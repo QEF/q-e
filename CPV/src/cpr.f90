@@ -80,7 +80,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        electrons_nosevel, electrons_noseupd
   USE pres_ai_mod,              ONLY : P_ext, P_in, P_fin, pvar, volclu, &
                                        surfclu, Surf_t, abivol, abisur
-  USE wavefunctions,            ONLY : c0_bgrp, cm_bgrp, phi_bgrp, cm_d, phi_d, c0_d
+  USE wavefunctions,            ONLY : c0_bgrp, cm_bgrp, cm_d, phi, c0_d
   USE wannier_module,           ONLY : allocate_wannier
   USE cp_interfaces,            ONLY : printout_new, move_electrons, newinit
   USE cell_nose,                ONLY : xnhh0, xnhhm, xnhhp, vnhh, temph, &
@@ -293,7 +293,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      IF( force_pairing ) THEN
           c0_bgrp(:,iupdwn(2):nbsp)       =     c0_bgrp(:,1:nupdwn(2))
           cm_bgrp(:,iupdwn(2):nbsp)       =     cm_bgrp(:,1:nupdwn(2))
-         phi_bgrp(:,iupdwn(2):nbsp)       =    phi_bgrp(:,1:nupdwn(2))
+         phi(:,iupdwn(2):nbsp)       =    phi(:,1:nupdwn(2))
       lambda(:,:, 2) = lambda(:,:, 1)
      ENDIF
      !
@@ -549,9 +549,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          IF ( tortho ) THEN
            !
 #if defined (__CUDA)
-           CALL ortho( eigr, cm_d, phi_d, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+           CALL ortho( eigr, cm_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
 #else
-           CALL ortho( eigr, cm_bgrp, phi_bgrp, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+           CALL ortho( eigr, cm_bgrp, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
 #endif
            !
          ELSE
@@ -568,18 +568,18 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          !
          IF ( tortho ) THEN
 #if defined (__CUDA)
-           CALL updatc( ccc, lambda, phi_d, bephi, becp_bgrp, bec_d, cm_d, idesc )
+           CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_d, cm_d, idesc )
            CALL dev_memcpy( bec_bgrp, bec_d )
            CALL dev_memcpy( cm_bgrp, cm_d )
 #else
-           CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, cm_bgrp, idesc )
+           CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_bgrp, cm_bgrp, idesc )
 #endif
          END IF
          !
          IF( force_pairing ) THEN
-           c0_bgrp(:,iupdwn(2):nbsp)       =     c0_bgrp(:,1:nupdwn(2))
-           cm_bgrp(:,iupdwn(2):nbsp)       =     cm_bgrp(:,1:nupdwn(2))
-           phi_bgrp(:,iupdwn(2):nbsp)       =    phi_bgrp(:,1:nupdwn(2))
+           c0_bgrp(:,iupdwn(2):nbsp)   =     c0_bgrp(:,1:nupdwn(2))
+           cm_bgrp(:,iupdwn(2):nbsp)   =     cm_bgrp(:,1:nupdwn(2))
+           phi(:,iupdwn(2):nbsp)       =    phi(:,1:nupdwn(2))
            lambda(:,:, 2) = lambda(:,:, 1)
          ENDIF
          !

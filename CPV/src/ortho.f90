@@ -7,12 +7,15 @@
 !
 
 #if defined(__CUDA)
+#define DGEMMDRV cublasDgemm
 #define DEVICEATTR ,DEVICE
 #else
+#define DGEMMDRV dgemm
 #define DEVICEATTR
 #endif
 
-MODULE local_ortho_memory
+MODULE ortho_module
+   !
 #if defined(__CUDA)
    USE cudafor
 #endif
@@ -20,12 +23,8 @@ MODULE local_ortho_memory
    IMPLICIT NONE
    SAVE
 
-   REAL(DP),   ALLOCATABLE DEVICEATTR :: s(:,:), sig(:,:), tau(:,:), stmp(:,:)
-   REAL(DP),   ALLOCATABLE DEVICEATTR :: wrk(:,:), rhoa(:,:), rhos(:,:), rhod(:)
-#if defined(__CUDA)
-   REAL(DP),   ALLOCATABLE, DEVICE :: qbecp_d(:,:), qbephi_d(:,:)
-#endif
-
+   REAL(DP), ALLOCATABLE DEVICEATTR :: s(:,:), sig(:,:), tau(:,:), stmp(:,:)
+   REAL(DP), ALLOCATABLE DEVICEATTR :: wrk(:,:), rhoa(:,:), rhos(:,:), rhod(:)
    REAL(DP), ALLOCATABLE DEVICEATTR :: xloc(:,:)
 
 CONTAINS
@@ -74,30 +73,6 @@ CONTAINS
 #endif
    END SUBROUTINE
 
-   SUBROUTINE sync_device_ortho_memory( qbecp, qbephi )
-      REAL(DP), INTENT(IN)    :: qbephi( :, : ), qbecp( :, : )
-      INTEGER :: info
-#if defined(__CUDA)
-      IF(ALLOCATED(qbecp_d)) THEN
-         IF( SIZE(qbecp,1) == SIZE(qbecp_d,1) .AND. SIZE(qbecp,2) == SIZE(qbecp_d,2) ) THEN
-            qbecp_d = qbecp
-            qbephi_d = qbephi
-            RETURN
-         ELSE
-            DEALLOCATE( qbecp_d, qbephi_d )
-         END IF
-      END IF
-      ALLOCATE( qbecp_d, source=qbecp, STAT = info )
-      IF( info /= 0 ) &
-         CALL errore( ' ortho_gamma ', ' allocating qbecp_d ', ABS( info ) )
-      ALLOCATE( qbephi_d, source=qbephi, STAT = info )
-      IF( info /= 0 ) &
-         CALL errore( ' ortho_gamma ', ' allocating qbephi_d ', ABS( info ) )
-      info = cudaDeviceSynchronize()
-#endif
-
-   END SUBROUTINE
-
    SUBROUTINE deallocate_local_ortho_memory()
      IF(ALLOCATED(s)) DEALLOCATE(s) 
      IF(ALLOCATED(sig)) DEALLOCATE(sig) 
@@ -108,10 +83,6 @@ CONTAINS
      IF(ALLOCATED(rhos)) DEALLOCATE(rhos) 
      IF(ALLOCATED(rhod)) DEALLOCATE(rhod) 
      IF(ALLOCATED(xloc)) DEALLOCATE(xloc) 
-#if defined(__CUDA)
-     IF(ALLOCATED(qbecp_d)) DEALLOCATE(qbecp_d) 
-     IF(ALLOCATED(qbephi_d)) DEALLOCATE(qbephi_d) 
-#endif
    END SUBROUTINE deallocate_local_ortho_memory
 
    SUBROUTINE x0_to_xloc( x0, nx0, ccc_, idesc )
@@ -130,12 +101,11 @@ CONTAINS
       IF( .NOT. ALLOCATED(xloc) ) THEN
          ALLOCATE( xloc, MOLD=x0, STAT = info )
          IF( info /= 0 ) &
-            CALL errore( ' ortho ', ' allocating xloc ', ABS( info ) )
+            CALL errore( ' x0_to_xloc ', ' allocating xloc ', ABS( info ) )
       END IF
       IF( idesc(LAX_DESC_ACTIVE_NODE) < 0 ) THEN
          RETURN
       ENDIF
-      !
       xloc = x0
       ccc = ccc_
 !$cuf kernel do(2) <<<*,*>>>
@@ -157,6 +127,9 @@ CONTAINS
       IF( idesc(LAX_DESC_ACTIVE_NODE) < 0 ) THEN
          RETURN
       ENDIF
+      IF( .NOT. ALLOCATED(xloc) ) THEN
+         CALL errore( ' xloc_to_x0 ', ' xloc not allocated ', 1 )
+      END IF
       byccc = 1.0d0 / ccc_
 !$cuf kernel do(2) <<<*,*>>>
       DO j = 1, SIZE(xloc,2)
@@ -222,24 +195,17 @@ CONTAINS
       RETURN
    END SUBROUTINE
 
-END MODULE local_ortho_memory
-
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE ortho_gamma_x( cp, ngwx, phi, becp_dist, qbecp, nkbx, bephi, qbephi, &
+   SUBROUTINE ortho_gamma( cp, ngwx, phi, becp_dist, qbecp, nkbx, bephi, qbephi, &
                            nx0, idesc, diff, iter, n, nss, istart )
 !=----------------------------------------------------------------------------=!
       !
-#if defined(__CUDA)
-      USE cudafor
-#endif
       USE kinds,              ONLY: DP
       USE orthogonalize_base, ONLY: rhoset, sigset, tauset, ortho_iterate,   &
                                     use_parallel_diag
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, my_bgrp_id, inter_bgrp_comm, nbgrp
       USE mp,                 ONLY: mp_sum, mp_bcast
       USE mp_world,           ONLY: mpime
-
-      USE local_ortho_memory
 
       IMPLICIT  NONE
 
@@ -249,16 +215,13 @@ END MODULE local_ortho_memory
 
       INTEGER,  INTENT(IN)  :: ngwx, nkbx, nx0
       INTEGER,  INTENT(IN)  :: n, nss, istart
-      COMPLEX(DP) :: phi( :, : ), cp( :, : )
-      REAL(DP)    :: bephi( :, : )
-      REAL(DP)    :: becp_dist( :, : )
-      REAL(DP)    :: qbephi( :, : ), qbecp( :, : )
+      COMPLEX(DP) DEVICEATTR :: phi( :, : ), cp( :, : )
+      REAL(DP)    DEVICEATTR :: bephi( :, : )
+      REAL(DP)    DEVICEATTR :: becp_dist( :, : )
+      REAL(DP)    DEVICEATTR :: qbephi( :, : ), qbecp( :, : )
       INTEGER,  INTENT(IN)  :: idesc(:)
       INTEGER,  INTENT(OUT) :: iter
       REAL(DP), INTENT(OUT) :: diff
-#if defined (__CUDA)
-      ATTRIBUTES( DEVICE ) :: bephi, becp_dist, phi, cp
-#endif
 
       ! ... Locals
 
@@ -291,38 +254,22 @@ END MODULE local_ortho_memory
       !
       CALL allocate_local_ortho_memory(nss, nx0)
       !
-      CALL sync_device_ortho_memory( qbecp, qbephi )
-      !
       !     rho = <s'c0|s|cp>
       !
       CALL start_clock( 'rhoset' )
-      !
-#if defined(__CUDA)
-      CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp_d, n, nss, istart, rhos, rhoa, nx0, idesc )
-#else
       CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, istart, rhos, rhoa, nx0, idesc )
-#endif
-      !
       CALL stop_clock( 'rhoset' )
       !
       !     sig = 1-<cp|s|cp>
       !
       CALL start_clock( 'sigset' )
-#if defined(__CUDA)
-      CALL sigset( cp, ngwx, becp_dist, nkbx, qbecp_d, n, nss, istart, sig, nx0, idesc )
-#else
       CALL sigset( cp, ngwx, becp_dist, nkbx, qbecp, n, nss, istart, sig, nx0, idesc )
-#endif
       CALL stop_clock( 'sigset' )
       !
       !     tau = <s'c0|s|s'c0>
       !
       CALL start_clock( 'tauset' )
-#if defined(__CUDA)
-      CALL tauset( phi, ngwx, bephi, nkbx, qbephi_d, n, nss, istart, tau, nx0, idesc )
-#else
       CALL tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, istart, tau, nx0, idesc )
-#endif
       CALL stop_clock( 'tauset' )
       !
       CALL consistency_check(rhos,idesc) 
@@ -410,10 +357,90 @@ END MODULE local_ortho_memory
       CALL stop_clock( 'ortho_iter' )
 
       RETURN
+   END SUBROUTINE ortho_gamma
 
-   END SUBROUTINE ortho_gamma_x
+   !
 
+   SUBROUTINE compute_qs_times_betas( bephi, bec_row, qbephi, qbecp, idesc )
+      USE uspp,           ONLY: nkb, qq_nt, indv_ijkb0, nkbus
+      USE uspp_gpum,      ONLY: qq_nt_d, using_qq_nt
+      USE uspp_param,     ONLY: nh, upf
+      USE electrons_base, ONLY: nspin, nbsp_bgrp, iupdwn_bgrp, nupdwn_bgrp, nbsp, nupdwn, iupdwn
+      USE ions_base,      ONLY: na, nat, nsp, ityp
+      USE cublas
+      !
+      IMPLICIT NONE
+      !
+      include 'laxlib.fh'
+      !
+      REAL(DP), INTENT(OUT) DEVICEATTR :: qbephi(:,:,:), qbecp(:,:,:)
+      REAL(DP), INTENT(IN)  DEVICEATTR :: bephi(:,:)
+      REAL(DP), INTENT(IN)  DEVICEATTR :: bec_row(:,:)
+      INTEGER, INTENT(IN) :: idesc(:,:)
 
+      REAL(DP), ALLOCATABLE DEVICEATTR :: bec_col(:,:), bephi_col(:,:)
+
+      INTEGER :: nkbx, info, nrcx, iss, is, jv, iv, ia
+      INTEGER :: i, j, inl, jnl, indv, nc, nhs
+
+      nkbx = nkb
+      nrcx = idesc( LAX_DESC_NRCX, 1 )
+      IF( nspin > 1 ) nrcx = MAX( nrcx, idesc( LAX_DESC_NRCX, 2 ) )
+
+      qbephi = 0.d0
+      qbecp  = 0.d0
+ 
+      CALL using_qq_nt(0)
+      !
+      IF( nkbus > 0 ) THEN
+         !
+         ALLOCATE( bec_col ( nkbx, nrcx*nspin ), STAT = info )
+         IF( info /= 0 ) &
+            CALL errore( ' compute_qs_times_betas ', ' allocating bec_col ', ABS( info ) )
+         ALLOCATE( bephi_col ( nkbx, nrcx*nspin ), STAT = info )
+         IF( info /= 0 ) &
+            CALL errore( ' compute_qs_times_betas ', ' allocating bephi_col ', ABS( info ) )
+         !
+         CALL redist_row2col( nupdwn(1), bephi, bephi_col, nkbx, nrcx, idesc(:,1) )
+         CALL redist_row2col( nupdwn(1), bec_row, bec_col, nkbx, nrcx, idesc(:,1) )
+         IF( nspin == 2 ) THEN
+            CALL redist_row2col( nupdwn(2), bephi(:,nrcx+1:), bephi_col(:,nrcx+1:), nkbx, nrcx, idesc(:,2) )
+            CALL redist_row2col( nupdwn(2), bec_row(:,nrcx+1:), bec_col(:,nrcx+1:), nkbx, nrcx, idesc(:,2) )
+         END IF
+         !
+         DO iss = 1, nspin
+            IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
+               nc = idesc( LAX_DESC_NC, iss )
+               DO ia = 1, nat
+                  is = ityp(ia)
+                  IF( upf(is)%tvanp ) THEN
+                     indv = indv_ijkb0(ia)
+                     nhs  = nh(is)
+                     CALL DGEMMDRV('N', 'N', nhs, nc, nhs, 1.0d0, qq_nt_d(1,1,is), SIZE(qq_nt_d,1), &
+                                   bephi_col(indv+1,(iss-1)*nrcx+1), SIZE(bephi_col,1), 0.0d0, qbephi(indv+1,1,iss), SIZE(qbephi,1))
+                     CALL DGEMMDRV('N', 'N', nhs, nc, nhs, 1.0d0, qq_nt_d(1,1,is), SIZE(qq_nt_d,1), &
+                                   bec_col(indv+1,(iss-1)*nrcx+1), SIZE(bec_col,1), 0.0d0, qbecp(indv+1,1,iss), SIZE(qbecp,1))
+!!$cuf kernel do (2)
+!                     DO iv=1,nhs
+!                        DO i = 1, nc
+!                           DO jv = 1, nhs
+!                              qbephi(indv+iv,i,iss) = qbephi(indv+iv,i,iss) + &
+!                                                         qq_nt_d(iv,jv,is) * bephi_col(indv+jv,i+(iss-1)*nrcx)
+!                              qbecp(indv+iv,i,iss) = qbecp(indv+iv,i,iss) + &
+!                                                        qq_nt_d(iv,jv,is) * bec_col(indv+jv,i+(iss-1)*nrcx)
+!                           END DO
+!                        END DO
+!                     END DO
+                  END IF
+               END DO
+            ENDIF
+         END DO
+         DEALLOCATE( bec_col )
+         DEALLOCATE( bephi_col )
+      END IF
+   END SUBROUTINE compute_qs_times_betas
+
+END MODULE ortho_module
 
 
 !=----------------------------------------------------------------------------=!
@@ -432,20 +459,19 @@ END MODULE local_ortho_memory
       !     for vanderbilt pseudo pot - kl & ap
       !
       USE kinds,          ONLY: DP
-      USE ions_base,      ONLY: na, nat, nsp, ityp
-      USE uspp,           ONLY: nkb, qq_nt, indv_ijkb0, nkbus
-      USE uspp_param,     ONLY: nh, upf
-      USE electrons_base, ONLY: f, nbsp_bgrp, iupdwn_bgrp, nupdwn_bgrp, i2gupdwn_bgrp, nbsp, nspin, nupdwn, iupdwn
+      USE uspp,           ONLY: nkb, nkbus
+      USE ions_base,      ONLY: nsp
+      USE electrons_base, ONLY: f, nbsp_bgrp, iupdwn_bgrp, nupdwn_bgrp, nbsp, nspin, nupdwn, iupdwn
       USE gvecw,          ONLY: ngw
       USE control_flags,  ONLY: iprint, iverbosity, ortho_max
       USE control_flags,  ONLY: force_pairing
       USE io_global,      ONLY: stdout, ionode
-      USE cp_interfaces,  ONLY: ortho_gamma, c_bgrp_expand, c_bgrp_pack, nlsm1, collect_bec, beta_eigr, nlsm1us
+      USE cp_interfaces,  ONLY: c_bgrp_expand, c_bgrp_pack, nlsm1, collect_bec, beta_eigr, nlsm1us
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, inter_bgrp_comm! DEBUG
       USE mp_world,           ONLY: mpime
       USE orthogonalize_base, ONLY: bec_bgrp2ortho
       USE mp,                 ONLY : mp_sum
-      USE local_ortho_memory, ONLY : xloc, x0_to_xloc, xloc_to_x0
+      USE ortho_module
       !
       IMPLICIT NONE
       !
@@ -453,39 +479,30 @@ END MODULE local_ortho_memory
       !
       INTEGER, INTENT(IN) :: idesc(:,:)
       COMPLEX(DP) :: eigr(:,:)
-      COMPLEX(DP) :: cp_bgrp(:,:), phi_bgrp(:,:)
+      COMPLEX(DP) DEVICEATTR :: cp_bgrp(:,:), phi_bgrp(:,:)
       REAL(DP)    :: x0(:,:,:), diff, ccc
       INTEGER     :: iter
-      REAL(DP)    :: bephi(:,:)
-      REAL(DP)    :: becp_bgrp(:,:)
+      REAL(DP)    DEVICEATTR :: bephi(:,:)
+      REAL(DP)    DEVICEATTR :: becp_bgrp(:,:)
       !
-      REAL(DP), ALLOCATABLE :: becp_dist(:,:)
-      REAL(DP), ALLOCATABLE :: qbephi(:,:,:), qbecp(:,:,:), bec_col(:,:)
-      COMPLEX(DP), ALLOCATABLE :: beigr(:,:)
-#if defined (__CUDA)
-      ATTRIBUTES( DEVICE ) :: becp_bgrp, bephi, becp_dist, beigr, cp_bgrp, phi_bgrp
-#endif
+      REAL(DP),    ALLOCATABLE DEVICEATTR :: bec_row(:,:)
+      REAL(DP),    ALLOCATABLE DEVICEATTR :: qbephi(:,:,:), qbecp(:,:,:)
+      COMPLEX(DP), ALLOCATABLE DEVICEATTR :: beigr(:,:)
 
-      INTEGER :: nkbx
-      INTEGER :: info, i, j, iss, iv, jv, ia, is, inl, jnl
-      INTEGER :: n1, n2, m1, m2
-      INTEGER :: nspin_sub, nx0, ngwx, nrcx
-      REAL(DP) :: qqf, dum, byccc
+      INTEGER :: nkbx, info, iss, nspin_sub, nx0, ngwx, nrcx
+      !
+      CALL start_clock( 'ortho' )
       !
       nkbx = nkb
       ngwx = SIZE( cp_bgrp, 1 )
-      !
-      nx0 = SIZE( x0, 1 )
+      nx0  = SIZE( x0, 1 )
+      nrcx = MAXVAL( idesc( LAX_DESC_NRCX, : ) )
       !
       !     calculation of becp and bephi
       !
-      CALL start_clock( 'ortho' )
-
-      nrcx = MAXVAL( idesc( LAX_DESC_NRCX, : ) )
-
-      ALLOCATE( becp_dist( nkbx, nrcx*nspin ), STAT = info )
+      ALLOCATE( bec_row( nkbx, nrcx*nspin ), STAT = info )
       IF( info /= 0 ) &
-         CALL errore( ' ortho ', ' allocating becp_dist ', ABS( info ) )
+         CALL errore( ' ortho ', ' allocating bec_row ', ABS( info ) )
 
       IF( nkbus > 0 ) THEN
          !
@@ -498,7 +515,7 @@ END MODULE local_ortho_memory
          CALL bec_bgrp2ortho( becp_bgrp, bephi, nrcx, idesc )
          !
          CALL nlsm1us ( nbsp_bgrp, beigr, cp_bgrp, becp_bgrp )
-         CALL bec_bgrp2ortho( becp_bgrp, becp_dist, nrcx, idesc )
+         CALL bec_bgrp2ortho( becp_bgrp, bec_row, nrcx, idesc )
          DEALLOCATE( beigr )
          !
       END IF
@@ -508,83 +525,11 @@ END MODULE local_ortho_memory
       ALLOCATE( qbephi( nkbx, nx0, nspin ), STAT = info )
       IF( info /= 0 ) &
          CALL errore( ' ortho ', ' allocating qbephi ', ABS( info ) )
-      !
-      IF( nkbus > 0 ) THEN
-         ALLOCATE( bec_col ( nkbx, nrcx*nspin ), STAT = info )
-         IF( info /= 0 ) &
-            CALL errore( ' ortho ', ' allocating bec_col ', ABS( info ) )
-         CALL redist_row2col( nupdwn(1), bephi, bec_col, nkbx, nrcx, idesc(:,1) )
-         IF( nspin == 2 ) THEN
-            CALL redist_row2col( nupdwn(2), bephi(:,nrcx+1:), bec_col(:,nrcx+1:), nkbx, nrcx, idesc(:,2) )
-         END IF
-      END IF
-      !
-      qbephi = 0.d0
-      !
-      DO iss = 1, nspin
-         IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
-!$omp parallel do default(none) &
-!$omp shared(nat,ityp,upf,nh,indv_ijkb0,qq_nt,idesc,qbephi,bec_col,iss,nrcx) &
-!$omp private(ia,is,iv,inl,jv,jnl,qqf,i)
-            DO ia = 1, nat
-               is = ityp(ia)
-               IF( upf(is)%tvanp ) THEN
-                  DO iv=1,nh(is)
-                     inl = indv_ijkb0(ia) + iv 
-                     DO jv=1,nh(is)
-                        jnl = indv_ijkb0(ia) + jv
-                        qqf = qq_nt(iv,jv,is)
-                        IF( ABS( qqf ) > 1.D-5 ) THEN
-                           DO i = 1, idesc( LAX_DESC_NC, iss )
-                              qbephi(inl,i,iss) = qbephi(inl,i,iss) + qqf * bec_col(jnl,i+(iss-1)*nrcx)
-                           END DO
-                        END IF
-                     END DO
-                  END DO
-               END IF
-            END DO
-!$omp end parallel do 
-         ENDIF
-      END DO
-      !
       ALLOCATE( qbecp ( nkbx, nx0, nspin ), STAT = info )
       IF( info /= 0 ) &
          CALL errore( ' ortho ', ' allocating qbecp ', ABS( info ) )
-
-      qbecp  = 0.d0
-
-      IF( nkbus > 0 ) THEN
-         CALL redist_row2col( nupdwn(1), becp_dist, bec_col, nkbx, nrcx, idesc(:,1) )
-         IF( nspin == 2 ) THEN
-            CALL redist_row2col( nupdwn(2), becp_dist(:,nrcx+1:), bec_col(:,nrcx+1:), nkbx, nrcx, idesc(:,2) )
-         END IF
-         DO iss = 1, nspin
-            IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
-!$omp parallel do default(none) &
-!$omp shared(nat,ityp,upf,nh,indv_ijkb0,qq_nt,idesc,qbecp,bec_col,iss,nrcx) &
-!$omp private(ia,is,iv,inl,jv,jnl,qqf,i)
-               DO ia = 1, nat
-                  is = ityp(ia) 
-                  IF( upf(is)%tvanp ) THEN
-                     DO iv=1,nh(is)
-                        inl = indv_ijkb0(ia) + iv
-                        DO jv=1,nh(is)
-                           jnl = indv_ijkb0(ia) + jv
-                           qqf = qq_nt(iv,jv,is)
-                           IF( ABS( qqf ) > 1.D-5 ) THEN
-                              DO i = 1, idesc( LAX_DESC_NC, iss )
-                                 qbecp(inl,i,iss) = qbecp(inl,i,iss) + qqf * bec_col(jnl,i+(iss-1)*nrcx)
-                              END DO
-                           ENDIF
-                        END DO
-                     END DO
-                  END IF
-               END DO
-!$omp end parallel do 
-            END IF
-         END DO
-         DEALLOCATE( bec_col )
-      END IF
+      !
+      CALL compute_qs_times_betas( bephi, bec_row, qbephi, qbecp, idesc )
       !
       ! Expand cp and phi to contain all electronic band
       !
@@ -598,7 +543,7 @@ END MODULE local_ortho_memory
 
          CALL x0_to_xloc( x0(:,:,iss), nx0, ccc, idesc(:,iss) )
 
-         CALL ortho_gamma( cp_bgrp, ngwx, phi_bgrp, becp_dist(:,(iss-1)*nrcx+1:iss*nrcx), qbecp(:,:,iss), nkbx, &
+         CALL ortho_gamma( cp_bgrp, ngwx, phi_bgrp, bec_row(:,(iss-1)*nrcx+1:iss*nrcx), qbecp(:,:,iss), nkbx, &
                            bephi(:,((iss-1)*nrcx+1):iss*nrcx), &
                            qbephi(:,:,iss), nx0, idesc(:,iss), diff, iter, nbsp, nupdwn(iss), iupdwn(iss) )
 
@@ -619,7 +564,7 @@ END MODULE local_ortho_memory
       !
       DEALLOCATE( qbecp )
       DEALLOCATE( qbephi )
-      DEALLOCATE( becp_dist )
+      DEALLOCATE( bec_row )
       !
       ! pack cp so that it contains only the bands in the band subgroup
       !

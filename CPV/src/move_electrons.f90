@@ -43,7 +43,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
   USE electrons_module,     ONLY : distribute_c, collect_c, distribute_b
   USE gvect,                ONLY : eigts1, eigts2, eigts3 
   USE control_flags,        ONLY : lwfpbe0nscf  ! exx_wf related
-  USE wavefunctions,        ONLY : cv0, c0_bgrp, cm_bgrp, phi_bgrp, c0_d, cm_d, phi_d
+  USE wavefunctions,        ONLY : cv0, c0_bgrp, cm_bgrp, phi, c0_d, cm_d
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
   USE device_util_m,        ONLY : dev_memcpy
   !
@@ -67,10 +67,14 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
   CALL start_clock('move_electrons')
   electron_dynamic: IF ( tcg ) THEN
      !
+#if defined (__CUDA)
+     CALL errore(' move_electrons ', ' GPU version of runcg not yet implemented ', 1 )
+#else
      CALL runcg_uspp( nfi, tfirst, tlast, eigr, bec_bgrp, irb, eigrb, &
                       rhor, rhog, rhos, rhoc, eigts1, eigts2, eigts3, sfac, &
                       fion, ema0bg, becdr_bgrp, lambdap, lambda, SIZE(lambda,1), vpot, c0_bgrp, &
-                      cm_bgrp, phi_bgrp, dbec, l_cprestart  )
+                      cm_bgrp, phi, dbec, l_cprestart  )
+#endif
      !
      CALL compute_stress( stress, detot, h, omega )
      !
@@ -154,7 +158,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
      !
      !=======================================================================
      !
-     CALL newd( vpot, irb, eigrb, becsum, fion )
+     CALL newd( vpot, irb, eigrb, becsum, fion, tprint )
      !
      CALL prefor( eigr, vkb )
      !
@@ -201,9 +205,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
      ! ... calphi calculates phi
      ! ... the electron mass rises with g**2
      !
-     CALL calphi_bgrp( c0_bgrp, ngw, bec_bgrp, nkb, vkb, phi_bgrp, nbspx_bgrp, ema0bg )
-     !
-     CALL dev_memcpy( phi_d, phi_bgrp )
+     CALL calphi_bgrp( c0_d, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
      !
      ! ... begin try and error loop (only one step!)
      !

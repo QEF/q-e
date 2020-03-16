@@ -1143,7 +1143,7 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------
-      SUBROUTINE calphi_bgrp( c0_bgrp, ngwx, bec_bgrp, nkbx, betae, phi_bgrp, nbspx_bgrp, ema0bg )
+   SUBROUTINE calphi_bgrp( c0_bgrp, ngwx, bec_bgrp, nkbx, betae, phi_bgrp, nbspx_bgrp, ema0bg )
 !-----------------------------------------------------------------------
 !     input: c0 (orthonormal with s(r(t)), bec=<c0|beta>, betae=|beta>
 !     computes the matrix phi (with the old positions)
@@ -1161,19 +1161,27 @@ CONTAINS
       USE constants,      ONLY: pi, fpi
       USE control_flags,  ONLY: iverbosity
       USE mp,             ONLY: mp_sum
+      USE cudafor
 !
       IMPLICIT NONE
       
       INTEGER, INTENT(IN) :: ngwx, nkbx, nbspx_bgrp
-      COMPLEX(DP)         :: c0_bgrp( ngwx, nbspx_bgrp ), phi_bgrp( ngwx, nbspx_bgrp ), betae( ngwx, nkbx )
-      REAL(DP)            :: bec_bgrp( nkbx, nbspx_bgrp ), emtot
-      REAL(DP), OPTIONAL  :: ema0bg( ngwx )
+      COMPLEX(DP)         :: c0_bgrp( :, : ), phi_bgrp( :, : )
+      COMPLEX(DP)         :: betae( :, : )
+      REAL(DP)            :: bec_bgrp( :, : ), emtot
+      REAL(DP), OPTIONAL  :: ema0bg( : )
 
       ! local variables
       !
       INTEGER  :: is, iv, jv, ia, inl, jnl, i, j, indv
       REAL(DP), ALLOCATABLE :: qtemp( : , : )
+      REAL(DP), ALLOCATABLE :: qtemp_d( : , : )
+      REAL(DP), ALLOCATABLE :: ema0bg_d( : )
+      COMPLEX(DP), ALLOCATABLE :: betae_d( : , : )
       REAL(DP) :: qqf
+#if defined (__CUDA)
+      ATTRIBUTES( DEVICE ) :: c0_bgrp, phi_bgrp, ema0bg_d, qtemp_d, betae_d
+#endif
 !
       IF( nbsp_bgrp < 1 ) RETURN
       !
@@ -1210,8 +1218,17 @@ CONTAINS
 !$omp end parallel do
 !
          IF( ngw > 0 ) THEN
+#if defined (__CUDA)
+            ALLOCATE(betae_d, SOURCE=betae)
+            ALLOCATE(qtemp_d, SOURCE=qtemp)
+            CALL MYDGEMM ( 'N', 'N', 2*ngw, nbsp_bgrp, nkb, 1.0d0, betae_d, &
+                       2*ngwx, qtemp_d, nkb, 0.0d0, phi_bgrp, 2*ngwx )
+            DEALLOCATE(qtemp_d)
+            DEALLOCATE(betae_d)
+#else
             CALL dgemm ( 'N', 'N', 2*ngw, nbsp_bgrp, nkb, 1.0d0, betae, &
                        2*ngwx, qtemp, nkb, 0.0d0, phi_bgrp, 2*ngwx )
+#endif
          ELSE
             phi_bgrp = 0.0d0
          END IF
@@ -1225,6 +1242,16 @@ CONTAINS
       END IF
 !
       IF( PRESENT( ema0bg ) ) THEN
+#if defined (__CUDA)
+         ALLOCATE(ema0bg_d, SOURCE=ema0bg )
+!$cuf kernel do(2) <<<*,*>>>
+         DO j=1,nbsp_bgrp
+            DO i=1,ngw
+               phi_bgrp(i,j)=(phi_bgrp(i,j)+c0_bgrp(i,j))*ema0bg_d(i)
+            END DO
+         END DO
+         DEALLOCATE(ema0bg_d)
+#else
 !$omp parallel do default(shared), private(i)
          DO j=1,nbsp_bgrp
             DO i=1,ngw
@@ -1232,7 +1259,16 @@ CONTAINS
             END DO
          END DO
 !$omp end parallel do
+#endif
       ELSE
+#if defined (__CUDA)
+!$cuf kernel do(2) <<<*,*>>>
+         DO j=1,nbsp_bgrp
+            DO i=1,ngw
+               phi_bgrp(i,j)=phi_bgrp(i,j)+c0_bgrp(i,j)
+            END DO
+         END DO
+#else
 !$omp parallel do default(shared), private(i)
          DO j=1,nbsp_bgrp
             DO i=1,ngw
@@ -1240,12 +1276,13 @@ CONTAINS
             END DO
          END DO
 !$omp end parallel do
+#endif
       END IF
       !   
       CALL stop_clock( 'calphi' )
 !
       RETURN
-      END SUBROUTINE calphi_bgrp
+   END SUBROUTINE calphi_bgrp
 
 
    SUBROUTINE bec_bgrp2ortho( bec_bgrp, bec_ortho, nrcx, idesc )

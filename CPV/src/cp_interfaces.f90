@@ -50,7 +50,6 @@
    PUBLIC :: packgam
 
    PUBLIC :: ortho
-   PUBLIC :: ortho_gamma
 
    PUBLIC :: nlfh
    PUBLIC :: nlfl_bgrp
@@ -437,27 +436,6 @@
          REAL(DP)    :: becp_bgrp(:,:)
 #if defined (__CUDA)
          ATTRIBUTES( DEVICE ) :: becp_bgrp, bephi, cp_bgrp, phi_bgrp
-#endif
-      END SUBROUTINE
-   END INTERFACE
-
-   INTERFACE ortho_gamma
-      SUBROUTINE ortho_gamma_x &
-         ( cp, ngwx, phi, becp_dist, qbecp, nkbx, bephi, qbephi, &
-           nx0, idesc, diff, iter, n, nss, istart )
-         USE kinds,          ONLY: DP
-         IMPLICIT NONE
-         INTEGER,  INTENT(IN)  :: ngwx, nkbx, nx0
-         INTEGER,  INTENT(IN)  :: n, nss, istart
-         COMPLEX(DP) :: phi( :, : ), cp( :, : )
-         REAL(DP)    :: bephi( :, : )
-         REAL(DP)    :: becp_dist(:,:)
-         REAL(DP)    :: qbephi( :, : ), qbecp( :, : )
-         INTEGER,  INTENT(IN) :: idesc( : )
-         INTEGER,  INTENT(OUT) :: iter
-         REAL(DP), INTENT(OUT) :: diff
-#if defined (__CUDA)
-         ATTRIBUTES( DEVICE ) :: becp_dist, bephi, phi, cp
 #endif
       END SUBROUTINE
    END INTERFACE
@@ -927,7 +905,7 @@
          IMPLICIT NONE
          INTEGER,     INTENT(IN) :: n
          COMPLEX(DP), DEVICE, INTENT(IN) :: c( :, : )
-         REAL(DP),    INTENT(IN) :: f( : )
+         REAL(DP),    DEVICE, INTENT(IN) :: f( : )
          REAL(DP) :: enkin_gpu_x
       END FUNCTION enkin_gpu_x
 #endif

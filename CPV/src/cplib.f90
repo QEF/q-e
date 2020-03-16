@@ -1092,6 +1092,7 @@ subroutine nlinit
       use uspp,            ONLY : aainit, beta, qq_nt, dvan, nhtol, nhtolm, indv,&
                                   dbeta
       use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh, ish
+      use uspp_gpum,       ONLY : using_qq_nt, using_qq_nt_d, qq_nt_d
       use atom,            ONLY : rgrid
       use qgb_mod,         ONLY : qgb, dqgb
       use smallbox_gvec,   ONLY : ngb
@@ -1672,7 +1673,7 @@ end subroutine dylmr2_
       USE constants,          ONLY: pi, fpi
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
-      USE gvecw,              ONLY: g2kin
+      USE gvecw,              ONLY: g2kin_d
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm
       USE cell_base,          ONLY: tpiba2
@@ -1684,29 +1685,20 @@ end subroutine dylmr2_
 
       INTEGER,     INTENT(IN) :: n
       COMPLEX(DP), DEVICE, INTENT(IN) :: c( :, : )
-      REAL(DP),    INTENT(IN) :: f( : )
+      REAL(DP),    DEVICE, INTENT(IN) :: f( : )
       !
       ! local
 
       INTEGER  :: ig, i
       REAL(DP) :: sk
-      REAL(DP), ALLOCATABLE, DEVICE :: f_d(:)  
-      REAL(DP), ALLOCATABLE, DEVICE :: g2(:)  
-      REAL(DP) :: ddot
       !
-      ALLOCATE( g2, SOURCE=g2kin )
-      ALLOCATE( f_d, SOURCE=f ) 
-
       sk=0.0d0
 !$cuf kernel do(2) <<<*,*>>>
       DO i=1,n
          DO ig=gstart,ngw
-            sk = sk + f_d(i) * DBLE(CONJG(c(ig,i))*c(ig,i)) * g2(ig)
+            sk = sk + f(i) * DBLE(CONJG(c(ig,i))*c(ig,i)) * g2kin_d(ig)
          END DO
       END DO
-
-      DEALLOCATE( f_d )
-      DEALLOCATE( g2 )
 
       CALL mp_sum( sk, intra_bgrp_comm )
 

@@ -48,7 +48,7 @@ SUBROUTINE from_scratch( )
     USE printout_base,        ONLY : printout_pos
     USE orthogonalize_base,   ONLY : updatc, calphi_bgrp
     USE wave_base,            ONLY : wave_steepest
-    USE wavefunctions,        ONLY : c0_bgrp, cm_bgrp, phi_bgrp, c0_d, phi_d, cm_d
+    USE wavefunctions,        ONLY : c0_bgrp, cm_bgrp, c0_d, phi, cm_d
     USE fft_base,             ONLY : dfftp, dffts
     USE time_step,            ONLY : delt
     USE cp_main_variables,    ONLY : idesc, bephi, becp_bgrp, nfi, &
@@ -234,7 +234,7 @@ SUBROUTINE from_scratch( )
       if( iverbosity > 1 ) &
              CALL printout_pos( stdout, fion, nat, ityp, head = ' fion ' )
 
-      CALL newd( vpot, irb, eigrb, becsum, fion )
+      CALL newd( vpot, irb, eigrb, becsum, fion, .true. )
       !
       IF( force_pairing ) THEN
          !
@@ -260,18 +260,16 @@ SUBROUTINE from_scratch( )
       !     calphi calculates phi
       !     the electron mass rises with g**2
       !
-      CALL calphi_bgrp( cm_bgrp, ngw, bec_bgrp, nkb, vkb, phi_bgrp, nbspx_bgrp, ema0bg )
+      CALL calphi_bgrp( cm_d, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
       !
       IF( force_pairing ) &
-         &   phi_bgrp( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) =    phi_bgrp( :, 1:nupdwn(2))
-
-      CALL dev_memcpy( phi_d, phi_bgrp )
+         &   phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) =    phi( :, 1:nupdwn(2))
       !
       if( tortho ) then
 #if defined (__CUDA)
-         CALL ortho( eigr, c0_d, phi_d, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+         CALL ortho( eigr, c0_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
 #else
-         CALL ortho( eigr, c0_bgrp, phi_bgrp, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+         CALL ortho( eigr, c0_bgrp, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
 #endif
       else
          CALL gram_bgrp( vkb, bec_bgrp, nkb, c0_bgrp, ngw )
@@ -289,18 +287,18 @@ SUBROUTINE from_scratch( )
       !
       IF ( tortho ) THEN
 #if defined (__CUDA)
-         CALL updatc( ccc, lambda, phi_d, bephi, becp_bgrp, bec_d, c0_d, idesc )
+         CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_d, c0_d, idesc )
          CALL dev_memcpy( c0_bgrp, c0_d )
          CALL dev_memcpy( bec_bgrp, bec_d )
 #else
-         CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, c0_bgrp, idesc )
+         CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_bgrp, c0_bgrp, idesc )
 #endif
       END IF
       !
       IF( force_pairing ) THEN
          !
          c0_bgrp ( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) = c0_bgrp( :, 1:nupdwn(2))
-         phi_bgrp( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) = phi_bgrp( :, 1:nupdwn(2))
+         phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) = phi( :, 1:nupdwn(2))
          lambda(:,:,2) = lambda(:,:,1)
          !
       ENDIF

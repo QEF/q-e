@@ -28,7 +28,7 @@ SUBROUTINE init_run()
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
   USE core,                     ONLY : rhoc
-  USE wavefunctions,            ONLY : c0_bgrp, cm_bgrp, phi_bgrp, allocate_cp_wavefunctions
+  USE wavefunctions,            ONLY : c0_bgrp, cm_bgrp, allocate_cp_wavefunctions
   USE ensemble_dft,             ONLY : tens, z0t
   USE cg_module,                ONLY : tcg
   USE electrons_base,           ONLY : nudx, nbnd

@@ -403,7 +403,7 @@ SUBROUTINE redist_row2col_gpu_x( n, a, b, ldx, nx, idesc )
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: ldx, nx
    REAL(DP), DEVICE    :: a(:,:)
-   REAL(DP)            :: b(:,:)
+   REAL(DP), DEVICE    :: b(:,:)
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
 END SUBROUTINE
 #endif

@@ -35,7 +35,7 @@
       ! pptype_: pseudo type to process: 0 = all, 1 = norm-cons, 2 = ultra-soft
       !
       integer   :: ig, is, iv, ia, l, inl
-      complex(DP) :: cfact
+      complex(DP) :: cfact(4)
       integer :: pptype
       LOGICAL :: ok1, ok2
       !
@@ -50,6 +50,19 @@
 !$omp parallel default(none), &
 !$omp shared(nat,ngw,nh,nhtol,beigr,beta,eigr,ityp,pptype,nspmn,nspmx,upf,gstart,indv_ijkb0), &
 !$omp private(is,ia,iv,inl,l,cfact,ig,ok1,ok2)
+
+      !if (l == 0) then
+      cfact(1) =   cmplx( 1.0_dp , 0.0_dp )
+      !else if (l == 1) then
+      cfact(2) = - cmplx( 0.0_dp , 1.0_dp )
+      !else if (l == 2) then
+      cfact(3) = - cmplx( 0.0_dp , 1.0_dp )
+      cfact(3) = cfact(3) * cfact(3)
+      !else if (l == 3) then
+      cfact(4) = - cmplx( 0.0_dp , 1.0_dp )
+      cfact(4) = cfact(4) * cfact(4) * cfact(4)
+      !endif
+
 !$omp do
       DO ia = 1, nat
          is  = ityp(ia)
@@ -63,28 +76,14 @@
                 !
                 l = nhtol( iv, is )
                 !
-                if (l == 0) then
-                  cfact =   cmplx( 1.0_dp , 0.0_dp )
-                else if (l == 1) then
-                  cfact = - cmplx( 0.0_dp , 1.0_dp )
-                else if (l == 2) then
-                  cfact = - cmplx( 0.0_dp , 1.0_dp )
-                  cfact = cfact * cfact
-                else if (l == 3) then
-                  cfact = - cmplx( 0.0_dp , 1.0_dp )
-                  cfact = cfact * cfact * cfact
-                endif
+                !  q = 0   component (with weight 1.0)  !  kept only with gstart = 2
                 !
-                !  q = 0   component (with weight 1.0)
-                !
-                if (gstart == 2) then
-                  beigr( 1, iv + inl ) = cfact * beta(1,iv,is) * eigr(1,ia)
-                end if
+                beigr( 1, iv + inl ) = cfact(l+1) * beta(1,iv,is) * eigr(1,ia)
                 !
                 !   q > 0   components (with weight 2.0)
                 !
                 do ig = gstart, ngw
-                  beigr( ig, iv + inl ) = 2.0d0 * cfact * beta(ig,iv,is) * eigr(ig,ia)
+                  beigr( ig, iv + inl ) = 2.0d0 * cfact(l+1) * beta(ig,iv,is) * eigr(ig,ia)
                 end do
                 !
               end do
@@ -135,7 +134,7 @@
       ! pptype_: pseudo type to process: 0 = all, 1 = norm-cons, 2 = ultra-soft
       !
       integer   :: ig, is, iv, ia, l, inl
-      complex(DP) :: cfact
+      complex(DP) :: cfact(4), c2, c1
       COMPLEX(DP), ALLOCATABLE :: beigr(:,:)
       integer :: pptype
       LOGICAL :: ok1, ok2
@@ -152,7 +151,17 @@
 
 !$omp parallel default(none), &
 !$omp shared(nat,ngw,nh,nhtol,beigr,beta,eigr,ityp,pptype,nspmn,nspmx,upf,gstart,indv_ijkb0), &
-!$omp private(is,ia,iv,inl,l,cfact,ig,ok1,ok2)
+!$omp private(is,ia,iv,inl,l,cfact,ig,ok1,ok2,c1,c2)
+
+      ! (l == 0) 
+      cfact(1) =   cmplx( 1.0_dp , 0.0_dp )
+      ! (l == 1) 
+      cfact(2) = - cmplx( 0.0_dp , 1.0_dp )
+      ! (l == 2) 
+      cfact(3) = - cmplx( 1.0_dp , 0.0_dp )
+      ! (l == 3) 
+      cfact(4) =   cmplx( 0.0_dp , 1.0_dp )
+
 !$omp do
       DO ia = 1, nat
          is  = ityp(ia)
@@ -165,29 +174,17 @@
               do iv = 1, nh( is )
                 !
                 l = nhtol( iv, is )
+                c1 = cfact(l+1)
+                c2 = 2.0d0 * c1
                 !
-                if (l == 0) then
-                  cfact =   cmplx( 1.0_dp , 0.0_dp )
-                else if (l == 1) then
-                  cfact = - cmplx( 0.0_dp , 1.0_dp )
-                else if (l == 2) then
-                  cfact = - cmplx( 0.0_dp , 1.0_dp )
-                  cfact = cfact * cfact
-                else if (l == 3) then
-                  cfact = - cmplx( 0.0_dp , 1.0_dp )
-                  cfact = cfact * cfact * cfact
-                endif
+                !  q = 0   component (with weight 1.0) !  kept only with gstart = 2
                 !
-                !  q = 0   component (with weight 1.0)
-                !
-                if (gstart == 2) then
-                  beigr( 1, iv + inl ) = cfact * beta(1,iv,is) * eigr(1,ia)
-                end if
+                beigr( 1, iv + inl ) = c1 * beta(1,iv,is) * eigr(1,ia)
                 !
                 !   q > 0   components (with weight 2.0)
                 !
                 do ig = gstart, ngw
-                  beigr( ig, iv + inl ) = 2.0d0 * cfact * beta(ig,iv,is) * eigr(ig,ia)
+                  beigr( ig, iv + inl ) = c2 * beta(ig,iv,is) * eigr(ig,ia)
                 end do
                 !
               end do
@@ -541,55 +538,50 @@
       complex(DP), intent(out) :: gbeigr(:,:,:)
       !
       integer  :: ig, is, iv, ia, k, l, inl
-      complex(DP) :: cfact
+      complex(DP) :: cfact(4)
 !
       call start_clock( 'g_beta_eigr' )
 !
 !$omp parallel default(none), &
 !$omp shared(nat,ngw,nh,nhtol,gbeigr,beta,eigr,ityp,g,gstart,indv_ijkb0,tpiba), &
 !$omp private(is,ia,iv,inl,l,cfact,ig,k)
-!$omp do
+
+      ! compute (-i)^(l+1)
+      !
+      !if (l == 0) then
+      cfact(1) = - cmplx( 0.0_dp , 1.0_dp )
+      !else if (l == 1) then
+      cfact(2) = - cmplx( 0.0_dp , 1.0_dp )
+      cfact(2) = cfact(2) * cfact(2)
+      !else if (l == 2) then
+      cfact(3) = - cmplx( 0.0_dp , 1.0_dp )
+      cfact(3) = cfact(3) * cfact(3) * cfact(3)
+      !else if (l == 3) then
+      cfact(4) =   cmplx( 1.0_dp , 0.0_dp )
+      !endif
+      cfact(1) = cfact(1) * tpiba
+      cfact(2) = cfact(2) * tpiba
+      cfact(3) = cfact(3) * tpiba
+      cfact(4) = cfact(4) * tpiba
+
+!$omp do collapse(2)
       DO ia = 1, nat
-      DO k = 1, 3
-
-         is = ityp(ia) 
-
-         inl = indv_ijkb0(ia)
-
-         do iv=1,nh(is)
-            !
-            !     order of states:  s_1  p_x1  p_z1  p_y1  s_2  p_x2  p_z2  p_y2
-            !
-            l=nhtol(iv,is)
-
-            ! compute (-i)^(l+1)
-            !
-            if (l == 0) then
-              cfact = - cmplx( 0.0_dp , 1.0_dp )
-            else if (l == 1) then
-              cfact = - cmplx( 0.0_dp , 1.0_dp )
-              cfact = cfact * cfact
-            else if (l == 2) then
-              cfact = - cmplx( 0.0_dp , 1.0_dp )
-              cfact = cfact * cfact * cfact
-            else if (l == 3) then
-              cfact =   cmplx( 1.0_dp , 0.0_dp )
-            endif
-
-            cfact = cfact * tpiba
-
-            !    q = 0   component (with weight 1.0)
-            if (gstart == 2) then
-               gbeigr(1,iv+inl,k) = cfact * g(k,1) * beta(1,iv,is) * eigr(1,ia)
-            end if
-            !    q > 0   components (with weight 2.0)
-            do ig=gstart,ngw
-               gbeigr(ig,iv+inl,k) = cfact * 2.0d0 * g(k,ig) * beta(ig,iv,is) * eigr(ig,ia)
+         DO k = 1, 3
+            is = ityp(ia) 
+            inl = indv_ijkb0(ia)
+            do iv=1,nh(is)
+               !
+               !     order of states:  s_1  p_x1  p_z1  p_y1  s_2  p_x2  p_z2  p_y2
+               !
+               l=nhtol(iv,is)
+               !    q = 0   component (with weight 1.0)
+               gbeigr(1,iv+inl,k) = cfact(l+1) * g(k,1) * beta(1,iv,is) * eigr(1,ia)
+               !    q > 0   components (with weight 2.0)
+               do ig=gstart,ngw
+                  gbeigr(ig,iv+inl,k) = cfact(l+1) * 2.0d0 * g(k,ig) * beta(ig,iv,is) * eigr(ig,ia)
+               end do
             end do
-            !
          end do
-
-      end do
       end do
 !$omp end do
 !$omp end parallel
@@ -960,8 +952,20 @@ SUBROUTINE dbeta_eigr_x( dbeigr, eigr )
   complex(DP), intent(in)  :: eigr(:,:)
   !
   integer   :: ig, is, iv, ia, l, inl, i, j
-  complex(DP) :: cfact
+  complex(DP) :: cfact(4)
   !
+  !if (l == 0) then
+  cfact(1) =   cmplx( 1.0_dp , 0.0_dp )
+  !else if (l == 1) then
+  cfact(2) = - cmplx( 0.0_dp , 1.0_dp )
+  !else if (l == 2) then
+  cfact(3) = - cmplx( 0.0_dp , 1.0_dp )
+  cfact(3) = cfact(3) * cfact(3)
+  !else if (l == 3) then
+  cfact(4) = - cmplx( 0.0_dp , 1.0_dp )
+  cfact(4) = cfact(4) * cfact(4) * cfact(4)
+  !endif
+
   do j=1,3
      do i=1,3
         do ia = 1, nat
@@ -969,27 +973,11 @@ SUBROUTINE dbeta_eigr_x( dbeigr, eigr )
            inl = indv_ijkb0(ia)
            do iv=1,nh(is)
               l=nhtol(iv,is)
-              if (l == 0) then
-                 cfact =   cmplx( 1.0_dp , 0.0_dp )
-              else if (l == 1) then
-                 cfact = - cmplx( 0.0_dp , 1.0_dp )
-              else if (l == 2) then
-                 cfact = - cmplx( 0.0_dp , 1.0_dp )
-                 cfact = cfact * cfact
-              else if (l == 3) then
-                 cfact = - cmplx( 0.0_dp , 1.0_dp )
-                 cfact = cfact * cfact * cfact
-              else
-                 CALL errore(' dbeta_eigr_x ', ' l not implemented ', ABS( l ) )
-              endif
-              !
               !     q = 0   component (with weight 1.0)
-              if (gstart == 2) then
-                 dbeigr(1,iv+inl,i,j)= cfact*dbeta(1,iv,is,i,j)*eigr(1,ia)
-              end if
+              dbeigr(1,iv+inl,i,j)= cfact(l+1)*dbeta(1,iv,is,i,j)*eigr(1,ia)
               !     q > 0   components (with weight 2.0)
               do ig = gstart, ngw
-                 dbeigr(ig,iv+inl,i,j) = 2.0d0*cfact*dbeta(ig,iv,is,i,j)*eigr(ig,ia)
+                 dbeigr(ig,iv+inl,i,j) = 2.0d0*cfact(l+1)*dbeta(ig,iv,is,i,j)*eigr(ig,ia)
               end do
            end do
         end do

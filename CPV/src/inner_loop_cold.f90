@@ -141,7 +141,7 @@
       ! the augmentation charges and the 
       ! corresponding contribution to the ionic force
        
-         CALL newd( vpot, irb, eigrb, rhovan, fion2 )
+         CALL newd( vpot, irb, eigrb, rhovan, fion2, .true. )
 
          ! operates the Hamiltonian on the wavefunction c0
          h0c0( :, : )= 0.D0

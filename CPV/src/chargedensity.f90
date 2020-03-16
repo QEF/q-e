@@ -55,7 +55,7 @@
       USE uspp,               ONLY: nkb
       USE uspp_param,         ONLY: nh, nhm
       USE cell_base,          ONLY: omega
-      USE electrons_base,     ONLY: nspin, nbsp_bgrp, ispin_bgrp, f_bgrp
+      USE electrons_base,     ONLY: nspin, nbsp_bgrp, ispin_bgrp, f_bgrp, f_d
       USE constants,          ONLY: pi, fpi
       USE mp,                 ONLY: mp_sum
       USE io_global,          ONLY: stdout, ionode
@@ -125,7 +125,11 @@
       !
       !  calculation of kinetic energy ekin
       !
+#if defined (__CUDA)
+      ekin = enkin( c_d, f_d, nbsp_bgrp )
+#else
       ekin = enkin( c_bgrp, f_bgrp, nbsp_bgrp )
+#endif
       !
       IF( nbgrp > 1 ) &
          CALL mp_sum( ekin, inter_bgrp_comm )

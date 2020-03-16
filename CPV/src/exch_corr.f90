@@ -513,29 +513,29 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
         ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
         !
 !$omp parallel default(none), shared(nnr,grhor,h), private(ipol,k)
+!$omp do collapse(2)
         do ipol = 1, 3
-!$omp do
            do k = 1, nnr
               grhor (ipol, k, 1) = h (k, 1, 1) * grhor (ipol, k, 1)
            enddo
-!$omp end do
         end do
+!$omp end do
 !$omp end parallel
         !
         !
      else
         !
 !$omp parallel default(none), shared(nnr,grhor,h), private(ipol,k,grup,grdw)
+!$omp do collapse(2)
         do ipol = 1, 3
-!$omp do
            do k = 1, nnr
              grup = grhor (ipol, k, 1)
              grdw = grhor (ipol, k, 2)
              grhor (ipol, k, 1) = h (k, 1, 1) * grup + h (k, 1, 2) * grdw
              grhor (ipol, k, 2) = h (k, 2, 2) * grdw + h (k, 2, 1) * grup
            enddo
-!$omp end do
         enddo
+!$omp end do
 !$omp end parallel
         !
      end if
