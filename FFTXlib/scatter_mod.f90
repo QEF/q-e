@@ -385,7 +385,7 @@ SUBROUTINE fft_scatter_many_xy ( desc, f_in, f_aux, isgn, howmany)
 !$omp          shared(howmany, ncpx, nr2px, nr1p_, iplx)       &
 !$omp&         shared(desc, f_aux, f_in, indx)
         ip = nr1p_(1) * desc%my_nr3p + 1
-!$omp do firstprivate(ip)
+!$omp do
         DO k=0, howmany-1
            DO j = 1, ncpx
               IF ( j >= ip ) CYCLE
@@ -482,7 +482,7 @@ SUBROUTINE fft_scatter_many_xy ( desc, f_in, f_aux, isgn, howmany)
 !$omp          shared(howmany, ncpx, nr2px, nr1p_)             &
 !$omp&         shared(desc, f_aux, f_in, indx)
         ip = nr1p_(1) * desc%my_nr3p + 1
-!$omp do firstprivate(ip)
+!$omp do
         DO k = 0, howmany - 1
            DO j = 1, ncpx
               IF ( j >= ip ) CYCLE
@@ -944,7 +944,7 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
         ENDDO
 !$omp end do
         ip = desc%iproc( me2, 1)
-!$omp do firstprivate(ip)
+!$omp do
         DO k=0, howmany-1
            DO j = 1, ncpx
               IF ( j>ncp_(ip) ) CYCLE
@@ -1036,7 +1036,7 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
 !$omp          shared(howmany, ncpx, nr3px, desc, f_aux, f_in) &
 !$omp&         shared(ncp_, me2, ir1p_, my_nr1p_)
         ip = desc%iproc( me2, 1 )
-!$omp do firstprivate(ip)
+!$omp do
         DO k = 0, howmany - 1
            DO j = 1, ncpx
               IF ( j>ncp_(ip) ) CYCLE
