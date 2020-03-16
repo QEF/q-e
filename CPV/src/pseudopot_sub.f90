@@ -802,8 +802,8 @@
       end do
 
       CALL using_qq_nt(2)
-      CALL using_qq_nt_d(0)
 #if defined (__CUDA)
+      CALL using_qq_nt_d(0)
 !$cuf kernel do (3)
       DO is = 1, SIZE(qq_nt_d,3)
          DO jv=1,SIZE(qq_nt_d,2)
@@ -1157,8 +1157,8 @@
       end do
 
       CALL using_qq_nt(2)
-      CALL using_qq_nt_d(0)
 #if defined (__CUDA)
+      CALL using_qq_nt_d(0)
 !$cuf kernel do (3)
       DO is = 1, SIZE(qq_nt_d,3)
          DO jv=1,SIZE(qq_nt_d,2)
