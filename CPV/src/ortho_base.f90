@@ -946,6 +946,8 @@ CONTAINS
       USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm
       USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nbsp, nspin,  nupdwn, iupdwn, nbspx
 !
+      USE device_util_m,     ONLY : dev_memcpy
+!
       IMPLICIT NONE
 
       include 'laxlib.fh'
@@ -1046,7 +1048,8 @@ CONTAINS
                ! broadcast the block to all processors 
                ! 
                IF( me_bgrp == root ) THEN
-                  bephi_tmp(:,:) = bephi(:, i1 : i1+nrcx-1 )
+                  !bephi_tmp(:,:) = bephi(:, i1 : i1+nrcx-1 )
+                  CALL dev_memcpy(bephi_tmp, bephi(:, i1:), [1, nkbx], 1 , [1, nrcx])
                END IF
                CALL mp_bcast( bephi_tmp, root, intra_bgrp_comm )
                !
@@ -1294,6 +1297,8 @@ CONTAINS
       USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm, nbgrp
       USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nspin
       !
+      USE device_util_m,     ONLY : dev_memcpy
+      !
       IMPLICIT NONE
       !
       include 'laxlib.fh'
@@ -1316,12 +1321,14 @@ CONTAINS
          ir = idesc(LAX_DESC_IR, 1)
          nr = idesc(LAX_DESC_NR, 1)
          IF( nbgrp == 1 ) THEN
-            bec_ortho(:,1:nr) = bec_bgrp(:,ir:ir+nr-1)
+            !bec_ortho(:,1:nr) = bec_bgrp(:,ir:ir+nr-1)
+            CALL dev_memcpy(bec_ortho, bec_bgrp(:, ir:), [1, ubound(bec_bgrp)], 1 , [1, nr])
          ELSE
             DO i = 1, nr
                ibgrp_i = ibgrp_g2l( i + ir - 1 )
                IF( ibgrp_i > 0 ) THEN
-                  bec_ortho( :, i ) = bec_bgrp( :, ibgrp_i )
+                  !bec_ortho( :, i ) = bec_bgrp( :, ibgrp_i )
+                  CALL dev_memcpy(bec_ortho(:, i), bec_bgrp(:, ibgrp_i), [1, ubound(bec_ortho)])
                END IF
             END DO
          END IF
@@ -1333,12 +1340,14 @@ CONTAINS
             ir = idesc(LAX_DESC_IR, 2 )
             nr = idesc(LAX_DESC_NR, 2 )
             IF( nbgrp == 1 ) THEN
-               bec_ortho( :, nrcx+1 : nrcx+nr ) = bec_bgrp( :, nup+ir:nup+ir+nr-1 )
+               !bec_ortho( :, nrcx+1 : nrcx+nr ) = bec_bgrp( :, nup+ir:nup+ir+nr-1 )
+               CALL dev_memcpy(bec_ortho( :, nrcx+1:), bec_bgrp(:, nup+ir:), [1, ubound(bec_ortho)], 1 , [1, nr])
             ELSE
                do i = 1, nr
                   ibgrp_i = ibgrp_g2l( i + ir - 1 + nup )
                   IF( ibgrp_i > 0 ) THEN
-                     bec_ortho( :, i + nrcx ) = bec_bgrp( :, ibgrp_i )
+                     !bec_ortho( :, i + nrcx ) = bec_bgrp( :, ibgrp_i )
+                     CALL dev_memcpy(bec_ortho(:, i+nrcx ), bec_bgrp(:, ibgrp_i), [1, ubound(bec_ortho)])
                   END IF
                end do
             END IF

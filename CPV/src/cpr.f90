@@ -293,7 +293,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      IF( force_pairing ) THEN
           c0_bgrp(:,iupdwn(2):nbsp)       =     c0_bgrp(:,1:nupdwn(2))
           cm_bgrp(:,iupdwn(2):nbsp)       =     cm_bgrp(:,1:nupdwn(2))
-         phi(:,iupdwn(2):nbsp)       =    phi(:,1:nupdwn(2))
+         !phi(:,iupdwn(2):nbsp)       =    phi(:,1:nupdwn(2))
+          CALL dev_memcpy(phi(:,iupdwn(2):), phi, [1, ubound(phi)], 1, [1, nbsp])
       lambda(:,:, 2) = lambda(:,:, 1)
      ENDIF
      !
@@ -579,7 +580,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          IF( force_pairing ) THEN
            c0_bgrp(:,iupdwn(2):nbsp)   =     c0_bgrp(:,1:nupdwn(2))
            cm_bgrp(:,iupdwn(2):nbsp)   =     cm_bgrp(:,1:nupdwn(2))
-           phi(:,iupdwn(2):nbsp)       =    phi(:,1:nupdwn(2))
+           !phi(:,iupdwn(2):nbsp)       =    phi(:,1:nupdwn(2))
+           CALL dev_memcpy(phi(:,iupdwn(2):), phi, [1, ubound(phi)], 1, [1, nbsp])
            lambda(:,:, 2) = lambda(:,:, 1)
          ENDIF
          !
