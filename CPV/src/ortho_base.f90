@@ -945,6 +945,7 @@ CONTAINS
       USE mp,                ONLY: mp_sum, mp_bcast
       USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm
       USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nbsp, nspin,  nupdwn, iupdwn, nbspx
+      USE device_util_m,     ONLY: dev_memcpy
 !
       IMPLICIT NONE
 
@@ -1046,7 +1047,8 @@ CONTAINS
                ! broadcast the block to all processors 
                ! 
                IF( me_bgrp == root ) THEN
-                  bephi_tmp(:,:) = bephi(:, i1 : i1+nrcx-1 )
+                  CALL dev_memcpy( bephi_tmp(:,:) , bephi(:, i1 : i1+nrcx-1 ) )
+                  !bephi_tmp(:,:) = bephi(:, i1 : i1+nrcx-1 )
                END IF
                CALL mp_bcast( bephi_tmp, root, intra_bgrp_comm )
                !
