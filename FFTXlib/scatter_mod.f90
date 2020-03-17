@@ -358,9 +358,7 @@ SUBROUTINE fft_scatter_many_xy ( desc, f_in, f_aux, isgn, howmany)
      print *, "ERRORE, this should never happen!"
   end if
   !
-!$omp master
   CALL start_clock ('fft_scatt_many_xy')
-!$omp end master
   !
   ! calculate the message size
   !
@@ -569,9 +567,7 @@ SUBROUTINE fft_scatter_many_xy ( desc, f_in, f_aux, isgn, howmany)
      ENDIF
   ENDIF
 
-!$omp master
   CALL stop_clock ('fft_scatt_many_xy')
-!$omp end master
 
 #endif
 
@@ -911,9 +907,7 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
      print *, "ERRORE, this should never happen!"
   end if
   !
-!$omp master
   CALL start_clock ('fft_scatt_many_yz')
-!$omp end master
   !
   ! calculate the message size
   !
@@ -1126,9 +1120,7 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
      !
   ENDIF
 
-!$omp master
   CALL stop_clock ('fft_scatt_many_yz')
-!$omp end master
 
 #endif
 
