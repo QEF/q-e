@@ -1047,8 +1047,8 @@ CONTAINS
                ! broadcast the block to all processors 
                ! 
                IF( me_bgrp == root ) THEN
+                  !  bephi_tmp(:,:) = bephi(:, i1 : i1+nrcx-1 )
                   CALL dev_memcpy( bephi_tmp(:,:) , bephi(:, i1 : i1+nrcx-1 ) )
-                  !bephi_tmp(:,:) = bephi(:, i1 : i1+nrcx-1 )
                END IF
                CALL mp_bcast( bephi_tmp, root, intra_bgrp_comm )
                !
@@ -1092,7 +1092,14 @@ CONTAINS
                IF( idesc( LAX_DESC_MYR, iss ) == ipr - 1 .AND. &
                    idesc( LAX_DESC_MYC, iss ) == ipc - 1 .AND. &
                    idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
-                  xd = x0(:,:,iss) * ccc
+                   ! xd = x0(:,:,iss) * ccc
+                   CALL dev_memcpy( xd(:,:) , x0(:, :, iss ) )
+!$cuf kernel do(2) <<<*,*>>>
+                   DO j = 1, SIZE( xd, 2 )
+                      DO i = 1, SIZE( xd, 1 )
+                         xd(i,j) = ccc * xd(i,j)
+                      END DO
+                   END DO
                END IF
    
                CALL mp_bcast( xd, root, intra_bgrp_comm )
