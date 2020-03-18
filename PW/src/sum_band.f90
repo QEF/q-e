@@ -71,7 +71,9 @@ SUBROUTINE sum_band()
   !
   ! ... calculates weights of Kohn-Sham orbitals used in calculation of rho
   !
+  CALL start_clock( 'sum_band:weights' )
   CALL weights ( )
+  CALL stop_clock( 'sum_band:weights' )
   !
   IF (one_atom_occupations) CALL new_evc()
   !
@@ -114,6 +116,7 @@ SUBROUTINE sum_band()
   !
   eband         = 0.D0
   !
+  CALL start_clock( 'sum_band:loop' )
   IF ( gamma_only ) THEN
      !
      CALL sum_band_gamma()
@@ -123,6 +126,7 @@ SUBROUTINE sum_band()
      CALL sum_band_k()
      !
   END IF
+  CALL stop_clock( 'sum_band:loop' )
   CALL mp_sum( eband, inter_pool_comm )
   CALL mp_sum( eband, inter_bgrp_comm )
   !
@@ -174,6 +178,7 @@ SUBROUTINE sum_band()
   !
   ! ... symmetrize rho(G) 
   !
+  CALL start_clock( 'sum_band:sym_rho' )
   CALL sym_rho ( nspin_mag, rho%of_g )
   !
   ! ... synchronize rho%of_r to the calculated rho%of_g (use psic as work array)
@@ -211,6 +216,7 @@ SUBROUTINE sum_band()
      END DO
      !
   END IF
+  CALL stop_clock( 'sum_band:sym_rho' )
   !
   ! ... if LSDA rho%of_r and rho%of_g are converted from (up,dw) to
   ! ... (up+dw,up-dw) format.
@@ -274,11 +280,15 @@ SUBROUTINE sum_band()
           !
           npw = ngk(ik)
           !
+          CALL start_clock( 'sum_band:buffer' )
           IF ( nks > 1 ) &
              CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+          CALL stop_clock( 'sum_band:buffer' )
           !
+          CALL start_clock( 'sum_band:init_us_2' )
           IF ( nkb > 0 ) &
              CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
+          CALL stop_clock( 'sum_band:init_us_2' )
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
           !
@@ -528,11 +538,15 @@ SUBROUTINE sum_band()
           IF ( lsda ) current_spin = isk(ik)
           npw = ngk (ik)
           !
+          CALL start_clock( 'sum_band:buffer' )
           IF ( nks > 1 ) &
              CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+          CALL stop_clock( 'sum_band:buffer' )
           !
+          CALL start_clock( 'sum_band:init_us_2' )
           IF ( nkb > 0 ) &
              CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
+          CALL stop_clock( 'sum_band:init_us_2' )
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
           !
@@ -893,6 +907,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   INTEGER :: npw, ikb, jkb, ih, jh, ijh, na, np, is, js
   ! counters on beta functions, atoms, atom types, spin
   !
+  CALL start_clock( 'sum_band:calbec' )
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN
      ! calbec computes becp = <vkb_i|psi_j>
@@ -914,6 +929,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
        call mp_sum(becp%k,inter_bgrp_comm)
      endif
   ENDIF
+  CALL stop_clock( 'sum_band:calbec' )
   !
   ! In the EXX case with ultrasoft or PAW, a copy of becp will be
   ! saved in a global variable to be rotated later
