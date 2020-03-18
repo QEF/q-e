@@ -409,6 +409,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE esm,                  ONLY : do_comp_esm, esm_printpot, esm_ewald
   USE fcp_variables,        ONLY : lfcpopt, lfcpdyn
   USE wrappers,             ONLY : memstat
+  USE iso_c_binding,        ONLY : c_int
   !
   USE plugin_variables,     ONLY : plugin_etot
   !

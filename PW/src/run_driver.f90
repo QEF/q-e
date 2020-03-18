@@ -27,6 +27,8 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   USE extrapolation,    ONLY : update_file, update_pot
   USE io_files,         ONLY : iunupdate, nd_nmbr, prefix, restart_dir, &
                                wfc_dir, delete_if_present, seqopn
+  USE input_parameters,     ONLY : ensemble_energies, print_ensemble_energies
+  USE beef,                 ONLY : beef_energies, beef_print, beefxc, energies
   !
   IMPLICIT NONE
   INTEGER, INTENT(OUT) :: exit_status
@@ -110,6 +112,7 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
         isinit=.true.
         !
      CASE( "POSDATA" )
+        ensemble_energies = .FALSE. 
         CALL driver_posdata()
         hasdata=.true.
         !
@@ -120,6 +123,18 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
         !
         isinit = .false.
         hasdata=.false.
+        !
+     CASE( "GENENSEMBLE" )
+        !
+        ensemble_energies = .TRUE. 
+        CALL driver_posdata( )
+        hasdata=.true.
+        !
+     CASE( "GETENSEMBLE" )
+        !
+        CALL driver_getforce( )
+        hasdata=.false.
+        isinit=.false.
         !
      CASE DEFAULT
         exit_status = 130
@@ -246,6 +261,9 @@ CONTAINS
     ! ... Compute everything
     !
     CALL electrons()
+    IF ( ensemble_energies ) THEN
+       CALL beef_energies(print_ensemble_energies)
+    ENDIF
     IF ( .NOT. conv_elec ) THEN
        CALL punch( 'all' )
        CALL stop_run( conv_elec )
@@ -271,6 +289,14 @@ CONTAINS
   SUBROUTINE driver_getforce()
     !
     ! ... communicates energy info back to i-pi
+    !
+    !
+    IF ( ensemble_energies ) THEN
+       IF ( ionode ) WRITE(*,*) " @ DRIVE MODE: Returning Ensemble Energies  "
+       IF ( ionode ) CALL writebuffer( socket, "ENSEMBREADY ", MSGLEN)
+       IF ( ionode ) CALL writebuffer( socket, energies, 2000)
+       IF ( ionode ) CALL writebuffer( socket, beefxc, 32)
+    ENDIF
     !
     IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Returning v,forces,stress "
     IF ( ionode ) CALL writebuffer( socket, "FORCEREADY  ", MSGLEN)         

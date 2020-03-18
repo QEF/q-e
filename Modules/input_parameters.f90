@@ -394,6 +394,13 @@ MODULE input_parameters
         REAL(DP) :: starting_magnetization( nsx ) = 0.0_DP
           ! ONLY PW
 
+        LOGICAL :: ensemble_energies = .false.
+          ! if .true. and input dft set to a BEE functional,
+          ! calculate ensemble energies as input for bayesian error estimates
+        LOGICAL :: print_ensemble_energies = .true.
+          ! if .true. print 2000 ensemble energies and basis
+          ! if .false. only print basis
+
         LOGICAL :: lda_plus_u = .false.
           ! Use DFT+U method - following are the needed parameters
         INTEGER :: lda_plus_u_kind = 0
@@ -617,6 +624,7 @@ MODULE input_parameters
              ntyp, nbnd, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s,         &
              nr3s, nr1b, nr2b, nr3b, nosym, nosym_evc, noinv, use_all_frac,   &
              force_symmorphic, starting_charge, starting_magnetization,       &
+             ensemble_energies, print_ensemble_energies,                      &
              occupations, degauss, nspin, ecfixed,                            &
              qcutz, q2sigma, lda_plus_U, lda_plus_u_kind,                     &
              Hubbard_U, Hubbard_J, Hubbard_alpha,                             &
@@ -624,7 +632,7 @@ MODULE input_parameters
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
              U_projection_type, input_dft, la2F, assume_isolated,             &
              nqx1, nqx2, nqx3, ecutfock, localization_thr, scdm, ace,         &
-             scdmden, scdmgrd, nscdm, n_proj,                                        &
+             scdmden, scdmgrd, nscdm, n_proj,                                 &
              exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
              exx_fraction, screening_parameter, ref_alat,                     &
              noncolin, lspinorb, starting_spin_angle, lambda, angle1, angle2, &
