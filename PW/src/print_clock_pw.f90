@@ -79,39 +79,96 @@ SUBROUTINE print_clock_pw()
    WRITE( stdout, '(/5x,"Called by c_bands:")' )
    CALL print_clock( 'init_us_2' )
    IF ( isolve == 0 ) THEN
-      IF ( gamma_only ) THEN
-         CALL print_clock( 'regterg' )
-      ELSE
-         CALL print_clock( 'cegterg' )
-      ENDIF
+      CALL print_clock( 'regterg' )    ; CALL print_clock( 'cegterg' )
    ELSE  IF (isolve == 1) THEN
-      IF ( gamma_only ) THEN
-         CALL print_clock( 'rcgdiagg' )
-      ELSE
-         CALL print_clock( 'ccgdiagg' )
-      ENDIF
+      CALL print_clock( 'rcgdiagg' )   ; CALL print_clock( 'ccgdiagg' )
       CALL print_clock( 'wfcrot' )
    ELSE  IF (isolve == 2) THEN
-      IF ( gamma_only ) THEN
-         CALL print_clock( 'ppcg_gamma' )
-      ELSE
-         CALL print_clock( 'ppcg_k' )
-      ENDIF
+      CALL print_clock( 'ppcg_gamma' ) ; CALL print_clock( 'ppcg_k' )
       CALL print_clock( 'wfcrot' )
+   ELSE  IF (isolve == 3) THEN
+      CALL print_clock( 'paro_gamma' ) ; CALL print_clock( 'paro_k' )
    ENDIF
    !
    !IF ( iverbosity > 0)  THEN
       WRITE( stdout, '(/5x,"Called by sum_band:")' )
+      CALL print_clock( 'sum_band:weights' )
+      CALL print_clock( 'sum_band:loop' )
+      CALL print_clock( 'sum_band:buffer' )
+      CALL print_clock( 'sum_band:init_us_2' )
+      CALL print_clock( 'sum_band:calbec' )
       CALL print_clock( 'sum_band:becsum' )
       CALL print_clock( 'addusdens' )
    !ENDIF
    !
    IF ( isolve == 0 ) THEN
       WRITE( stdout, '(/5x,"Called by *egterg:")' )
+      IF ( gamma_only ) THEN
+         CALL print_clock( 'rdiaghg' )
+         IF ( iverbosity > 0 )  THEN
+            CALL print_clock( 'regterg:overlap' )
+            CALL print_clock( 'regterg:update' )
+            CALL print_clock( 'regterg:last' )
+            CALL print_clock( 'rdiaghg:choldc' )
+            CALL print_clock( 'rdiaghg:inversion' )
+            CALL print_clock( 'rdiaghg:paragemm' )
+         ENDIF
+      ELSE
+         CALL print_clock( 'cdiaghg' )
+         IF ( iverbosity > 0 )  THEN
+            CALL print_clock( 'cegterg:overlap' )
+            CALL print_clock( 'cegterg:update' )
+            CALL print_clock( 'cegterg:last' )
+            CALL print_clock( 'cdiaghg:choldc' )
+            CALL print_clock( 'cdiaghg:inversion' )
+            CALL print_clock( 'cdiaghg:paragemm' )
+         END IF
+      END IF
    ELSE IF ( isolve == 1 ) THEN
       WRITE( stdout, '(/5x,"Called by *cgdiagg:")' )
    ELSE IF ( isolve == 2 ) THEN
       WRITE( stdout, '(/5x,"Called by ppcg_*:")' )
+!      IF ( iverbosity > 0 )  THEN
+         CALL print_clock( 'ppcg:zgemm' ) ; CALL print_clock( 'ppcg:dgemm' )
+         CALL print_clock( 'ppcg:hpsi' )
+         CALL print_clock( 'ppcg:cholQR' )
+         CALL print_clock( 'ppcg:RR' )
+         CALL print_clock( 'ppcg:ZTRSM' ) ; CALL print_clock( 'ppcg:DTRSM' )
+         CALL print_clock( 'ppcg:lock' )
+!      END IF
+   ELSE IF ( isolve == 3 ) THEN
+      WRITE( stdout, '(/5x,"Called by paro_*:")' )
+!      IF ( iverbosity > 0 )  THEN
+         CALL print_clock( 'paro:init' )
+         CALL print_clock( 'paro:pack' )
+         CALL print_clock( 'paro:zero' )
+         CALL print_clock( 'paro:mp_bar' )
+         CALL print_clock( 'paro:mp_sum' )
+         CALL print_clock( 'pcg' )
+         CALL print_clock( 'pcg:hs_1psi' )
+         CALL print_clock( 'pcg:ortho' )
+         CALL print_clock( 'pcg:move' )
+
+         CALL print_clock( 'rotHSw' )
+         CALL print_clock( 'rotHSw:move' )
+         CALL print_clock( 'rotHSw:hc' )
+         CALL print_clock( 'rotHSw:diag' )
+         CALL print_clock( 'rotHSw:evc' )
+         CALL print_clock( 'rotHSw:hc:b0' ) ; 
+         CALL print_clock( 'rotHSw:hc:s1' ) ; call print_clock('rotHSw:hc:comp')
+         CALL print_clock( 'rotHSw:hc:b1' ) ; 
+         CALL print_clock( 'rotHSw:hc:s2' ) ; 
+         CALL print_clock( 'rotHSw:hc:s3' ) ; call print_clock('rotHSw:hc:rs')
+         CALL print_clock( 'rotHSw:hc:b2' ) ; call print_clock('rotHSw:hc:sy')
+         CALL print_clock( 'rotHSw:hc:s4' ) ; CALL print_clock('rotHSw:hc:b3' ) 
+         CALL print_clock( 'rotHSw:ev:b0' ) ; 
+         CALL print_clock( 'rotHSw:ev:b3' ) ; call print_clock('rotHSw:ev:bc')
+         CALL print_clock( 'rotHSw:ev:s5' ) ; 
+         CALL print_clock( 'rotHSw:ev:b4' ) ; call print_clock('rotHSw:ev:comp')
+         CALL print_clock( 'rotHSw:ev:s6' ) ;
+         CALL print_clock( 'rotHSw:ev:b5' ) ; call print_clock('rotHSw:ev:sum')
+         CALL print_clock( 'rotHSw:ev:s7' ) ; CALL print_clock('rotHSw:ev:b6' ) 
+!      END IF
    END IF
    !
    CALL print_clock( 'h_psi' )
@@ -130,37 +187,6 @@ SUBROUTINE print_clock_pw()
     CALL print_clock ( 'fwfft_orbital' )
     CALL print_clock ( 'v_loc_psir' )
    ENDIF
-   IF ( gamma_only ) THEN
-      CALL print_clock( 'rdiaghg' )
-      IF ( iverbosity > 0 )  THEN
-         CALL print_clock( 'regterg:overlap' )
-         CALL print_clock( 'regterg:update' )
-         CALL print_clock( 'regterg:last' )
-         CALL print_clock( 'rdiaghg:choldc' )
-         CALL print_clock( 'rdiaghg:inversion' )
-         CALL print_clock( 'rdiaghg:paragemm' )
-      ENDIF
-   ELSE
-      CALL print_clock( 'cdiaghg' )
-      IF ( iverbosity > 0 )  THEN
-         CALL print_clock( 'cegterg:overlap' )
-         CALL print_clock( 'cegterg:update' )
-         CALL print_clock( 'cegterg:last' )
-         CALL print_clock( 'cdiaghg:choldc' )
-         CALL print_clock( 'cdiaghg:inversion' )
-         CALL print_clock( 'cdiaghg:paragemm' )
-      END IF
-   END IF
-   IF ( isolve == 2 ) THEN
-!      IF ( iverbosity > 0 )  THEN
-         CALL print_clock( 'ppcg:zgemm' ) ; CALL print_clock( 'ppcg:dgemm' )
-         CALL print_clock( 'ppcg:hpsi' )
-         CALL print_clock( 'ppcg:cholQR' )
-         CALL print_clock( 'ppcg:RR' )
-         CALL print_clock( 'ppcg:ZTRSM' ) ; CALL print_clock( 'ppcg:DTRSM' )
-         CALL print_clock( 'ppcg:lock' )
-!      END IF
-   END IF
    !
    WRITE( stdout, '(/5x,"Called by h_psi:")' )
    CALL print_clock( 'h_psi:calbec' )
