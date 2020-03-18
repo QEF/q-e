@@ -3,6 +3,16 @@ MODULE beef
   !
   ! BEEF-vdW Module
   !
+  ! by Gabriel S. Gusmao :: gusmaogabriels@gmail.com
+  ! Medford Groups @ ChBE, Georgia Institute of Technology
+  !
+  ! adapted from 
+  ! 
+  ! Johannes Voss
+  !  - https://github.com/vossjo/q-e 
+  !  - https://stanford.edu/~vossj/slac/
+  !
+  !
   USE kinds
   !
   PRIVATE
@@ -47,8 +57,7 @@ SUBROUTINE beef_energies(iprint)
   if (.not. allocated(beefxc)) allocate(beefxc(32))
   if (.not. allocated(energies)) allocate(energies(2000))
 
-  !if(calc) then
-     !CALL change_data_structure(.true.) MY ATTEMPT TO FIX IT
+#ifdef use_beef
   if (.not. dft_is_meta()) then
      do i=1,30
         !calculate exchange contributions in Legendre polynomial
@@ -102,6 +111,10 @@ SUBROUTINE beef_energies(iprint)
   if (iprint .AND. ionode) then
      call beef_print( )
   endif
+#else
+       CALL errore('set_dft_from_name', &
+    &    'BEEF xc functional support not compiled in', 1)
+#endif
 
 END SUBROUTINE beef_energies
 
