@@ -125,6 +125,10 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
         hasdata=.false.
         !
      CASE( "GENENSEMBLE" )
+        ! Energy ensemble ipi links
+        !
+        ! by Gabriel S. Gusmao :: gusmaogabriels@gmail.com
+        ! Medford Groups @ ChBE, Georgia Institute of Technology
         !
         ensemble_energies = .TRUE. 
         CALL driver_posdata( )
