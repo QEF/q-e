@@ -481,6 +481,7 @@ END MODULE ortho_module
       USE orthogonalize_base, ONLY: bec_bgrp2ortho
       USE mp,                 ONLY : mp_sum
       USE ortho_module
+      USE device_util_m
       !
       IMPLICIT NONE
       !
@@ -569,7 +570,10 @@ END MODULE ortho_module
          !
       END DO
 
-      IF( force_pairing ) cp_bgrp(:, iupdwn(2):iupdwn(2)+nupdwn(2)-1 ) = cp_bgrp(:,1:nupdwn(2))
+      IF( force_pairing ) THEN
+         !cp_bgrp(:, iupdwn(2):iupdwn(2)+nupdwn(2)-1 ) = cp_bgrp(:,1:nupdwn(2))
+         CALL dev_memcpy(cp_bgrp(:,iupdwn(2):), cp_bgrp(:,1:),  [1, ngw], 1 , [1, nupdwn(2)], 1) 
+      END IF
       !
       DEALLOCATE( qbecp )
       DEALLOCATE( qbephi )

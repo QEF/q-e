@@ -270,8 +270,10 @@ SUBROUTINE from_scratch( )
       CALL calphi_bgrp( cm_bgrp, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
 #endif
       !
-      IF( force_pairing ) &
-         &   phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) =    phi( :, 1:nupdwn(2))
+      IF( force_pairing ) THEN
+         !   phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) =    phi( :, 1:nupdwn(2))
+         CALL dev_memcpy(phi(:,iupdwn(2):), phi(:,1:),  [1, ngw], 1 , [1, nupdwn(2)], 1)
+      END IF
       !
       if( tortho ) then
 #if defined (__CUDA)
@@ -306,7 +308,8 @@ SUBROUTINE from_scratch( )
       IF( force_pairing ) THEN
          !
          c0_bgrp ( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) = c0_bgrp( :, 1:nupdwn(2))
-         phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) = phi( :, 1:nupdwn(2))
+         CALL dev_memcpy(phi(:,iupdwn(2):), phi(:,1:),  [1, ngw], 1 , [1, nupdwn(2)], 1)
+         !phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) = phi( :, 1:nupdwn(2))
          lambda(:,:,2) = lambda(:,:,1)
          !
       ENDIF
