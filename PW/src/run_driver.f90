@@ -300,10 +300,11 @@ CONTAINS
        IF ( ionode ) CALL writebuffer( socket, "ENSEMBREADY ", MSGLEN)
        IF ( ionode ) CALL writebuffer( socket, energies, 2000)
        IF ( ionode ) CALL writebuffer( socket, beefxc, 32)
+    ELSE
+       IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Returning v,forces,stress "
+       IF ( ionode ) CALL writebuffer( socket, "FORCEREADY  ", MSGLEN)         
     ENDIF
     !
-    IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Returning v,forces,stress "
-    IF ( ionode ) CALL writebuffer( socket, "FORCEREADY  ", MSGLEN)         
     IF ( ionode ) CALL writebuffer( socket, pot)
     IF ( ionode ) CALL writebuffer( socket, nat)
     IF ( ionode ) CALL writebuffer( socket, combuf, 3 * nat)
