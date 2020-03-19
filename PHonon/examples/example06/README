@@ -10,3 +10,5 @@ The calculation proceeds as follows:
    output=pt.ph.out).
 
 3) make a phonon calculation at X (input=pt.phX.in, output=pt.phX.out).
+
+4) make a phonon dispersion calculation (input=pt.ph.in, output=pt.ph.out).
