@@ -241,7 +241,7 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
 !$omp parallel default(none)                                        &
 !$omp          private(i, j)                                        &
 !$omp          shared(howmany, f, nnr_, nsticks_z, n3, nx3, isgn)   &
-!$omp&         shared(nsticks_zx, aux)
+!$omp          shared(nsticks_zx, dfft)
         !
 !$omp do
         DO i = 0, howmany-1
@@ -263,7 +263,7 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
 !$omp parallel default(none)                                        &
 !$omp          private(i)                                           &
 !$omp          shared(howmany, f, nnr_, isgn, nsticks_y, n2, nx2)   &
-!$omp&         shared(nsticks_yx, aux)
+!$omp          shared(nsticks_yx, dfft)
 !$omp do
         DO i = 0, howmany-1
            CALL cft_1z( aux(i*nnr_+1:), nsticks_y, n2, nx2, isgn, f(nx2*nsticks_yx*i+1:) )
@@ -276,7 +276,7 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
 !$omp parallel default(none)                                        &
 !$omp          private(i, j)                                        &
 !$omp          shared(howmany, f, nnr_, isgn, nsticks_x, n1, nx1)   &
-!$omp&         shared(aux)
+!$omp          shared(dfft)
 !$omp do
         DO i = 0, howmany-1
            CALL cft_1z( aux(i*nnr_+1:), nsticks_x, n1, nx1, isgn, f(i*nnr_+1:) )
@@ -296,7 +296,7 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
      ELSE                  ! R -> G
 !$omp parallel default(none)                                        &
 !$omp          private(i)                                           &
-!$omp          shared(howmany, f, isgn, nnr_, nsticks_x, n1, nx1, aux)
+!$omp          shared(howmany, f, isgn, nnr_, nsticks_x, n1, nx1, dfft)
         !
 !$omp do
         DO i = 0, howmany-1
@@ -310,7 +310,7 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
 !$omp parallel default(none)                                        &
 !$omp          private(i)                                           &
 !$omp          shared(howmany, f, isgn, nsticks_y, n2, nx2, nnr_)   &
-!$omp&         shared(nsticks_yx, aux)
+!$omp          shared(nsticks_yx, dfft)
 !$omp do
         DO i = 0, howmany-1
            CALL cft_1z( f(nx2*nsticks_yx*i+1:), nsticks_y, n2, nx2, isgn, aux(i*nnr_+1:))
@@ -323,7 +323,7 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
 !$omp parallel default(none)                                        &
 !$omp          private(i, j)                                        &
 !$omp          shared(howmany, f, nnr_, nsticks_z, n3, nx3, isgn)   &
-!$omp&         shared(nsticks_zx, aux)
+!$omp          shared(nsticks_zx, dfft)
 !$omp do
         DO i = 0, howmany-1
            CALL cft_1z( f(nx3*nsticks_zx*i+1:), nsticks_z, n3, nx3, isgn, aux(i*nnr_+1:) )
