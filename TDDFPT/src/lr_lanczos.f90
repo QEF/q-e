@@ -76,11 +76,17 @@ SUBROUTINE one_lanczos_step()
     !
     REAL(kind=dp) :: alpha, beta, gamma
     COMPLEX(kind=dp) :: alphac, gammac
-    COMPLEX(kind=dp) :: zeta(n_ipol)
+    COMPLEX(kind=dp) ,allocatable :: zeta(:)
     INTEGER(kind=c_int) :: kilobytes
     !
     IF (lr_verbosity > 5) THEN
        WRITE(stdout,'("<lr_lanczos_one_step>")')
+    ENDIF
+    !
+    IF (magnons) THEN 
+       ALLOCATE (zeta(n_op))
+    ELSE 
+       ALLOCATE (zeta(n_ipol))
     ENDIF
     !
     ! Memory usage
@@ -122,6 +128,7 @@ SUBROUTINE one_lanczos_step()
        !
        CALL lr_apply_liouvillian_magnons(evc1_rgt(:,:,:,:), evc1_rgt_new(:,:,:,:),.false.)
        ! 
+       IF (.not. pseudo_hermitian) &
        CALL lr_apply_liouvillian_magnons(evc1_lft(:,:,:,:), evc1_lft_new(:,:,:,:),.true.)
        !
     ELSE
@@ -173,18 +180,16 @@ SUBROUTINE one_lanczos_step()
     ! call general lanczos iteration routines
     ! O. Baseggio (2019)
     !
-    IF (magnons) THEN
-       ! 
-       call lanczos_nonhermitian_c(LR_iteration,size(evc1_rgt,1), size(evc1_rgt,2), size(evc1_rgt,3),&
-                                  &evc1_rgt, evc1_rgt_new, evc1_rgt_old, evc1_lft, evc1_lft_new, &
-                                  &evc1_lft_old, n_op, O_psi, alphac, beta, gammac, zeta)
-       !
-    ELSEIF (pseudo_hermitian) THEN
+    IF (pseudo_hermitian) THEN
        IF (eels) THEN
           CALL lanczos_pseudohermitian(LR_iteration,size(evc1,1), size(evc1,2), size(evc1,3),&
                                       &evc1(:,:,:,1), evc1_new(:,:,:,1), sevc1_new(:,:,:), &
                                       &evc1_old(:,:,:,1), n_ipol, d0psi2, alpha, beta, &
                                       &gamma, zeta)
+       ELSEIF (magnons) THEN
+          call lanczos_pseudohermitian_c(LR_iteration,size(evc1_rgt,1), size(evc1_rgt,2), &
+                                        &size(evc1_rgt,3), evc1_rgt, evc1_rgt_new, evc1_rgt_old, &
+                                        &n_op, O_psi, alphac, beta, gammac, zeta)          
        ELSE
           CALL lanczos_pseudohermitian(LR_iteration,size(evc1,1), size(evc1,2), size(evc1,3),&
                                       &evc1(:,:,:,1), evc1_new(:,:,:,1), sevc1_new(:,:,:), &
@@ -197,6 +202,11 @@ SUBROUTINE one_lanczos_step()
                                    &evc1(:,:,:,:), evc1_new(:,:,:,:), sevc1(:,:,:), &
                                    &evc1_old(:,:,:,1), n_ipol, d0psi2, alpha, beta, &
                                    &gamma, zeta)
+       ELSEIF (magnons) THEN
+          call lanczos_nonhermitian_c(LR_iteration,size(evc1_rgt,1), size(evc1_rgt,2), & 
+                                     &size(evc1_rgt,3), evc1_rgt, evc1_rgt_new, evc1_rgt_old, & 
+                                     &evc1_lft, evc1_lft_new, evc1_lft_old, n_op, O_psi, alphac, &
+                                     &beta, gammac, zeta)
        ELSE
           CALL lanczos_nonhermitian(LR_iteration,size(evc1,1), size(evc1,2), size(evc1,3),&
                                    &evc1(:,:,:,1), evc1_new(:,:,:,1), sevc1(:,:,:), &
@@ -315,6 +325,8 @@ SUBROUTINE one_lanczos_step()
            WRITE (stdout,'(5x,"Weight for this step=",2(e12.5,1x))') w_T(LR_iteration)
        ENDIF
     ENDIF
+    !
+    DEALLOCATE(zeta)
     !
     CALL stop_clock('one_step')
     !
