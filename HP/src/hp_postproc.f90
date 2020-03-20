@@ -61,7 +61,7 @@ SUBROUTINE hp_postproc
                          eps3 = 1.d-4    ! the same threshold for the comparison of distances
                                          ! as in PW/src/inter_V.f90 DFT+U+V
   !
-  CHARACTER(len=50) :: filenameU
+  CHARACTER(len=256) :: filenameU
   INTEGER, EXTERNAL :: find_free_unit
   !
   CALL start_clock('hp_calc_U')
