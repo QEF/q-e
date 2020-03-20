@@ -56,7 +56,7 @@ inputs_args = ('c.scf.in', '1'), ('c.phG.in', '2'), ('ni.scf.in', '1'), ('ni.phX
 
 [ph_metal/]
 program = PH
-inputs_args = ('al.scf.fit.in', '1'), ('al.scf.in', '1'), ('al.elph.in', '2'), ('q2r.in', '3'), ('matdyn.in.freq', '4'), ('matdyn.in.dos', '4'), ('lambda.in', '5')
+inputs_args = ('al.scf.fit.in', '1'), ('al.scf.in', '1'), ('al.elph.in', '2'), ('al.elph.notrans.in', '2'), ('q2r.in', '3'), ('matdyn.in.freq', '4'), ('matdyn.in.dos', '4'), ('lambda.in', '5')
 
 [ph_U_metal_us/]
 program = PH
