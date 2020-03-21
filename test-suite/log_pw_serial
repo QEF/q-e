@@ -1,0 +1,6 @@
+env QE_USE_MPI=0 /home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/..//test-suite/testcode/bin/testcode.py --verbose --category=pw_all
+Using executable: /home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/..//test-suite/run-pw.sh.
+Test id: 200320-7.
+Benchmark: git.
+
+All done. 189 out of 189 tests passed.

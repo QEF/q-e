@@ -1,0 +1,61 @@
+env QE_USE_MPI=1 /home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/..//test-suite/testcode/bin/testcode.py --verbose --category=pw_all
+Using executable: /home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/..//test-suite/run-pw.sh.
+Test id: 200320-1.
+Benchmark: git.
+
+
+pw_b3lyp - b3lyp-h2o.in: **FAILED**.
+
+pw_b3lyp - x3lyp-h2o.in: **FAILED**.
+
+pw_berry - berry-1.in: **FAILED**.
+
+pw_berry - berry-2.in: **FAILED**.
+
+pw_electric - electric1.in: **FAILED**.
+
+pw_electric - electric2.in: **FAILED**.
+
+pw_gau-pbe - gau-pbe-si111.in: **FAILED**.
+
+pw_gau-pbe - gau-pbe-si222.in: **FAILED**.
+
+pw_gau-pbe - gau-pbe-si444.in: **FAILED**.
+
+pw_hse - hse-si111.in: **FAILED**.
+
+pw_hse - hse-si222.in: **FAILED**.
+
+pw_hse - hse-si444.in: **FAILED**.
+
+pw_metaGGA - metaGGA-spin.in: **FAILED**.
+
+pw_noncolin - noncolin-constrain_total.in: **FAILED**.
+
+pw_noncolin - noncolin-pbe.in: **FAILED**.
+
+pw_pbe - pbe0-si111.in: **FAILED**.
+
+pw_pbe - pbe0-si222.in: **FAILED**.
+
+pw_pbe - pbe0-si444.in: **FAILED**.
+
+pw_plugins - plugin-pw2casino_1.in (arg(s): 1): **FAILED**.
+
+pw_plugins - plugin-pw2casino_2.in (arg(s): 1): **FAILED**.
+
+pw_uspp - uspp-hyb-g.in: **FAILED**.
+
+All done. ERROR: only 168 out of 189 tests passed.
+Failed tests in:
+	/home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/pw_atom/
+	/home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/pw_b3lyp/
+	/home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/pw_berry/
+	/home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/pw_electric/
+	/home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/pw_gau-pbe/
+	/home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/pw_hse/
+	/home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/pw_metaGGA/
+	/home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/pw_noncolin/
+	/home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/pw_pbe/
+	/home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/pw_plugins/
+	/home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/pw_uspp/
