@@ -76,8 +76,6 @@ SUBROUTINE sum_band()
   CALL weights ( )
   CALL stop_clock( 'sum_band:weights' )
   !
-  IF (one_atom_occupations) CALL new_evc()
-  !
   ! ... btype, used in diagonalization, is set here: a band is considered empty
   ! ... and computed with low accuracy only when its occupation is < 0.01, and
   ! ... only if option diago_full_acc is false; otherwise, use full accuracy
