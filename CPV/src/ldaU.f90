@@ -99,7 +99,7 @@
       end subroutine ldaU_init
 !
 !-----------------------------------------------------------------------
-      subroutine new_ns( c, eigr, betae, hpsi, forceh )
+      subroutine new_ns( c, eigr, beigr, betae, hpsi, forceh )
 !-----------------------------------------------------------------------
 !
 ! This routine computes the on site occupation numbers of the Hubbard ions.
@@ -122,7 +122,7 @@
       USE cp_interfaces,      only: nlsm1, nlsm2_bgrp
 !
       implicit none
-      complex(DP), intent(in) :: c(ngw,nx), eigr(ngw,nat), betae(ngw,nkb)
+      complex(DP), intent(in) :: c(ngw,nx), eigr(ngw,nat), beigr(ngw,nkb), betae(ngw,nkb)
       complex(DP), intent(out) :: hpsi(ngw,nx)
       real(DP), INTENT(OUT) :: forceh(3,nat)
 !
@@ -160,7 +160,7 @@
       !
       ! calculate proj = <wfcU|S|c>
       !
-      CALL projwfc_hub( c, nx, eigr, betae, n, nwfcU, &
+      CALL projwfc_hub( c, nx, eigr, beigr, betae, n, nwfcU, &
      &                  offset, Hubbard_l, wfcU, becwfc, swfc, proj )
       !
       ns(:,:,:,:) = 0.d0
@@ -243,7 +243,7 @@
         allocate(dns(ldmx,ldmx,nspin,nat))
         allocate (spsi(ngw,n))
 !
-        call nlsm1 ( n, 1, nsp, eigr, c, bp )
+        call nlsm1 ( n, beigr, c, bp )
         call s_wfc ( n, bp, betae, c, spsi )
         call nlsm2_bgrp( ngw, nkb, eigr, c, dbp, nx, n )
         call nlsm2_bgrp( ngw, nkb, eigr, wfcU, wdb, nwfcU, nwfcU )
@@ -605,7 +605,7 @@
       end subroutine dprojdtau
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE projwfc_hub( c, nx, eigr, betae, n, nwfcU,  &
+      SUBROUTINE projwfc_hub( c, nx, eigr, beigr, betae, n, nwfcU,  &
      &                        offset, Hubbard_l, wfcU, becwfc, swfc, proj )
 !-----------------------------------------------------------------------
       !
@@ -625,7 +625,7 @@
       IMPLICIT NONE
       INTEGER,     INTENT(IN) :: nx, n, nwfcU, offset(nat), &
                                  Hubbard_l(nsp)
-      COMPLEX(DP), INTENT(IN) :: c( ngw, nx ), eigr(ngw,nat), betae(ngw,nkb)
+      COMPLEX(DP), INTENT(IN) :: c( ngw, nx ), eigr(ngw,nat), beigr(ngw,nkb), betae(ngw,nkb)
 !
       COMPLEX(DP), INTENT(OUT):: wfcU(ngw, nwfcU),    &
      &                           swfc(ngw, nwfcU)
@@ -641,7 +641,7 @@
       !
       ! calculate bec = <beta|wfc>
       !
-      CALL nlsm1( nwfcU, 1, nsp, eigr, wfcU, becwfc )
+      CALL nlsm1( nwfcU, beigr, wfcU, becwfc )
       !
       ! calculate swfc = S|wfc>
       !

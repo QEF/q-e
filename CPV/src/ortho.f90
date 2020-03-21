@@ -449,11 +449,34 @@ CONTAINS
       END IF
    END SUBROUTINE compute_qs_times_betas
 
+   SUBROUTINE keep_only_us(wrk)
+      USE uspp,           ONLY: indv_ijkb0
+      USE uspp_param,     ONLY: nh, upf
+      USE ions_base,      ONLY: na, nat, nsp, ityp
+#if defined (__CUDA)
+      USE cublas
+#endif
+      IMPLICIT NONE
+      COMPLEX(DP) DEVICEATTR, INTENT(OUT) :: wrk(:,:)
+      INTEGER :: ia, is, inl, nhs, iv
+      DO ia = 1, nat
+         is  = ityp(ia)
+         inl = indv_ijkb0(ia)
+         nhs = nh(is)
+         IF( .NOT. upf(is)%tvanp ) THEN
+!$cuf kernel do (1)
+            DO iv = 1, nhs
+               wrk(:,iv+inl) = 0.0d0
+            END DO
+         END IF
+      END DO
+   END SUBROUTINE
+
 END MODULE ortho_module
 
 
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE ortho_x( eigr, cp_bgrp, phi_bgrp, x0, idesc, diff, iter, ccc, bephi, becp_bgrp )
+   SUBROUTINE ortho_x( beigr, cp_bgrp, phi_bgrp, x0, idesc, diff, iter, ccc, bephi, becp_bgrp )
 !=----------------------------------------------------------------------------=!
       !
       !     input = cp (non-orthonormal), beta
@@ -475,7 +498,7 @@ END MODULE ortho_module
       USE control_flags,  ONLY: iprint, iverbosity, ortho_max
       USE control_flags,  ONLY: force_pairing
       USE io_global,      ONLY: stdout, ionode
-      USE cp_interfaces,  ONLY: c_bgrp_expand, c_bgrp_pack, nlsm1, collect_bec, beta_eigr, nlsm1us
+      USE cp_interfaces,  ONLY: c_bgrp_expand, c_bgrp_pack, nlsm1, collect_bec, nlsm1us
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, inter_bgrp_comm! DEBUG
       USE mp_world,           ONLY: mpime
       USE orthogonalize_base, ONLY: bec_bgrp2ortho
@@ -488,7 +511,7 @@ END MODULE ortho_module
       include 'laxlib.fh'
       !
       INTEGER, INTENT(IN) :: idesc(:,:)
-      COMPLEX(DP) :: eigr(:,:)
+      COMPLEX(DP) DEVICEATTR :: beigr(:,:)
       COMPLEX(DP) DEVICEATTR :: cp_bgrp(:,:), phi_bgrp(:,:)
       REAL(DP)    :: x0(:,:,:), diff, ccc
       INTEGER     :: iter
@@ -497,7 +520,7 @@ END MODULE ortho_module
       !
       REAL(DP),    ALLOCATABLE DEVICEATTR :: bec_row(:,:)
       REAL(DP),    ALLOCATABLE DEVICEATTR :: qbephi(:,:,:), qbecp(:,:,:)
-      COMPLEX(DP), ALLOCATABLE DEVICEATTR :: beigr(:,:)
+      COMPLEX(DP), ALLOCATABLE DEVICEATTR :: wrk2(:,:)
 
       INTEGER :: nkbx, info, iss, nspin_sub, nx0, ngwx, nrcx
       !
@@ -516,17 +539,14 @@ END MODULE ortho_module
 
       IF( nkbus > 0 ) THEN
          !
-         ALLOCATE( beigr(ngw,nkb), STAT=info )
-         IF( info /= 0 ) &
-            CALL errore( ' ortho ', ' allocating beigr ', ABS( info ) )
-         !
-         CALL beta_eigr ( beigr, 1, nsp, eigr, 2 )
-         CALL nlsm1us ( nbsp_bgrp, beigr, phi_bgrp, becp_bgrp )
+         ALLOCATE( wrk2, SOURCE = beigr  )
+         CALL keep_only_us( wrk2 ) 
+         CALL nlsm1us ( nbsp_bgrp, wrk2, phi_bgrp, becp_bgrp )
          CALL bec_bgrp2ortho( becp_bgrp, bephi, nrcx, idesc )
          !
-         CALL nlsm1us ( nbsp_bgrp, beigr, cp_bgrp, becp_bgrp )
+         CALL nlsm1us ( nbsp_bgrp, wrk2, cp_bgrp, becp_bgrp )
          CALL bec_bgrp2ortho( becp_bgrp, bec_row, nrcx, idesc )
-         DEALLOCATE( beigr )
+         DEALLOCATE( wrk2 )
          !
       END IF
       !

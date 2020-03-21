@@ -16,8 +16,8 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
   USE kinds,                ONLY : DP
   USE control_flags,        ONLY : lwf, tfor, tprnfor, thdyn
   USE cg_module,            ONLY : tcg
-  USE cp_main_variables,    ONLY : eigr, irb, eigrb, rhog, rhos, rhor, drhor, &
-                                   drhog, sfac, ema0bg, bec_bgrp, becdr_bgrp, &
+  USE cp_main_variables,    ONLY : eigr, beigr, irb, eigrb, rhog, rhos, rhor, drhor, &
+                                   drhog, sfac, ema0bg, bec_bgrp, becdr_bgrp, beigr_d, &
                                    taub, lambda, lambdam, lambdap, vpot, dbec, idesc
   USE cell_base,            ONLY : omega, ibrav, h, press
   USE uspp,                 ONLY : becsum, vkb, nkb, nlcc_any
@@ -39,7 +39,8 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
   USE gvecw,                ONLY : ngw
   USE orthogonalize_base,   ONLY : calphi_bgrp
   USE control_flags,        ONLY : force_pairing
-  USE cp_interfaces,        ONLY : rhoofr, compute_stress, vofrho, nlfl_bgrp, prefor, nlfq_bgrp
+  USE cp_interfaces,        ONLY : rhoofr, compute_stress, vofrho, nlfl_bgrp, prefor, nlfq_bgrp, &
+                                   beta_eigr
   USE electrons_module,     ONLY : distribute_c, collect_c, distribute_b
   USE gvect,                ONLY : eigts1, eigts2, eigts3 
   USE control_flags,        ONLY : lwfpbe0nscf  ! exx_wf related
@@ -70,7 +71,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
 #if defined (__CUDA)
      CALL errore(' move_electrons ', ' GPU version of runcg not yet implemented ', 1 )
 #else
-     CALL runcg_uspp( nfi, tfirst, tlast, eigr, bec_bgrp, irb, eigrb, &
+     CALL runcg_uspp( nfi, tfirst, tlast, eigr, beigr, bec_bgrp, irb, eigrb, &
                       rhor, rhog, rhos, rhoc, eigts1, eigts2, eigts3, sfac, &
                       fion, ema0bg, becdr_bgrp, lambdap, lambda, SIZE(lambda,1), vpot, c0_bgrp, &
                       cm_bgrp, phi, dbec, l_cprestart  )
@@ -161,6 +162,9 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
      CALL newd( vpot, irb, eigrb, becsum, fion, tprint )
      !
      CALL prefor( eigr, vkb )
+     !
+     CALL beta_eigr( beigr, eigr )
+     CALL dev_memcpy( beigr_d, beigr )
      !
      IF( force_pairing ) THEN
         !

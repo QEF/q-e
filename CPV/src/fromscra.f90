@@ -40,7 +40,7 @@ SUBROUTINE from_scratch( )
                                      tefield2, efield_berry_setup2, berry_energy2
     USE cg_module,            ONLY : tcg
     USE ensemble_dft,         ONLY : tens, compute_entropy
-    USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
+    USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, beta_eigr, &
                                      strucf, phfacs, nlfh, vofrho, nlfl_bgrp, prefor
     USE cp_interfaces,        ONLY : rhoofr, ortho, wave_rand_init, elec_fakekine
     USE cp_interfaces,        ONLY : compute_stress, dotcsc, calbec_bgrp, caldbec_bgrp, calbec_nc
@@ -51,8 +51,8 @@ SUBROUTINE from_scratch( )
     USE wavefunctions,        ONLY : c0_bgrp, cm_bgrp, c0_d, phi, cm_d
     USE fft_base,             ONLY : dfftp, dffts
     USE time_step,            ONLY : delt
-    USE cp_main_variables,    ONLY : idesc, bephi, becp_bgrp, nfi, &
-                                     sfac, eigr, taub, irb, eigrb, bec_bgrp, bec_d, &
+    USE cp_main_variables,    ONLY : idesc, bephi, becp_bgrp, nfi, beigr_d, &
+                                     sfac, eigr, beigr, taub, irb, eigrb, bec_bgrp, bec_d, &
                                      lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
                                      vpot, ht0, edft, becdr_bgrp, dbec, drhor, drhog
     USE mp_global,            ONLY : inter_bgrp_comm, nbgrp, me_bgrp
@@ -137,6 +137,9 @@ SUBROUTINE from_scratch( )
     !
     CALL prefor( eigr, vkb )
     !
+    CALL beta_eigr( beigr, eigr )
+    CALL dev_memcpy( beigr_d, beigr )
+    !
     nspin_wfc = nspin
     IF( force_pairing ) nspin_wfc = 1
 
@@ -193,7 +196,7 @@ SUBROUTINE from_scratch( )
     !
     IF( .NOT. tcg ) THEN
        !
-       CALL calbec_bgrp ( eigr, cm_bgrp, bec_bgrp )
+       CALL calbec_bgrp ( beigr, cm_bgrp, bec_bgrp )
        !
        if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
        !
@@ -277,9 +280,9 @@ SUBROUTINE from_scratch( )
       !
       if( tortho ) then
 #if defined (__CUDA)
-         CALL ortho( eigr, c0_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+         CALL ortho( beigr_d, c0_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
 #else
-         CALL ortho( eigr, c0_bgrp, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+         CALL ortho( beigr, c0_bgrp, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
 #endif
       else
          CALL gram_bgrp( vkb, bec_bgrp, nkb, c0_bgrp, ngw )
@@ -315,7 +318,7 @@ SUBROUTINE from_scratch( )
       ENDIF
       !
       ! the following compute only on NC pseudo components
-      CALL calbec_nc ( eigr, c0_bgrp, bec_bgrp )
+      CALL calbec_nc ( beigr, c0_bgrp, bec_bgrp )
       !
       if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
 

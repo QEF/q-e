@@ -1504,7 +1504,7 @@ end subroutine dylmr2_
 
 
 !-----------------------------------------------------------------------
-      SUBROUTINE dotcsc_x( eigr, cp, ngw, n )
+      SUBROUTINE dotcsc_x( beigr, cp, ngw, n )
 !-----------------------------------------------------------------------
 !
       USE kinds,              ONLY: DP
@@ -1521,7 +1521,7 @@ end subroutine dylmr2_
       IMPLICIT NONE
 !
       INTEGER,     INTENT(IN) :: ngw, n
-      COMPLEX(DP), INTENT(IN) :: eigr(:,:), cp(:,:)
+      COMPLEX(DP), INTENT(IN) :: beigr(:,:), cp(:,:)
 ! local variables
       REAL(DP) rsum, csc(n) ! automatic array
       COMPLEX(DP) temp(ngw) ! automatic array
@@ -1537,7 +1537,7 @@ end subroutine dylmr2_
 !     < beta | phi > is real. only the i lowest:
 !
 
-      CALL nlsm1( nbspx_bgrp, 1, nsp, eigr, cp, becp, 2 )
+      CALL nlsm1( nbspx_bgrp, beigr, cp, becp, 2 )
 
       nnn = MIN( 12, n )
 

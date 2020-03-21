@@ -28,6 +28,8 @@ MODULE cp_main_variables
   ! ...  R_I = ionic positions
   !
   COMPLEX(DP), ALLOCATABLE :: eigr(:,:)        ! exp (i G   dot R_I)
+  COMPLEX(DP), ALLOCATABLE :: beigr(:,:)       ! beigr(ig,iv) = [(-i)**l beta(g,iv,is) e^(-ig.r_ia)]^*
+  COMPLEX(DP), ALLOCATABLE :: beigr_d(:,:)     ! device copy of beigr 
   !
   ! ... structure factors (summed over atoms of the same kind)
   !
@@ -57,7 +59,7 @@ MODULE cp_main_variables
   REAL(DP), ALLOCATABLE :: becdr_bgrp(:,:,:)  ! distributed becdr (band group)
   REAL(DP), ALLOCATABLE :: dbec(:,:,:,:)    ! derivative of bec distributed(ortho group) 
 #if defined (__CUDA)
-  ATTRIBUTES( DEVICE ) :: becp_bgrp, bephi, bec_d
+  ATTRIBUTES( DEVICE ) :: becp_bgrp, bephi, bec_d, beigr_d
 #endif
   !
   ! ... mass preconditioning
@@ -143,6 +145,12 @@ MODULE cp_main_variables
       ALLOCATE( eigr( ngw, nat ), STAT=ierr )
       IF( ierr /= 0 ) &
          CALL errore( ' allocate_mainvar ', ' unable to allocate eigr ', ierr )
+      ALLOCATE( beigr( ngw, nhsa ), STAT=ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( ' allocate_mainvar ', ' unable to allocate beigr ', ierr )
+      ALLOCATE( beigr_d( ngw, nhsa ), STAT=ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( ' allocate_mainvar ', ' unable to allocate beigr_d ', ierr )
       ALLOCATE( sfac( ngs, nsp ), STAT=ierr )
       IF( ierr /= 0 ) &
          CALL errore( ' allocate_mainvar ', ' unable to allocate sfac ', ierr )
@@ -287,6 +295,8 @@ MODULE cp_main_variables
       !------------------------------------------------------------------------
       !
       IF( ALLOCATED( eigr ) )    DEALLOCATE( eigr )
+      IF( ALLOCATED( beigr ) )   DEALLOCATE( beigr )
+      IF( ALLOCATED( beigr_d ) )   DEALLOCATE( beigr_d )
       IF( ALLOCATED( sfac ) )    DEALLOCATE( sfac )
       IF( ALLOCATED( eigrb ) )   DEALLOCATE( eigrb )
       IF( ALLOCATED( irb ) )     DEALLOCATE( irb )
