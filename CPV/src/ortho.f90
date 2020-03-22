@@ -539,7 +539,8 @@ END MODULE ortho_module
 
       IF( nkbus > 0 ) THEN
          !
-         ALLOCATE( wrk2, SOURCE = beigr  )
+         ALLOCATE( wrk2, MOLD = beigr  )
+         CALL dev_memcpy( wrk2, beigr )
          CALL keep_only_us( wrk2 ) 
          CALL nlsm1us ( nbsp_bgrp, wrk2, phi_bgrp, becp_bgrp )
          CALL bec_bgrp2ortho( becp_bgrp, bephi, nrcx, idesc )
@@ -591,7 +592,6 @@ END MODULE ortho_module
       END DO
 
       IF( force_pairing ) THEN
-         !cp_bgrp(:, iupdwn(2):iupdwn(2)+nupdwn(2)-1 ) = cp_bgrp(:,1:nupdwn(2))
          CALL dev_memcpy(cp_bgrp(:,iupdwn(2):), cp_bgrp(:,1:),  [1, ngw], 1 , [1, nupdwn(2)], 1) 
       END IF
       !
