@@ -352,7 +352,7 @@
       USE uspp_param,             ONLY: nhm, nh
       USE constants,              ONLY: pi, fpi
       USE ions_base,              ONLY: nsp, na, nat, ityp
-      USE gvecw,                  ONLY: ngw, g2kin
+      USE gvecw,                  ONLY: ngw, g2kin_d
       USE cell_base,              ONLY: tpiba2
       USE ensemble_dft,           ONLY: tens
       USE funct,                  ONLY: dft_is_meta, dft_is_hybrid, exx_is_active
@@ -389,7 +389,6 @@
       COMPLEX(DP), ALLOCATABLE, DEVICE :: psi(:)
       COMPLEX(DP), ALLOCATABLE, DEVICE :: df_d(:)
       COMPLEX(DP), ALLOCATABLE, DEVICE :: da_d(:)
-      REAL(DP),    ALLOCATABLE, DEVICE :: g2_d(:)
       INTEGER,     DEVICE, POINTER     :: nl_d(:), nlm_d(:)
       !
       CALL start_clock( 'dforce' ) 
@@ -401,7 +400,6 @@
       ALLOCATE( psi( dffts%nnr * many_fft ) )
       ALLOCATE( df_d( SIZE( df ) ) )
       ALLOCATE( da_d( SIZE( da ) ) )
-      ALLOCATE( g2_d, SOURCE=g2kin )
       !
       psi = 0.0d0
       nl_d => dffts%nl_d
@@ -466,8 +464,8 @@
             CALL fftx_psi2c_gamma_gpu( dffts, psi( 1+ioff : ioff+dffts%nnr ), df_d(1+igno:igno+ngw), da_d(1+igno:igno+ngw))
 !$cuf kernel do(1)
             DO ig=1,ngw
-               df_d(ig+igno)= fi*(tpiba2*g2_d(ig)* c(ig,idx+i-1)+df_d(ig+igno))
-               da_d(ig+igno)=fip*(tpiba2*g2_d(ig)* c(ig,idx+i  )+da_d(ig+igno))
+               df_d(ig+igno)= fi*(tpiba2*g2kin_d(ig)* c(ig,idx+i-1)+df_d(ig+igno))
+               da_d(ig+igno)=fip*(tpiba2*g2kin_d(ig)* c(ig,idx+i  )+da_d(ig+igno))
             END DO
          END IF
 

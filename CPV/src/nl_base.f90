@@ -468,17 +468,18 @@
       !
       complex(DP), allocatable :: wrk2(:,:)
       !
-      integer  :: ig, is, iv, ia, k, l, inl
+      integer  :: ig, iv, k, info
       complex(DP) :: cfact
 !
       call start_clock( 'nlsm2' )
 
       cfact = - cmplx( 0.0_dp , 1.0_dp ) * tpiba
 
-      allocate( wrk2, MOLD = beigr )
+      allocate( wrk2, MOLD = beigr, STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' nlsm2 ', ' allocating wrk2', ABS( info ) )
 !
       DO k = 1, 3
-         !
 !$omp parallel do default(shared) private(iv,ig) collapse(2)
          do iv=1,SIZE(beigr,2)
             do ig=1,ngw
@@ -490,7 +491,6 @@
             CALL dgemm( 'T', 'N', nkb, nbsp_bgrp, 2*ngw, 1.0d0, wrk2(1,1), 2*ngw, &
                  c_bgrp, 2*ngw, 0.0d0, becdr_bgrp( 1, 1, k ), nkb )
          END IF
-
       end do
 
       deallocate( wrk2 )
@@ -520,13 +520,10 @@
       !
  
       USE kinds,      ONLY : DP
-      use ions_base,  only : nsp, ityp, nat
-      use uspp,       only : nhtol, beta, indv_ijkb0
-      use uspp_param, only : nh, upf
       use cell_base,  only : tpiba
       use mp,         only : mp_sum
       use mp_global,  only : nproc_bgrp, intra_bgrp_comm
-      use gvect,      only : g, gstart
+      use gvect,      only : g
       USE device_util_m, ONLY : dev_memcpy
       USE cudafor
       USE cublas
@@ -542,7 +539,7 @@
       complex(DP), allocatable, DEVICE :: wrk2_d(:,:)
       real(DP), allocatable, DEVICE :: becdr_d(:,:)
       !
-      integer  :: ig, is, iv, ia, k, l, inl, info
+      integer  :: ig, iv, k, info
       complex(DP) :: cfact
 !
       call start_clock( 'nlsm2' )
@@ -722,12 +719,8 @@
       complex(DP), intent(in)  :: c( :, : ), beigr( :, : )
       INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
 
-      ! local variables
-!
       call start_clock( 'calbec' )
-      !
       call nlsm1( nbsp, beigr, c, bec, pptype_ )
-!
       call stop_clock( 'calbec' )
 !
       return
