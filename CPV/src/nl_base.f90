@@ -32,25 +32,23 @@
       complex(DP), intent(out) :: beigr( :, : )
       !
       integer   :: ig, is, iv, ia, l, inl
-      complex(DP) :: cfact(4)
+      COMPLEX(DP), PARAMETER, DIMENSION(4) :: cfact = &  ! (l == 0), (l == 1), (l == 2), (l == 3)
+      [( 1.0_dp , 0.0_dp ), ( 0.0_dp , -1.0_dp ), ( -1.0_dp , 0.0_dp ), ( 0.0_dp , 1.0_dp )]
       !
       call start_clock( 'beta_eigr' )
 
 !$omp parallel default(none), &
 !$omp shared(nat,ngw,nh,nhtol,beigr,beta,eigr,ityp,gstart,indv_ijkb0), &
-!$omp private(is,ia,iv,inl,l,cfact,ig)
+!$omp private(is,ia,iv,inl,l,ig)
 
-      !if (l == 0) then
-      cfact(1) =   cmplx( 1.0_dp , 0.0_dp )
-      !else if (l == 1) then
-      cfact(2) = - cmplx( 0.0_dp , 1.0_dp )
-      !else if (l == 2) then
-      cfact(3) = - cmplx( 0.0_dp , 1.0_dp )
-      cfact(3) = cfact(3) * cfact(3)
-      !else if (l == 3) then
-      cfact(4) = - cmplx( 0.0_dp , 1.0_dp )
-      cfact(4) = cfact(4) * cfact(4) * cfact(4)
-      !endif
+      ! (l == 0) 
+      !cfact(1) =   cmplx( 1.0_dp , 0.0_dp )
+      ! (l == 1) 
+      !cfact(2) = - cmplx( 0.0_dp , 1.0_dp )
+      ! (l == 2) 
+      !cfact(3) = - cmplx( 1.0_dp , 0.0_dp )
+      ! (l == 3) 
+      !cfact(4) =   cmplx( 0.0_dp , 1.0_dp )
 
 !$omp do
       DO ia = 1, nat
@@ -83,107 +81,10 @@
    END SUBROUTINE compute_beta_eigr_x
 !-----------------------------------------------------------------------
 !
-!-----------------------------------------------------------------------
-   SUBROUTINE beta_eigr_x ( beigr, nspmn, nspmx, eigr, pptype_ )
-!-----------------------------------------------------------------------
-
-      !     computes: the array becp
-      !     beigr(ig,iv)=
-      !         = [(-i)**l beta(g,iv,is) e^(-ig.r_ia)]^* 
-      !
-      !     routine makes use of c*(g)=c(-g)  (g> see routine ggen)
-      !     input : beta(ig,l,is), eigr, c
-      !     output: becp as parameter
-      !
-      USE kinds,      ONLY : DP
-      USE ions_base,  only : nat, nsp, ityp
-      USE gvecw,      only : ngw
-      USE uspp,       only : nkb, nhtol, beta, indv_ijkb0
-      USE uspp_param, only : nh, upf, nhm
-      !
-      USE gvect, ONLY : gstart
-!
-      implicit none
-
-      integer,     intent(in)  :: nspmn, nspmx
-      complex(DP), intent(in)  :: eigr( :, : )
-      complex(DP), intent(out) :: beigr( :, : )
-      INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
-      ! pptype_: pseudo type to process: 0 = all, 1 = norm-cons, 2 = ultra-soft
-      !
-      integer   :: ig, is, iv, ia, l, inl
-      complex(DP) :: cfact(4)
-      integer :: pptype
-      LOGICAL :: ok1, ok2
-      !
-      call start_clock( 'beta_eigr' )
-
-      IF( PRESENT( pptype_ ) ) THEN
-         pptype = pptype_
-      ELSE
-         pptype = 0
-      END IF
-
-!$omp parallel default(none), &
-!$omp shared(nat,ngw,nh,nhtol,beigr,beta,eigr,ityp,pptype,nspmn,nspmx,upf,gstart,indv_ijkb0), &
-!$omp private(is,ia,iv,inl,l,cfact,ig,ok1,ok2)
-
-      !if (l == 0) then
-      cfact(1) =   cmplx( 1.0_dp , 0.0_dp )
-      !else if (l == 1) then
-      cfact(2) = - cmplx( 0.0_dp , 1.0_dp )
-      !else if (l == 2) then
-      cfact(3) = - cmplx( 0.0_dp , 1.0_dp )
-      cfact(3) = cfact(3) * cfact(3)
-      !else if (l == 3) then
-      cfact(4) = - cmplx( 0.0_dp , 1.0_dp )
-      cfact(4) = cfact(4) * cfact(4) * cfact(4)
-      !endif
-
-!$omp do
-      DO ia = 1, nat
-         is  = ityp(ia)
-         inl = indv_ijkb0(ia)
-         !
-         ok1 = .NOT. ( pptype == 1 .AND. upf(is)%tvanp )
-         ok2 = .NOT. ( pptype == 2 .AND. .NOT. upf(is)%tvanp )
-         IF( ok1 .AND. ok2 .AND. ( is >= nspmn .AND. is <= nspmx ) ) THEN
-              !
-              do iv = 1, nh( is )
-                !
-                l = nhtol( iv, is )
-                !
-                !  q = 0   component (with weight 1.0)  !  kept only with gstart = 2
-                !
-                beigr( 1, iv + inl ) = cfact(l+1) * beta(1,iv,is) * eigr(1,ia)
-                !
-                !   q > 0   components (with weight 2.0)
-                !
-                do ig = gstart, ngw
-                  beigr( ig, iv + inl ) = 2.0d0 * cfact(l+1) * beta(ig,iv,is) * eigr(ig,ia)
-                end do
-                !
-              end do
-              !
-         ELSE
-            DO iv = 1, nh( is )
-               beigr(:,iv+inl) = 0.0d0
-            END DO
-         END IF
-      END DO
-!$omp end do
-!$omp end parallel
-
-      call stop_clock( 'beta_eigr' )
-
-      RETURN
-   END SUBROUTINE beta_eigr_x
-!-----------------------------------------------------------------------
-!
 #if defined(__CUDA)
 !
 !-----------------------------------------------------------------------
-   SUBROUTINE beta_eigr_gpu_x ( beigr_d, nspmn, nspmx, eigr, pptype_ )
+   SUBROUTINE beta_eigr_gpu_x ( beigr_d, eigr )
 !-----------------------------------------------------------------------
 
       !     computes: the array becp
@@ -204,79 +105,47 @@
 !
       implicit none
 
-      integer,     intent(in)  :: nspmn, nspmx
       complex(DP), intent(in)  :: eigr( :, : )
       complex(DP), DEVICE, intent(out) :: beigr_d( :, : )
-      INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
-      ! pptype_: pseudo type to process: 0 = all, 1 = norm-cons, 2 = ultra-soft
       !
       integer   :: ig, is, iv, ia, l, inl
-      complex(DP) :: cfact(4), c2, c1
-      COMPLEX(DP), ALLOCATABLE :: beigr(:,:)
-      integer :: pptype
-      LOGICAL :: ok1, ok2
+      !complex(DP) :: cfact(4), c2, c1
+      COMPLEX(DP), PARAMETER, DIMENSION(4) :: cfact = &  ! (l == 0), (l == 1), (l == 2), (l == 3)
+      [( 1.0_dp , 0.0_dp ), ( 0.0_dp , -1.0_dp ), ( -1.0_dp , 0.0_dp ), ( 0.0_dp , 1.0_dp )]
       !
+      CALL errore( ' beta_eigr_gpu ', ' not yet implemented ', 1 )
+
       call start_clock( 'beta_eigr' )
 
-      IF( PRESENT( pptype_ ) ) THEN
-         pptype = pptype_
-      ELSE
-         pptype = 0
-      END IF
-
-      ALLOCATE( beigr, MOLD=beigr_d )
-
-!$omp parallel default(none), &
-!$omp shared(nat,ngw,nh,nhtol,beigr,beta,eigr,ityp,pptype,nspmn,nspmx,upf,gstart,indv_ijkb0), &
-!$omp private(is,ia,iv,inl,l,cfact,ig,ok1,ok2,c1,c2)
-
       ! (l == 0) 
-      cfact(1) =   cmplx( 1.0_dp , 0.0_dp )
+      !cfact(1) =   cmplx( 1.0_dp , 0.0_dp )
       ! (l == 1) 
-      cfact(2) = - cmplx( 0.0_dp , 1.0_dp )
+      !cfact(2) = - cmplx( 0.0_dp , 1.0_dp )
       ! (l == 2) 
-      cfact(3) = - cmplx( 1.0_dp , 0.0_dp )
+      !cfact(3) = - cmplx( 1.0_dp , 0.0_dp )
       ! (l == 3) 
-      cfact(4) =   cmplx( 0.0_dp , 1.0_dp )
+      !cfact(4) =   cmplx( 0.0_dp , 1.0_dp )
 
-!$omp do
       DO ia = 1, nat
          is  = ityp(ia)
          inl = indv_ijkb0(ia)
-         !
-         ok1 = .NOT. ( pptype == 1 .AND. upf(is)%tvanp )
-         ok2 = .NOT. ( pptype == 2 .AND. .NOT. upf(is)%tvanp )
-         IF( ok1 .AND. ok2 .AND. ( is >= nspmn .AND. is <= nspmx ) ) THEN
-              !
-              do iv = 1, nh( is )
-                !
-                l = nhtol( iv, is )
-                c1 = cfact(l+1)
-                c2 = 2.0d0 * c1
-                !
-                !  q = 0   component (with weight 1.0) !  kept only with gstart = 2
-                !
-                beigr( 1, iv + inl ) = c1 * beta(1,iv,is) * eigr(1,ia)
-                !
-                !   q > 0   components (with weight 2.0)
-                !
-                do ig = gstart, ngw
-                  beigr( ig, iv + inl ) = c2 * beta(ig,iv,is) * eigr(ig,ia)
-                end do
-                !
-              end do
-              !
-         ELSE
-            DO iv = 1, nh( is )
-               beigr(:,iv+inl) = 0.0d0
-            END DO
-         END IF
+         do iv = 1, nh( is )
+            !
+            l = nhtol( iv, is )
+!            c1 = cfact(l+1)
+!            c2 = 2.0d0 * c1
+            !
+            !  q = 0   component (with weight 1.0) !  kept only with gstart = 2
+            !
+!            beigr( 1, iv + inl ) = c1 * beta(1,iv,is) * eigr(1,ia)
+!            !
+!            !   q > 0   components (with weight 2.0)
+!            !
+!            do ig = gstart, ngw
+!               beigr( ig, iv + inl ) = c2 * beta(ig,iv,is) * eigr(ig,ia)
+!            end do
+         end do
       END DO
-!$omp end do
-!$omp end parallel
-
-      beigr_d = beigr
-      DEALLOCATE( beigr )
 
       call stop_clock( 'beta_eigr' )
 
@@ -399,7 +268,6 @@
       USE uspp,       only : nkb, nhtol, beta, indv_ijkb0
       USE uspp_param, only : nh, upf, nhm
       USE gvect,      ONLY : gstart
-      USE cp_interfaces, only : beta_eigr
 !
       implicit none
 
@@ -440,7 +308,7 @@
                 becp(inl+iv,:) = becps( inl+iv, : )
               end do
             END IF
-          end do
+         end do
       end do
               !
       DEALLOCATE( becps )
@@ -472,7 +340,6 @@
       USE gvecw,      only : ngw
       USE uspp,       only : nkb, nhtol, beta, indv_ijkb0
       USE uspp_param, only : nh, upf, nhm
-      USE cp_interfaces, only : beta_eigr
 !
       IMPLICIT NONE
       INTEGER,     INTENT(IN)  :: n
@@ -495,27 +362,11 @@
       END DO
       IF( nothing_to_do ) GO TO 100
 
-      allocate( wrk2, SOURCE=beigr ) 
       allocate( becps( SIZE(becp,1), SIZE(becp,2) ) ) 
  
-      do is = 1, nsp
-        IF( upf(is)%tvanp ) THEN
-          DO ia = 1, nat
-            IF( ityp(ia) == is ) THEN
-              inl = indv_ijkb0(ia)
-              do iv = 1, nh( is )
-                wrk2(:,inl+iv) = 0.d0
-              end do
-            END IF
-          end do
-        END IF
-      end do
-
       IF( ngw > 0 .AND. nkb > 0 ) THEN
-         CALL dgemm( 'T', 'N', nkb, n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becps, nkb )
+         CALL dgemm( 'T', 'N', nkb, n, 2*ngw, 1.0d0, beigr, 2*ngw, c, 2*ngw, 0.0d0, becps, nkb )
       END IF
-
-      DEALLOCATE( wrk2 )
 
       IF( nproc_bgrp > 1 ) THEN
         CALL mp_sum( becps, intra_bgrp_comm )
@@ -589,84 +440,9 @@
       return
    end subroutine nlsm1all_x
 !-----------------------------------------------------------------------
-!-------------------------------------------------------------------------
-   subroutine g_beta_eigr_x( gbeigr, eigr )
-!-----------------------------------------------------------------------
-
-      !     computes: 
-      !      g_k beta(g,iv,is) (i)**(l+1) e^(ig.r_ia)
-      !
- 
-      USE kinds,      ONLY : DP
-      use ions_base,  only : nsp, ityp, nat
-      use uspp,       only : nhtol, beta, indv_ijkb0
-      use uspp_param, only : nh, upf
-      use cell_base,  only : tpiba
-      use gvect,      only : g, gstart
-      USE gvecw,      only : ngw
-!
-      implicit none
-    
-      complex(DP), intent(in)  :: eigr(:,:)
-      complex(DP), intent(out) :: gbeigr(:,:,:)
-      !
-      integer  :: ig, is, iv, ia, k, l, inl
-      complex(DP) :: cfact(4)
-!
-      call start_clock( 'g_beta_eigr' )
-!
-!$omp parallel default(none), &
-!$omp shared(nat,ngw,nh,nhtol,gbeigr,beta,eigr,ityp,g,gstart,indv_ijkb0,tpiba), &
-!$omp private(is,ia,iv,inl,l,cfact,ig,k)
-
-      ! compute (-i)^(l+1)
-      !
-      !if (l == 0) then
-      cfact(1) = - cmplx( 0.0_dp , 1.0_dp )
-      !else if (l == 1) then
-      cfact(2) = - cmplx( 0.0_dp , 1.0_dp )
-      cfact(2) = cfact(2) * cfact(2)
-      !else if (l == 2) then
-      cfact(3) = - cmplx( 0.0_dp , 1.0_dp )
-      cfact(3) = cfact(3) * cfact(3) * cfact(3)
-      !else if (l == 3) then
-      cfact(4) =   cmplx( 1.0_dp , 0.0_dp )
-      !endif
-      cfact(1) = cfact(1) * tpiba
-      cfact(2) = cfact(2) * tpiba
-      cfact(3) = cfact(3) * tpiba
-      cfact(4) = cfact(4) * tpiba
-
-!$omp do collapse(2)
-      DO ia = 1, nat
-         DO k = 1, 3
-            is = ityp(ia) 
-            inl = indv_ijkb0(ia)
-            do iv=1,nh(is)
-               !
-               !     order of states:  s_1  p_x1  p_z1  p_y1  s_2  p_x2  p_z2  p_y2
-               !
-               l=nhtol(iv,is)
-               !    q = 0   component (with weight 1.0)
-               gbeigr(1,iv+inl,k) = cfact(l+1) * g(k,1) * beta(1,iv,is) * eigr(1,ia)
-               !    q > 0   components (with weight 2.0)
-               do ig=gstart,ngw
-                  gbeigr(ig,iv+inl,k) = cfact(l+1) * 2.0d0 * g(k,ig) * beta(ig,iv,is) * eigr(ig,ia)
-               end do
-            end do
-         end do
-      end do
-!$omp end do
-!$omp end parallel
-
-      call stop_clock( 'g_beta_eigr' )
-!
-      return
-   end subroutine g_beta_eigr_x
-!-----------------------------------------------------------------------
 
 !-------------------------------------------------------------------------
-   subroutine nlsm2_bgrp_x( ngw, nkb, eigr, c_bgrp, becdr_bgrp, nbspx_bgrp, nbsp_bgrp )
+   subroutine nlsm2_bgrp_x( ngw, nkb, beigr, c_bgrp, becdr_bgrp, nbspx_bgrp, nbsp_bgrp )
 !-----------------------------------------------------------------------
 
       !     computes: the array becdr
@@ -679,36 +455,39 @@
       !
  
       USE kinds,      ONLY : DP
-      use ions_base,  only : nsp, ityp, nat
-      use uspp,       only : nhtol, beta, indv_ijkb0
-      use uspp_param, only : nh, upf
       use cell_base,  only : tpiba
       use mp,         only : mp_sum
       use mp_global,  only : nproc_bgrp, intra_bgrp_comm
-      use gvect,      only : g, gstart
-      USE cp_interfaces, only : g_beta_eigr
+      use gvect,      only : g
 !
       implicit none
     
       integer,     intent(in)  :: ngw, nkb, nbspx_bgrp, nbsp_bgrp
-      complex(DP), intent(in)  :: eigr(:,:), c_bgrp(:,:)
+      complex(DP), intent(in)  :: beigr(:,:), c_bgrp(:,:)
       real(DP),    intent(out) :: becdr_bgrp(:,:,:)
       !
-      complex(DP), allocatable :: wrk2(:,:,:)
+      complex(DP), allocatable :: wrk2(:,:)
       !
       integer  :: ig, is, iv, ia, k, l, inl
       complex(DP) :: cfact
 !
       call start_clock( 'nlsm2' )
 
-      allocate( wrk2( ngw, nkb, 3 ) )
-   
-      CALL g_beta_eigr( wrk2, eigr )
+      cfact = - cmplx( 0.0_dp , 1.0_dp ) * tpiba
+
+      allocate( wrk2, MOLD = beigr )
 !
       DO k = 1, 3
          !
+!$omp parallel do default(shared) private(iv,ig) collapse(2)
+         do iv=1,SIZE(beigr,2)
+            do ig=1,ngw
+               wrk2(ig,iv) = cfact * g(k,ig) * beigr(ig,iv)
+            end do
+         end do
+!$omp end parallel do
          IF( ngw > 0 .AND. nkb > 0 ) THEN
-            CALL dgemm( 'T', 'N', nkb, nbsp_bgrp, 2*ngw, 1.0d0, wrk2(1,1,k), 2*ngw, &
+            CALL dgemm( 'T', 'N', nkb, nbsp_bgrp, 2*ngw, 1.0d0, wrk2(1,1), 2*ngw, &
                  c_bgrp, 2*ngw, 0.0d0, becdr_bgrp( 1, 1, k ), nkb )
          END IF
 
@@ -728,7 +507,7 @@
 
 #if defined (__CUDA)
 !-------------------------------------------------------------------------
-   subroutine nlsm2_bgrp_gpu_x( ngw, nkb, eigr, c_bgrp, becdr_bgrp, nbspx_bgrp, nbsp_bgrp )
+   subroutine nlsm2_bgrp_gpu_x( ngw, nkb, beigr, c_bgrp, becdr_bgrp, nbspx_bgrp, nbsp_bgrp )
 !-----------------------------------------------------------------------
 
       !     computes: the array becdr
@@ -748,7 +527,6 @@
       use mp,         only : mp_sum
       use mp_global,  only : nproc_bgrp, intra_bgrp_comm
       use gvect,      only : g, gstart
-      USE cp_interfaces, only : g_beta_eigr
       USE device_util_m, ONLY : dev_memcpy
       USE cudafor
       USE cublas
@@ -757,11 +535,11 @@
     
       integer,     intent(in)  :: ngw, nkb, nbspx_bgrp, nbsp_bgrp
       complex(DP), intent(in), DEVICE :: c_bgrp(:,:)
-      complex(DP), intent(in)  :: eigr(:,:)
+      complex(DP), intent(in)  :: beigr(:,:)
       real(DP),    intent(out) :: becdr_bgrp(:,:,:)
       !
-      complex(DP), allocatable :: wrk2(:,:,:)
-      complex(DP), allocatable, DEVICE :: wrk2_d(:,:,:)
+      complex(DP), allocatable :: wrk2(:,:)
+      complex(DP), allocatable, DEVICE :: wrk2_d(:,:)
       real(DP), allocatable, DEVICE :: becdr_d(:,:)
       !
       integer  :: ig, is, iv, ia, k, l, inl, info
@@ -769,27 +547,32 @@
 !
       call start_clock( 'nlsm2' )
 
-      allocate( wrk2( ngw, nkb, 3 ), STAT = info )
+      ALLOCATE( wrk2, MOLD=beigr, STAT = info )
       IF( info /= 0 ) &
-         CALL errore( ' nlsm2 ', ' allocating wrk2 ', ABS( info ) )
-   
-      CALL g_beta_eigr( wrk2, eigr )
-!
-      ALLOCATE( wrk2_d, SOURCE=wrk2, STAT = info )
+         CALL errore( ' nlsm2 ', ' allocating wrk2', ABS( info ) )
+      ALLOCATE( wrk2_d, MOLD=beigr, STAT = info )
       IF( info /= 0 ) &
          CALL errore( ' nlsm2 ', ' allocating wrk2_d ', ABS( info ) )
       ALLOCATE( becdr_d( SIZE( becdr_bgrp, 1 ), SIZE( becdr_bgrp, 2 ) ), STAT=info ) 
       IF( info /= 0 ) &
          CALL errore( ' nlsm2 ', ' allocating becdr_d ', ABS( info ) )
 
+      cfact = - cmplx( 0.0_dp , 1.0_dp ) * tpiba
+
       DO k = 1, 3
-         !
+!$omp parallel do default(shared) private(iv,ig) collapse(2)
+         do iv=1,SIZE(beigr,2)
+            do ig=1,ngw
+               wrk2(ig,iv) = cfact * g(k,ig) * beigr(ig,iv)
+            end do
+         end do
+!$omp end parallel do
+         CALL dev_memcpy( wrk2_d, wrk2 )
          IF( ngw > 0 .AND. nkb > 0 ) THEN
-            CALL MYDGEMM( 'T', 'N', nkb, nbsp_bgrp, 2*ngw, 1.0d0, wrk2_d(1,1,k), 2*ngw, &
+            CALL MYDGEMM( 'T', 'N', nkb, nbsp_bgrp, 2*ngw, 1.0d0, wrk2_d(1,1), 2*ngw, &
                  c_bgrp, 2*ngw, 0.0d0, becdr_d, nkb )
             CALL dev_memcpy( becdr_bgrp(:,:,k), becdr_d )
          END IF
-
       end do
 
       DEALLOCATE( becdr_d )
@@ -1260,7 +1043,7 @@ end subroutine dennl_x
 
 
 !-----------------------------------------------------------------------
-subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
+subroutine nlfq_bgrp_x( c_bgrp, beigr, bec_bgrp, becdr_bgrp, fion )
   !-----------------------------------------------------------------------
   !
   !     contribution to fion due to nonlocal part
@@ -1283,7 +1066,7 @@ subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
 #if defined (__CUDA)
   ATTRIBUTES( DEVICE ) :: c_bgrp
 #endif
-  COMPLEX(DP), INTENT(IN)  ::  eigr( :, : )
+  COMPLEX(DP), INTENT(IN)  ::  beigr( :, : )
   REAL(DP),    INTENT(IN)  ::  bec_bgrp( :, : )
   REAL(DP),    INTENT(OUT)  ::  becdr_bgrp( :, :, : )
   REAL(DP),    INTENT(OUT) ::  fion( :, : )
@@ -1302,7 +1085,7 @@ subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
   !
   !     nlsm2 fills becdr
   !
-  call nlsm2_bgrp( ngw, nkb, eigr, c_bgrp, becdr_bgrp, nbspx_bgrp, nbsp_bgrp )
+  call nlsm2_bgrp( ngw, nkb, beigr, c_bgrp, becdr_bgrp, nbspx_bgrp, nbsp_bgrp )
   !
   allocate ( fion_loc( 3, nat ) )
   !

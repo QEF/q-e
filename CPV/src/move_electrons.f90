@@ -187,9 +187,9 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
      !
      IF ( tfor .OR. ( tprnfor .AND. tprint ) ) THEN
 #if defined (__CUDA)
-        CALL nlfq_bgrp( c0_d, eigr, bec_bgrp, becdr_bgrp, fion )
+        CALL nlfq_bgrp( c0_d, beigr, bec_bgrp, becdr_bgrp, fion )
 #else
-        CALL nlfq_bgrp( c0_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
+        CALL nlfq_bgrp( c0_bgrp, beigr, bec_bgrp, becdr_bgrp, fion )
 #endif
      END IF
      !

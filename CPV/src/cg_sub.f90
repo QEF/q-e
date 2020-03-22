@@ -860,9 +860,9 @@
       CALL errore('  runcg_uspp ', ' GPU version not yet implemented', 1 )
 #else
       if (.not.tens) then
-        if (tfor .or. tprnfor) call nlfq_bgrp( c0, eigr, bec, becdr, fion ) 
+        if (tfor .or. tprnfor) call nlfq_bgrp( c0, beigr, bec, becdr, fion ) 
       else
-        if (tfor .or. tprnfor) call nlfq_bgrp( c0diag, eigr, becdiag, becdrdiag, fion ) 
+        if (tfor .or. tprnfor) call nlfq_bgrp( c0diag, beigr, becdiag, becdrdiag, fion ) 
       endif
 #endif
   
@@ -1047,7 +1047,7 @@
            !
            DEALLOCATE( lambda_dist )
            !
-           call nlsm2_bgrp( ngw, nkb, eigr, c0, becdr, nbspx, nbsp )
+           call nlsm2_bgrp( ngw, nkb, beigr, c0, becdr, nbspx, nbsp )
            !
         endif
         !

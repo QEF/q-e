@@ -258,9 +258,9 @@ SUBROUTINE from_scratch( )
       !
       IF( ttforce ) THEN
 #if defined (__CUDA)
-         CALL nlfq_bgrp( cm_d, eigr, bec_bgrp, becdr_bgrp, fion )
+         CALL nlfq_bgrp( cm_d, beigr, bec_bgrp, becdr_bgrp, fion )
 #else
-         CALL nlfq_bgrp( cm_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
+         CALL nlfq_bgrp( cm_bgrp, beigr, bec_bgrp, becdr_bgrp, fion )
 #endif
       END IF
       !

@@ -245,8 +245,8 @@
 !
         call nlsm1 ( n, beigr, c, bp )
         call s_wfc ( n, bp, betae, c, spsi )
-        call nlsm2_bgrp( ngw, nkb, eigr, c, dbp, nx, n )
-        call nlsm2_bgrp( ngw, nkb, eigr, wfcU, wdb, nwfcU, nwfcU )
+        call nlsm2_bgrp( ngw, nkb, beigr, c, dbp, nx, n )
+        call nlsm2_bgrp( ngw, nkb, beigr, wfcU, wdb, nwfcU, nwfcU )
         !
         ! poor-man parallelization over bands
         ! - if nproc_pool=1   : nb_s=1, nb_e=n, mykey=0
