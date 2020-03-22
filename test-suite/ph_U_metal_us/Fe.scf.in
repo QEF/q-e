@@ -25,6 +25,7 @@
     Hubbard_U(1) = 2.0
  /
  &electrons
+    startingwfc = 'atomic'
     conv_thr =  1.d-14
     mixing_beta = 0.3
  /

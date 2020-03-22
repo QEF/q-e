@@ -29,6 +29,6 @@ The calculation proceeds as follows:
    insulator with noncollinear magnetization. 
    (input=o2_nc.scf.in, output=o2_nc.scf.out)
 
-8) make a self-consistent calculation for the O2 molecule treated as an 
-   insulator with noncollinear magnetization. 
+8) make a phonon calculatio at the Gamma point for the O2 molecule
+   treated as an insulator with noncollinear magnetization. 
    (input=o2_nc.phG.in, output=o2_nc.phG.out)

@@ -80,7 +80,7 @@
      INTEGER :: dfti_status = 0
      INTEGER :: placement
 
-!$omp threadprivate(hand, dfti_first, dfti_status, zdims, icurrent, is_inplace)
+!$omp threadprivate(hand, dfti_first, zdims, icurrent, is_inplace)
      IF (PRESENT(in_place)) THEN
        is_inplace = in_place
      ELSE
@@ -222,7 +222,6 @@
 
      END SUBROUTINE init_dfti
 
-
    END SUBROUTINE cft_1z
 
 !
@@ -325,7 +324,6 @@
         !
      END IF
 
-
 #if defined(__FFT_CLOCKS)
      CALL stop_clock( 'cft_2xy' )
 #endif
@@ -407,7 +405,6 @@
      END SUBROUTINE init_dfti
 
    END SUBROUTINE cft_2xy
-
 
 !
 !=----------------------------------------------------------------------=!
