@@ -1555,7 +1555,7 @@ SUBROUTINE calc_chi(freq,broad,chi)
      IF (magnons) THEN
         DO ip2 = 1,n_op
            !
-           chi(ip,ip2) = ZDOTC(itermax,zeta_store(ip,ip2,:),1,r(ip,:),1)
+           chi(ip,ip2) = dot_product(zeta_store(ip,ip2,:),r(ip,:))
            !
            ! Multiplication with a norm
            !

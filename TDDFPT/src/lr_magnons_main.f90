@@ -36,17 +36,18 @@ PROGRAM lr_magnons_main
   USE mp_bands,              ONLY : intra_bgrp_comm, inter_bgrp_comm, &
                                     ntask_groups
   USE mp_bands_TDDFPT,       ONLY : ibnd_start, ibnd_end
-  USE mp_diag,               ONLY : mp_start_diag
   USE command_line_options,  ONLY : ndiag_
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions,         ONLY : psic
   USE check_stop,            ONLY : check_stop_now, check_stop_init
+  USE fft_base,              ONLY : dffts
   USE uspp,                  ONLY : okvan
-  USE mp_bands,              ONLY : ntask_groups
   USE wrappers,              ONLY : memstat
   USE klist,                 ONLY : igk_k
   !
   IMPLICIT NONE
+  !
+  include 'laxlib.fh'
   !
   ! Local variables
   !
@@ -59,7 +60,7 @@ PROGRAM lr_magnons_main
   pol_index = 1
   !
   CALL mp_startup ( )
-  CALL mp_start_diag ( ndiag_, world_comm, intra_bgrp_comm, &
+  CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
        do_distr_diag_inside_bgrp_ = .true. )
   CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
        inter_bgrp_comm )
