@@ -1552,29 +1552,51 @@ SUBROUTINE calc_chi(freq,broad,chi)
      ! Notice that brodening has a positive sign, 
      ! thus the abs. coefficient is Im(tr(chi)) not -Im(Tr(chi)) as usual
      ! 
-     DO ip2 = 1,n_ipol
-         !
-         chi(ip,ip2) = dot_product(zeta_store(ip,ip2,:),r(ip,:))
-         !
-         ! Multiplication with a norm
-         !
-         chi(ip,ip2) = chi(ip,ip2) * cmplx(norm0(ip),0.0d0,dp)
-         !
-         ! The response charge density is defined as 2*evc0*q, see Eq. (43) in
-         ! JCP 128, 154105 (2008). 
-         ! Therefore, the dipole is given by 2*degspin* zeta^T *
-         ! (w-T^itermax)^-1 * e_1. See also Eq. (15) in that paper.
-         ! Optics: The minus sign accounts for the negative electron charge
-         ! (perturbation is -e E x, rather than E x)
-         !
-         ! 
-         IF (eels) THEN
-            chi(ip,ip2) = chi(ip,ip2) * cmplx( 2.d0*degspin, 0.d0, dp)
-         ELSE
-            chi(ip,ip2) = chi(ip,ip2) * cmplx(-2.d0*degspin, 0.d0, dp)
-         ENDIF
-         !
-     ENDDO
+     IF (magnons) THEN
+        DO ip2 = 1,n_op
+           !
+           chi(ip,ip2) = ZDOTC(itermax,zeta_store(ip,ip2,:),1,r(ip,:),1)
+           !
+           ! Multiplication with a norm
+           !
+           chi(ip,ip2) = chi(ip,ip2) * cmplx(norm0(ip),0.0d0,dp)
+           !
+           ! The response charge density is defined as 2*evc0*q, see Eq. (43) in
+           ! JCP 128, 154105 (2008).
+           ! Therefore, the dipole is given by 2*degspin* zeta^T *
+           ! (w-T^itermax)^-1 * e_1. See also Eq. (15) in that paper.
+           ! Optics: The minus sign accounts for the negative electron charge
+           ! (perturbation is -e E x, rather than E x)
+           !
+           !
+           chi(ip,ip2) = chi(ip,ip2) * cmplx(degspin, 0.d0, dp)
+           !
+        ENDDO
+     ELSE
+        DO ip2 = 1,n_ipol
+           !
+           chi(ip,ip2) = dot_product(zeta_store(ip,ip2,:),r(ip,:))
+           !
+           ! Multiplication with a norm
+           !
+           chi(ip,ip2) = chi(ip,ip2) * cmplx(norm0(ip),0.0d0,dp)
+           !
+           ! The response charge density is defined as 2*evc0*q, see Eq. (43) in
+           ! JCP 128, 154105 (2008). 
+           ! Therefore, the dipole is given by 2*degspin* zeta^T *
+           ! (w-T^itermax)^-1 * e_1. See also Eq. (15) in that paper.
+           ! Optics: The minus sign accounts for the negative electron charge
+           ! (perturbation is -e E x, rather than E x)
+           !
+           ! 
+           IF (eels) THEN
+              chi(ip,ip2) = chi(ip,ip2) * cmplx( 2.d0*degspin, 0.d0, dp)
+           ELSE
+              chi(ip,ip2) = chi(ip,ip2) * cmplx(-2.d0*degspin, 0.d0, dp)
+           ENDIF
+           !
+        ENDDO
+     ENDIF 
      !
   ENDDO
   !
