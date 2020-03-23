@@ -350,8 +350,6 @@ CONTAINS
     INTEGER :: ierr
      !write (6,*) ' inside fft_type_set' ; FLUSH(6)
     !
-#if defined(__MPI)
-#endif
     !
     IF (.NOT. ALLOCATED( desc%nsp ) ) &
         CALL fftx_error__(' fft_type_set ', ' fft arrays not yet allocated ', 1 )
