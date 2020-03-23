@@ -75,18 +75,18 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d)
   CALL mp_bcast(fildyn, ionode_id, world_comm)
   
   IF (ionode) THEN
-     OPEN (unit=1, file=TRIM(fildyn)//'0'//post, status='old', form='formatted', &
+     OPEN (unit=1, file=TRIM(fildyn)//'0', status='old', form='formatted', &
           iostat=ierr)
      lnogridinfo = ( ierr /= 0 )
      IF (lnogridinfo) THEN
         WRITE (stdout,*)
-        WRITE (stdout,*) ' file ',TRIM(fildyn)//'0'//post, ' not found'
+        WRITE (stdout,*) ' file ',TRIM(fildyn)//'0', ' not found'
         WRITE (stdout,*) ' reading grid info from input'
         READ (5, *) nr1, nr2, nr3
         READ (5, *) nfile
      ELSE
         WRITE (stdout,'(/,4x," reading grid info from file ",a)') &
-                                                          TRIM(fildyn)//'0'//post
+                                                          TRIM(fildyn)//'0'
         READ (1, *) nr1, nr2, nr3
         READ (1, *) nfile
         CLOSE (unit=1, status='keep')
