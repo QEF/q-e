@@ -133,10 +133,6 @@ MODULE fft_types
 
     INTEGER :: grid_id
     COMPLEX(DP), ALLOCATABLE, DIMENSION(:) :: aux
-#if defined(_OPENMP)
-    INTEGER, ALLOCATABLE :: comm2s(:) ! multiple communicator for the fft group along the second direction
-    INTEGER, ALLOCATABLE :: comm3s(:) ! multiple communicator for the fft group along the third direction
-#endif
   END TYPE
 
   REAL(DP) :: fft_dual = 4.0d0
@@ -207,14 +203,6 @@ CONTAINS
       CALL MPI_COMM_SPLIT( comm, color, key, desc%comm3, ierr )
       CALL MPI_COMM_RANK( desc%comm3, desc%mype3, ierr )
       CALL MPI_COMM_SIZE( desc%comm3, desc%nproc3, ierr )
-#if defined(_OPENMP)
-      ALLOCATE( desc%comm2s( OMP_GET_MAX_THREADS() ))
-      ALLOCATE( desc%comm3s( OMP_GET_MAX_THREADS() ))
-      DO i=1, OMP_GET_MAX_THREADS()
-         CALL MPI_COMM_DUP(desc%comm2, desc%comm2s(i), ierr)
-         CALL MPI_COMM_DUP(desc%comm3, desc%comm3s(i), ierr)
-      ENDDO
-#endif
 #else
       desc%comm2 = desc%comm ; desc%mype2 = desc%mype ; desc%nproc2 = desc%nproc
       desc%comm3 = desc%comm ; desc%mype3 = desc%mype ; desc%nproc3 = desc%nproc
@@ -323,14 +311,6 @@ CONTAINS
 #if defined(__MPI)
     IF (desc%comm2 /= MPI_COMM_NULL) CALL MPI_COMM_FREE( desc%comm2, ierr )
     IF (desc%comm3 /= MPI_COMM_NULL) CALL MPI_COMM_FREE( desc%comm3, ierr )
-#if defined(_OPENMP)
-    DO i=1, SIZE(desc%comm2s)
-       IF (desc%comm2s(i) /= MPI_COMM_NULL) CALL MPI_COMM_FREE( desc%comm2s(i), ierr )
-       IF (desc%comm3s(i) /= MPI_COMM_NULL) CALL MPI_COMM_FREE( desc%comm3s(i), ierr )
-    ENDDO
-    DEALLOCATE( desc%comm2s )
-    DEALLOCATE( desc%comm3s )
-#endif
 #else
     desc%comm2 = MPI_COMM_NULL
     desc%comm3 = MPI_COMM_NULL
@@ -370,24 +350,6 @@ CONTAINS
     INTEGER :: ierr
      !write (6,*) ' inside fft_type_set' ; FLUSH(6)
     !
-#if defined(__MPI)
-#if defined(_OPENMP)
-      IF (nmany > OMP_GET_MAX_THREADS()) THEN
-        DO i=1, SIZE(desc%comm2s)
-           IF (desc%comm2s(i) /= MPI_COMM_NULL) CALL MPI_COMM_FREE( desc%comm2s(i), ierr )
-           IF (desc%comm3s(i) /= MPI_COMM_NULL) CALL MPI_COMM_FREE( desc%comm3s(i), ierr )
-        ENDDO
-        DEALLOCATE( desc%comm2s )
-        DEALLOCATE( desc%comm3s )
-        ALLOCATE( desc%comm2s( nmany ))
-        ALLOCATE( desc%comm3s( nmany ))
-        DO i=1, nmany
-           CALL MPI_COMM_DUP(desc%comm2, desc%comm2s(i), ierr)
-           CALL MPI_COMM_DUP(desc%comm3, desc%comm3s(i), ierr)
-        ENDDO
-      ENDIF
-#endif
-#endif
     !
     IF (.NOT. ALLOCATED( desc%nsp ) ) &
         CALL fftx_error__(' fft_type_set ', ' fft arrays not yet allocated ', 1 )
