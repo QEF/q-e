@@ -17,7 +17,9 @@ p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
 # PH
 diel=`grep -A 4 '  Dielectric constant in cartesian' $fname | grep -v '  Dielectric constant' | awk '{print $2; print $3; print $4 }'`
 born=`grep "     E[x-z]  ( " $fname | awk '{print $3; print $4; print $5}'`
-phfreq=`grep "     freq (.*THz" $fname | awk '{print $5; print $8}'`
+# phfreq=`grep "     freq (.*THz" $fname | awk '{print $5; print $8}'`
+# in the version below, phfreq only contains frequencies in cm^-1, not in THz
+phfreq=`grep "     freq (.*THz" $fname | awk '{print $8}'`
 dos=`grep "DOS =" $fname | awk '{print $3; print $8}'`
 lambda=$(awk '
 # reset counters
