@@ -278,6 +278,7 @@ MODULE control_flags
 
   LOGICAL,          PUBLIC :: treinit_gvecs = .FALSE.
 
+  LOGICAL,          PUBLIC :: diagonalize_on_host = .FALSE.
   !
   ! ...  end of module-scope declarations
   !

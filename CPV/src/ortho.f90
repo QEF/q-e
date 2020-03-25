@@ -203,9 +203,11 @@ CONTAINS
       USE kinds,              ONLY: DP
       USE orthogonalize_base, ONLY: rhoset, sigset, tauset, ortho_iterate,   &
                                     use_parallel_diag
+      USE control_flags,      ONLY: diagonalize_on_host
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, my_bgrp_id, inter_bgrp_comm, nbgrp
       USE mp,                 ONLY: mp_sum, mp_bcast
       USE mp_world,           ONLY: mpime
+      USE device_util_m
 
       IMPLICIT  NONE
 
@@ -227,6 +229,7 @@ CONTAINS
 
       INTEGER  :: i, j, info, nr, nc, ir, ic
       INTEGER, SAVE :: icnt = 1
+      REAL(DP), ALLOCATABLE :: rhos_h(:,:), s_h(:,:), rhod_h(:)
       !
       ! ...   Subroutine body
       !
@@ -285,12 +288,22 @@ CONTAINS
          IF( idesc(LAX_DESC_NR) == idesc(LAX_DESC_NC) .AND. idesc(LAX_DESC_NR) == idesc(LAX_DESC_N) ) THEN
             CALL laxlib_diagonalize( nss, rhos, rhod, s, info )
          ELSE IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
-            CALL collect_matrix( wrk, rhos, ir, nr, ic, nc, idesc(LAX_DESC_COMM) )
-            IF( idesc(LAX_DESC_IC) == 1 .AND. idesc(LAX_DESC_IR) == 1 ) THEN
-               CALL laxlib_diagonalize( nss, wrk, rhod, stmp, info )
-            END IF 
-            CALL distribute_matrix( stmp, s, ir, nr, ic, nc, idesc(LAX_DESC_COMM) )
-            CALL mp_bcast( rhod, 0, idesc(LAX_DESC_COMM) )
+            IF( diagonalize_on_host ) THEN  !  tune here
+               ALLOCATE( rhos_h, SOURCE = rhos )
+               ALLOCATE( rhod_h, MOLD = rhod )
+               ALLOCATE( s_h, MOLD = s )
+               CALL laxlib_diagonalize( nss, rhos_h, rhod_h, s_h, idesc )
+               CALL dev_memcpy( s, s_h )
+               CALL dev_memcpy( rhod, rhod_h )
+               DEALLOCATE( rhos_h, rhod_h, s_h )
+            ELSE
+               CALL collect_matrix( wrk, rhos, ir, nr, ic, nc, idesc(LAX_DESC_COMM) )
+               IF( idesc(LAX_DESC_IC) == 1 .AND. idesc(LAX_DESC_IR) == 1 ) THEN
+                  CALL laxlib_diagonalize( nss, wrk, rhod, stmp, info )
+               END IF 
+               CALL distribute_matrix( stmp, s, ir, nr, ic, nc, idesc(LAX_DESC_COMM) )
+               CALL mp_bcast( rhod, 0, idesc(LAX_DESC_COMM) )
+            END IF
          END IF
 #else
          CALL laxlib_diagonalize( nss, rhos, rhod, s, idesc )

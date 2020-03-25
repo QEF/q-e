@@ -63,6 +63,8 @@
       complex(DP), ALLOCATABLE :: self_rhog( :,: )
       LOGICAL  :: ttsic
       real(DP) :: detmp(3,3)
+
+      CALL start_clock( 'exch_corr' )
       !
       !     filling of gradr with the gradient of rho using fft's
       !
@@ -245,6 +247,8 @@
       !
 
       IF( ALLOCATED( gradr ) ) DEALLOCATE( gradr )
+
+      CALL stop_clock( 'exch_corr' )
 
 5555  format(1x,f12.5,1x,f12.5,1x,f12.5/                                &
      &       1x,f12.5,1x,f12.5,1x,f12.5/                                &

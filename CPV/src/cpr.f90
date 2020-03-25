@@ -96,7 +96,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        ema0bg, sfac, eigr, beigr, beigr_d, iprint_stdout,  &
                                        irb, taub, eigrb, rhog, rhos, &
                                        rhor, bephi, becp_bgrp, nfi, idesc, &
-                                       drhor, drhog, bec_bgrp, dbec, bec_d
+                                       drhor, drhog, bec_bgrp, dbec, bec_d, iabox, nabox
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
   USE cell_base,                ONLY : s_to_r, r_to_s
@@ -268,7 +268,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      ! 
      IF ( (okvan .or. nlcc_any ) .AND. (tfor .OR. thdyn .OR. tfirst) ) THEN
         !
-        CALL initbox( tau0, alat, at, ainv, taub, irb )
+        CALL initbox( tau0, alat, at, ainv, taub, irb, iabox, nabox )
         !
         CALL phbox( taub, iverbosity, eigrb )
         !
@@ -812,7 +812,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            ! ... restart with CP
            !
            IF ( okvan .or. nlcc_any ) THEN
-              CALL initbox( tau0, alat, at, ainv, taub, irb )
+              CALL initbox( tau0, alat, at, ainv, taub, irb, iabox, nabox )
               CALL phbox( taub, iverbosity, eigrb ) 
            END IF
            CALL r_to_s( tau0, taus, nat, ainv )
@@ -1126,6 +1126,7 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'new_ns' )
   CALL print_clock( 'strucf' )
   CALL print_clock( 'calbec' )
+  CALL print_clock( 'exch_corr' )
 !==============================================================
   IF (ts_vdw) THEN
     WRITE( stdout, '(/5x,"Called by tsvdw:")' )

@@ -51,7 +51,7 @@ SUBROUTINE from_scratch( )
     USE wavefunctions,        ONLY : c0_bgrp, cm_bgrp, c0_d, phi, cm_d
     USE fft_base,             ONLY : dfftp, dffts
     USE time_step,            ONLY : delt
-    USE cp_main_variables,    ONLY : idesc, bephi, becp_bgrp, nfi, beigr_d, &
+    USE cp_main_variables,    ONLY : idesc, bephi, becp_bgrp, nfi, beigr_d, iabox, nabox, &
                                      sfac, eigr, beigr, taub, irb, eigrb, bec_bgrp, bec_d, &
                                      lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
                                      vpot, ht0, edft, becdr_bgrp, dbec, drhor, drhog
@@ -118,7 +118,7 @@ SUBROUTINE from_scratch( )
     CALL strucf( sfac, eigts1, eigts2, eigts3, mill, dffts%ngm )
     !     
     IF ( okvan .OR. nlcc_any ) THEN
-       CALL initbox ( tau0, alat, at, ainv, taub, irb )
+       CALL initbox ( tau0, alat, at, ainv, taub, irb, iabox, nabox )
        CALL phbox( taub, iverbosity, eigrb )
     END IF
     !
@@ -237,7 +237,7 @@ SUBROUTINE from_scratch( )
       if( iverbosity > 1 ) &
              CALL printout_pos( stdout, fion, nat, ityp, head = ' fion ' )
 
-      CALL newd( vpot, irb, eigrb, becsum, fion, .true. )
+      CALL newd( vpot, becsum, fion, .true. )
       !
       IF( force_pairing ) THEN
          !

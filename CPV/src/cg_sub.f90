@@ -307,7 +307,7 @@
 
         !update d
 
-        call newd(vpot,irb,eigrb,rhovan,fion,.true.)
+        call newd(vpot,rhovan,fion,.true.)
 
 
         call prefor(eigr,betae)!ATTENZIONE
@@ -855,7 +855,7 @@
 
      call calcmt( nrlx, f, z0t, fmat0 )
 
-      call newd(vpot,irb,eigrb,rhovan,fion,.true.)
+      call newd(vpot,rhovan,fion,.true.)
 #if defined (__CUDA)
       CALL errore('  runcg_uspp ', ' GPU version not yet implemented', 1 )
 #else

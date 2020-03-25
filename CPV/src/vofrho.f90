@@ -438,12 +438,12 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       END IF
        
       IF( nspin == 1 ) THEN
-         rhog( 1:dfftp%ngm, 1 ) = rhog( 1:dfftp%ngm, 1 ) + vtemp(1:dfftp%ngm) 
+         CALL zaxpy(dfftp%ngm, (1.0d0,0.0d0) , vtemp, 1, rhog(1,1), 1)
       ELSE
          isup=1
          isdw=2
-         rhog( 1:dfftp%ngm, isup ) = rhog( 1:dfftp%ngm, isup ) + vtemp(1:dfftp%ngm) 
-         rhog( 1:dfftp%ngm, isdw ) = rhog( 1:dfftp%ngm, isdw ) + vtemp(1:dfftp%ngm) 
+         CALL zaxpy(dfftp%ngm, (1.0d0,0.0d0) , vtemp, 1, rhog(1,isup), 1)
+         CALL zaxpy(dfftp%ngm, (1.0d0,0.0d0) , vtemp, 1, rhog(1,isdw), 1)
          IF( ttsic ) THEN
             rhog( 1:dfftp%ngm, isup ) = rhog( 1:dfftp%ngm, isup ) - self_vloc(1:dfftp%ngm) 
             rhog( 1:dfftp%ngm, isdw ) = rhog( 1:dfftp%ngm, isdw ) - self_vloc(1:dfftp%ngm) 

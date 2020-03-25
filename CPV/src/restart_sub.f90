@@ -35,7 +35,7 @@ SUBROUTINE from_restart( )
                                      efield_berry_setup2, tefield2
    USE uspp,                  ONLY : okvan, vkb, nkb, nlcc_any
    USE cp_main_variables,     ONLY : ht0, htm, lambdap, lambda, lambdam, eigr, beigr, beigr_d, &
-                                     sfac, taub, irb, eigrb, edft, bec_bgrp, dbec, idesc
+                                     sfac, taub, irb, eigrb, edft, bec_bgrp, dbec, idesc, iabox, nabox
    USE time_step,             ONLY : delt
    USE fft_base,              ONLY : dfftp, dffts
    USE matrix_inversion
@@ -154,7 +154,7 @@ SUBROUTINE from_restart( )
    ! ... to starting cell (from ndr or again standard input)
    !
    IF ( okvan .or. nlcc_any ) THEN
-      CALL initbox( tau0, alat, at, ainv, taub, irb )
+      CALL initbox( tau0, alat, at, ainv, taub, irb, iabox, nabox )
       CALL phbox( taub, iverbosity, eigrb )
    END IF
    !
