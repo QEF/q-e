@@ -79,8 +79,9 @@
   USE mp_global,     ONLY : my_pool_id, me_pool
   USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode_id, stdout
   USE io_var,        ONLY : iunkf, iunqf
-  USE noncollin_module, ONLY : npol
+  USE noncollin_module, ONLY : npol, noncolin
   USE wvfct,         ONLY : npwx
+  USE paw_variables, ONLY : okpaw
 #if defined(__NAG)
   USE F90_UNIX_ENV,  ONLY : iargc, getarg
 #endif
@@ -846,6 +847,12 @@
   IF (tfixed_occ) CALL errore('epw_readin', 'phonon with arbitrary occupations not tested', 1)
   !
   IF (elph .AND. lsda) CALL errore('epw_readin', 'El-ph and spin not implemented', 1)
+  !
+  IF (noncolin .AND. okpaw) THEN
+    WRITE(stdout, '(a)') &
+       'WARNING: epw_readin: Some features are still experimental in ph.x with PAW and noncolin=.true.'
+    WRITE(stdout, '(21x,a)') 'In this case, use the EPW results at your own risk.'
+  ENDIF
   !
   !   There might be other variables in the input file which describe
   !   partial computation of the dynamical matrix. Read them here

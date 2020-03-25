@@ -45,7 +45,9 @@
     ibndend,                 &!  Last band index after excluding bands in Wannierization step
     nbndep,                  &!  Number of remaining bands after excluding bands in Wannierizatin step
     ngxx,                    &!  Maximum number of G-vectors over all pools
-    ngxxf                     !  Maximum number of G-vectors over all pools for k+q folding
+    ngxxf,                   &!  Maximum number of G-vectors over all pools for k+q folding
+    ig_s,                    &!  First G index within each core in case of G parallelization
+    ig_e                      !  Last G index within each core in case of G parallelization
   INTEGER, ALLOCATABLE ::    &!
     igk(:),                  &!  Index for k+G vector
     igkq(:),                 &!  Index for k+q+G vector
@@ -128,7 +130,8 @@
     dmef(:, :, :, :),         &!  dipole matrix elements on the fine   mesh (ipol, nbnd, nbnd, nks)
     vmef(:, :, :, :),         &!  velocity matrix elements on the fine mesh (ipol, nbnd, nbnd, nks)
     bmat(:, :, :, :),         &!  overlap U_k+q U_k^\dagger on the coarse mesh (nbnd, nbnd, nks, nqtot)
-    eps_rpa(:)                 !  rpa model screening
+    eps_rpa(:),               &!  rpa model screening
+    veff(:, :)                 !  effective potential
 ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
  INTEGER ::                  &
     N1_dim,                  &
