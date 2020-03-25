@@ -183,7 +183,7 @@ clean:
                 
 # Special cases for EPW
 	@rm -rf epw_base/save epw_super/save epw_pl/save/ epw_polar/save/ \
-             trev/save epw_trev_uspp/save
+                epw_trev/save epw_trev_uspp/save epw_trev_paw/save
 
 	@rm -f userconfig
 
