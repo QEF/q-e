@@ -68,6 +68,7 @@ paw_variables.o \
 plugin_flags.o \
 plugin_arguments.o \
 plugin_variables.o \
+powell.o \
 pseudo_types.o \
 pw_dot.o \
 qmmm.o \
