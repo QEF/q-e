@@ -63,11 +63,10 @@ PROGRAM ev
       USE mp,        ONLY : mp_bcast
       USE io_global, ONLY : ionode, ionode_id
       IMPLICIT NONE
-      INTEGER, PARAMETER:: nmaxpar=4, nmaxpt=100, nseek=10000, nmin=4
+      INTEGER, PARAMETER:: nmaxpar=4, nmaxpt=100 
       INTEGER :: npar,npt,istat, ierr
       CHARACTER :: bravais*8, au_unit*3, filin*256
-      REAL(DP) :: par(nmaxpar), deltapar(nmaxpar), parmin(nmaxpar), &
-             parmax(nmaxpar), v0(nmaxpt), etot(nmaxpt), efit(nmaxpt), &
+      REAL(DP) :: par(nmaxpar), v0(nmaxpt), etot(nmaxpt), efit(nmaxpt), &
              fac, emin, chisq, a
       REAL(DP), PARAMETER :: gpa_kbar = 10.0_dp
       LOGICAL :: in_angstrom
@@ -147,24 +146,9 @@ PROGRAM ev
       par(2) = 500.0d0
       par(3) = 5.0d0
       par(4) = -0.01d0
-!
-      parmin(1) = 0.0d0
-      parmin(2) = 0.0d0
-      parmin(3) = 1.0d0
-      parmin(4) = -1.0d0
-!
-      parmax(1) = 100000.d0
-      parmax(2) = 100000.d0
-      parmax(3) = 15.0d0
-      parmax(4) = 0.0d0
-!
-      deltapar(1) = 1.0d0
-      deltapar(2) = 100.d0
-      deltapar(3) = 1.0d0
-      deltapar(4) = 0.01d0
-!
+
       CALL find_minimum &
-           (npar,par,chisq) !deltapar,parmin,parmax,nseek,nmin,chisq)
+           (npar,par,chisq)
 !
       CALL write_results &
            (npt,in_angstrom,fac,v0,etot,efit,istat,par,npar,emin,chisq, &
