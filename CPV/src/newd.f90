@@ -36,7 +36,7 @@
 !
       IMPLICIT NONE
 ! input
-      REAL(DP), INTENT(OUT) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
+      REAL(DP), INTENT(IN) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
       REAL(DP)  vr(dfftp%nnr,nspin)
       LOGICAL, INTENT(IN) :: tprint
 ! output
@@ -66,7 +66,7 @@
       fac=omegab/DBLE(dfftb%nr1*dfftb%nr2*dfftb%nr3)
 
 !$omp parallel default(none) &
-!$omp          shared(ngb, nh, qgb, eigrb, dfftb, irb, vr, ci, deeq, tfor, thdyn, tprnfor, tprint, nabox, &
+!$omp          shared(ngb, nh, qgb, eigrb, dfftb, irb, vr, deeq, tfor, thdyn, tprnfor, tprint, nabox, &
 !$omp                 fac, nspin, my_bgrp_id, nbgrp, ityp, upf, nat, fvan, tpibab, gxb, rhovan, iabox ) &
 !$omp          private(mytid, ntids, is, ia, iia, nfft, iv, jv, ijv, ig, qv, fg1, fg2, res, &
 !$omp                 iss, isup, isdw, fac2, facg1, fac1 )

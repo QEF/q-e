@@ -352,7 +352,7 @@
       
       ftmp = 0.0d0
 !$omp parallel do reduction(+:ftmp) default(none) &
-!$omp shared( gstart, dffts, sfac, rhops, screen_coul, rhoeg, nsp, fpi, gg, tpiba2, mill, g, &
+!$omp shared( gstart, dffts, sfac, rhops, screen_coul, rhoeg, nsp, gg, tpiba2, mill, g, &
 !$omp          nat, ityp, vps, ei1, ei2, ei3, tscreen ) &
 !$omp private(ig, rp, is, rhet, rhog, fpibg, ig1, ig2, ig3, gxc, gyc, gzc, ia, cnvg, cvn, tx, &
 !$omp          ty, tz, teigr )
