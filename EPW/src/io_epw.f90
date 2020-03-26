@@ -1754,7 +1754,7 @@
     !
     CHARACTER(LEN = 256) :: tempfile
     !! Temp file
-    CHARACTER(LEN = 3) :: filelab
+    CHARACTER(LEN = 4) :: filelab
     !! File number
     INTEGER :: unf_recl
     !! Rcl unit
@@ -1799,6 +1799,85 @@
     END SUBROUTINE readdvscf
     !-------------------------------------------------------------
     !
+    !-------------------------------------------------------------
+    SUBROUTINE readint3paw(int3paw, recn, iq, nqc)
+    !-------------------------------------------------------------
+    !!
+    !! Open int3paw files as direct access, read, and close again
+    !! 
+    !! HL - Mar 2020 based on the subroutine of readdvscf
+    !!
+    !-------------------------------------------------------------
+    USE kinds,            ONLY : DP
+    USE io_files,         ONLY : prefix
+    USE units_ph,         ONLY : lint3paw
+    USE epwcom,           ONLY : dvscf_dir
+    USE io_var,           ONLY : iuint3paw
+    USE low_lvl,          ONLY : set_ndnmbr
+    USE uspp_param,       ONLY : nhm
+    USE ions_base,        ONLY : nat
+    USE noncollin_module, ONLY : nspin_mag
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: recn
+    !! perturbation number
+    INTEGER, INTENT(in) :: iq
+    !! the current q-point
+    INTEGER, INTENT(in) :: nqc
+    !! the total number of q-points in the list
+    COMPLEX(KIND = DP), INTENT(inout) :: int3paw(nhm, nhm, nat, nspin_mag)
+    !! int3paw is read from file
+    !
+    ! Local variables
+    !
+    CHARACTER(LEN = 256) :: tempfile
+    !! Temp file
+    CHARACTER(LEN = 4) :: filelab
+    !! File number
+    INTEGER :: unf_recl
+    !! Rcl unit
+    INTEGER :: ios
+    !! Error number
+    INTEGER(KIND = 8) :: mult_unit
+    !! Record length
+    INTEGER(KIND = 8) :: file_size
+    !! File size
+    REAL(KIND = DP) :: dummy
+    !! Dummy variable
+    !
+    !  the call to set_ndnmbr is just a trick to get quickly
+    !  a file label by exploiting an existing subroutine
+    !  (if you look at the sub you will find that the original
+    !  purpose was for pools and nodes)
+    !
+    CALL set_ndnmbr(0, iq, 1, nqc, filelab)
+    tempfile = TRIM(dvscf_dir) // TRIM(prefix) // '.dvscf_paw_q' // filelab
+    INQUIRE(IOLENGTH = unf_recl) dummy
+    unf_recl = unf_recl  * lint3paw
+    mult_unit = unf_recl
+    mult_unit = recn * mult_unit
+    !
+    !  open the dvscf_paw file, read and close
+    !
+    OPEN(iuint3paw, FILE = tempfile, FORM = 'unformatted', &
+         ACCESS = 'direct', IOSTAT = ios, RECL = unf_recl, STATUS = 'old')
+    IF (ios /= 0) CALL errore('readint3paw', 'error opening ' // tempfile, iuint3paw)
+    !
+    ! check that the binary file is long enough
+    INQUIRE(FILE = tempfile, SIZE = file_size)
+    IF (mult_unit > file_size) CALL errore('readint3paw', &
+         TRIM(tempfile) //' too short', iuint3paw)
+    !
+    READ(iuint3paw, REC = recn) int3paw
+    CLOSE(iuint3paw, STATUS = 'keep')
+    !
+    RETURN
+    !
+    !-------------------------------------------------------------
+    END SUBROUTINE readint3paw
+    !-------------------------------------------------------------
+    !
     !------------------------------------------------------------
     SUBROUTINE readwfc(ipool, recn, evc0)
     !------------------------------------------------------------
@@ -1830,7 +1909,7 @@
     ! Local variables
     CHARACTER(LEN = 256) :: tempfile
     !! Temp file
-    CHARACTER(LEN = 3) :: nd_nmbr0
+    CHARACTER(LEN = 4) :: nd_nmbr0
     !! File number
     INTEGER :: unf_recl
     !! Rcl unit
@@ -1992,8 +2071,10 @@
     USE units_lr,         ONLY : iuwfc, lrwfc
     USE wvfct,            ONLY : nbnd, npwx
     USE noncollin_module, ONLY : npol, nspin_mag
-    USE units_ph,         ONLY : lrdrho
+    USE units_ph,         ONLY : lrdrho, lint3paw
     USE fft_base,         ONLY : dfftp
+    USE uspp_param,       ONLY : nhm
+    USE ions_base,        ONLY : nat
     !
     IMPLICIT NONE
     !
@@ -2013,6 +2094,7 @@
     ! file for setting unitary gauges of eigenstates
     !
     lrdrho = 2 * dfftp%nr1x * dfftp%nr2x * dfftp%nr3x * nspin_mag
+    lint3paw = 2 * nhm * nhm * nat * nspin_mag
     !
     RETURN
     !

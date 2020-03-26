@@ -106,12 +106,12 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
      call setqmod (ngm, xq, g, qmod, qpg)
      call ylmr2 (lmaxq * lmaxq, ngm, qpg, qmod, ylmk0)
      do ig = 1, ngm
-        qmod (ig) = sqrt (qmod (ig) )
+        qmod (ig) = sqrt (qmod (ig) ) * tpiba
      enddo
   else
      call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
      do ig = 1, ngm
-        qmod (ig) = sqrt (gg (ig) )
+        qmod (ig) = sqrt (gg (ig) ) * tpiba
      enddo
   endif
   fact = cmplx (0.d0, - tpiba, kind=DP)

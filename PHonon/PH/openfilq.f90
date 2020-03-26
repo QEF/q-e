@@ -83,16 +83,17 @@ SUBROUTINE openfilq()
   ELSE  
      ! this is the standard treatment
      IF (lgamma.AND.modenum==0.AND..NOT.newgrid ) tmp_dir=tmp_dir_save
-     IF ((noncolin.AND.domag).OR.lsda) tmp_dir=tmp_dir_phq
+     ! FIXME: why this case?
+     IF ( noncolin.AND.domag ) tmp_dir=tmp_dir_phq
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
   iuwfc = 20
   lrwfc = nbnd * npwx * npol
   CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst, tmp_dir)
   IF (.NOT.exst.AND..NOT.exst_mem.and..not.all_done) THEN
-     tmp_dir = tmp_dir_phq
-     !FIXME Dirty fix for obscure case, likely obsolete?
      CALL close_buffer(iuwfc, 'delete') 
+     !FIXME Dirty fix for obscure case
+     tmp_dir = tmp_dir_phq
      CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst, tmp_dir)
      IF (.NOT.exst.AND..NOT.exst_mem) CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)
   END IF

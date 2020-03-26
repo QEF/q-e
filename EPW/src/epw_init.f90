@@ -39,7 +39,7 @@
   USE phcom,            ONLY : vlocq
   USE qpoint,           ONLY : xq, eigqts
   USE nlcc_ph,          ONLY : drc
-  USE elph2,            ONLY : igk_k_all, ngk_all, ngxx
+  USE elph2,            ONLY : igk_k_all, ngk_all, ngxx, veff, ig_s, ig_e
   USE mp,               ONLY : mp_barrier
   USE mp_global,        ONLY : inter_pool_comm, my_pool_id
   USE spin_orb,         ONLY : lspinorb
@@ -49,6 +49,10 @@
   USE poolgathering,    ONLY : poolgather_int, poolgather_int1
   USE io_epw,           ONLY : readwfc
   USE dvqpsi,           ONLY : dvanqq2
+  USE scf,              ONLY : v, vltot
+  USE fft_base,         ONLY : dfftp
+  USE fft_interfaces,   ONLY : fwfft
+  USE mp_images,        ONLY : nproc_image, me_image
   !Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
   USE epwcom,           ONLY : polaron_wf
   USE grid,             ONLY : loadqmesh_serial, loadkmesh_para
@@ -70,10 +74,15 @@
   !! counter on atoms
   INTEGER :: ig
   !! counter on G vectors
+  INTEGER :: ir
+  !! counter on FFT mesh points
+  INTEGER :: is
+  !! counter on spin
   INTEGER :: ierr
   !! Error status
   INTEGER :: itmp
   !! Temporary variable
+  INTEGER, EXTERNAL :: ldim_block, gind_block
   REAL(KIND = DP) :: arg
   !! the argument of the phase
   !
@@ -85,24 +94,35 @@
     ALLOCATE(eigqts(nat), STAT = ierr)
     IF (ierr /= 0) CALL errore('epw_init', 'Error allocating eigqts', 1)
     IF (okvan) THEN
+      ALLOCATE(veff(dfftp%nnr, nspin_mag), STAT = ierr)
+      IF (ierr /= 0) CALL errore('epw_init', 'Error allocating veff', 1)
+      !
+      !   we start by computing the FT of the effective potential
+      !
+      veff(:, :) = czero
+      !
+      DO is = 1, nspin_mag
+        IF (nspin_mag /= 4 .OR. is == 1) THEN
+          DO ir = 1, dfftp%nnr
+            veff(ir, is) = CMPLX(vltot(ir) + v%of_r(ir, is), zero, KIND = DP)
+          ENDDO
+        ELSE
+          DO ir = 1, dfftp%nnr
+            veff(ir, is) = CMPLX(v%of_r(ir, is), zero, KIND = DP)
+          ENDDO
+        ENDIF
+        CALL fwfft('Rho', veff(:, is), dfftp)
+      ENDDO
       ALLOCATE(int1(nhm, nhm, 3, nat, nspin_mag), STAT = ierr)
       IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int1', 1)
       ALLOCATE(int2(nhm, nhm, 3, nat, nat), STAT = ierr)
       IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int2', 1)
-      ALLOCATE(int4(nhm * (nhm + 1) / 2, 3, 3, nat, nspin_mag), STAT = ierr)
-      IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int4(nhm * ', 1)
-      ALLOCATE(int5(nhm * (nhm + 1) / 2, 3, 3, nat , nat), STAT = ierr)
-      IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int5(nhm * ', 1)
       IF (noncolin) THEN
         ALLOCATE(int1_nc(nhm, nhm, 3, nat, nspin), STAT = ierr)
         IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int1_nc', 1)
-        ALLOCATE(int4_nc(nhm, nhm, 3, 3, nat, nspin), STAT = ierr)
-        IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int4_nc', 1)
         IF (lspinorb) THEN
           ALLOCATE(int2_so(nhm, nhm, 3, nat, nat, nspin), STAT = ierr)
           IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int2_so', 1)
-          ALLOCATE(int5_so(nhm, nhm, 3, 3, nat, nat, nspin), STAT = ierr)
-          IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int5_so', 1)
         ENDIF
       ENDIF ! noncolin
     ENDIF ! okvan
@@ -193,6 +213,21 @@
       ENDIF
       !
     ENDDO
+    !
+    IF (okvan) THEN
+#if defined(__MPI)
+      !
+      itmp = ldim_block(ngm, nproc_image, me_image)
+      ig_s = gind_block(1, ngm, nproc_image, me_image)
+      ig_e = ig_s + itmp - 1
+      !
+#else
+      !
+      ig_s = 1      
+      ig_e = ngm
+      !
+#endif
+    ENDIF
     !
   ENDIF
   !

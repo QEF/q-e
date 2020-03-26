@@ -3,6 +3,7 @@ New in dev branch:
   * Stress for noncolinear case
   * QE can be compiled on Windows 10 using PGI v.19.10 Community Edition
     configure works, except FoX: use script install/build_fox_with_pgi.sh
+  * ParO and PPCG iterative diagonalization algorithms
   
 Fixed in dev branch:
   * PW: Restart from interrupted calculations  simplified. As a side effect,
@@ -11,6 +12,8 @@ Fixed in dev branch:
   * Fermi energy incorrectly written to xml file in 'bands' calculation
     (did not affect results, just Fermi energy position in band plotting)
     Also: Fermi energy always written to xml file, also for insulators
+  * Phonon code in the noncolinear case with magnetization ("domag" case)
+    now works properly - courtesy Andrea Urru and Andrea Dal Corso.
 
 Incompatible changes in dev branch:
   * Conversion from 1D FFT real-space index to 3D positions moved into a
@@ -19,8 +22,9 @@ Incompatible changes in dev branch:
     type of atom is in array ityp(:). The logic is now the same as for all
     other codes and there is no need to re-order atoms or to put ultrasoft
     pseudopotentials first, non-conserving second.
-  * Calls to LAXlib routines changed:module to be includede replaced by file
+  * Calls to LAXlib routines changed: module to be included replaced by file
     'laxlib.fh', descriptors replaced by integer values
+  * Interpolation table for Q(G) is in a.u. and no longer in 2pi/a units
 
 New in 6.5 branch:
   * For non-local functionals of the vdW-DF and rVV10 families the kernel is

@@ -41,7 +41,7 @@
 !=----------------------------------------------------------------------=!
 !
 
-   SUBROUTINE cft_1z(c, nsl, nz, ldz, isign, cout)
+   SUBROUTINE cft_1z(c, nsl, nz, ldz, isign, cout, in_place)
 
 !     driver routine for nsl 1d complex fft's of length nz
 !     ldz >= nz is the distance between sequences to be transformed
@@ -52,8 +52,9 @@
 !     Up to "ndims" initializations (for different combinations of input
 !     parameters nz, nsl, ldz) are stored and re-used if available
 
-     INTEGER, INTENT(IN) :: isign
-     INTEGER, INTENT(IN) :: nsl, nz, ldz
+     INTEGER, INTENT(IN)           :: isign
+     INTEGER, INTENT(IN)           :: nsl, nz, ldz
+     LOGICAL, INTENT(IN), OPTIONAL :: in_place
 
      COMPLEX (DP) :: c(:), cout(:)
 
@@ -75,7 +76,16 @@
 
      TYPE(DFTI_DESCRIPTOR_ARRAY), SAVE :: hand( ndims )
      LOGICAL, SAVE :: dfti_first = .TRUE.
+     LOGICAL, SAVE :: is_inplace
      INTEGER :: dfti_status = 0
+     INTEGER :: placement
+
+!$omp threadprivate(hand, dfti_first, zdims, icurrent, is_inplace)
+     IF (PRESENT(in_place)) THEN
+       is_inplace = in_place
+     ELSE
+       is_inplace = .false.
+     endif
      !
      ! Check dimensions and corner cases.
      !
@@ -111,13 +121,21 @@
 #endif
 
      IF (isign < 0) THEN
-        dfti_status = DftiComputeForward(hand(ip)%desc, c, cout )
+        IF (is_inplace) THEN
+          dfti_status = DftiComputeForward(hand(ip)%desc, c )
+        ELSE
+          dfti_status = DftiComputeForward(hand(ip)%desc, c, cout )
+        ENDIF
         IF(dfti_status /= 0) &
-           CALL fftx_error__(' cft_1z ',' stopped in DftiComputeForward ', dfti_status )
+           CALL fftx_error__(' cft_1z ',' stopped in DftiComputeForward '// DftiErrorMessage(dfti_status), dfti_status )
      ELSE IF (isign > 0) THEN
-        dfti_status = DftiComputeBackward(hand(ip)%desc, c, cout )
+        IF (is_inplace) THEN
+          dfti_status = DftiComputeBackward(hand(ip)%desc, c)
+        ELSE
+          dfti_status = DftiComputeBackward(hand(ip)%desc, c, cout )
+        ENDIF
         IF(dfti_status /= 0) &
-           CALL fftx_error__(' cft_1z ',' stopped in DftiComputeBackward ', dfti_status )
+           CALL fftx_error__(' cft_1z ',' stopped in DftiComputeBackward '// DftiErrorMessage(dfti_status), dfti_status )
      END IF
 
 #if defined(__FFT_CLOCKS)
@@ -141,6 +159,8 @@
         found = ( nz == zdims(1,ip) )
         !   The initialization in ESSL and FFTW v.3 depends on all three parameters
         found = found .AND. ( nsl == zdims(2,ip) ) .AND. ( ldz == zdims(3,ip) )
+        dfti_status = DftiGetValue(hand(ip)%desc, DFTI_PLACEMENT, placement)
+        found = found .AND. is_inplace .AND. (placement == DFTI_INPLACE)
         IF (found) EXIT
      END DO
      END SUBROUTINE lookup
@@ -167,7 +187,11 @@
        IF(dfti_status /= 0) &
          CALL fftx_error__(' cft_1z ',' stopped in DFTI_INPUT_DISTANCE ', dfti_status )
 
-       dfti_status = DftiSetValue(hand( icurrent )%desc, DFTI_PLACEMENT, DFTI_NOT_INPLACE)
+       IF (is_inplace) THEN
+         dfti_status = DftiSetValue(hand( icurrent )%desc, DFTI_PLACEMENT, DFTI_INPLACE)
+       ELSE
+         dfti_status = DftiSetValue(hand( icurrent )%desc, DFTI_PLACEMENT, DFTI_NOT_INPLACE)
+       ENDIF
        IF(dfti_status /= 0) &
          CALL fftx_error__(' cft_1z ',' stopped in DFTI_PLACEMENT ', dfti_status )
 
@@ -184,6 +208,10 @@
        IF(dfti_status /= 0) &
          CALL fftx_error__(' cft_1z ',' stopped in DFTI_BACKWARD_SCALE ', dfti_status )
 
+       !dfti_status = DftiSetValue( hand( icurrent )%desc, DFTI_THREAD_LIMIT, 1 );
+       !IF(dfti_status /= 0) &
+       !  CALL fftx_error__(' cft_1z ',' stopped in DFTI_THREAD_LIMIT ', dfti_status )
+
        dfti_status = DftiCommitDescriptor(hand( icurrent )%desc)
        IF(dfti_status /= 0) &
          CALL fftx_error__(' cft_1z ',' stopped in DftiCommitDescriptor ', dfti_status )
@@ -193,7 +221,6 @@
        icurrent = MOD( icurrent, ndims ) + 1
 
      END SUBROUTINE init_dfti
-
 
    END SUBROUTINE cft_1z
 
@@ -297,7 +324,6 @@
         !
      END IF
 
-
 #if defined(__FFT_CLOCKS)
      CALL stop_clock( 'cft_2xy' )
 #endif
@@ -379,7 +405,6 @@
      END SUBROUTINE init_dfti
 
    END SUBROUTINE cft_2xy
-
 
 !
 !=----------------------------------------------------------------------=!

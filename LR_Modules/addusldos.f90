@@ -15,6 +15,7 @@ subroutine addusldos (ldos, becsum1)
   !
   USE kinds,            ONLY : DP
   USE ions_base,        ONLY : nat, ityp, ntyp => nsp
+  USE cell_base,        ONLY : tpiba
   USE fft_base,         ONLY : dfftp
   USE fft_interfaces,   ONLY : invfft
   USE gvect,            ONLY : eigts1, eigts2, eigts3, mill, gg, g, ngm
@@ -54,7 +55,7 @@ subroutine addusldos (ldos, becsum1)
   aux (:,:) = (0.d0,0.d0)
   call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
   do ig = 1, ngm
-     qmod (ig) = sqrt (gg (ig) )
+     qmod (ig) = sqrt (gg (ig) ) * tpiba
   enddo
   do nt = 1, ntyp
      if (upf(nt)%tvanp ) then

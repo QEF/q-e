@@ -6,7 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, qmod, ylmk0, dylmk0, dqg )
+SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, tpiba, qmod, ylmk0, dylmk0,&
+                 dqg )
   !-----------------------------------------------------------------------
   !! This routine computes the derivatives of the Fourier transform of
   !! the Q function needed in stress assuming that the radial fourier
@@ -35,6 +36,8 @@ SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, qmod, ylmk0, dylmk0, dqg )
   !! the polarization of the derivative
   REAL(DP), INTENT(IN) ::  g(3,ngy)
   !! G vectors
+  REAL(DP), INTENT(IN) ::  tpiba
+  !! 2pi/a factor, multiplies G vectors
   REAL(DP), INTENT(IN) ::  qmod(ngy)
   !! moduli of q+G vectors
   REAL(DP), INTENT(IN) ::  ylmk0(ngy,lmaxq*lmaxq)
@@ -157,9 +160,9 @@ SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, qmod, ylmk0, dylmk0, dqg )
         ENDIF
 #endif
 
-        dqg(ig) = dqg(ig) + sig * dylmk0(ig, lp) * work
+        dqg(ig) = dqg(ig) + sig * dylmk0(ig, lp) * work / tpiba
         IF (qmod(ig) > 1.d-9) dqg(ig) = dqg(ig) + &
-            sig * ylmk0(ig, lp) * work1 * g(ipol, ig) / qmod(ig)
+            sig * ylmk0(ig, lp) * work1 * tpiba * g(ipol, ig) / qmod(ig)
      ENDDO
 !$OMP END PARALLEL DO
   !

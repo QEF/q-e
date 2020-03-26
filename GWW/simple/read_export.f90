@@ -13,7 +13,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 ! sname is in symme which is now outside pwcom
   use  uspp,          ONLY : nkb, vkb
   use wavefunctions,  ONLY : evc
-  use io_files,       ONLY : nd_nmbr, prefix, iunwfc, nwordwfc, iunsat, nwordatwfc
+  use io_files,       ONLY : prefix, iunwfc, nwordwfc, iunsat, nwordatwfc
   use io_files,       ONLY : pseudo_dir, psfile
   use io_global,      ONLY : ionode, stdout
   USE ions_base,      ONLY : atm, nat, ityp, tau, nsp

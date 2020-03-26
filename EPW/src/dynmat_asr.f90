@@ -66,7 +66,7 @@
   !! Is the file XML
   CHARACTER(LEN = 3) :: atm
   !!
-  CHARACTER(LEN = 3) :: filelab
+  CHARACTER(LEN = 4) :: filelab
   !!
   CHARACTER(LEN = 80) :: line
   !!

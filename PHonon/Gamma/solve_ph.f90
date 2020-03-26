@@ -77,7 +77,7 @@ SUBROUTINE solve_ph ( )
      END IF
      CALL mp_bcast(mode_done,ionode_id,world_comm)
      CALL mp_bcast(dyn,ionode_id,world_comm)
-     PRINT '("  Phonon: modes up to mode ",i3," already done")', mode_done
+     PRINT '("  Phonon: modes up to mode",i4," already done")', mode_done
      GOTO 2
 1    CLOSE(unit=iunres)
   ENDIF
@@ -89,17 +89,17 @@ SUBROUTINE solve_ph ( )
   DO nu = 1, nmodes
      IF ( has_equivalent((nu-1)/3+1)==1) THEN
         ! calculate only independent modes
-        WRITE( stdout,'(" ***  mode # ",i3," : using symmetry")') nu
+        WRITE( stdout,'(" ***  mode #",i4," : using symmetry")') nu
         GOTO 10
      ENDIF
      IF ( nu<=mode_done) THEN
         ! do not recalculate modes already done
-        WRITE( stdout,'(" ***  mode # ",i3," : using previous run")') nu
+        WRITE( stdout,'(" ***  mode #",i4," : using previous run")') nu
         GOTO 10
      ENDIF
      IF ( asr .and. (nu-1)/3+1==nasr ) THEN
         ! impose ASR on last atom instead of calculating mode
-        WRITE( stdout,'(" ***  mode # ",i3," : using asr")') nu
+        WRITE( stdout,'(" ***  mode #",i4," : using asr")') nu
         GOTO 10
      ENDIF
      ! calculate |b> = dV/dtau*psi
@@ -126,7 +126,7 @@ SUBROUTINE solve_ph ( )
         !
      ENDIF
      !
-     WRITE( stdout,'(" ***  mode # ",i3," : ",i3," iterations")')  &
+     WRITE( stdout,'(" ***  mode #",i4," : ",i3," iterations")')  &
           &          nu, iter
 10   CONTINUE
   ENDDO
