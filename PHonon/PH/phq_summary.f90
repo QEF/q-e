@@ -295,7 +295,7 @@ subroutine phq_summary
   ENDIF
 
   WRITE( stdout, '(//5x,"Atomic displacements:")')
-  WRITE( stdout, '(5x,"There are ",i3," irreducible representations")') nirr
+  WRITE( stdout, '(5x,"There are ",i4," irreducible representations")') nirr
   imode0 = 0
   DO irr = 1, nirr
      IF (done_irr (irr)) then
