@@ -482,11 +482,8 @@
          COMPLEX(DP), DEVICE, ALLOCATABLE :: psis(:)
          COMPLEX(DP), DEVICE, ALLOCATABLE :: ptmp(:,:)
          INTEGER,     DEVICE, POINTER     :: nl_d(:), nlm_d(:)
-         COMPLEX(DP), ALLOCATABLE :: psis_h(:)
-
 
          ALLOCATE( psis( dffts%nnr * many_fft ) )  ! dffts%nnr * many_fft
-         ALLOCATE( psis_h( dffts%nnr ) )  ! dffts%nnr * many_fft
          ALLOCATE( rhos_d ( SIZE(rhos,1), SIZE(rhos,2) ) )
          !
          rhos_d = 0_DP

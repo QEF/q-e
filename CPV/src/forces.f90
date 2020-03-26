@@ -361,6 +361,7 @@
       USE mp_global,              ONLY: me_bgrp
       USE control_flags,          ONLY: many_fft
       USE fft_helper_subroutines
+      USE device_util_m,          ONLY : dev_memcpy
       USE cudafor
 !
       IMPLICIT NONE
@@ -475,8 +476,8 @@
       ENDDO
 
       !
-      df = df_d
-      da = da_d
+      CALL dev_memcpy( df, df_d )
+      CALL dev_memcpy( da, da_d )
 
       IF( nhsa > 0 ) THEN
          !
