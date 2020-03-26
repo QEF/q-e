@@ -293,7 +293,7 @@ DO 11 ITER=1,ITMAX  !main loop
     ETEMP=E
     E=D
     IF (ABS(P).GE.ABS(.5*Q*ETEMP).OR.P.LE.Q*(A-X).OR.  &
-	P.GE.Q*(B-X))  GOTO 1
+         P.GE.Q*(B-X))  GOTO 1
 !   The above conditions determine the acceptability of the 
 !   parabolic fit. Here it is o.k.:
     D=P/Q
