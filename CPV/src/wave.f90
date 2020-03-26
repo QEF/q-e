@@ -469,8 +469,8 @@
       !
       ! 2.519 = 4^(2/3), equivalent to keep only (ngw_g/4) values
       fac = 2.519d0
-      IF( ngw/4 < nbsp ) fac = 1.0d0
-      IF( ngw   < nbsp ) THEN
+      IF( ngw_g/4 < nbsp ) fac = 1.0d0
+      IF( ngw_g   < nbsp ) THEN
         CALL errore(' wave_rand_init ', ' too few plane waves, linear dependent electronic states! ', 1)
       END IF
 
