@@ -346,7 +346,7 @@
 
       nabox = 0
       DO ia = 1, nat
-         IF( .NOT. upf(is)%nlcc ) CYCLE
+         IF( .NOT. upf(ityp(ia))%nlcc ) CYCLE
          IF( ( dfftb%np3( ia ) <= 0 ) .OR. ( dfftb%np2 ( ia ) <= 0 ) .OR. ( my_bgrp_id /= MOD( ia, nbgrp ) ) ) CYCLE 
          nabox = nabox + 1
          iabox( nabox ) = ia
@@ -354,7 +354,7 @@
 !
 !$omp parallel default(none) &      
 !$omp          shared( nsp, na, ngb, eigrb, dfftb, irb, rhocb, &
-!$omp                 nat, upf, wrk1, ityp, nabox, iabox ) &
+!$omp                 nat, wrk1, ityp, nabox, iabox ) &
 !$omp          private( mytid, ntids, is, ia, iia, ig, qv, fg1 )
 
       allocate( qv ( dfftb%nnr ) )
