@@ -78,10 +78,10 @@ SUBROUTINE phqscf
            imode0 = imode0 + npert (irr1)
         ENDDO
         IF (npe == 1) THEN
-           WRITE( stdout, '(//,5x,"Representation #", i3," mode # ",i3)') &
+           WRITE( stdout, '(//,5x,"Representation #",i4," mode #",i4)') &
                               irr, imode0 + 1
         ELSE
-           WRITE( stdout, '(//,5x,"Representation #", i3," modes # ",8i3)') &
+           WRITE( stdout, '(//,5x,"Representation #",i4," modes #",8i4)') &
                               irr, (imode0+irr1, irr1=1,npe)
         ENDIF
         !
