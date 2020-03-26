@@ -244,7 +244,7 @@
           !
           !     put core charge (if present) in rhoc(r)
           !
-          if (nlcc_any) call set_cc(irb,eigrb,rhoc)
+          if (nlcc_any) call set_cc(rhoc)
 
           !
           !---ensemble-DFT
@@ -595,7 +595,7 @@
         !
         !     put core charge (if present) in rhoc(r)
         !
-        if (nlcc_any) call set_cc(irb,eigrb,rhoc)
+        if (nlcc_any) call set_cc(rhoc)
         !
         vpot = rhor
         !
@@ -659,7 +659,7 @@
         !
         !     put core charge (if present) in rhoc(r)
         !
-        if (nlcc_any) call set_cc(irb,eigrb,rhoc)
+        if (nlcc_any) call set_cc(rhoc)
         !
         vpot = rhor
         !
@@ -753,7 +753,7 @@
             !
             !     put core charge (if present) in rhoc(r)
             !
-            if (nlcc_any) call set_cc(irb,eigrb,rhoc)
+            if (nlcc_any) call set_cc(rhoc)
             !
             vpot = rhor
             !
@@ -838,7 +838,7 @@
           !
           !     put core charge (if present) in rhoc(r)
           !
-          if (nlcc_any) call set_cc(irb,eigrb,rhoc)
+          if (nlcc_any) call set_cc(rhoc)
 
           !
           !---ensemble-DFT

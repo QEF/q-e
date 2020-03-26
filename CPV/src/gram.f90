@@ -19,12 +19,14 @@ SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx )
       USE mp,             ONLY : mp_sum
       USE gvect,          ONLY : gstart
       USE mp_global,      ONLY : intra_bgrp_comm, inter_bgrp_comm, me_bgrp, nproc_bgrp
+      USE mp_world,       ONLY : mpime
 !
       IMPLICIT NONE
 !
       INTEGER, INTENT(IN) :: nkbx, ngwx
       REAL(DP)      :: bec_bgrp( nkbx, nbspx_bgrp )
-      COMPLEX(DP)   :: cp_bgrp( ngwx, nbspx_bgrp ), betae( ngwx, nkbx )
+      COMPLEX(DP)   :: cp_bgrp( ngwx, nbspx_bgrp )
+      COMPLEX(DP), INTENT(IN) :: betae( ngwx, nkbx )
 !
       REAL(DP) :: anorm
       REAL(DP), ALLOCATABLE :: csc( : )
@@ -54,7 +56,7 @@ SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx )
          !
          ibgrp_i = ibgrp_g2l( i )
          !
-         CALL gracsc_bgrp( bec_bgrp, betae, cp_bgrp, i, csc, iss, nbgrp_im1 )
+         CALL gracsc_bgrp( i, csc, iss, nbgrp_im1 )
          !
          ! calculate orthogonalized cp(i) : |cp(i)>=|cp(i)>-\sum_k<i csc(k)|cp(k)>
          !
@@ -72,8 +74,10 @@ SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx )
          IF( ibgrp_i > 0 ) THEN
             cp_bgrp( :, ibgrp_i ) = ctmp
             anorm = cscnorm( bec_bgrp, cp_bgrp, ibgrp_i, nbspx_bgrp )
-            CALL dscal( 2*ngw, 1.0d0/anorm, cp_bgrp(1,ibgrp_i), 1 )
-            CALL dscal( nkbx, 1.0d0/anorm, bec_bgrp(1,ibgrp_i), 1 )
+            cp_bgrp(:,ibgrp_i) = cp_bgrp(:,ibgrp_i) / anorm
+            bec_bgrp(:,ibgrp_i) = bec_bgrp(:,ibgrp_i) / anorm
+            !CALL dscal( 2*ngw, 1.0d0/anorm, cp_bgrp(1,ibgrp_i), 1 )
+            !CALL dscal( nkbx, 1.0d0/anorm, bec_bgrp(1,ibgrp_i), 1 )
          END IF
       END DO
       END DO
@@ -143,7 +147,7 @@ CONTAINS
 !
 !
 !-------------------------------------------------------------------------
-      SUBROUTINE gracsc_bgrp( bec_bgrp, betae, cp_bgrp, i, csc, iss, nk )
+      SUBROUTINE gracsc_bgrp( i, csc, iss, nk )
 !-----------------------------------------------------------------------
 !     requires in input the updated bec(k) for k<i
 !     on output: bec(i) is recalculated
@@ -161,9 +165,6 @@ CONTAINS
 !
       INTEGER, INTENT(IN) :: i, iss
       INTEGER, INTENT(OUT) :: nk
-      COMPLEX(DP) :: betae( :, : )
-      REAL(DP)    :: bec_bgrp( :, : )
-      COMPLEX(DP) :: cp_bgrp( :, : )
       REAL(DP)    :: csc( : )
       INTEGER     :: k, kmax_bgrp, kmax,ig, is, iv, jv, ia, inl, jnl, ibgrp_k, ibgrp_i
       REAL(DP)    :: rsum, ddot

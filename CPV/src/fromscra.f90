@@ -56,8 +56,8 @@ SUBROUTINE from_scratch( )
                                      lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
                                      vpot, ht0, edft, becdr_bgrp, dbec, drhor, drhog
     USE mp_global,            ONLY : inter_bgrp_comm, nbgrp, me_bgrp
-    USE mp_world,             ONLY : mpime
-    USE mp,                   ONLY : mp_sum
+    USE mp_world,             ONLY : mpime, world_comm
+    USE mp,                   ONLY : mp_sum, mp_barrier
     USE matrix_inversion
     USE device_util_m,        ONLY : dev_memcpy
 
@@ -209,7 +209,7 @@ SUBROUTINE from_scratch( )
     !
     !     put core charge (if present) in rhoc(r)
     !
-    if ( nlcc_any ) CALL set_cc( irb, eigrb, rhoc )
+    if ( nlcc_any ) CALL set_cc( rhoc )
     !
     IF( .NOT. tcg ) THEN
    

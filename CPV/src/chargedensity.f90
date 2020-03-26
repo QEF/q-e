@@ -75,6 +75,8 @@
       USE io_files,           ONLY: restart_dir
       USE fft_rho
       USE fft_helper_subroutines, ONLY: c2psi_gamma
+      USE mp,                 ONLY: mp_barrier
+      USE mp_world,           ONLY: mpime, world_comm
       !
       IMPLICIT NONE
       INTEGER nfi
@@ -480,9 +482,11 @@
          COMPLEX(DP), DEVICE, ALLOCATABLE :: psis(:)
          COMPLEX(DP), DEVICE, ALLOCATABLE :: ptmp(:,:)
          INTEGER,     DEVICE, POINTER     :: nl_d(:), nlm_d(:)
+         COMPLEX(DP), ALLOCATABLE :: psis_h(:)
 
 
          ALLOCATE( psis( dffts%nnr * many_fft ) )  ! dffts%nnr * many_fft
+         ALLOCATE( psis_h( dffts%nnr ) )  ! dffts%nnr * many_fft
          ALLOCATE( rhos_d ( SIZE(rhos,1), SIZE(rhos,2) ) )
          !
          rhos_d = 0_DP
@@ -505,7 +509,7 @@
 !$cuf kernel do(1)
                  do ig = 1, dffts%ngw
                     psis( nlm_d( ig ) + ioff) = CONJG( c_d( ig, ii ) )
-                    psis( nl_d( ig )  + ioff) = c_d( ig, ii+1 )
+                    psis( nl_d( ig )  + ioff) = c_d( ig, ii )
                  end do
               END IF
               ! CALL c2psi_gamma( dffts, psis, c_bgrp(:,ii), c_bgrp(:,ii+1) )

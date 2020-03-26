@@ -467,6 +467,13 @@
       !
       ! ... assign random values to wave functions
       !
+      ! 2.519 = 4^(2/3), equivalent to keep only (ngw_g/4) values
+      fac = 2.519d0
+      IF( ngw/4 < nbsp ) fac = 1.0d0
+      IF( ngw   < nbsp ) THEN
+        CALL errore(' wave_rand_init ', ' too few plane waves, linear dependent electronic states! ', 1)
+      END IF
+
       DO ib = 1, nbsp
 
         IF( local ) THEN
@@ -490,7 +497,7 @@
         IF( ibgrp > 0 ) THEN
           DO ig = 1, ngw
             IF( local ) THEN
-               IF( gg(ig) < ggx / 2.519d0 ) THEN  ! 2.519 = 4^(2/3), equivalent to keep only (ngw_g/4) values
+               IF( gg(ig) < ggx / fac ) THEN  
                   rranf1 = rnd( 1, mill(1,ig) ) * rnd( 2, mill(2,ig) ) * rnd( 3, mill(3,ig) )
                   rranf2 = 0.0d0
                   cm_bgrp( ig, ibgrp ) =  ampre * CMPLX( rranf1, rranf2 ,kind=DP) / ( 1.0d0 + gg(ig) )

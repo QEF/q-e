@@ -110,7 +110,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
 !=================================================================
      ! ... put core charge (if present) in rhoc(r)
      !
-     IF ( nlcc_any ) CALL set_cc( irb, eigrb, rhoc )
+     IF ( nlcc_any ) CALL set_cc( rhoc )
      !
      IF ( lwf ) THEN
         !

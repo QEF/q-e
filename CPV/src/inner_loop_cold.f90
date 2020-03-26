@@ -120,7 +120,7 @@
         ! calculates the electronic charge density
         CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, dbec, rhovan, &
                      rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
-        IF(nlcc_any) CALL set_cc( irb, eigrb, rhoc )
+        IF(nlcc_any) CALL set_cc( rhoc )
   
         ! calculates the SCF potential, the total energy
         ! and the ionic forces
@@ -261,7 +261,7 @@
         ! calculates the electronic charge density
          CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, dbec, rhovan, &
                      rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
-         IF(nlcc_any) CALL set_cc( irb, eigrb, rhoc )
+         IF(nlcc_any) CALL set_cc( rhoc )
   
         ! calculates the SCF potential, the total energy
         ! and the ionic forces
@@ -410,7 +410,7 @@
       ! calculates the electronic charge density
       CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, dbec, rhovan, &
                    rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
-      IF(nlcc_any) CALL set_cc( irb, eigrb, rhoc )
+      IF(nlcc_any) CALL set_cc( rhoc )
   
       ! calculates the SCF potential, the total energy
       ! and the ionic forces
