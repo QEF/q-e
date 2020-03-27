@@ -1,0 +1,12 @@
+&input
+  prefix   = 'aluminum',
+  outdir   = './'
+  verbosity = 'high'
+  wpot_dir = 'w_pot/'
+  fildyn = 'al.dyn'
+  fildvscf='aldv'
+
+  do_long_range = .false.
+  do_charge_neutral = .false.
+ /
+

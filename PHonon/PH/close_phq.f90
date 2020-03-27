@@ -27,6 +27,7 @@ SUBROUTINE close_phq( flag )
   USE ramanm,        ONLY : lraman, elop, iuchf, iud2w, iuba2
   USE el_phon,       ONLY : elph_mat,iunwfcwann
   USE ldaU,          ONLY : lda_plus_u
+  USE dvscf_interpolate, ONLY : ldvscf_interpolate, dvscf_interpol_close
   !
   IMPLICIT NONE
   !
@@ -107,6 +108,12 @@ SUBROUTINE close_phq( flag )
      CALL close_buffer(iuatwfc,'delete')
      CALL close_buffer(iuatswfc,'delete')
      CLOSE( UNIT = iundnsscf, STATUS = 'KEEP' )
+  ENDIF
+  !
+  ! dVscf Fourier interpolation
+  !
+  IF (flag .AND. ldvscf_interpolate) THEN
+    CALL dvscf_interpol_close()
   ENDIF
   !
   RETURN

@@ -612,14 +612,15 @@ clean_pw_ph.f90     Clean all variables of pw.x and of ph.x. Used to
 \end{verbatim}
 
 Starting point and main programs. The directory \texttt{PHonon/PH} contains 
-five executables whose main programs are:
+six executables whose main programs are:
 
 \begin{verbatim}
-phonon.f90  This is the main program of ph.x
-q2r.f90     This is the main program of q2r.x
-matdyn.f90  This is the main program of matdyn.x
-dynmat.f90  This is the main program of dynmat.x
-fqha.f90    This is the main program for fqha.x                      
+phonon.f90     This is the main program of ph.x
+q2r.f90        This is the main program of q2r.x
+matdyn.f90     This is the main program of matdyn.x
+dynmat.f90     This is the main program of dynmat.x
+fqha.f90       This is the main program for fqha.x
+dvscf_q2r.f90  This is the main program for dvscf_q2r.x
 \end{verbatim}
 
 Reading input, pseudopotentials, and files written by \texttt{pw.x}:
@@ -1189,6 +1190,12 @@ find_equiv_sites.f90
 generate_dynamical_matrix_c.f90   
 generate_effective_charges_c.f90 
 set_asr_c.f90
+\end{verbatim}
+
+Routine for the Fourier interpolation of the phonon potential:
+
+\begin{verbatim}
+dvscf_interpolate.f90
 \end{verbatim}
 
 Miscellaneous routines:

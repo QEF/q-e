@@ -4,6 +4,8 @@ New in dev branch:
   * QE can be compiled on Windows 10 using PGI v.19.10 Community Edition
     configure works, except FoX: use script install/build_fox_with_pgi.sh
   * ParO and PPCG iterative diagonalization algorithms
+  * Fourier interpolation of phonon potential implemented in ph.x
+    (Jae-Mo Lihm, Seoul Natl. Univ.)
   
 Fixed in dev branch:
   * PW: Restart from interrupted calculations  simplified. As a side effect,
