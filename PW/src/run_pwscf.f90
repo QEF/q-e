@@ -180,7 +180,7 @@ SUBROUTINE run_pwscf( exit_status )
         ! ... save data before updating positions / cell
         !
         CALL qexsd_set_status( 0 )
-        CALL punch( 'config-nowf' )
+        CALL punch( 'config-only' )
         !
         IF (fix_volume) CALL impose_deviatoric_stress( sigma )
         IF (fix_area)   CALL impose_deviatoric_stress_2d( sigma )
@@ -207,8 +207,8 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ! ... exit condition (ionic convergence) is checked here
      !
-     IF ( lmd .OR. lbfgs ) CALL add_qexsd_step( idone )
      IF ( conv_ions ) EXIT main_loop
+     IF ( lmd .OR. lbfgs ) CALL add_qexsd_step( idone )
      !
      ! ... receive new positions from MM code in QM/MM run
      !
