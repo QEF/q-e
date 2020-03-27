@@ -177,6 +177,11 @@ SUBROUTINE run_pwscf( exit_status )
      !
      IF ( lmd .OR. lbfgs ) THEN
         !
+        ! ... save data before updating positions / cell
+        !
+        CALL qexsd_set_status( 0 )
+        CALL punch( 'config-nowf' )
+        !
         IF (fix_volume) CALL impose_deviatoric_stress( sigma )
         IF (fix_area)   CALL impose_deviatoric_stress_2d( sigma )
         !
@@ -190,14 +195,8 @@ SUBROUTINE run_pwscf( exit_status )
         conv_ions = ( ions_status == 0 ) .OR. &
                     ( ions_status == 1 .AND. treinit_gvecs )
         !
-        ! ... then we save restart information for the new configuration
-        !
-        IF ( idone <= nstep .AND. .NOT. conv_ions ) THEN 
-            CALL qexsd_set_status( 255 )
-            CALL punch( 'config-nowf' )
-        END IF
-        !
         IF (dft_is_hybrid() )  CALL stop_exx()
+        !
      END IF
      !
      CALL stop_clock( 'ions' ); !write(*,*)' stop ions' ; FLUSH(6)
