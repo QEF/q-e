@@ -113,7 +113,7 @@
     ! read the <prefix>.dvscf_q[iq] files
     !
     dvscfin = czero
-    int3_paw = czero
+    IF (okpaw) int3_paw = czero
     !
     !! 2020.03 HL
     !! The part below should be changed accordingly when parallelization over
