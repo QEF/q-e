@@ -316,8 +316,13 @@ SUBROUTINE openfilq()
         !
         ir = irlocal + nrbase
         !
+#if defined(__MPI)
         WRITE(filwpot, '(a,I0,a)') TRIM(wpot_dir) // TRIM(prefix) // '.' &
                                    // 'wpot.irc', ir, '.dat1'
+#else
+        WRITE(filwpot, '(a,I0,a)') TRIM(wpot_dir) // TRIM(prefix) // '.' &
+                                   // 'wpot.irc', ir, '.dat'
+#endif
         !
         ! FIXME: better way to set units?
         !
