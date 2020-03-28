@@ -965,7 +965,11 @@ SUBROUTINE read_rotate_dvscf()
       CALL davcio_drho(dvscf_p, lrdrho, iudvscf, imode, -1)
       !
       DO is = 1, nspin_mag
+#if defined(__MPI)
         CALL gather_grid(dfftp, dvscf_p(:, is), dvscf_p_gathered)
+#else
+        dvscf_p_gathered = dvscf_p(:, is)
+#endif
         !
         ! Rotate from pattern to crystal coordiate
         !
