@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2008 Quantum ESPRESSO group
+! Copyright (C) 2002-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -395,16 +395,26 @@ MODULE input_parameters
           ! ONLY PW
 
         LOGICAL :: lda_plus_u = .false.
-          ! Use DFT+U method - following are the needed parameters
+          ! Use DFT+U(+V) method - following are the needed parameters
         INTEGER :: lda_plus_u_kind = 0
+        INTEGER :: lback(nsx) = -1
+        INTEGER :: l1back(nsx) = -1
         INTEGER, PARAMETER :: nspinx=2
         REAL(DP) :: starting_ns_eigenvalue(lqmax,nspinx,nsx) = -1.0_DP
         REAL(DP) :: hubbard_u(nsx) = 0.0_DP
+        REAL(DP) :: hubbard_u_back(nsx) = 0.0_DP
+        REAL(DP) :: hubbard_v(200,5400,4) = 0.0_DP ! 200*(3x3x3) = 5400
         REAL(DP) :: hubbard_j0(nsx) = 0.0_DP
         REAL(DP) :: hubbard_j(3,nsx) = 0.0_DP
         REAL(DP) :: hubbard_alpha(nsx) = 0.0_DP
+        REAL(DP) :: hubbard_alpha_back(nsx) = 0.0_DP
         REAL(DP) :: hubbard_beta(nsx) = 0.0_DP
         CHARACTER(len=80) :: U_projection_type = 'atomic'
+        CHARACTER(len=80) :: Hubbard_parameters = 'input'
+        LOGICAL :: reserv(nsx) = .FALSE.
+        LOGICAL :: reserv_back(nsx) = .FALSE.
+        LOGICAL :: hub_pot_fix = .FALSE.
+        LOGICAL :: backall(nsx) = .FALSE.
 
         LOGICAL :: la2F = .false.
           ! For electron-phonon calculations
@@ -619,8 +629,9 @@ MODULE input_parameters
              force_symmorphic, starting_charge, starting_magnetization,       &
              occupations, degauss, nspin, ecfixed,                            &
              qcutz, q2sigma, lda_plus_U, lda_plus_u_kind,                     &
-             Hubbard_U, Hubbard_J, Hubbard_alpha,                             &
-             Hubbard_J0, Hubbard_beta,                                        &
+             Hubbard_U, Hubbard_U_back, Hubbard_J, Hubbard_alpha,             &
+             Hubbard_alpha_back, Hubbard_J0, Hubbard_beta,                    &
+             hub_pot_fix, Hubbard_V, Hubbard_parameters,                      &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
              U_projection_type, input_dft, la2F, assume_isolated,             &
              nqx1, nqx2, nqx3, ecutfock, localization_thr, scdm, ace,         &

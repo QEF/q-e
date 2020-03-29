@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2016-2019 Quantum ESPRESSO group
+! Copyright (C) 2016-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -183,7 +183,7 @@ SUBROUTINE post_xml_init (  )
   okpaw = ANY ( upf(1:nsp)%tpawp )
   IF ( .NOT. lspinorb ) CALL average_pp ( nsp )
   !! average_pp must be called before init_lda_plus_u
-  IF ( lda_plus_u ) CALL init_lda_plus_u ( upf(1:nsp)%psd, noncolin )
+  IF ( lda_plus_u ) CALL init_lda_plus_u ( upf(1:nsp)%psd, nspin, noncolin )
   !
   ! ... allocate memory for G- and R-space fft arrays (from init_run.f90)
   !

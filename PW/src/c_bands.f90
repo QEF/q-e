@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,7 +23,7 @@ SUBROUTINE c_bands( iter )
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_flags,        ONLY : ethr, isolve, restart
-  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
+  USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, wfcU
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions,        ONLY : evc
   USE bp,                   ONLY : lelfield
@@ -80,7 +80,11 @@ SUBROUTINE c_bands( iter )
      ! ... Set k-point, spin, kinetic energy, needed by Hpsi
      !
      current_k = ik
+     !
+     IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) CALL phase_factor(ik)
+     !
      IF ( lsda ) current_spin = isk(ik)
+     !
      CALL g2_kin( ik )
      !
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
@@ -668,7 +672,7 @@ SUBROUTINE c_bands_nscf( )
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_flags,        ONLY : ethr, restart, isolve, io_level, iverbosity
-  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
+  USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, wfcU
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions,        ONLY : evc
   USE mp_pools,             ONLY : npool, kunit, inter_pool_comm
@@ -721,7 +725,11 @@ SUBROUTINE c_bands_nscf( )
      ! ... Set k-point, spin, kinetic energy, needed by Hpsi
      !
      current_k = ik
+     !
+     IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) CALL phase_factor(ik)
+     !
      IF ( lsda ) current_spin = isk(ik)
+     !
      CALL g2_kin( ik )
      ! 
      ! ... More stuff needed by the hamiltonian: nonlocal projectors

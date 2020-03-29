@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,36 +9,40 @@
 !-----------------------------------------------------------------------
 SUBROUTINE init_ns
    !-----------------------------------------------------------------------
-   !! This routine computes the starting ns (for lda+U calculation) filling
-   !! up the d states (the only interested by the on-site potential for the
-   !! moment) according to the Hund's rule (valid for the isolated atoms on
-   !! which starting potential is built), and to the starting_magnetization:
+   !! This routine computes the starting ns (for DFT+U calculation) filling
+   !! up the Hubbard manifold (we are only interested in the on-site potential 
+   !! for the moment) according to the Hund's rule (valid for the isolated atoms i
+   !! on which starting potential is built), and to the starting_magnetization:
    !! majority spin levels are populated first, THEN the remaining electrons
    !! are equally distributed among the minority spin states.
    !
    USE kinds,        ONLY : DP
    USE ions_base,    ONLY : nat, ityp
    USE lsda_mod,     ONLY : nspin, starting_magnetization
-   USE ldaU,         ONLY : hubbard_u, hubbard_alpha, hubbard_l
+   USE ldaU,         ONLY : Hubbard_l, Hubbard_l_back, Hubbard_l1_back, &
+                            is_hubbard, is_hubbard_back, ldim_back, backall
    USE scf,          ONLY : rho
    USE uspp_param,   ONLY : upf
    !
    IMPLICIT NONE
    !
-   REAL(DP) :: totoc
-   REAL(DP), EXTERNAL :: hubbard_occ
-   !
+   REAL(DP) :: totoc, totoc_b
+   REAL(DP), EXTERNAL :: hubbard_occ, hubbard_occ_back
    INTEGER :: ldim, na, nt, is, m1, majs, mins
    LOGICAL :: nm        ! true if the atom is non magnetic
    !
    rho%ns(:,:,:,:) = 0.d0
    !
    DO na = 1, nat
+      !
       nt = ityp(na)
-      IF (Hubbard_U(nt)/=0.d0 .OR. Hubbard_alpha(nt)/=0.d0) THEN
+      !
+      IF (is_hubbard(nt)) THEN
+         !
          ldim = 2*Hubbard_l(nt)+1
          totoc = hubbard_occ ( upf(nt)%psd )
          nm = .TRUE.
+         !
          IF (nspin==2) THEN
             IF (starting_magnetization(nt) > 0.d0) THEN  
                nm = .FALSE.
@@ -69,6 +73,47 @@ SUBROUTINE init_ns
             ENDDO  
          ENDIF  
       ENDIF  
+      !
+      ! Background part
+      ! 
+      IF (is_hubbard_back(nt)) THEN
+         !
+         totoc_b = hubbard_occ_back ( upf(nt)%psd )
+         rho%nsb(:,:,:,na) = 0.d0
+         !
+         IF (backall(nt)) THEN
+            DO is = 1, nspin
+               ldim = 2*Hubbard_l_back(nt)+1
+               IF (totoc_b*0.9d0.LE.2.d0*ldim) THEN
+                  DO m1 = 1, ldim
+                     rho%nsb (m1, m1, is, na) = totoc_b*0.9d0 /  2.d0 / ldim
+                  ENDDO
+                  ldim = 2*Hubbard_l1_back(nt)+1
+                  DO m1 = 2*Hubbard_l_back(nt)+2, ldim_back(nt)
+                     rho%nsb (m1, m1, is, na) = totoc_b*0.1d0 /  2.d0 / ldim
+                  ENDDO
+               ELSE
+                  DO m1 = 1, ldim
+                     rho%nsb (m1, m1, is, na) = 1.d0
+                  ENDDO
+                  totoc_b = totoc_b - 2.d0*ldim
+                  ldim = 2*Hubbard_l1_back(nt)+1
+                  DO m1 = 2*Hubbard_l_back(nt)+2, ldim_back(nt)
+                     rho%nsb (m1, m1, is, na) = totoc_b /  2.d0 / ldim
+                  ENDDO
+               ENDIF
+            ENDDO
+         ELSE
+            ldim = ldim_back(nt)
+            DO is = 1, nspin
+              DO m1 = 1, ldim
+                 rho%nsb (m1, m1, is, na) = totoc_b /  2.d0 / ldim
+              ENDDO
+            ENDDO
+         ENDIF
+         !
+      ENDIF
+      !
    ENDDO
    !
    RETURN

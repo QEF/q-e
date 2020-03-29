@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,8 @@ SUBROUTINE print_clock_pw()
    USE paw_variables,      ONLY : okpaw
    USE uspp,               ONLY : okvan
    USE realus,             ONLY : real_space
-   USE ldaU,               ONLY : lda_plus_U
+   USE noncollin_module,   ONLY : noncolin
+   USE ldaU,               ONLY : lda_plus_u, lda_plus_u_kind, is_hubbard_back
    USE funct,              ONLY : dft_is_hybrid
    USE bp,                 ONLY : lelfield
    !
@@ -225,8 +226,22 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'localization' )
    CALL print_clock( 'measure' )
    !
-   IF ( lda_plus_U ) THEN
+   IF ( lda_plus_u ) THEN
       WRITE( stdout, '(/,5X,"Hubbard U routines")' )
+      IF (lda_plus_u_kind.EQ.0) THEN
+         CALL print_clock( 'new_ns' )
+         IF (ANY(is_hubbard_back(:))) &
+            CALL print_clock( 'new_nsb' )
+      ELSEIF (lda_plus_u_kind.EQ.1) THEN
+         IF (noncolin) THEN
+            CALL print_clock( 'new_ns_nc' )
+         ELSE
+            CALL print_clock( 'new_ns' )
+         ENDIF
+      ELSEIF (lda_plus_u_kind.EQ.2) THEN
+         CALL print_clock( 'new_nsg' )
+         CALL print_clock( 'alloc_neigh' )
+      ENDIF
       CALL print_clock( 'new_ns' )
       CALL print_clock( 'vhpsi' )
       CALL print_clock( 'force_hub' )

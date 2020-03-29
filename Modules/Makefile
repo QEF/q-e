@@ -158,6 +158,7 @@ rgen.o \
 recips.o \
 remove_tot_torque.o \
 set_hubbard_l.o \
+set_hubbard_l_back.o \
 set_hubbard_n.o \
 simpsn.o \
 sort.o \
