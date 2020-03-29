@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -39,7 +39,8 @@ SUBROUTINE potinit()
   USE funct,                ONLY : dft_is_meta
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth, &
-                                   niter_with_fixed_ns
+                                   niter_with_fixed_ns, lda_plus_u_kind, &
+                                   nsg, nsgnew
   USE noncollin_module,     ONLY : noncolin, report
   USE io_files,             ONLY : restart_dir, input_drho, check_file_exist
   USE spin_orb,             ONLY : domag, lforcet
@@ -76,7 +77,7 @@ SUBROUTINE potinit()
   IF ( starting_pot == 'file' .AND. exst ) THEN
      !
      ! ... Cases a) and b): the charge density is read from file
-     ! ... this also reads rho%ns if lda+U, rho%bec if PAW, rho%kin if metaGGA
+     ! ... this also reads rho%ns if DFT+U, rho%bec if PAW, rho%kin if metaGGA
      !
      IF ( .NOT.lforcet ) THEN
         CALL read_scf ( rho, nspin, gamma_only )
@@ -118,13 +119,20 @@ SUBROUTINE potinit()
      !
      CALL atomic_rho_g( rho%of_g, nspin )
 
-     ! ... in the lda+U case set the initial value of ns
+     ! ... in the DFT+U(+V) case set the initial value of ns (or nsg)
+     !
      IF (lda_plus_u) THEN
         !
-        IF (noncolin) THEN
-           CALL init_ns_nc()
-        ELSE
+        IF (lda_plus_u_kind == 0) THEN
            CALL init_ns()
+        ELSEIF (lda_plus_u_kind == 1) THEN
+           IF (noncolin) THEN
+              CALL init_ns_nc()
+           ELSE
+              CALL init_ns()
+           ENDIF
+        ELSEIF (lda_plus_u_kind == 2) THEN
+           CALL init_nsg()
         ENDIF
         !
      ENDIF
@@ -216,7 +224,7 @@ SUBROUTINE potinit()
   !
   CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
   !
-  ! ... write on output the parameters used in the lda+U calculation
+  ! ... write on output the parameters used in the DFT+U(+V) calculation
   !
   IF ( lda_plus_u ) THEN
      !
@@ -224,10 +232,17 @@ SUBROUTINE potinit()
          niter_with_fixed_ns
      WRITE( stdout, '(5X,"Starting occupations:")')
      !
-     IF (noncolin) THEN
-       CALL write_ns_nc()
-     ELSE
-       CALL write_ns()
+     IF (lda_plus_u_kind == 0) THEN
+        CALL write_ns()
+     ELSEIF (lda_plus_u_kind == 1) THEN
+        IF (noncolin) THEN
+           CALL write_ns_nc()
+        ELSE
+           CALL write_ns()
+        ENDIF
+     ELSEIF (lda_plus_u_kind == 2) THEN
+        nsgnew = nsg
+        CALL write_nsg()
      ENDIF
      !
   END IF

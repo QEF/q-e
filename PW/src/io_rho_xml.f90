@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2012 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,13 +19,13 @@ MODULE io_rho_xml
   !
   ! {read|write}_rho: read or write the charge density
   ! {read|write}_scf: as above, plus ldaU ns, PAW becsum, meta-GGA
-
+  !
   CONTAINS
 
     SUBROUTINE write_scf ( rho, nspin )
       !
       USE paw_variables,    ONLY : okpaw
-      USE ldaU,             ONLY : lda_plus_u
+      USE ldaU,             ONLY : lda_plus_u, hub_back, lda_plus_u_kind, nsg
       USE funct,            ONLY : dft_is_meta
       USE noncollin_module, ONLY : noncolin
       USE spin_orb,         ONLY : domag
@@ -85,12 +85,19 @@ MODULE io_rho_xml
          IF ( ionode ) THEN
             OPEN ( UNIT=iunocc, FILE = TRIM(dirname) // 'occup.txt', &
                  FORM='formatted', STATUS='unknown' )
-            if (noncolin) then
-              WRITE( iunocc, * , iostat = ierr) rho%ns_nc
-            else
-              WRITE( iunocc, * , iostat = ierr) rho%ns
-            endif
-         END IF
+            IF (lda_plus_u_kind.EQ.0) THEN
+               WRITE( iunocc, * , iostat = ierr) rho%ns
+               IF (hub_back) WRITE( iunocc, * , iostat = ierr) rho%nsb
+            ELSEIF (lda_plus_u_kind.EQ.1) THEN
+               IF (noncolin) THEN
+                  WRITE( iunocc, * , iostat = ierr) rho%ns_nc
+               ELSE
+                  WRITE( iunocc, * , iostat = ierr) rho%ns
+               ENDIF
+            ELSEIF (lda_plus_u_kind.EQ.2) THEN
+               WRITE( iunocc, * , iostat = ierr) nsg  
+            ENDIF
+         ENDIF
          CALL mp_bcast( ierr, ionode_id, intra_image_comm )
          IF ( ierr/=0 ) CALL errore('write_scf', 'Writing ldaU ns', 1)
          IF ( ionode ) THEN
@@ -122,7 +129,8 @@ MODULE io_rho_xml
       !
       USE scf,              ONLY : scf_type
       USE paw_variables,    ONLY : okpaw
-      USE ldaU,             ONLY : lda_plus_u, starting_ns
+      USE ldaU,             ONLY : lda_plus_u, starting_ns, hub_back, &
+                                   lda_plus_u_kind, nsg
       USE noncollin_module, ONLY : noncolin
       USE spin_orb,         ONLY : domag
       USE gvect,            ONLY : ig_l2g
@@ -173,32 +181,58 @@ MODULE io_rho_xml
          IF ( ionode ) THEN
             OPEN ( UNIT=iunocc, FILE = TRIM(dirname) // 'occup.txt', &
                  FORM='formatted', STATUS='old', IOSTAT=ierr )
-            if (noncolin) then
-              READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns_nc
-            else
-              READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns
-            endif
-         END IF
+            IF (lda_plus_u_kind.EQ.0) THEN
+               READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns
+               IF (hub_back) READ( UNIT = iunocc, FMT = * , iostat = ierr) rho%nsb
+            ELSEIF (lda_plus_u_kind.EQ.1) THEN
+               IF (noncolin) THEN
+                  READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns_nc
+               ELSE
+                  READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns
+               ENDIF
+            ELSEIF (lda_plus_u_kind.EQ.2) THEN
+               READ( UNIT = iunocc, FMT = * , iostat = ierr) nsg 
+            ENDIF
+         ENDIF
+         !
          CALL mp_bcast( ierr, ionode_id, intra_image_comm )
          IF ( ierr/=0 ) CALL errore('read_scf', 'Reading ldaU ns', 1)
+         !
          IF ( ionode ) THEN
             CLOSE( UNIT = iunocc, STATUS = 'KEEP')
          ELSE
-            if (noncolin) then
-              rho%ns_nc(:,:,:,:) = 0.D0
-            else
-              rho%ns(:,:,:,:) = 0.D0
-            endif 
-         END IF
-         if (noncolin) then
-           CALL mp_sum(rho%ns_nc, intra_image_comm)
-         else
-           CALL mp_sum(rho%ns, intra_image_comm)
-         endif
+            IF (lda_plus_u_kind.EQ.0) THEN
+               rho%ns(:,:,:,:) = 0.D0
+               IF (hub_back) rho%nsb(:,:,:,:) = 0.D0
+            ELSEIF (lda_plus_u_kind.EQ.1) THEN
+               IF (noncolin) THEN
+                  rho%ns_nc(:,:,:,:) = 0.D0
+               ELSE
+                  rho%ns(:,:,:,:) = 0.D0
+               ENDIF 
+            ELSEIF (lda_plus_u_kind.EQ.2) THEN
+               nsg(:,:,:,:,:) = 0.d0 
+            ENDIF
+         ENDIF
+         !
+         IF (lda_plus_u_kind.EQ.0) THEN
+            CALL mp_sum(rho%ns, intra_image_comm) 
+            IF (hub_back) CALL mp_sum(rho%nsb, intra_image_comm)   
+         ELSEIF (lda_plus_u_kind.EQ.1) THEN
+            IF (noncolin) THEN
+               CALL mp_sum(rho%ns_nc, intra_image_comm)
+            ELSE
+               CALL mp_sum(rho%ns, intra_image_comm)
+            ENDIF
+         ELSEIF (lda_plus_u_kind.EQ.2) THEN
+            CALL mp_sum(nsg, intra_image_comm)
+         ENDIF
+         !
          ! If projections on Hubbard manifold are read from file, there is no
          ! need to set starting values: reset them to prevent any problem
          starting_ns = -1.0_dp
-      END IF
+         !
+      ENDIF
       !
       IF ( okpaw ) THEN
          !

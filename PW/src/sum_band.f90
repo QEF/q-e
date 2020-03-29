@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,7 +23,7 @@ SUBROUTINE sum_band()
   USE gvecs,                ONLY : doublegrid
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk, igk_k
   USE fixed_occ,            ONLY : one_atom_occupations
-  USE ldaU,                 ONLY : lda_plus_U
+  USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, is_hubbard_back
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho, rhoz_or_updw
   USE symme,                ONLY : sym_rho
@@ -31,7 +31,7 @@ SUBROUTINE sum_band()
   USE buffers,              ONLY : get_buffer
   USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, nhtol, nhtoj, indv, okvan
   USE uspp_param,           ONLY : upf, nh, nhm
-  USE wavefunctions, ONLY : evc, psic, psic_nc
+  USE wavefunctions,        ONLY : evc, psic, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
   USE spin_orb,             ONLY : lspinorb, domag, fcoef
   USE wvfct,                ONLY : nbnd, npwx, wg, et, btype
@@ -53,6 +53,7 @@ SUBROUTINE sum_band()
              ig,   &! counter on g vectors
              ibnd, &! counter on bands
              ik,   &! counter on k points
+             nt,   &! counter on atomic types
              npol_,&! auxiliary dimension for noncolin case
              ibnd_start, ibnd_end, this_bgrp_nbnd ! first, last and number of band in this bgrp
   REAL (DP), ALLOCATABLE :: kplusg (:)
@@ -90,14 +91,30 @@ SUBROUTINE sum_band()
      !
   END IF
   !
-  ! ... Needed for LDA+U: compute occupations of Hubbard states
+  ! ... Needed for DFT+U(+V): compute occupations of Hubbard states
   !
   IF (lda_plus_u) THEN
-     IF(noncolin) THEN
-        CALL new_ns_nc(rho%ns_nc)
-     ELSE
-        CALL new_ns(rho%ns)
-     ENDIF
+    IF (lda_plus_u_kind.EQ.0) THEN
+       !
+       CALL new_ns(rho%ns)
+       !
+       DO nt = 1, ntyp
+          IF (is_hubbard_back(nt)) CALL new_nsb(rho%nsb)
+       ENDDO
+       !
+    ELSEIF (lda_plus_u_kind.EQ.1) THEN
+       !
+       IF (noncolin) THEN
+          CALL new_ns_nc(rho%ns_nc)
+       ELSE
+          CALL new_ns(rho%ns)
+       ENDIF
+       !
+    ELSEIF (lda_plus_u_kind.EQ.2) THEN 
+       !
+       CALL new_nsg()
+       !
+    ENDIF
   ENDIF
   !
   ! ... for band parallelization: set band computed by this processor
