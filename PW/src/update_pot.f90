@@ -622,6 +622,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
                                    bec_type, becp, calbec
   USE mp_images,            ONLY : intra_image_comm
   USE mp,                   ONLY : mp_barrier
+  USE mp_bands,             ONLY : use_bgrp_in_hpsi
+
   !
   IMPLICIT NONE
   !
@@ -647,8 +649,12 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
     ! workspace for ZGESVD
     ! real version of sp_m
   LOGICAL :: exst
+  LOGICAL :: save_flag
   !
   CALL mp_barrier( intra_image_comm ) ! debug
+
+  save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
+
   !
   IF ( wfc_extr == 1 ) THEN
      !
@@ -724,7 +730,6 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
            !
            IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
            CALL calbec( npw, vkb, evc, becp )
-           !
            CALL s_psi ( npwx, npw, nbnd, evc, aux )
            !
         ELSE
@@ -824,6 +829,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
   END IF
   !
+  use_bgrp_in_hpsi = save_flag
+
   CALL mp_barrier( intra_image_comm ) ! debug
   !
   RETURN
