@@ -134,7 +134,7 @@ MODULE ldaU
   ! Inter atomic interaction should be cut off at some distance 
   ! that is the reason of having so many unitcell information. 
   !
-  REAL(DP) :: Hubbard_V(200,5400,4)
+  REAL(DP) :: Hubbard_V(50,1350,4) ! ! 50*(3x3x3) = 1350
   !! The Hubbard_V(I,J,int_type) gives the interaction between atom I (in the unit cell)
   !! with atom J (in the supercell).
   !! If int_type=1, the interaction is between standard orbitals,

@@ -403,7 +403,7 @@ MODULE input_parameters
         REAL(DP) :: starting_ns_eigenvalue(lqmax,nspinx,nsx) = -1.0_DP
         REAL(DP) :: hubbard_u(nsx) = 0.0_DP
         REAL(DP) :: hubbard_u_back(nsx) = 0.0_DP
-        REAL(DP) :: hubbard_v(200,5400,4) = 0.0_DP ! 200*(3x3x3) = 5400
+        REAL(DP) :: hubbard_v(50,1350,4) = 0.0_DP ! 50*(3x3x3) = 1350
         REAL(DP) :: hubbard_j0(nsx) = 0.0_DP
         REAL(DP) :: hubbard_j(3,nsx) = 0.0_DP
         REAL(DP) :: hubbard_alpha(nsx) = 0.0_DP

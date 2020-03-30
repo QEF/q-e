@@ -352,7 +352,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE check_stop,           ONLY : check_stop_now, stopped_by_user
   USE io_global,            ONLY : stdout, ionode
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
-  USE ions_base,            ONLY : zv, nat, nsp, ityp, tau, compute_eextfor, atm
+  USE ions_base,            ONLY : zv, nat, nsp, ityp, tau, compute_eextfor, atm, &
+                                   ntyp => nsp
   USE basis,                ONLY : starting_pot
   USE bp,                   ONLY : lelfield
   USE fft_base,             ONLY : dfftp
@@ -383,7 +384,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE ldaU,                 ONLY : eth, lda_plus_u, lda_plus_u_kind, &
                                    niter_with_fixed_ns, hub_pot_fix, &
                                    nsg, nsgnew, v_nsg, at_sc, neighood, &
-                                   ldim_u
+                                   ldim_u, is_hubbard_back
   USE extfield,             ONLY : tefield, etotefield, gate, etotgatefield !TB
   USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
                                    lambda, report
@@ -438,6 +439,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
   !! dummy counter on iterations
   INTEGER :: iter
   !! counter on iterations
+  INTEGER :: nt
+  !! counter on atomic types
   INTEGER :: ios, kilobytes
   !
   REAL(DP) :: tr2_min
@@ -466,6 +469,13 @@ SUBROUTINE electrons_scf ( printout, exxen )
   !! auxiliary variables for grimme-d3
   LOGICAL :: lhb
   !! if .TRUE. then background states are present (DFT+U)
+  !
+  lhb = .FALSE.
+  IF ( lda_plus_u )  THEN
+     DO nt = 1, ntyp
+        IF (is_hubbard_back(nt)) lhb = .TRUE.
+     ENDDO
+  ENDIF
   !
   iter = 0
   dr2  = 0.0_dp
@@ -659,6 +669,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
               WRITE( stdout, '(/,5X,"RESET ns to initial values (iter <= mixing_fixed_ns)",/)')
               IF (lda_plus_u_kind.EQ.0) THEN
                  rho%ns = rhoin%ns
+                 IF (lhb) rhoin%nsb = rho%nsb
               ELSEIF (lda_plus_u_kind.EQ.1) THEN
                  IF (noncolin) THEN
                     rho%ns_nc = rhoin%ns_nc
