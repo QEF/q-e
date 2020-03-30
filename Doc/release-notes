@@ -6,6 +6,8 @@ New in dev branch:
   * ParO and PPCG iterative diagonalization algorithms
   * Fourier interpolation of phonon potential implemented in ph.x
     (Jae-Mo Lihm, Seoul Natl. Univ.)
+  * DFT+U+V in pw.x, J. Phys.: Condens. Matter 22, 055602 (2010)
+    (V.L. Campo Jr, I. Timrov, N. Marzari, M. Cococcioni)
   
 Fixed in dev branch:
   * PW: Restart from interrupted calculations  simplified. As a side effect,

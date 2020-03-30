@@ -48,6 +48,8 @@ SUBROUTINE alloc_neighborhood()
   IF (.NOT.ALLOCATED(dist_s))   ALLOCATE (dist_s(nat,dimn))
   !
   ! Check the dimensions
+  ! Note: In order to increase the dimensions of the Hubbard_V array,
+  ! two routines must be modified: PW/src/ldaU.f90. Modules/input_parameters.f90.
   !
   IF ( nat > SIZE(Hubbard_V,1) ) CALL errore('alloc_neighborhood', &
           & 'Too many atoms. The dimensions of Hubbard_V must be increased.',1)
