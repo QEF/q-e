@@ -17,7 +17,7 @@ SUBROUTINE stres_hub ( sigmah )
    USE wavefunctions, ONLY : evc
    USE ions_base,     ONLY : nat, ityp, ntyp => nsp
    USE cell_base,     ONLY : omega, at, bg
-   USE wvfct,         ONLY : nbnd, npwx, wg
+   USE wvfct,         ONLY : nbnd, npwx
    USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, &
                              lda_plus_u_kind, U_projection, is_hubbard_back, &
                              ldim_back, ldmx_b, nsg, v_nsg, max_num_neighbors, &
@@ -31,7 +31,6 @@ SUBROUTINE stres_hub ( sigmah )
    USE io_files,      ONLY : nwordwfc, iunwfc
    USE buffers,       ONLY : get_buffer
    USE scf,           ONLY : v, rho
-   USE lsda_mod,      ONLY : nspin
    USE symme,         ONLY : symmatrix
    USE io_global,     ONLY : stdout
    USE mp_pools,      ONLY : inter_pool_comm, me_pool, nproc_pool
