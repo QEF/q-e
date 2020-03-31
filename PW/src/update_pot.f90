@@ -394,7 +394,8 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
   USE paw_onecenter,        ONLY : PAW_potential
   USE mp_pools,             ONLY : my_pool_id
   USE mp_bands,             ONLY : my_bgrp_id, root_bgrp_id, root_bgrp, &
-                                   intra_bgrp_comm
+                                   intra_bgrp_comm, inter_bgrp_comm, nbgrp
+  USE mp,                   ONLY : mp_bcast
   USE io_base,              ONLY : write_rhog, read_rhog
   USE fft_rho,              ONLY : rho_g2r, rho_r2g
   !
@@ -493,6 +494,7 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
         IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
              CALL read_rhog( TRIM(dirname) // "charge-old", &
              root_bgrp, intra_bgrp_comm, ig_l2g, 1, work(:,1:1) )
+        IF( nbgrp > 1 ) CALL mp_bcast( work, root_bgrp_id, inter_bgrp_comm )
         !
         ! ...   rho%of_r   ->  oldrho
         ! ...   work  ->  oldrho2
@@ -526,9 +528,11 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
         IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
              CALL read_rhog( TRIM(dirname) // "charge-old2", &
              root_bgrp, intra_bgrp_comm, ig_l2g, 1, work1(:,1:1) )
+        IF( nbgrp > 1 ) CALL mp_bcast( work1,root_bgrp_id, inter_bgrp_comm )
         IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
              CALL read_rhog( TRIM(dirname) // "charge-old", &
              root_bgrp, intra_bgrp_comm, ig_l2g, 1, work(:,1:1) )
+        IF( nbgrp > 1 ) CALL mp_bcast( work, root_bgrp_id, inter_bgrp_comm )
         !
         ! ...   rho%of_r   ->  oldrho
         ! ...   work  ->  oldrho2
