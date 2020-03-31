@@ -81,7 +81,7 @@ SUBROUTINE init_us_0
   ENDDO
   !
   ndm = MAXVAL( upf(:)%kkbeta )
-  nqxq = INT( ( (SQRT(ecutrho) / dq + 4)  )
+  nqxq = INT( SQRT(ecutrho) / dq + 4 )
   !
   IF (tprint) THEN
      WRITE (stdout,*) " PSEUDOPOTENTIAL REPORT "
