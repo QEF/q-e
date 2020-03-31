@@ -103,6 +103,7 @@ addusddens.o : ../../PW/src/buffers.o
 addusddens.o : phcom.o
 addusddense.o : ../../FFTXlib/fft_interfaces.o
 addusddense.o : ../../LR_Modules/lrcom.o
+addusddense.o : ../../Modules/cell_base.o
 addusddense.o : ../../Modules/fft_base.o
 addusddense.o : ../../Modules/ions_base.o
 addusddense.o : ../../Modules/kind.o
