@@ -378,14 +378,13 @@ SUBROUTINE compute_qrad ( )
   REAL(dp) :: prefr
   ! the prefactor of the Q functions
   REAL(dp) :: q
-  REAL(dp), ALLOCATABLE :: aux (:), besr (:), qtot (:,:)
+  REAL(dp), ALLOCATABLE :: aux (:), besr (:)
   ! various work space
   !
   prefr = fpi / omega
   ndm = MAXVAL ( upf(:)%kkbeta )
   ALLOCATE (aux ( ndm))
   ALLOCATE (besr( ndm))
-  ALLOCATE (qtot( ndm , nbetam*(nbetam+1)/2 ))
 
   CALL divide (intra_bgrp_comm, nqxq, startq, lastq)
   !
@@ -394,30 +393,16 @@ SUBROUTINE compute_qrad ( )
      if ( upf(nt)%tvanp ) then
         DO l = 0, upf(nt)%nqlc -1
            !
-           !     first we build for each nb,mb,l the total Q(|r|) function
            !     note that l is the true (combined) angular momentum
            !     and that the arrays have dimensions 0..l (no more 1..l+1)
            !
-           DO nb = 1, upf(nt)%nbeta
-              DO mb = nb, upf(nt)%nbeta
-                respect_sum_rule : &
-                IF ( ( l >= abs(upf(nt)%lll(nb) - upf(nt)%lll(mb)) ) .and. &
-                     ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .and. &
-                    (mod (l+upf(nt)%lll(nb)+upf(nt)%lll(mb), 2) == 0) ) then
-                 ijv = mb * (mb-1) / 2 + nb
-                 ! in PAW and now in US as well q(r) is stored in an l-dependent array
-                 qtot(1:upf(nt)%kkbeta,ijv) = upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l)
-                ENDIF respect_sum_rule
-              ENDDO ! mb
-           ENDDO ! nb
-           !
-           !     here we compute the spherical bessel function for each |g|
-           !
            DO iq = startq, lastq
-              q = (iq - 1) * dq
-              CALL sph_bes ( upf(nt)%kkbeta, rgrid(nt)%r, q, l, besr)
               !
-              !   and then we integrate with all the Q functions
+              q = (iq - 1) * dq
+              !
+              !     here we compute the spherical bessel function for each q_i
+              !
+              CALL sph_bes ( upf(nt)%kkbeta, rgrid(nt)%r, q, l, besr)
               !
               DO nb = 1, upf(nt)%nbeta
                  !
@@ -425,14 +410,17 @@ SUBROUTINE compute_qrad ( )
                  !
                  DO mb = nb, upf(nt)%nbeta
                     ijv = mb * (mb - 1) / 2 + nb
-                    IF ( ( l >= abs(upf(nt)%lll(nb) - upf(nt)%lll(mb)) ) .and. &
-                         ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .and. &
-                         (mod(l+upf(nt)%lll(nb)+upf(nt)%lll(mb),2)==0) ) then
+                    IF ( ( l >= abs(upf(nt)%lll(nb) - upf(nt)%lll(mb)) ) .AND. &
+                         ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .AND. &
+                         (mod(l+upf(nt)%lll(nb)+upf(nt)%lll(mb),2)==0) ) THEN
                        DO ir = 1, upf(nt)%kkbeta
-                          aux  (ir) = besr (ir) * qtot (ir, ijv)
+                          aux  (ir) = besr (ir) * upf(nt)%qfuncl(ir,ijv,l)
                        ENDDO
-                       call simpson ( upf(nt)%kkbeta, aux, rgrid(nt)%rab, &
-                                     qrad(iq,ijv,l + 1, nt) )
+                       !
+                       !   and then we integrate with all the Q functions
+                       !
+                       CALL simpson ( upf(nt)%kkbeta, aux, rgrid(nt)%rab, &
+                                     qrad(iq,ijv,l+1, nt) )
                     ENDIF
                  ENDDO
               ENDDO
@@ -446,7 +434,6 @@ SUBROUTINE compute_qrad ( )
      ! ntyp
   ENDDO
   !
-  DEALLOCATE (qtot)
   DEALLOCATE (besr)
   DEALLOCATE (aux)
   !
