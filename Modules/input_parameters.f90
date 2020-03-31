@@ -30,7 +30,7 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nsx, lqmax
+  USE parameters, ONLY : nsx, lqmax, natx
   USE wannier_new,ONLY : wannier_data
   !
   IMPLICIT NONE
@@ -403,7 +403,7 @@ MODULE input_parameters
         REAL(DP) :: starting_ns_eigenvalue(lqmax,nspinx,nsx) = -1.0_DP
         REAL(DP) :: hubbard_u(nsx) = 0.0_DP
         REAL(DP) :: hubbard_u_back(nsx) = 0.0_DP
-        REAL(DP) :: hubbard_v(50,1350,4) = 0.0_DP ! 50*(3x3x3) = 1350
+        REAL(DP) :: hubbard_v(natx,27*natx,4) = 0.0_DP 
         REAL(DP) :: hubbard_j0(nsx) = 0.0_DP
         REAL(DP) :: hubbard_j(3,nsx) = 0.0_DP
         REAL(DP) :: hubbard_alpha(nsx) = 0.0_DP
