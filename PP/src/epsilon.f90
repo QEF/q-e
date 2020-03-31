@@ -54,7 +54,7 @@ CONTAINS
   IF ( nspin == 1) full_occ = 2.0d0
   IF ( nspin == 2 .OR. nspin == 4) full_occ = 1.0d0
   !
-  IF ( nspin == 2 ) THEB
+  IF ( nspin == 2 ) THEN
      IF ( nbnd*full_occ <= nelec/2.d0 ) CALL errore('epsilon', 'bad band number', 2)
   ELSE
      IF ( nbnd*full_occ <= nelec ) CALL errore('epsilon', 'bad band number', 1)
