@@ -114,7 +114,7 @@ for dir in $dirs; do
 
         if test "$DIR" = "FFTXlib"
         then
-            sed '/@mkl_dfti/d' make.depend > make.depend.tmp
+            sed '/@mkl_dfti/d;/@omp_lib@/d' make.depend > make.depend.tmp
             sed '/@fftw3.f/d;s/@fftw.c@/fftw.c/' make.depend.tmp > make.depend
         fi
 
