@@ -230,7 +230,9 @@ CONTAINS
     ldmx_tot = -1
     !
     IF (.NOT.ALLOCATED (ldim_u) )    ALLOCATE(ldim_u(ntyp))
+    ldim_u(:)=-1
     IF (.NOT.ALLOCATED (ldim_back) ) ALLOCATE(ldim_back(ntyp))
+    ldim_back(:)=-1
     !
     IF ( lda_plus_u_kind == 0 ) THEN
        !
