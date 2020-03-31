@@ -47,13 +47,6 @@ SUBROUTINE alloc_neighborhood()
   IF (.NOT.ALLOCATED(ityp_s))   ALLOCATE (ityp_s(dimn))
   IF (.NOT.ALLOCATED(dist_s))   ALLOCATE (dist_s(nat,dimn))
   !
-  ! Check the dimensions
-  ! Note: In order to increase the dimensions of the Hubbard_V array,
-  ! two routines must be modified: PW/src/ldaU.f90. Modules/input_parameters.f90.
-  !
-  IF ( nat > SIZE(Hubbard_V,1) ) CALL errore('alloc_neighborhood', &
-          & 'Too many atoms. The dimensions of Hubbard_V must be increased.',1)
-  !
 13 CONTINUE
   !
   V0(:,:,:) = 0.d0
@@ -503,7 +496,6 @@ FUNCTION type_interaction (na1, m1, na2, m2)
   ELSE
        !
        ! background-standard term
-       ! V always = 0 in this case
        type_interaction = 4 
        !
   ENDIF

@@ -1238,6 +1238,13 @@ SUBROUTINE iosys()
      CALL errore('iosys', 'simplified LDA+U not implemented with &
                           &noncol. magnetism, use lda_plus_u_kind = 1', 1)
   END IF
+  IF ( lda_plus_u .AND. lda_plus_u_kind == 2 ) THEN
+     IF ( nat > SIZE(Hubbard_V,1) ) CALL errore('input', &
+          & 'Too many atoms. The dimensions of Hubbard_V must be increased.',1)
+     ! In order to increase the dimensions of the Hubbard_V array,
+     ! change the parameter natx in Modules/parameters.f90 from 50 to the 
+     ! number of atoms in your system.
+  END IF
   lda_plus_u_             = lda_plus_u
   lda_plus_u_kind_        = lda_plus_u_kind
   !

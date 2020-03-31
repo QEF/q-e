@@ -12,7 +12,7 @@ MODULE ldaU
   ! The quantities needed in DFT+U and extended DFT+U calculations.
   !
   USE kinds,         ONLY : DP
-  USE parameters,    ONLY : lqmax, ntypx
+  USE parameters,    ONLY : lqmax, ntypx, natx
   USE basis,         ONLY : natomwfc
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp
   USE control_flags, ONLY : dfpt_hub
@@ -69,7 +69,7 @@ MODULE ldaU
   !! the angular momentum of background states
   INTEGER :: l1back(ntypx)
   !! like above for the second background state
-  !! (there is a possibility to have two background state at the same U)
+  !! (there is a possibility to have two background states at the same U)
   INTEGER :: ldmx = -1
   !! max dimension of the manifold where the Hubbard correction
   !! is applied (max of 2*Hubbard_l+1 over all atoms)
@@ -93,14 +93,15 @@ MODULE ldaU
   LOGICAL :: reserv(ntypx), reserv_back(ntypx)
   !! reservoir states
   LOGICAL :: backall(ntypx)
-  !! FIXME - description
+  !! if .TRUE. two l channels can be used in the background (lback and l1back should be 
+  !! specified in input for all the types for which backall is .true.)
   LOGICAL :: hub_back
-  !! FIXME - description
+  !! .TRUE. if at least one species has Hubbard_U in the background states
   LOGICAL :: hub_pot_fix
-  !! if .true. do not include into account the change of the Hubbard potential
+  !! if .TRUE. do not include into account the change of the Hubbard potential
   !! during the SCF cycle (needed to compute U self-consistently with supercells)
   LOGICAL :: iso_sys
-  !! .true. if the system is isolated (the code diagonalizes
+  !! .TRUE. if the system is isolated (the code diagonalizes
   !! and prints the full occupation matrix)
   CHARACTER(len=30) :: U_projection
   !! 'atomic', 'ortho-atomic', 'file'
@@ -134,14 +135,15 @@ MODULE ldaU
   ! Inter atomic interaction should be cut off at some distance 
   ! that is the reason of having so many unitcell information. 
   !
-  REAL(DP) :: Hubbard_V(50,1350,4) ! ! 50*(3x3x3) = 1350
+  REAL(DP) :: Hubbard_V(natx,27*natx,4) ! ! 50*(3x3x3) = 1350
   !! The Hubbard_V(I,J,int_type) gives the interaction between atom I (in the unit cell)
   !! with atom J (in the supercell).
   !! If int_type=1, the interaction is between standard orbitals,
   !! If int_type=2, the interaction is between standard (on I) and background (on J) orbitals,
   !! If int_type=3, the interaction is between background orbitals,
   !! If int_type=4, the interaction is between background (on I) and standard (on J) orbitals.
-  !! In the case int_type=4, V is always 0 - WHY? FIXME
+  !! Hubbard_V(I,J,4) is equal to Hubbard_V(J,I,2). It is useful
+  !! in cases where Hubbard_V(I,J,2) /= 0 but I is outside the unit cell, J inside.
   INTEGER :: sc_size = 1
   !! Defines the supercell as composed by the unit cells located by
   !! (n1,n2,n3) in primitive vectors base with -sc_size <= ni <= sc_size
@@ -260,12 +262,19 @@ CONTAINS
           IF ( is_hubbard_back(nt) ) THEN
              lb = .TRUE.
              hub_back = .TRUE.
+             !
+             ! if .not.backall set_hubbard_l_back determines the Hubbard_l_back; otherwise
+             ! Hubbard_l_back and Hubbard_l1_back are set from input (by lback and l1back). 
+             !
              IF (.NOT.backall(nt)) THEN
+                ! In this case there is only one Hubbard channel for background states
                 Hubbard_l_back(nt) = set_Hubbard_l_back( psd(nt) )
                 Hubbard_lmax_back = MAX( Hubbard_lmax_back, Hubbard_l_back(nt) )
                 ldmx_b = MAX( ldmx_b, 2*Hubbard_l_back(nt)+1)
                 ldim_back(nt) = 2 * Hubbard_l_back(nt) + 1
              ELSE
+                ! In this case there are two Hubbard channels for background states.
+                ! Note: the same U_back is used for these two background channels.
                 lba = .TRUE.
                 Hubbard_l_back(nt) = lback(nt)
                 Hubbard_l1_back(nt) = l1back(nt)
@@ -285,6 +294,12 @@ CONTAINS
        !
        ALLOCATE(ll(ldmx_tot,ntyp))
        !
+       ! ll is a label of all the Hubbard states telling the l of that states. 
+       ! It is equal to Hubbard_l for the first 2*Hubbard_l+1 states, 
+       ! lback for the next 2*Hubbard_l_back+1, 
+       ! l1back for the next 2*Hubbard_l1_back+1
+       ! (if there are two channels in the background).
+       ! 
        ll(:,:) = -1
        DO nt = 1,ntyp
           IF (Hubbard_l(nt).GE.0) THEN
@@ -391,12 +406,18 @@ CONTAINS
                 lb = .TRUE.
                 hub_back = .TRUE.
                 !
+                ! if .not.backall set_hubbard_l_back determines the Hubbard_l_back; otherwise
+                ! Hubbard_l_back and Hubbard_l1_back are set from input (by lback and l1back).
+                !
                 IF (.NOT.backall(nt)) THEN
+                   ! In this case there is only one Hubbard channel for background states
                    IF (Hubbard_l_back(nt).EQ.-1) &
                       Hubbard_l_back(nt) = set_Hubbard_l_back( psd(nt) )
                    IF (Hubbard_l_back(nt).GE.0)  &
                       ldim_back(nt) = 2 * Hubbard_l_back(nt) + 1
                 ELSE
+                   ! In this case there are two Hubbard channels for background states.
+                   ! Note: the same Hubbard parameter is used for these two background channels.
                    lba = .TRUE.
                    IF (Hubbard_l1_back(nt).EQ.-1) THEN
                       Hubbard_l_back(nt) = lback(nt)
@@ -430,6 +451,12 @@ CONTAINS
        ALLOCATE ( nsgnew( ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin ) )
        ALLOCATE ( phase_fac(nat*(2*sc_size+1)**3))
        ALLOCATE ( ll(ldmx_tot, ntyp))
+       !
+       ! ll is a label of all the Hubbard states telling the l of that states. 
+       ! It is equal to Hubbard_l for the first 2*Hubbard_l+1 states, 
+       ! lback for the next 2*Hubbard_l_back+1, 
+       ! l1back for the next 2*Hubbard_l1_back+1
+       ! (if there are two channels in the background).
        !
        ll(:,:) = -1
        !
