@@ -215,7 +215,7 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
   !
   USE laxlib_parallel_include
   !
-#define __USE_GLOBAL_BUFFER
+!define __USE_GLOBAL_BUFFER
 #if defined(__USE_GLOBAL_BUFFER)
   USE gbuffers,        ONLY : dev=>dev_buf, pin=>pin_buf
 #define VARTYPE POINTER
@@ -282,7 +282,7 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
   !
   !
   !
-  CALL start_clock_gpu( 'cdiaghg' )
+  CALL start_clock( 'cdiaghg_gpu' )
   !
   ! ... only the first processor diagonalizes the matrix
   !
@@ -470,7 +470,7 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
 #endif
 #endif
   !
-  CALL stop_clock_gpu( 'cdiaghg' )
+  CALL stop_clock( 'cdiaghg_gpu' )
   !
   RETURN
   !
