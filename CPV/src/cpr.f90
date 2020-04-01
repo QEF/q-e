@@ -24,6 +24,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE core,                     ONLY : rhoc
   USE uspp_param,               ONLY : nhm, nh, ish
   USE uspp,                     ONLY : nkb, vkb, becsum, deeq, okvan, nlcc_any
+  USE uspp_gpum,                ONLY : vkb_d
   USE energies,                 ONLY : eht, epseu, exc, etot, eself, enl, &
                                        ekin, atot, entropy, egrand, enthal, &
                                        ekincm, print_energies
@@ -91,9 +92,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE gvecw,                    ONLY : ecutwfc
   USE gvect,                    ONLY : ecutrho
   USE time_step,                ONLY : delt, tps, dt2,  twodelt
-  USE cp_interfaces,            ONLY : cp_print_rho, nlfh, prefor, dotcsc, beta_eigr
+  USE cp_interfaces,            ONLY : cp_print_rho, nlfh, prefor, dotcsc
   USE cp_main_variables,        ONLY : acc, lambda, lambdam, lambdap, &
-                                       ema0bg, sfac, eigr, beigr, beigr_d, iprint_stdout,  &
+                                       ema0bg, sfac, eigr, iprint_stdout,  &
                                        irb, taub, eigrb, rhog, rhos, &
                                        rhor, bephi, becp_bgrp, nfi, idesc, &
                                        drhor, drhog, bec_bgrp, dbec, bec_d, iabox, nabox
@@ -103,7 +104,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE wannier_subroutines,      ONLY : wannier_startup, wf_closing_options, &
                                        ef_enthalpy
   USE cp_interfaces,            ONLY : writefile, eigs, strucf, phfacs
-  USE cp_interfaces,            ONLY : ortho, elec_fakekine, calbec_nc, calbec, caldbec_bgrp
+  USE cp_interfaces,            ONLY : ortho, elec_fakekine, calbec, caldbec_bgrp
   USE constraints_module,       ONLY : check_constraint, remove_constr_force
   USE cp_autopilot,             ONLY : pilot
   USE ions_nose,                ONLY : ions_nose_allocate, ions_nose_shiftvar
@@ -316,7 +317,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         forceh=0.0d0
         ! vupsi     ! potentials on electrons due to Hubbard U
         vupsi=(0.0d0,0.0d0)
-        CALL new_ns(c0_bgrp,eigr,beigr,vkb,vupsi,forceh)
+        CALL new_ns(c0_bgrp,eigr,vkb,vupsi,forceh)
         if ( mod(nfi,iprint).eq.0 ) call write_ns
      endif
      !
@@ -533,9 +534,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         ! ... prefor calculates vkb
         !
         CALL prefor( eigr, vkb )
-        !
-        CALL beta_eigr( beigr, eigr )
-        CALL dev_memcpy( beigr_d, beigr )
+        CALL dev_memcpy( vkb_d, vkb )
         !
      END IF
      !
@@ -553,16 +552,16 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          IF ( tortho ) THEN
            !
 #if defined (__CUDA)
-           CALL ortho( beigr_d, cm_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+           CALL ortho( vkb_d, cm_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
 #else
-           CALL ortho( beigr, cm_bgrp, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+           CALL ortho( vkb, cm_bgrp, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
 #endif
            !
          ELSE
            !
            CALL gram_bgrp( vkb, bec_bgrp, nkb, cm_bgrp, ngw )
            !
-           IF ( iverbosity > 2 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
+           IF ( iverbosity > 2 ) CALL dotcsc( vkb, cm_bgrp, ngw, nbsp_bgrp )
            !
          END IF
          !
@@ -589,13 +588,13 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          ENDIF
          !
          ! the following compute only on NC pseudo components
-         CALL calbec_nc( beigr, cm_bgrp, bec_bgrp ) 
+         CALL calbec( nbsp_bgrp, vkb, cm_bgrp, bec_bgrp, 1 ) 
          !
          IF ( tpre ) THEN
            CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
          END IF
          !
-         IF ( iverbosity > 1 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
+         IF ( iverbosity > 1 ) CALL dotcsc( vkb, cm_bgrp, ngw, nbsp_bgrp )
          !
        END IF
        !
@@ -1104,7 +1103,6 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'nlfq' )
   CALL print_clock( 'nlsm1' )
   CALL print_clock( 'nlsm2' )
-  CALL print_clock( 'beta_eigr' )
   CALL print_clock( 'nlsm1us' )
   CALL print_clock( 'fft' )
   CALL print_clock( 'ffts' )

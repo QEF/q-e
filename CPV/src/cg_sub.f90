@@ -8,7 +8,7 @@
 !
 !=======================================================================
 !
-   subroutine runcg_uspp( nfi, tfirst, tlast, eigr, beigr, bec, irb, eigrb, &
+   subroutine runcg_uspp( nfi, tfirst, tlast, eigr, bec, irb, eigrb, &
       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, fion, ema0bg, becdr, &
       lambdap, lambda, nlam, vpot, c0, cm, phi, dbec,l_cprestart  )
 
@@ -52,7 +52,7 @@
       use cp_electronic_mass,       ONLY : emass_cutoff
       use orthogonalize_base,       ONLY : calphi_bgrp
       use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress, vofrho, nlfl_bgrp, prefor
-      use cp_interfaces,            ONLY : nlsm2_bgrp, calbec, caldbec_bgrp, nlfq_bgrp, beta_eigr
+      use cp_interfaces,            ONLY : nlsm2_bgrp, calbec, caldbec_bgrp, nlfq_bgrp
       USE cp_main_variables,        ONLY : idesc, drhor, drhog
       USE mp_global, ONLY:  me_image, my_image_id, nbgrp
       USE fft_base,  ONLY: dffts, dfftp
@@ -69,7 +69,6 @@
       integer :: nfi, nlam
       logical :: tfirst , tlast
       complex(dp) :: eigr(ngw,nat)
-      complex(dp) :: beigr(ngw,nkb)
       real(dp) :: bec(nkb,nbspx)
       real(dp) :: becdr(nkb,nbspx,3)
       integer irb(3,nat)
@@ -165,7 +164,6 @@
       call  emass_precond_tpa( ema0bg, tpiba2, emass_cutoff )
      
       call prefor(eigr,betae) 
-      CALL beta_eigr(beigr, eigr)
 
       ltresh    = .false.
       itercg    = 1
@@ -177,7 +175,7 @@
 
       !orthonormalize c0
 
-      call calbec(beigr,c0,bec)
+      call calbec(nbsp, betae,c0,bec)
       CALL gram_bgrp( betae, bec, nkb, c0, ngw )
 
       !calculates phi for pcdaga
@@ -211,13 +209,13 @@
 
 
         ENERGY_CHECK: if(.not. ene_ok ) then
-          call calbec(beigr,c0,bec)
+          call calbec(nbsp, betae,c0,bec)
           if(.not.tens) then
              call rhoofr(nfi,c0(:,:),irb,eigrb,bec,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
           else
 
             if(newscheme.or.firstiter) then 
-               call  inner_loop_cold( nfi, tfirst, tlast, eigr, beigr, irb, eigrb, &
+               call  inner_loop_cold( nfi, tfirst, tlast, eigr, irb, eigrb, &
                       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,dbec,firstiter,vpot)
                firstiter=.false.
             endif
@@ -311,7 +309,6 @@
 
 
         call prefor(eigr,betae)!ATTENZIONE
-        CALL beta_eigr(beigr, eigr)
 
         do i=1,nbsp,2
           call dforce( i, bec, betae, c0,c2,c3,rhos, dffts%nnr, ispin,f,nbsp,nspin)
@@ -348,13 +345,13 @@
         hpsi0=hpsi
         gi = hpsi
         
-        call calbec(beigr,hpsi,becm)
+        call calbec(nbsp, betae,hpsi,becm)
         call xminus1(hpsi,betae,dumm,becm,s_minus1,.false.)
 !        call sminus1(hpsi,becm,betae)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !look if the following two lines are really needed
-        call calbec(beigr,hpsi,becm)
+        call calbec(nbsp, betae,hpsi,becm)
         call pc2(c0,bec,hpsi,becm)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -364,13 +361,13 @@
         else
            call xminus1_state(gi,betae,ema0bg,becm,k_minus1,.true.,ave_ene)
         endif
-        call calbec(beigr,gi,becm)
+        call calbec(nbsp, betae,gi,becm)
         call pc2(c0,bec,gi,becm)
 
         
         if(tens) call calcmt( nrlx, f, z0t, fmat0 )
 
-        call calbec(beigr,hpsi,bec0) 
+        call calbec(nbsp, betae,hpsi,bec0) 
 
 !  calculates gamma
         gamma=0.d0
@@ -503,7 +500,7 @@
 
         !project hi on conduction sub-space
 
-        call calbec(beigr,hi,bec0)
+        call calbec(nbsp, betae,hi,bec0)
         call pc2(c0,bec,hi,bec0)
         
 
@@ -572,7 +569,7 @@
 
         !orthonormalize
 
-        call calbec(beigr,cm,becm)
+        call calbec(nbsp, betae,cm,becm)
         CALL gram_bgrp( betae, becm, nkb, cm, ngw )
                
         !calculate energy
@@ -580,7 +577,7 @@
           call rhoofr(nfi,cm(:,:),irb,eigrb,becm,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
         else
           if(newscheme) then 
-              call  inner_loop_cold( nfi, tfirst, tlast, eigr, beigr,  irb, eigrb, &
+              call  inner_loop_cold( nfi, tfirst, tlast, eigr, irb, eigrb, &
                         rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,dbec,.false., vpot  )  
           endif
 
@@ -635,7 +632,7 @@
           cm(1,:)=0.5d0*(cm(1,:)+CONJG(cm(1,:)))
         endif
 
-        call calbec(beigr,cm,becm)
+        call calbec(nbsp, betae,cm,becm)
         CALL gram_bgrp( betae, becm, nkb, cm, ngw )
 
         !test on energy: check the energy has really diminished
@@ -645,7 +642,7 @@
           call rhoofr(nfi,cm(:,:),irb,eigrb,becm,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
         else
           if(newscheme)  then
-              call  inner_loop_cold( nfi, tfirst, tlast, eigr, beigr, irb, eigrb, &
+              call  inner_loop_cold( nfi, tfirst, tlast, eigr, irb, eigrb, &
                       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,dbec,.false., vpot  )
           endif
           !     calculation of the rotated quantities
@@ -706,7 +703,7 @@
           endif
           c0=c0+spasso*passov*hi
           restartcg=.true.
-          call calbec(beigr,c0,bec)
+          call calbec(nbsp, betae,c0,bec)
           CALL gram_bgrp( betae, bec, nkb, c0, ngw )
           ene_ok=.false.
           !if  ene1 << energy <  ene0; go to  ene1
@@ -716,7 +713,7 @@
           endif  
           c0=c0+spasso*passov*hi
           restartcg=.true.!ATTENZIONE
-          call calbec(beigr,c0,bec)
+          call calbec(nbsp, betae,c0,bec)
           CALL gram_bgrp( betae, bec, nkb, c0, ngw )
           !if ene > ene0,en1 do a steepest descent step
           ene_ok=.false.
@@ -732,14 +729,14 @@
             cm=c0+spasso*passov*hi
             ! chenge the searching direction
             spasso=spasso*(-1.d0)
-            call calbec(beigr,cm,becm)
+            call calbec(nbsp, betae,cm,becm)
             CALL gram_bgrp( betae, bec, nkb, cm, ngw )
-            call calbec(beigr,cm,becm)
+            call calbec(nbsp, betae,cm,becm)
             if(.not.tens) then
               call rhoofr(nfi,cm(:,:),irb,eigrb,becm,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
             else
               if(newscheme)  then
-                  call  inner_loop_cold( nfi, tfirst, tlast, eigr, beigr, irb, eigrb, &
+                  call  inner_loop_cold( nfi, tfirst, tlast, eigr, irb, eigrb, &
                           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,dbec,.false., vpot  )
               endif
               !     calculation of the rotated quantities
@@ -783,7 +780,7 @@
         
         if(tens.and.newscheme) enever=enever-entropy
  
-        if(.not. ene_ok) call calbec (beigr,c0,bec)
+        if(.not. ene_ok) call calbec (nbsp, betae,c0,bec)
 
 #if defined (__CUDA)
         CALL errore('  runcg_uspp ', ' GPU version not yet implemented', 1 )
@@ -799,7 +796,7 @@
         !
         !=======================================================================
         if(tens.and. .not.newscheme) then
-            call  inner_loop_cold( nfi, tfirst, tlast, eigr, beigr, irb, eigrb, &
+            call  inner_loop_cold( nfi, tfirst, tlast, eigr, irb, eigrb, &
                     rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,dbec,firstiter, vpot  )
 !the following sets up the new energy
            enever=etot
@@ -820,7 +817,7 @@
       !calculates atomic forces and lambda
 
        if(tpre) then!if pressure is need the following is written because of caldbec
-          call  calbec(beigr,c0,bec)
+          call  calbec(nbsp, betae,c0,bec)
           if(.not.tens) then
             call caldbec_bgrp( eigr, c0, dbec, idesc )
             call rhoofr(nfi,c0(:,:),irb,eigrb,bec,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
@@ -860,14 +857,13 @@
       CALL errore('  runcg_uspp ', ' GPU version not yet implemented', 1 )
 #else
       if (.not.tens) then
-        if (tfor .or. tprnfor) call nlfq_bgrp( c0, beigr, bec, becdr, fion ) 
+        if (tfor .or. tprnfor) call nlfq_bgrp( c0, betae, bec, becdr, fion ) 
       else
-        if (tfor .or. tprnfor) call nlfq_bgrp( c0diag, beigr, becdiag, becdrdiag, fion ) 
+        if (tfor .or. tprnfor) call nlfq_bgrp( c0diag, betae, becdiag, becdrdiag, fion ) 
       endif
 #endif
   
         call prefor(eigr,betae)
-        call beta_eigr(beigr, eigr)
         do i=1,nbsp,2
           call dforce(i,bec,betae,c0,c2,c3,rhos,dffts%nnr,ispin,f,nbsp,nspin)
           if(tefield.and.(evalue .ne. 0.d0)) then
@@ -971,9 +967,9 @@
                enddo
             enddo
           
-            call calbec (beigr,c0,bec)
+            call calbec (nbsp,betae,c0,bec)
             CALL gram_bgrp( betae, bec, nkb, c0, ngw )
-            call calbec(beigr,c0,bec)
+            call calbec(nbsp, betae,c0,bec)
           
 
 
@@ -1014,7 +1010,7 @@
             CALL mp_sum( lambda_repl, intra_bgrp_comm )
             CALL distribute_lambda( lambda_repl, lambda( :, :, 1 ), idesc( :, 1 ) )
             cm(:,:)=c0(:,:)
-            call calbec (beigr,cm,becm)
+            call calbec (nbsp, betae,cm,becm)
 
          endif
         DEALLOCATE( lambda_repl )
@@ -1047,7 +1043,7 @@
            !
            DEALLOCATE( lambda_dist )
            !
-           call nlsm2_bgrp( ngw, nkb, beigr, c0, becdr, nbspx, nbsp )
+           call nlsm2_bgrp( ngw, nkb, betae, c0, becdr, nbspx, nbsp )
            !
         endif
         !

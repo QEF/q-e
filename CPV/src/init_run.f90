@@ -27,6 +27,7 @@ SUBROUTINE init_run()
   USE fft_base,                 ONLY : dfftp, dffts
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
+  USE uspp_gpum,                ONLY : vkb_d
   USE core,                     ONLY : rhoc
   USE wavefunctions,            ONLY : c0_bgrp, cm_bgrp, allocate_cp_wavefunctions
   USE ensemble_dft,             ONLY : tens, z0t
@@ -80,6 +81,9 @@ SUBROUTINE init_run()
   USE cell_base,                ONLY : ref_tpiba2, init_tpiba2
   USE tsvdw_module,             ONLY : tsvdw_initialize
   USE exx_module,               ONLY : exx_initialize
+#if defined (__CUDA)
+  USE cudafor
+#endif
   !
   IMPLICIT NONE
   !
@@ -197,6 +201,9 @@ SUBROUTINE init_run()
   ALLOCATE( deeq( nhm, nhm, nat, nspin ) )
   !
   ALLOCATE( vkb( ngw, nkb ) )
+#if defined(_CUDA)
+  ALLOCATE( vkb_d( ngw, nkb ) )
+#endif
   !
   IF ( dft_is_meta() .AND. tens ) &
      CALL errore( ' init_run ', 'ensemble_dft not implemented for metaGGA', 1 )

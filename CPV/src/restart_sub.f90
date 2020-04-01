@@ -28,13 +28,14 @@ SUBROUTINE from_restart( )
    USE gvect,    ONLY : mill, eigts1, eigts2, eigts3 
    USE printout_base,         ONLY : printout_pos
    USE gvecw,                 ONLY : ngw
-   USE cp_interfaces,         ONLY : phfacs, strucf, prefor, calbec_bgrp, caldbec_bgrp, beta_eigr
+   USE cp_interfaces,         ONLY : phfacs, strucf, prefor, calbec, caldbec_bgrp
    USE energies,              ONLY : eself, dft_energy_type
    USE wave_base,             ONLY : rande_base
    USE efield_module,         ONLY : efield_berry_setup,  tefield, &
                                      efield_berry_setup2, tefield2
    USE uspp,                  ONLY : okvan, vkb, nkb, nlcc_any
-   USE cp_main_variables,     ONLY : ht0, htm, lambdap, lambda, lambdam, eigr, beigr, beigr_d, &
+   USE uspp_gpum,             ONLY : vkb_d
+   USE cp_main_variables,     ONLY : ht0, htm, lambdap, lambda, lambdam, eigr, &
                                      sfac, taub, irb, eigrb, edft, bec_bgrp, dbec, idesc, iabox, nabox
    USE time_step,             ONLY : delt
    USE fft_base,              ONLY : dfftp, dffts
@@ -163,9 +164,7 @@ SUBROUTINE from_restart( )
    CALL strucf( sfac, eigts1, eigts2, eigts3, mill, dffts%ngm )
    !
    CALL prefor( eigr, vkb )
-   !
-   CALL beta_eigr( beigr, eigr )
-   CALL dev_memcpy( beigr_d, beigr )
+   CALL dev_memcpy( vkb_d, vkb )
    !
    CALL formf( .TRUE. , eself )
    !
@@ -191,7 +190,7 @@ SUBROUTINE from_restart( )
       !
    END IF
    !
-   CALL calbec_bgrp( beigr, c0_bgrp, bec_bgrp )
+   CALL calbec( nbsp_bgrp, vkb, c0_bgrp, bec_bgrp, 0 )
    !
    IF ( tpre     ) CALL caldbec_bgrp( eigr, c0_bgrp, dbec, idesc )
    !

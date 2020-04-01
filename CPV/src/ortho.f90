@@ -489,7 +489,7 @@ END MODULE ortho_module
 
 
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE ortho_x( beigr, cp_bgrp, phi_bgrp, x0, idesc, diff, iter, ccc, bephi, becp_bgrp )
+   SUBROUTINE ortho_x( betae, cp_bgrp, phi_bgrp, x0, idesc, diff, iter, ccc, bephi, becp_bgrp )
 !=----------------------------------------------------------------------------=!
       !
       !     input = cp (non-orthonormal), beta
@@ -524,7 +524,7 @@ END MODULE ortho_module
       include 'laxlib.fh'
       !
       INTEGER, INTENT(IN) :: idesc(:,:)
-      COMPLEX(DP) DEVICEATTR :: beigr(:,:)
+      COMPLEX(DP) DEVICEATTR :: betae(:,:)
       COMPLEX(DP) DEVICEATTR :: cp_bgrp(:,:), phi_bgrp(:,:)
       REAL(DP)    :: x0(:,:,:), diff, ccc
       INTEGER     :: iter
@@ -552,8 +552,8 @@ END MODULE ortho_module
 
       IF( nkbus > 0 ) THEN
          !
-         ALLOCATE( wrk2, MOLD = beigr  )
-         CALL dev_memcpy( wrk2, beigr )
+         ALLOCATE( wrk2, MOLD = betae  )
+         CALL dev_memcpy( wrk2, betae )
          CALL keep_only_us( wrk2 ) 
          CALL nlsm1us ( nbsp_bgrp, wrk2, phi_bgrp, becp_bgrp )
          CALL bec_bgrp2ortho( becp_bgrp, bephi, nrcx, idesc )

@@ -21,6 +21,7 @@ SUBROUTINE deallocate_modules_var()
   USE ensemble_dft,         ONLY : deallocate_ensemble_dft
   USE cg_module,            ONLY : deallocate_cg
   USE gvect,                ONLY : deallocate_gvect
+  USE gvect_gpum,           ONLY : deallocate_gvect_gpu
   USE gvecw,                ONLY : deallocate_gvecw
   USE smallbox_gvec,        ONLY : deallocate_smallbox_gvec
   USE local_pseudo,         ONLY : deallocate_local_pseudo
@@ -63,6 +64,7 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_uspp_gpu()
   CALL deallocate_gvect(.TRUE.) ! Value .true. is hard coded in init.f90:195,
                                 !  here it prevents double free of gg variable.
+  CALL deallocate_gvect_gpu()
   CALL deallocate_gvecw()
   CALL deallocate_smallbox_gvec( )
   CALL deallocate_local_pseudo()

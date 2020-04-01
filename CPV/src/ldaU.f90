@@ -99,7 +99,7 @@
       end subroutine ldaU_init
 !
 !-----------------------------------------------------------------------
-      subroutine new_ns( c, eigr, beigr, betae, hpsi, forceh )
+      subroutine new_ns( c, eigr, betae, hpsi, forceh )
 !-----------------------------------------------------------------------
 !
 ! This routine computes the on site occupation numbers of the Hubbard ions.
@@ -119,10 +119,11 @@
       USE step_penalty,       ONLY: penalty_e, penalty_f
       USE mp_pools,           ONLY: intra_pool_comm, me_pool, nproc_pool
       USE mp_bands,           only: nbgrp
-      USE cp_interfaces,      only: nlsm1, nlsm2_bgrp
+      USE cp_interfaces,      only: calbec, nlsm2_bgrp
 !
       implicit none
-      complex(DP), intent(in) :: c(ngw,nx), eigr(ngw,nat), beigr(ngw,nkb), betae(ngw,nkb)
+      complex(DP), intent(in) :: c(ngw,nx), eigr(ngw,nat)
+      complex(DP), intent(inout) :: betae(ngw,nkb)
       complex(DP), intent(out) :: hpsi(ngw,nx)
       real(DP), INTENT(OUT) :: forceh(3,nat)
 !
@@ -160,7 +161,7 @@
       !
       ! calculate proj = <wfcU|S|c>
       !
-      CALL projwfc_hub( c, nx, eigr, beigr, betae, n, nwfcU, &
+      CALL projwfc_hub( c, nx, eigr, betae, n, nwfcU, &
      &                  offset, Hubbard_l, wfcU, becwfc, swfc, proj )
       !
       ns(:,:,:,:) = 0.d0
@@ -243,10 +244,10 @@
         allocate(dns(ldmx,ldmx,nspin,nat))
         allocate (spsi(ngw,n))
 !
-        call nlsm1 ( n, beigr, c, bp )
+        call calbec ( n, betae, c, bp )
         call s_wfc ( n, bp, betae, c, spsi )
-        call nlsm2_bgrp( ngw, nkb, beigr, c, dbp, nx, n )
-        call nlsm2_bgrp( ngw, nkb, beigr, wfcU, wdb, nwfcU, nwfcU )
+        call nlsm2_bgrp( ngw, nkb, betae, c, dbp, nx, n )
+        call nlsm2_bgrp( ngw, nkb, betae, wfcU, wdb, nwfcU, nwfcU )
         !
         ! poor-man parallelization over bands
         ! - if nproc_pool=1   : nb_s=1, nb_e=n, mykey=0
@@ -605,7 +606,7 @@
       end subroutine dprojdtau
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE projwfc_hub( c, nx, eigr, beigr, betae, n, nwfcU,  &
+      SUBROUTINE projwfc_hub( c, nx, eigr, betae, n, nwfcU,  &
      &                        offset, Hubbard_l, wfcU, becwfc, swfc, proj )
 !-----------------------------------------------------------------------
       !
@@ -620,12 +621,13 @@
       USE gvect,              ONLY: gstart
       USE ions_base,          ONLY: nsp, nat
       USE uspp,               ONLY: nkb
-      USE cp_interfaces,      only: nlsm1
+      USE cp_interfaces,      only: calbec
 !
       IMPLICIT NONE
       INTEGER,     INTENT(IN) :: nx, n, nwfcU, offset(nat), &
                                  Hubbard_l(nsp)
-      COMPLEX(DP), INTENT(IN) :: c( ngw, nx ), eigr(ngw,nat), beigr(ngw,nkb), betae(ngw,nkb)
+      COMPLEX(DP), INTENT(IN) :: c( ngw, nx ), eigr(ngw,nat)
+      COMPLEX(DP), INTENT(INOUT) :: betae(ngw,nkb)
 !
       COMPLEX(DP), INTENT(OUT):: wfcU(ngw, nwfcU),    &
      &                           swfc(ngw, nwfcU)
@@ -641,7 +643,7 @@
       !
       ! calculate bec = <beta|wfc>
       !
-      CALL nlsm1( nwfcU, beigr, wfcU, becwfc )
+      CALL calbec( nwfcU, betae, wfcU, becwfc )
       !
       ! calculate swfc = S|wfc>
       !

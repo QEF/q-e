@@ -101,8 +101,6 @@
    PUBLIC :: dotcsc
    PUBLIC :: nlsm1
    PUBLIC :: nlsm2_bgrp
-   PUBLIC :: calbec_bgrp
-   PUBLIC :: calbec_nc
    PUBLIC :: ennl
    PUBLIC :: calrhovan
    PUBLIC :: calbec
@@ -110,10 +108,7 @@
    PUBLIC :: dennl
    PUBLIC :: nlfq_bgrp
    PUBLIC :: collect_bec
-   PUBLIC :: beta_eigr
    PUBLIC :: nlsm1us
-   PUBLIC :: nlsm1nc
-   PUBLIC :: nlsm1all
    PUBLIC :: dbeta_eigr
 
    ! ------------------------------------ !
@@ -423,18 +418,18 @@
 
    INTERFACE ortho
       SUBROUTINE ortho_x &
-         ( beigr, cp_bgrp, phi_bgrp, x0, idesc, diff, iter, ccc, bephi, becp_bgrp )
+         ( betae, cp_bgrp, phi_bgrp, x0, idesc, diff, iter, ccc, bephi, becp_bgrp )
          USE kinds,          ONLY: DP
          IMPLICIT NONE
          INTEGER,  INTENT(IN) :: idesc( :, : )
-         COMPLEX(DP) :: beigr( :, : )
+         COMPLEX(DP) :: betae( :, : )
          COMPLEX(DP) :: cp_bgrp( :, : ), phi_bgrp( :, : )
          REAL(DP)    :: x0( :, :, : ), diff, ccc
          INTEGER     :: iter
          REAL(DP)    :: bephi(:,:)
          REAL(DP)    :: becp_bgrp(:,:)
 #if defined (__CUDA)
-         ATTRIBUTES( DEVICE ) :: becp_bgrp, bephi, cp_bgrp, phi_bgrp, beigr
+         ATTRIBUTES( DEVICE ) :: becp_bgrp, bephi, cp_bgrp, phi_bgrp, betae
 #endif
       END SUBROUTINE
    END INTERFACE
@@ -941,61 +936,45 @@
    END INTERFACE
 
    INTERFACE dotcsc
-      SUBROUTINE dotcsc_x( beigr, cp, ngw, n )
+      SUBROUTINE dotcsc_x( betae, cp, ngw, n )
          USE kinds, ONLY: dp
          IMPLICIT NONE
          INTEGER,     INTENT(IN) :: ngw, n
-         COMPLEX(DP), INTENT(IN) :: beigr(:,:), cp(:,:)
+         COMPLEX(DP), INTENT(IN) :: cp(:,:)
+         COMPLEX(DP), INTENT(INOUT) :: betae(:,:)
       END SUBROUTINE dotcsc_x
    END INTERFACE
 
    INTERFACE nlsm1
-      SUBROUTINE nlsm1_x ( n, beigr, c, becp, pptype_ )
+      SUBROUTINE nlsm1_x ( n, betae, c, becp, pptype_ )
          USE kinds,      ONLY : DP
          IMPLICIT NONE
          INTEGER,     INTENT(IN)  :: n
-         COMPLEX(DP), INTENT(IN)  :: beigr( :, : ), c( :, : )
+         COMPLEX(DP), INTENT(IN)  :: c( :, : )
+         COMPLEX(DP), INTENT(INOUT)  :: betae( :, : )
          REAL(DP),    INTENT(OUT) :: becp( :, : )
          INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
       END SUBROUTINE nlsm1_x 
    END INTERFACE
 
    INTERFACE nlsm2_bgrp
-      SUBROUTINE  nlsm2_bgrp_x( ngw, nkb, beigr, c_bgrp, becdr_bgrp, nbspx_bgrp, nbsp_bgrp )
+      SUBROUTINE  nlsm2_bgrp_x( ngw, nkb, betae, c_bgrp, becdr_bgrp, nbspx_bgrp, nbsp_bgrp )
          USE kinds,      ONLY : DP
          IMPLICIT NONE
          INTEGER,     INTENT(IN)  :: ngw, nkb, nbspx_bgrp, nbsp_bgrp
-         COMPLEX(DP), INTENT(IN)  :: beigr( :, : ), c_bgrp( :, : )
+         COMPLEX(DP), INTENT(IN)  :: betae( :, : ), c_bgrp( :, : )
          REAL(DP),    INTENT(OUT) :: becdr_bgrp( :, :, : )
       END SUBROUTINE nlsm2_bgrp_x
 #if defined (_CUDA)
-      SUBROUTINE  nlsm2_bgrp_gpu_x( ngw, nkb, beigr, c_bgrp, becdr_bgrp, nbspx_bgrp, nbsp_bgrp )
+      SUBROUTINE  nlsm2_bgrp_gpu_x( ngw, nkb, betae, c_bgrp, becdr_bgrp, nbspx_bgrp, nbsp_bgrp )
          USE kinds,      ONLY : DP
          IMPLICIT NONE
          INTEGER,     INTENT(IN)  :: ngw, nkb, nbspx_bgrp, nbsp_bgrp
-         COMPLEX(DP), INTENT(IN)  :: beigr( :, : )
+         COMPLEX(DP), INTENT(IN), DEVICE :: betae( :, : )
          COMPLEX(DP), INTENT(IN), DEVICE :: c_bgrp( :, : )
          REAL(DP),    INTENT(OUT) :: becdr_bgrp( :, :, : )
       END SUBROUTINE nlsm2_bgrp_gpu_x
 #endif
-   END INTERFACE
-
-   INTERFACE calbec_bgrp
-      SUBROUTINE calbec_bgrp_x ( beigr, c_bgrp, bec_bgrp )
-         USE kinds,      ONLY : DP
-         IMPLICIT NONE
-         COMPLEX(DP), INTENT(IN)  :: beigr( :, : ), c_bgrp( :, : )
-         REAL(DP),    INTENT(OUT) :: bec_bgrp( :, : )
-      END SUBROUTINE calbec_bgrp_x 
-   END INTERFACE
-
-   INTERFACE calbec_nc
-      SUBROUTINE calbec_nc_x ( beigr, c_bgrp, bec_bgrp )
-         USE kinds,      ONLY : DP
-         IMPLICIT NONE
-         COMPLEX(DP), INTENT(IN)  :: beigr( :, : ), c_bgrp( :, : )
-         REAL(DP),    INTENT(OUT) :: bec_bgrp( :, : )
-      END SUBROUTINE calbec_nc_x
    END INTERFACE
 
    INTERFACE ennl
@@ -1019,11 +998,13 @@
    END INTERFACE
 
    INTERFACE calbec
-      SUBROUTINE calbec_x( beigr, c, bec, pptype_ )
+      SUBROUTINE calbec_x( n, betae, c, bec, pptype_ )
          USE kinds,              ONLY: DP
          IMPLICIT NONE
-         REAL(DP),    INTENT(OUT) ::  bec( :, : )
-         COMPLEX(DP), INTENT(IN)  ::  c( :, : ), beigr( :, : )
+         INTEGER,     INTENT(IN)    :: n
+         REAL(DP),    INTENT(OUT)   :: bec( :, : )
+         COMPLEX(DP), INTENT(IN)    :: c( :, : )
+         COMPLEX(DP), INTENT(INOUT) :: betae( :, : )
          INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
       END SUBROUTINE calbec_x
    END INTERFACE
@@ -1051,11 +1032,11 @@
    END INTERFACE
 
    INTERFACE nlfq_bgrp
-      SUBROUTINE nlfq_bgrp_x( c_bgrp, beigr, bec_bgrp, becdr_bgrp, fion )
+      SUBROUTINE nlfq_bgrp_x( c_bgrp, betae, bec_bgrp, becdr_bgrp, fion )
          USE kinds,              ONLY: DP
          IMPLICIT NONE
          COMPLEX(DP), INTENT(IN) DEVICEATTR :: c_bgrp( :, : )
-         COMPLEX(DP), INTENT(IN)  ::  beigr( :, : )
+         COMPLEX(DP), INTENT(IN) DEVICEATTR :: betae( :, : )
          REAL(DP),    INTENT(IN)  ::  bec_bgrp( :, : )
          REAL(DP),    INTENT(OUT) ::  becdr_bgrp( :, :, : )
          REAL(DP),    INTENT(OUT) ::  fion( :, : )
@@ -1072,64 +1053,15 @@
       END SUBROUTINE collect_bec_x
    END INTERFACE
 
-   INTERFACE beta_eigr
-      SUBROUTINE compute_beta_eigr_x ( beigr, eigr )
-         USE kinds,      ONLY : DP
-         IMPLICIT NONE
-         COMPLEX(DP), INTENT(IN)  :: eigr( :, : )
-         COMPLEX(DP), INTENT(OUT) :: beigr( :, : )
-      END SUBROUTINE compute_beta_eigr_x
-#if defined (__CUDA)
-      SUBROUTINE beta_eigr_gpu_x ( beigr, eigr )
-         USE kinds,      ONLY : DP
-         IMPLICIT NONE
-         COMPLEX(DP), INTENT(IN)  :: eigr( :, : )
-         COMPLEX(DP), DEVICE, INTENT(OUT) :: beigr( :, : )
-      END SUBROUTINE beta_eigr_gpu_x
-#endif
-   END INTERFACE
-
    INTERFACE nlsm1us
-      SUBROUTINE nlsm1us_x ( n, beigr, c, becp )
+      SUBROUTINE nlsm1us_x ( n, betae, c, becp )
          USE kinds,      ONLY : DP
          IMPLICIT NONE
          INTEGER,     INTENT(IN)  :: n
-         COMPLEX(DP), INTENT(IN)  :: beigr( :, : )
-         COMPLEX(DP), INTENT(IN)  :: c( :, : )
-         REAL(DP),    INTENT(OUT) :: becp( :, : )
+         COMPLEX(DP) DEVICEATTR , INTENT(INOUT)  :: betae( :, : )
+         COMPLEX(DP) DEVICEATTR , INTENT(IN)  :: c( :, : )
+         REAL(DP) DEVICEATTR ,    INTENT(OUT) :: becp( :, : )
       END SUBROUTINE nlsm1us_x
-#if defined (__CUDA)
-      SUBROUTINE nlsm1us_gpu_x ( n, beigr, c, becp )
-         USE kinds,      ONLY : DP
-         IMPLICIT NONE
-         INTEGER,     INTENT(IN)  :: n
-         COMPLEX(DP), DEVICE, INTENT(IN)  :: beigr( :, : )
-         COMPLEX(DP), DEVICE, INTENT(IN)  :: c( :, : )
-         REAL(DP),    DEVICE, INTENT(OUT) :: becp( :, : )
-      END SUBROUTINE nlsm1us_gpu_x
-#endif
-   END INTERFACE
-
-   INTERFACE nlsm1nc
-      SUBROUTINE nlsm1nc_x ( n, beigr, c, becp )
-         USE kinds,      ONLY : DP
-         IMPLICIT NONE
-         INTEGER,     INTENT(IN)  :: n
-         COMPLEX(DP), INTENT(IN)  :: beigr( :, : )
-         COMPLEX(DP), INTENT(IN)  :: c( :, : )
-         REAL(DP),    INTENT(OUT) :: becp( :, : )
-      END SUBROUTINE nlsm1nc_x
-   END INTERFACE
-
-   INTERFACE nlsm1all
-      SUBROUTINE nlsm1all_x ( n, beigr, c, becp )
-         USE kinds,      ONLY : DP
-         IMPLICIT NONE
-         INTEGER,     INTENT(IN)  :: n
-         COMPLEX(DP), INTENT(IN)  :: beigr( :, : )
-         COMPLEX(DP), INTENT(IN)  :: c( :, : )
-         REAL(DP),    INTENT(OUT) :: becp( :, : )
-      END SUBROUTINE nlsm1all_x
    END INTERFACE
 
    INTERFACE dbeta_eigr

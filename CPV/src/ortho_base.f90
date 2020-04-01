@@ -1190,10 +1190,9 @@ CONTAINS
       REAL(DP), ALLOCATABLE :: qtemp( : , : )
       REAL(DP), ALLOCATABLE :: qtemp_d( : , : )
       REAL(DP), ALLOCATABLE :: ema0bg_d( : )
-      COMPLEX(DP), ALLOCATABLE :: betae_d( : , : )
       REAL(DP) :: qqf
 #if defined (__CUDA)
-      ATTRIBUTES( DEVICE ) :: c0_bgrp, phi_bgrp, ema0bg_d, qtemp_d, betae_d
+      ATTRIBUTES( DEVICE ) :: c0_bgrp, phi_bgrp, ema0bg_d, qtemp_d, betae
 #endif
 !
       IF( nbsp_bgrp < 1 ) RETURN
@@ -1232,12 +1231,10 @@ CONTAINS
 !
          IF( ngw > 0 ) THEN
 #if defined (__CUDA)
-            ALLOCATE(betae_d, SOURCE=betae)
             ALLOCATE(qtemp_d, SOURCE=qtemp)
-            CALL MYDGEMM ( 'N', 'N', 2*ngw, nbsp_bgrp, nkb, 1.0d0, betae_d, &
+            CALL MYDGEMM ( 'N', 'N', 2*ngw, nbsp_bgrp, nkb, 1.0d0, betae, &
                        2*ngwx, qtemp_d, nkb, 0.0d0, phi_bgrp, 2*ngwx )
             DEALLOCATE(qtemp_d)
-            DEALLOCATE(betae_d)
 #else
             CALL dgemm ( 'N', 'N', 2*ngw, nbsp_bgrp, nkb, 1.0d0, betae, &
                        2*ngwx, qtemp, nkb, 0.0d0, phi_bgrp, 2*ngwx )

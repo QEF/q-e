@@ -7,7 +7,7 @@
 !
 !
 !====================================================================
-   SUBROUTINE inner_loop_cold( nfi, tfirst, tlast, eigr, beigr,  irb, eigrb, &
+   SUBROUTINE inner_loop_cold( nfi, tfirst, tlast, eigr, irb, eigrb, &
                           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, &
                           sfac, c0, bec, dbec, firstiter, vpot )
 !====================================================================
@@ -60,7 +60,6 @@
       LOGICAL                :: tfirst 
       LOGICAL                :: tlast
       COMPLEX(kind=DP)            :: eigr( ngw, nat )
-      COMPLEX(kind=DP)            :: beigr( ngw, nhsa )
       COMPLEX(kind=DP)            :: c0( ngw, n )
       REAL(kind=DP)               :: bec( nhsa, n )
       REAL(kind=DP)               :: dbec( nhsa, n, 3, 3 )
@@ -110,7 +109,7 @@
 
         ! calculates the overlaps bec between the wavefunctions c0
         ! and the beta functions
-        CALL calbec( beigr, c0, bec )
+        CALL calbec( n, betae, c0, bec )
  
         ! rotates the wavefunctions c0 and the overlaps bec
         ! (the occupation matrix f_ij becomes diagonal f_i)      

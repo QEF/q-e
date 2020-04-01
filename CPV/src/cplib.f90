@@ -1504,7 +1504,7 @@ end subroutine dylmr2_
 
 
 !-----------------------------------------------------------------------
-      SUBROUTINE dotcsc_x( beigr, cp, ngw, n )
+      SUBROUTINE dotcsc_x( betae, cp, ngw, n )
 !-----------------------------------------------------------------------
 !
       USE kinds,              ONLY: DP
@@ -1515,13 +1515,14 @@ end subroutine dylmr2_
       USE uspp_param,         ONLY: nh, ish, upf
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm, nbgrp, inter_bgrp_comm
-      USE cp_interfaces,      ONLY: nlsm1
+      USE cp_interfaces,      ONLY: calbec
       USE electrons_base,     ONLY: ispin, ispin_bgrp, nbspx_bgrp, ibgrp_g2l, iupdwn, nupdwn, nbspx
 !
       IMPLICIT NONE
 !
       INTEGER,     INTENT(IN) :: ngw, n
-      COMPLEX(DP), INTENT(IN) :: beigr(:,:), cp(:,:)
+      COMPLEX(DP), INTENT(IN) :: cp(:,:)
+      COMPLEX(DP), INTENT(INOUT) :: betae(:,:)
 ! local variables
       REAL(DP) rsum, csc(n) ! automatic array
       COMPLEX(DP) temp(ngw) ! automatic array
@@ -1537,7 +1538,7 @@ end subroutine dylmr2_
 !     < beta | phi > is real. only the i lowest:
 !
 
-      CALL nlsm1( nbspx_bgrp, beigr, cp, becp, 2 )
+      CALL calbec( nbspx_bgrp, betae, cp, becp, 2 )
 
       nnn = MIN( 12, n )
 
@@ -1976,25 +1977,34 @@ end subroutine dylmr2_
       USE gvecw,      ONLY : ngw
       USE uspp,       ONLY : beta, nhtol, indv_ijkb0
       USE uspp_param, ONLY : nh, upf
+      USE gvect,      ONLY : gstart
 !
       IMPLICIT NONE
       COMPLEX(DP), INTENT(IN) :: eigr( :, : )
       COMPLEX(DP), INTENT(OUT) :: betae( :, : )
 !
       INTEGER     :: is, iv, ia, inl, ig, isa
+      COMPLEX(DP), PARAMETER, DIMENSION(4) :: cfact = &  ! (l == 0), (l == 1), (l == 2), (l == 3)
+      [( 1.0_dp , 0.0_dp ), ( 0.0_dp , -1.0_dp ), ( -1.0_dp , 0.0_dp ), ( 0.0_dp , 1.0_dp )]
       COMPLEX(DP) :: ci
 !
       CALL start_clock( 'prefor' )
+!$omp parallel do default(shared) private(ia,is,iv,ci,inl,ig)
       DO ia=1,nat
          is=ityp(ia)
          DO iv=1,nh(is)
-            ci=(0.0d0,-1.0d0)**nhtol(iv,is)
+            ci=cfact( nhtol(iv,is) + 1 )
             inl = indv_ijkb0(ia) + iv
             DO ig=1,ngw
                betae(ig,inl)=ci*beta(ig,iv,is)*eigr(ig,ia)
             END DO
+            !beigr(1,inl)=betae(1,inl)
+            !DO ig=gstart,ngw
+            !   beigr(ig,inl)=2.0d0 * betae(ig,inl)
+            !END DO
          END DO
       END DO
+!$omp end parallel do
       CALL stop_clock( 'prefor' )
 !
       RETURN

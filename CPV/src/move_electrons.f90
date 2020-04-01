@@ -16,11 +16,12 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
   USE kinds,                ONLY : DP
   USE control_flags,        ONLY : lwf, tfor, tprnfor, thdyn
   USE cg_module,            ONLY : tcg
-  USE cp_main_variables,    ONLY : eigr, beigr, irb, eigrb, rhog, rhos, rhor, drhor, &
-                                   drhog, sfac, ema0bg, bec_bgrp, becdr_bgrp, beigr_d, &
+  USE cp_main_variables,    ONLY : eigr, irb, eigrb, rhog, rhos, rhor, drhor, &
+                                   drhog, sfac, ema0bg, bec_bgrp, becdr_bgrp,  &
                                    taub, lambda, lambdam, lambdap, vpot, dbec, idesc
   USE cell_base,            ONLY : omega, ibrav, h, press
   USE uspp,                 ONLY : becsum, vkb, nkb, nlcc_any
+  USE uspp_gpum,            ONLY : vkb_d
   USE energies,             ONLY : ekin, enl, entropy, etot
   USE electrons_base,       ONLY : nbsp, nspin, f, nudx, nupdwn, nbspx_bgrp, nbsp_bgrp
   USE core,                 ONLY : rhoc
@@ -39,8 +40,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
   USE gvecw,                ONLY : ngw
   USE orthogonalize_base,   ONLY : calphi_bgrp
   USE control_flags,        ONLY : force_pairing
-  USE cp_interfaces,        ONLY : rhoofr, compute_stress, vofrho, nlfl_bgrp, prefor, nlfq_bgrp, &
-                                   beta_eigr
+  USE cp_interfaces,        ONLY : rhoofr, compute_stress, vofrho, nlfl_bgrp, prefor, nlfq_bgrp
   USE electrons_module,     ONLY : distribute_c, collect_c, distribute_b
   USE gvect,                ONLY : eigts1, eigts2, eigts3 
   USE control_flags,        ONLY : lwfpbe0nscf  ! exx_wf related
@@ -71,7 +71,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
 #if defined (__CUDA)
      CALL errore(' move_electrons ', ' GPU version of runcg not yet implemented ', 1 )
 #else
-     CALL runcg_uspp( nfi, tfirst, tlast, eigr, beigr, bec_bgrp, irb, eigrb, &
+     CALL runcg_uspp( nfi, tfirst, tlast, eigr, bec_bgrp, irb, eigrb, &
                       rhor, rhog, rhos, rhoc, eigts1, eigts2, eigts3, sfac, &
                       fion, ema0bg, becdr_bgrp, lambdap, lambda, SIZE(lambda,1), vpot, c0_bgrp, &
                       cm_bgrp, phi, dbec, l_cprestart  )
@@ -162,9 +162,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
      CALL newd( vpot, becsum, fion, tprint )
      !
      CALL prefor( eigr, vkb )
-     !
-     CALL beta_eigr( beigr, eigr )
-     CALL dev_memcpy( beigr_d, beigr )
+     CALL dev_memcpy( vkb_d, vkb )
      !
      IF( force_pairing ) THEN
         !
@@ -187,9 +185,9 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
      !
      IF ( tfor .OR. ( tprnfor .AND. tprint ) ) THEN
 #if defined (__CUDA)
-        CALL nlfq_bgrp( c0_d, beigr, bec_bgrp, becdr_bgrp, fion )
+        CALL nlfq_bgrp( c0_d, vkb_d, bec_bgrp, becdr_bgrp, fion )
 #else
-        CALL nlfq_bgrp( c0_bgrp, beigr, bec_bgrp, becdr_bgrp, fion )
+        CALL nlfq_bgrp( c0_bgrp, vkb, bec_bgrp, becdr_bgrp, fion )
 #endif
      END IF
      !
@@ -214,7 +212,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
      ! ... the electron mass rises with g**2
      !
 #if defined (__CUDA)
-     CALL calphi_bgrp( c0_d, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
+     CALL calphi_bgrp( c0_d, ngw, bec_bgrp, nkb, vkb_d, phi, nbspx_bgrp, ema0bg )
 #else
      CALL calphi_bgrp( c0_bgrp, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
 #endif
