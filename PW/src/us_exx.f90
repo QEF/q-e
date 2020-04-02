@@ -748,6 +748,8 @@ MODULE us_exx
     USE wvfct,    ONLY : nbnd
     USE funct,    ONLY : dft_is_hybrid
     USE uspp,     ONLY : okvan
+    USE mp_bands, ONLY : inter_bgrp_comm
+
     !
     IMPLICIT NONE
     !
@@ -767,7 +769,7 @@ MODULE us_exx
     !
     IF (ik<1 .OR. ik>nks) CALL errore( "store_becxx0", "unexpected ik", 1 )
     !
-    CALL beccopy( becp, becxx0(ik), nkb, nbnd )
+    CALL beccopy( becp, becxx0(ik), nkb, nbnd, inter_bgrp_comm )
     !
   END SUBROUTINE
   !

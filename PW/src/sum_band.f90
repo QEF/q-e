@@ -22,7 +22,6 @@ SUBROUTINE sum_band()
   USE gvect,                ONLY : ngm, g
   USE gvecs,                ONLY : doublegrid
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk, igk_k
-  USE fixed_occ,            ONLY : one_atom_occupations
   USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, is_hubbard_back
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho, rhoz_or_updw
