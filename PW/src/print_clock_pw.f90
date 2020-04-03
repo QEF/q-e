@@ -91,7 +91,7 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'paro_gamma' ) ; CALL print_clock( 'paro_k' )
    ENDIF
    !
-   !IF ( iverbosity > 0)  THEN
+   IF ( iverbosity > 0)  THEN
       WRITE( stdout, '(/5x,"Called by sum_band:")' )
       CALL print_clock( 'sum_band:weights' )
       CALL print_clock( 'sum_band:loop' )
@@ -103,46 +103,46 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'addusd:skk' )
       CALL print_clock( 'addusd:dgemm' )
       CALL print_clock( 'addusd:qvan2' )
-   !ENDIF
+   ENDIF
    !
    IF ( isolve == 0 ) THEN
       WRITE( stdout, '(/5x,"Called by *egterg:")' )
       IF ( gamma_only ) THEN
          CALL print_clock( 'rdiaghg' )
-!         IF ( iverbosity > 0 )  THEN
+         IF ( iverbosity > 0 )  THEN
             CALL print_clock( 'regterg:overlap' )
             CALL print_clock( 'regterg:update' )
             CALL print_clock( 'regterg:last' )
             CALL print_clock( 'rdiaghg:choldc' )
             CALL print_clock( 'rdiaghg:inversion' )
             CALL print_clock( 'rdiaghg:paragemm' )
-!         ENDIF
+         ENDIF
       ELSE
          CALL print_clock( 'cdiaghg' )
-!         IF ( iverbosity > 0 )  THEN
+         IF ( iverbosity > 0 )  THEN
             CALL print_clock( 'cegterg:overlap' )
             CALL print_clock( 'cegterg:update' )
             CALL print_clock( 'cegterg:last' )
             CALL print_clock( 'cdiaghg:choldc' )
             CALL print_clock( 'cdiaghg:inversion' )
             CALL print_clock( 'cdiaghg:paragemm' )
-!         END IF
+         END IF
       END IF
    ELSE IF ( isolve == 1 ) THEN
       WRITE( stdout, '(/5x,"Called by *cgdiagg:")' )
    ELSE IF ( isolve == 2 ) THEN
       WRITE( stdout, '(/5x,"Called by ppcg_*:")' )
-!      IF ( iverbosity > 0 )  THEN
+      IF ( iverbosity > 0 )  THEN
          CALL print_clock( 'ppcg:zgemm' ) ; CALL print_clock( 'ppcg:dgemm' )
          CALL print_clock( 'ppcg:hpsi' )
          CALL print_clock( 'ppcg:cholQR' )
          CALL print_clock( 'ppcg:RR' )
          CALL print_clock( 'ppcg:ZTRSM' ) ; CALL print_clock( 'ppcg:DTRSM' )
          CALL print_clock( 'ppcg:lock' )
-!      END IF
+      END IF
    ELSE IF ( isolve == 3 ) THEN
       WRITE( stdout, '(/5x,"Called by paro_*:")' )
-!      IF ( iverbosity > 0 )  THEN
+      IF ( iverbosity > 0 )  THEN
          CALL print_clock( 'paro:init' )
          CALL print_clock( 'paro:pack' )
          CALL print_clock( 'paro:zero' )
@@ -172,7 +172,7 @@ SUBROUTINE print_clock_pw()
          CALL print_clock( 'rotHSw:ev:s6' ) ;
          CALL print_clock( 'rotHSw:ev:b5' ) ; call print_clock('rotHSw:ev:sum')
          CALL print_clock( 'rotHSw:ev:s7' ) ; CALL print_clock('rotHSw:ev:b6' ) 
-!      END IF
+      END IF
    END IF
    !
    CALL print_clock( 'h_psi' )
