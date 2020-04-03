@@ -1,0 +1,20 @@
+env QE_USE_MPI=1 /home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/..//test-suite/testcode/bin/testcode.py --verbose --category=pw_all
+Using executable: /home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/..//test-suite/run-pw.sh.
+Test id: 290320-1.
+Benchmark: git.
+
+pw_md - md-pot_extrap1.in: **FAILED**.
+
+pw_md - md-pot_extrap2.in: **FAILED**.
+
+pw_uspp - uspp-hyb-g.in: **FAILED**.
+
+pw_uspp - uspp-hyb-k.in: **FAILED**.
+
+All done. ERROR: only 177 out of 189 tests passed.
+Failed tests in:
+	/home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/pw_lda+U/
+	/home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/pw_md/
+	/home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/pw_metaGGA/
+	/home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/pw_plugins/
+	/home/degironc/Dropbox/HOME/QE/gitlab/fork/q-e/test-suite/pw_uspp/

@@ -36,6 +36,7 @@ SUBROUTINE stres_hub ( sigmah )
    USE mp_pools,      ONLY : inter_pool_comm, me_pool, nproc_pool
    USE mp,            ONLY : mp_sum
    USE control_flags, ONLY : gamma_only
+   USE mp_bands,      ONLY : use_bgrp_in_hpsi
    !
    IMPLICIT NONE
    !
@@ -53,8 +54,11 @@ SUBROUTINE stres_hub ( sigmah )
    TYPE (bec_type) :: proj
    INTEGER, EXTERNAL :: type_interaction
    LOGICAL :: lhubb
+   LOGICAL :: save_flag
    !
    CALL start_clock( 'stres_hub' )
+   !
+   save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .false.
    !
    IF (U_projection .NE. "atomic") CALL errore("stres_hub", &
                    " stress for this U_projection_type not implemented",1)
@@ -279,6 +283,8 @@ SUBROUTINE stres_hub ( sigmah )
    IF (ALLOCATED(dnsg)) DEALLOCATE (dnsg)
    DEALLOCATE (wfcatom)
    DEALLOCATE (spsi)
+   !
+   use_bgrp_in_hpsi = save_flag
    !
    CALL stop_clock( 'stres_hub' )
    !

@@ -100,30 +100,33 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'sum_band:calbec' )
       CALL print_clock( 'sum_band:becsum' )
       CALL print_clock( 'addusdens' )
+      CALL print_clock( 'addusd:skk' )
+      CALL print_clock( 'addusd:dgemm' )
+      CALL print_clock( 'addusd:qvan2' )
    !ENDIF
    !
    IF ( isolve == 0 ) THEN
       WRITE( stdout, '(/5x,"Called by *egterg:")' )
       IF ( gamma_only ) THEN
          CALL print_clock( 'rdiaghg' )
-         IF ( iverbosity > 0 )  THEN
+!         IF ( iverbosity > 0 )  THEN
             CALL print_clock( 'regterg:overlap' )
             CALL print_clock( 'regterg:update' )
             CALL print_clock( 'regterg:last' )
             CALL print_clock( 'rdiaghg:choldc' )
             CALL print_clock( 'rdiaghg:inversion' )
             CALL print_clock( 'rdiaghg:paragemm' )
-         ENDIF
+!         ENDIF
       ELSE
          CALL print_clock( 'cdiaghg' )
-         IF ( iverbosity > 0 )  THEN
+!         IF ( iverbosity > 0 )  THEN
             CALL print_clock( 'cegterg:overlap' )
             CALL print_clock( 'cegterg:update' )
             CALL print_clock( 'cegterg:last' )
             CALL print_clock( 'cdiaghg:choldc' )
             CALL print_clock( 'cdiaghg:inversion' )
             CALL print_clock( 'cdiaghg:paragemm' )
-         END IF
+!         END IF
       END IF
    ELSE IF ( isolve == 1 ) THEN
       WRITE( stdout, '(/5x,"Called by *cgdiagg:")' )
