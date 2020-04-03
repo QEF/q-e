@@ -60,4 +60,7 @@ lib_all_currents.a : $(ALLCURRENTSOBJS)
 clean :
 	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i *.L lib_all_currents.a
 
+maroni-sync:
+	rsync Makefile make.depend *.f90 maroni:/marconi_work/Sis19_baroni/qe-thermalcurrents/all_currents
+
 include make.depend
