@@ -44,6 +44,7 @@ SUBROUTINE force_hub( forceh )
    USE klist,                ONLY : nks, xk, ngk, igk_k
    USE io_files,             ONLY : nwordwfc, iunwfc
    USE buffers,              ONLY : get_buffer
+   USE mp_bands,             ONLY : use_bgrp_in_hpsi
    !
    IMPLICIT NONE
    !
@@ -62,6 +63,8 @@ SUBROUTINE force_hub( forceh )
    INTEGER :: nb_s, nb_e, mykey, ldimb
    LOGICAL :: lhubb
    INTEGER, EXTERNAL :: type_interaction
+   LOGICAL :: save_flag
+   save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .false.
    !
    IF (U_projection .NE. "atomic") CALL errore( "force_hub", &
                    " forces for this U_projection_type not implemented", 1 )
@@ -259,6 +262,7 @@ SUBROUTINE force_hub( forceh )
    WRITE( 66,'(3f12.6)' ) forceh(:,:)
    WRITE( 66,'("Hubbard contribution End")' )
 #endif
+   use_bgrp_in_hpsi = save_flag
    !
    CALL stop_clock( 'force_hub' )
    !

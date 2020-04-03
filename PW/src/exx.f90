@@ -502,7 +502,7 @@ MODULE exx
       IF (.NOT. ALLOCATED(exxbuff)) THEN
          IF (gamma_only) THEN
             ALLOCATE( exxbuff(nrxxs*npol,ibnd_buff_start:ibnd_buff_start + &
-                                          max_buff_bands_per_egrp-1,nks) )
+                                          max_buff_bands_per_egrp-1,nkqs) ) ! THIS WORKS as for k
          ELSE
             ALLOCATE( exxbuff(nrxxs*npol,ibnd_buff_start:ibnd_buff_start + &
                                           max_buff_bands_per_egrp-1,nkqs) )
@@ -592,7 +592,7 @@ MODULE exx
                IF (ibnd-ibnd_loop_start+evc_offset+2 <= nbnd) &
                   locbuff(1:nrxxs,ibnd-ibnd_loop_start+evc_offset+2,ik) = AIMAG( psic_exx(1:nrxxs) )
              ELSE
-               exxbuff(1:nrxxs,(ibnd+1)/2,ik)=psic_exx(1:nrxxs)
+               exxbuff(1:nrxxs,(ibnd+1)/2,current_ik)=psic_exx(1:nrxxs) 
              ENDIF
              !
           ENDDO

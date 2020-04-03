@@ -361,6 +361,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE gvecs,                ONLY : doublegrid, ngms
   USE klist,                ONLY : xk, wk, nelec, ngk, nks, nkstot, lgauss, &
                                    two_fermi_energies, tot_charge
+  USE fixed_occ,            ONLY : one_atom_occupations
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
   USE vlocal,               ONLY : strf
   USE wvfct,                ONLY : nbnd, et
@@ -592,6 +593,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
            CALL save_in_electrons( iter-1, dr2, ethr, et )
            GO TO 10
         ENDIF
+        !
+        IF (one_atom_occupations) CALL new_evc()
         !
         ! ... xk, wk, isk, et, wg are distributed across pools;
         ! ... the first node has a complete copy of xk, wk, isk,
