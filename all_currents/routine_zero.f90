@@ -360,8 +360,8 @@ call read_zero()
          i_current_a(:) = i_current_a(:) + ion_vel(:, iatom)*(1./2.*amconv*amass(ityp(iatom))*(ion_vel(1, iatom)**2 +&
       &ion_vel(2, iatom)**2 + ion_vel(3, iatom)**2))
 !
-         i_current(:) = i_current(:) + 2./3.*e2*zv(ityp(iatom))**2*ion_vel(:, iatom)*I_primo
-         i_current_b(:) = i_current_b(:) + 2./3.*e2*zv(ityp(iatom))**2*ion_vel(:, iatom)*I_primo
+!         i_current(:) = i_current(:) + 2./3.*e2*zv(ityp(iatom))**2*ion_vel(:, iatom)*I_primo
+!         i_current_b(:) = i_current_b(:) + 2./3.*e2*zv(ityp(iatom))**2*ion_vel(:, iatom)*I_primo
       end do
 
       l_scambio = .true.
@@ -372,7 +372,7 @@ call read_zero()
                do jatom = 1, nat
                   if (iatom > jatom) then
                      u(1:3) = (tau(:, iatom) - tau(:, jatom))*alat
-                     call pbc(u(1:3), u_pbc(1:3))
+                     call pbc_ortho(u(1:3), u_pbc(1:3))
                      call I_due_value(value, u_pbc, 1)
                      i_current(:) = i_current(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom)) &
                                     *(ion_vel(:, iatom) + ion_vel(:, jatom))*value
@@ -409,7 +409,7 @@ call read_zero()
                do jatom = 1, nat
                   if (iatom > jatom) then
                      u(1:3) = (tau(:, iatom) - tau(:, jatom))*alat
-                     call pbc(u(1:3), u_pbc(1:3))
+                     call pbc_ortho(u(1:3), u_pbc(1:3))
                      call I_due_value(value, u_pbc, 1)
                      i_current(:) = i_current(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom)) &
                                     *(ion_vel(:, iatom) + ion_vel(:, jatom))*value
@@ -438,7 +438,7 @@ call read_zero()
             do jatom = 1, nat
                if (iatom .ne. jatom) then
                   u(1:3) = (tau(:, iatom) - tau(:, jatom))*alat
-                  call pbc(u(1:3), u_pbc(1:3))
+                  call pbc_ortho(u(1:3), u_pbc(1:3))
                   call I_due_value(value, u_pbc, 1)
                   i_current(:) = i_current(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*ion_vel(:, iatom)*value
                   i_current_c(:) = i_current_c(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*ion_vel(:, iatom)*value

@@ -139,6 +139,27 @@ MODULE zero_mod
 !!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
+  subroutine pbc_ortho(vin,vout)
+  use kinds,     only:DP
+  use cell_base, only:alat,at
+! apply the minimum image distance in a orthogonal cell
+  implicit none
+  real(DP), intent(in) :: vin(3)
+  real(DP), intent(out) :: vout(3)
+  !local
+  real(DP): alatdir ! box side in a given direction
+  integer :: i,n
+  vout(:)=0.d0
+  do i=1,3
+     alatdir = alat*at(i,i)
+     if (vin(i)>=0) then
+         n=int(vin(i)/alatdir)
+     else
+         n=int(vin(i)/alatdir)-1
+     end if
+     vout(i)=vin(i)-dble(n)*alatdir
+  end do
+  end subroutine pbc_ortho
 
   subroutine pbc(vin,vout)
   use kinds,     only:DP
