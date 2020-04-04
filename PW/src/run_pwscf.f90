@@ -272,7 +272,9 @@ SUBROUTINE run_pwscf( exit_status )
   ! ... save final data file
   !
   CALL qexsd_set_status( exit_status )
+#ifdef use_beef
   IF ( lensemb ) CALL beef_energies( )
+#endif 
   CALL punch( 'all' )
   !
   CALL qmmm_shutdown()
