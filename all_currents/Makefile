@@ -61,6 +61,6 @@ clean :
 	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i *.L lib_all_currents.a
 
 maroni-sync:
-	rsync Makefile make.depend *.f90 maroni:/marconi_work/Sis19_baroni/qe-thermalcurrents/all_currents
+	rsync Makefile make.depend *.f90 maroni:/marconi_work/Sis19_baroni/qe-thermalcurrents2/all_currents
 
 include make.depend

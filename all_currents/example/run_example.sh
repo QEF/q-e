@@ -9,7 +9,7 @@
 #SBATCH --job-name=example
 
 SCRIPTS_DIR="./scripts"
-QEBIN_DIR="/marconi_work/Sis19_baroni/qe-thermalcurrents/bin"
+QEBIN_DIR="/marconi_work/Sis19_baroni/qe-thermalcurrents2/bin"
 NPROCS=8
 
 module purge
