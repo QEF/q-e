@@ -50,6 +50,7 @@ SUBROUTINE addusdens_g( rho )
   USE uspp_param,           ONLY : upf, lmaxq, nh
   USE control_flags,        ONLY : gamma_only
   USE mp_pools,             ONLY : inter_pool_comm
+  USE mp_bands,             ONLY : inter_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -58,7 +59,7 @@ SUBROUTINE addusdens_g( rho )
   !
   ! ... local variables
   !
-  INTEGER :: ngm_s, ngm_e, ngm_l
+  INTEGER :: ngm_s, ngm_e, ngm_l, ngm_s_tmp, ngm_e_tmp, ngm_l_tmp
   ! starting/ending indices, local number of G-vectors
   INTEGER :: ig, na, nt, ih, jh, ijh, is, nab, nb, nij
   ! counters
@@ -78,13 +79,14 @@ SUBROUTINE addusdens_g( rho )
   ALLOCATE( aux(ngm,nspin_mag) )
   aux(:,:) = (0.d0, 0.d0)
   !
-  ! With k-point parallelization, distribute G-vectors across processors
-  ! ngm_s = index of first G-vector for this processor
-  ! ngm_e = index of last  G-vector for this processor
+  ! With k-point/bgrp parallelization, distribute G-vectors across all processors
+  ! ngm_s = index of first G-vector for this processor (in the k-point x bgrp pool)
+  ! ngm_e = index of last  G-vector for this processor (in the k-point x bgrp pool)
   ! ngm_l = local number of G-vectors 
   !
-  CALL divide( inter_pool_comm, ngm, ngm_s, ngm_e )
-  ngm_l = ngm_e-ngm_s + 1
+  CALL divide( inter_pool_comm, ngm, ngm_s_tmp, ngm_e_tmp ) ; ngm_l_tmp = ngm_e_tmp - ngm_s_tmp + 1
+  CALL divide( inter_bgrp_comm, ngm_l_tmp, ngm_s, ngm_e ) ; ngm_l = ngm_e - ngm_s + 1 
+  ngm_s = ngm_s + ngm_s_tmp - 1 ; ngm_e = ngm_e + ngm_s_tmp -1
   ! for the extraordinary unlikely case of more processors than G-vectors
   IF ( ngm_l <= 0 ) GOTO 10
   !
@@ -112,6 +114,7 @@ SUBROUTINE addusdens_g( rho )
         !
         ALLOCATE( skk(ngm_l,nab), tbecsum(nij,nab,nspin_mag), aux2(ngm_l,nij) )
         !
+        call start_clock( 'addusd:skk')
         nb = 0
         DO na = 1, nat
            IF ( ityp(na) == nt ) THEN
@@ -126,12 +129,16 @@ SUBROUTINE addusdens_g( rho )
 !$omp end parallel do
            ENDIF
         ENDDO
+        call stop_clock( 'addusd:skk')
 
         DO is = 1, nspin_mag
            ! sum over atoms
+           call start_clock( 'addusd:dgemm')
            CALL dgemm( 'N', 'T', 2*ngm_l, nij, nab, 1.0_dp, skk, 2*ngm_l, &
                        tbecsum(1,1,is), nij, 0.0_dp, aux2, 2*ngm_l )
+           call stop_clock( 'addusd:dgemm')
            ! sum over lm indices of Q_{lm}
+           call start_clock( 'addusd:qvan2')
            ijh = 0
            DO ih = 1, nh(nt)
               DO jh = ih, nh(nt)
@@ -144,6 +151,7 @@ SUBROUTINE addusdens_g( rho )
 !$omp end parallel do
              ENDDO
            ENDDO
+           call stop_clock( 'addusd:qvan2')
         ENDDO
         DEALLOCATE( aux2, tbecsum, skk )
      ENDIF
@@ -153,6 +161,7 @@ SUBROUTINE addusdens_g( rho )
   DEALLOCATE( qgm, qmod )
   !
   10 CONTINUE
+  CALL mp_sum( aux, inter_bgrp_comm )
   CALL mp_sum( aux, inter_pool_comm )
   !
   !     add aux to the charge density in reciprocal space
