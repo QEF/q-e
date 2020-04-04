@@ -82,6 +82,7 @@ subroutine routine_hartree()
    call diropn_due(prefix_due, iun, 'wfc', 2*nwordwfc, exst, tmp_dir)
    call davcio(evc_due, 2*nwordwfc, iun, 1, -1)
    close (iun)
+
    close (iunwfc)
    call diropn(iunwfc, 'wfc', 2*nwordwfc, exst, tmp_dir)
    call davcio(evc_uno, 2*nwordwfc, iunwfc, 1, -1)
@@ -90,6 +91,8 @@ subroutine routine_hartree()
 !-------STEP2.1: inizializzazione di charge_g, la carica al tempo t.
 ! charge_g = densità di carica nello spazio reciproco. Si ottiene dalla FFT di |evc(r)|^2, dove evc(r)=IFFT(evc)
 ! per ottimizzare: fa 2 bande alla volta con una sola IFFT
+
+
    charge = 0.d0
    do iv = 1, nbnd, 2
       psic = 0.d0

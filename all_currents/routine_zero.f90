@@ -116,8 +116,7 @@ subroutine read_zero()
 
 end subroutine
 
-
-subroutine read_step_data()
+subroutine read_wfc_uno()
     use kinds, only: dp
     use io_global, only: ionode,stdout, ionode_id
     use hartree_mod, only: file_dativel
@@ -137,23 +136,6 @@ subroutine read_step_data()
     logical ::  exst
     integer :: iun, iatom, iv
  
-!lettura velocita'
-      if (ionode) then
-         iun = find_free_unit()
-         open (unit=iun, file=trim(file_dativel), access='sequential', status='old')
-!! New reading method for .vel CP format. Only first step read.
-         read (iun, *)
-         do iatom = 1, nat
-            read (iun, *) ion_vel(1:3, iatom)
-         end do
-         close (iun)
-      end if
-      call mp_bcast(ion_vel(:, :), ionode_id, intra_pool_comm)
-
-!cambio unità di misure da velocità CP a velocità PW
-      ion_vel(1:3, 1:nat) = 2.d0*ion_vel(1:3, 1:nat)
-
-!
 !lettura funzione d'onda
       close (iunwfc)
 !call start_clock( 'lett_car' )
@@ -190,6 +172,45 @@ subroutine read_step_data()
 !call stop_clock( 'lett_car' )
 !call print_clock( 'lett_car' )
 !
+
+
+end subroutine
+
+subroutine read_step_data()
+    use kinds, only: dp
+    use io_global, only: ionode,stdout, ionode_id
+    use hartree_mod, only: file_dativel
+    use zero_mod, only: ion_pos, ion_vel,charge, evc_uno, charge_g
+    use ions_base, only: nsp, zv, nat, ityp, amass, tau
+    use mp, only: mp_sum, mp_bcast, mp_get
+    use wavefunctions_module, only: psic
+    use io_files, only: nwordwfc, diropn, iunwfc, prefix, tmp_dir
+    use wvfct, only: nbnd, npwx, npw
+    use fft_base, only: dffts
+    use gvect, only: ngm, gg, g, nl, nlm, gstart
+    use gvecs, only: nls, nlsm  
+    use mp_pools, only: intra_pool_comm
+    use fft_interfaces, only: invfft, fwfft
+    implicit none
+    integer , external :: find_free_unit
+    logical ::  exst
+    integer :: iun, iatom, iv
+ 
+!lettura velocita'
+      if (ionode) then
+         iun = find_free_unit()
+         open (unit=iun, file=trim(file_dativel), access='sequential', status='old')
+!! New reading method for .vel CP format. Only first step read.
+         read (iun, *)
+         do iatom = 1, nat
+            read (iun, *) ion_vel(1:3, iatom)
+         end do
+         close (iun)
+      end if
+      call mp_bcast(ion_vel(:, :), ionode_id, intra_pool_comm)
+
+!cambio unità di misure da velocità CP a velocità PW
+      ion_vel(1:3, 1:nat) = 2.d0*ion_vel(1:3, 1:nat)
 
 
 end subroutine
@@ -283,10 +304,8 @@ subroutine routine_zero()
       end if
 
 call read_step_data()
-
 call read_zero() 
-
-
+call read_wfc_uno()
 !call stop_clock( 'lett_H' )
 !call print_clock( 'lett_H' )
 !call start_clock( 'init_u' )
