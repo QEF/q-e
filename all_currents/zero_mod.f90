@@ -351,6 +351,8 @@ end subroutine check_positions
   
 !
 !!!!!!!!!!!
+  !This routines computes sum_{L}erfc(sqrt(eta)abs(d-L))/abs(d-L)
+  ! the sum is in real space over a small number of shells
   call start_clock( 'real' )
   l_blk= (2*n_max+1)/nproc
   if(l_blk*nproc <  (2*n_max+1) ) l_blk = l_blk+1

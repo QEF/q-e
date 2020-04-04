@@ -24,8 +24,10 @@ SUBROUTINE init_reciprocal_parts_tab()
   real(DP) :: H_g_rad(ngl,0:1)
   logical  ::l_plot
   real(kind=DP), external :: qe_erfc  
-  
+
+! I_primo == S_{2,B} (Aris note)
   I_primo=0.d0
+! these sum over n_x n_y n_z are sum_{L!=0}erfc(sqrt(eta*L)*1/L)
   do n_x=-n_max,n_max         
      do n_y=-n_max,n_max     
        do n_z=-n_max,n_max   
@@ -38,6 +40,7 @@ SUBROUTINE init_reciprocal_parts_tab()
        end do
    end do
   end do
+!now compute the other addendum of S_{2,B}
   I_primo=I_primo-2.d0*sqrt(eta/pi)
 !
   I_primo_rec=0.d0

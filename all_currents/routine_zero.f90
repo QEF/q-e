@@ -148,6 +148,7 @@ subroutine routine_zero()
    real(dp), parameter  :: amconv = AMU_RY
    real(DP) ::n(3), u(3), u_pbc(3), u_x(3), u_y(3), u_z(3), value, x(1:3), ics(3)
    real(DP), external :: qe_erfc
+   real(DP), :: dtauij(3)
    real(DP) ::modul, erf_value, charge_atom
    real(DP) ::fac_uno, fac_due, fac_tre, fac_quattro
    real(DP), external :: qe_erf
@@ -371,7 +372,9 @@ call read_zero()
             do iatom = 1, nat
                do jatom = 1, nat
                   if (iatom > jatom) then
-                     u(1:3) = (tau(:, iatom) - tau(:, jatom))*alat
+                     dtauij(:) = tau(:, iatom) - tau(:, jatom)
+                     u(1:3) = matmul(dtauij,at)*alat
+                     !u(1:3) =(tau(:, iatom) - tau(:, jatom),at(:,:))*alat
                      call pbc_ortho(u(1:3), u_pbc(1:3))
                      call I_due_value(value, u_pbc, 1)
                      i_current(:) = i_current(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom)) &
@@ -404,11 +407,12 @@ call read_zero()
                   end if
                end do
             end do
-         else
+         else  ! if (l_scambio_alt) but l_scambio_alt=.true. so it will never go here 
             do iatom = 1, nat
                do jatom = 1, nat
                   if (iatom > jatom) then
-                     u(1:3) = (tau(:, iatom) - tau(:, jatom))*alat
+                     dtauij(:) = tau(:, iatom) - tau(:, jatom)
+                     u(1:3) = matmul(dtauij,at)*alat
                      call pbc_ortho(u(1:3), u_pbc(1:3))
                      call I_due_value(value, u_pbc, 1)
                      i_current(:) = i_current(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom)) &
@@ -433,11 +437,13 @@ call read_zero()
                end do
             end do
          end if
-      else
+      else ! if (l_scambio) but l_scambio=.true. is hard coded so it will never go here
          do iatom = 1, nat
             do jatom = 1, nat
                if (iatom .ne. jatom) then
-                  u(1:3) = (tau(:, iatom) - tau(:, jatom))*alat
+                  dtauij(:) = tau(:, iatom) - tau(:, jatom)
+                  u(1:3) = matmul(dtauij,at)*alat
+                  !u(1:3) = (tau(:, iatom) - tau(:, jatom))*alat
                   call pbc_ortho(u(1:3), u_pbc(1:3))
                   call I_due_value(value, u_pbc, 1)
                   i_current(:) = i_current(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*ion_vel(:, iatom)*value
