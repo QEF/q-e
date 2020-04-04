@@ -152,11 +152,12 @@ MODULE zero_mod
   vout(:)=0.d0
   do i=1,3
      alatdir = alat*at(i,i)
-     if (vin(i)>=0) then
-         n=int(vin(i)/alatdir)
-     else
-         n=int(vin(i)/alatdir)-1
-     end if
+     n = nint(vin(i)/alatdir)
+    ! if (vin(i)>=0) then
+    !     n=int(vin(i)/alatdir)
+    ! else
+    !     n=int(vin(i)/alatdir)-1
+    ! end if
      vout(i)=vin(i)-dble(n)*alatdir
   end do
   end subroutine pbc_ortho
@@ -183,12 +184,17 @@ MODULE zero_mod
 
 subroutine check_positions(ion_pos)
   use ions_base, only :tau,nat
-  use cell_base, only :alat
+  use cell_base, only :alat,at
   real(DP), intent(in) ::ion_pos(3,nat)
   integer ::coord,iatom
+  !local variables
+  real(DP):: tau_at !
+
+! tau_at(i,iatom) = at(1,i)*tau(1,iatom) +at(2,i)*tau(2,iatom) + at(3,i)*tau(3,iatom)
+  tau_at = matmul(transpose(at),tau) 
   do iatom=1,nat
      do coord=1,3
-        if (abs(tau(coord,iatom)*alat-ion_pos(coord,iatom))>1.E-4) then
+        if (abs(tau_at(coord,iatom)*alat-ion_pos(coord,iatom))>1.E-4) then
              call errore('check_positions','positions from MD and from PW not matching',1)         
         end if
      end do
