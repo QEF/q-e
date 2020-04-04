@@ -59,7 +59,7 @@ subroutine cgsolve_all_gamma (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !   revised (to reduce memory) 29 May 2004 by S. de Gironcoli
   !
   USE kinds,          ONLY : DP
-  USE mp_global,      ONLY : intra_pool_comm
+  USE mp_pools,       ONLY : intra_pool_comm
   USE mp,             ONLY : mp_sum
   USE control_flags,  ONLY : gamma_only
   USE gvect,          ONLY : gstart

@@ -7,8 +7,8 @@
 !
 ! define __VERBOSE to print a message after each eigenvalue is computed
 !----------------------------------------------------------------------------
-SUBROUTINE rcgdiagg( hs_1psi, s_1psi, &
-                     npwx, npw, nbnd, psi, e, btype, precondition, &
+SUBROUTINE rcgdiagg( hs_1psi, s_1psi, precondition, &
+                     npwx, npw, nbnd, psi, e, btype, &
                      ethr, maxter, reorder, notconv, avg_iter )
   !----------------------------------------------------------------------------
   !
@@ -18,15 +18,18 @@ SUBROUTINE rcgdiagg( hs_1psi, s_1psi, &
   ! ... Calls hs_1psi and s_1psi to calculate H|psi> + S|psi> and S|psi>
   ! ... Works for generalized eigenvalue problem (US pseudopotentials) as well
   !
-  USE constants,    ONLY : pi
-  USE cg_param,     ONLY : DP
-  USE mp_bands_cg,  ONLY : intra_bgrp_comm, inter_bgrp_comm, set_bgrp_indices, gstart
-  USE mp,           ONLY : mp_sum
+  USE util_param,     ONLY : DP
+  USE mp_bands_util,  ONLY : intra_bgrp_comm, inter_bgrp_comm, gstart
+  USE mp,             ONLY : mp_sum
 #if defined(__VERBOSE)
-  USE cg_param,     ONLY : stdout
+  USE util_param,     ONLY : stdout
 #endif
   !
   IMPLICIT NONE
+  !
+  ! ... Mathematical constants
+  ! 
+  REAL(DP), PARAMETER :: pi     = 3.14159265358979323846_DP
   !
   ! ... I/O variables
   !
@@ -102,12 +105,13 @@ SUBROUTINE rcgdiagg( hs_1psi, s_1psi, &
      !
      ! ... orthogonalize starting eigenfunction to those already calculated
      !
-     call set_bgrp_indices(m,m_start,m_end); !write(*,*) m,m_start,m_end
+     CALL start_clock( 'cg:ortho' )
+     call divide(inter_bgrp_comm,m,m_start,m_end); !write(*,*) m,m_start,m_end
      lagrange = 0.d0
      if(m_start.le.m_end) &
      CALL DGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npwx2, spsi, 1, 0.D0, lagrange(m_start), 1 )
-     IF ( gstart == 2 ) lagrange(1:m) = lagrange(1:m) - psi(1,1:m) * spsi(1)
      CALL mp_sum( lagrange( 1:m ), inter_bgrp_comm )
+     IF ( gstart == 2 ) lagrange(1:m) = lagrange(1:m) - psi(1,1:m) * spsi(1)
      !
      CALL mp_sum( lagrange( 1:m ), intra_bgrp_comm )
      !
@@ -126,6 +130,7 @@ SUBROUTINE rcgdiagg( hs_1psi, s_1psi, &
      psi(:,m) = psi(:,m) / psi_norm
      ! ... set Im[ psi(G=0) ] -  needed for numerical stability
      IF ( gstart == 2 ) psi(1,m) = CMPLX( DBLE(psi(1,m)), 0.D0 ,kind=DP)
+     CALL stop_clock( 'cg:ortho' )
      !
      ! ... calculate starting gradient (|hpsi> = H|psi>) ...
      !
@@ -177,12 +182,13 @@ SUBROUTINE rcgdiagg( hs_1psi, s_1psi, &
         !
         CALL s_1psi( npwx, npw, g(1), scg(1) )
         !
+        CALL start_clock( 'cg:ortho' )
         lagrange(1:m-1) = 0.d0
-        call set_bgrp_indices(m-1,m_start,m_end); !write(*,*) m-1,m_start,m_end
+        call divide(inter_bgrp_comm,m-1,m_start,m_end); !write(*,*) m-1,m_start,m_end
         if(m_start.le.m_end) &
         CALL DGEMV( 'T', npw2, m_end-m_start+1, 2.D0, psi(1,m_start), npw2, scg, 1, 0.D0, lagrange(m_start), 1 )
-        IF ( gstart == 2 ) lagrange(1:m-1) = lagrange(1:m-1) - psi(1,1:m-1) * scg(1)
         CALL mp_sum( lagrange( 1:m-1 ), inter_bgrp_comm )
+        IF ( gstart == 2 ) lagrange(1:m-1) = lagrange(1:m-1) - psi(1,1:m-1) * scg(1)
         !
         CALL mp_sum( lagrange( 1:m-1 ), intra_bgrp_comm )
         !
@@ -192,6 +198,7 @@ SUBROUTINE rcgdiagg( hs_1psi, s_1psi, &
            scg(:) = scg(:) - lagrange(j) * psi(:,j)
            !
         END DO
+        CALL stop_clock( 'cg:ortho' )
         !
         IF ( iter /= 1 ) THEN
            !

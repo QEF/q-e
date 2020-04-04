@@ -1,0 +1,25 @@
+
+ ==============================================================================
+        * * * INSTALLATION instructions for PWgui as obtained * * *
+        * * *              from the QE repository             * * *
+ ==============================================================================
+
+This INSTALL.repository file is located in GUI/PWgui/ directory. To
+make the PWgui functional do the following:
+
+Either:
+  * from the QE root directory call:  make gui
+Or:                                      
+  * or from the this directory (i.e. GUI/PWgui) call:  make init
+
+  * to run the PWgui program, type from this directory: ./pwgui
+
+BEWARE: 
+
+To run the "pwgui" you will need the required Tcl-related software.
+See the INSTALL file, for the software-requirements of the PWgui
+source-package.
+
+
+--
+Anton Kokalj (tone.kokalj@ijs.si), Fri Mar 01 2019

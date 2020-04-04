@@ -8,7 +8,7 @@ compute_scf.o : ../../Modules/io_files.o
 compute_scf.o : ../../Modules/io_global.o
 compute_scf.o : ../../Modules/ions_base.o
 compute_scf.o : ../../Modules/kind.o
-compute_scf.o : ../../Modules/mp_global.o
+compute_scf.o : ../../Modules/mp_images.o
 compute_scf.o : ../../Modules/mp_world.o
 compute_scf.o : ../../PW/src/atomic_wfc_mod.o
 compute_scf.o : ../../PW/src/pwcom.o
@@ -41,8 +41,8 @@ fcp_opt_routines.o : ../../Modules/io_files.o
 fcp_opt_routines.o : ../../Modules/io_global.o
 fcp_opt_routines.o : ../../Modules/ions_base.o
 fcp_opt_routines.o : ../../Modules/kind.o
+fcp_opt_routines.o : ../../Modules/mdiis.o
 fcp_opt_routines.o : ../../Modules/mp_world.o
-fcp_opt_routines.o : ../../PW/src/pw_restart.o
 fcp_opt_routines.o : ../../PW/src/pwcom.o
 fcp_opt_routines.o : ../../UtilXlib/mp.o
 fcp_opt_routines.o : path_variables.o
@@ -60,7 +60,9 @@ neb.o : ../../Modules/check_stop.o
 neb.o : ../../Modules/command_line_options.o
 neb.o : ../../Modules/environment.o
 neb.o : ../../Modules/io_global.o
+neb.o : ../../Modules/mp_bands.o
 neb.o : ../../Modules/mp_global.o
+neb.o : ../../Modules/mp_pools.o
 neb.o : ../../Modules/mp_world.o
 neb.o : ../../Modules/read_input.o
 neb.o : ../../UtilXlib/mp.o
@@ -79,7 +81,7 @@ path_base.o : ../../Modules/io_files.o
 path_base.o : ../../Modules/io_global.o
 path_base.o : ../../Modules/ions_base.o
 path_base.o : ../../Modules/kind.o
-path_base.o : ../../Modules/mp_global.o
+path_base.o : ../../Modules/mp_images.o
 path_base.o : ../../Modules/mp_world.o
 path_base.o : ../../Modules/random_numbers.o
 path_base.o : ../../UtilXlib/mp.o
@@ -91,9 +93,8 @@ path_base.o : path_io_units_module.o
 path_base.o : path_opt_routines.o
 path_base.o : path_reparametrisation.o
 path_base.o : path_variables.o
-path_gen_inputs.o : ../../Modules/mp_global.o
+path_gen_inputs.o : ../../UtilXlib/mp.o
 path_input_parameters_module.o : ../../Modules/kind.o
-path_input_parameters_module.o : ../../Modules/parameters.o
 path_interpolation.o : ../../Modules/basic_algebra_routines.o
 path_interpolation.o : ../../Modules/cell_base.o
 path_interpolation.o : ../../Modules/constants.o

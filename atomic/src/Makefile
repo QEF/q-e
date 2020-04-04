@@ -5,10 +5,7 @@
 include ../../make.inc
 
 # location of needed modules and included files (if any)
-MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../KS_Solvers/CG $(MOD_FLAG)../../KS_Solvers/Davidson \
-          $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../../UtilXlib $(MOD_FLAG).
-IFLAGS=
+MODFLAGS= $(BASEMOD_FLAGS)
 
 LD1OBJS = \
 add_exchange.o \
@@ -66,6 +63,7 @@ lderiv.o \
 lderivps.o \
 lschps.o \
 newd_at.o \
+kli.o \
 new_potential.o \
 nodenum.o \
 normalize.o \
@@ -107,18 +105,17 @@ write_resultsps.o
 LD1MODS = \
 atomic_paw.o \
 ld1inc.o \
-parameters.o 
+parameters.o
 
-QEMODS=../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
-       ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/Davidson/libdavid.a
+QEMODS=../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../UtilXlib/libutil.a
 
-TLDEPS= bindir mods libs 
+TLDEPS= bindir libs mods
 
 all: tldeps ld1.x
 
 ld1.x: $(LD1OBJS) ld1.o $(LD1MODS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o ld1.x \
-		ld1.o $(LD1OBJS) $(LD1MODS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		ld1.o $(LD1OBJS) $(LD1MODS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../atomic/src/ld1.x . )
 
 tldeps :

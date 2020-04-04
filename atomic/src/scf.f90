@@ -31,11 +31,11 @@ SUBROUTINE scf(ic)
   real(DP), PARAMETER :: thresh=1.0e-10_dp
   !
   !
-  meta = dft_is_meta() 
+  meta = dft_is_meta()
   ze2 = - zed * e2
   rhoc1=0.0_dp
   IF (.not.frozen_core.or.ic==1) psi=0.0_dp
-  DO iter=1,maxter
+  DO iter = 1,maxter
      nerr=0
      vnew=vpot
      vtaunew=vtau
@@ -45,14 +45,19 @@ SUBROUTINE scf(ic)
               is=isw(n)
               IF (isic /= 0 .and. iter > 1) vnew(:,is)=vpot(:,is)-vsic(:,n)
               IF (rel == 0) THEN
+                 ! nonrelativistic calculation
                  IF ( meta ) THEN
+                   ! Meta-GGA version of lschps
                     CALL lschps_meta (2, zed, thresh, grid, nin, nn(n), ll(n),&
                          enl(n), vnew(1,is), vtaunew, psi(1,1,n), nstop)
                  ELSE
-                    CALL ascheq (nn(n),ll(n),enl(n),grid%mesh,grid,vnew(1,is),&
+                !     print  *, "Solving nonrelativistic nonmeta equation"
+                    CALL ascheq (nn(n),ll(n),enl(n),grid%mesh,grid,&
+                      vnew(1,is), & ! potential
                       ze2,thresh,psi(1,1,n),nstop)
                  END IF
               ELSEIF (rel == 1) THEN
+                 ! relativistic scalar calculation
                  IF ( meta ) THEN
                     CALL lschps_meta (1, zed, thresh, grid, nin, nn(n), ll(n),&
                          enl(n), vnew(1,is), vtaunew, psi(1,1,n), nstop)
@@ -76,16 +81,19 @@ SUBROUTINE scf(ic)
            psi(:,:,n)=0.0_dp
         ENDIF
      ENDDO
+
      !
      ! calculate charge density (spherical approximation)
      !
      rho=0.0_dp
+
      IF (noscf) GOTO 500
      DO n=1,nwf
-        DO i=1,grid%mesh
-           rho(i,isw(n))=rho(i,isw(n))+oc(n)*(psi(i,1,n)**2+psi(i,2,n)**2)
-        ENDDO
+        rho(1:grid%mesh,isw(n))=rho(1:grid%mesh,isw(n)) + &
+        oc(n)*(psi(1:grid%mesh,1,n)**2+psi(1:grid%mesh,2,n)**2)
      ENDDO
+
+
      !
      ! calculate kinetc energy density (spherical approximation)
      !
@@ -94,6 +102,7 @@ SUBROUTINE scf(ic)
      !
      ! calculate new potential
      !
+
      CALL new_potential ( ndmx, grid%mesh, grid, zed, vxt, &
           lsd, .false., latt, enne, rhoc1, rho, vh, vnew, 1 )
      !
@@ -114,7 +123,7 @@ SUBROUTINE scf(ic)
      !
      ! mix old and new potential
      !
-     id=3
+     id = 3
      IF (isic /= 0 .and. relpert)  id=1
      !
      CALL vpack(grid%mesh,ndmx,nspin,vnew,vpot,1)
@@ -128,14 +137,16 @@ SUBROUTINE scf(ic)
      !
 500  IF (noscf) THEN
         conv=.true.
-        eps0=0.0_DP
+        eps0 = 0.0_DP
      ENDIF
      IF (conv) THEN
+        print *, noscf
+        print *,"error", nerr
+
         IF (nerr /= 0) CALL infomsg ('scf','warning: at least one error in KS equations')
-        GOTO 45
+        EXIT ! exit cycle
      ENDIF
   ENDDO
-  CALL infomsg('scf','warning: convergence not achieved')
-45 RETURN
+  IF ( .not. conv ) CALL infomsg('scf','warning: convergence not achieved')
 
 END SUBROUTINE scf

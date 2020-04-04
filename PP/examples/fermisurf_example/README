@@ -1,0 +1,29 @@
+
+This example shows how to generate color ploted Fermi surfaces 
+(the Fermi velocity and the orbital character) of MgB2.
+
+The calculation proceeds as follows (for the meaning of the cited input
+variables see the appropriate INPUT_* file)
+
+1) Make a self-consistent calculation for MgB2.
+
+2a) Run fermi_velocity.x in mgb2.save/ directry to generate vfermi.frmsf
+   which is used to display Fermi surfaces with a color plot of the Fermi velocity
+
+2b-1) Run projwfc.x to generate atomic-proj.xml file 
+   which contains projection of each Kohn-Sham orbitals to the atomic orbital.
+
+2b-2) Run pfermi.x in mgb2.save/ directry to generate proj.frmsf
+   which is used to display Fermi surfaces with a color plot of the orbital character.
+
+3) Written files *.frmsf can be read by the FermiSurfer which is released in 
+   http://osdn.jp/projects/fermisurfer/. You can launch it as follows:
+   
+   $ fermisurfer vfermi.frmsf
+   $ fermisurfer mg3s3p.frmsf
+   $ fermisurfer b2s.frmsf
+   $ fermisurfer b2pz.frmsf
+   $ fermisurfer b2px.frmsf
+   $ fermisurfer b2py.frmsf
+
+   

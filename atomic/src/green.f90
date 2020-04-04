@@ -10,7 +10,7 @@ subroutine green(y,lam,e,dvy,chi,vpot,ze2)
    !
    ! I/O variables
    !
-   integer :: lam
+   integer :: lam ! l angular momentum
    real(DP) :: y(ndmx), chi(ndmx), dvy(ndmx), vpot(ndmx)
    real(DP) :: e, ze2
    !
@@ -52,6 +52,7 @@ subroutine green(y,lam,e,dvy,chi,vpot,ze2)
       f(i)=ddx12*(grid%r2(i)*(vpot(i)-e)+sqlhf)
       if( f(i) .ne. sign(f(i),f(i-1)) ) imatch=i
    end do
+
    do i=1,grid%mesh
       f(i)=1-f(i)
       g(i)=ddx12*dvy(i)*grid%r(i)*grid%sqr(i)
@@ -68,6 +69,7 @@ subroutine green(y,lam,e,dvy,chi,vpot,ze2)
    r2=grid%r(2)
    rr1=(c0+r1*(c1+r1*(c2+r1*(c3+r1*c4))))*r1**l1
    rr2=(c0+r2*(c1+r2*(c2+r2*(c3+r2*c4))))*r2**l1
+
    y(1)=rr1/grid%sqr(1)
    y(2)=rr2/grid%sqr(2)
 !
@@ -80,14 +82,17 @@ subroutine green(y,lam,e,dvy,chi,vpot,ze2)
    end do
 ! outward integration: numerov's algorithm
    call outward(y,f,g,grid%mesh,imatch,ncross)
+
 ! inward integration: froese's algorithm
    call inward(y,f,g,grid%mesh,imatch)
+
 !-orthogonalize to the 0^th order eigenvector
    do i=1,grid%mesh
       y(i) = y(i)*grid%sqr(i)
       work(i)=y(i)*chi(i)
    end do
-   fac=int_0_inf_dr(work,grid,grid%mesh,2*lam+2)
+
+   fac = int_0_inf_dr(work,grid,grid%mesh,2*lam+2)
    do i=1,grid%mesh
       y(i) = y(i) - fac*chi(i)
    end do

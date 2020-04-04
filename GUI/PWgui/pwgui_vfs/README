@@ -6,7 +6,7 @@ The starkit will be build in ./pwgui.vfs subdirectory.
 
 RECIPE to make a pwgui starkit:
 
-1 - edit one of make.* file and create a make.sys link that point to it.
+1 - edit one of make.* file and create a make.inc link that point to it.
 
 2 - execute one of: linux*.sh, win*.sh, and darwin*.sh script (depending
 on the plaform you have), and the corresponding starkit will be build.

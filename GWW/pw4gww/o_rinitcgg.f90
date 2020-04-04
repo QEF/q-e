@@ -22,8 +22,11 @@ SUBROUTINE o_rinitcgg( npwx, npw, nstart, numwp, psi, o_evc, e, numv, v_states,h
   USE mp, ONLY : mp_sum
   USE mp_world, ONLY : world_comm
   USE fft_base,             ONLY : dffts
+  USE mp_bands, ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
   !
   IMPLICIT NONE
+  !
+  include 'laxlib.fh'
   !
   INTEGER :: npw, npwx, nstart, numwp
     ! dimension of the matrix to be diagonalized
@@ -71,7 +74,7 @@ SUBROUTINE o_rinitcgg( npwx, npw, nstart, numwp, psi, o_evc, e, numv, v_states,h
   !
   DO m = 1, nstart
      !
-     !CALL h_1psi( npwx, npw, psi(1,m), aux(1,1), aux(1,2) )
+     !CALL hs_1psi( npwx, npw, psi(1,m), aux(1,1), aux(1,2) )
    
      write(stdout,*) 'Call o_1psi_gamma',m,nstart
      FLUSH(stdout)
@@ -116,7 +119,7 @@ SUBROUTINE o_rinitcgg( npwx, npw, nstart, numwp, psi, o_evc, e, numv, v_states,h
   write(stdout,*) 'Call rdiaghg'
   FLUSH(stdout)
 
-  CALL rdiaghg( nstart, numwp, hr, sr, nstart, en, hr(1,1,2) )
+  CALL diaghg( nstart, numwp, hr(:,:,1), sr, nstart, en, hr(:,:,2), me_bgrp, root_bgrp, intra_bgrp_comm )
   write(stdout,*) 'Done'
   FLUSH(stdout)
 

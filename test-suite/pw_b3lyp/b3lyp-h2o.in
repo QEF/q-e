@@ -1,5 +1,6 @@
  &control
     calculation = 'relax',
+    tstress=.true.
  /
  &system
     ibrav = 1,

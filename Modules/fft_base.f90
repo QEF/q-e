@@ -17,7 +17,6 @@
         USE parallel_include
 
         USE fft_types, ONLY: fft_type_descriptor
-        USE task_groups, ONLY: task_groups_descriptor
         USE fft_smallbox_type, ONLY: fft_box_descriptor
         USE stick_base, ONLY: sticks_map, sticks_map_deallocate
 
@@ -42,8 +41,6 @@
              !  charge density used in USPP (to speed up CPV iterations)
         TYPE ( fft_type_descriptor ) :: dfft3d
              !
-        TYPE ( task_groups_descriptor ) :: dtgs
-             !  Dimensions of the task groups
         TYPE (sticks_map) :: smap
              !  Stick map descriptor
 
@@ -52,7 +49,6 @@
         PRIVATE
 
         PUBLIC :: dfftp, dffts, dfft3d, fft_type_descriptor
-        PUBLIC :: dtgs, task_groups_descriptor
         PUBLIC :: dfftb, fft_box_descriptor, fft_base_info
         PUBLIC :: smap, pstickdealloc
 

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2013 Quantum ESPRESSO group
+! Copyright (C) 2002-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,7 +7,7 @@
 !
 !---------------------------------------------
 ! TB
-! included monopole related stuff, search 'TB'
+! included gate related stuff, search 'TB'
 !---------------------------------------------
 !
 !----------------------------------------------------------------------------
@@ -30,12 +30,11 @@ MODULE read_namelists_module
   REAL(DP), PARAMETER :: sm_not_set = -20.0_DP
   !
   PUBLIC :: read_namelists, sm_not_set
-  !
-  ! ... modules needed by read_xml.f90
-  !
+  PUBLIC :: check_namelist_read ! made public upon request of A.Jay
+  ! FIXME: should the following ones be public?
   PUBLIC :: control_defaults, system_defaults, &
        electrons_defaults, wannier_ac_defaults, ions_defaults, &
-       cell_defaults, press_ai_defaults, wannier_defaults, control_bcast, &
+       cell_defaults, press_ai_defaults, wannier_defaults, control_bcast,&
        system_bcast, electrons_bcast, ions_bcast, cell_bcast, &
        press_ai_bcast, wannier_bcast, wannier_ac_bcast, control_checkin, &
        system_checkin, electrons_checkin, ions_checkin, cell_checkin, &
@@ -60,6 +59,7 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=20) ::    temp_string 
        !
        !
        IF ( prog == 'PW' ) THEN
@@ -105,6 +105,10 @@ MODULE read_namelists_module
           pseudo_dir = TRIM( pseudo_dir ) // '/espresso/pseudo/'
        END IF
        !
+       ! ... max number of md steps added to the xml file. Needs to be limited for very long 
+       !     md simulations 
+       CALL get_environment_variable('MAX_XML_STEPS', temp_string) 
+            IF ( TRIM(temp_string) .NE.  ' ')  READ(temp_string, *) max_xml_steps 
        refg          = 0.05_DP
        max_seconds   = 1.E+7_DP
        ekin_conv_thr = 1.E-6_DP
@@ -112,7 +116,7 @@ MODULE read_namelists_module
        forc_conv_thr = 1.E-3_DP
        disk_io  = 'default'
        dipfield = .FALSE.
-       monopole = .FALSE. !TB
+       gate     = .FALSE. !TB
        lberry   = .FALSE.
        gdir     = 0
        nppstr   = 0
@@ -120,7 +124,6 @@ MODULE read_namelists_module
        lelfield = .FALSE.
        lorbm = .FALSE.
        nberrycyc  = 1
-       lkpoint_dir = .TRUE.
        lecrpa   = .FALSE.   
        tqmmm = .FALSE.
        !
@@ -189,6 +192,7 @@ MODULE read_namelists_module
        q2sigma = 0.01_DP
        input_dft = 'none'
        ecutfock  = -1.0_DP
+       starting_charge = 0.0_DP
 !
 ! ... set starting_magnetization to an invalid value:
 ! ... in PW starting_magnetization MUST be set for at least one atomic type
@@ -202,15 +206,25 @@ MODULE read_namelists_module
           U_projection_type = 'atomic'
        END IF
        !
-       ! .. DFT + U
+       ! .. DFT + U and its extensions
        !
        lda_plus_U = .FALSE.
        lda_plus_u_kind = 0
        Hubbard_U = 0.0_DP
+       Hubbard_U_back = 0.0_DP
+       Hubbard_V = 0.0_DP
        Hubbard_J0 = 0.0_DP
        Hubbard_J = 0.0_DP
        Hubbard_alpha = 0.0_DP
+       Hubbard_alpha_back = 0.0_DP
        Hubbard_beta = 0.0_DP
+       Hubbard_parameters = 'input'
+       reserv = .false.
+       reserv_back = .false.
+       backall = .false.
+       lback = -1
+       l1back = -1
+       hub_pot_fix = .false.
        step_pen=.false.
        A_pen=0.0_DP
        sigma_pen=0.01_DP
@@ -218,9 +232,13 @@ MODULE read_namelists_module
        !
        ! ... EXX
        !
+       ace=.TRUE.
+       n_proj = 0    
        localization_thr = 0.0_dp
        scdm=.FALSE.
-       ace=.TRUE.
+       scdmden=1.0d0
+       scdmgrd=1.0d0
+       nscdm=1
        !
        ! ... electric fields
        !
@@ -228,8 +246,8 @@ MODULE read_namelists_module
        emaxpos = 0.5_DP
        eopreg = 0.1_DP
        eamp = 0.0_DP
-       ! TB monopole related variables
-       zmon = 0.5
+       ! TB gate related variables
+       zgate = 0.5
        relaxz = .false.
        block = .false.
        block_1 = 0.45
@@ -252,7 +270,7 @@ MODULE read_namelists_module
        B_field = 0.0_DP
        angle1 = 0.0_DP
        angle2 = 0.0_DP
-       report = 100
+       report =-1
        !
        no_t_rev = .FALSE.
        !
@@ -276,8 +294,10 @@ MODULE read_namelists_module
        ts_vdw_isolated = .FALSE.
        ts_vdw_econv_thr = 1.E-6_DP
        xdm = .FALSE.
-       xdm_a1 = 0.6836_DP
-       xdm_a2 = 1.5045_DP
+       xdm_a1 = 0.0_DP
+       xdm_a2 = 0.0_DP
+       dftd3_version = 3
+       dftd3_threebody = .TRUE.
        !
        ! ... ESM
        !
@@ -295,8 +315,11 @@ MODULE read_namelists_module
        fcp_mu          = 0.0_DP
        fcp_mass        = 10000.0_DP
        fcp_tempw       = 0.0_DP
+       fcp_relax       = 'lm'
        fcp_relax_step  = 0.5_DP
        fcp_relax_crit  = 0.001_DP
+       fcp_mdiis_size  = 4
+       fcp_mdiis_step  = 0.2_DP
        !
        ! ... Wyckoff
        !
@@ -373,6 +396,7 @@ MODULE read_namelists_module
        diagonalization = 'david'
        diago_thr_init = 0.0_DP
        diago_cg_maxiter = 20
+       diago_ppcg_maxiter = 20
        diago_david_ndim = 4
        diago_full_acc = .FALSE.
        !
@@ -565,6 +589,7 @@ MODULE read_namelists_module
        cell_nstepe = 1
        cell_damping = 0.1_DP
        press_conv_thr = 0.5_DP
+       treinit_gvecs = .FALSE.
        !
        RETURN
        !
@@ -719,7 +744,6 @@ MODULE read_namelists_module
        CALL mp_bcast( gdir,          ionode_id, intra_image_comm )
        CALL mp_bcast( nppstr,        ionode_id, intra_image_comm )
        CALL mp_bcast( point_label_type,   ionode_id, intra_image_comm )
-       CALL mp_bcast( lkpoint_dir,   ionode_id, intra_image_comm )
        CALL mp_bcast( wf_collect,    ionode_id, intra_image_comm )
        CALL mp_bcast( lelfield,      ionode_id, intra_image_comm )
        CALL mp_bcast( lorbm,         ionode_id, intra_image_comm )
@@ -732,7 +756,7 @@ MODULE read_namelists_module
        CALL mp_bcast( lfcpopt,       ionode_id, intra_image_comm )
        CALL mp_bcast( lfcpdyn,       ionode_id, intra_image_comm )
        CALL mp_bcast( input_xml_schema_file, ionode_id, intra_image_comm )
-       CALL mp_bcast( monopole,      ionode_id, intra_image_comm ) !TB
+       CALL mp_bcast( gate,          ionode_id, intra_image_comm ) !TB
        !
        RETURN
        !
@@ -794,9 +818,13 @@ MODULE read_namelists_module
 
        ! ... EXX
 
+       CALL mp_bcast( ace,                 ionode_id, intra_image_comm )
        CALL mp_bcast( localization_thr,    ionode_id, intra_image_comm )
        CALL mp_bcast( scdm,                ionode_id, intra_image_comm )
-       CALL mp_bcast( ace,                 ionode_id, intra_image_comm )
+       CALL mp_bcast( scdmden,             ionode_id, intra_image_comm )
+       CALL mp_bcast( scdmgrd,             ionode_id, intra_image_comm )
+       CALL mp_bcast( nscdm,               ionode_id, intra_image_comm )
+       CALL mp_bcast( n_proj,              ionode_id, intra_image_comm )
        CALL mp_bcast( nqx1,                   ionode_id, intra_image_comm )
        CALL mp_bcast( nqx2,                   ionode_id, intra_image_comm )
        CALL mp_bcast( nqx3,                   ionode_id, intra_image_comm )
@@ -809,16 +837,27 @@ MODULE read_namelists_module
        CALL mp_bcast( ecutvcut,               ionode_id, intra_image_comm )
        CALL mp_bcast( ecutfock,               ionode_id, intra_image_comm )
        !
+       CALL mp_bcast( starting_charge,        ionode_id, intra_image_comm )
        CALL mp_bcast( starting_magnetization, ionode_id, intra_image_comm )
        CALL mp_bcast( starting_ns_eigenvalue, ionode_id, intra_image_comm )
        CALL mp_bcast( U_projection_type,      ionode_id, intra_image_comm )
        CALL mp_bcast( lda_plus_U,             ionode_id, intra_image_comm )
        CALL mp_bcast( lda_plus_u_kind,        ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_U,              ionode_id, intra_image_comm )
+       CALL mp_bcast( Hubbard_U_back,         ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_J0,             ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_J,              ionode_id, intra_image_comm )
+       CALL mp_bcast( Hubbard_V,              ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_alpha,          ionode_id, intra_image_comm )
+       CALL mp_bcast( Hubbard_alpha_back,     ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_beta,           ionode_id, intra_image_comm )
+       CALL mp_bcast( hub_pot_fix,            ionode_id,intra_image_comm )
+       CALL mp_bcast( Hubbard_parameters,     ionode_id,intra_image_comm )
+       CALL mp_bcast( reserv,                 ionode_id,intra_image_comm )
+       CALL mp_bcast( reserv_back,            ionode_id,intra_image_comm )
+       CALL mp_bcast( backall,                ionode_id,intra_image_comm )
+       CALL mp_bcast( lback,                  ionode_id,intra_image_comm )
+       CALL mp_bcast( l1back,                 ionode_id,intra_image_comm )
        CALL mp_bcast( step_pen,               ionode_id, intra_image_comm )
        CALL mp_bcast( A_pen,                  ionode_id, intra_image_comm )
        CALL mp_bcast( sigma_pen,              ionode_id, intra_image_comm )
@@ -878,8 +917,11 @@ MODULE read_namelists_module
        CALL mp_bcast( fcp_mu,          ionode_id, intra_image_comm )
        CALL mp_bcast( fcp_mass,        ionode_id, intra_image_comm )
        CALL mp_bcast( fcp_tempw,       ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_relax,       ionode_id, intra_image_comm )
        CALL mp_bcast( fcp_relax_step,  ionode_id, intra_image_comm )
        CALL mp_bcast( fcp_relax_crit,  ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_mdiis_size,  ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_mdiis_step,  ionode_id, intra_image_comm )
        !
        !
        ! ... space group information
@@ -889,9 +931,9 @@ MODULE read_namelists_module
        CALL mp_bcast( origin_choice,      ionode_id, intra_image_comm )
        CALL mp_bcast( rhombohedral,       ionode_id, intra_image_comm )
        !
-       ! TB - monopole broadcast
+       ! TB - gate broadcast
        !
-       CALL mp_bcast( zmon,               ionode_id, intra_image_comm )
+       CALL mp_bcast( zgate,              ionode_id, intra_image_comm )
        CALL mp_bcast( relaxz,             ionode_id, intra_image_comm )
        CALL mp_bcast( block,              ionode_id, intra_image_comm )
        CALL mp_bcast( block_1,            ionode_id, intra_image_comm )
@@ -963,6 +1005,7 @@ MODULE read_namelists_module
        CALL mp_bcast( diagonalization,      ionode_id, intra_image_comm )
        CALL mp_bcast( diago_thr_init,       ionode_id, intra_image_comm )
        CALL mp_bcast( diago_cg_maxiter,     ionode_id, intra_image_comm )
+       CALL mp_bcast( diago_ppcg_maxiter,   ionode_id, intra_image_comm )
        CALL mp_bcast( diago_david_ndim,     ionode_id, intra_image_comm )
        CALL mp_bcast( diago_full_acc,       ionode_id, intra_image_comm )
        CALL mp_bcast( sic,                  ionode_id, intra_image_comm )
@@ -1115,6 +1158,7 @@ MODULE read_namelists_module
        CALL mp_bcast( cell_nstepe,      ionode_id, intra_image_comm )
        CALL mp_bcast( cell_damping,     ionode_id, intra_image_comm )
        CALL mp_bcast( press_conv_thr,   ionode_id, intra_image_comm )
+       CALL mp_bcast( treinit_gvecs,    ionode_id, intra_image_comm )
        !
        RETURN
        !
@@ -1334,9 +1378,9 @@ MODULE read_namelists_module
        IF( .NOT. allowed ) &
           CALL errore(sub_name, ' memory "' // TRIM(memory)//'" not allowed',1)
        ! TB
-       IF ( monopole .and. tefield .and. (.not. dipfield) ) &
-          CALL errore(sub_name, ' monopole cannot be used with tefield if dipole correction is not active', 1)
-       IF ( monopole .and. dipfield .and. (.not. tefield) ) &
+       IF ( gate .and. tefield .and. (.not. dipfield) ) &
+          CALL errore(sub_name, ' gate cannot be used with tefield if dipole correction is not active', 1)
+       IF ( gate .and. dipfield .and. (.not. tefield) ) &
           CALL errore(sub_name, ' dipole correction is not active if tefield = .false.', 1)
 
        RETURN
@@ -1456,11 +1500,20 @@ MODULE read_namelists_module
                                           TRIM(exxdiv_treatment) == "vcut_spherical" ) ) &
           CALL errore(sub_name, ' x_gamma_extrapolation cannot be used with vcut', 1 )
        !
-       ! TB - monopole check
+       ! TB - gate check
        !
-       IF ( monopole .and. tot_charge == 0 ) &
-          CALL errore(sub_name, ' charged plane (monopole) to compensate tot_charge of 0', 1)
+       IF ( gate .and. tot_charge == 0 ) &
+          CALL errore(sub_name, ' charged plane (gate) to compensate tot_charge of 0', 1)
        RETURN
+       !
+       ! ... control on FCP variables
+       !
+       allowed = .FALSE.
+       DO i = 1, SIZE(fcp_relax_allowed)
+          IF( TRIM(fcp_relax) == fcp_relax_allowed(i) ) allowed = .TRUE.
+       END DO
+       IF( .NOT. allowed ) &
+          CALL errore(sub_name, ' fcp_relax '''//TRIM(fcp_relax)//''' not allowed ', 1)
        !
      END SUBROUTINE
      !
@@ -1783,7 +1836,7 @@ MODULE read_namelists_module
      !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE read_namelists( prog, unit )
+     SUBROUTINE read_namelists( prog_, unit )
        !-----------------------------------------------------------------------
        !
        !  this routine reads data from standard input and puts them into
@@ -1801,17 +1854,17 @@ MODULE read_namelists_module
        !
        ! ... declare variables
        !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
-                                  !     prog = 'PW'  pwscf
-                                  !     prog = 'CP'  cpr
-       !
+       CHARACTER(LEN=*) :: prog_  ! specifies the calling program, allowed:
+                                  !     prog = 'PW'     pwscf
+                                  !     prog = 'CP'     cp
+                                  !     prog = 'PW+iPi' pwscf + i-Pi
        !
        INTEGER, INTENT(IN), optional :: unit
        !
        ! ... declare other variables
        !
+       CHARACTER(LEN=2) :: prog
        INTEGER :: ios
-       !
        INTEGER :: unit_loc=5
        !
        ! ... end of declarations
@@ -1820,25 +1873,23 @@ MODULE read_namelists_module
        !
        IF(PRESENT(unit)) unit_loc = unit
        !
+       prog = prog_(1:2) ! Allowed: 'PW' or 'CP'
        IF( prog /= 'PW' .AND. prog /= 'CP' ) &
           CALL errore( ' read_namelists ', ' unknown calling program ', 1 )
        !
        ! ... default settings for all namelists
        !
-       IF( prog == 'PW' .OR. prog == 'CP') THEN
-         CALL control_defaults( prog )
-         CALL system_defaults( prog )
-         CALL electrons_defaults( prog )
-         CALL ions_defaults( prog )
-         CALL cell_defaults( prog )
-       ENDIF
+       CALL control_defaults( prog )
+       CALL system_defaults( prog )
+       CALL electrons_defaults( prog )
+       CALL ions_defaults( prog )
+       CALL cell_defaults( prog )
        !
        ! ... Here start reading standard input file
        !
        !
        ! ... CONTROL namelist
        !
-       IF(prog == 'PW' .OR. prog == 'CP' ) THEN
        ios = 0
        IF( ionode ) THEN
           READ( unit_loc, control, iostat = ios )
@@ -1876,22 +1927,17 @@ MODULE read_namelists_module
        CALL electrons_bcast( )
        CALL electrons_checkin( prog )
        !
-       ! ... IONS namelist
+       ! ... IONS namelist - must be read only if ionic motion is expected,
+       ! ...                 or if code called by i-Pi via run_driver
        !
        ios = 0
        IF ( ionode ) THEN
-          !
-          IF ( TRIM( calculation ) == 'relax'    .OR. &
-               TRIM( calculation ) == 'md'       .OR. &
-               TRIM( calculation ) == 'vc-relax' .OR. &
-               TRIM( calculation ) == 'vc-md'    .OR. &
-               TRIM( calculation ) == 'cp'       .OR. &
-               TRIM( calculation ) == 'vc-cp'    .OR. &
-               TRIM( calculation ) == 'smd'      .OR. &
-               TRIM( calculation ) == 'cp-wf-nscf' .OR. &
-               TRIM( calculation ) == 'vc-cp-wf'   .OR. &
-               TRIM( calculation ) == 'cp-wf' ) READ( unit_loc, ions, iostat = ios )
-  
+          IF ( ( TRIM( calculation ) /= 'scf'   .AND. &
+                 TRIM( calculation ) /= 'nscf'  .AND. &
+                 TRIM( calculation ) /= 'bands' ) .OR. &
+               ( TRIM( prog_ ) == 'PW+iPi' ) ) THEN
+             READ( unit_loc, ions, iostat = ios )
+          END IF
        END IF
        CALL check_namelist_read(ios, unit_loc, "ions")
        !
@@ -1955,8 +2001,6 @@ MODULE read_namelists_module
        CALL wannier_ac_bcast()
        CALL wannier_ac_checkin( prog )
        !
-       ENDIF
-       !
        RETURN
        !
      END SUBROUTINE read_namelists
@@ -1970,21 +2014,28 @@ MODULE read_namelists_module
        INTEGER,INTENT(in) :: ios, unit_loc
        CHARACTER(LEN=*) :: nl_name
        CHARACTER(len=512) :: line
+       INTEGER :: ios2
        !
        IF( ionode ) THEN
-         !READ( unit_loc, control, iostat = ios )
+         ios2=0
          IF (ios /=0) THEN
            BACKSPACE(unit_loc)
-           READ(unit_loc,'(A512)') line
-          END IF
+           READ(unit_loc,'(A512)', iostat=ios2) line
+         END IF
        END IF
+
+       CALL mp_bcast( ios2, ionode_id, intra_image_comm )
+       IF( ios2 /= 0 ) THEN
+          CALL errore( ' read_namelists ', ' could not find namelist &'//TRIM(nl_name), 2)
+       ENDIF
+       !
        CALL mp_bcast( ios, ionode_id, intra_image_comm )
        CALL mp_bcast( line, ionode_id, intra_image_comm )
        IF( ios /= 0 ) THEN
           CALL errore( ' read_namelists ', &
                        ' bad line in namelist &'//TRIM(nl_name)//&
                        ': "'//TRIM(line)//'" (error could be in the previous line)',&
-                       ABS(ios) )
+                       1 )
        END IF
        !
      END SUBROUTINE check_namelist_read

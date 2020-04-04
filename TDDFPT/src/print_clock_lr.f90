@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,13 +14,9 @@ SUBROUTINE print_clock_lr()
    !
    USE io_global,        ONLY : stdout
    USE mp_world,         ONLY : mpime, root
-   USE realus,           ONLY : real_space,real_space_debug
+   USE realus,           ONLY : real_space
    USE lr_variables,     ONLY : davidson, eels
    USE funct,            ONLY : dft_is_hybrid
-#if defined(__ENVIRON)
-   USE plugin_flags,     ONLY : use_environ
-   USE environ_info,     ONLY : environ_clock
-#endif
    !
    IMPLICIT NONE
    !
@@ -82,14 +78,12 @@ SUBROUTINE print_clock_lr()
     CALL print_clock( 'addusdbec_nc' )
     CALL print_clock( 'lr_addusddens' )
     CALL print_clock( 'lr_addus_dvpsi' )
+    CALL print_clock( 'lr_compute_intq' )
    ENDIF
-   IF (eels) THEN
-      CALL print_clock( 'lr_sm1_psiq' )
-   ELSE
-      CALL print_clock( 'lr_sm1_psi' )
-   ENDIF
+   CALL print_clock( 'lr_sm1_initialize' )
+   CALL print_clock( 'lr_sm1_psi' )
    !
-   IF (real_space_debug>0) THEN
+   IF (real_space) THEN
     WRITE( stdout, '(5X,"US routines, RS")' )
     CALL print_clock ( 'realus' )
     CALL print_clock ( 'betapointlist' )
@@ -123,9 +117,7 @@ SUBROUTINE print_clock_lr()
    WRITE( stdout, * )
 #endif
    !
-#if defined(__ENVIRON)
-   IF ( use_environ ) CALL environ_clock( stdout )
-#endif
+   CALL plugin_clock()
    !
    IF (dft_is_hybrid()) THEN
     !

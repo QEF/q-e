@@ -3,38 +3,40 @@
 include ../../make.inc
 
 # location of needed modules
-MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../KS_Solvers/CG $(MOD_FLAG)../../KS_Solvers/Davidson \
-	  $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../../UtilXlib $(MOD_FLAG)../src $(MOD_FLAG). 
-
+MODFLAGS= $(BASEMOD_FLAGS) \
+          $(MOD_FLAG)../src
+QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
+         ../../KS_Solvers/libks_solvers.a \
+         ../../UtilXlib/libutil.a ../../LAXlib/libqela.a
+# libqela required by xlf for obscure reasons
 PWOBJS = ../src/libpw.a
-QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/Davidson/libdavid.a \
-         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 
-TLDEPS= bindir mods libs pw libfft libla libutil
+TLDEPS= pwlibs
 
-LIBOBJS        = ../../clib/clib.a ../../iotk/src/libiotk.a
-
-all : tldeps ev.x kpoints.x pwi2xsf.x ibrav2cell.x
+all : tldeps ev.x kpoints.x pwi2xsf.x ibrav2cell.x cell2ibrav.x
 
 ibrav2cell.x : ibrav2cell.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		ibrav2cell.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		ibrav2cell.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PW/tools/$@ . )
-	- ( cd ../../bin ; ln -fs ../PW/tools/cell2ibrav.py cell2ibrav.x )
-
-ev.x : ev.o ev_xml.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
+cell2ibrav.x : cell2ibrav.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		ev.o ev_xml.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		cell2ibrav.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PW/tools/$@ . )
+
+ev.x : ev.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		ev.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PW/tools/$@ . )
 
 kpoints.x : kpoints.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		kpoints.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		kpoints.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PW/tools/$@ . )
 
 pwi2xsf.x : pwi2xsf.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		pwi2xsf.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		pwi2xsf.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PW/tools/$@ . )
 
 tldeps:

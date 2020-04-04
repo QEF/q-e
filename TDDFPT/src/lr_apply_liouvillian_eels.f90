@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,7 +24,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   USE wvfct,                ONLY : nbnd, npwx, et, current_k
   USE uspp,                 ONLY : vkb
   USE io_files,             ONLY : iunwfc, nwordwfc
-  USE wavefunctions_module, ONLY : evc, psic, psic_nc
+  USE wavefunctions, ONLY : evc, psic, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
   USE uspp,                 ONLY : okvan
   USE mp_bands,             ONLY : ntask_groups, me_bgrp
@@ -34,6 +34,8 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   USE eqv,                  ONLY : evq, dpsi, dvpsi
   USE control_lr,           ONLY : nbnd_occ
   USE dv_of_drho_lr
+  USE fft_helper_subroutines
+  USE fft_interfaces,       ONLY : fft_interpolate
  
   IMPLICIT NONE
   !
@@ -74,14 +76,14 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   !
   incr = 1
   !
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dffts%has_task_groups ) THEN
      !
      v_siz =  dffts%nnr_tg 
      !
      ALLOCATE( tg_dvrssc(v_siz,nspin_mag) )
      ALLOCATE( tg_psic(v_siz,npol) )
      !
-     incr = dffts%nproc2
+     incr = fftx_ntgrp(dffts)
      !
   ENDIF
   !
@@ -119,12 +121,18 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      !
      CALL dv_of_drho (dvrsc, .false.)
      !
+     ! USPP: Compute the integral of the HXC response potential with the Q function.
+     ! Input : dvrsc = V_HXC(r), Output: int3 = \int V_HXC(r) * Q_nm(r) dr 
+     ! See Eq.(B22) in Ref. A. Dal Corso, PRB 64, 235118 (2001)
+     !
+     IF (okvan) CALL newdq(dvrsc, 1)
+     !
      ! Interpolation of the HXC potential from the thick mesh 
      ! to a smoother mesh (if doublegrid=.true.)
      ! dvrsc -> dvrssc
      !
      DO is = 1, nspin_mag
-        CALL cinterpolate (dvrsc(1,is), dvrssc(1,is), -1)
+        CALL fft_interpolate (dfftp, dvrsc(:,is), dffts, dvrssc(:,is))
      ENDDO
      !
   ENDIF
@@ -168,7 +176,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
         ! We need to redistribute it so that it is completely contained in the
         ! processors of an orbital TASK-GROUP.
         !
-        IF ( dffts%have_task_groups ) THEN
+        IF ( dffts%has_task_groups ) THEN
            !
            IF (noncolin) THEN
               !
@@ -190,7 +198,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
         !
         DO ibnd = 1, nbnd_occ(ikk), incr
            !
-           IF ( dffts%have_task_groups ) THEN
+           IF ( dffts%has_task_groups ) THEN
               !
               ! FFT to R-space
               !
@@ -223,20 +231,9 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
         ENDDO
         !
         ! In the case of US pseudopotentials there is an additional term.
-        ! See second term in Eq.(11) in J. Chem. Phys. 127, 164106 (2007)
+        ! See the second term in Eq.(11) in J. Chem. Phys. 127, 164106 (2007).
         !
-        IF (okvan) THEN
-           !
-           ! Compute the integral of the HXC response potential with the Q function.
-           ! Input : dvrsc = V_HXC(r)
-           ! Output: int3 = \int V_HXC(r) * Q_nm(r) dr 
-           ! See Eq.(B22) in Ref. A. Dal Corso, PRB 64, 235118 (2001)
-           !
-           CALL newdq(dvrsc, 1)
-           !
-           CALL adddvscf(1, ik) 
-           !
-        ENDIF
+        IF (okvan) CALL adddvscf(1, ik) 
         !
         ! Ortogonalize dvpsi to valence states.
         ! Apply -P_c^+, and then change the sign, because we need P_c^+.
@@ -294,8 +291,8 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      !    evc1_new = S^{-1} * sevc1_new
      !    If not ultrasoft: evc1_new = sevc1_new
      !
-     CALL lr_sm1_psiq (.FALSE., ik, npwx, npwq, nbnd_occ(ikk), &
-                               & sevc1_new(1,1,ik), evc1_new(1,1,ik))
+     CALL lr_sm1_psi(ik, npwx, npwq, nbnd_occ(ikk), &
+                          & sevc1_new(1,1,ik), evc1_new(1,1,ik))
      !
   ENDDO ! loop on ik
   !
@@ -307,7 +304,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   DEALLOCATE (sevc1_new)
   IF (ALLOCATED(psic)) DEALLOCATE(psic)
   !
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dffts%has_task_groups ) THEN
      DEALLOCATE( tg_dvrssc )
      DEALLOCATE( tg_psic )
   ENDIF

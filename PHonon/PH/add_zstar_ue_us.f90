@@ -21,16 +21,16 @@ subroutine add_zstar_ue_us(imode0,npe)
   USE uspp,  ONLY : nkb, vkb
   USE wvfct, ONLY : npwx, nbnd
   USE noncollin_module,   ONLY : npol
-  USE wavefunctions_module,    ONLY : evc
+  USE wavefunctions,    ONLY : evc
   USE buffers, ONLY: get_buffer
   USE qpoint,     ONLY : nksq
   USE efield_mod, ONLY: zstarue0_rec
   USE eqv,        ONLY : dpsi, dvpsi
   USE modes,      ONLY : u
-  USE units_ph,   ONLY : iucom, lrcom, iuwfc, lrwfc
-
-  USE mp_bands,  ONLY: intra_bgrp_comm
-  USE mp,        ONLY: mp_sum
+  USE units_ph,   ONLY : iucom, lrcom
+  USE units_lr,   ONLY : iuwfc, lrwfc
+  USE mp_bands,   ONLY: intra_bgrp_comm
+  USE mp,         ONLY: mp_sum
   USE control_lr, ONLY : nbnd_occ
 
   implicit none

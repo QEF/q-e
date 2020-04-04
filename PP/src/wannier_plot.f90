@@ -30,6 +30,7 @@ PROGRAM wannier_plot
   !
   CHARACTER(len=256) :: outdir
   INTEGER :: ios,nc(3),n0(3)
+  LOGICAL :: needwf = .TRUE.
   NAMELIST /inputpp/ outdir, prefix, nwan, plot_wan_num, plot_wan_spin, nc, n0
   !
   ! initialise environment
@@ -67,8 +68,7 @@ PROGRAM wannier_plot
   !
   CALL mp_bcast( ios, ionode_id, world_comm )
   IF ( ios /= 0 ) CALL errore('wannier_ham','reading inputpp namelist',abs(ios))
-  CALL read_file
-  CALL openfil_pp
+  CALL read_file_new ( needwf )
 
   CALL wannier_init(.true.)
 
@@ -130,9 +130,6 @@ SUBROUTINE plot_wannier(nc,n0)
   ALLOCATE(psic_sum(nc(1)*dffts%nr1x,nc(2)*dffts%nr2x,nc(3)*dffts%nr3x,nspin))
   ALLOCATE(rho(nc(1)*dffts%nr1x,nc(2)*dffts%nr2x,nc(3)*dffts%nr3x,nspin))
 
-  CALL init_us_1
-  CALL init_at_1
-
   CALL struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
        strf, eigts1, eigts2, eigts3)
 
@@ -151,7 +148,7 @@ SUBROUTINE plot_wannier(nc,n0)
      psic(1:dffts%nnr) = ZERO
      rho = ZERO
      DO j = 1, npw
-        psic (nls (igk_k(j,ik) ) ) = wan_func (j, plot_wan_num)
+        psic (dffts%nl (igk_k(j,ik) ) ) = wan_func (j, plot_wan_num)
      ENDDO
 
      CALL invfft ('Wave', psic, dffts)

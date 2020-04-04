@@ -27,15 +27,19 @@ p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
 
 # NSCF
 ef1=`grep "the Fermi energy is" $fname | awk '{print $5}'`
-eh1=`grep "highest occupied" $fname | awk '{print $7}'`
-el1=`grep "highest occupied" $fname | awk '{print $8}'`
+eh1=`grep "highest occupied" $fname | tail -1 | awk '{print $5}'`
+ehl1=`grep "highest occupied, lowest unoccupied" $fname | tail -1 | awk '{print $7; print $8}'`
 tf1=`grep " P = " $fname | head -1 | awk '{printf "%7.5f", $3}'`
 
 # PH
 diel=`grep -A 4 '  Dielectric constant in cartesian' $fname | grep -v '  Dielectric constant' | awk '{print $2; print $3; print $4 }'`
 born=`grep "     E[x-z]  ( " $fname | awk '{print $3; print $4; print $5}'`
-phfreq=`grep "     freq (.*THz" $fname | awk '{print $5; print $8}'`
+# phfreq=`grep "     freq (.*THz" $fname | awk '{print $5; print $8}'`
+# in the version below, phfreq only contains phonon frequencies in cm-1, not in THz
+phfreq=`grep "     freq (.*THz" $fname | awk '{print $8}'`
 
+# Q2R
+qdir=`grep " q= " $fname | awk '{print $2; print $3; print $4}'`
 
 # EPW
 q1=`grep "   q(" $fname | awk '{print $6; print $7; print $8}'`
@@ -43,6 +47,8 @@ dos1=`grep "DOS =" $fname | awk '{print $3}'`
 e2=`grep " E(" $fname | awk '{print $4}'`
 rsig=`grep "Re\[Sigma\]=" $fname | awk '{print $7}'` 
 isig=`grep "Im\[Sigma\]=" $fname | awk '{print $10}'` 
+rpi=`grep "Re\[Pi\]=" $fname | awk '{print $7}'`
+ipi=`grep "Im\[Pi\]=" $fname | awk '{print $10}'`
 z1=`grep " Z=" $fname | awk '{print $13}'`
 lam=`grep "lam= " $fname | awk '{print $15}'`
 lambda=`grep "     lambda___(" $fname | awk '{print $4}'`
@@ -52,7 +58,7 @@ omega=`grep " omega=" $fname | awk '{print $9}'`
 lam_tot=`grep " lambda :" $fname | awk '{print $3}'`
 lam_tr=`grep " lambda_tr :" $fname | awk '{print $3}'`
 logavg=`grep " logavg =" $fname | awk '{print $3}'`
-l_a2F=`grep "l_a2F =" $fname | awk '{print $6}'`
+l_a2f=`grep "l_a2f =" $fname | awk '{print $6}'`
 efm=`grep "at Ef=" $fname | awk '{print $8}'`
 lam_max=`grep "lambda_max =" $fname | awk '{print $3}'`
 lam_kmax=`grep "lambda_k_max =" $fname | awk '{print $6}'`
@@ -60,6 +66,14 @@ elph=`grep "Electron-phonon coupling strength =" $fname | awk '{print $5}'`
 allDyn=`grep "Estimated Allen-Dynes Tc =" $fname | awk '{print $5}'`
 bcsgap=`grep "Estimated BCS superconducting gap =" $fname | awk '{print $6}'`
 pi=`grep "Re[Pi]=" $fname | awk '{print $4; print $7; print $10}'`
+mobvb=`grep "Mobility VB Fermi level" $fname | awk '{print $5}'`
+mobcb=`grep "Mobility CB Fermi level" $fname | awk '{print $5}'`
+density=`grep " x-axis" $fname | awk '{print $1; print $2; print $3}'`
+mobxZ=`grep " x-axis [Z]" $fname | awk '{print $1; print $2; print $3; print $4}'`
+indabs=`grep "  (cm-1)" $fname | awk '{print $1; print $2; print $3; print $4}'` 
+mobnewx=`sed -n -e "/       Temp    / {n;n;n;n;p}" $fname | awk '{print $1; print $2; print $5}'`
+mobnewy=`sed -n -e "/       Temp    / {n;n;n;n;n;p}" $fname | awk '{print $2}'`
+mobnewz=`sed -n -e "/       Temp    / {n;n;n;n;n;n;p}" $fname | awk '{print $3}'`
 
 if test "$efm" != ""; then
         echo efm
@@ -92,6 +106,51 @@ if test "$bcsgap" != ""; then
         echo $bcsgap
 fi
 
+if test "$mobvb" != ""; then
+        echo mobvb
+        for x in $mobvb; do echo $x; done
+fi
+
+if test "$mobcb" != ""; then
+        echo mobcb
+        for x in $mobcb; do echo $x; done
+fi
+
+if test "$mobnewx" != ""; then
+        echo mobnewx
+        for x in $mobnewx; do echo $x; done
+fi
+
+if test "$mobnewy" != ""; then
+        echo mobnewy
+        for x in $mobnewy; do echo $x; done
+fi
+
+if test "$mobnewz" != ""; then
+        echo mobnewz
+        for x in $mobnewz; do echo $x; done
+fi
+
+if test "$density" != ""; then
+        echo density
+        for x in $density; do echo $x; done
+fi
+
+if test "$mobxZ" != ""; then
+        echo mobxZ
+        for x in $mobxZ; do echo $x; done
+fi
+
+if test "$indabs" != ""; then
+        echo indabs
+        for x in $indabs; do echo $x; done
+fi
+
+if test "$qdir" != ""; then
+        echo qdir
+        for x in $qdir; do echo $x; done
+fi
+
 if test "$q1" != ""; then
         echo q1
         for x in $q1; do echo $x; done
@@ -115,6 +174,16 @@ fi
 if test "$isig" != ""; then
         echo isig
         for x in $isig; do echo $x; done
+fi
+
+if test "$rpi" != ""; then
+        echo rpi
+        for x in $rpi; do echo $x; done
+fi
+
+if test "$ipi" != ""; then
+        echo ipi
+        for x in $ipi; do echo $x; done
 fi
 
 if test "$z1" != ""; then
@@ -163,9 +232,9 @@ if test "$logavg" != ""; then
         echo $logavg
 fi
 
-if test "$l_a2F" != ""; then
-        echo l_a2F
-        echo $l_a2F
+if test "$l_a2f" != ""; then
+        echo l_a2f
+        echo $l_a2f
 fi
 
 if test "$e1" != ""; then
@@ -198,9 +267,9 @@ if test "$eh1" != ""; then
         for x in $eh1; do echo $x; done
 fi
 
-if test "$el1" != ""; then
-        echo el1
-        for x in $el1; do echo $x; done
+if test "$ehl1" != ""; then
+        echo ehl1
+        for x in $ehl1; do echo $x; done
 fi
 
 if test "$tf1" != ""; then

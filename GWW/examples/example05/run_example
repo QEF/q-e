@@ -1,0 +1,366 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x head.x pw4gww.x gww. x to calculate"
+$ECHO "the GW QP levels of bulk Si"
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x head.x pw4gww.x gww.x simple.x simple_bse.x"
+PSEUDO_LIST="Si.pz-vbc.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x "
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO
+HEAD_COMMAND="$PARA_PREFIX $BIN_DIR/head.x "
+$ECHO
+$ECHO "  running pw.x as: $HEAD_COMMAND"
+$ECHO
+PW4GWW_COMMAND="$PARA_PREFIX $BIN_DIR/pw4gww.x "
+$ECHO
+$ECHO "  running pw4gww.x as: $PW4GWW_COMMAND"
+$ECHO
+GWW_COMMAND="$PARA_PREFIX $BIN_DIR/gww.x "
+$ECHO
+$ECHO "  running gww.x as: $GWW_COMMAND"
+$ECHO
+SIMPLE_COMMAND="$PARA_PREFIX $BIN_DIR/simple.x "
+$ECHO
+$ECHO "  running simple.x as: $SIMPLE_COMMAND"
+$ECHO
+SIMPLE_BSE_COMMAND="$PARA_PREFIX $BIN_DIR/simple_bse.x "
+$ECHO
+$ECHO "  running simple_bse.x as: $SIMPLE_BSE_COMMAND"
+$ECHO
+ABCOEFF_TO_EPS_COMMAND="$BIN_DIR/../GWW/util/abcoeff_to_eps.x"
+    # self-consistent calculation
+    cat > si_scf_k.in << EOF
+&control
+ calculation='scf'
+ restart_mode='from_scratch',
+ prefix='si'
+ pseudo_dir = '$PSEUDO_DIR/',
+ outdir='$TMP_DIR/'
+/
+&system
+ ibrav= 8, celldm(1)= 10.26,celldm(2)= 1, celldm(3)=1,
+ nat=  8, ntyp= 1,
+ ecutwfc = 15.0
+/
+&electrons
+ diagonalization='david',
+ conv_thr =  1.0d-10,
+ mixing_beta = 0.5,
+ startingwfc='random',
+/
+ATOMIC_SPECIES
+Si  1. Si.pz-vbc.UPF
+ATOMIC_POSITIONS (crystal)
+Si 0.00000 0.00000 0.00000
+Si 0.50000 0.50000 0.00000
+Si 0.00000 0.50000 0.50000
+Si 0.50000 0.00000 0.50000
+Si 0.25000 0.25000 0.25000
+Si 0.75000 0.75000 0.25000
+Si 0.75000 0.25000 0.75000
+Si 0.25000 0.75000 0.75000
+K_POINTS (automatic)
+4 4 4 1 1 1
+
+EOF
+    $ECHO "  running the scf calculation for Si...\c"
+    $PW_COMMAND < si_scf_k.in > si_scf_k.out
+    check_failure $?
+    $ECHO " done"
+
+    #calculation of head 
+    cat > si_head.in << EOF
+calculation of head
+ &inputph
+  trans=.false.
+  l_head=.true.
+  tr2_ph=1.d-4,
+  prefix='si',
+  omega_gauss=20.0
+  n_gauss=97
+  grid_type=5
+  second_grid_i=1
+  second_grid_n=10
+  niter_ph=1
+  nsteps_lanczos=30
+  outdir='$TMP_DIR/'
+ /
+0.0 0.0 0.0
+
+EOF
+    $ECHO "  running the head calculation for Si...\c"
+    $HEAD_COMMAND < si_head.in > si_head.out
+    check_failure $?
+    $ECHO " done"
+
+    # non self-consistent calculation
+    cat > si_nscf.in << EOF
+&control
+ calculation='nscf'
+ restart_mode='from_scratch',
+ prefix='si'
+ pseudo_dir = '$PSEUDO_DIR/',
+ outdir='$TMP_DIR/'
+/
+&system
+ ibrav= 8, celldm(1)= 10.26,celldm(2)= 1, celldm(3)=1,
+ nat=  8, ntyp= 1,
+ ecutwfc = 15.0,nbnd=32
+/
+&electrons
+ diagonalization='david',
+ conv_thr =  1.0d-10,
+ mixing_beta = 0.5,
+ startingwfc='random',
+/
+ATOMIC_SPECIES
+Si  1. Si.pz-vbc.UPF
+ATOMIC_POSITIONS (crystal)
+Si 0.00000 0.00000 0.00000
+Si 0.50000 0.50000 0.00000
+Si 0.00000 0.50000 0.50000
+Si 0.50000 0.00000 0.50000
+Si 0.25000 0.25000 0.25000
+Si 0.75000 0.75000 0.25000
+Si 0.75000 0.25000 0.75000
+Si 0.25000 0.75000 0.75000
+K_POINTS (gamma)
+
+EOF
+    $ECHO "  running the nscf calculation for Si...\c"
+    $PW_COMMAND < si_nscf.in > si_nscf.out
+    check_failure $?
+    $ECHO " done"
+
+
+
+    #pw4gww calculations 
+    cat > si_pw4gww.in << EOF
+&inputpw4gww    
+    prefix='si'
+    num_nbndv(1)=16
+    num_nbnds=32
+    l_truncated_coulomb=.false.
+    numw_prod=100
+    pmat_cutoff=3d0
+    s_self_lanczos=1d-8
+    outdir='$TMP_DIR'
+    l_simple=.true.
+/
+
+
+EOF
+    $ECHO "  running the pw4gww calculation for Si...\c"
+    $PW4GWW_COMMAND < si_pw4gww.in > si_pw4gww.out
+    check_failure $?
+    $ECHO " done"
+
+
+  cat > si_gww.in << EOF
+&inputgww
+ggwin%prefix='si'
+ggwin%n=97,
+ggwin%n_fit=120,
+ggwin%max_i=32,
+ggwin%i_min=1
+ggwin%i_max=32
+ggwin%l_truncated_coulomb=.false.
+ggwin%grid_time=3
+ggwin%grid_freq=5
+ggwin%second_grid_i=1
+ggwin%second_grid_n=10
+ggwin%omega=20
+ggwin%omega_fit=20
+ggwin%n_grid_fit=240
+ggwin%tau=9.8
+ggwin%n_set_pola=16
+ggwin%outdir='$TMP_DIR'
+/
+
+EOF
+
+    $ECHO "  running the gww calculation for Si...\c"
+    $GWW_COMMAND < si_gww.in > si_gww.out
+    check_failure $?
+    $ECHO " done"
+
+ # non self-consistent calculation
+    cat > si_nscf_k.in << EOF
+&control
+ calculation='nscf'
+ restart_mode='from_scratch',
+ prefix='si'
+ pseudo_dir = '$PSEUDO_DIR/',
+ outdir='$TMP_DIR/'
+/
+&system
+ ibrav= 8, celldm(1)= 10.26,celldm(2)= 1, celldm(3)=1,
+ nat=  8, ntyp= 1,
+ ecutwfc = 15.0,nbnd=40
+ nosym=.true.,noinv=.true.
+/
+&electrons
+ diagonalization='david',
+ conv_thr =  1.0d-10,
+ mixing_beta = 0.5,
+ startingwfc='random',
+/
+ATOMIC_SPECIES
+Si  1. Si.pz-vbc.UPF
+ATOMIC_POSITIONS (crystal)
+Si 0.00000 0.00000 0.00000
+Si 0.50000 0.50000 0.00000
+Si 0.00000 0.50000 0.50000
+Si 0.50000 0.00000 0.50000
+Si 0.25000 0.25000 0.25000
+Si 0.75000 0.75000 0.25000
+Si 0.75000 0.25000 0.75000
+Si 0.25000 0.75000 0.75000
+K_POINTS (automatic)
+2 2 2   1 0 0
+
+EOF
+
+  $ECHO "  running the pw.x calculation for Si...\c"
+    $PW_COMMAND < si_nscf_k.in > si_nscf_k.out
+    check_failure $?
+    $ECHO " done"
+
+    # simple calculation
+    cat > si_simple.in << EOF
+&inputsimple
+prefix='si'
+outdir='$TMP_DIR/'
+calc_mode=0
+num_nbndv=16
+num_val=16     
+num_cond=24
+s_bands=0.1
+s_product=1.0
+nkpoints(1)=2
+nkpoints(2)=2
+nkpoints(3)=2
+w_type=0
+l_truncated_coulomb=.false.
+numpw=100
+/
+EOF
+    $ECHO "  running the simple calculation for Si...\c"
+    $SIMPLE_COMMAND < si_simple.in > si_simple.out
+    check_failure $?
+    $ECHO " done"
+
+ # simple calculation
+    cat > si_simple_bse.in << EOF
+&inputsimple
+simple_in%prefix='si'
+simple_in%outdir='$TMP_DIR/'
+simple_in%scissor=0.6
+simple_in%spin_state=1
+simple_in%h_level=3
+simple_in%task=1
+simple_in%lanczos_step=100
+/
+EOF
+    $ECHO "  running the simple_bse calculation for Si...\c"
+    $SIMPLE_BSE_COMMAND < si_simple_bse.in > si_simple_bse.out
+    check_failure $?
+    $ECHO " done"
+
+#  post processing calculation of complex dielectric function
+
+ cat > abcoeff_to_eps.in << EOF
+100
+100
+0. 
+5.
+0.2
+2000
+1080.04
+8
+2
+0.
+EOF
+ $ABCOEFF_TO_EPS_COMMAND < abcoeff_to_eps.in > abcoeff_to_eps.tmp
+
+    #copy self_energy files
+#    $ECHO  "copying self-energy files..\c"
+#    cp $TMP_DIR/si-im_on_im* .
+#    cp $TMP_DIR/si-re_on_im* .
+ #copy  alpha and beta coefficients
+     cp $TMP_DIR/ab_coeff.dat .	 
+     cp  $TMP_DIR/lanczos.eps*dat .     
+
+    # clean TMP_DIR
+    $ECHO "  cleaning $TMP_DIR...\c"
+     rm -rf $TMP_DIR/si*
+    $ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : done"

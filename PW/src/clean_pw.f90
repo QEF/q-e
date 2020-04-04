@@ -6,31 +6,29 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 ! TB
-! included deallocation of forcefield of monopole 'forcemono'
+! included deallocation of forcefield of gate 'forcegate'
 !
 !----------------------------------------------------------------------
 SUBROUTINE clean_pw( lflag )
   !----------------------------------------------------------------------
-  !    
-  ! ... This routine deallocates dynamically allocated arrays
-  ! ... if lflag=.TRUE.  all arrays are deallocated (end of calculation)
-  ! ... if lflag=.FALSE. ion-related variables and arrays allocated
-  ! ... at the very beginning of the calculation (routines iosys, read_file,
-  ! ... setup, read_pseudo) are not deallocated; all others arrays are.
-  ! ... This is used when a new calculation has to be performed (e.g. in neb,
-  ! ... phonon, vc-relax). Beware: the new calculation should not call any
-  ! ... of the routines mentioned above
+  !! This routine deallocates dynamically allocated arrays.
+  !
+  !! * If lflag=.TRUE.  all arrays are deallocated (end of calculation);
+  !! * if lflag=.FALSE. ion-related variables and arrays allocated.
+  !
+  !! At the very beginning of the calculation (routines iosys, read_file,
+  !! setup, read_pseudo) are not deallocated; all others arrays are.
+  !! This is used when a new calculation has to be performed (e.g. in neb,
+  !! phonon, vc-relax). Beware: the new calculation should not CALL any
+  !! of the routines mentioned above.
   !
   USE basis,                ONLY : swfcatom
   USE cellmd,               ONLY : lmovecell
   USE ions_base,            ONLY : deallocate_ions_base
-  USE gvect,                ONLY : g, gg, gl, nl, nlm, igtongl, mill, &
-                                   eigts1, eigts2, eigts3
-  USE gvecs,                ONLY : nls, nlsm
   USE fixed_occ,            ONLY : f_inp
   USE ktetra,               ONLY : deallocate_tetra
   USE klist,                ONLY : deallocate_igk
-  USE gvect,                ONLY : ig_l2g
+  USE gvect,                ONLY : deallocate_gvect
   USE vlocal,               ONLY : strf, vloc
   USE wvfct,                ONLY : g2kin, et, wg, btype
   USE force_mod,            ONLY : force
@@ -38,13 +36,13 @@ SUBROUTINE clean_pw( lflag )
                                    vrs, kedtau, destroy_scf_type, vnew
   USE symm_base,            ONLY : irt
   USE symme,                ONLY : sym_rho_deallocate
-  USE wavefunctions_module, ONLY : evc, psic, psic_nc
+  USE wavefunctions,        ONLY : evc, psic, psic_nc
   USE us,                   ONLY : qrad, tab, tab_at, tab_d2y, spline_ps
   USE uspp,                 ONLY : deallocate_uspp
   USE uspp_param,           ONLY : upf
   USE m_gth,                ONLY : deallocate_gth
   USE ldaU,                 ONLY : deallocate_ldaU
-  USE extfield,             ONLY : forcefield, forcemono
+  USE extfield,             ONLY : forcefield, forcegate
   USE fft_base,             ONLY : dfftp, dffts  
   USE fft_base,             ONLY : pstickdealloc
   USE fft_types,            ONLY : fft_type_deallocate
@@ -63,15 +61,20 @@ SUBROUTINE clean_pw( lflag )
   USE pseudo_types,         ONLY : deallocate_pseudo_upf
   USE bp,                   ONLY : deallocate_bp_efield
   USE exx,                  ONLY : deallocate_exx
+  USE Coul_cut_2D,          ONLY : cutoff_2D, lr_Vloc 
   !
   USE control_flags,        ONLY : ts_vdw
   USE tsvdw_module,         ONLY : tsvdw_finalize
+  USE dftd3_qe,             ONLY : dftd3_clean
   !
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN) :: lflag
+  !! see routine main comments.
   !
-  INTEGER :: nt, nr1,nr2,nr3
+  ! ... local variables
+  !
+  INTEGER :: nt, nr1, nr2, nr3
   !
   IF ( lflag ) THEN
      !
@@ -80,91 +83,82 @@ SUBROUTINE clean_pw( lflag )
      IF( ALLOCATED( upf ) ) THEN
         DO nt = 1, SIZE( upf )
            CALL deallocate_pseudo_upf( upf( nt ) )
-        END DO
+        ENDDO
         DEALLOCATE( upf )
-     END IF
-     IF (ALLOCATED(msh)) DEALLOCATE (msh)
-     CALL deallocate_radial_grid(rgrid)
+     ENDIF
+     !
+     IF (ALLOCATED(msh)) DEALLOCATE( msh )
+     !
+     CALL deallocate_radial_grid( rgrid )
      !
      CALL deallocate_ions_base()
      !
-     IF ( ALLOCATED( force ) )      DEALLOCATE( force )
+     IF ( ALLOCATED( force )      ) DEALLOCATE( force      )
      IF ( ALLOCATED( forcefield ) ) DEALLOCATE( forcefield )
-     IF ( ALLOCATED( forcemono ) )  DEALLOCATE( forcemono )
-     IF ( ALLOCATED( irt ) )        DEALLOCATE( irt )
+     IF ( ALLOCATED( forcegate )  ) DEALLOCATE( forcegate  )
+     IF ( ALLOCATED( irt )        ) DEALLOCATE( irt        )
      !
      CALL dealloca_london()
      CALL cleanup_xdm()
+     CALL dftd3_clean()
      CALL deallocate_constraint()
+     CALL deallocate_tetra()
      !
-  END IF
+  ENDIF
   !
   CALL deallocate_bp_efield()
   !
-  CALL deallocate_ldaU ( lflag )
+  CALL deallocate_ldaU( lflag )
   !
-  CALL deallocate_tetra ( )
+  IF ( ALLOCATED( f_inp ) .AND. lflag )  DEALLOCATE( f_inp )
   !
-  IF ( ALLOCATED( f_inp ) .and. lflag )      DEALLOCATE( f_inp )
+  ! ... arrays in gvect module
   !
-  ! ... arrays allocated in ggen.f90
+  CALL deallocate_gvect( lmovecell )
   !
-  IF ( ALLOCATED( ig_l2g ) )     DEALLOCATE( ig_l2g )
-  IF ( .NOT. lmovecell ) THEN
-     IF ( ASSOCIATED( gl ) )     DEALLOCATE ( gl )
-  END IF
-  !
-  CALL sym_rho_deallocate ( )
+  CALL sym_rho_deallocate()
   !
   ! ... arrays allocated in allocate_fft.f90 ( and never deallocated )
   !
-  IF ( ALLOCATED( g ) )          DEALLOCATE( g )
-  IF ( ALLOCATED( gg ) )         DEALLOCATE( gg )
-  IF ( ALLOCATED( nl ) )         DEALLOCATE( nl )  
-  IF ( ALLOCATED( nlm ) )        DEALLOCATE( nlm )
-  IF ( ALLOCATED( igtongl ) )    DEALLOCATE( igtongl )  
-  IF ( ALLOCATED( mill ) )       DEALLOCATE( mill )
-  call destroy_scf_type(rho)
-  call destroy_scf_type(v)
-  call destroy_scf_type(vnew)
+  CALL destroy_scf_type( rho  )
+  CALL destroy_scf_type( v    )
+  CALL destroy_scf_type( vnew )
+  !
   IF ( ALLOCATED( kedtau ) )     DEALLOCATE( kedtau )
-  IF ( ALLOCATED( vltot ) )      DEALLOCATE( vltot )
-  IF ( ALLOCATED( rho_core ) )   DEALLOCATE( rho_core )
+  IF ( ALLOCATED( vltot  ) )     DEALLOCATE( vltot  )
+  IF ( ALLOCATED( rho_core  ) )  DEALLOCATE( rho_core  )
   IF ( ALLOCATED( rhog_core ) )  DEALLOCATE( rhog_core )
-  IF ( ALLOCATED( psic ) )       DEALLOCATE( psic )
+  IF ( ALLOCATED( psic    ) )    DEALLOCATE( psic    )
   IF ( ALLOCATED( psic_nc ) )    DEALLOCATE( psic_nc )
-  IF ( ALLOCATED( vrs ) )        DEALLOCATE( vrs )
-  if (spline_ps) then
-    IF ( ALLOCATED( tab_d2y) )     DEALLOCATE( tab_d2y )
-  endif
-  IF ( ALLOCATED( nls ) )     DEALLOCATE( nls )
-  IF ( ALLOCATED( nlsm ) )   DEALLOCATE( nlsm )
+  IF ( ALLOCATED( vrs     ) )    DEALLOCATE( vrs     )
+  IF (spline_ps) THEN
+    IF ( ALLOCATED( tab_d2y) )   DEALLOCATE( tab_d2y )
+  ENDIF
   !
   ! ... arrays allocated in allocate_locpot.f90 ( and never deallocated )
   !
-  IF ( ALLOCATED( vloc ) )       DEALLOCATE( vloc )
-  IF ( ALLOCATED( strf ) )       DEALLOCATE( strf )
-  IF ( ALLOCATED( eigts1 ) )     DEALLOCATE( eigts1 )
-  IF ( ALLOCATED( eigts2 ) )     DEALLOCATE( eigts2 )
-  IF ( ALLOCATED( eigts3 ) )     DEALLOCATE( eigts3 )
+  IF ( ALLOCATED( vloc )      )  DEALLOCATE( vloc      )
+  IF ( ALLOCATED( cutoff_2D ) )  DEALLOCATE( cutoff_2D )
+  IF ( ALLOCATED( lr_Vloc )   )  DEALLOCATE( lr_Vloc   )
+  IF ( ALLOCATED( strf )      )  DEALLOCATE( strf      )
   !
   ! ... arrays allocated in allocate_nlpot.f90 ( and never deallocated )
   !
-  IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
-  IF ( ALLOCATED( qrad ) )       DEALLOCATE( qrad )
-  IF ( ALLOCATED( tab ) )        DEALLOCATE( tab )
+  IF ( ALLOCATED( qrad )   )     DEALLOCATE( qrad   )
+  IF ( ALLOCATED( tab )    )     DEALLOCATE( tab    )
   IF ( ALLOCATED( tab_at ) )     DEALLOCATE( tab_at )
   IF ( lspinorb ) THEN
-     IF ( ALLOCATED( fcoef ) )   DEALLOCATE( fcoef )
-  END IF
+     IF ( ALLOCATED( fcoef ) )   DEALLOCATE( fcoef  )
+  ENDIF
   !
-  CALL deallocate_igk ( )
+  CALL deallocate_igk()
   CALL deallocate_uspp() 
   CALL deallocate_gth( lflag ) 
-  CALL deallocate_noncol() 
+  CALL deallocate_noncol()
   !
   ! ... arrays allocated in init_run.f90 ( and never deallocated )
   !
+  IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
   IF ( ALLOCATED( et ) )         DEALLOCATE( et )
   IF ( ALLOCATED( wg ) )         DEALLOCATE( wg )
   IF ( ALLOCATED( btype ) )      DEALLOCATE( btype )
@@ -182,6 +176,7 @@ SUBROUTINE clean_pw( lflag )
   ! up with a different grid if FFT grids are re-initialized later.
   ! The following workaround restores the previous functionality.
   ! TODO: replace clean_pw with more fine-grained cleaning routines.
+  !
   nr1 = dfftp%nr1; nr2 = dfftp%nr2; nr3 = dfftp%nr3
   CALL fft_type_deallocate( dfftp )
   dfftp%nr1 = nr1; dfftp%nr2 = nr2; dfftp%nr3 = nr3
@@ -204,16 +199,16 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... arrays for real-space algorithm
   !
-  CALL  deallocate_realsp()
+  CALL deallocate_realsp()
   !
   ! for Wannier_ac
-  if (use_wannier) CALL wannier_clean()
+  IF (use_wannier) CALL wannier_clean()
   !
-  CALL deallocate_exx ( ) 
+  CALL deallocate_exx() 
   !
   IF (ts_vdw) CALL tsvdw_finalize()
   !
-  CALL plugin_clean( lflag )
+  CALL plugin_clean( 'PW', lflag )
   !
   RETURN
   !

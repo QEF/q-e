@@ -42,7 +42,7 @@ proc ::pwscf::run::run {guiObj {init 1} {use_defaults 1}} {
 	set _run(PH,$moduleObj)          $::pwscf::settings(PH)
 	set _run(PP,$moduleObj)          $::pwscf::settings(PP)
 	set _run(PROJWFC,$moduleObj)     $::pwscf::settings(PROJWFC)
-	set _run(D3,$moduleObj)          $::pwscf::settings(D3)
+	#set _run(D3,$moduleObj)          $::pwscf::settings(D3)
 	set _run(LD1,$moduleObj)         $::pwscf::settings(LD1)
     } else {
 	# use values as specified in the current configuration
@@ -52,7 +52,7 @@ proc ::pwscf::run::run {guiObj {init 1} {use_defaults 1}} {
 	set _run(PH,$moduleObj)          $run(PH,$moduleObj)          
 	set _run(PP,$moduleObj)          $run(PP,$moduleObj)          
 	set _run(PROJWFC,$moduleObj)     $run(PROJWFC,$moduleObj)     
-	set _run(D3,$moduleObj)          $run(D3,$moduleObj)          
+	#set _run(D3,$moduleObj)          $run(D3,$moduleObj)          
 	set _run(LD1,$moduleObj)         $run(LD1,$moduleObj)
     }
 
@@ -85,12 +85,6 @@ proc ::pwscf::run::run {guiObj {init 1} {use_defaults 1}} {
 	    # find out the outdir and create it !!!
 	    _mkdirOutdir $moduleObj
 	} 
-	*d3 {
-	    set runCmd "$_run(RUN.prefix,$moduleObj) $_run(D3,$moduleObj) $_run(RUN.postfix,$moduleObj)"
-
-	    # find out the outdir and create it !!!
-	    _mkdirOutdir $moduleObj
-	}
 	*ld1 {
 	    set runCmd "$_run(RUN.prefix,$moduleObj) $_run(LD1,$moduleObj) $_run(RUN.postfix,$moduleObj)"
 
@@ -102,6 +96,12 @@ proc ::pwscf::run::run {guiObj {init 1} {use_defaults 1}} {
 	    return 0
 	}
     }
+#	*d3 {
+#	    set runCmd "$_run(RUN.prefix,$moduleObj) $_run(D3,$moduleObj) $_run(RUN.postfix,$moduleObj)"
+#
+#	    # find out the outdir and create it !!!
+#	    _mkdirOutdir $moduleObj
+#	}
 
     #
     # run the calculation
@@ -245,7 +245,7 @@ proc ::pwscf::run::_init {guiObj} {
     ::tclu::newset run(PH,$moduleObj)          $::pwscf::settings(PH)
     ::tclu::newset run(PP,$moduleObj)          $::pwscf::settings(PP)
     ::tclu::newset run(PROJWFC,$moduleObj)     $::pwscf::settings(PROJWFC)
-    ::tclu::newset run(D3,$moduleObj)          $::pwscf::settings(D3)
+    #::tclu::newset run(D3,$moduleObj)          $::pwscf::settings(D3)
     ::tclu::newset run(LD1,$moduleObj)         $::pwscf::settings(LD1)
 
     #
@@ -283,13 +283,13 @@ proc ::pwscf::run::getProg {moduleIdent} {
 	*ph  { return ph.x }
 	*pp  { return pp.x }
 	*pr  { return projwfc.x }
-	*d3  { return d3.x }
 	*atomic { return ld1.x }
 	default {
 	    # module not yet supported ...
 	    return ""
 	}
-    }    
+    }
+    # 	*d3  { return d3.x }
 }
 
 

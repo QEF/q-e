@@ -1,0 +1,153 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether ECHO has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x and turbo_davidson.x"
+$ECHO "to calculate the absorption spectrum of the CH4 molecule."
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x turbo_davidson.x"
+PSEUDO_LIST="H.blyp-vbc.UPF C.blyp-mt.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+TURBO_DAVIDSON_COMMAND="$PARA_PREFIX $BIN_DIR/turbo_davidson.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as:              $PW_COMMAND"
+$ECHO "  running turbo_davidson.x as:  $TURBO_DAVIDSON_COMMAND"
+$ECHO "  running turbo_spectrum.x as:  $TURBO_SPECTRUM_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+PREFIX='CH4'
+
+# self-consistent calculation
+cat > $PREFIX.scf.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='$PREFIX'
+    pseudo_dir = '$PSEUDO_DIR/'
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav = 1,
+    celldm(1) = 20,
+    nat = 5,
+    ntyp = 2,
+    ecutwfc = 25,
+    ecutfock = 25,
+    nbnd = 20,
+    input_dft = 'B3LYP'
+ /
+ &electrons
+    conv_thr =  1.0d-10
+ /
+ATOMIC_SPECIES
+H  1.008  H.blyp-vbc.UPF
+C 12.011  C.blyp-mt.UPF
+ATOMIC_POSITIONS {angstrom}
+C   0.000000000   0.000000000   0.000000000
+H   0.642814093   0.642814093   0.642814093
+H  -0.642814093  -0.642814093   0.642814093
+H   0.642814093  -0.642814093  -0.642814093
+H  -0.642814093   0.642814093  -0.642814093
+K_POINTS {gamma}
+EOF
+$ECHO "  Running the SCF calculation for $PREFIX..."
+$PW_COMMAND < $PREFIX.scf.in > $PREFIX.scf.out
+$ECHO " done"
+
+
+# Perform the linear-response calculation
+cat > $PREFIX.tddfpt.in << EOF
+ &lr_input
+   prefix = '$PREFIX',
+   outdir = '$TMP_DIR/',
+   restart = .false.
+ /
+ &lr_dav
+   d0psi_rs = .true.
+   num_eign = 10,
+   num_init = 20,
+   num_basis_max = 80,
+   residue_conv_thr = 1.0D-4,
+   start  = 0.0,
+   finish = 1.5,
+   step   = 2.0D-4,
+   broadening = 0.005,
+   reference = 0.5,
+   p_nbnd_occ  = 4,
+   p_nbnd_virt = 15,
+   poor_of_ram  = .false.
+   poor_of_ram2 = .false.
+/
+EOF
+$ECHO "  Running the TDDFPT calculation for $PREFIX..."
+$TURBO_DAVIDSON_COMMAND < $PREFIX.tddfpt.in > $PREFIX.tddfpt.out
+$ECHO " done"

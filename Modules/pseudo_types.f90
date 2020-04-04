@@ -48,12 +48,14 @@ MODULE pseudo_types
      CHARACTER(LEN=80):: date=' '     ! generation date
      CHARACTER(LEN=80):: comment=' '  ! author's comment
      CHARACTER(LEN=2) :: psd=' '      ! Element label
-     CHARACTER(LEN=20) :: typ=' '     ! Pseudo type ( NC or US or PAW)
+     CHARACTER(LEN=20):: typ=' '      ! Pseudo type ( NC or US or PAW)
      CHARACTER(len=6) :: rel=' '      ! relativistic: {no|scalar|full}
      LOGICAL :: tvanp              ! .true. if Ultrasoft
      LOGICAL :: tcoulombp          ! .true. if Coulomb 1/r potential
      LOGICAL :: nlcc               ! Non linear core corrections
      LOGICAL :: is_gth             ! .true. if Goedecker-Teter-Hutter
+     LOGICAL :: is_multiproj       ! .true. if multiple projectors per l
+     ! (for NC PP only; US-PP and PAW are assumed to be multi-projector)
      CHARACTER(LEN=25) :: dft      ! Exch-Corr type
      REAL(DP) :: zp                ! z valence
      REAL(DP) :: etotps            ! total energy
@@ -64,7 +66,7 @@ MODULE pseudo_types
      INTEGER :: lmax               ! maximum l component in beta
      INTEGER :: lmax_rho           ! max l component in charge (should be 2*lmax)
      REAL(DP), POINTER :: vnl(:,:,:) ! vnl(i,l,s) = V(r_i)_{ls}
-     ! only for single-channel NC PP
+     ! (semilocal form) only for single-channel NC PP
      ! Wavefunctions and projectors
      INTEGER :: nwfc               ! number of atomic wavefunctions
      INTEGER :: nbeta              ! number of projectors
@@ -169,6 +171,18 @@ MODULE pseudo_types
 
   END TYPE pseudo_upf
 
+  TYPE pseudo_config
+     INTEGER :: nwfs
+     CHARACTER(len=32)        :: pseud
+     CHARACTER(len=2),POINTER :: els(:)    !=> null()    ! label
+     INTEGER,POINTER          :: nns(:)    !=> null()    ! n
+     INTEGER,POINTER          :: lls(:)    !=> null()    ! l
+     REAL(DP),POINTER         :: ocs(:)    !=> null()    ! occupation
+     REAL(DP),POINTER         :: rcut(:)   !=> null()    ! NC cutoff radius
+     REAL(DP),POINTER         :: rcutus(:) !=> null()    ! US cutoff radius
+     REAL(DP),POINTER         :: enls(:)   !=> null()    ! energy
+  END TYPE pseudo_config
+
 CONTAINS
 
   SUBROUTINE nullify_paw_in_upf( paw )
@@ -200,6 +214,18 @@ CONTAINS
     IF( ASSOCIATED( paw%oc ) )         DEALLOCATE ( paw%oc )
   END SUBROUTINE deallocate_paw_in_upf
   !
+   SUBROUTINE deallocate_pseudo_config(conf)
+      TYPE(pseudo_config),INTENT(INOUT) :: conf
+      if (associated(conf%els)   ) deallocate(conf%els)
+      if (associated(conf%nns)   ) deallocate(conf%nns)
+      if (associated(conf%lls)   ) deallocate(conf%lls)
+      if (associated(conf%ocs)   ) deallocate(conf%ocs)
+      if (associated(conf%rcut)  ) deallocate(conf%rcut)
+      if (associated(conf%rcutus)) deallocate(conf%rcutus)
+      if (associated(conf%enls)  ) deallocate(conf%enls)
+   END SUBROUTINE deallocate_pseudo_config
+
+
   !
   SUBROUTINE nullify_pseudo_upf( upf )
     TYPE( pseudo_upf ), INTENT(INOUT) :: upf

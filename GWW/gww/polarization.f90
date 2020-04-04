@@ -1978,7 +1978,7 @@
    REAL(kind=DP) :: loptwork
    INTEGER :: iw,jw,kw
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
    INTEGER :: ntids
    INTEGER :: omp_get_num_threads, omp_get_max_threads
    EXTERNAL omp_set_num_threads, omp_get_num_threads, omp_get_max_threads
@@ -1990,7 +1990,7 @@
 
    tmp_pw(:,:)=pw(:,:)
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
      ! go single-thread
      ntids = omp_get_max_threads()
      call omp_set_num_threads(1)
@@ -2011,7 +2011,7 @@
       stop
    endif
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
      ! go multi-thread
      call omp_set_num_threads(ntids)
 #endif

@@ -56,7 +56,7 @@ use ld1inc, only : file_pseudo, title, pseudotype, nlcc, rel, zval, etots, &
    &    'non relativistic pseudopotential and relativistic calculation',-1)
          
       read( iunps, '(4i5)',err=100, iostat=ios ) iexch, icorr, igcx, igcc
-      call set_dft_from_indices(iexch, icorr, igcx, igcc, 0)
+      call set_dft_from_indices(iexch, icorr, igcx, igcc, 0, 0)
       
       read( iunps, '(2e17.11,i5)') zval, etots, lmax
 

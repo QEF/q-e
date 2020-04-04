@@ -11,7 +11,7 @@ SUBROUTINE q_points ( )
 
   USE kinds, only : dp
   USE io_global,  ONLY :  stdout, ionode, ionode_id
-  USE disp,  ONLY : nq1, nq2, nq3, x_q, nqs, lgamma_iq
+  USE disp,  ONLY : nq1, nq2, nq3, x_q, nqs, lgamma_iq, wq
   USE output, ONLY : fildyn
   USE symm_base, ONLY : nsym, s, time_reversal, t_rev, invs
   USE cell_base, ONLY : at, bg
@@ -25,7 +25,7 @@ SUBROUTINE q_points ( )
   integer :: i, iq, ierr, iudyn = 26
   logical :: exist_gamma, check, skip_equivalence=.FALSE.
   logical, external :: check_q_points_sym
-  real(DP), allocatable :: xq(:,:), wq(:)
+  real(DP), allocatable :: xq(:,:), w_q(:)
 
   INTEGER :: nqmax
   !
@@ -37,20 +37,22 @@ SUBROUTINE q_points ( )
 
   nqmax= nq1 * nq2 * nq3
 
-  allocate (wq(nqmax))
+  allocate (w_q(nqmax))
   allocate (xq(3,nqmax))
   if(lshift_q) then
      call kpoint_grid( nsym, time_reversal, skip_equivalence, s, t_rev, bg, nqmax,&
-     &                  1,1,1, nq1,nq2,nq3, nqs, xq, wq )
+     &                  1,1,1, nq1,nq2,nq3, nqs, xq, w_q )
   else
      call kpoint_grid( nsym, time_reversal, skip_equivalence, s, t_rev, bg, nqmax,&
-     &                  0,0,0, nq1,nq2,nq3, nqs, xq, wq )
+     &                  0,0,0, nq1,nq2,nq3, nqs, xq, w_q )
   end if
+  allocate(wq(nqs))
   allocate(x_q(3,nqs))
   allocate(lgamma_iq(nqs))
+  wq(:)=w_q(1:nqs)
   x_q(:,:)=xq(:,1:nqs)
   deallocate (xq)
-  deallocate (wq)
+  deallocate (w_q)
   !
   ! Check if the Gamma point is one of the points and put
   ! it in the first position (it should already be the first)
@@ -77,7 +79,7 @@ SUBROUTINE q_points ( )
   write(stdout, '(//5x,"Dynamical matrices for (", 2(i2,","),i2,") &
            & uniform grid of q-points")') nq1, nq2, nq3
   IF (lshift_q) write(stdout,'(a)') "     With a half shift" 
-  write(stdout, '(5x,"(",i4,"q-points):")') nqs
+  write(stdout, '(5x,"(",i4," q-points):")') nqs
   write(stdout, '(5x,"  N         xq(1)         xq(2)         xq(3) " )')
   do iq = 1, nqs
      write(stdout, '(5x,i3, 3f14.9)') iq, x_q(1,iq), x_q(2,iq), x_q(3,iq)

@@ -1,0 +1,10 @@
+ &inputhp
+   prefix = 'Ni2MnGa',
+   outdir = '/scratch/timrov/WORK_DFPT_plus_U/A_PORTING_2018/A_Gitlab/A_my_Gitlab_08.11.2018/q-e/tempdir/',
+   nq1 = 2, nq2 = 2, nq3 = 2,
+   conv_thr_chi = 1.0d-8,
+   iverbosity = 2
+   perturb_only_atom(1) = .true.
+   start_q = 3
+   last_q  = 4
+ /

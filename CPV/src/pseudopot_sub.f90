@@ -54,7 +54,9 @@
 
       use parameters, only: lmaxx    !
       use ions_base,  only: nsp, &   !  number of specie
-                            na       !  number of atoms for each specie
+                            na, &    !  number of atoms for each specie
+                            nat, &   !  total number of atom
+                            ityp     !  the atomi specie for each atom
       use uspp,       only: nkb, &   !
                             nkbus    !
       use uspp_param, only: ish,    &!
@@ -66,12 +68,14 @@
                             lmaxq    !
       use uspp,       only: nhtol,  &!
                             nhtolm, &!
-                            indv     !
+                            indv,   &!
+                            ijtoh,  &!
+                            indv_ijkb0 !
 
       IMPLICIT NONE
      
       !
-      INTEGER :: is, iv, ind, il, lm
+      INTEGER :: is, iv, ind, il, lm, ih, jh, ijv, ijkb0, ia
       !     ------------------------------------------------------------------
       !     find  number of beta functions per species, max dimensions,
       !     total number of beta functions (all and Vanderbilt only)
@@ -102,21 +106,27 @@
       !
       do is=1,nsp
           upf(is)%nqlc = MIN (  upf(is)%nqlc, lmaxq )
+          IF ( upf(is)%nqlc < 0 )  upf(is)%nqlc = 0
       end do
       if (nkb <= 0) call errore(' pseudopotential_indexes ',' not implemented ?',nkb)
 
       if( allocated( nhtol ) ) deallocate( nhtol )
       if( allocated( indv  ) ) deallocate( indv )
       if( allocated( nhtolm  ) ) deallocate( nhtolm )
+      if( allocated( ijtoh  ) ) deallocate( ijtoh )
+      if( allocated( indv_ijkb0  ) ) deallocate( indv_ijkb0 )
       !
       allocate(nhtol(nhm,nsp))
       allocate(indv (nhm,nsp))
       allocate(nhtolm(nhm,nsp))
+      allocate(ijtoh(nhm,nhm,nsp))
+      allocate(indv_ijkb0(nat))
 
       !     ------------------------------------------------------------------
       !     definition of indices nhtol, indv, nhtolm
       !     ------------------------------------------------------------------
       !
+      ijkb0 = 0
       do is = 1, nsp
          ind = 0
          do iv = 1,  upf(is)%nbeta
@@ -129,6 +139,29 @@
                indv( ind, is ) = iv
             end do
          end do
+         !
+         ! ijtoh map augmentation channel indexes ih and jh to composite
+         ! "triangular" index ijh
+         ijtoh(:,:,is) = -1
+         ijv = 0
+         do ih = 1,nh(is)
+            do jh = ih,nh(is)
+               ijv = ijv+1
+               ijtoh(ih,jh,is) = ijv
+               ijtoh(jh,ih,is) = ijv
+            end do
+         end do
+         !
+         ! ijkb0 is just before the first beta "in the solid" for atom ia
+         ! i.e. ijkb0+1,.. ijkb0+nh(ityp(ia)) are the nh beta functions of
+         !      atom ia in the global list of beta functions
+         do ia = 1,nat
+            IF ( ityp(ia) == is ) THEN
+               indv_ijkb0(ia) = ijkb0
+               ijkb0 = ijkb0 + nh(is)
+           END IF
+        end do
+
       end do
 
       RETURN
@@ -185,7 +218,7 @@
       USE cell_base,          ONLY : tpiba, tpiba2
       USE splines,            ONLY : init_spline, allocate_spline, kill_spline, nullify_spline
       USE pseudo_base,        ONLY : formfn, formfa
-      USE uspp_param,         only : upf, oldvan
+      USE uspp_param,         only : upf
       USE control_flags,      only : tpre
       use gvect, ONLY : gg, gstart
       USE cp_interfaces,      ONLY : compute_xgtab
@@ -234,7 +267,7 @@
 
          call formfn( rgrid(is)%r, rgrid(is)%rab, &
                       upf(is)%vloc(1:rgrid(is)%mesh), zv(is), rcmax(is), &
-                      xgtab, 1.0d0, tpiba2, rgrid(is)%mesh, mmx, oldvan(is),&
+                      xgtab, 1.0d0, tpiba2, rgrid(is)%mesh, mmx, &
                       tpre, vps_sp(is)%y, vps0(is), dvps_sp(is)%y )
          ! obsolete BHS format
          !call formfa( vps_sp(is)%y, dvps_sp(is)%y, rc1(is), rc2(is), &
@@ -335,7 +368,7 @@
       !
       USE kinds,      ONLY : DP
       USE ions_base,  ONLY : nsp
-      USE uspp_param, ONLY : upf, nh, nhm, oldvan
+      USE uspp_param, ONLY : upf, nh, nhm
       USE atom,       ONLY : rgrid
       USE uspp,       ONLY : nhtol, indv
       USE betax,      only : refg, betagx, mmx, dbetagx
@@ -370,7 +403,7 @@
             l = nhtol(iv,is)
             !
 !$omp parallel default(none), private( dfint, djl, fint, jl, il, xg, ir ), &
-!$omp shared( tpre, nr, mmx, refg, l, is, rgrid, upf, indv, iv, betagx, dbetagx, oldvan )
+!$omp shared( tpre, nr, mmx, refg, l, is, rgrid, upf, indv, iv, betagx, dbetagx )
             if ( tpre ) then
                allocate( dfint( nr ) )
                allocate( djl  ( nr ) )
@@ -397,22 +430,14 @@
                   fint(ir) = rgrid(is)%r(ir) * jl(ir) * &
                              upf(is)%beta( ir, indv(iv,is) ) 
                end do
-               if (oldvan(is)) then
-                  call herman_skillman_int(nr,fint,rgrid(is)%rab,betagx(il,iv,is))
-               else
-                  call simpson_cp90(nr,fint,rgrid(is)%rab,betagx(il,iv,is))
-               endif
+               call simpson_cp90(nr,fint,rgrid(is)%rab,betagx(il,iv,is))
                ! 
                if(tpre) then
                   do ir = 1, nr
                      dfint(ir) = rgrid(is)%r(ir) * djl(ir) * &
                                  upf(is)%beta( ir, indv(iv,is) )
                   end do
-                  if (oldvan(is)) then
-                     call herman_skillman_int(nr,dfint,rgrid(is)%rab,dbetagx(il,iv,is))
-                  else
-                     call simpson_cp90(nr,dfint,rgrid(is)%rab,dbetagx(il,iv,is))
-                  end if
+                  call simpson_cp90(nr,dfint,rgrid(is)%rab,dbetagx(il,iv,is))
                endif
                !
             end do interp_tab
@@ -451,7 +476,7 @@
       USE kinds,         ONLY : DP
       use io_global,     only : stdout
       USE ions_base,     ONLY : nsp
-      USE uspp_param,    ONLY : upf, nh, nhm, nbetam, lmaxq, oldvan, ish, nvb
+      USE uspp_param,    ONLY : upf, nh, nhm, nbetam, lmaxq, ish
       USE atom,          ONLY : rgrid
       USE uspp,          ONLY : indv
       USE betax,         only : refg, qradx, mmx, dqradx
@@ -467,6 +492,7 @@
       REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), qrl(:,:,:)
       REAL(DP) :: xg
 
+
       CALL start_clock('qradx')
 
       IF( .NOT. ALLOCATED( rgrid ) ) &
@@ -481,13 +507,15 @@
       !
       IF ( tpre ) ALLOCATE( dqradx( mmx, nbetam*(nbetam+1)/2, lmaxq, nsp ) )
 
-      DO is = 1, nvb
+      DO is = 1, nsp
+         !
+         IF( .NOT. upf(is)%tvanp ) CYCLE
          !
          !     qqq and beta are now indexed and taken in the same order
          !     as vanderbilts ppot-code prints them out
          !
-         WRITE( stdout,*) ' nlinit  nh(is), ngb, is, kkbeta, lmaxq = ', &
-     &        nh(is), ngb, is, upf(is)%kkbeta, upf(is)%nqlc
+         WRITE( stdout,'(A,5I5)') 'is, nh(is), ngb, kkbeta, lmaxq = ', &
+     &        is, nh(is), ngb, upf(is)%kkbeta, upf(is)%nqlc
          !
          nr = upf(is)%kkbeta
          !
@@ -498,7 +526,7 @@
          do l = 1, upf(is)%nqlc
             !
 !$omp parallel default(none), private( djl, dfint, fint, jl, il, iv, jv, ijv, xg, ir ), &
-!$omp shared( tpre, nr, mmx, refg, rgrid, l, upf, qrl, oldvan, qradx, dqradx, is )
+!$omp shared( tpre, nr, mmx, refg, rgrid, l, upf, qrl, qradx, dqradx, is )
             IF ( tpre ) THEN
                ALLOCATE( djl  ( nr ) )
                ALLOCATE( dfint( nr ) )
@@ -529,25 +557,15 @@
                      do ir = 1, nr
                         fint( ir ) = qrl( ir, ijv, l ) * jl( ir )
                      end do
-                     if (oldvan(is)) then
-                        call herman_skillman_int &
+                     call simpson_cp90 &
                              (nr,fint(1),rgrid(is)%rab,qradx(il,ijv,l,is))
-                     else
-                        call simpson_cp90 &
-                             (nr,fint(1),rgrid(is)%rab,qradx(il,ijv,l,is))
-                     end if
                      !
                      if( tpre ) then
                         do ir = 1, nr
                            dfint(ir) = qrl(ir,ijv,l) * djl(ir)
                         end do
-                        if ( oldvan(is) ) then
-                           call herman_skillman_int &
+                        call simpson_cp90 &
                                 (nr,dfint(1),rgrid(is)%rab,dqradx(il,ijv,l,is))
-                        else
-                           call simpson_cp90 &
-                                (nr,dfint(1),rgrid(is)%rab,dqradx(il,ijv,l,is))
-                        end if
                      end if
                      !
                   end do
@@ -592,8 +610,8 @@
       USE kinds,         ONLY : DP
       use io_global,  only: stdout
       USE ions_base,  ONLY: nsp
-      USE uspp_param, ONLY: upf, nh, nhm, nbetam, lmaxq, oldvan
-      use uspp_param, only: lmaxkb, ish, nvb
+      USE uspp_param, ONLY: upf, nh, nhm, nbetam, lmaxq
+      use uspp_param, only: lmaxkb, ish
       USE atom,       ONLY: rgrid
       USE uspp,       ONLY: indv
       use uspp,       only: qq_nt, beta
@@ -620,8 +638,13 @@
       REAL(DP), ALLOCATABLE :: qradb(:,:,:,:)
       REAL(DP), ALLOCATABLE :: ylmb(:,:), dylmb(:,:,:,:)
       COMPLEX(DP), ALLOCATABLE :: dqgbs(:,:,:)
+      LOGICAL :: tvanp
 
-      IF( nvb < 1 ) &
+      tvanp = .FALSE.
+      DO is = 1, nsp
+         tvanp = tvanp .OR. upf(is)%tvanp
+      END DO
+      IF( .NOT. tvanp ) &
          return
 
       IF( .NOT. ALLOCATED( rgrid ) ) &
@@ -640,7 +663,9 @@
       qradb(:,:,:,:) = 0.d0
 
 
-      DO is = 1, nvb
+      DO is = 1, nsp
+
+         IF( .NOT. upf(is)%tvanp ) CYCLE
          !
          !     qqq and beta are now indexed and taken in the same order
          !     as vanderbilts ppot-code prints them out
@@ -686,25 +711,15 @@
                      do ir = 1, nr
                         fint( ir ) = qrl( ir, ijv, l ) * jl( ir )
                      end do
-                     if (oldvan(is)) then
-                        call herman_skillman_int &
+                     call simpson_cp90 &
                              (nr,fint(1),rgrid(is)%rab,qradx(il,ijv,l,is))
-                     else
-                        call simpson_cp90 &
-                             (nr,fint(1),rgrid(is)%rab,qradx(il,ijv,l,is))
-                     end if
                      !
                      if( tpre ) then
                         do ir = 1, nr
                            dfint(ir) = qrl(ir,ijv,l) * djl(ir)
                         end do
-                        if ( oldvan(is) ) then
-                           call herman_skillman_int &
+                        call simpson_cp90 &
                                 (nr,dfint(1),rgrid(is)%rab,dqradx(il,ijv,l,is))
-                        else
-                           call simpson_cp90 &
-                                (nr,dfint(1),rgrid(is)%rab,dqradx(il,ijv,l,is))
-                        end if
                      end if
                      !
                   end do
@@ -739,7 +754,9 @@
 !
       call ylmr2 (lmaxq*lmaxq, ngb, gxb, gb, ylmb)
 
-      do is = 1, nvb
+      do is = 1, nsp
+
+         IF( .NOT. upf(is)%tvanp ) CYCLE
          !
          !     calculation of array qradb(igb,iv,jv,is)
          !
@@ -792,7 +809,9 @@
          !
          call dylmr2_(lmaxq*lmaxq, ngb, gxb, gb, ainv, dylmb)
          !
-         do is=1,nvb
+         do is=1,nsp
+            !
+            IF( .NOT. upf(is)%tvanp ) CYCLE
             !
             do iv= 1, upf(is)%nbeta
                do jv=iv, upf(is)%nbeta
@@ -869,14 +888,15 @@
       USE cell_base,          ONLY : tpiba2
       USE small_box,          ONLY : tpibab
       USE smallbox_gvec,      ONLY : gb, ngb
-      USE gvect, ONLY : gg, ngm
+      USE gvect,              ONLY : gg
+      USE fft_base,           ONLY : dfftp
       !
       IMPLICIT NONE
       !
       REAL(DP), INTENT(OUT) :: gmax
       REAL(DP) :: g2, g2b
       !
-      g2  = MAXVAL( gg( 1:ngm ) )
+      g2  = MAXVAL( gg( 1:dfftp%ngm ) )
       !
       g2  = g2 * tpiba2 / refg
       !
@@ -1021,7 +1041,7 @@
       use uspp, only: qq_nt, nhtolm, beta
       use constants, only: pi, fpi
       use ions_base, only: nsp
-      use uspp_param, only: upf, lmaxq, lmaxkb, nbetam, nh, nvb
+      use uspp_param, only: upf, lmaxq, lmaxkb, nbetam, nh
       use qgb_mod, only: qgb, dqgb
       use smallbox_gvec, only: gb, gxb, ngb
       use small_box,  only: omegab, tpibab
@@ -1038,9 +1058,13 @@
       REAL(DP), ALLOCATABLE :: qradb( :, :, :, : )
       complex(dp), allocatable:: dqgbs(:,:,:)
       real(dp) xg, c, betagl, dbetagl, g2
-!
-      !
-      if( nvb < 1 ) &
+      LOGICAL :: tvanp
+
+      tvanp = .FALSE.
+      DO is = 1, nsp
+         tvanp = tvanp .OR. upf(is)%tvanp
+      END DO
+      IF( .NOT. tvanp ) &
          return
 
       allocate( qradb( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp ), STAT=ierr )
@@ -1055,7 +1079,9 @@
 !
       call ylmr2 (lmaxq*lmaxq, ngb, gxb, gb, ylmb)
 
-      do is = 1, nvb
+      do is = 1, nsp
+         !
+         IF( .NOT. upf(is)%tvanp ) CYCLE
          !
          !     calculation of array qradb(igb,iv,jv,is)
          !
@@ -1118,7 +1144,9 @@
          !
          call dylmr2_( lmaxq*lmaxq, ngb, gxb, gb, ainv, dylmb )
          !
-         do is=1,nvb
+         do is=1,nsp
+            !
+            IF( .NOT. upf(is)%tvanp ) CYCLE
             !
             do iv= 1, upf(is)%nbeta
                do jv=iv, upf(is)%nbeta
@@ -1197,7 +1225,7 @@
       USE io_global,     only : stdout
       USE gvecw,         only : ngw
       USE ions_base,     only : nsp
-      USE uspp_param,    only : upf, lmaxq, lmaxkb, nh, nhm, oldvan
+      USE uspp_param,    only : upf, lmaxq, lmaxkb, nh, nhm
       USE uspp,          only : qq_nt, nhtolm, beta, nhtol, indv, dbeta
       USE cell_base,     only : ainv, omega, tpiba2, tpiba
       USE atom,          ONLY : rgrid
@@ -1260,22 +1288,14 @@
                   fint(ir) = rgrid(is)%r(ir) * jl(ir) * &
                              upf(is)%beta( ir, indv(iv,is) )
                end do
-               if (oldvan(is)) then
-                  call herman_skillman_int(nr,fint,rgrid(is)%rab,betagx(il,iv,is))
-               else
-                  call simpson_cp90(nr,fint,rgrid(is)%rab,betagx(il,iv,is))
-               endif
+               call simpson_cp90(nr,fint,rgrid(is)%rab,betagx(il,iv,is))
                ! 
                if(tpre) then
                   do ir = 1, nr
                      dfint(ir) = rgrid(is)%r(ir) * djl(ir) * &
                                  upf(is)%beta( ir, indv(iv,is) )
                   end do
-                  if (oldvan(is)) then
-                     call herman_skillman_int(nr,dfint,rgrid(ir)%rab,dbetagx(il,iv,is))
-                  else
-                     call simpson_cp90(nr,dfint,rgrid(is)%rab,dbetagx(il,iv,is))
-                  end if
+                  call simpson_cp90(nr,dfint,rgrid(is)%rab,dbetagx(il,iv,is))
                endif
                !
             end do

@@ -3,7 +3,7 @@
     prefix          = 'pb'
     restart_mode    = 'from_scratch'
     wf_collect      = .true.
-    pseudo_dir      = './'
+    pseudo_dir      = '../../pseudo/'
     outdir          = './'
     verbosity       = 'high'
     tprnfor         = .true.

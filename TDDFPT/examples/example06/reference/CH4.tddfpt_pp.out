@@ -1,0 +1,68 @@
+ Warning: Only a single CPU will be used!
+
+     Program TDDFPT_PP v.6.3 starts on  5Sep2018 at 17:39: 1 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     8 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       8
+
+     Reading    500 Lanczos steps for direction 1
+        500 steps will be considered
+
+
+     Reading    500 Lanczos steps for direction 2
+        500 steps will be considered
+
+
+     Reading    500 Lanczos steps for direction 3
+        500 steps will be considered
+
+
+     Data ready, starting to calculate observables...
+
+     Broadening =      0.00100000 Ry
+
+     Output file name: CH4.plot_chi.dat    
+
+     Output file name for the oscillator strength S  CH4.plot_S.dat      
+
+     chi_i_j: dipole polarizability tensor  in units of e^2*a_0^2/energy
+
+     S: oscillator strength in units of 1/energy
+
+     S(\hbar \omega) = 2m/( 3 \pi e^2 \hbar)  \omega sum_j chi_j_j
+
+     S(\hbar \omega) satisfies the f-sum rule:  \int_0^\infty dE S(E) = N_el 
+
+     Functions are reported in \hbar.\omega  Energy unit is (Ry)
+
+     Static dipole polarizability tensor:
+     chi_1_1=  0.955871179942119E+01 + i0.000000000000000E+00
+     chi_2_1=  0.168928706801439E-05 + i0.000000000000000E+00
+     chi_3_1=  0.415347727729182E-06 + i0.000000000000000E+00
+     chi_1_2=  0.168928706802946E-05 + i0.000000000000000E+00
+     chi_2_2=  0.955871096857978E+01 + i0.000000000000000E+00
+     chi_3_2=  0.251299768422214E-05 + i0.000000000000000E+00
+     chi_1_3=  0.415347727921780E-06 + i0.000000000000000E+00
+     chi_2_3=  0.251299768416528E-05 + i0.000000000000000E+00
+     chi_3_3=  0.955871303580782E+01 + i0.000000000000000E+00
+     Possible peak at      0.65470000 Ry;  Intensity=   0.68E+02
+     Possible peak at      0.70610000 Ry;  Intensity=   0.34E+02
+ 
+     TDDFPT_PP    :      0.29s CPU      0.32s WALL
+
+ 
+   This run was terminated on:  17:39: 2   5Sep2018            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

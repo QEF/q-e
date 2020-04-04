@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,9 +15,13 @@ subroutine solve_e
   !    It performs the following tasks:
   !     a) computes the bare potential term  x | psi >
   !     b) adds to it the screening term Delta V_{SCF} | psi >
+  !        If lda_plus_u=.true. compute also the SCF part
+  !        of the response Hubbard potential.
   !     c) applies P_c^+ (orthogonalization to valence states)
   !     d) calls cgsolve_all to solve the linear system
   !     e) computes Delta rho, Delta V_{SCF} and symmetrizes them
+  !     f) If lda_plus_u=.true. compute also the response occupation
+  !        matrices dnsscf
   !
   USE kinds,                 ONLY : DP
   USE ions_base,             ONLY : nat
@@ -33,7 +37,7 @@ subroutine solve_e
   USE wvfct,                 ONLY : nbnd, npwx, g2kin, et
   USE check_stop,            ONLY : check_stop_now
   USE buffers,               ONLY : get_buffer, save_buffer
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,         ONLY : evc
   USE uspp,                  ONLY : okvan, vkb
   USE uspp_param,            ONLY : upf, nhm
   USE noncollin_module,      ONLY : noncolin, npol, nspin_mag
@@ -42,24 +46,25 @@ subroutine solve_e
   USE paw_onecenter,         ONLY : paw_dpotential
   USE paw_symmetry,          ONLY : paw_desymmetrize
 
-  USE units_ph,              ONLY : lrdwf, iudwf, lrwfc, iuwfc, lrdrho, &
-                                    iudrho
+  USE units_ph,              ONLY : lrdwf, iudwf, lrdrho, iudrho
+  USE units_lr,              ONLY : iuwfc, lrwfc
   USE output,                ONLY : fildrho
   USE control_ph,            ONLY : ext_recover, rec_code, &
                                     lnoloc, convt, tr2_ph, nmix_ph, &
                                     alpha_mix, lgamma_gamma, niter_ph, &
                                     flmixdpot, rec_code_read
   USE recover_mod,           ONLY : read_rec, write_rec
-
   USE mp_pools,              ONLY : inter_pool_comm
   USE mp_bands,              ONLY : intra_bgrp_comm, ntask_groups
   USE mp,                    ONLY : mp_sum
-
   USE lrus,                  ONLY : int3_paw
   USE qpoint,                ONLY : nksq
   USE eqv,                   ONLY : dpsi, dvpsi
   USE control_lr,            ONLY : nbnd_occ, lgamma
   USE dv_of_drho_lr
+  USE fft_helper_subroutines
+  USE fft_interfaces,        ONLY : fft_interpolate
+  USE ldaU,                  ONLY : lda_plus_u
 
   implicit none
 
@@ -138,12 +143,12 @@ subroutine solve_e
      iter0 = 0
   endif
   incr=1
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dffts%has_task_groups ) THEN
      !
      v_siz =  dffts%nnr_tg
      ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
      ALLOCATE( tg_psic( v_siz, npol ) )
-     incr = dffts%nproc2
+     incr = fftx_ntgrp(dffts)
      !
   ENDIF
   !
@@ -160,25 +165,31 @@ subroutine solve_e
   !
   if ( (lgauss .or. ltetra) .or..not.lgamma) call errore ('solve_e', &
        'called in the wrong case', 1)
-
   !
   !   The outside loop is over the iterations
   !
   do kter = 1, niter_ph
-
-!     write(6,*) 'kter', kter
+     !
      FLUSH( stdout )
      iter = kter + iter0
      ltaver = 0
      lintercall = 0
-
+     !
      dvscfout(:,:,:)=(0.d0,0.d0)
      dbecsum(:,:,:,:)=(0.d0,0.d0)
      IF (noncolin) dbecsum_nc=(0.d0,0.d0)
-
+     !
+     ! DFPT+U: at each iteration calculate dnsscf,
+     ! i.e. the scf variation of the occupation matrix ns.
+     !
+     IF (lda_plus_u .AND. (iter.NE.1)) &
+        CALL dnsq_scf (3, .false., 0, 1, .false.)
+     !
      do ik = 1, nksq
+        !
         npw = ngk(ik)
         npwq= npw     ! q=0 always in this routine
+        !
         if (lsda) current_spin = isk (ik)
         !
         ! reads unperturbed wavefunctions psi_k in G_space, for all bands
@@ -206,7 +217,7 @@ subroutine solve_e
               ! calculates dvscf_q*psi_k in G_space, for all bands, k=kpoint
               ! dvscf_q from previous iteration (mix_potential)
               !
-              IF( dffts%have_task_groups ) THEN
+              IF( dffts%has_task_groups ) THEN
                  IF (noncolin) THEN
                     CALL tg_cgather( dffts, dvscfins(:,1,ipol), tg_dv(:,1))
                     IF (domag) THEN
@@ -220,7 +231,7 @@ subroutine solve_e
               ENDIF
               aux2=(0.0_DP,0.0_DP)
               do ibnd = 1, nbnd_occ (ik), incr
-                 IF ( dffts%have_task_groups ) THEN
+                 IF ( dffts%has_task_groups ) THEN
                     call cft_wave_tg (ik, evc, tg_psic, 1, v_siz, ibnd, nbnd_occ (ik) )
                     call apply_dpot(v_siz, tg_psic, tg_dv, 1)
                     call cft_wave_tg (ik, aux2, tg_psic, -1, v_siz, ibnd, nbnd_occ (ik))
@@ -232,7 +243,16 @@ subroutine solve_e
               enddo
               dvpsi=dvpsi+aux2
               !
+              !  In the case of US pseudopotentials there is an additional
+              !  selfconsist term which comes from the dependence of D on
+              !  V_{eff} on the bare change of the potential
+              !
               call adddvscf(ipol,ik)
+              !
+              ! DFPT+U: add to dvpsi the scf part of the response
+              ! Hubbard potential dV_hub
+              !
+              if (lda_plus_u) call adddvhubscf (ipol, ik)
               !
            endif
            !
@@ -287,7 +307,7 @@ subroutine solve_e
            !
            IF (noncolin) THEN
               call incdrhoscf_nc(dvscfout(1,1,ipol),wk(ik),ik, &
-                                 dbecsum_nc(1,1,1,1,ipol), dpsi)
+                                 dbecsum_nc(1,1,1,1,ipol), dpsi, 1)
            ELSE
               call incdrhoscf (dvscfout(1,current_spin,ipol), wk(ik), &
                             ik, dbecsum(1,1,current_spin,ipol), dpsi)
@@ -308,7 +328,7 @@ subroutine solve_e
      if (doublegrid) then
         do is=1,nspin_mag
            do ipol=1,3
-              call cinterpolate (dvscfout(1,is,ipol), dvscfout(1,is,ipol), 1)
+              call fft_interpolate (dffts, dvscfout(:,is,ipol), dfftp, dvscfout(:,is,ipol))
            enddo
         enddo
      endif
@@ -360,7 +380,7 @@ subroutine solve_e
      if (doublegrid) then
         do is=1,nspin_mag
            do ipol = 1, 3
-              call cinterpolate (dvscfin(1,is,ipol),dvscfins(1,is,ipol),-1)
+              call fft_interpolate (dfftp, dvscfin(:,is,ipol), dffts, dvscfins(:,is,ipol))
            enddo
         enddo
      endif
@@ -408,6 +428,7 @@ subroutine solve_e
 
   enddo
 155 continue
+  !
   deallocate (h_diag)
   deallocate (aux1)
   deallocate (dbecsum)
@@ -420,7 +441,7 @@ subroutine solve_e
   deallocate (dvscfin)
   if (noncolin) deallocate(dbecsum_nc)
   deallocate(aux2)
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dffts%has_task_groups ) THEN
      !
      DEALLOCATE( tg_dv  )
      DEALLOCATE( tg_psic)

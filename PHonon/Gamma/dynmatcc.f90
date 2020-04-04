@@ -19,11 +19,11 @@ SUBROUTINE dynmatcc(dyncc)
   USE uspp_param, ONLY : upf
   USE fft_base,   ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft
-  USE gvect,      ONLY : nl, ngm, igtongl, ngl, g, gg, gl
+  USE gvect,      ONLY : ngm, igtongl, ngl, g, gg, gl
   USE scf,        ONLY : rho, rho_core, rhog_core
-  USE wavefunctions_module,  ONLY: psic
+  USE wavefunctions,  ONLY: psic
   USE cgcom
-  USE mp_global,  ONLY : intra_pool_comm
+  USE mp_pools,   ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
 
   IMPLICIT NONE
@@ -51,7 +51,7 @@ SUBROUTINE dynmatcc(dyncc)
   !
   CALL v_xc  (rho, rho_core, rhog_core, etxc, vtxc, vxc)
   !
-  CALL fwfft ( 'Dense', vxc, dfftp )
+  CALL fwfft ( 'Rho', vxc, dfftp )
   !
   dyncc1(:,:,:,:) = 0.d0
   ! temporary
@@ -66,7 +66,7 @@ SUBROUTINE dynmatcc(dyncc)
                         g(2,ig)*tau(2,na) + &
                         g(3,ig)*tau(3,na) )
            exc = cmplx(cos(exg),-sin(exg),kind=DP)*tpiba2
-           work1(ig)= rhocg(igtongl(ig))* exc * conjg(vxc(nl(ig)))
+           work1(ig)= rhocg(igtongl(ig))* exc * conjg(vxc(dfftp%nl(ig)))
            gc(ig,1) = g(1,ig) * exc * (0.0d0,-1.0d0)
            gc(ig,2) = g(2,ig) * exc * (0.0d0,-1.0d0)
            gc(ig,3) = g(3,ig) * exc * (0.0d0,-1.0d0)
@@ -81,7 +81,7 @@ SUBROUTINE dynmatcc(dyncc)
         ENDDO
         DO i=1,3
            CALL dvb_cc  (nlcc, nt, ngm, dfftp%nnr, &
-                nl,igtongl,rhocg,dmuxc,gc(1,i),aux3,gc(1,i))
+                dfftp%nl,igtongl,rhocg,dmuxc,gc(1,i),aux3,gc(1,i))
         ENDDO
         DO nb=1,nat
            ntb=ityp(nb)

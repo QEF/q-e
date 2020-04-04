@@ -14,15 +14,15 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
     USE cell_base,               ONLY  : omega
     USE parallel_include
     USE mp,                      ONLY  : mp_barrier
-    USE gvecs,                   ONLY  : nlsm, nls
     USE mp_wave,                 ONLY  : redistwfr
     USE io_global,               ONLY  : stdout         !print/write argument for standard output (to output file)
+    USE fft_helper_subroutines
     !
     IMPLICIT NONE
     !
     INTEGER,     INTENT(IN)    :: nnrtot, nbsp
     INTEGER,     INTENT(IN)    :: my_nbsp(nproc_image), my_nxyz(nproc_image)
-    COMPLEX(DP), INTENT(IN)    :: c(ngw,nbsp)
+    COMPLEX(DP), INTENT(INOUT) :: c(ngw,nbsp)
     REAL(DP),    INTENT(INOUT) :: psitot2(nnrtot, my_nbsp(me_image+1) )
     !
     INTEGER i, j, ir,proc, me, ierr, ig, irank, iobtl
@@ -73,9 +73,9 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
       DO i = 1, nbsp, 2
         !
         IF ( (MOD(nbsp, 2) .NE. 0) .AND. (i .EQ. nbsp ) ) THEN     
-          CALL c2psi( psis(1:sizefft), sizefft, c(1,i), ca(1), ngw, 2)
+          CALL c2psi_gamma( dffts, psis(1:sizefft), c(:,i), ca(:))
         ELSE
-          CALL c2psi( psis(1:sizefft), sizefft, c(1,i), c(1, i+1), ngw, 2)
+          CALL c2psi_gamma( dffts, psis(1:sizefft), c(:,i), c(:, i+1))
         END IF 
         !
         CALL invfft( 'Wave', psis(1:sizefft), dffts )
@@ -105,7 +105,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
       !write(stdout,'("dffts%nnr*nogrp:",I10)'), dffts%nnr*nogrp
       !write(stdout,'("nogrp*nr3 should be smaller or equal to nproc_image:")')
       !
-      nogrp = dffts%nproc2
+      nogrp = fftx_ntgrp(dffts)
       !
       ALLOCATE( sdispls(nproc_image), sendcount(nproc_image) ); sdispls=0; sendcount=0
       ALLOCATE( rdispls(nproc_image), recvcount(nproc_image) ); rdispls=0; recvcount=0 
@@ -135,47 +135,19 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
       nnr2 = dffts%nnr/2
       !
       !**** nbsp has to be divisible by (2*nogrp) ***
+      !
       DO i = 1, nbsp, 2*nogrp
         !
-        psis (:) = (0.d0, 0.d0)
-        !
-        igoff = 0
-        !
-        DO idx = 1, 2*nogrp , 2
-          !
-          !  important: if n is odd => c(*,n+1)=0.
-          !
-          IF ( idx + i - 1 < nbsp ) THEN
-            !$omp parallel do 
-            DO ig=1,ngw
-              psis(nlsm(ig)+igoff) = CONJG( c(ig,idx+i-1) ) + ci * CONJG( c(ig,idx+i) )
-              psis(nls(ig) +igoff) =        c(ig,idx+i-1)   + ci * c(ig,idx+i)
-            END DO
-            !$omp end parallel do 
-          END IF
-          !
-          ! BS: for odd number of bands ... need to be tested ..
-          IF ( idx + i - 1 == nbsp ) THEN
-            !$omp parallel do 
-            DO ig=1,ngw
-              psis(nlsm(ig)+igoff) = CONJG( c(ig,idx+i-1) ) 
-              psis(nls(ig) +igoff) =        c(ig,idx+i-1) 
-            END DO
-            !$omp end parallel do 
-          END IF
-          !
-          igoff = igoff + dffts%nnr
-          !
-        END DO
+        CALL c2psi_gamma_tg( dffts, psis, c, i, nbsp )
         !
         CALL invfft( 'tgWave', psis, dffts )
         !
 #if defined(__MPI)
         !
-        CALL mp_barrier( dffts%comm2 )
+        CALL mp_barrier( fftx_tgcomm(dffts) )
         CALL MPI_ALLTOALLV(psis, sendcount1, sdispls1, MPI_DOUBLE_COMPLEX, &
             &         psis1, recvcount1, rdispls1, MPI_DOUBLE_COMPLEX, &
-            &         dffts%comm2, ierr)
+            &         fftx_tgcomm(dffts), ierr)
 #endif
         !
         ngpww1 = 0

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -35,6 +35,22 @@ MODULE qpoint
   !
 END MODULE qpoint
 !
+!
+!
+MODULE qpoint_aux
+  USE kinds,      ONLY : DP
+  USE becmod,     ONLY : bec_type
+  SAVE
+  
+  INTEGER, ALLOCATABLE :: ikmks(:)    ! index of -k for magnetic calculations
+
+  INTEGER, ALLOCATABLE :: ikmkmqs(:)  ! index of -k-q for magnetic calculations
+
+  TYPE(bec_type), ALLOCATABLE :: becpt(:), alphapt(:,:)
+
+END MODULE qpoint_aux
+!
+!
 MODULE control_lr
   !
   USE kinds,      ONLY : DP
@@ -44,9 +60,12 @@ MODULE control_lr
   SAVE
   !
   INTEGER, ALLOCATABLE :: nbnd_occ(:)  ! occupied bands in metals
+  INTEGER, ALLOCATABLE :: ofsbeta(:)   ! for each atom gives the offset of beta functions 
   REAL(DP) :: alpha_pv       ! the alpha value for shifting the bands
   LOGICAL  :: lgamma         ! if .TRUE. this is a q=0 computation
   LOGICAL  :: lrpa           ! if .TRUE. uses the Random Phace Approximation
+  REAL(DP) :: ethr_nscf      ! convergence threshol for KS eigenvalues in the
+                             ! NSCF calculation
   !
 END MODULE control_lr
 !
@@ -79,23 +98,19 @@ MODULE gc_lr
   SAVE
   !
   REAL (DP), ALLOCATABLE :: &
-       grho(:,:,:),              &! 3, nrxx, nspin)
-       gmag(:,:,:),              &! 3, nrxx, nspin)
-       vsgga(:),                 &! nrxx)
-       segni(:),                 &! nrxx)
-       dvxc_rr(:,:,:),           &! nrxx, nspin, nspin)
-       dvxc_sr(:,:,:),           &! nrxx, nspin, nspin)
-       dvxc_ss(:,:,:),           &! nrxx, nspin, nspin)
-       dvxc_s(:,:,:)              ! nrxx, nspin, nspin)
+       grho(:,:,:),    &! gradient of the unperturbed density  (3,nrxx,nspin)
+       gmag(:,:,:),    &! 3, nrxx, nspin)
+       vsgga(:),       &! nrxx)
+       segni(:),       &! nrxx)
+       dvxc_rr(:,:,:), &! derivatives of the E_xc functional w.r.t. r and s  
+       dvxc_sr(:,:,:), &! r=rho and s=|grad(rho)|
+       dvxc_ss(:,:,:), &! dimensions: (nrxx, nspin, nspin)
+       dvxc_s(:,:,:)
   !
   ! in the noncollinear case gmag contains the gradient of the magnetization
   ! grho the gradient of rho+ and of rho-, the eigenvalues of the spin density
   ! vsgga= 0.5* (V_up-V_down) to be used in the calculation of the change
   ! of the exchange and correlation magnetic field.
-  ! gradient of the unpert. density
-  !
-  ! derivatives of the E_xc functiona
-  ! r=rho and s=|grad(rho)|
   !
 END MODULE gc_lr
 !
@@ -150,10 +165,25 @@ MODULE lrus
   ! for gamma_only     
   COMPLEX (DP), ALLOCATABLE :: bbk(:,:,:)    ! nkb, nkb, nks)
   ! for k points
-  COMPLEX (DP), ALLOCATABLE :: bbnc(:,:,:,:) ! nkb, nkb, nspin_mag, nks)
+  COMPLEX (DP), ALLOCATABLE :: bbnc(:,:,:) ! nkb*npol, nkb*npol, nks)
   ! for the noncollinear case
   ! bbg = < beta^N_i | beta^P_j > 
   ! bbg/bbk/bbnc are the scalar products of beta functions 
   ! localized on atoms N and P.
   !
 END MODULE lrus
+!
+MODULE units_lr
+  !
+  USE kinds,  ONLY : DP
+  !
+  ! ... These are the units used in the linear response calculations
+  !
+  SAVE
+  !
+  INTEGER :: iuwfc,   & ! unit for wavefunctions
+             lrwfc,   & ! the length of wavefunction record
+             iuatwfc, & ! unit for atomic wavefunctions
+             iuatswfc   ! unit for atomic wavefunctions * S
+  !
+END MODULE units_lr

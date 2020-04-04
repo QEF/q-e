@@ -22,7 +22,7 @@ fi
 cat $input | awk -v coor_only=$coor_only '
 BEGIN {
   f=1.0;
-  bohr=0.529177;
+  bohr=0.52917720859;
 }
 /PRIMVEC/ { 
   if ( $2 != "bohr" ) {

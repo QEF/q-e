@@ -16,7 +16,7 @@ MODULE ph_restart
   USE iotk_module
   !
   USE kinds,     ONLY : DP
-  USE io_files,  ONLY : prefix, xmlpun, qexml_version, qexml_version_init
+  USE io_files,  ONLY : prefix
   USE control_ph, ONLY : tmp_dir_ph
   USE io_global, ONLY : ionode, ionode_id
   USE mp_images, ONLY : intra_image_comm
@@ -37,8 +37,10 @@ MODULE ph_restart
   ! variables to describe qexml current version
   ! and back compatibility
   !
+  CHARACTER(len=256) :: qexml_version = ' '       ! the format of the current qexml datafile 
   LOGICAL :: qexml_version_before_1_4_0 = .FALSE.
-
+  LOGICAL :: qexml_version_init = .FALSE.  ! whether the fmt has been read or not
+  !
   CHARACTER(iotk_attlenx)  :: attr
   !
   !
@@ -516,7 +518,6 @@ MODULE ph_restart
       ! ... this routine reads the format version of the current xml datafile
       !
       USE parser, ONLY : version_compare
-      USE xml_io_base, ONLY : attr
 
       IMPLICIT NONE
       !
@@ -1021,6 +1022,7 @@ MODULE ph_restart
   IMPLICIT NONE
   !
   CHARACTER(LEN=256)  :: dirname, filename, filename1
+  CHARACTER(LEN=256), EXTERNAL  :: trimcheck
   INTEGER :: iunout, iq, irr, ierr
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   LOGICAL :: exst
@@ -1035,7 +1037,7 @@ MODULE ph_restart
   CALL errore( 'check_directory_phsave', &
                    'no free units to write or read ', ierr )
 
-  dirname = TRIM( tmp_dir_ph ) // TRIM( prefix ) // '.phsave'
+  dirname = trimcheck ( TRIM( tmp_dir_ph ) // TRIM( prefix ) // '.phsave' )
   ierr=0
   DO iq=1, nqs
      IF ( ionode ) THEN
@@ -1044,11 +1046,11 @@ MODULE ph_restart
 !    NB: the representation 0 is the initial dynamical matrix calculated by 
 !        dyn0. If it finds the file read the relevant information
 !
-           filename= TRIM( dirname ) // '/dynmat.' // &
+           filename= TRIM( dirname ) // 'dynmat.' // &
                      TRIM(int_to_char(iq)) // '.' 
 
            DO irr=0,irr_iq(iq)
-              IF (comp_irr_iq(irr,iq).OR..NOT.low_directory_check) THEN
+              IF (comp_irr_iq(irr,iq).AND..NOT.low_directory_check) THEN
                  filename1=TRIM(filename) // TRIM(int_to_char(irr)) // '.xml'
                  INQUIRE(FILE=TRIM(filename1), EXIST=exst)
                  IF (.NOT.exst) CYCLE
@@ -1065,7 +1067,7 @@ MODULE ph_restart
 !   Check for the electron phonon files
 !
            IF (elph) THEN
-              filename= TRIM( dirname ) // '/elph.' // &
+              filename= TRIM( dirname ) // 'elph.' // &
                         TRIM(int_to_char(iq)) // '.' 
 
               DO irr=1,irr_iq(iq)
@@ -1120,18 +1122,19 @@ MODULE ph_restart
   !
   USE kinds, ONLY : DP
   USE disp, ONLY : nqs, x_q, lgamma_iq
-  USE io_files, ONLY : tmp_dir
+  USE io_files, ONLY : tmp_dir, postfix, xmlpun_schema
   USE control_ph, ONLY : tmp_dir_ph, lqdir, current_iq, newgrid
   USE grid_irr_iq, ONLY : done_bands
   ! 
   IMPLICIT NONE
   !
   CHARACTER(LEN=256)  :: dirname, filename, dir_phq, tmp_dir_save
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  CHARACTER(LEN=6  ), EXTERNAL :: int_to_char
   INTEGER :: iq
-  CHARACTER(LEN=6), EXTERNAL :: int_to_char
   LOGICAL :: lgamma, exst, exst_restart, exst_recover
   !
-  ! We check if the file data-file.xml is present 
+  ! We check if the xml data file (data-file-schema.xml) is present 
   ! in the directory where it should be. If lqdir=.false. only the bands 
   ! of current_iq might be present, otherwise we have to check all q points.
   ! If the file is present and there is a restart file, the bands are not
@@ -1139,22 +1142,21 @@ MODULE ph_restart
   ! For the gamma point done_bands might be false only with newgrid. 
   !
   done_bands=.FALSE.
-  dirname = TRIM( tmp_dir_ph ) // TRIM( prefix ) // '.save'
+  dirname = TRIM( tmp_dir_ph ) // TRIM( prefix ) // postfix
   tmp_dir_save=tmp_dir
 
   DO iq=1, nqs
      IF ( iq == current_iq .OR. lqdir) THEN
         IF (lqdir .AND. .NOT. lgamma_iq(iq)) THEN
-           dir_phq= TRIM (tmp_dir_ph) // TRIM(prefix) //  &
-                       & '.q_' // TRIM(int_to_char(iq)) // '/'
-           dirname= TRIM (dir_phq) &
-                       &  //TRIM(prefix)//'.save'
+           dir_phq= trimcheck ( TRIM (tmp_dir_ph) // TRIM(prefix) //  &
+                               & '.q_' // int_to_char(iq) )
+           dirname= TRIM (dir_phq) // TRIM(prefix) // postfix
            tmp_dir=dir_phq
         ELSE
            tmp_dir=tmp_dir_ph
         ENDIF
         !
-        filename=TRIM(dirname) // '/data-file.xml'
+        filename=TRIM(dirname) // xmlpun_schema
         !
         IF (ionode) inquire (file =TRIM(filename), exist = exst)
         !
@@ -1267,7 +1269,7 @@ MODULE ph_restart
 !    and opens the appropriate file for reading or writing
 !
       USE io_global,    ONLY : ionode, ionode_id
-      USE xml_io_base,  ONLY : create_directory
+      USE io_files,     ONLY : create_directory, xmlpun_schema
       USE freq_ph,      ONLY : fpol
       USE mp_images,    ONLY : intra_image_comm
       USE mp,           ONLY : mp_bcast
@@ -1277,8 +1279,9 @@ MODULE ph_restart
       INTEGER, INTENT(OUT) :: ierr
       CHARACTER(LEN=*), INTENT(IN) :: what
 
-      CHARACTER(LEN=256)  :: dirname, filename
-      CHARACTER(LEN=6) :: int_to_char
+      CHARACTER(LEN=256) :: dirname, filename
+      CHARACTER(LEN=256), EXTERNAL :: trimcheck
+      CHARACTER(LEN=6  ), EXTERNAL :: int_to_char
       LOGICAL :: exst
 
       ierr=0
@@ -1295,13 +1298,11 @@ MODULE ph_restart
       CALL errore( 'ph_restart_set_filename', &
                    'no free units to write or read ', ierr )
       !
-      dirname = TRIM( tmp_dir_ph ) // TRIM( prefix ) // '.phsave'
+      dirname = trimcheck ( TRIM( tmp_dir_ph ) // TRIM( prefix ) // '.phsave' )
       !
       ! ... create the main restart directory
       !
-      IF (ionode) inquire (file =TRIM(dirname)//'/data-file.xml', &
-                           exist = exst)
-      !
+      IF (ionode) inquire (file = TRIM(dirname) // xmlpun_schema, exist = exst)
       CALL mp_bcast( exst, ionode_id, intra_image_comm )
       !
       IF (.NOT. exst) CALL create_directory( dirname )
@@ -1314,7 +1315,7 @@ MODULE ph_restart
          !
          ierr=0
          IF (what=='init') THEN
-            filename = TRIM( dirname ) // '/control_ph.xml'
+            filename = TRIM( dirname ) // 'control_ph.xml'
             IF (iflag==1) THEN
                CALL iotk_open_write( iunpun, FILE = TRIM(filename), &
                                              BINARY = .FALSE., IERR = ierr )
@@ -1325,7 +1326,7 @@ MODULE ph_restart
                                             BINARY = .FALSE., IERR = ierr )
             ENDIF
          ELSEIF (what=='status_ph') THEN
-            filename=TRIM( dirname ) //'/status_run.xml'
+            filename=TRIM( dirname ) //'status_run.xml'
             IF (iflag==1) THEN
                CALL iotk_open_write( iunpun, FILE = TRIM( filename ),  &
                                             BINARY = .FALSE., IERR = ierr )
@@ -1336,7 +1337,7 @@ MODULE ph_restart
                                             BINARY = .FALSE., IERR = ierr )
             ENDIF
          ELSEIF (what=='data_u') THEN
-            filename= TRIM( dirname ) // '/patterns.' // &
+            filename= TRIM( dirname ) // 'patterns.' // &
                       TRIM(int_to_char(current_iq)) // '.xml'
             IF (iflag==1) THEN
                CALL iotk_open_write( iunpun, FILE = TRIM( filename ), &
@@ -1348,7 +1349,7 @@ MODULE ph_restart
                                           BINARY = .FALSE., IERR = ierr )
             ENDIF
          ELSEIF (what=='data_dyn') THEN
-            filename= TRIM( dirname ) // '/dynmat.' // &
+            filename= TRIM( dirname ) // 'dynmat.' // &
                       TRIM(int_to_char(current_iq)) // '.' //  &
                       TRIM(int_to_char(irr)) // '.xml'
             IF (iflag==1) THEN
@@ -1361,7 +1362,7 @@ MODULE ph_restart
                                           BINARY = .FALSE., IERR = ierr )
             ENDIF
          ELSEIF (what=='tensors') THEN
-            filename= TRIM( dirname ) // '/tensors.xml'
+            filename= TRIM( dirname ) // 'tensors.xml'
             IF (iflag==1) THEN
                CALL iotk_open_write( iunpun, FILE = TRIM( filename ), &
                                           BINARY = .FALSE., IERR = ierr )
@@ -1373,7 +1374,7 @@ MODULE ph_restart
             ENDIF
          ELSEIF (what=='polarization') THEN
             IF (.NOT. fpol) RETURN
-            filename= TRIM( dirname ) // '/polarization.'// &
+            filename= TRIM( dirname ) // 'polarization.'// &
                       TRIM(int_to_char(irr)) // '.xml'
             IF (iflag==1) THEN
                CALL iotk_open_write( iunpun, FILE = TRIM( filename ), &
@@ -1385,7 +1386,7 @@ MODULE ph_restart
                                           BINARY = .FALSE., IERR = ierr )
             ENDIF
          ELSEIF (what=='el_phon') THEN
-            filename= TRIM( dirname ) // '/elph.' // &
+            filename= TRIM( dirname ) // 'elph.' // &
                       TRIM(int_to_char(current_iq)) // '.' //  &
                       TRIM(int_to_char(irr)) // '.xml'
             IF (iflag==1) THEN

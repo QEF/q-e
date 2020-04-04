@@ -19,6 +19,7 @@ subroutine setlocq (xq, mesh, msh, rab, r, vloc_at, zp, tpiba2, ngm, &
   !
   USE kinds, only  : DP
   USE constants, ONLY : e2, fpi, pi
+  USE Coul_cut_2D, ONLY: do_cutoff_2D
   !
   implicit none
   !
@@ -59,9 +60,18 @@ subroutine setlocq (xq, mesh, msh, rab, r, vloc_at, zp, tpiba2, ngm, &
   !
   ! first the G=0 term
   !
-  do ir = 1, msh
-     aux (ir) = r (ir) * (r (ir) * vloc_at (ir) + zp * e2)
-  enddo
+  ! 
+  IF (do_cutoff_2D) THEN
+     do ir = 1, msh
+        aux (ir) = r (ir) * (r (ir) * vloc_at (ir) + zp * e2    &
+                   * qe_erf (r (ir) ) )
+     enddo
+  ELSE
+      do ir = 1, msh
+         aux (ir) = r (ir) * (r (ir) * vloc_at (ir) + zp * e2)
+      enddo
+  ENDIF
+  ! 
   call simpson (msh, aux, rab, vloc0)
   !
   !   here the G<>0 terms, we first compute the part of the integrand func
@@ -89,7 +99,8 @@ subroutine setlocq (xq, mesh, msh, rab, r, vloc_at, zp, tpiba2, ngm, &
         !
         !     here we add the analytic fourier transform of the erf function
         !
-        vlcp = vlcp - fac * exp ( - g2a * tpiba2 * 0.25d0) / g2a
+        !  if 2D cutoff calculation, do not re-add the FT of erf function
+        IF (.not. do_cutoff_2D) vlcp = vlcp - fac * exp ( - g2a * tpiba2 * 0.25d0) / g2a
         vloc (ig) = vlcp
      endif
   enddo

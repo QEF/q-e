@@ -16,7 +16,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE ener, ONLY: ewld, ehart, etxc, vtxc, etot, etxcc, demet, ef
    USE fft_base,  ONLY: dfftp
    USE fft_interfaces, ONLY : fwfft
-   USE gvect, ONLY: ngm, gstart, g, gg, gcutm, nl, nlm, igtongl
+   USE gvect, ONLY: ngm, gstart, g, gg, gcutm, igtongl
    USE klist , ONLY: nks, nelec, xk, wk, degauss, ngauss, igk_k, ngk
    USE lsda_mod, ONLY: lsda, nspin
    USE scf, ONLY: rho, rho_core, rhog_core, v
@@ -28,8 +28,8 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE uspp, ONLY: nkb, vkb, dvan
    USE uspp_param, ONLY: nh
    USE io_global, ONLY: stdout, ionode, ionode_id
-   USE io_files, ONLY: nd_nmbr, nwordwfc, iunwfc, prefix, tmp_dir, seqopn
-   USE wavefunctions_module, ONLY : evc
+   USE io_files, ONLY: nwordwfc, iunwfc, prefix, tmp_dir, seqopn
+   USE wavefunctions, ONLY : evc
    USE funct, ONLY : dft_is_meta
    USE mp_pools, ONLY: inter_pool_comm, intra_pool_comm, nproc_pool, me_pool
    USE mp_bands, ONLY: intra_bgrp_comm
@@ -347,12 +347,12 @@ CONTAINS
          !      bring rho to G-space
          !
          aux(:) = cmplx( rho%of_r(:,ispin), 0.d0,kind=DP)
-         CALL fwfft ('Dense', aux, dfftp)
+         CALL fwfft ('Rho', aux, dfftp)
          !
          DO nt=1,ntyp
             DO ig = 1, ngm
                elocg = vloc(igtongl(ig),nt) * &
-                       dble ( strf(ig,nt) * conjg(aux(nl(ig))) )
+                       dble ( strf(ig,nt) * conjg(aux(dfftp%nl(ig))) )
                eloc = eloc + elocg
                IF( gamma_only .and. ig>=gstart) eloc = eloc + elocg
             ENDDO

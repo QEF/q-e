@@ -13,17 +13,20 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE check_stop,       ONLY : check_stop_init
-  USE mp_global,        ONLY : mp_bcast, mp_global_end, intra_image_comm
-  USE control_flags,    ONLY : gamma_only, conv_elec, istep, ethr, lscf, lmd
-  USE cellmd,           ONLY : lmovecell
+  USE mp,               ONLY : mp_bcast
+  USE mp_images,        ONLY : intra_image_comm
+  USE control_flags,    ONLY : gamma_only, conv_elec, istep, ethr, lscf, lmd, &
+       treinit_gvecs
   USE force_mod,        ONLY : lforce, lstres
   USE ions_base,        ONLY : tau
   USE cell_base,        ONLY : alat, at, omega, bg
-  USE cellmd,           ONLY : omega_old, at_old, calc
+  USE cellmd,           ONLY : omega_old, at_old, calc, lmovecell
   USE force_mod,        ONLY : force
   USE ener,             ONLY : etot
   USE f90sockets,       ONLY : readbuffer, writebuffer
   USE extrapolation,    ONLY : update_file, update_pot
+  USE io_files,         ONLY : iunupdate, nd_nmbr, prefix, restart_dir, &
+                               wfc_dir, delete_if_present, seqopn
   !
   IMPLICIT NONE
   INTEGER, INTENT(OUT) :: exit_status
@@ -33,10 +36,11 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   !
   ! Local variables
   INTEGER, PARAMETER :: MSGLEN=12
-  REAL*8, PARAMETER :: gvec_omega_tol= 1.0D-1
-  LOGICAL :: isinit=.false., hasdata=.false., firststep=.true., exst, lgreset
+  REAL*8, PARAMETER :: gvec_omega_tol=1.0D-1
+  LOGICAL :: isinit=.false., hasdata=.false., exst, firststep
   CHARACTER*12 :: header
   CHARACTER*1024 :: parbuffer
+  CHARACTER(LEN=256) :: dirname
   INTEGER :: socket, nat, rid, ccmd, i, info, rid_old=-1
   REAL*8 :: sigma(3,3), omega_reset, at_reset(3,3), dist_reset, ang_reset
   REAL *8 :: cellh(3,3), cellih(3,3), vir(3,3), pot, mtxbuffer(9)
@@ -49,6 +53,8 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   lstres    = .true.
   lmd       = .true.
   lmovecell = .true.
+  firststep = .true.
+  omega_reset = 0.d0
   !
   exit_status = 0
   IF ( ionode ) WRITE( unit = stdout, FMT = 9010 ) ntypx, npk, lmaxx
@@ -71,18 +77,9 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   CALL plugin_initialization()
   !
   CALL check_stop_init()
-  !
-  ! ... We do a fake run so that the G vectors are initialized
-  ! ... based on the pw input. This is needed to guarantee smooth energy
-  ! ... upon PW restart in NPT runs. Probably can be done in a smarter way
-  ! ... but we have to figure out how...
-  !
-  ! call setup()
-  ! call init_run()
-  CALL initialize_g_vectors
-  CALL electrons()
-  CALL update_file()
-  !
+  CALL setup()
+  ! ... Initializations
+  CALL init_run()
   IF (ionode) CALL create_socket(srvaddress)
   !
   driver_loop: DO
@@ -123,7 +120,6 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
         !
         isinit = .false.
         hasdata=.false.
-        firststep = .false.
         !
      CASE DEFAULT
         exit_status = 130
@@ -177,14 +173,11 @@ CONTAINS
     CALL mp_bcast( rid, ionode_id, intra_image_comm )
     !
     IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Receiving replica", rid, rid_old
-    IF ( rid .NE. rid_old .AND. .NOT. firststep ) THEN
+    IF ( rid .NE. rid_old ) THEN
        !
        ! ... If a different replica reset the history
-       ! ... the G-vectors will be reinitialized only if needed!
-       ! ... see lgreset below
        !
-       IF ( ionode ) write(*,*) " @ DRIVER MODE: Resetting scf history "
-       CALL close_files(.TRUE.)
+       CALL reset_history_for_extrapolation()
     END IF
     !
     rid_old = rid
@@ -204,11 +197,8 @@ CONTAINS
     !
     ! ... Receives the positions & the cell data
     !
-    !
-    IF ( .NOT. firststep) THEN
-       at_old = at
-       omega_old = omega
-    END IF
+    at_old = at
+    omega_old = omega
     !
     ! ... Read the atomic position from ipi and share to all processes
     !
@@ -221,27 +211,37 @@ CONTAINS
     CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
     CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
     !
-    ! ... Check if the cell is changed too much and in that case reset the
-    ! ... g-vectors
-    !
-    lgreset = ( ABS ( omega_reset - omega ) / omega .GT. gvec_omega_tol )
-    !
-    ! ... Initialize the G-Vectors when needed
-    !
-    IF ( lgreset ) THEN
-       !
-       ! ... Reinitialize the G-Vectors if the cell is changed
-       !
+    ! ... If the cell is changes too much, reinitialize G-Vectors
+    ! ... also extrapolation history must be reset
+    ! ... If firststep, it will also be executed (omega_reset equals 0),
+    ! ... to make sure we initialize G-vectors using positions from I-PI
+    IF ( ((ABS( omega_reset - omega ) / omega) .GT. gvec_omega_tol) .AND. (gvec_omega_tol .GE. 0.d0) ) THEN
+       IF (ionode) THEN
+          IF (firststep) THEN
+             WRITE(*,*) " @ DRIVER MODE: initialize G-vectors "
+          ELSE
+             WRITE(*,*) " @ DRIVER MODE: reinitialize G-vectors "
+          END IF
+       END IF
        CALL initialize_g_vectors()
+       CALL reset_history_for_extrapolation()
        !
     ELSE
        !
        ! ... Update only atomic position and potential from the history
        ! ... if the cell did not change too much
        !
-       CALL update_pot()
-       CALL hinit1()
+       IF (.NOT. firststep) THEN
+          IF ( treinit_gvecs ) THEN
+             IF ( lmovecell ) CALL scale_h()
+             CALL reset_gvectors ( )
+          ELSE
+             CALL update_pot()
+             CALL hinit1()
+          END IF
+       END IF
     END IF
+    firststep = .false.
     !
     ! ... Compute everything
     !
@@ -327,21 +327,7 @@ CONTAINS
   !
   SUBROUTINE initialize_g_vectors()
     !
-    IF (ionode) THEN
-       IF (firststep) WRITE(*,*) " @ DRIVER MODE: initialize G-vectors "
-       IF (lgreset .AND. .NOT. firststep ) WRITE(*,*) &
-            " @ DRIVER MODE: reinitialize G-vectors "
-    END IF
-    !
-    ! ... Keep trace of the last time the gvectors have been initialized
-    !
-    IF ( firststep ) CALL setup()
-    !
-    ! ... Reset the history
-    !
     CALL clean_pw( .FALSE. )
-    IF ( .NOT. firststep) CALL close_files(.TRUE.)
-    !
     CALL init_run()
     !
     CALL mp_bcast( at,        ionode_id, intra_image_comm )
@@ -355,6 +341,39 @@ CONTAINS
     !
   END SUBROUTINE initialize_g_vectors
   !
+  SUBROUTINE reset_history_for_extrapolation()
+    !
+    ! ... Resets history of wavefunction and rho as if the
+    ! ... previous step was the first one in the calculation.
+    ! ... To this end, files with rho and wfc from previous steps
+    ! ... must be deleted, and iunupdate unit wiped. The latter
+    ! ... is achieved by deleting the file and recreating it using
+    ! ... update_file() routine.
+    !
+    IMPLICIT NONE
+    LOGICAL :: exst
+    !
+    ! ... Delete history files, names correspond to the ones
+    ! ... in the update_pot() routine.
+    !
+    CALL delete_if_present(TRIM( wfc_dir ) // TRIM( prefix ) // '.oldwfc' // nd_nmbr)
+    CALL delete_if_present(TRIM( wfc_dir ) // TRIM( prefix ) // '.old2wfc' // nd_nmbr)
+    IF ( ionode ) THEN
+       dirname = restart_dir ( )
+       CALL delete_if_present(TRIM( dirname ) // 'charge-density.old.dat')
+       CALL delete_if_present(TRIM( dirname ) // 'charge-density.old2.dat')
+       !
+       ! ... The easiest way to wipe the iunupdate unit, is to delete it
+       ! ... and run update_file(), which will recreate the file
+       !
+       CALL seqopn( iunupdate, 'update', 'FORMATTED', exst )
+       CLOSE(UNIT=iunupdate, STATUS='DELETE')
+    END IF
+    !
+    CALL update_file()
+    !
+  END SUBROUTINE
+!
 END SUBROUTINE run_driver
 
 FUNCTION get_server_address ( command_line ) RESULT ( srvaddress )

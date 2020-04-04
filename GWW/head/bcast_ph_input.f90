@@ -20,7 +20,6 @@ subroutine bcast_ph_input ( )
 
   use mp, only: mp_bcast
   use mp_world, only: world_comm
-  USE mp_global, only : intra_image_comm
   USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, nmix_ph, &
                          niter_ph, lnoloc, alpha_mix, tr2_ph, recover, &
                          ldisp,  reduce_io, zue, zeu, epsil, trans
@@ -32,7 +31,7 @@ subroutine bcast_ph_input ( )
   use io_files, ONLY : tmp_dir, prefix
   USE control_flags, only: iverbosity, modenum
   USE ramanm, ONLY: lraman, elop, dek, eth_rps, eth_ns
-  USE input_parameters, ONLY: max_seconds
+  USE check_stop, ONLY: max_seconds
   USE ions_base,     ONLY : amass
   USE io_global, ONLY : ionode_id
   USE run_info, ONLY : title

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,48 +12,61 @@ SUBROUTINE openfilq()
   ! ... This subroutine opens all the files necessary for the phononq
   ! ... calculation.
   !
-  USE kinds,           ONLY : DP
-  USE control_flags,   ONLY : io_level, modenum
-  USE units_ph,        ONLY : iuwfc, iudwf, iubar, iucom, iudvkb3, &
+  USE kinds,            ONLY : DP
+  USE control_flags,    ONLY : io_level, modenum
+  USE units_ph,         ONLY : iudwf, iubar, iucom, iudvkb3, &
                               iudrhous, iuebar, iudrho, iudyn, iudvscf, &
-                              lrwfc, lrdwf, lrbar, lrcom, lrdvkb3, &
-                              lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw
-  USE io_files,        ONLY : tmp_dir, diropn, seqopn
-  USE control_ph,      ONLY : epsil, zue, ext_recover, trans, &
+                              lrdwf, lrbar, lrcom, lrdvkb3, &
+                              lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw, &
+                              iundnsscf
+  USE units_lr,         ONLY : iuwfc, lrwfc
+  USE io_files,         ONLY : tmp_dir, diropn, seqopn, nwordwfcU
+  USE control_ph,       ONLY : epsil, zue, ext_recover, trans, &
                               tmp_dir_phq, start_irr, last_irr, xmldyn, &
-                              all_done
+                              all_done, newgrid
   USE save_ph,         ONLY : tmp_dir_save
   USE ions_base,       ONLY : nat
   USE cell_base,       ONLY : at
   USE output,          ONLY : fildyn, fildvscf
   USE wvfct,           ONLY : nbnd, npwx
   USE fft_base,        ONLY : dfftp, dffts
-  USE lsda_mod,        ONLY : nspin
+  USE lsda_mod,        ONLY : nspin, lsda
   USE uspp,            ONLY : nkb, okvan
   USE uspp_param,      ONLY : nhm
   USE io_files,        ONLY : prefix
-  USE noncollin_module,ONLY : npol, nspin_mag
+  USE noncollin_module,ONLY : npol, nspin_mag, noncolin
   USE paw_variables,   ONLY : okpaw
-  USE control_flags,   ONLY : twfcollect
   USE mp_bands,        ONLY : me_bgrp
+  USE spin_orb,        ONLY : domag
   USE io_global,       ONLY : ionode,stdout
-  USE buffers,         ONLY : open_buffer
+  USE buffers,         ONLY : open_buffer, close_buffer
   USE ramanm,          ONLY : lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
   USE acfdtest,        ONLY : acfdt_is_active, acfdt_num_der
-  USE input_parameters,ONLY : nk1, nk2, nk3
   USE el_phon,         ONLY : elph, elph_mat, iunwfcwann, lrwfcr
   USE dfile_star,      ONLY : dvscf_star
   USE dfile_autoname,  ONLY : dfile_name
-
   USE qpoint,          ONLY : xq
   USE control_lr,      ONLY : lgamma
+  USE units_lr,        ONLY : iuatwfc, iuatswfc
+  USE modes,           ONLY : nmodes
+  USE ldaU,            ONLY : lda_plus_u, Hubbard_lmax, nwfcU
+  USE ldaU_ph,         ONLY : dnsscf_all_modes
+  USE mp_pools,        ONLY : me_pool, root_pool
+  USE dvscf_interpolate, ONLY : ldvscf_interpolate, nrbase, nrlocal, &
+                                wpot_dir, iunwpot, lrwpot
   !
   IMPLICIT NONE
   !
   INTEGER :: ios
   ! integer variable for I/O control
-  CHARACTER (len=256) :: filint, fildvscf_rot
+  CHARACTER (len=256) :: filint, fildvscf_rot, filwpot
   ! the name of the file
+  INTEGER :: ir, irlocal
+  !! Real space unit cell index
+  INTEGER :: unf_lrwpot, direct_io_factor
+  !! record length for opening wpot file
+  REAL(DP) :: dummy
+  !! dummy variable for calculating direct_io_factor
   LOGICAL :: exst, exst_mem
   ! logical variable to check file exists
   ! logical variable to check file exists in memory
@@ -78,14 +91,20 @@ SUBROUTINE openfilq()
      ENDIF
   ELSE  
      ! this is the standard treatment
-     IF (lgamma.AND.modenum==0.AND.nk1.eq.0.AND.nk2.eq.0.AND.nk3.eq.0) tmp_dir=tmp_dir_save
+     IF (lgamma.AND.modenum==0.AND..NOT.newgrid ) tmp_dir=tmp_dir_save
+     ! FIXME: why this case?
+     IF ( noncolin.AND.domag ) tmp_dir=tmp_dir_phq
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
   iuwfc = 20
   lrwfc = nbnd * npwx * npol
   CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst, tmp_dir)
   IF (.NOT.exst.AND..NOT.exst_mem.and..not.all_done) THEN
-     CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)
+     CALL close_buffer(iuwfc, 'delete') 
+     !FIXME Dirty fix for obscure case
+     tmp_dir = tmp_dir_phq
+     CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst, tmp_dir)
+     IF (.NOT.exst.AND..NOT.exst_mem) CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)
   END IF
   IF (elph_mat) then
      iunwfcwann=733
@@ -224,7 +243,103 @@ SUBROUTINE openfilq()
      lrba2 = 2 * nbnd * npwx * npol
      CALL diropn(iuba2, 'ba2', lrba2, exst)
   ENDIF
-
+  !
+  ! Files needed for DFPT+U calculation
+  !
+  IF (lda_plus_u) THEN   
+     !
+     nwordwfcU = npwx * nwfcU * npol
+     !
+     ! The unit iuatwfc contains atomic wfcs at k and k+q
+     !    
+     iuatwfc = 34
+     CALL open_buffer (iuatwfc, 'atwfc', nwordwfcU, io_level, exst_mem, exst, tmp_dir)
+     !
+     ! The unit iuatswfc contains atomic wfcs * S at k and k+q
+     !    
+     iuatswfc = 35
+     CALL open_buffer (iuatswfc, 'satwfc', nwordwfcU, io_level, exst_mem, exst, tmp_dir)
+     !
+     ! Check whether the necessary files for the elph calculation exist 
+     ! and are read correctly
+     !
+     IF (trans.OR.elph) THEN
+        !
+        iundnsscf = 36
+        !
+        IF (ionode) THEN
+           !
+           CALL seqopn (iundnsscf, 'dnsscf', 'formatted', exst)
+           !
+           IF (.NOT.exst .AND. elph) &
+             CALL errore ('openfilq', 'dnsscf file not found, necessary for el-ph calculation, stopping ', 1)
+           ! 
+           IF (exst) THEN
+              !
+              ALLOCATE (dnsscf_all_modes (2*Hubbard_lmax+1, 2*Hubbard_lmax+1, nspin, nat, nmodes))
+              READ(iundnsscf,*,iostat=ios) dnsscf_all_modes
+              REWIND(iundnsscf)
+              !
+              IF (elph .AND. ios.NE.0) &
+                 CALL errore ('openfilq', 'dnsscf file corrupted, necessary for el-ph calculation, stopping ', 1)
+              ! 
+              IF (elph .AND. ios==0) &
+                 WRITE( stdout,*) 'THE DNSSCF MATRIX WAS CORRECTLY READ FROM FILE, NECESSARY FOR ELPH+U'
+              !
+              DEALLOCATE(dnsscf_all_modes)
+              !
+           ENDIF
+           !
+        ENDIF
+        !
+     ENDIF
+     !
+  ENDIF
+  !
+  ! Files needed for dvscf interpolation
+  !
+  ! Here, root of each pool read different files. Subroutine diropn is not used
+  ! because diropn adds processor id at the end of filename.
+  !
+  IF (ldvscf_interpolate) THEN
+    !
+    lrwpot = 2 * dfftp%nr1x * dfftp%nr2x * dfftp%nr3x * nspin_mag
+    ! Need to multiply direct_io_factor: See diropn in Modules/io_files.f90
+    INQUIRE (IOLENGTH=direct_io_factor) dummy
+    unf_lrwpot = direct_io_factor * INT(lrwpot, KIND=KIND(unf_lrwpot))
+    !
+    ! w_pot files are read by the root of each pool
+    !
+    IF (me_pool == root_pool) THEN
+      !
+      DO irlocal = 1, nrlocal
+        !
+        ir = irlocal + nrbase
+        !
+#if defined(__MPI)
+        WRITE(filwpot, '(a,I0,a)') TRIM(wpot_dir) // TRIM(prefix) // '.' &
+                                   // 'wpot.irc', ir, '.dat1'
+#else
+        WRITE(filwpot, '(a,I0,a)') TRIM(wpot_dir) // TRIM(prefix) // '.' &
+                                   // 'wpot.irc', ir, '.dat'
+#endif
+        !
+        ! FIXME: better way to set units?
+        !
+        iunwpot(irlocal) = 1000 + irlocal
+        !
+        OPEN(iunwpot(irlocal), FILE=TRIM(filwpot), RECL=unf_lrwpot, &
+          FORM='unformatted', STATUS='unknown', ACCESS='direct', IOSTAT=ios)
+        !
+        IF (ios /= 0) CALL errore('openfilq', &
+          'problem opening w_pot file ' // TRIM(filwpot), 1)
+        !
+      ENDDO ! irlocal
+      !
+    ENDIF ! root_pool
+    !
+  ENDIF ! ldvscf_interpolate
+  !
   RETURN
   !
 END SUBROUTINE openfilq

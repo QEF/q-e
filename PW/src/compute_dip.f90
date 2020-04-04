@@ -16,27 +16,34 @@
 !   and electronic (compute_el_dip) contributions.
 !
 ! TB
-! included monopole in the calculation of the dipole
+! included gate in the calculation of the dipole
 ! search for 'TB'
 !
-SUBROUTINE compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
-  !
-  !
+!------------------------------------------------------------------------------
+SUBROUTINE compute_ion_dip( emaxpos, eopreg, edir, ion_dipole )
   !---------------------------------------------------------------------------
+  !! Calculation of the dipole - ionic contribution.
   !
   USE io_global,  ONLY : stdout, ionode
   USE ions_base,  ONLY : nat, ityp, tau, zv
-  USE constants, ONLY : fpi
+  USE constants,  ONLY : fpi
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg, omega, alat
   USE klist,      ONLY : nelec !TB
-  USE extfield,   ONLY : monopole, dipfield, zmon, saw
+  USE extfield,   ONLY : gate, dipfield, zgate, saw
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN)  :: emaxpos, eopreg
+  REAL(DP), INTENT(IN) :: emaxpos
+  !! position of the maximum of the field (0<emaxpos<1)
+  REAL(DP), INTENT(IN) :: eopreg
+  !! amplitude of the inverse region (0<eopreg<1)
   INTEGER, INTENT(IN)  :: edir
+  !! direction of the field
   REAL(DP), INTENT(OUT) ::  ion_dipole
+  !! ionic dipole
+  !
+  ! ... local variables
   !
   REAL(DP) :: bmod
   INTEGER  :: na
@@ -72,12 +79,12 @@ SUBROUTINE compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
   END DO
 
   !
-  ! if the monopole is used to represent the background charge we need to include
-  ! the charged plane in the calculation of the dipole
+  ! if the gate is used to represent the background charge we need to include
+  ! the charged plate in the calculation of the dipole
   !
-  IF (monopole.AND.dipfield) THEN
+  IF (gate.AND.dipfield) THEN
      ionic_charge = SUM( zv(ityp(1:nat)) )
-     ion_dipole = ion_dipole + (nelec-ionic_charge) * saw(emaxpos,eopreg, zmon ) &
+     ion_dipole = ion_dipole + (nelec-ionic_charge) * saw(emaxpos,eopreg, zgate ) &
                                                 * (alat/bmod) * (fpi/omega)
   ENDIF
   
@@ -85,10 +92,10 @@ SUBROUTINE compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
   
 END SUBROUTINE compute_ion_dip
 !
-SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
-  !
-  !
+!------------------------------------------------------------------------------
+SUBROUTINE compute_el_dip( emaxpos, eopreg, edir, charge, e_dipole )
   !---------------------------------------------------------------------------
+  !! Calculation of the dipole - electronic contribution.
   !
   USE io_global,  ONLY : stdout, ionode
   USE lsda_mod,   ONLY : nspin
@@ -96,22 +103,31 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg, omega, alat
   USE fft_base,   ONLY : dfftp
+  USE fft_types,  ONLY : fft_index_to_3d
   USE extfield,   ONLY : saw
   USE mp_bands,   ONLY : me_bgrp, intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN)  :: emaxpos, eopreg
-  REAL(DP), INTENT(IN), DIMENSION(dfftp%nnr,nspin) :: charge
+  REAL(DP), INTENT(IN) :: emaxpos
+  !! position of the maximum of the field (0<emaxpos<1)
+  REAL(DP), INTENT(IN) :: eopreg
+  !! amplitude of the inverse region (0<eopreg<1)
+  REAL(DP), INTENT(IN), DIMENSION(dfftp%nnr) :: charge
+  !! charge density
   INTEGER, INTENT(IN)  :: edir
+  !! direction of the field
   REAL(DP), INTENT(OUT) ::  e_dipole
+  !! electronic dipole
+  !
+  ! ... local variables
   !
   REAL(DP), ALLOCATABLE :: rho_all(:), aux(:)
   REAL(DP) :: rhoir,bmod
-  INTEGER  :: i, k, j, ip, ir, idx, j0, k0, na
   REAL(DP) :: sawarg, tvectb
-
+  INTEGER  :: i, k, j, ip, ir, na
+  LOGICAL  :: offrange
   !--------------------------
   !  Fix some values for later calculations
   !--------------------------
@@ -132,24 +148,13 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
   e_dipole  = 0.D0
   !
   ! Loop in the charge array
-  j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
+  !
   DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
      !
      ! ... three dimensional indexes
      !
-     idx = ir -1
-     k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-     idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-     k   = k + k0
-     j   = idx / dfftp%nr1x
-     idx = idx - dfftp%nr1x * j
-     j   = j + j0
-     i   = idx
-
-     ! ... do not include points outside the physical range
-
-!     IF ( i >= dfftp%nr1 .OR. j >= dfftp%nr2 .OR. k >= dfftp%nr3 ) CYCLE
-
+     CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+     ! IF ( offrange ) CYCLE ! NB this was commented before
      !
      ! Define the argument for the saw function     
      !
@@ -157,9 +162,7 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
      if (edir.eq.2) sawarg = DBLE(j)/DBLE(dfftp%nr2)
      if (edir.eq.3) sawarg = DBLE(k)/DBLE(dfftp%nr3)
 
-     rhoir = charge(ir,1)
-     !
-     IF ( nspin == 2 ) rhoir = rhoir + charge(ir,2)
+     rhoir = charge(ir)
 
      e_dipole = e_dipole + rhoir * saw(emaxpos,eopreg, sawarg) &
                       * (alat/bmod) * (fpi/(dfftp%nr1*dfftp%nr2*dfftp%nr3))

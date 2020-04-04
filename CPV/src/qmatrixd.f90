@@ -23,10 +23,10 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq, ipol)
 
   use kinds, only : DP
   use gvecw, only: ngw
-  use ions_base, only : nax, nsp, na
+  use ions_base, only : nax, nsp, na, nat, ityp
   use gvect, only: gstart
-  use uspp_param, only: nh, nhm, nvb, ish
-  use uspp, only : nkb
+  use uspp_param, only: nh, nhm, upf
+  use uspp, only : nkb, indv_ijkb0
   use electrons_base, only: nx => nbspx, n => nbsp, ispin
   use mp, only: mp_sum, mp_alltoall
   use mp_global, only: intra_bgrp_comm, nproc_bgrp
@@ -182,18 +182,18 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq, ipol)
        
        sca =(0.d0,0.d0)
        if(ispin(ix)==ispin(jx)) then
-          do is=1,nvb!loop on vanderbilt species
-             do ia=1,na(is)!loop on atoms
+          do ia=1,nat!loop on atoms
+             is=ityp(ia)
+             IF( upf(is)%tvanp ) THEN !loop on vanderbilt species
                 do iv=1,nh(is)!loop on projectors
                    do jv=1,nh(is)
-                      inl=ish(is)+(iv-1)*na(is)+ia
-                      jnl=ish(is)+(jv-1)*na(is)+ia                
+                      inl = indv_ijkb0(ia) + iv
+                      jnl = indv_ijkb0(ia) + jv
                       sca=sca+gqq(iv,jv,ia,is)*bec0(inl,ix)*bec0(jnl,jx)
                    enddo
                 enddo
-             enddo
+             END IF
           enddo
-
           qmat(ix,jx)=qmat(ix,jx)+sca
        endif
        qmat(jx,ix)=qmat(ix,jx)       

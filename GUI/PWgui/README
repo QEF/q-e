@@ -43,7 +43,6 @@ Currently, the following PWscf programs (modules) are supported:
  * projwfc.x
  * bands.x
  * dos.x
- * d3.x
  * ld1.x (atomic)
 
 Directory structure of the PWgui source package:

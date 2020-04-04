@@ -29,11 +29,11 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   USE kinds, only : DP
   use fft_base,  only: dfftp
   use fft_interfaces, only: invfft
-  USE gvect,  ONLY : gg, ngm, nl, g, eigts1, eigts2, eigts3, mill
+  USE gvect,  ONLY : gg, ngm, g, eigts1, eigts2, eigts3, mill
   USE uspp,     ONLY : okvan, becsum
   USE cell_base, ONLY : tpiba
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  USE wavefunctions_module,  ONLY: psic
+  USE wavefunctions,  ONLY: psic
   USE buffers,    ONLY : get_buffer
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
   USE paw_variables, ONLY : okpaw
@@ -106,12 +106,12 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
      call setqmod (ngm, xq, g, qmod, qpg)
      call ylmr2 (lmaxq * lmaxq, ngm, qpg, qmod, ylmk0)
      do ig = 1, ngm
-        qmod (ig) = sqrt (qmod (ig) )
+        qmod (ig) = sqrt (qmod (ig) ) * tpiba
      enddo
   else
      call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
      do ig = 1, ngm
-        qmod (ig) = sqrt (gg (ig) )
+        qmod (ig) = sqrt (gg (ig) ) * tpiba
      enddo
   endif
   fact = cmplx (0.d0, - tpiba, kind=DP)
@@ -188,9 +188,9 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
      do is = 1, nspin_mag
         psic(:) = (0.d0, 0.d0)
         do ig = 1, ngm
-           psic (nl (ig) ) = aux (ig, is, ipert)
+           psic (dfftp%nl (ig) ) = aux (ig, is, ipert)
         enddo
-        CALL invfft ('Dense', psic, dfftp)
+        CALL invfft ('Rho', psic, dfftp)
         call daxpy (2*dfftp%nnr, 1.0_DP, psic, 1, drhoscf(1,is,ipert), 1)
      enddo
   enddo

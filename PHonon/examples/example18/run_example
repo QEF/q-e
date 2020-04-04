@@ -1,0 +1,174 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether ECHO has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x and ph.x to calculate phonon"
+$ECHO "frequencies of LiCoO2 with Hubbard U on Co 3d states."
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x ph.x"
+PSEUDO_LIST="Co.pbesol-spn-rrkjus_psl.0.3.1.UPF O.pbesol-n-rrkjus_psl.0.1.UPF Li.pbesol-s-rrkjus_psl.0.2.1.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running ph.x as: $PH_COMMAND"
+$ECHO
+
+# Note: The value of Hubbard U for Co 3d states
+# in this example was taken randomly just for the 
+# sake of demonstrating how the PHonon code works
+# including the Hubbard correction.
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/LiCoO2*
+rm -rf $TMP_DIR/_ph0/LiCoO2*
+$ECHO " done"
+
+# self-consistent calculation
+cat > LiCoO2.scf.in << EOF
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    prefix='LiCoO2'
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav = 5, 
+    celldm(1) = 9.3705,
+    celldm(4) = 0.83874,
+    nat = 4, 
+    ntyp = 3,
+    ecutwfc = 40.0
+    ecutrho = 320.0
+    lda_plus_u = .true.,
+    lda_plus_u_kind = 0,
+    U_projection_type = 'atomic',
+    Hubbard_U(1) = 3.0
+ /
+ &electrons
+    conv_thr =  1.d-13
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+Co  58.933194  Co.pbesol-spn-rrkjus_psl.0.3.1.UPF 
+O   15.999     O.pbesol-n-rrkjus_psl.0.1.UPF 
+Li   6.94      Li.pbesol-s-rrkjus_psl.0.2.1.UPF
+ATOMIC_POSITIONS {crystal}
+ Co  0.0000000000   0.0000000000   0.0000000000
+ O   0.2604885000   0.2604885000   0.2604885000
+ O   0.7395115000   0.7395115000   0.7395115000
+ Li  0.5000000000   0.5000000000   0.5000000000
+K_POINTS {automatic}
+ 4 4 4 0 0 0
+EOF
+$ECHO "  running the scf calculation for LiCoO2...\c"
+$PW_COMMAND < LiCoO2.scf.in > LiCoO2.scf.out
+check_failure $?
+$ECHO " done"
+
+# phonon calculation at Gamma
+cat > LiCoO2.phG.in << EOF
+phonons of LiCoO2 at Gamma
+ &inputph
+  prefix = 'LiCoO2',
+  outdir='$TMP_DIR/',
+  tr2_ph = 1.0d-14,
+  amass(1) = 58.933194,
+  amass(2) = 15.999,
+  amass(3) =  6.94,
+  epsil = .true.
+  fildyn='LiCoO2.dynG',
+ /
+0.000000000000000   0.000000000000000   0.000000000000000
+EOF
+$ECHO "  running the phonon calculation at Gamma for LiCoO2...\c"
+$PH_COMMAND < LiCoO2.phG.in > LiCoO2.phG.out
+check_failure $?
+$ECHO " done"
+
+# phonon calculation at finite q
+cat > LiCoO2.phq.in << EOF
+phonons of LiCoO2 at finite q
+ &inputph
+  prefix = 'LiCoO2',
+  outdir='$TMP_DIR/',
+  tr2_ph = 1.0d-14,
+  amass(1) = 58.933194,
+  amass(2) = 15.999,
+  amass(3) =  6.94,
+  fildyn='LiCoO2.dynq',
+ /
+0.000000000000000   0.000000000000000   0.250000000000000
+EOF
+$ECHO "  running the phonon calculation at finite q for LiCoO2...\c"
+$PH_COMMAND < LiCoO2.phq.in > LiCoO2.phq.out
+check_failure $?
+$ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"

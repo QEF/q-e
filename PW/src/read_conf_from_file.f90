@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,83 +7,72 @@
 !
 !
 !-----------------------------------------------------------------------
-FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
-     omega, tau) RESULT (ierr)
+SUBROUTINE read_conf_from_file( stop_on_error, nat, nsp, tau, alat, at )
   !-----------------------------------------------------------------------
   !
-  USE kinds,          ONLY : DP
-  USE io_global,      ONLY : stdout
-  USE io_files,       ONLY : tmp_dir, prefix
-#if defined (__OLDXML)
-  USE pw_restart,     ONLY : pw_readfile
-#else
-  USE pw_restart_new,    ONLY  : pw_readschema_file, init_vars_from_schema
-  USE qes_types_module,     ONLY :  output_type, parallel_info_type, general_info_type
-  USE qes_libs_module,      ONLY :  qes_reset_output, qes_reset_general_info, qes_reset_parallel_info 
-#endif
+  USE kinds,           ONLY : DP
+  USE constants,       ONLY : eps8
+  USE io_global,       ONLY : stdout, ionode, ionode_id
+  USE io_files,        ONLY : restart_dir, xmlfile
+  USE mp,              ONLY : mp_bcast
+  USE mp_images,       ONLY : intra_image_comm
+  USE qexsd_module,    ONLY : qexsd_readschema
+  USE qexsd_copy,      ONLY : qexsd_copy_atomic_structure
+  USE qes_types_module,ONLY : output_type
+  USE qes_libs_module, ONLY : qes_reset
+  USE qes_bcast_module,ONLY : qes_bcast
   !
   IMPLICIT NONE
   !
-  LOGICAL,INTENT(in)     :: lmovecell
-  INTEGER,INTENT(in)     :: nat
-  REAL(DP),INTENT(inout) :: at_old(3,3), omega_old
-  REAL(DP),INTENT(inout) :: at(3,3), bg(3,3), omega
+  LOGICAL, INTENT(in)    :: stop_on_error
+  INTEGER, INTENT(in)    :: nat
+  INTEGER, INTENT(in)    :: nsp
+  REAL(DP),INTENT(out)   :: alat
+  REAL(DP),INTENT(out)   :: at(3,3)
   REAL(DP),INTENT(inout) :: tau(3,nat)
-  INTEGER :: ierr
-!
-#if !defined(__OLDXML)
-  TYPE ( output_type)                   :: output_obj
-  TYPE (parallel_info_type)             ::  parinfo_obj
-  TYPE (general_info_type )             :: geninfo_obj 
-#endif
-
   !
+  ! ... local variables
+  !
+  TYPE ( output_type) :: output_obj
+  !
+  INTEGER :: ierr, nat_, ibrav_
+  INTEGER, ALLOCATABLE :: ityp_(:)
+  REAL(dp), ALLOCATABLE :: tau_(:,:)
+  CHARACTER (LEN=3) :: atm_(nsp)
   !
   WRITE( stdout, '(/5X,"Atomic positions and unit cell read from directory:", &
-                &  /,5X,A)') TRIM( tmp_dir ) // TRIM( prefix ) // ".save/"
+                &  /,5X,A)') restart_dir()
   !
-  ! ... check if restart file is present, if yes read config parameters
+  ! ... check if restart file is present, if so read config parameters
   !
-#if defined(__OLDXML) 
-  CALL pw_readfile( 'config', ierr )
-#else
-  CALL pw_readschema_file ( ierr, output_obj, parinfo_obj, geninfo_obj)
-  IF (ierr == 0 ) THEN 
-     CALL init_vars_from_schema ( 'config', ierr, output_obj, parinfo_obj, geninfo_obj ) 
-     CALL qes_reset_output(output_obj) 
-     CALL qes_reset_parallel_info (parinfo_obj) 
-     CALL qes_reset_general_info  (geninfo_obj) 
-  END IF 
-#endif
-  !
-  IF ( ierr > 0 ) THEN
+  IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
+  CALL mp_bcast(ierr, ionode_id, intra_image_comm)
+  IF ( ierr > 0 .OR. (ierr < 0 .AND. stop_on_error) ) &
+       CALL errore ( 'read_conf_from_file', &
+       'fatal error reading xml file', ABS(ierr) ) 
+  IF (ierr < 0 ) THEN
      !
      WRITE( stdout, '(5X,"Nothing found: ", &
                        & "using input atomic positions and unit cell",/)' )
-     RETURN
      !
-  END IF
-  !
-  WRITE( stdout, * )
-  !
-  IF ( lmovecell ) THEN
+  ELSE
      !
-     ! ... input value of at and omega (currently stored in xxx_old variables)
-     ! ... must be used to initialize G vectors and other things
-     ! ... swap xxx and xxx_old variables and scale the atomic position to the
-     ! ... input cell shape in order to check the symmetry.
-     !
-     CALL cryst_to_cart( nat, tau, bg, - 1 )
-     !
-     CALL dswap( 9, at, 1, at_old,1  )
-     CALL dswap( 1, omega, 1, omega_old, 1 )
-     !
-     CALL cryst_to_cart( nat, tau, at, + 1 )
-     !
-     CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
+     CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
+     CALL qexsd_copy_atomic_structure (output_obj%atomic_structure, nsp, &
+          atm_, nat_, tau_, ityp_, alat, at(:,1), at(:,2), at(:,3), ibrav_ )
+     CALL qes_reset (output_obj)
+     IF ( nat_ /= nat ) CALL errore('read_conf_from_file','bad number of atoms',1)
+     at(:,:) = at(:,:) / alat
+     tau_(:,1:nat) = tau_(:,1:nat)/alat
+     IF ( SUM ( (tau_(:,1:nat)-tau(:,1:nat))**2 ) > eps8 ) THEN
+        WRITE( stdout, '(5X,"Atomic positions from file used, from input discarded")' )
+        tau(:,1:nat) = tau_(:,1:nat)
+     END IF
+     DEALLOCATE ( tau_, ityp_ )
+     WRITE( stdout, * )
      !
   END IF
   !
   RETURN
   !
-END FUNCTION read_config_from_file
+END SUBROUTINE read_conf_from_file

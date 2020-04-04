@@ -26,13 +26,6 @@ program fd_ifc
 
   USE symm_base
   USE symme
-  USE rap_point_group, ONLY : code_group, nclass, nelem, elem, &
-       which_irr, char_mat, name_rap, name_class, gname, ir_ram
-  USE rap_point_group_so, ONLY : nrap, nelem_so, elem_so, has_e, &
-       which_irr_so, char_mat_so, name_rap_so, name_class_so, d_spin, &
-       name_class_so1
-  USE rap_point_group_is, ONLY : nsym_is, sr_is, ftau_is, d_spin_is, &
-       gname_is, sname_is, code_group_is
   USE fft_base, ONLY : dfftp
 
 implicit none
@@ -126,8 +119,8 @@ READ(5,input,IOSTAT=ios)
 IF (ios /= 0) CALL errore ('FD_IFC', 'reading input namelist', ABS(ios) )
 tmp_dir = trimcheck( outdir )
 
-!reading the xml file
-call read_xml_file
+!reading the xml file - WILL CRASH; input variable needed
+call read_file_new ( )
 
     if (verbose) then
     write(6,*) '**************************************************'
@@ -248,7 +241,7 @@ end do
 
 allocate (force0(3,natx))
 
-de=de/0.529177 ! de is read in A and used in bohr.
+de=de/bohr_radius_angs ! de is read in A and used in bohr.
 
 ! read forces for null displacements (residual)
 

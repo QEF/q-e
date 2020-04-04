@@ -16,7 +16,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
   USE gvecw,           ONLY: gcutw
   USE lsda_mod,        ONLY: nspin,lsda,isk,current_spin
   USE cell_base,       ONLY: tpiba2, bg
-  USE wavefunctions_module, ONLY: evc
+  USE wavefunctions, ONLY: evc
   USE klist,           ONLY: &
        nkstot,               & ! total number of k-points
        nks,                  & ! number of k-points per pool
@@ -74,13 +74,12 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
 
 
   REAL (dp), ALLOCATABLE :: aux(:)
-  COMPLEX(KIND=DP), EXTERNAL :: zdotc
   COMPLEX(dp), ALLOCATABLE :: paw_vkb_cplx(:,:)
   COMPLEX(KIND=dp), ALLOCATABLE :: psi(:)
   COMPLEX(dp), ALLOCATABLE :: psiwfc(:), spsiwfc(:)
   CHARACTER(LEN=4) :: verbosity
 
-  REAL(DP), EXTERNAL ::  get_clock
+  REAL(DP), EXTERNAL :: ddot, get_clock
   REAL(dp) :: timenow
   EXTERNAL zdscal
 
@@ -360,10 +359,10 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
         spsiwfc(:)=(0.d0,0.d0)
         recalc=.true.
         CALL sm1_psi(recalc,npwx, npw, 1, psiwfc, spsiwfc)
-        xnorm_partial=zdotc(npw,psiwfc,1,spsiwfc,1)
+        xnorm_partial=ddot(2*npw,psiwfc,1,spsiwfc,1)
         DEALLOCATE(spsiwfc)
      ELSE
-        xnorm_partial=zdotc(npw,psiwfc,1,psiwfc,1)
+        xnorm_partial=ddot(2*npw,psiwfc,1,psiwfc,1)
      ENDIF
      !</CG>
 

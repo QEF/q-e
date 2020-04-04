@@ -1,0 +1,55 @@
+
+     Program DYNMAT v.6.2 starts on 23Jan2018 at 10:43:22 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+
+     Reading Dynamical Matrix from file sih4.dyn
+     ...Force constants read
+     ...epsilon and Z* read
+     Acoustic Sum Rule: || Z*(ASR) - Z*(orig)|| =    3.863028E+00
+     Acoustic Sum Rule: ||dyn(ASR) - dyn(orig)||=    3.457644E-02
+     A direction for q was not specified:TO-LO splitting will be absent
+
+     Polarizability (A^3 units)
+     multiply by 0.436612 for Clausius-Mossotti correction
+        19.720130   -0.000000   -0.000004
+        -0.000000   19.720131   -0.000005
+        -0.000004   -0.000005   19.720106
+
+     IR activities are in (D/A)^2/amu units
+
+# mode   [cm-1]    [THz]      IR
+    1     -0.00   -0.0000    0.0000
+    2     -0.00   -0.0000    0.0000
+    3     -0.00   -0.0000    0.0000
+    4     -0.00   -0.0000    0.0000
+    5      0.00    0.0000    0.0000
+    6      0.00    0.0000    0.0000
+    7    740.93   22.2124    0.0000
+    8    740.93   22.2124    0.0000
+    9    903.94   27.0993   13.3079
+   10    903.94   27.0993   13.3080
+   11    903.94   27.0993   13.3080
+   12   2519.34   75.5278   49.9820
+   13   2519.34   75.5278   49.9820
+   14   2519.34   75.5278   49.9817
+   15   2750.97   82.4719    0.0000
+
+     DYNMAT       :     0.02s CPU         0.02s WALL
+
+
+   This run was terminated on:  10:43:22  23Jan2018            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

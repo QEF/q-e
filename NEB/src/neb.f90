@@ -17,8 +17,10 @@ PROGRAM neb
   USE mp,                ONLY : mp_bcast
   USE mp_global,         ONLY : mp_startup
   USE mp_world,          ONLY : world_comm, mpime, root
+  USE mp_pools,          ONLY : intra_pool_comm
+  USE mp_bands,          ONLY : intra_bgrp_comm, inter_bgrp_comm
   USE read_input,        ONLY : read_input_file
-  USE command_line_options,  ONLY : input_file_
+  USE command_line_options,  ONLY : input_file_, ndiag_
   !
   USE path_variables,    ONLY : conv_path
   USE path_base,         ONLY : initialize_path, search_mep
@@ -33,6 +35,8 @@ PROGRAM neb
   !
   IMPLICIT NONE
   !
+  include 'laxlib.fh'
+  !
   CHARACTER(len=256) :: engine_prefix, parsing_file_name
   INTEGER :: unit_tmp, i, iimage
   INTEGER, EXTERNAL :: find_free_unit, input_images_getarg
@@ -40,6 +44,10 @@ PROGRAM neb
   !
   !
   CALL mp_startup ( start_images=.true. )
+  CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
+       do_distr_diag_inside_bgrp_ = .true. )
+  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
+       inter_bgrp_comm )
   CALL environment_start ( 'NEB' )
   !
   ! INPUT RELATED
@@ -104,6 +112,7 @@ PROGRAM neb
   !
   CALL search_mep()
   !
+  CALL laxlib_end()
   CALL stop_run_path( conv_path )
   !
   STOP

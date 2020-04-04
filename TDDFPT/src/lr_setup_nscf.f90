@@ -45,6 +45,7 @@ SUBROUTINE lr_setup_nscf ()
   IMPLICIT NONE
   !
   LOGICAL :: magnetic_sym 
+  LOGICAL, EXTERNAL :: check_para_diag
   !
   CALL start_clock( 'lr_setup_nscf' )
   ! 
@@ -62,11 +63,7 @@ SUBROUTINE lr_setup_nscf ()
   max_cg_iter = 20
   natomwfc = n_atom_wfc( nat, ityp, noncolin )
   !
-#if defined(__MPI)
-  IF ( use_para_diag )  CALL check_para_diag( nbnd )
-#else
-  use_para_diag = .FALSE.
-#endif
+  use_para_diag = check_para_diag( nbnd )
   !
   ! Symmetry section
   !
@@ -145,7 +142,7 @@ SUBROUTINE lr_setup_nscf ()
   ! ...notice: qnorm is used by allocate_nlpot to determine
   ! the correct size of the interpolation table "qrad"
   !
-  qnorm = sqrt(xq(1)**2 + xq(2)**2 + xq(3)**2)
+  qnorm = sqrt(xq(1)**2 + xq(2)**2 + xq(3)**2) * tpiba
   !
   ! ... set the granularity for k-point distribution
   !

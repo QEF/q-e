@@ -37,7 +37,6 @@ end module xc_f90_types_m
 module xc_f90_lib_m
 
   use xc_f90_types_m
-  use libxc_funcs_m
 
   implicit none
 

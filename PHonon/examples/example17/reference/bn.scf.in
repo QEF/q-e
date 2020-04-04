@@ -1,0 +1,27 @@
+ &control
+   calculation='scf'
+   restart_mode='from_scratch',
+   prefix='bn',
+   pseudo_dir = '/home/paulatto/espresso/pseudo/',
+   outdir='/home/paulatto/espresso/tempdir/'
+   wf_collect = .false.
+ /
+ &system
+    ibrav=  4, celldm(1) =4.7419, celldm(3) =4.3, nat= 2, ntyp= 2,
+    ecutwfc =55,
+    ecutrho =440,
+    occupations='fixed', 
+    assume_isolated='2D', 
+ /
+ &electrons
+    conv_thr =  1d-10
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+B 10.81     B.pbe-n-kjpaw_psl.0.1.UPF
+N 14.00674  N.pbe-n-kjpaw_psl.0.1.UPF
+ATOMIC_POSITIONS (alat)
+B        0.000000000   0.288675135   0.000000000
+N        0.000000000  -0.288675135   0.000000000 
+K_POINTS {automatic}
+12 12 1  0 0 0

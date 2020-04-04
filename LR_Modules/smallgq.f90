@@ -1,24 +1,24 @@
 !
-! Copyright (C) 2001 - 2012 Quantum ESPRESSO group
+! Copyright (C) 2001 - 2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-  !-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
 subroutine set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
   !-----------------------------------------------------------------------
   !
   ! This routine calculates the possible vectors G associated
   ! to the symmetries of the small group of q: Sq -> q + G
-  ! Furthermore if minus_q and irotmq are set if finds the G for Sq -> -q+G.
-  !
-  !  The dummy variables
+  ! Furthermore if minus_q and irotmq are set it finds the G for Sq -> -q+G.
   !
   USE kinds, ONLY : DP
   USE cell_base, ONLY : bg, at
   USE control_lr, ONLY : lgamma
-  implicit none
+  USE symm_base, ONLY : t_rev
+  
+  IMPLICIT NONE
 
   REAL(DP), PARAMETER :: accep=1.e-5_dp
 
@@ -74,10 +74,15 @@ subroutine set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
                 aq (jpol)
         enddo
      enddo
+     IF (t_rev(isym)==1) raq=-raq
      if (.NOT. eqvect (raq, aq, zero, accep) ) CALL errore('set_giq',&
                             'problems with the input group',1)
      do ipol = 1, 3
-        wrk (ipol) = raq (ipol) - aq (ipol)
+        IF (t_rev(isym)==1) THEN
+           wrk (ipol) = aq (ipol) - raq (ipol)
+        ELSE
+           wrk (ipol) = raq (ipol) - aq (ipol)
+        ENDIF
      enddo
      call cryst_to_cart (1, wrk, bg, 1)
      gi (:, isym) = wrk (:)

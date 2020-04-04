@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -44,6 +44,8 @@ SUBROUTINE cft_wave (ik, evc_g, evc_r, isw)
   !
   INTEGER :: ig, ikk, ikq, npw, npwq
 
+  CALL start_clock ('cft_wave')
+
   IF (isw == 1) THEN
      ikk = ikks(ik) ! points to k+G indices
      npw = ngk(ikk) 
@@ -53,15 +55,18 @@ SUBROUTINE cft_wave (ik, evc_g, evc_r, isw)
      npwq= ngk(ikq)
      CALL fwfft_wave (npwq, igk_k (1,ikq), evc_g, evc_r )
   ELSE
-     CALL  errore (' cft_wave',' Wrong value for isw',1)
+     CALL  errore ('cft_wave',' Wrong value for isw',1)
   ENDIF
+ 
+  CALL stop_clock ('cft_wave')
+ 
   RETURN
+
 END SUBROUTINE cft_wave
 
 SUBROUTINE fwfft_wave (npwq, igkq, evc_g, evc_r )
   USE kinds,    ONLY : DP
   USE wvfct,    ONLY : npwx
-  USE gvecs,    ONLY : nls
   USE fft_base, ONLY : dffts
   USE fft_interfaces,   ONLY: fwfft
   USE noncollin_module, ONLY : noncolin, npol
@@ -74,12 +79,12 @@ SUBROUTINE fwfft_wave (npwq, igkq, evc_g, evc_r )
 
   CALL fwfft ('Wave', evc_r(:,1), dffts)
   DO ig = 1, npwq
-     evc_g (ig) = evc_g (ig) + evc_r (nls (igkq(ig) ), 1 )
+     evc_g (ig) = evc_g (ig) + evc_r (dffts%nl (igkq(ig) ), 1 )
   ENDDO
   IF (noncolin) THEN
      CALL fwfft ('Wave', evc_r(:,2), dffts)
      DO ig = 1, npwq
-        evc_g (ig+npwx) = evc_g (ig+npwx) + evc_r (nls(igkq(ig)),2)
+        evc_g (ig+npwx) = evc_g (ig+npwx) + evc_r (dffts%nl(igkq(ig)),2)
      ENDDO
   ENDIF
 END SUBROUTINE fwfft_wave
@@ -87,7 +92,6 @@ END SUBROUTINE fwfft_wave
 SUBROUTINE invfft_wave (npw, igk, evc_g, evc_r )
   USE kinds,    ONLY : DP
   USE wvfct,    ONLY : npwx
-  USE gvecs,    ONLY : nls
   USE fft_base, ONLY : dffts
   USE fft_interfaces,   ONLY: invfft
   USE noncollin_module, ONLY : noncolin, npol
@@ -101,12 +105,12 @@ SUBROUTINE invfft_wave (npw, igk, evc_g, evc_r )
   
   evc_r = (0.0_dp, 0.0_dp)
   DO ig = 1, npw
-     evc_r (nls (igk(ig) ),1 ) = evc_g (ig)
+     evc_r (dffts%nl (igk(ig) ),1 ) = evc_g (ig)
   ENDDO
   CALL invfft ('Wave', evc_r(:,1), dffts)
   IF (noncolin) THEN
      DO ig = 1, npw
-        evc_r (nls(igk(ig)),2) = evc_g (ig+npwx)
+        evc_r (dffts%nl(igk(ig)),2) = evc_g (ig+npwx)
      ENDDO
      CALL invfft ('Wave', evc_r(:,2), dffts)
   ENDIF
@@ -139,19 +143,24 @@ SUBROUTINE cft_wave_tg (ik, evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
   USE kinds,    ONLY : DP
   USE wvfct,    ONLY : npwx
   USE fft_base, ONLY : dffts
-  USE gvecs,    ONLY : nls
   USE qpoint,   ONLY : ikks, ikqs
   USE klist,    ONLY : ngk, igk_k
   USE mp_bands, ONLY : me_bgrp
   USE fft_interfaces, ONLY: fwfft, invfft
   USE noncollin_module, ONLY : noncolin, npol
+  USE fft_helper_subroutines
 
   IMPLICIT NONE
 
   INTEGER, INTENT(in) :: ik, v_size, isw, ibnd, nbnd_occ
   COMPLEX(DP), INTENT(inout) :: evc_g(npwx*npol,nbnd_occ), evc_r(v_size,npol)
 
-  INTEGER :: ig, ikk, ikq, ioff, idx, npw, npwq
+  INTEGER :: ig, ikk, ikq, ioff, idx, npw, npwq, ntgrp, right_inc
+
+  CALL start_clock ('cft_wave_tg')
+
+  ntgrp = fftx_ntgrp( dffts )
+  CALL tg_get_recip_inc( dffts, right_inc )
 
   IF (isw == 1) then
      ikk = ikks(ik) ! points to k+G indices
@@ -159,20 +168,20 @@ SUBROUTINE cft_wave_tg (ik, evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
      evc_r = (0.0_dp, 0.0_dp)
      !
      ioff   = 0
-     DO idx = 1, dffts%nproc2
+     DO idx = 1, ntgrp
         !
         IF( idx + ibnd - 1 <= nbnd_occ ) THEN
            DO ig = 1, npw
-              evc_r(nls (igk_k(ig,ikk))+ioff,1) =  evc_g(ig,idx+ibnd-1)
+              evc_r(dffts%nl (igk_k(ig,ikk))+ioff,1) =  evc_g(ig,idx+ibnd-1)
            ENDDO
            IF (noncolin) THEN
               DO ig = 1, npw
-                 evc_r(nls (igk_k(ig,ikk))+ioff,2) =  evc_g(npwx+ig,idx+ibnd-1)
+                 evc_r(dffts%nl (igk_k(ig,ikk))+ioff,2) =  evc_g(npwx+ig,idx+ibnd-1)
               ENDDO
            ENDIF
         ENDIF
         !
-        ioff = ioff + dffts%nnr
+        ioff = ioff + right_inc
         !
      ENDDO
 
@@ -186,30 +195,32 @@ SUBROUTINE cft_wave_tg (ik, evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
      IF (noncolin) CALL fwfft ('tgWave', evc_r(:,2), dffts)
      !
      ioff   = 0
-     DO idx = 1, dffts%nproc2
+     DO idx = 1, ntgrp
         !
         IF( idx + ibnd - 1 <= nbnd_occ ) THEN
            !
            DO ig = 1, npwq
               evc_g(ig, ibnd+idx-1) = evc_g(ig, ibnd+idx-1) +  &
-                        evc_r( nls(igk_k(ig,ikq)) + ioff, 1 )
+                        evc_r( dffts%nl(igk_k(ig,ikq)) + ioff, 1 )
            ENDDO
            !
            IF (noncolin) THEN
               DO ig = 1, npwq
                  evc_g (ig+npwx, ibnd+idx-1) = evc_g (ig+npwx, ibnd+idx-1) &
-                      + evc_r (nls(igk_k(ig,ikq))+ ioff,2)
+                      + evc_r (dffts%nl(igk_k(ig,ikq))+ ioff,2)
               ENDDO
            ENDIF
            !
         ENDIF
         !
-        ioff = ioff + dffts%nnr
+        ioff = ioff + right_inc
         !
      ENDDO
   ELSE
-     CALL  errore (' cft_wave_tg',' Wrong value for isw',1)
+     CALL  errore ('cft_wave_tg',' Wrong value for isw',1)
   ENDIF
+
+  CALL stop_clock ('cft_wave_tg')
 
   RETURN
 END SUBROUTINE cft_wave_tg

@@ -1,0 +1,54 @@
+
+     Program FERMI_VELOCITY v.6.5 starts on 22Jan2020 at 14:43:21 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI & OpenMP), running on       1 processor cores
+     Number of MPI processes:                 1
+     Threads/MPI process:                     1
+
+     MPI processes distributed on     1 nodes
+     Reading input from mgb2.scf.in
+
+     Reading xml data from directory:
+
+     /home/kawamura/program/qe/qe-dev/tempdir/mgb2.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+               file Mg.pbe-n-kjpaw_psl.0.3.0.upf: wavefunction(s)  3S renormalized
+               file B.pbe-n-kjpaw_psl.0.1.upf: wavefunction(s)  2P renormalized
+
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum        1159     463    151                36773     9263    1619
+
+
+     Check: negative core charge=   -0.000006
+
+     Number of bands :       8
+     Number of k times spin :     210
+     Number of symmetries :      24
+     Lowest band which contains FS :       3
+     Highest band which contains FS :       5
+     Max :         1.49813968     Min :         0.00000000
+
+     FERMI_VELOCI :      2.22s CPU      2.32s WALL
+
+
+   This run was terminated on:  14:43:23  22Jan2020            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

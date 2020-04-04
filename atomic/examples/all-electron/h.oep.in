@@ -1,0 +1,15 @@
+ &input
+        title='H',
+        zed=1.0,
+        xmin=-4,
+        dx=0.0025,
+        rmax=40,
+        rel=0,
+        beta=0.3,
+        config='1s1'
+        lsd=0,
+        isic=0,
+        latt=0,
+        iswitch=1,
+        dft='OEP',
+ /

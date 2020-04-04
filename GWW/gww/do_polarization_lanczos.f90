@@ -294,7 +294,7 @@ subroutine do_polarization_lanczos(tf,options,ispin)
    LOGICAL :: l_do_restart
    REAL(kind=DP), ALLOCATABLE :: occ(:)
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
    INTEGER :: omp_get_num_threads, omp_get_max_threads 
    EXTERNAL omp_set_num_threads, omp_get_num_threads, omp_get_max_threads 
 #endif
@@ -522,7 +522,7 @@ subroutine do_polarization_lanczos(tf,options,ispin)
              if(options%l_verbose) FLUSH(stdout)
          
    
-#if defined(__OPENMP)
+#if defined(_OPENMP)
    !               write(stdout,*) 'Call dgemms, ntids=', omp_get_max_threads() 
 #else
    !               write(stdout,*) 'Call dgemms'

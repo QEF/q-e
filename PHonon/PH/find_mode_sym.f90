@@ -350,13 +350,13 @@ next=0
 DO imode = 1, 3 * nat
    IF ( imode < next .OR. ABS(w1(imode)) < 1.d-3 ) CYCLE
    IF (num_rap_mode(imode) == 0)  THEN
-      WRITE(stdout,'(5x,"freq (",i3," -",i3,") = ",f12.1,2x,"[cm-1]",3x, "-->   ?")') imode, imode, w1(imode)
+      WRITE(stdout,'(5x,"freq (",i4,"-",i4,") = ",f12.1,2x,"[cm-1]",3x, "-->   ?")') imode, imode, w1(imode)
    ELSE
       irap=num_rap_mode(imode)
       next = imode + NINT(DBLE(char_mat(irap,1)))
       cdum="   "
       IF (lir) cdum=TRIM(ir_ram(irap))
-      WRITE(stdout,'(5x,"freq (",i3," -",i3,") = ",f12.1,2x,"[cm-1]",3x,"--> ",a19)') &
+      WRITE(stdout,'(5x,"freq (",i4,"-",i4,") = ",f12.1,2x,"[cm-1]",3x,"--> ",a19)') &
            imode, next-1, w1(imode), name_rap(irap)//" "//cdum
    ENDIF
 ENDDO

@@ -30,7 +30,7 @@
 
 ! ...   Local Parameter
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
 #include "fftw3.f03"
 #else
 #include "fftw3.f"
@@ -75,7 +75,7 @@
      LOGICAL :: done
      INTEGER :: tid
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
      INTEGER :: offset, ldz_t
      INTEGER :: omp_get_max_threads
      EXTERNAL :: omp_get_max_threads
@@ -142,7 +142,7 @@
      END SUBROUTINE lookup
 
      SUBROUTINE init_plan()
-#if defined(__OPENMP)
+#if defined(_OPENMP)
        CALL dfftw_cleanup_threads() 
        void = fftw_init_threads()
        CALL dfftw_plan_with_nthreads(omp_get_max_threads())      
@@ -199,7 +199,7 @@
      LOGICAL :: dofft( nfftx ), done
      INTEGER, PARAMETER  :: stdout = 6
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
      INTEGER :: offset
      INTEGER :: nx_t, ny_t, nzl_t, ldx_t, ldy_t
      INTEGER  :: itid, mytid, ntids
@@ -302,7 +302,7 @@
 
      SUBROUTINE init_plan()
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
        CALL dfftw_cleanup_threads() 
        void = fftw_init_threads()
        CALL dfftw_plan_with_nthreads(omp_get_max_threads())      

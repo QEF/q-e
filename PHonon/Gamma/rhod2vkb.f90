@@ -11,24 +11,24 @@ SUBROUTINE rhod2vkb(dyn0)
   !----------------------------------------------------------------------
   !
   !  calculate the electronic term: <psi|V''|psi>  of the dynamical matrix
+  !  NOT IMPLEMENTED FOR LSDA
   !
   USE kinds, ONLY: dp
   USE constants, ONLY: tpi
   USE ions_base, ONLY : nat, tau, ityp, ntyp => nsp
   USE cell_base, ONLY : tpiba2, tpiba, omega
-  USE lsda_mod,  ONLY : current_spin
-  USE gvect,  ONLY : ngm, g, igtongl, nl
+  USE gvect,  ONLY : ngm, g, igtongl
   USE gvecw,  ONLY: gcutw
   USE wvfct,  ONLY: nbnd, npwx
   USE klist,  ONLY : wk, ngk
   USE scf,    ONLY : rho
   USE vlocal, ONLY: vloc
-  USE wavefunctions_module,  ONLY: evc, psic
+  USE wavefunctions,  ONLY: evc, psic
   USE uspp,   ONLY: nkb, vkb, dvan
   USE uspp_param, ONLY: nh
   USE becmod, ONLY: calbec
   USE cgcom
-  USE mp_global,  ONLY : intra_pool_comm
+  USE mp_pools,   ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
   USE fft_base, ONLY : dffts, dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
@@ -50,9 +50,9 @@ SUBROUTINE rhod2vkb(dyn0)
   ALLOCATE  ( dynloc( 3*nat, nmodes))
   dynloc (:,:) = 0.d0
   DO ir = 1,dfftp%nnr
-     psic(ir) = rho%of_r(ir,current_spin)
+     psic(ir) = rho%of_r(ir,1)
   ENDDO
-  CALL fwfft ('Dense', psic, dfftp)
+  CALL fwfft ('Rho', psic, dfftp)
   DO nu_i = 1,nmodes
      IF (has_equivalent( (nu_i-1)/3+1)==1 ) GOTO 10
      DO na = 1, nat
@@ -69,8 +69,8 @@ SUBROUTINE rhod2vkb(dyn0)
                              g(2,ng)*tau(2,na) + &
                              g(3,ng)*tau(3,na)   )
               fac = omega * vloc(igtongl(ng),ityp(na)) * tpiba2 *   &
-                        (  dble(psic(nl(ng)))*cos(gtau) -  &
-                          aimag(psic(nl(ng)))*sin(gtau)   )
+                        (  dble(psic(dfftp%nl(ng)))*cos(gtau) -  &
+                          aimag(psic(dfftp%nl(ng)))*sin(gtau)   )
               dynloc(nu_i,nu_j) = dynloc(nu_i,nu_j) + fac *         &
                    ( g(1,ng) * u(mu_i+1,nu_i) +                     &
                      g(2,ng) * u(mu_i+2,nu_i) +                     &

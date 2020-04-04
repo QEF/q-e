@@ -44,7 +44,7 @@ module xspectra
         xread_wf,   &         ! key word for reading wavefunctions
         xcoordcrys           ! kew word for epsilon and k in crystalline k.
 
-   logical :: terminator, show_status, wf_collect
+   logical :: terminator, show_status
 
    logical :: lplus,      &         ! if true only the l+1 transition is calculated
               lminus, &              ! if true only the l-1 transition is calculated
@@ -56,6 +56,7 @@ module xspectra
    CHARACTER (LEN=25)  :: calculation
    CHARACTER (LEN=4)   :: verbosity 
    character(LEN=256) :: x_save_file
+   character(LEN=256) :: xanes_file
    character(LEN=16) :: U_projection_type
    CHARACTER (LEN=256) ::  filecore
 

@@ -256,7 +256,7 @@ PRIVATE :: GetVdWParam
     ! Determine whether radial grid is logarithmic/exponential or equispaced/uniform...
     !
     drab=atgrdrab(NrgpA)-atgrdrab(1)
-    IF (DABS(drab).LT.(1.0E-6_DP)) uniform_grid=.TRUE.
+    uniform_grid = (DABS(drab).LT.(1.0E-6_DP))
     IF (uniform_grid) WRITE(stdout,'(5X,"Equispaced/Uniform radial atomic grid detected...")')
     !
     ! ----------------------------------------------------------------
@@ -549,7 +549,7 @@ PRIVATE :: GetVdWParam
     !
     ! Populate reference free atom quantities...
     !
-    CALL GetVdWParam(atm(is),C6AAfree(is),dpfree(is),R0free(is))
+    CALL GetVdWParam(upf(is)%psd,C6AAfree(is),dpfree(is),R0free(is))
     !
     WRITE(stdout,'(5X,"The free atom static dipole polarizability is ",F13.6," bohr^3.")') dpfree(is)
     WRITE(stdout,'(5X,"The free atom homonuclear C6 coefficient is ",F13.6," Hartree bohr^6.")') C6AAfree(is)
@@ -602,7 +602,7 @@ PRIVATE :: GetVdWParam
   !
   ! I/O variables
   !
-  REAL(DP), INTENT(IN) :: rhor(:,:)
+  REAL(DP), INTENT(IN) :: rhor(:)
   REAL(DP) :: tauin(3,nat)
   !
   ! Parallel initialization...
@@ -974,31 +974,23 @@ PRIVATE :: GetVdWParam
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN) :: rhor(:,:)
+  REAL(DP), INTENT(IN) :: rhor(:)
   !
   ! Local variables
   !
-  INTEGER :: ir,ierr,nspin
-  REAL(DP), DIMENSION(:), ALLOCATABLE :: rhor_tmp1,rhor_tmp2
+  INTEGER :: ir,ierr
+  REAL(DP), DIMENSION(:), ALLOCATABLE :: rhor_tmp
   !  
   CALL start_clock('tsvdw_rhotot')
   !
   ! Initialization of rhotot array (local copy of the real-space charge density)...
   !
   ALLOCATE(rhotot(nr1*nr2*nr3)); rhotot=0.0_DP
-  nspin = SIZE(rhor,2)
-  IF ( nspin < 1 .OR.  nspin > 2 ) CALL errore ('tsvdw','invalid nspin',1)
 #if defined(__MPI)
   !
   ! Initialization of rhor_tmp temporary buffers...
   !
-  ALLOCATE(rhor_tmp1(nr1*nr2*nr3)); rhor_tmp1=0.0_DP
-  !
-  IF (nspin.EQ.2) THEN
-    !
-    ALLOCATE(rhor_tmp2(nr1*nr2*nr3)); rhor_tmp2=0.0_DP
-    !
-  END IF
+  ALLOCATE(rhor_tmp(nr1*nr2*nr3)); rhor_tmp=0.0_DP
   !
   ! Collect distributed rhor and broadcast to all processors...
   !
@@ -1016,36 +1008,20 @@ PRIVATE :: GetVdWParam
     !
   END DO
   !
-  CALL MPI_ALLGATHERV(rhor(1,1),dfftp%nr3p(me_bgrp+1)*nr1*nr2,&
-      MPI_DOUBLE_PRECISION,rhor_tmp1(1),recvcount,rdispls,&
+  CALL MPI_ALLGATHERV(rhor(1),dfftp%nr3p(me_bgrp+1)*nr1*nr2,&
+      MPI_DOUBLE_PRECISION,rhor_tmp(1),recvcount,rdispls,&
       MPI_DOUBLE_PRECISION,intra_bgrp_comm,ierr)
-  !
-  IF (nspin.EQ.2) THEN
-    !
-    CALL MPI_ALLGATHERV(rhor(1,2),dfftp%nr3p(me_bgrp+1)*nr1*nr2,&
-        MPI_DOUBLE_PRECISION,rhor_tmp2(1),recvcount,rdispls,&
-        MPI_DOUBLE_PRECISION,intra_bgrp_comm,ierr)
-    !
-  END IF
   ! 
   ! Transfer rhor temporary arrays to rhotot array...
   !
-  rhotot=rhor_tmp1
-  !
-  IF (nspin.EQ.2) THEN
-    !
-    rhotot=rhotot+rhor_tmp2
-    !
-  END IF
+  rhotot=rhor_tmp
   !
   ! Clean-up temporary arrays...
   !
-  IF (ALLOCATED(rhor_tmp1))     DEALLOCATE(rhor_tmp1)
-  IF (ALLOCATED(rhor_tmp2))     DEALLOCATE(rhor_tmp2)
+  IF (ALLOCATED(rhor_tmp))     DEALLOCATE(rhor_tmp)
   !
 #else
-  rhotot(:) = rhor(:,1)
-  IF (nspin == 2) rhotot(:) = rhotot(:) + rhor(:,2)
+  rhotot(:) = rhor(:)
 #endif
   CALL stop_clock('tsvdw_rhotot')
   !
@@ -2468,7 +2444,7 @@ PRIVATE :: GetVdWParam
   !
   ! I/O variables
   !
-  CHARACTER(LEN=3) :: atom
+  CHARACTER(LEN=2) :: atom
   REAL(DP) :: C6,alpha,R0
   !
   SELECT CASE (atom) 

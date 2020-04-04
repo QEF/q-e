@@ -31,6 +31,7 @@ subroutine ld1_readin(input_file)
                          nnl, jjts, zval, title, write_coulomb, &
                          nlc, rm, rho0, lloc, rcore, rcloc, nlcc, & 
                          file_pseudo, file_pseudopw, &
+                         use_xsd, &  
                          file_potscf, file_screen, file_qvan, file_recon, &
                          file_wfcaegen, file_wfcncgen, file_wfcusgen, &
                          file_core, file_beta, file_chi, file_charge, author, &
@@ -136,6 +137,7 @@ subroutine ld1_readin(input_file)
        rmatch_augfun_nc, & ! if true the norm conserving core radii are
                            ! used to smooth the Q functions
        file_pseudopw, & ! output file where the pseudopotential is written
+       use_xsd,       & ! output xml schema used for upf file 
        file_screen,   & ! output file for the screening potential
        file_core,     & ! output file for total and core charge
        file_beta,     & ! output file for the beta functions
@@ -168,6 +170,7 @@ subroutine ld1_readin(input_file)
   file_wfcaegen = ' '
   file_wfcncgen = ' '
   file_wfcusgen = ' '
+  !
   !
   ! nullify grid object before it is used
   !
@@ -378,8 +381,8 @@ subroutine ld1_readin(input_file)
      lnc2paw = .false.
      rmatch_augfun=-1.0_dp   ! force a crash
      rmatch_augfun_nc =.false.
-     lgipaw_reconstruction = .true.
-     use_paw_as_gipaw = .true. 
+     lgipaw_reconstruction = .false.
+     use_paw_as_gipaw = .false. 
 
      if (ionode) read(qestdin,inputp,err=500,iostat=ios)
 500  call mp_bcast(ios, ionode_id, world_comm)
@@ -497,7 +500,7 @@ subroutine ld1_readin(input_file)
   if (iswitch == 3 .and. ios /= 0 ) then
      !
      ! use for testing the same configuration as for PP generation
-     ! (unless a different one is explicitely specified in namelist &test)
+     ! (unless a different one is explicitly specified in namelist &test)
      !
      ns1 = 0
      do ns=1,nwfs

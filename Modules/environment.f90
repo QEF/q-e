@@ -16,12 +16,14 @@ MODULE environment
   USE kinds, ONLY: DP
   USE io_files, ONLY: crash_file, nd_nmbr
   USE io_global, ONLY: stdout, meta_ionode
-  USE mp_world,  ONLY: nproc
+  USE mp_world,  ONLY: nproc, nnode
   USE mp_images, ONLY: me_image, my_image_id, root_image, nimage, &
       nproc_image
   USE mp_pools,  ONLY: npool
   USE mp_bands,  ONLY: ntask_groups, nproc_bgrp, nbgrp, nyfft
-  USE global_version, ONLY: version_number, svn_revision
+  USE global_version, ONLY: version_number
+  USE fox_init_module, ONLY: fox_init
+  USE command_line_options, ONLY : nmany_
 #if defined(__HDF5)
   USE qeh5_base_module,   ONLY: initialize_hdf5, finalize_hdf5
 #endif
@@ -70,11 +72,8 @@ CONTAINS
     CALL start_clock( TRIM(code) )
 
     code_version = TRIM (code) // " v." // TRIM (version_number)
-    IF ( TRIM (svn_revision) /= "unknown" ) code_version = &
-         TRIM (code_version) // " (svn rev. " // TRIM (svn_revision) // ")"
 
     ! ... for compatibility with PWSCF
-
 #if defined(__MPI)
     nd_nmbr = TRIM ( int_to_char( me_image+1 ))
 #else
@@ -125,8 +124,9 @@ CONTAINS
 #else
     CALL serial_info()
 #endif
-#if defined(__HDF5) & !defined(__OLDXML)
-  CALL initialize_hdf5()
+    CALL fox_init()
+#if defined(__HDF5)
+    CALL initialize_hdf5()
 #endif
   END SUBROUTINE environment_start
 
@@ -172,10 +172,11 @@ CONTAINS
          &/5X,"for quantum simulation of materials; please cite",   &
          &/9X,"""P. Giannozzi et al., J. Phys.:Condens. Matter 21 ",&
          &    "395502 (2009);", &
+         &/9X,"""P. Giannozzi et al., J. Phys.:Condens. Matter 29 ",&
+         &    "465901 (2017);", &
          &/9X," URL http://www.quantum-espresso.org"", ", &
          &/5X,"in publications or presentations arising from this work. More details at",&
          &/5x,"http://www.quantum-espresso.org/quote")' )
-
     RETURN
   END SUBROUTINE opening_message
 
@@ -206,7 +207,7 @@ CONTAINS
   SUBROUTINE parallel_info ( code )
     !
     CHARACTER(LEN=*), INTENT(IN) :: code
-#if defined(__OPENMP)
+#if defined(_OPENMP)
     INTEGER, EXTERNAL :: omp_get_max_threads
     !
     WRITE( stdout, '(/5X,"Parallel version (MPI & OpenMP), running on ",&
@@ -221,6 +222,10 @@ CONTAINS
          &I5," processors")' ) nproc 
 #endif
     !
+#if !defined(__GFORTRAN__) ||  ((__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8)))
+    WRITE( stdout, '(/5X,"MPI processes distributed on ",&
+         &I5," nodes")' ) nnode
+#endif
     IF ( nimage > 1 ) WRITE( stdout, &
          '(5X,"path-images division:  nimage    = ",I7)' ) nimage
     IF ( npool > 1 ) WRITE( stdout, &
@@ -235,23 +240,25 @@ CONTAINS
     IF ( ntask_groups > 1 ) WRITE( stdout, &
          '(5X,"wavefunctions fft division:  task group distribution",/,34X,"#TG    x Z-proc = ",2I7)' ) &
          ntask_groups, nproc_bgrp / ntask_groups
+    WRITE( stdout, '(5X,"Fft bands division:     nmany     = ",I7)' ) nmany_
     !
   END SUBROUTINE parallel_info
 
   !==-----------------------------------------------------------------------==!
   SUBROUTINE serial_info ( )
     !
-#if defined(__OPENMP)
+#if defined(_OPENMP)
     INTEGER, EXTERNAL :: omp_get_max_threads
 #endif
     !
-#if defined(__OPENMP)
+#if defined(_OPENMP)
     WRITE( stdout, '(/5X,"Serial multi-threaded version, running on ",&
          &I4," processor cores")' ) omp_get_max_threads()
     !
 #else
     WRITE( stdout, '(/5X,"Serial version")' )
 #endif
+    WRITE( stdout, '(5X,"Fft bands division:     nmany     = ",I7)' ) nmany_
     !
   END SUBROUTINE serial_info
 

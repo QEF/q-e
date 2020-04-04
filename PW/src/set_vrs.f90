@@ -5,107 +5,126 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!--------------------------------------------------------------------
-subroutine set_vrs (vrs, vltot, vr, kedtau, kedtaur,nrxx, nspin, doublegrid)
-  !--------------------------------------------------------------------
-  ! set the total local potential vrs on the smooth mesh to be used in 
-  ! h_psi, adding the (spin dependent) scf (H+xc) part and the sum of 
-  ! all the local pseudopotential contributions.
+!------------------------------------------------------------------------------
+SUBROUTINE set_vrs( vrs, vltot, vr, kedtau, kedtaur, nrxx, nspin, doublegrid )
+  !-----------------------------------------------------------------------------
+  !! Set the total local potential vrs on the smooth mesh to be used in 
+  !! \(\texttt{h_psi}\), adding the (spin dependent) scf (H+xc) part and
+  !! the sum of all the local pseudopotential contributions.
   !
   USE kinds
-  USE funct, only : dft_is_meta
-  USE fft_base, only : dffts 
-  implicit none
-
-  integer :: nspin, nrxx
-  ! input: number of spin components: 1 if lda, 2 if lsd, 4 if noncolinear
-  ! input: the fft grid dimension
-  real(DP) :: vrs (nrxx, nspin), vltot (nrxx), vr (nrxx, nspin), &
-              kedtau(dffts%nnr,nspin), kedtaur(nrxx,nspin)
-  ! output: total local potential on the smooth grid
-  !         vrs=vltot+vr
-  ! input: the total local pseudopotential
-  ! input: the scf(H+xc) part of the local potential
-  logical :: doublegrid
+  USE funct,    ONLY : dft_is_meta
+  USE fft_base, ONLY : dffts 
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: nspin
+  !! input: number of spin components: 1 if lda, 2 if lsd, 4 if noncolinear
+  INTEGER :: nrxx
+  !! input: the fft grid dimension
+  REAL(DP) :: vrs(nrxx,nspin)
+  !! output: total local potential on the smooth grid vrs=vltot+vr
+  REAL(DP) :: vltot(nrxx)
+  !! input: the total local pseudopotential
+  REAL(DP) :: vr(nrxx,nspin)
+  !! input: the scf(H+xc) part of the local potential
+  REAL(DP) :: kedtau(dffts%nnr,nspin)
+  !! position dependent kinetic energy enhancement factor
+  REAL(DP) :: kedtaur(nrxx,nspin)
+  !! the kinetic energy density in R-space
+  LOGICAL :: doublegrid
   ! input: true if a doublegrid is used
   !
   CALL sum_vrs( nrxx, nspin, vltot, vr, vrs )
   !
   CALL interpolate_vrs( nrxx, nspin, doublegrid, kedtau, kedtaur, vrs )
   ! 
-  return
-
-end subroutine set_vrs
+  RETURN
+  !
+END SUBROUTINE set_vrs
+!
 !
 !--------------------------------------------------------------------
-subroutine sum_vrs ( nrxx, nspin, vltot, vr, vrs )
+SUBROUTINE sum_vrs( nrxx, nspin, vltot, vr, vrs )
   !--------------------------------------------------------------------
-  ! accumulates local potential contributions in to vrs 
+  !! Accumulates local potential contributions into vrs (the total local potential).
   !
   USE kinds
   !
-  implicit none
-
-  integer :: nspin, nrxx
-  ! input: number of spin components: 1 if lda, 2 if lsd, 4 if noncolinear
-  ! input: the fft grid dimension
-  real(DP) :: vrs (nrxx, nspin), vltot (nrxx), vr (nrxx, nspin)
-  ! output: total local potential on the smooth grid
-  !         vrs=vltot+vr
-  ! input: the total local pseudopotential
-  ! input: the scf(H+xc) part of the local potential
-
-  integer:: is
-
-  do is = 1, nspin
+  IMPLICIT NONE
+  !
+  INTEGER :: nspin
+  !! input: number of spin components: 1 if lda, 2 if lsd, 4 if noncolinear
+  INTEGER :: nrxx
+  !! input: the fft grid dimension
+  REAL(DP) :: vrs(nrxx,nspin)
+  !! output: total local potential on the smooth grid:  
+  !! \(\text{vrs\}=\text{vltot}+\text{vr}\)
+  REAL(DP) :: vltot(nrxx)
+  !! input: the total local pseudopotential
+  REAL(DP) :: vr(nrxx,nspin)
+  !! input: the scf(H+xc) part of the local potential
+  !
+  ! ... local variable
+  !
+  INTEGER :: is
+  !
+  !
+  DO is = 1, nspin
      !
      ! define the total local potential (external + scf) for each spin ...
      !
-     if (is > 1 .and. nspin == 4) then
+     IF (is > 1 .AND. nspin == 4) THEN
         !
         ! noncolinear case: only the first component contains vltot
         !
-        vrs (:, is) = vr (:, is)
-     else
-        vrs (:, is) = vltot (:) + vr (:, is)
-     end if
+        vrs(:,is) = vr(:,is)
+     ELSE
+        vrs(:,is) = vltot(:) + vr(:,is)
+     ENDIF
      !
-  enddo
-  return
-
-end subroutine sum_vrs
+  ENDDO
+  !
+  RETURN
+  !
+END SUBROUTINE sum_vrs
 !
-!--------------------------------------------------------------------
-subroutine interpolate_vrs ( nrxx, nspin, doublegrid, kedtau, kedtaur, vrs )
-  !--------------------------------------------------------------------
-  ! set the total local potential vrs on the smooth mesh to be used in 
-  ! h_psi, adding the (spin dependent) scf (H+xc) part and the sum of 
-  ! all the local pseudopotential contributions.
+!--------------------------------------------------------------------------
+SUBROUTINE interpolate_vrs( nrxx, nspin, doublegrid, kedtau, kedtaur, vrs )
+  !--------------------------------------------------------------------------
+  !! Interpolates local potential on the smooth mesh if necessary.
   !
   USE kinds
-  USE funct, only : dft_is_meta
-  USE fft_base, only : dffts 
-  implicit none
-
-  integer :: nspin, nrxx
-  ! input: number of spin components: 1 if lda, 2 if lsd, 4 if noncolinear
-  ! input: the fft grid dimension
-  real(DP) :: vrs (nrxx, nspin), &
-              kedtau(dffts%nnr,nspin), kedtaur(nrxx,nspin)
-  ! output: total local potential interpolated on the smooth grid
-  ! input: the scf(H+xc) part of the local potential
-  logical :: doublegrid
-  ! input: true if a doublegrid is used
-
-  integer:: is
-
-  do is = 1, nspin
-     !
-     ! ... and interpolate it on the smooth mesh if necessary
-     !
-     if (doublegrid) call interpolate (vrs (1, is), vrs (1, is), - 1)
-     if (dft_is_meta()) call interpolate(kedtaur(1,is),kedtau(1,is),-1)
-  enddo
-  return
-
-end subroutine interpolate_vrs
+  USE funct,           ONLY : dft_is_meta
+  USE fft_base,        ONLY : dffts, dfftp
+  USE fft_interfaces,  ONLY : fft_interpolate
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: nspin
+  !! input: number of spin components: 1 if lda, 2 if lsd, 4 if noncolinear
+  INTEGER :: nrxx
+  !! input: the fft grid dimension
+  REAL(DP) :: vrs(nrxx,nspin)
+  !! output: total local potential interpolated on the smooth grid
+  REAL(DP) :: kedtau(dffts%nnr,nspin)
+  !! position dependent kinetic energy enhancement factor
+  REAL(DP) :: kedtaur(nrxx,nspin)
+  !! the kinetic energy density in R-space
+  LOGICAL :: doublegrid
+  !! input: true if a doublegrid is used
+  !
+  ! ... local variable
+  !
+  INTEGER :: is
+  !
+  ! ... interpolate it on the smooth mesh if necessary
+  !
+  DO is = 1, nspin
+     IF (doublegrid) CALL fft_interpolate( dfftp, vrs(:, is), dffts, vrs(:, is) )
+     IF (dft_is_meta()) CALL fft_interpolate( dfftp, kedtaur(:,is), dffts, kedtau(:,is) )
+  ENDDO
+  !
+  RETURN
+  !
+END SUBROUTINE interpolate_vrs

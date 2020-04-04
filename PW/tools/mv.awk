@@ -1,6 +1,6 @@
 BEGIN {nr=0; nat=0; nline=0; nframe=0; label=""; print}
 { if ($3=="atoms/cell" && nr==0) {nat=$5 };
-  if ($1=="lattice" && $2=="parameter" && nr==0 ) {alat= $5*0.529177}
+  if ($1=="lattice" && $2=="parameter" && nr==0 ) {alat= $5*0.52917720859}
   if ($1=="Search") {label="BFGS Search" };
   if ($1=="Final" && $2=="estimate") {label=$0};
   if ($1=="ATOMIC_POSITIONS") {nframe=nframe+1; nr=NR; nline=nat; print "frame ",nframe,label ; print " "}; 

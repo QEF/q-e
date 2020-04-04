@@ -90,7 +90,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
      write(stdout,*) 'setting preconditioning'
      FLUSH(stdout)
 
-!the following is for calling h_1psi routine
+!the following is for calling hs_1psi routine
      g2kin(1:npw) = ( (g(1,igk_k(1:npw,1)) )**2 + &
           ( g(2,igk_k(1:npw,1)) )**2 + &
           ( g(3,igk_k(1:npw,1)) )**2 ) * tpiba2

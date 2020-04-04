@@ -13,7 +13,6 @@ PROGRAM phcg
   USE ions_base,     ONLY: nat, tau
   USE io_global,     ONLY: ionode
   USE io_files,      ONLY: seqopn
-  USE check_stop,    ONLY: check_stop_init
   USE mp_global,     ONLY: mp_startup, mp_global_end
   USE environment,   ONLY: environment_start
   USE cgcom
@@ -25,8 +24,6 @@ PROGRAM phcg
   CHARACTER(len=9) :: cdate, ctime, code = 'PHCG'
   LOGICAL :: exst
   INTEGER :: i
-  !
-  CALL check_stop_init ()
   !
   ! Initialize MPI, clocks, print initial messages
   !
@@ -416,37 +413,34 @@ END SUBROUTINE cg_eps0dyn
 SUBROUTINE cg_neweps
   !-----------------------------------------------------------------------
   !
+  !!  Recalculate self-consistent potential etc
+  !
   USE constants, ONLY : bohr_radius_angs, fpi
   USE io_global, ONLY : stdout
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat, tau
   USE fft_base,  ONLY : dfftp
   USE scf,       ONLY : rho, rho_core
-  USE lsda_mod,  ONLY : current_spin
-  USE funct,     ONLY : dmxc
   USE cgcom
   !
   IMPLICIT NONE
-
-  INTEGER :: i, j
-  REAL(DP) :: rhotot, chi(3,3)
   !
-  !  recalculate self-consistent potential etc
+  INTEGER :: i, j
+  REAL(DP), DIMENSION(3,3) :: chi(3,3)
+  REAL(DP), DIMENSION(dfftp%nnr) ::  rhotot, sign_r
   !
   CALL newscf
   !
-  !  new derivative of the xc potential
+  !  new derivative of the xc potential - NOT IMPLEMENTED FOR LSDA
   !
-  dmuxc(:) = 0.d0
-  DO i = 1,dfftp%nnr
-     rhotot = rho%of_r(i,current_spin)+rho_core(i)
-     IF ( rhotot> 1.d-30 ) dmuxc(i)= dmxc( rhotot)
-     IF ( rhotot<-1.d-30 ) dmuxc(i)=-dmxc(-rhotot)
-  ENDDO
+  rhotot(:) = rho%of_r(:,1) + rho_core(:)
+  !
+  CALL dmxc_lda( dfftp%nnr, rhotot, dmuxc )
+  !
   !
   !  re-initialize data needed for gradient corrections
   !
-  CALL cg_setupdgc
+  CALL setup_dgc( )
   !
   !   calculate linear response to macroscopic fields
   !
@@ -488,7 +482,7 @@ SUBROUTINE newscf
   USE wvfct, ONLY: nbnd, nbndx
   USE noncollin_module, ONLY: report
   USE symm_base,     ONLY : nsym
-  USE io_files,      ONLY : iunwfc, input_drho, output_drho, prefix, tmp_dir
+  USE io_files,      ONLY : iunwfc, input_drho, output_drho, prefix, tmp_dir, postfix
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : restart, io_level, lscf, iprint, &
                             david, max_cg_iter, &
@@ -538,7 +532,7 @@ SUBROUTINE newscf
   !
   CALL openfil
   !
-  dirname = TRIM(tmp_dir) //TRIM(prefix) // '.save/'
+  dirname = TRIM(tmp_dir) //TRIM(prefix) // postfix
   CALL extrapolate_charge( dirname, 1 )
   CALL hinit1
   CALL electrons ( )

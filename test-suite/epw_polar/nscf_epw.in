@@ -2,7 +2,7 @@
     calculation     = 'nscf'
     prefix          = 'sic'
     wf_collect      = .false.
-    pseudo_dir      = './'
+    pseudo_dir      = '../../pseudo/'
     outdir          = './'
  /
  &system
@@ -10,7 +10,7 @@
     celldm(1)       = 8.237
     nat             = 2
     ntyp            = 2
-    ecutwfc         = 60
+    ecutwfc         = 20
     nbnd            = 8
  /
  &electrons

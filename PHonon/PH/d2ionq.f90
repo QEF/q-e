@@ -25,6 +25,8 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   USE constants, ONLY: e2, tpi, fpi
   USE mp_bands, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
+  USE Coul_cut_2D, ONLY : do_cutoff_2D, cutoff_2D 
+  USE Coul_cut_2D_ph, ONLY : cutoff_2D_qg
 
   implicit none
   !
@@ -110,6 +112,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
               (g (3, ng) + q (3) ) **2) * tpiba2
      if (abs (gtq2) > 1.d-8) then
         facq = - e2*fpi * tpiba2 / omega * exp ( - gtq2 / alpha / 4.d0) / gtq2
+        if (do_cutoff_2D) facq= facq*cutoff_2D_qg(ng)
      else
         facq = 0.d0
      endif
@@ -138,6 +141,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
      gt2 = gg (ng) * tpiba2
      if (abs (gt2) > 1.d-8) then
         fac = - e2 * fpi * tpiba2 / omega * exp ( - gt2 / alpha / 4.d0) / gt2
+        if (do_cutoff_2D) fac= fac*cutoff_2D(ng)
      else
         fac = 0.d0
      endif

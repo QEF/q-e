@@ -1,0 +1,6 @@
+This example is the first step of the silicon example from BerkeleyGW. It 
+produces several binary files (which can only be tested in BerkeleyGW) and 
+2 ascii files (*.dat files included with the example). It uses the Si.bhs 
+pseudopotential file.
+
+ 

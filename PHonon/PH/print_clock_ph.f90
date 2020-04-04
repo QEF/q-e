@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,6 +13,9 @@ subroutine print_clock_ph
   USE uspp,       ONLY : okvan, nlcc_any
   USE control_ph, ONLY : trans, zue, epsil
   USE ramanm,     ONLY : lraman, elop
+  USE ldau,       ONLY : lda_plus_u
+  USE dvscf_interpolate, ONLY : ldvscf_interpolate
+  !
   implicit none
   !
   WRITE( stdout, * )
@@ -143,6 +146,41 @@ subroutine print_clock_ph
 
   call print_clock ('addusddort')
   WRITE( stdout, * )
+  
+  IF (lda_plus_u) THEN
+     call print_clock ('dnsq_bare')
+     call print_clock ('dwfc')
+     call print_clock ('swfc')
+     call print_clock ('delta_sphi')
+     call print_clock ('dnsq_orth')
+     call print_clock ('d2nsq_bare_k')
+     call print_clock ('dnsq_scf')
+     call print_clock ('adddvhubscf')
+     call print_clock ('dynmat_hub_bare')
+     call print_clock ('dvqhub_barepsi_us')
+     call print_clock ('dvqhub_barepsi_us2')
+     call print_clock ('dynmat_hub_scf')
+     call print_clock ('doubleprojqq')
+     call print_clock ('doubleprojqq2')
+     WRITE( stdout, * )
+  ENDIF
+
+  IF (ldvscf_interpolate) THEN
+     WRITE( stdout, * ) '     Fourier interpolation of dVscf'
+     ! CALL print_clock('dvscf_setup')
+     CALL print_clock('dvscf_r2q')
+     CALL print_clock('dvscf_davcio')
+     CALL print_clock('dvscf_scatgrid')
+     ! CALL print_clock('dvscf_fourier')
+     ! CALL print_clock('dvscf_mpsum')
+     ! CALL print_clock('dvscf_shift')
+     ! CALL print_clock('dvscf_iqr')
+     ! CALL print_clock('dvscf_long')
+     CALL print_clock('dvscf_bare')
+     ! CALL print_clock('dvscf_cart2u')
+     WRITE( stdout, * )
+  ENDIF
+
   WRITE( stdout,  * ) '     General routines'
   call print_clock ('calbec')
   call print_clock ('fft')

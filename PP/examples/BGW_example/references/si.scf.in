@@ -1,0 +1,44 @@
+&control
+   prefix = 'si'
+   calculation = 'scf'
+   verbosity = 'high'
+   wf_collect = .true.
+   tstress = .true.
+   tprnfor = .true.
+   outdir = '.'
+   wfcdir = '.'
+   pseudo_dir = '.'
+/
+&system
+   ibrav = 0
+   a = 5.43
+   nat = 2
+   ntyp = 1
+   nbnd = 33
+   ecutwfc = 45.0
+   occupations = 'smearing'
+   smearing = 'mp'
+   degauss = 0.01
+/
+&electrons
+   electron_maxstep = 100
+   conv_thr = 1.0d-10
+   mixing_mode = 'plain'
+   mixing_beta = 0.7
+   mixing_ndim = 8
+   diagonalization = 'david'
+   diago_david_ndim = 4
+   diago_full_acc = .true.
+   startingwfc = 'random'
+/
+CELL_PARAMETERS alat
+       0.000000000   0.500000000   0.500000000
+       0.500000000   0.000000000   0.500000000
+       0.500000000   0.500000000   0.000000000
+ATOMIC_SPECIES
+  Si  28.086  Si.bhs
+ATOMIC_POSITIONS crystal
+  Si  -0.125000000  -0.125000000  -0.125000000
+  Si   0.125000000   0.125000000   0.125000000
+K_POINTS automatic
+8 8 8 0 0 0

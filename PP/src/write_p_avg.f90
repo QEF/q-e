@@ -14,7 +14,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
   USE cell_base,            ONLY : at, bg, ibrav
   USE constants,            ONLY : rytoev
-  USE gvect,                ONLY : ngm, nl, g
+  USE gvect,                ONLY : ngm, g
   USE lsda_mod,             ONLY : nspin
   USE ener,                 ONLY : ef
   USE wvfct,                ONLY : et, nbnd, npwx
@@ -25,7 +25,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
                                    allocate_bec_type, deallocate_bec_type
   USE noncollin_module,     ONLY : noncolin, npol
   USE ldaU,                 ONLY : lda_plus_u
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE io_global,            ONLY : ionode, ionode_id, stdout
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE mp_bands,             ONLY : intra_bgrp_comm
@@ -33,9 +33,8 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   !
   IMPLICIT NONE
   !
-  INTEGER :: spin_component, nks1, nks2, firstk, lastk, npw
+  INTEGER :: spin_component, nks1, nks2, firstk, lastk, npw, ndim
   INTEGER :: iunout, ios, ik, ibnd, jbnd, ipol, nbnd_occ
-  COMPLEX(DP) :: zdotc
   COMPLEX(DP), ALLOCATABLE :: ppsi(:,:), ppsi_us(:,:), matp(:,:,:)
   CHARACTER (len=256) :: filp, namefile
   !
@@ -96,29 +95,23 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
 
      CALL calbec ( npw, vkb, evc, becp, nbnd_occ )
 
+     IF (noncolin) THEN
+        ndim = npwx * npol
+     ELSE
+        ndim = npw
+     END IF
      DO ipol=1,3
         CALL compute_ppsi(ppsi, ppsi_us, ik, ipol, nbnd_occ, spin_component)
+        ! FIXME: use ZGEMM instead of DOT_PRODUCT
         DO ibnd=nbnd_occ+1,nbnd
            DO jbnd=1,nbnd_occ
-              IF (noncolin) THEN
-                 matp(ibnd-nbnd_occ,jbnd,ipol)=  &
-                         zdotc(npwx*npol,evc(1,ibnd),1,ppsi(1,jbnd),1)
-                 IF (okvan) THEN
-                    matp(ibnd-nbnd_occ,jbnd,ipol)=                  &
-                         matp(ibnd-nbnd_occ,jbnd,ipol)+             &
-                           (0.d0,0.5d0)*(et(ibnd,ik)-et(jbnd,ik))*  &
-                         (zdotc(npwx*npol,evc(1,ibnd),1,ppsi_us(1,jbnd),1) )
-                 ENDIF
-              ELSE
-                 matp(ibnd-nbnd_occ,jbnd,ipol)=  &
-                            zdotc(npw,evc(1,ibnd),1,ppsi(1,jbnd),1)
-                 IF (okvan) THEN
-                    matp(ibnd-nbnd_occ,jbnd,ipol)= &
-                               matp(ibnd-nbnd_occ,jbnd,ipol) +  &
-                   (0.d0,0.5d0)*zdotc(npw,evc(1,ibnd),1,ppsi_us(1,jbnd),1)* &
-                   (et(ibnd,ik)-et(jbnd,ik))
-
-                 ENDIF
+              matp(ibnd-nbnd_occ,jbnd,ipol)=  &
+                   DOT_PRODUCT( evc(1:ndim,ibnd),ppsi(1:ndim,jbnd) )
+              IF (okvan) THEN
+                 matp(ibnd-nbnd_occ,jbnd,ipol)=                  &
+                      matp(ibnd-nbnd_occ,jbnd,ipol)+             &
+                      (0.d0,0.5d0)*(et(ibnd,ik)-et(jbnd,ik))*  &
+                      DOT_PRODUCT( evc(1:ndim,ibnd),ppsi_us(1:ndim,jbnd))
               ENDIF
            ENDDO
         ENDDO

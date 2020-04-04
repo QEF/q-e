@@ -24,11 +24,11 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
    USE wvfct,     ONLY : npwx, npw, nbnd
    USE gvecw,     ONLY : ecutwfc
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm, mpime, nproc
    USE mp_pools, ONLY : intra_pool_comm
-   USE gvecs,              ONLY : nls, nlsm, doublegrid
+   USE gvecs,              ONLY : doublegrid
    USE fft_custom_gwl
    USE mp_wave, ONLY : mergewf,splitwf
    USE fft_base,             ONLY : dfftp, dffts
@@ -120,10 +120,10 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
          !trasform to r-space
          psic(:)=(0.d0,0.d0)
          do ig=1,max_ngm
-            psic(nl(ig))=tmp_g(ig)
-            psic(nlm(ig))=CONJG(tmp_g(ig))
+            psic(dfftp%nl(ig))=tmp_g(ig)
+            psic(dfftp%nlm(ig))=CONJG(tmp_g(ig))
          enddo
-         CALL invfft ('Dense', psic, dfftp)
+         CALL invfft ('Rho', psic, dfftp)
          tmp_r(:)=dble(psic(:))
          call davcio(tmp_r,dfftp%nnr,iunrprod,iw,1)
       enddo
@@ -541,7 +541,7 @@ subroutine pc_operator(state,ispin,l_cond)
    USE kinds,    ONLY : DP
    USE gvect
    USE wvfct,    ONLY : npwx, npw, nbnd
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm
    USE wannier_gw, ONLY : num_nbndv,num_nbnds
@@ -591,7 +591,7 @@ subroutine pc_operator_t(state,evc_t,ispin, fc)
    USE kinds,    ONLY : DP
    USE gvect
    USE wvfct,    ONLY : npwx, npw, nbnd
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm
    USE wannier_gw, ONLY : num_nbndv
@@ -641,10 +641,10 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
   USE constants, ONLY : e2, pi, tpi, fpi
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
   USE wvfct,    ONLY : g2kin, npwx, npw, nbnd
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions, ONLY : evc, psic
   USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
   USE mp_world, ONLY : mpime, nproc, world_comm
-  USE gvecs,              ONLY : nls, nlsm, doublegrid
+  USE gvecs,              ONLY : doublegrid
   USE g_psi_mod,            ONLY : h_diag, s_diag
   USE becmod,           ONLY : becp,allocate_bec_type,deallocate_bec_type
   USE uspp,                 ONLY : vkb, nkb, okvan
@@ -1290,9 +1290,9 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
   USE wvfct,    ONLY : npwx, npw, nbnd
   USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
   USE mp_world, ONLY : world_comm
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions, ONLY : evc, psic
   USE gvect
-  USE gvecs,              ONLY : nls, nlsm, doublegrid
+  USE gvecs,              ONLY : doublegrid
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE wannier_gw, ONLY : l_verbose
@@ -1532,8 +1532,8 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
      do iv=1,num_nbndv(ispin),num_nbndv(ispin)-1!ATTENZIONE
 !put iv on real space
         psic(:)=(0.d0,0.d0)
-        psic(nls(igk_k(1:npw,1)))  = evc(1:npw,iv)
-        psic(nlsm(igk_k(1:npw,1))) = CONJG( evc(1:npw,iv) )
+        psic(dffts%nl(igk_k(1:npw,1)))  = evc(1:npw,iv)
+        psic(dffts%nlm(igk_k(1:npw,1))) = CONJG( evc(1:npw,iv) )
         CALL invfft ('Wave', psic, dffts)
         wv_real(:)= DBLE(psic(:))
 !loop on wannier_products
@@ -1542,15 +1542,15 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
      !trasform to r-space
            psic(:)=(0.d0,0.d0)
            do ig=1,max_ngm
-              psic(nl(ig))=tmp_g(ig)
-              psic(nlm(ig))=CONJG(tmp_g(ig))
+              psic(dfftp%nl(ig))=tmp_g(ig)
+              psic(dfftp%nlm(ig))=CONJG(tmp_g(ig))
            enddo
-           CALL invfft ('Dense', psic, dfftp)
+           CALL invfft ('Rho', psic, dfftp)
            tmp_r(:)=dble(psic(:))
 !!form products with w_v and trasfrom in G space
            psic(:)=cmplx(tmp_r(:)*wv_real(:),0.d0)
            CALL fwfft ('Wave', psic, dffts)
-           wp_prod(1:npw) = psic(nls(igk_k(1:npw,1)))
+           wp_prod(1:npw) = psic(dffts%nl(igk_k(1:npw,1)))
 !!project on conduction subspace
            call pc_operator(wp_prod(:),ispin, .false.)
 !!do scalar product
@@ -1940,7 +1940,7 @@ subroutine pc_operator_test(state)
    USE kinds,    ONLY : DP
    USE gvect
    USE wvfct,    ONLY : npwx, npw, nbnd
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm
    USE wannier_gw, ONLY : num_nbndv
@@ -1974,7 +1974,7 @@ subroutine pc_operator_t_m(numpw,state,evc_t,ispin,fc)
    USE kinds,    ONLY : DP
    USE gvect
    USE wvfct,    ONLY : npwx, npw, nbnd
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm
    USE wannier_gw, ONLY : num_nbndv
@@ -2025,7 +2025,7 @@ subroutine pc_operator_t_r(numpw,state,evc_r,ispin,fc)
    USE kinds,    ONLY : DP
    USE gvect
    USE wvfct,    ONLY : npwx, npw, nbnd
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm
    USE wannier_gw, ONLY : num_nbndv
@@ -2080,7 +2080,7 @@ subroutine  h_psi_self( lda, n, m, psi, hpsi )
   USE kinds,    ONLY : DP
   USE gvect,    ONLY : gstart
   USE wvfct,    ONLY : npwx, npw, nbnd,et
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE wannier_gw, ONLY : n_gw_states, ene_gw, delta_self
   USE mp, ONLY : mp_sum
   USE mp_world, ONLY : world_comm
@@ -2138,7 +2138,7 @@ subroutine  h_psi_scissor( ispin,lda, n, m, psi, hpsi )
   USE kinds,    ONLY : DP
   USE gvect,    ONLY : gstart
   USE wvfct,    ONLY : npwx, npw, nbnd,et
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE wannier_gw, ONLY : num_nbndv,scissor
   USE mp, ONLY : mp_sum
   USE mp_world, ONLY : world_comm
@@ -2195,11 +2195,11 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
    USE wvfct,    ONLY : npwx, npw, nbnd
    USE gvecw,     ONLY : ecutwfc
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_pools, ONLY : intra_pool_comm
    USE mp_world, ONLY : world_comm, mpime, nproc
-   USE gvecs,              ONLY : nls, nlsm, doublegrid
+   USE gvecs,              ONLY : doublegrid
    USE fft_custom_gwl
    USE mp_wave, ONLY : mergewf,splitwf
    USE fft_base,             ONLY : dfftp, dffts

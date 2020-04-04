@@ -38,21 +38,27 @@ MODULE control_flags
             timing, memchk, trane, dt_old, ampre, tranp, amprp,              &
             tnosee, tnosep, tnoseh, tcp, tcap,                               &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
-            tscreen, gamma_only, force_pairing, lecrpa, tddfpt, smallmem
+            tscreen, gamma_only, force_pairing, lecrpa, tddfpt, smallmem,    &
+            tfirst, tlast, tprint, trescalee, max_xml_steps, dfpt_hub  
   !
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tksw, trhor, thdyn, trhow
-  PUBLIC :: twfcollect
-  PUBLIC :: lkpoint_dir
   !
   ! ...   declare execution control variables
   !
   LOGICAL :: trhor     = .FALSE. ! read rho from unit 47 (only cp, seldom used)
   LOGICAL :: trhow     = .FALSE. ! CP code, write rho to restart dir
   LOGICAL :: tksw      = .FALSE. ! CP: write Kohn-Sham states to restart dir
+  LOGICAL :: tfirst    = .TRUE.  ! CP: true if first iteration after restart
+  LOGICAL :: tlast     = .FALSE. ! CP: true if last iteration before ending
+  LOGICAL :: tprint    = .FALSE. ! CP: set to true when calculation of time
+                                 !     derivatives of wave functions must be 
+                                 !     computed via projection on occupied
+                                 !     manifold 
   !
   LOGICAL :: tsde          = .FALSE. ! electronic steepest descent
   LOGICAL :: tzeroe        = .FALSE. ! set to zero the electronic velocities
+  LOGICAL :: trescalee     = .FALSE. ! rescale the electronics velocities
   LOGICAL :: tfor          = .FALSE. ! move the ions ( calculate forces )
   LOGICAL :: tsdp          = .FALSE. ! ionic steepest descent
   LOGICAL :: tzerop        = .FALSE. ! set to zero the ionic velocities
@@ -68,10 +74,10 @@ MODULE control_flags
   LOGICAL :: timing        = .FALSE. ! print out timing information
   LOGICAL :: memchk        = .FALSE. ! check for memory leakage
   LOGICAL :: tscreen       = .FALSE. ! Use screened coulomb potentials for cluster calculations
-  LOGICAL :: twfcollect    = .FALSE. ! Collect wave function in the restart file at the end of run.
-  LOGICAL :: lkpoint_dir   = .TRUE.  ! save each k point in a different directory
   LOGICAL :: force_pairing = .FALSE. ! Force pairing
   LOGICAL :: lecrpa        = .FALSE. ! RPA correlation energy request
+  LOGICAL :: dfpt_hub      = .FALSE. ! If .true. perform the SCF calculation of U (and V)
+                                     ! and let PW rotuines to know about this
   LOGICAL :: tddfpt        = .FALSE. ! use TDDFPT specific tweaks when using the Environ plugin
   LOGICAL :: smallmem      = .FALSE. ! the memory per task is small
   !
@@ -93,6 +99,7 @@ MODULE control_flags
   INTEGER :: ndr    = 0 !
   INTEGER :: nomore = 0 !
   INTEGER :: iprint =10 ! print output every iprint step
+  INTEGER  :: max_xml_steps =0 ! max number of dynamics included in xml file if 0 all steps are included. 
   INTEGER :: isave  = 0 ! write restart to ndr unit every isave step
   !
   ! ... .TRUE. if only gamma point is used
@@ -158,6 +165,7 @@ MODULE control_flags
     lbands  =.FALSE., &! if .TRUE. the calc. is band structure
     lconstrain=.FALSE.,&! if .TRUE. the calc. is constraint
     llondon =.FALSE., & ! if .TRUE. compute Grimme D2 dispersion corrections
+    ldftd3 =.FALSE., & ! if .TRUE. compute Grimme D3 dispersion corrections
     ts_vdw  =.FALSE., & ! as above for Tkatchenko-Scheffler disp.corrections
     lxdm    =.FALSE., & ! if .TRUE. compute XDM dispersion corrections
     restart =.FALSE.   ! if .TRUE. restart from results of a preceding run
@@ -193,9 +201,10 @@ MODULE control_flags
   REAL(DP), PUBLIC  :: &
     ethr               ! the convergence threshold for eigenvalues
   INTEGER, PUBLIC :: &
-    isolve,           &! Davidson or CG or ParO diagonalization
+    isolve,           &! index selecting Davidson,  CG , PPCG or ParO diagonalization
     david,            &! max dimension of subspace in Davidson diagonalization
-    max_cg_iter        ! maximum number of iterations in a CG call
+    max_cg_iter,      &! maximum number of iterations in a CG call
+    max_ppcg_iter      ! maximum number of iterations in a PPCG call
   LOGICAL, PUBLIC :: &
     diago_full_acc = .FALSE. ! if true,  empty eigenvalues have the same
                              ! accuracy of the occupied ones
@@ -261,6 +270,9 @@ MODULE control_flags
   ! ... External Forces on Ions
   !
   LOGICAL,          PUBLIC :: textfor = .FALSE.
+
+
+  LOGICAL,          PUBLIC :: treinit_gvecs = .FALSE.
 
   !
   ! ...  end of module-scope declarations

@@ -22,13 +22,12 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
 ! gqq        : input, Int_e exp(iG*r)*q_ijR(r)
 ! evalue     : input, scale of electric field
  
-  use ions_base, only : nax, na, nsp
-  use uspp_param, only: nvb, ish
+  use ions_base, only : nax, na, nsp, nat, ityp
+  use uspp_param, only: upf, nh, nhm
+  use uspp, only : nkb, indv_ijkb0
   use kinds, only : dp
   use constants, only :
   use cell_base, only: at, alat
-  use uspp_param, only: nh, nhm
-  use uspp, only : nhsa=> nkb
   use electrons_base, only: nbsp, nbspx, nspin, nbspx_bgrp
   use mp_global, only: nbgrp
 
@@ -37,7 +36,7 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
 
   real(dp) evalue
   complex(dp) qmatinv(nbspx,nbspx),gqq(nhm,nhm,nax,nsp)
-  real(dp) bec0(nhsa,nbspx),becdr(nhsa,nbspx,3)
+  real(dp) bec0(nkb,nbspx),becdr(nkb,nbspx,3)
   real(dp) fion(3,*)
   integer ipol
   logical tfor
@@ -47,7 +46,7 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
   complex(dp) ci, temp, temp1,temp2,temp3
   real(dp) :: gmes
   real(dp), external :: g_mes
-  integer iv,jv,ia,is,k,i,j,isa,ilm,jlm,inl,jnl,ism
+  integer iv,jv,ia,is,k,i,j,ilm,jlm,inl,jnl,ism
       
   if(.not. tfor) return
 
@@ -57,15 +56,13 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
   ci = (0.d0,1.d0)
   gmes = g_mes (ipol, at, alat) 
 
-  isa = 0
-  do is=1,nvb
-   do ia=1,na(is)
-     isa = isa + 1
-     do iv= 1,nh(is)
-        do jv=1,nh(is)         
-              inl=ish(is)+(iv-1)*na(is)+ia
-              jnl=ish(is)+(jv-1)*na(is)+ia
-             
+  do ia=1,nat
+     is=ityp(ia)
+     IF(upf(is)%tvanp) THEN
+        do iv= 1,nh(is)
+           do jv=1,nh(is)         
+              inl = indv_ijkb0(ia) + iv
+              jnl = indv_ijkb0(ia) + jv
               temp=(0.d0,0.d0)
               temp1=(0.d0,0.d0)
               temp2=(0.d0,0.d0)
@@ -89,13 +86,13 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
                  enddo
               enddo
 
-              fion(ipol,isa) = fion(ipol,isa) -   2.d0*evalue*AIMAG(temp)/gmes
-              fion(1,isa) = fion(1,isa) -   2.d0*evalue*AIMAG(temp1)/gmes
-              fion(2,isa) = fion(2,isa) -   2.d0*evalue*AIMAG(temp2)/gmes
-              fion(3,isa) = fion(3,isa) -   2.d0*evalue*AIMAG(temp3)/gmes
+              fion(ipol,ia) = fion(ipol,ia) -   2.d0*evalue*AIMAG(temp)/gmes
+              fion(1,ia) = fion(1,ia) -   2.d0*evalue*AIMAG(temp1)/gmes
+              fion(2,ia) = fion(2,ia) -   2.d0*evalue*AIMAG(temp2)/gmes
+              fion(3,ia) = fion(3,ia) -   2.d0*evalue*AIMAG(temp3)/gmes
            end do
         end do
-     end do
+     END IF
   end do
 
   return

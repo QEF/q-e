@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,18 +14,25 @@ SUBROUTINE lr_run_nscf( )
   !
   ! Created by Iurii Timrov (2013)
   !
-  USE control_flags,   ONLY : conv_ions, twfcollect, restart
+  USE control_flags,   ONLY : conv_ions, restart
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE io_files,        ONLY : prefix, tmp_dir, wfc_dir, seqopn
-  USE fft_base,        ONLY : dffts
-  USE mp_bands,        ONLY : ntask_groups
+  USE io_global,       ONLY : stdout
   USE lr_variables,    ONLY : tmp_dir_lr
+  USE mp_bands,        ONLY : ntask_groups, intra_bgrp_comm, nyfft
+  USE fft_types,       ONLY : fft_type_allocate
+  USE fft_base,        ONLY : dffts, dfftp
+  USE cell_base,       ONLY : at, bg
+  USE gvect,           ONLY : gcutm
+  USE gvecs,           ONLY : gcutms
   !
   IMPLICIT NONE
   !
   LOGICAL :: exst
   !
   CALL start_clock( 'lr_run_nscf' )
+  !
+  WRITE( stdout, '(/,5X,"------------ Nscf calculation ---------------")')
   !   
   CALL clean_pw(.FALSE.)
   !   
@@ -48,6 +55,9 @@ SUBROUTINE lr_run_nscf( )
   restart = .false.
   conv_ions = .true.  ! IT: maybe this is not needed
   !
+  CALL fft_type_allocate ( dfftp, at, bg, gcutm,  intra_bgrp_comm, nyfft=nyfft )
+  CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft )
+  !
   ! Initialize variables for the non-scf calculations at k
   ! and k+q required by the linear response calculation at finite q.
   !
@@ -55,7 +65,7 @@ SUBROUTINE lr_run_nscf( )
   !
   ! The variables igk_k and ngk are re-set up here (because there 
   ! are not only poins k but also points k+q) through the path:
-  ! init_run -> hinit0 -> init_igk
+  ! init_run -> allocate_wfc_k -> init_igk
   ! 
   CALL init_run()
   !
@@ -65,7 +75,6 @@ SUBROUTINE lr_run_nscf( )
   !
   ! Save information for further processing
   !
-  twfcollect = .FALSE.
   CALL punch( 'all' ) 
   !
   CALL seqopn( 4, 'restart', 'UNFORMATTED', exst )

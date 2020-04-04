@@ -19,13 +19,13 @@ subroutine init_gipaw_1
   USE cell_base ,  ONLY : omega
   USE ions_base,   ONLY : nat, ntyp => nsp, ityp
   USE constants,   ONLY : fpi
-  USE us,          ONLY : dq, nqx, tab, tab_d2y, qrad, spline_ps
+  USE us,          ONLY : dq, nqx, tab, tab_d2y, spline_ps
   USE paw_gipaw,   ONLY : paw_recon, paw_nkb, paw_lmaxkb
   USE splinelib
   USE uspp,        ONLY : ap, aainit
   USE atom,        ONLY : rgrid, msh
   USE io_global,   ONLY : stdout
-  USE mp_global,   ONLY : intra_pool_comm
+  USE mp_pools,    ONLY : intra_pool_comm
   USE mp,          ONLY : mp_sum
   USE matrix_inversion
   !

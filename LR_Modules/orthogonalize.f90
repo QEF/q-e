@@ -10,7 +10,7 @@
 SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
 !------------------------------------------------------------------------
   !
-  ! This routine ortogonalizes dvpsi to the valence states: ps = <evq|dvpsi>
+  ! This routine orthogonalizes dvpsi to the valence states: ps = <evq|dvpsi>
   ! It should be quite general. It works for metals and insulators, with
   ! NC as well as with US PP, both SR or FR.
   ! Note that on output it changes sign. So it applies -P_c^+.
@@ -35,8 +35,9 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   USE ener,             ONLY : ef
   USE becmod,           ONLY : bec_type, becp, calbec
   USE uspp,             ONLY : vkb, okvan
-  USE mp_bands,         ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : use_bgrp_in_hpsi, inter_bgrp_comm, intra_bgrp_comm
   USE mp,               ONLY : mp_sum
+  USE funct,            ONLY : exx_is_active
   USE control_flags,    ONLY : gamma_only
   USE gvect,            ONLY : gstart
   USE control_lr,       ONLY : alpha_pv, nbnd_occ
@@ -52,7 +53,7 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   !
   COMPLEX(DP), ALLOCATABLE :: ps(:,:)
   REAL(DP), ALLOCATABLE    :: ps_r(:,:)
-  INTEGER :: ibnd, jbnd, nbnd_eff
+  INTEGER :: ibnd, jbnd, nbnd_eff, n_start, n_end
   REAL(DP) :: wg1, w0g, wgp, wwg, deltae, theta
   REAL(DP), EXTERNAL :: w0gauss, wgauss
   ! functions computing the delta and theta function
@@ -169,7 +170,14 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
   !
   IF (.NOT.dpsi_computed) THEN
      !
-     IF (okvan) CALL calbec ( npwq, vkb, evq, becp, nbnd_eff)
+     IF (okvan) then
+        if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. nbnd_eff > 1) then
+           call divide(inter_bgrp_comm,nbnd_eff, n_start, n_end)
+           if ( n_end >= n_start) CALL calbec ( npwq, vkb, evq(:,n_start:n_end), becp, n_end - n_start + 1 )
+        else
+           CALL calbec ( npwq, vkb, evq, becp, nbnd_eff )
+        end if
+     end if
      !
      CALL s_psi (npwx, npwq, nbnd_eff, evq, dpsi)
      !

@@ -13,7 +13,8 @@
 ! legacy NEC ASL libraries (3d only, no parallel execution)                !
 ! Written by Carlo Cavazzoni, modified by P. Giannozzi, contributions      !
 ! by Martin Hilgemans, Guido Roma, Pascal Thibaudeau, Stephane Lefranc,    !
-! Nicolas Lacorne, Filippo Spiga, Nicola Varini - Last update Jul 2015     !
+! Nicolas Lacorne, Filippo Spiga, Nicola Varini, Jason Wood                !
+! Last update Oct 2017                                                     !
 !--------------------------------------------------------------------------!
 
 !=----------------------------------------------------------------------=!

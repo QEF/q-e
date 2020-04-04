@@ -284,7 +284,7 @@ ATOMIC_SPECIES
  Au  196.966  Au.pz-rrkjus_aewfc.UPF
  C    12.0107  C.pz-rrkjus.UPF  
  O    15.9994  O.pz-rrkjus.UPF  
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
 C   0.238357456 0.0 0.948
 O   0.381346734 0.0 0.948
 Au  0.0  0.0  0.000
@@ -415,7 +415,7 @@ ATOMIC_SPECIES
  Au  196.966  Au.pz-rrkjus_aewfc.UPF
  C    12.0107  C.pz-rrkjus.UPF  
  O    15.9994  O.pz-rrkjus.UPF  
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
 C   0.238357456 0.0 0.948
 O   0.381346734 0.0 0.948
 Au  0.0  0.0  0.000

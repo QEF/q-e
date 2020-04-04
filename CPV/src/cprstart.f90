@@ -19,21 +19,32 @@ PROGRAM main
   !----------------------------------------------------------------------------
   !
   USE input,         ONLY : iosys_pseudo, iosys
-  USE read_input,    ONLY : read_input_file
-  USE mp_global,     ONLY : mp_startup
   USE io_global,     ONLY : ionode, ionode_id
   USE environment,   ONLY : environment_start
   USE check_stop,    ONLY : check_stop_init
+  USE mp_global,     ONLY : mp_startup
+  USE mp_world,      ONLY : world_comm
   USE mp_images,     ONLY : intra_image_comm
-  USE command_line_options, ONLY : input_file_
+  USE mp_pools,      ONLY : intra_pool_comm
+  USE mp_bands,      ONLY : intra_bgrp_comm, inter_bgrp_comm
+  USE read_input,    ONLY : read_input_file
+  USE command_line_options, ONLY : input_file_, ndiag_
   !
   IMPLICIT NONE
+  !
+  include 'laxlib.fh'
+  !
+  LOGICAL :: diag_in_band_group = .true.
   !
   ! ... program starts here
   !
   ! ... initialize MPI (parallel processing handling)
   !
-  CALL mp_startup ( diag_in_band_group = .true. , what_band_group = 0 )
+  CALL mp_startup ( )
+  CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
+       do_distr_diag_inside_bgrp_ = diag_in_band_group )
+  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
+       inter_bgrp_comm )
   !
   ! ... start the environment
   !
@@ -61,14 +72,11 @@ PROGRAM main
   ! temporary moved to init_run
 !  CALL plugin_initialization()
   !
-  !
   CALL check_stop_init()
   !
   CALL cpr_loop( 1 )
   !
-  CALL stop_run()
-  CALL do_stop( .TRUE. )
-  !
-  STOP
+  CALL laxlib_end()
+  CALL stop_cp_run()
   !
 END PROGRAM main

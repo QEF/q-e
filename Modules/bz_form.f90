@@ -809,7 +809,7 @@ SUBROUTINE init_bz_8(bz_struc)
          bz_struc%letter_list(8)=' A1'
          bz_struc%letter_list(9)=' Y '
       ELSE
-         bz_struc%letter_list(2)=' A1 '
+         bz_struc%letter_list(2)=' A1'
          bz_struc%letter_list(3)=' Y '
          bz_struc%letter_list(4)=' X '
          bz_struc%letter_list(7)=' T '
@@ -1008,7 +1008,7 @@ SUBROUTINE init_bz_10(bz_struc)
    bz_struc%letter_list(8)=' Y '
 
    IF (bz_struc%switch_b_c) THEN
-      bz_struc%letter_list(3)=' A1 '
+      bz_struc%letter_list(3)=' A1'
       bz_struc%letter_list(5)=' Y '
       bz_struc%letter_list(7)=' A '
       bz_struc%letter_list(8)=' Z '
@@ -1163,7 +1163,7 @@ SUBROUTINE init_bz_11(bz_struc)
 
    IF (bz_struc%switch_a_b) THEN
       IF (bz_struc%switch_b_c) THEN
-         bz_struc%letter_list(3)=' L2 '
+         bz_struc%letter_list(3)=' L2'
          bz_struc%letter_list(4)=' R '
          bz_struc%letter_list(5)=' L'
          bz_struc%letter_list(7)=' S '
@@ -1217,7 +1217,7 @@ SUBROUTINE init_bz_11(bz_struc)
          ENDIF
       ELSE
          bz_struc%letter_list(2)=' Y '
-         bz_struc%letter_list(3)=' L1 '
+         bz_struc%letter_list(3)=' L1'
          bz_struc%letter_list(4)=' S '
          bz_struc%letter_list(5)=' L2'
          bz_struc%letter_list(6)=' Z '

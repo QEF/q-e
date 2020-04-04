@@ -2,7 +2,8 @@
 subroutine set_sl3(sl3,lmax)
 !-----------------------------------------------------------------------
    ! compute sl3(l1,l2,l3)=\int pl(x,l1) pl(x,l2) pl(x,l3) dx
-   !
+   !  = 2 | l1 l2 l3 |^2
+   !      |  0  0  0 |
    use kinds, only: DP
    implicit none
    !

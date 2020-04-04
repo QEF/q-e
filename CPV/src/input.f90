@@ -141,6 +141,7 @@ MODULE input
                                nstep_      => nstep
      USE control_flags, ONLY : tsde_          => tsde, &
                                tzeroe_        => tzeroe, &
+                               trescalee_     => trescalee, &
                                trhor_         => trhor, &
                                trhow_         => trhow, &
                                tksw_          => tksw,  &
@@ -175,14 +176,15 @@ MODULE input
      USE control_flags, ONLY : remove_rigid_rot_ => remove_rigid_rot
      USE control_flags, ONLY : iesr_ => iesr
      USE control_flags, ONLY : textfor
-     USE control_flags, ONLY : do_makov_payne, twfcollect
+     USE control_flags, ONLY : do_makov_payne
      USE control_flags, ONLY : lwf, lwfnscf, lwfpbe0nscf
      USE control_flags, ONLY : smallmem
      USE control_flags, ONLY : tconvthrs
      !
      ! ...  Other modules
      !
-     USE cp_main_variables,        ONLY : nprint_nfi
+     USE check_stop,         ONLY : max_seconds_ => max_seconds
+     USE cp_main_variables,  ONLY : nprint_nfi
      USE wave_base,          ONLY : frice_ => frice
      USE ions_base,          ONLY : fricp_ => fricp
      USE cell_base,          ONLY : frich_ => frich
@@ -197,8 +199,6 @@ MODULE input
                                     epol2_       => epol2,     &
                                     efield2_     => efield2
      !
-     USE uspp_param,         ONLY : nvb
-     !
      USE input_parameters,   ONLY: &
         electron_dynamics, electron_damping, electron_temperature,   &
         ion_dynamics, ekin_conv_thr, etot_conv_thr, forc_conv_thr, ion_maxstep,&
@@ -209,10 +209,10 @@ MODULE input
         ortho_eps, ortho_max, ntyp, tolp, calculation, disk_io, dt,            &
         tcg, ndr, ndw, iprint, isave, tstress, k_points, tprnfor, verbosity,   &
         ampre, nstep, restart_mode, ion_positions, startingwfc,                &
-        orthogonalization, electron_velocities, nat, if_pos,                   &
+        orthogonalization, electron_velocities, nat, rd_if_pos,                &
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
         iesr, saverho, rd_for, assume_isolated, wf_collect,                    &
-        memory, ref_cell, tcpbo
+        memory, ref_cell, tcpbo, max_seconds
      USE funct,              ONLY : dft_is_hybrid
      !
      IMPLICIT NONE
@@ -239,7 +239,7 @@ MODULE input
      ! ... define memory- and disk-related internal switches
      !
      smallmem = ( TRIM( memory ) == 'small' )
-     twfcollect = wf_collect
+     IF (smallmem) CALL errore('init', "memory='small' no longer implemented",1)
      !
      ! Options for isolated system
      SELECT CASE( TRIM( assume_isolated ) )
@@ -339,6 +339,8 @@ MODULE input
      trane_  = .FALSE.
      ampre_  = ampre
      taurdr_ = .FALSE.
+     !
+     max_seconds_ = max_seconds
      !
      SELECT CASE ( TRIM( restart_mode ) )
        !
@@ -465,6 +467,9 @@ MODULE input
           tzeroe_ = .FALSE.
         CASE ('zero')
           tzeroe_ = .TRUE.
+        CASE ('change_step')
+          tzeroe_=.FALSE.
+          trescalee_ = .TRUE.
         CASE DEFAULT
           CALL errore(' control_flags ',' unknown electron_velocities '//TRIM(electron_velocities), 1 )
       END SELECT
@@ -716,12 +721,12 @@ MODULE input
      !
      USE input_parameters, ONLY: ibrav , celldm , trd_ht, dt,                 &
            rd_ht, a, b, c, cosab, cosac, cosbc, ntyp , nat ,                  &
-           na_inp , sp_pos , rd_pos , rd_vel, atom_mass, atom_label, if_pos,  &
+           na_inp , sp_pos , rd_pos , rd_vel, atom_mass, atom_label,rd_if_pos,&
            atomic_positions, sic, sic_epsilon, ecutwfc,                       &
            ecutrho, ecfixed, qcutz, q2sigma, tk_inp, wmass,                   &
            ion_radius, emass, emass_cutoff, temph, fnoseh, nr1b, nr2b, nr3b,  &
            tempw, fnosep, nr1, nr2, nr3, nr1s, nr2s, nr3s, ekincw, fnosee,    &
-           outdir, prefix, nkstot, xk, vdw_table_name,                        &
+           outdir, prefix, nkstot, xk,                                        &
            occupations, n_inner, fermi_energy, rotmass, occmass,              &
            rotation_damping, occupation_damping, occupation_dynamics,         &
            rotation_dynamics, degauss, smearing, nhpcl, nhptyp, ndega,        &
@@ -787,8 +792,6 @@ MODULE input
      USE wannier_base,     ONLY : wannier_init
      USE efield_module,    ONLY : tefield
      USE funct,            ONLY : dft_is_nonlocc, get_inlc
-     USE kernel_table,     ONLY : vdw_table_name_ => vdw_table_name, &
-                                  initialize_kernel_table
      USE control_flags,    ONLY : llondon, ts_vdw_ => ts_vdw
      USE london_module,    ONLY : init_london, scal6, lon_rcut
      USE tsvdw_module,     ONLY : vdw_isolated, vdw_econv_thr
@@ -819,7 +822,7 @@ MODULE input
      ! ...  Set ions base module
 
      CALL ions_base_init( ntyp , nat , na_inp , sp_pos , rd_pos , rd_vel,  &
-                          atom_mass, atom_label, if_pos, atomic_positions, &
+                          atom_mass, atom_label, rd_if_pos, atomic_positions, &
                           alat_ , at, ion_radius, rd_for )
 
      ! ...   Set Values for the cutoff
@@ -970,14 +973,6 @@ MODULE input
         vdw_isolated = ts_vdw_isolated
         vdw_econv_thr= ts_vdw_econv_thr
      END IF
-     !
-     ! ... initialize kernel table for nonlocal functionals
-     !
-     IF ( dft_is_nonlocc( ) ) THEN
-        vdw_table_name_ = vdw_table_name
-        inlc = get_inlc()
-        call initialize_kernel_table(inlc)
-     ENDIF
      !
      RETURN
      !

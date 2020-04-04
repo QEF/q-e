@@ -53,7 +53,25 @@
 ! National Institute of Standards and Technology (NIST), Award No. 70NANB3H3065 
 !
 !********************************************************************************
- 
+
+!********************************************************************************
+! 04/2018
+! Implemented switch from CG to Verlet and from Verlet to CG.
+! The code automagically set the correct wfc velocity after the last CG step,
+! and inizialize again the mass of the electron mu(k) after the CG.
+! Note that CG modifies the array of the electron mass.
+!
+! Riccardo Bertossa, Federico Grasselli
+!   (SISSA - via Bonomea, 265 - 34136 Trieste ITALY)
+!********************************************************************************
+!06/2018
+!Implemented on the fly change of timestep (with correct rescaling of the
+!velocities)
+!
+! Riccardo Bertossa
+!********************************************************************************
+
+
 
 MODULE cp_autopilot
   !---------------------------------------------------------------------------
@@ -75,10 +93,15 @@ MODULE cp_autopilot
   USE autopilot, ONLY : current_nfi, pilot_p, pilot_unit, pause_p,auto_error, &
         &  parse_mailbox, rule_isave, rule_iprint, rule_dt, rule_emass,       &
         &  rule_electron_dynamics, rule_electron_damping, rule_ion_dynamics, &
-        &  rule_ion_damping,  rule_ion_temperature, rule_tempw
+        &  rule_ion_damping,  rule_ion_temperature, rule_tempw, &
+        &  rule_electron_orthogonalization, rule_tprint, &
+        &  rule_nhpcl, rule_fnosep
   USE autopilot, ONLY : event_index, event_step, event_isave, event_iprint, &
         &  event_dt, event_emass, event_electron_dynamics, event_electron_damping, &
-        &  event_ion_dynamics, event_ion_damping, event_ion_temperature, event_tempw 
+        &  event_ion_dynamics, event_ion_damping, event_ion_temperature, event_tempw, &
+        & event_electron_orthogonalization, &
+        & event_tprint, &
+        & event_nhpcl, event_fnosep
 
   IMPLICIT NONE
   SAVE
@@ -86,8 +109,11 @@ MODULE cp_autopilot
 
   PRIVATE
   PUBLIC ::  pilot, employ_rules
-
+  LOGICAL, PRIVATE :: had_tcg_true = .false.
+  LOGICAL, PRIVATE :: had_tens_true = .false.
 CONTAINS
+
+  
 
 
   !-----------------------------------------------------------------------
@@ -97,19 +123,38 @@ CONTAINS
     USE input_parameters, ONLY :   dt, & 
          &  electron_dynamics, electron_damping, &
          & ion_dynamics, ion_damping, &
-         & ion_temperature, fnosep, nhpcl, nhptyp, nhgrp, fnhscl, ndega, nat
+         & ion_temperature, fnosep, nhpcl, nhptyp, nhgrp, fnhscl, ndega, nat, &
+         & orthogonalization
     use ions_nose, ONLY: tempw
     USE control_flags, only: tsde, tsdp, tfor, tcp, tnosep, isave,iprint,&
                              tconvthrs, tolp, &
-                             ekin_conv_thr, forc_conv_thr, etot_conv_thr
+                             ekin_conv_thr, forc_conv_thr, etot_conv_thr,&
+                             tortho, tfirst, tlast, tprint
     use wave_base, only: frice
     use ions_base, only: fricp
-    USE ions_nose, ONLY: ions_nose_init
+    USE ions_nose, ONLY: ions_nose_init,xnhp0, xnhpm, ions_nose_deallocate
+    USE ions_positions,        ONLY : taus, tausm
     USE io_global, ONLY: ionode, ionode_id
-    USE time_step,          ONLY : set_time_step
-    USE cp_electronic_mass, ONLY: emass
+    USE time_step,                ONLY : set_time_step,tps
+    USE cp_electronic_mass,       ONLY: emass, emass_cutoff, emass_precond
+    USE cg_module,                ONLY : tcg,allocate_cg,cg_info, &
+                                         nfi_firstcg,c0old
+    USE wavefunctions,     ONLY : cm_bgrp,c0_bgrp
+    USE ensemble_dft,             ONLY : tens,allocate_ensemble_dft
+    USE uspp,                     ONLY : nkb, nkbus
+    USE electrons_base,           ONLY : nspin, nbsp, nbspx, nudx
+    USE gvecw,                    ONLY : ngw
+    USE fft_base,                 ONLY : dffts
+    USE cp_main_variables,        ONLY : idesc, lambdap, lambda, lambdam
+    USE ions_base,                ONLY : nat_ions_base => nat 
+    USE cell_base,                ONLY : tpiba2
+    USE cp_main_variables,        ONLY : ema0bg
+    USE gvecw,                    ONLY : g2kin, ngw 
+
     IMPLICIT NONE
 
+    REAL(DP) :: old_tps
+    
     !----------------------------------------
     !     &CONTROL
     !----------------------------------------
@@ -126,10 +171,34 @@ CONTAINS
        IF ( ionode ) write(*,'(4X,A,13X,I10)') 'Rule event: iprint', iprint
     endif
 
+    ! TPRINT
+    if (event_tprint(event_index)) then
+       tprint           = rule_tprint(event_index)
+       IF ( ionode ) write(*,*) 'NUOVO Rule event: tprint', tprint
+    endif
+
+    ! DT
     if (event_dt(event_index)) then
+       IF ( ionode ) write(*,'(4X,A,18X,F10.4)') 'Rule event: dt',rule_dt(event_index)
+       IF (dt /= rule_dt(event_index) ) THEN
+          IF  (.NOT. ( tcg .OR. tsde ) ) THEN !if I am doing verlet for electrons
+             !rescale electron velocities (wavefunctions and lagrange
+             !multipliers) 
+             IF ( ionode ) write(*,*) 'Rescaling electronic velocities with new dt' 
+             lambdam = lambda - (lambda-lambdam)*rule_dt(event_index)/dt
+             cm_bgrp = c0_bgrp - (c0_bgrp-cm_bgrp)*rule_dt(event_index)/dt
+          END IF
+          IF ( (.NOT. tsdp) .AND. tfor ) THEN !if I am doing verlet for ions
+             !rescale ionic velocities (ions and nose variables)
+             IF ( ionode ) write(*,*) 'Rescaling ionic velocities with new dt'
+             tausm = taus - (taus-tausm)*rule_dt(event_index)/dt
+             xnhpm = xnhp0 - (xnhp0-xnhpm)*rule_dt(event_index)/dt
+          END IF
+       END IF
        dt               = rule_dt(event_index)
-       CALL set_time_step( dt )
-       IF ( ionode ) write(*,'(4X,A,18X,F10.4)') 'Rule event: dt', dt
+       old_tps=tps 
+       CALL set_time_step( dt ) !this subroutine sets to zero the elapsed time tps
+       tps=old_tps
     endif
 
     !----------------------------------------
@@ -139,6 +208,22 @@ CONTAINS
     !----------------------------------------
     !     &ELECTRONS
     !----------------------------------------
+    
+    
+    if (event_electron_orthogonalization(event_index)) then
+       orthogonalization=rule_electron_orthogonalization(event_index)
+       select case (orthogonalization)
+       case ('ORTHO')
+           tortho=.true.
+           IF ( ionode ) write(*,*) 'Wow, setting tortho=.true. !' 
+       case ('GRAM-SCHMIDT')
+           tortho=.false.
+           IF ( ionode ) write(*,*) 'Wow, setting tortho=.false. ! (Ma cossa xe sta monada?)' 
+       case default 
+           call auto_error(' autopilot ',' unknown orthogonalization'//trim(orthogonalization) )
+       end select
+
+    endif
 
     ! EMASS    
     if (event_emass(event_index)) then
@@ -150,17 +235,50 @@ CONTAINS
     ! electron_dynamics = 'sd' | 'verlet' | 'damp' | 'none'
     if (event_electron_dynamics(event_index)) then
        electron_dynamics= rule_electron_dynamics(event_index)
-      frice = 0.d0
+       frice = 0.d0
+       ! the cg algorithm uses cm for its internal purposes. The true cm is
+       ! c0old, so now I have to copy it into cm
+       if ( tcg ) then
+           cm_bgrp=c0old
+           ! tfirst=.true.   !check if this is needed (I don't think so)
+           ! the conjugate gradient method modifies the electron mass mu(k),
+           ! by calling the routine
+           ! emass_precond_tpa( ema0bg, tpiba2, emass_cutoff )
+           ! so I call here the standard routine to set mu(k)
+           CALL emass_precond( ema0bg, g2kin, ngw, tpiba2, emass_cutoff)
+
+       endif
        select case ( electron_dynamics ) 
        case ('SD')
           tsde  = .true.
+          tcg=.false.
        case ('VERLET')
           tsde  = .false.
+          tcg=.false.
        case ('DAMP')
           tsde  = .false.
           frice = electron_damping
+          tcg=.false.
        case ('NONE')
           tsde  = .false.
+          tcg=.false.
+       case ('CG')
+          tsde=.false.
+          IF ( ionode ) write(*,*) 'Wow, setting tcg=.true. at step '&
+                 ,current_nfi,' ! (La ghe domandi a mia molie)'
+          if (.not. tcg) then
+              nfi_firstcg=current_nfi  !the first step is different!
+          end if
+          if (.not. had_tcg_true) then
+              had_tcg_true=.true.
+              if (.not. had_tens_true) then
+                  CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, nspin, nbspx, &
+                                 dffts%nnr, nat_ions_base, idesc )
+              endif
+              CALL allocate_cg( ngw, nbspx,nkbus )              
+          endif
+          CALL cg_info()
+          tcg = .true.
        case default
           call auto_error(' autopilot ',' unknown electron_dynamics '//trim(electron_dynamics) )
        end select
@@ -248,6 +366,12 @@ CONTAINS
        case ('NOSE')
           tnosep = .true.
           tcp = .false.
+          if ( .not. event_tempw(event_index)) then
+              IF ( ionode ) write(*,*) 'WARNING: missing tempw event (if undefined can make the code bananas) '
+          end if
+          if ( .not. tfor) then
+              IF ( ionode ) write(*,*) 'WARNING: not doing Verlet on ions? (am I correct?)'
+          end if
        case ('NOT_CONTROLLED')
           tnosep = .false.
           tcp = .false.
@@ -267,8 +391,34 @@ CONTAINS
        tempw  = rule_tempw(event_index)
        ! The follwiong is a required side effect
        ! when resetting tempw
-       CALL ions_nose_init( tempw, fnosep, nhpcl, nhptyp, ndega, nhgrp, fnhscl)
        IF ( ionode ) write(*,'(4X,A,15X,F10.4)') 'Rule event: tempw', tempw
+    endif
+
+    ! NHPCL
+    if (event_nhpcl(event_index)) then
+       nhpcl = rule_nhpcl(event_index)
+       call ions_nose_deallocate() ! the dimension of the nose array can change
+       if ( ionode ) write(*,'(4X,A,15X,I1)') 'Rule event: nhpcl', nhpcl
+       
+    endif
+
+    ! FNOSEP
+    ! TODO: implement reading of full FNOSEP array
+    if (event_fnosep(event_index)) then
+       fnosep = rule_fnosep(event_index)
+       if ( ionode ) then
+           write(*,'(4X,A,15X,F10.4)') 'Rule event: fnosep', fnosep(1)
+           write(*,'(4X,A)') 'WARNING: all fnosep of the chain are set to the same value'
+       endif
+       
+       !IF ( ionode ) write(*,*) 'Rule event: fnosep', fnosep
+    endif
+
+    ! nose initialization
+    if (event_tempw(event_index) .or. event_nhpcl(event_index) .or. event_fnosep(event_index) .or. &
+            (event_ion_temperature(event_index) .and. rule_ion_temperature(event_index) .eq. 'NOSE'  ) &
+        ) then
+       call ions_nose_init( tempw, fnosep, nhpcl, nhptyp, ndega, nhgrp, fnhscl)
     endif
 
     !----------------------------------------
@@ -298,11 +448,21 @@ CONTAINS
 #if defined (__NAG)
     USE f90_unix_proc
 #endif
+    USE ensemble_dft,             ONLY : tens
+    USE cg_module, ONLY : tcg
+    USE control_flags , only : tprint
 
     IMPLICIT NONE
     INTEGER :: nfi
     LOGICAL :: file_p
     CHARACTER (LEN=256) :: mbfile = "pilot.mb"
+
+    ! The tcg control variable, that enables conjugate gradient electron
+    ! dynamics, allocates some arrays when used in the input file. So I check
+    ! if this variable is defined, and set had_tcg_true to true.
+
+    if (tcg) had_tcg_true = .true.
+    if (tens) had_tens_true = .true.
 
     ! Dynamics Loop Started
     pilot_p   = .TRUE.
@@ -364,6 +524,9 @@ CONTAINS
 
     end do pause_loop
 
+
+
+
     ! Autopilot (Dynamic Rules) Implementation
     ! When nfi has passed (is greater than
     ! the next event, then employ rules
@@ -388,7 +551,41 @@ CONTAINS
 
     enddo
     
+    ! During the last step of electron conjugate gradient,
+    ! set tprint to .true. if next step has electron_dynamics = Verlet
+    ! This is needed to calculate wavefunctions at time t and (t - dt)
+    if (need_tprint_true() ) then
+       tprint = .true.
+       if (ionode) then
+            WRITE(*,*) '=================================================='
+            WRITE(*,*) ' Setting tprint=.true. for this step (last of CG)'
+            WRITE(*,*) '=================================================='
+       endif
+    endif
+
   end subroutine pilot
+
+  function  need_tprint_true()
+  ! Check if next step is a Verlet. In such case returns .true.
+  ! Used whenever tprint == .true. is needed, e.g. to let CG
+  ! calculate wavefunctions at time t and (t - dt) via projections
+  ! onto the occupied manifold.
+  ! This function has to be called after 'call employ_rules()'!
+      USE cg_module, ONLY : tcg
+      LOGICAL :: need_tprint_true
+      INTEGER :: event_idx
+
+      need_tprint_true = .FALSE.
+      event_idx = event_index
+      do while ( event_idx .le. size(event_step) .and. (event_step(event_idx)==current_nfi+1) ) 
+          if ( tcg  .and. event_electron_dynamics(event_idx) .and. &
+            &  (rule_electron_dynamics(event_idx)=='VERLET') ) then
+               need_tprint_true = .TRUE.
+          end if 
+          event_idx = event_idx + 1
+      enddo
+      RETURN
+  end function need_tprint_true
 
 END MODULE cp_autopilot
 

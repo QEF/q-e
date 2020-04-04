@@ -22,11 +22,11 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
 ! Phi_alpha over beta-functions inside the unit cell.
 !
   USE constants, ONLY : tpi
-  USE parameters, only : npsx
-  use radial_grids, only: ndmx
+  USE parameters, ONLY : npsx
+  use radial_grids, ONLY : ndmx
   USE cell_base, ONLY : tpiba
   USE noncollin_module, ONLY : npol
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_pools, ONLY : intra_pool_comm
   USE cond
   !
   IMPLICIT NONE
@@ -46,7 +46,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
   COMPLEX(DP), PARAMETER :: cim=(0.d0,1.d0), one=(1.d0, 0.d0), &
                                  zero=(0.d0,0.d0)
   COMPLEX(DP) :: int1d, int2d, c, d, e, f, arg,&
-                      zdotc, fact, factm, psiper(n2d,n2d,nrzp), &
+                      fact, factm, psiper(n2d,n2d,nrzp), &
                       zk(n2d,nrzp)
   COMPLEX(DP), ALLOCATABLE ::   &
      psigper(:,:), & ! psigper(g,lam)=newbg(g,lam1) psiper(lam1,lam)

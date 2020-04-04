@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2016 Quantum ESPRESSO group
+# Copyright (C) 2001-2018 Quantum ESPRESSO group
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -6,10 +6,9 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-AC_INIT(ESPRESSO, 6.1, , espresso)
+AC_INIT(ESPRESSO, 6.4, , espresso)
 
-# Do not use Autoconf 2.69 
-AC_PREREQ(2.60)
+AC_PREREQ(2.64)
 AC_CONFIG_MACRO_DIR([m4/])
 
 # Initialize variables, filling with one comes from the environment...
@@ -28,7 +27,7 @@ X_AC_QE_ARCH()
 try_dflags=""
 
 # "-I../include" is required by IOTK ...
-try_iflags="-I\$(TOPDIR)/include -I\$(TOPDIR)/FoX/finclude -I../include/"
+try_iflags="-I\$(TOPDIR)/include -I\$(TOPDIR)/FoX/finclude -I\$(TOPDIR)/S3DE/iotk/include/"
 
 # Checking archiver...
 X_AC_QE_AR()
@@ -57,6 +56,9 @@ X_AC_QE_CPP()
 # Checking linker...
 X_AC_QE_LD()
 
+# Checking CUDA...
+X_AC_QE_CUDA()
+
 # Checking F90 rule...
 X_AC_QE_F90RULE()
 
@@ -74,6 +76,9 @@ X_AC_QE_LAPACK()
 # Checking for FFT...
 X_AC_QE_FFT()
 
+# Setting libxc...
+ACX_LIBXC()
+
 # Checking for IBM MASS library...
 X_AC_QE_MASS()
 
@@ -85,9 +90,6 @@ X_AC_QE_SCALAPACK()
 
 # Setting ELPA...
 X_AC_QE_ELPA()
-
-# Enable XML ...
-X_AC_QE_XML()
 
 # Setting HDF5...
 X_AC_QE_HDF5()
@@ -119,7 +121,7 @@ AC_SUBST(ld_libs)
 AC_SUBST(topdir)
 AC_SUBST(extlib_flags)
 
-AC_CONFIG_HEADERS([include/c_defs.h:include/c_defs.h.in])
+AC_CONFIG_HEADERS([include/qe_cdefs.h:include/qe_cdefs.h.in])
 AC_CONFIG_FILES([include/configure.h:include/configure.h.in])
 
 #AC_CONFIG_FILES(Makefile.cpu)

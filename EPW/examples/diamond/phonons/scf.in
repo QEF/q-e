@@ -2,7 +2,7 @@
     calculation     = 'scf'
     prefix          = 'diam'
     restart_mode    = 'from_scratch'
-    wf_collect      = .false.
+    wf_collect      = .true.
     pseudo_dir      = '../pp'
     outdir          = './'
     tprnfor         = .true.

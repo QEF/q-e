@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------
-subroutine write_results 
+subroutine write_results
   !--------------------------------------------------------------
   use radial_grids, only : ndmx
   use kinds,        only : dp
@@ -21,7 +21,7 @@ subroutine write_results
                         dhrsic, dxcsic, eps0, iter, psi, rytoev_fact, lsmall, &
                         core_state, ekinc, ekinv, ae_fc_energy, cau_fact, &
                         relpert, evel, edar, eso, noscf, iswitch, rho, &
-                        file_charge, max_out_wfc
+                        file_charge, max_out_wfc, vx
 
   use funct, only :  get_iexch, get_dft_name, write_dft_name
   implicit none
@@ -30,7 +30,7 @@ subroutine write_results
   real(DP):: work(ndmx), dum, int_0_inf_dr, ravg, r2avg, sij, ene, mm, &
              sij1, sij2, charge_large, charge_small, work1(ndmx), work2(ndmx)
   real(DP) :: psiaux(ndmx,max_out_wfc)
-  logical :: ok, oep, print_fc
+  logical :: ok, oep, print_fc, kli
   character (len=20) :: dft_name
   character (len=2) :: elaux(max_out_wfc)
   character (len=60) :: vstates
@@ -47,7 +47,7 @@ subroutine write_results
   if (zed.ne.0.0) write(stdout,1250) zed
 1250 format(/5x,'atomic number is',f6.2)
   write(stdout,2300) dft_name(1:len_trim(dft_name)),lsd,isic,latt,beta,tr2
-  CALL write_dft_name () 
+  CALL write_dft_name ()
 2300 format(5x,'dft =',a,'   lsd =',i1,' sic =',i1,' latt =',i1, &
        '  beta=',f4.2,' tr2=',1pe7.1)
   write(stdout,1270) grid%mesh,grid%r(grid%mesh),grid%xmin,grid%dx
@@ -64,9 +64,10 @@ subroutine write_results
           'n l     nl                  e(Ry) ','         e(Ha)          e(eV)')
 
      oep = get_iexch() .eq. 4
+     kli = get_iexch() .eq. 10
      if (oep) enl(1:nwf) = enl(1:nwf) - enzero(isw(1:nwf))
      do n=1,nwf
-        if (oc(n)>-eps6) then 
+        if (oc(n)>-eps6) then
           IF (verbosity=='high') THEN
              write(stdout,1103) &
                 nn(n),ll(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &
@@ -86,7 +87,7 @@ subroutine write_results
                 "-E_S-O",eso(n),eso(n)*0.5_dp,eso(n)*rytoev_fact
           endif
           !!!
-        endif     
+        endif
      enddo
      !!!
 1102 format(18x,a6,f15.4,f15.4,f15.4)
@@ -94,13 +95,13 @@ subroutine write_results
 
      if (oep) then
         enl(1:nwf) = enl(1:nwf) + enzero(isw(1:nwf))
-        write(stdout,*) 
+        write(stdout,*)
 !!1100 format(4x,2i2,5x,a2,i2,'(',f5.2,')',f15.4,f15.4,f15.4)
         write(stdout,'(5x,a)') "OEP WARNING: printed eigenvalues were shifted by"
-        if (nspin==1) write(stdout,'(17x,a,3f15.4)') ( "shift :", &
+        if (nspin == 1) write(stdout,'(17x,a,3f15.4)') ( "shift :", &
                             enzero(is), enzero(is)*0.5_dp, &
                             enzero(is)*rytoev_fact, is=1,nspin)
-        if (nspin==2) write(stdout,'(8x,a,i2,3x,a,3f15.4)') ( "spin",is,"shift :", &
+        if (nspin == 2) write(stdout,'(8x,a,i2,3x,a,3f15.4)') ( "spin",is,"shift :", &
                             enzero(is), enzero(is)*0.5_dp, &
                             enzero(is)*rytoev_fact, is=1,nspin)
      end if
@@ -109,7 +110,7 @@ subroutine write_results
 1001 format(/5x, &
           'n l j   nl                  e(Ry) ','         e(Ha)          e(eV)')
      write(stdout,'(5x,"Spin orbit split results")')
-     do n=1,nwf
+     do n = 1, nwf
         IF (verbosity=='high') THEN
            if (oc(n)>-eps6) write(stdout,1123) &
                nn(n),ll(n),jj(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &
@@ -121,7 +122,7 @@ subroutine write_results
         ENDIF
      enddo
      write(stdout,'(5x,"Averaged results")')
-     ok=.true.
+     ok = .true.
      do n=1,nwf
         if (ll(n).gt.0.and.ok) then
            if (oc(n)+oc(n+1)>-eps6) then
@@ -217,15 +218,15 @@ subroutine write_results
 
   write(stdout,1200) eps0, iter
 1200 format(/5x,'final scf error: ',1pe8.1,' reached in ',i3,' iterations')
-  print_fc=(verbosity=='high'.and.iswitch>1) 
+  print_fc=(verbosity=='high'.and.iswitch>1)
   write(stdout,*)
   if (print_fc) then
       vstates=' '
       do n=1,nwf
          if (.not.core_state(n)) vstates=TRIM(vstates)//el(n)//","
       enddo
-      write(stdout,'(5x,"The valence states are: ", a60,/)') vstates 
-  endif    
+      write(stdout,'(5x,"The valence states are: ", a60,/)') vstates
+  endif
   if (print_fc) write(6,"(5x,'Total energy of the atom:',/)")
   write(stdout,"(5x,'Etot =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')") &
        etot, etot*0.5_dp, etot*rytoev_fact
@@ -259,7 +260,7 @@ subroutine write_results
      write(stdout, "(5x,'Enclv=',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')") &
        enclv, enclv*0.5_dp, enclv*rytoev_fact
      write(stdout,*)
-  endif   
+  endif
   if (print_fc) write(6,'(/,5x,"Hartree energy:",/)')
   write(stdout,"(5x,'Eh   =',f15.6,' Ry,',f15.6, ' Ha,',f15.6,' eV')") &
        ehrt, ehrt*0.5_dp, ehrt*rytoev_fact
@@ -272,20 +273,20 @@ subroutine write_results
        ehrtvv, ehrtvv*0.5_dp, ehrtvv*rytoev_fact
      write(stdout,*)
   endif
-  if (print_fc) write(stdout, "(/,5x,'Exchange and correlation energy:',/)") 
+  if (print_fc) write(stdout, "(/,5x,'Exchange and correlation energy:',/)")
   write(stdout,"(5x,'Exc  =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')") &
        ecxc, ecxc*0.5_dp, ecxc*rytoev_fact
   if (print_fc)  write(stdout,*)
   if (ABS(evxt)>0.0_DP) then
      if (verbosity=='high') &
-          write(stdout,"(/,5x,'Interaction with the external potential:')") 
+          write(stdout,"(/,5x,'Interaction with the external potential:')")
      write(stdout, "(5x,'Evxt =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')") &
        evxt, evxt*0.5_dp, evxt*rytoev_fact
   endif
   if (print_fc) then
-     write(stdout, "(/,5x,'Estimated frozen-core energy from all-electron calculation:')") 
-     write(stdout, "(5x,'Efc = Ekinv + Enclv + Ehvv + Ehcv + Exc')") 
-     write(stdout, "(5x,'Ed = Etot - Efc',/)") 
+     write(stdout, "(/,5x,'Estimated frozen-core energy from all-electron calculation:')")
+     write(stdout, "(5x,'Efc = Ekinv + Enclv + Ehvv + Ehcv + Exc')")
+     write(stdout, "(5x,'Ed = Etot - Efc',/)")
      write(stdout, "(5x,'Efc  =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')") &
        ae_fc_energy, ae_fc_energy*0.5_dp, ae_fc_energy*rytoev_fact
      write(stdout, "(5x,'Ed   =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')") &
@@ -294,24 +295,24 @@ subroutine write_results
 
   if (isic.ne.0) then
      write(stdout,*)
-     write(stdout,'(5x,"SIC information:")') 
+     write(stdout,'(5x,"SIC information:")')
      write(stdout,1300) dhrsic, dhrsic*0.5_dp, dhrsic*rytoev_fact
      write(stdout,2310) dxcsic, dxcsic*0.5_dp, dxcsic*rytoev_fact
      write(stdout,2320) dxcsic+dhrsic,(dxcsic+dhrsic)*0.5_dp, &
-                       (dxcsic+dhrsic)*rytoev_fact  
+                       (dxcsic+dhrsic)*rytoev_fact
      write(stdout,*)
      write(stdout,2311) ecxc-dxcsic-dhrsic, &
-          &  (ecxc-dxcsic-dhrsic)*0.5_dp, (ecxc-dxcsic-dhrsic)*rytoev_fact 
+          &  (ecxc-dxcsic-dhrsic)*0.5_dp, (ecxc-dxcsic-dhrsic)*rytoev_fact
      write(stdout,2312) ecxc-dhrsic, &
-          &               (ecxc-dhrsic)*0.5_dp, (ecxc-dhrsic)*rytoev_fact 
+          &               (ecxc-dhrsic)*0.5_dp, (ecxc-dhrsic)*rytoev_fact
      write(stdout,2313) ehrt+dhrsic, &
           &              (ehrt+dhrsic)*0.5_dp, (ehrt+dhrsic)*rytoev_fact
-1300 format(5x,'Esich=',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 
-2310 format(5x,'Esicxc=',f14.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 
-2311 format(5x,'tot-Exc=',f13.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 
-2312 format(5x,'int-Exc=',f13.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 
-2313 format(5x,'int-Eh=',f14.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 
-2320 format(5x,'Esictot=',f13.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 
+1300 format(5x,'Esich=',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')
+2310 format(5x,'Esicxc=',f14.6,' Ry,',f15.6,' Ha,',f15.6,' eV')
+2311 format(5x,'tot-Exc=',f13.6,' Ry,',f15.6,' Ha,',f15.6,' eV')
+2312 format(5x,'int-Exc=',f13.6,' Ry,',f15.6,' Ha,',f15.6,' eV')
+2313 format(5x,'int-Eh=',f14.6,' Ry,',f15.6,' Ha,',f15.6,' eV')
+2320 format(5x,'Esictot=',f13.6,' Ry,',f15.6,' Ha,',f15.6,' eV')
   endif
 
 500 continue
@@ -407,7 +408,7 @@ subroutine write_results
                  if (counter>max_out_wfc) exit
               end if
            enddo
-        else 
+        else
            do i=nwf,1,-1
               elaux(counter)=el(i)
               psiaux(:,counter)=psi(:,is,i)
@@ -439,6 +440,38 @@ subroutine write_results
   endif
 
   write(stdout,"(/,5x,24('-'), ' End of All-electron run ',24('-'),/)")
+  do i = 1, nspin
+    call savetxtv2("vx.pot"//suffix(i), grid%r, vx(1:grid%mesh,i))
+  enddo
 
   return
+  contains
+
+subroutine savetxtv2(filename,x,y)
+    use kinds,        only : dp
+    ! Saves a x,y array into a textfile.
+    !
+    ! Arguments
+    ! ---------
+    !
+    character(len=*), intent(in) :: filename  ! File to save the array to
+    real(dp), intent(in) :: x(:)           ! The x data points
+    real(dp), intent(in) :: y(:)           ! The y data points
+    !
+    ! Example
+    ! -------
+    !
+    ! real(dp) :: data(3, 2)
+    ! call savetxt("log.txt", data)
+
+    integer :: s, i, find_free_unit
+    s = find_free_unit()
+    open(unit=s, file=filename, status="replace")
+    do i = 1, size(x, 1)
+        write(s, *) x(i), y(i)
+    end do
+    close(s)
+
+  end subroutine savetxtv2
+
 end subroutine write_results

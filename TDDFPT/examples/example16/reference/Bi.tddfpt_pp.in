@@ -1,0 +1,13 @@
+ &lr_input
+   prefix = 'Bi',
+   outdir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/',
+   eels = .true.
+   itermax0 = 500,
+   itermax  = 10000,
+   extrapolation = "osc",
+   epsil = 0.035,
+   units = 1,
+   start = 0.0,
+   end   = 50.0,
+   increment = 0.1
+ /

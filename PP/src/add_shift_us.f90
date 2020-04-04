@@ -20,13 +20,14 @@ SUBROUTINE add_shift_us( shift_nl )
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g, ngm
   USE uspp,                 ONLY : nkb, vkb, qq_nt, deeq
-  USE uspp_param,           ONLY : upf, nh, newpseudo
+  USE uspp_param,           ONLY : upf, nh
   USE wvfct,                ONLY : nbnd, wg, et
   USE lsda_mod,             ONLY : lsda, isk
   USE symme,                ONLY : symscalar
-  USE wavefunctions_module, ONLY : evc
-  USE io_files,             ONLY : iunwfc, nwordwfc
+  USE wavefunctions,        ONLY : evc
+  USE io_files,             ONLY : restart_dir
   USE becmod,               ONLY : calbec
+  USE pw_restart_new,       ONLY : read_collected_wfc
   !
   IMPLICIT NONE
   !
@@ -56,8 +57,8 @@ SUBROUTINE add_shift_us( shift_nl )
        !
        ! ... calculation at gamma
        !
-       USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm
-       USE mp,                   ONLY: mp_sum
+       USE mp_pools,            ONLY: inter_pool_comm, intra_pool_comm
+       USE mp,                  ONLY: mp_sum
 
        IMPLICIT NONE
        !
@@ -79,10 +80,8 @@ SUBROUTINE add_shift_us( shift_nl )
           !
           is = isk(ik)
           npw = ngk(ik)
-          IF ( nks > 1 ) THEN
-             CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
-             IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
-          ENDIF
+          CALL read_collected_wfc ( restart_dir(), ik, evc )
+          IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
           !
           CALL calbec ( npw, vkb, evc, rbecp )
           !
@@ -99,7 +98,7 @@ SUBROUTINE add_shift_us( shift_nl )
                                       rbecp(ikb,ibnd) * rbecp(ikb,ibnd)
                       ENDDO
                       !
-                      IF ( upf(nt)%tvanp .or. newpseudo(nt) ) THEN
+                      IF ( upf(nt)%tvanp .or. upf(nt)%is_multiproj ) THEN
                          !
                          ! ... in US case there is a contribution for jh<>ih.
                          ! ... We use here the symmetry in the interchange
@@ -146,8 +145,8 @@ SUBROUTINE add_shift_us( shift_nl )
      SUBROUTINE add_shift_us_k()
        !-----------------------------------------------------------------------
        !
-       USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm
-       USE mp,                   ONLY: mp_sum
+       USE mp_pools,            ONLY: inter_pool_comm, intra_pool_comm
+       USE mp,                  ONLY: mp_sum
 
        IMPLICIT NONE
        !
@@ -169,10 +168,8 @@ SUBROUTINE add_shift_us( shift_nl )
           !
           is = isk(ik)
           npw = ngk(ik)
-          IF ( nks > 1 ) THEN
-             CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
-             IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
-          ENDIF
+          CALL read_collected_wfc( restart_dir(), ik, evc )
+          IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
           !
           CALL calbec( npw, vkb, evc, becp )
           !
@@ -190,7 +187,7 @@ SUBROUTINE add_shift_us( shift_nl )
                                                    becp(ikb,ibnd) )
                       ENDDO
                       !
-                      IF ( upf(nt)%tvanp .or. newpseudo(nt) ) THEN
+                      IF ( upf(nt)%tvanp .or. upf(nt)%is_multiproj ) THEN
                          !
                          ! ... in US case there is a contribution for jh<>ih.
                          ! ... We use here the symmetry in the interchange

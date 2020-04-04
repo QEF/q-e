@@ -29,7 +29,7 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
   USE wvfct,                 ONLY : nbnd, npwx
   USE gvecw,                 ONLY : gcutw
   USE qpoint,                ONLY : nksq, ikks, ikqs
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,  ONLY : evc
   USE noncollin_module,      ONLY : npol, nspin_mag
   USE uspp_param,            ONLY : nhm
   USE uspp,                  ONLY : okvan, vkb
@@ -38,6 +38,7 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
   USE mp,                    ONLY : mp_sum
   USE io_files,              ONLY : iunwfc, nwordwfc
   USE buffers,               ONLY : get_buffer
+  USE fft_interfaces,        ONLY : fft_interpolate
   !
   IMPLICIT NONE
   !
@@ -88,7 +89,7 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
      !
      ! Calculation of the response charge density
      !
-     CALL incdrhoscf_nc(drhoscfh(:,:), weight, ik, dbecsum_nc(:,:,:,:), dpsi(:,:,ik))
+     CALL incdrhoscf_nc(drhoscfh(:,:), weight, ik, dbecsum_nc(:,:,:,:), dpsi(:,:,ik),1)
      !
   ENDDO 
   !
@@ -97,7 +98,7 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
   ! drhoscfh -> drhoscf
   !
   DO is = 1, nspin_mag
-     CALL cinterpolate(drhoscf(1,is), drhoscfh(1,is), 1)
+     CALL fft_interpolate(dffts, drhoscfh(:,is), dfftp, drhoscf(:,is) )
   ENDDO
   !
   IF (okvan) THEN

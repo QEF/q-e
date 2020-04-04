@@ -1,0 +1,25 @@
+Electron-phonon coefficients for Al
+ &inputph
+  tr2_ph=1.0d-10,
+  prefix='aluminum',
+  fildvscf='aldv',
+  amass(1)=26.98,
+  outdir='./',
+  fildyn='al.elph.dyn',
+  electron_phonon='simple',
+  trans=.true.,
+  ldisp=.true.,
+  qplot=.true.
+ /
+  10
+  0.000 0.000 0.000 0
+  0.250 0.000 0.000 0
+  0.500 0.000 0.000 0
+  1.000 0.000 0.000 0
+  0.750 0.250 0.250 0
+  0.500 0.500 0.500 0
+  0.250 0.250 0.250 0
+  0.000 0.000 0.000 0
+  0.250 0.250 0.000 0
+  0.500 0.500 0.000 0
+

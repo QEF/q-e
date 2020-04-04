@@ -35,22 +35,22 @@
       USE mp_global,       ONLY: me_bgrp
       USE fft_base,        ONLY: dfftp
       USE fft_interfaces,  ONLY: fwfft
-      USE gvect,           ONLY: ngm
       USE constants,       ONLY: gsmall, pi
       USE cell_base,       ONLY: tpiba2, s_to_r, alat
+      USE fft_rho
 
       IMPLICIT NONE
       
-      REAL(DP), INTENT(IN) :: hg( ngm )
+      REAL(DP), INTENT(IN) :: hg( dfftp%ngm )
       REAL(DP), INTENT(IN) :: omega, hmat( 3, 3 )
-      COMPLEX(DP) :: screen_coul( ngm )
+      COMPLEX(DP) :: screen_coul( dfftp%ngm )
 
       REAL(DP), EXTERNAL :: qe_erf
 
       ! ... Locals
       !
-      COMPLEX(DP), ALLOCATABLE :: grr(:)
-      COMPLEX(DP), ALLOCATABLE :: grg(:)
+      REAL(DP), ALLOCATABLE :: grr(:,:)
+      COMPLEX(DP), ALLOCATABLE :: grg(:,:)
       REAL(DP) :: rc, r(3), s(3), rmod, g2, rc2, arg, fact
       INTEGER   :: ig, i, j, k, ir
       INTEGER   :: ir1, ir2, ir3, nr3l
@@ -63,8 +63,8 @@
       END DO
       nr3l = dfftp%my_nr3p
 
-      ALLOCATE( grr( dfftp%nnr ) )
-      ALLOCATE( grg( SIZE( screen_coul ) ) )
+      ALLOCATE( grr( dfftp%nnr, 1 ) )
+      ALLOCATE( grg( dfftp%nnr, 1 ) )
 
       grr = 0.0d0
 
@@ -85,9 +85,9 @@
             rmod = SQRT( r(1)**2 + r(2)**2 + r(3)**2 )
             ir =  i + (j-1)*dfftp%nr1x + (k-1)*dfftp%nr1x*dfftp%nr2x
             IF( rmod < gsmall ) THEN
-              grr( ir ) = fact * 2.0d0 * rc / SQRT( pi )
+              grr( ir, 1 ) = fact * 2.0d0 * rc / SQRT( pi )
             ELSE
-              grr( ir ) = fact * qe_erf( rc * rmod ) / rmod
+              grr( ir, 1 ) = fact * qe_erf( rc * rmod ) / rmod
             END IF
           END DO
         END DO
@@ -95,16 +95,15 @@
 
       ! grg = FFT( grr )
 
-      CALL fwfft(   'Dense', grr, dfftp )
-      CALL psi2rho( 'Dense', grr, dfftp%nnr, grg, ngm )
+      CALL rho_r2g( dfftp, grr, grg )
 
       DO ig = 1, SIZE( screen_coul )
         IF( hg(ig) < gsmall ) THEN
-          screen_coul(ig) = grg(1) - ( - pi / rc2 )
+          screen_coul(ig) = grg(1,1) - ( - pi / rc2 )
         ELSE
           g2  = tpiba2 * hg(ig)
           arg = - g2 / ( 4.0d0 * rc2 )
-          screen_coul(ig) = grg(ig) - ( 4.0d0 * pi * EXP( arg ) / g2 ) 
+          screen_coul(ig) = grg(ig,1) - ( 4.0d0 * pi * EXP( arg ) / g2 ) 
         END IF
       END DO
 
@@ -130,10 +129,10 @@
       USE kinds,              ONLY: DP
       USE io_global,          ONLY: stdout
       USE ions_base,          ONLY: nsp
-      USE gvect,              ONLY: ngm
-      USE gvect, ONLY: gstart
+      USE gvect,              ONLY: gstart
       USE mp_global,          ONLY: intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
+      USE fft_base,           ONLY: dfftp
 
       IMPLICIT NONE
 
@@ -155,7 +154,7 @@
       !
       eps   = (0.D0,0.D0)
       !
-      DO ig = gstart, ngm 
+      DO ig = gstart, dfftp%ngm 
 
         vp   = (0.D0,0.D0)
         DO is = 1, nsp
@@ -209,11 +208,11 @@
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2, tpiba
       USE io_global,          ONLY: stdout
-      USE gvect, ONLY: gstart, gg
+      USE gvect,              ONLY: gstart, gg
       USE ions_base,          ONLY: nsp
-      USE gvect,              ONLY: ngm
       USE mp_global,          ONLY: intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
+      USE fft_base,           ONLY: dfftp
 
       IMPLICIT NONE
 
@@ -242,7 +241,7 @@
       ehti  = 0.0d0
 
 !$omp parallel do default(shared), private(rp,is,rhet,rhog,fpibg), reduction(+:eh,ehte,ehti)
-      DO ig = gstart, ngm 
+      DO ig = gstart, dfftp%ngm 
 
         rp   = (0.D0,0.D0)
         DO is = 1, nsp
@@ -320,11 +319,9 @@
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2, tpiba
       USE io_global,          ONLY: stdout
-      USE gvect, ONLY: mill, gstart, g, gg
-      USE ions_base,          ONLY: nat, nsp, na
-      USE gvect,              ONLY: ngm
-      USE gvecs,              ONLY: ngms
-      USE fft_base,           ONLY: dfftp
+      USE gvect,              ONLY: mill, gstart, g, gg
+      USE ions_base,          ONLY: nat, nsp, ityp
+      USE fft_base,           ONLY: dfftp, dffts
 
       IMPLICIT NONE
 
@@ -343,7 +340,7 @@
 
       ! ... Locals
 
-      INTEGER     :: is, ia, isa, ig, ig1, ig2, ig3
+      INTEGER     :: is, ia, ig, ig1, ig2, ig3
       REAL(DP)    :: fpibg
       COMPLEX(DP) :: cxc, rhet, rhog, vp, rp, gxc, gyc, gzc
       COMPLEX(DP) :: teigr, cnvg, cvn, tx, ty, tz
@@ -355,7 +352,7 @@
       
       ftmp = 0.0d0
 
-      DO ig = gstart, ngms 
+      DO ig = gstart, dffts%ngm
 
         RP   = (0.D0,0.D0)
         DO IS = 1, nsp
@@ -377,20 +374,17 @@
         GXC  = CMPLX(0.D0,g(1,IG),kind=DP)
         GYC  = CMPLX(0.D0,g(2,IG),kind=DP)
         GZC  = CMPLX(0.D0,g(3,IG),kind=DP)
-        isa = 1
-        DO IS = 1, nsp
+        DO ia = 1, nat
+           is = ityp(ia) 
            CNVG  = RHOPS(IG,is) * FPIBG * CONJG(rhog)
            CVN   = VPS(ig, is)  * CONJG(rhet)
            TX = (CNVG+CVN) * GXC
            TY = (CNVG+CVN) * GYC
            TZ = (CNVG+CVN) * GZC
-           DO IA = 1, na(is)
-              TEIGR = ei1(IG1,ISA) * ei2(IG2,ISA) * ei3(IG3,ISA)
-              ftmp(1,ISA) = ftmp(1,ISA) + TEIGR*TX
-              ftmp(2,ISA) = ftmp(2,ISA) + TEIGR*TY
-              ftmp(3,ISA) = ftmp(3,ISA) + TEIGR*TZ
-              isa = isa + 1
-           END DO
+           TEIGR = ei1(IG1,ia) * ei2(IG2,ia) * ei3(IG3,ia)
+           ftmp(1,ia) = ftmp(1,ia) + TEIGR*TX
+           ftmp(2,ia) = ftmp(2,ia) + TEIGR*TY
+           ftmp(3,ia) = ftmp(3,ia) + TEIGR*TZ
         END DO
 
       END DO
@@ -413,7 +407,7 @@
       USE cell_base,   ONLY : s_to_r, pbcs
       USE mp_global,   ONLY : nproc_bgrp, me_bgrp, intra_bgrp_comm
       USE mp,          ONLY : mp_sum
-      USE ions_base,   ONLY : rcmax, zv, nsp, na, nat
+      USE ions_base,   ONLY : rcmax, zv, nsp, na, nat, ityp
  
       IMPLICIT NONE
 
@@ -435,11 +429,8 @@
 ! ... LOCALS 
 
       INTEGER :: na_loc, ia_s, ia_e, igis
-      INTEGER :: k, i, j, l, m, is, ia, infm, ix, iy, iz, ishft
-      INTEGER :: npt, isa, me
-      INTEGER :: iakl, iajm
+      INTEGER :: k, i, j, is, ia, ib, ix, iy, iz
       LOGICAL :: split, tzero, tshift
-      INTEGER, ALLOCATABLE   :: iatom(:,:)
       REAL(DP), ALLOCATABLE :: zv2(:,:)
       REAL(DP), ALLOCATABLE :: rc(:,:)  
       REAL(DP), ALLOCATABLE :: fionloc(:,:) 
@@ -449,42 +440,12 @@
       REAL(DP)  :: rckj_m1
       REAL(DP)  :: zvk, zvj, zv2_kj
       REAL(DP)  :: fact_pre
-      REAL(DP)  :: iasp( nsp )
 
       INTEGER, DIMENSION(6), PARAMETER :: ALPHA = (/ 1,2,3,2,3,3 /)
       INTEGER, DIMENSION(6), PARAMETER :: BETA  = (/ 1,1,1,2,2,3 /)
 
 ! ... SUBROUTINE BODY 
 
-      me = me_bgrp + 1
-
-      !  get the index of the first atom of each specie
-
-      isa = 1
-      DO is = 1, nsp
-         iasp( is ) = isa
-         isa = isa + na( is )
-      END DO
-
-      !  Here count the pairs of atoms
-
-      npt = 0
-      DO k = 1, nsp
-        DO j = k, nsp
-          DO l = 1, na(k)
-            IF ( k == j ) THEN
-              infm = l             ! If the specie is the same avoid  
-            ELSE                   ! atoms double counting
-              infm = 1
-            END IF
-            DO m = infm, na(j)
-              npt = npt + 1
-            END DO
-          END DO
-        END DO
-      END DO
-
-      ALLOCATE( iatom( 4, npt ) )
       ALLOCATE( rc( nsp, nsp ) )
       ALLOCATE( zv2( nsp, nsp ) )
       ALLOCATE( fionloc( 3, nat ) )
@@ -494,32 +455,10 @@
 
       !  Here pre-compute some factors
 
-      DO k = 1, nsp
-        DO j = k, nsp
+      DO j = 1, nsp
+        DO k = 1, nsp
           zv2( k, j ) = zv( k ) * zv( j )
           rc ( k, j ) = SQRT( rcmax(k)**2 + rcmax(j)**2 )
-        END DO
-      END DO
-
-      !  Here store the indexes of all pairs of atoms
-
-      npt = 0
-      DO k = 1, nsp
-        DO j = k, nsp
-          DO l = 1, na(k)
-            IF (k.EQ.j) THEN
-              infm = l
-            ELSE
-              infm = 1
-            END IF
-            DO m = infm, na(j)
-              npt = npt + 1
-              iatom(1,npt) = k
-              iatom(2,npt) = j
-              iatom(3,npt) = l
-              iatom(4,npt) = m
-            END DO
-          END DO
         END DO
       END DO
 
@@ -531,94 +470,84 @@
 
       !  Distribute the atoms pairs to processors
 
-      NA_LOC = ldim_block( npt, nproc_bgrp, me_bgrp)
-      IA_S   = gind_block( 1, npt, nproc_bgrp, me_bgrp )
+      NA_LOC = ldim_block( nat, nproc_bgrp, me_bgrp)
+      IA_S   = gind_block( 1, nat, nproc_bgrp, me_bgrp )
       IA_E   = IA_S + NA_LOC - 1
 
       DO ia = ia_s, ia_e
+        k = ityp(ia)
+        DO ib = ia, nat
+          j = ityp(ib)
 
-        k = iatom(1,ia)
-        j = iatom(2,ia)
-        l = iatom(3,ia)
-        m = iatom(4,ia)
+          zv2_kj   = zv2(k,j)
+          rckj_m1  = 1.0_DP / rc(k,j)
+          fact_pre = (2.0_DP * zv2_kj * sqrtpm1) * rckj_m1
 
-        zv2_kj   = zv2(k,j)
-        rckj_m1  = 1.0_DP / rc(k,j)
-        fact_pre = (2.0_DP * zv2_kj * sqrtpm1) * rckj_m1
+          IF( ia.EQ.ib ) THEN      
+            ! ...     same atoms
+            xlm=0.0_DP; ylm=0.0_DP; zlm=0.0_DP; 
+            tzero=.TRUE.
+          ELSE
+            ! ...     different atoms
+            xlm0= taus(1,ia) - taus(1,ib)
+            ylm0= taus(2,ia) - taus(2,ib)
+            zlm0= taus(3,ia) - taus(3,ib)
+            CALL pbcs(xlm0,ylm0,zlm0,xlm,ylm,zlm,1)
+            TZERO=.FALSE.
+          END IF
 
-        iakl = iasp(k) + l - 1
-        iajm = iasp(j) + m - 1
-
-        IF( (l.EQ.m) .AND. (k.EQ.j)) THEN      
-           ! ...     same atoms
-           xlm=0.0_DP; ylm=0.0_DP; zlm=0.0_DP; 
-           tzero=.TRUE.
-        ELSE
-           ! ...     different atoms
-           xlm0= taus(1,iakl) - taus(1,iajm)
-           ylm0= taus(2,iakl) - taus(2,iajm)
-           zlm0= taus(3,iakl) - taus(3,iajm)
-           CALL pbcs(xlm0,ylm0,zlm0,xlm,ylm,zlm,1)
-           TZERO=.FALSE.
-        END IF
-
-        DO IX=-IESR,IESR
-          sxlm(1) = XLM + DBLE(IX)
-          DO IY=-IESR,IESR
-            sxlm(2) = YLM + DBLE(IY)
-            DO IZ=-IESR,IESR
-              TSHIFT= IX.EQ.0 .AND. IY.EQ.0 .AND. IZ.EQ.0
-              IF( .NOT. ( TZERO .AND. TSHIFT ) ) THEN
-                sxlm(3) = ZLM + DBLE(IZ)
-                CALL S_TO_R( sxlm, rxlm, hmat )
-                ERRE2 = rxlm(1)**2 + rxlm(2)**2 + rxlm(3)**2
-                RLM   = SQRT(ERRE2)
-                ARG   = RLM * rckj_m1
-                IF (TZERO) THEN
-                   ESRTZERO=0.5D0
-                ELSE
-                   ESRTZERO=1.D0
+          DO IX=-IESR,IESR
+            sxlm(1) = XLM + DBLE(IX)
+            DO IY=-IESR,IESR
+              sxlm(2) = YLM + DBLE(IY)
+              DO IZ=-IESR,IESR
+                TSHIFT= IX.EQ.0 .AND. IY.EQ.0 .AND. IZ.EQ.0
+                IF( .NOT. ( TZERO .AND. TSHIFT ) ) THEN
+                  sxlm(3) = ZLM + DBLE(IZ)
+                  CALL S_TO_R( sxlm, rxlm, hmat )
+                  ERRE2 = rxlm(1)**2 + rxlm(2)**2 + rxlm(3)**2
+                  RLM   = SQRT(ERRE2)
+                  ARG   = RLM * rckj_m1
+                  IF (TZERO) THEN
+                     ESRTZERO=0.5D0
+                  ELSE
+                     ESRTZERO=1.D0
+                  END IF
+                  ADDESR = ZV2_KJ * qe_erfc(ARG) / RLM
+                  ESR    = ESR + ESRTZERO*ADDESR
+                  ADDPRE = FACT_PRE * EXP(-ARG*ARG)
+                  REPAND = ESRTZERO*(ADDESR + ADDPRE)/ERRE2
+                  !
+                  DO i = 1, 3
+                     fxx = repand * rxlm( i )
+                     fionloc( i, ia ) = fionloc( i, ia ) + fxx
+                     fionloc( i, ib ) = fionloc( i, ib ) - fxx
+                  END DO
+                  !
+                  IF( tstress ) THEN
+                     DO i = 1, 6
+                        fxx = repand * rxlm( alpha( i ) ) * rxlm( beta( i ) )
+                        desr( i ) = desr( i ) - fxx
+                     END DO
+                  END IF
                 END IF
-                ADDESR = ZV2_KJ * qe_erfc(ARG) / RLM
-                ESR    = ESR + ESRTZERO*ADDESR
-                ADDPRE = FACT_PRE * EXP(-ARG*ARG)
-                REPAND = ESRTZERO*(ADDESR + ADDPRE)/ERRE2
-                !
-                DO i = 1, 3
-                   fxx = repand * rxlm( i )
-                   fionloc( i, iakl ) = fionloc( i, iakl ) + fxx
-                   fionloc( i, iajm ) = fionloc( i, iajm ) - fxx
-                END DO
-                !
-                IF( tstress ) THEN
-                   DO i = 1, 6
-                      fxx = repand * rxlm( alpha( i ) ) * rxlm( beta( i ) )
-                      desr( i ) = desr( i ) - fxx
-                   END DO
-                END IF
-                !
-              END IF
-            END DO    ! IZ
-          END DO      ! IY
-        END DO        ! IX
+              END DO    ! IZ
+            END DO      ! IY
+          END DO        ! IX
+        END DO
       END DO
 
 !
 !     each processor add its own contribution to the array FION
 !
-      isa = 0
-      DO IS = 1, nsp
-        DO IA = 1, na(is)
-          isa = isa + 1
-          FION(1,ISA) = FION(1,ISA)+FIONLOC(1,ISA)
-          FION(2,ISA) = FION(2,ISA)+FIONLOC(2,ISA)
-          FION(3,ISA) = FION(3,ISA)+FIONLOC(3,ISA)
-        END DO
+      DO ia = 1, nat
+        FION(1,ia) = FION(1,ia)+FIONLOC(1,ia)
+        FION(2,ia) = FION(2,ia)+FIONLOC(2,ia)
+        FION(3,ia) = FION(3,ia)+FIONLOC(3,ia)
       END DO
 
       CALL mp_sum(esr, intra_bgrp_comm)
      
-      DEALLOCATE(iatom)
       DEALLOCATE(rc)
       DEALLOCATE(zv2)
       DEALLOCATE(fionloc)
@@ -640,11 +569,11 @@
       USE constants,          ONLY: fpi
       USE control_flags,      ONLY: gamma_only
       USE cell_base,          ONLY: tpiba2
-      USE gvect,              ONLY: ngm
-      USE gvect, ONLY: gstart, gg
+      USE gvect,              ONLY: gstart, gg
       USE sic_module,         ONLY: sic_epsilon, sic_alpha
       USE mp_global,          ONLY: intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
+      USE fft_base,           ONLY: dfftp
 
       IMPLICIT NONE
 
@@ -668,7 +597,7 @@
       ! ... Subroutine body ...
 
       IF( tscreen ) THEN
-        ALLOCATE( screen_coul( ngm ) )
+        ALLOCATE( screen_coul( dfftp%ngm ) )
         CALL cluster_bc( screen_coul, gg, omega, hmat )
       END IF
 
@@ -676,7 +605,7 @@
 
       ehte = 0.D0
 
-      DO IG = gstart, ngm
+      DO IG = gstart, dfftp%ngm
 
         rhog  = rhoeg(ig,1) - rhoeg(ig,2)
 

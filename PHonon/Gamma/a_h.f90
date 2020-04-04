@@ -14,14 +14,15 @@ SUBROUTINE A_h(npw,e,h,ah)
   USE uspp,     ONLY : vkb, nkb
   USE lsda_mod, ONLY : current_spin, nspin
   USE wvfct, ONLY: nbnd, npwx, g2kin
-  USE wavefunctions_module,  ONLY: evc, psic
+  USE wavefunctions,  ONLY: evc, psic
   USE scf,      ONLY : vrs, rho
   USE fft_base, ONLY : dffts, dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvect,    ONLY : gstart, nl, nlm, ngm, g, gg
+  USE gvect,    ONLY : gstart, g, gg
   USE constants,  ONLY: degspin, e2, fpi
   USE becmod, ONLY: bec_type, becp, calbec
-  USE cgcom
+  USE gc_lr, ONLY:  grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
+  USE cgcom, ONLY: auxr, aux2, aux3, dmuxc
   USE funct, ONLY: dft_is_gradient
   !
   IMPLICIT NONE
@@ -30,8 +31,9 @@ SUBROUTINE A_h(npw,e,h,ah)
   COMPLEX(DP) :: h(npwx,nbnd), ah(npwx,nbnd)
   !
   COMPLEX(DP) :: fp, fm
-  COMPLEX(DP), POINTER :: dpsic(:), drhoc(:), dvxc(:)
-  real(DP), POINTER  :: dv(:), drho(:)
+  COMPLEX(DP), POINTER :: dpsic(:), drhoc(:)
+  REAL(dp), allocatable :: dv(:)
+  real(DP), POINTER  :: drho(:)
   !
   CALL start_clock('a_h')
   !
@@ -57,17 +59,17 @@ SUBROUTINE A_h(npw,e,h,ah)
      IF (ibnd<nbnd) THEN
         ! two ffts at the same time
         DO j = 1,npw
-           psic (nl (j)) = evc(j,ibnd) + (0.0d0,1.d0)* evc(j,ibnd+1)
-           dpsic(nl (j)) =   h(j,ibnd) + (0.0d0,1.d0)*   h(j,ibnd+1)
-           psic (nlm(j))= conjg(evc(j,ibnd)-(0.0d0,1.d0)* evc(j,ibnd+1))
-           dpsic(nlm(j))= conjg(  h(j,ibnd)-(0.0d0,1.d0)*   h(j,ibnd+1))
+           psic (dfftp%nl (j)) = evc(j,ibnd) + (0.0d0,1.d0)* evc(j,ibnd+1)
+           dpsic(dfftp%nl (j)) =   h(j,ibnd) + (0.0d0,1.d0)*   h(j,ibnd+1)
+           psic (dfftp%nlm(j))= conjg(evc(j,ibnd)-(0.0d0,1.d0)* evc(j,ibnd+1))
+           dpsic(dfftp%nlm(j))= conjg(  h(j,ibnd)-(0.0d0,1.d0)*   h(j,ibnd+1))
         ENDDO
      ELSE
         DO j = 1,npw
-           psic (nl (j)) = evc(j,ibnd)
-           dpsic(nl (j)) =   h(j,ibnd)
-           psic (nlm(j)) = conjg( evc(j,ibnd))
-           dpsic(nlm(j)) = conjg(   h(j,ibnd))
+           psic (dfftp%nl (j)) = evc(j,ibnd)
+           dpsic(dfftp%nl (j)) =   h(j,ibnd)
+           psic (dfftp%nlm(j)) = conjg( evc(j,ibnd))
+           dpsic(dfftp%nlm(j)) = conjg(   h(j,ibnd))
         ENDDO
      ENDIF
      CALL invfft ('Wave', psic, dffts)
@@ -81,19 +83,18 @@ SUBROUTINE A_h(npw,e,h,ah)
      IF (ibnd<nbnd) THEN
         ! two ffts at the same time
         DO j = 1,npw
-           fp = (dpsic (nl(j)) + dpsic (nlm(j)))*0.5d0
-           fm = (dpsic (nl(j)) - dpsic (nlm(j)))*0.5d0
+           fp = (dpsic (dfftp%nl(j)) + dpsic (dfftp%nlm(j)))*0.5d0
+           fm = (dpsic (dfftp%nl(j)) - dpsic (dfftp%nlm(j)))*0.5d0
            ah(j,ibnd  ) = ah(j,ibnd)  +cmplx( dble(fp), aimag(fm),kind=DP)
            ah(j,ibnd+1) = ah(j,ibnd+1)+cmplx(aimag(fp),- dble(fm),kind=DP)
         ENDDO
      ELSE
         DO j = 1,npw
-           ah(j,ibnd) = ah(j,ibnd)  + dpsic (nl(j))
+           ah(j,ibnd) = ah(j,ibnd)  + dpsic (dfftp%nl(j))
         ENDDO
      ENDIF
   ENDDO
   !
-  NULLIFY(dpsic)
   ! V_NL psi
   CALL calbec ( npw, vkb, h, becp)
   IF (nkb > 0) CALL add_vuspsi (npwx, npw, nbnd, ah)
@@ -101,46 +102,58 @@ SUBROUTINE A_h(npw,e,h,ah)
   DO j = 1,dfftp%nnr
      drhoc(j) = cmplx(drho(j),0.d0,kind=DP)
   ENDDO
-  CALL fwfft ('Dense', drhoc, dfftp)
+  CALL fwfft ('Rho', drhoc, dfftp)
+  DO j = 1,dfftp%ngm
+     dpsic(j) = drhoc(dfftp%nl(j))
+  ENDDO
   !
-  ! drho is deltarho(r), drhoc is deltarho(g)
+  ! drho is deltarho(r)
+  ! drhoc is deltarho(g) on the FFT grid
+  ! dpsic is deltarho(g) on the G-vector grid
   !
   !  mu'(n(r)) psi(r) delta psi(r)
   !
-  dvxc  => aux2
+  ALLOCATE (dv(dfftp%nnr))
   DO j = 1,dfftp%nnr
-     dvxc(j) = drho(j)*dmuxc(j)
+     dv(j) = drho(j)*dmuxc(j)
   ENDDO
   !
   !  add gradient correction contribution (if any)
   !
   CALL start_clock('dgradcorr')
-  IF (dft_is_gradient() ) CALL dgradcor1  &
-       (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s,            &
-        drho, drhoc, dfftp%nnr, nspin, nl, nlm, ngm, g, alat, omega, dvxc)
+  IF (dft_is_gradient() ) THEN
+     !
+     CALL dgradcor1  &
+         (dfftp, rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s,  &
+          drho, dpsic, nspin, g, dv)
+     !
+  ENDIF
   CALL stop_clock('dgradcorr')
+  NULLIFY(dpsic)
   NULLIFY (drho)
   !
   !  1/|r-r'| * psi(r') delta psi(r')
   !
   ! gstart is the first nonzero G vector (needed for parallel execution)
   !
-  IF (gstart==2) drhoc(nl(1)) = 0.d0
+  IF (gstart==2) drhoc(dfftp%nl(1)) = 0.d0
   !
-  DO j = gstart,ngm
-     drhoc(nl (j)) = e2*fpi*drhoc(nl(j))/ (tpiba2*gg(j))
-     drhoc(nlm(j)) = conjg(drhoc(nl (j)))
+  DO j = gstart,dfftp%ngm
+     drhoc(dfftp%nl (j)) = e2*fpi*drhoc(dfftp%nl(j))/ (tpiba2*gg(j))
+     drhoc(dfftp%nlm(j)) = conjg(drhoc(dfftp%nl (j)))
   ENDDO
-  CALL invfft ('Dense', drhoc, dfftp)
+  CALL invfft ('Rho', drhoc, dfftp)
   !
   ! drhoc now contains deltaV_hartree
   !
-  dv => auxr
   DO j = 1,dfftp%nnr
-     dv(j) = -  dble(dvxc(j)) - dble(drhoc(j))
+     dv(j) = - dv(j) - dble(drhoc(j))
   ENDDO
   !
   CALL vloc_psi_gamma(npwx, npw, nbnd, evc, dv, ah)
+  !
+  NULLIFY(drhoc)
+  DEALLOCATE (dv)
   !
   ! set to zero the imaginary part of ah at G=0
   ! needed for numerical stability

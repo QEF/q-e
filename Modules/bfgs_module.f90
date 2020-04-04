@@ -45,7 +45,7 @@ MODULE bfgs_module
    USE kinds,     ONLY : DP
    USE io_files,  ONLY : iunbfgs, prefix
    USE constants, ONLY : eps8, eps16
-   USE cell_base, ONLY : iforceh
+   USE cell_base, ONLY : iforceh      ! FIXME: should be passed as argument
    !
    USE basic_algebra_routines
    USE matrix_inversion
@@ -228,7 +228,15 @@ CONTAINS
       ! ... convergence is checked here
       !
       energy_error = ABS( energy_p - energy )
+      !
+      ! ... obscure PGI bug as of v.17.4
+      !
+#if defined (__PGI)
+      grad_in = MATMUL( TRANSPOSE(hinv_block), grad(1:n-9) )
+      grad_error = MAXVAL( ABS( grad_in ) )
+#else
       grad_error = MAXVAL( ABS( MATMUL( TRANSPOSE(hinv_block), grad(1:n-9)) ) )
+#endif
       conv_bfgs = energy_error < energy_thr
       conv_bfgs = conv_bfgs .AND. ( grad_error < grad_thr )
       !
@@ -237,7 +245,7 @@ CONTAINS
                                              TRANSPOSE(h) ) ) ) / omega
           conv_bfgs = conv_bfgs .AND. ( cell_error < cell_thr ) 
 #undef DEBUG
-#ifdef DEBUG
+#if defined(DEBUG)
            write (*,'(3f15.10)') TRANSPOSE ( RESHAPE( grad(n-8:n), (/ 3, 3 /) ) )
            write (*,*)
            write (*,'(3f15.10)') TRANSPOSE(h)
@@ -251,6 +259,8 @@ CONTAINS
       !
       ! ... converged (or useless to go on): quick return
       !
+      IF ( .NOT. conv_bfgs .AND. ( tr_min_hit > 1 ) ) CALL infomsg( 'bfgs',&
+              'history already reset at previous step: stopping' )
       conv_bfgs = conv_bfgs .OR. ( tr_min_hit > 1 )
       IF ( conv_bfgs ) GOTO 1000
       !
@@ -328,6 +338,7 @@ CONTAINS
             CALL reset_bfgs( n )
             !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
+            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*iforceh(i,j)
             ! normalize step but remember its length
             nr_step_length = scnorm(step)
             step(:) = step(:) / nr_step_length
@@ -378,6 +389,7 @@ CONTAINS
             ! ... standard Newton-Raphson step
             !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
+            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*iforceh(i,j)
             !
          END IF
          IF ( ( grad(:) .dot. step(:) ) > 0.0_DP ) THEN
@@ -387,6 +399,7 @@ CONTAINS
             !
             CALL reset_bfgs( n )
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
+            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*iforceh(i,j)
             !
          END IF
          !
@@ -540,6 +553,7 @@ CONTAINS
             ! ... last gradient and reset gdiis history
             !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
+            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*iforceh(i,j)
             !
             gdiis_iter = 0
             !
@@ -905,7 +919,7 @@ CONTAINS
                               lmovecell, stdout, scratch )
       !------------------------------------------------------------------------
       !
-      USE io_files, ONLY : prefix, delete_if_present
+      USE io_files, ONLY : delete_if_present
       !
       IMPLICIT NONE
       REAL(DP),         INTENT(IN) :: energy, energy_thr, grad_thr, cell_thr

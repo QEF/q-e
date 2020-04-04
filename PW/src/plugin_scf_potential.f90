@@ -6,19 +6,17 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE plugin_scf_potential(rhoin,conv_elec,dr2)
+SUBROUTINE plugin_scf_potential(rhoin,conv_elec,dr2,vltot)
 !----------------------------------------------------------------------------
-! This routine is used to calculate plugin energy related quantities
-! that needs to be solved inside the scf cycle
+!
+! This routine is used to calculate plugin contributions to Kohn-Sham
+! potential
 !
 USE io_global,        ONLY : stdout, ionode
 USE kinds,            ONLY : DP
-USE io_files,         ONLY : tmp_dir
-!
 USE fft_base,         ONLY : dfftp
 USE lsda_mod,         ONLY : nspin
-USE scf,              ONLY : scf_type, vltot
-!
+USE scf,              ONLY : scf_type
 USE plugin_flags
 !
 ! ***Environ MODULES BEGIN***
@@ -26,9 +24,10 @@ USE plugin_flags
 !
 IMPLICIT NONE
 !
-type(scf_type), intent(in) :: rhoin
-LOGICAL, intent(in) :: conv_elec
-real(DP), intent(in) :: dr2
+TYPE(scf_type), INTENT(IN) :: rhoin
+LOGICAL, INTENT(IN) :: conv_elec
+REAL(DP), INTENT(IN) :: dr2
+REAL(DP), INTENT(INOUT) :: vltot(dfftp%nnr)
 !
 ! ***Environ VARIABLES BEGIN***
 ! ***Environ VARIABLES END***

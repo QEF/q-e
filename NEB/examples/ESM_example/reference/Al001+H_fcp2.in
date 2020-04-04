@@ -15,8 +15,8 @@ END_PATH_INPUT
 BEGIN_ENGINE_INPUT
 &CONTROL
   prefix        = 'Al001+H_fcp2'
-  outdir        = '/home/pietro/espresso-svn/tempdir/',
-  pseudo_dir    = '/home/pietro/espresso-svn/pseudo/',
+  outdir        = '/Users/otani/ESPRESSO/qe-6.1/tempdir/',
+  pseudo_dir    = '/Users/otani/ESPRESSO/qe-6.1/pseudo/',
 /
 &SYSTEM
   ibrav         = 0,

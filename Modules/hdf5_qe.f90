@@ -4,7 +4,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#if defined(__HDF5)
+#if defined(__HDF5) && defined (__MPI) 
 module hdf5_qe
   !
   USE HDF5

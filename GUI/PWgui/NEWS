@@ -1,3 +1,6 @@
+Version: 6.2
+        * d3.x module disabled
+	
 Version: 5.0svn
         * adding bands.x and dos.x modules
         * note the syntax change for projwfc.x, bands.x, and dos.x,

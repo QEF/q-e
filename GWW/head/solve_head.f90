@@ -18,19 +18,19 @@ subroutine solve_head
   USE io_files,              ONLY : diropn,prefix, tmp_dir
   use pwcom
   USE cell_base,             ONLY : omega, tpiba2
-  USE check_stop,            ONLY : max_seconds
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,  ONLY : evc
   USE kinds,                 ONLY : DP
   USE becmod,                ONLY : becp,calbec
   USE uspp_param,            ONLY : nhm
   use phcom
+  use units_lr,             ONLY : iuwfc, lrwfc
   USE wannier_gw,           ONLY : n_gauss, omega_gauss, grid_type,&
                                    nsteps_lanczos,second_grid_n,second_grid_i,&
                                    l_scissor,scissor,len_head_block_freq, &
                                    len_head_block_wfc
   USE control_ph,           ONLY : tr2_ph
-  USE gvect,                ONLY : ngm, ngm_g, nl, ig_l2g, gstart, g
-  USE gvecs,                ONLY : nls, doublegrid
+  USE gvect,                ONLY : ngm, ngm_g, ig_l2g, gstart, g
+  USE gvecs,                ONLY : doublegrid
   USE mp,                   ONLY : mp_sum, mp_barrier, mp_bcast
   USE mp_world,             ONLY : world_comm, mpime, nproc
   USE uspp,                 ONLY : nkb, vkb
@@ -39,7 +39,7 @@ subroutine solve_head
   USE symme, only : crys_to_cart, symmatrix
   USE mp_wave, ONLY : mergewf,splitwf
   USE fft_base,             ONLY : dfftp, dffts
-  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE fft_interfaces,       ONLY : fwfft, invfft, fft_interpolate
   USE buffers,              ONLY : get_buffer
   USE constants,            ONLY : rytoev, fpi
 
@@ -317,7 +317,7 @@ subroutine solve_head
            !trasform valence wavefunctions to real space                                                                                        
            do ibnd=1,lenb
               psi_v(:,ibnd) = ( 0.D0, 0.D0 )
-              psi_v(nls(igk_k(1:npw,ik)),ibnd) = evc(1:npw,first_b+ibnd-1)
+              psi_v(dffts%nl(igk_k(1:npw,ik)),ibnd) = evc(1:npw,first_b+ibnd-1)
               CALL invfft ('Wave',  psi_v(:,ibnd), dffts)
            enddo
 
@@ -402,15 +402,13 @@ subroutine solve_head
                          &(0.d0,0.d0),psi_tmp,npwx) 
 !fourier trasform
                     prod(:) = ( 0.D0, 0.D0 )
-                    prod(nls(igk_k(1:npw,ik))) = psi_tmp(1:npw)
+                    prod(dffts%nl(igk_k(1:npw,ik))) = psi_tmp(1:npw)
                     CALL invfft ('Wave', prod, dffts)
            
 
 !      product dpsi * psi_v
                     prod(1:dffts%nnr)=conjg(prod(1:dffts%nnr))*psi_v(1:dffts%nnr,iv)
-                    if(doublegrid) then
-                       call cinterpolate(prod,prod,1)
-                    endif
+                    if(doublegrid) call fft_interpolate(dffts, prod, dfftp, prod)
 
 !US part STLL TO BE ADDED!!
                     pola_charge(1:dffts%nnr,1,ipol,i)=pola_charge(1:dffts%nnr,1,ipol,i)-prod(1:dffts%nnr)*ww
@@ -475,9 +473,9 @@ subroutine solve_head
 #endif
      
         do ipol=1,3
-           CALL fwfft ('Dense',  pola_charge(1:dfftp%nnr,1,ipol,i), dfftp)
+           CALL fwfft ('Rho',  pola_charge(1:dfftp%nnr,1,ipol,i), dfftp)
            tmp_g(:)=(0.d0,0.d0)
-           tmp_g(gstart:ngm)=pola_charge(nl(gstart:ngm),1,ipol,i) 
+           tmp_g(gstart:ngm)=pola_charge(dfftp%nl(gstart:ngm),1,ipol,i) 
           
 !loop on frequency
            do ig=gstart,ngm

@@ -6,12 +6,12 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------
-subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
-     dvxc_s, xq, drho, nrxx, nspin, nspin0, nl, ngm, g, alat, dvxc)
+subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
+     dvxc_s, xq, drho, nspin, nspin0, g, dvxc)
   !--------------------------------------------------------------------
   !
   !  Add gradient correction contribution to 
-  !  the responce exchange-correlation potential dvxc.
+  !  the response exchange-correlation potential dvxc.
   !  LSDA is allowed.         ADC (September 1999)
   !  Noncollinear is allowed. ADC (June 2007)
   !
@@ -19,15 +19,20 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   USE noncollin_module, ONLY : noncolin
   USE spin_orb,         ONLY : domag
   USE gc_lr,            ONLY : gmag, vsgga, segni
-
-  implicit none
-  integer :: nrxx, ngm, nl (ngm), &
-       nspin, nspin0
-  real(DP) :: rho (nrxx, nspin), grho (3, nrxx, nspin0), &
-       dvxc_rr(nrxx, nspin0, nspin0), dvxc_sr (nrxx, nspin0, nspin0), &
-       dvxc_ss (nrxx,nspin0, nspin0), dvxc_s (nrxx, nspin0, nspin0),&
-       g (3, ngm), xq(3), alat
-  complex(DP) :: drho (nrxx, nspin), dvxc (nrxx, nspin)
+  USE fft_types,        ONLY : fft_type_descriptor
+  !
+  IMPLICIT NONE
+  !
+  TYPE(fft_type_descriptor),INTENT(IN) :: dfft
+  INTEGER, INTENT(IN) :: nspin, nspin0
+  !
+  REAL(DP), INTENT(IN) ::rho (dfft%nnr, nspin), grho (3, dfft%nnr, nspin0), &
+       g (3, dfft%ngm), xq(3)       
+  REAL(DP), INTENT(IN) :: &
+       dvxc_rr(dfft%nnr, nspin0, nspin0), dvxc_sr (dfft%nnr, nspin0, nspin0), &
+       dvxc_ss (dfft%nnr,nspin0, nspin0), dvxc_s (dfft%nnr, nspin0, nspin0)
+  COMPLEX(DP), INTENT(IN) :: drho (dfft%nnr, nspin)
+  COMPLEX(DP), INTENT(INOUT) :: dvxc (dfft%nnr, nspin)
 
   real(DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10
   real(DP) :: grho2, seg, seg0, amag
@@ -37,41 +42,38 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   complex(DP), allocatable  :: gdrho (:,:,:), h (:,:,:), dh (:)
   complex(DP), allocatable  :: gdmag (:,:,:), dvxcsave(:,:), vgg(:,:)
   complex(DP), allocatable  :: drhoout(:,:)
-  real(DP), allocatable :: rhoout(:,:)
   integer :: k, ipol, jpol, is, js, ks, ls
 
+  IF ( nspin < nspin0 .OR. nspin < 1 .OR. nspin > 4 ) &
+       CALL errore('dgradcorr', 'incorrect number of spin components',1)
   if (noncolin.and.domag) then
-     allocate (gdmag(3, nrxx, nspin))
-     allocate (dvxcsave(nrxx, nspin))
-     allocate (vgg(nrxx, nspin0))
+     allocate (gdmag(3, dfft%nnr, nspin))
+     allocate (dvxcsave(dfft%nnr, nspin))
+     allocate (vgg(dfft%nnr, nspin0))
      dvxcsave=dvxc
      dvxc=(0.0_dp,0.0_dp)
   endif
-  allocate (rhoout( nrxx, nspin0))
-  allocate (drhoout( nrxx, nspin0))
-  allocate (gdrho( 3, nrxx, nspin0))
-  allocate (h( 3, nrxx, nspin0))
-  allocate (dh( nrxx))
-
+  allocate (drhoout( dfft%nnr, nspin0))
+  allocate (gdrho( 3, dfft%nnr, nspin0))
+  allocate (h( 3, dfft%nnr, nspin0))
+  allocate (dh( dfft%nnr))
+  
   h (:, :, :) = (0.d0, 0.d0)
   if (noncolin.and.domag) then
      do is = 1, nspin
-        call qgradient (xq, nrxx, &
-            drho (1, is), ngm, g, nl, alat, gdmag (1, 1, is) )
+        call fft_qgradient (dfft, drho(1,is), xq, g, gdmag (1, 1, is) )
      enddo
      DO is=1,nspin0
         IF (is==1) seg0=0.5_dp
         IF (is==2) seg0=-0.5_dp
-        rhoout(:,is) = 0.5_dp*rho(:,1)
         drhoout(:,is) = 0.5_dp*drho(:,1)
         DO ipol=1,3
            gdrho(ipol,:,is) = 0.5_dp*gdmag(ipol,:,1)
         ENDDO
-        DO k=1,nrxx
+        DO k=1,dfft%nnr
            seg=seg0*segni(k)
            amag=sqrt(rho(k,2)**2+rho(k,3)**2+rho(k,4)**2)
            IF (amag>1.d-12) THEN
-              rhoout(k,is) = rhoout(k,is)+seg*amag
               DO jpol=2,4
                  drhoout(k,is) = drhoout(k,is)+seg*rho(k,jpol)* &
                                                  drho(k,jpol)/amag
@@ -92,15 +94,15 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
         END DO
      END DO
   ELSE
+     !
      DO is = 1, nspin0
-        CALL qgradient (xq, nrxx, &
-            drho (1, is), ngm, g, nl, alat, gdrho (1, 1, is) )
-        rhoout(:,is)=rho(:,is)
+        CALL fft_qgradient (dfft, drho(1,is), xq, g, gdrho (1, 1, is) )
         drhoout(:,is)=drho(:,is)
      ENDDO
+     !
   ENDIF
 
-  do k = 1, nrxx
+  do k = 1, dfft%nnr
      grho2 = grho(1, k, 1)**2 + grho(2, k, 1)**2 + grho(3, k, 1)**2
      if (nspin == 1) then
         !
@@ -195,8 +197,8 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   enddo
   ! linear variation of the second term
   do is = 1, nspin0
-     call qgrad_dot (xq, nrxx, h (1, 1, is), ngm, g, nl, alat, dh)
-     do k = 1, nrxx
+     call fft_qgraddot (dfft, h (1, 1, is), xq, g, dh)
+     do k = 1, dfft%nnr
         dvxc (k, is) = dvxc (k, is) - dh (k)
      enddo
   enddo
@@ -205,7 +207,7 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
         vgg(:,is)=dvxc(:,is)
      ENDDO
      dvxc=dvxcsave
-     DO k=1,nrxx
+     DO k=1,dfft%nnr
         dvxc(k,1)=dvxc(k,1)+0.5d0*(vgg(k,1)+vgg(k,2))
         amag=sqrt(rho(k,2)**2+rho(k,3)**2+rho(k,4)**2)
         IF (amag.GT.1.d-12) THEN
@@ -225,7 +227,6 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   deallocate (dh)
   deallocate (h)
   deallocate (gdrho)
-  deallocate (rhoout)
   deallocate (drhoout)
   if (noncolin.and.domag) then
      deallocate (gdmag)
@@ -236,113 +237,3 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   return
 
 end subroutine dgradcorr
-!
-!--------------------------------------------------------------------
-subroutine qgradient (xq, nrxx, a, ngm, g, nl, alat, ga)
-  !--------------------------------------------------------------------
-  !
-  ! Calculates ga = \grad a in R-space (a is also in R-space)
-  ! Note: gamma_only is disregarded for phonon calculations
-  !
-  USE kinds,          ONLY : DP
-  USE constants,      ONLY : tpi
-  USE control_flags,  ONLY : gamma_only
-  USE fft_base,       ONLY : dfftp
-  USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvect,          ONLY : nlm
-  
-  implicit none
-  integer :: nrxx, ngm, nl (ngm)
-  complex(DP) :: a (nrxx), ga (3, nrxx)
-  real(DP) :: g (3, ngm), alat, xq (3)
-  integer :: n, ipol
-  real(DP) :: tpiba
-  complex(DP), allocatable :: aux (:), gaux (:)
-
-  allocate (gaux(  nrxx))
-  allocate (aux (  nrxx))
-
-  tpiba = tpi / alat
-  ! bring a(r) to G-space, a(G) ...
-  aux (:) = a(:)
-
-  CALL fwfft ('Dense', aux, dfftp)
-  ! multiply by i(q+G) to get (\grad_ipol a)(q+G) ...
-  do ipol = 1, 3
-     gaux (:) = (0.d0, 0.d0)
-     do n = 1, ngm
-        gaux(nl(n)) = CMPLX(0.d0, xq (ipol) + g (ipol, n),kind=DP) * aux (nl(n))
-        if (gamma_only) gaux( nlm(n) ) = conjg( gaux( nl(n) ) )
-     enddo
-     ! bring back to R-space, (\grad_ipol a)(r) ...
-
-     CALL invfft ('Dense', gaux, dfftp)
-     ! ...and add the factor 2\pi/a  missing in the definition of q+G
-     do n = 1, nrxx
-        ga (ipol, n) = gaux (n) * tpiba
-     enddo
-  enddo
-  deallocate (aux)
-  deallocate (gaux)
-  
-  return
-
-end subroutine qgradient
-!--------------------------------------------------------------------
-subroutine qgrad_dot (xq, nrxx, a, ngm, g, nl, alat, da)
-  !--------------------------------------------------------------------
-  !
-  ! Calculates da = \sum_i \grad_i a_i in R-space
-  ! Note: gamma_only is disregarded for phonon calculations
-  !
-  USE kinds,          ONLY : DP
-  USE constants,      ONLY : tpi
-  USE control_flags,  ONLY : gamma_only
-  USE fft_base,       ONLY : dfftp
-  USE fft_interfaces, ONLY: fwfft, invfft
-  USE gvect,          ONLY : nlm
-  
-  implicit none
-  integer ::  nrxx, ngm, nl (ngm)
-  complex(DP) :: a (3, nrxx), da (nrxx)
-
-  real(DP) :: xq (3), g (3, ngm), alat
-  integer :: n, ipol
-  real(DP) :: tpiba
-  complex(DP), allocatable :: aux (:)
-
-  allocate (aux (nrxx))
-  tpiba = tpi / alat
-  da(:) = (0.d0, 0.d0)
-  do ipol = 1, 3
-     ! copy a(ipol,r) to a complex array...
-     do n = 1, nrxx
-        aux (n) = a (ipol, n)
-     enddo
-     ! bring a(ipol,r) to G-space, a(G) ...
-     CALL fwfft ('Dense', aux, dfftp)
-     ! multiply by i(q+G) to get (\grad_ipol a)(q+G) ...
-     do n = 1, ngm
-        da (nl(n)) = da (nl(n)) + &
-             CMPLX(0.d0, xq (ipol) + g (ipol, n),kind=DP) * aux(nl(n))
-     enddo
-  enddo
-  if (gamma_only) then
-     !
-     do n = 1, ngm
-        !
-        da( nlm(n) ) = conjg( da( nl(n) ) )
-        !
-     end do
-     !
-  end if
-
-  !  bring back to R-space, (\grad_ipol a)(r) ...
-  CALL invfft ('Dense', da, dfftp)
-  ! ...add the factor 2\pi/a  missing in the definition of q+G and sum
-  da (:) = da (:) * tpiba
-  deallocate (aux)
-
-  return
- 
-end subroutine qgrad_dot

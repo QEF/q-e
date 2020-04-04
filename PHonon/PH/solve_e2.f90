@@ -21,15 +21,16 @@ subroutine solve_e2
   USE gvect,                 ONLY : g
   USE gvecs,                 ONLY : doublegrid
   USE fft_base,              ONLY : dfftp, dffts
+  USE fft_interfaces,        ONLY : fft_interpolate
   USE wvfct,                 ONLY : npwx, nbnd, et
   USE buffers,   ONLY: get_buffer
   USE ions_base, ONLY: nat
   USE uspp,      ONLY: okvan, nkb, vkb
   USE uspp_param,ONLY : nhm
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE control_ph, ONLY : convt, nmix_ph, alpha_mix, tr2_ph, &
                          niter_ph, rec_code, flmixdpot, rec_code_read
-  USE units_ph,   ONLY : lrwfc, iuwfc
+  USE units_lr,   ONLY : lrwfc, iuwfc
   USE ramanm,     ONLY : lrba2, iuba2, lrd2w, iud2w
   USE recover_mod, ONLY : read_rec, write_rec
 
@@ -173,8 +174,7 @@ subroutine solve_e2
      if (doublegrid) then
         do is = 1, nspin
            do ipol = 1, 6
-              call cinterpolate (dvscfout (1, is, ipol),     &
-                                 dvscfout (1, is, ipol), 1)
+              call fft_interpolate (dffts, dvscfout (:, is, ipol), dfftp, dvscfout (:, is, ipol))
            enddo
         enddo
      endif
@@ -198,8 +198,7 @@ subroutine solve_e2
      if (doublegrid) then
         do is = 1, nspin
            do ipol = 1, 6
-              call cinterpolate (dvscfin (1, is, ipol), &
-                                 dvscfins (1, is, ipol), -1)
+              call fft_interpolate (dfftp,dvscfin (:, is, ipol), dffts, dvscfins (:, is, ipol))
            enddo
         enddo
      end if

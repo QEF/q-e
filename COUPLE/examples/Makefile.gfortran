@@ -7,26 +7,30 @@ MPICXXFLAGS=-DOMPI_SKIP_MPICXX=1 -O2 -Wall -g
 MPILIBS=-lgfortran -lmpi_mpifh -lmpi
 
 # location of required libraries
-PWOBJS = ../src/libqecouple.a ../../PW/src/libpw.a ../../Modules/libqemod.a
-CPOBJS = ../src/libqecouple.a ../../CPV/src/libcp.a ../../Modules/libqemod.a
-LIBOBJS	= ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../clib/clib.a ../../iotk/src/libiotk.a
+PWOBJS = ../src/libqecouple.a ../../PW/src/libpw.a
+CPOBJS = ../src/libqecouple.a ../../CPV/src/libcp.a
+QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a \
+	 ../../KS_Solvers/CG/libcg.a ../../FFTXlib/libqefft.a  \
+	 ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
+	 ../../dft-d3/libdftd3qe.a
+LIBOBJS	= ../../clib/clib.a ../../iotk/src/libiotk.a
 
 TLDEPS=couple
 
 
 all : tldeps c2pw.x f2pw.x c2cp.x f2cp.x
 
-f2pw.x : f2pw.o $(PWOBJS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
+f2pw.x : f2pw.o $(PWOBJS) 
+	$(LD) $(LDFLAGS) -o $@ $^ $(QEMODS) $(LIBOBJS) $(LIBS)
 
-c2pw.x : c2pw.o $(PWOBJS) $(LIBOBJS)
-	$(MPICXX) $(LDFLAGS) -o $@ $^ $(MPILIBS) $(LIBS)
+c2pw.x : c2pw.o $(PWOBJS)
+	$(MPICXX) $(LDFLAGS) -o $@ $^ $(MPILIBS) $(QEMODS) $(LIBOBJS) $(LIBS)
 
-f2cp.x : f2cp.o $(CPOBJS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
+f2cp.x : f2cp.o $(CPOBJS)
+	$(LD) $(LDFLAGS) -o $@ $^ $(QEMODS) $(LIBOBJS) $(LIBS)
 
-c2cp.x : c2cp.o $(CPOBJS) $(LIBOBJS)
-	$(MPICXX) $(LDFLAGS) -o $@ $^ $(MPILIBS) $(LIBS)
+c2cp.x : c2cp.o $(CPOBJS)
+	$(MPICXX) $(LDFLAGS) -o $@ $^ $(MPILIBS) $(QEMODS) $(LIBOBJS) $(LIBS)
 
 %.o: %.cpp
 	$(MPICXX) -I../include -c $(MPICXXFLAGS) $< -o $@

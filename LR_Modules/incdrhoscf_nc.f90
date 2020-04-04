@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
+subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the change of the charge density due to the
@@ -18,18 +18,20 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   USE cell_base,            ONLY : omega
   USE fft_base,             ONLY : dffts, dfftp
   USE fft_interfaces,       ONLY : invfft
-  USE gvecs,                ONLY : nls
   USE lsda_mod,             ONLY : nspin
   USE spin_orb,             ONLY : domag
   USE noncollin_module,     ONLY : npol, nspin_mag
   USE uspp_param,           ONLY : nhm
   USE wvfct,                ONLY : npwx, nbnd
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE klist,                ONLY : ngk,igk_k
   USE qpoint,               ONLY : ikks, ikqs
   USE control_lr,           ONLY : nbnd_occ
+  USE qpoint_aux,           ONLY : becpt
+  USE lrus,                 ONLY : becp1
   USE mp_bands,             ONLY : me_bgrp, inter_bgrp_comm, ntask_groups
   USE mp,                   ONLY : mp_sum
+  USE fft_helper_subroutines
 
   IMPLICIT NONE
   !
@@ -37,7 +39,9 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   INTEGER, INTENT(IN) :: ik
   ! input: the k point
   REAL(DP), INTENT(IN) :: weight
+  REAL(DP), INTENT(IN) :: rsign
   ! input: the weight of the k point
+  ! the sign in front of the response of the magnetization density
   COMPLEX(DP), INTENT(IN) :: dpsi(npwx*npol,nbnd)
   ! input: the perturbed wfcs at the given k point
   COMPLEX(DP), INTENT(INOUT) :: drhoscf (dfftp%nnr,nspin_mag), dbecsum (nhm,nhm,nat,nspin)
@@ -56,7 +60,9 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   !
   INTEGER :: npw, npwq, ikk, ikq
   INTEGER :: ibnd, jbnd, ir, ir3, ig, incr, v_siz, idx, ioff, ioff_tg, nxyp
+  INTEGER :: ntgrp, right_inc
   ! counters
+  !
   !
   CALL start_clock ('incdrhoscf')
   !
@@ -70,7 +76,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   npwq= ngk(ikq)
   incr = 1
   !
-  IF (dffts%have_task_groups) THEN
+  IF (dffts%has_task_groups) THEN
      !
      v_siz = dffts%nnr_tg
      !
@@ -78,7 +84,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
      ALLOCATE( tg_dpsi( v_siz, npol ) )
      ALLOCATE( tg_drho( v_siz, nspin_mag ) )
      !
-     incr  = dffts%nproc2
+     incr  = fftx_ntgrp(dffts)
      !
   ENDIF
   !
@@ -87,15 +93,17 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   !
   do ibnd = 1, nbnd_occ(ikk), incr
 
-     IF (dffts%have_task_groups) THEN
+     IF (dffts%has_task_groups) THEN
         !
         tg_drho=(0.0_DP, 0.0_DP)
         tg_psi=(0.0_DP, 0.0_DP)
         tg_dpsi=(0.0_DP, 0.0_DP)
         !
         ioff   = 0
+        CALL tg_get_recip_inc( dffts, right_inc )
+        ntgrp = fftx_ntgrp( dffts )
         !
-        DO idx = 1, dffts%nproc2
+        DO idx = 1, ntgrp
            !
            ! ... dtgs%nogrp ffts at the same time. We prepare both
            ! evc (at k) and dpsi (at k+q)
@@ -103,17 +111,17 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
            IF( idx + ibnd - 1 <= nbnd_occ(ikk) ) THEN
               !
               DO ig = 1, npw
-                 tg_psi( nls( igk_k( ig,ikk ) ) + ioff, 1 ) = evc( ig, idx+ibnd-1 )
-                 tg_psi( nls( igk_k( ig,ikk ) ) + ioff, 2 ) = evc( npwx+ig, idx+ibnd-1 )
+                 tg_psi( dffts%nl( igk_k( ig,ikk ) ) + ioff, 1 ) = evc( ig, idx+ibnd-1 )
+                 tg_psi( dffts%nl( igk_k( ig,ikk ) ) + ioff, 2 ) = evc( npwx+ig, idx+ibnd-1 )
               END DO
               DO ig = 1, npwq
-                 tg_dpsi( nls( igk_k( ig,ikq ) ) + ioff, 1 ) = dpsi( ig, idx+ibnd-1 )
-                 tg_dpsi( nls( igk_k( ig,ikq ) ) + ioff, 2 ) = dpsi( npwx+ig, idx+ibnd-1 )
+                 tg_dpsi( dffts%nl( igk_k( ig,ikq ) ) + ioff, 1 ) = dpsi( ig, idx+ibnd-1 )
+                 tg_dpsi( dffts%nl( igk_k( ig,ikq ) ) + ioff, 2 ) = dpsi( npwx+ig, idx+ibnd-1 )
               END DO
               !
            END IF
            !
-           ioff = ioff + dffts%nnr
+           ioff = ioff + right_inc
            !
         END DO
         CALL invfft ('tgWave', tg_psi(:,1), dffts)
@@ -127,11 +135,11 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
         enddo
         IF (domag) THEN
            do ir = 1, dffts%nr1x * dffts%nr2x * dffts%my_nr3p
-              tg_drho(ir,2)= tg_drho(ir,2) + wgt * (CONJG(tg_psi(ir,1))*tg_dpsi(ir,2) &
+              tg_drho(ir,2)= tg_drho(ir,2) + rsign *wgt * (CONJG(tg_psi(ir,1))*tg_dpsi(ir,2) &
                                                   + CONJG(tg_psi(ir,2))*tg_dpsi(ir,1) )
-              tg_drho(ir,3)= tg_drho(ir,3) + wgt * (CONJG(tg_psi(ir,1))*tg_dpsi(ir,2) &
+              tg_drho(ir,3)= tg_drho(ir,3) + rsign *wgt * (CONJG(tg_psi(ir,1))*tg_dpsi(ir,2) &
                                                   - CONJG(tg_psi(ir,2))*tg_dpsi(ir,1) ) * (0.d0,-1.d0)
-              tg_drho(ir,4)= tg_drho(ir,4) + wgt * (CONJG(tg_psi(ir,1))*tg_dpsi(ir,1) &
+              tg_drho(ir,4)= tg_drho(ir,4) + rsign *wgt * (CONJG(tg_psi(ir,1))*tg_dpsi(ir,1) &
                                                   - CONJG(tg_psi(ir,2))*tg_dpsi(ir,2) )
            enddo
         ENDIF
@@ -139,17 +147,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
         ! reduce the group charge (equivalent to sum over the bands of the
         ! orbital group)
         !
-        CALL mp_sum( tg_drho, gid = dffts%comm2 )
-        !
-        ! copy the charge back to the proper processor location
-        !
-        nxyp = dffts%nr1x * dffts%my_nr2p
-        DO ir3 = 1, dffts%my_nr3p
-           ioff    = dffts%nr1x * dffts%my_nr2p * (ir3-1)
-           ioff_tg = dffts%nr1x * dffts%nr2x    * (ir3-1) + dffts%nr1x * dffts%my_i0r2p
-           drhoscf(ioff+1:ioff+nxyp,1:nspin_mag) = drhoscf(ioff+1:ioff+nxyp,1:nspin_mag) &
-                                                 + tg_drho(ioff_tg+1:ioff_tg+nxyp,1:nspin_mag)
-        END DO
+        CALL tg_reduce_rho( drhoscf, tg_drho, dffts )
         !
      ELSE
         !
@@ -159,8 +157,8 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
         !
         psi = (0.d0, 0.d0)
         do ig = 1, npw
-           psi (nls (igk_k(ig,ikk) ), 1) = evc (ig, ibnd)
-           psi (nls (igk_k(ig,ikk) ), 2) = evc (ig+npwx, ibnd)
+           psi (dffts%nl (igk_k(ig,ikk) ), 1) = evc (ig, ibnd)
+           psi (dffts%nl (igk_k(ig,ikk) ), 2) = evc (ig+npwx, ibnd)
         enddo
         CALL invfft ('Wave', psi(:,1), dffts)
         CALL invfft ('Wave', psi(:,2), dffts)
@@ -169,8 +167,8 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
         !
         dpsic = (0.d0, 0.d0)
         do ig = 1, npwq
-           dpsic (nls (igk_k(ig,ikq)), 1 ) = dpsi (ig, ibnd)
-           dpsic (nls (igk_k(ig,ikq)), 2 ) = dpsi (ig+npwx, ibnd)
+           dpsic (dffts%nl (igk_k(ig,ikq)), 1 ) = dpsi (ig, ibnd)
+           dpsic (dffts%nl (igk_k(ig,ikq)), 2 ) = dpsi (ig+npwx, ibnd)
         enddo
         CALL invfft ('Wave', dpsic(:,1), dffts)
         CALL invfft ('Wave', dpsic(:,2), dffts)
@@ -183,11 +181,11 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
         enddo
         IF (domag) THEN
            do ir = 1, dffts%nnr
-              drhoscf(ir,2)=drhoscf (ir,2) + wgt * (CONJG(psi(ir,1))*dpsic(ir,2) &
+              drhoscf(ir,2)=drhoscf (ir,2) + rsign *wgt * (CONJG(psi(ir,1))*dpsic(ir,2) &
                                                   + CONJG(psi(ir,2))*dpsic(ir,1) )
-              drhoscf(ir,3)=drhoscf (ir,3) + wgt * (CONJG(psi(ir,1))*dpsic(ir,2) &
+              drhoscf(ir,3)=drhoscf (ir,3) + rsign *wgt * (CONJG(psi(ir,1))*dpsic(ir,2) &
                                                   - CONJG(psi(ir,2))*dpsic(ir,1) ) * (0.d0,-1.d0)
-              drhoscf(ir,4)=drhoscf (ir,4) + wgt * (CONJG(psi(ir,1))*dpsic(ir,1) &
+              drhoscf(ir,4)=drhoscf (ir,4) + rsign *wgt * (CONJG(psi(ir,1))*dpsic(ir,1) &
                                                   - CONJG(psi(ir,2))*dpsic(ir,2) )
            enddo
         END IF
@@ -199,12 +197,16 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   ! Ultrasoft contribution
   ! Calculate dbecsum_nc = <evc|vkb><vkb|dpsi>
   !
-  CALL addusdbec_nc (ik, weight, dpsi, dbecsum)
+  IF (rsign==1) THEN
+     CALL addusdbec_nc (ik, weight, dpsi, dbecsum, becp1)
+  ELSE
+     CALL addusdbec_nc (ik, weight, dpsi, dbecsum, becpt)
+  ENDIF
   !
   DEALLOCATE(psi)
   DEALLOCATE(dpsic)
   !
-  IF (dffts%have_task_groups) THEN
+  IF (dffts%has_task_groups) THEN
      DEALLOCATE(tg_psi)
      DEALLOCATE(tg_dpsi)
      DEALLOCATE(tg_drho)

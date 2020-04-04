@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ln -sf make.win32 make.sys
+ln -sf make.win32 make.inc
 make
 
 version=

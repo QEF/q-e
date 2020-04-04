@@ -68,6 +68,7 @@ clean:
 	-rm -f *~ */*~ */*/*~
 	-rm -f *.tgz 
 	-rm -f *.tar
+	-cd doc/pwdocs; $(MAKE) clean
 
 veryclean: 
 	$(MAKE) clean
@@ -79,7 +80,7 @@ distclean: veryclean
 	-cd lib/; rm -f *
 	cd $(PWGUI_VFS); $(MAKE) distclean	
 
-svninit:
+init:
 	-cd doc/pwdocs; $(MAKE)
 	-if test ! -d lib; then mkdir lib; fi
 	-cd lib/; rm -f Guib-*;

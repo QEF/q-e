@@ -7,39 +7,50 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
+SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
   !-----------------------------------------------------------------------
-  !
-  ! Calculation of Vloc*psi using dual-space technique - Gamma point
+  !! Calculation of Vloc*psi using dual-space technique - Gamma point.
   !
   USE parallel_include
-  USE kinds,   ONLY : DP
-  USE gvecs, ONLY : nls, nlsm
-  USE mp_bands,      ONLY : me_bgrp
-  USE fft_base,      ONLY : dffts
-  USE fft_interfaces,ONLY : fwfft, invfft
-  USE wavefunctions_module,  ONLY: psic
+  USE kinds,                   ONLY : DP
+  USE mp_bands,                ONLY : me_bgrp
+  USE fft_base,                ONLY : dffts
+  USE fft_interfaces,          ONLY : fwfft, invfft
+  USE wavefunctions,           ONLY : psic
+  USE fft_helper_subroutines,  ONLY : fftx_ntgrp, tg_get_nnr, &
+                                      tg_get_group_nr3, tg_get_recip_inc
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(in) :: lda, n, m
-  COMPLEX(DP), INTENT(in)   :: psi (lda, m)
-  COMPLEX(DP), INTENT(inout):: hpsi (lda, m)
-  REAL(DP), INTENT(in) :: v(dffts%nnr)
+  INTEGER, INTENT(IN) :: lda
+  !! leading dimension of arrays psi, hpsi
+  INTEGER, INTENT(IN) :: n
+  !! true dimension of psi, hpsi
+  INTEGER, INTENT(IN) :: m
+  !! number of states psi
+  COMPLEX(DP), INTENT(IN) :: psi(lda,m)
+  !! the wavefunction
+  COMPLEX(DP), INTENT(INOUT) :: hpsi(lda,m)
+  !! Hamiltonian dot psi
+  REAL(DP), INTENT(IN) :: v(dffts%nnr)
+  !! the total pot. in real space (smooth grid) for current spin
+  !
+  ! ... local variables
   !
   INTEGER :: ibnd, j, incr
+  INTEGER :: right_nnr, right_nr3, right_inc
   COMPLEX(DP) :: fp, fm
   !
+  !Variables for task groups
   LOGICAL :: use_tg
-  ! Variables for task groups
-  REAL(DP),    ALLOCATABLE :: tg_v(:)
+  REAL(DP), ALLOCATABLE :: tg_v(:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
   INTEGER :: v_siz, idx, ioff
   !
   CALL start_clock ('vloc_psi')
   incr = 2
   !
-  use_tg = dffts%have_task_groups 
+  use_tg = dffts%has_task_groups 
   !
   IF( use_tg ) THEN
      !
@@ -52,7 +63,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
      CALL tg_gather( dffts, v, tg_v )
      CALL stop_clock ('vloc_psi:tg_gather')
      !
-     incr = 2 * dffts%nproc2
+     incr = 2 * fftx_ntgrp(dffts)
      !
   ENDIF
   !
@@ -62,25 +73,27 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
      !
      IF( use_tg ) THEN
         !
+        CALL tg_get_nnr( dffts, right_nnr )
+        !
         tg_psic = (0.d0, 0.d0)
         ioff   = 0
         !
-        DO idx = 1, 2*dffts%nproc2, 2
+        DO idx = 1, 2*fftx_ntgrp(dffts), 2
            IF( idx + ibnd - 1 < m ) THEN
               DO j = 1, n
-                 tg_psic(nls (j)+ioff) =        psi(j,idx+ibnd-1) + &
+                 tg_psic(dffts%nl (j)+ioff) =        psi(j,idx+ibnd-1) + &
                                       (0.0d0,1.d0) * psi(j,idx+ibnd)
-                 tg_psic(nlsm(j)+ioff) = conjg( psi(j,idx+ibnd-1) - &
+                 tg_psic(dffts%nlm(j)+ioff) = conjg( psi(j,idx+ibnd-1) - &
                                       (0.0d0,1.d0) * psi(j,idx+ibnd) )
               ENDDO
            ELSEIF( idx + ibnd - 1 == m ) THEN
               DO j = 1, n
-                 tg_psic(nls (j)+ioff) =        psi(j,idx+ibnd-1)
-                 tg_psic(nlsm(j)+ioff) = conjg( psi(j,idx+ibnd-1) )
+                 tg_psic(dffts%nl (j)+ioff) =        psi(j,idx+ibnd-1)
+                 tg_psic(dffts%nlm(j)+ioff) = conjg( psi(j,idx+ibnd-1) )
               ENDDO
            ENDIF
 
-           ioff = ioff + dffts%nnr
+           ioff = ioff + right_nnr
 
         ENDDO
         !
@@ -90,13 +103,13 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
         IF (ibnd < m) THEN
            ! two ffts at the same time
            DO j = 1, n
-              psic(nls (j))=      psi(j,ibnd) + (0.0d0,1.d0)*psi(j,ibnd+1)
-              psic(nlsm(j))=conjg(psi(j,ibnd) - (0.0d0,1.d0)*psi(j,ibnd+1))
+              psic(dffts%nl (j))=      psi(j,ibnd) + (0.0d0,1.d0)*psi(j,ibnd+1)
+              psic(dffts%nlm(j))=conjg(psi(j,ibnd) - (0.0d0,1.d0)*psi(j,ibnd+1))
            ENDDO
         ELSE
            DO j = 1, n
-              psic (nls (j)) =       psi(j, ibnd)
-              psic (nlsm(j)) = conjg(psi(j, ibnd))
+              psic (dffts%nl (j)) =       psi(j, ibnd)
+              psic (dffts%nlm(j)) = conjg(psi(j, ibnd))
            ENDDO
         ENDIF
         !
@@ -110,7 +123,9 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
         !
         CALL invfft ('tgWave', tg_psic, dffts )
         !
-        DO j = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
+        CALL tg_get_group_nr3( dffts, right_nr3 )
+        !
+        DO j = 1, dffts%nr1x * dffts%nr2x * right_nr3
            tg_psic (j) = tg_psic (j) * tg_v(j)
         ENDDO
         !
@@ -134,14 +149,16 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
         !
         ioff   = 0
         !
-        DO idx = 1, 2*dffts%nproc2, 2
+        CALL tg_get_recip_inc( dffts, right_inc )
+        !
+        DO idx = 1, 2*fftx_ntgrp(dffts), 2
            !
            IF( idx + ibnd - 1 < m ) THEN
               DO j = 1, n
-                 fp= ( tg_psic( nls(j) + ioff ) +  &
-                       tg_psic( nlsm(j) + ioff ) ) * 0.5d0
-                 fm= ( tg_psic( nls(j) + ioff ) -  &
-                       tg_psic( nlsm(j) + ioff ) ) * 0.5d0
+                 fp= ( tg_psic( dffts%nl(j) + ioff ) +  &
+                       tg_psic( dffts%nlm(j) + ioff ) ) * 0.5d0
+                 fm= ( tg_psic( dffts%nl(j) + ioff ) -  &
+                       tg_psic( dffts%nlm(j) + ioff ) ) * 0.5d0
                  hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
                                         cmplx( dble(fp), aimag(fm),kind=DP)
                  hpsi (j, ibnd+idx  ) = hpsi (j, ibnd+idx  ) + &
@@ -150,11 +167,11 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
            ELSEIF( idx + ibnd - 1 == m ) THEN
               DO j = 1, n
                  hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
-                                         tg_psic( nls(j) + ioff )
+                                         tg_psic( dffts%nl(j) + ioff )
               ENDDO
            ENDIF
            !
-           ioff = ioff + dffts%nnr
+           ioff = ioff + right_inc
            !
         ENDDO
         !
@@ -162,8 +179,8 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
         IF (ibnd < m) THEN
            ! two ffts at the same time
            DO j = 1, n
-              fp = (psic (nls(j)) + psic (nlsm(j)))*0.5d0
-              fm = (psic (nls(j)) - psic (nlsm(j)))*0.5d0
+              fp = (psic (dffts%nl(j)) + psic (dffts%nlm(j)))*0.5d0
+              fm = (psic (dffts%nl(j)) - psic (dffts%nlm(j)))*0.5d0
               hpsi (j, ibnd)   = hpsi (j, ibnd)   + &
                                  cmplx( dble(fp), aimag(fm),kind=DP)
               hpsi (j, ibnd+1) = hpsi (j, ibnd+1) + &
@@ -171,7 +188,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
            ENDDO
         ELSE
            DO j = 1, n
-              hpsi (j, ibnd)   = hpsi (j, ibnd)   + psic (nls(j))
+              hpsi (j, ibnd)   = hpsi (j, ibnd)   + psic (dffts%nl(j))
            ENDDO
         ENDIF
      ENDIF
@@ -190,44 +207,58 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
 END SUBROUTINE vloc_psi_gamma
 !
 !-----------------------------------------------------------------------
-SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
+SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
   !-----------------------------------------------------------------------
+  !! Calculation of Vloc*psi using dual-space technique - k-points:
   !
-  ! Calculation of Vloc*psi using dual-space technique - k-points
-  !
-  !   fft to real space
-  !   product with the potential v on the smooth grid
-  !   back to reciprocal space
-  !   addition to the hpsi
+  !! * fft to real space;
+  !! * product with the potential v on the smooth grid;
+  !! * back to reciprocal space;
+  !! * addition to the hpsi.
   !
   USE parallel_include
-  USE kinds, ONLY : DP
-  USE gvecs, ONLY : nls, nlsm
-  USE wvfct, ONLY : current_k
-  USE klist, ONLY : igk_k
-  USE mp_bands,      ONLY : me_bgrp
-  USE fft_base,      ONLY : dffts
-  USE fft_interfaces,ONLY : fwfft, invfft
-  USE wavefunctions_module,  ONLY: psic
+  USE kinds,                  ONLY : DP
+  USE wvfct,                  ONLY : current_k
+  USE klist,                  ONLY : igk_k
+  USE mp_bands,               ONLY : me_bgrp
+  USE fft_base,               ONLY : dffts
+  USE fft_interfaces,         ONLY : fwfft, invfft
+  USE fft_helper_subroutines, ONLY : fftx_ntgrp, tg_get_nnr, &
+                                     tg_get_group_nr3, tg_get_recip_inc
+  USE wavefunctions,          ONLY : psic
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(in) :: lda, n, m
-  COMPLEX(DP), INTENT(in)   :: psi (lda, m)
-  COMPLEX(DP), INTENT(inout):: hpsi (lda, m)
-  REAL(DP), INTENT(in) :: v(dffts%nnr)
+  INTEGER, INTENT(IN) :: lda
+  !! leading dimension of arrays psi, hpsi
+  INTEGER, INTENT(IN) :: n
+  !! true dimension of psi, hpsi
+  INTEGER, INTENT(IN) :: m
+  !! number of states psi
+  COMPLEX(DP), INTENT(IN) :: psi(lda,m)
+  !! the wavefunction
+  COMPLEX(DP), INTENT(INOUT) :: hpsi(lda,m)
+  !! Hamiltonian dot psi
+  REAL(DP), INTENT(IN) :: v(dffts%nnr)
+  !! the total pot. in real space (smooth grid) for current spin
+  !
+  ! ... local variables
   !
   INTEGER :: ibnd, j, incr
-  INTEGER :: i
+  INTEGER :: i, right_nnr, right_nr3, right_inc
   !
-  LOGICAL :: use_tg
+  ! chunking parameters
+  INTEGER, PARAMETER :: blocksize = 256
+  INTEGER :: numblock
+  !
   ! Task Groups
-  REAL(DP),    ALLOCATABLE :: tg_v(:)
+  LOGICAL :: use_tg
+  REAL(DP), ALLOCATABLE :: tg_v(:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
-  INTEGER :: v_siz, idx, ioff
+  INTEGER :: v_siz, idx
   !
   CALL start_clock ('vloc_psi')
-  use_tg = dffts%have_task_groups 
+  use_tg = dffts%has_task_groups 
   !
   IF( use_tg ) THEN
      !
@@ -244,33 +275,33 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   !
   IF( use_tg ) THEN
 
-     DO ibnd = 1, m, dffts%nproc2
+     CALL tg_get_nnr( dffts, right_nnr )
+
+     ! compute the number of chuncks
+     numblock  = (n+blocksize-1)/blocksize
+
+     DO ibnd = 1, m, fftx_ntgrp(dffts)
         !
-        tg_psic = (0.d0, 0.d0)
-        ioff   = 0
-        !
-        DO idx = 1, dffts%nproc2
-
-           IF( idx + ibnd - 1 <= m ) THEN
-!$omp parallel do
-              DO j = 1, n
-                 tg_psic(nls (igk_k(j,current_k))+ioff) =  psi(j,idx+ibnd-1)
-              ENDDO
-!$omp end parallel do
-           ENDIF
-
-        !write (6,*) 'wfc G ', idx+ibnd-1
-        !write (6,99) (tg_psic(i+ioff), i=1,400)
-
-           ioff = ioff + dffts%nnr
+!$omp parallel
+        CALL threaded_barrier_memset(tg_psic, 0.D0, fftx_ntgrp(dffts)*right_nnr*2)
+        !$omp do collapse(2)
+        DO idx = 0, MIN(fftx_ntgrp(dffts)-1, m-ibnd)
+           DO j = 1, numblock
+              tg_psic(dffts%nl (igk_k((j-1)*blocksize+1:MIN(j*blocksize, n),current_k))+right_nnr*idx) = &
+                 psi((j-1)*blocksize+1:MIN(j*blocksize, n),idx+ibnd)
+           ENDDO
         ENDDO
+        !$omp end do nowait
+!$omp end parallel
         !
         CALL  invfft ('tgWave', tg_psic, dffts )
         !write (6,*) 'wfc R ' 
         !write (6,99) (tg_psic(i), i=1,400)
         !
+        CALL tg_get_group_nr3( dffts, right_nr3 )
+        !
 !$omp parallel do
-        DO j = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
+        DO j = 1, dffts%nr1x*dffts%nr2x* right_nr3
            tg_psic (j) = tg_psic (j) * tg_v(j)
         ENDDO
 !$omp end parallel do
@@ -281,32 +312,30 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
         !
         !   addition to the total product
         !
-        ioff   = 0
+        CALL tg_get_recip_inc( dffts, right_inc )
         !
-        DO idx = 1, dffts%nproc2
-           !
-           IF( idx + ibnd - 1 <= m ) THEN
-!$omp parallel do
-              DO j = 1, n
-                 hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
-                    tg_psic( nls(igk_k(j,current_k)) + ioff )
-              ENDDO
-!$omp end parallel do
-           ENDIF
-           !
-        !write (6,*) 'v psi G ', idx+ibnd-1
-        !write (6,99) (tg_psic(i+ioff), i=1,400)
-
-           ioff = ioff + dffts%nnr
-           !
+!$omp parallel do collapse(2)
+        DO idx = 0, MIN(fftx_ntgrp(dffts)-1, m-ibnd)
+           DO j = 1, numblock
+              hpsi ((j-1)*blocksize+1:MIN(j*blocksize, n), ibnd+idx) = &
+                 hpsi ((j-1)*blocksize+1:MIN(j*blocksize, n), ibnd+idx) + &
+                 tg_psic( dffts%nl(igk_k((j-1)*blocksize+1:MIN(j*blocksize, n),current_k)) + right_inc*idx )
+           ENDDO
         ENDDO
+!$omp end parallel do
         !
      ENDDO
   ELSE
      DO ibnd = 1, m
         !
-        psic(:) = (0.d0, 0.d0)
-        psic (nls (igk_k(1:n,current_k))) = psi(1:n, ibnd)
+!$omp parallel
+        CALL threaded_barrier_memset(psic, 0.D0, dffts%nnr*2)
+        !$omp do
+        DO j = 1, n
+           psic (dffts%nl (igk_k(j,current_k))) = psi(j, ibnd)
+        ENDDO
+        !$omp end do nowait
+!$omp end parallel
         !write (6,*) 'wfc G ', ibnd
         !write (6,99) (psic(i), i=1,400)
         !
@@ -328,7 +357,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
         !
 !$omp parallel do
         DO j = 1, n
-           hpsi (j, ibnd)   = hpsi (j, ibnd)   + psic (nls(igk_k(j,current_k)))
+           hpsi (j, ibnd)   = hpsi (j, ibnd)   + psic (dffts%nl(igk_k(j,current_k)))
         ENDDO
 !$omp end parallel do
         !write (6,*) 'v psi G ', ibnd
@@ -351,45 +380,56 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
 END SUBROUTINE vloc_psi_k
 !
 !-----------------------------------------------------------------------
-SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
+SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
   !-----------------------------------------------------------------------
-  !
-  ! Calculation of Vloc*psi using dual-space technique - noncolinear
+  !! Calculation of Vloc*psi using dual-space technique - noncollinear.
   !
   USE parallel_include
-  USE kinds,   ONLY : DP
-  USE gvecs, ONLY : nls, nlsm
-  USE wvfct, ONLY : current_k
-  USE klist, ONLY : igk_k
-  USE mp_bands,      ONLY : me_bgrp
-  USE fft_base,      ONLY : dffts, dfftp
-  USE fft_interfaces,ONLY : fwfft, invfft
-  USE lsda_mod,      ONLY : nspin
-  USE spin_orb,      ONLY : domag
-  USE noncollin_module,     ONLY: npol
-  USE wavefunctions_module, ONLY: psic_nc
+  USE kinds,                  ONLY : DP
+  USE wvfct,                  ONLY : current_k
+  USE klist,                  ONLY : igk_k
+  USE mp_bands,               ONLY : me_bgrp
+  USE fft_base,               ONLY : dffts, dfftp
+  USE fft_interfaces,         ONLY : fwfft, invfft
+  USE lsda_mod,               ONLY : nspin
+  USE spin_orb,               ONLY : domag
+  USE noncollin_module,       ONLY : npol
+  USE wavefunctions,          ONLY : psic_nc
+  USE fft_helper_subroutines, ONLY : fftx_ntgrp, tg_get_nnr, &
+                                     tg_get_group_nr3, tg_get_recip_inc
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(in) :: lda, n, m
-  REAL(DP), INTENT(in) :: v(dfftp%nnr,4) ! beware dimensions!
-  COMPLEX(DP), INTENT(in)   :: psi (lda*npol, m)
-  COMPLEX(DP), INTENT(inout):: hpsi (lda,npol,m)
+  INTEGER, INTENT(IN) :: lda
+  !! leading dimension of arrays psi, hpsi
+  INTEGER, INTENT(IN) :: n
+  !! true dimension of psi, hpsi
+  INTEGER, INTENT(IN) :: m
+  !! number of states psi
+  REAL(DP), INTENT(IN) :: v(dfftp%nnr,4) ! beware dimensions!
+  !! the total pot. in real space (smooth grid)
+  COMPLEX(DP), INTENT(IN) :: psi(lda*npol,m)
+  !! the wavefunction
+  COMPLEX(DP), INTENT(INOUT) :: hpsi(lda,npol,m)
+  !! Hamiltonian dot psi
+  !
+  ! ... local variables
   !
   INTEGER :: ibnd, j,ipol, incr, is
   COMPLEX(DP) :: sup, sdwn
   !
-  LOGICAL :: use_tg
   ! Variables for task groups
-  REAL(DP),    ALLOCATABLE :: tg_v(:,:)
+  LOGICAL :: use_tg
+  REAL(DP), ALLOCATABLE :: tg_v(:,:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:,:)
   INTEGER :: v_siz, idx, ioff
+  INTEGER :: right_nnr, right_nr3, right_inc
   !
   CALL start_clock ('vloc_psi')
   !
   incr = 1
   !
-  use_tg = dffts%have_task_groups 
+  use_tg = dffts%has_task_groups 
   !
   IF( use_tg ) THEN
      CALL start_clock ('vloc_psi:tg_gather')
@@ -406,7 +446,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
      ALLOCATE( tg_psic( v_siz, npol ) )
      CALL stop_clock ('vloc_psi:tg_gather')
 
-     incr = dffts%nproc2
+     incr = fftx_ntgrp(dffts)
   ENDIF
   !
   ! the local potential V_Loc psi. First the psi in real space
@@ -415,21 +455,23 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
 
      IF( use_tg ) THEN
         !
+        CALL tg_get_nnr( dffts, right_nnr )
+        !
         DO ipol = 1, npol
            !
            tg_psic(:,ipol) = ( 0.D0, 0.D0 )
            ioff   = 0
            !
-           DO idx = 1, dffts%nproc2
+           DO idx = 1, fftx_ntgrp(dffts)
               !
               IF( idx + ibnd - 1 <= m ) THEN
                  DO j = 1, n
-                    tg_psic( nls( igk_k(j,current_k) ) + ioff, ipol ) = &
+                    tg_psic( dffts%nl( igk_k(j,current_k) ) + ioff, ipol ) = &
                        psi( j +(ipol-1)*lda, idx+ibnd-1 )
                  ENDDO
               ENDIF
 
-              ioff = ioff + dffts%nnr
+              ioff = ioff + right_nnr
 
            ENDDO
            !
@@ -441,7 +483,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
         psic_nc = (0.d0,0.d0)
         DO ipol=1,npol
            DO j = 1, n
-              psic_nc(nls(igk_k(j,current_k)),ipol) = psi(j+(ipol-1)*lda,ibnd)
+              psic_nc(dffts%nl(igk_k(j,current_k)),ipol) = psi(j+(ipol-1)*lda,ibnd)
            ENDDO
            CALL invfft ('Wave', psic_nc(:,ipol), dffts)
         ENDDO
@@ -451,8 +493,9 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
      !   product with the potential v = (vltot+vr) on the smooth grid
      !
      IF( use_tg ) THEN
+        CALL tg_get_group_nr3( dffts, right_nr3 )
         IF (domag) THEN
-           DO j=1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
+           DO j=1, dffts%nr1x*dffts%nr2x*right_nr3
               sup = tg_psic(j,1) * (tg_v(j,1)+tg_v(j,4)) + &
                     tg_psic(j,2) * (tg_v(j,2)-(0.d0,1.d0)*tg_v(j,3))
               sdwn = tg_psic(j,2) * (tg_v(j,1)-tg_v(j,4)) + &
@@ -461,7 +504,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
               tg_psic(j,2)=sdwn
            ENDDO
         ELSE
-           DO j=1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
+           DO j=1, dffts%nr1x*dffts%nr2x*right_nr3
               tg_psic(j,:) = tg_psic(j,:) * tg_v(j,1)
            ENDDO
         ENDIF
@@ -492,16 +535,18 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
            !
            ioff   = 0
            !
-           DO idx = 1, dffts%nproc2
+           CALL tg_get_recip_inc( dffts, right_inc )
+           !
+           DO idx = 1, fftx_ntgrp(dffts)
               !
               IF( idx + ibnd - 1 <= m ) THEN
                  DO j = 1, n
                     hpsi (j, ipol, ibnd+idx-1) = hpsi (j, ipol, ibnd+idx-1) + &
-                                 tg_psic( nls(igk_k(j,current_k)) + ioff, ipol )
+                                 tg_psic( dffts%nl(igk_k(j,current_k)) + ioff, ipol )
                  ENDDO
               ENDIF
               !
-              ioff = ioff + dffts%nnr
+              ioff = ioff + right_inc
               !
            ENDDO
 
@@ -518,7 +563,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
         DO ipol=1,npol
            DO j = 1, n
               hpsi(j,ipol,ibnd) = hpsi(j,ipol,ibnd) + &
-                                  psic_nc(nls(igk_k(j,current_k)),ipol)
+                                  psic_nc(dffts%nl(igk_k(j,current_k)),ipol)
            ENDDO
         ENDDO
 

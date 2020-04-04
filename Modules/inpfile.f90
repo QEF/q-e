@@ -8,8 +8,8 @@
 !----------------------------------------------------------------------------
 SUBROUTINE input_from_file( )
   !
-  ! This subroutine checks command-line arguments for -i[nput] "file name"
-  ! if "file name" is present, attach input unit 5 to the specified file
+  !! This subroutine checks command-line arguments for -i[nput] "file name"
+  !! if "file name" is present, attach input unit 5 to the specified file
   !
   IMPLICIT NONE
   !
@@ -64,14 +64,14 @@ END SUBROUTINE input_from_file
 !
 SUBROUTINE get_file( input_file )
   !
-  ! This subroutine reads, either from command line or from terminal,
-  ! the name of a file to be opened. To be used for serial codes only.
-  ! Expected syntax: "code [filename]"  (one command-line option, or none)
+  !! This subroutine reads, either from command line or from terminal,
+  !!the name of a file to be opened. To be used for serial codes only.
+  !!Expected syntax: "code [filename]"  (one command-line option, or none)
   !
   IMPLICIT NONE
   !
-  CHARACTER (LEN=*)  :: input_file
-  !
+  CHARACTER (LEN=*),INTENT(OUT)  :: input_file
+  !! On output contains the path to the input file
   CHARACTER (LEN=256) :: prgname
   INTEGER             :: nargs
   LOGICAL             :: exst

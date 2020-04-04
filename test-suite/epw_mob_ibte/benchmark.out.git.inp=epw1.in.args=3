@@ -1,0 +1,999 @@
+                                                                                      
+                                       ``:oss/                                        
+                           `.+s+.     .+ys--yh+     `./ss+.                           
+                          -sh//yy+`   +yy   +yy    -+h+-oyy                           
+                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           
+                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  
+               `/+ssys+-` `sh+      `                   oys`   .:osyo`                
+               -yh- ./syyooyo`                          .sys+/oyo--yh/                
+               `yy+    .-:-.                             `-/+/:`  -sh-                
+                /yh.                                              oys                 
+          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             
+       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        
+       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       
+       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        
+        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        
+         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          
+          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           
+    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      
+   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   
+   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   
+   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   
+   -yh-        ````````````````    `````````              ``        ``          oys   
+   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
+   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
+                                                                                      
+  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 
+                                                Comput. Phys. Commun. 209, 116 (2016) 
+                                                                                      
+
+     Program EPW v.5.1.0 starts on 25Mar2019 at 11:25:35 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+
+     Reading data from directory:
+     ./si.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      = PBE ( 1  4  3  4 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         151     151     61                 1139     1139     331
+
+
+     --                                                                         
+
+     bravais-lattice index     =            2
+     lattice parameter (a_0)   =      10.2620  a.u.
+     unit-cell volume          =     270.1693 (a.u.)^3
+     number of atoms/cell      =            2
+     number of atomic types    =            1
+     kinetic-energy cut-off    =      10.0000  Ry
+     charge density cut-off    =      40.0000  Ry
+     Exchange-correlation      = PBE ( 1  4  3  4 0 0)
+
+
+     celldm(1)=   10.26200  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = ( -0.5000  0.0000  0.5000 )  
+               a(2) = (  0.0000  0.5000  0.5000 )  
+               a(3) = ( -0.5000  0.5000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = ( -1.0000 -1.0000  1.0000 )  
+               b(2) = (  1.0000  1.0000  1.0000 )  
+               b(3) = ( -1.0000  1.0000 -1.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+        1        Si  28.0855   tau( 1) = (    0.00000    0.00000    0.00000  )
+        2        Si  28.0855   tau( 2) = (    0.25000    0.25000    0.25000  )
+
+     49 Sym.Ops. (with q -> -q+G )
+
+
+     G cutoff =  106.7000  (   1139 G-vectors)     FFT grid: ( 16, 16, 16)
+     number of k points=  216
+                       cart. coord. in units 2pi/a_0
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0092593
+        k(    2) = (  -0.1666667   0.1666667  -0.1666667), wk =   0.0092593
+        k(    3) = (  -0.3333333   0.3333333  -0.3333333), wk =   0.0092593
+        k(    4) = (  -0.5000000   0.5000000  -0.5000000), wk =   0.0092593
+        k(    5) = (  -0.6666667   0.6666667  -0.6666667), wk =   0.0092593
+        k(    6) = (  -0.8333333   0.8333333  -0.8333333), wk =   0.0092593
+        k(    7) = (   0.1666667   0.1666667   0.1666667), wk =   0.0092593
+        k(    8) = (   0.0000000   0.3333333   0.0000000), wk =   0.0092593
+        k(    9) = (  -0.1666667   0.5000000  -0.1666667), wk =   0.0092593
+        k(   10) = (  -0.3333333   0.6666667  -0.3333333), wk =   0.0092593
+        k(   11) = (  -0.5000000   0.8333333  -0.5000000), wk =   0.0092593
+        k(   12) = (  -0.6666667   1.0000000  -0.6666667), wk =   0.0092593
+        k(   13) = (   0.3333333   0.3333333   0.3333333), wk =   0.0092593
+        k(   14) = (   0.1666667   0.5000000   0.1666667), wk =   0.0092593
+        k(   15) = (   0.0000000   0.6666667   0.0000000), wk =   0.0092593
+        k(   16) = (  -0.1666667   0.8333333  -0.1666667), wk =   0.0092593
+        k(   17) = (  -0.3333333   1.0000000  -0.3333333), wk =   0.0092593
+        k(   18) = (  -0.5000000   1.1666667  -0.5000000), wk =   0.0092593
+        k(   19) = (   0.5000000   0.5000000   0.5000000), wk =   0.0092593
+        k(   20) = (   0.3333333   0.6666667   0.3333333), wk =   0.0092593
+        k(   21) = (   0.1666667   0.8333333   0.1666667), wk =   0.0092593
+        k(   22) = (   0.0000000   1.0000000   0.0000000), wk =   0.0092593
+        k(   23) = (  -0.1666667   1.1666667  -0.1666667), wk =   0.0092593
+        k(   24) = (  -0.3333333   1.3333333  -0.3333333), wk =   0.0092593
+        k(   25) = (   0.6666667   0.6666667   0.6666667), wk =   0.0092593
+        k(   26) = (   0.5000000   0.8333333   0.5000000), wk =   0.0092593
+        k(   27) = (   0.3333333   1.0000000   0.3333333), wk =   0.0092593
+        k(   28) = (   0.1666667   1.1666667   0.1666667), wk =   0.0092593
+        k(   29) = (   0.0000000   1.3333333   0.0000000), wk =   0.0092593
+        k(   30) = (  -0.1666667   1.5000000  -0.1666667), wk =   0.0092593
+        k(   31) = (   0.8333333   0.8333333   0.8333333), wk =   0.0092593
+        k(   32) = (   0.6666667   1.0000000   0.6666667), wk =   0.0092593
+        k(   33) = (   0.5000000   1.1666667   0.5000000), wk =   0.0092593
+        k(   34) = (   0.3333333   1.3333333   0.3333333), wk =   0.0092593
+        k(   35) = (   0.1666667   1.5000000   0.1666667), wk =   0.0092593
+        k(   36) = (   0.0000000   1.6666667   0.0000000), wk =   0.0092593
+        k(   37) = (  -0.1666667  -0.1666667   0.1666667), wk =   0.0092593
+        k(   38) = (  -0.3333333   0.0000000   0.0000000), wk =   0.0092593
+        k(   39) = (  -0.5000000   0.1666667  -0.1666667), wk =   0.0092593
+        k(   40) = (  -0.6666667   0.3333333  -0.3333333), wk =   0.0092593
+        k(   41) = (  -0.8333333   0.5000000  -0.5000000), wk =   0.0092593
+        k(   42) = (  -1.0000000   0.6666667  -0.6666667), wk =   0.0092593
+        k(   43) = (   0.0000000   0.0000000   0.3333333), wk =   0.0092593
+        k(   44) = (  -0.1666667   0.1666667   0.1666667), wk =   0.0092593
+        k(   45) = (  -0.3333333   0.3333333   0.0000000), wk =   0.0092593
+        k(   46) = (  -0.5000000   0.5000000  -0.1666667), wk =   0.0092593
+        k(   47) = (  -0.6666667   0.6666667  -0.3333333), wk =   0.0092593
+        k(   48) = (  -0.8333333   0.8333333  -0.5000000), wk =   0.0092593
+        k(   49) = (   0.1666667   0.1666667   0.5000000), wk =   0.0092593
+        k(   50) = (  -0.0000000   0.3333333   0.3333333), wk =   0.0092593
+        k(   51) = (  -0.1666667   0.5000000   0.1666667), wk =   0.0092593
+        k(   52) = (  -0.3333333   0.6666667   0.0000000), wk =   0.0092593
+        k(   53) = (  -0.5000000   0.8333333  -0.1666667), wk =   0.0092593
+        k(   54) = (  -0.6666667   1.0000000  -0.3333333), wk =   0.0092593
+        k(   55) = (   0.3333333   0.3333333   0.6666667), wk =   0.0092593
+        k(   56) = (   0.1666667   0.5000000   0.5000000), wk =   0.0092593
+        k(   57) = (  -0.0000000   0.6666667   0.3333333), wk =   0.0092593
+        k(   58) = (  -0.1666667   0.8333333   0.1666667), wk =   0.0092593
+        k(   59) = (  -0.3333333   1.0000000   0.0000000), wk =   0.0092593
+        k(   60) = (  -0.5000000   1.1666667  -0.1666667), wk =   0.0092593
+        k(   61) = (   0.5000000   0.5000000   0.8333333), wk =   0.0092593
+        k(   62) = (   0.3333333   0.6666667   0.6666667), wk =   0.0092593
+        k(   63) = (   0.1666667   0.8333333   0.5000000), wk =   0.0092593
+        k(   64) = (   0.0000000   1.0000000   0.3333333), wk =   0.0092593
+        k(   65) = (  -0.1666667   1.1666667   0.1666667), wk =   0.0092593
+        k(   66) = (  -0.3333333   1.3333333   0.0000000), wk =   0.0092593
+        k(   67) = (   0.6666667   0.6666667   1.0000000), wk =   0.0092593
+        k(   68) = (   0.5000000   0.8333333   0.8333333), wk =   0.0092593
+        k(   69) = (   0.3333333   1.0000000   0.6666667), wk =   0.0092593
+        k(   70) = (   0.1666667   1.1666667   0.5000000), wk =   0.0092593
+        k(   71) = (  -0.0000000   1.3333333   0.3333333), wk =   0.0092593
+        k(   72) = (  -0.1666667   1.5000000   0.1666667), wk =   0.0092593
+        k(   73) = (  -0.3333333  -0.3333333   0.3333333), wk =   0.0092593
+        k(   74) = (  -0.5000000  -0.1666667   0.1666667), wk =   0.0092593
+        k(   75) = (  -0.6666667   0.0000000   0.0000000), wk =   0.0092593
+        k(   76) = (  -0.8333333   0.1666667  -0.1666667), wk =   0.0092593
+        k(   77) = (  -1.0000000   0.3333333  -0.3333333), wk =   0.0092593
+        k(   78) = (  -1.1666667   0.5000000  -0.5000000), wk =   0.0092593
+        k(   79) = (  -0.1666667  -0.1666667   0.5000000), wk =   0.0092593
+        k(   80) = (  -0.3333333   0.0000000   0.3333333), wk =   0.0092593
+        k(   81) = (  -0.5000000   0.1666667   0.1666667), wk =   0.0092593
+        k(   82) = (  -0.6666667   0.3333333   0.0000000), wk =   0.0092593
+        k(   83) = (  -0.8333333   0.5000000  -0.1666667), wk =   0.0092593
+        k(   84) = (  -1.0000000   0.6666667  -0.3333333), wk =   0.0092593
+        k(   85) = (   0.0000000   0.0000000   0.6666667), wk =   0.0092593
+        k(   86) = (  -0.1666667   0.1666667   0.5000000), wk =   0.0092593
+        k(   87) = (  -0.3333333   0.3333333   0.3333333), wk =   0.0092593
+        k(   88) = (  -0.5000000   0.5000000   0.1666667), wk =   0.0092593
+        k(   89) = (  -0.6666667   0.6666667  -0.0000000), wk =   0.0092593
+        k(   90) = (  -0.8333333   0.8333333  -0.1666667), wk =   0.0092593
+        k(   91) = (   0.1666667   0.1666667   0.8333333), wk =   0.0092593
+        k(   92) = (  -0.0000000   0.3333333   0.6666667), wk =   0.0092593
+        k(   93) = (  -0.1666667   0.5000000   0.5000000), wk =   0.0092593
+        k(   94) = (  -0.3333333   0.6666667   0.3333333), wk =   0.0092593
+        k(   95) = (  -0.5000000   0.8333333   0.1666667), wk =   0.0092593
+        k(   96) = (  -0.6666667   1.0000000   0.0000000), wk =   0.0092593
+        k(   97) = (   0.3333333   0.3333333   1.0000000), wk =   0.0092593
+        k(   98) = (   0.1666667   0.5000000   0.8333333), wk =   0.0092593
+        k(   99) = (   0.0000000   0.6666667   0.6666667), wk =   0.0092593
+        k(  100) = (  -0.1666667   0.8333333   0.5000000), wk =   0.0092593
+        k(  101) = (  -0.3333333   1.0000000   0.3333333), wk =   0.0092593
+        k(  102) = (  -0.5000000   1.1666667   0.1666667), wk =   0.0092593
+        k(  103) = (   0.5000000   0.5000000   1.1666667), wk =   0.0092593
+        k(  104) = (   0.3333333   0.6666667   1.0000000), wk =   0.0092593
+        k(  105) = (   0.1666667   0.8333333   0.8333333), wk =   0.0092593
+        k(  106) = (  -0.0000000   1.0000000   0.6666667), wk =   0.0092593
+        k(  107) = (  -0.1666667   1.1666667   0.5000000), wk =   0.0092593
+        k(  108) = (  -0.3333333   1.3333333   0.3333333), wk =   0.0092593
+        k(  109) = (  -0.5000000  -0.5000000   0.5000000), wk =   0.0092593
+        k(  110) = (  -0.6666667  -0.3333333   0.3333333), wk =   0.0092593
+        k(  111) = (  -0.8333333  -0.1666667   0.1666667), wk =   0.0092593
+        k(  112) = (  -1.0000000   0.0000000   0.0000000), wk =   0.0092593
+        k(  113) = (  -1.1666667   0.1666667  -0.1666667), wk =   0.0092593
+        k(  114) = (  -1.3333333   0.3333333  -0.3333333), wk =   0.0092593
+        k(  115) = (  -0.3333333  -0.3333333   0.6666667), wk =   0.0092593
+        k(  116) = (  -0.5000000  -0.1666667   0.5000000), wk =   0.0092593
+        k(  117) = (  -0.6666667   0.0000000   0.3333333), wk =   0.0092593
+        k(  118) = (  -0.8333333   0.1666667   0.1666667), wk =   0.0092593
+        k(  119) = (  -1.0000000   0.3333333   0.0000000), wk =   0.0092593
+        k(  120) = (  -1.1666667   0.5000000  -0.1666667), wk =   0.0092593
+        k(  121) = (  -0.1666667  -0.1666667   0.8333333), wk =   0.0092593
+        k(  122) = (  -0.3333333   0.0000000   0.6666667), wk =   0.0092593
+        k(  123) = (  -0.5000000   0.1666667   0.5000000), wk =   0.0092593
+        k(  124) = (  -0.6666667   0.3333333   0.3333333), wk =   0.0092593
+        k(  125) = (  -0.8333333   0.5000000   0.1666667), wk =   0.0092593
+        k(  126) = (  -1.0000000   0.6666667   0.0000000), wk =   0.0092593
+        k(  127) = (   0.0000000   0.0000000   1.0000000), wk =   0.0092593
+        k(  128) = (  -0.1666667   0.1666667   0.8333333), wk =   0.0092593
+        k(  129) = (  -0.3333333   0.3333333   0.6666667), wk =   0.0092593
+        k(  130) = (  -0.5000000   0.5000000   0.5000000), wk =   0.0092593
+        k(  131) = (  -0.6666667   0.6666667   0.3333333), wk =   0.0092593
+        k(  132) = (  -0.8333333   0.8333333   0.1666667), wk =   0.0092593
+        k(  133) = (   0.1666667   0.1666667   1.1666667), wk =   0.0092593
+        k(  134) = (   0.0000000   0.3333333   1.0000000), wk =   0.0092593
+        k(  135) = (  -0.1666667   0.5000000   0.8333333), wk =   0.0092593
+        k(  136) = (  -0.3333333   0.6666667   0.6666667), wk =   0.0092593
+        k(  137) = (  -0.5000000   0.8333333   0.5000000), wk =   0.0092593
+        k(  138) = (  -0.6666667   1.0000000   0.3333333), wk =   0.0092593
+        k(  139) = (   0.3333333   0.3333333   1.3333333), wk =   0.0092593
+        k(  140) = (   0.1666667   0.5000000   1.1666667), wk =   0.0092593
+        k(  141) = (  -0.0000000   0.6666667   1.0000000), wk =   0.0092593
+        k(  142) = (  -0.1666667   0.8333333   0.8333333), wk =   0.0092593
+        k(  143) = (  -0.3333333   1.0000000   0.6666667), wk =   0.0092593
+        k(  144) = (  -0.5000000   1.1666667   0.5000000), wk =   0.0092593
+        k(  145) = (  -0.6666667  -0.6666667   0.6666667), wk =   0.0092593
+        k(  146) = (  -0.8333333  -0.5000000   0.5000000), wk =   0.0092593
+        k(  147) = (  -1.0000000  -0.3333333   0.3333333), wk =   0.0092593
+        k(  148) = (  -1.1666667  -0.1666667   0.1666667), wk =   0.0092593
+        k(  149) = (  -1.3333333   0.0000000   0.0000000), wk =   0.0092593
+        k(  150) = (  -1.5000000   0.1666667  -0.1666667), wk =   0.0092593
+        k(  151) = (  -0.5000000  -0.5000000   0.8333333), wk =   0.0092593
+        k(  152) = (  -0.6666667  -0.3333333   0.6666667), wk =   0.0092593
+        k(  153) = (  -0.8333333  -0.1666667   0.5000000), wk =   0.0092593
+        k(  154) = (  -1.0000000   0.0000000   0.3333333), wk =   0.0092593
+        k(  155) = (  -1.1666667   0.1666667   0.1666667), wk =   0.0092593
+        k(  156) = (  -1.3333333   0.3333333   0.0000000), wk =   0.0092593
+        k(  157) = (  -0.3333333  -0.3333333   1.0000000), wk =   0.0092593
+        k(  158) = (  -0.5000000  -0.1666667   0.8333333), wk =   0.0092593
+        k(  159) = (  -0.6666667  -0.0000000   0.6666667), wk =   0.0092593
+        k(  160) = (  -0.8333333   0.1666667   0.5000000), wk =   0.0092593
+        k(  161) = (  -1.0000000   0.3333333   0.3333333), wk =   0.0092593
+        k(  162) = (  -1.1666667   0.5000000   0.1666667), wk =   0.0092593
+        k(  163) = (  -0.1666667  -0.1666667   1.1666667), wk =   0.0092593
+        k(  164) = (  -0.3333333  -0.0000000   1.0000000), wk =   0.0092593
+        k(  165) = (  -0.5000000   0.1666667   0.8333333), wk =   0.0092593
+        k(  166) = (  -0.6666667   0.3333333   0.6666667), wk =   0.0092593
+        k(  167) = (  -0.8333333   0.5000000   0.5000000), wk =   0.0092593
+        k(  168) = (  -1.0000000   0.6666667   0.3333333), wk =   0.0092593
+        k(  169) = (   0.0000000   0.0000000   1.3333333), wk =   0.0092593
+        k(  170) = (  -0.1666667   0.1666667   1.1666667), wk =   0.0092593
+        k(  171) = (  -0.3333333   0.3333333   1.0000000), wk =   0.0092593
+        k(  172) = (  -0.5000000   0.5000000   0.8333333), wk =   0.0092593
+        k(  173) = (  -0.6666667   0.6666667   0.6666667), wk =   0.0092593
+        k(  174) = (  -0.8333333   0.8333333   0.5000000), wk =   0.0092593
+        k(  175) = (   0.1666667   0.1666667   1.5000000), wk =   0.0092593
+        k(  176) = (  -0.0000000   0.3333333   1.3333333), wk =   0.0092593
+        k(  177) = (  -0.1666667   0.5000000   1.1666667), wk =   0.0092593
+        k(  178) = (  -0.3333333   0.6666667   1.0000000), wk =   0.0092593
+        k(  179) = (  -0.5000000   0.8333333   0.8333333), wk =   0.0092593
+        k(  180) = (  -0.6666667   1.0000000   0.6666667), wk =   0.0092593
+        k(  181) = (  -0.8333333  -0.8333333   0.8333333), wk =   0.0092593
+        k(  182) = (  -1.0000000  -0.6666667   0.6666667), wk =   0.0092593
+        k(  183) = (  -1.1666667  -0.5000000   0.5000000), wk =   0.0092593
+        k(  184) = (  -1.3333333  -0.3333333   0.3333333), wk =   0.0092593
+        k(  185) = (  -1.5000000  -0.1666667   0.1666667), wk =   0.0092593
+        k(  186) = (  -1.6666667   0.0000000   0.0000000), wk =   0.0092593
+        k(  187) = (  -0.6666667  -0.6666667   1.0000000), wk =   0.0092593
+        k(  188) = (  -0.8333333  -0.5000000   0.8333333), wk =   0.0092593
+        k(  189) = (  -1.0000000  -0.3333333   0.6666667), wk =   0.0092593
+        k(  190) = (  -1.1666667  -0.1666667   0.5000000), wk =   0.0092593
+        k(  191) = (  -1.3333333   0.0000000   0.3333333), wk =   0.0092593
+        k(  192) = (  -1.5000000   0.1666667   0.1666667), wk =   0.0092593
+        k(  193) = (  -0.5000000  -0.5000000   1.1666667), wk =   0.0092593
+        k(  194) = (  -0.6666667  -0.3333333   1.0000000), wk =   0.0092593
+        k(  195) = (  -0.8333333  -0.1666667   0.8333333), wk =   0.0092593
+        k(  196) = (  -1.0000000   0.0000000   0.6666667), wk =   0.0092593
+        k(  197) = (  -1.1666667   0.1666667   0.5000000), wk =   0.0092593
+        k(  198) = (  -1.3333333   0.3333333   0.3333333), wk =   0.0092593
+        k(  199) = (  -0.3333333  -0.3333333   1.3333333), wk =   0.0092593
+        k(  200) = (  -0.5000000  -0.1666667   1.1666667), wk =   0.0092593
+        k(  201) = (  -0.6666667   0.0000000   1.0000000), wk =   0.0092593
+        k(  202) = (  -0.8333333   0.1666667   0.8333333), wk =   0.0092593
+        k(  203) = (  -1.0000000   0.3333333   0.6666667), wk =   0.0092593
+        k(  204) = (  -1.1666667   0.5000000   0.5000000), wk =   0.0092593
+        k(  205) = (  -0.1666667  -0.1666667   1.5000000), wk =   0.0092593
+        k(  206) = (  -0.3333333   0.0000000   1.3333333), wk =   0.0092593
+        k(  207) = (  -0.5000000   0.1666667   1.1666667), wk =   0.0092593
+        k(  208) = (  -0.6666667   0.3333333   1.0000000), wk =   0.0092593
+        k(  209) = (  -0.8333333   0.5000000   0.8333333), wk =   0.0092593
+        k(  210) = (  -1.0000000   0.6666667   0.6666667), wk =   0.0092593
+        k(  211) = (   0.0000000   0.0000000   1.6666667), wk =   0.0092593
+        k(  212) = (  -0.1666667   0.1666667   1.5000000), wk =   0.0092593
+        k(  213) = (  -0.3333333   0.3333333   1.3333333), wk =   0.0092593
+        k(  214) = (  -0.5000000   0.5000000   1.1666667), wk =   0.0092593
+        k(  215) = (  -0.6666667   0.6666667   1.0000000), wk =   0.0092593
+        k(  216) = (  -0.8333333   0.8333333   0.8333333), wk =   0.0092593
+
+     PseudoPot. # 1 for Si read from file:
+     ../../pseudo/Si_r.upf
+     MD5 check sum: c84abb4b0aac9c93a8e9f74896432a0a
+     Pseudo is Norm-conserving + core correction, Zval =  4.0
+     Generated using ONCVPSP code by D. R. Hamann
+     Using radial grid of 1528 points,  6 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+                l(5) =   2
+                l(6) =   2
+     EPW          :      0.24s CPU      0.24s WALL
+
+     EPW          :      0.31s CPU      0.31s WALL
+
+     No wavefunction gauge setting applied
+     -------------------------------------------------------------------
+     Wannierization on  6 x  6 x  6 electronic grid
+     -------------------------------------------------------------------
+
+     Spin CASE ( default = unpolarized )
+
+     Initializing Wannier90
+
+
+     Initial Wannier projections
+
+     (   0.00000   0.00000   0.00000) :  l =  -3 mr =   1
+     (   0.00000   0.00000   0.00000) :  l =  -3 mr =   2
+     (   0.00000   0.00000   0.00000) :  l =  -3 mr =   3
+     (   0.00000   0.00000   0.00000) :  l =  -3 mr =   4
+     (  -0.25000   0.75000  -0.25000) :  l =  -3 mr =   1
+     (  -0.25000   0.75000  -0.25000) :  l =  -3 mr =   2
+     (  -0.25000   0.75000  -0.25000) :  l =  -3 mr =   3
+     (  -0.25000   0.75000  -0.25000) :  l =  -3 mr =   4
+
+      - Number of bands is ( 10)
+      - Number of total bands is ( 10)
+      - Number of excluded bands is (  0)
+      - Number of wannier functions is (  8)
+      - All guiding functions are given 
+
+  Reading data about k-point neighbours 
+
+      - All neighbours are found 
+
+     AMN
+      k points =   216 in    1 pools
+            1 of  216 on ionode
+            2 of  216 on ionode
+            3 of  216 on ionode
+            4 of  216 on ionode
+            5 of  216 on ionode
+            6 of  216 on ionode
+            7 of  216 on ionode
+            8 of  216 on ionode
+            9 of  216 on ionode
+           10 of  216 on ionode
+           11 of  216 on ionode
+           12 of  216 on ionode
+           13 of  216 on ionode
+           14 of  216 on ionode
+           15 of  216 on ionode
+           16 of  216 on ionode
+           17 of  216 on ionode
+           18 of  216 on ionode
+           19 of  216 on ionode
+           20 of  216 on ionode
+           21 of  216 on ionode
+           22 of  216 on ionode
+           23 of  216 on ionode
+           24 of  216 on ionode
+           25 of  216 on ionode
+           26 of  216 on ionode
+           27 of  216 on ionode
+           28 of  216 on ionode
+           29 of  216 on ionode
+           30 of  216 on ionode
+           31 of  216 on ionode
+           32 of  216 on ionode
+           33 of  216 on ionode
+           34 of  216 on ionode
+           35 of  216 on ionode
+           36 of  216 on ionode
+           37 of  216 on ionode
+           38 of  216 on ionode
+           39 of  216 on ionode
+           40 of  216 on ionode
+           41 of  216 on ionode
+           42 of  216 on ionode
+           43 of  216 on ionode
+           44 of  216 on ionode
+           45 of  216 on ionode
+           46 of  216 on ionode
+           47 of  216 on ionode
+           48 of  216 on ionode
+           49 of  216 on ionode
+           50 of  216 on ionode
+           51 of  216 on ionode
+           52 of  216 on ionode
+           53 of  216 on ionode
+           54 of  216 on ionode
+           55 of  216 on ionode
+           56 of  216 on ionode
+           57 of  216 on ionode
+           58 of  216 on ionode
+           59 of  216 on ionode
+           60 of  216 on ionode
+           61 of  216 on ionode
+           62 of  216 on ionode
+           63 of  216 on ionode
+           64 of  216 on ionode
+           65 of  216 on ionode
+           66 of  216 on ionode
+           67 of  216 on ionode
+           68 of  216 on ionode
+           69 of  216 on ionode
+           70 of  216 on ionode
+           71 of  216 on ionode
+           72 of  216 on ionode
+           73 of  216 on ionode
+           74 of  216 on ionode
+           75 of  216 on ionode
+           76 of  216 on ionode
+           77 of  216 on ionode
+           78 of  216 on ionode
+           79 of  216 on ionode
+           80 of  216 on ionode
+           81 of  216 on ionode
+           82 of  216 on ionode
+           83 of  216 on ionode
+           84 of  216 on ionode
+           85 of  216 on ionode
+           86 of  216 on ionode
+           87 of  216 on ionode
+           88 of  216 on ionode
+           89 of  216 on ionode
+           90 of  216 on ionode
+           91 of  216 on ionode
+           92 of  216 on ionode
+           93 of  216 on ionode
+           94 of  216 on ionode
+           95 of  216 on ionode
+           96 of  216 on ionode
+           97 of  216 on ionode
+           98 of  216 on ionode
+           99 of  216 on ionode
+          100 of  216 on ionode
+          101 of  216 on ionode
+          102 of  216 on ionode
+          103 of  216 on ionode
+          104 of  216 on ionode
+          105 of  216 on ionode
+          106 of  216 on ionode
+          107 of  216 on ionode
+          108 of  216 on ionode
+          109 of  216 on ionode
+          110 of  216 on ionode
+          111 of  216 on ionode
+          112 of  216 on ionode
+          113 of  216 on ionode
+          114 of  216 on ionode
+          115 of  216 on ionode
+          116 of  216 on ionode
+          117 of  216 on ionode
+          118 of  216 on ionode
+          119 of  216 on ionode
+          120 of  216 on ionode
+          121 of  216 on ionode
+          122 of  216 on ionode
+          123 of  216 on ionode
+          124 of  216 on ionode
+          125 of  216 on ionode
+          126 of  216 on ionode
+          127 of  216 on ionode
+          128 of  216 on ionode
+          129 of  216 on ionode
+          130 of  216 on ionode
+          131 of  216 on ionode
+          132 of  216 on ionode
+          133 of  216 on ionode
+          134 of  216 on ionode
+          135 of  216 on ionode
+          136 of  216 on ionode
+          137 of  216 on ionode
+          138 of  216 on ionode
+          139 of  216 on ionode
+          140 of  216 on ionode
+          141 of  216 on ionode
+          142 of  216 on ionode
+          143 of  216 on ionode
+          144 of  216 on ionode
+          145 of  216 on ionode
+          146 of  216 on ionode
+          147 of  216 on ionode
+          148 of  216 on ionode
+          149 of  216 on ionode
+          150 of  216 on ionode
+          151 of  216 on ionode
+          152 of  216 on ionode
+          153 of  216 on ionode
+          154 of  216 on ionode
+          155 of  216 on ionode
+          156 of  216 on ionode
+          157 of  216 on ionode
+          158 of  216 on ionode
+          159 of  216 on ionode
+          160 of  216 on ionode
+          161 of  216 on ionode
+          162 of  216 on ionode
+          163 of  216 on ionode
+          164 of  216 on ionode
+          165 of  216 on ionode
+          166 of  216 on ionode
+          167 of  216 on ionode
+          168 of  216 on ionode
+          169 of  216 on ionode
+          170 of  216 on ionode
+          171 of  216 on ionode
+          172 of  216 on ionode
+          173 of  216 on ionode
+          174 of  216 on ionode
+          175 of  216 on ionode
+          176 of  216 on ionode
+          177 of  216 on ionode
+          178 of  216 on ionode
+          179 of  216 on ionode
+          180 of  216 on ionode
+          181 of  216 on ionode
+          182 of  216 on ionode
+          183 of  216 on ionode
+          184 of  216 on ionode
+          185 of  216 on ionode
+          186 of  216 on ionode
+          187 of  216 on ionode
+          188 of  216 on ionode
+          189 of  216 on ionode
+          190 of  216 on ionode
+          191 of  216 on ionode
+          192 of  216 on ionode
+          193 of  216 on ionode
+          194 of  216 on ionode
+          195 of  216 on ionode
+          196 of  216 on ionode
+          197 of  216 on ionode
+          198 of  216 on ionode
+          199 of  216 on ionode
+          200 of  216 on ionode
+          201 of  216 on ionode
+          202 of  216 on ionode
+          203 of  216 on ionode
+          204 of  216 on ionode
+          205 of  216 on ionode
+          206 of  216 on ionode
+          207 of  216 on ionode
+          208 of  216 on ionode
+          209 of  216 on ionode
+          210 of  216 on ionode
+          211 of  216 on ionode
+          212 of  216 on ionode
+          213 of  216 on ionode
+          214 of  216 on ionode
+          215 of  216 on ionode
+          216 of  216 on ionode
+
+     AMN calculated
+
+     MMN
+      k points =   216 in    1 pools
+            1 of  216 on ionode
+            2 of  216 on ionode
+            3 of  216 on ionode
+            4 of  216 on ionode
+            5 of  216 on ionode
+            6 of  216 on ionode
+            7 of  216 on ionode
+            8 of  216 on ionode
+            9 of  216 on ionode
+           10 of  216 on ionode
+           11 of  216 on ionode
+           12 of  216 on ionode
+           13 of  216 on ionode
+           14 of  216 on ionode
+           15 of  216 on ionode
+           16 of  216 on ionode
+           17 of  216 on ionode
+           18 of  216 on ionode
+           19 of  216 on ionode
+           20 of  216 on ionode
+           21 of  216 on ionode
+           22 of  216 on ionode
+           23 of  216 on ionode
+           24 of  216 on ionode
+           25 of  216 on ionode
+           26 of  216 on ionode
+           27 of  216 on ionode
+           28 of  216 on ionode
+           29 of  216 on ionode
+           30 of  216 on ionode
+           31 of  216 on ionode
+           32 of  216 on ionode
+           33 of  216 on ionode
+           34 of  216 on ionode
+           35 of  216 on ionode
+           36 of  216 on ionode
+           37 of  216 on ionode
+           38 of  216 on ionode
+           39 of  216 on ionode
+           40 of  216 on ionode
+           41 of  216 on ionode
+           42 of  216 on ionode
+           43 of  216 on ionode
+           44 of  216 on ionode
+           45 of  216 on ionode
+           46 of  216 on ionode
+           47 of  216 on ionode
+           48 of  216 on ionode
+           49 of  216 on ionode
+           50 of  216 on ionode
+           51 of  216 on ionode
+           52 of  216 on ionode
+           53 of  216 on ionode
+           54 of  216 on ionode
+           55 of  216 on ionode
+           56 of  216 on ionode
+           57 of  216 on ionode
+           58 of  216 on ionode
+           59 of  216 on ionode
+           60 of  216 on ionode
+           61 of  216 on ionode
+           62 of  216 on ionode
+           63 of  216 on ionode
+           64 of  216 on ionode
+           65 of  216 on ionode
+           66 of  216 on ionode
+           67 of  216 on ionode
+           68 of  216 on ionode
+           69 of  216 on ionode
+           70 of  216 on ionode
+           71 of  216 on ionode
+           72 of  216 on ionode
+           73 of  216 on ionode
+           74 of  216 on ionode
+           75 of  216 on ionode
+           76 of  216 on ionode
+           77 of  216 on ionode
+           78 of  216 on ionode
+           79 of  216 on ionode
+           80 of  216 on ionode
+           81 of  216 on ionode
+           82 of  216 on ionode
+           83 of  216 on ionode
+           84 of  216 on ionode
+           85 of  216 on ionode
+           86 of  216 on ionode
+           87 of  216 on ionode
+           88 of  216 on ionode
+           89 of  216 on ionode
+           90 of  216 on ionode
+           91 of  216 on ionode
+           92 of  216 on ionode
+           93 of  216 on ionode
+           94 of  216 on ionode
+           95 of  216 on ionode
+           96 of  216 on ionode
+           97 of  216 on ionode
+           98 of  216 on ionode
+           99 of  216 on ionode
+          100 of  216 on ionode
+          101 of  216 on ionode
+          102 of  216 on ionode
+          103 of  216 on ionode
+          104 of  216 on ionode
+          105 of  216 on ionode
+          106 of  216 on ionode
+          107 of  216 on ionode
+          108 of  216 on ionode
+          109 of  216 on ionode
+          110 of  216 on ionode
+          111 of  216 on ionode
+          112 of  216 on ionode
+          113 of  216 on ionode
+          114 of  216 on ionode
+          115 of  216 on ionode
+          116 of  216 on ionode
+          117 of  216 on ionode
+          118 of  216 on ionode
+          119 of  216 on ionode
+          120 of  216 on ionode
+          121 of  216 on ionode
+          122 of  216 on ionode
+          123 of  216 on ionode
+          124 of  216 on ionode
+          125 of  216 on ionode
+          126 of  216 on ionode
+          127 of  216 on ionode
+          128 of  216 on ionode
+          129 of  216 on ionode
+          130 of  216 on ionode
+          131 of  216 on ionode
+          132 of  216 on ionode
+          133 of  216 on ionode
+          134 of  216 on ionode
+          135 of  216 on ionode
+          136 of  216 on ionode
+          137 of  216 on ionode
+          138 of  216 on ionode
+          139 of  216 on ionode
+          140 of  216 on ionode
+          141 of  216 on ionode
+          142 of  216 on ionode
+          143 of  216 on ionode
+          144 of  216 on ionode
+          145 of  216 on ionode
+          146 of  216 on ionode
+          147 of  216 on ionode
+          148 of  216 on ionode
+          149 of  216 on ionode
+          150 of  216 on ionode
+          151 of  216 on ionode
+          152 of  216 on ionode
+          153 of  216 on ionode
+          154 of  216 on ionode
+          155 of  216 on ionode
+          156 of  216 on ionode
+          157 of  216 on ionode
+          158 of  216 on ionode
+          159 of  216 on ionode
+          160 of  216 on ionode
+          161 of  216 on ionode
+          162 of  216 on ionode
+          163 of  216 on ionode
+          164 of  216 on ionode
+          165 of  216 on ionode
+          166 of  216 on ionode
+          167 of  216 on ionode
+          168 of  216 on ionode
+          169 of  216 on ionode
+          170 of  216 on ionode
+          171 of  216 on ionode
+          172 of  216 on ionode
+          173 of  216 on ionode
+          174 of  216 on ionode
+          175 of  216 on ionode
+          176 of  216 on ionode
+          177 of  216 on ionode
+          178 of  216 on ionode
+          179 of  216 on ionode
+          180 of  216 on ionode
+          181 of  216 on ionode
+          182 of  216 on ionode
+          183 of  216 on ionode
+          184 of  216 on ionode
+          185 of  216 on ionode
+          186 of  216 on ionode
+          187 of  216 on ionode
+          188 of  216 on ionode
+          189 of  216 on ionode
+          190 of  216 on ionode
+          191 of  216 on ionode
+          192 of  216 on ionode
+          193 of  216 on ionode
+          194 of  216 on ionode
+          195 of  216 on ionode
+          196 of  216 on ionode
+          197 of  216 on ionode
+          198 of  216 on ionode
+          199 of  216 on ionode
+          200 of  216 on ionode
+          201 of  216 on ionode
+          202 of  216 on ionode
+          203 of  216 on ionode
+          204 of  216 on ionode
+          205 of  216 on ionode
+          206 of  216 on ionode
+          207 of  216 on ionode
+          208 of  216 on ionode
+          209 of  216 on ionode
+          210 of  216 on ionode
+          211 of  216 on ionode
+          212 of  216 on ionode
+          213 of  216 on ionode
+          214 of  216 on ionode
+          215 of  216 on ionode
+          216 of  216 on ionode
+     MMN calculated
+
+     Running Wannier90
+
+     Wannier Function centers (cartesian, alat) and spreads (ang):
+
+     (   0.04064   0.04064   0.04064) :   2.52567
+     (   0.04064  -0.04064  -0.04064) :   2.52567
+     (  -0.04064   0.04064  -0.04064) :   2.52567
+     (  -0.04064  -0.04064   0.04064) :   2.52567
+     (   0.33426   0.33426   0.33426) :   2.12918
+     (   0.33426   0.16574   0.16574) :   2.12918
+     (   0.16574   0.33426   0.16574) :   2.12918
+     (   0.16574   0.16574   0.33426) :   2.12918
+
+     -------------------------------------------------------------------
+     WANNIER      :     11.15s CPU     11.20s WALL (       1 calls)
+     -------------------------------------------------------------------
+
+     Dipole matrix elements calculated
+
+
+     Calculating kgmap
+
+     Progress kgmap: ########################################
+     kmaps        :      0.04s CPU      0.05s WALL (       1 calls)
+
+     Reading interatomic force constants
+
+     Read Z* and epsilon
+     IFC last   -0.0026119
+     Norm of the difference between old and new effective charges:    0.0000000
+     Norm of the difference between old and new force-constants:    0.0000020
+     Imposed crystal ASR
+
+     Finished reading ifcs
+
+     Symmetries of Bravais lattice:  48
+     Symmetries of crystal:          48
+
+
+     ===================================================================
+     irreducible q point #    1
+     ===================================================================
+
+     Symmetries of small group of q: 48
+          in addition sym. q -> -q+G:
+
+     Number of q in the star =    1
+     List of q in the star:
+          1   0.000000000   0.000000000   0.000000000
+     Imposing acoustic sum rule on the dynamical matrix
+     Read dielectric tensor and effective charges
+     Dyn mat calculated from ifcs
+
+        q(    1 ) = (   0.0000000   0.0000000   0.0000000 )
+
+
+     ===================================================================
+     irreducible q point #    2
+     ===================================================================
+
+     Symmetries of small group of q: 12
+          in addition sym. q -> -q+G:
+
+     Number of q in the star =    4
+     List of q in the star:
+          1   0.500000000  -0.500000000   0.500000000
+          2   0.500000000   0.500000000  -0.500000000
+          3  -0.500000000  -0.500000000  -0.500000000
+          4   0.500000000  -0.500000000  -0.500000000
+     Dyn mat calculated from ifcs
+
+        q(    2 ) = (   0.5000000  -0.5000000   0.5000000 )
+        q(    3 ) = (   0.5000000   0.5000000  -0.5000000 )
+        q(    4 ) = (  -0.5000000  -0.5000000  -0.5000000 )
+        q(    5 ) = (   0.5000000  -0.5000000  -0.5000000 )
+
+
+     ===================================================================
+     irreducible q point #    3
+     ===================================================================
+
+     Symmetries of small group of q: 16
+          in addition sym. q -> -q+G:
+
+     Number of q in the star =    3
+     List of q in the star:
+          1   0.000000000  -1.000000000   0.000000000
+          2  -1.000000000   0.000000000   0.000000000
+          3   0.000000000   0.000000000   1.000000000
+     Dyn mat calculated from ifcs
+
+        q(    6 ) = (   0.0000000  -1.0000000   0.0000000 )
+        q(    7 ) = (  -1.0000000   0.0000000   0.0000000 )
+        q(    8 ) = (   0.0000000   0.0000000   1.0000000 )
+
+     Writing epmatq on .epb files
+
+
+     The .epb files have been correctly written
+
+
+     Band disentanglement is used:  nbndsub =    8
+     Use zone-centred Wigner-Seitz cells 
+     Number of WS vectors for electrons      279
+     Number of WS vectors for phonons       19
+     Number of WS vectors for electron-phonon       19
+     Maximum number of cores for efficient parallelization      114
+     Results may improve by using use_ws == .true. 
+
+     Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file
+
+
+     Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
+
+
+     Reading interatomic force constants
+
+     Read Z* and epsilon
+     IFC last   -0.0026119
+     Norm of the difference between old and new effective charges:    0.0000000
+     Norm of the difference between old and new force-constants:    0.0000020
+     Imposed crystal ASR
+
+     Finished reading ifcs
+
+
+     Finished reading Wann rep data from file
+
+     ===================================================================
+     Memory usage:  VmHWM =        64Mb
+                   VmPeak =       332Mb
+     ===================================================================
+     
+     Using q-mesh file: ./LGX.txt
+     Size of q point mesh for interpolation:        100
+     Using k-mesh file: ./LGX.txt
+     Size of k point mesh for interpolation:        200
+     Max number of k points per pool:              200
+
+     Fermi energy coarse grid =   0.000000 eV
+
+     ===================================================================
+
+     Fermi energy corresponds to the coarse k-mesh
+
+     ===================================================================
+
+              ibndmin =     1  ebndmin =    -0.137
+              ibndmax =     2  ebndmax =     0.147
+
+
+     Number of ep-matrix elements per pool :         2400 ~=   18.75 Kb (@ 8 bytes/ DP)
+     Number selected, total     100     100
+     We only need to compute      100 q-points
+      
+     Progression iq (fine) =        100/       100
+     ===================================================================
+     Memory usage:  VmHWM =        64Mb
+                   VmPeak =       332Mb
+     ===================================================================
+
+
+     Unfolding on the coarse grid
+     elphon_wrap  :     14.34s CPU     14.74s WALL (       1 calls)
+
+     INITIALIZATION: 
+
+     set_drhoc    :      0.17s CPU      0.17s WALL (       9 calls)
+     init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
+     init_us_1    :      0.01s CPU      0.01s WALL (       1 calls)
+
+
+     Electron-Phonon interpolation
+     ephwann      :      2.59s CPU      2.95s WALL (       1 calls)
+     ep-interp    :      1.54s CPU      1.85s WALL (     100 calls)
+
+     Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
+     Ham: step 2  :      0.03s CPU      0.03s WALL (       1 calls)
+     ep: step 1   :      0.01s CPU      0.01s WALL (      48 calls)
+     ep: step 2   :      0.47s CPU      0.47s WALL (      48 calls)
+     DynW2B       :      0.00s CPU      0.00s WALL (     100 calls)
+     HamW2B       :      0.44s CPU      0.45s WALL (   20791 calls)
+     ephW2Bp      :      0.22s CPU      0.51s WALL (     100 calls)
+
+
+     Total program execution
+     EPW          :     28.39s CPU     29.20s WALL
+
+                                                                                          
+ Please consider citing:                                                                  
+ S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+                                                                                          
+ In addition, if you used anisotropic Eliashberg superconductivity please cite:           
+              E. R. Margine and F. Giustino, Phys. Rev. B 87, 024505 (2013)               
+              if you used transport properties (scattering rates, mobility) please cite:  
+              S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)     

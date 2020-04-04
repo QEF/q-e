@@ -16,6 +16,7 @@ SUBROUTINE lr_read_wf()
   ! Modified by Xiaochuan Ge (2013) to fix some bugs of virt_read and include Davidson
   !
   USE kinds,                ONLY : dp
+  USE cell_base,            ONLY : at
   USE io_global,            ONLY : stdout
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : ngm, g
@@ -28,23 +29,24 @@ SUBROUTINE lr_read_wf()
                                  & lr_verbosity, lr_exx, davidson, eels
   USE wvfct,                ONLY : nbnd, npwx
   USE control_flags,        ONLY : gamma_only,io_level
-  USE gvecs,                ONLY : nls, nlsm
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : invfft
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE becmod,               ONLY : bec_type, becp, calbec
   USE realus,               ONLY : real_space, invfft_orbital_gamma,&
-                                 & initialisation_level,&
-                                 & fwfft_orbital_gamma, calbec_rs_gamma,&
-                                 & add_vuspsir_gamma, v_loc_psir,&
-                                 & s_psir_gamma, real_space_debug
-  USE exx,                  ONLY : exx_grid_init, exx_div_check, exx_restart
+                                   initialisation_level,&
+                                   fwfft_orbital_gamma, calbec_rs_gamma,&
+                                   add_vuspsir_gamma, v_loc_psir,&
+                                   s_psir_gamma
   USE funct,                ONLY : dft_is_hybrid
-  USE lr_exx_kernel,        ONLY : lr_exx_revc0_init, lr_exx_alloc
-  USE wavefunctions_module, ONLY : evc
+  USE lr_exx_kernel,        ONLY : lr_exx_revc0_init, lr_exx_alloc, &
+                                   lr_exx_restart
+  USE wavefunctions,        ONLY : evc
   USE buffers,              ONLY : open_buffer
   USE qpoint,               ONLY : nksq
   USE noncollin_module,     ONLY : npol
+  USE symm_base,            ONLY : fft_fact
+  USE fft_helper_subroutines
   !
   IMPLICIT NONE
   !
@@ -70,14 +72,20 @@ SUBROUTINE lr_read_wf()
   !
   IF ( dft_is_hybrid() ) THEN
      !
-     CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst ) 
+     ! Initialize fft_fact
+     ! Warning: If there are fractional translations and 
+     ! they are not commensurate with the dfftt grid, then
+     ! fft_fact is different from (1,1,1) and it must be
+     ! properly initialized. This matters when a symmetrization
+     ! is real space is used.
      !
-     CALL exx_grid_init()
-     CALL exx_div_check()
+     fft_fact(:) = 1
+     !
+     CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst ) 
      !
      ! set_ace=.false. disables Lin Lin's ACE for TD-DFPT 
      !
-     CALL exx_restart( set_ace=.false.)
+     CALL lr_exx_restart( set_ace=.false.)
      !
      IF (.NOT. no_hxc) THEN
         !
@@ -106,7 +114,7 @@ SUBROUTINE normal_read()
   ! The usual way of reading wavefunctions
   !
   USE lr_variables,             ONLY : tg_revc0
-  USE wavefunctions_module,     ONLY : psic
+  USE wavefunctions,     ONLY : psic
   USE realus,                   ONLY : tg_psic
   USE mp_global,                ONLY : me_bgrp
   !
@@ -174,7 +182,7 @@ SUBROUTINE normal_read()
         !
         CALL init_us_2(ngk(1),igk_k(:,1),xk(1,1),vkb)
         !
-        IF (real_space_debug>0) THEN
+        IF (real_space) THEN
            !
            DO ibnd = 1, nbnd, 2
               !
@@ -219,10 +227,10 @@ SUBROUTINE normal_read()
   ! Calculation of the unperturbed wavefunctions in R-space revc0.
   ! Inverse Fourier transform of evc0.
   !
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dffts%has_task_groups ) THEN
        !
        v_siz =  dffts%nnr_tg
-       incr = 2 * dffts%nproc2
+       incr = 2 * fftx_ntgrp(dffts)
        tg_revc0 = (0.0d0,0.0d0)
        !
   ELSE
@@ -237,7 +245,7 @@ SUBROUTINE normal_read()
         !
         CALL invfft_orbital_gamma ( evc0(:,:,1), ibnd, nbnd)
         !
-        IF (dffts%have_task_groups) THEN               
+        IF (dffts%has_task_groups) THEN               
            !
            DO j = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
                !
@@ -262,7 +270,7 @@ SUBROUTINE normal_read()
         DO ibnd = 1, nbnd
            DO ig = 1, ngk(ik)
                !
-               revc0(nls(igk_k(ig,ik)),ibnd,ik) = evc0(ig,ibnd,ik)
+               revc0(dffts%nl(igk_k(ig,ik)),ibnd,ik) = evc0(ig,ibnd,ik)
                !
            ENDDO
            !
@@ -273,9 +281,7 @@ SUBROUTINE normal_read()
      !
   ENDIF
   !
-  ! OBM: Last minute check for real space implementation.
-  !
-  IF ( real_space_debug > 0 .AND. .NOT. gamma_only ) &
+  IF ( real_space .AND. .NOT. gamma_only ) &
            CALL errore( ' iosys ', ' Linear response calculation ' // &
            & 'real space algorithms with k-points not implemented', 1 )
   !
@@ -301,7 +307,7 @@ SUBROUTINE virt_read()
   !
   WRITE( stdout, '(/5x,"Virt read")' )
   !  
-  IF (dffts%have_task_groups) CALL errore ( 'virt_read', 'Task &
+  IF (dffts%has_task_groups) CALL errore ( 'virt_read', 'Task &
      & groups not supported when there are virtual states in the &
      & input.', 1 )
   !
@@ -389,7 +395,7 @@ SUBROUTINE virt_read()
         !
         CALL init_us_2(ngk(1),igk_k(:,1),xk(1,1),vkb)
         !    
-        IF (real_space_debug>0) THEN
+        IF (real_space) THEN
            !
            DO ibnd=1,nbnd,2
               CALL invfft_orbital_gamma(evc_all(:,:,1),ibnd,nbnd)
@@ -449,9 +455,9 @@ SUBROUTINE virt_read()
         IF (ibnd<nbnd) THEN
            DO ig=1,ngk(1)
               !
-              revc_all(nls(igk_k(ig,1)),ibnd,1) = evc_all(ig,ibnd,1)&
+              revc_all(dffts%nl(igk_k(ig,1)),ibnd,1) = evc_all(ig,ibnd,1)&
                                     &+(0.0d0,1.0d0)*evc_all(ig,ibnd+1,1)
-              revc_all(nlsm(igk_k(ig,1)),ibnd,1) = &
+              revc_all(dffts%nlm(igk_k(ig,1)),ibnd,1) = &
                                     &CONJG(evc_all(ig,ibnd,1)&
                                     &-(0.0d0,1.0d0)*evc_all(ig,ibnd+1,1))
               !
@@ -459,8 +465,8 @@ SUBROUTINE virt_read()
         ELSE
            DO ig=1,ngk(1)
               !
-              revc_all(nls(igk_k(ig,1)),ibnd,1) = evc_all(ig,ibnd,1)
-              revc_all(nlsm(igk_k(ig,1)),ibnd,1) = CONJG(evc_all(ig,ibnd,1))
+              revc_all(dffts%nl(igk_k(ig,1)),ibnd,1) = evc_all(ig,ibnd,1)
+              revc_all(dffts%nlm(igk_k(ig,1)),ibnd,1) = CONJG(evc_all(ig,ibnd,1))
               !
            ENDDO
         ENDIF
@@ -477,7 +483,7 @@ SUBROUTINE virt_read()
         DO ibnd=1,nbnd
            DO ig=1,ngk(ik)
               !
-              revc_all(nls(igk_k(ig,ik)),ibnd,ik) = evc_all(ig,ibnd,ik)
+              revc_all(dffts%nl(igk_k(ig,ik)),ibnd,ik) = evc_all(ig,ibnd,ik)
               !
            ENDDO
            !
@@ -534,9 +540,7 @@ SUBROUTINE virt_read()
   DEALLOCATE(sevc_all)
   DEALLOCATE(revc_all)
   !
-  ! OBM: Last minute check for real space implementation.
-  !
-  IF ( real_space_debug > 0 .and. .not. gamma_only ) &
+  IF ( real_space .and. .not. gamma_only ) &
            & CALL errore( ' iosys ', ' Linear response calculation ' // &
            & 'real space algorithms with k-points not implemented', 1 )
   !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,18 +18,22 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE wvfct,                ONLY : npwx, nbnd, current_k
   USE becmod,               ONLY : bec_type, becp, calbec
   USE uspp,                 ONLY : nkb, vkb
-  USE fft_base,             ONLY : dffts, dtgs
+  USE fft_base,             ONLY : dffts
   USE gvect,                ONLY : g
   USE klist,                ONLY : xk, igk_k
   USE noncollin_module,     ONLY : noncolin, npol
   USE eqv,                  ONLY : evq
   USE qpoint,               ONLY : ikqs
-  USE mp_bands,             ONLY : intra_bgrp_comm, ntask_groups
+  USE mp_bands,             ONLY : use_bgrp_in_hpsi, inter_bgrp_comm, intra_bgrp_comm
+  USE funct,                ONLY : exx_is_active
   USE mp,                   ONLY : mp_sum
   USE control_lr,           ONLY : alpha_pv, nbnd_occ, lgamma
-  !Needed only for TDDFPT
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions,        ONLY : evc
+  USE buffers,              ONLY : get_buffer
+  USE io_files,             ONLY : nwordwfcU
+  USE ldaU,                 ONLY : lda_plus_u, wfcU, lda_plus_u_kind
+  USE units_lr,             ONLY : iuatswfc
 
   IMPLICIT NONE
 
@@ -52,11 +56,10 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   ! counter on bands
   ! counter on G vetors
 
-  COMPLEX(DP), allocatable :: ps (:,:), hpsi (:,:), spsi (:,:)
+  COMPLEX(DP), ALLOCATABLE :: ps (:,:), hpsi (:,:), spsi (:,:)
   ! scalar products
   ! the product of the Hamiltonian and h
   ! the product of the S matrix and h
-  INTEGER, ALLOCATABLE :: ibuf(:)
 
   CALL start_clock ('ch_psi')
   !
@@ -68,10 +71,27 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   hpsi (:,:) = (0.d0, 0.d0)
   spsi (:,:) = (0.d0, 0.d0)
   !
-  !   compute an action of the Hamiltonian and the S operator
-  !   on the h vector (i.e. H*h and S*h, respectively).
+  current_k = ikqs(ik) ! k+q
   !
-  current_k = ikqs(ik)
+  ! DFT+U case
+  !
+  IF (lda_plus_u) THEN
+     !
+     ! Read the atomic orbitals (S*phi) at k+q from the file
+     ! and put the result in wfcU, because it is used
+     ! in vhpsi (via the call of h_psi) to compute the 
+     ! Hubbard potential.
+     !
+     CALL get_buffer (wfcU, nwordwfcU, iuatswfc, current_k)
+     !
+     ! Compute the phase factor at k+q
+     !IF (lda_plus_u_kind.EQ.2) CALL phase_factor(ikq)
+     !
+  ENDIF
+  !
+  ! Compute an action of the Hamiltonian and the S operator
+  ! on the h vector (i.e. H*h and S*h, respectively).
+  !
   CALL h_psi (npwx, n, m, h, hpsi)
   CALL s_psi (npwx, n, m, h, spsi)
   !
@@ -121,6 +141,7 @@ CONTAINS
     USE becmod, ONLY : becp, calbec
     
     IMPLICIT NONE
+    INTEGER :: m_start, m_end
     !
     !   Here we compute the projector in the valence band
     !
@@ -151,7 +172,12 @@ CONTAINS
     !
     !    And apply S again
     !
-    CALL calbec (n, vkb, hpsi, becp, m)
+    if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
+       call divide (inter_bgrp_comm, m, m_start, m_end)
+       if (m_end >= m_start) CALL calbec (n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
+    else
+       CALL calbec (n, vkb, hpsi, becp, m)
+    end if
     CALL s_psi (npwx, n, m, hpsi, spsi)
     DO ibnd = 1, m
        DO ig = 1, n
@@ -173,11 +199,12 @@ CONTAINS
     ! gamma_only case
     !  
     USE becmod, ONLY : becp,  calbec
-    USE realus, ONLY : real_space, real_space_debug, invfft_orbital_gamma, &
+    USE realus, ONLY : real_space, invfft_orbital_gamma, &
                        fwfft_orbital_gamma, calbec_rs_gamma,  s_psir_gamma
     use gvect,  only : gstart
 
     IMPLICIT NONE
+    INTEGER :: m_start, m_end
 
     ps (:,:) = 0.d0
     
@@ -203,7 +230,7 @@ CONTAINS
     !
     !    And apply S again
     !
-    IF (real_space_debug >6 ) THEN
+    IF (real_space ) THEN
        DO ibnd=1,m,2
           CALL invfft_orbital_gamma(hpsi,ibnd,m)
           CALL calbec_rs_gamma(ibnd,m,becp%r)
@@ -211,7 +238,12 @@ CONTAINS
           CALL fwfft_orbital_gamma(spsi,ibnd,m)
        ENDDO
     ELSE
-       CALL calbec (n, vkb, hpsi, becp, m)
+       if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
+          call divide( inter_bgrp_comm, m, m_start, m_end)
+          if (m_end >= m_start) CALL calbec (n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
+       else
+          CALL calbec (n, vkb, hpsi, becp, m)
+       end if
        CALL s_psi (npwx, n, m, hpsi, spsi)
     ENDIF
     DO ibnd = 1, m

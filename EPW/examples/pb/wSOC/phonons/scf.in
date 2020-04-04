@@ -1,7 +1,7 @@
  &control
     calculation='scf',
     prefix='pb',
-    pseudo_dir = '../pp/',
+    pseudo_dir = '../../pp/',
     outdir='./',
     tprnfor = .true.,
     tstress = .true.,

@@ -27,7 +27,7 @@ subroutine dvanqq
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE fft_base,   ONLY: dfftp
   USE fft_interfaces, ONLY: fwfft
-  use gvect, only : ngm, gg, nl, g, mill, eigts1, eigts2, eigts3
+  use gvect, only : ngm, gg, g, mill, eigts1, eigts2, eigts3
   use spin_orb, only : lspinorb
   use scf, only : v, vltot
   use noncollin_module, ONLY : noncolin, nspin_mag
@@ -36,6 +36,8 @@ subroutine dvanqq
 
   USE mp_bands, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
+  USE Coul_cut_2D, ONLY: do_cutoff_2D 
+  USE Coul_cut_2D_ph, ONLY: lr_Vlocq  
 
   USE phus, ONLY : int1, int2, int4, int4_nc, int5, int5_so
   USE control_ph, ONLY : rec_code_read
@@ -97,7 +99,7 @@ subroutine dvanqq
   !
   call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
   do ig = 1, ngm
-     qmodg (ig) = sqrt (gg (ig) )
+     qmodg (ig) = sqrt (gg (ig) ) * tpiba
   enddo
   if (.not.lgamma) then
      allocate (qpg (3, ngm))
@@ -105,7 +107,7 @@ subroutine dvanqq
      call ylmr2 (lmaxq * lmaxq, ngm, qpg, qmod, ylmkq)
      deallocate (qpg)
      do ig = 1, ngm
-        qmod (ig) = sqrt (qmod (ig) )
+        qmod (ig) = sqrt (qmod (ig) ) * tpiba
      enddo
   endif
   !
@@ -122,7 +124,7 @@ subroutine dvanqq
            veff (ir, is) = CMPLX(v%of_r (ir, is), 0.d0,kind=DP)
         enddo
      endif
-     CALL fwfft ('Dense', veff (:, is), dfftp)
+     CALL fwfft ('Rho', veff (:, is), dfftp)
   enddo
   !
   !     We compute here four of the five integrals needed in the phonon
@@ -157,11 +159,22 @@ subroutine dvanqq
                        !    nb is the atom of the augmentation function
                        !
                        nta = ityp (na)
-                       do ig=1, ngm
-                          sk(ig)=vlocq(ig,nta) * eigts1(mill(1,ig), na) &
+                       !  
+                       IF (do_cutoff_2D) THEN
+                          do ig=1, ngm
+                             sk(ig)=(vlocq(ig,nta)+lr_Vlocq (ig, nta)) &
+                                               * eigts1(mill(1,ig), na) &
                                                * eigts2(mill(2,ig), na) &
                                                * eigts3(mill(3,ig), na)
-                       enddo
+                          enddo
+                       ELSE
+                          do ig=1, ngm
+                             sk(ig)=vlocq(ig,nta) * eigts1(mill(1,ig), na) &
+                                                  * eigts2(mill(2,ig), na) &
+                                                  * eigts3(mill(3,ig), na)
+                           enddo
+                       ENDIF
+                       ! 
                        do ipol = 1, 3
                           do ig=1, ngm
                             aux5(ig)= sk(ig) * (g (ipol, ig) + xq (ipol) )
@@ -194,7 +207,7 @@ subroutine dvanqq
                     do is = 1, nspin_mag
                        do ipol = 1, 3
                           do ig = 1, ngm
-                             aux2 (ig) = veff (nl (ig), is) * g (ipol, ig)
+                             aux2 (ig) = veff (dfftp%nl (ig), is) * g (ipol, ig)
                           enddo
                           int1 (ih, jh, ipol, nb, is) = - fact1 * &
                                zdotc (ngm, aux1, 1, aux2, 1)

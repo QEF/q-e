@@ -11,7 +11,6 @@ SUBROUTINE stop_pp
   !
   ! Synchronize processes before stopping.
   !
-  USE control_flags, ONLY: twfcollect
   USE io_files, ONLY: iunwfc
   USE mp_global, ONLY: mp_global_end
 #if defined(__MPI)
@@ -20,14 +19,7 @@ SUBROUTINE stop_pp
   LOGICAL :: op
 
   INQUIRE ( iunwfc, opened = op )
-
-  IF ( op ) THEN
-     IF (twfcollect) THEN
-        CLOSE (unit = iunwfc, status = 'delete')
-     ELSE
-        CLOSE (unit = iunwfc, status = 'keep')
-     ENDIF
-  ENDIF
+  IF ( op ) CLOSE (unit = iunwfc, status = 'delete')
 
   CALL mp_global_end()
 

@@ -21,7 +21,6 @@ release:
 	rm -rf examples/*/epw/out/* examples/*/epw/tmp/* \
 	 examples/*/phonons/out/* examples/*/phonons/tmp/* \
 	 examples/*/phonons/save/* ; \
-	rm -rf .svn */.svn */*/*.svn */*/*/*.svn */*/*/*/*.svn 
 	cd .. ; tar cfz EPW/EPW-release.tgz EPW-release ; \
 	rm -rf EPW-release ; cd EPW
 	

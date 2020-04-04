@@ -12,11 +12,13 @@ TOPDIR=`pwd`
 if test $# = 0
 then
     dirs=" LAXlib FFTXlib UtilXlib Modules clib LR_Modules upftools \
-           KS_Solvers/Davidson KS_Solvers/Davidson_RCI KS_Solvers/CG \
+           KS_Solvers/Davidson KS_Solvers/Davidson_RCI KS_Solvers/CG KS_Solvers/PPCG \
+           KS_Solvers/ParO  KS_Solvers/DENSE  \
            PW/src CPV/src PW/tools upftools PP/src PWCOND/src \
-           PHonon/Gamma PHonon/PH PHonon/FD atomic/src \
-           XSpectra/src ACFDT/src NEB/src TDDFPT/src \
-           GWW/pw4gww GWW/gww GWW/head GWW/bse" 
+           PHonon/Gamma PHonon/PH PHonon/FD HP/src atomic/src \
+           EPW/src XSpectra/src ACFDT/src NEB/src TDDFPT/src \
+           GWW/pw4gww GWW/gww GWW/head GWW/bse GWW/simple \
+	   GWW/simple_bse GWW/simple_ip" 
           
 elif
     test $1 = "-addson" 
@@ -57,12 +59,10 @@ for dir in $dirs; do
              $LEVEL2/Modules"
     DEPEND3="$LEVEL2/include $LEVEL2/FFTXlib $LEVEL2/LAXlib $LEVEL2/UtilXlib"
     case $DIR in 
-        LAXlib )
-             DEPENDS="$DEPEND1 $LEVEL1/UtilXlib" ;;
         Modules )
              DEPENDS="$DEPEND1 $LEVEL1/UtilXlib" ;;
         LAXlib )
-             DEPENDS="$DEPEND1 ../UtilXlib " ;;
+             DEPENDS="$LEVEL1/UtilXlib " ;;
         upftools )
              DEPENDS="$DEPEND1 $LEVEL1/Modules" ;;
         LR_Modules )
@@ -72,17 +72,25 @@ for dir in $dirs; do
 	atomic/src | GWW/gww )
 	     DEPENDS="$DEPEND2" ;;
 	PW/src | CPV/src )
-	     DEPENDS="$DEPEND2 ../../KS_Solvers/Davidson ../../KS_Solvers/CG" ;;
-	KS_Solvers/Davidson | KS_Solvers/Davidson_RCI | KS_Solvers/CG )
+	     DEPENDS="$DEPEND2 ../../KS_Solvers/Davidson ../../KS_Solvers/CG ../../KS_Solvers/PPCG ../../KS_Solvers/ParO ../../KS_Solvers/DENSE ../../dft-d3" ;;
+	KS_Solvers/Davidson | KS_Solvers/Davidson_RCI | KS_Solvers/CG | KS_Solvers/PPCG | KS_Solvers/ParO | KS_Solvers/DENSE )
 	     DEPENDS="$DEPEND3" ;;
 	PW/tools | PP/src | PWCOND/src | GWW/pw4gww | NEB/src )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src" ;;
-	PHonon/FD | PHonon/PH | PHonon/Gamma | XSpectra/src  | GIPAW/src )
+	PHonon/FD | PHonon/PH | PHonon/Gamma | HP/src | TDDFPT/src | XSpectra/src  | GIPAW/src )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules" ;;
-	GWW/head | TDDFPT/src )
+        EPW/src )
+             DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL2/PHonon/PH $LEVEL2/Modules" ;; 
+	GWW/head )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;	
 	GWW/bse )
 	 DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules $LEVEL2/GWW/pw4gww $LEVEL2/GWW/gww" ;;	
+	GWW/simple )
+	 DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/GWW/pw4gww $LEVEL2/GWW/gww" ;;
+	GWW/simple_bse )
+	 DEPENDS="$DEPEND2 $LEVEL2/GWW/gww" ;;
+	GWW/simple_ip)
+	DEPENDS="$DEPEND2" ;;
     *)
 # if addson needs a make.depend file
 	DEPENDS="$DEPENDS $add_deps"
@@ -97,56 +105,34 @@ for dir in $dirs; do
 	$TOPDIR/moduledep.sh $DEPENDS > make.depend
 	$TOPDIR/includedep.sh $DEPENDS >> make.depend
 
-        # handle special cases: modules for C-fortran binding, hdf5, MPI
+        # handle special cases: modules for C-fortran binding,
+        #   	                hdf5, MPI, FoX, libxc
         sed '/@iso_c_binding@/d' make.depend > make.depend.tmp
         sed '/@hdf5@/d;/@mpi@/d' make.depend.tmp > make.depend
-        sed '/@fox_wxml@/d'      make.depend > make.depend.tmp 
-        sed '/@fox_dom@/d'       make.depend.tmp > make.depend
+        sed '/@fox_dom@/d;/@fox_wxml@/d'  make.depend > make.depend.tmp 
+        sed '/@m_common_io@/d;/@xc_f03_lib_m@/d' make.depend.tmp > make.depend
 
         if test "$DIR" = "FFTXlib"
         then
-            sed '/@mkl_dfti/d' make.depend > make.depend.tmp
+            sed '/@mkl_dfti/d;/@omp_lib@/d' make.depend > make.depend.tmp
             sed '/@fftw3.f/d;s/@fftw.c@/fftw.c/' make.depend.tmp > make.depend
         fi
 
         if test "$DIR" = "LAXlib"
         then
-            sed '/@elpa1@/d' make.depend > make.depend.tmp
-            cp make.depend.tmp make.depend
+            sed '/@elpa1@/d;/@elpa@/d' make.depend > make.depend.tmp
+            sed '/@cudafor@/d;/@cusolverdn@/d;/@gbuffers@/d' make.depend.tmp > make.depend
+            sed '/@zhegvdx_gpu@/d;/@dsyevd_gpu@/d;/@dsygvdx_gpu@/d' make.depend > make.depend.tmp
+            sed '/@cublas@/d;/@eigsolve_vars@/d;/@nvtx_inters@/d' make.depend.tmp > make.depend
+            /bin/rm make.depend.tmp
         fi
 
         if test "$DIR" = "UtilXlib"
         then
-            sed '/@elpa1@/d' make.depend > make.depend.tmp
-            sed '/@ifcore@/d' make.depend.tmp > make.depend
+            sed '/@ifcore@/d' make.depend > make.depend.tmp
+            sed '/@cudafor@/d' make.depend.tmp > make.depend
         fi
 
-        if test "$DIR" = "KS_Solvers/Davidson"
-        then
-
-            sed '/@elpa1@/d' make.depend > make.depend.tmp
-            sed '/@ifcore@/d' make.depend.tmp > make.depend
-        fi
-
-        if test "$DIR" = "KS_Solvers/Davidson_RCI"
-        then
-            sed '/@elpa1@/d' make.depend > make.depend.tmp
-            sed '/@ifcore@/d' make.depend.tmp > make.depend
-        fi
-
-        if test "$DIR" = "KS_Solvers/CG"
-        then
-
-            sed '/@elpa1@/d' make.depend > make.depend.tmp
-            sed '/@ifcore@/d' make.depend.tmp > make.depend
-        fi
-
-        if test "$DIR" = "Modules"
-        then
-
-            sed '/@elpa1@/d' make.depend > make.depend.tmp
-            sed '/@ifcore@/d' make.depend.tmp > make.depend
-        fi
 
         if test "$DIR" = "PW/src" || test "$DIR" = "TDDFPT/src"
         then
@@ -158,6 +144,14 @@ for dir in $dirs; do
         then
             sed '/@f90_unix_proc@/d' make.depend > make.depend.tmp
             cp make.depend.tmp make.depend
+        fi
+
+        if test "$DIR" = "EPW/src"
+        then
+            sed '/@f90_unix_io@/d' make.depend > make.depend.tmp
+            sed '/@f90_unix_env@/d' make.depend.tmp > make.depend
+            sed '/@w90_io@/d' make.depend > make.depend.tmp
+            sed '/@ifport@/d' make.depend.tmp > make.depend
         fi
 
         rm -f make.depend.tmp

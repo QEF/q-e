@@ -1,13 +1,13 @@
 #!/bin/sh
 
-ln -sf make.linux make.sys
+ln -sf make.linux make.inc
 make
 
 # temporary workaround: 
 
 if test ! -f pwgui; then
     # transition from pwgui.kit --> pwgui fails at the moment, which
-    # means we have non-optimal pwgui.kit, lets us it
+    # means we have non-optimal pwgui.kit, lets use it
     cp pwgui.kit pwgui
 fi
 

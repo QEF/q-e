@@ -11,15 +11,13 @@
 ! ... adapted to accept any kind of density by Oliviero Andreussi
 !
 !--------------------------------------------------------------------
-SUBROUTINE compute_dipole( nnr, nspin, rho, r0, dipole, quadrupole )
+SUBROUTINE compute_dipole( nnr, rho, r0, dipole, quadrupole )
 !--------------------------------------------------------------------
   USE kinds,            ONLY : DP
   USE cell_base,        ONLY : at, bg, alat, omega
   USE fft_base,         ONLY : dfftp
+  USE fft_types,        ONLY : fft_index_to_3d
   USE mp_bands,         ONLY : intra_bgrp_comm
-#if defined (__MPI)
-  USE mp_bands,         ONLY : me_bgrp
-#endif
   USE mp,               ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -28,16 +26,17 @@ SUBROUTINE compute_dipole( nnr, nspin, rho, r0, dipole, quadrupole )
   !
   !     nnr is passed in input, but nnr should match dfftp%nnr
   !     for the calculation to be meaningful
-  INTEGER,  INTENT(IN)  :: nnr, nspin
-  REAL(DP), INTENT(IN)  :: rho( nnr, nspin )
+  INTEGER,  INTENT(IN)  :: nnr
+  REAL(DP), INTENT(IN)  :: rho( nnr )
   REAL(DP), INTENT(IN)  :: r0(3)
   REAL(DP), INTENT(OUT) :: dipole(0:3), quadrupole(3)
   !
   ! ... Local variables
   !
   REAL(DP) :: r(3), rhoir
-  INTEGER  :: i, j, k, ip, ir, ir_end, idx, j0, k0
+  INTEGER  :: i, j, k, ip, ir, ir_end
   REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
+  LOGICAL  :: offrange
   !
   ! ... Initialization
   !
@@ -49,10 +48,8 @@ SUBROUTINE compute_dipole( nnr, nspin, rho, r0, dipole, quadrupole )
   quadrupole(:) = 0.D0
   !
 #if defined (__MPI)
-  j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
   ir_end = MIN(nnr,dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p)
 #else
-  j0 = 0 ; k0 = 0
   ir_end = nnr
 #endif
   !
@@ -60,17 +57,8 @@ SUBROUTINE compute_dipole( nnr, nspin, rho, r0, dipole, quadrupole )
      !
      ! ... three dimensional indexes
      !
-     idx = ir -1
-     k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-     idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-     k   = k + k0
-     IF ( k .GE. dfftp%nr3 ) CYCLE
-     j   = idx / dfftp%nr1x
-     idx = idx - dfftp%nr1x * j
-     j   = j + j0
-     IF ( j .GE. dfftp%nr2 ) CYCLE
-     i   = idx
-     IF ( i .GE. dfftp%nr1 ) CYCLE
+     CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+     IF ( offrange ) CYCLE
      !
      DO ip = 1, 3
         r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
@@ -88,9 +76,7 @@ SUBROUTINE compute_dipole( nnr, nspin, rho, r0, dipole, quadrupole )
      !
      CALL cryst_to_cart( 1, r, at, 1 )
      !
-     rhoir = rho( ir, 1 )
-     !
-     IF ( nspin == 2 ) rhoir = rhoir + rho(ir,2)
+     rhoir = rho( ir )
      !
      ! ... dipole(0) = charge density
      !

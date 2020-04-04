@@ -1,0 +1,85 @@
+This subdirectory contains code from the Grimme DFT-D3 code, version 0.9,
+as repackaged by Bàlint Aradi. Both the original library and repackaged one
+can be downloaded at
+https://www.chemie.uni-bonn.de/pctc/mulliken-center/software/dft-d3/dft-d3
+
+Interface routines for Quantum ESPRESSO are contained in file dftd3_qe.f90.
+This file is released under the GPL. The Quantum ESPRESSO group acknowledges 
+help from Bálint Aradi in debugging stress calculation.
+
+The original DFT-D3 version 0.9 file api.f90 has been slightly modified.
+Changes are highlighted with the label "(QE 2016)".
+
+There is a test program (test.f90), which calculates forces and stresses
+directly from dftd3-API code, and compares the results with numericallya
+computed forces and stresses from the obtained dispersion energy. 
+
+Parameters for dftd3 calculation are found in ../Modules/input_parameters.f90.
+Those values are valid for the PBE functional. Parameter 'version' can take 
+values from 2 to 6, but only version=3 (zero-damping) is tested with PWscf. 
+
+The following is the original dftd3-lib-0.9/README.rst file
+
+=====
+DFTD3
+=====
+
+This is a repackaged version of the `DFTD3 program
+<http://www.thch.uni-bonn.de/tc/index.php?section=downloads&subsection=getd3>`_
+by S. Grimme and his coworkers. [ NB: obsolete link, correct link above \]
+
+The original program (V3.1 Rev 1) was downloaded at 2016-04-03. It has been
+converted to free format and encapsulated into modules. The source has been
+split into two parts:
+
+* A library with the core functionality. This can be directly used by third
+  party applications wishing to calculate dispersion with the DFT-D3
+  approach.
+  
+* Additional extensions which are necessary for the command line tool DFTD3 and
+  the command line tool itself.
+
+* Updated dftd3 code to include refitted/modified zero- and BJ-damped D3
+  versions of Sherrill and coworkers (-bjm and -zerom)
+  (Functionality corresponds to V3.2 Rev0)
+
+Compilation
+===========
+
+Edit the file `make.arch` to reflect your compiler and linker. Then you can
+issue one of the following commands:
+
+* ``make lib``: to build the library `libdftd3.a` and the necessary
+  module files (`*.mod`) in the directory `lib/`.
+
+* ``make dftd3``: to build the executable `dftd3` in the directory `prg/`.
+
+* ``make testapi``: to build a simple tester for the library (`testapi`) in the
+  directory `test/`. The source code of this tester demonstrates how the library
+  can be used by third party codes.
+
+If you just issue ``make``, all three targets will be compiled.
+
+
+Credits
+=======
+
+When using the library or the dftd3 tool, please cite:
+
+  S. Grimme, J. Antony, S. Ehrlich and H. Krieg
+  J. Chem. Phys, 132 (2010), 154104.
+ 
+If BJ-damping is used 
+
+  S. Grimme, S. Ehrlich and L. Goerigk
+  J. Comput. Chem, 32 (2011), 1456-1465.
+
+should be cited as well.
+
+
+License
+=======
+
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 1, or (at your option) any later version.

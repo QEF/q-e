@@ -24,7 +24,7 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
   USE wvfct, ONLY : npwx, nbnd
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE noncollin_module, ONLY : noncolin, npol
-  USE wavefunctions_module,    ONLY : evc
+  USE wavefunctions,    ONLY : evc
   USE uspp_param, only: nh
   USE becmod, ONLY: calbec
   USE phus,   ONLY : alphap

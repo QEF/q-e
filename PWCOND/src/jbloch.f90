@@ -40,7 +40,7 @@ subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
       vec(2*n2d+npol*norb, nst),             & ! exp. coeff. for phi_k
       kval(nst),                                & ! k of phi_k
       c1(norbf*npol,2*n2d), c2(norbf*npol,norbf*npol),   & ! nonlocal integrals
-      z, zdotc
+      z
   integer, allocatable ::   &
       ncond(:)    ! channel --> Bloch state correspondence
   real(DP), allocatable :: ej(:), kcur(:)
@@ -94,9 +94,9 @@ subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
     do n=1, 2*nchan
       ir=ncond(k)
       il=ncond(n)
-      z=zdotc(n2d,kfun(1,ir),1,kfund(1,il),1)
-      kcuroff(k,n)=-cim*          &
-              (z-zdotc(n2d,kfund(1,ir),1,kfun(1,il),1))*sarea
+      z = dot_product (kfun(1:n2d,ir), kfund(1:n2d,il))
+      kcuroff(k,n) = - cim * ( z - &
+           dot_product (kfund(1:n2d,ir), kfun(1:n2d,il) ) ) * sarea
 !     ---------------------------------------------
       do iorb=1, nocros*npol
         kcuroff(k,n)=kcuroff(k,n)-cim*(                               &

@@ -1,0 +1,29 @@
+
+     Program POST-PROC v.6.3 starts on  6Sep2018 at 12:17:12 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     8 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       8
+     Reading header from file  /scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/drho-of-eign-1
+     Reading data from file  /scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/drho-of-eign-1
+
+     Writing data to be plotted to file drho-of-eign-1.cube
+     Plot Type: 3D                     Output format: Gaussian cube
+ 
+     POST-PROC    :      0.08s CPU      0.14s WALL
+
+ 
+   This run was terminated on:  12:17:12   6Sep2018            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

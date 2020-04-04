@@ -17,17 +17,16 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
   USE uspp,                 ONLY : nkb,qq_nt,vkb,nhtol,nhtoj,nhtolm,indv
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wvfct,                ONLY : nbnd, npwx
-  USE wavefunctions_module, ONLY : evc, psic_nc
+  USE wavefunctions, ONLY : evc, psic_nc
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g,gg
-  USE gvecs,                ONLY : nls, nlsm, doublegrid
+  USE gvecs,                ONLY : doublegrid
   USE scf,                  ONLY : rho
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE mp_global,            ONLY : me_pool, intra_bgrp_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   USE fft_base,             ONLY : dffts, dfftp
-  USE fft_interfaces,       ONLY : invfft
-
+  USE fft_interfaces,       ONLY : invfft, fft_interpolate
 
   IMPLICIT NONE
 
@@ -46,7 +45,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
   COMPLEX(DP), ALLOCATABLE :: be1(:,:), qq_lz(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: dfx(:), dfy(:)
 
-  COMPLEX(DP) :: c_aux, zdotc
+  COMPLEX(DP) :: c_aux
 
   IF (.not.(lsigma(1).or.lsigma(2).or.lsigma(3).or.lsigma(4))) RETURN
 
@@ -111,8 +110,8 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
      !--  Pseudo part
      psic_nc = (0.D0,0.D0)
      DO ig = 1, npw
-        psic_nc(nls(igk_k(ig,ik)), 1)=evc(ig     ,ibnd)
-        psic_nc(nls(igk_k(ig,ik)), 2)=evc(ig+npwx,ibnd)
+        psic_nc(dffts%nl(igk_k(ig,ik)), 1)=evc(ig     ,ibnd)
+        psic_nc(dffts%nl(igk_k(ig,ik)), 2)=evc(ig+npwx,ibnd)
      ENDDO
      DO ipol=1,npol
         CALL invfft ('Wave', psic_nc(:,ipol), dffts)
@@ -127,7 +126,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
                 (REAL(psic_nc(ir,1))*REAL(psic_nc(ir,2)) + &
                 aimag(psic_nc(ir,1))*aimag(psic_nc(ir,2)))
         ENDDO
-        IF (doublegrid) CALL interpolate( rho%of_r(1,2), rho%of_r(1,2), 1 )
+        IF (doublegrid) CALL fft_interpolate( dffts, rho%of_r(:,2), dfftp, rho%of_r(:,2) )
      ENDIF
      IF (lsigma(2)) THEN
         DO ir = 1,dffts%nnr
@@ -135,7 +134,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
                 (REAL(psic_nc(ir,1))*aimag(psic_nc(ir,2)) - &
                 REAL(psic_nc(ir,2))*aimag(psic_nc(ir,1)))
         ENDDO
-        IF (doublegrid) CALL interpolate( rho%of_r(1,3), rho%of_r(1,3), 1 )
+        IF (doublegrid) CALL fft_interpolate( dffts, rho%of_r(:,3), dfftp, rho%of_r(:,3) )
      ENDIF
      IF (lsigma(3)) THEN
         DO ir = 1,dffts%nnr
@@ -143,7 +142,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
                 (REAL(psic_nc(ir,1))**2+aimag(psic_nc(ir,1))**2 &
                 -REAL(psic_nc(ir,2))**2-aimag(psic_nc(ir,2))**2)
         ENDDO
-        IF (doublegrid) CALL interpolate( rho%of_r(1,4), rho%of_r(1,4), 1 )
+        IF (doublegrid) CALL fft_interpolate( dffts, rho%of_r(:,4), dfftp, rho%of_r(:,4) )
      ENDIF
 
      IF (lsigma(4)) THEN
@@ -153,9 +152,9 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
            dfy = 0.d0
            npwi=(ipol-1)*npwx+1
            npwf=(ipol-1)*npwx+npw
-           dfx(nls(igk_k(1:npw,ik))) = (xk(1,ik)+g(1,igk_k(1:npw,ik)))*tpiba* &
+           dfx(dffts%nl(igk_k(1:npw,ik))) = (xk(1,ik)+g(1,igk_k(1:npw,ik)))*tpiba* &
                 (0.d0,1.d0)*evc(npwi:npwf,ibnd)
-           dfy(nls(igk_k(1:npw,ik))) = (xk(2,ik)+g(2,igk_k(1:npw,ik)))*tpiba* &
+           dfy(dffts%nl(igk_k(1:npw,ik))) = (xk(2,ik)+g(2,igk_k(1:npw,ik)))*tpiba* &
                 (0.d0,1.d0)*evc(npwi:npwf,ibnd)
            CALL invfft ('Wave', dfx, dffts)
            CALL invfft ('Wave', dfy, dffts)
@@ -177,7 +176,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
                  ENDIF
               ENDDO
            ENDDO
-           c_aux = zdotc(dffts%nnr, psic_nc(1,ipol), 1, dfx, 1)
+           c_aux = DOT_PRODUCT (psic_nc(:,ipol), dfx(:) )
            magtot1(4) = magtot1(4) + aimag(c_aux)
         ENDDO
         CALL mp_sum( magtot1(4), intra_bgrp_comm )

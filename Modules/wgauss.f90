@@ -15,7 +15,8 @@ function wgauss (x, n)
   !
   ! --> (n>=0) : Methfessel-Paxton case. See PRB 40, 3616 (1989).
   !
-  ! --> (n=-1 ): Cold smearing (Marzari-Vanderbilt). See PRL 82, 3296 (1999)
+  ! --> (n=-1 ): Cold smearing (Marzari-Vanderbilt-DeVita-Payne).
+  !              See PRL 82, 3296 (1999)
   !       1/2*erf(x-1/sqrt(2)) + 1/sqrt(2*pi)*exp(-(x-1/sqrt(2))**2) + 1/2
   !
   ! --> (n=-99): Fermi-Dirac case: 1.0/(1.0+exp(-x)).

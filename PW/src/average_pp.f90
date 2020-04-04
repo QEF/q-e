@@ -6,8 +6,9 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE average_pp ( ntyp ) 
+SUBROUTINE average_pp( ntyp ) 
   !----------------------------------------------------------------------------
+  !! Spin-orbit pseudopotentials transformed into standard pseudopotentials.
   !
   USE kinds,            ONLY : DP
   USE atom,             ONLY : rgrid
@@ -16,8 +17,11 @@ SUBROUTINE average_pp ( ntyp )
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: ntyp
+  !! number of species
   !
-  INTEGER  :: nt, nb, nbe, ind, ind1, l
+  ! ... local variables
+  !
+  INTEGER :: nt, nb, nbe, ind, ind1, l
   REAL(DP) :: vionl
   !
   !
@@ -37,7 +41,7 @@ SUBROUTINE average_pp ( ntyp )
            IF ( upf(nt)%lll(nb) /= 0 .AND. &
                 ABS( upf(nt)%jjj(nb) - upf(nt)%lll(nb) - 0.5D0 ) < 1.D-7 ) &
               nbe = nbe - 1
-        END DO
+        ENDDO
         !
         upf(nt)%nbeta = nbe
         !
@@ -53,22 +57,22 @@ SUBROUTINE average_pp ( ntyp )
               !
               IF (ABS(upf(nt)%jjj(nbe)-upf(nt)%lll(nbe)+0.5d0) < 1.d-7) THEN
                  IF ( ABS( upf(nt)%jjj(nbe+1)-upf(nt)%lll(nbe+1)-0.5d0 ) &
-                      > 1.d-7 ) call errore('average_pp','wrong beta functions',1)
-                 ind=nbe+1
-                 ind1=nbe
+                      > 1.d-7 ) CALL errore( 'average_pp', 'wrong beta functions', 1 )
+                 ind = nbe+1
+                 ind1 = nbe
               ELSE
                  IF (ABS(upf(nt)%jjj(nbe+1)-upf(nt)%lll(nbe+1)+0.5d0) > 1.d-7) &
-                      call errore('average_pp','wrong beta functions',2)
-                 ind=nbe
-                 ind1=nbe+1
+                      CALL errore( 'average_pp', 'wrong beta functions', 2 )
+                 ind = nbe
+                 ind1 = nbe+1
               ENDIF
               !
               vionl = ( ( l + 1.D0 ) * upf(nt)%dion(ind,ind) + &
-                   l * upf(nt)%dion(ind1,ind1) ) / ( 2.D0 * l + 1.D0 )
+                      l * upf(nt)%dion(ind1,ind1) ) / ( 2.D0 * l + 1.D0 )
               !
               upf(nt)%beta(1:rgrid(nt)%mesh,nb) = 1.D0 / ( 2.D0 * l + 1.D0 ) * &
-                   ( ( l + 1.D0 ) * SQRT( upf(nt)%dion(ind,ind) / vionl ) * &
-                   upf(nt)%beta(1:rgrid(nt)%mesh,ind) + &
+                   ( ( l + 1.D0 ) * SQRT( upf(nt)%dion(ind,ind) / vionl ) *    &
+                   upf(nt)%beta(1:rgrid(nt)%mesh,ind) +          &
                    l * SQRT( upf(nt)%dion(ind1,ind1) / vionl ) * &
                    upf(nt)%beta(1:rgrid(nt)%mesh,ind1) )
               !
@@ -83,11 +87,11 @@ SUBROUTINE average_pp ( ntyp )
               !
               upf(nt)%dion(nb,nb) = upf(nt)%dion(nbe,nbe)
               !
-           END IF
+           ENDIF
            !
-           upf(nt)%lll(nb)=upf(nt)%lll(nbe)
+           upf(nt)%lll(nb) = upf(nt)%lll(nbe)
            !
-        END DO
+        ENDDO
         !
         nbe = 0
         !
@@ -99,13 +103,13 @@ SUBROUTINE average_pp ( ntyp )
                 ABS(upf(nt)%jchi(nb)-upf(nt)%lchi(nb)-0.5D0 ) < 1.D-7 ) &
               nbe = nbe - 1
            !
-        END DO
+        ENDDO
         !
         upf(nt)%nwfc = nbe
         ! 
         nbe = 0
         !
-        do nb = 1, upf(nt)%nwfc
+        DO nb = 1, upf(nt)%nwfc
            !
            nbe = nbe + 1
            !
@@ -115,15 +119,15 @@ SUBROUTINE average_pp ( ntyp )
               !
               IF (ABS(upf(nt)%jchi(nbe)-upf(nt)%lchi(nbe)+0.5d0) < 1.d-7) THEN
                  IF ( ABS(upf(nt)%jchi(nbe+1)-upf(nt)%lchi(nbe+1)-0.5d0) > &
-                      1.d-7) call errore('average_pp','wrong chi functions',3)
-                 ind=nbe+1
-                 ind1=nbe
+                      1.d-7) CALL errore( 'average_pp', 'wrong chi functions', 3 )
+                 ind = nbe+1
+                 ind1 = nbe
               ELSE
                  IF ( ABS(upf(nt)%jchi(nbe+1)-upf(nt)%lchi(nbe+1)+0.5d0) > &
-                      1.d-7) call errore('average_pp','wrong chi functions',4)
-                 ind=nbe
-                 ind1=nbe+1
-              END IF
+                      1.d-7) CALL errore( 'average_pp', 'wrong chi functions', 4 )
+                 ind = nbe
+                 ind1 = nbe+1
+              ENDIF
               !
               upf(nt)%chi(1:rgrid(nt)%mesh,nb) = &
                  ((l+1.D0) * upf(nt)%chi(1:rgrid(nt)%mesh,ind)+ &
@@ -135,16 +139,16 @@ SUBROUTINE average_pp ( ntyp )
               !
               upf(nt)%chi(1:rgrid(nt)%mesh,nb) = upf(nt)%chi(1:rgrid(nt)%mesh,nbe)
               !
-           END IF
+           ENDIF
            !
-           upf(nt)%lchi(nb)= upf(nt)%lchi(nbe)
+           upf(nt)%lchi(nb) = upf(nt)%lchi(nbe)
            !
-        END DO
+        ENDDO
         !
-     END IF
+     ENDIF
      !
      upf(nt)%has_so = .FALSE.
      !
-  END DO
+  ENDDO
   !
 END SUBROUTINE average_pp

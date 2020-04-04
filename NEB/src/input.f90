@@ -18,7 +18,7 @@ SUBROUTINE ioneb()
   USE kinds,         ONLY : DP
   USE constants,     ONLY : autoev, eV_to_kelvin
   USE io_global,     ONLY : stdout
-  USE io_files,      ONLY : tmp_dir 
+  USE io_files,      ONLY : tmp_dir
   USE path_variables, ONLY : lsteep_des, lquick_min, &
                              lbroyden, lbroyden2, llangevin, &
                              lneb, lsmd, restart
@@ -38,8 +38,11 @@ SUBROUTINE ioneb()
   !
   USE fcp_variables, ONLY : lfcpopt_ => lfcpopt, &
                             fcp_mu_ => fcp_mu, &
+                            fcp_relax_ => fcp_relax, &
                             fcp_relax_step_ => fcp_relax_step, &
                             fcp_relax_crit_ => fcp_relax_crit, &
+                            fcp_mdiis_size_ => fcp_mdiis_size, &
+                            fcp_mdiis_step_ => fcp_mdiis_step, &
                             fcp_tot_charge_first_ => fcp_tot_charge_first, &
                             fcp_tot_charge_last_ => fcp_tot_charge_last
   !
@@ -48,9 +51,10 @@ SUBROUTINE ioneb()
                                CI_scheme, opt_scheme, use_masses,      &
                                first_last_opt, temp_req, k_max, k_min, &
                                ds, use_freezing, fixed_tan,            &
-                               lfcpopt, fcp_mu, fcp_relax_step,        &
-                               fcp_relax_crit, fcp_tot_charge_first,   &
-                               fcp_tot_charge_last
+                               lfcpopt, fcp_mu, fcp_relax,             &
+                               fcp_relax_step, fcp_relax_crit,         &
+                               fcp_mdiis_size, fcp_mdiis_step,         &
+                               fcp_tot_charge_first, fcp_tot_charge_last
   !
   IMPLICIT NONE
   !
@@ -98,7 +102,7 @@ SUBROUTINE ioneb()
   END SELECT
   !
 !
-! check da mettere dopo iosys del pw
+! check to move after call to iosys in PW
 !
 !     IF( io_level < 0) CALL errore ( 'ioneb', &
 !                       'NEB, SMD do not work with "disk_io" set to "none"', 1)
@@ -186,8 +190,11 @@ SUBROUTINE ioneb()
   !
   lfcpopt_              = lfcpopt
   fcp_mu_               = fcp_mu
+  fcp_relax_            = fcp_relax
   fcp_relax_step_       = fcp_relax_step
   fcp_relax_crit_       = fcp_relax_crit
+  fcp_mdiis_size_       = fcp_mdiis_size
+  fcp_mdiis_step_       = fcp_mdiis_step
   fcp_tot_charge_first_ = fcp_tot_charge_first
   fcp_tot_charge_last_  = fcp_tot_charge_last
   !
@@ -203,7 +210,7 @@ SUBROUTINE verify_neb_tmpdir( tmp_dir )
   !
   USE wrappers,         ONLY : f_mkdir
   USE path_input_parameters_module, ONLY : restart_mode
-  USE io_files,         ONLY : prefix, xmlpun,  delete_if_present
+  USE io_files,         ONLY : prefix, check_tempdir, delete_if_present
   USE path_variables,   ONLY : num_of_images
   USE mp_world,         ONLY : world_comm, mpime, nproc
   USE io_global,        ONLY : meta_ionode

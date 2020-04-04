@@ -6,8 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE smallgk (xk, at, bg, s, ftau, t_rev, sname, nsym, sk, &
-                    ftauk, gk, t_revk, invsk, snamek, nsymk)
+SUBROUTINE smallgk (xk, at, bg, s, ft, t_rev, sname, nsym, sk, &
+                    ftk, gk, t_revk, invsk, snamek, nsymk)
 !-----------------------------------------------------------------------
 !
 ! This routine selects, among the symmetry matrices of the point group
@@ -19,20 +19,20 @@ IMPLICIT NONE
 REAL(DP), PARAMETER :: accep=1.d-5
 CHARACTER(len=45) :: snamek(48), sname(48)
 
-REAL(DP) :: bg (3, 3), at (3, 3), xk (3)
+REAL(DP) :: bg (3, 3), at (3, 3), xk (3), ft(3,48), ftk(3,48)
 ! input: the reciprocal lattice vectors
 ! input: the direct lattice vectors
 ! input: the k point of the crystal
-
-INTEGER :: s (3, 3, 48), ftau(3,48), t_rev(48), nsym, sk (3, 3, 48), &
-           ftauk(3,48), t_revk(48), gk(3,48), invsk(48), nsymk
-! input: the symmetry matrices
 ! input: fractional translation associated to each rotation
+! output: the fract. trans. associated to the operations of the small group of k
+
+INTEGER :: s (3, 3, 48), t_rev(48), nsym, sk (3, 3, 48), &
+           t_revk(48), gk(3,48), invsk(48), nsymk
+! input: the symmetry matrices
 ! input: possible time reversal associated to the rotation
 ! input: the inverse of each symmetry operation
 ! input: dimension of the point group
 ! output: the symmetry matrices of the small point group of k
-! output: the fract. trans. associated to the operations of the small group of k
 ! output: the time reversal associated to the operations of the small group of k
 ! output: the G vector which connects k and the rotated k.
 ! output: the inverse of each operation or the small point group of k.
@@ -74,7 +74,7 @@ INTEGER :: s (3, 3, 48), ftau(3,48), t_rev(48), nsym, sk (3, 3, 48), &
          (t_rev(isym)==1 .and. eqvect(rak, -ak, zero,accep)) ) THEN
         nsymk=nsymk+1
         sk(:,:,nsymk)=s(:,:,isym)
-        ftauk(:,nsymk)=ftau(:,isym)
+        ftk(:,nsymk)=ft(:,isym)
         snamek(nsymk)=sname(isym)
         t_revk(nsymk)=t_rev(isym)
         IF (t_rev(isym)==0) THEN

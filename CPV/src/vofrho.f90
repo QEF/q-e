@@ -25,9 +25,6 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
                                   tprnfor, iesr, textfor
       USE io_global,        ONLY: stdout
       USE ions_base,        ONLY: nsp, na, nat, rcmax, compute_eextfor
-      USE ions_base,        ONLY: ind_srt, ind_bck
-      USE gvecs
-      USE gvect,            ONLY: ngm, nl, nlm
       USE cell_base,        ONLY: omega, r_to_s
       USE cell_base,        ONLY: alat, at, tpiba2, h, ainv
       USE cell_base,        ONLY: ibrav, isotropic  !True if volume option is chosen for cell_dofree
@@ -46,7 +43,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE mp_global,        ONLY: intra_bgrp_comm
       USE funct,            ONLY: dft_is_meta, dft_is_nonlocc, nlc, get_inlc,&
                                   dft_is_hybrid, exx_is_active
-      USE vdW_DF,           ONLY: stress_vdW_DF
+      USE vdW_DF,           ONLY: vdW_DF_stress
       use rVV10,            ONLY: stress_rVV10 
       USE pres_ai_mod,      ONLY: abivol, abisur, v_vol, P_ext, volclu,  &
                                   Surf_t, surfclu
@@ -62,6 +59,8 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE tsvdw_module,     ONLY: EtsvdW,UtsvdW,FtsvdW,HtsvdW
       USE mp_global,        ONLY: me_image
       USE exx_module,       ONLY: dexx_dh, exxalfa  ! exx_wf related
+      USE fft_rho
+      USE fft_helper_subroutines
       
       USE plugin_variables, ONLY: plugin_etot
 
@@ -83,7 +82,6 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       COMPLEX(DP)  fp, fm, ci, drhop, zpseu, zh
       COMPLEX(DP), ALLOCATABLE :: rhotmp(:), vtemp(:)
       COMPLEX(DP), ALLOCATABLE :: drhot(:,:)
-      COMPLEX(DP), ALLOCATABLE :: v(:), vs(:)
       REAL(DP), ALLOCATABLE    :: gagb(:,:), rhosave(:,:), rhocsave(:)
       !
       REAL(DP), ALLOCATABLE :: fion1( :, : )
@@ -116,10 +114,18 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       IF (ts_vdw) THEN
         !
         CALL start_clock( 'ts_vdw' )
-        ALLOCATE (stmp(3,nat))
-        stmp(:,:) = tau0(:,ind_bck(:))
-        CALL tsvdw_calculate(stmp,rhor)
-        DEALLOCATE (stmp)
+        ALLOCATE (stmp(3,nat), rhocsave(dfftp%nnr) )
+        stmp(:,:) = tau0(:,:)
+        !
+        IF ( nspin==2 ) THEN
+           rhocsave(:) = rhor(:,1) + rhor(:,2) 
+        ELSE
+           rhocsave(:) = rhor(:,1)
+        ENDIF
+        !
+        CALL tsvdw_calculate(stmp,rhocsave)
+        !
+        DEALLOCATE (rhocsave,stmp)
         CALL stop_clock( 'ts_vdw' )
         !
       END IF
@@ -132,18 +138,18 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       ht = TRANSPOSE( h )
       !
-      ALLOCATE( vtemp( ngm ) )
-      ALLOCATE( rhotmp( ngm ) )
+      ALLOCATE( vtemp( dfftp%ngm ) )
+      ALLOCATE( rhotmp( dfftp%ngm ) )
       !
       IF ( tpre ) THEN
-         ALLOCATE( drhot( ngm, 6 ) )
-         ALLOCATE( gagb( 6, ngm ) )
-         CALL compute_gagb( gagb, g, ngm, tpiba2 )
+         ALLOCATE( drhot( dfftp%ngm, 6 ) )
+         ALLOCATE( gagb( 6, dfftp%ngm ) )
+         CALL compute_gagb( gagb, g, dfftp%ngm, tpiba2 )
       END IF
 !
 !     ab-initio pressure and surface tension contributions to the potential
 !
-      if (abivol.or.abisur) call vol_clu(rhor,rhog,sfac,nfi)
+      if (abivol.or.abisur) call vol_clu(rhor,rhog,nfi)
       !
       !     compute plugin contributions to the potential, add it later
       !
@@ -157,7 +163,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       ttsic = ( ABS( self_interaction ) /= 0 )
       !
-      IF( ttsic ) ALLOCATE( self_vloc( ngm ) )
+      IF( ttsic ) ALLOCATE( self_vloc( dfftp%ngm ) )
       !
       !     first routine in which fion is calculated: annihilation
       !
@@ -169,7 +175,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          !
          ALLOCATE( stmp( 3, nat ) )
          !
-         CALL r_to_s( tau0, stmp, na, nsp, ainv )
+         CALL r_to_s( tau0, stmp, nat, ainv )
          !
          CALL vofesr( iesr, esr, dsr6, fion, stmp, tpre, h )
          !
@@ -181,11 +187,11 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
 !
 !$omp parallel default(shared), private(ig,is,ij,i,j,k)
 !$omp workshare
-      rhotmp( 1:ngm ) = rhog( 1:ngm, 1 )
+      rhotmp( 1:dfftp%ngm ) = rhog( 1:dfftp%ngm, 1 )
 !$omp end workshare
       IF( nspin == 2 ) THEN
 !$omp workshare
-         rhotmp( 1:ngm ) = rhotmp( 1:ngm ) + rhog( 1:ngm, 2 )
+         rhotmp( 1:dfftp%ngm ) = rhotmp( 1:dfftp%ngm ) + rhog( 1:dfftp%ngm, 2 )
 !$omp end workshare
       END IF
       !
@@ -225,12 +231,12 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       END DO
       DO is=1,nsp
 !$omp do
-         DO ig=1,ngms
+         DO ig=1,dffts%ngm
             vtemp(ig)=vtemp(ig)+CONJG(rhotmp(ig))*sfac(ig,is)*vps(ig,is)
          END DO
       END DO
 !$omp do reduction(+:zpseu)
-      DO ig=1,ngms
+      DO ig=1,dffts%ngm
          zpseu = zpseu + vtemp(ig)
       END DO
 !$omp end parallel
@@ -262,18 +268,18 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
 
       DO is=1,nsp
 !$omp do
-         DO ig=1,ngms
+         DO ig=1,dffts%ngm
             rhotmp(ig)=rhotmp(ig)+sfac(ig,is)*rhops(ig,is)
          END DO
       END DO
       !
 !$omp do
-      DO ig = gstart, ngm
+      DO ig = gstart, dfftp%ngm
          vtemp(ig) = CONJG( rhotmp( ig ) ) * rhotmp( ig ) / gg( ig )
       END DO
 
 !$omp do reduction(+:zh)
-      DO ig = gstart, ngm
+      DO ig = gstart, dfftp%ngm
          zh = zh + vtemp(ig)
       END DO
 
@@ -308,9 +314,9 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       fion1 = 0.d0
       !
       IF( tprnfor .OR. tfor .OR. tpre) THEN
-          vtemp( 1:ngm ) = rhog( 1:ngm, 1 )
+          vtemp( 1:dfftp%ngm ) = rhog( 1:dfftp%ngm, 1 )
           IF( nspin == 2 ) THEN
-             vtemp( 1:ngm ) = vtemp(1:ngm) + rhog( 1:ngm, 2 )
+             vtemp( 1:dfftp%ngm ) = vtemp(1:dfftp%ngm) + rhog( 1:dfftp%ngm, 2 )
           END IF
           CALL force_loc( .false., vtemp, fion1, rhops, vps, ei1, ei2, ei3, sfac, omega, screen_coul )
       END IF
@@ -322,13 +328,13 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
 
 !$omp parallel default(shared), private(ig,is)
 !$omp do
-      DO ig=gstart,ngm
+      DO ig=gstart,dfftp%ngm
          vtemp(ig)=rhotmp(ig)*fpi/(tpiba2*gg(ig))
       END DO
       !
       DO is=1,nsp
 !$omp do
-         DO ig=1,ngms
+         DO ig=1,dffts%ngm
             vtemp(ig)=vtemp(ig)+sfac(ig,is)*vps(ig,is)
          END DO
       END DO
@@ -386,14 +392,20 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
              END DO
              denlc(:,:) = 0.0_dp
              inlc = get_inlc()
-
+             !
+             !^^ ... TEMPORARY FIX (newlsda) ...
+             IF ( nspin==2 ) THEN
+               rhosave(:,1) = rhosave(:,1) + rhosave(:,2) 
+               CALL errore('stres_vdW', 'LSDA+stress+vdW-DF not implemented',1)
+             END IF
+             !^^.......................
+             !   
              if (inlc==1 .or. inlc==2) then
-               if (nspin>2) call errore('stres_vdW_DF', 'vdW+DF non implemented in spin polarized calculations',1)
-               CALL stress_vdW_DF(rhosave, rhocsave, nspin, denlc )
+               CALL vdW_DF_stress(rhosave(:,1), rhocsave, nspin, denlc )
              elseif (inlc == 3) then
-               if (nspin>2) call errore('stress_rVV10', 'rVV10 non implemented with nspin>2',1)
-               CALL stress_rVV10(rhosave, rhocsave, nspin, denlc )
+               CALL stress_rVV10(rhosave(:,1), rhocsave, nspin, denlc )
              end if
+             !
              dxc(:,:) = dxc(:,:) - omega/e2 * MATMUL(denlc,TRANSPOSE(ainv))
          END IF
          DEALLOCATE ( rhocsave, rhosave )
@@ -405,28 +417,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       IF (ts_vdw) THEN
         !
-        IF (nspin.EQ.1) THEN
-           !
-!$omp parallel do
-           DO ir=1,dfftp%nr1*dfftp%nr2*dfftp%my_nr3p
-              !
-              rhor(ir,1)=rhor(ir,1)+UtsvdW(ir)
-              !
-           END DO
-!$omp end parallel do
-           !
-        ELSE IF (nspin.EQ.2) THEN
-           !
-!$omp parallel do
-           DO ir=1,dfftp%nr1*dfftp%nr2*dfftp%my_nr3p
-              !
-              rhor(ir,1)=rhor(ir,1)+UtsvdW(ir)
-              rhor(ir,2)=rhor(ir,2)+UtsvdW(ir)
-              !
-           END DO
-!$omp end parallel do
-          !
-        END IF
+        CALL fftx_add_field( rhor, UtsvdW, dfftp )
         !
       END IF
       !
@@ -441,65 +432,27 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
 !     fourier transform of xc potential to g-space (dense grid)
 !     -------------------------------------------------------------------
 !
-      ALLOCATE( v(  dfftp%nnr ) )
+      IF( abivol .or. abisur ) THEN
+         CALL rho_r2g ( dfftp, rhor, rhog, v_vol )
+      ELSE
+         CALL rho_r2g ( dfftp, rhor, rhog )
+      END IF
+       
       IF( nspin == 1 ) THEN
-         iss = 1
-         if (abivol.or.abisur) then
-!$omp parallel do
-            do ir=1, dfftp%nnr
-               v(ir)=CMPLX( rhor( ir, iss ) + v_vol( ir ), 0.d0 ,kind=DP)
-            end do           
-         else
-!$omp parallel do
-            do ir=1, dfftp%nnr
-               v(ir)=CMPLX( rhor( ir, iss ), 0.d0 ,kind=DP)
-            end do
-         end if
-         !
-         !     v_xc(r) --> v_xc(g)
-         !
-         CALL fwfft( 'Dense', v, dfftp )
-!
-!$omp parallel do
-         DO ig = 1, ngm
-            rhog( ig, iss ) = vtemp(ig) + v( nl( ig ) )
-         END DO
-         !
-         !     v_tot(g) = (v_tot(g) - v_xc(g)) +v_xc(g)
-         !     rhog contains the total potential in g-space
-         !
+         rhog( 1:dfftp%ngm, 1 ) = rhog( 1:dfftp%ngm, 1 ) + vtemp(1:dfftp%ngm) 
       ELSE
          isup=1
          isdw=2
-         if (abivol.or.abisur) then
-!$omp parallel do
-            do ir=1, dfftp%nnr
-               v(ir)=CMPLX ( rhor(ir,isup)+v_vol(ir), &
-                             rhor(ir,isdw)+v_vol(ir),kind=DP)
-            end do
-         else
-!$omp parallel do
-            do ir=1, dfftp%nnr
-               v(ir)=CMPLX (rhor(ir,isup),rhor(ir,isdw),kind=DP)
-            end do
-         end if
-         CALL fwfft('Dense',v, dfftp )
-!$omp parallel do private(fp,fm)
-         DO ig=1,ngm
-            fp=v(nl(ig))+v(nlm(ig))
-            fm=v(nl(ig))-v(nlm(ig))
-            IF( ttsic ) THEN
-             rhog(ig,isup)=vtemp(ig)-self_vloc(ig) + &
-                           0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
-             rhog(ig,isdw)=vtemp(ig)+self_vloc(ig) + &
-                           0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
-            ELSE
-             rhog(ig,isup)=vtemp(ig)+0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
-             rhog(ig,isdw)=vtemp(ig)+0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
-            ENDIF
-         END DO
-      ENDIF
+         rhog( 1:dfftp%ngm, isup ) = rhog( 1:dfftp%ngm, isup ) + vtemp(1:dfftp%ngm) 
+         rhog( 1:dfftp%ngm, isdw ) = rhog( 1:dfftp%ngm, isdw ) + vtemp(1:dfftp%ngm) 
+         IF( ttsic ) THEN
+            rhog( 1:dfftp%ngm, isup ) = rhog( 1:dfftp%ngm, isup ) - self_vloc(1:dfftp%ngm) 
+            rhog( 1:dfftp%ngm, isdw ) = rhog( 1:dfftp%ngm, isdw ) - self_vloc(1:dfftp%ngm) 
+         END IF
+      END IF
+
       DEALLOCATE (vtemp)
+      IF( ttsic ) DEALLOCATE( self_vloc )
 !
 !     rhog contains now the total (local+Hartree+xc) potential in g-space
 !
@@ -516,7 +469,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          !    Add TS-vdW ion forces to fion here... (RAD)
          !
          IF (ts_vdw) THEN
-            fion1(:,:) = FtsvdW(:,ind_srt(:))
+            fion1(:,:) = FtsvdW(:,:)
             fion = fion + fion1
             !fion=fion+FtsvdW
          END IF
@@ -529,101 +482,29 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
 
       DEALLOCATE( fion1 )
 !
-      IF( ttsic ) DEALLOCATE( self_vloc )
 !
 !     ===================================================================
 !     fourier transform of total potential to r-space (dense grid)
 !     -------------------------------------------------------------------
-      v(:) = (0.d0, 0.d0)
+      
+      CALL rho_g2r( dfftp, rhog, rhor )
+
       IF(nspin.EQ.1) THEN
-         iss=1
-!$omp parallel do
-         DO ig=1,ngm
-            v(nl (ig))=rhog(ig,iss)
-            v(nlm(ig))=CONJG(rhog(ig,iss))
-         END DO
-!
-!     v(g) --> v(r)
-!
-         CALL invfft('Dense',v, dfftp )
-!
-!$omp parallel do
-         DO ir=1, dfftp%nnr
-            rhor(ir,iss)=DBLE(v(ir))
-         END DO
-!
-!     calculation of average potential
-!
-         vave=SUM(rhor(:,iss))/DBLE( dfftp%nr1* dfftp%nr2* dfftp%nr3)
+         vave=SUM(rhor(:,1))/DBLE( dfftp%nr1* dfftp%nr2* dfftp%nr3)
       ELSE
          isup=1
          isdw=2
-!$omp parallel do
-         DO ig=1,ngm
-            v(nl (ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
-            v(nlm(ig))=CONJG(rhog(ig,isup)) +ci*CONJG(rhog(ig,isdw))
-         END DO
-!
-         CALL invfft('Dense',v, dfftp )
-!$omp parallel do
-         DO ir=1, dfftp%nnr
-            rhor(ir,isup)= DBLE(v(ir))
-            rhor(ir,isdw)=AIMAG(v(ir))
-         END DO
-         !
-         !     calculation of average potential
-         !
          vave=(SUM(rhor(:,isup))+SUM(rhor(:,isdw))) / 2.0d0 / DBLE(  dfftp%nr1 *  dfftp%nr2 *  dfftp%nr3 )
-      ENDIF
+      END IF
 
       CALL mp_sum( vave, intra_bgrp_comm )
 
       !
       !     fourier transform of total potential to r-space (smooth grid)
       !
-      ALLOCATE( vs( dffts%nnr ) )
-      vs (:) = (0.d0, 0.d0)
-      !
-      IF(nspin.EQ.1)THEN
-         !
-         iss=1
-!$omp parallel do
-         DO ig=1,ngms
-            vs(nlsm(ig))=CONJG(rhog(ig,iss))
-            vs(nls(ig))=rhog(ig,iss)
-         END DO
-         !
-         CALL invfft('Smooth',vs, dffts )
-         !
-!$omp parallel do
-         DO ir=1,dffts%nnr
-            rhos(ir,iss)=DBLE(vs(ir))
-         END DO
-         !
-      ELSE
-         !
-         isup=1
-         isdw=2
-!$omp parallel do
-         DO ig=1,ngms
-            vs(nls(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
-            vs(nlsm(ig))=CONJG(rhog(ig,isup)) +ci*CONJG(rhog(ig,isdw))
-         END DO 
-         !
-         CALL invfft('Smooth',vs, dffts )
-         !
-!$omp parallel do
-         DO ir=1,dffts%nnr
-            rhos(ir,isup)= DBLE(vs(ir))
-            rhos(ir,isdw)=AIMAG(vs(ir))
-         END DO
-         !
-      ENDIF
+      CALL rho_g2r ( dffts, rhog, rhos )
 
-      IF( dft_is_meta() ) CALL vofrho_meta( v, vs )
-
-      DEALLOCATE( vs )
-      DEALLOCATE( v )
+      IF( dft_is_meta() ) CALL vofrho_meta( )
 
       ebac = 0.0d0
       !
