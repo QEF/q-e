@@ -117,6 +117,84 @@ subroutine read_zero()
 end subroutine
 
 
+subroutine read_step_data()
+    use kinds, only: dp
+    use io_global, only: ionode,stdout, ionode_id
+    use hartree_mod, only: file_dativel
+    use zero_mod, only: ion_pos, ion_vel,charge, evc_uno, charge_g
+    use ions_base, only: nsp, zv, nat, ityp, amass, tau
+    use mp, only: mp_sum, mp_bcast, mp_get
+    use wavefunctions_module, only: psic
+    use io_files, only: nwordwfc, diropn, iunwfc, prefix, tmp_dir
+    use wvfct, only: nbnd, npwx, npw
+    use fft_base, only: dffts
+    use gvect, only: ngm, gg, g, nl, nlm, gstart
+    use gvecs, only: nls, nlsm  
+    use mp_pools, only: intra_pool_comm
+    use fft_interfaces, only: invfft, fwfft
+    implicit none
+    integer , external :: find_free_unit
+    logical ::  exst
+    integer :: iun, iatom, iv
+ 
+!lettura velocita'
+      if (ionode) then
+         iun = find_free_unit()
+         open (unit=iun, file=trim(file_dativel), access='sequential', status='old')
+!! New reading method for .vel CP format. Only first step read.
+         read (iun, *)
+         do iatom = 1, nat
+            read (iun, *) ion_vel(1:3, iatom)
+         end do
+         close (iun)
+      end if
+      call mp_bcast(ion_vel(:, :), ionode_id, intra_pool_comm)
+
+!cambio unità di misure da velocità CP a velocità PW
+      ion_vel(1:3, 1:nat) = 2.d0*ion_vel(1:3, 1:nat)
+
+!
+!lettura funzione d'onda
+      close (iunwfc)
+!call start_clock( 'lett_car' )
+
+      call diropn(iunwfc, 'wfc', 2*nwordwfc, exst, tmp_dir)
+      call davcio(evc_uno, 2*nwordwfc, iunwfc, 1, -1)
+
+!
+!calcolo della carica a partire dalle funzioni d'onda
+      charge = 0.d0
+      do iv = 1, nbnd, 2
+         psic = 0.d0
+         if (iv == nbnd) then
+            psic(nls(1:npw)) = evc_uno(1:npw, iv)
+            psic(nlsm(1:npw)) = CONJG(evc_uno(1:npw, iv))
+         else
+            psic(nls(1:npw)) = evc_uno(1:npw, iv) + (0.D0, 1.D0)*evc_uno(1:npw, iv + 1)
+            psic(nlsm(1:npw)) = CONJG(evc_uno(1:npw, iv) - (0.D0, 1.D0)*evc_uno(1:npw, iv + 1))
+         end if
+         call invfft('Wave', psic, dffts)
+         charge(1:dffts%nnr) = charge(1:dffts%nnr) + dble(psic(1:dffts%nnr))**2.0
+         if (iv /= nbnd) then
+            charge(1:dffts%nnr) = charge(1:dffts%nnr) + dimag(psic(1:dffts%nnr))**2.0
+         end if
+      end do
+!
+!moltiplico per due causa degenerazione di spin
+      charge(1:dffts%nnr) = charge(1:dffts%nnr)*2.d0
+!carica in spazio reciproco
+      psic = 0.d0
+      psic(1:dffts%nnr) = dcmplx(charge(1:dffts%nnr), 0.d0)
+      call fwfft('Smooth', psic, dffts)
+      charge_g(1:ngm) = psic(nls(1:ngm))
+!call stop_clock( 'lett_car' )
+!call print_clock( 'lett_car' )
+!
+
+
+end subroutine
+
+
 subroutine routine_zero()
    use kinds, only: DP
    use wvfct, only: nbnd, npwx, npw
@@ -130,7 +208,6 @@ subroutine routine_zero()
    use uspp_param, only: upf
    use atom, only: rgrid
    use mp_world, only: mpime
-   use fft_base, only: dffts
    use cell_base, only: at, alat, omega
    use wavefunctions_module, only: psic
    use fft_interfaces, only: invfft, fwfft
@@ -204,89 +281,8 @@ subroutine routine_zero()
       else
          l_non_loc = .false.
       end if
-!!!!!!! nuovo metodo di lettura
-!goto 30
-!leggi da file (unformatted) velocità e posizioni degli ioni al tempo istep.Legge solo ionode as usual, check fortran labelling.
 
-!if (ionode) then
-!   iun=find_free_unit()
-!   call diropn_rect(iun,'ion_positions_unf',3*nat,exst)
-!   call davcio (ion_pos(:,:),3*nat,iun,2*istep-1,-1)
-!   call davcio (ion_vel(:,:),3*nat,iun,2*istep  ,-1)
-!   close(iun)
-!end if
-!call mp_bcast(ion_pos(:,:),ionode_id)
-!call mp_bcast(ion_vel(:,:),ionode_id)
-!call check_positions(ion_pos)
-!30  do iatom=1,nat
-!   ion_vel(:,iatom)=[0.005,0.008660254,0.0]
-!    ion_vel(:,iatom)=[alat*0.003,alat*0.d0,alat*0.d0]
-!end do
-
-!lettura velocita'
-      if (ionode) then
-         iun = find_free_unit()
-         open (unit=iun, file=trim(file_dativel), access='sequential', status='old')
-!!per raggiungere il passo corretto:
-!    do istep=1,passo-1
-!       do iatom=1,nat
-!           read(iun,*)
-!       end do
-!    end do
-!    do iatom=1,nat
-!       read(iun,*) ion_vel(1:3,iatom)
-!    end do
-!! New reading method for .vel CP format. Only first step read.
-         read (iun, *)
-         do iatom = 1, nat
-            read (iun, *) ion_vel(1:3, iatom)
-         end do
-         close (iun)
-      end if
-      call mp_bcast(ion_vel(:, :), ionode_id, intra_pool_comm)
-
-!cambio unità di misure da velocità CP a velocità PW
-      ion_vel(1:3, 1:nat) = 2.d0*ion_vel(1:3, 1:nat)
-
-!
-!lettura funzione d'onda
-      close (iunwfc)
-!call start_clock( 'lett_car' )
-
-!if (ionode) print*,'uguali? ',npwx*nbnd,2*nwordwfc
-      call diropn(iunwfc, 'wfc', 2*nwordwfc, exst, tmp_dir)
-      call davcio(evc_uno, 2*nwordwfc, iunwfc, 1, -1)
-
-!
-!calcolo della carica a partire dalle funzioni d'onda
-      charge = 0.d0
-      do iv = 1, nbnd, 2
-         psic = 0.d0
-         if (iv == nbnd) then
-            psic(nls(1:npw)) = evc_uno(1:npw, iv)
-            psic(nlsm(1:npw)) = CONJG(evc_uno(1:npw, iv))
-         else
-            psic(nls(1:npw)) = evc_uno(1:npw, iv) + (0.D0, 1.D0)*evc_uno(1:npw, iv + 1)
-            psic(nlsm(1:npw)) = CONJG(evc_uno(1:npw, iv) - (0.D0, 1.D0)*evc_uno(1:npw, iv + 1))
-         end if
-         call invfft('Wave', psic, dffts)
-         charge(1:dffts%nnr) = charge(1:dffts%nnr) + dble(psic(1:dffts%nnr))**2.0
-         if (iv /= nbnd) then
-            charge(1:dffts%nnr) = charge(1:dffts%nnr) + dimag(psic(1:dffts%nnr))**2.0
-         end if
-      end do
-!
-!moltiplico per due causa degenerazione di spin
-      charge(1:dffts%nnr) = charge(1:dffts%nnr)*2.d0
-!carica in spazio reciproco
-      psic = 0.d0
-      psic(1:dffts%nnr) = dcmplx(charge(1:dffts%nnr), 0.d0)
-      call fwfft('Smooth', psic, dffts)
-      charge_g(1:ngm) = psic(nls(1:ngm))
-!call stop_clock( 'lett_car' )
-!call print_clock( 'lett_car' )
-!
-
+call read_step_data()
 
 call read_zero() 
 
