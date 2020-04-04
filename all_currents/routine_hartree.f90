@@ -1,3 +1,13 @@
+subroutine init_hartree()
+   use qpoint, only : ikqs
+   implicit none
+
+   if ( .not. allocated(ikqs)) allocate(ikqs(1))
+   ikqs(1)=1
+
+end subroutine
+
+
 subroutine routine_hartree()
    use kinds, only: DP
    use hartree_mod
@@ -49,7 +59,7 @@ subroutine routine_hartree()
    write (stdout, *) 'INIZIO ROUTINE HARTREE & KOHN'
    call start_clock('routine_hartree')
    call start_clock('hartree_current')
-
+   call init_hartree()
 !-------------------------------HARTREE---------------------------------------------------------
 !call flush_unit(stdout)
 !Il calcolo della corrente di Hartree e quella di Kohn-Sham
