@@ -148,6 +148,7 @@ SUBROUTINE iosys()
                             io_level, ethr, lscf, lbfgs, lmd, &
                             lbands, lconstrain, restart, &
                             llondon, ldftd3, do_makov_payne, lxdm, &
+                            lensemb, &
                             remove_rigid_rot_ => remove_rigid_rot, &
                             diago_full_acc_   => diago_full_acc, &
                             tolp_             => tolp, &
@@ -343,6 +344,12 @@ SUBROUTINE iosys()
      lscf  = .true.
      nstep = 1
      !
+  CASE( 'ensemble' )
+     !
+     lscf  = .true.
+     lensemb = .true.
+     nstep = 1
+     !
   CASE( 'nscf' )
      !
      lforce = .false.
@@ -373,6 +380,10 @@ SUBROUTINE iosys()
         calc    = 'vm'
         !
         ntcheck = nstep + 1
+        !
+     CASE ( 'ipi' )
+        !
+        CONTINUE
         !
      CASE DEFAULT
         !
@@ -442,6 +453,10 @@ SUBROUTINE iosys()
         lbfgs = .true.
         lmd   = .false.
         !
+     CASE ( 'ipi' )
+        !
+        CONTINUE
+        !
      CASE DEFAULT
         !
         CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
@@ -476,6 +491,10 @@ SUBROUTINE iosys()
      CASE( 'w' )
         !
         calc = 'nd'
+        !
+     CASE ( 'ipi' )
+        !
+        CONTINUE
         !
      CASE DEFAULT
         !

@@ -100,10 +100,10 @@ MODULE input_parameters
         CHARACTER(len=80) :: calculation = 'none'
           ! Specify the type of the simulation
           ! See below for allowed values
-        CHARACTER(len=80) :: calculation_allowed(14)
+        CHARACTER(len=80) :: calculation_allowed(15)
         DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
           'vc-relax', 'vc-md', 'vc-cp', 'bands', 'neb', 'smd', 'cp-wf', &
-          'vc-cp-wf', 'cp-wf-nscf'/
+          'vc-cp-wf', 'cp-wf-nscf', 'ensemble'/
         CHARACTER(len=80) :: verbosity = 'default'
           ! define the verbosity of the code output
         CHARACTER(len=80) :: verbosity_allowed(6)
@@ -394,13 +394,6 @@ MODULE input_parameters
         REAL(DP) :: starting_magnetization( nsx ) = 0.0_DP
           ! ONLY PW
 
-        LOGICAL :: ensemble_energies = .false.
-          ! if .true. and input dft set to a BEE functional,
-          ! calculate ensemble energies as input for bayesian error estimates
-        LOGICAL :: print_ensemble_energies = .true.
-          ! if .true. print 2000 ensemble energies and basis
-          ! if .false. only print basis
-
         LOGICAL :: lda_plus_u = .false.
           ! Use DFT+U method - following are the needed parameters
         INTEGER :: lda_plus_u_kind = 0
@@ -624,7 +617,6 @@ MODULE input_parameters
              ntyp, nbnd, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s,         &
              nr3s, nr1b, nr2b, nr3b, nosym, nosym_evc, noinv, use_all_frac,   &
              force_symmorphic, starting_charge, starting_magnetization,       &
-             ensemble_energies, print_ensemble_energies,                      &
              occupations, degauss, nspin, ecfixed,                            &
              qcutz, q2sigma, lda_plus_U, lda_plus_u_kind,                     &
              Hubbard_U, Hubbard_J, Hubbard_alpha,                             &
@@ -1025,10 +1017,10 @@ MODULE input_parameters
 
         CHARACTER(len=80) :: ion_dynamics = 'none'
           ! set how ions should be moved
-        CHARACTER(len=80) :: ion_dynamics_allowed(9)
+        CHARACTER(len=80) :: ion_dynamics_allowed(10)
         DATA ion_dynamics_allowed / 'none', 'sd', 'cg', 'langevin', &
                                     'damp', 'verlet', 'bfgs', 'beeman',& 
-                                    'langevin-smc' /
+                                    'langevin-smc', 'ipi' /
 
         REAL(DP) :: ion_radius(nsx) = 0.5_DP
           ! pseudo-atomic radius of the i-th atomic species (CP only)
@@ -1203,9 +1195,9 @@ MODULE input_parameters
 
         CHARACTER(len=80) :: cell_dynamics  = 'none'
           ! set how the cell should be moved
-        CHARACTER(len=80) :: cell_dynamics_allowed(7)
+        CHARACTER(len=80) :: cell_dynamics_allowed(8)
         DATA cell_dynamics_allowed / 'sd', 'pr', 'none', 'w', 'damp-pr', &
-                                     'damp-w', 'bfgs'  /
+                                     'damp-w', 'bfgs', 'ipi'  /
 
         CHARACTER(len=80) :: cell_velocities = 'default'
           ! cell_velocities = 'zero' | 'default'*

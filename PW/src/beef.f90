@@ -34,12 +34,11 @@ MODULE beef
 ! (provided by libbeef)
 !
 !-------------------------------------------------------------------------
-SUBROUTINE beef_energies(iprint)
+SUBROUTINE beef_energies( )
 !-------------------------------------------------------------------------
 
   USE io_global,         ONLY  : stdout, ionode
   USE funct,             ONLY  : dft_is_meta
-  USE input_parameters,  ONLY  : print_ensemble_energies
   USE control_flags,     ONLY  : io_level
   !USE exx_band,             ONLY : change_data_structure !MY ATTEMPTS
   !TO
@@ -49,7 +48,6 @@ SUBROUTINE beef_energies(iprint)
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
 
   implicit none
-  logical                     ::  iprint
   !real(DP), allocatable      :: beefxc(:), energies(:)
   real(DP)                    :: ldaxc
   integer                     :: i
@@ -108,9 +106,8 @@ SUBROUTINE beef_energies(iprint)
   !if (ionode .AND iprint) then
   if (.NOT. ionode) RETURN
 
-  if (iprint .AND. ionode) then
-     call beef_print( )
-  endif
+  if ( ionode ) call beef_print( )
+  
 #else
        CALL errore('set_dft_from_name', &
     &    'BEEF xc functional support not compiled in', 1)

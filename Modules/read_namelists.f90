@@ -191,8 +191,6 @@ MODULE read_namelists_module
        qcutz   = 0.0_DP
        q2sigma = 0.01_DP
        input_dft = 'none'
-       ensemble_energies = .FALSE.
-       print_ensemble_energies = .FALSE.
        ecutfock  = -1.0_DP
        starting_charge = 0.0_DP
 !
@@ -1698,7 +1696,7 @@ MODULE read_namelists_module
        !
        !
        SELECT CASE( TRIM( calculation ) )
-          CASE ('scf')
+          CASE ('scf', 'ensemble')
              IF( prog == 'CP' ) THEN
                  electron_dynamics = 'damp'
                  ion_dynamics      = 'none'

@@ -1684,7 +1684,6 @@ run_driver.o : ../../Modules/fsockets.o
 run_driver.o : ../../Modules/io_files.o
 run_driver.o : ../../Modules/io_global.o
 run_driver.o : ../../Modules/ions_base.o
-run_driver.o : ../../Modules/input_parameters.o
 run_driver.o : ../../Modules/mp_images.o
 run_driver.o : ../../Modules/parameters.o
 run_driver.o : ../../UtilXlib/mp.o
