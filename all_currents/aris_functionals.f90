@@ -7,6 +7,7 @@
 subroutine pbex_current (rho, grho, iflag, sx)
   USE kinds, ONLY : DP
   USE constants, ONLY : pi
+  use exch_gga, only: pbex
   implicit none
   real(DP) :: rho, grho(1:3) !nb, qui compare tutto il gradiente
   real(DP) :: sx(1:3) ! 
@@ -58,6 +59,7 @@ end subroutine pbex_current
 subroutine pbex_current_numerical_due (rho, grho, iflag, sx)
   USE kinds, ONLY : DP
   USE constants, ONLY : pi
+  use exch_gga, only: pbex
   implicit none
 !
   real(DP) :: rho, grho(1:3) !nb, qui compare tutto il gradiente
@@ -115,6 +117,7 @@ end subroutine pbex_current_numerical_due
   ! iflag=2: J.P.Perdew et al., PRL 100, 136406 (2008).
   !
   USE kinds, ONLY : DP
+  use corr_gga, only: pbec,pw
   implicit none
   integer, intent(in) :: iflag
   real(DP) :: rho, grho(1:3), sc(1:3)
@@ -163,6 +166,7 @@ end subroutine pbex_current_numerical_due
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : pi
+  use corr_gga, only: pbec
   implicit none
 !
   real(DP) :: rho, grho(1:3) !nb, qui compare tutto il gradiente

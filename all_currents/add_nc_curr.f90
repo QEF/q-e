@@ -14,7 +14,7 @@ use ions_base,  ONLY : nat, ityp, nsp
 use klist, only:xk
 use io_files, ONLY : nwordwfc,diropn
 use io_global, only : ionode
-use wavefunctions_module, only:evc
+use wavefunctions, only:evc
 use klist, only : igk_k
 !
 implicit none

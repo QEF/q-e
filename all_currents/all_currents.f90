@@ -78,7 +78,7 @@
      use iotk_module
      USE environment, ONLY: environment_start, environment_end
      use mp_global, ONLY: kunit, mp_startup
-     use mp_world, ONLY: mpime
+     use mp_world, ONLY: mpime, world_comm
      use mp, ONLY: mp_bcast, mp_barrier
      use mp_pools, ONLY: intra_pool_comm
      use control_flags, ONLY: gamma_only
@@ -89,9 +89,9 @@
      use klist, ONLY: xk, wk, nks, nkstot
      use zero_mod
      use hartree_mod
-     use wavefunctions_module, ONLY: evc
+     use wavefunctions, ONLY: evc
      use io_files, ONLY: nd_nmbr, tmp_dir, prefix, nwordwfc, iunwfc
-     use pw_restart_new, ONLY: read_collected_to_evc
+     use pw_restart_new, ONLY: read_collected_wfc !read_collected_to_evc
      USE wrappers, ONLY: f_mkdir_safe
      !
      implicit none
@@ -186,17 +186,17 @@
      IF (ios == 1) CALL errore('check_thermodir', 'thermodir cannot be opened', 1)
      if (ionode) print *, "    thermodir = "//thermodir
 
-     CALL mp_bcast(tmp_dir, ionode_id, MPI_COMM_WORLD)
-     CALL mp_bcast(thermodir, ionode_id, MPI_COMM_WORLD)
-     CALL mp_bcast(prefix_uno, ionode_id, MPI_COMM_WORLD)
-     CALL mp_bcast(prefix_due, ionode_id, MPI_COMM_WORLD)
-     CALL mp_bcast(delta_t, ionode_id, MPI_COMM_WORLD)
-     CALL mp_bcast(eta, ionode_id, MPI_COMM_WORLD)
-     CALL mp_bcast(n_max, ionode_id, MPI_COMM_WORLD)
-     CALL mp_bcast(status, ionode_id, MPI_COMM_WORLD)
-     CALL mp_bcast(init_linear, ionode_id, MPI_COMM_WORLD)
-     CALL mp_bcast(file_output, ionode_id, MPI_COMM_WORLD)
-     CALL mp_bcast(file_dativel, ionode_id, MPI_COMM_WORLD)
+     CALL mp_bcast(tmp_dir, ionode_id, world_comm)
+     CALL mp_bcast(thermodir, ionode_id, world_comm)
+     CALL mp_bcast(prefix_uno, ionode_id, world_comm)
+     CALL mp_bcast(prefix_due, ionode_id, world_comm)
+     CALL mp_bcast(delta_t, ionode_id, world_comm)
+     CALL mp_bcast(eta, ionode_id, world_comm)
+     CALL mp_bcast(n_max, ionode_id, world_comm)
+     CALL mp_bcast(status, ionode_id, world_comm)
+     CALL mp_bcast(init_linear, ionode_id, world_comm)
+     CALL mp_bcast(file_output, ionode_id, world_comm)
+     CALL mp_bcast(file_dativel, ionode_id, world_comm)
      !
      prefix = trim(prefix_uno)
      call read_file
@@ -204,7 +204,8 @@
      iunwfc = 1000 + iunwfc
      call diropn_due(trim(prefix_due), iunwfc, 'wfc', 2*nwordwfc, exst, tmp_dir)
 
-     call read_collected_to_evc(dirname)
+     !call read_collected_to_evc(dirname)
+     call read_collected_wfc(dirname,1,evc)
      IF (ionode) WRITE (stdout, '(/,5x,A,/,5x,A)') &
         'Reading data from directory:'//TRIM(dirname)
      close (iunwfc)
@@ -302,9 +303,9 @@
      use control_flags, ONLY: gamma_only
      use becmod, ONLY: bec_type, becp, calbec, &
                        allocate_bec_type, deallocate_bec_type
-     use symm_base, ONLY: nsym, s, invsym, irt, ftau
+     use symm_base, ONLY: nsym, s, invsym, irt
      use uspp, ONLY: nkb, vkb
-     use wavefunctions_module, ONLY: evc
+     use wavefunctions, ONLY: evc
      use io_files, ONLY: nd_nmbr, tmp_dir, prefix, iunwfc, nwordwfc, iunsat, nwordatwfc
      use io_files, ONLY: pseudo_dir, psfile
      use io_global, ONLY: ionode, stdout

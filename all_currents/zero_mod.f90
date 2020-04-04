@@ -3,7 +3,7 @@ MODULE zero_mod
 
   USE kinds, ONLY: DP
   use splines
-  use fft_custom
+  use fft_base
   use becmod
 
 

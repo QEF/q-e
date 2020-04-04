@@ -14,7 +14,7 @@ subroutine stop_pp
   !
   ! Synchronize processes before stopping.
   !
-  use control_flags, only: twfcollect
+  !use control_flags, only: twfcollect
   use io_files, only: iunwfc
   use mp_global,only: mp_global_end
   USE parallel_include
@@ -28,11 +28,7 @@ subroutine stop_pp
   ! print*,op
 
   if ( op ) then
-     if (twfcollect) then
-        close (unit = iunwfc, status = 'delete')
-     else
-        close (unit = iunwfc, status = 'keep')
-     end if
+     close (unit = iunwfc, status = 'keep')
   end if
 #endif
 

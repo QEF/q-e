@@ -16,7 +16,7 @@ SUBROUTINE openfil_all_currents()
   !
   USE kinds,          ONLY : DP
   USE wvfct,          ONLY : nbnd, npwx
-  use control_flags,  ONLY:  twfcollect
+  !use control_flags,  ONLY:  twfcollect
   USE io_files,       ONLY : prefix, iunwfc, nwordwfc, iunat => iunhub, iunsat, &
                              diropn, nwordatwfc, tmp_dir
   USE noncollin_module, ONLY : npol, noncolin
@@ -29,7 +29,7 @@ SUBROUTINE openfil_all_currents()
   !
   LOGICAL       :: exst
   !
-  twfcollect=.false.
+  !twfcollect=.false.
   !
   ! ... nwordwfc is the record length for the direct-access file
   ! ... containing wavefunctions

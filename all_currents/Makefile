@@ -11,7 +11,7 @@ MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules $(MOD_FLAG)../LAXlib \
           $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../FFTXlib $(MOD_FLAG)../LR_Modules 
 
 #location of needed libraries
-LIBOBJS= ../iotk/src/libiotk.a ../clib/clib.a ../UtilXlib/libutil.a 
+LIBOBJS= ../iotk/src/libiotk.a ../clib/clib.a ../UtilXlib/libutil.a ../KS_Solvers/DENSE/libdense.a $(QELIBS)
 
 ALLCURRENTSOBJS = \
 hartree_mod.o\
@@ -31,7 +31,7 @@ routine_zero.o\
 init_reciprocal_parts_tab.o\
 allocate_zero.o \
 deallocate_zero.o \
-aris_functionals.o 
+aris_functionals.o
 
 
 
@@ -45,7 +45,7 @@ all : tldeps all_currents.x
 
 all_currents.x : all_currents.o lib_all_currents.a $(ALLCURRENTSOBJS) $(PWOBJS) $(QEMODS) 
 	$(LD) $(LDFLAGS) -o $@ \
-		all_currents.o lib_all_currents.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		all_currents.o lib_all_currents.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(QEMODS) $(LIBOBJS)
 	- ( cd ../bin ; ln -fs ../all_currents/$@ . )
 
 # ( cd ../../bin ; ln -fs ../GWW/pw4gww/$@ . )

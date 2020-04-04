@@ -3,7 +3,7 @@ subroutine init_zero()
 
 
       use io_files, only: nwordwfc, diropn, iunwfc, prefix, tmp_dir
-      use gvect, only: ngm, gg, g, nl, nlm, gstart
+      use gvect, only: ngm, gg, g, gstart
       use zero_mod
       use hartree_mod 
       use ions_base, only : nsp
@@ -55,7 +55,7 @@ end subroutine
 
 subroutine read_zero()
       use io_files, only: nwordwfc, diropn, iunwfc, prefix, tmp_dir
-      use gvect, only: ngm, gg, g, nl, nlm, gstart
+      use gvect, only: ngm, gg, g, gstart
       use zero_mod
       use hartree_mod 
       use ions_base, only : nsp
@@ -123,12 +123,11 @@ subroutine read_wfc_uno()
     use zero_mod, only: ion_pos, ion_vel,charge, evc_uno, charge_g
     use ions_base, only: nsp, zv, nat, ityp, amass, tau
     use mp, only: mp_sum, mp_bcast, mp_get
-    use wavefunctions_module, only: psic
+    use wavefunctions, only: psic
     use io_files, only: nwordwfc, diropn, iunwfc, prefix, tmp_dir
     use wvfct, only: nbnd, npwx, npw
     use fft_base, only: dffts
-    use gvect, only: ngm, gg, g, nl, nlm, gstart
-    use gvecs, only: nls, nlsm  
+    use gvect, only: ngm, gg, g, gstart 
     use mp_pools, only: intra_pool_comm
     use fft_interfaces, only: invfft, fwfft
     implicit none
@@ -149,11 +148,11 @@ subroutine read_wfc_uno()
       do iv = 1, nbnd, 2
          psic = 0.d0
          if (iv == nbnd) then
-            psic(nls(1:npw)) = evc_uno(1:npw, iv)
-            psic(nlsm(1:npw)) = CONJG(evc_uno(1:npw, iv))
+            psic(dffts%nl(1:npw)) = evc_uno(1:npw, iv)
+            psic(dffts%nlm(1:npw)) = CONJG(evc_uno(1:npw, iv))
          else
-            psic(nls(1:npw)) = evc_uno(1:npw, iv) + (0.D0, 1.D0)*evc_uno(1:npw, iv + 1)
-            psic(nlsm(1:npw)) = CONJG(evc_uno(1:npw, iv) - (0.D0, 1.D0)*evc_uno(1:npw, iv + 1))
+            psic(dffts%nl(1:npw)) = evc_uno(1:npw, iv) + (0.D0, 1.D0)*evc_uno(1:npw, iv + 1)
+            psic(dffts%nlm(1:npw)) = CONJG(evc_uno(1:npw, iv) - (0.D0, 1.D0)*evc_uno(1:npw, iv + 1))
          end if
          call invfft('Wave', psic, dffts)
          charge(1:dffts%nnr) = charge(1:dffts%nnr) + dble(psic(1:dffts%nnr))**2.0
@@ -168,7 +167,7 @@ subroutine read_wfc_uno()
       psic = 0.d0
       psic(1:dffts%nnr) = dcmplx(charge(1:dffts%nnr), 0.d0)
       call fwfft('Smooth', psic, dffts)
-      charge_g(1:ngm) = psic(nls(1:ngm))
+      charge_g(1:ngm) = psic(dffts%nl(1:ngm))
 !call stop_clock( 'lett_car' )
 !call print_clock( 'lett_car' )
 !
@@ -183,12 +182,11 @@ subroutine read_step_data()
     use zero_mod, only: ion_pos, ion_vel,charge, evc_uno, charge_g
     use ions_base, only: nsp, zv, nat, ityp, amass, tau
     use mp, only: mp_sum, mp_bcast, mp_get
-    use wavefunctions_module, only: psic
+    use wavefunctions, only: psic
     use io_files, only: nwordwfc, diropn, iunwfc, prefix, tmp_dir
     use wvfct, only: nbnd, npwx, npw
     use fft_base, only: dffts
-    use gvect, only: ngm, gg, g, nl, nlm, gstart
-    use gvecs, only: nls, nlsm  
+    use gvect, only: ngm, gg, g, gstart  
     use mp_pools, only: intra_pool_comm
     use fft_interfaces, only: invfft, fwfft
     implicit none
@@ -230,10 +228,9 @@ subroutine routine_zero()
    use atom, only: rgrid
    use mp_world, only: mpime
    use cell_base, only: at, alat, omega
-   use wavefunctions_module, only: psic
+   use wavefunctions, only: psic
    use fft_interfaces, only: invfft, fwfft
-   use gvect, only: ngm, gg, g, nl, nlm, gstart
-   use gvecs, only: nls, nlsm
+   use gvect, only: ngm, gg, g,  gstart
    use constants, only: e2, AMU_RY
    use uspp, only: nkb
    use splines
