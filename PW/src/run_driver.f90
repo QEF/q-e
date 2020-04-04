@@ -27,9 +27,7 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   USE extrapolation,    ONLY : update_file, update_pot
   USE io_files,         ONLY : iunupdate, nd_nmbr, prefix, restart_dir, &
                                wfc_dir, delete_if_present, seqopn
-#ifdef use_beef
   USE beef,             ONLY : beef_energies, beefxc, energies
-#endif
   !
   IMPLICIT NONE
   INTEGER, INTENT(OUT) :: exit_status
@@ -199,7 +197,7 @@ CONTAINS
        CALL readbuffer( socket, lflags )
        IF ( lflags .NE. 0 ) THEN
           WRITE(*,*) " @ DRIVER MODE: Receiving encoded integer", lflags
-          WRITE(*,*) " @ DRIVER MODE: "," SCF: ", lscf," FORCE: ", lforce,\
+          WRITE(*,*) " @ DRIVER MODE: "," SCF: ", lscf," FORCE: ", lforce, &
                        " STRESS: ", lstres, " VC: ",lmovecell," ENSEMBLE: ", lensemb
           lscf      = MOD(INT(lflags/(2**4)),2) == 1
           lforce    = MOD(INT(lflags/(2**3)),2) == 1
@@ -215,7 +213,7 @@ CONTAINS
              lscf = .TRUE.
              hasensemb = .FALSE.
           ENDIF
-          WRITE(*,*) " @ DRIVER MODE: "," SCF: ", lscf," FORCE: ", lforce,\
+          WRITE(*,*) " @ DRIVER MODE: "," SCF: ", lscf," FORCE: ", lforce, &
                        " STRESS: ", lstres, " VC: ",lmovecell," ENSEMBLE: ", lensemb
        ENDIF
        !
@@ -254,7 +252,7 @@ CONTAINS
        ! ... also extrapolation history must be reset
        ! ... If firststep, it will also be executed (omega_reset equals 0),
        ! ... to make sure we initialize G-vectors using positions from I-PI
-       IF ( ((ABS( omega_reset - omega ) / omega) .GT. gvec_omega_tol) \
+       IF ( ((ABS( omega_reset - omega ) / omega) .GT. gvec_omega_tol) &
                                    .AND. (gvec_omega_tol .GE. 0.d0) ) THEN
           IF ( ionode ) THEN
              IF ( firststep ) THEN
