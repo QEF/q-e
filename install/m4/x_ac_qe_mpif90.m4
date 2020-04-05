@@ -138,8 +138,6 @@ case "$arch" in
                 version=`echo $pgf_version | cut -d ' ' -f2`
                 echo "${ECHO_T}pgf90 $version"
                 f90_in_mpif90="pgf90"
-                # flag to test MKL with PGI
-                MKL_FLAGS="-pgf90libs"
         elif test "$gfortran_version" != ""
         then
                 version=`echo $gfortran_version | cut -d ' ' -f3`
