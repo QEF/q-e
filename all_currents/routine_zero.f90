@@ -136,7 +136,7 @@ subroutine read_wfc_uno()
 !carica in spazio reciproco
       psic = 0.d0
       psic(1:dffts%nnr) = dcmplx(charge(1:dffts%nnr), 0.d0)
-      call fwfft('Smooth', psic, dffts)
+      call fwfft('Rho', psic, dffts)
       charge_g(1:ngm) = psic(dffts%nl(1:ngm))
 !call stop_clock( 'lett_car' )
 !call print_clock( 'lett_car' )

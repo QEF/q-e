@@ -136,7 +136,7 @@ subroutine routine_hartree()
 !calcolo carica in spazio reciproco (FFT di psic)
    psic = 0.d0
    psic(1:dffts%nnr) = dcmplx(charge(1:dffts%nnr), 0.d0)
-   call fwfft('Smooth', psic, dffts) ! TODO: smooth does not exist anymore
+   call fwfft('Rho', psic, dffts) ! TODO: smooth does not exist anymore
    charge_g(1:ngm) = psic(dffts%nl(1:ngm))
 
 !!!!!!!!!!!!------------primo exchange-corr_intermezzo 1/2  -------------!!!!!!!!!!!!!!!!!!
@@ -152,7 +152,7 @@ subroutine routine_hartree()
       psic(dffts%nl(1:ngm)) = exgradcharge_g(icoord, 1:ngm)
       psic(dffts%nlm(1:ngm)) = CONJG(exgradcharge_g(icoord, 1:ngm))
 !
-      call invfft('Smooth', psic, dffts)
+      call invfft('Rho', psic, dffts)
 !
       exgradcharge_r(icoord, 1:dffts%nnr) = dble(psic(1:dffts%nnr))
    end do
@@ -196,7 +196,7 @@ subroutine routine_hartree()
 !calcolo carica due in spazio reciproco (FFT di psic)
    psic = 0.d0
    psic(1:dffts%nnr) = dcmplx(charge(1:dffts%nnr), 0.d0)
-   call fwfft('Smooth', psic, dffts)
+   call fwfft('Rho', psic, dffts)
    charge_g_due(1:ngm) = psic(dffts%nl(1:ngm))
 
 !-------STEP3----- calcolo dei potenziali di Hartree a partire dalle cariche appena trovate.
