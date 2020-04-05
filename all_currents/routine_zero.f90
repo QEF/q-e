@@ -243,9 +243,9 @@ subroutine routine_zero()
    call start_clock('routine_zero')
    if (ionode) print *, 'eta', eta
 !
-   l_zero = .true.
+!   l_zero = .true.
 !
-   call allocate_zero()
+!   call allocate_zero()
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

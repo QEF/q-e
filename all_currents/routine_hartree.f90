@@ -136,7 +136,7 @@ subroutine routine_hartree()
 !calcolo carica in spazio reciproco (FFT di psic)
    psic = 0.d0
    psic(1:dffts%nnr) = dcmplx(charge(1:dffts%nnr), 0.d0)
-   call fwfft('Smooth', psic, dffts)
+   call fwfft('Smooth', psic, dffts) ! TODO: smooth does not exist anymore
    charge_g(1:ngm) = psic(dffts%nl(1:ngm))
 
 !!!!!!!!!!!!------------primo exchange-corr_intermezzo 1/2  -------------!!!!!!!!!!!!!!!!!!

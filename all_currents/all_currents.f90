@@ -210,11 +210,14 @@ program all_currents
          allocate(evc_uno, source=evc)
      end if
 
-     !init of all_current part
+     call allocate_zero()
      call init_us_1a() ! only once per all trajectory
+
 
      call routine_hartree()
 
+     !init of all_current part
+!
      call routine_zero()
      deallocate (evc_uno)
      deallocate (evc_due)
