@@ -25,10 +25,9 @@
   USE mp_pools,         ONLY : my_pool_id, inter_pool_comm
   USE ions_base,        ONLY : nat
   USE pwcom,            ONLY : nbnd, nks
-  USE gvect,            ONLY : ngm
   USE gvecs,            ONLY : doublegrid
   USE modes,            ONLY : nmodes, nirr, npert, u
-  USE elph2,            ONLY : epmatq, el_ph_mat, ibndstart, nbndep
+  USE elph2,            ONLY : epmatq, el_ph_mat, ibndstart, nbndep, ngxxf
   USE lrus,             ONLY : int3, int3_nc
   USE uspp,             ONLY : okvan
   USE lsda_mod,         ONLY : nspin
@@ -48,13 +47,13 @@
   !! Total number of irreducible q-points in the list
   INTEGER, INTENT(in) :: iq
   !! Current q-point in the star of iq_irr q-point
-  INTEGER, INTENT(in) :: gmapsym(ngm, 48)
+  INTEGER, INTENT(in) :: gmapsym(ngxxf)
   !! Correspondence G-->S(G)
   INTEGER, INTENT(in) :: isym
   !! The symmetry which generates the current q in the star
   REAL(KIND = DP), INTENT(in) :: xq0(3)
   !! The first q-point in the star (cartesian coords.)
-  COMPLEX(KIND = DP), INTENT(in) :: eigv(ngm, 48)
+  COMPLEX(KIND = DP), INTENT(in) :: eigv(ngxxf)
   !! e^{iGv} for 1...nsym (v the fractional translation)
   LOGICAL, INTENT(in) :: timerev
   !!  true if we are using time reversal

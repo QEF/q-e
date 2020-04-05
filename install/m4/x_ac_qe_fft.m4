@@ -149,15 +149,20 @@ if test "$fft_libs" = ""; then
                   then
                         try_dflags="$try_dflags -D__FFTW3"
                         try_incdir="$FFTW_INCLUDE $FFTW_INC $INCLUDE_PATH $CPATH $FPATH"
+                        orig_fflags="$FFLAGS"
                         for inc in $try_incdir
                         do
-                           AC_COMPILE_IFELSE([include "fftw3.f03"],have_fft_include=1,)
+                           FFLAGS="$orig_fflags -I$inc -ffree-form"
+                           AC_COMPILE_IFELSE([use iso_c_binding
+include "fftw3.f03"
+end],have_fft_include=1,)
                            if test "$have_fft_include" -eq 1
                            then
                              try_iflags="$try_iflags -I$inc"
                              break
                            fi
                         done
+                        FFLAGS="$orig_fflags"
                         break
                   fi
 
@@ -174,6 +179,12 @@ if test "$fft_libs" = ""; then
 else
 
    echo "using FFT_LIBS with no testing ... "
+   if test -n "$FFT_INCLUDE" ; then :
+      try_iflags="$try_iflags -I$FFT_INCLUDE"
+   fi
+   if test -n "$FFTW_INCLUDE" ; then :
+      try_iflags="$try_iflags -I$FFTW_INCLUDE"
+   fi
 
 fi
 

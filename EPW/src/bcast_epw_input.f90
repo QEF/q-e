@@ -51,6 +51,14 @@
                             mob_maxiter, use_ws, epmatkqread, selecqread,     &
                             scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma,&
                             assume_metal
+  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  USE epwcom,        ONLY : mob_maxiter, use_ws, epmatkqread, selecqread,     &
+                            wfcelec, model_vertex , polaron_wf, r01, r02, r03,&
+                            num_cbands, start_band, start_mode, cb_shift,     &
+                            polaron_interpol, polaron_bq, polaron_dos,        &
+                            electron_dos, phonon_dos, diag_mode,              &
+                            restart_polaron_mode, polaron_type,               &
+                            emax_plrn, nDOS_plrn, emin_plrn
   USE elph2,         ONLY : elph
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
@@ -233,6 +241,30 @@
   CALL mp_bcast(restart_filq     , meta_ionode_id, world_comm)
   CALL mp_bcast(asr_typ          , meta_ionode_id, world_comm)
   CALL mp_bcast(scdm_entanglement, meta_ionode_id, world_comm)
+  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  CALL mp_bcast (wfcelec         , meta_ionode_id, world_comm)
+  CALL mp_bcast (model_vertex    , meta_ionode_id, world_comm)
+  CALL mp_bcast (polaron_wf      , meta_ionode_id, world_comm)
+  CALL mp_bcast (polaron_interpol, meta_ionode_id, world_comm)
+  CALL mp_bcast (polaron_bq      , meta_ionode_id, world_comm)
+  CALL mp_bcast (polaron_dos     , meta_ionode_id, world_comm)
+  CALL mp_bcast (electron_dos    , meta_ionode_id, world_comm)
+  CALL mp_bcast (phonon_dos      , meta_ionode_id, world_comm)
+  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  CALL mp_bcast (num_cbands  , meta_ionode_id, world_comm)
+  CALL mp_bcast (start_band  , meta_ionode_id, world_comm)
+  CALL mp_bcast (start_mode  , meta_ionode_id, world_comm)
+  CALL mp_bcast (cb_shift    , meta_ionode_id, world_comm)
+  CALL mp_bcast (diag_mode   , meta_ionode_id, world_comm)
+  CALL mp_bcast (restart_polaron_mode, meta_ionode_id, world_comm)
+  CALL mp_bcast (polaron_type, meta_ionode_id, world_comm)
+  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  CALL mp_bcast (r01           , meta_ionode_id, world_comm)
+  CALL mp_bcast (r02           , meta_ionode_id, world_comm)
+  CALL mp_bcast (r03           , meta_ionode_id, world_comm)
+  CALL mp_bcast (nDOS_plrn     , meta_ionode_id, world_comm)
+  CALL mp_bcast (emax_plrn     , meta_ionode_id, world_comm)
+  CALL mp_bcast (emin_plrn     , meta_ionode_id, world_comm)
 #endif
   !
   !-----------------------------------------------------------------------

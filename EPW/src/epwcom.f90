@@ -331,6 +331,70 @@
   REAL(KIND = DP) :: n_r
   !! Refractive index
   !
+  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  INTEGER :: num_cbands
+  !! number of conduction bands accounted in the Hilbert space of polaron Hamilontian
+  INTEGER :: start_band
+  !! start band index in matrix element
+  INTEGER :: nPlrn
+  !! Number of polaron bands
+  INTEGER :: nDOS_plrn
+  !! Number of grid in polaron DOS calculation
+  INTEGER :: start_mode
+  !! start mode index
+  INTEGER :: cb_shift
+  !! CB shifted in polaron calculation
+  INTEGER :: diag_mode
+  !! diagonalization mode for polaron solver
+  INTEGER :: restart_polaron_mode
+  !! polaron restart mode
+  INTEGER :: polaron_type
+  !! polaron type (electron/hole)
+  INTEGER :: init_plrn_wf
+  !! initial polaron wavefuntion with 1:Gaussian package and 2:Random number
+  INTEGER :: niterPlrn
+  !! Maximum number of polaron SCF loops.
+  REAL (KIND=DP) :: spherical_cutoff
+  !!  spherical_cutoff for fast convergence in polaron calculation
+  REAL (KIND=DP) :: conv_thr_polaron
+  !!  convergent threshold for polaron calculation
+  REAL (KIND=DP) :: r01, r02, r03
+  !!  x,y,z Carsteian coordinate of polaron centre
+  REAL (KIND=DP) :: emin_plrn, emax_plrn, sigma_edos_plrn
+  !! Electron Energy range in polaron DOS calculation
+  REAL (KIND=DP) :: pmin_plrn, pmax_plrn, sigma_pdos_plrn
+  !! Phonon Energy range in polaron DOS calculation
+  REAL (KIND=DP) :: n_dop
+  !! extra added charge per cell (as tot_charge, with opposite sign)
+  REAL (KIND=DP) :: sigma_plrn
+  !! decay radius of polaron wavefunction in initialization
+  REAL (KIND=DP) :: ethr_Plrn
+  !! decay radius of polaron wavefunction in initialization
+  REAL (KIND=DP) :: mixing_Plrn
+  !! Mixing weight in Self-consistency
+  LOGICAL :: wfcelec
+  !! if .true. calculates perturbated part of the wavefunction
+  LOGICAL :: restart_polaron
+  !! if .true. Using Ack from written outputs
+  LOGICAL :: model_vertex
+  !! if .true. Using model vertex and effective mass for polaron calculation
+  LOGICAL :: wfcelec_old
+  !! if .true. Using old algorithm by DS
+  LOGICAL :: full_diagon_plrn
+   !! if .true. diagonalizing the polaron Hamiltonian with direct diagonalization
+  LOGICAL :: polaron_wf
+  !! if .true. Generating a 3D-plot for polaron wavefunction
+  LOGICAL :: polaron_interpol
+  !! if .true. interpolating polaron A(k) from A(Re)
+  LOGICAL :: polaron_bq
+  !! if .true. interpolating polaron phonon component bq from A(Re) and An(k)
+  LOGICAL :: polaron_dos
+  !! if .true. calculating polaron dos
+  LOGICAL :: electron_dos
+  !! if .true. calculating contributed electron dos
+  LOGICAL :: phonon_dos
+  !! if .true. calculating excited phonon dos
+  !
   !-----------------------------------------------------------------------
   END MODULE control_epw
   !-----------------------------------------------------------------------

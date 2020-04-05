@@ -329,6 +329,7 @@ set_int3_nc.o : ../Modules/noncol.o
 set_int3_nc.o : ../Modules/uspp.o
 set_int3_nc.o : ../PW/src/pwcom.o
 set_int3_nc.o : lrcom.o
+set_kplusq_nc.o : ../Modules/kind.o
 set_small_group_of_q.o : ../Modules/cell_base.o
 set_small_group_of_q.o : ../Modules/control_flags.o
 set_small_group_of_q.o : ../Modules/ions_base.o
@@ -373,7 +374,6 @@ setup_nbnd_occ.o : lrcom.o
 setup_nscf.o : ../Modules/cell_base.o
 setup_nscf.o : ../Modules/constants.o
 setup_nscf.o : ../Modules/control_flags.o
-setup_nscf.o : ../Modules/io_global.o
 setup_nscf.o : ../Modules/ions_base.o
 setup_nscf.o : ../Modules/kind.o
 setup_nscf.o : ../Modules/mp_pools.o
@@ -392,6 +392,7 @@ setup_offset_beta.o : lrcom.o
 sgam_lr.o : ../Modules/kind.o
 smallgq.o : ../Modules/cell_base.o
 smallgq.o : ../Modules/kind.o
+smallgq.o : ../PW/src/symm_base.o
 smallgq.o : lrcom.o
 star_q.o : ../Modules/io_global.o
 star_q.o : ../Modules/kind.o

@@ -72,9 +72,9 @@
   USE cell_base,        ONLY : at, bg
   USE klist_epw,        ONLY : xk_loc, xk_all, isk_loc, et_all
   USE cell_base,        ONLY : tpiba
-  USE gvect,            ONLY : ngm, g
+  USE gvect,            ONLY : g
   USE uspp,             ONLY : vkb
-  USE symm_base,        ONLY : s
+  USE symm_base,        ONLY : s, ft
   USE modes,            ONLY : u
   USE qpoint,           ONLY : xq, npwq
   USE eqv,              ONLY : dvpsi
@@ -86,9 +86,9 @@
   USE elph2,            ONLY : shift, gmap, el_ph_mat, igk_k_all, &
                                xkq, etq, &
                                ngk_all, lower_band, upper_band, &
-                               ibndstart, ibndend, nbndep
+                               ibndstart, ibndend, nbndep, ngxx, ngxxf
   USE fft_base,         ONLY : dffts
-  USE constants_epw,    ONLY : czero, cone, ci, zero
+  USE constants_epw,    ONLY : czero, cone, ci, zero, eps8
   USE control_flags,    ONLY : iverbosity
   USE klist,            ONLY : nkstot
   USE division,         ONLY : kpointdivision, fkbounds, fkbounds_bnd
@@ -104,7 +104,7 @@
   !! Number of perturbations for this irr representation
   INTEGER, INTENT(in) :: imode0
   !! Current mode number
-  INTEGER, INTENT(in) :: gmapsym(ngm, 48)
+  INTEGER, INTENT(in) :: gmapsym(ngxxf)
   !! Correspondence  G->S(G)
   INTEGER, INTENT(in) :: isym
   !! The symmetry which generates the current q in the star
@@ -112,7 +112,7 @@
   !! The first q-point in the star (cartesian coords.)
   COMPLEX(KIND = DP), INTENT(in) :: dvscfins(dffts%nnr, nspin_mag, npe)
   !! Delta scf potential
-  COMPLEX(KIND = DP), INTENT(in) :: eigv (ngm, 48)
+  COMPLEX(KIND = DP), INTENT(in) :: eigv (ngxxf)
   !! $e^{iGv}$ for 1...nsym (v the fractional translation)
   LOGICAL, INTENT(in) :: timerev
   !!  true if we are using time reversal
@@ -148,8 +148,6 @@
   !! Number of k+G-vectors inside 'ecut sphere'
   INTEGER :: ng0vec
   !! Number of G_0 vectors
-  INTEGER :: ngxx
-  !! Maximum number of G-vectors over all pools
   INTEGER :: lower_bnd
   !! Lower bounds index after k paral
   INTEGER :: upper_bnd
@@ -359,13 +357,15 @@
     !  Translate by G_0 the G-sphere where evq is defined,
     !  none of the G-points are lost.
     !
-    DO ig = 1, npwq
-      imap = ng0vec * (igkq(ig) - 1) + shift(ik + ik0)
-      igkq_tmp(ig) = gmap(imap)
-      !  the old matrix version...
-      !  igkq_tmp(ig) = gmap( igkq(ig), shift(ik+ik0) )
-    ENDDO
-    igkq = igkq_tmp
+    IF (ANY( g0vec_all_r(:, shift(ik + ik0)) /= 0 )) THEN
+      DO ig = 1, npwq
+        imap = ng0vec * (igkq(ig) - 1) + shift(ik + ik0)
+        igkq_tmp(ig) = gmap(imap)
+        !  the old matrix version...
+        !  igkq_tmp(ig) = gmap( igkq(ig), shift(ik+ik0) )
+      ENDDO
+      igkq = igkq_tmp
+    ENDIF
     !
     !  find k+q from k+q+G_0
     !  (this is needed in the calculation of the KB terms
@@ -379,8 +379,10 @@
     !
     !  u_{k+q+G_0} carries an additional factor e^{i G_0 v}
     !
-    CALL fractrasl(npw,  igk,  aux5, eigv(:, isym), cone)
-    CALL fractrasl(npwq, igkq, aux4, eigv(:, isym), cone)
+    IF (ANY( ABS(ft(:, isym)) > eps8 )) THEN
+      CALL fractrasl(npw,  igk,  aux5, eigv, cone)
+      CALL fractrasl(npwq, igkq, aux4, eigv, cone)
+    ENDIF
     !
     ! ---------------------------------------------------------------------
     ! wave function rotation to generate matrix elements for the star of q
@@ -389,8 +391,10 @@
     ! ps. don't use npwx instead of npw, npwq since the unused elements
     ! may be large and blow up gmapsym (personal experience)
     !
-    igk(1:npw) = gmapsym(igk(1:npw), isym)
-    igkq(1:npwq) = gmapsym(igkq(1:npwq), isym)
+    IF (isym /= 1) THEN
+       igk(1:npw) = gmapsym(igk(1:npw))
+       igkq(1:npwq) = gmapsym(igkq(1:npwq))
+    ENDIF
     !
     ! In dvqpsi_us_only3 we need becp1 and alphap for the rotated wfs.
     ! The other quantities (deeq and qq) do not depend on the wfs, in

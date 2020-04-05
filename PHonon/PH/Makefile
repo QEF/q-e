@@ -14,6 +14,7 @@ add_for_charges.o \
 add_zstar_ue.o \
 add_zstar_ue_us.o \
 addcore.o \
+adddvscf_ph_mag.o \
 addnlcc.o \
 addnlcc_zstar_eu_us.o \
 addusddens.o \
@@ -23,8 +24,10 @@ adddvhubscf.o \
 allocate_part.o \
 allocate_pert.o \
 allocate_phq.o \
+apply_trev.o \
 yambo.o \
 bcast_ph_input.o \
+c_bands_ph.o \
 cch_psi_all.o \
 ccg_psi.o \
 check_if_partial_dyn.o \
@@ -97,6 +100,7 @@ init_representations.o \
 io_dyn_mat.o \
 io_dyn_mat_old.o \
 io_pattern.o \
+non_scf_ph.o \
 obsolete.o \
 openfilq.o \
 phcom.o \

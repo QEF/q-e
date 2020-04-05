@@ -1439,7 +1439,7 @@ Optional Packages:
                           (default: no)
   --with-elpa-lib         Specify full path ELPA static or dynamic library
                           (default: no)
-  --with-elpa-version     Specify ELPA version, only year (2015 or 2016,
+  --with-elpa-version     Specify ELPA version, only year (2015 - 2019,
                           default: 2016)
   --with-hdf5             (no|yes|<path>) Use HDF5, if yes configure assumes
                           that a valid installation with version >= 1.8.16 is
@@ -2328,7 +2328,12 @@ $as_echo "$as_me: WARNING: Unrecognized build architecture" >&2;}
         test -d /bgsys && arch=ppc64-bg
         test -f /bgsys/drivers/ppcfloor/bin/runjob && arch=ppc64-bgq
 fi
-
+	case $arch in
+	ia32 | ia64 | necsx | crayxt | ppc64-bg )
+            { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Obsolete architecture? $arch" >&5
+$as_echo "$as_me: WARNING: Obsolete architecture? $arch" >&2;}
+	    ;;
+	esac
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${arch}" >&5
 $as_echo "${arch}" >&6; }
 
@@ -2901,7 +2906,7 @@ ppc64-mn )
         try_f90="xlf90_r"
         try_dflags="-D__XLF"
         ;;
-# IBM BlueGene
+# IBM BlueGene - obsolete
 ppc64-bg | ppc64-bgq )
 	if test "$use_openmp" -eq 0 ; then
           try_mpif90="mpixlf90"
@@ -4061,7 +4066,7 @@ xlf_flags=0
 echo using F90... $f90
 
 case "$arch:$f90_flavor" in
-ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort* | crayxt*:ifort* )
+*:ifort* )
         try_fflags="-O2 -assume byterecl -g -traceback"
         if test "$use_debug" -eq 1; then
             try_fflags="$try_fflags -fpe0 -CB"
@@ -4109,14 +4114,6 @@ x86_64:nagfor* )
         try_dflags="$try_dflags -D__NAG"
         have_cpp=0
         ;;
-ia32:path* | ia64:path* | x86_64:path* )
-        try_fflags="-march=auto -O2"
-        try_f90flags="\$(FFLAGS)"
-        try_fflags_noopt="-O0"
-        try_ldflags=""
-        try_ldflags_static="-static"
-        have_cpp=0
-        ;;
 crayxt*:cray* )
         try_fflags_nomain=""
         #NOTE: by default OpenMP is always ON (see crayftn man page)
@@ -4143,14 +4140,6 @@ crayxt*:pgf* )
         try_ldflags_openmp="-mp"
         try_ldflags="-v"
         try_dflags="$try_dflags -D__PGI -D__IOTK_WORKAROUND1"
-        have_cpp=1
-        ;;
-crayxt*:pathf* )
-        try_fflags="-march=auto -O2 -cpp"
-        try_f90flags="\$(FFLAGS)"
-        try_fflags_noopt="-O0"
-        try_ldflags=""
-        try_ldflags_static="-static"
         have_cpp=1
         ;;
 necsx:* )
@@ -5023,11 +5012,11 @@ else
       		    mkl_omp="mkl_gnu_thread"
 		    ;;
 	       pgf* )
-                    # Detect (again) PGI version
-                    pgf_version=`$mpif90 -V 2>&1 | sed '/^$/d' | grep "^pgf" | cut -d ' ' -f2`
-                    # From version 19.1, the new llvm backend requires linking to mkl_intel_thread
-                    ompimp=""
-                    as_arg_v1=$pgf_version
+      		    # Detect (again) PGI version
+      		    pgf_version=`$mpif90 -V 2>&1 | sed '/^$/d' | grep "^pgf" | cut -d ' ' -f2`
+      		    # From version 19.1, the new llvm backend requires linking to mkl_intel_thread
+      		    ompimp=""
+      		    as_arg_v1=$pgf_version
 as_arg_v2=19.1
 awk "$as_awk_strverscmp" v1="$as_arg_v1" v2="$as_arg_v2" /dev/null
 case $? in #(
@@ -5043,6 +5032,8 @@ esac
       		    mkl_lib="mkl_${ompimp}_lp64"
       		    mkl_omp="mkl_${ompimp}_thread"
       		    add_mkl_flag="-pgf90libs"
+      		    add_mkl_lib="-ldl"
+      		    add_mkl_omp="-ldl -lpthread -lm"
 	       ;;
 	    esac
             try_libdirs="$libdirs $MKLROOT/lib/intel64 $ld_library_path"
@@ -6387,10 +6378,14 @@ fi
                   then
                         try_dflags="$try_dflags -D__FFTW3"
                         try_incdir="$FFTW_INCLUDE $FFTW_INC $INCLUDE_PATH $CPATH $FPATH"
+                        orig_fflags="$FFLAGS"
                         for inc in $try_incdir
                         do
+                           FFLAGS="$orig_fflags -I$inc -ffree-form"
                            cat > conftest.$ac_ext <<_ACEOF
+use iso_c_binding
 include "fftw3.f03"
+end
 _ACEOF
 if ac_fn_f77_try_compile "$LINENO"; then :
   have_fft_include=1
@@ -6402,6 +6397,7 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
                              break
                            fi
                         done
+                        FFLAGS="$orig_fflags"
                         break
                   fi
 
@@ -6418,6 +6414,12 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 else
 
    echo "using FFT_LIBS with no testing ... "
+   if test -n "$FFT_INCLUDE" ; then :
+      try_iflags="$try_iflags -I$FFT_INCLUDE"
+   fi
+   if test -n "$FFTW_INCLUDE" ; then :
+      try_iflags="$try_iflags -I$FFTW_INCLUDE"
+   fi
 
 fi
 
@@ -7330,6 +7332,12 @@ if test "$with_elpa_libs" -eq 1; then
         try_dflags="$try_dflags -D__ELPA_2015"
       elif test "$with_elpa_version" = "2016"; then
         try_dflags="$try_dflags -D__ELPA_2016"
+      elif test "$with_elpa_version" = "2017"; then
+        try_dflags="$try_dflags -D__ELPA_2017"
+      elif test "$with_elpa_version" = "2018"; then
+        try_dflags="$try_dflags -D__ELPA_2018"
+      elif test "$with_elpa_version" = "2019"; then
+        try_dflags="$try_dflags -D__ELPA_2019"
       else
         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** Invalid ELPA version, defaulting to 2016" >&5
 $as_echo "$as_me: WARNING: *** Invalid ELPA version, defaulting to 2016" >&2;}
