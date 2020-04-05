@@ -359,7 +359,9 @@
     ifc(:, :, :, :, :, :, :) = zero
   ENDIF
   !
-  ! Do not do symmetry stuff
+  ! Initialize symmetries and create the s matrix
+  CALL set_sym_bl()
+  !
   IF (epwread .AND. .NOT. epbread) THEN
     CONTINUE
   ELSE
@@ -405,8 +407,7 @@
     !     First we start by setting up the lattice & crystal symm. as done in PHonon/PH/q2qstar.f90
     !
     ! ~~~~~~~~ setup Bravais lattice symmetry ~~~~~~~~
-    CALL set_sym_bl() ! This should define the s matrix
-    WRITE(stdout, '(5x, a, i3)') "Symmetries of Bravais lattice: ", nrot
+    WRITE(stdout,'(5x,a,i3)') "Symmetries of Bravais lattice: ", nrot
     !
     ! ~~~~~~~~ setup crystal symmetry ~~~~~~~~
     CALL find_sym(nat, tau, ityp, .FALSE., m_loc)

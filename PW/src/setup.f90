@@ -80,7 +80,7 @@ SUBROUTINE setup()
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
                                  starting_magnetization
   USE spin_orb,           ONLY : lspinorb, domag
-  USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, &
+  USE noncollin_module,   ONLY : noncolin, npol, i_cons, m_loc, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
   USE qexsd_module,       ONLY : qexsd_readschema
