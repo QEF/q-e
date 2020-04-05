@@ -37,7 +37,8 @@ subroutine routine_hartree()
    implicit none
    
    real(kind=DP) ::J_kohn(3), J_kohn_a(3), J_kohn_b(3), J_hartree(3), J_xc(3), J_electron(3)
-   complex(kind=DP), allocatable :: evc_uno(:, :), evc_due(:, :), evp(:, :), tmp(:, :)
+   !complex(kind=DP), allocatable :: evc_uno(:, :), evc_due(:, :), evp(:, :), tmp(:, :)
+   complex(kind=DP), allocatable ::  evp(:, :), tmp(:, :)
    integer :: iun, iv, igm, ibnd, i
    logical :: exst
    real(kind=DP), allocatable ::charge(:), fac(:)
@@ -72,8 +73,8 @@ subroutine routine_hartree()
 !-------STEP1: lettura e allocazione (npwx = number of plane waves (npwx>npw per comodita'), nbnd = number of bands (n_electrons/2 per insulators))
    allocate (tmp(npwx, nbnd))
    allocate (evp(npwx, nbnd))
-   allocate (evc_uno(npwx, nbnd))
-   allocate (evc_due(npwx, nbnd))
+   !allocate (evc_uno(npwx, nbnd))
+   !allocate (evc_due(npwx, nbnd))
    allocate (charge_g(ngm))
    allocate (charge_g_due(ngm))
    allocate (charge(dffts%nnr))
@@ -89,15 +90,15 @@ subroutine routine_hartree()
    allocate (exdotcharge_r(dffts%nnr))
 !
 ! legge le funzioni d'onda uno e due (evc_uno, evc_due)
-   iun = find_free_unit()
-   call diropn_due(prefix_due, iun, 'wfc', 2*nwordwfc, exst, tmp_dir)
-   call davcio(evc_due, 2*nwordwfc, iun, 1, -1)
-   close (iun)
-
-   close (iunwfc)
-   call diropn(iunwfc, 'wfc', 2*nwordwfc, exst, tmp_dir)
-   call davcio(evc_uno, 2*nwordwfc, iunwfc, 1, -1)
-   close (iunwfc)
+!   iun = find_free_unit()
+!   call diropn_due(prefix_due, iun, 'wfc', 2*nwordwfc, exst, tmp_dir)
+!   call davcio(evc_due, 2*nwordwfc, iun, 1, -1)
+!   close (iun)
+!
+!   close (iunwfc)
+!   call diropn(iunwfc, 'wfc', 2*nwordwfc, exst, tmp_dir)
+!   call davcio(evc_uno, 2*nwordwfc, iunwfc, 1, -1)
+!   close (iunwfc)
 
 !-------STEP2.1: inizializzazione di charge_g, la carica al tempo t.
 ! charge_g = densità di carica nello spazio reciproco. Si ottiene dalla FFT di |evc(r)|^2, dove evc(r)=IFFT(evc)
@@ -412,8 +413,8 @@ subroutine routine_hartree()
    end if
 
 
-   deallocate (evc_uno)
-   deallocate (evc_due)
+   !deallocate (evc_uno)
+   !deallocate (evc_due)
    deallocate (charge)
    deallocate (charge_g)
    deallocate (fac)

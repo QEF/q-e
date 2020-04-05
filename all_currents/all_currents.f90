@@ -56,6 +56,7 @@ subroutine read_second_vel_pos(filename)
      use input_parameters, only : rd_pos, tapos, rd_vel, tavel, atomic_positions
      use zero_mod, only : ion_pos2, ion_vel2
      use read_cards_module, only : read_cards
+     use io_global, ONLY: ionode
      implicit none
      integer :: iunit
         LOGICAL, EXTERNAL  :: matches
@@ -75,7 +76,7 @@ subroutine read_second_vel_pos(filename)
      tapos=.false.
      tavel=.false.
      iunit=1000
-     open(unit=iunit, file=filename)
+     if (ionode) open(unit=iunit, file=filename)
         old_atomic_pos=atomic_positions
         call read_cards('PW',iunit)
      close(iunit)
@@ -114,8 +115,16 @@ use  ions_base,     ONLY :  tau, tau_format, nat
 use io_global, ONLY: ionode, ionode_id
 USE mp_world,             ONLY : world_comm
 use mp, ONLY: mp_bcast, mp_barrier
-
+use hartree_mod, only : evc_due
 use zero_mod, only : ion_pos2
+use wavefunctions, only : evc 
+     !save old evc
+
+     if (allocated(evc_due)) then
+         evc_due=evc
+     else
+         allocate(evc_due, source=evc)
+     end if
      !set new positions
      if (ionode) then
      tau=ion_pos2
@@ -129,11 +138,11 @@ use zero_mod, only : ion_pos2
 end subroutine
 
 program all_currents
-     use zero_mod
-     use hartree_mod
+     use zero_mod, only : second_vel_pos_fname
+     use hartree_mod, only : evc_uno,evc_due
      USE environment, ONLY: environment_start, environment_end
      use io_global, ONLY: ionode ! stdout, ionode, ionode_id
-
+     use wavefunctions, only : evc
 
 !from ../PW/src/pwscf.f90
   USE mp_global,            ONLY : mp_startup
@@ -177,7 +186,7 @@ program all_currents
         call read_namelists( 'PW', 5 )
         call read_cards( 'PW', 5 )
         ! read second array of atomic positions
-        call read_second_vel_pos(second_vel_pos_fname)
+     call read_second_vel_pos(second_vel_pos_fname)
  
      !ENDIF
      call mp_barrier(intra_pool_comm)
@@ -191,10 +200,24 @@ program all_currents
      
      call run_pwscf(exit_status)
      if (exit_status /= 0 ) goto 100
-     call prepare_next_step()
+     call prepare_next_step() ! this stores value of evc
      call run_pwscf(exit_status)
      if (exit_status /= 0 ) goto 100
 
+     if (allocated(evc_uno)) then
+         evc_uno=evc
+     else
+         allocate(evc_uno, source=evc)
+     end if
+
+     !init of all_current part
+     call init_us_1a() ! only once per all trajectory
+
+     call routine_hartree()
+
+     call routine_zero()
+     deallocate (evc_uno)
+     deallocate (evc_due)
 
      ! shutdown stuff
 100     call laxlib_end()

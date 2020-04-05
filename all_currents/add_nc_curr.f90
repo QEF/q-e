@@ -6,7 +6,8 @@ use becmod
 use us, only: spline_ps
 use uspp,       ONLY : nkb, vkb, deeq
 USE uspp_param, ONLY : upf,nh
-use zero_mod, only: becpr,becpd,becprd,xvkb,xdvkb,dvkb, ion_vel,evc_uno
+use hartree_mod, only : evc_uno
+use zero_mod, only: becpr,becpd,becprd,xvkb,xdvkb,dvkb, ion_vel
 use wvfct,                ONLY : nbnd, npw, npwx
 use gvect,                ONLY : g
 use cell_base,            ONLY : tpiba

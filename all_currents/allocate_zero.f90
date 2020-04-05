@@ -1,6 +1,6 @@
 subroutine allocate_zero
 use zero_mod,   only:H_g,I_uno_g,I_due_g,status,&
-tabr,tabr_d2y,charge_g,evc_uno,u_g,charge,ion_pos,ion_vel,&
+tabr,tabr_d2y,charge_g,u_g,charge,ion_pos,ion_vel,&
 tablocal_hg,tablocal_d2y_hg
 use ions_base,  only:nsp,nat
 use gvect,      only :ngm
@@ -28,7 +28,7 @@ end if
 if (status=='compute') then
     allocate(charge_g(ngm))
     allocate(u_g(ngm,3))
-    allocate(evc_uno(npwx,nbnd))
+!    allocate(evc_uno(npwx,nbnd))
     allocate(charge(dffts%nnr))
     allocate(ion_pos(3,nat))
     allocate(ion_vel(3,nat)) 

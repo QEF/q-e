@@ -18,36 +18,6 @@ subroutine init_zero()
       call init_us_1all()
       call init_reciprocal_parts_tab()
 !
-!scrittura trasformate su file
-      pref_box = prefix
-      prefix = 'thermal'
-      iun = find_free_unit()
-      call diropn(iun, 'ecur', ngm, exst, thermodir)
-      do isp = 1, nsp
-         call davcio(H_g(:, 1, 1, isp), ngm, iun, (isp - 1)*6 + 1, 1)
-         call davcio(H_g(:, 2, 2, isp), ngm, iun, (isp - 1)*6 + 2, 1)
-         call davcio(H_g(:, 3, 3, isp), ngm, iun, (isp - 1)*6 + 3, 1)
-         call davcio(H_g(:, 2, 1, isp), ngm, iun, (isp - 1)*6 + 4, 1)
-         call davcio(H_g(:, 3, 1, isp), ngm, iun, (isp - 1)*6 + 5, 1)
-         call davcio(H_g(:, 3, 2, isp), ngm, iun, (isp - 1)*6 + 6, 1)
-      end do
-      close (iun)
-      iun = find_free_unit()
-      call diropn(iun, 'i_uno', ngm, exst, thermodir)
-      call davcio(I_uno_g(:, 1, 1), ngm, iun, 1, 1)
-      call davcio(I_uno_g(:, 2, 2), ngm, iun, 2, 1)
-      call davcio(I_uno_g(:, 3, 3), ngm, iun, 3, 1)
-      call davcio(I_uno_g(:, 2, 1), ngm, iun, 4, 1)
-      call davcio(I_uno_g(:, 3, 1), ngm, iun, 5, 1)
-      call davcio(I_uno_g(:, 3, 2), ngm, iun, 6, 1)
-      close (iun)
-      iun = find_free_unit()
-      call diropn(iun, 'i_due+i_primo', ngm, exst, thermodir)
-      call davcio(I_due_g(:), ngm, iun, 1, 1)
-      call davcio(I_primo, 1, iun, 2, 1)
-      close (iun)
-
-      prefix = pref_box
       call stop_clock('init_zero')
 
 end subroutine
@@ -119,8 +89,8 @@ end subroutine
 subroutine read_wfc_uno()
     use kinds, only: dp
     use io_global, only: ionode,stdout, ionode_id
-    use hartree_mod, only: file_dativel
-    use zero_mod, only: ion_pos, ion_vel,charge, evc_uno, charge_g
+    use hartree_mod, only: evc_uno,file_dativel
+    use zero_mod, only: ion_pos, ion_vel,charge, charge_g
     use ions_base, only: nsp, zv, nat, ityp, amass, tau
     use mp, only: mp_sum, mp_bcast, mp_get
     use wavefunctions, only: psic
@@ -136,11 +106,11 @@ subroutine read_wfc_uno()
     integer :: iun, iatom, iv
  
 !lettura funzione d'onda
-      close (iunwfc)
+      !close (iunwfc)
 !call start_clock( 'lett_car' )
 
-      call diropn(iunwfc, 'wfc', 2*nwordwfc, exst, tmp_dir)
-      call davcio(evc_uno, 2*nwordwfc, iunwfc, 1, -1)
+      !call diropn(iunwfc, 'wfc', 2*nwordwfc, exst, tmp_dir)
+      !call davcio(evc_uno, 2*nwordwfc, iunwfc, 1, -1)
 
 !
 !calcolo della carica a partire dalle funzioni d'onda
@@ -179,7 +149,7 @@ subroutine read_step_data()
     use kinds, only: dp
     use io_global, only: ionode,stdout, ionode_id
     use hartree_mod, only: file_dativel
-    use zero_mod, only: ion_pos, ion_vel,charge, evc_uno, charge_g
+    use zero_mod, only: ion_pos, ion_vel,charge, charge_g
     use ions_base, only: nsp, zv, nat, ityp, amass, tau
     use mp, only: mp_sum, mp_bcast, mp_get
     use wavefunctions, only: psic

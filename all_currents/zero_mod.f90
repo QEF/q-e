@@ -27,7 +27,7 @@ MODULE zero_mod
  
   !variables depending on the step
   !wavefunction
-  complex(DP),allocatable :: evc_uno(:,:)
+  !complex(DP),allocatable :: evc_uno(:,:)
   real(DP), allocatable   :: charge(:)
 
   !ion positions and velocities
