@@ -11,7 +11,7 @@ MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules $(MOD_FLAG)../LAXlib \
           $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../FFTXlib $(MOD_FLAG)../LR_Modules 
 
 #location of needed libraries
-LIBOBJS= ../iotk/src/libiotk.a ../clib/clib.a ../UtilXlib/libutil.a ../KS_Solvers/DENSE/libdense.a $(QELIBS)
+LIBOBJS= ../iotk/src/libiotk.a ../clib/clib.a ../UtilXlib/libutil.a ../KS_Solvers/DENSE/libdense.a ../dft-d3/libdftd3qe.a ../KS_Solvers/PPCG/libppcg.a ../KS_Solvers/ParO/libparo.a $(QELIBS)
 
 ALLCURRENTSOBJS = \
 hartree_mod.o\
@@ -62,5 +62,8 @@ clean :
 
 maroni-sync:
 	( cd .. ; rsync -mrvt --include="*/" --include="all_currents/Makefile" --include="all_currents/make.depend" --include="*.f90" --exclude="*" . maroni:/marconi_work/Sis19_baroni/qe-thermalcurrents2/ )
+
+mugon-sync:
+	( cd .. ; rsync -mrvt --include="*/" --include="all_currents/Makefile" --include="all_currents/make.depend" --include="*.f90" --exclude="*" . mugon:/scratch/rbertoss/qe-thermalcurrents2/ )
 
 include make.depend
