@@ -197,7 +197,7 @@ CONTAINS
          ibrav_tgt =  abs(ibrav) 
          ibrav_ptr => ibrav_tgt
          use_alt_axes_ => use_alt_axes 
-         SELECT CASE(abs(ibrav))
+         SELECT CASE(ibrav)
             CASE(-3)
                use_alt_axes="b:a-b+c:-c"
             CASE(-5)
