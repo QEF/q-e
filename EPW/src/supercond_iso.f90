@@ -1,28 +1,28 @@
   !
-  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino  
+  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Roxana Margine
-  ! 
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
   !
   !----------------------------------------------------------------------
   MODULE supercond_iso
   !----------------------------------------------------------------------
-  !! 
-  !! This module contains all the subroutines linked with superconductivity 
-  !! using the isotropic Eliashberg formalism. 
-  !! 
+  !!
+  !! This module contains all the subroutines linked with superconductivity
+  !! using the isotropic Eliashberg formalism.
+  !!
   IMPLICIT NONE
-  ! 
+  !
   CONTAINS
-    !                                                                            
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE eliashberg_iso_iaxis
     !-----------------------------------------------------------------------
     !!
-    !! This routine is the driver of the self-consistent cycle for the isotropic 
-    !! Eliashberg equations on the imaginary-axis.  
+    !! This routine is the driver of the self-consistent cycle for the isotropic
+    !! Eliashberg equations on the imaginary-axis.
     !!
     !
     USE kinds,             ONLY : DP
@@ -33,12 +33,12 @@
     USE eliashbergcom,     ONLY : nsw, nsiw, deltai, deltaip, delta, deltap, estemp
     USE constants_epw,     ONLY : kelvin2eV, ci, zero
     USE mp,                ONLY : mp_bcast, mp_barrier, mp_sum
-    USE supercond, ONLY : free_energy, dos_quasiparticle, gen_freqgrid_iaxis, & 
+    USE supercond, ONLY : free_energy, dos_quasiparticle, gen_freqgrid_iaxis, &
                                   deallocate_eliashberg_iaxis, deallocate_eliashberg_raxis, &
                                   deallocate_eliashberg_iso, eliashberg_grid
     USE utilities,           ONLY : mix_broyden
     USE printing,          ONLY : prtheader_supercond
-    ! 
+    !
     IMPLICIT NONE
     !
     ! Local variables
@@ -90,7 +90,7 @@
         !
         DO WHILE (.NOT. conv .AND. iter <= nsiter)
           CALL sum_eliashberg_iso_iaxis(itemp, iter, conv)
-          CALL mix_broyden(nsiw(itemp), deltai, deltaip, broyden_beta, & 
+          CALL mix_broyden(nsiw(itemp), deltai, deltaip, broyden_beta, &
                            iter, broyden_ndim, conv, df1, dv1)
           iter = iter + 1
         ENDDO ! iter
@@ -118,8 +118,8 @@
         ENDIF
       ENDIF
       !
-      IF (lpade) THEN 
-        CALL prtheader_supercond(itemp, 2) 
+      IF (lpade) THEN
+        CALL prtheader_supercond(itemp, 2)
         CALL start_clock('raxis_pade')
         N = 90 * nsiw(itemp) / 100
         IF (mod(N, 2) /= 0) N = N + 1
@@ -129,9 +129,9 @@
         CALL stop_clock('raxis_pade')
         CALL print_clock('raxis_pade')
         WRITE(stdout, '(a)') ' '
-      ENDIF 
+      ENDIF
       !
-      IF (lacon) THEN 
+      IF (lacon) THEN
         CALL prtheader_supercond(itemp, 3)
         CALL start_clock('raxis_acon')
         !
@@ -168,9 +168,9 @@
           cdeltain(:)  = AIMAG(deltap(:))
           rdeltaout(:) =  REAL(delta(:))
           cdeltaout(:) = AIMAG(delta(:))
-          CALL mix_broyden(nsw, rdeltaout, rdeltain, broyden_beta, & 
+          CALL mix_broyden(nsw, rdeltaout, rdeltain, broyden_beta, &
                            iter, broyden_ndim, conv, df1, dv1)
-          CALL mix_broyden(nsw, cdeltaout, cdeltain, broyden_beta, & 
+          CALL mix_broyden(nsw, cdeltaout, cdeltain, broyden_beta, &
                            iter, broyden_ndim, conv, df2, dv2)
           deltap(:) = rdeltain(:) + ci * cdeltain(:)
           iter = iter + 1
@@ -227,7 +227,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE sum_eliashberg_iso_iaxis(itemp, iter, conv) 
+    SUBROUTINE sum_eliashberg_iso_iaxis(itemp, iter, conv)
     !-----------------------------------------------------------------------
     !!
     !! This routine solves the isotropic Eliashberg equations on the imaginary-axis
@@ -240,7 +240,7 @@
     USE constants_epw, ONLY : zero
     USE constants,     ONLY : pi
     USE io_eliashberg, ONLY : eliashberg_write_iaxis
-    ! 
+    !
     IMPLICIT NONE
     !
     LOGICAL, INTENT(inout) :: conv
@@ -249,9 +249,9 @@
     !! Counter on temperature index
     INTEGER, INTENT(in) :: iter
     !! Counter on iteration steps
-    ! 
+    !
     ! Local variables
-    INTEGER :: iw, iwp 
+    INTEGER :: iw, iwp
     !! Counter on frequency imag-axis
     INTEGER :: ierr
     !! Error status
@@ -260,12 +260,12 @@
     !! K_{-}(n,n',T))
     REAL(KIND = DP) :: lambdap
     !! K_{+}(n,n',T)
-    REAL(KIND = DP) :: kernelm 
+    REAL(KIND = DP) :: kernelm
     !! kernelm = lambdam - lambdap
     REAL(KIND = DP) :: kernelp
     !! kernelp = lambdam + lambdap
     REAL(KIND = DP) :: absdelta, reldelta, errdelta
-    !! Errors in supercond. gap 
+    !! Errors in supercond. gap
     REAL(KIND = DP) :: esqrt
     !! Temporary variable
     REAL(KIND = DP), ALLOCATABLE :: wesqrt(:), desqrt(:)
@@ -276,18 +276,18 @@
     ALLOCATE(wesqrt(nsiw(itemp)), STAT = ierr)
     IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error allocating wesqrt', 1)
     ALLOCATE(desqrt(nsiw(itemp)), STAT = ierr)
-    IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error allocating desqrt', 1) 
+    IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error allocating desqrt', 1)
     !
     IF (iter == 1) THEN
-      ALLOCATE(gap(nstemp), STAT = ierr) 
+      ALLOCATE(gap(nstemp), STAT = ierr)
       IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error allocating gap', 1)
-      ALLOCATE(deltai(nsiw(itemp)), STAT = ierr) 
+      ALLOCATE(deltai(nsiw(itemp)), STAT = ierr)
       IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error allocating deltai', 1)
-      ALLOCATE(deltaip(nsiw(itemp)), STAT = ierr) 
+      ALLOCATE(deltaip(nsiw(itemp)), STAT = ierr)
       IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error allocating deltaip', 1)
-      ALLOCATE(znormi(nsiw(itemp)), STAT = ierr) 
+      ALLOCATE(znormi(nsiw(itemp)), STAT = ierr)
       IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error allocating znormi', 1)
-      ALLOCATE(nznormi(nsiw(itemp)), STAT = ierr) 
+      ALLOCATE(nznormi(nsiw(itemp)), STAT = ierr)
       IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error allocating nznormi', 1)
       gap(itemp) = zero
       deltaip(:) = zero
@@ -304,15 +304,15 @@
       IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error allocating deltaold', 1)
       deltaold(:) = gap0
     ENDIF
-    absdelta = zero 
-    reldelta = zero 
+    absdelta = zero
+    reldelta = zero
     DO iw = 1, nsiw(itemp) ! loop over omega
       DO iwp = 1, nsiw(itemp) ! loop over omega_prime
         ! this step is performed at each iter step only for iw=1 since it is independ of wsi(iw)
         IF (iw == 1) THEN
           esqrt = 1.d0 / DSQRT(wsi(iwp)**2.d0 + deltaip(iwp)**2.d0)
-          wesqrt(iwp) = wsi(iwp) * esqrt 
-          desqrt(iwp) = deltaip(iwp) * esqrt 
+          wesqrt(iwp) = wsi(iwp) * esqrt
+          desqrt(iwp) = deltaip(iwp) * esqrt
         ENDIF
         lambdam = keri(ABS(iw - iwp) + 1)
         lambdap = keri(ABS(iw + iwp))
@@ -321,18 +321,18 @@
         kernelp = lambdam + lambdap
         nznormi(iw) = nznormi(iw) + kernelm
         ! Eqs.(34)-(35) in Margine and Giustino, PRB 87, 024505 (2013)
-        ! using kernelm and kernelp the sum over |wp| < wscut in Eqs. (34)-(35) 
+        ! using kernelm and kernelp the sum over |wp| < wscut in Eqs. (34)-(35)
         ! is rewritten as a sum over iwp = 1, nsiw(itemp)
-        znormi(iw) = znormi(iw) + wesqrt(iwp) * kernelm 
-        deltai(iw) = deltai(iw) + desqrt(iwp) * (kernelp - 2.d0 * muc) 
+        znormi(iw) = znormi(iw) + wesqrt(iwp) * kernelm
+        deltai(iw) = deltai(iw) + desqrt(iwp) * (kernelp - 2.d0 * muc)
       ENDDO ! iwp
       znormi(iw) = 1.d0 + pi * estemp(itemp) * znormi(iw) / wsi(iw)
       ! Eqs.(34)-(35) in Margine and Giustino, PRB 87, 024505 (2013)
       nznormi(iw) = 1.d0 + pi * estemp(itemp) * nznormi(iw) / wsi(iw)
       deltai(iw) = pi * estemp(itemp) * deltai(iw) / znormi(iw)
       reldelta = reldelta + ABS(deltai(iw) - deltaold(iw))
-      absdelta = absdelta + ABS(deltai(iw)) 
-    ENDDO ! iw 
+      absdelta = absdelta + ABS(deltai(iw))
+    ENDDO ! iw
     errdelta = reldelta / absdelta
     deltaold(:) = deltai(:)
     !
@@ -350,13 +350,13 @@
       CALL eliashberg_write_iaxis(itemp)
     ENDIF
     !
-    DEALLOCATE(wesqrt, STAT = ierr) 
+    DEALLOCATE(wesqrt, STAT = ierr)
     IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error deallocating wesqrt', 1)
-    DEALLOCATE(desqrt, STAT = ierr) 
+    DEALLOCATE(desqrt, STAT = ierr)
     IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error deallocating desqrt', 1)
     !
     IF (conv .OR. iter == nsiter) THEN
-      DEALLOCATE(deltaold, STAT = ierr) 
+      DEALLOCATE(deltaold, STAT = ierr)
       IF (ierr /= 0) CALL errore('sum_eliashberg_iso_iaxis', 'Error deallocating deltaold', 1)
     ENDIF
     IF (conv) THEN
@@ -375,10 +375,10 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE analytic_cont_iso_iaxis_to_raxis(itemp, iter, conv) 
+    SUBROUTINE analytic_cont_iso_iaxis_to_raxis(itemp, iter, conv)
     !-----------------------------------------------------------------------
     !!
-    !! This routine does the analyic continuation of the isotropic Eliashberg equations 
+    !! This routine does the analyic continuation of the isotropic Eliashberg equations
     !! from the imaginary-axis to the real axis
     !! reference F. Marsiglio, M. Schossmann, and J. Carbotte, Phys. Rev. B 37, 4965 (1988)
     !!
@@ -386,13 +386,13 @@
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
     USE epwcom,        ONLY : nqstep, nsiter, conv_thr_racon, lpade
-    USE eliashbergcom, ONLY : nsw, estemp, dwsph, ws, gap, a2f_iso, dsumi, zsumi, & 
+    USE eliashbergcom, ONLY : nsw, estemp, dwsph, ws, gap, a2f_iso, dsumi, zsumi, &
                               delta, deltap, znorm, znormp, gp, gm
     USE constants_epw, ONLY : ci, zero, czero, cone
     USE constants,     ONLY : pi
     USE io_eliashberg, ONLY : eliashberg_write_raxis
     USE supercond,     ONLY : gamma_acont
-    ! 
+    !
     IMPLICIT NONE
     !
     LOGICAL, INTENT(inout) :: conv
@@ -401,12 +401,12 @@
     !! Counter on temperature index
     INTEGER, INTENT(in) :: iter
     !! Counter on the iteration number
-    ! 
+    !
     ! Local variables
     CHARACTER(LEN = 256) :: cname
     !! character in file name
     !
-    INTEGER :: i, iw, iwp 
+    INTEGER :: i, iw, iwp
     !! Counter on frequency real-axis
     INTEGER :: ierr
     !! Error status
@@ -417,7 +417,7 @@
     !!   bose_einstein(w') + fermi_dirac(-w + w')
     REAL(KIND = DP) :: absdelta, reldelta, errdelta
     !! Errors in supercond. gap
-    ! 
+    !
     COMPLEX(KIND = DP) :: esqrt, root
     !! Temporary variables
     COMPLEX(KIND = DP), ALLOCATABLE, SAVE :: deltaold(:)
@@ -425,30 +425,30 @@
     !
     IF (iter == 1) THEN
       IF (.NOT. lpade) THEN
-        ALLOCATE(delta(nsw), STAT = ierr) 
-        IF (ierr /= 0) CALL errore('analytic_cont_iso_iaxis_to_raxis', 'Error allocating delta', 1) 
+        ALLOCATE(delta(nsw), STAT = ierr)
+        IF (ierr /= 0) CALL errore('analytic_cont_iso_iaxis_to_raxis', 'Error allocating delta', 1)
         ALLOCATE(znorm(nsw), STAT = ierr)
         IF (ierr /= 0) CALL errore('analytic_cont_iso_iaxis_to_raxis', 'Error allocating znorm', 1)
       ENDIF
-      ALLOCATE(deltap(nsw), STAT = ierr)  
+      ALLOCATE(deltap(nsw), STAT = ierr)
       IF (ierr /= 0) CALL errore('analytic_cont_iso_iaxis_to_raxis', 'Error allocating deltap', 1)
-      ALLOCATE(znormp(nsw), STAT = ierr)  
+      ALLOCATE(znormp(nsw), STAT = ierr)
       IF (ierr /= 0) CALL errore('analytic_cont_iso_iaxis_to_raxis', 'Error allocating znormp', 1)
-      ALLOCATE(deltaold(nsw), STAT = ierr) 
+      ALLOCATE(deltaold(nsw), STAT = ierr)
       IF (ierr /= 0) CALL errore('analytic_cont_iso_iaxis_to_raxis', 'Error allocating deltaold', 1)
       deltap(:) = czero
       deltaold(:) = czero
       IF (lpade) THEN
         deltap(:) = delta(:)
         deltaold(:) = delta(:)
-      ELSE 
+      ELSE
         deltap(:) = gap(itemp)
         deltaold(:) = gap(itemp)
       ENDIF
       znormp(:) = cone
-      ALLOCATE(gp(nsw, nqstep), STAT = ierr) 
+      ALLOCATE(gp(nsw, nqstep), STAT = ierr)
       IF (ierr /= 0) CALL errore('analytic_cont_iso_iaxis_to_raxis', 'Error allocating gp', 1)
-      ALLOCATE(gm(nsw, nqstep), STAT = ierr) 
+      ALLOCATE(gm(nsw, nqstep), STAT = ierr)
       IF (ierr /= 0) CALL errore('analytic_cont_iso_iaxis_to_raxis', 'Error allocating gm', 1)
       !
       CALL kernel_iso_iaxis_analytic_cont(itemp)
@@ -456,11 +456,11 @@
     znorm(:) = czero
     delta(:) = czero
     !
-    absdelta = zero 
+    absdelta = zero
     reldelta = zero
     DO iw = 1, nsw ! loop over omega
       DO iwp = 1, nqstep ! loop over omega_prime
-        IF (iter == 1) THEN 
+        IF (iter == 1) THEN
           CALL gamma_acont(ws(iw), ws(iwp), estemp(itemp), rgammap, rgammam)
           gp(iw, iwp) = rgammap
           gm(iw, iwp) = rgammam
@@ -469,36 +469,36 @@
         i = iw + iwp - 1
         IF (i <= nsw) THEN
           root = SQRT(znormp(i) * znormp(i) * (ws(i) * ws(i) - deltap(i) * deltap(i)))
-          IF (AIMAG(root) < zero) THEN 
+          IF (AIMAG(root) < zero) THEN
             esqrt = znormp(i) / CONJG(root)
-          ELSE  
+          ELSE
             esqrt = znormp(i) / root
           ENDIF
-          esqrt = esqrt * gp(iw, iwp) * a2f_iso(iwp) 
-          znorm(iw) = znorm(iw) - ws(i) * esqrt 
-          delta(iw) = delta(iw) - deltap(i) * esqrt 
+          esqrt = esqrt * gp(iw, iwp) * a2f_iso(iwp)
+          znorm(iw) = znorm(iw) - ws(i) * esqrt
+          delta(iw) = delta(iw) - deltap(i) * esqrt
         ENDIF
-        ! 
+        !
         i = ABS(iw - iwp) + 1
         root = SQRT(znormp(i) * znormp(i) * (ws(i) * ws(i) - deltap(i) * deltap(i)))
-        IF (AIMAG(root) < zero) THEN 
+        IF (AIMAG(root) < zero) THEN
           esqrt = znormp(i) / CONJG(root)
-        ELSE  
+        ELSE
           esqrt = znormp(i) / root
         ENDIF
-        esqrt = esqrt * gm(iw, iwp) * a2f_iso(iwp) 
-        IF (iw < iwp) THEN 
-          znorm(iw) = znorm(iw) - ws(i) * esqrt 
+        esqrt = esqrt * gm(iw, iwp) * a2f_iso(iwp)
+        IF (iw < iwp) THEN
+          znorm(iw) = znorm(iw) - ws(i) * esqrt
         ELSE
-          znorm(iw) = znorm(iw) + ws(i) * esqrt 
+          znorm(iw) = znorm(iw) + ws(i) * esqrt
         ENDIF
         delta(iw) = delta(iw) + deltap(i) * esqrt
       ENDDO ! iwp
       znorm(iw) = 1.d0 + pi * (- estemp(itemp) * zsumi(iw) + ci * znorm(iw) * dwsph) / ws(iw)
       delta(iw) = pi * (estemp(itemp) * dsumi(iw) + ci * delta(iw) * dwsph) / znorm(iw)
-      reldelta = reldelta + ABS(delta(iw) - deltaold(iw)) 
-      absdelta = absdelta + ABS(delta(iw)) 
-    ENDDO ! iw 
+      reldelta = reldelta + ABS(delta(iw) - deltaold(iw))
+      absdelta = absdelta + ABS(delta(iw))
+    ENDDO ! iw
     errdelta = reldelta / absdelta
     deltaold(:) = delta(:)
     !
@@ -516,7 +516,7 @@
     ENDIF
     !
     IF (conv .OR. iter == nsiter) THEN
-      DEALLOCATE(deltaold, STAT = ierr) 
+      DEALLOCATE(deltaold, STAT = ierr)
       IF (ierr /= 0) CALL errore('analytic_cont_iso_iaxis_to_raxis', 'Error deallocating deltaold', 1)
     ENDIF
     IF (conv) THEN
@@ -538,7 +538,7 @@
     SUBROUTINE pade_cont_iso_iaxis_to_raxis(itemp, N)
     !-----------------------------------------------------------------------
     !
-    ! This routine uses pade approximants to continue the isotropic Eliashberg equations 
+    ! This routine uses pade approximants to continue the isotropic Eliashberg equations
     ! from the imaginary-axis to the real-axis
     !
     USE kinds,         ONLY : DP
@@ -547,14 +547,14 @@
     USE constants_epw, ONLY : cone, ci, zero, czero
     USE utilities,       ONLY : pade_coeff, pade_eval
     USE io_eliashberg, ONLY : eliashberg_write_raxis
-    ! 
+    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: itemp
     !! Counter on temperature index
     INTEGER, INTENT(in) :: N
     !! Nr. of frequency points in Pade approx
-    ! 
+    !
     ! Local variable
     CHARACTER(LEN = 256) :: cname
     !! character in file name
@@ -578,7 +578,7 @@
     COMPLEX(KIND = DP) :: u(N)
     !! u - deltai
     COMPLEX(KIND = DP) :: v(N)
-    !! v - znormi 
+    !! v - znormi
     !
     ALLOCATE(delta(nsw), STAT = ierr)
     IF (ierr /= 0) CALL errore('pade_cont_iso_iaxis_to_raxis', 'Error allocating delta', 1)
@@ -607,7 +607,7 @@
     WRITE(stdout, '(5x, a)') '   pade Re[znorm] [eV] Re[delta] [eV]'
     WRITE(stdout, '(5x, i6, 2ES15.6)') N, REAL(znorm(1)), REAL(delta(1))
 !    WRITE(stdout, '(5x, a, i6, a, ES15.6, a, ES15.6)') 'pade = ', N, &
-!                  '   Re[znorm(1)] = ', REAL(znorm(1)), & 
+!                  '   Re[znorm(1)] = ', REAL(znorm(1)), &
 !                  '   Re[delta(1)] = ', REAL(delta(1))
     WRITE(stdout, '(5x, a, i6, a)') 'Convergence was reached for N = ', N, ' Pade approximants'
     WRITE(stdout, '(a)') ' '
@@ -624,7 +624,7 @@
     !-----------------------------------------------------------------------
     SUBROUTINE kernel_iso_iaxis(itemp)
     !-----------------------------------------------------------------------
-    !  
+    !
     ! computes kernels K_{+}(n, n', T) and K_{-}(n, n', T)
     ! reference W. E. Pickett, PRB 26, 1186 (1982)
     !
@@ -633,7 +633,7 @@
     USE constants_epw, ONLY : zero
     USE constants,     ONLY : pi
     USE eliashbergcom, ONLY : nsiw, estemp, keri
-    ! 
+    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: itemp
@@ -658,26 +658,26 @@
       omega = DBLE(2 * n) * pi * estemp(itemp)
       CALL lambdar_iso(omega, lambda_eph)
       keri(iw) = lambda_eph
-    ENDDO 
+    ENDDO
     !
     RETURN
     !
     !-----------------------------------------------------------------------
-    END SUBROUTINE kernel_iso_iaxis                                         
-    !-----------------------------------------------------------------------              
+    END SUBROUTINE kernel_iso_iaxis
+    !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
     SUBROUTINE lambdar_iso(omega, lambda_eph)
     !-----------------------------------------------------------------------
     !
-    ! computes lambda(n - n')   
+    ! computes lambda(n - n')
     ! reference W. E. Pickett, PRB 26, 1186 (1982)
     !
     USE kinds, ONLY : DP
     USE epwcom, ONLY : nqstep
     USE constants_epw, ONLY : zero
     USE eliashbergcom, ONLY : a2f_iso, wsph, dwsph
-    ! 
+    !
     IMPLICIT NONE
     !
     REAL(KIND = DP), INTENT(in) :: omega
@@ -687,14 +687,14 @@
     !
     ! Local variables
     INTEGER :: iwph
-    !! Counter on frequency 
+    !! Counter on frequency
     !
     lambda_eph = zero
     DO iwph = 1, nqstep  ! loop over Omega (integration variable)
-      lambda_eph = lambda_eph + wsph(iwph) * a2f_iso(iwph) & 
+      lambda_eph = lambda_eph + wsph(iwph) * a2f_iso(iwph) &
                  / (wsph(iwph) * wsph(iwph) + omega * omega)
     ENDDO ! iwph
-    lambda_eph = 2.d0 * lambda_eph * dwsph 
+    lambda_eph = 2.d0 * lambda_eph * dwsph
     !
     RETURN
     !
@@ -705,7 +705,7 @@
     !-----------------------------------------------------------------------
     SUBROUTINE kernel_iso_iaxis_analytic_cont(itemp)
     !-----------------------------------------------------------------------
-    !  
+    !
     ! computes kernels K_{+}(w, iw_n, T) and K_{-}(w, iw_n, T)
     ! reference F. Masiglio, M. Schossmann, and J. Carbotte, PRB 37, 4965 (1988)
     !
@@ -714,7 +714,7 @@
     USE epwcom,        ONLY : muc
     USE eliashbergcom, ONLY : nsw, nsiw, ws, wsi, deltai, dsumi, zsumi
     USE constants_epw, ONLY : zero
-    ! 
+    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: itemp
@@ -742,14 +742,14 @@
     COMPLEX(KIND = DP) :: lambda_eph
     !! electron-phonon coupling lambda(w - iw_n)
     !
-    ALLOCATE(wesqrt(nsiw(itemp)), STAT = ierr) 
+    ALLOCATE(wesqrt(nsiw(itemp)), STAT = ierr)
     IF (ierr /= 0) CALL errore('kernel_iso_iaxis_analytic_cont', 'Error allocating wesqrt', 1)
     ALLOCATE(desqrt(nsiw(itemp)), STAT = ierr)
     IF (ierr /= 0) CALL errore('kernel_iso_iaxis_analytic_cont', 'Error allocating desqrt', 1)
     ALLOCATE(dsumi(nsw), STAT = ierr)
-    IF (ierr /= 0) CALL errore('kernel_iso_iaxis_analytic_cont', 'Error allocating dsumi', 1) 
+    IF (ierr /= 0) CALL errore('kernel_iso_iaxis_analytic_cont', 'Error allocating dsumi', 1)
     ALLOCATE(zsumi(nsw), STAT = ierr)
-    IF (ierr /= 0) CALL errore('kernel_iso_iaxis_analytic_cont', 'Error allocating zsumi', 1) 
+    IF (ierr /= 0) CALL errore('kernel_iso_iaxis_analytic_cont', 'Error allocating zsumi', 1)
     wesqrt(:) = zero
     desqrt(:) = zero
     dsumi(:) = zero
@@ -759,7 +759,7 @@
       DO iwp = 1, nsiw(itemp) ! loop over iw_n
         CALL lambdai_iso(ws(iw), wsi(iwp), lambda_eph)
         kernelr = 2.d0 * REAL(lambda_eph)
-        kerneli = 2.d0 * AIMAG(lambda_eph) 
+        kerneli = 2.d0 * AIMAG(lambda_eph)
         IF (iw == 1) THEN
           esqrt = 1.d0 / DSQRT(wsi(iwp) * wsi(iwp) + deltai(iwp) * deltai(iwp))
           wesqrt(iwp) =  wsi(iwp) * esqrt
@@ -774,25 +774,25 @@
     IF (ierr /= 0) CALL errore('kernel_iso_iaxis_analytic_cont', 'Error deallocating wesqrt', 1)
     DEALLOCATE(desqrt, STAT = ierr)
     IF (ierr /= 0) CALL errore('kernel_iso_iaxis_analytic_cont', 'Error deallocating desqrt', 1)
-    !   
+    !
     RETURN
     !
     !-----------------------------------------------------------------------
-    END SUBROUTINE kernel_iso_iaxis_analytic_cont      
+    END SUBROUTINE kernel_iso_iaxis_analytic_cont
     !-----------------------------------------------------------------------
-    !                                                
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE lambdai_iso(omega, omegap, lambda_eph)
     !-----------------------------------------------------------------------
     !
-    ! computes lambda(w-iw_n)   
+    ! computes lambda(w-iw_n)
     ! reference F. Masiglio, M. Schossmann, and J. Carbotte, PRB 37, 4965 (1988)
     !
     USE kinds, ONLY : DP
     USE epwcom,        ONLY : nqstep
     USE eliashbergcom, ONLY : a2f_iso, wsph, dwsph
     USE constants_epw, ONLY : ci, czero
-    ! 
+    !
     IMPLICIT NONE
     !
     REAL(KIND = DP), INTENT(in) :: omega
@@ -805,26 +805,26 @@
     ! Local variables
     INTEGER :: iwph
     !! Counter on frequency
-    !    
+    !
     lambda_eph = czero
     DO iwph = 1, nqstep  ! loop over Omega (integration variable)
-      lambda_eph = lambda_eph + wsph(iwph) * a2f_iso(iwph) & 
+      lambda_eph = lambda_eph + wsph(iwph) * a2f_iso(iwph) &
                  / (wsph(iwph) * wsph(iwph) - (omega - ci * omegap) * (omega - ci * omegap))
     ENDDO ! iwph
-    lambda_eph = lambda_eph * 2.d0 * dwsph 
+    lambda_eph = lambda_eph * 2.d0 * dwsph
     !
     RETURN
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE lambdai_iso
     !-----------------------------------------------------------------------
-    !          
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE eliashberg_iso_raxis
     !-----------------------------------------------------------------------
     !!
-    !! This routine is the driver of the self-consistent cycle for the isotropic 
-    !! Eliashberg equations directly on the real-axis.  
+    !! This routine is the driver of the self-consistent cycle for the isotropic
+    !! Eliashberg equations directly on the real-axis.
     !!
     !
     USE kinds,             ONLY : DP
@@ -836,7 +836,7 @@
     USE supercond, ONLY : gen_freqgrid_raxis, eliashberg_grid
     USE utilities,           ONLY : mix_broyden
     USE printing,          ONLY : prtheader_supercond
-    ! 
+    !
     IMPLICIT NONE
     !
     ! Local variables
@@ -854,7 +854,7 @@
     REAL(KIND = DP), EXTERNAL :: get_clock
     !! get the time spent
     REAL(KIND = DP), ALLOCATABLE :: rdeltain(:), rdeltaout(:)
-    !! Temporary variables for mix_broyden 
+    !! Temporary variables for mix_broyden
     REAL(KIND = DP), ALLOCATABLE :: cdeltain(:), cdeltaout(:)
     !! Temporary variables for mix_broyden
     REAL(KIND = DP), ALLOCATABLE :: df1(:, :), df2(:, :)
@@ -863,7 +863,7 @@
     !! Temporary variables for mix_broyden
 
     !
-    CALL start_clock('iso_raxis') 
+    CALL start_clock('iso_raxis')
     !
     CALL eliashberg_grid()
     CALL gen_freqgrid_raxis()
@@ -907,9 +907,9 @@
         cdeltain(:)  = AIMAG(deltap(:))
         rdeltaout(:) = REAL(delta(:))
         cdeltaout(:) = AIMAG(delta(:))
-        CALL mix_broyden(nsw, rdeltaout, rdeltain, broyden_beta, & 
+        CALL mix_broyden(nsw, rdeltaout, rdeltain, broyden_beta, &
                          iter, broyden_ndim, conv, df1, dv1)
-        CALL mix_broyden(nsw, cdeltaout, cdeltain, broyden_beta, & 
+        CALL mix_broyden(nsw, cdeltaout, cdeltain, broyden_beta, &
                          iter, broyden_ndim, conv, df2, dv2)
         deltap(:) = rdeltain(:) + ci * cdeltain(:)
         iter = iter + 1
@@ -953,9 +953,9 @@
       ENDIF
       !
     ENDDO ! itemp
-    !    
+    !
     CALL stop_clock('iso_raxis')
-    ! 
+    !
     RETURN
     !
     !-----------------------------------------------------------------------
@@ -963,7 +963,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE integrate_eliashberg_iso_raxis(itemp, iter, conv) 
+    SUBROUTINE integrate_eliashberg_iso_raxis(itemp, iter, conv)
     !-----------------------------------------------------------------------
     !!
     !! This routine solves the isotropic Eliashberg equations directly on the real-axis
@@ -975,11 +975,11 @@
     USE io_files,      ONLY : prefix
     USE epwcom,        ONLY : nswfc, nqstep, nsiter, muc, conv_thr_raxis, &
                               kerwrite, kerread, nstemp
-    USE eliashbergcom, ONLY : nsw, estemp, ws, dws, gap0, gap, bewph, fdwp, & 
+    USE eliashbergcom, ONLY : nsw, estemp, ws, dws, gap0, gap, bewph, fdwp, &
                               kp, km, delta, deltap, znorm, wsph
     USE constants_epw, ONLY : kelvin2eV, ci, eps6, zero, czero
     USE io_eliashberg, ONLY : eliashberg_write_raxis
-    ! 
+    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: itemp
@@ -987,14 +987,14 @@
     INTEGER, INTENT(in) :: iter
     !! Counter on iteration steps
     LOGICAL, INTENT(inout) :: conv
-    !! True if the calculation is converged  
-    ! 
+    !! True if the calculation is converged
+    !
     ! Local variables
     CHARACTER(LEN = 256) :: name1
     !! output file name
     CHARACTER(LEN = 256) :: cname
     !! character in output file name
-    ! 
+    !
     INTEGER :: iw, iwp
     !! Counter on frequency real-axis
     INTEGER :: iwph
@@ -1016,7 +1016,7 @@
     !! w / sqrt{w^2+\delta^2}
     REAL(KIND = DP), ALLOCATABLE :: desqrt(:)
     !! \delta / sqrt{w^2+\delta^2}
-    ! 
+    !
     COMPLEX(KIND = DP) :: esqrt
     !! 1 / sqrt{w^2+\delta^2}
     COMPLEX(KIND = DP) :: kernelp
@@ -1026,27 +1026,27 @@
     COMPLEX(KIND = DP), ALLOCATABLE, SAVE :: deltaold(:)
     !! supercond. gap from previous iteration
     !
-    ALLOCATE(wesqrt(nsw), STAT = ierr) 
-    IF (ierr /= 0) CALL errore('integrate_eliashberg_iso_raxis', 'Error allocating wesqrt', 1) 
-    ALLOCATE(desqrt(nsw), STAT = ierr) 
+    ALLOCATE(wesqrt(nsw), STAT = ierr)
+    IF (ierr /= 0) CALL errore('integrate_eliashberg_iso_raxis', 'Error allocating wesqrt', 1)
+    ALLOCATE(desqrt(nsw), STAT = ierr)
     IF (ierr /= 0) CALL errore('integrate_eliashberg_iso_raxis', 'Error allocating desqrt', 1)
     wesqrt(:) = zero
     desqrt(:) = zero
     !
-    IF (iter == 1) THEN 
-      ALLOCATE(gap(nstemp), STAT = ierr) 
+    IF (iter == 1) THEN
+      ALLOCATE(gap(nstemp), STAT = ierr)
       IF (ierr /= 0) CALL errore('integrate_eliashberg_iso_raxis', 'Error allocating gap', 1)
-      ALLOCATE(delta(nsw), STAT = ierr) 
+      ALLOCATE(delta(nsw), STAT = ierr)
       IF (ierr /= 0) CALL errore('integrate_eliashberg_iso_raxis', 'Error allocating delta', 1)
-      ALLOCATE(deltap(nsw), STAT = ierr) 
+      ALLOCATE(deltap(nsw), STAT = ierr)
       IF (ierr /= 0) CALL errore('integrate_eliashberg_iso_raxis', 'Error allocating deltap', 1)
-      ALLOCATE(znorm(nsw), STAT = ierr) 
+      ALLOCATE(znorm(nsw), STAT = ierr)
       IF (ierr /= 0) CALL errore('integrate_eliashberg_iso_raxis', 'Error allocating znorm', 1)
-      ALLOCATE(fdwp(nsw), STAT = ierr) 
+      ALLOCATE(fdwp(nsw), STAT = ierr)
       IF (ierr /= 0) CALL errore('integrate_eliashberg_iso_raxis', 'Error allocating fdwp', 1)
-      ALLOCATE(kp(nsw, nsw), STAT = ierr) 
+      ALLOCATE(kp(nsw, nsw), STAT = ierr)
       IF (ierr /= 0) CALL errore('integrate_eliashberg_iso_raxis', 'Error allocating kp', 1)
-      ALLOCATE(km(nsw, nsw), STAT = ierr) 
+      ALLOCATE(km(nsw, nsw), STAT = ierr)
       IF (ierr /= 0) CALL errore('integrate_eliashberg_iso_raxis', 'Error allocating km', 1)
       gap(itemp) = zero
       deltap(:)  = czero
@@ -1079,11 +1079,11 @@
     znorm(:) = czero
     !
     temp = estemp(itemp) / kelvin2eV
-    IF (temp < 10.d0) THEN  
+    IF (temp < 10.d0) THEN
       WRITE(name1, '(a, a7, f4.2)') TRIM(prefix), '.ker_00', temp
-    ELSEIF (temp >= 10.d0) THEN 
+    ELSEIF (temp >= 10.d0) THEN
       WRITE(name1, '(a, a6, f5.2)') TRIM(prefix), '.ker_0', temp
-    ELSEIF (temp >= 100.d0) THEN 
+    ELSEIF (temp >= 100.d0) THEN
       WRITE(name1, '(a, a5, f6.2)') TRIM(prefix), '.ker_', temp
     ENDIF
     OPEN(UNIT = iufilker, FILE = name1, STATUS = 'unknown', FORM = 'unformatted', IOSTAT = ios)
@@ -1091,10 +1091,10 @@
     !
     IF (iter == 1) THEN
       ALLOCATE(deltaold(nsw), STAT = ierr)
-      IF (ierr /= 0) CALL errore('integrate_eliashberg_iso_raxis', 'Error allocating deltaold', 1) 
+      IF (ierr /= 0) CALL errore('integrate_eliashberg_iso_raxis', 'Error allocating deltaold', 1)
       deltaold(:) = gap0
-    ENDIF  
-    !        
+    ENDIF
+    !
     absdelta = zero
     reldelta = zero
     DO iw = 1, nsw ! loop over omega
@@ -1102,12 +1102,12 @@
         IF (iter == 1) THEN
           !
           ! read the kernels from file if they were calculated before otherwise calculate them
-          IF (kerread) THEN 
+          IF (kerread) THEN
             READ(iufilker) a, b, c, d
             kp(iwp, iw) = a + ci * b
             km(iwp, iw) = c + ci * d
           ENDIF
-          IF (kerwrite) THEN 
+          IF (kerwrite) THEN
             CALL kernel_raxis(iw, iwp, kernelp, kernelm)
             kp(iwp, iw) = kernelp
             km(iwp, iw) = kernelm
@@ -1129,9 +1129,9 @@
       ENDDO ! iwp
       znorm(iw) = 1.d0 - znorm(iw) / ws(iw)
       delta(iw) = delta(iw) / znorm(iw)
-      reldelta = reldelta + ABS(delta(iw) - deltaold(iw)) 
-      absdelta = absdelta + ABS(delta(iw)) 
-    ENDDO ! iw 
+      reldelta = reldelta + ABS(delta(iw) - deltaold(iw))
+      absdelta = absdelta + ABS(delta(iw))
+    ENDDO ! iw
     CLOSE(iufilker)
     errdelta = reldelta / absdelta
     deltaold(:) = delta(:)
@@ -1157,7 +1157,7 @@
     !
     IF (conv .OR. iter == nsiter) THEN
       DEALLOCATE(deltaold, STAT = ierr)
-      IF (ierr /= 0) CALL errore('integrate_eliashberg_iso_raxis', 'Error allocating deltaold', 1) 
+      IF (ierr /= 0) CALL errore('integrate_eliashberg_iso_raxis', 'Error allocating deltaold', 1)
     ENDIF
     IF (conv) THEN
       WRITE(stdout, '(5x, a, i6)') 'Convergence was reached in nsiter = ', iter
@@ -1178,15 +1178,15 @@
     SUBROUTINE kernel_raxis(iw, iwp, kernelp, kernelm)
     !-----------------------------------------------------------------------
     !
-    ! computes kernels K_{+}(w', w, T) and K_{-}(w', w, T)  
-    ! reference M. J. Holcomb, PRB 54, 6648 (1996)   
+    ! computes kernels K_{+}(w', w, T) and K_{-}(w', w, T)
+    ! reference M. J. Holcomb, PRB 54, 6648 (1996)
     !
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : ci, eps6, zero, czero, one
     USE constants,     ONLY : pi
     USE epwcom,        ONLY : nqstep
     USE eliashbergcom, ONLY : a2f_iso, wsph, dwsph, ws, bewph, fdwp
-    ! 
+    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: iw
@@ -1194,11 +1194,11 @@
     INTEGER, INTENT(in) :: iwp
     !! index frequency w' : ws(iwp)
     COMPLEX(KIND = DP), INTENT(out) :: kernelp
-    !! phonon kernel K_{+}(w', w, T) 
+    !! phonon kernel K_{+}(w', w, T)
     COMPLEX(KIND = DP), INTENT(out) :: kernelm
     !! phonon kernel K_{-}(w', w, T)
     !
-    ! Local variables 
+    ! Local variables
     INTEGER :: iwph
     !! Counter on frequency
     INTEGER :: ierr
@@ -1207,7 +1207,7 @@
     REAL(KIND = DP) :: degaussw0
     !! smearing
     REAL(KIND = DP) :: inv_degaussw0
-    !! define inverse smearing for efficiency 
+    !! define inverse smearing for efficiency
     REAL(KIND = DP) :: f1, f2, f3, f4, w1, w2, w3, w4, var1, var2
     !! Temporaty variables
     REAL(KIND = DP), EXTERNAL :: w0gauss
@@ -1240,11 +1240,11 @@
       !
       ! a small complex number is added to denominator to move the pole away from the real-axis
       !
-      ! in order to reduce the numerical noise at very small frequencies coming from 
-      ! the complex number added in the denominator, the contribution of the imaginary part 
-      ! is reestimated using delta function (RM notes) 
+      ! in order to reduce the numerical noise at very small frequencies coming from
+      ! the complex number added in the denominator, the contribution of the imaginary part
+      ! is reestimated using delta function (RM notes)
       !
-      ! subtract the imaginary part coming from e1 to e4 and add instead the imaginary part 
+      ! subtract the imaginary part coming from e1 to e4 and add instead the imaginary part
       ! coming from f1 to f4
       !
       w1 = wsph(iwph) + ws(iwp) + ws(iw)
@@ -1252,10 +1252,10 @@
       w3 = wsph(iwph) - ws(iwp) + ws(iw)
       w4 = wsph(iwph) - ws(iwp) - ws(iw)
       !
-      e1 = one / (w1 + ci * degaussw0) 
-      e2 = one / (w2 - ci * degaussw0) 
-      e3 = one / (w3 + ci * degaussw0) 
-      e4 = one / (w4 - ci * degaussw0) 
+      e1 = one / (w1 + ci * degaussw0)
+      e2 = one / (w2 - ci * degaussw0)
+      e3 = one / (w3 + ci * degaussw0)
+      e4 = one / (w4 - ci * degaussw0)
       !
       ! estimate of the imaginary part using delta function
       f1 = w0gauss(w1 * inv_degaussw0, 0) * inv_degaussw0
@@ -1263,17 +1263,17 @@
       f3 = w0gauss(w3 * inv_degaussw0, 0) * inv_degaussw0
       f4 = w0gauss(w4 * inv_degaussw0, 0) * inv_degaussw0
       !
-      g1 = e1 - ci * AIMAG(e1) - ci * pi * f1 
+      g1 = e1 - ci * AIMAG(e1) - ci * pi * f1
       g2 = e2 - ci * AIMAG(e2) + ci * pi * f2
       g3 = e3 - ci * AIMAG(e3) - ci * pi * f3
       g4 = e4 - ci * AIMAG(e4) + ci * pi * f4
       var1 = one - fdwp(iwp) + bewph(iwph)
-      var2 = fdwp(iwp) + bewph(iwph) 
+      var2 = fdwp(iwp) + bewph(iwph)
       kernelp = kernelp + a2f_iso(iwph) * (var1 * (g1 + g2) - var2 * (g3 + g4))
       kernelm = kernelm + a2f_iso(iwph) * (var1 * (g1 - g2) + var2 * (g3 - g4))
     ENDDO ! iwph
-    kernelp = kernelp * dwsph 
-    kernelm = kernelm * dwsph 
+    kernelp = kernelp * dwsph
+    kernelm = kernelm * dwsph
     !
     RETURN
     !

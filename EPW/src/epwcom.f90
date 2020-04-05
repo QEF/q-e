@@ -1,18 +1,18 @@
-  !                                                                            
-  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino  
-  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino  
-  !                                                                            
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
-  !                                                                            
-  ! Adapted from the code PH/phcom - Quantum-ESPRESSO group                
+  !
+  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
+  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
+  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
+  !
+  ! Adapted from the code PH/phcom - Quantum-ESPRESSO group
   !-----------------------------------------------------------------------
   MODULE control_epw
   !-----------------------------------------------------------------------
   !!
   !! Common variables for the epw program
-  !!  
+  !!
   !
   USE kinds,      ONLY : DP
   USE parameters, ONLY : npk
@@ -70,7 +70,7 @@
   LOGICAL :: write_wfn
   !! if .TRUE. write UNK files in wannier90
   LOGICAL :: kmaps
-  !! if .TRUE. read kmap and kgmap from disk. 
+  !! if .TRUE. read kmap and kgmap from disk.
   LOGICAL :: nest_fn
   !! if .TRUE. calculate the electronic nesting function (metals only)
   LOGICAL :: rand_q
@@ -197,17 +197,17 @@
   INTEGER :: nkf1, nkf2, nkf3
   !! kx,ky,kz sizes of the uniform electron fine mesh to be used
   INTEGER :: nqsmear
-  !! nr. of smearings used to calculate a2f 
+  !! nr. of smearings used to calculate a2f
   INTEGER :: nqstep
-  !! nr. of steps used to calculate a2f 
+  !! nr. of steps used to calculate a2f
   INTEGER :: iswitch
   !! Switch for symmetry operations
   INTEGER :: nwanxx = 200
-  !! parameter used in writing prefix.win file. 
+  !! parameter used in writing prefix.win file.
   INTEGER :: ntempxx = 25
   !! Maximum number of wannier functions
   INTEGER :: etf_mem
-  !! If 0, all in memory. If 1, less is stored in memory (read files). 
+  !! If 0, all in memory. If 1, less is stored in memory (read files).
   INTEGER :: scr_typ
   !! If 0 calculates the Lindhard screening, if 1 the Thomas-Fermi screening
   INTEGER :: bnd_cum
@@ -229,16 +229,16 @@
   INTEGER :: broyden_ndim
   !! nr. of iterations used in broyden mixing scheme
   INTEGER :: nw_specfun
-  !! nr. of bins for frequency in electron spectral function due to e-p interaction 
+  !! nr. of bins for frequency in electron spectral function due to e-p interaction
   INTEGER :: restart_step
-  !! Create a restart point during the interpolation part every restart_step q/k-points. 
+  !! Create a restart point during the interpolation part every restart_step q/k-points.
   !
   REAL(KIND = DP) :: degaussw
   !! smearing width for Fermi surface average in e-ph coupling after wann interp
   REAL(KIND = DP) :: fsthick
   !! thickness of the Fermi shell for averaging the e-ph matrix element
   REAL(KIND = DP) :: eptemp
-  ! temperature for the electronic Fermi occupations in the e-p calculation 
+  ! temperature for the electronic Fermi occupations in the e-p calculation
   REAL(KIND = DP) :: wmin
   !! min frequency for frequency scan in \delta( e_k - e_k+q - w ) when strict sel. rule is applied
   REAL(KIND = DP) :: wmax
@@ -259,12 +259,12 @@
   !! parameter for Wannier functions via SCDM algorithm
   REAL(KIND = DP) :: scdm_sigma
   !! parameter for Wannier functions via SCDM algorithm
-  ! 
+  !
   ! Superconductivity
   REAL(KIND = DP) :: eps_acustic
   !! min. phonon frequency for e-p and a2f calculations
   REAL(KIND = DP) :: degaussq
-  !! smearing for sum over q in e-ph coupling  
+  !! smearing for sum over q in e-ph coupling
   REAL(KIND = DP) :: delta_qsmear
   !! change in energy for each additional smearing in the a2f
   REAL(KIND = DP) :: muc
@@ -293,12 +293,12 @@
   REAL(KIND = DP) :: max_memlt
   !! maximum memory that can be allocated per pool
   REAL(KIND = DP) :: fermi_energy
-  !! fermi energy is given in the input file 
+  !! fermi energy is given in the input file
   REAL(KIND = DP) :: wmin_specfun
-  !! min frequency in electron spectral function due to e-p interaction 
+  !! min frequency in electron spectral function due to e-p interaction
   REAL(KIND = DP) :: wmax_specfun
   !! max frequency in electron spectral function due to e-p `interaction
-  REAL(KIND = DP) :: temps(50) 
+  REAL(KIND = DP) :: temps(50)
   !! temperature entering in the Eliashberg equtions (units of Kelvin)
   !
   ! Conductivity
@@ -307,20 +307,20 @@
   REAL(KIND = DP) :: ncarrier
   !! Amount of carrier concentration in cm^-3 when doping a semiconductors
   REAL(KIND = DP) :: nc
-  !! Number of carrier per unit cell that participate to the conduction in the Ziman resistivity formula 
-  ! 
+  !! Number of carrier per unit cell that participate to the conduction in the Ziman resistivity formula
+  !
   ! Plasmon
   REAL(KIND = DP) :: nel
   !! fractional number of electrons in the unit cell
   REAL(KIND = DP) :: meff
   !! Density-of-state effective mass (in unit of the electron mass)
   REAL(KIND = DP) :: epsiheg
-  !! Dielectric constant at zero doping. 
+  !! Dielectric constant at zero doping.
   REAL(KIND = DP) :: fermi_diff
   !! difference between Fermi energy and band edge (in eV)
   REAL(KIND = DP) :: smear_rpa
   !! smearing for the calculation of the Lindhard function (in eV)
-  ! 
+  !
   ! Phonon-assisted absorption
   REAL(KIND = DP) :: omegamin
   !! Photon energy minimum (in eV)
@@ -338,32 +338,32 @@
   !-----------------------------------------------------------------------
   MODULE klist_epw
   !-----------------------------------------------------------------------
-  !!        
-  !! The variable for the k-points 
-  !! 
+  !!
+  !! The variable for the k-points
+  !!
   USE kinds,      ONLY : DP
   USE parameters, ONLY : npk
   !
   SAVE
   !
-  INTEGER :: kmap(npk)  
-  !! map of k+q grid into k grid 
-  INTEGER, ALLOCATABLE :: isk_all(:)  
+  INTEGER :: kmap(npk)
+  !! map of k+q grid into k grid
+  INTEGER, ALLOCATABLE :: isk_all(:)
   !! Spin index of each k-point (used in LSDA calculations only)
-  INTEGER, ALLOCATABLE :: isk_loc(:)  
+  INTEGER, ALLOCATABLE :: isk_loc(:)
   !! Spin index of local k-point (used in LSDA calculations only)
-  INTEGER, ALLOCATABLE :: isk_dummy(:)  
+  INTEGER, ALLOCATABLE :: isk_dummy(:)
   !! Spin index on the fine grid - dummy at the moment
-  REAL(KIND = DP), ALLOCATABLE :: xk_loc(:, :) 
+  REAL(KIND = DP), ALLOCATABLE :: xk_loc(:, :)
   !! List of local (each cores) kpoints in cartesian coordinates
-  REAL(KIND = DP), ALLOCATABLE :: xk_all(:, :) 
+  REAL(KIND = DP), ALLOCATABLE :: xk_all(:, :)
   !! List of all kpoints in cartesian coordinates
-  REAL(KIND = DP), ALLOCATABLE :: xk_cryst(:, :) 
+  REAL(KIND = DP), ALLOCATABLE :: xk_cryst(:, :)
   !! List of all kpoints in crystal coordinates
-  REAL(KIND = DP), ALLOCATABLE :: et_all(:, :) 
-  !! Eigenenergies on the full coarse k-grid 
-  REAL(KIND = DP), ALLOCATABLE :: et_loc(:, :) 
-  !! Eigenenergies on the local (each core) coarse k-grid 
+  REAL(KIND = DP), ALLOCATABLE :: et_all(:, :)
+  !! Eigenenergies on the full coarse k-grid
+  REAL(KIND = DP), ALLOCATABLE :: et_loc(:, :)
+  !! Eigenenergies on the local (each core) coarse k-grid
   !-----------------------------------------------------------------------
   END MODULE klist_epw
   !-----------------------------------------------------------------------

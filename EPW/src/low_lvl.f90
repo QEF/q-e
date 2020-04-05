@@ -1,37 +1,37 @@
   !
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
-  ! 
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
   !
   !----------------------------------------------------------------------
   MODULE low_lvl
   !----------------------------------------------------------------------
-  !! 
-  !! This module contains low level routines that are used throughout EPW. 
-  !! 
+  !!
+  !! This module contains low level routines that are used throughout EPW.
+  !!
   IMPLICIT NONE
-  ! 
+  !
   CONTAINS
-    ! 
+    !
     !-----------------------------------------------------------------------
     LOGICAL FUNCTION hslt(a, b, eps)
     !-----------------------------------------------------------------------
-    !! 
+    !!
     !! Compare two real number and return the result
-    !!  
+    !!
     USE kinds,  ONLY : DP
-    ! 
+    !
     IMPLICIT NONE
-    ! 
+    !
     REAL(KIND = DP), INTENT(in) :: a
     !! Input number a
     REAL(KIND = DP), INTENT(in) :: b
     !! Input number b
     REAL(KIND = DP), INTENT(in) :: eps
     !! Tolerence
-    ! 
+    !
     IF (ABS(a - b) < eps) THEN
       hslt = .FALSE.
     ELSE
@@ -40,12 +40,12 @@
     !-----------------------------------------------------------------------
     END FUNCTION hslt
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     PURE FUNCTION s()
     !-----------------------------------------------------------------------
-    !!  
-    !! s-orbital 
+    !!
+    !! s-orbital
     !!
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : fpi
@@ -60,12 +60,12 @@
     !-----------------------------------------------------------------------
     END FUNCTION s
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     PURE FUNCTION px(cost, phi)
     !-----------------------------------------------------------------------
-    !!  
-    !! p-orbital 
+    !!
+    !! p-orbital
     !!
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : fpi
@@ -78,8 +78,8 @@
     !! Phi
     REAL(KIND = DP) :: px
     !! Output
-    ! 
-    ! Local variable 
+    !
+    ! Local variable
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
@@ -90,12 +90,12 @@
     !-----------------------------------------------------------------------
     END FUNCTION px
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     PURE FUNCTION py(cost, phi)
     !-----------------------------------------------------------------------
-    !!  
-    !! p-orbital 
+    !!
+    !! p-orbital
     !!
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : fpi
@@ -107,7 +107,7 @@
     REAL(KIND = DP), INTENT(in) :: phi
     !! Phi
     REAL(KIND = DP) :: py
-    !! Output 
+    !! Output
     !
     ! Local variables
     REAL(KIND = DP) :: sint
@@ -120,12 +120,12 @@
     !-----------------------------------------------------------------------
     END FUNCTION py
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     PURE FUNCTION p_z(cost)
     !-----------------------------------------------------------------------
-    !!  
-    !! p-orbital 
+    !!
+    !! p-orbital
     !!
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : fpi
@@ -143,12 +143,12 @@
     !-----------------------------------------------------------------------
     END FUNCTION p_z
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     PURE FUNCTION dz2(cost)
     !-----------------------------------------------------------------------
-    !!  
-    !! d-orbital 
+    !!
+    !! d-orbital
     !!
     USE kinds, ONLY : DP
     USE constants_epw, ONLY : fpi
@@ -166,12 +166,12 @@
     !-----------------------------------------------------------------------
     END FUNCTION dz2
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     PURE FUNCTION dxz(cost, phi)
     !-----------------------------------------------------------------------
-    !!  
-    !! d-orbital 
+    !!
+    !! d-orbital
     !!
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : fpi
@@ -194,12 +194,12 @@
     !-----------------------------------------------------------------------
     END FUNCTION dxz
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     PURE FUNCTION dyz(cost, phi)
     !-----------------------------------------------------------------------
-    !!  
-    !! d-orbital 
+    !!
+    !! d-orbital
     !!
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : fpi
@@ -212,7 +212,7 @@
     !! phi
     REAL(KIND = DP) :: dyz
     !! output
-    ! 
+    !
     ! Local variables
     REAL(KIND = DP) :: sint
     !! sin(t)
@@ -224,12 +224,12 @@
     !-----------------------------------------------------------------------
     END FUNCTION dyz
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     PURE FUNCTION dx2my2(cost, phi)
     !-----------------------------------------------------------------------
-    !!  
-    !! d-orbital 
+    !!
+    !! d-orbital
     !!
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : fpi
@@ -242,7 +242,7 @@
     !! phi
     REAL(KIND = DP) :: dx2my2
     !! Output
-    ! 
+    !
     ! Local variables
     REAL(KIND = DP) :: sint
     !! sin(t)
@@ -254,12 +254,12 @@
     !-----------------------------------------------------------------------
     END FUNCTION dx2my2
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     PURE FUNCTION dxy(cost, phi)
     !-----------------------------------------------------------------------
-    !!  
-    !! d-orbital 
+    !!
+    !! d-orbital
     !!
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : fpi
@@ -272,7 +272,7 @@
     !! phi
     REAL(KIND = DP) :: dxy
     !! Output
-    ! 
+    !
     ! Local variables
     REAL(KIND = DP) :: sint
     !! sin(t)
@@ -288,8 +288,8 @@
     !-----------------------------------------------------------------------
     PURE FUNCTION fz3(cost)
     !-----------------------------------------------------------------------
-    !!  
-    !! f-orbital 
+    !!
+    !! f-orbital
     !!
     USE kinds,     ONLY : DP
     USE constants, ONLY : pi
@@ -302,17 +302,17 @@
     !! Output
     !
     fz3 = 0.25d0 * DSQRT(7.d0 / pi) * (5.d0 * cost * cost - 3.d0) * cost
-    ! 
+    !
     RETURN
     !-----------------------------------------------------------------------
     END FUNCTION fz3
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     PURE FUNCTION fxz2(cost, phi)
     !-----------------------------------------------------------------------
-    !!  
-    !! f-orbital 
+    !!
+    !! f-orbital
     !!
     USE kinds,     ONLY : DP
     USE constants, ONLY : pi
@@ -325,7 +325,7 @@
     !! phi
     REAL(KIND = DP) :: fxz2
     !! Output
-    ! 
+    !
     ! Local variables
     REAL(KIND = DP) :: sint
     !! sin(t)
@@ -337,12 +337,12 @@
     !-----------------------------------------------------------------------
     END FUNCTION fxz2
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     PURE FUNCTION fyz2(cost, phi)
     !-----------------------------------------------------------------------
-    !!  
-    !! f-orbital 
+    !!
+    !! f-orbital
     !!
     USE kinds,     ONLY : DP
     USE constants, ONLY : pi
@@ -355,7 +355,7 @@
     !! phi
     REAL(KIND = DP) :: fyz2
     !! Output
-    ! 
+    !
     ! Local variables
     REAL(KIND = DP) :: sint
     !! sin(t)
@@ -371,8 +371,8 @@
     !-----------------------------------------------------------------------
     PURE FUNCTION fzx2my2(cost, phi)
     !-----------------------------------------------------------------------
-    !!  
-    !! f-orbital 
+    !!
+    !! f-orbital
     !!
     USE kinds,     ONLY : DP
     USE constants, ONLY : pi
@@ -385,7 +385,7 @@
     !! phi
     REAL(KIND = DP) :: fzx2my2
     !! Output
-    ! 
+    !
     ! Local variables
     REAL(KIND = DP) :: sint
     !! sin(t)
@@ -397,25 +397,25 @@
     !-----------------------------------------------------------------------
     END FUNCTION fzx2my2
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     PURE FUNCTION fxyz(cost, phi)
     !-----------------------------------------------------------------------
-    !!  
-    !! f-orbital 
+    !!
+    !! f-orbital
     !!
     USE kinds,     ONLY : DP
     USE constants, ONLY : pi
     !
     IMPLICIT NONE
-    ! 
+    !
     REAL(KIND = DP), INTENT(in) :: cost
     !! cos(t)
     REAL(KIND = DP), INTENT(in) :: phi
     !! phi
     REAL(KIND = DP) :: fxyz
     !! Output
-    ! 
+    !
     ! Local variables
     REAL(KIND = DP) :: sint
     !! sin(t)
@@ -427,12 +427,12 @@
     !-----------------------------------------------------------------------
     END FUNCTION fxyz
     !-----------------------------------------------------------------------
-    !  
+    !
     !-----------------------------------------------------------------------
     PURE FUNCTION fxx2m3y2(cost, phi)
     !-----------------------------------------------------------------------
-    !!  
-    !! f-orbital 
+    !!
+    !! f-orbital
     !!
     USE kinds,     ONLY : DP
     USE constants, ONLY : pi
@@ -445,7 +445,7 @@
     !! phi
     REAL(KIND = DP) :: fxx2m3y2
     !! Output
-    ! 
+    !
     ! Local variables
     REAL(KIND = DP) :: sint
     !! sin(t)
@@ -460,8 +460,8 @@
     !-----------------------------------------------------------------------
     FUNCTION fy3x2my2(cost, phi)
     !-----------------------------------------------------------------------
-    !!  
-    !! f-orbital 
+    !!
+    !! f-orbital
     !!
     USE kinds,     ONLY : DP
     USE constants, ONLY : pi
@@ -474,7 +474,7 @@
     !! phi
     REAL(KIND = DP) :: fy3x2my2
     !! Output
-    ! 
+    !
     ! Local variables
     REAL(KIND = DP) :: sint
     !! sin(t)
@@ -486,16 +486,16 @@
     !-----------------------------------------------------------------------
     END FUNCTION fy3x2my2
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE init_random_seed()
     !-----------------------------------------------------------------------
-    !! 
+    !!
     !! Create seeds for random number generation
     !!
     !
     IMPLICIT NONE
-    ! 
+    !
     INTEGER :: i
     !! Division by number running from 1 to n
     INTEGER :: n
@@ -506,27 +506,27 @@
     !! Error status
     INTEGER, ALLOCATABLE :: seed(:)
     !! Seeds
-    !     
+    !
     CALL RANDOM_SEED(SIZE = n)
     ALLOCATE(seed(n), STAT = ierr)
     IF (ierr /= 0) CALL errore('init_random_seed', 'Error allocating seed', 1)
-    !      
+    !
     CALL SYSTEM_CLOCK(COUNT = clock)
-    !        
+    !
     seed = clock + 37 * (/(i - 1, i = 1, n)/)
     CALL RANDOM_SEED(PUT = seed)
-    !        
+    !
     DEALLOCATE(seed, STAT = ierr)
     IF (ierr /= 0) CALL errore('init_random_seed', 'Error deallocating seed', 1)
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE init_random_seed
     !-----------------------------------------------------------------------
-    ! 
+    !
     !---------------------------------------------------------------------
     SUBROUTINE hpsort_eps_epw(n, ra, ind, eps)
     !---------------------------------------------------------------------
-    !! This routine is adapted from flib/hpsort_eps 
+    !! This routine is adapted from flib/hpsort_eps
     !! Sort an array ra(1:n) into ascending order using heapsort algorithm,
     !! and considering two elements being equal if their values differ
     !! for less than "eps".
@@ -546,129 +546,129 @@
     !! adapted from Numerical Recipes pg. 329 (new edition)
     !
     USE kinds, ONLY : DP
-    ! 
-    IMPLICIT NONE  
-    ! 
+    !
+    IMPLICIT NONE
+    !
     INTEGER, INTENT(in) :: n
-    !! Size of the array  
+    !! Size of the array
     INTEGER, INTENT(inout) :: ind(n)
     !! Array
     REAL(KIND = DP), INTENT(inout) :: ra(n)
     !! Sorted array
     REAL(KIND = DP), INTENT(in) :: eps
     !! Tolerence
-    ! 
+    !
     ! Local variables
     INTEGER :: i
-    !! 
+    !!
     INTEGER :: ir
-    !! 
+    !!
     INTEGER :: j
-    !! 
+    !!
     INTEGER :: l
-    !! 
-    INTEGER :: iind  
-    !! 
-    REAL(KIND = DP) :: rra  
-    !! Input array 
-    ! 
+    !!
+    INTEGER :: iind
+    !!
+    REAL(KIND = DP) :: rra
+    !! Input array
+    !
     ! initialize index array
     IF (ind(1) == 0) THEN
-      DO i = 1, n  
-        ind(i) = i  
+      DO i = 1, n
+        ind(i) = i
       ENDDO
     ENDIF
     ! nothing to order
     IF (n < 2) RETURN
     ! initialize indices for hiring and retirement-promotion phase
-    l = n / 2 + 1  
-    ! 
-    ir = n  
-    ! 
+    l = n / 2 + 1
+    !
+    ir = n
+    !
     SORTING: DO
       ! still in hiring phase
-      IF (l > 1) THEN  
-        l = l - 1  
-        rra  = ra(l)  
-        iind = ind(l)  
+      IF (l > 1) THEN
+        l = l - 1
+        rra  = ra(l)
+        iind = ind(l)
         ! in retirement-promotion phase.
-      ELSE  
+      ELSE
         ! clear a space at the end of the array
-        rra  = ra(ir)  
-        iind = ind(ir)  
+        rra  = ra(ir)
+        iind = ind(ir)
         ! retire the top of the heap into it
-        ra(ir) = ra(1)  
+        ra(ir) = ra(1)
         !
-        ind(ir) = ind(1)  
+        ind(ir) = ind(1)
         ! decrease the size of the corporation
-        ir = ir - 1  
+        ir = ir - 1
         ! done with the last promotion
         IF (ir == 1) THEN
           ! the least competent worker at all !
-          ra(1) = rra  
-          ind(1) = iind  
-          EXIT sorting  
+          ra(1) = rra
+          ind(1) = iind
+          EXIT sorting
         ENDIF
       ENDIF
       ! Wheter in hiring or promotion phase, we
-      i = l  
+      i = l
       ! Set up to place rra in its proper level
-      j = l + l  
+      j = l + l
       !
-      DO WHILE(j <= ir)  
-        IF (j < ir) THEN  
+      DO WHILE(j <= ir)
+        IF (j < ir) THEN
           ! compare to better underling
-          IF (hslt(ra(j), ra(j + 1), eps)) THEN 
-            j = j + 1  
+          IF (hslt(ra(j), ra(j + 1), eps)) THEN
+            j = j + 1
           ENDIF
         ENDIF
         ! demote rra
-        IF (hslt(rra, ra(j), eps)) THEN  
-          ra(i) = ra(j)  
-          ind(i) = ind(j)  
-          i = j  
-          j = j + j  
+        IF (hslt(rra, ra(j), eps)) THEN
+          ra(i) = ra(j)
+          ind(i) = ind(j)
+          i = j
+          j = j + j
         ELSE
           ! set j to terminate do-while loop
-          j = ir + 1  
+          j = ir + 1
         ENDIF
       ENDDO
-      ra(i) = rra  
-      ind(i) = iind  
-      ! 
-    ENDDO sorting    
+      ra(i) = rra
+      ind(i) = iind
+      !
+    ENDDO sorting
     !
     !----------------------------------------------------------------------
     END SUBROUTINE hpsort_eps_epw
     !----------------------------------------------------------------------
-    ! 
+    !
     !----------------------------------------------------------------
     SUBROUTINE set_ndnmbr(pool, proc, procp, npool, ndlab)
     !----------------------------------------------------------------
     !!
     !!  create ndlab label from pool and proc numbers
     !!
-    !!  The rule for deciding the node number is based on 
-    !!  the restriction set in startup.f90 that every pool 
+    !!  The rule for deciding the node number is based on
+    !!  the restriction set in startup.f90 that every pool
     !!  has the same number of procs.
     !!
     IMPLICIT NONE
-    ! 
-    CHARACTER(LEN = 3), INTENT(out) :: ndlab 
+    !
+    CHARACTER(LEN = 3), INTENT(out) :: ndlab
     !! Label
     INTEGER, INTENT(in) :: pool
     !! Pool = 1,..., npool
     INTEGER, INTENT(in) :: proc
     !! Processor = 0,..., nproc_pool-1
     INTEGER, INTENT(in) :: procp
-    !! 
+    !!
     INTEGER, INTENT(in) :: npool
-    !! 
+    !!
     ! Local variables
     INTEGER :: node
-    !! Number of nodes 
+    !! Number of nodes
     INTEGER :: nprocs
-    !! 
+    !!
     !
     nprocs = npool * procp
     !
@@ -706,33 +706,33 @@
     !----------------------------------------------------------------
     END SUBROUTINE set_ndnmbr
     !----------------------------------------------------------------
-    ! 
+    !
     !----------------------------------------------------------------------
     SUBROUTINE system_mem_usage(valueRSS)
     !----------------------------------------------------------------------
-    ! 
-    !! Report the memory usage ( VIRT and REAL ) from the current PID 
+    !
+    !! Report the memory usage ( VIRT and REAL ) from the current PID
     !! process ( so it will be master only in case of MPI ).
     !! Memory is reported from the /proc/PID_NUMBER/status file
-    ! 
+    !
 #ifdef __INTEL_COMPILER
     USE ifport !if on intel compiler
-#endif  
+#endif
     USE io_global,   ONLY : stdout
     USE io_var,      ONLY : iunimem
-    ! 
+    !
     IMPLICIT NONE
-    ! 
+    !
     INTEGER, INTENT(inout) :: valueRSS(2)
     !! Contains the value of the memory in kB
-    ! 
+    !
     ! Local variables
     CHARACTER(LEN = 200) :: filename = ' '
     !! Name of the file
     CHARACTER(LEN = 80) :: line
     !! Line in the file
     CHARACTER(LEN = 8) :: pid_char = ' '
-    !! 
+    !!
     LOGICAL :: ifxst
     !! Does the file exists
 #if defined(__PGI) || defined(__CRAY) || defined(__XLF)
@@ -741,15 +741,15 @@
 #endif
     INTEGER :: pid
     !! PID of the process
-    ! 
+    !
     valueRSS = -1    ! return negative number if not found
-    ! 
+    !
     ! Get process ID
-    ! 
+    !
     pid = getpid()
     WRITE(pid_char, '(I8)') pid
     filename = '/proc/' // TRIM(ADJUSTL(pid_char)) // '/status'
-    ! 
+    !
     ! Read system file
     !
     INQUIRE(FILE = filename, EXIST = ifxst)
@@ -757,9 +757,9 @@
       WRITE(stdout, '(a)') 'System file does not exist'
       RETURN
     ENDIF
-    ! 
+    !
     OPEN(UNIT = iunimem, FILE = filename, ACTION = 'read')
-    ! 
+    !
     DO
       READ(iunimem, '(a)', END = 120) line
       ! Peak virtual memory usage
@@ -774,43 +774,43 @@
       ENDIF
     ENDDO
     120 CONTINUE
-    ! 
+    !
     !--------------------------------------------------------------------------
     END SUBROUTINE system_mem_usage
     !--------------------------------------------------------------------------
-    ! 
+    !
     !--------------------------------------------------------------------------
     FUNCTION utility_zdotu(a, b)
     !--------------------------------------------------------------------------
-    !! 
-    !! Dot product function 
-    !! 
+    !!
+    !! Dot product function
+    !!
     USE kinds, ONLY: DP
-    ! 
-    COMPLEX(KIND = DP), INTENT(in)  :: a(:) 
+    !
+    COMPLEX(KIND = DP), INTENT(in)  :: a(:)
     !! Input vector
     COMPLEX(KIND = DP), INTENT(in)  :: b(:)
     !!
     COMPLEX(KIND = DP) :: utility_zdotu
     !! Output
-    ! 
+    !
     utility_zdotu = SUM(a * b)
-    ! 
+    !
     RETURN
     !--------------------------------------------------------------------------
     END FUNCTION utility_zdotu
     !--------------------------------------------------------------------------
-    ! 
+    !
     !--------------------------------------------------------------------------
     SUBROUTINE degen_sort(input_array, sizes, output, repeat_list)
     !--------------------------------------------------------------------------
-    !! 
+    !!
     !! Find degenerate values using a bubble sorting algorithms
-    !! 
+    !!
     !! From: https://stackoverflow.com/questions/7502489/bubble-sort-algorithm-javascript/37901176
-    !! 
-    !! On exititing, repeat_list contains 0 for bands that are non-degenerate and 
-    !! a group index for the one that are. 
+    !!
+    !! On exititing, repeat_list contains 0 for bands that are non-degenerate and
+    !! a group index for the one that are.
     !! Example: the following set of eigenenergies from array = [0,0.1,0.1,0.1,0.2,0.3,0.3]
     !!          gives repeat_list = [0,1,1,1,0,2,2]
     !--------------------------------------------------------------------------
@@ -818,7 +818,7 @@
     USE constants_epw, ONLY : eps8, eps20, eps6
     !
     IMPLICIT NONE
-    ! 
+    !
     LOGICAL, INTENT(out) :: output
     !! Return true on return if degenercies found
     INTEGER, INTENT(in) :: sizes
@@ -827,17 +827,17 @@
     !! Array containing the degeneracices
     REAL(KIND = DP), INTENT(in) :: input_array(sizes)
     !! Input array
-    ! 
+    !
     ! Local variables
     INTEGER :: j
     !! Index of size
     INTEGER :: degen_label
-    !! Degen index      
+    !! Degen index
     !
     output         = .FALSE.
     degen_label    = 0
     repeat_list(:) = 0
-    ! 
+    !
     DO j = 1, sizes - 1
       IF (0.5d0 * (ABS(input_array(j) - input_array(j + 1)) /&
           (ABS(input_array(j)) + ABS(input_array(j + 1)) + eps20)) < eps6) THEN
@@ -861,15 +861,16 @@
     !--------------------------------------------------------------------------
     END SUBROUTINE degen_sort
     !--------------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
-    PURE FUNCTION matinv3(A) RESULT(B)
+    FUNCTION matinv3(A) RESULT(B)
     !-----------------------------------------------------------------------
     !!
-    !! Performs a direct calculation of the inverse of a 3×3 matrix. 
-    !! 
-    USE kinds, ONLY : DP
-    ! 
+    !! Performs a direct calculation of the inverse of a 3×3 matrix.
+    !!
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : eps160
+    !
     REAL(KIND = DP), INTENT(in) :: A(3, 3)
     !! Matrix
     !
@@ -878,12 +879,16 @@
     !! Inverse of the determinant
     REAL(KIND = DP) :: B(3, 3)
     !! Inverse matrix
-    !  
+    !
     ! Calculate the inverse determinant of the matrix
     detinv = 1 / (A(1, 1) * A(2, 2) * A(3, 3) - A(1, 1) * A(2, 3) * A(3, 2) &
                 - A(1, 2) * A(2, 1) * A(3, 3) + A(1, 2) * A(2, 3) * A(3, 1) &
                 + A(1, 3) * A(2, 1) * A(3, 2) - A(1, 3) * A(2, 2) * A(3, 1))
-    !  
+    !
+    IF (detinv < eps160) THEN
+      CALL errore('matinv3', 'Inverse does not exist ', 1)
+    ENDIF
+    !
     ! Calculate the inverse of the matrix
     B(1, 1) = +detinv * (A(2, 2) * A(3, 3) - A(2, 3) * A(3, 2))
     B(2, 1) = -detinv * (A(2, 1) * A(3, 3) - A(2, 3) * A(3, 1))
@@ -902,9 +907,9 @@
     !-----------------------------------------------------------------------
     !!
     !! Return the position of a minimum and its value in a grid
-    !! 
+    !!
     USE kinds,         ONLY : DP
-    ! 
+    !
     INTEGER, INTENT(in) :: grid_dim
     !! Grid dimension
     REAL(KIND = DP), INTENT(in) :: grid(grid_dim)
@@ -917,7 +922,7 @@
     !! Minimum value
     INTEGER :: minpos
     !! Return the minimum position
-    !  
+    !
     minvalore = grid(1)
     minpos = 1
     DO i = 2, grid_dim
@@ -929,7 +934,7 @@
     !-----------------------------------------------------------------------
     END FUNCTION find_minimum
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     LOGICAL FUNCTION eqvect_strict(x, y, accep)
     !-----------------------------------------------------------------------
@@ -968,13 +973,13 @@
     USE io_global,    ONLY : meta_ionode, meta_ionode_id
     USE mp,           ONLY : mp_bcast
     USE mp_global,    ONLY : world_comm
-    ! 
+    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: current_iq
-    !! Current q-point 
+    !! Current q-point
     INTEGER, INTENT(in) :: iunpun
-    !! Current q-point 
+    !! Current q-point
     INTEGER, INTENT(out) :: ierr
     !! Error
     !
@@ -986,7 +991,7 @@
     INTEGER :: ipert
     !! Counter on perturbations at each irr
     INTEGER :: iq
-    !! Current q-point 
+    !! Current q-point
     !
     ierr = 0
     IF (meta_ionode) THEN
@@ -996,7 +1001,7 @@
     ENDIF
     CALL mp_bcast(iq,  meta_ionode_id, world_comm)
     IF (iq /= current_iq) CALL errore('read_disp_pattern', ' Problems with current_iq', 1)
-    ! 
+    !
     IF (meta_ionode) THEN
       !
       CALL iotk_scan_dat(iunpun, "QPOINT_GROUP_RANK", nsymq)
@@ -1027,17 +1032,17 @@
     CALL mp_bcast(u      , meta_ionode_id, world_comm)
     !
     RETURN
-    ! 
+    !
     !---------------------------------------------------------------------------
     END SUBROUTINE read_disp_pattern
     !---------------------------------------------------------------------------
-    ! 
+    !
     !------------------------------------------------------------
     SUBROUTINE fractrasl(npw, igk, evc, eigv1, eig0v)
     !------------------------------------------------------------
     !!
     !! Routine to compute fractional translations
-    !! 
+    !!
     USE kinds, ONLY : DP
     USE wvfct, ONLY : nbnd, npwx
     USE gvect, ONLY : ngm
@@ -1050,7 +1055,7 @@
     INTEGER, INTENT(in) :: igk(npw)
     !! G mapping
     COMPLEX(KIND = DP), INTENT(inout) :: evc(npwx * npol, nbnd)
-    !! 
+    !!
     COMPLEX(KIND = DP), INTENT(in) :: eigv1(ngm)
     !! Eigenvalues
     COMPLEX(KIND = DP), INTENT(in) :: eig0v
@@ -1060,7 +1065,7 @@
     !! Counter on G-vectors
     INTEGER :: ibnd
     !! Counter on bands
-    ! 
+    !
     DO ibnd = 1, nbnd
       DO ig = 1, npw
         evc(ig, ibnd) = evc(ig, ibnd) * eigv1(igk(ig)) * eig0v
@@ -1078,7 +1083,7 @@
     SUBROUTINE rotate_cart(x, s, sx)
     !-----------------------------------------------------------------------
     !!
-    !! A simple symmetry operation in cartesian coordinates 
+    !! A simple symmetry operation in cartesian coordinates
     !! ( s is INTEGER and in crystal coord!)
     !!
     USE kinds,     ONLY : DP
@@ -1116,9 +1121,9 @@
     SUBROUTINE mem_size(nmodes, nkf)
     !--------------------------------------------------------------------------
     !!
-    !! This routine estimates the amount of memory taken up by 
-    !! the $$<k+q| dV_q,nu |k>$$ on the fine meshes and prints 
-    !! out a useful(?) message   
+    !! This routine estimates the amount of memory taken up by
+    !! the $$<k+q| dV_q,nu |k>$$ on the fine meshes and prints
+    !! out a useful(?) message
     !!
     USE io_global, ONLY : stdout
     USE kinds,     ONLY : DP
@@ -1129,7 +1134,7 @@
     INTEGER, INTENT(in) :: nmodes
     !! Number of modes
     INTEGER, INTENT(in) :: nkf
-    !! Number of k-points in pool 
+    !! Number of k-points in pool
     !
     ! Local variables
     CHARACTER(LEN = 256) :: chunit
@@ -1157,7 +1162,7 @@
     !--------------------------------------------------------------------------
     END SUBROUTINE mem_size
     !--------------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE mem_size_eliashberg(vmelt, imelt)
     !-----------------------------------------------------------------------
@@ -1310,13 +1315,13 @@
     !----------------------------------------------------------------------
     !!
     !! This routine transform a symmetry matrix expressed in the
-    !! basis of the crystal axis in the cartesian basis.    
-    !! 
+    !! basis of the crystal axis in the cartesian basis.
+    !!
     !! SP - Feb 2020
-    !! Routine taken from PP/src/sym_band.f90 and adapted for EPW. 
+    !! Routine taken from PP/src/sym_band.f90 and adapted for EPW.
     !!
     USE kinds,    ONLY : DP
-    ! 
+    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: s(3, 3)
@@ -1337,7 +1342,7 @@
     sa(:, :) = DBLE(s(:, :))
     sb = MATMUL(bg, sa)
     sr(:, :) = MATMUL(at, TRANSPOSE(sb))
-    ! 
+    !
     !-----------------------------------------------------------------------
     END SUBROUTINE s_crystocart
     !-----------------------------------------------------------------------
