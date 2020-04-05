@@ -24,6 +24,9 @@ SUBROUTINE hinit0()
   USE ldaU,             ONLY : lda_plus_U, U_projection
   USE control_flags,    ONLY : tqr, tq_smoothing, tbeta_smoothing, restart
   USE io_global,        ONLY : stdout
+  USE lsda_mod,         ONLY : nspin
+  USE spin_orb,         ONLY : domag
+  USE noncollin_module, ONLY : report, i_cons, noncolin
   !
   USE gvect_gpum,   ONLY : using_eigts1, using_eigts2, using_eigts3, &
                            using_eigts1_D, using_eigts2_d, using_eigts3_d
@@ -92,6 +95,8 @@ SUBROUTINE hinit0()
   !
   CALL set_rhoc()
   !
+  ! ... more position-dependent initializations
+  !
   IF ( tqr ) CALL generate_qpointlist()
   !
   IF (real_space ) THEN
@@ -99,6 +104,11 @@ SUBROUTINE hinit0()
      CALL init_realspace_vars()
      WRITE(stdout,'(5X,"Real space initialisation completed")')    
   ENDIF
+  !
+  IF ( ( (report /= 0).OR.(i_cons /= 0) ) .AND. (noncolin.AND.domag) &
+                      .OR. (i_cons==1) .OR. nspin==2 ) THEN
+     CALL make_pointlists( )
+  END IF
   !
   CALL stop_clock( 'hinit0' )
   !
