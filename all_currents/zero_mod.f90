@@ -147,7 +147,7 @@ MODULE zero_mod
   real(DP), intent(in) :: vin(3)
   real(DP), intent(out) :: vout(3)
   !local
-  real(DP): alatdir ! box side in a given direction
+  real(DP):: alatdir ! box side in a given direction
   integer :: i,n
   vout(:)=0.d0
   do i=1,3
@@ -188,7 +188,7 @@ subroutine check_positions(ion_pos)
   real(DP), intent(in) ::ion_pos(3,nat)
   integer ::coord,iatom
   !local variables
-  real(DP):: tau_at !
+  real(DP):: tau_at(3,nat) !
 
 ! tau_at(i,iatom) = at(1,i)*tau(1,iatom) +at(2,i)*tau(2,iatom) + at(3,i)*tau(3,iatom)
   tau_at = matmul(transpose(at),tau) 

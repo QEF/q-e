@@ -1,5 +1,0 @@
- &input
-    asr='simple',  amass(1)=26.98,
-    flfrc='Al444.fc', flfrq='Al444.freq', la2F=.true., dos=.true.
-    fldos='phonon.dos', nk1=10, nk2=10, nk3=10, ndos=50
- /

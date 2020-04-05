@@ -148,7 +148,7 @@ subroutine routine_zero()
    real(dp), parameter  :: amconv = AMU_RY
    real(DP) ::n(3), u(3), u_pbc(3), u_x(3), u_y(3), u_z(3), value, x(1:3), ics(3)
    real(DP), external :: qe_erfc
-   real(DP), :: dtauij(3)
+   real(DP)  :: dtauij(3)
    real(DP) ::modul, erf_value, charge_atom
    real(DP) ::fac_uno, fac_due, fac_tre, fac_quattro
    real(DP), external :: qe_erf
