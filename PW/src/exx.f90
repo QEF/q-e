@@ -143,6 +143,7 @@ MODULE exx
     USE control_flags,  ONLY : tqr
     USE realus,         ONLY : qpointlist, tabxx, tabp
     USE exx_band,       ONLY : smap_exx
+    USE command_line_options, ONLY : nmany_
     !
     IMPLICIT NONE
     !
@@ -192,7 +193,7 @@ MODULE exx
        lpara = ( nproc_bgrp > 1 )
        CALL fft_type_init( dfftt, smap, "rho", gamma_only, lpara,         &
                            intra_bgrp_comm, at, bg, gcutmt, gcutmt/gkcut, &
-                           fft_fact=fft_fact, nyfft=nyfft )
+                           fft_fact=fft_fact, nyfft=nyfft, nmany=nmany_ )
        CALL ggens( dfftt, gamma_only, at, g, gg, mill, gcutmt, ngmt, gt, ggt )
        gstart_t = gstart
        npwt = n_plane_waves(ecutwfc/tpiba2, nks, xk, gt, ngmt)
@@ -206,7 +207,7 @@ MODULE exx
        lpara = ( nproc_egrp > 1 )
        CALL fft_type_init( dfftt, smap_exx, "rho", gamma_only, lpara,     &
                            intra_egrp_comm, at, bg, gcutmt, gcutmt/gkcut, &
-                           fft_fact=fft_fact, nyfft=nyfft )
+                           fft_fact=fft_fact, nyfft=nyfft, nmany=nmany_ )
        ngmt = dfftt%ngm
        ngmt_g = ngmt
        CALL mp_sum( ngmt_g, intra_egrp_comm )

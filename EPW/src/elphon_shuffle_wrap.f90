@@ -37,7 +37,7 @@
   USE control_flags, ONLY : iverbosity
   USE io_var,        ONLY : iuepb, iuqpeig, crystal, iukgmap
   USE pwcom,         ONLY : nks, nbnd, nkstot, nelec
-  USE cell_base,     ONLY : at, bg, alat, omega
+  USE cell_base,     ONLY : at, bg, alat, omega, tpiba
   USE symm_base,     ONLY : irt, s, nsym, ft, sname, invs, s_axis_to_cart,      &
                             sr, nrot, set_sym_bl, find_sym, inverse_s,&
                             remove_sym, allfrac
@@ -88,7 +88,7 @@
   !! Name of the directory
   CHARACTER(LEN = 256) :: filename
   !! Name of the file
-  CHARACTER(LEN = 3) :: filelab
+  CHARACTER(LEN = 4) :: filelab
   !! Append the number of the core that works on that file
   CHARACTER(LEN = 80)   :: line
   !! Use to read external eigenvalues
@@ -230,7 +230,7 @@
   maxvalue = nqxq
   DO iq_irr = 1, nqc_irr
     qnorm_tmp = DSQRT(xqc_irr(1, iq_irr)**2 + xqc_irr(2, iq_irr)**2 + xqc_irr(3, iq_irr)**2)
-    nqxq_tmp = INT(((DSQRT(gcutm) + qnorm_tmp) / dq + 4) * cell_factor)
+    nqxq_tmp = INT(((DSQRT(gcutm) + qnorm_tmp) * tpiba / dq + 4) * cell_factor)
     IF (nqxq_tmp > maxvalue)  maxvalue = nqxq_tmp
   ENDDO
   !
