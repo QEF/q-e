@@ -15,7 +15,7 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   USE check_stop,       ONLY : check_stop_init
   USE mp,               ONLY : mp_bcast
   USE mp_images,        ONLY : intra_image_comm
-  USE control_flags,    ONLY : gamma_only, conv_elec, istep, ethr, lscf, &
+  USE control_flags,    ONLY : gamma_only, conv_elec, istep, ethr, lscf, lmd, &
        treinit_gvecs, lensemb
   USE force_mod,        ONLY : lforce, lstres
   USE ions_base,        ONLY : tau
@@ -51,8 +51,9 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   !
   lscf      = .true.
   lforce    = .true.
-  lstres    = .false.
-  lmovecell = .false.
+  lstres    = .true.
+  lmovecell = .true.
+  lmd       = .true.
   lensemb = .false.
   firststep = .true.
   omega_reset = 0.d0
