@@ -17,7 +17,7 @@ SUBROUTINE addusforce_gpu( forcenl )
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(INOUT) :: forcenl(3, nat)
+  REAL(DP), INTENT(INOUT) :: forcenl(3,nat)
   !! the non-local contribution to the force
   !
   IF ( tqr ) THEN
@@ -137,7 +137,7 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
   CALL dev_buf%lock_buffer( qmod_d, ngm_l, ierr  )
   !$cuf kernel do 
   DO ig = 1, ngm_l
-     qmod_d(ig) = SQRT( gg_d(ngm_s+ig-1) )
+     qmod_d(ig) = SQRT( gg_d(ngm_s+ig-1) )*tpiba
   ENDDO
   !
   ! Sync if needed
@@ -158,8 +158,6 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
               CALL qvan2_gpu( ngm_l, ih, jh, nt, qmod_d, qgm_d(1,ijh), ylmk0_d )
            ENDDO
         ENDDO
-
-
         !
         ! nab = number of atoms of type nt
         !

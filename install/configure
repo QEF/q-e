@@ -5032,8 +5032,6 @@ esac
       		    mkl_lib="mkl_${ompimp}_lp64"
       		    mkl_omp="mkl_${ompimp}_thread"
       		    add_mkl_flag="-pgf90libs"
-      		    add_mkl_lib="-ldl"
-      		    add_mkl_omp="-ldl -lpthread -lm"
 	       ;;
 	    esac
             try_libdirs="$libdirs $MKLROOT/lib/intel64 $ld_library_path"

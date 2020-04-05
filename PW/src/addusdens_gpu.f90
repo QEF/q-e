@@ -46,6 +46,7 @@ SUBROUTINE addusdens_g_gpu(rho)
 #endif
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
+  USE cell_base,            ONLY : tpiba
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : invfft
   USE gvect,                ONLY : ngm, eigts1, eigts2, eigts3, mill
@@ -121,7 +122,7 @@ SUBROUTINE addusdens_g_gpu(rho)
   
 !$cuf kernel do(1) <<<*,*>>>
   DO ig = 1, ngm_l
-     qmod_d (ig) = sqrt (gg_d (ngm_s+ig-1) )
+     qmod_d (ig) = SQRT(gg_d(ngm_s+ig-1))*tpiba
   ENDDO
   !
   ! Use largest size for buffer

@@ -213,7 +213,6 @@ bp_mod.o : ../../UtilXlib/mp.o
 bp_qvan3.o : ../../Modules/ions_base.o
 bp_qvan3.o : ../../Modules/kind.o
 bp_qvan3.o : ../../Modules/uspp.o
-bp_qvan3.o : pwcom.o
 bp_strings.o : ../../Modules/kind.o
 buffers.o : ../../Modules/io_files.o
 buffers.o : ../../Modules/kind.o
@@ -1996,6 +1995,7 @@ stress.o : symme.o
 stress.o : xdm_dispersion.o
 struct_fact.o : ../../Modules/constants.o
 struct_fact.o : ../../Modules/kind.o
+struct_fact.o : ../../Modules/recvec.o
 sum_band.o : ../../FFTXlib/fft_helper_subroutines.o
 sum_band.o : ../../FFTXlib/fft_interfaces.o
 sum_band.o : ../../Modules/becmod.o

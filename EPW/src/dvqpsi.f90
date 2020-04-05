@@ -725,7 +725,7 @@
     CALL ylmr2(lmaxq * lmaxq, ngm, g, gg, ylmk0)
     !
     DO ig = 1, ngm
-      qmodg(ig) = DSQRT(gg(ig))
+      qmodg(ig) = DSQRT(gg(ig))*tpiba
     ENDDO
     !
     ALLOCATE(qpg(3, ngm), STAT = ierr)
@@ -738,7 +738,7 @@
     DEALLOCATE(qpg, STAT = ierr)
     IF (ierr /= 0) CALL errore('dvanqq2', 'Error deallocating qpg', 1)
     DO ig = 1, ngm
-      qmod(ig) = DSQRT(qmod(ig))
+      qmod(ig) = DSQRT(qmod(ig))*tpiba
     ENDDO
     !
     !   we start by computing the FT of the effective potential
@@ -942,7 +942,7 @@
     USE kinds,                ONLY : DP
     USE ions_base,            ONLY : nat, ityp, ntyp => nsp
     USE noncollin_module,     ONLY : noncolin, nspin_mag
-    USE cell_base,            ONLY : omega
+    USE cell_base,            ONLY : omega, tpiba
     USE fft_base,             ONLY : dfftp
     USE fft_interfaces,       ONLY : fwfft
     USE gvect,                ONLY : g, ngm, mill, eigts1, eigts2, eigts3
@@ -1032,7 +1032,7 @@
     CALL ylmr2(lmaxq * lmaxq, ngm, qg, qmod, ylmk0)
     !
     DO ig = 1, ngm
-      qmod(ig) = DSQRT(qmod(ig))
+      qmod(ig) = DSQRT(qmod(ig))*tpiba
     ENDDO
     !
     ! and for each perturbation of this irreducible representation

@@ -21,6 +21,7 @@ subroutine addusddense (drhoscf, dbecsum)
 
   USE kinds, only : DP
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
+  USE cell_base, ONLY : tpiba
   use fft_base,  only: dfftp
   use fft_interfaces, only: invfft
   USE gvect, ONLY : g, gg, ngm, eigts1, eigts2, eigts3, mill
@@ -73,7 +74,7 @@ subroutine addusddense (drhoscf, dbecsum)
   !
   call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
   do ig = 1, ngm
-     qmod (ig) = sqrt (gg (ig) )
+     qmod (ig) = sqrt (gg (ig) ) * tpiba
   enddo
 
   aux (:,:,:) = (0.d0, 0.d0)
