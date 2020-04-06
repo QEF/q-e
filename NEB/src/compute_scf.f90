@@ -360,6 +360,9 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       pes(image) = etot / e2
       !
+      ! ... add potentio-stat contribution
+      IF ( lfcp ) pes(image) = pes(image) + ef / e2 * tot_charge
+      !
       ! ... gradients are converted from rydberg/bohr to hartree/bohr
       !
       grad_pes(:,image) = - RESHAPE( force, (/ dim1 /) ) / e2
