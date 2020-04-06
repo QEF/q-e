@@ -27,11 +27,11 @@ SUBROUTINE init_us_b0
                                          ! its relatives are printed or not.
   INTEGER, PARAMETER :: nn=16    ! Smoothing parameter, order of the polynomial
                                  ! inverse gaussian approximant.
-  REAL(DP), PARAMETER :: a=22.0  ! Smoothing parameter, exponent of the gaussian
+  REAL(DP), PARAMETER :: a=22.d0 ! Smoothing parameter, exponent of the gaussian
                                  ! decaying factor.
   REAL(DP) :: rcut, drcut ! beta function cutoff radius and estimated increase of
                           ! it due to the filtering
-  REAL(DP), PARAMETER :: eps = 1.d-8
+  REAL(DP), PARAMETER :: eps = 5.d-9
   !
   INTEGER :: nqx
   REAL(DP), ALLOCATABLE :: tab0(:,:), tab(:,:), beta(:,:), betas(:,:)
@@ -46,6 +46,8 @@ SUBROUTINE init_us_b0
   ! q-point grid for interpolation
   REAL(DP) ::  vqint 
   ! interpolated value
+  INTEGER :: kktest
+  REAL(DP) ::  test, test_save
   !
   CHARACTER(LEN=4) :: filename
   !
@@ -73,6 +75,7 @@ SUBROUTINE init_us_b0
   ALLOCATE( beta(ndm,nbetam), betas(ndm,nbetam) )
   ALLOCATE( aux(ndm),besr(ndm) )
   !
+  WRITE(6,'(a)') 'Pseudopotential projectors are smoothed with filter( 1.2d0 * q / qmax, a, nn )'
   WRITE(6,'(a,f6.2,a,i4,4(a,f11.8))') 'FILTER : a=',a,', nn=',nn,', filter(1.1d0)=',   filter(1.1d0,a,nn),  &
                                                                  ', filter(1.1d0/3)=', filter(1.1d0/3,a,nn),&
                                                                  ', filter(1.2d0)=',   filter(1.2d0,a,nn),  &
@@ -88,7 +91,7 @@ SUBROUTINE init_us_b0
   !
   CALL divide( intra_bgrp_comm, nqx, startq, lastq )
   DO nt = 1, ntyp
-     !     WRITE(*,*) ' ityp = ', nt
+     !     WRITE( stdout, * ) ' ityp = ', nt
      IF ( upf(nt)%is_gth ) CYCLE
      !
      tab0(:,:) = 0.d0  ; tab(:,:) = 0.d0
@@ -130,8 +133,8 @@ SUBROUTINE init_us_b0
      !
      CALL mp_sum( tab0, intra_bgrp_comm )
      CALL mp_sum( tab , intra_bgrp_comm )
-     beta = beta * 8.0/fpi ; CALL mp_sum( beta , intra_bgrp_comm )
-     betas= betas* 8.0/fpi ; CALL mp_sum( betas, intra_bgrp_comm )
+     beta = beta * 8.d0/fpi ; CALL mp_sum( beta , intra_bgrp_comm )
+     betas= betas* 8.d0/fpi ; CALL mp_sum( betas, intra_bgrp_comm )
      upf(nt)%beta(1:upf(nt)%kkbeta,1:upf(nt)%nbeta) = betas(1:upf(nt)%kkbeta,1:upf(nt)%nbeta) 
      !
      !-Fix the core cutoff radius kkbeta so that no more than eps of the integral is lost.
@@ -146,24 +149,22 @@ SUBROUTINE init_us_b0
            power_q(nb) = power_q(nb) + qi*qi * dq * tab(iq,nb) * tab(iq,nb)
         ENDDO
      ENDDO
-     power_q  = power_q * 8.0/fpi ; CALL mp_sum( power_q, intra_bgrp_comm )
+     power_q  = power_q * 8.d0/fpi ; CALL mp_sum( power_q, intra_bgrp_comm )
      !
      ! Compute the integral in real space up to the current value of kkbeta and try to reduce it if close enough to power_q
-     power_r = power_q                    ! initialize power_r so that the first test is passed. 
-     upf(nt)%kkbeta = upf(nt)%kkbeta + 1  ! increase kkbeta because it must be decreased in a moment
-     DO WHILE ( MAXVAL(1.d0-power_r(1:upf(nt)%nbeta)/power_q(1:upf(nt)%nbeta)) < eps ) 
-        WRITE(*,*) upf(nt)%kkbeta,rgrid(nt)%r(upf(nt)%kkbeta),1.d0-power_r(1:upf(nt)%nbeta)/power_q(1:upf(nt)%nbeta)
-        upf(nt)%kkbeta = upf(nt)%kkbeta - 1
+     kktest = upf(nt)%kkbeta + 1 ;  test = 0.d0  ! initialize mesh limit and test value 
+     DO WHILE ( test < eps ) 
+        test_save = test ; kktest = kktest - 1 
         DO nb = 1, upf(nt)%nbeta
            l = upf(nt)%lll (nb)
-           DO ir = 1, upf(nt)%kkbeta
-              aux(ir) = betas(ir,nb) * betas(ir,nb)
-           ENDDO
-           CALL simpson( upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint )
-           power_r(nb) = vqint
+           aux(1:kktest) = betas(1:kktest,nb) * betas(1:kktest,nb)
+           CALL simpson( kktest, aux, rgrid(nt)%rab, power_r(nb) )
         ENDDO
+        test = MAXVAL( 1.d0 - power_r(1:upf(nt)%nbeta)/power_q(1:upf(nt)%nbeta) )
      ENDDO
-     !
+     if (kktest == upf(nt)%kkbeta ) CALL errore('init_us_b0',' initial kkbeta too small', nt)
+     upf(nt)%kkbeta = kktest + 1 ! set the 
+     WRITE( stdout, * ) 'PSEUDO', nt, upf(nt)%kkbeta, rgrid(nt)%r(upf(nt)%kkbeta), test_save
      !
      IF (tprint) THEN
         !-
