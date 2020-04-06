@@ -2101,6 +2101,116 @@
     !----------------------------------------------------------------------------
     END SUBROUTINE openfilepw
     !----------------------------------------------------------------------------
+    !
+    !----------------------------------------------------------------------------
+    SUBROUTINE param_get_range_vector(field, length, lcount, i_value)
+    !----------------------------------------------------------------------------
+    !!
+    !!   Read a range vector eg. 1,2,3,4-10  or 1 3 400:100
+    !!   if(lcount) we return the number of states in length
+    !!
+    !!   HL - April 2020
+    !!   Imported and adapted from Wannier90
+    !!
+    !----------------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    !
+    CHARACTER(*), INTENT(in)         :: field
+    !! Field read for parsing
+    INTEGER, INTENT(inout)           :: length
+    !! Number of states
+    LOGICAL, INTENT(in)              :: lcount
+    !! If T only count states
+    INTEGER, OPTIONAL, INTENT(out)   :: i_value(length)
+    !! States specified in range vector
+    !
+    INTEGER :: loop
+    !! Loop index
+    INTEGER :: num1
+    !! Integer number read
+    INTEGER :: num2
+    !! Integer number read
+    INTEGER :: i_punc
+    !! Position returned after scanning punctuation marks
+    INTEGER :: counter
+    !! Counter index
+    INTEGER :: i_digit
+    !! Position returned after scanning numbers
+    INTEGER :: loop_r
+    !! Loop index
+    INTEGER :: range_size
+    !! Size of range
+    CHARACTER(LEN = 255) :: dummy
+    !! Copy of field read for parsing
+    CHARACTER(LEN = 10), PARAMETER :: c_digit = "0123456789"
+    CHARACTER(LEN = 2), PARAMETER :: c_range = "-:"
+    CHARACTER(LEN = 3), PARAMETER :: c_sep = " ,;"
+    CHARACTER(LEN = 5), PARAMETER :: c_punc = " ,;-:"
+    CHARACTER(LEN = 5) :: c_num1
+    !! Number read
+    CHARACTER(LEN = 5) :: c_num2
+    !! Number read
+    !
+    IF (lcount .AND. PRESENT(i_value)) &
+      CALL errore('param_get_range_vector', 'incorrect call', 1)
+    !
+    dummy = field
+    dummy = ADJUSTL(dummy)
+    !
+    counter = 0
+    IF (LEN_TRIM(dummy) == 0) THEN
+      length = counter
+      RETURN
+    ENDIF
+    !
+    DO
+      i_punc = SCAN(dummy, c_punc)
+      IF (i_punc == 0) &
+        CALL errore('param_get_range_vector', 'Error parsing field', 1)
+      c_num1 = dummy(1:i_punc - 1)
+      READ(c_num1, *, ERR = 101, END = 101) num1
+      dummy = ADJUSTL(dummy(i_punc:))
+      !look for range
+      IF (SCAN(dummy, c_range) == 1) THEN
+        i_digit = SCAN(dummy, c_digit)
+        dummy = ADJUSTL(dummy(i_digit:))
+        i_punc = SCAN(dummy, c_punc)
+        c_num2 = dummy(1:i_punc - 1)
+        READ(c_num2, *, ERR = 101, END = 101) num2
+        dummy = ADJUSTL(dummy(i_punc:))
+        range_size = ABS(num2 - num1) + 1
+        DO loop_r = 1, range_size
+          counter = counter + 1
+          IF (.NOT. lcount) i_value(counter) = MIN(num1, num2) + loop_r - 1
+        ENDDO
+      ELSE
+        counter = counter + 1
+        IF (.NOT. lcount) i_value(counter) = num1
+      ENDIF
+      IF (SCAN(dummy, c_sep) == 1) dummy = ADJUSTL(dummy(2:))
+      IF (SCAN(dummy, c_range) == 1) &
+        CALL errore('param_get_range_vector', 'Error parsing field: incorrect range', 1)
+      IF (INDEX(dummy, ' ') == 1) EXIT
+    ENDDO
+    !
+    IF (lcount) length = counter
+    IF (.NOT. lcount) THEN
+      DO loop = 1, counter - 1
+        DO loop_r = loop + 1, counter
+          IF (i_value(loop) == i_value(loop_r)) &
+            CALL errore('param_get_range_vector', 'Error parsing field: duplicate values', 1)
+        ENDDO
+      ENDDO
+    ENDIF
+    !
+    RETURN
+    !
+101 CALL errore('param_get_range_vector', 'Error parsing field', 1)
+    !
+    !----------------------------------------------------------------------------
+    END SUBROUTINE param_get_range_vector
+    !----------------------------------------------------------------------------
   !------------------------------------------------------------------------------
   END MODULE io_epw
   !------------------------------------------------------------------------------
