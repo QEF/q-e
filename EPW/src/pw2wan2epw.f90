@@ -1,33 +1,33 @@
   !
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
-  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino 
-  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino  
-  !                                                                            
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
-  !                                                                            
+  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
+  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
+  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
+  !
   !----------------------------------------------------------------------
   MODULE pw2wan2epw
   !----------------------------------------------------------------------
-  !! 
+  !!
   !! This module contains routine to go from PW results to Wannier90 to EPW
-  !! 
+  !!
   IMPLICIT NONE
-  ! 
+  !
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE pw2wan90epw 
+    SUBROUTINE pw2wan90epw
     !------------------------------------------------------------------------
-    !! 
-    !! This is the interface to the Wannier90 code: see http://www.wannier.org
-    !! Adapted from the code PP/pw2wannier - Quantum-ESPRESSO group               
     !!
-    !! 10/2008  Parellel computation of Amn and Mmn 
+    !! This is the interface to the Wannier90 code: see http://www.wannier.org
+    !! Adapted from the code PP/pw2wannier - Quantum-ESPRESSO group
+    !!
+    !! 10/2008  Parellel computation of Amn and Mmn
     !! 12/2008  Added phase setting of overlap matrix elements
     !! 02/2009  works with standard nkc1*nkc2*nkc3 grids
-    !! 12/2009  works with USPP 
+    !! 12/2009  works with USPP
     !! 12/2014  RM: Imported the noncolinear case implemented by xlzhang
     !! 06/2016  SP: Debug of SOC + print/reading of nnkp file
     !! 11/2019  RM: Imported and adapted the SCDM method from pw2wannier
@@ -36,7 +36,7 @@
     USE io_global,        ONLY : stdout
     USE klist,            ONLY : nkstot
     USE io_files,         ONLY : prefix
-    USE epwcom,           ONLY : write_wfn, scdm_proj, scdm_entanglement, & 
+    USE epwcom,           ONLY : write_wfn, scdm_proj, scdm_entanglement, &
                                  scdm_sigma
     USE wannierEPW,       ONLY : seedname2, wvfn_formatted, reduce_unk, ispinw, &
                                  ikstart, ikstop, iknum
@@ -94,9 +94,9 @@
       iknum   = nkstot
     END SELECT
     !
-    WRITE(stdout, *) 
+    WRITE(stdout, *)
     WRITE(stdout, *) '    Initializing Wannier90'
-    WRITE(stdout, *) 
+    WRITE(stdout, *)
     !
     CALL setup_nnkp()
     CALL ylm_expansion()
@@ -126,8 +126,8 @@
     !-------------------------------------------------------------------------
     SUBROUTINE lib_dealloc()
     !-----------------------------------------------------------------------
-    !! 
-    !! Routine to de-allocate Wannier related matrices. 
+    !!
+    !! Routine to de-allocate Wannier related matrices.
     !!
     USE wannierEPW, ONLY : atcart, atsym, kpb, g_kpb, center_w, alpha_w, &
                            l_w, mr_w, r_w, zaxis, xaxis, excluded_band,  &
@@ -136,7 +136,7 @@
                            wann_spreads
     !
     IMPLICIT NONE
-    ! 
+    !
     ! Local variables
     INTEGER :: ierr
     !! Error status
@@ -177,7 +177,7 @@
     IF (ierr /= 0) CALL errore('lib_dealloc', 'Error deallocating eigval', 1)
     DEALLOCATE(lwindow, STAT = ierr)
     IF (ierr /= 0) CALL errore('lib_dealloc', 'Error deallocating lwindow', 1)
-    DEALLOCATE(gf, STAT = ierr) 
+    DEALLOCATE(gf, STAT = ierr)
     IF (ierr /= 0) CALL errore('lib_dealloc', 'Error deallocating gf', 1)
     DEALLOCATE(ig_, STAT = ierr)
     IF (ierr /= 0) CALL errore('lib_dealloc', 'Error deallocating ig_', 1)
@@ -195,20 +195,20 @@
     !-------------------------------------------------------------------------
     SUBROUTINE setup_nnkp()
     !-----------------------------------------------------------------------
-    !! 
-    !! This routine writes and reads the .nnkp file. 
+    !!
+    !! This routine writes and reads the .nnkp file.
     !! The file specifies
     !! 1) The initial projections functions in the format
     !! num_proj
     !! proj_site(1,i), proj_site(2,i), proj_site(3,i), proj_l(i), proj_m(i), proj_radial(i)
     !! proj_z(1,i), proj_z(2,i), proj_z(3,i),proj_x(1,i), proj_x(2,i), proj_x(3,i), proj_zona(i)
-    !! proj_s(i), proj_s_qaxis(1,i), proj_s_qaxis(2,i), proj_s_qaxis(3,i) 
+    !! proj_s(i), proj_s_qaxis(1,i), proj_s_qaxis(2,i), proj_s_qaxis(3,i)
     !!
-    !! 2) begin nnkpts: the nearest neighbours of each k-point,         
-    !! and therefore provides the information required to      
-    !! calculate the M_mn(k,b) matrix elements 
-    !! 
-    ! ---------------------------------------------------------------------- 
+    !! 2) begin nnkpts: the nearest neighbours of each k-point,
+    !! and therefore provides the information required to
+    !! calculate the M_mn(k,b) matrix elements
+    !!
+    ! ----------------------------------------------------------------------
     USE kinds,     ONLY : DP
     USE io_global, ONLY : meta_ionode, stdout, meta_ionode_id
     USE mp_world,  ONLY : world_comm
@@ -230,14 +230,14 @@
     USE w90_io,           ONLY : post_proc_flag
     USE io_var,           ONLY : iunnkp
     USE elph2,            ONLY : ibndstart, ibndend, nbndep
-    ! 
+    !
     IMPLICIT NONE
     !
     LOGICAL  :: have_nnkp
     !! Check if the .nnkp file exists.
     LOGICAL  :: found
     !! Check if the section in the .nnkp file is found.
-    ! 
+    !
     INTEGER :: ik
     !! Counter on k-points
     INTEGER :: ib
@@ -245,7 +245,7 @@
     INTEGER :: ig
     !! Index on G_k+b vectors
     INTEGER :: iw
-    !! Counter on number of projections 
+    !! Counter on number of projections
     INTEGER :: ia
     !! Counter on number of atoms
     INTEGER  :: type
@@ -253,7 +253,7 @@
     INTEGER :: ibnd
     !! Counter on band index
     INTEGER  :: indexb
-    !! Index of exclude_bands 
+    !! Index of exclude_bands
     INTEGER  :: ipol
     !! Counter on polarizations
     INTEGER  :: idum
@@ -280,7 +280,7 @@
     INTERFACE
       !!
       !! SP: An interface is required because the Wannier routine has optional arguments
-      !! 
+      !!
       !-----------------------------------------------------------------------
       SUBROUTINE wannier_setup(seed__name, mp_grid_loc, num_kpts_loc, &
         real_lattice_loc, recip_lattice_loc, kpt_latt_loc, num_bands_tot, &
@@ -292,7 +292,7 @@
       !
       USE kinds,       ONLY : DP
       USE wannierEPW,  ONLY : num_nnmax
-      ! 
+      !
       IMPLICIT NONE
       !
       CHARACTER(LEN = *), INTENT(in) :: seed__name
@@ -322,8 +322,8 @@
       INTEGER, INTENT(out) :: num_wann_loc
       !! Number of Wannier functions
       INTEGER, INTENT(out) :: proj_l_loc(num_bands_tot)
-      !! Projection of l local momentum 
-      INTEGER, INTENT(out) :: proj_m_loc(num_bands_tot) 
+      !! Projection of l local momentum
+      INTEGER, INTENT(out) :: proj_m_loc(num_bands_tot)
       !! Local projection
       INTEGER, INTENT(out) :: proj_radial_loc(num_bands_tot)
       !! Radial projection
@@ -332,7 +332,7 @@
       INTEGER, OPTIONAL, INTENT(out) :: proj_s_loc(num_bands_tot)
       !! Projection on s
       REAL(KIND = DP), INTENT(in) :: REAL_lattice_loc(3, 3)
-      !! Lattice 
+      !! Lattice
       REAL(KIND = DP), INTENT(in) :: recip_lattice_loc(3, 3)
       !! Reciprocal lattice
       REAL(KIND = DP), INTENT(in) :: kpt_latt_loc(3, num_kpts_loc)
@@ -346,7 +346,7 @@
       REAL(KIND = DP), INTENT(out) :: proj_x_loc(3, num_bands_tot)
       !! Projection on x
       REAL(KIND = DP), INTENT(out) :: proj_zona_loc(num_bands_tot)
-      !! Projection on z 
+      !! Projection on z
       REAL(KIND = DP), OPTIONAL, INTENT(out) :: proj_s_qaxis_loc(3, num_bands_tot)
       !! Projection s q-axis
       !
@@ -354,9 +354,9 @@
       END SUBROUTINE wannier_setup
       !-----------------------------------------------------------------------
     END INTERFACE
-    ! 
+    !
     num_nnmax = 32
-    ! 
+    !
     ! aam: translations between PW2Wannier90 and Wannier90
     ! pw2wannier90   <==>   Wannier90
     !    nbnd                num_bands_tot
@@ -378,7 +378,7 @@
     !    exclude_bands       exclude_bands
     !    atcart              atoms_cart
     !    atsym               atom_symbols
-    ! 
+    !
     ALLOCATE(atcart(3, nat), STAT = ierr)
     IF (ierr /= 0) CALL errore('setup_nnkp', 'Error allocating atcart', 1)
     ALLOCATE(atsym(nat), STAT = ierr)
@@ -403,7 +403,7 @@
     IF (ierr /= 0) CALL errore('setup_nnkp', 'Error allocating xaxis', 1)
     ALLOCATE(excluded_band(nbnd), STAT = ierr)
     IF (ierr /= 0) CALL errore('setup_nnkp', 'Error allocating excluded_band', 1)
-    ! 
+    !
     ! real lattice (Cartesians, Angstrom)
     rlatt(:, :) = TRANSPOSE(at(:, :)) * alat * bohr
     ! reciprocal lattice (Cartesians, Angstrom)
@@ -415,7 +415,7 @@
       type = ityp(ia)
       atsym(ia) = atm(type)
     ENDDO
-    ! 
+    !
     IF (meta_ionode) THEN
       !postproc_setup = .TRUE.
       post_proc_flag = .TRUE.
@@ -427,7 +427,7 @@
              xaxis, alpha_w, exclude_bands)                   ! output
      ! SP: In wannier_setup, the .nnkp file is produced.
     ENDIF
-    ! 
+    !
     CALL mp_bcast(nnb,           meta_ionode_id, world_comm)
     CALL mp_bcast(kpb,           meta_ionode_id, world_comm)
     CALL mp_bcast(g_kpb,         meta_ionode_id, world_comm)
@@ -444,8 +444,8 @@
     CALL mp_bcast(noncolin,      meta_ionode_id, world_comm)
     !
     ! SP: Commented because we now write on file the .nnkp file and read from it.
-    ! 
-    ! n_proj = nr. of projections (=#WF unless spinors then =#WF/2) 
+    !
+    ! n_proj = nr. of projections (=#WF unless spinors then =#WF/2)
     !IF (noncolin) THEN
     !   n_proj = n_wannier/2
     !ELSE
@@ -462,7 +462,7 @@
       WRITE(stdout, *)
       !
       DO iw = 1, n_proj
-        WRITE(stdout, '(5x, "(", 3f10.5, ") :  l = ", i3, " mr = ", i3)') & 
+        WRITE(stdout, '(5x, "(", 3f10.5, ") :  l = ", i3, " mr = ", i3)') &
                        center_w(:, iw), l_w(iw), mr_w(iw)
       ENDDO
     ENDIF
@@ -480,7 +480,7 @@
         excluded_band(indexb) = .TRUE.
       ENDIF
     ENDDO band_loop
-    !  
+    !
     ibndstart = 1
     DO ibnd = 1, nbnd
       IF (excluded_band(ibnd) .eqv. .FALSE.) THEN
@@ -505,8 +505,8 @@
     !
     IF ((nbnd - nexband) /= num_bands ) &
       CALL errore('setup_nnkp', ' something wrong with num_bands', 1)
-    ! 
-    ! Now we read the .nnkp file 
+    !
+    ! Now we read the .nnkp file
     !
     IF (meta_ionode) THEN  ! Read nnkp file on ionode only
       INQUIRE(FILE = TRIM(seedname2)//".nnkp", EXIST = have_nnkp)
@@ -534,18 +534,18 @@
       READ(iunnkp, *) n_proj
     ENDIF
     CALL mp_bcast(n_proj, meta_ionode_id, world_comm)
-    ! 
+    !
     ALLOCATE(gf(npwx, n_proj), STAT = ierr)
     IF (ierr /= 0) CALL errore('setup_nnkp', 'Error allocating gf', 1)
     ALLOCATE(csph(16, n_proj), STAT = ierr)
     IF (ierr /= 0) CALL errore('setup_nnkp', 'Error allocating csph', 1)
-    IF (noncolin) THEN 
+    IF (noncolin) THEN
       ALLOCATE(spin_eig(n_proj), STAT = ierr)
       IF (ierr /= 0) CALL errore('setup_nnkp', 'Error allocating spin_eig', 1)
       ALLOCATE(spin_qaxis(3, n_proj), STAT = ierr)
       IF (ierr /= 0) CALL errore('setup_nnkp', 'Error allocating spin_qaxis', 1)
     ENDIF
-    ! 
+    !
     IF (meta_ionode) THEN   ! read from ionode only
       DO iw = 1, n_proj
         READ(iunnkp, *) (center_w(ipol, iw), ipol = 1, 3), l_w(iw), mr_w(iw), r_w(iw)
@@ -567,7 +567,7 @@
         ENDIF
       ENDDO
     ENDIF
-    ! 
+    !
     ! automatic projections
     IF (meta_ionode) THEN
       CALL scan_file_to(iunnkp, 'auto_projections', found)
@@ -584,7 +584,7 @@
             WRITE(stdout, '(/, " ****** end Error message ******",//)')
             CALL errore('setup_nnkp', 'Inconsistent options for projections.', 1)
           ELSE
-            IF (tmp_auto /= 0) & 
+            IF (tmp_auto /= 0) &
               CALL errore('setup_nnkp', 'Second entry in auto_projections block is not 0. ' // &
                           'See Wannier90 User Guide in the auto_projections section for clarifications.', 1)
           ENDIF
@@ -603,7 +603,7 @@
     ENDIF
     !
     IF (.NOT. scdm_proj) WRITE(stdout, *) '     - All guiding functions are given '
-    ! 
+    !
     ! Broadcast
     CALL mp_bcast(center_w, meta_ionode_id, world_comm)
     CALL mp_bcast(l_w,      meta_ionode_id, world_comm)
@@ -654,7 +654,7 @@
     ! Broadcast
     CALL mp_bcast(kpb,   meta_ionode_id, world_comm)
     CALL mp_bcast(g_kpb, meta_ionode_id, world_comm)
-    ! 
+    !
     DO ik  = 1, iknum
       DO ib = 1, nnb
         IF ((g_kpb(1, ik, ib) == 0) .AND.  &
@@ -688,7 +688,7 @@
     WRITE(stdout, *) '     - All neighbours are found '
     WRITE(stdout, *)
     !
-    IF (meta_ionode) THEN 
+    IF (meta_ionode) THEN
       CALL scan_file_to(iunnkp, 'exclude_bands', found)
       IF (.NOT. found) THEN
         CALL errore('setup_nnkp', 'Could not find exclude_bands block in ' &
@@ -701,7 +701,7 @@
         IF (indexb < 1 .OR. indexb > nbnd) &
           CALL errore('setup_nnkp', ' wrong excluded band index ', 1)
         excluded_band(indexb) = .TRUE.
-      ENDDO 
+      ENDDO
       num_bands = nbnd - nexband
     ENDIF
     !
@@ -709,7 +709,7 @@
     CALL mp_bcast(nexband,       meta_ionode_id, world_comm)
     CALL mp_bcast(excluded_band, meta_ionode_id, world_comm)
     CALL mp_bcast(num_bands,     meta_ionode_id, world_comm)
-    ! 
+    !
     IF (meta_ionode) THEN
       CLOSE(iunnkp)
     ENDIF
@@ -730,9 +730,9 @@
     !! Keyword searched for
     LOGICAL, INTENT(out)         :: found
     !! Check if the section in the .nnkp file is found.
-    INTEGER, INTENT(in)          :: iunr 
+    INTEGER, INTENT(in)          :: iunr
     !! Unit number for file
-    !  
+    !
     ! Local variables
     CHARACTER(LEN = 80) :: line1, line2
     !!
@@ -777,12 +777,12 @@
     USE constants_epw, ONLY : zero, czero, bohr
     !
     IMPLICIT NONE
-    ! 
+    !
     CHARACTER(LEN = 256) :: tempfile
     !! Temporary file
     CHARACTER (LEN = 80) :: line
     !! Temporary character
-    INTEGER :: iw 
+    INTEGER :: iw
     !! Counter on wannier functions
     INTEGER :: ik
     !! Counter of k-point index
@@ -794,7 +794,7 @@
     !! Integer variable for I/O control
     INTEGER :: ierr
     !! Error status
-    REAL(KIND = DP), ALLOCATABLE :: eigvaltmp(:, :) 
+    REAL(KIND = DP), ALLOCATABLE :: eigvaltmp(:, :)
     !! Temporary array containing the eigenvalues (KS or GW) when read from files
     !
     ALLOCATE(u_mat(n_wannier, n_wannier, iknum), STAT = ierr)
@@ -828,7 +828,7 @@
         READ(iuqpeig, '(a)') line
         DO ik = 1, nkstot
           ! We do not save the k-point for the moment ==> should be read and
-          ! tested against the current one  
+          ! tested against the current one
           READ(iuqpeig, '(a)') line
           READ(iuqpeig, *) eigvaltmp(:, ik)
         ENDDO
@@ -844,13 +844,13 @@
         DEALLOCATE(eigvaltmp, STAT = ierr)
         IF (ierr /= 0) CALL errore('run_wannier', 'Error deallocating eigvaltmp', 1)
       ENDIF
-  
+
   ! SP : This file is not used for now. Only required to build the UNK file
   !      tempfile = TRIM(prefix)//'.mmn'
   !      OPEN(iummn, FILE = tempfile, IOSTAT = ios, FORM = 'unformatted')
   !      WRITE(iummn) m_mat
   !      CLOSE(iummn)
-  
+
       CALL wannier_run(seedname2, mp_grid, iknum,   &              ! input
                        rlatt, glatt, kpt_latt, num_bands,       &  ! input
                        n_wannier, nnb, nat, atsym,              &  ! input
@@ -873,7 +873,7 @@
     WRITE(stdout, *) '    Wannier Function centers (cartesian, alat) and spreads (ang):'
     WRITE(stdout, *)
     DO iw = 1, n_wannier
-      WRITE(stdout, '(5x, "(", 3f10.5, ") :  ",f8.5)') & 
+      WRITE(stdout, '(5x, "(", 3f10.5, ") :  ",f8.5)') &
            wann_centers(:, iw) / alat / bohr, wann_spreads(iw)
     ENDDO
     WRITE(stdout, *)
@@ -894,10 +894,10 @@
     !!  adapted from compute_amn in pw2wannier90.f90
     !!  parallelization on k-points has been added
     !!  10/2008 Jesse Noffsinger UC Berkeley
-    !!  01/2018 Roxana Margine updated 
+    !!  01/2018 Roxana Margine updated
     !!
     USE kinds,           ONLY : DP
-    USE io_global,       ONLY : stdout, meta_ionode 
+    USE io_global,       ONLY : stdout, meta_ionode
     USE klist,           ONLY : nks, igk_k
     USE klist_epw,       ONLY : xk_loc
     USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
@@ -905,10 +905,10 @@
     USE gvect,           ONLY : g, ngm
     USE gvecw,           ONLY : gcutw
     USE uspp,            ONLY : nkb, vkb
-    USE becmod,          ONLY : becp, calbec, deallocate_bec_type, & 
+    USE becmod,          ONLY : becp, calbec, deallocate_bec_type, &
                                 allocate_bec_type
     USE wannierEPW,      ONLY : csph, excluded_band, gf, num_bands, &
-                                n_wannier, iknum, n_proj, a_mat, &  
+                                n_wannier, iknum, n_proj, a_mat, &
                                 spin_qaxis, spin_eig, gf_spinor, sgf_spinor
     USE uspp_param,      ONLY : upf
     USE noncollin_module,ONLY : noncolin, npol
@@ -917,7 +917,7 @@
     USE mp,              ONLY : mp_sum
     USE kfold,           ONLY : ktokpmq
     USE io_epw,          ONLY : readwfc
-    ! 
+    !
     IMPLICIT NONE
     !
     LOGICAL :: any_uspp
@@ -937,9 +937,9 @@
     INTEGER :: ipool
     !! Index of current pool
     INTEGER ::  nkq
-    !! Index of k-point in the pool 
+    !! Index of k-point in the pool
     INTEGER ::  nkq_abs
-    !! Absolute index of k-point 
+    !! Absolute index of k-point
     INTEGER ::  ik_g
     !! Temporary index of k-point, ik_g = nkq_abs
     INTEGER  :: ipol
@@ -994,7 +994,7 @@
 #if defined(__MPI)
     WRITE(stdout, '(6x, a, i5, a, i4, a)') 'k points = ', iknum, ' in ', npool, ' pools'
 #endif
-    ! 
+    !
     DO ik = 1, nks
       !
       ! returns in-pool index nkq and absolute index nkq_abs of xk
@@ -1005,7 +1005,7 @@
       FLUSH(stdout)
       !
       ! read wfc at k
-      CALL readwfc(my_pool_id + 1, ik, evc) 
+      CALL readwfc(my_pool_id + 1, ik, evc)
       !
       ! sorts k+G vectors in order of increasing magnitude, up to ecut
       CALL gk_sort(xk_loc(1, ik), ngm, g, gcutw, npw, igk_k(1, ik), g2kin)
@@ -1043,11 +1043,11 @@
           spin_z_pos = .FALSE.
           spin_z_neg = .FALSE.
           ! detect if spin quantisation axis is along z
-          IF ((ABS(spin_qaxis(1, iw) - 0.0d0) < eps6) .AND. & 
+          IF ((ABS(spin_qaxis(1, iw) - 0.0d0) < eps6) .AND. &
               (ABS(spin_qaxis(2, iw) - 0.0d0) < eps6) .AND. &
               (ABS(spin_qaxis(3, iw) - 1.0d0) < eps6)) THEN
             spin_z_pos = .TRUE.
-          ELSEIF ((ABS(spin_qaxis(1, iw) - 0.0d0) < eps6) .AND. & 
+          ELSEIF ((ABS(spin_qaxis(1, iw) - 0.0d0) < eps6) .AND. &
                   (ABS(spin_qaxis(2, iw) - 0.0d0) < eps6) .AND. &
                   (ABS(spin_qaxis(3, iw) + 1.0d0) < eps6)) THEN
             spin_z_neg = .TRUE.
@@ -1066,7 +1066,7 @@
                 ipol = (3 + spin_eig(iw)) / 2
               ENDIF
               istart = (ipol - 1) * npwx + 1
-              ! 
+              !
               amn = czero
               IF (any_uspp) THEN
                 amn = ZDOTC(npw, evc(1, ibnd), 1, sgf_spinor(1, iw), 1)
@@ -1076,23 +1076,23 @@
               ENDIF
               CALL mp_sum(amn, intra_pool_comm)
               !
-              ! changed since n_proj is now read from .nnkp file (n_proj=n_wannier) 
+              ! changed since n_proj is now read from .nnkp file (n_proj=n_wannier)
               ! a_mat(ibnd1, iw + n_proj * (ipol - 1), ik_g) = amn
               a_mat(ibnd1, iw, ik_g) = amn
             ENDDO ! ibnd
-          ELSE 
-            ! general routine for quantisation axis (a,b,c) 
+          ELSE
+            ! general routine for quantisation axis (a,b,c)
             ! 'up'    eigenvector is 1/DSQRT(1+c) [c+1,a+ib]
             ! 'down'  eigenvector is 1/DSQRT(1-c) [c-1,a+ib]
             IF (spin_eig(iw) == 1) THEN
-              fac(1) = (1.0d0 / DSQRT(1 + spin_qaxis(3, iw))) & 
+              fac(1) = (1.0d0 / DSQRT(1 + spin_qaxis(3, iw))) &
                      * (spin_qaxis(3, iw) + 1) * cone
-              fac(2) = (1.0d0 / DSQRT(1 + spin_qaxis(3, iw))) & 
+              fac(2) = (1.0d0 / DSQRT(1 + spin_qaxis(3, iw))) &
                      * CMPLX(spin_qaxis(1, iw), spin_qaxis(2, iw), KIND = DP)
             ELSE
-              fac(1) = (1.0d0 / DSQRT(1 + spin_qaxis(3, iw))) & 
+              fac(1) = (1.0d0 / DSQRT(1 + spin_qaxis(3, iw))) &
                      * (spin_qaxis(3, iw)) * cone
-              fac(2) = (1.0d0 / DSQRT(1 - spin_qaxis(3, iw))) & 
+              fac(2) = (1.0d0 / DSQRT(1 - spin_qaxis(3, iw))) &
                      * CMPLX(spin_qaxis(1, iw), spin_qaxis(2, iw), KIND = DP)
             ENDIF
             !
@@ -1105,7 +1105,7 @@
               DO ipol = 1, npol
                 istart = (ipol - 1) * npwx + 1
                 amn_tmp = czero
-                IF (any_uspp) THEN 
+                IF (any_uspp) THEN
                   amn_tmp = ZDOTC(npw, evc(istart, ibnd), 1, sgf_spinor(istart, iw), 1)
                   CALL mp_sum(amn_tmp, intra_pool_comm)
                   amn = amn + amn_tmp
@@ -1133,7 +1133,7 @@
             amn = czero
             amn = ZDOTC(npw, evc(1, ibnd), 1, sgf(1, iw), 1)
             CALL mp_sum(amn, intra_pool_comm)
-            ! 
+            !
             a_mat(ibnd1, iw, ik_g) = amn
           ENDDO ! ibnd
         ENDDO ! iw (wannier fns)
@@ -1144,7 +1144,7 @@
     IF (ierr /= 0) CALL errore('compute_amn_para', 'Error deallocating csph', 1)
     DEALLOCATE(sgf, STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_amn_para', 'Error deallocating sgf', 1)
-    IF (noncolin) THEN  
+    IF (noncolin) THEN
       DEALLOCATE(gf_spinor, STAT = ierr)
       IF (ierr /= 0) CALL errore('compute_amn_para', 'Error deallocating gf_spinor', 1)
       DEALLOCATE(sgf_spinor, STAT = ierr)
@@ -1194,10 +1194,10 @@
     SUBROUTINE compute_amn_with_scdm()
     !-----------------------------------------------------------------------
     !
-    !! This subroutine computes automatic Wannier functions using 
-    !! the selected columns of density matrix (SCDM) method. 
-    !! The subroutine is adapted from compute_amn_with_scdm and 
-    !! compute_amn_with_scdm_spinor subroutines in pw2wannier90.f90. 
+    !! This subroutine computes automatic Wannier functions using
+    !! the selected columns of density matrix (SCDM) method.
+    !! The subroutine is adapted from compute_amn_with_scdm and
+    !! compute_amn_with_scdm_spinor subroutines in pw2wannier90.f90.
     !
     USE kinds,           ONLY : DP
     USE constants,       ONLY : rytoev
@@ -1276,7 +1276,7 @@
     INTEGER, ALLOCATABLE :: piv_spin(:)
     !! jml: Spin index of piv
     REAL(KIND = DP):: pnorm
-    !! 
+    !!
     REAL(KIND = DP):: norm_psi
     !! norm of wave function |Psi|
     REAL(KIND = DP):: f_gamma
@@ -1364,7 +1364,7 @@
       IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating piv_pos', 1)
       ALLOCATE(piv_spin(n_wannier), STAT = ierr)
       IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating piv_spin', 1)
-      IF (meta_ionode) THEN 
+      IF (meta_ionode) THEN
         ALLOCATE(qr_tau(2 * minmn), STAT = ierr)
         IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating qr_tau', 1)
         ALLOCATE(rwork(2 * 2 * nrtot), STAT = ierr)
@@ -1442,7 +1442,7 @@
           ibnd1 = ibnd1 + 1
           !
           ! check ibnd1 <= numbands
-          IF (ibnd1 > numbands) & 
+          IF (ibnd1 > numbands) &
             CALL errore('compute_amn_with_scdm', &
                         'Something wrong with the number of bands. Check exclude_bands.', 1)
           IF (TRIM(scdm_entanglement) == 'isolated') THEN
@@ -1466,7 +1466,7 @@
           ! vv: Build Psi_k = Unk * focc at G-point only
           pnorm = REAL(SUM(psic_nc(1:nrtot, 1) * CONJG(psic_nc(1:nrtot, 1))), KIND = DP) + &
                   REAL(SUM(psic_nc(1:nrtot, 2) * CONJG(psic_nc(1:nrtot, 2))), KIND = DP)
-          norm_psi = DSQRT(pnorm) 
+          norm_psi = DSQRT(pnorm)
           psi_gamma(        1:nrtot,     ibnd1) = (psic_nc(1:nrtot, 1) / norm_psi) * f_gamma
           psi_gamma(1 + nrtot:2 * nrtot, ibnd1) = (psic_nc(1:nrtot, 2) / norm_psi) * f_gamma
         ENDDO ! ibnd
@@ -1476,7 +1476,7 @@
           ibnd1 = ibnd1 + 1
           !
           ! check ibnd1 <= numbands
-          IF (ibnd1 > numbands) & 
+          IF (ibnd1 > numbands) &
             CALL errore('compute_amn_with_scdm', &
                         'Something wrong with the number of bands. Check exclude_bands.', 1)
           IF (TRIM(scdm_entanglement) == 'isolated') THEN
@@ -1526,7 +1526,7 @@
       cwork(:)  = czero
       rwork(:)  = zero
       !
-      IF (noncolin) THEN 
+      IF (noncolin) THEN
         CALL ZGEQP3(numbands, 2 * nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
                     piv, qr_tau, cwork, lcwork, rwork, info)
       ELSE
@@ -1581,7 +1581,7 @@
     ENDDO
     !
     cpos(:, :) = zero
-    IF (noncolin) THEN 
+    IF (noncolin) THEN
       DO iw = 1, n_wannier
         cpos(iw, :) = rpos(piv_pos(iw), :)
         cpos(iw, :) = cpos(iw, :) - ANINT(cpos(iw, :))
@@ -1702,10 +1702,10 @@
           ENDDO ! iw (wannier fns)
         ENDDO ! ibnd
       ENDIF ! noncollinear
-      CALL mp_sum(nowfc, intra_pool_comm) 
+      CALL mp_sum(nowfc, intra_pool_comm)
       !
-      DEALLOCATE(phase_g, STAT = ierr) 
-      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating phase_g', 1) 
+      DEALLOCATE(phase_g, STAT = ierr)
+      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating phase_g', 1)
       !
       singval(:)   = zero
       umat(:, :)   = czero
@@ -1798,7 +1798,7 @@
     DEALLOCATE(amat, STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating amat', 1)
     !
-    IF (noncolin) THEN 
+    IF (noncolin) THEN
       DEALLOCATE(piv_pos, STAT = ierr)
       IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating piv_pos', 1)
       DEALLOCATE(piv_spin, STAT = ierr)
@@ -1817,18 +1817,18 @@
     !-----------------------------------------------------------------------
     SUBROUTINE orient_gf_spinor(npw)
     !-----------------------------------------------------------------------
-    !! 
+    !!
     !! FIXME
-    !! 
+    !!
     USE kinds,            ONLY : DP
     USE constants_epw,    ONLY : czero, cone, eps6
     USE wvfct,            ONLY : npwx
     USE wannierEPW,       ONLY : gf, n_proj, spin_qaxis, spin_eig, gf_spinor
-    ! 
+    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: npw
-    !! Number of plane waves 
+    !! Number of plane waves
     !
     ! Local variables
     LOGICAL :: spin_z_pos
@@ -1849,9 +1849,9 @@
       spin_z_pos = .FALSE.
       spin_z_neg = .FALSE.
       ! detect if spin quantisation axis is along z
-      IF ((ABS(spin_qaxis(1, iw) - 0.0d0) < eps6) .AND. & 
+      IF ((ABS(spin_qaxis(1, iw) - 0.0d0) < eps6) .AND. &
           (ABS(spin_qaxis(2, iw) - 0.0d0) < eps6) .AND. &
-          (ABS(spin_qaxis(3, iw) - 1.0d0) < eps6)) THEN 
+          (ABS(spin_qaxis(3, iw) - 1.0d0) < eps6)) THEN
         spin_z_pos = .TRUE.
       ELSEIF ((ABS(spin_qaxis(1, iw) - 0.0d0) < eps6) .AND. &
               (ABS(spin_qaxis(2, iw) - 0.0d0) < eps6) .AND. &
@@ -1914,7 +1914,7 @@
     USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
     USE uspp,            ONLY : nkb, vkb
     USE uspp_param,      ONLY : upf, lmaxq, nh, nhm
-    USE becmod,          ONLY : becp, calbec, allocate_bec_type, & 
+    USE becmod,          ONLY : becp, calbec, allocate_bec_type, &
                                 deallocate_bec_type
     USE noncollin_module,ONLY : noncolin, npol
     USE spin_orb,        ONLY : lspinorb
@@ -1930,7 +1930,7 @@
     USE kfold,           ONLY : ktokpmq
     USE io_epw,          ONLY : readwfc
     USE elph2,           ONLY : nbndep
-    ! 
+    !
     IMPLICIT NONE
     !
     CHARACTER (LEN=80) :: filmmn
@@ -1977,10 +1977,10 @@
     INTEGER  :: ipol
     !! Index of spin-up/spin-down polarizations
     INTEGER ::  istart, iend
-    !! Starting/ending index on plane waves 
+    !! Starting/ending index on plane waves
     INTEGER ::  ik_g
     !! Temporary index of k-point, ik_g = nkq_abs
-    INTEGER :: ind0 
+    INTEGER :: ind0
     !! Starting index for k-point nearest neighbours in each pool
     INTEGER :: ierr
     !! Error status
@@ -1991,7 +1991,7 @@
     COMPLEX(KIND = DP) :: mmn
     !! Element of M_mn matrix
     REAL(KIND = DP), ALLOCATABLE :: dxk(:, :)
-    !! Temporary vector k+b - k 
+    !! Temporary vector k+b - k
     REAL(KIND = DP), ALLOCATABLE :: qg(:)
     !!  Square of dxk
     REAL(KIND = DP), ALLOCATABLE :: ylm(:, :)
@@ -2019,7 +2019,7 @@
     COMPLEX(KIND = DP), ALLOCATABLE :: becp2_nc(:, :, :)
     !! Beta functions, noncolin
     COMPLEX(KIND = DP), ALLOCATABLE :: qb(:, :, :, :)
-    !! Local variables for uspp 
+    !! Local variables for uspp
     COMPLEX(KIND = DP), ALLOCATABLE :: qgm(:)
     !! Local variables for uspp
     COMPLEX(KIND = DP), ALLOCATABLE :: qq_so(:, :, :, :)
@@ -2027,7 +2027,7 @@
     !
     any_uspp = ANY(upf(:)%tvanp)
     !
-    ALLOCATE(phase(dffts%nnr), STAT = ierr) 
+    ALLOCATE(phase(dffts%nnr), STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error allocating phase', 1)
     ALLOCATE(igkq(npwx), STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error allocating igkq', 1)
@@ -2079,13 +2079,13 @@
       DO ik = 1, iknum ! loop over k-points
         DO ib = 1, nnb ! loop over nearest neighbours for each k-point
           ind = ind + 1
-          ikp = kpb(ik, ib) 
+          ikp = kpb(ik, ib)
           !
           g_(:) = REAL(g_kpb(:, ik, ib))
           ! bring g_ from crystal to cartesian
           CALL cryst_to_cart(1, g_, bg, 1)
-          dxk(:, ind) = xk_all(:, ikp) + g_(:) - xk_all(:, ik) 
-          qg(ind) = SUM(dxk(:, ind) * dxk(:, ind)) 
+          dxk(:, ind) = xk_all(:, ikp) + g_(:) - xk_all(:, ik)
+          qg(ind) = SUM(dxk(:, ind) * dxk(:, ind))
         ENDDO
       ENDDO
       !
@@ -2093,12 +2093,12 @@
       IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error allocating ylm', 1)
       ALLOCATE(qgm(nbt), STAT = ierr)
       IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error allocating qgm', 1)
-      ALLOCATE(qb(nhm, nhm, ntyp, nbt), STAT = ierr) 
+      ALLOCATE(qb(nhm, nhm, ntyp, nbt), STAT = ierr)
       IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error allocating qb', 1)
       ALLOCATE(qq_so(nhm, nhm, 4, ntyp), STAT = ierr)
       IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error allocating qq_so', 1)
       !
-      ! get spherical harmonics ylm 
+      ! get spherical harmonics ylm
       CALL ylmr2(lmaxq * lmaxq, nbt, dxk, qg, ylm)
       qg(:) = DSQRT(qg(:)) * tpiba
       !
@@ -2129,12 +2129,12 @@
     WRITE(stdout, '(6x, a, i5, a, i4, a)') 'k points = ', iknum, ' in ', npool, ' pools'
 #endif
     !
-    ! returns in-pool index nkq and absolute index nkq_abs of first k-point in this pool 
+    ! returns in-pool index nkq and absolute index nkq_abs of first k-point in this pool
     CALL ktokpmq( xk_loc(:,1), zero_vect, +1, ipool, nkq, nkq_abs )
     ind0 = (nkq_abs - 1) * nnb
     !
     ind = ind0
-    DO ik = 1, nks 
+    DO ik = 1, nks
       !
       ! returns in-pool index nkq and absolute index nkq_abs of xk
       CALL ktokpmq(xk_loc(:, ik), zero_vect, +1, ipool, nkq, nkq_abs)
@@ -2242,7 +2242,7 @@
                   ENDDO ! jh
                   ijkb0 = ijkb0 + nh(nt)
                 ENDIF  ! ityp
-              ENDDO  ! nat 
+              ENDDO  ! nat
             ELSE  ! tvanp
               DO na = 1, nat
                 IF (ityp(na) == nt) ijkb0 = ijkb0 + nh(nt)
@@ -2281,7 +2281,7 @@
           !  aa = 0.d0
           !
           !  Mkb(m,n) = Mkb(m,n) + \sum_{ijI} qb_{ij}^I * e^-i(b*tau_I)
-          !             <psi_m,k1| beta_i,k1 > < beta_j,k2 | psi_n,k2 > 
+          !             <psi_m,k1| beta_i,k1 > < beta_j,k2 | psi_n,k2 >
           !
           IF (noncolin) THEN
             DO n = 1, nbnd
@@ -2346,11 +2346,11 @@
       ENDIF !write_mmn
     ENDIF
     !
-    DEALLOCATE(Mkb, STAT = ierr) 
+    DEALLOCATE(Mkb, STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error deallocating Mkb', 1)
-    DEALLOCATE(phase, STAT = ierr) 
+    DEALLOCATE(phase, STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error deallocating phase', 1)
-    DEALLOCATE(evcq, STAT = ierr) 
+    DEALLOCATE(evcq, STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error deallocating evcq', 1)
     DEALLOCATE(igkq, STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error deallocating igkq', 1)
@@ -2364,7 +2364,7 @@
     !
     IF (any_uspp) THEN
       DEALLOCATE(dxk, STAT = ierr)
-      IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error deallocating dxk', 1) 
+      IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error deallocating dxk', 1)
       DEALLOCATE(qb, STAT = ierr)
       IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error deallocating qb', 1)
       DEALLOCATE(qq_so, STAT = ierr)
@@ -2383,7 +2383,7 @@
     !
     ! reopen wfc here, leaving UNIT = 20 in the same state
     iuwfc = 20
-    CALL diropn(iuwfc, 'wfc', lrwfc, exst)  
+    CALL diropn(iuwfc, 'wfc', lrwfc, exst)
     !
     RETURN
     !
@@ -2402,7 +2402,7 @@
     !!
     !!  06/2010  Jesse Noffsinger: adapted from compute_amn_para
     !!  08/2016  Samuel Ponce: adapted to work with SOC
-    !! 
+    !!
     !
     USE kinds,           ONLY : DP
     USE io_global,       ONLY : stdout
@@ -2426,7 +2426,7 @@
     USE io_epw,          ONLY : readwfc
     !
     IMPLICIT NONE
-    !  
+    !
     LOGICAL :: any_uspp
     !! Check if USPP is present
     !
@@ -2438,10 +2438,10 @@
     !! Counter on G vector
     INTEGER :: ierr
     !! Error status
-    ! 
+    !
     COMPLEX(KIND = DP) :: dipole_aux(3, nbnd, nbnd)
     !! Auxilary dipole
-    COMPLEX(KIND = DP) :: caux 
+    COMPLEX(KIND = DP) :: caux
     !! Wavefunction squared
     !
     any_uspp = ANY(upf(:)%tvanp)
@@ -2461,9 +2461,9 @@
       CALL allocate_bec_type(nkb, n_wannier, becp)
     ENDIF
     !
-    ! computes velocity dmec = v_mn(\alpha,k) in the local approximation 
-    ! acording to [Eqn. 60 of Comp. Phys. Commun. 209, 116 (2016)] 
-    ! v_mn(\alpha,k) = k \delta_mn + \sum_G * CONJG(c_mk(G)) * c_nk(G) * G 
+    ! computes velocity dmec = v_mn(\alpha,k) in the local approximation
+    ! acording to [Eqn. 60 of Comp. Phys. Commun. 209, 116 (2016)]
+    ! v_mn(\alpha,k) = k \delta_mn + \sum_G * CONJG(c_mk(G)) * c_nk(G) * G
     !
     DO ik = 1, nks
       !
@@ -2483,7 +2483,7 @@
           DO ig = 1, npw
             IF (igk_k(ig, ik) > SIZE(g, 2) .OR. igk_k(ig, ik) < 1) CYCLE
             !
-            caux = CONJG(evc(ig, ibnd)) * evc(ig, jbnd) 
+            caux = CONJG(evc(ig, ibnd)) * evc(ig, jbnd)
             !
             IF (noncolin) THEN
               !
@@ -2504,7 +2504,7 @@
         DO ig = 1, npw
           IF (igk_k(ig, ik) > SIZE(g, 2) .OR. igk_k(ig, ik) < 1) CYCLE
           !
-          caux = CONJG(evc(ig, ibnd)) * evc(ig, ibnd) 
+          caux = CONJG(evc(ig, ibnd)) * evc(ig, ibnd)
           !
           IF (noncolin) THEN
             !
@@ -2528,7 +2528,7 @@
     !
     WRITE(stdout, '(/5x, a)') 'Dipole matrix elements calculated'
     WRITE(stdout, *)
-    !DBSP 
+    !DBSP
     !WRITE(stdout, *) 'dmec ', SUM(dmec)
     !IF (meta_ionode) THEN
     !   WRITE(stdout, *) 'dmec(:, :, :, 1) ',sum(dmec(:, :, :, 1))
@@ -2536,7 +2536,7 @@
     !ENDIF
     !
     RETURN
-    ! 
+    !
     !------------------------------------------------------------------------
     END SUBROUTINE compute_pmn_para
     !-----------------------------------------------------------------------
@@ -2546,7 +2546,7 @@
     !-----------------------------------------------------------------------
     !
     ! Here we compute and write out the final ukk matrix which is used by
-    ! epw.x to localize the electron wavefuctions (and therefore the ep-matrix 
+    ! epw.x to localize the electron wavefuctions (and therefore the ep-matrix
     ! elements)
     ! 10/2008 Jesse Noffsinger UC Berkeley
     ! 07/2010 Fixed the rotation for ndimwin when lower bands are not included
@@ -2626,10 +2626,10 @@
       DO ibnd = 1, nbnd
         WRITE(iunukk, *) excluded_band(ibnd)
       ENDDO
-      ! 
+      !
       ! Now write the Wannier centers to files
       DO iw = 1, n_wannier
-        ! SP : Need more precision other WS are not determined properly. 
+        ! SP : Need more precision other WS are not determined properly.
         !WRITE (iuukk, '(3f12.8)') wann_centers(:, iw) / alat / bohr
         WRITE (iunukk, '(3E22.12)') wann_centers(:, iw) / alat / bohr
       ENDDO
@@ -2651,9 +2651,9 @@
     SUBROUTINE phases_a_m
     !-----------------------------------------------------------------------
     !!
-    !! We will set phases here on the matrices. It should not affect 
-    !! the spreads and centers found in w90, but it will leave 
-    !! u_mat_opt and u_mat to reflect the known phases. 
+    !! We will set phases here on the matrices. It should not affect
+    !! the spreads and centers found in w90, but it will leave
+    !! u_mat_opt and u_mat to reflect the known phases.
     !!
     !
     USE kinds,           ONLY : DP
@@ -2662,7 +2662,7 @@
     USE klist,           ONLY : nkstot, nks
     USE klist_epw,       ONLY : xk_loc
     USE wvfct,           ONLY : nbnd
-    USE wannierEPW,      ONLY : a_mat, m_mat, n_wannier, n_proj, & 
+    USE wannierEPW,      ONLY : a_mat, m_mat, n_wannier, n_proj, &
                                 nnb, kpb, iknum, excluded_band
     USE elph2,           ONLY : umat, umat_all
     USE constants_epw,   ONLY : czero, cone, zero
@@ -2710,13 +2710,13 @@
     !! Temporary m_mat matrices
     !
     ! RM: Band-dimension of a_mat and m_mat is num_bands while that of
-    !     umat and umat_all is nbnd. This causes a problem if exclude_bands 
-    !     is used because num_bands = nbnd - nexband 
-    !     a_mat(num_bands,n_wannier,nkstot) in compute_amn_para    
+    !     umat and umat_all is nbnd. This causes a problem if exclude_bands
+    !     is used because num_bands = nbnd - nexband
+    !     a_mat(num_bands,n_wannier,nkstot) in compute_amn_para
     !     m_mat(num_bands,n_wannier,nnb,nkstot) in compute_mmn_para
     !     umat(nbnd,nbnd,nks) and umat_mat(nbnd,nbnd,nkstot) in setphases_wrap
     !
-    ALLOCATE(a_mat_tmp(nbnd, n_wannier, iknum), STAT = ierr) 
+    ALLOCATE(a_mat_tmp(nbnd, n_wannier, iknum), STAT = ierr)
     IF (ierr /= 0) CALL errore('phases_a_m', 'Error allocating a_mat_tmp', 1)
     ALLOCATE(a_mat_tmp1(nbnd, n_wannier, iknum), STAT = ierr)
     IF (ierr /= 0) CALL errore('phases_a_m', 'Error allocating a_mat_tmp1', 1)
@@ -2772,11 +2772,11 @@
       CALL ktokpmq(xk_loc(:, ik), zero_vect, +1, ipool, nkq, nkq_abs)
       ik_g = nkq_abs
       !
-      !  GF_n are the guiding functions which are our initial guesses 
-      !  Amn(k) = <psi_k,m|GF_n>.  
+      !  GF_n are the guiding functions which are our initial guesses
+      !  Amn(k) = <psi_k,m|GF_n>.
       !  We want U(k)^\dagger<psi_k,m|GF_m>
       !
-      ! CALL ZGEMM('c', 'n', nbnd, n_wannier, nbnd, cone, umat(:, :, ik), & 
+      ! CALL ZGEMM('c', 'n', nbnd, n_wannier, nbnd, cone, umat(:, :, ik), &
       !      nbnd, a_mat(:, :, ik_g), nbnd, czero, a_mat_tmp(:, :, ik_g), nbnd)
       CALL ZGEMM('c', 'n', nbnd, n_wannier, nbnd, cone, umat(:, :, ik), &
            nbnd, a_mat_tmp1(:, :, ik_g), nbnd, czero, a_mat_tmp(:, :, ik_g), nbnd)
@@ -2786,16 +2786,16 @@
         !
         ! Mmn(k,k+b)  = <psi_k_m| psi_(k+b)_n> so we need
         !  (U(k)^\dagger <psi_k_m| ) * (|psi_k+b_n> U(k+b)
-        ! = U(k)^\dagger (M_mn) = m_mat_tmp, 
-        ! Mmn(k,k+b)' = m_mat_tmp*U(k+b) 
+        ! = U(k)^\dagger (M_mn) = m_mat_tmp,
+        ! Mmn(k,k+b)' = m_mat_tmp*U(k+b)
         !
-        ! CALL ZGEMM('c', 'n', nbnd, nbnd, nbnd, cone, umat(:, :, ik), & 
+        ! CALL ZGEMM('c', 'n', nbnd, nbnd, nbnd, cone, umat(:, :, ik), &
         !      nbnd, m_mat(:, :, ib, ik_g), nbnd, czero, m_mn_tmp1(:, :), nbnd)
         CALL ZGEMM('c', 'n', nbnd, nbnd, nbnd, cone, umat(:, :, ik), &
              nbnd, m_mat_tmp(:, :, ib, ik_g), nbnd, czero, m_mn_tmp1(:, :), nbnd)
-        CALL ZGEMM('n', 'n', nbnd, nbnd, nbnd, cone, m_mn_tmp1(:, :), & 
+        CALL ZGEMM('n', 'n', nbnd, nbnd, nbnd, cone, m_mn_tmp1(:, :), &
              nbnd, umat_all(:, :, ikb), nbnd, czero, m_mn_tmp2(:, :), nbnd)
-        ! 
+        !
         ! m_mn_tmp1 = MATMUL(CONJG(TRANSPOSE(umat(:, :, ik))), m_mat(:, :, ib, ik_g))
         ! m_mn_tmp2 = MATMUL(m_mn_tmp1, umat_g(:, :, ikb))
         !
@@ -2809,7 +2809,7 @@
     ! m_mat(:, :, :, :) = m_mn_tmp3(:, :, :, :)
     !
     ! slim down a_mat and m_mat matrices to num_bands=nbnd-nexband bands
-    ! 
+    !
     DO ik = 1, nkstot
       DO iw = 1, n_proj
         ibnd_m = 0
@@ -2829,7 +2829,7 @@
           DO m = 1, nbnd
             IF (excluded_band(m)) CYCLE
             ibnd_m = ibnd_m + 1
-            m_mat(ibnd_m, ibnd_n, ib, ik) = m_mn_tmp3(m, n, ib, ik) 
+            m_mat(ibnd_m, ibnd_n, ib, ik) = m_mn_tmp3(m, n, ib, ik)
           ENDDO
         ENDDO
       ENDDO
@@ -2857,9 +2857,9 @@
     !-----------------------------------------------------------------------
     SUBROUTINE generate_guiding_functions(ik)
     !-----------------------------------------------------------------------
-    !! 
+    !!
     !! Guiding functions
-    !!  
+    !!
     !
     USE kinds,          ONLY : DP
     USE mp_global,      ONLY : intra_pool_comm
@@ -2868,7 +2868,7 @@
     USE gvect,          ONLY : g
     USE cell_base,      ONLY : tpiba
     USE wannierEPW,     ONLY : n_proj, gf, center_w, csph, alpha_w, r_w
-    USE klist,          ONLY : igk_k 
+    USE klist,          ONLY : igk_k
     USE klist_epw,      ONLY : xk_loc
     USE constants_epw,  ONLY : zero, czero, ci, twopi, eps8
     !
@@ -2895,7 +2895,7 @@
     INTEGER :: ierr
     !! Error status
     REAL(KIND = DP) :: arg
-    !! 2*pi*(k+G)*r 
+    !! 2*pi*(k+G)*r
     REAL(KIND = DP) :: anorm
     !! Anormal
     REAL(KIND = DP), EXTERNAL :: DDOT
@@ -2912,7 +2912,7 @@
     !! (-i)^l
     COMPLEX(KIND = DP), EXTERNAL :: ZDOTC
     !! Scalar product of two complex vectors
-    COMPLEX(KIND = DP), ALLOCATABLE :: sk(:) 
+    COMPLEX(KIND = DP), ALLOCATABLE :: sk(:)
     !! e^{-i*2*pi*(k+G)*r}
     !
     ALLOCATE(gk(3, npw), STAT = ierr)
@@ -2941,12 +2941,12 @@
     ! define qg as the norm of (k+g) in a.u.
     qg(:) = DSQRT(qg(:)) * tpiba
     !
-    ! RM changed according to QE4.0.3/PP/pw2wannier90 
+    ! RM changed according to QE4.0.3/PP/pw2wannier90
     DO iw = 1, n_proj
       !
       gf(:, iw) = czero
       !
-      CALL radialpart(npw, qg, alpha_w(iw), r_w(iw), lmax, radial) 
+      CALL radialpart(npw, qg, alpha_w(iw), r_w(iw), lmax, radial)
       !
       DO lm = 1, lmax2
         IF (ABS(csph(lm, iw)) < eps8) CYCLE
@@ -2961,9 +2961,9 @@
       DO ig = 1, npw
         iig = igk_k(ig, ik)
         arg = twopi * DDOT(3, gk(:, ig), 1, center_w(:, iw), 1)
-        ! center_w are cartesian coordinates in units of alat 
+        ! center_w are cartesian coordinates in units of alat
         sk(ig) = CMPLX(COS(arg), - SIN(arg), KIND = DP)
-        gf(ig, iw) = gf(ig, iw) * sk(ig) 
+        gf(ig, iw) = gf(ig, iw) * sk(ig)
       ENDDO
       anorm = REAL(ZDOTC(npw, gf(1, iw), 1, gf(1, iw), 1))
       CALL mp_sum(anorm, intra_pool_comm)
@@ -2990,9 +2990,9 @@
     !-----------------------------------------------------------------------
     SUBROUTINE write_band()
     !-----------------------------------------------------------------------
-    !! 
+    !!
     !! Write bands
-    !! 
+    !!
     USE wvfct,         ONLY : nbnd, et
     USE constants,     ONLY : rytoev
     USE wannierEPW,    ONLY : ikstart, ikstop, iknum, num_bands, eigval, &
@@ -3000,7 +3000,7 @@
     USE constants_epw, ONLY : zero
     !
     IMPLICIT NONE
-    ! 
+    !
     ! Local variables
     INTEGER :: ik
     !! Counter on k-point
@@ -3023,7 +3023,7 @@
       DO ibnd = 1, nbnd
         IF (excluded_band(ibnd)) CYCLE
         ibnd1 = ibnd1 + 1
-        ! 
+        !
         ! RM - same value for rytoev as in wannier90
         ! eigval(ibnd1, ikevc) = et(ibnd, ik) * ryd2ev
         eigval(ibnd1, ikevc) = et(ibnd, ik) * rytoev
@@ -3040,7 +3040,7 @@
     SUBROUTINE write_plot()
     !-----------------------------------------------------------------------
     !!
-    !! JN 06/2009: 
+    !! JN 06/2009:
     !! added a couple of calls -- now works with multiple
     !! pools/procs (but one proc per pool)
     !!
@@ -3051,10 +3051,10 @@
     USE gvecw,           ONLY : gcutw
     USE wavefunctions,   ONLY : evc, psic, psic_nc
     USE wannierEPW,      ONLY : reduce_unk, wvfn_formatted, ispinw, nexband, &
-                                excluded_band 
+                                excluded_band
     USE klist,           ONLY : nks, igk_k
     USE klist_epw,       ONLY : xk_loc
-    USE gvect,           ONLY : g, ngm 
+    USE gvect,           ONLY : g, ngm
     USE fft_base,        ONLY : dffts
     USE fft_interfaces,  ONLY : invfft
     USE noncollin_module,ONLY : noncolin
@@ -3108,11 +3108,11 @@
     !!
 #if defined(__MPI)
     INTEGER nxxs
-    !! 
-    COMPLEX(KIND = DP), ALLOCATABLE :: psic_all(:) 
-    !! 
-    COMPLEX(KIND = DP), ALLOCATABLE :: psic_nc_all(:, :) 
-    !! 
+    !!
+    COMPLEX(KIND = DP), ALLOCATABLE :: psic_all(:)
+    !!
+    COMPLEX(KIND = DP), ALLOCATABLE :: psic_nc_all(:, :)
+    !!
     !
     nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
     IF (noncolin) THEN
@@ -3127,7 +3127,7 @@
 #endif
     !
     CALL start_clock('write_unk')
-    ! 
+    !
     zero_vect(:) = zero
     WRITE(stdout,*) '    Writing out UNK plot files'
     !
@@ -3137,15 +3137,15 @@
       n2by2 = (dffts%nr2 + 1) / 2
       n3by2 = (dffts%nr3 + 1) / 2
       WRITE(stdout, '(3(a, i5))') 'n1by2 =', n1by2, 'n2by2 =', n2by2, 'n3by2 =', n3by2
-      IF (noncolin) THEN                                                               
-        ALLOCATE(psic_nc_small(n1by2 * n2by2 * n3by2, 2), STAT = ierr)                                            
+      IF (noncolin) THEN
+        ALLOCATE(psic_nc_small(n1by2 * n2by2 * n3by2, 2), STAT = ierr)
         IF (ierr /= 0) CALL errore('write_plot', 'Error allocating psic_nc_small', 1)
-        psic_nc_small(:, :) = czero                                                      
-      ELSE                                                                                  
-        ALLOCATE(psic_small(n1by2 * n2by2 * n3by2), STAT = ierr)      
-        IF (ierr /= 0) CALL errore('write_plot', 'Error allocating psic_small', 1)                              
-        psic_small(:) = czero                                                   
-      ENDIF 
+        psic_nc_small(:, :) = czero
+      ELSE
+        ALLOCATE(psic_small(n1by2 * n2by2 * n3by2), STAT = ierr)
+        IF (ierr /= 0) CALL errore('write_plot', 'Error allocating psic_small', 1)
+        psic_small(:) = czero
+      ENDIF
     ENDIF
     !
     DO ik = 1, nks
@@ -3156,16 +3156,16 @@
       !
       spin = ispinw
       IF (ispinw == 0) spin = 1
-      IF (noncolin) THEN                                                               
-        WRITE(wfnname, 201) ik_g                            
-      ELSE                                                                                  
-        WRITE(wfnname, 200) ik_g, spin                                                           
-      ENDIF       
+      IF (noncolin) THEN
+        WRITE(wfnname, 201) ik_g
+      ELSE
+        WRITE(wfnname, 200) ik_g, spin
+      ENDIF
 200 FORMAT('UNK', i5.5, '.', i1)
-201 FORMAT('UNK', i5.5, '.', 'NC')                                                          
+201 FORMAT('UNK', i5.5, '.', 'NC')
       !
-      IF (meta_ionode) THEN 
-        IF (wvfn_formatted) THEN 
+      IF (meta_ionode) THEN
+        IF (wvfn_formatted) THEN
           OPEN(UNIT = iun_plot, FILE = wfnname, FORM = 'formatted')
            IF (reduce_unk) THEN
              WRITE(iun_plot, *) n1by2, n2by2, n3by2, ik_g, nbnd - nexband
@@ -3195,12 +3195,12 @@
         !
         IF (noncolin) THEN
           psic_nc(:, :) = czero
-          DO ipol = 1, 2                                                              
+          DO ipol = 1, 2
             istart = 1 + npwx * (ipol - 1)
-            iend   = npw + npwx * (ipol - 1) 
-            psic_nc(dffts%nl(igk_k(1:npw, ik)), ipol) = evc(istart:iend, ibnd) 
-            CALL invfft('Wave', psic_nc(:,ipol), dffts)                                 
-          ENDDO 
+            iend   = npw + npwx * (ipol - 1)
+            psic_nc(dffts%nl(igk_k(1:npw, ik)), ipol) = evc(istart:iend, ibnd)
+            CALL invfft('Wave', psic_nc(:,ipol), dffts)
+          ENDDO
         ELSE
           psic(:) = czero
           psic(dffts%nl(igk_k(1:npw, ik))) = evc(1:npw, ibnd)
@@ -3255,7 +3255,7 @@
             ENDIF
           ELSE
             IF (reduce_unk) THEN
-              IF (noncolin) THEN            
+              IF (noncolin) THEN
                 DO ipol = 1, 2
                   WRITE(iun_plot) (psic_nc_small(j, ipol), j = 1, n1by2 *n2by2 * n3by2)
                 ENDDO
@@ -3366,11 +3366,11 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE ylm_expansion() 
+    SUBROUTINE ylm_expansion()
     !-----------------------------------------------------------------------
     !!
-    !! Expansion 
-    !!  
+    !! Expansion
+    !!
     USE kinds,         ONLY : DP
     USE random_numbers,ONLY : randy
     USE wannierEPW,       ONLY : n_proj, xaxis, zaxis, csph, l_w, mr_w
@@ -3390,7 +3390,7 @@
     !! Counter on wannier projections
     INTEGER :: ierr
     !! Error status
-    ! 
+    !
     REAL(KIND = DP) :: u(3, 3)
     !!
     REAL(KIND = DP), ALLOCATABLE :: r(:, :)
@@ -3408,7 +3408,7 @@
     !
     ALLOCATE(r(3, lmax2), STAT = ierr)
     IF (ierr /= 0) CALL errore('ylm_expansion', 'Error allocating r', 1)
-    ALLOCATE(rp(3, lmax2), STAT = ierr)  
+    ALLOCATE(rp(3, lmax2), STAT = ierr)
     IF (ierr /= 0) CALL errore('ylm_expansion', 'Error allocating rp', 1)
     ALLOCATE(rr(lmax2), STAT = ierr)
     IF (ierr /= 0) CALL errore('ylm_expansion', 'Error allocating rr', 1)
@@ -3439,14 +3439,14 @@
     !- check that r points are independent
     CALL check_inverse(lmax2, ylm, mly)
     !
-    DO iw = 1, n_proj 
+    DO iw = 1, n_proj
       !
       !- define the u matrix that rotate the reference frame
       CALL set_u_matrix(xaxis(:, iw), zaxis(:, iw), u)
-      !- find rotated r-vectors 
+      !- find rotated r-vectors
       rp(:, :) = MATMUL(u(:, :), r(:, :))
       !- set ylm funtion according to wannier90 (l,mr) indexing in the rotaterd points
-      CALL ylm_wannier(ylm_w, l_w(iw), mr_w(iw), rp, lmax2) 
+      CALL ylm_wannier(ylm_w, l_w(iw), mr_w(iw), rp, lmax2)
       !
       csph(:, iw) = MATMUL(mly(:, :), ylm_w(:))
       !
@@ -3475,8 +3475,8 @@
     !-----------------------------------------------------------------------
     SUBROUTINE check_inverse(lmax2, ylm, mly)
     !-----------------------------------------------------------------------
-    !! 
-    !! Check the inverse 
+    !!
+    !! Check the inverse
     !!
     USE kinds,     ONLY : DP
     USE constants_epw, ONLY : zero, eps8
@@ -3527,7 +3527,7 @@
     !-----------------------------------------------------------------------
     !!
     !! Set the U matrix
-    !!  
+    !!
     USE kinds,     ONLY : DP
     USE constants_epw, ONLY : eps8
     !
@@ -3575,17 +3575,17 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE ylm_wannier(ylm, l, mr, r, nr) 
+    SUBROUTINE ylm_wannier(ylm, l, mr, r, nr)
     !-----------------------------------------------------------------------
     !!
-    !! This routine returns in ylm(r) the values at the nr points r(1:3,1:nr) 
-    !! of the spherical harmonic identified  by indices (l,mr) 
+    !! This routine returns in ylm(r) the values at the nr points r(1:3,1:nr)
+    !! of the spherical harmonic identified  by indices (l,mr)
     !! in table 3.1 of the wannierf90 specification.
-    !! 
-    !! No reference to the particular ylm ordering internal to quantum-espresso
-    !! is assumed. 
     !!
-    !! If ordering in wannier90 code is changed or extended this should be the 
+    !! No reference to the particular ylm ordering internal to quantum-espresso
+    !! is assumed.
+    !!
+    !! If ordering in wannier90 code is changed or extended this should be the
     !! only place to be modified accordingly
     !!
     USE kinds,         ONLY : DP
@@ -3593,7 +3593,7 @@
     USE constants,     ONLY : pi
     USE low_lvl,       ONLY : fy3x2my2, fxx2m3y2, fxx2m3y2, fxyz, fzx2my2, &
                               fyz2, fxz2, fz3, dxy, dx2my2, dyz, dxz, dz2, &
-                              p_z, py, px, s 
+                              p_z, py, px, s
     !
     IMPLICIT NONE
     !
@@ -3649,10 +3649,10 @@
       ENDIF
       !
       IF (l == 0) THEN ! s orbital
-        ylm(ir) = s()  
+        ylm(ir) = s()
       ENDIF
       IF (l == 1) THEN   ! p orbitals
-        IF (mr == 1) ylm(ir) = p_z(cost) 
+        IF (mr == 1) ylm(ir) = p_z(cost)
         IF (mr == 2) ylm(ir) = px(cost, phi)
         IF (mr == 3) ylm(ir) = py(cost, phi)
       ENDIF
@@ -3673,13 +3673,13 @@
         IF (mr == 7) ylm(ir) = fy3x2my2(cost, phi)
       ENDIF
       IF (l == -1) THEN  !  sp hybrids
-        IF (mr == 1) ylm(ir) = bs2 * (s() + px(cost, phi)) 
-        IF (mr == 2) ylm(ir) = bs2 * (s() - px(cost, phi)) 
+        IF (mr == 1) ylm(ir) = bs2 * (s() + px(cost, phi))
+        IF (mr == 2) ylm(ir) = bs2 * (s() - px(cost, phi))
       ENDIF
-      IF (l == -2) THEN  !  sp2 hybrids 
+      IF (l == -2) THEN  !  sp2 hybrids
         IF (mr == 1) ylm(ir) = bs3 * s() - bs6 * px(cost, phi) + bs2 * py(cost, phi)
         IF (mr == 2) ylm(ir) = bs3 * s() - bs6 * px(cost, phi) - bs2 * py(cost, phi)
-        IF (mr == 3) ylm(ir) = bs3 * s() + 2.d0 *bs6 * px(cost, phi) 
+        IF (mr == 3) ylm(ir) = bs3 * s() + 2.d0 *bs6 * px(cost, phi)
       ENDIF
       IF (l == -3) THEN  !  sp3 hybrids
         IF (mr == 1) ylm(ir) = 0.5d0 *(s() + px(cost, phi) + py(cost, phi) + p_z(cost))
@@ -3690,7 +3690,7 @@
       IF (l == -4) THEN  !  sp3d hybrids
         IF (mr == 1) ylm(ir) = bs3 * s() -bs6 * px(cost, phi) + bs2 * py(cost, phi)
         IF (mr == 2) ylm(ir) = bs3 * s() -bs6 * px(cost, phi) - bs2 * py(cost, phi)
-        IF (mr == 3) ylm(ir) = bs3 * s() +2.d0 * bs6 * px(cost, phi) 
+        IF (mr == 3) ylm(ir) = bs3 * s() +2.d0 * bs6 * px(cost, phi)
         IF (mr == 4) ylm(ir) = bs2 * p_z(cost) + bs2 * dz2(cost)
         IF (mr == 5) ylm(ir) =-bs2 * p_z(cost) + bs2 * dz2(cost)
       ENDIF
@@ -3715,7 +3715,7 @@
     SUBROUTINE radialpart(ng, q, alfa, rvalue, lmax, radial)
     !-----------------------------------------------------------------------
     !!
-    !! This routine computes a table with the radial Fourier transform 
+    !! This routine computes a table with the radial Fourier transform
     !! of the radial functions.
     !!
     USE kinds,     ONLY : DP
@@ -3751,7 +3751,7 @@
     !! Size of the radial FFT mesh
     INTEGER :: ierr
     !! Error status
-    ! 
+    !
     REAL(KIND = DP), PARAMETER :: xmin = -6.d0
     !!
     REAL(KIND = DP), PARAMETER :: dx = 0.025d0
@@ -3773,8 +3773,8 @@
     REAL(KIND = DP), ALLOCATABLE :: rij(:)
     !!
     REAL(KIND = DP), ALLOCATABLE :: aux(:)
-    !! 
-    ! 
+    !!
+    !
     mesh_r = NINT((log(rmax) - xmin) / dx + 1)
     !
     ALLOCATE(bes(mesh_r), STAT = ierr)
@@ -3796,17 +3796,17 @@
     ! compute the radial mesh
     !
     DO ir = 1, mesh_r
-      x = xmin  + DBLE(ir - 1) * dx 
+      x = xmin  + DBLE(ir - 1) * dx
       r(ir) = EXP(x) / alfa
       rij(ir) = dx  * r(ir)
     ENDDO
     !
     IF (rvalue == 1) func_r(:) = 2.d0 * alfa**(3.d0 / 2.d0) * EXP(-alfa * r(:))
-    IF (rvalue == 2) func_r(:) = 1.d0 / DSQRT(8.d0) * alfa**(3.d0 / 2.d0) * & 
+    IF (rvalue == 2) func_r(:) = 1.d0 / DSQRT(8.d0) * alfa**(3.d0 / 2.d0) * &
                                 (2.0d0 - alfa * r(:)) * EXP(-alfa * r(:) * 0.5d0)
     IF (rvalue == 3) func_r(:) = DSQRT(4.d0 / 27.d0) * alfa**(2.0d0 / 3.0d0) * &
-                                (1.d0 - 1.5d0 * alfa * r(:) + & 
-                                2.d0 * (alfa * r(:))**2 / 27.d0) * & 
+                                (1.d0 - 1.5d0 * alfa * r(:) + &
+                                2.d0 * (alfa * r(:))**2 / 27.d0) * &
                                 EXP(-alfa * r(:) / 3.0d0)
     pref = fpi / DSQRT(omega)
     !

@@ -1,20 +1,20 @@
   !
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
-  ! 
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
   !
   !----------------------------------------------------------------------
   MODULE dvqpsi
   !----------------------------------------------------------------------
-  !! 
-  !! This module contains the routines to computes dV_bare/dtau * psi or its components. 
-  !! 
+  !!
+  !! This module contains the routines to computes dV_bare/dtau * psi or its components.
+  !!
   IMPLICIT NONE
-  ! 
+  !
   CONTAINS
-    ! 
+    !
     !----------------------------------------------------------------------
     SUBROUTINE dvqpsi_us3(ik, uact, addnlcc, xxkq, xq0, igk, igkq, npw, npwq, evc)
     !----------------------------------------------------------------------
@@ -28,14 +28,14 @@
     !! pseudopotential in dvqpsi_us_only3.
     !! Adapted from PH/dvqpsi_us (QE)
     !!
-    !! RM - Nov/Dec 2014 
+    !! RM - Nov/Dec 2014
     !! Imported the noncolinear case implemented by xlzhang
     !!
-    !! RM - Jan 2019 
+    !! RM - Jan 2019
     !! Updated based on QE 6.3
-    !! 
+    !!
     !! SP - Feb 2020
-    !! Pass the wfc at k (evc) explicitely to work with noncolin rotation.  
+    !! Pass the wfc at k (evc) explicitely to work with noncolin rotation.
     !!
     USE kinds,                 ONLY : DP
     USE pwcom,                 ONLY : nbnd
@@ -77,7 +77,7 @@
     REAL(KIND = DP), INTENT(in) :: xq0(3)
     !! Current coarse q-point coordinate
     REAL(KIND = DP), INTENT(in) :: xxkq(3)
-    !! k+q point coordinate 
+    !! k+q point coordinate
     COMPLEX(KIND = DP), INTENT(in) :: uact(3 * nat)
     !! the pattern of displacements
     COMPLEX(KIND = DP), INTENT(in) :: evc(npwx * npol, nbnd)
@@ -107,7 +107,7 @@
     COMPLEX(KIND = DP) :: gtau
     !! e^{-i G * \tau}
     COMPLEX(KIND = DP) :: u1, u2, u3
-    !! components of displacement pattern u 
+    !! components of displacement pattern u
     COMPLEX(KIND = DP) :: gu0
     !! scalar product q * u
     COMPLEX(KIND = DP) :: gu
@@ -117,7 +117,7 @@
     COMPLEX(KIND = DP), ALLOCATABLE, TARGET :: aux(:)
     !! Auxillary variable
     COMPLEX(KIND = DP), ALLOCATABLE :: aux1(:), aux2(:)
-    !! Auxillary variable 
+    !! Auxillary variable
     COMPLEX(KIND = DP), POINTER :: auxs(:)
     !! Auxiallary pointer
     COMPLEX(KIND = DP), ALLOCATABLE :: drhoc(:)
@@ -155,7 +155,7 @@
         gu0 = xq0(1) * u1 + xq0(2) * u2 + xq0(3) * u3
         DO ig = 1, ngms
           gtau = eigts1(mill(1, ig), na) * &
-                 eigts2(mill(2, ig), na) * & 
+                 eigts2(mill(2, ig), na) * &
                  eigts3(mill(3, ig), na)
           gu = gu0 + g(1, ig) * u1 + g(2, ig) * u2 + g(3, ig) * u3
           aux1(dffts%nl(ig)) = aux1(dffts%nl(ig)) + vlocq(ig, nt) * gu * fact * gtau
@@ -224,7 +224,7 @@
       !
       ! This is needed also when the smooth and the thick grids coincide to
       ! cut the potential at the cut-off
-      ! 
+      !
       auxs(:) = czero
       DO ig = 1, ngms
         auxs(dffts%nl(ig)) = aux(dfftp%nl(ig))
@@ -269,7 +269,7 @@
         ENDIF
       ENDDO
     ENDDO
-    ! 
+    !
     IF (nlcc_any .AND. addnlcc) THEN
       DEALLOCATE(drhoc, STAT = ierr)
       IF (ierr /= 0) CALL errore('dvqpsi_us3', 'Error deallocating drhoc', 1)
@@ -296,7 +296,7 @@
     !----------------------------------------------------------------------
     END SUBROUTINE dvqpsi_us3
     !----------------------------------------------------------------------
-    ! 
+    !
     !----------------------------------------------------------------------
     SUBROUTINE dvqpsi_us_only3(ik, uact, xxkq, igkq, npwq)
     !----------------------------------------------------------------------
@@ -335,14 +335,14 @@
     !! Number of k+G-vectors inside 'ecut sphere'
     INTEGER, INTENT(in) :: igkq(npwq)
     !! k+G+q mapping
-    REAL(KIND = DP), INTENT(in) :: xxkq(3) 
+    REAL(KIND = DP), INTENT(in) :: xxkq(3)
     !! the k+q point (cartesian coordinates)
     COMPLEX(KIND = DP), INTENT(in) :: uact(3 * nat)
     !! the pattern of displacements
     !
     ! Local variables
     LOGICAL :: ok
-    !! 
+    !!
     INTEGER :: na
     !! Counter on atoms
     INTEGER :: nb
@@ -382,18 +382,18 @@
     REAL(KIND = DP), ALLOCATABLE :: deff(:, :, :)
     !
     COMPLEX(KIND = DP), ALLOCATABLE :: ps1(:, :)
-    !! 
+    !!
     COMPLEX(KIND = DP), ALLOCATABLE :: ps2(:, :, :)
-    !!  
+    !!
     COMPLEX(KIND = DP), ALLOCATABLE :: aux(:)
-    !!  
+    !!
     COMPLEX(KIND = DP), ALLOCATABLE :: deff_nc(:, :, :, :)
-    !!  
+    !!
     COMPLEX(KIND = DP), ALLOCATABLE :: ps1_nc(:, :, :)
-    !!  
+    !!
     COMPLEX(KIND = DP), ALLOCATABLE :: ps2_nc(:, :, :, :)
-    !!  
-    ! 
+    !!
+    !
     CALL start_clock('dvqpsi_us_on')
     IF (noncolin) THEN
       ALLOCATE(ps1_nc(nkb, npol, lower_band:upper_band), STAT = ierr)
@@ -579,7 +579,7 @@
     !----------------------------------------------------------------------
     END SUBROUTINE dvqpsi_us_only3
     !----------------------------------------------------------------------
-    ! 
+    !
     !----------------------------------------------------------------------
     SUBROUTINE dvanqq2()
     !----------------------------------------------------------------------
@@ -588,19 +588,19 @@
     !! its derivatives with V_loc and V_eff which are used
     !! to compute term dV_bare/dtau * psi  in addusdvqpsi.
     !! The result is stored in int1, int2, int4, int5. The routine is called
-    !! for each q in nqc. 
+    !! for each q in nqc.
     !! int1 -> Eq. B20 of Ref.[1]
     !! int2 -> Eq. B21 of Ref.[1]
     !! int4 -> Eq. B23 of Ref.[1]
     !! int5 -> Eq. B24 of Ref.[1]
     !!
     !! [1] PRB 64, 235118 (2001).
-    !! 
-    !! RM - Nov/Dec 2014 
+    !!
+    !! RM - Nov/Dec 2014
     !! Imported the noncolinear case implemented by xlzhang
     !!
     !! Roxana Margine - Dec 2018: Updated based on QE 6.3
-    !! SP: Sept. 2019 - Cleaning  
+    !! SP: Sept. 2019 - Cleaning
     !!
     !
     USE kinds,            ONLY : DP
@@ -610,7 +610,7 @@
     USE gvect,            ONLY : ngm, gg, g, eigts1, eigts2, eigts3, mill
     USE scf,              ONLY : v, vltot
     USE noncollin_module, ONLY : noncolin, nspin_mag
-    USE phcom,            ONLY : int1, int2, int4, int4_nc, int5, int5_so, & 
+    USE phcom,            ONLY : int1, int2, int4, int4_nc, int5, int5_so, &
                                  vlocq
     USE qpoint,           ONLY : xq, eigqts
     USE uspp_param,       ONLY : upf, lmaxq, nh
@@ -627,7 +627,7 @@
     INTEGER :: na
     !! counter on atoms
     INTEGER :: nb
-    !! counter on atoms  
+    !! counter on atoms
     INTEGER :: ntb
     !! counter on atomic types (species)
     INTEGER :: nta
@@ -661,7 +661,7 @@
     REAL(KIND = DP), ALLOCATABLE ::  ylmk0(:, :)
     !! the spherical harmonics at G
     COMPLEX(KIND = DP) :: fact
-    !! e^{-i q * \tau} * CONJG(e^{-i q * \tau}) 
+    !! e^{-i q * \tau} * CONJG(e^{-i q * \tau})
     COMPLEX(KIND = DP) :: fact1
     !! -i * omega
     COMPLEX(KIND = DP), EXTERNAL :: ZDOTC
@@ -669,18 +669,18 @@
     COMPLEX(KIND = DP), ALLOCATABLE :: aux1(:), aux2(:), aux3(:), aux5(:)
     !! Auxiallary array
     COMPLEX(KIND = DP), ALLOCATABLE :: sk(:)
-    !! 
+    !!
     COMPLEX(KIND = DP), ALLOCATABLE :: veff(:, :)
     !! effective potential
     COMPLEX(KIND = DP), ALLOCATABLE, TARGET :: qgm(:)
     !! the augmentation function at G
     COMPLEX(KIND = DP), POINTER :: qgmq(:)
     !! the augmentation function at q+G
-    ! 
+    !
     IF (.NOT. okvan) RETURN
     !
     CALL start_clock('dvanqq2')
-    ! 
+    !
     int1(:, :, :, :, :) = czero
     int2(:, :, :, :, :) = czero
     int4(:, :, :, :, :) = czero
@@ -725,9 +725,9 @@
     CALL ylmr2(lmaxq * lmaxq, ngm, g, gg, ylmk0)
     !
     DO ig = 1, ngm
-      qmodg(ig) = DSQRT(gg(ig))
+      qmodg(ig) = DSQRT(gg(ig))*tpiba
     ENDDO
-    ! 
+    !
     ALLOCATE(qpg(3, ngm), STAT = ierr)
     IF (ierr /= 0) CALL errore('dvanqq2', 'Error allocating qpg', 1)
     qpg(:, :) = zero
@@ -738,7 +738,7 @@
     DEALLOCATE(qpg, STAT = ierr)
     IF (ierr /= 0) CALL errore('dvanqq2', 'Error deallocating qpg', 1)
     DO ig = 1, ngm
-      qmod(ig) = DSQRT(qmod(ig))
+      qmod(ig) = DSQRT(qmod(ig))*tpiba
     ENDDO
     !
     !   we start by computing the FT of the effective potential
@@ -796,7 +796,7 @@
                   DO ig = 1, ngm
                     sk(ig) = vlocq(ig, nta) * eigts1(mill(1, ig), na) &
                                             * eigts2(mill(2, ig), na) &
-                                            * eigts3(mill(3, ig), na) 
+                                            * eigts3(mill(3, ig), na)
                   ENDDO
                   !
                   DO ipol = 1, 3
@@ -804,7 +804,7 @@
                       aux5(ig) = sk(ig) * (g(ipol, ig) + xq(ipol))
                     ENDDO
                     int2(ih, jh, ipol, na, nb) = fact * fact1 * ZDOTC(ngm, aux1, 1, aux5, 1)
-                    ! 
+                    !
                     DO jpol = 1, 3
                       IF (jpol >= ipol) THEN
                         DO ig = 1, ngm
@@ -923,11 +923,11 @@
     !
     CALL stop_clock('dvanqq2')
     RETURN
-    ! 
+    !
     !----------------------------------------------------------------------
     END SUBROUTINE dvanqq2
     !----------------------------------------------------------------------
-    ! 
+    !
     !----------------------------------------------------------------------
     SUBROUTINE newdq2(dvscf, npe, xq0, timerev)
     !----------------------------------------------------------------------
@@ -942,7 +942,7 @@
     USE kinds,                ONLY : DP
     USE ions_base,            ONLY : nat, ityp, ntyp => nsp
     USE noncollin_module,     ONLY : noncolin, nspin_mag
-    USE cell_base,            ONLY : omega
+    USE cell_base,            ONLY : omega, tpiba
     USE fft_base,             ONLY : dfftp
     USE fft_interfaces,       ONLY : fwfft
     USE gvect,                ONLY : g, ngm, mill, eigts1, eigts2, eigts3
@@ -1032,7 +1032,7 @@
     CALL ylmr2(lmaxq * lmaxq, ngm, qg, qmod, ylmk0)
     !
     DO ig = 1, ngm
-      qmod(ig) = DSQRT(qmod(ig))
+      qmod(ig) = DSQRT(qmod(ig))*tpiba
     ENDDO
     !
     ! and for each perturbation of this irreducible representation
@@ -1077,7 +1077,7 @@
               ENDDO
             ENDDO ! jh
           ENDDO ! ih
-          ! 
+          !
           DO na = 1, nat
             IF (ityp(na) == nt) THEN
               !
@@ -1246,7 +1246,7 @@
     CALL stop_clock('adddvscf2')
     !
     RETURN
-    ! 
+    !
     !---------------------------------------------------------------------------
     END SUBROUTINE adddvscf2
     !---------------------------------------------------------------------------

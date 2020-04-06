@@ -10,42 +10,11 @@ MODULE paw_gipaw
   USE kinds,        ONLY: DP
   USE parameters,   ONLY: npsx
   use radial_grids, ONLY: ndmx
-  !!use gipaw_module, ONLY: nbrx
   !
   ! ... These parameters are needed for the paw variables
   !
   SAVE
   !
-!  REAL(DP) :: &
-!       paw_betar(ndmx,nbrx,npsx)  ! radial beta_{mu} functions
-!  INTEGER :: &
-!       paw_nh(npsx),             &! number of beta functions per atomic type
-!       paw_nbeta(npsx),          &! number of beta functions
-!       paw_kkbeta(npsx),         &! point where the beta are zero
-!       paw_lll(nbrx,npsx)         ! angular momentum of the beta function
-!  INTEGER :: &
-!       paw_nhm,              &! max number of different beta functions per atom
-!       paw_nkb,              &! total number of beta functions, with st.fact.
-!       paw_nqxq,             &! size of interpolation table
-!       paw_lmaxkb,           &! max angular momentum
-!       paw_lmaxq,              &! max angular momentum + 1 for Q functions
-!       paw_nqx                ! number of interpolation points
-!  INTEGER, ALLOCATABLE ::&
-!       paw_indv(:,:),        &! correspondence of betas atomic <-> soli
-!       paw_nhtol(:,:),       &! correspondence n <-> angular momentum
-!       paw_nhtom(:,:),       &! correspondence n <-> magnetic angular m
-!       paw_nl(:,:),          &! number of projectors for each l
-!       paw_iltonh(:,:,:)        ! corresp l, num <--> n for each type
-!  complex(DP), ALLOCATABLE, TARGET :: &
-!       paw_vkb(:,:),         &   ! all beta functions in reciprocal space
-!       paw_becp(:,:)             !  products of wavefunctions and proj
-!  REAL(DP), ALLOCATABLE :: &
-!       paw_tab(:,:,:)              ! interpolation table for PPs
-!  !<ceres>
-!  REAL(DP), ALLOCATABLE :: &
-!       paw_tab_d2y(:,:,:)          ! for cubic splines
-!  !</ceres>
-
   type wfc_label
      integer  :: na , &   ! Atom number
           nt ,        &   ! Type
@@ -63,23 +32,10 @@ MODULE paw_gipaw
      real(DP)  , pointer :: psi(:)
   end type at_wfc
 
-!  TYPE ( at_wfc ), POINTER :: aephi(:,:)
-!  TYPE ( at_wfc ), POINTER :: psphi(:,:)
-!
-!  LOGICAL, ALLOCATABLE :: vloc_present ( : )
-!  REAL(dp), ALLOCATABLE :: gipaw_ae_vloc ( :, : )
-!  REAL(dp), ALLOCATABLE :: gipaw_ps_vloc ( :, : )
-!
-!  LOGICAL, ALLOCATABLE :: gipaw_data_in_upf_file ( : )
-!
-!  INTEGER, ALLOCATABLE :: gipaw_ncore_orbital ( : )
-!  REAL(dp), ALLOCATABLE :: gipaw_core_orbital ( :, :, : )
-
   integer, parameter :: nbrx = 20
 
   INTEGER :: &
        paw_nkb,            & ! total number of beta functions, with st.fact.
-       paw_nqxq,           & ! size of interpolation table
        paw_lmaxkb,         & ! max angular momentum
        paw_lmaxq,          & ! max angular momentum + 1 for Q functions
        paw_nqx               ! number of interpolation points

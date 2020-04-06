@@ -44,7 +44,7 @@ xlf_flags=0
 echo using F90... $f90
 
 case "$arch:$f90_flavor" in
-ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort* | crayxt*:ifort* )
+*:ifort* )
         try_fflags="-O2 -assume byterecl -g -traceback"
         if test "$use_debug" -eq 1; then
             try_fflags="$try_fflags -fpe0 -CB"
@@ -71,7 +71,7 @@ arm:armflang )
         try_ldflags="-mcpu=native"
         try_fflags_openmp="-fopenmp"
         try_ldfflags_openmp="-fopenmp" 
-        try_f90flags="\$(FFLAGS) -x f95-cpp-input" 
+        try_f90flags="\$(FFLAGS) -cpp"
         try_ldflags="-g -mcpu=native"
         try_ldflags_openmp="-fopenmp"
         try_ldflags_static="-static -static-flang-libs"
@@ -90,14 +90,6 @@ x86_64:nagfor* )
         try_ldflags_static="-unsharedrts"
         try_ldflags_openmp="-openmp"
         try_dflags="$try_dflags -D__NAG"
-        have_cpp=0
-        ;;
-ia32:path* | ia64:path* | x86_64:path* )
-        try_fflags="-march=auto -O2"
-        try_f90flags="\$(FFLAGS)"
-        try_fflags_noopt="-O0"
-        try_ldflags=""
-        try_ldflags_static="-static"
         have_cpp=0
         ;;
 crayxt*:cray* )
@@ -126,14 +118,6 @@ crayxt*:pgf* )
         try_ldflags_openmp="-mp"
         try_ldflags="-v"
         try_dflags="$try_dflags -D__PGI -D__IOTK_WORKAROUND1"
-        have_cpp=1
-        ;;
-crayxt*:pathf* )
-        try_fflags="-march=auto -O2 -cpp"
-        try_f90flags="\$(FFLAGS)"
-        try_fflags_noopt="-O0"
-        try_ldflags=""
-        try_ldflags_static="-static"
         have_cpp=1
         ;;
 necsx:* )
@@ -229,7 +213,7 @@ ppc64-bgq:*xlf* )
             try_fflags="-O2 -g -pedantic -Wall -Wextra -Wconversion -fimplicit-none -fbacktrace -ffree-line-length-0 -fcheck=all"
         fi
         try_fflags_openmp="-fopenmp"
-        try_f90flags="\$(FFLAGS) -x f95-cpp-input"
+        try_f90flags="\$(FFLAGS) -cpp"
         try_fflags_noopt="-O0 -g"
         try_ldflags="-g"
         try_ldflags_openmp="-pthread -fopenmp"

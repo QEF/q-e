@@ -108,7 +108,6 @@ chdens_module.o : ../../Modules/constants.o
 chdens_module.o : ../../Modules/control_flags.o
 chdens_module.o : ../../Modules/fft_base.o
 chdens_module.o : ../../Modules/gvecw.o
-chdens_module.o : ../../Modules/io_files.o
 chdens_module.o : ../../Modules/io_global.o
 chdens_module.o : ../../Modules/ions_base.o
 chdens_module.o : ../../Modules/kind.o

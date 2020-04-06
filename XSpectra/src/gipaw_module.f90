@@ -111,7 +111,7 @@ CONTAINS
   !         /
   !-----------------------------------------------------------------------
   SUBROUTINE gipaw_readin()
-    USE io_files,      ONLY : nd_nmbr, prefix, tmp_dir
+    USE io_files,      ONLY : prefix, tmp_dir
     USE io_global,     ONLY : ionode
     USE us,            ONLY : spline_ps
     IMPLICIT NONE
@@ -353,9 +353,6 @@ CONTAINS
     ! other - if not, remove them (how to check the k point mesh then? - oops!
 
 !*apsi*    CALL test_symmetries ( s, nsym )
-
-    ! initialize pseudopotentials - FIXME: called by read_file, is this needed?
-    call init_us_1
 
     ! initialise data, also for the case that no GIPAW is present
     IF ( .NOT. ALLOCATED ( paw_recon ) ) ALLOCATE ( paw_recon(ntyp) )

@@ -89,7 +89,7 @@ SUBROUTINE iosys()
                             prefix_     => prefix, &
                             pseudo_dir_ => pseudo_dir, &
                             pseudo_dir_cur, restart_dir, &
-                            check_tempdir, clean_tempdir
+                            check_tempdir, clean_tempdir, nd_nmbr
   !
   USE force_mod,     ONLY : lforce, lstres
   !
@@ -325,7 +325,7 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256):: dft_
   !
   INTEGER  :: ia, nt, inlc
-  LOGICAL  :: exst, parallelfs
+  LOGICAL  :: exst, parallelfs, domag
   REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp
   !
   ! MAIN CONTROL VARIABLES, MD AND RELAX
@@ -800,8 +800,16 @@ SUBROUTINE iosys()
   starting_spin_angle_ = starting_spin_angle
   angle1_   = angle1
   angle2_   = angle2
-  report_   = report
   lambda_   = lambda
+  domag     = ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6 )
+  !
+  IF ( (i_cons == 1 .OR. nspin == 2) .AND. (report /= 0) ) THEN
+     report_ = -1
+  ELSE IF ( (i_cons /= 0 .OR. report /= 0) .AND. ( domag .AND. noncolin) ) THEN
+     report_ = report
+  ELSE
+     report_ = 0
+  END IF
   !
   ! STARTING AND RESTARTING
   !
@@ -1366,6 +1374,11 @@ SUBROUTINE iosys()
   ! ... Files (for compatibility) and directories
   !     Must be set before calling read_conf_from_file
   !
+  !   if next line is uncommented, each process sees a different directory
+  !   (the process number is added at the end of tmp_dir)
+  !!! outdir = TRIM(outdir) // TRIM(nd_nmbr)
+  !   For testing purposes only; works only if outdir does not end with '/' 
+  ! 
   tmp_dir = trimcheck ( outdir )
   IF ( .not. trim( wfcdir ) == 'undefined' ) THEN
      wfc_dir = trimcheck ( wfcdir )

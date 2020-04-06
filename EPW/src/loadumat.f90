@@ -1,11 +1,11 @@
-  !                                                                            
-  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino 
-  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino  
-  !                                                                            
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
-  !                                                                            
+  !
+  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
+  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
+  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
+  !
   !----------------------------------------------------------------------------
   SUBROUTINE loadumat(nbndep, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, &
                        exband, w_centers)
@@ -18,10 +18,10 @@
   !! a pool scatter call that didn't work on hbar was performed
   !! and some crazy packing scheme was needed to use poolscatter
   !! subsequently it is just a bcast followed by an appropriate assignment
-  !! 
+  !!
   !-----------------------------------------------------------------------
   USE kinds,         ONLY : DP
-  USE klist_epw,     ONLY : kmap   
+  USE klist_epw,     ONLY : kmap
   USE epwcom,        ONLY : filukk
   USE constants_epw, ONLY : czero, zero
   USE io_var,        ONLY : iunukk
@@ -34,7 +34,7 @@
   USE pwcom,         ONLY : nbnd
   !
   IMPLICIT NONE
-  ! 
+  !
   LOGICAL, INTENT(out) :: lwin(nbndep, nks)
   !! Band windows at k
   LOGICAL, INTENT(out) :: lwinq(nbndep, nks)
@@ -46,7 +46,7 @@
   INTEGER, INTENT(in) :: nbndsub
   !! number of bands in the optimal subspace
   INTEGER, INTENT(in) :: nks
-  !! number of kpoints 
+  !! number of kpoints
   INTEGER, INTENT(in) :: nkstot
   !! total number of kpoints across pools
   REAL(KIND = DP), INTENT(in) :: xxq(3)
@@ -57,8 +57,8 @@
   !! U(k) matrix for k-points in the pool
   COMPLEX(KIND = DP), INTENT(out) :: cuq(nbndep, nbndsub, nks)
   !! U(k+q) matrix for k+q-points in the pool
-  ! 
-  ! Local variables 
+  !
+  ! Local variables
   LOGICAL :: lwin_big(nbndep, nkstot)
   !! .TRUE. if the band ibnd lies within the outer window at k-point ik
   LOGICAL :: lwinq_big(nbndep, nkstot)
@@ -74,7 +74,7 @@
   INTEGER :: ios
   !! INTEGER variable for I/O control
   INTEGER :: ik_start
-  !! Index of first k-point in the pool  
+  !! Index of first k-point in the pool
   INTEGER :: ik_stop
   !! Index of last k-point in the pool
   COMPLEX(KIND = DP) :: cu_big(nbndep, nbndsub, nkstot)
@@ -91,7 +91,7 @@
     OPEN(iunukk, FILE = filukk, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
     IF (ios /=0) CALL errore('loadumat', 'error opening ukk file', iunukk)
     !
-    ! dummy operation for skipping unnecessary data (ibndstart and ibndend) here 
+    ! dummy operation for skipping unnecessary data (ibndstart and ibndend) here
     !
     READ(iunukk, *) ibnd, jbnd
     !
@@ -117,7 +117,7 @@
     !
     CLOSE(iunukk)
     !
-    ! Generate U(k+q) through the map 
+    ! Generate U(k+q) through the map
     ! here we create the map k+q --> k
     ! (first proc has a copy of all kpoints)
     ! Generates kmap(ik) for this xxq
@@ -134,7 +134,7 @@
   ENDIF ! meta_ionode
   !
   CALL mp_bcast(cu_big, ionode_id, inter_pool_comm)
-  CALL mp_bcast(cuq_big, ionode_id, inter_pool_comm)   
+  CALL mp_bcast(cuq_big, ionode_id, inter_pool_comm)
   CALL mp_bcast(lwin_big, ionode_id, inter_pool_comm)
   CALL mp_bcast(lwinq_big, ionode_id, inter_pool_comm)
   CALL mp_bcast(exband, ionode_id, inter_pool_comm)

@@ -19,6 +19,7 @@ SUBROUTINE hinit1()
   USE gvecs,               ONLY : doublegrid
   USE ldaU,                ONLY : lda_plus_u
   USE lsda_mod,            ONLY : nspin
+  USE noncollin_module,    ONLY : report
   USE scf,                 ONLY : vrs, vltot, v, kedtau
   USE control_flags,       ONLY : tqr
   USE realus,              ONLY : generate_qpointlist, betapointlist, &
@@ -45,12 +46,16 @@ SUBROUTINE hinit1()
   !
   CALL setlocal()
   !
+  ! ... more position-dependent initializations
+  !
   IF ( tqr ) CALL generate_qpointlist()
   !
   IF ( real_space ) THEN
      CALL betapointlist()
      CALL init_realspace_vars()
   ENDIF
+  !
+  IF ( report /= 0 ) CALL make_pointlists( )
   !
   CALL tag_wg_corr_as_obsolete
   !

@@ -42,6 +42,9 @@ subroutine deallocate_phq
                            wfcatomk, swfcatomk, dwfcatomk, sdwfcatomk,         &
                            wfcatomkpq, dwfcatomkpq, swfcatomkpq, sdwfcatomkpq, &
                            dvkb, vkbkpq, dvkbkpq
+  USE qpoint_aux,   ONLY : ikmks, ikmkmqs, becpt, alphapt
+  USE becmod,       ONLY : deallocate_bec_type
+  USE nc_mag_aux,   ONLY : int1_nc_save, deeq_nc_save
 
   IMPLICIT NONE
   INTEGER :: ik, ipol
@@ -61,6 +64,8 @@ subroutine deallocate_phq
   !
   if(allocated(ikks)) deallocate (ikks)
   if(allocated(ikqs)) deallocate (ikqs)
+  IF(ALLOCATED(ikmks)) DEALLOCATE(ikmks)
+  IF(ALLOCATED(ikmkmqs)) DEALLOCATE(ikmkmqs)
   if(allocated(eigqts)) deallocate (eigqts)
   if(allocated(rtau)) deallocate (rtau)
   if(associated(u)) deallocate (u)
@@ -98,11 +103,13 @@ subroutine deallocate_phq
   if(allocated(int2_so)) deallocate(int2_so)
   if(allocated(int5_so)) deallocate(int5_so)
   if(allocated(dpqq_so)) deallocate(dpqq_so)
-
+  IF (ALLOCATED(int1_nc_save)) DEALLOCATE (int1_nc_save)
+  IF (ALLOCATED(deeq_nc_save)) DEALLOCATE (deeq_nc_save)
   if(allocated(alphasum)) deallocate (alphasum)
   if(allocated(this_dvkb3_is_on_file)) deallocate (this_dvkb3_is_on_file)
 
   if(allocated(this_pcxpsi_is_on_file)) deallocate (this_pcxpsi_is_on_file)
+  !IF (ALLOCATED(this_pcxpsi_is_on_file_tpw)) DEALLOCATE(this_pcxpsi_is_on_file_tpw) !!! AAA Da definire chi è this_pcxpsi_is_on_file_tpw
   if(allocated(alphap)) then
      do ik=1,nksq
         do ipol=1,3
@@ -117,6 +124,20 @@ subroutine deallocate_phq
      end do
      deallocate(becp1)
   end if
+  IF (ALLOCATED(alphapt)) THEN
+     DO ik=1,nksq
+        DO ipol=1,3
+           CALL deallocate_bec_type ( alphapt(ipol,ik) )
+        ENDDO
+     ENDDO
+     DEALLOCATE (alphapt)
+  ENDIF
+  IF (ALLOCATED(becpt))  THEN
+     DO ik=1, nksq
+        CALL deallocate_bec_type ( becpt(ik) )
+     ENDDO
+     DEALLOCATE(becpt)
+  ENDIF
   call deallocate_bec_type ( becp )
 
   if(allocated(el_ph_mat)) deallocate (el_ph_mat)

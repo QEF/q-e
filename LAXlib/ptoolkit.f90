@@ -3754,7 +3754,8 @@ SUBROUTINE redist_row2col_gpu_x( n, a, b, ldx, nx, idesc )
    IF( nx /= idesc(LAX_DESC_NRCX) ) &
       CALL lax_error__( ' redist_row2col_gpu ', ' inconsistent size lda  ', 1 )
 
-   comm  = idesc(LAX_DESC_COMM)
+   comm = idesc(LAX_DESC_COMM)
+
    rowid = idesc(LAX_DESC_MYR)
    colid = idesc(LAX_DESC_MYC)
    np    = idesc(LAX_DESC_NPR)

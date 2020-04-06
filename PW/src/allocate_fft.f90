@@ -20,12 +20,10 @@ SUBROUTINE allocate_fft
   USE fft_base,         ONLY : dfftp, dffts
   USE ions_base,        ONLY : nat
   USE lsda_mod,         ONLY : nspin
-  USE spin_orb,         ONLY : domag
   USE scf,              ONLY : rho, v, vnew, vltot, vrs, rho_core, rhog_core, &
                                kedtau, create_scf_type
   USE control_flags,    ONLY : gamma_only
-  USE noncollin_module, ONLY : pointlist, factlist, r_loc, &
-                               report, i_cons, noncolin, npol
+  USE noncollin_module, ONLY : pointlist, factlist, report, noncolin, npol
   USE wavefunctions,    ONLY : psic, psic_nc
   USE funct,            ONLY : dft_is_meta
   !
@@ -86,16 +84,14 @@ SUBROUTINE allocate_fft
   END IF
 #endif
   !
-  IF ( ( (report /= 0).OR.(i_cons /= 0) ) .AND. (noncolin.AND.domag) &
-                      .OR. (i_cons==1) .OR. nspin==2 ) THEN
+  IF ( report /= 0 ) THEN
      !
      ! ... In order to print out local quantities, integrated around the atoms,
      ! we need the following variables
      !
      ALLOCATE( pointlist(dfftp%nnr) )
      ALLOCATE( factlist(dfftp%nnr)  )
-     ALLOCATE( r_loc(nat) )
-     CALL make_pointlists( )
+     !
   ENDIF
   !
   RETURN

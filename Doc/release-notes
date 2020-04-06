@@ -3,6 +3,7 @@ New in dev branch:
   * Stress for noncolinear case
   * QE can be compiled on Windows 10 using PGI v.19.10 Community Edition
     configure works, except FoX: use script install/build_fox_with_pgi.sh
+  * ParO and PPCG iterative diagonalization algorithms
   
 Fixed in dev branch:
   * PW: Restart from interrupted calculations  simplified. As a side effect,
@@ -11,6 +12,8 @@ Fixed in dev branch:
   * Fermi energy incorrectly written to xml file in 'bands' calculation
     (did not affect results, just Fermi energy position in band plotting)
     Also: Fermi energy always written to xml file, also for insulators
+  * Phonon code in the noncolinear case with magnetization ("domag" case)
+    now works properly - courtesy Andrea Urru and Andrea Dal Corso.
 
 Incompatible changes in dev branch:
   * Conversion from 1D FFT real-space index to 3D positions moved into a

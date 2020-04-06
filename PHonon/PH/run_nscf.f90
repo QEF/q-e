@@ -22,7 +22,7 @@ SUBROUTINE run_nscf(do_band, iq)
   USE fft_base,        ONLY : dffts, dfftp
   !!!
   USE fft_types, ONLY: fft_type_allocate
-  USE cell_base, ONLY: at, bg
+  USE cell_base, ONLY: at, bg, tpiba
   USE gvect,     ONLY: gcutm
   USE gvecs,     ONLY: gcutms
   !!!
@@ -31,7 +31,7 @@ SUBROUTINE run_nscf(do_band, iq)
                               ext_restart, bands_computed, newgrid, qplot, &
                               only_wfc
   USE io_global,       ONLY : stdout
-  USE save_ph,         ONLY : tmp_dir_save
+  !USE save_ph,         ONLY : tmp_dir_save
   !
   USE grid_irr_iq,     ONLY : done_bands
   USE acfdtest,        ONLY : acfdt_is_active, acfdt_num_der, ir_point, delta_vrs
@@ -41,6 +41,8 @@ SUBROUTINE run_nscf(do_band, iq)
   USE lr_symm_base,    ONLY : minus_q, nsymq, invsymq
   USE control_lr,      ONLY : ethr_nscf
   USE qpoint,          ONLY : xq
+  USE noncollin_module,ONLY : noncolin
+  USE spin_orb,        ONLY : domag
   USE klist,           ONLY : qnorm, nelec 
   USE el_phon,         ONLY : elph_mat
   !
@@ -63,12 +65,13 @@ SUBROUTINE run_nscf(do_band, iq)
      ! FIXME: kunit is set here: in this case we do not go through setup_nscf
      ! FIXME: and read_file calls divide_et_impera that needs kunit
      ! FIXME: qnorm (also set in setup_nscf) is needed by allocate_nlpot
-     IF ( lgamma_iq(iq) ) THEN
-        kunit = 1
-     ELSE
-        kunit = 2
+     kunit = 2
+     IF ( lgamma_iq(iq) ) kunit = 1
+     IF (noncolin.AND.domag) THEN 
+        kunit = 4
+        IF (lgamma_iq(iq)) kunit=2
      ENDIF
-     qnorm = SQRT(xq(1)**2+xq(2)**2+xq(3)**2)
+     qnorm = SQRT(xq(1)**2+xq(2)**2+xq(3)**2) * tpiba
      !
      CALL read_file()
      IF (.NOT.lgamma_iq(iq).OR.(qplot.AND.iq>1)) CALL &
@@ -109,7 +112,7 @@ SUBROUTINE run_nscf(do_band, iq)
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!!END OF ACFDT TEST !!!!!!!!!!!!!!!!
 !
-  IF (do_band) CALL non_scf ( )
+  IF (do_band) CALL non_scf_ph ( )
 
 
   IF ( check_stop_now() ) THEN

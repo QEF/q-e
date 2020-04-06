@@ -1,33 +1,33 @@
   !
-  ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino                                                                            
+  ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
-  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino  
-  !                                                                            
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
-  !                                                                            
+  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
+  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
+  !
   !----------------------------------------------------------------------
   MODULE spectral_func
   !----------------------------------------------------------------------
-  !! 
+  !!
   !! This module contains the various spectral function routines
-  !! 
+  !!
   IMPLICIT NONE
-  ! 
+  !
   CONTAINS
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE spectral_func_el_q(iqq, iq, totq, first_cycle)
     !-----------------------------------------------------------------------
     !!
     !!  Compute the electron spectral function including the  electron-
-    !!  phonon interaction in the Migdal approximation. 
-    !!  
+    !!  phonon interaction in the Migdal approximation.
+    !!
     !!  We take the trace of the spectral function to simulate the photoemission
     !!  intensity. I do not consider the c-axis average for the time being.
     !!  The main approximation is constant dipole matrix element and diagonal
-    !!  selfenergy. The diagonality can be checked numerically. 
+    !!  selfenergy. The diagonality can be checked numerically.
     !!
     !!  Use matrix elements, electronic eigenvalues and phonon frequencies
     !!  from ep-wannier interpolation
@@ -37,8 +37,8 @@
     USE io_global,     ONLY : stdout
     USE io_var,        ONLY : iospectral_sup, iospectral
     USE phcom,         ONLY : nmodes
-    USE epwcom,        ONLY : nbndsub, eps_acustic, fsthick, eptemp, ngaussw, & 
-                              degaussw, wmin_specfun, wmax_specfun, nw_specfun, & 
+    USE epwcom,        ONLY : nbndsub, eps_acustic, fsthick, eptemp, ngaussw, &
+                              degaussw, wmin_specfun, wmax_specfun, nw_specfun, &
                               shortrange, efermi_read, fermi_energy, restart, &
                               restart_step
     USE pwcom,         ONLY : ef
@@ -57,21 +57,21 @@
     LOGICAL, INTENT(inout) :: first_cycle
     !! Use to determine weather this is the first cycle after restart
     INTEGER, INTENT(in) :: iqq
-    !! Current q-point index in selecq  
+    !! Current q-point index in selecq
     INTEGER, INTENT(in) :: iq
-    !! Current q-point index  
+    !! Current q-point index
     INTEGER, INTENT(in) :: totq
     !! Total number of q-point in window
-    ! 
+    !
     ! Local variables
     INTEGER :: iw
     !! Counter on the frequency
     INTEGER :: ik
-    !! Counter on the k-point index 
+    !! Counter on the k-point index
     INTEGER :: ikk
     !! k-point index
     INTEGER :: ikq
-    !! q-point index 
+    !! q-point index
     INTEGER :: ibnd
     !! Counter on bands
     INTEGER :: jbnd
@@ -96,16 +96,16 @@
     REAL(KIND = DP) :: fact1
     !! Temporary variable to store $f_{mk+q}(T) + n_{q\nu}(T)$
     REAL(KIND = DP) :: fact2
-    !! Temporary variable to store $1 - f_{mk+q}(T) + n_{q\nu}(T)$ 
+    !! Temporary variable to store $1 - f_{mk+q}(T) + n_{q\nu}(T)$
     REAL(KIND = DP) :: weight
-    !! Self-energy factor 
-    !!$$ N_q \Re( \frac{f_{mk+q}(T) + n_{q\nu}(T)}{ \varepsilon_{nk} - \varepsilon_{mk+q} + \omega_{q\nu} - i\delta }) $$ 
+    !! Self-energy factor
+    !!$$ N_q \Re( \frac{f_{mk+q}(T) + n_{q\nu}(T)}{ \varepsilon_{nk} - \varepsilon_{mk+q} + \omega_{q\nu} - i\delta }) $$
     !!$$ + N_q \Re( \frac{1- f_{mk+q}(T) + n_{q\nu}(T)}{ \varepsilon_{nk} - \varepsilon_{mk+q} - \omega_{q\nu} - i\delta }) $$
     REAL(KIND = DP) :: inv_eptemp
     !! Inverse of temperature define for efficiency reasons
     REAL(KIND = DP) :: inv_degaussw
-    !! Inverse of the smearing for efficiency reasons  
-    REAL(KIND = DP) :: dw 
+    !! Inverse of the smearing for efficiency reasons
+    REAL(KIND = DP) :: dw
     !! Frequency intervals
     REAL(KIND = DP) :: specfun_sum
     !! Sum of spectral function
@@ -140,13 +140,13 @@
     !! Temporary variable to store etmpw1 = ww - etmp2
     COMPLEX(KIND = DP) :: fact
     !! SE factor
-    ! 
+    !
     IF (adapt_smearing) CALL errore('spectral_func_el_q', 'adapt_smearing cannot be used with spectral functions ', 1)
     !
     ! SP: Define the inverse so that we can efficiently multiply instead of dividing
     inv_eptemp   = one / eptemp
     inv_degaussw = one / degaussw
-    !   
+    !
     ! energy range and spacing for spectral function
     !
     dw = (wmax_specfun - wmin_specfun) / DBLE(nw_specfun - 1)
@@ -190,12 +190,12 @@
       ef0 = efnew
     ENDIF
     !
-    IF (iqq == 1) THEN 
+    IF (iqq == 1) THEN
       WRITE(stdout, 100) degaussw * ryd2ev, ngaussw
       WRITE(stdout, '(a)') ' '
     ENDIF
     !
-    ! SP: Sum rule added to conserve the number of electron. 
+    ! SP: Sum rule added to conserve the number of electron.
     IF (iqq == 1) THEN
       WRITE(stdout, '(5x, a)') 'The sum rule to conserve the number of electron is enforced.'
       WRITE(stdout, '(5x, a)') 'The self energy is rescaled so that its real part is zero at the Fermi level.'
@@ -209,7 +209,7 @@
       esigmar_all(:, lower_bnd + nkf:nktotf, :) = zero
       esigmai_all(:, 1:lower_bnd - 1, :) = zero
       esigmai_all(:, lower_bnd + nkf:nktotf, :) = zero
-      ! 
+      !
     ENDIF
     !
     ! In the case of a restart do not add the first step
@@ -219,7 +219,7 @@
       !
       ! loop over all k points of the fine mesh
       !
-      fermicount = 0 
+      fermicount = 0
       DO ik = 1, nkf
         !
         ikk = 2 * ik - 1
@@ -237,12 +237,12 @@
               !
               ! the energy of the electron at k (relative to Ef)
               ekk = etf(ibndmin - 1 + ibnd, ikk) - ef0
-              !  
+              !
               DO jbnd = 1, nbndfst
                 !
                 ! the fermi occupation for k+q
                 ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0
-                wgkq = wgauss(-ekq * inv_eptemp, -99)  
+                wgkq = wgauss(-ekq * inv_eptemp, -99)
                 !
                 ! here we take into account the zero-point DSQRT(hbar/2M\omega)
                 ! with hbar = 1 and M already contained in the eigenmodes
@@ -250,8 +250,8 @@
                 !
                 IF (shortrange .AND. (ABS(xqf(1, iq))> eps8 .OR. ABS(xqf(2, iq))> eps8 &
                    .OR. ABS(xqf(3, iq))> eps8)) THEN
-                !  ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
-                !  !     number, in which case its square will be a negative number. 
+                !  ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary
+                !  !     number, in which case its square will be a negative number.
                   g2 = REAL((epf17(jbnd, ibnd, imode, ik)**two) * inv_wq(imode) * g2_tmp(imode))
                 ELSE
                   g2 = (ABS(epf17(jbnd, ibnd, imode, ik))**two) * inv_wq(imode) * g2_tmp(imode)
@@ -272,8 +272,8 @@
                   weight = wqf(iq) * REAL(fact)
                   !
                   ! \Re\Sigma [Eq. 3 in Comput. Phys. Commun. 209, 116 (2016)]
-                  esigmar_all(ibnd, ik + lower_bnd - 1, iw) = esigmar_all(ibnd, ik + lower_bnd - 1, iw) + g2 * weight 
-                  ! 
+                  esigmar_all(ibnd, ik + lower_bnd - 1, iw) = esigmar_all(ibnd, ik + lower_bnd - 1, iw) + g2 * weight
+                  !
                   ! SP : Application of the sum rule
                   esigmar0 = - g2 *  wqf(iq) * REAL((fact1 / etmp1) + (fact2 / etmp2))
                   esigmar_all(ibnd, ik + lower_bnd - 1, iw) = esigmar_all(ibnd, ik + lower_bnd - 1, iw) - esigmar0
@@ -332,7 +332,7 @@
       !
 #endif
       !
-      ! Output electron spectral function here after looping over all q-points 
+      ! Output electron spectral function here after looping over all q-points
       ! (with their contributions summed in a etc.)
       !
       WRITE(stdout, '(5x, "WARNING: only the eigenstates within the Fermi window are meaningful")')
@@ -341,10 +341,10 @@
       ! and constant matrix elements for dipole transitions)
       !
       IF (me_pool == 0) THEN
-        OPEN(UNIT = iospectral, FILE = 'specfun.elself') 
-        OPEN(UNIT = iospectral_sup, FILE = 'specfun_sup.elself') 
+        OPEN(UNIT = iospectral, FILE = 'specfun.elself')
+        OPEN(UNIT = iospectral_sup, FILE = 'specfun_sup.elself')
         WRITE(iospectral, '(/2x, a/)') '#Electronic spectral function (meV)'
-        WRITE(iospectral_sup, '(/2x, a/)') '#KS eigenenergies + real and im part of electronic self-energy (meV)' 
+        WRITE(iospectral_sup, '(/2x, a/)') '#KS eigenenergies + real and im part of electronic self-energy (meV)'
         WRITE(iospectral, '(/2x, a/)') '#K-point    Energy[meV]     A(k,w)[meV^-1]'
         WRITE(iospectral_sup, '(/2x, a/)') '#K-point    Band   e_nk[eV]   w[eV]      Real Sigma[meV]  Im Sigma[meV]'
       ENDIF
@@ -381,12 +381,12 @@
         !
         ! The spectral function should integrate to 1 for each k-point
         specfun_sum = 0.0
-        ! 
+        !
         DO iw = 1, nw_specfun
           !
-          fermi(iw) = wgauss(-ww(iw) * inv_eptemp, -99) 
+          fermi(iw) = wgauss(-ww(iw) * inv_eptemp, -99)
           !
-          specfun_sum = specfun_sum + a_all(iw, ik) * fermi(iw) * dw 
+          specfun_sum = specfun_sum + a_all(iw, ik) * fermi(iw) * dw
           !
           IF (me_pool == 0) WRITE(iospectral, '(2x, i7, 2x, f10.5, 2x, E12.5)') ik, ryd2ev * ww(iw), a_all(iw, ik) / ryd2mev
           !
@@ -410,11 +410,11 @@
           !
           DO iw = 1, nw_specfun
             !
-            WRITE(stdout, 102) ik, ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2ev * ww(iw), & 
+            WRITE(stdout, 102) ik, ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2ev * ww(iw), &
                   ryd2mev * esigmar_all(ibnd, ik, iw), ryd2mev * esigmai_all(ibnd, ik, iw)
-            ! 
+            !
             IF (me_pool == 0) &
-            WRITE(iospectral_sup, 102) ik, ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2ev * ww(iw), & 
+            WRITE(iospectral_sup, 102) ik, ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2ev * ww(iw), &
                   ryd2mev * esigmar_all(ibnd, ik, iw), ryd2mev * esigmai_all(ibnd, ik, iw)
             !
           ENDDO
@@ -443,19 +443,19 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE spectral_func_el_q
     !-----------------------------------------------------------------------
-    !                                                                            
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE spectral_func_ph_q(iqq, iq, totq)
     !-----------------------------------------------------------------------
     !!
     !! Compute the imaginary part of the phonon self energy due to electron-
-    !! phonon interaction in the Migdal approximation. This corresponds to 
+    !! phonon interaction in the Migdal approximation. This corresponds to
     !! the phonon linewidth (half width). The phonon frequency is taken into
     !! account in the energy selection rule.
     !!
     !! Use matrix elements, electronic eigenvalues and phonon frequencies
     !! from ep-wannier interpolation.  This routine is similar to the one above
-    !! but it is ONLY called from within ephwann_shuffle and calculates 
+    !! but it is ONLY called from within ephwann_shuffle and calculates
     !! the selfenergy for one phonon at a time.  Much smaller footprint on the disk
     !!
     !-----------------------------------------------------------------------
@@ -464,7 +464,7 @@
     USE io_var,    ONLY : iospectral_sup, iospectral
     USE phcom,     ONLY : nmodes
     USE epwcom,    ONLY : nbndsub, fsthick, eptemp, shortrange, ngaussw, degaussw, &
-                          nsmear, delta_smear, eps_acustic, efermi_read, fermi_energy, & 
+                          nsmear, delta_smear, eps_acustic, efermi_read, fermi_energy, &
                           wmin_specfun, wmax_specfun, nw_specfun
     USE pwcom,     ONLY : nelec, ef
     USE klist_epw, ONLY : isk_dummy
@@ -481,26 +481,26 @@
     INTEGER, INTENT(in) :: iqq
     !! Current q-point index from selecq
     INTEGER, INTENT(in) :: iq
-    !! Current q-point index 
+    !! Current q-point index
     INTEGER, INTENT(in) :: totq
     !! Total q-points in selecq window
-    ! 
+    !
     ! Local variables
     INTEGER :: ik
-    !! Counter on the k-point index 
+    !! Counter on the k-point index
     INTEGER :: ikk
     !! k-point index
     INTEGER :: ikq
-    !! q-point index 
+    !! q-point index
     INTEGER :: ibnd
     !! Counter on bands
     INTEGER :: jbnd
-    !! Counter on bands  
+    !! Counter on bands
     INTEGER :: imode
     !! Counter on mode
     INTEGER :: fermicount
     !! Number of states on the Fermi surface
-    INTEGER :: iw 
+    INTEGER :: iw
     !! Counter on frequency for the phonon spectra
     !
     REAL(KIND = DP) :: g2
@@ -524,19 +524,19 @@
     REAL(KIND = DP) :: etmp2
     !! Temporary variable to store etmp2 = ekq - ekk - ww
     REAL(KIND = DP) :: weight
-    !! Self-energy factor 
+    !! Self-energy factor
     REAL(KIND = DP) :: inv_degaussw
-    !! Inverse Gaussian for efficiency reasons   
+    !! Inverse Gaussian for efficiency reasons
     REAL(KIND = DP) :: inv_eptemp
     !! Inverse temperature
     REAL(KIND = DP) :: inv_pi
     !! Inverse pi
     REAL(KIND = DP) :: dw
-    !! Frequency intervals 
+    !! Frequency intervals
     REAL(KIND = DP), EXTERNAL :: dos_ef
     !! Function to compute the Density of States at the Fermi level
     REAL(KIND = DP), EXTERNAL :: efermig
-    !! Function to compute the Fermi energy 
+    !! Function to compute the Fermi energy
     REAL(KIND = DP), EXTERNAL :: wgauss
     !! Fermi-Dirac distribution function (when -99)
     REAL(KIND = DP), EXTERNAL :: w0gauss
@@ -586,14 +586,14 @@
     ! Thomas-Fermi screening according to Resta PRB 1977
     ! Here specific case of Diamond
     !eps0   = 5.7
-    !rtf    = 2.76 
-    !qtf    = 1.36 
+    !rtf    = 2.76
+    !qtf    = 1.36
     !qsquared = (xqf(1,iq)**2 + xqf(2,iq)**2 + xqf(3,iq)**2) * tpiba2
     !epstf =  (qtf**2 + qsquared) / (qtf**2/eps0 * sin (sqrt(qsquared)*rtf)/(sqrt(qsquared)*rtf)+qsquared)
     !
-    IF (iqq == 1) THEN 
+    IF (iqq == 1) THEN
       WRITE(stdout, '(/5x, a)') REPEAT('=', 67)
-      WRITE(stdout, '(5x, "Phonon Spectral Function Self-Energy in the Migdal Approximation (on the fly)")') 
+      WRITE(stdout, '(5x, "Phonon Spectral Function Self-Energy in the Migdal Approximation (on the fly)")')
       WRITE(stdout, '(5x, a/)') REPEAT('=', 67)
       !
       IF (fsthick < 1.d3) WRITE(stdout, '(/5x, a, f10.6, a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
@@ -624,7 +624,7 @@
     dosef = dos_ef(ngaussw, degaussw, ef0, etf, wkf, nkqf, nbndsub)
     dosef = dosef / two
     !
-    IF (iqq == 1) THEN 
+    IF (iqq == 1) THEN
       WRITE(stdout, 100) degaussw * ryd2ev, ngaussw
       WRITE(stdout, 101) dosef / ryd2ev, ef0 * ryd2ev
     ENDIF
@@ -637,7 +637,7 @@
     DO ik = 1, nkf
       ikk = 2 * ik - 1
       ikq = ikk + 1
-      ! 
+      !
       ! Here we must have ef, not ef0, to be consistent with ephwann_shuffle
       IF ((MINVAL(ABS(etf(:, ikk) - ef)) < fsthick) .AND. &
           (MINVAL(ABS(etf(:, ikq) - ef)) < fsthick)) THEN
@@ -656,7 +656,7 @@
               !
               !  the fermi occupation for k+q
               ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0
-              wgkq = wgauss(-ekq * inv_eptemp, -99)  
+              wgkq = wgauss(-ekq * inv_eptemp, -99)
               !
               ! here we take into account the zero-point DSQRT(hbar/2M\omega)
               ! with hbar = 1 and M already contained in the eigenmodes
@@ -664,8 +664,8 @@
               !
               IF (shortrange .AND. (ABS(xqf(1, iq))> eps8 .OR. ABS(xqf(2, iq))> eps8 &
                  .OR. ABS(xqf(3, iq))> eps8 )) THEN
-                ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
-                !     number, in which case its square will be a negative number. 
+                ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary
+                !     number, in which case its square will be a negative number.
                 g2 = REAL((epf17(jbnd, ibnd, imode, ik)**two) * inv_wq(imode) * g2_tmp(imode)) !* epsTF
               ELSE
                 g2 = (ABS(epf17(jbnd, ibnd, imode, ik))**two) * inv_wq(imode) * g2_tmp(imode) !* epsTF
@@ -673,31 +673,31 @@
               !
               ! SP - 03/2019 - Retarded phonon self-energy
               !                See Eq. 145 of RMP 89, 015003 (2017)
-              ! \Pi^R = k-point weight * [ [f(E_k+q) - f(E_k)]/ [E_k+q - E_k -w_q - id] 
+              ! \Pi^R = k-point weight * [ [f(E_k+q) - f(E_k)]/ [E_k+q - E_k -w_q - id]
               !                           -[f(E_k+q) - f(E_k)]/ [E_k+q - E_k - id] ]
-              ! The second term is gamma0 (static) 
+              ! The second term is gamma0 (static)
               !
               fact = wgkq - wgkk
               etmp1 = ekq - ekk
-              weight = wkf(ikk) * fact * REAL(cone / (etmp1 + ci * degaussw)) 
+              weight = wkf(ikk) * fact * REAL(cone / (etmp1 + ci * degaussw))
               !
               gamma0(imode) = gamma0(imode) + weight * g2
-              ! 
+              !
               DO iw = 1, nw_specfun
                 !
                 etmp2 = etmp1 - ww(iw)
-                weight = wkf(ikk) * fact * REAL(cone / (etmp2 + ci * degaussw)) 
+                weight = wkf(ikk) * fact * REAL(cone / (etmp2 + ci * degaussw))
                 gammar_all(iw, imode) = gammar_all(iw, imode) + weight * g2
                 !
-                ! Normal implementation 
-                !weight = wkf (ikk) * fact * AIMAG(cone / (etmp2 + ci * degaussw)) 
-                !  
-                ! More stable:
-                ! Analytical im. part 
-                weight = pi * wkf(ikk) * fact * w0gauss(etmp2 * inv_degaussw, 0) * inv_degaussw     
+                ! Normal implementation
+                !weight = wkf (ikk) * fact * AIMAG(cone / (etmp2 + ci * degaussw))
                 !
-                gammai_all(iw, imode) = gammai_all(iw, imode) + weight * g2 
-                ! 
+                ! More stable:
+                ! Analytical im. part
+                weight = pi * wkf(ikk) * fact * w0gauss(etmp2 * inv_degaussw, 0) * inv_degaussw
+                !
+                gammai_all(iw, imode) = gammai_all(iw, imode) + weight * g2
+                !
               ENDDO
             ENDDO ! jbnd
           ENDDO   ! ibnd
@@ -711,11 +711,11 @@
     !
     ! collect contributions from all pools (sum over k-points) this finishes the integral over the BZ  (k)
     !
-    CALL mp_sum(gammai_all, inter_pool_comm) 
-    CALL mp_sum(gammar_all, inter_pool_comm) 
-    CALL mp_sum(gamma0, inter_pool_comm) 
+    CALL mp_sum(gammai_all, inter_pool_comm)
+    CALL mp_sum(gammar_all, inter_pool_comm)
+    CALL mp_sum(gamma0, inter_pool_comm)
     CALL mp_sum(fermicount, inter_pool_comm)
-    CALL mp_barrier(inter_pool_comm) 
+    CALL mp_barrier(inter_pool_comm)
     !
 #endif
     !
@@ -733,36 +733,36 @@
       ENDIF
     ENDIF
     !
-    ! Write to output file  
-    WRITE(stdout, '(/5x, a)') 'Real and Imaginary part of the phonon self-energy (omega=0) without gamma0.'  
+    ! Write to output file
+    WRITE(stdout, '(/5x, a)') 'Real and Imaginary part of the phonon self-energy (omega=0) without gamma0.'
     DO imode = 1, nmodes
-      ! Real and Im part of Phonon self-energy at 0 freq. 
+      ! Real and Im part of Phonon self-energy at 0 freq.
       WRITE(stdout, 105) imode, ryd2ev * wq(imode), ryd2mev * gammar_all(1, imode), ryd2mev * gammai_all(1, imode)
-    ENDDO 
+    ENDDO
     WRITE(stdout, '(5x, a, i8, a, i8)' ) 'Number of (k,k+q) pairs on the Fermi surface: ', fermicount, ' out of ', totq
     !
     ! Write to support files
     DO iw = 1, nw_specfun
       !
       DO imode = 1, nmodes
-        ! 
+        !
         !a_all(iw,iq) = a_all(iw,iq) + ABS(gammai_all(imode,iq,iw) ) / pi / &
         !      ( ( ww - wq - gammar_all (imode,iq,iw) + gamma0 (imode))**two + (gammai_all(imode,iq,iw) )**two )
         ! SP: From Eq. 16 of PRB 9, 4733 (1974)
-        !    Also in Eq.2 of PRL 119, 017001 (2017). 
+        !    Also in Eq.2 of PRL 119, 017001 (2017).
         a_all_ph(iw, iqq) = a_all_ph(iw, iqq) + inv_pi * dwq(imode)**two * ABS(gammai_all(iw, imode)) / &
-                            ((ww(iw)**two - wq(imode)**two - dwq(imode) * (gammar_all(iw, imode) - gamma0(imode)))**two + & 
+                            ((ww(iw)**two - wq(imode)**two - dwq(imode) * (gammar_all(iw, imode) - gamma0(imode)))**two + &
                              (dwq(imode) * gammai_all(iw, imode))**two)
         !
         IF (mpime == ionode_id) THEN
-          WRITE(iospectral_sup, 102) iq, imode, ryd2ev * wq(imode), ryd2ev * ww(iw), ryd2mev * gammar_all(iw, imode), & 
+          WRITE(iospectral_sup, 102) iq, imode, ryd2ev * wq(imode), ryd2ev * ww(iw), ryd2mev * gammar_all(iw, imode), &
                                      ryd2mev * gamma0(imode), ryd2mev * gammai_all(iw, imode)
         ENDIF
         !
-      ENDDO 
+      ENDDO
       !
-      IF (mpime == ionode_id) THEN 
-        WRITE(iospectral, 103) iq, ryd2ev * ww(iw), a_all_ph(iw, iqq) / ryd2mev ! print to file 
+      IF (mpime == ionode_id) THEN
+        WRITE(iospectral, 103) iq, ryd2ev * ww(iw), a_all_ph(iw, iqq) / ryd2mev ! print to file
       ENDIF
       !
     ENDDO
@@ -771,10 +771,10 @@
       IF (mpime == ionode_id) THEN
         CLOSE(iospectral)
         CLOSE(iospectral_sup)
-      ENDIF 
-    ENDIF   
+      ENDIF
+    ENDIF
     WRITE(stdout, '(5x, a/)') REPEAT('-',67)
-    ! 
+    !
     100 FORMAT(5x, 'Gaussian Broadening: ', f10.6, ' eV, ngauss=', i4)
     101 FORMAT(5x, 'DOS =', f10.6,' states/spin/eV/Unit Cell at Ef=', f10.6, ' eV')
     102 FORMAT(2i9, 2x, f12.5, 2x, f12.5, 2x, E22.14, 2x, E22.14, 2x, E22.14)
@@ -786,18 +786,18 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE spectral_func_ph_q
     !-----------------------------------------------------------------------
-    !                                                                            
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE spectral_func_pl_q(iqq, iq, totq, first_cycle)
     !-----------------------------------------------------------------------
     !!
     !!  Compute the electron spectral function including the  electron-
-    !!  phonon interaction in the Migdal approximation. 
-    !!  
+    !!  phonon interaction in the Migdal approximation.
+    !!
     !!  We take the trace of the spectral function to simulate the photoemission
     !!  intensity. I do not consider the c-axis average for the time being.
     !!  The main approximation is constant dipole matrix element and diagonal
-    !!  selfenergy. The diagonality can be checked numerically. 
+    !!  selfenergy. The diagonality can be checked numerically.
     !!
     !!  Use matrix elements, electronic eigenvalues and phonon frequencies
     !!  from ep-wannier interpolation
@@ -807,28 +807,28 @@
     USE io_global,     ONLY : stdout
     USE io_var,        ONLY : iospectral_sup, iospectral
     USE epwcom,        ONLY : nbndsub, fsthick, eptemp, ngaussw, degaussw, nw_specfun, &
-                              wmin_specfun, wmax_specfun, efermi_read, fermi_energy, & 
+                              wmin_specfun, wmax_specfun, efermi_read, fermi_energy, &
                               nel, meff, epsiheg, restart, restart_step
     USE pwcom,         ONLY : nelec, ef
-    USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, nbndfst, wkf, nkf, wqf, xkf, & 
-                              nkqtotf, xqf, dmef, esigmar_all, esigmai_all, a_all, & 
+    USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, nbndfst, wkf, nkf, wqf, xkf, &
+                              nkqtotf, xqf, dmef, esigmar_all, esigmai_all, a_all, &
                               nktotf, lower_bnd, efnew
     USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, ci, eps6
     USE constants,     ONLY : pi
     USE mp,            ONLY : mp_barrier, mp_sum
-    USE mp_global,     ONLY : me_pool, inter_pool_comm 
+    USE mp_global,     ONLY : me_pool, inter_pool_comm
     USE cell_base,     ONLY : omega, alat, bg
     USE selfen,        ONLY : get_eps_mahan
     USE io_selfen,     ONLY : spectral_write
     USE poolgathering, ONLY : poolgather2
-    ! 
+    !
     IMPLICIT NONE
-    ! 
+    !
     LOGICAL, INTENT(inout) :: first_cycle
     !! Use to determine weather this is the first cycle after restart
     INTEGER, INTENT(in) :: iqq
     !! Q-point index in selecq
-    INTEGER, INTENT(in) :: iq 
+    INTEGER, INTENT(in) :: iq
     !! Q-point index
     INTEGER, INTENT(in) :: totq
     !! Total number of q-points in fsthick window
@@ -864,13 +864,13 @@
     REAL(KIND = DP) :: wq
     !! Plasmon frequency
     REAL(KIND = DP) :: wgq
-    !! Bose occupation factor $n_{q wpl}(T)$ 
+    !! Bose occupation factor $n_{q wpl}(T)$
     REAL(KIND = DP) :: wgkq
     !! Fermi-Dirac occupation factor $f_{nk+q}(T)$
     REAL(KIND = DP) :: fact1
     !! Temporary variable to store $f_{mk+q}(T) + n_{q wpl}(T)$
     REAL(KIND = DP) :: fact2
-    !! Temporary variable to store $1 - f_{mk+q}(T) + n_{q wpl}(T)$ 
+    !! Temporary variable to store $1 - f_{mk+q}(T) + n_{q wpl}(T)$
     REAL(KIND = DP) :: weight
     !! SE factor
     REAL(KIND = DP) :: inv_eptemp
@@ -879,7 +879,7 @@
     !! Inverse of degaussw defined for efficiency reasons
     REAL(KIND = DP) :: sq_degaussw
     !! Squared degaussw defined for efficiency reasons
-    REAL(KIND = DP) :: g2_tmp 
+    REAL(KIND = DP) :: g2_tmp
     !! Temporary variable defined for efficiency reasons
     REAL(KIND = DP) :: dw
     !! Spectral frequency increment
@@ -906,11 +906,11 @@
     REAL(KIND = DP) :: eps0
     !! Dielectric function at zero frequency
     REAL(KIND = DP) :: deltaeps
-    !! 
+    !!
     REAL(KIND = DP) :: qcut
     !! Cut-off of the maximum wave-vector of plasmon modes (qcut = wpl0 / vf)
     REAL(KIND = DP) :: qtf
-    !! Thomas-Fermi screening wave-vector 
+    !! Thomas-Fermi screening wave-vector
     REAL(KIND = DP) :: dipole
     !! Dipole
     REAL(KIND = DP) :: rs
@@ -969,12 +969,12 @@
       ef0 = efnew
     ENDIF
     !
-    IF (iqq == 1) THEN 
+    IF (iqq == 1) THEN
       WRITE(stdout, 100) degaussw * ryd2ev, ngaussw
       WRITE(stdout, '(a)') ' '
     ENDIF
     !
-    ! SP: Sum rule added to conserve the number of electron. 
+    ! SP: Sum rule added to conserve the number of electron.
     IF (iqq == 1) THEN
       WRITE(stdout, '(5x, a)') 'The sum rule to conserve the number of electron is enforced.'
       WRITE(stdout, '(5x, a)') 'The self energy is rescaled so that its real part is zero at the Fermi level.'
@@ -982,15 +982,15 @@
       WRITE(stdout, '(a)') ' '
     ENDIF
     !
-    !nel      =  0.01    ! this should be read from input - # of doping electrons 
-    !epsiheg  =  12.d0   ! this should be read from input - # dielectric constant at zero doping  
-    !meff     =  0.25    ! this should be read from input - effective mass 
+    !nel      =  0.01    ! this should be read from input - # of doping electrons
+    !epsiheg  =  12.d0   ! this should be read from input - # dielectric constant at zero doping
+    !meff     =  0.25    ! this should be read from input - effective mass
     !
     tpiba_new = two * pi / alat
     degen     = one
     !
     ! Based on Eqs. (5.3)-(5.6) and (5.127) of Mahan 2000.
-    ! 
+    !
     ! omega is the unit cell volume in Bohr^3
     rs = (3.d0 / (4.d0 * pi * nel / omega / degen))**(1.d0 / 3.d0) * meff * degen
     kf = (3.d0 * (pi**2.d0) * nel / omega / degen)**(1.d0 / 3.d0)
@@ -1003,7 +1003,7 @@
     ! wpl0 in [Ry] (multiplication by 2 converts from Ha to Ry)
     wpl0 = two * DSQRT(4.d0 * pi * nel / omega / meff / epsiheg)
     wq = wpl0
-    ! 
+    !
     q(:) = xqf(:, iq)
     CALL cryst_to_cart(1, q, bg, 1)
     qnorm = DSQRT(q(1)**two + q(2)**two + q(3)**two)
@@ -1013,7 +1013,7 @@
     ! qcut in [Ha] (1/2 converts from Ry to Ha)
     qcut = wpl0 / vf / tpiba_new / 2.d0
     !
-    !IF (.TRUE.) qcut = qcut / 2.d0 ! renormalize to account for Landau damping 
+    !IF (.TRUE.) qcut = qcut / 2.d0 ! renormalize to account for Landau damping
     !
     ! qin should be in atomic units for Mahan formula
     CALL get_eps_mahan(qin, rs, kf, eps0)
@@ -1042,7 +1042,7 @@
       esigmar_all(:, lower_bnd + nkf:nktotf, :) = zero
       esigmai_all(:, 1:lower_bnd - 1, :) = zero
       esigmai_all(:, lower_bnd + nkf:nktotf, :) = zero
-      ! 
+      !
     ENDIF
     !
     ! In the case of a restart do not add the first step
@@ -1051,14 +1051,14 @@
     ELSE
       IF (qnorm < qcut) THEN
         !
-        ! wq is the plasmon frequency 
+        ! wq is the plasmon frequency
         ! Bose occupation
         wgq = wgauss(-wq * inv_eptemp, -99)
         wgq = wgq / (one - two * wgq)
         !
         ! loop over all k points of the fine mesh
         !
-        fermicount = 0 
+        fermicount = 0
         DO ik = 1, nkf
           !
           ikk = 2 * ik - 1
@@ -1075,7 +1075,7 @@
               !
               !  the energy of the electron at k (relative to Ef)
               ekk = etf(ibndmin - 1 + ibnd, ikk) - ef0
-              !  
+              !
               DO jbnd = 1, nbndfst
                 !
                 ekk1 = etf(ibndmin - 1 + jbnd, ikk) - ef0
@@ -1096,13 +1096,13 @@
                     dipole = REAL(      dmef(1, ibndmin - 1 + jbnd, ibndmin - 1 + ibnd, ikk) *  &
                                   CONJG(dmef(1, ibndmin - 1 + jbnd, ibndmin - 1 + ibnd, ikk)) / &
                                   ((ekk1 - ekk)**two + sq_degaussw))
-                  ELSE 
+                  ELSE
                     dipole = zero
                   ENDIF
                 ENDIF
                 !
                 ! The q^-2 is cancelled by the q->0 limit of the dipole.
-                ! See e.g., pg. 258 of Grosso Parravicini. 
+                ! See e.g., pg. 258 of Grosso Parravicini.
                 ! electron-plasmon scattering matrix elements squared
                 g2 = dipole * g2_tmp
                 !
@@ -1122,7 +1122,7 @@
                   !
                   ! \Re\Sigma [Eq. 3 in Comput. Phys. Commun. 209, 116 (2016)]
                   esigmar_all(ibnd, ik + lower_bnd - 1, iw) = esigmar_all(ibnd, ik + lower_bnd - 1, iw) + g2 * weight
-                  ! 
+                  !
                   ! SP : Application of the sum rule
                   esigmar0 = - g2 *  wqf(iq) * REAL((fact1 / etmp1) + (fact2 / etmp2))
                   esigmar_all(ibnd, ik + lower_bnd - 1, iw) = esigmar_all(ibnd, ik + lower_bnd - 1, iw) - esigmar0
@@ -1189,10 +1189,10 @@
       ! and constant matrix elements for dipole transitions)
       !
       IF (me_pool == 0) then
-        OPEN(UNIT = iospectral, FILE = 'specfun.plself') 
-        OPEN(UNIT = iospectral_sup, FILE = 'specfun_sup.plself') 
+        OPEN(UNIT = iospectral, FILE = 'specfun.plself')
+        OPEN(UNIT = iospectral_sup, FILE = 'specfun_sup.plself')
         WRITE(iospectral, '(/2x, a/)') '#Electron-plasmon spectral function (meV)'
-        WRITE(iospectral_sup, '(/2x, a/)') '#KS eigenenergies + real and im part of electron-plasmon self-energy (meV)' 
+        WRITE(iospectral_sup, '(/2x, a/)') '#KS eigenenergies + real and im part of electron-plasmon self-energy (meV)'
         WRITE(iospectral, '(/2x, a/)') '#K-point    Energy[meV]     A(k,w)[meV^-1]'
         WRITE(iospectral_sup, '(/2x, a/)') '#K-point    Band   e_nk[eV]   w[eV]       Real Sigma[meV]  Im Sigma[meV]'
       ENDIF
@@ -1229,10 +1229,10 @@
         !
         ! The spectral function should integrate to 1 for each k-point
         specfun_sum = zero
-        ! 
+        !
         DO iw = 1, nw_specfun
           !
-          fermi(iw) = wgauss(-ww(iw) * inv_eptemp, -99) 
+          fermi(iw) = wgauss(-ww(iw) * inv_eptemp, -99)
           specfun_sum = specfun_sum + a_all(iw, ik) * fermi(iw) * dw !/ ryd2mev
           !
          IF (me_pool == 0) WRITE(iospectral, '(2x, i7, 2x, f10.5, 2x, E12.5)') ik, ryd2ev * ww(iw), a_all(iw, ik) / ryd2mev
@@ -1256,11 +1256,11 @@
           !
           DO iw = 1, nw_specfun
             !
-            WRITE(stdout, 102) ik, ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2ev * ww(iw), & 
+            WRITE(stdout, 102) ik, ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2ev * ww(iw), &
                   ryd2mev * esigmar_all(ibnd, ik, iw), ryd2mev * esigmai_all(ibnd, ik, iw)
-            ! 
+            !
             IF (me_pool == 0) &
-            WRITE(iospectral_sup, 102) ik, ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2ev * ww(iw), & 
+            WRITE(iospectral_sup, 102) ik, ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2ev * ww(iw), &
                   ryd2mev * esigmar_all(ibnd, ik, iw), ryd2mev * esigmai_all(ibnd, ik, iw)
             !
           ENDDO
@@ -1288,30 +1288,30 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE spectral_func_pl_q
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE a2f_main()
     !-----------------------------------------------------------------------
     !!
     !! Compute the Eliasberg spectral function
-    !! in the Migdal approximation. 
-    !! 
+    !! in the Migdal approximation.
+    !!
     !! If the q-points are not on a uniform grid (i.e. a line)
     !! the function will not be correct
-    !! 
+    !!
     !! 02/2009 works in serial on ionode at the moment.  can be parallelized
-    !! 03/2009 added transport spectral function -- this involves a v_k dot v_kq term 
-    !!         in the quantities coming from selfen_phon.f90.  Not fully implemented  
+    !! 03/2009 added transport spectral function -- this involves a v_k dot v_kq term
+    !!         in the quantities coming from selfen_phon.f90.  Not fully implemented
     !! 10/2009 the code is transitioning to 'on-the-fly' phonon selfenergies
     !!         and this routine is not currently functional
-    !! 10/2015 RM: added calcution of Tc based on Allen-Dynes formula 
+    !! 10/2015 RM: added calcution of Tc based on Allen-Dynes formula
     !! 09/2019 SP: Cleaning
     !!
     !
     USE kinds,     ONLY : DP
     USE phcom,     ONLY : nmodes
     USE cell_base, ONLY : omega
-    USE epwcom,    ONLY : degaussq, delta_qsmear, nqsmear, nqstep, nsmear, eps_acustic, & 
+    USE epwcom,    ONLY : degaussq, delta_qsmear, nqsmear, nqstep, nsmear, eps_acustic, &
                           delta_smear, degaussw, fsthick, nc
     USE elph2,     ONLY : nqtotf, wf, wqf, lambda_all, lambda_v_all
     USE constants_epw, ONLY : ryd2mev, ryd2ev, kelvin2eV, one, two, zero, kelvin2Ry
@@ -1322,7 +1322,7 @@
     USE io_global, ONLY : stdout
     USE io_var,    ONLY : iua2ffil, iudosfil, iua2ftrfil, iures
     USE io_files,  ONLY : prefix
-    ! 
+    !
     IMPLICIT NONE
     !
     CHARACTER(LEN = 256) :: fila2f
@@ -1354,19 +1354,19 @@
     REAL(KIND = DP) :: weight
     !! Factor in a2f
     REAL(KIND = DP) :: temp
-    !! Temperature 
+    !! Temperature
     REAL(KIND = DP) :: n
     !! Carrier density
     REAL(KIND = DP) :: be
-    !! Bose-Einstein distribution 
+    !! Bose-Einstein distribution
     REAL(KIND = DP) :: prefact
-    !! Prefactor in resistivity 
+    !! Prefactor in resistivity
     REAL(KIND = DP) :: lambda_tot
-    !! Total e-ph coupling strength (summation) 
+    !! Total e-ph coupling strength (summation)
     REAL(KIND = DP) :: lambda_tr_tot
     !! Total transport e-ph coupling strength (summation)
     REAL(KIND = DP) :: degaussq0
-    !! Phonon smearing 
+    !! Phonon smearing
     REAL(KIND = DP) :: inv_degaussq0
     !! Inverse of the smearing for efficiency reasons
     REAL(KIND = DP) :: a2f_tmp
@@ -1386,7 +1386,7 @@
     REAL(KIND = DP) :: tc
     !! Critical temperature
     REAL(KIND = DP) :: mu
-    !! Coulomb pseudopotential 
+    !! Coulomb pseudopotential
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function
     REAL(KIND = DP) :: ww(nqstep)
@@ -1399,7 +1399,7 @@
     !! total e-ph coupling strength (a2f_ integration) for different ismear
     REAL(KIND = DP), ALLOCATABLE :: l_a2f_tr(:)
     !! total transport e-ph coupling strength (a2f_tr integration) for different ismear
-    REAL(KIND = DP), ALLOCATABLE :: dosph(:, :) 
+    REAL(KIND = DP), ALLOCATABLE :: dosph(:, :)
     !! Phonon density of states for different for different ismear
     REAL(KIND = DP), ALLOCATABLE :: logavg(:)
     !! logavg phonon frequency for different ismear
@@ -1425,7 +1425,7 @@
       ! This is hardcoded and needs to be changed here if one wants to modify it
       ALLOCATE(rho(100, nqsmear), STAT = ierr)
       IF (ierr /= 0) CALL errore('a2f_main', 'Error allocating rho', 1)
-      !  
+      !
       DO isig = 1, nsmear
         !
         IF (isig < 10) THEN
@@ -1433,7 +1433,7 @@
           WRITE(fila2ftr, '(a, a9, i1)') TRIM(prefix), '.a2f_tr.0', isig
           WRITE(filres,   '(a, a6, i1)') TRIM(prefix), '.res.0', isig
           WRITE(fildos,   '(a, a8, i1)') TRIM(prefix), '.phdos.0', isig
-        ELSE 
+        ELSE
           WRITE(fila2f,   '(a, a5, i2)') TRIM(prefix), '.a2f.', isig
           WRITE(fila2ftr, '(a, a8, i2)') TRIM(prefix), '.a2f_tr.', isig
           WRITE(filres,   '(a, a5, i2)') TRIM(prefix), '.res.', isig
@@ -1445,13 +1445,13 @@
         OPEN(UNIT = iudosfil, FILE = fildos, FORM = 'formatted')
         !
         WRITE(stdout, '(/5x, a)') REPEAT('=',67)
-        WRITE(stdout, '(5x, "Eliashberg Spectral Function in the Migdal Approximation")') 
+        WRITE(stdout, '(5x, "Eliashberg Spectral Function in the Migdal Approximation")')
         WRITE(stdout, '(5x, a/)') REPEAT('=',67)
         !
         om_max = 1.1d0 * MAXVAL(wf(:, :)) ! increase by 10%
         dw = om_max / DBLE(nqstep)
-        DO iw = 1, nqstep  ! 
-          ww(iw) = DBLE(iw) * dw 
+        DO iw = 1, nqstep  !
+          ww(iw) = DBLE(iw) * dw
         ENDDO
         !
         lambda_tot    = zero
@@ -1470,15 +1470,15 @@
           !
           DO iw = 1, nqstep  ! loop over points on the a2F(w) graph
             !
-            DO iq = 1, nqtotf ! loop over q-points 
+            DO iq = 1, nqtotf ! loop over q-points
               DO imode = 1, nmodes ! loop over modes
                 w0 = wf(imode, iq)
                 !
-                IF (w0 > eps_acustic) THEN 
+                IF (w0 > eps_acustic) THEN
                   !
                   l = lambda_all(imode, iq, isig)
                   IF (lambda_all(imode, iq, isig) < 0.d0) l = zero ! sanity check
-                  ! 
+                  !
                   a2f_tmp = wqf(iq) * w0 * l / two
                   !
                   weight = w0gauss((ww(iw) - w0) * inv_degaussq0, 0) * inv_degaussq0
@@ -1487,7 +1487,7 @@
                   !
                   l_tr = lambda_v_all(imode, iq, isig)
                   IF (lambda_v_all(imode, iq, isig) < 0.d0) l_tr = zero !sanity check
-                  ! 
+                  !
                   a2f_tr_tmp = wqf(iq) * w0 * l_tr / two
                   !
                   a2f_tr(iw, ismear) = a2f_tr(iw, ismear) + a2f_tr_tmp * weight
@@ -1514,9 +1514,9 @@
           !
         ENDDO
         !
-        DO iq = 1, nqtotf ! loop over q-points 
+        DO iq = 1, nqtotf ! loop over q-points
           DO imode = 1, nmodes ! loop over modes
-            IF (lambda_all(imode, iq, isig) > 0.d0 .AND. wf(imode, iq) > eps_acustic ) & 
+            IF (lambda_all(imode, iq, isig) > 0.d0 .AND. wf(imode, iq) > eps_acustic ) &
               lambda_tot = lambda_tot + wqf(iq) * lambda_all(imode, iq, isig)
             IF (lambda_v_all(imode, iq, isig) > 0.d0 .AND. wf(imode, iq) > eps_acustic) &
               lambda_tr_tot = lambda_tr_tot + wqf(iq) * lambda_v_all(imode, iq, isig)
@@ -1542,41 +1542,41 @@
           !SP: IF Tc is too big, it is not physical
           IF (tc < 1000.0) THEN
             WRITE(stdout, '(5x, a, f6.2, a, f22.12, a)') "mu = ", mu, " Tc = ", tc, " K"
-          ENDIF 
+          ENDIF
           !
         ENDDO
-        ! 
+        !
         rho(:, :) = zero
         ! Now compute the Resistivity of Metal using the Ziman formula
         ! rho(T,smearing) = 4 * pi * me/(n * e**2 * kb * T) int dw hbar w a2F_tr(w,smearing) n(w,T)(1+n(w,T))
         ! n is the number of electron per unit volume and n(w,T) is the Bose-Einstein distribution
         ! Usually this means "the number of electrons that contribute to the mobility" and so it is typically 8 (full shell)
-        ! but not always. You might want to check this. 
-        ! 
+        ! but not always. You might want to check this.
+        !
         n = nc / omega
         WRITE(iures, '(a)') '# Temperature [K]                &
-                            Resistivity [micro Ohm cm] for different Phonon smearing (meV)        '  
+                            Resistivity [micro Ohm cm] for different Phonon smearing (meV)        '
         WRITE(iures, '("#     ", 15f12.7)') ((degaussq + (ismear - 1) * delta_qsmear) * ryd2mev, ismear = 1, nqsmear)
         DO ismear = 1, nqsmear
           DO itemp = 1, 100 ! Per step of 10K
             temp = itemp * 10.d0 * kelvin2Ry
-            ! omega is the volume of the primitive cell in a.u.  
-            ! 
+            ! omega is the volume of the primitive cell in a.u.
+            !
             prefact = 4.d0 * pi / (temp * n)
             DO iw = 1, nqstep  ! loop over points on the a2F(w)
-              ! 
-              be = one / (EXP(ww(iw) / temp) - one) 
-              ! Perform the integral with rectangle. 
-              rho(itemp, ismear) = rho(itemp, ismear) + prefact * ww(iw) * a2f_tr(iw, ismear) * be * (1.d0 + be) * dw  
-              ! 
+              !
+              be = one / (EXP(ww(iw) / temp) - one)
+              ! Perform the integral with rectangle.
+              rho(itemp, ismear) = rho(itemp, ismear) + prefact * ww(iw) * a2f_tr(iw, ismear) * be * (1.d0 + be) * dw
+              !
             ENDDO
             ! From a.u. to micro Ohm cm
             ! Conductivity 1 a.u. = 2.2999241E6 S/m
-            ! Now to go from Ohm*m to micro Ohm cm we need to multiply by 1E8 
+            ! Now to go from Ohm*m to micro Ohm cm we need to multiply by 1E8
             rho(itemp, ismear) = rho(itemp, ismear) * 1E8 / 2.2999241E6
             IF (ismear == nqsmear) WRITE (iures, '(i8, 15f12.7)') itemp * 10, rho(itemp, :)
           ENDDO
-        ENDDO 
+        ENDDO
         CLOSE(iures)
         !
         WRITE(iua2ffil, *) "Integrated el-ph coupling"
@@ -1600,7 +1600,7 @@
         CLOSE(iudosfil)
         !
       ENDDO ! isig
-      ! 
+      !
       DEALLOCATE(l_a2f, STAT = ierr)
       IF (ierr /= 0) CALL errore('eliashberg_a2f', 'Error deallocating l_a2f', 1)
       DEALLOCATE(l_a2f_tr, STAT = ierr)
