@@ -373,8 +373,8 @@ call read_zero()
                do jatom = 1, nat
                   if (iatom > jatom) then
                      dtauij(:) = tau(:, iatom) - tau(:, jatom)
-                     u(1:3) = matmul(dtauij,at)*alat
-                     !u(1:3) =(tau(:, iatom) - tau(:, jatom),at(:,:))*alat
+                     !u(1:3) = matmul(dtauij,at)*alat
+                     u(1:3) =(tau(:, iatom) - tau(:, jatom))*alat
                      call pbc_ortho(u(1:3), u_pbc(1:3))
                      call I_due_value(value, u_pbc, 1)
                      i_current(:) = i_current(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom)) &
