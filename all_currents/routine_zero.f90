@@ -8,7 +8,7 @@ subroutine init_zero()
       use hartree_mod 
       use ions_base, only : nsp
       implicit none
-      integer :: isp, iun
+      integer :: isp, iun,a,b
       character(256) :: pref_box
       integer, external :: find_free_unit
       logical :: exst
@@ -18,6 +18,17 @@ subroutine init_zero()
       call init_us_1all()
       call init_reciprocal_parts_tab()
 !
+!questo è necessario?
+      do a = 1, 3
+         do b = 1, 3
+            if (a > b) then
+               do isp = 1, nsp
+                  H_g(:, b, a, isp) = H_g(:, a, b, isp)
+               end do
+               I_uno_g(:, b, a) = I_uno_g(:, a, b)
+            end if
+         end do
+      end do
       call stop_clock('init_zero')
 
 end subroutine
@@ -70,17 +81,6 @@ subroutine read_zero()
 !
       prefix = pref_box
 !
-!questo è necessario?
-      do a = 1, 3
-         do b = 1, 3
-            if (a > b) then
-               do isp = 1, nsp
-                  H_g(:, b, a, isp) = H_g(:, a, b, isp)
-               end do
-               I_uno_g(:, b, a) = I_uno_g(:, a, b)
-            end if
-         end do
-      end do
 
 
 
@@ -271,7 +271,7 @@ subroutine routine_zero()
       end if
 
 call read_step_data()
-call read_zero() 
+!call read_zero() 
 call read_wfc_uno()
 !call stop_clock( 'lett_H' )
 !call print_clock( 'lett_H' )

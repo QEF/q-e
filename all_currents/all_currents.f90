@@ -211,7 +211,7 @@ program all_currents
      end if
 
      call allocate_zero()
-     call init_us_1a() ! only once per all trajectory
+     call init_zero() ! only once per all trajectory
      call setup_nbnd_occ()
 
      call routine_hartree()
