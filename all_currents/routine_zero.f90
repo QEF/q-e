@@ -270,7 +270,7 @@ subroutine routine_zero()
          l_non_loc = .false.
       end if
 
-call read_step_data()
+!call read_step_data() ! done in the main program
 !call read_zero() 
 call read_wfc_uno()
 !call stop_clock( 'lett_H' )

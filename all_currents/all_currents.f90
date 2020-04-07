@@ -7,9 +7,9 @@ subroutine read_all_currents_namelists(iunit)
      integer :: ios
      CHARACTER(LEN=256), EXTERNAL :: trimcheck
      
-     NAMELIST /inputhartree/ prefix_uno, prefix_due, delta_t, init_linear, &
-        file_output, file_dativel, thermodir, second_vel_pos_fname
-     NAMELIST /inputzero/ eta, n_max, status, l_zero
+     NAMELIST /energy_current/ delta_t, init_linear, &
+        file_output, thermodir, vel_input_units ,&
+        eta, n_max, status, l_zero
 
      !
      !   set default values for variables in namelist
@@ -23,10 +23,8 @@ subroutine read_all_currents_namelists(iunit)
      init_linear = "scratch"
      file_output = "corrente_def"
      file_dativel = "velocita_def"
-     READ (iunit, inputhartree, IOSTAT=ios)
-     IF (ios /= 0) CALL errore('main', 'reading inputhartree, namelist', ABS(ios))
-     READ (iunit, inputzero, IOSTAT=ios)
-     IF (ios /= 0) CALL errore('main', 'reading inputzero namelist', ABS(ios))    
+     READ (iunit, energy_current, IOSTAT=ios)
+     IF (ios /= 0) CALL errore('main', 'reading energy_current namelist', ABS(ios))    
      thermodir = trimcheck(thermodir)
 
 end subroutine
@@ -52,9 +50,37 @@ subroutine bcast_all_current_namelist()
 
 end subroutine
 
+subroutine create_second_pos_from_read_vel()
+     !TODO: maybe this should use tau and should be called after pw initialization -- tau is in unit of alat, cartesian coordinates
+     use input_parameters, only : rd_pos, tapos, rd_vel, tavel, atomic_positions, ion_velocities
+     use zero_mod, only : ion_pos2, vel_input_units, ion_vel
+     use hartree_mod, only : delta_t
+     implicit none
+     if ( .not. allocated(ion_pos2) ) then
+      allocate(ion_pos2, source=rd_pos)
+     else
+      ion_pos2=rd_pos
+     end if
+     !TODO: use consistent unit: rd_pos can be whatever units it is allowed by pw!!!
+     if (.not. tavel) &
+        call errore('read_vel', 'error: must provide velocities in input')
+     if (ion_velocities /= 'from_input') &
+        call errore('read_vel', 'error: atomic_velocities must be "from_input"')
+     if (.not. allocated(ion_vel)) &
+        allocate(ion_vel, source=rd_vel)
+     if (vel_input_units=='CP') then
+        ion_vel= 2.d0 * rd_vel
+     else if (vel_input_units=='PW') then
+        ion_vel = rd_vel
+     else
+        call errore('read_vel', 'error: unknown vel_input_units' )
+     endif
+     ion_pos2=ion_pos2 + delta_t * ion_vel
+
+end subroutine
 subroutine read_second_vel_pos(filename)
      use input_parameters, only : rd_pos, tapos, rd_vel, tavel, atomic_positions
-     use zero_mod, only : ion_pos2, ion_vel2
+     use zero_mod, only : ion_pos2
      use read_cards_module, only : read_cards
      use io_global, ONLY: ionode
      implicit none
@@ -68,13 +94,7 @@ subroutine read_second_vel_pos(filename)
      else
       ion_pos2=rd_pos
      end if
-     if ( .not. allocated(ion_vel2) ) then
-      allocate(ion_vel2, source=rd_vel)
-     else
-     ion_vel2=rd_vel
-     end if
      tapos=.false.
-     tavel=.false.
      iunit=1000
      if (ionode) open(unit=iunit, file=filename)
         old_atomic_pos=atomic_positions
@@ -185,10 +205,13 @@ program all_currents
         ! PW input
         call read_namelists( 'PW', 5 )
         call read_cards( 'PW', 5 )
-        ! read second array of atomic positions
-     call read_second_vel_pos(second_vel_pos_fname)
+
+     ! not used
+     ! read second array of atomic positions
+     ! call read_second_vel_pos(second_vel_pos_fname)
+     ! create second set of atomic positions
+     call create_second_pos_from_read_vel()
  
-     !ENDIF
      call mp_barrier(intra_pool_comm)
      call bcast_all_current_namelist() 
      call iosys()    ! ../PW/src/input.f90    save in internal variables

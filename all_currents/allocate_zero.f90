@@ -25,12 +25,14 @@ allocate(tabr(nqxq , nbetam ,nsp,-1:1 ))
 if (spline_ps) then
     allocate (tabr_d2y(nqxq , nbetam , nsp,-1:1 ))
 end if
-if (status=='compute') then
+if (status=='compute') then !TODO: check this
     allocate(charge_g(ngm))
     allocate(u_g(ngm,3))
 !    allocate(evc_uno(npwx,nbnd))
     allocate(charge(dffts%nnr))
+    if (.not. allocated(ion_pos)) &
     allocate(ion_pos(3,nat))
+    if (.not. allocated(ion_pos)) &
     allocate(ion_vel(3,nat)) 
 end if
 !
