@@ -16,7 +16,7 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   USE mp,               ONLY : mp_bcast
   USE mp_images,        ONLY : intra_image_comm
   USE control_flags,    ONLY : gamma_only, conv_elec, istep, ethr, lscf, lmd, &
-       treinit_gvecs
+       treinit_gvecs, lensemb
   USE force_mod,        ONLY : lforce, lstres
   USE ions_base,        ONLY : tau
   USE cell_base,        ONLY : alat, at, omega, bg
@@ -27,6 +27,7 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   USE extrapolation,    ONLY : update_file, update_pot
   USE io_files,         ONLY : iunupdate, nd_nmbr, prefix, restart_dir, &
                                wfc_dir, delete_if_present, seqopn
+  USE beef,             ONLY : beef_energies, beefxc, energies
   !
   IMPLICIT NONE
   INTEGER, INTENT(OUT) :: exit_status
@@ -37,11 +38,11 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   ! Local variables
   INTEGER, PARAMETER :: MSGLEN=12
   REAL*8, PARAMETER :: gvec_omega_tol=1.0D-1
-  LOGICAL :: isinit=.false., hasdata=.false., exst, firststep
+  LOGICAL :: isinit=.false., hasdata=.false., exst, firststep, hasensemb=.false. 
   CHARACTER*12 :: header
   CHARACTER*1024 :: parbuffer
   CHARACTER(LEN=256) :: dirname
-  INTEGER :: socket, nat, rid, ccmd, i, info, rid_old=-1
+  INTEGER :: socket, nat, rid, ccmd, i, info, lflags, rid_old=-1
   REAL*8 :: sigma(3,3), omega_reset, at_reset(3,3), dist_reset, ang_reset
   REAL *8 :: cellh(3,3), cellih(3,3), vir(3,3), pot, mtxbuffer(9)
   REAL*8, ALLOCATABLE :: combuf(:)
@@ -51,15 +52,16 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   lscf      = .true.
   lforce    = .true.
   lstres    = .true.
-  lmd       = .true.
   lmovecell = .true.
+  lmd       = .true.
+  lensemb = .false.
   firststep = .true.
   omega_reset = 0.d0
   !
   exit_status = 0
   IF ( ionode ) WRITE( unit = stdout, FMT = 9010 ) ntypx, npk, lmaxx
   !
-  IF (ionode) CALL plugin_arguments()
+  IF ( ionode ) CALL plugin_arguments()
   CALL plugin_arguments_bcast( ionode_id, intra_image_comm )
   !
   ! ... needs to come before iosys() so some input flags can be
@@ -80,7 +82,7 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   CALL setup()
   ! ... Initializations
   CALL init_run()
-  IF (ionode) CALL create_socket(srvaddress)
+  IF ( ionode ) CALL create_socket(srvaddress)
   !
   driver_loop: DO
      !
@@ -92,12 +94,12 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
      SELECT CASE ( trim( header ) )
      CASE( "STATUS" )
         !
-        IF (ionode) THEN  
-           IF (hasdata) THEN
+        IF ( ionode ) THEN  
+           IF ( hasdata ) THEN
               CALL writebuffer( socket, "HAVEDATA    ", MSGLEN )
-           ELSE IF (isinit) THEN
+           ELSE IF ( isinit ) THEN
               CALL writebuffer( socket, "READY       ", MSGLEN )
-           ELSE IF (.not. isinit) THEN
+           ELSE IF ( .not. isinit ) THEN
               CALL writebuffer( socket, "NEEDINIT    ", MSGLEN )
            ELSE
               exit_status = 129
@@ -122,6 +124,7 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
         hasdata=.false.
         !
      CASE DEFAULT
+        IF ( ionode ) WRITE(*,*) " @ DRIVE MODE: Exiting  "
         exit_status = 130
         RETURN
      END SELECT
@@ -181,14 +184,48 @@ CONTAINS
     END IF
     !
     rid_old = rid
+    ! 
     !
     IF ( ionode ) THEN
        !
-       ! ... Length of parameter string -- ignored at present!
+       ! ... Length of parameter string -- ignored at present! (Not anymore)
        !
-       CALL readbuffer( socket, nat ) 
-       CALL readbuffer( socket, parbuffer, nat )
+       ! A hacky enconding to allow overriding redundant calculations
+       !
+       ! by Gabriel S. Gusmao :: gusmaogabriels@gmail.com (2020)
+       ! Medford Group @ ChBE, Georgia Institute of Technology
+       !
+       CALL readbuffer( socket, lflags )
+       IF ( lflags .NE. 0 ) THEN
+          WRITE(*,*) " @ DRIVER MODE: Receiving encoded integer", lflags
+          WRITE(*,*) " @ DRIVER MODE: "," SCF: ", lscf," FORCE: ", lforce, &
+                       " STRESS: ", lstres, " VC: ",lmovecell," ENSEMBLE: ", lensemb
+          lscf      = MOD(INT(lflags/(2**4)),2) == 1
+          lforce    = MOD(INT(lflags/(2**3)),2) == 1
+          lstres    = MOD(INT(lflags/(2**2)),2) == 1
+          lmovecell = MOD(INT(lflags/(2**1)),2) == 1
+          lensemb   = MOD(INT(lflags/(2**0)),2) == 1
+          IF ( firststep .OR. ( hasensemb .AND. ( lforce .OR. lstres .OR. lmovecell ))) THEN
+             !
+             ! BEEF-vdw ensembles corrupt the wavefunction and, therefore, forces, stresses
+             ! Right now the workaround is to run an SCF cycle at the beginning in case 
+             ! ensembles have been generated
+             !
+             lscf = .TRUE.
+             hasensemb = .FALSE.
+          ENDIF
+          WRITE(*,*) " @ DRIVER MODE: "," SCF: ", lscf," FORCE: ", lforce, &
+                       " STRESS: ", lstres, " VC: ",lmovecell," ENSEMBLE: ", lensemb
+       ENDIF
+       !
+       CALL readbuffer( socket, parbuffer, 1 )
     END IF
+       !
+    CALL mp_bcast( lscf, ionode_id, intra_image_comm )
+    CALL mp_bcast( lforce, ionode_id, intra_image_comm )       
+    CALL mp_bcast( lstres, ionode_id, intra_image_comm )   
+    CALL mp_bcast( lmovecell, ionode_id, intra_image_comm )   
+    CALL mp_bcast( lensemb, ionode_id, intra_image_comm )   
     !
   END SUBROUTINE driver_init
   !
@@ -208,57 +245,74 @@ CONTAINS
     !
     ! ... Recompute cell data
     !
-    CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
-    CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
-    !
-    ! ... If the cell is changes too much, reinitialize G-Vectors
-    ! ... also extrapolation history must be reset
-    ! ... If firststep, it will also be executed (omega_reset equals 0),
-    ! ... to make sure we initialize G-vectors using positions from I-PI
-    IF ( ((ABS( omega_reset - omega ) / omega) .GT. gvec_omega_tol) .AND. (gvec_omega_tol .GE. 0.d0) ) THEN
-       IF (ionode) THEN
-          IF (firststep) THEN
-             WRITE(*,*) " @ DRIVER MODE: initialize G-vectors "
-          ELSE
-             WRITE(*,*) " @ DRIVER MODE: reinitialize G-vectors "
+    IF ( lmovecell .OR. firststep ) THEN
+       CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
+       CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
+       !
+       ! ... If the cell is changes too much, reinitialize G-Vectors
+       ! ... also extrapolation history must be reset
+       ! ... If firststep, it will also be executed (omega_reset equals 0),
+       ! ... to make sure we initialize G-vectors using positions from I-PI
+       IF ( ((ABS( omega_reset - omega ) / omega) .GT. gvec_omega_tol) &
+                                   .AND. (gvec_omega_tol .GE. 0.d0) ) THEN
+          IF ( ionode ) THEN
+             IF ( firststep ) THEN
+                WRITE(*,*) " @ DRIVER MODE: initialize G-vectors "
+             ELSE
+                WRITE(*,*) " @ DRIVER MODE: reinitialize G-vectors "
+             END IF
+          END IF
+          CALL initialize_g_vectors()
+          CALL reset_history_for_extrapolation()
+          !
+       ELSE
+          !
+          ! ... Update only atomic position and potential from the history
+          ! ... if the cell did not change too much
+          !
+          IF (.NOT. firststep) THEN
+             IF ( treinit_gvecs ) THEN
+                IF ( lmovecell ) CALL scale_h()
+                CALL reset_gvectors ( )
+             ELSE
+                CALL update_pot()
+                CALL hinit1()
+             END IF
           END IF
        END IF
-       CALL initialize_g_vectors()
-       CALL reset_history_for_extrapolation()
-       !
     ELSE
-       !
-       ! ... Update only atomic position and potential from the history
-       ! ... if the cell did not change too much
-       !
-       IF (.NOT. firststep) THEN
-          IF ( treinit_gvecs ) THEN
-             IF ( lmovecell ) CALL scale_h()
-             CALL reset_gvectors ( )
-          ELSE
-             CALL update_pot()
-             CALL hinit1()
-          END IF
-       END IF
+       IF (.NOT. firststep ) THEN
+           CALL update_pot()
+           CALL hinit1() 
+       ENDIF
     END IF
-    firststep = .false.
     !
     ! ... Compute everything
-    !
-    CALL electrons()
-    IF ( .NOT. conv_elec ) THEN
+    !  
+    IF ( lscf ) CALL electrons()
+    IF ( .NOT. conv_elec .AND. ionode ) THEN
        CALL punch( 'all' )
        CALL stop_run( conv_elec )
     ENDIF
-    CALL forces()
-    CALL stress(sigma)
+    IF ( lforce ) CALL forces()
+    IF ( lstres ) CALL stress(sigma)
+    IF ( lensemb .AND. .NOT. hasensemb ) THEN 
+       IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: BEEF-vdw "
+       CALL beef_energies( )
+       hasensemb = .TRUE.
+    ENDIF
+    firststep = .false.
     !
     ! ... Converts energy & forces to the format expected by i-pi
     ! ... (so go from Ry to Ha)
     !
-    combuf=RESHAPE(force, (/ 3 * nat /) ) * 0.5   ! force in a.u.
+    IF ( lforce ) THEN
+       combuf=RESHAPE(force, (/ 3 * nat /) ) * 0.5   ! force in a.u.
+    ENDIF
     pot=etot * 0.5                                ! potential in a.u.
-    vir=TRANSPOSE( sigma ) * omega * 0.5          ! virial in a.u & no omega scal.
+    IF ( lstres ) THEN
+       vir=TRANSPOSE( sigma ) * omega * 0.5          ! virial in a.u & no omega scal.
+    ENDIF
     !
     ! ... Updates history
     !
@@ -272,12 +326,19 @@ CONTAINS
     !
     ! ... communicates energy info back to i-pi
     !
-    IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Returning v,forces,stress "
+    !
+    IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Returning v,forces,stress,ensemble "
     IF ( ionode ) CALL writebuffer( socket, "FORCEREADY  ", MSGLEN)         
+    !
     IF ( ionode ) CALL writebuffer( socket, pot)
     IF ( ionode ) CALL writebuffer( socket, nat)
-    IF ( ionode ) CALL writebuffer( socket, combuf, 3 * nat)
-    IF ( ionode ) CALL writebuffer( socket, RESHAPE( vir, (/9/) ), 9)
+    IF ( ionode .AND. lforce ) CALL writebuffer( socket, combuf, 3 * nat)
+    IF ( ionode .AND. lstres ) CALL writebuffer( socket, RESHAPE( vir, (/9/) ), 9)
+    IF ( lensemb .AND. ionode ) THEN
+       WRITE(*,*) " @ DRIVE MODE: Returning Ensemble Energies  "
+       CALL writebuffer( socket, energies, 2000)
+       CALL writebuffer( socket, beefxc, 32)
+    ENDIF
     !
     ! ... Note: i-pi can also receive an arbitrary string, that will be printed
     ! ... out to the "extra" trajectory file. This is useful if you want to
@@ -295,16 +356,19 @@ CONTAINS
   SUBROUTINE read_and_share()
     ! ... First reads cell and the number of atoms
     !
-    IF ( ionode ) CALL readbuffer(socket, mtxbuffer, 9)
-    cellh = RESHAPE(mtxbuffer, (/3,3/))         
-    IF ( ionode ) CALL readbuffer(socket, mtxbuffer, 9)
-    cellih = RESHAPE(mtxbuffer, (/3,3/))
+    IF ( lmovecell .OR. firststep) THEN
+       IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Reading and sharing cell "
+       IF ( ionode ) CALL readbuffer(socket, mtxbuffer, 9)
+       cellh = RESHAPE(mtxbuffer, (/3,3/))         
+       IF ( ionode ) CALL readbuffer(socket, mtxbuffer, 9)
+       cellih = RESHAPE(mtxbuffer, (/3,3/))
+       !
+       ! ... Share the received data 
+       !
+       CALL mp_bcast( cellh,  ionode_id, intra_image_comm )  
+       CALL mp_bcast( cellih, ionode_id, intra_image_comm )
+    ENDIF
     IF ( ionode ) CALL readbuffer(socket, nat)
-    !
-    ! ... Share the received data 
-    !
-    CALL mp_bcast( cellh,  ionode_id, intra_image_comm )  
-    CALL mp_bcast( cellih, ionode_id, intra_image_comm )
     CALL mp_bcast(    nat, ionode_id, intra_image_comm )
     !
     ! ... Allocate the dummy array for the atoms coordinate and share it
@@ -312,15 +376,19 @@ CONTAINS
     IF ( .NOT. ALLOCATED( combuf ) ) THEN
        ALLOCATE( combuf( 3 * nat ) )
     END IF
+    IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Reading and sharing positions "
     IF ( ionode ) CALL readbuffer(socket, combuf, nat*3)
     CALL mp_bcast( combuf, ionode_id, intra_image_comm)
     !
     ! ... Convert the incoming configuration to the internal pwscf format
     !
-    cellh  = TRANSPOSE(  cellh )                 ! row-major to column-major 
-    cellih = TRANSPOSE( cellih )         
+    IF ( lmovecell .OR. firststep ) THEN
+       cellh  = TRANSPOSE(  cellh )                 ! row-major to column-major 
+       cellih = TRANSPOSE( cellih )         
+       at = cellh / alat                            ! and so the cell
+    ENDIF
     tau = RESHAPE( combuf, (/ 3 , nat /) )/alat  ! internally positions are in alat 
-    at = cellh / alat                            ! and so the cell
+    !
     !
   END SUBROUTINE read_and_share
   !

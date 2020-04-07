@@ -165,6 +165,10 @@ MPI_LIBS       = @mpi_libs@
 
 MASS_LIBS      = @mass_libs@
 
+# library for bayesian error estimate functionals
+
+BEEF_LIBS      = @beef_libs@
+
 # CUDA libraries
 CUDA_LIBS=@cuda_libs@
 CUDA_EXTLIBS = @cuda_extlibs@
@@ -185,7 +189,7 @@ FLIB_TARGETS   = all
 
 LIBOBJS        = $(TOPDIR)/clib/clib.a  $(TOPDIR)/iotk/src/libiotk.a
 LIBXC_LIBS     = @LIBS_LIBXC@
-QELIBS         = $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LIBXC_LIBS) $(LD_LIBS)
+QELIBS         = $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(BEEF_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LIBXC_LIBS) $(LD_LIBS)
 
 # wget or curl - useful to download from network
 WGET = @wget@
