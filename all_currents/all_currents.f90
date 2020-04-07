@@ -212,7 +212,7 @@ program all_currents
 
      call allocate_zero()
      call init_us_1a() ! only once per all trajectory
-
+     call setup_nbnd_occ()
 
      call routine_hartree()
 

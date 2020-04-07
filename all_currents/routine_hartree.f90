@@ -59,6 +59,7 @@ subroutine routine_hartree()
    integer, external :: find_free_unit
 
    write (stdout, *) 'INIZIO ROUTINE HARTREE & KOHN'
+   npw=npwx ! only gamma
    call start_clock('routine_hartree')
    call start_clock('hartree_current')
    call init_hartree()
