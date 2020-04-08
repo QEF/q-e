@@ -4,8 +4,7 @@ MODULE hartree_mod
 
   SAVE
 
-  CHARACTER(len=256) :: prefix_uno, prefix_due, &
-       init_linear, file_output, file_dativel, thermodir
+  CHARACTER(len=256) :: init_linear, file_output, trajdir
 
   real(kind=DP) ::delta_t 
   complex(kind=DP), allocatable :: evc_uno(:,:), evc_due(:, :) ! TODO: maybe save one allocation of npwx*nb

@@ -8,24 +8,22 @@ subroutine read_all_currents_namelists(iunit)
      CHARACTER(LEN=256), EXTERNAL :: trimcheck
      
      NAMELIST /energy_current/ delta_t, init_linear, &
-        file_output, thermodir, vel_input_units ,&
+        file_output, trajdir, vel_input_units ,&
         eta, n_max, status, l_zero
 
      !
      !   set default values for variables in namelist
      !
-     thermodir = './' ! TODO: remove
-     prefix_due = 'pwscf' !TODO: remove
+     !prefix_due = 'pwscf' !TODO: remove
      delta_t = 1.d0
      n_max = 5 ! number of periodic cells in each direction used to sum stuff in zero current
      eta = 1.0 ! ewald sum convergence parameter
      status = "undefined"
      init_linear = "scratch" ! 'scratch' or 'restart'. If 'scratch', saves a restart file in project routine. If 'restart', it starts from the saved restart file, and then save again it.
      file_output = "corrente_def"
-     file_dativel = "velocita_def"
+     !file_dativel = "velocita_def"
      READ (iunit, energy_current, IOSTAT=ios)
      IF (ios /= 0) CALL errore('main', 'reading energy_current namelist', ABS(ios))    
-     thermodir = trimcheck(thermodir)
 
 end subroutine
 
@@ -37,72 +35,34 @@ subroutine bcast_all_current_namelist()
      use mp_world, ONLY: mpime, world_comm
      use mp, ONLY: mp_bcast !, mp_barrier
      implicit none
-     CALL mp_bcast(thermodir, ionode_id, world_comm)
-     CALL mp_bcast(prefix_uno, ionode_id, world_comm)
-     CALL mp_bcast(prefix_due, ionode_id, world_comm)
+     CALL mp_bcast(trajdir, ionode_id, world_comm)
+!     CALL mp_bcast(prefix_uno, ionode_id, world_comm)
+!     CALL mp_bcast(prefix_due, ionode_id, world_comm)
      CALL mp_bcast(delta_t, ionode_id, world_comm)
      CALL mp_bcast(eta, ionode_id, world_comm)
      CALL mp_bcast(n_max, ionode_id, world_comm)
      CALL mp_bcast(status, ionode_id, world_comm)
      CALL mp_bcast(init_linear, ionode_id, world_comm)
      CALL mp_bcast(file_output, ionode_id, world_comm)
-     CALL mp_bcast(file_dativel, ionode_id, world_comm)
+     !CALL mp_bcast(file_dativel, ionode_id, world_comm)
 
 end subroutine
 
-subroutine create_second_pos_from_read_vel()
-     !TODO: maybe this should use tau and should be called after pw initialization -- tau is in unit of alat, cartesian coordinates
+subroutine check_input()
      use input_parameters, only : rd_pos, tapos, rd_vel, tavel, atomic_positions, ion_velocities
-     use zero_mod, only : ion_pos2, vel_input_units, ion_vel
+use  ions_base,     ONLY :  tau, tau_format, nat
+     use zero_mod, only : vel_input_units, ion_vel
      use hartree_mod, only : delta_t
      implicit none
-     if ( .not. allocated(ion_pos2) ) then
-      allocate(ion_pos2, source=rd_pos)
-     else
-      ion_pos2=rd_pos
-     end if
-     !TODO: use consistent unit: rd_pos can be whatever units it is allowed by pw!!!
      if (.not. tavel) &
         call errore('read_vel', 'error: must provide velocities in input',1)
      if (ion_velocities /= 'from_input') &
         call errore('read_vel', 'error: atomic_velocities must be "from_input"',1)
      if (.not. allocated(ion_vel)) &
         allocate(ion_vel, source=rd_vel)
-     if (vel_input_units=='CP') then
-        ion_vel= 2.d0 * rd_vel
-     else if (vel_input_units=='PW') then
-        ion_vel = rd_vel
-     else
-        call errore('read_vel', 'error: unknown vel_input_units',1 )
-     endif
-     ion_pos2=ion_pos2 + delta_t * ion_vel
 
 end subroutine
-subroutine read_second_vel_pos(filename)
-     use input_parameters, only : rd_pos, tapos, rd_vel, tavel, atomic_positions
-     use zero_mod, only : ion_pos2
-     use read_cards_module, only : read_cards
-     use io_global, ONLY: ionode
-     implicit none
-     integer :: iunit
-        LOGICAL, EXTERNAL  :: matches
-        CHARACTER, EXTERNAL :: capital
-        CHARACTER(len=80) :: input_line,old_atomic_pos
-     CHARACTER(len=256), intent(in) :: filename
-     if ( .not. allocated(ion_pos2) ) then
-      allocate(ion_pos2, source=rd_pos)
-     else
-      ion_pos2=rd_pos
-     end if
-     tapos=.false.
-     iunit=1000
-     if (ionode) open(unit=iunit, file=filename)
-        old_atomic_pos=atomic_positions
-        call read_cards('PW',iunit)
-     close(iunit)
-     if (old_atomic_pos /= atomic_positions) & 
-        call errore('read_second_vel_pos', 'must specify same units in all input positions cards',1)
-end subroutine
+
 
 subroutine run_pwscf(exit_status)
 USE control_flags,        ONLY : conv_elec, gamma_only, ethr, lscf, treinit_gvecs
@@ -132,11 +92,13 @@ subroutine prepare_next_step()
 USE extrapolation,        ONLY : update_pot
 USE control_flags,        ONLY : ethr
 use  ions_base,     ONLY :  tau, tau_format, nat
+use cell_base, only : alat
+use dynamics_module, only : vel
 use io_global, ONLY: ionode, ionode_id
 USE mp_world,             ONLY : world_comm
 use mp, ONLY: mp_bcast, mp_barrier
-use hartree_mod, only : evc_due
-use zero_mod, only : ion_pos2
+use hartree_mod, only : evc_due,delta_t
+use zero_mod, only : vel_input_units, ion_vel
 use wavefunctions, only : evc 
      !save old evc
 
@@ -147,18 +109,31 @@ use wavefunctions, only : evc
      end if
      !set new positions
      if (ionode) then
-     tau=ion_pos2
-     call convert_tau(tau_format,nat,tau)
+         if (vel_input_units=='CP') then ! atomic units of cp are different
+            vel= 2.d0 * vel
+         else if (vel_input_units=='PW') then
+            !do nothing
+         else
+            call errore('read_vel', 'error: unknown vel_input_units',1 )
+         endif
      endif
+     !broadcast
      CALL mp_bcast(tau, ionode_id, world_comm)
-     
+     CALL mp_bcast(vel, ionode_id, world_comm)
+     if (.not. allocated(ion_vel)) then
+         allocate(ion_vel,source=vel)
+     else
+         ion_vel=vel
+     endif
+     vel=vel/alat
+     tau=tau + delta_t * vel
+     call mp_barrier(world_comm) 
      call update_pot()
      call hinit1()
      ethr = 1.0D-6
 end subroutine
 
 program all_currents
-     use zero_mod, only : second_vel_pos_fname
      use hartree_mod, only : evc_uno,evc_due
      USE environment, ONLY: environment_start, environment_end
      use io_global, ONLY: ionode ! stdout, ionode, ionode_id
@@ -206,11 +181,8 @@ program all_currents
         call read_namelists( 'PW', 5 )
         call read_cards( 'PW', 5 )
 
-     ! not used
-     ! read second array of atomic positions
-     ! call read_second_vel_pos(second_vel_pos_fname)
      ! create second set of atomic positions
-     call create_second_pos_from_read_vel()
+     call check_input()
  
      call mp_barrier(intra_pool_comm)
      call bcast_all_current_namelist() 
@@ -219,14 +191,16 @@ program all_currents
      call setup()    ! ../PW/src/setup.f90    setup the calculation
      call init_run() ! ../PW/src/init_run.f90 allocate stuff
  
+
      ! in principle now scf is ready to start 
      
      call run_pwscf(exit_status)
      if (exit_status /= 0 ) goto 100
-     call prepare_next_step() ! this stores value of evc
+
+     call prepare_next_step() ! this stores value of evc and setup tau and ion_vel
+
      call run_pwscf(exit_status)
      if (exit_status /= 0 ) goto 100
-
      if (allocated(evc_uno)) then
          evc_uno=evc
      else

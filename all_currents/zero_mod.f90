@@ -31,12 +31,10 @@ MODULE zero_mod
   real(DP), allocatable   :: charge(:)
 
   !ion positions and velocities
-  real(DP), allocatable ::ion_pos(:,:) 
+  !real(DP), allocatable ::ion_pos(:,:) 
   real(DP), allocatable ::ion_vel(:,:) 
   !second ion positions and velocities read from input
-  real(DP), allocatable ::ion_pos2(:,:) ! must call convert_tau from ../PW/src/input.f90 to obtain correct units for positions
-  real(DP), allocatable ::ion_vel2(:,:)
-  character(len=256) :: second_vel_pos_fname ! TODO: delete
+  !real(DP), allocatable ::ion_pos2(:,:) ! must call convert_tau from ../PW/src/input.f90 to obtain correct units for positions
   character(len=256) :: vel_input_units = 'CP'
 
   !input from stdout

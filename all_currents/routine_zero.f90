@@ -52,7 +52,8 @@ subroutine read_zero()
 !
 !call start_clock( 'lett_H' )
       iun = find_free_unit()
-      call diropn(iun, 'ecur', ngm, exst, thermodir)
+      call errore('!','THIS SUB SHOULD NOT BE CALLED',42)
+      call diropn(iun, 'ecur', ngm, exst, '$errore')
       do isp = 1, nsp
          call davcio(H_g(:, 1, 1, isp), ngm, iun, (isp - 1)*6 + 1, -1)
          call davcio(H_g(:, 2, 2, isp), ngm, iun, (isp - 1)*6 + 2, -1)
@@ -64,7 +65,7 @@ subroutine read_zero()
       close (iun)
 !
       iun = find_free_unit()
-      call diropn(iun, 'i_uno', ngm, exst, thermodir)
+      call diropn(iun, 'i_uno', ngm, exst, '$errore')
       call davcio(I_uno_g(:, 1, 1), ngm, iun, 1, -1)
       call davcio(I_uno_g(:, 2, 2), ngm, iun, 2, -1)
       call davcio(I_uno_g(:, 3, 3), ngm, iun, 3, -1)
@@ -74,7 +75,7 @@ subroutine read_zero()
       close (iun)
 !
       iun = find_free_unit()
-      call diropn(iun, 'i_due+i_primo', ngm, exst, thermodir)
+      call diropn(iun, 'i_due+i_primo', ngm, exst, '$errore')
       call davcio(I_due_g(:), ngm, iun, 1, -1)
       call davcio(I_primo, 1, iun, 2, -1)
       close (iun)
@@ -89,8 +90,8 @@ end subroutine
 subroutine read_wfc_uno()
     use kinds, only: dp
     use io_global, only: ionode,stdout, ionode_id
-    use hartree_mod, only: evc_uno,file_dativel
-    use zero_mod, only: ion_pos, ion_vel,charge, charge_g
+    use hartree_mod, only: evc_uno !,file_dativel
+    use zero_mod, only: charge, charge_g
     use ions_base, only: nsp, zv, nat, ityp, amass, tau
     use mp, only: mp_sum, mp_bcast, mp_get
     use wavefunctions, only: psic
@@ -148,8 +149,8 @@ end subroutine
 subroutine read_step_data()
     use kinds, only: dp
     use io_global, only: ionode,stdout, ionode_id
-    use hartree_mod, only: file_dativel
-    use zero_mod, only: ion_pos, ion_vel,charge, charge_g
+    !use hartree_mod, only: file_dativel
+    use zero_mod, only:  ion_vel,charge, charge_g
     use ions_base, only: nsp, zv, nat, ityp, amass, tau
     use mp, only: mp_sum, mp_bcast, mp_get
     use wavefunctions, only: psic
@@ -167,7 +168,8 @@ subroutine read_step_data()
 !lettura velocita'
       if (ionode) then
          iun = find_free_unit()
-         open (unit=iun, file=trim(file_dativel), access='sequential', status='old')
+         open (unit=iun, file=trim('THIS ROUTINE SHOLD NOT BE CALLED'), access='sequential', status='old')
+         call errore('!','THIS ROUTINE SHOLD NOT BE CALLED',42)
 !! New reading method for .vel CP format. Only first step read.
          read (iun, *)
          do iatom = 1, nat
