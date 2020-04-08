@@ -8,6 +8,7 @@ New in dev branch:
     (Jae-Mo Lihm, Seoul Natl. Univ.)
   * DFT+U+V in pw.x, J. Phys.: Condens. Matter 22, 055602 (2010)
     (V.L. Campo Jr, I. Timrov, N. Marzari, M. Cococcioni)
+  * Support for BEEF-vdW XC (Gabriel S. Gusmão, Georgia Tech)
   
 Fixed in dev branch:
   * PW: Restart from interrupted calculations  simplified. As a side effect,
@@ -20,6 +21,9 @@ Fixed in dev branch:
     now works properly - courtesy Andrea Urru and Andrea Dal Corso.
   * Incorrect forces, and slightly inconsistent atomic positions, were
     written to xml file for structural optimization and molecular dynamics
+  * Some Bravais lattices with special axis orientations were not correctly
+    written to xml file, leading to errors in some codes (e.g., thermo_pw)
+    using that piece of information (fixed by Alberto Otero de la Roza)
  
 Incompatible changes in dev branch:
   * Conversion from 1D FFT real-space index to 3D positions moved into a
@@ -87,6 +91,7 @@ Problems fixed in 6.5 branch :
   * Option rescale-T and reduce-T now update the target temperature based on
     the previous target temperature, not based on instantaneous temperature
     as before.
+  * cppp.x works again
 
 Incompatible changes in 6.5 branch :
   * Major changes inside the exchange-correlation code; XC routines moved
@@ -1833,4 +1838,3 @@ Fixed in version 1.0.1:
   * Asymptotic high- and low-density formulae used in PW91 and PBE
     unpolarized functionals gave a small but not negligible error,
     leading to bad convergence of structural optimization
-

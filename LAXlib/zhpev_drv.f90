@@ -157,11 +157,13 @@ CONTAINS
       EXTERNAL           zdscal, zscal                                          
 !     ..
 !     .. External Functions ..
-      COMPLEX(DP)         zdotc
-      EXTERNAL           zdotc
+      ! some compiler don't like complex functions
+      !COMPLEX(DP)         zdotc
+      !EXTERNAL           zdotc
+      !COMPLEX(DP)         ZLADIV
+      !EXTERNAL            ZLADIV
       REAL(DP)             DLAMCH, DLAPY3, DZNRM2
-      COMPLEX(DP)         ZLADIV
-      EXTERNAL           DLAMCH, DLAPY3, DZNRM2, ZLADIV
+      EXTERNAL           DLAMCH, DLAPY3, DZNRM2
 !     ..
 !     .. Intrinsic Functions ..
       INTRINSIC          DABS, DBLE, AIMAG, SIGN
@@ -267,7 +269,9 @@ CONTAINS
                   ALPHA = CMPLX( ALPHR, ALPHI, KIND=DP )
                   BETA = -SIGN( DLAPY3( ALPHR, ALPHI, XNORM ), ALPHR )
                   TAUI = CMPLX( (BETA-ALPHR)/BETA, -ALPHI/BETA, KIND=DP )
-                  ALPHA = ZLADIV( ONE, ALPHA-BETA )
+                  ! next line yields problems on some compilers
+                  ! ALPHA = ZLADIV( ONE, ALPHA-BETA )
+                  ALPHA = ONE / (ALPHA-BETA)
 
                   IF(NI1.GT.0) THEN
                     CALL zscal( NI1, ALPHA, AP( I2, I ), 1 )
@@ -281,7 +285,9 @@ CONTAINS
                 ELSE
 
                   TAUI = CMPLX( (BETA-ALPHR)/BETA, -ALPHI/BETA, KIND=DP )
-                  ALPHA = ZLADIV( ONE, ALPHA-BETA )
+                  ! next line yields problems on some compilers
+                  ! ALPHA = ZLADIV( ONE, ALPHA-BETA )
+                  ALPHA = ONE / (ALPHA-BETA)
 
                   IF(NI1.GT.0) THEN
                     CALL zscal( NI1, ALPHA, AP( I2, I ), 1 )
@@ -375,7 +381,9 @@ CONTAINS
                ENDIF
                NI1 = NRL - I1 + 1          ! N-I
                IF ( NI1 > 0 ) THEN
-                  ALPHA = -HALF*TAUI*zdotc(NI1,TAUL(1),1,AP(I1,I),1)
+                  ! next line yields problems on some compilers
+                  !ALPHA = -HALF*TAUI*zdotc(NI1,TAUL(1),1,AP(I1,I),1)
+                  ALPHA = -HALF*TAUI*dot_product(TAUL(1:NI1),AP(I1:I1+NI1-1,I))
                ELSE
                   ALPHA = 0.0_DP
                END IF
