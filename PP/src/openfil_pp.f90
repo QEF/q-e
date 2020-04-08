@@ -17,7 +17,6 @@ SUBROUTINE openfil_pp()
   USE wvfct,          ONLY : nbnd, npwx
   USE basis,          ONLY : natomwfc
   USE ldaU,           ONLY : nwfcU
-  USE control_flags,  ONLY : twfcollect
   USE io_files,       ONLY : prefix, iunwfc, diropn, &
                              nwordwfc, nwordatwfc, nwordwfcU
   USE noncollin_module, ONLY : npol
@@ -25,8 +24,6 @@ SUBROUTINE openfil_pp()
   IMPLICIT NONE
   !
   LOGICAL       :: exst
-  !
-  twfcollect=.false.
   !
   ! ... nwordwfc is the record length for the direct-access file
   ! ... containing wavefunctions

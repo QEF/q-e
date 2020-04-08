@@ -1,0 +1,162 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether ECHO has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x, turbo_eels.x, and turbo_spectrum.x"
+$ECHO "to calculate the electron energy loss spectrum of bulk aluminum."
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x turbo_eels.x turbo_spectrum.x"
+PSEUDO_LIST="Al.pz-vbc.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+TURBO_EELS_COMMAND="$PARA_PREFIX $BIN_DIR/turbo_eels.x $PARA_POSTFIX"
+TURBO_SPECTRUM_COMMAND="$PARA_PREFIX $BIN_DIR/turbo_spectrum.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as:             $PW_COMMAND"
+$ECHO "  running turbo_eels.x as:     $TURBO_EELS_COMMAND"
+$ECHO "  running turbo_spectrum.x as: $TURBO_SPECTRUM_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+PREFIX='Al'
+
+# self-consistent calculation
+cat > $PREFIX.scf.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='$PREFIX'
+    pseudo_dir = '$PSEUDO_DIR/'
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav = 2,
+    celldm(1) = 7.60,
+    nat = 1,
+    ntyp = 1,
+    ecutwfc = 16.0,
+    occupations = 'smearing',
+    smearing = 'mv',
+    degauss = 0.02
+ /
+ &electrons
+    conv_thr =  1.0d-10
+ /
+ATOMIC_SPECIES
+Al  26.98   Al.pz-vbc.UPF
+ATOMIC_POSITIONS {alat}
+Al 0.00 0.00 0.00
+K_POINTS {automatic}
+3 3 3 1 1 1
+EOF
+$ECHO "  Running the SCF calculation for $PREFIX..."
+$PW_COMMAND < $PREFIX.scf.in > $PREFIX.scf.out
+$ECHO " done"
+
+
+# Perform the linear-response calculation
+cat > $PREFIX.tddfpt.in << EOF
+ &lr_input
+   prefix = '$PREFIX',
+   outdir = '$TMP_DIR/',
+   restart_step = 250,
+   restart = .false.
+ /
+ &lr_control
+   itermax = 500,
+   q1 = 0.621,
+   q2 = 0.000,
+   q3 = 0.000
+ /
+EOF
+$ECHO "  Running the TDDFPT calculation for $PREFIX..."
+$TURBO_EELS_COMMAND < $PREFIX.tddfpt.in > $PREFIX.tddfpt.out
+$ECHO " done"
+
+
+# Perform the postprocessing spectrum calculation
+cat > $PREFIX.tddfpt_pp.in << EOF
+ &lr_input
+   prefix = '$PREFIX',
+   outdir = '$TMP_DIR/',
+   eels = .true.
+   itermax0 = 500,
+   itermax  = 10000,
+   extrapolation = "osc",
+   epsil = 0.1,
+   units = 1,
+   start = 0.0,
+   end   = 50.0,
+   increment = 0.01
+ /
+EOF
+$ECHO "  Running the postprocessing spectrum calculation for $PREFIX..."
+$TURBO_SPECTRUM_COMMAND < $PREFIX.tddfpt_pp.in > $PREFIX.tddfpt_pp.out
+$ECHO " done"

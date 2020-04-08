@@ -1,7 +1,7 @@
 # Copyright (C) 2001-2016 Quantum ESPRESSO Foundation
 
 AC_DEFUN([X_AC_QE_MPIF90], [
-
+AC_REQUIRE([AC_PROG_FC])
 AC_ARG_ENABLE(parallel,
    [AS_HELP_STRING([--enable-parallel],
        [compile for parallel execution if possible (default: yes)])],
@@ -15,23 +15,15 @@ AC_ARG_ENABLE(parallel,
    
 # candidate fortran compilers good for all cases
 try_mpif90="mpif90"
-try_f90="gfortran g95 f90"
+try_f90="gfortran f90"
 
 # candidate compilers and flags based on architecture
 case $arch in
 ia32 | ia64 | x86_64 )
-        try_f90="ifort pgf90 pathf95 sunf95 openf95 nagfor $try_f90"
+        try_f90="ifort pgf90 nagfor $try_f90"
         ;;
 arm )
-        try_f90="$try_f90"
-        ;;
-solaris )
-        try_f90="sunf95 $try_f90"
-        ;;
-aix )
-        try_mpif90="mpxlf90_r mpxlf90"
-        try_f90="xlf90_r xlf90 $try_f90"
-        try_dflags="-D__AIX -D__XLF"
+        try_f90="pgf90 armflang $try_f90"
         ;;
 crayxt* )
         try_f90="ftn"
@@ -72,7 +64,7 @@ ppc64-mn )
         try_f90="xlf90_r"
         try_dflags="-D__XLF"
         ;;
-# IBM BlueGene
+# IBM BlueGene - obsolete
 ppc64-bg | ppc64-bgq )
 	if test "$use_openmp" -eq 0 ; then
           try_mpif90="mpixlf90"
@@ -92,56 +84,48 @@ ppc64-bg | ppc64-bgq )
         ;;
 esac
 
-# check serial Fortran 90 compiler. This must be done before performing
-# the check for the parallel compiler (section below) because option
-# --disable-parallel will do very strange things otherwise. The reason
-# seems to be that autoconf does not repeat all tests for the second
-# occurrence of AC_PROG_FC. So the first occurrence is the one that
-# must always be performed, the second is optional. PG & CC sep.2006
+# check Fortran 90 compiler
 
-# use F90 if set
-if test "$f90" = "" ; then f90="$try_f90" ; fi
-AC_PROG_FC($f90)
-f90=$FC
-AC_FC_SRCEXT(f90)
+# clear cached values
+unset FC ac_cv_prog_ac_ct_FC ac_cv_fc_compiler_gnu ac_cv_prog_fc_g
 
-# check parallel Fortran 90 compiler
-if test "$use_parallel" -eq 0 ;
-then
-        mpif90=$f90
+if test "$use_parallel" -eq 0 ; then
+# serial case - use F90 if set
+    	if test "$f90" = "" ; then
+	   mpif90="$try_f90"
+	else
+	   mpif90="$f90"
+	fi
 else
-        # clear cached values (not sure when and why this is needed)
-        unset FC ac_cv_prog_ac_ct_FC ac_cv_fc_compiler_gnu ac_cv_prog_fc_g
+# parallel case - use MPIF90 if set
         if test "$mpif90" = "" ; then 
-	   mpif90="$try_mpif90 $f90"
-           AC_PROG_FC($mpif90)
-        else
-           AC_PROG_FC($mpif90)
+	   mpif90="$try_mpif90 $f90 $try_f90 "
+	fi
+    	if test "$f90" != "" ; then
+           AC_MSG_WARN([F90 value is set to be consistent with value of MPIF90])
+	fi
+fi
+
+AC_PROG_FC($mpif90)
 # this avoids that an empty MPIF90 field is produced if the corresponding
 # environment variable MPIF90 does not contain an acceptable compiler
-           if test "$FC" = "" ; then 
-		AC_MSG_WARN([MPIF90 not found: using MPIF90 anyway])
-	  	FC=$MPIF90
-	   fi
-        fi
-        mpif90=$FC
+if test "$FC" = "" ; then 
+   AC_MSG_WARN([MPIF90 not found: using MPIF90 anyway])
+   FC=$mpif90
 fi
+mpif90=$FC
 
 # check which compiler does mpif90 wrap
 
 case "$arch" in
-        ia32 | ia64 | x86_64 | mac686 )
+        * )
         echo $ECHO_N "checking version of $mpif90... $ECHO_C"
         ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
-        sunf95_version=`$mpif90 -V 2>&1 | grep "Sun Fortran"`
-        openf95_version=`$mpif90 -V 2>&1 | grep "^Open64"`
         pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
-        g95_version=`$mpif90 -v 2>&1 | grep "g95"`
-        enzo_version=`$mpif90 -v 2>&1 | grep "PathScale ENZO"`
-        eko_version=`$mpif90 -v 2>&1 | grep "PathScale EKOPath"`
-        pathf95_version=`$mpif90 -v 2>&1 | grep "PathScale"`
         gfortran_version=`$mpif90 -v 2>&1 | grep "gcc version"`
         nagfor_version=`$mpif90 -v 2>&1 | grep "NAG Fortran"`
+        xlf_version=`$mpif90 -v 2>&1 | grep "xlf"`
+        armflang_version=`$mpif90 -v 2>&1 | grep "Arm C/C++/Fortran Compiler version"`
         #
         if test "$ifort_version" != ""
         then
@@ -149,48 +133,11 @@ case "$arch" in
                 f90_major_version=`echo $version | cut -d. -f1`
                 echo "${ECHO_T}ifort $f90_major_version"
                 f90_in_mpif90="ifort"
-                # Why so?
-                if test "$f90_major_version" -gt "9"; then
-                   MKL_FLAGS="-static-intel"
-                fi
-
-        elif test "$sunf95_version" != ""
-        then
-                version=`echo $sunf95_version | cut -d ' ' -f5`
-                echo "${ECHO_T}sunf95 $version"
-                f90_in_mpif90="sunf95"
-        elif test "$openf95_version" != ""
-        then
-                version=`echo $openf95_version | cut -d ' ' -f5`
-                echo "${ECHO_T}openf95 $version"
-                f90_in_mpif90="openf95"
         elif test "$pgf_version" != ""
         then
                 version=`echo $pgf_version | cut -d ' ' -f2`
                 echo "${ECHO_T}pgf90 $version"
                 f90_in_mpif90="pgf90"
-                # flag to test MKL with PGI
-                MKL_FLAGS="-pgf90libs"
-        elif test "$enzo_version" != ""
-        then
-                version=`echo $enzo_version | cut -d ' ' -f6`
-                echo "${ECHO_T}pathf95 $version"
-                f90_in_mpif90="pathf95"
-        elif test "$eko_version" != ""
-        then
-                version=`echo $eko_version | cut -d ' ' -f6`
-                echo "${ECHO_T}pathf95 $version"
-                f90_in_mpif90="pathf95"
-        elif test "$g95_version" != ""
-        then
-                version=`echo $g95_version | cut -d ' ' -f3`
-                echo "${ECHO_T}g95 $version"
-                f90_in_mpif90="g95"
-        elif test "$pathf95_version" != ""
-        then
-                version=`echo $pathf95_version | cut -d ' ' -f5`
-                echo "${ECHO_T}pathf95 $version"
-                f90_in_mpif90="pathf95"
         elif test "$gfortran_version" != ""
         then
                 version=`echo $gfortran_version | cut -d ' ' -f3`
@@ -204,42 +151,45 @@ case "$arch" in
                 version=`echo $nagfor_version | cut -d ' ' -f5`
                 echo "${ECHO_T}nagfor $version"
                 f90_in_mpif90="nagfor"
+        elif test "$xlf_version" != ""
+        then
+                echo "${ECHO_T}xlf (version unknonw)"
+                f90_in_mpif90="xlf"
+                try_dflags="-D__XLF"
+        elif test "$armflang_version" != "" 
+        then 
+                version=`echo $armflang_version | cut -d" " -f 5`
+                f90_major_version=`echo $version | cut -d. -f1` 
+                f90_minor_version=`echo $version | cut -d. -f2` 
+                f90_in_mpif90="armflang"
+                try_foxflags="-D__PGI"  
         else
                 echo "${ECHO_T}unknown, assuming gfortran"
                 f90_in_mpif90="gfortran"
         fi
-        # check if serial and parallel compiler are the same
-        if test "$f90" != "$f90_in_mpif90"; then
-           AC_MSG_WARN([parallel compiler $mpif90 uses $f90_in_mpif90, but serial compiler $f90 was detected])
-           AC_MSG_WARN([assuming F90=$f90_in_mpif90, discarding $f90])
-        fi
-        f90=$f90_in_mpif90
+        # notify if serial and parallel compiler are the same
+	if test "$set_use_parallel" -eq 1 ; then
+	   if test "$mpif90" = "$f90_in_mpif90"; then
+              AC_MSG_WARN([parallel and serial compiler are the same])
+	   fi
+	fi
+	f90=$f90_in_mpif90
         ;;
 esac
+AC_FC_SRCEXT(f90)
 
 echo setting F90... $f90
 echo setting MPIF90... $mpif90
 
+# For cray compiler
 case "$f90" in
 f90 | fc | ftn )
     echo $ECHO_N "checking version wrapped by $f90 command... $ECHO_C"
 
     if $f90 -V 2>&1 | grep -q "Intel(R)" ; then
         f90_flavor=ifort
-    elif $f90 -V 2>&1 | grep -q "Sun Fortran" ; then
-        f90_flavor=sunf95
-    elif $f90 -V 2>&1 | grep -q "^Open64" ; then
-        f90_flavor=openf95
     elif $f90 -V 2>&1 | grep -q "^pgf" ; then
         f90_flavor=pgf
-    elif $f90 -v 2>&1 | grep -q "PathScale ENZO" ; then
-        f90_flavor=pathf95
-    elif $f90 -v 2>&1 | grep -q "PathScale EKOPath" ; then
-        f90_flavor=pathf95
-    elif $f90 -version 2>&1 | grep -q "PathScale" ; then
-        f90_flavor=pathf95
-    elif $f90 -v 2>&1 | grep -q "g95" ; then
-        f90_flavor=g95
     elif $f90 -v 2>&1 | grep -q "gcc version" ; then
         f90_flavor=gfortran
     elif $f90 -V 2>&1 | grep -q "Cray Fortran" ; then

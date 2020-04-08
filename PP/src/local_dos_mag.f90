@@ -17,22 +17,23 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE cell_base,            ONLY : omega
   USE fft_base,             ONLY : dffts
-  USE fft_interfaces,       ONLY : invfft
+  USE fft_interfaces,       ONLY : invfft, fft_interpolate
   USE gvect,                ONLY : ngm, g
   USE fft_base,             ONLY : dfftp
-  USE gvecs,                ONLY : nls, doublegrid
+  USE gvecs,                ONLY : doublegrid
   USE klist,                ONLY : nks, xk, ngk, igk_k, nkstot
   USE scf,                  ONLY : rho
-  USE io_files,             ONLY : iunwfc, nwordwfc
+  USE io_files,             ONLY : restart_dir
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv, okvan
   USE uspp_param,           ONLY : upf, nh, nhm
-  USE wavefunctions_module, ONLY : evc, psic_nc
+  USE wavefunctions, ONLY : evc, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, fcoef
   USE wvfct,                ONLY : nbnd, npwx
   USE becmod,               ONLY : calbec
   USE mp_pools,             ONLY : my_pool_id, npool, inter_pool_comm
   USE mp,                   ONLY : mp_sum
+  USE pw_restart_new,       ONLY : read_collected_wfc
   !
   IMPLICIT NONE
   !
@@ -79,7 +80,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   IF ( ik > 0 ) THEN
   !
      npw = ngk(ik)
-     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+     CALL read_collected_wfc ( restart_dir(), ik, evc )
      IF (nkb > 0) CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
      CALL calbec ( npw, vkb, evc, becp_nc)
      !
@@ -87,8 +88,8 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
         !
         psic_nc = (0.D0,0.D0)
         DO ig = 1, npw
-           psic_nc(nls(igk_k(ig,ik)),1)=evc(ig     ,ibnd)
-           psic_nc(nls(igk_k(ig,ik)),2)=evc(ig+npwx,ibnd)
+           psic_nc(dffts%nl(igk_k(ig,ik)),1)=evc(ig     ,ibnd)
+           psic_nc(dffts%nl(igk_k(ig,ik)),2)=evc(ig+npwx,ibnd)
         ENDDO
         DO ipol=1,npol
            CALL invfft ('Wave', psic_nc(:,ipol), dffts)
@@ -257,7 +258,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   !
      IF ( doublegrid ) THEN
        is=spin_component+1
-       CALL interpolate( rho%of_r(1,is), rho%of_r(1,is), 1 )
+       CALL fft_interpolate( dffts, rho%of_r(:,is), dfftp, rho%of_r(:,is) )
      ENDIF
   !
   ! ... Here we add the Ultrasoft contribution to the charge and magnetization

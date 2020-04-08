@@ -1,9 +1,0 @@
-1) Planned optimizations
-1.1 revc0 each other band is not used in gamma point case
-2) Planned feature enhancements in order
-2.1 TG-FFT
-2.2 PAW
-2.3 Spin
-3) Known bugs
-3.1 Unsupported features from PWSCF XML file are still to be added as a halting error.
-

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ln -sf make.darwin make.sys
+ln -sf make.darwin make.inc
 make
 
 version=

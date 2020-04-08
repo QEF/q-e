@@ -3,8 +3,8 @@
 include ../make.inc
 
 # location of needed modules
-MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../ELPA/src $(MOD_FLAG)../FFTXlib $(MOD_FLAG)../LAXlib $(MOD_FLAG)../UtilXlib \
-          $(MOD_FLAG)../KS_Solvers/CG $(IFLAGS) $(MOD_FLAG).
+MODFLAGS=$(BASEMOD_FLAGS) \
+         $(MOD_FLAG)../ELPA/src
 
 # list of modules
 
@@ -23,29 +23,35 @@ compute_dipole.o \
 constants.o \
 constraints_module.o \
 control_flags.o \
+correlation_lda_lsda.o \
+correlation_gga.o \
 coulomb_vcut.o \
+dgcxc_drivers.o \
 dist.o \
+dmxc_drivers.o \
+dgcxc_drivers.o \
 electrons_base.o \
 environment.o \
+exchange_lda_lsda.o \
+exchange_gga.o \
 fcp_variables.o \
 fd_gradient.o \
 fft_base.o \
-fft_custom.o \
 fft_rho.o \
 fsockets.o \
 funct.o \
 generate_function.o \
 gth.o \
+gradutils.o \
 gvecw.o \
 input_parameters.o \
 invmat.o \
 io_files.o \
 io_global.o  \
 ions_base.o \
-kernel_table.o \
 kind.o \
 libxc.o \
-libxc_funcs.o \
+mdiis.o \
 mm_dispersion.o \
 mp_bands.o \
 mp_exx.o \
@@ -62,9 +68,9 @@ paw_variables.o \
 plugin_flags.o \
 plugin_arguments.o \
 plugin_variables.o \
+powell.o \
 pseudo_types.o \
 pw_dot.o \
-qexml.o \
 qmmm.o \
 radial_grids.o \
 random_numbers.o \
@@ -75,19 +81,19 @@ read_ncpp.o \
 read_pseudo.o \
 read_upf_v1.o \
 read_upf_v2.o \
+read_upf_schema.o \
 read_uspp.o \
-read_xml.o \
-read_xml_cards.o \
-read_xml_fields.o \
 recvec.o \
 recvec_subs.o \
 run_info.o \
 space_group.o \
 set_signal.o \
+set_vdw_corr.o \
 setqf.o \
 splinelib.o \
 timestep.o\
 tsvdw.o\
+emend_upf.o \
 upf.o \
 upf_to_internal.o \
 uspp.o \
@@ -97,38 +103,47 @@ wannier_new.o \
 wave_base.o \
 wavefunctions.o \
 wrappers.o\
+write_upf.o \
 write_upf_v2.o \
+write_upf_schema.o \
 ws_base.o \
 xc_vdW_DF.o \
 xc_rVV10.o \
-xml_input.o \
-xml_io_base.o \
+xc_lda_lsda_drivers.o \
+xc_gga_drivers.o \
+xc_mgga_drivers.o \
 io_base.o \
-qes_module.o  \
-qes_types.o \
-qes_libs.o  \
+qes_types_module.o \
+qes_libs_module.o  \
+qes_write_module.o \
 qes_read_module.o \
+qes_reset_module.o \
+qes_init_module.o \
+qes_read_module.o \
+qes_bcast_module.o \
 qexsd.o   \
+qexsd_copy.o   \
+qexsd_init.o   \
 qexsd_input.o \
 hdf5_qe.o\
 qeh5_module.o\
+fox_init_module.o \
 xsf.o \
 wyckoff.o \
 wypos.o \
-zdotc_wrapper.o  \
 zvscal.o 
 
-# list of subrooutines and functions (not modules) previously found in flib/
+# list of subroutines and functions (not modules) previously found in flib/
 
 OBJS = \
 atomic_number.o \
 capital.o \
+correlation_gga.o \
 cryst_to_car.o \
 erf.o \
+exchange_gga.o \
 expint.o \
-functionals.o \
 generate_k_along_lines.o \
-lsda_functionals.o \
 more_functionals.o \
 has_xml.o \
 inpfile.o \
@@ -143,6 +158,7 @@ rgen.o \
 recips.o \
 remove_tot_torque.o \
 set_hubbard_l.o \
+set_hubbard_l_back.o \
 set_hubbard_n.o \
 simpsn.o \
 sort.o \
@@ -159,22 +175,9 @@ w0gauss.o \
 w1gauss.o \
 deviatoric.o
 
-TLDEPS=libfft
+TLDEPS=libiotk libfox libutil libla libfft
 
-all : version version.o libqemod.a
-
-## If no update_version is found, or it is not executable,
-## just copy version.f90.in (that contains 'version=unknown').
-## We use cat and not cp so that version.f90 has a new timestamp,
-## forcing recompilation of version.f90.
-## We use the inner if to avoid recompilation at each make.
-version:
-	- ( if test -x ../install/update_version ; then \
-	../install/update_version; \
-	else if test ! -f version.f90 ; then \
-	cat version.f90.in > version.f90 ; fi ; fi )	
-
-version.f90: version
+all : libqemod.a
 
 ## The following is needed only for lapack compiled from sources
 
@@ -191,14 +194,6 @@ tldeps :
 
 
 clean :
-	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L version.f90
-
-# .PHONY forces execution of a rule irrespective of the presence of an
-# updated file with the same name of the rule. In this way, the script 
-# that generates version.f90 always runs, updating the version if you 
-# execute "svn update". The update_version script takes care of not
-# changing the file if the svn version did not change
-
-.PHONY: version all clean
+	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L
 
 include make.depend

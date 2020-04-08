@@ -8,6 +8,10 @@
 
 include make.inc
 
+# execute a target irrespective of the presence of a file or directory 
+# with the same name
+.PHONY: install
+
 default :
 	@echo 'to install Quantum ESPRESSO, type at the shell prompt:'
 	@echo '  ./configure [--prefix=]'
@@ -16,11 +20,12 @@ default :
 	@echo 'where target identifies one or multiple CORE PACKAGES:'
 	@echo '  pw           basic code for scf, structure optimization, MD'
 	@echo '  ph           phonon code, Gamma-only and third-order derivatives'
+	@echo '  hp           calculation of the Hubbard parameters from DFPT'
 	@echo '  pwcond       ballistic conductance'
 	@echo '  neb          code for Nudged Elastic Band method'
 	@echo '  pp           postprocessing programs'
 	@echo '  pwall        same as "make pw ph pp pwcond neb"'
-	@echo '  cp           CP code: CP MD with ultrasoft pseudopotentials'
+	@echo '  cp           CP code: Car-Parrinello molecular dynamics'
 	@echo '  tddfpt       time dependent dft code'
 	@echo '  gwl          GW with Lanczos chains'
 	@echo '  ld1          utilities for pseudopotential generation'
@@ -31,7 +36,7 @@ default :
 	@echo '  gui          Graphical User Interface'
 	@echo '  examples     fetch from web examples for all core packages'
 	@echo '  test-suite   run semi-automated test-suite for regression testing'
-	@echo '  all          same as "make pwall cp ld1 upf tddfpt"'
+	@echo '  all          same as "make pwall cp ld1 upf tddfpt hp"'
 	@echo ' '
 	@echo 'where target identifies one or multiple THIRD-PARTIES PACKAGES:'
 	@echo '  gipaw        NMR and EPR spectra'
@@ -65,39 +70,39 @@ default :
 # If "|| exit 1" is not present, the error code from make in subdirectories
 # is not returned and make goes on even if compilation has failed
 
-pw : bindir libfft libdavid libcg libla libutil mods liblapack libs libiotk 
+pw : pwlibs
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-pw-lib : bindir libdavid libcg libfft libla libutil mods liblapack libs libiotk
-	if test -d PW ; then \
-	( cd PW ; $(MAKE) TLDEPS= pw-lib || exit 1) ; fi
-
-cp : bindir libfft libla libutil mods liblapack libs libiotk libfox
+cp : bindir libs mods
 	if test -d CPV ; then \
 	( cd CPV ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-ph : bindir libfft libla libutil mods libs pw lrmods
+ph : phlibs
 	if test -d PHonon; then \
-	(cd PHonon; $(MAKE) all || exit 1) ; fi
+	( cd PHonon; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-neb : bindir libfft libla libutil mods libs pw
+hp : hplibs
+	if test -d HP; then \
+	( cd HP; $(MAKE) TLDEPS= all || exit 1) ; fi
+
+neb : pwlibs
 	if test -d NEB; then \
-  (cd NEB; $(MAKE) all || exit 1) ; fi
+	( cd NEB; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-tddfpt : bindir libfft libla libutil mods libs pw
+tddfpt : lrmods
 	if test -d TDDFPT; then \
-	(cd TDDFPT; $(MAKE) all || exit 1) ; fi
+	( cd TDDFPT; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-pp : bindir libfft libla libutil mods libs pw
+pp : pwlibs
 	if test -d PP ; then \
 	( cd PP ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-pwcond : bindir libfft libla libutil mods libs pw pp
+pwcond : pwlibs
 	if test -d PWCOND ; then \
 	( cd PWCOND ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-acfdt : bindir libfft libla libutil mods libs pw ph
+acfdt : phlibs
 	if test -d ACFDT ; then \
 	( cd ACFDT ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
@@ -105,29 +110,25 @@ acfdt : bindir libfft libla libutil mods libs pw ph
 gww:
 	@echo '"make gww" is obsolete, use "make gwl" instead '
 
-gwl : ph
+gwl : phlibs
 	if test -d GWW ; then \
 	( cd GWW ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-gipaw : pw
+gipaw : pwlibs
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-d3q : pw ph
+d3q : phlibs
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-ld1 : bindir liblapack libfft libla libutil mods libs
+ld1 : bindir libs mods
 	if test -d atomic ; then \
 	( cd atomic ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-upf : libfft libla libutil mods libs liblapack
+upf : libs mods
 	if test -d upftools ; then \
 	( cd upftools ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-pw_export : libiotk bindir libfft mods libs pw
-	if test -d PP ; then \
-	( cd PP ; $(MAKE) TLDEPS= pw_export.x || exit 1 ) ; fi
-
-xspectra : bindir libfft mods libs pw
+xspectra : pwlibs
 	if test -d XSpectra ; then \
 	( cd XSpectra ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
@@ -135,8 +136,7 @@ couple : pw cp
 	if test -d COUPLE ; then \
 	( cd COUPLE ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-# EPW needs to invoke make twice due to a Wannier90 workaround
-epw: pw ph ld1
+epw: phlibs
 	if test -d EPW ; then \
 	( cd EPW ; $(MAKE) all || exit 1; \
 		cd ../bin; ln -fs ../EPW/bin/epw.x . ); fi
@@ -146,47 +146,77 @@ travis : pwall epw
 	( cd test-suite ; make run-travis || exit 1 ) ; fi
 
 gui :
-	@echo 'Check "GUI/README" how to access the Graphical User Interface'
-#@echo 'Check "PWgui-X.Y/README" how to access the Graphical User Interface'
+	@if test -d GUI/PWgui ; then \
+	    cd GUI/PWgui ; \
+	    $(MAKE) TLDEPS= init; \
+	    echo ; \
+	    echo "  PWgui has been built in ./GUI/PWgui/. You may try it either as:  "; \
+	    echo "         ./GUI/PWgui/pwgui" ; \
+	    echo "     or"; \
+	    echo "         cd ./GUI/PWgui";\
+	    echo "         ./pwgui" ; \
+	    echo ; \
+	else \
+	    echo ; \
+	    echo "  Sorry, gui works only for git sources !!!" ; \
+	    echo ; \
+	fi
 
-examples : touch-dummy
+examples :
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 pwall : pw neb ph pp pwcond acfdt
 
-all   : pwall cp ld1 upf tddfpt xspectra gwl 
+all   : pwall cp ld1 upf tddfpt hp xspectra gwl 
 
 ###########################################################
 # Auxiliary targets used by main targets:
 # compile modules, libraries, directory for binaries, etc
 ###########################################################
 
-libdavid_rci : touch-dummy libla clib libutil
-	( cd KS_Solvers/Davidson_RCI ; $(MAKE) TLDEPS= all || exit 1 )
+pwlibs: bindir libs mods libks_solvers dftd3
+	if test -d PW ; then \
+	( cd PW ; $(MAKE) pw-lib || exit 1) ; fi
 
-libdavid : touch-dummy libla clib libutil
-	( cd KS_Solvers/Davidson ; $(MAKE) TLDEPS= all || exit 1 )
+phlibs: pwlibs lrmods
+	if test -d PHonon; then \
+	( cd PHonon; $(MAKE) ph-lib || exit 1) ; fi
 
-libcg : touch-dummy libla clib libutil
-	( cd KS_Solvers/CG ; $(MAKE) TLDEPS= all || exit 1 )
+hplibs: pwlibs lrmods
+	if test -d HP; then \
+	( cd HP; $(MAKE) hp-lib || exit 1) ; fi
 
-libla : touch-dummy liblapack libutil
-	( cd LAXlib ; $(MAKE) TLDEPS= all || exit 1 )
+gwwlib : phlibs
+	if test -d GWW ; then \
+	( cd GWW ; $(MAKE) gwwa || exit 1 ) ; fi
 
-libfft : touch-dummy
-	( cd FFTXlib ; $(MAKE) TLDEPS= all || exit 1 )
+pw4gwwlib : phlibs
+	if test -d GWW ; then \
+	( cd GWW ; $(MAKE) pw4gwwa || exit 1 ) ; fi
 
-libutil : touch-dummy 
-	( cd UtilXlib ; $(MAKE) TLDEPS= all || exit 1 )
-
-mods : libiotk libfox libla libfft libutil
+mods : libiotk libfox libutil libla libfft
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
-libs : mods
+libks_solvers : libs libutil libla
+	( cd KS_Solvers ; $(MAKE) TLDEPS= all || exit 1 )
+
+libla : liblapack libutil libcuda
+	( cd LAXlib ; $(MAKE) TLDEPS= all || exit 1 )
+
+libfft : 
+	( cd FFTXlib ; $(MAKE) TLDEPS= all || exit 1 )
+
+libutil : 
+	( cd UtilXlib ; $(MAKE) TLDEPS= all || exit 1 )
+
+libs :
 	( cd clib ; $(MAKE) TLDEPS= all || exit 1 )
 
-lrmods : libs libla libfft  libutil
+lrmods : mods pwlibs
 	( cd LR_Modules ; $(MAKE) TLDEPS= all || exit 1 )
+
+dftd3 : mods
+	( cd dft-d3 ; $(MAKE) TLDEPS= all || exit 1 )
 
 bindir :
 	test -d bin || mkdir bin
@@ -195,17 +225,19 @@ bindir :
 # Targets for external libraries
 ############################################################
 
-libblas : touch-dummy
+libblas : 
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
-liblapack: touch-dummy
+liblapack: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
-libiotk: touch-dummy
+libiotk: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
-libfox: touch-dummy
+libfox: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
+libcuda: 
+	cd install ; $(MAKE) -f extlibs_makefile $@
 # In case of trouble with iotk and compilers, add
 # FFLAGS="$(FFLAGS_NOOPT)" after $(MFLAGS)
 
@@ -216,29 +248,26 @@ libfox: touch-dummy
 w90: bindir liblapack
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-want : touch-dummy
+want : 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-SaX : touch-dummy
+SaX : 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-yambo: touch-dummy
+yambo: 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-yambo-devel: touch-dummy
+yambo-devel: 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-plumed: touch-dummy
+plumed: 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-west: pw touch-dummy
+west: pw
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-SternheimerGW: pw lrmods touch-dummy
+SternheimerGW: lrmods 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
-touch-dummy :
-	$(dummy-variable)
 
 #########################################################
 # "make links" produces links to all executables in bin/
@@ -261,25 +290,24 @@ links : bindir
 	[ -f ../W90/wannier90.x ] &&  ln -fs ../W90/wannier90.x ../bin/wannier90.x ;\
 	)
 
-#########################################################
-# 'make install' works based on --with-prefix
-# - If the final directory does not exists it creates it
-#########################################################
+#############################################################
+# 'make install' works with "configure --prefix=PREFIX"
+# - If the PREFIX/bin directory does not exists it creates it
+#############################################################
 
-install : touch-dummy
-	@if test -d bin ; then mkdir -p $(PREFIX)/bin ; \
+install : 
+	mkdir -p $(PREFIX)/bin ; \
 	for x in `find * ! -path "test-suite/*" -name *.x -type f` ; do \
-		cp $$x $(PREFIX)/bin/ ; done ; \
-	fi
-	@echo 'Quantum ESPRESSO binaries installed in $(PREFIX)/bin'
+		cp -v $$x $(PREFIX)/bin/ ; done
+	@echo -e '\nQuantum ESPRESSO binaries are installed in $(PREFIX)/bin\n'
 
 #########################################################
 # Run test-suite for numerical regression testing
 # NB: it is assumed that reference outputs have been 
-#     already computed once (usualy during release)
+#     already computed once (usually during release)
 #########################################################
 
-test-suite: pw cp touch-dummy
+test-suite: pw cp 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #########################################################
@@ -290,11 +318,10 @@ test-suite: pw cp touch-dummy
 clean : 
 	touch make.inc 
 	for dir in \
-		CPV LAXlib FFTXlib UtilXlib Modules PP PW EPW \
-                KS_Solvers/CG KS_Solvers/Davidson KS_Solvers/Davidson_RCI \
-		NEB ACFDT COUPLE GWW XSpectra PWCOND \
+		CPV LAXlib FFTXlib UtilXlib Modules PP PW EPW KS_Solvers \
+		NEB ACFDT COUPLE GWW XSpectra PWCOND dft-d3 \
 		atomic clib LR_Modules pwtools upftools \
-		dev-tools extlibs Environ TDDFPT PHonon GWW \
+		dev-tools extlibs Environ TDDFPT PHonon HP GWW Doc GUI \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
@@ -310,11 +337,9 @@ veryclean : clean
 	- @(cd install ; $(MAKE) -f plugins_makefile veryclean)
 	- @(cd install ; $(MAKE) -f extlibs_makefile veryclean)
 	- rm -rf install/patch-plumed
-	- cd install ; rm -f config.log configure.msg config.status \
-		CPV/version.h ChangeLog* intel.pcl */intel.pcl
+	- cd install ; rm -f config.log configure.msg config.status
 	- rm -rf include/configure.h install/make_wannier90.inc
 	- cd install ; rm -fr autom4te.cache
-	- cd pseudo; ./clean_ps ; cd -
 	- cd install; ./clean.sh ; cd -
 	- cd include; ./clean.sh ; cd -
 	- rm -f espresso.tar.gz -
@@ -322,6 +347,7 @@ veryclean : clean
 	- rm -rf FoX
 # remove everything not in the original distribution
 distclean : veryclean
+	- cd pseudo; ./clean_ps ; cd -
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 tar :
@@ -338,11 +364,11 @@ tar :
 tar-gui :
 	@if test -d GUI/PWgui ; then \
 	    cd GUI/PWgui ; \
-	    $(MAKE) TLDEPS= clean svninit pwgui-source; \
+	    $(MAKE) TLDEPS= clean init pwgui-source; \
 	    mv PWgui-*.tgz ../.. ; \
 	else \
 	    echo ; \
-	    echo "  Sorry, tar-gui works only for svn sources !!!" ; \
+	    echo "  Sorry, tar-gui works only for git sources !!!" ; \
 	    echo ; \
 	fi
 
@@ -353,7 +379,7 @@ tar-qe-modes :
 	    mv QE-modes-*.tar.gz ../.. ; \
 	else \
 	    echo ; \
-	    echo "  Sorry, tar-qe-modes works only for svn sources !!!" ; \
+	    echo "  Sorry, tar-qe-modes works only for git sources !!!" ; \
 	    echo ; \
 	fi
 
@@ -362,12 +388,12 @@ tar-qe-modes :
 # in order to build the .pdf files in Doc, "pdflatex" is needed;
 # in order to build html files for user guide and developer manual,
 # "latex2html" and "convert" (from Image-Magick) are needed.
-doc : touch-dummy
+doc : 
 	if test -d Doc ; then \
-	( cd Doc ; $(MAKE) TLDEPS= all ) ; fi
+	( cd Doc ; $(MAKE) VERSION=6.5 TLDEPS= all ) ; fi
 	for dir in */Doc; do \
 	( if test -f $$dir/Makefile ; then \
-	( cd $$dir; $(MAKE) TLDEPS= all ) ; fi ) ;  done
+	( cd $$dir; $(MAKE) VERSION=6.5 TLDEPS= all ) ; fi ) ;  done
 
 doc_clean :
 	if test -d Doc ; then \
@@ -376,10 +402,6 @@ doc_clean :
 	( if test -f $$dir/Makefile ; then \
 	( cd $$dir; $(MAKE) TLDEPS= clean ) ; fi ) ;  done
 
-depend: libiotk version
+depend: libiotk
 	@echo 'Checking dependencies...'
 	- ( if test -x install/makedeps.sh ; then install/makedeps.sh ; fi)
-# update file containing version number before looking for dependencies
-
-version:
-	- ( cd Modules; make version )

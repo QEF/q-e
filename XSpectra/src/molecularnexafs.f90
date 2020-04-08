@@ -77,7 +77,7 @@
 !    the results.
 !
 !=======================================================================
-! NAMELIST / CONTROL /	
+! NAMELIST / CONTROL /
 !-----------------------------------------------------------------------
 !
 !    syslabel     character(len=80)     DEFAULT='MOLECULE'
@@ -96,7 +96,7 @@
 !    The multiplicities of the inequivalent atoms in the molecule
 !
 !-----------------------------------------------------------------------
-!NAMELIST / XPS /	
+!NAMELIST / XPS /
 !-----------------------------------------------------------------------
 !
 !    erangexps(1:2)     real(DP)     DEFAULT=(-5:5)
@@ -116,7 +116,7 @@
 !    Total energy (Ry) with a FCH in that given atom
 !
 !-----------------------------------------------------------------------
-!NAMELIST / NEXAFS /	
+!NAMELIST / NEXAFS /
 !-----------------------------------------------------------------------
 !
 !    dosingleatoms     logical     DEFAULT=.TRUE.

@@ -1,0 +1,46 @@
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='NiO'
+    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/pseudo/'
+    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/'
+    verbosity='high'
+ /
+ &system
+    ibrav = 0, 
+    celldm(1) = 7.88, 
+    nat = 4, 
+    ntyp = 3,
+    ecutwfc = 50.0,
+    ecutrho = 400.0,
+    occupations = 'smearing',
+    smearing = 'gauss',
+    degauss = 0.001,
+    nspin = 2,
+    starting_magnetization(1) =  0.5,
+    starting_magnetization(2) = -0.5,
+    lda_plus_u = .true.,
+    lda_plus_u_kind = 0,
+    U_projection_type = 'ortho-atomic',
+    Hubbard_U(1) = 1.d-8
+    Hubbard_U(2) = 1.d-8
+ /
+ &electrons
+    conv_thr =  1.d-10
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Ni1  58.693  Ni.pbesol-n-rrkjus_psl.0.1.UPF
+ Ni2  58.693  Ni.pbesol-n-rrkjus_psl.0.1.UPF
+ O    16.000  O.pbesol-n-rrkjus_psl.0.1.UPF
+ATOMIC_POSITIONS {alat}
+ Ni1  0.0000000   0.0000000   0.0000000
+ Ni2  0.5000000   0.5000000   0.0000000
+ O    0.5000000   0.0000000   0.0000000
+ O    1.0000000   0.5000000   0.0000000
+CELL_PARAMETERS
+ 1.00000000  0.50000000  0.50000000
+ 0.50000000  1.00000000  0.50000000
+ 0.50000000  0.50000000  1.00000000
+K_POINTS {automatic}
+ 2 2 2 0 0 0

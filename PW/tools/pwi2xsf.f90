@@ -58,7 +58,7 @@
      &     celldm(6),          &! cell parameters
      &     omega,              &! cell volume (not used)
      &     alat,               &! lattice parameter (in Angstroms)
-     &     cell_f,             &! to tranform lattice-vectors to celldm(1) units
+     &     cell_f,             &! to transform lattice vectors to celldm(1) units
      &     a, b, c, cosab, cosac, cosbc ! lattice parameters
 !
       character                                                         &

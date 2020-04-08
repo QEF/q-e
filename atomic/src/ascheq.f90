@@ -78,7 +78,7 @@ subroutine ascheq(nn,lam,e,mesh,grid,vpot,ze2,thresh0,y,nstop)
      if( f(i) .ne. sign(f(i),f(i-1)) ) ik=i
   enddo
   nstop=302
-  
+
   if(ik.ge.mesh-2) go to 900
   do i=1,mesh
      f(i)=1.0_dp-f(i)

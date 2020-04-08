@@ -34,10 +34,9 @@ subroutine init_us_3 (npw_, xvkb_)
 !modules for UT
 !
   use splines
-  USE wavefunctions_module, ONLY :psic
+  USE wavefunctions, ONLY :psic
   use fft_interfaces, only :invfft,fwfft
   use fft_base, only :dffts  
-  USE gvecs,                  ONLY : nls,nlsm
   use atom, ONLY :rgrid
   use cell_base, ONLY :at,alat
   use mp_world, ONLY :mpime  
@@ -330,8 +329,8 @@ subroutine init_us_3 (npw_, xvkb_)
 !       xvkb_=0.d0
 !       do ikb=1,nkb
 !          psic=0.d0
-!          psic(nls(1:npw))=vkb(1:npw,ikb) 
-!          psic(nlsm(1:npw))=CONJG(vkb(1:npw,4))
+!          psic(dffts%nl(1:npw))=vkb(1:npw,ikb) 
+!          psic(dffts%nlm(1:npw))=CONJG(vkb(1:npw,4))
 !          call invfft ('Wave', psic, dffts)
 !          vkbr_2(1:dffts%nnr)=psic(1:dffts%nnr)
 !          nr3s_start=0
@@ -362,7 +361,7 @@ subroutine init_us_3 (npw_, xvkb_)
 !             psic=0.d0 
 !             psic(1:dffts%nnr)=vkbr_3(1:dffts%nnr,ipol) 
 !             call fwfft ('Wave', psic, dffts)
-!             xvkb_(1:npw,ikb,ipol)=psic(nls(1:npw))
+!             xvkb_(1:npw,ikb,ipol)=psic(dffts%nl(1:npw))
 !          end do
 !       end do 
 !    end if
@@ -378,14 +377,14 @@ subroutine init_us_3 (npw_, xvkb_)
 !            print*,"CONTROLLO",nkb,nh(1),nbnd,nkb
 !            print*,"CONTROLLO_POS", tau(:,:)*alat
 !            psic=0.d0
-!            psic(nls(1:npw))=xvkb_(1:npw,2,3) 
-!            psic(nlsm(1:npw))=CONJG(xvkb_(1:npw,2,3))
+!            psic(dffts%nl(1:npw))=xvkb_(1:npw,2,3) 
+!            psic(dffts%nlm(1:npw))=CONJG(xvkb_(1:npw,2,3))
 !            call invfft ('Wave', psic, dffts)  
 !            vkbr(1:dffts%nnr)=1/sqrt(omega)*psic(1:dffts%nnr)
 !
 !            psic=0.d0
-!            psic(nls(1:npw))=vkb(1:npw,2) 
-!            psic(nlsm(1:npw))=CONJG(vkb(1:npw,2))
+!            psic(dffts%nl(1:npw))=vkb(1:npw,2) 
+!            psic(dffts%nlm(1:npw))=CONJG(vkb(1:npw,2))
 !            call invfft ('Wave', psic, dffts)
 !            vkbr_2(1:dffts%nnr)=1/sqrt(omega)*psic(1:dffts%nnr)
 !!

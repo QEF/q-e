@@ -18,13 +18,13 @@ SUBROUTINE add_shift_cc (shift_cc)
   USE cell_base, ONLY: alat, omega, tpiba, tpiba2
   USE fft_base,  ONLY: dfftp
   USE fft_interfaces, ONLY : fwfft
-  USE gvect, ONLY: ngm, gstart, nl, g, gg, ngl, gl, igtongl
+  USE gvect, ONLY: ngm, gstart, g, gg, ngl, gl, igtongl
   USE ener, ONLY: etxc, vtxc
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho, rho_core, rhog_core
   USE control_flags, ONLY: gamma_only
-  USE wavefunctions_module,    ONLY : psic
-  USE mp_global,  ONLY : intra_pool_comm
+  USE wavefunctions,    ONLY : psic
+  USE mp_pools,   ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
 
   IMPLICIT NONE
@@ -44,7 +44,7 @@ SUBROUTINE add_shift_cc (shift_cc)
 
   real(DP), ALLOCATABLE :: vxc (:,:), rhocg (:), shift_(:)
   ! exchange-correlation potential
-  ! radial fourier trasform of rho core
+  ! radial fourier transform of rho core
   real(DP)  ::  arg, fact
   !
   IF ( any (upf(1:ntyp)%nlcc) ) GOTO 15
@@ -75,7 +75,7 @@ SUBROUTINE add_shift_cc (shift_cc)
      ENDDO
   ENDIF
   DEALLOCATE (vxc)
-  CALL fwfft ('Dense', psic, dfftp)
+  CALL fwfft ('Rho', psic, dfftp)
   !
   ! psic contains now Vxc(G)
   !
@@ -92,12 +92,12 @@ SUBROUTINE add_shift_cc (shift_cc)
         DO na = 1, nat
            IF (nt == ityp (na) ) THEN
               IF (gstart==2)  shift_(na) = omega * rhocg (igtongl (1) ) * &
-                                                     conjg(psic (nl (1) ) )
+                                                     conjg(psic (dfftp%nl (1) ) )
               DO ig = gstart, ngm
                  arg = (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) &
                       + g (3, ig) * tau (3, na) ) * tpi
                  shift_ (na) = shift_( na) + omega * &
-                         rhocg (igtongl (ig) ) * conjg(psic (nl (ig) ) ) * &
+                         rhocg (igtongl (ig) ) * conjg(psic (dfftp%nl (ig) ) ) * &
                          cmplx( cos(arg), -sin(arg),kind=DP) * fact
               ENDDO
            ENDIF

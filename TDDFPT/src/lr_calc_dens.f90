@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -25,9 +25,9 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   USE ions_base,              ONLY : ityp, nat, ntyp=>nsp
   USE cell_base,              ONLY : omega
   USE ener,                   ONLY : ef
-  USE gvecs,                  ONLY : nls, nlsm, doublegrid
+  USE gvecs,                  ONLY : doublegrid
   USE fft_base,               ONLY : dffts, dfftp
-  USE fft_interfaces,         ONLY : invfft
+  USE fft_interfaces,         ONLY : invfft, fft_interpolate
   USE io_global,              ONLY : stdout
   USE kinds,                  ONLY : dp
   USE klist,                  ONLY : nks, xk, wk, ngk, igk_k
@@ -39,7 +39,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
                                      & n_ipol, becp1_virt, rho_1c,&
                                      & lr_exx
   USE lsda_mod,               ONLY : current_spin, isk
-  USE wavefunctions_module,   ONLY : psic
+  USE wavefunctions,   ONLY : psic
   USE wvfct,                  ONLY : nbnd, et, wg, npwx
   USE control_flags,          ONLY : gamma_only
   USE uspp,                   ONLY : vkb, nkb, okvan, qq_nt, becsum
@@ -60,6 +60,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   USE lr_exx_kernel,          ONLY : lr_exx_kernel_int, revc_int,&
                                      & revc_int_c
   USE constants,              ONLY : eps12
+  USE fft_helper_subroutines
   !
   IMPLICIT NONE
   !
@@ -72,12 +73,13 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   ! Local variables
   !
   INTEGER       :: ir, ik, ibnd, jbnd, ig, ijkb0, np, na
-  INTEGER       :: ijh,ih,jh,ikb,jkb ,ispin 
+  INTEGER       :: ijh,ih,jh,ikb,jkb,is
   INTEGER       :: i, j, k, l
   REAL(kind=dp) :: w1, w2, scal, rho_sum
   ! These are temporary buffers for the response 
   REAL(kind=dp), ALLOCATABLE :: rho_sum_resp_x(:), rho_sum_resp_y(:),&
                               & rho_sum_resp_z(:)  
+  COMPLEX(kind=dp), ALLOCATABLE :: rhoaux(:,:)
   CHARACTER(len=256) :: tempfile, filename
   !
   IF (lr_verbosity > 5) THEN
@@ -87,12 +89,12 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   CALL start_clock('lr_calc_dens')
   !
   ALLOCATE( psic(dfftp%nnr) )
-  psic(:)    = (0.0d0,0.0d0)
+  psic(:) = (0.0d0, 0.0d0)
   !
   IF (gamma_only) THEN
-     rho_1(:,:) =  0.0d0
+     rho_1(:,:) = 0.0d0
   ELSE
-     rho_1c(:,:) =  0.0d0
+     rho_1c(:,:) = (0.0d0, 0.0d0)
   ENDIF
   !
   IF (gamma_only) THEN
@@ -103,7 +105,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
      !
      ! If a double grid is used, interpolate onto the fine grid
      !
-     IF ( doublegrid ) CALL interpolate(rho_1,rho_1,1)
+     IF ( doublegrid ) CALL fft_interpolate(dffts, rho_1(:,1), dfftp, rho_1(:,1))
      !
 #if defined(__MPI)
      CALL mp_sum(rho_1, inter_bgrp_comm)
@@ -117,14 +119,46 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
      !
      ! If a double grid is used, interpolate onto the fine grid
      !
-     IF ( doublegrid ) CALL cinterpolate(rho_1c,rho_1c,1)
+     IF ( doublegrid ) CALL fft_interpolate(dffts, rho_1c(:,1), dfftp, rho_1c(:,1))
      !
   ENDIF
   !
-  ! Here we add the Ultrasoft contribution to the charge density
-  ! response. 
+  ! Here we add the ultrasoft contribution to the charge density response. 
   !
-  IF (okvan) CALL addusdens(rho_1)
+  IF (okvan) THEN
+     ! 
+     ALLOCATE(rhoaux(dfftp%nnr,nspin_mag))
+     !
+     ! Compute the US part of the response charge density in G-space
+     ! and put the result in rhoaux
+     !
+     rhoaux(:,:) = (0.0d0, 0.0d0)
+     CALL addusdens(rhoaux)
+     !
+     DO is = 1, nspin_mag
+        !
+        ! FFT of the US part of the response charge density 
+        ! from G-space to R-space
+        !
+        psic(:) = (0.d0, 0.d0)
+        psic( dfftp%nl(:) ) = rhoaux(:,is)
+        IF ( gamma_only ) psic( dfftp%nlm(:) ) = CONJG(rhoaux(:,is))
+        CALL invfft ('Rho', psic, dfftp)
+        !
+        ! Sum up the normal and the US parts of the response charge density
+        ! in R-space
+        !
+        IF (gamma_only) THEN
+           rho_1(:,is)  = rho_1(:,is) + DBLE(psic(:))
+        ELSE
+           rho_1c(:,is) = rho_1c(:,is) + psic(:)
+        ENDIF
+        !
+     ENDDO
+     !
+     DEALLOCATE(rhoaux)
+     !
+  ENDIF
   !
   ! The psic workspace can present a memory bottleneck
   !
@@ -142,10 +176,10 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   !
   IF (lr_verbosity > 0) THEN
      ! 
-     DO ispin = 1, nspin_mag
+     DO is = 1, nspin_mag
         !
         rho_sum = 0.0d0
-        rho_sum = SUM(rho_1(:,ispin))
+        rho_sum = SUM(rho_1(:,is))
         !
 #if defined(__MPI)
         CALL mp_sum(rho_sum, intra_bgrp_comm )
@@ -315,10 +349,9 @@ CONTAINS
     USE lr_variables,        ONLY : becp_1, tg_revc0
     USE io_global,           ONLY : stdout
     USE realus,              ONLY : real_space, invfft_orbital_gamma,&
-                                    & initialisation_level,&
-                                    & calbec_rs_gamma,&
-                                    & add_vuspsir_gamma, v_loc_psir,&
-                                    & real_space_debug 
+                                    initialisation_level,&
+                                    calbec_rs_gamma,&
+                                    add_vuspsir_gamma, v_loc_psir
     USE mp_global,           ONLY : ibnd_start, ibnd_end, inter_bgrp_comm, &
                                     me_bgrp, me_pool
     USE mp,                  ONLY : mp_sum
@@ -337,11 +370,11 @@ CONTAINS
     !
     incr = 2
     !
-    IF ( dffts%have_task_groups ) THEN
+    IF ( dffts%has_task_groups ) THEN
        !
        v_siz =  dffts%nnr_tg
        !
-       incr = 2 * dffts%nproc2
+       incr = 2 * fftx_ntgrp(dffts)
        !
        ALLOCATE( tg_rho( v_siz ) )
        tg_rho= 0.0_DP
@@ -354,16 +387,16 @@ CONTAINS
        !
        CALL invfft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
        !
-       IF (dffts%have_task_groups) THEN
+       IF (dffts%has_task_groups) THEN
           !
           ! Now the first proc of the group holds the first two bands
-          ! of the 2*dffts%nproc2 bands that we are processing at the same time,
+          ! of the 2*ntgrp bands that we are processing at the same time,
           ! the second proc. holds the third and fourth band
           ! and so on.
           !
           ! Compute the proper factor for each band
           !
-          idx = dffts%mype2 + 1
+          idx = fftx_tgpe(dffts) + 1
           !
           ! Remember two bands are packed in a single array :
           ! proc 0 has bands ibnd   and ibnd+1
@@ -425,7 +458,7 @@ CONTAINS
           ! Notice that betapointlist() is called in lr_readin at the
           ! very beginning.
           !
-          IF ( real_space_debug > 6 .AND. okvan) THEN
+          IF ( real_space .AND. okvan) THEN
              ! The rbecp term
              CALL calbec_rs_gamma(ibnd,nbnd,becp%r)
              !
@@ -439,21 +472,11 @@ CONTAINS
        !
     ENDDO
     !
-    IF (dffts%have_task_groups) THEN
+    IF (dffts%has_task_groups) THEN
        !
        ! reduce the group charge
        !
-       CALL mp_sum( tg_rho, gid = dffts%comm2 )
-       !
-       ! copy the charge back to the processor location
-       !
-       nxyp = dffts%nr1x * dffts%my_nr2p
-       DO ir3 = 1, dffts%my_nr3p
-          ioff    = dffts%nr1x * dffts%my_nr2p * (ir3-1)
-          ioff_tg = dffts%nr1x * dffts%nr2x    * (ir3-1) + dffts%nr1x * dffts%my_i0r2p
-          rho_1(ioff+1:ioff+nxyp,1) = rho_1(ioff+1:ioff+nxyp,1) + tg_rho(ioff_tg+1:ioff_tg+nxyp)
-          rho_1(ir,1) = rho_1(ir,1) + tg_rho(ir+ioff)
-       END DO
+       CALL tg_reduce_rho( rho_1, tg_rho, 1, dffts )
        !
     ENDIF
     !
@@ -469,7 +492,7 @@ CONTAINS
        scal = 0.0d0
        becsum(:,:,:) = 0.0d0
        !
-       IF ( real_space_debug <= 6) THEN 
+       IF ( .NOT.real_space ) THEN 
           ! In real space, the value is calculated above
           CALL calbec(ngk(1), vkb, evc1(:,:,1), becp)
           !
@@ -552,7 +575,7 @@ CONTAINS
        !
     ENDIF
     !
-    IF ( dffts%have_task_groups ) THEN
+    IF ( dffts%has_task_groups ) THEN
        DEALLOCATE( tg_rho )
     END IF
     !   
@@ -579,7 +602,7 @@ CONTAINS
           psic(:) = (0.0d0,0.0d0)
           !
           DO ig = 1, ngk(ik)
-             psic(nls(igk_k(ig,ik)))=evc1(ig,ibnd,ik)
+             psic(dffts%nl(igk_k(ig,ik)))=evc1(ig,ibnd,ik)
           ENDDO
           !
           CALL invfft ('Wave', psic, dffts)

@@ -246,7 +246,11 @@ help fildrho -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> File where the charge density responses are written.
+<blockquote><pre>
+File where the charge density responses are written. Note that the file
+                  will actually be saved as ${outdir}/_ph0/${prefix}.${fildrho}1
+                  where  ${outdir}, ${prefix} and ${fildrho} are the values of the
+                  corresponding input variables
          </pre></blockquote>
 </ul>      
       
@@ -265,7 +269,7 @@ help fildvscf -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 File where the the potential variation is written
-(for later use in electron-phonon calculation).
+(for later use in electron-phonon calculation, see also fildrho).
          </pre></blockquote>
 </ul>      
       
@@ -737,9 +741,26 @@ up calculations at q=0 (phonon wavevector) if the sum over
 the Brillouin Zone includes k=0 only. The gamma_gamma
 trick exploits symmetry and acoustic sum rule to reduce
 the number of linear response calculations to the strict
-minimum, as it is done in code phcg.x. This option MUST
-BE USED if a run with ph.x is to be followed by a run
-with d3.x for third-order terms calculation.
+minimum, as it is done in code phcg.x.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help asr -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>asr</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Apply Acoustic Sum Rule to dynamical matrix, effective charges
+Works only in conjunction with "gamma_gamma" tricks (see above)
          </pre></blockquote>
 </ul>      
       
@@ -851,6 +872,32 @@ with offset determined by k1,k2,k3.
          </pre></blockquote>
 </ul>
     
+}
+
+
+# ------------------------------------------------------------------------
+help read_dns_bare -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>read_dns_bare</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true. the PH code tries to read three files in the DFPT+U
+calculation: dns_orth, dns_bare, d2ns_bare.
+dns_orth and dns_bare are the first-order variations of
+the occupation matrix, while d2ns_bare is the second-order
+variation of the occupation matrix. These matrices are
+computed only once during the DFPT+U calculation. However,
+their calculation (especially of d2ns_bare) is computationally
+expensive, this is why they are written to file and then can be
+read (e.g. for restart) in order to save time.
+         </pre></blockquote>
+</ul>      
+      
 }
 
 

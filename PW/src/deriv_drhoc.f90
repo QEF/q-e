@@ -5,68 +5,77 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!-----------------------------------------------------------------------
-subroutine deriv_drhoc (ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, drhocg)
-  !-----------------------------------------------------------------------
+!----------------------------------------------------------------------------
+SUBROUTINE deriv_drhoc( ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, drhocg )
+  !--------------------------------------------------------------------------
+  !! Calculates the Fourier transform of \(d\text{Rho}_c/dG\).
+  !
   USE kinds
-  USE constants, ONLY : pi, fpi
-  implicit none
+  USE constants,  ONLY : pi, fpi
   !
-  !    first the dummy variables
+  IMPLICIT NONE
   !
-
-  integer :: ngl, mesh
-  ! input: the number of g shell
-  ! input: the number of radial mesh points
-
-  real(DP), intent(in) :: gl (ngl), r (mesh), rab (mesh), rhoc (mesh), &
-                          omega, tpiba2
-  real(DP), intent(out) :: drhocg (ngl)
-  ! input: the number of G shells
-  ! input: the radial mesh
-  ! input: the derivative of the radial mesh
-  ! input: the radial core charge
-  ! input: the volume of the unit cell
-  ! input: 2 times pi / alat
-  ! output: fourier transform of d Rho_c/dG
+  INTEGER :: ngl
+  !! input: the number of g shell
+  INTEGER :: mesh
+  !! input: the number of radial mesh points
+  REAL(DP), INTENT(IN) :: gl(ngl)
+  !! input: the number of G shells
+  REAL(DP), INTENT(IN) :: r(mesh)
+  !! input: the radial mesh
+  REAL(DP), INTENT(IN) :: rab(mesh)
+  !! input: the derivative of the radial mesh
+  REAL(DP), INTENT(IN) :: rhoc(mesh)
+  !! input: the radial core charge
+  REAL(DP), INTENT(IN) :: omega
+  !! input: the volume of the unit cell
+  REAL(DP), INTENT(IN) :: tpiba2
+  !! input: 2 times pi / alat
+  REAL(DP), INTENT(OUT) :: drhocg(ngl)
+  !! Fourier transform of d Rho_c/dG
   !
-  !     here the local variables
+  ! ... local variables
   !
-  real(DP) :: gx, rhocg1
+  REAL(DP) :: gx, rhocg1
   ! the modulus of g for a given shell
   ! the fourier transform
-  real(DP), allocatable :: aux (:)
+  REAL(DP), ALLOCATABLE :: aux(:)
   ! auxiliary memory for integration
-
-  integer :: ir, igl, igl0
+  INTEGER :: ir, igl, igl0
   ! counter on radial mesh points
   ! counter on g shells
   ! lower limit for loop on ngl
-
   !
   ! G=0 term
   !
-  if (gl (1) < 1.0d-8) then
-     drhocg (1) = 0.0d0
+  IF (gl(1) < 1.0d-8) THEN
+     drhocg(1) = 0.0d0
      igl0 = 2
-  else
+  ELSE
      igl0 = 1
-  endif
+  ENDIF
   !
   ! G <> 0 term
   !
-  allocate (aux( mesh))    
-  do igl = igl0, ngl
-     gx = sqrt (gl (igl) * tpiba2)
-     do ir = 1, mesh
-        aux (ir) = r (ir) * rhoc (ir) * (r (ir) * cos (gx * r (ir) ) &
-             / gx - sin (gx * r (ir) ) / gx**2)
-     enddo
-     call simpson (mesh, aux, rab, rhocg1)
-     drhocg (igl) = fpi / omega * rhocg1
-  enddo
-  deallocate (aux)
-
-  return
-end subroutine deriv_drhoc
+!$omp parallel private(aux, gx, rhocg1)
+  !
+  ALLOCATE( aux(mesh) )
+!$omp do
+  DO igl = igl0, ngl
+     gx = SQRT( gl(igl) * tpiba2 )
+     DO ir = 1, mesh
+        aux(ir) = r(ir)*rhoc(ir)*( r(ir) * COS(gx*r(ir)) /       &
+                                      gx - SIN(gx*r(ir)) / gx**2 )
+     ENDDO
+     CALL simpson( mesh, aux, rab, rhocg1 )
+     drhocg(igl) = fpi / omega * rhocg1
+  ENDDO
+!$omp end do nowait
+  DEALLOCATE( aux )
+  !
+!$omp end parallel
+  !
+  RETURN
+  !
+END SUBROUTINE deriv_drhoc
 

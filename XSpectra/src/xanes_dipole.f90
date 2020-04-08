@@ -15,10 +15,9 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
   USE wvfct,           ONLY : npwx, nbnd, et, current_k
   USE gvecw,           ONLY : gcutw
   USE symm_base,       ONLY : d1,d2,d3
-  USE noncollin_module,ONLY : noncolin
   USE lsda_mod,        ONLY : nspin,lsda,isk,current_spin
   USE cell_base,       ONLY : tpiba2, bg
-  USE wavefunctions_module, ONLY: evc
+  USE wavefunctions, ONLY: evc
   USE klist,           ONLY : &
        nkstot,                & ! total number of k-points
        nks,                   & ! number of k-points per pool
@@ -76,13 +75,12 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
   REAL(dp) :: pref,prefb,v_of_0,xnorm_partial
   REAL(dp) :: norm, normps
   REAL(dp), ALLOCATABLE :: aux(:)
-  COMPLEX(KIND=DP), EXTERNAL :: zdotc
   COMPLEX(dp), ALLOCATABLE :: paw_vkb_cplx(:,:)
   COMPLEX(dp), ALLOCATABLE :: psiwfc(:), spsiwfc(:)
   CHARACTER(LEN=4) :: verbosity
 
   REAL(dp) :: timenow 
-  REAL(DP), EXTERNAL ::  get_clock
+  REAL(DP), EXTERNAL :: ddot, get_clock
   EXTERNAL :: zdscal
 
   timenow=0
@@ -141,10 +139,12 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
         nrc=paw_recon(xiabs)%aephi(ip)%label%nrc
         ip_l=ip_l+1
         ! here below, recall that psi is r*psi and you have a Jacobian=r^2
-        aux(1:nrc) = rgrid(xiabs)%r(1:nrc) * &
-                     paw_recon(xiabs)%aephi(ip)%psi(1:nrc) * &
-                     core_wfn(1:nrc)
+        DO is = 1,nrc
+        aux(is) = rgrid(xiabs)%r(is) * &
+                     paw_recon(xiabs)%aephi(ip)%psi(is) * &
+                     core_wfn(is)
         ! here we have to integrate only inside the augmentation region.
+        ENDDO
         xanes_dip(ip_l)=para_radin(aux(1:nrc),rgrid(xiabs)%r(1:nrc),nrc)
      ENDIF
   ENDDO
@@ -325,14 +325,14 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
         spsiwfc(:)=(0.d0,0.d0)
         recalc=.true.
         CALL sm1_psi(recalc,npwx, npw, 1, psiwfc, spsiwfc)
-        xnorm_partial=zdotc(npw,psiwfc,1,spsiwfc,1)
+        xnorm_partial=ddot(2*npw,psiwfc,1,spsiwfc,1)
         DEALLOCATE(spsiwfc)
      ELSE
 !        xnorm_partial=0.d0
 !        do ip=1,npw
 !          xnorm_partial=xnorm_partial+conjg(psiwfc(ip))*psiwfc(ip)
 !       enddo
-        xnorm_partial=real(zdotc(npw,psiwfc,1,psiwfc,1),dp)
+        xnorm_partial=ddot(2*npw,psiwfc,1,psiwfc,1)
 
      ENDIF
      !</CG>

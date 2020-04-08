@@ -6,179 +6,308 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !=----------------------------------------------------------------------------=!
-      MODULE read_upf_v2_module
-!=----------------------------------------------------------------------------=!
-!  this module handles the reading of pseudopotential data
+MODULE read_upf_v2_module
+!-----------------------------------------------------------------------------=!
+   !!  this module provides the function read_upf_v2 to read pseudopotential data
+   !!  from files in UPF format version 2. 
 
-! ...   declare modules
-        USE kinds,        ONLY: DP
-        USE pseudo_types, ONLY: pseudo_upf
-        USE radial_grids, ONLY: radial_grid_type
-        USE parser,       ONLY : version_compare
-        USE iotk_module
-        !
-        PRIVATE
-        PUBLIC :: read_upf_v2
- CONTAINS
-
-!------------------------------------------------+
-SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
+   ! ...   declare modules
+   USE kinds,        ONLY: DP
+   USE pseudo_types, ONLY: pseudo_upf
+   USE radial_grids, ONLY: radial_grid_type
+   USE parser,       ONLY : version_compare
+   USE FoX_dom
+   !
+   PRIVATE
+   PUBLIC :: read_upf_v2
+CONTAINS
+   !------------------------------------------------+
+   SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    !---------------------------------------------+
-   ! Read pseudopotential in UPF format version 2, uses iotk
-   !
-   USE pseudo_types, ONLY: nullify_pseudo_upf, deallocate_pseudo_upf
-   USE radial_grids, ONLY: radial_grid_type, nullify_radial_grid
-   IMPLICIT NONE
-   INTEGER,INTENT(IN)             :: u         ! i/o unit
-   TYPE(pseudo_upf),INTENT(INOUT) :: upf       ! the pseudo data
-   TYPE(radial_grid_type),OPTIONAL,INTENT(INOUT),TARGET :: grid
-   !
-   INTEGER,OPTIONAL,INTENT(OUT):: ierr      ! /= 0 if something went wrong
-   CHARACTER(len=iotk_namlenx) :: root
-   CHARACTER(len=iotk_attlenx) :: attr
-   INTEGER :: ierr_
-   LOGICAL :: found
-   LOGICAL,EXTERNAL :: matches
-   CHARACTER(len=6),PARAMETER :: max_version = '2.0.1'
-   !
-   ! Prepare the type .  Should be done where upf is instantiated
-   ! CALL deallocate_pseudo_upf(upf)
-   ! CALL nullify_pseudo_upf(upf)
-   !
-   ! IF(present(grid)) call nullify_radial_grid(grid)
-   ! nullify(upf%grid)
-   !
-   ! Initialize the file
-   CALL iotk_open_read(u, attr=attr, root=root, ierr=ierr_)
-   !
-   IF((abs(ierr_)>0) .or. .not. matches('UPF',root) ) THEN
-       !
-       CALL iotk_close_read(u,ierr=ierr_)
-       IF(.not. present(ierr)) &
-         CALL errore('read_upf_v2','Cannot open UPF file.',1)
-       ierr = 1
-       RETURN
-   ENDIF
-   CALL iotk_scan_attr(attr, 'version', upf%nv)
-   IF (version_compare(upf%nv, max_version) == 'newer') &
-       CALL errore('read_upf_v2',&
-                   'Unknown UPF format version: '//TRIM(upf%nv),1)
-   !
-   ! Skip human-readable header
-   CALL iotk_scan_begin(u,'PP_INFO',found=found)
-   if(found) CALL iotk_scan_end(u,'PP_INFO')
-   !
-   ! Read machine-readable header
-   CALL read_upf_header(u, upf)
-   IF(upf%tpawp .and. .not. present(grid)) &
-      CALL errore('read_upf_v2', 'PAW requires a radial_grid_type.', 1)
-   !
-   ! CHECK for bug in version 2.0.0 of UPF file
-   IF ( version_compare(upf%nv, '2.0.1') == 'older' .and. upf%tvanp .and.  &
-        .not. upf%tpawp ) CALL errore('read_upf_v2',&
+      !! Read pseudopotential in UPF format version 2, uses fox libraries. 
+      !! data are stored in a pseudo_upf structure ( upf argument ), 
+      !! optionally mesh data may be stored in a radial_grid_type strucure 
+      !! ( grid argument). 
+      !! If ierr argument is present the error status is returned otherwise 
+      !! in case of error the program stops.
+      !! @Note  version 2 UPF  files generated with older versions of QE may contain 
+      !! whithin in the PP_INFO/PP_INPUT section some xml reserved characters which 
+      !! prevent any standard xml reader to parse them. To make the UPF file accessible is 
+      !! sufficient to bracket  all the  text data within the PP_INPUT section with <![CDATA[
+      !! and ]]>     
+
+      USE pseudo_types, ONLY: nullify_pseudo_upf, deallocate_pseudo_upf
+      USE radial_grids, ONLY: radial_grid_type, nullify_radial_grid
+      IMPLICIT NONE
+      TYPE(Node),POINTER,INTENT(IN)  :: u         
+      !! pointer to root DOM node. 
+      TYPE(pseudo_upf),INTENT(INOUT) :: upf       
+      !! pseudo_upf type structure storing the pseudo data
+      TYPE(radial_grid_type),OPTIONAL,INTENT(INOUT),TARGET :: grid
+      !! optional structure  where to store mesh data 
+      INTEGER,OPTIONAL,INTENT(OUT):: ierr      
+      !!  /= 0 if something went wrong
+      !
+      !
+      INTEGER :: ierr_
+      TYPE(DOMException)   :: ex 
+      TYPE(Node), POINTER  :: auxNode
+      LOGICAL :: found
+      LOGICAL,EXTERNAL :: matches
+      CHARACTER(len = 256)  :: root
+      CHARACTER(len=6),PARAMETER :: max_version = '2.0.1'
+      !
+      ! Prepare the type .  Should be done where upf is instantiated
+      ! CALL deallocate_pseudo_upf(upf)
+      ! CALL nullify_pseudo_upf(upf)
+      !
+      ! IF(present(grid)) call nullify_radial_grid(grid)
+      ! nullify(upf%grid)
+      !
+      ! Initialize the file
+      root = getTagname(u, EX = ex)
+      ierr_ = getExceptionCode(ex)  
+      !
+      IF((abs(ierr_)>0)  ) THEN
+      !
+         IF(.not. present(ierr)) &
+            CALL errore('read_upf_v2','Cannot open UPF file.',1)
+         ierr = 1
+         RETURN
+      ENDIF
+      IF ( .not. matches('UPF',root) ) THEN
+         IF (PRESENT (ierr) ) THEN 
+            CALL infomsg( 'read_upf_v2', 'tagname is '//TRIM(root)//' instead of UPF' )
+            ierr = 2 
+            RETURN
+         ELSE 
+            CALL errore('read_upf_v2', 'tagname is '//TRIM(root)//' instead of UPF',2)
+         END IF
+      END IF
+      CALL extractDataAttribute(u, 'version', upf%nv)
+      IF (version_compare(upf%nv, max_version) == 'newer') &
+         CALL errore('read_upf_v2', 'Unknown UPF format version: '//TRIM(upf%nv),1)
+      !
+      !
+      ! Read machine-readable header
+      !
+      CALL read_upf_header(u, upf)
+      IF(upf%tpawp .and. .not. present(grid)) &
+         CALL errore('read_upf_v2', 'PAW requires a radial_grid_type.', 1)
+      !
+      ! CHECK for bug in version 2.0.0 of UPF file
+      IF ( version_compare(upf%nv, '2.0.1') == 'older' .and. upf%tvanp .and.  &
+         .not. upf%tpawp ) CALL errore('read_upf_v2',&
                    'Ultrasoft pseudopotentials in UPF format v.2.0.0 are &
                   & affected by a bug compromising their quality. Please &
                   & regenerate pseudopotential file for '//TRIM(upf%psd), 1)
 
-   ! Read radial grid mesh
-   CALL read_upf_mesh(u, upf, grid)
-   ! Read non-linear core correction charge
-   ALLOCATE( upf%rho_atc(upf%mesh) )
-   IF(upf%nlcc) THEN
-      CALL iotk_scan_dat(u, 'PP_NLCC',  upf%rho_atc)
-   ELSE
-      ! A null core charge simplifies several functions, mostly in PAW
-      upf%rho_atc(1:upf%mesh) = 0._dp
-   ENDIF
+      ! Read radial grid mesh
+      CALL read_upf_mesh(u, upf, grid)
+      ! Read non-linear core correction charge
+      ALLOCATE( upf%rho_atc(upf%mesh) )
+      IF(upf%nlcc) THEN
+         auxNode => item(getElementsByTagname(u, 'PP_NLCC'), 0)
+         CALL extractDataContent(auxNode, upf%rho_atc)
+      ELSE
+         ! A null core charge simplifies several functions, mostly in PAW
+         upf%rho_atc(1:upf%mesh) = 0._dp
+      ENDIF
+      ! Read local potential
+      IF(.not. upf%tcoulombp) THEN
+         ALLOCATE( upf%vloc(upf%mesh) )
+         auxNode => item( getElementsByTagname( u, 'PP_LOCAL'), 0)
+         CALL extractDataContent(auxNode, upf%vloc)
+      ENDIF
+      ! Read nonlocal components: projectors, augmentation, hamiltonian elements
+   
+      CALL read_upf_nonlocal(u, upf)
 
-   ! Read local potential
-   IF(.not. upf%tcoulombp) THEN
-      ALLOCATE( upf%vloc(upf%mesh) )
-      CALL iotk_scan_dat(u, 'PP_LOCAL', upf%vloc)
-   ENDIF
-   ! Read nonlocal components: projectors, augmentation, hamiltonian elements
-   CALL read_upf_nonlocal(u, upf)
-   ! Read initial pseudo wavefunctions
-   ! (usually only wfcs with occupancy > 0)
-   CALL read_upf_pswfc(u, upf)
-   ! Read all-electron and pseudo wavefunctions
-   CALL read_upf_full_wfc(u, upf)
-   ! Read valence atomic density (used for initial density)
-   ALLOCATE( upf%rho_at(upf%mesh) )
-   CALL iotk_scan_dat(u, 'PP_RHOATOM', upf%rho_at)
-   ! Read additional info for full-relativistic calculation
-   CALL read_upf_spin_orb(u, upf)
-   ! Read additional data for PAW (All-electron charge, wavefunctions, vloc..)
-   CALL read_upf_paw(u, upf)
-   ! Read data for gipaw reconstruction
-   CALL read_upf_gipaw(u, upf)
-   !
-   ! Close the file (not the unit!)
-   CALL iotk_close_read(u)
-   !
-   IF( present(ierr) ) ierr=0
+      ! Read initial pseudo wavefunctions
+      ! (usually only wfcs with occupancy > 0)
+      CALL read_upf_pswfc(u, upf)
 
-   RETURN
+      ! Read all-electron and pseudo wavefunctions
+      CALL read_upf_full_wfc(u, upf)
 
-   CONTAINS
+      ! Read valence atomic density (used for initial density)
+      ALLOCATE( upf%rho_at(upf%mesh) )
+      auxNode => item(getElementsByTagname(u, 'PP_RHOATOM'), 0) 
+      CALL extractDataContent(auxNode, upf%rho_at)
+
+      ! Read additional info for full-relativistic calculation
+      CALL read_upf_spin_orb(u, upf)
+
+      ! Read additional data for PAW (All-electron charge, wavefunctions, vloc..)
+      CALL read_upf_paw(u, upf)
+
+      ! Read data for gipaw reconstruction
+      CALL read_upf_gipaw(u, upf)
+
+      !
+      ! Close the file (not the unit!)
+      CALL destroy(u)
+      !
+      IF( present(ierr) ) ierr=0
+      !
+      RETURN
+
+END SUBROUTINE read_upf_v2
    !
-   SUBROUTINE read_upf_header(u, upf)
-      IMPLICIT NONE
-      INTEGER,INTENT(IN)             :: u    ! i/o unit
-      TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
-      INTEGER                     :: ierr ! /= 0 if something went wrong
-      CHARACTER(len=iotk_attlenx) :: attr
-      CHARACTER(len=256) :: dft_buffer  ! needed to allow the string defining the
+SUBROUTINE read_upf_header(u, upf)
+   IMPLICIT NONE
+   TYPE(Node),POINTER,INTENT(IN)  :: u    ! parent node pointer
+   TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
+   INTEGER                     :: ierr, ios  ! /= 0 if something went wrong
+   CHARACTER(len=256) :: dft_buffer     ! needed to allow the string defining the
                                         ! DFT flavor to be longer than upf%dft 
-                                        ! (currntly 25) without getting iotk upset. 
+                                        ! (currently 25)
                                         ! An error message is issued if trimmed 
                                         ! dft_buffer exceeds upf%dft size.
-      INTEGER :: len_buffer
+   INTEGER :: len_buffer
+   !
+   INTEGER :: nw
+   TYPE(Node), POINTER  :: hdrNode
+   CHARACTER(LEN=256)   :: attr
+   TYPE(DOMException)   :: ex 
+   !
+   ! GTH analytical format: obviously not true in this case
+   upf%is_gth=.false.
+   ! PP is assumed to be multi-projector
+   upf%is_multiproj=.true.
+   !
+   ! Read HEADER section with some initialization data
+   hdrNode  => item( getElementsByTagname(u, 'PP_HEADER'), 0 )  
+   IF ( hasAttribute( hdrNode, 'generated') ) THEN 
+      CALL extractDataAttribute(hdrNode, 'generated', upf%generated) 
+   ELSE 
+      upf%generated = ' '
+   END IF 
+   IF ( hasAttribute( hdrNode, 'author') ) THEN 
+      CALL extractDataAttribute(hdrNode, 'author', upf%author) 
+   ELSE 
+      upf%author = 'anonymous'
+   END IF 
+   IF ( hasAttribute( hdrNode, 'date') ) THEN 
+      CALL extractDataAttribute(hdrNode, 'date', upf%date) 
+   ELSE 
+      upf%date = ' '
+   END IF 
+   IF ( hasAttribute( hdrNode, 'comment') ) THEN 
+      CALL extractDataAttribute(hdrNode, 'comment', upf%comment) 
+   ELSE 
+      upf%comment = ' '
+   END IF 
+   !
+   CALL extractDataAttribute(hdrNode, 'element', upf%psd)
+   CALL extractDataAttribute(hdrNode, 'pseudo_type', upf%typ)
+   CALL extractDataAttribute(hdrNode, 'relativistic', upf%rel)   
+   !
+   CALL extractDataAttribute(hdrNode, 'is_ultrasoft', upf%tvanp, iostat = ios )
+   IF ( ios /= 0 ) THEN 
+      CALL extractDataAttribute(hdrNode, 'is_ultrasoft', attr) 
+      upf%tvanp = ( INDEX (attr, 'T') > 0 )  
+   END IF
+   CALL extractDataAttribute(hdrNode, 'is_paw', upf%tpawp, iostat = ios)
+   IF ( ios /= 0 ) THEN
+      CALL extractDataAttribute(hdrNode, 'is_paw', attr)
+      upf%tpawp = ( INDEX (attr, 'T') > 0 ) 
+   END IF
+   !
+   IF ( hasAttribute ( hdrNode, 'is_coulomb')) THEN
+      CALL extractDataAttribute(hdrNode, 'is_coulomb', upf%tcoulombp, iostat = ios)
+      IF ( ios /= 0 ) THEN 
+         CALL extractDataAttribute ( hdrNode, 'is_coulomb', attr) 
+         upf%tcoulombp = ( INDEX ( attr, 'T') > 0 ) 
+      END IF
+   ELSE 
+      upf%tcoulombp = .FALSE.
+   END IF
+   !
+   IF ( hasAttribute (hdrNode, 'has_so') ) THEN 
+      CALL extractDataAttribute(hdrNode, 'has_so',         upf%has_so , IOSTAT = ios )
+      IF ( ios /=0) THEN 
+         CALL extractDataAttribute(hdrNode, 'has_so',  attr) 
+         upf%has_so = ( INDEX ( attr, 'T') > 0 )
+      END IF
+   ELSE 
+      upf%has_so = .false.
+   END IF
+   IF ( hasAttribute( hdrNode, 'has_wfc') ) THEN 
+      CALL extractDataAttribute(hdrNode, 'has_wfc',        upf%has_wfc, IOSTAT = ios)
+      IF ( ios /= 0 ) THEN 
+         CALL extractDataAttribute (hdrNode, 'has_wfc', attr) 
+         upf%has_wfc = ( INDEX(attr, 'T' ) > 0 ) 
+      END IF 
+   ELSE 
+      upf%has_wfc = upf%tpawp
+   END IF 
+   IF ( hasAttribute ( hdrNode, 'has_gipaw' )) THEN  
+      CALL extractDataAttribute(hdrNode, 'has_gipaw',      upf%has_gipaw, IOSTAT = ios )
+      IF ( ios /= 0 ) THEN
+         CALL extractDataAttribute(hdrNode, 'has_gipaw', attr ) 
+         upf%has_gipaw = ( INDEX ( attr, 'T') > 0 ) 
+      END IF 
+   ELSE 
+      upf%has_gipaw = .false.
+   END IF 
+   !EMINE
+   IF ( hasAttribute ( hdrNode, 'paw_as_gipaw') ) THEN 
+      CALL extractDataAttribute(hdrNode, 'paw_as_gipaw',      upf%paw_as_gipaw, IOSTAT = ios )
+      IF ( ios /= 0 ) THEN 
+         CALL extractDataAttribute(hdrNode, 'paw_as_gipaw', attr ) 
+         upf%paw_as_gipaw = ( INDEX(attr, 'T') > 0 ) 
+      END IF 
+   ELSE 
+      upf%paw_as_gipaw  = .false.
+   END IF
+   !
+   CALL extractDataAttribute(hdrNode, 'core_correction',upf%nlcc, IOSTAT = ios)
+   IF ( ios /= 0 ) THEN 
+      CALL extractDataAttribute(hdrNode, 'core_correction', attr ) 
+      upf%nlcc = ( INDEX( attr, 'T') > 0 ) 
+   END IF
+!        
+   CALL extractDataAttribute(hdrNode, 'functional',  dft_buffer)
+      len_buffer=len_trim(dft_buffer)
+      IF (len_buffer > len(upf%dft)) &
+         CALL errore('read_upf_v2','String defining DFT is too long',len_buffer)
+      upf%dft=TRIM(dft_buffer)
       !
-      INTEGER :: nw
-      !
-      ! Read HEADER section with some initialization data
-      CALL iotk_scan_empty(u, 'PP_HEADER', attr=attr)
-         CALL iotk_scan_attr(attr, 'generated',      upf%generated, default=' ')
-         CALL iotk_scan_attr(attr, 'author',         upf%author,    default='anonymous')
-         CALL iotk_scan_attr(attr, 'date',           upf%date,      default=' ')
-         CALL iotk_scan_attr(attr, 'comment',        upf%comment,   default=' ')
-         !
-         CALL iotk_scan_attr(attr, 'element',        upf%psd)
-         CALL iotk_scan_attr(attr, 'pseudo_type',    upf%typ)
-         CALL iotk_scan_attr(attr, 'relativistic',   upf%rel)
-         !
-         CALL iotk_scan_attr(attr, 'is_ultrasoft',   upf%tvanp)
-         CALL iotk_scan_attr(attr, 'is_paw',         upf%tpawp)
-         CALL iotk_scan_attr(attr, 'is_coulomb',     upf%tcoulombp, default=.false.)
-         !
-         CALL iotk_scan_attr(attr, 'has_so',         upf%has_so,    default=.false.)
-         CALL iotk_scan_attr(attr, 'has_wfc',        upf%has_wfc,   default=upf%tpawp)
-         CALL iotk_scan_attr(attr, 'has_gipaw',      upf%has_gipaw, default=.false.)
-         !EMINE
-         CALL iotk_scan_attr(attr, 'paw_as_gipaw',      upf%paw_as_gipaw, default=.false.)
-         !
-         CALL iotk_scan_attr(attr, 'core_correction',upf%nlcc)
-!         CALL iotk_scan_attr(attr, 'functional',     upf%dft)
-         CALL iotk_scan_attr(attr, 'functional',     dft_buffer)
-         len_buffer=len_trim(dft_buffer)
-         if (len_buffer > len(upf%dft)) &
-            call errore('read_upf_v2','String defining DFT is too long',len_buffer)
-         upf%dft=TRIM(dft_buffer)
-
-         CALL iotk_scan_attr(attr, 'z_valence',      upf%zp)
-         CALL iotk_scan_attr(attr, 'total_psenergy', upf%etotps,    default=0._dp)
-         CALL iotk_scan_attr(attr, 'wfc_cutoff',     upf%ecutwfc,   default=0._dp)
-         CALL iotk_scan_attr(attr, 'rho_cutoff',     upf%ecutrho,   default=0._dp)
-         CALL iotk_scan_attr(attr, 'l_max',          upf%lmax,      default=0)
-         CALL iotk_scan_attr(attr, 'l_max_rho',      upf%lmax_rho,  default=2*upf%lmax)
-         CALL iotk_scan_attr(attr, 'l_local',        upf%lloc,      default=0)
-         CALL iotk_scan_attr(attr, 'mesh_size',      upf%mesh)
-         CALL iotk_scan_attr(attr, 'number_of_wfc',  upf%nwfc)
-         CALL iotk_scan_attr(attr, 'number_of_proj', upf%nbeta)
-      !
-      !CALL iotk_scan_end(u, 'PP_HEADER')
-      !CALL debug_pseudo_upf(upf)
+      CALL extractDataAttribute (hdrNode, 'z_valence',      upf%zp)
+      IF ( hasAttribute (hdrNode,  'total_psenergy') ) THEN 
+         CALL extractDataAttribute (hdrNode, 'total_psenergy', upf%etotps) 
+      ELSE 
+         upf%etotps = 0._dp
+      END IF 
+      IF ( hasAttribute (hdrNode, 'wfc_cutoff') ) THEN 
+         CALL extractDataAttribute (hdrNode, 'wfc_cutoff',     upf%ecutwfc )
+      ELSE 
+         upf%ecutwfc = 0._dp 
+      END IF
+      IF  ( hasAttribute (hdrNode, 'rho_cutoff') ) THEN 
+         CALL extractDataAttribute (hdrNode, 'rho_cutoff',     upf%ecutrho) 
+      ELSE 
+         upf%ecutrho = 0._dp 
+      END IF
+      IF ( hasAttribute ( hdrNode, 'l_max' ) ) THEN 
+         CALL extractDataAttribute (hdrNode, 'l_max',          upf%lmax) 
+      ELSE      
+         upf%lmax =0 
+      END IF
+      IF ( hasAttribute ( hdrNode, 'l_max_rho') ) THEN 
+         CALL extractDataAttribute (hdrNode, 'l_max_rho',      upf%lmax_rho) 
+      ELSE 
+         upf%lmax_rho = 2*upf%lmax
+      END IF
+      IF ( hasAttribute ( hdrNode, 'l_local') ) THEN 
+         CALL extractDataAttribute (hdrNode, 'l_local',        upf%lloc ) 
+      ELSE 
+         upf%lloc = 0
+      END IF
+      CALL extractDataAttribute (hdrNode, 'mesh_size',      upf%mesh)
+      CALL extractDataAttribute (hdrNode, 'number_of_wfc',  upf%nwfc)
+      CALL extractDataAttribute (hdrNode, 'number_of_proj', upf%nbeta)
       !
       RETURN
    END SUBROUTINE read_upf_header
@@ -186,21 +315,22 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    SUBROUTINE read_upf_mesh(u, upf, grid)
       USE radial_grids, ONLY: allocate_radial_grid
       IMPLICIT NONE
-      INTEGER,INTENT(IN)             :: u    ! i/o unit
-      TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
+      TYPE (Node),POINTER,INTENT(IN)       :: u    ! i/o unit
+      TYPE(pseudo_upf),INTENT(INOUT)         :: upf  ! the pseudo data
       TYPE(radial_grid_type),OPTIONAL,INTENT(INOUT),TARGET :: grid
       !
       INTEGER                     :: ierr ! /= 0 if something went wrong
-      CHARACTER(len=iotk_attlenx) :: attr
+      TYPE (Node),POINTER         :: mshNode, locNode
+      !
       LOGICAL :: found
       !
-      CALL iotk_scan_begin(u, 'PP_MESH', attr=attr)
-
-      CALL iotk_scan_attr(attr, 'dx',   upf%dx,    default=0._dp)
-      CALL iotk_scan_attr(attr, 'mesh', upf%mesh,  default=upf%mesh)
-      CALL iotk_scan_attr(attr, 'xmin', upf%xmin,  default=0._dp)
-      CALL iotk_scan_attr(attr, 'rmax', upf%rmax,  default=0._dp)
-      CALL iotk_scan_attr(attr, 'zmesh',upf%zmesh, default=0._dp)
+      mshNode => item( getElementsByTagname(u, 'PP_MESH'),0 )
+      IF ( hasAttribute(mshNode, 'dx')) CALL extractDataAttribute(mshNode, 'dx',   upf%dx ) 
+      IF ( hasAttribute (mshNode, 'mesh')) &
+             CALL extractDataAttribute(mshNode, 'mesh', upf%mesh )
+      IF ( hasAttribute ( mshNode, 'xmin') )  CALL extractDataAttribute(mshNode, 'xmin', upf%xmin ) 
+      IF ( hasAttribute ( mshNode, 'rmax') ) CALL extractDataAttribute(mshNode, 'rmax', upf%rmax )
+      IF ( hasAttribute ( mshNode, 'zmesh') ) CALL extractDataAttribute(mshNode, 'zmesh',upf%zmesh ) 
       IF (present(grid)) THEN
          CALL allocate_radial_grid(grid, upf%mesh)
          !
@@ -217,33 +347,49 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
          ALLOCATE( upf%r( upf%mesh ), upf%rab( upf%mesh ) )
       ENDIF
       !
-      CALL iotk_scan_dat(u, 'PP_R',   upf%r(1:upf%mesh))
-      CALL iotk_scan_dat(u, 'PP_RAB', upf%rab(1:upf%mesh))
+      locNode => item( getElementsByTagname( mshNode, 'PP_R'), 0 ) 
+      CALL extractDataContent(locNode, upf%r(1:upf%mesh))  
+      !
+      locNode => item(getElementsByTagname( mshNode, 'PP_RAB'), 0)
+      CALL extractDataContent(locNode, upf%rab(1:upf%mesh)) 
       !
       IF (present(grid)) THEN
          ! Reconstruct additional grids
          upf%grid%r2 =  upf%r**2
          upf%grid%sqr = sqrt(upf%r)
-         upf%grid%rm1 = upf%r**(-1)
-         upf%grid%rm2 = upf%r**(-2)
-         upf%grid%rm3 = upf%r**(-3)
+         ! Prevent FP error if r(1) = 0 
+         IF ( upf%r(1) > 1.0D-16) THEN
+            upf%grid%rm1 = upf%r**(-1)
+            upf%grid%rm2 = upf%r**(-2)
+            upf%grid%rm3 = upf%r**(-3)
+         ELSE
+            upf%grid%rm1(1) =0.0_dp
+            upf%grid%rm2(1) =0.0_dp
+            upf%grid%rm3(1) =0.0_dp
+            upf%grid%rm1(2:) = upf%r(2:)**(-1)
+            upf%grid%rm2(2:) = upf%r(2:)**(-2)
+            upf%grid%rm3(2:) = upf%r(2:)**(-3)
+         END IF
       ENDIF
-
-      CALL iotk_scan_end(u, 'PP_MESH')
       !
       RETURN
    END SUBROUTINE read_upf_mesh
    !
    SUBROUTINE read_upf_nonlocal(u, upf)
       IMPLICIT NONE
-      INTEGER,INTENT(IN)             :: u    ! i/o unit
+      TYPE(Node),POINTER,INTENT(IN)         :: u    ! i/o unit
       TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
-      CHARACTER(len=iotk_attlenx) :: attr
       !
+      !
+      TYPE (Node),POINTER     :: nlcNode, locNode,locNode1, locNode2, locNode3
+      TYPE (nodeList),POINTER :: tmpList 
       INTEGER :: nb,mb,ln,lm,l,nmb,ierr=0
       !INTEGER :: nb_=-1,mb_=-1,l_=-1,nmb_=-1
       REAL(DP):: zeros(upf%mesh)
+      REAL(DP), ALLOCATABLE :: tmp_dbuffer(:)
       LOGICAL :: isnull, found
+      CHARACTER(LEN = 256 )   :: attr 
+      INTEGER :: ios 
       zeros=0._dp
       !
       ! modified by AF
@@ -251,7 +397,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       IF (upf%tcoulombp) upf%nbeta = 0
       !
       ! Allocate space for non-local part
-      IF ( upf%nbeta == 0) then
+      IF ( upf%nbeta == 0) THEN
          upf%nqf = 0
          upf%nqlc= 0
          upf%qqq_eps= -1._dp
@@ -267,13 +413,12 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
                    upf%rcut(1),          &
                    upf%rcutus(1),        &
                    upf%els_beta(1) )
-         ! <AF>
-         !CALL iotk_scan_end(u, 'PP_NONLOCAL')
          RETURN
       END IF
       !
       ! <AF>
-      CALL iotk_scan_begin(u, 'PP_NONLOCAL')
+      
+      nlcNode => item ( getElementsByTagname( u, 'PP_NONLOCAL'), 0 )  
       !
       ALLOCATE( upf%kbeta(upf%nbeta),          &
                 upf%lll(upf%nbeta),            &
@@ -285,98 +430,167 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
 
       !
       ! Read the projectors:
-      DO nb = 1,upf%nbeta
-         CALL iotk_scan_dat(u, 'PP_BETA'//iotk_index( nb ), &
-                             upf%beta(:,nb), attr=attr)
-            CALL iotk_scan_attr(attr, 'label',                  upf%els_beta(nb), default='Xn')
-            CALL iotk_scan_attr(attr, 'angular_momentum',       upf%lll(nb))
-            CALL iotk_scan_attr(attr, 'cutoff_radius_index',    upf%kbeta(nb),    default=upf%mesh)
-            CALL iotk_scan_attr(attr, 'cutoff_radius',          upf%rcut(nb),     default=0._dp)
-            CALL iotk_scan_attr(attr, 'ultrasoft_cutoff_radius', upf%rcutus(nb),   default=0._dp)
+      locNode2 => getFirstChild(nlcNode) 
+      nb = 0 
+      DO 
+         IF (.NOT. ASSOCIATED( locNode2) )  EXIT
+         locNode => locNode2
+         locNode2 => getNextSibling(locNode) 
+         IF (getNodeType( locNode) .NE. ELEMENT_NODE ) CYCLE
+         IF ( INDEX(getTagName(locNode), 'PP_BETA') .LE. 0 ) CYCLE
+         nb = nb + 1
+         CALL extractDataContent(locNode, upf%beta(:, nb)) 
+         IF ( hasAttribute( locNode, 'label') ) THEN 
+            CALL extractDataAttribute(locNode, 'label',                  upf%els_beta(nb))
+         ELSE 
+            upf%els_beta(nb) ='Xn'
+         END IF
+         CALL extractDataAttribute(locNode, 'angular_momentum',       upf%lll(nb))
+         IF ( hasAttribute( locNode,'cutoff_radius_index' )) THEN 
+            CALL extractDataAttribute(locNode, 'cutoff_radius_index',    upf%kbeta(nb)) 
+         ELSE    
+           upf%kbeta = upf%mesh
+         END IF 
+         IF ( hasAttribute( locNode,'cutoff_radius' )) THEN 
+            CALL extractDataAttribute(locNode, 'cutoff_radius',          upf%rcut(nb) ) 
+         ELSE  
+            upf%rcut(nb) = 0._dp
+         END IF
+         IF ( hasAttribute( locNode,'ultrasoft_cutoff_radius' )) THEN
+            CALL extractDataAttribute(locNode, 'ultrasoft_cutoff_radius', upf%rcutus(nb)) 
+         ELSE    
+           upf%rcutus(nb)  = 0._dp
+         END IF
 !
 !    Old version of UPF PPs v.2 contained an error in the tag. 
 !    To be able to read the old PPs we need the following
 !
-            IF ( upf%rcutus(nb)==0._DP) &
-            CALL iotk_scan_attr(attr,'norm_conserving_radius',upf%rcutus(nb), &
-                                default=0._dp)
-      ENDDO
+         IF ( upf%rcutus(nb)==0._DP) THEN 
+            IF ( hasAttribute( locNode,'norm_conserving_radius' )) THEN
+               CALL extractDataAttribute(locNode,'norm_conserving_radius',upf%rcutus(nb))  
+            ELSE
+               upf%rcutus(nb)  = 0._dp
+            END IF
+         END IF  
+      ENDDO 
       !
       ! Read the hamiltonian terms D_ij
-      CALL iotk_scan_dat(u, 'PP_DIJ', upf%dion, attr=attr)
-      !   CALL iotk_scan_attr(attr, 'non_zero_elements', upf%nd)
+      locNode => item( getElementsByTagname(nlcNode, 'PP_DIJ'),0)    
+      CALL extractDataContent(locNode, upf%dion)
       !
       ! Read the augmentation charge section
       augmentation : &
       IF(upf%tvanp .or. upf%tpawp) THEN
-      !
-      CALL iotk_scan_begin(u, 'PP_AUGMENTATION', attr=attr)
-         CALL iotk_scan_attr(attr, 'q_with_l', upf%q_with_l)
-         CALL iotk_scan_attr(attr, 'nqf',      upf%nqf)
-         CALL iotk_scan_attr(attr, 'nqlc',     upf%nqlc, default=2*upf%lmax+1)
+         !
+         locNode => item(getElementsByTagname(nlcNode, 'PP_AUGMENTATION'),0) 
+         CALL extractDataAttribute(locNode, 'q_with_l', upf%q_with_l, IOSTAT = ios )
+         IF ( ios /= 0) THEN 
+            CALL extractDataAttribute(locNode, 'q_with_l', attr )
+            upf%q_with_l = ( INDEX ( attr, 'T') > 0)
+         END IF
+         CALL extractDataAttribute(locNode, 'nqf',      upf%nqf)
+         IF (hasAttribute(locNode, 'nqlc') ) THEN 
+            CALL extractDataAttribute(locNode, 'nqlc',     upf%nqlc) 
+         ELSE  
+            upf%nqlc =2*upf%lmax+1
+         END IF
          IF (upf%tpawp) THEN
-            CALL iotk_scan_attr(attr,'shape',          upf%paw%augshape, default='UNKNOWN')
-            CALL iotk_scan_attr(attr,'cutoff_r',       upf%paw%raug,     default=0._dp)
-            CALL iotk_scan_attr(attr,'cutoff_r_index', upf%paw%iraug,    default=upf%mesh)
-            CALL iotk_scan_attr(attr,'l_max_aug',      upf%paw%lmax_aug, default=upf%lmax_rho)
+            IF (hasAttribute(locNode, 'shape') ) THEN 
+               CALL extractDataAttribute(locNode,'shape',          upf%paw%augshape) 
+            ELSE 
+               upf%paw%augshape ='UNKNOWN'
+            END IF
+            IF (hasAttribute(locNode, 'cutoff_r') ) THEN
+               CALL extractDataAttribute(locNode,'cutoff_r',       upf%paw%raug ) 
+            ELSE 
+               upf%paw%raug = 0._dp
+            END IF
+            IF (hasAttribute(locNode, 'cutoff_r_index') ) THEN
+               CALL extractDataAttribute(locNode,'cutoff_r_index', upf%paw%iraug)  
+            ELSE 
+              upf%paw%iraug =upf%mesh 
+            END IF
+            IF (hasAttribute(locNode, 'l_max_aug') ) THEN
+               CALL extractDataAttribute(locNode,'l_max_aug',      upf%paw%lmax_aug) 
+            ELSE 
+              upf%paw%lmax_aug   =upf%lmax_rho
+            END IF
          ENDIF
          ! a negative number means that all qfunc are stored
-         CALL iotk_scan_attr(attr,'augmentation_epsilon',upf%qqq_eps, default=-1._dp)
+         IF (hasAttribute(locNode,   'augmentation_epsilon'  ) ) THEN
+            CALL extractDataAttribute(locNode,'augmentation_epsilon',upf%qqq_eps) 
+         ELSE 
+            upf%qqq_eps = -1._dp
+         END IF
+         !
+         ALLOCATE( upf%rinner( upf%nqlc ) )
+         ALLOCATE( upf%qqq   ( upf%nbeta, upf%nbeta ) )
+         IF ( upf%q_with_l ) THEN
+            ALLOCATE( upf%qfuncl ( upf%mesh, upf%nbeta*(upf%nbeta+1)/2, 0:2*upf%lmax ) )
+            upf%qfuncl=0._dp
+         ELSE
+            ALLOCATE( upf%qfunc (upf%mesh, upf%nbeta*(upf%nbeta+1)/2) )
+         ENDIF
+         !
+         ! Read the integrals of the Q functions
+         locNode2 => item( getElementsByTagname( locNode, 'PP_Q'), 0) 
+         CALL extractDataContent(locNode2, upf%qqq )
+         !
+         ! read charge multipoles (only if PAW)
+         IF( upf%tpawp ) THEN   
+            ALLOCATE(upf%paw%augmom(upf%nbeta,upf%nbeta, 0:2*upf%lmax))
+            ALLOCATE( tmp_dbuffer(upf%nbeta*upf%nbeta*(2*upf%lmax+1)) )
+            locNode2 => item( getElementsByTagname(locNode,'PP_MULTIPOLES'), 0)
+            CALL extractDataContent(locNode2, tmp_dbuffer)
+            upf%paw%augmom=reshape(tmp_dbuffer, [upf%nbeta,upf%nbeta,2*upf%lmax+1])
+            DEALLOCATE (tmp_dbuffer)
+         ENDIF
+         !
+         ! Read polinomial coefficients for Q_ij expansion at small radius
+         IF(upf%nqf <= 0) THEN
+            upf%rinner(:) = 0._dp
+            ALLOCATE( upf%qfcoef(1,1,1,1) )
+            upf%qfcoef = 0._dp
+         ELSE
+            ALLOCATE( upf%qfcoef( MAX( upf%nqf,1 ), upf%nqlc, upf%nbeta, upf%nbeta ) )
+            ALLOCATE(tmp_dbuffer(MAX( upf%nqf,1 )*upf%nqlc*upf%nbeta*upf%nbeta))
+            locNode2=> item(getElementsByTagname(locNode, 'PP_QFCOEF'),0) 
+            CALL extractDataContent(locNode2, tmp_dbuffer)
+            upf%qfcoef = reshape(tmp_dbuffer,[size(upf%qfcoef,1),size(upf%qfcoef,2),&
+                                           size(upf%qfcoef,3),size(upf%qfcoef,4)])
+            DEALLOCATE(tmp_dbuffer)
+            locNode2 => item(getElementsByTagname(locNode, 'PP_RINNER'),0)
+            CALL extractDataContent(locNode2, upf%rinner)
+         ENDIF
+         !
+         ! Read augmentation charge Q_ij
+         ultrasoft_or_paw : &
+         IF( upf%tvanp) THEN
+            locNode3 => getFirstChild(locNode)
+            IF (upf%q_with_l) THEN 
+               upf%qfuncl = 0._dp
+            ELSE 
+               upf%qfunc = 0._dp
+            END IF
+            search_for_qij: DO 
+               IF ( .NOT. ASSOCIATED(locNode3) ) EXIT search_for_qij
+               locNode2 => locNode3
+               locNode3 => getNextSibling(locNode2)
+               IF (getNodeType(locNode2) .NE. ELEMENT_NODE) CYCLE search_for_qij
+               !
+               IF ( INDEX( getTagName(locNode2), 'PP_QIJ') .LE. 0) CYCLE search_for_qij
+               CALL extractDataAttribute(locNode2, 'composite_index', nmb)
+               IF (upf%q_with_l) THEN 
+                  CALL extractDataAttribute(locNode2, 'angular_momentum', l)
+                  CALL extractDataContent( locNode2, upf%qfuncl(:, nmb,l))
+                  IF (upf%tpawp) upf%qfuncl(upf%paw%iraug+1:,nmb,l) = 0._DP
+               ELSE
+                  CALL extractDataContent ( locNode2, upf%qfunc(:,nmb))
+               END IF
+            END DO search_for_qij     
+            !
+         ENDIF ultrasoft_or_paw
       !
-      ALLOCATE( upf%rinner( upf%nqlc ) )
-      ALLOCATE( upf%qqq   ( upf%nbeta, upf%nbeta ) )
-      IF ( upf%q_with_l ) THEN
-        ALLOCATE( upf%qfuncl ( upf%mesh, upf%nbeta*(upf%nbeta+1)/2, 0:2*upf%lmax ) )
-        upf%qfuncl=0._dp
-      ELSE
-        ALLOCATE( upf%qfunc (upf%mesh, upf%nbeta*(upf%nbeta+1)/2) )
-      ENDIF
-      !
-      ! Read the integrals of the Q functions
-      CALL iotk_scan_dat(u, 'PP_Q',upf%qqq )
-      !
-      ! read charge multipoles (only if PAW)
-      IF( upf%tpawp ) THEN
-         ALLOCATE(upf%paw%augmom(upf%nbeta,upf%nbeta, 0:2*upf%lmax))
-         CALL iotk_scan_dat(u, 'PP_MULTIPOLES', upf%paw%augmom)
-      ENDIF
-      !
-      ! Read polinomial coefficients for Q_ij expansion at small radius
-      IF(upf%nqf <= 0) THEN
-         upf%rinner(:) = 0._dp
-         ALLOCATE( upf%qfcoef(1,1,1,1) )
-         upf%qfcoef = 0._dp
-      ELSE
-         ALLOCATE( upf%qfcoef( MAX( upf%nqf,1 ), upf%nqlc, upf%nbeta, upf%nbeta ) )
-         CALL iotk_scan_dat(u, 'PP_QFCOEF',upf%qfcoef, attr=attr)
-         CALL iotk_scan_dat(u, 'PP_RINNER',upf%rinner, attr=attr)
-      ENDIF
-      !
-      ! Read augmentation charge Q_ij
-      ultrasoft_or_paw : &
-      IF( upf%tvanp) THEN
-         DO nb = 1,upf%nbeta
-         ln = upf%lll(nb)
-         DO mb = nb,upf%nbeta
-         lm = upf%lll(mb)
-         nmb = mb * (mb-1) /2 + nb
-            q_with_l : &
-            IF( upf%q_with_l ) THEN
-               DO l = abs(ln-lm),ln+lm,2 ! only even terms
-                  CALL iotk_scan_dat(u, 'PP_QIJL'//iotk_index((/nb,mb,l/)),&
-                                    upf%qfuncl(:,nmb,l),default=zeros,attr=attr)
-                  IF( upf%tpawp) upf%qfuncl(upf%paw%iraug+1:,nmb,l) = 0._dp
-               ENDDO
-            ELSE q_with_l 
-               CALL iotk_scan_dat(u, 'PP_QIJ'//iotk_index((/nb,mb/)),&
-                                 upf%qfunc(:,nmb),attr=attr,default=zeros)
-            ENDIF q_with_l
-         ENDDO
-         ENDDO
-      !
-      ENDIF ultrasoft_or_paw
-      !
-      CALL iotk_scan_end(u, 'PP_AUGMENTATION')
       !
       ENDIF augmentation
       !
@@ -385,21 +599,21 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       ! For PAW augmentation charge may extend a bit further:
       IF(upf%tpawp) upf%kkbeta = MAX(upf%kkbeta, upf%paw%iraug)
       !
-      CALL iotk_scan_end(u, 'PP_NONLOCAL')
       !
       RETURN
    END SUBROUTINE read_upf_nonlocal
    !
    SUBROUTINE read_upf_pswfc(u, upf)
       IMPLICIT NONE
-      INTEGER,INTENT(IN)           :: u    ! i/o unit
-      TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
+      TYPE(Node), POINTER, INTENT(IN) :: u    ! pointer to root node
+      TYPE(pseudo_upf),INTENT(INOUT)  :: upf  ! the pseudo data
       INTEGER :: ierr ! /= 0 if something went wrong
-      CHARACTER(len=iotk_attlenx) :: attr
+      !
       !
       INTEGER :: nw
+      TYPE(Node),POINTER                :: pswfcNode, locNode, locNode2
       !
-      CALL iotk_scan_begin(u, 'PP_PSWFC')
+      pswfcNode  => item(getElementsByTagname(u, 'PP_PSWFC'), 0) 
       !
       ALLOCATE( upf%chi(upf%mesh,upf%nwfc) )
       ALLOCATE( upf%els(upf%nwfc), &
@@ -411,137 +625,194 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
                 upf%epseu(upf%nwfc) &
               )
       !
-      DO nw = 1,upf%nwfc
-         CALL iotk_scan_dat(u, 'PP_CHI'//iotk_index(nw), &
-                              upf%chi(:,nw), attr=attr)
-         CALL iotk_scan_attr(attr, 'label',         upf%els(nw),     default='Xn')
-         CALL iotk_scan_attr(attr, 'l',             upf%lchi(nw))
-         CALL iotk_scan_attr(attr, 'occupation',    upf%oc(nw))
-         CALL iotk_scan_attr(attr, 'n',             upf%nchi(nw),    default=upf%lchi(nw)-1)
-         CALL iotk_scan_attr(attr, 'pseudo_energy', upf%epseu(nw),   default=0._dp)
-         CALL iotk_scan_attr(attr, 'cutoff_radius', upf%rcut_chi(nw),default=0._dp)
-         CALL iotk_scan_attr(attr, 'ultrasoft_cutoff_radius', upf%rcutus_chi(nw),default=0._dp)
+      locNode2 => getFirstChild ( pswfcNode ) 
+      nw = 0 
+      DO  
+         IF (.NOT. ASSOCIATED( locNode2) ) EXIT
+         locNode => locNode2 
+         locNode2 => getNextSibling(locNode) 
+         IF (getNodeType(locNode) .NE. ELEMENT_NODE ) CYCLE 
+         IF ( INDEX ( getTagName(locNode),'PP_CHI') .LE. 0 ) CYCLE
+         nw = nw + 1 
+         IF ( nw .GT. upf%nwfc ) THEN 
+            CALL infomsg('pseudo '//trim(upf%psd), "too many chi found in pswfc" ) 
+            EXIT
+         END IF
+         IF ( hasAttribute (locNode, 'label')) THEN 
+            CALL extractDataAttribute(locNode, 'label', upf%els(nw) )
+         ELSE 
+            upf%els(nw) = 'Xn'
+         END IF 
+         CALL extractDataAttribute(locNode, 'l', upf%lchi(nw)) 
+         CALL extractDataAttribute(locNode, 'occupation',    upf%oc(nw))
+         IF ( hasAttribute(locNode, 'n')) THEN 
+            CALL extractDataAttribute(locNode, 'n',             upf%nchi(nw)) 
+         ELSE 
+             upf%nchi(nw) = upf%lchi(nw)-1 
+         END IF
+         IF ( hasAttribute(locNode, 'pseudo_energy') ) THEN 
+            CALL extractDataAttribute(locNode, 'pseudo_energy', upf%epseu(nw) ) 
+         ELSE 
+            upf%epseu(nw) = 0._dp
+         END IF
+         IF ( hasAttribute( locNode,'cutoff_radius') ) THEN 
+            CALL extractDataAttribute(locNode, 'cutoff_radius', upf%rcut_chi(nw) ) 
+         ELSE 
+            upf%rcut_chi(nw) =0._dp 
+         END IF
+         IF ( hasAttribute(locNode, 'ultrasoft_cutoff_radius') ) THEN 
+            CALL extractDataAttribute(locNode, 'ultrasoft_cutoff_radius', upf%rcutus_chi(nw)) 
+         ELSE 
+           upf%rcutus_chi(nw) =0._dp 
+         END IF 
+         CALL extractDataContent(locNode, upf%chi(:,nw) )
       ENDDO
-      !
-      CALL iotk_scan_end(u, 'PP_PSWFC')
       !
       RETURN
    END SUBROUTINE read_upf_pswfc
 
    SUBROUTINE read_upf_full_wfc(u, upf)
       IMPLICIT NONE
-      INTEGER,INTENT(IN)           :: u    ! i/o unit
+      TYPE(Node),POINTER, INTENT(IN) :: u    ! parent node
       TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
       INTEGER :: ierr ! /= 0 if something went wrong
-      CHARACTER(len=iotk_attlenx) :: attr
+      !
       LOGICAL :: exst
       !
-      INTEGER :: nb
+      INTEGER :: nbae, nbae_rel, nbps
+      TYPE(Node),POINTER       :: fllwfNode, locNode, locNode2
       !
       IF(.not. upf%has_wfc) RETURN
       !
-      CALL iotk_scan_begin(u, 'PP_FULL_WFC')
+      fllwfNode => item(getElementsByTagname (u, 'PP_FULL_WFC'), 0)
       !
       ALLOCATE( upf%aewfc(upf%mesh, upf%nbeta) )
-      DO nb = 1,upf%nbeta
-         CALL iotk_scan_dat(u, 'PP_AEWFC'//iotk_index(nb), &
-                              upf%aewfc(:,nb), attr=attr)
-      ENDDO
-
-      IF (upf%has_so .and. upf%tpawp) THEN
-         ALLOCATE( upf%paw%aewfc_rel(upf%mesh, upf%nbeta) )
-nb_loop: DO nb = 1,upf%nbeta
-            CALL iotk_scan_dat(u, 'PP_AEWFC_REL'//iotk_index(nb), &
-                              upf%paw%aewfc_rel(:,nb), attr=attr, found=exst)
-            IF (.not.exst) THEN
-               upf%paw%aewfc_rel=0.0_DP
-               EXIT nb_loop
-            ENDIF
-         ENDDO nb_loop
-      ENDIF
-
       ALLOCATE( upf%pswfc(upf%mesh, upf%nbeta) )
-      DO nb = 1,upf%nbeta
-         CALL iotk_scan_dat(u, 'PP_PSWFC'//iotk_index(nb), &
-                              upf%pswfc(:,nb), attr=attr)
+      IF (upf%has_so .and. upf%tpawp) THEN 
+        ALLOCATE( upf%paw%aewfc_rel(upf%mesh, upf%nbeta) )
+        upf%paw%aewfc_rel = 0._dp
+      END IF 
+      locNode2 => getFirstChild(fllwfNode) 
+      nbae=0 
+      nbae_rel = 0 
+      nbps = 0 
+      DO 
+         IF ( .NOT. ASSOCIATED ( locNode2) ) EXIT 
+         locNode => locNode2
+         locNode2=> getNextSibling(locNode) 
+         IF (getNodeType(locNode)  .NE. ELEMENT_NODE) CYCLE 
+         IF (INDEX(getTagName(locNode), 'PP_AEWFC_REL') .GT. 0 ) THEN 
+            nbae_rel = nbae_rel+1
+            IF (nbae_rel .GT. upf%nbeta ) THEN 
+               CYCLE
+            ELSE
+               CALL extractDataContent(locNode, upf%paw%aewfc_rel(:,nbae_rel)) 
+            END IF 
+         ELSE IF (INDEX(getTagName(locNode),'PP_AEWFC') .GT. 0) THEN 
+            nbae  = nbae +1 
+            IF (nbae .GT. upf%nbeta) THEN 
+               CYCLE
+            ELSE 
+               CALL extractDataContent(locNode, upf%aewfc(:,nbae)) 
+            END IF 
+         ELSE IF (INDEX(getTagName(locNode), 'PP_PSWFC') .GT. 0) THEN 
+            nbps = nbps + 1 
+            IF ( nbps .LE. upf%nbeta ) THEN 
+               CALL extractDataContent(locNode, upf%pswfc(:, nbps) )
+            END IF 
+         END IF 
       ENDDO
-      CALL iotk_scan_end(u, 'PP_FULL_WFC')
-      !
    END SUBROUTINE read_upf_full_wfc
 
    !
    SUBROUTINE read_upf_spin_orb(u, upf)
       IMPLICIT NONE
-      INTEGER,INTENT(IN)           :: u    ! i/o unit
-      TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
+      TYPE(Node), POINTER, INTENT(IN) :: u    ! parent node pointer
+      TYPE(pseudo_upf),INTENT(INOUT)  :: upf  ! the pseudo data
       INTEGER :: ierr ! /= 0 if something went wrong
 
-      CHARACTER(len=iotk_attlenx) :: attr
+      !
       !
       INTEGER :: nw, nb
+      TYPE(Node), POINTER  :: soNode, locNode, locNode2
       !
       IF (.not. upf%has_so) RETURN
       !
-      CALL iotk_scan_begin(u, 'PP_SPIN_ORB')
+      soNode => item(getElementsByTagName(u, 'PP_SPIN_ORB'), 0) 
       !
       ALLOCATE (upf%nn(upf%nwfc))
       ALLOCATE (upf%jchi(upf%nwfc))
       !
-      DO nw = 1,upf%nwfc
-         CALL iotk_scan_empty(u, 'PP_RELWFC'//iotk_index(nw),&
-                               attr=attr)
-            !CALL iotk_scan_attr(attr, 'els',   upf%els(nw))  ! already read
-            CALL iotk_scan_attr(attr, 'nn',    upf%nn(nw))
-            !CALL iotk_scan_attr(attr, 'lchi',  upf%lchi(nw)) ! already read
-            CALL iotk_scan_attr(attr, 'jchi',  upf%jchi(nw))
-            !CALL iotk_scan_attr(attr, 'oc',    upf%oc(nw))   ! already read
-      ENDDO
-      !
       ALLOCATE(upf%jjj(upf%nbeta))
       !
-      DO nb = 1,upf%nbeta
-         CALL iotk_scan_empty(u, 'PP_RELBETA'//iotk_index(nb),&
-                               attr=attr)
-            CALL iotk_scan_attr(attr, 'lll',   upf%lll(nb))
-            CALL iotk_scan_attr(attr, 'jjj',   upf%jjj(nb))
+      locNode2=> getFirstChild(soNode)
+      nw = 0 
+      nb = 0
+      DO 
+        IF (.NOT. ASSOCIATED(locNode2)) EXIT
+           locNode => locNode2
+           locNode2 => getNextSibling(locNode) 
+           IF ( getNodeType(locNode) .NE. ELEMENT_NODE ) CYCLE
+           select_tag: IF ( INDEX(getTagName(locNode),'PP_RELWFC') .GT. 0) THEN 
+              nw = nw + 1 
+              IF (nw .LE. upf%nwfc ) THEN 
+                 CALL extractDataAttribute (locNode, 'nn', upf%nn(nw))   
+                 CALL extractDataAttribute (locNode, 'jchi',  upf%jchi(nw))
+                 !extraxtDataAttribute(attr, 'els',   upf%els(nw))  ! already read 
+                 !extraxtDataAttribute(attr, 'lchi',  upf%lchi(nw)) ! already read
+                 !extraxtDataAttribute(attr, 'oc',    upf%oc(nw))   ! already read
+              END IF
+           ELSE IF (INDEX(getTagName(locNode),'PP_RELBETA') .GT. 0) THEN
+              nb = nb + 1 
+              IF (nb .LE. upf%nbeta ) THEN 
+                 CALL extractDataAttribute(locNode, 'lll',   upf%lll(nb))
+                 CALL extractDataAttribute(locNode, 'jjj',   upf%jjj(nb))
+              END IF 
+           END IF select_tag
       ENDDO
-      !
-      CALL iotk_scan_end(u, 'PP_SPIN_ORB')
       !
       RETURN
    END SUBROUTINE read_upf_spin_orb
    !
    SUBROUTINE read_upf_paw(u, upf)
       IMPLICIT NONE
-      INTEGER,INTENT(IN)           :: u    ! i/o unit
-      TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
+      TYPE(Node), POINTER, INTENT(IN) :: u    ! 
+      TYPE(pseudo_upf),INTENT(INOUT)  :: upf  ! the pseudo data
       INTEGER :: ierr ! /= 0 if something went wrong
-
       !
-      CHARACTER(len=iotk_attlenx) :: attr
-      !
+      TYPE(Node), POINTER      :: pawNode, locNode
       INTEGER :: nb,nb1
 
       IF (.not. upf%tpawp ) RETURN
 
-      CALL iotk_scan_begin(u, 'PP_PAW', attr=attr)
-      CALL iotk_scan_attr(attr, 'paw_data_format', upf%paw_data_format)
+      pawNode => item(getElementsByTagname(u, 'PP_PAW'), 0)
+      CALL extractDataAttribute(pawNode, 'paw_data_format', upf%paw_data_format)
       IF(upf%paw_data_format /= 2) &
          CALL errore('read_upf_v2::paw',&
                      'Unknown format of PAW data.',1)
-      CALL iotk_scan_attr(attr, 'core_energy', upf%paw%core_energy, default=0._dp)
+      IF (hasAttribute(pawNode, 'core_energy')) THEN
+         CALL extractDataAttribute(pawNode, 'core_energy', upf%paw%core_energy) 
+      ELSE 
+        upf%paw%core_energy = 0._dp 
+      END IF
       !
       ! Full occupation (not only > 0 ones)
       ALLOCATE( upf%paw%oc(upf%nbeta) )
-      CALL iotk_scan_dat(u, 'PP_OCCUPATIONS',upf%paw%oc)
+      locNode => item(getElementsByTagname(pawNode, 'PP_OCCUPATIONS'), 0)
+      CALL  extractDataContent(locNode, upf%paw%oc)
+      
       !
       ! All-electron core charge
       ALLOCATE( upf%paw%ae_rho_atc(upf%mesh) )
-      CALL iotk_scan_dat(u, 'PP_AE_NLCC', upf%paw%ae_rho_atc)
+      locNode => item(getElementsByTagname(pawNode, 'PP_AE_NLCC'), 0)
+      CALL extractDataContent(locNode, upf%paw%ae_rho_atc)
+      
       !
       ! All-electron local potential
       ALLOCATE( upf%paw%ae_vloc(upf%mesh) )
-      CALL iotk_scan_dat(u, 'PP_AE_VLOC', upf%paw%ae_vloc)
+      locNode => item(getElementsByTagname( pawNode, 'PP_AE_VLOC'), 0)
+      CALL extractDataContent(locNode, upf%paw%ae_vloc)
+
       !
       ALLOCATE(upf%paw%pfunc(upf%mesh, upf%nbeta,upf%nbeta) )
       upf%paw%pfunc(:,:,:) = 0._dp
@@ -587,43 +858,47 @@ nb_loop: DO nb = 1,upf%nbeta
          ENDDO
       ENDDO
       !
-      ! Finalize
-      CALL iotk_scan_end(u, 'PP_PAW')
-
       RETURN
    END SUBROUTINE read_upf_paw
 !
    SUBROUTINE read_upf_gipaw(u, upf)
       IMPLICIT NONE
-      INTEGER,INTENT(IN)           :: u    ! i/o unit
-      TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
+      TYPE(Node), POINTER, INTENT(IN)  :: u    ! i/o unit
+      TYPE(pseudo_upf),INTENT(INOUT)   :: upf  ! the pseudo data
       INTEGER :: ierr ! /= 0 if something went wrong
       !
-      CHARACTER(len=iotk_attlenx) :: attr
-      !
       INTEGER :: nb
+      TYPE(Node), POINTER   :: gpawNode, locNode, locNode2, locNode3, locNode4
+      TYPE(NodeList), POINTER  :: locList
       IF (.not. upf%has_gipaw ) RETURN
-      
-      CALL iotk_scan_begin(u, 'PP_GIPAW', attr=attr)
-         CALL iotk_scan_attr(attr, 'gipaw_data_format', upf%gipaw_data_format)
+      !
+      gpawNode => item(getElementsByTagname(u, 'PP_GIPAW'), 0)
+         CALL extractDataAttribute(gpawNode, 'gipaw_data_format', upf%gipaw_data_format)
       IF(upf%gipaw_data_format /= 2) &
          CALL infomsg('read_upf_v2::gipaw','Unknown format version')
       !
-      CALL iotk_scan_begin(u, 'PP_GIPAW_CORE_ORBITALS', attr=attr)
-         CALL iotk_scan_attr(attr, 'number_of_core_orbitals', upf%gipaw_ncore_orbitals)
+      locNode => item(getElementsByTagname(gpawNode, 'PP_GIPAW_CORE_ORBITALS'), 0) 
+         CALL extractDataAttribute(locNode, 'number_of_core_orbitals', upf%gipaw_ncore_orbitals)
       ALLOCATE ( upf%gipaw_core_orbital_n(upf%gipaw_ncore_orbitals) )
       ALLOCATE ( upf%gipaw_core_orbital_el(upf%gipaw_ncore_orbitals) )
       ALLOCATE ( upf%gipaw_core_orbital_l(upf%gipaw_ncore_orbitals) )
       ALLOCATE ( upf%gipaw_core_orbital(upf%mesh,upf%gipaw_ncore_orbitals) )
-      DO nb = 1,upf%gipaw_ncore_orbitals
-         CALL iotk_scan_dat(u, 'PP_GIPAW_CORE_ORBITAL'//iotk_index(nb), &
-                              upf%gipaw_core_orbital(:,nb), attr=attr)
-            CALL iotk_scan_attr(attr, 'label', upf%gipaw_core_orbital_el(nb))
-            CALL iotk_scan_attr(attr, 'n',     upf%gipaw_core_orbital_n(nb))
-            CALL iotk_scan_attr(attr, 'l',     upf%gipaw_core_orbital_l(nb))
+      locNode2  => getFirstChild( locNode )  
+      nb = 0 
+      DO 
+        IF ( .NOT. ASSOCIATED(locNode2) ) EXIT
+        IF ( getNodeType( locNode2 )  == ELEMENT_NODE ) THEN 
+           IF ( INDEX(getTagName(locNode2), 'PP_GIPAW_CORE_ORBITAL' ) > 0) THEN 
+              nb = nb + 1 
+              CALL extractDataContent(locNode2, upf%gipaw_core_orbital(:,nb) )
+              CALL extractDataAttribute(locNode2, 'label', upf%gipaw_core_orbital_el(nb))
+              CALL extractDataAttribute(locNode2, 'n',     upf%gipaw_core_orbital_n(nb))
+              CALL extractDataAttribute(locNode2, 'l',     upf%gipaw_core_orbital_l(nb))
+           END IF 
+        END IF 
+        locNode3 => locNode2 
+        locNode2 => getNextSibling(locNode3) 
       ENDDO
-      CALL iotk_scan_end(u, 'PP_GIPAW_CORE_ORBITALS')
-
       !
       ! Read valence all-electron and pseudo orbitals and their labels
       !
@@ -675,44 +950,59 @@ nb_loop: DO nb = 1,upf%nbeta
             upf%gipaw_wfs_rcutus(nb)=1.0d0
          ENDDO
       ELSE
-         CALL iotk_scan_begin(u, 'PP_GIPAW_ORBITALS', attr=attr)
-         CALL iotk_scan_attr(attr, 'number_of_valence_orbitals', upf%gipaw_wfs_nchannels)
+         locNode => item(getElementsByTagname(gpawNode, 'PP_GIPAW_ORBITALS'), 0)
+         CALL extractDataAttribute(locNode, 'number_of_valence_orbitals', upf%gipaw_wfs_nchannels)
+
          ALLOCATE ( upf%gipaw_wfs_el(upf%gipaw_wfs_nchannels) )
          ALLOCATE ( upf%gipaw_wfs_ll(upf%gipaw_wfs_nchannels) )
          ALLOCATE ( upf%gipaw_wfs_rcut(upf%gipaw_wfs_nchannels) )
          ALLOCATE ( upf%gipaw_wfs_rcutus(upf%gipaw_wfs_nchannels) )
          ALLOCATE ( upf%gipaw_wfs_ae(upf%mesh,upf%gipaw_wfs_nchannels) )
          ALLOCATE ( upf%gipaw_wfs_ps(upf%mesh,upf%gipaw_wfs_nchannels) )
-      
-         DO nb = 1,upf%gipaw_wfs_nchannels
-            CALL iotk_scan_begin(u, 'PP_GIPAW_ORBITAL'//iotk_index(nb), attr=attr)
-            CALL iotk_scan_attr(attr, 'label', upf%gipaw_wfs_el(nb))
-            CALL iotk_scan_attr(attr, 'l',     upf%gipaw_wfs_ll(nb))
-            CALL iotk_scan_attr(attr, 'cutoff_radius',           upf%gipaw_wfs_rcut(nb))
-            CALL iotk_scan_attr(attr, 'ultrasoft_cutoff_radius', upf%gipaw_wfs_rcutus(nb),&
-                                                                 default=upf%gipaw_wfs_rcut(nb))
-        ! read all-electron orbital
-            CALL iotk_scan_dat(u, 'PP_GIPAW_WFS_AE', upf%gipaw_wfs_ae(:,nb))
-        ! read pseudo orbital
-            CALL iotk_scan_dat(u, 'PP_GIPAW_WFS_PS', upf%gipaw_wfs_ps(:,nb))
+
+         locNode2 => getFirstChild(locNode) 
+         nb = 0  
+         DO 
+            IF (.NOT. ASSOCIATED( locNode2 ))  EXIT
+            !
+            IF ( getNodeType( locNode2 ) == ELEMENT_NODE)  THEN 
+               IF ( index( getTagName( locNode2 ), "PP_GIPAW_ORBITAL." )> 0) THEN  
+                  nb = nb + 1 
+                  CALL extractDataAttribute(locNode2, 'label', upf%gipaw_wfs_el(nb))
+                  CALL extractDataAttribute(locNode2, 'l',     upf%gipaw_wfs_ll(nb))
+                  CALL extractDataAttribute(locNode2, 'cutoff_radius',           upf%gipaw_wfs_rcut(nb))
+                  IF (hasAttribute(locNode, 'ultrasoft_cutoff_radius') ) THEN
+                     CALL extractDataAttribute(locNode, 'ultrasoft_cutoff_radius', upf%gipaw_wfs_rcutus(nb) )
+                  ELSE
+                     upf%gipaw_wfs_rcutus(nb) = upf%gipaw_wfs_rcut(nb) 
+                  END IF
+                  ! read all-electron orbital
+                  locNode4 => item( getElementsByTagname(locNode2, 'PP_GIPAW_WFS_AE'), 0)
+                  CALL extractDataContent(locNode4, upf%gipaw_wfs_ae(:,nb))
+                  ! read pseudo orbital
+                  locNode4 => item( getElementsByTagname( locNode2, 'PP_GIPAW_WFS_PS'), 0)
+                  CALL extractDataContent(locNode4, upf%gipaw_wfs_ps(:,nb))
+               END IF 
+           END IF 
+           locNode3 => locNode2 
+           locNode2 => getNextSibling(locNode3) 
          !
-            CALL iotk_scan_end(u, 'PP_GIPAW_ORBITAL'//iotk_index(nb))
          ENDDO
-         CALL iotk_scan_end(u, 'PP_GIPAW_ORBITALS')
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Read all-electron and pseudo local potentials
          ALLOCATE ( upf%gipaw_vlocal_ae(upf%mesh) )
          ALLOCATE ( upf%gipaw_vlocal_ps(upf%mesh) )
-         CALL iotk_scan_begin(u, 'PP_GIPAW_VLOCAL')
-         CALL iotk_scan_dat(u, 'PP_GIPAW_VLOCAL_AE',upf%gipaw_vlocal_ae(:))
-         CALL iotk_scan_dat(u, 'PP_GIPAW_VLOCAL_PS',upf%gipaw_vlocal_ps(:))
-         CALL iotk_scan_end(u, 'PP_GIPAW_VLOCAL')
-
+         locNode => item(getElementsByTagname( gpawNode, 'PP_GIPAW_VLOCAL'), 0)
+           !
+           locNode2 => item(getElementsBytagname( locNode, 'PP_GIPAW_VLOCAL_AE'), 0)
+              CALL extractDataContent (locNode2, upf%gipaw_vlocal_ae(:)) 
+           !
+           locNode2 => item(getElementsByTagname( locNode, 'PP_GIPAW_VLOCAL_PS'), 0)
+              CALL extractDataContent(locNode2, upf%gipaw_vlocal_ps(:))
       ENDIF
-      CALL iotk_scan_end(u, 'PP_GIPAW')
       RETURN
    END SUBROUTINE read_upf_gipaw
 !
-END SUBROUTINE read_upf_v2
+
 !
 END MODULE read_upf_v2_module

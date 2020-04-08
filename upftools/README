@@ -1,9 +1,10 @@
 Unified Pseudopotential File (UPF) Specifications - see:
-http://www.quantum-espresso.org/wiki/index.php/Unified_pseudopotential_format
+http://www.quantum-espresso.org/pseudopotentials/unified-pseudopotential-format
 
 Available converters to UPF from:
   CASINO tabulated format (see below)
   CPMD (TYPE=NUMERIC, LOGARITHMIC, CAR, GOEDECKER)
+  Hartwigsen-Goedecker-Hutter with nonlocal core correction (see HGH2QE/)
   Fritz-Haber numerical format, either ".cpi" (fhi88pp) or ".fhi" (abinit)
   David Vanderbilt's code format (formatted or binary)
   Old Norm-Conserving PWSCF format (deprecated)

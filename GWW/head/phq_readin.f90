@@ -19,16 +19,15 @@ SUBROUTINE phq_readin()
   !
   !
   USE kinds,         ONLY : DP
-  USE parameters,    ONLY : nsx
   USE ions_base,     ONLY : nat, ntyp => nsp
   USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_bcast,mp_barrier
   USE mp_world,      ONLY : world_comm
   USE ions_base,     ONLY : amass, atm
-  USE input_parameters, ONLY : max_seconds, nk1, nk2, nk3, k1, k2, k3
-  USE start_k,       ONLY : reset_grid
+  USE check_stop,    ONLY : max_seconds
+  USE start_k,       ONLY : reset_grid, nk1, nk2, nk3, k1, k2, k3
   USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, ltetra
-  USE control_flags, ONLY : gamma_only, tqr, restart, lkpoint_dir
+  USE control_flags, ONLY : gamma_only, tqr, restart
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda, nspin
@@ -47,10 +46,10 @@ SUBROUTINE phq_readin()
   USE partial,       ONLY : atomo, nat_todo, nat_todo_input
   USE output,        ONLY : fildyn, fildvscf, fildrho
   USE disp,          ONLY : nq1, nq2, nq3
-  USE io_files,      ONLY : tmp_dir, prefix
+  USE io_files,      ONLY : tmp_dir, prefix, create_directory
   USE noncollin_module, ONLY : i_cons, noncolin
   USE ldaU,          ONLY : lda_plus_u
-  USE control_flags, ONLY : iverbosity, modenum, twfcollect,io_level
+  USE control_flags, ONLY : iverbosity, modenum, io_level
   USE io_global,     ONLY : ionode, stdout
   USE mp_global,     ONLY : nproc_pool_file, nproc_image_file, &
                             ntask_groups_file, nproc_bgrp_file
@@ -61,7 +60,6 @@ SUBROUTINE phq_readin()
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
   USE freq_ph,       ONLY : fpol, fiu, nfs
   USE ph_restart,    ONLY : ph_readfile
-  USE xml_io_base,   ONLY : create_directory
   USE el_phon,       ONLY : elph,elph_mat,elph_simple,elph_nbnd_min, elph_nbnd_max, &
                             el_ph_sigma, el_ph_nsigma, el_ph_ngauss,auxdvscf
   USE dfile_star,    ONLY : drho_star, dvscf_star
@@ -83,7 +81,7 @@ SUBROUTINE phq_readin()
     ! counter on iterations
     ! counter on atoms
     ! counter on types
-  REAL(DP) :: amass_input(nsx)
+  REAL(DP), ALLOCATABLE :: amass_input(:)
     ! save masses read from input here
   CHARACTER (LEN=256) :: outdir
   !
@@ -434,6 +432,7 @@ SUBROUTINE phq_readin()
   !   amass will also be read from file:
   !   save its content in auxiliary variables
   !
+  ALLOCATE ( amass_input( SIZE(amass) ) )
   amass_input(:)= amass(:)
   !
   tmp_dir_save=tmp_dir
@@ -495,14 +494,6 @@ SUBROUTINE phq_readin()
   IF (lmovecell) CALL errore('phq_readin', &
       'The phonon code is not working after vc-relax',1)
 
-  IF (nproc_image /= nproc_image_file .and. .not. twfcollect)  &
-     CALL errore('phq_readin',&
-     'pw.x run with a different number of processors. Use wf_collect=.true.',1)
-
-  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
-     CALL errore('phq_readin',&
-     'pw.x run with a different number of pools. Use wf_collect=.true.',1)
-
   IF (ntask_groups > 1) &
      CALL errore('phq_readin','task_groups not available in phonon',1)
 
@@ -552,7 +543,6 @@ SUBROUTINE phq_readin()
   ! for k point
   !
   IF (reduce_io) io_level=0
-  lkpoint_dir=.FALSE.
   restart = recover
   !
   !  set masses to values read from input, if available;
@@ -564,6 +554,7 @@ SUBROUTINE phq_readin()
      IF (amass_input(it) > 0.D0) amass(it) = amass_input(it)
      IF (amass(it) <= 0.D0) CALL errore ('phq_readin', 'Wrong masses', it)
   ENDDO
+  DEALLOCATE (amass_input)
   lgamma_gamma=.FALSE.
   IF (.NOT.ldisp) THEN
      IF (nkstot==1.OR.(nkstot==2.AND.nspin==2)) THEN

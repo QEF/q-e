@@ -70,7 +70,9 @@ MODULE qeh5_base_module
 
 
   INTERFACE qeh5_read_dataset
-     MODULE PROCEDURE qeh5_read_real, qeh5_read_complex, qeh5_read_integer
+     MODULE PROCEDURE qeh5_read_real, qeh5_read_complex, qeh5_read_integer,&
+                      qeh5_read_real_2, qeh5_read_complex_2, qeh5_read_integer_2,&
+                      qeh5_read_real_3, qeh5_read_complex_3, qeh5_read_integer_3
   END INTERFACE 
 
 
@@ -161,13 +163,12 @@ END SUBROUTINE finalize_hdf5
        CASE default 
          ierr =1 
     END SELECT
-    IF ( ierr /=0 ) THEN 
-       IF (present (error)) then
-          error = ierr
-       ELSE 
-          CALL H5Eprint_f( jerr ) 
-          stop
-       END IF
+    IF (present (error)) then
+       ! success=0, fail=-1. QE error handling needs a positive error code.
+       error = abs(ierr)
+    ELSE IF ( ierr /=0 ) THEN
+       CALL H5Eprint_f( jerr )
+       stop
     END IF
     ! //' with action '// trim(action), 1 )  
   END SUBROUTINE  qeh5_openfile  
@@ -423,6 +424,46 @@ END SUBROUTINE finalize_hdf5
   END SUBROUTINE qeh5_read_real
 
   !----------------------------------------------------------
+  SUBROUTINE qeh5_read_real_2 ( real_data, h5_dataset)
+    !--------------------------------------------------------
+    IMPLICIT NONE
+    REAL(DP), TARGET, INTENT(INOUT)                  :: real_data(1,1) 
+    TYPE (qeh5_dataset),INTENT(IN)                   :: h5_dataset
+    !
+    TYPE(C_PTR)                                      :: ptr
+    INTEGER(HID_T)                                   :: mem_hid, file_hid
+    INTEGER                                          :: ierr  
+    ptr = C_LOC(real_data) 
+    mem_hid = H5S_ALL_F
+    file_hid = H5S_ALL_F
+    IF (ALLOCATED(h5_dataset%filespace%offset)) file_hid = h5_dataset%filespace%id
+    IF ( h5_dataset%memspace_ispresent ) mem_hid = h5_dataset%memspace%id
+    CALL H5Dread_f( h5_dataset%id, h5_realdp_type, ptr, ierr, mem_hid, file_hid, H5P_DEFAULT_F )
+    !IF ( ierr /=0)  CALL errore( 'qeh5_read_dataset', 'error reading '//TRIM(h5_descriptor%filename), ierr)
+  END SUBROUTINE qeh5_read_real_2
+
+  !----------------------------------------------------------
+  SUBROUTINE qeh5_read_real_3 ( real_data, h5_dataset)
+    !--------------------------------------------------------
+    IMPLICIT NONE
+    REAL(DP), TARGET, INTENT(INOUT)                  :: real_data(1,1,1) 
+    TYPE (qeh5_dataset),INTENT(IN)                   :: h5_dataset
+    !
+    TYPE(C_PTR)                                      :: ptr
+    INTEGER(HID_T)                                   :: mem_hid, file_hid
+    INTEGER                                          :: ierr  
+    ptr = C_LOC(real_data) 
+    mem_hid = H5S_ALL_F
+    file_hid = H5S_ALL_F
+    IF (ALLOCATED(h5_dataset%filespace%offset)) file_hid = h5_dataset%filespace%id
+    IF ( h5_dataset%memspace_ispresent ) mem_hid = h5_dataset%memspace%id
+    CALL H5Dread_f( h5_dataset%id, h5_realdp_type, ptr, ierr, mem_hid, file_hid, H5P_DEFAULT_F )
+    !IF ( ierr /=0)  CALL errore( 'qeh5_read_dataset', 'error reading '//TRIM(h5_descriptor%filename), ierr)
+  END SUBROUTINE qeh5_read_real_3
+
+
+
+  !----------------------------------------------------------
   SUBROUTINE qeh5_read_complex ( complex_data, h5_dataset)
     !--------------------------------------------------------
     IMPLICIT NONE
@@ -441,6 +482,45 @@ END SUBROUTINE finalize_hdf5
     !IF ( ierr /=0)  CALL errore( 'qeh5_read_dataset', 'error reading '//TRIM(h5_descriptor%filename), ierr)
   END SUBROUTINE qeh5_read_complex          
 
+  !----------------------------------------------------------
+  SUBROUTINE qeh5_read_complex_2 ( complex_data, h5_dataset)
+    !--------------------------------------------------------
+    IMPLICIT NONE
+    COMPLEX(DP), TARGET, INTENT(INOUT)               :: complex_data(1,1)
+    TYPE (qeh5_dataset),INTENT(IN)                   :: h5_dataset
+    INTEGER(HID_T)                                   :: mem_hid, file_hid
+    !
+    TYPE(C_PTR)                                      :: ptr
+    INTEGER                                          :: ierr 
+    ptr = C_LOC(complex_data)
+    file_hid = H5S_ALL_F
+    mem_hid  = H5S_ALL_F
+    IF (ALLOCATED(h5_dataset%filespace%offset)) file_hid = h5_dataset%filespace%id
+    IF ( h5_dataset%memspace_ispresent ) mem_hid = h5_dataset%memspace%id
+    CALL H5Dread_f( h5_dataset%id, H5_REALDP_TYPE, ptr, ierr, mem_hid, file_hid, H5P_DEFAULT_F )
+    !IF ( ierr /=0)  CALL errore( 'qeh5_read_dataset', 'error reading '//TRIM(h5_descriptor%filename), ierr)
+  END SUBROUTINE qeh5_read_complex_2
+
+  !----------------------------------------------------------
+  SUBROUTINE qeh5_read_complex_3 ( complex_data, h5_dataset)
+    !--------------------------------------------------------
+    IMPLICIT NONE
+    COMPLEX(DP), TARGET, INTENT(INOUT)               :: complex_data(1,1,1)
+    TYPE (qeh5_dataset),INTENT(IN)                   :: h5_dataset
+    INTEGER(HID_T)                                   :: mem_hid, file_hid
+    !
+    TYPE(C_PTR)                                      :: ptr
+    INTEGER                                          :: ierr 
+    ptr = C_LOC(complex_data)
+    file_hid = H5S_ALL_F
+    mem_hid  = H5S_ALL_F
+    IF (ALLOCATED(h5_dataset%filespace%offset)) file_hid = h5_dataset%filespace%id
+    IF ( h5_dataset%memspace_ispresent ) mem_hid = h5_dataset%memspace%id
+    CALL H5Dread_f( h5_dataset%id, H5_REALDP_TYPE, ptr, ierr, mem_hid, file_hid, H5P_DEFAULT_F )
+    !IF ( ierr /=0)  CALL errore( 'qeh5_read_dataset', 'error reading '//TRIM(h5_descriptor%filename), ierr)
+  END SUBROUTINE qeh5_read_complex_3         
+
+         
   !-----------------------------------------------------------
   SUBROUTINE qeh5_read_integer ( integer_data, h5_dataset)
     !---------------------------------------------------------
@@ -461,6 +541,49 @@ END SUBROUTINE finalize_hdf5
     CALL H5Dread_f( h5_dataset%id, H5T_NATIVE_INTEGER , ptr, ierr, mem_hid, file_hid, H5P_DEFAULT_F )
     !IF ( ierr /=0)  CALL errore( 'qeh5_read_dataset', 'error reading '//TRIM(h5_descriptor%filename), ierr)
   END SUBROUTINE  qeh5_read_integer
+
+  !-----------------------------------------------------------
+  SUBROUTINE qeh5_read_integer_2 ( integer_data, h5_dataset)
+    !---------------------------------------------------------
+    IMPLICIT NONE
+    INTEGER, TARGET, INTENT(INOUT)                   :: integer_data(1,1)
+    TYPE (qeh5_dataset),INTENT(IN)                   :: h5_dataset
+    INTEGER(HID_T)                                   :: mem_hid, file_hid
+    !
+    TYPE(C_PTR)                                      :: ptr
+    INTEGER                                          :: ierr
+    LOGICAL                                          :: is_valid 
+    ptr = C_LOC(integer_data)
+    !
+    file_hid = H5S_ALL_F
+    mem_hid  = H5S_ALL_F
+    IF (ALLOCATED(h5_dataset%filespace%offset)) file_hid = h5_dataset%filespace%id
+    IF ( h5_dataset%memspace_ispresent ) mem_hid = h5_dataset%memspace%id
+    CALL H5Dread_f( h5_dataset%id, H5T_NATIVE_INTEGER , ptr, ierr, mem_hid, file_hid, H5P_DEFAULT_F )
+    !IF ( ierr /=0)  CALL errore( 'qeh5_read_dataset', 'error reading '//TRIM(h5_descriptor%filename), ierr)
+  END SUBROUTINE  qeh5_read_integer_2
+
+  !-----------------------------------------------------------
+  SUBROUTINE qeh5_read_integer_3 ( integer_data, h5_dataset)
+    !---------------------------------------------------------
+    IMPLICIT NONE
+    INTEGER, TARGET, INTENT(INOUT)                   :: integer_data(1,1,1)
+    TYPE (qeh5_dataset),INTENT(IN)                   :: h5_dataset
+    INTEGER(HID_T)                                   :: mem_hid, file_hid
+    !
+    TYPE(C_PTR)                                      :: ptr
+    INTEGER                                          :: ierr
+    LOGICAL                                          :: is_valid 
+    ptr = C_LOC(integer_data)
+    !
+    file_hid = H5S_ALL_F
+    mem_hid  = H5S_ALL_F
+    IF (ALLOCATED(h5_dataset%filespace%offset)) file_hid = h5_dataset%filespace%id
+    IF ( h5_dataset%memspace_ispresent ) mem_hid = h5_dataset%memspace%id
+    CALL H5Dread_f( h5_dataset%id, H5T_NATIVE_INTEGER , ptr, ierr, mem_hid, file_hid, H5P_DEFAULT_F )
+    !IF ( ierr /=0)  CALL errore( 'qeh5_read_dataset', 'error reading '//TRIM(h5_descriptor%filename), ierr)
+  END SUBROUTINE  qeh5_read_integer_3
+
 
   !--------------------------------------------------------
   SUBROUTINE qeh5_write_real( real_data, h5_dataset ) 
@@ -934,20 +1057,15 @@ END SUBROUTINE finalize_hdf5
      IF (ALLOCATED(dataspace%count ) ) DEALLOCATE (dataspace%count) 
      IF (ALLOCATED(dataspace%stride) ) DEALLOCATE (dataspace%stride) 
      IF (ALLOCATED(dataspace%block ) ) DEALLOCATE (dataspace%block) 
-     ALLOCATE ( dataspace%offset(rank), dataspace%count(rank), dataspace%stride(rank), dataspace%block(rank) )
+     ALLOCATE ( dataspace%offset(rank), dataspace%count(rank))
+     IF (PRESENT(block) ) ALLOCATE ( dataspace%block(rank))
+     IF (PRESENT(stride)) ALLOCATE ( dataspace%stride(rank)) 
+
      !
      dataspace%offset(1:rank) = offset(1:rank) * 1_HSIZE_T
      dataspace%count (1:rank) = count (1:rank) * 1_HSIZE_T   
-     IF (PRESENT(stride) )  THEN
-        dataspace%stride(1:rank) = stride(1:rank) * 1_HSIZE_T
-     ELSE 
-        dataspace%stride(1:rank)  =  1_HSIZE_T
-     END IF 
-     IF (PRESENT( block ) ) THEN 
-        dataspace%block (1:rank) = block (1:rank) * 1_HSIZE_T
-     ELSE 
-        dataspace%block (1:rank)  =  1_HSIZE_T
-     END IF
+     IF (PRESENT(stride) )  dataspace%stride(1:rank) = stride(1:rank) * 1_HSIZE_T
+     IF (PRESENT( block ) ) dataspace%block (1:rank) = block (1:rank) * 1_HSIZE_T
      CALL H5Sselect_hyperslab_f( dataspace%id,  H5S_SELECT_SET_F, dataspace%offset, dataspace%count, &
                                  ierr, dataspace%stride, dataspace%block )    
   END SUBROUTINE set_hyperslab

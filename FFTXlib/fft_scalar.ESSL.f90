@@ -78,7 +78,7 @@
      !   ltabl   Dimension of the tables of factors calculated at the
      !           initialization stage
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
      INTEGER :: offset, ldz_t
      INTEGER :: omp_get_max_threads
      EXTERNAL :: omp_get_max_threads
@@ -203,7 +203,7 @@
      LOGICAL :: dofft( nfftx ), done
      INTEGER, PARAMETER  :: stdout = 6
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
      INTEGER :: offset
      INTEGER :: nx_t, ny_t, nzl_t, ldx_t, ldy_t
      INTEGER  :: itid, mytid, ntids
@@ -249,7 +249,7 @@
 
        ! WRITE( stdout, fmt="('DEBUG cft_2xy, reinitializing tables ', I3)" ) icurrent
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
 
        tscale = 1.0_DP / ( nx * ny )
        CALL DCFT ( 1, r(1), ldx, 1, r(1), ldx, 1, ny, nx,  1, 1.0_DP, &
@@ -291,7 +291,7 @@
 #endif
 
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
 
    IF( isign < 0 ) THEN
       tscale = 1.0_DP / ( nx * ny )

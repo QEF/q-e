@@ -17,7 +17,6 @@ subroutine rotate_wannier_gamma_bse( rot_u,a_in,a_out,ispin, itrasp)
   USE constants, ONLY : e2, pi, tpi, fpi
   USE io_files, ONLY: nwordwfc
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-!  USE wavefunctions_module, ONLY: evc
   use exciton
   USE io_global, ONLY : stdout 
 

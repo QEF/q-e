@@ -3,20 +3,23 @@
 include ../make.inc
 
 # location of needed modules and included files (if any)
-MODFLAGS=$(MOD_FLAG)../FFTXlib $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../Modules $(MOD_FLAG)../LAXlib $(MOD_FLAG)../PW/src $(MOD_FLAG).
-
-IFLAGS=
+MODFLAGS=$(BASEMOD_FLAGS) $(MOD_FLAG)$(TOPDIR)/PW/src
 
 LR_MODULES = \
 adddvscf.o \
 addusdbec.o \
 addusdbec_nc.o \
 apply_dpot.o \
+addusldos.o \
+adddvepsi_us.o \
 cft_wave.o \
 cgsolve_all.o \
 cg_psi.o \
 ch_psi_all.o \
 commutator_Hx_psi.o \
+commutator_Vhubx_psi.o \
+Coul_cut_2D_ph.o \
+check_q_points_sym.o \
 dfpt_tetra_mod.o \
 dynmat_sub.o \
 h_prec.o \
@@ -29,22 +32,34 @@ dv_vdW_DF.o \
 dv_rVV10.o \
 newdq.o \
 orthogonalize.o \
+setup_offset_beta.o \
 setup_nscf.o \
 set_dbecsum_nc.o \
 set_int3_nc.o \
+set_kplusq_nc.o \
 smallgq.o \
 lr_sm1_psi.o \
+lr_addusddens.o \
+localdos.o \
 setup_dgc.o \
 compute_vsgga.o \
 setup_dmuxc.o \
 setup_nbnd_occ.o \
 setup_alpha_pv.o \
-qdipol_cryst.o \
-adddvepsi_us.o \
+set_small_group_of_q.o \
+sgam_lr.o \
+star_q.o \
 setqmod.o \
-lrcom.o
+lr_orthoUwfc.o \
+qdipol_cryst.o \
+mode_group.o \
+mix_pot.o \
+lrcom.o \
+lr_dot.o \
+lanczos_pseudohermitian.o \
+lanczos_nonhermitian.o 
 
-TLDEPS=libfft mods
+TLDEPS=mods pwlibs
 
 all : liblrmod.a
 

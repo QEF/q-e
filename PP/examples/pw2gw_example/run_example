@@ -1,0 +1,231 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use the pw2gw.x postprocessing codes to"
+$ECHO "calculate the linear response optical properties for two-dimensional BN"
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x pw2gw.x"
+PSEUDO_LIST="B.pz-vbc.UPF N.pz-vbc.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for gnuplot
+GP_COMMAND=`which gnuplot 2>/dev/null`
+if [ "$GP_COMMAND" = "" ]; then
+        $ECHO
+        $ECHO "gnuplot not in PATH"
+        $ECHO "Results will not be plotted"
+fi
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PW2GW_COMMAND="$PARA_PREFIX $BIN_DIR/pw2gw.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as:       $PW_COMMAND"
+$ECHO "  running pw2gw.x as:    $PW2GW_COMMAND"
+$ECHO
+
+# self-consistent calculation
+cat > bn.scf.in << EOF
+&control
+    calculation       = 'scf'
+    restart_mode      = 'from_scratch'
+    prefix            = 'bn'
+    tstress           = .true.
+    tprnfor           = .true.
+    pseudo_dir        = '$PSEUDO_DIR'
+    outdir            = '$TMP_DIR'
+    verbosity         = 'high'
+    disk_io = 'minimal'
+/
+&system
+    ibrav             = 4
+    celldm(1)         = 4.68
+    celldm(3)         = 6
+    nat               = 2
+    ntyp              = 2
+    ecutwfc           = 40
+    nbnd              = 20
+/
+&electrons
+    conv_thr          = 1.0d-8
+    mixing_mode       = 'plain'
+    mixing_beta       = 0.7d0
+/
+&ions
+    ion_dynamics='bfgs',
+    upscale=10
+/
+
+ATOMIC_SPECIES
+B   10.811  B.pz-vbc.UPF
+N   14.067  N.pz-vbc.UPF
+
+ATOMIC_POSITIONS {alat}
+B     0.000000000   0.577350300   0.00
+N     0.500000000   0.288675100   0.00
+
+K_POINTS {automatic}
+12 12 1   1 1 1
+EOF
+$ECHO "  running the scf calculation...\c"
+$PW_COMMAND < bn.scf.in > bn.scf.out
+check_failure $?
+$ECHO " done"
+
+# non self-consistent calculation
+cat > bn.nscf.in << EOF
+&control
+    calculation       = 'nscf'
+    restart_mode      = 'from_scratch'
+    prefix            = 'bn'
+    tstress           = .true.
+    tprnfor           = .true.
+    pseudo_dir        = '$PSEUDO_DIR'
+    outdir            = '$TMP_DIR'
+    verbosity         = 'high'
+    disk_io = 'minimal'
+/
+&system
+    ibrav             = 4
+    celldm(1)         = 4.68
+    celldm(3)         = 6
+    nat               = 2
+    ntyp              = 2
+    ecutwfc           = 40
+    nbnd              = 25
+/
+&electrons
+    conv_thr          = 1.0d-8
+    mixing_mode       = 'plain'
+    mixing_beta       = 0.7d0
+/
+&ions
+    ion_dynamics='bfgs',
+    upscale=10
+/
+
+ATOMIC_SPECIES
+B   10.811  B.pz-vbc.UPF
+N   14.067  N.pz-vbc.UPF
+
+ATOMIC_POSITIONS {alat}
+B     0.000000000   0.577350300   0.00
+N     0.500000000   0.288675100   0.00
+
+K_POINTS {automatic}
+50 50 1   1 1 1
+EOF
+$ECHO "  running the nscf calculation...\c"
+$PW_COMMAND < bn.nscf.in > bn.nscf.out
+check_failure $?
+$ECHO " done"
+
+# post-processing for optical properties
+cat > bn.pw2gw.in <<EOF
+&inputpp
+  prefix='bn',
+  outdir='$TMP_DIR',
+  qplda=.false.,
+  vxcdiag=.false.,
+  vkb=.false.,
+  Emin=0.0,
+  Emax=25.0,
+  DeltaE=0.05,
+/
+EOF
+$ECHO "  running pw2gw.x to calculate the optical properties...\c"
+$PW2GW_COMMAND < bn.pw2gw.in > bn.pw2gw.out
+check_failure $?
+$ECHO " done"
+
+if [ "$GP_COMMAND" = "" ]; then
+    break
+else
+cat > gnuplot.tmp <<EOF
+#!$GP_COMMAND
+#
+set term pdfcairo enh size 10cm,10cm 
+set output "bn.opt.pdf"
+
+set xrange [0:25]
+set yrange [0:*]
+
+set xlabel "photon energy (eV)"
+set ylabel "eps_2"
+
+plot 'epsX.dat' w l lc rgb "black" title 'x', \
+     'epsY.dat' w l lc rgb "red" title 'y', \
+     'epsZ.dat' w l lc rgb "blue" title 'z', \
+     'epsTOT.dat' w l lc rgb "green" title 'average'
+EOF
+$ECHO "  generating bn.opt.pdf...\c"
+$GP_COMMAND < gnuplot.tmp
+$ECHO " done"
+rm gnuplot.tmp
+fi
+
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/bn.*
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"

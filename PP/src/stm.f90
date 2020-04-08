@@ -25,18 +25,19 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
   USE fft_base,  ONLY: dfftp
   USE scatter_mod,  ONLY: gather_grid
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvect, ONLY: ngm, g, nl, nlm
+  USE gvect, ONLY: ngm, g
   USE klist, ONLY: xk, lgauss, degauss, ngauss, wk, nks, nelec, ngk, igk_k
-  USE ener, ONLY: ef
+  USE ener,  ONLY: ef
   USE symme, ONLY : sym_rho, sym_rho_init
-  USE scf, ONLY: rho
+  USE scf,   ONLY: rho
   USE wvfct, ONLY: npwx, nbnd, wg, et
   USE control_flags, ONLY : gamma_only
-  USE wavefunctions_module,  ONLY : evc, psic
-  USE io_files, ONLY: iunwfc, nwordwfc
-  USE constants,      ONLY : degspin
+  USE wavefunctions, ONLY : evc, psic
+  USE io_files,  ONLY: restart_dir
+  USE constants, ONLY : degspin
   USE mp,        ONLY : mp_max, mp_min, mp_sum
-  USE mp_global, ONLY : inter_pool_comm
+  USE mp_pools,  ONLY : inter_pool_comm
+  USE pw_restart_new,ONLY : read_collected_wfc
   !
   IMPLICIT NONE
   !
@@ -149,7 +150,7 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
      istates = istates +  (last_band - first_band + 1)
 
      npw = ngk(ik)
-     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+     CALL read_collected_wfc ( restart_dir(), ik, evc )
      !
      IF (gamma_only) THEN
         !
@@ -172,19 +173,19 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
            psic(:) = (0.d0, 0.d0)
            IF ( ibnd < last_band ) THEN
               DO ig = 1, npw
-                 psic(nl(igk_k(ig,ik)))  = &
+                 psic(dfftp%nl(igk_k(ig,ik)))  = &
                              evc(ig,ibnd) + (0.D0,1.D0) * evc(ig,ibnd+1)
-                 psic(nlm(igk_k(ig,ik))) = &
+                 psic(dfftp%nlm(igk_k(ig,ik))) = &
                       conjg( evc(ig,ibnd) - (0.D0,1.D0) * evc(ig,ibnd+1) )
               ENDDO
            ELSE
               DO ig = 1, npw
-                 psic(nl (igk_k(ig,ik))) =        evc(ig,ibnd)
-                 psic(nlm(igk_k(ig,ik))) = conjg( evc(ig,ibnd) )
+                 psic(dfftp%nl (igk_k(ig,ik))) =        evc(ig,ibnd)
+                 psic(dfftp%nlm(igk_k(ig,ik))) = conjg( evc(ig,ibnd) )
               ENDDO
            ENDIF
 
-           CALL invfft ('Dense', psic, dfftp)
+           CALL invfft ('Rho', psic, dfftp)
            DO ir = 1, dfftp%nnr
               rho%of_r (ir, 1) = rho%of_r (ir, 1) + w1* dble( psic(ir) )**2 + &
                                                     w2*aimag( psic(ir) )**2
@@ -203,10 +204,10 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
            !
            psic(:) = (0.d0, 0.d0)
            DO ig = 1, npw
-              psic(nl(igk_k(ig,ik)))  = evc(ig,ibnd)
+              psic(dfftp%nl(igk_k(ig,ik)))  = evc(ig,ibnd)
            ENDDO
 
-           CALL invfft ('Dense', psic, dfftp)
+           CALL invfft ('Rho', psic, dfftp)
            DO ir = 1, dfftp%nnr
               rho%of_r (ir, 1) = rho%of_r (ir, 1) + w1 * &
                                 ( dble(psic (ir) ) **2 + aimag(psic (ir) ) **2)
@@ -225,12 +226,12 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
      CALL sym_rho_init (gamma_only)
      !
      psic(:) = cmplx ( rho%of_r(:,1), 0.0_dp, kind=dp)
-     CALL fwfft ('Dense', psic, dfftp)
-     rho%of_g(:,1) = psic(nl(:))
+     CALL fwfft ('Rho', psic, dfftp)
+     rho%of_g(:,1) = psic(dfftp%nl(:))
      CALL sym_rho (1, rho%of_g)
      psic(:) = (0.0_dp, 0.0_dp)
-     psic(nl(:)) = rho%of_g(:,1)
-     CALL invfft ('Dense', psic, dfftp)
+     psic(dfftp%nl(:)) = rho%of_g(:,1)
+     CALL invfft ('Rho', psic, dfftp)
      rho%of_r(:,1) = dble(psic(:))
   ENDIF
 #if defined(__MPI)

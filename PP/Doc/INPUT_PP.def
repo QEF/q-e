@@ -36,6 +36,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 
         All output quantities are in ATOMIC (RYDBERG) UNITS unless
         otherwise explicitly specified.
+        All charge densities integrate to the NUMBER of electrons
+        not to the total charge.
+        All potentials have the dimension of an energy (e*V, not V).
     }
 
     namelist INPUTPP {
@@ -122,6 +125,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                    21 = all-electron charge density (valence+core).
                         For PAW calculations only; requires a very dense real-space grid. 
 
+                   22 = kinetic energy density (for meta-GGA and XDM only)
             }
         }
 
@@ -176,7 +180,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                     info {
                         upper boundary of energy grid (in eV).
 
-                        If not specified, LDOS is computed just for energy @ref emin
+                        Defaults to Fermi energy.
                     }
                 }
 
@@ -327,6 +331,22 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                 }
             }
 
+            elsewhen -test "plot_num=22" {
+                label {
+                    Options for kinetic energy density (plot_num=22),
+                    LSDA case only:
+                }
+
+                var spin_component -type INTEGER {
+                    default 0
+                    info {
+                        0 = total density (default value),
+                        1 = spin up density,
+                        2 = spin down density.
+                    }
+                }
+            }
+
             #message { 
             #   Unfinished and untested option:
             #   
@@ -393,14 +413,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                 
                 0  = format suitable for gnuplot   (1D)
                 
-                1  = format suitable for contour.x (2D)
+                1  = obsolete format no longer supported
                 
                 2  = format suitable for plotrho   (2D)
                 
                 3  = format suitable for XCRYSDEN  (2D or user-supplied 3D region)
                 
-                4  = format suitable for gOpenMol  (3D)
-                     (formatted: convert to unformatted *.plt)
+                4  = obsolete format no longer supported
                 
                 5  = format suitable for XCRYSDEN  (3D, using entire FFT grid)
 
@@ -527,12 +546,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                           are ignored, the entire FFT grid is written in the
                           XCRYSDEN format - works for any crystal axis (VERY FAST)
                         
-                        - If @ref e1, @ref e2, @ref e3, @ref x0 are present, and @ref e1, @ref e2, @ref e3 are parallel
-                          to xyz and parallel to crystal axis, a subset of the
-                          FFT grid that approximately covers the parallelepiped
-                          defined by @ref e1, @ref e2, @ref e3, @ref x0, is written (presently only
-                          if @ref output_format = 4, i.e. gopenmol format) - works only
-                          if the crystal axis are parallel to xyz
+                        - If @ref e1, @ref e2, @ref e3, @ref x0 are present, 
+                          and @ref e1, @ref e2, @ref e3 are parallel to xyz 
+                          and parallel to crystal axis, a subset of the FFT 
+                          grid that approximately covers the parallelepiped
+                          defined by @ref e1, @ref e2, @ref e3, @ref x0, is 
+                          written - untested, might be obsolete
 
                         - Otherwise, the required 3D grid is generated from the
                           Fourier components (may be VERY slow)

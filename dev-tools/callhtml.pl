@@ -3,10 +3,18 @@
 use strict;
 
 {
-    # $basedir is directory where this script is
+    if ($#ARGV > -1 && $ARGV[0] eq "-h") {
+       print STDERR "usage: $0 [-h]\n";
+       print STDERR "       builds the dependency tree of f90 files - run from the QE root directory\n";
+       print STDERR "       html page with links written to standard output\n";
+       exit 0;
+    }
     my $basedir = $0;
-    $basedir =~ s/(.*)\/.*/$1/;
-    my @sources = split(/ /, `echo $basedir/*/*.f90`);
+    # Orig: the following is the directory where this script is
+    # $basedir =~ s/(.*)\/.*/$1/;
+    # the following works only if we run the script from QE root
+    $basedir = "./";
+    my @sources = split(/ /, `echo $basedir/*/*.f90 $basedir/*/*/*.f90`);
 
     # grab program, function and subroutine declarations
     my (%place, %fname, %pname, %sname);

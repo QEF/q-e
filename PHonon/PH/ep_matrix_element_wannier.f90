@@ -17,6 +17,7 @@ SUBROUTINE ep_matrix_element_wannier()
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, amass
   USE gvecs, ONLY: doublegrid
   USE fft_base, ONLY : dfftp, dffts
+  USE fft_interfaces, ONLY : fft_interpolate
   USE noncollin_module, ONLY : nspin_mag, noncolin
   USE dynmat, ONLY : dyn, w2
   USE modes,  ONLY : npert, nirr, u
@@ -30,7 +31,6 @@ SUBROUTINE ep_matrix_element_wannier()
   USE paw_variables, ONLY : okpaw
   USE uspp_param, ONLY : nhm
   USE lsda_mod, ONLY : nspin
-
   USE lrus,   ONLY : int3, int3_nc, int3_paw
   USE qpoint, ONLY : xq, nksq, ikks
   !
@@ -111,7 +111,7 @@ SUBROUTINE ep_matrix_element_wannier()
         ALLOCATE (dvscfins (dffts%nnr, nspin_mag , npert(irr)) )
         DO is = 1, nspin_mag
            DO ipert = 1, npert(irr)
-              CALL cinterpolate (dvscfin(1,is,ipert),dvscfins(1,is,ipert),-1)
+              CALL fft_interpolate (dfftp, dvscfin(:,is,ipert), dffts, dvscfins(:,is,ipert))
            ENDDO
         ENDDO
      ELSE
@@ -162,7 +162,7 @@ SUBROUTINE elphsum_wannier(q_index)
   USE kinds, ONLY : DP
   USE ions_base, ONLY : nat, ityp, tau,amass,tau, ntyp => nsp, atm
   USE cell_base, ONLY : at, bg, ibrav, celldm 
-  USE symm_base, ONLY : s, sr, irt, nsym, time_reversal, invs, ftau, copy_sym, inverse_s
+  USE symm_base, ONLY : s, sr, irt, nsym, time_reversal, invs, copy_sym, inverse_s
   USE klist, ONLY : xk, nelec
   USE wvfct, ONLY : nbnd, et
   USE el_phon
@@ -263,7 +263,7 @@ SUBROUTINE elphsum_wannier(q_index)
      sym = .false.
      sym(1:nsym) = .true.
      
-     call smallg_q (xq, 0, at, bg, nsym, s, ftau, sym, minus_qloc)
+     call smallg_q (xq, 0, at, bg, nsym, s, sym, minus_qloc)
      nsymq = copy_sym(nsym, sym)
      ! recompute the inverses as the order of sym.ops. has changed
      CALL inverse_s ( )
@@ -328,7 +328,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   !
   USE kinds, ONLY : DP
   USE fft_base, ONLY : dffts
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE io_files, ONLY: prefix, diropn
   USE klist, ONLY: xk, ngk, igk_k
   USE lsda_mod, ONLY: lsda, current_spin, isk
@@ -346,11 +346,12 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   USE mp,        ONLY: mp_sum
   USE ions_base, ONLY : nat
   USE io_global, ONLY : stdout
-  USE gvecs, ONLY : nls
 
   USE eqv,        ONLY : dvpsi!, evq
   USE qpoint,     ONLY : nksq, ikks, ikqs
   USE control_lr, ONLY : lgamma
+  USE lrus,       ONLY : becp1
+  USE phus,       ONLY : alphap
 
   IMPLICIT NONE
   !
@@ -438,7 +439,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
         ELSE
            mode = imode0 + ipert
            ! FIXME : .false. or .true. ???
-           CALL dvqpsi_us (ik, u (1, mode), .FALSE. )
+           CALL dvqpsi_us (ik, u (1, mode), .FALSE., becp1, alphap)
         ENDIF
         !
         ! calculate dvscf_q*psi_k
@@ -620,11 +621,10 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   USE fft_interfaces,  ONLY : fwfft, invfft
   USE wvfct, ONLY: nbnd, npwx
   USE gvect, ONLY : ngm, g
-  USE gvecs, ONLY : nls
   USE gvecw, ONLY : gcutw
   USE cell_base, ONLY : bg
   USE qpoint, ONLY : nksq
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE noncollin_module,     ONLY : npol, noncolin
   USE el_phon, ONLY:iunwfcwann, lrwfcr
 
@@ -672,7 +672,7 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   phase(:) = (0.d0,0.d0)
 
   if ( igqg(ik)>0) then
-     phase( nls(igqg(ik)) ) = (1.d0,0.d0)
+     phase( dffts%nl(igqg(ik)) ) = (1.d0,0.d0)
   endif
 
 
@@ -685,28 +685,28 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   
   do m=1,nbnd
      psi_scratch = (0.d0, 0.d0)
-     psi_scratch(nls (igk_ (1:npw_) ) ) = evq (1:npw_, m)
-!     psi_scratch(nls (igk_ (1:npw) ) ) = evq (1:npw, m)
+     psi_scratch(dffts%nl (igk_ (1:npw_) ) ) = evq (1:npw_, m)
+!     psi_scratch(dffts%nl (igk_ (1:npw) ) ) = evq (1:npw, m)
      CALL invfft ('Wave', psi_scratch, dffts)
      !     call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
      psi_scratch(1:dffts%nnr) = psi_scratch(1:dffts%nnr) * phase(1:dffts%nnr)
      !     call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
      CALL fwfft ('Wave', psi_scratch, dffts)
-     evq(1:npwq_refolded,m) = psi_scratch(nls (igkq_(1:npwq_refolded) ) )
+     evq(1:npwq_refolded,m) = psi_scratch(dffts%nl (igkq_(1:npwq_refolded) ) )
   enddo
 
   if(noncolin) then
      do m=1,nbnd
         psi_scratch = (0.d0, 0.d0)
-        psi_scratch(nls (igk_ (1:npw_) ) ) = evq (npwx+1:npwx+npw_, m)
-        !       psi_scratch(nls (igk_ (1:npw) ) ) = evq (1:npw, m)
+        psi_scratch(dffts%nl (igk_ (1:npw_) ) ) = evq (npwx+1:npwx+npw_, m)
+        !       psi_scratch(dffts%nl (igk_ (1:npw) ) ) = evq (1:npw, m)
         CALL invfft ('Wave', psi_scratch, dffts)
         !     call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
         psi_scratch(1:dffts%nnr) = psi_scratch(1:dffts%nnr) * phase(1:dffts%nnr)
         !     call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
         CALL fwfft ('Wave', psi_scratch, dffts)
-        !       evq(npwx+1:npwx+npwq_refolded,m) = psi_scratch(nls (igkq_(1:npwq_refolded) ) )
-        evq((npwx+1):(npwx+npwq_refolded),m) = psi_scratch(nls (igkq_(1:npwq_refolded) ) )
+        !       evq(npwx+1:npwx+npwq_refolded,m) = psi_scratch(dffts%nl (igkq_(1:npwq_refolded) ) )
+        evq((npwx+1):(npwx+npwq_refolded),m) = psi_scratch(dffts%nl (igkq_(1:npwq_refolded) ) )
      enddo
   endif
  

@@ -1,0 +1,65 @@
+include ../../make.inc
+
+# Stripped version of F90FLAGS to remove GPU details added explicitly below.
+F90FLAGSS := $(filter-out $(CUDA_F90FLAGS),$(F90FLAGS))
+
+FLAGS = -O3 -pgf90libs -Mcuda=cc$(GPU_ARCH),cuda$(CUDA_RUNTIME),ptxinfo $(F90FLAGSS)
+FLAGS2 = -O3 -pgf90libs -Mcuda=cc$(GPU_ARCH),cuda$(CUDA_RUNTIME),ptxinfo,maxregcount:64 $(F90FLAGSS)
+
+# For performance reasons, cc of FLAGS3 must be <= 60
+define MIN
+$(firstword $(sort ${1} ${2}))
+endef
+FLAGS3 = -O3 -pgf90libs -Mcuda=cc$(call MIN,${GPU_ARCH},60),cuda$(CUDA_RUNTIME),ptxinfo,nordc,maxregcount:255  $(F90FLAGSS)
+
+# Uncomment to enable NVTX markers
+#OPTFLAGS = -DUSE_NVTX
+
+all: lib_eigsolve.a
+
+OBJS = cusolverDn_m.o eigsolve_vars.o toolbox.o zhegst_gpu.o zhemv_gpu.o zhetd2_gpu.o zhetrd_gpu.o zheevd_gpu.o zhegvdx_gpu.o \
+       dsygst_gpu.o dsymv_gpu.o dsytd2_gpu.o dsytrd_gpu.o dsyevd_gpu.o dsygvdx_gpu.o
+
+zhetd2_gpu.o : zhetd2_gpu.F90
+	pgf90 -c ${FLAGS2} ${OPTFLAGS}  $*.F90 -o $*.o
+zhemv_gpu.o : zhemv_gpu.F90
+	pgf90 -c ${FLAGS3} ${OPTFLAGS}  $*.F90 -o $*.o
+dsytd2_gpu.o : dsytd2_gpu.F90
+	pgf90 -c ${FLAGS2} ${OPTFLAGS}  $*.F90 -o $*.o
+dsymv_gpu.o : dsymv_gpu.F90
+	pgf90 -c ${FLAGS3} ${OPTFLAGS}  $*.F90 -o $*.o
+%.o: %.cuf
+	pgf90 -c ${FLAGS} ${OPTFLAGS} $*.cuf -o $*.o
+%.o: %.F90
+	pgf90 -c ${FLAGS} ${OPTFLAGS} $*.F90 -o $*.o
+
+lib_eigsolve.a: $(OBJS)
+	ar -cr lib_eigsolve.a $(OBJS)
+
+clean:
+	rm -f lib_eigsolve.a *.mod *.o
+
+# Dependencies
+dsyevd_gpu.o : dsytrd_gpu.o
+dsyevd_gpu.o : eigsolve_vars.o
+dsyevd_gpu.o : toolbox.o
+dsygst_gpu.o : eigsolve_vars.o
+dsygvdx_gpu.o : dsyevd_gpu.o
+dsygvdx_gpu.o : dsygst_gpu.o
+dsygvdx_gpu.o : eigsolve_vars.o
+dsygvdx_gpu.o : toolbox.o
+dsytrd_gpu.o : dsymv_gpu.o
+dsytrd_gpu.o : dsytd2_gpu.o
+dsytrd_gpu.o : eigsolve_vars.o
+eigsolve_vars.o : cusolverDn_m.o
+zheevd_gpu.o : eigsolve_vars.o
+zheevd_gpu.o : toolbox.o
+zheevd_gpu.o : zhetrd_gpu.o
+zhegst_gpu.o : eigsolve_vars.o
+zhegvdx_gpu.o : eigsolve_vars.o
+zhegvdx_gpu.o : toolbox.o
+zhegvdx_gpu.o : zheevd_gpu.o
+zhegvdx_gpu.o : zhegst_gpu.o
+zhetrd_gpu.o : eigsolve_vars.o
+zhetrd_gpu.o : zhemv_gpu.o
+zhetrd_gpu.o : zhetd2_gpu.o

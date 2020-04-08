@@ -30,18 +30,15 @@
                                 e0, psihpsi, compute_entropy2, &
                                 compute_entropy_der, compute_entropy, &
                                 niter_cold_restart, lambda_cold
-      USE gvect,          ONLY: ngm
-      USE gvecs,          ONLY: ngms
       USE smallbox_gvec,  ONLY: ngb
       USE gvecw,          ONLY: ngw
       USE gvect,          ONLY: gstart
-      USE uspp_param,     ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, nsp
       USE cell_base,      ONLY: omega, alat
       USE fft_base,       ONLY: dfftp, dffts
       USE local_pseudo,   ONLY: vps, rhops
       USE io_global,      ONLY: stdout, ionode, ionode_id
-      USE mp_global,      ONLY: intra_bgrp_comm, leg_ortho
+      USE mp_bands,       ONLY: intra_bgrp_comm
       USE dener
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
                                 rhovan => becsum, deeq, nlcc_any
@@ -52,13 +49,11 @@
 
       USE cp_interfaces,  ONLY: rhoofr, dforce, protate, vofrho, calbec
       USE cg_module,      ONLY: itercg
-      USE cp_main_variables, ONLY: descla, drhor, drhog
-      USE descriptors,       ONLY: descla_init , la_descriptor
-      USE dspev_module,   ONLY: pdspev_drv, dspev_drv
-
-
+      USE cp_main_variables, ONLY: idesc, drhor, drhog
       !
       IMPLICIT NONE
+
+      include 'laxlib.fh'
 
 !input variables
       INTEGER                :: nfi
@@ -75,13 +70,13 @@
       COMPLEX (kind=DP)           :: eigrb( ngb, nat )
       REAL(kind=DP)               :: rhor( dfftp%nnr, nspin )
       REAL(kind=DP)               :: vpot( dfftp%nnr, nspin )
-      COMPLEX(kind=DP)            :: rhog( ngm, nspin )
+      COMPLEX(kind=DP)            :: rhog( dfftp%ngm, nspin )
       REAL(kind=DP)               :: rhos( dffts%nnr, nspin )
       REAL(kind=DP)               :: rhoc( dfftp%nnr )
       COMPLEX(kind=DP)            :: ei1( dfftp%nr1:dfftp%nr1, nat )
       COMPLEX(kind=DP)            :: ei2( dfftp%nr2:dfftp%nr2, nat )
       COMPLEX(kind=DP)            :: ei3( dfftp%nr3:dfftp%nr3, nat )
-      COMPLEX(kind=DP)            :: sfac( ngms, nsp )
+      COMPLEX(kind=DP)            :: sfac( dffts%ngm, nsp )
   
 
 !local variables
@@ -95,8 +90,8 @@
       REAL(kind=DP), ALLOCATABLE :: epsi0(:,:)
 
       INTEGER :: np(2), coor_ip(2), ipr, ipc, nr, nc, ir, ic, ii, jj, root, j
-      TYPE(la_descriptor) :: desc_ip
-      INTEGER :: np_rot, me_rot, comm_rot, nrlx
+      INTEGER :: idesc_ip(LAX_DESC_SIZE)
+      INTEGER :: np_rot, me_rot, comm_rot, nrlx, leg_ortho
 
       CALL start_clock( 'inner_loop')
 
@@ -104,6 +99,7 @@
       allocate(c0hc0(nrcx, nrcx, nspin))
       allocate(h0c0(ngw,nx))
 
+      CALL laxlib_getval( leg_ortho = leg_ortho )
 
       lambdap=0.3d0!small step for free-energy calculation
 
@@ -117,7 +113,7 @@
  
         ! rotates the wavefunctions c0 and the overlaps bec
         ! (the occupation matrix f_ij becomes diagonal f_i)      
-        nrlx  = MAXVAL(descla(:)%nrlx)
+        nrlx  = MAXVAL(idesc(LAX_DESC_NRLX,:))
         CALL rotate( nrlx, z0t, c0, bec, c0diag, becdiag )
   
         ! calculates the electronic charge density
@@ -163,23 +159,24 @@
             nss= nupdwn( is )
             istart= iupdwn( is )
 
-            np(1) = descla( is )%npr
-            np(2) = descla( is )%npc
+            np(1) = idesc( LAX_DESC_NPR, is )
+            np(2) = idesc( LAX_DESC_NPC, is )
 
             DO ipc = 1, np(2)
                DO ipr = 1, np(1)
 
                   coor_ip(1) = ipr - 1
                   coor_ip(2) = ipc - 1
-                  CALL descla_init( desc_ip, descla( is )%n, descla( is )%nx, np, coor_ip, &
-                                    descla( is )%comm, descla( is )%cntx, 1 )
+                  CALL laxlib_init_desc( idesc_ip, idesc( LAX_DESC_N, is ), idesc( LAX_DESC_NX, is ), np, coor_ip, &
+                                    idesc( LAX_DESC_COMM, is ), idesc( LAX_DESC_CNTX, is ), 1 )
 
-                  nr = desc_ip%nr
-                  nc = desc_ip%nc
-                  ir = desc_ip%ir
-                  ic = desc_ip%ic
+                  nr = idesc_ip(LAX_DESC_NR)
+                  nc = idesc_ip(LAX_DESC_NC)
+                  ir = idesc_ip(LAX_DESC_IR)
+                  ic = idesc_ip(LAX_DESC_IC)
 
-                  CALL GRID2D_RANK( 'R', desc_ip%npr, desc_ip%npc, desc_ip%myr, desc_ip%myc, root )
+                  CALL GRID2D_RANK( 'R', idesc_ip(LAX_DESC_NPR), idesc_ip(LAX_DESC_NPC), &
+                                         idesc_ip(LAX_DESC_MYR), idesc_ip(LAX_DESC_MYC), root )
                   !
                   root = root * leg_ortho
 
@@ -329,12 +326,9 @@
 
       USE ensemble_dft,   ONLY: tens,  ninner, ismear, etemp, &
                                  c0diag, becdiag, z0t, nrcx, nrlx
-      USE gvect,          ONLY: ngm
-      USE gvecs,          ONLY: ngms
       USE smallbox_gvec,  ONLY: ngb
       USE gvecw,          ONLY: ngw
       USE gvect,          ONLY: gstart
-      USE uspp_param,     ONLY: nvb, ish, nh
       USE ions_base,      ONLY: na, nat, nsp
       USE cell_base,      ONLY: omega, alat
       USE local_pseudo,   ONLY: vps, rhops
@@ -346,7 +340,7 @@
       USE ions_positions, ONLY: tau0
       USE mp,             ONLY: mp_sum,mp_bcast
       use cp_interfaces,  only: rhoofr, dforce, vofrho
-      USE cp_main_variables, ONLY: descla, drhor, drhog
+      USE cp_main_variables, ONLY: idesc, drhor, drhog
       USE fft_base,       ONLY: dfftp, dffts
 
       !
@@ -367,13 +361,13 @@
       COMPLEX (kind=DP)           :: eigrb( ngb, nat )
       REAL(kind=DP)               :: rhor( dfftp%nnr, nspin )
       REAL(kind=DP)               :: vpot( dfftp%nnr, nspin )
-      COMPLEX(kind=DP)            :: rhog( ngm, nspin )
+      COMPLEX(kind=DP)            :: rhog( dfftp%ngm, nspin )
       REAL(kind=DP)               :: rhos( dffts%nnr, nspin )
       REAL(kind=DP)               :: rhoc( dfftp%nnr )
       COMPLEX(kind=DP)            :: ei1( dfftp%nr1:dfftp%nr1, nat )
       COMPLEX(kind=DP)            :: ei2( dfftp%nr2:dfftp%nr2, nat )
       COMPLEX(kind=DP)            :: ei3( dfftp%nr3:dfftp%nr3, nat )
-      COMPLEX(kind=DP)            :: sfac( ngms, nsp )
+      COMPLEX(kind=DP)            :: sfac( dffts%ngm, nsp )
   
       REAL(kind=DP), INTENT(in)   :: c0hc0(nrcx,nrcx,nspin)
       REAL(kind=DP), INTENT(in)   :: c1hc1(nrcx,nrcx,nspin)
@@ -513,13 +507,10 @@
                                 compute_entropy2, nrlx, nrcx, &
                                 compute_entropy_der, compute_entropy, &
                                 niter_cold_restart, lambda_cold
-      USE gvect,          ONLY: ngm
-      USE gvecs,          ONLY: ngms
       USE smallbox_gvec,          ONLY: ngb
       USE gvecw,          ONLY: ngw
       USE gvect, &
                           ONLY: gstart
-      USE uspp_param,     ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, nsp
       USE cell_base,      ONLY: omega, alat
       USE local_pseudo,   ONLY: vps, rhops
@@ -535,13 +526,11 @@
 
       USE cp_interfaces,  ONLY: rhoofr, dforce, protate
       USE cg_module,      ONLY: itercg
-      USE cp_main_variables, ONLY: descla
-      USE descriptors,       ONLY: la_descriptor, descla_init
-      USE dspev_module,   ONLY: pdspev_drv, dspev_drv
-
-
+      USE cp_main_variables, ONLY: idesc
       !
       IMPLICIT NONE
+
+      include 'laxlib.fh'
 
       COMPLEX(kind=DP)            :: c0( ngw, n )
       REAL(kind=DP)               :: bec( nhsa, n )
@@ -563,22 +552,22 @@
  
             istart   = iupdwn( is )
             nss      = nupdwn( is )
-            np_rot   = descla( is )%npr  * descla( is )%npc
-            me_rot   = descla( is )%mype
-            nrl      = descla( is )%nrl
-            comm_rot = descla( is )%comm
+            np_rot   = idesc( LAX_DESC_NPR, is )  * idesc( LAX_DESC_NPC, is )
+            me_rot   = idesc( LAX_DESC_MYPE, is )
+            nrl      = idesc( LAX_DESC_NRL, is )
+            comm_rot = idesc( LAX_DESC_COMM, is )
 
             allocate( dval( nx ) )
 
             dval = 0.0d0
 
-            IF( descla( is )%active_node > 0 ) THEN
+            IF( idesc( LAX_DESC_ACTIVE_NODE, is ) > 0 ) THEN
                !
                ALLOCATE( epsi0( nrl, nss ), zaux( nrl, nss ) )
 
-               CALL blk2cyc_redist( nss, epsi0, nrl, nss, psihpsi(1,1,is), SIZE(psihpsi,1), SIZE(psihpsi,2), descla(is) )
+               CALL blk2cyc_redist( nss, epsi0, nrl, nss, psihpsi(:,:,is), SIZE(psihpsi,1), SIZE(psihpsi,2), idesc(:,is) )
 
-               CALL pdspev_drv( 'V', epsi0, nrl, dval, zaux, nrl, nrl, nss, np_rot, me_rot, comm_rot )
+               CALL dspev_drv( 'V', epsi0, nrl, dval, zaux, nrl, nrl, nss, np_rot, me_rot, comm_rot )
                !
                IF( me_rot /= 0 ) dval = 0.0d0
                !
@@ -595,7 +584,7 @@
             END DO
             z0t(:,:,is) = 0.0d0
 
-            IF( descla( is )%active_node > 0 ) THEN
+            IF( idesc( LAX_DESC_ACTIVE_NODE, is ) > 0 ) THEN
                !NB zaux is transposed
                !ALLOCATE( mtmp( nudx, nudx ) )
                z0t( 1:nrl , 1:nss, is ) = zaux( 1:nrl, 1:nss )

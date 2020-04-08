@@ -18,12 +18,13 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
   USE wvfct, ONLY : npwx, nbnd
   USE fft_base, ONLY : dffts
   use ramanm,  ONLY : lrd2w, iud2w, jab
-  USE units_ph, ONLY : iuwfc, lrdwf, iudwf
+  USE units_ph, ONLY : lrdwf, iudwf
+  USE units_lr, ONLY : iuwfc
   USE buffers, ONLY : get_buffer
   USE qpoint, ONLY : npwq, nksq
   USE eqv, ONLY : dpsi, dvpsi
   USE control_lr, ONLY : nbnd_occ
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   implicit none
 
   integer :: ik

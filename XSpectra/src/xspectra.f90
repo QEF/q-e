@@ -42,7 +42,6 @@ PROGRAM X_Spectra
        degauss,lgauss,ngauss,    &
        two_fermi_energies
   USE lsda_mod,        ONLY : nspin,lsda,isk,current_spin
-  USE noncollin_module,ONLY : noncolin
   USE mp,              ONLY : mp_bcast, mp_sum             !parallelization
   USE mp_global,       ONLY : mp_startup, mp_global_end
   USE mp_pools,        ONLY : intra_pool_comm, npool
@@ -63,7 +62,6 @@ PROGRAM X_Spectra
        cut_nmeml,&      ! size of the memory of the values of the green function, lower side
        cut_occ_states  ! true if you want tou remove occupied states from the spectrum
 
-  USE control_flags,   ONLY : twfcollect
   !<CG>
   USE gamma_variable_mod, ONLY : gamma_value, gamma_energy, &
                                  gamma_lines, gamma_tab, gamma_points, &
@@ -144,6 +142,7 @@ PROGRAM X_Spectra
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
      i=0
+     IF(xiabs<1 .or. xiabs>ntyp) CALL errore("xspectra","xiabs < 1 or xiabs > ntyp",1)
      DO na=1,nat
         IF(ityp(na).EQ.xiabs) i=i+1
      ENDDO
@@ -382,7 +381,7 @@ PROGRAM X_Spectra
      ENDIF
      !
      WRITE(stdout,'(5x,"Cross-section successfully written in ",a,/)') &
-      'xanes.dat'
+      xanes_file
      IF (.NOT. xonly_plot) WRITE(stdout,'(5x,"... End STEP 2 ...",/)')
 
   ELSEIF(TRIM(calculation).EQ.'rxes') THEN
@@ -433,7 +432,6 @@ SUBROUTINE stop_xspectra
   !
   ! Synchronize processes before stopping. This is a copy of stop_pp.
   !
-  USE control_flags, ONLY: twfcollect
   USE io_files, ONLY: iunwfc
   USE mp_global, ONLY: mp_global_end
   !
@@ -444,13 +442,7 @@ SUBROUTINE stop_xspectra
 
   INQUIRE ( iunwfc, opened = op )
 
-  IF ( op ) THEN
-     IF (twfcollect) THEN
-        CLOSE (unit = iunwfc, status = 'delete')
-     ELSE
-        CLOSE (unit = iunwfc, status = 'keep')
-     ENDIF
-  ENDIF
+  IF ( op ) CLOSE (unit = iunwfc, status = 'delete')
 
   CALL mp_global_end()
 
@@ -954,7 +946,7 @@ SUBROUTINE initialize_gamma_tab
   REAL(dp) :: e, x, y, dx
   INTEGER  :: i, j, n
 
-  dx = (xemax-xemin)/dfloat(xnepoint)
+  dx = (xemax-xemin)/DBLE(xnepoint)
 
   DO n = 1, xnepoint
      x = xemin + (n-1)*dx

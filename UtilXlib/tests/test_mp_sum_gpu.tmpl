@@ -1,0 +1,77 @@
+! Implemented: i1, iv, im, it, r1, rv, rm, rt, r4, c1, cv, cm, ct, c4, c5, r5, r6
+
+#if defined(__CUDA)
+PROGRAM test_mp_sum_{vname}_gpu
+!
+! Simple program to check the functionalities of mp_sum.
+!
+! NB: mp_sum is allreduce
+!
+    USE cudafor
+#if defined(__MPI)
+    USE MPI
+#endif
+    USE util_param, ONLY : DP
+    USE mp, ONLY : mp_sum
+    USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &
+                          root, nproc, world_comm
+    USE tester
+    IMPLICIT NONE
+    !
+    TYPE(tester_t) :: test
+    INTEGER :: world_group = 0, valid_sum, rnk
+    INTEGER, PARAMETER :: datasize = {datasize}
+    ! for comparing with CPU implementation
+    INTEGER :: i
+    REAL(DP) :: rnd{size}
+    ! test variable
+    {type}, DEVICE :: {vname}_d{size}
+    {type} :: {vname}_h{size}
+    {type} :: aux_h{size}
+    !
+    CALL test%init()
+    
+#if defined(__MPI)    
+    world_group = MPI_COMM_WORLD
+#endif
+    CALL mp_world_start(world_group)
+    {vname}_h = mpime
+    {vname}_d = {vname}_h
+    CALL mp_sum({vname}_d, world_comm)
+    {vname}_h = {vname}_d
+    !
+    ! The sum of n rank is (zero based)
+    !  sum = (n-1)*n*0.5
+    !
+    ! For a rank N matrix is 2^N * sum
+    !
+    rnk = SIZE(SHAPE({vname}_h))
+    valid_sum = ({datasize}**rnk) * (nproc-1)*nproc/2
+    !
+    CALL test%assert_equal(INT({sumf}({vname}_h )) , valid_sum )
+    !
+    ! Validate against CPU implementation
+    ! 
+    CALL save_random_seed("test_mp_sum_{vname}_gpu", mpime)
+    !
+    CALL RANDOM_NUMBER(rnd)
+    {vname}_h = {typeconv} ( 10.0 * rnd )
+    {vname}_d = {vname}_h
+    aux_h = 0
+    CALL mp_sum({vname}_d, world_comm)
+    CALL mp_sum({vname}_h, world_comm)
+    aux_h = {vname}_d
+    CALL test%assert_equal( {sumf}({vname}_h) , {sumf}(aux_h) )
+    !
+    CALL collect_results(test)
+    !
+    CALL mp_world_end()
+    !
+    IF (mpime .eq. 0) CALL test%print()
+    !
+END PROGRAM test_mp_sum_{vname}_gpu
+#else
+PROGRAM test_mp_sum_{vname}_gpu
+    CALL no_test()
+END PROGRAM test_mp_sum_{vname}_gpu
+#endif

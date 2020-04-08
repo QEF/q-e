@@ -1,0 +1,182 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: cppp.x / CP / Quantum Espresso (version: 6.4)
+------------------------------------------------------------------------
+
+
+=============================================================================
+                            CP Post-Processing code (cppp.x)
+=============================================================================
+
+The cppp.x code is an utility that can be used to extract data from the CP
+restart and CP trajectory files.
+
+INPUT:
+=====
+
+the program read the input parameters from the standard input or from
+any other file specified through the usual "-input" command line flag.
+The input parameters, in the input file, should be specified in the inputpp
+namelist follow:
+
+&INPUTPP
+  ...
+  cppp_input_parameter
+  ...
+/
+
+
+
+========================================================================
+NAMELIST: &INPUTPP
+
+   +--------------------------------------------------------------------
+   Variable:       prefix
+   
+   Type:           CHARACTER
+   Default:        'cp'
+   Description:    basename prepended to cp.x output filenames: cp.evp, cp.pos ....
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       fileout
+   
+   Type:           CHARACTER
+   Default:        'out'
+   Description:    basename of the cppp.x output files
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       output
+   
+   Type:           CHARACTER
+   Default:        'xsf'
+   Description:    a string describing the output format to be performed,
+                   allowed values: 'xsf', 'xyz'
+                   
+                       xsf     xcrysden format
+                       xyz     XMOL format
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       outdir
+   
+   Type:           CHARACTER
+   Default:        './'
+   Description:    directory containing the CP trajectory files (.evp .pos .cel ...)
+                   and restart files ( .save ) to be processed
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lcharge
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    OBSOLETE - no longer implemented. Use "pp.x" instead.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lforces
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    This logical flag control the processing of forces.
+                   
+                       .TRUE.  extract forces from trajectory files and write
+                               them to xcrysden file
+                   
+                       .FALSE. do not process forces
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ldynamics
+   
+   Type:           LOGICAL
+   Default:        .true.
+   Description:    This logical flag control the processing of atoms trajectory.
+                   
+                       .TRUE.  process CP trajectory files and generate a trajectory
+                               file for xcrysden (.axsf)
+                   
+                       .FALSE. do not process trajectory
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lpdb
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    This logical flag control the generation of a pdb file.
+                   
+                       .TRUE.  generate a pdb file containing positions and cell
+                               of the simulated system
+                   
+                       .FALSE. do not generate pdb file
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lrotation
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    This logical flag control the rotation of the cell
+                   
+                       .TRUE.  rotate the system cell in space in order to have
+                               the a lattice parameter laying on the x axis,
+                               the b lattice parameter laying on the xy plane
+                   
+                       .FALSE. do not rotate cell
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variables:      np1, np2, np3
+   
+   Type:           INTEGER
+   Default:        1
+   Description:    Number of replicas of atomic positions along cell parameters.
+                   
+                   If np1, np2, np3 are 1 or not specified, cppp.x does not
+                   replicate atomic positions in space.
+                   
+                   If np1, np2, np3 are > 1 cppp.x replicates the atomic
+                   positions used in the simulation np1 times along "a",
+                   np2 times along "b", np3 times along "c".
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       nframes
+   
+   Type:           INTEGER
+   Default:        1
+   Description:    number of MD step to be read to build the trajectory
+                   CURRENTLY MUST BE > 1
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ndr
+   
+   Type:           INTEGER
+   Default:        51
+   Description:    CP restart file number to post process
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       atomic_number(i), i=1,ntyp
+   
+   Type:           INTEGER
+   Default:        1
+   Description:    Specify the atomic number of the species in CP trajectory and
+                   restart file.
+                   
+                   atomic_number(1)  specify the atomic number of the first specie
+                   atomic_number(2)  specify the atomic number of the second specie
+                   ....
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+This file has been created by helpdoc utility on Thu Nov 28 10:41:56 CET 2019

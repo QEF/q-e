@@ -1,0 +1,29 @@
+&control
+ calculation='scf'
+ tprnfor=.true.
+ tstress=.true.
+/
+&system
+ ibrav=4
+ celldm(1)=4.66
+ celldm(3)=2.60
+ nat=4
+ ecutwfc=18.
+ ecutrho=200.
+ ntyp=1
+ occupations='smearing'
+ degauss=0.02
+ smearing='marzari-vanderbilt'
+ vdw_corr='grimme-d3'
+/
+&electrons
+ mixing_beta=0.5
+/
+ATOMIC_SPECIES
+ C   12.   C.pbe-van_bm.UPF   1
+K_POINTS {gamma}
+ATOMIC_POSITIONS {crystal}
+ C      0.000000    1.000000    0.75000 
+ C      0.666667    0.333333    0.75000 
+ C      0.000000    1.000000    0.25000
+ C      0.333333    0.666667    0.25000

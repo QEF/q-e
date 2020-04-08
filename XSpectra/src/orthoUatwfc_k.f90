@@ -32,7 +32,7 @@ SUBROUTINE orthoUwfc_k(ik)
   USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
-  USE noncollin_module, ONLY : noncolin, npol
+  USE noncollin_module, ONLY : npol
 
   ! 
   IMPLICIT NONE
@@ -89,7 +89,7 @@ SUBROUTINE orthoUwfc_k(ik)
   CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
 
   IF (orthogonalize_wfc) &
-     CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom )
+     CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
   !
   CALL copy_U_wfc (swfcatom)
   !

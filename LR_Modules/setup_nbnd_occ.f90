@@ -15,7 +15,7 @@ SUBROUTINE setup_nbnd_occ
   USE constants,        ONLY : degspin, pi
   USE klist,            ONLY : xk, ltetra, lgauss, degauss, ngauss, nks, &
                                nelec, nelup, neldw, two_fermi_energies, wk
-  USE ener,             ONLY : ef, ef_up, ef_dw
+  USE ener,             ONLY : ef
   USE wvfct,            ONLY : nbnd, et
   USE control_lr,       ONLY : nbnd_occ
   USE io_global,        ONLY : stdout
@@ -29,7 +29,6 @@ SUBROUTINE setup_nbnd_occ
   ! auxiliary variables used
   ! to set nbnd_occ in the metallic case
   INTEGER :: ik, ibnd, ipol
-  REAL(DP), ALLOCATABLE :: wg_up(:,:), wg_dw(:,:)
   !
   CALL start_clock ('setup_nbnd_occ')
   !
@@ -77,29 +76,13 @@ SUBROUTINE setup_nbnd_occ
         nbnd_occ = nint (nelec)
      ELSE
         IF ( two_fermi_energies ) THEN
-           !
-           ALLOCATE(wg_up(nbnd,nks))
-           ALLOCATE(wg_dw(nbnd,nks))
-           CALL iweights( nks, wk, nbnd, nelup, et, ef_up, wg_up, 1, isk )
-           CALL iweights( nks, wk, nbnd, neldw, et, ef_dw, wg_dw, 2, isk )
-           !
            DO ik = 1, nks
-              DO ibnd=1,nbnd
-                 IF (isk(ik)==1) THEN
-                    IF (wg_up(ibnd,ik) > 0.0_DP) nbnd_occ (ik) = nbnd_occ(ik)+1
-                 ELSE
-                    IF (wg_dw(ibnd,ik) > 0.0_DP) nbnd_occ (ik) = nbnd_occ(ik)+1
-                 ENDIF
-              ENDDO
+              IF (isk(ik)==1) THEN
+                 nbnd_occ (ik) = nint (nelup)
+              ELSE
+                 nbnd_occ (ik) = nint (neldw)
+              ENDIF
            ENDDO
-           !
-           ! the following line to prevent NaN in Ef
-           !
-           ef = ( ef_up + ef_dw ) / 2.0_dp
-           !
-           DEALLOCATE(wg_up)
-           DEALLOCATE(wg_dw)
-           !
         ELSE
            IF (lsda) CALL infomsg('setup_nbnd_occ', &
                                  'Occupation numbers probably wrong')

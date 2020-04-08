@@ -48,7 +48,7 @@ program test
   integer :: nargs
   CHARACTER(LEN=80) :: arg
   !
-#if defined(__OPENMP)
+#if defined(_OPENMP)
   INTEGER :: PROVIDED
 #endif
   !
@@ -90,7 +90,7 @@ program test
   
 #if defined(__MPI)
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
   CALL MPI_Init_thread(MPI_THREAD_FUNNELED, PROVIDED, ierr)
 #else
   CALL MPI_Init(ierr)
@@ -255,7 +255,7 @@ program test
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
 #endif
 
-  call invfft ('Dense',aux,dffts)
+  call invfft ('Rho',aux,dffts)
 
   if( mype == 0 ) write (*,*) 'function in Real space (i,j,k)'
   do k =1, 5
@@ -268,7 +268,7 @@ program test
      end do
   end do
 
-  call fwfft  ('Dense',aux,dffts)
+  call fwfft  ('Rho',aux,dffts)
 
   if( mype == 0 ) write (*,*) 'function in Reciprocal space '
   do k =1, 5

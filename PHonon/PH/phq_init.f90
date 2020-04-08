@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -34,7 +34,8 @@ SUBROUTINE phq_init()
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : bg, tpiba, tpiba2, omega
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
-  USE becmod,               ONLY : calbec
+  USE becmod,               ONLY : calbec, becp, allocate_bec_type, &
+                                   deallocate_bec_type
   USE constants,            ONLY : eps8, tpi
   USE gvect,                ONLY : g, ngm
   USE klist,                ONLY : xk, ngk, igk_k
@@ -43,30 +44,32 @@ SUBROUTINE phq_init()
   USE io_global,            ONLY : stdout
   USE atom,                 ONLY : msh, rgrid
   USE vlocal,               ONLY : strf
-  USE spin_orb,             ONLY : lspinorb
+  USE spin_orb,             ONLY : lspinorb, domag
   USE wvfct,                ONLY : npwx, nbnd
   USE gvecw,                ONLY : gcutw
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions,        ONLY : evc
   USE noncollin_module,     ONLY : noncolin, npol
-  USE uspp,                 ONLY : okvan, vkb, nlcc_any
+  USE uspp,                 ONLY : okvan, vkb, nlcc_any, nkb
   USE uspp_param,           ONLY : upf
   USE m_gth,                ONLY : setlocq_gth
   USE phus,                 ONLY : alphap
   USE nlcc_ph,              ONLY : drc
   USE control_ph,           ONLY : trans, zue, epsil, all_done
-  USE units_ph,             ONLY : lrwfc, iuwfc
-
-  USE mp_bands,            ONLY : intra_bgrp_comm
-  USE mp,                  ONLY : mp_sum
-  USE acfdtest,            ONLY : acfdt_is_active, acfdt_num_der
-  USE el_phon,             ONLY : elph_mat, iunwfcwann, npwq_refolded, &
-                                  kpq,g_kpq,igqg,xk_gamma, lrwfcr
+  USE units_lr,             ONLY : lrwfc, iuwfc
+  USE mp_bands,             ONLY : intra_bgrp_comm
+  USE mp,                   ONLY : mp_sum
+  USE acfdtest,             ONLY : acfdt_is_active, acfdt_num_der
+  USE el_phon,              ONLY : elph_mat, iunwfcwann, npwq_refolded, &
+                                   kpq,g_kpq,igqg,xk_gamma, lrwfcr
   USE wannier_gw,           ONLY : l_head
-
+  USE Coul_cut_2D,          ONLY : do_cutoff_2D     
+  USE Coul_cut_2D_ph,       ONLY : cutoff_lr_Vlocq , cutoff_fact_qg 
   USE lrus,                 ONLY : becp1, dpqq, dpqq_so
   USE qpoint,               ONLY : xq, nksq, eigqts, ikks, ikqs
+  USE qpoint_aux,           ONLY : becpt, alphapt, ikmks
   USE eqv,                  ONLY : vlocq, evq
   USE control_lr,           ONLY : nbnd_occ, lgamma
+  USE ldaU,                 ONLY : lda_plus_u
   !
   IMPLICIT NONE
   !
@@ -85,7 +88,7 @@ SUBROUTINE phq_init()
   INTEGER :: npw, npwq
   REAL(DP) :: arg
     ! the argument of the phase
-  COMPLEX(DP), ALLOCATABLE :: aux1(:,:)
+  COMPLEX(DP), ALLOCATABLE :: aux1(:,:), tevc(:,:)
     ! used to compute alphap
   !
   !
@@ -124,6 +127,16 @@ SUBROUTINE phq_init()
      END IF
      !
   END DO
+  ! for 2d calculations, we need to initialize the fact for the q+G 
+  ! component of the cutoff of the COulomb interaction
+  IF (do_cutoff_2D) call cutoff_fact_qg() 
+  !  in 2D calculations the long range part of vlocq(g) (erf/r part)
+  ! was not re-added in g-space because everything is caclulated in
+  ! radial coordinates, which is not compatible with 2D cutoff. 
+  ! It will be re-added each time vlocq(g) is used in the code. 
+  ! Here, this cutoff long-range part of vlocq(g) is computed only once
+  ! by the routine below and stored
+  IF (do_cutoff_2D) call cutoff_lr_Vlocq() 
   !
   ! only for electron-phonon coupling with wannier functions
   ! 
@@ -145,6 +158,7 @@ SUBROUTINE phq_init()
   endif
   !
   ALLOCATE( aux1( npwx*npol, nbnd ) )
+  IF (noncolin.AND.domag) ALLOCATE(tevc(npwx*npol,nbnd))
   !
   DO ik = 1, nksq
      !
@@ -176,19 +190,23 @@ SUBROUTINE phq_init()
      !
      ! ... read the wavefunctions at k
      !
-    if(elph_mat) then
+     if(elph_mat) then
         call read_wfc_rspace_and_fwfft( evc, ik, lrwfcr, iunwfcwann, npw, igk_k(1,ikk) )
-!       CALL davcio (evc, lrwfc, iunwfcwann, ik, - 1)
-    else
-       CALL get_buffer( evc, lrwfc, iuwfc, ikk )
-    endif
+        !       CALL davcio (evc, lrwfc, iunwfcwann, ik, - 1)
+     else
+        CALL get_buffer( evc, lrwfc, iuwfc, ikk )
+        IF (noncolin.AND.domag) THEN
+           CALL get_buffer( tevc, lrwfc, iuwfc, ikmks(ik) )
+           CALL calbec (npw, vkb, tevc, becpt(ik) )
+        ENDIF
+     endif
      !
      ! ... e) we compute the becp terms which are used in the rest of
      ! ...    the code
      !
-
+     
      CALL calbec (npw, vkb, evc, becp1(ik) )
-
+     
      !
      ! ... e') we compute the derivative of the becp term with respect to an
      !         atomic displacement
@@ -198,43 +216,61 @@ SUBROUTINE phq_init()
         DO ibnd = 1, nbnd
            DO ig = 1, npw
               aux1(ig,ibnd) = evc(ig,ibnd) * tpiba * ( 0.D0, 1.D0 ) * &
-                              ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
+                   ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
            END DO
            IF (noncolin) THEN
               DO ig = 1, npw
                  aux1(ig+npwx,ibnd)=evc(ig+npwx,ibnd)*tpiba*(0.D0,1.D0)*&
-                           ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
+                      ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
               END DO
            END IF
         END DO
         CALL calbec (npw, vkb, aux1, alphap(ipol,ik) )
      END DO
      !
+     IF (noncolin.AND.domag) THEN
+        DO ipol = 1, 3
+           aux1=(0.d0,0.d0)
+           DO ibnd = 1, nbnd
+              DO ig = 1, npw
+                 aux1(ig,ibnd) = tevc(ig,ibnd) * tpiba * ( 0.D0, 1.D0 ) * &
+                      ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
+              END DO
+              IF (noncolin) THEN
+                 DO ig = 1, npw
+                    aux1(ig+npwx,ibnd)=tevc(ig+npwx,ibnd)*tpiba*(0.D0,1.D0)*&
+                         ( xk(ipol,ikk) + g(ipol,igk_k(ig,ikk)) )
+                 END DO
+              END IF
+           END DO
+           CALL calbec (npw, vkb, aux1, alphapt(ipol,ik) )
+        END DO
+     ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
-  IF (acfdt_is_active) THEN
-     ! ACFDT -test always read calculated wcf from non_scf calculation
-     IF(acfdt_num_der) then 
-       CALL get_buffer( evq, lrwfc, iuwfc, ikq )
+     IF (acfdt_is_active) THEN
+        ! ACFDT -test always read calculated wcf from non_scf calculation
+        IF(acfdt_num_der) then 
+           CALL get_buffer( evq, lrwfc, iuwfc, ikq )
+        ELSE
+           IF ( .NOT. lgamma ) &
+                CALL get_buffer( evq, lrwfc, iuwfc, ikq )
+        ENDIF
      ELSE
-       IF ( .NOT. lgamma ) &
-          CALL get_buffer( evq, lrwfc, iuwfc, ikq )
+        ! this is the standard treatment
+        IF ( .NOT. lgamma .and..not. elph_mat )then 
+           CALL get_buffer( evq, lrwfc, iuwfc, ikq )
+        ELSEIF(.NOT. lgamma .and. elph_mat) then
+           !
+           ! I read the wavefunction in real space and fwfft it
+           !
+           ikqg = kpq(ik)
+           call read_wfc_rspace_and_fwfft( evq, ikqg, lrwfcr, iunwfcwann, npwq, &
+                igk_k(1,ikq) )
+           !        CALL davcio (evq, lrwfc, iunwfcwann, ikqg, - 1)
+           call calculate_and_apply_phase(ik, ikqg, igqg, &
+                npwq_refolded, g_kpq, xk_gamma, evq, .false.)
+        ENDIF
      ENDIF
-  ELSE
-     ! this is the standard treatment
-     IF ( .NOT. lgamma .and..not. elph_mat )then 
-        CALL get_buffer( evq, lrwfc, iuwfc, ikq )
-     ELSEIF(.NOT. lgamma .and. elph_mat) then
-        !
-        ! I read the wavefunction in real space and fwfft it
-        !
-        ikqg = kpq(ik)
-        call read_wfc_rspace_and_fwfft( evq, ikqg, lrwfcr, iunwfcwann, npwq, &
-                                        igk_k(1,ikq) )
-!        CALL davcio (evq, lrwfc, iunwfcwann, ikqg, - 1)
-        call calculate_and_apply_phase(ik, ikqg, igqg, &
-           npwq_refolded, g_kpq, xk_gamma, evq, .false.)
-     ENDIF
-  ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
      !
   END DO
@@ -249,6 +285,30 @@ SUBROUTINE phq_init()
      IF (lspinorb) CALL compute_qdipol_so(dpqq, dpqq_so)
      CALL qdipol_cryst()
   END IF
+  !
+  ! DFPT+U
+  ! 
+  IF (lda_plus_u)  THEN 
+     !
+     ! Calculate and write to file the atomic orbitals 
+     ! \phi and S\phi at k and k+q
+     ! Note: the array becp will be temporarily used
+     ! in the routine lr_orthoUwfc.
+     !
+     CALL deallocate_bec_type(becp)
+     CALL lr_orthoUwfc (.TRUE.)
+     CALL allocate_bec_type(nkb,nbnd,becp)   
+     !
+     ! Calculate dnsbare, i.e. the bare variation of ns, 
+     ! for all cartesian coordinates
+     !
+     CALL dnsq_bare()
+     !
+     ! Calculate the orthogonality term in the USPP case
+     !
+     IF (okvan) CALL dnsq_orth()
+     !
+  ENDIF
   !
   IF ( trans ) CALL dynmat0_new()
   !

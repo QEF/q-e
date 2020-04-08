@@ -18,7 +18,7 @@ subroutine dynmatcc
   USE ions_base, ONLY : nat, ityp, tau
   USE fft_base,  ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft
-  USE gvect,     ONLY : nl, ngm, g
+  USE gvect,     ONLY : ngm, g
   USE lsda_mod,  ONLY : nspin
   use scf,       ONLY : rho, rho_core, rhog_core
   USE modes,     ONLY : u
@@ -66,7 +66,7 @@ subroutine dynmatcc
   end if
   deallocate (v)
   !
-  CALL fwfft ('Dense', vxc, dfftp)
+  CALL fwfft ('Rho', vxc, dfftp)
   !
   ! vxc is the spin-averaged XC potential (in G-space)
   !
@@ -84,7 +84,7 @@ subroutine dynmatcc
         arg = tpi * (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) &
              + g (3, ig) * tau (3, na) )
         exc = CMPLX(cos (arg), - sin (arg) ,kind=DP) * tpiba2
-        work (ig) = drc (ig, nta) * exc * CONJG(vxc (nl (ig) ) )
+        work (ig) = drc (ig, nta) * exc * CONJG(vxc (dfftp%nl (ig) ) )
      enddo
      do i = 1, 3
         na_i = 3 * (na - 1) + i

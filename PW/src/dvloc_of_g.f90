@@ -15,6 +15,8 @@ subroutine dvloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
   !
   USE kinds
   USE constants , ONLY : pi, fpi, e2, eps8
+  USE Coul_cut_2D, ONLY: do_cutoff_2D
+  USE esm, ONLY : do_comp_esm, esm_bc
   implicit none
   !
   !    first the dummy variables
@@ -58,7 +60,6 @@ subroutine dvloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
   ! In order to perform the Fourier transform, a term erf(r)/r is
   ! subtracted in real space and added again in G space
 
-  allocate (aux( mesh))    
   allocate (aux1( mesh))    
   !
   !   This is the part of the integrand function
@@ -67,6 +68,12 @@ subroutine dvloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
   do i = 1, msh
      aux1 (i) = r (i) * vloc_at (i) + zp * e2 * qe_erf (r (i) )
   enddo
+  !
+!$omp parallel private(aux, gx, vlcp, g2a)
+  !
+  allocate (aux( mesh))
+  !
+!$omp do
   do igl = igl0, ngl
      gx = sqrt (gl (igl) * tpiba2)
      !
@@ -81,14 +88,24 @@ subroutine dvloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
      call simpson (msh, aux, rab, vlcp)
      ! DV(g^2)/Dg^2 = (DV(g)/Dg)/2g
      vlcp = fpi / omega / 2.0d0 / gx * vlcp
-     ! subtract the long-range term
-     g2a = gl (igl) * tpiba2 / 4.d0
-     vlcp = vlcp + fpi / omega * zp * e2 * exp ( - g2a) * (g2a + &
-          1.d0) / (gl (igl) * tpiba2) **2
+
+    ! for ESM stress
+     ! In ESM, vloc and dvloc have only short term.
+     IF ( ( .not. do_comp_esm ) .or. ( esm_bc .eq. 'pbc' ) ) THEN
+        ! subtract the long-range term
+        IF (.not.do_cutoff_2D) then ! 2D cutoff: do not re-add LR part here (re-added later in stres_loc)
+         g2a = gl (igl) * tpiba2 / 4.d0
+         vlcp = vlcp + fpi / omega * zp * e2 * exp ( - g2a) * (g2a + &
+             1.d0) / (gl (igl) * tpiba2) **2
+        ENDIF
+     END IF
      dvloc (igl) = vlcp
   enddo
-  deallocate (aux1)
+!$omp end do nowait
   deallocate (aux)
+!$omp end parallel
+  !
+  deallocate (aux1)
 
   return
 end subroutine dvloc_of_g

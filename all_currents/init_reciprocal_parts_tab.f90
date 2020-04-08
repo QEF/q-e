@@ -10,7 +10,7 @@ SUBROUTINE init_reciprocal_parts_tab()
   use zero_mod
   use fft_interfaces,   only :invfft
   use mp,  only :mp_sum,mp_min
-  use gvect,  only :ngm,gg,gstart,g,nl,nlm,igtongl,gl,ngl
+  use gvect,  only :ngm,gg,gstart,g,igtongl,gl,ngl
   use us, only :spline_ps,dq
   use mp_pools, only: intra_pool_comm
 !  use splinelib

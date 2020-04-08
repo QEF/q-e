@@ -15,6 +15,7 @@ SUBROUTINE lr_alloc_init()
   USE kinds,                ONLY : dp
   USE ions_base,            ONLY : nat
   USE uspp,                 ONLY : nkb, okvan
+  USE lrus,                 ONLY : bbk, bbg, bbnc
   USE uspp_param,           ONLY : nhm
   USE fft_base,             ONLY : dfftp, dffts
   USE klist,                ONLY : nks
@@ -26,7 +27,7 @@ SUBROUTINE lr_alloc_init()
                                  & w_T_zeta_store, w_T_npol,chi
   USE realus,               ONLY : tg_psic
   USE noncollin_module,     ONLY : nspin_mag, npol, noncolin
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE becmod,               ONLY : allocate_bec_type, bec_type, becp
   USE lrus,                 ONLY : int3, int3_nc, becp1
   USE eqv,                  ONLY : dmuxc, evq, dpsi, dvpsi
@@ -141,7 +142,7 @@ SUBROUTINE lr_alloc_init()
   !
   ! Allocate the R-space unperturbed orbitals
   !
-  IF (dffts%have_task_groups) THEN
+  IF (dffts%has_task_groups) THEN
      ALLOCATE(tg_revc0(dffts%nnr_tg,nbnd,nksq))
      IF (.NOT. ALLOCATED(tg_psic)) &
           & ALLOCATE( tg_psic(dffts%nnr_tg) )
@@ -153,12 +154,13 @@ SUBROUTINE lr_alloc_init()
   ENDIF
   !
   ! Optical case: allocate the response charge-density
-  !
+  ! 
   IF (.NOT.eels) THEN
      ! 
      IF (gamma_only) THEN
         ALLOCATE(rho_1(dfftp%nnr,nspin_mag))
         rho_1(:,:)=0.0d0
+        ALLOCATE(bbg(nkb,nkb))
      ELSE
         ALLOCATE(rho_1c(dfftp%nnr,nspin_mag))
         rho_1c(:,:)=(0.0d0,0.0d0)
@@ -181,6 +183,9 @@ SUBROUTINE lr_alloc_init()
         IF (noncolin) THEN
            ALLOCATE (int3_nc(nhm,nhm,nat,nspin,1))
            int3_nc = (0.0d0, 0.0d0)
+           ALLOCATE(bbnc(nkb*npol, nkb*npol, nksq))
+        ELSE
+           ALLOCATE(bbk(nkb, nkb, nksq))
         ENDIF
         !
      ENDIF

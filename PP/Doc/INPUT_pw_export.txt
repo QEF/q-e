@@ -1,0 +1,103 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: pw_export.x / PWscf / Quantum Espresso (version: svn)
+------------------------------------------------------------------------
+
+
+Purpose of pw_export.x:
+   Writes PWSCF data for postprocessing purposes in XML format using IOTK lib.
+   Wave-functions are collected and written using IO_BASE module.
+
+Structure of the input data:
+============================
+
+   &INPUTPP
+     ...
+   /
+
+
+
+========================================================================
+NAMELIST: &INPUTPP
+
+   +--------------------------------------------------------------------
+   Variable:       prefix
+   
+   Type:           STRING
+   Status:         MANDATORY
+   Description:    the first part of the name of all the file written by the code
+                   should be equal to the value given in the main calculations.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       outdir
+   
+   Type:           STRING
+   Default:        "./"
+   Description:    the scratch directory where the massive data-files are written
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       pseudo_dir
+   
+   Type:           STRING
+   Default:        "./"
+   Description:    directory containing pseudopotential (PP) files
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       psfile(i), i=1,ntyp
+   
+   Type:           STRING
+   Default:        (empty string)
+   Description:    files containing i-th pseudopotential, where i=1, ntyp.
+                   PP numbering must follow the ordering defined in the input of pw.x
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       single_file
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    if .TRUE. one-file output is produced
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ascii
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    if .TRUE. output files are textual, otherwise they are partly binary.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       pp_file
+   
+   Type:           STRING
+   Default:        ""prefix".export/"
+   Description:    Output file.
+                   
+                   If it is omitted, a directory ""prefix".export/" is created
+                   in outdir and some output files are put there. Anyway all the data
+                   are accessible through the ""prefix".export/index.xml" file which
+                   contains implicit pointers to all the other files in the
+                   export directory. If reading is done by the IOTK library
+                   all data appear to be in index.xml even if physically it is not.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       uspp_spsi
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    when using USPP,  if set .TRUE. the code writes S | psi >
+                   and | psi > vectors separately in the output file.
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+This file has been created by helpdoc utility on Fri Jun 22 17:11:35 CEST 2018

@@ -1,0 +1,177 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x and pw2bgw.x toproduce files "
+$ECHO "for usage by BerkeleyGW."
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x pw2bgw.x"
+PSEUDO_LIST="Si.bhs"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PW2BGW_COMMAND="$PARA_PREFIX $BIN_DIR/pw2bgw.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as:       $PW_COMMAND"
+$ECHO "  running pw2bgw.x as:   $PW2BGW_COMMAND"
+$ECHO
+
+# self-consistent calculation
+cat > si.scf.in << EOF
+&control
+   prefix = 'si'
+   calculation = 'scf'
+   verbosity = 'high'
+   tstress = .true.
+   tprnfor = .true.
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+&system
+   ibrav = 0
+   a = 5.43
+   nat = 2
+   ntyp = 1
+   nbnd = 33
+   ecutwfc = 45.0
+   occupations = 'smearing'
+   smearing = 'mp'
+   degauss = 0.01
+/
+&electrons
+   electron_maxstep = 100
+   conv_thr = 1.0d-10
+   mixing_mode = 'plain'
+   mixing_beta = 0.7
+   mixing_ndim = 8
+   diagonalization = 'david'
+   diago_david_ndim = 4
+   diago_full_acc = .true.
+   startingwfc = 'random'
+/
+CELL_PARAMETERS alat
+       0.000000000   0.500000000   0.500000000
+       0.500000000   0.000000000   0.500000000
+       0.500000000   0.500000000   0.000000000
+ATOMIC_SPECIES
+  Si  28.086  Si.bhs
+ATOMIC_POSITIONS crystal
+  Si  -0.125000000  -0.125000000  -0.125000000
+  Si   0.125000000   0.125000000   0.125000000
+K_POINTS automatic
+8 8 8 0 0 0
+EOF
+$ECHO "  running the scf calculation...\c"
+$PW_COMMAND < si.scf.in > si.scf.out
+check_failure $?
+$ECHO " done"
+
+# pw2bgw
+cat > si.pw2bgw.in << EOF
+
+&input_pw2bgw
+   prefix = 'si'
+   outdir='$TMP_DIR/'
+   real_or_complex = 1
+   wfng_flag = .true.
+   wfng_file = 'WFN'
+   wfng_kgrid = .true.
+   wfng_nk1 = 8
+   wfng_nk2 = 8
+   wfng_nk3 = 8
+   wfng_dk1 = 0.0
+   wfng_dk2 = 0.0
+   wfng_dk3 = 0.0
+   rhog_flag = .true.
+   rhog_file = 'RHO'
+   vxcg_flag = .true.
+   vxcg_file = 'VXC'
+   vxc0_flag = .true.
+   vxc0_file = 'vxc0.dat'
+   vxc_flag = .true.
+   vxc_file = 'vxc.dat'
+   vxc_integral = 'g'
+   vxc_diag_nmin = 1
+   vxc_diag_nmax = 33
+   vxc_offdiag_nmin = 0
+   vxc_offdiag_nmax = 0
+   vxc_zero_rho_core = .true.
+   vscg_flag = .true.
+   vscg_file = 'VSC'
+   vkbg_flag = .true.
+   vkbg_file = 'VKB'
+/
+EOF
+$ECHO "  running pw2bgw.x to save files for BerkeleyGW...\c"
+$PW2BGW_COMMAND < si.pw2bgw.in > si.pw2bgw.out
+check_failure $?
+$ECHO " done"
+
+mv $TMP_DIR/vxc* ./
+
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/si.* $TMP_DIR/???
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"

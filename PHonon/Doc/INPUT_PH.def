@@ -263,6 +263,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		    from the electron-phonon interactions
 		    using the optimized tetrahedron method.
    	        }
+                opt -val 'epa' {
+                    Electron-phonon coupling matrix elements are written
+                    to file prefix.epa.k for further processing by program
+                    epa.x which implements electron-phonon averaged (EPA)
+                    approximation as described in G. Samsonidze & B. Kozinsky,
+                    Adv. Energy Mater. 2018, 1800246 doi:10.1002/aenm.201800246
+                    arXiv:1511.08115
+                }
 		info {
 		    For metals only, requires gaussian smearing.
 		
@@ -275,6 +283,22 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		}
 	    }
 	}
+
+    var el_ph_nsigma -type INTEGER {
+        default { 10 }
+        info {
+            The number of double-delta smearing values used in an
+            electron-phonon coupling calculation.
+        }
+    }
+
+    var el_ph_sigma -type REAL {
+        default { 0.02 }
+        info {
+            The spacing between double-delta smearing values used in
+            an electron-phonon coupling calculation.
+        }
+    }
 
 	var lshift_q  -type LOGICAL { 
 	    default { .false. }
@@ -339,9 +363,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
                 the Brillouin Zone includes k=0 only. The gamma_gamma
                 trick exploits symmetry and acoustic sum rule to reduce
                 the number of linear response calculations to the strict
-                minimum, as it is done in code phcg.x. This option MUST 
-                BE USED if a run with ph.x is to be followed by a run
-                with d3.x for third-order terms calculation.
+                minimum, as it is done in code phcg.x. 
 	    }
 	}
 
@@ -415,6 +437,84 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
                 with offset determined by k1,k2,k3.
             }
         }
+
+        var diagonalization -type CHARACTER {
+            default { 'david' }
+            options {
+	        info {
+                  Diagonalization method for the non-SCF calculations.
+ 	        }
+                opt -val 'david' {
+                    Davidson iterative diagonalization with overlap matrix
+                    (default). Fast, may in some rare cases fail.
+                }
+
+                opt -val 'cg' {
+                    Conjugate-gradient-like band-by-band diagonalization.
+                    Slower than 'david' but uses less memory and is 
+                    (a little bit) more robust.
+                }
+            }
+        }
+
+        var read_dns_bare -type LOGICAL {
+            default { .false. }
+            info {
+                If .true. the PH code tries to read three files in the DFPT+U 
+                calculation: dns_orth, dns_bare, d2ns_bare.
+                dns_orth and dns_bare are the first-order variations of
+                the occupation matrix, while d2ns_bare is the second-order
+                variation of the occupation matrix. These matrices are 
+                computed only once during the DFPT+U calculation. However,
+                their calculation (especially of d2ns_bare) is computationally
+                expensive, this is why they are written to file and then can be
+                read (e.g. for restart) in order to save time.
+            }
+        }
+
+        var ldvscf_interpolate -type  LOGICAL {
+            default { .false. }
+            info {
+                If .true., use Fourier interpolation of phonon potential
+                to compute the induced part of phonon potential at each
+                q point. Results of a dvscf_q2r.x run is needed.
+                Requires @ref trans = .false..
+            }
+        }
+
+        group {
+            label { Optional variables for dvscf interpolation: }
+
+            var wpot_dir -type CHARACTER {
+                default { outdir // 'w_pot/' }
+                info {
+                    Directory where the w_pot binary files are written.
+                    Must be the same with wpot_dir used in dvscf_q2r.x.
+                    The real space potential files are stored in wpot_dir
+                    with names ${prefix}.wpot.irc${irc}//"1".
+                }
+            }
+            var do_long_range  -type LOGICAL {
+                default { .false. }
+                info {
+                    If .true., add the long-range part of the potential
+                    to the Fourier interpolated potential as in:
+                    S. Ponce et al, J. Chem. Phys. 143, 102813 (2015).
+                    Reads dielectric matrix and Born effective charges from
+                    the ${wpot_dir}/tensors.dat file, written in dvscf_q2r.x.
+                    Currently, only the dipole (Frohlich) part is implemented.
+                    The quadrupole part is not implemented.
+                }
+            }
+            var do_charge_neutral  -type LOGICAL {
+                default { .false. }
+                info {
+                    If .true., impose charge neutrality on the Born effective
+                    charges. Used only if @ref do_long_range = .true..
+                }
+            }
+        }
+
 
 	group {
 	    label { Specification of irreducible representation }

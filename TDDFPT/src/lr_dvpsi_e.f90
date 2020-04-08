@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -28,9 +28,9 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   USE io_global,            ONLY : stdout
   USE klist,                ONLY : xk, ngk, igk_k
   USE wvfct,                ONLY : npwx, nbnd, g2kin, et
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE gvect,                ONLY : g
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : npol
   USE becmod,               ONLY : allocate_bec_type, calbec, becp, &
                                    & deallocate_bec_type,  bec_type
   USE uspp,                 ONLY : okvan, nkb, vkb
@@ -147,7 +147,8 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   !
   IF (okvan) THEN
      ALLOCATE (spsi ( npwx*npol, nbnd))
-     CALL lr_sm1_psi (.TRUE.,ik,npwx,ngk(ik),nbnd,dvpsi,spsi)
+     CALL lr_sm1_initialize()
+     CALL lr_sm1_psi(ik,npwx,ngk(ik),nbnd,dvpsi,spsi)
      dvpsi(:,:) = spsi(:,:)
      DEALLOCATE(spsi)
   ENDIF

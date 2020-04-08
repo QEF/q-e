@@ -1,0 +1,43 @@
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='Ni2MnGa'
+    pseudo_dir = '/scratch/timrov/WORK_DFPT_plus_U/A_PORTING_2018/A_Gitlab/A_my_Gitlab_08.11.2018/q-e/pseudo/'
+    outdir='/scratch/timrov/WORK_DFPT_plus_U/A_PORTING_2018/A_Gitlab/A_my_Gitlab_08.11.2018/q-e/tempdir/'
+    verbosity='high'
+ /
+ &system
+    ibrav = 7,
+    celldm(1) = 7.80,
+    celldm(3) = 1.4142136,
+    nat = 4, 
+    ntyp = 3,
+    ecutwfc = 50.0
+    ecutrho = 400.0
+    occupations ='smearing',
+    smearing ='mv'
+    degauss = 0.01,
+    nspin = 2,
+    starting_magnetization(1) = 0.5
+    starting_magnetization(2) = 0.5
+    lda_plus_u = .true.,
+    lda_plus_u_kind = 0,
+    U_projection_type = 'ortho-atomic',
+    Hubbard_U(1) = 1.d-8
+    Hubbard_U(2) = 1.d-8
+ /
+ &electrons
+    conv_thr =  1.d-15
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Mn  54.938  Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF 
+ Ni  58.693  Ni.pbesol-n-rrkjus_psl.0.1.UPF 
+ Ga  69.723  Ga.pbesol-dn-rrkjus_psl.0.2.UPF 
+ATOMIC_POSITIONS {crystal}
+ Mn 0.0000000000   0.0000000000   0.0000000000
+ Ni 0.5000000000   0.7500000000   0.2500000000 
+ Ni 0.5000000000   0.2500000000   0.7500000000 
+ Ga 0.0000000000   0.5000000000   0.5000000000
+K_POINTS {automatic}
+ 4 4 4 0 0 0

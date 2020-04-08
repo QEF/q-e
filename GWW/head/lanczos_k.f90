@@ -20,10 +20,10 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
   USE constants, ONLY : e2, pi, tpi, fpi
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
   USE wvfct,    ONLY : g2kin, npwx, nbnd
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions, ONLY : evc, psic
   USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
   USE mp_world, ONLY : mpime, world_comm
-  USE gvecs,                ONLY : nls, nlsm, doublegrid
+  USE gvecs,                ONLY : doublegrid
   USE g_psi_mod,            ONLY : h_diag, s_diag
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE klist,                ONLY : xk,igk_k, ngk
@@ -319,7 +319,7 @@ subroutine  h_psi_scissor( ik,lda, n, m, psi, hpsi )
   USE kinds,    ONLY : DP
   USE gvect,    ONLY : gstart
   USE wvfct,    ONLY : npwx, npw, nbnd,et
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE wannier_gw, ONLY : scissor
   USE mp, ONLY : mp_sum
   USE mp_world, ONLY : world_comm

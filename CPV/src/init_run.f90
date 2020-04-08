@@ -18,18 +18,17 @@ SUBROUTINE init_run()
                                        ndr, ndw, tfor, tprnfor, tpre, ts_vdw, &
                                        force_pairing
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
-  USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, cdms
+  USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, cdms, ityp
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
                                        vels, velsm, velsp, fion, fionm
   USE gvecw,                    ONLY : ngw, ngw_g, g2kin, g2kin_init
   USE smallbox_gvec,            ONLY : ngb
-  USE gvecs,                    ONLY : ngms
-  USE gvect,                    ONLY : ngm, gstart, gg
+  USE gvect,                    ONLY : gstart, gg
   USE fft_base,                 ONLY : dfftp, dffts
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
   USE core,                     ONLY : rhoc
-  USE wavefunctions_module,     ONLY : c0_bgrp, cm_bgrp, phi_bgrp
+  USE wavefunctions,     ONLY : c0_bgrp, cm_bgrp, phi_bgrp
   USE ensemble_dft,             ONLY : tens, z0t
   USE cg_module,                ONLY : tcg
   USE electrons_base,           ONLY : nudx, nbnd
@@ -43,7 +42,7 @@ SUBROUTINE init_run()
                                        irb, eigrb, rhog, rhos, rhor,     &
                                        acc, acc_this_run, wfill, &
                                        edft, nfi, vpot, ht0, htm, iprint_stdout
-  USE cp_main_variables,        ONLY : allocate_mainvar, descla
+  USE cp_main_variables,        ONLY : allocate_mainvar, idesc
   USE energies,                 ONLY : eself, enl, ekin, etot, enthal, ekincm
   USE dener,                    ONLY : detot
   USE time_step,                ONLY : dt2, delt, tps
@@ -51,7 +50,7 @@ SUBROUTINE init_run()
   USE electrons_base,           ONLY : nbspx_bgrp
   USE cell_nose,                ONLY : xnhh0, xnhhm, vnhh
   USE funct,                    ONLY : dft_is_meta, dft_is_hybrid
-  USE metagga,                  ONLY : crosstaus, dkedtaus, gradwfc
+  USE metagga_cp,               ONLY : crosstaus, dkedtaus, gradwfc
   !
   USE efcalc,                   ONLY : clear_nbeg
   USE local_pseudo,             ONLY : allocate_local_pseudo
@@ -63,11 +62,10 @@ SUBROUTINE init_run()
   USE efield_module,            ONLY : allocate_efield, allocate_efield2
   USE cg_module,                ONLY : allocate_cg
   USE wannier_module,           ONLY : allocate_wannier  
-  USE io_files,                 ONLY : tmp_dir, prefix
+  USE io_files,                 ONLY : tmp_dir, create_directory, restart_dir
   USE io_global,                ONLY : ionode, stdout
   USE printout_base,            ONLY : printout_base_init
   USE wave_types,               ONLY : wave_descriptor_info
-  USE xml_io_base,              ONLY : restart_dir, create_directory
   USE orthogonalize_base,       ONLY : mesure_diag_perf, mesure_mmul_perf
   USE ions_base,                ONLY : ions_reference_positions, cdmi
   USE mp_bands,                 ONLY : nbgrp
@@ -75,9 +73,9 @@ SUBROUTINE init_run()
   USE wrappers
   USE ldaU_cp
   USE control_flags,            ONLY : lwfpbe0nscf         ! exx_wf related 
-  USE wavefunctions_module,     ONLY : cv0                 ! exx_wf related
+  USE wavefunctions,     ONLY : cv0                 ! exx_wf related
   USE wannier_base,             ONLY : vnbsp               ! exx_wf related
-  USE cp_restart,               ONLY : cp_read_wfc_Kong    ! exx_wf related
+  !!!USE cp_restart,               ONLY : cp_read_wfc_Kong    ! exx_wf related
   USE input_parameters,         ONLY : ref_cell
   USE cell_base,                ONLY : ref_tpiba2, init_tpiba2
   USE tsvdw_module,             ONLY : tsvdw_initialize
@@ -105,12 +103,13 @@ SUBROUTINE init_run()
   IF( nbgrp > 1 .AND. force_pairing ) &
      CALL errore( ' init_run ', ' force_pairing with parallelization over bands not implemented yet ', 1 )
   !
-  CALL printout_base_init( tmp_dir, prefix )
+  ! ... Open files containing MD information
   !
-  dirname = restart_dir( tmp_dir, ndw )
+  CALL printout_base_init( )
   !
   ! ... Create main restart directory
   !
+  dirname = restart_dir( ndw )
   CALL create_directory( dirname )
   !
   ! ... initialize g-vectors, fft grids 
@@ -138,7 +137,7 @@ SUBROUTINE init_run()
   !     allocate and initialize local and nonlocal potentials
   !=======================================================================
   !
-  CALL allocate_local_pseudo( ngms, nsp )
+  CALL allocate_local_pseudo( dffts%ngm, nsp )
   !
   CALL nlinit()
   !
@@ -146,7 +145,7 @@ SUBROUTINE init_run()
   !     allocation of all arrays not already allocated in init and nlinit
   !=======================================================================
   !
-  CALL allocate_mainvar( ngw, ngw_g, ngb, ngms, ngm, dfftp%nr1,dfftp%nr2,dfftp%nr3, dfftp%nr1x, &
+  CALL allocate_mainvar( ngw, ngw_g, ngb, dffts%ngm, dfftp%ngm, dfftp%nr1,dfftp%nr2,dfftp%nr3, dfftp%nr1x, &
                          dfftp%nr2x, dfftp%my_nr3p, dfftp%nnr, dffts%nnr, nat, nax, nsp,   &
                          nspin, nbsp, nbspx, nupdwn, nkb, gstart, nudx, &
                          tpre, nbspx_bgrp )
@@ -214,19 +213,22 @@ SUBROUTINE init_run()
      ALLOCATE( dkedtaus(  dffts%nnr, 3, 3, nspin ) )
      ALLOCATE( gradwfc(   dffts%nnr, 3 ) )
      !
+     if (nspin.ne.1) &
+       CALL errore( ' init_run ', 'spin-polarized stress not implemented for metaGGA', 1 )
+     !
   END IF
   !
   IF ( lwf ) THEN
      IF( nbgrp > 1 ) &
         CALL errore( ' init_run ', ' wannier with band parallelization not implemented ', 1 )
-     CALL allocate_wannier( nbsp, dffts%nnr, nspin, ngm )
+     CALL allocate_wannier( nbsp, dffts%nnr, nspin, dfftp%ngm )
   END IF
   !
   IF ( tens .OR. tcg ) THEN
      IF( nbgrp > 1 ) &
         CALL errore( ' init_run ', ' ensemble_dft with band parallelization not implemented ', 1 )
      CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, nspin, nbspx, &
-                                 dffts%nnr, nat, descla )
+                                 dffts%nnr, nat, idesc )
   END IF
   !
   IF ( tcg ) THEN 
@@ -265,8 +267,8 @@ SUBROUTINE init_run()
   phi_bgrp = ( 0.D0, 0.D0 )
   !
   IF ( tens ) then
-     CALL id_matrix_init( descla, nspin )
-     CALL h_matrix_init( descla, nspin )
+     CALL id_matrix_init( idesc, nspin )
+     CALL h_matrix_init( idesc, nspin )
   ENDIF
   !
   a1(:)=at(:,1)*alat; a2(:)=at(:,2)*alat; a3(:)=at(:,3)*alat 
@@ -314,7 +316,8 @@ SUBROUTINE init_run()
      !======================================================================
      ! Kong, read the valence orbitals
      IF(lwfpbe0nscf) THEN
-        CALL cp_read_wfc_Kong( 36, tmp_dir, 1, 1, 1, 1, cv0, 'v' )
+       !!! CALL cp_read_wfc_Kong( 36, tmp_dir, 1, 1, 1, 1, cv0, 'v' )
+       CALL errore( 'init_run', 'cp_read_wfc_Kong no longer available', 1)
      ENDIF
      !======================================================================
      i = 1  
@@ -350,7 +353,7 @@ SUBROUTINE init_run()
   !
   !  Set center of mass for scaled coordinates
   !
-  CALL ions_cofmass( taus, amass, na, nsp, cdms )
+  CALL ions_cofmass( taus, amass, nat, ityp, cdms )
   !
   IF ( nbeg <= 0 .OR. lwf ) THEN
      !

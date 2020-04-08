@@ -24,7 +24,7 @@ subroutine project (ipol)
   USE gvect,           ONLY : g,gstart
   USE wvfct,           ONLY : npw, npwx, nbnd, g2kin, et
   USE klist,           ONLY : igk_k
-  USE wavefunctions_module, ONLY: evc
+  USE wavefunctions, ONLY: evc
 
   USE noncollin_module,ONLY : noncolin, npol
   USE becmod,          ONLY : bec_type, becp, calbec, &

@@ -18,7 +18,7 @@ SUBROUTINE wfc_gamma_real(itask,ispin)
 
   USE kinds,                ONLY : DP
   USE gvect,                ONLY : gstart
-  USE gvecs,              ONLY : nls, nlsm, doublegrid
+  USE gvecs,              ONLY : doublegrid
    USE io_files,             ONLY : iunwfc, nwordwfc, diropn
   USE wvfct,                ONLY : nbnd, npwx, npw, wg, et
   USE mp,                   ONLY : mp_bcast
@@ -27,7 +27,7 @@ SUBROUTINE wfc_gamma_real(itask,ispin)
                                    nkstot, wk, xk, nelec, nelup, neldw, &
                                    two_fermi_energies, igk_k
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions, ONLY : evc, psic
   USE io_files,             ONLY : diropn
   USE wannier_gw,           ONLY : becp_gw, becp_gw_c, l_verbose
   USE uspp
@@ -96,15 +96,15 @@ SUBROUTINE wfc_gamma_real(itask,ispin)
                 !
                 ! ... two ffts at the same time
                 !
-        psic(nls(igk_k(1:npw,1)))  = evc(1:npw,ibnd) + &
+        psic(dffts%nl(igk_k(1:npw,1)))  = evc(1:npw,ibnd) + &
              ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1)
-        psic(nlsm(igk_k(1:npw,1))) = CONJG( evc(1:npw,ibnd) - &
+        psic(dffts%nlm(igk_k(1:npw,1))) = CONJG( evc(1:npw,ibnd) - &
              ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1) )
                 !
      ELSE
         !
-        psic(nls(igk_k(1:npw,1)))  = evc(1:npw,ibnd)
-        psic(nlsm(igk_k(1:npw,1))) = CONJG( evc(1:npw,ibnd) )
+        psic(dffts%nl(igk_k(1:npw,1)))  = evc(1:npw,ibnd)
+        psic(dffts%nlm(igk_k(1:npw,1))) = CONJG( evc(1:npw,ibnd) )
            !
      END IF
              !
@@ -141,7 +141,7 @@ SUBROUTINE wfc_gamma_real(itask,ispin)
   SUBROUTINE write_wfc_plot(itask)
 !save wannier functions on disk for plotting
      USE io_files,             ONLY : nwordwfc, diropn
-     USE wavefunctions_module, ONLY : evc
+     USE wavefunctions, ONLY : evc
    
     implicit none
 

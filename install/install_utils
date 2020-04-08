@@ -28,5 +28,11 @@ define download_and_unpack
   exit 1 ; fi ; fi ; fi)
   if test ! -e ../$(3); then \
   (gzip -dc ../archive/`echo "$(2)" | sed 's/.*\///;s/.*=//'` | \
-    (cd ../ ; tar -xvf - ; ln -s $(1) $(3)) ) ; fi
+    (cd ../ ; tar -xvf - ) ) ; \
+  if test "`echo $$?`" -ne "0" ; then \
+  echo "*** Unable to download $(2)." ; \
+  echo "*** Verify that the url is correct." ; \
+  exit 1 ; \
+  else \
+  (cd ../ ; ln -s $(1) $(3)) ; fi ; fi
 endef

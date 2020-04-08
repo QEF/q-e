@@ -39,7 +39,7 @@ SUBROUTINE check_initial_status(auxdyn)
   ! nsymq_iq : the order of the small group of q for each q
   !
   ! The following variables are set by this routine on the basis of
-  ! start_irr, last_irr, start_iq, last_iq, OR of modenum, OR of ifat and 
+  ! start_irr, last_irr, start_q, last_q, OR of modenum, OR of ifat and 
   ! atomo:
   !
   ! comp_iq : =.TRUE. if the q point is calculated in this run
@@ -69,10 +69,10 @@ SUBROUTINE check_initial_status(auxdyn)
   USE io_global,       ONLY : stdout
   USE control_flags,   ONLY : modenum
   USE ions_base,       ONLY : nat
-  USE io_files,        ONLY : tmp_dir
+  USE io_files,        ONLY : tmp_dir, postfix
   USE lsda_mod,        ONLY : nspin
   USE scf,             ONLY : rho
-  USE disp,            ONLY : nqs, x_q, comp_iq, nq1, nq2, nq3, &
+  USE disp,            ONLY : nqs, x_q, wq, comp_iq, nq1, nq2, nq3, &
                               done_iq, lgamma_iq
   USE qpoint,          ONLY : xq
   USE control_lr,      ONLY : lgamma
@@ -91,9 +91,8 @@ SUBROUTINE check_initial_status(auxdyn)
   USE io_rho_xml,      ONLY : write_scf
   USE mp_images,       ONLY : nimage, intra_image_comm
   USE io_global,       ONLY : ionode, ionode_id
-  USE io_files,        ONLY : prefix
+  USE io_files,        ONLY : prefix , create_directory
   USE mp,              ONLY : mp_bcast
-  USE xml_io_base,     ONLY : create_directory
   USE mp_global,       ONLY : mp_global_end
   USE el_phon,         ONLY : elph_mat
   ! YAMBO >
@@ -105,7 +104,8 @@ SUBROUTINE check_initial_status(auxdyn)
   IMPLICIT NONE
   !
   CHARACTER (LEN=256) :: auxdyn, filename
-  CHARACTER (LEN=6), EXTERNAL :: int_to_char
+  CHARACTER (LEN=256), EXTERNAL :: trimcheck
+  CHARACTER (LEN=6  ), EXTERNAL :: int_to_char
   LOGICAL :: exst
   INTEGER :: iq, iq_start, ierr
   !
@@ -138,8 +138,10 @@ SUBROUTINE check_initial_status(auxdyn)
         nqs = 1
         last_q = 1
         ALLOCATE(x_q(3,1))
+        ALLOCATE(wq(1))
         ALLOCATE(lgamma_iq(1))
         x_q(:,1)=xq(:)
+        wq(1)=1.0d0
         lgamma_iq(1)=lgamma
         !
      END IF
@@ -196,8 +198,8 @@ SUBROUTINE check_initial_status(auxdyn)
 !  If a recover or a restart file exists the first q point is the current one.
 !
      IF ((.NOT.lgamma_iq(current_iq).OR. newgrid).AND.lqdir) THEN
-        tmp_dir_phq= TRIM (tmp_dir_ph) //TRIM(prefix)//&
-                          & '.q_' // TRIM(int_to_char(current_iq))//'/'
+        tmp_dir_phq= trimcheck ( TRIM (tmp_dir_ph) // TRIM(prefix) // &
+                               & '.q_' // int_to_char(current_iq) )
         tmp_dir=tmp_dir_phq
         CALL check_restart_recover(ext_recover, ext_restart)
         tmp_dir=tmp_dir_ph
@@ -304,10 +306,14 @@ SUBROUTINE check_initial_status(auxdyn)
      ! ... each q /= gamma works on a different directory. We create them
      ! here and copy the charge density inside
      !
-     IF ((.NOT.lgamma.OR. newgrid).AND.lqdir) THEN
-        tmp_dir_phq= TRIM (tmp_dir_ph) //TRIM(prefix)//&
-                          & '.q_' // TRIM(int_to_char(iq))//'/'
-        filename=TRIM(tmp_dir_phq)//TRIM(prefix)//'.save/charge-density.dat'
+     IF ((.NOT.lgamma.OR. newgrid .OR. (qplot .AND. iq /=1)) .AND.lqdir) THEN
+        tmp_dir_phq= trimcheck ( TRIM (tmp_dir_ph) // TRIM(prefix) // &
+                                & '.q_' // int_to_char(iq) ) 
+#if defined(__HDF5)
+        filename=TRIM(tmp_dir_phq)//TRIM(prefix)//postfix//'charge-density.hdf5' 
+#else
+        filename=TRIM(tmp_dir_phq)//TRIM(prefix)//postfix//'charge-density.dat'
+#endif 
         IF (ionode) inquire (file =TRIM(filename), exist = exst)
         !
         CALL mp_bcast( exst, ionode_id, intra_image_comm )
@@ -504,7 +510,17 @@ SUBROUTINE check_initial_status(auxdyn)
    LOGICAL :: exst
    CHARACTER(LEN=256) :: file_input, file_output
    CHARACTER(LEN=6), EXTERNAL :: int_to_char
+   CHARACTER(LEN=8) :: phpostfix
 
+#if defined (_WIN32)
+#if defined (__PGI)
+   phpostfix='.phsave\\'
+#else
+   phpostfix='.phsave\'
+#endif
+#else
+   phpostfix='.phsave/'
+#endif
    CALL mp_barrier(intra_image_comm)
    IF (nimage == 1) RETURN
    IF (my_image_id==0) RETURN
@@ -513,12 +529,12 @@ SUBROUTINE check_initial_status(auxdyn)
       DO irr=0, irr_iq(iq)
          IF (comp_irr_iq(irr,iq).and.ionode) THEN
             file_input=TRIM( tmp_dir_ph ) // &
-                    & TRIM( prefix ) // '.phsave/dynmat.'  &
+                    & TRIM( prefix ) // phpostfix // 'dynmat.'  &
                     &  // TRIM(int_to_char(iq))&
                     &  // '.' // TRIM(int_to_char(irr)) // '.xml'
 
             file_output=TRIM( tmp_dir_save ) // '/_ph0/' &
-                    &    // TRIM( prefix ) // '.phsave/dynmat.' &
+                    &    // TRIM( prefix ) // phpostfix // 'dynmat.' &
                     &    // TRIM(int_to_char(iq))  &
                     &    // '.' // TRIM(int_to_char(irr)) // '.xml'
 
@@ -527,12 +543,12 @@ SUBROUTINE check_initial_status(auxdyn)
             IF ( elph .AND. irr>0 ) THEN
 
                file_input=TRIM( tmp_dir_ph ) // &
-                    & TRIM( prefix ) // '.phsave/elph.'  &
+                    & TRIM( prefix ) // phpostfix // 'elph.'  &
                     &  // TRIM(int_to_char(iq))&
                     &  // '.' // TRIM(int_to_char(irr)) // '.xml'
 
                file_output=TRIM( tmp_dir_save ) // '/_ph0/' // &
-                    &   TRIM( prefix ) // '.phsave/elph.' &
+                    &   TRIM( prefix ) // phpostfix // 'elph.' &
                     &    // TRIM(int_to_char(iq))  &
                     &    // '.' // TRIM(int_to_char(irr)) // '.xml'
 
@@ -544,10 +560,10 @@ SUBROUTINE check_initial_status(auxdyn)
       IF ((ldisp.AND..NOT. (lgauss .OR. ltetra)).OR.(epsil.OR.zeu.OR.zue)) THEN
          IF (lgamma_iq(iq).AND.comp_irr_iq(0,iq).AND.ionode) THEN
             file_input=TRIM( tmp_dir_ph ) // &
-                      TRIM( prefix ) // '.phsave/tensors.xml'
+                      TRIM( prefix ) // phpostfix // 'tensors.xml'
 
             file_output=TRIM( tmp_dir_save ) // '/_ph0/' &
-                    // TRIM( prefix ) // '.phsave/tensors.xml'
+                    // TRIM( prefix ) // phpostfix // 'tensors.xml'
 
             INQUIRE (FILE = TRIM(file_input), EXIST = exst)
             IF (exst) ios = f_copy(file_input, file_output)

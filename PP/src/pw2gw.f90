@@ -10,6 +10,17 @@
 ! Please note just symmorphic symm. op. have to be used
 ! Use input option of pw.x: force_symmorphic=.TRUE.
 
+! Update 20 November 2017 (Davide Grassano, Adriano Mosca Conte)
+! Added spin-orbit case for nspin == 4
+! Added flag to input file:
+!   Emin: Starting energy of eps spectra
+!   Emax: Max energy of eps spectra
+!   DeltaE: Energy steps for eps sectra
+!   qplda: disable/enable priting of qplda file (default = false)
+!   vkb: disable/enable priting of fort.15 file (default = false)
+!   vxcdiag: disable/enable priting of vxcdiag.dat file (default = false)
+! Using proper units(tpiba) for k-vectors in k+G sum before calculating matrixelements
+
 !-----------------------------------------------------------------------
 PROGRAM pw2gw
   !-----------------------------------------------------------------------
@@ -20,11 +31,12 @@ PROGRAM pw2gw
   USE io_files,   ONLY : prefix, tmp_dir
   USE io_global,  ONLY : ionode, ionode_id
   USE mp,         ONLY : mp_bcast
-  USE mp_world,   ONLY : world_comm, nproc
   USE mp_global,  ONLY : mp_startup
+  USE mp_images,  ONLY : intra_image_comm
   USE mp_pools,   ONLY : kunit
   USE environment,ONLY : environment_start, environment_end
   USE us,         ONLY : spline_ps
+  USE kinds,     ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -33,11 +45,12 @@ PROGRAM pw2gw
   !
   INTEGER :: ios
   INTEGER :: kunittmp
-  LOGICAL :: use_gmaps
+  LOGICAL :: use_gmaps, qplda, vkb, vxcdiag
   CHARACTER(len=20) :: what
-  CHARACTER(len=30) :: when
+  REAL(kind=DP) :: Emin, Emax, DeltaE
 
-  NAMELIST / inputpp / prefix, outdir, what, use_gmaps
+  NAMELIST / inputpp / prefix, outdir, what, use_gmaps, Emin, Emax, DeltaE, &
+  qplda, vkb, vxcdiag
   !
   ! initialise environment
   !
@@ -52,7 +65,13 @@ PROGRAM pw2gw
   CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
   IF ( trim( outdir ) == ' ' ) outdir = './'
   what   = 'gw'
+  qplda = .false.
+  vkb = .false.
+  vxcdiag = .false.
   use_gmaps = .false.
+  Emin = 0.0
+  Emax = 30.0
+  DeltaE = 0.05
 
   ios = 0
   IF ( ionode )  THEN
@@ -62,15 +81,22 @@ PROGRAM pw2gw
      !
   ENDIF
   !
-  CALL mp_bcast( ios, ionode_id, world_comm )
+  CALL mp_bcast( ios, ionode_id, intra_image_comm )
   IF (ios /= 0)   CALL errore('pw2gw', 'reading inputpp namelist', abs(ios))
   !
   ! ... Broadcast variables
   !
-  CALL mp_bcast( prefix, ionode_id, world_comm )
-  CALL mp_bcast(tmp_dir, ionode_id, world_comm )
-  CALL mp_bcast( what, ionode_id, world_comm )
-  CALL mp_bcast( use_gmaps, ionode_id, world_comm )
+  CALL mp_bcast( prefix, ionode_id, intra_image_comm )
+  CALL mp_bcast(tmp_dir, ionode_id, intra_image_comm )
+  CALL mp_bcast( what, ionode_id, intra_image_comm )
+  CALL mp_bcast( use_gmaps, ionode_id, intra_image_comm )
+  CALL mp_bcast( qplda, ionode_id, intra_image_comm )
+  CALL mp_bcast( vkb, ionode_id, intra_image_comm )
+  CALL mp_bcast( vxcdiag, ionode_id, intra_image_comm )
+  CALL mp_bcast( Emin, ionode_id, intra_image_comm )
+  CALL mp_bcast( Emax, ionode_id, intra_image_comm )
+  CALL mp_bcast( DeltaE, ionode_id, intra_image_comm )
+
   !
 
   spline_ps = .false.
@@ -78,16 +104,17 @@ PROGRAM pw2gw
   CALL read_file
   CALL openfil_pp
   !
-  CALL mp_bcast(spline_ps, ionode_id, world_comm)
+  CALL mp_bcast(spline_ps, ionode_id, intra_image_comm)
 #if defined __MPI
   kunittmp = kunit
 #else
   kunittmp = 1
 #endif
   !
+  !WRITE(*,*) what, qplda, vxcdiag, Emin, Emax, DeltaE
   IF( trim( what ) == 'gw' ) THEN
-    CALL compute_gw  ( use_gmaps )
-  ELSE
+    CALL compute_gw  ( Emin, Emax, DeltaE, use_gmaps, qplda, vkb, vxcdiag )
+  ELSEIF( trim( what ) == 'gmaps' ) THEN
     CALL write_gmaps ( kunittmp )
   ENDIF
   !
@@ -98,7 +125,7 @@ PROGRAM pw2gw
 END PROGRAM pw2gw
 
 
-SUBROUTINE compute_gw( use_gmaps )
+SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdiag_f )
 
   ! This routine creates the QPLDA and the matrixelements
   ! tform = .false. UNFORMATTED QPLDA
@@ -112,17 +139,18 @@ SUBROUTINE compute_gw( use_gmaps )
   USE wvfct,     ONLY : npwx, nbnd, wg, et
   USE gvecw,     ONLY : gcutw
   USE control_flags, ONLY : gamma_only
-  USE gvect,         ONLY : ngm, g, gg, ig_l2g, nl
+  USE gvect,         ONLY : ngm, g, gg, ig_l2g
   USE fft_base,  ONLY: dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
   USE klist ,        ONLY : nks, xk, wk, ngk, igk_k
   USE lsda_mod,      ONLY : nspin
   USE io_files,      ONLY : nwordwfc, iunwfc
-  USE wavefunctions_module, ONLY : evc, psic
-  USE mp_global, ONLY : intra_image_comm, npool
+  USE wavefunctions, ONLY : evc, psic
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_sum , mp_max
-  USE mp_world,  ONLY : world_comm, mpime, nproc
+  USE mp_pools,  ONLY : npool
+  USE mp_images, ONLY : intra_image_comm
+  USE mp_world,  ONLY : mpime, nproc
   USE mp_wave,   ONLY : mergewf
   USE parallel_include
   USE scf,       ONLY : rho, rho_core, rhog_core
@@ -136,7 +164,8 @@ SUBROUTINE compute_gw( use_gmaps )
 
   IMPLICIT NONE
 
-  LOGICAL, INTENT(in) :: use_gmaps
+  LOGICAL, INTENT(in) :: use_gmaps, qplda, vkb, vxcdiag_f
+  REAL(kind=DP), INTENT( in) :: omegamax, omegamin, d_omega
 
   INTEGER :: ii(16), ngw, nkpt, ig, ik, ir, n, i,j,k, io = 98, iband1, iband2
   INTEGER :: npw, omax, o, iproc
@@ -148,7 +177,7 @@ SUBROUTINE compute_gw( use_gmaps )
   REAL(kind=sgl), ALLOCATABLE :: xk_s(:,:), eig_s(:,:), focc_s(:,:)
   REAL(kind=DP):: g2max, a1(3), a2(3), a3(3),norm, xkgk(3), rrhotwx(3), delta
   REAL(kind=DP):: alpha, egap, halfalpha, Df, const, dummy
-  REAL(kind=DP), PARAMETER :: omegamax = 30.0
+  !REAL(kind=DP), PARAMETER :: omegamax = 30.0
   REAL(kind=DP), ALLOCATABLE:: gsort(:), eig(:,:), focc(:,:), kpg(:,:), omegatt(:), omeg(:)
   REAL(kind=DP), ALLOCATABLE:: pp1(:,:), pp2(:,:), pp3(:,:)
   REAL(kind=DP), ALLOCATABLE:: epsx(:,:), epsy(:,:), epsz(:,:)
@@ -163,6 +192,7 @@ SUBROUTINE compute_gw( use_gmaps )
   INTEGER :: igwx, igwxx, comm, ierr, ig_max, igwx_r
   INTEGER :: igwx_p(nproc)
   INTEGER, ALLOCATABLE :: igk_l2g(:)
+  INTEGER :: npol
   !
   REAL(kind=DP), ALLOCATABLE :: vkb0(:), djl(:), vec_tab(:), vec_tab_d2y(:)
   INTEGER :: nb, nt, size_tab, size_tab_d2y, ipw, l
@@ -173,17 +203,18 @@ SUBROUTINE compute_gw( use_gmaps )
   INTEGER :: istatus( MPI_STATUS_SIZE )
 #endif
   !
-  IF( nspin > 1 ) CALL errore('pw2gw','Spin polarization not implemented',1)
-  IF( npool > 1 ) CALL errore('pw2gw','parallel run with pools not allowed yet',1)
+  IF( nspin == 4 ) WRITE(*,*) "nspin = 4"
+  IF( nspin == 2 ) CALL errore('pw2gw','Spin polarization not implemented',1)
+  IF( npool > 1 )  CALL errore('pw2gw','parallel run with pools not allowed yet',1)
   !
   !
   IF( mpime == 0 ) THEN
      IF (t_form) THEN
         WRITE (6,'(//" writing LDA info on unit 98 FORMATTED")')
-        OPEN (io, FILE='QPLDA',STATUS='unknown',FORM='FORMATTED')
+        IF( qplda) OPEN (io, FILE='QPLDA',STATUS='unknown',FORM='FORMATTED')
      ELSE
         WRITE (6,'(//" writing LDA info on unit io UNFORMATTED")')
-        OPEN (io, FILE='QPLDA',STATUS='unknown',FORM='UNFORMATTED')
+        IF( qplda) OPEN (io, FILE='QPLDA',STATUS='unknown',FORM='UNFORMATTED')
      ENDIF
      WRITE (6,'(//" writing matrixelements on unit 98 FORMATTED")')
      OPEN (90, FILE='matrixelements',STATUS='unknown',FORM='FORMATTED')
@@ -195,10 +226,10 @@ SUBROUTINE compute_gw( use_gmaps )
   titleo(2)='test version'
   IF( mpime == 0 ) THEN
      IF (t_form) THEN
-        WRITE (io,'(A80/A80)') titleo(1), titleo(2)
+        IF( qplda) WRITE (io,'(A80/A80)') titleo(1), titleo(2)
      ELSE
-        WRITE (io) titleo(1)
-        WRITE (io) titleo(2)
+        IF( qplda) WRITE (io) titleo(1)
+        IF( qplda) WRITE (io) titleo(2)
      ENDIF
      !
      WRITE(6,*) 'qplda title'
@@ -215,10 +246,10 @@ SUBROUTINE compute_gw( use_gmaps )
   ii(:) = 0
   IF (t_form) THEN
      ii(1)=0
-     IF( mpime == 0 ) WRITE (io,'(16I5)') ii
+     IF( mpime == 0 .AND. qplda ) WRITE (io,'(16I5)') ii
   ELSE
      ii(1)=1
-     IF( mpime == 0 ) WRITE (io) ii
+     IF( mpime == 0 .AND. qplda  ) WRITE (io) ii
   ENDIF
   !
   WRITE(6,'(16I5)') ii
@@ -235,12 +266,12 @@ SUBROUTINE compute_gw( use_gmaps )
   IF( mpime == 0 ) THEN
      !
      IF (t_form) THEN
-        WRITE (io,'(3E26.18)') a1, a2, a3
+        IF( qplda) WRITE (io,'(3E26.18)') a1, a2, a3
      ELSE
         IF (t_single) THEN
-           WRITE (io) a1_s, a2_s, a3_s
+           IF( qplda) WRITE (io) a1_s, a2_s, a3_s
         ELSE
-           WRITE (io) a1, a2, a3
+           IF( qplda) WRITE (io) a1, a2, a3
         ENDIF
      ENDIF
      !
@@ -265,17 +296,17 @@ SUBROUTINE compute_gw( use_gmaps )
      WRITE(6,*)'nrot=',nsym
      WRITE(6,'(3E26.18)') (((float(s(i,j,k)),j=1,3),i=1,3),k=1,nsym)
      IF (t_form) THEN
-        WRITE (io,'(I2)') nsym
-        WRITE (io,'(3E26.18)') (((float(s(i,j,k)),j=1,3),i=1,3),k=1,nsym)
+        IF( qplda) WRITE (io,'(I2)') nsym
+        IF( qplda) WRITE (io,'(3E26.18)') (((float(s(i,j,k)),j=1,3),i=1,3),k=1,nsym)
         IF (ii(3) == 1) THEN
            ! READ (10,1020) ((VOFFSET(I,J),I=1,3),J=1,NOP)
            ! WRITE (6,'(//" Run program CNVNSY to convert QPLDA file first.")')
            CALL errore('pw2gw','non-symmorphic translation vectors',ii(3))
         ENDIF
      ELSE
-        WRITE (io) nsym
+        IF( qplda) WRITE (io) nsym
         IF (t_single) THEN
-           WRITE (io) (((float(s(i,j,k)),j=1,3),i=1,3),k=1,nsym)
+           IF( qplda) WRITE (io) (((float(s(i,j,k)),j=1,3),i=1,3),k=1,nsym)
         ELSE
            WRITE (io) (((dble(s(i,j,k)),j=1,3),i=1,3),k=1,nsym)
         ENDIF
@@ -336,12 +367,12 @@ SUBROUTINE compute_gw( use_gmaps )
   ENDDO
 
   igwxx = maxval( ig_l2g( 1:ngw ) )
-  CALL mp_max( igwxx, world_comm )
+  CALL mp_max( igwxx, intra_image_comm )
   IF (ionode) WRITE(*,*) "NDIMCP = ", igwxx
 
   igwx_p = 0
   igwx_p( mpime + 1 ) = igwx
-  CALL mp_sum( igwx_p, world_comm )
+  CALL mp_sum( igwx_p, intra_image_comm )
 
   IF( mpime == 0 ) THEN
      !
@@ -397,13 +428,13 @@ SUBROUTINE compute_gw( use_gmaps )
 
   IF (t_form) THEN
      IF( mpime == 0 ) THEN
-        WRITE (io,'(I12)') igwxx
-        WRITE (io,'(3I5)') (in1_tmp(ig),in2_tmp(ig),in3_tmp(ig),ig=1,igwxx)
+        IF( qplda) WRITE (io,'(I12)') igwxx
+        IF( qplda) WRITE (io,'(3I5)') (in1_tmp(ig),in2_tmp(ig),in3_tmp(ig),ig=1,igwxx)
      ENDIF
   ELSE
      IF( mpime == 0 ) THEN
-        WRITE (io) igwxx
-        WRITE (io) (in1_tmp(ig),in2_tmp(ig),in3_tmp(ig),ig=1,igwxx)
+        IF( qplda) WRITE (io) igwxx
+        IF( qplda) WRITE (io) (in1_tmp(ig),in2_tmp(ig),in3_tmp(ig),ig=1,igwxx)
      ENDIF
   ENDIF
   !
@@ -430,95 +461,99 @@ SUBROUTINE compute_gw( use_gmaps )
 
   IF( mpime == 0 ) THEN
      IF (t_form) THEN
-        WRITE (io,'(I12)') nkpt
-        WRITE (io,'(3E26.18)') ((xk_s(i,ik),i=1,3),ik=1,nkpt)
+        IF( qplda) WRITE (io,'(I12)') nkpt
+        IF( qplda) WRITE (io,'(3E26.18)') ((xk_s(i,ik),i=1,3),ik=1,nkpt)
      ELSE
-        WRITE (io) nkpt
-        WRITE(6,*) 'nkpt',nkpt
+        IF( qplda) WRITE (io) nkpt
+        IF( qplda) WRITE(6,*) 'nkpt',nkpt
         IF(t_single) THEN
-           WRITE (io) ((xk_s(i,ik),i=1,3),ik=1,nkpt)
+           IF( qplda) WRITE (io) ((xk_s(i,ik),i=1,3),ik=1,nkpt)
         ELSE
-           WRITE (io) ((xk(i,ik),i=1,3),ik=1,nkpt)
+           IF( qplda) WRITE (io) ((xk(i,ik),i=1,3),ik=1,nkpt)
         ENDIF
      ENDIF
      WRITE(6,'(1x,3f10.6)') ( (xk_s(i,ik),i=1,3), ik=1,nkpt)
   ENDIF
+
+  IF( vkb) THEN
 ! --------------------------
 ! vkb0
 ! --------------------------
-  DO ik=1,nkpt
-    npw = ngk(ik)
-    WRITE(15,*) "npw", npw
-    ALLOCATE(vkb0(1:npw))
+    DO ik=1,nkpt
+      npw = ngk(ik)
+      WRITE(15,*) "npw", npw
+      ALLOCATE(vkb0(1:npw))
 
-    size_tab=size(tab,1)
-    size_tab_d2y=size(tab_d2y,1)
+      size_tab=size(tab,1)
+      size_tab_d2y=size(tab_d2y,1)
 
-    ALLOCATE(vec_tab(1:size_tab))
-    if(.not.allocated(vec_tab_d2y)) ALLOCATE(vec_tab_d2y(1:size_tab_d2y))
+      ALLOCATE(vec_tab(1:size_tab))
+      if(.not.allocated(vec_tab_d2y)) ALLOCATE(vec_tab_d2y(1:size_tab_d2y))
 
-    DO nt = 1, ntyp
-      DO nb = 1, upf(nt)%nbeta
-        vkb0(:) = 0.0_dp
-        vec_tab(:) = 0.0_dp
-        vec_tab_d2y(:) = 0.0_dp
-        vec_tab(:) = tab(:,nb,nt)
-        IF(spline_ps) vec_tab_d2y(:) = tab_d2y(:,nb,nt)
-        CALL gen_us_vkb0(ik,npw,vkb0,size_tab,vec_tab,spline_ps,vec_tab_d2y)
-        WRITE(15,*) "---------------DEBUG-VKB0----------------------"
-        WRITE(15,*) "ik= ", ik
-        WRITE(15,*) "nt= ", nt
-        WRITE(15,*) "nb= ", nb
-        WRITE(15,*) "l= ", upf(nt)%lll(nb)
-        WRITE (15,'(8f15.9)') vkb0
-        WRITE(15,*) "--------------END-DEBUG------------------------"
-!        WRITE(io) vkb0
+      DO nt = 1, ntyp
+        DO nb = 1, upf(nt)%nbeta
+          vkb0(:) = 0.0_dp
+          vec_tab(:) = 0.0_dp
+          vec_tab_d2y(:) = 0.0_dp
+          vec_tab(:) = tab(:,nb,nt)
+          IF(spline_ps) vec_tab_d2y(:) = tab_d2y(:,nb,nt)
+          CALL gen_us_vkb0(ik,npw,vkb0,size_tab,vec_tab,spline_ps,vec_tab_d2y)
+          WRITE(15,*) "---------------DEBUG-VKB0----------------------"
+          WRITE(15,*) "ik= ", ik
+          WRITE(15,*) "nt= ", nt
+          WRITE(15,*) "nb= ", nb
+          WRITE(15,*) "l= ", upf(nt)%lll(nb)
+          WRITE (15,'(8f15.9)') vkb0
+          WRITE(15,*) "--------------END-DEBUG------------------------"
+  !        WRITE(io) vkb0
+        ENDDO
       ENDDO
+
+     DEALLOCATE(vkb0)
+     DEALLOCATE(vec_tab)
+     IF(allocated(vec_tab_d2y))  DEALLOCATE(vec_tab_d2y)
+
     ENDDO
-
-   DEALLOCATE(vkb0)
-   DEALLOCATE(vec_tab)
-   IF(allocated(vec_tab_d2y))  DEALLOCATE(vec_tab_d2y)
-
-  ENDDO
 !---------------------------
 ! djl
 !---------------------------
-  DO ik=1,nkpt
-    npw = ngk(ik)
+    DO ik=1,nkpt
+      npw = ngk(ik)
 
-    ALLOCATE(djl(1:npw))
+      ALLOCATE(djl(1:npw))
 
-    size_tab=size(tab,1)
-    size_tab_d2y=size(tab_d2y,1)
+      size_tab=size(tab,1)
+      size_tab_d2y=size(tab_d2y,1)
 
-    ALLOCATE(vec_tab(1:size_tab))
-    IF(.not. allocated(vec_tab_d2y)) ALLOCATE(vec_tab_d2y(1:size_tab_d2y))
-    DO nt = 1, ntyp
-      DO nb = 1, upf(nt)%nbeta
-        djl(:) = 0.0_dp
-        vec_tab(:) = 0.0_dp
-        vec_tab_d2y(:) = 0.0_dp
-        vec_tab(:) = tab(:,nb,nt)
-        IF(spline_ps) vec_tab_d2y(:) = tab_d2y(:,nb,nt)
-        CALL gen_us_djl(ik,npw,djl,size_tab,vec_tab,spline_ps,vec_tab_d2y)
-!        WRITE(0,*) "---------------DEBUG-----------------------"
-!        WRITE(0,*) "spline: ", spline_ps
-!        WRITE(0,*) "ik= ", ik
-!        WRITE(0,*) "nt= ", nt
-!        WRITE(0,*) "nb= ", nb
-!        WRITE(0,*) "l= ", upf(nt)%lll(nb)
-!        WRITE (0,'(8f15.9)') djl
-!        WRITE(0,*) "--------------END-DEBUG------------------------"
-!        WRITE(io) djl
+      ALLOCATE(vec_tab(1:size_tab))
+      IF(.not. allocated(vec_tab_d2y)) ALLOCATE(vec_tab_d2y(1:size_tab_d2y))
+      DO nt = 1, ntyp
+        DO nb = 1, upf(nt)%nbeta
+          djl(:) = 0.0_dp
+          vec_tab(:) = 0.0_dp
+          vec_tab_d2y(:) = 0.0_dp
+          vec_tab(:) = tab(:,nb,nt)
+          IF(spline_ps) vec_tab_d2y(:) = tab_d2y(:,nb,nt)
+          CALL gen_us_djl(ik,npw,djl,size_tab,vec_tab,spline_ps,vec_tab_d2y)
+  !        WRITE(0,*) "---------------DEBUG-----------------------"
+  !        WRITE(0,*) "spline: ", spline_ps
+  !        WRITE(0,*) "ik= ", ik
+  !        WRITE(0,*) "nt= ", nt
+  !        WRITE(0,*) "nb= ", nb
+  !        WRITE(0,*) "l= ", upf(nt)%lll(nb)
+  !        WRITE (0,'(8f15.9)') djl
+  !        WRITE(0,*) "--------------END-DEBUG------------------------"
+  !        WRITE(io) djl
+        ENDDO
       ENDDO
+
+     DEALLOCATE(djl)
+     DEALLOCATE(vec_tab)
+     IF(allocated(vec_tab_d2y))  DEALLOCATE(vec_tab_d2y)
+
     ENDDO
 
-   DEALLOCATE(djl)
-   DEALLOCATE(vec_tab)
-   IF(allocated(vec_tab_d2y))  DEALLOCATE(vec_tab_d2y)
-
-  ENDDO
+  ENDIF !vkb
 !-----------------------
 !-----------------------
 
@@ -530,10 +565,10 @@ SUBROUTINE compute_gw( use_gmaps )
   eig(:,:)   = et(:,1:nkpt)*0.5d0
 
   IF (t_form) THEN
-     IF( mpime == 0 ) WRITE (io,'(I12)') n
-     IF( mpime == 0 ) WRITE (io,'(3E26.18)') ((eig(i,ik),ik=1,nkpt),i=1,n)
+     IF( mpime == 0 .AND. qplda) WRITE (io,'(I12)') n
+     IF( mpime == 0 .AND. qplda) WRITE (io,'(3E26.18)') ((eig(i,ik),ik=1,nkpt),i=1,n)
   ELSE
-     IF( mpime == 0 ) WRITE (io) n
+     IF( mpime == 0 .AND. qplda) WRITE (io) n
      IF(t_single) THEN
         DO ik=1,nkpt
            DO i=1,n
@@ -541,10 +576,10 @@ SUBROUTINE compute_gw( use_gmaps )
            ENDDO
         ENDDO
         WRITE(6,*) 'nbndsi=',n
-        IF( mpime == 0 ) WRITE (io) ((eig_s(i,ik),ik=1,nkpt),i=1,n)
+        IF( mpime == 0 .AND. qplda) WRITE (io) ((eig_s(i,ik),ik=1,nkpt),i=1,n)
      ELSE
         WRITE(6,*) 'nbndsi=',n
-        IF( mpime == 0 ) WRITE (io) ((eig(i,ik),ik=1,nkpt),i=1,n)
+        IF( mpime == 0 .AND. qplda) WRITE (io) ((eig(i,ik),ik=1,nkpt),i=1,n)
      ENDIF
   ENDIF
 
@@ -567,12 +602,12 @@ SUBROUTINE compute_gw( use_gmaps )
 
   IF( mpime == 0 ) THEN
      IF (t_form) THEN
-        WRITE (io,'(3E26.18)') ((focc(i,ik), ik=1,nkpt), i=1,n)
+        IF( qplda) WRITE (io,'(3E26.18)') ((focc(i,ik), ik=1,nkpt), i=1,n)
      ELSE
         IF(t_single) THEN
-           WRITE (io) ((focc_s(i,ik),ik=1,nkpt),i=1,n)
+           IF( qplda) WRITE (io) ((focc_s(i,ik),ik=1,nkpt),i=1,n)
         ELSE
-           WRITE (io) ((focc(i,ik),ik=1,nkpt),i=1,n)
+           IF( qplda) WRITE (io) ((focc(i,ik),ik=1,nkpt),i=1,n)
         ENDIF
      ENDIF
   ENDIF
@@ -590,9 +625,9 @@ SUBROUTINE compute_gw( use_gmaps )
   !
 
   !  omax = nbnd*6
-  omax = 600
+  omax = floor((omegamax - omegamin)/d_omega)
   WRITE(6,*) 'io sono omax = ', omax
-  alpha = omegamax/omax
+  alpha = d_omega
   WRITE(6,*) 'alpha = ', alpha
   halfalpha= alpha*.5
   WRITE(6,*) 'halfalpha = ', halfalpha
@@ -606,7 +641,7 @@ SUBROUTINE compute_gw( use_gmaps )
   ALLOCATE( pp1(nkpt,omax+1), pp2(nkpt,omax+1), pp3(nkpt,omax+1), omegatt(omax+1) )
 
   DO o = 1, omax + 1
-     omeg(o) = (o-1)*alpha
+     omeg(o) = omegamin + (o-1)*alpha
   ENDDO
 
   epstx(:)=0.0
@@ -621,7 +656,16 @@ SUBROUTINE compute_gw( use_gmaps )
 
   WRITE(6,*) pp1(1,1), epstx(1)
 
-  ALLOCATE ( c0(igwx), c0_s(igwx), kpg(3,igwx), c0_m(igwx,n), c0_tmp(igwxx) )
+  npol=1
+  IF (nspin == 4) npol=2
+  write(*,*) "igwx, npw", igwx, npw
+  ALLOCATE ( c0(igwx*npol), c0_s(igwx*npol), kpg(3,igwx), c0_m(igwx*npol,n), &
+             c0_tmp(igwxx*npol) )
+  c0 = 0.0
+  c0_s = 0.0
+  kpg = 0.0
+  c0_m = 0.0
+  c0_tmp = 0.0
   !IF (gamma_only) ALLOCATE ( c0_gamma(2*igwx-1), c0_gamma_s(2*igwx-1) )
   CALL cryst_to_cart (nks, xk, bg, +1)
   IF (ionode) WRITE(6,*) 'Costruisco le psi ed il matrixelements'
@@ -670,11 +714,12 @@ SUBROUTINE compute_gw( use_gmaps )
         c0 (:) = 0.d0
         DO ig=1,npw
           c0(igk_k(ig,ik)) = evc(ig,i)
+          IF (nspin == 4) c0(igk_k(ig,ik)+igwx) = evc(ig+npwx,i)
         ENDDO
         c0_m(:,i)=c0(:)
 
         c0_tmp = c0_tmp_dp
-        IF( mpime == 0 ) WRITE(io) c0_tmp ! c0_s
+        IF( mpime == 0 .AND. qplda) WRITE(io) c0_tmp ! c0_s
 
         DEALLOCATE( c0_tmp_dp )
 
@@ -686,7 +731,7 @@ SUBROUTINE compute_gw( use_gmaps )
      ! k + g thet must be in 2piba units
      kpg(:,:) = 0.d0
      DO ig=1,npw
-        kpg(:,igk_k(ig,ik))= xk_s(:,ik)+g(:,igk_k(ig,ik))
+        kpg(:,igk_k(ig,ik))= xk(:,ik)+g(:,igk_k(ig,ik))
      ENDDO
 
      DO iband1 = 1,n
@@ -704,9 +749,15 @@ SUBROUTINE compute_gw( use_gmaps )
                     rhotwx(1) = rhotwx(1) + xkgk(1) * ctemp
                     rhotwx(2) = rhotwx(2) + xkgk(2) * ctemp
                     rhotwx(3) = rhotwx(3) + xkgk(3) * ctemp
+                    IF (nspin == 4) THEN
+                      ctemp= conjg(c0_m(ig+igwx,iband1))*c0_m(ig+igwx,iband2)
+                      rhotwx(1) = rhotwx(1) + xkgk(1) * ctemp
+                      rhotwx(2) = rhotwx(2) + xkgk(2) * ctemp
+                      rhotwx(3) = rhotwx(3) + xkgk(3) * ctemp
+                    ENDIF
                  ENDDO
 
-                 CALL mp_sum( rhotwx, world_comm )
+                 CALL mp_sum( rhotwx, intra_image_comm )
 
                  IF (mpime == 0) THEN
                     rrhotwx(1)=tpiba2* real(rhotwx(1)*conjg(rhotwx(1)))
@@ -736,41 +787,45 @@ SUBROUTINE compute_gw( use_gmaps )
 
 ! CALCULATE POTENTIAL MATRIX ELEMNTS
 
-   OPEN (UNIT=313,FILE="vxcdiag.dat",STATUS="UNKNOWN")
-   WRITE(313,*) "#         K            BND          <Vxc>"
-   ALLOCATE ( vxc(dfftp%nnr,nspin) )
-   CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
-   DO ik=1,nkpt
-      npw = ngk(ik)
-      CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
-      DO iband1 = 1, nbnd
-         psic(:) = (0.d0, 0.d0)
-         DO ig = 1, npw
-            psic(nl(igk_k(ig,ik)))  = evc(ig,iband1)
-         ENDDO
+   IF( vxcdiag_f) THEN
+     OPEN (UNIT=313,FILE="vxcdiag.dat",STATUS="UNKNOWN")
+     WRITE(313,*) "#         K            BND          <Vxc>"
+     ALLOCATE ( vxc(dfftp%nnr,nspin) )
+     !
+     CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
+     !
+     DO ik=1,nkpt
+        npw = ngk(ik)
+        CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
+        DO iband1 = 1, nbnd
+           psic(:) = (0.d0, 0.d0)
+           DO ig = 1, npw
+              psic(dfftp%nl(igk_k(ig,ik)))  = evc(ig,iband1)
+           ENDDO
 
-         CALL invfft ('Dense', psic, dfftp)
-         vxcdiag = 0.0d0
-         !norma = 0.0d0
-         DO ir = 1, dfftp%nnr
-            vxcdiag = vxcdiag + vxc(ir,nspin) * &
-                      ( dble(psic (ir) ) **2 + aimag(psic (ir) ) **2)
-         !   norma = norma + ( DBLE(psic (ir) ) **2 + AIMAG(psic (ir) ) **2) / (nr1*nr2*nr3)
-         ENDDO
- ! PG: this is the correct integral - 27/8/2010
-         vxcdiag = vxcdiag * rytoev / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
-         CALL mp_sum( vxcdiag, world_comm ) !, intra_pool_comm )
-         ! ONLY FOR DEBUG!
-         !IF (norma /= 1.0) THEN
-         !   WRITE(*,*) "norma =", norma
-         !   WRITE(*,*) "nrxx  =", nrxx
-         !   STOP
-         !ENDIF
-         WRITE(313,"(i1,2x,i1,4x,f18.14)") ik, iband1, vxcdiag
-      ENDDO
-   ENDDO
-   DEALLOCATE ( vxc )
-   CLOSE (313)
+           CALL invfft ('Rho', psic, dfftp)
+           vxcdiag = 0.0d0
+           !norma = 0.0d0
+           DO ir = 1, dfftp%nnr
+              vxcdiag = vxcdiag + vxc(ir,nspin) * &
+                        ( dble(psic (ir) ) **2 + aimag(psic (ir) ) **2)
+           !   norma = norma + ( DBLE(psic (ir) ) **2 + AIMAG(psic (ir) ) **2) / (nr1*nr2*nr3)
+           ENDDO
+   ! PG: this is the correct integral - 27/8/2010
+           vxcdiag = vxcdiag * rytoev / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
+           CALL mp_sum( vxcdiag, intra_image_comm ) !, intra_pool_comm )
+           ! ONLY FOR DEBUG!
+           !IF (norma /= 1.0) THEN
+           !   WRITE(*,*) "norma =", norma
+           !   WRITE(*,*) "nrxx  =", nrxx
+           !   STOP
+           !ENDIF
+           WRITE(313,"(i1,2x,i1,4x,f18.14)") ik, iband1, vxcdiag
+        ENDDO
+     ENDDO
+     DEALLOCATE ( vxc )
+     CLOSE (313)
+   ENDIF
 
 !
   !
@@ -830,7 +885,7 @@ SUBROUTINE compute_gw( use_gmaps )
   DEALLOCATE ( epsx, epsy, epsz )
   DEALLOCATE ( epstx, epsty, epstz )
   !
-  IF( mpime == 0 ) CLOSE(io)
+  IF( mpime == 0 .AND. qplda) CLOSE(io)
   IF( mpime == 0 ) CLOSE(90)
   !
 END SUBROUTINE compute_gw
@@ -849,13 +904,13 @@ SUBROUTINE write_gmaps ( kunit)
   USE wvfct,     ONLY : nbnd, npwx, et
   USE gvecw,     ONLY : gcutw
   USE klist,     ONLY : nkstot, ngk, nks, xk
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,  ONLY : evc
   USE io_files,  ONLY : nd_nmbr, tmp_dir, prefix, iunwfc, nwordwfc
   USE io_global, ONLY : ionode
-  USE mp_images, ONLY : my_image_id
-  USE mp_global, ONLY : nproc_pool, my_pool_id, my_image_id, intra_pool_comm
+  USE mp_images, ONLY : intra_image_comm, my_image_id
+  USE mp_pools,  ONLY : nproc_pool, my_pool_id, intra_pool_comm
   USE mp,        ONLY : mp_sum, mp_max
-  USE mp_world,  ONLY : world_comm, nproc, mpime
+  USE mp_world,  ONLY : nproc, mpime
 
 
   IMPLICIT NONE
@@ -916,11 +971,11 @@ SUBROUTINE write_gmaps ( kunit)
   ALLOCATE( ngk_gw( nkstot/nspin ) )
   ngk_g = 0
   ngk_g( iks:ike ) = ngk( 1:nks )
-  CALL mp_sum( ngk_g, world_comm )
+  CALL mp_sum( ngk_g, intra_image_comm )
 
   ! compute the Maximum G vector index among all G+k an processors
   npw_g = maxval( ig_l2g(:) ) ! ( igk_l2g(:,:) )
-  CALL mp_max( npw_g, world_comm )
+  CALL mp_max( npw_g, intra_image_comm )
 
   ! compute the Maximum number of G vector among all k points
   npwx_g = maxval( ngk_g( 1:nkstot ) )
@@ -937,7 +992,7 @@ SUBROUTINE write_gmaps ( kunit)
         itmp( ig_l2g( ig ), 1 ) = ig_l2g( ig )
       ENDDO
     ENDIF
-    CALL mp_sum( itmp, world_comm )
+    CALL mp_sum( itmp, intra_image_comm )
     ngg = 0
     DO  ig = 1, npw_g
       IF( itmp( ig, 1 ) == ig ) THEN
@@ -1061,13 +1116,13 @@ SUBROUTINE diropn_gw (unit, filename, recl, exst, mpime, nd_nmbr_ )
   CHARACTER(len=256) :: tempfile
   ! complete file name
   CHARACTER(len=80) :: assstr
-  INTEGER :: ios, unf_recl, ierr
+  INTEGER :: ios, unf_recl, ierr, direct_io_factor
   ! used to check I/O operations
   ! length of the record
   ! error code
   LOGICAL :: opnd
   ! if true the file is already opened
-
+  REAL(dp):: dummy
 
   IF (unit < 0) CALL errore ('diropn', 'wrong unit', 1)
   !
@@ -1087,8 +1142,8 @@ SUBROUTINE diropn_gw (unit, filename, recl, exst, mpime, nd_nmbr_ )
   !
   !      the unit for record length is unfortunately machine-dependent
   !
-#define DIRECT_IO_FACTOR 8
-  unf_recl = DIRECT_IO_FACTOR * recl
+  INQUIRE (IOLENGTH=direct_io_factor) dummy
+  unf_recl = direct_io_factor * recl
   IF (unf_recl <= 0) CALL errore ('diropn', 'wrong record length', 3)
   !
   OPEN ( unit, file = trim(tempfile), iostat = ios, form = 'unformatted', &

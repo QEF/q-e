@@ -20,13 +20,12 @@ SUBROUTINE deallocate_modules_var()
   USE ensemble_dft,         ONLY : deallocate_ensemble_dft
   USE cg_module,            ONLY : deallocate_cg
   USE gvect,                ONLY : deallocate_gvect
-  USE gvecs,                ONLY : deallocate_gvecs
   USE gvecw,                ONLY : deallocate_gvecw
   USE smallbox_gvec,        ONLY : deallocate_smallbox_gvec
   USE local_pseudo,         ONLY : deallocate_local_pseudo
   USE qgb_mod,              ONLY : deallocate_qgb_mod
   USE betax,                ONLY : deallocate_betax
-  USE wavefunctions_module, ONLY : deallocate_wavefunctions
+  USE wavefunctions, ONLY : deallocate_wavefunctions
   USE wannier_module,       ONLY : deallocate_wannier
   USE fft_types,            ONLY : fft_type_descriptor, fft_type_deallocate
   USE fft_smallbox_type,    ONLY : fft_box_deallocate
@@ -37,7 +36,7 @@ SUBROUTINE deallocate_modules_var()
   USE cp_main_variables,    ONLY : deallocate_mainvar
   USE pseudopotential,      ONLY : deallocate_pseudopotential
   USE ions_nose,            ONLY : ions_nose_deallocate
-  USE metagga,              ONLY : deallocate_metagga
+  USE metagga_cp,           ONLY : deallocate_metagga
   USE ions_positions,       ONLY : deallocate_ions_positions
   USE kohn_sham_states,     ONLY : ks_states_closeup
   USE ldaU_cp,              ONLY : deallocate_lda_plus_u
@@ -60,8 +59,8 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_cg( )
   CALL deallocate_core()
   CALL deallocate_uspp()
-  CALL deallocate_gvect()
-  CALL deallocate_gvecs()
+  CALL deallocate_gvect(.TRUE.) ! Value .true. is hard coded in init.f90:195,
+                                !  here it prevents double free of gg variable.
   CALL deallocate_gvecw()
   CALL deallocate_smallbox_gvec( )
   CALL deallocate_local_pseudo()

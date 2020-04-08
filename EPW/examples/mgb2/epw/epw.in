@@ -14,10 +14,9 @@
   epwwrite = .true.
   epwread  = .false.
 
-  etf_mem     = .true.
+  etf_mem     =  1 
 
   nbndsub     =  5,
-  nbndskip    =  0
 
   wannierize  = .true.
   num_iter    = 500
@@ -29,8 +28,6 @@
 
   iverbosity  = 2
 
-  parallel_k  = .true.
-  parallel_q  = .false.
 
   eps_acustic = 2.0    ! Lowest boundary for the 
   ephwrite    = .true. ! Writes .ephmat files used when wliasberg = .true.

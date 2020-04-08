@@ -17,38 +17,21 @@ MODULE printout_base
   CHARACTER(LEN=256) :: fort_unit(30:44)
   ! ...  fort_unit = fortran units for saving physical quantity
 
-  CHARACTER(LEN=256) :: pprefix
-  ! ...  prefix combined with the output path
-
 CONTAINS
 
 
-  SUBROUTINE printout_base_init( outdir, prefix )
+  SUBROUTINE printout_base_init( )
 
+     USE io_files,  ONLY: tmp_dir, prefix
      USE io_global, ONLY: ionode, ionode_id
      USE mp_global, ONLY: intra_image_comm 
-! KNK_nimage
-! USE mp_global, ONLY: my_image_id
      USE mp, ONLY: mp_bcast
 
-     INTEGER :: iunit, ierr
-     CHARACTER(LEN=*), INTENT(IN) :: outdir
-     CHARACTER(LEN=*), INTENT(IN) :: prefix
-     ! KNK_nimage
-     ! CHARACTER(LEN=6), EXTERNAL :: int_to_char
+     INTEGER :: iunit, ierr, ios
+     CHARACTER(LEN=256) :: pprefix
+     ! ...  prefix combined with the output path
 
-
-     IF( prefix /= ' ' ) THEN
-        pprefix = TRIM( prefix )
-     ELSE
-        pprefix = 'fpmd'
-     END IF
-     ! KNK_nimage
-     ! if (my_image_id > 0) pprefix = TRIM(pprefix) // '_' // TRIM(int_to_char( my_image_id ))
-!
-     IF( outdir /= ' ' ) THEN
-        pprefix = TRIM( outdir ) // '/' // TRIM( pprefix )
-     END IF
+     pprefix = TRIM( tmp_dir ) // TRIM( prefix )
 
      ierr = 0
 
@@ -70,15 +53,16 @@ CONTAINS
         fort_unit(44) = trim(pprefix)//'.ncg'  ! number of cgsteps
         DO iunit = LBOUND( fort_unit, 1 ), UBOUND( fort_unit, 1 )
            OPEN(UNIT=iunit, FILE=fort_unit(iunit), &
-               STATUS='unknown', POSITION='append', IOSTAT = ierr )
+               STATUS='unknown', POSITION='append', IOSTAT = ios )
            CLOSE( iunit )
+           ierr = ierr + ABS(ios)
         END DO
      END IF
 
      CALL mp_bcast(ierr, ionode_id, intra_image_comm)
      IF( ierr /= 0 ) THEN
         CALL errore(' printout_base_init ', &
-              ' error in opening unit, check outdir = '//TRIM(outdir),iunit)
+              ' error in opening files '//TRIM(pprefix)//'.XXX',ierr)
      END IF
 
     RETURN
@@ -188,18 +172,17 @@ CONTAINS
   END SUBROUTINE printout_base_close
 
   
-  SUBROUTINE printout_pos( iunit, tau, nat, what, nfi, tps, label, fact, sort, head )
+  SUBROUTINE printout_pos( iunit, tau, nat, ityp, what, nfi, tps, label, fact, head )
     !
     USE kinds
     !
-    INTEGER,          INTENT(IN)           :: iunit, nat
+    INTEGER,          INTENT(IN)           :: iunit, nat, ityp(:)
     REAL(DP),        INTENT(IN)           :: tau( :, : )
     CHARACTER(LEN=3), INTENT(IN), OPTIONAL :: what
     INTEGER,          INTENT(IN), OPTIONAL :: nfi
     REAL(DP),        INTENT(IN), OPTIONAL :: tps
     CHARACTER(LEN=3), INTENT(IN), OPTIONAL :: label( : )
     REAL(DP),        INTENT(IN), OPTIONAL :: fact
-    INTEGER,          INTENT(IN), OPTIONAL :: sort( : )
     CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: head
     !
     INTEGER   :: ia, k
@@ -232,15 +215,9 @@ CONTAINS
     END IF
     !
     IF( PRESENT( label ) ) THEN
-       IF( PRESENT( sort ) ) THEN
-         DO ia = 1, nat
-           WRITE( iunit, 255 ) label( sort(ia) ), ( f * tau(k, sort(ia) ),k = 1,3)
-         END DO
-       ELSE
-         DO ia = 1, nat
-           WRITE( iunit, 255 ) label(ia), ( f * tau(k,ia),k = 1,3)
-         END DO
-       END IF
+       DO ia = 1, nat
+         WRITE( iunit, 255 ) label(ityp(ia)), ( f * tau(k,ia),k = 1,3)
+       END DO
     ELSE
        DO ia = 1, nat
          WRITE( iunit, 252 ) (tau(k,ia),k = 1,3)
@@ -368,5 +345,105 @@ CONTAINS
 100 FORMAT(3E25.14)
     RETURN
   END SUBROUTINE printout_wfc
-
+    !------------------------------------------------------------------------
+    SUBROUTINE save_print_counter( iter, wunit )
+      !------------------------------------------------------------------------
+      !
+      ! ... a counter indicating the last successful printout iteration is saved
+      !
+      USE io_global, ONLY: ionode, ionode_id
+      USE io_files, ONLY : iunpun, create_directory, restart_dir
+      USE mp, ONLY: mp_bcast
+      USE mp_images, ONLY : intra_image_comm
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,          INTENT(IN) :: iter
+      INTEGER,          INTENT(IN) :: wunit
+      !
+      INTEGER            :: ierr
+      CHARACTER(LEN=256) :: filename, dirname
+      !
+      !
+      dirname = restart_dir( wunit )
+      !
+      CALL create_directory( TRIM( dirname ) )
+      !
+      IF ( ionode ) THEN
+         !
+         filename = TRIM( dirname ) // 'print_counter'
+         !
+         OPEN( UNIT = iunpun, FILE = filename, FORM = 'formatted', &
+                 STATUS = 'unknown', IOSTAT = ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      !
+      CALL errore( 'save_print_counter', &
+                   'cannot open restart file for writing', ierr )
+      !
+      IF ( ionode ) THEN
+         !
+         WRITE ( iunpun, '("LAST SUCCESSFUL PRINTOUT AT STEP:",/,i5 )' ) iter
+         !
+         CLOSE ( iunpun, STATUS = 'keep' )
+         !
+      END IF
+      !
+      RETURN
+      !
+    END SUBROUTINE save_print_counter
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE read_print_counter( nprint_nfi, runit )
+      !------------------------------------------------------------------------
+      !
+      ! ... the counter indicating the last successful printout iteration 
+      ! ... is read here
+      !
+      USE io_global, ONLY: ionode, ionode_id
+      USE io_files, ONLY : iunpun, restart_dir
+      USE mp, ONLY: mp_bcast
+      USE mp_images, ONLY : intra_image_comm
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,          INTENT(OUT) :: nprint_nfi
+      INTEGER,          INTENT(IN)  :: runit
+      !
+      INTEGER            :: ierr
+      CHARACTER(LEN=256) :: filename, dirname
+      !
+      !
+      dirname = restart_dir( runit )
+      !
+      IF ( ionode ) THEN
+         !
+         filename = TRIM( dirname ) // 'print_counter'
+         !
+         OPEN( UNIT = iunpun, FILE = filename, FORM = 'formatted', &
+                 STATUS = 'old', IOSTAT = ierr )
+         !
+         IF ( ierr > 0 ) THEN
+            !
+            nprint_nfi = -1
+            !
+         ELSE
+            !
+            READ ( iunpun, * )
+            READ ( iunpun, * ) nprint_nfi
+            !
+            CLOSE ( iunpun, STATUS = 'keep' )
+            !
+         END IF
+         !
+      END IF
+      !
+      CALL mp_bcast( nprint_nfi, ionode_id, intra_image_comm )
+      !
+      RETURN
+      !
+    END SUBROUTINE read_print_counter   
+    !
 END MODULE printout_base

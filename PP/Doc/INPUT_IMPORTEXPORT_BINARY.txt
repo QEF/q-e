@@ -1,0 +1,104 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: importexport_binary.x / PWscf / Quantum Espresso (version: svn)
+------------------------------------------------------------------------
+
+
+Purpose of importexport_binary.x:
+    convert the binary file for the charge density (and
+    for the spin polarization) from the native binary
+    format, that is not machine-independent, to a text-only
+    XML format ("export" phase), and import it back to
+    binary for restarting.
+
+
+Structure of the input data:
+============================
+
+   &INPUTPP
+     prefix = '...'
+     ...
+   /
+
+
+
+========================================================================
+NAMELIST: &INPUTPP
+
+   +--------------------------------------------------------------------
+   Variable:       prefix
+   
+   Type:           CHARACTER
+   Default:        'pwscf'
+   Description:    prefix of input file produced by pw.x
+                   (wavefunctions are not needed)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       outdir
+   
+   Type:           CHARACTER
+   Description:    directory containing the input data, i.e. the same as in pw.x
+   Default:        value of the ESPRESSO_TMPDIR environment variable if set;
+                   current directory ('./') otherwise
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       direction
+   
+   Type:           CHARACTER
+   Description:   
+                   Selects the direction:
+    
+                   'export' :
+                        for converting the charge density from the
+                        native binary format to text XML format
+    
+                   'import' :
+                        for converting a previously exported folder
+                        from text XML format to binary format
+   Default:        'export'
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       newoutdir
+   
+   Type:           CHARACTER
+   Description:    directory into which the export data is going to be
+                   generated; after the 'import' phase, it can be then used as
+                   the outdir to restart for instance a pw.x NSCF calculation
+   Default:        './import' if the direction is 'import',
+                    './export' if the direction is 'export'
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+
+:::: Notes
+
+   
+   ::: Important !
+   
+      The utility will also expect to find, and copy, the
+      outdir/data-file.xml and the *.UPF pseudopotential files in the
+      "prefix".save subdirectory, and will copy them from the outdir
+      to the newoutdir. It will then convert the charge density and
+      spin polarization files in the correct format. Other files,
+      in particular wavefunctions and the band structure (files
+      eigenvals.xml in the K????? subfolder) are ignored and not
+      copied.
+      
+      If you need also these files, please copy them by hand (they
+      are anyway already in text XML format).
+      
+      Note that while a NSCF calculation does not need the
+      band structure files, many other codes (in particular the
+      post-processing ones) may need them.
+      
+
+
+This file has been created by helpdoc utility on Fri Jun 22 17:11:37 CEST 2018

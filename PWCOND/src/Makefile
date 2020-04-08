@@ -3,10 +3,9 @@
 include ../../make.inc
 
 # location of needed modules and included files (if any)
-MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../UtilXlib $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../KS_Solvers/CG $(MOD_FLAG) ../../KS_Solvers/Davidson $(MOD_FLAG)../../LAXlib \
-          $(MOD_FLAG)../../FFTXlib  $(MOD_FLAG)../../PW/src $(MOD_FLAG).
-IFLAGS=
+MODFLAGS= $(BASEMOD_FLAGS) \
+          $(MOD_FLAG)../../PW/src \
+          $(MOD_FLAG)../../dft-d3
 
 PWCONDOBJS = \
 allocate_cond.o \
@@ -48,16 +47,17 @@ sunitary.o \
 transmit.o 
 
 PWOBJS = ../../PW/src/libpw.a
-QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/Davidson/libdavid.a \
-         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
+         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
+	 ../../dft-d3/libdftd3qe.a
 
-TLDEPS= bindir mods libs pw pp
+TLDEPS= pwlibs
 
 all : tldeps pwcond.x
 
 pwcond.x : $(PWCONDOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o pwcond.x $(PWCONDOBJS) \
-		$(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		$(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PWCOND/src/pwcond.x . )
 
 tldeps :

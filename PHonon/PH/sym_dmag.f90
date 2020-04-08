@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,13 +10,18 @@
 subroutine sym_dmag (nper, irr, dmagtosym)
   !---------------------------------------------------------------------
   ! symmetrize the change of the magnetization density
-  ! belonging to an irreducible representation
+  ! belonging to an irreducible representation.
+  ! The routine is generalized to include also the 
+  ! symmetry operations that require the time-reversal 
+  ! operator (meaning that TS is a symmetry of the crystal).
+  ! For a more complete explanation, please see: 
+  ! Phys. Rev. B 100, 045115 (2019).
   !
   USE kinds, only : DP
   USE constants, ONLY: tpi
   USE fft_base, ONLY: dfftp
   USE cell_base, ONLY : at, bg
-  USE symm_base, ONLY : s, ftau, t_rev, sname, invs
+  USE symm_base, ONLY : s, ft, t_rev, sname, invs
   USE noncollin_module, ONLY: nspin_mag
   USE modes,   ONLY : t, tmq
 
@@ -31,6 +36,7 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   complex(DP) :: dmagtosym (dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin_mag, nper)
   ! the magnetization to symmetrize (only 2:4 components)
 
+  integer :: ftau(3,48)
   integer :: is, ri, rj, rk, i, j, k, ipert, jpert, ipol, isym, &
        irot, kpol
   !  counter on spin polarizations
@@ -69,6 +75,9 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   in2 = tpi / DBLE (dfftp%nr2)
   in3 = tpi / DBLE (dfftp%nr3)
 
+  ftau(1,1:nsymq) = NINT ( ft(1,1:nsymq)*dfftp%nr1 ) 
+  ftau(2,1:nsymq) = NINT ( ft(2,1:nsymq)*dfftp%nr2 ) 
+  ftau(3,1:nsymq) = NINT ( ft(3,1:nsymq)*dfftp%nr3 ) 
   if (minus_q) then
      g1 (1) = 0.d0
      g2 (1) = 0.d0
@@ -137,10 +146,13 @@ subroutine sym_dmag (nper, irr, dmagtosym)
      g2 (isym) = 0.d0
      g3 (isym) = 0.d0
      do ipol = 1, 3
-        g1 (isym) = g1 (isym) + gi (ipol, isym) * in1 * at (ipol, 1)
-        g2 (isym) = g2 (isym) + gi (ipol, isym) * in2 * at (ipol, 2)
-        g3 (isym) = g3 (isym) + gi (ipol, isym) * in3 * at (ipol, 3)
+        g1 (isym) = g1 (isym) + gi (ipol, isym) * at (ipol, 1)
+        g2 (isym) = g2 (isym) + gi (ipol, isym) * at (ipol, 2)
+        g3 (isym) = g3 (isym) + gi (ipol, isym) * at (ipol, 3)
      enddo
+     g1 (isym) = NINT(g1(isym))*in1
+     g2 (isym) = NINT(g2(isym))*in2
+     g3 (isym) = NINT(g3(isym))*in3
      term (1, isym) = CMPLX(cos (g1 (isym) ), sin (g1 (isym) ) ,kind=DP)
      term (2, isym) = CMPLX(cos (g2 (isym) ), sin (g2 (isym) ) ,kind=DP)
      term (3, isym) = CMPLX(cos (g3 (isym) ), sin (g3 (isym) ) ,kind=DP)
@@ -179,12 +191,15 @@ subroutine sym_dmag (nper, irr, dmagtosym)
                  enddo
                  if (sname(irot)(1:3)=='inv') magrot=-magrot
                  if(t_rev(irot).eq.1) magrot=-magrot
-! go back to carthesian coordinates
+! go back to cartesian coordinates
                  do kpol = 1, 3
                     mag(kpol)=at(kpol,1)*magrot(1) + &
                               at(kpol,2)*magrot(2) + &
                               at(kpol,3)*magrot(3)
                  enddo
+                 if (t_rev(isym) == 1) then 
+                    mag(:) = conjg(mag(:))
+                 end if
                  dmagsym(i,j,k,1,ipert)=dmagsym(i,j,k,1,ipert)+mag(1)
                  dmagsym(i,j,k,2,ipert)=dmagsym(i,j,k,2,ipert)+mag(2)
                  dmagsym(i,j,k,3,ipert)=dmagsym(i,j,k,3,ipert)+mag(3)

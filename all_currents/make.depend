@@ -1,3 +1,5 @@
+aris_functional.o : ../Modules/exchange_gga.o
+aris_functional.o : ../Modules/correlation_gga.o
 add_nc_curr.o : ../Modules/becmod.o
 add_nc_curr.o : ../Modules/cell_base.o
 add_nc_curr.o : ../Modules/io_files.o
@@ -170,7 +172,7 @@ zero_mod.o : ../CPV/src/spline.o
 zero_mod.o : ../Modules/becmod.o
 zero_mod.o : ../Modules/cell_base.o
 zero_mod.o : ../Modules/constants.o
-zero_mod.o : ../Modules/fft_custom.o
+zero_mod.o : ../Modules/fft_base.o
 zero_mod.o : ../Modules/ions_base.o
 zero_mod.o : ../Modules/kind.o
 zero_mod.o : ../Modules/mp_pools.o
@@ -178,3 +180,5 @@ zero_mod.o : ../Modules/mp_world.o
 zero_mod.o : ../Modules/recvec.o
 zero_mod.o : ../PW/src/pwcom.o
 zero_mod.o : ../UtilXlib/mp.o
+cpv_traj.o : traj_object.o
+cpv_traj_test.o : cpv_traj.o

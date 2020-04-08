@@ -1,0 +1,58 @@
+#!/bin/bash
+
+TOOLDIR=$(dirname $0)
+
+revert=0
+case $1 in 
+    ("-h" | "--help" )      echo " Add memory counter to *.f90 files. Usage:
+   mem_counter [-h, --help] [-r, --revert] [DIRS]
+
+ -h, --help           print this manual    
+ -r, --revert         revert to original state
+ DIRS                 list of directories to be processed
+                      if absent, search all directories below the current one"
+ exit 0;;
+    ("-r" | "--revert" )  revert=1; shift;;
+esac
+
+if [[ $# == 0 ]] ; then
+    fnames=$(find -type f -name "*.f90" )
+else
+    for dir in $@ ; do fnames="$fnames $dir/*.f90"; done
+fi
+
+if [[ $revert == 0 ]] ; then
+    # add memory check
+    for f in $fnames ; do
+        # for all *.f90 files found ...
+	if [[ ! -f $f.bkp ]] ; then 
+           # if there is no *.f90.bkp file ...
+	   python $TOOLDIR/mem_counter.py $f
+           # add calls to mem_report
+	   diff -q $f.new $f > /dev/null
+           # check if file $f.new differs from $f
+	   if [[ $? == 1 ]] ; then
+	       # file is modified: save old copy in .bkp 
+	       mv $f $f.bkp
+	       mv $f.new $f
+	   else
+	       # file is not modified: leave as is
+	       /bin/rm $f.new
+	   fi
+	fi
+    done
+else
+    # remove memory check
+    for f in $fnames ; do
+	if [[ -f $f.bkp ]] ; then
+           # if there is a *.f90.bkp file, restore it ...
+	   mv $f.bkp $f
+           # ... and delete file *.o if ptesent
+	   fil=$(basename $f .f90)
+	   dir=$(dirname $f)
+	   obj="$dir/$fil".o
+	   if [[ -f $obj ]] ; then echo /bin/rm $obj; fi
+	fi
+    done
+fi
+

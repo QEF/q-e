@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -52,18 +52,19 @@ subroutine phq_setup
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp
   USE cell_base,     ONLY : at, bg
-  USE io_global,     ONLY : ionode
+  USE io_global,     ONLY : ionode, stdout
   USE io_files,      ONLY : tmp_dir
   USE klist,         ONLY : xk, nks, nkstot
   USE lsda_mod,      ONLY : nspin, starting_magnetization
-  USE scf,           ONLY : v, vrs, vltot, kedtau
+  USE scf,           ONLY : v, vrs, vltot, kedtau, rho
+  USE dfunct,        ONLY : newd
   USE fft_base,      ONLY : dfftp
   USE gvect,         ONLY : ngm
-  USE gvecs,       ONLY : doublegrid
-  USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, t_rev, time_reversal, &
-                            sr, invs, inverse_s
+  USE gvecs,         ONLY : doublegrid
+  USE symm_base,     ONLY : nrot, nsym, s, irt, t_rev, time_reversal, &
+                            sr, invs, inverse_s, d1, d2, d3
   USE uspp_param,    ONLY : upf
-  USE uspp,          ONLY : nlcc_any
+  USE uspp,          ONLY : nlcc_any, deeq_nc, okvan
   USE spin_orb,      ONLY : domag
   USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2, ux
   USE nlcc_ph,       ONLY : drc
@@ -87,24 +88,26 @@ subroutine phq_setup
   USE funct,         ONLY : dft_is_gradient
   USE ramanm,        ONLY : lraman, elop, ramtns, eloptns, done_lraman, &
                             done_elop
-
   USE mp_pools,      ONLY : inter_pool_comm, npool
-  !
   USE acfdtest,      ONLY : acfdt_is_active, acfdt_num_der
   USE elph_tetra_mod, ONLY : elph_tetra
   USE wvfct,         ONLY : nbnd, et
   USE ener,          ONLY : ef
   USE mp,            ONLY : mp_max, mp_min
-
   USE lr_symm_base,  ONLY : gi, gimq, irotmq, minus_q, invsymq, nsymq, rtau
   USE qpoint,        ONLY : xq, xk_col
+  USE nc_mag_aux,    ONLY : deeq_nc_save
   USE control_lr,    ONLY : lgamma
+  USE ldaU,          ONLY : lda_plus_u, Hubbard_U, Hubbard_J0
+  USE ldaU_ph,       ONLY : effU
+  USE constants,     ONLY : rytoev
+  USE dvscf_interpolate, ONLY : ldvscf_interpolate, dvscf_interpol_setup
 
   implicit none
 
   real(DP) :: sr_is(3,3,48)
 
-  integer :: isym, jsym, irot, ik, ibnd, ipol, &
+  integer :: isym, jsym, irot, ik, ibnd, ipol, nah, &
        mu, nu, imode0, irr, ipert, na, it, nt, nsym_is, last_irr_eff
   ! counters
 
@@ -135,6 +138,7 @@ subroutine phq_setup
   ! 1) Computes the total local potential (external+scf) on the smooth grid
   !
 !!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
+!  write(*,*) " acfdt_is_active ",acfdt_is_active, " acfdt_num_der ", acfdt_num_der
   IF (acfdt_is_active) THEN
      ! discard set_vrs for numerical derivatives
      if (.not.acfdt_num_der) then 
@@ -166,6 +170,18 @@ subroutine phq_setup
      END DO
      ux=0.0_DP
      if (dft_is_gradient()) call compute_ux(m_loc,ux,nat)
+     IF (okvan) THEN
+!
+!  Change the sign of the magnetic field in the screened US coefficients
+!  and save also the coefficients computed with -B_xc.
+!
+        deeq_nc_save(:,:,:,:,1)=deeq_nc(:,:,:,:)
+        v%of_r(:,2:4)=-v%of_r(:,2:4)
+        CALL newd()
+        v%of_r(:,2:4)=-v%of_r(:,2:4)
+        deeq_nc_save(:,:,:,:,2)=deeq_nc(:,:,:,:)
+        deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,1)
+     ENDIF
   ENDIF
   !
   ! 3) Computes the derivative of the XC potential
@@ -227,7 +243,7 @@ subroutine phq_setup
   ! allocate and calculate rtau, the bravais lattice vector associated
   ! to a rotation
   !
-  call sgam_ph_new (at, bg, nsym, s, irt, tau, rtau, nat)
+  call sgam_lr (at, bg, nsym, s, irt, tau, rtau, nat)
   !
   !    and calculate the vectors G associated to the symmetry Sq = q + G
   !    if minus_q is true calculate also irotmq and the G associated to Sq=-g+G
@@ -409,6 +425,40 @@ subroutine phq_setup
      !
   END IF
   !
+  ! DFPT+U 
+  !
+  IF (lda_plus_u) THEN
+     !
+     ! Define effU     
+     !
+     effU = 0.d0
+     DO nah = 1, nat
+        nt = ityp(nah)
+        ! For U only calculations
+        effU(nt) = Hubbard_U(nt)
+        ! When there is also Hubbard_J0/=0
+        IF (Hubbard_J0(nt).NE.0.d0) &
+           effU(nt) = Hubbard_U(nt) - Hubbard_J0(nt)
+     ENDDO
+     !
+     ! Initialize d1, d2, d3 to rotate the spherical harmonics
+     !
+     CALL d_matrix (d1, d2, d3)
+     ! 
+     ! Calculate the offset of beta functions for all atoms. 
+     !
+     CALL setup_offset_beta()
+     !
+  ENDIF
+  !
+  ! dVscf Fourier interpolation
+  !
+  IF (ldvscf_interpolate) THEN
+    CALL dvscf_interpol_setup()
+  ENDIF
+  !
   CALL stop_clock ('phq_setup')
+  !
   RETURN
+  !
 END SUBROUTINE phq_setup

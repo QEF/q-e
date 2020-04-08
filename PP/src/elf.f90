@@ -27,19 +27,20 @@ SUBROUTINE do_elf (elf)
   USE constants, ONLY: pi
   USE cell_base, ONLY: omega, tpiba
   USE fft_base,  ONLY: dffts, dfftp
-  USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvect, ONLY: gcutm, g, ngm, nl, nlm
-  USE gvecs, ONLY : nls, nlsm, ngms, doublegrid, dual
-  USE io_files, ONLY: iunwfc, nwordwfc
+  USE fft_interfaces, ONLY : fwfft, invfft, fft_interpolate
+  USE gvect, ONLY: gcutm, g, ngm
+  USE gvecs, ONLY : ngms, doublegrid, dual
+  USE io_files, ONLY: restart_dir
   USE klist, ONLY: nks, xk, ngk, igk_k
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho
   USE symme, ONLY: sym_rho, sym_rho_init
   USE wvfct, ONLY: nbnd, wg
   USE control_flags, ONLY: gamma_only
-  USE wavefunctions_module,  ONLY: evc
-  USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm
-  USE mp,                   ONLY: mp_sum
+  USE wavefunctions,  ONLY: evc
+  USE mp_pools, ONLY: inter_pool_comm, intra_pool_comm
+  USE mp, ONLY: mp_sum
+  USE pw_restart_new, ONLY : read_collected_wfc
   !
   ! I/O variables
   !
@@ -66,7 +67,7 @@ SUBROUTINE do_elf (elf)
      !
      !   reads the eigenfunctions
      !
-     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+     CALL read_collected_wfc ( restart_dir(), ik, evc )
      !
      DO ibnd = 1, nbnd
         DO j = 1, 3
@@ -74,9 +75,9 @@ SUBROUTINE do_elf (elf)
            w1 = wg (ibnd, ik) / omega
            DO i = 1, ngk(ik)
               gv (j) = (xk (j, ik) + g (j, igk_k (i,ik) ) ) * tpiba
-              aux (nls(igk_k(i,ik) ) ) = cmplx(0d0, gv (j) ,kind=DP) * evc(i,ibnd)
+              aux (dffts%nl(igk_k(i,ik) ) ) = cmplx(0d0, gv (j) ,kind=DP) * evc(i,ibnd)
               IF (gamma_only) THEN
-                 aux (nlsm(igk_k(i,ik) ) ) = cmplx(0d0, -gv (j) ,kind=DP) * &
+                 aux (dffts%nlm(igk_k(i,ik) ) ) = cmplx(0d0, -gv (j) ,kind=DP) * &
                       conjg ( evc (i, ibnd) )
               ENDIF
            ENDDO
@@ -104,7 +105,7 @@ SUBROUTINE do_elf (elf)
   IF (doublegrid) THEN
      DEALLOCATE (aux)
      ALLOCATE(aux(dfftp%nnr))
-     CALL interpolate (kkin, kkin, 1)
+     CALL fft_interpolate (dffts, kkin, dfftp, kkin)
   ENDIF
   !
   ! symmetrize the local kinetic energy if needed
@@ -114,18 +115,18 @@ SUBROUTINE do_elf (elf)
      CALL sym_rho_init ( gamma_only )
      !
      aux(:) =  cmplx ( kkin (:), 0.0_dp, kind=dp)
-     CALL fwfft ('Smooth', aux, dffts)
+     CALL fwfft ('Rho', aux, dfftp)
      ALLOCATE (aux2(ngm))
-     aux2(:) = aux(nl(:))
+     aux2(:) = aux(dfftp%nl(:))
      !
      ! aux2 contains the local kinetic energy in G-space to be symmetrized
      !
      CALL sym_rho ( 1, aux2 )
      !
      aux(:) = (0.0_dp, 0.0_dp)
-     aux(nl(:)) = aux2(:)
+     aux(dfftp%nl(:)) = aux2(:)
      DEALLOCATE (aux2)
-     CALL invfft ('Dense', aux, dfftp)
+     CALL invfft ('Rho', aux, dfftp)
      kkin (:) = dble(aux(:))
      !
   ENDIF
@@ -144,20 +145,20 @@ SUBROUTINE do_elf (elf)
   ENDDO
   !
   aux(:) = cmplx( rho%of_r(:, 1), 0.d0 ,kind=DP)
-  CALL fwfft ('Dense', aux, dfftp)
+  CALL fwfft ('Rho', aux, dfftp)
   !
   DO j = 1, 3
      aux2(:) = (0.d0,0.d0)
      DO i = 1, ngm
-        aux2(nl(i)) = aux(nl(i)) * cmplx(0.0d0, g(j,i)*tpiba,kind=DP)
+        aux2(dfftp%nl(i)) = aux(dfftp%nl(i)) * cmplx(0.0d0, g(j,i)*tpiba,kind=DP)
      ENDDO
      IF (gamma_only) THEN
         DO i = 1, ngm
-           aux2(nlm(i)) = aux(nlm(i)) * cmplx(0.0d0,-g(j,i)*tpiba,kind=DP)
+           aux2(dfftp%nlm(i)) = aux(dfftp%nlm(i)) * cmplx(0.0d0,-g(j,i)*tpiba,kind=DP)
         ENDDO
      ENDIF
 
-     CALL invfft ('Dense', aux2, dffts)
+     CALL invfft ('Rho', aux2, dfftp)
      DO i = 1, dfftp%nnr
         tbos (i) = tbos (i) + dble(aux2(i))**2
      ENDDO
@@ -175,10 +176,8 @@ SUBROUTINE do_elf (elf)
   ENDDO
   DEALLOCATE (aux, aux2, tbos, kkin)
   RETURN
+
 END SUBROUTINE do_elf
-
-
-
 !-----------------------------------------------------------------------
 SUBROUTINE do_rdg (rdg)
   !-----------------------------------------------------------------------
@@ -190,7 +189,7 @@ SUBROUTINE do_rdg (rdg)
   USE constants,            ONLY: pi
   USE fft_base,             ONLY: dfftp
   USE scf,                  ONLY: rho
-  USE gvect,                ONLY: g, ngm, nl
+  USE gvect,                ONLY: g, ngm
   USE lsda_mod,             ONLY: nspin
   IMPLICIT NONE
   REAL(DP), INTENT(OUT) :: rdg (dfftp%nnr)
@@ -203,14 +202,7 @@ SUBROUTINE do_rdg (rdg)
   ! gradient of rho
   ALLOCATE( grho(3,dfftp%nnr) )
 
-  ! put the total (up+down) charge density in rho%of_r(*,1)
-  DO is = 2, nspin
-     rho%of_g(:,1) =  rho%of_g(:,1) + rho%of_g(:,is)
-     rho%of_r(:,1) =  rho%of_r(:,1) + rho%of_r(:,is)
-  ENDDO
-
-  ! gradient of rho
-  CALL gradrho(dfftp%nnr, rho%of_g(1,1), ngm, g, nl, grho)
+  CALL fft_gradient_g2r(dfftp, rho%of_g(1,1), g, grho)
 
   ! calculate rdg
   DO i = 1, dfftp%nnr
@@ -240,7 +232,7 @@ SUBROUTINE do_sl2rho (sl2rho)
   USE constants,            ONLY: pi
   USE fft_base,             ONLY: dfftp
   USE scf,                  ONLY: rho
-  USE gvect,                ONLY: g, ngm, nl
+  USE gvect,                ONLY: g, ngm
   USE lsda_mod,             ONLY: nspin
   IMPLICIT NONE
   REAL(DP), INTENT(OUT) :: sl2rho (dfftp%nnr)
@@ -262,7 +254,7 @@ SUBROUTINE do_sl2rho (sl2rho)
   ENDDO
 
   ! calculate hessian of rho (gradient is discarded)
-  CALL hessian( dfftp%nnr, rho%of_r(:,1), ngm, g, nl, grho, hrho )
+  CALL fft_hessian( dfftp, rho%of_r(:,1), g, grho, hrho )
 
   ! find eigenvalues of the hessian
   DO i = 1, dfftp%nnr

@@ -17,13 +17,14 @@ subroutine add_zstar_ue (imode0, npe)
   USE klist, ONLY : xk, wk, ngk, igk_k
   USE uspp,  ONLY : vkb
   USE wvfct, ONLY : npwx
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE noncollin_module,      ONLY: noncolin
   USE buffers,  ONLY : get_buffer
   USE qpoint,   ONLY: nksq
   USE eqv,      ONLY: dpsi, dvpsi
   USE efield_mod, ONLY: zstarue0_rec
-  USE units_ph,   ONLY : iudwf, lrdwf, iuwfc, lrwfc
+  USE units_ph,   ONLY : iudwf, lrdwf
+  USE units_lr,   ONLY : iuwfc, lrwfc
   USE control_lr, ONLY : nbnd_occ
 
   implicit none

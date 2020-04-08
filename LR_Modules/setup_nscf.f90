@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,13 +24,12 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   !
   USE kinds,              ONLY : DP
   USE parameters,         ONLY : npk
-  USE io_global,          ONLY : stdout
   USE constants,          ONLY : pi, degspin
-  USE cell_base,          ONLY : at, bg
+  USE cell_base,          ONLY : at, bg, tpiba
   USE ions_base,          ONLY : nat, tau, ityp, zv
   USE force_mod,          ONLY : force
   USE basis,              ONLY : natomwfc
-  USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
+  USE klist,              ONLY : xk, wk, nks, degauss, lgauss, &
                                  ltetra, nkstot, qnorm
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
   USE symm_base,          ONLY : s, t_rev, nrot, nsym, time_reversal
@@ -42,11 +41,10 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   USE noncollin_module,   ONLY : noncolin
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
-  USE paw_variables,      ONLY : okpaw
   USE uspp_param,         ONLY : n_atom_wfc
   USE ktetra,             ONLY : tetra, tetra_type, opt_tetra_init
-  USE lr_symm_base, ONLY : nsymq, invsymq, minus_q
-  USE control_lr,   ONLY : lgamma
+  USE lr_symm_base,       ONLY : nsymq, invsymq, minus_q
+  USE control_lr,         ONLY : lgamma, ethr_nscf
   !
   IMPLICIT NONE
   !
@@ -55,28 +53,31 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   LOGICAL, INTENT (IN) :: elph_mat  ! used to be passed through a module. 
   !
   REAL (DP), ALLOCATABLE :: rtau (:,:,:)
+  INTEGER  :: t_rev_eff(48), ik
   LOGICAL  :: magnetic_sym, sym(48)
   LOGICAL  :: skip_equivalence
+  LOGICAL, EXTERNAL  :: check_para_diag
   !
   IF ( .NOT. ALLOCATED( force ) ) ALLOCATE( force( 3, nat ) )
   !
-  ! ... threshold for diagonalization ethr - should be good for all cases
+  ! ... threshold for diagonalization ethr
   !
-  ethr= 1.0D-9 / nelec
+  ethr = ethr_nscf
   !
   ! ... variables for iterative diagonalization
-  ! ... Davdson: isolve=0, david=4 ; CG: isolve=1, david=1
-  isolve = 0
-  david  = 4
+  ! ... Davidson: isolve=0, david=4 ; CG: isolve=1, david=1
+  IF (isolve == 0) THEN
+     david = 4
+  ELSE IF (isolve == 1) THEN
+     david = 1
+  ELSE
+     call errore('setup_nscf','erroneous value for diagonalization method. Should be isolve=0 (david) or 1 (cg)',1)
+  END IF
   nbndx = david*nbnd
   max_cg_iter=20
   natomwfc = n_atom_wfc( nat, ityp, noncolin )
   !
-#if defined(__MPI)
-  IF ( use_para_diag )  CALL check_para_diag( nbnd )
-#else
-  use_para_diag = .FALSE.
-#endif
+  use_para_diag = check_para_diag( nbnd )
   !
   ! ... Symmetry and k-point section
   !
@@ -108,7 +109,9 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
      ! (and possibly in other cases as well) the k-points should not be reduced
      !
      skip_equivalence = elph_mat
-     CALL kpoint_grid ( nrot, time_reversal, skip_equivalence, s, t_rev, &
+     t_rev_eff=0 
+     ! yet unclear whether t_rev_eff is really needed
+     CALL kpoint_grid ( nrot, time_reversal, skip_equivalence, s, t_rev_eff, &
                       bg, nk1*nk2*nk3, k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
   endif
 
@@ -122,14 +125,24 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   !
   ! ... add k+q to the list of k
   !
-  CALL set_kplusq( xk, wk, xq, nkstot, npk )
+  IF (noncolin.AND.domag) THEN
+     CALL set_kplusq_nc( xk, wk, xq, nkstot, npk)
+  ELSE
+     CALL set_kplusq( xk, wk, xq, nkstot, npk)
+  ENDIF
   !
   ! ... set the granularity for k-point distribution
   !
   IF ( lgamma  ) THEN
+     !
      kunit = 1
+     IF (noncolin.AND.domag) kunit = 2
+     !
   ELSE
+     !
      kunit = 2
+     IF (noncolin.AND.domag) kunit = 4
+     !
   ENDIF
   !
   ! ... Map each k point in the irr.-BZ into tetrahedra
@@ -173,7 +186,7 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   ! ...notice: qnorm is used by allocate_nlpot to determine
   ! the correct size of the interpolation table "qrad"
   !
-  qnorm = sqrt(xq(1)**2 + xq(2)**2 + xq(3)**2)
+  qnorm = sqrt(xq(1)**2 + xq(2)**2 + xq(3)**2) * tpiba
   !
   ! ... distribute k-points (and their weights and spin indices)
   !

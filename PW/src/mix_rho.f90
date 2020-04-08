@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -32,16 +32,17 @@ END MODULE mix_save
 SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
                     iunmix, conv )
   !----------------------------------------------------------------------------
-  !
-  ! ... Modified Broyden's method for charge density mixing
-  ! ...         D.D. Johnson PRB 38, 12807 (1988)
-  ! ... Extended to mix also quantities needed for PAW, meta-GGA, DFT+U,
-  ! ... electric field (all these are included into mix_type)
-  ! ... On output: the mixed density is in rhoin
-  !                input_rhout is unchanged
+  !! * Modified Broyden's method for charge density mixing: D.D. Johnson,
+  !!   PRB 38, 12807 (1988) ;
+  !! * Thomas-Fermi preconditioning described in: Raczkowski, Canning, Wang,
+  !!   PRB 64,121101 (2001) ;
+  !! * Extended to mix also quantities needed for PAW, meta-GGA, DFT+U(+V) ;
+  !! * Electric field (all these are included into \(\text{mix_type}\)) ;
+  !! * On output: the mixed density is in \(\text{rhoin}\), 
+  !!   \(\text{input_rhout}\) is unchanged.
   !
   USE kinds,          ONLY : DP
-  USE ions_base,      ONLY : nat
+  USE ions_base,      ONLY : nat, ntyp => nsp
   USE gvect,          ONLY : ngm
   USE gvecs,          ONLY : ngms
   USE lsda_mod,       ONLY : nspin
@@ -52,9 +53,12 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
                              mix_type, create_mix_type, destroy_mix_type, &
                              assign_scf_to_mix_type, assign_mix_to_scf_type, &
                              mix_type_AXPY, davcio_mix_type, rho_ddot, &
-                             high_frequency_mixing, &
+                             high_frequency_mixing, nsg_ddot, &
                              mix_type_COPY, mix_type_SCAL
   USE io_global,     ONLY : stdout
+  USE ldaU,          ONLY : lda_plus_u, lda_plus_u_kind, ldim_u, &
+                            max_num_neighbors, nsg, nsgnew
+  USE io_files,      ONLY : diropn
 #if defined(__GFORTRAN_HACK)
   USE mix_save
 #endif
@@ -63,37 +67,45 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   !
   ! ... First the I/O variable
   !
-  INTEGER, INTENT(IN) :: &
-    iter,        &!  counter of the number of iterations
-    n_iter,      &!  number of iterations used in mixing
-    iunmix        !  I/O unit where data from previous iterations is stored
-  REAL(DP), INTENT(IN) :: &
-    alphamix,    &! mixing factor
-    tr2_min       ! estimated error in diagonalization. If the estimated
-                  ! scf error is smaller than this, exit: a more accurate 
-                  ! diagonalization is needed
-  REAL(DP), INTENT(OUT) :: &
-    dr2           ! the estimated error on the energy
-  LOGICAL, INTENT(OUT) :: &
-    conv          ! .true. if the convergence has been reached
-
-  type(scf_type), intent(in)    :: input_rhout
-  type(scf_type), intent(inout) :: rhoin
+  INTEGER, INTENT(IN) :: iter
+  !! counter of the number of iterations
+  INTEGER, INTENT(IN) :: n_iter
+  !! number of iterations used in mixing
+  INTEGER, INTENT(IN) :: iunmix
+  !! I/O unit where data from previous iterations is stored
+  REAL(DP), INTENT(IN) :: alphamix
+  !! mixing factor
+  REAL(DP), INTENT(IN) :: tr2_min
+  !! estimated error in diagonalization. If the estimated
+  !! scf error is smaller than this, exit: a more accurate 
+  !! diagonalization is needed
+  REAL(DP), INTENT(OUT) :: dr2
+  !! the estimated error on the energy
+  LOGICAL, INTENT(OUT) :: conv
+  !! .TRUE. if the convergence has been reached
   !
-  ! ... Here the local variables
+  TYPE(scf_type), INTENT(INOUT) :: input_rhout
+  TYPE(scf_type), INTENT(INOUT) :: rhoin
   !
-  type(mix_type) :: rhout_m, rhoin_m
+  ! ... local variables
+  !
+  TYPE(mix_type) :: rhout_m, rhoin_m
   INTEGER, PARAMETER :: &
-    maxmix = 25             ! max number of iterations for charge mixing
-  INTEGER ::    &
+    maxmix = 25     ! max number of iterations for charge mixing
+  INTEGER ::       &
     iter_used,     &! actual number of iterations used
     ipos,          &! index of the present iteration
     inext,         &! index of the next iteration
     i, j,          &! counters on number of iterations
     info,          &! flag saying if the exec. of libr. routines was ok
-    ldim            ! 2 * Hubbard_lmax + 1
+    ldim,          &! 2 * Hubbard_lmax + 1
+    iunmix_nsg,    &! the unit for Hubbard mixing within DFT+U+V
+    nt              ! index of the atomic type
   REAL(DP),ALLOCATABLE :: betamix(:,:), work(:)
   INTEGER, ALLOCATABLE :: iwork(:)
+  COMPLEX(DP), ALLOCATABLE :: nsginsave(:,:,:,:,:),  nsgoutsave(:,:,:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: deltansg(:,:,:,:,:)
+  LOGICAL :: exst
   REAL(DP) :: gamma0
 #if defined(__NORMALIZE_BETAMIX)
   REAL(DP) :: norm2, obn
@@ -108,9 +120,14 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
     df(:),        &! information from preceding iterations
     dv(:)          !     "  "       "     "        "  "
 #endif
-  REAL(DP) :: dr2_paw, norm
+  REAL(DP) :: norm
   INTEGER, PARAMETER :: read_ = -1, write_ = +1
   !
+  ! ... external functions
+  !
+  INTEGER, EXTERNAL :: find_free_unit
+  !
+  COMPLEX(DP), ALLOCATABLE, SAVE :: df_nsg(:,:,:,:,:,:), dv_nsg(:,:,:,:,:,:)
   !
   CALL start_clock( 'mix_rho' )
   !
@@ -125,12 +142,26 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   call create_mix_type(rhout_m)
   call create_mix_type(rhoin_m)
   !
+  ! DFT+U+V case
+  !
+  IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) THEN
+     ldim = 0
+     DO nt = 1, ntyp
+        ldim = MAX(ldim, ldim_u(nt))
+     ENDDO
+     ALLOCATE ( deltansg (ldim, ldim, max_num_neighbors, nat, nspin) )
+     deltansg(:,:,:,:,:) = nsgnew(:,:,:,:,:) - nsg(:,:,:,:,:)
+  ENDIF
+  !
   call assign_scf_to_mix_type(rhoin, rhoin_m)
   call assign_scf_to_mix_type(input_rhout, rhout_m)
 
   call mix_type_AXPY ( -1.d0, rhoin_m, rhout_m )
   !
   dr2 = rho_ddot( rhout_m, rhout_m, ngms )  !!!! this used to be ngm NOT ngms
+  !
+  IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) &
+      dr2 = dr2 + nsg_ddot( deltansg, deltansg, nspin )
   !
   IF (dr2 < 0.0_DP) CALL errore('mix_rho','negative dr2',1)
   !
@@ -157,12 +188,24 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
      !
      call destroy_mix_type(rhoin_m)
      call destroy_mix_type(rhout_m)
- 
+     !
+     IF ( ALLOCATED( dv_nsg ) ) DEALLOCATE( dv_nsg )
+     IF ( ALLOCATED( df_nsg ) ) DEALLOCATE( df_nsg )
+     IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) THEN
+        nsgnew(:,:,:,:,:) = deltansg(:,:,:,:,:) + nsg(:,:,:,:,:)
+        DEALLOCATE(deltansg)
+     ENDIF
+     ! 
      CALL stop_clock( 'mix_rho' )
      !
      RETURN
      !
   END IF
+  !
+  IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) THEN
+     iunmix_nsg = find_free_unit()
+     CALL diropn( iunmix_nsg, 'mix.nsg', ldim*ldim*nspin*nat*max_num_neighbors, exst)
+  ENDIF
   !
   IF ( .NOT. ALLOCATED( df ) ) THEN
      ALLOCATE( df( n_iter ) )
@@ -176,6 +219,13 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
         CALL create_mix_type( dv(i) )
      END DO
   END IF
+  !
+  IF (lda_plus_u .AND. lda_plus_u_kind .EQ. 2) THEN 
+     IF ( .NOT. ALLOCATED( df_nsg ) ) &
+        ALLOCATE( df_nsg(ldim,ldim,max_num_neighbors,nat,nspin,n_iter) )
+     IF ( .NOT. ALLOCATED( dv_nsg ) ) &
+        ALLOCATE( dv_nsg(ldim,ldim,max_num_neighbors,nat,nspin,n_iter) )
+  ENDIF
   !
   ! ... iter_used = mixrho_iter-1  if  mixrho_iter <= n_iter
   ! ... iter_used = n_iter         if  mixrho_iter >  n_iter
@@ -194,12 +244,25 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
      !
      call mix_type_AXPY ( -1.d0, rhout_m, df(ipos) )
      call mix_type_AXPY ( -1.d0, rhoin_m, dv(ipos) )
+     !
+     IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) THEN
+        df_nsg(:,:,:,:,:,ipos) = df_nsg(:,:,:,:,:,ipos) - deltansg !nsgnew
+        dv_nsg(:,:,:,:,:,ipos) = dv_nsg(:,:,:,:,:,ipos) - nsg
+     ENDIF
+     !
 #if defined(__NORMALIZE_BETAMIX)
      ! NORMALIZE
      norm2 = rho_ddot( df(ipos), df(ipos), ngm0 )
+     IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) THEN
+        norm2 = norm2 + nsg_ddot( df_nsg(1,1,1,1,1,ipos), df_nsg(1,1,1,1,1,ipos), nspin )
+     ENDIF
      obn = 1.d0/sqrt(norm2)
      call mix_type_SCAL (obn,df(ipos))
      call mix_type_SCAL (obn,dv(ipos))
+     IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) THEN
+        df_nsg(:,:,:,:,:,ipos) = df_nsg(:,:,:,:,:,ipos) * obn
+        dv_nsg(:,:,:,:,:,ipos) = dv_nsg(:,:,:,:,:,ipos) * obn
+     ENDIF
 #endif
      !
   END IF
@@ -222,6 +285,17 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
      CALL davcio_mix_type( dv(ipos), iunmix, 2*ipos+2, write_ )
   END IF
   !
+  IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) THEN 
+     !
+     ALLOCATE( nsginsave(  ldim,ldim,max_num_neighbors,nat,nspin ), &
+               nsgoutsave( ldim,ldim,max_num_neighbors,nat,nspin ) )
+     nsginsave  = (0.d0,0.d0)
+     nsgoutsave = (0.d0,0.d0)
+     nsginsave  = nsg
+     nsgoutsave = deltansg !nsgnew
+     !
+  ENDIF
+  !
   ! Nothing else to do on first iteration
   skip_on_first: &
   IF (iter_used > 0) THEN
@@ -234,6 +308,9 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
         DO j = i, iter_used
             !
             betamix(i,j) = rho_ddot( df(j), df(i), ngm0 )
+            IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) &
+               betamix(i,j) = betamix(i,j) + &
+                  nsg_ddot( df_nsg(1,1,1,1,1,j), df_nsg(1,1,1,1,1,i), nspin )
             betamix(j,i) = betamix(i,j)
             !
         END DO
@@ -259,6 +336,8 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
     !
     DO i = 1, iter_used
         work(i) = rho_ddot( df(i), rhout_m, ngm0 )
+        IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) &
+           work(i) = work(i) + nsg_ddot( df_nsg(1,1,1,1,1,i), deltansg, nspin )
     END DO
     !
     DO i = 1, iter_used
@@ -267,6 +346,11 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
         !
         call mix_type_AXPY ( -gamma0, dv(i), rhoin_m )
         call mix_type_AXPY ( -gamma0, df(i), rhout_m )
+        !
+        IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) THEN
+           nsg(:,:,:,:,:) = nsg(:,:,:,:,:) - gamma0*dv_nsg(:,:,:,:,:,i)
+           deltansg(:,:,:,:,:) = deltansg(:,:,:,:,:) - gamma0*df_nsg(:,:,:,:,:,i)
+        ENDIF
         !
     END DO
     DEALLOCATE(betamix, work)
@@ -288,6 +372,14 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
      DEALLOCATE( dv )
   END IF
   !
+  IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) THEN
+     inext = mixrho_iter - ( ( mixrho_iter - 1 ) / n_iter ) * n_iter
+     df_nsg(:,:,:,:,:,inext) = nsgoutsave
+     dv_nsg(:,:,:,:,:,inext) = nsginsave
+     IF (ALLOCATED(nsginsave))  DEALLOCATE(nsginsave)
+     IF (ALLOCATED(nsgoutsave)) DEALLOCATE(nsgoutsave)
+  ENDIF
+  !
   ! ... preconditioning the new search direction
   !
   IF ( imix == 1 ) THEN
@@ -303,6 +395,10 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   ! ... set new trial density
   !
   call mix_type_AXPY ( alphamix, rhout_m, rhoin_m )
+  IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) THEN
+     nsg = nsg + alphamix * deltansg
+     IF (ALLOCATED(deltansg)) DEALLOCATE(deltansg)
+  ENDIF
   ! ... simple mixing for high_frequencies (and set to zero the smooth ones)
   call high_frequency_mixing ( rhoin, input_rhout, alphamix )
   ! ... add the mixed rho for the smooth frequencies
@@ -310,7 +406,11 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   !
   call destroy_mix_type(rhout_m)
   call destroy_mix_type(rhoin_m)
-
+  !
+  IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) THEN
+     CLOSE( iunmix_nsg, STATUS = 'KEEP' )
+  ENDIF
+  !
   CALL stop_clock( 'mix_rho' )
   !
   RETURN
@@ -320,47 +420,28 @@ END SUBROUTINE mix_rho
 !----------------------------------------------------------------------------
 SUBROUTINE approx_screening( drho )
   !----------------------------------------------------------------------------
-  !
-  ! ... apply an average TF preconditioning to drho
+  !! Apply an average TF preconditioning to \(\text{drho}\).
   !
   USE kinds,         ONLY : DP
   USE constants,     ONLY : e2, pi, fpi
   USE cell_base,     ONLY : omega, tpiba2
-  USE gvect,         ONLY : gg, ngm, nl, nlm
+  USE gvect,         ONLY : gg, ngm
   USE klist,         ONLY : nelec
-  USE lsda_mod,      ONLY : nspin
   USE control_flags, ONLY : ngm0
   USE scf,           ONLY : mix_type
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   !
-  IMPLICIT NONE  
+  IMPLICIT NONE
   !
   type (mix_type), intent(INOUT) :: drho ! (in/out)
   !
-  REAL(DP) :: rrho, rmag, rs, agg0
-  INTEGER  :: ig, is
+  REAL(DP) :: rs, agg0
   !
   rs = ( 3.D0 * omega / fpi / nelec )**( 1.D0 / 3.D0 )
   !
   agg0 = ( 12.D0 / pi )**( 2.D0 / 3.D0 ) / tpiba2 / rs
   !
-  IF ( nspin == 1 .OR. nspin == 4 ) THEN
-     !
-     drho%of_g(:ngm0,1) =  drho%of_g(:ngm0,1) * gg(:ngm0) / (gg(:ngm0)+agg0)
-     !
-  ELSE IF ( nspin == 2 ) THEN
-     !
-     DO ig = 1, ngm0
-        !
-        rrho = ( drho%of_g(ig,1) + drho%of_g(ig,2) ) * gg(ig) / (gg(ig)+agg0)
-        rmag = ( drho%of_g(ig,1) - drho%of_g(ig,2) )
-        !
-        drho%of_g(ig,1) =  0.5D0*( rrho + rmag )
-        drho%of_g(ig,2) =  0.5D0*( rrho - rmag )
-        !
-     END DO
-     !
-  END IF
+  drho%of_g(:ngm0,1) =  drho%of_g(:ngm0,1) * gg(:ngm0) / (gg(:ngm0)+agg0)
   !
   RETURN
   !
@@ -369,17 +450,14 @@ END SUBROUTINE approx_screening
 !----------------------------------------------------------------------------
 SUBROUTINE approx_screening2( drho, rhobest )
   !----------------------------------------------------------------------------
-  !
-  ! ... apply a local-density dependent TF preconditioning to drho
+  !! Apply a local-density dependent TF preconditioning to \(\text{drho}\).
   !
   USE kinds,                ONLY : DP
   USE constants,            ONLY : e2, pi, tpi, fpi, eps8, eps32
   USE cell_base,            ONLY : omega, tpiba2
-  USE gvecs,                ONLY : nls, nlsm
-  USE gvect,                ONLY : gg, ngm, nl, nlm
-  USE wavefunctions_module, ONLY : psic
+  USE gvect,                ONLY : gg, ngm
+  USE wavefunctions, ONLY : psic
   USE klist,                ONLY : nelec
-  USE lsda_mod,             ONLY : nspin
   USE control_flags,        ONLY : ngm0, gamma_only
   USE scf,                  ONLY : mix_type, local_tf_ddot
   USE mp,                   ONLY : mp_sum
@@ -397,7 +475,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   INTEGER :: &
     iwork(mmx), i, j, m, info, is
   REAL(DP) :: &
-    rs, avg_rsm1, target, dr2_best
+    avg_rsm1, target, dr2_best
   REAL(DP) :: &
     aa(mmx,mmx), invaa(mmx,mmx), bb(mmx), work(mmx), vec(mmx), agg0
   COMPLEX(DP), ALLOCATABLE :: &
@@ -409,24 +487,8 @@ SUBROUTINE approx_screening2( drho, rhobest )
   REAL(DP), ALLOCATABLE :: &
     alpha(:)     ! alpha(dffts%nnr)
   !
-  COMPLEX(DP)         :: rrho, rmag
   INTEGER             :: ir, ig
   REAL(DP), PARAMETER :: one_third = 1.D0 / 3.D0
-  !
-  !
-  IF ( nspin == 2 ) THEN
-     !
-     DO ig = 1, ngm0
-        !
-        rrho = drho%of_g(ig,1) + drho%of_g(ig,2)
-        rmag = drho%of_g(ig,1) - drho%of_g(ig,2)
-        !        
-        drho%of_g(ig,1) = rrho
-        drho%of_g(ig,2) = rmag
-        !
-     END DO
-     !
-  END IF
   !
   target = 0.D0
   !
@@ -436,50 +498,38 @@ SUBROUTINE approx_screening2( drho, rhobest )
   ALLOCATE( v( ngm0, mmx ), &
             w( ngm0, mmx ), dv( ngm0 ), vbest( ngm0 ), wbest( ngm0 ) )
   !
-  v(:,:)   = ZERO
-  w(:,:)   = ZERO
-  dv(:)    = ZERO
-  vbest(:) = ZERO
-  wbest(:) = ZERO
+  !$omp parallel
+     !
+     CALL threaded_barrier_memset(psic, 0.0_DP, dffts%nnr*2)
+     !$omp do
+     DO ig = 1, ngm0
+        psic(dffts%nl(ig)) = rhobest%of_g(ig,1)
+     ENDDO
+     !$omp end do nowait
+     !
+  !$omp end parallel
   !
   ! ... calculate alpha from density
   !
-  psic(:) = ZERO
-  !
-  IF ( nspin == 2 ) THEN
-     !
-     psic(nls(:ngm0)) = ( rhobest%of_g(:ngm0,1) + rhobest%of_g(:ngm0,2) )
-     !
-  ELSE
-     !
-     psic(nls(:ngm0)) = rhobest%of_g(:ngm0,1)
-     !
-  END IF
-  !
-  IF ( gamma_only ) psic(nlsm(:ngm0)) = CONJG( psic(nls(:ngm0)) )
-  !
-  CALL invfft ('Smooth', psic, dffts)
-  !
-  alpha(:) = REAL( psic(1:dffts%nnr) )
+  CALL invfft ('Rho', psic, dffts)
   !
   avg_rsm1 = 0.D0
   !
+  !$omp parallel do reduction(+:avg_rsm1)
   DO ir = 1, dffts%nnr
-     !
-     alpha(ir) = ABS( alpha(ir) )
+     alpha(ir) = ABS( REAL( psic(ir) ) )
      !
      IF ( alpha(ir) > eps32 ) THEN
         !
-        rs        = ( 3.D0 / fpi / alpha(ir) )**one_third
-        avg_rsm1  = avg_rsm1 + 1.D0 / rs
-        alpha(ir) = rs
+        alpha(ir) = ( 3.D0 / fpi / alpha(ir) )**one_third
+        avg_rsm1  = avg_rsm1 + 1.D0 / alpha(ir)
         !
      END IF   
      !
+     alpha(ir) = 3.D0 * ( tpi / 3.D0 )**( 5.D0 / 3.D0 ) * alpha(ir)
+     !
   END DO
-  !
-  alpha = 3.D0 * ( tpi / 3.D0 )**( 5.D0 / 3.D0 ) * alpha
-  rs       = ( 3.D0 * omega / fpi / nelec )**one_third
+  !$omp end parallel do
   !
   CALL mp_sum( avg_rsm1 , intra_bgrp_comm )
   avg_rsm1 = ( dffts%nr1*dffts%nr2*dffts%nr3 ) / avg_rsm1
@@ -487,20 +537,39 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   ! ... calculate deltaV and the first correction vector
   !
-  psic(:) = ZERO
+  !$omp parallel
+     CALL threaded_barrier_memset(psic, 0.0_DP, dffts%nnr*2)
+     !$omp do
+     DO ig = 1, ngm0
+        psic(dffts%nl(ig)) = drho%of_g(ig,1)
+     ENDDO
+     !$omp end do nowait
+     !
+     IF ( gamma_only ) THEN
+        !$omp do
+        DO ig = 1, ngm0
+           psic(dffts%nlm(ig)) = CONJG( psic(dffts%nl(ig)) )
+        ENDDO
+        !$omp end do nowait
+     ENDIF
+  !$omp end parallel
   !
-  psic(nls(:ngm0)) = drho%of_g(:ngm0,1)
+  CALL invfft ('Rho', psic, dffts)
   !
-  IF ( gamma_only ) psic(nlsm(:ngm0)) = CONJG( psic(nls(:ngm0)) )
+  !$omp parallel do
+  DO ir = 1, dffts%nnr
+     psic(ir) = psic(ir) * alpha(ir)
+  ENDDO
+  !$omp end parallel do
   !
-  CALL invfft ('Smooth', psic, dffts)
+  CALL fwfft ('Rho', psic, dffts)
   !
-  psic(:dffts%nnr) = psic(:dffts%nnr) * alpha(:)
-  !
-  CALL fwfft ('Smooth', psic, dffts)
-  !
-  dv(:) = psic(nls(:ngm0)) * gg(:ngm0) * tpiba2
-  v(:,1)= psic(nls(:ngm0)) * gg(:ngm0) / ( gg(:ngm0) + agg0 )
+  !$omp parallel do
+  DO ig = 1, ngm0
+     dv(ig) = psic(dffts%nl(ig)) * gg(ig) * tpiba2
+     v(ig,1)= psic(dffts%nl(ig)) * gg(ig) / ( gg(ig) + agg0 )
+  ENDDO
+  !$omp end parallel do
   !
   m       = 1
   aa(:,:) = 0.D0
@@ -510,21 +579,41 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      ! ... generate the vector w
      !     
-     w(:,m) = fpi * e2 * v(:,m)
+     !$omp parallel
+        CALL threaded_barrier_memset(psic, 0.0_DP, dffts%nnr*2)
+        !$omp do
+        DO ig = 1, ngm0
+           !
+           w(ig,m) = fpi * e2 * v(ig,m)
+           !
+           psic(dffts%nl(ig)) = v(ig,m)
+        ENDDO
+        !$omp end do nowait
+        !
+        IF ( gamma_only ) THEN
+           !$omp do
+           DO ig = 1, ngm0
+              psic(dffts%nlm(ig)) = CONJG( psic(dffts%nl(ig)) )
+           ENDDO
+           !$omp end do nowait
+        ENDIF
+     !$omp end parallel
      !
-     psic(:) = ZERO
+     CALL invfft ('Rho', psic, dffts)
      !
-     psic(nls(:ngm0)) = v(:,m)
+     !$omp parallel do
+     DO ir = 1, dffts%nnr
+        psic(ir) = psic(ir) * alpha(ir)
+     ENDDO
+     !$omp end parallel do
      !
-     IF ( gamma_only ) psic(nlsm(:ngm0)) = CONJG( psic(nls(:ngm0)) )
+     CALL fwfft ('Rho', psic, dffts)
      !
-     CALL invfft ('Smooth', psic, dffts)
-     !
-     psic(:dffts%nnr) = psic(:dffts%nnr) * alpha(:)
-     !
-     CALL fwfft ('Smooth', psic, dffts)
-     !
-     w(:,m) = w(:,m) + gg(:ngm0) * tpiba2 * psic(nls(:ngm0))
+     !$omp parallel do
+     DO ig = 1, ngm0
+        w(ig,m) = w(ig,m) + gg(ig) * tpiba2 * psic(dffts%nl(ig))
+     ENDDO
+     !$omp end parallel do
      !
      ! ... build the linear system
      !
@@ -552,15 +641,23 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      FORALL( i = 1:m ) vec(i) = SUM( invaa(i,:)*bb(:) )
      !
-     vbest(:) = ZERO
-     wbest(:) = dv(:)
-     !
-     DO i = 1, m
+     !$omp parallel
+        !$omp do
+        DO ig = 1, ngm0
+           vbest(ig) = ZERO
+           wbest(ig) = dv(ig)
+        ENDDO
+        !$omp end do nowait
         !
-        vbest = vbest + vec(i) * v(:,i)
-        wbest = wbest - vec(i) * w(:,i)
-        !
-     END DO
+        DO i = 1, m
+           !$omp do
+           DO ig = 1, ngm0
+              vbest(ig) = vbest(ig) + vec(i) * v(ig,i)
+              wbest(ig) = wbest(ig) - vec(i) * w(ig,i)
+           ENDDO
+           !$omp end do nowait
+        END DO
+     !$omp end parallel
      !
      dr2_best = local_tf_ddot( wbest, wbest, ngm0 )
      !
@@ -568,21 +665,14 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      IF ( dr2_best < target ) THEN
         !
-        drho%of_g(:ngm0,1) = vbest(:)
-        !
-        IF ( nspin == 2 ) THEN
-           !
+        !$omp parallel
+           !$omp do
            DO ig = 1, ngm0
-              !
-              rrho = drho%of_g(ig,1)
-              rmag = drho%of_g(ig,2)
-              !
-              drho%of_g(ig,1) = 0.5D0 * ( rrho + rmag )
-              drho%of_g(ig,2) = 0.5D0 * ( rrho - rmag )
-              !
-           END DO
+              drho%of_g(ig,1) = vbest(ig)
+           ENDDO
+           !$omp end do nowait
            !
-        END IF
+        !$omp end parallel
         !
         DEALLOCATE( alpha, v, w, dv, vbest, wbest )
         !
@@ -592,7 +682,11 @@ SUBROUTINE approx_screening2( drho, rhobest )
         !
         m = 1
         !
-        v(:,m)  = vbest(:)
+        !$omp parallel do
+        DO ig = 1, ngm0
+           v(ig,m)  = vbest(ig)
+        ENDDO
+        !$omp end parallel do
         aa(:,:) = 0.D0
         bb(:)   = 0.D0
         !
@@ -602,7 +696,11 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      m = m + 1
      !
-     v(:,m) = wbest(:) / ( gg(:ngm0) + agg0 )
+     !$omp parallel do
+     DO ig = 1, ngm0
+        v(ig,m) = wbest(ig) / ( gg(ig) + agg0 )
+     ENDDO
+     !$omp end parallel do
      !
   END DO repeat_loop
   !

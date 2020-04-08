@@ -22,14 +22,16 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   USE constants,         ONLY : e2, fpi
   USE fft_base,          ONLY : dfftp
   USE fft_interfaces,    ONLY : fwfft, invfft
-  USE gvect,             ONLY : nl, ngm, g,nlm, gstart
-  USE cell_base,         ONLY : alat, tpiba2, omega
+  USE gvect,             ONLY : ngm, g, gstart
+  USE cell_base,         ONLY : tpiba2, omega
   USE noncollin_module,  ONLY : nspin_lsda, nspin_mag, nspin_gga
   USE funct,             ONLY : dft_is_gradient, dft_is_nonlocc
   USE scf,               ONLY : rho, rho_core
   USE uspp,              ONLY : nlcc_any
   USE control_flags,     ONLY : gamma_only
   USE martyna_tuckerman, ONLY : wg_corr_h, do_comp_mt
+  USE Coul_cut_2D,       ONLY : do_cutoff_2D  
+  USE Coul_cut_2D_ph,    ONLY : cutoff_dv_of_drho 
   USE qpoint,            ONLY : xq
   USE gc_lr,             ONLY : grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
   USE control_lr,        ONLY : lrpa
@@ -76,8 +78,8 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   fac = 1.d0 / DBLE (nspin_lsda)
   !
   if (nlcc_any.and.add_nlcc) then
+     rho%of_r(:, 1) = rho%of_r(:, 1) + rho_core (:)
      do is = 1, nspin_lsda
-        rho%of_r(:, is) = rho%of_r(:, is) + fac * rho_core (:)
         dvscf(:, is) = dvscf(:, is) + fac * drhoc (:)
      enddo
   endif
@@ -94,17 +96,15 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   ! NB: If nlcc=.true. we need to add here its contribution. 
   ! grho contains already the core charge
   !
-  if ( dft_is_gradient() ) call dgradcorr &
-       (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
-       dvscf, dfftp%nnr, nspin_mag, nspin_gga, nl, ngm, g, alat, dvaux)
+  if ( dft_is_gradient() ) call dgradcorr(dfftp, rho%of_r, grho, dvxc_rr, &
+                                dvxc_sr, dvxc_ss, dvxc_s, xq, dvscf, &
+                                nspin_mag, nspin_gga, g, dvaux) 
   !
-  if (dft_is_nonlocc()) then
-     call dnonloccorr(rho%of_r, dvscf, xq, dvaux)
-  endif
-
+  if ( dft_is_nonlocc() )  call dnonloccorr(rho%of_r, dvscf, xq, dvaux)
+  !
   if (nlcc_any.and.add_nlcc) then
+     rho%of_r(:, 1) = rho%of_r(:, 1) - rho_core (:)
      do is = 1, nspin_lsda
-        rho%of_r(:, is) = rho%of_r(:, is) - fac * rho_core (:)
         dvscf(:, is) = dvscf(:, is) - fac * drhoc (:)
      enddo
   endif
@@ -117,7 +117,7 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
      dvscf(:,1) = dvscf(:,1) + dvscf(:,2)
   end if
   !
-  CALL fwfft ('Dense', dvscf(:,1), dfftp)
+  CALL fwfft ('Rho', dvscf(:,1), dfftp)
   !
   ! 2) Hartree contribution is computed in reciprocal space
   !
@@ -131,7 +131,7 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
       do is = 1, nspin_lsda
         do ig = gstart, ngm
           qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
-          dvhart(nl(ig),is) = e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
+          dvhart(dfftp%nl(ig),is) = e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
         enddo
       enddo 
       !
@@ -142,7 +142,7 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
       ! Total response density
       !
       do ig = 1, ngm
-         rgtot(ig) = dvscf(nl(ig),1)
+         rgtot(ig) = dvscf(dfftp%nl(ig),1)
       enddo
       !
       CALL wg_corr_h (omega, ngm, rgtot, dvaux_mt, eh_corr)
@@ -150,17 +150,17 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
       do is = 1, nspin_lsda
         !
         do ig = 1, ngm
-           dvhart(nl(ig),is)  = dvhart(nl(ig),is)  + dvaux_mt(ig)
+           dvhart(dfftp%nl(ig),is)  = dvhart(dfftp%nl(ig),is)  + dvaux_mt(ig)
         enddo
         if (gamma_only) then
            do ig = 1, ngm
-              dvhart(nlm(ig),is) = conjg(dvhart(nl(ig),is))
+              dvhart(dfftp%nlm(ig),is) = conjg(dvhart(dfftp%nl(ig),is))
            enddo
         endif
         !
         ! Transform response Hartree potential to real space
         !
-        CALL invfft ('Dense', dvhart (:,is), dfftp)
+        CALL invfft ('Rho', dvhart (:,is), dfftp)
         !
       enddo
       !
@@ -186,14 +186,14 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
         do ig = 1, ngm
            qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
            if (qg2 > 1.d-8) then
-              dvhart(nl(ig),is) = e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
-              dvhart(nlm(ig),is)=conjg(dvhart(nl(ig),is))
+              dvhart(dfftp%nl(ig),is) = e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
+              dvhart(dfftp%nlm(ig),is)=conjg(dvhart(dfftp%nl(ig),is))
            endif
         enddo
         !
         ! Transformed back to real space
         !
-        CALL invfft ('Dense', dvhart (:, is), dfftp)
+        CALL invfft ('Rho', dvhart (:, is), dfftp)
         !
       enddo
       !
@@ -208,18 +208,22 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
       ! General k points implementation
       !
       do is = 1, nspin_lsda
-         CALL fwfft ('Dense', dvaux (:, is), dfftp)
-         do ig = 1, ngm
-            qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
-            if (qg2 > 1.d-8) then
-               dvaux(nl(ig),is) = dvaux(nl(ig),is) + &
-                              & e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
-            endif
-         enddo
+         CALL fwfft ('Rho', dvaux (:, is), dfftp)
+         IF (do_cutoff_2D) THEN 
+            call cutoff_dv_of_drho(dvaux, is, dvscf)
+         ELSE
+            do ig = 1, ngm
+               qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
+               if (qg2 > 1.d-8) then
+                  dvaux(dfftp%nl(ig),is) = dvaux(dfftp%nl(ig),is) + &
+                                 & e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
+               endif
+            enddo
+         ENDIF
          !
          ! Transformed back to real space
          !
-         CALL invfft ('Dense', dvaux (:, is), dfftp)
+         CALL invfft ('Rho', dvaux (:, is), dfftp)
          !
       enddo
       !

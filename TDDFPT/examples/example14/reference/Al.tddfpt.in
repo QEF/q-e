@@ -1,0 +1,12 @@
+ &lr_input
+   prefix = 'Al',
+   outdir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/',
+   restart_step = 250,
+   restart = .false.
+ /
+ &lr_control
+   itermax = 500,
+   q1 = 0.621,
+   q2 = 0.000,
+   q3 = 0.000
+ /

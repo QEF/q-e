@@ -1,0 +1,55 @@
+! Implemented: it, ct
+
+PROGRAM test_mp_alltoall_{vname}
+!
+! Simple program to check the functionalities of mp_alltoall.
+!
+#if defined(__MPI)
+    USE MPI
+#endif
+    USE util_param, ONLY : DP
+    USE mp, ONLY : mp_alltoall
+    USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &
+                          root, nproc, world_comm
+    USE tester
+    IMPLICIT NONE
+    !
+    TYPE(tester_t) :: test
+    INTEGER :: rnk, valid_sum, world_group = 0
+    INTEGER, PARAMETER :: datasize = {datasize}
+    !
+    ! Stuff for comparing with CPU implementation
+    integer :: i
+    !
+    ! test variable
+    {type}, ALLOCATABLE :: snd_{vname}_h{all}
+    {type}, ALLOCATABLE :: rcv_{vname}_h{all}
+    
+    !
+    CALL test%init()
+    
+#if defined(__MPI)    
+    world_group = MPI_COMM_WORLD
+#endif
+    CALL mp_world_start(world_group)
+    !
+    ALLOCATE(snd_{vname}_h(datasize, datasize, nproc))
+    ALLOCATE(rcv_{vname}_h(datasize, datasize, nproc))
+    
+    snd_{vname}_h = mpime + 1
+    !mp_alltoall    (sndbuf, rcvbuf, gid)
+    CALL mp_alltoall(snd_{vname}_h, rcv_{vname}_h, world_comm)
+    !
+    DO i = 1, nproc
+        CALL test%assert_equal(SUM(rcv_{vname}_h(:,:,i)) , {typeconv} (i*(datasize**2)))
+    END DO
+    !
+    DEALLOCATE(snd_{vname}_h, rcv_{vname}_h)
+    !
+    CALL collect_results(test)
+    !
+    CALL mp_world_end()
+    !
+    IF (mpime .eq. 0) CALL test%print()
+    !
+END PROGRAM test_mp_alltoall_{vname}

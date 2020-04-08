@@ -11,16 +11,15 @@ MODULE ph_rVV10
   
   USE kinds,             ONLY : dp
   USE constants,         ONLY : pi, e2
-  USE kernel_table,      ONLY : q_mesh, Nr_points, Nqs, r_max
   USE mp,                ONLY : mp_bcast, mp_sum, mp_barrier
-  USE mp_global,         ONLY : me_pool, nproc_pool, intra_pool_comm, root_pool
+  USE mp_pools,          ONLY : me_pool, nproc_pool, intra_pool_comm, root_pool
   USE io_global,         ONLY : ionode
   USE fft_base,          ONLY : dfftp
   USE fft_interfaces,    ONLY : fwfft, invfft 
   USE control_flags,     ONLY : iverbosity, gamma_only
   USE io_global,         ONLY : stdout
   USE rVV10,             ONLY : b_value, initialize_spline_interpolation, &
-                                numerical_gradient, interpolate_kernel
+                                interpolate_kernel, q_mesh, Nr_points, Nqs, r_max
   USE gc_lr,             ONLY : grho
   
 
@@ -56,8 +55,8 @@ CONTAINS
 subroutine dv_drho_rvv10(rho, drho, nspin, q_point, dv_drho)
 
 
-    USE gvect,               ONLY : nl, g, nlm, ngm
-    USE cell_base,           ONLY : alat, tpiba, omega
+    USE gvect,               ONLY : g, ngm
+    USE cell_base,           ONLY : tpiba, omega
 
     integer, intent(IN)        :: nspin
     real(dp), intent(IN)       :: rho(:,:), q_point(3)
@@ -87,8 +86,8 @@ end subroutine dv_drho_rvv10
 
 subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
 
-    USE gvect,               ONLY : nl, g, nlm, ngm
-    USE cell_base,           ONLY : alat, tpiba, omega
+    USE gvect,               ONLY : g, ngm
+    USE cell_base,           ONLY : tpiba, omega
 
     integer, intent(IN) :: nspin
     real(dp),    intent(IN) :: rho(:,:), q_point(3)       !
@@ -96,7 +95,7 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
 
     complex(DP), intent(OUT) :: delta_v(dfftp%nnr)
 
-    !! Varables needed for calcualtions
+    !! Variables needed for calculations
 
     real(dp)    :: gmod, gmod2
     real(dp)    :: theta, dtheta_dn, dtheta_dgradn, d2theta_dn2, dn_dtheta_dgradn, dgradn_dtheta_dgradn 
@@ -145,8 +144,8 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
 
     !! Global variables
     allocate(total_rho(dfftp%nnr) )
-    allocate(gradient_rho(dfftp%nnr, 3))
-    allocate(gradient_drho(dfftp%nnr, 3))
+    allocate(gradient_rho(3,dfftp%nnr))
+    allocate(gradient_drho(3,dfftp%nnr))
     allocate(q0(dfftp%nnr), q(dfftp%nnr))    
     allocate(dq0_dq(dfftp%nnr), d2q0_dq2(dfftp%nnr))
     allocate(dq_dn_n(dfftp%nnr), dn_dq_dn_n_n(dfftp%nnr), dq_dgradn_n_gmod(dfftp%nnr))
@@ -180,9 +179,9 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
     !! -------------------------------------------------------------------------     
 
     total_rho(:) = rho(:,1)
-    call numerical_gradient(total_rho,gradient_rho)
+    call fft_gradient_r2r( dfftp, total_rho, g, gradient_rho )
 
-    CALL qgradient (q_point, dfftp%nnr, drho(:,1), ngm, g, nl, alat, gradient_drho)
+    CALL fft_qgradient (dfftp, drho(:,1), q_point, g, gradient_drho)
 
     call fill_q0_extended_on_grid ()
 
@@ -199,11 +198,11 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
 
     !! --------------------------------------------------------------------------------------------- 
     !! Begin integral for the delta_b part
-    !!---------------------------------------------------------------------------------------------    	
+    !!--------------------------------------------------------------------------------------------- 
  
     do i_grid = 1,dfftp%nnr
 
-        gmod2 = gradient_rho(i_grid,1)**2+gradient_rho(i_grid,2)**2+gradient_rho(i_grid,3)**2 
+        gmod2 = gradient_rho(1,i_grid)**2+gradient_rho(2,i_grid)**2+gradient_rho(3,i_grid)**2 
         if (total_rho(i_grid) <= epsr ) cycle
         
         CALL get_abcdef (q0, i_grid, q_hi, q_low, dq, a,b,c,d,e,f ) 
@@ -260,7 +259,7 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
 
     !! --------------------------------------------------------------------------------------------- 
     !! Begin h
-    !!---------------------------------------------------------------------------------------------    	
+    !!--------------------------------------------------------------------------------------------- 
    
     delta_h(:) = 0.0_DP
     delta_h1(:) = 0.0_DP
@@ -271,7 +270,7 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
  
     do i_grid = 1,dfftp%nnr
 
-        gmod2 = gradient_rho(i_grid,1)**2+gradient_rho(i_grid,2)**2+gradient_rho(i_grid,3)**2 
+        gmod2 = gradient_rho(1,i_grid)**2+gradient_rho(2,i_grid)**2+gradient_rho(3,i_grid)**2 
         if (total_rho(i_grid) <= epsr) cycle
     
         CALL get_abcdef (q0, i_grid, q_hi, q_low, dq, a,b,c,d,e,f )
@@ -299,16 +298,16 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
     allocate (delta_h2_aux(dfftp%nnr))
 
     do icar = 1,3
-       delta_h(:) = (h1t(:) * gradient_rho(:,icar)+ h2t(:) * gradient_drho(:,icar))
+       delta_h(:) = (h1t(:) * gradient_rho(icar,:)+ h2t(:) * gradient_drho(icar,:))
 
-       CALL fwfft ('Dense', delta_h, dfftp) 
+       CALL fwfft ('Rho', delta_h, dfftp) 
 
        delta_h_aux(:) = (0.0_DP, 0.0_DP)
-       delta_h_aux(nl(:)) = CMPLX(0.0_DP,(g(icar,:)+q_point(icar)),kind=DP ) * delta_h(nl(:))
+       delta_h_aux(dfftp%nl(:)) = CMPLX(0.0_DP,(g(icar,:)+q_point(icar)),kind=DP ) * delta_h(dfftp%nl(:))
        
-       if (gamma_only) delta_h_aux(nlm(:)) = CONJG(delta_h_aux(nl(:)))
+       if (gamma_only) delta_h_aux(dfftp%nlm(:)) = CONJG(delta_h_aux(dfftp%nl(:)))
 
-       CALL invfft ('Dense', delta_h_aux, dfftp) 
+       CALL invfft ('Rho', delta_h_aux, dfftp) 
 
        delta_h_aux(:) = delta_h_aux(:)*tpiba
 
@@ -345,8 +344,6 @@ end subroutine get_delta_v
   !! ###############################################################################################################
 
   SUBROUTINE get_abcdef (q0, i_grid, q_hi, q_low, dq, a,b,c,d,e,f )
-
-    USE kernel_table,    ONLY : q_cut, q_min
 
     real(dp),  intent(IN)    :: q0(:)
     integer, INTENT(IN)      :: i_grid
@@ -442,10 +439,10 @@ end subroutine get_delta_v
     !!
     !! Fractions
     !!
-    gmod = sqrt(gradient_rho(i_grid,1)**2+gradient_rho(i_grid,2)**2+gradient_rho(i_grid,3)**2)
-    gradn_graddeltan = gradient_rho(i_grid,1)*gradient_drho(i_grid,1) + &
-                       gradient_rho(i_grid,2)*gradient_drho(i_grid,2) + &
-                       gradient_rho(i_grid,3)*gradient_drho(i_grid,3)
+    gmod = sqrt(gradient_rho(1,i_grid)**2+gradient_rho(2,i_grid)**2+gradient_rho(3,i_grid)**2)
+    gradn_graddeltan = gradient_rho(1,i_grid)*gradient_drho(1,i_grid) + &
+                       gradient_rho(2,i_grid)*gradient_drho(2,i_grid) + &
+                       gradient_rho(3,i_grid)*gradient_drho(3,i_grid)
 
   END SUBROUTINE get_thetas_exentended
 
@@ -468,7 +465,7 @@ end subroutine get_delta_v
   !!     dq_dgradrho = total_rho / |gradient_rho| * d q / d |gradient_rho|
   !!
     
-  USE kernel_table,    ONLY : q_cut, q_min
+  USE rVV10,           ONLY : q_cut, q_min
     
   !                                                                  
   !                                                                        _
@@ -516,7 +513,7 @@ end subroutine get_delta_v
      
      if (total_rho(i_grid) < epsr)cycle
 
-     gmod2 = gradient_rho(i_grid,1)**2+gradient_rho(i_grid,2)**2+gradient_rho(i_grid,3)**2
+     gmod2 = gradient_rho(1,i_grid)**2+gradient_rho(2,i_grid)**2+gradient_rho(3,i_grid)**2
      gmod = sqrt(gmod2)
 
 
@@ -610,7 +607,7 @@ end SUBROUTINE fill_q0_extended_on_grid
 
 subroutine get_u_delta_u(u, delta_u, q_point)
   
-  USE gvect,           ONLY : nl, nlm, g, gg, ngm, igtongl, gl, ngl, gstart
+  USE gvect,           ONLY : g, gg, ngm, igtongl, gl, ngl, gstart
   USE cell_base,       ONLY : tpiba, omega
 
   complex(dp), intent(inout)  :: u(dfftp%nnr,Nqs), delta_u(dfftp%nnr,Nqs)
@@ -637,8 +634,8 @@ subroutine get_u_delta_u(u, delta_u, q_point)
   !!
   call start_clock( 'vdW_ffts')
   do q1_i = 1, Nqs
-     CALL fwfft ('Dense', u(:,q1_i), dfftp)
-     CALL fwfft ('Dense', delta_u(:,q1_i), dfftp)
+     CALL fwfft ('Rho', u(:,q1_i), dfftp)
+     CALL fwfft ('Rho', delta_u(:,q1_i), dfftp)
   end do
   call stop_clock( 'vdW_ffts')
   
@@ -664,18 +661,18 @@ subroutine get_u_delta_u(u, delta_u, q_point)
         !! Sum over beta
         do q1_i = 1, Nqs
         
-           temp_u(nl(g_i), q2_i) = temp_u(nl(g_i), q2_i) + kernel_of_g(q2_i,q1_i)*u(nl(g_i), q1_i)
+           temp_u(dfftp%nl(g_i), q2_i) = temp_u(dfftp%nl(g_i), q2_i) + kernel_of_g(q2_i,q1_i)*u(dfftp%nl(g_i), q1_i)
        
-           temp_delta_u(nl(g_i), q2_i) = temp_delta_u(nl(g_i), q2_i) + &
-                                        kernel_of_gq(q2_i,q1_i)*delta_u(nl(g_i), q1_i)
+           temp_delta_u(dfftp%nl(g_i), q2_i) = temp_delta_u(dfftp%nl(g_i), q2_i) + &
+                                        kernel_of_gq(q2_i,q1_i)*delta_u(dfftp%nl(g_i), q1_i)
         end do
      end do
 
   end do
 
   if (gamma_only) then
-    temp_u(nlm(:),:) = CONJG(temp_u(nl(:),:))
-    temp_delta_u(nlm(:),:) = CONJG(temp_delta_u(nl(:),:))
+    temp_u(dfftp%nlm(:),:) = CONJG(temp_u(dfftp%nl(:),:))
+    temp_delta_u(dfftp%nlm(:),:) = CONJG(temp_delta_u(dfftp%nl(:),:))
   endif
 
   !!
@@ -683,8 +680,8 @@ subroutine get_u_delta_u(u, delta_u, q_point)
   !!
   call start_clock( 'vdW_ffts')
   do q1_i = 1, Nqs
-     CALL invfft ('Dense', temp_u(:,q1_i), dfftp)
-     CALL invfft ('Dense', temp_delta_u(:,q1_i), dfftp)
+     CALL invfft ('Rho', temp_u(:,q1_i), dfftp)
+     CALL invfft ('Rho', temp_delta_u(:,q1_i), dfftp)
   end do
   call stop_clock( 'vdW_ffts')
 
@@ -697,60 +694,8 @@ subroutine get_u_delta_u(u, delta_u, q_point)
   
 end subroutine get_u_delta_u
 
-
-!! ###############################################################################################################
-!!                  |                      |
-!!                  |      qgradient       |
-!!                  |______________________|
-
-
-subroutine qgradient (xq, nrxx, a, ngm, g, nl, alat, ga)
-  !--------------------------------------------------------------------
-  ! Calculates ga = \grad a in R-space (a is also in R-space)
-  use control_flags,  ONLY : gamma_only
-  USE fft_base,       ONLY: dfftp
-  USE fft_interfaces, ONLY: fwfft, invfft
-  USE gvect,     ONLY : nlm
-  !gamma_only is disregarded for phonon calculations
-  USE kinds, only : DP
-  USE constants, ONLY: tpi
-  implicit none
-  integer :: nrxx, ngm, nl (ngm)
-  complex(DP) :: a (nrxx), ga (nrxx, 3)
-  real(DP) :: g (3, ngm), alat, xq (3)
-  integer :: n, ipol
-  real(DP) :: tpiba
-  complex(DP), allocatable :: aux (:), gaux (:)
-
-  allocate (gaux(  nrxx))
-  allocate (aux (  nrxx))
-
-  tpiba = tpi / alat
-  ! bring a(r) to G-space, a(G) ...
-  aux (:) = a(:)
-
-  CALL fwfft ('Dense', aux, dfftp)
-  ! multiply by i(q+G) to get (\grad_ipol a)(q+G) ...
-  do ipol = 1, 3
-     gaux (:) = (0.d0, 0.d0)
-     do n = 1, ngm
-        gaux(nl(n)) = CMPLX(0.d0, xq (ipol) + g (ipol, n),kind=DP) * aux (nl(n))
-        if (gamma_only) gaux( nlm(n) ) = conjg( gaux( nl(n) ) )
-     enddo
-     ! bring back to R-space, (\grad_ipol a)(r) ...
-
-     CALL invfft ('Dense', gaux, dfftp)
-     ! ...and add the factor 2\pi/a  missing in the definition of q+G
-     do n = 1, nrxx
-        ga (n, ipol) = gaux (n) * tpiba
-     enddo
-  enddo
-  deallocate (aux)
-  deallocate (gaux)
-  return
-
-end subroutine qgradient
-
-
+   ! ####################################################################
+   !                          |              |
+   !                          | thetas_to_uk |
 END MODULE ph_rVV10 
 

@@ -24,9 +24,10 @@ subroutine raman_mat
   USE symme,    ONLY : symtensor3
   USE uspp,     ONLY : nkb, vkb
   USE wvfct,    ONLY : npwx, nbnd
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE phus,     ONLY : alphap
-  USE units_ph, ONLY : lrdwf, iudwf, lrwfc, iuwfc
+  USE units_ph, ONLY : lrdwf, iudwf
+  USE units_lr, ONLY : iuwfc, lrwfc
   USE ramanm,   ONLY : ramtns, jab, a1j, a2j, lrd2w, iud2w
 
   USE lrus,     ONLY : becp1
@@ -154,7 +155,7 @@ subroutine raman_mat
      enddo
 
      do imod = 1, 3 * nat
-        call dvqpsi_us (ik, uact (1, imod),.false. )
+        call dvqpsi_us (ik, uact (1, imod),.false., becp1, alphap)
         do ipa = 1, 6
            tmp = 0.d0
            do ibnd = 1, nbnd_occ (ik)
@@ -197,7 +198,7 @@ subroutine raman_mat
               call calbec (npw, vkb, aux1, alphap (ipb,ik) )
            enddo
 
-           call dvqpsi_us (ik, uact (1, imod),.false. )
+           call dvqpsi_us (ik, uact (1, imod),.false., becp1, alphap )
            do ipb = 1, ipa
               tmp = 0.d0
               do ibnd = 1, nbnd_occ (ik)

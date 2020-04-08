@@ -19,12 +19,14 @@ subroutine dvpsi_e2
   USE klist,           ONLY : wk, ngk
   USE gvecs,           ONLY : doublegrid
   USE wvfct,           ONLY : npwx, nbnd
-  USE wavefunctions_module, ONLY: evc
+  USE wavefunctions, ONLY: evc
   USE buffers,         ONLY : get_buffer
   USE fft_base,        ONLY : dfftp, dffts
+  USE fft_interfaces,  ONLY : fft_interpolate
   USE scf,             ONLY : rho
   USE qpoint,          ONLY : nksq
-  USE units_ph,        ONLY : lrdrho, iudrho, lrdwf, iudwf, lrwfc, iuwfc
+  USE units_ph,        ONLY : lrdrho, iudrho, lrdwf, iudwf
+  USE units_lr,        ONLY : iuwfc, lrwfc
   USE control_lr,      ONLY : nbnd_occ
   USE ramanm,          ONLY : lrba2, iuba2, lrchf, iuchf, a1j, a2j
   USE mp_pools,        ONLY : my_pool_id, inter_pool_comm
@@ -142,7 +144,7 @@ subroutine dvpsi_e2
         do ir = 1, dffts%nnr
            auxs1 (ir) = CMPLX(raux6 (ir, ipa), 0.d0,kind=DP)
         enddo
-        call cinterpolate (aux6 (1, ipa), auxs1, +1)
+        call fft_interpolate (dffts, auxs1, dfftp, aux6 (:, ipa))
      else
         do ir = 1, dffts%nnr
            aux6 (ir, ipa) = CMPLX(raux6 (ir, ipa), 0.d0,kind=DP)
@@ -193,7 +195,7 @@ subroutine dvpsi_e2
   if (doublegrid) then
      allocate (aux6s  (dffts%nnr,6))
      do ipa = 1, 6
-        call cinterpolate (aux6 (1, ipa), aux6s (1, ipa), -1)
+        call fft_interpolate (dfftp, aux6 (:, ipa), dffts, aux6s (:, ipa))
      enddo
      deallocate (aux6)
   endif

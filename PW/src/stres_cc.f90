@@ -11,19 +11,19 @@ subroutine stres_cc (sigmaxcc)
   !-----------------------------------------------------------------------
   !
   USE kinds,                ONLY : DP
-  USE atom,                 ONLY : rgrid
+  USE atom,                 ONLY : rgrid, msh
   USE uspp_param,           ONLY : upf
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : alat, omega, tpiba, tpiba2
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : ngm, gstart, nl, g, gg, ngl, gl,igtongl
+  USE gvect,                ONLY : ngm, gstart, g, gg, ngl, gl,igtongl
   USE ener,                 ONLY : etxc, vtxc
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho, rho_core, rhog_core
   USE vlocal,               ONLY : strf
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
@@ -58,7 +58,7 @@ subroutine stres_cc (sigmaxcc)
      enddo
   endif
   deallocate (vxc)
-  CALL fwfft ('Dense', psic, dfftp)
+  CALL fwfft ('Rho', psic, dfftp)
   !
   ! psic contains now Vxc(G)
   !
@@ -71,23 +71,23 @@ subroutine stres_cc (sigmaxcc)
   end if
   do nt = 1, ntyp
      if ( upf(nt)%nlcc ) then
-        call drhoc (ngl, gl, omega, tpiba2, rgrid(nt)%mesh, rgrid(nt)%r, &
+        call drhoc (ngl, gl, omega, tpiba2, msh(nt), rgrid(nt)%r, &
               rgrid(nt)%rab, upf(nt)%rho_atc, rhocg)
         ! diagonal term
         if (gstart==2) sigmadiag = sigmadiag + &
-             CONJG(psic (nl(1) ) ) * strf (1,nt) * rhocg (igtongl (1) )
+             CONJG(psic (dfftp%nl(1) ) ) * strf (1,nt) * rhocg (igtongl (1) )
         do ng = gstart, ngm
-           sigmadiag = sigmadiag + CONJG(psic (nl (ng) ) ) * &
+           sigmadiag = sigmadiag + CONJG(psic (dfftp%nl (ng) ) ) * &
                 strf (ng,nt) * rhocg (igtongl (ng) ) * fact
         enddo
 
-        call deriv_drhoc (ngl, gl, omega, tpiba2, rgrid(nt)%mesh, &
+        call deriv_drhoc (ngl, gl, omega, tpiba2, msh(nt), &
              rgrid(nt)%r, rgrid(nt)%rab, upf(nt)%rho_atc, rhocg)
         ! non diagonal term (g=0 contribution missing)
         do ng = gstart, ngm
            do l = 1, 3
               do m = 1, 3
-                 sigmaxcc (l, m) = sigmaxcc (l, m) + CONJG(psic (nl (ng) ) ) &
+                 sigmaxcc (l, m) = sigmaxcc (l, m) + CONJG(psic (dfftp%nl (ng) ) ) &
                       * strf (ng, nt) * rhocg (igtongl (ng) ) * tpiba * &
                       g (l, ng) * g (m, ng) / sqrt (gg (ng) ) * fact
               enddo

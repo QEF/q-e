@@ -16,6 +16,7 @@ if test -e difference ; then /bin/rm difference > /dev/null ; fi
 touch difference
 
 for atom in ar f fe he cu cu1 h pt mg u u1 w ne_oep c_oep ; do
+    echo $atom
     $ld1_command < $atom.in > $work/$atom.out
     echo "diff -wib ./results/$atom.out ./reference/$atom.out" >> difference
     diff -wib $work/$atom.out $reference/ >> difference

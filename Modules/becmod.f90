@@ -165,7 +165,7 @@ CONTAINS
     npwx= size (beta, 1)
     IF ( npwx /= size (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
     IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
-#ifdef DEBUG
+#if defined(DEBUG)
     WRITE (*,*) 'calbec gamma'
     WRITE (*,*)  nkb,  size (betapsi,1) , m , size (betapsi, 2)
 #endif
@@ -226,7 +226,7 @@ CONTAINS
     ELSE
         m = size ( psi, 2)
     ENDIF
-#ifdef DEBUG
+#if defined(DEBUG)
     WRITE (*,*) 'calbec k'
     WRITE (*,*)  nkb,  size (betapsi,1) , m , size (betapsi, 2)
 #endif
@@ -287,7 +287,7 @@ CONTAINS
         m = size ( psi, 2)
     ENDIF
     npol= size (betapsi, 2)
-#ifdef DEBUG
+#if defined(DEBUG)
     WRITE (*,*) 'calbec nc'
     WRITE (*,*)  nkb,  size (betapsi,1) , m , size (betapsi, 3)
 #endif
@@ -399,18 +399,34 @@ CONTAINS
     !
   END SUBROUTINE deallocate_bec_type
 
-  SUBROUTINE beccopy(bec, bec1, nkb, nbnd)
+  SUBROUTINE beccopy(bec, bec1, nkb, nbnd, comm)
+    USE mp, ONLY: mp_size, mp_sum
     IMPLICIT NONE
     TYPE(bec_type), INTENT(in) :: bec
     TYPE(bec_type)  :: bec1
     INTEGER, INTENT(in) :: nkb, nbnd
+    INTEGER, INTENT (in), OPTIONAL :: comm
+
+    INTEGER :: nbgrp, ib_start, ib_end, this_bgrp_nbnd
+
+    nbgrp = 1; ib_start = 1; ib_end = nbnd ; this_bgrp_nbnd = nbnd
+    IF( PRESENT( comm ) ) THEN
+       nbgrp = mp_size( comm )
+       call divide( comm, nbnd, ib_start, ib_end) ; this_bgrp_nbnd = ib_end - ib_start + 1
+    END IF
 
     IF (gamma_only) THEN
-       CALL dcopy(nkb*nbnd, bec%r, 1, bec1%r, 1)
+       if(nbgrp>1) bec1%r = 0.d0
+       CALL dcopy(nkb*this_bgrp_nbnd, bec%r, 1, bec1%r(1,ib_start), 1)
+       if (nbgrp > 1) CALL mp_sum( bec1%r, comm )
     ELSEIF (noncolin) THEN
-       CALL zcopy(nkb*npol*nbnd, bec%nc, 1, bec1%nc,  1)
+       if(nbgrp>1) bec1%nc = ( 0.d0, 0.d0 )
+       CALL zcopy(nkb*npol*this_bgrp_nbnd, bec%nc, 1, bec1%nc(1,1,ib_start),  1)
+       if (nbgrp > 1) CALL mp_sum( bec1%nc, comm )
     ELSE
-       CALL zcopy(nkb*nbnd, bec%k, 1, bec1%k, 1)
+       if(nbgrp>1) bec1%k = ( 0.d0, 0.d0 )
+       CALL zcopy(nkb*this_bgrp_nbnd, bec%k, 1, bec1%k(1,ib_start), 1)
+       if (nbgrp > 1) CALL mp_sum( bec1%k, comm )
     ENDIF
 
     RETURN

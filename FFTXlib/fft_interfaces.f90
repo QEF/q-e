@@ -13,7 +13,7 @@ MODULE fft_interfaces
   PRIVATE
 
 
-  PUBLIC :: fwfft, invfft
+  PUBLIC :: fwfft, invfft, fft_interpolate
 
   
   INTERFACE invfft
@@ -21,15 +21,15 @@ MODULE fft_interfaces
      !! and to the "box-grid" version **invfft_b**, used only in CP 
      !! (the latter has an additional argument)
      
-     SUBROUTINE invfft_x( grid_type, f, dfft, howmany )
+     SUBROUTINE invfft_y( fft_kind, f, dfft, howmany )
        USE fft_types,  ONLY: fft_type_descriptor
        USE fft_param,  ONLY :DP
        IMPLICIT NONE
-       CHARACTER(LEN=*),  INTENT(IN) :: grid_type
+       CHARACTER(LEN=*),  INTENT(IN) :: fft_kind
        TYPE(fft_type_descriptor), INTENT(IN) :: dfft
        INTEGER, OPTIONAL, INTENT(IN) :: howmany
        COMPLEX(DP) :: f(:)
-     END SUBROUTINE invfft_x
+     END SUBROUTINE invfft_y
      !
      SUBROUTINE invfft_b( f, dfft, ia )
        USE fft_smallbox_type,  ONLY: fft_box_descriptor
@@ -42,15 +42,38 @@ MODULE fft_interfaces
   END INTERFACE
 
   INTERFACE fwfft
-     SUBROUTINE fwfft_x( grid_type, f, dfft, howmany )
+     SUBROUTINE fwfft_y( fft_kind, f, dfft, howmany )
        USE fft_types,  ONLY: fft_type_descriptor
        USE fft_param,  ONLY :DP
        IMPLICIT NONE
-       CHARACTER(LEN=*), INTENT(IN) :: grid_type
+       CHARACTER(LEN=*), INTENT(IN) :: fft_kind
        TYPE(fft_type_descriptor), INTENT(IN) :: dfft
        INTEGER, OPTIONAL, INTENT(IN) :: howmany
        COMPLEX(DP) :: f(:)
-     END SUBROUTINE fwfft_x
+     END SUBROUTINE fwfft_y
+  END INTERFACE
+
+  INTERFACE fft_interpolate
+     !! fft_interpolate  is the interface to utility that fourier interpolate
+     !! real/complex arrays between two grids 
+     
+     SUBROUTINE fft_interpolate_real( dfft_in, v_in, dfft_out, v_out )
+       USE fft_param,  ONLY :DP
+       USE fft_types,  ONLY: fft_type_descriptor
+       IMPLICIT NONE
+       TYPE(fft_type_descriptor), INTENT(IN) :: dfft_in, dfft_out
+       REAL(DP), INTENT(IN)  :: v_in(:)
+       REAL(DP), INTENT(OUT) :: v_out(:)
+     END SUBROUTINE fft_interpolate_real
+     !
+     SUBROUTINE fft_interpolate_complex( dfft_in, v_in, dfft_out, v_out )
+       USE fft_param,  ONLY :DP
+       USE fft_types,  ONLY: fft_type_descriptor
+       IMPLICIT NONE
+       TYPE(fft_type_descriptor), INTENT(IN) :: dfft_in, dfft_out
+       COMPLEX(DP), INTENT(IN)  :: v_in(:)
+       COMPLEX(DP), INTENT(OUT) :: v_out(:)
+     END SUBROUTINE fft_interpolate_complex
   END INTERFACE
 
 END MODULE fft_interfaces

@@ -1,0 +1,20 @@
+&INPUT
+   fildyn = ''
+   filout = ''
+   filmol = ''
+   filxsf = ''
+   ! fileig = ''
+
+   ! q(1) = , q(2) = , q(3) =
+   ! amass(1) = , amass(2) = ...
+   
+   !! asr options: 'no' | 'simple' | 'crystal' | 'one-dim' | 'zero-dim' | 
+   ! asr = 'no'
+   
+   !! for asr = 'one-dim'
+   ! axis =
+   
+   ! lperm =
+   ! lplasma =   
+/
+

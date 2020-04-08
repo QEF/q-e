@@ -1,11 +1,11 @@
 subroutine init_hartree()
    use qpoint, only : ikqs
    implicit none
-   
+
    if ( .not. allocated(ikqs)) allocate(ikqs(1))
    ikqs(1)=1
 
-end subroutine 
+end subroutine
 
 
 subroutine routine_hartree()
@@ -14,11 +14,11 @@ subroutine routine_hartree()
    use wvfct, only: nbnd, npw, npwx
    use io_files, only: nwordwfc, diropn, iunwfc, prefix, tmp_dir
    use fft_base, only: dffts
-   use wavefunctions_module, only: psic, evc
+   use wavefunctions, only: psic, evc
    use mp, only: mp_sum, mp_barrier
    use io_global, only: stdout, ionode
    use gvect, only: g, ngm, gstart
-   USE gvecs, ONLY: nls, nlsm
+   !USE gvecs, ONLY: dffts%nl, dffts%nlm   !moved to fft type
    USE cell_base, ONLY: tpiba, omega, tpiba2, alat, at
    USE constants, ONLY: e2, fpi, pi
    USE fft_interfaces, ONLY: fwfft, invfft
@@ -33,10 +33,12 @@ subroutine routine_hartree()
    use constants, only: rytoev
    USE eqv, ONLY: dpsi, dvpsi
    USE mp_pools, ONLY: intra_pool_comm
+   
    implicit none
-
+   
    real(kind=DP) ::J_kohn(3), J_kohn_a(3), J_kohn_b(3), J_hartree(3), J_xc(3), J_electron(3)
-   complex(kind=DP), allocatable :: evc_uno(:, :), evc_due(:, :), evp(:, :), tmp(:, :)
+   !complex(kind=DP), allocatable :: evc_uno(:, :), evc_due(:, :), evp(:, :), tmp(:, :)
+   complex(kind=DP), allocatable ::  evp(:, :), tmp(:, :)
    integer :: iun, iv, igm, ibnd, i
    logical :: exst
    real(kind=DP), allocatable ::charge(:), fac(:)
@@ -57,6 +59,7 @@ subroutine routine_hartree()
    integer, external :: find_free_unit
 
    write (stdout, *) 'INIZIO ROUTINE HARTREE & KOHN'
+   npw=npwx ! only gamma
    call start_clock('routine_hartree')
    call start_clock('hartree_current')
    call init_hartree()
@@ -71,8 +74,8 @@ subroutine routine_hartree()
 !-------STEP1: lettura e allocazione (npwx = number of plane waves (npwx>npw per comodita'), nbnd = number of bands (n_electrons/2 per insulators))
    allocate (tmp(npwx, nbnd))
    allocate (evp(npwx, nbnd))
-   allocate (evc_uno(npwx, nbnd))
-   allocate (evc_due(npwx, nbnd))
+   !allocate (evc_uno(npwx, nbnd))
+   !allocate (evc_due(npwx, nbnd))
    allocate (charge_g(ngm))
    allocate (charge_g_due(ngm))
    allocate (charge(dffts%nnr))
@@ -88,27 +91,30 @@ subroutine routine_hartree()
    allocate (exdotcharge_r(dffts%nnr))
 !
 ! legge le funzioni d'onda uno e due (evc_uno, evc_due)
-   iun = find_free_unit()
-   call diropn_due(prefix_due, iun, 'wfc', 2*nwordwfc, exst, tmp_dir)
-   call davcio(evc_due, 2*nwordwfc, iun, 1, -1)
-   close (iun)
-   close (iunwfc)
-   call diropn(iunwfc, 'wfc', 2*nwordwfc, exst, tmp_dir)
-   call davcio(evc_uno, 2*nwordwfc, iunwfc, 1, -1)
-   close (iunwfc)
+!   iun = find_free_unit()
+!   call diropn_due(prefix_due, iun, 'wfc', 2*nwordwfc, exst, tmp_dir)
+!   call davcio(evc_due, 2*nwordwfc, iun, 1, -1)
+!   close (iun)
+!
+!   close (iunwfc)
+!   call diropn(iunwfc, 'wfc', 2*nwordwfc, exst, tmp_dir)
+!   call davcio(evc_uno, 2*nwordwfc, iunwfc, 1, -1)
+!   close (iunwfc)
 
 !-------STEP2.1: inizializzazione di charge_g, la carica al tempo t.
 ! charge_g = densità di carica nello spazio reciproco. Si ottiene dalla FFT di |evc(r)|^2, dove evc(r)=IFFT(evc)
 ! per ottimizzare: fa 2 bande alla volta con una sola IFFT
+
+
    charge = 0.d0
    do iv = 1, nbnd, 2
       psic = 0.d0
       if (iv == nbnd) then
-         psic(nls(1:npw)) = evc_uno(1:npw, iv)
-         psic(nlsm(1:npw)) = CONJG(evc_uno(1:npw, iv))
+         psic(dffts%nl(1:npw)) = evc_uno(1:npw, iv)
+         psic(dffts%nlm(1:npw)) = CONJG(evc_uno(1:npw, iv))
       else
-         psic(nls(1:npw)) = evc_uno(1:npw, iv) + (0.D0, 1.D0)*evc_uno(1:npw, iv + 1)
-         psic(nlsm(1:npw)) = CONJG(evc_uno(1:npw, iv) - (0.D0, 1.D0)*evc_uno(1:npw, iv + 1))
+         psic(dffts%nl(1:npw)) = evc_uno(1:npw, iv) + (0.D0, 1.D0)*evc_uno(1:npw, iv + 1)
+         psic(dffts%nlm(1:npw)) = CONJG(evc_uno(1:npw, iv) - (0.D0, 1.D0)*evc_uno(1:npw, iv + 1))
       end if
       call invfft('Wave', psic, dffts)
       charge(1:dffts%nnr) = charge(1:dffts%nnr) + dble(psic(1:dffts%nnr))**2.0
@@ -131,8 +137,8 @@ subroutine routine_hartree()
 !calcolo carica in spazio reciproco (FFT di psic)
    psic = 0.d0
    psic(1:dffts%nnr) = dcmplx(charge(1:dffts%nnr), 0.d0)
-   call fwfft('Smooth', psic, dffts)
-   charge_g(1:ngm) = psic(nls(1:ngm))
+   call fwfft('Rho', psic, dffts) ! TODO: smooth does not exist anymore
+   charge_g(1:ngm) = psic(dffts%nl(1:ngm))
 
 !!!!!!!!!!!!------------primo exchange-corr_intermezzo 1/2  -------------!!!!!!!!!!!!!!!!!!
 !copio la densità di carica in spazio reale
@@ -144,10 +150,10 @@ subroutine routine_hartree()
       end do
 !
       psic = 0.d0
-      psic(nls(1:ngm)) = exgradcharge_g(icoord, 1:ngm)
-      psic(nlsm(1:ngm)) = CONJG(exgradcharge_g(icoord, 1:ngm))
+      psic(dffts%nl(1:ngm)) = exgradcharge_g(icoord, 1:ngm)
+      psic(dffts%nlm(1:ngm)) = CONJG(exgradcharge_g(icoord, 1:ngm))
 !
-      call invfft('Smooth', psic, dffts)
+      call invfft('Rho', psic, dffts)
 !
       exgradcharge_r(icoord, 1:dffts%nnr) = dble(psic(1:dffts%nnr))
    end do
@@ -159,11 +165,11 @@ subroutine routine_hartree()
    do iv = 1, nbnd, 2
       psic = 0.d0
       if (iv == nbnd) then
-         psic(nls(1:npw)) = evc_due(1:npw, iv)
-         psic(nlsm(1:npw)) = CONJG(evc_due(1:npw, iv))
+         psic(dffts%nl(1:npw)) = evc_due(1:npw, iv)
+         psic(dffts%nlm(1:npw)) = CONJG(evc_due(1:npw, iv))
       else
-         psic(nls(1:npw)) = evc_due(1:npw, iv) + (0.D0, 1.D0)*evc_due(1:npw, iv + 1)
-         psic(nlsm(1:npw)) = CONJG(evc_due(1:npw, iv) - (0.D0, 1.D0)*evc_due(1:npw, iv + 1))
+         psic(dffts%nl(1:npw)) = evc_due(1:npw, iv) + (0.D0, 1.D0)*evc_due(1:npw, iv + 1)
+         psic(dffts%nlm(1:npw)) = CONJG(evc_due(1:npw, iv) - (0.D0, 1.D0)*evc_due(1:npw, iv + 1))
       end if
       call invfft('Wave', psic, dffts)
       charge(1:dffts%nnr) = charge(1:dffts%nnr) + dble(psic(1:dffts%nnr))**2.0
@@ -191,8 +197,8 @@ subroutine routine_hartree()
 !calcolo carica due in spazio reciproco (FFT di psic)
    psic = 0.d0
    psic(1:dffts%nnr) = dcmplx(charge(1:dffts%nnr), 0.d0)
-   call fwfft('Smooth', psic, dffts)
-   charge_g_due(1:ngm) = psic(nls(1:ngm))
+   call fwfft('Rho', psic, dffts)
+   charge_g_due(1:ngm) = psic(dffts%nl(1:ngm))
 
 !-------STEP3----- calcolo dei potenziali di Hartree a partire dalle cariche appena trovate.
 
@@ -408,8 +414,8 @@ subroutine routine_hartree()
    end if
 
 
-   deallocate (evc_uno)
-   deallocate (evc_due)
+   !deallocate (evc_uno)
+   !deallocate (evc_due)
    deallocate (charge)
    deallocate (charge_g)
    deallocate (fac)

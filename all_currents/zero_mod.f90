@@ -3,7 +3,7 @@ MODULE zero_mod
 
   USE kinds, ONLY: DP
   use splines
-  use fft_custom
+  use fft_base
   use becmod
 
 
@@ -27,17 +27,20 @@ MODULE zero_mod
  
   !variables depending on the step
   !wavefunction
-  complex(DP),allocatable :: evc_uno(:,:)
+  !complex(DP),allocatable :: evc_uno(:,:)
   real(DP), allocatable   :: charge(:)
 
   !ion positions and velocities
-  real(DP), allocatable ::ion_pos(:,:) 
+  !real(DP), allocatable ::ion_pos(:,:) 
   real(DP), allocatable ::ion_vel(:,:) 
+  !second ion positions and velocities read from input
+  !real(DP), allocatable ::ion_pos2(:,:) ! must call convert_tau from ../PW/src/input.f90 to obtain correct units for positions
+  character(len=256) :: vel_input_units = 'CP'
 
   !input from stdout
   integer        :: natoms !cutoff per somme in griglia reale
   integer        :: n_max !cutoff per somme in griglia reale
-  character(256) :: status !what to do with the program. "initialize" or "compute"
+  character(len=256) :: status !what to do with the program. "initialize" or "compute"
   real(kind=DP)  :: eta !ewald factor for convergence
 
   

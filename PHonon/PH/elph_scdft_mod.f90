@@ -430,7 +430,6 @@ SUBROUTINE elph_scdft_fft(evc_g, evc_r, npw, igk, isw)
   USE wvfct, ONLY : npwx
   USE fft_base,   ONLY: dffts
   USE fft_interfaces, ONLY: fwfft, invfft
-  USE gvecs, ONLY : nls
   !
   INTEGER,INTENT(IN) :: isw
   INTEGER,INTENT(IN) :: npw, igk(npw)
@@ -443,7 +442,7 @@ SUBROUTINE elph_scdft_fft(evc_g, evc_r, npw, igk, isw)
      evc_r = (0_dp, 0_dp)
      !     
      DO ig = 1, npw
-        evc_r(nls(igk(ig))) = evc_g(ig)
+        evc_r(dffts%nl(igk(ig))) = evc_g(ig)
      END DO
      !
      CALL invfft ('Wave', evc_r(1:dffts%nnr), dffts)
@@ -453,7 +452,7 @@ SUBROUTINE elph_scdft_fft(evc_g, evc_r, npw, igk, isw)
      CALL fwfft ('Wave', evc_r(1:dffts%nnr), dffts)
      !
      DO ig = 1, npw
-        evc_g(ig) = evc_r(nls(igk(ig)))
+        evc_g(ig) = evc_r(dffts%nl(igk(ig)))
      END DO
      !
   END IF

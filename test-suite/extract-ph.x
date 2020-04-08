@@ -17,9 +17,58 @@ p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
 # PH
 diel=`grep -A 4 '  Dielectric constant in cartesian' $fname | grep -v '  Dielectric constant' | awk '{print $2; print $3; print $4 }'`
 born=`grep "     E[x-z]  ( " $fname | awk '{print $3; print $4; print $5}'`
-phfreq=`grep "     freq (.*THz" $fname | awk '{print $5; print $8}'`
+# phfreq=`grep "     freq (.*THz" $fname | awk '{print $5; print $8}'`
+# in the version below, phfreq only contains frequencies in cm^-1, not in THz
+phfreq=`grep "     freq (.*THz" $fname | awk '{print $8}'`
 dos=`grep "DOS =" $fname | awk '{print $3; print $8}'`
-lambda=`grep "lambda(" $fname | awk '{print $3; print $5}'`
+lambda=$(awk '
+# reset counters
+/Diagonalizing the dynamical matrix/{
+  num_freq = 0
+  ifreq = 0
+}
+# determine degenerate frequencies
+# last frequency of a degenerate subspace has list number of degeneracies
+/freq.*THz/{
+  freq[num_freq] = $8
+  degen[num_freq] = 1
+  for (i = num_freq - 1; i >= 0; i--) {
+    if (degen[i] >= 1) {
+      if (freq[i] == freq[num_freq]) {
+        degen[num_freq] = degen[i] + 1
+        degen[i] = 0
+      }
+      break
+    }
+  }
+  num_freq++
+}
+# store lambda in array and sort over degenerate subspace
+/lambda/{
+  # read lambda and gamma
+  lambda[ifreq] = $3
+  gamma[ifreq]  = $5
+  # we use the maximum to deactivate found entries
+  max_gamma = (max_gamma < gamma[ifreq] ? gamma[ifreq] : max_gamma)
+  # sort over degenerate subspace
+  for (i = 0; i < degen[ifreq]; i++) {
+    # find minimum gamma
+    j = 0
+    min_pos   = ifreq - j
+    min_gamma = gamma[min_pos]
+    for (j = 1; j < degen[ifreq]; j++) {
+      if (min_gamma > gamma[ifreq - j]) {
+        min_pos   = ifreq - j
+        min_gamma = gamma[min_pos]
+      }
+    }
+    # print sorted array
+    print lambda[min_pos]"\n"min_gamma
+    # remove lambda from list
+    gamma[min_pos] = max_gamma + 1.0
+  }
+  ifreq = (ifreq + 1) % num_freq
+}' $fname)
 
 # Q2R
 qpt=`grep "q= " $fname | awk '{print $2; print $3; print $4}'` 
@@ -27,6 +76,10 @@ qpt=`grep "q= " $fname | awk '{print $2; print $3; print $4}'`
 # LAMBDA
 lambda2=`grep "lambda =" $fname | awk '{print $3; print $5; print $9 ;print $12; print $15}'`
 
+#DVSCF_Q2R
+rlatt_cart=`grep "rlatt_cart" $fname | awk '{print $2; print $3; print $4}'`
+rlatt_crys=`grep "rlatt_crys" $fname | awk '{print $2; print $3; print $4}'`
+sum_w_pot=`grep "sum_w_pot" $fname | awk '{print $2; print $3; print $4}'`
 
 if test "$e1" != ""; then
         echo e1
@@ -81,4 +134,17 @@ fi
 if test "$lambda2" != ""; then
         echo lambda2
         for x in $lambda2; do echo $x; done
+fi
+
+if test "$rlatt_cart" != ""; then
+        echo rlatt_cart
+        for x in $rlatt_cart; do echo $x; done
+fi
+if test "$rlatt_crys" != ""; then
+        echo rlatt_crys
+        for x in $rlatt_crys; do echo $x; done
+fi
+if test "$sum_w_pot" != ""; then
+        echo sum_w_pot
+        for x in $sum_w_pot; do echo $x; done
 fi

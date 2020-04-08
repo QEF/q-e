@@ -27,6 +27,7 @@ SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nnr, f, grad )
   USE kinds,         ONLY : DP
   USE cell_base,     ONLY : at, bg, alat
   USE fft_base,      ONLY : dfftp
+  USE fft_types,     ONLY : fft_index_to_3d
   USE scatter_mod,   ONLY : scatter_grid
   USE mp,            ONLY : mp_sum
   USE mp_bands,      ONLY : me_bgrp, intra_bgrp_comm
@@ -40,37 +41,27 @@ SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nnr, f, grad )
   REAL( DP ), DIMENSION( nnr ), INTENT(IN) :: f
   REAL( DP ), DIMENSION( 3, nnr ), INTENT(OUT) :: grad
 
-  INTEGER :: idx, j0, k0, i, ir, ir_end, ipol, in
+  INTEGER :: i, ir, ir_end, ipol, in
   INTEGER :: ix(-nfdpoint:nfdpoint),iy(-nfdpoint:nfdpoint),iz(-nfdpoint:nfdpoint)
   INTEGER :: ixc, iyc, izc, ixp, ixm, iyp, iym, izp, izm
-  REAL( DP ), DIMENSION( :, : ), ALLOCATABLE :: gradtmp
+  REAL( DP ), DIMENSION( :, : ), ALLOCATABLE :: gradtmp, gradaux
+  LOGICAL  :: offrange
   !
   grad = 0.D0
   !
-  ALLOCATE( gradtmp( 3, dfftp%nr1x*dfftp%nr2x*dfftp%nr3x ) )
+  ALLOCATE( gradtmp( dfftp%nr1x*dfftp%nr2x*dfftp%nr3x, 3 ) )
   gradtmp = 0.D0
   !
 #if defined (__MPI)
-  j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
   ir_end = MIN(nnr,dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p)
 #else
-  j0 = 0 ; k0 = 0
   ir_end = nnr
 #endif
   !
   DO ir = 1, ir_end
     !
-    idx   = ir - 1
-    iz(0) = idx / (dfftp%nr1x*dfftp%my_nr2p)
-    idx   = idx - (dfftp%nr1x*dfftp%my_nr2p)*iz(0)
-    iz(0) = iz(0) + k0
-    IF ( iz(0) .GE. dfftp%nr3 ) CYCLE ! if nr3x > nr3 skip unphysical part of the grid
-    iy(0) = idx / dfftp%nr1x
-    idx   = idx - dfftp%nr1x*iy(0)
-    iy(0) = iy(0) + j0
-    IF ( iy(0) .GE. dfftp%nr2 ) CYCLE ! if nr2x > nr2 skip unphysical part of the grid
-    ix(0) = idx 
-    IF ( ix(0) .GE. dfftp%nr1 ) CYCLE ! if nr1x > nr1 skip unphysical part of the grid
+    CALL fft_index_to_3d (ir, dfftp, ix(0), iy(0), iz(0), offrange)
+    IF ( offrange ) CYCLE
     !
     DO in = 1, nfdpoint
       ix(in) = ix(in-1) + 1
@@ -89,29 +80,32 @@ SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nnr, f, grad )
     !
     DO in = -nfdpoint, nfdpoint
       i = ix(in) + iy(0) * dfftp%nr1x + iz(0) * dfftp%nr1x * dfftp%nr2x + 1
-      gradtmp(1,i) = gradtmp(1,i) - icfd(in)*f(ir)*dfftp%nr1
+      gradtmp(i,1) = gradtmp(i,1) - icfd(in)*f(ir)*dfftp%nr1
       i = ix(0) + iy(in) * dfftp%nr1x + iz(0) * dfftp%nr1x * dfftp%nr2x + 1
-      gradtmp(2,i) = gradtmp(2,i) - icfd(in)*f(ir)*dfftp%nr2
+      gradtmp(i,2) = gradtmp(i,2) - icfd(in)*f(ir)*dfftp%nr2
       i = ix(0) + iy(0) * dfftp%nr1x + iz(in) * dfftp%nr1x * dfftp%nr2x + 1
-      gradtmp(3,i) = gradtmp(3,i) - icfd(in)*f(ir)*dfftp%nr3
+      gradtmp(i,3) = gradtmp(i,3) - icfd(in)*f(ir)*dfftp%nr3
     ENDDO
     !
   ENDDO
   !
+  ALLOCATE( gradaux(nnr,3) )
 #if defined (__MPI)
   DO ipol = 1, 3
-    CALL mp_sum( gradtmp(ipol,:), intra_bgrp_comm )
-    CALL scatter_grid ( dfftp, gradtmp(ipol,:), grad(ipol,:) )
+    CALL mp_sum( gradtmp(:,ipol), intra_bgrp_comm )
+    CALL scatter_grid ( dfftp, gradtmp(:,ipol), gradaux(:,ipol) )
   ENDDO
 #else
-  grad = gradtmp
+  gradaux(1:nnr,:) = gradtmp(1:nnr,:)
 #endif
   !
   DEALLOCATE( gradtmp )
   !
   DO ir = 1,nnr
-    grad(:,ir) = MATMUL( bg, grad(:,ir) )
+    grad(:,ir) = MATMUL( bg, gradaux(ir,:) )
   ENDDO
+  DEALLOCATE( gradaux )
+  !
   grad = grad / DBLE(ncfd) / alat
   !
   RETURN

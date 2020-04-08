@@ -26,15 +26,15 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE ions_base,        ONLY : tau, nat, ityp, zv
   USE ener,             ONLY : etot, ef
   USE force_mod,        ONLY : force
-  USE io_files,         ONLY : prefix, tmp_dir, wfc_dir,  iunupdate, seqopn, &
-                               exit_file, iunexit, delete_if_present
+  USE io_files,         ONLY : prefix, tmp_dir, wfc_dir,  iunupdate, &
+                               exit_file, delete_if_present
   USE path_io_units_module, ONLY : iunpath
   USE path_formats,     ONLY : scf_fmt, scf_fmt_para
   USE path_variables,   ONLY : pos, pes, grad_pes, dim1, pending_image, &
                                istep_path, frozen, num_of_images, &
                                first_last_opt
   USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode
-  USE mp_global,        ONLY : inter_image_comm, intra_image_comm, &
+  USE mp_images,        ONLY : inter_image_comm, intra_image_comm, &
                                my_image_id, nimage, root_image
   USE mp_world,         ONLY : world_comm
   USE mp,               ONLY : mp_bcast, mp_barrier, mp_sum, mp_min

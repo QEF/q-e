@@ -196,14 +196,15 @@ SUBROUTINE dfpt_tetra_setup(et_col)
   USE start_k,    ONLY : nk1, nk2, nk3, k1, k2, k3
   USE symm_base,  ONLY : s, t_rev, time_reversal
   USE cell_base,  ONLY : at, bg
-  USE lr_symm_base,  ONLY : nsymq
+  USE control_lr, ONLY : lgamma
+  USE lr_symm_base,  ONLY : nsymq, minus_q
   USE parameters,    ONLY : npk
   !
   IMPLICIT NONE
   !
   REAL(dp),INTENT(OUT) :: et_col(nbnd, nkstot)
   !
-  INTEGER :: nktot
+  INTEGER :: nktot, kunit
   REAL(dp),ALLOCATABLE :: xk_col(:,:)
   !
   CALL poolcollect(nbnd, nks, et, nkstot, et_col)
@@ -219,9 +220,14 @@ SUBROUTINE dfpt_tetra_setup(et_col)
         nktot = nkstot
      END IF
      !
+     IF ( lgamma  ) THEN
+        kunit = 1
+     ELSE
+        kunit = 2
+     ENDIF
      IF(ALLOCATED(tetra)) DEALLOCATE(tetra)
-     CALL opt_tetra_init(nsymq, s, time_reversal, t_rev, at, bg, npk, &
-                         k1, k2, k3, nk1, nk2, nk3, nktot, xk_col, 1)
+     CALL opt_tetra_init(nsymq, s, time_reversal .AND. minus_q, t_rev, at, bg, npk, &
+                         k1, k2, k3, nk1, nk2, nk3, nktot, xk_col, kunit)
      !
      DEALLOCATE(xk_col)
      !
@@ -284,7 +290,7 @@ SUBROUTINE dfpt_tetra_calc_delta(tfst,tlst,et_col,delta)
            !
         END DO
         !
-        wdos0(1:nbnd,1:4) = 0.0_dp
+        wdos0(1:4,1:nbnd) = 0.0_dp
         !
         DO ibnd = 1, nbnd
            !

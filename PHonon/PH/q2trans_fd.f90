@@ -61,7 +61,7 @@ USE iotk_module
 USE kinds,      ONLY : DP
   USE mp,         ONLY : mp_bcast
   USE mp_global,  ONLY : mp_startup, mp_global_end
-  USE mp_world,   ONLY : nproc, mpime, world_comm
+  USE mp_world,   ONLY : world_comm
   USE dynamicalq, ONLY : phiq, tau, ityp, zeu
   USE io_global, ONLY : ionode_id, ionode, stdout
   USE io_dyn_mat, ONLY : read_dyn_mat_param, read_dyn_mat_header, &

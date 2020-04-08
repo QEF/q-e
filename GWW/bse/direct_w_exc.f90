@@ -11,7 +11,7 @@ USE constants,        ONLY : e2, fpi
 USE cell_base,        ONLY : tpiba,omega,tpiba2
 !USE io_files,             ONLY : find_free_unit, prefix, diropn
 USE io_files,             ONLY :  prefix, diropn
-USE wavefunctions_module, ONLY :  psic
+USE wavefunctions, ONLY :  psic
 USE io_global, ONLY : stdout, ionode, ionode_id
 USE mp_world, ONLY : mpime, nproc
 USE mp_pools, ONLY: intra_pool_comm

@@ -62,7 +62,6 @@ program gwl_punch
   use io_files,  ONLY : psfile, pseudo_dir
   use io_files,  ONLY : prefix, tmp_dir
   use ions_base, ONLY : ntype => nsp
-  use iotk_module
   use mp_pools, ONLY : kunit
   use mp, ONLY: mp_bcast
   use mp_world, ONLY: world_comm, mpime
@@ -160,7 +159,6 @@ program gwl_punch
   integer :: i, kunittmp, ios
 
   character(len=200) :: pp_file
-  character(len=iotk_attlenx) :: attr
   logical :: found, uspp_spsi, ascii, single_file, raw
 !  INTEGER(i4b), EXTERNAL :: C_MKDIR
  CHARACTER(LEN=256), EXTERNAL :: trimcheck
@@ -434,8 +432,6 @@ program gwl_punch
 !
 ! init some quantities ...
 !
-  CALL hinit0()
-!
   if(lda_plus_u) then 
     CALL init_ns()
   endif
@@ -512,9 +508,6 @@ end program gwl_punch
 subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   !-----------------------------------------------------------------------
   !
-  use iotk_module
-
-
   use kinds,          ONLY : DP 
   use pwcom  
   USE gvect,          ONLY : ngm, ngm_g, mill, ig_l2g, g
@@ -527,8 +520,8 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 !  use char,           ONLY : sname
 ! occhio sname is in symme which is now outside pwcom
   use  uspp,          ONLY : nkb, vkb
-  use wavefunctions_module,  ONLY : evc
-  use io_files,       ONLY : nd_nmbr, prefix, iunwfc, nwordwfc, iunsat, nwordatwfc
+  use wavefunctions,  ONLY : evc
+  use io_files,       ONLY : prefix, iunwfc, nwordwfc, iunsat, nwordatwfc
   use io_files,       ONLY : pseudo_dir, psfile
   use io_global,      ONLY : ionode, stdout
   USE ions_base,      ONLY : atm, nat, ityp, tau, nsp
@@ -565,7 +558,6 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   real(DP) :: wfc_scal 
   logical :: twf0, twfm
-  character(iotk_attlenx) :: attr
   complex(DP), allocatable :: sevc (:,:)
 
   write(stdout,*) "nkstot=", nkstot
@@ -742,9 +734,6 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
        ALLOCATE( sevc(npwx,nbnd), STAT=ierr )
        IF (ierr/=0) CALL errore( ' read_export ',' Unable to allocate SEVC ', ABS(ierr) )
-
-       CALL init_us_1
-       CALL init_at_1
 
        CALL allocate_bec_type (nkb,nbnd,becp)
 

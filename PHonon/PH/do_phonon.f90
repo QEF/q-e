@@ -33,7 +33,7 @@ SUBROUTINE do_phonon(auxdyn)
   USE disp,            ONLY : nqs
   USE control_ph,      ONLY : epsil, trans, qplot, only_init, &
                               only_wfc, rec_code, where_rec
-  USE el_phon,         ONLY : elph, elph_mat, elph_simple
+  USE el_phon,         ONLY : elph, elph_mat, elph_simple, elph_epa
   !
   ! YAMBO >
   USE YAMBO,           ONLY : elph_yambo
@@ -41,6 +41,10 @@ SUBROUTINE do_phonon(auxdyn)
   !
   USE elph_tetra_mod, ONLY : elph_tetra, elph_tetra_lambda, elph_tetra_gamma
   USE elph_scdft_mod, ONLY : elph_scdft
+  USE io_global,      ONLY : stdout
+  ! FIXME: see below setup_pw
+  USE noncollin_module, ONLY : noncolin
+  USE spin_orb,         ONLY : domag
 
   IMPLICIT NONE
   !
@@ -58,6 +62,12 @@ SUBROUTINE do_phonon(auxdyn)
      !
      !  If necessary the bands are recalculated
      !
+     ! Note (A. Urru): This has still to be cleaned (setup_pw 
+     ! should be correctly set by prepare_q: here we force it 
+     ! to be .true. in order for the code to work properly in 
+     ! the case SO-MAG).
+     !
+     setup_pw=setup_pw .OR. (noncolin .AND. domag)
      IF (setup_pw) CALL run_nscf(do_band, iq)
      !
      !  If only_wfc=.TRUE. the code computes only the wavefunctions 
@@ -116,6 +126,8 @@ SUBROUTINE do_phonon(auxdyn)
            CALL elphsum_wannier(iq)
         ELSEIF( elph_simple ) THEN
            CALL elphsum_simple()
+        ELSEIF( elph_epa ) THEN
+           CALL elphfil_epa(iq)
         ELSEIF( elph_yambo ) THEN
            CALL elph_yambo_eval_and_IO()
         ELSEIF(elph_tetra == 1) THEN

@@ -10,7 +10,7 @@ SUBROUTINE lr_ortho(dvpsi, evq, ikk, ikq, sevc, inverse)
   !---------------------------------------------------------------------
   !
   ! Inspired by LR_Modules/orthogonalize.f90
-  ! This routine ortogonalizes dvpsi to the valence states.
+  ! This routine orthogonalizes dvpsi to the valence states.
   ! It should be quite general. It works for metals and insulators, with 
   ! NC as well as with US PP, both SR or FR.
   !

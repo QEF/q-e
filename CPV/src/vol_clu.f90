@@ -8,7 +8,7 @@
 
 
 !----------------------------------------------------------------------
-SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
+SUBROUTINE vol_clu(rho_real,rho_g,flag)
 !----------------------------------------------------------------------
 ! it computes the volume of the cluster (cluster calculations) starting
 ! from the measure of the region of space occupied by the electronic density
@@ -16,13 +16,11 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
 
       USE kinds,          ONLY: dp
       USE constants,      ONLY: pi
-      USE parameters,     ONLY: nsx
       USE cell_base,      ONLY: alat, at, h, omega, tpiba, tpiba2
       USE electrons_base, ONLY: nspin
-      USE ions_base,      ONLY: na, nsp, amass
+      USE ions_base,      ONLY: nsp, amass, nat, ityp
       USE ions_positions, ONLY: tau0
-      USE gvect,          ONLY: g, gg, ngm, nl, nlm
-      USE gvecs,          ONLY: ngms
+      USE gvect,          ONLY: g, gg
       USE cp_main_variables, only: drhor
       USE control_flags,  ONLY: tpre
       USE fft_base,       ONLY: dfftp
@@ -37,6 +35,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       USE io_global,      ONLY: ionode
       USE mp,             ONLY: mp_bcast, mp_sum
       USE mp_bands,       ONLY: intra_bgrp_comm
+      USE fft_rho
 
       implicit none
 
@@ -44,7 +43,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       real(kind=8) weight0, wpiu, wmeno, maxr, minr
       real(kind=8) tau00(3), dist
       real(kind=8) rho_real(dfftp%nnr,nspin), rhoc
-      real(kind=8) alfa(nsx), alfa0, sigma, hgt 
+      real(kind=8) alfa0, sigma, hgt 
       real(kind=8) pos_cry(3), pos_car(3), pos_aux(3)
       real(kind=8) pos_cry0(3), dpvdh(3,3)
       real(kind=8) v_d(3)
@@ -54,16 +53,14 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       real(kind=8) gxl, xyr, xzr, yzr
       real(kind=8), allocatable:: vec(:,:,:), aiuto(:,:,:)
       real(kind=8), allocatable:: drho(:,:), d2rho(:,:)
-      real(kind=8), allocatable:: dxdyrho(:), dxdzrho(:)
-      real(kind=8), allocatable:: dydzrho(:)
-      real(kind=8), allocatable:: tauv(:,:,:)
+      real(kind=8), allocatable:: tauv(:,:)
 
-      complex(kind=8) s_fac(ngms,nsp), ci
-      complex(kind=8) sum_sf, aux, auxx, fact, rho_g(ngm,nspin) 
-      complex(kind=8), allocatable :: psi(:), rhofill(:), rhotmp(:,:)
+      complex(kind=8) ci
+      complex(kind=8) sum_sf, aux, auxx, fact, rho_g(dfftp%ngm,nspin) 
+      complex(kind=8), allocatable :: rhofill(:), rhotmp(:,:)
 
       integer ir, ir1, ir2, ir3, is, iss, ia, flag, ierr
-      integer i, j, k, l, ig, cnt, nmin, nmax, n_at
+      integer i, j, k, l, ig, cnt, nmin, nmax
 
 #if defined(__MPI)
       real(kind=8) maxr_p(nproc), minr_p(nproc), maxr_pp, minr_pp
@@ -71,11 +68,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       integer displs(nproc), ip, me
 #endif
       if (abisur) allocate(drho(3,dfftp%nnr))
-      if (abisur) allocate(d2rho(3,dfftp%nnr))
-      if (abisur) allocate(dxdyrho(dfftp%nnr))
-      if (abisur) allocate(dxdzrho(dfftp%nnr))
-      if (abisur) allocate(dydzrho(dfftp%nnr))
-      allocate(psi(dfftp%nnr))
+      if (abisur) allocate(d2rho(6,dfftp%nnr))
 
       call start_clock( 'vol_clu' )
 
@@ -138,16 +131,12 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
          end if
       end if
 
-      n_at = MAXVAL ( na(1:nsp) )
-      allocate ( tauv(3,n_at,nsp) )
-      n_at = 0
-      do is = 1,nsp
-         alfa(is) = step_rad(is)/2.d0
-         do ia = 1,na(is)
-            n_at = n_at + 1
-            do k = 1,3
-               tauv(k,ia,is) = tau0(k,n_at)
-            end do
+      allocate ( tauv(3,nat) )
+      do ia = 1,nat
+         is=ityp(ia)    
+         ! alfa(is) = step_rad(is)/2.d0 (not used)
+         do k = 1,3
+            tauv(k,ia) = tau0(k,ia)
          end do
       end do
 
@@ -163,15 +152,15 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
 ! Let's add rhops to fill possible holes in the valence charge density on top
 ! of the ions
 
-      allocate(rhotmp(ngm,nspin))
+      allocate(rhotmp(dfftp%ngm,nspin))
       rhotmp = (0.d0,0.d0)
 
       if (nspin.eq.1) then
-         do ig = 1,ngm
+         do ig = 1,dfftp%ngm
             rhotmp(ig,1)=rho_g(ig,1)
          end do
       else
-         do ig = 1,ngm
+         do ig = 1,dfftp%ngm
             do iss = 1,2
                rhotmp(ig,iss) = rho_g(ig,iss) 
             end do
@@ -181,16 +170,14 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
 ! To fill the vacuum inside hollow structures
 
       if (fill_vac) then
-         allocate(rhofill(ngm))
+         allocate(rhofill(dfftp%ngm))
          rhofill = 0.d0
          do k = 1,3
             cm(k) = 0.d0
             mtot = 0.d0
-            do is = 1,nsp
-               do ia = 1,na(is)
-                  cm(k) = cm(k) + tauv(k,ia,is)*amass(is)
-               end do
-               mtot = mtot + amass(is)
+            do ia = 1,nat
+               cm(k) = cm(k) + tauv(k,ia)*amass(ityp(ia))
+               mtot = mtot + amass(ityp(ia))
             end do
             cm(k) = cm(k)/mtot
          end do
@@ -198,20 +185,20 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
 
       if (fill_vac) then
          do i = 1,n_cntr
-            do is = 1,nsp
+            do ia = 1,nat
+               is = ityp(ia)
                if (cntr(is)) then
                   rad0 = step_rad(is) + DBLE(i)*delta_sigma
                   alfa0 = rad0/2.d0
-                  do ia = 1,na(is)
                      do k = 1,3
                         if (k.ne.axis) then
-                           tau00(k) = (tauv(k,ia,is)-cm(k))*              &
+                           tau00(k) = (tauv(k,ia)-cm(k))*              &
      &                                  (1.d0-delta_eps*DBLE(i))+cm(k)
                         else
-                           tau00(k) = tauv(k,ia,is)
+                           tau00(k) = tauv(k,ia)
                         end if
                      end do
-                     do ig = 1,ngm
+                     do ig = 1,dfftp%ngm
                         prod = 0.d0
                         do k = 1,3
                            prod = prod + g(k,ig)*tau00(k)
@@ -221,16 +208,15 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
                         aux = alfa0*hgt*EXP(-(0.50d0*alfa0**2*gg(ig)*tpiba2))
                         rhofill(ig) = rhofill(ig) + aux*fact
                      end do 
-                  end do
                end if
             end do
          end do   
          if (nspin.eq.1) then
-            do ig=1,ngm
+            do ig=1,dfftp%ngm
                rhotmp(ig,1) = rhotmp(ig,1) + rhofill(ig)
             end do
          else
-            do ig = 1,ngm
+            do ig = 1,dfftp%ngm
                do iss = 1,2
                   rhotmp(ig,iss) = rhotmp(ig,iss) + 0.5d0*rhofill(ig)
                end do
@@ -242,30 +228,14 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
          deallocate(rhofill)
       end if
 
-      if (abisur)                                                       &
-     &   call gradrho(nspin,rhotmp,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
-
-      psi = (0.d0,0.d0)
-      if (nspin.eq.1) then
-         do ig = 1,ngm
-            psi(nl(ig)) = rhotmp(ig,1)
-            psi(nlm(ig))= conjg(rhotmp(ig,1))
-         end do
-         call invfft('Dense',psi, dfftp )
-         do ir = 1,dfftp%nnr
-            rho_gaus(ir) = real(psi(ir))
-         end do
-      else            
-        do ig = 1,ngm
-            psi(nl(ig)) = rhotmp(ig,1) + ci*rhotmp(ig,2)
-            psi(nlm(ig))= conjg(rhotmp(ig,1)) + ci*conjg(rhotmp(ig,2))
-         end do
-         call invfft('Dense',psi, dfftp )
-         do ir = 1,dfftp%nnr
-            rho_gaus(ir) = real(psi(ir))+aimag(psi(ir))
-         end do
-      end if
-      deallocate(psi)
+      IF (abisur) THEN
+         DO iss = 1, nspin
+            CALL fft_gradient_g2r( dfftp, rhotmp(1,iss), g, drho(1,iss) )
+            CALL fft_hessian_g2r ( dfftp, rhotmp, g, d2rho(1,iss)  )
+         END DO
+      END IF
+ 
+      CALL rho_g2r( dfftp, rhotmp, rho_gaus )
       deallocate(rhotmp)
 
       e_j = 0.d0
@@ -366,17 +336,15 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
          end if
 
          if (abisur) then
-            modr = 0.d0
-            lap = 0.d0
-            gxl = 0.d0
-            do j = 1,3
-               modr = modr + drho(j,ir)**2
-               lap = lap + d2rho(j,ir)
-               gxl = gxl + drho(j,ir)**2*d2rho(j,ir)
-            end do
-            xyr = 2.d0*dxdyrho(ir)*drho(1,ir)*drho(2,ir)
-            xzr = 2.d0*dxdzrho(ir)*drho(1,ir)*drho(3,ir)
-            yzr = 2.d0*dydzrho(ir)*drho(2,ir)*drho(3,ir)
+            ! for d2rho: 1=xx, 2=xy, 3=yy, 4=xz, 5=yz, 6=zz
+            modr = drho(1,ir)**2 + drho(2,ir)**2 + drho(3,ir)**2
+            lap = d2rho(1,ir) + d2rho(3,ir) + d2rho(6,ir)
+            gxl = drho(1,ir)**2*d2rho(1,ir) + &
+                  drho(2,ir)**2*d2rho(3,ir) + &
+                  drho(3,ir)**2*d2rho(6,ir)
+            xyr = 2.d0*d2rho(2,ir)*drho(1,ir)*drho(2,ir)
+            xzr = 2.d0*d2rho(4,ir)*drho(1,ir)*drho(3,ir)
+            yzr = 2.d0*d2rho(5,ir)*drho(2,ir)*drho(3,ir)
             modr = dsqrt(modr)
             surfclu = surfclu + (wpiu-wmeno)*modr
             v_vol(ir) = v_vol(ir) -1.d0*Surf_t/dthr * (wpiu-wmeno) *    &
@@ -404,9 +372,6 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       deallocate( tauv )
       if ( abisur ) deallocate( drho )
       if ( abisur ) deallocate( d2rho )
-      if ( abisur ) deallocate( dxdyrho )
-      if ( abisur ) deallocate( dxdzrho )
-      if ( abisur ) deallocate( dydzrho )
 
       call stop_clock( 'vol_clu' )
 

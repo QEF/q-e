@@ -15,32 +15,28 @@ LOGICAL FUNCTION symmorphic_or_nzb()
   USE kinds,        ONLY : DP
   USE cell_base,    ONLY : at
   USE fft_base,     ONLY : dfftp
-  USE symm_base,    ONLY : ftau
+  USE symm_base,    ONLY : ft
   USE lr_symm_base, ONLY : gi, nsymq
 
   IMPLICIT NONE
   LOGICAL :: is_symmorphic, result_sym
   INTEGER :: isym, jsym
-  REAL(DP) :: ft(3,nsymq)
+  REAL(DP) :: ft_(3,nsymq)
 
-  is_symmorphic=.NOT.(ANY(ftau(:,1:nsymq) /= 0))
+  is_symmorphic=.NOT.(ANY( ABS(ft(:,1:nsymq)) > 1.0d-8 ) )
   IF (is_symmorphic) THEN
      symmorphic_or_nzb=.TRUE.
      RETURN
   ELSE
      result_sym=.TRUE.
-     DO isym = 1, nsymq
-        ft(1,isym) = DBLE(ftau(1,isym)) / DBLE(dfftp%nr1)
-        ft(2,isym) = DBLE(ftau(2,isym)) / DBLE(dfftp%nr2)
-        ft(3,isym) = DBLE(ftau(3,isym)) / DBLE(dfftp%nr3)
-     END DO
-     CALL cryst_to_cart(nsymq, ft, at, 1)
+     ft_(:,1:nsymq) = ft(:,1:nsymq)
+     CALL cryst_to_cart(nsymq, ft_, at, 1)
 
      DO isym=1,nsymq
         DO jsym=1,nsymq
-           result_sym=( result_sym.AND.(ABS( gi(1,isym)*ft(1,jsym) +  &
-                                             gi(2,isym)*ft(2,jsym) +  &
-                                             gi(3,isym)*ft(3,jsym) ) < 1.D-8) )
+           result_sym=( result_sym.AND.(ABS( gi(1,isym)*ft_(1,jsym) +  &
+                                             gi(2,isym)*ft_(2,jsym) +  &
+                                             gi(3,isym)*ft_(3,jsym) ) < 1.D-8) )
         END DO
      END DO
      symmorphic_or_nzb=result_sym

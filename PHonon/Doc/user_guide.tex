@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.1}
+\def\version{6.5MaX}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -30,6 +30,7 @@
   \includegraphics[width=5cm]{\qeImage} \\
   % title
   \Huge \PHonon\ User's Guide (v. \version)
+  \\ \Large (only partially updated)
 }
 
 \maketitle
@@ -43,6 +44,9 @@ part of the \qe\ distribution.
 Further documentation, beyond what is provided 
 in this guide, can be found in the directory
 \texttt{PHonon/Doc/}, containing a copy of this guide.
+
+{\em Important notice: due to the lack of time and of manpower, this
+manual is only partially updated and may contain outdated information.}
 
 This guide assumes that you know the contents of 
 the general User's Guide for \qe\ and of the User's 
@@ -109,7 +113,12 @@ We quote in particular:
  \item Andrea Dal Corso for the implementation of Ultrasoft, PAW,
   noncolinear, spin-orbit extensions to \PHonon;
   \item Mitsuaki Kawamura (U.Tokyo) for implementation of the optimized
-  tetrahedron method in phonon and electron-phonon calculations. 
+  tetrahedron method in phonon and electron-phonon calculations;
+  \item Thibault Sohier, Matteo Calandra, Francesco Mauri, for 
+	phonons in two-dimensional systems;
+  \item Andrea Floris, Iurii Timrov, Burak Himmetoglu, Nicola Marzari, 
+        Stefano de Gironcoli, and Matteo Cococcioni, for phonons using 
+        Hubbard-corrected DFPT (DFPT+$U$).
 \end{itemize}
 
 The \texttt{PlotPhon} and \texttt{QHA} packages were contribute by the
@@ -118,20 +127,12 @@ late Prof. Eyvaz Isaev.
 Other contributors include: Lorenzo Paulatto (Univ. Paris VI) for
 PAW, 2n+1 code; William Parker (Argonne) for phonon terms in dielectric
 tensor; Tobias Wassmann (Univ. Paris VI) for third-order derivatives of GGA 
-potential.
+potential. Weicheng Bao (Nanjing University) and Norge Cruz Hernandez
+(Universidad de Sevilla) helped debugging the phonon code.
 
-We shall greatly appreciate if scientific work done using this code will 
-contain an explicit acknowledgment and the following reference:
-\begin{quote}
-P. Giannozzi, S. Baroni, N. Bonini, M. Calandra, R. Car, C. Cavazzoni,
-D. Ceresoli, G. L. Chiarotti, M. Cococcioni, I. Dabo, A. Dal Corso,
-S. Fabris, G. Fratesi, S. de Gironcoli, R. Gebauer, U. Gerstmann,
-C. Gougoussis, A. Kokalj, M. Lazzeri, L. Martin-Samos, N. Marzari,
-F. Mauri, R. Mazzarello, S. Paolini, A. Pasquarello, L. Paulatto,
-C. Sbraccia, S. Scandolo, G. Sclauzero, A. P. Seitsonen, A. Smogunov,
-P. Umari, R. M. Wentzcovitch, J.Phys.:Condens.Matter {\bf 21}, 395502 (2009),
-http://arxiv.org/abs/0906.2569
-\end{quote}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input ../../Doc/quote.tex
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Installation}
 
@@ -169,12 +170,14 @@ from the \PHonon\ directory, produces the following codes:
   (\verb|lshiftq=.true.| in \phx).
 \item \texttt{PH/fqha.x}: a simple code to calculate vibrational entropy with
    the quasi-harmonic approximation
-\item \texttt{Gamma/phcg.x}: 
+\item \texttt{PH/dvscf\_q2r.x}: performs inverse Fourier transformation of phonon
+   potential from a regular {\bf q} grid to real space.
+\item \texttt{Gamma/phcg.x}:
   a version of \phx\ that calculates phonons at ${\bf q} = 0$ using
   conjugate-gradient minimization of the density functional expanded to
-  second-order. Only the $\Gamma$ (${\bf k} = 0$) point is used for Brillouin zone
-  integration. It is faster and takes less memory than \phx, but does
-  not support USPP and PAW.
+  second-order. Only the $\Gamma$ (${\bf k} = 0$) point is used for
+  Brillouin zone integration. It is faster and takes less memory than
+  \phx, but does not support spin polarization, USPP and PAW.
 \end{itemize}
 Links to the main \qe\ \texttt{bin/} directory are automatically generated.
    
@@ -360,6 +363,64 @@ they are printed to a file \textit{prefix}\verb|.a2F.dat|.
 
 There is an example in \verb|PHonon/example/tetra_example/|.
 
+\subsection{Phonons for two-dimensional crystals}
+
+The extension of DFPT to two dimensional crystals,
+in particular gated two-dimensional heterostructure,
+s described in the following paper:
+
+T. Sohier, M. Calandra, and F. Mauri, Phys. Rev. B {\bf 96}, 075448 (2017),
+https://doi.org/10.1103/PhysRevB.96.075448
+
+See example  \verb|PHonon/example/example17/|.
+
+\subsection{Phonons from DFPT+$U$}
+
+The extension of DFPT to inlcude Hubbard $U$ correction is described
+in the following papers:
+
+A.~Floris, S.~de~Gironcoli, E.~K.~U.~Gross, M.~Cococcioni, Phys. Rev. B {\bf 84}, 
+161102(R), (2011);
+
+A.~Floris, I.~Timrov, B.~Himmetoglu, N.~Marzari, S.~de~Gironcoli, and M.~Cococcioni, 
+Phys. Rev. B {\bf 101}, 064305 (2020).
+
+See example  \verb|PHonon/example/example18/|.
+
+\subsection{Fourier interpolation of phonon potential}
+
+The potential perturbation caused by the displacement of a single atom is
+spatially localized. Hence, the phonon potential can be interpolated from
+$q$ points on a coarse grid to other $q$ points using Fourier interpolation.
+To use this functionality, first, a \phx calculation of $q$ points on a coarse
+grid is required. Then, a \texttt{dvscf\_q2r.x} run performs an inverse Fourier
+transformation of the phonon potentials from a $q$ grid to a real-space
+supercell. Finally, by specifying \texttt{ldvscf\_interpolation=.true.} in
+\phx, the phonon potentials are Fourier transformed to given $q$ points.
+
+For insulators, the nonanalytic long-ranged dipole part of the potential needs
+to be subtracted and added before and after the interpolation, respectively.
+This treatment is activated specifying \texttt{do\_long\_range=.true.} in the
+input files of \texttt{dvscf\_q2r.x} and \phx.
+
+Due to numerical inaccuracies, the calculated Born effective charges may not
+add up to zero, violating the charge neutrality condition. This error may lead
+to nonphysical polar divergence of the phonon potential for $q$ points close
+to $\Gamma$, even in IR-inactive materials. To avoid this problem, one can
+specify \texttt{do\_charge\_neutral=.true.} in the input files of
+\texttt{dvscf\_q2r.x} and \phx. Then, the phonon potentials and the Born
+effective charges are renormalized by enforcing the charge neutrality condition,
+following the scheme of S.~ Ponce et al, J. Chem. Phys. (2015).
+
+The Fourier interpolation of phonon potential is proposed and described in the
+following papers:
+
+A.~Eiguren and C.~Ambrosch-Draxl, Phys. Rev. B {\bf 78}, 045124 (2008);
+
+S.~ Ponce et al, J. Chem. Phys. {\bf 143}, 102813 (2015);
+
+X.~Gonze et al, Comput. Phys. Commun., {\bf 248}, 107042 (2020).
+
 \section{Parallelism}
 \label{Sec:para}
 
@@ -429,9 +490,6 @@ in \texttt{examples/GRID\_example}. Reference:\\
 \paragraph{ph.x stops with {\em error reading file}}
 The data file produced by \pwx\ is bad or incomplete or produced
 by an incompatible version of the code.
-In parallel execution: if you did not set \texttt{wf\_collect=.true.}, the number
-of processors and pools for the phonon run should be the same as for the
-self-consistent run; all files must be visible to all processors.
 
 \paragraph{ph.x mumbles something like {\em cannot recover} or {\em error
   reading recover file}} 
@@ -504,9 +562,18 @@ sign flags eigenvalues of the dynamical matrix for which $\omega^2 <
 Verify the {\bf q}-vector for which you are calculating phonons. In order to
 check whether a symmetry operation belongs to the small group of ${\bf q}$,
 the code compares ${\bf q}$ and the rotated ${\bf q}$, with an acceptance tolerance of  
-$10^{-5}$ (set in routine \texttt{PW/eqvect.f90}). You may run into trouble if
+$10^{-5}$ (set in routine \texttt{PW/src/eqvect.f90}). You may run into trouble if
 your {\bf q}-vector differs from a high-symmetry point by an amount in that
 order of magnitude.
+
+\paragraph{Mysterious symmetry-related errors} 
+Symmetry-related errors like {\em symmetry operation is non orthogonal}, 
+or {\em Wrong representation}, or {\em Wrong degeneracy}, are almost 
+invariably a consequence of atomic positions that are close to, 
+but not sufficiently close to, symmetry positions. If such errors occur,
+set the Bravais lattice using the correct \texttt{ibrav} value (i.e. do
+not use \texttt{ibrav=0}), use Wyckoff positions if known. This must be
+done in the self-consistent calculation.
 
 \appendix
 \section{Appendix: Electron-phonon coefficients}

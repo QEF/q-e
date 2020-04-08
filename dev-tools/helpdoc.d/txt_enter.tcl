@@ -136,6 +136,20 @@ switch -exact -- $tag {
 	    syntaxAppend "[arr name], i=[arr start],[arr end]"
 	}
     }
+    multidimension {
+	if { ! [::tclu::lpresent $mode syntax] } {
+	    if { [printableVarDescription $tree $node] } {
+		printf +--------------------------------------------------------------------
+		printf [labelMsg [format "%-${var_chars}s" Variable:] "[arr name]([arr indexes]), ([arr indexes])=([arr start]) ... ([arr end]"])\n
+		printf [labelMsg [format "%-${var_chars}s" Type:] [arr type]]
+	    }
+	}
+
+	if { [::tclu::lpresent $mode syntax] } {
+	    syntaxAppend "[arr name], i=[arr start],[arr end]"
+	}
+    }
+
 
     vargroup - dimensiongroup - colgroup - rowgroup {
 	if { ($tag == "colgroup" || $tag == "rowgroup") && ! [::tclu::lpresent $mode description] } {

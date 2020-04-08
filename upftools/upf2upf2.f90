@@ -16,7 +16,7 @@ PROGRAM upf2upf2
                            deallocate_pseudo_upf
   USE radial_grids, ONLY: radial_grid_type, nullify_radial_grid
   USE read_upf_v1_module, ONLY : read_upf_v1
-  USE write_upf_v2_module, ONLY: write_upf_v2
+  USE write_upf_module,          ONLY: write_upf
   !
   IMPLICIT NONE
   TYPE(pseudo_upf) :: upf
@@ -60,9 +60,11 @@ PROGRAM upf2upf2
   upf%rcutus_chi=upf%rcutus(1:upf%nwfc)
   !
   upf%rmax = upf%r(upf%mesh)
-  upf%dx = log(upf%rmax/upf%r(1))/(upf%mesh-1)
   upf%zmesh = atomic_number( upf%psd )
-  upf%xmin = log(upf%r(1)*upf%zmesh )
+  IF (upf%r(1) .GT. 1.d-16) THEN 
+     upf%dx = log(upf%rmax/upf%r(1))/(upf%mesh-1)
+     upf%xmin = log(upf%r(1)*upf%zmesh )
+  END IF
   IF ( upf%has_so) THEN
      upf%rel="full"
   ELSEIF ( upf%zmesh > 18 ) THEN
@@ -75,9 +77,9 @@ PROGRAM upf2upf2
   !
   fileout=trim(filein)//'.UPF'
   PRINT '(''Output PP file in UPF format :  '',a)', fileout
-  OPEN(unit=2,file=fileout,status='unknown',form='formatted')
+  !OPEN(unit=2,file=fileout,status='unknown',form='formatted')
   !
-  CALL write_upf_v2 (2, upf )
+  CALL write_upf (FILENAME = fileout, UPF = upf, SCHEMA = 'v2')
   !
   CLOSE (unit=2)
   CALL deallocate_pseudo_upf ( upf )

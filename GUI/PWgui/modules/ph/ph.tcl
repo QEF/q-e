@@ -67,6 +67,13 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 		    -fmt       %s
 		}
 
+		var asr {
+		    -label "Apply acoustic sum rule for \"gamma_gamma\" (asr):"
+		    -widget    radiobox
+		    -textvalue { Yes No }	      
+		    -value     { .true. .false. }
+		}
+
 		var ldiag {
 		    -label     "Force diagonalization of the incomplete dynamical matrix (ldiag):"
 		    -textvalue {Yes No}
@@ -470,7 +477,16 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 		    -label    "Number of iterations used in mixing of potential (nmix_ph):"
 		    -widget   spinint
 		    -fmt      %d
-		}	
+		}
+
+                separator -label "--- Miscellaneous ---"
+
+                var read_dns_bare {
+                    -label "For DFPT+U: read the dns_* files (read_dns_bare):"
+                    -widget    radiobox
+                    -textvalue { Yes No }	      
+                    -value     { .true. .false. }
+                }
 	    }	
 
 	    page q_k_points -name "q- and k-points" {

@@ -26,11 +26,11 @@ subroutine pola_partial(numpw,ispin)
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
    USE wvfct,     ONLY : npwx, npw, nbnd, wg
    USE gvecw,     ONLY : ecutwfc
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : mpime,nproc, world_comm
    USE mp_pools, ONLY : intra_pool_comm
-   USE gvecs,              ONLY : nls, nlsm, doublegrid
+   USE gvecs,              ONLY : doublegrid
    USE fft_custom_gwl
    USE mp_wave, ONLY : mergewf,splitwf
    USE fft_base,             ONLY : dfftp, dffts

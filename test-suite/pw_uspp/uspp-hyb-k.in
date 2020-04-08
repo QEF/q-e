@@ -9,6 +9,7 @@
     x_gamma_extrapolation = .true.
  /
  &electrons
+    conv_thr=1.01E-6
  /
 ATOMIC_SPECIES
  C   28.086  C.pbe-rrkjus.UPF

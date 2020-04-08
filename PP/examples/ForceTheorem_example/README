@@ -23,10 +23,12 @@ each band energy over atomic orbitals using PDOS. One will get two files,
 eband_par.dat and eband_per.dat, containing this decomposition
 for each magnetic orientation.
 
-Taking the above difference orbital by orbital we obtain
-orbital-resolved MAE.
+Taking the above difference orbital by orbital we obtain orbital-resolved MAE.
 
 There are two new parameters to specify: lforcet and ef_0 (in projwfc.x run).
 The last one should be the Fermi energy of one of NSCF calculations with SOC
 and will be substracted from all the eigenvalues to produce correct
 local decomposition of MAE.
+
+Note that in order to get reliable results for the magnetic anisotropy,
+you need a much denser grid of k-points than what used in this example.

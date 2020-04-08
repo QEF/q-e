@@ -25,7 +25,7 @@ $ECHO
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x phcg.x "
-PSEUDO_LIST="Si.pz-vbc.UPF H.pz-vbc.UPF C.pz-rrkjus.UPF"
+PSEUDO_LIST="Si.pz-vbc.UPF H.pz-vbc.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -87,7 +87,7 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/sih4*
+rm -rf $TMP_DIR/sih4* 
 rm -rf $TMP_DIR/_ph0/sih4*
 $ECHO " done"
 
@@ -121,7 +121,7 @@ ATOMIC_POSITIONS (alat)
   H   0.128530744  -0.128530744  -0.128530744
 K_POINTS (gamma)
 EOF
-$ECHO "  running the scf calculation for SiH4...\c"
+$ECHO "  running the scf calculation for SiH4 (LDA) ...\c"
 $PW_COMMAND < sih4.scf.in > sih4.scf.out
 check_failure $?
 $ECHO " done"
@@ -142,7 +142,7 @@ normal modes for sih4
  /
  0.0 0.0 0.0
 EOF
-$ECHO "  running normal mode calculation for SiH4...\c"
+$ECHO "  running normal mode calculation for SiH4 (LDA) ...\c"
 $PHCG_COMMAND < sih4.nm.in > sih4.nm.out
 check_failure $?
 $ECHO " done"
@@ -152,8 +152,74 @@ cat > sih4.dyn.in << EOF
  &input fildyn='sih4.dyn', asr='zero-dim' /
 EOF
 
-$ECHO "  running IR cross section calculation for SiH4...\c"
+$ECHO "  running IR cross section calculation for SiH4 (LDA) ...\c"
 $DYNMAT_COMMAND < sih4.dyn.in > sih4.dyn.out
+check_failure $?
+$ECHO " done"
+
+# Self consistent calculation for SiH4 (GGA)
+cat > sih4.scf.in << EOF
+ &control
+    calculation='scf'
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+    title='Test Silane SiH4 gamma only'
+    prefix='sih4'
+ /
+ &system
+    ibrav=2, celldm(1) =12.0, nat=5, ntyp= 2,
+    ecutwfc =16.0
+    input_dft='PBE'
+ /
+  &electrons
+    mixing_mode='plain'
+    mixing_beta = 0.7,
+    conv_thr =  1.0d-8
+ /
+ATOMIC_SPECIES
+ Si 28.086 Si.pz-vbc.UPF
+  H  1.008  H.pz-vbc.UPF
+ATOMIC_POSITIONS (alat)
+ Si   0.000000000   0.000000000   0.000000000
+  H   0.128530744   0.128530744   0.128530744
+  H  -0.128530744  -0.128530744   0.128530744
+  H  -0.128530744   0.128530744  -0.128530744
+  H   0.128530744  -0.128530744  -0.128530744
+K_POINTS (gamma)
+EOF
+$ECHO "  running the scf calculation for SiH4 (GGA) ...\c"
+$PW_COMMAND < sih4.scf.in > sih4-gga.scf.out
+check_failure $?
+$ECHO " done"
+
+# normal mode calculation for SiH4 (GGA)
+cat > sih4.nm.in << EOF
+vibrations of SiH4
+ &inputph
+  tr2_ph=4.0d-14,
+  prefix='sih4',
+  outdir='$TMP_DIR',
+  amass(1)=28.086,
+  amass(2)=1.d0,
+  asr=.false,
+  epsil=.true.,
+  trans=.true.,
+  fildyn='sih4-gga.dyn',
+ /
+0.0 0.0 0.0
+EOF
+$ECHO "  running normal mode calculation for SiH4 (GGA) ...\c"
+$PHCG_COMMAND < sih4.nm.in > sih4-gga.nm.out
+check_failure $?
+$ECHO " done"
+
+# IR cross sections  for SiH4 (GGA)
+cat > sih4.dyn.in << EOF
+ &input fildyn='sih4.dyn', asr='zero-dim' /
+EOF
+
+$ECHO "  running IR cross section calculation for SiH4 (GGA) ...\c"
+$DYNMAT_COMMAND < sih4.dyn.in > sih4-gga.dyn.out
 check_failure $?
 $ECHO " done"
 

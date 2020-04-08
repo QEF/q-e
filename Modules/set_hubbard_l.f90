@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2010 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -42,11 +42,11 @@ FUNCTION set_hubbard_l( psd ) RESULT( hubbard_l )
         !
         hubbard_l =  0
         !
-     CASE( 'C', 'N', 'O' )
+     CASE( 'C', 'N', 'O', 'As' )
         !
         hubbard_l =  1
         !
-     CASE( 'As', 'Ga', 'In' )
+     CASE( 'Ga', 'In' )
         !
         hubbard_l =  2
         !
@@ -62,4 +62,4 @@ FUNCTION set_hubbard_l( psd ) RESULT( hubbard_l )
   !
   RETURN  
   !
-END FUNCTION set_Hubbard_l
+END FUNCTION set_hubbard_l

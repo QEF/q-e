@@ -1,0 +1,30 @@
+title-line that is reprinted on output
+
+&INPUTPH
+   !recover = .true. | .false. 
+
+   !amass(1) = , amass(2) = ...
+   
+   outdir    = ''
+   prefix    = ''
+   fildyn    =  ''
+   
+   tr2_ph    = 1d-16
+   alpha_mix(1) = 0.5
+   
+   !nat_todo =
+   
+   !trans  = .true. | .false.
+   !epsil  = .true. | .false.
+   !lrpa   = .true. | .false.
+   !lnoloc = .true. | .false.
+   !lraman = .true. | .false.
+
+   !ldisp = .true. | .false.
+
+   !nogg  = .true. | .false.
+   !asr   = .true. | .false.
+/
+q-point(s)-specs
+nat_todo-list-of-atoms 
+

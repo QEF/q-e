@@ -81,6 +81,7 @@
 
         INTEGER   :: iforceh(3,3) = 1  ! if iforceh( i, j ) = 0 then h( i, j ) 
                                        ! is not allowed to move
+        LOGICAL   :: enforce_ibrav = .FALSE.! True if ibrav representation is fix
         LOGICAL   :: fix_volume = .FALSE.! True if cell volume is kept fixed
         LOGICAL   :: fix_area = .FALSE.  ! True if area in xy plane is kept constant
         LOGICAL   :: isotropic = .FALSE. ! True if volume option is chosen for cell_dofree 
@@ -225,6 +226,8 @@
      at(:,:) = at(:,:) / alat
      !
   END IF
+  IF ( alat < 1.9_dp ) CALL infomsg ('cell_base_init', &
+     'DEPRECATED: use true lattice parameter, not A to a.u. conversion factor') 
   !
   ! ... Generate the reciprocal lattice vectors
   !
@@ -372,24 +375,20 @@
 
 !------------------------------------------------------------------------------!
 
-        SUBROUTINE r_to_s3 ( r, s, na, nsp, hinv )
+        SUBROUTINE r_to_s3 ( r, s, nat, hinv )
           REAL(DP), intent(out) ::  S(:,:)
-          INTEGER, intent(in) ::  na(:), nsp
+          INTEGER, intent(in) ::  nat
           REAL(DP), intent(in) :: R(:,:)
           REAL(DP), intent(in) :: hinv(:,:)    ! hinv = TRANSPOSE( box%m1 )
-          integer :: i, j, ia, is, isa
-          isa = 0
-          DO is = 1, nsp
-            DO ia = 1, na(is)
-              isa = isa + 1
-              DO I=1,3
-                S(I,isa) = 0.0_DP
-                DO J=1,3
-                  S(I,isa) = S(I,isa) + R(J,isa)*hinv(i,j)
+          integer :: i, j, ia
+            DO ia = 1, nat
+              DO i=1,3
+                S(i,ia) = 0.0_DP
+                DO j=1,3
+                  S(i,ia) = S(i,ia) + R(j,ia)*hinv(i,j)
                 END DO
               END DO
             END DO
-          END DO
           RETURN
         END SUBROUTINE r_to_s3
 
@@ -444,24 +443,20 @@
 
 !------------------------------------------------------------------------------!
 
-        SUBROUTINE s_to_r3 ( S, R, na, nsp, h )
+        SUBROUTINE s_to_r3 ( S, R, nat, h )
           REAL(DP), intent(in) ::  S(:,:)
-          INTEGER, intent(in) ::  na(:), nsp
+          INTEGER, intent(in) ::  nat
           REAL(DP), intent(out) :: R(:,:)
           REAL(DP), intent(in) :: h(:,:)    ! h = TRANSPOSE( box%a )
-          integer :: i, j, ia, is, isa
-          isa = 0
-          DO is = 1, nsp
-            DO ia = 1, na(is)
-              isa = isa + 1
+          integer :: i, j, ia
+            DO ia = 1, nat
               DO I = 1, 3
-                R(I,isa) = 0.0_DP
+                R(I,ia) = 0.0_DP
                 DO J = 1, 3
-                  R(I,isa) = R(I,isa) + S(J,isa) * h(I,j)
+                  R(I,ia) = R(I,ia) + S(J,ia) * h(I,j)
                 END DO
               END DO
             END DO
-          END DO
           RETURN
         END SUBROUTINE s_to_r3
 
@@ -696,6 +691,9 @@
 
             CASE ( 'all', 'default' )
               iforceh = 1
+            CASE ( 'ibrav')
+              iforceh = 1
+              enforce_ibrav = .true.
             CASE ( 'shape' )
               iforceh = 1
               fix_volume = .true.
@@ -760,6 +758,26 @@
               iforceh(1,1) = 1
               iforceh(2,2) = 1
               iforceh(3,3) = 1
+! epitaxial constraints (2 axes fixed, one free)
+! added by ulrich.aschauer@dcb.unibe.ch on 2018-02-02
+            CASE ('epitaxial_ab')
+              !fix the a and b axis while allowing c to change
+              iforceh      = 0
+              iforceh(1,3) = 1
+              iforceh(2,3) = 1
+              iforceh(3,3) = 1
+            CASE ('epitaxial_ac')
+              !fix the a and c axis while allowing b to change
+              iforceh      = 0
+              iforceh(1,2) = 1
+              iforceh(2,2) = 1
+              iforceh(3,2) = 1
+            CASE ('epitaxial_bc')
+              !fix the b and c axis while allowing a to change
+              iforceh      = 0
+              iforceh(1,1) = 1
+              iforceh(2,1) = 1
+              iforceh(3,1) = 1
             CASE DEFAULT
               CALL errore(' init_dofree ',' unknown cell_dofree '//TRIM(cell_dofree), 1 )
 
@@ -952,7 +970,7 @@
     REAL(DP), intent(in) :: omega, press
     REAL(DP), intent(in), optional :: wmassIN
     integer        :: i, j
-    REAL(DP) :: wmass
+    REAL(DP) :: wmass, fiso
     IF (.not. present(wmassIN)) THEN
       wmass = 1.0
     ELSE
@@ -971,6 +989,17 @@
     IF( wmass < eps8 ) &
        CALL errore( ' movecell ',' cell mass is less than 0 ! ', 1 )
     fcell = omega * fcell / wmass
+! added this :
+    IF( isotropic ) THEN
+      !
+      ! Isotropic force on the cell
+      !
+      fiso = (fcell(1,1)+fcell(2,2)+fcell(3,3))/3.0_DP
+      do i=1,3
+          fcell(i,i)=fiso
+      end do
+    END IF
+! 
     return
   end subroutine cell_force
 

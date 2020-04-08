@@ -1,0 +1,23 @@
+
+     Program MATDYN v.6.1 (svn rev. 13615) starts on 25Jul2017 at 10:58:21 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+     Message from routine matdyn:
+     Z* not found in file Al444.fc, TO-LO splitting at q=0 will be absent!
+     A direction for q was not specified:TO-LO splitting will be absent
+
+     MATDYN       :     1.00s CPU         0.50s WALL
+
+
+   This run was terminated on:  10:58:22  25Jul2017            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

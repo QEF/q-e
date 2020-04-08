@@ -13,7 +13,7 @@
   epwread     = .false.
 
   nbndsub     =  4
-  nbndskip    =  5
+  bands_skipped = 'exclude_bands = 1-5'
 
   wannierize  = .true.
   num_iter    = 300
@@ -39,8 +39,6 @@
   elecselfen  = .false. 
   phonselfen  = .true.
 
-  parallel_k  = .true.
-  parallel_q  = .false.
 
   fsthick     = 6 ! eV
   eptemp      = 0.075 ! K

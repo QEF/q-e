@@ -31,16 +31,14 @@ SUBROUTINE extract (plot_files,plot_num)
   USE vlocal,    ONLY : strf
   USE io_files,  ONLY : tmp_dir, prefix
   USE io_global, ONLY : ionode, ionode_id
-  USE mp_global,     ONLY : nproc_pool, nproc_file, nproc_pool_file
-  USE control_flags, ONLY : twfcollect
   USE noncollin_module, ONLY : i_cons
   USE paw_variables, ONLY : okpaw
   USE mp,        ONLY : mp_bcast
-  USE mp_world,  ONLY : world_comm
+  USE mp_images, ONLY : intra_image_comm
   USE constants, ONLY : rytoev
   USE parameters, ONLY : npk
   USE io_global, ONLY : stdout
-
+  !
   IMPLICIT NONE
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
@@ -52,7 +50,7 @@ SUBROUTINE extract (plot_files,plot_num)
        (/ '  ', '_X', '_Y', '_Z' /)
 
   INTEGER :: kpoint(2), kband(2), spin_component(3), ios
-  LOGICAL :: lsign, needwf
+  LOGICAL :: lsign, needwf, dummy
 
   REAL(DP) :: emin, emax, sample_bias, z, dz
   
@@ -99,27 +97,27 @@ SUBROUTINE extract (plot_files,plot_num)
      !
   ENDIF
   !
-  CALL mp_bcast (ios, ionode_id, world_comm)
+  CALL mp_bcast (ios, ionode_id, intra_image_comm)
   !
   IF ( ios /= 0) CALL errore ('postproc', 'reading inputpp namelist', abs(ios))
   !
   ! ... Broadcast variables
   !
-  CALL mp_bcast( tmp_dir, ionode_id, world_comm )
-  CALL mp_bcast( prefix, ionode_id, world_comm )
-  CALL mp_bcast( plot_num, ionode_id, world_comm )
-  CALL mp_bcast( sample_bias, ionode_id, world_comm )
-  CALL mp_bcast( spin_component, ionode_id, world_comm )
-  CALL mp_bcast( z, ionode_id, world_comm )
-  CALL mp_bcast( dz, ionode_id, world_comm )
-  CALL mp_bcast( emin, ionode_id, world_comm )
-  CALL mp_bcast( emax, ionode_id, world_comm )
-  CALL mp_bcast( degauss_ldos, ionode_id, world_comm )
-  CALL mp_bcast( delta_e, ionode_id, world_comm )
-  CALL mp_bcast( kband, ionode_id, world_comm )
-  CALL mp_bcast( kpoint, ionode_id, world_comm )
-  CALL mp_bcast( filplot, ionode_id, world_comm )
-  CALL mp_bcast( lsign, ionode_id, world_comm )
+  CALL mp_bcast( tmp_dir, ionode_id, intra_image_comm )
+  CALL mp_bcast( prefix, ionode_id, intra_image_comm )
+  CALL mp_bcast( plot_num, ionode_id, intra_image_comm )
+  CALL mp_bcast( sample_bias, ionode_id, intra_image_comm )
+  CALL mp_bcast( spin_component, ionode_id, intra_image_comm )
+  CALL mp_bcast( z, ionode_id, intra_image_comm )
+  CALL mp_bcast( dz, ionode_id, intra_image_comm )
+  CALL mp_bcast( emin, ionode_id, intra_image_comm )
+  CALL mp_bcast( emax, ionode_id, intra_image_comm )
+  CALL mp_bcast( degauss_ldos, ionode_id, intra_image_comm )
+  CALL mp_bcast( delta_e, ionode_id, intra_image_comm )
+  CALL mp_bcast( kband, ionode_id, intra_image_comm )
+  CALL mp_bcast( kpoint, ionode_id, intra_image_comm )
+  CALL mp_bcast( filplot, ionode_id, intra_image_comm )
+  CALL mp_bcast( lsign, ionode_id, intra_image_comm )
   !
   ! no task specified: do nothing and return
   !
@@ -142,19 +140,12 @@ SUBROUTINE extract (plot_files,plot_num)
          ('postproc', 'wrong spin_component', 3)
   ENDIF
   !
-  !   Now allocate space for pwscf variables, read and check them.
+  !   Read xml file, allocate and initialize general variables
+  !   If needed, allocate and initialize wavefunction-related variables
   !
   needwf=(plot_num==3).or.(plot_num==4).or.(plot_num==5).or.(plot_num==7).or. &
          (plot_num==8).or.(plot_num==10)
-  IF ( needwf ) THEN
-     CALL read_file ( )
-     IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
-        CALL errore('postproc', &
-        'pw.x run with a different number of procs/pools. Use wf_collect=.true.',1)
-     CALL openfil_pp ( )
-  ELSE
-     CALL read_xml_file ( )
-  END IF
+  CALL read_file_new ( needwf )
   !
   IF ( ( two_fermi_energies .or. i_cons /= 0) .and. &
        ( plot_num==3 .or. plot_num==4 .or. plot_num==5 ) ) &

@@ -4,6 +4,9 @@ TMP_FILES = INPUT_*.xml INPUT_*.xml.tcl *-help.tcl
 pw: makedoc
 	./check_gui pw
 
+neb: makedoc
+	./check_gui neb
+
 ph: makedoc 
 	./check_gui ph
 
@@ -21,9 +24,6 @@ dos: makedoc
 
 atomic: makedoc 
 	./check_gui atomic
-
-d3: makedoc 
-	./check_gui d3
 
 makedoc:
 	(cd ..; $(MAKE) doc)

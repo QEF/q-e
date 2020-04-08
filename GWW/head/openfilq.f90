@@ -17,10 +17,11 @@ SUBROUTINE openfilq()
   !
   USE kinds,          ONLY : DP
   USE control_flags, ONLY : io_level, modenum
-  USE units_ph,       ONLY : iuwfc, iudwf, iubar, iucom, iudvkb3, &
+  USE units_ph,       ONLY : iudwf, iubar, iucom, iudvkb3, &
                              iudrhous, iuebar, iudrho, iudyn, iudvscf, &
-                             lrwfc, lrdwf, lrbar, lrcom, lrdvkb3, &
+                             lrdwf, lrbar, lrcom, lrdvkb3, &
                              lrdrhous, lrebar, lrdrho
+  USE units_lr,       ONLY : iuwfc, lrwfc
   ! USE io_files,       ONLY : tmp_dir
   USE control_ph,     ONLY : epsil, zue, ext_recover, trans,  &
                              tmp_dir_ph, start_irr, last_irr
@@ -29,10 +30,9 @@ SUBROUTINE openfilq()
   USE wvfct,          ONLY : nbnd, npwx
   USE lsda_mod,       ONLY : nspin
   USE uspp,           ONLY : nkb, okvan
-  USE io_files,       ONLY : prefix,tmp_dir, diropn,seqopn
+  USE io_files,       ONLY : prefix,tmp_dir, diropn
   USE noncollin_module, ONLY : npol, nspin_mag
-  USE control_flags,  ONLY : twfcollect
-  USE mp_global,      ONLY : me_pool
+  USE mp_pools,       ONLY : me_pool
   USE io_global,      ONLY : ionode
   USE ramanm, ONLY: lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
   USE wannier_gw,     ONLY : l_head

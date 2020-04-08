@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,7 +13,7 @@ SUBROUTINE run_nscf(do_band, iq)
   ! ... phonon code.
   !
   !
-  USE control_flags,   ONLY : conv_ions, twfcollect
+  USE control_flags,   ONLY : conv_ions
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE io_files,        ONLY : prefix, tmp_dir, wfc_dir, seqopn
   USE lsda_mod,        ONLY : nspin
@@ -22,7 +22,7 @@ SUBROUTINE run_nscf(do_band, iq)
   USE fft_base,        ONLY : dffts, dfftp
   !!!
   USE fft_types, ONLY: fft_type_allocate
-  USE cell_base, ONLY: at, bg
+  USE cell_base, ONLY: at, bg, tpiba
   USE gvect,     ONLY: gcutm
   USE gvecs,     ONLY: gcutms
   !!!
@@ -31,17 +31,21 @@ SUBROUTINE run_nscf(do_band, iq)
                               ext_restart, bands_computed, newgrid, qplot, &
                               only_wfc
   USE io_global,       ONLY : stdout
-  USE save_ph,         ONLY : tmp_dir_save
+  !USE save_ph,         ONLY : tmp_dir_save
   !
   USE grid_irr_iq,     ONLY : done_bands
   USE acfdtest,        ONLY : acfdt_is_active, acfdt_num_der, ir_point, delta_vrs
   USE scf,             ONLY : vrs
-  USE mp_bands,        ONLY : ntask_groups, intra_bgrp_comm
-
+  USE mp_bands,        ONLY : intra_bgrp_comm, nyfft
+  USE mp_pools,        ONLY : kunit
   USE lr_symm_base,    ONLY : minus_q, nsymq, invsymq
+  USE control_lr,      ONLY : ethr_nscf
   USE qpoint,          ONLY : xq
+  USE noncollin_module,ONLY : noncolin
+  USE spin_orb,        ONLY : domag
+  USE klist,           ONLY : qnorm, nelec 
   USE el_phon,         ONLY : elph_mat
- !
+  !
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN) :: do_band
@@ -51,12 +55,24 @@ SUBROUTINE run_nscf(do_band, iq)
   !
   CALL start_clock( 'PWSCF' )
   !
+  ! FIXME: following section does not belong to this subroutine
   IF (done_bands(iq)) THEN
      WRITE (stdout,'(/,5x,"Bands found: reading from ",a)') TRIM(tmp_dir_phq)
      CALL clean_pw( .TRUE. )
      CALL close_files(.true.)
      wfc_dir=tmp_dir_phq
      tmp_dir=tmp_dir_phq
+     ! FIXME: kunit is set here: in this case we do not go through setup_nscf
+     ! FIXME: and read_file calls divide_et_impera that needs kunit
+     ! FIXME: qnorm (also set in setup_nscf) is needed by allocate_nlpot
+     kunit = 2
+     IF ( lgamma_iq(iq) ) kunit = 1
+     IF (noncolin.AND.domag) THEN 
+        kunit = 4
+        IF (lgamma_iq(iq)) kunit=2
+     ENDIF
+     qnorm = SQRT(xq(1)**2+xq(2)**2+xq(3)**2) * tpiba
+     !
      CALL read_file()
      IF (.NOT.lgamma_iq(iq).OR.(qplot.AND.iq>1)) CALL &
                                   set_small_group_of_q(nsymq,invsymq,minus_q)
@@ -71,17 +87,22 @@ SUBROUTINE run_nscf(do_band, iq)
   !
   wfc_dir=tmp_dir_phq
   tmp_dir=tmp_dir_phq
+  !
   ! ... Setting the values for the nscf run
   !
-  startingconfig    = 'input'
-  starting_pot      = 'file'
-  starting_wfc      = 'atomic'
-  restart = ext_restart
-  conv_ions=.true.
+  startingconfig = 'input'
+  starting_pot   = 'file'
+  starting_wfc   = 'atomic'
+  restart        = ext_restart
+  conv_ions      = .true.
+  ethr_nscf      = 1.0D-9 / nelec 
+  ! threshold for diagonalization ethr_nscf - should be good for all cases
   !
-  CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm )
-  CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm)
+  CALL fft_type_allocate ( dfftp, at, bg, gcutm,  intra_bgrp_comm, nyfft=nyfft )
+  CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft)
+  !
   CALL setup_nscf ( newgrid, xq, elph_mat )
+  !
   CALL init_run()
   !
 !!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
@@ -91,7 +112,7 @@ SUBROUTINE run_nscf(do_band, iq)
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!!END OF ACFDT TEST !!!!!!!!!!!!!!!!
 !
-  IF (do_band) CALL non_scf ( )
+  IF (do_band) CALL non_scf_ph ( )
 
 
   IF ( check_stop_now() ) THEN
@@ -103,16 +124,17 @@ SUBROUTINE run_nscf(do_band, iq)
      CALL stop_run( -1 )
      CALL do_stop( 1 )
   ENDIF
-
   !
   IF (.NOT.reduce_io.and.do_band) THEN
-!
-!  If only_wfc flag is true, we use the same twfcollect as in the pw.x
-!  calculation.
-!
-     IF (.NOT. only_wfc) twfcollect=.FALSE.
-     CALL punch( 'all' )
-  ENDIF
+     IF ( only_wfc ) THEN
+        ! write wavefunctions to file in portable format
+        CALL punch( 'all' )
+     ELSE
+        ! do not write wavefunctions: not sure why, I think
+        ! they are written anyway in internal format - PG
+        CALL punch( 'config' )
+     END IF
+  END IF
   !
   CALL seqopn( 4, 'restart', 'UNFORMATTED', exst )
   CLOSE( UNIT = 4, STATUS = 'DELETE' )

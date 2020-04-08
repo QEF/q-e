@@ -36,6 +36,8 @@ CONTAINS
       tau=1.d5
 
       SELECT CASE (space_group_number)
+         CASE (1, 4, 7, 9, 19, 29, 33, 76, 78, 144, 145, 169, 170)
+            ! groups having only one set of positions "Na x y z": do nothing
          CASE (2) !P-1
              CALL wypos_2  ( wp, tau )
          CASE (3) !P2
@@ -302,11 +304,11 @@ CONTAINS
              CALL wypos_141( wp, inp, origin_choice, tau )
          CASE (142) !I4(1)/acd
              CALL wypos_142( wp, inp, origin_choice, tau )
-         CASE(143) !P3
+         CASE (143) !P3
              CALL wypos_143( wp, inp, tau )
          CASE (146) !R3
              CALL wypos_146( wp, inp, rhombohedral, tau )
-         CASE(147) !P-3
+         CASE (147) !P-3
              CALL wypos_147( wp, inp, tau )
          CASE (148) !R-3
              CALL wypos_148( wp, inp, rhombohedral, tau )

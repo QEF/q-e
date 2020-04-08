@@ -28,9 +28,9 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE ener,                 ONLY : ef
   USE fft_base,             ONLY : dffts, dfftp
-  USE fft_interfaces,       ONLY : fwfft, invfft
-  USE gvect,                ONLY : nl, ngm, g
-  USE gvecs,                ONLY : nls, nlsm, doublegrid
+  USE fft_interfaces,       ONLY : fwfft, invfft, fft_interpolate
+  USE gvect,                ONLY : ngm, g
+  USE gvecs,                ONLY : doublegrid
   USE klist,                ONLY : lgauss, degauss, ngauss, nks, wk, xk, &
                                    nkstot, ngk, igk_k
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
@@ -38,15 +38,16 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE symme,                ONLY : sym_rho, sym_rho_init, sym_rho_deallocate
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv
   USE uspp_param,           ONLY : upf, nh, nhm
-  USE wavefunctions_module, ONLY : evc, psic, psic_nc
+  USE wavefunctions,        ONLY : evc, psic, psic_nc
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE control_flags,        ONLY : gamma_only
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, fcoef
-  USE io_files,             ONLY : iunwfc, nwordwfc
-  USE mp_global,            ONLY : me_pool, nproc_pool, my_pool_id, npool
+  USE io_files,             ONLY : restart_dir
+  USE pw_restart_new,       ONLY : read_collected_wfc
+  USE mp_pools,             ONLY : me_pool, nproc_pool, my_pool_id, npool, &
+                                   inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_bcast, mp_sum
-  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE becmod,               ONLY : calbec
   IMPLICIT NONE
   !
@@ -150,7 +151,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   DO ik = 1, nks
      IF ( iflag /= 0 .or. ik == kpoint_pool) THEN
         IF (lsda) current_spin = isk (ik)
-        CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+        CALL read_collected_wfc ( restart_dir(), ik, evc )
         npw = ngk(ik)
         CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
 
@@ -171,8 +172,8 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
               IF (noncolin) THEN
                  psic_nc = (0.d0,0.d0)
                  DO ig = 1, npw
-                    psic_nc(nls(igk_k(ig,ik)),1)=evc(ig     ,ibnd)
-                    psic_nc(nls(igk_k(ig,ik)),2)=evc(ig+npwx,ibnd)
+                    psic_nc(dffts%nl(igk_k(ig,ik)),1)=evc(ig     ,ibnd)
+                    psic_nc(dffts%nl(igk_k(ig,ik)),2)=evc(ig+npwx,ibnd)
                  ENDDO
                  DO ipol=1,npol
                     CALL invfft ('Wave', psic_nc(:,ipol), dffts)
@@ -180,11 +181,11 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
               ELSE
                  psic(1:dffts%nnr) = (0.d0,0.d0)
                  DO ig = 1, npw
-                    psic (nls (igk_k(ig,ik) ) ) = evc (ig, ibnd)
+                    psic (dffts%nl (igk_k(ig,ik) ) ) = evc (ig, ibnd)
                  ENDDO
                  IF (gamma_only) THEN
                     DO ig = 1, npw
-                       psic (nlsm(igk_k (ig,ik) ) ) = conjg(evc (ig, ibnd))
+                       psic (dffts%nlm(igk_k (ig,ik) ) ) = conjg(evc (ig, ibnd))
                     ENDDO
                  ENDIF
                  CALL invfft ('Wave', psic, dffts)
@@ -226,7 +227,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
 #endif
                     segno(1:dffts%nnr) = dble( psic(1:dffts%nnr)*conjg(phase) )
                  ENDIF
-                 IF (doublegrid) CALL interpolate (segno, segno, 1)
+                 IF (doublegrid) CALL fft_interpolate (dffts, segno, dfftp, segno)
                  segno(:) = sign( 1.d0, segno(:) )
               ENDIF
               !
@@ -366,32 +367,41 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
         DEALLOCATE(becp)
      ENDIF
   ENDIF
-  IF (doublegrid) THEN
-     IF (noncolin) THEN
-       CALL interpolate(rho%of_r, rho%of_r, 1)
-     ELSE
-       DO is = 1, nspin
-         CALL interpolate(rho%of_r(1, is), rho%of_r(1, is), 1)
-       ENDDO
-     ENDIF
-  ENDIF
+  !
+  ! ... bring rho(r) to G-space (use psic as work array)
+  !
+  DO is = 1, nspin
+     psic(1:dffts%nnr) = rho%of_r(1:dffts%nnr,is)
+     psic(dffts%nnr+1:) = 0.0_dp
+     CALL fwfft ('Rho', psic, dffts)
+     rho%of_g(1:dffts%ngm,is) = psic(dffts%nl(1:dffts%ngm))
+     rho%of_g(dffts%ngm+1:,is) = (0.0_dp,0.0_dp)
+  END DO
   !
   !    Here we add the US contribution to the charge
   !
-  CALL addusdens(rho%of_r(:,:))
+  CALL addusdens(rho%of_g(:,:))
   !
+  !    Now select the desired component, bring it to real space
+  !
+  psic(:) = (0.0_dp, 0.0_dp)
   IF (nspin == 1 .or. nspin==4) THEN
      is = 1
-     dos(:) = rho%of_r (:, is)
+     psic(dfftp%nl(:)) = rho%of_g (:, is)
   ELSE
      IF ( iflag==3 .and. (spin_component==1 .or. spin_component==2 ) ) THEN
-        dos(:) = rho%of_r (:, spin_component)
+        psic(dfftp%nl(:)) = rho%of_g (:, spin_component)
      ELSE
         isup = 1
         isdw = 2
-        dos(:) = rho%of_r (:, isup) + rho%of_r (:, isdw)
+        psic(dfftp%nl(:)) = rho%of_g (:, isup) + rho%of_g (:, isdw)
      ENDIF
   ENDIF
+  !
+  CALL invfft ('Rho', psic, dfftp)
+  !
+  dos(:) = DBLE ( psic(:) )
+  !
   IF (lsign) THEN
      dos(:) = dos(:) * segno(:)
      DEALLOCATE(segno)
@@ -399,7 +409,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
 #if defined(__MPI)
   CALL mp_sum( dos, inter_pool_comm )
 #endif
-
+  !
   IF (iflag == 0 .or. gamma_only) RETURN
   !
   !    symmetrization of the local dos
@@ -407,14 +417,14 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   CALL sym_rho_init (gamma_only )
   !
   psic(:) = cmplx ( dos(:), 0.0_dp, kind=dp)
-  CALL fwfft ('Dense', psic, dfftp)
-  rho%of_g(:,1) = psic(nl(:))
+  CALL fwfft ('Rho', psic, dfftp)
+  rho%of_g(:,1) = psic(dfftp%nl(:))
   !
   CALL sym_rho (1, rho%of_g)
   !
   psic(:) = (0.0_dp, 0.0_dp)
-  psic(nl(:)) = rho%of_g(:,1)
-  CALL invfft ('Dense', psic, dfftp)
+  psic(dfftp%nl(:)) = rho%of_g(:,1)
+  CALL invfft ('Rho', psic, dfftp)
   dos(:) = dble(psic(:))
   !
   CALL sym_rho_deallocate()

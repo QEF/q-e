@@ -19,8 +19,9 @@
        USE io_files, ONLY : prefix, tmp_dir, nwordwfc,iunwfc
        USE wvfct,                ONLY : nbnd, et, npwx
        USE io_global,            ONLY : stdout, ionode
-       USE wavefunctions_module, ONLY : evc
-       USE exx,      ONLY : ecutfock,vexx,exx_div_check,exx_grid_init,exx_grid_check,exxinit,x_occupation
+       USE wavefunctions, ONLY : evc
+       USE exx,      ONLY : ecutfock,vexx, exxinit
+       USE exx_base, ONLY : exx_div_check, exx_grid_init, exx_grid_check
        USE funct,    ONLY : exx_is_active, dft_is_hybrid,start_exx,stop_exx
        USE wvfct,    ONLY : current_k, et
        USE gvecw,    ONLY : ecutwfc
@@ -177,7 +178,7 @@
             CALL exx_grid_init()
             CALL exx_div_check()
             call stop_exx()
-            call  exxinit
+            call  exxinit(.false.)
             call start_exx()
             current_k= 1
                !the following is very important                                                                                                                            
@@ -432,7 +433,7 @@
 !if EXX is one calculates stuff for Fock operator
                 if(dft_is_hybrid()) then
 !NOT_TO_BE_INCLUDED_START
-                   call  exxinit
+                   call  exxinit(.false.)
                    current_k= 1
 !NOT_TO_BE_INCLUDED_END
                 endif

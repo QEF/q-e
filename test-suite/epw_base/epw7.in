@@ -12,15 +12,15 @@
   epbread     = .false.
 
   etf_mem     = 2
+  vme         = .false. 
 
   restart      = .true.
-  restart_freq = 50      ! We test the restart feature
+  restart_step = 50
 
   epwwrite    = .false.
   epwread     = .true.
 
   nbndsub     =  4
-  nbndskip    =  0
 
   wannierize  = .false.
   num_iter    = 300
@@ -34,15 +34,11 @@
   phonselfen  = .false.
   a2f         = .false.
 
-  parallel_k  = .true.
-  parallel_q  = .false.
-
   fsthick     = 1.5 ! eV 
   eptemp      = 300 ! K (same as PRB 76, 165108)
   degaussw    = 0.3 ! eV
 
   dvscf_dir   = './save/'
-  filukk      = './diam.ukk'
 
   nkf1        = 6
   nkf2        = 6
@@ -61,8 +57,8 @@
   nq3         = 3
  /
       4 cartesian
-  0.000000000000   0.000000000000   0.000000000000   0.0740741
- -0.333333333333   0.333333333333  -0.333333333333   0.5925926
-  0.000000000000   0.666666666667   0.000000000000   0.4444444
-  0.666666666667   0.000000000000   0.666666666667   0.8888889
+  0.000000000000   0.000000000000   0.000000000000   
+ -0.333333333333   0.333333333333  -0.333333333333   
+  0.000000000000   0.666666666667   0.000000000000   
+  0.666666666667   0.000000000000   0.666666666667   
 

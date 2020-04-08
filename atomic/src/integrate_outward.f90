@@ -52,7 +52,7 @@ subroutine integrate_outward (lam,jam,e,mesh,ndm,grid,f, &
 
   real(DP) :: &
        b0e,     & ! the expansion of the known part
-       ddx12,   & ! the deltax enetering the equations
+       ddx12,   & ! the deltax entering the equations
        x4l6,    & ! auxiliary for small r expansion
        j1(4),d(4),& ! auxiliary for starting values of chi
        delta,xc(4),& ! auxiliary for starting values of eta
@@ -81,10 +81,12 @@ subroutine integrate_outward (lam,jam,e,mesh,ndm,grid,f, &
   x4l6=4*lam+6
   nst=(lam+1)*2
   !
-  !  first solve the omogeneous equation
+  !  first solve the homogeneous equation
   !
+  ! f is the original function 
+  ! of the form 1 + h^2/12 * d2Rdr2
   do n=2,ik-1
-     y(n+1)=((12.0_DP-10.0_DP*f(n))*y(n)-f(n-1)*y(n-1))/f(n+1)
+     y(n+1)=( 12.0_DP*y(n)  - 10.0_DP* f(n)*y(n) - f(n-1)*y(n-1) )/f(n+1)
   enddo
   !
   !     for each beta function with correct angular momentum

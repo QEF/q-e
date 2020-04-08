@@ -68,6 +68,7 @@ program dynmat
 !                    (default: filmol='dynmat.mold')
 !  filxsf  character as above, in axsf format suitable for xcrysden
 !                    (default: filxsf='dynmat.axsf')
+!  loto_2d logical set to .true. to activate two-dimensional treatment of LO-TO splitting.
 !
   USE kinds, ONLY: DP
   USE mp,         ONLY : mp_bcast
@@ -79,13 +80,14 @@ program dynmat
                          read_dyn_mat, read_dyn_mat_tail
   USE constants,   ONLY : amu_ry
   USE dynamical
+  USE rigid,       ONLY: dyndiag, nonanal
   !
   implicit none
   integer, parameter :: ntypx = 10
   character(len=256):: fildyn, filout, filmol, filxsf, fileig
   character(len=3) :: atm(ntypx)
   character(len=10) :: asr
-  logical :: lread, gamma
+  logical :: lread, gamma, loto_2d
   complex(DP), allocatable :: z(:,:)
   real(DP) :: amass(ntypx), amass_(ntypx), eps0(3,3), a0, omega, &
        at(3,3), bg(3,3), q(3), q_(3)
@@ -97,7 +99,7 @@ program dynmat
   integer :: ibrav, nqs
   integer, allocatable :: itau(:)
   namelist /input/ amass, asr, axis, fildyn, filout, filmol, filxsf, &
-                   fileig, lperm, lplasma, q
+                   fileig, lperm, lplasma, q, loto_2d
   !
   ! code is parallel-compatible but not parallel
   !
@@ -117,6 +119,7 @@ program dynmat
   q(:)=0.0d0
   lperm=.false.
   lplasma=.false.
+  loto_2d=.false.
   !
   IF (ionode) read (5,input, iostat=ios)
   CALL mp_bcast(ios, ionode_id, world_comm)
@@ -182,7 +185,7 @@ program dynmat
      !
      gamma = ( abs( q_(1)**2+q_(2)**2+q_(3)**2 ) < 1.0d-8 )
      !
-     IF (gamma) THEN
+     IF (gamma .and. .not.loto_2d) THEN
         ALLOCATE (itau(nat))
         DO na=1,nat
            itau(na)=na

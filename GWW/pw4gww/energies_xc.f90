@@ -25,8 +25,8 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
   !       e_h
   USE kinds,    ONLY : DP
   USE uspp,     ONLY : vkb, nkb
-  USE gvecs,  ONLY : nls, doublegrid
-  USE gvect,                ONLY : ngm, gstart, nl, nlm, g, gg, gcutm
+  USE gvecs,  ONLY : doublegrid
+  USE gvect,                ONLY : ngm, gstart, g, gg, gcutm
   USE cell_base,            ONLY :  alat, omega
   USE lsda_mod,             ONLY : nspin
   USE ldaU,     ONLY : lda_plus_u
@@ -41,7 +41,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
   USE control_flags,        ONLY : gamma_only
   USE funct,            ONLY : dft_is_meta
   USE fft_base,             ONLY : dfftp, dffts
-  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE fft_interfaces,       ONLY : fwfft, invfft, fft_interpolate
 
   USE exx,      ONLY : vexx !Suriano
   USE funct,    ONLY : exx_is_active,dft_is_hybrid
@@ -88,7 +88,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
        !
        ! ... k-points version
        !
-       USE wavefunctions_module, ONLY : psic
+       USE wavefunctions, ONLY : psic
        USE becmod,  ONLY : becp
        !
        IMPLICIT NONE
@@ -111,16 +111,16 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
        ! ... the local potential V_Loc psi. First the psi in real space
 !set exchange and correlation potential
           if(.not.allocated(psic)) write(stdout,*) 'psic not allocated'
+      !
        if (dft_is_meta()) then
 !         call v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
       else
          CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, vr )
       endif
-
-
+      !
        do is=1,nspin
           vrs(:,is)=vr(:,is)
-          if(doublegrid) call interpolate(vrs(1,is),vrs(1,is),-1)
+          if(doublegrid) call fft_interpolate(dfftp, vrs(:,is),dffts,vrs(:,is)) ! interpolate from dense to smooth
        enddo
        !
        DO ibnd = 1, m
@@ -129,7 +129,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
           !
           psic(1:dffts%nnr) = ( 0.D0, 0.D0 )
           !
-          psic(nls(igk_k(1:n,1))) = psi(1:n,ibnd)
+          psic(dffts%nl(igk_k(1:n,1))) = psi(1:n,ibnd)
           !
           CALL invfft ('Wave', psic, dffts)
 
@@ -150,7 +150,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
           !
           e_xc(ibnd)=0.d0
           do ig=1,n
-             e_xc(ibnd)=e_xc(ibnd)+real(conjg(psi(ig,ibnd))*psic(nls(igk_k(ig,1))))
+             e_xc(ibnd)=e_xc(ibnd)+real(conjg(psi(ig,ibnd))*psic(dffts%nl(igk_k(ig,1))))
           enddo
           call mp_sum(e_xc(ibnd),world_comm)
           write(stdout,*) 'energies_xc :', ibnd, e_xc(ibnd)*rytoev
@@ -162,7 +162,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
        call  v_h(rho%of_g , ehart, charge, vr )
        do is=1,nspin
           vrs(:,is)=vr(:,is)
-          if(doublegrid) call interpolate(vrs(1,is),vrs(1,is),-1)
+          if(doublegrid) call fft_interpolate(dfftp, vrs(:,is), dffts, vrs(:,is)) ! interpolate from dense to smooth
        enddo
 
 
@@ -170,7 +170,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 
           CALL start_clock( 'firstfft' )
           psic(1:dffts%nnr) = ( 0.D0, 0.D0 )
-          psic(nls(igk_k(1:n,1))) = psi(1:n,ibnd)
+          psic(dffts%nl(igk_k(1:n,1))) = psi(1:n,ibnd)
 
           CALL invfft ('Wave', psic, dffts)
 
@@ -184,7 +184,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
           CALL fwfft ('Wave', psic, dffts)
           e_h(ibnd)=0.d0
           do ig=1,n
-             e_h(ibnd)=e_h(ibnd)+real(conjg(psi(ig,ibnd))*psic(nls(igk_k(ig,1))))
+             e_h(ibnd)=e_h(ibnd)+real(conjg(psi(ig,ibnd))*psic(dffts%nl(igk_k(ig,1))))
           enddo
           call mp_sum(e_h(ibnd),world_comm)
           write(stdout,*) 'energies_h :', ibnd, e_h(ibnd)*rytoev
@@ -206,7 +206,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
                                &l_scissor,scissor,num_nbndv,num_nbnds
       ! USE realus,  ONLY : adduspos_gamma_r
        USE wvfct,    ONLY : npwx,npw,nbnd, et,g2kin
-       USE wavefunctions_module, ONLY : evc
+       USE wavefunctions, ONLY : evc
        USE klist,                ONLY : xk
        USE mp, ONLY : mp_sum
        USE mp_world, ONLY : world_comm
@@ -357,14 +357,13 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
        if(.not.allocated(vr)) write(stdout,*) 'vr not allocated'
        allocate(rho_fake_core(dfftp%nnr))
        rho_fake_core(:)=0.d0
-
+       !
        if (dft_is_meta()) then
       !    call v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
        else
           CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, vr )
        endif
-
-
+       !
      deallocate(rho_fake_core)
 
 
@@ -408,7 +407,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 !read from disk wfc on coarse grid
          CALL davcio( psi_rs,dffts%nnr,iunwfcreal,ibnd+(ispin-1)*nbnd,-1)
          if(doublegrid) then
-           call interpolate(psi_r,psi_rs,1)
+           call fft_interpolate(dffts, psi_rs, dfftp, psi_r) ! interpolate from smooth to dense
          else
            psi_r(:)=psi_rs(:)
          endif
@@ -458,7 +457,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 !read from disk wfc on coarse grid
            CALL davcio( psi_rs,dffts%nnr,iunwfcreal,ibnd+(ispin-1)*nbnd,-1)
            if(doublegrid) then
-              call interpolate(psi_r,psi_rs,1)
+              call fft_interpolate(dffts, psi_rs, dfftp, psi_r) ! interpolate from smooth to dense
            else
               psi_r(:)=psi_rs(:)
            endif

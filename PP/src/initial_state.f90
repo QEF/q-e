@@ -21,7 +21,7 @@ PROGRAM initial_state
   USE ions_base,  ONLY : nat
   USE klist,      ONLY : nks, xk, igk_k, ngk
   USE uspp,       ONLY : nkb, vkb
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE parameters, ONLY : ntypx
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm
@@ -34,13 +34,12 @@ PROGRAM initial_state
   !
   CHARACTER(len=256) :: outdir
   INTEGER :: ios, ik, excite(ntypx)
+  LOGICAL :: needwf = .TRUE.
   NAMELIST / inputpp / outdir, prefix, excite
   !
   ! initialise environment
   !
-#if defined(__MPI)
   CALL mp_startup ( )
-#endif
   CALL environment_start ( 'initstate' )
   !
   !   set default values for variables in namelist
@@ -75,14 +74,8 @@ PROGRAM initial_state
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
-  CALL read_file
-  CALL openfil_pp
-  IF ( nks == 1 ) THEN
-     ik = 1
-     CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
-     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
-  ENDIF
-
+  CALL read_file_new( needwf )
+  !
   CALL do_initial_state (excite)
   !
   CALL environment_end ( 'initstate' )

@@ -3,10 +3,13 @@ sinclude ../make.inc
 
 default: all
 
-all: phonon phgamma_only finite_diffs
+all: phonon phgamma_only # finite_diffs
 
 phonon:
 	( cd PH ; $(MAKE) all || exit 1 )
+
+ph-lib:
+	( cd PH ; $(MAKE) libs-ph || exit 1 )
 
 phgamma_only:
 	( cd Gamma ; $(MAKE) all || exit 1 )

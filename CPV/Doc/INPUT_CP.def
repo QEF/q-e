@@ -295,7 +295,8 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	var memory -type CHARACTER { 
 	    default { 'default' }
 	    info {
-               'small': memory-saving tricks are implemented. Currently:
+               'small': NO LONGER IMPLEMENTED SINCE v.6.3
+                        memory-saving tricks are implemented. Currently:
                         - the G-vectors are sorted only locally, not globally
                         - they are not collected and written to file
                         For large systems, the memory and time gain is sizable
@@ -416,11 +417,21 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 
                13          Monoclinic base-centered        celldm(2)=b/a
                                                            celldm(3)=c/a,
-                                                           celldm(4)=cos(ab)
+                                                           celldm(4)=cos(gamma)
                     v1 = (  a/2,         0,                -c/2),
-                    v2 = (b*cos(gamma), b*sin(gamma), 0),
-                    v3 = (  a/2,         0,                  c/2),
-                    where gamma is the angle between axis a and b
+                    v2 = (b*cos(gamma), b*sin(gamma),       0  ),
+                    v3 = (  a/2,         0,                 c/2),
+                    where gamma=angle between axis a and b projected on xy plane
+
+              -13          Monoclinic base-centered        celldm(2)=b/a
+                           (unique axis b)                 celldm(3)=c/a,
+                                                           celldm(5)=cos(beta)
+                    v1 = (  a/2,       b/2,             0),
+                    v2 = ( -a/2,       b/2,             0),
+                    v3 = (c*cos(beta),   0,   c*sin(beta)),
+                    where beta=angle between axis a and c projected on xz plane
+               IMPORTANT NOTICE: until QE v.6.4.1, axis for ibrav=-13 had a 
+               different definition: v1(old) = v2(now), v2(old) = -v1(now)
 
                14          Triclinic                       celldm(2)= b/a,
                                                            celldm(3)= c/a,
@@ -926,6 +937,12 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
                'zero'      : restart setting electronic velocities to zero
                'default'   : restart using electronic velocities of the
                            previous run
+               'change_step' : restart simulation using electronic velocities of the
+                           previous run, with rescaling due to the timestep change.
+                           specify the old step via @ref tolp as in
+                           tolp = 'old_time_step_value' in au.
+                           Note that you may want to specify
+                           @ref ion_velocities = 'change_step'
 	    }
 	}
 
@@ -1097,13 +1114,15 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
                                from the restart file
                'change_step' : restart the simulation with atomic velocities read
                                from the restart file, with rescaling due to the
-                               timestep change, specify the old step via tolp
-                               as in tolp = 'old_time_step_value' in au
+                               timestep change, specify the old step via @ref tolp
+                               as in tolp = 'old_time_step_value' in au.
+                               Note that you may want to specify
+                               electron_velocities = 'change_step'
                'random'      : start the simulation with random atomic velocities
+                               (see also variable @ref tempw)
                'from_input'  : restart the simulation with atomic velocities read
                                from standard input - see card 'ATOMIC_VELOCITIES'
-                               BEWARE: works only if restart_mode='from_scratch',
-                               tested only with electrons_dynamics='cg'
+                               BEWARE: tested only with electrons_dynamics='cg'
                'zero'        : restart the simulation with atomic velocities set
                                to zero
             }
@@ -1213,8 +1232,8 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	    info {
                tolerance (in Kelvin) of the rescaling. When ionic temperature
                differs from "tempw" more than "tolp" apply rescaling.
-               meaningful only with " ion_temperature = 'rescaling' "
-               and with ion_velocities='change_step', where it specifies
+               meaningful only with @ref ion_temperature = 'rescaling'
+               or with @ref ion_velocities='change_step', where it specifies
                the old timestep
 
 	    }
@@ -1482,7 +1501,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
             }
         }
 
-	var abivol -type LOGICAL { 
+	var abisur -type LOGICAL { 
             default { .false. }
             info { 
                .true. for finite surface tension calculations
@@ -2013,13 +2032,16 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
 	    	}
 
 	label { 
-	    Optional card, reads velocities (in atomic units) from standard input 
+	    Optional card, reads velocities from standard input  
 	}
 
 
         message {
                when starting with ion_velocities="from_input" it is convenient
-               to perform few steps (~5-10) with a smaller time step (0.5 a.u.)
+               to perform a few steps (~5-10) with a small time step (0.5 a.u.).
+               The velocities must be expressed using the same length units
+               indicated in the card ATOMIC_POSITIONS, divided by time
+               in atomic units.
 	}
 
 	syntax {

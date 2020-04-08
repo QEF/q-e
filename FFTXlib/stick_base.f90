@@ -539,6 +539,8 @@ CONTAINS
 
       !write (6,*) 'final nyfft distribution'
       !write (6,'(4i5)') (i1,ygrp(i1),ygrc(i1),ygrg(i1),i1=1,nyfft)
+      DEALLOCATE ( ygrp, ygrc, ygrg ) 
+      DEALLOCATE ( yc, yg, ygr ) 
 
       RETURN
    END SUBROUTINE sticks_dist_new

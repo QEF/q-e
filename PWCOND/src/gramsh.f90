@@ -29,8 +29,7 @@ subroutine gramsh (n, nvec, nstart, nfinish,         &
   real(DP), parameter :: eps=1.d-8
   complex(DP) :: &
      psibase(n,n),    & ! i/o:basis vector set
-     psiprob(n,nvec), & ! i/o:vectors to be orthog. and added to psibas
-     zdotc              ! to compute scalar products
+     psiprob(n,nvec)    ! i/o:vectors to be orthog. and added to psibas
   complex(DP), allocatable ::  &
      ps(:)                        ! the scalar products
 
@@ -44,7 +43,7 @@ subroutine gramsh (n, nvec, nstart, nfinish,         &
 ! To find orthogonal to psibase projection of psiprob
 !
      do ivecp=1, ndim
-       ps(ivecp)=zdotc(n,psibase(1,ivecp),1,psiprob(1,ivec),1)
+       ps(ivecp)=dot_product (psibase(1:n,ivecp),psiprob(1:n,ivec))
      enddo
      do ivecp=1,ndim
        call zaxpy (n,-ps(ivecp),psibase(1,ivecp),1,psiprob(1,ivec),1)

@@ -28,6 +28,7 @@ subroutine wannier_check()
   
   if ( gamma_only ) call errore ('wannier_check', 'gamma_only calculation not implemented', 1) 
 
+  if (nwan > nbnd ) call errore( 'wannier_check','too few bands', nwan-nbnd)
   ! here we will write to stdout source of wannier functions (atomic functions from which wannier are generated) 
   do ispin=1, nspin
      !
@@ -51,7 +52,7 @@ subroutine wannier_check()
            write(stdout,'(10x,f12.10," of l=",i1,", m=",i1)') &
                 wan_in(iwan,ispin)%ing(i)%c, wan_in(iwan,ispin)%ing(i)%l, wan_in(iwan,ispin)%ing(i)%m
            
-           ! now we shoud associate every ingridient of trial wavefunction with atomic orbital
+           ! now we should associate every ingredient of trial wavefunction with atomic orbital
            ! it will be done only once - for future using in wannier_proj
            DO na = 1, nat
               nt = ityp (na)
@@ -79,10 +80,8 @@ subroutine wannier_check()
   ! do iwan=1,nwan
   !   write(stdout,'(7x,"Wannier #",i3," atomic wavefunction", i3)') iwan, wan_in(iwan,1)%ing(1)%iatomwfc
  ! end do ! iwannier
-     
   if (lmax_wfc > 3) call errore ('wannier_check', 'l > 3 not yet implemented', 1) 
   if (nwfc /= natomwfc) call errore ('wannier_check', 'wrong # of atomic wfcs?', 1)
-  if (nwan > nbnd ) call errore( 'wannier_check','too few bands', nwan-nbnd)
 
   return
 

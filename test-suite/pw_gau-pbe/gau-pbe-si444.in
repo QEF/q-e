@@ -8,6 +8,8 @@
     input_dft='gaup', nqx1=4, nqx2=4, nqx3=4, 
     exxdiv_treatment='none'
     x_gamma_extrapolation = .false.
+!force_symmorphic=.true.,
+!nr1=16,nr2=16,nr3=16,nr1s=16,nr2s=16,nr3s=16
  /
  &electrons
  /

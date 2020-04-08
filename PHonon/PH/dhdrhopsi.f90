@@ -43,12 +43,12 @@ subroutine dhdrhopsi
   USE fft_base,  ONLY : dffts
   USE wvfct,     ONLY : npwx, nbnd, et, current_k
   USE uspp,      ONLY : nkb, vkb
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE becmod,    ONLY : calbec, bec_type, allocate_bec_type, &
                         deallocate_bec_type, beccopy
   use ramanm,    ONLY : lrchf, iuchf, lrd2w, iud2w, jab, dek, eth_ns
-  USE units_ph,  ONLY : lrdwf, iudwf, lrwfc, iuwfc
-
+  USE units_ph,  ONLY : lrdwf, iudwf
+  USE units_lr,  ONLY : iuwfc, lrwfc
   USE lrus,      ONLY : becp1
   USE eqv,       ONLY : dpsi, dvpsi
   USE qpoint,    ONLY : nksq

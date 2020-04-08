@@ -52,7 +52,8 @@ MODULE pseudo_mod
   ! pp_rhoatom
   real(8) :: rho_at(ndm,npsx)
   !
-  PRIVATE
+  ! virtual.x actually needs the variables above so everything is public
+  !!! PRIVATE
   PUBLIC :: read_pseudo
   !
 CONTAINS

@@ -27,7 +27,7 @@ MODULE noncollin_module
   INTEGER, ALLOCATABLE :: &
   !                         !  when spherical (non-overlapping) integration
       pointlist(:)          !  regions are defined around atoms this index
-                            !  say for each point in the fft grid to which 
+                            !  says for each point in the fft grid to which 
                             !  atom it is assigned (0 if no atom is selected)
   !
   LOGICAL :: &
@@ -49,11 +49,9 @@ MODULE noncollin_module
   !
   REAL (DP), ALLOCATABLE :: &
       factlist(:),         &! weight factors for local integrations
-      r_loc(:),            &! local integrated charge 
       m_loc(:,:)            ! local integrated magnetization
-
-  REAL(DP) ::     &
-     ux(3)                 ! versor for deciding signs in gga
+  REAL(DP) ::              &
+       ux(3)                 ! versor for deciding signs in gga
   !
   CONTAINS
     !
@@ -63,7 +61,6 @@ MODULE noncollin_module
       !
       IF ( ALLOCATED( pointlist) )       DEALLOCATE( pointlist )
       IF ( ALLOCATED( factlist ) )       DEALLOCATE( factlist )
-      IF ( ALLOCATED( r_loc    ) )       DEALLOCATE( r_loc )
       IF ( ALLOCATED( m_loc    ) )       DEALLOCATE( m_loc )
       !
     END SUBROUTINE deallocate_noncol

@@ -15,7 +15,6 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
   
   USE io_global,            ONLY : stdout, ionode, ionode_id
   USE io_files,             ONLY : prefix, tmp_dir, iunwfc, nwordwfc
-  USE mp_global,            ONLY : nproc_pool, me_pool
   USE kinds,    ONLY : DP
   USE basis
   USE klist
@@ -25,10 +24,10 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2,bg
   USE wannier_gw
   USE gvect
-  USE gvecs,              ONLY : nls, nlsm, doublegrid
+  USE gvecs,              ONLY : doublegrid
   USE uspp
   USE uspp_param,           ONLY : lmaxq,upf,nh, nhm
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
  ! USE realus,  ONLY : adduspos_gamma_r
   USE cell_base,            ONLY : at, bg, omega
   USE mp, ONLY : mp_sum, mp_bcast
@@ -36,7 +35,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
   USE control_flags,        ONLY : gamma_only
   !USE exx, ONLY : exx_divergence_new, exx_grid_init, yukawa,exx_divergence_old
   USE fft_base,             ONLY : dfftp, dffts
-  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE fft_interfaces,       ONLY : fwfft, invfft, fft_interpolate
   USE fft_base,             ONLY : dfftp
   USE io_global, ONLY : ionode
   USE lsda_mod,  ONLY : nspin
@@ -122,26 +121,26 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
             psic(:)=(0.d0,0.d0)
             psic(:)=(0.d0,0.d0)
             IF ( hw < min(iiv*n_set,nbnd_v(isv))) then
-               psic(nls(1:npw0))  = ks_wfcs(1:npw0,hw,isv) + &
+               psic(dffts%nl(1:npw0))  = ks_wfcs(1:npw0,hw,isv) + &
                     ( 0.D0, 1.D0 ) * ks_wfcs(1:npw0,hw+1,isv)
-               psic(nlsm(1:npw0)) = CONJG( ks_wfcs(1:npw,hw,isv) - &
+               psic(dffts%nlm(1:npw0)) = CONJG( ks_wfcs(1:npw,hw,isv) - &
                     ( 0.D0, 1.D0 ) * ks_wfcs(1:npw0,hw+1,isv) )
             ELSE
-               psic(nls(1:npw0))  = ks_wfcs(1:npw0,hw,isv)
-               psic(nlsm(1:npw0)) = CONJG( ks_wfcs(1:npw0,hw,isv) )
+               psic(dffts%nl(1:npw0))  = ks_wfcs(1:npw0,hw,isv)
+               psic(dffts%nlm(1:npw0)) = CONJG( ks_wfcs(1:npw0,hw,isv) )
             END IF
          
             CALL invfft ('Wave', psic, dffts)
             tmpreal1(1:dfftp%nnr)=dble(psic(1:dfftp%nnr))
             if(doublegrid) then
-               call interpolate(tmpreal_v(:,hw-(iiv-1)*n_set),tmpreal1,1)
+               call fft_interpolate(dffts,tmpreal1, dfftp, tmpreal_v(:,hw-(iiv-1)*n_set)) ! interpolate smooth -> dense
             else
                tmpreal_v(:,hw-(iiv-1)*n_set)=tmpreal1(:)
             endif
             if ( hw < min(iiv*n_set,nbnd_v(isv))) then
                tmpreal1(1:dfftp%nnr)=aimag(psic(1:dfftp%nnr))
                if(doublegrid) then
-                  call interpolate(tmpreal_v(:,hw-(iiv-1)*n_set+1),tmpreal1,1)
+                  call fft_interpolate(dffts,tmpreal1, dfftp, tmpreal_v(:,hw-(iiv-1)*n_set+1)) ! interpolate smooth -> dense
                else
                   tmpreal_v(:,hw-(iiv-1)*n_set+1)=tmpreal1(:)
                endif
@@ -157,26 +156,26 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
                psic(:)=(0.d0,0.d0)
                psic(:)=(0.d0,0.d0)
                IF ( hw < min(jjs*n_set,nbnd_s)) then
-                  psic(nls(1:npw0))  = ks_wfcs(1:npw0,hw,isv) + &
+                  psic(dffts%nl(1:npw0))  = ks_wfcs(1:npw0,hw,isv) + &
                        ( 0.D0, 1.D0 ) * ks_wfcs(1:npw0,hw+1,isv)
-                  psic(nlsm(1:npw0)) = CONJG( ks_wfcs(1:npw,hw,isv) - &
+                  psic(dffts%nlm(1:npw0)) = CONJG( ks_wfcs(1:npw,hw,isv) - &
                        ( 0.D0, 1.D0 ) * ks_wfcs(1:npw0,hw+1,isv) )
                ELSE
-                  psic(nls(1:npw0))  = ks_wfcs(1:npw0,hw,isv)
-                  psic(nlsm(1:npw0)) = CONJG( ks_wfcs(1:npw0,hw,isv) )
+                  psic(dffts%nl(1:npw0))  = ks_wfcs(1:npw0,hw,isv)
+                  psic(dffts%nlm(1:npw0)) = CONJG( ks_wfcs(1:npw0,hw,isv) )
                END IF
                   
                CALL invfft ('Wave', psic, dffts)
                tmpreal1(1:dfftp%nnr)=dble(psic(1:dfftp%nnr))
                if(doublegrid) then
-                  call interpolate(tmpreal_s(:,hw-(jjs-1)*n_set),tmpreal1,1)
+                  call fft_interpolate(dffts,tmpreal1, dfftp, tmpreal_s(:,hw-(jjs-1)*n_set)) ! interpolate smooth -> dense
                else
                   tmpreal_s(:,hw-(jjs-1)*n_set)=tmpreal1(:)
                endif
                if ( hw < min(jjs*n_set,nbnd_s)) then
                   tmpreal1(1:dfftp%nnr)=aimag(psic(1:dfftp%nnr))
                   if(doublegrid) then
-                     call interpolate(tmpreal_s(:,hw-(jjs-1)*n_set+1),tmpreal1,1)
+                     call fft_interpolate(dffts,tmpreal1, dfftp, tmpreal_s(:,hw-(jjs-1)*n_set+1)) ! interp. smooth -> dense
                   else
                      tmpreal_s(:,hw-(jjs-1)*n_set+1)=tmpreal1(:)
                   endif
@@ -196,13 +195,13 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
 !NOT_TO_BE_INCLUDED_START
                   do ks=1,nbnd_s,1
                      psic(:)=(0.d0,0.d0)
-                     psic(nls(1:npw0))  = ks_wfcs(1:npw0,ks,isv)
-                     psic(nlsm(1:npw0)) = CONJG( ks_wfcs(1:npw0,ks,isv) )
+                     psic(dffts%nl(1:npw0))  = ks_wfcs(1:npw0,ks,isv)
+                     psic(dffts%nlm(1:npw0)) = CONJG( ks_wfcs(1:npw0,ks,isv) )
                      CALL invfft ('Wave', psic, dffts)
                      prod_c(1:dfftp%nnr)=dcmplx(dble(psic(1:dfftp%nnr))*tmpreal_v(1:dfftp%nnr,iv-(iiv-1)*n_set)&
                           &  ,0.d0)
-                     CALL fwfft ('Dense', prod_c, dfftp)
-                     prod_g2(1:ngm,ks)=prod_c(nl(1:ngm))
+                     CALL fwfft ('Rho', prod_c, dfftp)
+                     prod_g2(1:ngm,ks)=prod_c(dfftp%nl(1:ngm))
                   enddo
 !NOT_TO_BE_INCLUDED_END
                endif
@@ -214,9 +213,9 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
                      ! (iv,js, prod_r(:),1,becpr(:,iv),becpr(:,js))
 
                   prod_c(:)=dcmplx(prod_r(:),0.d0)
-                  CALL fwfft ('Dense', prod_c, dfftp)
+                  CALL fwfft ('Rho', prod_c, dfftp)
                      !go to g_space
-                  prod_g(1:ngm)=prod_c(nl(1:ngm))
+                  prod_g(1:ngm)=prod_c(dfftp%nl(1:ngm))
                   !calculated exchange
                   exc=0.d0
                   do ig=1,ngm
@@ -302,7 +301,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
    deallocate(fac)
    deallocate(prod_c,prod_g,prod_g2)
    deallocate(prod_r)
-   if(okvan) deallocate(becpr)
+   ! if(okvan) deallocate(becpr)
    if(l_whole_s) then
 !NOT_TO_BE_INCLUDED_START
       deallocate(e_x_off)
@@ -322,13 +321,14 @@ subroutine addus_charge(r_ij,becp_iw,becp_jw)
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE gvect,                ONLY : ngm, nl, nlm, gg, g, eigts1, eigts2, &
+  USE cell_base,            ONLY : tpiba
+  USE gvect,                ONLY : ngm, gg, g, eigts1, eigts2, &
                                    eigts3, mill
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho
   USE uspp,                 ONLY : okvan, nkb
   USE uspp_param,           ONLY : lmaxq, upf, nh
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE control_flags ,       ONLY : gamma_only
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
@@ -371,7 +371,7 @@ subroutine addus_charge(r_ij,becp_iw,becp_jw)
   aux (:,:) = (0.d0, 0.d0)
   call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
   do ig = 1, ngm
-     qmod (ig) = sqrt (gg (ig) )
+     qmod (ig) = sqrt (gg (ig) ) * tpiba
   enddo
   
 !found index correspondence
@@ -441,9 +441,9 @@ subroutine addus_charge(r_ij,becp_iw,becp_jw)
   !
   do is = 1, nspin!SPIN TO BE IMPLEMENTED YET
      psic(:) = (0.d0, 0.d0)
-     psic( nl(:) ) = aux(:,is)
-     if (gamma_only) psic( nlm(:) ) = CONJG(aux(:,is))
-     CALL invfft ('Dense', psic, dfftp)
+     psic( dfftp%nl(:) ) = aux(:,is)
+     if (gamma_only) psic( dfftp%nlm(:) ) = CONJG(aux(:,is))
+     CALL invfft ('Rho', psic, dfftp)
      r_ij(:)=r_ij(:)+psic(:)
   enddo
   deallocate (aux)

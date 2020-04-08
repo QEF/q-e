@@ -8,7 +8,7 @@
 !---------------------------------------------------------------------
 subroutine set_drhoc (q,drc)
   !---------------------------------------------------------------------
-  ! calculate the fourier trasform of the core charge for all pseudo
+  ! calculate the fourier transform of the core charge for all pseudo
   ! without structure factor and put it in drc, at q point
   ! used to calculate derivatives of the core charge
   !

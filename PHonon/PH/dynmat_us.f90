@@ -22,26 +22,28 @@ SUBROUTINE dynmat_us()
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE buffers,              ONLY : get_buffer
-  USE gvect,                ONLY : g, ngm, nl, igtongl
+  USE gvect,                ONLY : g, ngm, igtongl
   USE wvfct,                ONLY : npwx, nbnd, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
   USE vlocal,               ONLY : vloc
   USE klist,                ONLY : xk, ngk, igk_k
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE cell_base,            ONLY : omega, tpiba2
   USE uspp_param,           ONLY : nh, nhm
-  USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda
+  USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb
   USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
                                    deallocate_bec_type, beccopy
   USE modes,                ONLY : u
   USE dynmat,               ONLY : dyn
   USE phus,                 ONLY : alphap
-  USE units_ph,             ONLY : iuwfc, lrwfc
+  USE units_lr,             ONLY : iuwfc, lrwfc
   USE io_global,            ONLY : stdout
   USE mp_pools,             ONLY : my_pool_id, inter_pool_comm
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
+  USE Coul_cut_2D,          ONLY : do_cutoff_2D 
+  USE Coul_cut_2D_ph,       ONLY : cutoff_dynmat0 
 
   USE lrus,                 ONLY : becp1
   USE qpoint,               ONLY : nksq, ikks
@@ -95,11 +97,9 @@ SUBROUTINE dynmat_us()
 
   !
   rhog (:) = (0.d0, 0.d0)
-  DO is = 1, nspin_lsda
-     rhog (:) = rhog (:) + CMPLX(rho%of_r(:, is), 0.d0,kind=DP)
-  ENDDO
+  rhog (:) = CMPLX(rho%of_r(:, 1), 0.d0,kind=DP)
 
-  CALL fwfft ('Dense', rhog, dfftp)
+  CALL fwfft ('Rho', rhog, dfftp)
   !
   ! there is a delta ss'
   !
@@ -113,14 +113,15 @@ SUBROUTINE dynmat_us()
                             g (2, ng) * tau (2, na) + &
                             g (3, ng) * tau (3, na) )
               fac = omega * vloc (igtongl (ng), ityp (na) ) * tpiba2 * &
-                   ( DBLE (rhog (nl (ng) ) ) * COS (gtau) - &
-                    AIMAG (rhog (nl (ng) ) ) * SIN (gtau) )
+                   ( DBLE (rhog (dfftp%nl (ng) ) ) * COS (gtau) - &
+                    AIMAG (rhog (dfftp%nl (ng) ) ) * SIN (gtau) )
               dynwrk (na_icart, na_jcart) = dynwrk (na_icart, na_jcart) - &
                    fac * g (icart, ng) * g (jcart, ng)
            ENDDO
         ENDDO
      ENDDO
   ENDDO
+  IF (do_cutoff_2D) call cutoff_dynmat0(dynwrk, rhog)  
 
   CALL mp_sum (dynwrk, intra_bgrp_comm)
   !

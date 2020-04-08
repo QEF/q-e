@@ -11,7 +11,7 @@ MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules $(MOD_FLAG)../LAXlib \
           $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../FFTXlib $(MOD_FLAG)../LR_Modules 
 
 #location of needed libraries
-LIBOBJS= ../iotk/src/libiotk.a ../clib/clib.a ../UtilXlib/libutil.a 
+LIBOBJS= ../iotk/src/libiotk.a ../clib/clib.a ../UtilXlib/libutil.a ../KS_Solvers/DENSE/libdense.a ../dft-d3/libdftd3qe.a ../KS_Solvers/PPCG/libppcg.a ../KS_Solvers/ParO/libparo.a $(QELIBS)
 
 ALLCURRENTSOBJS = \
 hartree_mod.o\
@@ -31,7 +31,12 @@ routine_zero.o\
 init_reciprocal_parts_tab.o\
 allocate_zero.o \
 deallocate_zero.o \
-aris_functionals.o 
+aris_functionals.o
+
+TEST_CPV_TRAJ_OBJ= \
+traj_object.o \
+cpv_traj.o \
+cpv_traj_test.o
 
 
 
@@ -43,9 +48,14 @@ TLDEPS= bindir mods libs pw ph cp
 
 all : tldeps all_currents.x
 
+cpv-traj-test : cpv-traj-test.x
+
+cpv-traj-test.x : $(TEST_CPV_TRAJ_OBJ)
+	$(LD) $(LDFLAGS) -o $@ $(TEST_CPV_TRAJ_OBJ) $(QEMODS)
+
 all_currents.x : all_currents.o lib_all_currents.a $(ALLCURRENTSOBJS) $(PWOBJS) $(QEMODS) 
 	$(LD) $(LDFLAGS) -o $@ \
-		all_currents.o lib_all_currents.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		all_currents.o lib_all_currents.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(QEMODS) $(LIBOBJS)
 	- ( cd ../bin ; ln -fs ../all_currents/$@ . )
 
 # ( cd ../../bin ; ln -fs ../GWW/pw4gww/$@ . )
@@ -61,5 +71,9 @@ clean :
 	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i *.L lib_all_currents.a
 
 maroni-sync:
-	( cd .. ; rsync -mrvt --include="*/" --include="all_currents/Makefile" --include="all_currents/make.depend" --include="*.f90" --exclude="*" . maroni:/marconi_work/Sis19_baroni/qe-thermalcurrents2/)
+	( cd .. ; rsync -mrvt --include="*/" --include="all_currents/Makefile" --include="all_currents/make.depend" --include="*.f90" --exclude="*" . maroni:/marconi_work/Sis19_baroni/qe-thermalcurrents2/ )
+
+mugon-sync:
+	( cd .. ; rsync -mrvt --include="*/" --include="all_currents/Makefile" --include="all_currents/make.depend" --include="*.f90" --exclude="*" . mugon:/scratch/rbertoss/qe-thermalcurrents2/ )
+
 include make.depend

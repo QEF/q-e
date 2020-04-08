@@ -11,12 +11,11 @@ SUBROUTINE stop_ph( flag )
   !
   ! ... Synchronize processes before stopping.
   !
-  USE kinds, ONLY : DP
-  USE mp_global, ONLY : mp_global_end
-  USE mp_images, ONLY : nimage
-  USE ph_restart,      ONLY : destroy_status_run
-  USE save_ph,         ONLY : clean_input_variables
-  USE environment,        ONLY : environment_end
+  USE kinds,      ONLY : DP
+  USE mp_global,  ONLY : mp_global_end
+  USE ph_restart, ONLY : destroy_status_run
+  USE save_ph,    ONLY : clean_input_variables
+  USE environment,ONLY : environment_end
   !
   IMPLICIT NONE
   !
@@ -47,13 +46,11 @@ SUBROUTINE stop_ph( flag )
 END SUBROUTINE stop_ph
 
 SUBROUTINE stop_smoothly_ph(flag)
-IMPLICIT NONE
-LOGICAL, INTENT(IN) :: flag
-
-CALL collect_grid_files()
-
-CALL close_phq(.FALSE.)
-
-CALL stop_ph(flag)
+  IMPLICIT NONE
+  LOGICAL, INTENT(IN) :: flag
+  
+  CALL collect_grid_files()
+  CALL close_phq(.FALSE.)
+  CALL stop_ph(flag)
 
 END SUBROUTINE stop_smoothly_ph

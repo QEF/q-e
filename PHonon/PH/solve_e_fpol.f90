@@ -25,14 +25,14 @@ subroutine solve_e_fpol ( iw )
   USE io_files,              ONLY : prefix, diropn
   USE buffers,               ONLY : get_buffer, save_buffer
   USE check_stop,            ONLY : check_stop_now
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,  ONLY : evc
   USE cell_base,             ONLY : tpiba2
   USE klist,                 ONLY : ltetra, lgauss, nkstot, wk, xk, ngk, igk_k
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
   USE fft_base,              ONLY : dffts, dfftp
-  USE fft_interfaces,        ONLY : fwfft, invfft
+  USE fft_interfaces,        ONLY : fwfft, invfft, fft_interpolate
   USE gvect,                 ONLY : g
-  USE gvecs,                 ONLY : doublegrid, nls
+  USE gvecs,                 ONLY : doublegrid
   USE becmod,                ONLY : becp, calbec
   USE wvfct,                 ONLY : npwx, nbnd, g2kin, et
   USE uspp,                  ONLY : okvan, vkb
@@ -42,8 +42,8 @@ subroutine solve_e_fpol ( iw )
                                     rec_code, flmixdpot
   USE output,                ONLY : fildrho
   USE qpoint,                ONLY : nksq
-  USE units_ph,              ONLY : lrdwf, iudwf, lrwfc, iuwfc, iudrho, &
-                                    lrdrho
+  USE units_ph,              ONLY : lrdwf, iudwf, iudrho, lrdrho
+  USE units_lr,              ONLY : iuwfc, lrwfc
   USE mp_pools,              ONLY : inter_pool_comm
   USE mp_bands,              ONLY : intra_bgrp_comm
   USE mp,                    ONLY : mp_sum
@@ -120,7 +120,7 @@ subroutine solve_e_fpol ( iw )
      !if (doublegrid) then
      !   do is=1,nspin
      !      do ipol=1,3
-     !         call cinterpolate (dvscfin(1,is,ipol), dvscfins(1,is,ipol), -1)
+     !         call fft_interpolate (dfftp, dvscfin(:,is,ipol), dffts, dvscfins(:,is,ipol))
      !      enddo
      !   enddo
      !endif
@@ -185,7 +185,7 @@ subroutine solve_e_fpol ( iw )
               do ibnd = 1, nbnd_occ (ik)
                  aux1(:) = (0.d0, 0.d0)
                  do ig = 1, npw
-                    aux1 (nls(igk_k(ig,ik)))=evc(ig,ibnd)
+                    aux1 (dffts%nl(igk_k(ig,ik)))=evc(ig,ibnd)
                  enddo
                  CALL invfft ('Wave', aux1, dffts)
                  do ir = 1, dffts%nnr
@@ -193,7 +193,7 @@ subroutine solve_e_fpol ( iw )
                  enddo
                  CALL fwfft ('Wave', aux1, dffts)
                  do ig = 1, npwq
-                    dvpsi(ig,ibnd)=dvpsi(ig,ibnd)+aux1(nls(igk_k(ig,ik)))
+                    dvpsi(ig,ibnd)=dvpsi(ig,ibnd)+aux1(dffts%nl(igk_k(ig,ik)))
                  enddo
               enddo
               !
@@ -298,7 +298,7 @@ subroutine solve_e_fpol ( iw )
      if (doublegrid) then
         do is=1,nspin
            do ipol=1,3
-              call cinterpolate (dvscfout(1,is,ipol), dvscfout(1,is,ipol), 1)
+              call fft_interpolate (dffts, dvscfout(:,is,ipol), dfftp, dvscfout(:,is,ipol))
            enddo
         enddo
      endif
@@ -327,7 +327,7 @@ subroutine solve_e_fpol ( iw )
      if (doublegrid) then
         do is=1,nspin
            do ipol = 1, 3
-              call cinterpolate (dvscfin(1,is,ipol),dvscfins(1,is,ipol),-1)
+              call fft_interpolate (dfftp,dvscfin(:,is,ipol),dffts,dvscfins(:,is,ipol))
            enddo
         enddo
      endif

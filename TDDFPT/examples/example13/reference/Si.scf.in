@@ -1,0 +1,24 @@
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='Si'
+    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/pseudo/'
+    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/'
+ /
+ &system
+    ibrav = 2,
+    celldm(1) = 10.26,
+    nat = 2,
+    ntyp = 1,
+    ecutwfc = 16.0
+ /
+ &electrons
+    conv_thr =  1.0d-10
+ /
+ATOMIC_SPECIES
+Si  28.08  Si.pz-vbc.UPF
+ATOMIC_POSITIONS {alat}
+Si 0.00 0.00 0.00
+Si 0.25 0.25 0.25
+K_POINTS {automatic}
+3 3 3 1 1 1

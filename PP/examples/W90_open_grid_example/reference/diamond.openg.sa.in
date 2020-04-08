@@ -1,0 +1,4 @@
+&inputpp 
+   outdir = '/home/paulatto/espresso/tempdir/'
+   prefix = 'di'
+/

@@ -29,13 +29,14 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
   USE wvfct,                 ONLY : nbnd, npwx
   USE gvecw,                 ONLY : gcutw
   USE qpoint,                ONLY : nksq, ikks, ikqs
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,  ONLY : evc
   USE uspp_param,            ONLY : nhm 
   USE uspp,                  ONLY : okvan, vkb
   USE mp_global,             ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,                    ONLY : mp_sum
   USE io_files,              ONLY : iunwfc, nwordwfc
   USE buffers,               ONLY : get_buffer
+  USE fft_interfaces,        ONLY : fft_interpolate
   !
   IMPLICIT NONE
   !
@@ -91,7 +92,7 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
   ! to a thicker mesh (if doublegrid=.true.)
   ! drhoscfh -> drhoscf
   !
-  CALL cinterpolate(drhoscf, drhoscfh, 1)
+  CALL fft_interpolate(dffts, drhoscfh, dfftp, drhoscf)
   !
   IF (okvan) THEN
      !

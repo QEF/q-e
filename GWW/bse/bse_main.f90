@@ -9,7 +9,7 @@ USE wvfct,     ONLY : nbnd, et, npwx
 USE gvecw,              ONLY : ecutwfc
 USE gvecs,              ONLY : doublegrid
 use pwcom
-USE wavefunctions_module, ONLY : evc
+USE wavefunctions, ONLY : evc
 use mp, ONLY: mp_bcast
 USE mp_world, ONLY : world_comm
 USE fft_base,             ONLY : dfftp
@@ -229,7 +229,6 @@ ENDIF
   call summary()  
   call print_bseinfo()
 
-  CALL hinit0()
   CALL set_vrs(vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
 
   if(l_verbose) write(stdout,*) 'To check, we print the KS eigenvalues:'

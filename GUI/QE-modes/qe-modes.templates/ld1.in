@@ -1,0 +1,34 @@
+&INPUT
+   title =''
+   
+   !! either zed or atom
+   zed   =   ! atomic number
+   !atom =   ! atomic symbol
+   
+   rel = 1   ! allowed values: 0, 1, 2
+
+   config  = '',
+   iswitch =    ! allowed values: 1, 2, 3, 4
+   dft     = 'PBE'
+/
+
+&INPUTP
+   lpaw = 
+   pseudotype =    ! allowed values: 1, 2, 3
+   file_pseudopw = ''
+   author = '',
+   
+   lloc  = 
+   rcloc =
+   which_augfun =     ! allowed values: 'PSQ'; for PAW: 'BESSEL', 'GAUSS' , 'BG'
+   rmatch_augfun_nc = ! .true. | .false.
+   nlcc =             ! .true. | .false.
+   new_core_ps =      ! .true. | .false.
+   rcore = 
+   tm =               ! .true. | .false.
+ /
+nwfs  
+ nls(1)    nns(1)    lls(1)  	ocs(1)     ener(1)     rcut(1)     rcutus(1)  	 [ jjs(1) ]
+ nls(2)    nns(2)    lls(2)  	ocs(2)     ener(2)     rcut(2)     rcutus(2)  	 [ jjs(2) ]
+ . . .
+ nls(nwfs) nns(nwfs) lls(nwfs)  ocs(nwfs)  ener(nwfs)  rcut(nwfs)  rcutus(nwfs)	 [ jjs(nwfs) ]

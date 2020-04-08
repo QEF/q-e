@@ -1,9 +1,6 @@
 subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   !-----------------------------------------------------------------------
   !
-  use iotk_module
-
-
   use kinds,          ONLY : DP 
   use pwcom  
   use cell_base,      ONLY : tpiba2, bg
@@ -16,8 +13,8 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 !  use char,           ONLY : sname
 ! occhio sname is in symme which is now outside pwcom
   use  uspp,          ONLY : nkb, vkb
-  use wavefunctions_module,  ONLY : evc
-  use io_files,       ONLY : nd_nmbr, prefix, iunwfc, nwordwfc, iunsat, nwordatwfc
+  use wavefunctions,  ONLY : evc
+  use io_files,       ONLY : prefix, iunwfc, nwordwfc, iunsat, nwordatwfc
   use io_files,       ONLY : pseudo_dir, psfile
   use io_global,      ONLY : ionode, stdout
   USE ions_base,      ONLY : atm, nat, ityp, tau, nsp
@@ -55,7 +52,6 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   real(DP) :: wfc_scal 
   logical :: twf0, twfm
-  character(iotk_attlenx) :: attr
   complex(DP), allocatable :: sevc (:,:)
 
   call start_clock('read_export')
@@ -231,9 +227,6 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
        ALLOCATE( sevc(npwx,nbnd), STAT=ierr )
        IF (ierr/=0) CALL errore( ' read_export ',' Unable to allocate SEVC ', ABS(ierr) )
-
-       CALL init_us_1
-       CALL init_at_1
 
        CALL allocate_bec_type (nkb,nbnd,becp)
 

@@ -1,5 +1,5 @@
 ! 
-! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,45 +14,39 @@ SUBROUTINE wfcinit()
   ! ... from superposition of atomic wavefunctions and/or random wavefunctions.
   ! ... It also open needed files or memory buffers
   !
-  USE io_global,            ONLY : stdout
+  USE io_global,            ONLY : stdout, ionode, ionode_id
   USE basis,                ONLY : natomwfc, starting_wfc
   USE bp,                   ONLY : lelfield
   USE klist,                ONLY : xk, nks, ngk, igk_k
-  USE control_flags,        ONLY : io_level, lscf, twfcollect 
+  USE control_flags,        ONLY : io_level, lscf
   USE fixed_occ,            ONLY : one_atom_occupations
-  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
+  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU, lda_plus_u_kind
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
-                                   diropn, tmp_dir, prefix
-  USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
+                                   diropn, xmlfile, restart_dir
+  USE buffers,              ONLY : open_buffer, close_buffer, get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions,        ONLY : evc
   USE wvfct,                ONLY : nbnd, npwx, current_k
   USE wannier_new,          ONLY : use_wannier
-#if defined (__OLDXML)
-  USE pw_restart,           ONLY : pw_readfile
-#else
-  USE pw_restart_new,       ONLY : pw_readschema_file, read_collected_to_evc 
-#endif
-  USE mp_bands,             ONLY : nbgrp, root_bgrp,inter_bgrp_comm
-  USE mp,                   ONLY : mp_bcast
-  USE qes_types_module,            ONLY : output_type
-  USE qes_libs_module,             ONLY : qes_reset_output
+  USE pw_restart_new,       ONLY : read_collected_wfc
+  USE mp,                   ONLY : mp_bcast, mp_sum
+  USE mp_images,            ONLY : intra_image_comm
+  USE qexsd_module,         ONLY : qexsd_readschema
+  USE qes_types_module,     ONLY : output_type
+  USE qes_libs_module,      ONLY : qes_reset
   !
   IMPLICIT NONE
   !
-  INTEGER :: ik, ierr
-  LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file = .FALSE.
-  CHARACTER (LEN=256)                     :: dirname
-#if !defined (__OLDXML) 
-  TYPE ( output_type )                    :: output_obj
-#endif 
-  !
+  INTEGER :: ik, ierr, exst_sum 
+  LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file
+  CHARACTER (LEN=256)  :: dirname
+  TYPE ( output_type ) :: output_obj
   !
   !
   CALL start_clock( 'wfcinit' )
   !
-  ! ... Orthogonalized atomic functions needed for LDA+U and other cases
+  ! ... Orthogonalized atomic functions needed for DFT+U and other cases
   !
   IF ( use_wannier .OR. one_atom_occupations ) CALL orthoatwfc ( use_wannier )
   IF ( lda_plus_u ) CALL orthoUwfc()
@@ -62,81 +56,89 @@ SUBROUTINE wfcinit()
   !
   CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst_file )
   !
-  ! ... now the various possible wavefunction initializations
-  ! ... first a check: is "tmp_dir"/"prefix".wfc found on disk?
-  !
-  IF ( TRIM(starting_wfc) == 'file' .AND. .NOT. exst_file) THEN
+  IF ( TRIM(starting_wfc) == 'file') THEN
+     ! Check whether all processors have found a file when opening a buffer
+     IF (exst_file) THEN
+        exst_sum = 0
+     ELSE
+        exst_sum = 1
+     END IF
+     CALL mp_sum (exst_sum, intra_image_comm)
      !
-     ! ... "tmp_dir"/"prefix".wfc not found on disk: try to read
-     ! ... wavefunctions in "collected" format from "prefix".save/, 
-     ! ... rewrite them (in pw_readfile) using the internal format
+     ! Check whether wavefunctions are collected (info in xml file)
+     dirname = restart_dir ( ) 
+     IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
+     CALL mp_bcast(ierr, ionode_id, intra_image_comm)
+     IF ( ierr <= 0 ) THEN
+        ! xml file is valid
+        IF (ionode) twfcollect_file = output_obj%band_structure%wf_collected   
+        CALL mp_bcast(twfcollect_file, ionode_id, intra_image_comm)
+        CALL qes_reset  ( output_obj )
+     ELSE
+        ! xml file not found or not valid
+        twfcollect_file = .FALSE.
+     END IF
      !
-     ierr = 1
-#if defined(__OLDXML)
-     CALL pw_readfile( 'wave', ierr )
-#else
-     CALL pw_readschema_file(IERR = ierr, RESTART_OUTPUT = output_obj )
-     IF ( ierr == 0 ) THEN 
-        twfcollect_file = output_obj%band_structure%wf_collected   
-        dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/' 
-        IF ( twfcollect_file ) CALL read_collected_to_evc(dirname )
-     END IF 
-     CALL qes_reset_output ( output_obj ) 
-#endif
-     IF ( ierr > 0 ) THEN
-        WRITE( stdout, '(5X,"Cannot read wfc : file not found")' )
+     IF ( twfcollect_file ) THEN
+        !
+        DO ik = 1, nks
+           CALL read_collected_wfc ( dirname, ik, evc )
+           CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
+        END DO
+        !
+     ELSE IF ( exst_sum /= 0 ) THEN
+        !
+        WRITE( stdout, '(5X,"Cannot read wfcs: file not found")' )
+        IF (exst_file) THEN
+           CALL close_buffer(iunwfc, 'delete') 
+           CALL open_buffer(iunwfc,'wfc', nwordwfc, io_level, exst_mem, exst_file)
+        END IF
         starting_wfc = 'atomic+random'
+        !
+     ELSE
+        !
+        ! ... wavefunctions are read from file (or buffer) not here but
+        !  ...in routine c_bands. If however there is a single k-point,
+        ! ... c_bands doesn't read wavefunctions, so we read them here
+        ! ... (directly from file to avoid a useless buffer allocation)
+        !
+        IF ( nks == 1 ) THEN
+           INQUIRE (unit = iunwfc, opened = opnd_file)
+           IF ( .NOT.opnd_file ) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
+           CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, -1 )
+           IF ( .NOT.opnd_file ) CLOSE ( UNIT=iunwfc, STATUS='keep' )
+        END IF
      END IF
-     !
-     ! ... workaround: with k-point parallelization and 1 k-point per pool,
-     ! ... pw_readfile does not leave evc properly initialized on all pools
-     !
-     IF ( nks == 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, 1 )
-     !
-  ELSE IF ( TRIM(starting_wfc) == 'file' .AND. exst_file) THEN
-     !
-     ! ... wavefunctions are read from file (or buffer) in routine 
-     ! ... c_bands, but not if there is a single k-point. In such
-     ! ... a case, we read wavefunctions (directly from file in 
-     ! ... order to avoid a useless buffer allocation) here
-     !
-     IF ( nks == 1 ) THEN
-         inquire (unit = iunwfc, opened = opnd_file)
-         if (.not.opnd_file) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
-         CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, -1 )
-         if(.not.opnd_file) CLOSE ( UNIT=iunwfc, STATUS='keep' )
-     END IF
-     !
   END IF
   !
   ! ... state what will happen
   !
   IF ( TRIM(starting_wfc) == 'file' ) THEN
      !
-     WRITE( stdout, '(5X,"Starting wfc from file")' )
+     WRITE( stdout, '(5X,"Starting wfcs from file")' )
      !
   ELSE IF ( starting_wfc == 'atomic' ) THEN
      !
      IF ( natomwfc >= nbnd ) THEN
-        WRITE( stdout, '(5X,"Starting wfc are ",I4," atomic wfcs")' ) natomwfc
+        WRITE( stdout, '(5X,"Starting wfcs are ",I4," atomic wfcs")' ) natomwfc
      ELSE
-        WRITE( stdout, '(5X,"Starting wfc are ",I4," atomic + ", &
-             &           I4," random wfc")' ) natomwfc, nbnd-natomwfc
+        WRITE( stdout, '(5X,"Starting wfcs are ",I4," atomic + ", &
+             &           I4," random wfcs")' ) natomwfc, nbnd-natomwfc
      END IF
      !
   ELSE IF ( TRIM(starting_wfc) == 'atomic+random' .AND. natomwfc > 0) THEN
      !
      IF ( natomwfc >= nbnd ) THEN
-        WRITE( stdout, '(5X,"Starting wfc are ",I4," randomized atomic wfcs")')&
+        WRITE( stdout, '(5X,"Starting wfcs are ",I4," randomized atomic wfcs")')&
              natomwfc
      ELSE
-        WRITE( stdout, '(5X,"Starting wfc are ",I4," randomized atomic wfcs + "&
-             &          ,I4," random wfc")' ) natomwfc, nbnd-natomwfc
+        WRITE( stdout, '(5X,"Starting wfcs are ",I4," randomized atomic wfcs + "&
+             &          ,I4," random wfcs")' ) natomwfc, nbnd-natomwfc
      END IF
      !
   ELSE
      !
-     WRITE( stdout, '(5X,"Starting wfc are random")' )
+     WRITE( stdout, '(5X,"Starting wfcs are random")' )
      !
   END IF
   !
@@ -151,7 +153,7 @@ SUBROUTINE wfcinit()
      !
   END IF
   !
-  ! ... calculate and write all starting wavefunctions to file
+  ! ... calculate and write all starting wavefunctions to buffer
   !
   DO ik = 1, nks
      !
@@ -165,10 +167,14 @@ SUBROUTINE wfcinit()
      !
      IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !
-     ! ... Needed for LDA+U
+     ! ... Needed for DFT+U
      !
      IF ( nks > 1 .AND. lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
         CALL get_buffer( wfcU, nwordwfcU, iunhub, ik )
+     !
+     ! DFT+U+V: calculate the phase factor at a given k point
+     !
+     IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) CALL phase_factor(ik)
      !
      ! ... calculate starting wavefunctions (calls Hpsi)
      !
@@ -204,10 +210,12 @@ SUBROUTINE init_wfc ( ik )
   USE wvfct,                ONLY : nbnd, npwx, et
   USE uspp,                 ONLY : nkb, okvan
   USE noncollin_module,     ONLY : npol
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE random_numbers,       ONLY : randy
-  USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm, my_bgrp_id
-  USE mp,                   ONLY : mp_sum
+  USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm, &
+                                   nbgrp, root_bgrp_id
+  USE mp,                   ONLY : mp_bcast
+  USE funct,                ONLY : dft_is_hybrid, stop_exx
   !
   IMPLICIT NONE
   !
@@ -304,9 +312,9 @@ SUBROUTINE init_wfc ( ik )
   
   ! when band parallelization is active, the first band group distributes
   ! the wfcs to the others making sure all bgrp have the same starting wfc
-
-  if (my_bgrp_id > 0) wfcatom(:,:,:) = (0.d0,0.d0)
-  call mp_sum(wfcatom,inter_bgrp_comm)
+  ! FIXME: maybe this should be done once evc are computed, not here?
+  !
+  IF( nbgrp > 1 ) CALL mp_bcast( wfcatom, root_bgrp_id, inter_bgrp_comm )
   !
   ! ... Diagonalize the Hamiltonian on the basis of atomic wfcs
   !
@@ -326,6 +334,7 @@ SUBROUTINE init_wfc ( ik )
   !
   ! ... subspace diagonalization (calls Hpsi)
   !
+  IF ( dft_is_hybrid()  ) CALL stop_exx() 
   CALL start_clock( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
   CALL rotate_wfc ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc, etatom )
   CALL stop_clock( 'wfcinit:wfcrot' ); !write(*,*) 'stop wfcinit:wfcrot' ; FLUSH(6)

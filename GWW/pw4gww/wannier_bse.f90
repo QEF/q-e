@@ -25,7 +25,7 @@ subroutine wannier_bse(ispin,w_wfcs,o_mat)
    USE mp_world, ONLY : mpime, nproc, world_comm
    USE mp,             ONLY : mp_sum
    USE gvect
-   USE wavefunctions_module, ONLY :  psic
+   USE wavefunctions, ONLY :  psic
    USE constants, ONLY : e2, fpi
    USE cell_base, ONLY: tpiba,tpiba2,omega
    USE mp_wave, ONLY : mergewf,splitwf

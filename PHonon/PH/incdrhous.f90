@@ -19,7 +19,6 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE cell_base, ONLY : omega
   USE fft_base,  ONLY : dffts
   USE fft_interfaces, ONLY: invfft
-  USE gvecs,   ONLY : nls
   USE noncollin_module, ONLY : npol
   USE uspp,      ONLY : nkb, qq_nt
   USE uspp_param,ONLY : nhm, nh
@@ -120,7 +119,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
      enddo
      dpsir(:) = (0.d0, 0.d0)
      do ig = 1, npwq
-        dpsir(nls(igk_k(ig,ikq))) = dpsi (ig, ibnd)
+        dpsir(dffts%nl(igk_k(ig,ikq))) = dpsi (ig, ibnd)
      enddo
      CALL invfft ('Wave', dpsir, dffts)
      do ir = 1, dffts%nnr

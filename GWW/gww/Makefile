@@ -3,13 +3,9 @@
 #
 include ../../make.inc
 
-# location of include files
-IFLAGS=
-
 # location of needed modules
-MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../KS_Solvers/CG $(MOD_FLAG)../../KS_Solvers/Davidson \
-          $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../../UtilXlib $(MOD_FLAG)../pw4gww $(MOD_FLAG).
+MODFLAGS= $(BASEMOD_FLAGS) \
+          $(MOD_FLAG)../pw4gww
 
 GWWOBJS = \
 basic_structures.o \
@@ -48,22 +44,23 @@ vcprim.o
 
 
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
-         ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/Davidson/libdavid.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+         ../../KS_Solvers/libks_solvers.a \
+         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 
 LIBMIN= ../minpack/minpacklib.a
 
-TLDEPS=bindir mods libs libiotk 
+TLDEPS=phlibs
 
 all : tldeps gww.x gww_fit.x libgww.a
 
 gww.x : gww.o $(GWWOBJS) $(LIBOBJS) $(QEMODS)  $(LIBMIN)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		gww.o $(GWWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(LIBS)
+		gww.o $(GWWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(QELIBS)
 	- ( cd ../../bin; ln -fs ../GWW/gww/$@ . )
 
 gww_fit.x : gww_fit.o $(GWWOBJS) $(LIBOBJS) $(QEMODS) $(LIBMIN)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-	gww_fit.o $(GWWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(LIBS)
+	gww_fit.o $(GWWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(QELIBS)
 	- ( cd ../../bin; ln -fs ../GWW/gww/$@ . )
 
 libgww.a : $(GWWOBJS)

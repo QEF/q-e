@@ -1,0 +1,27 @@
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='Ag'
+    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/pseudo/'
+    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/'
+ /
+ &system
+    ibrav = 2,
+    celldm(1) = 7.72,
+    nat = 1,
+    ntyp = 1,
+    ecutwfc = 40.0,
+    ecutrho = 320.0,
+    occupations = 'smearing',
+    smearing = 'mv',
+    degauss = 0.02
+ /
+ &electrons
+    conv_thr =  1.0d-10
+ /
+ATOMIC_SPECIES
+Ag  107.8682  Ag.pbe-dn-rrkjus_psl.0.1.UPF
+ATOMIC_POSITIONS {alat}
+Ag  0.0000000  0.0000000  0.0000000
+K_POINTS {automatic}
+4 4 4 1 1 1

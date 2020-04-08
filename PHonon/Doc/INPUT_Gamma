@@ -17,6 +17,7 @@ feature has not been tested since a long time, so it may not actually work.
 Note that:
 - the code reads a file produced by pw.x with Gamma point only and
   Gamma-point special tricks (half of the plane waves and so on)
+- Only nonmagnetic insulators, with nbnd=nelec/2, are implemented
 - Ultrasoft PP's are not implemented
 - the symmetry is used in a different way wrt all other PWscf codes:
   only inequivalent atoms are displaced. This has an historical reason: 
@@ -36,7 +37,7 @@ Input variables as in the phonon code:
   outdir
   prefix
   fildyn
-  epsil 
+  epsil    Note that effective charges are also computed if epsil=.true.,
   trans
   recover
   tr2_ph   Note that Conjugate-Gradient algorithm stops when 

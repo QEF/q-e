@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,18 +13,21 @@ SUBROUTINE close_phq( flag )
   ! ... Called at the end of the run with flag=.TRUE. (removes 'recover')
   ! ... or during execution with flag=.FALSE. (does not remove 'recover')
   !
-  USE control_flags, ONLY : twfcollect
   USE paw_variables, ONLY : okpaw
   USE io_global,     ONLY : ionode, stdout
   USE buffers,       ONLY : close_buffer
   USE uspp,          ONLY : okvan
-  USE units_ph,      ONLY : iuwfc, iudwf, iubar, iudrhous, iuebar, iudrho, &
-                            iudvscf, iucom, iudvkb3, iuint3paw, iudyn
+  USE units_ph,      ONLY : iudwf, iubar, iudrhous, iuebar, iudrho, &
+                            iudvscf, iucom, iudvkb3, iuint3paw, iudyn, &
+                            iundnsscf
+  USE units_lr,      ONLY : iuwfc, iuatwfc, iuatswfc
   USE control_ph,    ONLY : zue, epsil, only_wfc
   USE recover_mod,   ONLY : clean_recover
   USE output,        ONLY : fildrho, fildvscf
   USE ramanm,        ONLY : lraman, elop, iuchf, iud2w, iuba2
   USE el_phon,       ONLY : elph_mat,iunwfcwann
+  USE ldaU,          ONLY : lda_plus_u
+  USE dvscf_interpolate, ONLY : ldvscf_interpolate, dvscf_interpol_close
   !
   IMPLICIT NONE
   !
@@ -33,15 +36,7 @@ SUBROUTINE close_phq( flag )
   !
   IF (only_wfc) RETURN
   !
-  IF ( twfcollect ) THEN
-     !
-     CALL close_buffer(iuwfc,'delete')
-     !
-  ELSE
-     !
-     CALL close_buffer(iuwfc,'keep')
-     !
-  END IF
+  CALL close_buffer(iuwfc,'keep')
   !
   IF (flag) THEN
      CALL close_buffer(iudwf,'delete')
@@ -107,6 +102,19 @@ SUBROUTINE close_phq( flag )
      INQUIRE( UNIT=iudyn, OPENED=opnd )
      IF (opnd) CLOSE( UNIT = iudyn, STATUS = 'KEEP' )
   END IF
+  !
+  ! DFPT+U
+  IF (lda_plus_u) THEN
+     CALL close_buffer(iuatwfc,'delete')
+     CALL close_buffer(iuatswfc,'delete')
+     CLOSE( UNIT = iundnsscf, STATUS = 'KEEP' )
+  ENDIF
+  !
+  ! dVscf Fourier interpolation
+  !
+  IF (flag .AND. ldvscf_interpolate) THEN
+    CALL dvscf_interpol_close()
+  ENDIF
   !
   RETURN
   !

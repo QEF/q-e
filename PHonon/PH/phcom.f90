@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -70,6 +70,12 @@ MODULE dynmat
   REAL (DP), ALLOCATABLE :: &
        w2(:)                  ! 3 * nat)
   ! omega^2
+  !
+  ! DFPT+U
+  COMPLEX(DP), ALLOCATABLE :: dyn_hub_bare(:,:) ! (3*nat,*3nat)
+  COMPLEX(DP), ALLOCATABLE :: dyn_hub_scf(:,:)  ! (3*nat,*3nat)
+  ! the bare part of the Hubbard dynamical matrix
+  ! the scf part of the  Hubbard dynamical matrix
   !
 END MODULE dynmat
 !
@@ -204,13 +210,12 @@ MODULE control_ph
              current_iq,    & ! current q point
              start_q, last_q  ! initial q in the list, last_q in the list
   REAL(DP) :: tr2_ph  ! threshold for phonon calculation
-  REAL(DP) :: alpha_mix(maxter), & ! the mixing parameter
-              time_now             ! CPU time up to now
+  REAL(DP) :: alpha_mix(maxter)  ! the mixing parameter
   CHARACTER(LEN=10)  :: where_rec='no_recover'! where the ph run recovered
   CHARACTER(LEN=12) :: electron_phonon
   CHARACTER(LEN=256) :: flmixdpot, tmp_dir_ph, tmp_dir_phq
-  INTEGER :: rec_code=-1000,    &! code for recover
-             rec_code_read=-1000 ! code for recover. Not changed during the run
+  INTEGER :: rec_code=-1000,    & ! code for recover
+             rec_code_read=-1000  ! code for recover. Not changed during the run
   LOGICAL :: lgamma_gamma,&! if .TRUE. this is a q=0 computation with k=0 only
              convt,       &! if .TRUE. the phonon has converged
              epsil,       &! if .TRUE. computes dielec. const and eff. charges
@@ -227,6 +232,7 @@ MODULE control_ph
                                         ! to decide what each image does.
              always_run=.FALSE., & ! if .TRUE. the code do not stop after
                                    ! doing partial representations
+             !always_run=.TRUE., & ! only for testing purposes
              recover,     &! if .TRUE. the run restarts
              low_directory_check=.FALSE., & ! if .TRUE. search on the phsave 
                            ! directory only the representations requested 
@@ -250,8 +256,10 @@ MODULE control_ph
              lqdir=.FALSE.,        & ! if true each q writes in its directory
              qplot=.FALSE.,        & ! if true the q are read from input
              xmldyn=.FALSE.,   & ! if true the dynamical matrix is in xml form
-             all_done, &      ! if .TRUE. all representations have been done
-             newgrid=.FALSE.  ! if .TRUE. use new k-point grid nk1,nk2,nk3
+             all_done      ! if .TRUE. all representations have been done
+  !
+  LOGICAL :: newgrid=.FALSE.  ! if .TRUE. use new k-point grid nk1,nk2,nk3
+  INTEGER :: nk1,nk2,nk3, k1,k2,k3  ! new Monkhorst-Pack k-point grid
   !
 END MODULE control_ph
 !
@@ -290,8 +298,6 @@ MODULE units_ph
   SAVE
   !
   INTEGER :: &
-       iuwfc,     & ! iunit with the wavefunctions
-       lrwfc,     & ! the length of wavefunction record
        iuvkb,     & ! unit with vkb
        iubar,     & ! unit with the part DV_{bare}
        lrbar,     & ! length of the DV_{bare}
@@ -311,10 +317,9 @@ MODULE units_ph
        lrcom,     & ! the length  of the bare commutator in US case
        iudvkb3, lrdvkb3, &
        iuint3paw, & ! the unit of the int3_paw coefficients
-       lint3paw     ! the length of the int3_paw coefficients
-  ! the unit with the products
-  ! the length of the products
-
+       lint3paw,  & ! the length of the int3_paw coefficients
+       iundnsscf    ! the unit of dnsscf, for DFPT+U  
+  
   logical, ALLOCATABLE :: this_dvkb3_is_on_file(:), &
                           this_pcxpsi_is_on_file(:,:)
   !
@@ -373,8 +378,78 @@ MODULE grid_irr_iq
                              ! calculated
 END MODULE grid_irr_iq
 
-!
-!
+MODULE ldaU_ph
+  !
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : ntypx
+  !
+  SAVE
+  !
+  ! atomic wfc's at k
+  COMPLEX(DP), ALLOCATABLE, TARGET :: wfcatomk(:,:),      & ! atomic wfc at k
+                                      swfcatomk(:,:),     & ! S * atomic wfc at k
+                                      dwfcatomk(:,:,:),   & ! derivative of atomic wfc at k
+                                      sdwfcatomk(:,:)       ! S * derivative of atomic wfc at k
+  ! atomic wfc's at k+q
+  COMPLEX(DP), POINTER ::             wfcatomkpq(:,:),    & ! atomic wfc at k+q
+                                      swfcatomkpq(:,:),   & ! S * atomic wfc at k+q
+                                      dwfcatomkpq(:,:,:), & ! derivative of atomic wfc at k+q
+                                      sdwfcatomkpq(:,:)     ! S * derivative of atomic wfc at k+q
+  ! 
+  COMPLEX(DP), ALLOCATABLE, TARGET :: dvkb(:,:,:)    ! derivative of beta funtions at k  
+  COMPLEX(DP), POINTER ::             vkbkpq(:,:), & ! beta funtions at k+q
+                                      dvkbkpq(:,:,:) ! derivative of beta funtions at k+q
+  !
+  ! Various arrays for the response occupation matrix
+  COMPLEX(DP), ALLOCATABLE :: dnsbare(:,:,:,:,:,:),         & ! bare derivative of ns
+                              dnsbare_all_modes(:,:,:,:,:), & ! bare derivative of ns for all modes
+                              dnsscf(:,:,:,:,:),            & ! SCF  derivative of ns
+                              dnsscf_all_modes(:,:,:,:,:),  & ! SCF  derivative of ns for all modes
+                              dnsorth(:,:,:,:,:),           & ! valence component of dns
+                              dnsorth_cart(:,:,:,:,:,:)       ! same as above, but in cart. coordinates
+  !
+  COMPLEX (DP), ALLOCATABLE :: proj1(:,:),    &
+                               proj2(:,:),    &
+                               projpb(:,:),   &
+                               projpdb(:,:,:)
+  ! Arrays to store scalar products between vectors
+  ! projpb  = <psi|beta>
+  ! projpdb = <psi|dbeta>
+  !
+  !
+  REAL(DP) :: effU(ntypx)
+  ! effective Hubbard parameter: effU = Hubbard_U - Hubbard_J0
+  LOGICAL  :: read_dns_bare
+  ! if .true. read the first bare derivative of ns from file
+  CHARACTER(LEN=4) :: d2ns_type
+  ! type of approximation to compute the second bare derivative 
+  ! of atomic occupation matrix ns
+  !
+END MODULE ldaU_ph
+
+MODULE nc_mag_aux
+  USE kinds,      ONLY : DP
+  SAVE
+  
+  COMPLEX (DP), ALLOCATABLE ::  &
+                               deeq_nc_save(:,:,:,:,:), &
+                               int1_nc_save(:,:,:,:,:,:), &
+                               int3_save(:, :, :, :, :, :)
+END MODULE nc_mag_aux
+
+!MODULE qpoint_aux
+!  USE kinds,      ONLY : DP
+!  USE becmod,     ONLY : bec_type
+!  SAVE
+  
+!  INTEGER, ALLOCATABLE :: ikmks(:)    ! index of -k for magnetic calculations
+
+!  INTEGER, ALLOCATABLE :: ikmkmqs(:)  ! index of -k-q for magnetic calculations
+
+!  TYPE(bec_type), ALLOCATABLE :: becpt(:), alphapt(:,:)
+
+!END MODULE qpoint_aux
+
 MODULE phcom
   USE modes
   USE dynmat
@@ -390,4 +465,7 @@ MODULE phcom
   USE gamma_gamma
   USE disp
   USE grid_irr_iq
+  USE ldaU_ph
+  USE nc_mag_aux
+!  USE qpoint_aux
 END MODULE phcom

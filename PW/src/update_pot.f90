@@ -9,19 +9,23 @@
 #define ONE  (1.D0,0.D0)
 #define ZERO (0.D0,0.D0)
 !
+!----------------------------------------------------------------------------
 MODULE extrapolation
+  !---------------------------------------------------------------------------
+  !! Wfc and rho extrapolation.
   !
-  ! ... wfc and rho extrapolation
+  USE kinds, ONLY: DP
   !
-  USE kinds, ONLY: dp
-  !
-  REAL(dp) :: &
-    alpha0,           &! the mixing parameters for the extrapolation
-    beta0              ! of the starting potential
-  INTEGER :: &
-    history,          &! number of old steps available for potential updating
-    pot_order = 0,    &! type of potential updating ( see update_pot )
-    wfc_order = 0      ! type of wavefunctions updating ( see update_pot )
+  REAL(DP) :: alpha0
+  !! the mixing parameters for the extrapolation
+  REAL(DP) :: beta0
+  !! of the starting potential
+  INTEGER :: history
+  !! number of old steps available for potential updating
+  INTEGER :: pot_order = 0
+  !! type of potential updating ( see \(\texttt{update_pot}\) )
+  INTEGER :: wfc_order = 0
+  !! type of wavefunctions updating ( see \(\texttt{update_pot}\) )
   !
   PRIVATE
   PUBLIC :: pot_order, wfc_order
@@ -30,14 +34,13 @@ MODULE extrapolation
   CONTAINS
 !
 !----------------------------------------------------------------------------
-SUBROUTINE update_file ( )
+SUBROUTINE update_file()
   !----------------------------------------------------------------------------
-  !
-  ! ... Reads, updates and rewrites the file containing atomic positions at
-  ! ... two previous steps, used by potential and wavefunction extrapolation
-  ! ... Requires: number of atoms nat, current atomic positions tau
-  ! ... Produces: length of history and tau at current and two previous steps
-  ! ...           written to file $prefix.update
+  !! Reads, updates and rewrites the file containing atomic positions at
+  !! two previous steps, used by potential and wavefunction extrapolation.  
+  !! Requires the number of atoms (nat), current atomic positions (tau).  
+  !! Produces the length of history and tau at current and two previous steps
+  !! written to file $prefix.update.
   !
   USE io_global, ONLY : ionode
   USE io_files,  ONLY : iunupdate, seqopn
@@ -87,12 +90,12 @@ SUBROUTINE update_file ( )
 END SUBROUTINE update_file
 !
 !----------------------------------------------------------------------------
-SUBROUTINE update_neb ( )
+SUBROUTINE update_neb( )
   !----------------------------------------------------------------------------
+  !! Potential and wavefunction extrapolation for NEB.  
+  !! Prepares file with previous steps for usage by \(\texttt{update_pot}\).
   !
-  ! ... Potential and wavefunction extrapolation for NEB
-  ! ... Prepares file with previous steps for usage by update_pot
-  ! ... Must be merged soon with update_file for MD in PWscf
+  ! ... Must be merged soon with update_file for MD in PWscf.
   !
   USE io_global, ONLY : ionode, ionode_id
   USE io_files,  ONLY : iunupdate, seqopn
@@ -185,59 +188,49 @@ SUBROUTINE update_neb ( )
    !
    DEALLOCATE ( tauold )
    !
- END SUBROUTINE update_neb
+END SUBROUTINE update_neb
+ 
+!
 !----------------------------------------------------------------------------
 SUBROUTINE update_pot()
   !----------------------------------------------------------------------------
+  !! Update the potential by extrapolating the charge density and extrapolates
+  !! the wave-functions.
   !
-  ! ... update the potential extrapolating the charge density and extrapolates
-  ! ... the wave-functions
+  !! Charge density extrapolation:
   !
-  ! ... charge density extrapolation :
+  !! * pot_order=0 \(\rightarrow\) copy the old potential (nothing is done);
+  !! * pot_order=1 \(\rightarrow\) subtract old atomic charge density and sum
+  !!                               the new if dynamics is done the routine 
+  !!                               extrapolates also the difference between
+  !!                               the scf charge and the atomic one;
+  !! * pot_order=2 \(\rightarrow\) first order extrapolation:
+  !!                               \[ \rho(t+dt) = 
+  !!                                  2\ \rho(t)-\rho(t-dt); \]
+  !! * pot_order=3 \(\rightarrow\) second order extrapolation:
+  !!                               \[ \rho(t+dt) = \rho(t) + \alpha_0\ (\rho(t)
+  !!                                  -\rho(t-dt)) + \beta_0\ (\rho(t-dt)-
+  !!                                   \rho(t-2 dt)). \]
   !
-  ! ... pot_order = 0   copy the old potential (nothing is done)
+  !! Wave-function extrapolation:
   !
-  ! ... pot_order = 1   subtract old atomic charge density and sum the new
-  ! ...                 if dynamics is done the routine extrapolates also
-  ! ...                 the difference between the the scf charge and the
-  ! ...                 atomic one,
+  !! * wfc_order = 0 \(\rightarrow\) nothing is done;
+  !! * wfc_order = 2 \(\rightarrow\) first order extrapolation:
+  !!                                 \[ |\psi(t+dt)\rangle = 2\ |\psi(t)\rangle-
+  !!                                 |\psi(t-dt)\rangle; \]
+  !! * wfc_order = 3 \(\rightarrow\) second order extrapolation:
+  !!                                 \[ |\psi(t+dt)\rangle = |\psi(t)\rangle
+  !!                               + \alpha_0\ ( |\psi(t)\rangle - |\psi(t-dt)\rangle)
+  !!                               + \beta_0\ ( |\psi(t-dt)\rangle - |\psi(t-2 dt)\rangle). \]
   !
-  ! ... pot_order = 2   first order extrapolation :
+  !! The \(\alpha_0\) and \(\beta_0\) parameters are calculated in \(\texttt{find_alpha_and_beta}\)
+  !! so that \(|\tau'-\tau(t+dt)|\) is minimum. \(\tau'\) and \(\tau(t+dt)\) are respectively
+  !! the atomic positions at time t+dt and the extrapolated one:
+  !! \[ \tau(t+dt) = \tau(t) + \alpha_0\ ( \tau(t)    - \tau(t-dt)   )
+  !!                         + \beta_0\ ( \tau(t-dt) - \tau(t-2 dt) ). \]
   !
-  ! ...                   rho(t+dt) = 2*rho(t) - rho(t-dt)
-  !
-  ! ... pot_order = 3   second order extrapolation :
-  !
-  ! ...                   rho(t+dt) = rho(t) +
-  ! ...                               + alpha0*( rho(t) - rho(t-dt) )
-  ! ...                               + beta0* ( rho(t-dt) - rho(t-2*dt) )
-  !
-  !
-  ! ... wave-functions extrapolation :
-  !
-  ! ... wfc_order = 0   nothing is done
-  !
-  ! ... wfc_order = 2   first order extrapolation :
-  !
-  ! ...                   |psi(t+dt)> = 2*|psi(t)> - |psi(t-dt)>
-  !
-  ! ... wfc_order = 3   second order extrapolation :
-  !
-  ! ...                   |psi(t+dt)> = |psi(t)> +
-  ! ...                               + alpha0*( |psi(t)> - |psi(t-dt)> )
-  ! ...                               + beta0* ( |psi(t-dt)> - |psi(t-2*dt)> )
-  !
-  !
-  ! ...  alpha0 and beta0 are calculated in "find_alpha_and_beta()" so that
-  ! ...  |tau'-tau(t+dt)| is minimum;
-  ! ...  tau' and tau(t+dt) are respectively the atomic positions at time
-  ! ...  t+dt and the extrapolated one:
-  !
-  ! ...  tau(t+dt) = tau(t) + alpha0*( tau(t) - tau(t-dt) )
-  ! ...                     + beta0*( tau(t-dt) -tau(t-2*dt) )
-  !
-  !
-  USE io_files,      ONLY : prefix, iunupdate, tmp_dir, wfc_dir, nd_nmbr, seqopn
+  USE io_files,      ONLY : iunupdate, nd_nmbr, seqopn, restart_dir
+  USE io_files,      ONLY : wfc_dir, prefix
   USE io_global,     ONLY : ionode, ionode_id
   USE cell_base,     ONLY : bg
   USE ions_base,     ONLY : nat, tau, nsp, ityp
@@ -347,15 +340,16 @@ SUBROUTINE update_pot()
   !
   IF ( pot_order > 1 .AND. ionode ) THEN
      !
-     dirname =  TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
-     INQUIRE( FILE = TRIM( dirname ) // 'charge-density.old.dat', &
+     ! FIXME: won't work for hdf5
+     dirname =  restart_dir () 
+     INQUIRE( FILE = TRIM( dirname ) // 'charge-old.dat', &
           EXIST = exists )
      !
      IF ( exists ) THEN
         !
         rho_extr = MIN( 2, history, pot_order )
         !
-        INQUIRE( FILE = TRIM( dirname ) //'charge-density.old2.dat', &
+        INQUIRE( FILE = TRIM( dirname ) //'charge-old2.dat', &
              EXIST = exists )
         !
         IF ( exists ) rho_extr = MIN( 3, history, pot_order )
@@ -377,36 +371,45 @@ END SUBROUTINE update_pot
 !----------------------------------------------------------------------------
 SUBROUTINE extrapolate_charge( dirname, rho_extr )
   !----------------------------------------------------------------------------
+  !! Charge density extrapolation.
   !
-  USE constants,            ONLY : eps32
   USE io_global,            ONLY : stdout
   USE cell_base,            ONLY : omega, bg
   USE ions_base,            ONLY : nat, tau, nsp, ityp
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
-  USE gvect,                ONLY : ngm, g, gg, gstart, nl, eigts1, eigts2, eigts3
+  USE control_flags,        ONLY : gamma_only
+  USE gvect,                ONLY : ngm, g, gg, gstart, eigts1, eigts2, eigts3, &
+                                   mill, ig_l2g
   USE lsda_mod,             ONLY : lsda, nspin
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE ldaU,                 ONLY : eth
-  USE wavefunctions_module, ONLY : psic
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw
   USE extfield,             ONLY : etotefield
   USE cellmd,               ONLY : lmovecell, omega_old
   USE vlocal,               ONLY : strf
   USE noncollin_module,     ONLY : noncolin
   USE klist,                ONLY : nelec
-  USE xml_io_base,          ONLY : write_rho, read_rho
   USE paw_variables,        ONLY : okpaw, ddd_paw
   USE paw_onecenter,        ONLY : PAW_potential
+  USE mp_pools,             ONLY : my_pool_id
+  USE mp_bands,             ONLY : my_bgrp_id, root_bgrp_id, root_bgrp, &
+                                   intra_bgrp_comm, inter_bgrp_comm, nbgrp
+  USE mp,                   ONLY : mp_bcast
+  USE io_base,              ONLY : write_rhog, read_rhog
+  USE fft_rho,              ONLY : rho_g2r, rho_r2g
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: rho_extr
   CHARACTER(LEN=*), INTENT(IN) :: dirname
   !
-  REAL(DP), ALLOCATABLE :: work(:,:), work1(:,:)
+  ! ... local variables
+  !
+  COMPLEX (DP), ALLOCATABLE :: work(:,:), work1(:,:)
     ! work  is the difference between rho and atomic rho at time t
     ! work1 is the same thing at time t-dt
+  REAL(DP) :: dum(3) = [0_dp, 0_dp, 0_dp]
   REAL(DP) :: charge
   !
   INTEGER :: is
@@ -418,7 +421,7 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      IF ( lmovecell ) CALL scale_h()
      !
      CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
-                      dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
+          dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
      !
      ! ... new charge density from extrapolated wfcs
      !
@@ -439,42 +442,23 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      !
   ELSE
      ! 
-     ALLOCATE( work( dfftp%nnr, 1 ) )
-     !
-     work = 0.D0
+     ALLOCATE( work( dfftp%ngm, 1 ) )
      !
      ! ... in the lsda case the magnetization will follow rigidly the density
      ! ... keeping fixed the value of zeta = mag / rho_tot.
      ! ... zeta is set here and put in rho%of_r(:,2) while rho%of_r(:,1) 
-     ! ... will contain the total valence charge
+     ! ... contains the total valence charge
+     ! FIXME: half extrapolation is done in G-space, half in real space
      !
-     IF ( lsda ) CALL rho2zeta( rho%of_r, rho_core, dfftp%nnr, nspin, 1 )
-     !
-     IF ( noncolin ) THEN
-        !
-        DO is = 2, nspin
-           !
-           WHERE( rho%of_r(:,1) > eps32 )
-              !
-              rho%of_r(:,is) = rho%of_r(:,is) / rho%of_r(:,1)
-              !
-           ELSEWHERE
-              !
-              rho%of_r(:,is) = 0.D0
-              !
-           END WHERE
-           !
-        END DO
-        !
-     END IF
+     IF ( lsda .or. noncolin ) CALL rho2zeta( rho%of_r, rho_core, dfftp%nnr, nspin, 1 )
      !
      ! ... subtract the old atomic charge density
      !
-     CALL atomic_rho( work, 1 )
+     CALL atomic_rho_g( work, 1 )
      !
-     rho%of_r(:,1) = rho%of_r(:,1) - work(:,1)
+     rho%of_g(:,1) = rho%of_g(:,1) - work(:,1)
      !
-     IF ( lmovecell ) rho%of_r(:,1) = rho%of_r(:,1) * omega_old
+     IF ( lmovecell ) rho%of_g(:,1) = rho%of_g(:,1) * omega_old
      !
      ! ... extrapolate the difference between the atomic charge and
      ! ... the self-consistent one
@@ -490,7 +474,14 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
         !
         ! ... no need to save old charge density if no extrapolation is done
         !
-        IF ( pot_order > 1 ) CALL write_rho( dirname, rho%of_r, 1, 'old' )
+        IF ( pot_order > 1 ) THEN
+           ! Write G-space density
+           IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+                CALL write_rhog( TRIM(dirname) // "charge-old", &
+                root_bgrp, intra_bgrp_comm, dum, dum, dum, & 
+                gamma_only, mill, ig_l2g, rho%of_g(:,1:1) )
+           !
+        END IF
         !
      ELSE IF ( rho_extr == 2 ) THEN
         !
@@ -499,100 +490,99 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
         !
         ! ...   oldrho  ->  work
         !
-        CALL read_rho( dirname, work, 1, 'old' )
+        ! Read G-space density
+        IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+             CALL read_rhog( TRIM(dirname) // "charge-old", &
+             root_bgrp, intra_bgrp_comm, ig_l2g, 1, work(:,1:1) )
+        IF( nbgrp > 1 ) CALL mp_bcast( work, root_bgrp_id, inter_bgrp_comm )
         !
         ! ...   rho%of_r   ->  oldrho
         ! ...   work  ->  oldrho2
+        ! FIXME: rename files instead of rewriting them
         !
-        CALL write_rho( dirname, rho%of_r,  1, 'old' )
-        CALL write_rho( dirname, work, 1, 'old2' )
+        IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+             CALL write_rhog( TRIM(dirname) // "charge-old", &
+             root_bgrp, intra_bgrp_comm, dum, dum, dum, & 
+             gamma_only, mill, ig_l2g, rho%of_g(:,1:1) )
+        IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+             CALL write_rhog( TRIM(dirname) // "charge-old2", &
+             root_bgrp, intra_bgrp_comm, dum, dum, dum, & 
+             gamma_only, mill, ig_l2g, work(:,1:1) )
         !
         ! ... extrapolation
         !
-        rho%of_r(:,1) = 2.D0*rho%of_r(:,1) - work(:,1)
+        rho%of_g(:,1) = 2.D0*rho%of_g(:,1) - work(:,1)
         !
      ELSE IF ( rho_extr == 3 ) THEN
         !
         WRITE( UNIT = stdout, &
                FMT = '(5X,"second order charge density extrapolation")' )
         !
-        ALLOCATE( work1( dfftp%nnr, 1 ) )
+        ALLOCATE( work1( dfftp%ngm, 1 ) )
         !
         work1 = 0.D0
         !
         ! ...   oldrho2  ->  work1
         ! ...   oldrho   ->  work
         !
-        CALL read_rho( dirname, work1, 1, 'old2' )
-        CALL read_rho( dirname, work,  1, 'old' )
+        IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+             CALL read_rhog( TRIM(dirname) // "charge-old2", &
+             root_bgrp, intra_bgrp_comm, ig_l2g, 1, work1(:,1:1) )
+        IF( nbgrp > 1 ) CALL mp_bcast( work1,root_bgrp_id, inter_bgrp_comm )
+        IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+             CALL read_rhog( TRIM(dirname) // "charge-old", &
+             root_bgrp, intra_bgrp_comm, ig_l2g, 1, work(:,1:1) )
+        IF( nbgrp > 1 ) CALL mp_bcast( work, root_bgrp_id, inter_bgrp_comm )
         !
         ! ...   rho%of_r   ->  oldrho
         ! ...   work  ->  oldrho2
         !
-        CALL write_rho( dirname, rho%of_r,  1, 'old' )
-        CALL write_rho( dirname, work, 1, 'old2' )
+        IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+             CALL write_rhog( TRIM(dirname) // "charge-old", &
+             root_bgrp, intra_bgrp_comm, dum, dum, dum, & 
+             gamma_only, mill, ig_l2g, rho%of_g(:,1:1) )
+        IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+             CALL write_rhog( TRIM(dirname) // "charge-old2", &
+             root_bgrp, intra_bgrp_comm, dum, dum, dum, & 
+             gamma_only, mill, ig_l2g, work(:,1:1) )
         !
-        rho%of_r(:,1) = rho%of_r(:,1) + alpha0*( rho%of_r(:,1) - work(:,1) ) + &
+        rho%of_g(:,1) = rho%of_g(:,1) + alpha0*( rho%of_g(:,1) - work(:,1) ) + &
                                beta0*( work(:,1) - work1(:,1) )
         !
         DEALLOCATE( work1 )
         !
      END IF
      !
-     IF ( lmovecell ) rho%of_r(:,1) = rho%of_r(:,1) / omega
+     IF ( lmovecell ) rho%of_g(:,1) = rho%of_g(:,1) / omega
      !
      ! ... calculate structure factors for the new positions
      !
      IF ( lmovecell ) CALL scale_h()
      !
      CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
-                      dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
+          dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
      !
      CALL set_rhoc()
      !
      ! ... add atomic charges in the new positions
      !
-     CALL atomic_rho( work, 1 )
+     CALL atomic_rho_g( work, 1 )
      !
-     rho%of_r(:,1) = rho%of_r(:,1) + work(:,1)
+     rho%of_g(:,1) = rho%of_g(:,1) + work(:,1)
+     !
+     ! ... bring extrapolated rho to real space
+     !
+     CALL rho_g2r (dfftp, rho%of_g(:,1:1), rho%of_r(:,1:1))
      !
      ! ... reset up and down charge densities in the LSDA case
      !
-     IF ( lsda ) CALL rho2zeta( rho%of_r, rho_core, dfftp%nnr, nspin, -1 )
-     !
-     IF ( noncolin ) THEN
-        !
-        DO is = 2, nspin
-           !
-           WHERE( rho%of_r(:,1) > eps32 )
-           !
-              rho%of_r(:,is) = rho%of_r(:,is)*rho%of_r(:,1)
-              !
-           ELSEWHERE
-              !
-              rho%of_r(:,is) = 0.D0
-              !
-           END WHERE
-           !
-        END DO
-        !
-     END IF
+     IF ( lsda .or. noncolin ) CALL rho2zeta( rho%of_r, rho_core, dfftp%nnr, nspin, -1 )
      !
      DEALLOCATE( work )
      !
   END IF
   !
-  ! ... bring extrapolated rho to G-space
-  !
-  DO is = 1, nspin
-     !
-     psic(:) = rho%of_r(:,is)
-     !
-     CALL fwfft ('Dense', psic, dfftp)
-     !
-     rho%of_g(:,is) = psic(nl(:))
-     !
-  END DO
+  CALL rho_r2g (dfftp, rho%of_r, rho%of_g )
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
@@ -616,10 +606,9 @@ END SUBROUTINE extrapolate_charge
 !-----------------------------------------------------------------------
 SUBROUTINE extrapolate_wfcs( wfc_extr )
   !-----------------------------------------------------------------------
-  !
-  ! ... This routine extrapolate the wfc's after a "parallel alignment"
-  ! ... of the basis of the t-dt and t time steps, according to a recipe
-  ! ... by Mead, Rev. Mod. Phys., vol 64, pag. 51 (1992), eqs. 3.20-3.29
+  !! This routine extrapolate the wfc's after a "parallel alignment"
+  !! of the basis of the \(t-dt\) and \(t\) time steps, according to a recipe
+  !! by Mead, Rev. Mod. Phys., vol 64, pag. 51 (1992), Eqs. (3.20) and (3.29).
   !
   USE io_global,            ONLY : stdout
   USE klist,                ONLY : nks, ngk, xk, igk_k
@@ -630,17 +619,21 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
                                    iunoldwfc2, diropn
   USE buffers,              ONLY : get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb, okvan
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions,        ONLY : evc
   USE noncollin_module,     ONLY : noncolin, npol
   USE control_flags,        ONLY : gamma_only
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp, calbec
   USE mp_images,            ONLY : intra_image_comm
   USE mp,                   ONLY : mp_barrier
+  USE mp_bands,             ONLY : use_bgrp_in_hpsi
+
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: wfc_extr
+  !
+  ! ... local variables
   !
   INTEGER :: npw, ik, zero_ew, lwork, info
     ! do-loop variables
@@ -660,8 +653,12 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
     ! workspace for ZGESVD
     ! real version of sp_m
   LOGICAL :: exst
+  LOGICAL :: save_flag
   !
   CALL mp_barrier( intra_image_comm ) ! debug
+
+  save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
+
   !
   IF ( wfc_extr == 1 ) THEN
      !
@@ -737,7 +734,6 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
            !
            IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
            CALL calbec( npw, vkb, evc, becp )
-           !
            CALL s_psi ( npwx, npw, nbnd, evc, aux )
            !
         ELSE
@@ -837,6 +833,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
   END IF
   !
+  use_bgrp_in_hpsi = save_flag
+
   CALL mp_barrier( intra_image_comm ) ! debug
   !
   RETURN
@@ -848,21 +846,25 @@ END SUBROUTINE extrapolate_wfcs
 !----------------------------------------------------------------------------
 SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
   !----------------------------------------------------------------------------
-  !
-  ! ... This routine finds the best coefficients alpha0 and beta0 so that
-  !
-  ! ...    | tau(t+dt) - tau' | is minimum, where
-  !
-  ! ...    tau' = tau(t) + alpha0 * ( tau(t) - tau(t-dt) )
-  ! ...                  + beta0 * ( tau(t-dt) -tau(t-2*dt) )
+  !! This routine finds the best coefficients \(\alpha_0\) and \(\beta_0\) so
+  !! that \(|\tau(t+dt)-\tau'|\) is minimum, with:
+  !! \[ \tau' = \tau(t) + \alpha_0\cdot( \tau(t)    - \tau(t-dt)   )
+  !!                    + \beta_0 \cdot( \tau(t-dt) - \tau(t-2dt) ). \]
   !
   USE constants,     ONLY : eps16
   USE io_global,     ONLY : stdout
   !
   IMPLICIT NONE
   !
-  INTEGER  :: nat, na, ipol
-  REAL(DP) :: alpha0, beta0, tau(3,nat), tauold(3,nat,3)
+  INTEGER  :: nat
+  REAL(DP) :: tau(3,nat)
+  REAL(DP) :: tauold(3,nat,3)
+  REAL(DP) :: alpha0
+  REAL(DP) :: beta0
+  !
+  ! ... local variables
+  !
+  INTEGER :: na, ipol
   REAL(DP) :: a11, a12, a21, a22, b1, b2, c, det
   !
   !

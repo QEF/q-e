@@ -7,18 +7,50 @@
 !  
 !
 !----------------------------------------------------------------------------
-SUBROUTINE print_ks_energies()
+SUBROUTINE print_ks_energies_nonscf ( ef_scf, ef_scf_up, ef_scf_dw )
+  !----------------------------------------------------------------------------
+  !
+  ! ... printout of Kohn-Sham eigenvalues, Fermi energies, HOMO, LUMO if available
+  ! ... The input Fermi energy from scf is passed as argument and printed as well
+  !
+  USE kinds,                ONLY : dp
+  USE control_flags,        ONLY : lbands
+  IMPLICIT NONE
+  !
+  REAL(dp), INTENT(in) :: ef_scf, ef_scf_up, ef_scf_dw
+  !
+  CALL print_ks_only ( )
+  !
+  IF ( .NOT. lbands) CALL print_ks_ef_homolumo ( .true., ef_scf, ef_scf_up, ef_scf_dw )
+  !
+END SUBROUTINE print_ks_energies_nonscf
+!
+!----------------------------------------------------------------------------
+SUBROUTINE print_ks_energies( )
+  !----------------------------------------------------------------------------
+  !
+  ! ... printout of Kohn-Sham eigenvalues, Fermi energies, HOMO, LUMO if available
+  !
+  USE kinds,                ONLY : dp
+  USE control_flags,        ONLY : lbands
+  !
+  CALL print_ks_only ( )
+  !
+  IF ( .NOT. lbands) CALL print_ks_ef_homolumo ( .false., 0.0_dp, 0.0_dp, 0.0_dp )
+  !
+END SUBROUTINE print_ks_energies
+!
+!----------------------------------------------------------------------------
+SUBROUTINE print_ks_only( )
   !----------------------------------------------------------------------------
   !
   ! ... printout of Kohn-Sham eigenvalues
   !
-  USE kinds,                ONLY : DP
+  USE kinds,                ONLY : dp
   USE constants,            ONLY : rytoev
   USE io_global,            ONLY : stdout
-  USE klist,                ONLY : xk, ngk, nks, nkstot, wk, lgauss, ltetra, &
-                                   two_fermi_energies
-  USE fixed_occ,            ONLY : one_atom_occupations
-  USE ener,                 ONLY : ef, ef_up, ef_dw, eband 
+  USE klist,                ONLY : xk, ngk, nks, nkstot, wk
+  USE ener,                 ONLY : ef, eband 
   USE lsda_mod,             ONLY : lsda, nspin
   USE spin_orb,             ONLY : lforcet
   USE wvfct,                ONLY : nbnd, et, wg
@@ -26,7 +58,6 @@ SUBROUTINE print_ks_energies()
   USE mp_bands,             ONLY : root_bgrp, intra_bgrp_comm, inter_bgrp_comm
   USE mp,                   ONLY : mp_sum, mp_bcast
   USE mp_pools,             ONLY : inter_pool_comm 
-
   !
   IMPLICIT NONE
   !
@@ -34,8 +65,6 @@ SUBROUTINE print_ks_energies()
   !  
   INTEGER, ALLOCATABLE :: &
       ngk_g(:)       ! number of plane waves summed on all nodes
-  REAL(DP) :: &
-      ehomo, elumo   ! highest occupied and lowest unoccupied levels
   INTEGER :: &
       i,            &! counter on polarization
       ik,           &! counter on k points
@@ -103,39 +132,6 @@ SUBROUTINE print_ks_energies()
      !
   ENDIF
   !
-  ! ... print HOMO/Top of the VB and LUMO/Bottom of the CB, or E_Fermi
-  !
-  IF ( .NOT. lbands ) THEN
-     !
-     IF ( lgauss .OR. ltetra ) THEN
-        !
-        ! ... presumably a metal: print Fermi energy
-        !
-        IF ( two_fermi_energies ) THEN
-           WRITE( stdout, 9041 ) ef_up*rytoev, ef_dw*rytoev
-        ELSE
-           WRITE( stdout, 9040 ) ef*rytoev
-        END IF
-        !
-     ELSE IF ( .NOT. one_atom_occupations ) THEN
-        !
-        ! ... presumably not a metal: print HOMO (and LUMO if available)
-        !
-        CALL get_homo_lumo (ehomo, elumo)
-        !
-        IF ( elumo < 1d+6) THEN
-           WRITE( stdout, 9042 ) ehomo*rytoev, elumo*rytoev
-        ELSE
-           WRITE( stdout, 9043 ) ehomo*rytoev
-        END IF
-        !
-     END IF
-     !
-  END IF
-  !
-  FLUSH( stdout )
-  RETURN
-  !
   ! ... formats
   !
 9015 FORMAT(/' ------ SPIN UP ------------'/ )
@@ -144,13 +140,66 @@ SUBROUTINE print_ks_energies()
 9021 FORMAT(/'          k =',3F7.4,' (',I6,' PWs)   bands (ev):'/ )
 9030 FORMAT( '  ',8F9.4 )
 9032 FORMAT(/'     occupation numbers ' )
+  !
+END SUBROUTINE print_ks_only
+!
+!----------------------------------------------------------------------------
+SUBROUTINE print_ks_ef_homolumo ( print_ef_scf, ef_scf, ef_scf_up, ef_scf_dw )
+  !----------------------------------------------------------------------------
+  !
+  USE kinds,                ONLY : dp
+  USE constants,            ONLY : rytoev
+  USE io_global,            ONLY : stdout
+  USE fixed_occ,            ONLY : one_atom_occupations
+  USE klist,                ONLY : two_fermi_energies, lgauss, ltetra
+  USE ener,                 ONLY : ef, ef_up, ef_dw
+  !
+  IMPLICIT NONE
+  LOGICAL, INTENT(in) :: print_ef_scf
+  REAL(dp), INTENT(in) :: ef_scf, ef_scf_up, ef_scf_dw
+  REAL(dp) :: ehomo, elumo ! highest occupied and lowest unoccupied levels
+  !
+  ! ... print HOMO/Top of the VB and LUMO/Bottom of the CB, or E_Fermi
+  !
+  IF ( lgauss .OR. ltetra ) THEN
+     !
+     ! ... presumably a metal: print Fermi energy
+     !
+     IF ( two_fermi_energies ) THEN
+        WRITE( stdout, 9041 ) ef_up*rytoev, ef_dw*rytoev
+        IF ( print_ef_scf ) &
+             WRITE( stdout, 9051 ) ef_scf_up*rytoev, ef_scf_dw*rytoev
+     ELSE
+        WRITE( stdout, 9040 ) ef*rytoev
+        IF ( print_ef_scf ) WRITE( stdout, 9050 ) ef_scf*rytoev
+     END IF
+     !
+  ELSE IF ( .NOT. one_atom_occupations ) THEN
+     !
+     ! ... presumably not a metal: print HOMO (and LUMO if available)
+     !
+     CALL get_homo_lumo (ehomo, elumo)
+     !
+     IF ( elumo < 1d+6) THEN
+        WRITE( stdout, 9042 ) ehomo*rytoev, elumo*rytoev
+     ELSE
+        WRITE( stdout, 9043 ) ehomo*rytoev
+     END IF
+     !
+  END IF
+  !
+  FLUSH( stdout )
+  !
+  ! ... formats
+  !
 9043 FORMAT(/'     highest occupied level (ev): ',F10.4 )
 9042 FORMAT(/'     highest occupied, lowest unoccupied level (ev): ',2F10.4 )
 9041 FORMAT(/'     the spin up/dw Fermi energies are ',2F10.4,' ev' )
 9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev' )
-!
+9051 FORMAT( '     (compare with: ',2F10.4,' eV, computed in scf)' )
+9050 FORMAT( '     (compare with: ', F10.4,' eV, computed in scf)' )
   !
-END SUBROUTINE print_ks_energies
+END SUBROUTINE print_ks_ef_homolumo
 !
 !----------------------------------------------------------------------------
 SUBROUTINE get_homo_lumo ( ehomo, elumo )
@@ -171,7 +220,7 @@ SUBROUTINE get_homo_lumo ( ehomo, elumo )
   IMPLICIT NONE
   !
   REAL(dp), PARAMETER :: eps = 0.001_dp ! threshold for zero occupancy
-  REAL(DP), INTENT(OUT) :: &
+  REAL(dp), INTENT(OUT) :: &
       ehomo, elumo   ! highest occupied and lowest unoccupied levels
 
   INTEGER :: &

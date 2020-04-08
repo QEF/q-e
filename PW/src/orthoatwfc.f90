@@ -29,6 +29,7 @@ SUBROUTINE orthoUwfc
                          bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
+  USE mp_bands,         ONLY : use_bgrp_in_hpsi
   ! 
   IMPLICIT NONE
   !
@@ -37,7 +38,7 @@ SUBROUTINE orthoUwfc
        l, lm, ltot, ntot, ipol, npw
   ! ik: the k point under consideration
   ! ibnd: counter on bands
-  LOGICAL :: orthogonalize_wfc, normalize_only
+  LOGICAL :: orthogonalize_wfc, normalize_only, save_flag
   COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:)
 
   IF ( U_projection == "pseudo" ) THEN
@@ -75,6 +76,8 @@ SUBROUTINE orthoUwfc
   END IF
 
   ALLOCATE ( wfcatom(npwx*npol, natomwfc), swfcatom(npwx*npol, natomwfc) )
+  
+  save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
 
   ! Allocate the array becp = <beta|wfcatom>
   CALL allocate_bec_type (nkb,natomwfc, becp) 
@@ -92,7 +95,7 @@ SUBROUTINE orthoUwfc
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
 
      IF (orthogonalize_wfc) &
-        CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom )
+        CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
      !
      ! copy atomic wavefunctions with Hubbard U term only in wfcU
      ! save to unit iunhub
@@ -104,6 +107,8 @@ SUBROUTINE orthoUwfc
   ENDDO
   DEALLOCATE (wfcatom, swfcatom)
   CALL deallocate_bec_type ( becp )
+
+  use_bgrp_in_hpsi = save_flag
   !
   RETURN
      
@@ -162,7 +167,7 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
 
      IF (orthogonalize_wfc) &
-        CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom )
+        CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
      !
      ! write S * atomic wfc to unit iunsat
      !
@@ -177,27 +182,34 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
 END SUBROUTINE orthoatwfc
 !
 !-----------------------------------------------------------------------
-SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc )
+SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc, lflag )
   !-----------------------------------------------------------------------
   !
   ! On input : wfc (npwx*npol,m) =  \psi = a set of "m" (atomic) wavefcts
   !            swfc(npwx*npol,m) = S\psi 
   !            normalize_only    = only normalize, do not orthonormalize
-  ! On output: swfc = S^{-1/2}\psi = orthonormalized wavefunctions
-  !                                 (i.e. <swfc_i|S|swfc_j> = \delta_{ij})
-  !             wfc = currently unchanged
   !
-  USE kinds,      ONLY : DP
-  USE wvfct,      ONLY : npwx
-  USE mp_bands,   ONLY : intra_bgrp_comm
-  USE mp,         ONLY : mp_sum
+  ! This routine will compute the overlap matrix O: 
+  ! O_ij = <wfc_i|S|wfc_j> = <wfc_i|swfc_j>
+  !
+  ! On output: swfc = O^{-1/2} S\psi, i.e. S * orthonormalized wavefunctions
+  ! If lflag=.FALSE. : wfc are unchanged on output (not orthonormalized), i.e.
+  !                    wfc = \psi
+  ! If lflag=.TRUE.  : wfc are orthonormalized on output, i.e.
+  !                    wfc = O^{-1/2} \psi, <wfc_i|S|wfc_j> = \delta_{ij}
+  !
+  USE kinds,            ONLY : DP
+  USE wvfct,            ONLY : npwx
+  USE mp_bands,         ONLY : intra_bgrp_comm
+  USE mp,               ONLY : mp_sum
   USE noncollin_module, ONLY : noncolin, npol
   IMPLICIT NONE
   !
-  INTEGER, INTENT(in) :: m, npw
-  LOGICAL, INTENT(in) :: normalize_only
-  COMPLEX(dp), INTENT(IN   ) :: wfc (npwx*npol,m)
+  INTEGER, INTENT(IN) :: m, npw
+  LOGICAL, INTENT(IN) :: normalize_only
+  COMPLEX(dp), INTENT(INOUT) :: wfc (npwx*npol,m)
   COMPLEX(dp), INTENT(INOUT) :: swfc(npwx*npol,m)
+  LOGICAL, INTENT(IN) :: lflag
 
   COMPLEX(DP) :: temp 
   COMPLEX(DP) , ALLOCATABLE ::  work (:,:), overlap (:,:)
@@ -232,7 +244,7 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc )
      ENDDO
   END IF
   !
-  ! find O^-.5
+  ! find O^(-1/2)
   !
   CALL cdiagh (m, overlap, m, e, work)
   DO i = 1, m
@@ -249,7 +261,7 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc )
      ENDDO
   ENDDO
   !
-  ! trasform atomic orbitals O^-.5 psi
+  ! transform atomic orbitals O^(-1/2) S\psi
   ! FIXME: can be done in a faster way by using wfc as work space 
   !
   DO i = 1, npw
@@ -258,7 +270,7 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc )
         DO ipol=1,npol
            j = i + (ipol-1)*npwx
            CALL zgemv ('n',m,m,(1.d0,0.d0),overlap, &
-                m, swfc(j,1),npwx*npol, (0.d0,0.d0),work,1)
+                m, swfc(j,1), npwx*npol, (0.d0,0.d0),work,1)
            CALL zcopy (m,work,1,swfc(j,1),npwx*npol)
         END DO
      ELSE
@@ -267,9 +279,32 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc )
         CALL zcopy (m, work, 1, swfc (i, 1), npwx)
      END IF
   ENDDO
-
+  !
+  ! If lflag=.TRUE. transform atomic orbitals without
+  ! the ultrasoft S operator O^(-1/2) \psi
+  !
+  IF (lflag) THEN
+   DO i = 1, npw
+     work(:,1) = (0.d0,0.d0)
+     IF (noncolin) THEN
+        DO ipol=1,npol
+           j = i + (ipol-1)*npwx
+           CALL zgemv ('n',m,m,(1.d0,0.d0),overlap, &
+                m, wfc(j,1), npwx*npol, (0.d0,0.d0),work,1)
+           CALL zcopy (m,work,1,wfc(j,1),npwx*npol)
+        END DO
+     ELSE
+        CALL zgemv ('n', m, m, (1.d0, 0.d0) , overlap, &
+             m, wfc (i, 1) , npwx, (0.d0, 0.d0) , work, 1)
+        CALL zcopy (m, work, 1, wfc (i, 1), npwx)
+     END IF
+   ENDDO
+  ENDIF
+  !
   DEALLOCATE (overlap)
   DEALLOCATE (work)
   DEALLOCATE (e)
-        
+  !
+  RETURN
+  !      
 END SUBROUTINE ortho_swfc

@@ -60,7 +60,7 @@ proc ::pwscf::_settingsApply {obj} {
 	set ::pwscf::settings(PH)   $::pwscf::settings(BINDIR)/ph.x
 	set ::pwscf::settings(PP)   $::pwscf::settings(BINDIR)/pp.x
 	set ::pwscf::settings(PROJWFC) $::pwscf::settings(BINDIR)/projwfc.x
-	set ::pwscf::settings(D3)   $::pwscf::settings(BINDIR)/d3.x
+	#set ::pwscf::settings(D3)   $::pwscf::settings(BINDIR)/d3.x
 	set ::pwscf::settings(LD1)   $::pwscf::settings(BINDIR)/ld1.x
     }
 }
@@ -149,7 +149,7 @@ proc ::pwscf::_settingsModule {} {
 		    var PH -variable ::pwscf::settings(PH) -label "Executable \"ph.x\":" -widget entryfileselect
 		    var PP -variable ::pwscf::settings(PP) -label "Executable \"pp.x\":" -widget entryfileselect
 		    var PROJWFC -variable ::pwscf::settings(PROJWFC) -label "Executable \"projwfc.x\":" -widget entryfileselect
-		    var D3      -variable ::pwscf::settings(D3) -label "Executable \"d3.x\":" -widget entryfileselect
+		    #var D3      -variable ::pwscf::settings(D3) -label "Executable \"d3.x\":" -widget entryfileselect
 		    var LD1     -variable ::pwscf::settings(LD1) -label "Executable \"ld1.x\":" -widget entryfileselect
 		}
 	    }

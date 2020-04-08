@@ -4,20 +4,21 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-subroutine plugin_init_potential()
+subroutine plugin_init_potential(vltot)
 !
 ! This routine is used for initializing potentials in plugins
 ! DO NOT REMOVE THE TAGS ! ***ADDSON_NAME KIND_OF_PATCH***
 !
 USE plugin_flags
+USE kinds, ONLY : DP
 USE fft_base,  ONLY : dfftp
-USE scf,  ONLY : vltot
 !
 ! ***Environ MODULES BEGIN***
 ! ***Environ MODULES END***
 !
 implicit none
 !
+REAL(DP), INTENT(IN) :: vltot(dfftp%nnr)
 ! ***Environ VARIABLES BEGIN***
 ! ***Environ VARIABLES END***
 !

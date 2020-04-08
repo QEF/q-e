@@ -122,7 +122,6 @@ cat > SiO2.scf.in << EOF
     outdir='$TMP_DIR/',
     prefix='SiO2',
     verbosity = 'high',
-    wf_collect=.true.,
  &end
  &system
     ibrav = 4 ,
@@ -191,7 +190,6 @@ cat > SiO2.xspectra_dip_plane.in << EOF
     xiabs=1,
     x_save_file='SiO2.xspectra_dip_plane.sav',
     xerror=0.001,
-    wf_collect=.true.,
  / 
  &plot
     xnepoint=1000,
@@ -233,7 +231,6 @@ cat > SiO2.xspectra_dip_c.in << EOF
     xiabs=1,
     x_save_file='SiO2.xspectra_dip_c.sav',
     xerror=0.001,
-    wf_collect=.true.,
  /
  &plot
     xnepoint=1000,
@@ -281,7 +278,6 @@ cat > SiO2.xspectra_dip_restart_1.in << EOF
     xiabs=1,
     x_save_file='SiO2.xspectra_dip_restart_1.sav',
     xerror=0.001,
-    wf_collect=.true.,
     time_limit=10,
  /
  &plot
@@ -325,7 +321,6 @@ cat > SiO2.xspectra_dip_restart_2.in << EOF
     xiabs=1,
     x_save_file='SiO2.xspectra_dip_restart_2.sav',
     xerror=0.001,
-    wf_collect=.true.,
     restart_mode='restart',
  /
  &plot

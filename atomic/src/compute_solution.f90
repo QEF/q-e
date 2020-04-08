@@ -49,7 +49,7 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,grid,vpot,y,beta,ddd,&
   real(DP) :: &
        ddx12,      &  ! dx**2/12 used for Numerov integration
        sqlhf,      &  ! the term for angular momentum in equation
-       ze2,        &  ! possible coulomb term aroun the origin (set 0)
+       ze2,        &  ! possible coulomb term around the origin (set 0)
        b(0:3),     &  ! coefficients of taylor expansion of potential
        sum,       &! auxiliary 
        yln, xp, expn,& ! used to compute the tail of the solution
@@ -77,9 +77,9 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,grid,vpot,y,beta,ddd,&
   allocate(c(mesh), stat=ierr)
 
   ddx12=grid%dx*grid%dx/12.0_dp
-  l1=lam+1
-  nst=l1*2
-  sqlhf=(DBLE(lam)+0.5_dp)**2
+  l1 = lam+1
+  nst = l1*2
+  sqlhf = (DBLE(lam)+0.5_dp)**2
   !
   !  series developement of the potential near the origin
   !
