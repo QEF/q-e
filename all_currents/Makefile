@@ -35,9 +35,7 @@ aris_functionals.o
 
 TEST_CPV_TRAJ_OBJ= \
 traj_object.o \
-cpv_traj.o \
-cpv_traj_test.o
-
+cpv_traj.o
 
 
 QEMODS=   ../Modules/libqemod.a ../KS_Solvers/Davidson/libdavid.a ../KS_Solvers/CG/libcg.a \
@@ -48,14 +46,14 @@ TLDEPS= bindir mods libs pw ph cp
 
 all : tldeps all_currents.x
 
-cpv-traj-test : cpv-traj-test.x
+cpv-traj-test : cpv-traj-test.x cpv_traj_test.o
 
 cpv-traj-test.x : $(TEST_CPV_TRAJ_OBJ)
-	$(LD) $(LDFLAGS) -o $@ $(TEST_CPV_TRAJ_OBJ) $(QEMODS)
+	$(LD) $(LDFLAGS) -o $@ cpv_traj_test.o $(TEST_CPV_TRAJ_OBJ) $(QEMODS)
 
-all_currents.x : all_currents.o lib_all_currents.a $(ALLCURRENTSOBJS) $(PWOBJS) $(QEMODS) 
+all_currents.x : all_currents.o lib_all_currents.a $(ALLCURRENTSOBJS) $(PWOBJS) $(QEMODS)   $(TEST_CPV_TRAJ_OBJ)
 	$(LD) $(LDFLAGS) -o $@ \
-		all_currents.o lib_all_currents.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(QEMODS) $(LIBOBJS)
+		all_currents.o lib_all_currents.a  $(TEST_CPV_TRAJ_OBJ) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(QEMODS) $(LIBOBJS)
 	- ( cd ../bin ; ln -fs ../all_currents/$@ . )
 
 # ( cd ../../bin ; ln -fs ../GWW/pw4gww/$@ . )
