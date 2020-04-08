@@ -33,6 +33,11 @@ allocate_zero.o \
 deallocate_zero.o \
 aris_functionals.o
 
+TEST_CPV_TRAJ_OBJ= \
+traj_object.o \
+cpv_traj.o \
+cpv_traj_test.o
+
 
 
 QEMODS=   ../Modules/libqemod.a ../KS_Solvers/Davidson/libdavid.a ../KS_Solvers/CG/libcg.a \
@@ -42,6 +47,11 @@ PWOBJS =  ../LR_Modules/liblrmod.a  ../PHonon/PH/libph.a  ../PW/src/libpw.a ../C
 TLDEPS= bindir mods libs pw ph cp 
 
 all : tldeps all_currents.x
+
+cpv-traj-test : cpv-traj-test.x
+
+cpv-traj-test.x : $(TEST_CPV_TRAJ_OBJ)
+	$(LD) $(LDFLAGS) -o $@ $(TEST_CPV_TRAJ_OBJ) $(QEMODS)
 
 all_currents.x : all_currents.o lib_all_currents.a $(ALLCURRENTSOBJS) $(PWOBJS) $(QEMODS) 
 	$(LD) $(LDFLAGS) -o $@ \

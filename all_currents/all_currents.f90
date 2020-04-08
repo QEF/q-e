@@ -14,13 +14,13 @@ subroutine read_all_currents_namelists(iunit)
      !
      !   set default values for variables in namelist
      !
-     thermodir = './'
-     prefix_due = 'pwscf'
+     thermodir = './' ! TODO: remove
+     prefix_due = 'pwscf' !TODO: remove
      delta_t = 1.d0
-     n_max = 5
-     eta = 1.0
+     n_max = 5 ! number of periodic cells in each direction used to sum stuff in zero current
+     eta = 1.0 ! ewald sum convergence parameter
      status = "undefined"
-     init_linear = "scratch"
+     init_linear = "scratch" ! 'scratch' or 'restart'. If 'scratch', saves a restart file in project routine. If 'restart', it starts from the saved restart file, and then save again it.
      file_output = "corrente_def"
      file_dativel = "velocita_def"
      READ (iunit, energy_current, IOSTAT=ios)
@@ -63,9 +63,9 @@ subroutine create_second_pos_from_read_vel()
      end if
      !TODO: use consistent unit: rd_pos can be whatever units it is allowed by pw!!!
      if (.not. tavel) &
-        call errore('read_vel', 'error: must provide velocities in input')
+        call errore('read_vel', 'error: must provide velocities in input',1)
      if (ion_velocities /= 'from_input') &
-        call errore('read_vel', 'error: atomic_velocities must be "from_input"')
+        call errore('read_vel', 'error: atomic_velocities must be "from_input"',1)
      if (.not. allocated(ion_vel)) &
         allocate(ion_vel, source=rd_vel)
      if (vel_input_units=='CP') then
@@ -73,7 +73,7 @@ subroutine create_second_pos_from_read_vel()
      else if (vel_input_units=='PW') then
         ion_vel = rd_vel
      else
-        call errore('read_vel', 'error: unknown vel_input_units' )
+        call errore('read_vel', 'error: unknown vel_input_units',1 )
      endif
      ion_pos2=ion_pos2 + delta_t * ion_vel
 
