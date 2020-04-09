@@ -213,7 +213,6 @@ use wavefunctions, only : evc
      else
          ion_vel=vel
      endif
-     !vel=vel/alat
      call convert_tau ( tau_format, nat, vel)
      tau=tau + delta_t * vel
      call mp_barrier(world_comm) 
@@ -223,6 +222,8 @@ use wavefunctions, only : evc
 end subroutine
 
 function read_next_step(t) result(res)
+USE extrapolation,        ONLY : update_pot
+USE control_flags,        ONLY : ethr
     use cpv_traj , only : cpv_trajectory, cpv_trajectory_initialize, cpv_trajectory_deallocate, &
                           cpv_trajectory_read_step, cpv_trajectory_get_step
     use traj_object, only : timestep ! type for timestep data
@@ -248,6 +249,10 @@ use zero_mod, only : vel_input_units, ion_vel
         tau=ts%tau
         CALL convert_tau ( tau_format, nat, tau)
         res=.true.
+     call mp_barrier(world_comm) 
+     call update_pot()
+     call hinit1()
+     ethr = 1.0D-6
     else
         res=.false.
     endif
