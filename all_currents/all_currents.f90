@@ -153,8 +153,8 @@ subroutine read_all_currents_namelists(iunit)
      delta_t = 1.d0
      n_max = 5 ! number of periodic cells in each direction used to sum stuff in zero current
      eta = 1.0 ! ewald sum convergence parameter
-     init_linear = "scratch" ! 'scratch' or 'restart'. If 'scratch', saves a restart file in project routine. If 'restart', it starts from the saved restart file, and then save again it.
-     file_output = "corrente_def"
+     init_linear = "nothing" ! 'scratch' or 'restart'. If 'scratch', saves a restart file in project routine. If 'restart', it starts from the saved restart file, and then save again it.
+     file_output = "current_hz"
      READ (iunit, energy_current, IOSTAT=ios)
      IF (ios /= 0) CALL errore('main', 'reading energy_current namelist', ABS(ios))    
 
