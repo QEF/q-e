@@ -392,7 +392,8 @@ subroutine routine_hartree()
    J_electron = 0.d0
    do ipol = 1, 3
 !     at(:, ipol) / amodulus is the versor along direction ipol
-      amodulus = sqrt(at(1, ipol)**2 + at(2, ipol)**2 + at(3, ipol)**2)
+!      amodulus = sqrt(at(1, ipol)**2 + at(2, ipol)**2 + at(3, ipol)**2)
+      amodulus = at(1, ipol)**2 + at(2, ipol)**2 + at(3, ipol)**2
       J_kohn(:) = J_kohn(:) + 2.d0*at(:, ipol)*real(kcurrent(ipol)) / amodulus
       J_kohn_a(:) = J_kohn_a(:) + 2.d0*at(:, ipol)*real(kcurrent_a(ipol)) / amodulus
       J_kohn_b(:) = J_kohn_b(:) + 2.d0*at(:, ipol)*real(kcurrent_b(ipol)) / amodulus
