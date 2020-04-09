@@ -28,29 +28,40 @@ module cpv_traj
       end do
     end function newunit
  
-    subroutine cpv_trajectory_initialize(t, fname, natoms, tau_fac, vel_fac,tps_fac)
+    subroutine cpv_trajectory_initialize(t, fname, natoms, tau_fac, vel_fac,tps_fac,circular,ios)
         type(cpv_trajectory), intent(inout) :: t
         character(len=256), intent(in) :: fname
         integer, intent(in) :: natoms
         real(dp), intent(in) :: tau_fac,vel_fac,tps_fac
+        logical, intent(in), optional :: circular
+        integer, intent(out),optional :: ios
         integer :: iostat
         ! try to open fname, allocate traj
         t%iounit_pos=newunit()
         open(unit=t%iounit_pos, file=trim(fname) // '.pos', iostat=iostat )
-        if (iostat /= 0) &
+        if (.not. present(ios) .and. iostat /= 0) &
             call errore('cpv_trajectory_initialize', 'error opening file "' // trim(fname) // '.pos"',1)
+        if (present(ios)) &
+            ios=iostat
+        if (iostat /=0 ) return 
         t%iounit_vel=newunit()
         open(unit=t%iounit_vel,file=trim(fname) // '.vel' )
-        if (iostat /= 0) &
+        if (.not. present(ios) .and. iostat /= 0) &
             call errore('cpv_trajectory_initialize', 'error opening file "' // trim(fname) // '.vel"',1)
+        if (present(ios)) &
+            ios=iostat
+        if (iostat /=0 ) return 
         t%is_open=.true.
         t%tau_fac=tau_fac
         t%vel_fac=vel_fac
         t%tps_fac=tps_fac
         t%fname=fname
         !allocate traj
-        call trajectory_allocate(t%traj,natoms,50) !start allocating space for 50 steps
-       
+        if (present(circular)) then
+            call trajectory_allocate(t%traj,natoms,50,circular) !start allocating space for 50 steps
+        else
+            call trajectory_allocate(t%traj,natoms,50) !start allocating space for 50 steps
+        end if
     end subroutine
 
     subroutine cpv_trajectory_close(t)

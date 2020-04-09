@@ -89,6 +89,7 @@ program all_currents
      ! shutdown stuff
 100     call laxlib_end()
      call cpv_trajectory_deallocate(traj)
+     call deallocate_zero()
      if (allocated(evc_uno)) deallocate (evc_uno)
      if (allocated(evc_due)) deallocate (evc_due)
      call stop_run( exit_status )
@@ -108,7 +109,7 @@ subroutine read_all_currents_namelists(iunit)
      
      NAMELIST /energy_current/ delta_t, init_linear, &
         file_output, trajdir, vel_input_units ,&
-        eta, n_max, status, l_zero
+        eta, n_max, l_zero
 
      !
      !   set default values for variables in namelist
@@ -116,7 +117,6 @@ subroutine read_all_currents_namelists(iunit)
      delta_t = 1.d0
      n_max = 5 ! number of periodic cells in each direction used to sum stuff in zero current
      eta = 1.0 ! ewald sum convergence parameter
-     status = "undefined"
      init_linear = "scratch" ! 'scratch' or 'restart'. If 'scratch', saves a restart file in project routine. If 'restart', it starts from the saved restart file, and then save again it.
      file_output = "corrente_def"
      READ (iunit, energy_current, IOSTAT=ios)
@@ -135,7 +135,6 @@ subroutine bcast_all_current_namelist()
      CALL mp_bcast(delta_t, ionode_id, world_comm)
      CALL mp_bcast(eta, ionode_id, world_comm)
      CALL mp_bcast(n_max, ionode_id, world_comm)
-     CALL mp_bcast(status, ionode_id, world_comm)
      CALL mp_bcast(init_linear, ionode_id, world_comm)
      CALL mp_bcast(file_output, ionode_id, world_comm)
 

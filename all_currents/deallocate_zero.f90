@@ -1,16 +1,16 @@
 subroutine deallocate_zero
-use zero_mod,   only:H_g,I_uno_g,I_due_g,status,&
-tabr,tabr_d2y,charge_g,u_g,charge,ion_vel !,ion_pos
+use zero_mod,   only:H_g,I_uno_g,I_due_g, &
+tabr,tabr_d2y,charge_g,u_g,charge,ion_vel 
 !
 implicit none
 !
-!da completare con deallocazioni per altri status, se necessario
-if (status=='compute') then
+if (allocated(charge)) &
     deallocate(charge)
-    !deallocate(ion_pos)
+if (allocated(ion_vel)) &
     deallocate(ion_vel)
+if (allocated(charge_g)) &
     deallocate(charge_g)
+if (allocated(u_g)) &
     deallocate(u_g) 
-end if
 !
 end subroutine deallocate_zero

@@ -106,13 +106,6 @@ subroutine read_wfc_uno()
     logical ::  exst
     integer :: iun, iatom, iv
  
-!lettura funzione d'onda
-      !close (iunwfc)
-!call start_clock( 'lett_car' )
-
-      !call diropn(iunwfc, 'wfc', 2*nwordwfc, exst, tmp_dir)
-      !call davcio(evc_uno, 2*nwordwfc, iunwfc, 1, -1)
-
 !
 !calcolo della carica a partire dalle funzioni d'onda
       charge = 0.d0
@@ -244,26 +237,7 @@ subroutine routine_zero()
    write (stdout, *) 'INIZIO ROUTINE ZERO'
    call start_clock('routine_zero')
    if (ionode) print *, 'eta', eta
-!
-!   l_zero = .true.
-!
-!   call allocate_zero()
 
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!! SELECT INPUT ZERO STATUS
-   select case (status)
-
-!!!! INPUT ZERO status = 'initialize'
-!!!! to be run only once, depends only on the species - produces "thermal" files
-   case ("initialize")
-      call init_zero()
-!
-
-!!!! INPUT ZERO status = 'compute'
-!!!! run for each snapshot, reads thermal files and velocities,
-!!!! and computes zero and ionic current
-   case ("compute")
 
       call start_clock('zero_current')
       if (nkb > 0) then
@@ -272,12 +246,7 @@ subroutine routine_zero()
          l_non_loc = .false.
       end if
 
-!call read_step_data() ! done in the main program
-!call read_zero() 
 call read_wfc_uno()
-!call stop_clock( 'lett_H' )
-!call print_clock( 'lett_H' )
-!call start_clock( 'init_u' )
 !
 !inizializzazione di u_g
       u_g = 0.d0
@@ -292,11 +261,6 @@ call read_wfc_uno()
          end do
       end do
 !
-!call stop_clock( 'init_u' )
-!call print_clock( 'init_u' )
-      iun = find_free_unit()
-!
-!call start_clock( 'calcolo_z' )
 !calcolo della corrente
       z_current = 0.d0
       do a = 1, 3
@@ -308,20 +272,9 @@ call read_wfc_uno()
          end if
       end do
       call mp_sum(z_current, intra_pool_comm)
-!call stop_clock( 'calcolo_z' )
-!call print_clock( 'calcolo_z' )
-!call start_clock( 'non_locale' )
       if (l_non_loc) then
-         !Loris: commentati questi test
-         !  l_test=.false.
-         !  if (l_test) then
-         !      call add_nl_evc(z_current)
-         !  else
          call add_nc_curr(z_current)
-         !  end if
       end if
-!call stop_clock( 'non_locale' )
-!call print_clock( 'non_locale' )
       call stop_clock('zero_current')
       call print_clock('zero_current')
       if (ionode) print *, 'CORRENTE ZERO CALCOLATA'
@@ -462,15 +415,6 @@ call read_wfc_uno()
          write (iun, '(A,3E20.12)') 'zero:', z_current(:)
          close (iun)
       end if
-
-!!!! INPUT ZERO status not valid
-   case default
-      write (stdout, *) "Unknown keyword for zero_current"
-
-   end select
-
-!
-   call deallocate_zero()
 !
 300 call stop_clock('routine_zero')
    call print_clock('routine_zero')
