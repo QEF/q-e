@@ -45,6 +45,7 @@ subroutine routine_hartree()
    real(kind=DP), allocatable ::excharge_r(:), exgradcharge_r(:, :), exdotcharge_r(:)
    real(kind=DP) :: qq_fact, q_tot
    real(kind=DP) :: update(1:3), update_a(1:3), update_b(1:3)
+   real(kind=DP) :: amodulus
 !
    complex(kind=DP), allocatable ::charge_g(:), v_uno(:), v_due(:), v_point(:), v_mean(:), charge_g_due(:)
 !
@@ -390,10 +391,12 @@ subroutine routine_hartree()
    J_kohn_b = 0.d0
    J_electron = 0.d0
    do ipol = 1, 3
-      J_kohn(:) = J_kohn(:) + 2.d0*at(:, ipol)*real(kcurrent(ipol))
-      J_kohn_a(:) = J_kohn_a(:) + 2.d0*at(:, ipol)*real(kcurrent_a(ipol))
-      J_kohn_b(:) = J_kohn_b(:) + 2.d0*at(:, ipol)*real(kcurrent_b(ipol))
-      J_electron(:) = J_electron(:) + 2.d0*e2*at(:, ipol)*real(ecurrent(ipol))
+!     at(:, ipol) / amodulus is the versor along direction ipol
+      amodulus = sqrt(at(1, ipol)**2 + at(2, ipol)**2 + at(3, ipol)**2)
+      J_kohn(:) = J_kohn(:) + 2.d0*at(:, ipol)*real(kcurrent(ipol)) / amodulus
+      J_kohn_a(:) = J_kohn_a(:) + 2.d0*at(:, ipol)*real(kcurrent_a(ipol)) / amodulus
+      J_kohn_b(:) = J_kohn_b(:) + 2.d0*at(:, ipol)*real(kcurrent_b(ipol)) / amodulus
+      J_electron(:) = J_electron(:) + 2.d0*e2*at(:, ipol)*real(ecurrent(ipol)) / amodulus
 !    J_kohn(ipol)=J_kohn(ipol)+2.d0*real(kcurrent(ipol))
    end do
    call stop_clock('kohn_current')
