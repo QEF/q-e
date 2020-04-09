@@ -38,14 +38,14 @@ module cpv_traj
         integer :: iostat
         ! try to open fname, allocate traj
         t%iounit_pos=newunit()
-        open(unit=t%iounit_pos, file=trim(fname) // '.pos', iostat=iostat )
+        open(unit=t%iounit_pos, file=trim(fname) // '.pos', iostat=iostat, action='read' )
         if (.not. present(ios) .and. iostat /= 0) &
             call errore('cpv_trajectory_initialize', 'error opening file "' // trim(fname) // '.pos"',1)
         if (present(ios)) &
             ios=iostat
         if (iostat /=0 ) return 
         t%iounit_vel=newunit()
-        open(unit=t%iounit_vel,file=trim(fname) // '.vel' )
+        open(unit=t%iounit_vel,file=trim(fname) // '.vel', iostat=iostat, action='read' )
         if (.not. present(ios) .and. iostat /= 0) &
             call errore('cpv_trajectory_initialize', 'error opening file "' // trim(fname) // '.vel"',1)
         if (present(ios)) &
@@ -58,7 +58,7 @@ module cpv_traj
         t%fname=fname
         !allocate traj
         if (present(circular)) then
-            call trajectory_allocate(t%traj,natoms,50,circular) !start allocating space for 50 steps
+            call trajectory_allocate(t%traj,natoms,10,circular) !allocate space for 10 steps
         else
             call trajectory_allocate(t%traj,natoms,50) !start allocating space for 50 steps
         end if

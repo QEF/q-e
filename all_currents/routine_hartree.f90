@@ -36,7 +36,6 @@ subroutine routine_hartree()
    
    implicit none
    
-   real(kind=DP) ::J_kohn(3), J_kohn_a(3), J_kohn_b(3), J_hartree(3), J_xc(3), J_electron(3)
    !complex(kind=DP), allocatable :: evc_uno(:, :), evc_due(:, :), evp(:, :), tmp(:, :)
    complex(kind=DP), allocatable ::  evp(:, :), tmp(:, :)
    integer :: iun, iv, igm, ibnd, i
@@ -400,22 +399,6 @@ subroutine routine_hartree()
    call print_clock('kohn_current')
    if (ionode) print *, 'CORRENTE KOHN CALCOLATA'
 !---------------------------------------------------------------------------
-!!!!!!!!!! temporaneamente tolto per test
-
-   if (ionode) then
-      iun = find_free_unit()
-      open (iun, file=trim(file_output), position='append')
-      write (iun, *) 'Passo: '
-      write (iun, '(A,10E20.12)') 'h&K-XC', J_xc(:)
-      write (iun, '(A,10E20.12)') 'h&K-H', J_hartree(:)
-      write (iun, '(A,1F15.7,9E20.12)') 'h&K-K', delta_t, J_kohn(1:3), J_kohn_a(1:3), J_kohn_b(1:3)
-      write (iun, '(A,3E20.12)') 'h&K-ELE', J_electron(1:3)
-      close (iun)
-   end if
-
-
-   !deallocate (evc_uno)
-   !deallocate (evc_due)
    deallocate (charge)
    deallocate (charge_g)
    deallocate (fac)

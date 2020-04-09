@@ -1,5 +1,5 @@
 program all_currents
-     use hartree_mod, only : evc_uno,evc_due,trajdir
+     use hartree_mod, only : evc_uno,evc_due,trajdir 
      USE environment, ONLY: environment_start, environment_end
      use io_global, ONLY: ionode 
      use wavefunctions, only : evc
@@ -8,7 +8,7 @@ program all_currents
      use ions_base, only : nat
      use cpv_traj , only : cpv_trajectory, &
          cpv_trajectory_initialize, cpv_trajectory_deallocate
-
+     
 !from ../PW/src/pwscf.f90
   USE mp_global,            ONLY : mp_startup
   USE mp_world,             ONLY : world_comm
@@ -24,7 +24,7 @@ program all_currents
      USE read_cards_module,     ONLY : read_cards
 
      implicit none
-     integer :: exit_status
+     integer :: exit_status,ios
      type(cpv_trajectory) :: traj
 
 !from ../PW/src/pwscf.f90
@@ -61,9 +61,15 @@ program all_currents
      call init_zero() ! only once per all trajectory
      call setup_nbnd_occ() ! only once per all trajectory
 
-     !initialize trajectory reading
-     call cpv_trajectory_initialize(traj,trajdir,nat,1.0_dp,1.0_dp,1.0_dp) 
-
+     if (ionode) then
+         !initialize trajectory reading
+         call cpv_trajectory_initialize(traj,trajdir,nat,1.0_dp,1.0_dp,1.0_dp,ios=ios,circular=.true.)
+         if (ios == 0 ) then
+             write(*,*) 'After first step from input file, I will read from the CPV trajectory ',trajdir
+         else
+             write(*,*) 'Calculating only a single step from input file'
+         endif 
+     endif
      do
          call run_pwscf(exit_status)
          if (exit_status /= 0 ) goto 100
@@ -81,7 +87,7 @@ program all_currents
          !calculate energy current
          call routine_hartree()
          call routine_zero()
-
+         call write_results()
          !read new velocities and positions and continue, or exit the loop     
          if (.not. read_next_step(traj)) exit
      end do
@@ -97,6 +103,36 @@ program all_currents
      stop
 
 contains
+
+
+subroutine write_results()
+   use hartree_mod
+   use zero_mod
+   use io_global, ONLY: ionode 
+   implicit none
+   integer :: iun
+   integer, external :: find_free_unit
+   if (ionode) then
+      iun = find_free_unit()
+      open (iun, file=trim(file_output), position='append')
+      write (iun, *) 'Passo: '
+      write (iun, '(A,10E20.12)') 'h&K-XC', J_xc(:)
+      write (iun, '(A,10E20.12)') 'h&K-H', J_hartree(:)
+      write (iun, '(A,1F15.7,9E20.12)') 'h&K-K', delta_t, J_kohn(1:3), J_kohn_a(1:3), J_kohn_b(1:3)
+      write (iun, '(A,3E20.12)') 'h&K-ELE', J_electron(1:3)
+         write (iun, '(A,3E20.12)') 'ionic:', i_current(:)
+         write (iun, '(A,3E20.12)') 'ionic_a:', i_current_a(:)
+         write (iun, '(A,3E20.12)') 'ionic_b:', i_current_b(:)
+         write (iun, '(A,3E20.12)') 'ionic_c:', i_current_c(:)
+         write (iun, '(A,3E20.12)') 'ionic_d:', i_current_d(:)
+         write (iun, '(A,3E20.12)') 'ionic_e:', i_current_e(:)
+         write (iun, '(A,3E20.12)') 'zero:', z_current(:)
+         write (iun,*) 'total: ', J_xc+J_hartree+J_kohn+i_current+z_current
+         write (*,*) 'total energy current: ', J_xc+J_hartree+J_kohn+i_current+z_current
+         close (iun)
+      end if
+
+end subroutine
 
 subroutine read_all_currents_namelists(iunit)
      use zero_mod
@@ -239,22 +275,29 @@ use zero_mod, only : vel_input_units, ion_vel
     type(timestep) :: ts
     logical :: res
     integer,save :: step_idx = 0
- 
-    if (cpv_trajectory_read_step(t)) then
-        step_idx = step_idx + 1
-        call cpv_trajectory_get_step(t,step_idx,ts)
-        if (ionode) write (*,*) 'STEP', ts%nstep, ts%tps
-        vel=ts%vel
-        tau=ts%tau
-        CALL convert_tau ( tau_format, nat, tau)
-        res=.true.
-     call mp_barrier(world_comm) 
-     call update_pot()
-     call hinit1()
-     ethr = 1.0D-6
-    else
-        res=.false.
+    if (ionode) then 
+        if (cpv_trajectory_read_step(t)) then
+            step_idx = step_idx + 1
+            call cpv_trajectory_get_step(t,step_idx,ts)
+            write (*,*) 'STEP', ts%nstep, ts%tps
+            vel=ts%vel
+            tau=ts%tau
+            CALL convert_tau ( tau_format, nat, tau)
+            res=.true.
+         ethr = 1.0D-6
+        else
+            write(*,*) 'Finished reading trajectory ', t%fname
+            res=.false.
+        endif
     endif
+    CALL mp_bcast(res, ionode_id, world_comm)
+    if (res) then
+         CALL mp_bcast(vel, ionode_id, world_comm)
+         CALL mp_bcast(tau, ionode_id, world_comm)
+         call update_pot()
+         call hinit1()
+    end if
+    
 end function
 
 end program all_currents

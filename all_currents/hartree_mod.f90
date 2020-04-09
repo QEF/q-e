@@ -5,6 +5,7 @@ MODULE hartree_mod
   SAVE
 
   CHARACTER(len=256) :: init_linear, file_output, trajdir
+   real(kind=DP) ::J_kohn(3), J_kohn_a(3), J_kohn_b(3), J_hartree(3), J_xc(3), J_electron(3)
 
   real(kind=DP) ::delta_t 
   complex(kind=DP), allocatable :: evc_uno(:,:), evc_due(:, :) ! TODO: maybe save one allocation of npwx*nb

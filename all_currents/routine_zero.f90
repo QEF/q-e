@@ -401,21 +401,6 @@ call read_wfc_uno()
       call print_clock('calcolo_i')
       if (ionode) print *, 'CORRENTE IONIC CALCOLATA'
 
-!
-! write output
-      if (ionode) then
-         iun = find_free_unit()
-         open (iun, file=trim(file_output), position='append')
-         write (iun, '(A,3E20.12)') 'ionic:', i_current(:)
-         write (iun, '(A,3E20.12)') 'ionic_a:', i_current_a(:)
-         write (iun, '(A,3E20.12)') 'ionic_b:', i_current_b(:)
-         write (iun, '(A,3E20.12)') 'ionic_c:', i_current_c(:)
-         write (iun, '(A,3E20.12)') 'ionic_d:', i_current_d(:)
-         write (iun, '(A,3E20.12)') 'ionic_e:', i_current_e(:)
-         write (iun, '(A,3E20.12)') 'zero:', z_current(:)
-         close (iun)
-      end if
-!
 300 call stop_clock('routine_zero')
    call print_clock('routine_zero')
 
