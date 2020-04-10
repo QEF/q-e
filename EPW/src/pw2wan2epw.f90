@@ -3042,7 +3042,9 @@
     !! pools/procs (but one proc per pool)
     !!
     !! HL 03/2020:
-    !! New implementation based on some parts of QE and Wannier90
+    !! New implementation based on some parts of 
+    !! QE (subroutine of write_plot in /PP/src/pw2wannier.f90)
+    !! and Wannier90 (subroutine of plot_wannier in /src/plot.F90)
     !!
     USE kinds,           ONLY : DP
     USE io_global,       ONLY : stdout, meta_ionode, meta_ionode_id
@@ -3443,7 +3445,8 @@
       !! Write WFs in Gaussian cube format.
       !!
       !! HL 03/2020:
-      !! Imported and adopted from W90
+      !! Imported and adapted from the same name of subroutine in plot.F90
+      !! in the directory of src in Wannier90
       !!
       USE constants_epw,    ONLY : bohr
       USE cell_base,        ONLY : bg, alat, tpiba
@@ -3639,8 +3642,8 @@
       !
       DO nzz = 1, ilength(3)
         qzz = nzz + istart(3) - 1
-        IF ( (qzz < (-((ngs(3))/2)*ngz)) .OR. &
-             (qzz > ((ngs(3) + 1)/2)*ngz - 1) ) THEN
+        IF ((qzz < (-((ngs(3))/2)*ngz)) .OR. &
+            (qzz > ((ngs(3) + 1)/2)*ngz - 1)) THEN
           WRITE(stdout, *) 'Error plotting WF cube. Try one of the following:'
           WRITE(stdout, *) '   (1) increase wannier_plot_supercell;'
           WRITE(stdout, *) '   (2) decrease wannier_plot_radius;'
@@ -3648,8 +3651,8 @@
         ENDIF
         DO nyy = 1, ilength(2)
           qyy = nyy + istart(2) - 1
-          IF ( (qyy < (-((ngs(2))/2)*ngy)) .OR. &
-               (qyy > ((ngs(2) + 1)/2)*ngy - 1) ) THEN
+          IF ((qyy < (-((ngs(2))/2)*ngy)) .OR. &
+              (qyy > ((ngs(2) + 1)/2)*ngy - 1)) THEN
             WRITE(stdout, *) 'Error plotting WF cube. Try one of the following:'
             WRITE(stdout, *) '   (1) increase wannier_plot_supercell;'
             WRITE(stdout, *) '   (2) decrease wannier_plot_radius;'
@@ -3657,8 +3660,8 @@
           ENDIF
           DO nxx = 1, ilength(1)
             qxx = nxx + istart(1) - 1
-            IF ( (qxx < (-((ngs(1))/2)*ngx)) .OR. &
-                 (qxx > ((ngs(1) + 1)/2)*ngx - 1) ) THEN
+            IF ((qxx < (-((ngs(1))/2)*ngx)) .OR. &
+                (qxx > ((ngs(1) + 1)/2)*ngx - 1)) THEN
               WRITE(stdout, *) 'Error plotting WF cube. Try one of the following:'
               WRITE(stdout, *) '   (1) increase wannier_plot_supercell;'
               WRITE(stdout, *) '   (2) decrease wannier_plot_radius;'

@@ -60,7 +60,7 @@
                             electron_dos, phonon_dos, diag_mode,              &
                             restart_polaron_mode, polaron_type,               &
                             emax_plrn, nDOS_plrn, emin_plrn
-  USE elph2,         ONLY : elph, wanplotlist
+  USE elph2,         ONLY : elph
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
   USE io_files,      ONLY : prefix, tmp_dir
@@ -186,7 +186,6 @@
   CALL mp_bcast(scr_typ     , meta_ionode_id, world_comm)
   CALL mp_bcast(bnd_cum     , meta_ionode_id, world_comm)
   CALL mp_bcast(mob_maxiter , meta_ionode_id, world_comm)
-  CALL mp_bcast(wanplotlist , meta_ionode_id, world_comm)
   CALL mp_bcast(wannier_plot_supercell, meta_ionode_id, world_comm)
   !
   ! REAL*8

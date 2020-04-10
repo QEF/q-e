@@ -799,10 +799,11 @@
   !
   CALL mp_bcast(wannier_plot, meta_ionode_id, world_comm)
   CALL mp_bcast(num_wannier_plot, meta_ionode_id, world_comm)
-  IF ( (wannier_plot) .AND. (.NOT. meta_ionode) ) THEN
+  IF ((wannier_plot) .AND. (.NOT. meta_ionode)) THEN
     ALLOCATE(wanplotlist(num_wannier_plot), STAT = ierr)
     IF (ierr /= 0) CALL errore('epw_readin', 'Error allocating wanplotlist', 1)
   ENDIF
+  IF (wannier_plot) CALL mp_bcast(wanplotlist, meta_ionode_id, world_comm)
   !
   CALL bcast_epw_input()
   !

@@ -2110,7 +2110,8 @@
     !!   if(lcount) we return the number of states in length
     !!
     !!   HL - April 2020
-    !!   Imported and adapted from Wannier90
+    !!   Imported and adapted from the same name of subroutine in parameters.F90
+    !!   in the directory of src in Wannier90
     !!
     !----------------------------------------------------------------------------
     !
