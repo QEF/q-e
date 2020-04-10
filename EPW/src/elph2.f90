@@ -47,7 +47,8 @@
     ngxx,                    &!  Maximum number of G-vectors over all pools
     ngxxf,                   &!  Maximum number of G-vectors over all pools for k+q folding
     ig_s,                    &!  First G index within each core in case of G parallelization
-    ig_e                      !  Last G index within each core in case of G parallelization
+    ig_e,                    &!  Last G index within each core in case of G parallelization
+    num_wannier_plot          !  Number of Wannier functions to plot
   INTEGER, ALLOCATABLE ::    &!
     igk(:),                  &!  Index for k+G vector
     igkq(:),                 &!  Index for k+q+G vector
@@ -59,7 +60,8 @@
     gmap(:),                 &!  the map G -> G-G_0 in the large (density) G vectors set, for every G_0
     ixkqf_tr(:),             &!  Mapping matrix from k+q (where q is full BZ) to IBZ
     s_bztoibz_full(:),       &!  Rotation that brink that k-point from BZ to IBZ
-    mapg(:,:,:)               !  Map between FFT grid and G-vector index
+    mapg(:,:,:),             &!  Map between FFT grid and G-vector index
+    wanplotlist(:)            !  List of Wannier functions to plot
   REAL(KIND = DP) ::         &!
     efnew,                   &!  Fermi level on the fine grid. Added globaly for efficiency reason
     deltaq,                  &!  Displacement of fine-mesh k-points for velocity corrections
