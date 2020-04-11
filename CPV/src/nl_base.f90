@@ -420,7 +420,7 @@
       iss = ispin(iwf)
       !
       do ia = 1, nat
-         is = ityp(is)
+         is = ityp(ia)
          do iv = 1, nh(is)
             do jv = iv, nh(is)
                ijv = (jv-1)*jv/2 + iv
