@@ -84,7 +84,9 @@ SUBROUTINE sum_band_gpu()
   !
   ! ... calculates weights of Kohn-Sham orbitals used in calculation of rho
   !
+  CALL start_clock_gpu( 'sum_band:weights' )
   CALL weights ( )
+  CALL stop_clock_gpu( 'sum_band:weights' )
   !
   IF (one_atom_occupations) CALL new_evc()
   !
@@ -128,6 +130,7 @@ SUBROUTINE sum_band_gpu()
   !
   eband         = 0.D0
   !
+  CALL start_clock_gpu( 'sum_band:loop' )
   IF ( gamma_only ) THEN
      !
      CALL sum_band_gamma_gpu()
@@ -137,6 +140,7 @@ SUBROUTINE sum_band_gpu()
      CALL sum_band_k_gpu()
      !
   END IF
+  CALL stop_clock_gpu( 'sum_band:loop' )
   CALL mp_sum( eband, inter_pool_comm )
   CALL mp_sum( eband, inter_bgrp_comm )
   !
@@ -193,6 +197,7 @@ SUBROUTINE sum_band_gpu()
   !
   ! ... symmetrize rho(G) 
   !
+  CALL start_clock_gpu( 'sum_band:sym_rho' )
   CALL sym_rho ( nspin_mag, rho%of_g )
   !
   ! ... synchronize rho%of_r to the calculated rho%of_g (use psic as work array)
@@ -230,6 +235,7 @@ SUBROUTINE sum_band_gpu()
      END DO
      !
   END IF
+  CALL stop_clock_gpu( 'sum_band:sym_rho' )
   !
   ! ... if LSDA rho%of_r and rho%of_g are converted from (up,dw) to
   ! ... (up+dw,up-dw) format.
@@ -247,8 +253,7 @@ SUBROUTINE sum_band_gpu()
      !-----------------------------------------------------------------------
      SUBROUTINE sum_band_gamma_gpu()
        !-----------------------------------------------------------------------
-       !
-       ! ... gamma version
+       !! \(\texttt{sum_band}\) - part for gamma version.
        !
        USE becmod,        ONLY : becp
        USE mp_bands,      ONLY : me_bgrp
@@ -309,13 +314,19 @@ SUBROUTINE sum_band_gpu()
           !
           npw = ngk(ik)
           !
+          CALL start_clock_gpu( 'sum_band:buffer' )
           IF ( nks > 1 ) &
              CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
           IF ( nks > 1 ) CALL using_evc(2) ! get_buffer(evc, ...) evc is updated (intent out)
           IF ( nks > 1 ) CALL using_evc_d(0) ! sync on the GPU
           !
+          CALL stop_clock_gpu( 'sum_band:buffer' )
+          !
+          CALL start_clock_gpu( 'sum_band:init_us_2' )
+
           IF ( nkb > 0 ) CALL using_vkb_d(2)
           IF ( nkb > 0 ) CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
+          CALL stop_clock_gpu( 'sum_band:init_us_2' )
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
           !
@@ -523,8 +534,7 @@ SUBROUTINE sum_band_gpu()
      !-----------------------------------------------------------------------
      SUBROUTINE sum_band_k_gpu()
        !-----------------------------------------------------------------------
-       !
-       ! ... k-points version
+       !! \(\texttt{sum_band}\) - part for k-points version
        !
        USE wavefunctions_gpum, ONLY : psic_nc_d
        USE mp_bands,     ONLY : me_bgrp
@@ -611,14 +621,18 @@ SUBROUTINE sum_band_gpu()
           IF ( lsda ) current_spin = isk(ik)
           npw = ngk (ik)
           !
+          CALL start_clock_gpu( 'sum_band:buffer' )
           IF ( nks > 1 ) &
              CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
           IF ( nks > 1 ) CALL using_evc(2)
           IF ( nks > 1 ) CALL using_evc_d(0)  ! sync evc on GPU, OPTIMIZE (use async here)
+          CALL stop_clock_gpu( 'sum_band:buffer' )
           !
+          CALL start_clock_gpu( 'sum_band:init_us_2' )
           IF ( nkb > 0 ) CALL using_vkb_d(2)
           IF ( nkb > 0 ) &
              CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
+          CALL stop_clock_gpu( 'sum_band:init_us_2' )
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
           !
@@ -996,13 +1010,15 @@ END SUBROUTINE sum_band_gpu
 SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd ) 
   !----------------------------------------------------------------------------
   !
-  ! This routine computes the sum over bands
-  !     \sum_i <\psi_i|\beta_l>w_i<\beta_m|\psi_i>
-  ! for point "ik" and, for LSDA, spin "current_spin" 
-  ! Calls calbec to compute "becp"=<beta_m|psi_i> 
-  ! Output is accumulated (unsymmetrized) into "becsum", module "uspp"
+  !! This routine computes the sum over bands:
   !
-  ! Routine used in sum_band (if okvan) and in compute_becsum, called by hinit1 (if okpaw)
+  !! \[ \sum_i \langle\psi_i|\beta_l\rangle w_i \langle\beta_m|\psi_i\rangle \]
+  !
+  !! for point "ik" and, for LSDA, spin "current_spin".  
+  !! Calls calbec to compute \(\text{"becp"}=\langle \beta_m|\psi_i \rangle\).  
+  !! Output is accumulated (unsymmetrized) into "becsum", module "uspp".
+  !
+  !! Routine used in sum_band (if okvan) and in compute_becsum, called by hinit1 (if okpaw).
   !
 #if defined(__CUDA)
   USE cudafor
@@ -1064,6 +1080,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   CALL using_becsum_d(1)
   IF (tqr) CALL using_ebecsum_d(1)
   !
+  CALL start_clock_gpu( 'sum_band:calbec' )
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN
      CALL using_evc_d(0); CALL using_vkb_d(0); CALL using_becp_d_auto(2)
@@ -1087,6 +1104,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
        call mp_sum(becp%k,inter_bgrp_comm)
      endif
   ENDIF
+  CALL stop_clock_gpu( 'sum_band:calbec' )
   !
   ! In the EXX case with ultrasoft or PAW, a copy of becp will be
   ! saved in a global variable to be rotated later
@@ -1277,10 +1295,9 @@ END SUBROUTINE sum_bec_gpu
 !----------------------------------------------------------------------------
 SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc_d, becsum_d )
 !----------------------------------------------------------------------------
-  !
-  ! This routine multiplies becsum_nc by the identity and the Pauli matrices,
-  ! saves it in becsum for the calculation of augmentation charge and
-  ! magnetization.
+  !! This routine multiplies \(\text{becsum_nc}\) by the identity and the
+  !! Pauli matrices, saves it in \(\text{becsum}\) for the calculation of 
+  !! augmentation charge and magnetization.
   !
 #if defined(__CUDA)
   USE cudafor
@@ -1340,10 +1357,9 @@ END SUBROUTINE add_becsum_nc_gpu
 !----------------------------------------------------------------------------
 SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc_d, becsum_d )
   !----------------------------------------------------------------------------
-  !
-  ! This routine multiplies becsum_nc by the identity and the Pauli matrices,
-  ! rotates it as appropriate for the spin-orbit case, saves it in becsum
-  ! for the calculation of augmentation charge and magnetization.
+  !! This routine multiplies \(\text{becsum_nc}\) by the identity and the Pauli
+  !! matrices, rotates it as appropriate for the spin-orbit case, saves it in 
+  !! \(\text{becsum}\) for the calculation of augmentation charge and magnetization.
   !
 #if defined(__CUDA)
   USE cudafor

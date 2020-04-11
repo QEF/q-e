@@ -4,21 +4,20 @@
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 EXAMPLE_DIR=`pwd`
 
-# check whether echo has the -e option
+# check whether ECHO has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use ph.x to calculate the phonons at X and Gamma"
-$ECHO "of fcc-Pt using fully relativistic pseudo-potential and including spin-orbit coupling."
+$ECHO "This example shows how to use pw.x and ph.x to calculate phonon"
+$ECHO "dispersions for spin-polarized fcc-Ni."
 
 # set the needed environment variables
 . ../../../environment_variables
-
 # required executables and pseudopotentials
 BIN_LIST="pw.x ph.x"
-PSEUDO_LIST="Pt.rel-pz-n-rrkjus.UPF"
+PSEUDO_LIST="Ni.pbe-nd-rrkjus.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -79,100 +78,62 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/platinum*
-rm -rf $TMP_DIR/_ph0/platinum*
+rm -rf $TMP_DIR/nickel*
+rm -rf $TMP_DIR/_ph0/nickel*
 $ECHO " done"
 
-# self-consistent calculation
-cat > pt.scf_ph.in << EOF
-Pt
-Pt
+# self-consistent calculation for Ni with US-PP
+cat > ni.scf.in << EOF
  &control
-    calculation = 'scf'
+    calculation='scf'
     restart_mode='from_scratch',
-    prefix='platinum',
-    tprnfor = .true.,
-    tstress =.true.,
+    tprnfor = .true.
+    prefix='nickel',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
  &system
-    ibrav=  2, celldm(1) =7.42, nat=  1, ntyp= 1,
-    lspinorb=.true.,
-    noncolin=.true.,
-    starting_magnetization=0.0,
-    occupations='smearing',
+    ibrav=2, celldm(1) =6.65, nat=  1, ntyp= 1,
+    nspin=2,
+    starting_magnetization(1)=0.5,
     degauss=0.02,
     smearing='mv',
-    ecutwfc =30.0,
-    ecutrho =250.0,
+    occupations='smearing',
+    ecutwfc =27.0
+    ecutrho =300.0
  /
  &electrons
-    mixing_beta = 0.7,
     conv_thr =  1.0d-8
+    mixing_beta = 0.7
  /
 ATOMIC_SPECIES
-Pt  0.0    Pt.rel-pz-n-rrkjus.UPF
+ Ni  58.6934  Ni.pbe-nd-rrkjus.UPF
 ATOMIC_POSITIONS (alat)
-Pt  0.0000000   0.00000000   0.0
+ Ni 0.00 0.00 0.00
 K_POINTS AUTOMATIC
-2 2 2 1 1 1
+4 4 4 1 1 1
 EOF
-$ECHO "  running the scf calculation for Pt with spin-orbit coupling...\c"
-$PW_COMMAND < pt.scf_ph.in > pt.scf_ph.out
+$ECHO "  running the scf calculation for Ni...\c"
+$PW_COMMAND < ni.scf.in > ni.scf.out
 check_failure $?
 $ECHO " done"
 
-cat > pt.ph.in << EOF
-phonons of Pt at Gamma
+# phonon dispersion calculation 
+cat > ni.ph.in << EOF
+phonons of Ni 
  &inputph
-
-  amass(1)=195.078,
-
-  prefix='platinum',
-  outdir='$TMP_DIR'
-  fildyn='ptdyn',
-  tr2_ph=1.0d-16,
- /
-0.0 0.0 0.0
-EOF
-$ECHO "  running the phonon calculation for Pt with spin-orbit coupling...\c"
-$PH_COMMAND < pt.ph.in > pt.ph.out
-check_failure $?
-$ECHO " done"
-
-cat > pt.phX.in << EOF
-phonons of Pt at X
- &inputph
-  amass(1)=195.078,
-  prefix='platinum',
-  outdir='$TMP_DIR'
-  fildyn='ptdyn',
-  tr2_ph=1.0d-16,
- /
-1.0 0.0 0.0
-EOF
-$ECHO "  running the phonon calculation at X for Pt with spin-orbit coupling...\c"
-$PH_COMMAND < pt.phX.in > pt.phX.out
-check_failure $?
-$ECHO " done"
-
-cat > pt.ph.in << EOF
-phonon dispersions of Pt
- &inputph
-  amass(1)=195.078,
-  prefix='platinum',
-  outdir='$TMP_DIR'
-  fildyn='ptdyn',
-  tr2_ph=1.0d-16, 
+  tr2_ph=1.0d-14,
+  prefix='nickel',
+  amass(1)=58.6934,
+  fildyn='niX.dyn',
+  outdir='$TMP_DIR/',
   ldisp=.true., nq1=4,nq2=4,nq3=4
  /
 EOF
-$ECHO "  running the phonon dispersions calculation for Pt with spin-orbit coupling...\c"
-$PH_COMMAND < pt.ph.in > pt.ph.out
+$ECHO "  running the phonon dispersion calculation for Ni...\c"
+$PH_COMMAND < ni.ph.in > ni.ph.out
 check_failure $?
 $ECHO " done"
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"
-
