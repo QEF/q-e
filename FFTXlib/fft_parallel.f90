@@ -235,8 +235,6 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
      CALL fftx_error__( ' many_cft3s', ' wrong value of isgn ', 10+abs(isgn) )
   end if
   !
-  !ASSOCIATE (aux => dfft%aux)
-
      IF ( isgn > 0 ) THEN  ! G -> R
 !$omp parallel default(none)                                        &
 !$omp          private(i, j)                                        &
@@ -339,7 +337,6 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
 !$omp end do
 !$omp end parallel
      ENDIF
-  !ENDASSOCIATE
   !write (6,99) f_d(1:400); write(6,*); FLUSH(6)
   !
   RETURN
