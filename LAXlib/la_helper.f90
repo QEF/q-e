@@ -659,7 +659,7 @@ END SUBROUTINE laxlib_multi_init_desc_x
       RETURN
    END SUBROUTINE diagonalize_serial_x
 
-#if defined(__CUDA)
+#if (!defined(__USE_CUSOLVER)) && defined(__CUDA)
    SUBROUTINE diagonalize_serial_gpu( m, rhos, rhod, s, info )
       use eigsolve_vars
       use nvtx_inters
