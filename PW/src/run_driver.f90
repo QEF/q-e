@@ -42,20 +42,16 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   CHARACTER*12 :: header
   CHARACTER*1024 :: parbuffer
   CHARACTER(LEN=256) :: dirname
-  INTEGER :: socket, nat, rid, ccmd, i, info, lflags, rid_old=-1
+  INTEGER :: socket, nat, rid, ccmd, i, info, lflags, lflags_old, rid_old=-1
   REAL*8 :: sigma(3,3), omega_reset, at_reset(3,3), dist_reset, ang_reset
   REAL *8 :: cellh(3,3), cellih(3,3), vir(3,3), pot, mtxbuffer(9)
   REAL*8, ALLOCATABLE :: combuf(:)
   REAL*8 :: dist_ang(6), dist_ang_reset(6)
   !----------------------------------------------------------------------------
   !
-  lscf      = .true.
-  lforce    = .true.
-  lstres    = .true.
-  lmovecell = .true.
-  lmd       = .true.
-  lensemb = .false.
   firststep = .true.
+  lflags  = -1 
+  !
   omega_reset = 0.d0
   !
   exit_status = 0
@@ -80,8 +76,7 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   !
   CALL check_stop_init()
   CALL setup()
-  ! ... Initializations
-  CALL init_run()
+  !
   IF ( ionode ) CALL create_socket(srvaddress)
   !
   driver_loop: DO
@@ -103,6 +98,7 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
               CALL writebuffer( socket, "NEEDINIT    ", MSGLEN )
            ELSE
               exit_status = 129
+              IF ( ionode ) WRITE(*,*) " @ DRIVE MODE: Exiting: ", exit_status
               RETURN
            END IF
         END IF
@@ -185,47 +181,11 @@ CONTAINS
     !
     rid_old = rid
     ! 
+    CALL update_flags( )
     !
-    IF ( ionode ) THEN
-       !
-       ! ... Length of parameter string -- ignored at present! (Not anymore)
-       !
-       ! A hacky enconding to allow overriding redundant calculations
-       !
-       ! by Gabriel S. Gusmao :: gusmaogabriels@gmail.com (2020)
-       ! Medford Group @ ChBE, Georgia Institute of Technology
-       !
-       CALL readbuffer( socket, lflags )
-       IF ( lflags .NE. 0 ) THEN
-          WRITE(*,*) " @ DRIVER MODE: Receiving encoded integer", lflags
-          WRITE(*,*) " @ DRIVER MODE: "," SCF: ", lscf," FORCE: ", lforce, &
-                       " STRESS: ", lstres, " VC: ",lmovecell," ENSEMBLE: ", lensemb
-          lscf      = MOD(INT(lflags/(2**4)),2) == 1
-          lforce    = MOD(INT(lflags/(2**3)),2) == 1
-          lstres    = MOD(INT(lflags/(2**2)),2) == 1
-          lmovecell = MOD(INT(lflags/(2**1)),2) == 1
-          lensemb   = MOD(INT(lflags/(2**0)),2) == 1
-          IF ( firststep .OR. ( hasensemb .AND. ( lforce .OR. lstres .OR. lmovecell ))) THEN
-             !
-             ! BEEF-vdw ensembles corrupt the wavefunction and, therefore, forces, stresses
-             ! Right now the workaround is to run an SCF cycle at the beginning in case 
-             ! ensembles have been generated
-             !
-             lscf = .TRUE.
-             hasensemb = .FALSE.
-          ENDIF
-          WRITE(*,*) " @ DRIVER MODE: "," SCF: ", lscf," FORCE: ", lforce, &
-                       " STRESS: ", lstres, " VC: ",lmovecell," ENSEMBLE: ", lensemb
-       ENDIF
-       !
-       CALL readbuffer( socket, parbuffer, 1 )
-    END IF
-       !
-    CALL mp_bcast( lscf, ionode_id, intra_image_comm )
-    CALL mp_bcast( lforce, ionode_id, intra_image_comm )       
-    CALL mp_bcast( lstres, ionode_id, intra_image_comm )   
-    CALL mp_bcast( lmovecell, ionode_id, intra_image_comm )   
-    CALL mp_bcast( lensemb, ionode_id, intra_image_comm )   
+    ! ... this is a better place for initialization or 
+    !     reinitialization if lflags change
+    IF (firststep) CALL init_run( )
     !
   END SUBROUTINE driver_init
   !
@@ -245,7 +205,7 @@ CONTAINS
     !
     ! ... Recompute cell data
     !
-    IF ( lmovecell .OR. firststep ) THEN
+    IF ( lmovecell ) THEN 
        CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
        CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
        !
@@ -290,7 +250,7 @@ CONTAINS
     ! ... Compute everything
     !  
     IF ( lscf ) CALL electrons()
-    IF ( .NOT. conv_elec .AND. ionode ) THEN
+    IF ( .NOT. conv_elec ) THEN
        CALL punch( 'all' )
        CALL stop_run( conv_elec )
     ENDIF
@@ -348,6 +308,7 @@ CONTAINS
     !
     nat = 0
     IF ( ionode ) CALL writebuffer( socket, nat )
+    !
     CALL punch( 'config' )
     !
   END SUBROUTINE driver_getforce
@@ -378,6 +339,7 @@ CONTAINS
     END IF
     IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Reading and sharing positions "
     IF ( ionode ) CALL readbuffer(socket, combuf, nat*3)
+    !
     CALL mp_bcast( combuf, ionode_id, intra_image_comm)
     !
     ! ... Convert the incoming configuration to the internal pwscf format
@@ -441,7 +403,76 @@ CONTAINS
     CALL update_file()
     !
   END SUBROUTINE
-!
+  !
+  SUBROUTINE update_flags()
+     !     
+     if ( ionode ) THEN
+        !
+        ! ... A hacky enconding to allow overriding redundant calculations
+        !
+        ! ... by Gabriel S. Gusmao :: gusmaogabriels@gmail.com (2020)
+        ! ... Medford Group @ ChBE, Georgia Institute of Technology
+        !
+        lflags_old = lflags
+        !
+        CALL readbuffer( socket, lflags )
+        !
+        WRITE(*,*) " @ DRIVER MODE: Receiving encoded integer", lflags
+        WRITE(*,*) " @ DRIVER MODE: "," SCF: ", lscf," FORCE: ", lforce, &
+                     " STRESS: ", lstres, " VC: ",lmovecell," ENSEMBLE: ", lensemb
+        !
+        lflags = lflags - 1 ! ... making it ASE compliant since it send a one.   
+        !
+        IF (lflags .NE. lflags_old) THEN
+           !
+           IF ( lflags > 1 ) THEN
+              !
+              lscf      = MOD(INT(lflags/(2**4)),2) == 1
+              lforce    = MOD(INT(lflags/(2**3)),2) == 1
+              lstres    = MOD(INT(lflags/(2**2)),2) == 1
+              lmovecell = MOD(INT(lflags/(2**1)),2) == 1
+              lensemb   = MOD(INT(lflags/(2**0)),2) == 1
+              IF ( firststep .OR. ( hasensemb .AND. ( lforce .OR. lstres .OR. lmovecell ))) THEN
+                 !
+                 ! ... BEEF-vdw ensembles corrupt the wavefunction and, therefore, forces, 
+                 !     stresses .Right now the workaround is to run an SCF cycle at the 
+                 !     beginning in case  ensembles have been generated.
+                 !
+                 lscf = .TRUE.
+                 hasensemb = .FALSE.
+              ENDIF
+           ELSE
+              lscf      = .true.
+              lforce    = .true.
+              lstres    = .true.
+              lmovecell = .true.
+              lmd       = .true.
+              lensemb   = .false.
+           ENDIF
+        ENDIF
+        !
+        WRITE(*,*) " @ DRIVER MODE: "," SCF: ", lscf," FORCE: ", lforce, &
+                     " STRESS: ", lstres, " VC: ",lmovecell," ENSEMBLE: ", lensemb
+        !
+        CALL readbuffer( socket, parbuffer, 1 )
+        !
+     END IF
+     !
+     CALL mp_bcast( lflags,      ionode_id, intra_image_comm )
+     CALL mp_bcast( lflags_old,  ionode_id, intra_image_comm )
+     !
+     ! ... broadcat flags if they have changed
+     !
+     IF ( lflags .NE. lflags_old .OR. firststep) THEN
+        CALL mp_bcast( lscf,      ionode_id, intra_image_comm )
+        CALL mp_bcast( lforce,    ionode_id, intra_image_comm )       
+        CALL mp_bcast( lstres,    ionode_id, intra_image_comm )   
+        CALL mp_bcast( lmovecell, ionode_id, intra_image_comm )   
+        CALL mp_bcast( lensemb,   ionode_id, intra_image_comm )   
+     ENDIF
+     !
+  END SUBROUTINE
+!   
 END SUBROUTINE run_driver
 
 FUNCTION get_server_address ( command_line ) RESULT ( srvaddress )
