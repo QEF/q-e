@@ -694,6 +694,51 @@ are also used to initialize the \PWscf\ run. Thus, it is important
 that the \PWscf\ input contains atomic positions and cell parameters
 which are as close as possible to those specified in the i-PI input. 
 
+\paragraph{Advanced i-PI usage}
+
+\noindent For more advanced users, calculation flags can be changed 
+on-the-fly by parsing a single binary-encoded integer to QE through 
+the i-PI socket. That gives users the flexibility to define what 
+properties to be calculated. For example, if only a single SCF cycle 
+is needed, traditionally \verb#run_driver.f90# would be set to 
+calculate not only the potential energy, but also forces, stresses 
+and initialize g-vectors. With the binary-integer encoded flags, now
+one can turn flags on and off as necessary to speed up their code flow.
+
+The sequence of flags that is currently accepted is: SCF, 
+forces, stresses, variable-cell and ensembles. The latter is only
+available if QE has been compiled against BEEF-vdW XC. For a SCF and
+forces-only calculation, that would corresponds to a \verb#11000# 
+sequence, which has a \verb#24# decimal representation. The QE side
+of the i-PI socket expects the equivalent-decimal\verb#+1#; therefore, 
+for a \verb#11000# calculation, the integer \verb#25# would have to be 
+parsed to the \verb#driver_init# subroutine in \verb#run_driver.f90#. If
+any number less-than or equal-to \verb#1# is parsed to QE, it falls back
+to its standard i-PI mode.
+
+Currently, the QE i-PI interface can only reside in
+three different states: "NEEDINIT", "READY" or "HAVEDATA". Whenever 
+the socket sends a "STATUS" message to QE, it responds back with its 
+current status. A simple calculation sequence of events would be: (1) an
+"STATUS" message is received, QE sends back "NEEDINIT", (2) an "INIT"
+message is received, QE waits for three data packets, (i) an integer
+that identifies the client on the other side of the socket, (ii) the flag-encoded integer
+mentioned above, which can be used to change calculation 
+settings, and (iii) an initialization string. QE then changes its status
+to "READY". (3) The server sends a "POSDATA" message and QE then expects 
+a sequence of variables depending on the calculation settings; the default 
+being: a 3-by-3 matrix with cell and 3-by-3 marix with its inverse (if 
+\verb#lmovecell# is \verb#.TRUE.#) and a (# of atoms)-by-3 position matrix. QE 
+proceeds and computes all active properties (e.g. SCF, forces, stresses, 
+etc.) and change its status to "HAVEDATA" and expects a (4) "GETFORCE"
+message from the socket. Once it is received, (5) QE sends back (i) a
+float with the potential energy, (ii) an integer with the total number of
+atoms, (iii) a (# of atoms)-by-3 matrix with forces (if \verb#lforce# is
+\verb#.TRUE.#), (iv) a 9-element-virial tensor (if \verb#lstres# is
+\verb#.TRUE.#). QE goes back to "NEEDINIT" status. The other side of socket
+should be able to compute new positions and cell coordinates (if \verb#lmovecell#
+is \verb#.TRUE.#) and start the cycle again from (1).
+
 \section{Performances}
 
 \subsection{Execution time}

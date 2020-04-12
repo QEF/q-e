@@ -8,7 +8,14 @@ New in dev branch:
     (Jae-Mo Lihm, Seoul Natl. Univ.)
   * DFT+U+V in pw.x, J. Phys.: Condens. Matter 22, 055602 (2010)
     (V.L. Campo Jr, I. Timrov, N. Marzari, M. Cococcioni)
-  * Support for BEEF-vdW XC (Gabriel S. Gusmão, Georgia Tech)
+  * Support for BEEF-vdW XC (by Johannes Voss) compilation link has been included; 
+    e.g. BEEF_LIBS="-L$LIBBEEF/src -lbeef", where $LIBBEEF is the path 
+    to the compiled libbeef folder. If "calculation='ensemble'", 
+    BEEF-vdW nscf ensemble energies will be generated at the end of PWscf.
+    (Gabriel S. Gusmão, Georgia Tech)
+  * i-PI socket now supports on-the-fly change of flags for SCF, forces,
+    stresses and variable cell calculations using binary-integer enconding.
+    (Gabriel S. Gusmão, Georgia Tech)
   
 Fixed in dev branch:
   * PW: Restart from interrupted calculations  simplified. As a side effect,
