@@ -106,7 +106,6 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
      CASE( "INIT" )
         CALL driver_init()
         isinit=.true.
-        IF ( ionode ) write(*,*) " @ DRIVER MODE: INIT ", isinit
         !
      CASE( "POSDATA" )
         CALL driver_posdata()
