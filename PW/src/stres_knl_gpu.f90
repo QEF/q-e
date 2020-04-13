@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE stres_knl_gpu( sigmanlc, sigmakin ) 
+SUBROUTINE stres_knl_gpu( sigmanlc, sigmakin )
   !-----------------------------------------------------------------------
   !! Computes the kinetic + nonlocal contribuition to the stress
   !
@@ -42,23 +42,21 @@ SUBROUTINE stres_knl_gpu( sigmanlc, sigmakin )
   !
   ! ... local variables
   !
-  REAL(DP), ALLOCATABLE :: gk(:,:)
-  !
   REAL(DP), POINTER :: gk_d(:,:), kfac_d (:)
-#if defined(__CUDA) 
-  ATTRIBUTES(DEVICE)  :: gk_d, kfac_d 
-#endif 
   REAL(DP) :: twobysqrtpi, gk2, arg, s11, s21, s31, s22, s32, s33, &
               xk1, xk2, xk3, tmpf, wg_nk 
   INTEGER  :: npw, ik, l, m, i, ibnd, is
-  INTEGER  :: ierr(2)
+  INTEGER  :: ierr
+  ! 
+#if defined(__CUDA) 
+  ATTRIBUTES(DEVICE)  :: gk_d, kfac_d 
+#endif 
   !
   CALL using_evc(0)
   CALL using_evc_d(0)
   !
-  ALLOCATE( gk(npwx,3) )
-  CALL dev_buf%lock_buffer( gk_d, [npwx,3], ierr(1) )
-  CALL dev_buf%lock_buffer( kfac_d, npwx, ierr(2)  )
+  CALL dev_buf%lock_buffer( gk_d, [npwx,3], ierr)
+  CALL dev_buf%lock_buffer( kfac_d, npwx, ierr  )
   !
   sigmanlc(:,:) = 0._DP
   sigmakin(:,:) = 0._DP
@@ -120,9 +118,7 @@ SUBROUTINE stres_knl_gpu( sigmanlc, sigmakin )
      !
      !  ... contribution from the  nonlocal part
      !
-     gk = gk_d
-     !
-     CALL stres_us_gpu( ik, gk, sigmanlc )
+     CALL stres_us_gpu( ik, gk_d, sigmanlc )
      !
   ENDDO
   !
@@ -131,9 +127,8 @@ SUBROUTINE stres_knl_gpu( sigmanlc, sigmakin )
   sigmakin(:,3) =  [0._DP,0._DP,s33]
   
   !
-  CALL dev_buf%release_buffer( kfac_d, ierr(2)  )
-  CALL dev_buf%release_buffer( gk_d,   ierr(1)  )
-  DEALLOCATE( gk )
+  CALL dev_buf%release_buffer( kfac_d, ierr  )
+  CALL dev_buf%release_buffer( gk_d,   ierr  )
   !
   ! ... the kinetic term must be summed over PW's and over k-points
   !
