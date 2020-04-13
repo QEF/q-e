@@ -247,6 +247,14 @@
   !! change in energy for each additional smearing in the selfen_phon
   !
   ! Wannierization
+  CHARACTER(LEN = 255) :: wannier_plot_list
+  !! Field read for parsing Wannier function list
+  LOGICAL :: wannier_plot
+  !! if .TRUE. plot Wannier functions
+  LOGICAL :: reduce_unk
+  !! if .TRUE. plot Wannier functions on reduced grids
+  INTEGER :: wannier_plot_supercell(3)
+  !! Size of supercell for plotting Wannier functions
   REAL(KIND = DP) :: dis_win_min
   !! min energy of the Wannier disentanglement window
   REAL(KIND = DP) :: dis_win_max
@@ -259,6 +267,10 @@
   !! parameter for Wannier functions via SCDM algorithm
   REAL(KIND = DP) :: scdm_sigma
   !! parameter for Wannier functions via SCDM algorithm
+  REAL(KIND = DP) :: wannier_plot_scale
+  !! Scaling parameter for cube files
+  REAL(KIND = DP) :: wannier_plot_radius
+  !! Cut-off radius for plotting Wannier functions
   !
   ! Superconductivity
   REAL(KIND = DP) :: eps_acustic

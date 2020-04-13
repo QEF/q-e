@@ -74,6 +74,7 @@ indabs=`grep "  (cm-1)" $fname | awk '{print $1; print $2; print $3; print $4}'`
 mobnewx=`sed -n -e "/       Temp    / {n;n;n;n;p}" $fname | awk '{print $1; print $2; print $5}'`
 mobnewy=`sed -n -e "/       Temp    / {n;n;n;n;n;p}" $fname | awk '{print $2}'`
 mobnewz=`sed -n -e "/       Temp    / {n;n;n;n;n;n;p}" $fname | awk '{print $3}'`
+ratmax=`grep "Maximum Im/Re Ratio =" $fname | awk '{print $9}'`
 
 if test "$efm" != ""; then
         echo efm
@@ -297,4 +298,7 @@ if test "$pi" != ""; then
         for x in $pi; do echo $x; done
 fi
 
-
+if test "$ratmax" != ""; then
+        echo ratmax
+        for x in $ratmax; do echo $x; done
+fi

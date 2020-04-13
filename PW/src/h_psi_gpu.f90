@@ -125,8 +125,8 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   attributes(DEVICE) :: psi_d, hpsi_d
 #endif
   !
-  COMPLEX(DP), ALLOCATABLE, PINNED :: psi_host(:,:)
-  COMPLEX(DP), ALLOCATABLE, PINNED :: hpsi_host(:,:)
+  COMPLEX(DP), ALLOCATABLE :: psi_host(:,:)
+  COMPLEX(DP), ALLOCATABLE :: hpsi_host(:,:)
 #if defined(__CUDA)
   attributes(PINNED) :: psi_host, hpsi_host
 #endif

@@ -179,6 +179,13 @@ atomic_wfc_mod.o : ../../Modules/kind.o
 average_pp.o : ../../Modules/atom.o
 average_pp.o : ../../Modules/kind.o
 average_pp.o : ../../Modules/uspp.o
+beef.o       : ../../Modules/kind.o
+beef.o       : ../../Modules/io_global.o
+beef.o       : ../../Modules/funct.o
+beef.o       : ../../Modules/input_parameters.o
+beef.o       : ../../Modules/control_flags.o
+beef.o       : scf_mod.o
+beef.o       : pwcom.o
 bp_c_phase.o : ../../Modules/becmod.o
 bp_c_phase.o : ../../Modules/cell_base.o
 bp_c_phase.o : ../../Modules/constants.o
@@ -1170,6 +1177,7 @@ move_ions.o : dynamics_module.o
 move_ions.o : fcp.o
 move_ions.o : pwcom.o
 move_ions.o : symm_base.o
+move_ions.o : beef.o
 n_plane_waves.o : ../../Modules/kind.o
 n_plane_waves.o : ../../Modules/mp_pools.o
 n_plane_waves.o : ../../UtilXlib/mp.o
@@ -1737,6 +1745,7 @@ run_driver.o : ../../Modules/parameters.o
 run_driver.o : ../../UtilXlib/mp.o
 run_driver.o : pwcom.o
 run_driver.o : update_pot.o
+run_driver.o : beef.o
 run_pwscf.o : ../../FFTXlib/fft_types.o
 run_pwscf.o : ../../Modules/cell_base.o
 run_pwscf.o : ../../Modules/check_stop.o
@@ -1753,6 +1762,7 @@ run_pwscf.o : ../../Modules/noncol.o
 run_pwscf.o : ../../Modules/parameters.o
 run_pwscf.o : ../../Modules/qexsd.o
 run_pwscf.o : ../../Modules/qmmm.o
+run_pwscf.o : beef.o
 run_pwscf.o : atomic_wfc_mod.o
 run_pwscf.o : exx.o
 run_pwscf.o : exx_band.o

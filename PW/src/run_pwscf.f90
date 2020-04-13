@@ -37,7 +37,7 @@ SUBROUTINE run_pwscf( exit_status )
   USE parameters,           ONLY : ntypx, npk, lmaxx
   USE cell_base,            ONLY : fix_volume, fix_area
   USE control_flags,        ONLY : conv_elec, gamma_only, ethr, lscf, treinit_gvecs
-  USE control_flags,        ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs
+  USE control_flags,        ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs, lensemb
   USE cellmd,               ONLY : lmovecell
   USE command_line_options, ONLY : command_line
   USE force_mod,            ONLY : lforce, lstres, sigma, force
@@ -51,6 +51,9 @@ SUBROUTINE run_pwscf( exit_status )
                                    qmmm_update_positions, qmmm_update_forces
   USE qexsd_module,         ONLY : qexsd_set_status
   USE funct,                ONLY : dft_is_hybrid, stop_exx 
+#ifdef use_beef
+  USE beef,                 ONLY : beef_energies
+#endif 
   !
   IMPLICIT NONE
   !
@@ -269,6 +272,9 @@ SUBROUTINE run_pwscf( exit_status )
   ! ... save final data file
   !
   CALL qexsd_set_status( exit_status )
+#ifdef use_beef
+  IF ( lensemb ) CALL beef_energies( )
+#endif 
   CALL punch( 'all' )
   !
   CALL qmmm_shutdown()
