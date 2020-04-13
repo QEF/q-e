@@ -126,8 +126,19 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   !
   CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
-
-  hpsi (:, 1:m) = (0.0_dp, 0.0_dp)
+  !
+  ! ... Here we set the kinetic energy (k+G)^2 psi and clean up garbage
+  !
+  !$omp parallel do
+  DO ibnd = 1, m
+     hpsi(1:n,ibnd) = g2kin(1:n) * psi(1:n,ibnd)
+     IF (n<lda) hpsi(n+1:lda, ibnd) = (0.0_dp, 0.0_dp)
+     IF ( noncolin ) THEN
+        hpsi(lda+1:lda+n, ibnd) = g2kin(1:n) * psi(lda+1:lda+n, ibnd)
+        IF (n<lda) hpsi(lda+n+1:lda+lda, ibnd) = (0.0_dp, 0.0_dp)
+     ENDIF
+  ENDDO
+  !$omp end parallel do
 
   CALL start_clock( 'h_psi:pot' ); !write (*,*) 'start h_psi:pot';FLUSH(6)
   !
@@ -154,8 +165,8 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
            CALL v_loc_psir_inplace( ibnd, m ) 
            ! ... psic (hpsi) -> psic + vusp
            CALL  add_vuspsir_gamma( ibnd, m )
-           ! ... transform psic back in reciprocal space and assign it to hpsi
-           CALL fwfft_orbital_gamma( hpsi, ibnd, m )
+           ! ... transform psic back in reciprocal space and add it to hpsi
+           CALL fwfft_orbital_gamma( hpsi, ibnd, m, add_to_orbital=.TRUE. )
         ENDDO
         !
      ELSE
@@ -189,8 +200,8 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
            CALL v_loc_psir_inplace( ibnd, m )
            ! ... psic (hpsi) -> psic + vusp
            CALL  add_vuspsir_k( ibnd, m )
-           ! ... transform psic back in reciprocal space and assign it to hpsi
-           CALL fwfft_orbital_k( hpsi, ibnd, m )
+           ! ... transform psic back in reciprocal space and add it to hpsi
+           CALL fwfft_orbital_k( hpsi, ibnd, m, add_to_orbital=.TRUE. )
            !
         ENDDO
         !
@@ -215,19 +226,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   ENDIF
   !
   CALL stop_clock( 'h_psi:pot' ); !write (*,*) 'stop h_psi:pot';FLUSH(6)
-  !
-  ! ... Here we add the kinetic energy (k+G)^2 psi and clean up garbage
-  !
-  !$omp parallel do
-  DO ibnd = 1, m
-     hpsi(1:n,ibnd) = hpsi(1:n,ibnd) + g2kin(1:n) * psi(1:n,ibnd)
-     IF (n<lda) hpsi(n+1:lda, ibnd) = (0.0_dp, 0.0_dp)
-     IF ( noncolin ) THEN
-        hpsi(lda+1:lda+n, ibnd) = hpsi(lda+1:lda+n, ibnd) + g2kin(1:n) * psi(lda+1:lda+n, ibnd)
-        IF (n<lda) hpsi(lda+n+1:lda+lda, ibnd) = (0.0_dp, 0.0_dp)
-     ENDIF
-  ENDDO
-  !$omp end parallel do
   !  
   IF (dft_is_meta()) CALL h_psi_meta( lda, n, m, psi, hpsi )
   !
