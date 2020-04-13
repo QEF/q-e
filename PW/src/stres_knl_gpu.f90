@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE stres_knl_gpu( sigmanlc, sigmakin )
+SUBROUTINE stres_knl_gpu( sigmanlc, sigmakin ) 
   !-----------------------------------------------------------------------
   !! Computes the kinetic + nonlocal contribuition to the stress
   !
@@ -122,7 +122,7 @@ SUBROUTINE stres_knl_gpu( sigmanlc, sigmakin )
      !
      gk = gk_d
      !
-     CALL stres_us( ik, gk, sigmanlc )
+     CALL stres_us_gpu( ik, gk, sigmanlc )
      !
   ENDDO
   !
