@@ -15,6 +15,7 @@ module cpv_traj
     contains
 
     function newunit() result(unit)
+    implicit none
       integer  :: unit
       integer, parameter :: LUN_MIN=10, LUN_MAX=2000
       logical :: opened
@@ -28,32 +29,45 @@ module cpv_traj
       end do
     end function newunit
  
-    subroutine cpv_trajectory_initialize(t, fname, natoms, tau_fac, vel_fac,tps_fac)
+    subroutine cpv_trajectory_initialize(t, fname, natoms, tau_fac, vel_fac,tps_fac,circular,ios)
+    implicit none
         type(cpv_trajectory), intent(inout) :: t
         character(len=256), intent(in) :: fname
         integer, intent(in) :: natoms
         real(dp), intent(in) :: tau_fac,vel_fac,tps_fac
+        logical, intent(in), optional :: circular
+        integer, intent(out),optional :: ios
         integer :: iostat
         ! try to open fname, allocate traj
         t%iounit_pos=newunit()
-        open(unit=t%iounit_pos, file=trim(fname) // '.pos', iostat=iostat )
-        if (iostat /= 0) &
+        open(unit=t%iounit_pos, file=trim(fname) // '.pos', iostat=iostat, action='read' )
+        if (.not. present(ios) .and. iostat /= 0) &
             call errore('cpv_trajectory_initialize', 'error opening file "' // trim(fname) // '.pos"',1)
+        if (present(ios)) &
+            ios=iostat
+        if (iostat /=0 ) return 
         t%iounit_vel=newunit()
-        open(unit=t%iounit_vel,file=trim(fname) // '.vel' )
-        if (iostat /= 0) &
+        open(unit=t%iounit_vel,file=trim(fname) // '.vel', iostat=iostat, action='read' )
+        if (.not. present(ios) .and. iostat /= 0) &
             call errore('cpv_trajectory_initialize', 'error opening file "' // trim(fname) // '.vel"',1)
+        if (present(ios)) &
+            ios=iostat
+        if (iostat /=0 ) return 
         t%is_open=.true.
         t%tau_fac=tau_fac
         t%vel_fac=vel_fac
         t%tps_fac=tps_fac
         t%fname=fname
         !allocate traj
-        call trajectory_allocate(t%traj,natoms,50) !start allocating space for 50 steps
-       
+        if (present(circular)) then
+            call trajectory_allocate(t%traj,natoms,10,circular) !allocate space for 10 steps
+        else
+            call trajectory_allocate(t%traj,natoms,50) !start allocating space for 50 steps
+        end if
     end subroutine
 
     subroutine cpv_trajectory_close(t)
+    implicit none
     type(cpv_trajectory), intent(inout) :: t
         close(t%iounit_pos)
         close(t%iounit_vel)
@@ -61,6 +75,7 @@ module cpv_traj
     end subroutine
 
     function cpv_trajectory_read_step(t) result (res)
+    implicit none
         type(cpv_trajectory), intent(inout) :: t
         logical :: res
         type(timestep) :: tstep !this internally is only a pointer to a bigger allocated array
@@ -108,7 +123,17 @@ module cpv_traj
 
     end function
 
+    subroutine cpv_trajectory_get_last_step(t, tstep)
+    implicit none
+        type(cpv_trajectory), intent(in) :: t
+        type(timestep), intent(out) :: tstep
+
+        ! get the timestep data
+        call trajectory_get(t%traj,t%traj%nsteps,tstep)
+
+    end subroutine
     subroutine cpv_trajectory_get_step(t, idx, tstep)
+    implicit none
         type(cpv_trajectory), intent(in) :: t
         type(timestep), intent(out) :: tstep
         integer, intent(in) :: idx
@@ -119,6 +144,7 @@ module cpv_traj
     end subroutine
 
     subroutine cpv_trajectory_deallocate(t)
+    implicit none
         type(cpv_trajectory), intent(inout) :: t
 
         !deallocate stuff

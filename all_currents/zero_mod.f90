@@ -40,7 +40,7 @@ MODULE zero_mod
   !input from stdout
   integer        :: natoms !cutoff per somme in griglia reale
   integer        :: n_max !cutoff per somme in griglia reale
-  character(len=256) :: status !what to do with the program. "initialize" or "compute"
+!  character(len=256) :: status !what to do with the program. "initialize" or "compute"
   real(kind=DP)  :: eta !ewald factor for convergence
 
   

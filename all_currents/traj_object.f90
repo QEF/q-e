@@ -15,11 +15,13 @@ module traj_object
        integer :: nsteps=0,nsteps_max=0,natoms=0
        real(dp), pointer :: tau(:,:,:) => null(), vel(:,:,:) => null(), tps(:)=>null()
        integer,  pointer :: nstep(:)=>null()
+       logical :: circular = .false. !save trajectory in a circular buffer
    end type
 
    contains
 
    subroutine trajectory_deallocate(t)
+    implicit none
        type(trajectory), intent(inout) :: t 
 
        if (associated(t%tau)) then
@@ -31,13 +33,16 @@ module traj_object
    end subroutine
 
    subroutine trajectory_remove_back(t)
+    implicit none
        type(trajectory), intent(inout) :: t
        if (t%nsteps > 0) t%nsteps = t%nsteps - 1
    end subroutine
 
    subroutine trajectory_reallocate_if_necessary(t)
+    implicit none
        type(trajectory), intent(inout) :: t
        integer :: newsize
+       if (t%circular) return !never reallocate for a circular buffer
        if (t%nsteps_max == t%nsteps) then
            newsize=(t%nsteps_max*3)/2
            if (newsize < t%nsteps_max ) &
@@ -46,12 +51,25 @@ module traj_object
        end if
    end subroutine
 
+   function get_idx(t,idx) result(res)
+    implicit none
+       type(trajectory), intent(in) :: t
+       integer,intent(in) :: idx
+       integer :: res
+       if (t%circular) then
+           res=mod(idx,t%nsteps_max)+1
+       else
+           res=idx
+       end if
+   end function
+
    subroutine trajectory_push_back(t, natoms, tps, nstep, tau, vel)
+    implicit none
        type(trajectory), intent(inout) :: t
        real(dp), intent(in) :: tps, tau(:,:), vel(:,:)
        integer,  intent(in) :: nstep, natoms
 
-       integer :: newsize
+       integer :: newsize,idx
 
        if (natoms /= t%natoms) &
            call errore('trajectory_push_back','trying to push back a frame with a different number of atoms',1)
@@ -61,13 +79,15 @@ module traj_object
 
        t%nsteps = t%nsteps + 1
        !copy stuff
-       t%tps(t%nsteps)   = tps
-       t%nstep(t%nsteps) = nstep
-       t%tau(:,:,t%nsteps) = tau
-       t%vel(:,:,t%nsteps) = vel
+       idx=get_idx(t,t%nsteps)
+       t%tps(idx)   = tps
+       t%nstep(idx) = nstep
+       t%tau(:,:,idx) = tau
+       t%vel(:,:,idx) = vel
    end subroutine
 
    subroutine trajectory_get_temporary(t, natoms,tstep)
+    implicit none
        type(trajectory), intent(inout) :: t
        type(timestep), intent(out) :: tstep
        integer, intent(in) :: natoms
@@ -82,6 +102,7 @@ module traj_object
    end subroutine
 
    subroutine trajectory_push_back_last_temporary(t)
+    implicit none
        type(trajectory), intent(inout) :: t
        if (t%nsteps == t%nsteps_max) &
            call errore('trajectory_push_back_last_temporary','there is no last temporary!',1)
@@ -89,30 +110,36 @@ module traj_object
    end subroutine
 
    subroutine trajectory_get(t, idx, tstep, dont_check)
+    implicit none
        type(trajectory), intent(in) :: t
        integer, intent(in) :: idx 
        type(timestep), intent(out) :: tstep
        logical, optional, intent(in) :: dont_check
-       if (present(dont_check)) then
-           if (.not. dont_check .and. &
-               .not. (idx>0 .and. idx <= t%nsteps) ) &
+       integer :: cidx
+       if (.not. t%circular) then
+           if (present(dont_check)) then
+               if (.not. dont_check .and. &
+                   .not. (idx>0 .and. idx <= t%nsteps) ) &
+                       call errore('get_step','idx out of range',1)
+           else
+               if (.not. (idx>0 .and. idx <= t%nsteps) ) &
                    call errore('get_step','idx out of range',1)
-       else
-           if (.not. (idx>0 .and. idx <= t%nsteps) ) &
-               call errore('get_step','idx out of range',1)
+           end if
        end if
-       tstep%tps   => t%tps(idx)
-       tstep%nstep => t%nstep(idx)
-       tstep%tau   => t%tau(:,:,idx)
-       tstep%vel   => t%vel(:,:,idx)
+       cidx=get_idx(t,idx)
+       tstep%tps   => t%tps(cidx)
+       tstep%nstep => t%nstep(cidx)
+       tstep%tau   => t%tau(:,:,cidx)
+       tstep%vel   => t%vel(:,:,cidx)
    end subroutine
 
-   subroutine trajectory_allocate(t,natoms,nsteps_to_allocate)
+   subroutine trajectory_allocate(t,natoms,nsteps_to_allocate,circular)
        !reallocate (to expand the trajectory or shrink) a trajectory type
        !or initialize from scratch
 
        type(trajectory), intent(inout) :: t
        integer, intent(in) :: natoms,nsteps_to_allocate
+       logical,intent(in),optional :: circular
        integer :: n
 
        ! arrays that may be stolen by t
@@ -121,8 +148,14 @@ module traj_object
 
 
        if (associated(t%tau) .and. t%nsteps_max /= nsteps_to_allocate) then
+           if (t%circular) &
+               call errore('trajectory_allocate','reallocation of circular buffer not implemented',1)
            if (t%natoms /= natoms) &
                call errore('trajectory_allocate','trying to reallocate with different number of atoms',1)
+           if (present(circular)) then
+               if(circular .neqv. t%circular) &
+                   call errore('trajectory_allocate','cannot switch circular buffer on/off after initialization')
+           end if
            !reallocate stuff and copy
            n=min(nsteps_to_allocate,t%nsteps)
 
@@ -150,6 +183,7 @@ module traj_object
            t%nsteps_max=nsteps_to_allocate
            ! now t is extended (or reduced)
        else if (.not. associated(t%tau)) then
+           if (present(circular)) t%circular=circular
            ! initialize structure with nothing inside
            allocate(t%tau(3,natoms,nsteps_to_allocate))
            allocate(t%tps(nsteps_to_allocate))

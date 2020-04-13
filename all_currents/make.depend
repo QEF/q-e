@@ -182,3 +182,4 @@ zero_mod.o : ../PW/src/pwcom.o
 zero_mod.o : ../UtilXlib/mp.o
 cpv_traj.o : traj_object.o
 cpv_traj_test.o : cpv_traj.o
+all_currents.o : cpv_traj.o
