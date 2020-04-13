@@ -13,15 +13,13 @@ SUBROUTINE compute_deff_gpu( deff_d, et )
   !! This routine is for the collinear case.
   !
   USE kinds,       ONLY: DP
-  USE ions_base,   ONLY: nat !, nsp, ityp
+  USE ions_base,   ONLY: nat
   USE uspp,        ONLY: okvan
   USE uspp_param,  ONLY: nhm
   USE lsda_mod,    ONLY: current_spin
   !
-  USE uspp_gpum, ONLY : using_deeq_d, deeq_d, &
-                        using_qq_at_d, qq_at_d
-  !
-  !USE device_util_m,  ONLY : dev_memcpy
+  USE uspp_gpum,   ONLY: using_deeq_d, deeq_d, &
+                         using_qq_at_d, qq_at_d
   !
   IMPLICIT NONE
   !
@@ -32,16 +30,14 @@ SUBROUTINE compute_deff_gpu( deff_d, et )
   !
   ! ... local variables
   !
-  INTEGER :: nt, na, is, i ,j
+  INTEGER :: nt, na, is, i, j
   !
 #if defined(__CUDA)
   attributes(DEVICE) ::  deff_d
 #endif  
   !
-  !call using_deeq(0) ; call using_qq_at(0)
   CALL using_deeq_d(0)
   CALL using_qq_at_d(0)
-  !
   !
   IF (.NOT. okvan) THEN
      !
@@ -74,67 +70,104 @@ END SUBROUTINE compute_deff_gpu
 !
 !
 !---------------------------------------------------------------------------
-! SUBROUTINE compute_deff_nc( deff, et )
-!   !-------------------------------------------------------------------------
-!   !! This routine computes the effective value of the D-eS coefficients
-!   !! which appears often in many expressions. This routine is for the
-!   !! noncollinear case.
-!   !
-!   USE kinds,            ONLY: DP
-!   USE ions_base,        ONLY: nsp, nat, ityp
-!   USE spin_orb,         ONLY: lspinorb
-!   USE noncollin_module, ONLY: noncolin, npol
-!   USE uspp,             ONLY: deeq_nc, qq_at, qq_so, okvan
-!   USE uspp_param,       ONLY: nhm
-!   USE lsda_mod,         ONLY: nspin
-!   !
-!   USE uspp_gpum, ONLY : using_deeq_nc, using_qq_at, using_qq_so
-!   !
-!   IMPLICIT NONE
-!   !
-!   REAL(DP), INTENT(IN) :: et
-!   !! The eigenvalues of the hamiltonian
-!   COMPLEX(DP), INTENT(OUT) :: deff(nhm,nhm,nat,nspin) 
-!   !! Effective values of the D-eS coefficients
-!   !
-!   ! ... local variables
-!   !
-!   INTEGER :: nt, na, is, js, ijs
-!   !
-!   CALL using_deeq_nc(0)
-!   IF (.not. lspinorb) CALL using_qq_at(0)
-!   IF (lspinorb) CALL using_qq_so(0)
-!   !
-!   deff=deeq_nc
-!   IF (okvan) THEN
-!      !
-!      DO nt = 1, nsp
-!         DO na = 1, nat
-!            !
-!            IF ( ityp(na) == nt ) THEN
-!               IF (lspinorb) THEN
-!                  deff(:,:,na,:) = deff(:,:,na,:) - et * qq_so(:,:,:,nt)
-!               ELSE
-!                  ijs=0
-!                  !
-!                  DO is=1,npol
-!                     DO js=1,npol
-!                        !
-!                        ijs=ijs+1
-!                        IF (is==js) deff(:,:,na,ijs)=deff(:,:,na,ijs)-et*qq_at(:,:,na)
-!                        !
-!                     ENDDO
-!                  ENDDO
-!                  !
-!               ENDIF
-!            ENDIF
-!            !
-!         ENDDO
-!      ENDDO
-!      !
-!   ENDIF
-!   !
-!   !
-!   RETURN
-!   !
-! END SUBROUTINE compute_deff_nc
+SUBROUTINE compute_deff_nc_gpu( deff_d, et )
+  !-------------------------------------------------------------------------
+  !! This routine computes the effective value of the D-eS coefficients
+  !! which appears often in many expressions. This routine is for the
+  !! noncollinear case.
+  !
+  USE kinds,            ONLY: DP
+  USE ions_base,        ONLY: nsp, nat, ityp
+  USE spin_orb,         ONLY: lspinorb
+  USE noncollin_module, ONLY: noncolin, npol
+  USE uspp,             ONLY: okvan
+  USE uspp_param,       ONLY: nhm
+  USE lsda_mod,         ONLY: nspin
+  !
+  USE uspp_gpum,        ONLY: using_deeq_nc_d, using_qq_at_d,    &
+                              using_qq_so_d, deeq_nc_d, qq_so_d, &
+                              qq_at_d
+  USE device_util_m,    ONLY: dev_memcpy
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: et
+  !! The eigenvalues of the hamiltonian
+  COMPLEX(DP), INTENT(OUT) :: deff_d(nhm,nhm,nat,nspin) 
+  !! Effective values of the D-eS coefficients
+  !
+  ! ... local variables
+  !
+  INTEGER :: nt, na, is, js, ijs, i, j, ias
+  INTEGER :: na_v(nat), nt_v(nat)
+  INTEGER, ALLOCATABLE :: na_d(:), nt_d(:)
+  !
+#if defined(__CUDA)
+  attributes(DEVICE) ::  deff_d, na_d, nt_d
+#endif  
+  !
+  CALL using_deeq_nc_d(0)
+  IF (.NOT. lspinorb) CALL using_qq_at_d(0)
+  IF (lspinorb) CALL using_qq_so_d(0)
+  !
+  CALL dev_memcpy( deff_d, deeq_nc_d )
+  !
+  IF ( okvan ) THEN
+    !
+    ALLOCATE( nt_d(nat), na_d(nat) )
+    !
+    i = 0
+    DO nt = 1, nsp
+      DO na = 1, nat
+        IF ( ityp(na)/=nt ) CYCLE
+        i = i + 1
+        nt_v(i) = nt
+        na_v(i) = na
+      ENDDO
+    ENDDO
+    !
+    nt_d = nt_v ; na_d = na_v
+    !
+    IF (lspinorb) THEN
+      !
+      !$cuf kernel do (3) <<<*,*>>>
+      DO ias = 1, nat
+        DO i = 1, nhm
+          DO j = 1, nhm
+            na = na_d(ias)
+            nt = nt_d(ias)
+            deff_d(i,j,na,:) = deff_d(i,j,na,:) - et*qq_so_d(i,j,:,nt)
+          ENDDO
+        ENDDO
+      ENDDO
+      !
+    ELSE  
+      !
+      !$cuf kernel do (3) <<<*,*>>>
+      DO ias = 1, nat
+        DO i = 1, nhm
+          DO j = 1, nhm
+            na = na_d(ias)
+            nt = nt_d(ias)
+            ijs=0
+            DO is = 1, npol
+              DO js = 1, npol
+                ijs = ijs + 1
+                IF (is==js) deff_d(i,j,na,ijs) = deff_d(i,j,na,ijs) - &
+                                                 et*qq_at_d(i,j,na)
+              ENDDO
+            ENDDO
+          ENDDO
+        ENDDO
+      ENDDO
+      !
+    ENDIF
+    !
+    DEALLOCATE( nt_d, na_d )
+    !
+  ENDIF  
+  !
+  !
+  RETURN
+  !
+END SUBROUTINE compute_deff_nc_gpu

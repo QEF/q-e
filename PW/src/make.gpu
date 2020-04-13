@@ -64,7 +64,6 @@ clean_pw.o : pwcom_gpu.o
 clean_pw.o : pwcom_gpu.o
 clean_pw.o : pwcom_gpu.o
 clean_pw.o : scf_mod_gpu.o
-compute_deff_gpu.o : pwcom.o
 dqvan2.o : pwcom_gpu.o
 electrons.o : newd_gpu.o
 electrons.o : pwcom_gpu.o
@@ -102,7 +101,6 @@ stres_ewa_gpu.o : Coul_cut_2D.o
 stres_knl_gpu.o : buffers.o
 stres_knl_gpu.o : pwcom.o
 stres_knl_gpu.o : symme.o
-stres_knl_gpu.o : stres_us.o
 stres_us_gpu.o : pwcom.o
 stres_us_gpu.o : compute_deff_gpu.o
 stres_us_gpu.o : gen_us_dj_gpu.o

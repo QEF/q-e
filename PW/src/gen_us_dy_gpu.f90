@@ -17,7 +17,7 @@ SUBROUTINE gen_us_dy_gpu( ik, u, dvkb_d )
   USE constants,   ONLY: tpi
   USE ions_base,   ONLY: nat, ntyp => nsp, ityp, tau
   USE cell_base,   ONLY: tpiba
-  USE klist,       ONLY: xk, ngk, igk_k
+  USE klist,       ONLY: xk, ngk, igk_k_d
   USE wvfct,       ONLY: npwx
   USE uspp,        ONLY: nkb, indv, nhtol, nhtolm
   USE us,          ONLY: nqx, tab, tab_d2y, dq, spline_ps
@@ -27,6 +27,7 @@ SUBROUTINE gen_us_dy_gpu( ik, u, dvkb_d )
   USE us_gpum,     ONLY: using_tab, using_tab_d2y, &
                          using_tab_d, tab_d
   USE gvect_gpum,  ONLY: mill_d, eigts1_d, eigts2_d, eigts3_d, g_d
+  USE gbuffers,    ONLY: dev_buf
   !
   IMPLICIT NONE
   !
@@ -42,18 +43,17 @@ SUBROUTINE gen_us_dy_gpu( ik, u, dvkb_d )
   INTEGER :: na, nt, nb, ih, l, lm, ikb, iig, ipol, i0, i1, i2, &
              i3, ig, npw, nbm, iq, &
              mil1, mil2, mil3, ikb_t, nht, ina
-  INTEGER :: nas(nat)
+  INTEGER :: nas(nat), ierr(4)
   !
-  INTEGER, ALLOCATABLE :: igk_k_d(:), ityp_d(:), ih_d(:), na_d(:), &
+  INTEGER, ALLOCATABLE :: ityp_d(:), ih_d(:), na_d(:), &
                           nas_d(:), indv_d(:,:), nhtol_d(:,:),    &
                           nhtolm_d(:,:)
   !
   REAL(DP), ALLOCATABLE :: q(:), vkb0(:,:,:), dylm(:,:)
-  REAL(DP), ALLOCATABLE :: xdata(:)
+  REAL(DP), ALLOCATABLE :: xdata(:), tau_d(:,:), q_d(:)
   !
-  REAL(DP), ALLOCATABLE :: gk_d(:,:), q_d(:)
-  REAL(DP), ALLOCATABLE :: vkb0_d(:,:,:), dylm_u_d(:,:), dylm_d(:,:), &
-                           tau_d(:,:)
+  REAL(DP), POINTER :: gk_d(:,:)
+  REAL(DP), POINTER :: vkb0_d(:,:,:), dylm_u_d(:,:), dylm_d(:,:)
   ! dylm = d Y_lm/dr_i in cartesian axes
   ! dylm_u as above projected on u
   COMPLEX(DP), ALLOCATABLE :: phase_d(:), sk_d(:,:)
@@ -62,48 +62,47 @@ SUBROUTINE gen_us_dy_gpu( ik, u, dvkb_d )
   COMPLEX(DP) :: pref
   !
 #if defined(__CUDA)
-  attributes(DEVICE) :: dvkb_d, gk_d, q_d, igk_k_d, sk_d, vkb0_d, &
+  attributes(DEVICE) :: dvkb_d, gk_d, q_d, sk_d, vkb0_d, &
                         dylm_u_d, dylm_d, indv_d, nhtol_d, nhtolm_d, &
                         ityp_d, phase_d, ih_d, na_d, tau_d, nas_d
 #endif
   !
-  dvkb_d = (0.d0, 0.d0)
-  
+  dvkb_d = (0._DP,0._DP)
+  !
   IF (lmaxkb <= 0) RETURN
   !
-  CALL using_tab(0);
-  CALL using_tab_d(0);
-  
+  CALL using_tab(0)
+  CALL using_tab_d(0)
+  !
   IF (spline_ps) CALL using_tab_d2y(0)
   !
   npw = ngk(ik)
   !
-  ALLOCATE( dylm_u_d(npw,(lmaxkb+1)**2), vkb0_d(npw,nbetam,ntyp) )
-  ALLOCATE( gk_d(3,npw), q_d(npw) )
-  ALLOCATE( igk_k_d(npw) )
+  CALL dev_buf%lock_buffer( dylm_u_d, (/ npw,(lmaxkb+1)**2 /), ierr(1) )
+  CALL dev_buf%lock_buffer( vkb0_d, (/ npw,nbetam,ntyp /), ierr(2) )
+  CALL dev_buf%lock_buffer( gk_d, (/ 3,npw /), ierr(3) )
+  ALLOCATE( q_d(npw) )
   !
   xk1 = xk(1,ik)
   xk2 = xk(2,ik)
   xk3 = xk(3,ik)
-  igk_k_d = igk_k(:,ik)
   !
   !$cuf kernel do <<<*,*>>>
   DO ig = 1, npw
-     iig = igk_k_d(ig)
+     iig = igk_k_d(ig,ik)
      gk_d(1,ig) = xk1 + g_d(1,iig)
      gk_d(2,ig) = xk2 + g_d(2,iig)
      gk_d(3,ig) = xk3 + g_d(3,iig)
      q_d(ig) = gk_d(1,ig)**2 +  gk_d(2,ig)**2 + gk_d(3,ig)**2
   ENDDO
   !
-  !
   dylm_u_d(:,:) = 0._DP
   !
-  ALLOCATE( dylm_d(npw,(lmaxkb+1)**2) )
+  CALL dev_buf%lock_buffer( dylm_d, (/npw,(lmaxkb+1)**2/), ierr(4) )
   DO ipol = 1, 3
      CALL dylmr2_gpu( (lmaxkb+1)**2, npw, gk_d, q_d, dylm_d, ipol )
      !
-     u_ipol=u(ipol)
+     u_ipol = u(ipol)
      !$cuf kernel do (2) <<<*,*>>>
      DO lm = 1, (lmaxkb+1)**2
        DO ig = 1, npw
@@ -112,7 +111,7 @@ SUBROUTINE gen_us_dy_gpu( ik, u, dvkb_d )
      ENDDO
      !
   ENDDO
-  DEALLOCATE( dylm_d )
+  CALL dev_buf%release_buffer( dylm_d, ierr(4) )
   !
   !
   !$cuf kernel do (1) <<<*,*>>>
@@ -122,6 +121,7 @@ SUBROUTINE gen_us_dy_gpu( ik, u, dvkb_d )
   !
   !
   IF ( spline_ps ) THEN
+    !
     ALLOCATE( q(npw), xdata(nqx), vkb0(npw,nbetam,ntyp) )
     q = q_d
     DO iq = 1, nqx
@@ -202,7 +202,7 @@ SUBROUTINE gen_us_dy_gpu( ik, u, dvkb_d )
     DO ig = 1, npw
       !
       na = nas_d(ina)
-      iig = igk_k_d(ig)
+      iig = igk_k_d(ig,ik)
       mil1 = mill_d(1,iig)
       mil2 = mill_d(2,iig)
       mil3 = mill_d(3,iig)
@@ -212,12 +212,10 @@ SUBROUTINE gen_us_dy_gpu( ik, u, dvkb_d )
     ENDDO
   ENDDO
   !
-  
-  !
   DEALLOCATE( phase_d )
   !
   ALLOCATE( ih_d(nat*nhm), na_d(nat*nhm) )
-  
+  !
   ikb_t = 0
   DO ina = 1, nat
     na = nas(ina)
@@ -229,10 +227,8 @@ SUBROUTINE gen_us_dy_gpu( ik, u, dvkb_d )
     ENDDO
     ikb_t = ikb_t + nht
   ENDDO
-  
-  
-  ALLOCATE( indv_d(nhm,ntyp), nhtol_d(nhm,ntyp), &
-            nhtolm_d(nhm,ntyp) )
+  !
+  ALLOCATE( indv_d(nhm,ntyp), nhtol_d(nhm,ntyp), nhtolm_d(nhm,ntyp) )
   !
   indv_d   = indv
   nhtol_d  = nhtol
@@ -261,10 +257,12 @@ SUBROUTINE gen_us_dy_gpu( ik, u, dvkb_d )
      CALL errore( 'gen_us_dy', 'unexpected error', 1 )
   ENDIF
   !
-  DEALLOCATE( gk_d, vkb0_d )
-  DEALLOCATE( igk_k_d, ih_d, na_d, nas_d )
+  CALL dev_buf%release_buffer( dylm_u_d, ierr(1) )
+  CALL dev_buf%release_buffer( vkb0_d, ierr(2) )
+  CALL dev_buf%release_buffer( gk_d, ierr(3) )
+  !
+  DEALLOCATE( ih_d, na_d, nas_d )
   DEALLOCATE( indv_d, nhtol_d, nhtolm_d )
-  DEALLOCATE( dylm_u_d )
   !
   !
   RETURN
