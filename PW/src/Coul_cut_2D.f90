@@ -671,6 +671,97 @@ END SUBROUTINE cutoff_stres_sigmahar
 !
 !
 !----------------------------------------------------------------------
+SUBROUTINE cutoff_stres_sigmahar_gpu( psicG_d, sigmahar )
+  !----------------------------------------------------------------------
+  !! This subroutine cuts off the Hartree part of the stress.  
+  !! See Eq. (62) of PRB 96, 075448.
+  !
+  USE kinds
+  USE gvect,      ONLY: ngm, gstart
+  USE constants,  ONLY: eps8
+  USE cell_base,  ONLY: tpiba2, alat, tpiba
+  USE io_global,  ONLY: stdout
+  USE fft_base,   ONLY: dfftp
+  USE gvect_gpum, ONLY: g_d, gg_d
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(IN) :: psicG_d(dfftp%nnr)
+  !! charge density in G-space
+  REAL(DP), INTENT(INOUT) :: sigmahar(3,3)
+  !! hartree contribution to stress
+  !
+  ! ... local variables
+  !
+  INTEGER :: ng, nt, l, m
+  INTEGER, POINTER :: nl_d(:)
+  REAL(DP) :: Gp, G2lzo2Gp, beta, shart, g2, fact
+  REAL(DP) :: sigmahar11, sigmahar31, sigmahar21, &
+              sigmahar32, sigmahar22, sigmahar33
+  REAL(DP), ALLOCATABLE :: cutoff2D_d(:)
+  !
+#if defined(__CUDA)
+  attributes(DEVICE) :: psicG_d, cutoff2D_d, nl_d
+#endif
+  !
+  ALLOCATE( cutoff2D_d(ngm) )
+  cutoff2D_d = cutoff_2D
+  !
+  nl_d => dfftp%nl_d
+  !
+  sigmahar11 = 0._DP  ;  sigmahar31 = 0._DP
+  sigmahar21 = 0._DP  ;  sigmahar32 = 0._DP
+  sigmahar22 = 0._DP  ;  sigmahar33 = 0._DP
+  !
+  !$cuf kernel do (1) <<<*,*>>>
+  DO ng = gstart, ngm
+     Gp = SQRT(g_d(1,ng)**2 + g_d(2,ng)**2)*tpiba
+     IF (Gp < eps8) THEN
+        G2lzo2Gp = 0._DP
+        beta = 0._DP
+     ELSE
+        G2lzo2Gp = gg_d(ng)*tpiba2*lz/2._DP/Gp
+        beta = G2lzo2Gp*(1._DP-cutoff2D_d(ng))/cutoff2D_d(ng)
+     ENDIF
+     !
+     g2 = gg_d(ng) * tpiba2
+     !
+     shart = DBLE(psicG_d(nl_d(ng))*CONJG(psicG_d(nl_d(ng)))) /&
+             g2 * cutoff2D_d(ng)
+     !
+     fact = 1._DP - beta
+     !
+     sigmahar11 = sigmahar11 + shart *tpiba2*2._DP * &
+                               g_d(1,ng) * g_d(1,ng) / g2 * fact
+     sigmahar21 = sigmahar21 + shart *tpiba2*2._DP * &
+                               g_d(2,ng) * g_d(1,ng) / g2 * fact
+     sigmahar22 = sigmahar22 + shart *tpiba2*2._DP * &
+                               g_d(2,ng) * g_d(2,ng) / g2 * fact
+     sigmahar31 = sigmahar31 + shart *tpiba2*2._DP * &
+                               g_d(3,ng) * g_d(1,ng) / g2
+     sigmahar32 = sigmahar32 + shart *tpiba2*2._DP * &
+                               g_d(3,ng) * g_d(2,ng) / g2
+     sigmahar33 = sigmahar33 + shart *tpiba2*2._DP * &
+                               g_d(3,ng) * g_d(3,ng) / g2
+     !
+  ENDDO   
+  !
+  sigmahar(1,1) = sigmahar(1,1) + sigmahar11
+  sigmahar(2,1) = sigmahar(2,1) + sigmahar21
+  sigmahar(2,2) = sigmahar(2,2) + sigmahar22
+  sigmahar(3,1) = sigmahar(3,1) + sigmahar31
+  sigmahar(3,2) = sigmahar(3,2) + sigmahar32
+  sigmahar(3,3) = sigmahar(3,3) + sigmahar33
+  !sigma is multiplied by 0.5*fpi*e2 after
+  !
+  DEALLOCATE( cutoff2D_d )
+  !
+  RETURN
+  !
+END SUBROUTINE cutoff_stres_sigmahar_gpu
+!
+!
+!----------------------------------------------------------------------
 SUBROUTINE cutoff_stres_sigmaewa( alpha, sdewald, sigmaewa )
   !----------------------------------------------------------------------
   !! This subroutine cuts off the Ewald part of the stress.  

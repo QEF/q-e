@@ -28,7 +28,8 @@ PWLIBS += \
   addusforce_gpu.o \
   force_corr_gpu.o \
   stres_loc_gpu.o \
-  dvloc_of_g_gpu.o
+  dvloc_of_g_gpu.o \
+  stres_har_gpu.o
 
 MODFLAGS += \
          $(MOD_FLAG)../../GScratch
@@ -79,7 +80,11 @@ stres_loc_gpu.o : buffers.o
 stres_loc_gpu.o : Coul_cut_2D.o
 stres_loc_gpu.o : pwcom.o
 stres_loc_gpu.o : scf_mod.o
+stres_har_gpu.o : Coul_cut_2D.o
+stres_har_gpu.o : pwcom.o
+stres_har_gpu.o : scf_mod.o
 stress.o : stres_loc_gpu.o
+stress.o : stres_har_gpu.o
 g2_kin.o : pwcom_gpu.o
 g2_kin_gpu.o : pwcom.o
 g2_kin_gpu.o : pwcom_gpu.o
