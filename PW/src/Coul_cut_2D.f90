@@ -798,19 +798,19 @@ SUBROUTINE cutoff_stres_sigmaewa( alpha, sdewald, sigmaewa )
   ! sdewald is the last term in equation B1 of PRB 32 3792.
   ! See also similar comment for ewaldg in cutoff_ewald routine
   !
-  sdewald = 0.0D0
+  sdewald = 0._DP
   DO ng = gstart, ngm
      Gp = SQRT( g(1,ng)**2 + g(2,ng)**2 )*tpiba
      IF (Gp < eps8) THEN
-        G2lzo2Gp = 0.0d0
-        beta = 0.0d0
+        G2lzo2Gp = 0._DP
+        beta = 0._DP
      ELSE
-        G2lzo2Gp = gg(ng)*tpiba2*lz/2.0d0/Gp
-        beta = G2lzo2Gp*(1.0d0-cutoff_2D(ng))/cutoff_2D(ng)
+        G2lzo2Gp = gg(ng)*tpiba2*lz/2._DP/Gp
+        beta = G2lzo2Gp*(1._DP-cutoff_2D(ng))/cutoff_2D(ng)
      ENDIF
      g2 = gg(ng) * tpiba2
-     g2a = g2 / 4.d0 / alpha
-     rhostar = (0.d0, 0.d0)
+     g2a = g2 / 4._DP / alpha
+     rhostar = (0._DP,0._DP)
      DO na = 1, nat
         arg = (g(1,ng) * tau(1,na) + g(2,ng) * tau(2,na) + &
                g(3,ng) * tau(3,na) ) * tpi
@@ -841,5 +841,117 @@ SUBROUTINE cutoff_stres_sigmaewa( alpha, sdewald, sigmaewa )
   !
 END SUBROUTINE cutoff_stres_sigmaewa
 !
+!----------------------------------------------------------------------
+SUBROUTINE cutoff_stres_sigmaewa_gpu( alpha, sdewald, sigmaewa )
+  !----------------------------------------------------------------------
+  !! This subroutine cuts off the Ewald part of the stress.  
+  !! See Eq. (64) in PRB 96 075448
+  !
+  USE kinds
+  USE ions_base,   ONLY : nat, zv, tau, ityp
+  USE constants,   ONLY : e2, eps8
+  USE gvect,       ONLY : ngm, gstart
+  USE cell_base,   ONLY : tpiba2, alat, omega, tpiba
+  USE io_global,   ONLY : stdout
+  !
+  USE gvect_gpum,  ONLY : g_d, gg_d
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: alpha
+  !! tuning param for LR/SR separation
+  REAL(DP), INTENT(INOUT) :: sigmaewa(3,3)
+  !! ewald contribution to stress
+  REAL(DP), INTENT(INOUT) :: sdewald
+  !! constant and diagonal terms
+  !
+  ! ... local variables
+  !
+  INTEGER :: ng, na, l, m, ntyp
+  REAL(DP) :: Gp, G2lzo2Gp, beta, sewald, g2, g2a, arg, fact
+  REAL(DP) :: sigma11, sigma21, sigma22, sigma31, sigma32, sigma33
+  COMPLEX(DP) :: rhostar
+  !
+  INTEGER , ALLOCATABLE :: ityp_d(:)
+  REAL(DP), ALLOCATABLE :: cutoff2D_d(:), tau_d(:,:), zv_d(:)
+  !
+#if defined(__CUDA)
+  attributes(DEVICE) :: cutoff2D_d, tau_d, zv_d, ityp_d
+#endif
+  !
+  ntyp = SIZE(zv)
+  ALLOCATE( cutoff2D_d(ngm), tau_d(3,nat), zv_d(ntyp) )
+  ALLOCATE( ityp_d(nat) )
+  cutoff2D_d = cutoff_2D
+  tau_d = tau
+  zv_d = zv
+  ityp_d = ityp
+  ! g(1) is a problem if it's G=0, because we divide by G^2. 
+  ! So start at gstart.
+  ! fact=1.0d0, gamma_only not implemented
+  ! G=0 componenent of the long-range part of the local part of the 
+  ! pseudopotminus the Hartree potential is set to 0.
+  ! in other words, sdewald=0.  
+  ! sdewald is the last term in equation B1 of PRB 32 3792.
+  ! See also similar comment for ewaldg in cutoff_ewald routine
+  !
+  sigma11 = 0._DP ; sigma21 = 0._DP ; sigma22 = 0._DP
+  sigma31 = 0._DP ; sigma32 = 0._DP ; sigma33 = 0._DP
+  !
+  sdewald = 0._DP
+  !
+  !$cuf kernel do (1) <<<*,*>>>
+  DO ng = gstart, ngm
+     Gp = SQRT( g_d(1,ng)**2 + g_d(2,ng)**2 )*tpiba
+     IF (Gp < eps8) THEN
+        G2lzo2Gp = 0._DP
+        beta = 0._DP
+     ELSE
+        G2lzo2Gp = gg_d(ng)*tpiba2*lz/2._DP/Gp
+        beta = G2lzo2Gp*(1._DP-cutoff2D_d(ng))/cutoff2D_d(ng)
+     ENDIF
+     g2 = gg_d(ng) * tpiba2
+     g2a = g2 / 4._DP / alpha
+     rhostar = (0._DP,0._DP)
+     DO na = 1, nat
+        arg = (g_d(1,ng) * tau_d(1,na) + g_d(2,ng) * tau_d(2,na) + &
+               g_d(3,ng) * tau_d(3,na) ) * tpi
+        rhostar = rhostar + CMPLX(zv_d(ityp_d(na))) * CMPLX(COS(arg),SIN(arg),KIND=DP)
+     ENDDO
+     rhostar = rhostar / CMPLX(omega)
+     sewald = tpi * e2 * EXP(-g2a) / g2* cutoff2D_d(ng) * ABS(rhostar)**2
+     ! ... sewald is an other diagonal term that is similar to the diagonal terms 
+     ! in the other stress contributions. It basically gives a term prop to 
+     ! the ewald energy
+     !
+     sdewald = sdewald - sewald
+     sigma11 = sigma11 + sewald * tpiba2 * 2._DP * &
+                 g_d(1,ng) * g_d(1,ng) / g2 * (1._DP+g2a-beta)
+     sigma21 = sigma21 + sewald * tpiba2 * 2._DP * &
+                 g_d(2,ng) * g_d(1,ng) / g2 * (1._DP+g2a-beta)          
+     sigma22 = sigma22 + sewald * tpiba2 * 2._DP * &
+                 g_d(2,ng) * g_d(2,ng) / g2 * (1._DP+g2a-beta)         
+     sigma31 = sigma31 + sewald * tpiba2 * 2._DP * &
+                 g_d(3,ng) * g_d(1,ng) / g2 * (g2a+1._DP)          
+     sigma32 = sigma32 + sewald * tpiba2 * 2._DP * &
+                 g_d(3,ng) * g_d(2,ng) / g2 * (g2a+1._DP)          
+     sigma33 = sigma33 + sewald * tpiba2 * 2._DP * &
+                 g_d(3,ng) * g_d(3,ng) / g2 * (g2a+1._DP)
+     !
+  ENDDO
+  !
+  sigmaewa(1,1) = sigmaewa(1,1) + sigma11
+  sigmaewa(2,1) = sigmaewa(2,1) + sigma21
+  sigmaewa(2,2) = sigmaewa(2,2) + sigma22
+  sigmaewa(3,1) = sigmaewa(3,1) + sigma31
+  sigmaewa(3,2) = sigmaewa(3,2) + sigma32
+  sigmaewa(3,3) = sigmaewa(3,3) + sigma33
+  !
+  DEALLOCATE( cutoff2D_d, tau_d, zv_d )
+  DEALLOCATE( ityp_d )
+  !
+  RETURN
+  !
+END SUBROUTINE cutoff_stres_sigmaewa_gpu
 !
 END MODULE Coul_cut_2D

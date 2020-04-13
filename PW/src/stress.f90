@@ -36,6 +36,7 @@ SUBROUTINE stress( sigma )
   USE tsvdw_module,     ONLY : HtsvdW
   USE esm,              ONLY : do_comp_esm, esm_bc ! for ESM stress
   USE esm,              ONLY : esm_stres_har, esm_stres_ewa, esm_stres_loclong ! for ESM stress
+  USE gvect_gpum,       ONLY : g_d, gg_d
   !
   IMPLICIT NONE
   !
@@ -114,8 +115,12 @@ SUBROUTINE stress( sigma )
   IF ( do_comp_esm .AND. ( esm_bc /= 'pbc' ) ) THEN ! for ESM stress
      CALL esm_stres_ewa( sigmaewa )
   ELSE
-     CALL stres_ewa( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
-          gg, ngm, gstart, gamma_only, gcutm, sigmaewa )
+     IF (.NOT. use_gpu) CALL stres_ewa( alat, nat, ntyp, ityp, zv, at,      &
+                                        bg, tau, omega, g, gg, ngm, gstart, &
+                                        gamma_only, gcutm, sigmaewa )
+     IF (      use_gpu) CALL stres_ewa_gpu( alat, nat, ntyp, ityp, zv, at, bg,&
+                                            tau, omega, g_d,gg_d, ngm, gstart,&
+                                            gamma_only, gcutm, sigmaewa )     
   END IF
   !
   ! semi-empirical dispersion contribution: Grimme-D2 and D3
