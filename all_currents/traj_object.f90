@@ -21,6 +21,7 @@ module traj_object
    contains
 
    subroutine trajectory_deallocate(t)
+    implicit none
        type(trajectory), intent(inout) :: t 
 
        if (associated(t%tau)) then
@@ -32,11 +33,13 @@ module traj_object
    end subroutine
 
    subroutine trajectory_remove_back(t)
+    implicit none
        type(trajectory), intent(inout) :: t
        if (t%nsteps > 0) t%nsteps = t%nsteps - 1
    end subroutine
 
    subroutine trajectory_reallocate_if_necessary(t)
+    implicit none
        type(trajectory), intent(inout) :: t
        integer :: newsize
        if (t%circular) return !never reallocate for a circular buffer
@@ -49,6 +52,7 @@ module traj_object
    end subroutine
 
    function get_idx(t,idx) result(res)
+    implicit none
        type(trajectory), intent(in) :: t
        integer,intent(in) :: idx
        integer :: res
@@ -60,6 +64,7 @@ module traj_object
    end function
 
    subroutine trajectory_push_back(t, natoms, tps, nstep, tau, vel)
+    implicit none
        type(trajectory), intent(inout) :: t
        real(dp), intent(in) :: tps, tau(:,:), vel(:,:)
        integer,  intent(in) :: nstep, natoms
@@ -82,6 +87,7 @@ module traj_object
    end subroutine
 
    subroutine trajectory_get_temporary(t, natoms,tstep)
+    implicit none
        type(trajectory), intent(inout) :: t
        type(timestep), intent(out) :: tstep
        integer, intent(in) :: natoms
@@ -96,6 +102,7 @@ module traj_object
    end subroutine
 
    subroutine trajectory_push_back_last_temporary(t)
+    implicit none
        type(trajectory), intent(inout) :: t
        if (t%nsteps == t%nsteps_max) &
            call errore('trajectory_push_back_last_temporary','there is no last temporary!',1)
@@ -103,6 +110,7 @@ module traj_object
    end subroutine
 
    subroutine trajectory_get(t, idx, tstep, dont_check)
+    implicit none
        type(trajectory), intent(in) :: t
        integer, intent(in) :: idx 
        type(timestep), intent(out) :: tstep

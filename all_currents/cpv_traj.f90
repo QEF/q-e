@@ -15,6 +15,7 @@ module cpv_traj
     contains
 
     function newunit() result(unit)
+    implicit none
       integer  :: unit
       integer, parameter :: LUN_MIN=10, LUN_MAX=2000
       logical :: opened
@@ -29,6 +30,7 @@ module cpv_traj
     end function newunit
  
     subroutine cpv_trajectory_initialize(t, fname, natoms, tau_fac, vel_fac,tps_fac,circular,ios)
+    implicit none
         type(cpv_trajectory), intent(inout) :: t
         character(len=256), intent(in) :: fname
         integer, intent(in) :: natoms
@@ -65,6 +67,7 @@ module cpv_traj
     end subroutine
 
     subroutine cpv_trajectory_close(t)
+    implicit none
     type(cpv_trajectory), intent(inout) :: t
         close(t%iounit_pos)
         close(t%iounit_vel)
@@ -72,6 +75,7 @@ module cpv_traj
     end subroutine
 
     function cpv_trajectory_read_step(t) result (res)
+    implicit none
         type(cpv_trajectory), intent(inout) :: t
         logical :: res
         type(timestep) :: tstep !this internally is only a pointer to a bigger allocated array
@@ -119,7 +123,17 @@ module cpv_traj
 
     end function
 
+    subroutine cpv_trajectory_get_last_step(t, tstep)
+    implicit none
+        type(cpv_trajectory), intent(in) :: t
+        type(timestep), intent(out) :: tstep
+
+        ! get the timestep data
+        call trajectory_get(t%traj,t%traj%nsteps,tstep)
+
+    end subroutine
     subroutine cpv_trajectory_get_step(t, idx, tstep)
+    implicit none
         type(cpv_trajectory), intent(in) :: t
         type(timestep), intent(out) :: tstep
         integer, intent(in) :: idx
@@ -130,6 +144,7 @@ module cpv_traj
     end subroutine
 
     subroutine cpv_trajectory_deallocate(t)
+    implicit none
         type(cpv_trajectory), intent(inout) :: t
 
         !deallocate stuff

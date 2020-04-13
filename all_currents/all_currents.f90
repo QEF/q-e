@@ -87,7 +87,7 @@ program all_currents
          !calculate energy current
          call routine_hartree()
          call routine_zero()
-         call write_results()
+         call write_results(traj)
          !read new velocities and positions and continue, or exit the loop     
          if (.not. read_next_step(traj)) exit
      end do
@@ -105,17 +105,28 @@ program all_currents
 contains
 
 
-subroutine write_results()
+subroutine write_results(traj)
    use hartree_mod
    use zero_mod
    use io_global, ONLY: ionode 
+     use cpv_traj , only : cpv_trajectory, cpv_trajectory_get_last_step
+   use traj_object, only : timestep      
    implicit none
-   integer :: iun
+   type(cpv_trajectory),intent(in)  :: traj
+   type(timestep) :: ts
+   integer :: iun,step
    integer, external :: find_free_unit
+   
+   if (traj%traj%nsteps > 0) then
+       call cpv_trajectory_get_last_step(traj,ts)
+       step=ts%nstep
+   else
+       step=0
+   endif
    if (ionode) then
       iun = find_free_unit()
       open (iun, file=trim(file_output), position='append')
-      write (iun, *) 'Passo: '
+      write (iun, *) 'Passo: ',step
       write (iun, '(A,10E20.12)') 'h&K-XC', J_xc(:)
       write (iun, '(A,10E20.12)') 'h&K-H', J_hartree(:)
       write (iun, '(A,1F15.7,9E20.12)') 'h&K-K', delta_t, J_kohn(1:3), J_kohn_a(1:3), J_kohn_b(1:3)
@@ -127,8 +138,8 @@ subroutine write_results()
          write (iun, '(A,3E20.12)') 'ionic_d:', i_current_d(:)
          write (iun, '(A,3E20.12)') 'ionic_e:', i_current_e(:)
          write (iun, '(A,3E20.12)') 'zero:', z_current(:)
-         write (iun,*) 'total: ', J_xc+J_hartree+J_kohn+i_current+z_current
-         write (*,*) 'total energy current: ', J_xc+J_hartree+J_kohn+i_current+z_current
+         write (iun,'(A,3E20.12)') 'total: ', J_xc+J_hartree+J_kohn+i_current+z_current
+         write (*,'(A,3E20.12)') 'total energy current: ', J_xc+J_hartree+J_kohn+i_current+z_current
          close (iun)
       end if
 
