@@ -120,7 +120,7 @@ SUBROUTINE stress( sigma )
                                         gamma_only, gcutm, sigmaewa )
      IF (      use_gpu) CALL stres_ewa_gpu( alat, nat, ntyp, ityp, zv, at, bg,&
                                             tau, omega, g_d,gg_d, ngm, gstart,&
-                                            gamma_only, gcutm, sigmaewa )     
+                                            gamma_only, gcutm, sigmaewa )
   END IF
   !
   ! semi-empirical dispersion contribution: Grimme-D2 and D3
@@ -143,7 +143,8 @@ SUBROUTINE stress( sigma )
   !
   !  kinetic + nonlocal contribuition
   !
-  CALL stres_knl( sigmanlc, sigmakin )
+  IF (.NOT. use_gpu) CALL stres_knl( sigmanlc, sigmakin )
+  IF (      use_gpu) CALL stres_knl_gpu( sigmanlc, sigmakin )
   !
   DO l = 1, 3
      DO m = 1, 3
