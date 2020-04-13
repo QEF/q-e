@@ -37,6 +37,7 @@ PWLIBS += \
   stres_knl_gpu.o \
   stres_us_gpu.o \
   compute_deff_gpu.o \
+  gen_us_dj_gpu.o \
   gen_us_dy_gpu.o
 
 MODFLAGS += \
@@ -104,7 +105,9 @@ stres_knl_gpu.o : symme.o
 stres_knl_gpu.o : stres_us.o
 stres_us_gpu.o : pwcom.o
 stres_us_gpu.o : compute_deff_gpu.o
+stres_us_gpu.o : gen_us_dj_gpu.o
 stres_us_gpu.o : gen_us_dy_gpu.o
+gen_us_dj_gpu.o : pwcom_gpu.o
 gen_us_dy_gpu.o : pwcom_gpu.o
 stress.o : stres_loc_gpu.o
 stress.o : stres_har_gpu.o

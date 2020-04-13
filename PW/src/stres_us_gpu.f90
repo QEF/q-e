@@ -67,8 +67,6 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
   INTEGER, ALLOCATABLE :: na_d(:), ih_d(:), ikb_d(:), nhnp_d(:), &
                           ityp_d(:), nh_d(:), ishift_d(:), shift_d(:)
   LOGICAL, ALLOCATABLE :: is_multinp_d(:)
-  
-  
   !
 #if defined(__CUDA)
   attributes(DEVICE) :: gk_d, qm1_d, is_multinp_d, na_d, ishift_d, &
@@ -173,7 +171,6 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
   DEALLOCATE( ityp_d )
   DEALLOCATE( nh_d )
   DEALLOCATE( shift )
-  
   !
   CALL deallocate_bec_type( becp ) 
   CALL using_becp_auto(2)
@@ -214,7 +211,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
        complex(dp) :: becy, defy
        !^^PROV^^
        !
-       COMPLEX(DP), ALLOCATABLE :: dvkb(:,:,:)
+       !COMPLEX(DP), ALLOCATABLE :: dvkb(:,:,:)
        ! dvkb contains the derivatives of the kb potential
        COMPLEX(DP)              :: ps
        ! xyz are the three unit vectors in the x,y,z directions
@@ -283,16 +280,16 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
        !
        ! ... non diagonal contribution - derivative of the bessel function
        !------------------------------------
-       ALLOCATE( dvkb( npwx, nkb,4 ) )
+       !ALLOCATE( dvkb( npwx, nkb,4 ) )
        ALLOCATE( dvkb_d(npwx,nkb,4) )
        !
-       CALL gen_us_dj( ik, dvkb(:,:,4) )
+       CALL gen_us_dj_gpu( ik, dvkb_d(:,:,4) )
        IF ( lmaxkb > 0 ) THEN 
          DO ipol = 1, 3
            CALL gen_us_dy_gpu( ik, xyz(1,ipol), dvkb_d(:,:,ipol))
          ENDDO
        ENDIF
-       dvkb_d(:,:,4) = dvkb(:,:,4)
+       !dvkb_d(:,:,4) = dvkb(:,:,4)
        !
        !
        DO icyc = 0, nproc -1
@@ -425,7 +422,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
        ENDDO
        !
        !
-       DEALLOCATE( dvkb )
+       !DEALLOCATE( dvkb )
        DEALLOCATE( deff_d  )
        DEALLOCATE( ps_d    )
        DEALLOCATE( becpr_d )
@@ -452,7 +449,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
        INTEGER :: na, np, ibnd, ipol, jpol, l, i, ipw, &
                   ikb, jkb, ih, jh, is, js, ijs
        REAL(DP) :: fac, xyz(3,3), evps, ddot
-       COMPLEX(DP), ALLOCATABLE :: dvkb(:,:,:)
+       !COMPLEX(DP), ALLOCATABLE :: dvkb(:,:,:)
        !
        
        
@@ -516,15 +513,15 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
        evps = 0.D0
        ! ... diagonal contribution
        !
-       ALLOCATE( dvkb(npwx,nkb,4) )
+       !ALLOCATE( dvkb(npwx,nkb,4) )
        ALLOCATE( dvkb_d(npwx,nkb,4) )
-       CALL gen_us_dj( ik, dvkb(:,:,4) )
+       CALL gen_us_dj_gpu( ik, dvkb_d(:,:,4) )
        IF ( lmaxkb > 0 ) THEN 
          DO ipol = 1, 3
            CALL gen_us_dy_gpu( ik, xyz(1,ipol), dvkb_d(:,:,ipol))
          ENDDO
        ENDIF
-       dvkb_d(:,:,4) = dvkb(:,:,4)
+       !dvkb_d(:,:,4) = dvkb(:,:,4)
        !
        !
        IF (noncolin) THEN 
@@ -542,7 +539,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
           CALL dev_buf%lock_buffer ( ps_d, nkb, ierr)
           !becpk_d => becp_d%k_d
           ALLOCATE( becpk_d(nkb,nbnd) )
-          becpk_d = becp%k
+          becpk_d = becp%k 
           
           ALLOCATE( deff_d(nhm,nhm,nat) )
        END IF
@@ -553,7 +550,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
        CALL using_deeq(0)
        
        !
-       !^^^^^^^^^^^^^^^^^^^^^^^^
+       !^^^^^^^^^^^^^^^^^^^^^^^^ 
        nhmx = SIZE(deeq(:,1,1,1))
        ALLOCATE( deeq_d(nhmx,nhmx,nat,nspin) )
        deeq_d = deeq
@@ -562,7 +559,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
        CALL start_clock('knl_ciclo2')
        !
        CALL using_et(0) ! compute_deff : intent(in)
-       !
+       
        IF ( me_bgrp /= root_bgrp ) GO TO 100
        !
        ! ... the contribution is calculated only on one processor because
@@ -628,8 +625,6 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
               ENDIF
             ENDDO
             !
-
-            !
           ELSE
             !
             !$cuf kernel do (1) <<<*,*>>>
@@ -656,7 +651,6 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
           sigmanlc(l,l) = sigmanlc(l,l) - evps
        END DO
        !
-       
        
        CALL stop_clock('knl_ciclo2')
        
@@ -962,7 +956,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
        !
 10     CONTINUE
        !
-       DEALLOCATE( dvkb )
+       !DEALLOCATE( dvkb )
        DEALLOCATE( dvkb_d )
        DEALLOCATE( deeq_d )
        IF (noncolin) THEN 
