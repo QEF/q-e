@@ -101,7 +101,8 @@ SUBROUTINE stress( sigma )
   !
   !  meta-GGA contribution 
   !
-  CALL stres_mgga( sigmaxc )
+  IF (.NOT. use_gpu) CALL stres_mgga( sigmaxc )
+  IF (      use_gpu) CALL stres_mgga_gpu( sigmaxc )
   !
   ! core correction contribution
   !
