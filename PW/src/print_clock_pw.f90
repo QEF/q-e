@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,8 @@ SUBROUTINE print_clock_pw()
    USE paw_variables,      ONLY : okpaw
    USE uspp,               ONLY : okvan
    USE realus,             ONLY : real_space
-   USE ldaU,               ONLY : lda_plus_U
+   USE noncollin_module,   ONLY : noncolin
+   USE ldaU,               ONLY : lda_plus_u, lda_plus_u_kind, is_hubbard_back
    USE funct,              ONLY : dft_is_hybrid
    USE bp,                 ONLY : lelfield
    !
@@ -90,7 +91,7 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'paro_gamma' ) ; CALL print_clock( 'paro_k' )
    ENDIF
    !
-   !IF ( iverbosity > 0)  THEN
+   IF ( iverbosity > 0)  THEN
       WRITE( stdout, '(/5x,"Called by sum_band:")' )
       CALL print_clock( 'sum_band:weights' )
       CALL print_clock( 'sum_band:loop' )
@@ -99,7 +100,10 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'sum_band:calbec' )
       CALL print_clock( 'sum_band:becsum' )
       CALL print_clock( 'addusdens' )
-   !ENDIF
+      CALL print_clock( 'addusd:skk' )
+      CALL print_clock( 'addusd:dgemm' )
+      CALL print_clock( 'addusd:qvan2' )
+   ENDIF
    !
    IF ( isolve == 0 ) THEN
       WRITE( stdout, '(/5x,"Called by *egterg:")' )
@@ -128,17 +132,17 @@ SUBROUTINE print_clock_pw()
       WRITE( stdout, '(/5x,"Called by *cgdiagg:")' )
    ELSE IF ( isolve == 2 ) THEN
       WRITE( stdout, '(/5x,"Called by ppcg_*:")' )
-!      IF ( iverbosity > 0 )  THEN
+      IF ( iverbosity > 0 )  THEN
          CALL print_clock( 'ppcg:zgemm' ) ; CALL print_clock( 'ppcg:dgemm' )
          CALL print_clock( 'ppcg:hpsi' )
          CALL print_clock( 'ppcg:cholQR' )
          CALL print_clock( 'ppcg:RR' )
          CALL print_clock( 'ppcg:ZTRSM' ) ; CALL print_clock( 'ppcg:DTRSM' )
          CALL print_clock( 'ppcg:lock' )
-!      END IF
+      END IF
    ELSE IF ( isolve == 3 ) THEN
       WRITE( stdout, '(/5x,"Called by paro_*:")' )
-!      IF ( iverbosity > 0 )  THEN
+      IF ( iverbosity > 0 )  THEN
          CALL print_clock( 'paro:init' )
          CALL print_clock( 'paro:pack' )
          CALL print_clock( 'paro:zero' )
@@ -168,7 +172,7 @@ SUBROUTINE print_clock_pw()
          CALL print_clock( 'rotHSw:ev:s6' ) ;
          CALL print_clock( 'rotHSw:ev:b5' ) ; call print_clock('rotHSw:ev:sum')
          CALL print_clock( 'rotHSw:ev:s7' ) ; CALL print_clock('rotHSw:ev:b6' ) 
-!      END IF
+      END IF
    END IF
    !
    CALL print_clock( 'h_psi' )
@@ -225,8 +229,22 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'localization' )
    CALL print_clock( 'measure' )
    !
-   IF ( lda_plus_U ) THEN
+   IF ( lda_plus_u ) THEN
       WRITE( stdout, '(/,5X,"Hubbard U routines")' )
+      IF (lda_plus_u_kind.EQ.0) THEN
+         CALL print_clock( 'new_ns' )
+         IF (ANY(is_hubbard_back(:))) &
+            CALL print_clock( 'new_nsb' )
+      ELSEIF (lda_plus_u_kind.EQ.1) THEN
+         IF (noncolin) THEN
+            CALL print_clock( 'new_ns_nc' )
+         ELSE
+            CALL print_clock( 'new_ns' )
+         ENDIF
+      ELSEIF (lda_plus_u_kind.EQ.2) THEN
+         CALL print_clock( 'new_nsg' )
+         CALL print_clock( 'alloc_neigh' )
+      ENDIF
       CALL print_clock( 'new_ns' )
       CALL print_clock( 'vhpsi' )
       CALL print_clock( 'force_hub' )

@@ -63,11 +63,10 @@ PROGRAM ev
       USE mp,        ONLY : mp_bcast
       USE io_global, ONLY : ionode, ionode_id
       IMPLICIT NONE
-      INTEGER, PARAMETER:: nmaxpar=4, nmaxpt=100, nseek=10000, nmin=4
+      INTEGER, PARAMETER:: nmaxpar=4, nmaxpt=100 
       INTEGER :: npar,npt,istat, ierr
       CHARACTER :: bravais*8, au_unit*3, filin*256
-      REAL(DP) :: par(nmaxpar), deltapar(nmaxpar), parmin(nmaxpar), &
-             parmax(nmaxpar), v0(nmaxpt), etot(nmaxpt), efit(nmaxpt), &
+      REAL(DP) :: par(nmaxpar), v0(nmaxpt), etot(nmaxpt), efit(nmaxpt), &
              fac, emin, chisq, a
       REAL(DP), PARAMETER :: gpa_kbar = 10.0_dp
       LOGICAL :: in_angstrom
@@ -147,24 +146,9 @@ PROGRAM ev
       par(2) = 500.0d0
       par(3) = 5.0d0
       par(4) = -0.01d0
-!
-      parmin(1) = 0.0d0
-      parmin(2) = 0.0d0
-      parmin(3) = 1.0d0
-      parmin(4) = -1.0d0
-!
-      parmax(1) = 100000.d0
-      parmax(2) = 100000.d0
-      parmax(3) = 15.0d0
-      parmax(4) = 0.0d0
-!
-      deltapar(1) = 1.0d0
-      deltapar(2) = 100.d0
-      deltapar(3) = 1.0d0
-      deltapar(4) = 0.01d0
-!
+
       CALL find_minimum &
-           (npar,par,deltapar,parmin,parmax,nseek,nmin,chisq)
+           (npar,par,chisq)
 !
       CALL write_results &
            (npt,in_angstrom,fac,v0,etot,efit,istat,par,npar,emin,chisq, &
@@ -380,52 +364,47 @@ PROGRAM ev
  99   RETURN
     END SUBROUTINE write_results
 !
+
+      ! This funtion is passed to POWELL to be minimized
+      REAL(DP) FUNCTION FCHISQ(par_)
+           IMPLICIT NONE
+           REAL(DP),INTENT(in) :: par_(nmaxpar)
+           REAL(DP) :: chisq_
+           CALL eqstate(npar,par_,chisq_)
+           FCHISQ = chisq_
+        END FUNCTION
+
+
 !-----------------------------------------------------------------------
-      SUBROUTINE find_minimum &
-         (npar,par,deltapar,parmin,parmax,nseek,nmin,chisq)
+      SUBROUTINE find_minimum(npar,par,chisq)
 !-----------------------------------------------------------------------
-!
-!     Very Stupid Minimization
 !
       USE random_numbers, ONLY : randy
+      USE powell, ONLY : POWELL_MIN
       IMPLICIT NONE
-      INTEGER maxpar, nseek, npar, nmin, n,j,i
-      PARAMETER (maxpar=4)
-      REAL(DP) par(npar), deltapar(npar), parmin(npar), parmax(npar), &
-             parnew(maxpar), chisq, chinew, bidon
-!
-!      various initializations
-!
-      chisq = 1.0d30
-      chinew= 1.0d30
+      INTEGER ,INTENT(in)  :: npar !, npt, istat
+!      REAL(DP),INTENT(in)  :: v0(npt),etot(npt)
+!      REAL(DP),INTENT(out) :: efit(npt), emin
+      REAL(DP),INTENT(out) :: par(nmaxpar)
+      REAL(DP),INTENT(out) :: chisq
+      !
+      REAL(DP) :: xi(npar,npar)
+      INTEGER :: i
+      !
+      xi = 0._dp
+      FORALL(i=1:npar) xi(i,i) = 1._dp
+      par(1) = v0(npt/2)
+      par(2) = 500.0d0
+      par(3) = 5.0d0
+      par(4) = -0.01d0 ! unused for some eos
+      !
+      CALL POWELL_MIN(FCHISQ,par,xi,npar,npar,1.d-12,i,chisq)
+      !
       CALL eqstate(npar,par,chisq)
-      DO j = 1,nmin
-         DO i = 1,nseek
-            DO n = 1,npar
-  10           parnew(n) = par(n) + (0.5d0 - randy())*deltapar(n)
-               IF(parnew(n)>parmax(n) .or. parnew(n)<parmin(n)) &
-               GOTO 10
-            ENDDO
-!
-            CALL eqstate(npar,parnew,chinew)
-!
-            IF(chinew<chisq) THEN
-               DO n = 1,npar
-                  par(n) = parnew(n)
-               ENDDO
-               chisq = chinew
-            ENDIF
-         ENDDO
-         DO n = 1,npar
-            deltapar(n) = deltapar(n)/10.d0
-         ENDDO
-      ENDDO
-!
-      CALL eqstate(npar,par,chisq)
-!
-      RETURN
-    END SUBROUTINE find_minimum
-!
+
+      END SUBROUTINE
+!-----------------------------------------------------------------------
+
   END PROGRAM ev
 
       FUNCTION birch(x,k0,dk0,d2k0)

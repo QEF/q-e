@@ -12,12 +12,12 @@ SUBROUTINE punch( what )
   !! the information needed for further processing (phonon etc.).
   !
   !! * what = 'all' : write xml data file, charge density, wavefunctions
-  !!                  (for final data);
+  !!                  (for final data)
   !! * what = 'config' : write xml data file and charge density; also,
   !!                     for nks=1, wavefunctions in plain binary format
   !!                     (see why in comments below). For intermediate 
-  !!                     or incomplete results;
-  !! * what = 'config-nowf' : write xml data file iand charge density only
+  !!                     or incomplete results
+  !! * what = 'config-only' : write xml data file only
   !! * what = 'config-init' : write xml data file only excluding final results
   !!                          (for dry run, can be called at early stages).
   !

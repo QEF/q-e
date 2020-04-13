@@ -150,15 +150,6 @@ SUBROUTINE run_pwscf( exit_status )
         RETURN
      ENDIF
      !
-     ! ... ionic section starts here
-     !
-     CALL start_clock( 'ions' ); !write(*,*)' start ions' ; FLUSH(6)
-     conv_ions = .TRUE.
-     !
-     ! ... recover from a previous run, if appropriate
-     !
-     !IF ( restart .AND. lscf ) CALL restart_in_ions()
-     !
      ! ... file in CASINO format written here if required
      !
      IF ( lmd ) THEN
@@ -166,6 +157,11 @@ SUBROUTINE run_pwscf( exit_status )
      ELSE
         CALL pw2casino( 0 )
      END IF
+     !
+     ! ... ionic section starts here
+     !
+     CALL start_clock( 'ions' ); !write(*,*)' start ions' ; FLUSH(6)
+     conv_ions = .TRUE.
      !
      ! ... force calculation
      !
@@ -176,6 +172,10 @@ SUBROUTINE run_pwscf( exit_status )
      IF ( lstres ) CALL stress( sigma )
      !
      IF ( lmd .OR. lbfgs ) THEN
+        !
+        ! ... add information on this ionic step to xml file
+        !
+        CALL add_qexsd_step( idone )
         !
         IF (fix_volume) CALL impose_deviatoric_stress( sigma )
         IF (fix_area)   CALL impose_deviatoric_stress_2d( sigma )
@@ -190,14 +190,15 @@ SUBROUTINE run_pwscf( exit_status )
         conv_ions = ( ions_status == 0 ) .OR. &
                     ( ions_status == 1 .AND. treinit_gvecs )
         !
-        ! ... then we save restart information for the new configuration
+        IF (dft_is_hybrid() )  CALL stop_exx()
         !
-        IF ( idone <= nstep .AND. .NOT. conv_ions ) THEN 
+        ! ... save restart information for the new configuration
+        !
+        IF ( idone <= nstep .AND. .NOT. conv_ions ) THEN
             CALL qexsd_set_status( 255 )
-            CALL punch( 'config-nowf' )
+            CALL punch( 'config-only' )
         END IF
         !
-        IF (dft_is_hybrid() )  CALL stop_exx()
      END IF
      !
      CALL stop_clock( 'ions' ); !write(*,*)' stop ions' ; FLUSH(6)
@@ -208,7 +209,6 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ! ... exit condition (ionic convergence) is checked here
      !
-     IF ( lmd .OR. lbfgs ) CALL add_qexsd_step( idone )
      IF ( conv_ions ) EXIT main_loop
      !
      ! ... receive new positions from MM code in QM/MM run

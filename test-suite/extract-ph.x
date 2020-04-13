@@ -17,7 +17,9 @@ p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
 # PH
 diel=`grep -A 4 '  Dielectric constant in cartesian' $fname | grep -v '  Dielectric constant' | awk '{print $2; print $3; print $4 }'`
 born=`grep "     E[x-z]  ( " $fname | awk '{print $3; print $4; print $5}'`
-phfreq=`grep "     freq (.*THz" $fname | awk '{print $5; print $8}'`
+# phfreq=`grep "     freq (.*THz" $fname | awk '{print $5; print $8}'`
+# in the version below, phfreq only contains frequencies in cm^-1, not in THz
+phfreq=`grep "     freq (.*THz" $fname | awk '{print $8}'`
 dos=`grep "DOS =" $fname | awk '{print $3; print $8}'`
 lambda=$(awk '
 # reset counters
@@ -74,6 +76,10 @@ qpt=`grep "q= " $fname | awk '{print $2; print $3; print $4}'`
 # LAMBDA
 lambda2=`grep "lambda =" $fname | awk '{print $3; print $5; print $9 ;print $12; print $15}'`
 
+#DVSCF_Q2R
+rlatt_cart=`grep "rlatt_cart" $fname | awk '{print $2; print $3; print $4}'`
+rlatt_crys=`grep "rlatt_crys" $fname | awk '{print $2; print $3; print $4}'`
+sum_w_pot=`grep "sum_w_pot" $fname | awk '{print $2; print $3; print $4}'`
 
 if test "$e1" != ""; then
         echo e1
@@ -128,4 +134,17 @@ fi
 if test "$lambda2" != ""; then
         echo lambda2
         for x in $lambda2; do echo $x; done
+fi
+
+if test "$rlatt_cart" != ""; then
+        echo rlatt_cart
+        for x in $rlatt_cart; do echo $x; done
+fi
+if test "$rlatt_crys" != ""; then
+        echo rlatt_crys
+        for x in $rlatt_crys; do echo $x; done
+fi
+if test "$sum_w_pot" != ""; then
+        echo sum_w_pot
+        for x in $sum_w_pot; do echo $x; done
 fi

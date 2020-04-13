@@ -509,7 +509,6 @@ MODULE pwcom
   USE force_mod
   USE relax
   USE cellmd
-  USE us
   USE fixed_occ
   USE spin_orb
   !

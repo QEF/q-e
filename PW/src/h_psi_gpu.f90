@@ -15,12 +15,12 @@ SUBROUTINE h_psi_gpu( lda, n, m, psi_d, hpsi_d )
   !! non-distributed bands. If suitable and required, calls old H\psi 
   !! routine h_psi_ .
   !
-  USE kinds,            ONLY : DP
-  USE noncollin_module, ONLY : npol
-  USE funct,            ONLY : exx_is_active
-  USE mp_bands,         ONLY : use_bgrp_in_hpsi, inter_bgrp_comm
-  USE mp,               ONLY : mp_allgather, mp_size, &
-                               mp_type_create_column_section, mp_type_free
+  USE kinds,              ONLY: DP
+  USE noncollin_module,   ONLY: npol
+  USE funct,              ONLY: exx_is_active
+  USE mp_bands,           ONLY: use_bgrp_in_hpsi, inter_bgrp_comm
+  USE mp,                 ONLY: mp_allgather, mp_size, &
+                                mp_type_create_column_section, mp_type_free
   !
   IMPLICIT NONE
   !
@@ -110,7 +110,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE exx,                     ONLY: use_ace, vexx, vexxace_gamma, vexxace_k
   USE funct,                   ONLY: exx_is_active
   USE fft_helper_subroutines
-  USE device_util_m,           ONLY: dev_memcpy
+  USE device_util_m,           ONLY: dev_memcpy, dev_memset
   !
   USE wvfct_gpum,    ONLY : g2kin_d, using_g2kin_d
   USE uspp_gpum,     ONLY : vkb_d, using_vkb_d
@@ -125,12 +125,10 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   attributes(DEVICE) :: psi_d, hpsi_d
 #endif
   !
-#if defined(__CUDA)
   COMPLEX(DP), ALLOCATABLE, PINNED :: psi_host(:,:)
   COMPLEX(DP), ALLOCATABLE, PINNED :: hpsi_host(:,:)
-#else
-  COMPLEX(DP), ALLOCATABLE :: psi_host(:,:)
-  COMPLEX(DP), ALLOCATABLE :: hpsi_host(:,:)
+#if defined(__CUDA)
+  attributes(PINNED) :: psi_host, hpsi_host
 #endif
   !
   INTEGER     :: ipol, ibnd, incr, i
@@ -144,34 +142,18 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !
   ! ... Here we add the kinetic energy (k+G)^2 psi and clean up garbage
   !
-  !$cuf kernel do(2)
-  DO ibnd = 1, m
-     DO i=1, lda
-        IF (i <= n) THEN
-           hpsi_d (i, ibnd) = g2kin_d (i) * psi_d (i, ibnd)
-           IF ( noncolin ) THEN
-              hpsi_d (lda+i, ibnd) = g2kin_d (i) * psi_d (lda+i, ibnd)
-           END IF
-        ELSE
-           hpsi_d (i, ibnd) = (0.0_dp, 0.0_dp)
-           IF ( noncolin ) THEN
-              hpsi_d (lda+i, ibnd) = (0.0_dp, 0.0_dp)
-           END IF
-        END IF
-     END DO
-  END DO
-  !
-
   need_host_copy = ( real_space .and. nkb > 0  ) .OR. &
                     dft_is_meta() .OR. &
                     (lda_plus_u .AND. U_projection.NE."pseudo" ) .OR. &
                     exx_is_active() .OR. lelfield
 
-  if (need_host_copy) then
+  CALL dev_memset( hpsi_d , (0.0_dp, 0.0_dp), [1,lda*npol], 1, [1,m])
+
+  IF (need_host_copy) THEN
       ALLOCATE(psi_host(lda*npol,m) , hpsi_host(lda*npol,m) )
       CALL dev_memcpy(psi_host, psi_d)    ! psi_host = psi_d
-      CALL dev_memcpy(hpsi_host, hpsi_d)  ! hpsi_host = hpsi_d
-  end if
+      hpsi_host(:, 1:m) = (0.0_dp, 0.0_dp)
+  ENDIF
 
   CALL start_clock_gpu( 'h_psi:pot' ); !write (*,*) 'start h_pot';FLUSH(6)
   !
@@ -263,6 +245,23 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   END IF
   !  
   CALL stop_clock_gpu( 'h_psi:pot' )
+
+  !$cuf kernel do(2)
+  DO ibnd = 1, m
+     DO i=1, lda
+        IF (i <= n) THEN
+           hpsi_d (i, ibnd) = hpsi_d (i, ibnd)   + g2kin_d (i) * psi_d (i, ibnd)
+           IF ( noncolin ) THEN
+              hpsi_d (lda+i, ibnd) =  hpsi_d (lda+ i, ibnd) + g2kin_d (i) * psi_d (lda+i, ibnd)
+           END IF
+        ELSE
+           hpsi_d (i, ibnd) = (0.0_dp, 0.0_dp)
+           IF ( noncolin ) THEN
+              hpsi_d (lda+i, ibnd) = (0.0_dp, 0.0_dp)
+           END IF
+        END IF
+     END DO
+  END DO
   !
   if (dft_is_meta()) then
      CALL dev_memcpy(hpsi_host, hpsi_d) ! hpsi_host = hpsi_d

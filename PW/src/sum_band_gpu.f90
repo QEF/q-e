@@ -9,9 +9,8 @@
 !----------------------------------------------------------------------------
 SUBROUTINE sum_band_gpu()
   !----------------------------------------------------------------------------
-  !
-  ! ... Calculates the symmetrized charge density and related quantities
-  ! ... Also computes the occupations and the sum of occupied eigenvalues.
+  !! Calculates the symmetrized charge density and related quantities.  
+  !! Also computes the occupations and the sum of occupied eigenvalues.
   !
 #if defined(__CUDA)
   USE cudafor
@@ -26,8 +25,7 @@ SUBROUTINE sum_band_gpu()
   USE gvect,                ONLY : ngm, g
   USE gvecs,                ONLY : doublegrid
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk, igk_k, igk_k_d
-  USE fixed_occ,            ONLY : one_atom_occupations
-  USE ldaU,                 ONLY : lda_plus_U
+  USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, is_hubbard_back
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho, rhoz_or_updw
   USE symme,                ONLY : sym_rho
@@ -63,6 +61,7 @@ SUBROUTINE sum_band_gpu()
              ig,   &! counter on g vectors
              ibnd, &! counter on bands
              ik,   &! counter on k points
+             nt,   &! counter on atomic types
              npol_,&! auxiliary dimension for noncolin case
              ibnd_start, ibnd_end, this_bgrp_nbnd ! first, last and number of band in this bgrp
   REAL (DP), ALLOCATABLE :: kplusg (:)
@@ -88,8 +87,6 @@ SUBROUTINE sum_band_gpu()
   CALL weights ( )
   CALL stop_clock_gpu( 'sum_band:weights' )
   !
-  IF (one_atom_occupations) CALL new_evc()
-  !
   ! ... btype, used in diagonalization, is set here: a band is considered empty
   ! ... and computed with low accuracy only when its occupation is < 0.01, and
   ! ... only if option diago_full_acc is false; otherwise, use full accuracy
@@ -106,11 +103,27 @@ SUBROUTINE sum_band_gpu()
   ! ... Needed for LDA+U: compute occupations of Hubbard states
   !
   IF (lda_plus_u) THEN
-     IF(noncolin) THEN
-        CALL new_ns_nc(rho%ns_nc)
-     ELSE
-        CALL new_ns(rho%ns)
-     ENDIF
+    IF (lda_plus_u_kind.EQ.0) THEN
+       !
+       CALL new_ns(rho%ns)
+       !
+       DO nt = 1, ntyp
+          IF (is_hubbard_back(nt)) CALL new_nsb(rho%nsb)
+       ENDDO
+       !
+    ELSEIF (lda_plus_u_kind.EQ.1) THEN
+       !
+       IF (noncolin) THEN
+          CALL new_ns_nc(rho%ns_nc)
+       ELSE
+          CALL new_ns(rho%ns)
+       ENDIF
+       !
+    ELSEIF (lda_plus_u_kind.EQ.2) THEN 
+       !
+       CALL new_nsg()
+       !
+    ENDIF
   ENDIF
   !
   ! ... for band parallelization: set band computed by this processor
@@ -120,7 +133,7 @@ SUBROUTINE sum_band_gpu()
   !
   ! ... Allocate (and later deallocate) arrays needed in specific cases
   !
-  IF ( okvan ) CALL allocate_bec_type (nkb,nbnd, becp,intra_bgrp_comm)
+  IF ( okvan ) CALL allocate_bec_type (nkb, this_bgrp_nbnd, becp, intra_bgrp_comm)
   IF ( okvan ) CALL using_becp_auto(2)
   IF (dft_is_meta() .OR. lxdm) ALLOCATE (kplusg(npwx))
   !

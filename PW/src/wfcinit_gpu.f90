@@ -20,7 +20,7 @@ SUBROUTINE wfcinit_gpu()
   USE klist,                ONLY : xk, nks, ngk, igk_k_d
   USE control_flags,        ONLY : io_level, lscf
   USE fixed_occ,            ONLY : one_atom_occupations
-  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
+  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU, lda_plus_u_kind
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
                                    diropn, xmlfile, restart_dir
@@ -49,7 +49,7 @@ SUBROUTINE wfcinit_gpu()
   CALL start_clock_gpu( 'wfcinit' )
   CALL using_evc(0) ! this may be removed
   !
-  ! ... Orthogonalized atomic functions needed for LDA+U and other cases
+  ! ... Orthogonalized atomic functions needed for DFT+U and other cases
   !
   IF ( use_wannier .OR. one_atom_occupations ) CALL orthoatwfc ( use_wannier )
   IF ( lda_plus_u ) CALL orthoUwfc()
@@ -172,10 +172,14 @@ SUBROUTINE wfcinit_gpu()
      IF ( nkb > 0 ) CALL using_vkb_d(1)
      IF ( nkb > 0 ) CALL init_us_2_gpu( ngk(ik), igk_k_d(1,ik), xk(1,ik), vkb_d )
      !
-     ! ... Needed for LDA+U
+     ! ... Needed for DFT+U
      !
      IF ( nks > 1 .AND. lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
         CALL get_buffer( wfcU, nwordwfcU, iunhub, ik )
+     !
+     ! DFT+U+V: calculate the phase factor at a given k point
+     !
+     IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) CALL phase_factor(ik)
      !
      ! ... calculate starting wavefunctions (calls Hpsi)
      !

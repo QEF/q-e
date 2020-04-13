@@ -23,7 +23,8 @@
   PUBLIC :: lambda_phself, linewidth_phself, linewidth_elself, iospectral, &
             iua2ffil, iudosfil, iufillambda, iuqdos, iufe, iufilker, &
             iufilgap, iospectral_sup, iua2ftrfil, iufilgapFS, iufillambdaFS, &
-            iospectral_cum, iuwanep, iuwane, iunukk, iudvscf, iuqpeig, iures
+            iospectral_cum, iuwanep, iuwane, iunukk, iudvscf, iuqpeig, iures, &
+            iuint3paw
   PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb,&
             iufilfreq, iufilegnv, iufileph, iufilkqmap, &
             iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, &
@@ -78,6 +79,7 @@
                                    ! Electrons + phonons [epmat_wanep]
   INTEGER :: iuwane          = 98  ! Spatial decay of matrix elements in Wannier basis
                                    ! [.epwane]
+  INTEGER :: iuint3paw       = 99  ! Unit for the dvscf_paw_q file
   !
   ! Output of quantity for restarting purposes (101-200)
   ! Note that 100-102 are reserved Cray unit and cannot be used.

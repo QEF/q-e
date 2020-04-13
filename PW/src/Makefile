@@ -116,6 +116,9 @@ input.o \
 io_rho_xml.o \
 irrek.o \
 iweights.o \
+intersite_V.o \
+init_nsg.o \
+nsg_adj.o \
 start_k.o \
 kpoint_grid.o \
 lchk_tauxk.o \
@@ -130,6 +133,8 @@ move_ions.o \
 multable.o \
 n_plane_waves.o \
 new_ns.o \
+new_nsb.o \
+new_nsg.o \
 new_occ.o \
 ns_adj.o \
 non_scf.o \

@@ -39,7 +39,7 @@ MODULE control_flags
             tnosee, tnosep, tnoseh, tcp, tcap,                               &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
             tscreen, gamma_only, force_pairing, lecrpa, tddfpt, smallmem,    &
-            tfirst, tlast, tprint, trescalee, max_xml_steps  
+            tfirst, tlast, tprint, trescalee, max_xml_steps, dfpt_hub  
   !
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tksw, trhor, thdyn, trhow
@@ -76,6 +76,8 @@ MODULE control_flags
   LOGICAL :: tscreen       = .FALSE. ! Use screened coulomb potentials for cluster calculations
   LOGICAL :: force_pairing = .FALSE. ! Force pairing
   LOGICAL :: lecrpa        = .FALSE. ! RPA correlation energy request
+  LOGICAL :: dfpt_hub      = .FALSE. ! If .true. perform the SCF calculation of U (and V)
+                                     ! and let PW rotuines to know about this
   LOGICAL :: tddfpt        = .FALSE. ! use TDDFPT specific tweaks when using the Environ plugin
   LOGICAL :: smallmem      = .FALSE. ! the memory per task is small
   !

@@ -51,13 +51,22 @@ SUBROUTINE openfilq()
   USE modes,           ONLY : nmodes
   USE ldaU,            ONLY : lda_plus_u, Hubbard_lmax, nwfcU
   USE ldaU_ph,         ONLY : dnsscf_all_modes
+  USE mp_pools,        ONLY : me_pool, root_pool
+  USE dvscf_interpolate, ONLY : ldvscf_interpolate, nrbase, nrlocal, &
+                                wpot_dir, iunwpot, lrwpot
   !
   IMPLICIT NONE
   !
   INTEGER :: ios
   ! integer variable for I/O control
-  CHARACTER (len=256) :: filint, fildvscf_rot
+  CHARACTER (len=256) :: filint, fildvscf_rot, filwpot
   ! the name of the file
+  INTEGER :: ir, irlocal
+  !! Real space unit cell index
+  INTEGER :: unf_lrwpot, direct_io_factor
+  !! record length for opening wpot file
+  REAL(DP) :: dummy
+  !! dummy variable for calculating direct_io_factor
   LOGICAL :: exst, exst_mem
   ! logical variable to check file exists
   ! logical variable to check file exists in memory
@@ -286,6 +295,50 @@ SUBROUTINE openfilq()
      ENDIF
      !
   ENDIF
+  !
+  ! Files needed for dvscf interpolation
+  !
+  ! Here, root of each pool read different files. Subroutine diropn is not used
+  ! because diropn adds processor id at the end of filename.
+  !
+  IF (ldvscf_interpolate) THEN
+    !
+    lrwpot = 2 * dfftp%nr1x * dfftp%nr2x * dfftp%nr3x * nspin_mag
+    ! Need to multiply direct_io_factor: See diropn in Modules/io_files.f90
+    INQUIRE (IOLENGTH=direct_io_factor) dummy
+    unf_lrwpot = direct_io_factor * INT(lrwpot, KIND=KIND(unf_lrwpot))
+    !
+    ! w_pot files are read by the root of each pool
+    !
+    IF (me_pool == root_pool) THEN
+      !
+      DO irlocal = 1, nrlocal
+        !
+        ir = irlocal + nrbase
+        !
+#if defined(__MPI)
+        WRITE(filwpot, '(a,I0,a)') TRIM(wpot_dir) // TRIM(prefix) // '.' &
+                                   // 'wpot.irc', ir, '.dat1'
+#else
+        WRITE(filwpot, '(a,I0,a)') TRIM(wpot_dir) // TRIM(prefix) // '.' &
+                                   // 'wpot.irc', ir, '.dat'
+#endif
+        !
+        ! FIXME: better way to set units?
+        !
+        iunwpot(irlocal) = 1000 + irlocal
+        !
+        OPEN(iunwpot(irlocal), FILE=TRIM(filwpot), RECL=unf_lrwpot, &
+          FORM='unformatted', STATUS='unknown', ACCESS='direct', IOSTAT=ios)
+        !
+        IF (ios /= 0) CALL errore('openfilq', &
+          'problem opening w_pot file ' // TRIM(filwpot), 1)
+        !
+      ENDDO ! irlocal
+      !
+    ENDIF ! root_pool
+    !
+  ENDIF ! ldvscf_interpolate
   !
   RETURN
   !
