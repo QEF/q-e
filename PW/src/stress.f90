@@ -22,7 +22,7 @@ SUBROUTINE stress( sigma )
   USE ldaU,             ONLY : lda_plus_u, U_projection
   USE lsda_mod,         ONLY : nspin
   USE scf,              ONLY : rho, rho_core, rhog_core
-  USE control_flags,    ONLY : iverbosity, gamma_only, llondon, ldftd3, lxdm, ts_vdw
+  USE control_flags,    ONLY : iverbosity, gamma_only, llondon, ldftd3, lxdm, ts_vdw, use_gpu
   USE funct,            ONLY : dft_is_meta, dft_is_gradient
   USE symme,            ONLY : symmatrix
   USE bp,               ONLY : lelfield
@@ -69,7 +69,9 @@ SUBROUTINE stress( sigma )
   !
   !   contribution from local potential
   !
-  CALL stres_loc( sigmaloc )
+  IF (.NOT. use_gpu) CALL stres_loc( sigmaloc )
+  IF (      use_gpu) CALL stres_loc_gpu( sigmaloc )
+  !
   IF ( do_comp_esm .AND. ( esm_bc /= 'pbc' ) ) THEN
      ! In ESM, sigmaloc has only short-range term: add long-range term
      CALL esm_stres_loclong( sigmaloclong, rho%of_g(:,1) )
