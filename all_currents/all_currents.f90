@@ -284,7 +284,6 @@ use zero_mod, only : vel_input_units, ion_vel
             tau=ts%tau
             CALL convert_tau ( tau_format, nat, tau)
             res=.true.
-         ethr = 1.0D-6
         else
             write(*,*) 'Finished reading trajectory ', t%fname
             res=.false.
@@ -296,6 +295,7 @@ use zero_mod, only : vel_input_units, ion_vel
          CALL mp_bcast(tau, ionode_id, world_comm)
          call update_pot()
          call hinit1()
+         ethr = 1.0D-6
     end if
     
 end function

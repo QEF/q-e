@@ -49,7 +49,7 @@ subroutine routine_hartree()
 !
    complex(kind=DP), allocatable ::exgradcharge_g(:, :)
 !
-   integer ::icoord, enne, ir
+   integer ::icoord, enne, ir !, npwold
 !
    logical  :: l_test
    real(DP) :: M(nbnd, nbnd), emme(nbnd, nbnd), kcurrent(3), s(nbnd, nbnd), ss(nbnd, nbnd), &
@@ -58,6 +58,7 @@ subroutine routine_hartree()
    integer, external :: find_free_unit
 
    write (stdout, *) 'INIZIO ROUTINE HARTREE & KOHN'
+   !npwold=npw
    npw=npwx ! only gamma
    call start_clock('routine_hartree')
    call start_clock('hartree_current')
@@ -73,8 +74,6 @@ subroutine routine_hartree()
 !-------STEP1: lettura e allocazione (npwx = number of plane waves (npwx>npw per comodita'), nbnd = number of bands (n_electrons/2 per insulators))
    allocate (tmp(npwx, nbnd))
    allocate (evp(npwx, nbnd))
-   !allocate (evc_uno(npwx, nbnd))
-   !allocate (evc_due(npwx, nbnd))
    allocate (charge_g(ngm))
    allocate (charge_g_due(ngm))
    allocate (charge(dffts%nnr))
@@ -88,23 +87,13 @@ subroutine routine_hartree()
    allocate (exgradcharge_r(3, dffts%nnr))
    allocate (exgradcharge_g(3, ngm))
    allocate (exdotcharge_r(dffts%nnr))
-!
-! legge le funzioni d'onda uno e due (evc_uno, evc_due)
-!   iun = find_free_unit()
-!   call diropn_due(prefix_due, iun, 'wfc', 2*nwordwfc, exst, tmp_dir)
-!   call davcio(evc_due, 2*nwordwfc, iun, 1, -1)
-!   close (iun)
-!
-!   close (iunwfc)
-!   call diropn(iunwfc, 'wfc', 2*nwordwfc, exst, tmp_dir)
-!   call davcio(evc_uno, 2*nwordwfc, iunwfc, 1, -1)
-!   close (iunwfc)
 
 !-------STEP2.1: inizializzazione di charge_g, la carica al tempo t.
 ! charge_g = densità di carica nello spazio reciproco. Si ottiene dalla FFT di |evc(r)|^2, dove evc(r)=IFFT(evc)
 ! per ottimizzare: fa 2 bande alla volta con una sola IFFT
 
-
+!TODO: call QE routine
+!TODO: use qe computed charge
    charge = 0.d0
    do iv = 1, nbnd, 2
       psic = 0.d0
@@ -136,7 +125,7 @@ subroutine routine_hartree()
 !calcolo carica in spazio reciproco (FFT di psic)
    psic = 0.d0
    psic(1:dffts%nnr) = dcmplx(charge(1:dffts%nnr), 0.d0)
-   call fwfft('Rho', psic, dffts) ! TODO: smooth does not exist anymore
+   call fwfft('Rho', psic, dffts)
    charge_g(1:ngm) = psic(dffts%nl(1:ngm))
 
 !!!!!!!!!!!!------------primo exchange-corr_intermezzo 1/2  -------------!!!!!!!!!!!!!!!!!!
@@ -159,6 +148,7 @@ subroutine routine_hartree()
 !
 !!!!!!!!!!!!------------- fine intermezzo----------------- !!!!!!!!!!!!!!!!!!!!
 
+!TODO: use qe computed charge
 !-------STEP2.2-------inizializzazione di chargeg_due, la carica al tempo t-Dt.
    charge = 0.d0
    do iv = 1, nbnd, 2
@@ -200,7 +190,7 @@ subroutine routine_hartree()
    charge_g_due(1:ngm) = psic(dffts%nl(1:ngm))
 
 !-------STEP3----- calcolo dei potenziali di Hartree a partire dalle cariche appena trovate.
-
+!TODO: use qe routine!!
 !calcolo del potenziale v_uno e di fac
 ! fac(G) = e2*fpi/(tpiba2*G^2*omega)
 ! v(G) = charge(G)*fac
@@ -247,9 +237,7 @@ subroutine routine_hartree()
 
 !-----------------EXCHANGE-CORRELATION-----------------------------------------------
    call start_clock('xc_current')
-!
-!!!!!questo passaggio e' necessario? discuss with Paolo!!!!!
-!
+
    exdotcharge_r(1:dffts%nnr) = exdotcharge_r(1:dffts%nnr)/omega
    excharge_r(1:dffts%nnr) = excharge_r(1:dffts%nnr)/omega
    exgradcharge_r(1:3, 1:dffts%nnr) = exgradcharge_r(1:3, 1:dffts%nnr)/omega
@@ -275,7 +263,8 @@ subroutine routine_hartree()
 
    call stop_clock('xc_current')
    call print_clock('xc_current')
-   if (ionode) print *, 'CORRENTE X-C CALCOLATA'
+   if (ionode) print *, 'CORRENTE X-C CALCOLATA'  
+!!la corrente appena calcolata si può fare senza scrivere più di 5 righe di codice probabilmente usando quello che c'è già in QE
 
 !---------------------------------KOHN------------------------------------------------
    call start_clock('kohn_current')
@@ -289,6 +278,7 @@ subroutine routine_hartree()
                    (xk(3, 1) + g(3, igk_k(ig, 1)))**2)*tpiba2
    end do
 ! inizializzazioni potenziali che servono per fare  H|psi>
+! TODO: sono già inizializzati
    call init_us_1()
    call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
    call allocate_bec_type(nkb, nbnd, becp)
@@ -397,6 +387,7 @@ subroutine routine_hartree()
    end do
    call stop_clock('kohn_current')
    call print_clock('kohn_current')
+   !npw=npwold
    if (ionode) print *, 'CORRENTE KOHN CALCOLATA'
 !---------------------------------------------------------------------------
    deallocate (charge)
@@ -406,7 +397,7 @@ subroutine routine_hartree()
    deallocate (v_due)
    deallocate (v_point)
    deallocate (v_mean)
-   call deallocate_bec_type(becp)
+   call deallocate_bec_type(becp) 
    deallocate (dpsi)
    deallocate (dvpsi)
    deallocate (excharge_r)
