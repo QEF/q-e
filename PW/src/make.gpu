@@ -36,7 +36,8 @@ PWLIBS += \
   stres_ewa_gpu.o \
   stres_knl_gpu.o \
   stres_us_gpu.o \
-  compute_deff_gpu.o
+  compute_deff_gpu.o \
+  gen_us_dy_gpu.o
 
 MODFLAGS += \
          $(MOD_FLAG)../../GScratch
@@ -103,6 +104,8 @@ stres_knl_gpu.o : symme.o
 stres_knl_gpu.o : stres_us.o
 stres_us_gpu.o : pwcom.o
 stres_us_gpu.o : compute_deff_gpu.o
+stres_us_gpu.o : gen_us_dy_gpu.o
+gen_us_dy_gpu.o : pwcom_gpu.o
 stress.o : stres_loc_gpu.o
 stress.o : stres_har_gpu.o
 stress.o : stres_mgga_gpu.o
