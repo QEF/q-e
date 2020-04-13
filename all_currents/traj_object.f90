@@ -104,7 +104,7 @@ module traj_object
    subroutine trajectory_push_back_last_temporary(t)
     implicit none
        type(trajectory), intent(inout) :: t
-       if (t%nsteps == t%nsteps_max) &
+       if (t%nsteps == t%nsteps_max .and. .not. t%circular ) &
            call errore('trajectory_push_back_last_temporary','there is no last temporary!',1)
        t%nsteps = t%nsteps + 1
    end subroutine
