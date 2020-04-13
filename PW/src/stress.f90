@@ -106,7 +106,8 @@ SUBROUTINE stress( sigma )
   !
   ! core correction contribution
   !
-  CALL stres_cc( sigmaxcc )
+  IF (.NOT. use_gpu) CALL stres_cc( sigmaxcc )
+  IF (      use_gpu) CALL stres_cc_gpu( sigmaxcc )
   !
   !  ewald contribution
   !
