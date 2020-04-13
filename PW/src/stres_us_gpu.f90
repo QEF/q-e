@@ -30,14 +30,14 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp, calbec
   USE mp,                   ONLY : mp_sum, mp_get_comm_null, mp_circular_shift_left 
-  USE wavefunctions_gpum, ONLY : using_evc
+  USE wavefunctions_gpum, ONLY : using_evc, using_evc_d
   USE wvfct_gpum,                ONLY : using_et
   USE uspp_gpum,                 ONLY : using_vkb, using_deeq
   USE becmod_subs_gpum,          ONLY : using_becp_auto
   !
   !^^^^^^^^^^^^gpu^^^^^^^^^
   !
-  USE becmod,    ONLY :  allocate_bec_type,deallocate_bec_type
+  !USE becmod,    ONLY :  allocate_bec_type,deallocate_bec_type
   USE becmod_gpum,          ONLY : bec_type_d !, becp_d
   
   USE gbuffers,             ONLY : dev_buf
@@ -58,6 +58,8 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
   REAL(DP)                :: q
   INTEGER                 :: npw, i
   !
+  !
+  !CALL using_evc_d(0)
   CALL using_evc(0)
   !
   !
@@ -70,7 +72,11 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
   !
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm ) 
   
-  CALL using_vkb(0); CALL using_becp_auto(2)
+  CALL using_vkb(0) ; CALL using_becp_auto(2)
+  
+  !CALL using_evc_d(0)
+  !CALL using_evc(0)
+  
   CALL calbec( npw, vkb, evc, becp )
   !
   ALLOCATE( qm1( npwx ) )
@@ -323,6 +329,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        !----------------------------------------------------------------------  
        !! nonlocal contribution to the stress - k-points version       
        !
+       
 #if defined(_OPENMP) && defined(__PGI)
        USE omp_lib
 #endif
@@ -338,7 +345,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        
        
        !^^^^^^^^^^^^gpu
-       REAL(DP) :: wg_nk, qm1i
+       COMPLEX(DP) :: wg_nk, qm1i
        COMPLEX(DP) :: gk1, gk2, gk3
        !
        REAL(DP) :: dot11, dot21, dot31, dot22, dot32, dot33
@@ -350,7 +357,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        INTEGER :: ierr
        LOGICAL :: ismulti_np
        
-       TYPE(bec_type_d), TARGET :: becp_d 
+       !TYPE(bec_type_d), TARGET :: becp_d 
        
        INTEGER :: nh_np
        REAL(DP), POINTER :: qm1_d(:)
@@ -361,9 +368,16 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        COMPLEX(DP), ALLOCATABLE, DEVICE :: deff_d(:,:,:), deff_nc_d(:,:,:,:)
        
        COMPLEX(DP), POINTER :: ps_d(:), ps_nc_d(:,:)
+       
+       !*********
+       COMPLEX(DP), ALLOCATABLE :: ps_ncv(:,:)
+       COMPLEX(DP), ALLOCATABLE :: becpnc_h(:,:,:)
+       !**********
+       
+       
        !COMPLEX(DP), POINTER ::  becpnc_d(:,:,:)
        COMPLEX(DP), ALLOCATABLE, DEVICE :: becpk_d(:,:)
-       COMPLEX(DP), ALLOCATABLE, DEVICE :: becpnc_d(:,:,:)
+       COMPLEX(DP), ALLOCATABLE, DEVICE :: becpnc_d(:,:)
        INTEGER, ALLOCATABLE :: shift(:)
        INTEGER, POINTER :: shift_d(:), ityp_d(:), nh_d(:)
        LOGICAL,ALLOCATABLE :: tvanp_d(:) 
@@ -372,7 +386,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        INTEGER, ALLOCATABLE, DEVICE :: na_d(:),ih_d(:),ikb_d(:),nhnp_d(:)
        integer :: bbb, itt
        complex(dp) :: becy, deqy
-       !^^PROVV^^
+       !^^PROV^^
        
 #if defined(__CUDA) 
   ATTRIBUTES(DEVICE) :: shift_d, tvanp_d, ps_d, ps_nc_d,&
@@ -468,17 +482,24 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        ityp_d(1:nat) = ityp(1:nat)
        !
        IF (noncolin) THEN 
+       
+          !*************
+          ALLOCATE( ps_ncv(nkb, npol) )       
+          !*************
+       
           CALL dev_buf%lock_buffer( ps_nc_d, [nkb, npol], ierr )
           !becpnc_d => becp_d%nc_d
-          ALLOCATE( becpnc_d(nkb,npol,nbnd) )
-          becpnc_d = becp%nc
+          ALLOCATE( becpnc_d(nkb,npol) )
+          !becpnc_d = becp%nc
+          !CALL dev_buf%lock_buffer( becpnc_d, [nkb, npol], ierr )
+          !CALL dev_memcpy( becpnc_d, becp%nc )
           !
           ALLOCATE( deff_nc_d(nhm,nhm,nat,nspin) )
        ELSE 
           CALL dev_buf%lock_buffer ( ps_d, nkb, ierr)
           !becpk_d => becp_d%k_d
           ALLOCATE( becpk_d(nkb,nbnd) )
-          becpk_d = becp%k      !correggi---devi usare becp_d.....
+          becpk_d = becp%k 
           
           ALLOCATE( deff_d(nhm,nhm,nat) )
        END IF
@@ -492,17 +513,16 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        CALL using_deeq(0)
        
        !
-       !^^^^^^^^^^^^^^^^^^^^^^^^    1) metti gli using_...
+       !^^^^^^^^^^^^^^^^^^^^^^^^    
        ALLOCATE( deeq_d(nhm,nhm,nat,nspin) )
        ALLOCATE( evc_d(npw,nbnd) )
        evc_d = evc
        deeq_d = deeq
-       
-       
-       
-       IF (noncolin) THEN
-         !
-       ELSE
+       !
+       !
+       !IF (noncolin) THEN
+       !  !
+       !ELSE
          !
          bbb = nat*nhm
          ALLOCATE( is_multinp_d(bbb) )
@@ -526,9 +546,8 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
            itt = itt + nh_np
          ENDDO
          !
-       ENDIF 
-       
-       
+       !ENDIF 
+
        !
        CALL start_clock('knl_ciclo2')
        !
@@ -546,50 +565,61 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
           IF (ABS(fac) < 1.d-9) CYCLE
           IF (noncolin) THEN
              CALL compute_deff_nc(deff_nc,et(ibnd,ik))
+             deff_nc_d = deff_nc
+             becpnc_d = becp%nc(:,:,ibnd)
           ELSE
              CALL compute_deff_gpu( deff_d, et(ibnd,ik) )
           ENDIF
           ijkb0 = 0
-          
+          !
+          !
           IF (noncolin) THEN
             !
-            DO np = 1, ntyp
-              DO na = 1, nat
-                IF ( ityp(na) == np ) THEN
-                   DO ih = 1, nh(np)
-                      ikb = ijkb0 + ih
-                      ! 
-                      ijs=0
-                      DO is=1,npol
-                        DO js=1,npol
-                           ijs=ijs+1
-                           evps=evps+fac*deff_nc(ih,ih,na,ijs)*   &
-                                     CONJG(becp%nc(ikb,is,ibnd))* &
-                                           becp%nc(ikb,js,ibnd)
-                        END DO
-                      END DO
-                      !
-                      IF ( upf(np)%tvanp .OR. upf(np)%is_multiproj ) THEN
-                         !
-                         DO jh = ( ih + 1 ), nh(np)
-                            jkb = ijkb0 + jh
-                            ijs=0
-                            DO is=1,npol
-                              DO js=1,npol
-                                 ijs=ijs+1
-                                 evps = evps+2.d0*fac&
-                                       *DBLE(deff_nc(ih,jh,na,ijs)*     &
-                                       (CONJG( becp%nc(ikb,is,ibnd) ) * &
-                                               becp%nc(jkb,js,ibnd))  )
-                              END DO
-                            END DO
-                         END DO
-                      END IF
-                   END DO
-                   ijkb0 = ijkb0 + nh(np)
-                END IF
-              END DO
-            END DO
+            !$cuf kernel do (1) <<<*,*>>>
+            DO i = 1, itt
+              IF (.NOT. is_multinp_d(i)) THEN
+                 !
+                 ijs = 0
+                 DO is = 1, npol
+                   DO js = 1, npol
+                      ijs = ijs + 1
+                      evps=evps+fac*DBLE(deff_nc_d(ih_d(i),ih_d(i),na_d(i),ijs)* &
+                                 CONJG(becpnc_d(ikb_d(i),is))* &
+                                      becpnc_d(ikb_d(i),js))
+                   ENDDO
+                 ENDDO
+                 !
+              ELSE
+                 !
+                 ijs=0
+                 DO is=1,npol
+                   DO js=1,npol
+                      ijs=ijs+1
+                      evps=evps+fac*DBLE(deff_nc_d(ih_d(i),ih_d(i),na_d(i),ijs)*   &
+                                 CONJG(becpnc_d(ikb_d(i),is))* &
+                                      becpnc_d(ikb_d(i),js))
+                   ENDDO
+                 ENDDO
+                 !
+                 !
+                 DO jh = ( ih_d(i) + 1 ), nhnp_d(i)
+                    jkb = shift_d(na_d(i)) + jh
+                    ijs=0
+                    DO is=1,npol
+                      DO js=1,npol
+                         ijs=ijs+1
+                         evps = evps + &
+                                +2.d0*fac &
+                                *DBLE(deff_nc_d(ih_d(i),jh,na_d(i),ijs) *    &
+                                (CONJG( becpnc_d(ikb_d(i),is) ) * &
+                                        becpnc_d(jkb,js)) )
+                      ENDDO
+                    ENDDO
+                 ENDDO
+                 !
+              ENDIF
+            ENDDO
+            !
             !
           ELSE
             !
@@ -613,12 +643,10 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
           !
        END DO
        
-       
-       
        DO l = 1, 3
           sigmanlc(l,l) = sigmanlc(l,l) - evps
        END DO
-       !
+       !   
        
        
        CALL stop_clock('knl_ciclo2')
@@ -631,6 +659,9 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        !
        CALL start_clock('knl_ciclo2')
        !
+       
+       
+       !call using_becp_auto(0)
        !
        DO ibnd = 1, nbnd
          !
@@ -643,43 +674,47 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
             !CALL compute_deff_nc_gpu(deff_nc_d,et_d(ibnd,ik))
             !^^^^^^^^^^^
             !
+            becpnc_d = becp%nc(:,:,ibnd)
+            
+            !
             !$cuf kernel do (1) <<<*,*>>>
-            DO na = 1, nat
-               np = ityp_d(na)
-               ijkb0 = shift_d(na)
-               nh_np = nh_d(np)
-               ismulti_np = tvanp_d(np)
-               IF (.NOT. ismulti_np) THEN
-                  !
-                  DO ih = 1, nh_np
-                     ikb = ijkb0 + ih
-                     DO ijs = 1, npol2 
-                        ps_nc_d(ikb,:) = (0.D0, 0.D0)
-                        js = MOD(ijs-1, npol)
-                        is = (ijs-1)/npol + 1
-                        ps_nc_d(ikb,is) = ps_nc_d(ikb,is) + becpnc_d(ikb,js,ibnd)* &
-                                          deff_nc_d(ih,ih,na,ijs)
-                     ENDDO
-                  ENDDO
-                  !
-               ELSE 
-                  !
-                  DO ih =1, nh_np
-                     ikb = ijkb0 + ih
-                     ps_nc_d(ikb,:) = (0._DP, 0._DP) 
-                     DO jh = 1, nh_np
-                        jkb = ijkb0 + jh
-                        DO ijs = 1, npol2 
-                           js = MOD(ijs-1,npol) 
-                           is = (ijs-1)/npol + 1
-                           ps_nc_d(ikb,is)= ps_nc_d(ikb,is) + becpnc_d(jkb,js,ibnd)* &
-                                            deff_nc_d(ih,jh,na,ijs)
-                        ENDDO
-                     ENDDO
-                  ENDDO
-                  !
-               ENDIF 
+            DO i = 1, itt
+              IF (.NOT. is_multinp_d(i)) THEN
+                 !
+                 ijs=0
+                 ps_nc_d(ikb_d(i),:) = (0._DP,0._DP)
+                 DO is=1,npol
+                   DO js=1,npol
+                      ijs=ijs+1
+                      !DO ijs = 1, npol*npol
+                      !js = MOD(ijs-1, npol)
+                      !is = (ijs-1)/npol + 1
+                      ps_nc_d(ikb_d(i),is) = ps_nc_d(ikb_d(i),is) + becpnc_d(ikb_d(i),js)* &
+                                      deff_nc_d(ih_d(i),ih_d(i),na_d(i),ijs)
+                   ENDDO
+                 ENDDO
+                 !
+              ELSE
+                 !
+                 ps_nc_d(ikb_d(i),:) = (0._DP,0._DP) 
+                 DO jh = 1, nhnp_d(i)
+                    jkb = shift_d(na_d(i)) + jh
+                    ijs=0
+                    DO is=1,npol
+                      DO js=1,npol
+                        ijs=ijs+1
+                        ps_nc_d(ikb_d(i),is)= ps_nc_d(ikb_d(i),is) + becpnc_d(jkb,js)* &
+                                            deff_nc_d(ih_d(i),jh,na_d(i),ijs)
+                      ENDDO
+                    ENDDO
+                 ENDDO   
+                 !
+              ENDIF
             ENDDO
+            
+            ALLOCATE( becpnc_h(nkb,npol,1))
+            becpnc_h(:,:,1) = becpnc_d
+            
             !
          ELSE
             !
@@ -689,7 +724,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
             !$cuf kernel do (1) <<<*,*>>>
             DO i = 1, itt
                !
-               IF (.NOT. is_multinp_d(i)) THEN !....questo caso fuori ciclo
+               IF (.NOT. is_multinp_d(i)) THEN
                    !
                    deqy = CMPLX(deeq_d(ih_d(i),ih_d(i),na_d(i),current_spin))
                    becy = becpk_d(ikb_d(i),ibnd)
@@ -716,39 +751,40 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
                DO i = 1, npw    
                   evc1i = evc_d(i, ibnd)
                   evc2i = evc_d(i+npwx,ibnd)  
+                  qm1i = CMPLX(qm1_d(i))
                   gk1 = CMPLX(gk_d(i,1))
                   gk2 = CMPLX(gk_d(i,2))
                   gk3 = CMPLX(gk_d(i,3))
                   worksum1 = ps_nc_d(ikb,1) * dvkb_d(i,ikb,4)     
                   worksum2 = ps_nc_d(ikb,2) * dvkb_d(i,ikb,4)   
                   !   
-                  cv1 = evc1i * gk1 * gk1
-                  cv2 = evc2i * gk1 * gk1
+                  cv1 = evc1i * gk1 * gk1 * qm1i
+                  cv2 = evc2i * gk1 * gk1 * qm1i
                   dot11 = dot11 + DREAL(worksum1)*DREAL(cv1) + DIMAG (worksum1)*DIMAG(cv1)
                   dot11 = dot11 + DREAL(worksum2)*DREAL(cv2) + DIMAG (worksum2)*DIMAG(cv2)
                   !   
-                  cv1 = evc1i * gk2 * gk1
-                  cv2 = evc2i * gk2 * gk1
+                  cv1 = evc1i * gk2 * gk1 * qm1i
+                  cv2 = evc2i * gk2 * gk1 * qm1i
                   dot21 = dot21 + DREAL(worksum1)*DREAL(cv1) + DIMAG (worksum1)*DIMAG(cv1)   
                   dot21 = dot21 + DREAL(worksum2)*DREAL(cv2) + DIMAG (worksum2)*DIMAG(cv2)   
                   !   
-                  cv1 = evc1i * gk3 * gk1
-                  cv2 = evc2i * gk3 * gk1
+                  cv1 = evc1i * gk3 * gk1 * qm1i
+                  cv2 = evc2i * gk3 * gk1 * qm1i
                   dot31 = dot31 + DREAL(worksum1)*DREAL(cv1) + DIMAG (worksum1)*DIMAG(cv1)   
                   dot31 = dot31 + DREAL(worksum2)*DREAL(cv2) + DIMAG (worksum2)*DIMAG(cv2)   
                   !   
-                  cv1 = evc1i * gk2 * gk2
-                  cv2 = evc2i * gk2 * gk2
+                  cv1 = evc1i * gk2 * gk2 * qm1i
+                  cv2 = evc2i * gk2 * gk2 * qm1i
                   dot22 = dot22 + DREAL(worksum1)*DREAL(cv1) + DIMAG (worksum1)*DIMAG(cv1)   
                   dot22 = dot22 + DREAL(worksum2)*DREAL(cv2) + DIMAG (worksum2)*DIMAG(cv2)   
                   !   
-                  cv1 = evc1i * gk3 * gk2
-                  cv2 = evc2i * gk3 * gk2
+                  cv1 = evc1i * gk3 * gk2 * qm1i
+                  cv2 = evc2i * gk3 * gk2 * qm1i
                   dot32 = dot32 + DREAL(worksum1)*DREAL(cv1) + DIMAG (worksum1)*DIMAG(cv1)
                   dot32 = dot32 + DREAL(worksum2)*DREAL(cv2) + DIMAG (worksum2)*DIMAG(cv2)
                   !   
-                  cv1  = evc1i * gk3 * gk3
-                  cv2  = evc2i * gk3 * gk3
+                  cv1  = evc1i * gk3 * gk3 * qm1i
+                  cv2  = evc2i * gk3 * gk3 * qm1i
                   dot33 = dot33 + DREAL(worksum1)*DREAL(cv1) + DIMAG (worksum1)*DIMAG(cv1)
                   dot33 = dot33 + DREAL(worksum2)*DREAL(cv2) + DIMAG (worksum2)*DIMAG(cv2)
                END DO
@@ -764,7 +800,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
                   worksum = ps_d(ikb) *dvkb_d(i,ikb,4)   
                   !    
                   evci = evc_d(i,ibnd)
-                  qm1i = qm1_d(i)
+                  qm1i = CMPLX(qm1_d(i))
                   gk1 = CMPLX(gk_d(i,1))
                   gk2 = CMPLX(gk_d(i,2))
                   gk3 = CMPLX(gk_d(i,3))
@@ -790,8 +826,6 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
                ENDDO   
             ENDDO   
                
-            !stop  !------- 
-               
             !IF ( me_bgrp /= root_bgrp ) stop     
             !   
          ENDIF
@@ -800,11 +834,7 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
          sigmanlc(:,2) = sigmanlc(:,2) - 2._DP * wg(ibnd,ik) * [0._DP, dot22, dot32]
          sigmanlc(:,3) = sigmanlc(:,3) - 2._DP * wg(ibnd,ik) * [0._DP, 0._DP, dot33]
          !
-         !do i = 1, 3
-         !  print *, 'stres-USUSU:', sigmanlc(i,1), sigmanlc(i,2), sigmanlc(i,3)
-         !enddo
-         !!
-         !stop
+         
          !===========^=========mmcpy
          
          !      
@@ -907,11 +937,6 @@ SUBROUTINE stres_us_gpu( ik, gk, sigmanlc )
        !
        
        
-         
-  do i = 1, 3
-    print *, 'stres-USUSU:', sigmanlc(i,1), sigmanlc(i,2), sigmanlc(i,3)
-  enddo
-  stop
        
        
        !stop !------------------------------
