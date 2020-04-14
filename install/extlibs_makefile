@@ -123,7 +123,7 @@ libcuda_eigensolver :
 	(echo "No configuration file found for GPU custom eigensolver"; exit); fi
 
 # libbeef
-libbeef : libbeef_$(LIBBEEF_LIBS_SWITCH)
+libbeef : libbeef_$(BEEF_LIBS_SWITCH)
 
 libbeef_ : fake_libbeef_external
 libbeef_external : fake_elpa_external
@@ -132,9 +132,9 @@ fake_libbeef_external :
 	touch fake_libbeef.a
 	-rm fake_libbeef.a
 
-libbeef_enabled:
+libbeef_internal:
 	if test ! -d ../LIBBEEF; then mkdir ../LIBBEEF; \
-	( gzip -dc ../archive/libbeef.tar.gz |(cd ../LIBBEEF; tar -xvf -)); fi
+	( gzip -dc ../archive/libbeef-0.1.2.tar.gz |(cd ../LIBBEEF; tar -xvf -)); fi
 	cd ../LIBBEEF; $(MAKE)
 
 ###################################

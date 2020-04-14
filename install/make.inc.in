@@ -168,6 +168,7 @@ MASS_LIBS      = @mass_libs@
 # library for bayesian error estimate functionals
 
 BEEF_LIBS      = @beef_libs@
+BEEF_LIBS_SWITCH = @beef_libs_switch@
 
 # CUDA libraries
 CUDA_LIBS=@cuda_libs@

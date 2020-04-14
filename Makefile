@@ -194,7 +194,7 @@ pw4gwwlib : phlibs
 	if test -d GWW ; then \
 	( cd GWW ; $(MAKE) pw4gwwa || exit 1 ) ; fi
 
-mods : libiotk libfox libutil libla libfft
+mods : libiotk libfox libutil libla libfft libbeef
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 libks_solvers : libs libutil libla
@@ -237,6 +237,9 @@ libfox:
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
 libcuda: 
+	cd install ; $(MAKE) -f extlibs_makefile $@
+
+libbeef:
 	cd install ; $(MAKE) -f extlibs_makefile $@
 # In case of trouble with iotk and compilers, add
 # FFLAGS="$(FFLAGS_NOOPT)" after $(MFLAGS)
