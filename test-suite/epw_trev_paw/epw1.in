@@ -1,0 +1,60 @@
+--
+&inputepw
+  prefix      = 'sic'
+  outdir      = './'
+  dvscf_dir   = './save'
+
+  elph        = .true.
+  kmaps       = .false.
+  epbwrite    = .true.
+  epbread     = .false.
+  epwwrite    = .true.
+  epwread     = .false.
+  lpolar      = .true.
+
+  wannierize  = .true.
+  nbndsub     =  4
+  dis_win_max = 12
+  dis_froz_max= 9.6
+  proj(1)     = 'f= 0.000, 0.000, 0.000, : sp3'
+  wdata(1)    = 'bands_plot = .true.'
+  wdata(2)    = 'begin kpoint_path'
+  wdata(3)    = 'G 0.000 0.000 0.000   X 0.500 0.000 0.500'
+  wdata(4)    = 'X 0.500 0.000 0.500   W 0.500 0.250 0.750'
+  wdata(5)    = 'W 0.500 0.250 0.750   L 0.500 0.500 0.500'
+  wdata(6)    = 'L 0.500 0.500 0.500   K 0.375 0.375 0.750'
+  wdata(7)    = 'K 0.375 0.375 0.750   G 0.000 0.000 0.000'
+  wdata(8)    = 'G 0.000 0.000 0.000   L 0.500 0.500 0.500'
+  wdata(9)    = 'end kpoint_path'
+  wdata(10)   = 'bands_plot_format = gnuplot'
+  wdata(11)   = 'guiding_centres = .true.'
+  wdata(12)   = 'dis_num_iter      = 500'
+  wdata(13)   = 'num_print_cycles  = 50'
+
+  use_ws      = .true. 
+  vme         = .true.
+
+  elecselfen  = .false.
+  phonselfen  = .false.
+  a2f         = .false.
+  prtgkk      = .true.
+
+  fsthick     = 7.0 
+  eptemp      = 20 
+  degaussw    = 0.05
+  
+  filqf       = 'pathq.dat'
+  filkf       = 'path.dat'
+
+  nk1         = 3
+  nk2         = 3
+  nk3         = 3
+  nq1         = 3
+  nq2         = 3
+  nq3         = 3
+ /
+   4
+   0.000000000000000E+00   0.000000000000000E+00   0.000000000000000E+00
+  -0.333333333333333E+00   0.333333333333333E+00  -0.333333333333333E+00
+   0.000000000000000E+00   0.666666666666667E+00   0.000000000000000E+00
+   0.666666666666667E+00   0.000000000000000E+00   0.666666666666667E+00

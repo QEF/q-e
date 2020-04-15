@@ -472,6 +472,50 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
             }
         }
 
+        var ldvscf_interpolate -type  LOGICAL {
+            default { .false. }
+            info {
+                If .true., use Fourier interpolation of phonon potential
+                to compute the induced part of phonon potential at each
+                q point. Results of a dvscf_q2r.x run is needed.
+                Requires @ref trans = .false..
+            }
+        }
+
+        group {
+            label { Optional variables for dvscf interpolation: }
+
+            var wpot_dir -type CHARACTER {
+                default { outdir // 'w_pot/' }
+                info {
+                    Directory where the w_pot binary files are written.
+                    Must be the same with wpot_dir used in dvscf_q2r.x.
+                    The real space potential files are stored in wpot_dir
+                    with names ${prefix}.wpot.irc${irc}//"1".
+                }
+            }
+            var do_long_range  -type LOGICAL {
+                default { .false. }
+                info {
+                    If .true., add the long-range part of the potential
+                    to the Fourier interpolated potential as in:
+                    S. Ponce et al, J. Chem. Phys. 143, 102813 (2015).
+                    Reads dielectric matrix and Born effective charges from
+                    the ${wpot_dir}/tensors.dat file, written in dvscf_q2r.x.
+                    Currently, only the dipole (Frohlich) part is implemented.
+                    The quadrupole part is not implemented.
+                }
+            }
+            var do_charge_neutral  -type LOGICAL {
+                default { .false. }
+                info {
+                    If .true., impose charge neutrality on the Born effective
+                    charges. Used only if @ref do_long_range = .true..
+                }
+            }
+        }
+
+
 	group {
 	    label { Specification of irreducible representation }
 

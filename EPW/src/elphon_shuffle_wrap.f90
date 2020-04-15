@@ -37,7 +37,7 @@
   USE control_flags, ONLY : iverbosity
   USE io_var,        ONLY : iuepb, iuqpeig, crystal, iukgmap
   USE pwcom,         ONLY : nks, nbnd, nkstot, nelec
-  USE cell_base,     ONLY : at, bg, alat, omega
+  USE cell_base,     ONLY : at, bg, alat, omega, tpiba
   USE symm_base,     ONLY : irt, s, nsym, ft, sname, invs, s_axis_to_cart,      &
                             sr, nrot, set_sym_bl, find_sym, inverse_s,&
                             remove_sym, allfrac
@@ -51,7 +51,7 @@
   USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, umat, umat_all,      &
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat,            &
                             exband, wscache, area,                              &
-                            nbndep, ngxxf
+                            nbndep, ngxxf, veff
   USE klist_epw,     ONLY : et_loc, et_all
   USE constants_epw, ONLY : ryd2ev, zero, two, czero, eps6, eps8
   USE fft_base,      ONLY : dfftp
@@ -64,8 +64,7 @@
   USE spin_orb,      ONLY : lspinorb
   USE lrus,          ONLY : becp1
   USE becmod,        ONLY : becp, deallocate_bec_type
-  USE phus,          ONLY : int1, int1_nc, int2, int2_so, int4, int4_nc, int5,  &
-                            int5_so, alphap
+  USE phus,          ONLY : int1, int1_nc, int2, int2_so, alphap
   USE kfold,         ONLY : shift, createkmap_pw2, createkmap
   USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, read_disp_pattern,       &
                             copy_sym_epw
@@ -88,7 +87,7 @@
   !! Name of the directory
   CHARACTER(LEN = 256) :: filename
   !! Name of the file
-  CHARACTER(LEN = 3) :: filelab
+  CHARACTER(LEN = 4) :: filelab
   !! Append the number of the core that works on that file
   CHARACTER(LEN = 80)   :: line
   !! Use to read external eigenvalues
@@ -230,7 +229,7 @@
   maxvalue = nqxq
   DO iq_irr = 1, nqc_irr
     qnorm_tmp = DSQRT(xqc_irr(1, iq_irr)**2 + xqc_irr(2, iq_irr)**2 + xqc_irr(3, iq_irr)**2)
-    nqxq_tmp = INT(((DSQRT(gcutm) + qnorm_tmp) / dq + 4) * cell_factor)
+    nqxq_tmp = INT(((DSQRT(gcutm) + qnorm_tmp) * tpiba / dq + 4) * cell_factor)
     IF (nqxq_tmp > maxvalue)  maxvalue = nqxq_tmp
   ENDDO
   !
@@ -812,24 +811,18 @@
     DEALLOCATE(npert, STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating npert', 1)
     IF (okvan) THEN
+      DEALLOCATE(veff, STAT = ierr)
+      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating veff', 1)
       DEALLOCATE(int1, STAT = ierr)
       IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating int1', 1)
       DEALLOCATE(int2, STAT = ierr)
       IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating int2', 1)
-      DEALLOCATE(int4, STAT = ierr)
-      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating int4', 1)
-      DEALLOCATE(int5, STAT = ierr)
-      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating int5', 1)
       IF (noncolin) THEN
         DEALLOCATE(int1_nc, STAT = ierr)
         IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating int1_nc', 1)
-        DEALLOCATE(int4_nc, STAT = ierr)
-        IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating int4_nc', 1)
         IF (lspinorb) THEN
           DEALLOCATE(int2_so, STAT = ierr)
           IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating int2_so', 1)
-          DEALLOCATE(int5_so, STAT = ierr)
-          IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating int5_so', 1)
         ENDIF
       ENDIF
     ENDIF

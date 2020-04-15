@@ -27,9 +27,6 @@
   !!
   LOGICAL :: write_unk
   !! Set to .TRUE. to write the periodic part of the Bloch functions. Default is .FALSE.
-  LOGICAL :: reduce_unk
-  !! Set to .TRUE. to reduce file-size (and resolution) of Bloch functions by a factor of 8.
-  !! Default is .FALSE. (only relevant if write_unk=.TRUE.)
   LOGICAL :: wvfn_formatted
   !! Set to .TRUE. to write formatted wavefunctions. Default is .FALSE. (only relevant if write_unk=.TRUE.)
   LOGICAL :: write_amn

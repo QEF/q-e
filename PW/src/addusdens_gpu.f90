@@ -57,6 +57,7 @@ SUBROUTINE addusdens_g_gpu(rho)
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE control_flags,        ONLY : gamma_only
   USE mp_pools,             ONLY : inter_pool_comm
+  USE mp_bands,             ONLY : inter_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
   USE uspp_gpum,            ONLY : becsum_d, using_becsum_d
@@ -69,7 +70,7 @@ SUBROUTINE addusdens_g_gpu(rho)
   !
   ! ... local variables
   !
-  INTEGER :: ngm_s, ngm_e, ngm_l
+  INTEGER :: ngm_s, ngm_e, ngm_l, ngm_s_tmp, ngm_e_tmp, ngm_l_tmp
   ! starting/ending indices, local number of G-vectors
   INTEGER :: ig, na, nt, ih, jh, ijh, is, nab, nb, nij
   ! counters
@@ -99,13 +100,14 @@ SUBROUTINE addusdens_g_gpu(rho)
   !
   CALL dev_memset(aux_d, (0.d0, 0.d0), [ 1, ngm ], 1, [ 1, nspin_mag ], 1)
   !
-  ! With k-point parallelization, distribute G-vectors across processors
-  ! ngm_s = index of first G-vector for this processor
-  ! ngm_e = index of last  G-vector for this processor
+  ! With k-point/bgrp parallelization, distribute G-vectors across all processors
+  ! ngm_s = index of first G-vector for this processor (in the k-point x bgrp pool)
+  ! ngm_e = index of last  G-vector for this processor (in the k-point x bgrp pool)
   ! ngm_l = local number of G-vectors 
   !
-  CALL divide (inter_pool_comm, ngm, ngm_s, ngm_e)
-  ngm_l = ngm_e-ngm_s+1
+  CALL divide( inter_pool_comm, ngm, ngm_s_tmp, ngm_e_tmp ) ; ngm_l_tmp = ngm_e_tmp - ngm_s_tmp + 1
+  CALL divide( inter_bgrp_comm, ngm_l_tmp, ngm_s, ngm_e ) ; ngm_l = ngm_e - ngm_s + 1 
+  ngm_s = ngm_s + ngm_s_tmp - 1 ; ngm_e = ngm_e + ngm_s_tmp -1
   ! for the extraordinary unlikely case of more processors than G-vectors
   IF ( ngm_l <= 0 ) GO TO 10
   !
@@ -148,6 +150,7 @@ SUBROUTINE addusdens_g_gpu(rho)
         CALL dev_buf%lock_buffer(tbecsum_d, (/ nij,nab,nspin_mag /), ierr )
         CALL dev_buf%lock_buffer(aux2_d, (/ ngm_l,nij /), ierr )
         !
+        call start_clock_gpu( 'addusd:skk')
         nb = 0
         DO na = 1, nat
            IF ( ityp(na) == nt ) THEN
@@ -168,6 +171,7 @@ SUBROUTINE addusdens_g_gpu(rho)
               ENDDO
            ENDIF
         ENDDO
+        call stop_clock_gpu( 'addusd:skk')
 
         DO is = 1, nspin_mag
            ! sum over atoms
@@ -203,6 +207,7 @@ SUBROUTINE addusdens_g_gpu(rho)
   10 CONTINUE
   !
   CALL dev_memcpy(aux_h, aux_d)
+  CALL mp_sum( aux_h, inter_bgrp_comm )
   CALL mp_sum( aux_h, inter_pool_comm )
   !
   !     add aux to the charge density in reciprocal space

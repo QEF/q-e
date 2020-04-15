@@ -34,7 +34,9 @@ tf1=`grep " P = " $fname | head -1 | awk '{printf "%7.5f", $3}'`
 # PH
 diel=`grep -A 4 '  Dielectric constant in cartesian' $fname | grep -v '  Dielectric constant' | awk '{print $2; print $3; print $4 }'`
 born=`grep "     E[x-z]  ( " $fname | awk '{print $3; print $4; print $5}'`
-phfreq=`grep "     freq (.*THz" $fname | awk '{print $5; print $8}'`
+# phfreq=`grep "     freq (.*THz" $fname | awk '{print $5; print $8}'`
+# in the version below, phfreq only contains phonon frequencies in cm-1, not in THz
+phfreq=`grep "     freq (.*THz" $fname | awk '{print $8}'`
 
 # Q2R
 qdir=`grep " q= " $fname | awk '{print $2; print $3; print $4}'`
@@ -72,6 +74,7 @@ indabs=`grep "  (cm-1)" $fname | awk '{print $1; print $2; print $3; print $4}'`
 mobnewx=`sed -n -e "/       Temp    / {n;n;n;n;p}" $fname | awk '{print $1; print $2; print $5}'`
 mobnewy=`sed -n -e "/       Temp    / {n;n;n;n;n;p}" $fname | awk '{print $2}'`
 mobnewz=`sed -n -e "/       Temp    / {n;n;n;n;n;n;p}" $fname | awk '{print $3}'`
+ratmax=`grep "Maximum Im/Re Ratio =" $fname | awk '{print $9}'`
 
 if test "$efm" != ""; then
         echo efm
@@ -295,4 +298,7 @@ if test "$pi" != ""; then
         for x in $pi; do echo $x; done
 fi
 
-
+if test "$ratmax" != ""; then
+        echo ratmax
+        for x in $ratmax; do echo $x; done
+fi

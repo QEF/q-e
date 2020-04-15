@@ -8,10 +8,9 @@
 
 !=----------------------------------------------------------------------=!
 !
-!   CP90 / FPMD common init subroutine 
+!   CP90 / FPMD common init subroutine
 !
 !=----------------------------------------------------------------------=!
-
 
   subroutine init_dimensions(  )
 
@@ -19,49 +18,49 @@
       !     initialize G-vectors and related quantities
       !
 
-      USE kinds,                ONLY: dp
-      USE constants,            ONLY: tpi
-      use io_global,            only: stdout, ionode
-      use control_flags,        only: gamma_only, iverbosity
-      use cell_base,            only: ainv, at, omega, alat
-      use small_box,            only: small_box_set
-      use smallbox_grid_dim,    only: smallbox_grid_init,smallbox_grid_info
-      USE fft_types,            ONLY: fft_type_init
-      use ions_base,            only: nat
-      USE recvec_subs,          ONLY: ggen, ggens
-      USE gvect,                ONLY: mill_g, eigts1,eigts2,eigts3, g, gg, &
-                                      ecutrho, gcutm, gvect_init, mill, &
-                                      ig_l2g, gstart, ngm, ngm_g, gshells
-      USE gvect_gpum,           ONLY: using_g, using_g_d 
-      use gvecs,                only: gcutms, gvecs_init, ngms
-      use gvecw,                only: gkcut, gvecw_init, g2kin_init
-      USE smallbox_subs,        ONLY: ggenb
-      USE fft_base,             ONLY: dfftp, dffts, dfftb, fft_base_info
-      USE fft_smallbox,         ONLY: cft_b_omp_init
-      USE fft_base,             ONLY: smap
-      USE control_flags,        ONLY: gamma_only, smallmem
-      USE electrons_module,     ONLY: bmeshset
-      USE electrons_base,       ONLY: distribute_bands
-      USE problem_size,         ONLY: cpsizes
-      USE mp_bands,             ONLY: me_bgrp, root_bgrp, nproc_bgrp, nbgrp, &
-                                      my_bgrp_id, intra_bgrp_comm, ntask_groups
-      USE uspp,                 ONLY: okvan, nlcc_any
-      USE input_parameters,     ONLY: ref_cell, ref_alat
-      use cell_base,            ONLY: ref_at, ref_bg
-      USE exx_module,           ONLY: h_init
+      USE kinds,                ONLY : dp
+      USE constants,            ONLY : tpi
+      use io_global,            only : stdout, ionode
+      use control_flags,        only : gamma_only, iverbosity
+      use cell_base,            only : ainv, at, omega, alat
+      use small_box,            only : small_box_set
+      use smallbox_grid_dim,    only : smallbox_grid_init,smallbox_grid_info
+      USE fft_types,            ONLY : fft_type_init
+      use ions_base,            only : nat
+      USE recvec_subs,          ONLY : ggen, ggens
+      USE gvect,                ONLY : mill_g, eigts1,eigts2,eigts3, g, gg, &
+                                       ecutrho, gcutm, gvect_init, mill, &
+                                       ig_l2g, gstart, ngm, ngm_g, gshells
+      USE gvect_gpum,           ONLY : using_g, using_g_d 
+      use gvecs,                only : gcutms, gvecs_init, ngms
+      use gvecw,                only : gkcut, gvecw_init, g2kin_init
+      USE smallbox_subs,        ONLY : ggenb
+      USE fft_base,             ONLY : dfftp, dffts, dfftb, fft_base_info
+      USE fft_smallbox,         ONLY : cft_b_omp_init
+      USE fft_base,             ONLY : smap
+      USE control_flags,        ONLY : gamma_only, smallmem
+      USE electrons_module,     ONLY : bmeshset
+      USE electrons_base,       ONLY : distribute_bands
+      USE problem_size,         ONLY : cpsizes
+      USE mp_bands,             ONLY : me_bgrp, root_bgrp, nproc_bgrp, nbgrp, &
+                                       my_bgrp_id, intra_bgrp_comm, ntask_groups
+      USE uspp,                 ONLY : okvan, nlcc_any
+      USE input_parameters,     ONLY : ref_cell, ref_alat
+      use cell_base,            ONLY : ref_at, ref_bg
+      USE exx_module,           ONLY : h_init
+      USE command_line_options, ONLY : nmany_
 
       implicit none
-! 
+!
       integer  :: i
       real(dp) :: rat1, rat2, rat3
-      real(dp) :: bg(3,3), tpiba2 
+      real(dp) :: bg(3,3), tpiba2
       integer :: ng_, ngs_, ngm_ , ngw_, nyfft_
 #if defined(__MPI)
       LOGICAL :: lpara = .true.
 #else
       LOGICAL :: lpara = .false.
 #endif
-
 
       CALL start_clock( 'init_dim' )
 
@@ -73,7 +72,7 @@
                 3X,'------------------------------------' )
       END IF
       !
-      ! ... Initialize bands indexes for parallel linear algebra 
+      ! ... Initialize bands indexes for parallel linear algebra
       ! ... (distribute bands to processors)
       !
       CALL bmeshset( )
@@ -105,25 +104,29 @@
         WRITE( stdout,'(3X,"ref_cell_a2 =",1X,3f14.8,3x,"ref_cell_b2 =",3f14.8)') ref_at(:,2)*ref_alat,ref_bg(:,2)/ref_alat
         WRITE( stdout,'(3X,"ref_cell_a3 =",1X,3f14.8,3x,"ref_cell_b3 =",3f14.8)') ref_at(:,3)*ref_alat,ref_bg(:,3)/ref_alat
         !
-        CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, ref_at, ref_bg, gkcut, nyfft=nyfft_ )
-        CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, ref_at, ref_bg,  gcutm, nyfft=nyfft_ )
+        CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, ref_at, ref_bg, &
+                            gkcut, nyfft=nyfft_, nmany=nmany_ )
+        CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, ref_at, ref_bg, &
+                            gcutm, nyfft=nyfft_, nmany=nmany_ )
         !
       ELSE
         !
-        CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, at, bg, gkcut, nyfft=nyfft_ )
-        CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, at, bg,  gcutm, nyfft=nyfft_ )
+        CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, at, bg, &
+                            gkcut, nyfft=nyfft_, nmany=nmany_ )
+        CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, at, bg, &
+                            gcutm, nyfft=nyfft_, nmany=nmany_ )
         !
       END IF
       ! define the clock labels ( this enables the corresponding fft too ! )
       dffts%rho_clock_label = 'ffts' ; dffts%wave_clock_label = 'fftw'
-      dfftp%rho_clock_label = 'fft' 
+      dfftp%rho_clock_label = 'fft'
       !
       !
       CALL smallbox_grid_init( dfftp, dfftb )
 
       IF( ionode ) THEN
 
-        WRITE( stdout,210) 
+        WRITE( stdout,210)
 210     format(/,3X,'unit vectors of full simulation cell',&
               &/,3X,'in real space:',25x,'in reciprocal space (units 2pi/alat):')
         WRITE( stdout,'(3X,I1,1X,3f10.4,10x,3f10.4)') 1,at(:,1)*alat,bg(:,1)
@@ -152,7 +155,7 @@
 
       !
       ! ... Initialize reciprocal space local and global dimensions
-      !     NOTE in a parallel run ngm_ , ngw_ , ngs_ here are the 
+      !     NOTE in a parallel run ngm_ , ngw_ , ngs_ here are the
       !     local number of reciprocal vectors
       !
       CALL gvect_init ( ngm_ , intra_bgrp_comm )
@@ -204,7 +207,7 @@
       !
       CALL gvecw_init ( ngw_ , intra_bgrp_comm )
       CALL g2kin_init ( gg, tpiba2 )
-      ! 
+      !
       !     global arrays are no more needed
       !
       if( allocated( mill_g ) ) deallocate( mill_g )
@@ -248,7 +251,7 @@
       !
       CALL gmeshinfo()
       !
-      !  CALL cpsizes( )  Maybe useful 
+      !  CALL cpsizes( )  Maybe useful
       !
       !   Flush stdout
       !
@@ -275,9 +278,6 @@
       END SUBROUTINE fft_extra_info
 
    END SUBROUTINE init_dimensions
-
-
-
 
 !-----------------------------------------------------------------------
       subroutine init_geometry ( )
@@ -324,11 +324,11 @@
       CALL cell_init( alat, at, htm )
 
       CALL allocate_ions_positions( nsp, nat )
-      ! 
+      !
       ! tau0 = initial positions, sorted wrt order read from input
       ! taus = initial positions, scaled with the cell read from input
       !
-      tau0(:,:) = tau(:,:) 
+      tau0(:,:) = tau(:,:)
       CALL r_to_s( tau, taus, nat, ainv )
       !
       !  Allocate box descriptor
@@ -349,7 +349,7 @@
         CALL cell_init( 't', ht0, ht   )
         CALL cell_init( 't', htm, hold )
         ht0%hvel = velh  !  set cell velocity
-        ht0%gvel = gvel 
+        ht0%gvel = gvel
 
         h     = TRANSPOSE( ht   )
         ht    = TRANSPOSE( hold )
@@ -369,7 +369,6 @@
           WRITE( stdout,345) (hold(i,j),j=1,3)
         enddo
         WRITE( stdout,*)
-
 
       else
         !
@@ -392,8 +391,6 @@
  345  format(3(4x,f10.5))
       return
       end subroutine init_geometry
-
-
 
 !-----------------------------------------------------------------------
 

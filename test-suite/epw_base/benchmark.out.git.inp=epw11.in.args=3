@@ -1,0 +1,251 @@
+                                                                                      
+                                       ``:oss/                                        
+                           `.+s+.     .+ys--yh+     `./ss+.                           
+                          -sh//yy+`   +yy   +yy    -+h+-oyy                           
+                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           
+                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  
+               `/+ssys+-` `sh+      `                   oys`   .:osyo`                
+               -yh- ./syyooyo`                          .sys+/oyo--yh/                
+               `yy+    .-:-.                             `-/+/:`  -sh-                
+                /yh.                                              oys                 
+          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             
+       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        
+       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       
+       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        
+        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        
+         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          
+          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           
+    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      
+   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   
+   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   
+   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   
+   -yh-        ````````````````    `````````              ``        ``          oys   
+   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
+   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
+                                                                                      
+  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 
+                                                Comput. Phys. Commun. 209, 116 (2016) 
+                                                                                      
+
+     Program EPW v.5.2.0 starts on  9Apr2020 at 19:34:20 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     K-points division:     npool     =       4
+     Fft bands division:     nmany     =       1
+
+     Reading xml data from directory:
+
+     ./diam.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+               file C_3.98148.UPF: wavefunction(s)  3d renormalized
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         367     367    121                 4645     4645     893
+ 
+     Reading collected, re-writing distributed wavefunctions
+
+Possibly too few bands at point    1   0.00000   0.00000   0.00000
+
+Possibly too few bands at point    2  -0.33333   0.33333  -0.33333
+
+Possibly too few bands at point    3  -0.66667   0.66667  -0.66667
+
+Possibly too few bands at point    4   0.33333   0.33333   0.33333
+
+Possibly too few bands at point    5   0.00000   0.66667   0.00000
+
+Possibly too few bands at point    6  -0.33333   1.00000  -0.33333
+
+Possibly too few bands at point    7   0.66667   0.66667   0.66667
+
+     --                                                                         
+
+     bravais-lattice index     =            2
+     lattice parameter (a_0)   =       6.6425  a.u.
+     unit-cell volume          =      73.2698 (a.u.)^3
+     number of atoms/cell      =            2
+     number of atomic types    =            1
+     kinetic-energy cut-off    =      60.0000  Ry
+     charge density cut-off    =     240.0000  Ry
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
+
+
+     celldm(1)=    6.64245  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = ( -0.5000  0.0000  0.5000 )  
+               a(2) = (  0.0000  0.5000  0.5000 )  
+               a(3) = ( -0.5000  0.5000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = ( -1.0000 -1.0000  1.0000 )  
+               b(2) = (  1.0000  1.0000  1.0000 )  
+               b(3) = ( -1.0000  1.0000 -1.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+        1        C   12.0108   tau( 1) = (    0.00000    0.00000    0.00000  )
+        2        C   12.0108   tau( 2) = (    0.25000    0.25000    0.25000  )
+ 
+     49 Sym.Ops. (with q -> -q+G )
+
+
+     G cutoff =  268.2305  (   4645 G-vectors)     FFT grid: ( 24, 24, 24)
+     number of k points=   27  gaussian broad. (Ry)=  0.0200     ngauss =   1
+                       cart. coord. in units 2pi/a_0
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0740741
+        k(    2) = (  -0.3333333   0.3333333  -0.3333333), wk =   0.0740741
+        k(    3) = (  -0.6666667   0.6666667  -0.6666667), wk =   0.0740741
+        k(    4) = (   0.3333333   0.3333333   0.3333333), wk =   0.0740741
+        k(    5) = (   0.0000000   0.6666667   0.0000000), wk =   0.0740741
+        k(    6) = (  -0.3333333   1.0000000  -0.3333333), wk =   0.0740741
+        k(    7) = (   0.6666667   0.6666667   0.6666667), wk =   0.0740741
+        k(    8) = (   0.3333333   1.0000000   0.3333333), wk =   0.0740741
+        k(    9) = (   0.0000000   1.3333333   0.0000000), wk =   0.0740741
+        k(   10) = (  -0.3333333  -0.3333333   0.3333333), wk =   0.0740741
+        k(   11) = (  -0.6666667   0.0000000   0.0000000), wk =   0.0740741
+        k(   12) = (  -1.0000000   0.3333333  -0.3333333), wk =   0.0740741
+        k(   13) = (   0.0000000   0.0000000   0.6666667), wk =   0.0740741
+        k(   14) = (  -0.3333333   0.3333333   0.3333333), wk =   0.0740741
+        k(   15) = (  -0.6666667   0.6666667  -0.0000000), wk =   0.0740741
+        k(   16) = (   0.3333333   0.3333333   1.0000000), wk =   0.0740741
+        k(   17) = (   0.0000000   0.6666667   0.6666667), wk =   0.0740741
+        k(   18) = (  -0.3333333   1.0000000   0.3333333), wk =   0.0740741
+        k(   19) = (  -0.6666667  -0.6666667   0.6666667), wk =   0.0740741
+        k(   20) = (  -1.0000000  -0.3333333   0.3333333), wk =   0.0740741
+        k(   21) = (  -1.3333333   0.0000000   0.0000000), wk =   0.0740741
+        k(   22) = (  -0.3333333  -0.3333333   1.0000000), wk =   0.0740741
+        k(   23) = (  -0.6666667  -0.0000000   0.6666667), wk =   0.0740741
+        k(   24) = (  -1.0000000   0.3333333   0.3333333), wk =   0.0740741
+        k(   25) = (   0.0000000   0.0000000   1.3333333), wk =   0.0740741
+        k(   26) = (  -0.3333333   0.3333333   1.0000000), wk =   0.0740741
+        k(   27) = (  -0.6666667   0.6666667   0.6666667), wk =   0.0740741
+
+     PseudoPot. # 1 for C  read from file:
+     ../../pseudo/C_3.98148.UPF
+     MD5 check sum: 8b65adcd36341f53911399f4b6efa59f
+     Pseudo is Norm-conserving, Zval =  4.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  461 points,  2 beta functions with: 
+                l(1) =   0
+                l(2) =   1
+     EPW          :      0.06s CPU      0.07s WALL
+
+     EPW          :      0.07s CPU      0.08s WALL
+
+     -------------------------------------------------------------------
+     Wannierization on  3 x  3 x  3 electronic grid
+     -------------------------------------------------------------------
+ 
+     Spin CASE ( default = unpolarized )
+ 
+     Initializing Wannier90
+ 
+ 
+     Initial Wannier projections
+ 
+     (   0.00000   0.00000   0.00000) :  l =  -3 mr =   1
+     (   0.00000   0.00000   0.00000) :  l =  -3 mr =   2
+     (   0.00000   0.00000   0.00000) :  l =  -3 mr =   3
+     (   0.00000   0.00000   0.00000) :  l =  -3 mr =   4
+
+      - Number of bands is (  4)
+      - Number of total bands is (  4)
+      - Number of excluded bands is (  0)
+      - Number of wannier functions is (  4)
+      - All guiding functions are given 
+ 
+  Reading data about k-point neighbours 
+ 
+      - All neighbours are found 
+ 
+     AMN
+      k points =    27 in    4 pools
+            1 of    7 on ionode
+            2 of    7 on ionode
+            3 of    7 on ionode
+            4 of    7 on ionode
+            5 of    7 on ionode
+            6 of    7 on ionode
+            7 of    7 on ionode
+ 
+     AMN calculated
+ 
+     MMN
+      k points =    27 in    4 pools
+            1 of    7 on ionode
+            2 of    7 on ionode
+            3 of    7 on ionode
+            4 of    7 on ionode
+            5 of    7 on ionode
+            6 of    7 on ionode
+            7 of    7 on ionode
+     MMN calculated
+ 
+     Running Wannier90
+ 
+     Wannier Function centers (cartesian, alat) and spreads (ang):
+ 
+     (   0.12500   0.12500   0.12500) :   0.57702
+     (   0.12500  -0.12500  -0.12500) :   0.57702
+     (  -0.12500   0.12500  -0.12500) :   0.57702
+     (  -0.12500  -0.12500   0.12500) :   0.57702
+ 
+    Writing out Wannier function cube files
+
+nr1s =   24, nr2s =   24, nr3s =   24
+write_plot: wannier_plot_supercell =    3    3    3
+      Wannier Function Num:    1       Maximum Im/Re Ratio =    0.000013
+      Wannier Function Num:    3       Maximum Im/Re Ratio =    0.000013
+      Wannier Function Num:    4       Maximum Im/Re Ratio =    0.000014
+
+
+  cube files written
+     -------------------------------------------------------------------
+     WANNIER      :      0.81s CPU      1.02s WALL (       1 calls)
+     -------------------------------------------------------------------
+
+     Unfolding on the coarse grid
+
+     INITIALIZATION: 
+
+     init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
+     init_us_1    :      0.00s CPU      0.00s WALL (       1 calls)
+
+
+
+     Electron-Phonon interpolation
+
+
+
+     Total program execution
+     EPW          :      0.88s CPU      1.10s WALL
+
+                                                                                          
+ Please consider citing:                                                                  
+ S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+                                                                                          

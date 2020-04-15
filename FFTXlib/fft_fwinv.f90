@@ -125,7 +125,7 @@ SUBROUTINE fwfft_y( fft_kind, f, dfft, howmany )
   !! 
   
   USE fft_scalar,    ONLY: cfft3d, cfft3ds
-  USE fft_parallel,  ONLY: tg_cft3s
+  USE fft_parallel,  ONLY: tg_cft3s, many_cft3s
   USE fft_parallel_2d,  ONLY: tg_cft3s_2d => tg_cft3s
   USE fft_types,     ONLY: fft_type_descriptor
   USE fft_param,     ONLY: DP
@@ -157,17 +157,23 @@ SUBROUTINE fwfft_y( fft_kind, f, dfft, howmany )
   CALL start_clock(clock_label)
 
   IF( dfft%lpara .and. dfft%use_pencil_decomposition ) THEN
-
-     IF( howmany_ /= 1 ) THEN
-        CALL fftx_error__( ' fwfft ', ' howmany not yet implemented for parallel driver ', 1 )
-     END IF
      
+     IF( howmany_ == 1 ) THEN
      IF( fft_kind == 'Rho' ) THEN
         CALL tg_cft3s(f,dfft,-1)
      ELSE IF( fft_kind == 'Wave' ) THEN
         CALL tg_cft3s(f,dfft,-2 )
      ELSE IF( fft_kind == 'tgWave' ) THEN
         CALL tg_cft3s(f,dfft,-3 )
+        END IF
+     ELSE
+        IF( fft_kind == 'Rho' ) THEN
+           CALL many_cft3s( f, dfft, -1, howmany )
+        ELSE IF( fft_kind == 'Wave' ) THEN
+           CALL many_cft3s( f, dfft, -2, howmany )
+        ELSE IF( fft_kind == 'tgWave' ) THEN
+           CALL many_cft3s( f, dfft, -3, howmany )
+        END IF
      END IF
 
   ELSE IF( dfft%lpara ) THEN

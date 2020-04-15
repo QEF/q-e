@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2012 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,17 +15,15 @@ SUBROUTINE new_ns( ns )
   !!
   !! ns_{I,s,m1,m2} = \sum_{k,v}
   !! f_{kv} <\fi^{at}_{I,m1}|\psi_{k,v,s}><\psi_{k,v,s}|\fi^{at}_{I,m2}>
-  !
-  !  It seems that the order of {m1, m2} in the definition should be opposite. 
-  !  Hovewer, since ns is symmetric (and real for collinear case, due to time
-  !  reversal) it does not matter.  
-  !  (A.Smogunov) 
+  !!
+  !! ns is symmetric (and real for collinear case, due to time reversal),
+  !! hence the order of m1 and m2 does not matter.  
   !
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp
   USE klist,                ONLY : nks, ngk
-  USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, q_ae, wfcU, &
+  USE ldaU,                 ONLY : ldmx, Hubbard_l, q_ae, wfcU, &
                                    U_projection, is_hubbard, nwfcU, offsetU
   USE symm_base,            ONLY : d1, d2, d3
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
@@ -44,14 +42,14 @@ SUBROUTINE new_ns( ns )
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(OUT) :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
+  REAL(DP), INTENT(OUT) :: ns(ldmx,ldmx,nspin,nat)
   !! the occupation numbers of orthogonalized atomic wfcs
   !
   ! ... local variables
   !
   TYPE(bec_type) :: proj
   ! proj(nwfcU,nbnd)
-  INTEGER :: ik, ibnd, is, i, na, nb, nt, isym, m1, m2, m0, m00, ldim, npw
+  INTEGER :: ik, ibnd, is, i, na, nb, nt, isym, m1, m2, m0, m00, npw
   ! counter on k points
   !    "    "  bands
   !    "    "  spins
@@ -62,8 +60,8 @@ SUBROUTINE new_ns( ns )
   !
   CALL start_clock( 'new_ns' )
   !
-  ldim = 2 * Hubbard_lmax + 1
-  ALLOCATE( nr(ldim, ldim, nspin, nat) )
+  ALLOCATE( nr(ldmx, ldmx, nspin, nat) )
+  !
   CALL allocate_bec_type( nwfcU, nbnd, proj ) 
   !
   ! D_Sl for l=1, l=2 and l=3 are already initialized, for l=0 D_S0 is 1
@@ -72,54 +70,53 @@ SUBROUTINE new_ns( ns )
   !
   nr(:,:,:,:) = 0.d0
   !
-  !    we start a loop on k points
+  ! we start a loop on k points
   !
   DO ik = 1, nks
+     !
      IF (lsda) current_spin = isk(ik)
-     npw = ngk (ik)
-     IF (nks > 1) &
-        CALL get_buffer( evc, nwordwfc, iunwfc, ik )
+     !
+     npw = ngk(ik)
+     !
+     IF (nks > 1) CALL get_buffer (evc, nwordwfc, iunwfc, ik)
      IF (nks > 1) CALL using_evc(1)
      !
      ! make the projection
      !
      IF ( U_projection == 'pseudo' ) THEN
-        !
-        CALL compute_pproj( q_ae, proj )
-        ! does not need mp_sum intra-pool, since it is already done in calbec
-        !
+        CALL compute_pproj( ik, q_ae, proj )
      ELSE
         IF (nks > 1) CALL get_buffer( wfcU, nwordwfcU, iunhub, ik )
         CALL calbec( npw, wfcU, evc, proj )
      ENDIF
      !
-     ! ... compute the occupation numbers (the quantities n(m1,m2)) of the
+     ! compute the occupation matrix (ns_{I,s,m1,m2}) of the
      ! atomic orbitals
      !
      DO na = 1, nat  
-        nt = ityp (na)  
-        IF ( is_hubbard(nt) ) THEN  
+        nt = ityp(na)  
+        IF ( is_hubbard(nt) ) THEN 
            DO m1 = 1, 2 * Hubbard_l(nt) + 1  
               DO m2 = m1, 2 * Hubbard_l(nt) + 1
                  IF ( gamma_only ) THEN
                     DO ibnd = 1, nbnd  
                        nr(m1,m2,current_spin,na) = nr(m1,m2,current_spin,na) +   &
                                                    proj%r(offsetU(na)+m2,ibnd) * &
-                                                   proj%r(offsetU(na)+m1,ibnd) * wg(ibnd,ik) 
+                                                   proj%r(offsetU(na)+m1,ibnd) * &
+                                                   wg(ibnd,ik) 
                     ENDDO
                  ELSE
                     DO ibnd = 1, nbnd  
-                       nr(m1,m2,current_spin,na) = nr(m1,m2,current_spin,na) +         &
-                                                   DBLE( proj%k(offsetU(na)+m2,ibnd) * &
-                                                   CONJG(proj%k(offsetU(na)+m1,ibnd)) ) * wg(ibnd,ik) 
+                       nr(m1,m2,current_spin,na) = nr(m1,m2,current_spin,na) +            &
+                                                   DBLE( proj%k(offsetU(na)+m2,ibnd) *    &
+                                                   CONJG(proj%k(offsetU(na)+m1,ibnd)) ) * & 
+                                                   wg(ibnd,ik)
                     ENDDO
                  ENDIF
               ENDDO
            ENDDO
         ENDIF
     ENDDO
-    !
-    ! on k-points
     !
   ENDDO
   !
@@ -135,7 +132,7 @@ SUBROUTINE new_ns( ns )
      nt = ityp(na)
      DO is = 1, nspin  
         DO m1 = 1, 2*Hubbard_l(nt)+1
-           DO m2 = m1+1, 2*Hubbard_l(nt)+1  
+           DO m2 = m1+1, 2*Hubbard_l(nt)+1 
               nr(m2,m1,is,na) = nr(m1,m2,is,na)  
            ENDDO
         ENDDO
@@ -143,6 +140,7 @@ SUBROUTINE new_ns( ns )
   ENDDO
   !
   ! symmetrize the quantities nr -> ns
+  !
   ns (:,:,:,:) = 0.d0
   !
   DO na = 1, nat  
@@ -195,6 +193,7 @@ SUBROUTINE new_ns( ns )
   DEALLOCATE( nr )
   !
   ! Now we make the matrix ns(m1,m2) strictly hermitean
+  !
   DO na = 1, nat  
      nt = ityp (na)  
      IF ( is_hubbard(nt) ) THEN  
@@ -222,24 +221,34 @@ SUBROUTINE new_ns( ns )
   !
   RETURN
   !
-  CONTAINS
-  !
-  !------------------------------------------------------------------
-  SUBROUTINE compute_pproj( q, p )
+END SUBROUTINE new_ns
+
+!--------------------------------------------------------------------
+SUBROUTINE compute_pproj( ik, q, p )
     !------------------------------------------------------------------
-    !! Here we compute LDA+U projections using the <beta|psi> overlaps.
+    !! Here we compute DFT+U projections using the <beta|psi> overlaps.
     !
-    USE ions_base,            ONLY : ntyp => nsp
-    USE klist,                ONLY : xk, igk_k
+    USE kinds,                ONLY : DP
+    USE ions_base,            ONLY : nat, ityp, ntyp => nsp
+    USE klist,                ONLY : xk, igk_k, ngk
     USE becmod,               ONLY : becp
     USE uspp,                 ONLY : nkb, vkb, indv_ijkb0
     USE uspp_param,           ONLY : nhm, nh
+    USE wvfct,                ONLY : nbnd
+    USE wavefunctions,        ONLY : evc
+    USE control_flags,        ONLY : gamma_only
+    USE ldaU,                 ONLY : is_hubbard, nwfcU
+    USE becmod,               ONLY : bec_type, calbec, &
+                                   allocate_bec_type, deallocate_bec_type
     !
+    USE wavefunctions_gpum,   ONLY : using_evc
     USE uspp_gpum,            ONLY : using_vkb, using_indv_ijkb0
     USE becmod_subs_gpum,     ONLY : using_becp_auto
     !
     IMPLICIT NONE
     !
+    INTEGER, INTENT(IN) :: ik
+    !! k point
     REAL(DP), INTENT(IN) :: q(nwfcU,nhm,nat)
     !! coefficients for projecting onto beta functions
     TYPE(bec_type), INTENT(INOUT) :: p
@@ -247,13 +256,17 @@ SUBROUTINE new_ns( ns )
     !
     ! ... local variables
     !
-    INTEGER :: ib, iw, nt, na, ikb, ih
+    INTEGER :: ib, iw, nt, na, ikb, ih, npw
     !
     IF ( nkb == 0 ) RETURN
     !
     CALL using_indv_ijkb0(0)
     !
-    ! compute <beta|psi>
+    ! Number of plane waves at a given k point
+    !
+    npw = ngk(ik)
+    !
+    ! Compute <beta|psi>
     !
     CALL allocate_bec_type( nkb, nbnd, becp )
     CALL using_becp_auto(2)
@@ -261,6 +274,7 @@ SUBROUTINE new_ns( ns )
     CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
     CALL using_evc(0)
     CALL calbec( npw, vkb, evc, becp )
+    ! does not need mp_sum intra-pool, since it is already done in calbec 
     !
     IF ( gamma_only ) THEN 
        p%r(:,:) = 0.0_DP
@@ -270,38 +284,24 @@ SUBROUTINE new_ns( ns )
     !
     CALL using_becp_auto(0)
     DO nt = 1, ntyp
-       !
        DO na = 1, nat
-          !
           IF ( ityp(na) == nt ) THEN
-             !
              IF ( is_hubbard(nt) ) THEN
-                !
                 DO ib = 1, nbnd
-                   !
                    DO ih = 1, nh(nt)
-                      !
                       ikb = indv_ijkb0(na) + ih
                       DO iw = 1, nwfcU
-                         !
                          IF ( gamma_only ) THEN
                             p%r(iw,ib) = p%r(iw,ib) + q(iw,ih,na)*becp%r(ikb,ib)
                          ELSE
                             p%k(iw,ib) = p%k(iw,ib) + q(iw,ih,na)*becp%k(ikb,ib)
                          ENDIF
-                         !
                       ENDDO
-                      !
                    ENDDO
-                   !
                 ENDDO
-                !
              ENDIF
-             !
           ENDIF
-          !
        ENDDO
-       !
     ENDDO
     !
     CALL deallocate_bec_type( becp )
@@ -309,10 +309,7 @@ SUBROUTINE new_ns( ns )
     !
     RETURN
     !
-  END SUBROUTINE compute_pproj
-  !
-END SUBROUTINE new_ns 
-!
+END SUBROUTINE compute_pproj
 !
 !---------------------------------------------------------------------------
 SUBROUTINE new_ns_nc( ns )
@@ -327,7 +324,7 @@ SUBROUTINE new_ns_nc( ns )
                                    d_spin_ldau, is_hubbard, nwfcU, offsetU
   USE symm_base,            ONLY : d1, d2, d3
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : npol
   USE symm_base,            ONLY : nsym, irt, time_reversal, t_rev
   USE wvfct,                ONLY : nbnd, npwx, wg
   USE control_flags,        ONLY : gamma_only
@@ -355,7 +352,7 @@ SUBROUTINE new_ns_nc( ns )
   COMPLEX(DP) :: z  
   REAL(DP) :: psum
   !
-  CALL start_clock( 'new_ns' )
+  CALL start_clock( 'new_ns_nc' )
   !
   ldim = 2 * Hubbard_lmax + 1
   !
@@ -561,7 +558,7 @@ loopisym:     DO isym = 1, nsym
   !--
   DEALLOCATE( nr, nr1 )
   !
-  CALL stop_clock( 'new_ns' )
+  CALL stop_clock( 'new_ns_nc' )
   !
   RETURN
   !

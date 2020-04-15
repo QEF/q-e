@@ -18,21 +18,24 @@
   !!
   !! Roxana Margine - Jan 2019: Updated based on QE 6.3 for US
   !!
+  !! HL - Mar 2020: PAW added based on QE v6.5
+  !!
   !-----------------------------------------------------------------------
   !
   USE kinds,            ONLY : DP
-  USE mp,               ONLY : mp_barrier, mp_sum
-  USE mp_pools,         ONLY : my_pool_id, inter_pool_comm
+  USE mp,               ONLY : mp_barrier, mp_bcast
+  USE mp_pools,         ONLY : my_pool_id, inter_pool_comm, root_pool
   USE ions_base,        ONLY : nat
   USE pwcom,            ONLY : nbnd, nks
   USE gvecs,            ONLY : doublegrid
   USE modes,            ONLY : nmodes, nirr, npert, u
   USE elph2,            ONLY : epmatq, el_ph_mat, ibndstart, nbndep, ngxxf
-  USE lrus,             ONLY : int3, int3_nc
+  USE lrus,             ONLY : int3, int3_nc, int3_paw
   USE uspp,             ONLY : okvan
+  USE paw_variables,    ONLY : okpaw
   USE lsda_mod,         ONLY : nspin
   USE fft_base,         ONLY : dfftp, dffts
-  USE io_epw,           ONLY : readdvscf
+  USE io_epw,           ONLY : readdvscf, readint3paw
   USE uspp_param,       ONLY : nhm
   USE constants_epw,    ONLY : czero, cone
   USE fft_interfaces,   ONLY : fft_interpolate
@@ -97,6 +100,10 @@
     IF (okvan) THEN
       ALLOCATE(int3(nhm, nhm, nat, nspin_mag, npe), STAT = ierr)
       IF (ierr /= 0) CALL errore('elphon_shuffle', 'Error allocating int3', 1)
+      IF (okpaw) THEN
+        ALLOCATE(int3_paw(nhm, nhm, nat, nspin_mag, npe), STAT = ierr)
+        IF (ierr /= 0) CALL errore('elphon_shuffle', 'Error allocating int3_paw', 1)
+      ENDIF
       IF (noncolin) THEN
         ALLOCATE(int3_nc(nhm, nhm, nat, nspin, npe), STAT = ierr)
         IF (ierr /= 0) CALL errore('elphon_shuffle', 'Error allocating int3_nc', 1)
@@ -106,12 +113,25 @@
     ! read the <prefix>.dvscf_q[iq] files
     !
     dvscfin = czero
+    IF (okpaw) int3_paw = czero
+    !
+    !! 2020.03 HL
+    !! The part below should be changed accordingly when parallelization over
+    !! G vectors is implemented.
+    !
     IF (my_pool_id == 0) THEN
-       DO ipert = 1, npe
-          CALL readdvscf(dvscfin(:, :, ipert), imode0 + ipert, iq_irr, nqc_irr)
-       ENDDO
+      DO ipert = 1, npe
+        CALL readdvscf(dvscfin(:, :, ipert), imode0 + ipert, iq_irr, nqc_irr)
+        IF (okpaw) CALL readint3paw(int3_paw(:, :, :, :, ipert), imode0 + ipert, iq_irr, nqc_irr)
+      ENDDO
     ENDIF
-    CALL mp_sum(dvscfin,inter_pool_comm)
+    !
+    !! 2020.03 HL
+    !! Below root_pool should be interpreted as the index of root pool group.
+    !! Currently, there is no root_pool_id like root_bgrp_id in bands groups.
+    !
+    CALL mp_bcast(dvscfin, root_pool, inter_pool_comm)
+    IF (okpaw) CALL mp_bcast(int3_paw, root_pool, inter_pool_comm)
     !
     IF (doublegrid) THEN
       ALLOCATE(dvscfins(dffts%nnr, nspin_mag, npe) , STAT = ierr)
@@ -138,6 +158,10 @@
     IF (okvan) THEN
       DEALLOCATE(int3, STAT = ierr)
       IF (ierr /= 0) CALL errore('elphon_shuffle', 'Error deallocating int3', 1)
+      IF (okpaw) THEN
+        DEALLOCATE(int3_paw, STAT = ierr)
+        IF (ierr /= 0) CALL errore('elphon_shuffle', 'Error deallocating int3_paw', 1)
+      ENDIF
       IF (noncolin) THEN
         DEALLOCATE(int3_nc, STAT = ierr)
         IF (ierr /= 0) CALL errore('elphon_shuffle', 'Error deallocating int3_nc', 1)

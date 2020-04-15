@@ -80,6 +80,7 @@ dylmr2.o : kind.o
 electrons_base.o : constants.o
 electrons_base.o : io_global.o
 electrons_base.o : kind.o
+environment.o : command_line_options.o
 environment.o : fox_init_module.o
 environment.o : io_files.o
 environment.o : io_global.o
@@ -234,6 +235,7 @@ plugin_flags.o : kind.o
 plugin_flags.o : parameters.o
 plugin_variables.o : kind.o
 plugin_variables.o : parameters.o
+powell.o : kind.o
 pseudo_types.o : kind.o
 pseudo_types.o : radial_grids.o
 pw_dot.o : ../UtilXlib/mp.o
@@ -382,6 +384,7 @@ recvec_subs.o : kind.o
 remove_tot_torque.o : kind.o
 rgen.o : kind.o
 set_hubbard_l.o : io_global.o
+set_hubbard_l_back.o : io_global.o
 set_hubbard_n.o : io_global.o
 set_signal.o : ../UtilXlib/mp.o
 set_signal.o : io_global.o

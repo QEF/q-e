@@ -23,7 +23,7 @@ SUBROUTINE reset_k_points_and_reinit_nscf()
   USE noncollin_module,   ONLY : noncolin
   USE symm_base,          ONLY : d1, d2, d3, fft_fact
   USE parameters,         ONLY : npk
-  USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
+  USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, nspin
   USE constants,          ONLY : degspin
 
   IMPLICIT NONE 
@@ -46,7 +46,7 @@ SUBROUTINE reset_k_points_and_reinit_nscf()
   !
   ! ... Set up Hubbard parameters for LDA+U calculation
   !
-  CALL init_lda_plus_u ( upf(1:ntyp)%psd, noncolin )
+  CALL init_lda_plus_u ( upf(1:ntyp)%psd, nspin, noncolin )
   !
   ! ... initialize d1 and d2 to rotate the spherical harmonics
   !

@@ -1227,7 +1227,7 @@
     !
     CHARACTER(LEN = 256) :: filephmat
     !! File name
-    CHARACTER(LEN = 3) :: filelab
+    CHARACTER(LEN = 4) :: filelab
     !! File name
     !
     INTEGER :: ios
@@ -1412,7 +1412,7 @@
     !! Name eigenvalue file
     CHARACTER(LEN = 256) :: filephmat
     !! Name e-ph mat file
-    CHARACTER(LEN = 3) :: filelab
+    CHARACTER(LEN = 4) :: filelab
     !!
     INTEGER :: ik
     !! Counter on the k-point index

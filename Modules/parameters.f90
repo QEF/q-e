@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,6 +17,7 @@ MODULE parameters
        nsx    = ntypx,  &! max number of atomic species (CP)
        npk    = 40000,  &! max number of k-points               
        lmaxx  = 3,      &! max non local angular momentum (l=0 to lmaxx)      
-       lqmax= 2*lmaxx+1  ! max number of angular momenta of Q
+       lqmax= 2*lmaxx+1,&! max number of angular momenta of Q
+       natx   = 50       ! max number of atoms for DFT+U+V calculations
 
 END MODULE parameters

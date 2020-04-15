@@ -48,14 +48,17 @@ CONTAINS
   INTEGER         :: iw,ik,i,ierr
 
   !
-  ! check on the number of bands: we need to include empty bands in order to allow
-  ! to write the transitions
+  ! check on the number of bands: we need to include empty bands in order
+  ! to compute the transitions
   !
   IF ( nspin == 1) full_occ = 2.0d0
   IF ( nspin == 2 .OR. nspin == 4) full_occ = 1.0d0
   !
-  IF ( REAL(nbnd,DP)*full_occ <= nelec ) CALL errore('epsilon', 'bad band number', 1)
-
+  IF ( nspin == 2 ) THEN
+     IF ( nbnd*full_occ <= nelec/2.d0 ) CALL errore('epsilon', 'bad band number', 2)
+  ELSE
+     IF ( nbnd*full_occ <= nelec ) CALL errore('epsilon', 'bad band number', 1)
+  ENDIF
   !
   ! USPP are not implemented (dipole matrix elements are not trivial at all)
   !
@@ -83,7 +86,7 @@ CONTAINS
   DO ik = 2, nks
      !
      IF ( abs( wk(1) - wk(ik) ) > 1.0d-8 ) &
-        CALL errore('grid_build','non unifrom kpt grid', ik )
+        CALL errore('grid_build','non uniform kpt grid', ik )
      !
   ENDDO
   !
@@ -100,7 +103,7 @@ CONTAINS
   ! set the energy grid
   !
   IF ( metalcalc .AND. ABS(wmin) <= 0.001d0 ) wmin=0.001d0
-  IF ( ionode ) WRITE(stdout,"(5x,a,f12.6)") "metalling system: redefining wmin = ", wmin  
+  IF ( ionode ) WRITE(stdout,"(5x,a,f12.6)") "metallic system: redefining wmin = ", wmin  
   !
   alpha = (wmax - wmin) / REAL(nw-1, KIND=DP)
   !

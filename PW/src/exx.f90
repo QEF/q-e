@@ -143,6 +143,7 @@ MODULE exx
     USE control_flags,  ONLY : tqr
     USE realus,         ONLY : qpointlist, tabxx, tabp
     USE exx_band,       ONLY : smap_exx
+    USE command_line_options, ONLY : nmany_
     !
     IMPLICIT NONE
     !
@@ -192,7 +193,7 @@ MODULE exx
        lpara = ( nproc_bgrp > 1 )
        CALL fft_type_init( dfftt, smap, "rho", gamma_only, lpara,         &
                            intra_bgrp_comm, at, bg, gcutmt, gcutmt/gkcut, &
-                           fft_fact=fft_fact, nyfft=nyfft )
+                           fft_fact=fft_fact, nyfft=nyfft, nmany=nmany_ )
        CALL ggens( dfftt, gamma_only, at, g, gg, mill, gcutmt, ngmt, gt, ggt )
        gstart_t = gstart
        npwt = n_plane_waves(ecutwfc/tpiba2, nks, xk, gt, ngmt)
@@ -206,7 +207,7 @@ MODULE exx
        lpara = ( nproc_egrp > 1 )
        CALL fft_type_init( dfftt, smap_exx, "rho", gamma_only, lpara,     &
                            intra_egrp_comm, at, bg, gcutmt, gcutmt/gkcut, &
-                           fft_fact=fft_fact, nyfft=nyfft )
+                           fft_fact=fft_fact, nyfft=nyfft, nmany=nmany_ )
        ngmt = dfftt%ngm
        ngmt_g = ngmt
        CALL mp_sum( ngmt_g, intra_egrp_comm )
@@ -525,7 +526,7 @@ MODULE exx
       IF (.NOT. ALLOCATED(exxbuff)) THEN
          IF (gamma_only) THEN
             ALLOCATE( exxbuff(nrxxs*npol,ibnd_buff_start:ibnd_buff_start + &
-                                          max_buff_bands_per_egrp-1,nks) )
+                                          max_buff_bands_per_egrp-1,nkqs) ) ! THIS WORKS as for k
          ELSE
             ALLOCATE( exxbuff(nrxxs*npol,ibnd_buff_start:ibnd_buff_start + &
                                           max_buff_bands_per_egrp-1,nkqs) )
@@ -635,7 +636,7 @@ MODULE exx
                IF (ibnd-ibnd_loop_start+evc_offset+2 <= nbnd) &
                   locbuff(1:nrxxs,ibnd-ibnd_loop_start+evc_offset+2,ik) = AIMAG( psic_exx(1:nrxxs) )
              ELSE
-               exxbuff(1:nrxxs,(ibnd+1)/2,ik)=psic_exx(1:nrxxs)
+               exxbuff(1:nrxxs,(ibnd+1)/2,current_ik)=psic_exx(1:nrxxs) 
              ENDIF
              !
           ENDDO
