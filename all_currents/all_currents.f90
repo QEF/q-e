@@ -112,6 +112,7 @@ contains
 
 
 subroutine write_results(traj)
+   use kinds, only : dp
    use hartree_mod
    use zero_mod
    use io_global, ONLY: ionode 
@@ -122,12 +123,15 @@ subroutine write_results(traj)
    type(timestep) :: ts
    integer :: iun,step
    integer, external :: find_free_unit
+   real(dp) :: time
    
    if (traj%traj%nsteps > 0) then
        call cpv_trajectory_get_last_step(traj,ts)
        step=ts%nstep
+       time=ts%tps
    else
        step=0
+       time=0.d0
    endif
    if (ionode) then
       iun = find_free_unit()
@@ -147,6 +151,9 @@ subroutine write_results(traj)
          write (iun,'(A,3E20.12)') 'total: ', J_xc+J_hartree+J_kohn+i_current+z_current
          write (*,'(A,3E20.12)') 'total energy current: ', J_xc+J_hartree+J_kohn+i_current+z_current
          close (iun)
+      open (iun, file=trim(file_output)//'.dat', position='append')
+         write (*,'(1I7,1E14.6,3E20.12)') step,time, J_xc+J_hartree+J_kohn+i_current+z_current
+      close(iun)
       end if
 
 end subroutine
@@ -208,10 +215,15 @@ use  ions_base,     ONLY :  tau, tau_format, nat
      use zero_mod, only : vel_input_units, ion_vel
      use hartree_mod, only : delta_t
      implicit none
+     if (first_step == 0) then
      if (.not. tavel) &
         call errore('read_vel', 'error: must provide velocities in input',1)
      if (ion_velocities /= 'from_input') &
         call errore('read_vel', 'error: atomic_velocities must be "from_input"',1)
+     else
+         if (tavel) &
+             write(*,*) 'WARNING: VELOCITIES FROM INPUT FILE WILL BE IGNORED'
+     end if
 
 end subroutine
 
