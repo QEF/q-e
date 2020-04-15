@@ -1,5 +1,5 @@
 program all_currents
-     use hartree_mod, only : evc_uno,evc_due,trajdir 
+     use hartree_mod, only : evc_uno,evc_due,trajdir,first_step
      USE environment, ONLY: environment_start, environment_end
      use io_global, ONLY: ionode 
      use wavefunctions, only : evc
@@ -70,14 +70,20 @@ program all_currents
              write(*,*) 'Calculating only a single step from input file'
          endif 
      endif
+     if (first_step>0) then
+         if (.not. read_next_step(traj)) &
+             goto 100 ! skip everything and exit
+         if (ionode) &
+             write(*,*) 'SKIPPING STEP FROM INPUT FILE'
+     end if
      do
          call run_pwscf(exit_status)
-         if (exit_status /= 0 ) goto 100
+         if (exit_status /= 0 ) exit
 
          call prepare_next_step() ! this stores value of evc and setup tau and ion_vel
 
          call run_pwscf(exit_status)
-         if (exit_status /= 0 ) goto 100
+         if (exit_status /= 0 ) goto 100 !shutdown everything and exit
          if (allocated(evc_uno)) then
              evc_uno=evc
          else
@@ -156,16 +162,21 @@ subroutine read_all_currents_namelists(iunit)
      
      NAMELIST /energy_current/ delta_t, init_linear, &
         file_output, trajdir, vel_input_units ,&
-        eta, n_max, l_zero
+        eta, n_max, l_zero, first_step, last_step, &
+        ethr_small_step, ethr_big_step
 
      !
      !   set default values for variables in namelist
      !
      delta_t = 1.d0
      n_max = 5 ! number of periodic cells in each direction used to sum stuff in zero current
-     eta = 1.0 ! ewald sum convergence parameter
+     eta = 1.d0 ! ewald sum convergence parameter
      init_linear = "nothing" ! 'scratch' or 'restart'. If 'scratch', saves a restart file in project routine. If 'restart', it starts from the saved restart file, and then save again it.
      file_output = "current_hz"
+     ethr_small_step=1.d-6
+     ethr_big_step=1.d-4
+     first_step=0
+     last_step=0
      READ (iunit, energy_current, IOSTAT=ios)
      IF (ios /= 0) CALL errore('main', 'reading energy_current namelist', ABS(ios))    
 
@@ -181,6 +192,10 @@ subroutine bcast_all_current_namelist()
      CALL mp_bcast(trajdir, ionode_id, world_comm)
      CALL mp_bcast(delta_t, ionode_id, world_comm)
      CALL mp_bcast(eta, ionode_id, world_comm)
+     CALL mp_bcast(first_step, ionode_id, world_comm)
+     CALL mp_bcast(last_step, ionode_id, world_comm)
+     CALL mp_bcast(ethr_small_step, ionode_id, world_comm)
+     CALL mp_bcast(ethr_big_step, ionode_id, world_comm)
      CALL mp_bcast(n_max, ionode_id, world_comm)
      CALL mp_bcast(init_linear, ionode_id, world_comm)
      CALL mp_bcast(file_output, ionode_id, world_comm)
@@ -231,7 +246,7 @@ use dynamics_module, only : vel
 use io_global, ONLY: ionode, ionode_id
 USE mp_world,             ONLY : world_comm
 use mp, ONLY: mp_bcast, mp_barrier
-use hartree_mod, only : evc_due,delta_t
+use hartree_mod, only : evc_due,delta_t,ethr_small_step
 use zero_mod, only : vel_input_units, ion_vel
 use wavefunctions, only : evc 
      implicit none
@@ -264,7 +279,7 @@ use wavefunctions, only : evc
      call mp_barrier(world_comm) 
      call update_pot()
      call hinit1()
-     ethr = 1.0D-6
+     ethr = ethr_small_step
 end subroutine
 
 function read_next_step(t) result(res)
@@ -281,24 +296,38 @@ use io_global, ONLY: ionode, ionode_id
 USE mp_world,             ONLY : world_comm
 use mp, ONLY: mp_bcast, mp_barrier
 use zero_mod, only : vel_input_units, ion_vel
+use hartree_mod, only : first_step, last_step, ethr_big_step
     implicit none
     type(cpv_trajectory), intent(inout) :: t
     type(timestep) :: ts
     logical :: res
     integer,save :: step_idx = 0
     if (ionode) then 
-        if (cpv_trajectory_read_step(t)) then
+        do while (cpv_trajectory_read_step(t))
             step_idx = step_idx + 1
-            call cpv_trajectory_get_step(t,step_idx,ts)
-            write (*,*) 'STEP', ts%nstep, ts%tps
+            call cpv_trajectory_get_step(t,step_idx,ts) 
+            !if we are done exit the loop 
+            if (ts%nstep > last_step) then
+                write(*,*) 'STEP ', ts%nstep, ts%tps, ' > ', last_step
+                exit
+            end if
+            !if needed go on in the reading of trajectory
+            if (ts%nstep < first_step) then
+                write(*,*) 'SKIPPED STEP ', ts%nstep, ts%tps
+                cycle
+            end if
+            write (*,*) 'STEP ', ts%nstep, ts%tps
             vel=ts%vel
             tau=ts%tau
             CALL convert_tau ( tau_format, nat, tau)
             res=.true.
-        else
+            !exit the loop
+            goto 200
+        enddo
+        !else
             write(*,*) 'Finished reading trajectory ', t%fname
             res=.false.
-        endif
+200   continue
     endif
     CALL mp_bcast(res, ionode_id, world_comm)
     if (res) then
@@ -306,7 +335,7 @@ use zero_mod, only : vel_input_units, ion_vel
          CALL mp_bcast(tau, ionode_id, world_comm)
          call update_pot()
          call hinit1()
-         ethr = 1.0D-6
+         ethr = ethr_big_step
     end if
     
 end function
