@@ -56,7 +56,9 @@
                             restart_filq, prtgkk, nel, meff, epsiheg, lphase,          &
                             omegamin, omegamax, omegastep, n_r, lindabs, mob_maxiter,  &
                             auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   &
-                            scdm_sigma, assume_metal
+                            scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, &
+                            wannier_plot_supercell, wannier_plot_scale, reduce_unk,    &
+                            wannier_plot_radius
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
   USE epwcom,        ONLY : wfcelec, restart_polaron, spherical_cutoff,                &
                             model_vertex, conv_thr_polaron, n_dop,                     &
@@ -68,7 +70,7 @@
                             init_plrn_wf, niterPlrn, nDOS_plrn, emax_plrn, emin_plrn,  &
                             sigma_edos_plrn, sigma_pdos_plrn, pmax_plrn, pmin_plrn
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
-  USE elph2,         ONLY : elph
+  USE elph2,         ONLY : elph, num_wannier_plot, wanplotlist
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, ang2m
   USE io_files,      ONLY : tmp_dir, prefix
   USE control_flags, ONLY : iverbosity, modenum, gamma_only
@@ -77,10 +79,12 @@
   USE partial,       ONLY : atomo, nat_todo
   USE constants,     ONLY : AMU_RY, eps16
   USE mp_global,     ONLY : my_pool_id, me_pool
-  USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode_id, stdout
+  USE io_global,     ONLY : meta_ionode, meta_ionode_id, stdout
   USE io_var,        ONLY : iunkf, iunqf
-  USE noncollin_module, ONLY : npol
+  USE noncollin_module, ONLY : npol, noncolin
   USE wvfct,         ONLY : npwx
+  USE paw_variables, ONLY : okpaw
+  USE io_epw,        ONLY : param_get_range_vector
 #if defined(__NAG)
   USE F90_UNIX_ENV,  ONLY : iargc, getarg
 #endif
@@ -143,7 +147,8 @@
        scatread, restart, restart_step, restart_filq, prtgkk, nel, meff,       &
        epsiheg, lphase, omegamin, omegamax, omegastep, n_r, lindabs,           &
        mob_maxiter, auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   &
-       scdm_sigma, assume_metal,                                               &
+       scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, reduce_unk,  &
+       wannier_plot_supercell, wannier_plot_scale, wannier_plot_radius,        &
        ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
        wfcelec, restart_polaron, spherical_cutoff, model_vertex, start_mode,   &
        conv_thr_polaron, polaron_wf, r01, r02, r03, num_cbands, start_band,    &
@@ -184,7 +189,7 @@
   ! epbread  : read epmatq array from .epb files
   ! epbwrite : write epmatq array to .epb files
   ! nbndskip : number of bands to be skipped from the original Hamitonian (nfirstwin-1 in Marzari's notation)
-  !            nbndskip is not an input any more. It is now automatically calculated in Wannierization step.
+  !            [HL 02/2020] nbndskip is not an input any more. It is now automatically calculated in Wannierization step.
   !            For backward compatibility, nbndskip still can be entered as an input, but ignored with warning message.
   ! epwread  : read all quantities in Wannier representation from file epwdata.fmt
   ! epwwrite : write all quantities in Wannier representation to file epwdata.fmt
@@ -329,6 +334,15 @@
   !
   ! Added by Felix Goudreault
   ! assume_metal     : If .TRUE. => we are dealing with a metal
+  !
+  ! Added by HL
+  ! wannier_plot           : If .TRUE., plot Wannier functions
+  ! wannier_plot_list      : Field read for parsing Wannier function list
+  ! wannier_plot_supercell : Size of supercell for plotting Wannier functions
+  ! wannier_plot_scale     : Scaling parameter for cube files
+  ! wannier_plot_radius    : Cut-off radius for plotting Wannier functions
+  ! reduce_unk             : If .TRUE., plot Wannier functions on reduced grids
+  !
   nk1tmp = 0
   nk2tmp = 0
   nk3tmp = 0
@@ -397,6 +411,12 @@
   bands_skipped= ''
   wdata(:)     = ''
   iprint       = 2
+  wannier_plot = .FALSE.
+  wannier_plot_scale = 1.0d0
+  wannier_plot_radius = 3.5d0
+  wannier_plot_supercell = (/5,5,5/)
+  wannier_plot_list = ''
+  reduce_unk   = .FALSE.
   wmin         = 0.d0
   wmax         = 0.3d0
   eps_acustic  = 5.d0 ! cm-1
@@ -579,6 +599,33 @@
 #endif
 200 CALL errore('epw_readin', 'reading input_epw namelist', ABS(ios))
   !
+  IF (wannier_plot) THEN
+    IF (wannier_plot_radius < 0.0d0) &
+      CALL errore('epw_readin', 'Error: wannier_plot_radius must be positive', 1)
+    IF (wannier_plot_scale < 0.0d0) &
+      CALL errore('epw_readin', 'Error: wannier_plot_scale must be positive', 1)
+    IF (ANY(wannier_plot_supercell <= 0)) &
+      CALL errore('epw_readin', &
+        'Error: Three positive integers must be explicitly provided &
+                for wannier_plot_supercell', 1)
+    CALL param_get_range_vector(wannier_plot_list, num_wannier_plot, .TRUE.)
+    IF (num_wannier_plot == 0) THEN
+      num_wannier_plot = nbndsub
+      ALLOCATE(wanplotlist(num_wannier_plot), STAT = ierr)
+      IF (ierr /= 0) CALL errore('epw_readin', 'Error allocating wanplotlist', 1)
+      DO i = 1, num_wannier_plot
+        wanplotlist(i) = i
+      ENDDO
+    ELSE
+      ALLOCATE(wanplotlist(num_wannier_plot), STAT = ierr)
+      IF (ierr /= 0) CALL errore('epw_readin', 'Error allocating wanplotlist', 1)
+      CALL param_get_range_vector(wannier_plot_list, num_wannier_plot, .FALSE., wanplotlist)
+      IF (ANY(wanplotlist < 1) .OR. ANY(wanplotlist > nbndsub)) &
+        CALL errore('epw_readin', &
+          'Error: wannier_plot_list asks for a non-valid wannier function to be plotted', 1)
+    ENDIF
+  ENDIF
+  !
   nk1tmp = nk1
   nk2tmp = nk2
   nk3tmp = nk3
@@ -749,6 +796,15 @@
   dvscf_dir = TRIM(dvscf_dir) // '/'
   !
 400 CONTINUE
+  !
+  CALL mp_bcast(wannier_plot, meta_ionode_id, world_comm)
+  CALL mp_bcast(num_wannier_plot, meta_ionode_id, world_comm)
+  IF ((wannier_plot) .AND. (.NOT. meta_ionode)) THEN
+    ALLOCATE(wanplotlist(num_wannier_plot), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_readin', 'Error allocating wanplotlist', 1)
+  ENDIF
+  IF (wannier_plot) CALL mp_bcast(wanplotlist, meta_ionode_id, world_comm)
+  !
   CALL bcast_epw_input()
   !
   !   Here we finished the reading of the input file.
@@ -785,10 +841,10 @@
     !  bring k-points from cartesian to crystal coordinates
     CALL cryst_to_cart(nkstot, xk_cryst, at, -1)
     ! Only master has the correct full list of kpt. Therefore bcast to all cores
-    CALL mp_bcast(xk_all, ionode_id, world_comm)
-    CALL mp_bcast(et_all, ionode_id, world_comm)
-    CALL mp_bcast(isk_all, ionode_id, world_comm)
-    CALL mp_bcast(xk_cryst, ionode_id, world_comm)
+    CALL mp_bcast(xk_all, meta_ionode_id, world_comm)
+    CALL mp_bcast(et_all, meta_ionode_id, world_comm)
+    CALL mp_bcast(isk_all, meta_ionode_id, world_comm)
+    CALL mp_bcast(xk_cryst, meta_ionode_id, world_comm)
     !
     ! We define the local list of kpt
     ALLOCATE(xk_loc(3, nks), STAT = ierr)
@@ -846,6 +902,12 @@
   IF (tfixed_occ) CALL errore('epw_readin', 'phonon with arbitrary occupations not tested', 1)
   !
   IF (elph .AND. lsda) CALL errore('epw_readin', 'El-ph and spin not implemented', 1)
+  !
+  IF (noncolin .AND. okpaw) THEN
+    WRITE(stdout, '(a)') &
+       'WARNING: epw_readin: Some features are still experimental in ph.x with PAW and noncolin=.true.'
+    WRITE(stdout, '(21x,a)') 'In this case, use the EPW results at your own risk.'
+  ENDIF
   !
   !   There might be other variables in the input file which describe
   !   partial computation of the dynamical matrix. Read them here

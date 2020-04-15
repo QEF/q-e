@@ -29,6 +29,7 @@ SUBROUTINE orthoUwfc
                          bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
+  USE mp_bands,         ONLY : use_bgrp_in_hpsi
   ! 
   IMPLICIT NONE
   !
@@ -37,7 +38,7 @@ SUBROUTINE orthoUwfc
        l, lm, ltot, ntot, ipol, npw
   ! ik: the k point under consideration
   ! ibnd: counter on bands
-  LOGICAL :: orthogonalize_wfc, normalize_only
+  LOGICAL :: orthogonalize_wfc, normalize_only, save_flag
   COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:)
 
   IF ( U_projection == "pseudo" ) THEN
@@ -75,6 +76,8 @@ SUBROUTINE orthoUwfc
   END IF
 
   ALLOCATE ( wfcatom(npwx*npol, natomwfc), swfcatom(npwx*npol, natomwfc) )
+  
+  save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
 
   ! Allocate the array becp = <beta|wfcatom>
   CALL allocate_bec_type (nkb,natomwfc, becp) 
@@ -104,6 +107,8 @@ SUBROUTINE orthoUwfc
   ENDDO
   DEALLOCATE (wfcatom, swfcatom)
   CALL deallocate_bec_type ( becp )
+
+  use_bgrp_in_hpsi = save_flag
   !
   RETURN
      

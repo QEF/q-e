@@ -50,7 +50,8 @@
                             lphase, omegamin, omegamax, omegastep, n_r,       &
                             mob_maxiter, use_ws, epmatkqread, selecqread,     &
                             scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma,&
-                            assume_metal
+                            assume_metal, wannier_plot_scale, reduce_unk,     &
+                            wannier_plot_supercell, wannier_plot_radius
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
   USE epwcom,        ONLY : mob_maxiter, use_ws, epmatkqread, selecqread,     &
                             wfcelec, model_vertex , polaron_wf, r01, r02, r03,&
@@ -146,6 +147,7 @@
   CALL mp_bcast(selecqread      , meta_ionode_id, world_comm)
   CALL mp_bcast(scdm_proj       , meta_ionode_id, world_comm)
   CALL mp_bcast(assume_metal    , meta_ionode_id, world_comm)
+  CALL mp_bcast(reduce_unk      , meta_ionode_id, world_comm)
   !
   ! integers
   !
@@ -184,6 +186,7 @@
   CALL mp_bcast(scr_typ     , meta_ionode_id, world_comm)
   CALL mp_bcast(bnd_cum     , meta_ionode_id, world_comm)
   CALL mp_bcast(mob_maxiter , meta_ionode_id, world_comm)
+  CALL mp_bcast(wannier_plot_supercell, meta_ionode_id, world_comm)
   !
   ! REAL*8
   !
@@ -225,6 +228,8 @@
   CALL mp_bcast(nc            , meta_ionode_id, world_comm)
   CALL mp_bcast(scdm_mu       , meta_ionode_id, world_comm)
   CALL mp_bcast(scdm_sigma    , meta_ionode_id, world_comm)
+  CALL mp_bcast(wannier_plot_radius, meta_ionode_id, world_comm)
+  CALL mp_bcast(wannier_plot_scale, meta_ionode_id, world_comm)
   !
   ! characters
   !

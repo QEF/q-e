@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2008 Quantum ESPRESSO group
+! Copyright (C) 2002-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -30,7 +30,7 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nsx, lqmax
+  USE parameters, ONLY : nsx, lqmax, natx
   USE wannier_new,ONLY : wannier_data
   !
   IMPLICIT NONE
@@ -100,10 +100,10 @@ MODULE input_parameters
         CHARACTER(len=80) :: calculation = 'none'
           ! Specify the type of the simulation
           ! See below for allowed values
-        CHARACTER(len=80) :: calculation_allowed(14)
+        CHARACTER(len=80) :: calculation_allowed(15)
         DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
           'vc-relax', 'vc-md', 'vc-cp', 'bands', 'neb', 'smd', 'cp-wf', &
-          'vc-cp-wf', 'cp-wf-nscf'/
+          'vc-cp-wf', 'cp-wf-nscf', 'ensemble'/
         CHARACTER(len=80) :: verbosity = 'default'
           ! define the verbosity of the code output
         CHARACTER(len=80) :: verbosity_allowed(6)
@@ -395,16 +395,26 @@ MODULE input_parameters
           ! ONLY PW
 
         LOGICAL :: lda_plus_u = .false.
-          ! Use DFT+U method - following are the needed parameters
+          ! Use DFT+U(+V) method - following are the needed parameters
         INTEGER :: lda_plus_u_kind = 0
+        INTEGER :: lback(nsx) = -1
+        INTEGER :: l1back(nsx) = -1
         INTEGER, PARAMETER :: nspinx=2
         REAL(DP) :: starting_ns_eigenvalue(lqmax,nspinx,nsx) = -1.0_DP
         REAL(DP) :: hubbard_u(nsx) = 0.0_DP
+        REAL(DP) :: hubbard_u_back(nsx) = 0.0_DP
+        REAL(DP) :: hubbard_v(natx,27*natx,4) = 0.0_DP 
         REAL(DP) :: hubbard_j0(nsx) = 0.0_DP
         REAL(DP) :: hubbard_j(3,nsx) = 0.0_DP
         REAL(DP) :: hubbard_alpha(nsx) = 0.0_DP
+        REAL(DP) :: hubbard_alpha_back(nsx) = 0.0_DP
         REAL(DP) :: hubbard_beta(nsx) = 0.0_DP
         CHARACTER(len=80) :: U_projection_type = 'atomic'
+        CHARACTER(len=80) :: Hubbard_parameters = 'input'
+        LOGICAL :: reserv(nsx) = .FALSE.
+        LOGICAL :: reserv_back(nsx) = .FALSE.
+        LOGICAL :: hub_pot_fix = .FALSE.
+        LOGICAL :: backall(nsx) = .FALSE.
 
         LOGICAL :: la2F = .false.
           ! For electron-phonon calculations
@@ -619,12 +629,13 @@ MODULE input_parameters
              force_symmorphic, starting_charge, starting_magnetization,       &
              occupations, degauss, nspin, ecfixed,                            &
              qcutz, q2sigma, lda_plus_U, lda_plus_u_kind,                     &
-             Hubbard_U, Hubbard_J, Hubbard_alpha,                             &
-             Hubbard_J0, Hubbard_beta,                                        &
+             Hubbard_U, Hubbard_U_back, Hubbard_J, Hubbard_alpha,             &
+             Hubbard_alpha_back, Hubbard_J0, Hubbard_beta,                    &
+             hub_pot_fix, Hubbard_V, Hubbard_parameters,                      &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
              U_projection_type, input_dft, la2F, assume_isolated,             &
              nqx1, nqx2, nqx3, ecutfock, localization_thr, scdm, ace,         &
-             scdmden, scdmgrd, nscdm, n_proj,                                        &
+             scdmden, scdmgrd, nscdm, n_proj,                                 &
              exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
              exx_fraction, screening_parameter, ref_alat,                     &
              noncolin, lspinorb, starting_spin_angle, lambda, angle1, angle2, &
@@ -1017,10 +1028,10 @@ MODULE input_parameters
 
         CHARACTER(len=80) :: ion_dynamics = 'none'
           ! set how ions should be moved
-        CHARACTER(len=80) :: ion_dynamics_allowed(9)
+        CHARACTER(len=80) :: ion_dynamics_allowed(10)
         DATA ion_dynamics_allowed / 'none', 'sd', 'cg', 'langevin', &
                                     'damp', 'verlet', 'bfgs', 'beeman',& 
-                                    'langevin-smc' /
+                                    'langevin-smc', 'ipi' /
 
         REAL(DP) :: ion_radius(nsx) = 0.5_DP
           ! pseudo-atomic radius of the i-th atomic species (CP only)
@@ -1195,9 +1206,9 @@ MODULE input_parameters
 
         CHARACTER(len=80) :: cell_dynamics  = 'none'
           ! set how the cell should be moved
-        CHARACTER(len=80) :: cell_dynamics_allowed(7)
+        CHARACTER(len=80) :: cell_dynamics_allowed(8)
         DATA cell_dynamics_allowed / 'sd', 'pr', 'none', 'w', 'damp-pr', &
-                                     'damp-w', 'bfgs'  /
+                                     'damp-w', 'bfgs', 'ipi'  /
 
         CHARACTER(len=80) :: cell_velocities = 'default'
           ! cell_velocities = 'zero' | 'default'*

@@ -39,6 +39,7 @@ addusdbec_nc.o : ../Modules/uspp.o
 addusdbec_nc.o : ../PW/src/pwcom.o
 addusdbec_nc.o : lrcom.o
 addusldos.o : ../FFTXlib/fft_interfaces.o
+addusldos.o : ../Modules/cell_base.o
 addusldos.o : ../Modules/fft_base.o
 addusldos.o : ../Modules/ions_base.o
 addusldos.o : ../Modules/kind.o
@@ -234,6 +235,7 @@ localdos.o : ../UtilXlib/mp.o
 localdos.o : dfpt_tetra_mod.o
 localdos.o : lrcom.o
 lr_addusddens.o : ../FFTXlib/fft_interfaces.o
+lr_addusddens.o : ../Modules/cell_base.o
 lr_addusddens.o : ../Modules/fft_base.o
 lr_addusddens.o : ../Modules/ions_base.o
 lr_addusddens.o : ../Modules/kind.o

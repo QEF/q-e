@@ -1,0 +1,29 @@
+Electron-phonon coefficients for Al using Fourier interpolation of dvscf
+&inputph
+  tr2_ph=1.0d-10,
+  prefix='aluminum',
+  fildvscf='aldv',
+  amass(1)=26.98,
+  outdir='./',
+  fildyn='al.elph.dyn',
+  electron_phonon='simple',
+  ldisp=.true.,
+  qplot=.true.
+
+  trans=.false.
+  ldvscf_interpolate=.true.
+  do_long_range=.false.
+  wpot_dir='w_pot/'
+ /
+  10
+  0.000 0.000 0.000 0
+  0.250 0.000 0.000 0
+  0.500 0.000 0.000 0
+  1.000 0.000 0.000 0
+  0.750 0.250 0.250 0
+  0.500 0.500 0.500 0
+  0.250 0.250 0.250 0
+  0.000 0.000 0.000 0
+  0.250 0.250 0.000 0
+  0.500 0.500 0.000 0
+

@@ -38,6 +38,7 @@ SUBROUTINE elphon()
   USE io_global, ONLY: stdout
   USE lrus,   ONLY : int3, int3_nc, int3_paw
   USE qpoint, ONLY : xq
+  USE dvscf_interpolate, ONLY : ldvscf_interpolate, dvscf_r2q
   !
   IMPLICIT NONE
   !
@@ -46,6 +47,8 @@ SUBROUTINE elphon()
   ! counter on the modes
   ! the change of Vscf due to perturbations
   INTEGER :: i,j
+  COMPLEX(DP), ALLOCATABLE :: dvscfin_all(:, :, :)
+  !! dvscfin for all modes. Used when doing dvscf_r2q interpolation.
   COMPLEX(DP), POINTER :: dvscfin(:,:,:), dvscfins (:,:,:)
   COMPLEX(DP), allocatable :: phip (:, :, :, :)
   
@@ -63,10 +66,21 @@ SUBROUTINE elphon()
      enddo
   endif
   !
+  ! If ldvscf_interpolate, use Fourier interpolation instead of reading dVscf
+  !
+  IF (ldvscf_interpolate) THEN
+    !
+    WRITE (6, '(5x,a)') "Fourier interpolating dVscf"
+    ALLOCATE(dvscfin_all(dfftp%nnr, nspin_mag, 3 * nat))
+    CALL dvscf_r2q(xq, u, dvscfin_all)
+    !
+  ELSE
+    WRITE (6, '(5x,a)') "Reading dVscf from file "//trim(fildvscf)
+  ENDIF
+  !
   ! read Delta Vscf and calculate electron-phonon coefficients
   !
   imode0 = 0
-  WRITE (6, '(5x,a)') "Reading dVscf from file "//trim(fildvscf)
   DO irr = 1, nirr
      npe=npert(irr)
      ALLOCATE (dvscfin (dfftp%nnr, nspin_mag , npe) )
@@ -76,8 +90,12 @@ SUBROUTINE elphon()
         IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, nat, nspin, npe))
      ENDIF
      DO ipert = 1, npe
-        CALL davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
-                           imode0 + ipert,  -1 )
+        IF (ldvscf_interpolate) THEN
+          dvscfin(:, :, ipert) = dvscfin_all(:, :, imode0 + ipert)
+        ELSE
+          CALL davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
+                             imode0 + ipert,  -1 )
+        ENDIF
         IF (okpaw .AND. me_bgrp==0) &
              CALL davcio( int3_paw(:,:,:,:,ipert), lint3paw, &
                                           iuint3paw, imode0 + ipert, - 1 )
@@ -105,6 +123,8 @@ SUBROUTINE elphon()
         IF (noncolin) DEALLOCATE(int3_nc)
      ENDIF
   ENDDO
+  !
+  IF (ldvscf_interpolate) DEALLOCATE(dvscfin_all)
   !
   ! now read the eigenvalues and eigenvectors of the dynamical matrix
   ! calculated in a previous run

@@ -1,5 +1,5 @@
 
-! Copyright (C) 2002-2015 Quantum ESPRESSO group
+! Copyright (C) 2002-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -111,7 +111,18 @@ SUBROUTINE iosys()
                             Hubbard_beta_ => hubbard_beta, &
                             lda_plus_u_    => lda_plus_u, &
                             lda_plus_u_kind_    => lda_plus_u_kind, &
-                            niter_with_fixed_ns, starting_ns, U_projection
+                            Hubbard_parameters_ => Hubbard_parameters, &
+                            iso_sys_    => iso_sys, &
+                            niter_with_fixed_ns, starting_ns, U_projection, &
+                            Hubbard_U_back_ => hubbard_u_back, &
+                            Hubbard_alpha_back_ => hubbard_alpha_back, &
+                            Hubbard_V_ => hubbard_v , &
+                            hub_pot_fix_ => hub_pot_fix, &
+                            reserv_ => reserv, &
+                            backall_ => backall, &
+                            lback_ => lback, &
+                            l1back_ => l1back, &
+                            reserv_back_ => reserv_back
   !
   USE martyna_tuckerman, ONLY: do_comp_mt
   !
@@ -148,6 +159,7 @@ SUBROUTINE iosys()
                             io_level, ethr, lscf, lbfgs, lmd, &
                             lbands, lconstrain, restart, &
                             llondon, ldftd3, do_makov_payne, lxdm, &
+                            lensemb, &
                             remove_rigid_rot_ => remove_rigid_rot, &
                             diago_full_acc_   => diago_full_acc, &
                             tolp_             => tolp, &
@@ -234,7 +246,10 @@ SUBROUTINE iosys()
                                ecfixed, qcutz, q2sigma, lda_plus_U,         &
                                lda_plus_U_kind, Hubbard_U, Hubbard_J,       &
                                Hubbard_J0, Hubbard_beta,                    &
-                               Hubbard_alpha, input_dft, la2F,              &
+                               Hubbard_alpha, Hubbard_parameters,           &
+                               Hubbard_U_back, Hubbard_alpha_back,          &
+                               Hubbard_V, hub_pot_fix, reserv, reserv_back, &
+                               backall, lback, l1back, input_dft, la2F,     &
                                starting_ns_eigenvalue, U_projection_type,   &
                                x_gamma_extrapolation, nqx1, nqx2, nqx3,     &
                                exxdiv_treatment, yukawa, ecutvcut,          &
@@ -324,9 +339,12 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   CHARACTER(LEN=256):: dft_
   !
-  INTEGER  :: ia, nt, inlc
+  INTEGER  :: ia, nt, inlc, tempunit, na, nb
   LOGICAL  :: exst, parallelfs, domag
-  REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp
+  REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp, &
+              interaction
+  CHARACTER(len=256) :: tempfile
+  INTEGER, EXTERNAL  :: find_free_unit
   !
   ! MAIN CONTROL VARIABLES, MD AND RELAX
   !
@@ -341,6 +359,12 @@ SUBROUTINE iosys()
   CASE( 'scf' )
      !
      lscf  = .true.
+     nstep = 1
+     !
+  CASE( 'ensemble' )
+     !
+     lscf  = .true.
+     lensemb = .true.
      nstep = 1
      !
   CASE( 'nscf' )
@@ -373,6 +397,10 @@ SUBROUTINE iosys()
         calc    = 'vm'
         !
         ntcheck = nstep + 1
+        !
+     CASE ( 'ipi' )
+        !
+        CONTINUE
         !
      CASE DEFAULT
         !
@@ -442,6 +470,10 @@ SUBROUTINE iosys()
         lbfgs = .true.
         lmd   = .false.
         !
+     CASE ( 'ipi' )
+        !
+        CONTINUE
+        !
      CASE DEFAULT
         !
         CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
@@ -476,6 +508,10 @@ SUBROUTINE iosys()
      CASE( 'w' )
         !
         calc = 'nd'
+        !
+     CASE ( 'ipi' )
+        !
+        CONTINUE
         !
      CASE DEFAULT
         !
@@ -1159,19 +1195,74 @@ SUBROUTINE iosys()
         CALL errore( 'iosys', 'Unknown efield_phase', 1 )
   END SELECT
   !
-  ! HUBBARD U
+  ! Hubbard parameters for DFT+U+V
+  !
+  IF ( lda_plus_u_kind == 0 .OR. lda_plus_u_kind == 1 ) THEN
+     !
+     ! In this case the Hubbard parameters can be read only directly
+     ! from the PWscf input
+     !
+     IF ( Hubbard_parameters /= 'input' ) &
+        CALL errore( 'iosys', 'Not allowed value of Hubbard_parameters', 1 )
+     !
+  ELSEIF ( lda_plus_u_kind == 2 ) THEN
+     !
+     IF ( Hubbard_parameters == 'input' ) THEN
+        !
+        WRITE( stdout, '(/5x,"Reading Hubbard V parameters from the input...",/)')
+        !
+     ELSEIF ( Hubbard_parameters == 'file' ) THEN
+        !
+        WRITE( stdout, '(/5x,"Reading Hubbard V parameters from the file parameters.in...",/)')
+        !
+        tempunit = find_free_unit()
+        tempfile = TRIM("parameters.in")
+        !
+        INQUIRE (file = tempfile, exist = exst)
+        IF (.NOT.exst) CALL errore('iosys','File parameters.in was not found...',1)
+        !
+        ! Nullify all Hubbard_V, just in case if they were specified in the PWscf input
+        !
+        Hubbard_V(:,:,:) = 0.0d0
+        !
+        ! Open the file parameters.in and read Hubbard_V from there
+        !
+        OPEN( UNIT = tempunit, FILE = tempfile, FORM = 'formatted', STATUS = 'unknown' )
+        READ(tempunit,*)
+10      READ(tempunit,*,END=11) na, nb, interaction
+        Hubbard_V(na,nb,1) = interaction
+        GO TO 10
+11      CLOSE( UNIT = tempunit, STATUS = 'KEEP' )
+        !
+     ELSEIF ( Hubbard_parameters /= 'input' .AND. Hubbard_parameters /= 'file' ) THEN
+        !
+        CALL errore( 'iosys', 'Not allowed value of Hubbard_parameters', 1 )
+        !  
+     ENDIF
+     !
+  ENDIF
   !
   Hubbard_U_(1:ntyp)      = hubbard_u(1:ntyp) / rytoev
   Hubbard_J_(1:3,1:ntyp)  = hubbard_j(1:3,1:ntyp) / rytoev
   Hubbard_J0_(1:ntyp)     = hubbard_j0(1:ntyp) / rytoev
+  Hubbard_V_(:,:,:)       = hubbard_V(:,:,:) / rytoev
+  Hubbard_U_back_(:)      = hubbard_U_back(:) / rytoev
   Hubbard_alpha_(1:ntyp)  = hubbard_alpha(1:ntyp) / rytoev
   Hubbard_beta_(1:ntyp)   = hubbard_beta(1:ntyp) / rytoev
+  Hubbard_alpha_back_(:)  = hubbard_alpha_back(:) / rytoev
   U_projection            = U_projection_type
   starting_ns             = starting_ns_eigenvalue
   !
   IF ( lda_plus_u .AND. lda_plus_u_kind == 0 .AND. noncolin ) THEN
      CALL errore('iosys', 'simplified LDA+U not implemented with &
                           &noncol. magnetism, use lda_plus_u_kind = 1', 1)
+  END IF
+  IF ( lda_plus_u .AND. lda_plus_u_kind == 2 ) THEN
+     IF ( nat > SIZE(Hubbard_V,1) ) CALL errore('input', &
+          & 'Too many atoms. The dimensions of Hubbard_V must be increased.',1)
+     ! In order to increase the dimensions of the Hubbard_V array,
+     ! change the parameter natx in Modules/parameters.f90 from 50 to the 
+     ! number of atoms in your system.
   END IF
   lda_plus_u_             = lda_plus_u
   lda_plus_u_kind_        = lda_plus_u_kind

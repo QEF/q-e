@@ -74,15 +74,23 @@ inputs_args = ('Ni.scf.in', '1'), ('Ni.phq.in', '2')
 program = PH
 inputs_args = ('BN.scf.in', '1'), ('BN.phG.in', '2'), ('BN.phq.in', '2')
 
+[ph_interpol_metal/]
+program = PH
+inputs_args = ('al.scf.in', '1'), ('al.ph.in', '2'), ('al.dvscfq2r.in', '6'), ('al.elph.in', '2'), ('al.elph.interpol.in', '2')
+
 [epw_base/]
 program = EPW
-inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3'), ('epw5.in', '3'), ('epw6.in', '3'), ('epw7.in', '3'), ('epw8.in', '3'), ('epw9.in', '3'), ('epw10.in', '3')
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3'), ('epw5.in', '3'), ('epw6.in', '3'), ('epw7.in', '3'), ('epw8.in', '3'), ('epw9.in', '3'), ('epw10.in', '3'), ('epw11.in', '3')
 
 [epw_trev/]
 program = EPW
 inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3')
 
 [epw_trev_uspp/]
+program = EPW
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf.in', '1'), ('nscf.in', '1'), ('epw1.in', '3')
+
+[epw_trev_paw/]
 program = EPW
 inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf.in', '1'), ('nscf.in', '1'), ('epw1.in', '3')
 
