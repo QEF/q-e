@@ -425,7 +425,7 @@ CONTAINS
         !
         IF (lflags .NE. lflags_old) THEN
            !
-           IF ( lflags > 1 ) THEN
+           IF ( lflags > 0 ) THEN
               !
               lscf      = MOD(INT(lflags/(2**4)),2) == 1
               lforce    = MOD(INT(lflags/(2**3)),2) == 1
