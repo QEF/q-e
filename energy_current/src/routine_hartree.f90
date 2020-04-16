@@ -1,12 +1,11 @@
 subroutine init_hartree()
-   use qpoint, only : ikqs
+   use qpoint, only: ikqs
    implicit none
 
-   if ( .not. allocated(ikqs)) allocate(ikqs(1))
-   ikqs(1)=1
+   if (.not. allocated(ikqs)) allocate (ikqs(1))
+   ikqs(1) = 1
 
 end subroutine
-
 
 subroutine routine_hartree()
    use kinds, only: DP
@@ -33,9 +32,9 @@ subroutine routine_hartree()
    use constants, only: rytoev
    USE eqv, ONLY: dpsi, dvpsi
    USE mp_pools, ONLY: intra_pool_comm
-   
+
    implicit none
-   
+
    !complex(kind=DP), allocatable :: evc_uno(:, :), evc_due(:, :), evp(:, :), tmp(:, :)
    complex(kind=DP), allocatable ::  evp(:, :), tmp(:, :)
    integer :: iun, iv, igm, ibnd, i
@@ -60,7 +59,7 @@ subroutine routine_hartree()
 
    write (stdout, *) 'INIZIO ROUTINE HARTREE & KOHN'
    !npwold=npw
-   npw=npwx ! only gamma
+   npw = npwx ! only gamma
    call start_clock('routine_hartree')
    call start_clock('hartree_current')
    call init_hartree()
@@ -195,7 +194,7 @@ subroutine routine_hartree()
 !calcolo del potenziale v_uno e di fac
 ! fac(G) = e2*fpi/(tpiba2*G^2*omega)
 ! v(G) = charge(G)*fac
-   if (gstart==2)   fac(1) = 0.d0
+   if (gstart == 2) fac(1) = 0.d0
    do igm = gstart, ngm
       qq_fact = g(1, igm)**2.d0 + g(2, igm)**2.d0 + g(3, igm)**2.d0
       fac(igm) = (e2*fpi/(tpiba2*qq_fact))
@@ -261,7 +260,7 @@ subroutine routine_hartree()
 
    call stop_clock('xc_current')
    call print_clock('xc_current')
-   if (ionode) print *, 'CORRENTE X-C CALCOLATA'  
+   if (ionode) print *, 'CORRENTE X-C CALCOLATA'
 !!la corrente appena calcolata si può fare senza scrivere più di 5 righe di codice probabilmente usando quello che c'è già in QE
 
 !---------------------------------KOHN------------------------------------------------
@@ -308,8 +307,6 @@ subroutine routine_hartree()
       end do
       evp(:, :) = evp(:, :)/delta_t
    end if
-
-
 
    tmp(:, :) = (0.d0, 0.d0)
 !fa H|evp>  cioe' H|phi_v^c_punto> e lo mette in tmp:
@@ -369,8 +366,6 @@ subroutine routine_hartree()
 
       if (ionode) write (*, "('  KOHN POLARIZZAZIONE ',I3,' COMPLETATA')") ipol
 
-
-
    end do polariz
    J_kohn = 0.d0
    J_kohn_a = 0.d0
@@ -380,10 +375,10 @@ subroutine routine_hartree()
 !     at(:, ipol) / amodulus is the versor along direction ipol
 !      amodulus = sqrt(at(1, ipol)**2 + at(2, ipol)**2 + at(3, ipol)**2)
       amodulus = at(1, ipol)**2 + at(2, ipol)**2 + at(3, ipol)**2
-      J_kohn(:) = J_kohn(:) + 2.d0*at(:, ipol)*real(kcurrent(ipol)) / amodulus
-      J_kohn_a(:) = J_kohn_a(:) + 2.d0*at(:, ipol)*real(kcurrent_a(ipol)) / amodulus
-      J_kohn_b(:) = J_kohn_b(:) + 2.d0*at(:, ipol)*real(kcurrent_b(ipol)) / amodulus
-      J_electron(:) = J_electron(:) + 2.d0*e2*at(:, ipol)*real(ecurrent(ipol)) / amodulus
+      J_kohn(:) = J_kohn(:) + 2.d0*at(:, ipol)*real(kcurrent(ipol))/amodulus
+      J_kohn_a(:) = J_kohn_a(:) + 2.d0*at(:, ipol)*real(kcurrent_a(ipol))/amodulus
+      J_kohn_b(:) = J_kohn_b(:) + 2.d0*at(:, ipol)*real(kcurrent_b(ipol))/amodulus
+      J_electron(:) = J_electron(:) + 2.d0*e2*at(:, ipol)*real(ecurrent(ipol))/amodulus
 !    J_kohn(ipol)=J_kohn(ipol)+2.d0*real(kcurrent(ipol))
    end do
    call stop_clock('kohn_current')
@@ -398,7 +393,7 @@ subroutine routine_hartree()
    deallocate (v_due)
    deallocate (v_point)
    deallocate (v_mean)
-   call deallocate_bec_type(becp) 
+   call deallocate_bec_type(becp)
    deallocate (dpsi)
    deallocate (dvpsi)
    deallocate (excharge_r)

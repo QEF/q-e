@@ -69,98 +69,98 @@ subroutine init_us_1a
 !lb è il momento angolare della funzione di bessel
 !si può avere solo lb=la+1 lb=la-1 o lb=la
 !e questi tre casi sono rappresentati dall'ultimo indice
-      ndm = MAXVAL(upf(:)%kkbeta)
-      allocate (aux(ndm))
-      allocate (besr(ndm))
+   ndm = MAXVAL(upf(:)%kkbeta)
+   allocate (aux(ndm))
+   allocate (besr(ndm))
 
 !
 !inizializzazione di tabr
 ! questo può essere estratto. Il resto della routine è init_us_1.f90 di PW
 !
-      pref = fpi/sqrt(omega)
-      call divide(intra_bgrp_comm, nqxq, startq, lastq)
-      tabr(:, :, :, :) = 0.d0
-      do nt = 1, ntyp
-         do nb = 1, upf(nt)%nbeta
-            l = upf(nt)%lll(nb)
-            do iq = startq, lastq
-               qi = (iq - 1)*dq
-!inizializzazione tabella con l_bessel=l
-               call sph_bes(upf(nt)%kkbeta, rgrid(nt)%r, qi, l, besr)
-               do ir = 1, upf(nt)%kkbeta
-                  aux(ir) = upf(nt)%beta(ir, nb)*besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir)
-               enddo
-               call simpson(upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
-               tabr(iq, nb, nt, 0) = vqint*pref
-!l_bessel=l+1
-               call sph_bes(upf(nt)%kkbeta, rgrid(nt)%r, qi, l + 1, besr)
-               do ir = 1, upf(nt)%kkbeta
-                  aux(ir) = upf(nt)%beta(ir, nb)*besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir)
-               enddo
-               call simpson(upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
-               tabr(iq, nb, nt, 1) = vqint*pref
-!l_bessel=l-1, solo se l>0
-               if (l > 0) then
-                  call sph_bes(upf(nt)%kkbeta, rgrid(nt)%r, qi, l - 1, besr)
-                  do ir = 1, upf(nt)%kkbeta
-                     aux(ir) = upf(nt)%beta(ir, nb)*besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir)
-                  enddo
-                  call simpson(upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
-                  tabr(iq, nb, nt, -1) = vqint*pref
-               end if
-            enddo
-         enddo
-      enddo
-#ifdef __MPI
-      call mp_sum(tabr, intra_bgrp_comm)
-#endif
-      ! initialize spline interpolation
-      if (spline_ps) then
-         CALL errore('init_us_1a', 'splines for tabr not implemented', 1)
-      endif
-!!!!!!!!!!!!!!
-!inizializzazione di tablocal_hg
-      !attenzione alla nuova griglia che deve essere compatibile con quella
-!dello pseudo locale
-      rm = MAXVAL(rgrid(:)%mesh)
-      deallocate (besr)
-      allocate (besr(rm))
-      deallocate (aux)
-      allocate (aux(rm))
-!
-      pref = fpi/omega
-      call divide(intra_bgrp_comm, nqxq, startq, lastq)
-      tablocal_hg(:, :, :) = 0.d0
-      do nt = 1, ntyp
+   pref = fpi/sqrt(omega)
+   call divide(intra_bgrp_comm, nqxq, startq, lastq)
+   tabr(:, :, :, :) = 0.d0
+   do nt = 1, ntyp
+      do nb = 1, upf(nt)%nbeta
+         l = upf(nt)%lll(nb)
          do iq = startq, lastq
             qi = (iq - 1)*dq
-!inizializzazione con l=0
-            call sph_bes(rgrid(nt)%mesh, rgrid(nt)%r, qi, 0, besr)
-            do ir = 1, rgrid(nt)%mesh
-               aux(ir) = (rgrid(nt)%r(ir)*upf(nt)%vloc(ir) + 2.d0*zv(nt))* &
-                         besr(ir)*rgrid(nt)%r(ir)
-            end do
-            call simpson(rgrid(nt)%mesh, aux, rgrid(nt)%rab, vqint)
-            tablocal_hg(iq, nt, 0) = vqint*pref
-!inizializzazione con l=1
-            call sph_bes(rgrid(nt)%mesh, rgrid(nt)%r, qi, 1, besr)
-            do ir = 1, rgrid(nt)%mesh
-               aux(ir) = (rgrid(nt)%r(ir)*upf(nt)%vloc(ir) + 2.d0*zv(nt))* &
-                         besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir)
-            end do
-            call simpson(rgrid(nt)%mesh, aux, rgrid(nt)%rab, vqint)
-            tablocal_hg(iq, nt, 1) = vqint*pref
-         end do
-      end do
+!inizializzazione tabella con l_bessel=l
+            call sph_bes(upf(nt)%kkbeta, rgrid(nt)%r, qi, l, besr)
+            do ir = 1, upf(nt)%kkbeta
+               aux(ir) = upf(nt)%beta(ir, nb)*besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir)
+            enddo
+            call simpson(upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
+            tabr(iq, nb, nt, 0) = vqint*pref
+!l_bessel=l+1
+            call sph_bes(upf(nt)%kkbeta, rgrid(nt)%r, qi, l + 1, besr)
+            do ir = 1, upf(nt)%kkbeta
+               aux(ir) = upf(nt)%beta(ir, nb)*besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir)
+            enddo
+            call simpson(upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
+            tabr(iq, nb, nt, 1) = vqint*pref
+!l_bessel=l-1, solo se l>0
+            if (l > 0) then
+               call sph_bes(upf(nt)%kkbeta, rgrid(nt)%r, qi, l - 1, besr)
+               do ir = 1, upf(nt)%kkbeta
+                  aux(ir) = upf(nt)%beta(ir, nb)*besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir)
+               enddo
+               call simpson(upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
+               tabr(iq, nb, nt, -1) = vqint*pref
+            end if
+         enddo
+      enddo
+   enddo
 #ifdef __MPI
-      call mp_sum(tablocal_hg, intra_bgrp_comm)
+   call mp_sum(tabr, intra_bgrp_comm)
 #endif
-      ! initialize spline interpolation
-      if (spline_ps) then
-         CALL errore('init_us_1a', 'splines for tablocal not implemented', 1)
-      endif
-      deallocate (besr)
-      deallocate (aux)
+   ! initialize spline interpolation
+   if (spline_ps) then
+      CALL errore('init_us_1a', 'splines for tabr not implemented', 1)
+   endif
+!!!!!!!!!!!!!!
+!inizializzazione di tablocal_hg
+   !attenzione alla nuova griglia che deve essere compatibile con quella
+!dello pseudo locale
+   rm = MAXVAL(rgrid(:)%mesh)
+   deallocate (besr)
+   allocate (besr(rm))
+   deallocate (aux)
+   allocate (aux(rm))
+!
+   pref = fpi/omega
+   call divide(intra_bgrp_comm, nqxq, startq, lastq)
+   tablocal_hg(:, :, :) = 0.d0
+   do nt = 1, ntyp
+      do iq = startq, lastq
+         qi = (iq - 1)*dq
+!inizializzazione con l=0
+         call sph_bes(rgrid(nt)%mesh, rgrid(nt)%r, qi, 0, besr)
+         do ir = 1, rgrid(nt)%mesh
+            aux(ir) = (rgrid(nt)%r(ir)*upf(nt)%vloc(ir) + 2.d0*zv(nt))* &
+                      besr(ir)*rgrid(nt)%r(ir)
+         end do
+         call simpson(rgrid(nt)%mesh, aux, rgrid(nt)%rab, vqint)
+         tablocal_hg(iq, nt, 0) = vqint*pref
+!inizializzazione con l=1
+         call sph_bes(rgrid(nt)%mesh, rgrid(nt)%r, qi, 1, besr)
+         do ir = 1, rgrid(nt)%mesh
+            aux(ir) = (rgrid(nt)%r(ir)*upf(nt)%vloc(ir) + 2.d0*zv(nt))* &
+                      besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir)
+         end do
+         call simpson(rgrid(nt)%mesh, aux, rgrid(nt)%rab, vqint)
+         tablocal_hg(iq, nt, 1) = vqint*pref
+      end do
+   end do
+#ifdef __MPI
+   call mp_sum(tablocal_hg, intra_bgrp_comm)
+#endif
+   ! initialize spline interpolation
+   if (spline_ps) then
+      CALL errore('init_us_1a', 'splines for tablocal not implemented', 1)
+   endif
+   deallocate (besr)
+   deallocate (aux)
 
    call stop_clock('init_us_1a')
    return
