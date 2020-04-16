@@ -108,7 +108,7 @@ subroutine routine_hartree()
       call invfft('Wave', psic, dffts)
       charge(1:dffts%nnr) = charge(1:dffts%nnr) + dble(psic(1:dffts%nnr))**2.0
       if (iv /= nbnd) then
-         charge(1:dffts%nnr) = charge(1:dffts%nnr) + dimag(psic(1:dffts%nnr))**2.0
+         charge(1:dffts%nnr) = charge(1:dffts%nnr) + dimag(psic(1:dffts%nnr))**2.0 !is dimag standard fortran?
       end if
    end do
    q_tot = 0.
@@ -149,7 +149,7 @@ subroutine routine_hartree()
 !
 !!!!!!!!!!!!------------- fine intermezzo----------------- !!!!!!!!!!!!!!!!!!!!
 
-!TODO: use qe computed charge
+!TODO: use sum_bands?
 !-------STEP2.2-------inizializzazione di chargeg_due, la carica al tempo t-Dt.
    charge = 0.d0
    do iv = 1, nbnd, 2
@@ -195,13 +195,10 @@ subroutine routine_hartree()
 !calcolo del potenziale v_uno e di fac
 ! fac(G) = e2*fpi/(tpiba2*G^2*omega)
 ! v(G) = charge(G)*fac
-   do igm = 1, ngm
+   if (gstart==2)   fac(1) = 0.d0
+   do igm = gstart, ngm
       qq_fact = g(1, igm)**2.d0 + g(2, igm)**2.d0 + g(3, igm)**2.d0
-      if (qq_fact > 1.d-8) then
-         fac(igm) = (e2*fpi/(tpiba2*qq_fact))
-      else
-         fac(igm) = 0.d0
-      end if
+      fac(igm) = (e2*fpi/(tpiba2*qq_fact))
    end do
    fac(:) = fac(:)/omega
 
