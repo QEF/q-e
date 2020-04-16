@@ -471,7 +471,7 @@ SUBROUTINE chdens (plot_files,plot_num)
                WRITE(stdout,'(/"BEWARE: plot requiring G-space interpolation",&
                               &" not implemented for Gamma only!",/, &
                               &"SOLUTION: restart this calculation with", &
-                              &" emtpy namelist &inputpp")')
+                              &" empty namelist &inputpp")')
                CALL errore ('chdens','Not implemented, please read above',1)
           ENDIF
           !

@@ -50,8 +50,13 @@ else
       		    mkl_omp="mkl_gnu_thread"
 		    ;;
 	       pgf* )
-      		    mkl_lib="mkl_intel_lp64"
-      		    mkl_omp="mkl_intel_thread"
+                    # Detect (again) PGI version
+                    pgf_version=`$mpif90 -V 2>&1 | sed '/^$/d' | grep "^pgf" | cut -d ' ' -f2`
+                    # From version 19.1, the new llvm backend requires linking to mkl_intel_thread
+                    ompimp=""
+                    AS_VERSION_COMPARE([$pgf_version], [19.1], [ ompimp="pgi" ], [ ompimp="intel" ], [ ompimp="intel" ] )
+      		    mkl_lib="mkl_${ompimp}_lp64"
+      		    mkl_omp="mkl_${ompimp}_thread"
       		    add_mkl_flag="-pgf90libs"
 	       ;;
 	    esac

@@ -645,6 +645,12 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v1x = (1.0_DP - exx_fraction) * v1x
            v2x = (1.0_DP - exx_fraction) * v2x
         ENDIF
+#ifdef use_beef
+     CASE( 43 ) ! 'beefx'
+        ! last parameter = 0 means do not add LDA (=Slater) exchange
+        ! (espresso) will add it itself
+        CALL beefx(rho, grho, sx, v1x, v2x, 0)
+#endif
         !
      CASE DEFAULT
         !
@@ -704,6 +710,12 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v1c = 0.871_DP * v1c
            v2c = 0.871_DP * v2c
         ENDIF
+#ifdef use_beef
+     CASE( 14 ) ! 'BEEF'
+        ! last parameter 0 means: do not add lda contributions
+        ! espresso will do that itself
+        call beeflocalcorr(rho, grho, sc, v1c, v2c, 0)
+#endif
         !
      CASE DEFAULT
         !
@@ -1096,9 +1108,31 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
            v2x = (1.0_DP - exx_fraction) * v2x
         ENDIF
         !
+#ifdef use_beef
+     CASE( 43 ) ! 'beefx'
+        IF (rho(1) > small .AND. SQRT (ABS (grho2(1)) ) > small) THEN
+           call beefx(2.0_DP * rho(1), 4.0_DP * grho2(1), sx(1), v1x(1), v2x(1), 0)
+        ELSE
+           sx(1) = 0.0_DP
+           v1x(1) = 0.0_DP
+           v2x(1) = 0.0_DP
+        ENDIF
+        IF (rho(2) > small .AND. SQRT (ABS (grho2(2)) ) > small) THEN
+           CALL beefx(2.0_DP * rho(2), 4.0_DP * grho2(2), sx(2), v1x(2), v2x(2), 0)
+           CALL beefx(2.0_DP * rho(2), 4.0_DP * grho2(2), sx(2), v1x(2), v2x(2), 0)
+        ELSE
+           sx(2) = 0.0_DP
+           v1x(2) = 0.0_DP
+           v2x(2) = 0.0_DP
+        ENDIF
+        sx_tot(ir) = 0.5_DP * (sx(1) + sx(2))
+        v2x  = 2.0_DP * v2x
+#endif
+     !
      ! case igcx == 5 (HCTH) and 6 (OPTX) not implemented
      ! case igcx == 7 (meta-GGA) must be treated in a separate call to another
      ! routine: needs kinetic energy density in addition to rho and grad rho
+     !
      CASE DEFAULT
         !
         CALL errore( 'gcx_spin', 'not implemented', igcx )
@@ -1198,6 +1232,11 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
        !
        CALL pbec_spin( rho, zeta, grho, 2, sc, v1c(1), v1c(2), v2c )
        !
+#ifdef use_beef
+    CASE( 14 )
+       !
+       call beeflocalcorrspin(rho, zeta, grho, sc, v1c(1), v1c(2), v2c, 0)
+#endif
     CASE DEFAULT
        !
        CALL errore( 'xc_gga_drivers (gcc_spin)', 'not implemented', igcc )
