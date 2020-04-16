@@ -222,20 +222,27 @@ subroutine set_first_step_restart()
      use mp_world, ONLY: mpime, world_comm
      use mp, ONLY: mp_bcast
     implicit none
-   integer :: iun,step,ios
+   integer :: iun,step,ios,step1
    integer, external :: find_free_unit
-   real(dp) :: time, J(3)
+   real(dp) :: time, J(3), time1,J1(3)
    
    
     if (.not. restart) return
-
     if (ionode) then 
       iun = find_free_unit()
+      step1=-1
       open (iun, file=trim(file_output)//'.dat')
-         read (iun,*,iostat=ios) step,time, J
-         if (ios == 0) then
-             first_step=step+1
-             write (*,*) 'RESTARTING AFTER STEP ',step, time, J
+         do while (ios==0)
+             read (iun,*,iostat=ios) step,time, J
+             if (ios == 0) then
+                 step1=step
+                 time1=time
+                 J1=J
+             end if
+         enddo
+         if (step1 /= -1) then
+             first_step=step1+1
+             write (*,*) 'RESTARTING AFTER STEP ',step1, time1, J1
          else
              write (*,*) 'NOTHING TO RESTART'
          endif
@@ -352,6 +359,7 @@ use hartree_mod, only : first_step, last_step, ethr_big_step
     logical :: res
     integer :: nstep
     integer,save :: step_idx = 0
+    logical,save :: first = .true.
     if (ionode) then 
         nstep=0
         do while (cpv_trajectory_read_step(t))
@@ -384,9 +392,12 @@ use hartree_mod, only : first_step, last_step, ethr_big_step
     if (res) then
          CALL mp_bcast(vel, ionode_id, world_comm)
          CALL mp_bcast(tau, ionode_id, world_comm)
+         if (first_step>0 .and. first) return
+         first=.false.
          call update_pot()
          call hinit1()
          ethr = ethr_big_step
+         
     end if
     
 end function

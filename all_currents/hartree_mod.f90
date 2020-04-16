@@ -14,7 +14,6 @@ MODULE hartree_mod
 
   integer :: first_step, last_step
   logical :: restart ! if true try to read last calculated step from output and set first_step
-
 END MODULE hartree_mod
 
 
