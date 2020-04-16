@@ -122,6 +122,21 @@ libcuda_eigensolver :
     cd ../EIGENSOLVER_GPU/lib_eigsolve/; $(MAKE) ); else \
 	(echo "No configuration file found for GPU custom eigensolver"; exit); fi
 
+# libbeef
+libbeef : libbeef_$(BEEF_LIBS_SWITCH)
+
+libbeef_ : fake_libbeef_external
+libbeef_external : fake_elpa_external
+
+fake_libbeef_external :
+	touch fake_libbeef.a
+	-rm fake_libbeef.a
+
+libbeef_internal:
+	if test ! -d ../LIBBEEF; then mkdir ../LIBBEEF; \
+	( gzip -dc ../archive/libbeef-0.1.2.tar.gz |(cd ../LIBBEEF; tar -xvf -)); fi
+	cd ../LIBBEEF; $(MAKE)
+
 ###################################
 # cleaning
 ###################################
@@ -160,6 +175,10 @@ libcuda_eigensolver_clean:
 	if test -d ../EIGENSOLVER_GPU; then (cd ../EIGENSOLVER_GPU/lib_eigsolve ; $(MAKE) clean); fi
 libcuda_eigensolver_veryclean:
 	if test -d ../EIGENSOLVER_GPU; then (rm -R -f ../EIGENSOLVER_GPU ../${EIGENSOLVER_GPU_NAME}); fi
+libbeef_clean:
+	if test -d ../LIBBEEF; then (cd ../LIBBEEF ; $(MAKE) clean); fi
+libbeef_veryclean:
+	if test -d ../LIBBEEF; then (rm -R -f ../LIBBEEF); fi
 # general cleaning
-clean: lapack_clean elpa_clean iotk_clean fox_clean libcuda_eigensolver_clean
-veryclean: lapack_veryclean elpa_veryclean iotk_veryclean fox_clean libcuda_eigensolver_veryclean
+clean: lapack_clean elpa_clean iotk_clean fox_clean libcuda_eigensolver_clean libbeef_clean
+veryclean: lapack_veryclean elpa_veryclean iotk_veryclean fox_clean libcuda_eigensolver_veryclean libbeef_veryclean
