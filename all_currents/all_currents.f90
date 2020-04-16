@@ -54,14 +54,8 @@ program all_currents
      call set_first_step_restart()
      call iosys()    ! ../PW/src/input.f90    save in internal variables
      call check_stop_init() ! ../PW/src/input.f90
-     call setup()    ! ../PW/src/setup.f90    setup the calculation
-     call init_run() ! ../PW/src/init_run.f90 allocate stuff
 
-     ! now scf is ready to start, but I first initialize energy current stuff 
-     call allocate_zero() ! only once per all trajectory
-     call init_zero() ! only once per all trajectory
-     call setup_nbnd_occ() ! only once per all trajectory
-
+     !eventually read new positions and velocities from trajectory
      if (ionode) then
          !initialize trajectory reading
          call cpv_trajectory_initialize(traj,trajdir,nat,1.0_dp,1.0_dp,1.0_dp,ios=ios,circular=.true.)
@@ -80,6 +74,14 @@ program all_currents
              goto 100 ! skip everything and exit
          endif
      end if
+
+     call setup()    ! ../PW/src/setup.f90    setup the calculation 
+     call init_run() ! ../PW/src/init_run.f90 allocate stuff
+     ! now scf is ready to start, but I first initialize energy current stuff 
+     call allocate_zero() ! only once per all trajectory
+     call init_zero() ! only once per all trajectory
+     call setup_nbnd_occ() ! only once per all trajectory
+
      do
          call run_pwscf(exit_status)
          if (exit_status /= 0 ) exit
@@ -113,7 +115,6 @@ program all_currents
      stop
 
 contains
-
 
 subroutine write_results(traj)
    use kinds, only : dp
@@ -392,8 +393,11 @@ use hartree_mod, only : first_step, last_step, ethr_big_step
     if (res) then
          CALL mp_bcast(vel, ionode_id, world_comm)
          CALL mp_bcast(tau, ionode_id, world_comm)
-         if (first_step>0 .and. first) return
-         first=.false.
+         if (first_step>0 .and. first) then
+             first=.false.
+             return
+         end if
+         first = .false.
          call update_pot()
          call hinit1()
          ethr = ethr_big_step

@@ -17,7 +17,7 @@ module cpv_traj
     function newunit() result(unit)
     implicit none
       integer  :: unit
-      integer, parameter :: LUN_MIN=10, LUN_MAX=2000
+      integer, parameter :: LUN_MIN=123, LUN_MAX=2000
       logical :: opened
       integer :: lun
       do lun=LUN_MIN,LUN_MAX
