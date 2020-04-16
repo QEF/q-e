@@ -69,9 +69,9 @@ clean :
 	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i *.L lib_all_currents.a
 
 maroni-sync:
-	( cd .. ; rsync -mrvt --include="*/" --include="all_currents/Makefile" --include="all_currents/make.depend" --include="*.f90" --exclude="*" . maroni:/marconi_work/Sis19_baroni/qe-thermalcurrents2/ )
+	( cd .. ; rsync -mrvt --include="*/" --include="*Makefile" --include="*make.depend" --include="*.f90" --exclude="*" . maroni:/marconi_work/Sis19_baroni/qe-thermalcurrents2/ )
 
 mugon-sync:
-	( cd .. ; rsync -mrvt --include="*/" --include="all_currents/Makefile" --include="all_currents/make.depend" --include="*.f90" --exclude="*" . mugon:/scratch/rbertoss/qe-thermalcurrents2/ )
+	( cd .. ; rsync -mrvt --include="*/" --include="*Makefile" --include="*make.depend" --include="*.f90" --exclude="*" . mugon:/scratch/rbertoss/qe-thermalcurrents2/ )
 
 include make.depend

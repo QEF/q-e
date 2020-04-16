@@ -48,6 +48,7 @@ program all_currents
         call read_cards( 'PW', 5 )
 
      call check_input()
+     call set_first_step_restart()
  
      call mp_barrier(intra_pool_comm)
      call bcast_all_current_namelist() 
@@ -64,17 +65,20 @@ program all_currents
      if (ionode) then
          !initialize trajectory reading
          call cpv_trajectory_initialize(traj,trajdir,nat,1.0_dp,1.0_dp,1.0_dp,ios=ios,circular=.true.)
-         if (ios == 0 ) then
+         if (ios == 0 ) then !FIXME: this is printed also when the trajfiles do not exist. Why!?
              write(*,*) 'After first step from input file, I will read from the CPV trajectory ',trajdir
          else
              write(*,*) 'Calculating only a single step from input file'
          endif 
      endif
      if (first_step>0) then
-         if (.not. read_next_step(traj)) &
-             goto 100 ! skip everything and exit
          if (ionode) &
              write(*,*) 'SKIPPING STEP FROM INPUT FILE'
+         if (.not. read_next_step(traj)) then
+             if (ionode) &
+                 write(*,*) 'NOTHING TO DO IN TRAJECTORY FILE'
+             goto 100 ! skip everything and exit
+         endif
      end if
      do
          call run_pwscf(exit_status)
@@ -152,7 +156,7 @@ subroutine write_results(traj)
          write (*,'(A,3E20.12)') 'total energy current: ', J_xc+J_hartree+J_kohn+i_current+z_current
          close (iun)
       open (iun, file=trim(file_output)//'.dat', position='append')
-         write (*,'(1I7,1E14.6,3E20.12)') step,time, J_xc+J_hartree+J_kohn+i_current+z_current
+         write (iun,'(1I7,1E14.6,3E20.12)') step,time, J_xc+J_hartree+J_kohn+i_current+z_current
       close(iun)
       end if
 
@@ -167,10 +171,11 @@ subroutine read_all_currents_namelists(iunit)
      integer :: ios
      CHARACTER(LEN=256), EXTERNAL :: trimcheck
      
-     NAMELIST /energy_current/ delta_t, init_linear, &
+     NAMELIST /energy_current/ delta_t,  &
         file_output, trajdir, vel_input_units ,&
-        eta, n_max, l_zero, first_step, last_step, &
-        ethr_small_step, ethr_big_step
+        eta, n_max, first_step, last_step, &
+        ethr_small_step, ethr_big_step, &
+        restart
 
      !
      !   set default values for variables in namelist
@@ -184,6 +189,7 @@ subroutine read_all_currents_namelists(iunit)
      ethr_big_step=1.d-4
      first_step=0
      last_step=0
+     restart = .false.
      READ (iunit, energy_current, IOSTAT=ios)
      IF (ios /= 0) CALL errore('main', 'reading energy_current namelist', ABS(ios))    
 
@@ -194,11 +200,12 @@ subroutine bcast_all_current_namelist()
      use hartree_mod
      use io_global, ONLY: stdout, ionode, ionode_id
      use mp_world, ONLY: mpime, world_comm
-     use mp, ONLY: mp_bcast !, mp_barrier
+     use mp, ONLY: mp_bcast
      implicit none
      CALL mp_bcast(trajdir, ionode_id, world_comm)
      CALL mp_bcast(delta_t, ionode_id, world_comm)
      CALL mp_bcast(eta, ionode_id, world_comm)
+     CALL mp_bcast(restart, ionode_id, world_comm)
      CALL mp_bcast(first_step, ionode_id, world_comm)
      CALL mp_bcast(last_step, ionode_id, world_comm)
      CALL mp_bcast(ethr_small_step, ionode_id, world_comm)
@@ -209,21 +216,51 @@ subroutine bcast_all_current_namelist()
 
 end subroutine
 
+subroutine set_first_step_restart()
+    use hartree_mod, only : restart, file_output, first_step
+     use io_global, ONLY: ionode, ionode_id
+     use mp_world, ONLY: mpime, world_comm
+     use mp, ONLY: mp_bcast
+    implicit none
+   integer :: iun,step,ios
+   integer, external :: find_free_unit
+   real(dp) :: time, J(3)
+   
+   
+    if (.not. restart) return
+
+    if (ionode) then 
+      iun = find_free_unit()
+      open (iun, file=trim(file_output)//'.dat')
+         read (iun,*,iostat=ios) step,time, J
+         if (ios == 0) then
+             first_step=step+1
+             write (*,*) 'RESTARTING AFTER STEP ',step, time, J
+         else
+             write (*,*) 'NOTHING TO RESTART'
+         endif
+      close(iun)
+    endif
+    !broadcast first_step
+    CALL mp_bcast(first_step, ionode_id, world_comm)
+
+end subroutine
+
 subroutine check_input()
      use input_parameters, only : rd_pos, tapos, rd_vel, tavel, atomic_positions, ion_velocities
 use  ions_base,     ONLY :  tau, tau_format, nat
-     use zero_mod, only : vel_input_units, ion_vel
-     use hartree_mod, only : delta_t
      implicit none
      if (first_step == 0) then
-     if (.not. tavel) &
-        call errore('read_vel', 'error: must provide velocities in input',1)
-     if (ion_velocities /= 'from_input') &
-        call errore('read_vel', 'error: atomic_velocities must be "from_input"',1)
+         if (.not. tavel) &
+            call errore('read_vel', 'error: must provide velocities in input',1)
+         if (ion_velocities /= 'from_input') &
+            call errore('read_vel', 'error: atomic_velocities must be "from_input"',1)
      else
          if (tavel) &
              write(*,*) 'WARNING: VELOCITIES FROM INPUT FILE WILL BE IGNORED'
      end if
+     
+     !eventually set first_step if restart
 
 end subroutine
 
@@ -313,13 +350,16 @@ use hartree_mod, only : first_step, last_step, ethr_big_step
     type(cpv_trajectory), intent(inout) :: t
     type(timestep) :: ts
     logical :: res
+    integer :: nstep
     integer,save :: step_idx = 0
     if (ionode) then 
+        nstep=0
         do while (cpv_trajectory_read_step(t))
             step_idx = step_idx + 1
             call cpv_trajectory_get_step(t,step_idx,ts) 
             !if we are done exit the loop 
-            if (ts%nstep > last_step) then
+            nstep=ts%nstep
+            if (ts%nstep > last_step .and. last_step > 0) then
                 write(*,*) 'STEP ', ts%nstep, ts%tps, ' > ', last_step
                 exit
             end if
@@ -333,11 +373,10 @@ use hartree_mod, only : first_step, last_step, ethr_big_step
             tau=ts%tau
             CALL convert_tau ( tau_format, nat, tau)
             res=.true.
-            !exit the loop
-            goto 200
+            goto 200 ! exit the loop skipping 'finish': we will do an other calculation
         enddo
         !else
-            write(*,*) 'Finished reading trajectory ', t%fname
+            write(*,*) 'Finished reading trajectory ', t%fname, 'before step ', nstep
             res=.false.
 200   continue
     endif

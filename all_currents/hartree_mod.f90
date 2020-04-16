@@ -4,7 +4,7 @@ MODULE hartree_mod
 
   SAVE
 
-  CHARACTER(len=256) :: init_linear, file_output, trajdir
+  CHARACTER(len=256) :: init_linear, file_output, trajdir=''
    real(kind=DP) ::J_kohn(3), J_kohn_a(3), J_kohn_b(3), J_hartree(3), J_xc(3), J_electron(3)
 
   real(kind=DP) ::delta_t, ethr_small_step, ethr_big_step
@@ -13,6 +13,7 @@ MODULE hartree_mod
    !evc_due will be a copy of evc of the first electrons() call
 
   integer :: first_step, last_step
+  logical :: restart ! if true try to read last calculated step from output and set first_step
 
 END MODULE hartree_mod
 

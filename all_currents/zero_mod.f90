@@ -9,7 +9,7 @@ MODULE zero_mod
 
   SAVE
 !variabili per potenziale non locale
-  logical  ::l_zero,l_non_loc,l_tab
+  logical  ::l_non_loc,l_tab
   real(DP), allocatable :: tabr(:,:,:,:)
   real(DP), allocatable :: tabr_d2y(:,:,:,:)
   real(DP), allocatable :: tablocal_hg(:,:,:)

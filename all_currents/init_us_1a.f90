@@ -30,7 +30,7 @@ subroutine init_us_1a
    USE uspp_param, ONLY: upf, lmaxq, nbetam, nh, nhm, lmaxkb
    USE mp_global, ONLY: intra_bgrp_comm
    USE mp, ONLY: mp_sum
-   use zero_mod, ONLY: l_tab, l_zero, tabr, tabr_d2y, &
+   use zero_mod, ONLY: l_tab, tabr, tabr_d2y, &
                        tablocal_hg, tablocal_d2y_hg
 
    USE ions_base, ONLY: nsp
