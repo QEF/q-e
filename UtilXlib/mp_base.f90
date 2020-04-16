@@ -291,7 +291,7 @@ SUBROUTINE reduce_base_real( dim, ps, comm, root )
   !
 #if defined (__MPI)  
   !
-  INTEGER            :: info
+  INTEGER            :: info, myid
   !
 #if defined __TRACE
   write(*,*) 'reduce_base_real IN'
@@ -306,8 +306,15 @@ SUBROUTINE reduce_base_real( dim, ps, comm, root )
 #endif
   !
   IF( root >= 0 ) THEN
-     CALL MPI_REDUCE( MPI_IN_PLACE, ps, dim, MPI_DOUBLE_PRECISION, MPI_SUM, root, comm, info )
-     IF( info /= 0 ) CALL errore( 'reduce_base_real', 'error in mpi_reduce 1', info )
+     CALL mpi_comm_rank( comm, myid, info )
+     IF( info /= 0 ) CALL errore( 'reduce_base_real', 'error in mpi_comm_rank', info )
+     IF (myid == root) THEN
+        CALL MPI_REDUCE( MPI_IN_PLACE, ps, dim, MPI_DOUBLE_PRECISION, MPI_SUM, root, comm, info )
+        IF( info /= 0 ) CALL errore( 'reduce_base_real', 'error in mpi_reduce 1', info )
+     ELSE
+        CALL MPI_REDUCE( ps, ps, dim, MPI_DOUBLE_PRECISION, MPI_SUM, root, comm, info )
+        IF( info /= 0 ) CALL errore( 'reduce_base_real', 'error in mpi_reduce 1', info )
+     ENDIF
   ELSE
      CALL MPI_ALLREDUCE( MPI_IN_PLACE, ps, dim, MPI_DOUBLE_PRECISION, MPI_SUM, comm, info )
      IF( info /= 0 ) CALL errore( 'reduce_base_real', 'error in mpi_allreduce 1', info )
@@ -447,7 +454,7 @@ END SUBROUTINE reduce_base_real
   !
 #if defined (__MPI)  
   !
-  INTEGER            :: info
+  INTEGER            :: info, myid
   !
 #if defined __TRACE
   WRITE(*, *) 'reduce_base_integer IN'
@@ -460,8 +467,15 @@ END SUBROUTINE reduce_base_real
 #endif
   !
   IF(root >= 0) THEN
-    CALL MPI_REDUCE(MPI_IN_PLACE, ps, dim, MPI_INTEGER, MPI_SUM, root, comm, info)
-    IF(info /= 0) CALL errore('reduce_base_integer', 'error in mpi_reduce 1', info)
+    CALL mpi_comm_rank( comm, myid, info )
+    IF( info /= 0 ) CALL errore( 'reduce_base_integer', 'error in mpi_comm_rank', info )
+    IF (myid == root) THEN
+      CALL MPI_REDUCE(MPI_IN_PLACE, ps, dim, MPI_INTEGER, MPI_SUM, root, comm, info)
+      IF(info /= 0) CALL errore('reduce_base_integer', 'error in mpi_reduce 1', info)
+    ELSE
+      CALL MPI_REDUCE(ps, ps, dim, MPI_INTEGER, MPI_SUM, root, comm, info)
+      IF(info /= 0) CALL errore('reduce_base_integer', 'error in mpi_reduce 1', info)
+    ENDIF
   ELSE
     CALL MPI_ALLREDUCE(MPI_IN_PLACE, ps, dim, MPI_INTEGER, MPI_SUM, comm, info)
     IF(info /= 0 ) CALL errore('reduce_base_integer', 'error in mpi_allreduce 1', info)
@@ -498,7 +512,7 @@ END SUBROUTINE reduce_base_real
   !   
 #if defined (__MPI)  
   !
-  INTEGER            :: info
+  INTEGER            :: info, myid
   !
 #if defined __TRACE
   WRITE(*, *) 'reduce_base_integer IN'
@@ -511,8 +525,15 @@ END SUBROUTINE reduce_base_real
 #endif
   !
   IF(root >= 0) THEN
-    CALL MPI_REDUCE(MPI_IN_PLACE, ps, dim, MPI_INTEGER8, MPI_SUM, root, comm, info)
-    IF(info /= 0) CALL errore('reduce_base_integer8', 'error in mpi_reduce 1', info)
+    CALL mpi_comm_rank( comm, myid, info )
+    IF( info /= 0 ) CALL errore( 'reduce_base_integer8', 'error in mpi_comm_rank', info )
+    IF (myid == root) THEN
+      CALL MPI_REDUCE(MPI_IN_PLACE, ps, dim, MPI_INTEGER8, MPI_SUM, root, comm, info)
+      IF(info /= 0) CALL errore('reduce_base_integer8', 'error in mpi_reduce 1', info)
+    ELSE
+      CALL MPI_REDUCE(ps, ps, dim, MPI_INTEGER8, MPI_SUM, root, comm, info)
+      IF(info /= 0) CALL errore('reduce_base_integer8', 'error in mpi_reduce 1', info)
+    ENDIF
   ELSE
     CALL MPI_ALLREDUCE(MPI_IN_PLACE, ps, dim, MPI_INTEGER8, MPI_SUM, comm, info)
     IF(info /= 0 ) CALL errore('reduce_base_integer8', 'error in mpi_allreduce 1', info)
