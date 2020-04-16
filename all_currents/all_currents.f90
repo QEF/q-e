@@ -48,10 +48,10 @@ program all_currents
         call read_cards( 'PW', 5 )
 
      call check_input()
-     call set_first_step_restart()
  
      call mp_barrier(intra_pool_comm)
      call bcast_all_current_namelist() 
+     call set_first_step_restart()
      call iosys()    ! ../PW/src/input.f90    save in internal variables
      call check_stop_init() ! ../PW/src/input.f90
      call setup()    ! ../PW/src/setup.f90    setup the calculation
@@ -65,11 +65,11 @@ program all_currents
      if (ionode) then
          !initialize trajectory reading
          call cpv_trajectory_initialize(traj,trajdir,nat,1.0_dp,1.0_dp,1.0_dp,ios=ios,circular=.true.)
-         if (ios == 0 ) then !FIXME: this is printed also when the trajfiles do not exist. Why!?
-             write(*,*) 'After first step from input file, I will read from the CPV trajectory ',trajdir
+         if (ios == 0 ) then
+             write(*,*) 'After first step from input file, I will read from the CPV trajectory ',trim(trajdir)
          else
-             write(*,*) 'Calculating only a single step from input file'
-         endif 
+             write(*,*) 'Cannot open trajectory file', trim(trajdir), '. I can calculate only a single step from input file'
+         endif
      endif
      if (first_step>0) then
          if (ionode) &
@@ -376,7 +376,7 @@ use hartree_mod, only : first_step, last_step, ethr_big_step
             goto 200 ! exit the loop skipping 'finish': we will do an other calculation
         enddo
         !else
-            write(*,*) 'Finished reading trajectory ', t%fname, 'before step ', nstep
+            write(*,*) 'Finished reading trajectory ', trim(t%fname), 'before step ', nstep
             res=.false.
 200   continue
     endif
