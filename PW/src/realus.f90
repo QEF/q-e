@@ -950,6 +950,8 @@ MODULE realus
          END DO
          if (tprint) WRITE (*,*) 'BETAPOINTLIST: ATOM ',ia, ' MAXBOX_BETA =', maxbox_beta(ia)
       ENDDO
+!
+      WRITE (*,*) 'BETAPOINTLIST: TOTAL POINTS ', (100*SUM(MIN(maxbox_beta(1:nat),1)))/nat, SUM(maxbox_beta(1:nat))
       !
       goodestimate = maxval( maxbox_beta )
       !
@@ -1480,7 +1482,7 @@ MODULE realus
     if (ik .eq. current_phase_kpoint ) return
     !
     DO ia = 1, nat
-       mbia = maxbox_beta(ia)
+       mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
        !$omp parallel do default(shared) private(ir, arg)
        do ir =1, mbia
           arg = ( xk(1,ik) * xyz_beta(1,ir,ia) + &
@@ -1565,8 +1567,9 @@ MODULE realus
           !
           IF ( ityp(ia) == nt ) THEN
              !
+             mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
+             !
              ijkb0 = indv_ijkb0(ia)
-             mbia = maxbox_beta(ia)
              !$omp parallel default(shared) private(ih,ikb,ir,bcr,bci)
              !$omp do 
              DO ir =1, mbia
@@ -1670,8 +1673,9 @@ MODULE realus
           !
           IF ( ityp(ia) == nt ) THEN
              !
+             mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
+             !
              ijkb0 = indv_ijkb0(ia)
-             mbia = maxbox_beta(ia)
              !
              !$omp parallel default(shared) private(ih,ikb,ir,bcr,bci)
              !$omp do
@@ -1723,7 +1727,7 @@ MODULE realus
       USE ions_base,              ONLY : nat, nsp, ityp
       USE uspp_param,             ONLY : nh
       USE lsda_mod,               ONLY : current_spin
-      USE uspp,                   ONLY : qq_at
+      USE uspp,                   ONLY : qq_at, indv_ijkb0
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : dffts
       !
@@ -1731,7 +1735,7 @@ MODULE realus
       !
       INTEGER, INTENT(in) :: ibnd, last
       !
-      INTEGER :: ih, jh, ikb, jkb, nt, ia, ir, mbia
+      INTEGER :: ih, jh, jkb, nt, ia, ir, mbia
       REAL(DP) :: fac
       REAL(DP), ALLOCATABLE, DIMENSION(:) :: w1, w2
       !
@@ -1744,15 +1748,14 @@ MODULE realus
       !
       fac = sqrt(omega)
       !
-      ikb = 0
-      !
       DO nt = 1, nsp
          !
          DO ia = 1, nat
             !
             IF ( ityp(ia) == nt ) THEN
                !
-               mbia = maxbox_beta(ia)
+               mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
+               !
                !print *, "mbia=",mbia
                ALLOCATE( w1(nh(nt)),  w2(nh(nt)) )
                w1 = 0.D0
@@ -1760,7 +1763,7 @@ MODULE realus
                !
                DO ih = 1, nh(nt)
                   DO jh = 1, nh(nt)
-                     jkb = ikb + jh
+                     jkb = indv_ijkb0(ia) + jh
                      w1(ih) = w1(ih) + qq_at(ih,jh,ia) * becp%r(jkb, ibnd)
                      IF ( ibnd+1 <= last ) w2(ih) = w2(ih) + qq_at(ih,jh,ia) * becp%r(jkb, ibnd+1)
                   ENDDO
@@ -1768,15 +1771,19 @@ MODULE realus
                !
                w1 = w1 * fac
                w2 = w2 * fac
-               ikb = ikb + nh(nt)
                !
+               !$omp parallel
                DO ih = 1, nh(nt)
                   !
+                  !$omp do
                   DO ir = 1, mbia
-                     psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + betasave(ir,ih,ia)*cmplx( w1(ih), w2(ih) ,kind=DP)
+                     psic( box_beta(ir,ia) ) = psic( box_beta(ir,ia) ) + &
+                                               betasave(ir,ih,ia)*cmplx( w1(ih), w2(ih) ,kind=DP)
                   ENDDO
+                  !$omp end do
                   !
                ENDDO
+               !$omp end parallel
                !
                DEALLOCATE( w1, w2 )
                !
@@ -1809,7 +1816,7 @@ MODULE realus
       USE ions_base,              ONLY : nat, nsp, ityp
       USE uspp_param,             ONLY : nh
       USE lsda_mod,               ONLY : current_spin
-      USE uspp,                   ONLY : qq_at
+      USE uspp,                   ONLY : qq_at, indv_ijkb0
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : dffts
       !
@@ -1817,7 +1824,7 @@ MODULE realus
       !
       INTEGER, INTENT(in) :: ibnd, last
       !
-      INTEGER :: ih, jh, ikb, jkb, nt, ia, ir, mbia
+      INTEGER :: ih, jh, jkb, nt, ia, ir, mbia
       REAL(DP) :: fac
       COMPLEX(DP) , ALLOCATABLE :: w1(:)
       !
@@ -1833,38 +1840,40 @@ MODULE realus
       !
       fac = sqrt(omega)
       !
-      ikb = 0
-      !
       DO nt = 1, nsp
          !
          DO ia = 1, nat
             !
             IF ( ityp(ia) == nt ) THEN
                !
-               mbia = maxbox_beta(ia)
-
+               mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
+               !
                ALLOCATE( w1(nh(nt)) )
                w1 = 0.D0
                !
                DO ih = 1, nh(nt)
                   DO jh = 1, nh(nt)
-                     jkb = ikb + jh
+                     jkb = indv_ijkb0(ia) + jh
                      w1(ih) = w1(ih) + qq_at(ih,jh,ia) * becp%k(jkb, ibnd)
                   ENDDO
                ENDDO
                !
                w1 = w1 * fac
-               ikb = ikb + nh(nt)
                !
+               !$omp parallel
                DO ih = 1, nh(nt)
                   !
+                  !$omp do
                   DO ir = 1, mbia
                      !
-                     psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + xkphase(ir,ia)*betasave(ir,ih,ia)*w1(ih)
+                     psic( box_beta(ir,ia) ) = psic( box_beta(ir,ia) ) + &
+                                               xkphase(ir,ia)*betasave(ir,ih,ia)*w1(ih)
                      !
                   ENDDO
+                  !$omp end do
                   !
                ENDDO
+               !$omp end parallel
                !
                DEALLOCATE( w1 )
                !
@@ -1908,7 +1917,7 @@ MODULE realus
   !
   INTEGER, INTENT(in) :: ibnd, last
   !
-  INTEGER :: ih, jh, ikb, jkb, nt, ia, ir, mbia
+  INTEGER :: ih, jh, jkb, nt, ia, ir, mbia
   REAL(DP) :: fac
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: w1, w2
   !
@@ -1928,10 +1937,10 @@ MODULE realus
         !
         IF ( ityp(ia) == nt ) THEN
            !
-           mbia = maxbox_beta(ia)
+           mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
+           !
            w1 = 0.D0
            w2 = 0.D0
-           !
            DO ih = 1, nh(nt)
               !
               DO jh = 1, nh(nt)
@@ -1939,8 +1948,7 @@ MODULE realus
                  jkb = indv_ijkb0(ia) + jh
                  !
                  w1(ih) = w1(ih) + deeq(ih,jh,ia,current_spin) * becp%r(jkb,ibnd)
-                 IF ( ibnd+1 <= last )  w2(ih) = w2(ih) + deeq(ih,jh,ia,current_spin)* &
-                      becp%r(jkb,ibnd+1)
+                 IF ( ibnd+1 <= last )  w2(ih) = w2(ih) + deeq(ih,jh,ia,current_spin) * becp%r(jkb,ibnd+1)
                  !
               ENDDO
               !
@@ -2027,7 +2035,7 @@ MODULE realus
         !
         IF ( ityp(ia) == nt ) THEN
            !
-           mbia = maxbox_beta(ia)
+           mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
 
            w1 = (0.d0, 0d0)
            !
@@ -2545,17 +2553,21 @@ MODULE realus
           !if ibnd==1 this is a new calculation, and tg_v should be distributed.
         ENDIF
         !
+        !$omp parallel do
         DO j = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
            tg_psic (j) = tg_psic (j) + tg_psic_temp (j) * tg_v(j)
         ENDDO
+        !$omp end parallel do
         !
         DEALLOCATE( tg_v )
      ELSE
         !   product with the potential v on the smooth grid
         !
+        !$omp parallel do
         DO j = 1, dffts%nnr
            psic (j) = psic (j) + psic_temp (j) * vrs(j,current_spin)
         ENDDO
+        !$omp end parallel do
      ENDIF
   CALL stop_clock( 'v_loc_psir' )
   END SUBROUTINE v_loc_psir
