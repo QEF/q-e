@@ -186,8 +186,8 @@ contains
       eta = 1.d0 ! ewald sum convergence parameter
       init_linear = "nothing" ! 'scratch' or 'restart'. If 'scratch', saves a restart file in project routine. If 'restart', it starts from the saved restart file, and then save again it.
       file_output = "current_hz"
-      ethr_small_step = 1.d-6
-      ethr_big_step = 1.d-4
+      ethr_small_step = 1.d-7
+      ethr_big_step = 1.d-3
       first_step = 0
       last_step = 0
       restart = .false.
