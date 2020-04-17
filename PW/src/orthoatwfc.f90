@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,14 +11,16 @@ SUBROUTINE orthoUwfc
   !-----------------------------------------------------------------------
   !
   ! This routine saves to buffer "iunhub" atomic wavefunctions having an
-  ! associated Hubbard U term, for DFT+U calculations. Atomic wavefunctions
+  ! associated Hubbard U term * S, for DFT+U(+V) calculations. Same for 
+  ! "iunhub2" but without S (this is then used to computed Hubbard forces 
+  ! and stresses). Atomic wavefunctions
   ! are orthogonalized if desired, depending upon the value of "U_projection"
   ! "swfcatom" must NOT be allocated on input.
   !
   USE kinds,      ONLY : DP
   USE buffers,    ONLY : get_buffer, save_buffer
   USE io_global,  ONLY : stdout
-  USE io_files,   ONLY : iunhub, nwordwfcU
+  USE io_files,   ONLY : iunhub, iunhub2, nwordwfcU
   USE ions_base,  ONLY : nat
   USE basis,      ONLY : natomwfc, swfcatom
   USE klist,      ONLY : nks, xk, ngk, igk_k
@@ -95,9 +97,17 @@ SUBROUTINE orthoUwfc
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
 
      IF (orthogonalize_wfc) &
-        CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
+        CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .TRUE. )
      !
      ! copy atomic wavefunctions with Hubbard U term only in wfcU
+     ! (this is then used to compute Hubbard forces and stresses)
+     ! save to unit iunhub2
+     !
+     CALL copy_U_wfc (wfcatom, noncolin)
+     CALL save_buffer (wfcU, nwordwfcU, iunhub2, ik)
+     !
+     ! copy S * atomic wavefunctions with Hubbard U term only in wfcU
+     ! (this is used during the self-consistent solution of Kohn-Sham equations)
      ! save to unit iunhub
      !
      CALL copy_U_wfc (swfcatom, noncolin)

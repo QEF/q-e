@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2013 Quantum ESPRESSO group
+! Copyright (C) 2002-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -67,7 +67,8 @@ MODULE io_files
   INTEGER :: iunwfc      = 10 ! unit with wavefunctions
   INTEGER :: iunoldwfc   = 11 ! unit with old wavefunctions
   INTEGER :: iunoldwfc2  = 12 ! as above at step -2
-  INTEGER :: iunhub      = 13 ! unit for saving Hubbard-U atomic wfcs 
+  INTEGER :: iunhub      = 13 ! unit for saving Hubbard-U atomic wfcs * S 
+  INTEGER :: iunhub2     = 17 ! unit for saving Hubbard-U atomic wfcs 
   INTEGER :: iunsat      = 14 ! unit for saving (orthogonal) atomic wfcs * S
   INTEGER :: iunmix      = 15 ! unit for saving mixing information
   INTEGER :: iunwfc_exx  = 16 ! unit with exx wavefunctions

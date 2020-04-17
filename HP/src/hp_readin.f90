@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -139,8 +139,8 @@ SUBROUTINE input_sanity()
   USE cellmd,           ONLY : lmovecell
   USE noncollin_module, ONLY : i_cons, noncolin
   USE mp_bands,         ONLY : nbgrp
-  USE ldaU,             ONLY : lda_plus_u, U_projection, lda_plus_u_kind, Hubbard_J0
-                               !is_hubbard_back
+  USE ldaU,             ONLY : lda_plus_u, U_projection, lda_plus_u_kind, Hubbard_J0, &
+                               is_hubbard_back, Hubbard_V
   !
   IMPLICIT NONE
   !
@@ -154,8 +154,13 @@ SUBROUTINE input_sanity()
   IF (compute_hp .AND. ANY(perturb_only_atom(:))) &
      CALL errore ('hp_readin', 'compute_hp and perturb_only_atom are not allowed to be true together', 1)
   !
-  !IF (ANY(is_hubbard_back(:))) &
-  !   CALL errore ('hp_readin', 'Calculation of Hubbard parameters with the background is not implemented', 1)
+  IF (ANY(is_hubbard_back(:))) &
+     CALL errore ('hp_readin', 'Calculation of Hubbard parameters with the background is not implemented', 1)
+  !
+  IF ( ANY(Hubbard_V(:,:,2).NE.0.d0) .OR. &
+       ANY(Hubbard_V(:,:,3).NE.0.d0) .OR. &
+       ANY(Hubbard_V(:,:,4).NE.0.d0) ) &
+     CALL errore ('hp_readin', 'The HP code does not support DFT+U+V with the background', 1)
   !
   IF (ANY(Hubbard_J0(:).NE.0.d0)) &
      CALL errore ('hp_readin', 'Hubbard_J0 /= 0 is not allowed.', 1)
@@ -186,8 +191,8 @@ SUBROUTINE input_sanity()
   IF (.NOT.lda_plus_u) CALL errore('hp_readin',&
      & 'The HP code can be used only when lda_plus_u=.true.',1)
   !
-  IF (lda_plus_u_kind/=0) CALL errore("hp_readin", &
-     & ' The HP code supports only lda_plus_u_kind=0',1)
+  IF (lda_plus_u_kind.EQ.1) CALL errore("hp_readin", &
+     & ' The HP code does not support lda_plus_u_kind=1',1)
   !
   IF (U_projection.NE."atomic" .AND. U_projection.NE."ortho-atomic") &
      CALL errore("hp_readin", &

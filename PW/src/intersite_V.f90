@@ -21,16 +21,15 @@ SUBROUTINE alloc_neighborhood()
   USE control_flags,   ONLY : dfpt_hub
   USE ldaU,            ONLY : sc_size, num_uc, max_num_neighbors, neighood, &
                               at_sc, sc_at, Hubbard_V, is_hubbard, is_hubbard_back, &
-                              dist_s, ityp_s, deallocate_at_center_type
+                              dist_s, ityp_s, deallocate_at_center_type, eps_dist
   !
   IMPLICIT NONE 
   !
   ! Local variables
   !
-  REAL(DP), ALLOCATABLE :: V0(:,:,:), tau_sc(:,:)
+  REAL(DP), ALLOCATABLE :: V(:,:,:), tau_sc(:,:)
   REAL(DP) :: daux, distm(7)
-  REAL(DP), PARAMETER :: eps1 = 1.d-20, & ! threshold for Hubbard_V
-                         eps2 = 1.d-4     ! threshold for comparison of inter-atomic distances
+  REAL(DP), PARAMETER :: eps1 = 1.d-20  ! threshold for Hubbard_V
   INTEGER :: i, j, k, l, ii, jj, nx, ny, nz, dimn, &
              viz, atom, nb1, nb2, isym, l1, l2, l3, na, nb
   !
@@ -42,16 +41,16 @@ SUBROUTINE alloc_neighborhood()
   ! Number of atoms in the supercell
   dimn = num_uc * nat       
   !
-  ALLOCATE (V0(nat,dimn,3))
+  ALLOCATE (V(nat,dimn,3))
   ALLOCATE (tau_sc(3,dimn))
   IF (.NOT.ALLOCATED(ityp_s))   ALLOCATE (ityp_s(dimn))
   IF (.NOT.ALLOCATED(dist_s))   ALLOCATE (dist_s(nat,dimn))
   !
 13 CONTINUE
   !
-  V0(:,:,:) = 0.d0
+  V(:,:,:) = 0.d0
   !
-  ! Build V0 from Hubbard_V (input plus equivalent neighborhood)
+  ! Build V from Hubbard_V (input plus equivalent neighborhood)
   !
   DO na = 1, nat
      DO nb = 1, dimn
@@ -59,7 +58,7 @@ SUBROUTINE alloc_neighborhood()
             ABS(Hubbard_V(na,nb,2)) /= 0.0_dp .OR. &
             ABS(Hubbard_V(na,nb,3)) /= 0.0_dp ) THEN
             !
-            V0(na,nb,1:3) = Hubbard_V(na,nb,1:3)
+            V(na,nb,1:3) = Hubbard_V(na,nb,1:3)
             ! 
         ENDIF
      ENDDO
@@ -121,21 +120,21 @@ SUBROUTINE alloc_neighborhood()
      ! 
      DO nb = 1, dimn
         !
-        IF (ABS(V0(na,nb,1)) /= 0.0_dp .OR. &
-            ABS(V0(na,nb,2)) /= 0.0_dp .OR. &
-            ABS(V0(na,nb,3)) /= 0.0_dp ) THEN
+        IF (ABS(V(na,nb,1)) /= 0.0_dp .OR. &
+            ABS(V(na,nb,2)) /= 0.0_dp .OR. &
+            ABS(V(na,nb,3)) /= 0.0_dp ) THEN
             !
-            IF (ABS(V0(na,nb,1)) /= 0.0_dp) THEN
+            IF (ABS(V(na,nb,1)) /= 0.0_dp) THEN
                is_hubbard(ityp(na))   = .TRUE.
                is_hubbard(ityp_s(nb)) = .TRUE.
             ENDIF
             !
-            IF (ABS(V0(na,nb,2)) /= 0.0_dp) THEN
+            IF (ABS(V(na,nb,2)) /= 0.0_dp) THEN
                is_hubbard(ityp(na))        = .TRUE.
                is_hubbard_back(ityp_s(nb)) = .TRUE.
             ENDIF
             !
-            IF (ABS(V0(na,nb,3)) /= 0.0_dp) THEN
+            IF (ABS(V(na,nb,3)) /= 0.0_dp) THEN
                is_hubbard_back(ityp(na))   = .TRUE.
                is_hubbard_back(ityp_s(nb)) = .TRUE.
             ENDIF
@@ -195,19 +194,19 @@ SUBROUTINE alloc_neighborhood()
   ! Find the missing Hubbard_V(i,j,2) i.e. standard-background interactions. 
   ! This loop is needed only when the background is included.
   !
-  IF ( ANY(V0(:,:,2).GE.eps1) ) THEN 
+  IF ( ANY(V(:,:,2).GE.eps1) ) THEN 
      !
      DO i = 1, nat
         DO j = 1, dimn
            DO l = 1, nat
               DO k = 1, dimn
                  !
-                 IF ( ityp_s(k).EQ.ityp_s(j)               .AND. &
-                      ityp(l).EQ.ityp(i)                   .AND. &
-                      ABS(dist_s(l,k)-dist_s(i,j)).LE.eps2 .AND. &
-                      ABS(V0(l,k,2)).GE.eps1 )             THEN 
+                 IF ( ityp_s(k).EQ.ityp_s(j)                   .AND. &
+                      ityp(l).EQ.ityp(i)                       .AND. &
+                      ABS(dist_s(l,k)-dist_s(i,j)).LE.eps_dist .AND. &
+                      ABS(V(l,k,2)).GE.eps1 )                  THEN 
                       !
-                      IF (Hubbard_V(i,j,2).EQ.0.d0) Hubbard_V(i,j,2) = V0(l,k,2)
+                      IF (Hubbard_V(i,j,2).EQ.0.d0) Hubbard_V(i,j,2) = V(l,k,2)
                       GO TO 22
                       !
                  ENDIF
@@ -223,12 +222,12 @@ SUBROUTINE alloc_neighborhood()
            DO l = 1, nat
               DO k = 1, dimn
                  !
-                 IF ( ityp_s(k).EQ.ityp(i)                  .AND. &
-                      ityp(l).EQ.ityp_s(j)                  .AND. &
-                      ABS(dist_s(l,k)-dist_s(i,j)).LE.eps2  .AND. &
-                      ABS(V0(l,k,2)).GE.eps1 )              THEN 
+                 IF ( ityp_s(k).EQ.ityp(i)                      .AND. &
+                      ityp(l).EQ.ityp_s(j)                      .AND. &
+                      ABS(dist_s(l,k)-dist_s(i,j)).LE.eps_dist  .AND. &
+                      ABS(V(l,k,2)).GE.eps1 )                   THEN 
                       !
-                      IF (Hubbard_V(i,j,4).EQ.0.d0) Hubbard_V(i,j,4) = V0(l,k,2)
+                      IF (Hubbard_V(i,j,4).EQ.0.d0) Hubbard_V(i,j,4) = V(l,k,2)
                       GO TO 23
                       !
                  ENDIF
@@ -247,22 +246,22 @@ SUBROUTINE alloc_neighborhood()
         DO l = 1, nat
            DO k = 1, dimn
               !
-              IF ( ityp_s(k).EQ.ityp_s(j)                .AND. &
-                   ityp(l).EQ.ityp(i)                    .AND. &
-                   ABS(dist_s(l,k)-dist_s(i,j)).LE.eps2  .AND. &
-                  ( ABS(V0(l,k,1)).GE.eps1 ) )           THEN
+              IF ( ityp_s(k).EQ.ityp_s(j)                    .AND. &
+                   ityp(l).EQ.ityp(i)                        .AND. &
+                   ABS(dist_s(l,k)-dist_s(i,j)).LE.eps_dist  .AND. &
+                  ( ABS(V(l,k,1)).GE.eps1 ) )                THEN
                   !
-                  IF (Hubbard_V(i,j,1).EQ.0.d0) Hubbard_V(i,j,1) = V0(l,k,1)
+                  IF (Hubbard_V(i,j,1).EQ.0.d0) Hubbard_V(i,j,1) = V(l,k,1)
                   GO TO 32
                   !
               ENDIF
               !
-              IF ( ityp_s(k).EQ.ityp(i)                   .AND. &
-                   ityp(l).EQ.ityp_s(j)                   .AND. &
-                   ABS(dist_s(l,k)-dist_s(i,j)).LE.eps2   .AND. &
-                  ( ABS(V0(l,k,1)).GE.eps1 ) )            THEN
+              IF ( ityp_s(k).EQ.ityp(i)                      .AND. &
+                   ityp(l).EQ.ityp_s(j)                      .AND. &
+                   ABS(dist_s(l,k)-dist_s(i,j)).LE.eps_dist  .AND. &
+                  ( ABS(V(l,k,1)).GE.eps1 ) )                THEN
                   !
-                  IF (Hubbard_V(i,j,1).EQ.0.d0) Hubbard_V(i,j,1) = V0(l,k,1)
+                  IF (Hubbard_V(i,j,1).EQ.0.d0) Hubbard_V(i,j,1) = V(l,k,1)
                   GO TO 32
                   !
               ENDIF
@@ -276,28 +275,28 @@ SUBROUTINE alloc_neighborhood()
   ! Find the missing Hubbard_V(i,j,3) i.e. background-background interactions.
   ! This loop is needed only when the background is included.
   !
-  IF ( ANY(V0(:,:,3).GE.eps1) ) THEN 
+  IF ( ANY(V(:,:,3).GE.eps1) ) THEN 
      DO i = 1, nat
         DO j = 1, dimn
            DO l = 1, nat
               DO k = 1, dimn
                  !
-                 IF ( ityp_s(k).EQ.ityp_s(j)                .AND. &
-                      ityp(l).EQ.ityp(i)                    .AND. &
-                      ABS(dist_s(l,k)-dist_s(i,j)).LE.eps2  .AND. &
-                     ( ABS(V0(l,k,3)).GE.eps1 ) )           THEN
+                 IF ( ityp_s(k).EQ.ityp_s(j)                   .AND. &
+                      ityp(l).EQ.ityp(i)                       .AND. &
+                      ABS(dist_s(l,k)-dist_s(i,j)).LE.eps_dist .AND. &
+                     ( ABS(V(l,k,3)).GE.eps1 ) )               THEN
                      !
-                     IF (Hubbard_V(i,j,3).EQ.0.d0) Hubbard_V(i,j,3) = V0(l,k,3)
+                     IF (Hubbard_V(i,j,3).EQ.0.d0) Hubbard_V(i,j,3) = V(l,k,3)
                      GO TO 33
                      !
                  ENDIF
                  !
-                 IF ( ityp_s(k).EQ.ityp(i)                   .AND. &
-                      ityp(l).EQ.ityp_s(j)                   .AND. &
-                      ABS(dist_s(l,k)-dist_s(i,j)).LE.eps2   .AND. &
-                     ( ABS(V0(l,k,3)).GE.eps1) ) THEN
+                 IF ( ityp_s(k).EQ.ityp(i)                     .AND. &
+                      ityp(l).EQ.ityp_s(j)                     .AND. &
+                      ABS(dist_s(l,k)-dist_s(i,j)).LE.eps_dist .AND. &
+                     ( ABS(V(l,k,3)).GE.eps1) )                THEN
                      !
-                     IF (Hubbard_V(i,j,3).EQ.0.d0) Hubbard_V(i,j,3) = V0(l,k,3)
+                     IF (Hubbard_V(i,j,3).EQ.0.d0) Hubbard_V(i,j,3) = V(l,k,3)
                      GO TO 33
                      !
                  ENDIF
@@ -380,7 +379,7 @@ SUBROUTINE alloc_neighborhood()
                 !
                 CALL symonpair(i,j,isym,ii,jj)
                 !
-                IF (ABS(dist_s(i,j)-dist_s(ii,jj)).gt.eps2) &
+                IF (ABS(dist_s(i,j)-dist_s(ii,jj)).GT.eps_dist) &
                    WRITE(stdout,'(2x,"WARNING: probably a larger sc_size is needed")')
                 !
                 IF ( ABS(Hubbard_V(ii,jj,1)).LT.eps1 .AND. &
@@ -448,7 +447,7 @@ SUBROUTINE alloc_neighborhood()
      GO TO 13
   ENDIF
   !
-  DEALLOCATE (V0)
+  DEALLOCATE (V)
   DEALLOCATE (tau_sc)
   !
   CALL stop_clock( 'alloc_neigh' )
@@ -771,4 +770,84 @@ SUBROUTINE alloc_atom_pos()
   RETURN
   !
 END SUBROUTINE alloc_atom_pos
+!-------------------------------------------------------------------------
+
+!-------------------------------------------------------------------------
+SUBROUTINE write_V
+  !-----------------------------------------------------------------------
+  !
+  ! This routine writes Hubbard_V to file
+  !
+  USE io_files,       ONLY : seqopn
+  USE io_global,      ONLY : ionode
+  USE ldaU,           ONLY : Hubbard_V
+  !
+  IMPLICIT NONE
+  INTEGER :: i, j, k, iunit
+  LOGICAL :: exst
+  INTEGER, EXTERNAL :: find_free_unit
+  !
+  iunit = find_free_unit()
+  ! 
+  IF (ionode) THEN
+     CALL seqopn( iunit, 'HubbardV.txt', 'FORMATTED', exst )
+     DO i = 1, SIZE(Hubbard_V,1)
+        DO j = 1, SIZE(Hubbard_V,2)
+           DO k = 1, SIZE(Hubbard_V,3)
+              IF (Hubbard_V(i,j,k) > 1.d-20) WRITE(iunit,*) i, j, k, Hubbard_V(i,j,k)
+           ENDDO
+        ENDDO
+     ENDDO
+     CLOSE(UNIT=iunit, STATUS='KEEP')
+  ENDIF
+  !
+  RETURN
+  ! 
+END SUBROUTINE write_V
+!-------------------------------------------------------------------------
+
+!-------------------------------------------------------------------------
+SUBROUTINE read_V
+  !-----------------------------------------------------------------------
+  !
+  ! This routine reads Hubbard_V from file
+  !
+  USE kinds,          ONLY : DP
+  USE io_files,       ONLY : seqopn
+  USE io_global,      ONLY : ionode, ionode_id
+  USE ldaU,           ONLY : Hubbard_V
+  USE mp_images,      ONLY : intra_image_comm
+  USE mp,             ONLY : mp_bcast
+  !
+  IMPLICIT NONE
+  REAL(DP) :: V
+  INTEGER :: i, j, k, iunit, ierr
+  LOGICAL :: exst
+  INTEGER, EXTERNAL :: find_free_unit
+  !
+  iunit = find_free_unit()
+  ! 
+  Hubbard_V(:,:,:) = 0.0d0
+  !
+  IF (ionode) THEN
+     CALL seqopn( iunit, 'HubbardV.txt', 'FORMATTED', exst )
+     IF (exst) THEN 
+10      READ(iunit,*,END=11,IOSTAT=ierr) i, j, k, V
+        IF ( ierr/=0 ) THEN
+           CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+           CALL errore('read_V', 'Reading Hubbard_V', 1)
+        ENDIF
+        Hubbard_V(i,j,k) = V
+        GO TO 10
+     ELSE
+        CALL errore('read_V','File HubbardV.txt was not found...',1)
+     ENDIF
+11   CLOSE( UNIT=iunit, STATUS='KEEP' )
+  ENDIF
+  ! Broadcast Hubbard_V across all processors
+  CALL mp_bcast( Hubbard_V, ionode_id, intra_image_comm )
+  !
+  RETURN
+  ! 
+END SUBROUTINE read_V
 !-------------------------------------------------------------------------

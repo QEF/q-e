@@ -19,7 +19,6 @@ MODULE ldaU
   !
   SAVE
   !
-  INTEGER, PARAMETER :: nspinx=2
   COMPLEX(DP), ALLOCATABLE :: wfcU(:,:)
   !! atomic wfcs with U term
   COMPLEX(DP), ALLOCATABLE :: d_spin_ldau(:,:,:)
@@ -43,9 +42,9 @@ MODULE ldaU
   !! the Hubbard alpha (used to calculate U on background states)
   REAL(DP) :: Hubbard_beta(ntypx)
   !! the Hubbard beta (used to calculate J0)
-  REAL(DP) :: starting_ns(lqmax,nspinx,ntypx)
+  REAL(DP) :: starting_ns(lqmax,2,ntypx)
   !! starting ns
-  REAL(DP) :: starting_ns_back(lqmax,nspinx,ntypx)
+  REAL(DP) :: starting_ns_back(lqmax,2,ntypx)
   !! starting ns on background states
   INTEGER :: nwfcU
   !! total no. of atomic wavefunctions having U term
@@ -170,6 +169,8 @@ MODULE ldaU
   !! Phase factor (it is 1 if we have only Hubbard U)
   INTEGER, ALLOCATABLE :: sc_at(:,:,:,:)
   !! Matrix with ranges [1:nat], gives the corresponding atom in the supercell ordering 
+  REAL(DP), PARAMETER :: eps_dist = 5.d-4     
+  !! Threshold for comparing inter-atomic distances
   !
   TYPE position
      INTEGER :: at, n(3)
