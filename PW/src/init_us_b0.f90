@@ -24,7 +24,7 @@ SUBROUTINE init_us_b0
   IMPLICIT NONE
   !
   LOGICAL, PARAMETER :: tprint=.FALSE.     ! Whether the beta_l(r) and its relatives are printed or not.
-  INTEGER, PARAMETER :: nn=20              ! Smoothing parameter, order of the polynomial in the
+  INTEGER, PARAMETER :: nn=14              ! Smoothing parameter, order of the polynomial in the
                                            ! inverse gaussian approximant.
   REAL(DP), PARAMETER:: a=1.125d0*(2*nn+1) ! Smoothing parameter, exponent of the gaussian
                                            ! decaying factor, chosen so that the flex is at x=2/3.
