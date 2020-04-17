@@ -315,6 +315,9 @@ subroutine routine_zero()
                      do b = 1, 3
                         if (a > b) then
                            call I_uno_value(value, u_pbc, a, b, 1)
+                           !if (ionode) print *,'value, a, b iatom, jatom='
+                           !if (ionode) print *,value, a, b ,iatom, jatom
+                           !value=100.0
                            i_current_e(a) = i_current_e(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
  &(ion_vel(b, jatom) + ion_vel(b, iatom))*value
                            i_current_e(b) = i_current_e(b) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
@@ -326,6 +329,9 @@ subroutine routine_zero()
                         end if
                         if (a == b) then
                            call I_uno_value(value, u_pbc, a, b, 1)
+                           !if (ionode) print *,'value, a, b iatom, jatom='
+                           !if (ionode) print *,value, a, b ,iatom, jatom
+                           !value=100.0
                            i_current_d(a) = i_current_d(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
   &(ion_vel(b, jatom) + ion_vel(b, iatom))*value
                            i_current(a) = i_current(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&

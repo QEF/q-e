@@ -54,7 +54,7 @@ cpv-traj-test.x : $(TEST_CPV_TRAJ_OBJ)
 all_currents.x : all_currents.o lib_all_currents.a $(ALLCURRENTSOBJS) $(PWOBJS) $(QEMODS)   $(TEST_CPV_TRAJ_OBJ)
 	$(LD) $(LDFLAGS) -o $@ \
 		all_currents.o lib_all_currents.a  $(TEST_CPV_TRAJ_OBJ) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(QEMODS) $(LIBOBJS)
-	- ( cd ../../bin ; ln -fs ../emergy_current/src/$@ . )
+	- ( cd ../../bin ; ln -fs ../energy_current/src/$@ . )
 
  
 tldeps:
