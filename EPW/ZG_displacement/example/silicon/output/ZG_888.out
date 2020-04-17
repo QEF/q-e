@@ -1,0 +1,102 @@
+
+     Program MATDYN v.6.5 starts on 17Apr2020 at 14:46:23 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+
+
+    Total vibrational energy:    4.57473297  Ry
+
+            Potential energy:    2.28736648  Ry
+
+              Kinetic energy:    2.28736648  Ry
+
+ Note that the total energy output from a DFT-ZG calculation accounts for half the total vibrational energy
+
+ Points in sets AB, A, B :         260           8         252
+
+ Sign matrix
+ -----------
+ 1 1 1 1 1 1
+-1-1-1-1-1 1
+ 1 1 1 1-1 1
+-1-1-1-1 1 1
+ 1 1 1-1 1 1
+-1-1-1 1-1 1
+ 1 1 1-1-1 1
+-1-1-1 1 1 1
+ 1 1-1 1 1 1
+-1-1 1-1-1 1
+ 1 1-1 1-1 1
+-1-1 1-1 1 1
+ 1 1-1-1 1 1
+-1-1 1 1-1 1
+ 1 1-1-1-1 1
+-1-1 1 1 1 1
+ 1-1 1 1 1 1
+-1 1-1-1-1 1
+ 1-1 1 1-1 1
+-1 1-1-1 1 1
+ 1-1 1-1 1 1
+-1 1-1 1-1 1
+ 1-1 1-1-1 1
+-1 1-1 1 1 1
+ 1-1-1 1 1 1
+-1 1 1-1-1 1
+ 1-1-1 1-1 1
+-1 1 1-1 1 1
+ 1-1-1-1 1 1
+-1 1 1 1-1 1
+ 1-1-1-1-1 1
+-1 1 1 1 1 1
+-1 1 1 1 1 1
+ 1-1-1-1-1 1
+-1 1 1 1-1 1
+ 1-1-1-1 1 1
+-1 1 1-1 1 1
+ 1-1-1 1-1 1
+-1 1 1-1-1 1
+ 1-1-1 1 1 1
+-1 1-1 1 1 1
+ 1-1 1-1-1 1
+-1 1-1 1-1 1
+ 1-1 1-1 1 1
+-1 1-1-1 1 1
+ 1-1 1 1-1 1
+-1 1-1-1-1 1
+ 1-1 1 1 1 1
+-1-1 1 1 1 1
+ 1 1-1-1-1 1
+-1-1 1 1-1 1
+ 1 1-1-1 1 1
+-1-1 1-1 1 1
+ 1 1-1 1-1 1
+-1-1 1-1-1 1
+ 1 1-1 1 1 1
+-1-1-1 1 1 1
+ 1 1 1-1-1 1
+-1-1-1 1-1 1
+ 1 1 1-1 1 1
+-1-1-1-1 1 1
+ 1 1 1 1-1 1
+-1-1-1-1-1 1
+ 1 1 1 1 1 1
+ Total error:   2.7062291033367575E-002
+
+     MATDYN       :      1.68s CPU      1.11s WALL
+
+
+   This run was terminated on:  14:46:24  17Apr2020            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
