@@ -1,0 +1,121 @@
+
+     Program MATDYN v.6.5 starts on 17Apr2020 at 14:42:44 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+
+
+    Total vibrational energy:    0.57122691  Ry
+
+            Potential energy:    0.28561345  Ry
+
+              Kinetic energy:    0.28561345  Ry
+
+ Note that the total energy output from a DFT-ZG calculation accounts for half the total vibrational energy
+
+ Points in sets AB, A, B :          36           8          28
+
+ Sign matrix
+ -----------
+ 1 1 1 1 1 1
+-1-1-1-1-1 1
+ 1 1 1 1-1 1
+-1-1-1-1 1 1
+ 1 1 1-1 1 1
+-1-1-1 1-1 1
+ 1 1 1-1-1 1
+-1-1-1 1 1 1
+ 1 1-1 1 1 1
+-1-1 1-1-1 1
+ 1 1-1 1-1 1
+-1-1 1-1 1 1
+ 1 1-1-1 1 1
+-1-1 1 1-1 1
+ 1 1-1-1-1 1
+-1-1 1 1 1 1
+ 1-1 1 1 1 1
+-1 1-1-1-1 1
+ 1-1 1 1-1 1
+-1 1-1-1 1 1
+ 1-1 1-1 1 1
+-1 1-1 1-1 1
+ 1-1 1-1-1 1
+-1 1-1 1 1 1
+ 1-1-1 1 1 1
+-1 1 1-1-1 1
+ 1-1-1 1-1 1
+-1 1 1-1 1 1
+ 1-1-1-1 1 1
+-1 1 1 1-1 1
+ 1-1-1-1-1 1
+-1 1 1 1 1 1
+-1 1 1 1 1 1
+ 1-1-1-1-1 1
+-1 1 1 1-1 1
+ 1-1-1-1 1 1
+-1 1 1-1 1 1
+ 1-1-1 1-1 1
+-1 1 1-1-1 1
+ 1-1-1 1 1 1
+-1 1-1 1 1 1
+ 1-1 1-1-1 1
+-1 1-1 1-1 1
+ 1-1 1-1 1 1
+-1 1-1-1 1 1
+ 1-1 1 1-1 1
+-1 1-1-1-1 1
+ 1-1 1 1 1 1
+-1-1 1 1 1 1
+ 1 1-1-1-1 1
+-1-1 1 1-1 1
+ 1 1-1-1 1 1
+-1-1 1-1 1 1
+ 1 1-1 1-1 1
+-1-1 1-1-1 1
+ 1 1-1 1 1 1
+-1-1-1 1 1 1
+ 1 1 1-1-1 1
+-1-1-1 1-1 1
+ 1 1 1-1 1 1
+-1-1-1-1 1 1
+ 1 1 1 1-1 1
+-1-1-1-1-1 1
+ 1 1 1 1 1 1
+ Total error:  0.10018617615784596     
+ Total error:   4.8052180228975734E-002
+ Total error:  0.12642652186357525     
+ Total error:  0.11206673191206251     
+ Total error:  0.10539691512889833     
+ Total error:  0.14780157080535339     
+ Total error:  0.18466278567054592     
+ Total error:   7.1701073707248056E-002
+ Total error:   9.7445529124017105E-002
+ Total error:  0.19564961581955451     
+ Total error:  0.13389929224987923     
+ Total error:  0.10205743125645644     
+ Total error:  0.20567575705633154     
+ Total error:  0.10826898697723525     
+ Total error:  0.14927516144581901     
+ Total error:   8.2295818965750056E-002
+ Total error:  0.19706368098255042     
+ Total error:  0.11160510704654371     
+ Total error:   6.9330025211406535E-002
+ Total error:   3.3139789898234316E-002
+
+     MATDYN       :      0.42s CPU      0.26s WALL
+
+
+   This run was terminated on:  14:42:44  17Apr2020            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
