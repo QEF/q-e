@@ -1291,6 +1291,24 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
+        var ensemble_energies -type LOGICAL {
+            default { .false. }
+            info {
+                If ensemble_energies = .true., an ensemble of xc energies
+                is calculated non-selfconsistently for perturbed
+                exchange-enhancement factors and LDA vs. PBE correlation
+                ratios after each converged electronic ground state
+                calculation.
+
+                Ensemble energies can be analyzed with the 'bee' utility
+                included with libbeef.
+
+                Requires linking against libbeef.
+                input_dft must be set to a BEEF-type functional
+                (e.g. input_dft = 'BEEF-vdW')
+            }
+        }
+
         var edir -type INTEGER {
             info {
                 The direction of the electric field or dipole correction is

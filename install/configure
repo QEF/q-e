@@ -552,6 +552,66 @@ as_tr_cpp="eval sed 'y%*$as_cr_letters%P$as_cr_LETTERS%;s%[^_$as_cr_alnum]%_%g'"
 # Sed expression to map a string onto a valid variable name.
 as_tr_sh="eval sed 'y%*+%pp%;s%[^_$as_cr_alnum]%_%g'"
 
+as_awk_strverscmp='
+  # Use only awk features that work with 7th edition Unix awk (1978).
+  # My, what an old awk you have, Mr. Solaris!
+  END {
+    while (length(v1) && length(v2)) {
+      # Set d1 to be the next thing to compare from v1, and likewise for d2.
+      # Normally this is a single character, but if v1 and v2 contain digits,
+      # compare them as integers and fractions as strverscmp does.
+      if (v1 ~ /^[0-9]/ && v2 ~ /^[0-9]/) {
+	# Split v1 and v2 into their leading digit string components d1 and d2,
+	# and advance v1 and v2 past the leading digit strings.
+	for (len1 = 1; substr(v1, len1 + 1) ~ /^[0-9]/; len1++) continue
+	for (len2 = 1; substr(v2, len2 + 1) ~ /^[0-9]/; len2++) continue
+	d1 = substr(v1, 1, len1); v1 = substr(v1, len1 + 1)
+	d2 = substr(v2, 1, len2); v2 = substr(v2, len2 + 1)
+	if (d1 ~ /^0/) {
+	  if (d2 ~ /^0/) {
+	    # Compare two fractions.
+	    while (d1 ~ /^0/ && d2 ~ /^0/) {
+	      d1 = substr(d1, 2); len1--
+	      d2 = substr(d2, 2); len2--
+	    }
+	    if (len1 != len2 && ! (len1 && len2 && substr(d1, 1, 1) == substr(d2, 1, 1))) {
+	      # The two components differ in length, and the common prefix
+	      # contains only leading zeros.  Consider the longer to be less.
+	      d1 = -len1
+	      d2 = -len2
+	    } else {
+	      # Otherwise, compare as strings.
+	      d1 = "x" d1
+	      d2 = "x" d2
+	    }
+	  } else {
+	    # A fraction is less than an integer.
+	    exit 1
+	  }
+	} else {
+	  if (d2 ~ /^0/) {
+	    # An integer is greater than a fraction.
+	    exit 2
+	  } else {
+	    # Compare two integers.
+	    d1 += 0
+	    d2 += 0
+	  }
+	}
+      } else {
+	# The normal case, without worrying about digits.
+	d1 = substr(v1, 1, 1); v1 = substr(v1, 2)
+	d2 = substr(v2, 1, 1); v2 = substr(v2, 2)
+      }
+      if (d1 < d2) exit 1
+      if (d1 > d2) exit 2
+    }
+    # Beware Solaris /usr/xgp4/bin/awk (at least through Solaris 10),
+    # which mishandles some comparisons of empty strings to integers.
+    if (length(v2)) exit 1
+    if (length(v1)) exit 2
+  }
+'
 
 test -n "$DJDIR" || exec 7<&0 </dev/null
 exec 6>&1
@@ -593,6 +653,7 @@ wget
 ranlib
 hdf5_line
 hdf5_libs
+beef_libs
 elpa_line
 elpa_libs
 scalapack_line
@@ -715,6 +776,8 @@ with_cuda_runtime
 with_libxc
 with_libxc_prefix
 with_libxc_include
+enable_libbeef
+with_libeef_prefix
 with_scalapack
 with_elpa_include
 with_elpa_lib
@@ -1370,6 +1433,7 @@ Optional Features:
   --enable-pedantic       compile Fortran with pedantic flags (default: no)
   --enable-shared         use shared libraries if available (default: yes)
   --enable-signals        enable signal trapping (default: no)
+  --enable-libbeef        link against library for BEEF xc support (default: yes - if found)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1384,6 +1448,7 @@ Optional Packages:
   --with-libxc-include=DIR
                           Directory where libxc Fortran headers were
                           installed.
+  --with-libbeef-prefix    path to directory containing libbeef.a (default: none)
   --with-scalapack        (yes|no|intel) Use scalapack if available. Set to
                           "intel" to use Intel MPI and blacs (default: use
                           openMPI)
@@ -4957,8 +5022,25 @@ else
       		    mkl_omp="mkl_gnu_thread"
 		    ;;
 	       pgf* )
-      		    mkl_lib="mkl_intel_lp64"
-      		    mkl_omp="mkl_intel_thread"
+                    # Detect (again) PGI version
+                    pgf_version=`$mpif90 -V 2>&1 | sed '/^$/d' | grep "^pgf" | cut -d ' ' -f2`
+                    # From version 19.1, the new llvm backend requires linking to mkl_intel_thread
+                    ompimp=""
+                    as_arg_v1=$pgf_version
+as_arg_v2=19.1
+awk "$as_awk_strverscmp" v1="$as_arg_v1" v2="$as_arg_v2" /dev/null
+case $? in #(
+  1) :
+     ompimp="pgi"  ;; #(
+  0) :
+     ompimp="intel"  ;; #(
+  2) :
+     ompimp="intel"   ;; #(
+  *) :
+     ;;
+esac
+      		    mkl_lib="mkl_${ompimp}_lp64"
+      		    mkl_omp="mkl_${ompimp}_thread"
       		    add_mkl_flag="-pgf90libs"
 	       ;;
 	    esac
@@ -7857,7 +7939,86 @@ fi
   fi
 
 
+# Setting BEEF...
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking BEEF" >&5
+$as_echo_n "checking BEEF... " >&6; }
+
+beef_libs=$BEEF_LIBS
+
+# Check whether --enable-libbeef was given.
+if test "${enable_libbeef+set}" = set; then :
+  enableval=$enable_libbeef; if   test "$withval" = "yes" ; then
+      beef_enabled=1
+   else
+      beef_enabled=0
+   fi
+else
+  beef_enabled=1
+fi
+
+# Check whether --with-libbeef-prefix was given.
+if test "${with_libbeef_prefix+set}" = set; then :
+  withval=$with_libbeef_prefix; libbeef_prefix="$withval"
+
+else
+  libbeef_prefix=""
+fi
+ 
+
+
+if test "$beef_enabled" -ne 0
+then
+    BEEF_LDFLAGS_SAVE="$LDFLAGS"
+    LDFLAGS="$beef_libs $LDFLAGS"
+    if ! test "$libbeef_prefix"x = "x"
+    then
+        echo testing prefix $libbeef_prefix
+        beefprefix=1
+        LDFLAGS="$LDFLAGS -L$libbeef_prefix/lib -L$libbeef_prefix"
+    else
+        beefprefix=0
+    fi
+    LIBS="$LIBS -lbeef"
+    cat > conftest.$ac_ext <<_ACEOF
+
+      SUBROUTINE ddot
+      END SUBROUTINE
+      SUBROUTINE dgemv
+      END SUBROUTINE
+      PROGRAM main
+      CALL beefx
+      END
+
+_ACEOF
+if ac_fn_f77_try_link "$LINENO"; then :
+  try_dflags="$try_dflags -Duse_beef" ; usebeef=1
+  echo link succeeded
+else
+  usebeef=0
+  echo link failed
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+    echo usebeef $usebeef
+    if test "$usebeef" -ne 0
+    then
+        if test "$beefprefix" -ne 0
+        then
+            beef_libs="$beef_libs -L$libbeef_prefix/lib -L$libbeef_prefix -lbeef"
+        else
+            if test "$beef_libs"x = "x"
+            then
+                beef_libs=-lbeef
+            fi
+        fi
+        echo "-lbeef"
+        echo setting BEEF_LIBS...
+    else
+        echo no
+    fi
+    LDFLAGS="$BEEF_LDFLAGS_SAVE"
+fi
 
 
 

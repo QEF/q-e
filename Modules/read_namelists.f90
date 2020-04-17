@@ -1716,7 +1716,7 @@ MODULE read_namelists_module
        !
        !
        SELECT CASE( TRIM( calculation ) )
-          CASE ('scf')
+          CASE ('scf', 'ensemble')
              IF( prog == 'CP' ) THEN
                  electron_dynamics = 'damp'
                  ion_dynamics      = 'none'

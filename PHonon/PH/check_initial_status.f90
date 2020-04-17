@@ -82,7 +82,8 @@ SUBROUTINE check_initial_status(auxdyn)
                               ext_recover, ext_restart, tmp_dir_phq, lqdir, &
                               start_irr, last_irr, newgrid, qplot, &
                               done_zeu, done_start_zstar, done_epsil, &
-                              done_zue, with_ext_images, always_run
+                              done_zue, with_ext_images, always_run, trans, &
+                              u_from_file
   USE save_ph,         ONLY : tmp_dir_save
   USE units_ph,        ONLY : iudyn
   USE ph_restart,      ONLY : check_directory_phsave, check_available_bands,&
@@ -100,6 +101,7 @@ SUBROUTINE check_initial_status(auxdyn)
   ! YAMBO <
   !
   USE acfdtest,        ONLY : acfdt_is_active, acfdt_num_der
+  USE dvscf_interpolate, ONLY : ldvscf_interpolate
   !
   IMPLICIT NONE
   !
@@ -152,7 +154,11 @@ SUBROUTINE check_initial_status(auxdyn)
      !
      !   Initialize the representations and write them on file.
      !
-     CALL init_representations()
+     IF (trans .OR. ldvscf_interpolate) THEN
+        CALL init_representations()
+     ELSE
+        u_from_file = .TRUE.
+     ENDIF
      !
      IF ((start_irr==0).AND.(last_irr==0)) THEN
         where_rec='init_rep..'

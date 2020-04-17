@@ -34,6 +34,14 @@ build:ph:
 #    - make run-tests-ph-serial
 #    - rm -r /tmp/save
 
+build:pgi:
+  tags: [docker]
+  image: nvcr.io/hpc/pgi-compilers:ce
+  script:
+    - ./configure FC=pgf90 F90=pgf90 MPIF90=mpif90 --enable-openmp
+    - apt-get install --reinstall make
+    - make pw cp ph
+
 #build:centos:
 #  image: centos:latest
 #  script:
