@@ -259,5 +259,43 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
             }
 	}
 
+        var num_neigh   -type INTEGER {
+            default { 6 }
+            info {
+                Number of nearest neighbors of every Hubbard atom which 
+                will be considered when writting Hubbard V parameters to 
+                the file parameters.out, which can be used in the 
+                subsequent DFT+U+V calculation. This keyword is used only 
+                when lda_plus_u_kind = 2 (post-processing stage).
+            }
+        }
+
+        var lmin   -type INTEGER {
+            default { 2 }
+            info {
+                Minimum value of the orbital quantum number of the Hubbard 
+                atoms starting from which (and up to the maximum l in the 
+                system) Hubbard V will be written to the file parameters.out.
+                lmin refers to the orbital quantum number of the atom 
+                corresponding to the first site-index in Hubbard_V(:,:,:). 
+                This keyword is used only when lda_plus_u_kind = 2 and only 
+                in the post-processing stage. Example: lmin=1 corresponds to 
+                writing to file V between e.g. oxygen (with p states) and its 
+                neighbors, and including V between transition metals (with d 
+                states) and their neighbors. Instead, when lmin=2 only the 
+                latter will be written to parameters.out.
+            }
+        }
+
+        var rmax   -type REAL {
+            default { 100.D0 }
+            info {
+                Maximum distance (in Bohr) between two atoms to search 
+                neighbors (used only at the postprocessing step when 
+                lda_plus_u_kind = 2). This keyword is useful when there 
+                are e.g. defects in the system.
+            }
+        }
+
 }  
 }

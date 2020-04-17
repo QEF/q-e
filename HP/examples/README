@@ -49,8 +49,8 @@ To run the examples, you should follow this procedure:
 -----------------------------------------------------------------------
 
 Note : In the PWscf input in the ATOMIC_POSITIONS card you must first
-       specify atoms which have Hubbard_U \= 0, and then all other atoms
-       which have Hubbard_U = 0. Otherwise the HP code will stop.
+       specify atoms which have Hubbard_U \= 0 (or Hubbard_V \=0), and 
+       then all other atoms. Otherwise the HP code will stop.
 
 
                    LIST AND CONTENT OF THE EXAMPLES
@@ -120,3 +120,8 @@ example09:
     from the GGA ground state and using a non-uniform q-mesh.
     This example uses PAW pseudopotentials and the GGA-PBE functional.
 
+example10:
+    This example shows how to calculate the on-site U and inter-site V 
+    Hubbard parameters in LiCoO2 (non-magnetic insulator) starting from 
+    the GGA ground state. This example uses ultrasoft pseudopotentials 
+    and the GGA-PBEsol functional.

@@ -249,7 +249,7 @@ CONTAINS
     nwordwfc = nbnd*npwx*npol
     CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst )
 
-    ! ... Needed for LDA+U
+    ! ... Needed for DFT+U(+V)
     ! ... iunhub contains the (orthogonalized) atomic wfcs * S
     !
     nwordwfcU = npwx*nwfcU*npol

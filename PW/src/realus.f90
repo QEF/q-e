@@ -1481,12 +1481,14 @@ MODULE realus
     !
     DO ia = 1, nat
        mbia = maxbox_beta(ia)
+       !$omp parallel do default(shared) private(ir, arg)
        do ir =1, mbia
           arg = ( xk(1,ik) * xyz_beta(1,ir,ia) + &
                   xk(2,ik) * xyz_beta(2,ir,ia) + &
                   xk(3,ik) * xyz_beta(3,ir,ia) ) * tpiba
           xkphase( ir, ia ) = CMPLX(COS(arg),-SIN(arg),KIND=dp)
        end do
+       !$omp end parallel do
     end do
     !
     current_phase_kpoint = ik
@@ -1634,6 +1636,7 @@ MODULE realus
     USE fft_base,              ONLY : dffts
     USE mp_bands,              ONLY : intra_bgrp_comm
     USE mp,                    ONLY : mp_sum
+    USE uspp,                  ONLY : indv_ijkb0
     !
     IMPLICIT NONE
     !
@@ -1643,10 +1646,9 @@ MODULE realus
     REAL(DP), ALLOCATABLE, DIMENSION(:) :: wr, wi
     REAL(DP) :: bcr, bci
     !COMPLEX(DP), allocatable, dimension(:) :: bt
-    integer :: ir
+    integer :: ir, maxbox, ijkb0
     !
     REAL(DP), EXTERNAL :: ddot
-    !
     !
     CALL start_clock( 'calbec_rs' )
     !
@@ -1656,37 +1658,44 @@ MODULE realus
 
     fac = sqrt(omega) / (dffts%nr1*dffts%nr2*dffts%nr3)
     !
-    becp%k(:,ibnd)=0.d0
-       ikb = 0
-       !
-       DO nt = 1, nsp
-          !
-           DO ia = 1, nat
-             !
-             IF ( ityp(ia) == nt ) THEN
-                !
-                mbia = maxbox_beta(ia)
+    maxbox = MAXVAL(maxbox_beta(1:nat))
+    ALLOCATE( wr(maxbox), wi(maxbox) )
 
-                ALLOCATE( wr(mbia), wi(mbia) )
-                DO ih = 1, nh(nt)
-                   ! nh is the number of beta functions, or something similar
-                   !
-                   ikb = ikb + 1
-                   wr(:) = dble ( psic( box_beta(1:mbia,ia) ) * CONJG(xkphase(1:mbia,ia)))
-                   wi(:) = aimag( psic( box_beta(1:mbia,ia) ) * CONJG(xkphase(1:mbia,ia)))
-                   bcr  = ddot( mbia, betasave(:,ih,ia), 1, wr(:) , 1 )
-                   bci  = ddot( mbia, betasave(:,ih,ia), 1, wi(:) , 1 )
-                   becp%k(ikb,ibnd)   = fac * cmplx( bcr, bci,kind=DP)
-                   !
-                ENDDO
-                DEALLOCATE( wr, wi )
-                !
-             ENDIF
+    becp%k(:,ibnd)=0.d0
+    !
+    DO nt = 1, nsp
+       !
+       DO ia = 1, nat
+          !
+          IF ( ityp(ia) == nt ) THEN
              !
-          ENDDO
+             mbia = maxbox_beta(ia)
+             ijkb0 = indv_ijkb0(ia)
+             !
+             DO ih = 1, nh(nt)
+                ! nh is the number of beta functions, or something similar
+                !
+                ikb = ijkb0 + ih
+                !
+                !$omp parallel do default(shared) private(ir)
+                do ir =1, mbia
+                   wr(ir) = dble ( psic( box_beta(ir,ia) ) * CONJG(xkphase(ir,ia)))
+                   wi(ir) = aimag( psic( box_beta(ir,ia) ) * CONJG(xkphase(ir,ia)))
+                end do
+                !$omp end parallel do
+                bcr  = ddot( mbia, betasave(:,ih,ia), 1, wr(:) , 1 )
+                bci  = ddot( mbia, betasave(:,ih,ia), 1, wi(:) , 1 )
+                becp%k(ikb,ibnd)   = fac * cmplx( bcr, bci,kind=DP)
+                !
+             ENDDO
+             !
+          ENDIF
           !
        ENDDO
        !
+    ENDDO
+    !
+    DEALLOCATE( wr, wi )
     CALL mp_sum( becp%k( :, ibnd ), intra_bgrp_comm )
     CALL stop_clock( 'calbec_rs' )
     !
@@ -2179,15 +2188,17 @@ MODULE realus
   !
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE fwfft_orbital_gamma( orbital, ibnd, last, conserved )
+  SUBROUTINE fwfft_orbital_gamma( orbital, ibnd, last, conserved, add_to_orbital )
     !--------------------------------------------------------------------------
-    !! This driver subroutine -back- transforms the given orbital using FFT with
-    !! the already existent data in \(\text{psic}\).
+    !! This driver subroutine -back- transforms the given contribution using FFT from
+    !! the already existent data in \(\text{psic}\) and return it in (or optionally
+    !! add it to) orbital.
     !
-    !! WARNING 1: this subroutine does not reset the orbital, use carefully!  
+    !! WARNING 1: this subroutine does not reset the orbital, use carefully!
     !! WARNING 2: in order to be fast, no checks on the supplied data are performed!
     !
-    !! OBM 241008.
+    !! OBM 241008,
+    !! SdG 130420.
     !
     USE wavefunctions, &
                        ONLY : psic
@@ -2206,18 +2217,24 @@ MODULE realus
     INTEGER, INTENT(IN) :: last
     !! index of the last band that you want to transform (usually the
     !! total number of bands but can be different in band parallelization)
-    COMPLEX(DP),INTENT(out) :: orbital(:,:)
-    !! the array of orbitals to be transformed
+    COMPLEX(DP),INTENT(inout) :: orbital(:,:)
+    !! the array of orbitals to be returned (or updated)
     LOGICAL, OPTIONAL :: conserved
     !! if this flag is true, the orbital is stored in temporary memory
+    LOGICAL, OPTIONAL :: add_to_orbital
+    !! if this flag is true, the result is added to (rather than stored into) orbital
     !
     ! Internal temporary variables
     COMPLEX(DP) :: fp, fm
     INTEGER :: j, idx, ioff, right_inc, ntgrp
+    LOGICAL :: add_to_orbital_
 
     !Task groups
     !print *, "->fourier space"
     CALL start_clock( 'fwfft_orbital' )
+    !
+    add_to_orbital_=.FALSE. ; IF( present(add_to_orbital)) add_to_orbital_ = add_to_orbital
+    !
     !New task_groups versions
     IF( dffts%has_task_groups ) THEN
        !
@@ -2235,12 +2252,21 @@ MODULE realus
                       tg_psic( dffts%nlm(igk_k(j,1)) + ioff ) ) * 0.5d0
                  fm= ( tg_psic( dffts%nl(igk_k(j,1)) + ioff ) -  &
                       tg_psic( dffts%nlm(igk_k(j,1)) + ioff ) ) * 0.5d0
-                 orbital (j, ibnd+idx-1) =  cmplx( dble(fp), aimag(fm),kind=DP)
-                 orbital (j, ibnd+idx  ) =  cmplx(aimag(fp),- dble(fm),kind=DP)
+                 IF( add_to_orbital_ ) THEN
+                    orbital (j, ibnd+idx-1) = orbital (j, ibnd+idx-1) + cmplx( dble(fp), aimag(fm),kind=DP)
+                    orbital (j, ibnd+idx  ) = orbital (j, ibnd+idx  ) + cmplx(aimag(fp),- dble(fm),kind=DP)
+                 ELSE
+                    orbital (j, ibnd+idx-1) = cmplx( dble(fp), aimag(fm),kind=DP)
+                    orbital (j, ibnd+idx  ) = cmplx(aimag(fp),- dble(fm),kind=DP)
+                 END IF
               ENDDO
            ELSEIF( idx + ibnd - 1 == last ) THEN
               DO j = 1, ngk(1)
-                 orbital (j, ibnd+idx-1) =  tg_psic( dffts%nl(igk_k(j,1)) + ioff )
+                 IF( add_to_orbital_ ) THEN
+                    orbital (j, ibnd+idx-1) = orbital (j, ibnd+idx-1) + tg_psic( dffts%nl(igk_k(j,1)) + ioff )
+                 ELSE
+                    orbital (j, ibnd+idx-1) = tg_psic( dffts%nl(igk_k(j,1)) + ioff )
+                 END IF
               ENDDO
            ENDIF
            !
@@ -2265,12 +2291,21 @@ MODULE realus
            DO j = 1, ngk(1)
               fp = (psic (dffts%nl(igk_k(j,1))) + psic (dffts%nlm(igk_k(j,1))))*0.5d0
               fm = (psic (dffts%nl(igk_k(j,1))) - psic (dffts%nlm(igk_k(j,1))))*0.5d0
-              orbital( j, ibnd)   = cmplx( dble(fp), aimag(fm),kind=DP)
-              orbital( j, ibnd+1) = cmplx(aimag(fp),- dble(fm),kind=DP)
+              IF( add_to_orbital_ ) THEN
+                 orbital( j, ibnd)   = orbital( j, ibnd)   + cmplx( dble(fp), aimag(fm),kind=DP)
+                 orbital( j, ibnd+1) = orbital( j, ibnd+1) + cmplx(aimag(fp),- dble(fm),kind=DP)
+              ELSE
+                 orbital( j, ibnd)   = cmplx( dble(fp), aimag(fm),kind=DP)
+                 orbital( j, ibnd+1) = cmplx(aimag(fp),- dble(fm),kind=DP)
+              ENDIF
            ENDDO
         ELSE
            DO j = 1, ngk(1)
-              orbital(j, ibnd)   =  psic (dffts%nl(igk_k(j,1)))
+              IF( add_to_orbital_ ) THEN
+                 orbital(j, ibnd)   =  orbital(j, ibnd) +  psic (dffts%nl(igk_k(j,1)))
+              ELSE
+                 orbital(j, ibnd)   =  psic (dffts%nl(igk_k(j,1)))
+              ENDIF
            ENDDO
         ENDIF
         IF (present(conserved)) THEN
@@ -2372,14 +2407,17 @@ MODULE realus
   END SUBROUTINE invfft_orbital_k
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE fwfft_orbital_k( orbital, ibnd, last, ik, conserved )
+  SUBROUTINE fwfft_orbital_k( orbital, ibnd, last, ik, conserved, add_to_orbital )
     !-------------------------------------------------------------------------
-    !! This subroutine transforms the given orbital using fft and puts the result
-    !! in psic.
+    !! This driver subroutine -back- transforms the given contribution using FFT from
+    !! the already existent data in \(\text{psic}\) and return it in (or optionally
+    !! add it to) orbital.
     !
-    !! WARNING: in order to be fast, no checks on the supplied data are performed!
+    !! WARNING 1: this subroutine does not reset the orbital, use carefully!
+    !! WARNING 2: in order to be fast, no checks on the supplied data are performed!
     !
-    !! OBM 110908
+    !! OBM 241008,
+    !! SdG 130420.
     !
     USE wavefunctions,            ONLY : psic
     USE klist,                    ONLY : ngk, igk_k
@@ -2398,18 +2436,23 @@ MODULE realus
     INTEGER, INTENT(in) :: last
     !! index of the last band that you want to transform (usually the
     !! total number of bands but can be different in band parallelization)
-    COMPLEX(DP),INTENT(out) :: orbital(:,:)
-    !! the array of orbitals to be transformed
+    COMPLEX(DP),INTENT(inout) :: orbital(:,:)
+    !! the array of orbitals to be returned (or updated)
     INTEGER, OPTIONAL :: ik
     !! the index of the desired kpoint
     LOGICAL, OPTIONAL :: conserved
     !! if this flag is true, the orbital is stored in temporary memory
+    LOGICAL, OPTIONAL :: add_to_orbital
+    !! if this flag is true, the result is added to (rather than stored into) orbital
     !
     ! Internal variables
-    INTEGER :: ioff, idx, ik_ , right_inc, ntgrp
+    INTEGER :: ioff, idx, ik_ , right_inc, ntgrp, ig
+    LOGICAL :: add_to_orbital_
     !
     CALL start_clock( 'fwfft_orbital' )
-    
+    !
+    add_to_orbital_=.FALSE. ; IF( present(add_to_orbital)) add_to_orbital_ = add_to_orbital
+    !
     ! current_k  variable  must contain the index of the desired kpoint
     ik_ = current_k ; if (present(ik)) ik_ = ik
 
@@ -2424,7 +2467,11 @@ MODULE realus
        DO idx = 1, ntgrp
           !
           IF( idx + ibnd - 1 <= last ) THEN
-             orbital (:, ibnd+idx-1) = tg_psic( dffts%nl(igk_k(:,ik_)) + ioff )
+             IF( add_to_orbital_ ) THEN
+                orbital (:, ibnd+idx-1) = orbital (:, ibnd+idx-1) + tg_psic( dffts%nl(igk_k(:,ik_)) + ioff )
+             ELSE
+                orbital (:, ibnd+idx-1) = tg_psic( dffts%nl(igk_k(:,ik_)) + ioff )
+             END IF
 
           ENDIF
           !
@@ -2441,7 +2488,19 @@ MODULE realus
        !
        CALL fwfft ('Wave', psic, dffts)
        !
-       orbital(1:ngk(ik_),ibnd) = psic(dffts%nl(igk_k(1:ngk(ik_),ik_)))
+       IF( add_to_orbital_ ) THEN
+          !$omp parallel do default(shared) private(ig)
+          do ig=1,ngk(ik_)
+             orbital(ig,ibnd) = orbital(ig,ibnd) + psic(dffts%nl(igk_k(ig,ik_)))
+          end do
+          !$omp end parallel do
+       ELSE
+          !$omp parallel do default(shared) private(ig)
+          do ig=1,ngk(ik_)
+             orbital(ig,ibnd) = psic(dffts%nl(igk_k(ig,ik_)))
+          end do
+          !$omp end parallel do
+       END IF
        !
        IF (present(conserved)) THEN
           IF (conserved .eqv. .true.) THEN

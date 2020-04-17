@@ -666,7 +666,7 @@ SUBROUTINE v_hubbard( ns, v_hub, eth )
   USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, Hubbard_U, &
                                    Hubbard_alpha, Hubbard_J0, Hubbard_beta
   USE lsda_mod,             ONLY : nspin
-  USE control_flags,        ONLY : iverbosity
+  USE control_flags,        ONLY : iverbosity, dfpt_hub
   USE io_global,            ONLY : stdout
   !
   IMPLICIT NONE
@@ -740,7 +740,7 @@ SUBROUTINE v_hubbard( ns, v_hub, eth )
   !
   ! Hubbard energy
   !
-  IF ( iverbosity > 0 ) THEN
+  IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
      WRITE(stdout,*) '--- in v_hubbard ---'
      WRITE(stdout,'("Hubbard energy ",f9.4)') eth
      WRITE(stdout,*) '-------'
@@ -765,7 +765,7 @@ SUBROUTINE v_hubbard_b (ns, v_hub, eth)
                                    ldim_back, ldmx_b, Hubbard_alpha_back, &
                                    is_hubbard_back
   USE lsda_mod,             ONLY : nspin
-  USE control_flags,        ONLY : iverbosity
+  USE control_flags,        ONLY : iverbosity, dfpt_hub
   USE io_global,            ONLY : stdout
 
   IMPLICIT NONE
@@ -821,7 +821,7 @@ SUBROUTINE v_hubbard_b (ns, v_hub, eth)
   !
   ! Hubbard energy
   !
-  IF ( iverbosity > 0 ) THEN
+  IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
      WRITE(stdout,*) '--- in v_hubbard_b ---'
      WRITE(stdout,'(''Hubbard_back energy '',f9.4)') eth
      WRITE(stdout,*) '-------'
@@ -1176,7 +1176,7 @@ SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
                                 ldim_u, ldmx_tot, max_num_neighbors, at_sc, neighood, &
                                 Hubbard_V, Hubbard_alpha_back, is_hubbard, is_hubbard_back
   USE lsda_mod,          ONLY : nspin
-  USE control_flags,     ONLY : iverbosity
+  USE control_flags,     ONLY : iverbosity, dfpt_hub
   USE io_global,         ONLY : stdout
   !
   IMPLICIT NONE
@@ -1330,7 +1330,7 @@ SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
   !
   ! Hubbard energy
   !
-  IF ( iverbosity > 0 ) THEN
+  IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
      WRITE(stdout,*) '--- in v_hubbard_extended ---'
      WRITE(stdout,'("Hubbard energy ",f9.4)') eth
      WRITE(stdout,*) '-----------------------------'

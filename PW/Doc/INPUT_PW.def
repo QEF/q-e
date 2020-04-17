@@ -1176,13 +1176,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         var lda_plus_u_kind -type INTEGER { 
             default { 0 }
             info {
-                Specifies the type of DFT+U calculation:
+                Specifies the type of calculation:
                 
-                   0   simplified version of Cococcioni and de Gironcoli, 
+                   0   DFT+U simplified version of Cococcioni and de Gironcoli, 
                        PRB 71, 035105 (2005), using @ref Hubbard_U
                 
-                   1   rotationally invariant scheme of Liechtenstein et al., 
+                   1   DFT+U rotationally invariant scheme of Liechtenstein et al., 
                        using @ref Hubbard_U and @ref Hubbard_J
+                   
+                   2   DFT+U+V simplified version of Campo Jr and Cococcioni,
+                       J. Phys.: Condens. Matter 22, 055602 (2010), using @ref Hubbard_V
             }
         }
         dimension Hubbard_U -start 1 -end ntyp -type REAL {      
@@ -1196,6 +1199,28 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             info {
                 Hubbard_J0(i): J0 parameter (eV) for species i, DFT+U+J calculation,
                 see PRB 84, 115108 (2011) for details.
+            }
+        }
+        multidimension  Hubbard_V  -start 1,1,1 -end natx,27*natx,4 -indexes na,nb,k -type REAL {
+            default { 0.D0 for all elements}
+            info {
+                Hubbard_V(na,nb,k): V parameters (eV) between atoms na and nb,
+                used in DFT+U+V calculations (only for @ref lda_plus_u_kind=2).
+                The atomic indices na and nb correspond to the atomic positions
+                in the @ref ATOMIC_POSITIONS card (this is not the same as Hubbard_U
+                which is specified for @ref ATOMIC_SPECIES). 
+                Wnen na=nb, then Hubbard_V(na,na,k) is the on-site Hubbard_U
+                for the atom na.
+                natx=50 (if needed it can be changed in /Modules/parameters.f90)
+                The index k controls the "interaction type" (k=1 is used for the
+                simplest DFT+U+V calculation):
+                k=1 - interaction between standard orbitals (both on na and nb); 
+                k=2 - interaction between standard (on na) and background (on nb) orbitals;
+                k=3 - interaction between background (on na) and standard (on nb) orbitals;
+                k=4 - interaction between background orbitlas (both on na and nb).
+                Standard orbitals correspond to the main Hubbard channel (e.g. d electrons
+                in transition metals) and background orbitals correspond to the secondary
+                Hubbard channel (e.g. p electrons in transition metals).
             }
         } 
         dimension Hubbard_alpha -start 1 -end ntyp -type REAL { 
@@ -1288,6 +1313,20 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     NB: forces and stress currently implemented only for the
                     'atomic' and 'pseudo' choice.
                 }
+            }
+        }
+
+        var Hubbard_parameters -type CHARACTER {
+            default { 'input' }
+            info {
+               'input': read the @ref Hubbard_U (or @ref Hubbard_V) parameters from
+                        the PW input file
+
+               'file' : read the @ref Hubbard_V parameters from the file "parameters.in"
+                        which can be generated after the linear-response calculation
+                        (using the HP code). This option has a higher priority over 
+                        the Hubbard_V if they are specified in the input. This option 
+                        can be used only when @ref lda_plus_u_kind = 2.
             }
         }
 

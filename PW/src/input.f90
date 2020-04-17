@@ -339,10 +339,9 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   CHARACTER(LEN=256):: dft_
   !
-  INTEGER  :: ia, nt, inlc, tempunit, na, nb
+  INTEGER  :: ia, nt, inlc, tempunit, i, j
   LOGICAL  :: exst, parallelfs, domag
-  REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp, &
-              interaction
+  REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp, V
   CHARACTER(len=256) :: tempfile
   INTEGER, EXTERNAL  :: find_free_unit
   !
@@ -1229,8 +1228,8 @@ SUBROUTINE iosys()
         !
         OPEN( UNIT = tempunit, FILE = tempfile, FORM = 'formatted', STATUS = 'unknown' )
         READ(tempunit,*)
-10      READ(tempunit,*,END=11) na, nb, interaction
-        Hubbard_V(na,nb,1) = interaction
+10      READ(tempunit,*,END=11) i, j, V
+        Hubbard_V(i,j,1) = V
         GO TO 10
 11      CLOSE( UNIT = tempunit, STATUS = 'KEEP' )
         !

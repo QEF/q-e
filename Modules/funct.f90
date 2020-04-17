@@ -552,7 +552,7 @@ CONTAINS
              CASE('-VDW')
                 beeftype = 0
              CASE default
-                READ(dftout(5:), '(i)', IOSTAT=i) beeftype
+                READ(dftout(5:), '(i1)', IOSTAT=i) beeftype
                 if (i.ne.0) call errore('set_dft_from_name', &
                 & 'unknown BEEF type', 1)
           END SELECT
