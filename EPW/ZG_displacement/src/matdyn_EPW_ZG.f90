@@ -6,6 +6,7 @@
 !
 !
 Module ifconstants
+! The Code to generate the ZG displacement
   !
   ! All variables read from file that need dynamical allocation
   !
@@ -23,7 +24,7 @@ Module ifconstants
 end Module ifconstants
 !
 !---------------------------------------------------------------------
-PROGRAM matdyn_ZG
+PROGRAM matdyn_ZG_EPW
   !-----------------------------------------------------------------------
   !  This program generates the ZG_displacement for a list of
   !  q vectors that are comensurate to the supercell size to be employed for 
@@ -102,6 +103,7 @@ PROGRAM matdyn_ZG
   USE rap_point_group,  ONLY : code_group
   USE bz_form,    ONLY : transform_label_coord
   USE parser,     ONLY : read_line
+  USE rigid,      ONLY : dyndiag, nonanal, nonanal_ifc
 
   USE ifconstants, ONLY : frc, atm, zeu, tau_blk, ityp_blk, m_loc
   !
@@ -215,7 +217,7 @@ PROGRAM matdyn_ZG
      !
      IF (ionode) READ (5, input,IOSTAT=ios)
      CALL mp_bcast(ios, ionode_id, world_comm) 
-     CALL errore('matdyn_ZG', 'reading input namelist', ABS(ios))
+     CALL errore('matdyn_ZG_EPW', 'reading input namelist', ABS(ios))
      CALL mp_bcast(asr, ionode_id, world_comm)
      CALL mp_bcast(flfrc, ionode_id, world_comm)
      CALL mp_bcast(amass, ionode_id, world_comm)
@@ -238,7 +240,7 @@ PROGRAM matdyn_ZG
      ! 
      ! To check that use specify supercell dimensions
      IF (ZG_conf) THEN 
-        IF ((dimx < 1)  .OR. (dimy < 1) .OR. (dimz < 1)) CALL errore('matdyn_ZG', 'reading supercell size', dimx)
+        IF ((dimx < 1)  .OR. (dimy < 1) .OR. (dimz < 1)) CALL errore('matdyn_ZG_EPW', 'reading supercell size', dimx)
      ENDIF
      ! mz_e      
      !
@@ -273,7 +275,7 @@ PROGRAM matdyn_ZG
      ! set up (super)cell
      !
      IF (ntyp < 0) THEN
-        call errore ('matdyn_ZG','wrong ntyp ', ABS(ntyp))
+        call errore ('matdyn_ZG_EPW','wrong ntyp ', ABS(ntyp))
      ELSE IF (ntyp == 0) THEN
         ntyp =ntyp_blk
      ENDIF
@@ -282,14 +284,14 @@ PROGRAM matdyn_ZG
      !
      DO it= 1, ntyp
         IF (amass(it) < 0.d0) THEN
-           CALL errore ('matdyn_ZG','wrong mass in the namelist', it)
+           CALL errore ('matdyn_ZG_EPW','wrong mass in the namelist', it)
         ELSE IF (amass(it) == 0.d0) THEN
            IF (it.LE.ntyp_blk) THEN
               WRITE (stdout,'(a, i3, a, a)') ' mass for atomic type ', it,      &
                    &                     ' not given; uses mass from file ',flfrc
               amass(it) = amass_blk(it)
            ELSE
-              CALL errore ('matdyn_ZG','missing mass in the namelist', it)
+              CALL errore ('matdyn_ZG_EPW','missing mass in the namelist', it)
            ENDIF
         ENDIF
      ENDDO
@@ -298,7 +300,7 @@ PROGRAM matdyn_ZG
      !
      IF (SUM(ABS(at(:,:))) == 0.d0) THEN
         IF (l1.LE.0 .OR. l2.LE.0 .OR. l3.LE.0) CALL                    &
-             &             errore ('matdyn_ZG',' wrong l1,l2 or l3', 1)
+             &             errore ('matdyn_ZG_EPW',' wrong l1,l2 or l3', 1)
         at(:, 1) = at_blk(:, 1) *DBLE(l1)
         at(:, 2) = at_blk(:, 2) *DBLE(l2)
         at(:, 3) = at_blk(:, 3) *DBLE(l3)
@@ -310,7 +312,7 @@ PROGRAM matdyn_ZG
      !
      nsc = NINT(omega/omega_blk)
      IF (ABS(omega/omega_blk-nsc) > eps) &
-          CALL errore ('matdyn_ZG', 'volume ratio not integer', 1)
+          CALL errore ('matdyn_ZG_EPW', 'volume ratio not integer', 1)
      !
      ! read/generate atomic positions of the (super)cell
      !
@@ -361,8 +363,8 @@ PROGRAM matdyn_ZG
            npk_label= 0
            DO n = 1, nq
               CALL read_line( input_line, end_of_file = tend, error = terr )
-              IF (tend) CALL errore('matdyn_ZG','Missing lines', 1)
-              IF (terr) CALL errore('matdyn_ZG','Error reading q points', 1)
+              IF (tend) CALL errore('matdyn_ZG_EPW','Missing lines', 1)
+              IF (terr) CALL errore('matdyn_ZG_EPW','Error reading q points', 1)
               DO j = 1, 256   ! loop over all characters of input_line
                  IF ( (ICHAR(input_line(j:j)) < 58 .AND. &   ! a digit
                        ICHAR(input_line(j:j)) > 47)      &
@@ -396,7 +398,7 @@ PROGRAM matdyn_ZG
                          ICHAR(input_line(j+2:j+2)) ==32 ) nch=2
                     buffer =input_line(j+nch:)
                     READ(buffer,*, err =20, iostat=ios) nqb(n)
-20                  IF (ios /= 0) CALL errore('matdyn_ZG',&
+20                  IF (ios /= 0) CALL errore('matdyn_ZG_EPW',&
                                       'problem reading number of points', 1)
                     EXIT
                  ENDIF
@@ -495,7 +497,7 @@ PROGRAM matdyn_ZG
            IF (qh /= 0.d0) qhat(:) = qhat(:) / qh
            IF (qh /= 0.d0 .AND. .NOT. has_zstar) THEN
                 CALL infomsg  &
-                ('matdyn_ZG','Z* not found in file '//TRIM(flfrc)// &
+                ('matdyn_ZG_EPW','Z* not found in file '//TRIM(flfrc)// &
                           ', TO-LO splitting at q = 0 will be ABSent!')
            ELSE
               lo_to_split=.TRUE.
@@ -509,7 +511,7 @@ PROGRAM matdyn_ZG
        ! mz comments out !!!!!!!! if(iout_dyn.ne.0) call WRITE_dyn_on_file(q(1, n), dyn, nat, iout_dyn)
         
 
-        CALL dyndiag(nat, ntyp, amass, ityp, dyn,w2(1, n), z)
+        CALL dyndiag(nat, ntyp, amass, ityp, dyn, w2(1, n), z)
         ! mz_b fill a 3D matrix with all eigenvectors
         IF (ZG_conf) THEN
            z_nq_zg(:,:, n) = z(:,:)               
@@ -549,9 +551,9 @@ PROGRAM matdyn_ZG
      !
      !
      !mz_b
-     IF (ZG_conf) call ZG_configuration(nq, nat, ntyp, amass, ityp,q_nq_mz,w2, z_nq_zg, ios, & 
+     IF (ZG_conf) call ZG_configuration(nq, nat, ntyp, amass, ityp, q_nq_mz, w2, z_nq_zg, ios, & 
                                 dimx, dimy, dimz, nloops, error_thresh, synch,tau, alat, atm_zg, & 
-                                ntypx, at,q_in_cryst_coord,q_in_band_form, T, incl_qA)
+                                ntypx, at, q_in_cryst_coord, q_in_band_form, T, incl_qA)
      !mz_e
      ! 
      !
@@ -572,7 +574,7 @@ PROGRAM matdyn_ZG
   !
   STOP
   !
-END PROGRAM matdyn_ZG
+END PROGRAM matdyn_ZG_EPW
 !
 !-----------------------------------------------------------------------
 SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
@@ -821,6 +823,8 @@ SUBROUTINE setupmat (q, dyn, nat, at, bg,tau, itau_blk, nsc, alat, &
   !
   USE kinds,      ONLY : DP
   USE constants,  ONLY : tpi
+  USE cell_base,  ONLY : celldm
+  USE rigid,      ONLY : rgd_blk
   !
   IMPLICIT NONE
   !
@@ -841,6 +845,7 @@ SUBROUTINE setupmat (q, dyn, nat, at, bg,tau, itau_blk, nsc, alat, &
   COMPLEX(DP) :: cfac(nat)
   INTEGER :: i, j, k, na, nb, na_blk, nb_blk, iq
   REAL(DP) :: qp(3), qbid(3, nsc) ! automatic array
+  LOGICAL ::  loto_2d
   !
   !
   CALL q_gen(nsc,qbid, at_blk, bg_blk, at, bg)
@@ -856,7 +861,7 @@ SUBROUTINE setupmat (q, dyn, nat, at, bg,tau, itau_blk, nsc, alat, &
           &              nr1, nr2, nr3,frc, at_blk, bg_blk, rws, nrws,f_of_q)
       IF (has_zstar) &
            CALL rgd_blk(nr1, nr2, nr3, nat_blk, dyn_blk, qp,tau_blk,   &
-                        epsil, zeu, bg_blk, omega_blk,+ 1.d0)
+                        epsil, zeu, bg_blk, omega_blk, celldm(1), loto_2d, +1.d0)
      !
      DO na= 1, nat
         na_blk = itau_blk(na)
@@ -1997,7 +2002,7 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
 
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg
-  USE symm_base,  ONLY : s, sr, ftau, irt, nsym, nrot, t_rev, time_reversal,&
+  USE symm_base,  ONLY : s, sr, ft, irt, nsym, nrot, t_rev, time_reversal,&
                          sname, copy_sym, s_axis_to_cart
 
   IMPLICIT NONE
@@ -2017,7 +2022,7 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
   IF (.NOT.time_reversal) minus_q=.FALSE.
 
   sym(1:nsym) =.TRUE.
-  call smallg_q (xq, 0, at, bg, nsym, s, ftau, sym, minus_q)
+  call smallg_q (xq, 0, at, bg, nsym, s, ft, sym, minus_q)
   nsymq= copy_sym(nsym, sym )
   call s_axis_to_cart ()
   CALL set_giq (xq, s, nsymq, nsym, irotmq,minus_q,gi,gimq)
@@ -2026,7 +2031,7 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
 !  search the symmetries only IF there are no G such that Sq -> q+G
 !
   search_sym=.TRUE.
-  IF ( ANY ( ftau(:, 1:nsymq) /= 0 ) ) THEN
+   IF ( ANY ( ABS(ft(:,1:nsymq)) > 1.0d-8 ) ) THEN
      DO isym= 1, nsymq
         search_sym=( search_sym.and.(ABS(gi(1, isym))<1.d-8).and.  &
                                     (ABS(gi(2, isym))<1.d-8).and.  &
@@ -2041,7 +2046,7 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
      magnetic_sym=(nspin_mag==4)
      CALL prepare_sym_analysis(nsymq, sr,t_rev,magnetic_sym)
      sym (1:nsym) = .TRUE.
-     CALL sgam_ph_new (at, bg, nsym, s, irt, tau, rtau, nat)
+     CALL sgam_lr (at, bg, nsym, s, irt, tau, rtau, nat)
      CALL find_mode_sym_new (u, w2, tau, nat, nsymq, s, sr, irt, xq,    &
              rtau, amass, ntyp, ityp, 1, .FALSE., .FALSE., num_rap_mode, ierr)
 
@@ -2050,9 +2055,9 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
   END SUBROUTINE find_representations_mode_q
 
 !mz adds this routine
-SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp,q,w2, z_nq_zg, ios, & 
+SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, & 
                       dimx, dimy, dimz, nloops, error_thresh, synch,tau, alat, atm, &
-                      ntypx, at,q_in_cryst_coord,q_in_band_form, T, incl_qA) 
+                      ntypx, at, q_in_cryst_coord, q_in_band_form, T, incl_qA) 
 ! we start here with the WRITE_eigenvectors.f90 routine
   use kinds, only: dp
   use constants, only: amu_ry, ry_to_thz, ry_to_cmm1, H_PLANCK_SI, &  
@@ -2071,10 +2076,10 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp,q,w2, z_nq_zg, ios, &
   REAL(DP), intent(in)         :: q(3, nq), w2(3 * nat, nq), amass(ntyp), tau(3, nat)
   COMPLEX(DP), intent(in)      :: z_nq_zg(3 * nat, 3 * nat, nq)
   ! 
+  ! local
   CHARACTER(len=256)       :: filename
   CHARACTER(len=256)       :: pointer_etta, pointer_T
   !
-  ! local
   INTEGER ityp(nat)
   INTEGER                  :: nat3, na, nta, ipol, i, j, k, qp, ii, p, kk
   INTEGER                  :: nq_tot, pn, combs, combs_all, sum_zg
@@ -2085,12 +2090,15 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp,q,w2, z_nq_zg, ios, &
   INTEGER                  :: ctr, ctr2, ctrA, ctrB, ctrAB
   !
   REAL(DP)                 :: freq(3 * nat, nq), ph_w(3 * nat, nq), l_q(3 * nat, nq)
-  REAL(DP)                 :: q_A(3), q_B(3), p_q(3 * nat, nq), e_nq(3 * nat, nq) !, l_qAB(3*nat, nq) 
-  ! l_q is the amplitude \sigma at temperature T, e_nq --> to calculate total vibrational energy
+  REAL(DP)                 :: q_A(3), q_B(3), p_q(3 * nat, nq), e_nq(3 * nat, nq) 
+  ! l_q is the amplitude \sigma at temperature T, 
+  ! e_nq --> to calculate total vibrational energy
+  !  PE_nq --> Potential enrgy: 1/2 Mp \omega_\nu^2 x_\nu^2
   ! p_q is the momentum on the nuclei \hbar\2\l_\bq\nu \SQRT(n_{q\nu, T}+ 1/2)
+  ! 
   !  
   REAL(DP), PARAMETER      :: eps = 1.0d-6
-  REAL(DP)                 :: hbar, ang, u_rand, dotp
+  REAL(DP)                 :: hbar, ang, JOULE_TO_RY, u_rand, dotp, PE_nq, KE_nq
   ! ALLOCATE TABLES
   REAL(DP), ALLOCATABLE    :: equil_p(:,:,:),  T_fact(:,:), DW_fact(:,:), qA(:,:), qB(:,:), DWp_fact(:,:), Tp_fact(:,:) 
   ! for displacements
@@ -2124,6 +2132,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp,q,w2, z_nq_zg, ios, &
   !  
   ! constants to be used
   hbar = 0.5 * H_PLANCK_SI / pi ! reduce Plnack constant
+  JOULE_TO_RY = 2.1798741E-18 ! joule to rydberg 2.1798741E-18
   ang  = 1.0E-10            ! angstrom units
   imagi = (0.0d0, 1.0d0) !imaginary unit
   ! Inititialize eigenvectors matrix
@@ -2169,12 +2178,13 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp,q,w2, z_nq_zg, ios, &
 !
 !
 ! Frequency check
+  WRITE(*,*)
   freq = 0.0d0
   DO qp = 1, nq
     DO i = 1, nat3 
    !   IF (w2(i, qp) .lt. 1.0E-8) THEN
       IF (w2(i, qp) .lt. 0.0d0) THEN
-          freq(i, qp) = 0.0d0
+          freq(i, qp) = 1.0E-15
           WRITE(*,*) "Some frequencies are negative:", w2(i, qp), i, qp 
       ELSE
           freq(i, qp) = SQRT(ABS(w2(i, qp)))
@@ -2187,22 +2197,18 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp,q,w2, z_nq_zg, ios, &
   !
   ! set amplitudes of displacements l_q = \sigma_\bq\nu and momenta 
   p_q = 0.0d0
-  dotp = 0.0d0
   DO qp = 1, nq
     DO i = 1, nat3 
       l_q(i, qp) = SQRT(hbar / ph_w(i, qp) / 2.0d0 / AMU_SI / ang**2.0d0) * & 
-                   SQRT(1.0d0 + 2.0d0 / (EXP(hbar * ph_w(i, qp) / (K_BOLTZMANN_SI * T)) - 1)) 
+                   SQRT(dble(1.0d0 + 2.0d0 / (EXP(hbar * ph_w(i, qp) / (K_BOLTZMANN_SI * T)) - 1))) 
       p_q(i, qp) = hbar / SQRT(2.0d0) / (SQRT(hbar / ph_w(i, qp) / 2.0d0 /AMU_SI)) / ang * & !*1.0E-12& 
-                   SQRT(0.5d0 + 1.0d0 / (EXP(hbar * ph_w(i, qp) / (K_BOLTZMANN_SI * T)) - 1)) 
+                   SQRT(dble(0.5d0 + 1.0d0 / (EXP(hbar * ph_w(i, qp) / (K_BOLTZMANN_SI * T)) - 1))) 
                    ! we can multiply by 1.0E-12 to get 'picos'
   !!    WRITE(*,*) p_q(i, qp),l_q(i, qp), amass(1)
-      e_nq(i, qp) = hbar * ph_w(i, qp) * (1.0d0 / 2.0d0 + 1.0d0 / (EXP(hbar*ph_w(i, qp) / (K_BOLTZMANN_SI * T)) - 1))
-      dotp = dotp + e_nq(i, qp) / 2.1798741E-18 ! joule to rydberg 2.1798741E-18
     ENDDO
   ENDDO
   !     
-!  WRITE(*,*) "total vibrational energy per cell", dotp/dimx/dimy/dimz, "Ry"
-  WRITE(*,*) "total vibrational energy", dotp, "Ry"
+!  WRITE(*,*) "total vibrational energy per cell", 2*dotp/dimx/dimy/dimz, "Ry"
   IF (q_in_cryst_coord .EQV. .FALSE.) THEN
   ! in both cases convert them to crystal because the matdyn converts them to cartesian
       CALL cryst_to_cart(nq, q, at, -1)
@@ -2216,6 +2222,9 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp,q,w2, z_nq_zg, ios, &
   !
   ctrA = 0
   ctrAB = 0
+  dotp = 0.0d0
+  PE_nq = 0.0d0
+  KE_nq = 0.0d0
   DO qp = 1, nq
     q_A = q(:, qp) + q(:, qp) ! q_A to find IF q belongs in A
     IF (((ABS(q_A(1)) < eps) .OR. (ABS(ABS(q_A(1)) - 1) < eps)) .AND. &
@@ -2224,13 +2233,38 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp,q,w2, z_nq_zg, ios, &
   !     WRITE(*,*) "set A", qp, q(:, qp)
        ctrA  = ctrA + 1
        ctrAB = ctrAB + 1
+       DO i = 1, nat3 
+         e_nq(i, qp) = hbar * ph_w(i, qp) * (0.5d0 + 1.0d0 / (EXP(hbar*ph_w(i, qp) / (K_BOLTZMANN_SI * T)) - 1))
+         dotp = dotp + e_nq(i, qp) / JOULE_TO_RY ! joule to rydberg 2.1798741E-18
+         PE_nq = PE_nq + 0.5d0 * AMU_SI * ph_w(i, qp)**2 * l_q(i, qp)**2 * ang**2.0d0 / JOULE_TO_RY
+         KE_nq = KE_nq + 0.5d0 / AMU_SI * p_q(i, qp)**2 * ang**2 / JOULE_TO_RY
+       ENDDO
     ELSE
        ctrAB = ctrAB + 1
+       DO i = 1, nat3 
+         e_nq(i, qp) = hbar * ph_w(i, qp) * (0.5d0 + 1.0d0 / (EXP(hbar*ph_w(i, qp) / (K_BOLTZMANN_SI * T)) - 1))
+         ! Factor of two because I account half of the q-points (set B equiv. to set C) 
+         dotp = dotp + 2.0d0 * e_nq(i, qp) / JOULE_TO_RY ! joule to rydberg 2.1798741E-18
+         PE_nq = PE_nq + 2.0d0 * 0.5d0 * AMU_SI * ph_w(i, qp)**2 * l_q(i, qp)**2 * ang**2.0d0 / JOULE_TO_RY 
+         KE_nq = KE_nq + 2.0d0 * 0.5d0 / AMU_SI * p_q(i, qp)**2 * ang**2 / JOULE_TO_RY
+       ENDDO
     ENDIF
   ENDDO 
   !
+  WRITE(*,*)
+  WRITE(*,'(A30, 1F13.8, A4)') "Total vibrational energy: ", dotp, "Ry" 
+  WRITE(*,*)
+  WRITE(*,'(A30, 1F13.8, A4)') "Potential energy: ", PE_nq, "Ry" 
+  WRITE(*,*)
+  WRITE(*,'(A30, 1F13.8, A4)') "Kinetic energy: ", KE_nq, "Ry" 
+  WRITE(*,*)
+  WRITE(*,*) "Note that the total energy output from a DFT-ZG &
+              calculation accounts for half the total vibrational energy"
+  WRITE(*,*)
+  !
   ctrB = ctrAB - ctrA
   WRITE(*,*) "Points in sets AB, A, B :", ctrAB, ctrA, ctrB
+  WRITE(*,*) 
   ! 
   ALLOCATE(qA(ctrA, 3), qB(ctrB, 3), z_nq_A(nat3, nat3, ctrA), z_nq_B(nat3, nat3, ctrB))  
   ALLOCATE(Cx_matAB(nat3, ctrAB), Cx_matA(nat3, ctrA), Cx_matB(nat3, ctrB))
