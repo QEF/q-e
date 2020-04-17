@@ -1,10 +1,8 @@
  &energy_current
     delta_t=   0.500,
-    init_linear= 'niente',
-    file_output= 'current_hz2',
+    file_output= 'current_hz',
     eta=   0.100,
     n_max=     5,
-    status= 'compute',
  /
  &CONTROL
     calculation='md',
@@ -22,7 +20,7 @@
     ecutwfc=  70.000,
 /
  &ELECTRONS
-    conv_thr = 1.D-10,
+    conv_thr = 1.D-11,
     mixing_beta = 0.7,
 /
  & IONS
