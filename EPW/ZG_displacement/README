@@ -1,21 +1,23 @@
-              Marios Zacharias [1] & Feliciano Giustino [2,3], Feb 2020
+              Marios Zacharias [1,2] & Feliciano Giustino [3,4], Feb 2020
 
 [1] Fritz-Haber-Institut der Max-Planck-Gesellschaft, Faradayweg 4–6, D-14195 Berlin, Germany
-[2] Oden Institute for Computational Engineering and Sciences, The University of Texas at Austin,
+[2] Department of Mechanical and Materials Science Engineering, Cyprus University of Technology, 
+    P.O. Box 50329, 3603 Limassol, Cyprus 
+[3] Oden Institute for Computational Engineering and Sciences, The University of Texas at Austin,
 Austin, Texas 78712, USA 
-[3] Department of Physics, The University of Texas at Austin, Austin, Texas 78712, USA
+[4] Department of Physics, The University of Texas at Austin, Austin, Texas 78712, USA
 -----------------------------------------------------------------------------------------
 
 Instructions for the construction of the "ZG-displacement" (Zacharias-Giustino) following 
-Eq. (2) of https://arxiv.org/abs/1912.10929. The approach for the construction of the ZG-displacement 
-is based on the generalized theory of the special displacement method presented in https://arxiv.org/abs/1912.10929.    
-Our new theory is in the process of publication.  
+Eq. (2) of Phys. Rev. Research 2, 013357, 2020. The approach for the construction of the ZG-displacement 
+is based on the generalized theory of the special displacement method presented in 
+Phys. Rev. Research 2, 013357, (2020). 
 
 STEPS for generating the "ZG-displacement" for temperature dependent properties of solids: 
 
-0. Compile the version of Quantum Espresso (preferably 6.1.0 or later).
-   Copy "src/matdyn_EPW_ZG.f90", "src/make.depend" and  "src/Makefile" 
-   to "/path_to_your_espresso/PHonon/PH/matdyn_EPW_ZG.f90" and "make".
+0. Compile the version of Quantum Espresso 6.5.0.
+   Copy "src/ZG_epw.f90", "src/make.depend" and  "src/Makefile" 
+   to "/path_to_your_espresso/EPW/src/ZG_epw.f90" and "make".
    This code is exploits some main routines of matdyn.x. In particular, our code
    takes advantage of the phonon interpolation scheme implemented for matdyn.x. This is 
    important, for example, in taking into account the LO-TO splitting in polar materials. 
@@ -33,9 +35,9 @@ STEPS for generating the "ZG-displacement" for temperature dependent properties 
    calculating the interatomic force constant matrix elements to be used in "ZG.in" file. 
 
 4.  Now one needs to decide the size of the supercell configuration to be used for calculating 
-    temperature dependent properties. In the example "example/silicon/input/matdyn_ZG_444.in" we  
+    temperature dependent properties. In the example "example/silicon/input/ZG_444.in" we  
     use the example for a 4x4x4 ZG configuration. One could potentially generate any supercell size
-    by simply changing "dimx","dimy","dimz", see below. "matdyn_ZG.in" has the standard format 
+    by simply changing "dimx","dimy","dimz", see below. "ZG.in" has the standard format 
     as a "matdyn.in" file for Quantum Espresso. Here we use the following input parameters:
     ---------------------------------------------------------------------------------------
     i) "ZG_conf"           : logical flag that enables the creation of the ZG-displacement. 
@@ -66,14 +68,14 @@ STEPS for generating the "ZG-displacement" for temperature dependent properties 
                              (default 0.05)
        "incl_qA"           : logical flag, to decide whether to include phonon modes in set A. 
                              (default .true.)
-       "qlist_AB.txt"      : this is the q-list in crystal coordinates that appears in the "matdyn_ZG_444.in" example. 
+       "qlist_AB.txt"      : this is the q-list in crystal coordinates that appears in the "ZG_444.in" example. 
                              It corresponds to the q-points commensurate to the supercell size. Only one
                              of the q-point pairs related by inversion symmetry is kept for the construction of the 
                              ZG-displacement. For the generation of the "qlist_AB.txt" set the q-gird in file 
                              "example/silicon/input/qlist.in" and run "../../../src/create_qlist.x < qlist.in > qlist.out ". 
-                             Copy and paste the output in "qlist_AB.txt" in matdyn_ZG.in. 
+                             Copy and paste the output in "qlist_AB.txt" ZG.in. 
                                           
-    ii)  To generate the ZG-displacement run "/path_to_your_espresso/bin/matdyn_EPW_ZG.x <matdyn_ZG_444.in> matdyn_ZG_444.out".
+    ii)  To generate the ZG-displacement run "/path_to_your_espresso/bin/ZG_epw.x <ZG_444.in> ZG_444.out".
        This generates two output files: the "equil_pos.txt", "ZG-displacement.txt". The first file has the equilibrium 
        coordinates of the nuclei and the latter has the optimum set of nuclear coordinates that define the ZG-displacement 
        at a particular temperature and the required supercell size. The outputs for a supercell size 4x4x4 are in the 
@@ -88,5 +90,3 @@ STEPS for generating the "ZG-displacement" for temperature dependent properties 
 
 6. The ZG-displacement can also be employed for the calculation of full temperature dependent
    band structures using the band unfolding procedure for supercell calculations. 
-   This method is in the process of publication and will be released in the 
-   next version of the code.  
