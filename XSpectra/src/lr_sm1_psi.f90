@@ -34,7 +34,6 @@ SUBROUTINE sm1_psi( recalc, lda, n, m, psi, spsi)
   USE control_flags,      ONLY : gamma_only
   USE uspp,         ONLY : okvan, vkb, nkb, qq_nt
   USE uspp_param, ONLY : upf, nh
-  USE ldaU,       ONLY : lda_plus_u
   USE ions_base,   ONLY : nat, ntyp => nsp, ityp  
   use becmod, only : calbec
   !
