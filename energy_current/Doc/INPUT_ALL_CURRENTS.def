@@ -105,10 +105,11 @@ input_description -distribution {Quantum Espresso} -package energy_current -prog
                 The program will write the output in @ref file_output and @ref file_output  + '.dat'.
                 In the latter file the format of the output is:
 
-                   NSTEP t_ps J_x J_y J_z
+                   NSTEP t_ps J_x J_y J_z v_cm(1)_x v_cm(1)_y v_cm(1)_z ... 
 
                 where J_x, J_y, J_z are the three components of the DFT energy current,
-                and can be easily post-processed by other external program
+                and can be easily post-processed by other external programs. 
+                v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomi species.
             }
         }
         
@@ -166,29 +167,45 @@ input_description -distribution {Quantum Espresso} -package energy_current -prog
         }
         var first_step -type INTEGER {
             default { 0 }
-            info { The program will start with step  istep >= @ref first_step.
-                   If greater than zero the input file's positions and velocities will be ignored. }
+            info {
+                   The program will start with step  istep >= @ref first_step.
+                   If greater than zero the input file's positions and velocities will be ignored. 
+                 }
         }
         var last_step -type INTEGER {
             default { 0 }
-            info { The program will end with step  istep <= @ref last_step.
-                   If 0, it will stop at the end of the trajectory file }
+            info {
+                   The program will end with step  istep <= @ref last_step.
+                   If 0, it will stop at the end of the trajectory file
+                 }
         }
         var ethr_small_step -type REAL {
             default { 1.D-7 }
-            info { Diagonalization threshold after the small @ref delta_t numerical derivative step.
-                  (the system changed a very little) }
+            info {
+                  Diagonalization threshold after the small @ref delta_t numerical derivative step.
+                  (the system changed a very little)
+                 }
         }
         var ethr_big_step -type REAL {
             default { 1.D-3 }
-            info { Diagonalization threshold at the beginning of each step but the first,
+            info {
+                   Diagonalization threshold at the beginning of each step but the first,
                    for wich the pw.x input value is used.
                  }
         }
         var restart -type LOGICAL {
             default { .false. }
-            info { If true try to read @ref file_output .dat and try to set @ref first_step to the
-                   last step in the file + 1 } 
+            info {
+                   If true try to read @ref file_output .dat and try to set @ref first_step to the
+                   last step in the file + 1 
+                 } 
+        }
+        var subtract_cm_vel  -type LOGICAL {
+            default { .false. }
+            info {
+                   If true subtract from the velocities of all atoms for every step
+                   the center of mass velocity for each atomic type
+                 } 
         }
     }
 

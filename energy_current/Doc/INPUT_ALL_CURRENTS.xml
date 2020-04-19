@@ -100,10 +100,11 @@ in order to compute some parts of the current. Note that is in the pw.x units.
 The program will write the output in <ref>file_output</ref> and <ref>file_output</ref>  + &apos;.dat&apos;.
 In the latter file the format of the output is:
 
-   NSTEP t_ps J_x J_y J_z
+   NSTEP t_ps J_x J_y J_z v_cm(1)_x v_cm(1)_y v_cm(1)_z ...
 
 where J_x, J_y, J_z are the three components of the DFT energy current,
-and can be easily post-processed by other external program
+and can be easily post-processed by other external programs.
+v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomi species.
          </info>
       </var>
       <var name="trajdir" type="CHARACTER" >
@@ -168,7 +169,7 @@ assume velocities are given in pw.x time units
          </default>
          <info>
 The program will start with step  istep &gt;= <ref>first_step</ref>.
-                  If greater than zero the input file&apos;s positions and velocities will be ignored.
+If greater than zero the input file&apos;s positions and velocities will be ignored.
          </info>
       </var>
       <var name="last_step" type="INTEGER" >
@@ -176,7 +177,7 @@ The program will start with step  istep &gt;= <ref>first_step</ref>.
          </default>
          <info>
 The program will end with step  istep &lt;= <ref>last_step</ref>.
-                  If 0, it will stop at the end of the trajectory file
+If 0, it will stop at the end of the trajectory file
          </info>
       </var>
       <var name="ethr_small_step" type="REAL" >
@@ -184,7 +185,7 @@ The program will end with step  istep &lt;= <ref>last_step</ref>.
          </default>
          <info>
 Diagonalization threshold after the small <ref>delta_t</ref> numerical derivative step.
-                 (the system changed a very little)
+(the system changed a very little)
          </info>
       </var>
       <var name="ethr_big_step" type="REAL" >
@@ -192,7 +193,7 @@ Diagonalization threshold after the small <ref>delta_t</ref> numerical derivativ
          </default>
          <info>
 Diagonalization threshold at the beginning of each step but the first,
-                  for wich the pw.x input value is used.
+for wich the pw.x input value is used.
          </info>
       </var>
       <var name="restart" type="LOGICAL" >
@@ -200,7 +201,15 @@ Diagonalization threshold at the beginning of each step but the first,
          </default>
          <info>
 If true try to read <ref>file_output</ref> .dat and try to set <ref>first_step</ref> to the
-                  last step in the file + 1
+last step in the file + 1
+         </info>
+      </var>
+      <var name="subtract_cm_vel" type="LOGICAL" >
+         <default> .false.
+         </default>
+         <info>
+If true subtract from the velocities of all atoms for every step
+the center of mass velocity for each atomic type
          </info>
       </var>
    </namelist>

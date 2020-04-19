@@ -107,10 +107,11 @@ NAMELIST: &ENERGY_CURRENT
    Description:    The program will write the output in "file_output" and "file_output"  + '.dat'.
                    In the latter file the format of the output is:
                    
-                      NSTEP t_ps J_x J_y J_z
+                      NSTEP t_ps J_x J_y J_z v_cm(1)_x v_cm(1)_y v_cm(1)_z ...
                    
                    where J_x, J_y, J_z are the three components of the DFT energy current,
-                   and can be easily post-processed by other external program
+                   and can be easily post-processed by other external programs.
+                   v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomi species.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -181,7 +182,7 @@ NAMELIST: &ENERGY_CURRENT
    Type:           INTEGER
    Default:        0
    Description:    The program will start with step  istep >= "first_step".
-                                     If greater than zero the input file's positions and velocities will be ignored.
+                   If greater than zero the input file's positions and velocities will be ignored.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -190,7 +191,7 @@ NAMELIST: &ENERGY_CURRENT
    Type:           INTEGER
    Default:        0
    Description:    The program will end with step  istep <= "last_step".
-                                     If 0, it will stop at the end of the trajectory file
+                   If 0, it will stop at the end of the trajectory file
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -199,7 +200,7 @@ NAMELIST: &ENERGY_CURRENT
    Type:           REAL
    Default:        1.D-7
    Description:    Diagonalization threshold after the small "delta_t" numerical derivative step.
-                                    (the system changed a very little)
+                   (the system changed a very little)
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -208,7 +209,7 @@ NAMELIST: &ENERGY_CURRENT
    Type:           REAL
    Default:        1.D-3
    Description:    Diagonalization threshold at the beginning of each step but the first,
-                                     for wich the pw.x input value is used.
+                   for wich the pw.x input value is used.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -217,10 +218,19 @@ NAMELIST: &ENERGY_CURRENT
    Type:           LOGICAL
    Default:        .false.
    Description:    If true try to read "file_output" .dat and try to set "first_step" to the
-                                     last step in the file + 1
+                   last step in the file + 1
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       subtract_cm_vel
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If true subtract from the velocities of all atoms for every step
+                   the center of mass velocity for each atomic type
    +--------------------------------------------------------------------
    
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Apr 17 11:17:23 CEST 2020
+This file has been created by helpdoc utility on Sun Apr 19 10:38:49 CEST 2020

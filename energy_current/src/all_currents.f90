@@ -118,6 +118,7 @@ contains
 
    subroutine write_results(traj)
       use kinds, only: dp
+      use ions_base, ONLY: nsp
       use hartree_mod
       use zero_mod
       use io_global, ONLY: ionode
@@ -126,7 +127,7 @@ contains
       implicit none
       type(cpv_trajectory), intent(in)  :: traj
       type(timestep) :: ts
-      integer :: iun, step
+      integer :: iun, step, itype
       integer, external :: find_free_unit
       real(dp) :: time
 
@@ -157,7 +158,11 @@ contains
          write (*, '(A,3E20.12)') 'total energy current: ', J_xc + J_hartree + J_kohn + i_current + z_current
          close (iun)
          open (iun, file=trim(file_output)//'.dat', position='append')
-         write (iun, '(1I7,1E14.6,3E20.12)') step, time, J_xc + J_hartree + J_kohn + i_current + z_current
+         write (iun, '(1I7,1E14.6,3E20.12)', advance='no') step, time, J_xc + J_hartree + J_kohn + i_current + z_current
+         do itype=1,nsp
+             write (iun, '(3E20.12)', advance='no') v_cm(:,itype)
+         end do
+         write (iun,'(A)') ''
          close (iun)
       end if
 
@@ -176,7 +181,7 @@ contains
          file_output, trajdir, vel_input_units, &
          eta, n_max, first_step, last_step, &
          ethr_small_step, ethr_big_step, &
-         restart
+         restart, subtract_cm_vel
 
       !
       !   set default values for variables in namelist
@@ -191,6 +196,7 @@ contains
       first_step = 0
       last_step = 0
       restart = .false.
+      subtract_cm_vel = .false.
       READ (iunit, energy_current, IOSTAT=ios)
       IF (ios /= 0) CALL errore('main', 'reading energy_current namelist', ABS(ios))
 
@@ -207,6 +213,7 @@ contains
       CALL mp_bcast(delta_t, ionode_id, world_comm)
       CALL mp_bcast(eta, ionode_id, world_comm)
       CALL mp_bcast(restart, ionode_id, world_comm)
+      CALL mp_bcast(subtract_cm_vel, ionode_id, world_comm)
       CALL mp_bcast(first_step, ionode_id, world_comm)
       CALL mp_bcast(last_step, ionode_id, world_comm)
       CALL mp_bcast(ethr_small_step, ionode_id, world_comm)
@@ -292,6 +299,38 @@ contains
       ENDIF
    end subroutine
 
+   subroutine cm_vel(vel_cm)
+      use kinds, only: dp
+      use ions_base, ONLY: nat, nsp, ityp
+      use dynamics_module, only: vel
+      use hartree_mod, only: v_cm
+      implicit none
+      real(dp), intent(out), optional :: vel_cm(:,:)
+      integer :: iatom, itype
+      integer, allocatable :: counter(:)
+      real(dp) :: delta(3), mean(3)
+      if (.not. allocated(v_cm)) &
+         allocate(v_cm(3,nsp))
+      allocate(counter(nsp))
+      counter = 0
+      v_cm=0.0_dp
+
+      do iatom=1,nat
+          itype=ityp(iatom)
+          counter(itype) = counter(itype) + 1
+          delta = (vel(:,iatom)-v_cm(:,itype))/real(counter(itype),dp)
+          v_cm(:,itype) = v_cm(:,itype) + delta
+      end do
+      if (present(vel_cm)) then
+          do iatom=1,nat
+              itype=ityp(iatom)
+              vel_cm(:,iatom)=vel_cm(:,iatom)-v_cm(:,itype)
+          end do
+      end if
+      
+      deallocate(counter)
+   end subroutine
+
    subroutine prepare_next_step()
       USE extrapolation, ONLY: update_pot
       USE control_flags, ONLY: ethr
@@ -301,7 +340,8 @@ contains
       use io_global, ONLY: ionode, ionode_id
       USE mp_world, ONLY: world_comm
       use mp, ONLY: mp_bcast, mp_barrier
-      use hartree_mod, only: evc_due, delta_t, ethr_small_step
+      use hartree_mod, only: evc_due, delta_t, ethr_small_step, &
+                             subtract_cm_vel
       use zero_mod, only: vel_input_units, ion_vel
       use wavefunctions, only: evc
       implicit none
@@ -320,6 +360,12 @@ contains
          else
             call errore('read_vel', 'error: unknown vel_input_units', 1)
          endif
+         if ( subtract_cm_vel ) then
+         !calculate center of mass velocity for each atomic species and subtract it
+            call cm_vel(vel)
+         else
+            call cm_vel()
+         end if
       endif
       !broadcast
       CALL mp_bcast(tau, ionode_id, world_comm)

@@ -58,7 +58,7 @@
    <p><a href="#idm3">INTRODUCTION</a></p>
    <p><a href="#idm29">&amp;ENERGY_CURRENT</a></p>
 <blockquote>
-<a href="#idm30">delta_t</a> | <a href="#idm33">file_output</a> | <a href="#idm38">trajdir</a> | <a href="#idm44">vel_input_units</a> | <a href="#idm50">eta</a> | <a href="#idm53">n_max</a> | <a href="#idm56">first_step</a> | <a href="#idm60">last_step</a> | <a href="#idm64">ethr_small_step</a> | <a href="#idm68">ethr_big_step</a> | <a href="#idm71">restart</a>
+<a href="#idm30">delta_t</a> | <a href="#idm33">file_output</a> | <a href="#idm38">trajdir</a> | <a href="#idm44">vel_input_units</a> | <a href="#idm50">eta</a> | <a href="#idm53">n_max</a> | <a href="#idm56">first_step</a> | <a href="#idm60">last_step</a> | <a href="#idm64">ethr_small_step</a> | <a href="#idm68">ethr_big_step</a> | <a href="#idm71">restart</a> | <a href="#idm76">subtract_cm_vel</a>
 </blockquote>
 </blockquote>
 </blockquote>
@@ -178,10 +178,11 @@ in order to compute some parts of the current. Note that is in the pw.x units.
 The program will write the output in <a href="#file_output">file_output</a> and <a href="#file_output">file_output</a>  + '.dat'.
 In the latter file the format of the output is:
 
-   NSTEP t_ps J_x J_y J_z
+   NSTEP t_ps J_x J_y J_z v_cm(1)_x v_cm(1)_y v_cm(1)_z ...
 
 where J_x, J_y, J_z are the three components of the DFT energy current,
-and can be easily post-processed by other external program
+and can be easily post-processed by other external programs.
+v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomi species.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -292,7 +293,7 @@ assume velocities are given in pw.x time units
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
 The program will start with step  istep &gt;= <a href="#first_step">first_step</a>.
-                  If greater than zero the input file's positions and velocities will be ignored.
+If greater than zero the input file's positions and velocities will be ignored.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -308,7 +309,7 @@ The program will start with step  istep &gt;= <a href="#first_step">first_step</
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
 The program will end with step  istep &lt;= <a href="#last_step">last_step</a>.
-                  If 0, it will stop at the end of the trajectory file
+If 0, it will stop at the end of the trajectory file
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -324,7 +325,7 @@ The program will end with step  istep &lt;= <a href="#last_step">last_step</a>.
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
 Diagonalization threshold after the small <a href="#delta_t">delta_t</a> numerical derivative step.
-                 (the system changed a very little)
+(the system changed a very little)
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -340,7 +341,7 @@ Diagonalization threshold after the small <a href="#delta_t">delta_t</a> numeric
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
 Diagonalization threshold at the beginning of each step but the first,
-                  for wich the pw.x input value is used.
+for wich the pw.x input value is used.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -356,7 +357,23 @@ Diagonalization threshold at the beginning of each step but the first,
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
 If true try to read <a href="#file_output">file_output</a> .dat and try to set <a href="#first_step">first_step</a> to the
-                  last step in the file + 1
+last step in the file + 1
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm76"></a><a name="subtract_cm_vel"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">subtract_cm_vel</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If true subtract from the velocities of all atoms for every step
+the center of mass velocity for each atomic type
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -365,7 +382,7 @@ If true try to read <a href="#file_output">file_output</a> .dat and try to set <
 </td></tr>
 </table>
 <small>
-	  This file has been created by helpdoc utility on Fri Apr 17 11:17:23 CEST 2020.
+	  This file has been created by helpdoc utility on Sun Apr 19 10:38:49 CEST 2020.
 	</small>
 </body>
 </html>
