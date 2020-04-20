@@ -132,7 +132,7 @@ SUBROUTINE fwfft_y( fft_kind, f, dfft, howmany )
 
   IMPLICIT NONE
 
-  TYPE(fft_type_descriptor), INTENT(IN) :: dfft
+  TYPE(fft_type_descriptor), INTENT(INOUT) :: dfft
   CHARACTER(LEN=*), INTENT(IN) :: fft_kind
   COMPLEX(DP) :: f(:)
   INTEGER, OPTIONAL, INTENT(IN) :: howmany
