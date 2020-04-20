@@ -1646,7 +1646,6 @@ MODULE realus
     REAL(DP) :: fac
     REAL(DP), ALLOCATABLE, DIMENSION(:) :: wr, wi
     REAL(DP) :: bcr, bci
-    !COMPLEX(DP), allocatable, dimension(:) :: bt
     integer :: ir, maxbox, ijkb0, nh_nt
     !
     REAL(DP), EXTERNAL :: ddot
@@ -1723,9 +1722,9 @@ MODULE realus
     !
       USE kinds,                  ONLY : DP
       USE cell_base,              ONLY : omega
-      USE wavefunctions,   ONLY : psic
+      USE wavefunctions,          ONLY : psic
       USE ions_base,              ONLY : nat, nsp, ityp
-      USE uspp_param,             ONLY : nh
+      USE uspp_param,             ONLY : nh, nhm
       USE lsda_mod,               ONLY : current_spin
       USE uspp,                   ONLY : qq_at, indv_ijkb0
       USE becmod,                 ONLY : bec_type, becp
@@ -1735,16 +1734,15 @@ MODULE realus
       !
       INTEGER, INTENT(in) :: ibnd, last
       !
-      INTEGER :: ih, jh, jkb, nt, ia, ir, mbia
+      INTEGER :: ih, nt, ia, ir, mbia, ijkb0
       REAL(DP) :: fac
       REAL(DP), ALLOCATABLE, DIMENSION(:) :: w1, w2
-      !
-      REAL(DP), EXTERNAL :: ddot
       !
       CALL start_clock( 's_psir' )
 
       IF( dffts%has_task_groups ) CALL errore( 's_psir_gamma', 'task_groups not implemented', 1 )
 
+      ALLOCATE( w1(nhm), w2(nhm) ) ; if ( ibnd+1 > last) w2 = 0.D0
       !
       fac = sqrt(omega)
       !
@@ -1755,43 +1753,32 @@ MODULE realus
             IF ( ityp(ia) == nt ) THEN
                !
                mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
-               !
                !print *, "mbia=",mbia
-               ALLOCATE( w1(nh(nt)),  w2(nh(nt)) )
-               w1 = 0.D0
-               w2 = 0.D0
                !
-               DO ih = 1, nh(nt)
-                  DO jh = 1, nh(nt)
-                     jkb = indv_ijkb0(ia) + jh
-                     w1(ih) = w1(ih) + qq_at(ih,jh,ia) * becp%r(jkb, ibnd)
-                     IF ( ibnd+1 <= last ) w2(ih) = w2(ih) + qq_at(ih,jh,ia) * becp%r(jkb, ibnd+1)
-                  ENDDO
-               ENDDO
-               !
-               w1 = w1 * fac
-               w2 = w2 * fac
+               ijkb0 = indv_ijkb0(ia)
                !
                !$omp parallel
+               !$omp do
                DO ih = 1, nh(nt)
-                  !
-                  !$omp do
-                  DO ir = 1, mbia
-                     psic( box_beta(ir,ia) ) = psic( box_beta(ir,ia) ) + &
-                                               betasave(ir,ih,ia)*cmplx( w1(ih), w2(ih) ,kind=DP)
-                  ENDDO
-                  !$omp end do
-                  !
+                  w1(ih) = fac * SUM(qq_at(ih,1:nh(nt),ia) * becp%r(ijkb0+1:ijkb0+nh(nt), ibnd))
+                  IF ( ibnd+1 <= last ) &
+                     w2(ih) = fac * SUM(qq_at(ih,1:nh(nt),ia) * becp%r(ijkb0+1:ijkb0+nh(nt), ibnd+1))
                ENDDO
+               !$omp end do
+               !$omp do
+               DO ir = 1, mbia
+                  psic( box_beta(ir,ia) ) = psic( box_beta(ir,ia) ) + &
+                        SUM(betasave(ir,1:nh(nt),ia)*cmplx( w1(1:nh(nt)), w2(1:nh(nt)) ,kind=DP))
+               ENDDO
+               !$omp end do
                !$omp end parallel
-               !
-               DEALLOCATE( w1, w2 )
                !
             ENDIF
             !
          ENDDO
          !
       ENDDO
+      DEALLOCATE( w1, w2 )
       !
       CALL stop_clock( 's_psir' )
       !
@@ -1812,9 +1799,9 @@ MODULE realus
       USE kinds,                  ONLY : DP
       USE wvfct,                  ONLY : current_k
       USE cell_base,              ONLY : omega
-      USE wavefunctions,   ONLY : psic
+      USE wavefunctions,          ONLY : psic
       USE ions_base,              ONLY : nat, nsp, ityp
-      USE uspp_param,             ONLY : nh
+      USE uspp_param,             ONLY : nh, nhm
       USE lsda_mod,               ONLY : current_spin
       USE uspp,                   ONLY : qq_at, indv_ijkb0
       USE becmod,                 ONLY : bec_type, becp
@@ -1824,7 +1811,7 @@ MODULE realus
       !
       INTEGER, INTENT(in) :: ibnd, last
       !
-      INTEGER :: ih, jh, jkb, nt, ia, ir, mbia
+      INTEGER :: ih, nt, ia, ir, mbia, ijkb0
       REAL(DP) :: fac
       COMPLEX(DP) , ALLOCATABLE :: w1(:)
       !
@@ -1836,10 +1823,10 @@ MODULE realus
       IF( dffts%has_task_groups ) CALL errore( 's_psir_k', 'task_groups not implemented', 1 )
 
       call set_xkphase(current_k)
-
       !
       fac = sqrt(omega)
       !
+      ALLOCATE( w1(nhm) )
       DO nt = 1, nsp
          !
          DO ia = 1, nat
@@ -1847,41 +1834,31 @@ MODULE realus
             IF ( ityp(ia) == nt ) THEN
                !
                mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
+               !print *, "mbia=",mbia
                !
-               ALLOCATE( w1(nh(nt)) )
-               w1 = 0.D0
-               !
-               DO ih = 1, nh(nt)
-                  DO jh = 1, nh(nt)
-                     jkb = indv_ijkb0(ia) + jh
-                     w1(ih) = w1(ih) + qq_at(ih,jh,ia) * becp%k(jkb, ibnd)
-                  ENDDO
-               ENDDO
-               !
-               w1 = w1 * fac
+               ijkb0 = indv_ijkb0(ia)
                !
                !$omp parallel
+               !$omp do
                DO ih = 1, nh(nt)
-                  !
-                  !$omp do
-                  DO ir = 1, mbia
-                     !
-                     psic( box_beta(ir,ia) ) = psic( box_beta(ir,ia) ) + &
-                                               xkphase(ir,ia)*betasave(ir,ih,ia)*w1(ih)
-                     !
-                  ENDDO
-                  !$omp end do
-                  !
+                  w1(ih) = fac * SUM(qq_at(ih,1:nh(nt),ia) * becp%k(ijkb0+1:ijkb0+nh(nt),ibnd))
                ENDDO
+               !$omp end do
+               !$omp do
+               DO ir = 1, mbia
+                  psic( box_beta(ir,ia) ) = psic( box_beta(ir,ia) ) + &
+                                            SUM(xkphase(ir,ia)*betasave(ir,1:nh(nt),ia)*w1(1:nh(nt)))
+               ENDDO
+               !$omp end do
                !$omp end parallel
                !
-               DEALLOCATE( w1 )
                !
             ENDIF
             !
          ENDDO
          !
       ENDDO
+      DEALLOCATE( w1 )
       !
       CALL stop_clock( 's_psir' )
       !
@@ -1907,7 +1884,7 @@ MODULE realus
   USE cell_base,              ONLY : omega
   USE wavefunctions,          ONLY : psic
   USE ions_base,              ONLY : nat, nsp, ityp
-  USE uspp_param,             ONLY : nh
+  USE uspp_param,             ONLY : nh, nhm
   USE lsda_mod,               ONLY : current_spin
   USE uspp,                   ONLY : deeq, indv_ijkb0
   USE becmod,                 ONLY : bec_type, becp
@@ -1917,21 +1894,18 @@ MODULE realus
   !
   INTEGER, INTENT(in) :: ibnd, last
   !
-  INTEGER :: ih, jh, jkb, nt, ia, ir, mbia
+  INTEGER :: ih, nt, ia, ir, mbia, ijkb0
   REAL(DP) :: fac
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: w1, w2
-  !
-  REAL(DP), EXTERNAL :: ddot
   !
   CALL start_clock( 'add_vuspsir' )
 
   IF( dffts%has_task_groups ) CALL errore( 'add_vuspsir_gamma', 'task_groups not implemented', 1 )
-
   !
   fac = sqrt(omega)
   !
+  ALLOCATE( w1(nhm), w2(nhm) ) ; IF ( ibnd+1 > last) w2 = 0.D0
   DO nt = 1, nsp
-     ALLOCATE( w1(nh(nt)),  w2(nh(nt)) )
      !
      DO ia = 1, nat
         !
@@ -1939,44 +1913,30 @@ MODULE realus
            !
            mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
            !
-           w1 = 0.D0
-           w2 = 0.D0
-           DO ih = 1, nh(nt)
-              !
-              DO jh = 1, nh(nt)
-                 !
-                 jkb = indv_ijkb0(ia) + jh
-                 !
-                 w1(ih) = w1(ih) + deeq(ih,jh,ia,current_spin) * becp%r(jkb,ibnd)
-                 IF ( ibnd+1 <= last )  w2(ih) = w2(ih) + deeq(ih,jh,ia,current_spin) * becp%r(jkb,ibnd+1)
-                 !
-              ENDDO
-              !
-           ENDDO
-           !
-           w1 = w1 * fac
-           w2 = w2 * fac
+           ijkb0 = indv_ijkb0(ia)
            !
            !$omp parallel
+           !$omp do
            DO ih = 1, nh(nt)
-              !
-              !$omp do
-              DO ir = 1, mbia
-                 !
-                 psic( box_beta(ir,ia) ) = psic( box_beta(ir,ia) ) + &
-                                           betasave(ir,ih,ia)*cmplx( w1(ih), w2(ih) ,kind=DP)
-                 !
-              ENDDO
-              !$omp end do
+              w1(ih) = fac * SUM(deeq(ih,1:nh(nt),ia,current_spin) * becp%r(ijkb0+1:ijkb0+nh(nt),ibnd))
+              IF ( ibnd+1 <= last ) &
+                 w2(ih) = fac * SUM(deeq(ih,1:nh(nt),ia,current_spin) * becp%r(ijkb0+1:ijkb0+nh(nt),ibnd+1))
            ENDDO
+           !$omp end do
+           !$omp do
+           DO ir = 1, mbia
+              psic( box_beta(ir,ia) ) = psic( box_beta(ir,ia) ) + &
+                    SUM(betasave(ir,1:nh(nt),ia)*cmplx( w1(1:nh(nt)), w2(1:nh(nt)) ,kind=DP))
+           ENDDO
+           !$omp end do
            !$omp end parallel
            !
         ENDIF
         !
      ENDDO
      !
-     DEALLOCATE( w1, w2 )
   ENDDO
+  DEALLOCATE( w1, w2 )
   !
   CALL stop_clock( 'add_vuspsir' )
   !
@@ -2003,7 +1963,7 @@ MODULE realus
   USE cell_base,              ONLY : omega
   USE wavefunctions,          ONLY : psic
   USE ions_base,              ONLY : nat, nsp, ityp
-  USE uspp_param,             ONLY : nh
+  USE uspp_param,             ONLY : nh, nhm
   USE lsda_mod,               ONLY : current_spin
   USE uspp,                   ONLY : deeq, indv_ijkb0
   USE becmod,                 ONLY : bec_type, becp
@@ -2013,23 +1973,21 @@ MODULE realus
   !
   INTEGER, INTENT(in) :: ibnd, last
   !
-  INTEGER :: ih, jh, jkb, nt, ia, ir, mbia
+  INTEGER :: ih, nt, ia, ir, mbia, ijkb0
   REAL(DP) :: fac
   !
   COMPLEX(DP), ALLOCATABLE :: w1(:)
   !
-  REAL(DP), EXTERNAL :: ddot
-  !
   CALL start_clock( 'add_vuspsir' )
 
   IF( dffts%has_task_groups ) CALL errore( 'add_vuspsir_k', 'task_groups not implemented', 1 )
-
+  !
   call set_xkphase(current_k)
   !
   fac = sqrt(omega)
   !
+  ALLOCATE( w1(nhm))
   DO nt = 1, nsp
-     ALLOCATE( w1(nh(nt)))
      !
      DO ia = 1, nat
         !
@@ -2037,38 +1995,28 @@ MODULE realus
            !
            mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
 
-           w1 = (0.d0, 0d0)
-           !
-           DO ih = 1, nh(nt)
-              !
-              DO jh = 1, nh(nt)
-                 !
-                 jkb = indv_ijkb0(ia) + jh
-                 !
-                 w1(ih) = w1(ih) + deeq(ih,jh,ia,current_spin) * becp%k(jkb,ibnd)
-                 !
-              ENDDO
-              !
-           ENDDO
-           !
-           w1 = w1 * fac
-           !
+           ijkb0 = indv_ijkb0(ia)
+
            !$omp parallel
+           !$omp do
            DO ih = 1, nh(nt)
-              !$omp do
-              DO ir = 1, mbia
-                 psic( box_beta(ir,ia) ) = psic( box_beta(ir,ia) ) + xkphase(ir,ia)*betasave(ir,ih,ia)*w1(ih)
-              ENDDO
-              !$omp end do
+              w1(ih) = fac * SUM( deeq(ih,1:nh(nt),ia,current_spin) * becp%k(ijkb0+1:ijkb0+nh(nt),ibnd))
            ENDDO
+           !$omp end do
+           !$omp do
+           DO ir = 1, mbia
+              psic( box_beta(ir,ia) ) = psic( box_beta(ir,ia) ) + &
+                                        xkphase(ir,ia)*SUM(betasave(ir,1:nh(nt),ia)*w1(1:nh(nt)))
+           ENDDO
+           !$omp end do
            !$omp end parallel
            !
         ENDIF
         !
      ENDDO
      !
-     DEALLOCATE( w1 )
   ENDDO
+  DEALLOCATE( w1 )
   CALL stop_clock( 'add_vuspsir' )
   RETURN
   !
@@ -2084,8 +2032,7 @@ MODULE realus
     !
     !! OBM 241008.
     !
-    USE wavefunctions, &
-                       ONLY : psic
+    USE wavefunctions, ONLY : psic
     USE gvecs,         ONLY : doublegrid
     USE klist,         ONLY : ngk, igk_k
     USE kinds,         ONLY : DP
@@ -2155,20 +2102,26 @@ MODULE realus
 
     ELSE !Task groups not used
         !
-        psic(:) = (0.d0, 0.d0)
+        !$omp parallel default(shared) private(j)
+        CALL threaded_barrier_memset(psic, 0.D0, dffts%nnr*2)
 
         IF (ibnd < last) THEN
            ! two ffts at the same time
+           !$omp do
            DO j = 1, ngk(1)
               psic (dffts%nl (igk_k(j,1))) =       orbital(j, ibnd) + (0.0d0,1.d0)*orbital(j, ibnd+1)
               psic (dffts%nlm(igk_k(j,1))) = conjg(orbital(j, ibnd) - (0.0d0,1.d0)*orbital(j, ibnd+1))
            ENDDO
+           !$omp end do
         ELSE
+           !$omp do
            DO j = 1, ngk(1)
               psic (dffts%nl (igk_k(j,1))) =       orbital(j, ibnd)
               psic (dffts%nlm(igk_k(j,1))) = conjg(orbital(j, ibnd))
            ENDDO
+           !$omp end do
         ENDIF
+        !$omp end parallel
         !
        CALL invfft ('Wave', psic, dffts)
         !
@@ -2283,29 +2236,42 @@ MODULE realus
          !larger memory slightly faster
         CALL fwfft ('Wave', psic, dffts)
 
-
         IF (ibnd < last) THEN
-
            ! two ffts at the same time
-           DO j = 1, ngk(1)
-              fp = (psic (dffts%nl(igk_k(j,1))) + psic (dffts%nlm(igk_k(j,1))))*0.5d0
-              fm = (psic (dffts%nl(igk_k(j,1))) - psic (dffts%nlm(igk_k(j,1))))*0.5d0
-              IF( add_to_orbital_ ) THEN
+
+           IF( add_to_orbital_ ) THEN
+              !$omp parallel do 
+              DO j = 1, ngk(1)
+                 fp = (psic (dffts%nl(igk_k(j,1))) + psic (dffts%nlm(igk_k(j,1))))*0.5d0
+                 fm = (psic (dffts%nl(igk_k(j,1))) - psic (dffts%nlm(igk_k(j,1))))*0.5d0
                  orbital( j, ibnd)   = orbital( j, ibnd)   + cmplx( dble(fp), aimag(fm),kind=DP)
                  orbital( j, ibnd+1) = orbital( j, ibnd+1) + cmplx(aimag(fp),- dble(fm),kind=DP)
-              ELSE
+              ENDDO
+              !$omp end parallel do
+           ELSE
+              !$omp parallel do
+              DO j = 1, ngk(1)
+                 fp = (psic (dffts%nl(igk_k(j,1))) + psic (dffts%nlm(igk_k(j,1))))*0.5d0
+                 fm = (psic (dffts%nl(igk_k(j,1))) - psic (dffts%nlm(igk_k(j,1))))*0.5d0
                  orbital( j, ibnd)   = cmplx( dble(fp), aimag(fm),kind=DP)
                  orbital( j, ibnd+1) = cmplx(aimag(fp),- dble(fm),kind=DP)
-              ENDIF
-           ENDDO
+              ENDDO
+              !$omp end parallel do
+           ENDIF
         ELSE
-           DO j = 1, ngk(1)
-              IF( add_to_orbital_ ) THEN
+           IF( add_to_orbital_ ) THEN
+              !$omp parallel do
+              DO j = 1, ngk(1)
                  orbital(j, ibnd)   =  orbital(j, ibnd) +  psic (dffts%nl(igk_k(j,1)))
-              ELSE
+              ENDDO
+              !$omp end parallel do
+           ELSE
+              !$omp parallel do
+              DO j = 1, ngk(1)
                  orbital(j, ibnd)   =  psic (dffts%nl(igk_k(j,1)))
-              ENDIF
-           ENDDO
+              ENDDO
+              !$omp end parallel do
+           ENDIF
         ENDIF
         IF (present(conserved)) THEN
          IF (conserved .eqv. .true.) THEN
