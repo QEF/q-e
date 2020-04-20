@@ -449,6 +449,7 @@ CONTAINS
          IF (PRESENT(J))           CALL init_hubbard_J (J, J_, label, "Hubbard_J" )
          IF (PRESENT(starting_ns)) CALL init_starting_ns(starting_ns_ , label)
          IF (PRESENT(Hub_ns))      CALL init_Hubbard_ns(Hubbard_ns_ , label)
+         IF (PRESENT(Hub_ns_nc))   CALL init_Hubbard_ns(Hubbard_ns_nc_ , label)
          !
          CALL qes_init (obj, "dftU", lda_plus_u_kind, U_, J0_, alpha_, beta_, J_, starting_ns_, Hubbard_ns_, &
                         U_projection_type, U_back_, alpha_back_, Hubbard_ns_nc_)
