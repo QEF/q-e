@@ -150,30 +150,30 @@ CONTAINS
     alat = atomic_structure%alat 
     IF ( atomic_structure%bravais_index_ispresent ) THEN 
        ibrav = atomic_structure%bravais_index 
-       IF (atomic_structure%use_alternative_axes_ispresent ) THEN 
+       IF (atomic_structure%alternative_axes_ispresent ) THEN 
          SELECT CASE(ibrav) 
             CASE(3)
-               IF (TRIM(atomic_structure%use_alternative_axes)=="b:a-b+c:-c") THEN 
+               IF (TRIM(atomic_structure%alternative_axes)=="b:a-b+c:-c") THEN 
                   ibrav = -ibrav
                ELSE 
                   CALL errore("qexsd_copy_atomic_structure:","alternative axes not recognised", 1) 
                END IF
             CASE(5) 
-               IF (TRIM(atomic_structure%use_alternative_axes)=="3fold-111") THEN
+               IF (TRIM(atomic_structure%alternative_axes)=="3fold-111") THEN
                     ibrav = -ibrav
                ELSE
                     CALL errore("qexsd_copy_atomic_structure:","alternative axes not recognised", 1)
                END IF
             CASE(9)
-                IF (TRIM(atomic_structure%use_alternative_axes)=="-b:a:c") THEN
+                IF (TRIM(atomic_structure%alternative_axes)=="-b:a:c") THEN
                       ibrav = -ibrav
-                ELSE IF( TRIM(atomic_structure%use_alternative_axes)=="bcoA-type") THEN 
+                ELSE IF( TRIM(atomic_structure%alternative_axes)=="bcoA-type") THEN 
                      ibrav = 91
                 ELSE
                       CALL errore("qexsd_copy_atomic_structure:","alternative axes not recognised", 1)
                 END IF
             CASE(13,12) 
-                IF (TRIM(atomic_structure%use_alternative_axes)=="unique-axis-b") THEN
+                IF (TRIM(atomic_structure%alternative_axes)=="unique-axis-b") THEN
                       ibrav = -ibrav
                  ELSE
                       CALL errore("qexsd_copy_atomic_structure:","alternativ axes not recognised", 1)
@@ -402,7 +402,7 @@ CONTAINS
           loop_on_hubbardUback:DO ihub =1, dft_obj%dftU%ndim_Hubbard_U_back
              symbol = TRIM(dft_obj%dftU%Hubbard_U_back(ihub)%specie)
              label  = TRIM(dft_obj%dftU%Hubbard_U_back(ihub)%label )
-             loop_on_speciesU:DO isp = 1, nsp
+             loop_on_speciesU_back:DO isp = 1, nsp
                 IF ( TRIM(symbol) == TRIM ( atm(isp) ) ) THEN
                      Hubbard_U_back(isp) = dft_obj%dftU%Hubbard_U_back(ihub)%HubbardCommon
                      SELECT CASE ( TRIM (label))
@@ -422,9 +422,9 @@ CONTAINS
                         IF (Hubbard_U_back(isp)/=0) &
                              CALL errore ("qexsd_copy_dft:", "unrecognized label for Hubbard back "//label, 1 )
                      END SELECT
-                     EXIT loop_on_speciesU
+                     EXIT loop_on_speciesU_back
                 END IF
-             END DO loop_on_speciesU
+             END DO loop_on_speciesU_back
           END DO loop_on_hubbardUback
        END IF
        ! 
@@ -455,12 +455,12 @@ CONTAINS
        IF ( dft_obj%dftU%Hubbard_alpha_back_ispresent) THEN    
             loop_on_hubbardAlphaBack:DO ihub =1, dft_obj%dftU%ndim_Hubbard_alpha_back
                symbol = TRIM(dft_obj%dftU%Hubbard_alpha_back(ihub)%specie)
-               loop_on_speciesAlpha:DO isp = 1, nsp
+               loop_on_speciesAlphaBack:DO isp = 1, nsp
                   IF ( TRIM(symbol) == TRIM (atm(isp)) ) THEN
                      Hubbard_alpha_back(isp) = dft_obj%dftU%Hubbard_alpha_back(ihub)%HubbardCommon
-                     EXIT loop_on_speciesAlpha
+                     EXIT loop_on_speciesAlphaBack
                   END IF
-               END DO loop_on_speciesAlpha
+               END DO loop_on_speciesAlphaBack
             END DO loop_on_hubbardAlphaBack
        END IF
        !

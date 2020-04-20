@@ -1093,8 +1093,8 @@ MODULE qes_types_module
     LOGICAL :: alat_ispresent = .FALSE.
     INTEGER :: bravais_index
     LOGICAL :: bravais_index_ispresent = .FALSE.
-    LOGICAL :: use_alternative_axes
-    LOGICAL :: use_alternative_axes_ispresent = .FALSE.
+    CHARACTER(len=256) :: alternative_axes
+    LOGICAL :: alternative_axes_ispresent = .FALSE.
     LOGICAL  :: atomic_positions_ispresent = .FALSE.
     TYPE(atomic_positions_type) :: atomic_positions
     LOGICAL  :: wyckoff_positions_ispresent = .FALSE.

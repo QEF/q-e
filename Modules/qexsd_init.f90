@@ -236,7 +236,7 @@ CONTAINS
       !
       CALL qes_init (obj, "atomic_structure", NAT=nat, ALAT=alat, &
               ATOMIC_POSITIONS=atomic_pos, CELL=cell , &
-              BRAVAIS_INDEX=ibrav_ptr, USE_ALTERNATIVE_AXES = use_alt_axes_ )
+              BRAVAIS_INDEX=ibrav_ptr, ALTERNATIVE_AXES = use_alt_axes_ )
       ! 
       ! cleanup 
       ! 

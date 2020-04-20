@@ -736,7 +736,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_species 
   !
   !
-  SUBROUTINE qes_init_atomic_structure(obj, tagname, nat, cell, alat, bravais_index, use_alternative_axes,&
+  SUBROUTINE qes_init_atomic_structure(obj, tagname, nat, cell, alat, bravais_index, alternative_axes,&
                                       atomic_positions, wyckoff_positions, crystal_positions)
     !
     IMPLICIT NONE
@@ -746,7 +746,7 @@ MODULE qes_init_module
     INTEGER, INTENT(IN) :: nat
     REAL(DP), OPTIONAL, INTENT(IN) :: alat
     INTEGER, OPTIONAL, INTENT(IN) :: bravais_index
-    LOGICAL, OPTIONAL, INTENT(IN) :: use_alternative_axes
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: alternative_axes
     TYPE(atomic_positions_type),OPTIONAL,INTENT(IN) :: atomic_positions
     TYPE(wyckoff_positions_type),OPTIONAL,INTENT(IN) :: wyckoff_positions
     TYPE(atomic_positions_type),OPTIONAL,INTENT(IN) :: crystal_positions
@@ -768,11 +768,11 @@ MODULE qes_init_module
     ELSE 
       obj%bravais_index_ispresent = .FALSE.
     END IF
-    IF (PRESENT(use_alternative_axes)) THEN
-      obj%use_alternative_axes_ispresent = .TRUE.
-      obj%use_alternative_axes = use_alternative_axes
+    IF (PRESENT(alternative_axes)) THEN
+      obj%alternative_axes_ispresent = .TRUE.
+      obj%alternative_axes = alternative_axes
     ELSE 
-      obj%use_alternative_axes_ispresent = .FALSE.
+      obj%alternative_axes_ispresent = .FALSE.
     END IF
     !
     IF ( PRESENT(atomic_positions)) THEN 

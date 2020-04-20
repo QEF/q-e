@@ -2509,11 +2509,11 @@ MODULE qes_read_module
       obj%bravais_index_ispresent = .FALSE.
     END IF
     !
-    IF (hasAttribute(xml_node, "use_alternative_axes")) THEN
-      CALL extractDataAttribute(xml_node, "use_alternative_axes", obj%use_alternative_axes)
-      obj%use_alternative_axes_ispresent = .TRUE.
+    IF (hasAttribute(xml_node, "alternative_axes")) THEN
+      CALL extractDataAttribute(xml_node, "alternative_axes", obj%alternative_axes)
+      obj%alternative_axes_ispresent = .TRUE.
     ELSE
-      obj%use_alternative_axes_ispresent = .FALSE.
+      obj%alternative_axes_ispresent = .FALSE.
     END IF
     !
 
