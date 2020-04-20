@@ -949,9 +949,9 @@ MODULE pw_restart_new
       USE symm_base,       ONLY : nrot, nsym, invsym, s, ft, irt, t_rev, &
            sname, inverse_s, s_axis_to_cart, &
            time_reversal, no_t_rev, nosym, checkallsym
-      USE ldaU,            ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_lmax, &
+      USE ldaU,            ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_lmax, Hubbard_lmax_back, &
                                   Hubbard_l, Hubbard_l_back, Hubbard_l1_back, &
-                                  Hubbard_U, Hubbard_J, Hubbard_V, Hubbard_alpha, &
+                                  Hubbard_U, Hubbard_U_back, Hubbard_J, Hubbard_V, Hubbard_alpha, &
                                   Hubbard_alpha_back, Hubbard_J0, Hubbard_beta, U_projection
       USE funct,           ONLY : set_exx_fraction, set_screening_parameter, &
            set_gau_parameter, enforce_input_dft,  &
