@@ -100,7 +100,7 @@ MODULE pw_restart_new
                                        Hubbard_l_back, Hubbard_l1_back, Hubbard_V, &
                                        Hubbard_alpha, Hubbard_alpha_back, nsg, &
                                        Hubbard_J0, Hubbard_beta, Hubbard_U_back, &
-                                       is_hubbard, is_hubbard_back, Hubbard_parameters
+                                       is_hubbard, is_hubbard_back, backall
       USE spin_orb,             ONLY : lspinorb, domag
       USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
                                        t_rev, sname, time_reversal, no_t_rev,&
@@ -442,7 +442,7 @@ MODULE pw_restart_new
                                   NONCOLIN = noncolin, LDA_PLUS_U_KIND = lda_plus_u_kind, U_PROJECTION_TYPE = U_projection, &
                                   U =U_opt, U_back = U_back_opt, J0 = J0_opt, J = J_opt, &
                                   alpha = alpha_opt, beta = beta_opt, alpha_back = alpha_back_opt,  & 
-                                  starting_ns = starting_ns_eigenvalue, Hub_ns = rho%ns, Hub_ns_nc = rho%ns_nc)
+                                  starting_ns = starting_ns_eigenvalue, Hub_ns = rho%ns, Hub_ns_nc = rho%ns_nc, BACKALL = backall)
          END IF 
          dft_name = get_dft_short()
          inlc = get_inlc()
@@ -950,7 +950,7 @@ MODULE pw_restart_new
            sname, inverse_s, s_axis_to_cart, &
            time_reversal, no_t_rev, nosym, checkallsym
       USE ldaU,            ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_lmax, Hubbard_lmax_back, &
-                                  Hubbard_l, Hubbard_l_back, Hubbard_l1_back, &
+                                  Hubbard_l, Hubbard_l_back, backall, &
                                   Hubbard_U, Hubbard_U_back, Hubbard_J, Hubbard_V, Hubbard_alpha, &
                                   Hubbard_alpha_back, Hubbard_J0, Hubbard_beta, U_projection
       USE funct,           ONLY : set_exx_fraction, set_screening_parameter, &
@@ -1054,7 +1054,7 @@ MODULE pw_restart_new
            dft_name, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
            exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
            lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax, &
-           Hubbard_l_back, Hubbard_l1_back, Hubbard_lmax_back, Hubbard_alpha_back, &
+           Hubbard_l_back, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
            Hubbard_U, Hubbard_U_back, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
            vdw_corr, scal6, lon_rcut, vdw_isolated )
       !! More DFT initializations

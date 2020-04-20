@@ -412,7 +412,7 @@ CONTAINS
       !
       SUBROUTINE qexsd_init_dftU (obj, nsp, psd, species, ityp, is_hubbard, is_hubbard_back, noncolin, &
                                   lda_plus_u_kind, U_projection_type, U, U_back, J0, J, &
-                                  alpha, beta, alpha_back, starting_ns, Hub_ns, Hub_ns_nc)
+                                  alpha, beta, alpha_back, starting_ns, Hub_ns, Hub_ns_nc, backall)
          IMPLICIT NONE 
          TYPE(dftU_type),INTENT(INOUT)  :: obj 
          INTEGER,INTENT(IN)             :: nsp
@@ -426,6 +426,7 @@ CONTAINS
          LOGICAL,OPTIONAL,INTENT(IN)    :: noncolin 
          REAL(DP),OPTIONAL,INTENT(IN)   :: U(:), U_back(:), J0(:), alpha(:), alpha_back(:), &
                                            beta(:), J(:,:)
+         LOGICAL,OPTIONAL,INTENT(IN)    :: backall(:)
          REAL(DP),OPTIONAL,INTENT(IN)   :: starting_ns(:,:,:), Hub_ns(:,:,:,:)
          COMPLEX(DP),OPTIONAL,INTENT(IN) :: Hub_ns_nc(:,:,:,:)
          !
@@ -482,7 +483,7 @@ CONTAINS
                   label(i)="no Hubbard"
                ENDIF
                ! Background part
-               IF (is_hubbard_back(i)) THEN
+               IF (is_hubbard_back(i) .AND. .NOT.backall(i)) THEN
                   hubb_l=set_hubbard_l_back(psd(i))
                   hubb_n=set_hubbard_n_back(psd(i))
                   WRITE (label(i),'(I0,A)') hubb_n,hubbard_shell(hubb_l+1)

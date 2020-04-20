@@ -310,7 +310,7 @@ CONTAINS
        dft_name, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
        exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
        lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax, &
-       Hubbard_l_back, Hubbard_l1_back, Hubbard_lmax_back, Hubbard_alpha_back, &
+       Hubbard_l_back, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
        Hubbard_U, Hubbard_U_back, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
        vdw_corr, scal6, lon_rcut, vdw_isolated )
     !-------------------------------------------------------------------
@@ -334,9 +334,10 @@ CONTAINS
     LOGICAL, INTENT(out) :: lda_plus_U
     INTEGER, INTENT(inout) :: lda_plus_U_kind, Hubbard_lmax, Hubbard_lmax_back
     CHARACTER(LEN=*), INTENT(inout) :: U_projection
-    INTEGER, INTENT(inout) :: Hubbard_l(:), Hubbard_l_back(:), Hubbard_l1_back(:)
+    INTEGER, INTENT(inout) :: Hubbard_l(:), Hubbard_l_back(:)
     REAL(dp), INTENT(inout) :: Hubbard_U(:), Hubbard_U_back(:), Hubbard_J0(:), Hubbard_J(:,:), &
                                Hubbard_alpha(:), Hubbard_alpha_back(:), Hubbard_beta(:)
+    LOGICAL, INTENT(inout) :: backall(:)
     !
     CHARACTER(LEN=*), INTENT(out) :: vdw_corr
     REAL(dp), INTENT(inout) :: scal6, lon_rcut
@@ -370,7 +371,6 @@ CONTAINS
        U_projection = TRIM ( dft_obj%dftU%U_projection_type )
        Hubbard_l =-1 
        Hubbard_l_back =-1 
-       Hubbard_l1_back =-1 
        !
        IF ( dft_obj%dftU%Hubbard_U_ispresent) THEN 
           loop_on_hubbardU:DO ihub =1, dft_obj%dftU%ndim_Hubbard_U
@@ -399,6 +399,7 @@ CONTAINS
        END IF 
        ! 
        IF ( dft_obj%dftU%Hubbard_U_back_ispresent) THEN
+          ! HERE 1. read backall, 2. if backall(i)=.false. continue reading the things below
           loop_on_hubbardUback:DO ihub =1, dft_obj%dftU%ndim_Hubbard_U_back
              symbol = TRIM(dft_obj%dftU%Hubbard_U_back(ihub)%specie)
              label  = TRIM(dft_obj%dftU%Hubbard_U_back(ihub)%label )
@@ -408,16 +409,12 @@ CONTAINS
                      SELECT CASE ( TRIM (label))
                      CASE ( '1s', '2s', '3s', '4s', '5s', '6s', '7s' )
                         Hubbard_l_back(isp)  = 0                           
-                        Hubbard_l1_back(isp) = 0                          
                      CASE ( '2p', '3p', '4p', '5p', '6p' )
                         Hubbard_l_back(isp)  = 1
-                        Hubbard_l1_back(isp) = 1
                      CASE ( '3d', '4d', '5d' )
                         Hubbard_l_back( isp )  = 2
-                        Hubbard_l1_back( isp ) = 2
                      CASE ( '4f', '5f' )
                         Hubbard_l_back(isp )  = 3
-                        Hubbard_l1_back(isp ) = 3
                      CASE  default
                         IF (Hubbard_U_back(isp)/=0) &
                              CALL errore ("qexsd_copy_dft:", "unrecognized label for Hubbard back "//label, 1 )
@@ -489,7 +486,7 @@ CONTAINS
        END IF
        !
        Hubbard_lmax      = MAXVAL( Hubbard_l(1:nsp) )
-       Hubbard_lmax_back = MAX ( MAXVAL( Hubbard_l_back(1:nsp) ), MAXVAL( Hubbard_l1_back(1:nsp) ) )
+       Hubbard_lmax_back = MAXVAL( Hubbard_l_back(1:nsp) ) 
        !  
     END IF
 
