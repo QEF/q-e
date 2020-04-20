@@ -145,6 +145,15 @@ MODULE qes_types_module
     !
   END TYPE Hubbard_ns_type
   !
+  TYPE :: backrestr_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    !
+  END TYPE backrestr_type
+  !
   TYPE :: smearing_type
     !
     CHARACTER(len=100) :: tagname
@@ -535,8 +544,30 @@ MODULE qes_types_module
     INTEGER   :: ndim_Hubbard_ns
     LOGICAL  :: U_projection_type_ispresent = .FALSE.
     CHARACTER(len=256) :: U_projection_type
+    LOGICAL  :: Hubbard_U_back_ispresent = .FALSE.
+    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_U_back
+    INTEGER   :: ndim_Hubbard_U_back
+    LOGICAL  :: Hubbard_alpha_back_ispresent = .FALSE.
+    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_alpha_back
+    INTEGER   :: ndim_Hubbard_alpha_back
+    LOGICAL  :: Hubbard_ns_nc_ispresent = .FALSE.
+    TYPE(Hubbard_ns_type), DIMENSION(:), ALLOCATABLE :: Hubbard_ns_nc
+    INTEGER   :: ndim_Hubbard_ns_nc
     !
   END TYPE dftU_type
+  !
+  TYPE :: HubbardBack_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    CHARACTER(len=256) :: species
+    CHARACTER(len=256) :: background
+    TYPE(backrestr_type), DIMENSION(:), ALLOCATABLE :: label
+    INTEGER   :: ndim_label
+    !
+  END TYPE HubbardBack_type
   !
   TYPE :: vdW_type
     !
@@ -1062,8 +1093,8 @@ MODULE qes_types_module
     LOGICAL :: alat_ispresent = .FALSE.
     INTEGER :: bravais_index
     LOGICAL :: bravais_index_ispresent = .FALSE.
-    CHARACTER(len=256) :: alternative_axes
-    LOGICAL :: alternative_axes_ispresent = .FALSE.
+    LOGICAL :: use_alternative_axes
+    LOGICAL :: use_alternative_axes_ispresent = .FALSE.
     LOGICAL  :: atomic_positions_ispresent = .FALSE.
     TYPE(atomic_positions_type) :: atomic_positions
     LOGICAL  :: wyckoff_positions_ispresent = .FALSE.

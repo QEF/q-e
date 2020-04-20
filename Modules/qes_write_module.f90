@@ -46,6 +46,8 @@ MODULE qes_write_module
     MODULE PROCEDURE qes_write_HubbardJ
     MODULE PROCEDURE qes_write_starting_ns
     MODULE PROCEDURE qes_write_Hubbard_ns
+    MODULE PROCEDURE qes_write_HubbardBack
+    MODULE PROCEDURE qes_write_backrestr
     MODULE PROCEDURE qes_write_vdW
     MODULE PROCEDURE qes_write_spin
     MODULE PROCEDURE qes_write_bands
@@ -569,7 +571,7 @@ MODULE qes_write_module
      CALL xml_addAttribute(xp, 'nat', obj%nat )
      IF (obj%alat_ispresent) CALL xml_addAttribute(xp, 'alat', obj%alat )
      IF (obj%bravais_index_ispresent) CALL xml_addAttribute(xp, 'bravais_index', obj%bravais_index )
-     IF (obj%alternative_axes_ispresent) CALL xml_addAttribute(xp, 'alternative_axes', TRIM(obj%alternative_axes) )
+     IF (obj%use_alternative_axes_ispresent) CALL xml_addAttribute(xp, 'use_alternative_axes', obj%use_alternative_axes )
      IF (obj%atomic_positions_ispresent) THEN
         CALL qes_write_atomic_positions (xp, obj%atomic_positions)
      END IF
@@ -812,6 +814,21 @@ MODULE qes_write_module
            CALL xml_addCharacters(xp, TRIM(obj%U_projection_type))
         CALL xml_EndElement(xp, "U_projection_type")
      END IF
+     IF (obj%Hubbard_U_back_ispresent) THEN
+        DO i = 1, obj%ndim_Hubbard_U_back
+           CALL qes_write_HubbardCommon(xp, obj%Hubbard_U_back(i) )
+        END DO
+     END IF
+     IF (obj%Hubbard_alpha_back_ispresent) THEN
+        DO i = 1, obj%ndim_Hubbard_alpha_back
+           CALL qes_write_HubbardCommon(xp, obj%Hubbard_alpha_back(i) )
+        END DO
+     END IF
+     IF (obj%Hubbard_ns_nc_ispresent) THEN
+        DO i = 1, obj%ndim_Hubbard_ns_nc
+           CALL qes_write_Hubbard_ns(xp, obj%Hubbard_ns_nc(i) )
+        END DO
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_dftU
 
@@ -897,6 +914,41 @@ MODULE qes_write_module
         END DO
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_Hubbard_ns
+
+   SUBROUTINE qes_write_HubbardBack(xp, obj) 
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(HubbardBack_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     CALL xml_addAttribute(xp, 'species', TRIM(obj%species) )
+     CALL xml_NewElement(xp, 'background')
+        CALL xml_addCharacters(xp, TRIM(obj%background))
+     CALL xml_EndElement(xp, 'background')
+     DO i = 1, obj%ndim_label
+        CALL qes_write_backrestr(xp, obj%label(i) )
+     END DO
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_HubbardBack
+
+   SUBROUTINE qes_write_backrestr(xp, obj) 
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(backrestr_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_backrestr
 
    SUBROUTINE qes_write_vdW(xp, obj) 
      !-----------------------------------------------------------------

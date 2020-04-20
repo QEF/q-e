@@ -97,8 +97,10 @@ MODULE pw_restart_new
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
       USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, &
                                        Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_J, &
-                                       Hubbard_alpha, Hubbard_J0, Hubbard_beta,&
-                                       is_hubbard
+                                       Hubbard_l_back, Hubbard_l1_back, Hubbard_V, &
+                                       Hubbard_alpha, Hubbard_alpha_back, nsg, &
+                                       Hubbard_J0, Hubbard_beta, Hubbard_U_back, &
+                                       is_hubbard, is_hubbard_back, Hubbard_parameters
       USE spin_orb,             ONLY : lspinorb, domag
       USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
                                        t_rev, sname, time_reversal, no_t_rev,&
@@ -176,7 +178,7 @@ MODULE pw_restart_new
       LOGICAL             :: scf_has_converged 
       INTEGER             :: itemp = 1
       REAL(DP),ALLOCATABLE :: london_c6_(:), bp_el_pol(:), bp_ion_pol(:), U_opt(:), J0_opt(:), alpha_opt(:), &
-                              J_opt(:,:), beta_opt(:) 
+                              J_opt(:,:), beta_opt(:), U_back_opt(:), alpha_back_opt(:) 
       CHARACTER(LEN=3),ALLOCATABLE :: species_(:)
       CHARACTER(LEN=20),TARGET   :: dft_nonlocc_
       INTEGER,TARGET             :: dftd3_version_
@@ -426,15 +428,21 @@ MODULE pw_restart_new
             CALL check_and_allocate(J0_opt, Hubbard_J0) 
             CALL check_and_allocate(alpha_opt, Hubbard_alpha) 
             CALL check_and_allocate(beta_opt, Hubbard_beta) 
+            CALL check_and_allocate(U_back_opt, Hubbard_U_back)
+            CALL check_and_allocate(alpha_back_opt, Hubbard_alpha_back)
             IF ( ANY(Hubbard_J(:,1:nsp) /= 0.0_DP)) THEN
                ALLOCATE (J_opt(3,nsp)) 
                J_opt(:, 1:nsp) = Hubbard_J(:, 1:nsp) 
-            END IF 
-            CALL qexsd_init_dftU (dftU_obj, NSP = nsp, SPECIES = atm(1:nsp), ITYP = ityp(1:nat),                     &
-                                  IS_HUBBARD = is_hubbard, PSD = upf(1:nsp)%psd, NONCOLIN = noncolin, U =U_opt, &
-                                  LDA_PLUS_U_KIND = lda_plus_u_kind, U_PROJECTION_TYPE = U_projection,               &
-                                  J0 = J0_opt, alpha = alpha_opt, beta = beta_opt, J = J_opt,        & 
-                                  starting_ns = starting_ns_eigenvalue, Hub_ns = rho%ns, Hub_ns_nc = rho%ns_nc ) 
+            END IF
+            ! 
+            ! Currently Hubbard_V, rho%nsb, and nsg are not written (read) to (from) XML 
+            ! 
+            CALL qexsd_init_dftU (dftU_obj, NSP = nsp, PSD = upf(1:nsp)%psd, SPECIES = atm(1:nsp), ITYP = ityp(1:nat), &
+                                  IS_HUBBARD = is_hubbard, IS_HUBBARD_BACK = is_hubbard_back,  &
+                                  NONCOLIN = noncolin, LDA_PLUS_U_KIND = lda_plus_u_kind, U_PROJECTION_TYPE = U_projection, &
+                                  U =U_opt, U_back = U_back_opt, J0 = J0_opt, J = J_opt, &
+                                  alpha = alpha_opt, beta = beta_opt, alpha_back = alpha_back_opt,  & 
+                                  starting_ns = starting_ns_eigenvalue, Hub_ns = rho%ns, Hub_ns_nc = rho%ns_nc)
          END IF 
          dft_name = get_dft_short()
          inlc = get_inlc()
@@ -942,8 +950,9 @@ MODULE pw_restart_new
            sname, inverse_s, s_axis_to_cart, &
            time_reversal, no_t_rev, nosym, checkallsym
       USE ldaU,            ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_lmax, &
-           Hubbard_l, Hubbard_U, Hubbard_J, Hubbard_alpha, &
-           Hubbard_J0, Hubbard_beta, U_projection
+                                  Hubbard_l, Hubbard_l_back, Hubbard_l1_back, &
+                                  Hubbard_U, Hubbard_J, Hubbard_V, Hubbard_alpha, &
+                                  Hubbard_alpha_back, Hubbard_J0, Hubbard_beta, U_projection
       USE funct,           ONLY : set_exx_fraction, set_screening_parameter, &
            set_gau_parameter, enforce_input_dft,  &
            start_exx, dft_is_hybrid
@@ -1045,7 +1054,8 @@ MODULE pw_restart_new
            dft_name, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
            exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
            lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax, &
-           Hubbard_U, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
+           Hubbard_l_back, Hubbard_l1_back, Hubbard_lmax_back, Hubbard_alpha_back, &
+           Hubbard_U, Hubbard_U_back, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
            vdw_corr, scal6, lon_rcut, vdw_isolated )
       !! More DFT initializations
       CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, lxdm )

@@ -47,6 +47,8 @@ MODULE qes_bcast_module
     MODULE PROCEDURE qes_bcast_HubbardJ
     MODULE PROCEDURE qes_bcast_starting_ns
     MODULE PROCEDURE qes_bcast_Hubbard_ns
+    MODULE PROCEDURE qes_bcast_HubbardBack
+    MODULE PROCEDURE qes_bcast_backrestr
     MODULE PROCEDURE qes_bcast_vdW
     MODULE PROCEDURE qes_bcast_spin
     MODULE PROCEDURE qes_bcast_bands
@@ -531,9 +533,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%bravais_index_ispresent, ionode_id, comm)
     IF (obj%bravais_index_ispresent) &
       CALL mp_bcast(obj%bravais_index, ionode_id, comm)
-    CALL mp_bcast(obj%alternative_axes_ispresent, ionode_id, comm)
-    IF (obj%alternative_axes_ispresent) &
-      CALL mp_bcast(obj%alternative_axes, ionode_id, comm)
+    CALL mp_bcast(obj%use_alternative_axes_ispresent, ionode_id, comm)
+    IF (obj%use_alternative_axes_ispresent) &
+      CALL mp_bcast(obj%use_alternative_axes, ionode_id, comm)
     CALL mp_bcast(obj%atomic_positions_ispresent, ionode_id, comm)
     IF (obj%atomic_positions_ispresent) &
       CALL qes_bcast_atomic_positions(obj%atomic_positions, ionode_id, comm)
@@ -792,6 +794,30 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%U_projection_type_ispresent, ionode_id, comm)
     IF (obj%U_projection_type_ispresent) &
       CALL mp_bcast(obj%U_projection_type, ionode_id, comm)
+    CALL mp_bcast(obj%Hubbard_U_back_ispresent, ionode_id, comm)
+    IF (obj%Hubbard_U_back_ispresent) THEN
+      CALL mp_bcast(obj%ndim_Hubbard_U_back, ionode_id, comm)
+      IF (.NOT.ionode) ALLOCATE(obj%Hubbard_U_back(obj%ndim_Hubbard_U_back))
+      DO i=1, obj%ndim_Hubbard_U_back
+        CALL qes_bcast_HubbardCommon(obj%Hubbard_U_back(i), ionode_id, comm)
+      ENDDO
+    ENDIF
+    CALL mp_bcast(obj%Hubbard_alpha_back_ispresent, ionode_id, comm)
+    IF (obj%Hubbard_alpha_back_ispresent) THEN
+      CALL mp_bcast(obj%ndim_Hubbard_alpha_back, ionode_id, comm)
+      IF (.NOT.ionode) ALLOCATE(obj%Hubbard_alpha_back(obj%ndim_Hubbard_alpha_back))
+      DO i=1, obj%ndim_Hubbard_alpha_back
+        CALL qes_bcast_HubbardCommon(obj%Hubbard_alpha_back(i), ionode_id, comm)
+      ENDDO
+    ENDIF
+    CALL mp_bcast(obj%Hubbard_ns_nc_ispresent, ionode_id, comm)
+    IF (obj%Hubbard_ns_nc_ispresent) THEN
+      CALL mp_bcast(obj%ndim_Hubbard_ns_nc, ionode_id, comm)
+      IF (.NOT.ionode) ALLOCATE(obj%Hubbard_ns_nc(obj%ndim_Hubbard_ns_nc))
+      DO i=1, obj%ndim_Hubbard_ns_nc
+        CALL qes_bcast_Hubbard_ns(obj%Hubbard_ns_nc(i), ionode_id, comm)
+      ENDDO
+    ENDIF
     !
   END SUBROUTINE qes_bcast_dftU
   !
@@ -886,6 +912,44 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%Hubbard_ns, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_Hubbard_ns
+  !
+  !
+  SUBROUTINE qes_bcast_HubbardBack(obj, ionode_id, comm )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(HubbardBack_type), INTENT(INOUT) :: obj
+    INTEGER, INTENT(IN) :: ionode_id, comm
+    INTEGER :: i
+    !
+    CALL mp_bcast(obj%tagname, ionode_id, comm)
+    CALL mp_bcast(obj%lwrite, ionode_id, comm)
+    CALL mp_bcast(obj%lread, ionode_id, comm)
+    !
+    CALL mp_bcast(obj%species, ionode_id, comm)
+    CALL mp_bcast(obj%background, ionode_id, comm)
+    CALL mp_bcast(obj%ndim_label, ionode_id, comm)
+    IF (.NOT.ionode) ALLOCATE(obj%label(obj%ndim_label))
+    DO i=1, obj%ndim_label
+      CALL qes_bcast_backrestr(obj%label(i), ionode_id, comm)
+    ENDDO
+    !
+  END SUBROUTINE qes_bcast_HubbardBack
+  !
+  !
+  SUBROUTINE qes_bcast_backrestr(obj, ionode_id, comm )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(backrestr_type), INTENT(INOUT) :: obj
+    INTEGER, INTENT(IN) :: ionode_id, comm
+    !
+    CALL mp_bcast(obj%tagname, ionode_id, comm)
+    CALL mp_bcast(obj%lwrite, ionode_id, comm)
+    CALL mp_bcast(obj%lread, ionode_id, comm)
+    !
+    !
+  END SUBROUTINE qes_bcast_backrestr
   !
   !
   SUBROUTINE qes_bcast_vdW(obj, ionode_id, comm )

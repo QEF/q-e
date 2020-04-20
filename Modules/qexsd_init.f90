@@ -15,6 +15,7 @@ MODULE qexsd_init
   !
   !
   USE kinds,            ONLY : DP
+  USE parameters,       ONLY : natx 
   ! 
   USE qes_types_module
   USE qes_reset_module, ONLY:  qes_reset 
@@ -235,7 +236,7 @@ CONTAINS
       !
       CALL qes_init (obj, "atomic_structure", NAT=nat, ALAT=alat, &
               ATOMIC_POSITIONS=atomic_pos, CELL=cell , &
-              BRAVAIS_INDEX=ibrav_ptr, ALTERNATIVE_AXES = use_alt_axes_ )
+              BRAVAIS_INDEX=ibrav_ptr, USE_ALTERNATIVE_AXES = use_alt_axes_ )
       ! 
       ! cleanup 
       ! 
@@ -409,8 +410,9 @@ CONTAINS
          !
       END SUBROUTINE qexsd_init_hybrid 
       !
-      SUBROUTINE qexsd_init_dftU (obj, nsp, psd, species, ityp, is_hubbard, lda_plus_u_kind, U_projection_type, &
-                                   U, J0, alpha, beta, J, noncolin, starting_ns, Hub_ns, Hub_ns_nc )
+      SUBROUTINE qexsd_init_dftU (obj, nsp, psd, species, ityp, is_hubbard, is_hubbard_back, noncolin, &
+                                  lda_plus_u_kind, U_projection_type, U, U_back, J0, J, &
+                                  alpha, beta, alpha_back, starting_ns, Hub_ns, Hub_ns_nc)
          IMPLICIT NONE 
          TYPE(dftU_type),INTENT(INOUT)  :: obj 
          INTEGER,INTENT(IN)             :: nsp
@@ -418,46 +420,55 @@ CONTAINS
          CHARACTER(LEN=*),INTENT(IN)    :: species(nsp)
          INTEGER,INTENT(IN)             :: ityp(:)
          LOGICAL,INTENT(IN)             :: is_hubbard(nsp)
+         LOGICAL,INTENT(IN)             :: is_hubbard_back(nsp)
          INTEGER,INTENT(IN)             :: lda_plus_u_kind
          CHARACTER(LEN=*),INTENT(IN)    :: U_projection_type
          LOGICAL,OPTIONAL,INTENT(IN)    :: noncolin 
-         REAL(DP),OPTIONAL,INTENT(IN)   :: U(:), J0(:), alpha(:), beta(:), J(:,:)
+         REAL(DP),OPTIONAL,INTENT(IN)   :: U(:), U_back(:), J0(:), alpha(:), alpha_back(:), &
+                                           beta(:), J(:,:)
          REAL(DP),OPTIONAL,INTENT(IN)   :: starting_ns(:,:,:), Hub_ns(:,:,:,:)
          COMPLEX(DP),OPTIONAL,INTENT(IN) :: Hub_ns_nc(:,:,:,:)
          !
          CHARACTER(10), ALLOCATABLE            :: label(:)
-         TYPE(HubbardCommon_type),ALLOCATABLE  :: U_(:), J0_(:), alpha_(:), beta_(:) 
+         TYPE(HubbardCommon_type),ALLOCATABLE  :: U_(:), U_back_(:), J0_(:), alpha_(:), &
+                                                  alpha_back_(:), beta_(:) 
          TYPE(HubbardJ_type),ALLOCATABLE       :: J_(:) 
          TYPE(starting_ns_type),ALLOCATABLE    :: starting_ns_(:) 
-         TYPE(Hubbard_ns_type),ALLOCATABLE     :: Hubbard_ns_(:)
+         TYPE(Hubbard_ns_type),ALLOCATABLE     :: Hubbard_ns_(:), Hubbard_ns_nc_(:)
          LOGICAL                               :: noncolin_ =.FALSE.
          !
          CALL set_labels ()
          IF ( PRESENT(noncolin)) noncolin_ = noncolin 
          !
-         IF (PRESENT(U))   CALL init_hubbard_commons(U, U_, label, "Hubbard_U") 
-         IF (PRESENT(J0))  CALL init_hubbard_commons(J0, J0_, label, "Hubbard_J0" ) 
-         IF (PRESENT(alpha)) CALL init_hubbard_commons(alpha, alpha_,label, "Hubbard_alpha") 
-         IF (PRESENT(beta))  CALL init_hubbard_commons(beta, beta_, label, "Hubbard_beta")
-         IF (PRESENT(J))     CALL init_hubbard_J (J, J_, label, "Hubbard_J" )
+         IF (PRESENT(U))           CALL init_hubbard_commons(U, U_, label, "Hubbard_U") 
+         IF (PRESENT(U_back))      CALL init_hubbard_commons(U_back, U_back_, label, "Hubbard_U_back") 
+         IF (PRESENT(J0))          CALL init_hubbard_commons(J0, J0_, label, "Hubbard_J0" ) 
+         IF (PRESENT(alpha))       CALL init_hubbard_commons(alpha, alpha_,label, "Hubbard_alpha") 
+         IF (PRESENT(alpha_back))  CALL init_hubbard_commons(alpha_back, alpha_back_,label, "Hubbard_alpha_back") 
+         IF (PRESENT(beta))        CALL init_hubbard_commons(beta, beta_, label, "Hubbard_beta")
+         IF (PRESENT(J))           CALL init_hubbard_J (J, J_, label, "Hubbard_J" )
          IF (PRESENT(starting_ns)) CALL init_starting_ns(starting_ns_ , label)
-         IF (PRESENT(Hub_ns))  CALL init_Hubbard_ns(Hubbard_ns_ , label)
+         IF (PRESENT(Hub_ns))      CALL init_Hubbard_ns(Hubbard_ns_ , label)
          !
          CALL qes_init (obj, "dftU", lda_plus_u_kind, U_, J0_, alpha_, beta_, J_, starting_ns_, Hubbard_ns_, &
-                           U_projection_type)
+                        U_projection_type, U_back_, alpha_back_, Hubbard_ns_nc_)
          ! 
          CALL reset_hubbard_commons(U_)
+         CALL reset_hubbard_commons(U_back_)
          CALL reset_hubbard_commons(beta_) 
          CALL reset_hubbard_commons(J0_)
          CALL reset_hubbard_commons(alpha_) 
+         CALL reset_hubbard_commons(alpha_back_) 
          CALL reset_hubbard_J(J_)
          CALL reset_starting_ns(starting_ns_) 
          CALL reset_Hubbard_ns(Hubbard_ns_) 
+         !
       CONTAINS 
          SUBROUTINE set_labels() 
             IMPLICIT NONE 
             CHARACTER                     :: hubbard_shell(4)=['s','p','d','f']
             INTEGER,EXTERNAL              :: set_hubbard_l,set_hubbard_n
+            INTEGER,EXTERNAL              :: set_hubbard_l_back,set_hubbard_n_back
             INTEGER                       :: i, hubb_l, hubb_n 
             ! 
             ALLOCATE(label(nsp))
@@ -468,8 +479,16 @@ CONTAINS
                   WRITE (label(i),'(I0,A)') hubb_n,hubbard_shell(hubb_l+1) 
                ELSE
                   label(i)="no Hubbard"
-               END IF
-            END DO
+               ENDIF
+               ! Background part
+               IF (is_hubbard_back(i)) THEN
+                  hubb_l=set_hubbard_l_back(psd(i))
+                  hubb_n=set_hubbard_n_back(psd(i))
+                  WRITE (label(i),'(I0,A)') hubb_n,hubbard_shell(hubb_l+1)
+               ELSE
+                  label(i)="no Hubbard"
+               ENDIF
+            ENDDO
          END SUBROUTINE set_labels 
 
          SUBROUTINE init_hubbard_commons(dati, objs, labs, tag)
@@ -479,7 +498,6 @@ CONTAINS
             CHARACTER(LEN=*) :: labs(:), tag
             INTEGER          :: i
             !
-
             ALLOCATE (objs(nsp)) 
             DO i = 1, nsp 
                CALL qes_init( objs(i), TRIM(tag), TRIM(species(i)), dati(i), TRIM(labs(i)))
@@ -567,8 +585,7 @@ CONTAINS
             !
             REAL(DP), ALLOCATABLE               :: Hubb_occ_aux(:,:) 
             INTEGER                             :: i, is,ind, ldim, m1, m2, llmax, nat, nspin
-            ! 
-            ! 
+            !
             IF (PRESENT(Hub_ns_nc )) THEN
                llmax = SIZE ( Hub_ns_nc, 1) 
                nat = size(Hub_ns_nc,4)

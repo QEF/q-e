@@ -78,3 +78,48 @@ FUNCTION set_hubbard_n( psd ) RESULT( hubbard_n )
   RETURN  
   !
 END FUNCTION set_hubbard_n
+!---------------------------------------------------------------------------
+
+!---------------------------------------------------------------------------
+FUNCTION set_hubbard_n_back( psd ) RESULT( hubbard_n_back )
+  !---------------------------------------------------------------------------
+  !
+  USE io_global, ONLY : stdout
+  !
+  IMPLICIT NONE
+  !
+  INTEGER                      :: hubbard_n_back
+  CHARACTER(LEN=2), INTENT(IN) :: psd
+  !
+  !
+  SELECT CASE( TRIM(ADJUSTL(psd)) )
+     !
+     ! ... transition metals
+     !
+
+     CASE( 'H', 'He', 'Li', 'Be', 'Na', 'Mg', 'K', 'Ca', 'Rb', 'Sr', 'Cs', 'Ba',&
+           'Fr', 'Ra' )
+        !
+        hubbard_n_back =  -1 ! no background states
+        !
+     CASE( 'Se' )
+        !
+        hubbard_n_back =  3
+        !
+     CASE( 'Zn' ) 
+        !
+        hubbard_n_back =  3
+        !
+     CASE DEFAULT
+        !
+        hubbard_n_back = -1
+        !
+        WRITE( stdout, '(/,"psd = ",A,/)' ) psd
+        !
+        CALL errore( 'set_hubbard_n_back', 'pseudopotential not yet inserted', 1 )
+        !
+  END SELECT
+  !
+  RETURN  
+  !
+END FUNCTION set_hubbard_n_back

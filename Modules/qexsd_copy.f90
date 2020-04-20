@@ -150,30 +150,30 @@ CONTAINS
     alat = atomic_structure%alat 
     IF ( atomic_structure%bravais_index_ispresent ) THEN 
        ibrav = atomic_structure%bravais_index 
-       IF (atomic_structure%alternative_axes_ispresent ) THEN 
+       IF (atomic_structure%use_alternative_axes_ispresent ) THEN 
          SELECT CASE(ibrav) 
             CASE(3)
-               IF (TRIM(atomic_structure%alternative_axes)=="b:a-b+c:-c") THEN 
+               IF (TRIM(atomic_structure%use_alternative_axes)=="b:a-b+c:-c") THEN 
                   ibrav = -ibrav
                ELSE 
                   CALL errore("qexsd_copy_atomic_structure:","alternative axes not recognised", 1) 
                END IF
             CASE(5) 
-               IF (TRIM(atomic_structure%alternative_axes)=="3fold-111") THEN
+               IF (TRIM(atomic_structure%use_alternative_axes)=="3fold-111") THEN
                     ibrav = -ibrav
                ELSE
                     CALL errore("qexsd_copy_atomic_structure:","alternative axes not recognised", 1)
                END IF
             CASE(9)
-                IF (TRIM(atomic_structure%alternative_axes)=="-b:a:c") THEN
+                IF (TRIM(atomic_structure%use_alternative_axes)=="-b:a:c") THEN
                       ibrav = -ibrav
-                ELSE IF( TRIM(atomic_structure%alternative_axes)=="bcoA-type") THEN 
+                ELSE IF( TRIM(atomic_structure%use_alternative_axes)=="bcoA-type") THEN 
                      ibrav = 91
                 ELSE
                       CALL errore("qexsd_copy_atomic_structure:","alternative axes not recognised", 1)
                 END IF
             CASE(13,12) 
-                IF (TRIM(atomic_structure%alternative_axes)=="unique-axis-b") THEN
+                IF (TRIM(atomic_structure%use_alternative_axes)=="unique-axis-b") THEN
                       ibrav = -ibrav
                  ELSE
                       CALL errore("qexsd_copy_atomic_structure:","alternativ axes not recognised", 1)
@@ -310,7 +310,8 @@ CONTAINS
        dft_name, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
        exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
        lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax, &
-       Hubbard_U, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
+       Hubbard_l_back, Hubbard_l1_back, Hubbard_lmax_back, Hubbard_alpha_back, &
+       Hubbard_U, Hubbard_U_back, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
        vdw_corr, scal6, lon_rcut, vdw_isolated )
     !-------------------------------------------------------------------
     ! 
@@ -331,11 +332,11 @@ CONTAINS
     LOGICAL, INTENT(inout) :: x_gamma_extrapolation
     !
     LOGICAL, INTENT(out) :: lda_plus_U
-    INTEGER, INTENT(inout) :: lda_plus_U_kind, Hubbard_lmax
+    INTEGER, INTENT(inout) :: lda_plus_U_kind, Hubbard_lmax, Hubbard_lmax_back
     CHARACTER(LEN=*), INTENT(inout) :: U_projection
-    INTEGER, INTENT(inout) :: Hubbard_l(:)
-    REAL(dp), INTENT(inout) :: Hubbard_U(:), Hubbard_J0(:), Hubbard_J(:,:), &
-         Hubbard_alpha(:), Hubbard_beta(:)
+    INTEGER, INTENT(inout) :: Hubbard_l(:), Hubbard_l_back(:), Hubbard_l1_back(:)
+    REAL(dp), INTENT(inout) :: Hubbard_U(:), Hubbard_U_back(:), Hubbard_J0(:), Hubbard_J(:,:), &
+                               Hubbard_alpha(:), Hubbard_alpha_back(:), Hubbard_beta(:)
     !
     CHARACTER(LEN=*), INTENT(out) :: vdw_corr
     REAL(dp), INTENT(inout) :: scal6, lon_rcut
@@ -368,6 +369,9 @@ CONTAINS
        lda_plus_u_kind = dft_obj%dftU%lda_plus_u_kind
        U_projection = TRIM ( dft_obj%dftU%U_projection_type )
        Hubbard_l =-1 
+       Hubbard_l_back =-1 
+       Hubbard_l1_back =-1 
+       !
        IF ( dft_obj%dftU%Hubbard_U_ispresent) THEN 
           loop_on_hubbardU:DO ihub =1, dft_obj%dftU%ndim_Hubbard_U
              symbol = TRIM(dft_obj%dftU%Hubbard_U(ihub)%specie)
@@ -389,12 +393,42 @@ CONTAINS
                              CALL errore ("qexsd_copy_dft:", "unrecognized label for Hubbard "//label, 1 ) 
                      END SELECT
                      EXIT loop_on_speciesU
-                  END IF 
-                END DO loop_on_speciesU
-            END DO loop_on_hubbardU
-         END IF 
-         
-         IF ( dft_obj%dftU%Hubbard_J0_ispresent ) THEN 
+                END IF 
+             END DO loop_on_speciesU
+          END DO loop_on_hubbardU
+       END IF 
+       ! 
+       IF ( dft_obj%dftU%Hubbard_U_back_ispresent) THEN
+          loop_on_hubbardUback:DO ihub =1, dft_obj%dftU%ndim_Hubbard_U_back
+             symbol = TRIM(dft_obj%dftU%Hubbard_U_back(ihub)%specie)
+             label  = TRIM(dft_obj%dftU%Hubbard_U_back(ihub)%label )
+             loop_on_speciesU:DO isp = 1, nsp
+                IF ( TRIM(symbol) == TRIM ( atm(isp) ) ) THEN
+                     Hubbard_U_back(isp) = dft_obj%dftU%Hubbard_U_back(ihub)%HubbardCommon
+                     SELECT CASE ( TRIM (label))
+                     CASE ( '1s', '2s', '3s', '4s', '5s', '6s', '7s' )
+                        Hubbard_l_back(isp)  = 0                           
+                        Hubbard_l1_back(isp) = 0                          
+                     CASE ( '2p', '3p', '4p', '5p', '6p' )
+                        Hubbard_l_back(isp)  = 1
+                        Hubbard_l1_back(isp) = 1
+                     CASE ( '3d', '4d', '5d' )
+                        Hubbard_l_back( isp )  = 2
+                        Hubbard_l1_back( isp ) = 2
+                     CASE ( '4f', '5f' )
+                        Hubbard_l_back(isp )  = 3
+                        Hubbard_l1_back(isp ) = 3
+                     CASE  default
+                        IF (Hubbard_U_back(isp)/=0) &
+                             CALL errore ("qexsd_copy_dft:", "unrecognized label for Hubbard back "//label, 1 )
+                     END SELECT
+                     EXIT loop_on_speciesU
+                END IF
+             END DO loop_on_speciesU
+          END DO loop_on_hubbardUback
+       END IF
+       ! 
+       IF ( dft_obj%dftU%Hubbard_J0_ispresent ) THEN 
             loop_on_hubbardj0:DO ihub =1, dft_obj%dftU%ndim_Hubbard_J0
                symbol = TRIM(dft_obj%dftU%Hubbard_J0(ihub)%specie)
                loop_on_speciesj0:DO isp = 1, nsp
@@ -404,8 +438,9 @@ CONTAINS
                   END IF
                END DO loop_on_speciesj0
             END DO loop_on_hubbardj0
-         END IF
-         IF ( dft_obj%dftU%Hubbard_alpha_ispresent) THEN 
+       END IF
+       !
+       IF ( dft_obj%dftU%Hubbard_alpha_ispresent) THEN 
             loop_on_hubbardAlpha:DO ihub =1, dft_obj%dftU%ndim_Hubbard_alpha
                symbol = TRIM(dft_obj%dftU%Hubbard_alpha(ihub)%specie)
                loop_on_speciesAlpha:DO isp = 1, nsp
@@ -415,8 +450,21 @@ CONTAINS
                   END IF
                END DO loop_on_speciesAlpha
             END DO loop_on_hubbardAlpha
-         END IF
-         IF ( dft_obj%dftU%Hubbard_beta_ispresent) THEN 
+       END IF
+       !
+       IF ( dft_obj%dftU%Hubbard_alpha_back_ispresent) THEN    
+            loop_on_hubbardAlphaBack:DO ihub =1, dft_obj%dftU%ndim_Hubbard_alpha_back
+               symbol = TRIM(dft_obj%dftU%Hubbard_alpha_back(ihub)%specie)
+               loop_on_speciesAlpha:DO isp = 1, nsp
+                  IF ( TRIM(symbol) == TRIM (atm(isp)) ) THEN
+                     Hubbard_alpha_back(isp) = dft_obj%dftU%Hubbard_alpha_back(ihub)%HubbardCommon
+                     EXIT loop_on_speciesAlpha
+                  END IF
+               END DO loop_on_speciesAlpha
+            END DO loop_on_hubbardAlphaBack
+       END IF
+       !
+       IF ( dft_obj%dftU%Hubbard_beta_ispresent) THEN 
             loop_on_hubbardBeta:DO ihub =1, dft_obj%dftU%ndim_Hubbard_beta
                symbol = TRIM(dft_obj%dftU%Hubbard_beta(ihub)%specie)
                loop_on_speciesBeta:DO isp = 1, nsp
@@ -426,8 +474,9 @@ CONTAINS
                   END IF
                END DO loop_on_speciesBeta
             END DO loop_on_hubbardBeta
-         END IF
-         IF ( dft_obj%dftU%Hubbard_J_ispresent) THEN 
+       END IF
+       !
+       IF ( dft_obj%dftU%Hubbard_J_ispresent) THEN 
             loop_on_hubbardJ:DO ihub =1, dft_obj%dftU%ndim_Hubbard_J
                symbol = TRIM(dft_obj%dftU%Hubbard_J(ihub)%specie)
                loop_on_speciesJ:DO isp = 1, nsp
@@ -437,9 +486,12 @@ CONTAINS
                   END IF
                END DO loop_on_speciesJ
             END DO loop_on_hubbardJ
-         END IF
-         Hubbard_lmax = MAXVAL( Hubbard_l(1:nsp) )
-      END IF
+       END IF
+       !
+       Hubbard_lmax      = MAXVAL( Hubbard_l(1:nsp) )
+       Hubbard_lmax_back = MAX ( MAXVAL( Hubbard_l_back(1:nsp) ), MAXVAL( Hubbard_l1_back(1:nsp) ) )
+       !  
+    END IF
 
       IF ( dft_obj%vdW_ispresent ) THEN 
          vdw_corr = TRIM( dft_obj%vdW%vdw_corr ) 
