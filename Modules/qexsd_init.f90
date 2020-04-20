@@ -420,7 +420,7 @@ CONTAINS
          CHARACTER(LEN=*),INTENT(IN)    :: species(nsp)
          INTEGER,INTENT(IN)             :: ityp(:)
          LOGICAL,INTENT(IN)             :: is_hubbard(nsp)
-         LOGICAL,INTENT(IN)             :: is_hubbard_back(nsp)
+         LOGICAL,OPTIONAL,INTENT(IN)    :: is_hubbard_back(nsp)
          INTEGER,INTENT(IN)             :: lda_plus_u_kind
          CHARACTER(LEN=*),INTENT(IN)    :: U_projection_type
          LOGICAL,OPTIONAL,INTENT(IN)    :: noncolin 
@@ -483,13 +483,15 @@ CONTAINS
                   label(i)="no Hubbard"
                ENDIF
                ! Background part
-               IF (is_hubbard_back(i) .AND. .NOT.backall(i)) THEN
-                  hubb_l=set_hubbard_l_back(psd(i))
-                  hubb_n=set_hubbard_n_back(psd(i))
-                  WRITE (label(i),'(I0,A)') hubb_n,hubbard_shell(hubb_l+1)
-               ELSE
-                  label(i)="no Hubbard"
-               ENDIF
+               IF (PRESENT(is_hubbard_back) .AND. PRESENT(backall)) THEN
+                  IF (is_hubbard_back(i) .AND. .NOT.backall(i)) THEN
+                     hubb_l=set_hubbard_l_back(psd(i))
+                     hubb_n=set_hubbard_n_back(psd(i))
+                     WRITE (label(i),'(I0,A)') hubb_n,hubbard_shell(hubb_l+1)
+                  ELSE
+                     label(i)="no Hubbard"
+                  ENDIF
+              ENDIF
             ENDDO
          END SUBROUTINE set_labels 
 
