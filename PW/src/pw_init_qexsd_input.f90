@@ -25,11 +25,12 @@
                                 ip_nqx3 => nqx3, ip_ecutfock => ecutfock, ip_ecutvcut => ecutvcut, localization_thr,  &
                                 screening_parameter, exx_fraction, x_gamma_extrapolation, exxdiv_treatment,           &
                                 ip_lda_plus_u=>lda_plus_u, ip_lda_plus_u_kind => lda_plus_u_kind,                     & 
-                                ip_hubbard_u => hubbard_u, ip_hubbard_j0 => hubbard_j0,                               &
-                                ip_hubbard_beta => hubbard_beta, ip_hubbard_alpha => hubbard_alpha,                   &
+                                ip_hubbard_u => hubbard_u, ip_hubbard_u_back => hubbard_u_back,                       &
+                                ip_hubbard_j0 => hubbard_j0,  ip_hubbard_beta => hubbard_beta,                        &
+                                ip_hubbard_alpha => hubbard_alpha, ip_Hubbard_alpha_back => hubbard_alpha_back,       &
                                 ip_hubbard_j => hubbard_j,  starting_ns_eigenvalue, u_projection_type,                &
                                 vdw_corr, london, london_s6, london_c6, london_rcut, london_c6, xdm_a1, xdm_a2,       &
-                                ts_vdw_econv_thr, ts_vdw_isolated, dftd3_threebody,dftd3_version,                   &
+                                ts_vdw_econv_thr, ts_vdw_isolated, dftd3_threebody,dftd3_version,                     &
                                 ip_noncolin => noncolin, ip_spinorbit => lspinorb,                                    &
                                 nbnd, smearing, degauss, ip_occupations=>occupations, tot_charge, tot_magnetization,  &
                                 ip_k_points => k_points, ecutwfc, ip_ecutrho => ecutrho, ip_nr1 => nr1, ip_nr2=>nr2,  &
@@ -85,7 +86,8 @@
   REAL(DP),ALLOCATABLE                     ::   tau(:,:)
   REAL(DP)                                 ::   alat, a1(3), a2(3), a3(3), gamma_xk(3,1), gamma_wk(1)
   INTEGER                                  ::   inlc,nt
-  LOGICAL                                  ::   lsda,dft_is_hybrid,dft_is_nonlocc,is_hubbard(ntypx)=.FALSE., ibrav_lattice
+  LOGICAL                                  ::   lsda,dft_is_hybrid,  dft_is_nonlocc,  is_hubbard(ntypx)=.FALSE.,&
+                                                is_hubbard_back(ntypx) = .FALSE.,  ibrav_lattice 
   INTEGER                                  ::   Hubbard_l=0,hublmax=0
   INTEGER                                  ::   iexch, icorr, igcx, igcc, imeta, my_vec(6) 
   INTEGER,EXTERNAL                         ::   set_hubbard_l
@@ -280,6 +282,9 @@
                             ANY(ip_Hubbard_J(:,nt) /= 0.0_DP)
         IF (is_hubbard(nt)) hublmax = MAX (hublmax, set_hubbard_l(upf(nt)%psd))
         !
+        is_hubbard_back(nt) = ip_Hubbard_U_back(nt) /= 0.0_DP .OR. &
+                              ip_Hubbard_alpha_back(nt) /= 0.0_DP  
+        !
      END DO
      IF ( ANY(ip_hubbard_u(1:ntyp) /=0.0_DP)) THEN
         ALLOCATE(hubbard_U_(ntyp))
@@ -312,9 +317,10 @@
          starting_ns_eigenvalue(1:2*hublmax+1, 1:spin_ns, 1:ntyp)
       END IF
       CALL qexsd_init_dftU(dftU_, NSP = ntyp, PSD = upf(1:ntyp)%psd, SPECIES = atm(1:ntyp), ITYP = ip_ityp(1:ntyp), &
-                           IS_HUBBARD = is_hubbard(1:ntyp), LDA_PLUS_U_KIND = ip_lda_plus_u_kind,                   &
-                           U_PROJECTION_TYPE=u_projection_type, U=hubbard_U_, J0=hubbard_J0_, NONCOLIN=ip_noncolin, &
-                           ALPHA = hubbard_alpha_, BETA = hubbard_beta_, J = hubbard_J_, STARTING_NS = starting_ns_ )
+                           IS_HUBBARD = is_hubbard(1:ntyp), IS_HUBBARD_BACK= is_hubbard_back(1:ntyp),               &
+                           LDA_PLUS_U_KIND = ip_lda_plus_u_kind, U_PROJECTION_TYPE=u_projection_type, U=hubbard_U_, &
+                           J0=hubbard_J0_, NONCOLIN=ip_noncolin, ALPHA = hubbard_alpha_, BETA = hubbard_beta_,      &
+                           J = hubbard_J_, STARTING_NS = starting_ns_ )
   END IF
   CALL qexsd_init_dft(obj%dft, TRIM(dft_name), hybrid_, vdW_, dftU_)
   IF (ASSOCIATED(hybrid_)) THEN
