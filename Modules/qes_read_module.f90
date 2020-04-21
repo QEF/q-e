@@ -48,7 +48,7 @@ MODULE qes_read_module
     MODULE PROCEDURE qes_read_starting_ns
     MODULE PROCEDURE qes_read_Hubbard_ns
     MODULE PROCEDURE qes_read_HubbardBack
-    MODULE PROCEDURE qes_read_backrestr
+    MODULE PROCEDURE qes_read_backL
     MODULE PROCEDURE qes_read_vdW
     MODULE PROCEDURE qes_read_spin
     MODULE PROCEDURE qes_read_bands
@@ -3464,6 +3464,22 @@ MODULE qes_read_module
        obj%U_projection_type_ispresent = .FALSE.
     END IF
     !
+    tmp_node_list => getElementsByTagname(xml_node, "Hubbard_back")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%Hubbard_back_ispresent = .TRUE.
+    ELSE
+      obj%Hubbard_back_ispresent = .FALSE.
+    END IF
+    obj%ndim_Hubbard_back = tmp_node_list_size
+    ALLOCATE(obj%Hubbard_back(tmp_node_list_size))
+    DO index=1,tmp_node_list_size
+        tmp_node => item( tmp_node_list, index-1 )
+        CALL qes_read_HubbardBack(tmp_node, obj%Hubbard_back(index), ierr )
+    END DO
+    !
     tmp_node_list => getElementsByTagname(xml_node, "Hubbard_U_back")
     tmp_node_list_size = getLength(tmp_node_list)
     !
@@ -3850,23 +3866,23 @@ MODULE qes_read_module
        END IF
     END IF
     !
-    tmp_node_list => getElementsByTagname(xml_node, "label")
+    tmp_node_list => getElementsByTagname(xml_node, "l_number")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size < 1) THEN
         IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:HubbardBackType","label: not enough elements")
+           CALL infomsg("qes_read:HubbardBackType","l_number: not enough elements")
            ierr = ierr + 1 
         ELSE 
-           CALL errore("qes_read:HubbardBackType","label: not enough elements",10)
+           CALL errore("qes_read:HubbardBackType","l_number: not enough elements",10)
         END IF
     END IF
     !
-    obj%ndim_label = tmp_node_list_size
-    ALLOCATE(obj%label(tmp_node_list_size))
+    obj%ndim_l_number = tmp_node_list_size
+    ALLOCATE(obj%l_number(tmp_node_list_size))
     DO index=1,tmp_node_list_size
         tmp_node => item( tmp_node_list, index-1 )
-        CALL qes_read_backrestr(tmp_node, obj%label(index), ierr )
+        CALL qes_read_backL(tmp_node, obj%l_number(index), ierr )
     END DO
     !
     !
@@ -3875,12 +3891,12 @@ MODULE qes_read_module
   END SUBROUTINE qes_read_HubbardBack
   !
   !
-  SUBROUTINE qes_read_backrestr(xml_node, obj, ierr )
+  SUBROUTINE qes_read_backL(xml_node, obj, ierr )
     !
     IMPLICIT NONE
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
-    TYPE(backrestr_type), INTENT(OUT) :: obj
+    TYPE(backL_type), INTENT(OUT) :: obj
     INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
@@ -3890,14 +3906,29 @@ MODULE qes_read_module
     obj%tagname = getTagName(xml_node)
     !
 
+    IF (hasAttribute(xml_node, "l_index")) THEN
+      CALL extractDataAttribute(xml_node, "l_index", obj%l_index)
+    ELSE
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: backLType",&
+                        "required attribute l_index not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: backLType",&
+                      "required attribute l_index not found", 10 )
+      END IF
+    END IF
+    !
 
 
 
     !
+    !
+    CALL extractDataContent(xml_node, obj%backL )
     !
     obj%lwrite = .TRUE.
     !
-  END SUBROUTINE qes_read_backrestr
+  END SUBROUTINE qes_read_backL
   !
   !
   SUBROUTINE qes_read_vdW(xml_node, obj, ierr )

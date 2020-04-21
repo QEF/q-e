@@ -145,14 +145,17 @@ MODULE qes_types_module
     !
   END TYPE Hubbard_ns_type
   !
-  TYPE :: backrestr_type
+  TYPE :: backL_type
     !
     CHARACTER(len=100) :: tagname
     LOGICAL  :: lwrite = .FALSE.
     LOGICAL  :: lread  = .FALSE.
     !
+    INTEGER :: l_index
     !
-  END TYPE backrestr_type
+    INTEGER :: backL
+    !
+  END TYPE backL_type
   !
   TYPE :: smearing_type
     !
@@ -513,49 +516,6 @@ MODULE qes_types_module
     !
   END TYPE hybrid_type
   !
-  TYPE :: dftU_type
-    !
-    CHARACTER(len=100) :: tagname
-    LOGICAL  :: lwrite = .FALSE.
-    LOGICAL  :: lread  = .FALSE.
-    !
-    LOGICAL  :: lda_plus_u_kind_ispresent = .FALSE.
-    INTEGER :: lda_plus_u_kind
-    LOGICAL  :: Hubbard_U_ispresent = .FALSE.
-    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_U
-    INTEGER   :: ndim_Hubbard_U
-    LOGICAL  :: Hubbard_J0_ispresent = .FALSE.
-    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_J0
-    INTEGER   :: ndim_Hubbard_J0
-    LOGICAL  :: Hubbard_alpha_ispresent = .FALSE.
-    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_alpha
-    INTEGER   :: ndim_Hubbard_alpha
-    LOGICAL  :: Hubbard_beta_ispresent = .FALSE.
-    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_beta
-    INTEGER   :: ndim_Hubbard_beta
-    LOGICAL  :: Hubbard_J_ispresent = .FALSE.
-    TYPE(HubbardJ_type), DIMENSION(:), ALLOCATABLE :: Hubbard_J
-    INTEGER   :: ndim_Hubbard_J
-    LOGICAL  :: starting_ns_ispresent = .FALSE.
-    TYPE(starting_ns_type), DIMENSION(:), ALLOCATABLE :: starting_ns
-    INTEGER   :: ndim_starting_ns
-    LOGICAL  :: Hubbard_ns_ispresent = .FALSE.
-    TYPE(Hubbard_ns_type), DIMENSION(:), ALLOCATABLE :: Hubbard_ns
-    INTEGER   :: ndim_Hubbard_ns
-    LOGICAL  :: U_projection_type_ispresent = .FALSE.
-    CHARACTER(len=256) :: U_projection_type
-    LOGICAL  :: Hubbard_U_back_ispresent = .FALSE.
-    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_U_back
-    INTEGER   :: ndim_Hubbard_U_back
-    LOGICAL  :: Hubbard_alpha_back_ispresent = .FALSE.
-    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_alpha_back
-    INTEGER   :: ndim_Hubbard_alpha_back
-    LOGICAL  :: Hubbard_ns_nc_ispresent = .FALSE.
-    TYPE(Hubbard_ns_type), DIMENSION(:), ALLOCATABLE :: Hubbard_ns_nc
-    INTEGER   :: ndim_Hubbard_ns_nc
-    !
-  END TYPE dftU_type
-  !
   TYPE :: HubbardBack_type
     !
     CHARACTER(len=100) :: tagname
@@ -564,8 +524,8 @@ MODULE qes_types_module
     !
     CHARACTER(len=256) :: species
     CHARACTER(len=256) :: background
-    TYPE(backrestr_type), DIMENSION(:), ALLOCATABLE :: label
-    INTEGER   :: ndim_label
+    TYPE(backL_type), DIMENSION(:), ALLOCATABLE :: l_number
+    INTEGER   :: ndim_l_number
     !
   END TYPE HubbardBack_type
   !
@@ -1105,21 +1065,51 @@ MODULE qes_types_module
     !
   END TYPE atomic_structure_type
   !
-  TYPE :: dft_type
+  TYPE :: dftU_type
     !
     CHARACTER(len=100) :: tagname
     LOGICAL  :: lwrite = .FALSE.
     LOGICAL  :: lread  = .FALSE.
     !
-    CHARACTER(len=256) :: functional
-    LOGICAL  :: hybrid_ispresent = .FALSE.
-    TYPE(hybrid_type) :: hybrid
-    LOGICAL  :: dftU_ispresent = .FALSE.
-    TYPE(dftU_type) :: dftU
-    LOGICAL  :: vdW_ispresent = .FALSE.
-    TYPE(vdW_type) :: vdW
+    LOGICAL  :: lda_plus_u_kind_ispresent = .FALSE.
+    INTEGER :: lda_plus_u_kind
+    LOGICAL  :: Hubbard_U_ispresent = .FALSE.
+    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_U
+    INTEGER   :: ndim_Hubbard_U
+    LOGICAL  :: Hubbard_J0_ispresent = .FALSE.
+    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_J0
+    INTEGER   :: ndim_Hubbard_J0
+    LOGICAL  :: Hubbard_alpha_ispresent = .FALSE.
+    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_alpha
+    INTEGER   :: ndim_Hubbard_alpha
+    LOGICAL  :: Hubbard_beta_ispresent = .FALSE.
+    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_beta
+    INTEGER   :: ndim_Hubbard_beta
+    LOGICAL  :: Hubbard_J_ispresent = .FALSE.
+    TYPE(HubbardJ_type), DIMENSION(:), ALLOCATABLE :: Hubbard_J
+    INTEGER   :: ndim_Hubbard_J
+    LOGICAL  :: starting_ns_ispresent = .FALSE.
+    TYPE(starting_ns_type), DIMENSION(:), ALLOCATABLE :: starting_ns
+    INTEGER   :: ndim_starting_ns
+    LOGICAL  :: Hubbard_ns_ispresent = .FALSE.
+    TYPE(Hubbard_ns_type), DIMENSION(:), ALLOCATABLE :: Hubbard_ns
+    INTEGER   :: ndim_Hubbard_ns
+    LOGICAL  :: U_projection_type_ispresent = .FALSE.
+    CHARACTER(len=256) :: U_projection_type
+    LOGICAL  :: Hubbard_back_ispresent = .FALSE.
+    TYPE(HubbardBack_type), DIMENSION(:), ALLOCATABLE :: Hubbard_back
+    INTEGER   :: ndim_Hubbard_back
+    LOGICAL  :: Hubbard_U_back_ispresent = .FALSE.
+    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_U_back
+    INTEGER   :: ndim_Hubbard_U_back
+    LOGICAL  :: Hubbard_alpha_back_ispresent = .FALSE.
+    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_alpha_back
+    INTEGER   :: ndim_Hubbard_alpha_back
+    LOGICAL  :: Hubbard_ns_nc_ispresent = .FALSE.
+    TYPE(Hubbard_ns_type), DIMENSION(:), ALLOCATABLE :: Hubbard_ns_nc
+    INTEGER   :: ndim_Hubbard_ns_nc
     !
-  END TYPE dft_type
+  END TYPE dftU_type
   !
   TYPE :: basis_set_type
     !
@@ -1300,6 +1290,59 @@ MODULE qes_types_module
     !
   END TYPE band_structure_type
   !
+  TYPE :: step_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    INTEGER :: n_step
+    TYPE(scf_conv_type) :: scf_conv
+    TYPE(atomic_structure_type) :: atomic_structure
+    TYPE(total_energy_type) :: total_energy
+    TYPE(matrix_type) :: forces
+    LOGICAL  :: stress_ispresent = .FALSE.
+    TYPE(matrix_type) :: stress
+    LOGICAL  :: FCP_force_ispresent = .FALSE.
+    REAL(DP) :: FCP_force
+    LOGICAL  :: FCP_tot_charge_ispresent = .FALSE.
+    REAL(DP) :: FCP_tot_charge
+    !
+  END TYPE step_type
+  !
+  TYPE :: dft_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    CHARACTER(len=256) :: functional
+    LOGICAL  :: hybrid_ispresent = .FALSE.
+    TYPE(hybrid_type) :: hybrid
+    LOGICAL  :: dftU_ispresent = .FALSE.
+    TYPE(dftU_type) :: dftU
+    LOGICAL  :: vdW_ispresent = .FALSE.
+    TYPE(vdW_type) :: vdW
+    !
+  END TYPE dft_type
+  !
+  TYPE :: outputElectricField_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    LOGICAL  :: BerryPhase_ispresent = .FALSE.
+    TYPE(BerryPhaseOutput_type) :: BerryPhase
+    LOGICAL  :: finiteElectricFieldInfo_ispresent = .FALSE.
+    TYPE(finiteFieldOut_type) :: finiteElectricFieldInfo
+    LOGICAL  :: dipoleInfo_ispresent = .FALSE.
+    TYPE(dipoleOutput_type) :: dipoleInfo
+    LOGICAL  :: gateInfo_ispresent = .FALSE.
+    TYPE(gateInfo_type) :: gateInfo
+    !
+  END TYPE outputElectricField_type
+  !
   TYPE :: input_type
     !
     CHARACTER(len=100) :: tagname
@@ -1337,43 +1380,6 @@ MODULE qes_types_module
     TYPE(spin_constraints_type) :: spin_constraints
     !
   END TYPE input_type
-  !
-  TYPE :: step_type
-    !
-    CHARACTER(len=100) :: tagname
-    LOGICAL  :: lwrite = .FALSE.
-    LOGICAL  :: lread  = .FALSE.
-    !
-    INTEGER :: n_step
-    TYPE(scf_conv_type) :: scf_conv
-    TYPE(atomic_structure_type) :: atomic_structure
-    TYPE(total_energy_type) :: total_energy
-    TYPE(matrix_type) :: forces
-    LOGICAL  :: stress_ispresent = .FALSE.
-    TYPE(matrix_type) :: stress
-    LOGICAL  :: FCP_force_ispresent = .FALSE.
-    REAL(DP) :: FCP_force
-    LOGICAL  :: FCP_tot_charge_ispresent = .FALSE.
-    REAL(DP) :: FCP_tot_charge
-    !
-  END TYPE step_type
-  !
-  TYPE :: outputElectricField_type
-    !
-    CHARACTER(len=100) :: tagname
-    LOGICAL  :: lwrite = .FALSE.
-    LOGICAL  :: lread  = .FALSE.
-    !
-    LOGICAL  :: BerryPhase_ispresent = .FALSE.
-    TYPE(BerryPhaseOutput_type) :: BerryPhase
-    LOGICAL  :: finiteElectricFieldInfo_ispresent = .FALSE.
-    TYPE(finiteFieldOut_type) :: finiteElectricFieldInfo
-    LOGICAL  :: dipoleInfo_ispresent = .FALSE.
-    TYPE(dipoleOutput_type) :: dipoleInfo
-    LOGICAL  :: gateInfo_ispresent = .FALSE.
-    TYPE(gateInfo_type) :: gateInfo
-    !
-  END TYPE outputElectricField_type
   !
   TYPE :: output_type
     !

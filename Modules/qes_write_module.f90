@@ -47,7 +47,7 @@ MODULE qes_write_module
     MODULE PROCEDURE qes_write_starting_ns
     MODULE PROCEDURE qes_write_Hubbard_ns
     MODULE PROCEDURE qes_write_HubbardBack
-    MODULE PROCEDURE qes_write_backrestr
+    MODULE PROCEDURE qes_write_backL
     MODULE PROCEDURE qes_write_vdW
     MODULE PROCEDURE qes_write_spin
     MODULE PROCEDURE qes_write_bands
@@ -814,6 +814,11 @@ MODULE qes_write_module
            CALL xml_addCharacters(xp, TRIM(obj%U_projection_type))
         CALL xml_EndElement(xp, "U_projection_type")
      END IF
+     IF (obj%Hubbard_back_ispresent) THEN
+        DO i = 1, obj%ndim_Hubbard_back
+           CALL qes_write_HubbardBack(xp, obj%Hubbard_back(i) )
+        END DO
+     END IF
      IF (obj%Hubbard_U_back_ispresent) THEN
         DO i = 1, obj%ndim_Hubbard_U_back
            CALL qes_write_HubbardCommon(xp, obj%Hubbard_U_back(i) )
@@ -930,25 +935,27 @@ MODULE qes_write_module
      CALL xml_NewElement(xp, 'background')
         CALL xml_addCharacters(xp, TRIM(obj%background))
      CALL xml_EndElement(xp, 'background')
-     DO i = 1, obj%ndim_label
-        CALL qes_write_backrestr(xp, obj%label(i) )
+     DO i = 1, obj%ndim_l_number
+        CALL qes_write_backL(xp, obj%l_number(i) )
      END DO
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_HubbardBack
 
-   SUBROUTINE qes_write_backrestr(xp, obj) 
+   SUBROUTINE qes_write_backL(xp, obj) 
      !-----------------------------------------------------------------
      IMPLICIT NONE
      TYPE (xmlf_t),INTENT(INOUT)                      :: xp
-     TYPE(backrestr_type),INTENT(IN)    :: obj
+     TYPE(backL_type),INTENT(IN)    :: obj
      ! 
      INTEGER                                          :: i 
      ! 
      IF ( .NOT. obj%lwrite ) RETURN 
      ! 
      CALL xml_NewElement(xp, TRIM(obj%tagname))
+     CALL xml_addAttribute(xp, 'l_index', obj%l_index )
+        CALL xml_AddCharacters(xp, obj%backL)
      CALL xml_EndElement(xp, TRIM(obj%tagname))
-   END SUBROUTINE qes_write_backrestr
+   END SUBROUTINE qes_write_backL
 
    SUBROUTINE qes_write_vdW(xp, obj) 
      !-----------------------------------------------------------------

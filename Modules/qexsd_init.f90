@@ -410,9 +410,10 @@ CONTAINS
          !
       END SUBROUTINE qexsd_init_hybrid 
       !
-      SUBROUTINE qexsd_init_dftU (obj, nsp, psd, species, ityp, is_hubbard, is_hubbard_back, noncolin, &
-                                  lda_plus_u_kind, U_projection_type, U, U_back, J0, J, &
-                                  alpha, beta, alpha_back, starting_ns, Hub_ns, Hub_ns_nc, backall)
+      SUBROUTINE qexsd_init_dftU (obj, nsp, psd, species, ityp, is_hubbard, &
+                                  is_hubbard_back, backall, hubb_l_back, hubb_l1_back, & 
+                                  noncolin, lda_plus_u_kind, U_projection_type, U, U_back, J0, J, &
+                                  alpha, beta, alpha_back, starting_ns, Hub_ns, Hub_ns_nc )
          IMPLICIT NONE 
          TYPE(dftU_type),INTENT(INOUT)  :: obj 
          INTEGER,INTENT(IN)             :: nsp
@@ -421,12 +422,14 @@ CONTAINS
          INTEGER,INTENT(IN)             :: ityp(:)
          LOGICAL,INTENT(IN)             :: is_hubbard(nsp)
          LOGICAL,OPTIONAL,INTENT(IN)    :: is_hubbard_back(nsp)
+         LOGICAL,OPTIONAL,INTENT(IN)    :: backall(nsp)
+         INTEGER,OPTIONAL,INTENT(IN)    :: hubb_l_back(nsp)
+         INTEGER,OPTIONAL,INTENT(IN)    :: hubb_l1_back(nsp) 
          INTEGER,INTENT(IN)             :: lda_plus_u_kind
          CHARACTER(LEN=*),INTENT(IN)    :: U_projection_type
          LOGICAL,OPTIONAL,INTENT(IN)    :: noncolin 
          REAL(DP),OPTIONAL,INTENT(IN)   :: U(:), U_back(:), J0(:), alpha(:), alpha_back(:), &
                                            beta(:), J(:,:)
-         LOGICAL,OPTIONAL,INTENT(IN)    :: backall(:)
          REAL(DP),OPTIONAL,INTENT(IN)   :: starting_ns(:,:,:), Hub_ns(:,:,:,:)
          COMPLEX(DP),OPTIONAL,INTENT(IN) :: Hub_ns_nc(:,:,:,:)
          !
@@ -436,6 +439,7 @@ CONTAINS
          TYPE(HubbardJ_type),ALLOCATABLE       :: J_(:) 
          TYPE(starting_ns_type),ALLOCATABLE    :: starting_ns_(:) 
          TYPE(Hubbard_ns_type),ALLOCATABLE     :: Hubbard_ns_(:), Hubbard_ns_nc_(:)
+         TYPE(HubbardBack_type),ALLOCATABLE    :: hub_back_(:) 
          LOGICAL                               :: noncolin_ =.FALSE.
          !
          CALL set_labels ()
@@ -451,9 +455,11 @@ CONTAINS
          IF (PRESENT(starting_ns)) CALL init_starting_ns(starting_ns_ , label)
          IF (PRESENT(Hub_ns))      CALL init_Hubbard_ns(Hubbard_ns_ , label)
          IF (PRESENT(Hub_ns_nc))   CALL init_Hubbard_ns(Hubbard_ns_nc_ , label)
+         IF (PRESENT(is_hubbard_back)) &
+              CALL init_Hubbard_back(is_hubbard_back, Hub_back_, hubb_l_back, backall, hubb_l1_back) 
          !
          CALL qes_init (obj, "dftU", lda_plus_u_kind, U_, J0_, alpha_, beta_, J_, starting_ns_, Hubbard_ns_, &
-                        U_projection_type, U_back_, alpha_back_, Hubbard_ns_nc_)
+                        U_projection_type, Hub_back_, U_back_, alpha_back_, Hubbard_ns_nc_)
          ! 
          CALL reset_hubbard_commons(U_)
          CALL reset_hubbard_commons(U_back_)
@@ -630,6 +636,48 @@ CONTAINS
             !
          END SUBROUTINE init_Hubbard_ns 
          
+         SUBROUTINE init_Hubbard_back(is_back, objs, l_back, backall_, l1_back) 
+            IMPLICIT NONE
+            LOGICAL, INTENT(IN)                                  :: is_back(nsp) 
+            INTEGER, INTENT(IN)                                  :: l_back(nsp)
+            TYPE(HubbardBack_type),ALLOCATABLE,INTENT(INOUT)     :: objs(:) 
+            LOGICAL,OPTIONAL,INTENT(IN)                          :: backall_(nsp) 
+            INTEGER,OPTIONAL,INTENT(IN)                          :: l1_back(nsp)  
+            !
+            INTEGER  :: isp, il, ndimbackL  
+            LOGICAL,ALLOCATABLE  :: temp(:) 
+            TYPE(backL_type)     :: backL_objs(2)  
+            CHARACTER(LEN=16)    :: backchar
+            ALLOCATE(objs(nsp), temp(nsp)) 
+            IF (PRESENT(backall_)) THEN 
+               temp(1:nsp)  = backall_(1:nsp)
+            ELSE 
+               temp(1:nsp) = .FALSE.
+            END IF 
+            DO isp =1, nsp 
+               CALL qes_init(backL_objs(1), "l_number", l_index=0, backL = l_back(nsp))
+               ndimbackL = 1 
+               IF (temp(isp) .AND. PRESENT(l1_back) ) THEN 
+                  IF (l1_back(isp) >=0) THEN
+                     ndimbackL=2 
+                     CALL qes_init(backL_objs(2), "l_number", l_index=1, backL  = l1_back(nsp)) 
+                  END IF 
+               END IF 
+               IF (temp(isp)) THEN
+                  backchar = 'two_orbitals'
+               ELSE 
+                  backchar = 'one_orbital'
+               END IF 
+               CALL qes_init(objs(isp), "Hubbard_back", SPECIES = TRIM(species(ityp(isp))), &
+                             background=TRIM(backchar),  l_number = backL_objs(1:ndimbackL))    
+               IF (.NOT. is_back(isp)) objs(isp)%lwrite = .FALSE.
+               DO il = 1, ndimbackL
+                  CALL qes_reset(backL_objs(il))
+               END DO 
+            END DO 
+         END SUBROUTINE init_Hubbard_back 
+
+
          SUBROUTINE reset_Hubbard_ns(objs) 
             IMPLICIT NONE 
             ! 

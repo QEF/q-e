@@ -51,7 +51,7 @@ MODULE qes_init_module
     MODULE PROCEDURE qes_init_starting_ns
     MODULE PROCEDURE qes_init_Hubbard_ns
     MODULE PROCEDURE qes_init_HubbardBack
-    MODULE PROCEDURE qes_init_backrestr
+    MODULE PROCEDURE qes_init_backL
     MODULE PROCEDURE qes_init_vdW
     MODULE PROCEDURE qes_init_spin
     MODULE PROCEDURE qes_init_bands
@@ -1035,7 +1035,7 @@ MODULE qes_init_module
   !
   SUBROUTINE qes_init_dftU(obj, tagname, lda_plus_u_kind, Hubbard_U, Hubbard_J0, Hubbard_alpha,&
                           Hubbard_beta, Hubbard_J, starting_ns, Hubbard_ns, U_projection_type,&
-                          Hubbard_U_back, Hubbard_alpha_back, Hubbard_ns_nc)
+                          Hubbard_back, Hubbard_U_back, Hubbard_alpha_back, Hubbard_ns_nc)
     !
     IMPLICIT NONE
     !
@@ -1050,6 +1050,7 @@ MODULE qes_init_module
     TYPE(starting_ns_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: starting_ns
     TYPE(Hubbard_ns_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_ns
     CHARACTER(LEN=*),OPTIONAL,INTENT(IN) :: U_projection_type
+    TYPE(HubbardBack_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_back
     TYPE(HubbardCommon_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_U_back
     TYPE(HubbardCommon_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_alpha_back
     TYPE(Hubbard_ns_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_ns_nc
@@ -1125,6 +1126,14 @@ MODULE qes_init_module
       obj%U_projection_type = U_projection_type
     ELSE 
       obj%U_projection_type_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(Hubbard_back)) THEN 
+      obj%Hubbard_back_ispresent = .TRUE.
+      ALLOCATE(obj%Hubbard_back(SIZE(Hubbard_back)))
+      obj%ndim_Hubbard_back = SIZE(Hubbard_back) 
+      obj%Hubbard_back = Hubbard_back
+    ELSE 
+      obj%Hubbard_back_ispresent = .FALSE.
     END IF
     IF ( PRESENT(Hubbard_U_back)) THEN 
       obj%Hubbard_U_back_ispresent = .TRUE.
@@ -1266,7 +1275,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_Hubbard_ns
   !
   !
-  SUBROUTINE qes_init_HubbardBack(obj, tagname, species, background, label)
+  SUBROUTINE qes_init_HubbardBack(obj, tagname, species, background, l_number)
     !
     IMPLICIT NONE
     !
@@ -1274,7 +1283,7 @@ MODULE qes_init_module
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     CHARACTER(LEN=*), INTENT(IN) :: species
     CHARACTER(LEN=*),INTENT(IN) :: background
-    TYPE(backrestr_type),DIMENSION(:),INTENT(IN) :: label
+    TYPE(backL_type),DIMENSION(:),INTENT(IN) :: l_number
     !
     obj%tagname = TRIM(tagname) 
     obj%lwrite = .TRUE.
@@ -1282,26 +1291,30 @@ MODULE qes_init_module
     obj%species = species
     !
     obj%background = background
-    ALLOCATE( obj%label(SIZE(label))) 
-    obj%ndim_label = SIZE(label)
-    obj%label = label
+    ALLOCATE( obj%l_number(SIZE(l_number))) 
+    obj%ndim_l_number = SIZE(l_number)
+    obj%l_number = l_number
     !
   END SUBROUTINE qes_init_HubbardBack 
   !
   !
-  SUBROUTINE qes_init_backrestr(obj, tagname)
+  SUBROUTINE qes_init_backL(obj, tagname, l_index, backL)
     !
     IMPLICIT NONE
     !
-    TYPE(backrestr_type), INTENT(OUT) :: obj
+    TYPE(backL_type), INTENT(OUT) :: obj
     CHARACTER(LEN=*), INTENT(IN) :: tagname
+    INTEGER, INTENT(IN) :: l_index
+    INTEGER, INTENT(IN) :: backL
     !
     obj%tagname = TRIM(tagname) 
     obj%lwrite = .TRUE.
     obj%lread = .TRUE.
+    obj%l_index = l_index
     !
+    obj%backL = backL
     !
-  END SUBROUTINE qes_init_backrestr 
+  END SUBROUTINE qes_init_backL 
   !
   !
   SUBROUTINE qes_init_vdW(obj, tagname, vdw_corr, dftd3_version, dftd3_threebody, non_local_term,&

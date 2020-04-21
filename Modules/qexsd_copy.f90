@@ -310,7 +310,7 @@ CONTAINS
        dft_name, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
        exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
        lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax, &
-       Hubbard_l_back, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
+       Hubbard_l_back, Hubbard_l1_back, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
        Hubbard_U, Hubbard_U_back, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
        vdw_corr, scal6, lon_rcut, vdw_isolated )
     !-------------------------------------------------------------------
@@ -334,7 +334,7 @@ CONTAINS
     LOGICAL, INTENT(out) :: lda_plus_U
     INTEGER, INTENT(inout) :: lda_plus_U_kind, Hubbard_lmax, Hubbard_lmax_back
     CHARACTER(LEN=*), INTENT(inout) :: U_projection
-    INTEGER, INTENT(inout) :: Hubbard_l(:), Hubbard_l_back(:)
+    INTEGER, INTENT(inout) :: Hubbard_l(:), Hubbard_l_back(:), Hubbard_l1_back(:) 
     REAL(dp), INTENT(inout) :: Hubbard_U(:), Hubbard_U_back(:), Hubbard_J0(:), Hubbard_J(:,:), &
                                Hubbard_alpha(:), Hubbard_alpha_back(:), Hubbard_beta(:)
     LOGICAL, INTENT(inout) :: backall(:)
@@ -406,24 +406,31 @@ CONTAINS
              loop_on_speciesU_back:DO isp = 1, nsp
                 IF ( TRIM(symbol) == TRIM ( atm(isp) ) ) THEN
                      Hubbard_U_back(isp) = dft_obj%dftU%Hubbard_U_back(ihub)%HubbardCommon
-                     SELECT CASE ( TRIM (label))
-                     CASE ( '1s', '2s', '3s', '4s', '5s', '6s', '7s' )
-                        Hubbard_l_back(isp)  = 0                           
-                     CASE ( '2p', '3p', '4p', '5p', '6p' )
-                        Hubbard_l_back(isp)  = 1
-                     CASE ( '3d', '4d', '5d' )
-                        Hubbard_l_back( isp )  = 2
-                     CASE ( '4f', '5f' )
-                        Hubbard_l_back(isp )  = 3
-                     CASE  default
-                        IF (Hubbard_U_back(isp)/=0) &
-                             CALL errore ("qexsd_copy_dft:", "unrecognized label for Hubbard back "//label, 1 )
-                     END SELECT
                      EXIT loop_on_speciesU_back
                 END IF
              END DO loop_on_speciesU_back
           END DO loop_on_hubbardUback
+          IF (.NOT. dft_obj%dftU%Hubbard_back_ispresent) CALL errore("qexsd_copy:", &
+                                                        "internal error: U_back is present but not Hub_back",1) 
+          loop_hubbardBack: DO ihub =1, dft_obj%dftU%ndim_Hubbard_back
+              symbol = TRIM(dft_obj%dftU%Hubbard_back(ihub)%species) 
+              loop_on_species_2:DO isp = 1, nsp
+                 IF ( TRIM(symbol) == TRIM(atm(isp))) THEN 
+                    Hubbard_l_back(isp) = dft_obj%dftU%Hubbard_back(ihub)%l_number(1)%backL
+                    SELECT CASE ( TRIM (dft_obj%dftU%Hubbard_back(ihub)%background)) 
+                       CASE ('one_orbital') 
+                         backall(isp) = .FALSE. 
+                       CASE ('two_orbitals') 
+                         backall(isp)  = .TRUE. 
+                         Hubbard_l1_back(isp) = dft_obj%dftU%Hubbard_back(ihub)%l_number(2)%backL 
+                    END SELECT
+                    EXIT loop_on_species_2 
+                 END IF
+              END DO loop_on_species_2
+         END DO loop_hubbardBack
+
        END IF
+
        ! 
        IF ( dft_obj%dftU%Hubbard_J0_ispresent ) THEN 
             loop_on_hubbardj0:DO ihub =1, dft_obj%dftU%ndim_Hubbard_J0
