@@ -41,7 +41,7 @@ SUBROUTINE gen_us_dy_gpu( ik, u, dvkb_d )
   ! ... local variables
   !
   INTEGER :: na, nt, nb, ih, l, lm, ikb, iig, ipol, i0, i1, i2, &
-             i3, ig, npw, nbm, iq, &
+             i3, ig, npw, nbm, iq, lmx2, &
              mil1, mil2, mil3, ikb_t, nht, ina
   INTEGER :: nas(nat), ierr(4)
   !
@@ -77,8 +77,9 @@ SUBROUTINE gen_us_dy_gpu( ik, u, dvkb_d )
   IF (spline_ps) CALL using_tab_d2y(0)
   !
   npw = ngk(ik)
+  lmx2 = (lmaxkb+1)**2
   !
-  CALL dev_buf%lock_buffer( dylm_u_d, (/ npw,(lmaxkb+1)**2 /), ierr(1) )
+  CALL dev_buf%lock_buffer( dylm_u_d, (/ npw,lmx2 /), ierr(1) )
   CALL dev_buf%lock_buffer( vkb0_d, (/ npw,nbetam,ntyp /), ierr(2) )
   CALL dev_buf%lock_buffer( gk_d, (/ 3,npw /), ierr(3) )
   ALLOCATE( q_d(npw) )
@@ -98,13 +99,13 @@ SUBROUTINE gen_us_dy_gpu( ik, u, dvkb_d )
   !
   dylm_u_d(:,:) = 0._DP
   !
-  CALL dev_buf%lock_buffer( dylm_d, (/npw,(lmaxkb+1)**2/), ierr(4) )
+  CALL dev_buf%lock_buffer( dylm_d, (/npw,lmx2/), ierr(4) )
   DO ipol = 1, 3
-     CALL dylmr2_gpu( (lmaxkb+1)**2, npw, gk_d, q_d, dylm_d, ipol )
+     CALL dylmr2_gpu( lmx2, npw, gk_d, q_d, dylm_d, ipol )
      !
      u_ipol = u(ipol)
      !$cuf kernel do (2) <<<*,*>>>
-     DO lm = 1, (lmaxkb+1)**2
+     DO lm = 1, lmx2
        DO ig = 1, npw
          dylm_u_d(ig,lm) = dylm_u_d(ig,lm) + u_ipol*dylm_d(ig,lm)
        ENDDO
