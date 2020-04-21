@@ -179,7 +179,7 @@ MODULE exx_base
     ! ... local variables
     !
     CHARACTER(13) :: sub_name='exx_grid_init'
-    INTEGER :: iq1, iq2, iq3, isym, ik, ikq, iq, max_nk, temp_nkqs, qs(3)
+    INTEGER :: iq1, iq2, iq3, isym, ik, ikq, iq, max_nk, temp_nkqs
     INTEGER, ALLOCATABLE :: temp_index_xk(:), temp_index_sym(:)
     INTEGER, ALLOCATABLE :: temp_index_ikq(:)
     REAL(DP), ALLOCATABLE :: temp_xkq(:,:), xk_collect(:,:)
@@ -382,7 +382,7 @@ MODULE exx_base
   !------------------------------------------------------------------------
   SUBROUTINE exx_qgrid_init(temp_nkqs, xk_collect, temp_xkq, nkqs, temp_index_ikq, dxk)
     !------------------------------------------------------------------------
-    !! Generate q-point mesh compatibel with the k-point mesh
+    !! Generate q-point mesh compatible with the k-point mesh
     !
     USE klist,     ONLY : nkstot, xk
     USE cell_base, ONLY : at
