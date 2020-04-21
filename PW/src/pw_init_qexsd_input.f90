@@ -25,7 +25,7 @@
                                 ip_nqx3 => nqx3, ip_ecutfock => ecutfock, ip_ecutvcut => ecutvcut, localization_thr,  &
                                 screening_parameter, exx_fraction, x_gamma_extrapolation, exxdiv_treatment,           &
                                 ip_lda_plus_u=>lda_plus_u, ip_lda_plus_u_kind => lda_plus_u_kind,                     & 
-                                ip_hubbard_u => hubbard_u, ip_hubbard_u_back => hubbard_u_back,                       &
+                                ip_hubbard_u => hubbard_u, ip_hubbard_u_back => hubbard_u_back, lback, l1back,        &
                                 ip_hubbard_j0 => hubbard_j0,  ip_hubbard_beta => hubbard_beta, ip_backall => backall, &
                                 ip_hubbard_alpha => hubbard_alpha, ip_Hubbard_alpha_back => hubbard_alpha_back,       &
                                 ip_hubbard_j => hubbard_j,  starting_ns_eigenvalue, u_projection_type,                &
@@ -90,7 +90,7 @@
                                                 is_hubbard_back(ntypx) = .FALSE.,  ibrav_lattice 
   INTEGER                                  ::   Hubbard_l=0,hublmax=0
   INTEGER                                  ::   iexch, icorr, igcx, igcc, imeta, my_vec(6) 
-  INTEGER,EXTERNAL                         ::   set_hubbard_l
+  INTEGER,EXTERNAL                         ::   set_hubbard_l, set_hubbard_l_back 
   INTEGER                                  ::   lung,l 
   CHARACTER,EXTERNAL                       ::   capital
   CHARACTER(LEN=8),  EXTERNAL              ::   schema_smearing
@@ -121,6 +121,7 @@
                                               hubbard_alpha_back_(:), hubbard_J_(:,:), hubbard_J0_(:), hubbard_beta_(:), &
                                               starting_ns_(:,:,:)
   LOGICAL, ALLOCATABLE                     :: backall_(:)
+  INTEGER, ALLOCATABLE                     :: Hubbard_l_back_(:), Hubbard_l1_back_(:) 
   CHARACTER(LEN=3),ALLOCATABLE             :: species_(:)
   INTEGER, POINTER                         :: nr_1,nr_2, nr_3, nrs_1, nrs_2, nrs_3, nrb_1, nrb_2, nrb_3 
   INTEGER,ALLOCATABLE                      :: nr_(:), nrs_(:), nrb_(:) 
@@ -318,10 +319,6 @@
         ALLOCATE(hubbard_J_(3,ntyp))
         hubbard_J_(1:3,1:ntyp) = ip_hubbard_J(1:3,1:ntyp)
      END IF
-     IF (ANY (ip_backall)) THEN
-        ALLOCATE(backall_(ntyp))
-        backall_ (1:ntyp) = ip_backall(1:ntyp)
-     END IF
      IF (ANY(starting_ns_eigenvalue /= -1.0_DP)) THEN
          IF (lsda) THEN
             spin_ns = 2
@@ -332,10 +329,27 @@
          starting_ns_          (1:2*hublmax+1, 1:spin_ns, 1:ntyp) = &
          starting_ns_eigenvalue(1:2*hublmax+1, 1:spin_ns, 1:ntyp)
      END IF
+     IF (ANY(is_hubbard_back(1:ntyp))) THEN 
+        ALLOCATE (Hubbard_l_back_(ntyp)) 
+        IF (ANY(lback>=0)) THEN
+           Hubbard_l_back_(1:ntyp) = lback(1:ntyp) 
+        ELSE 
+          DO nt = 1, ntyp 
+             Hubbard_l_back_(nt) = set_hubbard_l_back(TRIM(upf(nt)%psd))
+          END DO 
+        END IF
+        IF (ANY(ip_backall) ) THEN 
+           ALLOCATE(backall_, SOURCE=ip_backall) 
+           IF (ANY(l1back >=0)) ALLOCATE(Hubbard_l1_back_, SOURCE = l1back) 
+        END IF 
+           
+     END IF 
      CALL qexsd_init_dftU(dftU_, NSP = ntyp, PSD = upf(1:ntyp)%psd, SPECIES = atm(1:ntyp), ITYP = ip_ityp(1:ntyp), &
                            IS_HUBBARD = is_hubbard(1:ntyp), IS_HUBBARD_BACK= is_hubbard_back(1:ntyp),               &
-                           NONCOLIN=ip_noncolin, LDA_PLUS_U_KIND = ip_lda_plus_u_kind, U_PROJECTION_TYPE=u_projection_type, &
-                           U=hubbard_U_, U_back=hubbard_U_back_, J0=hubbard_J0_, J = hubbard_J_, &
+                           NONCOLIN=ip_noncolin, LDA_PLUS_U_KIND = ip_lda_plus_u_kind, &
+                           U_PROJECTION_TYPE=u_projection_type, &
+                           U=hubbard_U_, U_back=hubbard_U_back_, HUBB_L_BACK = Hubbard_l_back_, &
+                           HUBB_L1_BACK= Hubbard_l1_back_, J0=hubbard_J0_, J = hubbard_J_, &
                            ALPHA = hubbard_alpha_, BETA = hubbard_beta_, ALPHA_BACK = hubbard_alpha_back_, &
                            STARTING_NS = starting_ns_, BACKALL = backall_ )
   END IF

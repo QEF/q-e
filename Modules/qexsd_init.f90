@@ -455,8 +455,11 @@ CONTAINS
          IF (PRESENT(starting_ns)) CALL init_starting_ns(starting_ns_ , label)
          IF (PRESENT(Hub_ns))      CALL init_Hubbard_ns(Hubbard_ns_ , label)
          IF (PRESENT(Hub_ns_nc))   CALL init_Hubbard_ns(Hubbard_ns_nc_ , label)
-         IF (PRESENT(is_hubbard_back)) &
+         IF (ANY(is_hubbard_back) .AND.  PRESENT(hubb_l_back)) &
               CALL init_Hubbard_back(is_hubbard_back, Hub_back_, hubb_l_back, backall, hubb_l1_back) 
+         IF (ANY(is_hubbard_back) .AND. .NOT. PRESENT (hubb_l_back)) &
+            CALL errore('qexsd_init_dft:',&
+                        'internal error background is set to true but hubb_l_back is not present',1)  
          !
          CALL qes_init (obj, "dftU", lda_plus_u_kind, U_, J0_, alpha_, beta_, J_, starting_ns_, Hubbard_ns_, &
                         U_projection_type, Hub_back_, U_back_, alpha_back_, Hubbard_ns_nc_)
@@ -488,16 +491,6 @@ CONTAINS
                ELSE
                   label(i)="no Hubbard"
                ENDIF
-               ! Background part
-               IF (PRESENT(is_hubbard_back) .AND. PRESENT(backall)) THEN
-                  IF (is_hubbard_back(i) .AND. .NOT.backall(i)) THEN
-                     hubb_l=set_hubbard_l_back(psd(i))
-                     hubb_n=set_hubbard_n_back(psd(i))
-                     WRITE (label(i),'(I0,A)') hubb_n,hubbard_shell(hubb_l+1)
-                  ELSE
-                     label(i)="no Hubbard"
-                  ENDIF
-              ENDIF
             ENDDO
          END SUBROUTINE set_labels 
 
@@ -662,6 +655,8 @@ CONTAINS
                      ndimbackL=2 
                      CALL qes_init(backL_objs(2), "l_number", l_index=1, backL  = l1_back(isp)) 
                   END IF 
+               ELSE 
+                  CALL errore ('qexsd_init_dftU:', 'internal error: backall is true l1_back is not present',1) 
                END IF 
                IF (temp(isp)) THEN
                   backchar = 'two_orbitals'
