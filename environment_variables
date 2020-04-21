@@ -87,7 +87,7 @@ PARA_IMAGE_PREFIX="mpirun -np 4"
 #
 # OpenMP parallelization max number of threads
 #
-#export OMP_NUM_THREADS=1
+export OMP_NUM_THREADS=1
 
 # function to test the exit status of a job
 check_failure () {

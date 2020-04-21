@@ -19,7 +19,8 @@ MODULE realus
   !! some comments about the way some routines act added by S. de Gironcoli (2015);  
   !! extended to generic k by S. de Gironcoli (2016);  
   !! addusstress_r added by S. de Gironcoli (2016);  
-  !! task group reorganization by S. de Gironcoli (2016).
+  !! task group reorganization by S. de Gironcoli (2016);
+  !! additional parallelization work (OpenMP and MPI) by S. de Gironcoli (2020).
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
@@ -950,11 +951,12 @@ MODULE realus
          END DO
          if (tprint) WRITE (*,*) 'BETAPOINTLIST: ATOM ',ia, ' MAXBOX_BETA =', maxbox_beta(ia)
       ENDDO
-!
-      WRITE (*,*) 'BETAPOINTLIST: TOTAL POINTS ', (100*SUM(MIN(maxbox_beta(1:nat),1)))/nat, SUM(maxbox_beta(1:nat))
+      !
+      CALL beta_box_scatter (nat, maxbox_beta)
       !
       goodestimate = maxval( maxbox_beta )
-      !
+      WRITE(*,*)  'GOODESTIMATE', goodestimate, goodestimate*nat, SUM(maxbox_beta(1:nat))
+
       IF ( goodestimate > roughestimate ) &
          CALL errore( 'betapointlist', 'rough-estimate is too rough', 2 )
       !
@@ -1102,6 +1104,84 @@ MODULE realus
       CALL stop_clock( 'betapointlist' )
       !
     END SUBROUTINE betapointlist
+    !
+    SUBROUTINE beta_box_scatter (nat, maxbox_beta)
+      !! This routine determines whether it is needed to re-shuffle the
+      !! beta point grids in real space.
+      USE mp_bands,   ONLY : me_bgrp, intra_bgrp_comm, nproc_bgrp
+      USE mp,         ONLY : mp_sum
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN)  :: nat
+      INTEGER, INTENT(IN)  :: maxbox_beta(nat)
+      REAL(DP)             :: boxtot_avg, boxtot_unbalance
+      INTEGER              :: in, nn, ip, np, ncheck, dd, boxtot_max
+      INTEGER, ALLOCATABLE :: ind(:), color(:), data(:), boxtot_beta(:)
+      !
+!      WRITE (*,*) ' me_bgrp ', me_bgrp ; FLUSH(6)
+!      WRITE (*,*)  ' BETAPOINT LIST', maxbox_beta(:) ; FLUSH(6)
+      ALLOCATE ( boxtot_beta ( nproc_bgrp ) )
+      boxtot_beta (:) = 0 ; boxtot_beta ( me_bgrp+1 ) = SUM(maxbox_beta(1:nat))
+      CALL mp_sum(  boxtot_beta, intra_bgrp_comm )
+
+      boxtot_avg = SUM ( boxtot_beta ( 1:nproc_bgrp ) ) / dble ( nproc_bgrp )
+      boxtot_max = MAXVAL( boxtot_beta ( 1:nproc_bgrp ) )
+      boxtot_unbalance =  boxtot_max / boxtot_avg
+      WRITE ( stdout, * ) 'BETAPOINTLIST SUMMARY: ', boxtot_max , boxtot_avg, boxtot_unbalance ; FLUSH(6)
+      WRITE ( stdout, * ) ' BETATOT LIST', boxtot_beta(:) ; FLUSH(6)
+
+      nn = 1
+      ALLOCATE ( ind(nproc_bgrp), color(nproc_bgrp),  data(nproc_bgrp) )
+
+      data(:) = - boxtot_beta(:) ; ind(1) = 0
+      call ihpsort ( nproc_bgrp, data, ind )
+
+      DO WHILE ( boxtot_unbalance > 1.25d0 .or. nn < nproc_bgrp )
+
+         nn = nn + 1
+
+         np = nproc_bgrp / nn ; IF ( nproc_bgrp .ne. np * nn  ) CYCLE
+
+!         WRITE ( stdout, * ) 'CHECKING nn =', nn, np
+!         WRITE ( stdout, * ) ind(:) ; FLUSH(6)
+!         WRITE ( stdout, * ) data(:) ; FLUSH(6)
+         color(ind(1:np)) = ind(1:np)
+         DO in = nn, 2, -1
+            DO ip = 1, np
+               data(ip) = data(ip) + data (in*np+1-ip)
+               color(ind(in*np+1-ip)) = ind(ip)
+            END DO
+            call ihpsort ( np, data, ind )
+!            WRITE ( stdout, * ) ind(:) ; FLUSH(6)
+!            WRITE ( stdout, * ) data(:) ; FLUSH(6)
+!            WRITE ( stdout, * ) color(:) ; FLUSH(6)
+         END DO
+         boxtot_unbalance =  -data(1)/(boxtot_avg*nn)
+         WRITE ( stdout, * ) nn, ' is a factor ',-data(1), -data(1)/boxtot_avg, boxtot_unbalance ; FLUSH(6)
+         DO ip = 1, np
+            data(ip) = -boxtot_beta(ind(ip))
+         END DO
+         do ip = 1, np
+            WRITE ( stdout, '(A,i4,A,$)' ) ' color ', color(ind(ip)), ':'  ; FLUSH(6)
+            dd = 0 ; ncheck = 0
+            do in = 1, nproc_bgrp
+               if ( color(in) == color(ind(ip)) ) then
+                  WRITE (stdout, '(i4,$)' ) in ; FLUSH(6)
+                  dd = dd + boxtot_beta(in)
+                  ncheck = ncheck + 1
+               end if
+            end do
+            WRITE ( stdout, * ) ' ', dd ; FLUSH(6)
+            if (ncheck .ne. nn) WRITE(*,*) '!!!! something wrong ', ncheck, nn ; FLUSH(6)
+         end do
+
+      END DO
+      DEALLOCATE ( data, color, ind, boxtot_beta )
+
+      RETURN
+      !
+    END SUBROUTINE beta_box_scatter
     !
     !------------------------------------------------------------------------
     SUBROUTINE newq_r( vr,deeq, skip_vltot )
@@ -1520,6 +1600,8 @@ MODULE realus
       !
       !! Subroutine written by Dario Rocca, Stefano de Gironcoli, modified by O. 
       !! Baris Malcioglu.
+      !! Some speedup and restrucuring by SdG April 2020.
+      !!
       !
     USE kinds,                 ONLY : DP
     USE cell_base,             ONLY : omega
@@ -1570,6 +1652,7 @@ MODULE realus
              mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
              !
              ijkb0 = indv_ijkb0(ia)
+! scatter psic  among intra_rsgrp_comm
              !$omp parallel default(shared) private(ih,ikb,ir,bcr,bci)
              !$omp do 
              DO ir =1, mbia
@@ -1626,6 +1709,7 @@ MODULE realus
     !! skipping the gamma point reduction derived from above by OBM 051108.
     !
     !! k-point phase factor fixed by SdG 030816.
+    !! Some speedup and restrucuring by SdG April 2020.
     !
     USE kinds,                 ONLY : DP
     USE wvfct,                 ONLY : current_k
@@ -1676,6 +1760,7 @@ MODULE realus
              !
              ijkb0 = indv_ijkb0(ia)
              !
+! scatter psic  among intra_rsgrp_comm
              !$omp parallel default(shared) private(ih,ikb,ir,bcr,bci)
              !$omp do
              DO ir =1, mbia
@@ -1718,7 +1803,8 @@ MODULE realus
     !
     !! WARNING: for the sake of speed, no checks performed in this subroutine.
     !
-    !! Subroutine written by Dario Rocca, modified by O. Baris Malcioglu.
+    !! Subroutine written by Dario Rocca, modified by O. Baris Malcioglu,
+    !! and S. de Gironcoli(2020).
     !
       USE kinds,                  ONLY : DP
       USE cell_base,              ONLY : omega
@@ -1779,6 +1865,7 @@ MODULE realus
          !
       ENDDO
       DEALLOCATE( w1, w2 )
+! collect psic  among intra_rsgrp_comm
       !
       CALL stop_clock( 's_psir' )
       !
@@ -1859,6 +1946,7 @@ MODULE realus
          !
       ENDDO
       DEALLOCATE( w1 )
+! collect psic  among intra_rsgrp_comm
       !
       CALL stop_clock( 's_psir' )
       !
@@ -1937,6 +2025,7 @@ MODULE realus
      !
   ENDDO
   DEALLOCATE( w1, w2 )
+! collect psic  among intra_rsgrp_comm
   !
   CALL stop_clock( 'add_vuspsir' )
   !
@@ -2017,6 +2106,8 @@ MODULE realus
      !
   ENDDO
   DEALLOCATE( w1 )
+! collect psic  among intra_rsgrp_comm
+
   CALL stop_clock( 'add_vuspsir' )
   RETURN
   !
