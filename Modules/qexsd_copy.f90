@@ -401,7 +401,6 @@ CONTAINS
        END IF 
        ! 
        IF ( dft_obj%dftU%Hubbard_U_back_ispresent) THEN
-          ! HERE 1. read backall, 2. if backall(i)=.false. continue reading the things below
           loop_on_hubbardUback:DO ihub =1, dft_obj%dftU%ndim_Hubbard_U_back
              symbol = TRIM(dft_obj%dftU%Hubbard_U_back(ihub)%specie)
              label  = TRIM(dft_obj%dftU%Hubbard_U_back(ihub)%label )

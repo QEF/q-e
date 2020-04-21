@@ -178,7 +178,9 @@ MODULE pw_restart_new
       LOGICAL             :: scf_has_converged 
       INTEGER             :: itemp = 1
       REAL(DP),ALLOCATABLE :: london_c6_(:), bp_el_pol(:), bp_ion_pol(:), U_opt(:), J0_opt(:), alpha_opt(:), &
-                              J_opt(:,:), beta_opt(:), U_back_opt(:), alpha_back_opt(:) 
+                              J_opt(:,:), beta_opt(:), U_back_opt(:), alpha_back_opt(:)
+      INTEGER,ALLOCATABLE :: Hubbard_l_back_opt(:), Hubbard_l1_back_opt(:)
+      LOGICAL, ALLOCATABLE :: backall_opt(:) 
       CHARACTER(LEN=3),ALLOCATABLE :: species_(:)
       CHARACTER(LEN=20),TARGET   :: dft_nonlocc_
       INTEGER,TARGET             :: dftd3_version_
@@ -424,12 +426,15 @@ MODULE pw_restart_new
          END IF 
          IF ( lda_plus_u) THEN 
             ALLOCATE (dftU_obj)  
-            CALL check_and_allocate(U_opt, Hubbard_U)
-            CALL check_and_allocate(J0_opt, Hubbard_J0) 
-            CALL check_and_allocate(alpha_opt, Hubbard_alpha) 
-            CALL check_and_allocate(beta_opt, Hubbard_beta) 
-            CALL check_and_allocate(U_back_opt, Hubbard_U_back)
-            CALL check_and_allocate(alpha_back_opt, Hubbard_alpha_back)
+            CALL check_and_allocate_real(U_opt, Hubbard_U)
+            CALL check_and_allocate_real(J0_opt, Hubbard_J0) 
+            CALL check_and_allocate_real(alpha_opt, Hubbard_alpha) 
+            CALL check_and_allocate_real(beta_opt, Hubbard_beta) 
+            CALL check_and_allocate_real(U_back_opt, Hubbard_U_back)
+            CALL check_and_allocate_real(alpha_back_opt, Hubbard_alpha_back)
+            CALL check_and_allocate_integer(Hubbard_l_back_opt, Hubbard_l_back)
+            CALL check_and_allocate_integer(Hubbard_l1_back_opt, Hubbard_l1_back)
+            CALL check_and_allocate_logical(backall_opt, backall)
             IF ( ANY(Hubbard_J(:,1:nsp) /= 0.0_DP)) THEN
                ALLOCATE (J_opt(3,nsp)) 
                J_opt(:, 1:nsp) = Hubbard_J(:, 1:nsp) 
@@ -439,10 +444,11 @@ MODULE pw_restart_new
             ! 
             CALL qexsd_init_dftU (dftU_obj, NSP = nsp, PSD = upf(1:nsp)%psd, SPECIES = atm(1:nsp), ITYP = ityp(1:nat), &
                                   IS_HUBBARD = is_hubbard, IS_HUBBARD_BACK = is_hubbard_back,  &
+                                  BACKALL = backall, HUBB_L_BACK = Hubbard_l_back_opt, HUBB_L1_BACK = Hubbard_l1_back_opt, &
                                   NONCOLIN = noncolin, LDA_PLUS_U_KIND = lda_plus_u_kind, U_PROJECTION_TYPE = U_projection, &
                                   U =U_opt, U_back = U_back_opt, J0 = J0_opt, J = J_opt, &
                                   alpha = alpha_opt, beta = beta_opt, alpha_back = alpha_back_opt,  & 
-                                  starting_ns = starting_ns_eigenvalue, Hub_ns = rho%ns, Hub_ns_nc = rho%ns_nc, BACKALL = backall)
+                                  starting_ns = starting_ns_eigenvalue, Hub_ns = rho%ns, Hub_ns_nc = rho%ns_nc)
          END IF 
          dft_name = get_dft_short()
          inlc = get_inlc()
@@ -675,7 +681,7 @@ MODULE pw_restart_new
       RETURN
        !
     CONTAINS
-       SUBROUTINE check_and_allocate(alloc, mydata)
+       SUBROUTINE check_and_allocate_real(alloc, mydata)
           IMPLICIT NONE
           REAL(DP),ALLOCATABLE  :: alloc(:) 
           REAL(DP)              :: mydata(:)  
@@ -684,7 +690,29 @@ MODULE pw_restart_new
              alloc(1:nsp) = mydata(1:nsp) 
           END IF 
           RETURN
-       END SUBROUTINE check_and_allocate 
+       END SUBROUTINE check_and_allocate_real 
+       !
+       SUBROUTINE check_and_allocate_integer(alloc, mydata)
+          IMPLICIT NONE
+          INTEGER,ALLOCATABLE  :: alloc(:)
+          INTEGER              :: mydata(:)
+          IF ( ANY(mydata(1:nsp) /= -1)) THEN
+             ALLOCATE(alloc(nsp))
+             alloc(1:nsp) = mydata(1:nsp)
+          END IF
+          RETURN
+       END SUBROUTINE check_and_allocate_integer
+       !
+       SUBROUTINE check_and_allocate_logical(alloc, mydata)
+          IMPLICIT NONE
+          LOGICAL,ALLOCATABLE  :: alloc(:)
+          LOGICAL              :: mydata(:)
+          IF ( ANY(mydata(1:nsp))) THEN
+             ALLOCATE(alloc(nsp))
+             alloc(1:nsp) = mydata(1:nsp)
+          END IF
+          RETURN
+       END SUBROUTINE check_and_allocate_logical
        !
     END SUBROUTINE pw_write_schema
     !

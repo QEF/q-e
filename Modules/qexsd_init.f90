@@ -439,7 +439,7 @@ CONTAINS
          TYPE(HubbardJ_type),ALLOCATABLE       :: J_(:) 
          TYPE(starting_ns_type),ALLOCATABLE    :: starting_ns_(:) 
          TYPE(Hubbard_ns_type),ALLOCATABLE     :: Hubbard_ns_(:), Hubbard_ns_nc_(:)
-         TYPE(HubbardBack_type),ALLOCATABLE    :: hub_back_(:) 
+         TYPE(HubbardBack_type),ALLOCATABLE    :: Hub_back_(:) 
          LOGICAL                               :: noncolin_ =.FALSE.
          !
          CALL set_labels ()
