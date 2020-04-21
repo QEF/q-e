@@ -655,12 +655,12 @@ CONTAINS
                temp(1:nsp) = .FALSE.
             END IF 
             DO isp =1, nsp 
-               CALL qes_init(backL_objs(1), "l_number", l_index=0, backL = l_back(nsp))
+               CALL qes_init(backL_objs(1), "l_number", l_index=0, backL = l_back(isp))
                ndimbackL = 1 
                IF (temp(isp) .AND. PRESENT(l1_back) ) THEN 
                   IF (l1_back(isp) >=0) THEN
                      ndimbackL=2 
-                     CALL qes_init(backL_objs(2), "l_number", l_index=1, backL  = l1_back(nsp)) 
+                     CALL qes_init(backL_objs(2), "l_number", l_index=1, backL  = l1_back(isp)) 
                   END IF 
                END IF 
                IF (temp(isp)) THEN
