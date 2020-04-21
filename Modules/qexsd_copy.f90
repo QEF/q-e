@@ -369,6 +369,13 @@ CONTAINS
     !
     lda_plus_u = dft_obj%dftU_ispresent 
     IF ( lda_plus_u ) THEN 
+       Hubbard_U = 0.0_DP
+       Hubbard_U_back =0.0_DP
+       Hubbard_alpha = 0.0_DP
+       Hubbard_alpha_back = 0.0_DP
+       Hubbard_J = 0.0_DP
+       Hubbard_J0 = 0.0_DP
+       Hubbard_beta = 0.0_DP
        lda_plus_u_kind = dft_obj%dftU%lda_plus_u_kind
        U_projection = TRIM ( dft_obj%dftU%U_projection_type )
        Hubbard_l =-1 
