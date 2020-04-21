@@ -338,6 +338,8 @@ CONTAINS
     REAL(dp), INTENT(inout) :: Hubbard_U(:), Hubbard_U_back(:), Hubbard_J0(:), Hubbard_J(:,:), &
                                Hubbard_alpha(:), Hubbard_alpha_back(:), Hubbard_beta(:)
     LOGICAL, INTENT(inout) :: backall(:)
+    OPTIONAL    :: Hubbard_U_back, Hubbard_l_back, Hubbard_lmax_back, Hubbard_alpha_back, &
+                   Hubbard_l1_back 
     !
     CHARACTER(LEN=*), INTENT(out) :: vdw_corr
     REAL(dp), INTENT(inout) :: scal6, lon_rcut
