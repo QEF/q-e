@@ -1,0 +1,33 @@
+ &control
+   calculation = 'scf'
+ /
+ &system
+    ibrav=  3, 
+    celldm(1) =5.42, 
+    nat=  1, 
+    ntyp= 1,
+    noncolin=.true.
+    lspinorb=.true.
+    starting_magnetization(1)=0.5,
+    occupations='smearing',
+    smearing='mv',
+    degauss=0.01,
+    ecutwfc=35.0, 
+    ecutrho=280.0,
+    angle1(1)=90.0
+    angle2(1)=0.0    
+    lda_plus_u=.true.
+    lda_plus_u_kind = 1
+    Hubbard_U(1)   = 2.20
+    Hubbard_J(1,1) = 1.75
+    Hubbard_J(2,1) = 0.00
+ /
+ &electrons
+    conv_thr =  1.0d-10
+ /
+ATOMIC_SPECIES
+Fe  0.0    Fe.rel-pbe-spn-rrkjus_psl.0.2.1.UPF
+ATOMIC_POSITIONS {alat}
+Fe  0.0000000   0.00000000   0.00000000  
+K_POINTS {automatic}
+4 4 4 1 1 1
