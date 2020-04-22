@@ -319,6 +319,7 @@
         ALLOCATE(hubbard_J_(3,ntyp))
         hubbard_J_(1:3,1:ntyp) = ip_hubbard_J(1:3,1:ntyp)
      END IF
+     !
      IF (ANY(starting_ns_eigenvalue /= -1.0_DP)) THEN
          IF (lsda) THEN
             spin_ns = 2
@@ -329,6 +330,7 @@
          starting_ns_          (1:2*hublmax+1, 1:spin_ns, 1:ntyp) = &
          starting_ns_eigenvalue(1:2*hublmax+1, 1:spin_ns, 1:ntyp)
      END IF
+     !
      IF (ANY(is_hubbard_back(1:ntyp))) THEN 
         ALLOCATE (Hubbard_l_back_(ntyp)) 
         IF (ANY(lback>=0)) THEN
@@ -339,11 +341,15 @@
           END DO 
         END IF
         IF (ANY(ip_backall) ) THEN 
-           ALLOCATE(backall_, SOURCE=ip_backall) 
-           IF (ANY(l1back >=0)) ALLOCATE(Hubbard_l1_back_, SOURCE = l1back) 
+           ALLOCATE(backall_(ntyp))
+           backall_ (1:ntyp) = ip_backall(1:ntyp)
+           IF (ANY(l1back >=0)) THEN
+              ALLOCATE(Hubbard_l1_back_(ntyp))
+              Hubbard_l1_back_ (1:ntyp) = l1back(1:ntyp)
+           ENDIF
         END IF 
-           
      END IF 
+     ! 
      CALL qexsd_init_dftU(dftU_, NSP = ntyp, PSD = upf(1:ntyp)%psd, SPECIES = atm(1:ntyp), ITYP = ip_ityp(1:ntyp), &
                            IS_HUBBARD = is_hubbard(1:ntyp), IS_HUBBARD_BACK= is_hubbard_back(1:ntyp),               &
                            NONCOLIN=ip_noncolin, LDA_PLUS_U_KIND = ip_lda_plus_u_kind, &
