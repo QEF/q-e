@@ -169,7 +169,7 @@ MODULE ldaU
   !! Phase factor (it is 1 if we have only Hubbard U)
   INTEGER, ALLOCATABLE :: sc_at(:,:,:,:)
   !! Matrix with ranges [1:nat], gives the corresponding atom in the supercell ordering 
-  REAL(DP), PARAMETER :: eps_dist = 5.d-4     
+  REAL(DP), PARAMETER :: eps_dist = 6.d-4     
   !! Threshold for comparing inter-atomic distances
   !
   TYPE position
