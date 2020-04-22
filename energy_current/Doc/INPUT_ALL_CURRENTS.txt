@@ -111,7 +111,7 @@ NAMELIST: &ENERGY_CURRENT
                    
                    where J_x, J_y, J_z are the three components of the DFT energy current,
                    and can be easily post-processed by other external programs.
-                   v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomi species.
+                   v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomic species.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -173,7 +173,7 @@ NAMELIST: &ENERGY_CURRENT
    
    Type:           INTEGER
    Default:        5
-   Description:    Number of images in each direction use to converge some sums.
+   Description:    Number of images in each direction used to converge some sums.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -227,10 +227,11 @@ NAMELIST: &ENERGY_CURRENT
    Type:           LOGICAL
    Default:        .false.
    Description:    If true subtract from the velocities of all atoms for every step
-                   the center of mass velocity for each atomic type
+                   the center of mass velocity for each atomic type.
+                   It help to decorrelate a little the mass flux from the energy flux
    +--------------------------------------------------------------------
    
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Sun Apr 19 10:38:49 CEST 2020
+This file has been created by helpdoc utility on Wed Apr 22 09:42:50 CEST 2020

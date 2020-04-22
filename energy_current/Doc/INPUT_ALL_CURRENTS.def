@@ -109,7 +109,7 @@ input_description -distribution {Quantum Espresso} -package energy_current -prog
 
                 where J_x, J_y, J_z are the three components of the DFT energy current,
                 and can be easily post-processed by other external programs. 
-                v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomi species.
+                v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomic species.
             }
         }
         
@@ -163,7 +163,7 @@ input_description -distribution {Quantum Espresso} -package energy_current -prog
         }
         var n_max -type INTEGER {
             default { 5 }
-            info { Number of images in each direction use to converge some sums. }
+            info { Number of images in each direction used to converge some sums. }
         }
         var first_step -type INTEGER {
             default { 0 }
@@ -204,7 +204,8 @@ input_description -distribution {Quantum Espresso} -package energy_current -prog
             default { .false. }
             info {
                    If true subtract from the velocities of all atoms for every step
-                   the center of mass velocity for each atomic type
+                   the center of mass velocity for each atomic type. 
+                   It help to decorrelate a little the mass flux from the energy flux 
                  } 
         }
     }

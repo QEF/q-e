@@ -104,7 +104,7 @@ In the latter file the format of the output is:
 
 where J_x, J_y, J_z are the three components of the DFT energy current,
 and can be easily post-processed by other external programs.
-v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomi species.
+v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomic species.
          </info>
       </var>
       <var name="trajdir" type="CHARACTER" >
@@ -161,7 +161,7 @@ assume velocities are given in pw.x time units
       <var name="n_max" type="INTEGER" >
          <default> 5
          </default>
-         <info> Number of images in each direction use to converge some sums.
+         <info> Number of images in each direction used to converge some sums.
          </info>
       </var>
       <var name="first_step" type="INTEGER" >
@@ -209,7 +209,8 @@ last step in the file + 1
          </default>
          <info>
 If true subtract from the velocities of all atoms for every step
-the center of mass velocity for each atomic type
+the center of mass velocity for each atomic type.
+It help to decorrelate a little the mass flux from the energy flux
          </info>
       </var>
    </namelist>
