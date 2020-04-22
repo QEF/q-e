@@ -4,7 +4,6 @@
     prefix      ='LiCoO2'
     pseudo_dir  = '../../pseudo/'
     outdir      ='./'
-    verbosity   ='high'
     tprnfor = .true.
     tstress = .true.
  /
