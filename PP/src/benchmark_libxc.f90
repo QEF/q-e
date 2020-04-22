@@ -24,8 +24,7 @@ PROGRAM benchmark_libxc
   !
 #if defined(__LIBXC)
   !
-  USE xc_f90_types_m
-  USE xc_f90_lib_m
+  USE xc_f03_lib_m
   !
   USE funct,          ONLY: set_dft_from_indices, set_exx_fraction
   USE corr_lda,       ONLY: lyp, lsd_lyp
@@ -62,8 +61,8 @@ PROGRAM benchmark_libxc
   REAL(DP), ALLOCATABLE :: vrrc(:,:), vsrc(:,:), vssc(:), vrzc(:,:)
   !
   !--------- LIBXC vars -----------------------
-  TYPE(xc_f90_pointer_t) :: xc_func
-  TYPE(xc_f90_pointer_t) :: xc_info1, xc_info2, xc_info3, xc_info4
+  TYPE(xc_f03_func_t) :: xc_func
+  TYPE(xc_f03_func_info_t) :: xc_info1, xc_info2, xc_info3, xc_info4
   CHARACTER(LEN=120) :: name1, name2
   INTEGER :: iexch_lxc, icorr_lxc
   INTEGER :: pol_unpol
@@ -386,30 +385,33 @@ PROGRAM benchmark_libxc
      !
      !------ LIBXC ------
      !
-     CALL xc_f90_func_init( xc_func, xc_info1, iexch_lxc, pol_unpol )   ! ... EXCHANGE
-      CALL xc_f90_lda_exc_vxc( xc_func, nnr, rho_lxc(1), ex_lxc(1), vx_lxc(1) )
+     CALL xc_f03_func_init( xc_func, iexch_lxc, pol_unpol )   ! ... EXCHANGE
+      xc_info1 = xc_f03_func_get_info( xc_func )
+      CALL xc_f03_lda_exc_vxc( xc_func, nnr, rho_lxc(1), ex_lxc(1), vx_lxc(1) )
       !
-      IF ( DF_OK ) CALL xc_f90_lda_fxc( xc_func, nnr, rho_lxc(1), dex_lxc(1) )
-     CALL xc_f90_func_end( xc_func )
+      IF ( DF_OK ) CALL xc_f03_lda_fxc( xc_func, nnr, rho_lxc(1), dex_lxc(1) )
+     CALL xc_f03_func_end( xc_func )
      ! 
-     CALL xc_f90_func_init( xc_func, xc_info2, icorr_lxc, pol_unpol )  ! ... CORRELATION
-      CALL xc_f90_lda_exc_vxc( xc_func, nnr, rho_lxc(1), ec_lxc(1), vc_lxc(1) )
+     CALL xc_f03_func_init( xc_func, icorr_lxc, pol_unpol )  ! ... CORRELATION
+      xc_info2 = xc_f03_func_get_info( xc_func )
+      CALL xc_f03_lda_exc_vxc( xc_func, nnr, rho_lxc(1), ec_lxc(1), vc_lxc(1) )
       !
       IF ( DF_OK ) THEN   
-        CALL xc_f90_lda_fxc( xc_func, nnr, rho_lxc(1), dcr_lxc(1) )   
+        CALL xc_f03_lda_fxc( xc_func, nnr, rho_lxc(1), dcr_lxc(1) )
         df_lxc = (dex_lxc + dcr_lxc) * 2.0_DP   
       ENDIF
-     CALL xc_f90_func_end( xc_func )
+     CALL xc_f03_func_end( xc_func )
      !
      !----- QE ----------
      !
      CALL set_dft_from_indices( iexch_qe, icorr_qe, 0, 0, 0, 0 )    ! ... EXCHANGE and CORRELATION
      !
      ! get exx_fraction, if needed
-     CALL xc_f90_func_init( xc_func, xc_info1, iexch_qe, 1 )  
-     family = xc_f90_info_family( xc_info1 )
-     IF (family == XC_FAMILY_HYB_GGA) CALL xc_f90_hyb_exx_coef( xc_func, exx_frctn )
-     CALL xc_f90_func_end( xc_func )
+     CALL xc_f03_func_init( xc_func, iexch_qe, 1 )
+     xc_info1 = xc_f03_func_get_info( xc_func )
+     family = xc_f03_func_info_get_family( xc_info1 )
+     IF (family == XC_FAMILY_HYB_GGA) exx_frctn = xc_f03_hyb_exx_coef( xc_func )
+     CALL xc_f03_func_end( xc_func )
      CALL set_exx_fraction( exx_frctn )
      !
      IF ( DF_OK ) THEN
@@ -433,21 +435,23 @@ PROGRAM benchmark_libxc
      !
      exx_frctn = 0.0_DP
      !
-     CALL xc_f90_func_init( xc_func, xc_info1, iexch_lxc, pol_unpol )
-      family = xc_f90_info_family( xc_info1 )
-      IF (family == XC_FAMILY_HYB_GGA) CALL xc_f90_hyb_exx_coef( xc_func, exx_frctn )
+     CALL xc_f03_func_init( xc_func, iexch_lxc, pol_unpol )
+      xc_info1 = xc_f03_func_get_info( xc_func )
+      family = xc_f03_func_info_get_family( xc_info1 )
+      IF (family == XC_FAMILY_HYB_GGA) exx_frctn = xc_f03_hyb_exx_coef( xc_func )
       !
-      CALL xc_f90_gga_exc_vxc( xc_func, nnr, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
+      CALL xc_f03_gga_exc_vxc( xc_func, nnr, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
       !
-      IF ( DF_OK ) CALL xc_f90_gga_fxc( xc_func, nnr, rho_lxc(1), sigma(1), v2rho2_x(1), v2rhosigma_x(1), v2sigma2_x(1) )
-     CALL xc_f90_func_end( xc_func )
+      IF ( DF_OK ) CALL xc_f03_gga_fxc( xc_func, nnr, rho_lxc(1), sigma(1), v2rho2_x(1), v2rhosigma_x(1), v2sigma2_x(1) )
+     CALL xc_f03_func_end( xc_func )
      !
      ! remove Slater term for compatibility with QE
-     CALL xc_f90_func_init( xc_func, xc_info3, 1, pol_unpol )
-      CALL xc_f90_lda_exc_vxc( xc_func, nnr, rho_lxc(1), ex_lxc2(1), vx_lxc2(1) )
+     CALL xc_f03_func_init( xc_func, 1, pol_unpol )
+      xc_info3 = xc_f03_func_get_info( xc_func )
+      CALL xc_f03_lda_exc_vxc( xc_func, nnr, rho_lxc(1), ex_lxc2(1), vx_lxc2(1) )
       !
-      IF ( DF_OK ) CALL xc_f90_lda_fxc( xc_func, nnr, rho_lxc(1), dex_lxc(1) )
-     CALL xc_f90_func_end( xc_func )
+      IF ( DF_OK ) CALL xc_f03_lda_fxc( xc_func, nnr, rho_lxc(1), dex_lxc(1) )
+     CALL xc_f03_func_end( xc_func )
      !
      IF ( DF_OK ) v2rho2_x = v2rho2_x - dex_lxc
      !
@@ -463,22 +467,24 @@ PROGRAM benchmark_libxc
      !
      ! ----
      !
-     CALL xc_f90_func_init( xc_func, xc_info2, icorr_lxc, pol_unpol )
-      CALL xc_f90_gga_exc_vxc( xc_func, nnr, rho_lxc(1), sigma(1), ec_lxc(1), vc_rho(1), vc_sigma(1) )
+     CALL xc_f03_func_init( xc_func, icorr_lxc, pol_unpol )
+      xc_info2 = xc_f03_func_get_info( xc_func )
+      CALL xc_f03_gga_exc_vxc( xc_func, nnr, rho_lxc(1), sigma(1), ec_lxc(1), vc_rho(1), vc_sigma(1) )
       !
-      IF ( DF_OK ) CALL xc_f90_gga_fxc( xc_func, nnr, rho_lxc(1), sigma(1), v2rho2_c(1), v2rhosigma_c(1), v2sigma2_c(1) )
-     CALL xc_f90_func_end( xc_func )
+      IF ( DF_OK ) CALL xc_f03_gga_fxc( xc_func, nnr, rho_lxc(1), sigma(1), v2rho2_c(1), v2rhosigma_c(1), v2sigma2_c(1) )
+     CALL xc_f03_func_end( xc_func )
      !
      ec_lxc2 = 0.d0
      vc_lxc2 = 0.d0
      IF (icorr_lxc /= 131 ) then ! .AND. .NOT.(icorr_lxc == 130 .AND. POLARIZED)) THEN 
         ! remove LDA correlation for compatibility with QE
         i_sub=12 !(pw)
-        CALL xc_f90_func_init( xc_func, xc_info4, i_sub, pol_unpol )
-         CALL xc_f90_lda_exc_vxc( xc_func, nnr, rho_lxc(1), ec_lxc2(1), vc_lxc2(1) )
+        CALL xc_f03_func_init( xc_func, i_sub, pol_unpol )
+         xc_info4 = xc_f03_func_get_info( xc_func )
+         CALL xc_f03_lda_exc_vxc( xc_func, nnr, rho_lxc(1), ec_lxc2(1), vc_lxc2(1) )
          !
-         IF ( DF_OK ) CALL xc_f90_lda_fxc( xc_func, nnr, rho_lxc(1), dex_lxc(1) )
-        CALL xc_f90_func_end( xc_func )
+         IF ( DF_OK ) CALL xc_f03_lda_fxc( xc_func, nnr, rho_lxc(1), dex_lxc(1) )
+        CALL xc_f03_func_end( xc_func )
         !
         IF ( DF_OK ) v2rho2_c = v2rho2_c - dex_lxc
         !
@@ -565,10 +571,11 @@ PROGRAM benchmark_libxc
      !------ LIBXC ------
      !
      ! exch
-     CALL xc_f90_func_init( xc_func, xc_info1, iexch_lxc, pol_unpol )
-      CALL xc_f90_mgga_exc_vxc( xc_func, nnr, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
+     CALL xc_f03_func_init( xc_func, iexch_lxc, pol_unpol )
+      xc_info1 = xc_f03_func_get_info( xc_func )
+      CALL xc_f03_mgga_exc_vxc( xc_func, nnr, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
                                 ex_lxc(1), vx_rho(1), vx_sigma(1), vlapl_rho(1), vx_tau(1) )
-     CALL xc_f90_func_end( xc_func )
+     CALL xc_f03_func_end( xc_func )
      !
      IF (.NOT. POLARIZED) THEN
         ex_lxc = ex_lxc * rho_qe(:,1)
@@ -578,10 +585,11 @@ PROGRAM benchmark_libxc
      vx_sigma = vx_sigma * 2.0_DP
      !
      ! corr
-     CALL xc_f90_func_init( xc_func, xc_info2, icorr_lxc, pol_unpol )
-      CALL xc_f90_mgga_exc_vxc( xc_func, nnr, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
+     CALL xc_f03_func_init( xc_func, icorr_lxc, pol_unpol )
+      xc_info2 = xc_f03_func_get_info( xc_func )
+      CALL xc_f03_mgga_exc_vxc( xc_func, nnr, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
                                 ec_lxc(1), vc_rho(1), vc_sigma(1), vlapl_rho(1), vc_tau(1) )
-     CALL xc_f90_func_end( xc_func )
+     CALL xc_f03_func_end( xc_func )
      !
      IF (.NOT. POLARIZED) THEN
         ec_lxc = ec_lxc * rho_qe(:,1)
@@ -628,8 +636,8 @@ PROGRAM benchmark_libxc
   !
   !--
   !
-  CALL xc_f90_info_name( xc_info1, name1 )
-  CALL xc_f90_info_name( xc_info2, name2 )
+  name1 = xc_f03_functional_get_name( iexch_lxc )
+  name2 = xc_f03_functional_get_name( icorr_lxc )
   !
   PRINT *, "=================================== "//CHAR(10)//" "
   PRINT *, "libxc functionals:"//CHAR(10)//" "

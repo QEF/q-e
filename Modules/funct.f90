@@ -36,8 +36,6 @@ MODULE funct
   USE io_global,   ONLY: stdout, ionode
   USE kinds,       ONLY: DP
 #if defined(__LIBXC)
-  USE xc_f90_types_m
-  USE xc_f90_lib_m
   USE xc_f03_lib_m
 #endif
   !
@@ -74,6 +72,10 @@ MODULE funct
   ! driver subroutines computing XC
   PUBLIC  :: is_libxc
   PUBLIC  :: nlc
+  !
+#if defined(__LIBXC)
+  PUBLIC  :: xc_funct_iexch
+#endif
   !
   ! PRIVATE variables defining the DFT functional
   !
@@ -404,6 +406,9 @@ MODULE funct
   INTEGER :: libxc_major=0, libxc_minor=0, libxc_micro=0
   PUBLIC :: libxc_major, libxc_minor, libxc_micro, get_libxc_version
   PUBLIC :: get_libxc_flags_exc
+  !
+  TYPE(xc_f03_func_t) :: xc_func_iexch
+  TYPE(xc_f03_func_info_t) :: xc_info_iexch
 #endif
   !
 CONTAINS
@@ -414,9 +419,9 @@ CONTAINS
     !! Translates a string containing the exchange-correlation name
     !! into internal indices iexch, icorr, igcx, igcc, inlc, imeta.
     !
-#if defined(__LIBXC)
-    USE xc_f03_lib_m
-#endif
+!#if defined(__LIBXC)
+!    USE xc_f03_lib_m
+!#endif
     !
     IMPLICIT NONE
     !
@@ -709,7 +714,12 @@ CONTAINS
           READ( dftout(24:26), * ) imetac
           inlc   = 0
           !
-          IF (iexch /= 0) is_libxc(1) = .TRUE.
+          IF (iexch /= 0) THEN
+            is_libxc(1) = .TRUE.
+            CALL xc_f03_func_init( xc_func_iexch, iexch, sv_d )         !come fare con lo spin??
+            xc_info_iexch = xc_f03_func_get_info( xc_func_iexch )
+          ENDIF
+          
           IF (icorr /= 0) is_libxc(2) = .TRUE.
           IF (igcx  /= 0) is_libxc(3) = .TRUE.
           IF (igcc  /= 0) is_libxc(4) = .TRUE.
@@ -1358,11 +1368,11 @@ CONTAINS
      TYPE(xc_f03_func_info_t) :: xc_info
      !
      IF ( is_libxc(3) ) THEN
-       CALL xc_f03_func_init( xc_func, igcx, 1 )  
-       xc_info = xc_f03_func_get_info( xc_func )
-       family = xc_f03_func_info_get_family( xc_info )
-       IF (family == XC_FAMILY_HYB_GGA) exx_fraction = xc_f03_hyb_exx_coef( xc_func )
-       CALL xc_f03_func_end( xc_func )
+        CALL xc_f03_func_init( xc_func, igcx, 1 )  
+        xc_info = xc_f03_func_get_info( xc_func )
+        family = xc_f03_func_info_get_family( xc_info )
+        IF (family == XC_FAMILY_HYB_GGA) exx_fraction = xc_f03_hyb_exx_coef( xc_func )
+        CALL xc_f03_func_end( xc_func )
      ENDIF
 #endif
      get_exx_fraction = exx_fraction
@@ -1433,7 +1443,7 @@ CONTAINS
      ! functional (e.g. TB09)
      TYPE(xc_f03_func_info_t) :: xc_info
      INTEGER :: ii, flags_tot
-     INTEGER, INTENT(OUT) :: eflag
+     INTEGER, INTENT(OUT) :: eflag 
      flags_tot = xc_f03_func_info_get_flags(xc_info)
      eflag = 0
      DO ii = 15, 0, -1
