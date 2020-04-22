@@ -50,8 +50,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   !
 #if defined(__LIBXC)
   USE funct,            ONLY : get_libxc_flags_exc
-  USE xc_f90_types_m
-  USE xc_f90_lib_m
+  USE xc_f03_lib_m
 #endif 
   !
   IMPLICIT NONE
@@ -91,8 +90,8 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   REAL(DP), ALLOCATABLE :: grho2(:,:)
   !
 #if defined(__LIBXC)
-  TYPE(xc_f90_pointer_t) :: xc_func
-  TYPE(xc_f90_pointer_t) :: xc_info1, xc_info2
+  TYPE(xc_f03_func_t) :: xc_func
+  TYPE(xc_f03_func_info_t) :: xc_info1, xc_info2
   !
   REAL(DP), ALLOCATABLE :: rho_lxc(:), sigma(:), tau_lxc(:)
   REAL(DP), ALLOCATABLE :: ex_lxc(:), ec_lxc(:)
@@ -177,17 +176,18 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   ! META EXCHANGE
   !
   IF ( is_libxc(5) ) THEN
-     CALL xc_f90_func_init( xc_func, xc_info1, imeta, pol_unpol )
-     CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold )
+     CALL xc_f03_func_init( xc_func, imeta, pol_unpol )
+     xc_info1 = xc_f03_func_get_info( xc_func )
+     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold )
      CALL get_libxc_flags_exc( xc_info1, eflag )
      IF (eflag==1) THEN
-       CALL xc_f90_mgga_exc_vxc( xc_func, length, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
+       CALL xc_f03_mgga_exc_vxc( xc_func, length, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
                                  ex_lxc(1), vx_rho(1), vx_sigma(1), vlapl_rho(1), vx_tau(1) )
      ELSE
-       CALL xc_f90_mgga_vxc( xc_func, length, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
+       CALL xc_f03_mgga_vxc( xc_func, length, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
                              vx_rho(1), vx_sigma(1), vlapl_rho(1), vx_tau(1) )
      ENDIF
-    CALL xc_f90_func_end( xc_func )
+    CALL xc_f03_func_end( xc_func )
     !
     IF (.NOT. POLARIZED) THEN
       DO k = 1, length
@@ -225,11 +225,12 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   !
   IF ( is_libxc(6) ) THEN
     !
-    CALL xc_f90_func_init( xc_func, xc_info1, imetac, pol_unpol )
-    CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold )
-    CALL xc_f90_mgga_exc_vxc( xc_func, length, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
+    CALL xc_f03_func_init( xc_func, imetac, pol_unpol )
+    xc_info1 = xc_f03_func_get_info( xc_func )
+    CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold )
+    CALL xc_f03_mgga_exc_vxc( xc_func, length, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
                                ec_lxc(1), vc_rho(1), vc_sigma(1), vlapl_rho(1), vc_tau(1) )
-    CALL xc_f90_func_end( xc_func )
+    CALL xc_f03_func_end( xc_func )
     !
     IF (.NOT. POLARIZED) THEN
        DO k = 1, length
