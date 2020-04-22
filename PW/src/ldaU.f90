@@ -211,6 +211,7 @@ CONTAINS
     !
     lba = .FALSE.
     lb  = .FALSE.
+    hub_back = .FALSE.
     !
     is_hubbard(:) = .FALSE.
     is_hubbard_back(:) = .FALSE.
