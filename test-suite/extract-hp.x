@@ -27,12 +27,9 @@ p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
 
 # HP
 u=`grep "Hubbard U (eV)" -A 1 $fname | tail -n 1 | awk '{print $7}'`
+v1=`grep "Hubbard V (eV)" -A 2 $fname | tail -n 1 | awk '{print $6}'`
+v2=`grep "Hubbard V (eV)" -A 3 $fname | tail -n 1 | awk '{print $6}'`
 
-
-if test "$u" != ""; then
-        echo u
-        echo $u
-fi
 
 if test "$e1" != ""; then
 	echo e1
@@ -54,3 +51,17 @@ if test "$p1" != ""; then
 	echo $p1
 fi
 
+if test "$u" != ""; then
+        echo u
+        echo $u
+fi
+
+if test "$v1" != ""; then
+        echo v1
+        echo $v1
+fi
+
+if test "$v2" != ""; then
+        echo v2
+        echo $v2
+fi

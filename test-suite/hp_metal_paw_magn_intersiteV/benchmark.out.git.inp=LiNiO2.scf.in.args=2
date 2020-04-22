@@ -1,0 +1,2309 @@
+
+     Program PWSCF v.6.5 starts on 22Apr2020 at 20:51:33 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     K-points division:     npool     =       4
+     Fft bands division:     nmany     =       1
+     Waiting for input...
+     Reading input from standard input
+
+     Current dimensions of program PWSCF are:
+     Max number of different atomic species (ntypx) = 10
+     Max number of k-points (npk) =  40000
+     Max angular momentum in pseudopotentials (lmaxx) =  3
+
+     Reading Hubbard V parameters from the input...
+
+               file Ni.pbesol-n-kjpaw_psl.0.1.UPF: wavefunction(s)  4S 3D renormalized
+               file O.pbesol-n-kjpaw_psl.0.1.UPF: wavefunction(s)  2P renormalized
+
+     Subspace diagonalization in iterative solution of the eigenvalue problem:
+     a serial algorithm will be used
+
+     First shells distances (in Bohr):
+     shell:   1    0.000000
+     shell:   2    3.719418
+     shell:   3    5.440101
+     shell:   4    5.460668
+     shell:   5    6.590051
+     shell:   6    6.941703
+     shell:   7    7.708022
+
+     i    j  dist (Bohr)       stan-stan stan-bac bac-bac
+     1    1   0.00000000  V =    3.0000   0.0000   0.0000
+     1    2   6.94170256  V =    0.7000   0.0000   0.0000
+     1    7   6.94170256  V =    0.7000   0.0000   0.0000
+     2    1   6.94170256  V =    0.7000   0.0000   0.0000
+     2    2   0.00000000  V =    0.0000   0.0000   0.0000
+     3    3   0.00000000  V =    0.0000   0.0000   0.0000
+     3  105   6.94170256  V =    0.7000   0.0000   0.0000
+     4    4   0.00000000  V =    0.0000   0.0000   0.0000
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         789     393    125                11021     3851     707
+ 
+
+
+     bravais-lattice index     =            5
+     lattice parameter (alat)  =       9.4700  a.u.
+     unit-cell volume          =     228.9758 (a.u.)^3
+     number of atoms/cell      =            4
+     number of atomic types    =            3
+     number of electrons       =        25.00
+     number of Kohn-Sham states=           17
+     kinetic-energy cutoff     =      25.0000  Ry
+     charge density cutoff     =     200.0000  Ry
+     convergence threshold     =      1.0E-10
+     mixing beta               =       0.7000
+     number of iterations used =            8  plain     mixing
+     Exchange-correlation= SLA PW PSX PSC
+                           (   1   4  10   8   0   0   0)
+
+     celldm(1)=   9.470000  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.835000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (   0.287228  -0.165831   0.943398 )  
+               a(2) = (   0.000000   0.331662   0.943398 )  
+               a(3) = (  -0.287228  -0.165831   0.943398 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = (  1.740777 -1.005038  0.353333 )  
+               b(2) = (  0.000000  2.010076  0.353333 )  
+               b(3) = ( -1.740777 -1.005038  0.353333 )  
+
+
+     PseudoPot. # 1 for Ni read from file:
+     ../../pseudo/Ni.pbesol-n-kjpaw_psl.0.1.UPF
+     MD5 check sum: 67dae6e8573ff35121f56d11d0d0ce7d
+     Pseudo is Projector augmented-wave + core cor, Zval = 10.0
+     Generated using "atomic" code by A. Dal Corso v.5.0.2 svn rev. 9415
+     Shape of augmentation charge: PSQ
+     Using radial grid of 1195 points,  6 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+                l(5) =   2
+                l(6) =   2
+     Q(r) pseudized with 0 coefficients 
+
+
+     PseudoPot. # 2 for O  read from file:
+     ../../pseudo/O.pbesol-n-kjpaw_psl.0.1.UPF
+     MD5 check sum: f1fabb93b5f951fba6cb430882e2825c
+     Pseudo is Projector augmented-wave + core cor, Zval =  6.0
+     Generated using "atomic" code by A. Dal Corso v.6.3
+     Shape of augmentation charge: BESSEL
+     Using radial grid of 1095 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     PseudoPot. # 3 for Li read from file:
+     ../../pseudo/Li.pbesol-s-kjpaw_psl.0.2.1.UPF
+     MD5 check sum: 859015b7cfe8ffa064b4dbcc5a9071b6
+     Pseudo is Projector augmented-wave, Zval =  3.0
+     Generated using "atomic" code by A. Dal Corso v.5.0.2 svn rev. 9415
+     Shape of augmentation charge: PSQ
+     Using radial grid of 1017 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     atomic species   valence    mass     pseudopotential
+        Ni            10.00    58.70000     Ni( 1.00)
+        O              6.00    16.00000     O ( 1.00)
+        Li             3.00     7.00000     Li( 1.00)
+
+     Starting magnetic structure 
+     atomic species   magnetization
+        Ni           0.500
+        O            0.000
+        Li           0.000
+
+
+
+     12 Sym. Ops., with inversion, found
+
+
+                                    s                        frac. trans.
+
+      isym =  1     identity                                     
+
+ cryst.   s( 1) = (     1          0          0      )
+                  (     0          1          0      )
+                  (     0          0          1      )
+
+ cart.    s( 1) = (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+      isym =  2     180 deg rotation - cart. axis [1,0,0]        
+
+ cryst.   s( 2) = (     0          0         -1      )
+                  (     0         -1          0      )
+                  (    -1          0          0      )
+
+ cart.    s( 2) = (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000 -1.0000000 -0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym =  3     120 deg rotation - cryst. axis [0,0,1]       
+
+ cryst.   s( 3) = (     0          1          0      )
+                  (     0          0          1      )
+                  (     1          0          0      )
+
+ cart.    s( 3) = ( -0.5000000 -0.8660254 -0.0000000 )
+                  (  0.8660254 -0.5000000 -0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+      isym =  4     120 deg rotation - cryst. axis [0,0,-1]      
+
+ cryst.   s( 4) = (     0          0          1      )
+                  (     1          0          0      )
+                  (     0          1          0      )
+
+ cart.    s( 4) = ( -0.5000000  0.8660254  0.0000000 )
+                  ( -0.8660254 -0.5000000 -0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+      isym =  5     180 deg rotation - cryst. axis [0,1,0]       
+
+ cryst.   s( 5) = (     0         -1          0      )
+                  (    -1          0          0      )
+                  (     0          0         -1      )
+
+ cart.    s( 5) = ( -0.5000000 -0.8660254 -0.0000000 )
+                  ( -0.8660254  0.5000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym =  6     180 deg rotation - cryst. axis [1,1,0]       
+
+ cryst.   s( 6) = (    -1          0          0      )
+                  (     0          0         -1      )
+                  (     0         -1          0      )
+
+ cart.    s( 6) = ( -0.5000000  0.8660254  0.0000000 )
+                  (  0.8660254  0.5000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym =  7     inversion                                    
+
+ cryst.   s( 7) = (    -1          0          0      )
+                  (     0         -1          0      )
+                  (     0          0         -1      )
+
+ cart.    s( 7) = ( -1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000 -1.0000000 -0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym =  8     inv. 180 deg rotation - cart. axis [1,0,0]   
+
+ cryst.   s( 8) = (     0          0          1      )
+                  (     0          1          0      )
+                  (     1          0          0      )
+
+ cart.    s( 8) = ( -1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+      isym =  9     inv. 120 deg rotation - cryst. axis [0,0,1]  
+
+ cryst.   s( 9) = (     0         -1          0      )
+                  (     0          0         -1      )
+                  (    -1          0          0      )
+
+ cart.    s( 9) = (  0.5000000  0.8660254  0.0000000 )
+                  ( -0.8660254  0.5000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym = 10     inv. 120 deg rotation - cryst. axis [0,0,-1] 
+
+ cryst.   s(10) = (     0          0         -1      )
+                  (    -1          0          0      )
+                  (     0         -1          0      )
+
+ cart.    s(10) = (  0.5000000 -0.8660254 -0.0000000 )
+                  (  0.8660254  0.5000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym = 11     inv. 180 deg rotation - cryst. axis [0,1,0]  
+
+ cryst.   s(11) = (     0          1          0      )
+                  (     1          0          0      )
+                  (     0          0          1      )
+
+ cart.    s(11) = (  0.5000000  0.8660254  0.0000000 )
+                  (  0.8660254 -0.5000000 -0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+      isym = 12     inv. 180 deg rotation - cryst. axis [1,1,0]  
+
+ cryst.   s(12) = (     1          0          0      )
+                  (     0          0          1      )
+                  (     0          1          0      )
+
+ cart.    s(12) = (  0.5000000 -0.8660254 -0.0000000 )
+                  ( -0.8660254 -0.5000000 -0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+     point group D_3d (-3m) 
+     there are  6 classes
+     the character table:
+
+       E     2C3   3C2'  i     2S6   3s_d 
+A_1g   1.00  1.00  1.00  1.00  1.00  1.00
+A_2g   1.00  1.00 -1.00  1.00  1.00 -1.00
+E_g    2.00 -1.00  0.00  2.00 -1.00  0.00
+A_1u   1.00  1.00  1.00 -1.00 -1.00 -1.00
+A_2u   1.00  1.00 -1.00 -1.00 -1.00  1.00
+E_u    2.00 -1.00  0.00 -2.00  1.00  0.00
+
+     the symmetry operations in each class and the name of the first element:
+
+     E        1
+          identity                                               
+     2C3      3    4
+          120 deg rotation - cryst. axis [0,0,1]                 
+     3C2'     2    5    6
+          180 deg rotation - cart. axis [1,0,0]                  
+     i        7
+          inversion                                              
+     2S6      9   10
+          inv. 120 deg rotation - cryst. axis [0,0,1]            
+     3s_d     8   11   12
+          inv. 180 deg rotation - cart. axis [1,0,0]             
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1           Ni  tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+         2           O   tau(   2) = (   0.0000000  -0.0000000   0.7330203  )
+         3           O   tau(   3) = (   0.0000000  -0.0000000   2.0971740  )
+         4           Li  tau(   4) = (   0.0000000  -0.0000000   1.4150972  )
+
+   Crystallographic axes
+
+     site n.     atom                  positions (cryst. coord.)
+         1           Ni  tau(   1) = (  0.0000000  0.0000000  0.0000000  )
+         2           O   tau(   2) = (  0.2590000  0.2590000  0.2590000  )
+         3           O   tau(   3) = (  0.7410000  0.7410000  0.7410000  )
+         4           Li  tau(   4) = (  0.5000000  0.5000000  0.5000000  )
+
+     number of k points=     4  Marzari-Vanderbilt smearing, width (Ry)=  0.0150
+                       cart. coord. in units 2pi/alat
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.1250000
+        k(    2) = (   0.8703883   0.5025189  -0.1766663), wk =   0.3750000
+        k(    3) = (   0.8703883  -0.5025189  -0.3533326), wk =   0.3750000
+        k(    4) = (   0.0000000   0.0000000  -0.5299989), wk =   0.1250000
+
+                       cryst. coord.
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.1250000
+        k(    2) = (   0.0000000   0.0000000  -0.5000000), wk =   0.3750000
+        k(    3) = (   0.0000000  -0.5000000  -0.5000000), wk =   0.3750000
+        k(    4) = (  -0.5000000  -0.5000000  -0.5000000), wk =   0.1250000
+
+     Dense  grid:    11021 G-vectors     FFT dimensions: (  45,  45,  45)
+
+     Smooth grid:     3851 G-vectors     FFT dimensions: (  32,  32,  32)
+
+     Dynamical RAM for                 wfc:       0.13 MB
+
+     Dynamical RAM for     wfc (w. buffer):       0.38 MB
+
+     Dynamical RAM for             U proj.:       0.08 MB
+
+     Dynamical RAM for  U proj. (w. buff.):       0.24 MB
+
+     Dynamical RAM for           str. fact:       0.50 MB
+
+     Dynamical RAM for           local pot:       0.00 MB
+
+     Dynamical RAM for          nlocal pot:       0.31 MB
+
+     Dynamical RAM for                qrad:       3.41 MB
+
+     Dynamical RAM for          rho,v,vnew:       5.18 MB
+
+     Dynamical RAM for               rhoin:       1.73 MB
+
+     Dynamical RAM for            rho*nmix:       5.38 MB
+
+     Dynamical RAM for           G-vectors:       0.66 MB
+
+     Dynamical RAM for          h,s,v(r/c):       0.21 MB
+
+     Dynamical RAM for          <psi|beta>:       0.01 MB
+
+     Dynamical RAM for                 psi:       0.50 MB
+
+     Dynamical RAM for                hpsi:       0.50 MB
+
+     Dynamical RAM for                spsi:       0.50 MB
+
+     Dynamical RAM for      wfcinit/wfcrot:       0.29 MB
+
+     Dynamical RAM for           addusdens:       8.20 MB
+
+     Dynamical RAM for          addusforce:       8.44 MB
+
+     Dynamical RAM for         addusstress:       8.64 MB
+
+     Estimated static dynamical RAM per process >      22.63 MB
+
+     Estimated max dynamical RAM per process >      31.27 MB
+
+     Estimated total dynamical RAM >     125.09 MB
+
+     Check: negative core charge=   -0.000020
+     Generating pointlists ...
+     new r_m :   0.1620 (alat units)  1.5343 (a.u.) for type    1
+     new r_m :   0.1620 (alat units)  1.5343 (a.u.) for type    2
+     new r_m :   0.1742 (alat units)  1.6494 (a.u.) for type    3
+
+     Initial potential from superposition of free atoms
+
+     starting charge   24.99496, renormalised to   25.00000
+ --- in v_hubbard_extended ---
+Hubbard energy    0.1323
+ -----------------------------
+     Number of +U iterations with fixed ns =  0
+     Starting occupations:
+ --- enter write_nsg ---
+ Atom:    1   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  1.000
+  1.000  0.000  0.000  0.000  0.000
+  1.000
+  0.000  1.000  0.000  0.000  0.000
+  1.000
+  0.000  0.000  1.000  0.000  0.000
+  1.000
+  0.000  0.000  0.000  1.000  0.000
+  1.000
+  0.000  0.000  0.000  0.000  1.000
+    occupation matrix before diagonalization:
+  1.000  0.000  0.000  0.000  0.000
+  0.000  1.000  0.000  0.000  0.000
+  0.000  0.000  1.000  0.000  0.000
+  0.000  0.000  0.000  1.000  0.000
+  0.000  0.000  0.000  0.000  1.000
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.667
+  1.000  0.000  0.000
+  0.667
+  0.000  1.000  0.000
+  0.667
+  0.000  0.000  1.000
+    occupation matrix before diagonalization:
+  0.667  0.000  0.000
+  0.000  0.667  0.000
+  0.000  0.000  0.667
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.667
+  1.000  0.000  0.000
+  0.667
+  0.000  1.000  0.000
+  0.667
+  0.000  0.000  1.000
+    occupation matrix before diagonalization:
+  0.667  0.000  0.000
+  0.000  0.667  0.000
+  0.000  0.000  0.667
+ Atom:    1   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.600
+  1.000  0.000  0.000  0.000  0.000
+  0.600
+  0.000  1.000  0.000  0.000  0.000
+  0.600
+  0.000  0.000  1.000  0.000  0.000
+  0.600
+  0.000  0.000  0.000  1.000  0.000
+  0.600
+  0.000  0.000  0.000  0.000  1.000
+    occupation matrix before diagonalization:
+  0.600  0.000  0.000  0.000  0.000
+  0.000  0.600  0.000  0.000  0.000
+  0.000  0.000  0.600  0.000  0.000
+  0.000  0.000  0.000  0.600  0.000
+  0.000  0.000  0.000  0.000  0.600
+ Atom:    2   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.667
+  1.000  0.000  0.000
+  0.667
+  0.000  1.000  0.000
+  0.667
+  0.000  0.000  1.000
+    occupation matrix before diagonalization:
+  0.667  0.000  0.000
+  0.000  0.667  0.000
+  0.000  0.000  0.667
+ Atom:    3   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.667
+  1.000  0.000  0.000
+  0.667
+  0.000  1.000  0.000
+  0.667
+  0.000  0.000  1.000
+    occupation matrix before diagonalization:
+  0.667  0.000  0.000
+  0.000  0.667  0.000
+  0.000  0.000  0.667
+atom    1   Tr[ns(na)]=   8.0000000
+atom    1   Mag[ns(na)]=   2.0000000
+atom    2   Tr[ns(na)]=   4.0000000
+atom    2   Mag[ns(na)]=   0.0000000
+atom    3   Tr[ns(na)]=   4.0000000
+atom    3   Mag[ns(na)]=   0.0000000
+ --- exit write_nsg ---
+ Atomic wfc used for LDA+U Projector are NOT orthogonalized
+     Starting wfcs are   19 randomized atomic wfcs
+     Checking if some PAW data can be deallocated... 
+       PAW data deallocated on    3 nodes for type:  1
+       PAW data deallocated on    2 nodes for type:  2
+       PAW data deallocated on    3 nodes for type:  3
+
+     total cpu time spent up to now is        1.9 secs
+
+     Self-consistent Calculation
+
+     iteration #  1     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  3.4
+ --- enter write_nsg ---
+ Atom:    1   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.965
+ -0.000  0.959 -0.281  0.005 -0.019
+  0.965
+ -0.000  0.281  0.959 -0.019 -0.005
+  0.965
+ -1.000 -0.000 -0.000  0.000  0.000
+  0.966
+  0.000  0.007  0.018  0.923  0.383
+  0.966
+ -0.000  0.018 -0.007 -0.383  0.923
+    occupation matrix before diagonalization:
+  0.965  0.000  0.000  0.000  0.000
+  0.000  0.965  0.000 -0.000  0.000
+  0.000  0.000  0.965  0.000 -0.000
+  0.000 -0.000  0.000  0.966 -0.000
+  0.000  0.000 -0.000 -0.000  0.966
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.947
+ -0.000 -0.971 -0.237
+  0.947
+ -0.000 -0.237  0.971
+  0.948
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.948 -0.000  0.000
+ -0.000  0.947 -0.000
+  0.000 -0.000  0.947
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.947
+ -0.000 -0.971 -0.238
+  0.947
+ -0.000 -0.238  0.971
+  0.948
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.948 -0.000  0.000
+ -0.000  0.947 -0.000
+  0.000 -0.000  0.947
+ Atom:    1   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.308
+  0.000 -0.442 -0.526 -0.556 -0.468
+  0.308
+  0.000  0.526 -0.442 -0.468  0.556
+  0.643
+  0.000 -0.013  0.727 -0.687  0.013
+  0.643
+ -0.000 -0.727 -0.013  0.013  0.687
+  0.697
+ -1.000 -0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.697  0.000  0.000  0.000  0.000
+  0.000  0.485  0.000 -0.000 -0.167
+  0.000  0.000  0.485 -0.167 -0.000
+  0.000 -0.000 -0.167  0.466 -0.000
+  0.000 -0.167 -0.000 -0.000  0.466
+ Atom:    2   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.904
+ -0.000 -0.971 -0.238
+  0.904
+ -0.000 -0.238  0.971
+  0.924
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.924 -0.000  0.000
+ -0.000  0.904 -0.000
+  0.000 -0.000  0.904
+ Atom:    3   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.904
+ -0.000 -0.971 -0.238
+  0.904
+ -0.000 -0.238  0.971
+  0.924
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.924 -0.000  0.000
+ -0.000  0.904 -0.000
+  0.000 -0.000  0.904
+atom    1   Tr[ns(na)]=   7.4241744
+atom    1   Mag[ns(na)]=   2.2256354
+atom    2   Tr[ns(na)]=   5.5724978
+atom    2   Mag[ns(na)]=   0.1102349
+atom    3   Tr[ns(na)]=   5.5724978
+atom    3   Mag[ns(na)]=   0.1102349
+ --- exit write_nsg ---
+ --- in v_hubbard_extended ---
+Hubbard energy    0.1418
+ -----------------------------
+
+     total cpu time spent up to now is        2.4 secs
+
+     total energy              =    -279.02966116 Ry
+     estimated scf accuracy    <       1.07907388 Ry
+
+     total magnetization       =     3.00 Bohr mag/cell
+     absolute magnetization    =     3.00 Bohr mag/cell
+
+     iteration #  2     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  4.32E-03,  avg # of iterations =  3.1
+ --- enter write_nsg ---
+ Atom:    1   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.958
+ -0.000  0.969 -0.201 -0.030  0.142
+  0.958
+ -0.000  0.201  0.969  0.142  0.030
+  0.960
+ -1.000 -0.000 -0.000  0.000  0.000
+  0.961
+  0.000 -0.051 -0.136  0.926  0.349
+  0.961
+ -0.000 -0.136  0.051 -0.349  0.926
+    occupation matrix before diagonalization:
+  0.960  0.000  0.000  0.000  0.000
+  0.000  0.958  0.000 -0.000 -0.000
+  0.000  0.000  0.958 -0.000 -0.000
+  0.000 -0.000 -0.000  0.961 -0.000
+  0.000 -0.000 -0.000 -0.000  0.961
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.756
+  1.000  0.000 -0.000
+  0.773
+ -0.000  0.971  0.238
+  0.773
+  0.000 -0.238  0.971
+    occupation matrix before diagonalization:
+  0.756 -0.000  0.000
+ -0.000  0.773 -0.000
+  0.000 -0.000  0.773
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.756
+  1.000  0.000 -0.000
+  0.773
+ -0.000  0.971  0.239
+  0.773
+  0.000 -0.239  0.971
+    occupation matrix before diagonalization:
+  0.756 -0.000  0.000
+ -0.000  0.773 -0.000
+  0.000 -0.000  0.773
+ Atom:    1   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.953
+ -0.000  0.764  0.348  0.225  0.495
+  0.953
+  0.000  0.348 -0.764 -0.495  0.225
+  0.962
+ -1.000 -0.000 -0.000  0.000  0.000
+  0.962
+  0.000 -0.132 -0.528  0.814  0.203
+  0.962
+  0.000 -0.528  0.132 -0.203  0.814
+    occupation matrix before diagonalization:
+  0.962  0.000  0.000  0.000  0.000
+  0.000  0.956  0.000 -0.000 -0.004
+  0.000  0.000  0.956 -0.004 -0.000
+  0.000 -0.000 -0.004  0.960 -0.000
+  0.000 -0.004 -0.000 -0.000  0.960
+ Atom:    2   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.611
+ -0.000 -0.971 -0.239
+  0.611
+ -0.000 -0.239  0.971
+  0.731
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.731 -0.000  0.000
+ -0.000  0.611 -0.000
+  0.000 -0.000  0.611
+ Atom:    3   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.611
+ -0.000 -0.971 -0.239
+  0.611
+ -0.000 -0.239  0.971
+  0.731
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.731 -0.000  0.000
+ -0.000  0.611 -0.000
+  0.000 -0.000  0.611
+atom    1   Tr[ns(na)]=   9.5906089
+atom    1   Mag[ns(na)]=   0.0051400
+atom    2   Tr[ns(na)]=   4.2561217
+atom    2   Mag[ns(na)]=   0.3502559
+atom    3   Tr[ns(na)]=   4.2561217
+atom    3   Mag[ns(na)]=   0.3502559
+ --- exit write_nsg ---
+ --- in v_hubbard_extended ---
+Hubbard energy    0.1394
+ -----------------------------
+
+     total cpu time spent up to now is        3.1 secs
+
+     total energy              =    -279.10605162 Ry
+     estimated scf accuracy    <       8.69748681 Ry
+
+     total magnetization       =     1.00 Bohr mag/cell
+     absolute magnetization    =     1.00 Bohr mag/cell
+
+     iteration #  3     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  4.32E-03,  avg # of iterations =  2.0
+ --- enter write_nsg ---
+ Atom:    1   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.905
+  0.000 -0.635 -0.470 -0.365 -0.493
+  0.905
+  0.000  0.470 -0.635 -0.493  0.365
+  0.961
+  0.000  0.122  0.601 -0.774 -0.158
+  0.961
+ -0.000 -0.601  0.122 -0.158  0.774
+  0.964
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.964  0.000  0.000  0.000  0.000
+  0.000  0.926  0.000 -0.000 -0.027
+  0.000  0.000  0.926 -0.027 -0.000
+  0.000 -0.000 -0.027  0.940 -0.000
+  0.000 -0.027 -0.000 -0.000  0.940
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.819
+ -0.000 -0.971 -0.238
+  0.819
+ -0.000 -0.238  0.971
+  0.877
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.877 -0.000  0.000
+ -0.000  0.819 -0.000
+  0.000 -0.000  0.819
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.819
+ -0.000 -0.971 -0.238
+  0.819
+ -0.000 -0.238  0.971
+  0.877
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.877 -0.000  0.000
+ -0.000  0.819 -0.000
+  0.000 -0.000  0.819
+ Atom:    1   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.578
+  0.000 -0.616 -0.478 -0.384 -0.495
+  0.578
+ -0.000 -0.478  0.616  0.495 -0.384
+  0.953
+ -1.000 -0.000 -0.000  0.000  0.000
+  0.953
+  0.000 -0.124 -0.614  0.764  0.154
+  0.953
+  0.000 -0.614  0.124 -0.154  0.764
+    occupation matrix before diagonalization:
+  0.953  0.000  0.000  0.000  0.000
+  0.000  0.725  0.000 -0.000 -0.183
+  0.000  0.000  0.725 -0.183  0.000
+  0.000 -0.000 -0.183  0.806 -0.000
+  0.000 -0.183  0.000 -0.000  0.806
+ Atom:    2   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.824
+ -0.000 -0.971 -0.238
+  0.824
+ -0.000 -0.238  0.971
+  0.847
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.847 -0.000  0.000
+ -0.000  0.824 -0.000
+  0.000 -0.000  0.824
+ Atom:    3   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.824
+ -0.000 -0.971 -0.238
+  0.824
+ -0.000 -0.238  0.971
+  0.847
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.847 -0.000  0.000
+ -0.000  0.824 -0.000
+  0.000 -0.000  0.824
+atom    1   Tr[ns(na)]=   8.7121432
+atom    1   Mag[ns(na)]=   0.6811501
+atom    2   Tr[ns(na)]=   5.0094293
+atom    2   Mag[ns(na)]=   0.0195549
+atom    3   Tr[ns(na)]=   5.0094293
+atom    3   Mag[ns(na)]=   0.0195549
+ --- exit write_nsg ---
+ --- in v_hubbard_extended ---
+Hubbard energy    0.1267
+ -----------------------------
+
+     total cpu time spent up to now is        3.7 secs
+
+     total energy              =    -279.75806008 Ry
+     estimated scf accuracy    <       0.42992271 Ry
+
+     total magnetization       =     1.00 Bohr mag/cell
+     absolute magnetization    =     1.07 Bohr mag/cell
+
+     iteration #  4     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  1.72E-03,  avg # of iterations =  1.0
+ --- enter write_nsg ---
+ Atom:    1   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.862
+  0.000 -0.679 -0.437 -0.319 -0.496
+  0.862
+  0.000  0.437 -0.679 -0.496  0.319
+  0.957
+  0.000  0.128  0.575 -0.788 -0.176
+  0.957
+ -0.000 -0.575  0.128 -0.176  0.788
+  0.962
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.962  0.000  0.000  0.000  0.000
+  0.000  0.895  0.000 -0.000 -0.045
+  0.000  0.000  0.895 -0.045 -0.000
+  0.000 -0.000 -0.045  0.924 -0.000
+  0.000 -0.045 -0.000 -0.000  0.924
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.839
+ -0.000 -0.971 -0.238
+  0.839
+ -0.000 -0.238  0.971
+  0.906
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.906 -0.000  0.000
+ -0.000  0.839 -0.000
+  0.000 -0.000  0.839
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.839
+ -0.000 -0.971 -0.238
+  0.839
+ -0.000 -0.238  0.971
+  0.906
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.906 -0.000  0.000
+ -0.000  0.839 -0.000
+  0.000 -0.000  0.839
+ Atom:    1   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.471
+ -0.000  0.638  0.464  0.362  0.498
+  0.471
+ -0.000 -0.464  0.638  0.498 -0.362
+  0.955
+  0.000  0.128  0.602 -0.771 -0.163
+  0.955
+ -0.000 -0.602  0.128 -0.163  0.771
+  0.955
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.955  0.000  0.000  0.000  0.000
+  0.000  0.654  0.000 -0.000 -0.234
+  0.000  0.000  0.654 -0.234  0.000
+  0.000 -0.000 -0.234  0.772 -0.000
+  0.000 -0.234  0.000 -0.000  0.772
+ Atom:    2   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.859
+ -0.000 -0.971 -0.237
+  0.859
+ -0.000 -0.237  0.971
+  0.880
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.880 -0.000  0.000
+ -0.000  0.859 -0.000
+  0.000 -0.000  0.859
+ Atom:    3   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.859
+ -0.000 -0.971 -0.238
+  0.859
+ -0.000 -0.238  0.971
+  0.880
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.880 -0.000  0.000
+ -0.000  0.859 -0.000
+  0.000 -0.000  0.859
+atom    1   Tr[ns(na)]=   8.4086802
+atom    1   Mag[ns(na)]=   0.7945561
+atom    2   Tr[ns(na)]=   5.1823438
+atom    2   Mag[ns(na)]=  -0.0133247
+atom    3   Tr[ns(na)]=   5.1823438
+atom    3   Mag[ns(na)]=  -0.0133247
+ --- exit write_nsg ---
+ --- in v_hubbard_extended ---
+Hubbard energy    0.0960
+ -----------------------------
+
+     total cpu time spent up to now is        4.2 secs
+
+     total energy              =    -279.80167282 Ry
+     estimated scf accuracy    <       0.04284003 Ry
+
+     total magnetization       =     1.00 Bohr mag/cell
+     absolute magnetization    =     1.12 Bohr mag/cell
+
+     iteration #  5     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  1.71E-04,  avg # of iterations =  2.1
+ --- enter write_nsg ---
+ Atom:    1   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.827
+  0.000 -0.656 -0.455 -0.343 -0.494
+  0.827
+  0.000  0.455 -0.656 -0.494  0.343
+  0.953
+  0.000  0.127  0.588 -0.781 -0.169
+  0.953
+ -0.000 -0.588  0.127 -0.169  0.781
+  0.960
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.960  0.000  0.000  0.000  0.000
+  0.000  0.873  0.000 -0.000 -0.060
+  0.000  0.000  0.873 -0.060 -0.000
+  0.000 -0.000 -0.060  0.908 -0.000
+  0.000 -0.060 -0.000 -0.000  0.908
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.859
+ -0.000 -0.971 -0.238
+  0.859
+ -0.000 -0.238  0.971
+  0.909
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.909 -0.000  0.000
+ -0.000  0.859 -0.000
+  0.000 -0.000  0.859
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.859
+ -0.000 -0.971 -0.238
+  0.859
+ -0.000 -0.238  0.971
+  0.909
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.909 -0.000  0.000
+ -0.000  0.859 -0.000
+  0.000 -0.000  0.859
+ Atom:    1   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.444
+  0.000 -0.649 -0.456 -0.350 -0.498
+  0.444
+ -0.000 -0.456  0.649  0.498 -0.350
+  0.958
+ -1.000 -0.000 -0.000  0.000  0.000
+  0.958
+  0.000 -0.128 -0.595  0.776  0.167
+  0.958
+  0.000 -0.595  0.128 -0.167  0.776
+    occupation matrix before diagonalization:
+  0.958  0.000  0.000  0.000  0.000
+  0.000  0.634  0.000 -0.000 -0.248
+  0.000  0.000  0.634 -0.248  0.000
+  0.000 -0.000 -0.248  0.767 -0.000
+  0.000 -0.248  0.000 -0.000  0.767
+ Atom:    2   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.867
+ -0.000 -0.971 -0.238
+  0.867
+ -0.000 -0.238  0.971
+  0.885
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.885 -0.000  0.000
+ -0.000  0.867 -0.000
+  0.000 -0.000  0.867
+ Atom:    3   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.867
+ -0.000 -0.971 -0.238
+  0.867
+ -0.000 -0.238  0.971
+  0.885
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.885 -0.000  0.000
+ -0.000  0.867 -0.000
+  0.000 -0.000  0.867
+atom    1   Tr[ns(na)]=   8.2807579
+atom    1   Mag[ns(na)]=   0.7604441
+atom    2   Tr[ns(na)]=   5.2447487
+atom    2   Mag[ns(na)]=   0.0091427
+atom    3   Tr[ns(na)]=   5.2447487
+atom    3   Mag[ns(na)]=   0.0091427
+ --- exit write_nsg ---
+ --- in v_hubbard_extended ---
+Hubbard energy    0.1078
+ -----------------------------
+
+     total cpu time spent up to now is        4.7 secs
+
+     total energy              =    -279.80723038 Ry
+     estimated scf accuracy    <       0.01741218 Ry
+
+     total magnetization       =     1.00 Bohr mag/cell
+     absolute magnetization    =     1.06 Bohr mag/cell
+
+     iteration #  6     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  6.96E-05,  avg # of iterations =  1.2
+ --- enter write_nsg ---
+ Atom:    1   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.842
+  0.000 -0.656 -0.456 -0.343 -0.494
+  0.842
+  0.000  0.456 -0.656 -0.494  0.343
+  0.955
+  0.000  0.126  0.588 -0.781 -0.168
+  0.955
+ -0.000 -0.588  0.126 -0.168  0.781
+  0.961
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.961  0.000  0.000  0.000  0.000
+  0.000  0.883  0.000 -0.000 -0.054
+  0.000  0.000  0.883 -0.054 -0.000
+  0.000 -0.000 -0.054  0.914 -0.000
+  0.000 -0.054 -0.000 -0.000  0.914
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.850
+ -0.000 -0.971 -0.238
+  0.850
+ -0.000 -0.238  0.971
+  0.909
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.909 -0.000  0.000
+ -0.000  0.850 -0.000
+  0.000 -0.000  0.850
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.850
+ -0.000 -0.971 -0.239
+  0.850
+ -0.000 -0.239  0.971
+  0.909
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.909 -0.000  0.000
+ -0.000  0.850 -0.000
+  0.000 -0.000  0.850
+ Atom:    1   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.478
+ -0.000  0.650  0.456  0.349  0.498
+  0.478
+ -0.000 -0.456  0.650  0.498 -0.349
+  0.957
+  0.000  0.128  0.595 -0.776 -0.167
+  0.957
+ -0.000 -0.595  0.128 -0.167  0.776
+  0.957
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.957  0.000  0.000  0.000  0.000
+  0.000  0.655  0.000 -0.000 -0.231
+  0.000  0.000  0.655 -0.231  0.000
+  0.000 -0.000 -0.231  0.780 -0.000
+  0.000 -0.231  0.000 -0.000  0.780
+ Atom:    2   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.857
+ -0.000 -0.971 -0.238
+  0.857
+ -0.000 -0.238  0.971
+  0.877
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.877 -0.000  0.000
+ -0.000  0.857 -0.000
+  0.000 -0.000  0.857
+ Atom:    3   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.857
+ -0.000 -0.971 -0.239
+  0.857
+ -0.000 -0.239  0.971
+  0.877
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.877 -0.000  0.000
+ -0.000  0.857 -0.000
+  0.000 -0.000  0.857
+atom    1   Tr[ns(na)]=   8.3831809
+atom    1   Mag[ns(na)]=   0.7277488
+atom    2   Tr[ns(na)]=   5.2003514
+atom    2   Mag[ns(na)]=   0.0199339
+atom    3   Tr[ns(na)]=   5.2003514
+atom    3   Mag[ns(na)]=   0.0199339
+ --- exit write_nsg ---
+ --- in v_hubbard_extended ---
+Hubbard energy    0.1098
+ -----------------------------
+
+     total cpu time spent up to now is        5.2 secs
+
+     total energy              =    -279.80977690 Ry
+     estimated scf accuracy    <       0.00069124 Ry
+
+     total magnetization       =     1.00 Bohr mag/cell
+     absolute magnetization    =     1.05 Bohr mag/cell
+
+     iteration #  7     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  2.76E-06,  avg # of iterations =  2.8
+ --- enter write_nsg ---
+ Atom:    1   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.838
+  0.000 -0.658 -0.454 -0.342 -0.494
+  0.838
+  0.000  0.454 -0.658 -0.494  0.342
+  0.955
+  0.000  0.127  0.587 -0.781 -0.169
+  0.955
+ -0.000 -0.587  0.127 -0.169  0.781
+  0.961
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.961  0.000  0.000  0.000  0.000
+  0.000  0.880  0.000 -0.000 -0.056
+  0.000  0.000  0.880 -0.056 -0.000
+  0.000 -0.000 -0.056  0.913 -0.000
+  0.000 -0.056 -0.000 -0.000  0.913
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.852
+ -0.000 -0.971 -0.238
+  0.852
+ -0.000 -0.238  0.971
+  0.910
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.910 -0.000  0.000
+ -0.000  0.852 -0.000
+  0.000 -0.000  0.852
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.852
+ -0.000 -0.971 -0.238
+  0.852
+ -0.000 -0.238  0.971
+  0.910
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.910 -0.000  0.000
+ -0.000  0.852 -0.000
+  0.000 -0.000  0.852
+ Atom:    1   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.473
+ -0.000  0.651  0.456  0.349  0.498
+  0.473
+ -0.000 -0.456  0.651  0.498 -0.349
+  0.957
+  0.000  0.128  0.594 -0.776 -0.168
+  0.957
+ -0.000 -0.594  0.128 -0.168  0.776
+  0.957
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.957  0.000  0.000  0.000  0.000
+  0.000  0.652  0.000 -0.000 -0.234
+  0.000  0.000  0.652 -0.234  0.000
+  0.000 -0.000 -0.234  0.778 -0.000
+  0.000 -0.234  0.000 -0.000  0.778
+ Atom:    2   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.858
+ -0.000 -0.971 -0.238
+  0.858
+ -0.000 -0.238  0.971
+  0.878
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.878 -0.000  0.000
+ -0.000  0.858 -0.000
+  0.000 -0.000  0.858
+ Atom:    3   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.858
+ -0.000 -0.971 -0.238
+  0.858
+ -0.000 -0.238  0.971
+  0.878
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.878 -0.000  0.000
+ -0.000  0.858 -0.000
+  0.000 -0.000  0.858
+atom    1   Tr[ns(na)]=   8.3626867
+atom    1   Mag[ns(na)]=   0.7300986
+atom    2   Tr[ns(na)]=   5.2092357
+atom    2   Mag[ns(na)]=   0.0197369
+atom    3   Tr[ns(na)]=   5.2092357
+atom    3   Mag[ns(na)]=   0.0197369
+ --- exit write_nsg ---
+ --- in v_hubbard_extended ---
+Hubbard energy    0.1122
+ -----------------------------
+
+     total cpu time spent up to now is        5.8 secs
+
+     total energy              =    -279.80990612 Ry
+     estimated scf accuracy    <       0.00017963 Ry
+
+     total magnetization       =     1.00 Bohr mag/cell
+     absolute magnetization    =     1.05 Bohr mag/cell
+
+     iteration #  8     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  7.19E-07,  avg # of iterations =  1.9
+ --- enter write_nsg ---
+ Atom:    1   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.839
+  0.000 -0.652 -0.459 -0.347 -0.494
+  0.839
+  0.000  0.459 -0.652 -0.494  0.347
+  0.955
+  0.000  0.126  0.590 -0.780 -0.166
+  0.955
+ -0.000 -0.590  0.126 -0.166  0.780
+  0.961
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.961  0.000  0.000  0.000  0.000
+  0.000  0.881  0.000 -0.000 -0.056
+  0.000  0.000  0.881 -0.056 -0.000
+  0.000 -0.000 -0.056  0.913 -0.000
+  0.000 -0.056 -0.000 -0.000  0.913
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.852
+ -0.000 -0.971 -0.238
+  0.852
+ -0.000 -0.238  0.971
+  0.909
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.909 -0.000  0.000
+ -0.000  0.852 -0.000
+  0.000 -0.000  0.852
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.852
+ -0.000 -0.971 -0.239
+  0.852
+ -0.000 -0.239  0.971
+  0.909
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.909 -0.000  0.000
+ -0.000  0.852 -0.000
+  0.000 -0.000  0.852
+ Atom:    1   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.482
+ -0.000  0.652  0.454  0.347  0.498
+  0.482
+ -0.000 -0.454  0.652  0.498 -0.347
+  0.957
+  0.000  0.129  0.594 -0.776 -0.168
+  0.957
+ -0.000 -0.594  0.129 -0.168  0.776
+  0.957
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.957  0.000  0.000  0.000  0.000
+  0.000  0.657  0.000 -0.000 -0.229
+  0.000  0.000  0.657 -0.229  0.000
+  0.000 -0.000 -0.229  0.782 -0.000
+  0.000 -0.229  0.000 -0.000  0.782
+ Atom:    2   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.856
+ -0.000 -0.971 -0.238
+  0.856
+ -0.000 -0.238  0.971
+  0.876
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.876 -0.000  0.000
+ -0.000  0.856 -0.000
+  0.000 -0.000  0.856
+ Atom:    3   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.856
+ -0.000 -0.971 -0.238
+  0.856
+ -0.000 -0.238  0.971
+  0.876
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.876 -0.000  0.000
+ -0.000  0.856 -0.000
+  0.000 -0.000  0.856
+atom    1   Tr[ns(na)]=   8.3827225
+atom    1   Mag[ns(na)]=   0.7141371
+atom    2   Tr[ns(na)]=   5.2003218
+atom    2   Mag[ns(na)]=   0.0264188
+atom    3   Tr[ns(na)]=   5.2003218
+atom    3   Mag[ns(na)]=   0.0264188
+ --- exit write_nsg ---
+ --- in v_hubbard_extended ---
+Hubbard energy    0.1123
+ -----------------------------
+
+     total cpu time spent up to now is        6.3 secs
+
+     total energy              =    -279.80997189 Ry
+     estimated scf accuracy    <       0.00016148 Ry
+
+     total magnetization       =     1.00 Bohr mag/cell
+     absolute magnetization    =     1.05 Bohr mag/cell
+
+     iteration #  9     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  6.46E-07,  avg # of iterations =  1.0
+ --- enter write_nsg ---
+ Atom:    1   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.837
+  0.000 -0.653 -0.459 -0.347 -0.494
+  0.837
+  0.000  0.459 -0.653 -0.494  0.347
+  0.955
+  0.000  0.126  0.590 -0.780 -0.167
+  0.955
+ -0.000 -0.590  0.126 -0.167  0.780
+  0.961
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.961  0.000  0.000  0.000  0.000
+  0.000  0.880  0.000 -0.000 -0.057
+  0.000  0.000  0.880 -0.057 -0.000
+  0.000 -0.000 -0.057  0.912 -0.000
+  0.000 -0.057 -0.000 -0.000  0.912
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.853
+ -0.000 -0.971 -0.238
+  0.853
+ -0.000 -0.238  0.971
+  0.910
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.910 -0.000  0.000
+ -0.000  0.853 -0.000
+  0.000 -0.000  0.853
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.853
+ -0.000 -0.971 -0.238
+  0.853
+ -0.000 -0.238  0.971
+  0.910
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.910 -0.000  0.000
+ -0.000  0.853 -0.000
+  0.000 -0.000  0.853
+ Atom:    1   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.481
+ -0.000  0.653  0.453  0.346  0.499
+  0.481
+ -0.000 -0.453  0.653  0.499 -0.346
+  0.957
+  0.000  0.129  0.593 -0.777 -0.169
+  0.957
+ -0.000 -0.593  0.129 -0.169  0.777
+  0.957
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.957  0.000  0.000  0.000  0.000
+  0.000  0.656  0.000 -0.000 -0.230
+  0.000  0.000  0.656 -0.230  0.000
+  0.000 -0.000 -0.230  0.781 -0.000
+  0.000 -0.230  0.000 -0.000  0.781
+ Atom:    2   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.856
+ -0.000 -0.971 -0.238
+  0.856
+ -0.000 -0.238  0.971
+  0.876
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.876 -0.000  0.000
+ -0.000  0.856 -0.000
+  0.000 -0.000  0.856
+ Atom:    3   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.856
+ -0.000 -0.971 -0.238
+  0.856
+ -0.000 -0.238  0.971
+  0.876
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.876 -0.000  0.000
+ -0.000  0.856 -0.000
+  0.000 -0.000  0.856
+atom    1   Tr[ns(na)]=   8.3755536
+atom    1   Mag[ns(na)]=   0.7131907
+atom    2   Tr[ns(na)]=   5.2038991
+atom    2   Mag[ns(na)]=   0.0272579
+atom    3   Tr[ns(na)]=   5.2038991
+atom    3   Mag[ns(na)]=   0.0272579
+ --- exit write_nsg ---
+ --- in v_hubbard_extended ---
+Hubbard energy    0.1123
+ -----------------------------
+
+     total cpu time spent up to now is        6.8 secs
+
+     total energy              =    -279.80998885 Ry
+     estimated scf accuracy    <       0.00000206 Ry
+
+     total magnetization       =     1.00 Bohr mag/cell
+     absolute magnetization    =     1.05 Bohr mag/cell
+
+     iteration # 10     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  8.24E-09,  avg # of iterations =  2.9
+ --- enter write_nsg ---
+ Atom:    1   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.836
+  0.000 -0.653 -0.458 -0.346 -0.494
+  0.836
+  0.000  0.458 -0.653 -0.494  0.346
+  0.955
+  0.000  0.126  0.590 -0.780 -0.167
+  0.955
+ -0.000 -0.590  0.126 -0.167  0.780
+  0.961
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.961  0.000  0.000  0.000  0.000
+  0.000  0.879  0.000 -0.000 -0.057
+  0.000  0.000  0.879 -0.057 -0.000
+  0.000 -0.000 -0.057  0.912 -0.000
+  0.000 -0.057 -0.000 -0.000  0.912
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.853
+ -0.000 -0.971 -0.238
+  0.853
+ -0.000 -0.238  0.971
+  0.910
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.910 -0.000  0.000
+ -0.000  0.853 -0.000
+  0.000 -0.000  0.853
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.853
+ -0.000 -0.971 -0.238
+  0.853
+ -0.000 -0.238  0.971
+  0.910
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.910 -0.000  0.000
+ -0.000  0.853 -0.000
+  0.000 -0.000  0.853
+ Atom:    1   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.481
+ -0.000  0.652  0.454  0.347  0.498
+  0.481
+ -0.000 -0.454  0.652  0.498 -0.347
+  0.957
+  0.000  0.129  0.593 -0.777 -0.168
+  0.957
+ -0.000 -0.593  0.129 -0.168  0.777
+  0.957
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.957  0.000  0.000  0.000  0.000
+  0.000  0.656  0.000 -0.000 -0.230
+  0.000  0.000  0.656 -0.230  0.000
+  0.000 -0.000 -0.230  0.781 -0.000
+  0.000 -0.230  0.000 -0.000  0.781
+ Atom:    2   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.856
+ -0.000 -0.971 -0.238
+  0.856
+ -0.000 -0.238  0.971
+  0.876
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.876 -0.000  0.000
+ -0.000  0.856 -0.000
+  0.000 -0.000  0.856
+ Atom:    3   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.856
+ -0.000 -0.971 -0.238
+  0.856
+ -0.000 -0.238  0.971
+  0.876
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.876 -0.000  0.000
+ -0.000  0.856 -0.000
+  0.000 -0.000  0.856
+atom    1   Tr[ns(na)]=   8.3750438
+atom    1   Mag[ns(na)]=   0.7122456
+atom    2   Tr[ns(na)]=   5.2042961
+atom    2   Mag[ns(na)]=   0.0277903
+atom    3   Tr[ns(na)]=   5.2042961
+atom    3   Mag[ns(na)]=   0.0277903
+ --- exit write_nsg ---
+ --- in v_hubbard_extended ---
+Hubbard energy    0.1123
+ -----------------------------
+
+     total cpu time spent up to now is        7.4 secs
+
+     total energy              =    -279.80998979 Ry
+     estimated scf accuracy    <       0.00000006 Ry
+
+     total magnetization       =     1.00 Bohr mag/cell
+     absolute magnetization    =     1.05 Bohr mag/cell
+
+     iteration # 11     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  2.26E-10,  avg # of iterations =  1.8
+ --- enter write_nsg ---
+ Atom:    1   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.836
+  0.000 -0.653 -0.458 -0.346 -0.494
+  0.836
+  0.000  0.458 -0.653 -0.494  0.346
+  0.955
+  0.000  0.126  0.590 -0.780 -0.167
+  0.955
+ -0.000 -0.590  0.126 -0.167  0.780
+  0.961
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.961  0.000  0.000  0.000  0.000
+  0.000  0.879  0.000 -0.000 -0.057
+  0.000  0.000  0.879 -0.057 -0.000
+  0.000 -0.000 -0.057  0.912 -0.000
+  0.000 -0.057 -0.000 -0.000  0.912
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.853
+ -0.000 -0.971 -0.238
+  0.853
+ -0.000 -0.238  0.971
+  0.910
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.910 -0.000  0.000
+ -0.000  0.853 -0.000
+  0.000 -0.000  0.853
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.853
+ -0.000 -0.971 -0.238
+  0.853
+ -0.000 -0.238  0.971
+  0.910
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.910 -0.000  0.000
+ -0.000  0.853 -0.000
+  0.000 -0.000  0.853
+ Atom:    1   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.481
+ -0.000  0.652  0.454  0.347  0.498
+  0.481
+ -0.000 -0.454  0.652  0.498 -0.347
+  0.957
+  0.000  0.129  0.593 -0.777 -0.168
+  0.957
+ -0.000 -0.593  0.129 -0.168  0.777
+  0.957
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.957  0.000  0.000  0.000  0.000
+  0.000  0.656  0.000 -0.000 -0.229
+  0.000  0.000  0.656 -0.229  0.000
+  0.000 -0.000 -0.229  0.781 -0.000
+  0.000 -0.229  0.000 -0.000  0.781
+ Atom:    2   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.856
+ -0.000 -0.971 -0.238
+  0.856
+ -0.000 -0.238  0.971
+  0.876
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.876 -0.000  0.000
+ -0.000  0.856 -0.000
+  0.000 -0.000  0.856
+ Atom:    3   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.856
+ -0.000 -0.971 -0.238
+  0.856
+ -0.000 -0.238  0.971
+  0.876
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.876 -0.000  0.000
+ -0.000  0.856 -0.000
+  0.000 -0.000  0.856
+atom    1   Tr[ns(na)]=   8.3752868
+atom    1   Mag[ns(na)]=   0.7118755
+atom    2   Tr[ns(na)]=   5.2041785
+atom    2   Mag[ns(na)]=   0.0279689
+atom    3   Tr[ns(na)]=   5.2041785
+atom    3   Mag[ns(na)]=   0.0279689
+ --- exit write_nsg ---
+ --- in v_hubbard_extended ---
+Hubbard energy    0.1123
+ -----------------------------
+
+     total cpu time spent up to now is        8.0 secs
+
+     total energy              =    -279.80998983 Ry
+     estimated scf accuracy    <       0.00000003 Ry
+
+     total magnetization       =     1.00 Bohr mag/cell
+     absolute magnetization    =     1.05 Bohr mag/cell
+
+     iteration # 12     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  1.23E-10,  avg # of iterations =  1.5
+ --- enter write_nsg ---
+ Atom:    1   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.836
+  0.000 -0.653 -0.458 -0.346 -0.494
+  0.836
+  0.000  0.458 -0.653 -0.494  0.346
+  0.955
+  0.000  0.126  0.590 -0.780 -0.167
+  0.955
+ -0.000 -0.590  0.126 -0.167  0.780
+  0.961
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.961  0.000  0.000  0.000  0.000
+  0.000  0.879  0.000 -0.000 -0.057
+  0.000  0.000  0.879 -0.057 -0.000
+  0.000 -0.000 -0.057  0.912 -0.000
+  0.000 -0.057 -0.000 -0.000  0.912
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.853
+ -0.000 -0.971 -0.238
+  0.853
+ -0.000 -0.238  0.971
+  0.910
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.910 -0.000  0.000
+ -0.000  0.853 -0.000
+  0.000 -0.000  0.853
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.853
+ -0.000 -0.971 -0.238
+  0.853
+ -0.000 -0.238  0.971
+  0.910
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.910 -0.000  0.000
+ -0.000  0.853 -0.000
+  0.000 -0.000  0.853
+ Atom:    1   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.481
+ -0.000  0.653  0.453  0.346  0.499
+  0.481
+ -0.000 -0.453  0.653  0.499 -0.346
+  0.957
+  0.000  0.129  0.593 -0.777 -0.169
+  0.957
+ -0.000 -0.593  0.129 -0.169  0.777
+  0.957
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.957  0.000  0.000  0.000  0.000
+  0.000  0.656  0.000 -0.000 -0.229
+  0.000  0.000  0.656 -0.229  0.000
+  0.000 -0.000 -0.229  0.781 -0.000
+  0.000 -0.229  0.000 -0.000  0.781
+ Atom:    2   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.856
+ -0.000 -0.971 -0.238
+  0.856
+ -0.000 -0.238  0.971
+  0.876
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.876 -0.000  0.000
+ -0.000  0.856 -0.000
+  0.000 -0.000  0.856
+ Atom:    3   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.856
+ -0.000 -0.971 -0.238
+  0.856
+ -0.000 -0.238  0.971
+  0.876
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.876 -0.000  0.000
+ -0.000  0.856 -0.000
+  0.000 -0.000  0.856
+atom    1   Tr[ns(na)]=   8.3752041
+atom    1   Mag[ns(na)]=   0.7118762
+atom    2   Tr[ns(na)]=   5.2042278
+atom    2   Mag[ns(na)]=   0.0279812
+atom    3   Tr[ns(na)]=   5.2042278
+atom    3   Mag[ns(na)]=   0.0279812
+ --- exit write_nsg ---
+ --- in v_hubbard_extended ---
+Hubbard energy    0.1123
+ -----------------------------
+
+     total cpu time spent up to now is        8.7 secs
+
+     total energy              =    -279.80998984 Ry
+     estimated scf accuracy    <          5.4E-10 Ry
+
+     total magnetization       =     1.00 Bohr mag/cell
+     absolute magnetization    =     1.05 Bohr mag/cell
+
+     iteration # 13     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  2.14E-12,  avg # of iterations =  2.8
+ --- enter write_nsg ---
+ Atom:    1   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.836
+  0.000 -0.653 -0.458 -0.346 -0.494
+  0.836
+  0.000  0.458 -0.653 -0.494  0.346
+  0.955
+  0.000  0.126  0.590 -0.780 -0.167
+  0.955
+ -0.000 -0.590  0.126 -0.167  0.780
+  0.961
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.961  0.000  0.000  0.000  0.000
+  0.000  0.879  0.000 -0.000 -0.057
+  0.000  0.000  0.879 -0.057 -0.000
+  0.000 -0.000 -0.057  0.912 -0.000
+  0.000 -0.057 -0.000 -0.000  0.912
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.853
+ -0.000 -0.971 -0.238
+  0.853
+ -0.000 -0.238  0.971
+  0.910
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.910 -0.000  0.000
+ -0.000  0.853 -0.000
+  0.000 -0.000  0.853
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.853
+ -0.000 -0.971 -0.237
+  0.853
+ -0.000 -0.237  0.971
+  0.910
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.910 -0.000  0.000
+ -0.000  0.853 -0.000
+  0.000 -0.000  0.853
+ Atom:    1   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.481
+ -0.000  0.652  0.454  0.347  0.498
+  0.481
+ -0.000 -0.454  0.652  0.498 -0.347
+  0.957
+  0.000  0.129  0.593 -0.777 -0.168
+  0.957
+ -0.000 -0.593  0.129 -0.168  0.777
+  0.957
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.957  0.000  0.000  0.000  0.000
+  0.000  0.656  0.000 -0.000 -0.229
+  0.000  0.000  0.656 -0.229  0.000
+  0.000 -0.000 -0.229  0.781 -0.000
+  0.000 -0.229  0.000 -0.000  0.781
+ Atom:    2   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.856
+ -0.000 -0.971 -0.238
+  0.856
+ -0.000 -0.238  0.971
+  0.876
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.876 -0.000  0.000
+ -0.000  0.856 -0.000
+  0.000 -0.000  0.856
+ Atom:    3   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.856
+ -0.000 -0.971 -0.238
+  0.856
+ -0.000 -0.238  0.971
+  0.876
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.876 -0.000  0.000
+ -0.000  0.856 -0.000
+  0.000 -0.000  0.856
+atom    1   Tr[ns(na)]=   8.3751809
+atom    1   Mag[ns(na)]=   0.7118871
+atom    2   Tr[ns(na)]=   5.2042388
+atom    2   Mag[ns(na)]=   0.0279773
+atom    3   Tr[ns(na)]=   5.2042388
+atom    3   Mag[ns(na)]=   0.0279773
+ --- exit write_nsg ---
+ --- in v_hubbard_extended ---
+Hubbard energy    0.1123
+ -----------------------------
+
+     total cpu time spent up to now is        9.4 secs
+
+     total energy              =    -279.80998984 Ry
+     estimated scf accuracy    <          3.4E-10 Ry
+
+     total magnetization       =     1.00 Bohr mag/cell
+     absolute magnetization    =     1.05 Bohr mag/cell
+
+     iteration # 14     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  1.35E-12,  avg # of iterations =  1.6
+ --- enter write_nsg ---
+ Atom:    1   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.836
+  0.000 -0.654 -0.457 -0.346 -0.494
+  0.836
+  0.000  0.457 -0.654 -0.494  0.346
+  0.955
+  0.000  0.126  0.590 -0.780 -0.167
+  0.955
+ -0.000 -0.590  0.126 -0.167  0.780
+  0.961
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.961  0.000  0.000  0.000  0.000
+  0.000  0.879  0.000 -0.000 -0.057
+  0.000  0.000  0.879 -0.057 -0.000
+  0.000 -0.000 -0.057  0.912 -0.000
+  0.000 -0.057 -0.000 -0.000  0.912
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.853
+ -0.000 -0.971 -0.239
+  0.853
+ -0.000 -0.239  0.971
+  0.910
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.910 -0.000  0.000
+ -0.000  0.853 -0.000
+  0.000 -0.000  0.853
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.853
+ -0.000 -0.971 -0.238
+  0.853
+ -0.000 -0.238  0.971
+  0.910
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.910 -0.000  0.000
+ -0.000  0.853 -0.000
+  0.000 -0.000  0.853
+ Atom:    1   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.481
+ -0.000  0.652  0.454  0.347  0.498
+  0.481
+ -0.000 -0.454  0.652  0.498 -0.347
+  0.957
+  0.000  0.129  0.593 -0.777 -0.168
+  0.957
+ -0.000 -0.593  0.129 -0.168  0.777
+  0.957
+ -1.000  0.000  0.000 -0.000 -0.000
+    occupation matrix before diagonalization:
+  0.957  0.000  0.000  0.000  0.000
+  0.000  0.656  0.000 -0.000 -0.229
+  0.000  0.000  0.656 -0.229  0.000
+  0.000 -0.000 -0.229  0.781 -0.000
+  0.000 -0.229  0.000 -0.000  0.781
+ Atom:    2   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.856
+ -0.000 -0.971 -0.238
+  0.856
+ -0.000 -0.238  0.971
+  0.876
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.876 -0.000  0.000
+ -0.000  0.856 -0.000
+  0.000 -0.000  0.856
+ Atom:    3   Spin:  2
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.856
+ -0.000 -0.971 -0.238
+  0.856
+ -0.000 -0.238  0.971
+  0.876
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.876 -0.000  0.000
+ -0.000  0.856 -0.000
+  0.000 -0.000  0.856
+atom    1   Tr[ns(na)]=   8.3751946
+atom    1   Mag[ns(na)]=   0.7118791
+atom    2   Tr[ns(na)]=   5.2042326
+atom    2   Mag[ns(na)]=   0.0279805
+atom    3   Tr[ns(na)]=   5.2042326
+atom    3   Mag[ns(na)]=   0.0279805
+ --- exit write_nsg ---
+ --- in v_hubbard_extended ---
+Hubbard energy    0.1123
+ -----------------------------
+ 
+     Magnetic moment per site:
+     atom:    1    charge:    7.5257    magn:    0.8442    constr:    0.0000
+     atom:    2    charge:    5.3445    magn:    0.0599    constr:    0.0000
+     atom:    3    charge:    5.3445    magn:    0.0599    constr:    0.0000
+     atom:    4    charge:    2.1789    magn:    0.0088    constr:    0.0000
+
+     total cpu time spent up to now is        9.9 secs
+
+     End of self-consistent calculation
+
+ ------ SPIN UP ------------
+
+
+          k = 0.0000 0.0000 0.0000 (   501 PWs)   bands (ev):
+
+   -36.3261 -11.7217 -10.2312   1.0848   2.4458   2.4458   4.9360   4.9360
+     6.1570   6.3149   6.3149   6.3658   8.6873   8.6873  13.3628  15.4392
+    21.3399
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   0.3055   0.3055   0.0000   0.0000
+     0.0000
+
+          k = 0.8704 0.5025-0.1767 (   480 PWs)   bands (ev):
+
+   -36.2775 -10.4383 -10.2293   0.9372   2.5782   2.7679   2.9104   4.9622
+     5.1441   5.1878   5.4886   6.1890   7.8929   8.5354  17.2357  18.5826
+    19.2189
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   1.0000   0.8318   0.0000   0.0000
+     0.0000
+
+          k = 0.8704-0.5025-0.3533 (   472 PWs)   bands (ev):
+
+   -36.2706 -10.3473 -10.3104   0.9003   2.2094   2.7408   3.4252   4.9353
+     5.0578   5.1727   5.5140   6.0732   8.6253   8.8580  15.1705  18.8771
+    20.5973
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   0.5124   0.0312   0.0000   0.0000
+     0.0000
+
+          k = 0.0000 0.0000-0.5300 (   494 PWs)   bands (ev):
+
+   -36.3127 -11.5951 -10.4332   1.9143   2.4267   2.4267   4.9537   4.9537
+     5.1061   6.2641   6.2641   6.4657   8.7623   8.7623  14.3458  16.1054
+    20.5597
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   0.1314   0.1314   0.0000   0.0000
+     0.0000
+
+ ------ SPIN DOWN ----------
+
+
+          k = 0.0000 0.0000 0.0000 (   501 PWs)   bands (ev):
+
+   -36.3159 -11.6121 -10.1195   1.2855   3.5532   3.5532   5.7087   5.7087
+     6.3979   6.3979   6.5591   6.6636   9.9243   9.9243  13.4943  15.4759
+    21.5462
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
+     0.0000
+
+          k = 0.8704 0.5025-0.1767 (   480 PWs)   bands (ev):
+
+   -36.2674 -10.1484 -10.1100   1.1046   2.9745   3.2437   3.8451   5.1083
+     5.2646   6.0245   6.2387   6.6673   9.4896   9.8433  17.3772  18.6601
+    19.3740
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
+     0.0000
+
+          k = 0.8704-0.5025-0.3533 (   472 PWs)   bands (ev):
+
+   -36.2602 -10.2292 -10.0119   1.0308   2.2906   3.9662   4.2277   5.0128
+     5.3098   5.9824   6.2575   6.5943  10.0149  10.0603  15.2535  19.0459
+    20.7436
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
+     0.0000
+
+          k = 0.0000 0.0000-0.5300 (   494 PWs)   bands (ev):
+
+   -36.3023 -11.4834 -10.3230   2.1714   3.5862   3.5862   5.3017   5.7445
+     5.7445   6.3488   6.3488   6.8999   9.9383   9.9383  14.4929  16.1651
+    20.6719
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
+     0.0000
+
+     the Fermi energy is     8.6571 ev
+
+!    total energy              =    -279.80998984 Ry
+
+     total all-electron energy =     -3353.433937 Ry
+     estimated scf accuracy    <          1.1E-11 Ry
+     smearing contrib. (-TS)   =      -0.00240094 Ry
+     internal energy E=F+TS    =    -279.80758890 Ry
+
+     The total energy is F=E-TS. E is the sum of the following terms:
+     one-electron contribution =     -50.15230371 Ry
+     hartree contribution      =      46.86235980 Ry
+     xc contribution           =     -59.20104516 Ry
+     ewald contribution        =    -116.37229352 Ry
+     Hubbard energy            =       0.11234340 Ry
+     one-center paw contrib.   =    -101.05664972 Ry
+      -> PAW hartree energy AE =      86.02659542 Ry
+      -> PAW hartree energy PS =     -85.66064398 Ry
+      -> PAW xc energy AE      =    -125.02839271 Ry
+      -> PAW xc energy PS      =      41.75311968 Ry
+      -> total E_H with PAW    =      47.22831125 Ry
+      -> total E_XC with PAW   =    -142.47631820 Ry
+
+     total magnetization       =     1.00 Bohr mag/cell
+     absolute magnetization    =     1.05 Bohr mag/cell
+
+     convergence has been achieved in  14 iterations
+
+     Forces acting on atoms (cartesian axes, Ry/au):
+
+     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom    2 type  2   force =     0.00000000    0.00000000    0.03344102
+     atom    3 type  2   force =     0.00000000    0.00000000   -0.03344102
+     atom    4 type  3   force =     0.00000000    0.00000000    0.00000000
+     The non-local contrib.  to forces
+     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom    2 type  2   force =     0.00000000    0.00000000    0.56212227
+     atom    3 type  2   force =     0.00000000    0.00000000   -0.56212227
+     atom    4 type  3   force =     0.00000000    0.00000000    0.00000000
+     The ionic contribution  to forces
+     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom    2 type  2   force =     0.00000000   -0.00000000   -9.97630367
+     atom    3 type  2   force =     0.00000000    0.00000000    9.97630367
+     atom    4 type  3   force =    -0.00000000   -0.00000000    0.00000000
+     The local contribution  to forces
+     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom    2 type  2   force =    -0.00000000    0.00000000    9.45368462
+     atom    3 type  2   force =    -0.00000000   -0.00000000   -9.45368462
+     atom    4 type  3   force =     0.00000000    0.00000000   -0.00000000
+     The core correction contribution to forces
+     atom    1 type  1   force =    -0.00000000   -0.00000000    0.00000000
+     atom    2 type  2   force =    -0.00000000    0.00000000   -0.00574195
+     atom    3 type  2   force =    -0.00000000   -0.00000000    0.00574195
+     atom    4 type  3   force =     0.00000000    0.00000000    0.00000000
+     The Hubbard contrib.    to forces
+     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom    2 type  2   force =     0.00000000    0.00000000   -0.00031322
+     atom    3 type  2   force =     0.00000000    0.00000000    0.00031322
+     atom    4 type  3   force =     0.00000000    0.00000000    0.00000000
+     The SCF correction term to forces
+     atom    1 type  1   force =    -0.00000000   -0.00000000    0.00000000
+     atom    2 type  2   force =     0.00000000    0.00000000   -0.00000705
+     atom    3 type  2   force =    -0.00000000   -0.00000000    0.00000705
+     atom    4 type  3   force =    -0.00000000    0.00000000   -0.00000000
+
+     Total force =     0.047293     Total SCF correction =     0.000010
+
+
+     Computing stress (Cartesian axis) and pressure
+
+          total   stress  (Ry/bohr**3)                   (kbar)     P=    -1576.91
+  -0.01039092   0.00000000   0.00000000        -1528.56        0.00        0.00
+  -0.00000000  -0.01039092  -0.00000000           -0.00    -1528.56       -0.00
+   0.00000000  -0.00000000  -0.01137698            0.00       -0.00    -1673.61
+
+     kinetic stress (kbar)  24534.90     -0.00      0.00
+                               -0.00  24534.90      0.00
+                                0.00      0.00  24850.89
+
+     local   stress (kbar) -13196.28     -0.00     -0.00
+                               -0.00 -13196.28      0.00
+                               -0.00      0.00  21930.92
+
+     nonloc. stress (kbar)  -1690.79      0.00     -0.00
+                               -0.00  -1690.79     -0.00
+                               -0.00     -0.00  -1741.19
+
+     hartree stress (kbar)  15199.42      0.00      0.00
+                                0.00  15199.42      0.00
+                                0.00      0.00   -292.19
+
+     exc-cor stress (kbar)   9103.99     -0.00      0.00
+                               -0.00   9103.99     -0.00
+                                0.00     -0.00   9100.74
+
+     corecor stress (kbar) -16765.68     -0.00      0.00
+                               -0.00 -16765.68      0.00
+                                0.00      0.00 -16778.93
+
+     ewald   stress (kbar) -18248.31      0.00      0.00
+                                0.00 -18248.31      0.00
+                                0.00      0.00 -38266.57
+
+     hubbard stress (kbar)   -465.82      0.00      0.00
+                                0.00   -465.82     -0.00
+                                0.00     -0.00   -477.28
+
+     DFT-D   stress (kbar)      0.00      0.00      0.00
+                                0.00      0.00      0.00
+                                0.00      0.00      0.00
+
+     XDM     stress (kbar)      0.00      0.00      0.00
+                                0.00      0.00      0.00
+                                0.00      0.00      0.00
+
+     dft-nl  stress (kbar)      0.00      0.00      0.00
+                                0.00      0.00      0.00
+                                0.00      0.00      0.00
+
+     TS-vdW  stress (kbar)      0.00      0.00      0.00
+                                0.00      0.00      0.00
+                                0.00      0.00      0.00
+
+
+
+     Writing output data file ./LiNiO2.save/
+ 
+     init_run     :      1.00s CPU      1.02s WALL (       1 calls)
+     electrons    :      7.92s CPU      7.99s WALL (       1 calls)
+     forces       :      0.16s CPU      0.16s WALL (       1 calls)
+     stress       :      0.31s CPU      0.32s WALL (       1 calls)
+
+     Called by init_run:
+     wfcinit      :      0.03s CPU      0.03s WALL (       1 calls)
+     wfcinit:atom :      0.00s CPU      0.00s WALL (       2 calls)
+     wfcinit:wfcr :      0.02s CPU      0.02s WALL (       2 calls)
+     potinit      :      0.44s CPU      0.46s WALL (       1 calls)
+     hinit0       :      0.52s CPU      0.52s WALL (       1 calls)
+
+     Called by electrons:
+     c_bands      :      0.89s CPU      0.90s WALL (      14 calls)
+     sum_band     :      0.49s CPU      0.48s WALL (      14 calls)
+     v_of_rho     :      1.47s CPU      1.49s WALL (      15 calls)
+     v_h          :      0.02s CPU      0.02s WALL (      15 calls)
+     v_xc         :      1.62s CPU      1.65s WALL (      17 calls)
+     newd         :      0.15s CPU      0.15s WALL (      15 calls)
+     PAW_pot      :      5.21s CPU      5.23s WALL (      15 calls)
+     mix_rho      :      0.08s CPU      0.08s WALL (      14 calls)
+
+     Called by c_bands:
+     init_us_2    :      0.01s CPU      0.02s WALL (      68 calls)
+     cegterg      :      0.82s CPU      0.83s WALL (      28 calls)
+
+     Called by sum_band:
+     sum_band:wei :      0.00s CPU      0.00s WALL (      14 calls)
+     sum_band:loo :      0.16s CPU      0.16s WALL (      14 calls)
+     sum_band:buf :      0.00s CPU      0.00s WALL (      28 calls)
+     sum_band:ini :      0.00s CPU      0.01s WALL (      28 calls)
+     sum_band:cal :      0.00s CPU      0.00s WALL (      28 calls)
+     sum_band:bec :      0.00s CPU      0.00s WALL (      28 calls)
+     addusdens    :      0.21s CPU      0.22s WALL (      14 calls)
+     addusd:skk   :      0.01s CPU      0.00s WALL (      42 calls)
+     addusd:dgemm :      0.05s CPU      0.06s WALL (      84 calls)
+     addusd:qvan2 :      0.14s CPU      0.14s WALL (      84 calls)
+
+     Called by *egterg:
+     cdiaghg      :      0.06s CPU      0.04s WALL (      88 calls)
+     cegterg:over :      0.01s CPU      0.01s WALL (      60 calls)
+     cegterg:upda :      0.01s CPU      0.01s WALL (      60 calls)
+     cegterg:last :      0.00s CPU      0.00s WALL (      28 calls)
+     h_psi        :      0.75s CPU      0.77s WALL (      90 calls)
+     s_psi        :      0.00s CPU      0.01s WALL (      96 calls)
+     g_psi        :      0.00s CPU      0.00s WALL (      60 calls)
+
+     Called by h_psi:
+     h_psi:calbec :      0.00s CPU      0.01s WALL (      90 calls)
+     vloc_psi     :      0.72s CPU      0.74s WALL (      90 calls)
+     add_vuspsi   :      0.00s CPU      0.01s WALL (      90 calls)
+     vhpsi        :      0.02s CPU      0.02s WALL (      90 calls)
+
+     General routines
+     calbec       :      0.01s CPU      0.02s WALL (     562 calls)
+     fft          :      0.31s CPU      0.36s WALL (     413 calls)
+     ffts         :      0.02s CPU      0.02s WALL (      58 calls)
+     fftw         :      0.78s CPU      0.78s WALL (    2778 calls)
+     interpolate  :      0.04s CPU      0.04s WALL (      30 calls)
+     davcio       :      0.00s CPU      0.00s WALL (       4 calls)
+ 
+     Parallel routines
+
+     Hubbard U routines
+     new_nsg      :      0.02s CPU      0.01s WALL (      14 calls)
+     alloc_neigh  :      0.00s CPU      0.00s WALL (       1 calls)
+     vhpsi        :      0.02s CPU      0.02s WALL (      90 calls)
+     force_hub    :      0.00s CPU      0.01s WALL (       1 calls)
+     stres_hub    :      0.03s CPU      0.04s WALL (       1 calls)
+
+     PAW routines
+     PAW_pot      :      5.21s CPU      5.23s WALL (      15 calls)
+     PAW_symme    :      0.00s CPU      0.01s WALL (      29 calls)
+ 
+     PWSCF        :     10.26s CPU     10.38s WALL
+
+ 
+   This run was terminated on:  20:51:44  22Apr2020            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

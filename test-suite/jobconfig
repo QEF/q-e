@@ -146,6 +146,10 @@ inputs_args = ('Si.pw-in', '1'), ('Si.tddfpt-eels-in', '5'), ('Si.tddfpt_pp_eels
 program = HP
 inputs_args = ('LiCoO2.scf.in', '1'), ('LiCoO2.hp.in', '3'), ('LiCoO2.scf.in', '2'), ('LiCoO2.hp.in', '4')
 
+[hp_insulator_us_intersiteV/]
+program = HP
+inputs_args = ('LiCoO2.scf.in', '1'), ('LiCoO2.hp.in', '3'), ('LiCoO2.scf.in', '2'), ('LiCoO2.hp.in', '4')
+
 [hp_insulator_us_magn/]
 program = HP
 inputs_args = ('NiO.scf.1.in', '1'), ('NiO.scf.2.in', '1'), ('NiO.hp.in', '3'), ('NiO.scf.1.in', '2'), ('NiO.scf.2.in', '2'), ('NiO.hp.in', '4')
@@ -165,6 +169,10 @@ inputs_args = ('Ni.scf.in', '1'), ('Ni.hp.in', '3'), ('Ni.scf.in', '2'), ('Ni.hp
 [hp_metal_paw_magn/]
 program = HP
 inputs_args = ('Fe.scf.in', '2'), ('Fe.hp.in', '4')
+
+[hp_metal_paw_magn_intersiteV/]
+program = HP
+inputs_args = ('LiNiO2.scf.in', '2'), ('LiNiO2.hp.in', '4')
 
 [pw_*/]
 program = PW
