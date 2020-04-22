@@ -28,22 +28,25 @@ MODULE realus
   IMPLICIT NONE
   !
   REAL(DP), ALLOCATABLE :: boxrad(:)
-  !! radius of boxes, does not depend on the grid
+  !! radius of Q boxes, does not depend on the grid
   !
   ! Beta function in real space
-  INTEGER, ALLOCATABLE :: box_beta(:,:)
-  INTEGER, ALLOCATABLE :: maxbox_beta(:)
-  REAL(DP), ALLOCATABLE :: betasave(:,:,:)
-  REAL(DP), ALLOCATABLE :: boxrad_beta(:)
-  REAL(DP), ALLOCATABLE :: boxdist_beta(:,:)
-  REAL(DP), ALLOCATABLE :: xyz_beta(:,:,:)
-  REAL(DP), ALLOCATABLE :: spher_beta(:,:,:)
+  INTEGER              :: boxtot             ! total dimension of the boxes
+  INTEGER, ALLOCATABLE :: box_beta(:)        ! (combined) list of points in the atomic boxes
+  INTEGER, ALLOCATABLE :: maxbox_beta(:)     ! number of points in a given atom section
+  INTEGER, ALLOCATABLE :: box0(:), box_s(:), box_e(:) ! offset, start, and end index of a given atom section
+  REAL(DP), ALLOCATABLE :: xyz_beta(:,:)     ! coordinates of the points in box_beta
+  REAL(DP), ALLOCATABLE :: betasave(:,:)     ! beta funtions on the (combined) list of points
+  REAL(DP), ALLOCATABLE :: boxrad_beta(:)    ! (ntypx) radius of the boxes
   !! beta function
-  COMPLEX(DP), ALLOCATABLE :: xkphase(:,:)
+  !!
+  COMPLEX(DP), ALLOCATABLE :: xkphase(:)   ! (combined) phases for all atomic boxes
   !! kpoint-related phase factor around each atom
   INTEGER :: current_phase_kpoint=-1
   !! the kpoint index for which the xkphase is currently set. 
   !! Negative initial value  means not set
+  INTEGER :: intra_rbgrp_comm
+  !! MPI communicator used to break boxes of the beta functions
   !
   ! ... General
   !
@@ -786,8 +789,6 @@ MODULE realus
       !!   number of points of the fine mesh contained in each box;
       !! * in \(\text{xyz_beta}\) there are the coordinates of the points with
       !!   origin in the centre of atom;
-      !! * in \(\text{boxdist_beta}\) the distance from the centre;
-      !! * in \(\text{spher_beta}\) the spherical harmonics computed for each box;
       !! * in the last part ('tabp') the q value is interpolated in these boxes.
       !
       ! ... Most of time is spent here; the calling routines are faster.
@@ -811,12 +812,13 @@ MODULE realus
       !
       INTEGER               :: ia, it, mbia
       INTEGER               :: indm, inbrx, idimension, ih
-      INTEGER               :: roughestimate, goodestimate, lamx2, nt
-      INTEGER,  ALLOCATABLE :: buffpoints(:,:)
-      REAL(DP), ALLOCATABLE :: buffdist(:,:)
-      REAL(DP), ALLOCATABLE :: buff_xyz_beta(:,:,:)
+      INTEGER               :: roughestimate, lamx2, nt
+      INTEGER,  ALLOCATABLE :: tmp_box_beta(:,:)
+      REAL(DP), ALLOCATABLE :: tmp_boxdist_beta(:,:)
+      REAL(DP), ALLOCATABLE :: tmp_xyz_beta(:,:,:)
+      REAL(DP), ALLOCATABLE :: spher_beta(:,:), boxdist_beta(:)
       REAL(DP)              :: distsq, qtot_int, first, second
-      INTEGER               :: ir, i, j, k, ipol, lm, nb
+      INTEGER               :: ir, i, j, k, ipol, lm, nb, box_ir
       INTEGER               :: imin, imax, ii, jmin, jmax, jj, kmin, kmax, kk
       REAL(DP)              :: posi(3)
       REAL(DP), ALLOCATABLE :: rl(:,:), rl2(:)
@@ -878,14 +880,14 @@ MODULE realus
       CALL start_clock( 'realus:boxes' )
 
       !
-      ALLOCATE( buffpoints( roughestimate, nat ) )
-      ALLOCATE( buffdist(   roughestimate, nat ) )
+      ALLOCATE( tmp_box_beta( roughestimate, nat ) )
+      ALLOCATE( tmp_boxdist_beta( roughestimate, nat ) )
       !
       IF ( allocated( xyz_beta ) ) DEALLOCATE( xyz_beta )
-      ALLOCATE( buff_xyz_beta( 3, roughestimate, nat ) )
+      ALLOCATE( tmp_xyz_beta( 3, roughestimate, nat ) )
       !
-      buffpoints(:,:) = 0
-      buffdist(:,:) = 0.D0
+      tmp_box_beta(:,:) = 0
+      tmp_boxdist_beta(:,:) = 0.D0
       !
       IF ( .not.allocated( maxbox_beta ) ) ALLOCATE( maxbox_beta( nat ) )
       !
@@ -941,9 +943,9 @@ MODULE realus
                      mbia = maxbox_beta(ia) + 1
                      !
                      maxbox_beta(ia)     = mbia
-                     buffpoints(mbia,ia) = ir
-                     buffdist(mbia,ia)   = sqrt( distsq )*alat
-                     buff_xyz_beta(:,mbia,ia) = posi(:)*alat
+                     tmp_box_beta(mbia,ia) = ir
+                     tmp_boxdist_beta(mbia,ia)   = sqrt( distsq )*alat
+                     tmp_xyz_beta(:,mbia,ia) = posi(:)*alat
                      !
                   ENDIF
                END DO
@@ -952,34 +954,41 @@ MODULE realus
          if (tprint) WRITE (*,*) 'BETAPOINTLIST: ATOM ',ia, ' MAXBOX_BETA =', maxbox_beta(ia)
       ENDDO
       !
-      CALL beta_box_scatter (nat, maxbox_beta)
+      CALL beta_box_breaking (nat, maxbox_beta)
       !
-      goodestimate = maxval( maxbox_beta )
-      WRITE(*,*)  'GOODESTIMATE', goodestimate, goodestimate*nat, SUM(maxbox_beta(1:nat))
+      boxtot = sum(maxbox_beta(1:nat))
+      WRITE( stdout,* )  'BOXTOT', boxtot
 
-      IF ( goodestimate > roughestimate ) &
-         CALL errore( 'betapointlist', 'rough-estimate is too rough', 2 )
+      IF (.not. ALLOCATED( box0  ) ) ALLOCATE ( box0  ( nat ) )
+      IF (.not. ALLOCATED( box_s ) ) ALLOCATE ( box_s ( nat ) )
+      IF (.not. ALLOCATED( box_e ) ) ALLOCATE ( box_e ( nat ) )
+      box0(1) = 0 ; box_s(1) = 1 ; box_e(1) = maxbox_beta(1) 
+      do ia =2,nat
+         box0 (ia) = box_e(ia-1) ; box_s(ia) = box0(ia) + 1 ;  box_e(ia) = box0(ia) + maxbox_beta(ia)
+      end do
       !
       ! ... now store them in a more convenient place
       !
       IF ( allocated( xyz_beta ) )     DEALLOCATE( xyz_beta )
       IF ( allocated( box_beta ) )     DEALLOCATE( box_beta )
-      IF ( allocated( boxdist_beta ) ) DEALLOCATE( boxdist_beta )
       IF ( allocated( xkphase ) )      DEALLOCATE( xkphase )
       !
-      ALLOCATE( xyz_beta ( 3, goodestimate, nat ) )
-      ALLOCATE( box_beta    ( goodestimate, nat ) )
-      ALLOCATE( boxdist_beta( goodestimate, nat ) )
-      ALLOCATE( xkphase     ( goodestimate, nat ) )
+      ALLOCATE( xyz_beta ( 3, boxtot ) ) 
+      ALLOCATE( box_beta    ( boxtot ) )
+      ALLOCATE( boxdist_beta( boxtot ) )
+      ALLOCATE( xkphase     ( boxtot ) )
       !
-      xyz_beta(:,:,:)   = buff_xyz_beta(:,1:goodestimate,:)
-      box_beta(:,:)     = buffpoints(1:goodestimate,:)
-      boxdist_beta(:,:) = buffdist(1:goodestimate,:)
+      do ia =1,nat
+         xyz_beta ( :, box_s(ia):box_e(ia) ) =  tmp_xyz_beta(:,1:maxbox_beta(ia),ia)
+         box_beta (    box_s(ia):box_e(ia) ) =  tmp_box_beta(  1:maxbox_beta(ia),ia)
+         boxdist_beta( box_s(ia):box_e(ia) ) =  tmp_boxdist_beta(       1:maxbox_beta(ia),ia)
+      end do
+      !
       call set_xkphase(1)
       !
-      DEALLOCATE( buff_xyz_beta )
-      DEALLOCATE( buffpoints )
-      DEALLOCATE( buffdist )
+      DEALLOCATE( tmp_xyz_beta )
+      DEALLOCATE( tmp_box_beta )
+      DEALLOCATE( tmp_boxdist_beta )
       !
       CALL stop_clock( 'realus:boxes' )
       CALL start_clock( 'realus:spher' )
@@ -988,11 +997,9 @@ MODULE realus
       !
       lamx2 = lmaxq*lmaxq
       !
-      IF ( allocated( spher_beta ) ) DEALLOCATE( spher_beta )
+      ALLOCATE( spher_beta( boxtot, lamx2 ) ) ! ( boxtot,lmax2 )
       !
-      ALLOCATE( spher_beta( goodestimate, lamx2, nat ) )
-      !
-      spher_beta(:,:,:) = 0.D0
+      spher_beta(:,:) = 0.D0
       !
       DO ia = 1, nat
          !
@@ -1002,13 +1009,13 @@ MODULE realus
          ALLOCATE( rl( 3, idimension ), rl2( idimension ) )
          !
          DO ir = 1, idimension
-            rl(:,ir) = xyz_beta(:,ir,ia)
+            rl(:,ir) = xyz_beta(:,box0(ia)+ir)
             rl2(ir) = rl(1,ir)**2 + rl(2,ir)**2 + rl(3,ir)**2
          ENDDO
          !
          ALLOCATE( tempspher( idimension, lamx2 ) )
          CALL ylmr2( lamx2, idimension, rl, rl2, tempspher )
-         spher_beta(1:idimension,:,ia) = tempspher(:,:)
+         spher_beta(box_s(ia):box_e(ia),:) = tempspher(:,:)
          DEALLOCATE( rl, rl2, tempspher )
          !
       ENDDO
@@ -1020,7 +1027,7 @@ MODULE realus
       !
       ! ... let's do the main work
       !
-      ALLOCATE( betasave( goodestimate, nhm, nat )  )
+      ALLOCATE( betasave( boxtot, nhm )  )
       !
       betasave = 0.D0
       ! Box is set, Y_lm is known in the box, now the calculation can commence
@@ -1075,17 +1082,15 @@ MODULE realus
             second =d2y(1) ! second derivative in first point
             DEALLOCATE( d1y, d2y )
 
-
             CALL spline( xsp, ysp, first, second, wsp )
 
-
-            DO ir = 1, mbia
+            DO box_ir = box_s(ia), box_e(ia)
                !
                ! ... spline interpolation
                !
-               qtot_int = splint( xsp, ysp, wsp, boxdist_beta(ir,ia) ) !the value of f_l(r) in point ir in atom ia
+               qtot_int = splint( xsp, ysp, wsp, boxdist_beta(box_ir) ) !the value of f_l(r) in point ir in atom ia
                !
-               betasave(ir,ih,ia) = qtot_int*spher_beta(ir,lm,ia) !spher_beta is the Y_lm in point ir for atom ia
+               betasave(box_ir,ih) = qtot_int*spher_beta(box_ir,lm) !spher_beta is the Y_lm in point ir for atom ia
                !
             ENDDO
          ENDDO
@@ -1105,19 +1110,22 @@ MODULE realus
       !
     END SUBROUTINE betapointlist
     !
-    SUBROUTINE beta_box_scatter (nat, maxbox_beta)
+    SUBROUTINE beta_box_breaking (nat, maxbox_beta)
       !! This routine determines whether it is needed to re-shuffle the
       !! beta point grids in real space.
       USE mp_bands,   ONLY : me_bgrp, intra_bgrp_comm, nproc_bgrp
-      USE mp,         ONLY : mp_sum
+      USE mp,         ONLY : mp_sum, mp_comm_split
       !
       IMPLICIT NONE
       !
       INTEGER, INTENT(IN)  :: nat
       INTEGER, INTENT(IN)  :: maxbox_beta(nat)
-      REAL(DP)             :: boxtot_avg, boxtot_unbalance
-      INTEGER              :: in, nn, ip, np, ncheck, dd, boxtot_max
+      REAL(DP)             :: boxtot_avg, boxtot_unbalance, opt_boxtot_unbalance
+      INTEGER              :: in, nn, ip, np, ncheck, dd, boxtot_max, opt_nn, my_color
       INTEGER, ALLOCATABLE :: ind(:), color(:), data(:), boxtot_beta(:)
+      !
+      REAL(DP), PARAMETER  :: tollerable_unbalance = 1.25D0
+      INTEGER, PARAMETER   :: maximum_nn = 6
       !
 !      WRITE (*,*) ' me_bgrp ', me_bgrp ; FLUSH(6)
 !      WRITE (*,*)  ' BETAPOINT LIST', maxbox_beta(:) ; FLUSH(6)
@@ -1131,13 +1139,13 @@ MODULE realus
       WRITE ( stdout, * ) 'BETAPOINTLIST SUMMARY: ', boxtot_max , boxtot_avg, boxtot_unbalance ; FLUSH(6)
       WRITE ( stdout, * ) ' BETATOT LIST', boxtot_beta(:) ; FLUSH(6)
 
-      nn = 1
-      ALLOCATE ( ind(nproc_bgrp), color(nproc_bgrp),  data(nproc_bgrp) )
+      nn = 1; opt_nn = 1 ; opt_boxtot_unbalance = boxtot_unbalance
 
+      ALLOCATE ( ind(nproc_bgrp), color(nproc_bgrp),  data(nproc_bgrp) )
       data(:) = - boxtot_beta(:) ; ind(1) = 0
       call ihpsort ( nproc_bgrp, data, ind )
 
-      DO WHILE ( boxtot_unbalance > 1.25d0 .or. nn < nproc_bgrp )
+      DO WHILE ( boxtot_unbalance > tollerable_unbalance .and. nn < maximum_nn )
 
          nn = nn + 1
 
@@ -1159,29 +1167,38 @@ MODULE realus
          END DO
          boxtot_unbalance =  -data(1)/(boxtot_avg*nn)
          WRITE ( stdout, * ) nn, ' is a factor ',-data(1), -data(1)/boxtot_avg, boxtot_unbalance ; FLUSH(6)
+         IF  ( boxtot_unbalance < opt_boxtot_unbalance ) THEN
+            opt_boxtot_unbalance = boxtot_unbalance ; opt_nn = nn ; my_color = color(me_bgrp+1)
+         END IF
          DO ip = 1, np
             data(ip) = -boxtot_beta(ind(ip))
          END DO
-         do ip = 1, np
+         DO ip = 1, np
             WRITE ( stdout, '(A,i4,A,$)' ) ' color ', color(ind(ip)), ':'  ; FLUSH(6)
             dd = 0 ; ncheck = 0
-            do in = 1, nproc_bgrp
-               if ( color(in) == color(ind(ip)) ) then
+            DO in = 1, nproc_bgrp
+               IF ( color(in) == color(ind(ip)) ) THEN
                   WRITE (stdout, '(i4,$)' ) in ; FLUSH(6)
                   dd = dd + boxtot_beta(in)
                   ncheck = ncheck + 1
-               end if
-            end do
+               END IF
+            END DO
             WRITE ( stdout, * ) ' ', dd ; FLUSH(6)
             if (ncheck .ne. nn) WRITE(*,*) '!!!! something wrong ', ncheck, nn ; FLUSH(6)
-         end do
+         END DO
 
       END DO
       DEALLOCATE ( data, color, ind, boxtot_beta )
 
+      IF (nn > 1 ) THEN
+         CALL mp_comm_split( intra_bgrp_comm, my_color, me_bgrp, intra_rbgrp_comm )
+      ELSE
+         intra_rbgrp_comm = 0
+      END IF
+
       RETURN
       !
-    END SUBROUTINE beta_box_scatter
+    END SUBROUTINE beta_box_breaking
     !
     !------------------------------------------------------------------------
     SUBROUTINE newq_r( vr,deeq, skip_vltot )
@@ -1555,23 +1572,20 @@ MODULE realus
   
     INTEGER, INTENT (IN) :: ik
 
-    INTEGER :: ia, mbia, ir
+    INTEGER :: box_ir
     REAL(DP) :: arg
 
     if (.not.allocated ( xkphase ) ) call errore ('set_xkphase',' array not allocated yes',1)
     if (ik .eq. current_phase_kpoint ) return
     !
-    DO ia = 1, nat
-       mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
-       !$omp parallel do default(shared) private(ir, arg)
-       do ir =1, mbia
-          arg = ( xk(1,ik) * xyz_beta(1,ir,ia) + &
-                  xk(2,ik) * xyz_beta(2,ir,ia) + &
-                  xk(3,ik) * xyz_beta(3,ir,ia) ) * tpiba
-          xkphase( ir, ia ) = CMPLX(COS(arg),-SIN(arg),KIND=dp)
-       end do
-       !$omp end parallel do
+    !$omp parallel do
+    do box_ir =1, boxtot
+       arg = ( xk(1,ik) * xyz_beta(1,box_ir) + &
+               xk(2,ik) * xyz_beta(2,box_ir) + &
+               xk(3,ik) * xyz_beta(3,box_ir) ) * tpiba
+       xkphase( box_ir ) = CMPLX(COS(arg),-SIN(arg),KIND=dp)
     end do
+    !$omp end parallel do
     !
     current_phase_kpoint = ik
     !
@@ -1656,14 +1670,14 @@ MODULE realus
              !$omp parallel default(shared) private(ih,ikb,ir,bcr,bci)
              !$omp do 
              DO ir =1, mbia
-                wr(ir) = dble ( psic( box_beta(ir,ia) ) )
+                wr(ir) = dble ( psic( box_beta(box0(ia)+ir) ) )
              END DO
              !$omp end do
              !$omp do
              DO ih = 1, nh_nt
                 !
                 ikb = ijkb0 + ih
-                bcr = ddot( mbia, betasave(:,ih,ia), 1, wr(:) , 1 )
+                bcr = ddot( mbia, betasave(box_s(ia):box_e(ia),ih), 1, wr(:) , 1 )
                 becp_r(ikb,ibnd)   = fac * bcr
                 !
              ENDDO
@@ -1671,14 +1685,14 @@ MODULE realus
              IF ( ibnd+1 <= last ) THEN
                 !$omp do
                 DO ir =1, mbia
-                   wi(ir) = aimag( psic( box_beta(ir,ia) ) )
+                   wi(ir) = aimag( psic( box_beta(box0(ia)+ir) ) )
                 END DO
                 !$omp end do
                 !$omp do
                 DO ih = 1, nh_nt
                    !
                    ikb = ijkb0 + ih
-                   bci = ddot( mbia, betasave(:,ih,ia), 1, wi(:) , 1 )
+                   bci = ddot( mbia, betasave(box_s(ia):box_e(ia),ih), 1, wi(:) , 1 )
                    becp_r(ikb,ibnd+1) = fac * bci
                    !
                 ENDDO
@@ -1764,15 +1778,15 @@ MODULE realus
              !$omp parallel default(shared) private(ih,ikb,ir,bcr,bci)
              !$omp do
              DO ir =1, mbia
-                wr(ir) = dble ( psic( box_beta(ir,ia) ) * CONJG(xkphase(ir,ia)))
-                wi(ir) = aimag( psic( box_beta(ir,ia) ) * CONJG(xkphase(ir,ia)))
+                wr(ir) = dble ( psic( box_beta(box0(ia)+ir) ) * CONJG(xkphase(box0(ia)+ir)))
+                wi(ir) = aimag( psic( box_beta(box0(ia)+ir) ) * CONJG(xkphase(box0(ia)+ir)))
              END DO
              !$omp end do
              !$omp do
              DO ih = 1, nh_nt
                 ikb = ijkb0 + ih
-                bcr = ddot( mbia, betasave(:,ih,ia), 1, wr(:) , 1 )
-                bci = ddot( mbia, betasave(:,ih,ia), 1, wi(:) , 1 )
+                bcr = ddot( mbia, betasave(box_s(ia):box_e(ia),ih), 1, wr(:) , 1 )
+                bci = ddot( mbia, betasave(box_s(ia):box_e(ia),ih), 1, wi(:) , 1 )
                 becp%k(ikb,ibnd)   = fac * cmplx( bcr, bci, kind=DP)
              ENDDO
              !$omp end do
@@ -1820,7 +1834,7 @@ MODULE realus
       !
       INTEGER, INTENT(in) :: ibnd, last
       !
-      INTEGER :: ih, nt, ia, ir, mbia, ijkb0
+      INTEGER :: ih, nt, ia, ir, mbia, ijkb0, box_ir
       REAL(DP) :: fac
       REAL(DP), ALLOCATABLE, DIMENSION(:) :: w1, w2
       !
@@ -1852,9 +1866,9 @@ MODULE realus
                ENDDO
                !$omp end do
                !$omp do
-               DO ir = 1, mbia
-                  psic( box_beta(ir,ia) ) = psic( box_beta(ir,ia) ) + &
-                        SUM(betasave(ir,1:nh(nt),ia)*cmplx( w1(1:nh(nt)), w2(1:nh(nt)) ,kind=DP))
+               DO box_ir = box_s(ia), box_e(ia) 
+                  psic( box_beta(box_ir) ) = psic( box_beta(box_ir) ) + &
+                        SUM(betasave(box_ir,1:nh(nt))*cmplx( w1(1:nh(nt)), w2(1:nh(nt)) ,kind=DP))
                ENDDO
                !$omp end do
                !$omp end parallel
@@ -1898,7 +1912,7 @@ MODULE realus
       !
       INTEGER, INTENT(in) :: ibnd, last
       !
-      INTEGER :: ih, nt, ia, ir, mbia, ijkb0
+      INTEGER :: ih, nt, ia, ir, mbia, ijkb0, box_ir
       REAL(DP) :: fac
       COMPLEX(DP) , ALLOCATABLE :: w1(:)
       !
@@ -1932,9 +1946,9 @@ MODULE realus
                ENDDO
                !$omp end do
                !$omp do
-               DO ir = 1, mbia
-                  psic( box_beta(ir,ia) ) = psic( box_beta(ir,ia) ) + &
-                                            SUM(xkphase(ir,ia)*betasave(ir,1:nh(nt),ia)*w1(1:nh(nt)))
+               DO box_ir = box_s(ia), box_e(ia)
+                  psic( box_beta(box_ir) ) = psic( box_beta(box_ir) ) + &
+                        SUM(xkphase(box_ir)*betasave(box_ir,1:nh(nt))*w1(1:nh(nt)))
                ENDDO
                !$omp end do
                !$omp end parallel
@@ -1982,7 +1996,7 @@ MODULE realus
   !
   INTEGER, INTENT(in) :: ibnd, last
   !
-  INTEGER :: ih, nt, ia, ir, mbia, ijkb0
+  INTEGER :: ih, nt, ia, ir, mbia, ijkb0, box_ir
   REAL(DP) :: fac
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: w1, w2
   !
@@ -2012,9 +2026,9 @@ MODULE realus
            ENDDO
            !$omp end do
            !$omp do
-           DO ir = 1, mbia
-              psic( box_beta(ir,ia) ) = psic( box_beta(ir,ia) ) + &
-                    SUM(betasave(ir,1:nh(nt),ia)*cmplx( w1(1:nh(nt)), w2(1:nh(nt)) ,kind=DP))
+           DO box_ir = box_s(ia), box_e(ia)
+              psic( box_beta(box_ir) ) = psic( box_beta(box_ir) ) + &
+                    SUM(betasave(box_ir,1:nh(nt))*cmplx( w1(1:nh(nt)), w2(1:nh(nt)) ,kind=DP))
            ENDDO
            !$omp end do
            !$omp end parallel
@@ -2062,7 +2076,7 @@ MODULE realus
   !
   INTEGER, INTENT(in) :: ibnd, last
   !
-  INTEGER :: ih, nt, ia, ir, mbia, ijkb0
+  INTEGER :: ih, nt, ia, ir, mbia, ijkb0, box_ir
   REAL(DP) :: fac
   !
   COMPLEX(DP), ALLOCATABLE :: w1(:)
@@ -2093,9 +2107,9 @@ MODULE realus
            ENDDO
            !$omp end do
            !$omp do
-           DO ir = 1, mbia
-              psic( box_beta(ir,ia) ) = psic( box_beta(ir,ia) ) + &
-                                        xkphase(ir,ia)*SUM(betasave(ir,1:nh(nt),ia)*w1(1:nh(nt)))
+           DO box_ir = box_s(ia), box_e(ia)
+              psic( box_beta(box_ir) ) = psic( box_beta(box_ir) ) + &
+                    xkphase(box_ir)*SUM(betasave(box_ir,1:nh(nt))*w1(1:nh(nt)))
            ENDDO
            !$omp end do
            !$omp end parallel
