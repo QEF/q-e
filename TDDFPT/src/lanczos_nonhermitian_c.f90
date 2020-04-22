@@ -1,4 +1,6 @@
-subroutine lanczos_nonhermitian_c(j, npwx_npol, nbnd_occ, nksq, qj_r, Aqj_r, qjold_r, qj_l, Aqj_l, qjold_l, n_ipol, u, alpha, beta, gamma, zeta)
+subroutine lanczos_nonhermitian_c(j, npwx_npol, nbnd_occ, nksq, qj_r, Aqj_r, &
+                                 & qjold_r, qj_l, Aqj_l, qjold_l, n_ipol, u, &
+                                 & alpha, beta, gamma, zeta)
    !
    !! Bi-Orthogonal Lanczos algorithm for magnons 
    !! 

@@ -146,7 +146,7 @@ SUBROUTINE lr_readin
      force_real_gamma = .FALSE.
      force_real_alpha = .FALSE.
      force_zero_alpha = .FALSE.
-     b_pol = 0
+     b_pol = 1
      lan_precondition = .FALSE.
      !
      ! For lr_dav (Davidson program)
