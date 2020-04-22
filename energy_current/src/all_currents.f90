@@ -402,11 +402,10 @@ contains
       type(cpv_trajectory), intent(inout) :: t
       type(timestep) :: ts
       logical :: res
-      integer :: nstep
+      integer, save :: nstep = 0
       integer, save :: step_idx = 0
       logical, save :: first = .true.
       if (ionode) then
-         nstep = 0
          do while (cpv_trajectory_read_step(t))
             step_idx = step_idx + 1
             call cpv_trajectory_get_step(t, step_idx, ts)
@@ -429,7 +428,7 @@ contains
             goto 200 ! exit the loop skipping 'finish': we will do an other calculation
          enddo
          !else
-         write (*, *) 'Finished reading trajectory ', trim(t%fname), 'before step ', nstep
+         write (*, *) 'Finished reading trajectory ', trim(t%fname), ' at step ', nstep
          res = .false.
 200      continue
       endif

@@ -7,7 +7,7 @@
  &CONTROL
     calculation='md',
     restart_mode='from_scratch',
-    pseudo_dir='./pseudo',
+    pseudo_dir='../pseudo',
     outdir='./save',
     prefix= 'a_blocco',
     tprnfor=.true.,

@@ -69,8 +69,14 @@ contains
    subroutine cpv_trajectory_close(t)
       implicit none
       type(cpv_trajectory), intent(inout) :: t
-      close (t%iounit_pos)
-      close (t%iounit_vel)
+      logical itsopen 
+      if (.not. t%is_open) return
+      inquire(unit=t%iounit_pos, opened=itsopen)
+      if (itsopen) &
+          close (t%iounit_pos)
+      inquire(unit=t%iounit_vel, opened=itsopen)
+      if (itsopen) &
+          close (t%iounit_vel)
       t%is_open = .false.
    end subroutine
 
