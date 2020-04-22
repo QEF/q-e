@@ -107,9 +107,9 @@ MODULE realus
     !------------------------------------------------------------------------
     SUBROUTINE generate_qpointlist
       !------------------------------------------------------------------------
-      USE fft_base,     ONLY : dfftp, dffts
+      USE fft_base,     ONLY : dfftp  !, dffts
       USE funct,        ONLY : dft_is_hybrid
-      USE gvecs,        ONLY : doublegrid
+      !USE gvecs,        ONLY : doublegrid
       !USE exx,  ONLY : exx_fft
       IMPLICIT NONE
       !
@@ -143,12 +143,9 @@ MODULE realus
      !! This subroutine should be called to allocate/reset real space related 
      !! variables.
      !
-     USE control_flags,        ONLY : tqr
      USE fft_base,             ONLY : dffts
 
      IMPLICIT NONE
-
-     INTEGER :: ik
 
      !print *, "<<<<<init_realspace_vars>>>>>>>"
 
@@ -172,7 +169,7 @@ MODULE realus
       !------------------------------------------------------------------------
       !! Deallocate real space related variables.
       !
-      USE gvecs,      ONLY : doublegrid
+!      USE gvecs,      ONLY : doublegrid
       !
       IMPLICIT NONE
       !
@@ -228,12 +225,11 @@ MODULE realus
       !
       USE constants,  ONLY : pi, fpi, eps16, eps6
       USE ions_base,  ONLY : nat, nsp, ityp, tau
-      USE cell_base,  ONLY : at, bg, omega, alat
+      USE cell_base,  ONLY : at, bg, alat
       USE uspp,       ONLY : okvan, qq_at, qq_nt, nhtol
       USE uspp_param, ONLY : upf, nh
       USE atom,       ONLY : rgrid
       USE fft_types,  ONLY : fft_type_descriptor
-      USE mp_bands,   ONLY : me_bgrp
       USE mp_bands,   ONLY : intra_bgrp_comm
       USE mp,         ONLY : mp_sum
       !
@@ -244,9 +240,9 @@ MODULE realus
       !
       INTEGER               :: ia, mbia
       INTEGER               :: indm, ih, jh, ijh, il, jl
-      INTEGER               :: roughestimate, nt, l
+      INTEGER               :: roughestimate, nt
       INTEGER,  ALLOCATABLE :: buffpoints(:)
-      INTEGER               :: ir, i, j, k, ipol, ijv
+      INTEGER               :: ir, i, j, k, ijv
       INTEGER               :: imin, imax, ii, jmin, jmax, jj, kmin, kmax, kk
       REAL(DP)              :: distsq, posi(3)
       REAL(DP), ALLOCATABLE :: boxdist(:), xyz(:,:), diff(:)
@@ -446,7 +442,7 @@ MODULE realus
       !! we multiply by the spherical harmonics and store it into \(\text{tab}\).
       !
       USE constants,  ONLY : eps16, eps6
-      USE uspp,       ONLY : indv, nhtol, nhtolm, ap, nhtoj, qq_at
+      USE uspp,       ONLY : indv, nhtolm, ap, qq_at
       USE uspp_param, ONLY : upf, lmaxq, nh
       USE atom,       ONLY : rgrid
       USE splinelib,  ONLY : spline, splint
@@ -458,11 +454,9 @@ MODULE realus
       INTEGER, INTENT(IN) :: ia, nt, mbia
       TYPE(realsp_augmentation), INTENT(INOUT), POINTER :: tab(:)
       !
-      INTEGER  :: l, nb, mb, ijv, lllnbnt, lllmbnt, ir, nfuncs, lm, &
-           i0, ijh, ih, jh, ipol
+      INTEGER  :: l, nb, mb, ijv, lllnbnt, lllmbnt, ir, nfuncs, lm, i0, ijh, ih, jh
       REAL(dp) :: first, second, qtot_int
-      REAL(dp), ALLOCATABLE :: qtot(:), dqtot(:), xsp(:), wsp(:), &
-           rl2(:), spher(:,:)
+      REAL(dp), ALLOCATABLE :: qtot(:), dqtot(:), xsp(:), wsp(:), rl2(:), spher(:,:)
 
       CALL start_clock( 'realus:tabp' )
 
@@ -613,21 +607,18 @@ MODULE realus
       !! This routine follows the same logic of \(\texttt{real_space_q}\).
       !
       USE constants,  ONLY : eps8, eps16
-      USE uspp,       ONLY : indv, nhtol, nhtolm, ap, nhtoj
+      USE uspp,       ONLY : indv, nhtolm, ap
       USE uspp_param, ONLY : upf, lmaxq, nh
       USE atom,       ONLY : rgrid
       USE splinelib,  ONLY : spline, splint
-      USE cell_base,  ONLY : omega
-      USE fft_base,   ONLY : dfftp
       !
       IMPLICIT NONE
       !
       INTEGER, INTENT(IN) :: ia, nt, mbia, nfuncs
       REAL(dp),INTENT(OUT):: dqr(mbia,nfuncs,3)
       !
-      INTEGER  :: l, nb, mb, ijv, lllnbnt, lllmbnt, ir, lm, &
-           i, ijh, ih, jh, ipol
-      REAL(dp) :: first, second, qtot_int, dqtot_int, dqxyz(3), df(3)
+      INTEGER  :: l, nb, mb, ijv, lllnbnt, lllmbnt, ir, lm, ijh, ih, jh, ipol
+      REAL(dp) :: first, second, qtot_int, dqtot_int, dqxyz(3)
       REAL(dp), ALLOCATABLE :: qtot(:), dqtot(:), xsp(:), wsp(:,:), &
            rl2(:), spher(:,:), dspher(:,:,:)
       !
@@ -798,12 +789,11 @@ MODULE realus
       USE constants,  ONLY : pi
       USE control_flags, ONLY : gamma_only
       USE ions_base,  ONLY : nat, nsp, ityp, tau
-      USE cell_base,  ONLY : at, bg, omega, alat
-      USE uspp,       ONLY : okvan, indv, nhtol, nhtolm, ap
+      USE cell_base,  ONLY : at, bg, alat
+      USE uspp,       ONLY : okvan, indv,nhtolm
       USE uspp_param, ONLY : upf, lmaxq, nh, nhm
       USE atom,       ONLY : rgrid
       USE fft_base,   ONLY : dffts
-      USE mp_bands,   ONLY : me_bgrp
       USE splinelib,  ONLY : spline, splint
       !
       IMPLICIT NONE
@@ -818,7 +808,7 @@ MODULE realus
       REAL(DP), ALLOCATABLE :: tmp_xyz_beta(:,:,:)
       REAL(DP), ALLOCATABLE :: spher_beta(:,:), boxdist_beta(:)
       REAL(DP)              :: distsq, qtot_int, first, second
-      INTEGER               :: ir, i, j, k, ipol, lm, nb, box_ir
+      INTEGER               :: ir, i, j, k, lm, nb, box_ir
       INTEGER               :: imin, imax, ii, jmin, jmax, jj, kmin, kmax, kk
       REAL(DP)              :: posi(3)
       REAL(DP), ALLOCATABLE :: rl(:,:), rl2(:)
@@ -1283,14 +1273,14 @@ MODULE realus
       !! the US augmentation, in real space.
       !
       USE ions_base,        ONLY : nat, ityp
-      USE lsda_mod,         ONLY : nspin
       USE uspp,             ONLY : okvan, becsum
       USE uspp_param,       ONLY : upf, nh
-      USE noncollin_module, ONLY : nspin_mag, nspin_lsda
+      USE noncollin_module, ONLY : nspin_mag
       USE fft_interfaces,   ONLY : fwfft
       USE fft_base,         ONLY : dfftp
-      USE wavefunctions,  ONLY : psic
+      USE wavefunctions,    ONLY : psic
 #if defined (__DEBUG)
+      USE noncollin_module, ONLY : nspin_lsda
       USE constants,        ONLY : eps6
       USE klist,            ONLY : nelec
       USE cell_base,        ONLY : omega
@@ -1304,9 +1294,11 @@ MODULE realus
       COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag)
       !
       INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, mbia
-      CHARACTER(len=80) :: msg
       REAL(kind=dp), ALLOCATABLE :: rhor(:,:) 
+#if defined (__DEBUG)
+      CHARACTER(len=80) :: msg
       REAL(kind=dp) :: charge
+#endif
       !
       !
       IF ( .not. okvan ) RETURN
@@ -1413,7 +1405,7 @@ MODULE realus
       !
       REAL(DP), INTENT(INOUT) :: forcenl (3, nat)
       !
-      INTEGER :: na, nt, ih, jh, ijh, nfuncs, mbia, ir, is, irb
+      INTEGER :: na, nt, ijh, nfuncs, mbia, ir, is, irb
       REAL(dp), ALLOCATABLE:: dqr(:,:,:), forceq(:,:)
       REAL(dp) :: dqrforce(3), dqb(3), dqeb(3), v_eff
       !
@@ -1495,16 +1487,16 @@ MODULE realus
       USE fft_base,   ONLY : dfftp
       USE noncollin_module,  ONLY : nspin_mag
       USE scf,        ONLY : v, vltot
-      USE uspp,       ONLY : becsum, ebecsum, okvan, qq_at
+      USE uspp,       ONLY : becsum, ebecsum, okvan
       USE uspp_param, ONLY : upf,  nh
-      USE mp_bands,   ONLY : intra_bgrp_comm
-      USE mp,         ONLY : mp_sum
+!      USE mp_bands,   ONLY : intra_bgrp_comm
+!      USE mp,         ONLY : mp_sum
       !
       IMPLICIT NONE
       !
       REAL(DP), INTENT(INOUT) :: sigmanl (3,3)
       !
-      INTEGER :: ipol, jpol, na, nt, nfuncs, mbia, ir, is, irb , ih,jh,ijh
+      INTEGER :: ipol, na, nt, nfuncs, mbia, ir, is, irb , ijh
       REAL(dp), ALLOCATABLE:: dqr(:,:,:)
       REAL(dp) :: sus(3,3), sus_at(3,3), qb, qeb, dqb(3), dqeb(3), v_eff
       !
@@ -1566,7 +1558,6 @@ MODULE realus
     USE kinds,      ONLY : DP
     USE klist,      ONLY : xk
     USE cell_base,  ONLY : tpiba
-    USE ions_base,  ONLY : nat
 
     IMPLICIT NONE
   
@@ -1621,7 +1612,7 @@ MODULE realus
     USE cell_base,             ONLY : omega
     USE wavefunctions,         ONLY : psic
     USE ions_base,             ONLY : nat, nsp, ityp
-    USE uspp_param,            ONLY : nh, nhm
+    USE uspp_param,            ONLY : nh
     USE fft_base,              ONLY : dffts
     USE mp_bands,              ONLY : intra_bgrp_comm
     USE mp,                    ONLY : mp_sum
@@ -1730,7 +1721,7 @@ MODULE realus
     USE cell_base,             ONLY : omega
     USE wavefunctions,         ONLY : psic
     USE ions_base,             ONLY : nat, nsp, ityp
-    USE uspp_param,            ONLY : nh, nhm
+    USE uspp_param,            ONLY : nh
     USE becmod,                ONLY : bec_type, becp
     USE fft_base,              ONLY : dffts
     USE mp_bands,              ONLY : intra_bgrp_comm
@@ -1825,7 +1816,6 @@ MODULE realus
       USE wavefunctions,          ONLY : psic
       USE ions_base,              ONLY : nat, nsp, ityp
       USE uspp_param,             ONLY : nh, nhm
-      USE lsda_mod,               ONLY : current_spin
       USE uspp,                   ONLY : qq_at, indv_ijkb0
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : dffts
@@ -1834,7 +1824,7 @@ MODULE realus
       !
       INTEGER, INTENT(in) :: ibnd, last
       !
-      INTEGER :: ih, nt, ia, ir, mbia, ijkb0, box_ir
+      INTEGER :: ih, nt, ia, mbia, ijkb0, box_ir
       REAL(DP) :: fac
       REAL(DP), ALLOCATABLE, DIMENSION(:) :: w1, w2
       !
@@ -1903,7 +1893,6 @@ MODULE realus
       USE wavefunctions,          ONLY : psic
       USE ions_base,              ONLY : nat, nsp, ityp
       USE uspp_param,             ONLY : nh, nhm
-      USE lsda_mod,               ONLY : current_spin
       USE uspp,                   ONLY : qq_at, indv_ijkb0
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : dffts
@@ -1912,7 +1901,7 @@ MODULE realus
       !
       INTEGER, INTENT(in) :: ibnd, last
       !
-      INTEGER :: ih, nt, ia, ir, mbia, ijkb0, box_ir
+      INTEGER :: ih, nt, ia, mbia, ijkb0, box_ir
       REAL(DP) :: fac
       COMPLEX(DP) , ALLOCATABLE :: w1(:)
       !
@@ -1996,7 +1985,7 @@ MODULE realus
   !
   INTEGER, INTENT(in) :: ibnd, last
   !
-  INTEGER :: ih, nt, ia, ir, mbia, ijkb0, box_ir
+  INTEGER :: ih, nt, ia, mbia, ijkb0, box_ir
   REAL(DP) :: fac
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: w1, w2
   !
@@ -2076,7 +2065,7 @@ MODULE realus
   !
   INTEGER, INTENT(in) :: ibnd, last
   !
-  INTEGER :: ih, nt, ia, ir, mbia, ijkb0, box_ir
+  INTEGER :: ih, nt, ia, mbia, ijkb0, box_ir
   REAL(DP) :: fac
   !
   COMPLEX(DP), ALLOCATABLE :: w1(:)
@@ -2138,7 +2127,6 @@ MODULE realus
     !! OBM 241008.
     !
     USE wavefunctions, ONLY : psic
-    USE gvecs,         ONLY : doublegrid
     USE klist,         ONLY : ngk, igk_k
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
@@ -2260,11 +2248,9 @@ MODULE realus
     USE wavefunctions, &
                        ONLY : psic
     USE klist,         ONLY : ngk, igk_k
-    USE gvecs,         ONLY : doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : fwfft
-    USE mp_bands,      ONLY : me_bgrp
     USE fft_helper_subroutines,   ONLY : fftx_ntgrp, tg_get_recip_inc
     !
     IMPLICIT NONE
@@ -2403,7 +2389,6 @@ MODULE realus
     USE wavefunctions,     ONLY : psic
     USE klist,                    ONLY : ngk, igk_k
     USE wvfct,                    ONLY : current_k
-    USE gvecs,                    ONLY : doublegrid
     USE fft_base,                 ONLY : dffts
     USE fft_interfaces,           ONLY : invfft
     USE fft_helper_subroutines,   ONLY : fftx_ntgrp, tg_get_recip_inc
@@ -2497,11 +2482,9 @@ MODULE realus
     USE wavefunctions,            ONLY : psic
     USE klist,                    ONLY : ngk, igk_k
     USE wvfct,                    ONLY : current_k
-    USE gvecs,                    ONLY : doublegrid
     USE kinds,                    ONLY : DP
     USE fft_base,                 ONLY : dffts
     USE fft_interfaces,           ONLY : fwfft
-    USE mp_bands,                 ONLY : me_bgrp
     USE fft_helper_subroutines,   ONLY : fftx_ntgrp, tg_get_recip_inc
     !
     IMPLICIT NONE
@@ -2597,10 +2580,8 @@ MODULE realus
     !
     USE wavefunctions, &
                        ONLY : psic
-    USE gvecs,         ONLY : doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
-    USE mp_bands,      ONLY : me_bgrp
     USE scf,           ONLY : vrs
     USE lsda_mod,      ONLY : current_spin
     !
@@ -2655,10 +2636,8 @@ MODULE realus
     !
     USE wavefunctions, &
                        ONLY : psic
-    USE gvecs,         ONLY : doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
-    USE mp_bands,      ONLY : me_bgrp
     USE scf,           ONLY : vrs
     USE lsda_mod,      ONLY : current_spin
     !
