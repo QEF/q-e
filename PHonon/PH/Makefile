@@ -26,6 +26,7 @@ allocate_pert.o \
 allocate_phq.o \
 apply_trev.o \
 yambo.o \
+dvscf_interpolate.o \
 bcast_ph_input.o \
 c_bands_ph.o \
 cch_psi_all.o \
@@ -204,7 +205,7 @@ QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
 TLDEPS= phlibs
 
 all : tldeps libs-ph ph.x dynmat.x matdyn.x q2r.x q2trans.x q2trans_fd.x lambda.x fqha.x q2qstar.x \
-	alpha2f.x epa.x
+	alpha2f.x epa.x dvscf_q2r.x
 
 libs-ph : libph.a libphaux.a
 
@@ -257,6 +258,11 @@ alpha2f.x : alpha2f.o libph.a $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
 epa.x : epa.o libph.a $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ epa.o libph.a \
                  $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
+
+dvscf_q2r.x : dvscf_q2r.o libphaux.a libph.a $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ dvscf_q2r.o libphaux.a libph.a \
+         $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
 #fqha.o :

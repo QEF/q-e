@@ -15,7 +15,7 @@ SUBROUTINE scale_h
   !
   USE kinds,          ONLY : DP
   USE io_global,      ONLY : stdout
-  USE cell_base,      ONLY : bg, omega, set_h_ainv
+  USE cell_base,      ONLY : bg, omega, set_h_ainv, tpiba
   USE cellmd,         ONLY : at_old, omega_old
   USE constants,      ONLY : eps8
   USE gvect,          ONLY : g, gg, ngm
@@ -71,7 +71,7 @@ SUBROUTINE scale_h
   !
   CALL mp_max( gg_max, intra_bgrp_comm )
   !
-  IF (nqxq < INT(SQRT(gg_max)/dq)+4) THEN
+  IF (nqxq < INT(SQRT(gg_max)*tpiba/dq)+4) THEN
      CALL errore( 'scale_h', 'Not enough space allocated for radial FFT: '//&
                              'try restarting with a larger cell_factor.', 1 )
   ENDIF

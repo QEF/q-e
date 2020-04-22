@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2010 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -123,4 +123,50 @@ FUNCTION hubbard_occ( psd )
   RETURN
   !
 END FUNCTION hubbard_occ
+!-----------------------------------------------------------------------
 
+!-----------------------------------------------------------------------
+FUNCTION hubbard_occ_back ( psd )
+  !-----------------------------------------------------------------------
+  !
+  ! This routine is a table (far from being complete) for the total number
+  ! of localized electrons in transition metals or rare earths in the
+  ! background channel (PPs usually are built on non physical configurations)
+  !
+  USE kinds, ONLY: DP
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER(LEN=2), INTENT(IN) :: psd
+  REAL(DP)                     :: hubbard_occ_back
+  !
+  SELECT CASE( TRIM(ADJUSTL(psd)) )
+     !
+     ! TRANSITION METALS
+     !
+     CASE('Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Ta', 'Ir', 'Sc', 'La', 'Lu')
+        hubbard_occ_back = 2.d0
+        !
+     CASE( 'Zn' , 'Se' )
+        hubbard_occ_back = 0.01d0
+     !
+     ! OTHER ELEMENTS
+     !
+     CASE( 'C', 'O', 'Si', 'Ga', 'As', 'Al','N', 'P', 'Ar' )
+        hubbard_occ_back = 2.d0
+     !
+     CASE( 'H', 'Li'  )
+        hubbard_occ_back = 0.d0
+     !
+     ! NOT INSERTED
+     !
+     CASE DEFAULT
+        hubbard_occ_back = 0.d0
+        call errore ('hubbard_occ_back', 'pseudopotential not yet inserted', 1)
+     !
+  END SELECT
+  !
+  RETURN
+  !
+END FUNCTION hubbard_occ_back
+!-----------------------------------------------------------------------

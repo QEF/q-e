@@ -38,13 +38,22 @@ tolerance = ( (5.0e-5, 5.0e-3, 'e1'),
               (5.0e+0, 5.0e-1, 'n1'),
               (1.0e-3, 1.0e-5, 'f1'),
               (1.0e-1, 1.0e-3, 'p1'),
+              (5.0e-2, None,   'band'),
+              (1.0e-2, 1.0e-2, 'ef1'),
+              (1.0e-2, 1.0e-2, 'eh1'),
+              (1.0e-2, 2.0e-2, 'ehl1'),
+              (1.0e-2, 1.0e-2, 'tf1'),
               (5.0e-2, 5.0e-3, 'diel'),
               (5.0e-2, 5.0e-3, 'born'),
               (5.0e-4, 5.0e-4, 'dos'),
-              (1.5e-0, 5.0e-1, 'lambda'),
-              (1.0e-1, 5.0e-3, 'lambda2'),
+              (5.0e-2, 1.0e-1, 'born_diff'),
+              (1.5e-0,   None, 'lambda'),
+              (3.0e-1, 5.0e-3, 'lambda2'),
               (1.0e-6, 1.0e-6, 'qpt'),
-              (2.0e+0, 2.0e-1, 'phfreq'))
+              (2.0e+0,   None, 'phfreq'),
+              (1.0e-3, 1.0e-5, 'rlatt_cart'),
+              (1.0e-3, 1.0e-5, 'rlatt_crys'),
+              (1.0e-1,   None, 'sum_w_pot'))
 skip_program = grep
 skip_args = 'not present in this version'
 
@@ -78,7 +87,7 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (1.0e-4, 1.0e-5, 'qdir'),
               (5.0e-2, 5.0e-3, 'diel'),
               (5.0e-2, 5.0e-3, 'born'),
-              (2.0e+0, 3.0e-1, 'phfreq'),
+              (2.0e+0,   None, 'phfreq'),
               (1.0e-5, 1.0e-5, 'q1'),
               (1.0e-5, 1.0e-5, 'dos1'),
               (1.0e-3, 5.0e-3, 'e2'),
@@ -110,7 +119,8 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (3.0e+1, 1.0e-1, 'mobnewz'),
               (1.0e+10,1.0e+2, 'density'),
               (1.0   , 1.0e-2, 'mobxZ'),
-              (1.5e+3,   None, 'indabs'))
+              (1.5e+3,   None, 'indabs'),
+              (1.0e-4,   None, 'ratmax'))
 
 skip_program = grep
 skip_args = 'not present in this version'

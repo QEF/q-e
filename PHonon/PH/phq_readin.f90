@@ -73,7 +73,9 @@ SUBROUTINE phq_readin()
   USE elph_tetra_mod,ONLY : elph_tetra, lshift_q, in_alpha2f
   USE ktetra,        ONLY : tetra_type
   USE ldaU,          ONLY : lda_plus_u, U_projection, lda_plus_u_kind
-  USE ldaU_ph,       ONLY : read_dns_bare, d2ns_type 
+  USE ldaU_ph,       ONLY : read_dns_bare, d2ns_type
+  USE dvscf_interpolate, ONLY : ldvscf_interpolate, do_long_range, &
+      do_charge_neutral, wpot_dir
   !
   IMPLICIT NONE
   !
@@ -118,7 +120,9 @@ SUBROUTINE phq_readin()
                        elph_nbnd_min, elph_nbnd_max, el_ph_ngauss, &
                        el_ph_nsigma, el_ph_sigma,  electron_phonon, &
                        q_in_band_form, q2d, qplot, low_directory_check, &
-                       lshift_q, read_dns_bare, d2ns_type, diagonalization
+                       lshift_q, read_dns_bare, d2ns_type, diagonalization, &
+                       ldvscf_interpolate, do_long_range, do_charge_neutral, &
+                       wpot_dir
 
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
@@ -193,6 +197,10 @@ SUBROUTINE phq_readin()
   !                                     for <\beta_J|\phi_I> products where for J==I.   
   !                 d2ns_type='dmmp': same as 'diag', but also assuming a m <=> m'.
   ! diagonalization : diagonalization method used in the nscf calc
+  ! ldvscf_interpolate: if .true., use Fourier interpolation of phonon potential
+  ! do_long_range: if .true., add the long-range part of the potential to dvscf
+  ! do_charge_neutral: if .true., impose the neutrality condition on Born effective charges
+  ! wpot_dir: folder where w_pot binary files are located
   ! 
   ! Note: meta_ionode is a single processor that reads the input
   !       (ionode is also a single processor but per image)
@@ -289,6 +297,12 @@ SUBROUTINE phq_readin()
   k1       = 0
   k2       = 0
   k3       = 0
+  !
+  ! dvscf_interpolate
+  ldvscf_interpolate = .FALSE.
+  do_charge_neutral = .FALSE.
+  do_long_range = .FALSE.
+  wpot_dir = ' '
   !
   drho_star%open = .FALSE.
   drho_star%basis = 'modes'
@@ -455,12 +469,6 @@ SUBROUTINE phq_readin()
      elph_simple=.false.
      elph_epa=.false.
   END SELECT
-  ! YAMBO >
-  IF (.not.elph_yambo) then
-    ! YAMBO <
-    IF (elph.AND.qplot) &
-       CALL errore('phq_readin', 'qplot and elph not implemented',1)
-  ENDIF
 
   ! YAMBO >
   IF (.not.elph_yambo.and..not.dvscf_yambo) then
@@ -537,6 +545,28 @@ SUBROUTINE phq_readin()
      lraman=.FALSE.
      elop = .FALSE.
   ENDIF
+  !
+  ! dvscf_interpolate
+  !
+  IF (ldvscf_interpolate) THEN
+    !
+    IF (wpot_dir == ' ') wpot_dir = TRIM(outdir) // "/w_pot/"
+    !
+    IF (do_charge_neutral .AND. (.NOT. do_long_range)) THEN
+      WRITE(stdout, '(5x,a)') 'charge neutrality for dvscf_interpolate is &
+        & meaningful only if do_long_range is true.'
+      WRITE(stdout, '(5x,a)') 'Set do_charge_neutral = .false.'
+      do_charge_neutral = .FALSE.
+    ENDIF
+    !
+  ENDIF
+  !
+  IF (trans .AND. ldvscf_interpolate) CALL errore ('phq_readin', &
+    'ldvscf_interpolate should be used only when trans = .false.', 1)
+  IF (domag .AND. ldvscf_interpolate) CALL errore ('phq_readin', &
+    'ldvscf_interpolate and magnetism not implemented', 1)
+  IF (okpaw .AND. ldvscf_interpolate) CALL errore ('phq_readin', &
+    'PAW and ldvscf_interpolate not tested.', 1)
   !
   ! reads the frequencies ( just if fpol = .true. )
   !

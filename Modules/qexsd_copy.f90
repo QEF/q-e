@@ -172,7 +172,7 @@ CONTAINS
                 ELSE
                       CALL errore("qexsd_copy_atomic_structure:","alternative axes not recognised", 1)
                 END IF
-            CASE(13,14) 
+            CASE(13,12) 
                 IF (TRIM(atomic_structure%alternative_axes)=="unique-axis-b") THEN
                       ibrav = -ibrav
                  ELSE

@@ -265,6 +265,8 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
      !
      CALL xc_lda( length*2, rhoaux, ex, ec, vx, vc )
      !
+     WHERE ( arho < small ) dr = 1.0_DP ! ... to avoid NaN in the next operation
+     !
      dmuxc(:) = (vx(i1:f1) + vc(i1:f1) - vx(i2:f2) - vc(i2:f2)) / &
                 (2.0_DP * dr(:))
      !

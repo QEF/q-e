@@ -170,7 +170,9 @@ from the \PHonon\ directory, produces the following codes:
   (\verb|lshiftq=.true.| in \phx).
 \item \texttt{PH/fqha.x}: a simple code to calculate vibrational entropy with
    the quasi-harmonic approximation
-\item \texttt{Gamma/phcg.x}: 
+\item \texttt{PH/dvscf\_q2r.x}: performs inverse Fourier transformation of phonon
+   potential from a regular {\bf q} grid to real space.
+\item \texttt{Gamma/phcg.x}:
   a version of \phx\ that calculates phonons at ${\bf q} = 0$ using
   conjugate-gradient minimization of the density functional expanded to
   second-order. Only the $\Gamma$ (${\bf k} = 0$) point is used for
@@ -384,6 +386,40 @@ A.~Floris, I.~Timrov, B.~Himmetoglu, N.~Marzari, S.~de~Gironcoli, and M.~Cococci
 Phys. Rev. B {\bf 101}, 064305 (2020).
 
 See example  \verb|PHonon/example/example18/|.
+
+\subsection{Fourier interpolation of phonon potential}
+
+The potential perturbation caused by the displacement of a single atom is
+spatially localized. Hence, the phonon potential can be interpolated from
+$q$ points on a coarse grid to other $q$ points using Fourier interpolation.
+To use this functionality, first, a \phx calculation of $q$ points on a coarse
+grid is required. Then, a \texttt{dvscf\_q2r.x} run performs an inverse Fourier
+transformation of the phonon potentials from a $q$ grid to a real-space
+supercell. Finally, by specifying \texttt{ldvscf\_interpolation=.true.} in
+\phx, the phonon potentials are Fourier transformed to given $q$ points.
+
+For insulators, the nonanalytic long-ranged dipole part of the potential needs
+to be subtracted and added before and after the interpolation, respectively.
+This treatment is activated specifying \texttt{do\_long\_range=.true.} in the
+input files of \texttt{dvscf\_q2r.x} and \phx.
+
+Due to numerical inaccuracies, the calculated Born effective charges may not
+add up to zero, violating the charge neutrality condition. This error may lead
+to nonphysical polar divergence of the phonon potential for $q$ points close
+to $\Gamma$, even in IR-inactive materials. To avoid this problem, one can
+specify \texttt{do\_charge\_neutral=.true.} in the input files of
+\texttt{dvscf\_q2r.x} and \phx. Then, the phonon potentials and the Born
+effective charges are renormalized by enforcing the charge neutrality condition,
+following the scheme of S.~ Ponce et al, J. Chem. Phys. (2015).
+
+The Fourier interpolation of phonon potential is proposed and described in the
+following papers:
+
+A.~Eiguren and C.~Ambrosch-Draxl, Phys. Rev. B {\bf 78}, 045124 (2008);
+
+S.~ Ponce et al, J. Chem. Phys. {\bf 143}, 102813 (2015);
+
+X.~Gonze et al, Comput. Phys. Commun., {\bf 248}, 107042 (2020).
 
 \section{Parallelism}
 \label{Sec:para}

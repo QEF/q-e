@@ -151,11 +151,13 @@ clean:
 # Special case for PH
 	@for x in `find ph_* -name "*dyn"`; do rm -rf $$x; done
 # Cleaning PH final files
-	@rm -rf ph_*/_ph0 ph_*/*.save ph_*/*.xml ph_*/a2F.* ph_*/*.dyn? ph_*/alpha2F.dat \
+	@rm -rf ph_*/_ph0 ph_*/*.save ph_*/*.xml ph_*/a2F.* ph_*/*.dyn? ph_*/*.dyn?? ph_*/alpha2F.dat \
 		ph_*/dyna2F ph_*/elph.gamma* ph_*/gam.lines ph_*/lambda ph_*/lambda.dat \
 		ph_*/elph_dir ph_*/Al444.* ph_*/matdyn.modes ph_*/phonon.dos
 	@rm -rf ph_metal/aluminum.* ph_base/carbon.* ph_base/nickel.* ph_base/nickelpaw.* ph_base/silicon.* \
 	        ph_U_metal_us/iron.* ph_U_insulator_us/bn.* ph_U_metal_paw/nickel.* ph_U_insulator_paw/bn.*
+# Special case for PH dvscf_q2r
+	@rm -rf ph_interpol*/w_pot/ ph_interpol*/*.dyn*.elph.* ph_interpol*/*.wfc* ph_interpol*/*.dyn.freq
 # Cleaning HP final files
 	@rm -rf hp_*/HP hp_*/*hub* hp_*/*.xml hp_*/*.wfc* hp_*/*.save hp_*/*Hubbard_parameters*
 # Cleaning EPW final files
@@ -179,11 +181,12 @@ clean:
                 epw_*/epsilon2_indabs.dat epw_*/epsilon2_indabs_lorenz.dat \
                 epw_mob_ibte_sym/save epw_*/*.bvec epw_*/*.fc epw_*/*.xml epw_*/*.labelinfo.dat \
                 epw_mob_ibte/save epw_mob/save epw_*/Fepmatkq1 epw_*/Fepmatkqcb1 epw_*/Fsparse \
-                epw_*/Fsparsecb epw_*/inv_taucb_tmp epw_*/inv_tau_tmp epw_mob_polar/save
+                epw_*/Fsparsecb epw_*/inv_taucb_tmp epw_*/inv_tau_tmp epw_mob_polar/save \
+                epw_base/*.cube
                 
 # Special cases for EPW
 	@rm -rf epw_base/save epw_super/save epw_pl/save/ epw_polar/save/ \
-             trev/save epw_trev_uspp/save
+                epw_trev/save epw_trev_uspp/save epw_trev_paw/save
 
 	@rm -f userconfig
 

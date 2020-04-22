@@ -101,6 +101,7 @@ subroutine phq_setup
   USE ldaU,          ONLY : lda_plus_u, Hubbard_U, Hubbard_J0
   USE ldaU_ph,       ONLY : effU
   USE constants,     ONLY : rytoev
+  USE dvscf_interpolate, ONLY : ldvscf_interpolate, dvscf_interpol_setup
 
   implicit none
 
@@ -448,6 +449,12 @@ subroutine phq_setup
      !
      CALL setup_offset_beta()
      !
+  ENDIF
+  !
+  ! dVscf Fourier interpolation
+  !
+  IF (ldvscf_interpolate) THEN
+    CALL dvscf_interpol_setup()
   ENDIF
   !
   CALL stop_clock ('phq_setup')

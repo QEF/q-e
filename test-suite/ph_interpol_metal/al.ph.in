@@ -1,0 +1,12 @@
+DFPT for Al
+ &inputph
+  tr2_ph=1.0d-10,
+  prefix='aluminum',
+  fildvscf='aldv',
+  amass(1)=26.98,
+  outdir='./',
+  fildyn='al.dyn',
+  trans=.true.,
+  ldisp=.true.,
+  nq1=3, nq2=3, nq3=3
+ /

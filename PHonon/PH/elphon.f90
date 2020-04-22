@@ -13,7 +13,7 @@ SUBROUTINE elphon()
   ! Electron-phonon calculation from data saved in fildvscf
   !
   USE kinds, ONLY : DP
-  USE constants, ONLY : amu_ry
+  USE constants, ONLY : amu_ry, RY_TO_THZ, RY_TO_CMM1
   USE cell_base, ONLY : celldm, omega, ibrav, at, bg
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, amass
   USE gvecs, ONLY: doublegrid
@@ -38,6 +38,7 @@ SUBROUTINE elphon()
   USE io_global, ONLY: stdout
   USE lrus,   ONLY : int3, int3_nc, int3_paw
   USE qpoint, ONLY : xq
+  USE dvscf_interpolate, ONLY : ldvscf_interpolate, dvscf_r2q
   !
   IMPLICIT NONE
   !
@@ -46,11 +47,13 @@ SUBROUTINE elphon()
   ! counter on the modes
   ! the change of Vscf due to perturbations
   INTEGER :: i,j
+  COMPLEX(DP), ALLOCATABLE :: dvscfin_all(:, :, :)
+  !! dvscfin for all modes. Used when doing dvscf_r2q interpolation.
   COMPLEX(DP), POINTER :: dvscfin(:,:,:), dvscfins (:,:,:)
   COMPLEX(DP), allocatable :: phip (:, :, :, :)
   
   INTEGER :: ntyp_, nat_, ibrav_, nspin_mag_, mu, nu, na, nb, nta, ntb, nqs_
-  REAL(DP) :: celldm_(6)
+  REAL(DP) :: celldm_(6), w1
   CHARACTER(LEN=3) :: atm(ntyp)
    
   CALL start_clock ('elphon')
@@ -63,10 +66,21 @@ SUBROUTINE elphon()
      enddo
   endif
   !
+  ! If ldvscf_interpolate, use Fourier interpolation instead of reading dVscf
+  !
+  IF (ldvscf_interpolate) THEN
+    !
+    WRITE (6, '(5x,a)') "Fourier interpolating dVscf"
+    ALLOCATE(dvscfin_all(dfftp%nnr, nspin_mag, 3 * nat))
+    CALL dvscf_r2q(xq, u, dvscfin_all)
+    !
+  ELSE
+    WRITE (6, '(5x,a)') "Reading dVscf from file "//trim(fildvscf)
+  ENDIF
+  !
   ! read Delta Vscf and calculate electron-phonon coefficients
   !
   imode0 = 0
-  WRITE (6, '(5x,a)') "Reading dVscf from file "//trim(fildvscf)
   DO irr = 1, nirr
      npe=npert(irr)
      ALLOCATE (dvscfin (dfftp%nnr, nspin_mag , npe) )
@@ -76,8 +90,12 @@ SUBROUTINE elphon()
         IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, nat, nspin, npe))
      ENDIF
      DO ipert = 1, npe
-        CALL davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
-                           imode0 + ipert,  -1 )
+        IF (ldvscf_interpolate) THEN
+          dvscfin(:, :, ipert) = dvscfin_all(:, :, imode0 + ipert)
+        ELSE
+          CALL davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
+                             imode0 + ipert,  -1 )
+        ENDIF
         IF (okpaw .AND. me_bgrp==0) &
              CALL davcio( int3_paw(:,:,:,:,ipert), lint3paw, &
                                           iuint3paw, imode0 + ipert, - 1 )
@@ -105,6 +123,8 @@ SUBROUTINE elphon()
         IF (noncolin) DEALLOCATE(int3_nc)
      ENDIF
   ENDDO
+  !
+  IF (ldvscf_interpolate) DEALLOCATE(dvscfin_all)
   !
   ! now read the eigenvalues and eigenvectors of the dynamical matrix
   ! calculated in a previous run
@@ -165,9 +185,27 @@ SUBROUTINE elphon()
   
         deallocate( phip )
      ENDIF
-  ENDIF
+     !
+     ! Write phonon frequency to stdout
+     !
+     WRITE( stdout, 8000) (xq (i), i = 1, 3)
+     !
+     DO nu = 1, 3 * nat
+        w1 = SQRT( ABS( w2(nu) ) )
+        if (w2(nu) < 0.d0) w1 = - w1
+        WRITE( stdout, 8010) nu, w1 * RY_TO_THZ, w1 * RY_TO_CMM1
+     ENDDO
+     !
+     WRITE( stdout, '(1x,74("*"))')
+     !
+  ENDIF ! .NOT. trans
   !
   CALL stop_clock ('elphon')
+  !
+8000 FORMAT(/,5x,'Diagonalizing the dynamical matrix', &
+       &       //,5x,'q = ( ',3f14.9,' ) ',//,1x,74('*'))
+8010 FORMAT   (5x,'freq (',i5,') =',f15.6,' [THz] =',f15.6,' [cm-1]')
+  !
   RETURN
 END SUBROUTINE elphon
 !

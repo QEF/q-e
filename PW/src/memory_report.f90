@@ -34,7 +34,7 @@ SUBROUTINE memory_report()
   USE exx,       ONLY : ecutfock, use_ace
   USE exx_base,  ONLY : nkqs
   USE fft_base,  ONLY : dffts, dfftp
-  USE gvect,     ONLY : ngm, ngl, ngm_g, g, gcutm
+  USE gvect,     ONLY : ngm, ngl, ngm_g, g, ecutrho
   USE gvecs,     ONLY : ngms, doublegrid
   USE gvecw,     ONLY : ecutwfc, gcutw
   USE klist,     ONLY : nks, nkstot, xk, qnorm
@@ -167,7 +167,7 @@ SUBROUTINE memory_report()
   lmaxq = 2*lmaxkb+1
   IF (lmaxq > 0) THEN
      ! not accurate if spline_ps .and. cell_factor <= 1.1d0
-     nqxq = int( ( (sqrt(gcutm) + qnorm) / dq + 4) * cell_factor )
+     nqxq = int( ( (sqrt(ecutrho) + qnorm) / dq + 4) * cell_factor )
      ! allocate_nlpot.f90:87 qrad
      add = real_size * nqxq * nbetam*(nbetam+1)/2 * lmaxq * ntyp
      IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'qrad', add/MB

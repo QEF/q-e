@@ -394,7 +394,8 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
   USE paw_onecenter,        ONLY : PAW_potential
   USE mp_pools,             ONLY : my_pool_id
   USE mp_bands,             ONLY : my_bgrp_id, root_bgrp_id, root_bgrp, &
-                                   intra_bgrp_comm
+                                   intra_bgrp_comm, inter_bgrp_comm, nbgrp
+  USE mp,                   ONLY : mp_bcast
   USE io_base,              ONLY : write_rhog, read_rhog
   USE fft_rho,              ONLY : rho_g2r, rho_r2g
   !
@@ -493,6 +494,7 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
         IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
              CALL read_rhog( TRIM(dirname) // "charge-old", &
              root_bgrp, intra_bgrp_comm, ig_l2g, 1, work(:,1:1) )
+        IF( nbgrp > 1 ) CALL mp_bcast( work, root_bgrp_id, inter_bgrp_comm )
         !
         ! ...   rho%of_r   ->  oldrho
         ! ...   work  ->  oldrho2
@@ -526,9 +528,11 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
         IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
              CALL read_rhog( TRIM(dirname) // "charge-old2", &
              root_bgrp, intra_bgrp_comm, ig_l2g, 1, work1(:,1:1) )
+        IF( nbgrp > 1 ) CALL mp_bcast( work1,root_bgrp_id, inter_bgrp_comm )
         IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
              CALL read_rhog( TRIM(dirname) // "charge-old", &
              root_bgrp, intra_bgrp_comm, ig_l2g, 1, work(:,1:1) )
+        IF( nbgrp > 1 ) CALL mp_bcast( work, root_bgrp_id, inter_bgrp_comm )
         !
         ! ...   rho%of_r   ->  oldrho
         ! ...   work  ->  oldrho2
@@ -622,6 +626,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
                                    bec_type, becp, calbec
   USE mp_images,            ONLY : intra_image_comm
   USE mp,                   ONLY : mp_barrier
+  USE mp_bands,             ONLY : use_bgrp_in_hpsi
+
   !
   IMPLICIT NONE
   !
@@ -647,8 +653,12 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
     ! workspace for ZGESVD
     ! real version of sp_m
   LOGICAL :: exst
+  LOGICAL :: save_flag
   !
   CALL mp_barrier( intra_image_comm ) ! debug
+
+  save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
+
   !
   IF ( wfc_extr == 1 ) THEN
      !
@@ -724,7 +734,6 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
            !
            IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
            CALL calbec( npw, vkb, evc, becp )
-           !
            CALL s_psi ( npwx, npw, nbnd, evc, aux )
            !
         ELSE
@@ -824,6 +833,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
   END IF
   !
+  use_bgrp_in_hpsi = save_flag
+
   CALL mp_barrier( intra_image_comm ) ! debug
   !
   RETURN

@@ -99,7 +99,7 @@ subroutine dvanqq
   !
   call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
   do ig = 1, ngm
-     qmodg (ig) = sqrt (gg (ig) )
+     qmodg (ig) = sqrt (gg (ig) ) * tpiba
   enddo
   if (.not.lgamma) then
      allocate (qpg (3, ngm))
@@ -107,7 +107,7 @@ subroutine dvanqq
      call ylmr2 (lmaxq * lmaxq, ngm, qpg, qmod, ylmkq)
      deallocate (qpg)
      do ig = 1, ngm
-        qmod (ig) = sqrt (qmod (ig) )
+        qmod (ig) = sqrt (qmod (ig) ) * tpiba
      enddo
   endif
   !

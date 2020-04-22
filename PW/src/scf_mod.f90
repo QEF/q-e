@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,7 +13,8 @@ MODULE scf
   !
   USE kinds,           ONLY : DP
   USE lsda_mod,        ONLY : nspin
-  USE ldaU,            ONLY : lda_plus_u, Hubbard_lmax
+  USE ldaU,            ONLY : lda_plus_u, Hubbard_lmax, lda_plus_u_kind, ldmx, &
+                              ldmx_b, is_hubbard_back
   USE ions_base,       ONLY : nat
   USE buffers,         ONLY : open_buffer, close_buffer, get_buffer, save_buffer
   USE funct,           ONLY : dft_is_meta
@@ -21,6 +22,7 @@ MODULE scf
   USE fft_interfaces,  ONLY : invfft
   USE gvect,           ONLY : ngm
   USE gvecs,           ONLY : ngms
+  USE ions_base,       ONLY : ntyp => nsp
   USE paw_variables,   ONLY : okpaw
   USE uspp_param,      ONLY : nhm
   USE extfield,        ONLY : dipfield, emaxpos, eopreg, edir
@@ -53,9 +55,11 @@ MODULE scf
      COMPLEX(DP), ALLOCATABLE :: kin_g(:,:)
      !! the kinetic energy density in G-space
      REAL(DP),    ALLOCATABLE :: ns(:,:,:,:)
-     !! the LDA+U occupation matrix
+     !! the DFT+U occupation matrix
+     REAL(DP),    ALLOCATABLE :: nsb(:,:,:,:)
+     !! the DFT+U occupation matrix (background states)
      COMPLEX(DP), ALLOCATABLE :: ns_nc(:,:,:,:)
-     !! the LDA+U occupation matrix - noncollinear case
+     !! the DFT+U occupation matrix - noncollinear case
      REAL(DP),    ALLOCATABLE :: bec(:,:,:)
      !! the PAW hamiltonian elements
   END TYPE scf_type
@@ -67,9 +71,11 @@ MODULE scf
      COMPLEX(DP), ALLOCATABLE :: kin_g(:,:)
      !! the charge density in G-space
      REAL(DP),    ALLOCATABLE :: ns(:,:,:,:)
-     !! the LDA+U occupation matrix 
+     !! the DFT+U occupation matrix
+     REAL(DP),    ALLOCATABLE :: nsb(:,:,:,:)
+     !! the DFT+U occupation matrix (background states)
      COMPLEX(DP), ALLOCATABLE :: ns_nc(:,:,:,:)
-     !! the LDA+U occupation matrix noncollinear case 
+     !! the DFT+U occupation matrix noncollinear case 
      REAL(DP),    ALLOCATABLE :: bec(:,:,:)
      !! PAW corrections to hamiltonian
      REAL(DP) :: el_dipole
@@ -98,11 +104,14 @@ MODULE scf
   !
   INTEGER, PRIVATE  :: record_length, &
                        rlen_rho=0,  rlen_kin=0,  rlen_ldaU=0,  rlen_bec=0,&
-                       rlen_dip=0, &
+                       rlen_dip=0, rlen_ldaUb=0, &
                        start_rho=0, start_kin=0, start_ldaU=0, start_bec=0, &
-                       start_dipole=0
+                       start_dipole=0, start_ldaUb=0
+  INTEGER :: nt
   ! DFT+U, colinear and noncolinear cases
-  LOGICAL, PRIVATE :: lda_plus_u_co, lda_plus_u_nc
+  LOGICAL, PRIVATE :: lda_plus_u_co  ! collinear case
+  LOGICAL, PRIVATE :: lda_plus_u_cob ! collinear case (background states)
+  LOGICAL, PRIVATE :: lda_plus_u_nc  ! noncollinear case
   COMPLEX(DP), PRIVATE, ALLOCATABLE:: io_buffer(:)
   !
 CONTAINS
@@ -134,11 +143,18 @@ CONTAINS
       ALLOCATE( rho%kin_g(1,1) )
    ENDIF
    !
-   lda_plus_u_co = lda_plus_u .AND. .NOT. ( nspin == 4 )
-   lda_plus_u_nc = lda_plus_u .AND.       ( nspin == 4 )
+   lda_plus_u_co  = lda_plus_u .AND. .NOT. ( nspin == 4 )
+   lda_plus_u_nc  = lda_plus_u .AND.       ( nspin == 4 )
+   lda_plus_u_cob = .FALSE.
+   IF (lda_plus_u_co) THEN
+      DO nt = 1, ntyp
+         IF (is_hubbard_back(nt)) lda_plus_u_cob = .TRUE.
+      ENDDO
+   ENDIF
    !
-   IF (lda_plus_u_co) ALLOCATE( rho%ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat) )
-   IF (lda_plus_u_nc) ALLOCATE( rho%ns_nc(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat) )
+   IF (lda_plus_u_co)  ALLOCATE( rho%ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat) )
+   IF (lda_plus_u_cob) ALLOCATE( rho%nsb(ldmx_b,ldmx_b,nspin,nat) )
+   IF (lda_plus_u_nc)  ALLOCATE( rho%ns_nc(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat) )
    !
    IF (okpaw) THEN ! See the top of the file for clarification
       IF ( PRESENT(do_not_allocate_becsum) ) THEN
@@ -169,6 +185,7 @@ CONTAINS
    IF (ALLOCATED(rho%kin_r))  DEALLOCATE( rho%kin_r )
    IF (ALLOCATED(rho%kin_g))  DEALLOCATE( rho%kin_g )
    IF (ALLOCATED(rho%ns)   )  DEALLOCATE( rho%ns    )
+   IF (ALLOCATED(rho%nsb)  )  DEALLOCATE( rho%nsb   )
    IF (ALLOCATED(rho%ns_nc))  DEALLOCATE( rho%ns_nc )
    IF (ALLOCATED(rho%bec)  )  DEALLOCATE( rho%bec   )
    !
@@ -196,6 +213,12 @@ CONTAINS
    !
    lda_plus_u_co = lda_plus_u .AND. .NOT. (nspin == 4 )
    lda_plus_u_nc = lda_plus_u .AND.       (nspin == 4 )
+   lda_plus_u_cob = .FALSE.
+   IF (lda_plus_u_co) THEN
+      DO nt = 1, ntyp
+         IF (is_hubbard_back(nt)) lda_plus_u_cob = .TRUE.
+      ENDDO
+   ENDIF
    !
    IF (lda_plus_u_nc) THEN
       ALLOCATE( rho%ns_nc(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat) )
@@ -205,6 +228,11 @@ CONTAINS
    IF (lda_plus_u_co) THEN
       ALLOCATE( rho%ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat) )
       rho%ns = 0._dp
+   ENDIF
+   !
+   IF (lda_plus_u_cob) THEN
+      ALLOCATE( rho%nsb(ldmx_b,ldmx_b,nspin,nat) )
+      rho%nsb = 0._dp
    ENDIF
    !
    IF (okpaw) THEN
@@ -231,6 +259,7 @@ CONTAINS
    IF (ALLOCATED(rho%of_g) )  DEALLOCATE( rho%of_g  )
    IF (ALLOCATED(rho%kin_g))  DEALLOCATE( rho%kin_g )
    IF (ALLOCATED(rho%ns)   )  DEALLOCATE( rho%ns    )
+   IF (ALLOCATED(rho%nsb)  )  DEALLOCATE( rho%nsb   )
    IF (ALLOCATED(rho%ns_nc))  DEALLOCATE( rho%ns_nc )
    IF (ALLOCATED(rho%bec)  )  DEALLOCATE( rho%bec   )
    !
@@ -255,9 +284,10 @@ CONTAINS
    rho_m%of_g(1:ngms,:) = rho_s%of_g(1:ngms,:)
    !
    IF (dft_is_meta() .OR. lxdm) rho_m%kin_g(1:ngms,:) = rho_s%kin_g(1:ngms,:)
-   IF (lda_plus_u_nc) rho_m%ns_nc  = rho_s%ns_nc
-   IF (lda_plus_u_co) rho_m%ns     = rho_s%ns
-   IF (okpaw)         rho_m%bec    = rho_s%bec
+   IF (lda_plus_u_nc)  rho_m%ns_nc  = rho_s%ns_nc
+   IF (lda_plus_u_co)  rho_m%ns     = rho_s%ns
+   IF (lda_plus_u_cob) rho_m%nsb    = rho_s%nsb
+   IF (okpaw)          rho_m%bec    = rho_s%bec
    !
    IF (dipfield) THEN
       CALL compute_el_dip( emaxpos, eopreg, edir, rho_s%of_r(:,1), e_dipole )
@@ -308,9 +338,10 @@ CONTAINS
       ENDDO
    ENDIF
    !
-   IF (lda_plus_u_nc) rho_s%ns_nc(:,:,:,:) = rho_m%ns_nc(:,:,:,:)
-   IF (lda_plus_u_co) rho_s%ns(:,:,:,:)    = rho_m%ns(:,:,:,:)
-   IF (okpaw)         rho_s%bec(:,:,:)     = rho_m%bec(:,:,:)
+   IF (lda_plus_u_nc)  rho_s%ns_nc(:,:,:,:) = rho_m%ns_nc(:,:,:,:)
+   IF (lda_plus_u_co)  rho_s%ns(:,:,:,:)    = rho_m%ns(:,:,:,:)
+   IF (lda_plus_u_cob) rho_s%nsb(:,:,:,:)   = rho_m%nsb(:,:,:,:)
+   IF (okpaw)          rho_s%bec(:,:,:)     = rho_m%bec(:,:,:)
    !
    RETURN
    !
@@ -337,9 +368,10 @@ CONTAINS
      Y%kin_g = X%kin_g
   ENDIF
   !
-  IF (lda_plus_u_nc) Y%ns_nc = X%ns_nc
-  IF (lda_plus_u_co) Y%ns    = X%ns
-  IF (okpaw)         Y%bec   = X%bec
+  IF (lda_plus_u_nc)  Y%ns_nc = X%ns_nc
+  IF (lda_plus_u_co)  Y%ns    = X%ns
+  IF (lda_plus_u_cob) Y%nsb   = X%nsb
+  IF (okpaw)          Y%bec   = X%bec
   !
   RETURN
   !
@@ -365,6 +397,7 @@ CONTAINS
   IF (dft_is_meta() .OR. lxdm) Y%kin_g     = Y%kin_g     + A * X%kin_g
   IF (lda_plus_u_nc)           Y%ns_nc     = Y%ns_nc     + A * X%ns_nc
   IF (lda_plus_u_co)           Y%ns        = Y%ns        + A * X%ns
+  IF (lda_plus_u_cob)          Y%nsb       = Y%nsb       + A * X%nsb
   IF (okpaw)                   Y%bec       = Y%bec       + A * X%bec
   IF (dipfield)                Y%el_dipole = Y%el_dipole + A * X%el_dipole
   !
@@ -390,6 +423,7 @@ CONTAINS
   IF (dft_is_meta() .OR. lxdm) Y%kin_g     = X%kin_g
   IF (lda_plus_u_nc)           Y%ns_nc     = X%ns_nc
   IF (lda_plus_u_co)           Y%ns        = X%ns
+  IF (lda_plus_u_cob)          Y%nsb       = X%nsb
   IF (okpaw)                   Y%bec       = X%bec
   IF (dipfield)                Y%el_dipole = X%el_dipole
   !
@@ -416,6 +450,7 @@ CONTAINS
   IF (dft_is_meta() .OR. lxdm) X%kin_g     = A * X%kin_g
   IF (lda_plus_u_nc)           X%ns_nc     = A * X%ns_nc
   IF (lda_plus_u_co)           X%ns        = A * X%ns
+  IF (lda_plus_u_cob)          X%nsb       = A * X%nsb
   IF (okpaw)                   X%bec       = A * X%bec
   IF (dipfield)                X%el_dipole = A * X%el_dipole
   !
@@ -478,8 +513,9 @@ CONTAINS
       !
    ENDIF
    !
-   IF (lda_plus_u_nc) rhoin%ns_nc(:,:,:,:) = 0.d0
-   IF (lda_plus_u_co) rhoin%ns(:,:,:,:)    = 0.d0
+   IF (lda_plus_u_nc)  rhoin%ns_nc(:,:,:,:) = 0.d0
+   IF (lda_plus_u_co)  rhoin%ns(:,:,:,:)    = 0.d0
+   IF (lda_plus_u_cob) rhoin%nsb(:,:,:,:)   = 0.d0
    !
    RETURN
    !
@@ -502,6 +538,7 @@ CONTAINS
    rlen_rho = 2 * ngms * nspin
    IF (dft_is_meta() .OR. lxdm) rlen_kin  = 2 * ngms * nspin
    IF (lda_plus_u_co)           rlen_ldaU = (2*Hubbard_lmax+1)**2 *nspin*nat
+   IF (lda_plus_u_cob)          rlen_ldaUb = (ldmx_b)**2 *nspin*nat
    IF (lda_plus_u_nc)           rlen_ldaU = 2 * (2*Hubbard_lmax+1)**2 *nspin*nat
    IF (okpaw)                   rlen_bec  = (nhm*(nhm+1)/2) * nat * nspin
    IF (dipfield)                rlen_dip  = 1
@@ -513,7 +550,12 @@ CONTAINS
    start_rho    = 1
    start_kin    = start_rho  + rlen_rho / 2
    start_ldaU   = start_kin  + rlen_kin / 2
-   start_bec    = start_ldaU + ( rlen_ldaU + 1 ) / 2 
+   IF (lda_plus_u_cob) THEN
+      start_ldaUb = start_ldaU + ( rlen_ldaU + 1 ) / 2
+      start_bec = start_ldaUb + ( rlen_ldaUb + 1 ) / 2
+   ELSE
+      start_bec = start_ldaU + ( rlen_ldaU + 1 ) / 2
+   ENDIF
    start_dipole = start_bec  + ( rlen_bec + 1 ) / 2
    !
    ! define total record length, in complex numbers
@@ -566,6 +608,7 @@ CONTAINS
       IF (dft_is_meta() .OR. lxdm) CALL DCOPY(rlen_kin, rho%kin_g,1,io_buffer(start_kin), 1)
       IF (lda_plus_u_nc)           CALL DCOPY(rlen_ldaU,rho%ns_nc,1,io_buffer(start_ldaU),1)
       IF (lda_plus_u_co)           CALL DCOPY(rlen_ldaU,rho%ns,   1,io_buffer(start_ldaU),1)
+      IF (lda_plus_u_cob)          CALL DCOPY(rlen_ldaUb,rho%nsb, 1,io_buffer(start_ldaUb),1)
       IF (okpaw)                   CALL DCOPY(rlen_bec, rho%bec,  1,io_buffer(start_bec), 1)
       !
       IF (dipfield) io_buffer(start_dipole) = CMPLX( rho%el_dipole, 0.0_dp )
@@ -580,6 +623,7 @@ CONTAINS
       !
       IF (dft_is_meta() .OR. lxdm) CALL DCOPY(rlen_kin, io_buffer(start_kin), 1,rho%kin_g,1)
       IF (lda_plus_u_co)           CALL DCOPY(rlen_ldaU,io_buffer(start_ldaU),1,rho%ns,   1)
+      IF (lda_plus_u_cob)          CALL DCOPY(rlen_ldaUb,io_buffer(start_ldaUb),1,rho%nsb,1)
       IF (lda_plus_u_nc)           CALL DCOPY(rlen_ldaU,io_buffer(start_ldaU),1,rho%ns_nc,1)
       IF (okpaw)                   CALL DCOPY(rlen_bec, io_buffer(start_bec), 1,rho%bec,  1)
       !
@@ -747,10 +791,11 @@ END FUNCTION tauk_ddot
 FUNCTION ns_ddot( rho1, rho2 )
   !---------------------------------------------------------------------------
   !! Calculates \(U/2 \sum_i \text{ns1}(i)\ \text{ns2}(i)\) used as an estimate
-  !! of the self-consistency error on the LDA+U correction to the energy.
+  !! of the self-consistency error on the DFT+U correction to the energy.
   !
   USE kinds,     ONLY : DP
-  USE ldaU,      ONLY : Hubbard_l, Hubbard_U, Hubbard_alpha
+  USE ldaU,      ONLY : Hubbard_l, Hubbard_U, Hubbard_U_back, ldim_back, &
+                        lda_plus_u_kind, is_hubbard, is_hubbard_back
   USE ions_base, ONLY : nat, ityp
   !
   IMPLICIT NONE  
@@ -768,9 +813,12 @@ FUNCTION ns_ddot( rho1, rho2 )
   !
   ns_ddot = 0.D0
   !
+  IF (lda_plus_u_kind.EQ.2) RETURN
+  !
   DO na = 1, nat
      nt = ityp(na)
-     IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0 ) THEN
+     IF ( is_hubbard(nt) ) THEN
+        !
         m1 = 2 * Hubbard_l(nt) + 1
         m2 = 2 * Hubbard_l(nt) + 1
         !
@@ -783,6 +831,19 @@ FUNCTION ns_ddot( rho1, rho2 )
         ENDIF
         !
      ENDIF
+     !
+     ! Background part
+     !
+     IF ( is_hubbard_back(nt) .AND. lda_plus_u_kind.EQ.0 ) THEN
+        !
+        m1 = ldim_back(nt)
+        m2 = ldim_back(nt)
+        !
+        ns_ddot = ns_ddot + 0.5D0 * Hubbard_U_back(nt) * &
+                SUM( rho1%nsb(:m1,:m2,:nspin,na)*rho2%nsb(:m1,:m2,:nspin,na) )
+        !
+     ENDIF
+     !
   ENDDO
   !
   IF ( nspin == 1 ) ns_ddot = 2.D0*ns_ddot
@@ -791,6 +852,60 @@ FUNCTION ns_ddot( rho1, rho2 )
   !
 END FUNCTION ns_ddot
 !
+!----------------------------------------------------------------------------
+FUNCTION nsg_ddot( nsg1, nsg2, nspin )
+  !----------------------------------------------------------------------------
+  !! Calculates \(U/2 \sum_i \text{nsg1}(i) \text{nsg2}(i)\)
+  !! used as an estimate of the self-consistency error on the 
+  !! DFT+U+V correction to the energy
+  !
+  USE kinds,     ONLY : DP
+  USE ldaU,      ONLY : Hubbard_V, max_num_neighbors, is_hubbard, &
+                        is_hubbard_back, ldim_u, neighood, ldmx,  &
+                        ldmx_tot, at_sc
+  USE ions_base, ONLY : nat, ityp
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(IN) :: nsg1(ldmx_tot,ldmx_tot,max_num_neighbors,nat,nspin), &
+                             nsg2(ldmx_tot,ldmx_tot,max_num_neighbors,nat,nspin)
+  INTEGER,  INTENT(IN) :: nspin
+  REAL(DP)             :: nsg_ddot
+  !
+  INTEGER :: na1, nt1, m1, m2, na2, nt2, viz, equiv_na2, i_type
+  INTEGER, EXTERNAL :: find_viz, type_interaction
+  !
+  nsg_ddot = 0.D0
+  !
+  DO na1 = 1, nat
+     nt1 = ityp(na1)
+     IF ( (is_hubbard(nt1) .OR. is_hubbard_back(nt1)) .AND.ldim_u(nt1).GT.0 ) THEN
+        DO viz = 1, neighood(na1)%num_neigh
+           na2 = neighood(na1)%neigh(viz)
+           equiv_na2 = at_sc(na2)%at
+           nt2 = ityp(equiv_na2)
+           IF ((Hubbard_V(na1,na2,1) .NE. 0.d0) .OR. &
+               (Hubbard_V(na1,na2,2) .NE. 0.d0) .OR. &
+               (Hubbard_V(na1,na2,3) .NE. 0.d0) .OR. &
+               (Hubbard_V(na1,na2,4) .NE. 0.d0) ) THEN
+              DO m1=1,ldim_u(nt1)
+                 DO m2=1,ldim_u(nt2)
+                    i_type = type_interaction(na1,m1,equiv_na2,m2)
+                    nsg_ddot = nsg_ddot + 0.5D0 * ABS(Hubbard_V(na1,na2,i_type)) * &
+                      REAL(SUM( nsg1(m2,m1,viz, na1,:nspin)*  &
+                                CONJG(nsg2(m2,m1,viz, na1,:nspin) ) ) )
+                 ENDDO
+              ENDDO
+           ENDIF
+        ENDDO
+     ENDIF
+  ENDDO
+  !
+  IF ( nspin == 1 ) nsg_ddot = 2.D0*nsg_ddot
+  !
+  RETURN
+  !
+END FUNCTION nsg_ddot
 !
 !----------------------------------------------------------------------------
 FUNCTION local_tf_ddot( rho1, rho2, ngm0 )
@@ -863,9 +978,10 @@ SUBROUTINE bcast_scf_type( rho, root, comm )
      CALL mp_bcast( rho%kin_g, root, comm )
      CALL mp_bcast( rho%kin_r, root, comm )
   END IF
-  IF ( lda_plus_u_co) CALL mp_bcast( rho%ns,    root, comm )
-  IF ( lda_plus_u_nc) CALL mp_bcast( rho%ns_nc, root, comm )
-  IF ( okpaw )        CALL mp_bcast( rho%bec,   root, comm )
+  IF (lda_plus_u_co)  CALL mp_bcast( rho%ns,    root, comm )
+  IF (lda_plus_u_cob) CALL mp_bcast( rho%nsb,   root, comm )
+  IF (lda_plus_u_nc)  CALL mp_bcast( rho%ns_nc, root, comm )
+  IF (okpaw)          CALL mp_bcast( rho%bec,   root, comm )
   !
 END SUBROUTINE
 !

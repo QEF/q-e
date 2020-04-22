@@ -1799,6 +1799,85 @@
     END SUBROUTINE readdvscf
     !-------------------------------------------------------------
     !
+    !-------------------------------------------------------------
+    SUBROUTINE readint3paw(int3paw, recn, iq, nqc)
+    !-------------------------------------------------------------
+    !!
+    !! Open int3paw files as direct access, read, and close again
+    !! 
+    !! HL - Mar 2020 based on the subroutine of readdvscf
+    !!
+    !-------------------------------------------------------------
+    USE kinds,            ONLY : DP
+    USE io_files,         ONLY : prefix
+    USE units_ph,         ONLY : lint3paw
+    USE epwcom,           ONLY : dvscf_dir
+    USE io_var,           ONLY : iuint3paw
+    USE low_lvl,          ONLY : set_ndnmbr
+    USE uspp_param,       ONLY : nhm
+    USE ions_base,        ONLY : nat
+    USE noncollin_module, ONLY : nspin_mag
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: recn
+    !! perturbation number
+    INTEGER, INTENT(in) :: iq
+    !! the current q-point
+    INTEGER, INTENT(in) :: nqc
+    !! the total number of q-points in the list
+    COMPLEX(KIND = DP), INTENT(inout) :: int3paw(nhm, nhm, nat, nspin_mag)
+    !! int3paw is read from file
+    !
+    ! Local variables
+    !
+    CHARACTER(LEN = 256) :: tempfile
+    !! Temp file
+    CHARACTER(LEN = 4) :: filelab
+    !! File number
+    INTEGER :: unf_recl
+    !! Rcl unit
+    INTEGER :: ios
+    !! Error number
+    INTEGER(KIND = 8) :: mult_unit
+    !! Record length
+    INTEGER(KIND = 8) :: file_size
+    !! File size
+    REAL(KIND = DP) :: dummy
+    !! Dummy variable
+    !
+    !  the call to set_ndnmbr is just a trick to get quickly
+    !  a file label by exploiting an existing subroutine
+    !  (if you look at the sub you will find that the original
+    !  purpose was for pools and nodes)
+    !
+    CALL set_ndnmbr(0, iq, 1, nqc, filelab)
+    tempfile = TRIM(dvscf_dir) // TRIM(prefix) // '.dvscf_paw_q' // filelab
+    INQUIRE(IOLENGTH = unf_recl) dummy
+    unf_recl = unf_recl  * lint3paw
+    mult_unit = unf_recl
+    mult_unit = recn * mult_unit
+    !
+    !  open the dvscf_paw file, read and close
+    !
+    OPEN(iuint3paw, FILE = tempfile, FORM = 'unformatted', &
+         ACCESS = 'direct', IOSTAT = ios, RECL = unf_recl, STATUS = 'old')
+    IF (ios /= 0) CALL errore('readint3paw', 'error opening ' // tempfile, iuint3paw)
+    !
+    ! check that the binary file is long enough
+    INQUIRE(FILE = tempfile, SIZE = file_size)
+    IF (mult_unit > file_size) CALL errore('readint3paw', &
+         TRIM(tempfile) //' too short', iuint3paw)
+    !
+    READ(iuint3paw, REC = recn) int3paw
+    CLOSE(iuint3paw, STATUS = 'keep')
+    !
+    RETURN
+    !
+    !-------------------------------------------------------------
+    END SUBROUTINE readint3paw
+    !-------------------------------------------------------------
+    !
     !------------------------------------------------------------
     SUBROUTINE readwfc(ipool, recn, evc0)
     !------------------------------------------------------------
@@ -1992,8 +2071,10 @@
     USE units_lr,         ONLY : iuwfc, lrwfc
     USE wvfct,            ONLY : nbnd, npwx
     USE noncollin_module, ONLY : npol, nspin_mag
-    USE units_ph,         ONLY : lrdrho
+    USE units_ph,         ONLY : lrdrho, lint3paw
     USE fft_base,         ONLY : dfftp
+    USE uspp_param,       ONLY : nhm
+    USE ions_base,        ONLY : nat
     !
     IMPLICIT NONE
     !
@@ -2013,11 +2094,123 @@
     ! file for setting unitary gauges of eigenstates
     !
     lrdrho = 2 * dfftp%nr1x * dfftp%nr2x * dfftp%nr3x * nspin_mag
+    lint3paw = 2 * nhm * nhm * nat * nspin_mag
     !
     RETURN
     !
     !----------------------------------------------------------------------------
     END SUBROUTINE openfilepw
+    !----------------------------------------------------------------------------
+    !
+    !----------------------------------------------------------------------------
+    SUBROUTINE param_get_range_vector(field, length, lcount, i_value)
+    !----------------------------------------------------------------------------
+    !!
+    !!   Read a range vector eg. 1,2,3,4-10  or 1 3 400:100
+    !!   if(lcount) we return the number of states in length
+    !!
+    !!   HL - April 2020
+    !!   Imported and adapted from the same name of subroutine in parameters.F90
+    !!   in the directory of src in Wannier90
+    !!
+    !----------------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    !
+    CHARACTER(*), INTENT(in)         :: field
+    !! Field read for parsing
+    INTEGER, INTENT(inout)           :: length
+    !! Number of states
+    LOGICAL, INTENT(in)              :: lcount
+    !! If T only count states
+    INTEGER, OPTIONAL, INTENT(out)   :: i_value(length)
+    !! States specified in range vector
+    !
+    INTEGER :: loop
+    !! Loop index
+    INTEGER :: num1
+    !! Integer number read
+    INTEGER :: num2
+    !! Integer number read
+    INTEGER :: i_punc
+    !! Position returned after scanning punctuation marks
+    INTEGER :: counter
+    !! Counter index
+    INTEGER :: i_digit
+    !! Position returned after scanning numbers
+    INTEGER :: loop_r
+    !! Loop index
+    INTEGER :: range_size
+    !! Size of range
+    CHARACTER(LEN = 255) :: dummy
+    !! Copy of field read for parsing
+    CHARACTER(LEN = 10), PARAMETER :: c_digit = "0123456789"
+    CHARACTER(LEN = 2), PARAMETER :: c_range = "-:"
+    CHARACTER(LEN = 3), PARAMETER :: c_sep = " ,;"
+    CHARACTER(LEN = 5), PARAMETER :: c_punc = " ,;-:"
+    CHARACTER(LEN = 5) :: c_num1
+    !! Number read
+    CHARACTER(LEN = 5) :: c_num2
+    !! Number read
+    !
+    IF (lcount .AND. PRESENT(i_value)) &
+      CALL errore('param_get_range_vector', 'incorrect call', 1)
+    !
+    dummy = field
+    dummy = ADJUSTL(dummy)
+    !
+    counter = 0
+    IF (LEN_TRIM(dummy) == 0) THEN
+      length = counter
+      RETURN
+    ENDIF
+    !
+    DO
+      i_punc = SCAN(dummy, c_punc)
+      IF (i_punc == 0) &
+        CALL errore('param_get_range_vector', 'Error parsing field', 1)
+      c_num1 = dummy(1:i_punc - 1)
+      READ(c_num1, *, ERR = 101, END = 101) num1
+      dummy = ADJUSTL(dummy(i_punc:))
+      !look for range
+      IF (SCAN(dummy, c_range) == 1) THEN
+        i_digit = SCAN(dummy, c_digit)
+        dummy = ADJUSTL(dummy(i_digit:))
+        i_punc = SCAN(dummy, c_punc)
+        c_num2 = dummy(1:i_punc - 1)
+        READ(c_num2, *, ERR = 101, END = 101) num2
+        dummy = ADJUSTL(dummy(i_punc:))
+        range_size = ABS(num2 - num1) + 1
+        DO loop_r = 1, range_size
+          counter = counter + 1
+          IF (.NOT. lcount) i_value(counter) = MIN(num1, num2) + loop_r - 1
+        ENDDO
+      ELSE
+        counter = counter + 1
+        IF (.NOT. lcount) i_value(counter) = num1
+      ENDIF
+      IF (SCAN(dummy, c_sep) == 1) dummy = ADJUSTL(dummy(2:))
+      IF (SCAN(dummy, c_range) == 1) &
+        CALL errore('param_get_range_vector', 'Error parsing field: incorrect range', 1)
+      IF (INDEX(dummy, ' ') == 1) EXIT
+    ENDDO
+    !
+    IF (lcount) length = counter
+    IF (.NOT. lcount) THEN
+      DO loop = 1, counter - 1
+        DO loop_r = loop + 1, counter
+          IF (i_value(loop) == i_value(loop_r)) &
+            CALL errore('param_get_range_vector', 'Error parsing field: duplicate values', 1)
+        ENDDO
+      ENDDO
+    ENDIF
+    !
+    RETURN
+    !
+101 CALL errore('param_get_range_vector', 'Error parsing field', 1)
+    !
+    !----------------------------------------------------------------------------
+    END SUBROUTINE param_get_range_vector
     !----------------------------------------------------------------------------
   !------------------------------------------------------------------------------
   END MODULE io_epw

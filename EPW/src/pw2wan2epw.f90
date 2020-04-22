@@ -37,9 +37,8 @@
     USE klist,            ONLY : nkstot
     USE io_files,         ONLY : prefix
     USE epwcom,           ONLY : write_wfn, scdm_proj, scdm_entanglement, &
-                                 scdm_sigma
-    USE wannierEPW,       ONLY : seedname2, wvfn_formatted, reduce_unk, ispinw, &
-                                 ikstart, ikstop, iknum
+                                 scdm_sigma, wannier_plot
+    USE wannierEPW,       ONLY : seedname2, ispinw, ikstart, ikstop, iknum
     USE constants_epw,    ONLY : zero, one
     USE noncollin_module, ONLY : noncolin
     !
@@ -53,8 +52,6 @@
     outdir = './'
     seedname2 = prefix
     spin_component = 'none'
-    wvfn_formatted = .FALSE.
-    reduce_unk = .FALSE.
     !
     IF (scdm_proj) THEN
       IF ((TRIM(scdm_entanglement) /= 'isolated') .AND. &
@@ -110,12 +107,12 @@
 !    CALL phases_a_m()
     CALL write_band()
     !
-    IF (write_wfn) CALL write_plot()
-    !
     WRITE(stdout, *)
     WRITE(stdout, *) '    Running Wannier90'
     !
     CALL run_wannier()
+    !
+    IF (wannier_plot) CALL write_plot()
     !
     CALL lib_dealloc()
     !
@@ -3044,37 +3041,47 @@
     !! added a couple of calls -- now works with multiple
     !! pools/procs (but one proc per pool)
     !!
+    !! HL 03/2020:
+    !! New implementation based on some parts of 
+    !! QE (subroutine of write_plot in /PP/src/pw2wannier.f90)
+    !! and Wannier90 (subroutine of plot_wannier in /src/plot.F90)
+    !!
     USE kinds,           ONLY : DP
-    USE io_global,       ONLY : stdout, meta_ionode
-    USE io_var,          ONLY : iun_plot
-    USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
-    USE gvecw,           ONLY : gcutw
+    USE io_global,       ONLY : stdout, meta_ionode, meta_ionode_id
+    USE wvfct,           ONLY : nbnd, npw, npwx
     USE wavefunctions,   ONLY : evc, psic, psic_nc
-    USE wannierEPW,      ONLY : reduce_unk, wvfn_formatted, ispinw, nexband, &
-                                excluded_band
-    USE klist,           ONLY : nks, igk_k
+    USE wannierEPW,      ONLY : excluded_band, u_mat, u_mat_opt, iknum, &
+                                n_wannier, num_bands, lwindow
+    USE epwcom,          ONLY : wannier_plot_supercell, reduce_unk
+    USE klist,           ONLY : nks, igk_k, ngk
     USE klist_epw,       ONLY : xk_loc
-    USE gvect,           ONLY : g, ngm
     USE fft_base,        ONLY : dffts
     USE fft_interfaces,  ONLY : invfft
-    USE noncollin_module,ONLY : noncolin
-    USE scatter_mod,     ONLY : gather_grid
-    USE constants_epw,   ONLY : czero, zero
-    USE mp_global,       ONLY : my_pool_id
+    USE noncollin_module,ONLY : noncolin, npol
+    USE constants_epw,   ONLY : czero, zero, twopi, ci
+    USE mp_pools,        ONLY : my_pool_id
     USE kfold,           ONLY : ktokpmq
     USE io_epw,          ONLY : readwfc
+    USE mp_world,        ONLY : world_comm
+    USE elph2,           ONLY : nbndep, wanplotlist, num_wannier_plot
+    USE cell_base,       ONLY : at
+    USE control_flags,   ONLY : iverbosity
+    USE mp,              ONLY : mp_barrier
+    USE parallel_include
     !
     IMPLICIT NONE
     !
     ! Local variables
-    CHARACTER(LEN = 20) wfnname
-    !! Name of WF
     INTEGER :: ik
     !! Counter on k-point
     INTEGER :: ibnd
     !! Counter on bands
+    INTEGER :: ibnd0
+    !! Band index
     INTEGER :: ibnd1
     !! Band index
+    INTEGER :: ig
+    !! Counter on G vectors
     INTEGER :: ipool
     !! Index of current pool
     INTEGER ::  nkq
@@ -3083,284 +3090,677 @@
     !! Absolute index of k-point
     INTEGER ::  ik_g
     !! Temporary index of k-point, ik_g = nkq_abs
-    INTEGER :: spin
-    !! Spin case
     INTEGER :: ipol
     !! Counter on polarizations
-    INTEGER :: istart, iend
-    !! Starting/ ending index of plane waves
-    INTEGER :: i, j, k
-    !!
-    INTEGER :: n1by2, n2by2, n3by2
-    !!
+    INTEGER :: istart
+    !! Starting index of plane waves
+    INTEGER :: iend
+    !! Ending index of plane waves
+    INTEGER :: ngx
+    !! Number of soft grids
+    INTEGER :: ngy
+    !! Number of soft grids
+    INTEGER :: ngz
+    !! Number of soft grids
+    INTEGER :: n1by2
+    !! Number of reduced grids
+    INTEGER :: n2by2
+    !! Number of reduced grids
+    INTEGER :: n3by2
+    !! Number of reduced grids
+    INTEGER :: nx
+    !! Counter on primitive-cell grids
+    INTEGER :: ny
+    !! Counter on primitive-cell grids
+    INTEGER :: nz
+    !! Counter on primitive-cell grids
+    INTEGER :: nxx
+    !! Counter on super-cell grids
+    INTEGER :: nyy
+    !! Counter on super-cell grids
+    INTEGER :: nzz
+    !! Counter on super-cell grids
+    INTEGER :: loop_w
+    !! Counter on Wannier functions
+    INTEGER :: ngridwf
+    !! Number of grids to describe real-space Wannier function
+    INTEGER :: ipoint
+    !! Real-space grid index
     INTEGER :: idx
-    !!
-    INTEGER :: pos
-    !!
+    !! Real-space grid index
+    INTEGER :: i
+    !! Counter index
     INTEGER :: ierr
     !! Error status
+    INTEGER :: ndimwin(nks)
+    !! Number of bands within outer window at each k-point
+    INTEGER :: ngs(3)
+    !! Size of the supercell for Wannier function plot
+    INTEGER :: fgrid(3)
+    !! First grid index
+    INTEGER :: lgrid(3)
+    !! Last grid intex
+    REAL(KIND = DP) :: scalfac
+    !! Scaling factor
+    REAL(KIND = DP) :: tmax
+    !! Temporary max. of wavefunction norm
+    REAL(KIND = DP) :: tmaxx
+    !! Temporary max. of wavefunction norm
+    REAL(KIND = DP) :: ratio
+    !! Im/Re Ratio
+    REAL(KIND = DP) :: ratmax
+    !! Max Im/Re Ratio
     REAL(KIND = DP) :: zero_vect(3)
     !! Temporary zero vector
+    REAL(KIND = DP) :: xcrys(3)
+    !! x in crystal coords.
+    COMPLEX(KIND = DP) :: catmp
+    !! Temporary complex number
+    COMPLEX(KIND = DP) :: uptmp
+    !! Temporary complex number
+    COMPLEX(KIND = DP) :: dntmp
+    !! Temporary complex number
+    COMPLEX(KIND = DP) :: wmod
+    !! Conversion factor for wavefunction
+    COMPLEX(KIND = DP), ALLOCATABLE :: u_kc(:, :)
+    !! Rotation matrix, U^dis*U
+    COMPLEX(KIND = DP), ALLOCATABLE :: rotwf(:, :, :)
+    !! Rotated wave function in reciprocal space
+    COMPLEX(KIND = DP), ALLOCATABLE :: psic_small(:, :)
+    !! Rotated wave function in reduced real space
+    COMPLEX(KIND = DP), ALLOCATABLE :: wann_func(:, :, :, :)
+    !! Real-space Wannier function
     !
-    COMPLEX(KIND = DP), ALLOCATABLE :: psic_small(:)
-    !!
-    COMPLEX(KIND = DP), ALLOCATABLE :: psic_nc_small(:, :)
-    !!
-#if defined(__MPI)
-    INTEGER nxxs
-    !!
-    COMPLEX(KIND = DP), ALLOCATABLE :: psic_all(:)
-    !!
-    COMPLEX(KIND = DP), ALLOCATABLE :: psic_nc_all(:, :)
-    !!
+    CALL start_clock('write_plot')
     !
-    nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
-    IF (noncolin) THEN
-      ALLOCATE(psic_nc_all(nxxs, 2), STAT = ierr)
-      IF (ierr /= 0) CALL errore('write_plot', 'Error allocating psic_nc_all', 1)
-      psic_nc_all(:, :) = czero
-    ELSE
-      ALLOCATE(psic_all(nxxs), STAT = ierr)
-      IF (ierr /= 0) CALL errore('write_plot', 'Error allocating psic_all', 1)
-      psic_all(:) = czero
-    ENDIF
-#endif
-    !
-    CALL start_clock('write_unk')
+    ngs(:) = wannier_plot_supercell(:)
     !
     zero_vect(:) = zero
-    WRITE(stdout,*) '    Writing out UNK plot files'
+    WRITE(stdout,'(a,/)') '    Writing out Wannier function cube files'
     !
+    ngx = dffts%nr1
+    ngy = dffts%nr2
+    ngz = dffts%nr3
     IF (reduce_unk) THEN
-      WRITE(stdout, '(3(a, i5))') 'nr1s =', dffts%nr1, 'nr2s =', dffts%nr2, 'nr3s =', dffts%nr3
-      n1by2 = (dffts%nr1 + 1) / 2
-      n2by2 = (dffts%nr2 + 1) / 2
-      n3by2 = (dffts%nr3 + 1) / 2
-      WRITE(stdout, '(3(a, i5))') 'n1by2 =', n1by2, 'n2by2 =', n2by2, 'n3by2 =', n3by2
-      IF (noncolin) THEN
-        ALLOCATE(psic_nc_small(n1by2 * n2by2 * n3by2, 2), STAT = ierr)
-        IF (ierr /= 0) CALL errore('write_plot', 'Error allocating psic_nc_small', 1)
-        psic_nc_small(:, :) = czero
-      ELSE
-        ALLOCATE(psic_small(n1by2 * n2by2 * n3by2), STAT = ierr)
-        IF (ierr /= 0) CALL errore('write_plot', 'Error allocating psic_small', 1)
-        psic_small(:) = czero
-      ENDIF
+      ngx = (dffts%nr1 + 1) / 2
+      ngy = (dffts%nr2 + 1) / 2
+      ngz = (dffts%nr3 + 1) / 2
+      ALLOCATE(psic_small(ngx*ngy*ngz, npol), STAT = ierr)
+      IF (ierr /= 0) CALL errore('write_plot', 'Error allocating psic_small', 1)
+      psic_small(:, :) = czero
+      WRITE(stdout, '(a)') 'write_plot: Real-space grids for plotting Wannier functions are reduced'
     ENDIF
+    WRITE(stdout, '(3(a, i5))') 'nr1s =', ngx, ', nr2s =', ngy, ', nr3s =', ngz
+    WRITE(stdout, '(a, 3i5)') 'write_plot: wannier_plot_supercell =', &
+                              (wannier_plot_supercell(i), i = 1, 3)
+    !
+    ndimwin(:) = 0
+    ALLOCATE(u_kc(nbndep, n_wannier), STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_plot', 'Error allocating u_kc', 1)
+    u_kc(:, :) = czero
+    ALLOCATE(rotwf(npwx*npol, num_wannier_plot, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_plot', 'Error allocating rotwf', 1)
+    rotwf(:, :, :) = czero
     !
     DO ik = 1, nks
       !
+      npw = ngk(ik)
+      !
       ! returns in-pool index nkq and absolute index nkq_abs of xk
+      !
       CALL ktokpmq(xk_loc(:, ik), zero_vect, +1, ipool, nkq, nkq_abs)
       ik_g = nkq_abs
       !
-      spin = ispinw
-      IF (ispinw == 0) spin = 1
-      IF (noncolin) THEN
-        WRITE(wfnname, 201) ik_g
-      ELSE
-        WRITE(wfnname, 200) ik_g, spin
-      ENDIF
-200 FORMAT('UNK', i5.5, '.', i1)
-201 FORMAT('UNK', i5.5, '.', 'NC')
+      DO ibnd = 1, num_bands
+        IF (lwindow(ibnd, ik_g)) ndimwin(ik) = ndimwin(ik) + 1
+      ENDDO
       !
-      IF (meta_ionode) THEN
-        IF (wvfn_formatted) THEN
-          OPEN(UNIT = iun_plot, FILE = wfnname, FORM = 'formatted')
-           IF (reduce_unk) THEN
-             WRITE(iun_plot, *) n1by2, n2by2, n3by2, ik_g, nbnd - nexband
-           ELSE
-             WRITE(iun_plot, *) dffts%nr1, dffts%nr2, dffts%nr3, ik_g, nbnd - nexband
-           ENDIF
-        ELSE
-           OPEN(UNIT = iun_plot, FILE = wfnname, FORM = 'unformatted')
-           IF (reduce_unk) THEN
-             WRITE(iun_plot) n1by2, n2by2, n3by2, ik_g, nbnd - nexband
-           ELSE
-             WRITE(iun_plot) dffts%nr1, dffts%nr2, dffts%nr3, ik_g, nbnd - nexband
-           ENDIF
-        ENDIF
-      ENDIF
+      ! get the final rotation matrix, which is the product of the optimal
+      ! subspace and the rotation among the n_wannier wavefunctions
+      !
+      u_kc(1:ndimwin(ik), 1:n_wannier) = &
+        MATMUL(u_mat_opt(1:ndimwin(ik), :, ik_g), u_mat(:, 1:n_wannier, ik_g))
       !
       ! read wfc at ik
+      !
       CALL readwfc(my_pool_id + 1, ik, evc)
       !
-      ! sorts k+G vectors in order of increasing magnitude, up to ecut
-      CALL gk_sort(xk_loc(1, ik), ngm, g, gcutw, npw, igk_k(1, ik), g2kin)
-      !
+      ibnd0 = 0
       ibnd1 = 0
       DO ibnd = 1, nbnd
-        IF (excluded_band(ibnd)) CYCLE
-        ibnd1 = ibnd1 + 1
         !
+        IF (excluded_band(ibnd)) CYCLE
+        ibnd0 = ibnd0 + 1
+        IF (lwindow(ibnd0, ik_g)) THEN
+          ibnd1 = ibnd1 + 1
+          DO loop_w = 1, num_wannier_plot
+            DO ig = 1, npw
+              rotwf(ig, loop_w, ik) = rotwf(ig, loop_w, ik) + &
+                u_kc(ibnd1, wanplotlist(loop_w)) * evc(ig, ibnd)
+              IF (noncolin) THEN
+                rotwf(ig + npwx, loop_w, ik) = rotwf(ig + npwx, loop_w, ik) + &
+                  u_kc(ibnd1, wanplotlist(loop_w)) * evc(ig + npwx, ibnd)
+              ENDIF
+            ENDDO
+          ENDDO
+        ENDIF
+        !
+      ENDDO
+      !
+    ENDDO
+    !
+    lgrid(1) = ((ngs(1) + 1)/2) * ngx - 1
+    lgrid(2) = ((ngs(2) + 1)/2) * ngy - 1
+    lgrid(3) = ((ngs(3) + 1)/2) * ngz - 1
+    fgrid(1) = -((ngs(1))/2) * ngx
+    fgrid(2) = -((ngs(2))/2) * ngy
+    fgrid(3) = -((ngs(3))/2) * ngz
+    ngridwf = (lgrid(1) - fgrid(1) + 1) &
+            * (lgrid(2) - fgrid(2) + 1) &
+            * (lgrid(3) - fgrid(3) + 1)
+    IF (iverbosity == 1) THEN
+      WRITE(stdout, '(a, 3i5)') 'fgrid =', fgrid(:)
+      WRITE(stdout, '(a, 3i5)') 'lgrid =', lgrid(:)
+      WRITE(stdout, '(a, i15)') 'ngridwf =', ngridwf
+    ENDIF
+    !
+    ALLOCATE(wann_func(fgrid(1):lgrid(1), fgrid(2):lgrid(2), fgrid(3):lgrid(3), &
+                       npol), STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_plot', 'Error allocating wann_func', 1)
+    !
+    DO loop_w = 1, num_wannier_plot
+      wann_func(:, :, :, :) = czero
+      DO ik = 1, nks
+        !
+        npw = ngk(ik)
+        xcrys = xk_loc(:, ik)
+        CALL cryst_to_cart(1, xcrys, at, -1)
         IF (noncolin) THEN
           psic_nc(:, :) = czero
           DO ipol = 1, 2
             istart = 1 + npwx * (ipol - 1)
-            iend   = npw + npwx * (ipol - 1)
-            psic_nc(dffts%nl(igk_k(1:npw, ik)), ipol) = evc(istart:iend, ibnd)
+            iend = npw + npwx * (ipol - 1)
+            psic_nc(dffts%nl(igk_k(1:npw, ik)), ipol) = rotwf(istart:iend, loop_w, ik)
             CALL invfft('Wave', psic_nc(:,ipol), dffts)
           ENDDO
         ELSE
           psic(:) = czero
-          psic(dffts%nl(igk_k(1:npw, ik))) = evc(1:npw, ibnd)
+          psic(dffts%nl(igk_k(1:npw, ik))) = rotwf(1:npw, loop_w, ik)
           CALL invfft('Wave', psic, dffts)
         ENDIF
-        IF (reduce_unk) pos = 0
+        !
+        IF (reduce_unk) THEN
+          idx = 0
+          DO nz = 1, dffts%nr3, 2
+            DO ny = 1, dffts%nr2, 2
+              DO nx = 1, dffts%nr1, 2
+                ipoint = nx + (ny - 1)*dffts%nr1 + (nz - 1)*dffts%nr2*dffts%nr1
+                idx = idx + 1
+                IF (noncolin) THEN
+                  psic_small(idx, 1) = psic_nc(ipoint, 1)
+                  psic_small(idx, 2) = psic_nc(ipoint, 2)
+                ELSE
+                  psic_small(idx, 1) = psic(ipoint)
+                ENDIF
+              ENDDO
+            ENDDO
+          ENDDO
+        ENDIF
+        !
+        DO nzz = fgrid(3), lgrid(3)
+          nz = MOD(nzz, ngz)
+          IF (nz < 1) nz = nz + ngz
+          DO nyy = fgrid(2), lgrid(2)
+            ny = MOD(nyy, ngy)
+            IF (ny < 1) ny = ny + ngy
+            DO nxx = fgrid(1), lgrid(1)
+              nx = MOD(nxx, ngx)
+              IF (nx < 1) nx = nx + ngx
+              scalfac = xcrys(1) * DBLE(nxx - 1) / DBLE(ngx) + &
+                        xcrys(2) * DBLE(nyy - 1) / DBLE(ngy) + &
+                        xcrys(3) * DBLE(nzz - 1) / DBLE(ngz)
+              ipoint = nx + (ny - 1) * ngx + (nz - 1) * ngy * ngx
+              catmp = EXP(twopi * ci * scalfac)
+              IF (.NOT. noncolin) THEN
+                IF (reduce_unk) THEN
+                  wann_func(nxx, nyy, nzz, 1) = wann_func(nxx, nyy, nzz, 1) + &
+                                                psic_small(ipoint, 1) * catmp
+                ELSE
+                  wann_func(nxx, nyy, nzz, 1) = wann_func(nxx, nyy, nzz, 1) + &
+                                                psic(ipoint) * catmp
+                ENDIF
+              ELSE
+                IF (reduce_unk) THEN
+                  wann_func(nxx, nyy, nzz, 1) = wann_func(nxx, nyy, nzz, 1) + &
+                                                psic_small(ipoint, 1) * catmp
+                  wann_func(nxx, nyy, nzz, 2) = wann_func(nxx, nyy, nzz, 2) + &
+                                                psic_small(ipoint, 2) * catmp
+                ELSE
+                  wann_func(nxx, nyy, nzz, 1) = wann_func(nxx, nyy, nzz, 1) + &
+                                                psic_nc(ipoint, 1) * catmp
+                  wann_func(nxx, nyy, nzz, 2) = wann_func(nxx, nyy, nzz, 2) + &
+                                                psic_nc(ipoint, 2) * catmp
+                ENDIF
+              ENDIF
+            ENDDO ! nxx
+          ENDDO ! nyy
+        ENDDO ! nzz
+      ENDDO ! ik
+      !
 #if defined(__MPI)
-        IF (noncolin) THEN
-          DO ipol = 1, 2
-            CALL gather_grid(dffts, psic_nc(:, ipol), psic_nc_all(:, ipol))
-          ENDDO
-        ELSE
-          CALL gather_grid(dffts, psic, psic_all)
-        ENDIF
-        !
-        IF (reduce_unk) THEN
-          DO k = 1, dffts%nr3, 2
-            DO j = 1, dffts%nr2, 2
-              DO i = 1, dffts%nr1, 2
-                idx = (k - 1) * dffts%nr3 * dffts%nr2 + (j - 1) * dffts%nr2 + i
-                pos = pos + 1
-                IF (noncolin) THEN
-                  DO ipol = 1, 2
-                    psic_nc_small(pos, ipol) = psic_nc_all(idx, ipol)
-                  ENDDO
-                ELSE
-                  psic_small(pos) = psic_all(idx)
-                ENDIF
-              ENDDO
-            ENDDO
-          ENDDO
-        ENDIF
-        !
-        IF (meta_ionode) THEN
-          IF (wvfn_formatted) THEN
-            IF (reduce_unk) THEN
-              IF (noncolin) THEN
-                DO ipol = 1, 2
-                  WRITE(iun_plot, '(2ES20.10)') (psic_nc_small(j, ipol), j = 1, n1by2 * n2by2 * n3by2)
-                ENDDO
-              ELSE
-                WRITE(iun_plot, '(2ES20.10)') (psic_small(j), j = 1, n1by2 * n2by2 * n3by2)
-              ENDIF
-            ELSE
-              IF (noncolin) THEN
-                DO ipol = 1, 2
-                  WRITE(iun_plot, '(2ES20.10)') (psic_nc_all(j, ipol), j = 1, n1by2 * n2by2 * n3by2)
-                ENDDO
-              ELSE
-                WRITE(iun_plot, '(2ES20.10)') (psic_all(j), j = 1, n1by2 * n2by2 * n3by2)
-              ENDIF
-            ENDIF
-          ELSE
-            IF (reduce_unk) THEN
-              IF (noncolin) THEN
-                DO ipol = 1, 2
-                  WRITE(iun_plot) (psic_nc_small(j, ipol), j = 1, n1by2 *n2by2 * n3by2)
-                ENDDO
-              ELSE
-                WRITE(iun_plot) (psic_small(j), j = 1, n1by2 * n2by2 * n3by2)
-              ENDIF
-            ELSE
-              IF (noncolin) THEN
-                DO ipol = 1, 2
-                  WRITE(iun_plot) (psic_nc_all(j, ipol), j = 1, n1by2 *n2by2 * n3by2)
-                ENDDO
-              ELSE
-                WRITE(iun_plot) (psic_all(j), j = 1, n1by2 * n2by2 * n3by2)
-              ENDIF
-            ENDIF
-          ENDIF
-        ENDIF
-#else
-        IF (reduce_unk) THEN
-          DO k = 1, dffts%nr3, 2
-            DO j = 1, dffts%nr2, 2
-              DO i = 1, dffts%nr1, 2
-                idx = (k-1) * dffts%nr3 * dffts%nr2 + (j-1) * dffts%nr2 + i
-                pos = pos + 1
-                IF (noncolin) THEN
-                  DO ipol = 1, 2
-                    psic_nc_small(pos, ipol) = psic_nc(idx, ipol)
-                  ENDDO
-                ELSE
-                  psic_small(pos) = psic(idx)
-                ENDIF
-              ENDDO
-            ENDDO
-          ENDDO
-        ENDIF
-        !
-        IF (meta_ionode) THEN
-          IF (wvfn_formatted) THEN
-            IF (noncolin) THEN
-              DO ipol = 1, 2
-                IF (reduce_unk) THEN
-                  WRITE(iun_plot, '(2ES20.10)') (psic_nc_small(j, ipol), j = 1, n1by2 * n2by2 * n3by2)
-                ELSE
-                  WRITE(iun_plot, '(2ES20.10)') (psic_nc(j, ipol), j = 1, dffts%nr1 * dffts%nr2 * dffts%nr3)
-                ENDIF
-              ENDDO
-            ELSE
-              IF (reduce_unk) THEN
-                WRITE(iun_plot, '(2ES20.10)') (psic_small(j), j = 1, n1by2 * n2by2 * n3by2)
-              ELSE
-                WRITE(iun_plot, '(2ES20.10)') (psic(j), j = 1, dffts%nr1 * dffts%nr2 * dffts%nr3)
-              ENDIF
-            ENDIF
-          ELSE
-            IF (noncolin) THEN
-              DO ipol = 1, 2
-                IF (reduce_unk) THEN
-                  WRITE(iun_plot) (psic_nc_small(j, ipol), j = 1, n1by2 * n2by2 * n3by2)
-                ELSE
-                  WRITE(iun_plot) (psic_nc(j, ipol), j = 1, dffts%nr1 * dffts%nr2 * dffts%nr3)
-                ENDIF
-              ENDDO
-            ELSE
-              IF (reduce_unk) THEN
-                WRITE(iun_plot) (psic_small(j), j = 1, n1by2 * n2by2 * n3by2)
-              ELSE
-                WRITE(iun_plot) (psic(j), j = 1, dffts%nr1 * dffts%nr2 * dffts%nr3)
-              ENDIF
-            ENDIF
-          ENDIF
-        ENDIF
-#endif
-      ENDDO ! ibnd
-      !
-      IF (meta_ionode) CLOSE(iun_plot)
-      !
-    ENDDO ! ik
-    !
-    IF (reduce_unk) THEN
-      IF (noncolin) THEN
-        DEALLOCATE(psic_nc_small, STAT = ierr)
-        IF (ierr /= 0) CALL errore('write_plot', 'Error deallocating psic_nc_small', 1)
+      IF (meta_ionode) THEN
+        CALL MPI_REDUCE( MPI_IN_PLACE, wann_func, 2 * npol * ngridwf, MPI_DOUBLE_PRECISION, &
+                         MPI_SUM, meta_ionode_id, world_comm, ierr )
       ELSE
-        DEALLOCATE(psic_small, STAT = ierr)
-        IF (ierr /= 0) CALL errore('write_plot', 'Error deallocating psic_small', 1)
+        CALL MPI_REDUCE( wann_func, wann_func, 2 * npol * ngridwf, MPI_DOUBLE_PRECISION, &
+                         MPI_SUM, meta_ionode_id, world_comm, ierr )
       ENDIF
-    ENDIF
-    !
-#if defined(__MPI)
-    IF (noncolin) THEN
-      DEALLOCATE(psic_nc_all, STAT = ierr)
-      IF (ierr /= 0) CALL errore('write_plot', 'Error deallocating psic_nc_all', 1)
-    ELSE
-      DEALLOCATE(psic_all, STAT = ierr)
-      IF (ierr /= 0) CALL errore('write_plot', 'Error deallocating psic_all', 1)
-    ENDIF
+      IF (ierr /= 0) CALL errore('write_plot', 'mpi_reduce', ierr)
 #endif
+      !
+      IF (meta_ionode) THEN
+        !
+        !! [HL] For spinor Wannier functions, the step below is not necessary.
+        !
+        IF (.NOT. noncolin) THEN
+          ! fix the global phase by setting the wannier to
+          ! be real at the point where it has max. modulus
+          tmaxx = 0.0d0
+          wmod = CMPLX(1.0d0, 0.0d0, KIND = DP)
+          DO nzz = fgrid(3), lgrid(3)
+            DO nyy = fgrid(2), lgrid(2)
+              DO nxx = fgrid(1), lgrid(1)
+                wann_func(nxx, nyy, nzz, 1) = wann_func(nxx, nyy, nzz, 1)/REAL(iknum, KIND = DP)
+                tmax = REAL(wann_func(nxx, nyy, nzz, 1) * &
+                            CONJG(wann_func(nxx, nyy, nzz, 1)), KIND = DP)
+                IF (tmax > tmaxx) THEN
+                  tmaxx = tmax
+                  wmod = wann_func(nxx, nyy, nzz, 1)
+                ENDIF
+              ENDDO
+            ENDDO
+          ENDDO
+          wmod = wmod / DSQRT(DBLE(wmod)**2 + AIMAG(wmod)**2)
+          wann_func(:, :, :, :) = wann_func(:, :, :, :) / wmod
+          !
+          ! Check the 'reality' of the WF
+          !
+          ratmax = 0.0d0
+          DO nzz = fgrid(3), lgrid(3)
+            DO nyy = fgrid(2), lgrid(2)
+              DO nxx = fgrid(1), lgrid(1)
+                IF (ABS(REAL(wann_func(nxx, nyy, nzz, 1), KIND = DP)) >= 0.01d0) THEN
+                  ratio = ABS(AIMAG(wann_func(nxx, nyy, nzz, 1))) / &
+                          ABS(REAL(wann_func(nxx, nyy, nzz, 1), KIND = DP))
+                  ratmax = MAX(ratmax, ratio)
+                ENDIF
+              ENDDO
+            ENDDO
+          ENDDO
+          WRITE (stdout, '(6x,a,i4,7x,a,f11.6)') 'Wannier Function Num: ', &
+                 wanplotlist(loop_w), 'Maximum Im/Re Ratio = ', ratmax
+        ELSE
+          DO nzz = fgrid(3), lgrid(3)
+            DO nyy = fgrid(2), lgrid(2)
+              DO nxx = fgrid(1), lgrid(1)
+                wann_func(nxx, nyy, nzz, 1) = CMPLX(DSQRT( &
+                  REAL(wann_func(nxx, nyy, nzz, 1) * CONJG(wann_func(nxx, nyy, nzz, 1)), KIND = DP) &
+                + REAL(wann_func(nxx, nyy, nzz, 2) * CONJG(wann_func(nxx, nyy, nzz, 2)), KIND = DP)) &
+                / DBLE(iknum), 0.0d0, KIND = DP)
+              ENDDO
+            ENDDO
+          ENDDO
+        ENDIF
+        CALL internal_cube_format(loop_w)
+      ENDIF
+      CALL mp_barrier(world_comm)
+    ENDDO ! loop_w
     !
     WRITE(stdout, '(/)')
-    WRITE(stdout,*) ' UNK written'
+    WRITE(stdout, *) ' cube files written'
     !
-    CALL stop_clock('write_unk')
+    IF (reduce_unk) THEN
+      DEALLOCATE(psic_small, STAT = ierr)
+      IF (ierr /= 0) CALL errore('write_plot', 'Error deallocating psic_small', 1)
+    ENDIF
+    DEALLOCATE(u_kc, STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_plot', 'Error deallocating u_kc', 1)
+    DEALLOCATE(rotwf, STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_plot', 'Error deallocating rotwf', 1)
+    DEALLOCATE(wann_func, STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_plot', 'Error deallocating wann_func', 1)
+    DEALLOCATE(wanplotlist, STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_plot', 'Error deallocating wanplotlist', 1)
+    !
+    CALL stop_clock('write_plot')
     !
     RETURN
     !
+    CONTAINS
+      !
+      !-----------------------------------------------------------------------
+      SUBROUTINE internal_cube_format(loop_w)
+      !-----------------------------------------------------------------------
+      !!
+      !! Write WFs in Gaussian cube format.
+      !!
+      !! HL 03/2020:
+      !! Imported and adapted from the same name of subroutine in plot.F90
+      !! in the directory of src in Wannier90
+      !!
+      USE constants_epw,    ONLY : bohr
+      USE cell_base,        ONLY : bg, alat, tpiba
+      USE wannierEPW,       ONLY : wann_centers
+      USE ions_base,        ONLY : nat, tau, ityp, atm, nsp
+      USE io_var,           ONLY : iun_plot
+      USE io_files,         ONLY : prefix
+      USE epwcom,           ONLY : wannier_plot_radius, wannier_plot_scale
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(in) :: loop_w
+      !! Index of Wannier functions to plot
+      CHARACTER(LEN = 60) :: wancube
+      !! Name of Wannier function cube files
+      CHARACTER(LEN = 2), DIMENSION(109) :: periodic_table = (/ &
+           & 'H ', 'He', &
+           & 'Li', 'Be', 'B ', 'C ', 'N ', 'O ', 'F ', 'Ne', &
+           & 'Na', 'Mg', 'Al', 'Si', 'P ', 'S ', 'Cl', 'Ar', &
+           & 'K ', 'Ca', 'Sc', 'Ti', 'V ', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', &
+           & 'Rb', 'Sr', 'Y ', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I ', 'Xe', &
+           & 'Cs', 'Ba', &
+           & 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu', &
+           & 'Hf', 'Ta', 'W ', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn', &
+           & 'Fr', 'Ra', &
+           & 'Ac', 'Th', 'Pa', 'U ', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr', &
+           & 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt'/)
+      CHARACTER(LEN = 9) :: cdate
+      !! Current date
+      CHARACTER(LEN = 9) :: ctime
+      !! Current time
+      INTEGER :: iname
+      !! Counter on elements
+      INTEGER :: max_elements
+      !! Max. of atomic number
+      INTEGER :: isp
+      !! Counter on species
+      INTEGER :: iat
+      !! Counter on atoms
+      INTEGER :: qxx
+      !! Temporary grid index
+      INTEGER :: qyy
+      !! Temporary grid index
+      INTEGER :: qzz
+      !! Temporary grid index
+      INTEGER :: wann_index
+      !! Index of Wannier functions to plot
+      INTEGER :: icount
+      !! Counter on atoms within a given radius of Wannier centre
+      INTEGER :: istart(3)
+      !! First grid to consider in cube files
+      INTEGER :: iend(3)
+      !! Last grid to consider in cube files
+      INTEGER :: ilength(3)
+      !! Length of grids in cube files
+      INTEGER, ALLOCATABLE :: atomic_Z(:)
+      !! Atomic number
+      REAL(KIND = DP) :: val_Q
+      !! Dummy value for cube file
+      REAL(KIND = DP) :: dist
+      !! Distance from Wannier centre to atoms
+      REAL(KIND = DP) :: rstart(3)
+      !! Start of cube wrt simulation (home) cell origin
+      REAL(KIND = DP) :: rend(3)
+      !! End of cube wrt simulation (home) cell origin
+      REAL(KIND = DP) :: rlength(3)
+      !! Length of region to consider in cube files
+      REAL(KIND = DP) :: orig(3)
+      !! Origin of cube wrt simulation (home) cell in Cart. coords.
+      REAL(KIND = DP) :: dgrid(3)
+      !! Grid spacing in each lattice direction
+      REAL(KIND = DP) :: moda(3)
+      !! Length of real lattice vectors
+      REAL(KIND = DP) :: modb(3)
+      !! Length of reciprocal lattice vectors
+      REAL(KIND = DP) :: wcf(3)
+      !! Wannier centre in fractional coords.
+      REAL(KIND = DP) :: diff(3)
+      !! Vector (in fractional coords.) from Wannier centre to "centre of mass"
+      REAL(KIND = DP) :: difc(3)
+      !! Temporary difference vector
+      REAL(KIND = DP) :: xau(3, nat)
+      !! Atomic positions (in fractional coords.)
+      REAL(KIND = DP), ALLOCATABLE :: wann_cube(:, :, :)
+      !! Wannier function data for cube files
+      !
+      IF (iverbosity == 1) THEN
+        WRITE(stdout,'(a,f6.3)') 'internal_cube_format: wannier_plot_radius =', &
+                                 wannier_plot_radius
+        WRITE(stdout,'(a,f6.3)') 'internal_cube_format: wannier_plot_scale =', &
+                                 wannier_plot_scale
+      ENDIF
+      !
+      ALLOCATE(atomic_Z(nsp), STAT = ierr)
+      IF (ierr /= 0) CALL errore('internal_cube_format', 'Error allocating atomic_Z', 1)
+      !
+      val_Q = 1.0d0 ! dummy value for cube file
+      !
+      ! Assign atomic numbers to species
+      !
+      max_elements = SIZE(periodic_table)
+      DO isp = 1, nsp
+        DO iname = 1, max_elements
+          IF (atm(isp) == periodic_table(iname)) THEN
+            atomic_Z(isp) = iname
+            EXIT
+          ENDIF
+        ENDDO
+      ENDDO
+      !
+202   FORMAT(a, '_', i5.5, '.cube')
+      !
+      ! Lengths of real and reciprocal lattice vectors
+      !
+      DO i = 1, 3
+        moda(i) = DSQRT( at(1, i) * at(1, i) &
+                       + at(2, i) * at(2, i) &
+                       + at(3, i) * at(3, i) ) * alat
+        modb(i) = DSQRT( bg(1, i) * bg(1, i) &
+                       + bg(2, i) * bg(2, i) &
+                       + bg(3, i) * bg(3, i) ) * tpiba
+      ENDDO
+      !
+      ! Grid spacing in each lattice direction
+      !
+      dgrid(1) = moda(1) / ngx
+      dgrid(2) = moda(2) / ngy
+      dgrid(3) = moda(3) / ngz
+      !
+      ! Compute the coordinates of each atom in the basis of the
+      ! direct lattice vectors
+      !
+      DO iat = 1, nat
+        DO ipol = 1, 3
+          xau(ipol,iat) = bg(1,ipol)*tau(1,iat) + bg(2,ipol)*tau(2,iat) + &
+                          bg(3,ipol)*tau(3,iat)
+        ENDDO
+      ENDDO
+      !
+      wann_index = wanplotlist(loop_w)
+      WRITE(wancube, 202) TRIM(prefix), wann_index
+      !
+      ! Find start and end of cube wrt simulation (home) cell origin
+      !
+      DO i = 1, 3
+        ! ... in terms of distance along each lattice vector direction i
+        rstart(i) = (wann_centers(1, wann_index) / bohr / alat * bg(1, i) &
+                   + wann_centers(2, wann_index) / bohr / alat * bg(2, i) &
+                   + wann_centers(3, wann_index) / bohr / alat * bg(3, i)) * moda(i) &
+                   - twopi * wannier_plot_radius / bohr / (moda(i) * modb(i))
+        rend(i) = (wann_centers(1, wann_index) / bohr / alat * bg(1, i) &
+                 + wann_centers(2, wann_index) / bohr / alat * bg(2, i) &
+                 + wann_centers(3, wann_index) / bohr / alat * bg(3, i)) * moda(i) &
+                 + twopi * wannier_plot_radius / bohr / (moda(i) * modb(i))
+      ENDDO
+      !
+      rlength(:) = rend(:) - rstart(:)
+      ilength(:) = CEILING(rlength(:) / dgrid(:))
+      !
+      ! ... in terms of integer gridpoints along each lattice vector direction i
+      !
+      istart(:) = FLOOR(rstart(:) / dgrid(:)) + 1
+      iend(:) = istart(:) + ilength(:) - 1
+      !
+      ! Origin of cube wrt simulation (home) cell in Cartesian co-ordinates
+      !
+      DO i = 1, 3
+        orig(i) = REAL(istart(1) - 1, KIND = DP) * dgrid(1) * at(i, 1) * alat / moda(1) &
+                + REAL(istart(2) - 1, KIND = DP) * dgrid(2) * at(i, 2) * alat / moda(2) &
+                + REAL(istart(3) - 1, KIND = DP) * dgrid(3) * at(i, 3) * alat / moda(3)
+      ENDDO
+      !
+      IF (iverbosity == 1) THEN
+        WRITE(stdout, '(a,i12)') 'loop_w  =', loop_w
+        WRITE(stdout, '(a,3i12)') 'ngi     =', ngx, ngy, ngz
+        WRITE(stdout, '(a,3f12.6)') 'dgrid   =', (dgrid(i), i=1, 3)
+        WRITE(stdout, '(a,3f12.6)') 'rstart  =', (rstart(i), i=1, 3)
+        WRITE(stdout, '(a,3f12.6)') 'rend    =', (rend(i), i=1, 3)
+        WRITE(stdout, '(a,3f12.6)') 'rlength =', (rlength(i), i=1, 3)
+        WRITE(stdout, '(a,3i12)') 'istart  =', (istart(i), i=1, 3)
+        WRITE(stdout, '(a,3i12)') 'iend    =', (iend(i), i=1, 3)
+        WRITE(stdout, '(a,3i12)') 'ilength =', (ilength(i), i=1, 3)
+        WRITE(stdout, '(a,3f12.6)') 'orig    =', (orig(i), i=1, 3)
+        WRITE(stdout, '(a,3f12.6)') 'wann_cen=', (wann_centers(i, wann_index), i=1, 3)
+      ENDIF
+      !
+      ALLOCATE(wann_cube(1:ilength(1), 1:ilength(2), 1:ilength(3)), STAT = ierr)
+      IF (ierr /= 0) CALL errore('internal_cube_format', 'Error allocating wann_cube', 1)
+      !
+      ! initialise
+      !
+      wann_cube = 0.0d0
+      !
+      DO nzz = 1, ilength(3)
+        qzz = nzz + istart(3) - 1
+        IF ((qzz < (-((ngs(3))/2)*ngz)) .OR. &
+            (qzz > ((ngs(3) + 1)/2)*ngz - 1)) THEN
+          WRITE(stdout, *) 'Error plotting WF cube. Try one of the following:'
+          WRITE(stdout, *) '   (1) increase wannier_plot_supercell;'
+          WRITE(stdout, *) '   (2) decrease wannier_plot_radius;'
+          CALL errore('internal_cube_format', 'Error plotting WF cube.', 1)
+        ENDIF
+        DO nyy = 1, ilength(2)
+          qyy = nyy + istart(2) - 1
+          IF ((qyy < (-((ngs(2))/2)*ngy)) .OR. &
+              (qyy > ((ngs(2) + 1)/2)*ngy - 1)) THEN
+            WRITE(stdout, *) 'Error plotting WF cube. Try one of the following:'
+            WRITE(stdout, *) '   (1) increase wannier_plot_supercell;'
+            WRITE(stdout, *) '   (2) decrease wannier_plot_radius;'
+            CALL errore('internal_cube_format', 'Error plotting WF cube.', 1)
+          ENDIF
+          DO nxx = 1, ilength(1)
+            qxx = nxx + istart(1) - 1
+            IF ((qxx < (-((ngs(1))/2)*ngx)) .OR. &
+                (qxx > ((ngs(1) + 1)/2)*ngx - 1)) THEN
+              WRITE(stdout, *) 'Error plotting WF cube. Try one of the following:'
+              WRITE(stdout, *) '   (1) increase wannier_plot_supercell;'
+              WRITE(stdout, *) '   (2) decrease wannier_plot_radius;'
+              CALL errore('internal_cube_format', 'Error plotting WF cube.', 1)
+            ENDIF
+            wann_cube(nxx, nyy, nzz) = REAL(wann_func(qxx, qyy, qzz, 1), KIND = DP)
+          ENDDO
+        ENDDO
+      ENDDO
+      !
+      ! WF centre in fractional coordinates
+      !
+      wcf(:) = wann_centers(:, wann_index) / bohr / alat
+      CALL cryst_to_cart(1, wcf(:), bg, -1)
+      !
+      IF (iverbosity == 1) THEN
+        WRITE(stdout, '(a,3f12.6)') 'wcf     =', (wcf(i), i=1, 3)
+      ENDIF
+      !
+      icount = 0
+      DO iat = 1, nat
+        DO nzz = -ngs(3)/2, (ngs(3) + 1)/2
+          DO nyy = -ngs(2)/2, (ngs(2) + 1)/2
+            DO nxx = -ngs(1)/2, (ngs(1) + 1)/2
+              diff(:) = xau(:, iat) - wcf(:) &
+                        + (/REAL(nxx, KIND = DP), REAL(nyy, KIND = DP), REAL(nzz, KIND = DP)/)
+              difc(:) = diff(:)
+              CALL cryst_to_cart(1, difc(:), at, 1)
+              dist = DSQRT(difc(1)*difc(1) + difc(2)*difc(2) + difc(3)*difc(3)) * alat
+              IF (dist < (wannier_plot_scale * wannier_plot_radius / bohr)) THEN
+                icount = icount + 1
+              ENDIF
+            ENDDO
+          ENDDO
+        ENDDO
+      ENDDO ! iat
+      IF (iverbosity == 1) WRITE(stdout, '(a,i12)') 'icount  =', icount
+      !
+      ! Write cube file (everything in Bohr)
+      !
+      OPEN(UNIT = iun_plot, FILE=TRIM(wancube), FORM='formatted', STATUS='unknown')
+      CALL date_and_tim(cdate, ctime )
+      ! First two lines are comments
+      WRITE(iun_plot, *) '     Generated by EPW code'
+      WRITE(iun_plot, *) '     On ', cdate, ' at ', ctime
+      ! Number of atoms, origin of cube (Cartesians) wrt simulation (home) cell
+      WRITE(iun_plot, '(i4,3f13.5)') icount, orig(1), orig(2), orig(3)
+      ! Number of grid points in each direction, lattice vector
+      WRITE(iun_plot, '(i4,3f13.5)') ilength(1), at(1, 1) * alat / (REAL(ngx, KIND = DP)), &
+        at(2, 1) * alat / (REAL(ngx, KIND = DP)), at(3, 1) * alat / (REAL(ngx, KIND = DP))
+      WRITE(iun_plot, '(i4,3f13.5)') ilength(2), at(1, 2) * alat / (REAL(ngy, KIND = DP)), &
+        at(2, 2) * alat / (REAL(ngy, KIND = DP)), at(3, 2) * alat / (REAL(ngy, KIND = DP))
+      WRITE(iun_plot, '(i4,3f13.5)') ilength(3), at(1, 3) * alat / (REAL(ngz, KIND = DP)), &
+        at(2, 3) * alat / (REAL(ngz, KIND = DP)), at(3, 3) * alat / (REAL(ngz, KIND = DP))
+      !
+      DO iat = 1, nat
+        DO nzz = -ngs(3)/2, (ngs(3) + 1)/2
+          DO nyy = -ngs(2)/2, (ngs(2) + 1)/2
+            DO nxx = -ngs(1)/2, (ngs(1) + 1)/2
+              diff(:) = xau(:, iat) - wcf(:) &
+                        + (/REAL(nxx, KIND = DP), REAL(nyy, KIND = DP), REAL(nzz, KIND = DP)/)
+              difc(:) = diff(:)
+              CALL cryst_to_cart(1, difc(:), at, 1)
+              dist = DSQRT(difc(1) * difc(1) + difc(2) * difc(2) + difc(3) * difc(3)) * alat
+              IF (dist < (wannier_plot_scale * wannier_plot_radius / bohr)) THEN
+                diff(:) = xau(:, iat) &
+                          + (/REAL(nxx, KIND = DP), REAL(nyy, KIND = DP), REAL(nzz, KIND = DP)/)
+                difc(:) = diff(:)
+                CALL cryst_to_cart(1, difc(:), at, 1)
+                difc(:) = difc(:) * alat
+                WRITE(iun_plot, '(i4,4f13.5)') atomic_Z(ityp(iat)), val_Q, (difc(i), i=1, 3)
+              ENDIF
+            ENDDO
+          ENDDO
+        ENDDO
+      ENDDO ! iat
+      !
+      ! Volumetric data in batches of 6 values per line, 'z'-direction first.
+      !
+      DO nxx = 1, ilength(1)
+        DO nyy = 1, ilength(2)
+          DO nzz = 1, ilength(3)
+            WRITE(iun_plot, '(E13.5)', ADVANCE = 'no') wann_cube(nxx, nyy, nzz)
+            IF ((MOD(nzz, 6) == 0) .OR. (nzz == ilength(3))) WRITE(iun_plot, '(a)') ''
+          ENDDO
+        ENDDO
+      ENDDO
+      !
+      CLOSE(iun_plot)
+      !
+      DEALLOCATE(atomic_Z, STAT = ierr)
+      IF (ierr /= 0) CALL errore('internal_cube_format', 'Error deallocating atomic_Z', 1)
+      DEALLOCATE(wann_cube, STAT = ierr)
+      IF (ierr /= 0) CALL errore('internal_cube_format', 'Error deallocating wann_cube', 1)
+      !
+      RETURN
+      !
+      END SUBROUTINE internal_cube_format
+      !
     !------------------------------------------------------------------------
     END SUBROUTINE write_plot
     !-----------------------------------------------------------------------

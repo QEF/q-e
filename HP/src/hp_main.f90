@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,6 +22,7 @@ PROGRAM hp_main
   USE environment,       ONLY : environment_start, environment_end
   USE ions_base,         ONLY : nat, ityp, atm, tau, amass
   USE io_files,          ONLY : tmp_dir
+  USE control_flags,     ONLY : dfpt_hub
   USE ldaU_hp,           ONLY : perturbed_atom, start_q, last_q, nqs, code, &
                                 compute_hp, sum_pertq, perturb_only_atom,   &
                                 determine_num_pert_only, tmp_dir_save
@@ -43,6 +44,10 @@ PROGRAM hp_main
   !
   CALL environment_start(code)
   !
+  ! Inform the PW routines that we are performing the HP calculation
+  !
+  dfpt_hub = .TRUE.
+  ! 
   ! Print the preamble
   !
   CALL hp_print_preamble()

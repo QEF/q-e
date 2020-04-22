@@ -89,8 +89,8 @@ example05:
     tensor for AlAs.
 
 example06
-    This example shows how to use ph.x to calculate
-    the phonon frequencies at Gamma and X of fcc-Pt.
+    This example shows how to use ph.x to calculate the phonon frequencies
+    at Gamma and X and the dispersion for fcc-Pt with spin-orbit interactions.
 
 example07:
     This example tests pw.x and ph.x in several cases that require the 
@@ -120,7 +120,7 @@ example12:
     modes of a molecule (SiH4) at Gamma.
 
 example13:
-    Deleted
+    Full dispersions for spin-polarized phonons (Ni)
 
 example14:
     This example shows how to use ph.x to calculate the phonon frequencies
