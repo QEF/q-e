@@ -20,8 +20,7 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   USE funct,            ONLY: get_iexch, get_icorr, is_libxc
   USE xc_lda_lsda,      ONLY: xc_lda, xc_lsda
 #if defined(__LIBXC)
-  USE xc_f90_types_m
-  USE xc_f90_lib_m
+  USE xc_f03_lib_m
 #endif
   !
   IMPLICIT NONE
@@ -38,8 +37,8 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   ! ... local variables
   !
 #if defined(__LIBXC)
-  TYPE(xc_f90_pointer_t) :: xc_func
-  TYPE(xc_f90_pointer_t) :: xc_info1, xc_info2
+  TYPE(xc_f03_func_t) :: xc_func
+  TYPE(xc_f03_func_info_t) :: xc_info1, xc_info2
   INTEGER :: pol_unpol
   REAL(DP), ALLOCATABLE :: rho_lxc(:)
   REAL(DP), ALLOCATABLE :: dmxc_lxc(:), dmex_lxc(:), dmcr_lxc(:)
@@ -97,17 +96,19 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
     ! ... DERIVATIVE FOR EXCHANGE
     dmex_lxc(:) = 0.0_DP
     IF (iexch /= 0) THEN    
-       CALL xc_f90_func_init( xc_func, xc_info1, iexch, pol_unpol )
-        CALL xc_f90_lda_fxc( xc_func, length, rho_lxc(1), dmex_lxc(1) )
-       CALL xc_f90_func_end( xc_func )
+       CALL xc_f03_func_init( xc_func, iexch, pol_unpol )
+        xc_info1 = xc_f03_func_get_info( xc_func )
+        CALL xc_f03_lda_fxc( xc_func, length, rho_lxc(1), dmex_lxc(1) )
+       CALL xc_f03_func_end( xc_func )
     ENDIF    
     !
     ! ... DERIVATIVE FOR CORRELATION
     dmcr_lxc(:) = 0.0_DP
     IF (icorr /= 0) THEN
-       CALL xc_f90_func_init( xc_func, xc_info2, icorr, pol_unpol )
-        CALL xc_f90_lda_fxc( xc_func, length, rho_lxc(1), dmcr_lxc(1) )
-       CALL xc_f90_func_end( xc_func )
+       CALL xc_f03_func_init( xc_func, icorr, pol_unpol )
+        xc_info2 = xc_f03_func_get_info( xc_func )
+        CALL xc_f03_lda_fxc( xc_func, length, rho_lxc(1), dmcr_lxc(1) )
+       CALL xc_f03_func_end( xc_func )
     ENDIF
     !
     dmxc_lxc = (dmex_lxc + dmcr_lxc)*2.0_DP
