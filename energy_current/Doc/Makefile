@@ -11,7 +11,7 @@ TOCS = $(PDFS:.pdf=.toc)
 
 
 doc:  all
-all:  defs pdf html 
+all:  defs # html pdf
 pdf: $(PDFS)
 html: user_guide
 
