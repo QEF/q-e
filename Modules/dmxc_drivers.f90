@@ -571,9 +571,11 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   aux2(1:length) =  vx(i2:f2,1) + vc(i2:f2,1) - vx(i3:f3,1) - vc(i3:f3,1) - &
                   ( vx(i2:f2,2) + vc(i2:f2,2) - vx(i3:f3,2) - vc(i3:f3,2) )
   !
-  dbx_rho(:) = aux2(1:length) * m(:,1) / (4.0_DP*dr*amag)
-  dby_rho(:) = aux2(1:length) * m(:,2) / (4.0_DP*dr*amag)
-  dbz_rho(:) = aux2(1:length) * m(:,3) / (4.0_DP*dr*amag)
+  WHERE (amag > 1.E-10_DP)
+    dbx_rho(:) = aux2(1:length) * m(:,1) / (4.0_DP*dr*amag)
+    dby_rho(:) = aux2(1:length) * m(:,2) / (4.0_DP*dr*amag)
+    dbz_rho(:) = aux2(1:length) * m(:,3) / (4.0_DP*dr*amag)
+  END WHERE  
   !
   aux1(1:length) =  vx(i4:f4,1) + vc(i4:f4,1) - vx(i5:f5,1) - vc(i5:f5,1) + &
                     vx(i4:f4,2) + vc(i4:f4,2) - vx(i5:f5,2) - vc(i5:f5,2)
