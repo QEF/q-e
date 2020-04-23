@@ -91,7 +91,6 @@ bands.o : ../../UtilXlib/mp.o
 bands.o : ../../upflib/uspp.o
 benchmark_libxc.o : ../../Modules/correlation_lda_lsda.o
 benchmark_libxc.o : ../../Modules/funct.o
-benchmark_libxc.o : ../../Modules/libxc.o
 benchmark_libxc.o : ../../Modules/xc_gga_drivers.o
 benchmark_libxc.o : ../../Modules/xc_lda_lsda_drivers.o
 benchmark_libxc.o : ../../Modules/xc_mgga_drivers.o
