@@ -29,14 +29,13 @@
   USE phcom,         ONLY : nmodes
   USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange,               &
                             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
-                            nbndskip, scr_typ, nw_specfun,                      &
+                            scr_typ, nw_specfun, specfun_pl, lindabs, use_ws,   &
                             elecselfen, phonselfen, nest_fn, a2f, specfun_ph,   &
                             vme, eig_read, ephwrite, nkf1, nkf2, nkf3,          &
                             efermi_read, fermi_energy, specfun_el, band_plot,   &
                             scattering, nstemp, int_mob, scissor, carrier,      &
                             iterative_bte, longrange, scatread, nqf1, prtgkk,   &
                             nqf2, nqf3, mp_mesh_k, restart, plselfen,           &
-                            specfun_pl, lindabs, use_ws,                        &
                             epmatkqread, selecqread, restart_step, nsmear,      &
                             nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, assume_metal
   USE control_flags, ONLY : iverbosity
@@ -56,7 +55,7 @@
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
                             efnew, sigmar_all, zi_all, nkqtotf, eps_rpa,        &
                             sigmar_all, zi_allvb, inv_tau_all, eta, nbndfst,    &
-                            inv_tau_allcb, zi_allcb, exband,                    &
+                            inv_tau_allcb, zi_allcb, exband, nbndskip,          &
                             gamma_v_all, esigmar_all, esigmai_all,              &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
                             nktotf,  transp_temp, xkq, lower_bnd, upper_bnd, dos,&

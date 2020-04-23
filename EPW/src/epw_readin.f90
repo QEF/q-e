@@ -48,7 +48,7 @@
                             laniso, lpolar, lifc, asr_typ, lscreen, scr_typ, nbndsub,  &
                             fermi_diff, smear_rpa, cumulant, bnd_cum, proj, write_wfn, &
                             iswitch, ntempxx, liso, lacon, lpade, etf_mem, epbwrite,   &
-                            nsiter, conv_thr_racon, specfun_el, specfun_ph, nbndskip,  &
+                            nsiter, conv_thr_racon, specfun_el, specfun_ph,            &
                             system_2d, delta_approx, title, int_mob, scissor,          &
                             iterative_bte, scattering, selecqread, epmatkqread,        &
                             ncarrier, carrier, scattering_serta, restart, restart_step,&
@@ -121,7 +121,7 @@
   !
   NAMELIST / inputepw / &
        amass, outdir, prefix, iverbosity, fildvscf,                            &
-       elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndskip,  nbndsub,                 &
+       elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndsub,                            &
        filukk, epbread, epbwrite, epwread, epwwrite, etf_mem, kmaps,           &
        eig_read, wepexst, epexst, vme,                                         &
        degaussw, fsthick, eptemp,  nsmear, delta_smear,                        &
@@ -188,9 +188,6 @@
   ! dvscf_dir: the dir containing all the .dvscf and .dyn files
   ! epbread  : read epmatq array from .epb files
   ! epbwrite : write epmatq array to .epb files
-  ! nbndskip : number of bands to be skipped from the original Hamitonian (nfirstwin-1 in Marzari's notation)
-  !            [HL 02/2020] nbndskip is not an input any more. It is now automatically calculated in Wannierization step.
-  !            For backward compatibility, nbndskip still can be entered as an input, but ignored with warning message.
   ! epwread  : read all quantities in Wannier representation from file epwdata.fmt
   ! epwwrite : write all quantities in Wannier representation to file epwdata.fmt
   !
@@ -456,7 +453,6 @@
   mp_mesh_k    = .FALSE.
   mp_mesh_q    = .FALSE.
   nbndsub      = 0
-  nbndskip     = -1
   nsmear       = 1
   delta_smear  = 0.01d0 ! eV
   modenum = 0 ! Was -1 previously and read from Modules/input_parameters.f90
@@ -649,8 +645,6 @@
   IF (epbread .AND. epbwrite) CALL errore('epw_readin', 'epbread cannot be used with epbwrite', 1)
   IF (epbread .AND. epwread) CALL errore('epw_readin', 'epbread cannot be used with epwread', 1)
   IF (degaussw * 4.d0 > fsthick) CALL errore('epw_readin', ' degaussw too close to fsthick', 1)
-  IF (nbndskip /= -1) WRITE(stdout, '(A)') &
-     'WARNING: epw_readin: nbndskip is not an input anymore. It is automatically calculated in Wannierization step.'
   IF ((nw < 1) .OR. (nw > 1000)) CALL errore ('epw_readin', 'unreasonable nw', 1)
   IF (elecselfen .AND. plselfen) CALL errore('epw_readin', &
       'Electron-plasmon self-energy cannot be computed with electron-phonon', 1)

@@ -25,7 +25,7 @@
   USE phcom,         ONLY : nmodes
   USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange,               &
                             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
-                            nbndskip, etf_mem, scr_typ, nw_specfun,             &
+                            etf_mem, scr_typ, nw_specfun,                       &
                             elecselfen, phonselfen, nest_fn, a2f, specfun_ph,   &
                             vme, eig_read, ephwrite, nkf1, nkf2, nkf3,          &
                             efermi_read, fermi_energy, specfun_el, band_plot,   &
@@ -59,8 +59,7 @@
                             inv_tau_allcb, zi_allcb, exband, gamma_v_all,       &
                             esigmar_all, esigmai_all, lower_bnd, upper_bnd,     &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
-                            nktotf, transp_temp, xkq, dos,                      &
-                            nbndep
+                            nktotf, transp_temp, xkq, dos, nbndskip, nbndep
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
   USE elph2,         ONLY : g2_4,  ngk_all, igk_k_all
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &

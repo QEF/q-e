@@ -223,10 +223,10 @@
     USE noncollin_module, ONLY : noncolin
     USE constants_epw,    ONLY : bohr, eps6, twopi
     USE mp_pools,         ONLY : intra_pool_comm
-    USE epwcom,           ONLY : nbndskip, scdm_proj
+    USE epwcom,           ONLY : scdm_proj
     USE w90_io,           ONLY : post_proc_flag
     USE io_var,           ONLY : iunnkp
-    USE elph2,            ONLY : ibndstart, ibndend, nbndep
+    USE elph2,            ONLY : ibndstart, ibndend, nbndep, nbndskip
     !
     IMPLICIT NONE
     !
