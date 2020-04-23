@@ -13,9 +13,9 @@
   !! Load the information on the band manifold determined in Wannierization step
   !!
   !-----------------------------------------------------------------------
-  USE epwcom,        ONLY : filukk, nbndskip
+  USE epwcom,        ONLY : filukk
   USE io_var,        ONLY : iunukk
-  USE elph2,         ONLY : ibndstart, ibndend, nbndep
+  USE elph2,         ONLY : ibndstart, ibndend, nbndep, nbndskip
   USE io_global,     ONLY : ionode_id, meta_ionode
   USE mp_global,     ONLY : inter_pool_comm
   USE mp,            ONLY : mp_bcast

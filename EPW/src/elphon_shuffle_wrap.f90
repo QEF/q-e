@@ -39,8 +39,8 @@
   USE pwcom,         ONLY : nks, nbnd, nkstot, nelec
   USE cell_base,     ONLY : at, bg, alat, omega, tpiba
   USE symm_base,     ONLY : irt, s, nsym, ft, sname, invs, s_axis_to_cart,      &
-                            sr, nrot, set_sym_bl, find_sym, inverse_s,&
-                            remove_sym, allfrac
+                            sr, nrot, set_sym_bl, find_sym, inverse_s, t_rev,   &
+                            remove_sym, allfrac, time_reversal
   USE phcom,         ONLY : evq
   USE qpoint,        ONLY : igkq, xq, eigqts
   USE modes,         ONLY : nmodes, u, npert
@@ -201,56 +201,55 @@
   !
   CALL start_clock('elphon_wrap')
   !
-  ! Read qpoint list from stdin
-  !
-  IF (meta_ionode) READ(5, *) nqc_irr
-  CALL mp_bcast(nqc_irr, meta_ionode_id, world_comm)
-  ALLOCATE(xqc_irr(3, nqc_irr), STAT = ierr)
-  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating xqc_irr', 1)
   ALLOCATE(xqc(3, nqc1 * nqc2 * nqc3), STAT = ierr)
   IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating xqc', 1)
-  ALLOCATE(wqlist(nqc1 * nqc2 * nqc3), STAT = ierr)
-  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating wqlist', 1)
-  xqc_irr(:, :) = zero
-  xqc(:, :)     = zero
-  wqlist(:)     = zero
+  xqc(:, :) = zero
   !
-  IF (meta_ionode) THEN
-    DO iq_irr = 1, nqc_irr
-      READ(5,*) xqc_irr(:, iq_irr)
-    ENDDO
-  ENDIF
-  CALL mp_bcast(xqc_irr, meta_ionode_id, world_comm)
-  !
-  ! fix for uspp
-  ! this is needed to get the correct size of the interpolation table 'qrad'
-  ! for the non-local part of the pseudopotential in PW/src/allocate_nlpot.f90
-  !
-  maxvalue = nqxq
-  DO iq_irr = 1, nqc_irr
-    qnorm_tmp = DSQRT(xqc_irr(1, iq_irr)**2 + xqc_irr(2, iq_irr)**2 + xqc_irr(3, iq_irr)**2)
-    nqxq_tmp = INT(((DSQRT(gcutm) + qnorm_tmp) * tpiba / dq + 4) * cell_factor)
-    IF (nqxq_tmp > maxvalue)  maxvalue = nqxq_tmp
-  ENDDO
-  !
-  IF (maxvalue > nqxq) THEN
-    IF (.NOT. epwread) THEN
-      DEALLOCATE(qrad, STAT = ierr)
-      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating qrad', 1)
-    ENDIF
-    ALLOCATE(qrad(maxvalue, nbetam * (nbetam + 1) / 2, lmaxq, nsp), STAT = ierr)
-    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating qrad ', 1)
-    !
-    qrad(:, :, :, :) = zero
-    ! RM - need to call init_us_1 to re-calculate qrad
-    CALL init_us_1()
-  ENDIF
-  !
-  ! do not perform the check if restart
   IF (epwread .AND. .NOT. epbread) THEN
     CONTINUE
   ELSE
+    !
+    ! Regenerate qpoint list
+    !
+    ALLOCATE(wqlist(nqc1 * nqc2 * nqc3), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating wqlist', 1)
+    wqlist(:) = zero
+    CALL kpoint_grid(nsym, time_reversal, .FALSE., s, t_rev, bg, nqc1 * nqc2 * nqc3, &
+                     0, 0, 0, nqc1, nqc2, nqc3, nqc_irr, xqc, wqlist)
+    ALLOCATE(xqc_irr(3, nqc_irr), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating xqc_irr', 1)
+    xqc_irr(:, :) = zero
+    DEALLOCATE(wqlist, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating wqlist', 1)
+    xqc_irr(:, :) = xqc(:, 1:nqc_irr)
+    xqc(:, :) = zero
+    !
+    ! fix for uspp
+    ! this is needed to get the correct size of the interpolation table 'qrad'
+    ! for the non-local part of the pseudopotential in PW/src/allocate_nlpot.f90
+    !
+    IF (.NOT. epbread .AND. .NOT. epwread) THEN
+      maxvalue = nqxq
+      DO iq_irr = 1, nqc_irr
+        qnorm_tmp = DSQRT(xqc_irr(1, iq_irr)**2 + xqc_irr(2, iq_irr)**2 + xqc_irr(3, iq_irr)**2)
+        nqxq_tmp = INT(((DSQRT(gcutm) + qnorm_tmp) * tpiba / dq + 4) * cell_factor)
+        IF (nqxq_tmp > maxvalue)  maxvalue = nqxq_tmp
+      ENDDO
+      !
+      IF (maxvalue > nqxq) THEN
+        DEALLOCATE(qrad, STAT = ierr)
+        IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating qrad', 1)
+        ALLOCATE(qrad(maxvalue, nbetam * (nbetam + 1) / 2, lmaxq, nsp), STAT = ierr)
+        IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating qrad ', 1)
+        !
+        qrad(:, :, :, :) = zero
+        ! RM - need to call init_us_1 to re-calculate qrad
+        CALL init_us_1()
+      ENDIF
+    ENDIF
+    !
     IF (nkstot /= nkc1 * nkc2 * nkc3) CALL errore('elphon_shuffle_wrap', 'nscf run inconsistent with epw input', 1)
+    !
   ENDIF
   !
   ! Read in external electronic eigenvalues. e.g. GW
@@ -784,7 +783,6 @@
     ENDDO ! irr-q loop
     !
     IF (nqc /= nqc1 * nqc2 * nqc3) CALL errore('elphon_shuffle_wrap', 'nqc /= nq1*nq2*nq3', nqc)
-    wqlist = DBLE(1) / DBLE(nqc)
     !
     IF (lifc) THEN
       DEALLOCATE(wscache, STAT = ierr)
@@ -893,12 +891,12 @@
   ! free up some memory
   !
   NULLIFY(igkq)
-  DEALLOCATE(xqc_irr, STAT = ierr)
-  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating xqc_irr', 1)
-  DEALLOCATE(wqlist, STAT = ierr)
-  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating wqlist', 1)
+  IF (.NOT. (epwread .AND. .NOT. epbread)) THEN
+    DEALLOCATE(xqc_irr, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating xqc_irr', 1)
+  ENDIF
   !
-  IF (maxvalue > nqxq) THEN
+  IF ((maxvalue > nqxq) .AND. (.NOT. epbread .AND. .NOT. epwread)) THEN
     DEALLOCATE(qrad, STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating qrad', 1)
   ENDIF

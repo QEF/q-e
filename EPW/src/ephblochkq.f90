@@ -24,7 +24,7 @@ CONTAINS
         USE phcom,         ONLY : nq1, nq2, nq3, nmodes
         USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange, &
             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
-            nbndskip, etf_mem, scr_typ, &
+            etf_mem, scr_typ, &
             elecselfen, phonselfen, nest_fn, a2f, specfun_ph, &
             vme, eig_read, ephwrite, nkf1, nkf2, nkf3, &
             efermi_read, fermi_energy, specfun_el, band_plot, &
@@ -41,7 +41,7 @@ CONTAINS
             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef, &
             sigmai_all, sigmai_mode, gamma_all, epsi, zstar, &
             efnew, ifc, sigmar_all, zi_all, nkqtotf, eps_rpa, &
-            g2_4, wf
+            g2_4, wf, nbndskip
 #if defined(__NAG)
         USE f90_unix_io,   ONLY : FLUSH
 #endif
@@ -134,7 +134,7 @@ CONTAINS
         USE phcom,         ONLY : nq1, nq2, nq3, nmodes
         USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange, &
             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen,&
-            nbndskip, etf_mem, scr_typ,&
+            etf_mem, scr_typ,&
             elecselfen, phonselfen, nest_fn, a2f, specfun_ph, &
             vme, eig_read, ephwrite, nkf1, nkf2, nkf3, &
             efermi_read, fermi_energy, specfun_el, band_plot, &
@@ -151,7 +151,7 @@ CONTAINS
             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef, &
             sigmai_all, sigmai_mode, gamma_all, epsi, zstar, &
             efnew, ifc, sigmar_all, zi_all, nkqtotf, eps_rpa, &
-            g2_4, wf
+            g2_4, wf, nbndskip
 #if defined(__NAG)
         USE f90_unix_io,   ONLY : FLUSH
 #endif
@@ -304,7 +304,7 @@ CONTAINS
         USE phcom,         ONLY : nq1, nq2, nq3, nmodes
         USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange, &
             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
-            nbndskip, etf_mem, scr_typ, &
+            etf_mem, scr_typ, &
             elecselfen, phonselfen, nest_fn, a2f, specfun_ph, &
             vme, eig_read, ephwrite, nkf1, nkf2, nkf3, &
             efermi_read, fermi_energy, specfun_el, band_plot, &
@@ -321,7 +321,7 @@ CONTAINS
             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef, &
             sigmai_all, sigmai_mode, gamma_all, epsi, zstar, &
             efnew, ifc, sigmar_all, zi_all, nkqtotf, eps_rpa, &
-            g2_4, wf
+            g2_4, wf, nbndskip
 #if defined(__NAG)
         USE f90_unix_io,   ONLY : FLUSH
 #endif
@@ -470,7 +470,7 @@ CONTAINS
         USE phcom,         ONLY : nq1, nq2, nq3, nmodes
         USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange, &
             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
-            nbndskip, etf_mem, scr_typ, &
+            etf_mem, scr_typ, &
             elecselfen, phonselfen, nest_fn, a2f, specfun_ph, &
             vme, eig_read, ephwrite, nkf1, nkf2, nkf3, &
             efermi_read, fermi_energy, specfun_el, band_plot, &
@@ -487,7 +487,7 @@ CONTAINS
             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef, &
             sigmai_all, sigmai_mode, gamma_all, epsi, zstar, &
             efnew, ifc, sigmar_all, zi_all, nkqtotf, eps_rpa, &
-            g2_4, wf
+            g2_4, wf, nbndskip
 #if defined(__NAG)
         USE f90_unix_io,   ONLY : FLUSH
 #endif
@@ -637,7 +637,7 @@ CONTAINS
         USE phcom,         ONLY : nq1, nq2, nq3, nmodes
         USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange, &
             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
-            nbndskip, etf_mem, scr_typ, &
+            etf_mem, scr_typ, &
             elecselfen, phonselfen, nest_fn, a2f, specfun_ph, &
             vme, eig_read, ephwrite, nkf1, nkf2, nkf3, &
             efermi_read, fermi_energy, specfun_el, band_plot, &
@@ -654,7 +654,7 @@ CONTAINS
             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef, &
             sigmai_all, sigmai_mode, gamma_all, epsi, zstar, &
             efnew, ifc, sigmar_all, zi_all, nkqtotf, eps_rpa, &
-            g2_4, wf
+            g2_4, wf, nbndskip
 #if defined(__NAG)
         USE f90_unix_io,   ONLY : FLUSH
 #endif
