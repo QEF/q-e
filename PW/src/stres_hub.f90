@@ -900,7 +900,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE gvect,                ONLY : g
    USE klist,                ONLY : nks, xk, igk_k, ngk
-   USE ldaU,                 ONLY : Hubbard_l, is_hubbard, nwfcU, wfcU
+   USE ldaU,                 ONLY : nwfcU, wfcU
    USE lsda_mod,             ONLY : lsda, nspin, isk
    USE wvfct,                ONLY : nbnd, npwx, wg
    USE uspp,                 ONLY : nkb, vkb, qq_at
@@ -967,11 +967,11 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    !
    ! The derivative of the Bessel function
    !
-   CALL gen_at_dj ( ik, nwfcU, is_hubbard, Hubbard_l, dwfc )
+   CALL gen_at_dj ( ik, dwfc )
    !
    ! The derivative of the spherical harmonic
    !
-   CALL gen_at_dy ( ik, nwfcU, is_hubbard, Hubbard_l, xyz(1,ipol), aux )
+   CALL gen_at_dy ( ik, xyz(1,ipol), aux)
    !
    ! Number of plane waves at the k point with the index ik
    !
@@ -1120,7 +1120,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE gvect,                ONLY : g, gstart
    USE klist,                ONLY : nks, xk, igk_k, ngk
-   USE ldaU,                 ONLY : Hubbard_l, is_hubbard, nwfcU, wfcU
+   USE ldaU,                 ONLY : nwfcU, wfcU
    USE lsda_mod,             ONLY : lsda, nspin, isk
    USE wvfct,                ONLY : nbnd, npwx, wg
    USE uspp,                 ONLY : nkb, vkb, qq_at
@@ -1187,11 +1187,11 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    !
    ! The derivative of the Bessel function
    !
-   CALL gen_at_dj ( ik, nwfcU, is_hubbard, Hubbard_l, dwfc )
+   CALL gen_at_dj ( ik, dwfc )
    !
    ! The derivative of the spherical harmonic
    !
-   CALL gen_at_dy ( ik, nwfcU, is_hubbard, Hubbard_l, xyz(1,ipol), aux)
+   CALL gen_at_dy ( ik, xyz(1,ipol), aux)
    !
    ! Number of plane waves at the k point with the index ik
    !
