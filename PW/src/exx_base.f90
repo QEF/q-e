@@ -179,7 +179,7 @@ MODULE exx_base
     ! ... local variables
     !
     CHARACTER(13) :: sub_name='exx_grid_init'
-    INTEGER :: iq1, iq2, iq3, isym, ik, ikq, iq, max_nk, temp_nkqs
+    INTEGER :: iq1, iq2, iq3, isym, ik, ikq, iq, max_nk, temp_nkqs, idx, sign
     INTEGER, ALLOCATABLE :: temp_index_xk(:), temp_index_sym(:)
     INTEGER, ALLOCATABLE :: temp_index_ikq(:)
     REAL(DP), ALLOCATABLE :: temp_xkq(:,:), xk_collect(:,:)
@@ -289,22 +289,41 @@ MODULE exx_base
     !
     ! Find good q-point grid. Decrease the nqX until a good grid is found or
     ! until it is 1 x 1 x 1 (always good)
+
+    idx = 0
+    sign = -1
     DO WHILE (.TRUE.)
       CALL exx_qgrid_init(temp_nkqs, xk_collect, temp_xkq, &
                           nkqs, temp_index_ikq, dxk)
 
       ! Good q-point mesh
       IF (ALL(ABS(dxk) < eps ) ) THEN
+        !
+        IF (idx .ne. 0) &
+          WRITE(stdout, '(5x,a)') "EXX: WARNING: q-point mesh has been updated!"
+        !
         WRITE(stdout, '(5x,a,3i5)') "EXX: q-point mesh: ", nq1, nq2, nq3
         EXIT ! DO WHILE
       ENDIF
-
-      IF (nq1 > 1) nq1 = nq1 - 1
-      IF (nq2 > 1) nq2 = nq2 - 1
-      IF (nq3 > 1) nq3 = nq3 - 1
-
+      !
+      ! Try q-points around the input mesh, prioritizing smaller mesh
+      idx = idx + 1
+      !
+      IF (nq1 > 1) nq1 = nq1 + idx * sign
+      IF (nq2 > 1) nq2 = nq2 + idx * sign
+      IF (nq3 > 1) nq3 = nq3 + idx * sign
+      !
+      ! Enforce nqX <= nkX. This is important for surfaces to keep the
+      ! Z q-point 1.
+      !
+      IF (nq1 > nk1) nq1 = nk1
+      IF (nq2 > nk2) nq2 = nk2
+      IF (nq3 > nk3) nq3 = nk3
+      !
       nqs = nq1 * nq2 * nq3
-
+      !
+      sign = -1 * sign
+      !
     ENDDO
     !
     ! allocate and fill the arrays xkq(3,nkqs), index_xk(nkqs) and index_sym(nkqs)
