@@ -99,6 +99,7 @@ MODULE realus
   PUBLIC :: real_space, initialisation_level, &
        tg_psic, betasave, maxbox_beta, box_beta
   PUBLIC :: betapointlist, init_realspace_vars, v_loc_psir, v_loc_psir_inplace
+  PUBLIC :: box0, box_s, box_e, box_psic
   PUBLIC :: invfft_orbital_gamma, fwfft_orbital_gamma, s_psir_gamma, &
             calbec_rs_gamma, add_vuspsir_gamma, invfft_orbital_k,    &
             fwfft_orbital_k, s_psir_k, calbec_rs_k, add_vuspsir_k
