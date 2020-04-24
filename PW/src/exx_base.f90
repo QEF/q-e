@@ -290,7 +290,7 @@ MODULE exx_base
     !
     ! Find good q-point grid. Decrease the nqX until a good grid is found or
     ! until it is 1 x 1 x 1 (always good)
-    idx = 0
+    idx = 1
     sign_ = -1
     nqx = (/nq1, nq2, nq3/)
     DO WHILE (.TRUE.)
@@ -300,7 +300,7 @@ MODULE exx_base
       ! Good q-point mesh
       IF (ALL(ABS(dxk) < eps ) ) THEN
         !
-        IF (idx .ne. 0) &
+        IF (idx > 1) &
           WRITE(stdout, '(5x,a)') "EXX: WARNING: q-point mesh has been updated!"
         !
         WRITE(stdout, '(5x,a,3i5)') "EXX: q-point mesh: ", nq1, nq2, nq3
@@ -308,7 +308,6 @@ MODULE exx_base
       ENDIF
       !
       ! Try q-points around the input mesh, prioritizing smaller mesh
-      idx = idx + 1
       !
       nq1 = nqx(1) + idx * sign_
       nq2 = nqx(2) + idx * sign_
@@ -329,6 +328,9 @@ MODULE exx_base
       nqs = nq1 * nq2 * nq3
       !
       sign_ = -1 * sign_
+      !
+      ! Increase idx every other time sign is changed
+      IF (sign_ < 0) idx = idx + 1
       !
     ENDDO
     !
