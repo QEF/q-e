@@ -161,6 +161,7 @@ contains
          write (iun, '(1I7,1E14.6,3E20.12)', advance='no') step, time, J_xc + J_hartree + J_kohn + i_current + z_current
          do itype=1,nsp
              write (iun, '(3E20.12)', advance='no') v_cm(:,itype)
+             write (*, '(A,1I3,A,3E20.12)') 'center of mass velocity of type ',itype ,': ', v_cm(:,itype)
          end do
          write (iun,'(A)') ''
          close (iun)
