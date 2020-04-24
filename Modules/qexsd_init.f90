@@ -641,6 +641,7 @@ CONTAINS
             LOGICAL,ALLOCATABLE  :: temp(:) 
             TYPE(backL_type)     :: backL_objs(2)  
             CHARACTER(LEN=16)    :: backchar
+            !
             ALLOCATE(objs(nsp), temp(nsp)) 
             IF (PRESENT(backall_)) THEN 
                temp(1:nsp)  = backall_(1:nsp)
@@ -654,9 +655,11 @@ CONTAINS
                   IF (l1_back(isp) >=0) THEN
                      ndimbackL=2 
                      CALL qes_init(backL_objs(2), "l_number", l_index=1, backL  = l1_back(isp)) 
-                  END IF 
-               ELSE 
-                  CALL errore ('qexsd_init_dftU:', 'internal error: backall is true l1_back is not present',1) 
+                  ELSE
+                     CALL errore ('qexsd_init_dftU:', 'internal error: l1_back < 0',1)
+                  END IF
+               ELSEIF (temp(isp) .AND. .NOT.PRESENT(l1_back) ) THEN
+                     CALL errore ('qexsd_init_dftU:', 'internal error: backall is true but l1_back is not present',1) 
                END IF 
                IF (temp(isp)) THEN
                   backchar = 'two_orbitals'

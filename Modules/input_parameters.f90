@@ -632,6 +632,7 @@ MODULE input_parameters
              Hubbard_U, Hubbard_U_back, Hubbard_J, Hubbard_alpha,             &
              Hubbard_alpha_back, Hubbard_J0, Hubbard_beta,                    &
              hub_pot_fix, Hubbard_V, Hubbard_parameters,                      &
+             backall, lback, l1back, reserv, reserv_back,                     &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
              U_projection_type, input_dft, la2F, assume_isolated,             &
              nqx1, nqx2, nqx3, ecutfock, localization_thr, scdm, ace,         &

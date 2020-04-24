@@ -334,7 +334,7 @@
      IF (ANY(is_hubbard_back(1:ntyp))) THEN 
         ALLOCATE (Hubbard_l_back_(ntyp)) 
         IF (ANY(lback>=0)) THEN
-           Hubbard_l_back_(1:ntyp) = lback(1:ntyp) 
+          Hubbard_l_back_(1:ntyp) = lback(1:ntyp) 
         ELSE 
           DO nt = 1, ntyp 
              Hubbard_l_back_(nt) = set_hubbard_l_back(TRIM(upf(nt)%psd))
@@ -349,7 +349,7 @@
            ENDIF
         END IF 
      END IF 
-     ! 
+     !
      CALL qexsd_init_dftU(dftU_, NSP = ntyp, PSD = upf(1:ntyp)%psd, SPECIES = atm(1:ntyp), ITYP = ip_ityp(1:ntyp), &
                            IS_HUBBARD = is_hubbard(1:ntyp), IS_HUBBARD_BACK= is_hubbard_back(1:ntyp),               &
                            NONCOLIN=ip_noncolin, LDA_PLUS_U_KIND = ip_lda_plus_u_kind, &

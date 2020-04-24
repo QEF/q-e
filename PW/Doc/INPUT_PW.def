@@ -1216,8 +1216,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 simplest DFT+U+V calculation):
                 k=1 - interaction between standard orbitals (both on na and nb); 
                 k=2 - interaction between standard (on na) and background (on nb) orbitals;
-                k=3 - interaction between background (on na) and standard (on nb) orbitals;
-                k=4 - interaction between background orbitlas (both on na and nb).
+                k=3 - interaction between background orbitlas (both on na and nb);
+                k=4 - interaction between background (on na) and standard (on nb) orbitals.
                 Standard orbitals correspond to the main Hubbard channel (e.g. d electrons
                 in transition metals) and background orbitals correspond to the secondary
                 Hubbard channel (e.g. p electrons in transition metals).
