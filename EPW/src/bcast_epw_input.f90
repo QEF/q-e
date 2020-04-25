@@ -21,17 +21,16 @@
                             lnscf, ldisp, fildvscf, fildrho, epsil, alpha_mix
   USE epwcom,        ONLY : epexst, epbwrite, ep_coupling,                    &
                             eliashberg, elecselfen, eig_read, plselfen,       &
-                            efermi_read, dvscf_dir, delta_smear,              &
+                            efermi_read, dvscf_dir, delta_smear, ngaussw,     &
                             delta_qsmear, degaussw, degaussq, conv_thr_raxis, &
                             conv_thr_racon, conv_thr_iaxis, broyden_ndim,     &
-                            broyden_beta, band_plot, a2f, lacon,              &
+                            broyden_beta, band_plot, a2f, lacon, nest_fn,     &
                             kmaps, kerwrite, kerread, imag_read, nkc3,        &
                             gap_edge, fsthick, filqf, filkf, nqc1, nqc2, nqc3,&
                             fileig, fila2f, fermi_energy, nc, nkc1, nkc2,     &
-                            etf_mem, epwwrite, epwread, eptemp,               &
+                            etf_mem, epwwrite, epwread, eptemp, nbndsub,      &
                             eps_acustic, ephwrite, epbread, nsiter, nqstep,   &
                             nqsmear, nqf3, nqf2, nqf1, nkf3, nkf2, nkf1,      &
-                            ngaussw, nest_fn,  nbndsub, nbndskip,             &
                             muc, mp_mesh_q, mp_mesh_k, max_memlt, lunif,      &
                             lreal, lpolar, lpade, liso, limag, laniso,        &
                             specfun_el, specfun_ph, lifc, asr_typ,            &
@@ -157,7 +156,6 @@
   CALL mp_bcast(ngaussw     , meta_ionode_id, world_comm)
   CALL mp_bcast(nw          , meta_ionode_id, world_comm)
   CALL mp_bcast(nbndsub     , meta_ionode_id, world_comm)
-  CALL mp_bcast(nbndskip    , meta_ionode_id, world_comm)
   CALL mp_bcast(nsmear      , meta_ionode_id, world_comm)
   CALL mp_bcast(rand_nq     , meta_ionode_id, world_comm)
   CALL mp_bcast(rand_nk     , meta_ionode_id, world_comm)
