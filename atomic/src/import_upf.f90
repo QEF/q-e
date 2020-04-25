@@ -25,7 +25,8 @@ subroutine import_upf ( )
                      rhos, phis, which_augfun, lpaw, rmatch_augfun, pawsetup, psipaw
   use funct, only: set_dft_from_name
   !
-  use pseudo_types
+  use pseudo_types, only : pseudo_upf, pseudo_config, radial_grid_type, &
+       nullify_pseudo_upf, deallocate_pseudo_upf
   use paw_type
   use upf_module
   !

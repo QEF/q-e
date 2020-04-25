@@ -11,7 +11,8 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   !! Driver for IPI
   !!
   USE io_global,        ONLY : stdout, ionode, ionode_id
-  USE parameters,       ONLY : ntypx, npk, lmaxx
+  USE parameters,       ONLY : ntypx, npk
+  USE upf_params,       ONLY : lmaxx
   USE check_stop,       ONLY : check_stop_init
   USE mp,               ONLY : mp_bcast
   USE mp_images,        ONLY : intra_image_comm

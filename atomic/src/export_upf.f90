@@ -28,7 +28,8 @@ SUBROUTINE export_upf(filename, unit_loc)
   use funct, only: get_dft_name
   use global_version, only: version_number
   !
-  use pseudo_types
+  use pseudo_types, only : pseudo_upf, pseudo_config, radial_grid_type, &
+       nullify_pseudo_upf, deallocate_pseudo_upf, deallocate_pseudo_config
   use write_upf_module, only: write_upf
   !
   implicit none

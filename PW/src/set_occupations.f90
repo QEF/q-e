@@ -34,7 +34,7 @@ SUBROUTINE set_occupations( occupations, smearing, degauss, &
      !
      IF ( degauss /= 0.D0 ) THEN
         CALL errore( ' set_occupations ', &
-             & ' fixed occupations, gauss. broadening ignored', -1 )
+             & ' fixed occupations, gaussian broadening (degauss) ignored', -1 )
         degauss = 0.D0
      ENDIF
      smearing = 'none'
@@ -43,7 +43,7 @@ SUBROUTINE set_occupations( occupations, smearing, degauss, &
      !
      lgauss = ( degauss > 0.0_dp ) 
      IF ( .NOT. lgauss ) CALL errore( ' set_occupations ',  &
-          ' smearing requires gaussian broadening', 1 )
+          ' smearing requires a vaklue for gaussian broadening (degauss)', 1 )
      !
      SELECT CASE ( trim( smearing ) )
      CASE ( 'gaussian', 'gauss', 'Gaussian', 'Gauss' )
