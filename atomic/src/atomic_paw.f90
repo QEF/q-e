@@ -36,7 +36,7 @@ MODULE atomic_paw
   !
   USE kinds,            ONLY: dp
   USE ld1_parameters,   ONLY: nwfsx
-  USE parameters,       ONLY: lmaxx
+  USE upf_params,       ONLY: lmaxx
   USE constants,        ONLY: pi, fpi, e2, eps8
   USE radial_grids,     ONLY: ndmx, radial_grid_type
   USE paw_type,         ONLY: paw_t, nullify_pseudo_paw, allocate_pseudo_paw

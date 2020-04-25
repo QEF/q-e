@@ -20,7 +20,7 @@ subroutine init_us_2_max (npw_, igk_, q_, vkb_)
   !
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
-  USE cell_base,  ONLY : tpiba
+  USE cell_base,  ONLY : tpiba, omega
   USE constants,  ONLY : tpi
   USE gvect,      ONLY : eigts1, eigts2, eigts3, mill, g
   USE us,         ONLY : nqx, dq, tab, tab_d2y, spline_ps
@@ -89,7 +89,7 @@ subroutine init_us_2_max (npw_, igk_, q_, vkb_)
      ! calculate beta in G-space using an interpolation table f_l(q)=\int _0 ^\infty dr r^2 f_l(r) j_l(q.r)
      do nb = 1, upf(nt)%nbeta
         if ( upf(nt)%is_gth ) then
-           call mk_ffnl_gth( nt, nb, npw_, qg, vq )
+           call mk_ffnl_gth( nt, nb, npw_, omega, qg, vq )
         else
            do ig = 1, npw_
               if (spline_ps) then

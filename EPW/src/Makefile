@@ -82,12 +82,12 @@ W90LIB = ../../wannier90-3.0.0/libwannier.a
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a 
 QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
-         ../../FFTXlib/libqefft.a ../../dft-d3/libdftd3qe.a
+         ../../upflib/libupf.a ../../FFTXlib/libqefft.a ../../dft-d3/libdftd3qe.a
 LIBOBJS =../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../clib/clib.a ../../iotk/src/libiotk.a 
 
 TLDEPS= pw ph
 
-all :   pw ph wannier pp upf libepw.a epw.x 
+all :   pw ph wannier pp libepw.a epw.x 
 
 libepw.a : $(EPWOBJS)
 	$(AR) $(ARFLAGS) $@ $?
@@ -112,9 +112,6 @@ pp :
 
 ld1 :
 	cd ../../ ; make ld1
-
-upf :
-	cd ../../ ; make upf
 
 clean :
 	- /bin/rm -f  *.o *~ *.d *.mod *.i libepw.a liblr.a

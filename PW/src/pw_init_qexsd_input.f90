@@ -92,7 +92,6 @@
   INTEGER                                  ::   iexch, icorr, igcx, igcc, imeta, my_vec(6) 
   INTEGER,EXTERNAL                         ::   set_hubbard_l, set_hubbard_l_back 
   INTEGER                                  ::   lung,l 
-  CHARACTER,EXTERNAL                       ::   capital
   CHARACTER(LEN=8),  EXTERNAL              ::   schema_smearing
   CHARACTER(LEN=8)                         ::   smearing_loc
   CHARACTER(len=20)                        ::   dft_shortname
