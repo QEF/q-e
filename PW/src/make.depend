@@ -711,6 +711,7 @@ gen_at_dj.o : ../../Modules/ions_base.o
 gen_at_dj.o : ../../Modules/kind.o
 gen_at_dj.o : ../../Modules/recvec.o
 gen_at_dj.o : ../../Modules/uspp.o
+gen_at_dj.o : ldaU.o
 gen_at_dj.o : pwcom.o
 gen_at_dy.o : ../../Modules/atom.o
 gen_at_dy.o : ../../Modules/cell_base.o
@@ -720,6 +721,7 @@ gen_at_dy.o : ../../Modules/ions_base.o
 gen_at_dy.o : ../../Modules/kind.o
 gen_at_dy.o : ../../Modules/recvec.o
 gen_at_dy.o : ../../Modules/uspp.o
+gen_at_dy.o : ldaU.o
 gen_at_dy.o : pwcom.o
 gen_us_dj.o : ../../Modules/cell_base.o
 gen_us_dj.o : ../../Modules/constants.o
@@ -1783,12 +1785,14 @@ s_1psi.o : pwcom.o
 s_1psi.o : realus.o
 s_psi.o : ../../Modules/becmod.o
 s_psi.o : ../../Modules/control_flags.o
+s_psi.o : ../../Modules/fft_base.o
 s_psi.o : ../../Modules/funct.o
 s_psi.o : ../../Modules/ions_base.o
 s_psi.o : ../../Modules/kind.o
 s_psi.o : ../../Modules/mp_bands.o
 s_psi.o : ../../Modules/noncol.o
 s_psi.o : ../../Modules/uspp.o
+s_psi.o : ../../Modules/wavefunctions.o
 s_psi.o : ../../UtilXlib/mp.o
 s_psi.o : pwcom.o
 s_psi.o : realus.o
@@ -2308,7 +2312,6 @@ weights.o : ../../UtilXlib/mp.o
 weights.o : pwcom.o
 weights.o : tetra.o
 wfcinit.o : ../../Modules/becmod.o
-wfcinit.o : ../../Modules/cell_base.o
 wfcinit.o : ../../Modules/constants.o
 wfcinit.o : ../../Modules/control_flags.o
 wfcinit.o : ../../Modules/funct.o
