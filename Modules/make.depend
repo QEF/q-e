@@ -285,6 +285,7 @@ qexsd_init.o : mp_images.o
 qexsd_init.o : mp_pools.o
 qexsd_init.o : mp_world.o
 qexsd_init.o : noncol.o
+qexsd_init.o : parameters.o
 qexsd_init.o : qes_init_module.o
 qexsd_init.o : qes_libs_module.o
 qexsd_init.o : qes_reset_module.o
@@ -384,7 +385,6 @@ recvec_subs.o : kind.o
 remove_tot_torque.o : kind.o
 rgen.o : kind.o
 set_hubbard_l.o : io_global.o
-set_hubbard_l_back.o : io_global.o
 set_hubbard_n.o : io_global.o
 set_signal.o : ../UtilXlib/mp.o
 set_signal.o : io_global.o
