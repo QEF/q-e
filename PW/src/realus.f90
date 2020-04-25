@@ -1114,32 +1114,34 @@ MODULE realus
       !
       INTEGER, INTENT(IN)  :: nat
       INTEGER, INTENT(IN)  :: maxbox_beta(nat)
-      REAL(DP)             :: boxtot_avg, boxtot_unbalance, opt_boxtot_unbalance
-      INTEGER              :: in, nn, ip, np, ncheck, dd, boxtot_max, opt_nn, my_color
+      REAL(DP)             :: boxtot_avg, unbalance, opt_unbalance, maximum_nn
+      INTEGER              :: in, nn, ip, np, id, target_ndata, boxtot_max, opt_nn, my_color
       INTEGER, ALLOCATABLE :: ind(:), color(:), data(:), boxtot_beta(:)
+      INTEGER              :: recv, send, delta, delta_tot
       !
-      REAL(DP), PARAMETER  :: tollerable_unbalance = 1.25D0
-      INTEGER, PARAMETER   :: maximum_nn = 6
+      REAL(DP), PARAMETER  :: tollerable_unbalance = 0.88 !1.25D0
+      INTEGER, PARAMETER   :: maximum_nn_param = 6
       !
 !      WRITE (*,*) ' me_bgrp ', me_bgrp ; FLUSH(6)
-!      WRITE (*,*)  ' BETAPOINT LIST', maxbox_beta(:) ; FLUSH(6)
+!      WRITE (*,*) ' BETAPOINT LIST', maxbox_beta(:) ; FLUSH(6)
       ALLOCATE ( boxtot_beta ( nproc_bgrp ) )
       boxtot_beta (:) = 0 ; boxtot_beta ( me_bgrp+1 ) = SUM(maxbox_beta(1:nat))
       CALL mp_sum(  boxtot_beta, intra_bgrp_comm )
 
       boxtot_avg = SUM ( boxtot_beta ( 1:nproc_bgrp ) ) / dble ( nproc_bgrp )
       boxtot_max = MAXVAL( boxtot_beta ( 1:nproc_bgrp ) )
-      boxtot_unbalance =  boxtot_max / boxtot_avg
-      WRITE ( stdout, * ) 'BETAPOINTLIST SUMMARY: ', boxtot_max , boxtot_avg, boxtot_unbalance ; FLUSH(6)
+      unbalance  =  boxtot_max / boxtot_avg
+      WRITE ( stdout, * ) 'BETAPOINTLIST SUMMARY: ', boxtot_max , boxtot_avg, unbalance ; FLUSH(6)
       WRITE ( stdout, * ) ' BETATOT LIST', boxtot_beta(:) ; FLUSH(6)
 
-      nn = 1; opt_nn = 1 ; opt_boxtot_unbalance = boxtot_unbalance
+      nn = 1; opt_nn = 1 ; opt_unbalance = unbalance
 
       ALLOCATE ( ind(nproc_bgrp), color(nproc_bgrp),  data(nproc_bgrp) )
       data(:) = - boxtot_beta(:) ; ind(1) = 0
       call ihpsort ( nproc_bgrp, data, ind )
 
-      DO WHILE ( boxtot_unbalance > tollerable_unbalance .and. nn < maximum_nn )
+      maximum_nn = min ( maximum_nn_param, nproc_bgrp )
+      DO WHILE ( unbalance > tollerable_unbalance .and. nn < maximum_nn )
 
          nn = nn + 1
 
@@ -1159,36 +1161,80 @@ MODULE realus
 !            WRITE ( stdout, * ) data(:) ; FLUSH(6)
 !            WRITE ( stdout, * ) color(:) ; FLUSH(6)
          END DO
-         boxtot_unbalance =  -data(1)/(boxtot_avg*nn)
-         WRITE ( stdout, * ) nn, ' is a factor ',-data(1), -data(1)/boxtot_avg, boxtot_unbalance ; FLUSH(6)
-         IF  ( boxtot_unbalance < opt_boxtot_unbalance ) THEN
-            opt_boxtot_unbalance = boxtot_unbalance ; opt_nn = nn ; my_color = color(me_bgrp+1)
+         unbalance =  -data(1)/(boxtot_avg*nn)
+         WRITE ( stdout, * ) nn, ' is a factor ',-data(1), -data(1)/boxtot_avg, unbalance ; FLUSH(6)
+         IF  ( unbalance < opt_unbalance ) THEN
+            opt_unbalance = unbalance ; opt_nn = nn ; my_color = color(me_bgrp+1)
          END IF
          DO ip = 1, np
             data(ip) = -boxtot_beta(ind(ip))
          END DO
+
+      END DO
+      nn = opt_nn
+      WRITE ( stdout, * ) ' opt_nn is', opt_nn, 'with opt_unbalance', opt_unbalance ; FLUSH(6)
+
+      IF ( nn > 1 ) THEN
+! collect the optimal colors for reporting and redistribution
+         color(:) = 0 ; color(me_bgrp+1) = my_color
+         CALL mp_sum(  color, intra_bgrp_comm )
+
+         np = nproc_bgrp / nn
          DO ip = 1, np
             WRITE ( stdout, '(A,i4,A,$)' ) ' color ', color(ind(ip)), ':'  ; FLUSH(6)
-            dd = 0 ; ncheck = 0
+            target_ndata = 0 ; id = 0
             DO in = 1, nproc_bgrp
                IF ( color(in) == color(ind(ip)) ) THEN
                   WRITE (stdout, '(i4,$)' ) in ; FLUSH(6)
-                  dd = dd + boxtot_beta(in)
-                  ncheck = ncheck + 1
+                  id = id + 1
+                  target_ndata = target_ndata + boxtot_beta(in)
                END IF
             END DO
-            WRITE ( stdout, * ) ' ', dd ; FLUSH(6)
-            if (ncheck .ne. nn) WRITE(*,*) '!!!! something wrong ', ncheck, nn ; FLUSH(6)
+            WRITE ( stdout, * ) ' ', target_ndata ; FLUSH(6)
+            IF ( id .ne. nn ) CALL errore( 'beta_box_breaking', '# of terms .ne. nn', 1)
          END DO
 
-      END DO
-      DEALLOCATE ( data, color, ind, boxtot_beta )
-
-      IF (nn > 1 ) THEN
          CALL mp_comm_split( intra_bgrp_comm, my_color, me_bgrp, intra_bbox_comm )
+
+         id = 0 ; target_ndata = 0 ; data = 0 ; ind = 0
+         DO in = 1, nproc_bgrp
+            IF ( color(in) == my_color ) THEN
+               id       = id + 1
+               ind(id)  =  in
+               data(id) = boxtot_beta ( in )
+               target_ndata = target_ndata + data(id)
+            END IF
+         END DO
+         IF ( id .ne. nn ) CALL errore( 'beta_box_breaking', '# of terms .ne. nn', 2)
+
+         target_ndata = target_ndata / nn
+         WRITE ( stdout, * ) 'target_ndata ', target_ndata
+
+         delta_tot = 0
+         do ip = 1, nn - 1
+            CALL ihpsort ( nn, data, ind )
+            do id =1, nn
+               WRITE ( stdout, * ) ind(id),':', data(id)
+            end do
+            recv = target_ndata - data(1)
+            send = data(nn) - target_ndata
+            delta = min ( recv, send )
+            write( stdout, * )'recv, send, delta', recv, send, delta
+            delta_tot = delta_tot + delta
+            data(1)  = data(1) + delta
+            data(nn) = data(nn) - delta
+            write ( stdout, * ) ind(nn), ' -> ', ind(1), delta
+         end do
+         do id =1, nn
+            WRITE ( stdout, * ) ind(id),':', data(id)
+         end do
+         WRITE ( stdout, * ) 'total number of points moved ', delta_tot
+
       ELSE
          intra_bbox_comm = 0
       END IF
+
+      DEALLOCATE ( data, color, ind, boxtot_beta )
 
       RETURN
       !
