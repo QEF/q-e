@@ -300,7 +300,7 @@ SUBROUTINE dfpt_tetra_calc_delta(tfst,tlst,et_col,delta)
            !
            DO ii = 1, 4
               DO i  = 1, 4
-                 IF ( i == ii ) THEN
+                 IF ( ABS(e(ii)-e(i)) < 1.d-12 ) THEN
                     a(ii,i) = 0.0_dp
                  ELSE
                     a(ii,i) = ( 0.0_dp - e(i) ) / (e(ii) - e(i))
@@ -446,7 +446,7 @@ SUBROUTINE dfpt_tetra_calc_beta1(iq,tfst,tlst,et_col,beta)
            !
            DO ii = 1, 4
               DO i  = 1, 4
-                 IF ( i == ii ) THEN
+                 IF ( ABS(e(ii)-e(i)) < 1.d-12 ) THEN
                     a(ii,i) = 0.0_dp
                  ELSE
                     a(ii,i) = ( 0.0_dp - e(i) ) / (e(ii) - e(i))
@@ -765,7 +765,7 @@ SUBROUTINE dfpt_tetra_calc_beta2(iq,tfst,tlst,et_col,beta)
            !
            DO ii = 1, 4
               DO i  = 1, 4
-                 IF ( i == ii ) THEN
+                 IF ( ABS(e(ii)-e(i)) < 1.d-12 ) THEN
                     a(ii,i) = 0.0_dp
                  ELSE
                     a(ii,i) = ( 0.0_dp - e(i) ) / (e(ii) - e(i))
@@ -1021,7 +1021,7 @@ SUBROUTINE dfpt_tetra_calc_beta3(iq,tfst,tlst,et_col,beta)
            !
            DO ii = 1, 4
               DO i  = 1, 4
-                 IF ( i == ii ) THEN
+                 IF ( ABS(e(ii)-e(i)) < 1.d-12 ) THEN
                     a(ii,i) = 0.0_dp
                  ELSE
                     a(ii,i) = ( 0.0_dp - e(i) ) / (e(ii) - e(i))
@@ -1240,7 +1240,7 @@ SUBROUTINE dfpt_tetra2_theta(ei0,ej0,w0)
      !
      DO ii = 1, 4
         DO i  = 1, 4
-           IF ( i == ii ) THEN
+           IF ( ABS(e(ii)-e(i)) < 1.d-12 ) THEN
               a(ii,i) = 0.0_dp
            ELSE
               a(ii,i) = ( 0.0_dp - e(i) ) / (e(ii) - e(i))
@@ -1324,7 +1324,7 @@ SUBROUTINE dfpt_tetra2_lindhard(ei0,ej0,w0)
      !
      DO ii = 1, 4
         DO i  = 1, 4
-           IF ( i == ii ) THEN
+           IF ( ABS(e(ii)-e(i)) < 1.d-12 ) THEN
               a(ii,i) = 0.0_dp
            ELSE
               a(ii,i) = ( 0.0_dp - e(i) ) / (e(ii) - e(i))
