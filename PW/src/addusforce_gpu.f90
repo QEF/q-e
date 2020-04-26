@@ -223,7 +223,8 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
                 forceq(3,na) = forceq(3,na)+forceqz
               ENDIF
            ENDDO
-        ENDDO 
+        ENDDO
+        CALL dev_buf%release_buffer( ddeeq_d , ierr)
      ENDIF
   ENDDO
   !
@@ -233,7 +234,6 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
   !
   forcenl(:,:) = forcenl(:,:) + forceq(:,:)
   !
-  CALL dev_buf%release_buffer( ddeeq_d , ierr)
   CALL dev_buf%release_buffer(qmod_d, ierr)
   CALL dev_buf%release_buffer(ylmk0_d, ierr)
   CALL dev_buf%release_buffer (vg_d, ierr )
