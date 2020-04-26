@@ -15,7 +15,7 @@ SUBROUTINE set_mpi_comm_4_solvers(parent_comm, intra_bgrp_comm_, inter_bgrp_comm
   !
   INTEGER, INTENT(IN) :: parent_comm, intra_bgrp_comm_, inter_bgrp_comm_
   ! local variables
-  INTEGER :: parent_nproc, parent_mype, ortho_parent_comm_, ierr
+  INTEGER :: parent_nproc, parent_mype, ierr
   !
   !write(*,*) ' enter set_mpi_comm_4_davidson'
   intra_bgrp_comm   = intra_bgrp_comm_
