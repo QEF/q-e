@@ -32,13 +32,16 @@ MODULE realus
   !
   ! Beta function in real space
   INTEGER              :: boxtot             ! total dimension of the boxes
+  INTEGER              :: bboxtot            ! total dimension of the broken boxes
   INTEGER, ALLOCATABLE :: box_beta(:)        ! (combined) list of points in the atomic boxes
-  INTEGER, ALLOCATABLE :: maxbox_beta(:)     ! number of points in a given atom section
-  INTEGER, ALLOCATABLE :: box0(:), box_s(:), box_e(:) ! offset, start, and end index of a given atom section
-  REAL(DP), ALLOCATABLE :: xyz_beta(:,:)     ! coordinates of the points in box_beta
-  REAL(DP), ALLOCATABLE :: betasave(:,:)     ! beta funtions on the (combined) list of points
-  REAL(DP), ALLOCATABLE :: boxrad_beta(:)    ! (ntypx) radius of the boxes
-  COMPLEX(DP), ALLOCATABLE :: box_psic(:)    ! a box-friendly version of psic
+  INTEGER, ALLOCATABLE :: maxbox_beta(:)     ! number of points in a given box atomic section
+  INTEGER, ALLOCATABLE :: maxbbox_beta(:)    ! number of points in a given broken-box atomic section
+  INTEGER, ALLOCATABLE :: box0(:),  box_s(:),  box_e(:) ! offset, start, and end index of a given box section
+  INTEGER, ALLOCATABLE :: bbox0(:), bbox_s(:), bbox_e(:)! offset, start, and end index for broken boxes
+  REAL(DP),ALLOCATABLE :: xyz_beta(:,:)      ! coordinates of the points in box_beta
+  REAL(DP),ALLOCATABLE :: betasave(:,:)      ! beta funtions on the (combined) list of points
+  REAL(DP),ALLOCATABLE :: boxrad_beta(:)     ! (ntypx) radius of the boxes
+  COMPLEX(DP),ALLOCATABLE :: box_psic(:)     ! a box-friendly version of psic
   !! beta function
   !!
   COMPLEX(DP), ALLOCATABLE :: xkphase(:)   ! (combined) phases for all atomic boxes
@@ -46,8 +49,19 @@ MODULE realus
   INTEGER :: current_phase_kpoint=-1
   !! the kpoint index for which the xkphase is currently set. 
   !! Negative initial value  means not set
-  INTEGER :: intra_bbox_comm
+  ! 
+  !! MPI parallelization stuff
+  INTEGER :: intra_bbox_comm, me_bbox, nproc_bbox
   !! MPI communicator used to break boxes of the beta functions
+  INTEGER, ALLOCATABLE :: bbox_rank(:)
+  !! collection of the ranks of the members of the bbox group in order of appearance
+  INTEGER, ALLOCATABLE :: send_id(:), recv_id(:), datasize(:), break_at(:), break_ir0(:), offset(:)
+  !! MPI send/recv info
+  INTEGER, ALLOCATABLE :: maxbox_beta_all(:,:) ! maxbox_beta for all precesses in intra_bbox_comm
+  INTEGER, ALLOCATABLE :: maxbbox_beta_all(:,:)! maxbbox_beta for all processes in intra_bbox_comm
+  INTEGER, ALLOCATABLE :: mbox(:,:)            ! working array for box_to_bbox and back
+  LOGICAL :: tbbox
+  !! .true. if atomic boxes are broken and redistributed
   !
   ! ... General
   !
@@ -882,6 +896,7 @@ MODULE realus
       tmp_boxdist_beta(:,:) = 0.D0
       !
       IF ( .not.allocated( maxbox_beta ) ) ALLOCATE( maxbox_beta( nat ) )
+      IF ( .not.allocated( maxbbox_beta ) ) ALLOCATE( maxbbox_beta( nat ) )
       !
       maxbox_beta(:) = 0
       !
@@ -946,18 +961,27 @@ MODULE realus
          if (tprint) WRITE (*,*) 'BETAPOINTLIST: ATOM ',ia, ' MAXBOX_BETA =', maxbox_beta(ia)
       ENDDO
       !
-      CALL beta_box_breaking (nat, maxbox_beta)
-      !
-      boxtot = sum(maxbox_beta(1:nat))
-      WRITE( stdout,* )  'BOXTOT', boxtot
-
+      boxtot = sum(maxbox_beta(1:nat)) ; WRITE( stdout,* )  'BOXTOT', boxtot
       IF (.not. ALLOCATED( box0  ) ) ALLOCATE ( box0  ( nat ) )
       IF (.not. ALLOCATED( box_s ) ) ALLOCATE ( box_s ( nat ) )
       IF (.not. ALLOCATED( box_e ) ) ALLOCATE ( box_e ( nat ) )
       box0(1) = 0 ; box_s(1) = 1 ; box_e(1) = maxbox_beta(1) 
       do ia =2,nat
-         box0 (ia) = box_e(ia-1) ; box_s(ia) = box0(ia) + 1 ;  box_e(ia) = box0(ia) + maxbox_beta(ia)
+         box0(ia) = box_e(ia-1) ; box_s(ia) = box0(ia) + 1 ;  box_e(ia) = box0(ia) + maxbox_beta(ia)
       end do
+      !
+      CALL beta_box_breaking (nat, maxbox_beta, maxbbox_beta, tbbox)
+      !
+      if (tbbox) then
+         bboxtot = sum(maxbbox_beta(1:nat)) ; WRITE( stdout,* )  'BBOXTOT', bboxtot
+         IF (.not. ALLOCATED( bbox0  ) ) ALLOCATE ( bbox0  ( nat ) )
+         IF (.not. ALLOCATED( bbox_s ) ) ALLOCATE ( bbox_s ( nat ) )
+         IF (.not. ALLOCATED( bbox_e ) ) ALLOCATE ( bbox_e ( nat ) )
+         bbox0(1) = 0 ; bbox_s(1) = 1 ; bbox_e(1) = maxbbox_beta(1)
+         do ia =2,nat
+            bbox0(ia) = bbox_e(ia-1) ; bbox_s(ia) = bbox0(ia)+1 ;  bbox_e(ia) = bbox0(ia) + maxbbox_beta(ia)
+         end do
+      end if
       !
       ! ... now store them in a more convenient place
       !
@@ -966,11 +990,13 @@ MODULE realus
       IF ( allocated( box_beta ) )     DEALLOCATE( box_beta )
       IF ( allocated( xkphase ) )      DEALLOCATE( xkphase )
       !
-      ALLOCATE( box_psic    ( boxtot ) )
+      ALLOCATE( box_psic    ( max(boxtot, bboxtot) ) )
       ALLOCATE( box_beta    ( boxtot ) )
       ALLOCATE( xyz_beta ( 3, boxtot ) )
       ALLOCATE( boxdist_beta( boxtot ) )
       ALLOCATE( xkphase     ( boxtot ) )
+      !
+      call beta_box_turning
       !
       do ia =1,nat
          xyz_beta ( :, box_s(ia):box_e(ia) ) =  tmp_xyz_beta(:,1:maxbox_beta(ia),ia)
@@ -1104,26 +1130,32 @@ MODULE realus
       !
     END SUBROUTINE betapointlist
     !
-    SUBROUTINE beta_box_breaking (nat, maxbox_beta)
+    SUBROUTINE beta_box_breaking (nat, maxbox_beta, maxbbox_beta, tbbox)
       !! This routine determines whether it is needed to re-shuffle the
       !! beta point grids in real space.
       USE mp_bands,   ONLY : me_bgrp, intra_bgrp_comm, nproc_bgrp
-      USE mp,         ONLY : mp_sum, mp_comm_split
+      USE mp,         ONLY : mp_sum, mp_comm_split, mp_rank, mp_size
       !
       IMPLICIT NONE
       !
-      INTEGER, INTENT(IN)  :: nat
-      INTEGER, INTENT(IN)  :: maxbox_beta(nat)
-      REAL(DP)             :: boxtot_avg, unbalance, opt_unbalance, maximum_nn
-      INTEGER              :: in, nn, ip, np, id, target_ndata, boxtot_max, opt_nn, my_color
-      INTEGER, ALLOCATABLE :: ind(:), color(:), data(:), boxtot_beta(:)
-      INTEGER              :: recv, send, delta, delta_tot
+      ! I/O variables
       !
-      REAL(DP), PARAMETER  :: tollerable_unbalance = 0.88 !1.25D0
+      INTEGER, INTENT(IN)  :: nat                 ! number of atom
+      INTEGER, INTENT(IN)  :: maxbox_beta(nat)    ! box dimension of each atom
+      INTEGER, INTENT(OUT) :: maxbbox_beta(nat)   ! (broken) box dimension of each atom
+      LOGICAL, INTENT(OUT) :: tbbox               ! .TRUE. if boxes are broken
+      !
+      ! local variables
+      !
+      REAL(DP)             :: boxtot_avg, unbalance, opt_unbalance, maximum_nn
+      INTEGER              :: ia, ib, in, nn, ip, np, id, my_id, boxtot_max, opt_nn, my_color
+      INTEGER, ALLOCATABLE :: ind(:), ind0(:), color(:), data(:), boxtot_beta(:), rank(:)
+      INTEGER              :: recv, send, delta, delta_tot
+      INTEGER              :: target_ndata, recv_target, send_target
+      !
+      REAL(DP), PARAMETER  :: tollerable_unbalance = 0.88 ! 1.25D0
       INTEGER, PARAMETER   :: maximum_nn_param = 6
       !
-!      WRITE (*,*) ' me_bgrp ', me_bgrp ; FLUSH(6)
-!      WRITE (*,*) ' BETAPOINT LIST', maxbox_beta(:) ; FLUSH(6)
       ALLOCATE ( boxtot_beta ( nproc_bgrp ) )
       boxtot_beta (:) = 0 ; boxtot_beta ( me_bgrp+1 ) = SUM(maxbox_beta(1:nat))
       CALL mp_sum(  boxtot_beta, intra_bgrp_comm )
@@ -1131,8 +1163,9 @@ MODULE realus
       boxtot_avg = SUM ( boxtot_beta ( 1:nproc_bgrp ) ) / dble ( nproc_bgrp )
       boxtot_max = MAXVAL( boxtot_beta ( 1:nproc_bgrp ) )
       unbalance  =  boxtot_max / boxtot_avg
+!      WRITE ( stdout ,* ) ' me_bgrp ', me_bgrp ; FLUSH(6)
       WRITE ( stdout, * ) 'BETAPOINTLIST SUMMARY: ', boxtot_max , boxtot_avg, unbalance ; FLUSH(6)
-      WRITE ( stdout, * ) ' BETATOT LIST', boxtot_beta(:) ; FLUSH(6)
+      WRITE ( stdout, * ) 'BETATOT LIST:', boxtot_beta(:) ; FLUSH(6)
 
       nn = 1; opt_nn = 1 ; opt_unbalance = unbalance
 
@@ -1147,9 +1180,6 @@ MODULE realus
 
          np = nproc_bgrp / nn ; IF ( nproc_bgrp .ne. np * nn  ) CYCLE
 
-!         WRITE ( stdout, * ) 'CHECKING nn =', nn, np
-!         WRITE ( stdout, * ) ind(:) ; FLUSH(6)
-!         WRITE ( stdout, * ) data(:) ; FLUSH(6)
          color(ind(1:np)) = ind(1:np)
          DO in = nn, 2, -1
             DO ip = 1, np
@@ -1157,13 +1187,10 @@ MODULE realus
                color(ind(in*np+1-ip)) = ind(ip)
             END DO
             call ihpsort ( np, data, ind )
-!            WRITE ( stdout, * ) ind(:) ; FLUSH(6)
-!            WRITE ( stdout, * ) data(:) ; FLUSH(6)
-!            WRITE ( stdout, * ) color(:) ; FLUSH(6)
          END DO
          unbalance =  -data(1)/(boxtot_avg*nn)
-         WRITE ( stdout, * ) nn, ' is a factor ',-data(1), -data(1)/boxtot_avg, unbalance ; FLUSH(6)
-         IF  ( unbalance < opt_unbalance ) THEN
+!         WRITE ( stdout, * ) nn, ' is a factor ',-data(1), -data(1)/boxtot_avg, unbalance ; FLUSH(6)
+         IF ( unbalance < opt_unbalance ) THEN
             opt_unbalance = unbalance ; opt_nn = nn ; my_color = color(me_bgrp+1)
          END IF
          DO ip = 1, np
@@ -1175,11 +1202,14 @@ MODULE realus
       WRITE ( stdout, * ) ' opt_nn is', opt_nn, 'with opt_unbalance', opt_unbalance ; FLUSH(6)
 
       IF ( nn > 1 ) THEN
-! collect the optimal colors for reporting and redistribution
+
+! collect optimal colors for reporting and redistribution
          color(:) = 0 ; color(me_bgrp+1) = my_color
          CALL mp_sum(  color, intra_bgrp_comm )
 
          np = nproc_bgrp / nn
+
+         !- report
          DO ip = 1, np
             WRITE ( stdout, '(A,i4,A,$)' ) ' color ', color(ind(ip)), ':'  ; FLUSH(6)
             target_ndata = 0 ; id = 0
@@ -1193,45 +1223,118 @@ MODULE realus
             WRITE ( stdout, * ) ' ', target_ndata ; FLUSH(6)
             IF ( id .ne. nn ) CALL errore( 'beta_box_breaking', '# of terms .ne. nn', 1)
          END DO
-
+         !- create new communicators (labeled by my_color) inside intra_bgrp_comm
          CALL mp_comm_split( intra_bgrp_comm, my_color, me_bgrp, intra_bbox_comm )
+         me_bbox =  mp_rank( intra_bbox_comm ); WRITE ( stdout, * ) 'me_bbox', me_bbox ; FLUSH(6)
+         nproc_bbox = mp_size( intra_bbox_comm ); WRITE ( stdout, * ) ' nproc_bbox', nproc_bbox ; FLUSH(6)
+         if ( nproc_bbox .ne. nn ) call errore( 'beta_box_breaking', 'nproc_bbox .ne. nn', nn)
 
+         DEALLOCATE ( data, ind ) ; ALLOCATE ( data ( nn ), ind( nn ), ind0 ( nn ) )
+
+         !- compute target dimensions of the broken boxes of my_color
+         !- define an ordered identifier (id) in the group and set my_id
          id = 0 ; target_ndata = 0 ; data = 0 ; ind = 0
          DO in = 1, nproc_bgrp
             IF ( color(in) == my_color ) THEN
                id       = id + 1
-               ind(id)  =  in
+               ind(id)  = in
                data(id) = boxtot_beta ( in )
                target_ndata = target_ndata + data(id)
+               IF ( in == me_bgrp + 1 ) my_id = id
             END IF
          END DO
          IF ( id .ne. nn ) CALL errore( 'beta_box_breaking', '# of terms .ne. nn', 2)
 
-         target_ndata = target_ndata / nn
-         WRITE ( stdout, * ) 'target_ndata ', target_ndata
+         !- link the order in the group to the mp_rank in the communicator
+         ALLOCATE ( bbox_rank( nproc_bbox ) ) ; bbox_rank=0; bbox_rank(my_id) = me_bbox
+         call mp_sum( bbox_rank, intra_bbox_comm )
 
-         delta_tot = 0
-         do ip = 1, nn - 1
-            CALL ihpsort ( nn, data, ind )
-            do id =1, nn
-               WRITE ( stdout, * ) ind(id),':', data(id)
-            end do
-            recv = target_ndata - data(1)
-            send = data(nn) - target_ndata
+         !- define the target dimension of the broken boxes
+         recv_target = 1 + ( target_ndata - 1 )/ nproc_bbox
+         send_target =       target_ndata / nproc_bbox
+
+         WRITE ( stdout, * ) 'targets ', target_ndata, recv_target, send_target ; FLUSH(6)
+         !
+         ALLOCATE ( send_id(nproc_bbox-1), recv_id(nproc_bbox-1), datasize(nproc_bbox-1) )
+         ALLOCATE ( break_at(nproc_bbox-1), break_ir0(nproc_bbox-1), offset(nproc_bbox-1) )
+
+         ! collected atomic box dimensions to plan grid point redistribution
+         ALLOCATE ( mbox(nat,nproc_bbox),  maxbox_beta_all(nat,nproc_bbox), maxbbox_beta_all(nat,nproc_bbox) )
+         mbox = 0 ; mbox(:,my_id) = maxbox_beta(:); CALL mp_sum( mbox, intra_bbox_comm )
+         maxbox_beta_all(:,:) = mbox(:,:)  ! store for later reference
+
+         write ( stdout, * ) ind(1:nproc_bbox) ; FLUSH(6)
+         do ia = 1, nat
+            write ( stdout, * ) (mbox(ia,id),id=1,nproc_bbox), '|',sum(mbox(ia,1:nproc_bbox)) ; FLUSH(6)
+         end do
+         write ( stdout, * ) "--------------------------------------------------------------"
+         write ( stdout, * ) (sum(mbox(1:nat,id)),id=1,nproc_bbox) ; FLUSH(6)
+         write ( stdout, * ) ind(1:nproc_bbox) ; FLUSH(6)
+         write ( stdout, * ) (sum(mbox(1:nat,id)),id=1,nproc_bbox) ; FLUSH(6)
+         write ( stdout, * ) (data(id),id=1,nproc_bbox) ; FLUSH(6)
+
+         !- compute dimensions of the broken boxes of my_color and the needed exchanges
+         delta_tot = 0 ; ind0 = 0
+         do ip = 1, nn - 1   ! NB: nn = nproc_bbox
+            CALL ihpsort ( nn, data, ind0 ) ! the first time ind0 is initialized, after it is reshuffled
+!            do id =1, nn     ! write the bbox group members (bgrp and bbox ordering) and their data dim
+!               WRITE ( stdout, * ) ind(ind0(id)), bbox_rank(ind0(id)),':', data(id) ; FLUSH(6)
+!            end do
+            send = data(nn) - send_target
+            recv = recv_target - data(1)
             delta = min ( recv, send )
-            write( stdout, * )'recv, send, delta', recv, send, delta
+            if ( data(nn) == recv_target ) delta = 0 ! avoid having a last point going around (see NB later)
+!            write( stdout, * )'recv, send, delta', recv, send, delta  ; FLUSH(6)
             delta_tot = delta_tot + delta
-            data(1)  = data(1) + delta
+            data(1)  = data(1)  + delta
             data(nn) = data(nn) - delta
-            write ( stdout, * ) ind(nn), ' -> ', ind(1), delta
+            write ( stdout, * ) ind(ind0(nn)),bbox_rank(ind0(nn)),' -> ', ind(ind0(1)),bbox_rank(ind0(1)), delta
+            ! set the communication plan
+            send_id (ip) = ind0(nn) ! who sends
+            recv_id (ip) = ind0(1)  ! who receives
+            datasize(ip) = delta    ! transmitted data size
+            offset(ip)   = data(nn) ! the global offset of the breaking point
+            ! determine the the effect on the atomic data distribution (up to a permutation)
+            ! NB: as who gains never loses later (delta=0 fix!) permutations are immaterial in the count
+            do ia =nat,1,-1
+               delta = delta - mbox(ia,ind0(nn))
+               mbox(ia,ind0(1))  = mbox(ia,ind0(1)) + mbox(ia,ind0(nn))
+               mbox(ia,ind0(nn)) = 0
+               if ( delta > 0 ) cycle
+               break_at (ip) = ia         ! the atomic index of the breaking point
+               break_ir0(ip) = -delta     ! the offset of the breaking point
+               mbox(ia,ind0(1))  = mbox(ia,ind0(1)) - break_ir0(ip)
+               mbox(ia,ind0(nn)) = break_ir0(ip)
+               write ( stdout, * ) '     break_at, break_ir0:', break_at(ip), break_ir0(ip); FLUSH(6)
+               write ( stdout, * ) ind(1:nproc_bbox); FLUSH(6)
+               do ib = 1, nat
+                  write ( stdout, * ) (mbox(ib,id),id=1,nproc_bbox), '|',sum(mbox(ib,1:nproc_bbox)); FLUSH(6)
+               end do
+               write ( stdout, * ) "--------------------------------------------------------------"
+               write ( stdout, * ) (sum(mbox(1:nat,id)),id=1,nproc_bbox); FLUSH(6)
+               write ( stdout, * ) ind(ind0(1:nproc_bbox)); FLUSH(6)
+               write ( stdout, * ) (sum(mbox(1:nat,ind0(id))),id=1,nproc_bbox); FLUSH(6)
+               write ( stdout, * ) (data(id),id=1,nproc_bbox); FLUSH(6)
+               exit
+            end do
          end do
-         do id =1, nn
-            WRITE ( stdout, * ) ind(id),':', data(id)
+         do id =1, nproc_bbox
+            WRITE ( stdout, * ) ind(id),':', data(id); FLUSH(6)
          end do
-         WRITE ( stdout, * ) 'total number of points moved ', delta_tot
+         WRITE ( stdout, * ) 'total number of points moved ', delta_tot; FLUSH(6)
+         maxbbox_beta(:) = mbox(:, my_id )  ! these are the atomic dimensions after redistribution
+         maxbbox_beta_all(:,:) = mbox(:,:)  ! store for later reference
+
+         DEALLOCATE ( ind0 )
+
+         tbbox = .TRUE.
 
       ELSE
+
          intra_bbox_comm = 0
+         maxbbox_beta(:) = maxbox_beta(:)
+         tbbox = .FALSE.
+
       END IF
 
       DEALLOCATE ( data, color, ind, boxtot_beta )
@@ -1239,6 +1342,178 @@ MODULE realus
       RETURN
       !
     END SUBROUTINE beta_box_breaking
+    !
+    SUBROUTINE beta_box_turning
+      !! This routine complete the box/bbox redistribution by findig the permutation needed to
+      !! pack the grid pointis in bbox in contigous list for each atom
+      !!
+      USE ions_base,  ONLY : nat
+      !
+      IMPLICIT NONE
+      !
+      INTEGER :: ia, box_ir
+      INTEGER, ALLOCATABLE :: grid_check(:)
+
+      !$omp parallel
+      CALL threaded_barrier_memset(box_psic, 0.D0, max(boxtot,bboxtot)*2)
+      DO ia = 1, nat
+         !$omp do
+         DO box_ir = box_s(ia), box_e(ia)
+            box_psic ( box_ir ) =  ia
+         END DO
+         !$omp end do
+      END DO
+      !$omp end parallel
+
+      ALLOCATE ( grid_check(nat) ); grid_check(1:nat) = 0
+
+      do box_ir =  1, boxtot
+         ia = nint( real (box_psic ( box_ir ) ) )
+         grid_check(ia) = grid_check(ia) + 1
+      end do
+      write (stdout,*) 'box atomic grids'
+      write (stdout,*) (grid_check(ia),ia=1,nat)
+      write (stdout,*) (maxbox_beta(ia),ia=1,nat)
+
+      call box_to_bbox
+
+      grid_check(1:nat) = 0
+      do box_ir =  1, bboxtot
+         ia = nint( real (box_psic (box_ir ) ) )
+         grid_check(ia) = grid_check(ia) + 1
+      end do
+      write (stdout,*) 'bbox atomic grids'
+      write (stdout,*) (grid_check(ia),ia=1,nat)
+      write (stdout,*) (maxbbox_beta(ia),ia=1,nat)
+      DEALLOCATE ( grid_check )
+
+      RETURN
+
+    END SUBROUTINE beta_box_turning
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE box_to_bbox
+      !-----------------------------------------------------------------------
+      !! This routine redistributes box_psic inplace from the box to the bbox ordering
+      !! a final index turn-around is still neeed
+      !
+      USE mp,         ONLY : mp_send, mp_recv, mp_barrier
+      !
+      IMPLICIT NONE
+      !
+      INTEGER :: ip, id_send, id_recv, ndata, ir0, msg_tag, my_size
+      LOGICAL :: sending, recving
+      !
+!      write ( stdout, * ) 'enter  box_to_bbox '; FLUSH(6)
+!      write ( stdout, * ) 'me_bbox = ', me_bbox; FLUSH(6)
+      call mp_barrier ( intra_bbox_comm )
+
+      my_size = boxtot
+
+      do ip =1, nproc_bbox -1
+
+         msg_tag = ip
+
+         id_send = send_id(ip) ; sending = ( me_bbox == bbox_rank(send_id(ip)) )
+         id_recv = recv_id(ip) ; recving = ( me_bbox == bbox_rank(recv_id(ip)) )
+         ndata = datasize(ip)
+         ir0   = offset(ip)
+
+         !NB this s the intended direct operation so variable name means mean what they say
+!         write (*,*) 'msg_tag is',msg_tag; FLUSH(6)
+!         write (*,*) 'sending is',id_send, bbox_rank(id_send); FLUSH(6)
+!         write (*,*) 'recving is',id_recv, bbox_rank(id_recv); FLUSH(6)
+!         write (*,*) 'ndata is', datasize(ip); FLUSH(6)
+!         write (*,*) 'offset is', ir0; FLUSH(6)
+!         write (*,*) 'sending is', sending,' recving is', recving ; FLUSH(6)
+
+         if (recving) then ! id_recv is receiving ndata from id_send
+!            write ( stdout, * )  id_recv, ' receives ',ndata,' from ', id_send ; FLUSH(6)
+            call mp_recv ( box_psic(my_size+1:my_size+ndata), bbox_rank(id_send), msg_tag, intra_bbox_comm )
+            my_size = my_size + ndata
+         end if
+
+         if (sending) then ! id_send is sending ndata to id_recv
+!            write ( stdout, * )  id_send, ' sends ',ndata,' to ', id_recv ; FLUSH(6)
+            my_size = my_size - ndata
+            if (ir0 .ne. my_size) call errore('box_to_bbox',' wrong size ', ip)
+            call mp_send ( box_psic(my_size+1:my_size+ndata), bbox_rank(id_recv), msg_tag, intra_bbox_comm )
+         end if
+
+!         write(stdout,*) 'done', my_size ; FLUSH(6)
+
+      end do
+
+      call mp_barrier ( intra_bbox_comm )
+
+      if (my_size .ne. bboxtot) call errore('box_to_bbox',' wrong size ', nproc_bbox )
+
+!      write ( stdout, * ) 'exit  box_to_bbox '; FLUSH(6)
+      !
+      RETURN
+    END SUBROUTINE box_to_bbox
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE bbox_to_box
+      !-----------------------------------------------------------------------
+      !! This routine redistributes box_psic inplace from the box to the bbox ordering
+      !! an initial index turn-around is neeed
+      !
+      USE mp,         ONLY : mp_send, mp_recv, mp_barrier
+      !
+      IMPLICIT NONE
+      !
+      INTEGER :: ip, id_send, id_recv, ndata, ir0, msg_tag, my_size
+      LOGICAL :: sending, recving
+      !
+!      write ( stdout, * ) 'enter  bbox_to_box '; FLUSH(6)
+!      write ( stdout, * ) 'me_bbox = ', me_bbox; FLUSH(6)
+      call mp_barrier ( intra_bbox_comm )
+
+      my_size = bboxtot
+
+      do ip =nproc_bbox -1, 1, -1
+
+         msg_tag = ip
+
+         id_send = send_id(ip) ; sending = ( me_bbox == bbox_rank(send_id(ip)) )
+         id_recv = recv_id(ip) ; recving = ( me_bbox == bbox_rank(recv_id(ip)) )
+         ndata = datasize(ip)
+         ir0   = offset(ip)
+
+         !NB this the inverse of box_to_bbox so variable name means their opposite
+!         write (*,*) 'msg_tag is',msg_tag; FLUSH(6)
+!         write (*,*) 'un-sending is',id_send, bbox_rank(id_send); FLUSH(6)
+!         write (*,*) 'un-recving is',id_recv, bbox_rank(id_recv); FLUSH(6)
+!         write (*,*) 'ndata is', datasize(ip); FLUSH(6)
+!         write (*,*) 'offset is', ir0; FLUSH(6)
+!         write (*,*) 'un-sending is', sending,' un-recving is', recving ; FLUSH(6)
+
+         if (recving) then ! id_recv is actually sending ndata to id_send
+!            write ( stdout, * )  id_recv, ' sends ',ndata,' to ', id_send ; FLUSH(6)
+            my_size = my_size - ndata
+            call mp_send ( box_psic(my_size+1:my_size+ndata), bbox_rank(id_send), msg_tag, intra_bbox_comm )
+         end if
+
+         if (sending) then ! id_send is actually receiving ndata from id_recv
+!            write ( stdout, * )  id_send, ' receives ',ndata,' from ', id_recv ; FLUSH(6)
+            if (ir0 .ne. my_size) call errore('bbox_to_box',' wrong size ', ip)
+            call mp_recv ( box_psic(my_size+1:my_size+ndata), bbox_rank(id_recv), msg_tag, intra_bbox_comm )
+            my_size = my_size + ndata
+         end if
+
+!         write(stdout,*) 'done',my_size ; FLUSH(6)
+
+      end do
+
+      call mp_barrier ( intra_bbox_comm )
+
+      if (my_size .ne. boxtot) call errore('bbox_to_box',' wrong size ', nproc_bbox )
+
+!      write ( stdout, * ) 'exit  bbox_to_box '; FLUSH(6)
+      !
+      RETURN
+    END SUBROUTINE bbox_to_box
     !
     !------------------------------------------------------------------------
     SUBROUTINE newq_r( vr,deeq, skip_vltot )
@@ -1655,7 +1930,7 @@ MODULE realus
       !
       !! Subroutine written by Dario Rocca, Stefano de Gironcoli, modified by O. 
       !! Baris Malcioglu.
-      !! Some speedup and restrucuring by SdG April 2020.
+      !! Some speedup and restructuring by SdG April 2020.
       !!
       !
     USE kinds,                 ONLY : DP
@@ -1702,6 +1977,9 @@ MODULE realus
        box_psic ( box_ir ) = psic( box_beta( box_ir ) )
     END DO
     !$omp end parallel do
+
+    if (tbbox) call box_to_bbox
+    if (tbbox) call bbox_to_box
 
     ALLOCATE( wr(maxbox), wi(maxbox) )
     ! working arrays to order the points in the clever way
@@ -1816,6 +2094,9 @@ MODULE realus
        box_psic ( box_ir ) = psic( box_beta( box_ir ) )
     END DO
     !$omp end parallel do
+
+    if (tbbox) call box_to_bbox
+    if (tbbox) call bbox_to_box
 
     ALLOCATE( wr(maxbox), wi(maxbox) )
     ! working arrays to order the points in the clever way
@@ -2186,6 +2467,9 @@ MODULE realus
     IMPLICIT NONE
     !
     INTEGER :: ia, box_ir
+
+    if (tbbox) call box_to_bbox
+    if (tbbox) call bbox_to_box
 
     !$omp parallel
     DO ia = 1, nat
