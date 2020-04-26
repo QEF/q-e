@@ -48,6 +48,7 @@
       USE ldaU_cp,             ONLY : lda_plus_u, vupsi
       USE fft_helper_subroutines
 #if defined (__CUDA)
+      USE uspp_gpum,           ONLY : vkb_d
       USE cudafor
 #endif
       !
@@ -260,7 +261,7 @@
            ELSE
 
 #if defined (__CUDA)
-              CALL dforce( i, bec_bgrp, vkb, c0_d, c2, c3, rhos_d, &
+              CALL dforce( i, bec_bgrp, vkb_d, c0_d, c2, c3, rhos_d, &
                            SIZE(rhos_d,1), ispin_bgrp, f_bgrp, nbsp_bgrp, nspin )
 #else
               CALL dforce( i, bec_bgrp, vkb, c0_bgrp, c2, c3, rhos, &

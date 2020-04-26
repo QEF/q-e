@@ -355,3 +355,10 @@ SUBROUTINE from_scratch( )
     RETURN
     !
 END SUBROUTINE from_scratch
+
+subroutine hangup
+    USE mp_world,             ONLY : mpime, world_comm
+    USE mp,                   ONLY : mp_sum, mp_barrier
+    call mp_barrier(world_comm)
+    CALL stop_cp_run()
+end subroutine

@@ -286,7 +286,9 @@ CONTAINS
          !
 #if defined(__CUDA)
          IF( idesc(LAX_DESC_NR) == idesc(LAX_DESC_NC) .AND. idesc(LAX_DESC_NR) == idesc(LAX_DESC_N) ) THEN
-            CALL laxlib_diagonalize( nss, rhos, rhod, s, info )
+            IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
+               CALL laxlib_diagonalize( nss, rhos, rhod, s, info )
+            END IF
          ELSE IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
             IF( diagonalize_on_host ) THEN  !  tune here
                ALLOCATE( rhos_h, SOURCE = rhos )

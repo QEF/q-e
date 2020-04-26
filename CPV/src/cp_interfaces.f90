@@ -136,7 +136,7 @@
          IMPLICIT NONE
          INTEGER,     INTENT(IN)    :: i
          REAL(DP)                   :: bec(:,:)
-         COMPLEX(DP)                :: vkb(:,:)
+         COMPLEX(DP), DEVICE        :: vkb(:,:)
          COMPLEX(DP), DEVICE        :: c(:,:)
          COMPLEX(DP)                :: df(:), da(:)
          INTEGER,     INTENT(IN)    :: ldv

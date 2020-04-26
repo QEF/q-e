@@ -368,7 +368,7 @@
 !
       INTEGER,     INTENT(IN)    :: i
       REAL(DP)                   :: bec(:,:)
-      COMPLEX(DP)                :: vkb(:,:)
+      COMPLEX(DP), DEVICE        :: vkb(:,:)
       COMPLEX(DP), DEVICE        :: c(:,:)
       COMPLEX(DP)                :: df(:), da(:)
       INTEGER,     INTENT(IN)    :: ldv
@@ -387,6 +387,7 @@
       complex(DP), parameter :: ci=(0.0d0,1.0d0)
 
       REAL(DP),    ALLOCATABLE :: af( :, : ), aa( :, : )
+      REAL(DP),    ALLOCATABLE, DEVICE :: af_d( :, : ), aa_d( :, : )
       COMPLEX(DP), ALLOCATABLE, DEVICE :: psi(:)
       COMPLEX(DP), ALLOCATABLE, DEVICE :: df_d(:)
       COMPLEX(DP), ALLOCATABLE, DEVICE :: da_d(:)
@@ -476,14 +477,13 @@
       ENDDO
 
       !
-      CALL dev_memcpy( df, df_d )
-      CALL dev_memcpy( da, da_d )
 
       IF( nhsa > 0 ) THEN
          !
          !     aa_i,i,n = sum_j d_i,ij <beta_i,j|c_n>
          ! 
          ALLOCATE( af( nhsa, many_fft ), aa( nhsa, many_fft ) )
+         ALLOCATE( af_d( nhsa, many_fft ), aa_d( nhsa, many_fft ) )
          !
 !$omp parallel do default(none), &
 !$omp shared(many_fft,i,n,tens,f,nat,ityp,nh,dvan,indv_ijkb0,deeq,af,aa,bec,ispin), &
@@ -533,14 +533,21 @@
          END DO
 !$omp end parallel do
 
+         CALL dev_memcpy( af_d, af )
+         CALL dev_memcpy( aa_d, aa )
+
          IF( ngw > 0 ) THEN
-           CALL dgemm ( 'N', 'N', 2*ngw, many_fft , nhsa, 1.0d0, vkb, 2*ngw, af, nhsa, 1.0d0, df, 2*ngw)
-           CALL dgemm ( 'N', 'N', 2*ngw, many_fft , nhsa, 1.0d0, vkb, 2*ngw, aa, nhsa, 1.0d0, da, 2*ngw)
+           CALL MYDGEMM ( 'N', 'N', 2*ngw, many_fft , nhsa, 1.0d0, vkb, 2*ngw, af_d, nhsa, 1.0d0, df_d, 2*ngw)
+           CALL MYDGEMM ( 'N', 'N', 2*ngw, many_fft , nhsa, 1.0d0, vkb, 2*ngw, aa_d, nhsa, 1.0d0, da_d, 2*ngw)
          END IF
          !
          DEALLOCATE( aa, af )
+         DEALLOCATE( aa_d, af_d )
          !
       ENDIF
+
+      CALL dev_memcpy( df, df_d )
+      CALL dev_memcpy( da, da_d )
 !
       DEALLOCATE( df_d )
       DEALLOCATE( da_d )
