@@ -52,7 +52,7 @@ END SUBROUTINE deallocate_buffers
 !
 
 SUBROUTINE mp_synchronize( gid )
-   USE parallel_include  
+   USE parallel_include
    IMPLICIT NONE
    INTEGER, INTENT(IN) :: gid
 #if defined __MPI && defined __USE_BARRIER
@@ -63,6 +63,208 @@ SUBROUTINE mp_synchronize( gid )
    RETURN
 END SUBROUTINE mp_synchronize
 
+
+!=----------------------------------------------------------------------------=!
+! send_* section
+! NB: no barrier is introduced for this point-to-point operation
+!     if they are needed for synchronization they must be called outside
+!
+   !------------------------------------------------------------------------------!
+   SUBROUTINE send_integer(array, n, dest, tag, gid)
+   !------------------------------------------------------------------------------!
+   !!
+   !! Send integers
+   !!
+   USE parallel_include
+   !
+   IMPLICIT NONE
+   INTEGER, INTENT(in) :: n, dest, tag, gid
+   INTEGER :: array(n)
+#if defined __MPI
+   INTEGER :: msgsiz_max = __MSGSIZ_MAX
+   INTEGER :: nblk, blksiz, iblk, istart, ierr
+#if defined __TRACE
+   WRITE(*, *) 'SEND_INTEGER IN'
+#endif
+   IF(n <= 0) GOTO 1
+   !
+   IF(n <= msgsiz_max) THEN
+     CALL MPI_SEND(array, n, MPI_INTEGER, dest, tag, gid, ierr)
+     IF(ierr /= 0) CALL errore(' send_integer ', ' error in mpi_send 1 ', ierr)
+   ELSE
+     nblk   = n / msgsiz_max
+     blksiz = msgsiz_max
+     DO iblk = 1, nblk
+       istart = (iblk - 1) * msgsiz_max + 1
+       CALL MPI_SEND(array(istart), blksiz, MPI_INTEGER, dest, tag, gid, ierr )
+       IF(ierr /= 0) CALL errore(' send_integer ', ' error in mpi_send 2 ', ierr)
+     ENDDO
+     blksiz = MOD( n, msgsiz_max )
+     IF(blksiz > 0) THEN
+       istart = nblk * msgsiz_max + 1
+       CALL MPI_SEND(array( istart ), blksiz, MPI_INTEGER, dest, tag, gid, ierr)
+       IF(ierr /= 0) CALL errore(' send_integer ', ' error in mpi_send 3 ', ierr)
+     ENDIF
+   ENDIF
+1  CONTINUE
+#if defined __TRACE
+   WRITE(*, *) 'SEND_INTEGER OUT'
+#endif
+#endif
+   RETURN
+   !------------------------------------------------------------------------------!
+   END SUBROUTINE send_integer
+   !------------------------------------------------------------------------------!
+   !
+   !------------------------------------------------------------------------------!
+   SUBROUTINE send_real( array, n, dest, tag, gid )
+   !------------------------------------------------------------------------------!
+   !!
+   !! Send reals
+   !!
+   USE util_param, ONLY: DP
+   USE parallel_include
+   !
+   IMPLICIT NONE
+   INTEGER, INTENT(in) :: n, dest, tag, gid
+   REAL(DP) :: array( n )
+#if defined __MPI
+   INTEGER :: msgsiz_max = __BCAST_MSGSIZ_MAX
+   INTEGER :: nblk, blksiz, iblk, istart, ierr
+#if defined __TRACE
+   write(*,*) 'SEND_REAL IN'
+#endif
+   IF( n <= 0 ) GO TO 1
+   !
+   IF( n <= msgsiz_max ) THEN
+     CALL MPI_SEND( array, n, MPI_DOUBLE_PRECISION, dest, tag, gid, ierr )
+     IF( ierr /= 0 ) CALL errore( ' send_real ', ' error in mpi_send 1 ', ierr )
+   ELSE
+     nblk   = n / msgsiz_max
+     blksiz = msgsiz_max
+     DO iblk = 1, nblk
+       istart = (iblk-1)*msgsiz_max + 1
+       CALL MPI_SEND( array( istart ), blksiz, MPI_DOUBLE_PRECISION, dest, tag, gid, ierr )
+       IF( ierr /= 0 ) CALL errore( ' send_real ', ' error in mpi_send 2 ', ierr )
+     END DO
+     blksiz = MOD( n, msgsiz_max )
+     IF( blksiz > 0 ) THEN
+       istart = nblk * msgsiz_max + 1
+       CALL MPI_SEND( array( istart ), blksiz, MPI_DOUBLE_PRECISION, dest, tag, gid, ierr )
+       IF( ierr /= 0 ) CALL errore( ' send_real ', ' error in mpi_send 3 ', ierr )
+     END IF
+   END IF
+1  CONTINUE
+#if defined __TRACE
+   write(*,*) 'SEND_REAL OUT'
+#endif
+#endif
+   RETURN
+   !------------------------------------------------------------------------------!
+   END SUBROUTINE send_real
+   !------------------------------------------------------------------------------!
+
+!=----------------------------------------------------------------------------=!
+! recv_* section
+! NB: no barrier is introduced for this point-to-point operation
+!     if they are needed for synchronization they must be called outside
+!
+   !------------------------------------------------------------------------------!
+   SUBROUTINE recv_integer(array, n, source, tag, gid)
+   !------------------------------------------------------------------------------!
+   !!
+   !! Receive integers
+   !!
+   USE parallel_include
+   !
+   IMPLICIT NONE
+   INTEGER, INTENT(in) :: n, source, tag, gid
+   INTEGER :: array(n)
+#if defined __MPI
+   INTEGER :: msgsiz_max = __MSGSIZ_MAX
+   INTEGER :: nblk, blksiz, iblk, istart, ierr
+   INTEGER :: istatus(MPI_STATUS_SIZE)
+#if defined __TRACE
+   WRITE(*, *) 'RECV_INTEGER IN'
+#endif
+   IF(n <= 0) GOTO 1
+   !
+   IF(n <= msgsiz_max) THEN
+     CALL MPI_RECV(array, n, MPI_INTEGER, source, tag, gid, istatus, ierr)
+     IF(ierr /= 0) CALL errore(' recv_integer ', ' error in mpi_recv 1 ', ierr)
+   ELSE
+     nblk   = n / msgsiz_max
+     blksiz = msgsiz_max
+     DO iblk = 1, nblk
+       istart = (iblk - 1) * msgsiz_max + 1
+       CALL MPI_RECV(array(istart), blksiz, MPI_INTEGER, source, tag, gid, istatus, ierr )
+       IF(ierr /= 0) CALL errore(' recv_integer ', ' error in mpi_recv 2 ', ierr)
+     ENDDO
+     blksiz = MOD( n, msgsiz_max )
+     IF(blksiz > 0) THEN
+       istart = nblk * msgsiz_max + 1
+       CALL MPI_RECV(array( istart ), blksiz, MPI_INTEGER, source, tag, gid, istatus, ierr)
+       IF(ierr /= 0) CALL errore(' recv_integer ', ' error in mpi_recv 3 ', ierr)
+     ENDIF
+   ENDIF
+1  CONTINUE
+#if defined __TRACE
+   WRITE(*, *) 'RECV_INTEGER OUT'
+#endif
+#endif
+   RETURN
+   !------------------------------------------------------------------------------!
+   END SUBROUTINE recv_integer
+   !------------------------------------------------------------------------------!
+   !
+   !------------------------------------------------------------------------------!
+   SUBROUTINE recv_real( array, n, source, tag, gid )
+   !------------------------------------------------------------------------------!
+   !!
+   !! Receive reals
+   !!
+   USE util_param, ONLY: DP
+   USE parallel_include
+   !
+   IMPLICIT NONE
+   INTEGER, INTENT(in) :: n, source, tag, gid
+   REAL(DP) :: array( n )
+#if defined __MPI
+   INTEGER :: msgsiz_max = __BCAST_MSGSIZ_MAX
+   INTEGER :: nblk, blksiz, iblk, istart, ierr
+   INTEGER :: istatus(MPI_STATUS_SIZE)
+#if defined __TRACE
+   write(*,*) 'RECV_REAL IN'
+#endif
+   IF( n <= 0 ) GO TO 1
+   !
+   IF( n <= msgsiz_max ) THEN
+     CALL MPI_RECV( array, n, MPI_DOUBLE_PRECISION, source, tag, gid, istatus, ierr )
+     IF( ierr /= 0 ) CALL errore( ' recv_real ', ' error in mpi_recv 1 ', ierr )
+   ELSE
+     nblk   = n / msgsiz_max
+     blksiz = msgsiz_max
+     DO iblk = 1, nblk
+       istart = (iblk-1)*msgsiz_max + 1
+       CALL MPI_RECV( array( istart ), blksiz, MPI_DOUBLE_PRECISION, source, tag, gid, istatus, ierr )
+       IF( ierr /= 0 ) CALL errore( ' recv_real ', ' error in mpi_recv 2 ', ierr )
+     END DO
+     blksiz = MOD( n, msgsiz_max )
+     IF( blksiz > 0 ) THEN
+       istart = nblk * msgsiz_max + 1
+       CALL MPI_RECV( array( istart ), blksiz, MPI_DOUBLE_PRECISION, source, tag, gid, istatus, ierr )
+       IF( ierr /= 0 ) CALL errore( ' recv_real ', ' error in mpi_recv 3 ', ierr )
+     END IF
+   END IF
+1  CONTINUE
+#if defined __TRACE
+   write(*,*) 'RECV_REAL OUT'
+#endif
+#endif
+   RETURN
+   !------------------------------------------------------------------------------!
+   END SUBROUTINE recv_real
+   !------------------------------------------------------------------------------!
 
 !=----------------------------------------------------------------------------=!
 !

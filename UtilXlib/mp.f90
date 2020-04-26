@@ -31,7 +31,24 @@ MODULE mp
     mp_circular_shift_left, mp_circular_shift_left_start, &
     mp_get_comm_null, mp_get_comm_self, mp_count_nodes, &
     mp_type_create_column_section, mp_type_create_row_section, mp_type_free, &
-    mp_allgather, mp_waitall, mp_testall
+    mp_allgather, mp_waitall, mp_testall, &
+    mp_send, mp_recv
+  !
+  INTERFACE mp_send
+    MODULE PROCEDURE mp_send_i1, mp_send_iv, mp_send_r1, mp_send_rv, mp_send_c1, mp_send_cv
+#if defined(__CUDA)
+!    MODULE PROCEDURE mp_send_i1_gpu, mp_send_iv_gpu, mp_send_r1_gpu, mp_send_rv_gpu, &
+!                     mp_send_c1_gpu, mp_send_cv_gpu
+#endif
+  END INTERFACE
+  !
+  INTERFACE mp_recv
+    MODULE PROCEDURE mp_recv_i1, mp_recv_iv, mp_recv_r1, mp_recv_rv, mp_recv_c1, mp_recv_cv
+#if defined(__CUDA)
+!    MODULE PROCEDURE mp_recv_i1_gpu, mp_recv_iv_gpu, mp_recv_r1_gpu, mp_recv_rv_gpu, &
+!                     mp_recv_c1_gpu, mp_recv_cv_gpu
+#endif
+  END INTERFACE
   !
   INTERFACE mp_bcast
     MODULE PROCEDURE mp_bcast_i1, mp_bcast_r1, mp_bcast_c1, &
@@ -425,6 +442,230 @@ MODULE mp
 #endif
           RETURN
        END SUBROUTINE mp_testall
+
+!------------------------------------------------------------------------------!
+!..mp_send
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_send_i1(msg,dest,tag,gid)
+      !------------------------------------------------------------------------------!
+      !!
+      !! Send an integer element
+      !!
+      IMPLICIT NONE
+      INTEGER :: msg
+      INTEGER, INTENT(IN) :: dest
+      INTEGER, INTENT(IN) :: tag
+      INTEGER, INTENT(IN) :: gid
+      INTEGER :: group
+      INTEGER :: msglen
+#if defined(__MPI)
+      msglen = 1
+      group = gid
+      CALL send_integer( msg, msglen, dest, tag, group )
+#endif
+      END SUBROUTINE mp_send_i1
+      !
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_send_iv(msg, dest, tag, gid)
+      !------------------------------------------------------------------------------!
+      !!
+      !! Send an integer vector
+      !!
+      IMPLICIT NONE
+      INTEGER :: msg(:)
+      INTEGER, INTENT(IN) :: dest
+      INTEGER, INTENT(IN) :: tag
+      INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+      INTEGER :: msglen
+      msglen = SIZE(msg)
+      CALL send_integer(msg, msglen, dest, tag, gid)
+#endif
+      END SUBROUTINE mp_send_iv
+      !
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_send_r1( msg, dest, tag, gid )
+      !------------------------------------------------------------------------------!
+      !!
+      !! Send a real element
+      !!
+      IMPLICIT NONE
+      REAL (DP) :: msg
+      INTEGER, INTENT(IN) :: dest
+      INTEGER, INTENT(IN) :: tag
+      INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+      INTEGER :: msglen
+      msglen = 1
+      CALL send_real( msg, msglen, dest, tag, gid )
+#endif
+      END SUBROUTINE mp_send_r1
+      !
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_send_rv(msg,dest,tag,gid)
+      !------------------------------------------------------------------------------!
+      !!
+      !! Send a real vector
+      !!
+      IMPLICIT NONE
+      REAL (DP) :: msg(:)
+      INTEGER, INTENT(IN) :: dest
+      INTEGER, INTENT(IN) :: tag
+      INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+      INTEGER :: msglen
+      msglen = size(msg)
+      CALL send_real( msg, msglen, dest, tag, gid )
+#endif
+      END SUBROUTINE mp_send_rv
+      !
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_send_c1( msg, dest, tag, gid )
+      !------------------------------------------------------------------------------!
+      !!
+      !! Send a complex element
+      !!
+      IMPLICIT NONE
+      COMPLEX (DP) :: msg
+      INTEGER, INTENT(IN) :: dest
+      INTEGER, INTENT(IN) :: tag
+      INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+      INTEGER :: msglen
+      msglen = 1
+      CALL send_real( msg, 2 * msglen, dest, tag, gid )
+#endif
+      END SUBROUTINE mp_send_c1
+      !
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_send_cv(msg,dest,tag,gid)
+      !------------------------------------------------------------------------------!
+      !!
+      !! Send a complex vector
+      !!
+      IMPLICIT NONE
+      COMPLEX (DP) :: msg(:)
+      INTEGER, INTENT(IN) :: dest
+      INTEGER, INTENT(IN) :: tag
+      INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+      INTEGER :: msglen
+      msglen = size(msg)
+      CALL send_real( msg, 2 * msglen, dest, tag, gid )
+#endif
+      END SUBROUTINE mp_send_cv
+
+!------------------------------------------------------------------------------!
+!..mp_recv
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_recv_i1(msg,source,tag,gid)
+      !------------------------------------------------------------------------------!
+      !!
+      !! Receive an integer element
+      !!
+      IMPLICIT NONE
+      INTEGER :: msg
+      INTEGER, INTENT(IN) :: source
+      INTEGER, INTENT(IN) :: tag
+      INTEGER, INTENT(IN) :: gid
+      INTEGER :: group
+      INTEGER :: msglen
+#if defined(__MPI)
+      msglen = 1
+      group = gid
+      CALL recv_integer( msg, msglen, source, tag, group )
+#endif
+      END SUBROUTINE mp_recv_i1
+      !
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_recv_iv(msg, source, tag, gid)
+      !------------------------------------------------------------------------------!
+      !!
+      !! Receive an integer vector
+      !!
+      IMPLICIT NONE
+      INTEGER :: msg(:)
+      INTEGER, INTENT(IN) :: source
+      INTEGER, INTENT(IN) :: tag
+      INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+      INTEGER :: msglen
+      msglen = SIZE(msg)
+      CALL recv_integer(msg, msglen, source, tag, gid)
+#endif
+      END SUBROUTINE mp_recv_iv
+      !
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_recv_r1( msg, source, tag, gid )
+      !------------------------------------------------------------------------------!
+      !!
+      !! Receive a real element
+      !!
+      IMPLICIT NONE
+      REAL (DP) :: msg
+      INTEGER, INTENT(IN) :: source
+      INTEGER, INTENT(IN) :: tag
+      INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+      INTEGER :: msglen
+      msglen = 1
+      CALL recv_real( msg, msglen, source, tag, gid )
+#endif
+      END SUBROUTINE mp_recv_r1
+      !
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_recv_rv(msg,source,tag,gid)
+      !------------------------------------------------------------------------------!
+      !!
+      !! Receive a real vector
+      !!
+      IMPLICIT NONE
+      REAL (DP) :: msg(:)
+      INTEGER, INTENT(IN) :: source
+      INTEGER, INTENT(IN) :: tag
+      INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+      INTEGER :: msglen
+      msglen = size(msg)
+      CALL recv_real( msg, msglen, source, tag, gid )
+#endif
+      END SUBROUTINE mp_recv_rv
+      !
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_recv_c1( msg, source, tag, gid )
+      !------------------------------------------------------------------------------!
+      !!
+      !! Receive a complex element
+      !!
+      IMPLICIT NONE
+      COMPLEX (DP) :: msg
+      INTEGER, INTENT(IN) :: source
+      INTEGER, INTENT(IN) :: tag
+      INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+      INTEGER :: msglen
+      msglen = 1
+      CALL recv_real( msg, 2 * msglen, source, tag, gid )
+#endif
+      END SUBROUTINE mp_recv_c1
+      !
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_recv_cv(msg,source,tag,gid)
+      !------------------------------------------------------------------------------!
+      !!
+      !! Receive a complex vector
+      !!
+      IMPLICIT NONE
+      COMPLEX (DP) :: msg(:)
+      INTEGER, INTENT(IN) :: source
+      INTEGER, INTENT(IN) :: tag
+      INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+      INTEGER :: msglen
+      msglen = size(msg)
+      CALL recv_real( msg, 2 * msglen, source, tag, gid )
+#endif
+      END SUBROUTINE mp_recv_cv
 
 !------------------------------------------------------------------------------!
 !..mp_bcast
@@ -1997,7 +2238,6 @@ MODULE mp
       END FUNCTION mp_size
 
       SUBROUTINE mp_report
-        INTEGER :: i
         WRITE( stdout, *)
 #if defined(__MPI)
 #  if defined (__MP_STAT)
@@ -2137,7 +2377,7 @@ MODULE mp
         INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
-        INTEGER :: ierr, npe, myid, nsiz
+        INTEGER :: ierr, npe, myid
         INTEGER, ALLOCATABLE :: nrecv(:), ndisp(:)
 
 
@@ -2187,7 +2427,7 @@ MODULE mp
         INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
-        INTEGER :: ierr, npe, myid, nsiz
+        INTEGER :: ierr, npe, myid
         INTEGER, ALLOCATABLE :: nrecv(:), ndisp(:)
 
 
@@ -2414,7 +2654,7 @@ SUBROUTINE mp_circular_shift_left_i0( buf, itag, gid )
    INTEGER :: buf
    INTEGER, INTENT(IN) :: itag
    INTEGER, INTENT(IN) :: gid
-   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+   INTEGER :: group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 
@@ -2449,7 +2689,7 @@ SUBROUTINE mp_circular_shift_left_i1( buf, itag, gid )
    INTEGER :: buf(:)
    INTEGER, INTENT(IN) :: itag
    INTEGER, INTENT(IN) :: gid
-   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+   INTEGER :: group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 
@@ -2484,7 +2724,7 @@ SUBROUTINE mp_circular_shift_left_i2( buf, itag, gid )
    INTEGER :: buf(:,:)
    INTEGER, INTENT(IN) :: itag
    INTEGER, INTENT(IN) :: gid
-   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+   INTEGER :: group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 
@@ -2519,7 +2759,7 @@ SUBROUTINE mp_circular_shift_left_r2d( buf, itag, gid )
    REAL(DP) :: buf( :, : )
    INTEGER, INTENT(IN) :: itag
    INTEGER, INTENT(IN) :: gid
-   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+   INTEGER :: group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 
@@ -2553,7 +2793,7 @@ SUBROUTINE mp_circular_shift_left_c2d( buf, itag, gid )
    COMPLEX(DP) :: buf( :, : )
    INTEGER, INTENT(IN) :: itag
    INTEGER, INTENT(IN) :: gid
-   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+   INTEGER :: group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 
@@ -2591,7 +2831,7 @@ SUBROUTINE mp_circular_shift_left_start_i0( sendbuf, recvbuf, itag, gid, request
    INTEGER, INTENT(IN) :: itag
    INTEGER, INTENT(IN) :: gid
    INTEGER, INTENT(INOUT) :: requests(2)
-   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+   INTEGER :: group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 
@@ -2634,7 +2874,7 @@ SUBROUTINE mp_circular_shift_left_start_i1( sendbuf, recvbuf, itag, gid, request
    INTEGER, INTENT(IN) :: itag
    INTEGER, INTENT(IN) :: gid
    INTEGER, INTENT(INOUT) :: requests(2)
-   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+   INTEGER :: group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 
@@ -2678,7 +2918,7 @@ SUBROUTINE mp_circular_shift_left_start_i2( sendbuf, recvbuf, itag, gid, request
    INTEGER, INTENT(IN) :: itag
    INTEGER, INTENT(IN) :: gid
    INTEGER, INTENT(INOUT) :: requests(2)
-   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+   INTEGER :: group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 
@@ -2722,7 +2962,7 @@ SUBROUTINE mp_circular_shift_left_start_r2d( sendbuf, recvbuf, itag, gid, reques
    INTEGER, INTENT(IN) :: itag
    INTEGER, INTENT(IN) :: gid
    INTEGER, INTENT(INOUT) :: requests(2)
-   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+   INTEGER :: group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 
@@ -2766,7 +3006,7 @@ SUBROUTINE mp_circular_shift_left_start_c2d( sendbuf, recvbuf, itag, gid, reques
    INTEGER, INTENT(IN) :: itag
    INTEGER, INTENT(IN) :: gid
    INTEGER, INTENT(INOUT) :: requests(2)
-   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+   INTEGER :: group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 
@@ -2837,10 +3077,10 @@ SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
   INTEGER, ALLOCATABLE   :: color_list(:)
   INTEGER, ALLOCATABLE   :: key_list(:)
   !
-  INTEGER :: hostname_len, max_hostname_len, numtask, me, ierr
+  INTEGER :: hostname_len, numtask, me, ierr
   !
   ! Loops variables
-  INTEGER :: i, j, e, s, c, k
+  INTEGER :: i, j, c, k
   ! ...
   ierr      = 0
   num_nodes = 1
@@ -5526,7 +5766,7 @@ END SUBROUTINE mp_type_free
         INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
-        INTEGER :: ierr, npe, myid, nsiz
+        INTEGER :: ierr, npe, myid
         INTEGER, ALLOCATABLE :: nrecv(:), ndisp(:)
 
 
@@ -5595,7 +5835,7 @@ END SUBROUTINE mp_type_free
         INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
-        INTEGER :: ierr, npe, myid, nsiz
+        INTEGER :: ierr, npe, myid
         INTEGER, ALLOCATABLE :: nrecv(:), ndisp(:)
 
 
@@ -5751,7 +5991,7 @@ END SUBROUTINE mp_type_free
          INTEGER, DEVICE :: buf_d
          INTEGER, INTENT(IN) :: itag
          INTEGER, INTENT(IN) :: gid
-         INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+         INTEGER :: group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
@@ -5795,7 +6035,7 @@ END SUBROUTINE mp_type_free
          INTEGER, DEVICE :: buf_d(:)
          INTEGER, INTENT(IN) :: itag
          INTEGER, INTENT(IN) :: gid
-         INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+         INTEGER :: group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
@@ -5839,7 +6079,7 @@ END SUBROUTINE mp_type_free
          INTEGER, DEVICE :: buf_d(:,:)
          INTEGER, INTENT(IN) :: itag
          INTEGER, INTENT(IN) :: gid
-         INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+         INTEGER :: group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
@@ -5883,7 +6123,7 @@ END SUBROUTINE mp_type_free
          REAL(DP), DEVICE :: buf_d( :, : )
          INTEGER, INTENT(IN) :: itag
          INTEGER, INTENT(IN) :: gid
-         INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+         INTEGER :: group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
@@ -5927,7 +6167,7 @@ END SUBROUTINE mp_type_free
          COMPLEX(DP), DEVICE :: buf_d( :, : )
          INTEGER, INTENT(IN) :: itag
          INTEGER, INTENT(IN) :: gid
-         INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+         INTEGER :: group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
