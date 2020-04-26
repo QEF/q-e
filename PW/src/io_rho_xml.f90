@@ -95,7 +95,9 @@ MODULE io_rho_xml
                   WRITE( iunocc, * , iostat = ierr) rho%ns
                ENDIF
             ELSEIF (lda_plus_u_kind.EQ.2) THEN
-               WRITE( iunocc, * , iostat = ierr) nsg  
+               WRITE( iunocc, * , iostat = ierr) nsg
+               ! Write Hubbard_V to file
+               CALL write_V  
             ENDIF
          ENDIF
          CALL mp_bcast( ierr, ionode_id, intra_image_comm )
@@ -211,7 +213,7 @@ MODULE io_rho_xml
                   rho%ns(:,:,:,:) = 0.D0
                ENDIF 
             ELSEIF (lda_plus_u_kind.EQ.2) THEN
-               nsg(:,:,:,:,:) = 0.d0 
+               nsg(:,:,:,:,:) = (0.d0, 0.d0) 
             ENDIF
          ENDIF
          !

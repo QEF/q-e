@@ -421,7 +421,7 @@
       end do
     end do
     !
-    ekin2nhp(1:nsp) = ekin2nhp(1:nsp) * 0.5_DP
+    ekin2nhp(1:nhpdim) = ekin2nhp(1:nhpdim) * 0.5_DP
     !
     !
     temps( 1:nsp ) = 0.5_DP * temps( 1:nsp ) / k_boltzmann_au / ( 1.5_DP * na(1:nsp) )

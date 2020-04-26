@@ -13,8 +13,9 @@ export REFERENCE_VERSION=6.0
 # export ESPRESSO_ROOT=${PWD}/../
 export ESPRESSO_ROOT=${shell pwd}/../
 
-# Edit this line to change the number of processors for parallel execution
+# Edit these lines to change the number of processors for MPI/OpenMP parallel execution
 export TESTCODE_NPROCS=4
+export OMP_NUM_THREADS=1
 
 export ESPRESSO_PSEUDO=${ESPRESSO_ROOT}/pseudo
 export NETWORK_PSEUDO=http://www.quantum-espresso.org/wp-content/uploads/upf_files/

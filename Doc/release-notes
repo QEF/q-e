@@ -6,8 +6,10 @@ New in dev branch:
   * ParO and PPCG iterative diagonalization algorithms
   * Fourier interpolation of phonon potential implemented in ph.x
     (Jae-Mo Lihm, Seoul Natl. Univ.)
-  * DFT+U+V in pw.x, J. Phys.: Condens. Matter 22, 055602 (2010)
-    (V.L. Campo Jr, I. Timrov, N. Marzari, M. Cococcioni)
+  * Extension of the PW code to DFT+U+V [JPCM 22, 055602 (2010)];
+    Extension of the HP code to compute also inter-site Hubbard V parameters;
+    Extension of the XSpectra code to work on top of DFT+U+V [arXiv:2004.04142]
+    (I. Timrov, N. Marzari, M. Cococcioni).
   * Support for BEEF-vdW XC (by Johannes Voss) compilation link has been included; 
     e.g. BEEF_LIBS="-L$LIBBEEF/src -lbeef", where $LIBBEEF is the path 
     to the compiled libbeef folder. If "calculation='ensemble'", 

@@ -140,6 +140,7 @@ The following features of the code are tested:
 The following features of the code are tested:
 - LDA+U with standard and user-defined occupancies
 - forces and stresses, gamma-only case
+- lda_plus_u_kind=1, collinear and noncollinear
 
 ####################
 # pw_lsda : Ni fcc #
@@ -349,6 +350,12 @@ The following features of the code are tested:
 The following features of the code are tested:
 - Calculation of U for a nonmagnetic insulator, with USPP
 
+#######################################
+# hp_insulator_us_intersiteV : LiCoO2 #
+#######################################
+The following features of the code are tested:
+- Calculation of U and V for a nonmagnetic insulator, with USPP
+
 ##############################
 # hp_insulator_us_magn : NiO #
 ##############################
@@ -378,6 +385,13 @@ The following features of the code are tested:
 ##########################
 The following features of the code are tested:
 - Calculation of U for a ferromagnetic metal, with PAW
+
+#########################################
+# hp_metal_paw_magn_intersiteV : LiNiO2 #
+#########################################
+The following features of the code are tested:
+- Calculation of U and V for a ferromagnetic metal (it is a metal even
+at the DFT+U+V level for the rhombohedral structure), with PAW
 
 #################################################################################################
 # EPW tests

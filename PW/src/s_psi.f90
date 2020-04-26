@@ -94,6 +94,8 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
                               fwfft_orbital_gamma, calbec_rs_gamma, &
                               s_psir_gamma, invfft_orbital_k,       &
                               fwfft_orbital_k, calbec_rs_k, s_psir_k
+  USE wavefunctions,    ONLY: psic
+  USE fft_base,         ONLY: dffts
   !
   USE uspp_gpum,        ONLY: using_vkb, using_indv_ijkb0, using_qq_at, using_qq_so
   !
@@ -130,10 +132,14 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
      IF ( real_space ) THEN
         !
         DO ibnd = 1, m, 2
-           !   transform the orbital to real space
-           CALL invfft_orbital_gamma( psi, ibnd, m ) 
+!SdG: the becp are already computed ! no need to invfft psi to real space.
+!           CALL invfft_orbital_gamma( psi, ibnd, m ) 
+!SdG: we just need to clean psic in real space ...
+           CALL threaded_barrier_memset(psic, 0.D0, dffts%nnr*2)
+!SdG: ... before computing the us-only contribution ...
            CALL s_psir_gamma( ibnd, m )
-           CALL fwfft_orbital_gamma( spsi, ibnd, m )
+!SdG: ... and add it to spsi (already containing psi).
+           CALL fwfft_orbital_gamma( spsi, ibnd, m, add_to_orbital=.TRUE. )
         ENDDO
         !
      ELSE
@@ -151,10 +157,14 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
      IF ( real_space ) THEN
         !
         DO ibnd = 1, m
-           !   transform the orbital to real space
-           CALL invfft_orbital_k( psi, ibnd, m )
+!SdG: the becp are already computed ! no need to invfft psi to real space.
+!           CALL invfft_orbital_k( psi, ibnd, m )
+!SdG: we just need to clean psic in real space ...
+           CALL threaded_barrier_memset(psic, 0.D0, dffts%nnr*2)
+!SdG: ... before computing the us-only contribution ...
            CALL s_psir_k( ibnd, m )
-           CALL fwfft_orbital_k( spsi, ibnd, m )
+!SdG: ... and add it to spsi (already containing psi).
+           CALL fwfft_orbital_k( spsi, ibnd, m, add_to_orbital=.TRUE. )
         ENDDO
         !
      ELSE

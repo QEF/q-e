@@ -42,7 +42,7 @@ SUBROUTINE force_hub( forceh )
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE klist,                ONLY : nks, xk, ngk, igk_k
-   USE io_files,             ONLY : nwordwfc, iunwfc
+   USE io_files,             ONLY : nwordwfc, iunwfc, iunhub2, nwordwfcU
    USE buffers,              ONLY : get_buffer
    USE mp_bands,             ONLY : use_bgrp_in_hpsi
    !
@@ -58,7 +58,7 @@ SUBROUTINE force_hub( forceh )
    ! ... local variables
    !
    TYPE(bec_type) :: proj     ! proj(nwfcU,nbnd)
-   COMPLEX(DP), ALLOCATABLE :: spsi(:,:), wfcatom(:,:) 
+   COMPLEX(DP), ALLOCATABLE :: spsi(:,:) 
    REAL(DP), ALLOCATABLE :: dns(:,:,:,:), dnsb(:,:,:,:)
    COMPLEX (DP), ALLOCATABLE ::  dnsg(:,:,:,:,:)
    ! dns(ldim,ldim,nspin,nat) ! the derivative of the atomic occupations
@@ -96,7 +96,6 @@ SUBROUTINE force_hub( forceh )
    ENDIF
    !
    ALLOCATE( spsi(npwx,nbnd)          ) 
-   ALLOCATE( wfcatom (npwx,natomwfc)  ) 
    !
    CALL allocate_bec_type( nkb, nbnd, becp   )
    CALL allocate_bec_type( nwfcU, nbnd, proj )
@@ -133,10 +132,10 @@ SUBROUTINE force_hub( forceh )
       CALL calbec( npw, vkb, evc, becp )
       CALL s_psi( npwx, npw, nbnd, evc, spsi )
       !
-      ! re-calculate atomic wfc - wfcatom is used here as work space
+      ! Read the (ortho-)atomic orbitals from file (it does not include 
+      ! the ultrasoft operator S)
       !
-      CALL atomic_wfc( ik, wfcatom )
-      CALL copy_U_wfc( wfcatom     )
+      CALL get_buffer( wfcU, nwordwfcU, iunhub2, ik )
       !
       ! wfcU contains Hubbard-U atomic wavefunctions
       ! proj=<wfcU|S|evc> - no need to read S*wfcU from buffer
@@ -260,7 +259,6 @@ SUBROUTINE force_hub( forceh )
       DEALLOCATE(dnsg)
    ENDIF
    !
-   DEALLOCATE(wfcatom) 
    DEALLOCATE(spsi) 
    !
    CALL using_becp_auto(2)

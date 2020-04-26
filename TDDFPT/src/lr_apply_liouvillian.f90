@@ -53,7 +53,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
                                    & calbec_rs_gamma, newq_r, &
                                    & add_vuspsir_gamma, v_loc_psir,   &
                                    & s_psir_gamma, &
-                                   & betasave, box_beta, maxbox_beta
+                                   & betasave, box_beta, box0, maxbox_beta
   USE dfunct,               ONLY : newq
   USE control_flags,        ONLY : tqr
   USE mp,                   ONLY : mp_sum, mp_barrier
@@ -480,9 +480,9 @@ CONTAINS
                           DO ir = 1, mbia
                           !
                            iqs = jqs + ir
-                           psic( box_beta(ir,ia) ) = &
-                                &psic(  box_beta(ir,ia) ) + &
-                                &betasave(ir,ih,ia)*&
+                           psic( box_beta(box0(ia)+ir) ) = &
+                                &psic( box_beta(box0(ia)+ir) ) + &
+                                &betasave(box0(ia)+ir,ih)*&
                                 &CMPLX( w1(ih), w2(ih), KIND=dp )
                           !
                           ENDDO
