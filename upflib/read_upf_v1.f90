@@ -264,10 +264,16 @@ subroutine read_pseudo_header (upf, iunps)
 
   read (iunps, *, err = 100, end = 100) upf%nwfc, upf%nbeta , dummy
   read (iunps, '(a)', err = 100, end = 100) dummy
-  ALLOCATE( upf%els( upf%nwfc ), upf%lchi( upf%nwfc ), upf%oc( upf%nwfc ) )
+  ALLOCATE( upf%els( upf%nwfc ), upf%lchi( upf%nwfc ), upf%oc( upf%nwfc ),&
+       upf%nchi( upf%nwfc ) )
   do nw = 1, upf%nwfc  
      read (iunps, * ) upf%els (nw), upf%lchi (nw), upf%oc (nw)  
+     upf%nchi (nw) = upf%lchi(nw)-1
   enddo
+  ! next lines for compatibility with upf v.2
+  ALLOCATE( upf%rcut_chi( upf%nwfc ), upf%rcutus_chi( upf%nwfc ), &
+       upf%epseu( upf%nwfc ) )
+  upf%rcut_chi = 0.0_dp; upf%rcutus_chi=0.0_dp; upf%epseu = 0.0_dp
 
   return  
 
@@ -576,11 +582,10 @@ subroutine read_pseudo_addinfo (upf, iunps)
   integer :: nb
   
   ALLOCATE( upf%nn(upf%nwfc) )
-  ALLOCATE( upf%epseu(upf%nwfc), upf%jchi(upf%nwfc) )
+  ALLOCATE( upf%jchi(upf%nwfc) )
   ALLOCATE( upf%jjj(upf%nbeta) )
 
   upf%nn=0
-  upf%epseu=0.0_DP
   upf%jchi=0.0_DP
   do nb = 1, upf%nwfc
      read (iunps, *,err=100,end=100) upf%els(nb),  &

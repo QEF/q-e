@@ -194,6 +194,12 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
         !
      END IF
      !
+     IF ( .not. ionode) THEN
+        OPEN ( UNIT = iunps, FILE = file_pseudo, STATUS = 'old', FORM = 'formatted' ) 
+        CALL  read_upf(upf(nt), rgrid(nt), isupf, UNIT = iunps )
+        CLOSE (iunps)
+     END IF
+     !
      CALL mp_bcast (isupf,ionode_id,intra_image_comm)
      !
      IF (isupf == -2 .OR. isupf == -1 .OR. isupf == 0) THEN
