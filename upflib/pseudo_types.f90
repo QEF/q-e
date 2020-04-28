@@ -11,7 +11,6 @@ MODULE pseudo_types
   !  together with their allocation/deallocation routines
 
   USE upf_kinds,    ONLY: DP
-  use radial_grids, ONLY: radial_grid_type
 
   IMPLICIT NONE
   SAVE
@@ -142,9 +141,6 @@ MODULE pseudo_types
      INTEGER :: paw_data_format      ! The version of the format
      LOGICAL  :: tpawp               ! true if atom is PAW, PAW data must be present
      TYPE(paw_in_upf) :: paw         ! additional data for PAW (see above)
-     TYPE(radial_grid_type),POINTER :: grid ! pointer to the corresponding grid
-     ! in radial_grids module
-
      ! GIPAW:
      LOGICAL  :: has_gipaw           ! Whether GIPAW data is included
      LOGICAL  :: paw_as_gipaw        !EMINE
@@ -230,7 +226,6 @@ CONTAINS
   SUBROUTINE nullify_pseudo_upf( upf )
     TYPE( pseudo_upf ), INTENT(INOUT) :: upf
     CALL nullify_paw_in_upf( upf%paw )
-    NULLIFY( upf%grid ) 
     NULLIFY( upf%els, upf%lchi, upf%nchi, upf%jchi, upf%oc )
     NULLIFY( upf%r, upf%rab )
     NULLIFY( upf%rho_atc, upf%vloc )
@@ -301,14 +296,8 @@ CONTAINS
     IF( ASSOCIATED( upf%jchi ) )    DEALLOCATE( upf%jchi )
     IF( ASSOCIATED( upf%oc ) )      DEALLOCATE( upf%oc )
     !
-    IF(ASSOCIATED(upf%grid)) THEN
-       IF( ASSOCIATED( upf%r ) ) NULLIFY( upf%r )
-       IF( ASSOCIATED( upf%rab ) ) NULLIFY( upf%rab )
-       NULLIFY(upf%grid)
-    ELSE
-       IF( ASSOCIATED( upf%r ) ) DEALLOCATE( upf%r )
-       IF( ASSOCIATED( upf%rab ) ) DEALLOCATE( upf%rab )
-    ENDIF
+    IF( ASSOCIATED( upf%r ) ) DEALLOCATE( upf%r )
+    IF( ASSOCIATED( upf%rab ) ) DEALLOCATE( upf%rab )
     !
     IF( ASSOCIATED( upf%nn ) )      DEALLOCATE( upf%nn )
     IF( ASSOCIATED( upf%els_beta ) )DEALLOCATE( upf%els_beta )

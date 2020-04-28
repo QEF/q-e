@@ -14,7 +14,6 @@
 
 ! ...   declare modules
         USE upf_kinds,    ONLY: DP
-        USE radial_grids, ONLY: allocate_radial_grid, radial_grid_type
         USE pseudo_types, ONLY : pseudo_upf
         USE upf_utils,    ONLY: matches
 !
@@ -25,7 +24,7 @@
       CONTAINS
 !
 !---------------------------------------------------------------------
-SUBROUTINE read_upf_v1 (iunps, upf, grid, ierr, header_only)
+SUBROUTINE read_upf_v1 (iunps, upf, ierr, header_only)
   !---------------------------------------------------------------------
   !
   !   read pseudopotential "upf" in the Unified Pseudopotential Format
@@ -37,7 +36,6 @@ SUBROUTINE read_upf_v1 (iunps, upf, grid, ierr, header_only)
   INTEGER, INTENT(OUT) :: ierr 
   LOGICAL, INTENT(IN), OPTIONAL :: header_only
   TYPE (pseudo_upf), INTENT(INOUT)       :: upf
-  TYPE (radial_grid_type), TARGET, INTENT(INOUT) :: grid
   !
   !     Local variables
   !
@@ -45,9 +43,6 @@ SUBROUTINE read_upf_v1 (iunps, upf, grid, ierr, header_only)
   CHARACTER (len=80) :: dummy  
   !
   ! Prepare the pointers
-  ! CALL nullify_pseudo_upf( upf ) should be nullified when instantiated
-  !
-  upf%grid => grid
   !
   ! First check if this pseudo-potential has spin-orbit information 
   !
@@ -257,11 +252,6 @@ subroutine read_pseudo_header (upf, iunps)
   read (iunps, * ) upf%ecutwfc, upf%ecutrho
   read (iunps, * ) upf%lmax , dummy
   read (iunps, *, err = 100, end = 100) upf%mesh , dummy
-  upf%grid%mesh = upf%mesh
-  call allocate_radial_grid(upf%grid,upf%grid%mesh)
-!   IF ( upf%grid%mesh > SIZE (upf%grid%r) ) &
-!      CALL upf_error('read_pseudo_header', 'too many grid points', 1)
-
   read (iunps, *, err = 100, end = 100) upf%nwfc, upf%nbeta , dummy
   read (iunps, '(a)', err = 100, end = 100) dummy
   ALLOCATE( upf%els( upf%nwfc ), upf%lchi( upf%nwfc ), upf%oc( upf%nwfc ),&
@@ -292,12 +282,7 @@ subroutine read_pseudo_mesh (upf, iunps)
   !
   integer :: ir
 
-  IF(associated(upf%grid)) THEN
-     upf%r   => upf%grid%r
-     upf%rab => upf%grid%rab
-  ELSE
-     ALLOCATE( upf%r( upf%mesh ), upf%rab( upf%mesh ) )
-  ENDIF
+  ALLOCATE( upf%r( upf%mesh ), upf%rab( upf%mesh ) )
   upf%r   = 0.0_DP
   upf%rab = 0.0_DP
 
@@ -307,8 +292,6 @@ subroutine read_pseudo_mesh (upf, iunps)
   call scan_begin (iunps, "RAB", .false.)  
   read (iunps, *, err = 101, end = 101) (upf%rab(ir), ir=1,upf%mesh )
   call scan_end (iunps, "RAB")  
-!   upf%grid%r(1:upf%mesh)   = upf%r(1:upf%mesh)
-!   upf%grid%rab(1:upf%mesh) = upf%rab(1:upf%mesh)
 
   return  
 
@@ -448,11 +431,15 @@ subroutine read_pseudo_nl (upf, iunps)
         ALLOCATE( upf%qfunc ( upf%mesh, upf%nbeta*(upf%nbeta+1)/2 ) )
         upf%qfunc  = 0.0_DP
      ENDIF
-     ALLOCATE( upf%qfcoef( MAX( upf%nqf,1 ), upf%nqlc, upf%nbeta, upf%nbeta ) )
+     IF ( upf%nqf > 0 ) THEN
+        ALLOCATE( upf%qfcoef(upf%nqf, upf%nqlc, upf%nbeta, upf%nbeta ) )
+     ELSE
+        ALLOCATE( upf%qfcoef(1,1,1,1) )
+     ENDIF
      upf%rinner = 0.0_DP
      upf%qqq    = 0.0_DP
      upf%qfcoef = 0.0_DP
-     if ( upf%nqf /= 0) then
+     if ( upf%nqf > 0) then
         call scan_begin (iunps, "RINNER", .false.)  
         read (iunps,*,err=103,end=103) ( idum, upf%rinner(i), i=1,upf%nqlc )
         call scan_end (iunps, "RINNER")  
@@ -610,10 +597,6 @@ subroutine read_pseudo_addinfo (upf, iunps)
   enddo
   
   read(iunps, *) upf%xmin, upf%rmax, upf%zmesh, upf%dx
-  upf%grid%dx   = upf%dx
-  upf%grid%xmin = upf%xmin
-  upf%grid%zmesh= upf%zmesh
-  upf%grid%mesh = upf%mesh
 
   return
 100 call upf_error ('read_pseudo_addinfo','Reading pseudo file', 1)

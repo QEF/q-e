@@ -31,7 +31,6 @@ PROGRAM virtual_test
                            deallocate_pseudo_upf
   USE upf_module, ONLY : read_ps
   USE write_upf_module, ONLY : write_upf
-  USE radial_grids, ONLY : radial_grid_type, nullify_radial_grid
   USE upf_io, ONLY : stdin, stdout
   !
   IMPLICIT NONE
@@ -44,7 +43,6 @@ PROGRAM virtual_test
   !
   INTEGER :: ios
   TYPE (pseudo_upf) :: upf(2), upf_vca
-  TYPE (radial_grid_type) :: grid(2)
   LOGICAL :: exst
   !
   !
@@ -63,10 +61,9 @@ PROGRAM virtual_test
      !  nullify objects as soon as they are instantiated
      
      CALL nullify_pseudo_upf(upf(is))
-     CALL nullify_radial_grid(grid(is))
      INQUIRE ( FILE = TRIM(filein(is)), EXIST = exst )  
      IF (.NOT. exst ) CALL upf_error ( 'virtual_v2.x: ', TRIM(filein(is)) // ' not found', 5)
-     CALL read_ps ( filein(is), upf(is), grid(is) )
+     CALL read_ps ( filein(is), upf(is) )
      PRINT '('' '')'
      IF ( TRIM(upf(is)%typ) == 'PAW') CALL upf_error('virtual_v2.x: ', &
           'Use of PAW is not implemented', 1) 

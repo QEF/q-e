@@ -71,24 +71,10 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   INTEGER :: iunps, isupf, nt, nb, ir, ios
   INTEGER :: iexch_, icorr_, igcx_, igcc_, inlc_
   !
-  ! ... initialization: allocate radial grids etc
+  ! ... initializations, allocations, etc
   !
   iunps = 4
-  IF( ALLOCATED( rgrid ) ) THEN
-     DO nt = 1, SIZE( rgrid )
-        CALL deallocate_radial_grid( rgrid( nt ) )
-        CALL nullify_radial_grid( rgrid( nt ) )
-     END DO
-     DEALLOCATE( rgrid )
-     if(allocated(msh)) DEALLOCATE( msh )
-  END IF
-
-  ALLOCATE( rgrid( ntyp ), msh( ntyp ) )
-
-  DO nt = 1, ntyp
-     CALL nullify_radial_grid( rgrid( nt ) )
-  END DO
-
+  !
   IF( ALLOCATED( upf ) ) THEN
      DO nt = 1, SIZE( upf )
         CALL deallocate_pseudo_upf( upf( nt ) )
@@ -115,12 +101,6 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   !
   DO nt = 1, ntyp
      !
-     ! variables not necessary for USPP, but necessary for PAW;
-     ! will be read from file if it is a PAW dataset.
-     !
-     rgrid(nt)%xmin = 0.d0
-     rgrid(nt)%dx = 0.d0
-     !
      ! try first pseudo_dir_cur if set: in case of restart from file,
      ! this is where PP files should be located
      !
@@ -132,13 +112,10 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
         CALL mp_sum (ios,intra_image_comm)
         IF ( ios /= 0 ) CALL infomsg &
                      ('readpp', 'file '//TRIM(file_pseudo)//' not found')
-        !
-        ! file not found? no panic (yet): if the restart file is not visible
-        ! to all processors, this may happen. Try the original location
      END IF
      !
-     ! try the original location pseudo_dir, as set in input
-     ! (it should already contain a slash at the end)
+     ! file not found? no panic (yet): try the original location pseudo_dir
+     ! as set in input (it should already contain a slash at the end)
      !
      IF ( ios /= 0 ) THEN
         file_pseudo = TRIM (pseudo_dir) // TRIM (psfile(nt))
@@ -148,8 +125,6 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
         CALL errore('readpp', 'file '//TRIM(file_pseudo)//' not found',ABS(ios))
      END IF
      !
-     upf(nt)%grid => rgrid(nt)
-     !
      IF( printout_ ) THEN
         WRITE( stdout, "(/,3X,'Reading pseudopotential for specie # ',I2, &
                        & ' from file :',/,3X,A)") nt, TRIM(file_pseudo)
@@ -157,7 +132,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !
      IF ( ionode ) THEN
         isupf = 0
-        CALL  read_upf(upf(nt), rgrid(nt), isupf, filename = file_pseudo )
+        CALL  read_upf(upf(nt), isupf, filename = file_pseudo )
         !
         !! start reading - check  first if files are readable as xml files,
         !! then as UPF v.2, then as UPF v.1
@@ -173,17 +148,17 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
            !
            IF (is_xml) THEN
               !
-              CALL  read_upf(upf(nt), rgrid(nt), isupf, filename = TRIM(file_fixed) )
+              CALL  read_upf(upf(nt), isupf, filename = TRIM(file_fixed) )
              !! try again to read from the corrected file 
              WRITE ( msg, '(A)') 'Pseudo file '// trim(psfile(nt)) // ' has been fixed on the fly.' &
-                // new_line('a') // 'To avoid this message in the future, permanently fix ' &
-                // new_line('a') // ' your pseudo files following these instructions: ' &
-                // new_line('a') // 'https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md'
+            &    // new_line('a') // '     To avoid this message in the future, permanently fix ' &
+            &    // new_line('a') // '     your pseudo files following these instructions: ' &
+            &    // new_line('a') // '     https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md'
              CALL infomsg('read_upf:', trim(msg) )    
            ELSE
               !
               OPEN ( UNIT = iunps, FILE = file_pseudo, STATUS = 'old', FORM = 'formatted' ) 
-              CALL  read_upf(upf(nt), rgrid(nt), isupf, UNIT = iunps )
+              CALL  read_upf(upf(nt), isupf, UNIT = iunps )
               !! try to read UPF v.1 file
               CLOSE (iunps)
               !
@@ -198,7 +173,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !
      IF (isupf == -2 .OR. isupf == -1 .OR. isupf == 0) THEN
         !
-        CALL upf_bcast(upf(nt), rgrid(nt), ionode, ionode_id, intra_image_comm)
+        CALL upf_bcast(upf(nt), ionode, ionode_id, intra_image_comm)
         !! broadcast the pseudopotential to all processors
         !
         IF( printout_) THEN
@@ -209,10 +184,6 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
            END IF
         END IF
         !
-        ! reconstruct Q(r) if needed
-        !
-        CALL set_upf_q (upf(nt))
-        ! 
      ELSE
         !
         OPEN ( UNIT = iunps, FILE = TRIM(file_pseudo), STATUS = 'old', FORM = 'formatted' ) 
@@ -255,15 +226,15 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
            !
         ENDIF
         !
-        ! add grid information, reconstruct Q(r) if needed
-        !
-        CALL add_upf_grid (upf(nt), rgrid(nt))
-        !
         ! end of reading
         !
         CLOSE (iunps)
         !
      ENDIF
+     !
+     ! reconstruct Q(r) if needed
+     !
+     CALL set_upf_q (upf(nt))
      !
      ! Calculate MD5 checksum for this pseudopotential
      !
@@ -271,23 +242,63 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !
   END DO
   !
-  ! end of PP reading - now set uo some variables
+  ! end of PP reading - now set up more variables
   !
-  IF (input_dft /='none') CALL enforce_input_dft (input_dft)
+  ! radial grids - 
+  !
+  IF( ALLOCATED( rgrid ) ) THEN
+     DO nt = 1, SIZE( rgrid )
+        CALL deallocate_radial_grid( rgrid( nt ) )
+        CALL nullify_radial_grid( rgrid( nt ) )
+     END DO
+     DEALLOCATE( rgrid )
+     if(allocated(msh)) DEALLOCATE( msh )
+  END IF
+  ALLOCATE( rgrid( ntyp ), msh( ntyp ) )
   !
   nvb = 0
   DO nt = 1, ntyp
+     !
+     CALL nullify_radial_grid( rgrid( nt ) )
+     CALL add_upf_grid (upf(nt), rgrid(nt))
+     !
+     ! the radial grid is defined up to r(mesh) but we introduce 
+     ! an auxiliary variable msh to limit the grid up to rcut=10 a.u. 
+     ! This is used to cut off the numerical noise arising from the
+     ! large-r tail in cases like the integration of V_loc-Z/r
+     !
+     DO ir = 1, rgrid(nt)%mesh
+        IF (rgrid(nt)%r(ir) > rcut) THEN
+           msh (nt) = ir
+           GOTO 5
+        END IF
+     END DO
+     msh (nt) = rgrid(nt)%mesh 
+5    msh (nt) = 2 * ( (msh (nt) + 1) / 2) - 1
+     !
+     ! msh is forced to be odd for simpson integration (maybe obsolete?)
      !
      ! ... Zv = valence charge of the (pseudo-)atom, read from PP files,
      ! ... is set equal to Zp = pseudo-charge of the pseudopotential
      !
      zv(nt) = upf(nt)%zp
      !
-     ! ... count US species
+     ! ... count US species (obsolete?)
      !
      IF (upf(nt)%tvanp) nvb=nvb+1
      !
-     ! ... set DFT value
+     ! check for zero atomic wfc, 
+     ! check that (occupied) atomic wfc are properly normalized
+     !
+     CALL upf_check_atwfc_norm(upf(nt),psfile(nt))
+     !
+  END DO
+  !
+  ! ... set DFT value
+  !
+  IF (input_dft /='none') CALL enforce_input_dft (input_dft)
+  !
+  DO nt = 1, ntyp
      !
      CALL set_dft_from_name( upf(nt)%dft )
      !
@@ -306,27 +317,6 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
            CALL errore( 'readpp','inconsistent DFT read from PP files', nt)
         END IF
      END IF
-     !
-     ! the radial grid is defined up to r(mesh) but we introduce 
-     ! an auxiliary variable msh to limit the grid up to rcut=10 a.u. 
-     ! This is used to cut off the numerical noise arising from the
-     ! large-r tail in cases like the integration of V_loc-Z/r
-     !
-     DO ir = 1, rgrid(nt)%mesh
-        IF (rgrid(nt)%r(ir) > rcut) THEN
-           msh (nt) = ir
-           GOTO 5
-        END IF
-     END DO
-     msh (nt) = rgrid(nt)%mesh 
-5    msh (nt) = 2 * ( (msh (nt) + 1) / 2) - 1
-     !
-     ! msh is forced to be odd for simpson integration (maybe obsolete?)
-     !
-     ! check for zero atomic wfc, 
-     ! check that (occupied) atomic wfc are properly normalized
-     !
-     CALL upf_check_atwfc_norm(upf(nt),psfile(nt))
      !
   END DO
   !
@@ -358,7 +348,7 @@ END SUBROUTINE check_order
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !------------------------------------------------+
-SUBROUTINE upf_bcast(upf, grid, ionode, ionode_id, comm)
+SUBROUTINE upf_bcast(upf, ionode, ionode_id, comm)
   !---------------------------------------------+
   !
   !! Broadcast the "upf" structure, read on processor "ionode_id",
@@ -366,15 +356,12 @@ SUBROUTINE upf_bcast(upf, grid, ionode, ionode_id, comm)
   !
   USE kinds,        ONLY: DP
   USE pseudo_types, ONLY: pseudo_upf
-  USE radial_grids, ONLY: radial_grid_type, allocate_radial_grid
   USE mp,           ONLY: mp_bcast
   !
   IMPLICIT NONE
   !
   TYPE(pseudo_upf),INTENT(INOUT) :: upf
   !! pseudo_upf type structure storing the pseudo data
-  TYPE(radial_grid_type), OPTIONAL, INTENT(INOUT), TARGET :: grid
-  !! optional structure  where to store mesh data 
   LOGICAL, INTENT(in) :: ionode
   !! true if we are on the processor that broadcasts
   !! upf is allocated if (ionode), must be allocated otherwise
@@ -417,34 +404,9 @@ SUBROUTINE upf_bcast(upf, grid, ionode, ionode_id, comm)
   CALL mp_bcast (upf%rmax, ionode_id, comm )
   CALL mp_bcast (upf%zmesh, ionode_id, comm )
   !
-  ! FIXME: disentangle grid and upf
-  !
-  IF (present(grid)) THEN
-     IF ( .NOT. ionode) CALL allocate_radial_grid(grid, upf%mesh)
-     grid%dx    = upf%dx
-     grid%mesh  = upf%mesh
-     grid%xmin  = upf%xmin
-     grid%rmax  = upf%rmax
-     grid%zmesh = upf%zmesh
-     ! FIXME: no need to broadcast all this stuff
-     CALL mp_bcast (grid%r,   ionode_id, comm )
-     CALL mp_bcast (grid%rab, ionode_id, comm )
-     CALL mp_bcast (grid%r2 , ionode_id, comm )
-     CALL mp_bcast (grid%sqr, ionode_id, comm )
-     CALL mp_bcast (grid%rm1, ionode_id, comm )
-     CALL mp_bcast (grid%rm2, ionode_id, comm )
-     CALL mp_bcast (grid%rm3, ionode_id, comm )
-     !
-     IF ( .NOT. ionode) THEN
-        upf%grid => grid
-        upf%r    => upf%grid%r
-        upf%rab  => upf%grid%rab
-     END IF
-  ELSE
-     IF ( .NOT. ionode) ALLOCATE( upf%r( upf%mesh ), upf%rab( upf%mesh ) )
-     CALL mp_bcast (upf%r,   ionode_id, comm )
-     CALL mp_bcast (upf%rab, ionode_id, comm )
-  ENDIF
+  IF ( .NOT. ionode) ALLOCATE( upf%r( upf%mesh ), upf%rab( upf%mesh ) )
+  CALL mp_bcast (upf%r,   ionode_id, comm )
+  CALL mp_bcast (upf%rab, ionode_id, comm )
   !
   IF ( .NOT. ionode) ALLOCATE( upf%rho_atc(upf%mesh) )
   CALL mp_bcast (upf%rho_atc, ionode_id, comm )
@@ -464,10 +426,6 @@ SUBROUTINE upf_bcast(upf, grid, ionode, ionode_id, comm)
              upf%lll(1),           &
              upf%beta(upf%mesh,1), &
              upf%dion(1,1),        &
-             upf%rinner(1),        &
-             upf%qqq(1,1),         &
-             upf%qfunc(upf%mesh,1),&
-             upf%qfcoef(1,1,1,1),  &
              upf%rcut(1),          &
              upf%rcutus(1),        &
              upf%els_beta(1) )
@@ -505,23 +463,33 @@ SUBROUTINE upf_bcast(upf, grid, ionode, ionode_id, comm)
      END IF
      CALL mp_bcast (upf%qqq_eps, ionode_id, comm )
      IF ( .not. ionode) THEN
-        ALLOCATE( upf%rinner( upf%nqlc ) )
-        ALLOCATE( upf%qqq   ( upf%nbeta, upf%nbeta ) )
-        IF ( upf%q_with_l ) THEN
-           ALLOCATE( upf%qfuncl ( upf%mesh, upf%nbeta*(upf%nbeta+1)/2, 0:2*upf%lmax ) )
+        IF ( upf%nbeta == 0 ) THEN
+           ALLOCATE(upf%rinner(1), &
+             upf%qqq(1,1),         &
+             upf%qfunc(upf%mesh,1),&
+             upf%qfcoef(1,1,1,1) )
+             IF ( upf%q_with_l ) &
+                ALLOCATE( upf%qfuncl ( upf%mesh, 1, 1 ) )
         ELSE
-           ALLOCATE( upf%qfunc (upf%mesh, upf%nbeta*(upf%nbeta+1)/2) )
-        ENDIF
-        IF(upf%nqf <= 0) THEN
-           ALLOCATE( upf%qfcoef(1,1,1,1) )
-        ELSE
-           ALLOCATE( upf%qfcoef( MAX( upf%nqf,1 ), upf%nqlc, &
-                upf%nbeta, upf%nbeta ) )
+           ALLOCATE( upf%rinner( upf%nqlc ) )
+           ALLOCATE( upf%qqq   ( upf%nbeta, upf%nbeta ) )
+           IF ( upf%q_with_l ) THEN
+              ALLOCATE( upf%qfuncl ( upf%mesh, upf%nbeta*(upf%nbeta+1)/2, 0:2*upf%lmax ) )
+           ELSE
+              ALLOCATE( upf%qfunc (upf%mesh, upf%nbeta*(upf%nbeta+1)/2) )
+           ENDIF
+           IF(upf%nqf <= 0) THEN
+              ALLOCATE( upf%qfcoef(1,1,1,1) )
+           ELSE
+              ALLOCATE( upf%qfcoef( upf%nqf, upf%nqlc, &
+                   upf%nbeta, upf%nbeta ) )
+           END IF
+     print *, size(upf%qfcoef,1),size(upf%qfcoef,2),size(upf%qfcoef,3),size(upf%qfcoef,4)
         END IF
      ENDIF
      CALL mp_bcast (upf%qqq   , ionode_id, comm )
-     CALL mp_bcast (upf%qfcoef, ionode_id, comm )
      CALL mp_bcast (upf%rinner, ionode_id, comm )
+     CALL mp_bcast (upf%qfcoef, ionode_id, comm )
      IF (upf%q_with_l) THEN 
         CALL mp_bcast (upf%qfuncl, ionode_id, comm )
      ELSE
