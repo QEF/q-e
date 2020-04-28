@@ -169,7 +169,11 @@
   !
   ! added by @ FG
   !
-  ! ngaussw  : smearing type for FS average after wann interp
+  ! ngaussw  : smearing type after wann interp
+  !            (n >= 0) : Methfessel-Paxton case. See PRB 40, 3616 (1989)
+  !            (n=-1)   : Cold smearing See PRL 82, 3296 (1999)
+  !            (n=-99)  : Fermi-Dirac case: 1.0/(1.0+exp(-x)).
+  !                       If n = -99 you probably want assume_metal == .true. as well.
   ! degaussw : corresponding width (units of eV)
   ! filqf    : file with fine q kmesh for interpolation
   ! filkf    : file with fine kmesh for interpolation
@@ -729,6 +733,13 @@
       'Cannot specify both auto_projections and projections block', 1)
   IF ((auto_projections .AND. .NOT. scdm_proj) .OR. (.NOT. auto_projections .AND. scdm_proj)) &
     CALL errore('epw_readin', 'auto_projections require both scdm_proj=.true. and auto_projections=.true.', 1)
+  !
+  ! In the case of Fermi-Dirac distribution one should probably etemp instead of degauss.
+  ! This is achieved with assume_metal == .true.
+  IF (ngaussw == -99 .AND. .NOT. assume_metal) THEN
+    WRITE(stdout, '(/,5x,a)') 'WARNING: You are using ngaussw == -99 (Fermi-Dirac).'
+    WRITE(stdout, '(/,5x,a)') '         You probably need assume_metal == .true '
+  ENDIF
   ! thickness and smearing width of the Fermi surface
   ! from eV to Ryd
   fsthick     = fsthick / ryd2ev
@@ -753,7 +764,7 @@
   ! from cm-1 to Ryd
   eps_acustic = eps_acustic / ev2cmm1 / ryd2ev
   !
-  !    reads the q point (just if ldisp = .FALSE.)
+  ! reads the q point (just if ldisp = .FALSE.)
   !
   ! wmin and wmax from eV to Ryd
   wmin = wmin / ryd2ev
