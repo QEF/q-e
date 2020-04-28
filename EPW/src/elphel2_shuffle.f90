@@ -223,10 +223,6 @@
   !
   CALL kpointdivision(ik0)
   !
-!!$  ALLOCATE(shift(nkstot), STAT = ierr)
-!!$  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating shift', 1)
-!!$  shift(:) = 0
-  !
   CALL readkmap(nkstot)
   !
   ! close all sequential files in order to re-open them as direct access
@@ -553,8 +549,6 @@
   IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating aux3', 1)
   DEALLOCATE(dvpsi, STAT = ierr)
   IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating dvpsi', 1)
-!!$  DEALLOCATE(shift, STAT = ierr)
-!!$  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating shift', 1)
   DEALLOCATE(etq, STAT = ierr)
   IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating etq', 1)
   !
