@@ -5,13 +5,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! This module is USEd, for the time being, as an interface
-! between the UPF pseudo type and the pseudo variables internal representation
-
 !=----------------------------------------------------------------------------=!
   MODULE upf_to_internal
 !=----------------------------------------------------------------------------=!
-
+  !! Contains two subroutines:
+  !! add_upf_grid  generates the radial grid from data contained in upf
+  !! set_upf_q     builds the Q(r) functions if not explicitly present
+  !!
   USE pseudo_types
   IMPLICIT NONE
   PRIVATE
@@ -26,28 +26,37 @@
 SUBROUTINE add_upf_grid (upf, grid)
   !---------------------------------------------------------------------
   !
-  !   Complete pseudopotential "upf" read from old-style PP files
-  !   by reconstructing the radial grid and the Q(r) functions 
-  !   Obsolescent, to be used with old formats only
-  !
   USE radial_grids, ONLY: radial_grid_type, allocate_radial_grid
   !
   IMPLICIT NONE
   !
-  TYPE (pseudo_upf) :: upf
-  TYPE (radial_grid_type), target :: grid
+  TYPE (pseudo_upf), INTENT(in) :: upf
+  TYPE (radial_grid_type), INTENT(out) :: grid
   !
   CALL allocate_radial_grid(grid,upf%mesh)
+  !
   grid%dx   = upf%dx
   grid%xmin = upf%xmin
   grid%zmesh= upf%zmesh
   grid%mesh = upf%mesh
-  !
   grid%r  (1:upf%mesh) = upf%r  (1:upf%mesh)
   grid%rab(1:upf%mesh) = upf%rab(1:upf%mesh)
-  upf%grid => grid
   !
-  CALL set_upf_q (upf)
+  grid%r2 = upf%r**2
+  grid%sqr= sqrt(upf%r)
+  ! Prevent FP error if r(1) = 0
+  IF ( upf%r(1) > 1.0D-16 ) THEN
+     grid%rm1 = upf%r**(-1)
+     grid%rm2 = upf%r**(-2)
+     grid%rm3 = upf%r**(-3)
+  ELSE
+     grid%rm1(1) =0.0_dp
+     grid%rm2(1) =0.0_dp
+     grid%rm3(1) =0.0_dp
+     grid%rm1(2:)= upf%r(2:)**(-1)
+     grid%rm2(2:)= upf%r(2:)**(-2)
+     grid%rm3(2:)= upf%r(2:)**(-3)
+  END IF
   !
 END SUBROUTINE add_upf_grid
 !

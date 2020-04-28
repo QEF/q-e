@@ -143,7 +143,7 @@ subroutine plus_u_setup(natih, lsr)
  do it = 1, ntyp
    if (Hubbard_U(it).ne.0.d0) then
 
-     mesh = upf(it)%grid%mesh
+     mesh = upf(it)%mesh
      kkbeta = upf(it)%kkbeta
      do iwfc = 1, upf(it)%nwfc
        if (upf(it)%lchi(iwfc).eq.Hubbard_l(it)) then
@@ -151,7 +151,7 @@ subroutine plus_u_setup(natih, lsr)
            if (upf(it)%lll(iorb).eq.Hubbard_l(it)) then
               gi(1:kkbeta)= upf(it)%beta(1:kkbeta,iorb) * &
                             upf(it)%chi (1:kkbeta,iwfc)
-              call simpson (kkbeta, gi, upf(it)%grid%rab,bphi(iorb,it))
+              call simpson (kkbeta, gi, upf(it)%rab,bphi(iorb,it))
            endif  
          enddo
        endif 

@@ -25,7 +25,6 @@ PROGRAM upfconv
   !          if available, core wavefunctions from GIPAW section
   !     - convert to CASINO tabulated format (obsolete?)
   !
-  USE radial_grids, ONLY : radial_grid_type, deallocate_radial_grid
   USE pseudo_types, ONLY : pseudo_upf, deallocate_pseudo_upf
   USE casino_pp,    ONLY : conv_upf2casino, write_casino_tab
   USE upf_module,   ONLY : read_ps
@@ -33,7 +32,6 @@ PROGRAM upfconv
   !
   IMPLICIT NONE
   TYPE(pseudo_upf) :: upf_in
-  TYPE(radial_grid_type) :: grid
   INTEGER :: prefix_len, nargs, i,j 
   CHARACTER(LEN=256) :: filein, fileout
   CHARACTER(LEN=2)   :: conversion=' '
@@ -104,12 +102,12 @@ PROGRAM upfconv
   END IF
   WRITE(*,*) 'input file: ' // trim(filein), ', output file: ' // trim(fileout)
  
-  CALL read_ps ( filein, upf_in, grid )
+  CALL read_ps ( filein, upf_in )
 
   IF ( conversion == "-c" ) THEN
      !
-     CALL conv_upf2casino(upf_in, grid)
-     CALL write_casino_tab(upf_in, grid, fileout)
+     CALL conv_upf2casino(upf_in)
+     CALL write_casino_tab(upf_in, fileout)
      !
   ELSE IF ( conversion == "-e" ) THEN
      !
@@ -126,8 +124,6 @@ PROGRAM upfconv
      CALL write_upf (FILENAME = fileout, UPF = upf_in, SCHEMA = schema)
      !
   ENDIF
-  CALL deallocate_radial_grid(grid)
-  CALL deallocate_pseudo_upf(upf_in)
   
   STOP
 END PROGRAM upfconv
@@ -185,8 +181,8 @@ SUBROUTINE write_files( upf_in, fileout )
      DO j = 1, upf_in%gipaw_ncore_orbitals
         OPEN(unit=iunps, file = TRIM(fileout)//TRIM(upf_in%gipaw_core_orbital_el(j))//".out")
         WRITE(*,"('writing: ',a)") TRIM(fileout)//TRIM(upf_in%gipaw_core_orbital_el(j))//".out"
-        DO n = 1, upf_in%grid%mesh
-           WRITE(iunps,*) upf_in%grid%r(n), upf_in%gipaw_wfs_ae(n,1)
+        DO n = 1, upf_in%mesh
+           WRITE(iunps,*) upf_in%r(n), upf_in%gipaw_wfs_ae(n,1)
         ENDDO
         CLOSE(iunps)
      ENDDO

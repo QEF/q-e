@@ -374,7 +374,6 @@ CONTAINS
        !     ----------------------------------------------------------
        USE upf_kinds,    ONLY : dp
        USE pseudo_types, ONLY : pseudo_upf
-       USE radial_grids, ONLY : radial_grid_type, deallocate_radial_grid
 
        IMPLICIT NONE
 
@@ -403,7 +402,7 @@ CONTAINS
           xmin= log(zmesh * r_(2) )
        ENDIF
 
-       ! Allocate and assign the raidal grid
+       ! Allocate and assign the radial grid
 
        upf_out%mesh  = mesh_
        upf_out%zmesh = zmesh
@@ -571,16 +570,14 @@ CONTAINS
      END SUBROUTINE convert_casino
 
 
-     SUBROUTINE write_casino_tab(upf_in, grid, fileout)
+     SUBROUTINE write_casino_tab(upf_in, fileout)
 
        USE pseudo_types, ONLY : pseudo_upf
-       USE radial_grids, ONLY: radial_grid_type, deallocate_radial_grid
 
        IMPLICIT NONE
 
        CHARACTER(LEN=*), INTENT(in)       :: fileout
        TYPE(pseudo_upf), INTENT(in)       :: upf_in
-       TYPE(radial_grid_type), INTENT(in) :: grid
        INTEGER :: i, lp1, unout_
 
        INTEGER, EXTERNAL :: atomic_number
@@ -598,9 +595,9 @@ CONTAINS
             &input/default VALUE)"
        WRITE(unout_,*) "0 0"
        WRITE(unout_,*) "Number of grid points"
-       WRITE(unout_,*) grid%mesh
+       WRITE(unout_,*) upf_in%mesh
        WRITE(unout_,*) "R(i) in atomic units"
-       WRITE(unout_, "(T4,E22.15)") grid%r(:)
+       WRITE(unout_, "(T4,E22.15)") upf_in%r(:)
 
        lp1 = size ( vnl, 2 )
        DO i=1,lp1
@@ -612,16 +609,14 @@ CONTAINS
 
      END SUBROUTINE write_casino_tab
 
-     SUBROUTINE conv_upf2casino(upf_in,grid)
+     SUBROUTINE conv_upf2casino(upf_in)
 
        USE pseudo_types, ONLY : pseudo_upf
-       USE radial_grids, ONLY: radial_grid_type, deallocate_radial_grid
 
 
        IMPLICIT NONE
 
        TYPE(pseudo_upf), INTENT(in)       :: upf_in
-       TYPE(radial_grid_type), INTENT(in) :: grid
        INTEGER :: i, l, channels
 
        REAL(dp), PARAMETER :: offset=1E-20_dp
@@ -636,17 +631,17 @@ CONTAINS
           STOP
        ENDIF
        
-       WRITE(0,*) "Number of grid points: ", grid%mesh
+       WRITE(0,*) "Number of grid points: ", upf_in%mesh
        WRITE(0,*) "Number of KB projectors: ", upf_in%nbeta
        WRITE(0,*) "Channel(s) of KB projectors: ", upf_in%lll
        WRITE(0,*) "Number of channels to be re-constructed: ", upf_in%nbeta+1
 
        channels=upf_in%nbeta+1
-       ALLOCATE ( vnl(grid%mesh,channels) )
+       ALLOCATE ( vnl(upf_in%mesh,channels) )
 
        !Set up the local component of each channel
        DO i=1,channels
-          vnl(:,i)=grid%r(:)*upf_in%vloc(:)
+          vnl(:,i)=upf_in%r(:)*upf_in%vloc(:)
        ENDDO
 
 
@@ -658,12 +653,12 @@ CONTAINS
 
           IF ( minval(abs(upf_in%chi(:,l))) /= 0 ) THEN
              vnl(:,l)= (upf_in%beta(:,l)/(upf_in%chi(:,l)) &
-                  *grid%r(:)) + vnl(:,l)
+                  *upf_in%r(:)) + vnl(:,l)
           ELSE
              WRITE(0,"(A,ES10.3,A)") 'Applying ',offset , ' offset to &
                   &wavefunction to avoid divide by zero'
              vnl(:,l)= (upf_in%beta(:,l)/(upf_in%chi(:,l)+offset) &
-                  *grid%r(:)) + vnl(:,l)
+                  *upf_in%r(:)) + vnl(:,l)
           ENDIF
 
        ENDDO
