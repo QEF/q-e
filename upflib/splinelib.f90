@@ -26,20 +26,25 @@ MODULE splinelib
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE spline( xdata, ydata, startu, startd, d2y )
+    SUBROUTINE spline( xdata, ydata, startu, startd, d2y, ydim_ )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
       !
       REAL(DP), INTENT(IN)  :: xdata(:), ydata(:), startu, startd 
       REAL(DP), INTENT(OUT) :: d2y(:)
+      INTEGER, INTENT(IN), OPTIONAL :: ydim_
       !
       INTEGER               :: i, k, ydim
       REAL(DP)              :: p, sig
       REAL(DP), ALLOCATABLE :: u(:)
       !
-      !
       ydim = SIZE( ydata )
+
+      IF ( PRESENT(ydim_) ) THEN
+         IF ( ydim < ydim_ ) CALL upf_error('spline',' optionally declared dimension is too large',ydim_)
+         ydim = ydim_
+      END IF
       !
       ALLOCATE( u( ydim ) )
       !
@@ -71,13 +76,14 @@ MODULE splinelib
     END SUBROUTINE spline
     !
     !------------------------------------------------------------------------
-    FUNCTION splint( xdata, ydata, d2y, x )
+    FUNCTION splint( xdata, ydata, d2y, x, xdim_ )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
       !
       REAL(DP), INTENT(IN) :: xdata(:), ydata(:), d2y(:)
       REAL(DP), INTENT(IN) :: x
+      INTEGER, INTENT(IN), OPTIONAL :: xdim_
       !
       REAL(DP) :: splint
       INTEGER  :: khi, klo, xdim
@@ -85,11 +91,15 @@ MODULE splinelib
       !
       !
       xdim = SIZE( xdata )
+      IF ( PRESENT(xdim_) ) THEN
+         IF ( xdim < xdim_ ) CALL upf_error('spline',' optionally declared dimension is too large',xdim_)
+         xdim = xdim_
+      END IF
       !
       klo = 1
       khi = xdim
       !
-      klo = MAX( MIN( locate( xdata, x ), ( xdim - 1 ) ), 1 )
+      klo = MAX( MIN( locate( xdata, x, xdim ), ( xdim - 1 ) ), 1 )
       !
       khi = klo + 1
       !
@@ -106,13 +116,14 @@ MODULE splinelib
 
 
     !------------------------------------------------------------------------
-    FUNCTION splint_deriv( xdata, ydata, d2y, x )
+    FUNCTION splint_deriv( xdata, ydata, d2y, x, xdim_ )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
       !
       REAL(DP), INTENT(IN) :: xdata(:), ydata(:), d2y(:)
       REAL(DP), INTENT(IN) :: x
+      INTEGER, INTENT(IN), OPTIONAL :: xdim_
       !
       REAL(DP) :: splint_deriv
       INTEGER  :: khi, klo, xdim
@@ -120,11 +131,15 @@ MODULE splinelib
       !
       !
       xdim = SIZE( xdata )
+      IF ( PRESENT(xdim_) ) THEN
+         IF ( xdim < xdim_ ) CALL upf_error('spline',' optionally declared dimension is too large',xdim_)
+         xdim = xdim_
+      END IF
       !
       klo = 1
       khi = xdim
       !
-      klo = MAX( MIN( locate( xdata, x ), ( xdim - 1 ) ), 1 )
+      klo = MAX( MIN( locate( xdata, x, xdim ), ( xdim - 1 ) ), 1 )
       !
       khi = klo + 1
       !
@@ -143,20 +158,21 @@ MODULE splinelib
       END FUNCTION splint_deriv
 
          !-------------------------------------------------------------------
-         FUNCTION locate( xx, x )
+         FUNCTION locate( xx, x, n )
            !-------------------------------------------------------------------
            !
            IMPLICIT NONE
            !
            REAL(DP), INTENT(IN) :: xx(:)
            REAL(DP), INTENT(IN) :: x
+           INTEGER, INTENT(IN) :: n
            !
            INTEGER :: locate
-           INTEGER :: n, jl, jm, ju
+           INTEGER :: jl, jm, ju
            LOGICAL :: ascnd
            !
            !
-           n     = SIZE( xx )
+           if ( n > SIZE( xx ) ) call upf_error('locate', 'something very wrong in splint/splint_deriv', n)
            ascnd = ( xx(n) >= xx(1) )
            jl    = 0
            ju    = n + 1
