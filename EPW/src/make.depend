@@ -436,6 +436,7 @@ io_epw.o : constants_epw.o
 io_epw.o : elph2.o
 io_epw.o : epwcom.o
 io_epw.o : io_var.o
+io_epw.o : kfold.o
 io_epw.o : low_lvl.o
 io_selfen.o : ../../Modules/io_files.o
 io_selfen.o : ../../Modules/io_global.o
