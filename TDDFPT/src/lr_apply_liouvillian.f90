@@ -52,8 +52,8 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
                                    & fwfft_orbital_gamma,&
                                    & calbec_rs_gamma, newq_r, &
                                    & add_vuspsir_gamma, v_loc_psir,   &
-                                   & s_psir_gamma, &
-                                   & betasave, box_beta, box0, maxbox_beta
+                                   & s_psir_gamma, add_box_to_psic, &
+                                   & betasave, bbox0, maxbbox_beta, box_psic
   USE dfunct,               ONLY : newq
   USE control_flags,        ONLY : tqr
   USE mp,                   ONLY : mp_sum, mp_barrier
@@ -447,13 +447,14 @@ CONTAINS
                   iqs = 0
                   jqs = 0
                   !
+                  box_psic(:) = (0.d0,0.d0)
                   DO nt = 1, ntyp
                   !
                     DO ia = 1, nat
                       !
                       IF ( ityp(ia) == nt ) THEN
                         !
-                        mbia = maxbox_beta(ia)
+                        mbia = maxbbox_beta(ia)
                         ALLOCATE( w1(nh(nt)),  w2(nh(nt)) )
                         w1 = 0.D0
                         w2 = 0.D0
@@ -480,9 +481,9 @@ CONTAINS
                           DO ir = 1, mbia
                           !
                            iqs = jqs + ir
-                           psic( box_beta(box0(ia)+ir) ) = &
-                                &psic( box_beta(box0(ia)+ir) ) + &
-                                &betasave(box0(ia)+ir,ih)*&
+                           box_psic(bbox0(ia)+ir) = &
+                                &box_psic(bbox0(ia)+ir)  + &
+                                &betasave(bbox0(ia)+ir,ih)*&
                                 &CMPLX( w1(ih), w2(ih), KIND=dp )
                           !
                           ENDDO
@@ -498,7 +499,7 @@ CONTAINS
                     ENDDO
                   !
                  ENDDO
-
+                 call add_box_to_psic ( )
           ENDIF
           !
           !   Back to reciprocal space 
