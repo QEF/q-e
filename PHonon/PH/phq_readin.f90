@@ -92,7 +92,6 @@ SUBROUTINE phq_readin()
   CHARACTER (LEN=256) :: outdir, filename
   CHARACTER (LEN=8)   :: verbosity
   CHARACTER(LEN=80)          :: card
-  CHARACTER(LEN=1), EXTERNAL :: capital
   CHARACTER(LEN=6) :: int_to_char
   INTEGER                    :: i
   LOGICAL                    :: nogg
@@ -226,7 +225,7 @@ SUBROUTINE phq_readin()
   ! Rewind the input if the title is actually the beginning of inputph namelist
   !
   IF( imatches("&inputph", title) ) THEN
-    WRITE(*, '(6x,a)') "Title line not specified: using 'default'."
+    WRITE(stdout,'(6x,a)') "Title line not specified: using 'default'."
     title='default'
     IF (meta_ionode) REWIND(5, iostat=ios)
     CALL mp_bcast(ios, meta_ionode_id, world_comm  )

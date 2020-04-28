@@ -14,7 +14,7 @@ SUBROUTINE init_us_2( npw_, igk_, q_, vkb_ )
   !
   USE kinds,        ONLY : DP
   USE ions_base,    ONLY : nat, ntyp => nsp, ityp, tau
-  USE cell_base,    ONLY : tpiba
+  USE cell_base,    ONLY : tpiba, omega
   USE constants,    ONLY : tpi
   USE gvect,        ONLY : eigts1, eigts2, eigts3, mill, g
   USE wvfct,        ONLY : npwx
@@ -105,7 +105,7 @@ SUBROUTINE init_us_2( npw_, igk_, q_, vkb_ )
         DO nb = 1, upf(nt)%nbeta
            !
            IF ( upf(nt)%is_gth ) THEN
-              CALL mk_ffnl_gth( nt, nb, realblocksize, qg, vq )
+              CALL mk_ffnl_gth( nt, nb, realblocksize, omega, qg, vq )
            ELSE
               DO ig = 1, realblocksize
                  IF (spline_ps) THEN

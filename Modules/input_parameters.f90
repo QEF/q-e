@@ -30,7 +30,7 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nsx, lqmax, natx
+  USE parameters, ONLY : nsx, natx
   USE wannier_new,ONLY : wannier_data
   !
   IMPLICIT NONE
@@ -399,7 +399,7 @@ MODULE input_parameters
         INTEGER :: lda_plus_u_kind = 0
         INTEGER :: lback(nsx) = -1
         INTEGER :: l1back(nsx) = -1
-        INTEGER, PARAMETER :: nspinx=2
+        INTEGER, PARAMETER :: nspinx=2, lqmax=7
         REAL(DP) :: starting_ns_eigenvalue(lqmax,nspinx,nsx) = -1.0_DP
         REAL(DP) :: hubbard_u(nsx) = 0.0_DP
         REAL(DP) :: hubbard_u_back(nsx) = 0.0_DP

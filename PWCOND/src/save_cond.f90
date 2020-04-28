@@ -12,7 +12,7 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
 !  so that the punch file from PW calculations is not needed.
 !
   use kinds, only : DP
-  USE parameters, only : npsx
+  USE upf_params,   only: npsx
   use radial_grids, only: ndmx
   USE cell_base, ONLY : alat, tpiba, tpiba2, at, bg
   use lsda_mod, only: nspin

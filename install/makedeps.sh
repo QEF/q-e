@@ -11,10 +11,10 @@ TOPDIR=`pwd`
 
 if test $# = 0
 then
-    dirs=" LAXlib FFTXlib UtilXlib Modules clib LR_Modules upftools \
+    dirs=" LAXlib FFTXlib UtilXlib upflib Modules clib LR_Modules \
            KS_Solvers/Davidson KS_Solvers/Davidson_RCI KS_Solvers/CG KS_Solvers/PPCG \
            KS_Solvers/ParO  KS_Solvers/DENSE  \
-           PW/src CPV/src PW/tools upftools PP/src PWCOND/src \
+           PW/src CPV/src PW/tools PP/src PWCOND/src \
            PHonon/Gamma PHonon/PH PHonon/FD HP/src atomic/src \
            EPW/src XSpectra/src ACFDT/src NEB/src TDDFPT/src \
            GWW/pw4gww GWW/gww GWW/head GWW/bse GWW/simple \
@@ -56,17 +56,15 @@ for dir in $dirs; do
     # for convenience, used later
     DEPEND1="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/FFTXlib $LEVEL1/LAXlib $LEVEL1/UtilXlib"
     DEPEND2="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/LAXlib $LEVEL2/UtilXlib \
-             $LEVEL2/Modules"
+             $LEVEL2/Modules $LEVEL2/upflib "
     DEPEND3="$LEVEL2/include $LEVEL2/FFTXlib $LEVEL2/LAXlib $LEVEL2/UtilXlib"
     case $DIR in 
         Modules )
-             DEPENDS="$DEPEND1 $LEVEL1/UtilXlib" ;;
+             DEPENDS="$DEPEND1 $LEVEL1/UtilXlib $LEVEL1/upflib" ;;
         LAXlib )
              DEPENDS="$LEVEL1/UtilXlib " ;;
-        upftools )
-             DEPENDS="$DEPEND1 $LEVEL1/Modules" ;;
         LR_Modules )
-             DEPENDS="$DEPEND1 $LEVEL1/Modules $LEVEL1/PW/src" ;;
+             DEPENDS="$DEPEND1 $LEVEL1/Modules $LEVEL1/upflib $LEVEL1/PW/src" ;;
 	ACFDT/src ) 
              DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;
 	atomic/src | GWW/gww )

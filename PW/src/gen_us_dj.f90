@@ -15,7 +15,7 @@ SUBROUTINE gen_us_dj( ik, dvkb )
   USE kinds,      ONLY: DP
   USE constants,  ONLY: tpi
   USE ions_base,  ONLY: nat, ntyp => nsp, ityp, tau
-  USE cell_base,  ONLY: tpiba
+  USE cell_base,  ONLY: tpiba, omega
   USE klist,      ONLY: xk, ngk, igk_k
   USE gvect,      ONLY: mill, eigts1, eigts2, eigts3, g
   USE wvfct,      ONLY: npwx
@@ -90,7 +90,7 @@ SUBROUTINE gen_us_dj( ik, dvkb )
      DO nb = 1, upf(nt)%nbeta
         !
         IF ( upf(nt)%is_gth ) THEN
-           CALL mk_dffnl_gth( nt, nb, npw, q, djl(1,nb,nt) )
+           CALL mk_dffnl_gth( nt, nb, npw, omega, tpiba, q, djl(1,nb,nt) )
            CYCLE
         ENDIF
         DO ig = 1, npw

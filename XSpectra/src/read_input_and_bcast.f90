@@ -21,7 +21,8 @@ subroutine read_input_and_bcast(filerecon, r_paw)
   USE io_global,       ONLY : stdout,ionode,ionode_id   ! Modules/io_global.f90
   USE mp,              ONLY : mp_bcast, mp_sum             !parallelization
   USE mp_world,        ONLY : nproc, world_comm
-  USE parameters,      ONLY : ntypx,lmaxx,lqmax
+  USE parameters,      ONLY : ntypx
+  USE upf_params,      ONLY : lmaxx
   USE klist, ONLY : nelup, neldw, nelec
 
   IMPLICIT NONE
