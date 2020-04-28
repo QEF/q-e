@@ -708,11 +708,11 @@ END SUBROUTINE laxlib_multi_init_desc_x
       !
       info = cusolverDnCreate(cuSolverHandle)
       IF ( info /= CUSOLVER_STATUS_SUCCESS ) &
-         CALL errore( ' diagonalize_serial_gpu ', 'cusolverDnCreate',  ABS( info ) )
+         CALL lax_error__( ' diagonalize_serial_gpu ', 'cusolverDnCreate',  ABS( info ) )
 
       info = cusolverDnDsyevd_bufferSize( &
              cuSolverHandle, CUSOLVER_EIG_MODE_VECTOR, CUBLAS_FILL_MODE_UPPER, m, s, lda, rhod, lwork_d)
-      IF( info /= 0 ) CALL lax_error__( ' laxlib diagonalize_serial_gpu ', ' error in solver 1 ', ABS( info ) )
+      IF( info /= CUSOLVER_STATUS_SUCCESS ) CALL lax_error__( ' laxlib diagonalize_serial_gpu ', ' error in solver 1 ', ABS( info ) )
 
       ALLOCATE( work_d ( lwork_d ), STAT=info )
       IF( info /= 0 ) CALL lax_error__( ' laxlib diagonalize_serial_gpu ', ' allocate work_d ', ABS( info ) )
@@ -724,7 +724,7 @@ END SUBROUTINE laxlib_multi_init_desc_x
       info = cudaDeviceSynchronize()
 
       info = cusolverDnDestroy(cuSolverHandle)
-      IF( info /= 0 ) CALL errore( ' diagonalize_serial_gpu ', ' cusolverDnDestroy failed ', ABS( info ) )
+      IF( info /= CUSOLVER_STATUS_SUCCESS ) CALL lax_error__( ' diagonalize_serial_gpu ', ' cusolverDnDestroy failed ', ABS( info ) )
 
       DEALLOCATE( work_d )
 
