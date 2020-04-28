@@ -258,9 +258,7 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
      ENDDO
 !$omp end do
      !
-!!$omp single
      CALL fft_scatter_many_yz( dfft, f, dfft%aux, isgn, howmany )
-!!$omp end single
      !
 !$omp do
      DO i = 0, howmany-1
@@ -268,9 +266,7 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
      ENDDO
 !$omp end do
      !
-!!$omp single
      CALL fft_scatter_many_xy ( dfft, f, dfft%aux, isgn, howmany )
-!!$omp end single
      !
 !$omp do
      DO i = 0, howmany-1
@@ -303,9 +299,7 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
      ENDDO
 !$omp end do
      !
-!!$omp single
      CALL fft_scatter_many_xy ( dfft, f, dfft%aux, isgn, howmany )
-!!$omp end single
      !
 !$omp do
      DO i = 0, howmany-1
@@ -313,9 +307,7 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
      ENDDO
 !$omp end do
      !
-!!$omp single
      CALL fft_scatter_many_yz( dfft, f, dfft%aux, isgn, howmany )
-!!$omp end single
      !
 !$omp do
      DO i = 0, howmany-1
