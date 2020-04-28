@@ -1942,40 +1942,32 @@
     !------------------------------------------------------------
     !
     !--------------------------------------------------------------
-    SUBROUTINE readgmap(nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd)
+    SUBROUTINE readgmap(nkstot)
     !--------------------------------------------------------------
     !!
-    !! read map of G vectors G -> G-G_0 for a given q point
+    !! read the map of G vectors G -> G-G_0 for a given q point
     !! (this is used for the folding of k+q into the first BZ)
     !!
     !
     USE kinds,    ONLY : DP
-    USE mp_global,ONLY : inter_pool_comm, world_comm
+    USE mp_global,ONLY : world_comm
     USE mp,       ONLY : mp_bcast, mp_max
     use io_global,ONLY : meta_ionode, meta_ionode_id
-    use io_var,   ONLY : iukgmap, iukmap
-    use pwcom,    ONLY : nks
-    use elph2,    ONLY : shift, gmap, igk_k_all, ngk_all
+    use io_var,   ONLY : iukgmap
+    use elph2,    ONLY : ngxxf, ngxx
+    use kfold,    ONLY : ng0vec, g0vec_all_r, gmap, shift
     USE io_files, ONLY : prefix
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nkstot
     !! Total number of k-points
-    INTEGER, INTENT(in) :: ngxx
-    !! Maximum number of G-vectors over all pools
-    INTEGER, INTENT(out) :: ng0vec
-    !! Number of G_0 vectors
-    INTEGER, INTENT(in) :: lower_bnd
-    !! Lower bound for the k-parallellization
-    REAL(KIND = DP), INTENT(out) :: g0vec_all_r(3, 125)
-    !! G_0 vectors needed to fold the k+q grid into the k grid, cartesian coord.
     !
     ! Lork variables
     INTEGER :: ik
     !! Counter on k-points
-    INTEGER :: ik1, itmp
-    !! Temporary indeces when reading kmap and kgmap files
+    INTEGER :: ik1
+    !! Temporary indices when reading kgmap files
     INTEGER :: ig0
     !! Counter on G_0 vectors
     INTEGER :: ishift
@@ -1992,42 +1984,26 @@
       OPEN(iukgmap, FILE = TRIM(prefix)//'.kgmap', FORM = 'formatted', STATUS = 'old', IOSTAT = ios)
       IF (ios /=0) CALL errore('readgmap', 'error opening kgmap file', iukgmap)
       !
-      ! dummy operation for skipping unnecessary data (ngxxf) here
+      READ(iukgmap, *) ngxxf
       !
-      READ(iukgmap, *) ik ! dummy
+      !! HL: The part below should be removed later since it is useless.
       !
       DO ik = 1, nkstot
         READ(iukgmap, *) ik1, shift(ik1)
       ENDDO
+      !
       READ(iukgmap, *) ng0vec
-      !
-      !  the following seems crazy but I make it for compatibility
-      !  with versions up to 2.1.5:
-      !
-      !  iukgmap has been created by ../PW/set_kplusq.f90 and has
-      !  the correct gmap(), but the wrong shift() (actually the
-      !  shift for a specific q-point)
-      !
-      !  since createkmap.f90 has regenerated the shifts for the
-      !  present k-point I read them again in kmap.dat. The above
-      !  'fake' reading is because the gmap appears *after* the
-      !  wrong kmap.
-      !
-      OPEN(iukmap, FILE = TRIM(prefix)//'.kmap', FORM = 'formatted', STATUS = 'old', IOSTAT = ios)
-      IF (ios /= 0) CALL errore('readgmap', 'error opening kmap file', iukmap)
-      DO ik = 1, nkstot
-        READ(iukmap,*) ik1, itmp, shift(ik1)
-      ENDDO
-      CLOSE(iukmap)
       !
     ENDIF
     !
     ! first node broadcasts ng0vec to all nodes for allocation of gmap
     !
+    CALL mp_bcast(ngxxf, meta_ionode_id, world_comm)
     CALL mp_bcast(ng0vec, meta_ionode_id, world_comm)
     !
     ALLOCATE(gmap(ngxx * ng0vec), STAT = ierr)
     IF (ierr /= 0) CALL errore('readgmap', 'Error allocating gmap', 1)
+    gmap(:) = 0
     !
     IF (meta_ionode) THEN
        !
@@ -2038,21 +2014,69 @@
         !
         ! at variance with the nscf calculation, here gmap is read as a vector,
         !
-        READ(iukgmap,*) (gmap(ng0vec * ( ig - 1 ) + ishift), ishift = 1, ng0vec)
+        READ(iukgmap,*) (gmap(ng0vec * (ig - 1) + ishift), ishift = 1, ng0vec)
       ENDDO
       !
       CLOSE(iukgmap)
       !
     ENDIF
     !
-    ! first node broadcasts everything to all nodes
+    ! first node broadcasts arrays to all nodes
     !
     CALL mp_bcast(g0vec_all_r, meta_ionode_id, world_comm)
-    CALL mp_bcast(shift, meta_ionode_id, world_comm)
     CALL mp_bcast(gmap, meta_ionode_id, world_comm)
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE readgmap
+    !-----------------------------------------------------------------------
+    !
+    !--------------------------------------------------------------
+    SUBROUTINE readkmap(nkstot)
+    !--------------------------------------------------------------
+    !!
+    !! Read the index of G_0 such that k+q+G_0 belongs to the 1st BZ
+    !!
+    !
+    USE kinds,    ONLY : DP
+    USE mp_global,ONLY : world_comm
+    USE mp,       ONLY : mp_bcast
+    USE io_global,ONLY : meta_ionode, meta_ionode_id
+    USE io_var,   ONLY : iukmap
+    USE io_files, ONLY : prefix
+    USE kfold,    ONLY : shift
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: nkstot
+    !! Total number of k-points
+    !
+    ! Local variables
+    INTEGER :: ik
+    !! Counter on k-points
+    INTEGER :: ik1
+    !! Temporary indices when reading kmap files
+    INTEGER :: itmp
+    !! Temporary indices when reading kmap files
+    INTEGER :: ios
+    !! Integer variable for I/O control
+    !
+    IF (meta_ionode) THEN
+      !
+      OPEN(iukmap, FILE = TRIM(prefix)//'.kmap', FORM = 'formatted', STATUS = 'old', IOSTAT = ios)
+      IF (ios /= 0) CALL errore('readkmap', 'error opening kmap file', iukmap)
+      DO ik = 1, nkstot
+        READ(iukmap,*) ik1, itmp, shift(ik1)
+      ENDDO
+      CLOSE(iukmap)
+      !
+    ENDIF
+    !
+    ! first node broadcasts shift to all nodes
+    !
+    CALL mp_bcast(shift, meta_ionode_id, world_comm)
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE readkmap
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------

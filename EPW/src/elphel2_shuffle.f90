@@ -83,18 +83,16 @@
   USE phus,             ONLY : alphap
   USE lrus,             ONLY : becp1
   USE becmod,           ONLY : calbec
-  USE elph2,            ONLY : shift, gmap, el_ph_mat, igk_k_all, &
-                               xkq, etq, &
-                               ngk_all, lower_band, upper_band, &
-                               ibndstart, ibndend, nbndep, ngxx, ngxxf
+  USE elph2,            ONLY : el_ph_mat, igk_k_all, xkq, etq, ngk_all, lower_band, &
+                               upper_band, ibndstart, ibndend, nbndep, ngxx, ngxxf
   USE fft_base,         ONLY : dffts
   USE constants_epw,    ONLY : czero, cone, ci, zero, eps8
   USE control_flags,    ONLY : iverbosity
   USE klist,            ONLY : nkstot
   USE division,         ONLY : kpointdivision, fkbounds, fkbounds_bnd
-  USE kfold,            ONLY : ktokpmq
+  USE kfold,            ONLY : ktokpmq, ng0vec, g0vec_all_r, gmap, shift
   USE low_lvl,          ONLY : fractrasl, rotate_cart, s_crystocart
-  USE io_epw,           ONLY : readwfc, readgmap
+  USE io_epw,           ONLY : readwfc, readkmap
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE dvqpsi,           ONLY : dvqpsi_us3, adddvscf2
   !
@@ -146,8 +144,6 @@
   !! Counter on polarizations
   INTEGER :: npw
   !! Number of k+G-vectors inside 'ecut sphere'
-  INTEGER :: ng0vec
-  !! Number of G_0 vectors
   INTEGER :: lower_bnd
   !! Lower bounds index after k paral
   INTEGER :: upper_bnd
@@ -171,8 +167,6 @@
   !! Temporary k+q vector for KB projectors
   REAL(KIND = DP) :: sxk(3)
   !! Rotated k-point xk
-  REAL(KIND = DP) :: g0vec_all_r(3, 125)
-  !! G_0 vectors needed to fold the k+q grid into the k grid, cartesian coord.
   REAL(KIND = DP) :: zero_vect(3)
   !! Temporary zero vector
   REAL(KIND = DP) :: s_cart(3, 3)
@@ -229,14 +223,11 @@
   !
   CALL kpointdivision(ik0)
   !
-  ALLOCATE(shift(nkstot), STAT = ierr)
-  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating shift', 1)
-  shift(:) = 0
-  ! gmap gets allocated inside readgmap
-  CALL readgmap(nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd)
+!!$  ALLOCATE(shift(nkstot), STAT = ierr)
+!!$  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating shift', 1)
+!!$  shift(:) = 0
   !
-  IF (imode0 == 0 .AND. iverbosity == 1) WRITE(stdout, 5) ngxx
-5 FORMAT(5x,'Estimated size of gmap: ngxx =', i5)
+  CALL readkmap(nkstot)
   !
   ! close all sequential files in order to re-open them as direct access
   ! close all .wfc files in order to prepare shuffled read
@@ -562,10 +553,8 @@
   IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating aux3', 1)
   DEALLOCATE(dvpsi, STAT = ierr)
   IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating dvpsi', 1)
-  DEALLOCATE(gmap, STAT = ierr)
-  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating gmap', 1)
-  DEALLOCATE(shift, STAT = ierr)
-  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating shift', 1)
+!!$  DEALLOCATE(shift, STAT = ierr)
+!!$  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating shift', 1)
   DEALLOCATE(etq, STAT = ierr)
   IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating etq', 1)
   !
