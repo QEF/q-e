@@ -55,6 +55,8 @@ SUBROUTINE run_pwscf( exit_status )
   USE beef,                 ONLY : beef_energies
 #endif 
   !
+  USE gbuffers,             ONLY : dev_buf
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(OUT) :: exit_status
@@ -72,6 +74,9 @@ SUBROUTINE run_pwscf( exit_status )
   ! ions_status =  2  converged, restart with nonzero magnetization
   ! ions_status =  1  converged, final step with current cell needed
   ! ions_status =  0  converged, exiting
+  !
+  INTEGER :: ierr
+  ! collect error codes
   !
   ions_status = 3
   exit_status = 0
@@ -266,6 +271,9 @@ SUBROUTINE run_pwscf( exit_status )
      ! ... the first scf iteration of each ionic step (after the first)
      !
      ethr = 1.0D-6
+     !
+     CALL dev_buf%reinit( ierr )
+     IF ( ierr .ne. 0 ) CALL errore( 'run_pwscf', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr) )
      !
   ENDDO main_loop
   !

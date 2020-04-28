@@ -103,6 +103,7 @@ SUBROUTINE forces()
   !
   ! Cleanup scratch space used in previous SCF iterations. This will reduce memory footprint.
   CALL dev_buf%reinit(ierr)
+  IF (ierr .ne. 0) CALL errore('forces', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr))
   !
   ALLOCATE( forcenl(3,nat), forcelc(3,nat), forcecc(3,nat), &
             forceh(3,nat), forceion(3,nat), forcescc(3,nat) )
@@ -196,6 +197,7 @@ SUBROUTINE forces()
   ! Cleanup scratch space again, next subroutines uses a lot of memory.
   ! In an ideal world this should be done only if really needed (TODO).
   CALL dev_buf%reinit(ierr)
+  IF (ierr .ne. 0) CALL errore('forces', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr))
   !
   IF ( .not. use_gpu ) CALL force_corr( forcescc )
   IF (       use_gpu ) CALL force_corr_gpu( forcescc )
