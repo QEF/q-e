@@ -130,7 +130,7 @@ SUBROUTINE beef_print( )
 
   WRITE(*,*) "BEEFens 2000 ensemble energies"
   do i=1,2000
-     WRITE(*, "(E35.15)"), energies(i)
+     WRITE(*, "(E35.15)") energies(i)
   enddo
   WRITE(*,*)
   WRITE(*,*) "BEEF-vdW xc energy contributions"
