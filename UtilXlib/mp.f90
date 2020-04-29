@@ -484,7 +484,7 @@ MODULE mp
       END SUBROUTINE mp_send_iv
       !
       !------------------------------------------------------------------------------!
-      SUBROUTINE mp_send_r1( msg, dest, tag, gid )
+      SUBROUTINE mp_send_r1( msg, dest, tag, gid, send_request )
       !------------------------------------------------------------------------------!
       !!
       !! Send a real element
@@ -494,15 +494,20 @@ MODULE mp
       INTEGER, INTENT(IN) :: dest
       INTEGER, INTENT(IN) :: tag
       INTEGER, INTENT(IN) :: gid
+      INTEGER, OPTIONAL, INTENT(out) :: send_request
 #if defined(__MPI)
       INTEGER :: msglen
       msglen = 1
-      CALL send_real( msg, msglen, dest, tag, gid )
+      IF ( PRESENT(send_request) ) THEN
+         CALL isend_real( msg, msglen, dest, tag, gid, send_request )
+      ELSE
+         CALL send_real( msg, msglen, dest, tag, gid )
+      ENDIF
 #endif
       END SUBROUTINE mp_send_r1
       !
       !------------------------------------------------------------------------------!
-      SUBROUTINE mp_send_rv(msg,dest,tag,gid)
+      SUBROUTINE mp_send_rv(msg,dest,tag,gid, send_request)
       !------------------------------------------------------------------------------!
       !!
       !! Send a real vector
@@ -512,15 +517,20 @@ MODULE mp
       INTEGER, INTENT(IN) :: dest
       INTEGER, INTENT(IN) :: tag
       INTEGER, INTENT(IN) :: gid
+      INTEGER, OPTIONAL, INTENT(out) :: send_request
 #if defined(__MPI)
       INTEGER :: msglen
       msglen = size(msg)
-      CALL send_real( msg, msglen, dest, tag, gid )
+      IF ( PRESENT(send_request) ) THEN
+         CALL isend_real( msg, msglen, dest, tag, gid, send_request )
+      ELSE
+         CALL send_real( msg, msglen, dest, tag, gid )
+      ENDIF
 #endif
       END SUBROUTINE mp_send_rv
       !
       !------------------------------------------------------------------------------!
-      SUBROUTINE mp_send_c1( msg, dest, tag, gid )
+      SUBROUTINE mp_send_c1( msg, dest, tag, gid, send_request )
       !------------------------------------------------------------------------------!
       !!
       !! Send a complex element
@@ -530,15 +540,20 @@ MODULE mp
       INTEGER, INTENT(IN) :: dest
       INTEGER, INTENT(IN) :: tag
       INTEGER, INTENT(IN) :: gid
+      INTEGER, OPTIONAL, INTENT(out) :: send_request
 #if defined(__MPI)
       INTEGER :: msglen
       msglen = 1
-      CALL send_real( msg, 2 * msglen, dest, tag, gid )
+      IF ( PRESENT(send_request) ) THEN
+         CALL isend_real( msg, 2 * msglen, dest, tag, gid, send_request )
+      ELSE
+         CALL send_real( msg, 2 * msglen, dest, tag, gid )
+      ENDIF
 #endif
       END SUBROUTINE mp_send_c1
       !
       !------------------------------------------------------------------------------!
-      SUBROUTINE mp_send_cv(msg,dest,tag,gid)
+      SUBROUTINE mp_send_cv( msg, dest, tag, gid, send_request )
       !------------------------------------------------------------------------------!
       !!
       !! Send a complex vector
@@ -548,10 +563,15 @@ MODULE mp
       INTEGER, INTENT(IN) :: dest
       INTEGER, INTENT(IN) :: tag
       INTEGER, INTENT(IN) :: gid
+      INTEGER, OPTIONAL, INTENT(out) :: send_request
 #if defined(__MPI)
       INTEGER :: msglen
       msglen = size(msg)
-      CALL send_real( msg, 2 * msglen, dest, tag, gid )
+      IF ( PRESENT(send_request) ) THEN
+         CALL isend_real( msg, 2 * msglen, dest, tag, gid, send_request )
+      ELSE
+         CALL send_real( msg, 2 * msglen, dest, tag, gid )
+      ENDIF
 #endif
       END SUBROUTINE mp_send_cv
 

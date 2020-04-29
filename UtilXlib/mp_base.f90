@@ -163,6 +163,61 @@ END SUBROUTINE mp_synchronize
    !------------------------------------------------------------------------------!
    END SUBROUTINE send_real
    !------------------------------------------------------------------------------!
+   !
+   !------------------------------------------------------------------------------!
+   SUBROUTINE isend_real( array, n, dest, tag, gid, send_request )
+   !------------------------------------------------------------------------------!
+   !!
+   !! Non Blocking Send reals
+   !!
+   USE util_param, ONLY: DP
+   USE parallel_include
+   !
+   IMPLICIT NONE
+   INTEGER, INTENT(in) :: n, dest, tag, gid
+   INTEGER, INTENT(out) :: send_request
+   REAL(DP) :: array( n )
+#if defined __MPI
+   INTEGER :: msgsiz_max = __BCAST_MSGSIZ_MAX
+   INTEGER :: nblk, blksiz, iblk, istart, ierr
+#if defined __TRACE
+   write(*,*) 'ISEND_REAL IN'
+#endif
+   IF( n <= 0 ) GO TO 1
+   !
+   IF( n <= msgsiz_max ) THEN
+     CALL MPI_ISEND( array, n, MPI_DOUBLE_PRECISION, dest, tag, gid, send_request, ierr )
+     IF( ierr /= 0 ) CALL errore( ' send_real ', ' error in mpi_send 1 ', ierr )
+   ELSE
+     ! I'm assuming send_request will be overwritten at each call and the multiple
+     ! sends will be received in the sending order so that checking for completion
+     ! of the last send_request should be fine.
+     ! Not sure this is always correct, tho.                            SdG 290420
+     !
+     nblk   = n / msgsiz_max
+     blksiz = msgsiz_max
+     DO iblk = 1, nblk
+       istart = (iblk-1)*msgsiz_max + 1
+       CALL MPI_ISEND( array( istart ), blksiz, MPI_DOUBLE_PRECISION, dest, tag, gid, send_request, ierr )
+       IF( ierr /= 0 ) CALL errore( ' send_real ', ' error in mpi_send 2 ', ierr )
+     END DO
+     blksiz = MOD( n, msgsiz_max )
+     IF( blksiz > 0 ) THEN
+       istart = nblk * msgsiz_max + 1
+       CALL MPI_ISEND( array( istart ), blksiz, MPI_DOUBLE_PRECISION, dest, tag, gid, send_request, ierr )
+       IF( ierr /= 0 ) CALL errore( ' send_real ', ' error in mpi_send 3 ', ierr )
+     END IF
+   END IF
+1  CONTINUE
+#if defined __TRACE
+   write(*,*) 'ISEND_REAL OUT'
+#endif
+#endif
+   RETURN
+   !------------------------------------------------------------------------------!
+   END SUBROUTINE isend_real
+   !------------------------------------------------------------------------------!
+
 
 !=----------------------------------------------------------------------------=!
 ! recv_* section
