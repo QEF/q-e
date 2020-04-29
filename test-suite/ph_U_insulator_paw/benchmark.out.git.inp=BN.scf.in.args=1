@@ -21,12 +21,6 @@
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
-           1           1           1           1
-           1           1           1           1
-           1           1           1           1
-           1           1           1           1
-           1           1           1           1
-           1           1           1           1
      file N.pbe-n-kjpaw_psl.1.0.0.UPF: wavefunction(s)  2S renormalized
 
      Subspace diagonalization in iterative solution of the eigenvalue problem:
