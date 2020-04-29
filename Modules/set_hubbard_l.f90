@@ -79,9 +79,6 @@ FUNCTION set_hubbard_l_back( psd ) RESULT( hubbard_l_back )
   !
   SELECT CASE( TRIM(ADJUSTL(psd)) )
      !
-     ! ... transition metals
-     !
-
      CASE( 'H', 'He', 'Li', 'Be', 'Na', 'Mg', 'K', 'Ca', 'Rb', 'Sr', 'Cs', 'Ba',&
            'Fr', 'Ra' )
         !
@@ -97,11 +94,9 @@ FUNCTION set_hubbard_l_back( psd ) RESULT( hubbard_l_back )
         !
      CASE DEFAULT
         !
-        hubbard_l_back = -1
+        ! For almost all the elements the background states are s states
         !
-        WRITE( stdout, '(/,"psd = ",A,/)' ) psd
-        !
-        CALL errore( 'set_hubbard_l_back', 'pseudopotential not yet inserted', 1 )
+        hubbard_l_back = 0
         !
   END SELECT
   !

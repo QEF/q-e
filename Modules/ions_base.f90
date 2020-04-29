@@ -11,7 +11,7 @@
 
       USE kinds,      ONLY : DP
       USE parameters, ONLY : ntypx
-!
+      !
       IMPLICIT NONE
       SAVE
 

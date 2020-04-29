@@ -20,7 +20,7 @@ inputs_args = ('lsda.in', ''), ('lsda-2.in', ''), ('lsda-cg.in', ''), ('lsda-mix
 
 [pw_metal/]
 program = PW
-inputs_args = ('metal.in' ,''), ('metal-2.in' ,''), ('metal-fermi_dirac.in' ,''), ('metal-gaussian.in' ,''), ('metal-tetrahedra-2.in' ,''), ('metal-tetrahedra.in' ,'')
+inputs_args = ('metal.in' ,''), ('metal-2.in' ,''), ('metal-fermi_dirac.in' ,''), ('metal-gaussian.in' ,''), ('metal-tetrahedra.in' ,''), ('metal-tetrahedra-1.in' ,''), ('metal-tetrahedra-2.in','')
 
 [pw_noncolin/]
 program = PW

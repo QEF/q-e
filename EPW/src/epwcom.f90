@@ -176,8 +176,6 @@
   !! nr. of bins for frequency scan in \delta( e_k - e_k+q - w ) when strict sel. rule is applied
   INTEGER :: nbndsub
   !! nr. of bands in the optimal subspace (when disentanglement is used)
-  INTEGER :: nbndskip
-  !! nr. of bands to be skipped when we use only a subspace (this is nfirstwin-1 in Marzari's notation)
   INTEGER :: num_iter
   !! nr. of steps used in creating the maximally localized Wannier functions
   INTEGER :: iprint

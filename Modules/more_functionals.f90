@@ -1454,42 +1454,6 @@
       return
       end subroutine ggapwold
 
-!-----------------------------------------------------------------------
-      subroutine dftname_cp (exfact, dft)
-!-----------------------------------------------------------------------
-!
-      implicit none
-      integer :: exfact
-      character(len=25) dft
-!
-      if (exfact == 0) then
-         dft = 'PZ'
-      elseif (exfact == 1) then
-         dft = 'BLYP'
-      elseif (exfact == 2) then
-         dft = 'B88'
-      elseif (exfact ==  - 5 .or. exfact == 3) then
-         dft = 'BP'
-      elseif (exfact ==  - 6 .or. exfact == 4) then
-         dft = 'PW91'
-      elseif (exfact == 5) then
-         dft = 'PBE'
-      elseif (exfact ==-1) then
-         dft = 'WIG'
-      elseif (exfact ==-2) then
-         dft = 'HL'
-      elseif (exfact ==-3) then
-         dft = 'GL'
-      elseif (exfact == 6) then
-         dft = 'TPSS'
-      else
-         call errore ('dftname','unknown exch-corr functional',exfact)
-      end if
-
-      return
-      end subroutine dftname_cp
-
-
 !-------------------------------------------------------------------------
       subroutine expxc(nnr,nspin,rhor,exc)
 !----------------------------------------------------------------------

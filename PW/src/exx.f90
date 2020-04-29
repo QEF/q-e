@@ -3766,10 +3766,11 @@ end associate
   !----------------------------------------------------------------------
   !! Calculates beta functions (Kleinman-Bylander projectors), with
   !! structure factor, for all atoms, in reciprocal space.
+  !! FIXME: why so much replicated code?  
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau
-  USE cell_base,     ONLY : tpiba
+  USE cell_base,     ONLY : tpiba, omega
   USE constants,     ONLY : tpi
   USE gvect,         ONLY : eigts1, eigts2, eigts3, mill, g
   USE wvfct,         ONLY : npwx, nbnd
@@ -3858,7 +3859,7 @@ end associate
      ! f_l(q)=\int _0 ^\infty dr r^2 f_l(r) j_l(q.r)
      DO nb = 1, upf(nt)%nbeta
         IF ( upf(nt)%is_gth ) THEN
-           CALL mk_ffnl_gth( nt, nb, npw_, qg, vq )
+           CALL mk_ffnl_gth( nt, nb, npw_, omega, qg, vq )
         ELSE
            DO ig = 1, npw_
               IF (spline_ps) THEN

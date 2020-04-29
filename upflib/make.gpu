@@ -1,0 +1,6 @@
+OBJS += \
+  uspp_gpu.o \
+  simpsn_gpu.o \
+  splinelib_gpu.o
+
+uspp_gpu.o : uspp.o

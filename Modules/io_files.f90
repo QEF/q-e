@@ -12,8 +12,8 @@ MODULE io_files
   USE parameters, ONLY: ntypx
   USE kinds,      ONLY: dp
   USE io_global,  ONLY: ionode, ionode_id, stdout
-  USE mp,         ONLY : mp_barrier, mp_bcast, mp_sum
-  USE mp_images,  ONLY : me_image, intra_image_comm, nproc_image
+  USE mp,         ONLY: mp_barrier, mp_bcast, mp_sum
+  USE mp_images,  ONLY: me_image, intra_image_comm, nproc_image
   !
   ! ... I/O related variables: file names, units, utilities
   ! ... IMPORTANT: when directory names are set, they must always end with "/"

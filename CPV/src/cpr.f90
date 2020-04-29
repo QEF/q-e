@@ -145,7 +145,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               enow, econs, econt, fccc, ccc, bigr, dt2bye
   REAL(DP) :: ekinc0, ekinp, ekinpr, ekinc
   REAL(DP) :: temps(nsp)
-  REAL(DP) :: ekinh, temphc, randy
+  REAL(DP) :: ekinh, temphc
   REAL(DP) :: delta_etot
   REAL(DP) :: ftmp, enb, enbi
   INTEGER  :: is, nacc, ia, j, iter, i, isa, ipos, iat, CYCLE_NOSE

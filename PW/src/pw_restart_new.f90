@@ -74,7 +74,6 @@ MODULE pw_restart_new
       USE uspp,                 ONLY : okvan
       USE paw_variables,        ONLY : okpaw
       USE uspp_param,           ONLY : upf
-      USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, ibrav
       USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, zv, amass
       USE noncollin_module,     ONLY : noncolin, npol

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -83,6 +83,9 @@ END FUNCTION set_hubbard_n
 !---------------------------------------------------------------------------
 FUNCTION set_hubbard_n_back( psd ) RESULT( hubbard_n_back )
   !---------------------------------------------------------------------------
+  !
+  ! IT: Note, currently this routine is not used anywhere. The data reported 
+  !     here is not complete.
   !
   USE io_global, ONLY : stdout
   !

@@ -309,10 +309,11 @@ SUBROUTINE alloc_neighborhood()
   ENDIF
   !
   IF (.NOT.dfpt_hub) WRITE(stdout,'(/5x,"i",4x,"j",2x,"dist (Bohr)", &
-                                & 7x,"stan-stan",x,"stan-bac",x,"bac-bac")')
+                                & 7x,"stan-stan",x,"stan-bac",x,"bac-bac",x,"bac-stan")')
   ! stan-stan = standard-standard
   ! stan-bac  = standard-background
   ! bac-bac   = background-background
+  ! bac-stan  = background-standard
   !
   ! Determine how many neighbors there are and what are their indices.
   !
@@ -351,8 +352,8 @@ SUBROUTINE alloc_neighborhood()
              !
              ! Diagonal term i=j needed in init_nsg, nsg_adj and mix_rho
              !
-             IF (.NOT.dfpt_hub) WRITE(stdout,'(2x,i4,x,i4,x,f12.8,x,a5,3(x,f8.4))') &
-                        i, j, dist_s(i,j), ' V = ', (Hubbard_V(i,j,k)*rytoev, k=1,3)
+             IF (.NOT.dfpt_hub) WRITE(stdout,'(2x,i4,x,i4,x,f12.8,x,a5,4(x,f8.4))') &
+                        i, j, dist_s(i,j), ' V = ', (Hubbard_V(i,j,k)*rytoev, k=1,4)
              !
              viz = viz + 1
              !

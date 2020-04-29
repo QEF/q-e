@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.2.0 starts on  9Apr2020 at 19:34:20 
+     Program EPW v.5.2.0 starts on 22Apr2020 at 17:51:26 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -226,7 +226,7 @@ write_plot: wannier_plot_supercell =    3    3    3
 
   cube files written
      -------------------------------------------------------------------
-     WANNIER      :      0.81s CPU      1.02s WALL (       1 calls)
+     WANNIER      :      0.81s CPU      1.03s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Unfolding on the coarse grid

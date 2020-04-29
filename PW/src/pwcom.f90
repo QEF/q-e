@@ -478,7 +478,8 @@ MODULE spin_orb
   !! Variables needed for calculations with spin-orbit
   !
   USE kinds,       ONLY : DP
-  USE parameters,  ONLY : lmaxx
+  USE upf_params,  ONLY : lmaxx, lqmax
+  !! FIXME: rot_ylm could be dynamically allocated
   !
   SAVE
   !
@@ -490,7 +491,7 @@ MODULE spin_orb
   !! if .TRUE. the initial wavefunctions are spin-angle functions. 
   LOGICAL :: domag
   !! if .TRUE. magnetization is computed
-  COMPLEX (DP) :: rot_ylm(2*lmaxx+1,2*lmaxx+1)
+  COMPLEX (DP) :: rot_ylm(lqmax,lqmax)
   !! transform real spherical harmonics into complex ones
   COMPLEX (DP), ALLOCATABLE :: fcoef(:,:,:,:,:)
   !! function needed to account for spinors.

@@ -26,7 +26,6 @@ subroutine init_us_1
   !   h) It fills the interpolation table "tab" for the beta functions
   !
   USE kinds,        ONLY : DP
-  USE parameters,   ONLY : lmaxx
   USE constants,    ONLY : fpi, sqrt2
   USE atom,         ONLY : rgrid
   USE ions_base,    ONLY : ntyp => nsp, ityp, nat
@@ -38,7 +37,7 @@ subroutine init_us_1
   USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq_at, qq_nt, indv,&
                            ap, aainit, qq_so, dvan_so, okvan, indv_ijkb0
   USE uspp_param,   ONLY : upf, lmaxq, nh, nhm, lmaxkb
-  USE spin_orb,     ONLY : lspinorb, rot_ylm, fcoef
+  USE spin_orb,     ONLY : lspinorb, rot_ylm, fcoef, lmaxx
   USE paw_variables,ONLY : okpaw
   USE mp_bands,     ONLY : intra_bgrp_comm
   USE mp,           ONLY : mp_sum

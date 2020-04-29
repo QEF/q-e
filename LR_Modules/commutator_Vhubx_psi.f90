@@ -119,8 +119,8 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   !
   ! Derivative of Bessel functions and spherical harmonics wrt to crystal axis ipol
   !
-  CALL gen_at_dj (ik, nwfcU, is_hubbard, Hubbard_l, dkwfcbessel)
-  CALL gen_at_dy (ik, nwfcU, is_hubbard, Hubbard_l, at(:,ipol), dkwfcylmr)
+  CALL gen_at_dj (ik, dkwfcbessel)
+  CALL gen_at_dy (ik, at(:,ipol), dkwfcylmr)
   !
   DO ig = 1, npw
      !

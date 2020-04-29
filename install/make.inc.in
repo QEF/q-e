@@ -64,6 +64,7 @@ MOD_FLAG      = @imod@
 # Each Makefile can add directories to MODFLAGS and libraries to QEMODS
 
 BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/iotk/src \
+               $(MOD_FLAG)$(TOPDIR)/upflib \
                $(MOD_FLAG)$(TOPDIR)/Modules \
                $(MOD_FLAG)$(TOPDIR)/FFTXlib \
 	       $(MOD_FLAG)$(TOPDIR)/LAXlib \

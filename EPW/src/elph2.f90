@@ -44,6 +44,8 @@
     ibndstart,               &!  First band index after excluding bands in Wannierization step
     ibndend,                 &!  Last band index after excluding bands in Wannierization step
     nbndep,                  &!  Number of remaining bands after excluding bands in Wannierizatin step
+    nbndskip,                &!  Number of bands to be skipped in Wannierization step, leading to
+                              !  the exclusion from the original Hamiltonian
     ngxx,                    &!  Maximum number of G-vectors over all pools
     ngxxf,                   &!  Maximum number of G-vectors over all pools for k+q folding
     ig_s,                    &!  First G index within each core in case of G parallelization
