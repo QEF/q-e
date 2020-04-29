@@ -1603,7 +1603,6 @@
         IF (assume_metal) THEN
           CALL errore("ephwann_shuffle", "Cannot apply scissor shift for metals.", 1)
         ENDIF
-        icbm = FLOOR(nelec / 2.0d0) + nbndskip + 1
         DO ik = 1, nkf
           ikk = 2 * ik - 1
           ikq = ikk + 1
