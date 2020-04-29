@@ -1025,9 +1025,15 @@ CONTAINS
           i = 0
           DO WHILE ( i < LEN_TRIM(dft) )
             i = i + 1
-            IF ( matches( TRIM(qe_name), TRIM(dft(i:i+3)) ) ) THEN
+            IF ( matches( TRIM(qe_name), TRIM(dft(i:i+1)) ) ) THEN
                qedft = qedft + 1
-               i = i + LEN_TRIM(qe_name)-1
+               i = i + 1
+            ELSEIF (matches( TRIM(qe_name), TRIM(dft(i:i+2)) ) ) THEN
+               qedft = qedft + 1
+               i = i + 2
+            ELSEIF (matches( TRIM(qe_name), TRIM(dft(i:i+3)) ) ) THEN
+               qedft = qedft + 1
+               i = i + 3
             ENDIF
           ENDDO
           !
