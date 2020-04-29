@@ -9,11 +9,12 @@
 subroutine print_clock_ph
   !-----------------------------------------------------------------------
 
-  USE io_global,  ONLY : stdout
-  USE uspp,       ONLY : okvan, nlcc_any
-  USE control_ph, ONLY : trans, zue, epsil
-  USE ramanm,     ONLY : lraman, elop
-  USE ldau,       ONLY : lda_plus_u
+  USE io_global,         ONLY : stdout
+  USE uspp,              ONLY : okvan, nlcc_any
+  USE control_ph,        ONLY : trans, zue, epsil
+  USE ramanm,            ONLY : lraman, elop
+  USE ldau,              ONLY : lda_plus_u
+  USE el_phon,           ONLY : elph
   USE dvscf_interpolate, ONLY : ldvscf_interpolate
   !
   implicit none
@@ -178,6 +179,12 @@ subroutine print_clock_ph
      ! CALL print_clock('dvscf_long')
      CALL print_clock('dvscf_bare')
      ! CALL print_clock('dvscf_cart2u')
+     WRITE( stdout, * )
+  ENDIF
+
+  IF (elph) THEN
+     WRITE( stdout, * ) '    Electron-phonon interaction'
+     CALL print_clock('elphsum')
      WRITE( stdout, * )
   ENDIF
 
