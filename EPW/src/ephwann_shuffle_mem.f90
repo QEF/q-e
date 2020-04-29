@@ -478,7 +478,7 @@
     !
     ! Only master perform this task. Need to be parallelize in the future (SP)
     IF (ionode) THEN
-      CALL ephbloch2wanp_mem(nbndsub, nmodes, xqc, nqc, irvec_k, irvec_g, nrr_k, nrr_g, epmatwe_mem)
+      CALL ephbloch2wanp_mem(nbndsub, nmodes, xqc, nqc, irvec_k, irvec_g, nrr_k, nrr_g)
     ENDIF
     !
     IF (epwwrite) THEN

@@ -46,8 +46,7 @@
   USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE io_global,     ONLY : stdout, ionode
   USE io_var,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
-                            iunepmatwp, iunepmatwp2, iunrestart, iuntau,        &
-                            iuntaucb
+                            iunepmatwp2, iunrestart, iuntau, iuntaucb
   USE elph2,         ONLY : cu, cuq, lwin, lwinq, map_rebal, map_rebal_inv,     &
                             chw, chw_ks, cvmew, cdmew, rdw, adapt_smearing,     &
                             epmatwp, epmatq, wf, etf, etf_ks, xqf, xkf,         &
@@ -376,18 +375,7 @@
     WRITE(stdout, '(5x,a)' )    'Results may improve by using use_ws == .TRUE. '
   ENDIF
   !
-#ifndef __MPI
-  ! Open like this only in sequential. Otherwize open with MPI-open
-  IF ((etf_mem == 1) .AND. (ionode)) THEN
-    ! open the .epmatwe file with the proper record length
-    lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-    filint   = TRIM(prefix)//'.epmatwp'
-    CALL diropn(iunepmatwp, 'epmatwp', lrepmatw, exst)
-  ENDIF
-#endif
-  !
   ! At this point, we will interpolate the Wannier rep to the Bloch rep
-  !
   IF (epwread .AND. .NOT. epbread) THEN
     !
     ! Read all quantities in Wannier representation from file
@@ -395,16 +383,6 @@
     CALL epw_read(nrr_k, nrr_q, nrr_g)
     !
   ELSE !if not epwread (i.e. need to calculate fmt file)
-    !
-    IF ((etf_mem == 1) .AND. (ionode)) THEN
-      lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-      filint   = TRIM(prefix)//'.epmatwe'
-      CALL diropn(iunepmatwe, 'epmatwe', lrepmatw, exst)
-#if defined(__MPI)
-      filint   = TRIM(prefix)//'.epmatwp'
-      CALL diropn(iunepmatwp, 'epmatwp', lrepmatw, exst)
-#endif
-    ENDIF
     !
     ! ------------------------------------------------------
     !   Bloch to Wannier transform
@@ -467,6 +445,13 @@
     !
     ! Electron-Phonon vertex (Bloch el and Bloch ph -> Wannier el and Bloch ph)
     !
+    ! Open the prefix.epmatwe file
+    IF ((etf_mem == 1) .AND. ionode) THEN
+      lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
+      filint   = TRIM(prefix)//'.epmatwe'
+      CALL diropn(iunepmatwe, 'epmatwe', lrepmatw, exst)
+    ENDIF
+    !
     DO iq = 1, nqc
       !
       xxq = xqc(:, iq)
@@ -500,20 +485,21 @@
       !
     ENDDO
     !
+    IF (etf_mem == 1 .AND. ionode) CLOSE(iunepmatwe, STATUS = 'keep')
+    !
     ! Electron-Phonon vertex (Wannier el and Bloch ph -> Wannier el and Wannier ph)
     !
     ! Only master perform this task. Need to be parallelize in the future (SP)
-    IF (ionode) THEN
-      IF (etf_mem == 0) THEN
-        CALL ephbloch2wanp(nbndsub, nmodes, xqc, nqc, irvec_k, irvec_g, nrr_k, nrr_g, epmatwe)
-      ELSE
-         CALL ephbloch2wanp_mem(nbndsub, nmodes, xqc, nqc, irvec_k, irvec_g, nrr_k, nrr_g, epmatwe_mem)
-      ENDIF
+    IF (etf_mem == 0) THEN
+      IF (ionode) CALL ephbloch2wanp(nbndsub, nmodes, xqc, nqc, irvec_k, irvec_g, nrr_k, nrr_g, epmatwe)
+      CALL mp_bcast(epmatwp, ionode_id, world_comm)
     ENDIF
-    IF (etf_mem == 0) CALL mp_bcast(epmatwp, ionode_id, world_comm)
+    IF (etf_mem > 0) THEN
+      CALL ephbloch2wanp_mem(nbndsub, nmodes, xqc, nqc, irvec_k, irvec_g, nrr_k, nrr_g)
+    ENDIF
     !
     IF (epwwrite) THEN
-       CALL epw_write(nrr_k, nrr_q, nrr_g, w_centers)
+      CALL epw_write(nrr_k, nrr_q, nrr_g, w_centers)
     ENDIF
     !
     DEALLOCATE(epmatq, STAT = ierr)
@@ -540,15 +526,6 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating lwinq', 1)
   DEALLOCATE(exband, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating exband', 1)
-  !
-  IF (etf_mem == 1) THEN
-    CLOSE(iunepmatwe, STATUS = 'delete')
-  ELSE
-    CLOSE(iunepmatwe)
-  ENDIF
-#if defined(__MPI)
-  CLOSE(iunepmatwp)
-#endif
   !
   ! Check Memory usage
   CALL system_mem_usage(valueRSS)
@@ -795,7 +772,7 @@
   IF (etf_mem == 1) then
     ! Check for directory given by "outdir"
     !
-    filint = TRIM(tmp_dir) // TRIM(prefix)//'.epmatwp1'
+    filint = TRIM(tmp_dir) // TRIM(prefix)//'.epmatwp'
     CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmatwp2, ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'error in MPI_FILE_OPEN', 1)
   ENDIF
