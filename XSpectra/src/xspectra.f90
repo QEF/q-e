@@ -672,10 +672,6 @@ SUBROUTINE check_paw_projectors(xiabs)
   USE paw_gipaw,       ONLY: paw_lmaxkb, paw_recon
   USE xspectra_paw_variables, ONLY: xspectra_paw_nhm
   USE atom,            ONLY: rgrid, msh
-  !  USE atom,  ONLY : &
-  !       mesh,     &!mesh(ntypx) number of mesh points              
-  !       msh ,     &!msh(ntypx)the point at rcut=end of radial integration 
-  !       r, rab
   USE ions_base,       ONLY: ntyp => nsp
   USE io_global,       ONLY: stdout
   USE radin_mod
