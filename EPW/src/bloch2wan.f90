@@ -1292,11 +1292,11 @@
     USE io_var,           ONLY : iunepmatwe, iunepmatwp, iuwanep
     USE io_global,        ONLY : ionode_id, stdout
     USE mp_global,        ONLY : world_comm
-    USE io_files,         ONLY : prefix
     USE mp,               ONLY : mp_barrier, mp_bcast
     USE mp_world,         ONLY : mpime
     USE io_epw,           ONLY : rwepmatw
     USE division,         ONLY : para_bounds
+    USE io_files,         ONLY : prefix, diropn
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_SEEK_SET, MPI_MODE_RDONLY, &
                                  MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, &
@@ -1328,6 +1328,8 @@
     !
     CHARACTER(LEN = 256) :: filint
     !! Name of the file to write/read
+    LOGICAL :: exst
+    !! If the file exist
     INTEGER :: iq
     !! Counter on q-point
     INTEGER :: ir
@@ -1352,7 +1354,7 @@
 #else
     INTEGER(KIND = 8) :: lrepmatw
     !! Offset to tell where to start reading the file
-    INTEGER(KIND = 8) :: lsize
+    INTEGER(KIND = 4) :: lsize
     !! Offset to tell where to start reading the file
 #endif
     REAL(KIND = DP) :: rdotk
@@ -1418,11 +1420,13 @@
     filint = TRIM(prefix)//'.epmatwp'
     CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_WRONLY + MPI_MODE_CREATE, MPI_INFO_NULL, iunepmatwp, ierr)
     IF (ierr /= 0) CALL errore('ephbloch2wanp_mem', 'error in MPI_FILE_OPEN epmatwp', 1)
-#elif
+#else
     ! Size of the read array
-    lsize = INT(2 * nbnd * nbnd * nrr_k * nmodes, KIND = 8)
+    lsize = INT(2 * nbnd * nbnd * nrr_k * nmodes, KIND = 4)
     filint   = TRIM(prefix)//'.epmatwe'
     CALL diropn(iunepmatwe, 'epmatwe', lsize, exst)
+    IF (.NOT. exst) CALL errore('ephbloch2wanp_mem', 'file ' // TRIM(filint) // ' not found', 1)
+    !
     filint   = TRIM(prefix)//'.epmatwp'
     CALL diropn(iunepmatwp, 'epmatwp', lsize, exst)
 #endif
