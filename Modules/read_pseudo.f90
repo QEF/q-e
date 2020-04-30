@@ -484,7 +484,6 @@ SUBROUTINE upf_bcast(upf, ionode, ionode_id, comm)
               ALLOCATE( upf%qfcoef( upf%nqf, upf%nqlc, &
                    upf%nbeta, upf%nbeta ) )
            END IF
-     print *, size(upf%qfcoef,1),size(upf%qfcoef,2),size(upf%qfcoef,3),size(upf%qfcoef,4)
         END IF
      ENDIF
      CALL mp_bcast (upf%qqq   , ionode_id, comm )
