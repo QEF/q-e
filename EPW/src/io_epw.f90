@@ -113,7 +113,9 @@
     !----------------------------------------------------------------------
     SUBROUTINE epw_write(nrr_k, nrr_q, nrr_g, w_centers)
     !----------------------------------------------------------------------
-    !
+    !!
+    !! Routine to write files on real-space grid for fine grid interpolation
+    !!
     USE kinds,     ONLY : DP
     USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem
     USE pwcom,     ONLY : ef, nelec
@@ -156,6 +158,14 @@
     !! Cartesian direction (polarison direction)
     INTEGER :: lrepmatw
     !! Record length
+    INTEGER*8 :: unf_recl
+    !! Record length
+    INTEGER :: direct_io_factor
+    !! Type of IOlength
+    INTEGER :: ierr
+    !! Error index
+    REAL(KIND = DP) :: dummy
+    !! Dummy variable
     !
     WRITE(stdout,'(/5x,"Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file"/)')
     !
@@ -218,7 +228,14 @@
         !     of kind 4.
         lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
         filint   = TRIM(prefix)//'.epmatwp'
-        CALL diropn(iunepmatwp, 'epmatwp', lrepmatw, exst)
+        INQUIRE(IOLENGTH = direct_io_factor) dummy
+        unf_recl = direct_io_factor * INT(lrepmatw, KIND = KIND(unf_recl))
+        IF (unf_recl <= 0) CALL errore('epw_write', 'wrong record length', 3)
+        OPEN(iunepmatwp, FILE = TRIM(ADJUSTL(filint)), IOSTAT = ierr, form='unformatted', &
+             STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
+        IF (ierr /= 0) CALL errore('epw_write', 'error opening ' // TRIM(filint), 1)
+        !
+        !CALL diropn(iunepmatwp, 'epmatwp', lrepmatw, exst)
         DO irg = 1, nrr_g
           CALL davcio(epmatwp(:, :, :, :, irg), lrepmatw, iunepmatwp, irg, +1)
         ENDDO
@@ -243,6 +260,10 @@
     !--------------------------------------------------------------------------------
     SUBROUTINE epw_read(nrr_k, nrr_q, nrr_g)
     !--------------------------------------------------------------------------------
+    !!
+    !! Routine to read the real space quantities for fine grid interpolation
+    !!
+    USE kinds,     ONLY : DP
     USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem, lifc
     USE pwcom,     ONLY : ef
     USE elph2,     ONLY : chw, rdw, epmatwp, cdmew, cvmew, chw_ks, zstar, epsi
@@ -289,6 +310,13 @@
     !! Status of files
     INTEGER :: ierr
     !! Error status
+    INTEGER*8 :: unf_recl
+    !! Record length
+    INTEGER :: direct_io_factor
+    !! Type of IOlength
+    REAL(KIND = DP) :: dummy
+    !! Dummy variable
+
     !
     WRITE(stdout,'(/5x,"Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file"/)')
     FLUSH(stdout)
@@ -397,7 +425,14 @@
         !     of kind 4.
         lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
         filint   = TRIM(prefix)//'.epmatwp'
-        CALL diropn(iunepmatwp, 'epmatwp', lrepmatw, exst)
+        !
+        INQUIRE(IOLENGTH = direct_io_factor) dummy
+        unf_recl = direct_io_factor * INT(lrepmatw, KIND = KIND(unf_recl))
+        IF (unf_recl <= 0) CALL errore('epw_read', 'wrong record length', 3)
+        OPEN(iunepmatwp, FILE = TRIM(ADJUSTL(filint)), IOSTAT = ierr, FORM = 'unformatted', &
+             STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
+        IF (ierr /= 0) CALL errore('epw_read', 'error opening ' // TRIM(filint), 1)
+        !
         DO irg = 1, nrr_g
           CALL davcio(epmatwp(:, :, :, :, irg), lrepmatw, iunepmatwp, irg, -1)
         ENDDO
@@ -1804,7 +1839,7 @@
     !-------------------------------------------------------------
     !!
     !! Open int3paw files as direct access, read, and close again
-    !! 
+    !!
     !! HL - Mar 2020 based on the subroutine of readdvscf
     !!
     !-------------------------------------------------------------

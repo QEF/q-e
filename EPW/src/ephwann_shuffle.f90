@@ -295,7 +295,7 @@
   COMPLEX(KIND = DP), ALLOCATABLE :: vmefp(:, :, :)
   !! Phonon velocity
   !
-  CALL start_clock ('ephwann')
+  CALL start_clock('ephwann')
   !
   IF (nbndsub /= nbndep) WRITE(stdout, '(/,5x,a,i4)' ) 'Band disentanglement is used: nbndsub = ', nbndsub
   !
@@ -604,6 +604,8 @@
   ALLOCATE(irvec_r(3, nrr_k), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating irvec_r', 1)
   irvec_r = REAL(irvec_k, KIND = DP)
+  !
+  ! Zeroing everything - initialization is important !
   cfac(:, :, :)  = czero
   cfacq(:, :, :) = czero
   rdotk(:)       = zero

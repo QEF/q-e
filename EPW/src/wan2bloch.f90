@@ -2294,7 +2294,7 @@
     CALL para_bounds(ir_start, ir_stop, nrr_g)
     !
 #if defined(__MPI)
-    filint = TRIM(tmp_dir) // TRIM(prefix) // '.epmatwp1'
+    filint = TRIM(tmp_dir) // TRIM(prefix) // '.epmatwp'
     CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmatwp2, ierr)
     IF (ierr /= 0) CALL errore('ephwan2blochp_mem', 'error in MPI_FILE_OPEN', 1)
 #endif
