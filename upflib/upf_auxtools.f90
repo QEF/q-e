@@ -79,10 +79,10 @@ SUBROUTINE upf_check_atwfc_norm(upf,psfile)
      work(:), gi(:)        ! auxiliary variable for becp
   character (len=80) :: renorm
   !
-  allocate (work(upf%nbeta), gi(upf%grid%mesh) )
+  allocate (work(upf%nbeta), gi(upf%mesh) )
 
   ! define indices for integration limits
-  mesh = upf%grid%mesh
+  mesh = upf%mesh
   kkbeta = upf%kkbeta
   !
   renorm = ' '
@@ -92,7 +92,7 @@ SUBROUTINE upf_check_atwfc_norm(upf,psfile)
      !
      ! the smooth part first ..
      gi(1:mesh) = upf%chi(1:mesh,iwfc) * upf%chi(1:mesh,iwfc)
-     call simpson (mesh, gi, upf%grid%rab, norm)
+     call simpson (mesh, gi, upf%rab, norm)
      !
      IF ( norm < eps8 ) then
         WRITE( stdout,'(5X,"WARNING: atomic wfc # ",i2, &
@@ -115,7 +115,7 @@ SUBROUTINE upf_check_atwfc_norm(upf,psfile)
            if (match) then
               gi(1:kkbeta)= upf%beta(1:kkbeta,ibeta) * &
                             upf%chi (1:kkbeta,iwfc) 
-              call simpson (kkbeta, gi, upf%grid%rab, work(ibeta))
+              call simpson (kkbeta, gi, upf%rab, work(ibeta))
            else
               work(ibeta)=0.0_dp
            endif
@@ -135,10 +135,10 @@ SUBROUTINE upf_check_atwfc_norm(upf,psfile)
   deallocate (work, gi )
   if ( len_trim(renorm) > 0 ) then
      if (present(psfile)) then
-        write(stdout, '(15x,"file ",a,": wavefunction(s) ",a," renormalized")') &
+        write(stdout, '(5x,"file ",a,": wavefunction(s) ",a," renormalized")') &
               trim(psfile),trim(renorm)
      else
-        write(stdout, '(15x,"specie ",a,": wavefunction(s) ",a," renormalized")') &
+        write(stdout, '(5x,"specie ",a,": wavefunction(s) ",a," renormalized")') &
               trim(upf%psd),trim(renorm)
      endif
   endif

@@ -62,9 +62,9 @@ SUBROUTINE init_us_b0
   !
   WRITE( stdout, '(/5X,"PSEUDOPOTENTIAL Beta Smoothing: ==============================================")' )
   IF (tprint) THEN
-     WRITE( stdout,'(/5X,"table grid dimensions:  NQX =",I7," NBETAM =", I4)'), nqx, nbetam
+     WRITE( stdout,'(/5X,"table grid dimensions:  NQX =",I7," NBETAM =", I4)') nqx, nbetam
      WRITE( stdout,'(11X,"initial rcut indices:",10i7)') upf(1:ntyp)%kkbeta
-     WRITE( stdout,'(19X,"rcut (ityp) :",10f7.3)'), (rgrid(nt)%r(upf(nt)%kkbeta),nt=1,ntyp)
+     WRITE( stdout,'(19X,"rcut (ityp) :",10f7.3)') (rgrid(nt)%r(upf(nt)%kkbeta),nt=1,ntyp)
   END IF
   !
   DO nt=1,ntyp
@@ -99,7 +99,7 @@ SUBROUTINE init_us_b0
      ENDDO
      IF (tprint) THEN
        WRITE( stdout, '(5X,a)' ) "BETA FUNCTIONS NORMS:"
-       WRITE( stdout, '(5X,a,1p,10e12.4)'), "norm2 R:", (power_r(nb), nb=1,upf(nt)%nbeta)
+       WRITE( stdout, '(5X,a,1p,10e12.4)') "norm2 R:", (power_r(nb), nb=1,upf(nt)%nbeta)
        !- write the radial beta_l(r) as defined in the pseudopotential
        CALL write_beta_r( 'br_', nt, upf(nt)%beta, upf(nt)%kkbeta, upf(nt)%nbeta )
      END IF
@@ -137,8 +137,8 @@ SUBROUTINE init_us_b0
      ENDDO
      power_q  = power_q * 8.d0/fpi ; CALL mp_sum( power_q, intra_bgrp_comm )
      IF (tprint) THEN
-        WRITE( stdout, '(5X,a,1p,10e12.4)'), "norm2 Q:", (power_q(nb), nb=1,upf(nt)%nbeta)
-        WRITE( stdout, '(5X,a,1p,10e12.4)'), "1-ratio:", (1.D0-power_q(nb)/power_r(nb), nb=1,upf(nt)%nbeta)
+        WRITE( stdout, '(5X,a,1p,10e12.4)') "norm2 Q:", (power_q(nb), nb=1,upf(nt)%nbeta)
+        WRITE( stdout, '(5X,a,1p,10e12.4)') "1-ratio:", (1.D0-power_q(nb)/power_r(nb), nb=1,upf(nt)%nbeta)
      END IF
      !- fraction of beta normalizations that is lost due to Q space truncation
      missing_norm = MAXVAL(1.d0-power_q(1:upf(nt)%nbeta)/power_r(1:upf(nt)%nbeta))
@@ -228,7 +228,7 @@ SUBROUTINE init_us_b0
   !- end of loop over pseudopotentials
   IF (tprint) THEN
      WRITE( stdout,'(/13X,"final rcut indices:",10i7)') upf(1:ntyp)%kkbeta
-     WRITE( stdout,'(19X,"rcut (ityp) :",10f7.3)'), (rgrid(nt)%r(upf(nt)%kkbeta),nt=1,ntyp)
+     WRITE( stdout,'(19X,"rcut (ityp) :",10f7.3)') (rgrid(nt)%r(upf(nt)%kkbeta),nt=1,ntyp)
   END IF
   WRITE( stdout, '(/5X,"PSEUDOPOTENTIAL end Beta Smoothing: ==========================================")' )
   !

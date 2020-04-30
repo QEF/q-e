@@ -4,13 +4,11 @@ casino2upf.o : casino_pp.o
 casino2upf.o : pseudo_types.o
 casino2upf.o : write_upf.o
 casino_pp.o : pseudo_types.o
-casino_pp.o : radial_grids.o
 casino_pp.o : upf_kinds.o
 gth.o : pseudo_types.o
 gth.o : upf_const.o
 gth.o : upf_kinds.o
 gth.o : upf_params.o
-pseudo_types.o : radial_grids.o
 pseudo_types.o : upf_kinds.o
 radial_grids.o : upf_const.o
 radial_grids.o : upf_kinds.o
@@ -26,15 +24,12 @@ read_ncpp.o : upf_const.o
 read_ncpp.o : upf_kinds.o
 read_ncpp.o : upf_params.o
 read_upf_schema.o : pseudo_types.o
-read_upf_schema.o : radial_grids.o
 read_upf_schema.o : upf_kinds.o
 read_upf_schema.o : upf_utils.o
 read_upf_v1.o : pseudo_types.o
-read_upf_v1.o : radial_grids.o
 read_upf_v1.o : upf_kinds.o
 read_upf_v1.o : upf_utils.o
 read_upf_v2.o : pseudo_types.o
-read_upf_v2.o : radial_grids.o
 read_upf_v2.o : upf_kinds.o
 read_upf_v2.o : upf_utils.o
 read_uspp.o : pseudo_types.o
@@ -48,7 +43,6 @@ splinelib.o : upf_kinds.o
 upf.o : emend_upf.o
 upf.o : gth.o
 upf.o : pseudo_types.o
-upf.o : radial_grids.o
 upf.o : read_cpmd.o
 upf.o : read_fhi.o
 upf.o : read_upf_schema.o
@@ -71,7 +65,6 @@ upf_to_internal.o : radial_grids.o
 upf_to_internal.o : upf_kinds.o
 upfconv.o : casino_pp.o
 upfconv.o : pseudo_types.o
-upfconv.o : radial_grids.o
 upfconv.o : upf.o
 upfconv.o : upf_const.o
 upfconv.o : upf_utils.o
@@ -82,7 +75,6 @@ uspp.o : upf_invmat.o
 uspp.o : upf_kinds.o
 uspp.o : upf_params.o
 virtual_v2.o : pseudo_types.o
-virtual_v2.o : radial_grids.o
 virtual_v2.o : splinelib.o
 virtual_v2.o : upf.o
 virtual_v2.o : upf_io.o
@@ -93,9 +85,7 @@ write_upf.o : pseudo_types.o
 write_upf.o : write_upf_schema.o
 write_upf.o : write_upf_v2.o
 write_upf_schema.o : pseudo_types.o
-write_upf_schema.o : radial_grids.o
 write_upf_schema.o : upf_kinds.o
 write_upf_v2.o : pseudo_types.o
-write_upf_v2.o : radial_grids.o
 write_upf_v2.o : upf_kinds.o
 write_upf_schema.o : ../include/version.h

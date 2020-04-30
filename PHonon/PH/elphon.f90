@@ -652,8 +652,9 @@ SUBROUTINE elphsum ( )
   USE modes,       ONLY : u, nirr
   USE dynmat,      ONLY : dyn, w2
   USE io_global,   ONLY : stdout, ionode, ionode_id
+  USE parallel_include
   USE mp_pools,    ONLY : my_pool_id, npool, kunit
-  USE mp_images,   ONLY : intra_image_comm
+  USE mp_images,   ONLY : intra_image_comm, me_image, nproc_image
   USE mp,          ONLY : mp_bcast
   USE control_ph,  ONLY : tmp_dir_phq, xmldyn, current_iq
   USE save_ph,     ONLY : tmp_dir_save
@@ -711,7 +712,7 @@ SUBROUTINE elphsum ( )
   REAL(DP), ALLOCATABLE :: xk_collect(:,:)
   REAL(DP), POINTER :: wkfit_dist(:), etfit_dist(:,:)
   INTEGER :: nksfit_dist, rest, kunit_save
-  INTEGER :: nks_real, ispin, nksqtot, irr
+  INTEGER :: nks_real, ispin, nksqtot, irr, ierr
   CHARACTER(LEN=256) :: elph_dir
   CHARACTER(LEN=6) :: int_to_char
   !
@@ -723,6 +724,9 @@ SUBROUTINE elphsum ( )
   DO irr=1,nirr
      IF (.NOT.done_elph(irr)) RETURN
   ENDDO
+
+  CALL start_clock('elphsum')
+
   elph_dir='elph_dir/'
   IF (ionode) INQUIRE(file=TRIM(elph_dir), EXIST=exst)
   CALL mp_bcast(exst, ionode_id, intra_image_comm) 
@@ -901,7 +905,11 @@ SUBROUTINE elphsum ( )
   wqa  = 1.0d0/nkfit
   IF (nspin==1) wqa=degspin*wqa
   !
+#if defined(__MPI)
+  do ibnd = me_image+1, nbnd, nproc_image
+#else
   do ibnd = 1, nbnd
+#endif
      do jbnd = 1, nbnd
         allocate (g2(nkBZ*nspin_lsda,3*nat,3*nat))
         allocate (g1(nksqtot,3*nat,3*nat))
@@ -966,6 +974,11 @@ SUBROUTINE elphsum ( )
         !
      enddo    ! ibnd
   enddo    ! jbnd
+
+#if defined(__MPI)
+  CALL MPI_ALLREDUCE(MPI_IN_PLACE,gf,3*nat*3*nat*el_ph_nsigma, &
+                     MPI_DOUBLE_COMPLEX,MPI_SUM,intra_image_comm,ierr)
+#endif
 
   deallocate (eqqfit, eqkfit)
   deallocate (etfit)
@@ -1081,6 +1094,8 @@ SUBROUTINE elphsum ( )
   DEALLOCATE( dosfit )
   DEALLOCATE( xk_collect )
   IF (npool /= 1) DEALLOCATE(el_ph_mat_collect)
+
+  call stop_clock('elphsum')
 
   !
 9000 FORMAT(5x,'Gaussian Broadening: ',f7.3,' Ry, ngauss=',i4)
