@@ -2505,7 +2505,7 @@ MODULE realus
            !$omp end do
            !$omp do
            DO box_ir = bbox_s(ia), bbox_e(ia)
-              box_psic( box_ir ) = xkphase(box_ir)*SUM(betasave(box_ir,1:nh(nt))*w1(1:nh(nt)))
+              box_psic( box_ir ) = SUM(xkphase(box_ir)*betasave(box_ir,1:nh(nt))*w1(1:nh(nt)))
            ENDDO
            !$omp end do
            !$omp end parallel
