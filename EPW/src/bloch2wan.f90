@@ -1428,6 +1428,7 @@
 #endif
     !
     DO ir = ir_start, ir_stop + add
+      WRITE(stdout, '(a,i10,a,i10)' ) '     Bloch2wanp: ',ir - ir_start,' / ', ir_stop + add - ir_start
       !
 #if defined(__MPI)
       IF (add == 1 .AND. ir == ir_stop + add) lsize = 0_MPI_OFFSET_KIND

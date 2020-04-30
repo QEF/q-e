@@ -453,7 +453,9 @@
       CALL diropn(iunepmatwe, 'epmatwe', lrepmatw, exst)
     ENDIF
     !
+    WRITE(stdout, '(a)' ) ' '
     DO iq = 1, nqc
+      WRITE(stdout, '(a,i10,a,i10)' ) '     Bloch2wane: ',iq,' / ', nqc1 * nqc2 * nqc3
       !
       xxq = xqc(:, iq)
       !
@@ -485,6 +487,7 @@
       ENDIF
       !
     ENDDO
+    WRITE(stdout, '(a)' ) ' '
     !
     IF (etf_mem == 1 .AND. ionode) CLOSE(iunepmatwe, STATUS = 'keep')
     !
