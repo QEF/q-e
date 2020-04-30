@@ -35,21 +35,17 @@ SUBROUTINE init_vloc()
      !
      ! compute V_loc(G) for a given type of atom
      !
-     IF ( .NOT. ASSOCIATED( upf(nt)%vloc ) ) THEN
+     IF ( upf(nt)%is_gth ) THEN
         !
-        IF ( upf(nt)%is_gth ) THEN
-           !
-           ! special case: GTH pseudopotential
-           !
-           CALL vloc_gth( nt, upf(nt)%zp, tpiba2, ngl, gl, omega, vloc(1,nt) )
-           !
-        ELSE
-           !
-           ! special case: pseudopotential is coulomb 1/r potential
-           !
-           CALL vloc_coul( upf(nt)%zp, tpiba2, ngl, gl, omega, vloc(1,nt) )
-           !
-        ENDIF
+        ! special case: GTH pseudopotential
+        !
+        CALL vloc_gth( nt, upf(nt)%zp, tpiba2, ngl, gl, omega, vloc(1,nt) )
+        !
+     ELSE IF ( upf(nt)%tcoulombp ) THEN
+        !
+        ! special case: pseudopotential is coulomb 1/r potential
+        !
+        CALL vloc_coul( upf(nt)%zp, tpiba2, ngl, gl, omega, vloc(1,nt) )
         !
      ELSE
         !

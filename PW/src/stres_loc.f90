@@ -64,20 +64,18 @@ subroutine stres_loc (sigmaloc)
   !      WRITE( 6,*) ' evloc ', evloc, evloc*omega   ! DEBUG
   !
   do nt = 1, ntyp
-     IF ( .NOT. ASSOCIATED ( upf(nt)%vloc ) ) THEN
-        IF ( upf(nt)%is_gth ) THEN
-           !
-           ! special case: GTH pseudopotential
-           !
-           call dvloc_gth (nt, upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc)
-           !
-        ELSE
-           !
-           ! special case: pseudopotential is coulomb 1/r potential
-           !
-           call dvloc_coul (upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc)
-           !
-        END IF
+     IF ( upf(nt)%is_gth ) THEN
+        !
+        ! special case: GTH pseudopotential
+        !
+        call dvloc_gth (nt, upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc)
+        !
+     ELSE IF ( upf(nt)%tcoulombp ) THEN
+        !
+        ! special case: pseudopotential is coulomb 1/r potential
+        !
+        call dvloc_coul (upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc)
+        !
      ELSE
         !
         ! normal case: dvloc contains dV_loc(G)/dG

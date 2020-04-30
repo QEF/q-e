@@ -29,7 +29,7 @@ SUBROUTINE read_ps ( filein, upf_in )
   !
   USE read_upf_v1_module, ONLY: read_upf_v1
   USE emend_upf_module, ONLY: make_emended_upf_copy
-  USE pseudo_types,     ONLY: pseudo_upf, nullify_pseudo_upf
+  USE pseudo_types,     ONLY: pseudo_upf
   USE upf_auxtools,     ONLY: upf_get_pp_format 
   USE upf_to_internal,  ONLY: set_upf_q
   USE read_uspp_module, ONLY: readvan, readrrkj
@@ -43,8 +43,6 @@ SUBROUTINE read_ps ( filein, upf_in )
   !
   LOGICAL :: is_xml
   INTEGER :: isupf, iunps = 4, stdout = 6
-  !
-  CALL nullify_pseudo_upf ( upf_in )
   !
   is_xml = .false.
   isupf = 0

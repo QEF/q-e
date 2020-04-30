@@ -44,7 +44,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   USE mp,           ONLY: mp_bcast, mp_sum
   USE mp_images,    ONLY: intra_image_comm
   USE io_global,    ONLY: stdout, ionode, ionode_id
-  USE pseudo_types, ONLY: pseudo_upf, nullify_pseudo_upf, deallocate_pseudo_upf
+  USE pseudo_types, ONLY: pseudo_upf, deallocate_pseudo_upf
   USE funct,        ONLY: enforce_input_dft, set_dft_from_name, &
        get_iexch, get_icorr, get_igcx, get_igcc, get_inlc
   use radial_grids, ONLY: deallocate_radial_grid, nullify_radial_grid
@@ -79,18 +79,11 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   IF( ALLOCATED( upf ) ) THEN
      DO nt = 1, SIZE( upf )
         CALL deallocate_pseudo_upf( upf( nt ) )
-        CALL nullify_pseudo_upf( upf( nt ) )
      END DO
      DEALLOCATE( upf )
   END IF
   !
   ALLOCATE ( upf( ntyp ) )
-  !
-  !  nullify upf objects as soon as they are instantiated
-  !
-  do nt = 1, ntyp 
-     CALL nullify_pseudo_upf( upf( nt ) )
-  end do
   !
   IF ( PRESENT(printout) ) THEN
      printout_ = printout .AND. ionode

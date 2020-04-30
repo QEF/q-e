@@ -26,8 +26,7 @@ subroutine import_upf ( )
                      rhos, phis, which_augfun, lpaw, rmatch_augfun, pawsetup, psipaw
   use funct, only: set_dft_from_name
   !
-  use pseudo_types, only : pseudo_upf, pseudo_config, &
-       nullify_pseudo_upf, deallocate_pseudo_upf
+  use pseudo_types, only : pseudo_upf, pseudo_config, deallocate_pseudo_upf
   use paw_type
   use upf_module, only : read_upf_new
   !
@@ -39,8 +38,6 @@ subroutine import_upf ( )
   !
   integer :: nb, ios
   TYPE (pseudo_upf) :: upf
-  !
-  CALL nullify_pseudo_upf( upf )
   !
   ierr = 1
   call read_upf_new ( file_pseudo, upf, ierr)

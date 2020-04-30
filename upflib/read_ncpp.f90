@@ -216,7 +216,7 @@ subroutine read_ncpp (iunps, np, upf)
   ! convert to separable (KB) form
   !
   ALLOCATE ( upf%beta (upf%mesh, upf%nbeta) ) 
-  ALLOCATE ( upf%dion (upf%nbeta,upf%nbeta), upf%lll (upf%nbeta) ) 
+  ALLOCATE ( upf%dion (upf%nbeta,upf%nbeta) ) 
   upf%dion (:,:) = 0.d0
   nb = 0
   do l = 0, lmax
