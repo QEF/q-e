@@ -29,7 +29,7 @@ subroutine import_upf ( )
   use pseudo_types, only : pseudo_upf, pseudo_config, &
        nullify_pseudo_upf, deallocate_pseudo_upf
   use paw_type
-  use upf_module
+  use upf_module, only : read_upf_new
   !
   implicit none
   !
@@ -43,7 +43,7 @@ subroutine import_upf ( )
   CALL nullify_pseudo_upf( upf )
   !
   ierr = 1
-  call read_upf(upf, ierr, filename = file_pseudo)
+  call read_upf_new ( file_pseudo, upf, ierr)
   !
   if (ierr>0) &
      call errore('import_upf','reading pseudo upf',abs(ierr))
