@@ -136,7 +136,7 @@ SUBROUTINE compute_deff_nc_gpu( deff_d, et )
           DO j = 1, nhm
             na = na_d(ias)
             nt = nt_d(ias)
-            deff_d(i,j,na,:) = deff_d(i,j,na,:) - et*qq_so_d(i,j,:,nt)
+            deff_d(i,j,na,:) = deeq_nc_d(i,j,na,:) - et*qq_so_d(i,j,:,nt)
           ENDDO
         ENDDO
       ENDDO
@@ -149,13 +149,10 @@ SUBROUTINE compute_deff_nc_gpu( deff_d, et )
           DO j = 1, nhm
             na = na_d(ias)
             nt = nt_d(ias)
-            ijs=0
             DO is = 1, npol
-              DO js = 1, npol
-                ijs = ijs + 1
-                IF (is==js) deff_d(i,j,na,ijs) = deff_d(i,j,na,ijs) - &
+              ijs = (is-1)*npol+is
+              deff_d(i,j,na,ijs) = deeq_nc_d(i,j,na,ijs) - &
                                                  et*qq_at_d(i,j,na)
-              ENDDO
             ENDDO
           ENDDO
         ENDDO

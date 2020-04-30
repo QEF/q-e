@@ -591,7 +591,6 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
        !
        DO ibnd = 1, nbnd
          !
-         
          IF ( noncolin ) THEN
             !
             CALL compute_deff_nc_gpu( deff_nc_d, et(ibnd,ik) )
@@ -604,32 +603,21 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
               !
               IF (.NOT. is_multinp_d(i)) THEN
                  !
-                 ijs = 0
-                 ps_nc_d(ikb,:) = (0._DP,0._DP)
                  DO is = 1, npol
-                   DO js = 1, npol
-                      ijs = ijs + 1
-                      ps_nc_d(ikb,is) = ps_nc_d(ikb,is) + becpnc_d(ikb,js,ibnd) * &
-                                                   deff_nc_d(ih,ih,na,ijs)
-                   ENDDO
+                   ijs = (is-1)*npol
+                   ps_nc_d(ikb,is) = SUM( becpnc_d(ikb,1:npol,ibnd) * &
+                                          deff_nc_d(ih,ih,na,ijs+1:ijs+npol) )
                  ENDDO
                  !
               ELSE
                  !
                  nh_np = ix_d(i,3)
                  !
-                 ps_nc_d(ikb,:) = (0._DP,0._DP)
-                 DO jh = 1, nh_np
-                    jkb = ishift + jh
-                    ijs = 0
-                    DO is = 1, npol
-                      DO js = 1, npol
-                        ijs = ijs + 1
-                        ps_nc_d(ikb,is) = ps_nc_d(ikb,is) + becpnc_d(jkb,js,ibnd)* &
-                                                     deff_nc_d(ih,jh,na,ijs)
-                      ENDDO
-                    ENDDO
-                 ENDDO   
+                 DO is = 1, npol
+                   ijs = (is-1)*npol
+                   ps_nc_d(ikb,is) = SUM( becpnc_d(ishift+1:ishift+nh_np,1:npol,ibnd) * &
+                                          deff_nc_d(ih,1:nh_np,na,ijs+1:ijs+npol) )
+                 ENDDO  
                  !
               ENDIF
             ENDDO
@@ -872,14 +860,6 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
        ENDDO 
        !
 10     CONTINUE
-       !
-       
-       
-       !do i = 1, 3
-       !  print *, 'stres-USUSU:', sigmanlc(i,1), sigmanlc(i,2), sigmanlc(i,3)
-       !enddo
-       !stop
-       
        !
        CALL dev_buf%release_buffer( dvkb_d, ierrs(1) )
        !

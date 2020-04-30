@@ -41,24 +41,24 @@ SUBROUTINE gen_us_dy_gpu( ik, u, dvkb_d )
   ! ... local variables
   !
   INTEGER :: na, nt, nb, ih, l, lm, ikb, iig, ipol, i0, i1, i2, &
-             i3, ig, npw, nbm, iq, lmx2, &
-             mil1, mil2, mil3, ikb_t, nht, ina
+             i3, ig, npw, nbm, iq, mil1, mil2, mil3, ikb_t,     &
+             nht, ina, lmx2
   INTEGER :: nas(nat), ierr(4)
   !
-  INTEGER, ALLOCATABLE :: ityp_d(:), ih_d(:), na_d(:), &
-                          nas_d(:), indv_d(:,:), nhtol_d(:,:),    &
+  INTEGER, ALLOCATABLE :: ityp_d(:), ih_d(:), na_d(:),         &
+                          nas_d(:), indv_d(:,:), nhtol_d(:,:), &
                           nhtolm_d(:,:)
   !
   REAL(DP), ALLOCATABLE :: q(:), vkb0(:,:,:), dylm(:,:)
   REAL(DP), ALLOCATABLE :: xdata(:), tau_d(:,:), q_d(:)
   !
   REAL(DP), POINTER :: gk_d(:,:)
-  REAL(DP), POINTER :: vkb0_d(:,:,:), dylm_u_d(:,:), dylm_d(:,:)
+  REAL(DP), POINTER :: vkb0_d(:,:,:), dylm_u_d(:,:), dylm_d(:,:,:)
   ! dylm = d Y_lm/dr_i in cartesian axes
   ! dylm_u as above projected on u
   COMPLEX(DP), ALLOCATABLE :: phase_d(:), sk_d(:,:)
   !
-  REAL(DP) :: px, ux, vx, wx, arg, u_ipol, xk1, xk2, xk3
+  REAL(DP) :: px, ux, vx, wx, arg, u_ipol1, u_ipol2, u_ipol3, xk1, xk2, xk3
   COMPLEX(DP) :: pref
   !
 #if defined(__CUDA)
@@ -97,20 +97,20 @@ SUBROUTINE gen_us_dy_gpu( ik, u, dvkb_d )
      q_d(ig) = gk_d(1,ig)**2 +  gk_d(2,ig)**2 + gk_d(3,ig)**2
   ENDDO
   !
-  dylm_u_d(:,:) = 0._DP
-  !
-  CALL dev_buf%lock_buffer( dylm_d, (/npw,lmx2/), ierr(4) )
+  CALL dev_buf%lock_buffer( dylm_d, (/npw,lmx2,3/), ierr(4) )
   DO ipol = 1, 3
-     CALL dylmr2_gpu( lmx2, npw, gk_d, q_d, dylm_d, ipol )
-     !
-     u_ipol = u(ipol)
-     !$cuf kernel do (2) <<<*,*>>>
-     DO lm = 1, lmx2
-       DO ig = 1, npw
-         dylm_u_d(ig,lm) = dylm_u_d(ig,lm) + u_ipol*dylm_d(ig,lm)
-       ENDDO
-     ENDDO
-     !
+     CALL dylmr2_gpu( lmx2, npw, gk_d, q_d, dylm_d(:,:,ipol), ipol )
+  ENDDO   
+  !
+  u_ipol1 = u(1) ; u_ipol2 = u(2) ; u_ipol3 = u(3)
+  !
+  !$cuf kernel do (2) <<<*,*>>>
+  DO lm = 1, lmx2
+    DO ig = 1, npw
+      dylm_u_d(ig,lm) = u_ipol1*dylm_d(ig,lm,1) + &
+                        u_ipol2*dylm_d(ig,lm,2) + &
+                        u_ipol3*dylm_d(ig,lm,3)
+    ENDDO
   ENDDO
   CALL dev_buf%release_buffer( dylm_d, ierr(4) )
   !
