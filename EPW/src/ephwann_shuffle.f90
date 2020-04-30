@@ -490,7 +490,6 @@
     !
     ! Electron-Phonon vertex (Wannier el and Bloch ph -> Wannier el and Wannier ph)
     !
-    ! Only master perform this task. Need to be parallelize in the future (SP)
     IF (etf_mem == 0) THEN
       IF (ionode) CALL ephbloch2wanp(nbndsub, nmodes, xqc, nqc, irvec_k, irvec_g, nrr_k, nrr_g, epmatwe)
       CALL mp_bcast(epmatwp, ionode_id, world_comm)
@@ -857,12 +856,10 @@
     !
     ! Check if the grids are homogeneous and commensurate
     homogeneous = .FALSE.
-    IF ( (nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0) .AND. &
-       (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0) ) THEN
-      IF ( (MOD(nkf1,nqf1) == 0) .AND. (MOD(nkf2,nqf2) == 0) .AND. &
-           (MOD(nkf3,nqf3) == 0) ) THEN
-        homogeneous = .TRUE.
-      END IF
+    IF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0) .AND. &
+        (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0) .AND. &
+        (MOD(nkf1, nqf1) == 0) .AND. (MOD(nkf2, nqf2) == 0) .AND. (MOD(nkf3, nqf3) == 0)) THEN
+      homogeneous = .TRUE.
     ELSE
       homogeneous = .FALSE.
     ENDIF
@@ -871,7 +868,7 @@
     !
     ! Check if we are doing Superconductivity
     ! If Eliashberg, then do not use fewer q-points within the fsthick window.
-    IF (ephwrite .or. wfcelec) THEN
+    IF (ephwrite .OR. wfcelec) THEN
       !
       totq = nqf
       ALLOCATE(selecq(nqf), STAT = ierr)
@@ -982,35 +979,39 @@
         sigmai_mode(:, :, :) = zero
       ENDIF
     ENDIF ! elecselfen
+    !
+    ! --------------------------------------------------------------------------------------
+    ! Polaron shell implementation for future use
     IF (wfcelec) then
-        IF(polaron_interpol) THEN
-            ALLOCATE(eigVec(nktotf*nbndfst, nplrn), STAT = ierr)
-            IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eigVec', 1)
-            eigVec = czero
-            CALL interp_plrn_wf(nrr_k, ndegen_k, irvec_r, dims)
-            iq_restart = totq ! Skip the calculation of e-ph element, save the time.
-            DEALLOCATE(eigVec)
-        ELSE IF(polaron_bq) THEN
-            CALL interp_plrn_bq(nrr_q, ndegen_q, irvec_q)
-            iq_restart = totq ! Skip the calculation of e-ph element, save the time.
-        ELSE IF(polaron_wf) THEN
-            CALL plot_plrn_wf()
-            iq_restart = totq
-        ELSE
-            ALLOCATE(eigVec(nktotf*nbndfst, nplrn), STAT = ierr)
-            IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eigVec', 1)
-            eigVec = czero
-            ALLOCATE(epfall(nbndfst, nbndfst, nmodes, nkf, nqtotf), STAT = ierr)
-            IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epfall', 1)
-            epfall = czero
-            ALLOCATE(ufall(nmodes, nmodes, nqtotf), STAT = ierr)
-            IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating ufall', 1)
-            ufall = czero
-            ALLOCATE(Hamil(nkf*nbndfst, nktotf*nbndfst), STAT = ierr)
-            IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating Hamil', 1)
-            Hamil = czero
-        END IF
-    END IF
+      IF (polaron_interpol) THEN
+        ALLOCATE(eigVec(nktotf * nbndfst, nplrn), STAT = ierr)
+        IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eigVec', 1)
+        eigVec = czero
+        CALL interp_plrn_wf(nrr_k, ndegen_k, irvec_r, dims)
+        iq_restart = totq ! Skip the calculation of e-ph element, save the time.
+        DEALLOCATE(eigVec)
+      ELSEIF(polaron_bq) THEN
+        CALL interp_plrn_bq(nrr_q, ndegen_q, irvec_q)
+        iq_restart = totq ! Skip the calculation of e-ph element, save the time.
+      ELSEIF(polaron_wf) THEN
+        CALL plot_plrn_wf()
+        iq_restart = totq
+      ELSE
+        ALLOCATE(eigVec(nktotf * nbndfst, nplrn), STAT = ierr)
+        IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eigVec', 1)
+        eigVec = czero
+        ALLOCATE(epfall(nbndfst, nbndfst, nmodes, nkf, nqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epfall', 1)
+        epfall = czero
+        ALLOCATE(ufall(nmodes, nmodes, nqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating ufall', 1)
+        ufall = czero
+        ALLOCATE(Hamil(nkf * nbndfst, nktotf * nbndfst), STAT = ierr)
+        IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating Hamil', 1)
+        Hamil = czero
+      ENDIF
+    ENDIF
+    ! -------------------------------------------------------------------------------------
     !
     ! Restart in SERTA case or self-energy (electron or plasmon) case
     IF (restart) THEN
@@ -1265,7 +1266,7 @@
           ! within a Fermi shell of size fsthick
           !
           IF (((MINVAL(ABS(etf(:, ikk) - ef)) < fsthick) .AND. &
-              (MINVAL(ABS(etf(:, ikq) - ef)) < fsthick)) .or. wfcelec) THEN
+              (MINVAL(ABS(etf(:, ikq) - ef)) < fsthick)) .OR. wfcelec) THEN
             !
             ! Compute velocities
             !

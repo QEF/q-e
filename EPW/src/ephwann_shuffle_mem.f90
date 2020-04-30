@@ -45,8 +45,7 @@
   USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE io_global,     ONLY : stdout, ionode
   USE io_var,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
-                            iunepmatwp, iunepmatwp2, iunrestart, iuntau,        &
-                            iuntaucb
+                            iunepmatwp2, iunrestart, iuntau, iuntaucb
   USE elph2,         ONLY : cu, cuq, lwin, lwinq, map_rebal, map_rebal_inv,     &
                             chw, chw_ks, cvmew, cdmew, rdw, adapt_smearing,     &
                             epmatq, wf, etf, etf_ks, xqf, xkf,                  &
@@ -366,34 +365,14 @@
     WRITE(stdout, '(5x,a)' )    'Results may improve by using use_ws == .TRUE. '
   ENDIF
   !
-#ifndef __MPI
-  ! Open like this only in sequential. Otherwize open with MPI-open
-  IF (ionode) THEN
-    ! open the .epmatwe file with the proper record length
-    lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-    filint   = TRIM(prefix)//'.epmatwp'
-    CALL diropn(iunepmatwp, 'epmatwp', lrepmatw, exst)
-  ENDIF
-#endif
-  !
   ! At this point, we will interpolate the Wannier rep to the Bloch rep
-  !
   IF (epwread) THEN
     !
-    !  read all quantities in Wannier representation from file
-    !  in parallel case all pools read the same file
-    !
+    ! Read all quantities in Wannier representation from file
+    ! in parallel case all pools read the same file
     CALL epw_read(nrr_k, nrr_q, nrr_g)
     !
   ELSE !if not epwread (i.e. need to calculate fmt file)
-    !
-    IF (ionode) THEN
-      lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-      filint   = TRIM(prefix)//'.epmatwe'
-      CALL diropn(iunepmatwe, 'epmatwe', lrepmatw, exst)
-      filint   = TRIM(prefix)//'.epmatwp'
-      CALL diropn(iunepmatwp, 'epmatwp', lrepmatw, exst)
-    ENDIF
     !
     ! ------------------------------------------------------
     !   Bloch to Wannier transform
@@ -447,6 +426,13 @@
     !
     ! Electron-Phonon vertex (Bloch el and Bloch ph -> Wannier el and Bloch ph)
     !
+    ! Open the prefix.epmatwe file
+    IF (ionode) THEN
+      lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
+      filint   = TRIM(prefix)//'.epmatwe'
+      CALL diropn(iunepmatwe, 'epmatwe', lrepmatw, exst)
+    ENDIF
+    !
     DO iq = 1, nqc
       !
       xxq = xqc(:, iq)
@@ -474,12 +460,10 @@
       !
     ENDDO
     !
-    ! Electron-Phonon vertex (Wannier el and Bloch ph -> Wannier el and Wannier ph)
+    IF (ionode) CLOSE(iunepmatwe, STATUS = 'keep')
     !
-    ! Only master perform this task. Need to be parallelize in the future (SP)
-    IF (ionode) THEN
-      CALL ephbloch2wanp_mem(nbndsub, nmodes, xqc, nqc, irvec_k, irvec_g, nrr_k, nrr_g)
-    ENDIF
+    ! Electron-Phonon vertex (Wannier el and Bloch ph -> Wannier el and Wannier ph)
+    CALL ephbloch2wanp_mem(nbndsub, nmodes, xqc, nqc, irvec_k, irvec_g, nrr_k, nrr_g)
     !
     IF (epwwrite) THEN
       CALL epw_write(nrr_k, nrr_q, nrr_g, w_centers)
@@ -504,8 +488,6 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating lwinq', 1)
   DEALLOCATE(exband, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating exband', 1)
-  CLOSE(iunepmatwe, STATUS =  'delete')
-  CLOSE(iunepmatwp)
   !
   ! Check Memory usage
   CALL system_mem_usage(valueRSS)
@@ -989,7 +971,7 @@
     !
     ! Scatread assumes that you alread have done the full q-integration
     ! We just do one loop to get interpolated eigenenergies.
-    IF(scatread) iq_restart = totq -1
+    IF(scatread) iq_restart = totq - 1
     !
     ! Restart in IBTE case
     IF (iterative_bte) THEN
@@ -1349,9 +1331,8 @@
         ! Conductivity ---------------------------------------------------------
         IF (scattering) THEN
           !
-          ! If we want to compute intrinsic mobilities, call fermicarrier to
-          ! correctly positionned the ef0 level.
-          ! This is only done once for the first iq.
+          ! If we want to compute intrinsic mobilities, call fermicarrier to  correctly positionned the ef0 level.
+          ! This is only done once for the first iq. Also compute the dos at the same time
           IF (iqq == iq_restart) THEN
             DO itemp = 1, nstemp
               etemp = transp_temp(itemp)
