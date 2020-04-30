@@ -1446,6 +1446,8 @@ MODULE realus
 !         write (*,*) 'offset is', ir0; FLUSH(6)
 !         write (*,*) 'sending is', sending,' recving is', recving ; FLUSH(6)
 
+         if ( ndata == 0 ) cycle
+
 !recv should be blocking as box_psic is accesssed immediately after
          if (recving) then ! id_recv is receiving ndata from id_send
 !            write ( stdout, * )  id_recv, ' receives ',ndata,' from ', id_send ; FLUSH(6)
