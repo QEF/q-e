@@ -48,9 +48,10 @@
   USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem, vme,     &
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir,       &
                             nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, lpolar, system_2d
-  USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, umat, umat_all, veff,   &
-                            zstar, epsi, cu, cuq, lwin, lwinq, bmat, nbndep, ngxx, &
-                            exband, wscache, area, ngxxf
+  USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, umat, umat_all, veff,&
+                            zstar, epsi, cu, cuq, lwin, lwinq, bmat, nbndep,    &
+                            ngxx, exband, wscache, area, ngxxf, ng0vec, shift,  &
+                            gmap, g0vec_all_r
   USE klist_epw,     ONLY : et_loc, et_all
   USE constants_epw, ONLY : ryd2ev, zero, two, czero, eps6, eps8
   USE fft_base,      ONLY : dfftp
@@ -64,7 +65,7 @@
   USE lrus,          ONLY : becp1
   USE becmod,        ONLY : becp, deallocate_bec_type
   USE phus,          ONLY : int1, int1_nc, int2, int2_so, alphap
-  USE kfold,         ONLY : shift, createkmap_pw2, createkmap, gmap, ng0vec, g0vec_all_r
+  USE kfold,         ONLY : createkmap_pw2, createkmap
   USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, read_disp_pattern,       &
                             copy_sym_epw
   USE io_epw,        ONLY : read_ifc, readdvscf, readgmap

@@ -1952,10 +1952,9 @@
     USE kinds,    ONLY : DP
     USE mp_global,ONLY : world_comm
     USE mp,       ONLY : mp_bcast, mp_max
-    use io_global,ONLY : meta_ionode, meta_ionode_id
-    use io_var,   ONLY : iukgmap
-    use elph2,    ONLY : ngxxf, ngxx
-    use kfold,    ONLY : ng0vec, g0vec_all_r, gmap, shift
+    USE io_global,ONLY : meta_ionode, meta_ionode_id
+    USE io_var,   ONLY : iukgmap
+    USE elph2,    ONLY : ngxxf, ngxx, ng0vec, shift, gmap, g0vec_all_r
     USE io_files, ONLY : prefix
     !
     IMPLICIT NONE
@@ -2043,7 +2042,7 @@
     USE io_global,ONLY : meta_ionode, meta_ionode_id
     USE io_var,   ONLY : iukmap
     USE io_files, ONLY : prefix
-    USE kfold,    ONLY : shift
+    USE elph2,    ONLY : shift
     !
     IMPLICIT NONE
     !
