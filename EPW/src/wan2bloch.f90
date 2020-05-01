@@ -1792,6 +1792,7 @@
     !  every pool works with its own subset of k points on the fine grid
     !
     ! SP: Because nrr_g can be quite small, we do a combined parallelization on WS vector and atoms
+    !
     IF (use_ws) THEN
       CALL para_bounds(ir_start, ir_stop, nrr_g * nat)
     ELSE

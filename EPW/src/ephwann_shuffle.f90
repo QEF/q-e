@@ -215,6 +215,10 @@
   !! To restart opening files
   INTEGER :: ctype
   !! Calculation type: -1 = hole, +1 = electron and 0 = both.
+  INTEGER*8 :: unf_recl
+  !! Record length
+  INTEGER :: direct_io_factor
+  !! Type of IOlength
 #if defined(__MPI)
   INTEGER(KIND = MPI_OFFSET_KIND) :: ind_tot
   !! Total number of points store on file
@@ -781,6 +785,15 @@
     CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmatwp2, ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'error in MPI_FILE_OPEN', 1)
   ENDIF
+#else
+  lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
+  filint   = TRIM(prefix)//'.epmatwp'
+  INQUIRE(IOLENGTH = direct_io_factor) dummy(1)
+  unf_recl = direct_io_factor * INT(lrepmatw, KIND = KIND(unf_recl))
+  IF (unf_recl <= 0) CALL errore('epw_write', 'wrong record length', 3)
+  OPEN(iunepmatwp, FILE = TRIM(ADJUSTL(filint)), IOSTAT = ierr, FORM='unformatted', &
+       STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
+  IF (ierr /= 0) CALL errore('epw_write', 'error opening ' // TRIM(filint), 1)
 #endif
   !
   ! get the size of the matrix elements stored in each pool
