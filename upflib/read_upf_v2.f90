@@ -33,7 +33,7 @@ CONTAINS
       !! sufficient to bracket  all the  text data within the PP_INPUT section with <![CDATA[
       !! and ]]>     
 
-      USE pseudo_types, ONLY: nullify_pseudo_upf, deallocate_pseudo_upf
+      USE pseudo_types, ONLY: deallocate_pseudo_upf
       IMPLICIT NONE
       TYPE(Node),POINTER,INTENT(IN)  :: u         
       !! pointer to root DOM node. 
@@ -52,7 +52,6 @@ CONTAINS
       !
       ! Prepare the type .  Should be done where upf is instantiated
       ! CALL deallocate_pseudo_upf(upf)
-      ! CALL nullify_pseudo_upf(upf)
       !
       ! Initialize the file
       root = getTagname(u, EX = ex)

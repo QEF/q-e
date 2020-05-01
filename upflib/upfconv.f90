@@ -205,12 +205,12 @@ SUBROUTINE conv_upf2xml( upf )
   !
   IF ( version_compare(upf%nv,"2.0.1") == 'equal') RETURN
   upf%nv="2.0.1"
-  IF ( .not. associated (upf%epseu) ) THEN
+  IF ( .not. ALLOCATED (upf%epseu) ) THEN
      ALLOCATE ( upf%epseu( upf%nwfc) )
      upf%epseu=0
   ENDIF
   ALLOCATE ( upf%nchi( upf%nwfc) )
-  IF ( .not. associated(upf%nn) ) THEN
+  IF ( .not. ALLOCATED(upf%nn) ) THEN
      upf%nchi=0
   ELSE
      upf%nchi=upf%nn(1:upf%nwfc)
