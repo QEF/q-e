@@ -35,7 +35,7 @@
   USE eqv,           ONLY : vlocq, dmuxc
   USE ions_base,     ONLY : nat, nsp, tau, ityp, amass
   USE control_flags, ONLY : iverbosity
-  USE io_var,        ONLY : iuepb, iuqpeig, crystal, iukgmap, iunpattern
+  USE io_var,        ONLY : iuepb, iuqpeig, crystal, iunpattern
   USE pwcom,         ONLY : nks, nbnd, nkstot, nelec
   USE cell_base,     ONLY : at, bg, alat, omega, tpiba
   USE symm_base,     ONLY : irt, s, nsym, ft, sname, invs, s_axis_to_cart,      &
@@ -48,10 +48,10 @@
   USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem, vme,     &
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir,       &
                             nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, lpolar, system_2d
-  USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, umat, umat_all,      &
-                            zstar, epsi, cu, cuq, lwin, lwinq, bmat,            &
-                            exband, wscache, area,                              &
-                            nbndep, ngxxf, veff
+  USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, umat, umat_all, veff,&
+                            zstar, epsi, cu, cuq, lwin, lwinq, bmat, nbndep,    &
+                            ngxx, exband, wscache, area, ngxxf, ng0vec, shift,  &
+                            gmap, g0vec_all_r
   USE klist_epw,     ONLY : et_loc, et_all
   USE constants_epw, ONLY : ryd2ev, zero, two, czero, eps6, eps8
   USE fft_base,      ONLY : dfftp
@@ -65,10 +65,10 @@
   USE lrus,          ONLY : becp1
   USE becmod,        ONLY : becp, deallocate_bec_type
   USE phus,          ONLY : int1, int1_nc, int2, int2_so, alphap
-  USE kfold,         ONLY : shift, createkmap_pw2, createkmap
+  USE kfold,         ONLY : createkmap_pw2, createkmap
   USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, read_disp_pattern,       &
                             copy_sym_epw
-  USE io_epw,        ONLY : read_ifc, readdvscf
+  USE io_epw,        ONLY : read_ifc, readdvscf, readgmap
   USE poolgathering, ONLY : poolgather
   USE rigid_epw,     ONLY : compute_umn_c
   USE rotate,        ONLY : rotate_epmat, rotate_eigenm, star_q2, gmap_sym
@@ -297,37 +297,37 @@
     CALL poolgather(nbnd, nkstot, nks, et_loc(1:nbnd, 1:nks), et_all)
   ENDIF
   !
-  IF (.NOT. kmaps) THEN
-    CALL start_clock('kmaps')
-    CALL createkmap_pw2
-    CALL stop_clock('kmaps')
-    CALL print_clock('kmaps')
-  ELSE
-    !
-    ! 26/06/2012 RM
-    ! if we do not have epmatq already on file then epbread=.FALSE.
-    ! .kgmap is used from disk and .kmap is regenerated for each q-point
-    !
-    WRITE(stdout, '(/5x, a)') 'Using kmap and kgmap from disk'
-    !
-    IF (meta_ionode) THEN
+  IF (.NOT. epbread .AND. .NOT. epwread) THEN
+    IF (.NOT. kmaps) THEN
+      CALL start_clock('kmaps')
+      CALL createkmap_pw2
+      CALL stop_clock('kmaps')
+      CALL print_clock('kmaps')
+    ELSE
       !
-      OPEN(iukgmap, FILE = TRIM(prefix)//'.kgmap', FORM = 'formatted', STATUS = 'old', IOSTAT = ios)
-      IF (ios /=0) CALL errore('elphon_shuffle_wrap', 'error opening kgmap file', iukgmap)
-      READ(iukgmap, *) ngxxf
-      CLOSE(iukgmap)
+      ! 26/06/2012 RM
+      ! if we do not have epmatq already on file then epbread=.FALSE.
+      ! .kgmap is used from disk and .kmap is regenerated for each q-point
+      !
+      WRITE(stdout, '(/5x, a)') 'Using kmap and kgmap from disk'
+      !
+      ! gmap gets allocated inside readgmap
+      !
+      CALL readgmap(nkstot)
       !
     ENDIF
-    CALL mp_bcast(ngxxf, meta_ionode_id, world_comm)
+    !
+    IF (iverbosity == 1) WRITE(stdout, 15) ngxx
+15  FORMAT(5x,'Estimated size of gmap: ngxx =', i5)
+    !
+    ALLOCATE(gmapsym(ngxxf, 48), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating gmapsym', 1)
+    gmapsym = 0
+    ALLOCATE(eigv(ngxxf, 48), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating eigv', 1)
+    eigv = czero
     !
   ENDIF
-  !
-  ALLOCATE(gmapsym(ngxxf, 48), STAT = ierr)
-  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating gmapsym', 1)
-  gmapsym = 0
-  ALLOCATE(eigv(ngxxf, 48), STAT = ierr)
-  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating eigv', 1)
-  eigv = czero
   !
   IF (epwread) THEN
     !
@@ -582,7 +582,7 @@
         IF (iq == 1) WRITE(stdout, *)
         WRITE(stdout, 5) nqc, xq
         !
-        ! Prepare the gmap for the refolding
+        ! Prepare the kmap for the refolding
         !
         CALL createkmap(xq)
         !
@@ -754,7 +754,7 @@
           IF (iq == 1) WRITE(stdout, *)
           WRITE(stdout,5) nqc, xq
           !
-          !  prepare the gmap for the refolding
+          !  prepare the kmap for the refolding
           !
           CALL createkmap(xq)
           !
@@ -797,6 +797,12 @@
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating xkq', 1)
     DEALLOCATE(shift, STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating shift', 1)
+    DEALLOCATE(gmap, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating gmap', 1)
+    DEALLOCATE(gmapsym, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating gmapsym', 1)
+    DEALLOCATE(eigv, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating eigv', 1)
     DEALLOCATE(vlocq, STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating vlocq', 1)
     DEALLOCATE(dmuxc, STAT = ierr)
@@ -954,11 +960,6 @@
     DEALLOCATE(ityp, STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating ityp', 1)
   ENDIF ! epwread
-  !
-  DEALLOCATE(gmapsym, STAT = ierr)
-  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating gmapsym', 1)
-  DEALLOCATE(eigv, STAT = ierr)
-  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating eigv', 1)
   !
 5 FORMAT (8x, "q(", i5, " ) = (", 3f12.7, " )")
   !
