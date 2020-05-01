@@ -42,7 +42,7 @@
   USE io_files,         ONLY : prefix, diropn, tmp_dir
   USE io_global,        ONLY : stdout, ionode
   USE io_var,           ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
-                               iunepmatwp2, iunrestart, iuntau, iuntaucb
+                               iunepmatwp2, iunrestart, iuntau, iuntaucb, iunepmatwp
   USE elph2,            ONLY : cu, cuq, lwin, lwinq, map_rebal, map_rebal_inv,     &
                                chw, chw_ks, cvmew, cdmew, rdw, adapt_smearing,     &
                                epmatwp, epmatq, wf, etf, etf_ks, xqf, xkf,         &
