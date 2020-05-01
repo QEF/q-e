@@ -35,7 +35,7 @@
   USE eqv,           ONLY : vlocq, dmuxc
   USE ions_base,     ONLY : nat, nsp, tau, ityp, amass
   USE control_flags, ONLY : iverbosity
-  USE io_var,        ONLY : iuepb, iuqpeig, crystal
+  USE io_var,        ONLY : iuepb, iuqpeig, crystal, iunpattern
   USE pwcom,         ONLY : nks, nbnd, nkstot, nelec
   USE cell_base,     ONLY : at, bg, alat, omega, tpiba
   USE symm_base,     ONLY : irt, s, nsym, ft, sname, invs, s_axis_to_cart,      &
@@ -158,7 +158,7 @@
   !! Polarization index
   INTEGER :: ierr
   !! Error index when reading/writing a file
-  INTEGER :: iunpun
+  !INTEGER :: iunpun
   !! Unit of the file
   INTEGER, ALLOCATABLE :: gmapsym(:, :)
   !! Correspondence G -> S(G)
@@ -492,16 +492,17 @@
       IF (u_from_file) THEN
          ierr = 0
          ! ... look for an empty unit (only ionode needs it)
-         IF (meta_ionode) CALL iotk_free_unit(iunpun, ierr)
+         !IF (meta_ionode) CALL iotk_free_unit(iunpun, ierr)
          dirname = TRIM(dvscf_dir) // TRIM(prefix) // '.phsave'
          filename = TRIM(dirname) // '/patterns.' // TRIM(int_to_char(iq_irr)) // '.xml'
          INQUIRE(FILE = TRIM(filename), EXIST = exst)
          IF (.NOT. exst) CALL errore('elphon_shuffle_wrap', &
                    'cannot open file for reading or writing', ierr)
-         CALL iotk_open_read(iunpun, FILE = TRIM(filename), binary = .FALSE., ierr = ierr)
-         CALL read_disp_pattern(iunpun, iq_irr, ierr)
+         CALL iotk_open_read(iunpattern, FILE = TRIM(filename), binary = .FALSE., ierr = ierr)
+         CALL read_disp_pattern(iunpattern, iq_irr, ierr)
          IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', ' Problem with modes file', 1)
-         IF (meta_ionode) CALL iotk_close_read(iunpun)
+         !IF (meta_ionode) CALL iotk_close_read(iunpattern)
+         CALL iotk_close_read(iunpattern)
       ENDIF
       !
       WRITE(stdout, '(//5x, a)') REPEAT('=', 67)
@@ -796,6 +797,12 @@
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating xkq', 1)
     DEALLOCATE(shift, STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating shift', 1)
+    DEALLOCATE(gmap, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating gmap', 1)
+    DEALLOCATE(gmapsym, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating gmapsym', 1)
+    DEALLOCATE(eigv, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating eigv', 1)
     DEALLOCATE(vlocq, STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating vlocq', 1)
     DEALLOCATE(dmuxc, STAT = ierr)
@@ -953,15 +960,6 @@
     DEALLOCATE(ityp, STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating ityp', 1)
   ENDIF ! epwread
-  !
-  IF (.NOT. epbread .AND. .NOT. epwread) THEN
-    DEALLOCATE(gmap, STAT = ierr)
-    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating gmap', 1)
-    DEALLOCATE(gmapsym, STAT = ierr)
-    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating gmapsym', 1)
-    DEALLOCATE(eigv, STAT = ierr)
-    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating eigv', 1)
-  ENDIF
   !
 5 FORMAT (8x, "q(", i5, " ) = (", 3f12.7, " )")
   !

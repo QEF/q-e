@@ -43,10 +43,6 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
                               xnitermax, xepsilon,time_limit,calculated,&
                               save_file_kind
   USE atom,            ONLY : rgrid, msh
-  !  use atom,        ONLY : &
-  !       mesh,     &!mesh(ntypx) number of mesh points
-  !       msh ,     &!msh(ntypx)the point at rcut=end of radial integration
-  !       r   
   USE radin_mod
   USE basis,           ONLY : natomwfc
   USE uspp,            ONLY : vkb, nkb, okvan !CG

@@ -138,25 +138,28 @@
     bmat(:, :, :, :),         &!  overlap U_k+q U_k^\dagger on the coarse mesh (nbnd, nbnd, nks, nqtot)
     eps_rpa(:),               &!  rpa model screening
     veff(:, :)                 !  effective potential
-! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
- INTEGER ::                  &
-    N1_dim,                  &
-    hh,                      &
-    Np
-  REAL(KIND = DP), ALLOCATABLE ::&
-    Ec(:),                   &
-    ekf(:),                  &
-    etfq(:,:),               &
-    etf_qs(:,:)
-  COMPLEX(KIND = DP), ALLOCATABLE :: &
-    g2_4  (:, :, :, :),     &
-    g2_all(:,:,:,:,:),      &
-    Ac(:),                  &
-    Hkk(:,:),               &
-    H_copy(:,:),            &
-    gq(:),                  &
-    dtau(:,:,:)
-  ! End Polaron
+  !
+  ! -------------------------------------------------------------------------
+  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  ! Shell implementation for future use
+  INTEGER ::                  &! Add descriptions
+     N1_dim,                  &
+     hh,                      &
+     Np
+   REAL(KIND = DP), ALLOCATABLE ::&
+     Ec(:),                   &
+     ekf(:),                  &
+     etfq(:,:),               &
+     etf_qs(:,:)
+   COMPLEX(KIND = DP), ALLOCATABLE :: &
+     g2_4  (:, :, :, :),     &
+     g2_all(:,:,:,:,:),      &
+     Ac(:),                  &
+     Hkk(:,:),               &
+     H_copy(:,:),            &
+     gq(:),                  &
+     dtau(:,:,:)
+  ! -------------------------------------------------------------------------
   !--------------------------------------------------------------------------
   END MODULE elph2
   !--------------------------------------------------------------------------

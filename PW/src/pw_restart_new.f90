@@ -145,7 +145,7 @@ MODULE pw_restart_new
       !
       LOGICAL, INTENT(IN) :: only_init, wf_collect
       !
-      CHARACTER(LEN=20)     :: dft_name
+      CHARACTER(LEN=26)     :: dft_name
       CHARACTER(LEN=8)      :: smearing_loc
       CHARACTER(LEN=8), EXTERNAL :: schema_smearing
       INTEGER               :: i, ig, ngg, ipol
@@ -1009,7 +1009,8 @@ MODULE pw_restart_new
       !
       INTEGER  :: i, is, ik, ierr, dum1,dum2,dum3
       LOGICAL  :: magnetic_sym, lvalid_input, lfixed
-      CHARACTER(LEN=20) :: dft_name, vdw_corr, occupations
+      CHARACTER(LEN=26) :: dft_name
+      CHARACTER(LEN=20) :: vdw_corr, occupations
       CHARACTER(LEN=320):: filename
       REAL(dp) :: exx_fraction, screening_parameter
       TYPE (output_type)        :: output_obj 
