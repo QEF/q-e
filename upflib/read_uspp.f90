@@ -154,6 +154,7 @@ CONTAINS
     upf%has_so=.false.
     upf%tpawp = .false.
     upf%tcoulombp = .false.
+    upf%q_with_l = .false.
 ! NC-PP in this format are assumed not to be multi-projector
     upf%is_multiproj = .false.
     !
@@ -671,6 +672,7 @@ CONTAINS
     upf%has_so=.false.
     upf%tpawp = .false.
     upf%tcoulombp=.false.
+    upf%q_with_l = .false.
     !
     if ( upf%tvanp ) then
        upf%generated = &
