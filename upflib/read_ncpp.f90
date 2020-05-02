@@ -244,6 +244,8 @@ subroutine read_ncpp (iunps, np, upf)
   upf%tvanp =.false.
   upf%tpawp =.false.
   upf%has_so=.false.
+  upf%has_wfc=.false.
+  upf%has_gipaw=.false.
   upf%tcoulombp=.false.
   upf%is_gth=.false.
   upf%is_multiproj=.false.

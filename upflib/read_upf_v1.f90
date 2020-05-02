@@ -48,7 +48,7 @@ SUBROUTINE read_upf_v1 ( file_pseudo, upf, ierr )
        FORM = 'formatted', iostat=ios )
   IF ( ios /= 0 ) GO TO 200
   !
-  ! First check if this pseudo-potential has spin-orbit information 
+  ! First check if this pseudo-potential has spin-orbit or GIPAW information
   !
   upf%q_with_l=.false.
   upf%has_so=.false.
@@ -91,6 +91,8 @@ SUBROUTINE read_upf_v1 ( file_pseudo, upf, ierr )
   call scan_end (iunps, "HEADER")  
 
   ! WRITE( stdout, * ) "Reading pseudopotential file in UPF format"  
+  ! Compatibility with later formats:
+  upf%has_wfc = .false.
 
   !-------->Search for mesh information
   call scan_begin (iunps, "MESH", .true.)  
