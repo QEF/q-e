@@ -552,6 +552,8 @@ subroutine readgth (iunps, np, upf)
   upf%nlcc=.false.
   upf%tcoulombp=.false.
   upf%has_so=.false.
+  upf%has_gipaw=.false.
+  upf%has_wfc=.false.
   upf%rel = 'scalar'
   upf%typ = 'NC'
   upf%lmax_rho = 0
