@@ -26,10 +26,8 @@ MODULE radial_grids
   !
   ! - hartree  : a routine that solve the Poisson's equation on radial grid
   !
-  ! - series   : a simple routine returning the coefficient of the polynomial 
+  ! - series   : a simple routine returning the coefficient of the polynomial
   !              describing the leading behavior of a function f at small r.
-  !
-  ! - write_grid_on_file, read_grid_from_file : I/O routines 
   !
   !============================================================================
   !
@@ -61,8 +59,7 @@ END TYPE radial_grid_type
 
   PRIVATE
   PUBLIC :: ndmx, radial_grid_type, &
-            do_mesh, check_mesh, hartree, series, &
-            write_grid_on_file, read_grid_from_file, &
+            do_mesh, check_mesh, hartree, series,&
             allocate_radial_grid,&
             deallocate_radial_grid,&
             nullify_radial_grid,&
@@ -423,52 +420,5 @@ subroutine series(f,r,r2,b)
   b(0)=f(1)-r(1)*(b(1)+r(1)*(b(2)+r(1)*b(3)))
   return
 end subroutine series
-!----------------------------------------------------------------------
-!----------------------------------------------------------------------
-!
-! I/O routines 
-!
-!----------------------------------------------------------------------
-subroutine write_grid_on_file(iunit,grid)
-
-  implicit none
-  type(radial_grid_type), intent(in) :: grid
-  integer, intent(in) :: iunit
-  integer :: n
-!
-  WRITE(iunit,'(i8)') grid%mesh
-  WRITE(iunit,'(e20.10)') grid%dx
-  WRITE(iunit,'(e20.10)') grid%xmin
-  WRITE(iunit,'(e20.10)') grid%zmesh
-  WRITE(iunit,'(e20.10)') (grid%r(n), n=1,grid%mesh)
-  WRITE(iunit,'(e20.10)') (grid%r2(n), n=1,grid%mesh)
-  WRITE(iunit,'(e20.10)') (grid%sqr(n), n=1,grid%mesh)
-!  WRITE(iunit,'(e20.10)') (grid%rab(n), n=1,grid%mesh)
-  return
-end subroutine write_grid_on_file
-
-subroutine read_grid_from_file(iunit,grid)
-
-  implicit none
-  type(radial_grid_type), intent(inout) :: grid
-  integer, intent(in) :: iunit
-  integer :: n
-!
-  READ(iunit,'(i8)')     grid%mesh
-  READ(iunit,'(e20.10)') grid%dx
-  READ(iunit,'(e20.10)') grid%xmin
-  READ(iunit,'(e20.10)') grid%zmesh
-  READ(iunit,'(e20.10)') (grid%r(n), n=1,grid%mesh)
-  READ(iunit,'(e20.10)') (grid%r2(n), n=1,grid%mesh)
-  READ(iunit,'(e20.10)') (grid%sqr(n), n=1,grid%mesh)
-!  READ(iunit,'(e20.10)') (grid%rab(n), n=1,grid%mesh)
-  grid%rab(1:grid%mesh) = grid%r(1:grid%mesh) * grid%dx
-  grid%rm1(1:grid%mesh) = 1._dp/grid%r(1:grid%mesh)
-  grid%rm2(1:grid%mesh) = 1._dp/grid%r2(1:grid%mesh)
-  grid%rm3(1:grid%mesh) = 1._dp/grid%r(1:grid%mesh)**3
-
-  return
-end subroutine read_grid_from_file
- 
 !----------------------------------------------------------------------
 END MODULE radial_grids
