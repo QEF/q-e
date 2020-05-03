@@ -97,7 +97,7 @@
          !
          IF (indv_ood) THEN
              IF ((.not. allocated(indv_d)) .and. (intento_ < 2)) THEN
-                CALL errore('using_indv_d', 'PANIC: sync of indv from indv_d with unallocated array. Bye!!', 1)
+                CALL upf_error('using_indv_d', 'PANIC: sync of indv from indv_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(indv)) THEN
@@ -150,7 +150,7 @@
          ENDIF
          IF (intento > 0)    indv_ood = .true.
 #else
-         CALL errore('using_indv_d', 'Trying to use device data without device compilated code!', 1)
+         CALL upf_error('using_indv_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_indv_d
      !
@@ -173,7 +173,7 @@
          !
          IF (nhtol_ood) THEN
              IF ((.not. allocated(nhtol_d)) .and. (intento_ < 2)) THEN
-                CALL errore('using_nhtol_d', 'PANIC: sync of nhtol from nhtol_d with unallocated array. Bye!!', 1)
+                CALL upf_error('using_nhtol_d', 'PANIC: sync of nhtol from nhtol_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(nhtol)) THEN
@@ -226,7 +226,7 @@
          ENDIF
          IF (intento > 0)    nhtol_ood = .true.
 #else
-         CALL errore('using_nhtol_d', 'Trying to use device data without device compilated code!', 1)
+         CALL upf_error('using_nhtol_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_nhtol_d
      !
@@ -249,7 +249,7 @@
          !
          IF (nhtolm_ood) THEN
              IF ((.not. allocated(nhtolm_d)) .and. (intento_ < 2)) THEN
-                CALL errore('using_nhtolm_d', 'PANIC: sync of nhtolm from nhtolm_d with unallocated array. Bye!!', 1)
+                CALL upf_error('using_nhtolm_d', 'PANIC: sync of nhtolm from nhtolm_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(nhtolm)) THEN
@@ -302,7 +302,7 @@
          ENDIF
          IF (intento > 0)    nhtolm_ood = .true.
 #else
-         CALL errore('using_nhtolm_d', 'Trying to use device data without device compilated code!', 1)
+         CALL upf_error('using_nhtolm_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_nhtolm_d
      !
@@ -325,7 +325,7 @@
          !
          IF (ijtoh_ood) THEN
              IF ((.not. allocated(ijtoh_d)) .and. (intento_ < 2)) THEN
-                CALL errore('using_ijtoh_d', 'PANIC: sync of ijtoh from ijtoh_d with unallocated array. Bye!!', 1)
+                CALL upf_error('using_ijtoh_d', 'PANIC: sync of ijtoh from ijtoh_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(ijtoh)) THEN
@@ -378,7 +378,7 @@
          ENDIF
          IF (intento > 0)    ijtoh_ood = .true.
 #else
-         CALL errore('using_ijtoh_d', 'Trying to use device data without device compilated code!', 1)
+         CALL upf_error('using_ijtoh_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_ijtoh_d
      !
@@ -401,7 +401,7 @@
          !
          IF (indv_ijkb0_ood) THEN
              IF ((.not. allocated(indv_ijkb0_d)) .and. (intento_ < 2)) THEN
-                CALL errore('using_indv_ijkb0_d', 'PANIC: sync of indv_ijkb0 from indv_ijkb0_d with unallocated array. Bye!!', 1)
+                CALL upf_error('using_indv_ijkb0_d', 'PANIC: sync of indv_ijkb0 from indv_ijkb0_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(indv_ijkb0)) THEN
@@ -454,7 +454,7 @@
          ENDIF
          IF (intento > 0)    indv_ijkb0_ood = .true.
 #else
-         CALL errore('using_indv_ijkb0_d', 'Trying to use device data without device compilated code!', 1)
+         CALL upf_error('using_indv_ijkb0_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_indv_ijkb0_d
      !
@@ -477,7 +477,7 @@
          !
          IF (vkb_ood) THEN
              IF ((.not. allocated(vkb_d)) .and. (intento_ < 2)) THEN
-                CALL errore('using_vkb_d', 'PANIC: sync of vkb from vkb_d with unallocated array. Bye!!', 1)
+                CALL upf_error('using_vkb_d', 'PANIC: sync of vkb from vkb_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(vkb)) THEN
@@ -530,7 +530,7 @@
          ENDIF
          IF (intento > 0)    vkb_ood = .true.
 #else
-         CALL errore('using_vkb_d', 'Trying to use device data without device compilated code!', 1)
+         CALL upf_error('using_vkb_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_vkb_d
      !
@@ -553,7 +553,7 @@
          !
          IF (becsum_ood) THEN
              IF ((.not. allocated(becsum_d)) .and. (intento_ < 2)) THEN
-                CALL errore('using_becsum_d', 'PANIC: sync of becsum from becsum_d with unallocated array. Bye!!', 1)
+                CALL upf_error('using_becsum_d', 'PANIC: sync of becsum from becsum_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(becsum)) THEN
@@ -606,7 +606,7 @@
          ENDIF
          IF (intento > 0)    becsum_ood = .true.
 #else
-         CALL errore('using_becsum_d', 'Trying to use device data without device compilated code!', 1)
+         CALL upf_error('using_becsum_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_becsum_d
      !
@@ -629,7 +629,7 @@
          !
          IF (ebecsum_ood) THEN
              IF ((.not. allocated(ebecsum_d)) .and. (intento_ < 2)) THEN
-                CALL errore('using_ebecsum_d', 'PANIC: sync of ebecsum from ebecsum_d with unallocated array. Bye!!', 1)
+                CALL upf_error('using_ebecsum_d', 'PANIC: sync of ebecsum from ebecsum_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(ebecsum)) THEN
@@ -682,7 +682,7 @@
          ENDIF
          IF (intento > 0)    ebecsum_ood = .true.
 #else
-         CALL errore('using_ebecsum_d', 'Trying to use device data without device compilated code!', 1)
+         CALL upf_error('using_ebecsum_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_ebecsum_d
      !
@@ -705,7 +705,7 @@
          !
          IF (dvan_ood) THEN
              IF ((.not. allocated(dvan_d)) .and. (intento_ < 2)) THEN
-                CALL errore('using_dvan_d', 'PANIC: sync of dvan from dvan_d with unallocated array. Bye!!', 1)
+                CALL upf_error('using_dvan_d', 'PANIC: sync of dvan from dvan_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(dvan)) THEN
@@ -758,7 +758,7 @@
          ENDIF
          IF (intento > 0)    dvan_ood = .true.
 #else
-         CALL errore('using_dvan_d', 'Trying to use device data without device compilated code!', 1)
+         CALL upf_error('using_dvan_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_dvan_d
      !
@@ -781,7 +781,7 @@
          !
          IF (deeq_ood) THEN
              IF ((.not. allocated(deeq_d)) .and. (intento_ < 2)) THEN
-                CALL errore('using_deeq_d', 'PANIC: sync of deeq from deeq_d with unallocated array. Bye!!', 1)
+                CALL upf_error('using_deeq_d', 'PANIC: sync of deeq from deeq_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(deeq)) THEN
@@ -834,7 +834,7 @@
          ENDIF
          IF (intento > 0)    deeq_ood = .true.
 #else
-         CALL errore('using_deeq_d', 'Trying to use device data without device compilated code!', 1)
+         CALL upf_error('using_deeq_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_deeq_d
      !
@@ -857,7 +857,7 @@
          !
          IF (qq_nt_ood) THEN
              IF ((.not. allocated(qq_nt_d)) .and. (intento_ < 2)) THEN
-                CALL errore('using_qq_nt_d', 'PANIC: sync of qq_nt from qq_nt_d with unallocated array. Bye!!', 1)
+                CALL upf_error('using_qq_nt_d', 'PANIC: sync of qq_nt from qq_nt_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(qq_nt)) THEN
@@ -910,7 +910,7 @@
          ENDIF
          IF (intento > 0)    qq_nt_ood = .true.
 #else
-         CALL errore('using_qq_nt_d', 'Trying to use device data without device compilated code!', 1)
+         CALL upf_error('using_qq_nt_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_qq_nt_d
      !
@@ -933,7 +933,7 @@
          !
          IF (qq_at_ood) THEN
              IF ((.not. allocated(qq_at_d)) .and. (intento_ < 2)) THEN
-                CALL errore('using_qq_at_d', 'PANIC: sync of qq_at from qq_at_d with unallocated array. Bye!!', 1)
+                CALL upf_error('using_qq_at_d', 'PANIC: sync of qq_at from qq_at_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(qq_at)) THEN
@@ -986,7 +986,7 @@
          ENDIF
          IF (intento > 0)    qq_at_ood = .true.
 #else
-         CALL errore('using_qq_at_d', 'Trying to use device data without device compilated code!', 1)
+         CALL upf_error('using_qq_at_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_qq_at_d
      !
@@ -1009,7 +1009,7 @@
          !
          IF (nhtoj_ood) THEN
              IF ((.not. allocated(nhtoj_d)) .and. (intento_ < 2)) THEN
-                CALL errore('using_nhtoj_d', 'PANIC: sync of nhtoj from nhtoj_d with unallocated array. Bye!!', 1)
+                CALL upf_error('using_nhtoj_d', 'PANIC: sync of nhtoj from nhtoj_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(nhtoj)) THEN
@@ -1062,7 +1062,7 @@
          ENDIF
          IF (intento > 0)    nhtoj_ood = .true.
 #else
-         CALL errore('using_nhtoj_d', 'Trying to use device data without device compilated code!', 1)
+         CALL upf_error('using_nhtoj_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_nhtoj_d
      !
@@ -1085,7 +1085,7 @@
          !
          IF (qq_so_ood) THEN
              IF ((.not. allocated(qq_so_d)) .and. (intento_ < 2)) THEN
-                CALL errore('using_qq_so_d', 'PANIC: sync of qq_so from qq_so_d with unallocated array. Bye!!', 1)
+                CALL upf_error('using_qq_so_d', 'PANIC: sync of qq_so from qq_so_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(qq_so)) THEN
@@ -1138,7 +1138,7 @@
          ENDIF
          IF (intento > 0)    qq_so_ood = .true.
 #else
-         CALL errore('using_qq_so_d', 'Trying to use device data without device compilated code!', 1)
+         CALL upf_error('using_qq_so_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_qq_so_d
      !
@@ -1161,7 +1161,7 @@
          !
          IF (dvan_so_ood) THEN
              IF ((.not. allocated(dvan_so_d)) .and. (intento_ < 2)) THEN
-                CALL errore('using_dvan_so_d', 'PANIC: sync of dvan_so from dvan_so_d with unallocated array. Bye!!', 1)
+                CALL upf_error('using_dvan_so_d', 'PANIC: sync of dvan_so from dvan_so_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(dvan_so)) THEN
@@ -1214,7 +1214,7 @@
          ENDIF
          IF (intento > 0)    dvan_so_ood = .true.
 #else
-         CALL errore('using_dvan_so_d', 'Trying to use device data without device compilated code!', 1)
+         CALL upf_error('using_dvan_so_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_dvan_so_d
      !
@@ -1237,7 +1237,7 @@
          !
          IF (deeq_nc_ood) THEN
              IF ((.not. allocated(deeq_nc_d)) .and. (intento_ < 2)) THEN
-                CALL errore('using_deeq_nc_d', 'PANIC: sync of deeq_nc from deeq_nc_d with unallocated array. Bye!!', 1)
+                CALL upf_error('using_deeq_nc_d', 'PANIC: sync of deeq_nc from deeq_nc_d with unallocated array. Bye!!', 1)
                 stop
              END IF
              IF (.not. allocated(deeq_nc)) THEN
@@ -1290,7 +1290,7 @@
          ENDIF
          IF (intento > 0)    deeq_nc_ood = .true.
 #else
-         CALL errore('using_deeq_nc_d', 'Trying to use device data without device compilated code!', 1)
+         CALL upf_error('using_deeq_nc_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_deeq_nc_d
      !

@@ -15,7 +15,7 @@ SUBROUTINE gen_us_dj_gpu( ik, dvkb_d )
   USE kinds,       ONLY: DP
   USE constants,   ONLY: tpi
   USE ions_base,   ONLY: nat, ntyp => nsp, ityp, tau
-  USE cell_base,   ONLY: tpiba
+  USE cell_base,   ONLY: tpiba, omega
   USE klist,       ONLY: xk, ngk, igk_k_d
   USE wvfct,       ONLY: npwx
   USE uspp,        ONLY: nkb, indv, nhtol, nhtolm
@@ -98,7 +98,7 @@ SUBROUTINE gen_us_dj_gpu( ik, dvkb_d )
       ! calculate beta in G-space using an interpolation table
       DO nb = 1, upf(nt)%nbeta
         IF ( upf(nt)%is_gth ) THEN
-           CALL mk_dffnl_gth( nt, nb, npw, q, djl(1,nb,nt) )
+           CALL mk_dffnl_gth( nt, nb, npw, omega, tpiba, q, djl(1,nb,nt) )
            CYCLE
         ENDIF
         DO ig = 1, npw
@@ -118,7 +118,7 @@ SUBROUTINE gen_us_dj_gpu( ik, dvkb_d )
       nbm = upf(nt)%nbeta
       IF ( upf(nt)%is_gth ) THEN
         DO nb = 1, nbm
-          CALL mk_dffnl_gth_gpu( nt, nb, npw, q_d, djl_d(:,nb,nt) )
+          CALL mk_dffnl_gth_gpu( nt, nb, npw, omega, tpiba, q_d, djl_d(:,nb,nt) )
         ENDDO
       ELSE
         !$cuf kernel do (2) <<<*,*>>>

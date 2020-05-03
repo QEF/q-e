@@ -268,17 +268,18 @@ contains
   end subroutine mk_dffnl_gth
   !
   !-----------------------------------------------------------------------
-  subroutine mk_dffnl_gth_gpu(itype, ibeta, nq, qg_d, dvq_d)
+  subroutine mk_dffnl_gth_gpu(itype, ibeta, nq, omega, tpiba, qg_d, dvq_d)
     !-----------------------------------------------------------------------
     !
-    USE kinds,        ONLY: dp
-    USE constants,    ONLY: pi, fpi, e2
-    USE cell_base,    ONLY: omega, tpiba
+    USE upf_kinds,        ONLY: dp
+    USE upf_const,        ONLY: pi, fpi, e2
 
     implicit none
     !  
     ! I/O 
     integer,  intent(in)  :: itype, ibeta, nq
+    real(dp), intent(in)  :: omega
+    real(dp), intent(in)  :: tpiba
     real(dp), intent(in)  :: qg_d(nq)
     real(dp), intent(out) :: dvq_d(nq)
     !     
@@ -297,12 +298,12 @@ contains
           exit
        endif
     enddo
-    if (my_gth==0) call errore('mk_dffnl_gth', 'cannot map itype in some gtp param. set', itype)
+    if (my_gth==0) call upf_error('mk_dffnl_gth', 'cannot map itype in some gtp param. set', itype)
     iproj=gth_p(my_gth)%ipr(ibeta)
     ll=gth_p(my_gth)%lll(ibeta)
     rrl=gth_p(my_gth)%rrl(ll)
-    if ( ll<0 .or. ll>3  ) call errore('mk_dffnl_gth', 'wrong l:', ll)
-    if ( iproj>nprj_max(ll) ) call errore('mk_dffnl_gth', 'projector exceeds max. n. of projectors', iproj)
+    if ( ll<0 .or. ll>3  ) call upf_error('mk_dffnl_gth', 'wrong l:', ll)
+    if ( iproj>nprj_max(ll) ) call upf_error('mk_dffnl_gth', 'projector exceeds max. n. of projectors', iproj)
     !
     fact = e2 * fpi * pi**0.25_dp * sqrt( 2._dp**(ll+1) * rrl**(2*ll+3) &
            / omega )
@@ -584,8 +585,8 @@ SUBROUTINE dvloc_gth_gpu( itype, zion, tpiba2, ngl, gl_d, omega, dvloc_d, igl0 )
   !! GPU version of 'dvloc_gth' from 'Modules/gth.f90'
   !! dvloc = D Vloc (g^2) / D g^2 = (1/2g) * D Vloc(g) / D g
   !
-  USE kinds,        ONLY : DP
-  USE constants,    ONLY : pi, tpi, e2, eps8
+  USE upf_kinds,    ONLY : DP
+  USE upf_const,    ONLY : pi, tpi, e2, eps8
   !
   IMPLICIT NONE
   !
@@ -605,7 +606,7 @@ SUBROUTINE dvloc_gth_gpu( itype, zion, tpiba2, ngl, gl_d, omega, dvloc_d, igl0 )
   attributes(DEVICE) ::  dvloc_d, gl_d
 #endif
   !
-! IF ( do_comp_esm ) call errore('vloc_gth', 'ESM not implemented', itype)
+! IF ( do_comp_esm ) call upf_error('vloc_gth', 'ESM not implemented', itype)
   !
   ! Find gtp param. set for type itype
   my_gth = 0
@@ -616,7 +617,7 @@ SUBROUTINE dvloc_gth_gpu( itype, zion, tpiba2, ngl, gl_d, omega, dvloc_d, igl0 )
     ENDIF
   ENDDO
   !
-  IF ( my_gth==0 ) CALL errore( 'dvloc_gth', 'cannot map itype in some gtp param. set', itype )
+  IF ( my_gth==0 ) CALL upf_error( 'dvloc_gth', 'cannot map itype in some gtp param. set', itype )
   rloc = gth_p(my_gth)%rloc
   cc1  = gth_p(my_gth)%cc(1)
   cc2  = gth_p(my_gth)%cc(2)
