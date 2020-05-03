@@ -447,7 +447,7 @@ MODULE dvscf_interpolate
     !! Close units and deallocate arrays. Called at the end of each q point
     !--------------------------------------------------------------------------
     !
-    USE io_global,   ONLY : ionode
+    USE mp_pools,    ONLY : me_pool, root_pool
     !
     IMPLICIT NONE
     !
@@ -456,7 +456,7 @@ MODULE dvscf_interpolate
     !
     DEALLOCATE(rlatt)
     !
-    IF (ionode) THEN
+    IF (me_pool == root_pool) THEN
       DO irlocal = 1, nrlocal
         CLOSE(UNIT=iunwpot(irlocal), STATUS='KEEP')
       ENDDO
