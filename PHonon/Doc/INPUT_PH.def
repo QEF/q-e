@@ -271,8 +271,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
                     Adv. Energy Mater. 2018, 1800246 doi:10.1002/aenm.201800246
                     arXiv:1511.08115
                 }
+    opt -val 'ahc' {
+        Quantities required for the calculation of phonon-induced
+        electron self-energy are computed and written to the directory
+        @ref ahc_dir. The output files can be read by postahc.x for
+        the calculation of electron self-energy.
+        Available for both metals and insulators.
+        @ref trans=.false. is required.
+    }
 		info {
-		    For metals only, requires gaussian smearing.
+		    For metals only, requires gaussian smearing (except for 'ahc').
 		
 		    If @ref trans=.true., the lambdas are calculated in the same
 		    run, using the same k-point grid for phonons and lambdas.
@@ -297,6 +305,39 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
         info {
             The spacing between double-delta smearing values used in
             an electron-phonon coupling calculation.
+        }
+    }
+
+    group {
+        label { Variables for @ref electron_phonon = 'ahc': }
+
+        var ahc_dir  -type CHARACTER {
+            default { outdir // 'ahc_dir/' }
+            info {
+                Directory where the output binary files are written.
+            }
+        }
+        var ahc_nbnd -type INTEGER {
+            status { REQUIRED }
+            info {
+                Number of bands for which the electron self-energy is to be computed.
+            }
+        }
+        var ahc_nbndskip  -type INTEGER {
+            default { 0 }
+            info {
+                Number of bands to exclude when computing the self-energy. Self-energy
+                is computed for bands with indices from @ref ahc_nbndskip+1 to
+                @ref ahc_nbndskip+@ref ahc_nbnd. @ref ahc_nbndskip+@ref ahc_nbnd cannot
+                exceed nbnd of the preceding SCF or NSCF calculation.
+            }
+        }
+        var skip_upperfan  -type LOGICAL {
+            default { .false. }
+            info {
+                If .true., skip calculation of the upper Fan self-energy, which
+                involves solving the Sternheimer equation.
+            }
         }
     }
 
