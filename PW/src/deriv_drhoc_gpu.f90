@@ -189,7 +189,9 @@ SUBROUTINE deriv_drhoc_gpu( ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, 
   ! counter on g shells
   ! 
   !
+#if defined(__CUDA)
   attributes(DEVICE) :: gl_d, r_d, rab_d, rhoc_d, drhocg_d, aux_d
+#endif
   !
   ! G=0 term
   !

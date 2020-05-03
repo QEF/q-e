@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
+#if defined(__CUDA)
 MODULE compute_dvloc_gpu_m
   USE cudafor
   IMPLICIT NONE
@@ -194,7 +195,7 @@ END FUNCTION qe_erfc_d
 !
 !
 END MODULE compute_dvloc_gpu_m
-
+#endif
 
 
 !----------------------------------------------------------------------
@@ -209,7 +210,9 @@ SUBROUTINE dvloc_of_g_gpu( mesh, msh, rab_d, r_d, vloc_at_d, zp, tpiba2, &
   USE constants,          ONLY : pi, fpi, e2, eps8
   USE Coul_cut_2D,        ONLY : do_cutoff_2D
   USE esm,                ONLY : do_comp_esm, esm_bc
+#if defined(__CUDA)
   USE compute_dvloc_gpu_m
+#endif
   !
   IMPLICIT NONE
   !
@@ -240,10 +243,15 @@ SUBROUTINE dvloc_of_g_gpu( mesh, msh, rab_d, r_d, vloc_at_d, zp, tpiba2, &
   !
   LOGICAL :: esm_bc_lg
   !
-  REAL(DP), ALLOCATABLE, DEVICE :: aux1_d(:)
+  REAL(DP), ALLOCATABLE :: aux1_d(:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: aux1_d
+  !
+  TYPE(dim3) :: threads
+#endif
   !
   INTEGER :: i, igl, blocks
-  TYPE(dim3) :: threads
+  !
   ! counter on erf functions or gaussians
   ! counter on g shells vectors
   ! first shell with g != 0
@@ -261,6 +269,7 @@ SUBROUTINE dvloc_of_g_gpu( mesh, msh, rab_d, r_d, vloc_at_d, zp, tpiba2, &
   !   This is the part of the integrand function
   !   indipendent of |G| in real space
   !
+#if defined(__CUDA)
   !$cuf kernel do(1)<<<*,*>>>
   DO i = 1, msh
      aux1_d(i) = r_d(i) * vloc_at_d(i) + zp * e2 * qe_erf_d(r_d(i))
@@ -274,6 +283,9 @@ SUBROUTINE dvloc_of_g_gpu( mesh, msh, rab_d, r_d, vloc_at_d, zp, tpiba2, &
                                  aux1_d, r_d, rab_d, dvloc_d(igl0), do_cutoff_2D, &
                                  do_comp_esm, esm_bc_lg )
   !
+#else
+  CALL errore( 'dvloc_of_g_gpu' , 'GPU version of dvloc_of_g called but not compiled.', 0 )
+#endif
   DEALLOCATE( aux1_d )
   !
   !
