@@ -1,0 +1,29 @@
+ &control
+    calculation     = 'scf'
+    prefix          = 'diam'
+    restart_mode    = 'from_scratch'
+    pseudo_dir      = '/group2/jmlim/program/qe-dev-dvscf/pseudo/'
+    outdir          = '/group2/jmlim/program/qe-dev-dvscf/tempdir/'
+    tprnfor         = .true.
+    tstress         = .true.
+ /
+ &system
+    ibrav           = 2
+    celldm(1)       = 6.64
+    nat             = 2
+    ntyp            = 1
+    ecutwfc         = 60
+    occupations     = 'fixed'
+ /
+ &electrons
+    diagonalization = 'david'
+    mixing_beta     = 0.7
+    conv_thr        = 1.0d-12
+ /
+ATOMIC_SPECIES
+  C  12.01078  C.UPF
+ATOMIC_POSITIONS alat
+  C   0.00  0.00  0.00
+  C   0.25  0.25  0.25
+K_POINTS automatic
+ 6 6 6 0 0 0

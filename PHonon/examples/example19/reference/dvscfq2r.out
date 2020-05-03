@@ -1,0 +1,67 @@
+
+     Program DVSCF_Q2R v.6.5 starts on 14Apr2020 at 17:37:31 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+     Fft bands division:     nmany     =       1
+
+     Reading xml data from directory:
+
+     /group2/jmlim/program/qe-dev-dvscf/tempdir/diam.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+               file C.UPF: wavefunction(s)  3d renormalized
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          91      91     30                 1160     1160     222
+     Max          92      92     31                 1162     1162     225
+     Sum         367     367    121                 4645     4645     893
+ 
+
+     Reading grid info from file diam.dyn0
+ 
+     Allocating dvscf, shape    3456       6      27
+     Done allocating dvscf
+ 
+     Reading and rotating dvscf files (induced part of dvscf)
+ 
+     Computing bare part of dvscf
+       1       2       3       4       5       6       7       8       9      10
+      11      12      13      14      15      16      17      18      19      20
+      21      22      23      24      25      26      27 
+ 
+     Fourier transforming dvscf to w_pot, writing to file
+ 
+ 
+     read_dvscf   :      0.08s CPU      0.09s WALL (       1 calls)
+     dvscf_bare   :      0.16s CPU      0.16s WALL (       1 calls)
+     mul_iqr      :      0.01s CPU      0.01s WALL (       1 calls)
+     dvscf_shift  :      0.04s CPU      0.04s WALL (      27 calls)
+     calc_w_pot   :      0.04s CPU      0.04s WALL (      27 calls)
+     write_w_pot  :      0.01s CPU      0.04s WALL (      27 calls)
+ 
+     DVSCF_Q2R    :      0.41s CPU      0.45s WALL
+
+ 
+   This run was terminated on:  17:37:32  14Apr2020            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
