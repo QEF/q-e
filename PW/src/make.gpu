@@ -26,7 +26,19 @@ PWLIBS += \
   force_cc_gpu.o \
   drhoc_gpu.o \
   addusforce_gpu.o \
-  force_corr_gpu.o 
+  force_corr_gpu.o \
+  stres_loc_gpu.o \
+  dvloc_of_g_gpu.o \
+  stres_har_gpu.o \
+  stres_mgga_gpu.o \
+  stres_cc_gpu.o \
+  deriv_drhoc_gpu.o \
+  stres_ewa_gpu.o \
+  stres_knl_gpu.o \
+  stres_us_gpu.o \
+  compute_deff_gpu.o \
+  gen_us_dj_gpu.o \
+  gen_us_dy_gpu.o
 
 MODFLAGS += \
          $(MOD_FLAG)../../GScratch
@@ -70,6 +82,37 @@ force_us_gpu.o : pwcom_gpu.o
 force_us_gpu.o : symme.o
 forces.o : force_us_gpu.o
 forces.o : force_lc_gpu.o
+dvloc_of_g_gpu.o : Coul_cut_2D.o
+dvloc_of_g_gpu.o : esm.o
+stres_loc_gpu.o : dvloc_of_g_gpu.o
+stres_loc_gpu.o : buffers.o
+stres_loc_gpu.o : Coul_cut_2D.o
+stres_loc_gpu.o : pwcom.o
+stres_loc_gpu.o : scf_mod.o
+stres_har_gpu.o : Coul_cut_2D.o
+stres_har_gpu.o : pwcom.o
+stres_har_gpu.o : scf_mod.o
+stres_mgga_gpu.o : buffers.o
+stres_mgga_gpu.o : pwcom.o
+stres_mgga_gpu.o : scf_mod.o
+stres_cc_gpu.o : pwcom.o
+stres_cc_gpu.o : scf_mod.o
+stres_ewa_gpu.o : Coul_cut_2D.o
+stres_knl_gpu.o : buffers.o
+stres_knl_gpu.o : pwcom.o
+stres_knl_gpu.o : symme.o
+stres_us_gpu.o : pwcom.o
+stres_us_gpu.o : compute_deff_gpu.o
+stres_us_gpu.o : gen_us_dj_gpu.o
+stres_us_gpu.o : gen_us_dy_gpu.o
+gen_us_dj_gpu.o : pwcom_gpu.o
+gen_us_dy_gpu.o : pwcom_gpu.o
+stress.o : stres_loc_gpu.o
+stress.o : stres_har_gpu.o
+stress.o : stres_mgga_gpu.o
+stress.o : stres_cc_gpu.o
+stress.o : stres_ewa_gpu.o
+stress.o : stres_knl_gpu.o
 g2_kin.o : pwcom_gpu.o
 g2_kin_gpu.o : pwcom.o
 g2_kin_gpu.o : pwcom_gpu.o
