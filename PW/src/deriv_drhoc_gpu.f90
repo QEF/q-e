@@ -150,7 +150,9 @@ SUBROUTINE deriv_drhoc_gpu( ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, 
   USE kinds
   USE constants,    ONLY: pi, fpi
   !
+#if defined(__CUDA)
   USE cudafor
+#endif
   USE simpsn_gpum,  ONLY: simpsn_gpu_dev
   USE gbuffers,     ONLY: dev_buf
   !

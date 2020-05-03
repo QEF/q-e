@@ -205,7 +205,9 @@ SUBROUTINE dvloc_of_g_gpu( mesh, msh, rab_d, r_d, vloc_at_d, zp, tpiba2, &
   !
   ! dvloc = D Vloc (g^2) / D g^2 = (1/2g) * D Vloc(g) / D g
   !
+#if defined(__CUDA)
   USE cudafor
+#endif
   USE kinds
   USE constants,          ONLY : pi, fpi, e2, eps8
   USE Coul_cut_2D,        ONLY : do_cutoff_2D
