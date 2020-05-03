@@ -1,0 +1,12 @@
+&input
+  verbosity = 'high'
+  prefix = 'diam'
+  outdir   = '.'
+  fildyn = 'diam.dyn'
+  fildvscf = 'dvscf'
+  wpot_dir = 'wpot_neutral/'
+
+  do_long_range = .true.
+  do_charge_neutral = .true.
+ /
+

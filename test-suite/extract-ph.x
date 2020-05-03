@@ -91,6 +91,10 @@ rlatt_cart=`grep "rlatt_cart" $fname | awk '{print $2; print $3; print $4}'`
 rlatt_crys=`grep "rlatt_crys" $fname | awk '{print $2; print $3; print $4}'`
 sum_w_pot=`grep "sum_w_pot" $fname | awk '{print $2; print $3; print $4}'`
 
+#POSTAHC
+postahc_selfen=`sed -n '/Begin postahc output/,/End postahc output/p' $fname \
+    | head -n -3 | tail -n +6 | awk '{print $3; print $4; print $5 ; print $6 ; print $7}'`
+
 if test "$e1" != ""; then
         echo e1
         echo $e1
@@ -187,4 +191,8 @@ fi
 if test "$sum_w_pot" != ""; then
         echo sum_w_pot
         for x in $sum_w_pot; do echo $x; done
+fi
+if test "$postahc_selfen" != ""; then
+        echo postahc_selfen
+        for x in $postahc_selfen; do echo $x; done
 fi

@@ -1,0 +1,6 @@
+&input
+  fildyn = 'diam.dyn'
+  zasr   = 'crystal'
+  flfrc  = 'diam.ifc'
+/
+
