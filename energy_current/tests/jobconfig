@@ -5,4 +5,4 @@ program = ALL_CURRENTS
 
 
 [categories]
-all_currents_all = energy_current_*?? 
+all_currents_all = energy_current_*
