@@ -44,7 +44,7 @@ vcprim.o
 
 
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
-         ../../KS_Solvers/libks_solvers.a \
+         ../../KS_Solvers/libks_solvers.a ../../XClib/libqeldaxc.a \
          ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 
 LIBMIN= ../minpack/minpacklib.a

@@ -367,7 +367,8 @@ CONTAINS
   SUBROUTINE get_q0cc_on_grid (cc,lecnl_qx,total_rho, grad_rho, q0, thetas)
 
   USE vdW_DF,               ONLY : spline_interpolation
-  USE corr_lda,             ONLY : pw
+  !USE corr_lda,             ONLY : pw
+  use ldaxc_interfaces, only : pw
 
   implicit none
 

@@ -56,7 +56,8 @@ PROGRAM do_ppacf
   USE funct,                ONLY : get_iexch, get_icorr, get_igcx, get_igcc
   USE funct,                ONLY : set_exx_fraction, set_auxiliary_flags, &
                                    enforce_input_dft
-  USE exch_lda,             ONLY : slater, slater_spin
+  USE exch_lda,             ONLY : slater_spin
+  USE ldaxc_interfaces,     ONLY : slater
   USE xc_gga,               ONLY : gcxc, gcx_spin, gcc_spin
   USE xc_lda_lsda,          ONLY : xc
   USE wvfct,                ONLY : npw, npwx

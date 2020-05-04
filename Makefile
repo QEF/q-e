@@ -175,7 +175,7 @@ pw4gwwlib : phlibs
 	if test -d GWW ; then \
 	( cd GWW ; $(MAKE) pw4gwwa || exit 1 ) ; fi
 
-mods : libfox libutil libla libfft libupf libbeef libmbd
+mods : libfox libutil libla libfft libupf libbeef libmbd librxc
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 libks_solvers : libs libutil libla
@@ -186,6 +186,9 @@ libla : liblapack libutil libcuda
 
 libfft : 
 	( cd FFTXlib ; $(MAKE) TLDEPS= all || exit 1 )
+
+librxc : 
+	( cd XClib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libutil : 
 	( cd UtilXlib ; $(MAKE) TLDEPS= all || exit 1 )
@@ -277,7 +280,7 @@ install :
 clean : 
 	touch make.inc 
 	for dir in \
-		CPV LAXlib FFTXlib UtilXlib upflib Modules PP PW EPW KS_Solvers \
+		CPV LAXlib FFTXlib XClib UtilXlib upflib Modules PP PW EPW KS_Solvers \
 		NEB ACFDT COUPLE GWW XSpectra PWCOND dft-d3 \
 		atomic clib LR_Modules pwtools upflib \
 		dev-tools extlibs Environ TDDFPT PHonon HP GWW Doc GUI \

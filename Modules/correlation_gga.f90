@@ -1,7 +1,8 @@
 !
 MODULE corr_gga                       !<GPU:corr_gga=>corr_gga_gpu>
   !
-  USE corr_lda,  ONLY : pw, pw_spin   !<GPU:pw_spin=>pw_spin_d,pw=>pw_d,corr_lda=>corr_lda_gpu>
+  USE ldaxc_interfaces, ONLY: pw
+  USE corr_lda,  ONLY : pw_spin   !<GPU:pw_spin=>pw_spin_d,pw=>pw_d,corr_lda=>corr_lda_gpu>
   !
 CONTAINS
 !

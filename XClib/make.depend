@@ -1,0 +1,14 @@
+xc_lda.o : kind_l.o
+xc_lda.o : dft_par_mod.o
+xc_lda.o : correlation_lda.o
+xc_lda.o : exchange_lda.o
+ldaxc_interfaces.o : dft_par_mod.o
+ldaxc_interfaces.o : kind_l.o
+correlation_lda.o : kind_l.o
+exchange_lda.o : kind_l.o
+exchange_lda.o : constants_l.o
+get_ldaxc.o : kind_l.o
+get_ldaxc.o : dft_par_mod.o
+constants_l.o : kind_l.o
+dft_par_mod.o : kind_l.o
+kind_l.o :

@@ -412,6 +412,11 @@ CONTAINS
     !! Translates a string containing the exchange-correlation name
     !! into internal indices iexch, icorr, igcx, igcc, inlc, imeta.
     !
+    USE ldaxc_interfaces,  ONLY: get_ldaxc_indexes, get_ldaxc_param
+#if defined(__LIBXC)
+    USE xc_f03_lib_m
+#endif
+    !
     IMPLICIT NONE
     !
     CHARACTER(LEN=*), INTENT(IN) :: dft_
@@ -851,6 +856,25 @@ CONTAINS
        CALL errore( 'set_dft_from_name', ' conflicting values for inlc', 1 )
     ENDIF
     !
+    
+    
+    IF ( iexch==8 .OR. icorr==10 ) THEN         !  'sla+kzk'
+       !
+       IF ( .NOT. finite_size_cell_volume_set) CALL errore('XC', &
+             'finite size corrected exchange used w/o initialization',1)
+       !
+       CALL get_ldaxc_indexes( iexch, icorr )
+       CALL get_ldaxc_param( finite_size_cell_volume )   !...to set properly...
+       !
+    ELSE
+       !
+       CALL get_ldaxc_indexes( iexch, icorr )
+       !
+    ENDIF
+    
+    
+    
+    
     RETURN
     !
   END SUBROUTINE set_dft_from_name
