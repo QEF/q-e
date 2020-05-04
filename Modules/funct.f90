@@ -363,7 +363,7 @@ MODULE funct
   INTEGER  :: beefvdw = 0
 #endif
   !
-  INTEGER, PARAMETER :: nxc=8, ncc=10, ngcx=44, ngcc=14, nmeta=7, ncnl=6
+  INTEGER, PARAMETER :: nxc=8, ncc=10, ngcx=44, ngcc=13, nmeta=6, ncnl=6
   CHARACTER(LEN=4) :: exc, corr, gradx, gradc, meta, nonlocc
   DIMENSION :: exc(0:nxc), corr(0:ncc), gradx(0:ngcx), gradc(0:ngcc), &
                meta(0:nmeta), nonlocc(0:ncnl)
