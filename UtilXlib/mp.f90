@@ -35,10 +35,12 @@ MODULE mp
     mp_send, mp_recv
   !
   INTERFACE mp_send
-    MODULE PROCEDURE mp_send_i1, mp_send_iv, mp_send_r1, mp_send_rv, mp_send_c1, mp_send_cv
+    MODULE PROCEDURE mp_send_i1, mp_send_iv, mp_send_r1, mp_isend_r1, mp_send_rv, mp_isend_rv, &
+                     mp_send_c1, mp_isend_c1, mp_send_cv, mp_isend_cv
 #if defined(__CUDA)
-!    MODULE PROCEDURE mp_send_i1_gpu, mp_send_iv_gpu, mp_send_r1_gpu, mp_send_rv_gpu, &
-!                     mp_send_c1_gpu, mp_send_cv_gpu
+!    MODULE PROCEDURE mp_send_i1_gpu, mp_send_iv_gpu,  mp_send_r1_gpu, mp_isend_r1_gpu, &
+!                     mp_send_rv_gpu, mp_isend_rv_gpu, mp_send_c1_gpu, mp_isend_c1_gpu, &
+!                     mp_send_cv_gpu, mp_isend_cv_gnu
 #endif
   END INTERFACE
   !
@@ -484,7 +486,7 @@ MODULE mp
       END SUBROUTINE mp_send_iv
       !
       !------------------------------------------------------------------------------!
-      SUBROUTINE mp_send_r1( msg, dest, tag, gid, send_request )
+      SUBROUTINE mp_send_r1( msg, dest, tag, gid )
       !------------------------------------------------------------------------------!
       !!
       !! Send a real element
@@ -494,20 +496,36 @@ MODULE mp
       INTEGER, INTENT(IN) :: dest
       INTEGER, INTENT(IN) :: tag
       INTEGER, INTENT(IN) :: gid
-      INTEGER, OPTIONAL, INTENT(out) :: send_request
 #if defined(__MPI)
       INTEGER :: msglen
       msglen = 1
-      IF ( PRESENT(send_request) ) THEN
-         CALL isend_real( msg, msglen, dest, tag, gid, send_request )
-      ELSE
-         CALL send_real( msg, msglen, dest, tag, gid )
-      ENDIF
+      CALL send_real( msg, msglen, dest, tag, gid )
 #endif
       END SUBROUTINE mp_send_r1
       !
       !------------------------------------------------------------------------------!
-      SUBROUTINE mp_send_rv(msg,dest,tag,gid, send_request)
+      SUBROUTINE mp_isend_r1( msg, dest, tag, gid, send_requests, nsend )
+      !------------------------------------------------------------------------------!
+      !!
+      !! Send a real element (Non Blocking version)
+      !!
+      IMPLICIT NONE
+      REAL (DP) :: msg
+      INTEGER, INTENT(IN) :: dest
+      INTEGER, INTENT(IN) :: tag
+      INTEGER, INTENT(IN) :: gid
+      INTEGER, ALLOCATABLE, INTENT(inout) :: send_requests(:)
+      INTEGER, INTENT(inout) :: nsend
+#if defined(__MPI)
+      INTEGER :: msglen, nsendx
+      msglen = 1
+      nsendx = size (send_requests)
+      CALL isend_real( msg, msglen, dest, tag, gid, send_requests, nsend, nsendx )
+#endif
+      END SUBROUTINE mp_isend_r1
+      !
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_send_rv(msg,dest,tag,gid )
       !------------------------------------------------------------------------------!
       !!
       !! Send a real vector
@@ -517,20 +535,36 @@ MODULE mp
       INTEGER, INTENT(IN) :: dest
       INTEGER, INTENT(IN) :: tag
       INTEGER, INTENT(IN) :: gid
-      INTEGER, OPTIONAL, INTENT(out) :: send_request
 #if defined(__MPI)
       INTEGER :: msglen
       msglen = size(msg)
-      IF ( PRESENT(send_request) ) THEN
-         CALL isend_real( msg, msglen, dest, tag, gid, send_request )
-      ELSE
-         CALL send_real( msg, msglen, dest, tag, gid )
-      ENDIF
+      CALL send_real( msg, msglen, dest, tag, gid )
 #endif
       END SUBROUTINE mp_send_rv
       !
       !------------------------------------------------------------------------------!
-      SUBROUTINE mp_send_c1( msg, dest, tag, gid, send_request )
+      SUBROUTINE mp_isend_rv(msg,dest,tag,gid, send_requests, nsend )
+      !------------------------------------------------------------------------------!
+      !!
+      !! Send a real vector (Non Blocking version)
+      !!
+      IMPLICIT NONE
+      REAL (DP) :: msg(:)
+      INTEGER, INTENT(IN) :: dest
+      INTEGER, INTENT(IN) :: tag
+      INTEGER, INTENT(IN) :: gid
+      INTEGER, ALLOCATABLE, INTENT(inout) :: send_requests(:)
+      INTEGER, INTENT(inout) :: nsend
+#if defined(__MPI)
+      INTEGER :: msglen, nsendx
+      msglen = size(msg)
+      nsendx = size (send_requests)
+      CALL isend_real( msg, msglen, dest, tag, gid, send_requests, nsend, nsendx )
+#endif
+      END SUBROUTINE mp_isend_rv
+      !
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_send_c1( msg, dest, tag, gid )
       !------------------------------------------------------------------------------!
       !!
       !! Send a complex element
@@ -540,20 +574,36 @@ MODULE mp
       INTEGER, INTENT(IN) :: dest
       INTEGER, INTENT(IN) :: tag
       INTEGER, INTENT(IN) :: gid
-      INTEGER, OPTIONAL, INTENT(out) :: send_request
 #if defined(__MPI)
       INTEGER :: msglen
       msglen = 1
-      IF ( PRESENT(send_request) ) THEN
-         CALL isend_real( msg, 2 * msglen, dest, tag, gid, send_request )
-      ELSE
-         CALL send_real( msg, 2 * msglen, dest, tag, gid )
-      ENDIF
+      CALL send_real( msg, 2 * msglen, dest, tag, gid )
 #endif
       END SUBROUTINE mp_send_c1
       !
       !------------------------------------------------------------------------------!
-      SUBROUTINE mp_send_cv( msg, dest, tag, gid, send_request )
+      SUBROUTINE mp_isend_c1( msg, dest, tag, gid, send_requests, nsend )
+      !------------------------------------------------------------------------------!
+      !!
+      !! Send a complex element (Non Blocking version)
+      !!
+      IMPLICIT NONE
+      COMPLEX (DP) :: msg
+      INTEGER, INTENT(IN) :: dest
+      INTEGER, INTENT(IN) :: tag
+      INTEGER, INTENT(IN) :: gid
+      INTEGER, ALLOCATABLE, INTENT(inout) :: send_requests(:)
+      INTEGER, INTENT(inout) :: nsend
+#if defined(__MPI)
+      INTEGER :: msglen, nsendx
+      msglen = 1
+      nsendx = size (send_requests)
+      CALL isend_real( msg, 2 * msglen, dest, tag, gid, send_requests, nsend, nsendx )
+#endif
+      END SUBROUTINE mp_isend_c1
+      !
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_send_cv( msg, dest, tag, gid )
       !------------------------------------------------------------------------------!
       !!
       !! Send a complex vector
@@ -563,17 +613,33 @@ MODULE mp
       INTEGER, INTENT(IN) :: dest
       INTEGER, INTENT(IN) :: tag
       INTEGER, INTENT(IN) :: gid
-      INTEGER, OPTIONAL, INTENT(out) :: send_request
 #if defined(__MPI)
       INTEGER :: msglen
       msglen = size(msg)
-      IF ( PRESENT(send_request) ) THEN
-         CALL isend_real( msg, 2 * msglen, dest, tag, gid, send_request )
-      ELSE
-         CALL send_real( msg, 2 * msglen, dest, tag, gid )
-      ENDIF
+      CALL send_real( msg, 2 * msglen, dest, tag, gid )
 #endif
       END SUBROUTINE mp_send_cv
+      !
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_isend_cv( msg, dest, tag, gid, send_requests, nsend )
+      !------------------------------------------------------------------------------!
+      !!
+      !! Send a complex vector (Non Blocking version)
+      !!
+      IMPLICIT NONE
+      COMPLEX (DP) :: msg(:)
+      INTEGER, INTENT(IN) :: dest
+      INTEGER, INTENT(IN) :: tag
+      INTEGER, INTENT(IN) :: gid
+      INTEGER, ALLOCATABLE, INTENT(inout) :: send_requests(:)
+      INTEGER, INTENT(inout) :: nsend
+#if defined(__MPI)
+      INTEGER :: msglen, nsendx
+      msglen = size(msg)
+      nsendx = size (send_requests)
+      CALL isend_real( msg, 2 * msglen, dest, tag, gid, send_requests, nsend, nsendx )
+#endif
+      END SUBROUTINE mp_isend_cv
 
 !------------------------------------------------------------------------------!
 !..mp_recv

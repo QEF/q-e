@@ -165,7 +165,7 @@ END SUBROUTINE mp_synchronize
    !------------------------------------------------------------------------------!
    !
    !------------------------------------------------------------------------------!
-   SUBROUTINE isend_real( array, n, dest, tag, gid, send_request )
+   SUBROUTINE isend_real( array, n, dest, tag, gid, send_requests, nsend, nsendx )
    !------------------------------------------------------------------------------!
    !!
    !! Non Blocking Send reals
@@ -175,7 +175,9 @@ END SUBROUTINE mp_synchronize
    !
    IMPLICIT NONE
    INTEGER, INTENT(in) :: n, dest, tag, gid
-   INTEGER, INTENT(out) :: send_request
+   INTEGER, INTENT(inout) :: send_requests( nsendx )
+   INTEGER, INTENT(inout) :: nsend
+   INTEGER, INTENT(in)    :: nsendx
    REAL(DP) :: array( n )
 #if defined __MPI
    INTEGER :: msgsiz_max = __BCAST_MSGSIZ_MAX
@@ -186,26 +188,32 @@ END SUBROUTINE mp_synchronize
    IF( n <= 0 ) GO TO 1
    !
    IF( n <= msgsiz_max ) THEN
-     CALL MPI_ISEND( array, n, MPI_DOUBLE_PRECISION, dest, tag, gid, send_request, ierr )
-     IF( ierr /= 0 ) CALL errore( ' send_real ', ' error in mpi_send 1 ', ierr )
+     nsend = nsend + 1 ; if ( nsend > nsendx ) call errore ('isend_real', 'nsendx too small 1', nsend )
+     CALL MPI_ISEND( array, n, MPI_DOUBLE_PRECISION, dest, tag, gid, send_requests(nsend), ierr )
+     IF( ierr /= 0 ) CALL errore( 'isend_real', 'error in mpi_isend 1', ierr )
    ELSE
      ! I'm assuming send_request will be overwritten at each call and the multiple
      ! sends will be received in the sending order so that checking for completion
      ! of the last send_request should be fine.
      ! Not sure this is always correct, tho.                            SdG 290420
      !
+     ! Indeed it is safe to assume this is not true                     SdG 040520
+     !
      nblk   = n / msgsiz_max
      blksiz = msgsiz_max
+     if ( nsend + nblk + 1 > nsendx ) call errore ('isend_real', 'nsendx too small 2', nsend+nblk+1 )
      DO iblk = 1, nblk
        istart = (iblk-1)*msgsiz_max + 1
-       CALL MPI_ISEND( array( istart ), blksiz, MPI_DOUBLE_PRECISION, dest, tag, gid, send_request, ierr )
-       IF( ierr /= 0 ) CALL errore( ' send_real ', ' error in mpi_send 2 ', ierr )
+       nsend = nsend + 1
+       CALL MPI_ISEND( array( istart ), blksiz, MPI_DOUBLE_PRECISION, dest, tag, gid, send_requests(nsend), ierr )
+       IF( ierr /= 0 ) CALL errore( 'isend_real', 'error in mpi_isend 2', ierr )
      END DO
      blksiz = MOD( n, msgsiz_max )
      IF( blksiz > 0 ) THEN
        istart = nblk * msgsiz_max + 1
-       CALL MPI_ISEND( array( istart ), blksiz, MPI_DOUBLE_PRECISION, dest, tag, gid, send_request, ierr )
-       IF( ierr /= 0 ) CALL errore( ' send_real ', ' error in mpi_send 3 ', ierr )
+       nsend = nsend + 1
+       CALL MPI_ISEND( array( istart ), blksiz, MPI_DOUBLE_PRECISION, dest, tag, gid, send_requests(nsend), ierr )
+       IF( ierr /= 0 ) CALL errore( 'isend_real', 'error in mpi_isend 3', ierr )
      END IF
    END IF
 1  CONTINUE
@@ -214,10 +222,10 @@ END SUBROUTINE mp_synchronize
 #endif
 #endif
    RETURN
+
    !------------------------------------------------------------------------------!
    END SUBROUTINE isend_real
    !------------------------------------------------------------------------------!
-
 
 !=----------------------------------------------------------------------------=!
 ! recv_* section
