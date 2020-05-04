@@ -66,7 +66,7 @@ elif [[ "$1" == "6" ]]
 then
   echo "Running DVSCF_Q2R ..."
 # echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/dvscf_q2r.x < $2 > $3 2> $4"
-  ${ESPRESSO_ROOT}/bin/dvscf_q2r.x < $2 > $3 2> $4
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/dvscf_q2r.x < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3
