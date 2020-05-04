@@ -38,8 +38,8 @@ GIPAWOBJS=./paw_gipaw.o \
 
 MANIP_XS_OBJ=./gaunt_mod.o 
              
-QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
-         ../../KS_Solvers/libks_solvers.a \
+QEMODS = ../../Modules/libqemod.a  ../../upflib/libupf.a \
+         ../../FFTXlib/libqefft.a ../../KS_Solvers/libks_solvers.a \
 	 ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 PWOBJS = ../../PW/src/libpw.a 
 

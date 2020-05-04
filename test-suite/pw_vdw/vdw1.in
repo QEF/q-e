@@ -19,6 +19,7 @@
 &electrons
  mixing_beta=0.5
  mixing_ndim=20
+ conv_thr=1.0e-8
 /
 ATOMIC_SPECIES
  C   12.   C.pbe-van_bm.UPF   1

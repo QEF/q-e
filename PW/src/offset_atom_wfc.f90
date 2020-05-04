@@ -1,12 +1,12 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-SUBROUTINE offset_atom_wfc( Hubbard_only, offset, counter )
+SUBROUTINE offset_atom_wfc( Hubbard_only, l_back, offset, counter )
   !----------------------------------------------------------------------------
   !
   ! For each Hubbard atom, compute the index of the projector in the list of
@@ -19,14 +19,17 @@ SUBROUTINE offset_atom_wfc( Hubbard_only, offset, counter )
   USE uspp_param,       ONLY : upf
   USE noncollin_module, ONLY : noncolin
   USE ions_base,        ONLY : nat, ityp
-  USE ldaU,             ONLY : Hubbard_l, Hubbard_U, Hubbard_alpha
+  USE ldaU,             ONLY : Hubbard_l, Hubbard_l_back, Hubbard_l1_back, &
+                               is_hubbard, is_hubbard_back, backall
+  !
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN)  :: Hubbard_only
   INTEGER, INTENT(OUT) :: offset(nat), counter
+  INTEGER, INTENT(IN)  :: l_back
   !
   INTEGER  :: na, nt, n, l
-  LOGICAL  :: hubbard_wfc
+  LOGICAL  :: hubbard_wfc, hubbard_wfc_b, hubbard_wfc_b1
   !
   !
   counter = 0
@@ -38,10 +41,20 @@ SUBROUTINE offset_atom_wfc( Hubbard_only, offset, counter )
      !
      DO n = 1, upf(nt)%nwfc
         !
+        hubbard_wfc    = .FALSE.
+        hubbard_wfc_b  = .FALSE.
+        hubbard_wfc_b1 = .FALSE.
+        !
         IF ( upf(nt)%oc(n) >= 0.D0 ) THEN
            !
            l = upf(nt)%lchi(n)
-           hubbard_wfc = ( upf(nt)%oc(n)>0.D0 .AND. l == Hubbard_l(nt) )
+           IF (is_hubbard(nt)) hubbard_wfc = ( upf(nt)%oc(n)>0.D0 .AND. l == Hubbard_l(nt) )
+           IF (is_hubbard_back(nt)) THEN
+              hubbard_wfc_b = ( upf(nt)%oc(n)>0.D0 .AND. l == Hubbard_l_back(nt) ) 
+              IF (backall(nt)) THEN
+                 hubbard_wfc_b1 = ( upf(nt)%oc(n)>0.D0 .AND. l == Hubbard_l1_back(nt) )
+              ENDIF
+           ENDIF
            !
            IF ( noncolin ) THEN
               !
@@ -74,20 +87,32 @@ SUBROUTINE offset_atom_wfc( Hubbard_only, offset, counter )
               !
            ELSE
               !
-              IF (hubbard_wfc) offset(na) = counter
+              IF ( ( (hubbard_wfc   .AND. l_back.EQ.1) .OR. &
+                     (hubbard_wfc_b .AND. l_back.EQ.2) .OR. &
+                     (hubbard_wfc_b1.AND. l_back.EQ.3) )    &
+                      .AND. offset(na).EQ.-99 ) offset(na) = counter
               !
-              IF (hubbard_wfc .OR. .NOT. hubbard_only) THEN
+              IF (hubbard_wfc .OR. hubbard_wfc_b .OR. hubbard_wfc_b1 .OR. &
+                 .NOT. hubbard_only) THEN
                  counter = counter + 2*l + 1
-              END IF
+              ENDIF
               !
-           END IF
-        END IF
-     END DO
-     
-     IF ( (Hubbard_U(nt).NE.0.D0 .OR. Hubbard_alpha(nt).NE.0.D0 ) .AND. &
-         offset(na) < 0 ) CALL errore('offset_atom_wfc', 'wrong offset', na)
-
-  END DO
+           ENDIF
+        ENDIF
+     ENDDO
+     !
+     IF (is_hubbard(nt) .OR. is_hubbard_back(nt)) THEN
+        !
+        IF ( l_back.EQ.1 .AND. is_hubbard(nt) .AND. offset(na) < 0 ) &
+            CALL errore('offset_atom_wfc', 'wrong offset', na)
+        IF ( l_back.EQ.2 .AND. is_hubbard_back(nt) .AND. offset(na) < 0 ) &
+            CALL errore('offset_atom_wfc', 'wrong offset back', na)
+        IF ( l_back.EQ.3 .AND. backall(nt) .AND. offset(na) < 0 ) &
+            CALL errore('offset_atom_wfc', 'wrong offset back1', na)
+        !
+     ENDIF      
+     !
+  ENDDO
   !
   RETURN
   !

@@ -22,21 +22,20 @@
   !-----------------------------------------------------------------------
   !
   USE kinds,         ONLY : DP, i4b, i8b
-  USE pwcom,         ONLY : nbnd, nks, nkstot, ef,  nelec
+  USE pwcom,         ONLY : nbnd, nks, nkstot, ef, nelec
   USE klist_epw,     ONLY : et_loc, xk_loc, isk_dummy
   USE cell_base,     ONLY : at, bg
   USE ions_base,     ONLY : nat, amass, ityp, tau
   USE phcom,         ONLY : nmodes
   USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange,               &
                             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
-                            nbndskip, scr_typ, nw_specfun,                      &
+                            scr_typ, nw_specfun, specfun_pl, lindabs, use_ws,   &
                             elecselfen, phonselfen, nest_fn, a2f, specfun_ph,   &
                             vme, eig_read, ephwrite, nkf1, nkf2, nkf3,          &
                             efermi_read, fermi_energy, specfun_el, band_plot,   &
                             scattering, nstemp, int_mob, scissor, carrier,      &
                             iterative_bte, longrange, scatread, nqf1, prtgkk,   &
-                            nqf2, nqf3, mp_mesh_k, restart, plselfen,           &
-                            specfun_pl, lindabs, use_ws,                        &
+                            nqf2, nqf3, mp_mesh_k, restart, plselfen, epbread,  &
                             epmatkqread, selecqread, restart_step, nsmear,      &
                             nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, assume_metal
   USE control_flags, ONLY : iverbosity
@@ -46,8 +45,7 @@
   USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE io_global,     ONLY : stdout, ionode
   USE io_var,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
-                            iunepmatwp, iunepmatwp2, iunrestart, iuntau,        &
-                            iuntaucb
+                            iunepmatwp2, iunrestart, iuntau, iuntaucb
   USE elph2,         ONLY : cu, cuq, lwin, lwinq, map_rebal, map_rebal_inv,     &
                             chw, chw_ks, cvmew, cdmew, rdw, adapt_smearing,     &
                             epmatq, wf, etf, etf_ks, xqf, xkf,                  &
@@ -56,7 +54,7 @@
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
                             efnew, sigmar_all, zi_all, nkqtotf, eps_rpa,        &
                             sigmar_all, zi_allvb, inv_tau_all, eta, nbndfst,    &
-                            inv_tau_allcb, zi_allcb, exband,                    &
+                            inv_tau_allcb, zi_allcb, exband, nbndskip,          &
                             gamma_v_all, esigmar_all, esigmai_all,              &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
                             nktotf,  transp_temp, xkq, lower_bnd, upper_bnd, dos,&
@@ -259,8 +257,6 @@
   !! velocity from all the k-point
   REAL(KIND = DP), ALLOCATABLE :: wkf_all(:)
   !! k-point weights for all the k-points
-  REAL(KIND = DP), ALLOCATABLE :: eta_deg(:, :)
-  !! Average eta over degenerate states
   COMPLEX(KIND = DP), ALLOCATABLE :: epmatwe_mem(:, :, :, :)
   !! e-p matrix  in wannier basis - electrons (written on disk)
   COMPLEX(KIND = DP), ALLOCATABLE :: epmatwef(:, :, :)
@@ -367,34 +363,14 @@
     WRITE(stdout, '(5x,a)' )    'Results may improve by using use_ws == .TRUE. '
   ENDIF
   !
-#ifndef __MPI
-  ! Open like this only in sequential. Otherwize open with MPI-open
-  IF (ionode) THEN
-    ! open the .epmatwe file with the proper record length
-    lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-    filint   = TRIM(prefix)//'.epmatwp'
-    CALL diropn(iunepmatwp, 'epmatwp', lrepmatw, exst)
-  ENDIF
-#endif
-  !
   ! At this point, we will interpolate the Wannier rep to the Bloch rep
-  !
-  IF (epwread) THEN
+  IF (epwread .AND. .NOT. epbread) THEN
     !
-    !  read all quantities in Wannier representation from file
-    !  in parallel case all pools read the same file
-    !
+    ! Read all quantities in Wannier representation from file
+    ! in parallel case all pools read the same file
     CALL epw_read(nrr_k, nrr_q, nrr_g)
     !
   ELSE !if not epwread (i.e. need to calculate fmt file)
-    !
-    IF (ionode) THEN
-      lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-      filint   = TRIM(prefix)//'.epmatwe'
-      CALL diropn(iunepmatwe, 'epmatwe', lrepmatw, exst)
-      filint   = TRIM(prefix)//'.epmatwp'
-      CALL diropn(iunepmatwp, 'epmatwp', lrepmatw, exst)
-    ENDIF
     !
     ! ------------------------------------------------------
     !   Bloch to Wannier transform
@@ -448,6 +424,13 @@
     !
     ! Electron-Phonon vertex (Bloch el and Bloch ph -> Wannier el and Bloch ph)
     !
+    ! Open the prefix.epmatwe file
+    IF (ionode) THEN
+      lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
+      filint   = TRIM(prefix)//'.epmatwe'
+      CALL diropn(iunepmatwe, 'epmatwe', lrepmatw, exst)
+    ENDIF
+    !
     DO iq = 1, nqc
       !
       xxq = xqc(:, iq)
@@ -463,7 +446,7 @@
       DO imode = 1, nmodes
         !
         CALL ephbloch2wane(nbndep, nbndsub, nks, nkstot, xk_loc, cu, cuq, &
-          epmatq (:, :, :, imode, iq), nrr_k, irvec_k, wslen_k, epmatwe_mem(:, :, :, imode))
+          epmatq(:, :, :, imode, iq), nrr_k, irvec_k, wslen_k, epmatwe_mem(:, :, :, imode))
         !
       ENDDO
       ! Only the master node writes
@@ -475,12 +458,10 @@
       !
     ENDDO
     !
-    ! Electron-Phonon vertex (Wannier el and Bloch ph -> Wannier el and Wannier ph)
+    IF (ionode) CLOSE(iunepmatwe, STATUS = 'keep')
     !
-    ! Only master perform this task. Need to be parallelize in the future (SP)
-    IF (ionode) THEN
-      CALL ephbloch2wanp_mem(nbndsub, nmodes, xqc, nqc, irvec_k, irvec_g, nrr_k, nrr_g, epmatwe_mem)
-    ENDIF
+    ! Electron-Phonon vertex (Wannier el and Bloch ph -> Wannier el and Wannier ph)
+    CALL ephbloch2wanp_mem(nbndsub, nmodes, xqc, nqc, irvec_k, irvec_g, nrr_k, nrr_g)
     !
     IF (epwwrite) THEN
       CALL epw_write(nrr_k, nrr_q, nrr_g, w_centers)
@@ -505,8 +486,6 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating lwinq', 1)
   DEALLOCATE(exband, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating exband', 1)
-  CLOSE(iunepmatwe, STATUS =  'delete')
-  CLOSE(iunepmatwp)
   !
   ! Check Memory usage
   CALL system_mem_usage(valueRSS)
@@ -603,7 +582,6 @@
   xxq = 0.d0
   !
   ! nkqf is the number of kpoints in the pool
-  !
   DO ik = 1, nkqf
     !
     xxk = xkf(:, ik)
@@ -697,7 +675,7 @@
     ! if 'fine' Fermi level differs by more than 250 meV, there is probably something wrong
     ! with the wannier functions, or 'coarse' Fermi level is inaccurate
     IF (ABS(efnew - ef) * ryd2eV > 0.250d0 .AND. (.NOT. eig_read)) &
-       WRITE(stdout,'(/5x,a)') 'Warning: check if difference with Fermi level fine grid makes sense'
+      WRITE(stdout,'(/5x,a)') 'Warning: check if difference with Fermi level fine grid makes sense'
     WRITE(stdout,'(/5x,a)') REPEAT('=',67)
     !
     ef = efnew
@@ -716,12 +694,12 @@
     ENDIF
     etf(icbm:nbndsub, :) = etf(icbm:nbndsub, :) + scissor
     !
-    WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
+    WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the CB ",i6)' ) scissor * ryd2ev, icbm
   ENDIF
   !
   ! Identify the bands within fsthick from the Fermi level
   ! Return ibndmin and ibndmax
-  CALL fermiwindow
+  CALL fermiwindow()
   nbndfst = ibndmax - ibndmin + 1
   !
   ! Define it only once for the full run.
@@ -733,11 +711,7 @@
     CALL load_rebal
   ENDIF
   !
-  !  xqf must be in crystal coordinates
-  !
-  ! this loops over the fine mesh of q points.
-  ! ---------------------------------------------------------------------------------------
-  ! ---------------------------------------------------------------------------------------
+  ! In the case of crystal ASR
   IF (lifc) THEN
     !
     ! build the WS cell corresponding to the force constant grid
@@ -759,7 +733,7 @@
 #if defined(__MPI)
   ! Check for directory given by "outdir"
   !
-  filint = TRIM(tmp_dir) // TRIM(prefix)//'.epmatwp1'
+  filint = TRIM(tmp_dir) // TRIM(prefix)//'.epmatwp'
   CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmatwp2, ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'error in MPI_FILE_OPEN', 1)
 #endif
@@ -990,7 +964,7 @@
     !
     ! Scatread assumes that you alread have done the full q-integration
     ! We just do one loop to get interpolated eigenenergies.
-    IF(scatread) iq_restart = totq -1
+    IF(scatread) iq_restart = totq - 1
     !
     ! Restart in IBTE case
     IF (iterative_bte) THEN
@@ -1061,12 +1035,11 @@
       eta(:, :, :)   = zero
       vmefp(:, :, :) = czero
       adapt_smearing = .TRUE.
-      ALLOCATE(eta_deg(nmodes, nbndfst), STAT = ierr)
-      IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating eta_deg', 1)
     ENDIF
     !
     DO iqq = iq_restart, totq
-      ! This needs to be uncommented.
+      CALL start_clock ('ep-interp')
+      !
       epf17(:, :, :, :) = czero
       eptmp(:, :, :, :)    = czero
       epmatlrT(:, :, :, :) = czero
@@ -1075,7 +1048,6 @@
       !
       iq = selecq(iqq)
       !
-      CALL start_clock ('ep-interp')
       !
       ! In case of big calculation, show progression of iq (especially usefull when
       ! elecselfen = true as nothing happen during the calculation otherwise.
@@ -1350,9 +1322,8 @@
         ! Conductivity ---------------------------------------------------------
         IF (scattering) THEN
           !
-          ! If we want to compute intrinsic mobilities, call fermicarrier to
-          ! correctly positionned the ef0 level.
-          ! This is only done once for the first iq.
+          ! If we want to compute intrinsic mobilities, call fermicarrier to  correctly positionned the ef0 level.
+          ! This is only done once for the first iq. Also compute the dos at the same time
           IF (iqq == iq_restart) THEN
             DO itemp = 1, nstemp
               etemp = transp_temp(itemp)
@@ -1435,7 +1406,7 @@
         ! \Gamma = 2 * gamma_all
         OPEN(UNIT = linewidth_phself, FILE = 'linewidth.phself')
         WRITE(linewidth_phself, '(a)') '# Phonon frequency and phonon lifetime in meV '
-        WRITE(linewidth_phself,'(a)') '# Q-point  Mode   Phonon freq (meV)   Phonon linewidth (meV)'
+        WRITE(linewidth_phself, '(a)') '# Q-point  Mode   Phonon freq (meV)   Phonon linewidth (meV)'
         DO iqq = 1, nqtotf
           !
           DO imode = 1, nmodes
@@ -1454,13 +1425,12 @@
     ! if scattering is read then Fermi level and scissor have not been computed.
     IF (scatread) THEN
       IF (ABS(scissor) > 0.000001) THEN
-        icbm = FLOOR(nelec / 2.0d0) + nbndskip + 1
         DO ik = 1, nkf
           ikk = 2 * ik - 1
           ikq = ikk + 1
           DO ibnd = icbm, nbndsub
-            etf (ibnd, ikk) = etf(ibnd, ikk) + scissor
-            etf (ibnd, ikq) = etf(ibnd, ikq) + scissor
+            etf(ibnd, ikk) = etf(ibnd, ikk) + scissor
+            etf(ibnd, ikq) = etf(ibnd, ikq) + scissor
           ENDDO
         ENDDO
         WRITE( stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
@@ -1500,7 +1470,8 @@
     IF (int_mob .AND. carrier) THEN
       DEALLOCATE(inv_tau_allcb, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating inv_tau_allcb', 1)
-      DeALLOCATE(zi_allcb)
+      DEALLOCATE(zi_allcb, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating zi_allcb', 1)
     ENDIF
     IF (elecselfen .OR. plselfen) THEN
       DEALLOCATE(sigmar_all, STAT = ierr)
@@ -1509,7 +1480,10 @@
       IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating sigmai_all', 1)
       DEALLOCATE(zi_all, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating zi_all', 1)
-      IF (iverbosity == 3) DEALLOCATE(sigmai_mode)
+      IF (iverbosity == 3) THEN
+        DEALLOCATE(sigmai_mode, STAT = ierr)
+        IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating sigmai_mode', 1)
+      ENDIF
     ENDIF
     IF (phonselfen) THEN
       DEALLOCATE(lambda_all, STAT = ierr)

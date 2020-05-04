@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -62,17 +62,17 @@ SUBROUTINE lr_orthoUwfc (lflag)
   IF (U_projection=="atomic") THEN
      orthogonalize_wfc = .FALSE.
      normalize_only = .FALSE.
-     WRITE( stdout, '(/5x,"Atomic wfc used for the DFT+U projector are NOT orthogonalized")')
+     WRITE( stdout, '(/5x,"Atomic wfc used for the projector on the Hubbard manifold are NOT orthogonalized")')
   ELSEIF (U_projection=="ortho-atomic") THEN
      orthogonalize_wfc = .TRUE.
      normalize_only = .FALSE.
-     WRITE( stdout, '(/5x,"Atomic wfc used for the DFT+U projector are orthogonalized")')
+     WRITE( stdout, '(/5x,"Atomic wfc used for the projector on the Hubbard manifold are orthogonalized")')
      IF (gamma_only) CALL errore('lr_orthoUwfc', &
           'Gamma-only calculation for this case not implemented', 1 )
   ELSEIF (U_projection=="norm-atomic") THEN
      orthogonalize_wfc = .TRUE.
      normalize_only = .TRUE.
-     WRITE( stdout, '(/5x,"Atomic wfc used for the DFT+U projector are normalized but NOT orthogonalized")')
+     WRITE( stdout, '(/5x,"Atomic wfc used for the projector on the Hubbard manifold are normalized but NOT orthogonalized")')
      IF (gamma_only) CALL errore('lr_orthoUwfc', &
           'Gamma-only calculation for this case not implemented', 1 )
   ELSE

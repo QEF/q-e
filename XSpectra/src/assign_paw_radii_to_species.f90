@@ -1,7 +1,8 @@
 subroutine assign_paw_radii_to_species(rc,r_paw)
   USE kinds, ONLY : DP
   USE io_global,       ONLY : stdout
-  USE parameters,      ONLY : ntypx,lmaxx
+  USE parameters,      ONLY : ntypx
+  USE upf_params ,     ONLY : lmaxx
   USE ions_base,       ONLY : nat, ntyp => nsp, ityp
   USE paw_gipaw,       ONLY : paw_recon
   USE xspectra,        ONLY : xiabs

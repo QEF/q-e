@@ -1,6 +1,6 @@
-# generated automatically by aclocal 1.16.1 -*- Autoconf -*-
+# generated automatically by aclocal 1.13.4 -*- Autoconf -*-
 
-# Copyright (C) 1996-2018 Free Software Foundation, Inc.
+# Copyright (C) 1996-2013 Free Software Foundation, Inc.
 
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -16,6 +16,7 @@ m4_include([m4/ax_check_compile_flag.m4])
 m4_include([m4/x_ac_qe_aix_dflags.m4])
 m4_include([m4/x_ac_qe_ar.m4])
 m4_include([m4/x_ac_qe_arch.m4])
+m4_include([m4/x_ac_qe_beef.m4])
 m4_include([m4/x_ac_qe_blas.m4])
 m4_include([m4/x_ac_qe_cc.m4])
 m4_include([m4/x_ac_qe_cpp.m4])

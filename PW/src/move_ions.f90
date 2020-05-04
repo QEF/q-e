@@ -138,8 +138,8 @@ SUBROUTINE move_ions( idone, ions_status )
         !
         CALL cryst_to_cart( nat, pos,  at, 1 )
         tau    =  RESHAPE( pos,  (/ 3, nat /) )
-        CALL cryst_to_cart( nat, grad, bg, 1 )
-        force = - RESHAPE( grad, (/ 3, nat /) )
+        !
+        DEALLOCATE( pos, grad, fixion )
         !
         IF ( conv_ions ) THEN
            !
@@ -231,8 +231,6 @@ SUBROUTINE move_ions( idone, ions_status )
         ENDIF
         !
         CALL output_tau( lmovecell, conv_ions )
-        !
-        DEALLOCATE( pos, grad, fixion )
         !
      ENDIF bfgs_minimization
      !

@@ -46,7 +46,8 @@ hpsi_pw4gww.o \
 cgsolve_all_gamma.o \
 realus.o 
 
-QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
+QEMODS = ../../Modules/libqemod.a ../../upflib/libupf.a \
+         ../../KS_Solvers/libks_solvers.a \
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a \
          ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 # dft-d3 required by xlf for obscure reasons

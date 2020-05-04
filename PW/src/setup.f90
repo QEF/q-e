@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -35,7 +35,7 @@ SUBROUTINE setup()
   !! 3) generates k-points corresponding to the actual crystal symmetry;
   !
   !! 4) calculates various quantities used in magnetic, spin-orbit, PAW
-  !!    electric-field, LDA+U calculations, and for parallelism.
+  !!    electric-field, DFT+U(+V) calculations, and for parallelism.
   !
   USE kinds,              ONLY : DP
   USE constants,          ONLY : eps8, e2, fpi, pi, degspin
@@ -630,9 +630,9 @@ SUBROUTINE setup()
      ENDDO
   ENDIF
   !
-  ! ... Set up Hubbard parameters for LDA+U calculation
+  ! ... Set up Hubbard parameters for DFT+U(+V) calculation
   !
-  CALL init_lda_plus_u ( upf(1:ntyp)%psd, noncolin )
+  CALL init_lda_plus_u ( upf(1:ntyp)%psd, nspin, noncolin )
   !
   ! ... initialize d1 and d2 to rotate the spherical harmonics
   !

@@ -147,13 +147,6 @@
       !
       WRITE(iuwinfil, '("num_wann = ", i3)') nbndsub
       WRITE(iuwinfil, '("iprint = ", i3)') iprint
-      !
-      ! SP: You can have more bands in nscf.in than in
-      !     nbndskip+nbndsub. In which case the dis_win_max can be larger than
-      !     nbndskip+nbndsub. This is crucial for disantanglement.
-      IF (dis_froz_min < MINVAL(et_tmp)) dis_froz_min = MINVAL(et_tmp)
-      IF (dis_froz_max > MAXVAL(et_tmp)) dis_froz_max = MAXVAL(et_tmp)
-      !
       WRITE(iuwinfil, '("dis_win_min = ", f18.12)')  dis_win_min
       WRITE(iuwinfil, '("dis_win_max = ", f18.12)')  dis_win_max
       WRITE(iuwinfil, '("dis_froz_min = ", f18.12)') dis_froz_min

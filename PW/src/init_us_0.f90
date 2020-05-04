@@ -28,7 +28,7 @@ SUBROUTINE init_us_0
   USE atom,         ONLY: rgrid
   USE ions_base,    ONLY: ntyp => nsp
   USE cell_base,    ONLY: omega, tpiba
-  USE us,           ONLY: nqxq, dq
+  USE us,           ONLY: dq
   USE uspp_param,   ONLY: upf, lmaxq, nbetam
   USE mp_bands,     ONLY: intra_bgrp_comm
   USE mp,           ONLY: mp_sum
@@ -47,6 +47,7 @@ SUBROUTINE init_us_0
   !
   INTEGER :: nt, ih, jh, nb, mb, ijv, l, m, ir, ir0, iq, is, startq, lastq, ilast, ndm, ia
   ! various counters
+  INTEGER :: nqxq
   REAL(DP), ALLOCATABLE :: qrad_q(:,:,:), qrad_r(:,:,:), qrad_rs(:,:,:), ffrr(:)
   REAL(DP), ALLOCATABLE :: power_0(:,:), power_r(:,:), power_q(:,:), power_rs(:,:), power_qs(:,:)
   REAL(DP), ALLOCATABLE :: aux(:), aux1(:)
@@ -80,6 +81,7 @@ SUBROUTINE init_us_0
   ENDDO
   !
   ndm = MAXVAL( upf(:)%kkbeta )
+  nqxq = INT( SQRT(ecutrho) / dq + 4 )
   !
   IF (tprint) THEN
      WRITE (stdout,*) " PSEUDOPOTENTIAL REPORT "
@@ -178,8 +180,8 @@ SUBROUTINE init_us_0
               ENDDO
            ENDDO
            !
-           ! 2) compute the fourier transform of the Qs and their itegrated power spectum in
-           !    reciprocal space.
+           ! 2) compute the fourier transform of the Qs and their integrated power spectum in
+           !    reciprocal space - FIXME: use routine compute_qrad in init_us_1
            !
            DO iq = startq, lastq
               !
@@ -236,7 +238,7 @@ SUBROUTINE init_us_0
         CALL mp_sum( power_q, intra_bgrp_comm ) ; power_q (:,:) = power_q (:,:) * 8.0_DP/fpi 
         CALL mp_sum( qrad_r , intra_bgrp_comm ) ; qrad_r(:,:,:) = qrad_r(:,:,:) * 8.0_DP/fpi 
         !
-        ! 4) compute intergrated power spectrum of the Qs in real space (completeness check).
+        ! 4) compute integrated power spectrum of the Qs in real space (completeness check).
         !
         DO l = 0, upf(nt)%nqlc-1
            !
@@ -494,9 +496,9 @@ SUBROUTINE init_us_0
               WRITE (filename(5:5),'(i1)') mb
               WRITE (filename(6:6),'(i1)') nt
               !-
-              filename(1:3) = 'qq_'    ! the radial fourier transform of q_l in reciprcal space
+              filename(1:3) = 'qq_'    ! the radial fourier transform of q_l in reciprocal space
               OPEN (4, FILE=filename, FORM='formatted', STATUS='unknown')
-              WRITE (4,*) '# the radial fourier transform of q_l in reciprcal space'
+              WRITE (4,*) '# the radial fourier transform of q_l in reciprocal space'
               WRITE (4,*) '# nb :', nb, lnb,' mb :', mb, lmb,' lmax :', lnb+lmb, ' nqxq :', nqxq
               DO iq=1,nqxq
                  q = (iq-1)*dq
@@ -504,9 +506,9 @@ SUBROUTINE init_us_0
               ENDDO
               CLOSE (4)
               !-
-              filename(1:3) = 'qqs'    ! the smoothed radial fourier transform of q_l in reciprcal space
+              filename(1:3) = 'qqs'    ! the smoothed radial fourier transform of q_l in reciprocal space
               OPEN (4, FILE=filename, FORM='formatted', STATUS='unknown')
-              WRITE (4,*) '# the smoothed radial fourier transform of q_l in reciprcal space'
+              WRITE (4,*) '# the smoothed radial fourier transform of q_l in reciprocal space'
               WRITE (4,*) '# nb :', nb,lnb,' mb :',mb,lmb,' lmax :',lnb+lmb, ' nqxq :',nqxq
               DO iq = 1, nqxq
                  q = (iq-1)*dq

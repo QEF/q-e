@@ -364,6 +364,7 @@ common to all packages:
 
 \begin{tabular}{ll}
 \texttt{Modules/} &  Fortran modules and utilities used by all programs\\
+\texttt{upflib/}  &  pseudopotential-related code, plus conversion tools\\
 \texttt{include/} &  files *.h included by fortran and C source files\\
 \texttt{clib/}    &  libraries and utilities written in C\\
 \texttt{FFTXlib/} &  FFT libraries\\
@@ -372,7 +373,6 @@ common to all packages:
 \texttt{UtilXlib/}&  Miscellaneous timing, error handling, MPI utilites\\
 \texttt{install/} &  installation scripts and utilities\\
 \texttt{pseudo}/  &  pseudopotential files used by examples\\
-\texttt{upftools/}&  converters to unified pseudopotential format (UPF)\\
 \texttt{Doc/}     &  general documentation\\
 \texttt{archive/} &  external libraries in .tar.gz form\\
 \texttt{test-suite/} &  automated tests\\
@@ -836,8 +836,6 @@ At your choice, you may compile the complete \qe\ suite of programs
 \item \texttt{make xspectra} compiles the package \texttt{XSpectra}.
 			All executables are linked
 			in main \texttt{bin} directory
-\item \texttt{make upf} produces utilities for pseudopotential conversion in
-                        directory \texttt{upftools/}
 \item \texttt{make all} produces all of the above
 \item \texttt{make epw} compiles package \texttt{EPW}
 \item \texttt{make plumed} unpacks \texttt{PLUMED}, patches several routines

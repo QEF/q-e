@@ -9,11 +9,13 @@
 subroutine print_clock_ph
   !-----------------------------------------------------------------------
 
-  USE io_global,  ONLY : stdout
-  USE uspp,       ONLY : okvan, nlcc_any
-  USE control_ph, ONLY : trans, zue, epsil
-  USE ramanm,     ONLY : lraman, elop
-  USE ldau,       ONLY : lda_plus_u
+  USE io_global,         ONLY : stdout
+  USE uspp,              ONLY : okvan, nlcc_any
+  USE control_ph,        ONLY : trans, zue, epsil
+  USE ramanm,            ONLY : lraman, elop
+  USE ldau,              ONLY : lda_plus_u
+  USE el_phon,           ONLY : elph
+  USE dvscf_interpolate, ONLY : ldvscf_interpolate
   !
   implicit none
   !
@@ -161,6 +163,28 @@ subroutine print_clock_ph
      call print_clock ('dynmat_hub_scf')
      call print_clock ('doubleprojqq')
      call print_clock ('doubleprojqq2')
+     WRITE( stdout, * )
+  ENDIF
+
+  IF (ldvscf_interpolate) THEN
+     WRITE( stdout, * ) '     Fourier interpolation of dVscf'
+     ! CALL print_clock('dvscf_setup')
+     CALL print_clock('dvscf_r2q')
+     CALL print_clock('dvscf_davcio')
+     CALL print_clock('dvscf_scatgrid')
+     ! CALL print_clock('dvscf_fourier')
+     ! CALL print_clock('dvscf_mpsum')
+     ! CALL print_clock('dvscf_shift')
+     ! CALL print_clock('dvscf_iqr')
+     ! CALL print_clock('dvscf_long')
+     CALL print_clock('dvscf_bare')
+     ! CALL print_clock('dvscf_cart2u')
+     WRITE( stdout, * )
+  ENDIF
+
+  IF (elph) THEN
+     WRITE( stdout, * ) '    Electron-phonon interaction'
+     CALL print_clock('elphsum')
      WRITE( stdout, * )
   ENDIF
 

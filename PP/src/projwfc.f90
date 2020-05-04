@@ -978,7 +978,7 @@ SUBROUTINE projwave_paw( )
   !-----------------------------------------------------------------------
   !
   USE atom,       ONLY : rgrid, msh
-  USE io_global, ONLY : stdout, ionode
+  USE io_global, ONLY : stdout
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
   USE constants, ONLY: rytoev
   USE klist, ONLY: xk, nks, nkstot, nelec, igk_k, ngk
@@ -1124,7 +1124,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   !
   USE io_files,  ONLY: nd_nmbr
   USE mp,        ONLY: mp_bcast
-  USE mp_pools,  ONLY: root_pool, intra_pool_comm
+  USE mp_pools,  ONLY: me_pool, root_pool, intra_pool_comm
   !
   IMPLICIT NONE
   !
@@ -1134,6 +1134,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   LOGICAL, INTENT(IN)    :: lsym
   LOGICAL, INTENT(INOUT) :: lwrite_ovp
   !
+  LOGICAL :: ionode_pool
   INTEGER :: npw, npw_, ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, l, nwfc,&
        lmax_wfc, is
   REAL(DP),    ALLOCATABLE :: e (:)
@@ -1179,8 +1180,6 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   !
   ALLOCATE( proj (natomwfc, nbnd, nkstot) )
   !
-  IF( la_para ) lwrite_ovp = .FALSE. ! not implemented
-  !
   IF (.not. ALLOCATED(swfcatom)) THEN
      ALLOCATE(swfcatom (npwx*npol , natomwfc ) )
      freeswfcatom = .true.
@@ -1190,17 +1189,26 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   ALLOCATE(wfcatom (npwx*npol, natomwfc) )
   ALLOCATE(e (natomwfc) )
   !
-  ! Open file as temporary storage
+  ! Open file as temporary storage (only one processor per pool writes)
   !
-  iunaux = find_free_unit()
-  auxname = TRIM( restart_dir() ) // 'AUX' // TRIM(nd_nmbr)
-  OPEN( unit=iunaux, file=trim(auxname), status='unknown', form='unformatted')
+  ionode_pool = ( me_pool == root_pool )
+  IF ( ionode_pool ) THEN
+     iunaux = find_free_unit()
+     auxname = TRIM( restart_dir() ) // 'AUX' // TRIM(nd_nmbr)
+     OPEN( unit=iunaux, file=auxname, status='unknown', form='unformatted')
+  END IF
   !
   CALL desc_init( natomwfc, nx, la_proc, idesc, rank_ip, idesc_ip )
   CALL laxlib_getval(nproc_ortho=nproc_ortho)
   la_para = ( nproc_ortho > 1 )
-  IF ( la_para ) WRITE( stdout, &
-       '(5x,"linear algebra parallelized on ",i3," procs")') nproc_ortho
+  IF ( la_para ) THEN
+     WRITE( stdout, &
+          '(5x,"linear algebra parallelized on ",i3," procs")') nproc_ortho
+     IF ( lwrite_ovp ) THEN
+        WRITE( stdout, '(5x,"Warning: lwrite_ovp not implemented, ignored")')
+        lwrite_ovp = .false.
+     END IF
+  END IF
   !
   IF( ionode ) THEN
      WRITE( stdout, * )
@@ -1269,7 +1277,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
      !
      ! save overlap matrix if required
      !
-     IF ( lwrite_ovp ) WRITE( iunaux ) overlap_d
+     IF ( ionode_pool .AND. lwrite_ovp ) WRITE( iunaux ) overlap_d
      !
      ! diagonalize the overlap matrix
      !
@@ -1344,7 +1352,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
         !
         ALLOCATE( rproj0(natomwfc,nbnd) )
         CALL calbec ( npw, wfcatom, evc, rproj0)
-        WRITE( iunaux ) rproj0
+        IF (ionode_pool) WRITE( iunaux ) rproj0
         IF (lsym) THEN
            CALL sym_proj_g (rproj0, proj(:,:,ik))
         ELSE
@@ -1356,7 +1364,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
         !
         ALLOCATE( proj0(natomwfc,nbnd) )
         CALL calbec ( npw_, wfcatom, evc, proj0)
-        WRITE( iunaux ) proj0
+        IF (ionode_pool) WRITE( iunaux ) proj0
         IF (lsym) THEN
            IF ( lspinorb ) THEN 
               CALL sym_proj_so ( domag, proj0, proj(:,:,ik) )
@@ -1380,9 +1388,6 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   DEALLOCATE( idesc_ip )
   DEALLOCATE( rank_ip )
   !
-  ! closing the file will cause a lot of I/O
-  !!! CLOSE( unit=iunaux )
-  !
   !   vectors et and proj are distributed across the pools
   !   collect data for all k-points to the first pool
   !   (I think it is not actually needed for et)
@@ -1392,7 +1397,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   !
   ! write to standard output and to file filproj (if required)
   !
-  IF ( ionode) THEN
+  IF (ionode) THEN
      !
      CALL print_proj( lmax_wfc, proj )
      CALL write_proj_file ( filproj, proj )
@@ -1401,33 +1406,38 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   !
   !  Recover proj_aux and (if required) overlap matrices for all k-points
   !
-  !  See above: no reason to close and re-open the file
-  !!! OPEN( unit=iunaux, file=trim(auxname), status='old', form='unformatted')
-  REWIND (unit=iunaux)
-  !
-  IF ( lwrite_ovp ) THEN
-     ALLOCATE( ovps_aux(natomwfc, natomwfc, nkstot) )
-  ELSE
-     ALLOCATE( ovps_aux(1, 1, 1) )
-  ENDIF
-  ALLOCATE( proj_aux (natomwfc, nbnd, nkstot) )
-  proj_aux = (0.d0, 0.d0)
-  !
-  DO ik = 1, nks
+  IF (ionode_pool) THEN
      !
-     IF ( lwrite_ovp ) READ( iunaux)  ovps_aux(:,:,ik)
-     IF( gamma_only ) THEN
-        ALLOCATE( rproj0( natomwfc, nbnd ) )
-        READ( iunaux ) rproj0(:,:)
-        proj_aux(:,:,ik) = cmplx( rproj0(:,:), 0.00_dp, kind=dp )
-        DEALLOCATE ( rproj0 )
+     !  rewind the file instead of closing it: saves a lot of I/O
+     !
+     REWIND (unit=iunaux)
+     IF ( lwrite_ovp ) THEN
+        ALLOCATE( ovps_aux(natomwfc, natomwfc, nkstot) )
      ELSE
-        READ( iunaux ) proj_aux(:,:,ik)
+        ALLOCATE( ovps_aux(1, 1, 1) )
      ENDIF
+     ALLOCATE( proj_aux (natomwfc, nbnd, nkstot) )
+     proj_aux = (0.d0, 0.d0)
      !
-  ENDDO
-  !
-  CLOSE( unit=iunaux, status='delete' )
+     DO ik = 1, nks
+        !
+        IF ( lwrite_ovp ) READ( iunaux)  ovps_aux(:,:,ik)
+        IF( gamma_only ) THEN
+           ALLOCATE( rproj0( natomwfc, nbnd ) )
+           READ( iunaux ) rproj0(:,:)
+           proj_aux(:,:,ik) = cmplx( rproj0(:,:), 0.00_dp, kind=dp )
+           DEALLOCATE ( rproj0 )
+        ELSE
+           READ( iunaux ) proj_aux(:,:,ik)
+        ENDIF
+        !
+     ENDDO
+     !
+     CLOSE( unit=iunaux, status='delete' )
+     !
+  ELSE
+     ALLOCATE( proj_aux (1,1,1) )
+  END IF
   !
   CALL poolrecover (proj_aux, 2 * nbnd * natomwfc, nkstot, nks)
   IF ( lwrite_ovp ) &
@@ -1442,7 +1452,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
      !
   ENDIF
   !
-  DEALLOCATE( proj_aux, ovps_aux )
+  IF ( ionode_pool ) DEALLOCATE( proj_aux, ovps_aux )
   !
   RETURN
   !

@@ -12,7 +12,8 @@ MODULE gipaw_module
   ! ... This module contains the variables used for GIPAW calculations
   !
   USE kinds, ONLY : DP
-  USE parameters, ONLY : npk, ntypx, lmaxx
+  USE parameters, ONLY : npk, ntypx
+  USE upf_params, ONLY : lmaxx
 
   IMPLICIT NONE
   SAVE
@@ -249,7 +250,7 @@ CONTAINS
     nwordwfc = nbnd*npwx*npol
     CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst )
 
-    ! ... Needed for LDA+U
+    ! ... Needed for DFT+U(+V)
     ! ... iunhub contains the (orthogonalized) atomic wfcs * S
     !
     nwordwfcU = npwx*nwfcU*npol

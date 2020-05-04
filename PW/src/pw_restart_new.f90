@@ -74,7 +74,6 @@ MODULE pw_restart_new
       USE uspp,                 ONLY : okvan
       USE paw_variables,        ONLY : okpaw
       USE uspp_param,           ONLY : upf
-      USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, ibrav
       USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, zv, amass
       USE noncollin_module,     ONLY : noncolin, npol
@@ -97,8 +96,10 @@ MODULE pw_restart_new
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
       USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, &
                                        Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_J, &
-                                       Hubbard_alpha, Hubbard_J0, Hubbard_beta,&
-                                       is_hubbard
+                                       Hubbard_l_back, Hubbard_l1_back, Hubbard_V, &
+                                       Hubbard_alpha, Hubbard_alpha_back, nsg, &
+                                       Hubbard_J0, Hubbard_beta, Hubbard_U_back, &
+                                       is_hubbard, is_hubbard_back, backall
       USE spin_orb,             ONLY : lspinorb, domag
       USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
                                        t_rev, sname, time_reversal, no_t_rev,&
@@ -144,7 +145,7 @@ MODULE pw_restart_new
       !
       LOGICAL, INTENT(IN) :: only_init, wf_collect
       !
-      CHARACTER(LEN=20)     :: dft_name
+      CHARACTER(LEN=26)     :: dft_name
       CHARACTER(LEN=8)      :: smearing_loc
       CHARACTER(LEN=8), EXTERNAL :: schema_smearing
       INTEGER               :: i, ig, ngg, ipol
@@ -176,7 +177,9 @@ MODULE pw_restart_new
       LOGICAL             :: scf_has_converged 
       INTEGER             :: itemp = 1
       REAL(DP),ALLOCATABLE :: london_c6_(:), bp_el_pol(:), bp_ion_pol(:), U_opt(:), J0_opt(:), alpha_opt(:), &
-                              J_opt(:,:), beta_opt(:) 
+                              J_opt(:,:), beta_opt(:), U_back_opt(:), alpha_back_opt(:)
+      INTEGER,ALLOCATABLE :: Hubbard_l_back_opt(:), Hubbard_l1_back_opt(:)
+      LOGICAL, ALLOCATABLE :: backall_opt(:) 
       CHARACTER(LEN=3),ALLOCATABLE :: species_(:)
       CHARACTER(LEN=20),TARGET   :: dft_nonlocc_
       INTEGER,TARGET             :: dftd3_version_
@@ -422,19 +425,29 @@ MODULE pw_restart_new
          END IF 
          IF ( lda_plus_u) THEN 
             ALLOCATE (dftU_obj)  
-            CALL check_and_allocate(U_opt, Hubbard_U)
-            CALL check_and_allocate(J0_opt, Hubbard_J0) 
-            CALL check_and_allocate(alpha_opt, Hubbard_alpha) 
-            CALL check_and_allocate(beta_opt, Hubbard_beta) 
+            CALL check_and_allocate_real(U_opt, Hubbard_U)
+            CALL check_and_allocate_real(J0_opt, Hubbard_J0) 
+            CALL check_and_allocate_real(alpha_opt, Hubbard_alpha) 
+            CALL check_and_allocate_real(beta_opt, Hubbard_beta) 
+            CALL check_and_allocate_real(U_back_opt, Hubbard_U_back)
+            CALL check_and_allocate_real(alpha_back_opt, Hubbard_alpha_back)
+            CALL check_and_allocate_integer(Hubbard_l_back_opt, Hubbard_l_back)
+            CALL check_and_allocate_integer(Hubbard_l1_back_opt, Hubbard_l1_back)
+            CALL check_and_allocate_logical(backall_opt, backall)
             IF ( ANY(Hubbard_J(:,1:nsp) /= 0.0_DP)) THEN
                ALLOCATE (J_opt(3,nsp)) 
                J_opt(:, 1:nsp) = Hubbard_J(:, 1:nsp) 
-            END IF 
-            CALL qexsd_init_dftU (dftU_obj, NSP = nsp, SPECIES = atm(1:nsp), ITYP = ityp(1:nat),                     &
-                                  IS_HUBBARD = is_hubbard, PSD = upf(1:nsp)%psd, NONCOLIN = noncolin, U =U_opt, &
-                                  LDA_PLUS_U_KIND = lda_plus_u_kind, U_PROJECTION_TYPE = U_projection,               &
-                                  J0 = J0_opt, alpha = alpha_opt, beta = beta_opt, J = J_opt,        & 
-                                  starting_ns = starting_ns_eigenvalue, Hub_ns = rho%ns, Hub_ns_nc = rho%ns_nc ) 
+            END IF
+            ! 
+            ! Currently Hubbard_V, rho%nsb, and nsg are not written (read) to (from) XML 
+            ! 
+            CALL qexsd_init_dftU (dftU_obj, NSP = nsp, PSD = upf(1:nsp)%psd, SPECIES = atm(1:nsp), ITYP = ityp(1:nat), &
+                                  IS_HUBBARD = is_hubbard, IS_HUBBARD_BACK = is_hubbard_back,  &
+                                  BACKALL = backall, HUBB_L_BACK = Hubbard_l_back_opt, HUBB_L1_BACK = Hubbard_l1_back_opt, &
+                                  NONCOLIN = noncolin, LDA_PLUS_U_KIND = lda_plus_u_kind, U_PROJECTION_TYPE = U_projection, &
+                                  U =U_opt, U_back = U_back_opt, J0 = J0_opt, J = J_opt, &
+                                  alpha = alpha_opt, beta = beta_opt, alpha_back = alpha_back_opt,  & 
+                                  starting_ns = starting_ns_eigenvalue, Hub_ns = rho%ns, Hub_ns_nc = rho%ns_nc)
          END IF 
          dft_name = get_dft_short()
          inlc = get_inlc()
@@ -667,7 +680,7 @@ MODULE pw_restart_new
       RETURN
        !
     CONTAINS
-       SUBROUTINE check_and_allocate(alloc, mydata)
+       SUBROUTINE check_and_allocate_real(alloc, mydata)
           IMPLICIT NONE
           REAL(DP),ALLOCATABLE  :: alloc(:) 
           REAL(DP)              :: mydata(:)  
@@ -676,7 +689,29 @@ MODULE pw_restart_new
              alloc(1:nsp) = mydata(1:nsp) 
           END IF 
           RETURN
-       END SUBROUTINE check_and_allocate 
+       END SUBROUTINE check_and_allocate_real 
+       !
+       SUBROUTINE check_and_allocate_integer(alloc, mydata)
+          IMPLICIT NONE
+          INTEGER,ALLOCATABLE  :: alloc(:)
+          INTEGER              :: mydata(:)
+          IF ( ANY(mydata(1:nsp) /= -1)) THEN
+             ALLOCATE(alloc(nsp))
+             alloc(1:nsp) = mydata(1:nsp)
+          END IF
+          RETURN
+       END SUBROUTINE check_and_allocate_integer
+       !
+       SUBROUTINE check_and_allocate_logical(alloc, mydata)
+          IMPLICIT NONE
+          LOGICAL,ALLOCATABLE  :: alloc(:)
+          LOGICAL              :: mydata(:)
+          IF ( ANY(mydata(1:nsp))) THEN
+             ALLOCATE(alloc(nsp))
+             alloc(1:nsp) = mydata(1:nsp)
+          END IF
+          RETURN
+       END SUBROUTINE check_and_allocate_logical
        !
     END SUBROUTINE pw_write_schema
     !
@@ -941,9 +976,10 @@ MODULE pw_restart_new
       USE symm_base,       ONLY : nrot, nsym, invsym, s, ft, irt, t_rev, &
            sname, inverse_s, s_axis_to_cart, &
            time_reversal, no_t_rev, nosym, checkallsym
-      USE ldaU,            ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_lmax, &
-           Hubbard_l, Hubbard_U, Hubbard_J, Hubbard_alpha, &
-           Hubbard_J0, Hubbard_beta, U_projection
+      USE ldaU,            ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_lmax, Hubbard_lmax_back, &
+                                  Hubbard_l, Hubbard_l_back, Hubbard_l1_back, backall, &
+                                  Hubbard_U, Hubbard_U_back, Hubbard_J, Hubbard_V, Hubbard_alpha, &
+                                  Hubbard_alpha_back, Hubbard_J0, Hubbard_beta, U_projection
       USE funct,           ONLY : set_exx_fraction, set_screening_parameter, &
            set_gau_parameter, enforce_input_dft,  &
            start_exx, dft_is_hybrid
@@ -973,7 +1009,8 @@ MODULE pw_restart_new
       !
       INTEGER  :: i, is, ik, ierr, dum1,dum2,dum3
       LOGICAL  :: magnetic_sym, lvalid_input, lfixed
-      CHARACTER(LEN=20) :: dft_name, vdw_corr, occupations
+      CHARACTER(LEN=26) :: dft_name
+      CHARACTER(LEN=20) :: vdw_corr, occupations
       CHARACTER(LEN=320):: filename
       REAL(dp) :: exx_fraction, screening_parameter
       TYPE (output_type)        :: output_obj 
@@ -1045,7 +1082,8 @@ MODULE pw_restart_new
            dft_name, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
            exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
            lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax, &
-           Hubbard_U, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
+           Hubbard_l_back, Hubbard_l1_back, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
+           Hubbard_U, Hubbard_U_back, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
            vdw_corr, scal6, lon_rcut, vdw_isolated )
       !! More DFT initializations
       CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, lxdm )
