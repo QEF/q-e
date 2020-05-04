@@ -9,7 +9,8 @@ MODULE dft_par_mod
     !
     INTEGER  :: iexch, icorr
     LOGICAL  :: exx_started !, is_there_finite_size_corr
-    REAL(DP) :: finite_size_cell_volume, exx_fraction
-    REAL(DP) :: rho_threshold
+    REAL(DP) :: finite_size_cell_volume
+    REAL(DP) :: exx_fraction = 0.0_DP
+    REAL(DP) :: rho_threshold = 1.E-10_DP
     !
 END MODULE

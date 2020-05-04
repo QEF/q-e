@@ -49,9 +49,6 @@ SUBROUTINE xc_lda_l( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   REAL(DP) :: rho, rs
   REAL(DP) :: ex, ec, ec_
   REAL(DP) :: vx, vc, vc_
-  !REAL(DP) :: exx_fraction
-  !REAL(DP) :: finite_size_cell_volume
-  !LOGICAL :: exx_started, is_there_finite_size_corr
   REAL(DP), PARAMETER :: third = 1.0_DP/3.0_DP, &
                          pi34 = 0.6203504908994_DP, e2 = 2.0_DP
   !                      pi34 = (3/4pi)^(1/3)
@@ -62,19 +59,6 @@ SUBROUTINE xc_lda_l( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
   ntids = omp_get_num_threads()
 #endif
-  !
-  !exx_started = exx_is_active()                  !....to adjust...
-  !exx_fraction = get_exx_fraction()
-  
-  rho_threshold = 1.E-10_DP                       !....out
-   
-  !IF (iexch==8 .OR. icorr==10) THEN
-  !  CALL get_finite_size_cell_volume( is_there_finite_size_corr, &
-  !                                    finite_size_cell_volume )
-  !  
-  !  IF (.NOT. is_there_finite_size_corr) CALL errore( 'XC',&
-  !      'finite size corrected exchange used w/o initialization', 1 )
-  !ENDIF
   !
 !$omp parallel if(ntids==1)
 !$omp do private( rho, rs, ex, ec, ec_, vx, vc, vc_ )

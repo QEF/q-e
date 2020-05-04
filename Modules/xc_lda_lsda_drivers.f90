@@ -12,7 +12,7 @@ USE kinds,     ONLY: DP
 USE funct,     ONLY: get_iexch, get_icorr, is_libxc,  &
                      exx_is_active, get_exx_fraction, &
                      get_finite_size_cell_volume
-USE ldaxc_interfaces, ONLY: xc_lda
+USE ldaxc_interfaces, ONLY: xc_lda, get_ldaxc_param, get_lda_threshold
 !
 IMPLICIT NONE
 !
@@ -96,7 +96,10 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
   REAL(DP), ALLOCATABLE :: arho(:), zeta(:)
   !
-  INTEGER :: ir, iexch, icorr
+  INTEGER  :: ir, iexch, icorr
+  REAL(DP) :: exx_fraction
+  REAL(DP) :: finite_size_cell_volume
+  LOGICAL  :: exx_started, is_there_finite_size_corr
   !
   iexch = get_iexch()
   icorr = get_icorr()
@@ -169,6 +172,18 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
      SELECT CASE( sr_d )
      CASE( 1 )
         !
+        exx_started  = exx_is_active()
+        exx_fraction = get_exx_fraction()
+        CALL get_ldaxc_param( 0.d0, exx_started, exx_fraction )
+        CALL get_lda_threshold( rho_threshold )
+        IF (iexch==8 .OR. icorr==10) THEN
+          CALL get_finite_size_cell_volume( is_there_finite_size_corr, &
+                                            finite_size_cell_volume )
+          CALL get_ldaxc_param( finite_size_cell_volume )
+          !
+          IF (.NOT. is_there_finite_size_corr) CALL errore( 'XC',&
+              'finite size corrected exchange used w/o initialization', 1 )
+        ENDIF
         CALL xc_lda( length, ABS(rho_in(:,1)), ex_out, ec_out, vx_out(:,1), vc_out(:,1) )
         !
      CASE( 2 )
@@ -226,6 +241,19 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   SELECT CASE( sr_d )
   CASE( 1 )
      !
+     exx_started  = exx_is_active()
+     exx_fraction = get_exx_fraction()
+     CALL get_ldaxc_param( 0.d0, exx_started, exx_fraction )
+     CALL get_lda_threshold( rho_threshold )
+     IF (iexch==8 .OR. icorr==10) THEN
+       CALL get_finite_size_cell_volume( is_there_finite_size_corr, &
+                                         finite_size_cell_volume )
+       CALL get_ldaxc_param( finite_size_cell_volume )
+       !
+       IF (.NOT. is_there_finite_size_corr) CALL errore( 'XC',&
+           'finite size corrected exchange used w/o initialization', 1 )
+     ENDIF
+     !
      CALL xc_lda( length, ABS(rho_in(:,1)), ex_out, ec_out, vx_out(:,1), vc_out(:,1) )
      !
   CASE( 2 )
@@ -267,7 +295,6 @@ END SUBROUTINE xc
 !----------------------------------------------------------------------------
 !-------  LDA-LSDA DRIVERS --------------------------------------------------
 !----------------------------------------------------------------------------
-!
 !
 !-----------------------------------------------------------------------------
 SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )

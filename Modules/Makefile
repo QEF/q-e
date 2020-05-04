@@ -155,7 +155,7 @@ w0gauss.o \
 w1gauss.o \
 deviatoric.o
 
-TLDEPS=libfox libutil libla libfft
+TLDEPS= libfox libutil libla libfft librxc
 
 all : libqemod.a
 

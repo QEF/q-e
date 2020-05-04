@@ -820,6 +820,14 @@ CONTAINS
     !
     dft_defined = .TRUE.
     !
+#if defined(__LIBXC)
+    IF (.NOT. is_libxc(1) .AND. .NOT. is_libxc(2)) CALL get_ldaxc_indexes( iexch, icorr )
+    IF (.NOT. is_libxc(1)) CALL get_ldaxc_indexes( iexch, 0 )
+    IF (.NOT. is_libxc(2)) CALL get_ldaxc_indexes( 0, icorr )
+#else
+    CALL get_ldaxc_indexes( iexch, icorr )
+#endif
+    !
     !dft_longname = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
     !     &//gradc (igcc) //'-'// nonlocc(inlc)
     !
@@ -856,25 +864,6 @@ CONTAINS
        CALL errore( 'set_dft_from_name', ' conflicting values for inlc', 1 )
     ENDIF
     !
-    
-    
-    IF ( iexch==8 .OR. icorr==10 ) THEN         !  'sla+kzk'
-       !
-       IF ( .NOT. finite_size_cell_volume_set) CALL errore('XC', &
-             'finite size corrected exchange used w/o initialization',1)
-       !
-       CALL get_ldaxc_indexes( iexch, icorr )
-       CALL get_ldaxc_param( finite_size_cell_volume )   !...to set properly...
-       !
-    ELSE
-       !
-       CALL get_ldaxc_indexes( iexch, icorr )
-       !
-    ENDIF
-    
-    
-    
-    
     RETURN
     !
   END SUBROUTINE set_dft_from_name
