@@ -758,6 +758,10 @@
     CALL load_rebal
   ENDIF
   !
+  IF (ephwrite .AND. mp_mesh_k) THEN
+    CALL load_rebal
+  ENDIF
+  !
   ! In the case of crystal ASR
   IF (lifc) THEN
     !
@@ -884,9 +888,7 @@
     !
     totq = 0
     !
-    ! Check if we are doing Superconductivity
-    ! If Eliashberg, then do not use fewer q-points within the fsthick window.
-    IF (ephwrite .OR. wfcelec) THEN
+    IF (wfcelec) THEN
       !
       totq = nqf
       ALLOCATE(selecq(nqf), STAT = ierr)
@@ -895,7 +897,7 @@
         selecq(iq) = iq
       ENDDO
       !
-    ELSE ! ephwrite
+    ELSE ! wfcelec
       ! Check if the file has been pre-computed
       IF (mpime == ionode_id) THEN
         INQUIRE(FILE = 'selecq.fmt', EXIST = exst)
@@ -923,7 +925,7 @@
       WRITE(stdout, '(5x,a,i8,a)')'We only need to compute ', totq, ' q-points'
       WRITE(stdout, '(5x,a)')' '
       !
-    ENDIF ! ephwrite
+    ENDIF ! wfcelec
     !
     ! -----------------------------------------------------------------------
     ! Possible restart during step 1)
@@ -1114,6 +1116,38 @@
         ! Now, the iq_restart point has been done, so we need to do the next
         iq_restart = iq_restart + 1
         WRITE(stdout, '(5x,a,i8,a)')'We restart from ', iq_restart, ' q-points'
+        !
+      ENDIF ! exst
+    ENDIF
+    !
+    ! Restart in ephwrite case
+    IF (ephwrite) THEN
+      IF (mpime == ionode_id) THEN
+        INQUIRE(FILE = 'restart_ephmat.fmt', EXIST = exst)
+      ENDIF
+      CALL mp_bcast(exst, ionode_id, world_comm)
+      !
+      IF (exst) THEN
+        IF (mpime == ionode_id) THEN
+          OPEN(UNIT = iunrestart, FILE = 'restart_ephmat.fmt', STATUS = 'old', IOSTAT = ios)
+          READ(iunrestart, *) iq_restart
+          READ(iunrestart, *) npool_tmp
+          CLOSE(iunrestart)
+          !
+        ENDIF
+        CALL mp_bcast(iq_restart, ionode_id, world_comm)
+        CALL mp_bcast(npool_tmp, ionode_id, world_comm)
+        IF (npool /= npool_tmp) CALL errore('ephwann_shuffle','Number of cores is different',1)
+        !
+        iq_restart = iq_restart + 1
+        !
+        IF (iq_restart > totq) THEN
+          WRITE(stdout, '(5x,a/)') 'All q-points are done! No need to restart '
+        ELSE
+          WRITE(stdout, '(5x,a,i8,a/)') 'We restart from ', iq_restart, ' q-points'
+        ENDIF
+        !
+        IF (iq_restart > 1) first_cycle = .TRUE.
         !
       ENDIF ! exst
     ENDIF
@@ -1403,12 +1437,13 @@
       IF (specfun_ph) CALL spectral_func_ph_q(iqq, iq, totq)
       IF (specfun_pl .AND. .NOT. vme) CALL spectral_func_pl_q(iqq, iq, totq, first_cycle)
       IF (ephwrite) THEN
-        IF (iq == 1) THEN
+        IF (first_cycle .OR. iq == 1) THEN
            CALL kmesh_fine
            CALL kqmap_fine
+           CALL count_kpoints
+           first_cycle = .FALSE.
         ENDIF
-        CALL write_ephmat(iq)
-        CALL count_kpoints(iq)
+        CALL write_ephmat(iqq, iq)
       ENDIF
       !
       IF (.NOT. scatread) THEN
@@ -1704,6 +1739,12 @@
   ENDIF ! (iterative_bte .AND. epmatkqread)
   !
   IF (mp_mesh_k .AND. iterative_bte) THEN
+    DEALLOCATE(map_rebal, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating map_rebal', 1)
+    DEALLOCATE(map_rebal_inv, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating map_rebal_inv', 1)
+  ENDIF
+  IF (mp_mesh_k .AND. ephwrite) THEN
     DEALLOCATE(map_rebal, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating map_rebal', 1)
     DEALLOCATE(map_rebal_inv, STAT = ierr)

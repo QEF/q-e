@@ -1289,7 +1289,7 @@
     USE mp,            ONLY : mp_sum, mp_bcast
     USE constants_epw, ONLY : twopi, ci, zero, eps6, ryd2ev, czero
     USE epwcom,        ONLY : nbndsub, fsthick, use_ws, mp_mesh_k, nkf1, nkf2, &
-                              nkf3, iterative_bte, restart_step, scissor
+                              nkf3, iterative_bte, restart_step, scissor, ephwrite
     USE noncollin_module, ONLY : noncolin
     USE pwcom,         ONLY : ef, nelec
     USE cell_base,     ONLY : bg
@@ -1458,6 +1458,13 @@
             bztoibz(:) = bztoibz_tmp(:)
           ENDIF
           !
+          IF (ephwrite) THEN
+            bztoibz_tmp(:) = 0
+            DO ikbz = 1, nkf1 * nkf2 * nkf3
+              bztoibz_tmp(ikbz) = map_rebal(bztoibz(ikbz))
+           ENDDO
+            bztoibz(:) = bztoibz_tmp(:)
+          ENDIF
           !
         ENDIF ! mp_mesh_k
         !
