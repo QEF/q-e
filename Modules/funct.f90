@@ -420,7 +420,7 @@ CONTAINS
     LOGICAL :: dft_defined = .FALSE.
     LOGICAL :: check_libxc
 #if defined(__LIBXC)
-    INTEGER :: ii, id_vec(6), fkind_v(6), n_ext_params
+    INTEGER :: ii, id_vec(6), n_ext_params
     TYPE(xc_f03_func_t) :: xc_func03
     TYPE(xc_f03_func_info_t) :: xc_info03
 #endif
@@ -742,80 +742,52 @@ CONTAINS
     ! If the DFT was not yet defined, check every part of the string
     !----------------------------------------------------------------
     !
-    is_libxc(:) = .FALSE.
-    !
     IF (.NOT. dft_defined) THEN
-      !
-#if defined(__LIBXC)
-      !
-      CALL matching_libxc( dftout )
-      !
-      !------------------------------------------------------------------
-      ! Checks whether external parameters are required by the libxc
-      ! functionals (if present)
-      !------------------------------------------------------------------
-      !
-      id_vec(1) = iexch  ;  id_vec(2) = icorr
-      id_vec(3) = igcx   ;  id_vec(4) = igcc
-      id_vec(5) = imeta  ;  id_vec(6) = imetac
-      !
-      fkind_v = 0
-      n_ext_params = 0
-      DO ii = 1, 6
-        IF (is_libxc(ii)) THEN
-          CALL xc_f03_func_init( xc_func03, id_vec(ii), 1 )
-          xc_info03 = xc_f03_func_get_info(xc_func03)
-          n_ext_params = n_ext_params + xc_f03_func_info_get_n_ext_params(xc_info03)
-          fkind_v(ii) = xc_f03_func_info_get_kind( xc_info03 )
-          CALL xc_f03_func_end( xc_func03 )
-        ENDIF
-      ENDDO
-      !
-      IF ( n_ext_params/=0 ) THEN
-         WRITE( stdout, '(/5X,"WARNING: one or more of the chosen libxc functionals depend",&
-                         &/5X," on external parameters: their correct operation is not guaranteed.")' )
-      ENDIF
-#endif
-      !----------------------------------------------------------------
-      ! Last check
-      ! No more defaults, the code exits if the dft is not defined
-      !----------------------------------------------------------------
-      !
-      IF ( .NOT. is_libxc(1) ) iexch = matching( dftout, nxc,   exc   )
-      IF ( .NOT. is_libxc(2) ) icorr = matching( dftout, ncc,   corr  )
-      IF ( .NOT. is_libxc(3) ) igcx  = matching( dftout, ngcx,  gradx )
-      IF ( .NOT. is_libxc(4) ) igcc  = matching( dftout, ngcc,  gradc )
-      IF ( .NOT. is_libxc(5) ) imeta = matching( dftout, nmeta, meta  )
-      IF ( .NOT. is_libxc(6) ) imetac = 0
-      inlc  = matching( dftout, ncnl, nonlocc )
-      !
+       !
+       is_libxc(:) = .FALSE.
+       !
+       iexch = matching( dftout, nxc,   exc   )
+       icorr = matching( dftout, ncc,   corr  )
+       igcx  = matching( dftout, ngcx,  gradx )
+       igcc  = matching( dftout, ngcc,  gradc )
+       imeta = matching( dftout, nmeta, meta  )
+       imetac = 0
+       inlc  = matching( dftout, ncnl, nonlocc )
+       !
     ENDIF
     !
 #if defined(__LIBXC)
-    !  ... Compatibility checks for libxc functionals
-    ! LDA:
-    IF (icorr/=0 .AND. fkind_v(1)==XC_EXCHANGE_CORRELATION)  &
-       CALL infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION functional has &
-                    &been found together with a correlation one (LDA)' )
-    ! GGA:
-    IF (igcc/=0 .AND. fkind_v(3)==XC_EXCHANGE_CORRELATION)   &
-       CALL infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION functional has &
-                    &been found together with a correlation one (GGA)' )
+    IF (.NOT. dft_defined) CALL matching_libxc( dftout )
     !
-    IF ( (is_libxc(3).AND.iexch/=0) .OR. (is_libxc(4).AND. icorr/=0) )    &
-       CALL infomsg( 'matching_libxc', 'WARNING: an LDA functional has been found, but &
-                    &libxc GGA functionals already include the LDA term' )
-    ! mGGA:
-    ! (imeta defines both exchange and correlation term for q-e mGGA functionals)
-    IF (imeta/=0 .AND. (.NOT. is_libxc(5)) .AND. imetac/=0)   &
-       CALL errore( 'matching_libxc', 'Two conflicting metaGGA functionals &
-                    &have been found', 1 )
+    !------------------------------------------------------------------
+    ! Checks whether external parameters are required by the libxc
+    ! functionals (if present)
+    !------------------------------------------------------------------
     !
-    IF (imetac/=0 .AND. fkind_v(5)==XC_EXCHANGE_CORRELATION)  &   
-       CALL infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION functional has &   
-                     &been found together with a correlation one (mGGA)' )
+    id_vec(1) = iexch  ;  id_vec(2) = icorr
+    id_vec(3) = igcx   ;  id_vec(4) = igcc
+    id_vec(5) = imeta  ;  id_vec(6) = imetac
     !
+    n_ext_params = 0
+    DO ii = 1, 6
+      IF (is_libxc(ii)) THEN
+        CALL xc_f03_func_init( xc_func03, id_vec(ii), 1 )
+        xc_info03 = xc_f03_func_get_info(xc_func03)
+        n_ext_params = n_ext_params + xc_f03_func_info_get_n_ext_params(xc_info03)
+        CALL xc_f03_func_end( xc_func03 )
+      ENDIF
+    ENDDO
+    !
+    IF ( n_ext_params/=0 ) THEN
+       WRITE( stdout, '(/5X,"WARNING: one or more of the chosen libxc functionals depend",&
+                       &/5X," on external parameters: their correct operation is not guaranteed.")' )
+    ENDIF
 #endif
+    !
+    !----------------------------------------------------------------
+    ! Last check
+    ! No more defaults, the code exits if the dft is not defined
+    !----------------------------------------------------------------
     !
     ! Back compatibility - TO BE REMOVED
     !
@@ -898,6 +870,9 @@ CONTAINS
     DO i = n, 0, -1
        IF ( matches(name(i), TRIM(dft)) ) THEN
           !
+#if defined(__LIBXC)
+          IF ( matching == notset ) matching = i
+#else
           IF ( matching == notset ) THEN
            !WRITE(*, '("matches",i2,2X,A,2X,A)') i, name(i), TRIM(dft)
            matching = i
@@ -906,6 +881,7 @@ CONTAINS
                                   matching, TRIM(name(matching))
              CALL errore( 'set_dft', 'two conflicting matching values', 1 )
           ENDIF
+#endif
        ENDIF
     ENDDO
     !
@@ -926,9 +902,9 @@ CONTAINS
     !
     CHARACTER(LEN=*), INTENT(IN) :: dft
     !
-    CHARACTER(LEN=128) :: name
+    CHARACTER(LEN=256) :: name
     INTEGER :: i, l, prev_len(6), fkind, fkind_v(3), family
-    INTEGER, PARAMETER :: ID_MAX_LIBXC=700
+    INTEGER, PARAMETER :: ID_MAX_LIBXC=600
     TYPE(xc_f03_func_t) :: xc_func
     TYPE(xc_f03_func_info_t) :: xc_info
     LOGICAL, EXTERNAL :: matches
@@ -944,9 +920,11 @@ CONTAINS
           name(l:l) = capital( name(l:l) )
        ENDDO
        !
-       IF ( TRIM(name)=='' ) CYCLE
+       IF ( TRIM(name) == '' ) CYCLE
        !
        IF ( matches(TRIM(name), TRIM(dft)) ) THEN
+          !
+          !WRITE(*, '("matches libxc",i2,2X,A,2X,A)') i, TRIM(name), TRIM(dft)
           !
           fkind=-100 ; family=-100
           CALL xc_f03_func_init( xc_func, i, 1 )
@@ -998,6 +976,33 @@ CONTAINS
        !
     ENDDO
     !
+    ! ... overlaps check (between qe and libxc names)
+    !
+    IF (ANY(.NOT.is_libxc(:)).AND.ANY(is_libxc(:))) CALL check_overlaps_qe_libxc( dft )
+    !
+    ! ... Compatibility checks
+    !
+    ! LDA:
+    IF (icorr/=0 .AND. fkind_v(1)==XC_EXCHANGE_CORRELATION)  &
+       CALL infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION functional has &
+                    &been found together with a correlation one (LDA)' )
+    ! GGA:
+    IF (igcc/=0 .AND. fkind_v(2)==XC_EXCHANGE_CORRELATION)   &
+       CALL infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION functional has &
+                    &been found together with a correlation one (GGA)' )
+    !
+    IF ( (is_libxc(3).AND.iexch/=0) .OR. (is_libxc(4).AND. icorr/=0) )    &
+       CALL infomsg( 'matching_libxc', 'WARNING: an LDA functional has been found, but &
+                    &libxc GGA functionals already include the LDA part' )
+    ! mGGA:
+    ! (imeta defines both exchange and correlation term for q-e mGGA functionals)
+    IF (imeta/=0 .AND. (.NOT. is_libxc(5)) .AND. imetac/=0)   &
+       CALL errore( 'matching_libxc', 'Two conflicting metaGGA functionals &
+                    &have been found', 1 )
+    !
+    IF (imetac/=0 .AND. fkind_v(3)==XC_EXCHANGE_CORRELATION)  &   
+       CALL infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION functional has &   
+                     &been found together with a correlation one (mGGA)' )
     !   
   END SUBROUTINE matching_libxc
   !
@@ -1075,10 +1080,8 @@ CONTAINS
     imeta = id_vec(5) ;  imetac = id_vec(6)
     !
   END SUBROUTINE
-  !
 #endif
   !
-  !--------------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
   SUBROUTINE set_auxiliary_flags
