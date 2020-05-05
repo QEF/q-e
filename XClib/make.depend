@@ -9,6 +9,6 @@ exchange_lda.o : kind_l.o
 exchange_lda.o : constants_l.o
 get_ldaxc.o : kind_l.o
 get_ldaxc.o : dft_par_mod.o
+external.o : kind_l.o
 constants_l.o : kind_l.o
 dft_par_mod.o : kind_l.o
-kind_l.o :

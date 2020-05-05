@@ -10,6 +10,7 @@ constants_l.o  \
 dft_par_mod.o  \
 ldaxc_interfaces.o  \
 correlation_lda.o  \
+external.o \
 get_ldaxc.o  \
 exchange_lda.o  \
 xc_lda.o

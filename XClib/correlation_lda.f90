@@ -6,9 +6,9 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-! MODULE corr_lda !<GPU:corr_lda=>corr_lda_gpu>
+MODULE corr_lda_l !<GPU:corr_lda=>corr_lda_gpu>
 
-! CONTAINS
+ CONTAINS
 
 !-------------------------------------------------------------------------
 SUBROUTINE pz_l( rs, iflag, ec, vc )                    !<GPU:DEVICE>
@@ -479,4 +479,4 @@ SUBROUTINE gl_l( rs, ec, vc )                    !<GPU:DEVICE>
 END SUBROUTINE gl_l
 !
 !
-! END MODULE
+END MODULE

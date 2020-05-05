@@ -105,7 +105,6 @@ benchmark_libxc.o : ../../Modules/funct.o
 benchmark_libxc.o : ../../Modules/libxc.o
 benchmark_libxc.o : ../../Modules/xc_gga_drivers.o
 benchmark_libxc.o : ../../Modules/xc_lda_lsda_drivers.o
-benchmark_libxc.o : ../../XClib/ldaxc_interfaces.o
 benchmark_libxc.o : ../../Modules/xc_mgga_drivers.o
 >>>>>>> XClib - lda - scratch
 >>>>>>> XClib - lda - scratch

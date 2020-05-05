@@ -6,11 +6,11 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-! MODULE exch_lda  !<GPU:exch_lda=>exch_lda_gpu>
+MODULE exch_lda_l  !<GPU:exch_lda=>exch_lda_gpu>
 !
-! ! Module containing LDA functionals.
+!  Module containing LDA functionals.
 !
-! CONTAINS
+ CONTAINS
 !-----------------------------------------------------------------------
 SUBROUTINE slater_l( rs, ex, vx )                    !<GPU:DEVICE>
   !---------------------------------------------------------------------
@@ -173,4 +173,4 @@ SUBROUTINE slaterKZK_l( rs, ex, vx, vol )                 !<GPU:DEVICE>
 END SUBROUTINE slaterKZK_l
 !
 !
-! END MODULE
+END MODULE

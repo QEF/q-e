@@ -25,8 +25,8 @@ SUBROUTINE xc_lda_l( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   USE kind_l, ONLY: DP
   USE dft_par_mod
   
-  ! USE exch_lda   !-gpu
-  ! USE corr_lda   !-gpu
+  USE exch_lda_l
+  USE corr_lda_l
   !
   IMPLICIT NONE
   !

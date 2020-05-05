@@ -15,7 +15,6 @@ MODULE ldaxc_interfaces
      !
      SUBROUTINE get_ldaxclib( iexch_, icorr_ )
        !
-       !USE dft_par_mod
        USE kind_l,  ONLY: DP
        IMPLICIT NONE
        INTEGER, INTENT(IN) :: iexch_, icorr_
@@ -28,7 +27,6 @@ MODULE ldaxc_interfaces
      !
      SUBROUTINE get_ldaxcparlib( finite_size_cell_volume_, exx_started_, exx_fraction_ )
        !
-       !USE dft_par_mod
        USE kind_l,  ONLY: DP
        IMPLICIT NONE
        REAL(DP), OPTIONAL, INTENT(IN) :: finite_size_cell_volume_
@@ -43,7 +41,6 @@ MODULE ldaxc_interfaces
      !
      SUBROUTINE get_threshold( rho_threshold_ )
        !
-       !USE dft_par_mod
        USE kind_l,  ONLY: DP
        IMPLICIT NONE
        REAL(DP), INTENT(IN) :: rho_threshold_
@@ -69,11 +66,11 @@ MODULE ldaxc_interfaces
      !
   END INTERFACE
   !
-  !--------------------------------------------------------
+  !---PROVISIONAL .. for cases when functional routines are called outside xc-drivers---
   !
   INTERFACE SLATER
      !
-     SUBROUTINE slater_l( rs, ex, vx )
+     SUBROUTINE slater_ext( rs, ex, vx )
        !
        USE kind_l,  ONLY: DP
        IMPLICIT NONE
@@ -81,14 +78,14 @@ MODULE ldaxc_interfaces
        REAL(DP), INTENT(OUT) :: ex
        REAL(DP), INTENT(OUT) :: vx
        !
-     END SUBROUTINE slater_l
+     END SUBROUTINE slater_ext
      !
   END INTERFACE
   !
   !
   INTERFACE PZ
      !
-     SUBROUTINE pz_l( rs, iflag, ec, vc )
+     SUBROUTINE pz_ext( rs, iflag, ec, vc )
        !
        USE kind_l,  ONLY: DP
        IMPLICIT NONE
@@ -96,14 +93,14 @@ MODULE ldaxc_interfaces
        REAL(DP), INTENT(OUT) :: ec, vc
        INTEGER,  INTENT(IN)  :: iflag
        !
-     END SUBROUTINE pz_l
+     END SUBROUTINE pz_ext
      !
   END INTERFACE
   !
   !
   INTERFACE PW
      !
-     SUBROUTINE pw_l( rs, iflag, ec, vc )
+     SUBROUTINE pw_ext( rs, iflag, ec, vc )
        !
        USE kind_l,  ONLY: DP
        IMPLICIT NONE
@@ -111,7 +108,7 @@ MODULE ldaxc_interfaces
        REAL(DP), INTENT(OUT) :: ec, vc
        INTEGER,  INTENT(IN)  :: iflag
        !
-     END SUBROUTINE pw_l
+     END SUBROUTINE pw_ext
      !
   END INTERFACE
   !
