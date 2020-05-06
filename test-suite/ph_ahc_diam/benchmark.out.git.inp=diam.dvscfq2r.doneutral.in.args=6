@@ -1,0 +1,274 @@
+
+     Program DVSCF_Q2R v.6.5 starts on  9Apr2020 at 16:53:15 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     Fft bands division:     nmany     =       1
+
+     Reading xml data from directory:
+
+     ./diam.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+               file C.UPF: wavefunction(s)  3d renormalized
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         121     121     55                  893      893     229
+ 
+
+     Reading grid info from file diam.dyn0
+ 
+     Reading epsilon and Born effective charge from file
+     Done reading epsilon and Born effective charge
+ 
+     Allocating dvscf, shape    4096       6      27
+     Done allocating dvscf
+ 
+     Reading and rotating dvscf files (induced part of dvscf)
+ 
+     Number of q in the star =    1
+     List of q in the star:
+          1   0.000000000   0.000000000   0.000000000
+ 
+     Number of q in the star =    8
+     List of q in the star:
+          1  -0.333333333   0.333333333  -0.333333333
+          2   0.333333333   0.333333333  -0.333333333
+          3  -0.333333333  -0.333333333  -0.333333333
+          4   0.333333333  -0.333333333   0.333333333
+          5  -0.333333333   0.333333333   0.333333333
+          6   0.333333333  -0.333333333  -0.333333333
+          7  -0.333333333  -0.333333333   0.333333333
+          8   0.333333333   0.333333333   0.333333333
+ 
+     Number of q in the star =    6
+     List of q in the star:
+          1   0.000000000   0.666666667   0.000000000
+          2   0.000000000  -0.666666667   0.000000000
+          3   0.000000000   0.000000000  -0.666666667
+          4  -0.666666667   0.000000000   0.000000000
+          5   0.000000000   0.000000000   0.666666667
+          6   0.666666667   0.000000000   0.000000000
+ 
+     Number of q in the star =   12
+     List of q in the star:
+          1   0.666666667   0.000000000   0.666666667
+          2  -0.666666667   0.000000000  -0.666666667
+          3   0.666666667   0.000000000  -0.666666667
+          4  -0.666666667   0.000000000   0.666666667
+          5   0.666666667  -0.666666667   0.000000000
+          6   0.000000000  -0.666666667   0.666666667
+          7  -0.666666667   0.666666667   0.000000000
+          8  -0.666666667  -0.666666667   0.000000000
+          9   0.666666667   0.666666667   0.000000000
+         10   0.000000000   0.666666667   0.666666667
+         11   0.000000000   0.666666667  -0.666666667
+         12   0.000000000  -0.666666667  -0.666666667
+ 
+     Renormalize induced part of dvscf for charge neutrality
+     Charge neutrality done
+ 
+     Computing bare part of dvscf
+       1       2       3       4       5       6       7       8       9      10
+      11      12      13      14      15      16      17      18      19      20
+      21      22      23      24      25      26      27 
+     Computing and subtracting long-range part of dvscf
+     Long-range part done
+ 
+ 
+     Fourier transforming dvscf to w_pot, writing to file
+     unit_cell_index        1
+     rlatt_crys           -1          -1          -1
+     rlatt_cart       1.0000     -1.0000     -1.0000
+     sum_w_pot        9.174277        9.174277        9.174277
+     sum_w_pot       12.885070       12.885070       12.885070
+ 
+     unit_cell_index        2
+     rlatt_crys           -1          -1           0
+     rlatt_cart       0.5000     -0.5000     -1.0000
+     sum_w_pot       14.062851       14.062851       19.596086
+     sum_w_pot       19.278058       19.278058       23.929151
+ 
+     unit_cell_index        3
+     rlatt_crys           -1          -1           1
+     rlatt_cart       0.0000      0.0000     -1.0000
+     sum_w_pot        7.689830        7.689830       15.426501
+     sum_w_pot       10.719581       10.719581       12.225607
+ 
+     unit_cell_index        4
+     rlatt_crys           -1           0          -1
+     rlatt_cart       1.0000     -0.5000     -0.5000
+     sum_w_pot       19.596086       14.062851       14.062851
+     sum_w_pot       23.929151       19.278058       19.278058
+ 
+     unit_cell_index        5
+     rlatt_crys           -1           0           0
+     rlatt_cart       0.5000      0.0000     -0.5000
+     sum_w_pot       83.754093       93.220828       83.754093
+     sum_w_pot      116.074682      130.158029      116.074682
+ 
+     unit_cell_index        6
+     rlatt_crys           -1           0           1
+     rlatt_cart       0.0000      0.5000     -0.5000
+     sum_w_pot       42.574358       35.790136       30.573128
+     sum_w_pot       44.432920       29.645038       33.283583
+ 
+     unit_cell_index        7
+     rlatt_crys           -1           1          -1
+     rlatt_cart       1.0000      0.0000      0.0000
+     sum_w_pot       15.426501        7.689830        7.689830
+     sum_w_pot       12.225607       10.719581       10.719581
+ 
+     unit_cell_index        8
+     rlatt_crys           -1           1           0
+     rlatt_cart       0.5000      0.5000      0.0000
+     sum_w_pot       30.573128       35.790136       42.574358
+     sum_w_pot       33.283583       29.645038       44.432920
+ 
+     unit_cell_index        9
+     rlatt_crys           -1           1           1
+     rlatt_cart       0.0000      1.0000      0.0000
+     sum_w_pot        8.307747       10.352621        8.307747
+     sum_w_pot        6.745614       12.573697        6.745614
+ 
+     unit_cell_index       10
+     rlatt_crys            0          -1          -1
+     rlatt_cart       0.5000     -1.0000     -0.5000
+     sum_w_pot       14.062851       19.596086       14.062851
+     sum_w_pot       19.278058       23.929151       19.278058
+ 
+     unit_cell_index       11
+     rlatt_crys            0          -1           0
+     rlatt_cart       0.0000     -0.5000     -0.5000
+     sum_w_pot       93.220828       83.754093       83.754093
+     sum_w_pot      130.158029      116.074682      116.074682
+ 
+     unit_cell_index       12
+     rlatt_crys            0          -1           1
+     rlatt_cart      -0.5000      0.0000     -0.5000
+     sum_w_pot       35.790136       42.574358       30.573128
+     sum_w_pot       29.645038       44.432920       33.283583
+ 
+     unit_cell_index       13
+     rlatt_crys            0           0          -1
+     rlatt_cart       0.5000     -0.5000      0.0000
+     sum_w_pot       83.754093       83.754093       93.220828
+     sum_w_pot      116.074682      116.074682      130.158029
+ 
+     unit_cell_index       14
+     rlatt_crys            0           0           0
+     rlatt_cart       0.0000      0.0000      0.0000
+     sum_w_pot     2912.732016     2912.732016     2912.732016
+     sum_w_pot     2891.242884     2891.242884     2891.242884
+ 
+     unit_cell_index       15
+     rlatt_crys            0           0           1
+     rlatt_cart      -0.5000      0.5000      0.0000
+     sum_w_pot       78.149977       78.149977       94.574609
+     sum_w_pot       52.965409       52.965409       66.214638
+ 
+     unit_cell_index       16
+     rlatt_crys            0           1          -1
+     rlatt_cart       0.5000      0.0000      0.5000
+     sum_w_pot       30.573128       42.574358       35.790136
+     sum_w_pot       33.283583       44.432920       29.645038
+ 
+     unit_cell_index       17
+     rlatt_crys            0           1           0
+     rlatt_cart       0.0000      0.5000      0.5000
+     sum_w_pot       94.574609       78.149977       78.149977
+     sum_w_pot       66.214638       52.965409       52.965409
+ 
+     unit_cell_index       18
+     rlatt_crys            0           1           1
+     rlatt_cart      -0.5000      1.0000      0.5000
+     sum_w_pot       16.515157       27.183244       16.515157
+     sum_w_pot       12.690372       18.751905       12.690372
+ 
+     unit_cell_index       19
+     rlatt_crys            1          -1          -1
+     rlatt_cart       0.0000     -1.0000      0.0000
+     sum_w_pot        7.689830       15.426501        7.689830
+     sum_w_pot       10.719581       12.225607       10.719581
+ 
+     unit_cell_index       20
+     rlatt_crys            1          -1           0
+     rlatt_cart      -0.5000     -0.5000      0.0000
+     sum_w_pot       35.790136       30.573128       42.574358
+     sum_w_pot       29.645038       33.283583       44.432920
+ 
+     unit_cell_index       21
+     rlatt_crys            1          -1           1
+     rlatt_cart      -1.0000      0.0000      0.0000
+     sum_w_pot       10.352621        8.307747        8.307747
+     sum_w_pot       12.573697        6.745614        6.745614
+ 
+     unit_cell_index       22
+     rlatt_crys            1           0          -1
+     rlatt_cart       0.0000     -0.5000      0.5000
+     sum_w_pot       42.574358       30.573128       35.790136
+     sum_w_pot       44.432920       33.283583       29.645038
+ 
+     unit_cell_index       23
+     rlatt_crys            1           0           0
+     rlatt_cart      -0.5000      0.0000      0.5000
+     sum_w_pot       78.149977       94.574609       78.149977
+     sum_w_pot       52.965409       66.214638       52.965409
+ 
+     unit_cell_index       24
+     rlatt_crys            1           0           1
+     rlatt_cart      -1.0000      0.5000      0.5000
+     sum_w_pot       27.183244       16.515157       16.515157
+     sum_w_pot       18.751905       12.690372       12.690372
+ 
+     unit_cell_index       25
+     rlatt_crys            1           1          -1
+     rlatt_cart       0.0000      0.0000      1.0000
+     sum_w_pot        8.307747        8.307747       10.352621
+     sum_w_pot        6.745614        6.745614       12.573697
+ 
+     unit_cell_index       26
+     rlatt_crys            1           1           0
+     rlatt_cart      -0.5000      0.5000      1.0000
+     sum_w_pot       16.515157       16.515157       27.183244
+     sum_w_pot       12.690372       12.690372       18.751905
+ 
+     unit_cell_index       27
+     rlatt_crys            1           1           1
+     rlatt_cart      -1.0000      1.0000      1.0000
+     sum_w_pot       11.592164       11.592164       11.592164
+     sum_w_pot        9.035405        9.035405        9.035405
+ 
+ 
+ 
+     read_dvscf   :      0.05s CPU      0.05s WALL (       1 calls)
+     dvscf_bare   :      0.11s CPU      0.11s WALL (       1 calls)
+     mul_iqr      :      0.01s CPU      0.01s WALL (       1 calls)
+     dvscf_shift  :      0.02s CPU      0.02s WALL (      27 calls)
+     calc_w_pot   :      0.04s CPU      0.04s WALL (      27 calls)
+     write_w_pot  :      0.00s CPU      0.02s WALL (      27 calls)
+ 
+     DVSCF_Q2R    :      0.34s CPU      0.37s WALL
+
+ 
+   This run was terminated on:  16:53:15   9Apr2020            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

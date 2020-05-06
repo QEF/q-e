@@ -76,6 +76,8 @@ SUBROUTINE phq_readin()
   USE ldaU_ph,       ONLY : read_dns_bare, d2ns_type
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, do_long_range, &
       do_charge_neutral, wpot_dir
+  USE ahc,           ONLY : elph_ahc, ahc_dir, ahc_nbnd, ahc_nbndskip, &
+      skip_upperfan
   !
   IMPLICIT NONE
   !
@@ -121,7 +123,8 @@ SUBROUTINE phq_readin()
                        q_in_band_form, q2d, qplot, low_directory_check, &
                        lshift_q, read_dns_bare, d2ns_type, diagonalization, &
                        ldvscf_interpolate, do_long_range, do_charge_neutral, &
-                       wpot_dir
+                       wpot_dir, ahc_dir, ahc_nbnd, ahc_nbndskip, &
+                       skip_upperfan
 
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
@@ -200,7 +203,11 @@ SUBROUTINE phq_readin()
   ! do_long_range: if .true., add the long-range part of the potential to dvscf
   ! do_charge_neutral: if .true., impose the neutrality condition on Born effective charges
   ! wpot_dir: folder where w_pot binary files are located
-  ! 
+  ! ahc_dir: Directory where the output binary files for AHC e-ph coupling are written
+  ! ahc_nbnd: Number of bands where the electron self-energy is to be computed.
+  ! ahc_nbndskip: Number of bands to exclude when computing the self-energy.
+  ! skip_upperfan: If .true., skip the calculation of upper Fan self-energy.
+  !
   ! Note: meta_ionode is a single processor that reads the input
   !       (ionode is also a single processor but per image)
   !       Data read from input is subsequently broadcast to all processors
@@ -302,6 +309,13 @@ SUBROUTINE phq_readin()
   do_charge_neutral = .FALSE.
   do_long_range = .FALSE.
   wpot_dir = ' '
+  !
+  ! electron_phonon == 'ahc'
+  ahc_dir = ' '
+  ahc_nbnd = 0
+  ahc_nbndskip = 0
+  skip_upperfan = .FALSE.
+  elph_ahc = .FALSE.
   !
   drho_star%open = .FALSE.
   drho_star%basis = 'modes'
@@ -462,6 +476,14 @@ SUBROUTINE phq_readin()
      elph_simple=.false.
      trans = .false.
      elph_tetra = 3
+  CASE( 'ahc' )
+     elph = .true.
+     elph_ahc = .true.
+     elph_mat = .false.
+     elph_simple = .false.
+     elph_epa = .false.
+     trans = .false.
+     nogg = .true.
   CASE DEFAULT
      elph=.false.
      elph_mat=.false.
@@ -483,9 +505,9 @@ SUBROUTINE phq_readin()
   epsil = epsil .OR. lraman .OR. elop
 
   IF (modenum /= 0) search_sym=.FALSE.
-  
-  IF (elph_mat) THEN
-     trans=.false.
+
+  IF (elph_mat .OR. elph_ahc) THEN
+     trans = .FALSE.
   ELSEIF (.NOT. elph) THEN
      trans = trans .OR. ldisp
   ENDIF
@@ -549,7 +571,8 @@ SUBROUTINE phq_readin()
   !
   IF (ldvscf_interpolate) THEN
     !
-    IF (wpot_dir == ' ') wpot_dir = TRIM(outdir) // "/w_pot/"
+    IF (wpot_dir == ' ') wpot_dir = TRIM(tmp_dir) // "w_pot/"
+    wpot_dir = trimcheck(wpot_dir)
     !
     IF (do_charge_neutral .AND. (.NOT. do_long_range)) THEN
       WRITE(stdout, '(5x,a)') 'charge neutrality for dvscf_interpolate is &
@@ -566,6 +589,31 @@ SUBROUTINE phq_readin()
     'ldvscf_interpolate and magnetism not implemented', 1)
   IF (okpaw .AND. ldvscf_interpolate) CALL errore ('phq_readin', &
     'PAW and ldvscf_interpolate not tested.', 1)
+  !
+  ! AHC e-ph coupling
+  !
+  IF (elph_ahc) THEN
+    !
+    IF (ahc_nbnd <= 0) CALL errore('phq_readin', &
+      'ahc_nbnd must be specified as a positive integer')
+    IF (ahc_nbndskip < 0) CALL errore('phq_readin', &
+      'ahc_nbndskip cannot be negative')
+    !
+    IF (ahc_dir == ' ') ahc_dir = TRIM(tmp_dir) // "ahc_dir/"
+    ahc_dir = trimcheck(ahc_dir)
+    !
+  ENDIF ! elph_ahc
+  !
+  IF (elph_ahc .AND. trans) CALL errore ('phq_readin', &
+    'elph_ahc can be used only when trans = .false.', 1)
+  IF (elph_ahc .AND. domag) CALL errore ('phq_readin', &
+    'elph_ahc and magnetism not implemented', 1)
+  IF (elph_ahc .AND. okpaw) CALL errore ('phq_readin', &
+    'elph_ahc and PAW not tested.', 1)
+  IF (elph_ahc .AND. okvan) CALL errore ('phq_readin', &
+    'elph_ahc and PAW not tested.', 1)
+  IF (elph_ahc .AND. lda_plus_u) CALL errore ('phq_readin', &
+    'elph_ahc and lda_plus_u not tested.', 1)
   !
   ! reads the frequencies ( just if fpol = .true. )
   !
@@ -861,11 +909,12 @@ SUBROUTINE phq_readin()
      CALL errore('phq_readin','phonon with arbitrary occupations not tested',1)
   !
   !YAMBO >
-  IF (elph.AND..NOT.(lgauss .or. ltetra).and..NOT.elph_yambo) &
+  IF (elph .AND. .NOT.(lgauss .OR. ltetra) &
+      .AND. .NOT. (elph_yambo .OR. elph_ahc)) &
           CALL errore ('phq_readin', 'Electron-phonon only for metals', 1)
   !YAMBO <
-  IF (elph.AND.fildvscf.EQ.' ') CALL errore ('phq_readin', 'El-ph needs &
-       &a DeltaVscf file', 1)
+  IF (elph .AND. fildvscf.EQ.' ' .AND. .NOT. ldvscf_interpolate) &
+      CALL errore ('phq_readin', 'El-ph needs a DeltaVscf file', 1)
   !   There might be other variables in the input file which describe
   !   partial computation of the dynamical matrix. Read them here
   !
