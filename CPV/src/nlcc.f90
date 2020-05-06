@@ -305,7 +305,7 @@
 
 !
 !-----------------------------------------------------------------------
-      subroutine set_cc( irb, eigrb, rhoc )
+      subroutine set_cc( rhoc )
 !-----------------------------------------------------------------------
 !
 !     Calculate core charge contribution in real space, rhoc(r)
@@ -320,90 +320,75 @@
       use core,              only: rhocb
       use fft_interfaces,    only: invfft
       use fft_base,          only: dfftb, dfftp
+      USE cp_main_variables, ONLY: irb, eigrb
+      USE mp_global,         ONLY: nproc_bgrp, me_bgrp, inter_bgrp_comm, my_bgrp_id, nbgrp
+      USE mp,                ONLY: mp_sum
 
       implicit none
-! input
-      integer, intent(in)        :: irb(3,nat)
-      complex(dp), intent(in):: eigrb(ngb,nat)
 ! output
       real(dp), intent(out)  :: rhoc(dfftp%nnr)
 ! local
-      integer nfft, ig, is, ia, isa
-      complex(dp) ci
+      integer :: ig, is, ia, isa, iia
+      INTEGER :: nabox, iabox( nat )
+      complex(dp), PARAMETER :: ci = (0.d0,1.d0)
       complex(dp), allocatable :: wrk1(:)
       complex(dp), allocatable :: qv(:), fg1(:), fg2(:)
 
+      INTEGER :: mytid, ntids
 #if defined(_OPENMP)
-      INTEGER :: itid, mytid, ntids, omp_get_thread_num, omp_get_num_threads
+      INTEGER :: omp_get_thread_num, omp_get_num_threads
       EXTERNAL :: omp_get_thread_num, omp_get_num_threads
 #endif
 !
       call start_clock( 'set_cc' )
-      ci=(0.d0,1.d0)
 
       allocate( wrk1 ( dfftp%nnr ) )
-      wrk1 (:) = (0.d0, 0.d0)
+
+      nabox = 0
+      DO ia = 1, nat
+         IF( .NOT. upf(ityp(ia))%nlcc ) CYCLE
+         IF( ( dfftb%np3( ia ) <= 0 ) .OR. ( dfftb%np2 ( ia ) <= 0 ) .OR. ( my_bgrp_id /= MOD( ia, nbgrp ) ) ) CYCLE 
+         nabox = nabox + 1
+         iabox( nabox ) = ia
+      END DO
 !
 !$omp parallel default(none) &      
-!$omp          shared(nsp, na, ngb, eigrb, dfftb, irb, ci, rhocb, &
-!$omp                 nat, upf, wrk1, ityp ) &
-!$omp          private(mytid, ntids, is, ia, nfft, ig, isa, qv, fg1, fg2, itid )
+!$omp          shared( nsp, na, ngb, eigrb, dfftb, irb, rhocb, &
+!$omp                 nat, wrk1, ityp, nabox, iabox ) &
+!$omp          private( mytid, ntids, is, ia, iia, ig, qv, fg1 )
 
       allocate( qv ( dfftb%nnr ) )
       allocate( fg1 ( ngb ) )
-      allocate( fg2 ( ngb ) )
-!
-      isa = 0
 
+!$omp workshare
+      wrk1 = (0.d0, 0.d0)
+!$omp end workshare
+!
 #if defined(_OPENMP)
       mytid = omp_get_thread_num()  ! take the thread ID
       ntids = omp_get_num_threads() ! take the number of threads
-      itid  = 0
+#else
+      mytid = 0
+      ntids = 1
 #endif
 
-      do ia = 1, nat
-         !
-         is = ityp(ia)
-
-         if (.not.upf(is)%nlcc) then
-            cycle
-         end if
-         !
-#if defined(__MPI)
-         nfft=1
-         if ( ( dfftb%np3( ia ) <= 0 ) .OR. ( dfftb%np2 ( ia ) <= 0 ) ) cycle
-#endif
-
-#if defined(_OPENMP)
-         IF ( mytid /= itid ) THEN
-            itid = MOD( itid + 1, ntids )
-            CYCLE
-         ELSE
-            itid = MOD( itid + 1, ntids )
-         END IF
-#endif
-
-         if(nfft.eq.2)then
-            fg1 = eigrb(1:ngb,ia  )*rhocb(1:ngb,is)
-            fg2 = eigrb(1:ngb,ia+1)*rhocb(1:ngb,is)
-            CALL fft_oned2box( qv, fg1, fg2 )
-         else
+      do iia = 1, nabox
+         IF( MOD( iia - 1, ntids ) == mytid ) THEN
+            ia = iabox(iia)
+            is = ityp(ia)
             fg1 = eigrb(1:ngb,ia  )*rhocb(1:ngb,is)
             CALL fft_oned2box( qv, fg1 )
-         endif
-!
-         call invfft( qv, dfftb, ia )
-!
-         call box2grid(irb(:,ia),1,qv,wrk1)
-         if (nfft.eq.2) call box2grid(irb(:,ia+1),2,qv,wrk1)
-!
+            call invfft( qv, dfftb, ia )
+            call box2grid(irb(:,ia),1,qv,wrk1)
+         END IF
       end do
 !
-      deallocate( qv  )
       deallocate( fg1  )
-      deallocate( fg2  )
+      deallocate( qv  )
 
 !$omp end parallel
+
+      CALL mp_sum( wrk1, inter_bgrp_comm ) 
 
       call dcopy( dfftp%nnr, wrk1, 2, rhoc, 1 )
 

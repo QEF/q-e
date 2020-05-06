@@ -444,6 +444,34 @@ CONTAINS
      END IF
   END SUBROUTINE
 
+#if defined (__CUDA)
+  SUBROUTINE fftx_psi2c_gamma_gpu( desc, vin, vout1, vout2 )
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     USE cudafor
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     complex(DP), DEVICE, INTENT(OUT) :: vout1(:)
+     complex(DP), DEVICE, OPTIONAL, INTENT(OUT) :: vout2(:)
+     complex(DP), DEVICE, INTENT(IN) :: vin(:)
+     INTEGER,     DEVICE, POINTER     :: nl(:), nlm(:)
+     INTEGER :: ig
+     nl  => desc%nl_d
+     nlm => desc%nlm_d
+     IF( PRESENT( vout2 ) ) THEN
+!$cuf kernel do(1)
+        DO ig=1,desc%ngw
+           vout1(ig) = CMPLX( DBLE(vin(nl(ig))+vin(nlm(ig))),AIMAG(vin(nl(ig))-vin(nlm(ig))),kind=DP)
+           vout2(ig) = CMPLX(AIMAG(vin(nl(ig))+vin(nlm(ig))),-DBLE(vin(nl(ig))-vin(nlm(ig))),kind=DP)
+        END DO
+     ELSE
+!$cuf kernel do(1)
+        DO ig=1,desc%ngw
+           vout1(ig) = vin(nl(ig))
+        END DO
+     END IF
+  END SUBROUTINE
+#endif
+
 
   SUBROUTINE c2psi_gamma_tg(desc, psis, c_bgrp, i, nbsp_bgrp )
      !

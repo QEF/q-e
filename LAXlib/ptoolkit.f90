@@ -3719,13 +3719,10 @@ SUBROUTINE redist_row2col_gpu_x( n, a, b, ldx, nx, idesc )
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: ldx, nx
    REAL(DP), DEVICE    :: a(:,:)
-   REAL(DP)            :: b(:,:)
+   REAL(DP), DEVICE    :: b(:,:)
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
    !
-   REAL(DP), ALLOCATABLE :: wrk(:,:)
-#if defined(__GPU_MPI)
-   ATTRIBUTES(DEVICE) :: wrk
-#endif
+   REAL(DP), ALLOCATABLE :: a_h(:,:), b_h(:,:)
    INTEGER :: ierr
    INTEGER :: np, rowid, colid
    INTEGER :: comm
@@ -3778,30 +3775,30 @@ SUBROUTINE redist_row2col_gpu_x( n, a, b, ldx, nx, idesc )
       CALL lax_error__( " redist_row2col_gpu ", " in MPI_BARRIER ", ABS( ierr ) )
    !
 #if defined(__GPU_MPI)
-   ALLOCATE( wrk(SIZE(b,1),SIZE(b,2)), STAT=ierr )
    IF( ierr /= 0 ) &
       CALL lax_error__( " redist_row2col_gpu ", " allocating wrk ", ABS( ierr ) )
    !
    ierr = cudaDeviceSynchronize()
    CALL MPI_SENDRECV(a, ldx*nx, MPI_DOUBLE_PRECISION, idest, np+np+1, &
-                     wrk, ldx*nx, MPI_DOUBLE_PRECISION, isour, np+np+1, comm, istatus, ierr)
-   IF( ierr /= 0 ) &
-      CALL lax_error__( " redist_row2col_gpu ", " in MPI_SENDRECV ", ABS( ierr ) )
-
-   b = wrk
-   !
-   DEALLOCATE( wrk )
-#else
-   ALLOCATE( wrk, SOURCE=a, STAT=ierr )
-   IF( ierr /= 0 ) &
-      CALL lax_error__( " redist_row2col_gpu ", " allocating wrk ", ABS( ierr ) )
-   !
-   CALL MPI_SENDRECV(wrk, ldx*nx, MPI_DOUBLE_PRECISION, idest, np+np+1, &
                      b, ldx*nx, MPI_DOUBLE_PRECISION, isour, np+np+1, comm, istatus, ierr)
    IF( ierr /= 0 ) &
       CALL lax_error__( " redist_row2col_gpu ", " in MPI_SENDRECV ", ABS( ierr ) )
+#else
+   ALLOCATE( a_h, SOURCE=a, STAT=ierr )
+   IF( ierr /= 0 ) &
+      CALL lax_error__( " redist_row2col_gpu ", " allocating a_h ", ABS( ierr ) )
+   ALLOCATE( b_h, MOLD=b, STAT=ierr )
+   IF( ierr /= 0 ) &
+      CALL lax_error__( " redist_row2col_gpu ", " allocating b_h ", ABS( ierr ) )
    !
-   DEALLOCATE( wrk )
+   CALL MPI_SENDRECV(a_h, ldx*nx, MPI_DOUBLE_PRECISION, idest, np+np+1, &
+                     b_h, ldx*nx, MPI_DOUBLE_PRECISION, isour, np+np+1, comm, istatus, ierr)
+   IF( ierr /= 0 ) &
+      CALL lax_error__( " redist_row2col_gpu ", " in MPI_SENDRECV ", ABS( ierr ) )
+   !
+   b = b_h
+   !
+   DEALLOCATE( a_h, b_h )
 #endif
    !
 #else

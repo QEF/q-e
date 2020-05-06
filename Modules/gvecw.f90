@@ -15,7 +15,7 @@
 
      PRIVATE
      PUBLIC :: ngw, ngw_g, ngwx, ecutwfc, gcutw, ekcut, gkcut
-     PUBLIC :: g2kin, ecfixed, qcutz, q2sigma
+     PUBLIC :: g2kin, g2kin_d, ecfixed, qcutz, q2sigma
      PUBLIC :: gvecw_init, g2kin_init, deallocate_gvecw
 
      ! ...   G vectors less than the wave function cut-off ( ecutwfc )
@@ -42,6 +42,10 @@
      ! g2kin = g + ( agg / tpiba**2 ) * ( 1 + erf( ( tpiba2*g - e0gg ) / sgg ) )
 
      REAL(DP), ALLOCATABLE :: g2kin(:)
+     REAL(DP), ALLOCATABLE :: g2kin_d(:)
+#if defined (__CUDA)
+     ATTRIBUTES( DEVICE ) :: g2kin_d
+#endif
 
    CONTAINS
 
@@ -74,6 +78,9 @@
 
      SUBROUTINE g2kin_init( gg, tpiba2 )
        !
+#if defined (__CUDA)
+       USE cudafor
+#endif
        IMPLICIT NONE
        REAL(DP), INTENT(IN) :: gg(:), tpiba2
        REAL(DP), EXTERNAL :: qe_erf
@@ -92,12 +99,17 @@
           g2kin( 1 : ngw ) = gg( 1 : ngw )
        END IF
 
+#if defined (__CUDA)
+       ALLOCATE( g2kin_d, SOURCE = g2kin )
+#endif
+
        RETURN 
 
      END SUBROUTINE g2kin_init
 
      SUBROUTINE deallocate_gvecw
        IF( ALLOCATED( g2kin ) ) DEALLOCATE( g2kin )
+       IF( ALLOCATED( g2kin_d ) ) DEALLOCATE( g2kin_d )
      END SUBROUTINE deallocate_gvecw
 
 !=----------------------------------------------------------------------------=!
