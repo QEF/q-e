@@ -408,17 +408,24 @@ CONTAINS
     END DO
     ! set the offset
     desc%nr3p_offset(1) = 0
+#if ! defined(newfft)
+    WRITE(6,*) ' OLD DISTRIBUTION'
     DO i =1, desc%nproc3-1
        desc%nr3p_offset(i+1) = desc%nr3p_offset(i) + desc%nr3p(i)
     ENDDO
+#else
+    WRITE(6,*) ' NEW DISTRIBUTION'
+#endif
     !-- my_nr3p is the number of planes per processor of this processor   in the Z group
     desc%my_nr3p = desc%nr3p( desc%mype3 + 1 )
 
     !  Find out the index of the starting plane on each proc
     desc%i0r3p  = 0
+#if ! defined(newfft)
     DO i = 2, desc%nproc3
        desc%i0r3p( i )  = desc%i0r3p( i-1 ) + desc%nr3p ( i-1 )
     ENDDO
+#endif
     !-- my_i0r3p is the index-offset of the starting plane of this processor  in the Z group
     desc%my_i0r3p = desc%i0r3p( desc%mype3 + 1 )
 
@@ -1025,7 +1032,11 @@ CONTAINS
      j     = i /  dfft%nr1x
      i     = i -  dfft%nr1x * j
      j     = j + dfft%my_i0r2p
+#if defined(newfft)
+     k     = dfft%mype3 + dfft%nproc3 * k
+#else
      k     = k + dfft%my_i0r3p
+#endif
      !
      offrange = (i < 0 .OR. i >= dfft%nr1 ) .OR. &
           (j < 0 .OR. j >= dfft%nr2 ) .OR. &

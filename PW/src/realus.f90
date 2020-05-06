@@ -367,7 +367,13 @@ MODULE realus
          write (*,*) imin,imax,jmin,jmax,kmin,kmax
 #endif
          DO k = kmin, kmax
+#if defined(newfft)
+            kk = modulo(k,dfft%nr3)-dfft%mype3
+            if ( modulo(kk,dfft%nproc3).ne.0) cycle
+            kk = kk / dfft%nproc3
+#else
             kk = modulo(k,dfft%nr3) - dfft%my_i0r3p
+#endif
             if (kk .LT. 0 .OR. kk .ge. dfft%my_nr3p ) cycle
             DO j = jmin, jmax
                jj = modulo(j,dfft%nr2) - dfft%my_i0r2p
@@ -931,7 +937,13 @@ MODULE realus
             write (*,*) imin,imax,jmin,jmax,kmin,kmax
          end if
          DO k = kmin, kmax
+#if defined(newfft)
+            kk = modulo(k,dffts%nr3)-dffts%mype3
+            if ( modulo(kk,dffts%nproc3).ne.0) cycle
+            kk = kk / dffts%nproc3
+#else
             kk = modulo(k,dffts%nr3) - dffts%my_i0r3p
+#endif
             if (kk .LT. 0 .OR. kk .ge. dffts%my_nr3p ) cycle
             DO j = jmin, jmax
                jj = modulo(j,dffts%nr2) - dffts%my_i0r2p

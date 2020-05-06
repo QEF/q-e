@@ -691,7 +691,11 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
               kdest = ( iproc3 - 1 ) * sendsize + nr3px * ( me2_iproc3_offset( me2 - me2_start + 1, me3 ) + k )
               kfrom = desc%nr3p_offset(iproc3) + desc%nr3x * ( me2_iproc3_offset( me2 - me2_start + 1, me3 ) + k )
               DO i = 1, desc%nr3p( iproc3 )
+#if defined (newfft)
+                 f_aux ( kdest + i ) =  f_in ( kfrom + iproc3 + desc%nproc3*(i-1) )
+#else
                  f_aux ( kdest + i ) =  f_in ( kfrom + i )
+#endif
               ENDDO
            ENDDO
         ENDDO
@@ -826,7 +830,11 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
               kdest = ( iproc3 - 1 ) * sendsize + nr3px * ( me2_iproc3_offset( me2 - me2_start + 1, me3 ) + k )
               kfrom = desc%nr3p_offset(iproc3) + desc%nr3x * ( me2_iproc3_offset( me2 - me2_start + 1, me3 ) + k )
               DO i = 1, desc%nr3p( iproc3 )
+#if defined (newfft)
+                 f_in ( kfrom + iproc3 + desc%nproc3*(i-1) ) = f_aux ( kdest + i )
+#else
                  f_in ( kfrom + i ) = f_aux ( kdest + i )
+#endif
               ENDDO
            ENDDO
         ENDDO
