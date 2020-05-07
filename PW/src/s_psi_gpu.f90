@@ -264,7 +264,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        CALL dev_buf%lock_buffer(ps_d, (/ nkb, m_max /), ierr)
        
-       IF( ierr /= 0 .and. ierr /= -1 ) &
+       IF( ierr /= 0 ) &
           CALL errore( ' s_psi_gamma_gpu ', ' cannot allocate buffer (ps_d) ', ABS(ierr) )
        !
        ps_d(1:nkb,1:m_max) = 0.D0
@@ -357,7 +357,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        CALL dev_buf%lock_buffer(ps_d, (/ nkb, m /), ierr)
        !
-       IF( ierr /= 0 .and. ierr /= -1 ) &
+       IF( ierr /= 0 ) &
           CALL errore( ' s_psi_k_gpu ', ' cannot allocate buffer (ps_d) ', ABS(ierr) )
 
        ! sync vkb if needed
@@ -373,7 +373,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        ! here we need to use qq_at_d instead of qq_nt_d otherwise real space augmentation brakes!
        !  qq_nt_d would be much faster and works for calculations without real space augmentation
        CALL dev_buf%lock_buffer( qqc_d, (/ nhm, nhm, nat/), ierr )
-       IF( ierr /= 0 .and. ierr /= -1 ) &
+       IF( ierr /= 0 ) &
           CALL errore( ' s_psi_k_gpu ', ' cannot allocate buffer (qqc_d) ', ABS(ierr) )
 
 !$cuf kernel do(3) <<<*,*>>>
@@ -448,7 +448,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        IF ( lspinorb ) CALL using_qq_so_d(0)
 
        CALL dev_buf%lock_buffer(ps_d, (/ nkb, npol, m /), ierr)
-       IF( ierr /= 0 .and. ierr /= -1 ) &
+       IF( ierr /= 0 ) &
           CALL errore( ' s_psi_nc_gpu ', ' cannot allocate buffer (ps_d) ', ABS(ierr) )
 
        ps_d(1:nkb,1:npol,1:m) = (0.D0,0.D0)

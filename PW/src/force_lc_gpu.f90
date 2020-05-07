@@ -88,6 +88,7 @@ SUBROUTINE force_lc_gpu( nat, tau, ityp, alat, omega, ngm, ngl, &
   !
   ALLOCATE( aux(dfftp%nnr) )
   CALL dev_buf%lock_buffer(aux_d, dfftp%nnr, ierr)
+  IF (ierr /= 0) CALL errore( 'force_lc_gpu', 'cannot allocate buffers', -1 )
   !
   aux(:) = CMPLX( rho(:), 0.0_DP, KIND=DP )
   CALL dev_memcpy( aux_d, aux )

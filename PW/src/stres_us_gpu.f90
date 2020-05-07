@@ -220,6 +220,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
        CALL using_et(0) ! compute_deff : intent(in)
        !
        CALL dev_buf%lock_buffer( ps_d, nkb, ierrs(2) )
+       IF (ANY(ierrs(1:2) /= 0)) CALL errore( 'stres_us_gpu', 'cannot allocate buffers', -1 )
        !
        becpr_d => becp_d%r_d 
        !
@@ -261,6 +262,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
        ! ... non diagonal contribution - derivative of the bessel function
        !------------------------------------
        CALL dev_buf%lock_buffer( dvkb_d, (/ npwx,nkb,4 /), ierrs(3) )
+       IF (ierrs(3) /= 0) CALL errore( 'stres_us_gpu', 'cannot allocate buffers', -1 )
        !
        CALL gen_us_dj_gpu( ik, dvkb_d(:,:,4) )
        IF ( lmaxkb > 0 ) THEN 
@@ -479,6 +481,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
           CALL dev_buf%lock_buffer( deff_d, (/ nhm,nhm,nat /), ierrs(3) )
           becpk_d => becp_d%k_d
        ENDIF
+       IF (ANY(ierrs /= 0)) CALL errore( 'stres_us_gpu', 'cannot allocate buffers', -1 )
        !
        CALL using_deeq_d(0)
        !

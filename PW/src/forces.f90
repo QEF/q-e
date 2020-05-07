@@ -129,6 +129,7 @@ SUBROUTINE forces()
   IF (      use_gpu) THEN ! On the GPU
      ! move these data to the GPU
      CALL dev_buf%lock_buffer(vloc_d, (/ ngl, ntyp /) , ierr)
+     IF (ierr /= 0) CALL errore( 'forces', 'cannot allocate buffers', -1 )
      CALL dev_memcpy(vloc_d, vloc)
      CALL force_lc_gpu( nat, tau, ityp, alat, omega, ngm, ngl, igtongl_d, &
                    g_d, rho%of_r(:,1), dfftp%nl_d, gstart, gamma_only, vloc_d, &

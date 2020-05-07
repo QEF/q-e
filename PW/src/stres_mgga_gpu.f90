@@ -73,6 +73,7 @@ SUBROUTINE stres_mgga_gpu( sigmaxc )
   !
   CALL dev_buf%lock_buffer( gradwfc_d, (/ dffts%nnr, 3 /), ierrs(1) )
   CALL dev_buf%lock_buffer( crosstaus_d, (/ dffts%nnr, 6, nspin /), ierrs(2) )
+  IF (ANY(ierrs(1:2) /= 0)) CALL errore( 'stres_mgga_gpu', 'cannot allocate buffers', -1 )
   ALLOCATE( crosstaus(dffts%nnr,6,nspin) )
   crosstaus = (0._DP,0._DP)
   !
@@ -155,6 +156,7 @@ SUBROUTINE stres_mgga_gpu( sigmaxc )
   !
   CALL dev_buf%lock_buffer( vkin_d, dffts%nnr, ierrs(3) )
   CALL dev_buf%lock_buffer( rhokin_d, dffts%nnr, ierrs(4) )
+  IF (ANY(ierrs(3:4) /= 0)) CALL errore( 'stres_mgga_gpu', 'cannot allocate buffers', -1 )
   !
   ! metagga contribution to the stress tensor
   sigma_mgga(:,:) = 0._DP
