@@ -5,17 +5,18 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! The random matrix (see later) can be populated either with uniformly distributed
-! random numbers or with normal-distributed randm numbers. The former has been the default
-! until QE 6.1, however it sometimes produces accidentally degenerate eigenvalue, especially
-! when dealing with large number of atoms.
-! A matrix of normal-distributed numbers should have (on average) more evenly spaced
-! eigenvalues, reducing the chance of collision.
+! The random matrix (see later) can be populated either with uniformly
+! distributed random numbers or with normal-distributed random numbers.
+! The former has been the default until QE 6.1, however it sometimes 
+! produces accidentally degenerate eigenvalue, especially when dealing
+! with large number of atoms.
+! A matrix of normal-distributed numbers should have (on average) more 
+! evenly spaced eigenvalues, reducing the chance of collision.
 !
 ! See <http://web.math.princeton.edu/mathlab/projects/ranmatrices/yl/randmtx.PDF>
 ! (If I understand it correctly)
 ! LP 2017
-!
+! Uncomment the following line in case of trouble with set_irr_sym_new
 !!#define __UNIFORM_DISTRIB
 !
 !----------------------------------------------------------------------
