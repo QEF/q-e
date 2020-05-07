@@ -8,7 +8,8 @@ include ../../make.inc
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../LAXlib \
           $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../CPV/src $(MOD_FLAG)../../PHonon/PH \
-          $(MOD_FLAG)../../UtilXlib $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LR_Modules 
+          $(MOD_FLAG)../../UtilXlib $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LR_Modules \
+          $(MOD_FLAG)../../upflib
 
 #location of needed libraries
 LIBOBJS= ../../iotk/src/libiotk.a ../../clib/clib.a ../../UtilXlib/libutil.a ../../KS_Solvers/DENSE/libdense.a ../../dft-d3/libdftd3qe.a ../../KS_Solvers/PPCG/libppcg.a ../../KS_Solvers/ParO/libparo.a $(QELIBS)
@@ -39,7 +40,8 @@ cpv_traj.o
 
 
 QEMODS=   ../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a ../../KS_Solvers/CG/libcg.a \
-       ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a 
+       ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
+       ../../upflib/libupf.a
 PWOBJS =  ../../LR_Modules/liblrmod.a  ../../PHonon/PH/libph.a  ../../PW/src/libpw.a ../../CPV/src/libcp.a
 
 TLDEPS= bindir mods libs pw ph cp 
