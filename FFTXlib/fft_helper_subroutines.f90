@@ -444,16 +444,17 @@ CONTAINS
      END IF
   END SUBROUTINE
 
-#if defined (__CUDA)
   SUBROUTINE fftx_psi2c_gamma_gpu( desc, vin, vout1, vout2 )
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
-     USE cudafor
      TYPE(fft_type_descriptor), INTENT(in) :: desc
-     complex(DP), DEVICE, INTENT(OUT) :: vout1(:)
-     complex(DP), DEVICE, OPTIONAL, INTENT(OUT) :: vout2(:)
-     complex(DP), DEVICE, INTENT(IN) :: vin(:)
-     INTEGER,     DEVICE, POINTER     :: nl(:), nlm(:)
+     complex(DP), INTENT(OUT) :: vout1(:)
+     complex(DP), OPTIONAL, INTENT(OUT) :: vout2(:)
+     complex(DP), INTENT(IN) :: vin(:)
+     INTEGER,     POINTER     :: nl(:), nlm(:)
+#if defined (__CUDA)
+     attributes(DEVICE) :: vout1, vout2, vin, nl, nlm
+#endif
      INTEGER :: ig
      nl  => desc%nl_d
      nlm => desc%nlm_d
@@ -470,7 +471,6 @@ CONTAINS
         END DO
      END IF
   END SUBROUTINE
-#endif
 
 
   SUBROUTINE c2psi_gamma_tg(desc, psis, c_bgrp, i, nbsp_bgrp )
