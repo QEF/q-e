@@ -97,7 +97,11 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
            CALL invfft ('Rho', drhoscf(:,is,ipert), dfftp)
         enddo
         call mp_sum ( delta_n, intra_bgrp_comm )
-        def (ipert) = - delta_n / dos_ef
+        IF ( ABS(dos_ef) > 1.d-18 ) THEN
+           def (ipert) = - delta_n / dos_ef
+        ELSE
+           def (ipert) = 0.0_dp
+        ENDIF
      enddo
      !
      ! symmetrizes the Fermi energy shift

@@ -11,7 +11,8 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   !! Driver for IPI
   !!
   USE io_global,        ONLY : stdout, ionode, ionode_id
-  USE parameters,       ONLY : ntypx, npk, lmaxx
+  USE parameters,       ONLY : ntypx, npk
+  USE upf_params,       ONLY : lmaxx
   USE check_stop,       ONLY : check_stop_init
   USE mp,               ONLY : mp_bcast
   USE mp_images,        ONLY : intra_image_comm
@@ -425,7 +426,7 @@ CONTAINS
         !
         IF (lflags .NE. lflags_old) THEN
            !
-           IF ( lflags > 1 ) THEN
+           IF ( lflags > 0 ) THEN
               !
               lscf      = MOD(INT(lflags/(2**4)),2) == 1
               lforce    = MOD(INT(lflags/(2**3)),2) == 1

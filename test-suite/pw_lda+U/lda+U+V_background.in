@@ -1,0 +1,46 @@
+ &control
+    calculation ='scf'
+    tprnfor = .true.
+    tstress = .true.
+ /
+ &system
+    ibrav     = 5,
+    celldm(1) = 9.3705,
+    celldm(4) = 0.83874,
+    nat       = 4, 
+    ntyp      = 3,
+    ecutwfc   = 25.0
+    ecutrho   = 200.0
+    lda_plus_u        = .true.,
+    lda_plus_u_kind   = 2,
+    U_projection_type = 'atomic',
+    Hubbard_V(1,1,1)  = 5.0  ! Co d-d
+    Hubbard_V(1,1,2)  = 1.0  ! Co d-s
+    Hubbard_V(1,1,3)  = 2.0  ! Co s-s
+    Hubbard_V(1,2,1)  = 0.8  ! Co d - O p
+    Hubbard_V(1,2,2)  = 0.5  ! Co d - O s
+    Hubbard_V(1,2,3)  = 0.3  ! Co s - O s
+    Hubbard_V(1,2,4)  = 0.5  ! Co s - O p
+    Hubbard_V(2,2,1)  = 2.0  ! O p-p
+    Hubbard_V(2,2,2)  = 0.8  ! O p-s
+    Hubbard_V(2,2,3)  = 1.0  ! O s-s 
+    Hubbard_V(2,1,1)  = 0.8  ! O p - Co d
+    Hubbard_V(2,1,2)  = 0.5  ! O p - Co s 
+    Hubbard_V(2,1,3)  = 0.3  ! O s - Co s
+    Hubbard_V(2,1,4)  = 0.5  ! O s - Co d
+ /
+ &electrons
+    conv_thr    =  1.d-10
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+Co  59.0   Co.pbesol-spn-rrkjus_psl.0.3.1.UPF 
+O   16.0   O.pbesol-n-rrkjus_psl.0.1.UPF 
+Li   7.0   Li.pbesol-s-rrkjus_psl.0.2.1.UPF 
+ATOMIC_POSITIONS {crystal}
+ Co  0.0000000000   0.0000000000   0.0000000000
+ O   0.2604885000   0.2604885000   0.2604885000
+ O   0.7395115000   0.7395115000   0.7395115000
+ Li  0.5000000000   0.5000000000   0.5000000000
+K_POINTS {automatic}
+ 2 2 2 0 0 0

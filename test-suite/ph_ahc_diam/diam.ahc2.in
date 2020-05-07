@@ -1,0 +1,21 @@
+--
+&inputph
+  prefix   = 'diam'
+  outdir   = '.'
+  fildyn   = 'diam.ahc2.dyn'
+  tr2_ph   =  1.0d-15
+  ldisp    = .true.
+  nq1 = 2
+  nq2 = 2
+  nq3 = 2
+
+  ldvscf_interpolate = .true.
+  wpot_dir = 'wpot/'
+
+  trans = .false.
+  electron_phonon = 'ahc'
+  ahc_nbnd = 4
+  ahc_dir = 'ahc_dir.2/'
+  skip_upperfan = .true.
+ /
+

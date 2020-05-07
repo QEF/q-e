@@ -44,11 +44,14 @@
     ibndstart,               &!  First band index after excluding bands in Wannierization step
     ibndend,                 &!  Last band index after excluding bands in Wannierization step
     nbndep,                  &!  Number of remaining bands after excluding bands in Wannierizatin step
+    nbndskip,                &!  Number of bands to be skipped in Wannierization step, leading to
+                              !  the exclusion from the original Hamiltonian
     ngxx,                    &!  Maximum number of G-vectors over all pools
     ngxxf,                   &!  Maximum number of G-vectors over all pools for k+q folding
     ig_s,                    &!  First G index within each core in case of G parallelization
     ig_e,                    &!  Last G index within each core in case of G parallelization
-    num_wannier_plot          !  Number of Wannier functions to plot
+    num_wannier_plot,        &!  Number of Wannier functions to plot
+    ng0vec                    ! number of inequivalent such translations (125)
   INTEGER, ALLOCATABLE ::    &!
     igk(:),                  &!  Index for k+G vector
     igkq(:),                 &!  Index for k+q+G vector
@@ -66,7 +69,8 @@
     efnew,                   &!  Fermi level on the fine grid. Added globaly for efficiency reason
     deltaq,                  &!  Displacement of fine-mesh k-points for velocity corrections
     threshold,               &!  Threshold below which the transition probabilities are not written to file in transport.
-    area                      !  Area of the 2D unit cell.
+    area,                    &!  Area of the 2D unit cell.
+    g0vec_all_r(3, 125)       ! G-vectors needed to fold the k+q grid into the k grid, cartesian coord.
   REAL(KIND = DP), ALLOCATABLE ::&
     a_all(:, :),             &!  electronic spectral function du to electron-phonon interaction
     a_all_ph(:, :),          &!  phononic spectral function du to electron-phonon interaction
@@ -134,25 +138,28 @@
     bmat(:, :, :, :),         &!  overlap U_k+q U_k^\dagger on the coarse mesh (nbnd, nbnd, nks, nqtot)
     eps_rpa(:),               &!  rpa model screening
     veff(:, :)                 !  effective potential
-! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
- INTEGER ::                  &
-    N1_dim,                  &
-    hh,                      &
-    Np
-  REAL(KIND = DP), ALLOCATABLE ::&
-    Ec(:),                   &
-    ekf(:),                  &
-    etfq(:,:),               &
-    etf_qs(:,:)
-  COMPLEX(KIND = DP), ALLOCATABLE :: &
-    g2_4  (:, :, :, :),     &
-    g2_all(:,:,:,:,:),      &
-    Ac(:),                  &
-    Hkk(:,:),               &
-    H_copy(:,:),            &
-    gq(:),                  &
-    dtau(:,:,:)
-  ! End Polaron
+  !
+  ! -------------------------------------------------------------------------
+  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  ! Shell implementation for future use
+  INTEGER ::                  &! Add descriptions
+     N1_dim,                  &
+     hh,                      &
+     Np
+   REAL(KIND = DP), ALLOCATABLE ::&
+     Ec(:),                   &
+     ekf(:),                  &
+     etfq(:,:),               &
+     etf_qs(:,:)
+   COMPLEX(KIND = DP), ALLOCATABLE :: &
+     g2_4  (:, :, :, :),     &
+     g2_all(:,:,:,:,:),      &
+     Ac(:),                  &
+     Hkk(:,:),               &
+     H_copy(:,:),            &
+     gq(:),                  &
+     dtau(:,:,:)
+  ! -------------------------------------------------------------------------
   !--------------------------------------------------------------------------
   END MODULE elph2
   !--------------------------------------------------------------------------

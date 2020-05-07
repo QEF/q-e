@@ -6,7 +6,6 @@ SUBROUTINE read_core_abs(filename,core_wfn,nl_init)
   !--------------------------------------------------------------------------
   USE kinds,   ONLY: DP
   USE atom,    ONLY: rgrid
-  !USE atom,        ONLY : mesh     !mesh(ntypx) number of mesh points
   USE xspectra,ONLY: xiabs
   USE io_global,       ONLY : ionode, stdout
 
@@ -18,7 +17,6 @@ SUBROUTINE read_core_abs(filename,core_wfn,nl_init)
   REAL(KIND=dp):: x
   REAL(KIND=dp):: core_wfn(*)
 
-  !WRITE(6,*) 'xmesh=',rgrid(xiabs)%mesh
   open(unit=33,file=filename,form='formatted',iostat=ierr,status='old',err=123)
 
 123   if( ierr == 29 )  then

@@ -653,6 +653,7 @@ wget
 ranlib
 hdf5_line
 hdf5_libs
+beef_libs_switch
 beef_libs
 elpa_line
 elpa_libs
@@ -741,7 +742,6 @@ infodir
 docdir
 oldincludedir
 includedir
-runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -776,12 +776,12 @@ with_cuda_runtime
 with_libxc
 with_libxc_prefix
 with_libxc_include
-enable_libbeef
-with_libeef_prefix
 with_scalapack
 with_elpa_include
 with_elpa_lib
 with_elpa_version
+enable_libbeef
+with_libbeef_prefix
 with_hdf5
 with_hdf5_libs
 with_hdf5_include
@@ -839,7 +839,6 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
-runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1092,15 +1091,6 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
-  -runstatedir | --runstatedir | --runstatedi | --runstated \
-  | --runstate | --runstat | --runsta | --runst | --runs \
-  | --run | --ru | --r)
-    ac_prev=runstatedir ;;
-  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
-  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
-  | --run=* | --ru=* | --r=*)
-    runstatedir=$ac_optarg ;;
-
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1238,7 +1228,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir runstatedir
+		libdir localedir mandir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1391,7 +1381,6 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
-  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -1432,8 +1421,9 @@ Optional Features:
   --enable-debug          compile Fortran with debug flags (default: no)
   --enable-pedantic       compile Fortran with pedantic flags (default: no)
   --enable-shared         use shared libraries if available (default: yes)
+  --enable-libbeef        link against library for BEEF xc support (default:
+                          yes - if found)
   --enable-signals        enable signal trapping (default: no)
-  --enable-libbeef        link against library for BEEF xc support (default: yes - if found)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1448,7 +1438,6 @@ Optional Packages:
   --with-libxc-include=DIR
                           Directory where libxc Fortran headers were
                           installed.
-  --with-libbeef-prefix    path to directory containing libbeef.a (default: none)
   --with-scalapack        (yes|no|intel) Use scalapack if available. Set to
                           "intel" to use Intel MPI and blacs (default: use
                           openMPI)
@@ -1458,6 +1447,8 @@ Optional Packages:
                           (default: no)
   --with-elpa-version     Specify ELPA version, only year (2015 - 2019,
                           default: 2016)
+  --with-libbeef-prefix   path to directory containing libbeef.a (default:
+                          none)
   --with-hdf5             (no|yes|<path>) Use HDF5, if yes configure assumes
                           that a valid installation with version >= 1.8.16 is
                           available, and h5cc and h5fc are in the default
@@ -7370,6 +7361,96 @@ $as_echo "${elpa_libs}" >&6; }
 
 
 
+# Setting BEEF...
+
+
+beef_libs_switch=
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking BEEF" >&5
+$as_echo_n "checking BEEF... " >&6; }
+
+beef_libs=$BEEF_LIBS
+
+# Check whether --enable-libbeef was given.
+if test "${enable_libbeef+set}" = set; then :
+  enableval=$enable_libbeef; if   test "$withval" = "yes" ; then
+      beef_enabled=1
+   else
+      beef_enabled=0
+   fi
+else
+  beef_enabled=1
+fi
+
+
+
+# Check whether --with-libbeef-prefix was given.
+if test "${with_libbeef_prefix+set}" = set; then :
+  withval=$with_libbeef_prefix; libbeef_prefix="$withval"
+
+else
+  libbeef_prefix=""
+fi
+
+
+if test "$beef_enabled" -ne 0
+then
+    BEEF_LDFLAGS_SAVE="$LDFLAGS"
+    LDFLAGS="$beef_libs $LDFLAGS"
+    if ! test "$libbeef_prefix"x = "x"
+    then
+        beefprefix=1
+        LDFLAGS="$LDFLAGS -L$libbeef_prefix/lib -L$libbeef_prefix"
+
+        LIBS="$LIBS -lbeef"
+        cat > conftest.$ac_ext <<_ACEOF
+
+          SUBROUTINE ddot
+          END SUBROUTINE
+          SUBROUTINE dgemv
+          END SUBROUTINE
+          PROGRAM main
+          CALL beefx
+          END
+
+_ACEOF
+if ac_fn_f77_try_link "$LINENO"; then :
+  try_dflags="$try_dflags -Duse_beef" ; usebeef=1
+else
+  usebeef=0
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+    else
+        beefprefix=0
+        usebeef=1
+    fi
+
+    if test "$usebeef" -ne 0
+    then
+        if test "$beefprefix" -ne 0
+        then
+            beef_libs="$beef_libs -L$libbeef_prefix/lib -L$libbeef_prefix -lbeef"
+            beef_libs_switch="external"
+        else
+            beef_libs="\$(TOPDIR)/LIBBEEF/libbeef.a"
+            beef_libs_switch="internal"
+            try_dflags="$try_dflags -Duse_beef"
+        fi
+        echo "-lbeef"
+        echo setting BEEF_LIBS... $beef_libs
+
+    else
+        echo no
+    fi
+    LDFLAGS="$BEEF_LDFLAGS_SAVE"
+fi
+
+
+
+
+
+
 # Setting HDF5...
 
 
@@ -7939,86 +8020,7 @@ fi
   fi
 
 
-# Setting BEEF...
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking BEEF" >&5
-$as_echo_n "checking BEEF... " >&6; }
-
-beef_libs=$BEEF_LIBS
-
-# Check whether --enable-libbeef was given.
-if test "${enable_libbeef+set}" = set; then :
-  enableval=$enable_libbeef; if   test "$withval" = "yes" ; then
-      beef_enabled=1
-   else
-      beef_enabled=0
-   fi
-else
-  beef_enabled=1
-fi
-
-# Check whether --with-libbeef-prefix was given.
-if test "${with_libbeef_prefix+set}" = set; then :
-  withval=$with_libbeef_prefix; libbeef_prefix="$withval"
-
-else
-  libbeef_prefix=""
-fi
- 
-
-
-if test "$beef_enabled" -ne 0
-then
-    BEEF_LDFLAGS_SAVE="$LDFLAGS"
-    LDFLAGS="$beef_libs $LDFLAGS"
-    if ! test "$libbeef_prefix"x = "x"
-    then
-        echo testing prefix $libbeef_prefix
-        beefprefix=1
-        LDFLAGS="$LDFLAGS -L$libbeef_prefix/lib -L$libbeef_prefix"
-    else
-        beefprefix=0
-    fi
-    LIBS="$LIBS -lbeef"
-    cat > conftest.$ac_ext <<_ACEOF
-
-      SUBROUTINE ddot
-      END SUBROUTINE
-      SUBROUTINE dgemv
-      END SUBROUTINE
-      PROGRAM main
-      CALL beefx
-      END
-
-_ACEOF
-if ac_fn_f77_try_link "$LINENO"; then :
-  try_dflags="$try_dflags -Duse_beef" ; usebeef=1
-  echo link succeeded
-else
-  usebeef=0
-  echo link failed
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-    echo usebeef $usebeef
-    if test "$usebeef" -ne 0
-    then
-        if test "$beefprefix" -ne 0
-        then
-            beef_libs="$beef_libs -L$libbeef_prefix/lib -L$libbeef_prefix -lbeef"
-        else
-            if test "$beef_libs"x = "x"
-            then
-                beef_libs=-lbeef
-            fi
-        fi
-        echo "-lbeef"
-        echo setting BEEF_LIBS...
-    else
-        echo no
-    fi
-    LDFLAGS="$BEEF_LDFLAGS_SAVE"
-fi
 
 
 

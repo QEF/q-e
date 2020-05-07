@@ -38,7 +38,7 @@ MODULE laxlib_processors_grid
   LOGICAL :: do_distr_diag_inside_bgrp = .true. ! whether the distributed diagoalization should be performed
                                                 ! at the band group level (bgrp) or at its parent level
   !
-  LOGICAL, SAVE :: lax_is_initialized = .false.
+  LOGICAL :: lax_is_initialized = .false.
   !
 CONTAINS
   !

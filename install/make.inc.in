@@ -64,6 +64,7 @@ MOD_FLAG      = @imod@
 # Each Makefile can add directories to MODFLAGS and libraries to QEMODS
 
 BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/iotk/src \
+               $(MOD_FLAG)$(TOPDIR)/upflib \
                $(MOD_FLAG)$(TOPDIR)/Modules \
                $(MOD_FLAG)$(TOPDIR)/FFTXlib \
 	       $(MOD_FLAG)$(TOPDIR)/LAXlib \
@@ -168,6 +169,7 @@ MASS_LIBS      = @mass_libs@
 # library for bayesian error estimate functionals
 
 BEEF_LIBS      = @beef_libs@
+BEEF_LIBS_SWITCH = @beef_libs_switch@
 
 # CUDA libraries
 CUDA_LIBS=@cuda_libs@

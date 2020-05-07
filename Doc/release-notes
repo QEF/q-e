@@ -6,8 +6,10 @@ New in dev branch:
   * ParO and PPCG iterative diagonalization algorithms
   * Fourier interpolation of phonon potential implemented in ph.x
     (Jae-Mo Lihm, Seoul Natl. Univ.)
-  * DFT+U+V in pw.x, J. Phys.: Condens. Matter 22, 055602 (2010)
-    (V.L. Campo Jr, I. Timrov, N. Marzari, M. Cococcioni)
+  * Extension of the PW code to DFT+U+V [JPCM 22, 055602 (2010)];
+    Extension of the HP code to compute also inter-site Hubbard V parameters;
+    Extension of the XSpectra code to work on top of DFT+U+V [arXiv:2004.04142]
+    (I. Timrov, N. Marzari, M. Cococcioni).
   * Support for BEEF-vdW XC (by Johannes Voss) compilation link has been included; 
     e.g. BEEF_LIBS="-L$LIBBEEF/src -lbeef", where $LIBBEEF is the path 
     to the compiled libbeef folder. If "calculation='ensemble'", 
@@ -16,6 +18,9 @@ New in dev branch:
   * i-PI socket now supports on-the-fly change of flags for SCF, forces,
     stresses and variable cell calculations using binary-integer enconding.
     (Gabriel S. Gusmão, Georgia Tech)
+  * Phonon-induced electron self-energy implemented in ph.x and
+    a new post-processing program PHonon/postahc.x added.
+    (Jae-Mo Lihm, Seoul Natl. Univ.)
   
 Fixed in dev branch:
   * PW: Restart from interrupted calculations  simplified. As a side effect,
@@ -42,6 +47,8 @@ Incompatible changes in dev branch:
   * Calls to LAXlib routines changed: module to be included replaced by file
     'laxlib.fh', descriptors replaced by integer values
   * Interpolation table for Q(G) is in a.u. and no longer in 2pi/a units
+  * Part of pseudopotential-related code moved to new directory upflib/ and
+    into library libupf.a. Directory upftools/ deleted.
 
 New in 6.5 branch:
   * For non-local functionals of the vdW-DF and rVV10 families the kernel is

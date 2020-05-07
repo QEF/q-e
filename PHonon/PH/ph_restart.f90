@@ -38,7 +38,6 @@ MODULE ph_restart
   ! and back compatibility
   !
   CHARACTER(len=256) :: qexml_version = ' '       ! the format of the current qexml datafile 
-  LOGICAL :: qexml_version_before_1_4_0 = .FALSE.
   LOGICAL :: qexml_version_init = .FALSE.  ! whether the fmt has been read or not
   !
   CHARACTER(iotk_attlenx)  :: attr
@@ -544,14 +543,6 @@ MODULE ph_restart
       CALL mp_bcast( qexml_version,       ionode_id, intra_image_comm )
       CALL mp_bcast( qexml_version_init,  ionode_id, intra_image_comm )
       
-      !
-      ! init logical variables for versioning
-      !
-      qexml_version_before_1_4_0 = .FALSE.
-      !
-      IF ( TRIM( version_compare( qexml_version, "1.4.0" )) == "older" ) &
-         qexml_version_before_1_4_0 = .TRUE.
-      !
        RETURN
     END SUBROUTINE read_header
     !------------------------------------------------------------------------

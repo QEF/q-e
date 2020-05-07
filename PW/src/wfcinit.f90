@@ -27,7 +27,7 @@ SUBROUTINE wfcinit()
   USE buffers,              ONLY : open_buffer, close_buffer, get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb
   USE wavefunctions,        ONLY : evc
-  USE wvfct,                ONLY : nbnd, npwx, current_k
+  USE wvfct,                ONLY : nbnd, current_k
   USE wannier_new,          ONLY : use_wannier
   USE pw_restart_new,       ONLY : read_collected_wfc
   USE mp,                   ONLY : mp_bcast, mp_sum
@@ -203,7 +203,6 @@ SUBROUTINE init_wfc ( ik )
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp
   USE constants,            ONLY : tpi
-  USE cell_base,            ONLY : tpiba2
   USE basis,                ONLY : natomwfc, starting_wfc
   USE gvect,                ONLY : g, gstart
   USE klist,                ONLY : xk, ngk, igk_k

@@ -10,7 +10,7 @@ subroutine gen_beta_simple (qk, npw_max, dvkb)
   USE kinds,      ONLY : DP
   USE constants,  ONLY : tpi
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
-  USE cell_base,  ONLY : tpiba
+  USE cell_base,  ONLY : tpiba, omega
   USE klist,      ONLY : ngk
   USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
@@ -83,7 +83,7 @@ subroutine gen_beta_simple (qk, npw_max, dvkb)
   do nt = 1, ntyp
      do nb = 1, upf(nt)%nbeta
         if ( upf(nt)%is_gth ) then
-           call mk_dffnl_gth( nt, nb, npw_max, q, djl(1,nb,nt) )
+           call mk_dffnl_gth( nt, nb, npw_max, omega, tpiba, q, djl(1,nb,nt) )
            cycle
         endif
         do ig = 1, npw_max

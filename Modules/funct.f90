@@ -208,6 +208,7 @@ MODULE funct
   !              "b86x"   B86b exchange * 0.75           igcx =41
   !              "b88x"   B88 exchange * 0.50            igcx =42
   !              "beex"   BEE exchange                   igcx =43 
+  !              "rpbe"   Hammer-Hansen-Norskov          igcx =44
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -362,7 +363,7 @@ MODULE funct
   INTEGER  :: beefvdw = 0
 #endif
   !
-  INTEGER, PARAMETER :: nxc=8, ncc=10, ngcx=43, ngcc=13, nmeta=6, ncnl=6
+  INTEGER, PARAMETER :: nxc=8, ncc=10, ngcx=44, ngcc=13, nmeta=6, ncnl=6
   CHARACTER(LEN=4) :: exc, corr, gradx, gradc, meta, nonlocc
   DIMENSION :: exc(0:nxc), corr(0:ncc), gradx(0:ngcx), gradc(0:ngcc), &
                meta(0:nmeta), nonlocc(0:ncnl)
@@ -371,20 +372,20 @@ MODULE funct
   DATA corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
               'OBW', 'GL' , 'KZK' /
   !
-  DATA gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
-               'xxxx', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE', 'RW86', 'PBE', &
-               'xxxx', 'C09X', 'SOX', 'xxxx', 'Q2DX', 'GAUP', 'PW86', 'B86B', &
-               'OBK8', 'OB86', 'EVX', 'B86R', 'CX13', 'X3LP', &
-               'CX0', 'R860', 'CX0P', 'AHCX', 'AHF2', &
-               'AHPB', 'AHPS', 'CX14', 'CX15', 'BR0', 'CX16', 'C090', &
-               'B86X', 'B88X', 'BEEX'/
+  DATA gradx / 'NOGX', 'B88',  'GGX',  'PBX',  'RPB',  'HCTH', 'OPTX', &
+               'xxxx', 'PB0X', 'B3LP', 'PSX',  'WCX',  'HSE',  'RW86', 'PBE', &
+               'xxxx', 'C09X', 'SOX',  'xxxx', 'Q2DX', 'GAUP', 'PW86', 'B86B', &
+               'OBK8', 'OB86', 'EVX',  'B86R', 'CX13', 'X3LP', &
+               'CX0',  'R860', 'CX0P', 'AHCX', 'AHF2', &
+               'AHPB', 'AHPS', 'CX14', 'CX15', 'BR0',  'CX16', 'C090', &
+               'B86X', 'B88X', 'BEEX', 'RPBX'/
   !
-  DATA gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'NONE',&
+  DATA gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC',  'HCTH', 'NONE',&
                'B3LP', 'PSC', 'PBE', 'xxxx', 'xxxx', 'Q2DC', 'BEEC' /
   !
   DATA meta  / 'NONE', 'TPSS', 'M06L', 'TB09', 'META', 'SCAN', 'SCA0' /
   !
-  DATA nonlocc/'NONE', 'VDW1', 'VDW2', 'VV10', 'VDWX', 'VDWY', 'VDWZ' /
+  DATA nonlocc/ 'NONE', 'VDW1', 'VDW2', 'VV10', 'VDWX', 'VDWY', 'VDWZ' /
   !
 #if defined(__LIBXC)
   INTEGER :: libxc_major=0, libxc_minor=0, libxc_micro=0
@@ -525,8 +526,7 @@ CONTAINS
        dft_defined = set_dft_values(1,4,25,0,0,0)
     ! special case : RPBE
     CASE( 'RPBE' )
-       CALL errore( 'set_dft_from_name', &
-                    'RPBE (Hammer-Hansen-Norskov) not implemented (revPBE is)', 1 )
+       dft_defined = set_dft_values(1,4,44,4,0,0)
     ! special case : PBE0
     CASE( 'PBE0' )
        dft_defined = set_dft_values(6,4,8,4,0,0)
@@ -552,7 +552,7 @@ CONTAINS
              CASE('-VDW')
                 beeftype = 0
              CASE default
-                READ(dftout(5:), '(i)', IOSTAT=i) beeftype
+                READ(dftout(5:), '(i1)', IOSTAT=i) beeftype
                 if (i.ne.0) call errore('set_dft_from_name', &
                 & 'unknown BEEF type', 1)
           END SELECT
@@ -1025,9 +1025,15 @@ CONTAINS
           i = 0
           DO WHILE ( i < LEN_TRIM(dft) )
             i = i + 1
-            IF ( matches( TRIM(qe_name), TRIM(dft(i:i+3)) ) ) THEN
+            IF ( matches( TRIM(qe_name), TRIM(dft(i:i+1)) ) ) THEN
                qedft = qedft + 1
-               i = i + LEN_TRIM(qe_name)-1
+               i = i + 1
+            ELSEIF (matches( TRIM(qe_name), TRIM(dft(i:i+2)) ) ) THEN
+               qedft = qedft + 1
+               i = i + 2
+            ELSEIF (matches( TRIM(qe_name), TRIM(dft(i:i+3)) ) ) THEN
+               qedft = qedft + 1
+               i = i + 3
             ENDIF
           ENDDO
           !
@@ -1522,6 +1528,8 @@ CONTAINS
        shortname = 'BEEF'
     ELSEIF (iexch==5 .AND. icorr==0  .AND. igcx==0 .AND. igcc== 0) THEN
        shortname = 'HF'
+    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==44 .AND. igcc== 4) THEN
+       shortname = 'RPBE'
     ENDIF
     !
     IF (imeta==1) THEN

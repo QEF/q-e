@@ -48,7 +48,7 @@
                             laniso, lpolar, lifc, asr_typ, lscreen, scr_typ, nbndsub,  &
                             fermi_diff, smear_rpa, cumulant, bnd_cum, proj, write_wfn, &
                             iswitch, ntempxx, liso, lacon, lpade, etf_mem, epbwrite,   &
-                            nsiter, conv_thr_racon, specfun_el, specfun_ph, nbndskip,  &
+                            nsiter, conv_thr_racon, specfun_el, specfun_ph,            &
                             system_2d, delta_approx, title, int_mob, scissor,          &
                             iterative_bte, scattering, selecqread, epmatkqread,        &
                             ncarrier, carrier, scattering_serta, restart, restart_step,&
@@ -59,16 +59,6 @@
                             scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, &
                             wannier_plot_supercell, wannier_plot_scale, reduce_unk,    &
                             wannier_plot_radius
-  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
-  USE epwcom,        ONLY : wfcelec, restart_polaron, spherical_cutoff,                &
-                            model_vertex, conv_thr_polaron, n_dop,                     &
-                            polaron_wf, r01, r02, r03, num_cbands, start_band,         &
-                            start_mode, cb_shift, polaron_interpol, polaron_bq,        &
-                            polaron_dos, electron_dos, phonon_dos, diag_mode,          &
-                            restart_polaron_mode, polaron_type, nPlrn, wfcelec_old,    &
-                            sigma_plrn, ethr_Plrn, full_diagon_plrn, mixing_Plrn,      &
-                            init_plrn_wf, niterPlrn, nDOS_plrn, emax_plrn, emin_plrn,  &
-                            sigma_edos_plrn, sigma_pdos_plrn, pmax_plrn, pmin_plrn
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
   USE elph2,         ONLY : elph, num_wannier_plot, wanplotlist
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, ang2m
@@ -88,6 +78,20 @@
 #if defined(__NAG)
   USE F90_UNIX_ENV,  ONLY : iargc, getarg
 #endif
+  !
+  ! ---------------------------------------------------------------------------------------
+  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  ! Shell implementation for future use.
+  USE epwcom,        ONLY : wfcelec, restart_polaron, spherical_cutoff,                &
+                            model_vertex, conv_thr_polaron, n_dop,                     &
+                            polaron_wf, r01, r02, r03, num_cbands, start_band,         &
+                            start_mode, cb_shift, polaron_interpol, polaron_bq,        &
+                            polaron_dos, electron_dos, phonon_dos, diag_mode,          &
+                            restart_polaron_mode, polaron_type, nPlrn, wfcelec_old,    &
+                            sigma_plrn, ethr_Plrn, full_diagon_plrn, mixing_Plrn,      &
+                            init_plrn_wf, niterPlrn, nDOS_plrn, emax_plrn, emin_plrn,  &
+                            sigma_edos_plrn, sigma_pdos_plrn, pmax_plrn, pmin_plrn
+  ! -------------------------------------------------------------------------------------
   !
   IMPLICIT NONE
   !
@@ -121,7 +125,7 @@
   !
   NAMELIST / inputepw / &
        amass, outdir, prefix, iverbosity, fildvscf,                            &
-       elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndskip,  nbndsub,                 &
+       elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndsub,                            &
        filukk, epbread, epbwrite, epwread, epwwrite, etf_mem, kmaps,           &
        eig_read, wepexst, epexst, vme,                                         &
        degaussw, fsthick, eptemp,  nsmear, delta_smear,                        &
@@ -149,7 +153,9 @@
        mob_maxiter, auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   &
        scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, reduce_unk,  &
        wannier_plot_supercell, wannier_plot_scale, wannier_plot_radius,        &
-       ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  !---------------------------------------------------------------------------------
+  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  ! Shell implementation for future use.
        wfcelec, restart_polaron, spherical_cutoff, model_vertex, start_mode,   &
        conv_thr_polaron, polaron_wf, r01, r02, r03, num_cbands, start_band,    &
        cb_shift, polaron_interpol, polaron_bq, polaron_dos, electron_dos ,     &
@@ -157,6 +163,8 @@
        niterPlrn, wfcelec_old, sigma_plrn, ethr_Plrn, full_diagon_plrn,        &
        mixing_Plrn, init_plrn_wf, nPlrn, nDOS_plrn, emax_plrn, emin_plrn,      &
        sigma_edos_plrn, sigma_pdos_plrn, pmax_plrn, pmin_plrn
+  ! --------------------------------------------------------------------------------
+  !
   ! tphases, fildvscf0
   !
   ! amass    : atomic masses
@@ -169,7 +177,11 @@
   !
   ! added by @ FG
   !
-  ! ngaussw  : smearing type for FS average after wann interp
+  ! ngaussw  : smearing type after wann interp
+  !            (n >= 0) : Methfessel-Paxton case. See PRB 40, 3616 (1989)
+  !            (n=-1)   : Cold smearing See PRL 82, 3296 (1999)
+  !            (n=-99)  : Fermi-Dirac case: 1.0/(1.0+exp(-x)).
+  !                       If n = -99 you probably want assume_metal == .true. as well.
   ! degaussw : corresponding width (units of eV)
   ! filqf    : file with fine q kmesh for interpolation
   ! filkf    : file with fine kmesh for interpolation
@@ -188,9 +200,6 @@
   ! dvscf_dir: the dir containing all the .dvscf and .dyn files
   ! epbread  : read epmatq array from .epb files
   ! epbwrite : write epmatq array to .epb files
-  ! nbndskip : number of bands to be skipped from the original Hamitonian (nfirstwin-1 in Marzari's notation)
-  !            [HL 02/2020] nbndskip is not an input any more. It is now automatically calculated in Wannierization step.
-  !            For backward compatibility, nbndskip still can be entered as an input, but ignored with warning message.
   ! epwread  : read all quantities in Wannier representation from file epwdata.fmt
   ! epwwrite : write all quantities in Wannier representation to file epwdata.fmt
   !
@@ -456,7 +465,6 @@
   mp_mesh_k    = .FALSE.
   mp_mesh_q    = .FALSE.
   nbndsub      = 0
-  nbndskip     = -1
   nsmear       = 1
   delta_smear  = 0.01d0 ! eV
   modenum = 0 ! Was -1 previously and read from Modules/input_parameters.f90
@@ -540,17 +548,19 @@
   lindabs    = .FALSE.
   mob_maxiter= 50
   use_ws     = .FALSE.
-  epmatkqread = .FALSE.
-  selecqread = .FALSE.
-  nc         = 4.0d0
+  epmatkqread  = .FALSE.
+  selecqread   = .FALSE.
+  nc           = 4.0d0
   assume_metal = .FALSE.  ! default is we deal with an insulator
+  !
+  ! --------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  ! Shell implementation for future use.
   nPlrn = 1
   niterPlrn = 50
   n_dop = 0.d0
   smear_rpa = 1.d0
   wfcelec = .false.
-  !FIXME: remove it after test
   wfcelec_old = .false.
   restart_polaron = .false.
   spherical_cutoff = 100.d0
@@ -578,16 +588,15 @@
   pmin_plrn = zero
   emax_plrn = 1.d0
   pmax_plrn = 1d-2
-
   sigma_edos_plrn = 0.1d0
   sigma_pdos_plrn = 1d-3
-
   restart_polaron_mode = 1
   polaron_type = -1
   sigma_plrn  = 4.6
   ethr_Plrn = 1E-3
+  ! ---------------------------------------------------------------------------------
   !
-  !     reading the namelist inputepw
+  ! Reading the namelist inputepw
   !
 #if defined(__CRAYY)
   !   The Cray does not accept "err" and "iostat" together with a namelist
@@ -649,8 +658,6 @@
   IF (epbread .AND. epbwrite) CALL errore('epw_readin', 'epbread cannot be used with epbwrite', 1)
   IF (epbread .AND. epwread) CALL errore('epw_readin', 'epbread cannot be used with epwread', 1)
   IF (degaussw * 4.d0 > fsthick) CALL errore('epw_readin', ' degaussw too close to fsthick', 1)
-  IF (nbndskip /= -1) WRITE(stdout, '(A)') &
-     'WARNING: epw_readin: nbndskip is not an input anymore. It is automatically calculated in Wannierization step.'
   IF ((nw < 1) .OR. (nw > 1000)) CALL errore ('epw_readin', 'unreasonable nw', 1)
   IF (elecselfen .AND. plselfen) CALL errore('epw_readin', &
       'Electron-plasmon self-energy cannot be computed with electron-phonon', 1)
@@ -735,6 +742,13 @@
       'Cannot specify both auto_projections and projections block', 1)
   IF ((auto_projections .AND. .NOT. scdm_proj) .OR. (.NOT. auto_projections .AND. scdm_proj)) &
     CALL errore('epw_readin', 'auto_projections require both scdm_proj=.true. and auto_projections=.true.', 1)
+  !
+  ! In the case of Fermi-Dirac distribution one should probably etemp instead of degauss.
+  ! This is achieved with assume_metal == .true.
+  IF (ngaussw == -99 .AND. .NOT. assume_metal) THEN
+    WRITE(stdout, '(/,5x,a)') 'WARNING: You are using ngaussw == -99 (Fermi-Dirac).'
+    WRITE(stdout, '(/,5x,a)') '         You probably need assume_metal == .true '
+  ENDIF
   ! thickness and smearing width of the Fermi surface
   ! from eV to Ryd
   fsthick     = fsthick / ryd2ev
@@ -759,7 +773,7 @@
   ! from cm-1 to Ryd
   eps_acustic = eps_acustic / ev2cmm1 / ryd2ev
   !
-  !    reads the q point (just if ldisp = .FALSE.)
+  ! reads the q point (just if ldisp = .FALSE.)
   !
   ! wmin and wmax from eV to Ryd
   wmin = wmin / ryd2ev
@@ -873,27 +887,27 @@
   IF (nbndsub == 0) nbndsub = nbnd
   !
 #if defined(__MPI)
-  IF (.NOT. (me_pool /=0 .OR. my_pool_id /=0)) THEN
-     nk1 = nk1tmp
-     nk2 = nk2tmp
-     nk3 = nk3tmp
+  IF (.NOT. (me_pool /= 0 .OR. my_pool_id /= 0)) THEN
+    nk1 = nk1tmp
+    nk2 = nk2tmp
+    nk3 = nk3tmp
   ENDIF
 #else
-     nk1 = nk1tmp
-     nk2 = nk2tmp
-     nk3 = nk3tmp
+  nk1 = nk1tmp
+  nk2 = nk2tmp
+  nk3 = nk3tmp
 #endif
   !
   IF (gamma_only) CALL errore('epw_readin',&
      'cannot start from pw.x data file using Gamma-point tricks',1)
   !
   IF (modenum_aux /= -1) THEN
-     modenum = modenum_aux
-     iswitch = -4
+    modenum = modenum_aux
+    iswitch = -4
   ELSEIF (modenum == 0) THEN
-     iswitch = -2
+    iswitch = -2
   ELSE
-     iswitch = -4
+    iswitch = -4
   ENDIF
   !
   CALL mp_bcast(iswitch, meta_ionode_id, world_comm)
@@ -936,23 +950,26 @@
   CALL mp_bcast(nk1, meta_ionode_id, world_comm)
   CALL mp_bcast(nk2, meta_ionode_id, world_comm)
   CALL mp_bcast(nk3, meta_ionode_id, world_comm)
+  !
+  ! ---------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  ! Shell implementation for future use.
   CALL mp_bcast(nPlrn, meta_ionode_id, world_comm)
   CALL mp_bcast(niterPlrn, meta_ionode_id, world_comm)
-  CALL mp_bcast( spherical_cutoff, meta_ionode_id, world_comm )
-  CALL mp_bcast( conv_thr_polaron, meta_ionode_id, world_comm )
-  CAll mp_bcast( restart_polaron, meta_ionode_id, world_comm )
-  CAll mp_bcast( polaron_type, meta_ionode_id, world_comm )
-  CAll mp_bcast( sigma_plrn, meta_ionode_id, world_comm )
-  CAll mp_bcast( full_diagon_plrn, meta_ionode_id, world_comm )
-  CAll mp_bcast( mixing_Plrn, meta_ionode_id, world_comm )
-  CAll mp_bcast( ethr_Plrn, meta_ionode_id, world_comm )
-  CAll mp_bcast( init_plrn_wf, meta_ionode_id, world_comm )
-
-  CAll mp_bcast( sigma_edos_plrn, meta_ionode_id, world_comm )
-  CAll mp_bcast( sigma_pdos_plrn, meta_ionode_id, world_comm )
-  CAll mp_bcast( pmax_plrn, meta_ionode_id, world_comm )
-  CAll mp_bcast( pmin_plrn, meta_ionode_id, world_comm )
+  CALL mp_bcast(spherical_cutoff, meta_ionode_id, world_comm)
+  CALL mp_bcast(conv_thr_polaron, meta_ionode_id, world_comm)
+  CALL mp_bcast(restart_polaron, meta_ionode_id, world_comm)
+  CALL mp_bcast(polaron_type, meta_ionode_id, world_comm)
+  CALL mp_bcast(sigma_plrn, meta_ionode_id, world_comm)
+  CALL mp_bcast(full_diagon_plrn, meta_ionode_id, world_comm)
+  CALL mp_bcast(mixing_Plrn, meta_ionode_id, world_comm)
+  CALL mp_bcast(ethr_Plrn, meta_ionode_id, world_comm)
+  CALL mp_bcast(init_plrn_wf, meta_ionode_id, world_comm)
+  CALL mp_bcast(sigma_edos_plrn, meta_ionode_id, world_comm)
+  CALL mp_bcast(sigma_pdos_plrn, meta_ionode_id, world_comm)
+  CALL mp_bcast(pmax_plrn, meta_ionode_id, world_comm)
+  CALL mp_bcast(pmin_plrn, meta_ionode_id, world_comm)
+  ! ---------------------------------------------------------------------------------
   !
   amass = AMU_RY * amass
   !

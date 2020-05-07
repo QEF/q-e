@@ -185,3 +185,30 @@ program elph
 
 end program elph
 
+!-----------------------------------------------------------------------
+SUBROUTINE remove_comments_from_string( string )  
+  !-----------------------------------------------------------------------
+  !
+  ! chop string removing everything after an esclamation mark (!)
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER (LEN=*), INTENT(INOUT) :: string
+  INTEGER                       :: len, l  
+  !
+  !
+  len = LEN_TRIM( string )  
+  !
+  l=1
+  DO WHILE ( string(l:l) /= "!" ) 
+     l = l + 1
+     if (l == len+1) EXIT 
+  END DO
+  len = l-1
+  !
+  string = string(1:len)
+  ! 
+  RETURN
+  !
+END SUBROUTINE remove_comments_from_string
+!

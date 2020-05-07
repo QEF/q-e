@@ -143,8 +143,8 @@ CONTAINS
       ALLOCATE( rho%kin_g(1,1) )
    ENDIF
    !
-   lda_plus_u_co  = lda_plus_u .AND. .NOT. ( nspin == 4 )
-   lda_plus_u_nc  = lda_plus_u .AND.       ( nspin == 4 )
+   lda_plus_u_co  = lda_plus_u .AND. .NOT. ( nspin == 4 ) .AND. .NOT. ( lda_plus_u_kind == 2)
+   lda_plus_u_nc  = lda_plus_u .AND.       ( nspin == 4 ) .AND. .NOT. ( lda_plus_u_kind == 2)
    lda_plus_u_cob = .FALSE.
    IF (lda_plus_u_co) THEN
       DO nt = 1, ntyp
@@ -211,8 +211,8 @@ CONTAINS
       rho%kin_g = 0._dp
    ENDIF
    !
-   lda_plus_u_co = lda_plus_u .AND. .NOT. (nspin == 4 )
-   lda_plus_u_nc = lda_plus_u .AND.       (nspin == 4 )
+   lda_plus_u_co = lda_plus_u .AND. .NOT. (nspin == 4 ) .AND. .NOT. ( lda_plus_u_kind == 2)
+   lda_plus_u_nc = lda_plus_u .AND.       (nspin == 4 ) .AND. .NOT. ( lda_plus_u_kind == 2)
    lda_plus_u_cob = .FALSE.
    IF (lda_plus_u_co) THEN
       DO nt = 1, ntyp

@@ -56,6 +56,7 @@ fi
 # a small number of processors; do not use tests and examples to benchmark
 # parallelism, do not run on too many processors
 
+
 PARA_PREFIX=" "
 PARA_PREFIX="mpirun -np 4"
 #
@@ -78,6 +79,15 @@ PARA_POSTFIX=" -nk 1 -nd 1 -nb 1 -nt 1 "
 #
 PARA_IMAGE_POSTFIX="-ni 2 $PARA_POSTFIX"
 PARA_IMAGE_PREFIX="mpirun -np 4"
+
+#
+# In case of mixed MPI / OpenMP parallelization you may want to limit the maximum
+# number to OpenMP threads so that the number of threads per MPI process times the
+# number of MPI processes equals the number of available cores to avoid hyperthreading
+#
+# OpenMP parallelization max number of threads
+#
+export OMP_NUM_THREADS=1
 
 # function to test the exit status of a job
 check_failure () {

@@ -309,6 +309,7 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   REAL(DP), DIMENSION(4*length) :: raux, s2aux
   REAL(DP), ALLOCATABLE :: v1x(:), v2x(:), v1c(:), v2c(:)
   REAL(DP), ALLOCATABLE :: sx(:), sc(:)
+  REAL(DP), PARAMETER :: small = 1.E-30_DP
   !
   ALLOCATE( v1x(4*length), v2x(4*length), sx(4*length) )
   ALLOCATE( v1c(4*length), v2c(4*length), sc(4*length) )
@@ -328,6 +329,11 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   raux(i4:f4) = r_in     ;   s2aux(i4:f4) = (s-ds)**2
   !
   CALL gcxc( length*4, raux, s2aux, sx, sc, v1x, v2x, v1c, v2c )
+  !
+  ! ... to avoid NaN in the next operations
+  WHERE( r_in<=small .OR. s2_in<=small )
+    dr = 1._DP ; ds = 1._DP ; s = 1._DP
+  END WHERE
   !
   vrrx = 0.5_DP * (v1x(i1:f1) - v1x(i2:f2)) / dr
   vrrc = 0.5_DP * (v1c(i1:f1) - v1c(i2:f2)) / dr
