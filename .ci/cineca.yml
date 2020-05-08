@@ -27,8 +27,8 @@ pgi cuda mpi:
   tags: [k80]
   script:
     - module purge
-    - module load profile/global pgi/17.10 mkl/2018--binary cuda/8.0.61
-    - ./configure --enable-openmp --with-cuda-runtime=8.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME --with-scalapack=no
+    - module load profile/global pgi/19.10--binary mkl/2019--binary cuda/10.0
+    - ./configure --enable-openmp --with-cuda-runtime=10.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME --with-scalapack=no
     - make -j pw cp
     - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
     - echo "Using $SLURM_NTASKS procs and $OMP_NUM_THREADS threads"
@@ -92,8 +92,8 @@ pgi cuda serial:
   tags: [k80]
   script:
     - module purge
-    - module load profile/global pgi/17.10 mkl/2018--binary cuda/8.0.61
-    - ./configure --disable-parallel --enable-openmp --with-cuda-runtime=8.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME
+    - module load profile/global pgi/19.10--binary mkl/2019--binary cuda/10.0
+    - ./configure --disable-parallel --enable-openmp --with-cuda-runtime=10.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME
     - make -j pw cp
     - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
     - echo "Using $OMP_NUM_THREADS threads"
