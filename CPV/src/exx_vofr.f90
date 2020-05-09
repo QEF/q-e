@@ -267,7 +267,6 @@ SUBROUTINE getvofr(me_r, ps_r, n_me, n_ps, hcub, rhops, potme, guess_state, psgs
     USE exx_module,              ONLY  :  n_exx
     USE funct,                   ONLY  :  get_screening_parameter
     USE mp_global,               ONLY  :  me_image
-    USE input_parameters,        ONLY  :  exx_solver
     USE parallel_include
     USE exx_module,              ONLY  :  pot_ps, rho_ps
     !
@@ -479,20 +478,6 @@ SUBROUTINE getvofr(me_r, ps_r, n_me, n_ps, hcub, rhops, potme, guess_state, psgs
     !pot_ps = pot_ps_d
 !#endif
 
-    !IF (TRIM(ADJUSTL(exx_solver)) .EQ. 'STDCG') THEN
-    !    call cg_solver_stdcg
-    !    ! WRITE(*,"(A, I4)") "number of PCG steps:", nstep
-    !ELSE IF (TRIM(ADJUSTL(exx_solver)) .EQ. 'STDCG_GPU') THEN
-    !    !call cg_solver_cpu
-    !    call cg_solver_stdcg
-    !    ! WRITE(*,"(A, I4)") "number of PCG steps:", nstep
-    !ELSE IF (TRIM(ADJUSTL(exx_solver)) .EQ. 'PCG_GPU') THEN
-    !    !call cg_solver_cpu_pcg
-    !    ! WRITE(*,"(A, I4)") "number of PCG steps:", nstep
-    !ELSE 
-    !    !CALL multigrid(nstep, ncb, poisson_eps, coeke, rho_ps, pot_ps) ! multigrid is default
-    !    ! WRITE(*,"(A, I4)") "number of MG steps:", nstep
-    !END IF
     !---------------------------------------------------------------------------
     CALL stop_clock('getvofr_solver')
     !---------------------------------------------------------------------------

@@ -644,8 +644,6 @@ CONTAINS
         ALLOCATE( vwc(3, vnbsp) )
         ALLOCATE( pair_dist( 3, neigh, my_nbspx), stat=ierr )
         pair_dist (:,:,:) = 0.0_DP
-        ALLOCATE( pairv( np_in_sp_p, 3, neigh, my_nbspx), stat=ierr )
-        pairv (:,:,:,:) = 0.0_DP
       END IF
       !
       WRITE(stdout,'(/,3X,"----------------------------------------------------")')

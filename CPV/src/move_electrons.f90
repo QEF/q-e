@@ -90,7 +90,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
         IF ( lwfpbe0nscf ) THEN
            !
            CALL start_clock('exact_exchange')
-           CALL exx_es(nfi, c0_bgrp, cv0)
+           !CALL exx_es(nfi, c0_bgrp, cv0)
            CALL stop_clock('exact_exchange')
            !
         ELSE
