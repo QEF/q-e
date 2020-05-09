@@ -14,6 +14,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
     USE cell_base,               ONLY  : omega
     USE parallel_include
     USE mp,                      ONLY  : mp_barrier
+    !USE gvecs,                   ONLY  : nlsm, nls
     USE mp_wave,                 ONLY  : redistwfr
     USE io_global,               ONLY  : stdout         !print/write argument for standard output (to output file)
     USE fft_helper_subroutines
@@ -41,14 +42,20 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
     INTEGER,    ALLOCATABLE    :: sdispls1(:), sendcount1(:)
     INTEGER,    ALLOCATABLE    :: rdispls1(:), recvcount1(:)
     INTEGER                    :: igoff, idx
+#ifdef __CUDA
+    COMPLEX(DP), ALLOCATABLE, DEVICE   ::    psis_d(:), ca_d(:), c_d(:,:)
+    REAL(DP),    ALLOCATABLE, DEVICE   ::    psis2_d(:,:)
+#endif
     !
     me=me_image + 1
     !
     nr1s=dfftp%nr1; nr2s=dfftp%nr2; nr3s=dfftp%nr3 
     !
     IF (nproc_image .GE. nr3s) THEN
+      !sizefft=MAX(nr1s*nr2s,dffts%npp(me)*nr1s*nr2s)
       sizefft=MAX(nr1s*nr2s,nr1s*nr2s*dffts%my_nr3p)
     ELSE
+      !sizefft=dffts%npp(me)*nr1s*nr2s
       sizefft=nr1s*nr2s*dffts%my_nr3p
     END IF 
     !
@@ -67,30 +74,62 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
       !
       ALLOCATE ( psis(dffts%nnr)    ); psis=0.0_DP
       ALLOCATE ( psis2(sizefft,nbsp)); psis2=0.0_DP
+#ifdef __CUDA
+      ALLOCATE ( psis_d(dffts%nnr)    ); psis_d=0.0_DP
+      ALLOCATE ( psis2_d(sizefft,nbsp)); psis2_d=0.0_DP
+      ALLOCATE ( ca_d(ngw) ); ca_d = (0.0_DP, 0.0_DP)
+      ALLOCATE ( c_d, source = c);
+#endif
       !
       ca(:)=(0., 0.)
       !
       DO i = 1, nbsp, 2
         !
         IF ( (MOD(nbsp, 2) .NE. 0) .AND. (i .EQ. nbsp ) ) THEN     
-          CALL c2psi_gamma( dffts, psis(1:sizefft), c(:,i), ca(:))
+          !CALL c2psi( psis(1:sizefft), sizefft, c(1,i), ca(1), ngw, 2)
+#ifdef __CUDA
+          CALL c2psi_gamma( dffts, psis_d, c_d(:,i), ca_d)
+#else
+          CALL c2psi_gamma( dffts, psis, c(:,i), ca)
+#endif
         ELSE
-          CALL c2psi_gamma( dffts, psis(1:sizefft), c(:,i), c(:, i+1))
+          !CALL c2psi( psis(1:sizefft), sizefft, c(1,i), c(1, i+1), ngw, 2)
+#ifdef __CUDA
+          CALL c2psi_gamma( dffts, psis_d, c_d(:,i), c_d(:, i+1))
+#else
+          CALL c2psi_gamma( dffts, psis, c(:,i), c(:, i+1))
+#endif
         END IF 
         !
-        CALL invfft( 'Wave', psis(1:sizefft), dffts )
+#ifdef __CUDA
+        associate(psis=>psis_d, psis2=>psis2_d)  
+#endif
+        CALL invfft( 'Wave', psis, dffts )
         !
+#ifdef __CUDA
+        !$cuf kernel do (1)
+#endif
         DO ir = 1,sizefft
           psis2(ir,i) = DBLE(psis(ir))
         END DO
         !
         IF ( (mod(nbsp, 2) .EQ. 0) .OR. (i .NE. nbsp ) ) THEN
+#ifdef __CUDA
+          !$cuf kernel do (1)
+#endif
           DO ir=1,sizefft
             psis2(ir,i+1) = AIMAG(psis(ir))
           END DO
         END IF
         !
+#ifdef __CUDA
+      end associate
+#endif
       END DO !loop over state i
+
+#ifdef __CUDA
+      psis2 = psis2_d
+#endif
       !
       CALL redistwfr( psis2, psitot2, my_nxyz, my_nbsp, intra_image_comm, 1 )
       !
@@ -105,6 +144,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
       !write(stdout,'("dffts%nnr*nogrp:",I10)'), dffts%nnr*nogrp
       !write(stdout,'("nogrp*nr3 should be smaller or equal to nproc_image:")')
       !
+      !nogrp = dffts%nogrp
       nogrp = fftx_ntgrp(dffts)
       !
       ALLOCATE( sdispls(nproc_image), sendcount(nproc_image) ); sdispls=0; sendcount=0
@@ -135,19 +175,51 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
       nnr2 = dffts%nnr/2
       !
       !**** nbsp has to be divisible by (2*nogrp) ***
-      !
       DO i = 1, nbsp, 2*nogrp
         !
         CALL c2psi_gamma_tg( dffts, psis, c, i, nbsp )
+        !psis (:) = (0.d0, 0.d0)
         !
-        CALL invfft( 'tgWave', psis, dffts )
+        !igoff = 0
+        !!
+        !DO idx = 1, 2*nogrp , 2
+        !  !
+        !  !  important: if n is odd => c(*,n+1)=0.
+        !  !
+        !  IF ( idx + i - 1 < nbsp ) THEN
+        !    !$omp parallel do 
+        !    DO ig=1,ngw
+        !      psis(nlsm(ig)+igoff) = CONJG( c(ig,idx+i-1) ) + ci * CONJG( c(ig,idx+i) )
+        !      psis(nls(ig) +igoff) =        c(ig,idx+i-1)   + ci * c(ig,idx+i)
+        !    END DO
+        !    !$omp end parallel do 
+        !  END IF
+        !  !
+        !  ! BS: for odd number of bands ... need to be tested ..
+        !  IF ( idx + i - 1 == nbsp ) THEN
+        !    !$omp parallel do 
+        !    DO ig=1,ngw
+        !      psis(nlsm(ig)+igoff) = CONJG( c(ig,idx+i-1) ) 
+        !      psis(nls(ig) +igoff) =        c(ig,idx+i-1) 
+        !    END DO
+        !    !$omp end parallel do 
+        !  END IF
+        !  !
+        !  igoff = igoff + dffts%nnr
+        !  !
+        !END DO
         !
-#if defined(__MPI)
+        !CALL invfft( 'tgWave', psis, dffts )
+        CALL invfft( 'Wave', psis, dffts )
         !
+#ifdef __MPI
+        !
+        !CALL mp_barrier( dffts%ogrp_comm )
         CALL mp_barrier( fftx_tgcomm(dffts) )
         CALL MPI_ALLTOALLV(psis, sendcount1, sdispls1, MPI_DOUBLE_COMPLEX, &
             &         psis1, recvcount1, rdispls1, MPI_DOUBLE_COMPLEX, &
             &         fftx_tgcomm(dffts), ierr)
+        !    &         dffts%ogrp_comm, ierr)
 #endif
         !
         ngpww1 = 0
@@ -212,11 +284,11 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
       rdispls(1) = 0
       !
       DO proc = 2,  nproc_image
-        sdispls(proc)=  sdispls(proc-1) + sendcount(proc-1)
+        sdispls(proc) = sdispls(proc-1) + sendcount(proc-1)
         rdispls(proc) = rdispls(proc-1) + recvcount(proc-1)
       END DO
       !
-#if defined(__MPI)
+#ifdef __MPI
       !
       CALL mp_barrier( intra_image_comm )
       CALL MPI_ALLTOALLV(psis2, sendcount,sdispls,MPI_DOUBLE_PRECISION, &
@@ -245,6 +317,13 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
     IF (ALLOCATED(recvcount))    DEALLOCATE(recvcount)
     IF (ALLOCATED(sendcount1))   DEALLOCATE(sendcount1)
     IF (ALLOCATED(recvcount1))   DEALLOCATE(recvcount1)
+
+#ifdef __CUDA
+    DEALLOCATE (psis_d)
+    DEALLOCATE (psis2_d)
+    DEALLOCATE (ca_d)
+    DEALLOCATE (c_d)
+#endif
     !
     !=========================================================================
     !

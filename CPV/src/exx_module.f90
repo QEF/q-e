@@ -40,6 +40,8 @@ MODULE exx_module
   USE funct,              ONLY: stop_exx, start_exx
   USE input_parameters,   ONLY: ref_alat           !alat of reference cell ..
   USE input_parameters,   ONLY: ref_cell           !.true. if reference cell parameters are in use, .false. otherwise ... 
+  USE input_parameters,   ONLY: exx_ps_sl_s=>exx_ps_sl_self
+  USE input_parameters,   ONLY: exx_ps_sl_p=>exx_ps_sl_pair
   USE io_global,          ONLY: stdout             !print/write argument for standard output (to output file)
   USE kinds,              ONLY: DP                 !double-precision kind (selected_real_kind(14,200))
   USE mp,                 ONLY: mp_sum             !MPI collection with sum
@@ -50,10 +52,6 @@ MODULE exx_module
   USE parallel_include
   USE wannier_base,       ONLY: neigh         ! maximum number of neighbors set in the calculation to initialize many arrays  ...
   USE wannier_base,       ONLY: dis_cutoff    ! radius to obtain WF pairs 
-  USE wannier_base,       ONLY: exx_ps_rcut_s ! radius of the poisson sphere for self orbital
-  USE wannier_base,       ONLY: exx_me_rcut_s ! radius of the ME sphere for self orbital
-  USE wannier_base,       ONLY: exx_ps_rcut_p ! radius of the poisson sphere for pair orbital
-  USE wannier_base,       ONLY: exx_me_rcut_p ! radius of the ME sphere for pair orbital
   USE wannier_base,       ONLY: vnbsp 
   USE fft_helper_subroutines
   !
@@ -64,6 +62,7 @@ MODULE exx_module
   ! PUBLIC variables 
   !
   INTEGER, PARAMETER, PUBLIC          :: lmax=6  ! maximum angular momentum ... 
+  INTEGER, PARAMETER, PUBLIC          :: lm_mx=((lmax+1)*(lmax+2))/2  ! size of flattened 1d lm angular momentum ... 
   INTEGER, PARAMETER, PUBLIC          :: nord1=3 ! order of expansion for first derivatives  ( points on one side) ...
   INTEGER, PARAMETER, PUBLIC          :: nord2=3 ! order of expansion for second derivatives ( points on one side) ...
   !
@@ -71,49 +70,90 @@ MODULE exx_module
   INTEGER, PUBLIC                     :: sc_fac  ! scaling factor to parallelize on (nproc_image=integer multiple of nbsp)
   ! sc_fac=INT(nproc_image/nbsp); the parallelization can be 
   ! generalized for any number of procesors by using an array of sc_fac(1:nbsp)
-  INTEGER, PUBLIC                     :: np_in_sp_s, np_in_sp_me_s  ! number of grid points in the PS sphere and the ME sphere for self orbital in Full Grid 
-  INTEGER, PUBLIC                     :: np_in_sp_p, np_in_sp_me_p  ! number of grid points in the PS sphere and the ME sphere for pair orbital in Full Grid
+  !----------------------------------------------------------------------------------------------------------------
+  ! JJ: new variables
+  !----------------------------------------------------------------------------------------------------------------
+  INTEGER, PUBLIC                     :: s_me_r(6), n_s_me      ! start/ending indexes for 3-dimension in self multipole cube
+  INTEGER, PUBLIC                     :: s_ps_r(6), n_s_ps      ! start/ending indexes for 3-dimension in self poisson cube
+  INTEGER, PUBLIC                     :: p_me_r(6), n_p_me      ! start/ending indexes for 3-dimension in pair multipole cube
+  INTEGER, PUBLIC                     :: p_ps_r(6), n_p_ps      ! start/ending indexes for 3-dimension in pair poisson cube 
+  !----------------------------------------------------------------------------------------------------------------
+  INTEGER, PUBLIC                     :: PScubeSL_s
+  INTEGER, PUBLIC                     :: PScubeSL_p
+  INTEGER, PUBLIC                     :: MEcubeSL_s
+  INTEGER, PUBLIC                     :: MEcubeSL_p
+  INTEGER, PUBLIC                     :: nrg(3)
+  INTEGER, PUBLIC                     :: nrgr(3)
+  !----------------------------------------------------------------------------------------------------------------
   !
   INTEGER, PUBLIC                     :: my_nbspx               ! parallelization/distribution of orbitals over processors 
-  INTEGER,  ALLOCATABLE, PUBLIC       :: my_nbsp(:), my_nxyz(:) ! parallelization/distribution of orbitals over processors 
-  INTEGER,  ALLOCATABLE, PUBLIC       :: index_my_nbsp (:, :), rk_of_obtl (:), lindex_of_obtl(:) ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: my_nbsp(:)             ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: my_nxyz(:)             ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: index_my_nbsp(:, :)    ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: rk_of_obtl(:)          ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: lindex_of_obtl(:)      ! parallelization/distribution of orbitals over processors 
   !
-  ! conversion between 3D index (i,j,k) and 1D index 
-  ! odthothd_in_sp(3, 1:np_in_sp_p) is for inner sphere (1st shell)
-  ! odthothd_in_sp(3, np_in_sp_p+1:np_tmp_1) is for 2nd shell
-  ! odthothd_in_sp(3, np_tmp_1+1:np_tmp_2) is for 3rd shell
-  ! odthothd_in_sp(3, np_tmp_2:np_in_sp_me_s) is for 4th shell
-  INTEGER,  ALLOCATABLE, PUBLIC       :: odtothd_in_sp(:,:)     ! 1D to 3D index converter in local grid within largest ME sphere
-  INTEGER,  ALLOCATABLE, PUBLIC       :: thdtood_in_sp(:,:,:)   ! 3D to 1D index converter in local grid within largest ME sphere
-  INTEGER,  ALLOCATABLE, PUBLIC       :: thdtood(:,:,:)         ! 3D to 1D index converter in global grid (nr1,nr2,nr3 => nr1*nr2*nr3) 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: pair_label(:,:)        ! the orbital label of previous pair potential/density
+  INTEGER,  ALLOCATABLE, PUBLIC       :: pair_step(:,:)         ! the last step that we use previous pair potential/density
+  INTEGER,  ALLOCATABLE, PUBLIC       :: pair_status(:,:)       ! the status of this pair for guess
+  INTEGER,  ALLOCATABLE, PUBLIC       :: prev_obtl_overlap(:,:) ! obtl_recv of previous step
+  INTEGER,  ALLOCATABLE, PUBLIC       :: prev_obtl_recv(:,:)    ! obtl_recv of previous step
   !
   REAL(DP), ALLOCATABLE, PUBLIC       :: rhopr(:,:)
   !
-  REAL(DP), ALLOCATABLE, PUBLIC       :: xx_in_sp(:)            ! distance between centre of the simulation box and grid points along X direction .. 
-  REAL(DP), ALLOCATABLE, PUBLIC       :: yy_in_sp(:)            ! distance between centre of the simulation box and grid points along Y direction .. 
-  REAL(DP), ALLOCATABLE, PUBLIC       :: zz_in_sp(:)            ! distance between centre of the simulation box and grid points along Z direction .. 
+  REAL(DP), ALLOCATABLE, PUBLIC       :: me_cs(:,:,:,:)         ! coordinate  of every point in ME cube
+  REAL(DP), ALLOCATABLE, PUBLIC       :: me_rs(:,:,:,:)         ! distance^n  of every point in ME cube
+  REAL(DP), ALLOCATABLE, PUBLIC       :: me_ri(:,:,:,:)         ! distance^-n of every point in ME cube
+  COMPLEX(DP), ALLOCATABLE, PUBLIC    :: me_rc(:,:,:,:)         ! exp(i*m*phi_j) of everg point in PS cube
   !
-  REAL(DP), ALLOCATABLE, PUBLIC       :: sc_xx_in_sp(:)         ! scaled distance between centre of the simulation box and grid points along X direction .. 
-  REAL(DP), ALLOCATABLE, PUBLIC       :: sc_yy_in_sp(:)         ! scaled distance between centre of the simulation box and grid points along Y direction .. 
-  REAL(DP), ALLOCATABLE, PUBLIC       :: sc_zz_in_sp(:)         ! scaled distance between centre of the simulation box and grid points along Z direction .. 
+#ifdef __CUDA
+  REAL(DP), ALLOCATABLE, PUBLIC   , DEVICE :: me_cs_d(:,:,:,:)       ! coordinate  of every point in ME cube
+  REAL(DP), ALLOCATABLE, PUBLIC   , DEVICE :: me_rs_d(:,:,:,:)       ! distance^n  of every point in ME cube
+  REAL(DP), ALLOCATABLE, PUBLIC   , DEVICE :: me_ri_d(:,:,:,:)       ! distance^-n of every point in ME cube
+  COMPLEX(DP), ALLOCATABLE, PUBLIC, DEVICE :: me_rc_d(:,:,:,:)       ! exp(i*m*phi_j) of everg point in PS cube
+#endif
   !
   REAL(DP), ALLOCATABLE, PUBLIC       :: selfv(:,:,:)           ! self potential stored in Poisson sphere as guess potential ...
+  REAL(DP), ALLOCATABLE, PUBLIC       :: selfrho(:,:,:)         ! self density stored in Poisson sphere for guess potential ...
   REAL(DP), ALLOCATABLE, PUBLIC       :: pair_dist(:,:,:)       ! pair distance stored in order to extrapolate guess potential ...    
   REAL(DP), ALLOCATABLE, PUBLIC       :: pairv(:,:,:,:)         ! pair potential stored in Poisson sphere as guess potential ...
+  REAL(DP), ALLOCATABLE, PUBLIC       :: pairrho(:,:,:,:)       ! pair density stored in Poisson sphere for guess potential ...
   !
   REAL(DP), ALLOCATABLE, PUBLIC       :: exx_potential(:, :)    ! EXX potential which is passed/added to the DFT-GGA potential ... 
   !
   REAL(DP), ALLOCATABLE, PUBLIC       :: clm(:,:)
-  REAL(DP), ALLOCATABLE, PUBLIC       :: coeke(:,:,:)           ! coeke(neighbor, d/di, d/dj)
   REAL(DP), ALLOCATABLE, PUBLIC       :: coe_1st_derv(:,:)      ! coe_1st_derv(neighbor, d/di)
+  REAL(DP), ALLOCATABLE, PUBLIC       :: coeke(:,:,:)           ! coeke(neighbor, d/di, d/dj)
+  REAL(DP), ALLOCATABLE, PUBLIC       :: coemicf(:,:,:)         ! coefficient for preconditioner
   REAL(DP), ALLOCATABLE, PUBLIC       :: vwc(:,:)
   REAL(DP), PUBLIC                    :: h_init(3,3)
   REAL(DP), PUBLIC                    :: dexx_dh(3,3)           ! dexx/dhab for vofrho.f90
   REAL(DP), PUBLIC                    :: exxalfa                ! fraction of exx mixing (locally used in CP)
+  REAL(DP), PUBLIC                    :: fbsscale               ! coefficient for preconditioner
   !
 #if defined(_OPENMP)
   INTEGER, EXTERNAL                   :: omp_get_max_threads
 #endif
+#if defined __CUDA
+  REAL(DP), ALLOCATABLE, PUBLIC, DEVICE       :: coe_1st_derv_d(:,:)      ! coe_1st_derv(neighbor, d/di)
+  REAL(DP), ALLOCATABLE, PUBLIC, DEVICE       :: coeke_d(:,:,:)           ! coeke(neighbor, d/di, d/dj)
+  REAL(DP), ALLOCATABLE, PUBLIC, DEVICE       :: coemicf_d(:,:,:)         ! coefficient for preconditioner
+#endif
+  real(dp), allocatable, public  :: psime_pair_recv(:,:,:),psime_pair_send(:,:,:)
+  real(dp), allocatable, public  :: rho_ps(:)
+  real(dp), allocatable, public  :: pot_ps(:)
+#ifdef __CUDA
+  attributes(device) :: rho_ps, pot_ps
+  !attributes(device) :: psime_pair_recv,psime_pair_send
+  attributes(pinned) :: psime_pair_send, psime_pair_recv
+  !real(dp), allocatable, device :: potme_d(:)
+  real(dp), allocatable, device :: psime_pair_recv_d(:,:,:),psime_pair_send_d(:,:,:)
+  real(dp), allocatable, device :: psi_d(:,:)!,rhops_d(:)
+  !reaL(dp), allocatable, device :: psime_d(:)
+  !real(dp), allocatable, device :: rhome_d(:)
+  real(dp), allocatable, device :: potpsi_d(:,:)
+#endif
+
   !==========================================================================
   !
   ! PRIVATE variables 
@@ -127,7 +167,6 @@ MODULE exx_module
   !
   PUBLIC :: exx_initialize
   PUBLIC :: exx_finalize
-  PUBLIC :: getnpinsp 
   PUBLIC :: exx_setup 
   PUBLIC :: exx_setup_nscf
   PUBLIC :: fornberg
@@ -136,7 +175,7 @@ MODULE exx_module
   ! PRIVATE subroutines
   !
   PRIVATE :: setclm 
-  PRIVATE :: exx_pot_derivative
+  ! PRIVATE :: exx_pot_derivative
   !
   !
 CONTAINS
@@ -150,7 +189,8 @@ CONTAINS
       !
       include 'laxlib.fh'
       !
-      INTEGER ::  i, iobtl, gindex_of_iobtl, irank, proc, tmp_iobtl, ndiag_n, ndiag_nx, ndiag_i
+      INTEGER  :: i, iobtl, gindex_of_iobtl, irank, proc, tmp_iobtl, ndiag_n, ndiag_nx, ndiag_i
+      REAL(DP) :: hx, hy, hz                             !grid spacing along lattice directions
       CHARACTER (len=300) :: print_str
       ndiag_i = ndiag_
       !
@@ -169,7 +209,7 @@ CONTAINS
 #if defined(_OPENMP)
       WRITE(stdout,'(5X,"OpenMP threads/MPI task",3X,I4)') omp_get_max_threads() 
 #endif
-      WRITE(stdout,'(5X,"Taskgroups          ",3X,I7)') fftx_ntgrp(dffts)
+      WRITE(stdout,'(5X,"Taskgroups          ",3X,I7)') fftx_ntgrp(dffts) 
       !
       ! the fraction of exact exchange is stored here
       !
@@ -195,33 +235,6 @@ CONTAINS
       !
       WRITE(stdout,'(/,3X,"parameters used in exact exchange calculation",/ &
           &,5X,"radius to compute pairs:",F6.1,1X,"A.U.",3X,"maximum number of neighbors:",I5)')dis_cutoff,neigh
-      !
-      WRITE(stdout,'(/,3X,"parameters used to solve Poisson equation",/ &
-          &,5X,"radius for self potential:",F6.1,1X,"A.U."   &
-          &,3X,"radius for pair potential:",F6.1,1X,"A.U.",/ &
-          &,5X,"Poisson solver discretized using",I4,3X,"points in each dimension")')exx_ps_rcut_s,exx_ps_rcut_p,2*nord2+1
-      !
-      WRITE(stdout,'(/,3X,"parameters used for multipole expansion",/   &
-          &,5X,"radius for self potential:",F6.1,1X,"A.U."   &
-          &,3X,"radius for pair potential:",F6.1,1X,"A.U.",/ &
-          &,5X,"maximum angular momentum:",I4)')exx_me_rcut_s,exx_me_rcut_p,lmax
-      !
-      ! Error messages for inconsistencies with current version of code...
-      !
-      IF(exx_ps_rcut_p.GT.exx_ps_rcut_s) CALL errore('exx_module','EXX calculation error :  &
-          & The exx_ps_rcut_pair should be set smaller than or equal to the exx_ps_rcut_self',1)
-      !
-      IF(exx_ps_rcut_p.GE.exx_me_rcut_p) CALL errore('exx_module','EXX calculation error :  &
-          & The exx_ps_rcut_pair should be set smaller than the exx_me_rcut_pair',1)
-      !
-      IF(exx_ps_rcut_p.GE.exx_me_rcut_s) CALL errore('exx_module','EXX calculation error :  &
-          & The exx_ps_rcut_pair should be set smaller than the exx_me_rcut_self',1)
-      !
-      IF(exx_me_rcut_p.GT.exx_me_rcut_s) CALL errore('exx_module','EXX calculation error :  &
-          & The exx_me_rcut_pair should be set smaller than or equal to the exx_me_rcut_self',1)
-      !
-      IF(exx_ps_rcut_s.GE.exx_me_rcut_s) CALL errore('exx_module','EXX calculation error :  &
-          & The exx_ps_rcut_self should be set smaller than the exx_me_rcut_self',1)
       !
       IF(nproc_image.GE.nbsp) THEN
         !
@@ -271,7 +284,7 @@ CONTAINS
         !
       END IF      
       !
-      IF(fftx_ntgrp(dffts).GT.1) CALL errore('exx_module','EXX calculation error : taskgroup no longer supported for exx.',1)
+      !IF((nproc_image.LE.nbsp).AND.(dffts%nogrp.GT.1)) CALL errore('exx_module','EXX calculation error :  &
       IF((nproc_image.LE.nbsp).AND.(fftx_ntgrp(dffts).GT.1)) CALL errore('exx_module','EXX calculation error :  &
           & use taskgroup (-ntg) = 1 when number of MPI tasks is less or equal to the number of electronic states',1)
       !
@@ -334,7 +347,7 @@ CONTAINS
           !
         ELSE IF (NINT(2**(LOG(DBLE(fftx_ntgrp(dffts))) / LOG(2.0))).NE.fftx_ntgrp(dffts)) THEN
           !
-          ! NINT(2**(LOG(DBLE(fftx_ntgrp(dffts))) / LOG(2.0))) is the largest power of 2 that is smaller or equal to dffts%nogrp
+          ! NINT(2**(LOG(DBLE(dffts%nogrp)) / LOG(2.0))) is the largest power of 2 that is smaller or equal to dffts%nogrp
           !
           CALL errore('exx_module','EXX calculation error : &
             & One needs number of task groups =  2^n where n is a positive integer when number of MPI tasks is greater than &
@@ -343,6 +356,7 @@ CONTAINS
         !
       END IF
       !
+      !IF((dffts%nogrp.GT.1).AND.(dfftp%nr3*dffts%nogrp.GT.nproc_image)) CALL errore('exx_module','EXX calculation error : &
       IF((fftx_ntgrp(dffts).GT.1).AND.(dfftp%nr3*fftx_ntgrp(dffts).GT.nproc_image)) &
           & CALL errore('exx_module','EXX calculation error : &
           & (nr3x * number of taskgroups) is greater than the number of MPI tasks. Change the number of MPI tasks or the number &
@@ -364,6 +378,8 @@ CONTAINS
       IF(MOD(nr1,2).EQ.1) nr1r=(nr1+1)/2
       IF(MOD(nr2,2).EQ.1) nr2r=(nr2+1)/2
       IF(MOD(nr3,2).EQ.1) nr3r=(nr3+1)/2
+      nrg(1)=nr1;   nrg(2)=nr2;   nrg(3)=nr3
+      nrgr(1)=nr1r; nrgr(2)=nr2r; nrgr(3)=nr3r
       !
       ! calculates clm = (l-m)!/(l+m)!
       !
@@ -376,6 +392,12 @@ CONTAINS
       !
       ALLOCATE( coe_1st_derv(-nord1:nord1, 3)) ! coe_1st_derv(neighbor, d/di)
       ALLOCATE( coeke(-nord2:nord2, 3,3))      ! coeke(neighbor, d/di, d/dj)
+      ALLOCATE( coemicf(-nord2:nord2, 3,3))    ! coeke(neighbor, d/di, d/dj)
+#ifdef __CUDA
+      ALLOCATE(coe_1st_derv_d, source=coe_1st_derv)
+      ALLOCATE(coeke_d,   source=coeke)
+      ALLOCATE(coemicf_d, source=coemicf)
+#endif
       !
       ! ALLOCATE exx_potential
       !
@@ -415,9 +437,9 @@ CONTAINS
         h_in=h_init
         !
         WRITE(stdout,'(/,3X,"This is a variable cell calculation. In this implementation",/ &
-            &,3X,"the number of grid points used in Poisson sphere and",/ &
-            &,3X,"multipole expansion sphere are kept constant as computed",/ &
-            &,3X,"from the simulation cell given in the input...")')
+                    &,3X,"the number of grid points used in Poisson cube and",/ &
+                    &,3X,"multipole expansion cube are kept constant as computed",/ &
+                    &,3X,"from the simulation cell given in the input...")')
         !
         WRITE(stdout,'(/3X,"cell from input:")')
         WRITE(stdout,'(3X,3F12.6)') h_in
@@ -437,24 +459,68 @@ CONTAINS
       ! get number of points inside the Poisson and (Poisson + Multipole expansion) spheres
       ! for self and pair spheres (using different cutoff radii)
       !
-      CALL getnpinsp(exx_ps_rcut_s, exx_me_rcut_s, np_in_sp_s, np_in_sp_me_s )
-      CALL getnpinsp(exx_ps_rcut_p, exx_me_rcut_p, np_in_sp_p, np_in_sp_me_p )
-      !
-      ! exx_setup   orders the local index in the order such that
-      !                      1 ... np_in_sp_s      is in self Poisson sphere
-      !             np_in_sp_s ... np_in_sp_me_s   is in self Multipole sphere
-      !                      1 ... np_in_sp_p      is in pair Poisson sphere
-      !             np_in_sp_p ... np_in_sp_me_p   is in self Multipole sphere
-      !
-      !             and computes the x y z values for multipole expansion
-      !          ( notice that it is still xyz even in non-orthogonal cells)
+      !--------------------------------------------------------------------------
+      ! calculate grid spaing along each direction
+      !--------------------------------------------------------------------------
+      hx=DSQRT(h(1,1)*h(1,1)+h(2,1)*h(2,1)+h(3,1)*h(3,1))/nr1
+      hy=DSQRT(h(1,2)*h(1,2)+h(2,2)*h(2,2)+h(3,2)*h(3,2))/nr2
+      hz=DSQRT(h(1,3)*h(1,3)+h(2,3)*h(2,3)+h(3,3)*h(3,3))/nr3
+      !--------------------------------------------------------------------------
+      ! nr1r is the 1st dimension of the reduced grid, also the center of the dense grid
+      !--------------------------------------------------------------------------
+      PScubeSL_s = IDNINT((exx_ps_sl_s/MIN(hx,hy,hz))/8.0D0)*8-1
+      PScubeSL_p = IDNINT((exx_ps_sl_p/MIN(hx,hy,hz))/8.0D0)*8-1
+      !--------------------------------------------------------------------------
+      MEcubeSL_s = PScubeSL_s+24;
+      MEcubeSL_p = PScubeSL_p+24;
+      !--------------------------------------------------------------------------
+      ! JJ: the following four lines are for debug purposes, delete them in the end
+      !--------------------------------------------------------------------------
+      ! PScubeSL_s = FLOOR(MIN(nr1,nr2,nr3)/8.0D0)*8-9
+      ! PScubeSL_p = FLOOR(MIN(nr1,nr2,nr3)/8.0D0)*8-9
+      ! MEcubeSL_s = PScubeSL_s+8;
+      ! MEcubeSL_p = PScubeSL_p+8;
+      !--------------------------------------------------------------------------
+      s_ps_r(1) = nr1r - (PScubeSL_s-1)/2;
+      s_ps_r(2) = nr2r - (PScubeSL_s-1)/2;
+      s_ps_r(3) = nr3r - (PScubeSL_s-1)/2;
+      s_ps_r(4) = nr1r - (PScubeSL_s-1)/2 + (PScubeSL_s-1);
+      s_ps_r(5) = nr2r - (PScubeSL_s-1)/2 + (PScubeSL_s-1);
+      s_ps_r(6) = nr3r - (PScubeSL_s-1)/2 + (PScubeSL_s-1);
+      !--------------------------------------------------------------------------
+      p_ps_r(1) = nr1r - (PScubeSL_p-1)/2;
+      p_ps_r(2) = nr2r - (PScubeSL_p-1)/2;
+      p_ps_r(3) = nr3r - (PScubeSL_p-1)/2;
+      p_ps_r(4) = nr1r - (PScubeSL_p-1)/2 + (PScubeSL_p-1);
+      p_ps_r(5) = nr2r - (PScubeSL_p-1)/2 + (PScubeSL_p-1);
+      p_ps_r(6) = nr3r - (PScubeSL_p-1)/2 + (PScubeSL_p-1);
+      !--------------------------------------------------------------------------
+      s_me_r(1) = nr1r - (MEcubeSL_s-1)/2;
+      s_me_r(2) = nr2r - (MEcubeSL_s-1)/2;
+      s_me_r(3) = nr3r - (MEcubeSL_s-1)/2;
+      s_me_r(4) = nr1r - (MEcubeSL_s-1)/2 + (MEcubeSL_s-1);
+      s_me_r(5) = nr2r - (MEcubeSL_s-1)/2 + (MEcubeSL_s-1);
+      s_me_r(6) = nr3r - (MEcubeSL_s-1)/2 + (MEcubeSL_s-1);
+      !--------------------------------------------------------------------------
+      p_me_r(1) = nr1r - (MEcubeSL_p-1)/2;
+      p_me_r(2) = nr2r - (MEcubeSL_p-1)/2;
+      p_me_r(3) = nr3r - (MEcubeSL_p-1)/2;
+      p_me_r(4) = nr1r - (MEcubeSL_p-1)/2 + (MEcubeSL_p-1);
+      p_me_r(5) = nr2r - (MEcubeSL_p-1)/2 + (MEcubeSL_p-1);
+      p_me_r(6) = nr3r - (MEcubeSL_p-1)/2 + (MEcubeSL_p-1);
+      !--------------------------------------------------------------------------
+      n_s_ps = PScubeSL_s**3
+      n_p_ps = PScubeSL_p**3
+      n_s_me = MEcubeSL_s**3
+      n_p_me = MEcubeSL_p**3
+      !--------------------------------------------------------------------------
       !
       CALL exx_setup( )
       !
-      WRITE(stdout,'(/,3X,"number of grid points in Poisson spehere ",/ &
-          &,5X,"self potential:",I8,3X,"pair potential:",I8)')np_in_sp_s,np_in_sp_p
-      WRITE(stdout,'(/,3X,"number of grid points in multipole expansion spehere: ",/ &
-          &,5X,"self potential:",I8,3X,"pair potential:",I8)')np_in_sp_me_s,np_in_sp_me_p
+      WRITE(stdout,'(/,3X,"number of grid points in Poisson cube ",/ &
+          &,5X,"self potential:",I8,3X,"pair potential:",I8)') n_s_ps, n_p_ps
+      WRITE(stdout,'(/,3X,"number of grid points in multipole expansion cube: ",/ &
+          &,5X,"self potential:",I8,3X,"pair potential:",I8)') n_s_me, n_p_me
       !
       ! Variables for parallelization are initialized ....
       !
@@ -505,7 +571,7 @@ CONTAINS
       !DEBUG
       !
       ALLOCATE( index_my_nbsp (my_nbspx, nproc_image) )
-      ALLOCATE( rk_of_obtl ( nbsp ) )
+      ALLOCATE( rk_of_obtl ( MAX(nbsp, nproc_image) ) )
       ALLOCATE( lindex_of_obtl( nbsp ) )
       !
       IF(nproc_image .LE. nbsp) THEN
@@ -533,18 +599,24 @@ CONTAINS
       !WRITE(stdout,'(20I5)')index_my_nbsp(2,:)
       !DEBUG
       !
-      DO iobtl = 1, nbsp
-        rk_of_obtl(iobtl) = 0
-        tmp_iobtl = iobtl
-        DO proc = 1, nproc_image
-          tmp_iobtl = tmp_iobtl - my_nbsp(proc)
-          IF (tmp_iobtl <= 0) THEN
-            rk_of_obtl(iobtl) = proc - 1
-            !print *, 'lrk_of_iobtl=', proc-1, rk_of_obtl(iobtl) 
-            EXIT
-          END IF
+      IF(nproc_image .LE. nbsp) THEN
+        DO iobtl = 1, nbsp
+          rk_of_obtl(iobtl) = 0
+          tmp_iobtl = iobtl
+          DO proc = 1, nproc_image
+            tmp_iobtl = tmp_iobtl - my_nbsp(proc)
+            IF (tmp_iobtl <= 0) THEN
+              rk_of_obtl(iobtl) = proc - 1
+              !print *, 'lrk_of_iobtl=', proc-1, rk_of_obtl(iobtl) 
+              EXIT
+            END IF
+          END DO
         END DO
-      END DO
+      ELSE
+        DO iobtl = 1, nproc_image
+          rk_of_obtl(iobtl) = iobtl - 1
+        END DO
+      END IF
       !
       !DEBUG
       !WRITE(stdout,'("rk_of_obtl")')
@@ -589,27 +661,54 @@ CONTAINS
       IF( ALLOCATED( clm )     )        DEALLOCATE( clm)
       IF( ALLOCATED( coeke)    )        DEALLOCATE( coeke)
       IF( ALLOCATED( coe_1st_derv)   )  DEALLOCATE( coe_1st_derv)
+      IF( ALLOCATED( coemicf)    )      DEALLOCATE( coemicf)
+#ifdef __CUDA
+      IF( ALLOCATED( coe_1st_derv_d)    )      DEALLOCATE( coe_1st_derv_d)
+      IF( ALLOCATED( coeke_d)    )      DEALLOCATE( coeke_d)
+      IF( ALLOCATED( coemicf_d)    )    DEALLOCATE( coemicf_d)
+#endif
       IF( ALLOCATED( exx_potential ) )  DEALLOCATE( exx_potential )
       IF( ALLOCATED( rhopr ) )          DEALLOCATE( rhopr )
       IF( ALLOCATED( vwc)    )          DEALLOCATE( vwc )
       IF( ALLOCATED( selfv ) )          DEALLOCATE( selfv )
+      IF( ALLOCATED( selfrho ) )        DEALLOCATE( selfrho )
       IF( ALLOCATED( pairv ) )          DEALLOCATE( pairv )
+      IF( ALLOCATED( pairrho ) )        DEALLOCATE( pairrho )
       IF( ALLOCATED( pair_dist ) )      DEALLOCATE( pair_dist )
+      IF( ALLOCATED( pair_label ) )     DEALLOCATE( pair_label )
+      IF( ALLOCATED( pair_step ) )      DEALLOCATE( pair_step )
+      IF( ALLOCATED( pair_status ) )    DEALLOCATE( pair_status )
+      IF( ALLOCATED( prev_obtl_recv ) ) DEALLOCATE( prev_obtl_recv )
+      IF( ALLOCATED(prev_obtl_overlap)) DEALLOCATE( prev_obtl_overlap )
       IF( ALLOCATED( my_nxyz ) )        DEALLOCATE( my_nxyz )
       IF( ALLOCATED( my_nbsp ) )        DEALLOCATE( my_nbsp )
       IF( ALLOCATED( index_my_nbsp ) )  DEALLOCATE( index_my_nbsp)
       IF( ALLOCATED( rk_of_obtl ) )     DEALLOCATE( rk_of_obtl)
       IF( ALLOCATED( lindex_of_obtl ) ) DEALLOCATE( lindex_of_obtl )
       !
-      IF( ALLOCATED( odtothd_in_sp ) )  DEALLOCATE( odtothd_in_sp )
-      IF( ALLOCATED( thdtood_in_sp ) )  DEALLOCATE( thdtood_in_sp )
-      IF( ALLOCATED( thdtood  ))        DEALLOCATE( thdtood)
-      IF( ALLOCATED( xx_in_sp ))        DEALLOCATE( xx_in_sp )
-      IF( ALLOCATED( yy_in_sp ))        DEALLOCATE( yy_in_sp )
-      IF( ALLOCATED( zz_in_sp ))        DEALLOCATE( zz_in_sp )
-      IF( ALLOCATED( sc_xx_in_sp ))     DEALLOCATE( sc_xx_in_sp )
-      IF( ALLOCATED( sc_yy_in_sp ))     DEALLOCATE( sc_yy_in_sp )
-      IF( ALLOCATED( sc_zz_in_sp ))     DEALLOCATE( sc_zz_in_sp )
+      IF( ALLOCATED( me_cs ) )          DEALLOCATE( me_cs )
+      IF( ALLOCATED( me_rs ) )          DEALLOCATE( me_rs )
+      IF( ALLOCATED( me_ri ) )          DEALLOCATE( me_ri )
+      IF( ALLOCATED( me_rc ) )          DEALLOCATE( me_rc )
+      IF (ALLOCATED(psime_pair_send))  DEALLOCATE(psime_pair_send)
+      IF (ALLOCATED(psime_pair_recv))  DEALLOCATE(psime_pair_recv)
+      IF (ALLOCATED( rho_ps ))          DEALLOCATE( rho_ps )
+      IF (ALLOCATED( pot_ps ))          DEALLOCATE( pot_ps )
+      !
+#ifdef __CUDA
+      IF( ALLOCATED( me_cs_d ) )          DEALLOCATE( me_cs_d )
+      IF( ALLOCATED( me_rs_d ) )          DEALLOCATE( me_rs_d )
+      IF( ALLOCATED( me_ri_d ) )          DEALLOCATE( me_ri_d )
+      IF( ALLOCATED( me_rc_d ) )          DEALLOCATE( me_rc_d )
+      !IF( ALLOCATED( potme_d ) )          DEALLOCATE( potme_d )
+      IF (ALLOCATED(psime_pair_send_d))  DEALLOCATE(psime_pair_send_d)
+      IF (ALLOCATED(psime_pair_recv_d))  DEALLOCATE(psime_pair_recv_d)
+      IF(ALLOCATED(psi_d   ))  DEALLOCATE(psi_d   )
+      !IF(ALLOCATED(rhops_d ))  DEALLOCATE(rhops_d )
+      !IF(ALLOCATED(psime_d ))  DEALLOCATE(psime_d )
+      !IF(ALLOCATED(rhome_d ))  DEALLOCATE(rhome_d )
+      IF(ALLOCATED(potpsi_d))  DEALLOCATE(potpsi_d)
+#endif
       !
       RETURN
       !
@@ -618,64 +717,12 @@ CONTAINS
 
   !======================================================================
   ! Set up the real-space grid for exact exchange.
-  ! Define two spheres, possion solver is called for potential inside the inner one 
+  ! Define two cube, possion solver is called for potential inside the inner one 
   ! Multipole expansion is used for points inside the outer one and all other points
   ! are set to zero.
   !
   ! Adapted from PARSEC by Lingzhu Kong. http://parsec.ices.utexas.edu/
   !========================================================================
-  !--------------------------------------------------------------------------------------------------------------
-  SUBROUTINE getnpinsp( exx_ps_rcut, exx_me_rcut, np_in_sp, np_in_sp_me )
-      !
-      IMPLICIT NONE
-      !
-      REAL(DP) :: exx_ps_rcut, exx_me_rcut
-      INTEGER  :: np_in_sp, np_in_sp_me
-      !
-      REAL(DP) :: x,y,z,dqs(3),dq(3),dist
-      INTEGER  :: i,j,k,np_in_sp2
-      ! --------------------------------------------------------------------
-      np_in_sp=0;np_in_sp2=0;np_in_sp_me= 0
-      !
-      DO k = 1,nr3
-        DO j = 1, nr2
-          DO i =1, nr1
-            !
-            ! distances between Grid points and center of the simulation cell in S space
-            ! center of the box is set to grid point at int(nr1/2), int(nr2/2), int(nr3/2) for every cell
-            ! 
-            dqs(1) = (DBLE(i)/DBLE(nr1)) - DBLE(INT(nr1/2))/DBLE(nr1)
-            dqs(2) = (DBLE(j)/DBLE(nr2)) - DBLE(INT(nr2/2))/DBLE(nr2)
-            dqs(3) = (DBLE(k)/DBLE(nr3)) - DBLE(INT(nr3/2))/DBLE(nr3)
-            !
-            ! Here we are computing distances between Grid points and center of the simulation cell, so no MIC is needed ...
-            ! Compute distance between grid point and the center of the simulation cell in R space 
-            !
-            dq(1)=h_in(1,1)*dqs(1)+h_in(1,2)*dqs(2)+h_in(1,3)*dqs(3)   !r_i = h s_i
-            dq(2)=h_in(2,1)*dqs(1)+h_in(2,2)*dqs(2)+h_in(2,3)*dqs(3)   !r_i = h s_i
-            dq(3)=h_in(3,1)*dqs(1)+h_in(3,2)*dqs(2)+h_in(3,3)*dqs(3)   !r_i = h s_i
-            !
-            dist = DSQRT(dq(1)*dq(1)+dq(2)*dq(2)+dq(3)*dq(3))
-            !
-            IF (dist .LE. exx_ps_rcut) THEN
-              !
-              np_in_sp = np_in_sp + 1
-              !
-            ELSE IF (dist .LE. exx_me_rcut) THEN
-              !
-              np_in_sp2 = np_in_sp2 + 1
-              !
-            END IF
-            !
-            np_in_sp_me = np_in_sp+np_in_sp2
-            !
-          END DO !i
-        END DO !j
-      END DO !k
-      !
-      RETURN
-  END SUBROUTINE getnpinsp
-  !--------------------------------------------------------------------------------------------------------------
 
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE exx_setup( )
@@ -688,153 +735,21 @@ CONTAINS
       ! LOCAL VARIABLES
       INTEGER  :: np, npsp1, npsp2, npsp3, npsp4, np_tmp_1, np_tmp_2 
       REAL(DP) :: x,y,z, dq(3),dqs(3),dist, rcut_sp2, rcut_sp3
-      INTEGER  :: i,j,k, ierr, tmp
+      INTEGER  :: i,j,k,l, ierr, tmp
       ! --------------------------------------------------------------------
       !
-      !! This part would be necessary if number of points in PS and ME sphere
-      !! change every step
-      !IF(n_exx.GT.0) THEN 
-      !    IF( ALLOCATED( odtothd_in_sp ) )  DEALLOCATE(odtothd_in_sp )
-      !    IF( ALLOCATED( thdtood_in_sp ) )  DEALLOCATE(thdtood_in_sp )
-      !    IF( ALLOCATED( thdtood  ))        DEALLOCATE(thdtood)
-      !    IF( ALLOCATED( xx_in_sp ))        DEALLOCATE(xx_in_sp )
-      !    IF( ALLOCATED( yy_in_sp ))        DEALLOCATE(yy_in_sp )
-      !    IF( ALLOCATED( zz_in_sp ))        DEALLOCATE(zz_in_sp )
-      !END IF
+      ALLOCATE( me_cs(3,       s_me_r(1):s_me_r(4),s_me_r(2):s_me_r(5),s_me_r(3):s_me_r(6)), stat=ierr)
+      ALLOCATE( me_rs(0:lmax,  s_me_r(1):s_me_r(4),s_me_r(2):s_me_r(5),s_me_r(3):s_me_r(6)), stat=ierr)
+      ALLOCATE( me_ri(0:lmax+1,s_me_r(1):s_me_r(4),s_me_r(2):s_me_r(5),s_me_r(3):s_me_r(6)), stat=ierr)
+      ALLOCATE( me_rc(0:lmax,  s_me_r(1):s_me_r(4),s_me_r(2):s_me_r(5),s_me_r(3):s_me_r(6)), stat=ierr)
       !
-      ALLOCATE( odtothd_in_sp(3, np_in_sp_me_s ), stat=ierr )
-      ALLOCATE( thdtood_in_sp(nr1, nr2, nr3), stat=ierr )
-      ALLOCATE( thdtood(nr1, nr2, nr3), stat=ierr )
-      ALLOCATE( xx_in_sp(1:np_in_sp_me_s), stat=ierr )
-      ALLOCATE( yy_in_sp(1:np_in_sp_me_s), stat=ierr )
-      ALLOCATE( zz_in_sp(1:np_in_sp_me_s), stat=ierr )
-      ALLOCATE( sc_xx_in_sp(1:np_in_sp_me_s), stat=ierr )
-      ALLOCATE( sc_yy_in_sp(1:np_in_sp_me_s), stat=ierr )
-      ALLOCATE( sc_zz_in_sp(1:np_in_sp_me_s), stat=ierr )
-      !
-      xx_in_sp=0.0_DP; sc_xx_in_sp=0.0_DP
-      yy_in_sp=0.0_DP; sc_yy_in_sp=0.0_DP
-      zz_in_sp=0.0_DP; sc_zz_in_sp=0.0_DP
-      !
-      thdtood_in_sp = 0; odtothd_in_sp = 0; thdtood = 0
-      !
-      !this is the cutoff acording to the size of sphere
-      !
-      rcut_sp2=MIN(exx_me_rcut_p,exx_ps_rcut_s)
-      rcut_sp3=MAX(exx_me_rcut_p,exx_ps_rcut_s)
-      np_tmp_1=MIN(np_in_sp_s,np_in_sp_me_p)
-      np_tmp_2=MAX(np_in_sp_s,np_in_sp_me_p)
-      np    = 0
-      npsp1 = 0; npsp2 = 0; npsp3 = 0; npsp4 = 0
-      !
-      DO k = 1,nr3
-        DO j = 1, nr2
-          DO i =1, nr1
-            !
-            np = np + 1
-            !
-            thdtood(i,j,k) = np
-            !
-            ! distances between Grid points and center of the simulation cell in S space
-            ! center of the box is set to grid point at int(nr1/2), int(nr2/2), int(nr3/2) for every cell
-            ! 
-            dqs(1) = (DBLE(i)/DBLE(nr1)) - DBLE(INT(nr1/2))/DBLE(nr1)
-            dqs(2) = (DBLE(j)/DBLE(nr2)) - DBLE(INT(nr2/2))/DBLE(nr2)
-            dqs(3) = (DBLE(k)/DBLE(nr3)) - DBLE(INT(nr3/2))/DBLE(nr3)
-            !
-            ! Here we are computing distances between Grid points and center of the simulation cell, so no MIC is needed ...
-            ! Compute distance between grid point and the center of the simulation cell in R space 
-            !
-            dq(1)=h_in(1,1)*dqs(1)+h_in(1,2)*dqs(2)+h_in(1,3)*dqs(3)   !r_i = h s_i
-            dq(2)=h_in(2,1)*dqs(1)+h_in(2,2)*dqs(2)+h_in(2,3)*dqs(3)   !r_i = h s_i
-            dq(3)=h_in(3,1)*dqs(1)+h_in(3,2)*dqs(2)+h_in(3,3)*dqs(3)   !r_i = h s_i
-            !
-            dist = DSQRT(dq(1)*dq(1)+dq(2)*dq(2)+dq(3)*dq(3))
-            !
-            IF (dist .LE. exx_ps_rcut_p) THEN
-              npsp1 = npsp1 + 1
-              thdtood_in_sp(i,j,k)  = npsp1
-              odtothd_in_sp(1,npsp1) = i
-              odtothd_in_sp(2,npsp1) = j
-              odtothd_in_sp(3,npsp1) = k
-              !
-              xx_in_sp(npsp1) = dq(1); sc_xx_in_sp(npsp1) = dqs(1)
-              yy_in_sp(npsp1) = dq(2); sc_yy_in_sp(npsp1) = dqs(2)
-              zz_in_sp(npsp1) = dq(3); sc_zz_in_sp(npsp1) = dqs(3)
-              !
-            ELSE IF (dist .LE. rcut_sp2) THEN
-              !
-              npsp2 = npsp2 + 1
-              tmp = npsp2 + np_in_sp_p
-              thdtood_in_sp(i,j,k)  = tmp
-              odtothd_in_sp(1, tmp) = i
-              odtothd_in_sp(2, tmp) = j
-              odtothd_in_sp(3, tmp) = k
-              !
-              xx_in_sp(tmp) = dq(1); sc_xx_in_sp(tmp) = dqs(1)
-              yy_in_sp(tmp) = dq(2); sc_yy_in_sp(tmp) = dqs(2)
-              zz_in_sp(tmp) = dq(3); sc_zz_in_sp(tmp) = dqs(3)
-              !
-            ELSE IF (dist .LE. rcut_sp3) THEN
-              !
-              npsp3 = npsp3 + 1
-              tmp = npsp3 + np_tmp_1
-              thdtood_in_sp(i,j,k)  = tmp
-              odtothd_in_sp(1, tmp) = i
-              odtothd_in_sp(2, tmp) = j
-              odtothd_in_sp(3, tmp) = k
-              !
-              xx_in_sp(tmp) = dq(1); sc_xx_in_sp(tmp) = dqs(1)
-              yy_in_sp(tmp) = dq(2); sc_yy_in_sp(tmp) = dqs(2)
-              zz_in_sp(tmp) = dq(3); sc_zz_in_sp(tmp) = dqs(3)
-              !
-            ELSE IF (dist .LE. exx_me_rcut_s) THEN
-              !
-              npsp4 = npsp4 + 1
-              tmp = npsp4 + np_tmp_2
-              thdtood_in_sp(i,j,k)  = tmp
-              odtothd_in_sp(1, tmp) = i
-              odtothd_in_sp(2, tmp) = j
-              odtothd_in_sp(3, tmp) = k
-              !
-              xx_in_sp(tmp) = dq(1); sc_xx_in_sp(tmp) = dqs(1)
-              yy_in_sp(tmp) = dq(2); sc_yy_in_sp(tmp) = dqs(2)
-              zz_in_sp(tmp) = dq(3); sc_zz_in_sp(tmp) = dqs(3)
-              !
-            END IF
-          END DO
-        END DO
-      END DO
-      !
-      IF ( npsp1 .NE. np_in_sp_p) THEN
-        WRITE(stdout, *)&
-            'number of points in the 1st shell does not match', npsp1, np_in_sp_p
-        WRITE(stdout, *)'STOP in exx_setup'
-        RETURN
-      END IF
-      !
-      IF ( npsp2 .NE. np_tmp_1-np_in_sp_p) THEN
-        WRITE(stdout,*)&
-            'number of points in the 2nd shell does not match', npsp2, np_tmp_1-np_in_sp_p
-        WRITE(stdout, *)'STOP in exx_setup'
-        RETURN
-      END IF
-      !
-      IF ( npsp3 .NE. np_tmp_2-np_tmp_1) THEN
-        WRITE(stdout,*)&
-            'number of points in the 3rd shell does not match', npsp3, np_tmp_2-np_tmp_1
-        WRITE(stdout, *)'STOP in exx_setup'
-        RETURN
-      END IF
-      !
-      IF ( npsp4 .NE. np_in_sp_me_s-np_tmp_2) THEN
-        WRITE(stdout,*)&
-            'number of points in the 4th shell does not match', npsp4, np_in_sp_me_s-np_tmp_2
-        WRITE(stdout, *)'STOP in exx_setup'
-        RETURN
-      END IF
-      !
-      RETURN
+      me_cs=0.0_DP; me_rs=0.0_DP; me_ri=0.0_DP; me_rc=0.0_DP
+#ifdef __CUDA
+      ALLOCATE(me_cs_d, source=me_cs)
+      ALLOCATE(me_rs_d, source=me_rs)
+      ALLOCATE(me_ri_d, source=me_ri)
+      ALLOCATE(me_rc_d, source=me_rc)
+#endif
       !
   END SUBROUTINE exx_setup
   !--------------------------------------------------------------------------------------------------------------
@@ -852,13 +767,8 @@ CONTAINS
       REAL(DP) clm(0:lpole, 0:lpole)
       !
       ! ====================================================================
-      !      integer  odtothd_in_sp(3,np_in_sp), odtothd_in_sp2(3,np_in_sp2)
-      !      integer  thdtood_in_sp(nr1, nr2, nr3),thdtood(nr1,nr2,nr3)
-      ! ====================================================================
       ! LOCAL VARIABLES
-      INTEGER   np, npsp, npsp2
-      REAL(DP)  x,y,z, dist, exx_ps_rcut, exx_me_rcut
-      INTEGER   i,j,k, ierr, tmp,np_in_sp
+      INTEGER  :: ierr
       REAL(DP) :: lenA,lenB,lenC                       !length of lattice  A, B, C in a.u.
       REAL(DP) :: centerx,centery,centerz              !coordinate of the center of the simulation box
       REAL(DP) :: hx,hy,hz                             !grid spacing along lattice directions
@@ -866,10 +776,6 @@ CONTAINS
       !                                      jacobian    |d/d y| = [J]  |d/d b|
       !                                                  [d/d z]        [d/d c]
       ! --------------------------------------------------------------------
-      !
-      exx_ps_rcut=exx_ps_rcut_s
-      exx_me_rcut=exx_me_rcut_s
-      np_in_sp=np_in_sp_s
       !
       ! should work for all type of cells
       !
@@ -885,76 +791,12 @@ CONTAINS
       centery = 0.5_DP * lenB
       centerz = 0.5_DP * lenC
       !
-      ! For points in the 1st sphere, one needs to know if its finite-difference neighbors
-      ! are inside or outside. We set the thdtood_in_sp to be np_in_sp + 1 for outside neighbors
-      ALLOCATE( odtothd_in_sp(3, np_in_sp_me_s ), stat=ierr )
-      ALLOCATE( thdtood_in_sp(nr1, nr2, nr3), stat=ierr )
-      ALLOCATE( thdtood(nr1, nr2, nr3), stat=ierr )
-      ALLOCATE( xx_in_sp(1:np_in_sp_me_s), stat=ierr )
-      ALLOCATE( yy_in_sp(1:np_in_sp_me_s), stat=ierr )
-      ALLOCATE( zz_in_sp(1:np_in_sp_me_s), stat=ierr )
+      ALLOCATE( me_cs(3,       s_me_r(1):s_me_r(4),s_me_r(2):s_me_r(5),s_me_r(3):s_me_r(6)), stat=ierr)
+      ALLOCATE( me_rs(0:lmax,  s_me_r(1):s_me_r(4),s_me_r(2):s_me_r(5),s_me_r(3):s_me_r(6)), stat=ierr)
+      ALLOCATE( me_ri(0:lmax+1,s_me_r(1):s_me_r(4),s_me_r(2):s_me_r(5),s_me_r(3):s_me_r(6)), stat=ierr)
+      ALLOCATE( me_rc(0:lmax,  s_me_r(1):s_me_r(4),s_me_r(2):s_me_r(5),s_me_r(3):s_me_r(6)), stat=ierr)
       !
-      xx_in_sp=0.0_DP
-      yy_in_sp=0.0_DP
-      zz_in_sp=0.0_DP
-      !
-      thdtood_in_sp = 0
-      odtothd_in_sp = 0
-      thdtood = 0
-      !
-      np    = 0
-      npsp  = 0
-      npsp2 = 0
-      do k = 1,nr3
-        do j = 1, nr2
-          do i =1, nr1
-            np = np + 1
-            thdtood(i,j,k) = np
-            !
-            x = i * hx -centerx
-            y = j * hy -centery
-            z = k * hz -centerz
-            dist = sqrt(x*x + y*y + z*z)
-            !
-            if(dist .le. exx_ps_rcut)then
-              npsp = npsp + 1
-              thdtood_in_sp(i,j,k)  = npsp
-              odtothd_in_sp(1,npsp) = i
-              odtothd_in_sp(2,npsp) = j
-              odtothd_in_sp(3,npsp) = k
-              !
-              xx_in_sp(npsp) = x
-              yy_in_sp(npsp) = y
-              zz_in_sp(npsp) = z
-            elseif(dist .le. exx_me_rcut)then
-              npsp2 = npsp2 + 1
-              tmp = npsp2 + np_in_sp
-              thdtood_in_sp(i,j,k)  = tmp
-              odtothd_in_sp(1, tmp) = i
-              odtothd_in_sp(2, tmp) = j
-              odtothd_in_sp(3, tmp) = k
-              !
-              xx_in_sp(tmp) = x
-              yy_in_sp(tmp) = y
-              zz_in_sp(tmp) = z
-              !
-            endif
-          enddo
-        enddo
-      enddo
-      !
-      write(6,*)' npsp in exx_setup =', npsp, npsp2
-      if( npsp .ne. np_in_sp)then
-        write(6, *)'number of points in the 1st sphere does not match', npsp, np_in_sp
-        write(6, *)'STOP in exx_setup'
-        return
-      endif
-      !
-      if( npsp2+npsp .ne. np_in_sp_me_s)then
-        write(6,*)'number of points in the 2nd sphere does not match', npsp2+npsp, np_in_sp_me_s
-        write(6, *)'STOP in exx_setup'
-        return
-      endif
+      me_cs=0.0_DP; me_rs=0.0_DP; me_ri=0.0_DP; me_rc=0.0_DP
       !
       !========================================================================
       !
@@ -1183,28 +1025,28 @@ CONTAINS
       !
       !     Input/Output variables:
       !
-      !     order of expansion of derivative. 
-      !     it is the number of neighbors used ON ONE SIDE.
-      !     the maximum order implemented is 20.
+      ! order of expansion of derivative. 
+      ! it is the number of neighbors used ON ONE SIDE.
+      ! the maximum order implemented is 20.
       INTEGER, INTENT(IN) :: norder1, norder2
       !
-      !  coe1 - coefficients for the first derivative
+      ! coe1 - coefficients for the first derivative
       REAL(DP), INTENT(OUT) :: coe1(-norder1:norder1)
       !
-      !  coe  - coefficients for the axial derivative (2 nd)
+      ! coe  - coefficients for the axial derivative (2 nd)
       REAL(DP), INTENT(OUT) :: coe(-norder2:norder2)
       !
-      !  coe_cross - coefficients for the cross derivative (2 nd)
+      ! coe_cross - coefficients for the cross derivative (2 nd)
       REAL(DP), INTENT(OUT) :: coe_cross(-norder2:norder2)
       !
-      !     ierr - error flag
+      ! ierr - error flag
       INTEGER, INTENT(OUT) :: ierr
       !     
-      !     Work variables:
+      ! Work variables:
       !
-      !     counters 
+      ! counters 
       INTEGER i
-      !     ---------------------------------------------------------------
+      !---------------------------------------------------------------
       !
       !     First order derivative
       !
@@ -1404,130 +1246,236 @@ CONTAINS
   END SUBROUTINE fornberg
   !--------------------------------------------------------------------------------------------------------------
 
-  !--------------------------------------------------------------------------------------------------------------
-  SUBROUTINE exx_pot_derivative (np_in_sp_me, n, v, dvdr)
-      !
-      !  To calculate the cell derivatives for the EXX calculation, one needs
-      !  the derivatives of the exchange potential.
-      !
-      IMPLICIT NONE
-      ! io
-      INTEGER , INTENT(IN)  :: np_in_sp_me, n
-      REAL(DP), INTENT(IN)  :: v(np_in_sp_me)
-      REAL(DP), INTENT(OUT) :: dvdr(n,3)
-      ! loc
-      INTEGER               :: i, ish, ii, jj, kk
-      REAL(DP)              :: v1, v2, v3
-      !
-      !  --------------------------------------------------------
-      !  initialize
-      dvdr(:,:) = 0.0_DP
-      !
-      !  derivatives
-      !
-      !$omp parallel do private(ii,jj,kk,v1,v2,v3)
-      DO i = 1, n ! running inside PS sphere
-        !
-        ii = odtothd_in_sp(1,i)
-        jj = odtothd_in_sp(2,i)
-        kk = odtothd_in_sp(3,i)
-        !
-        DO ish = 1, nord1
-          ! since the derivative coeff is odd in parity,
-          !     we combine neighbors
-          v1 = v( thdtood_in_sp( ii+ish, jj,     kk))    - &
-              v( thdtood_in_sp( ii-ish, jj,     kk))
-          !
-          v2 = v( thdtood_in_sp( ii,     jj+ish, kk))    - &
-              v( thdtood_in_sp( ii,     jj-ish, kk))
-          !
-          v3 = v( thdtood_in_sp( ii,     jj,     kk+ish))- &
-              v( thdtood_in_sp( ii,     jj,     kk-ish))
-          !
-          dvdr(i,1) = dvdr(i,1) + coe_1st_derv(ish,1)*v1
-          dvdr(i,2) = dvdr(i,2) + coe_1st_derv(ish,2)*v2
-          dvdr(i,3) = dvdr(i,3) + coe_1st_derv(ish,3)*v3
-          !
-        END DO
-        !
-      END DO
-      !$omp end parallel do
-      !
-      RETURN
-      !
-  END SUBROUTINE exx_pot_derivative
-  !--------------------------------------------------------------------------------------------------------------
+  !!--------------------------------------------------------------------------------------------------------------
+  !SUBROUTINE exx_pot_derivative (me_r,ps_r,pot,Jim,dvdr_out)
+  !  !
+  !  !  To calculate the cell derivatives for the EXX calculation, one needs
+  !  !  the derivatives of the exchange potential.
+  !  !
+  !  IMPLICIT NONE
+  !  !----------------------------------------------------------------------------
+  !  ! pass in variable
+  !  !----------------------------------------------------------------------------
+  !  INTEGER , INTENT(IN)  :: me_r(6)
+  !  INTEGER , INTENT(IN)  :: ps_r(6)
+  !  REAL(DP), INTENT(IN)  :: pot(me_r(1):me_r(4),me_r(2):me_r(5),me_r(3):me_r(6))
+  !  REAL(DP), INTENT(IN)  :: Jim(3,3)  ! jacobian [d/d x]        [d/d a]
+  !  !                                             |d/d y| = [J]  |d/d b|
+  !  !                                             [d/d z]        [d/d c]
+  !  REAL(DP), INTENT(OUT) :: dvdr_out(3,ps_r(1):ps_r(4),ps_r(2):ps_r(5),ps_r(3):ps_r(6))
+  !  !----------------------------------------------------------------------------
+  !  ! local variable
+  !  !----------------------------------------------------------------------------
+  !  INTEGER               :: i,j,k,ish
+  !  REAL(DP), ALLOCATABLE :: dvdr(:,:,:,:)
+  !  REAL(DP) :: dvdri1, dvdri2, dvdri3 
+  !  REAL(DP) :: dvdr1, dvdr2, dvdr3 
+  !  !----------------------------------------------------------------------------
+  !  
+  !  !-------------------------------------------------------------------
+  !  ! initialize
+  !  !-------------------------------------------------------------------
+  !  ALLOCATE(dvdr(3,ps_r(1):ps_r(4),ps_r(2):ps_r(5),ps_r(3):ps_r(6))); dvdr = 0.0_DP
+  !  !-------------------------------------------------------------------
+  !  !  derivatives
+  !  !-------------------------------------------------------------------
+  !  !$omp parallel do private(i,j,k,ish)
+  !  DO k = ps_r(3),ps_r(6)
+  !    DO j = ps_r(2),ps_r(5)
+  !      DO i = ps_r(1),ps_r(4)
+  !        !----------------------------------------------------
+  !        dvdri1 = 0.d0; dvdri2 = 0.d0; dvdri3 = 0.d0
+  !        DO ish = 1, nord1
+  !          ! since the derivative coeff is odd in parity, we combine neighbors
+  !          dvdri1 = dvdri1 + coe_1st_derv(ish,1)*(pot(i+ish,j,k)-pot(i-ish,j,k))
+  !          dvdri2 = dvdri2 + coe_1st_derv(ish,2)*(pot(i,j+ish,k)-pot(i,j-ish,k))
+  !          dvdri3 = dvdri3 + coe_1st_derv(ish,3)*(pot(i,j,k+ish)-pot(i,j,k-ish))
+  !        END DO
+  !        !----------------------------------------------------
+  !        dvdr1 = Jim(1,1)*dvdri1 + Jim(1,2)*dvdri2 + Jim(1,3)*dvdri3
+  !        dvdr2 = Jim(2,1)*dvdri1 + Jim(2,2)*dvdri2 + Jim(2,3)*dvdri3
+  !        dvdr3 = Jim(3,1)*dvdri1 + Jim(3,2)*dvdri2 + Jim(3,3)*dvdri3
+  !        !----------------------------------------------------
+  !      END DO
+  !    END DO
+  !  END DO
+  !  !$omp end parallel do
+  !  !-------------------------------------------------------------------
+  !  ! transform from [a,b,c] space to [x,y,z] space
+  !  !-------------------------------------------------------------------
+  !  !$omp parallel do private(i,j,k,ish)
+  !  DO k = ps_r(3),ps_r(6)
+  !    DO j = ps_r(2),ps_r(5)
+  !      DO i = ps_r(1),ps_r(4)
+  !        !----------------------------------------------------
+  !        dvdr_out(1,i,j,k) = Jim(1,1)*dvdr(1,i,j,k) + Jim(1,2)*dvdr(2,i,j,k) + Jim(1,3)*dvdr(3,i,j,k)
+  !        dvdr_out(2,i,j,k) = Jim(2,1)*dvdr(1,i,j,k) + Jim(2,2)*dvdr(2,i,j,k) + Jim(2,3)*dvdr(3,i,j,k)
+  !        dvdr_out(3,i,j,k) = Jim(3,1)*dvdr(1,i,j,k) + Jim(3,2)*dvdr(2,i,j,k) + Jim(3,3)*dvdr(3,i,j,k)
+  !        !----------------------------------------------------
+  !      END DO
+  !    END DO
+  !  END DO
+  !  !$omp end parallel do
+  !  !-------------------------------------------------------------------
+  !  !
+  !  DEALLOCATE(dvdr)
+  !  !
+  !  !-------------------------------------------------------------------
+  !  RETURN
+  !  !-------------------------------------------------------------------
+  !END SUBROUTINE exx_pot_derivative
+  !!--------------------------------------------------------------------------------------------------------------
 
   !--------------------------------------------------------------------------------------------------------------
-  SUBROUTINE exx_energy_cell_derivative (np_in_sp_me, n, tran, &
-          vl, ha, hb, hc, rhol, dexx_dhab)
-      !
-      IMPLICIT NONE
-      ! io
-      INTEGER , INTENT(IN)  :: np_in_sp_me, n, tran(3)
-      REAL(DP), INTENT(IN)  :: vl(np_in_sp_me), rhol(np_in_sp_me) ! rhol pass in side n is good enough
-      REAL(DP), INTENT(IN)  :: ha, hb, hc
-      REAL(DP), INTENT(OUT) :: dexx_dhab(3,3)
-      ! loc
-      INTEGER               :: i, ish, ii, jj, kk, alpha, beta
-      REAL(DP)              :: dvdr(n,3), Imn(3,3), r_alpha(3)
-      REAL(DP)              :: tmp1, tmp2, tmp3, tmp4, tmp5, tmp6
-      !
-      ! initialize
-      !
-      tmp1 = 0.0_DP; tmp2 = 0.0_DP; tmp3 = 0.0_DP
-      tmp4 = 0.0_DP; tmp5 = 0.0_DP; tmp6 = 0.0_DP
-      !
-      Imn(:,:) = 0.0_DP
-      !
-      ! Calculate the potential derivative
-      !
-      CALL exx_pot_derivative (np_in_sp_me, n, vl, dvdr)
-      !
-      ! Integration:
-      !             I_{mn} = \int \dd r \rho(r) r_m v_n (r)
-      !
-      !$omp parallel do private(i,ii,jj,kk,r_alpha) reduction(+:tmp1,tmp2,tmp3,tmp4,tmp5,tmp6)
-      DO i = 1, n ! running inside PS sphere
-        !
-        ! Calculate r_m on the fly
-        !
-        ii = odtothd_in_sp(1,i) - tran(1) ! include the l2goff (1d->3d)
-        jj = odtothd_in_sp(2,i) - tran(2) ! include the l2goff (1d->3d)
-        kk = odtothd_in_sp(3,i) - tran(3) ! include the l2goff (1d->3d)
-        !
-        r_alpha(1) = DBLE(ii)*ha
-        r_alpha(2) = DBLE(jj)*hb
-        r_alpha(3) = DBLE(kk)*hc
-        !
-        ! Combining potential derivatives with cell parameters
-        !
-        tmp1 = tmp1 + rhol(i)*r_alpha(1)*dvdr(i,1)
-        tmp2 = tmp2 + rhol(i)*r_alpha(1)*dvdr(i,2)
-        tmp3 = tmp3 + rhol(i)*r_alpha(1)*dvdr(i,3)
-        tmp4 = tmp4 + rhol(i)*r_alpha(2)*dvdr(i,2)
-        tmp5 = tmp5 + rhol(i)*r_alpha(2)*dvdr(i,3)
-        tmp6 = tmp6 + rhol(i)*r_alpha(3)*dvdr(i,3)
-        !
-      END DO
-      !$omp end parallel do
-      !
-      Imn(1,1) = tmp1; Imn(1,2) = tmp2; Imn(1,3) = tmp3
-      Imn(2,1) = tmp2; Imn(2,2) = tmp4; Imn(2,3) = tmp5
-      Imn(3,1) = tmp3; Imn(3,2) = tmp5; Imn(3,3) = tmp6
-      !
-      ! Calculate the stress tensor from Imn
-      !   (d exx / d hab )_{ij} =  2 (sum_k  Imn_{ik}(ainv)_{jk})
-      DO alpha = 1, 3
-        DO beta = 1, 3
-          dexx_dhab(alpha,beta) = Imn(alpha,1)*ainv(beta,1)+&
-              Imn(alpha,2)*ainv(beta,2)+Imn(alpha,3)*ainv(beta,3)
+  SUBROUTINE exx_energy_cell_derivative(me_r, ps_r, tran, rho, pot, &
+                                      ha_proj, hb_proj, hc_proj, Jim, dexx_dhab)
+    !
+    IMPLICIT NONE
+    !----------------------------------------------------------------------------
+    ! pass in variable
+    !----------------------------------------------------------------------------
+    INTEGER , INTENT(IN)  :: me_r(6)
+    INTEGER , INTENT(IN)  :: ps_r(6)
+    INTEGER , INTENT(IN)  :: tran(3)
+    REAL(DP), INTENT(IN)  :: rho(me_r(1):me_r(4),me_r(2):me_r(5),me_r(3):me_r(6))
+    REAL(DP), INTENT(IN)  :: pot(me_r(1):me_r(4),me_r(2):me_r(5),me_r(3):me_r(6))
+    REAL(DP), INTENT(IN)  :: ha_proj(3)
+    REAL(DP), INTENT(IN)  :: hb_proj(3)
+    REAL(DP), INTENT(IN)  :: hc_proj(3)
+    REAL(DP), INTENT(IN)  :: Jim(3,3)  ! jacobian [d/d x]        [d/d a]
+    !                                             |d/d y| = [J]  |d/d b|
+    !                                             [d/d z]        [d/d c]
+    REAL(DP), INTENT(OUT) :: dexx_dhab(3,3)
+    !----------------------------------------------------------------------------
+    ! local variable
+    !----------------------------------------------------------------------------
+    INTEGER               :: i,j,k,ish
+    INTEGER               :: ii,jj,kk
+    INTEGER               :: alpha, beta
+    REAL(DP)              :: Imn(3,3), r_alpha(3)
+    REAL(DP)              :: tmp1, tmp2, tmp3, tmp4, tmp5, tmp6
+    !
+    REAL(DP) :: dvdri1, dvdri2, dvdri3 
+    REAL(DP) :: dvdr1, dvdr2, dvdr3 
+    integer              :: tran1, tran2, tran3
+    REAL(DP)              :: r_alpha1, r_alpha2, r_alpha3
+    !REAL(DP), ALLOCATABLE :: dvdr(:,:,:,:)
+#ifdef __CUDA
+    REAL(DP), device  :: ha_proj_d(3)
+    REAL(DP), device  :: hb_proj_d(3)
+    REAL(DP), device  :: hc_proj_d(3)
+    REAL(DP), device  :: Jim_d(3,3)
+    attributes(device) :: pot, rho
+#endif
+    !----------------------------------------------------------------------------------
+    
+    !----------------------------------------------------------------------------------
+    ! initialize
+    !----------------------------------------------------------------------------------
+    !ALLOCATE(dvdr(3,ps_r(1):ps_r(4),ps_r(2):ps_r(5),ps_r(3):ps_r(6))); dvdr=0.0D0
+    !----------------------------------------------------------------------------------
+    tmp1 = 0.0_DP; tmp2 = 0.0_DP; tmp3 = 0.0_DP
+    tmp4 = 0.0_DP; tmp5 = 0.0_DP; tmp6 = 0.0_DP
+    !----------------------------------------------------------------------------------
+    Imn(:,:) = 0.0_DP
+#ifdef __CUDA
+    ha_proj_d = ha_proj
+    hb_proj_d = hb_proj
+    hc_proj_d = hc_proj
+    Jim_d = Jim
+#endif
+    !----------------------------------------------------------------------------------
+    !
+    !----------------------------------------------------------------------------------
+    ! Calculate the potential derivative
+    !----------------------------------------------------------------------------------
+    !CALL exx_pot_derivative(me_r, ps_r, pot, Jim, dvdr)
+    !----------------------------------------------------------------------------------
+
+    tran1 = tran(1)
+    tran2 = tran(2)
+    tran3 = tran(3)
+    
+    !----------------------------------------------------------------------------------
+    ! Integration: I_{mn} = \int \dd r \rho(r) r_m dv_n (r)
+    !----------------------------------------------------------------------------------
+#ifdef __CUDA
+associate (ha_proj=>ha_proj_d, hb_proj=>hb_proj_d, hc_proj=>hc_proj_d, Jim=>Jim_d, &
+    &      coe_1st_derv=>coe_1st_derv_d )
+    !$cuf kernel do (3)
+#else
+   !$omp parallel do collapse(3) reduction(+:tmp1,tmp2,tmp3,tmp4,tmp5,tmp6) &
+   !$omp private(i,j,k,ii,jj,kk,ish) &
+   !$omp private(r_alpha1, r_alpha2, r_alpha3) &
+   !$omp private(dvdri1, dvdri2, dvdri3, dvdr1, dvdr2, dvdr3) &
+   !$omp firstprivate(ha_proj, hb_proj, hc_proj) &
+   !$omp firstprivate(Jim,tran1,tran2,tran3)
+#endif
+    DO k = ps_r(3),ps_r(6)
+      DO j = ps_r(2),ps_r(5)
+        DO i = ps_r(1),ps_r(4)
+          !----------------------------------------------------
+          ! Calculate r_m on the fly
+          !----------------------------------------------------
+          ii = i - tran1 ! include the l2goff (1d->3d)
+          jj = j - tran2 ! include the l2goff (1d->3d)
+          kk = k - tran3 ! include the l2goff (1d->3d)
+          !----------------------------------------------------
+          r_alpha1 = DBLE(ii)*ha_proj(1)+DBLE(jj)*hb_proj(1)+DBLE(kk)*hc_proj(1)
+          r_alpha2 = DBLE(ii)*ha_proj(2)+DBLE(jj)*hb_proj(2)+DBLE(kk)*hc_proj(2)
+          r_alpha3 = DBLE(ii)*ha_proj(3)+DBLE(jj)*hb_proj(3)+DBLE(kk)*hc_proj(3)
+          !----------------------------------------------------
+          dvdri1 = 0.d0; dvdri2 = 0.d0; dvdri3 = 0.d0
+          DO ish = 1, nord1
+            ! since the derivative coeff is odd in parity, we combine neighbors
+            dvdri1 = dvdri1 + coe_1st_derv(ish,1)*(pot(i+ish,j,k)-pot(i-ish,j,k))
+            dvdri2 = dvdri2 + coe_1st_derv(ish,2)*(pot(i,j+ish,k)-pot(i,j-ish,k))
+            dvdri3 = dvdri3 + coe_1st_derv(ish,3)*(pot(i,j,k+ish)-pot(i,j,k-ish))
+          END DO
+          !----------------------------------------------------
+          dvdr1 = Jim(1,1)*dvdri1 + Jim(1,2)*dvdri2 + Jim(1,3)*dvdri3
+          dvdr2 = Jim(2,1)*dvdri1 + Jim(2,2)*dvdri2 + Jim(2,3)*dvdri3
+          dvdr3 = Jim(3,1)*dvdri1 + Jim(3,2)*dvdri2 + Jim(3,3)*dvdri3
+          !----------------------------------------------------
+          !----------------------------------------------------
+          ! Combining potential derivatives with cell parameters
+          !----------------------------------------------------
+          tmp1 = tmp1 + rho(i,j,k)*r_alpha1*dvdr1
+          tmp2 = tmp2 + rho(i,j,k)*r_alpha1*dvdr2
+          tmp3 = tmp3 + rho(i,j,k)*r_alpha1*dvdr3
+          tmp4 = tmp4 + rho(i,j,k)*r_alpha2*dvdr2
+          tmp5 = tmp5 + rho(i,j,k)*r_alpha2*dvdr3
+          tmp6 = tmp6 + rho(i,j,k)*r_alpha3*dvdr3
+          !----------------------------------------------------
         END DO
       END DO
-      !
-      dexx_dhab = 2.0_DP*dexx_dhab
-      !
-      RETURN
+    END DO
+#ifdef __CUDA
+end associate
+#else
+    !$omp end parallel do
+#endif
+    !----------------------------------------------------------------------------------
+    Imn(1,1) = tmp1; Imn(1,2) = tmp2; Imn(1,3) = tmp3
+    Imn(2,1) = tmp2; Imn(2,2) = tmp4; Imn(2,3) = tmp5
+    Imn(3,1) = tmp3; Imn(3,2) = tmp5; Imn(3,3) = tmp6
+    !----------------------------------------------------------------------------------
+    ! Calculate the stress tensor from Imn: (d exx / d hab )_{ij} =  2 (sum_k  Imn_{ik}(ainv)_{jk})
+    !----------------------------------------------------------------------------------
+    DO alpha = 1, 3
+      DO beta = 1, 3
+        dexx_dhab(alpha,beta) = Imn(alpha,1)*ainv(beta,1)+Imn(alpha,2)*ainv(beta,2)+Imn(alpha,3)*ainv(beta,3)
+      END DO
+    END DO
+    !----------------------------------------------------------------------------------
+    dexx_dhab = 2.0_DP*dexx_dhab
+    !----------------------------------------------------------------------------------
+    !
+    !DEALLOCATE(dvdr)
+    !
+    RETURN
   END SUBROUTINE exx_energy_cell_derivative
-  !
+  !--------------------------------------------------------------------------------------------------------------
+
 END MODULE exx_module
+!----------------------------------------------------------------------------------------------------------------
