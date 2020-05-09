@@ -64,6 +64,8 @@ clean_pw.o : pwcom_gpu.o
 clean_pw.o : pwcom_gpu.o
 clean_pw.o : pwcom_gpu.o
 clean_pw.o : scf_mod_gpu.o
+compute_deff_gpu : pwcom.o
+compute_deff_gpu : pwcom_gpu.o
 dqvan2.o : pwcom_gpu.o
 electrons.o : newd_gpu.o
 electrons.o : pwcom_gpu.o
