@@ -180,6 +180,22 @@ The program will end with step  istep &lt;= <ref>last_step</ref>.
 If 0, it will stop at the end of the trajectory file
          </info>
       </var>
+      <var name="step_mul" type="INTEGER" >
+         <default> 1
+         </default>
+         <info>
+The program will use the step only if
+MOD(step, <ref>step_mul</ref>) == <ref>step_rem</ref>.
+         </info>
+      </var>
+      <var name="step_rem" type="INTEGER" >
+         <default> 0
+         </default>
+         <info>
+The program will use the step only if
+MOD(step, <ref>step_mul</ref>) == <ref>step_rem</ref>.
+         </info>
+      </var>
       <var name="ethr_small_step" type="REAL" >
          <default> 1.D-7
          </default>

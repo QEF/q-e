@@ -195,6 +195,24 @@ NAMELIST: &ENERGY_CURRENT
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
+   Variable:       step_mul
+   
+   Type:           INTEGER
+   Default:        1
+   Description:    The program will use the step only if
+                   MOD(step, "step_mul") == "step_rem".
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       step_rem
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    The program will use the step only if
+                   MOD(step, "step_mul") == "step_rem".
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
    Variable:       ethr_small_step
    
    Type:           REAL
@@ -234,4 +252,4 @@ NAMELIST: &ENERGY_CURRENT
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Wed Apr 22 09:42:50 CEST 2020
+This file has been created by helpdoc utility on Sat May 09 22:14:56 CEST 2020

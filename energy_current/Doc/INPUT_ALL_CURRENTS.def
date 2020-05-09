@@ -179,6 +179,20 @@ input_description -distribution {Quantum Espresso} -package energy_current -prog
                    If 0, it will stop at the end of the trajectory file
                  }
         }
+        var step_mul -type INTEGER {
+            default { 1 }
+            info {
+                   The program will use the step only if
+                   MOD(step, @ref step_mul) == @ref step_rem.
+                 }
+        }
+        var step_rem -type INTEGER {
+            default { 0 }
+            info {
+                   The program will use the step only if
+                   MOD(step, @ref step_mul) == @ref step_rem.
+                 }
+        }
         var ethr_small_step -type REAL {
             default { 1.D-7 }
             info {

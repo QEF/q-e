@@ -182,8 +182,8 @@ contains
          file_output, trajdir, vel_input_units, &
          eta, n_max, first_step, last_step, &
          ethr_small_step, ethr_big_step, &
-         restart, subtract_cm_vel
-
+         restart, subtract_cm_vel, step_mul, &
+         step_rem
       !
       !   set default values for variables in namelist
       !
@@ -198,6 +198,8 @@ contains
       last_step = 0
       restart = .false.
       subtract_cm_vel = .false.
+      step_mul=1
+      step_rem=0
       READ (iunit, energy_current, IOSTAT=ios)
       IF (ios /= 0) CALL errore('main', 'reading energy_current namelist', ABS(ios))
 
@@ -222,7 +224,8 @@ contains
       CALL mp_bcast(n_max, ionode_id, world_comm)
       CALL mp_bcast(init_linear, ionode_id, world_comm)
       CALL mp_bcast(file_output, ionode_id, world_comm)
-
+      CALL mp_bcast(step_mul, ionode_id, world_comm)
+      CALL mp_bcast(step_rem, ionode_id, world_comm)
    end subroutine
 
    subroutine set_first_step_restart()
@@ -398,7 +401,8 @@ contains
       USE mp_world, ONLY: world_comm
       use mp, ONLY: mp_bcast, mp_barrier
       use zero_mod, only: vel_input_units, ion_vel
-      use hartree_mod, only: first_step, last_step, ethr_big_step
+      use hartree_mod, only: first_step, last_step, ethr_big_step, &
+                             step_mul, step_rem
       implicit none
       type(cpv_trajectory), intent(inout) :: t
       type(timestep) :: ts
@@ -417,7 +421,7 @@ contains
                exit
             end if
             !if needed go on in the reading of trajectory
-            if (ts%nstep < first_step) then
+            if (ts%nstep < first_step .or. mod(ts%nstep,step_mul) /= step_rem) then
                write (*, *) 'SKIPPED STEP ', ts%nstep, ts%tps
                cycle
             end if
