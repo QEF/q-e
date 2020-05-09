@@ -29,6 +29,7 @@ pgi cuda mpi:
     - module purge
     - module load profile/global pgi/19.10--binary mkl/2019--binary cuda/10.0
     - ./configure --enable-openmp --with-cuda-runtime=10.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME --with-scalapack=no
+    - sed -i 's/DFTI/FFTW/' make.inc # There is a bug in current FFTXlib, CPU version
     - make -j pw cp
     - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
     - echo "Using $SLURM_NTASKS procs and $OMP_NUM_THREADS threads"
