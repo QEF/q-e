@@ -63,3 +63,43 @@ FUNCTION set_hubbard_l( psd ) RESULT( hubbard_l )
   RETURN  
   !
 END FUNCTION set_hubbard_l
+!---------------------------------------------------------------------------
+
+!---------------------------------------------------------------------------
+FUNCTION set_hubbard_l_back( psd ) RESULT( hubbard_l_back )
+  !---------------------------------------------------------------------------
+  !
+  USE io_global, ONLY : stdout
+  !
+  IMPLICIT NONE
+  !
+  INTEGER                      :: hubbard_l_back
+  CHARACTER(LEN=2), INTENT(IN) :: psd
+  !
+  !
+  SELECT CASE( TRIM(ADJUSTL(psd)) )
+     !
+     CASE( 'H', 'He', 'Li', 'Be', 'Na', 'Mg', 'K', 'Ca', 'Rb', 'Sr', 'Cs', 'Ba',&
+           'Fr', 'Ra' )
+        !
+        hubbard_l_back =  -1 ! no background states
+        !
+     CASE( 'Se' )
+        !
+        hubbard_l_back =  2
+        !
+     CASE( 'Zn' ) 
+        !
+        hubbard_l_back =  1
+        !
+     CASE DEFAULT
+        !
+        ! For almost all the elements the background states are s states
+        !
+        hubbard_l_back = 0
+        !
+  END SELECT
+  !
+  RETURN  
+  !
+END FUNCTION set_hubbard_l_back

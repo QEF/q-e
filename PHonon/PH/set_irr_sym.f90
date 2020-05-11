@@ -99,7 +99,7 @@ subroutine set_irr_sym_new ( t, tmq, npertx )
                  arg = arg + xq (ipol) * rtau (ipol, irot, na)
               enddo
               arg = arg * tpi
-              if ((isymq.eq.nsymtot.and.minus_q).OR.(t_rev(isymq)==1)) then
+              if ((isymq.eq.nsymtot.and.minus_q).OR.(t_rev(irot)==1)) then
                  fase = CMPLX (cos (arg), sin (arg), KIND=dp )
               else
                  fase = CMPLX (cos (arg),-sin (arg), KIND=dp )

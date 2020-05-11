@@ -238,7 +238,6 @@ SUBROUTINE cutoff_ewald( alpha, ewaldg, omega )
   INTEGER :: ng, nt, na, nr, ir, iz, nz, rmax
   COMPLEX(DP) :: rhon
   REAL(DP) :: rp, z
-  REAL(DP), EXTERNAL :: qe_erf
   !
   ! The G=0 component of the long-ranged local part of the 
   ! pseudopotential minus the Hartree potential is set to 0.

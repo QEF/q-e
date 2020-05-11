@@ -14,7 +14,7 @@ subroutine ld1_readin(input_file)
   use kinds,      ONLY : dp
   use radial_grids, only: ndmx, nullify_radial_grid
   use ld1_parameters, only: ncmax1, nwfx, nwfsx
-  use parameters,     only: lmaxx
+  use upf_params, only: lmaxx
   use constants,  ONLY : rytoev, c_au
   USE io_global,  ONLY : ionode, ionode_id, qestdin, stdout
   USE mp,         ONLY : mp_bcast

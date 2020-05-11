@@ -139,9 +139,9 @@
     !
     IMPLICIT NONE
     !
-    IF (etf_mem == 1 .OR. etf_mem == 2) THEN
-      CLOSE(UNIT = iunepmatwe, STATUS = 'delete')
-    ENDIF
+    !IF (etf_mem == 1 .OR. etf_mem == 2) THEN
+    !  CLOSE(UNIT = iunepmatwe, STATUS = 'delete')
+    !ENDIF
     !
     CLOSE(UNIT = iuwfc, STATUS = 'keep')
     CLOSE(UNIT = iudwf, STATUS = 'keep')

@@ -292,7 +292,7 @@ PROGRAM dvscf_q2r
   ! Read xml data. Do not need wavefunction information.
   !
   needwf = .FALSE.
-  CALL read_file(needwf)
+  CALL read_file_new(needwf)
   !
   IF (nspin_mag /= 1) CALL errore('dvscf_q2r', 'magnetism not implemented', 1)
   IF (nspin == 2) CALL errore('dvscf_q2r', 'LSDA magnetism not implemented', 1)

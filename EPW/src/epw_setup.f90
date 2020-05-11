@@ -14,7 +14,6 @@
   !! EPW setup.
   !!
   !! RM - Nov 2014: Noncolinear case implemented
-  !!
   !! RM - Nov 2018: Updated based on QE 6.3
   !!
   USE kinds,         ONLY : DP
@@ -48,8 +47,11 @@
   USE gvecs,         ONLY : doublegrid
   USE elph2,         ONLY : transp_temp
   USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2, ux, nspin_mag
+  ! ---------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
-  USE epwcom, ONLY: polaron_wf 
+  ! Shell implementation for future use.
+  USE epwcom,        ONLY: polaron_wf
+  ! ---------------------------------------------------------------------------------
   !
   IMPLICIT NONE
   !
@@ -72,21 +74,19 @@
   !
   CALL start_clock('epw_setup')
   !
-  !  loosy tolerance: not important 
-  IF ( .not. polaron_wf)  THEN
-  ! Modified for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
-  DO jk = 1, nkstot
-    xx_c = xk_cryst(1, jk) * nkc1
-    yy_c = xk_cryst(2, jk) * nkc2
-    zz_c = xk_cryst(3, jk) * nkc3
-    !
-    ! check that the k-mesh was defined in the positive region of 1st BZ
-    !
-    IF (xx_c < -eps5 .OR. yy_c < -eps5 .OR. zz_c < -eps5) &
-      CALL errore('epw_setup', 'coarse k-mesh needs to be strictly positive in 1st BZ', 1)
-    !
-  ENDDO
-  END IF
+  IF (.NOT. polaron_wf)  THEN
+    DO jk = 1, nkstot
+      xx_c = xk_cryst(1, jk) * nkc1
+      yy_c = xk_cryst(2, jk) * nkc2
+      zz_c = xk_cryst(3, jk) * nkc3
+      !
+      ! check that the k-mesh was defined in the positive region of 1st BZ
+      !
+      IF (xx_c < -eps5 .OR. yy_c < -eps5 .OR. zz_c < -eps5) &
+        CALL errore('epw_setup', 'coarse k-mesh needs to be strictly positive in 1st BZ', 1)
+      !
+    ENDDO
+  ENDIF ! not polaron_wf
   !
   ! 1) Computes the total local potential (external+scf) on the smooth grid
   !
@@ -94,7 +94,7 @@
   !
   ! Set non linear core correction stuff
   !
-  nlcc_any = ANY( upf(1:ntyp)%nlcc )
+  nlcc_any = ANY(upf(1:ntyp)%nlcc)
   IF (nlcc_any) ALLOCATE(drc(ngm, ntyp))
   !
   !  2) If necessary calculate the local magnetization. This information is

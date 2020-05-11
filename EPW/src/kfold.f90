@@ -14,19 +14,12 @@
   !!
   !
   USE kinds, ONLY : DP
+  USE elph2, ONLY : ng0vec, shift, gmap, g0vec_all_r
   !
   IMPLICIT NONE
   !
   INTEGER :: g0vec_all(3, 125)
   !! G-vectors needed to fold the k+q grid into the k grid
-  INTEGER :: ng0vec
-  !! number of inequivalent such translations (125)
-  INTEGER, ALLOCATABLE :: shift(:)
-  !! for every k+q, index of the G_0-vector needed to fold k+q into k+q+G0
-  INTEGER, ALLOCATABLE :: gmap(:, :)
-  !! the map G --> G-G_0 in the large (density) set, for every G_0 (125 at most)
-  REAL(KIND = DP) :: g0vec_all_r(3, 125)
-  !! G-vectors needed to fold the k+q grid into the k grid, cartesian coord.
   !
   CONTAINS
     !
@@ -449,9 +442,9 @@
         mapg(mill(1, ng), mill(2, ng), mill(3, ng)) = ng
       ENDDO
       !
-      ALLOCATE(gmap(ngxx, ng0vec), STAT = ierr)
+      ALLOCATE(gmap(ngxx * ng0vec), STAT = ierr)
       IF (ierr /= 0) CALL errore('createkmap_pw2', 'Error allocating gmap', 1)
-      gmap(:, :) = 0
+      gmap(:) = 0
       !
       !  Loop on the inequivalent G_0 vectors
       !
@@ -475,15 +468,15 @@
           IF ((ABS(i) .GT. ni) .OR. &
               (ABS(j) .GT. nj) .OR. &
               (ABS(k) .GT. nk)) THEN
-            gmap(ig1, ig0) = 0
+            gmap(ng0vec * (ig1 - 1) + ig0) = 0
           ELSE
-            gmap(ig1, ig0) = mapg(i, j, k)
+            gmap(ng0vec * (ig1 - 1) + ig0) = mapg(i, j, k)
           ENDIF
           !
         ENDDO
       ENDDO
       !
-      ngxxf = MAXVAL(gmap(ngxx,:))
+      ngxxf = MAXVAL(gmap(:))
       WRITE(iukgmap, *) ngxxf
       !
       ALLOCATE(shift(nkstot), STAT = ierr)
@@ -514,19 +507,25 @@
       ENDDO
       !
       DO ig1 = 1, ngxx
-        WRITE(iukgmap, '(9i10)') (gmap(ig1, ig0), ig0 = 1, ng0vec)
+        WRITE(iukgmap, '(9i10)') (gmap(ng0vec * (ig1 - 1) + ig0), ig0 = 1, ng0vec)
       ENDDO
       !
       CLOSE(iukgmap)
       !
       DEALLOCATE(mapg, STAT = ierr)
       IF (ierr /= 0) CALL errore('createkmap_pw2', 'Error deallocating mapg', 1)
-      DEALLOCATE(gmap, STAT = ierr)
-      IF (ierr /= 0) CALL errore('createkmap_pw2', 'Error deallocating gmap', 1)
       !
     ENDIF
     !
     CALL mp_bcast(ngxxf, meta_ionode_id, world_comm)
+    CALL mp_bcast(ng0vec, meta_ionode_id, world_comm)
+    CALL mp_bcast(g0vec_all_r, meta_ionode_id, world_comm)
+    IF (.NOT. meta_ionode) THEN
+      ALLOCATE(gmap(ngxx * ng0vec), STAT = ierr)
+      IF (ierr /= 0) CALL errore('createkmap_pw2', 'Error allocating gmap', 1)
+      gmap(:) = 0
+    ENDIF
+    CALL mp_bcast(gmap, meta_ionode_id, world_comm)
     WRITE(stdout, *)
     !
     !CALL mp_barrier(inter_pool_comm)
@@ -537,158 +536,6 @@
     !-------------------------------------------------------------------------
     END SUBROUTINE createkmap_pw2
     !-------------------------------------------------------------------------
-    !
-    !! Feb. 2020 [HL] : Now the subroutine of refold is not used and
-    !!                  its function is implemented in the subroutine
-    !!                  of createkmap_pw2.
-    !
-    !-----------------------------------------------------------------------
-    SUBROUTINE refold(ngm_g, mill_g, itoj, jtoi)
-    !----------------------------------------------------------------------
-    !!
-    !! Map the indices of G+G_0 into those of G
-    !! this is used to calculate electron-phonon matrix elements by
-    !! refolding the k+q points into the first BZ (original k grid)
-    !!
-    !! No parallelization on G-vecs at the moment
-    !! (actually this is done on the global array, but in elphel2.f90
-    !! every processor has just a chunk of the array, I may need some
-    !! communication)
-    !!
-    !! I use the rule : if not found then gmap = 0
-    !! Note that the map will be used only up to npwx (small sphere),
-    !! while the G-vectors lost in the process are on the surface of
-    !! the large sphere (density set).
-    !!
-    !-----------------------------------------------------------------
-    USE io_global, ONLY : stdout, meta_ionode
-    USE io_var,    ONLY : iukgmap
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(in) :: ngm_g
-    !! Counter on G-vectors
-    INTEGER, INTENT(in) :: mill_g(3, ngm_g)
-    !!  Array of Miller indices of G-vectors in increasing order of G^2
-    INTEGER, INTENT(in) :: jtoi(ngm_g)
-    !! For the i-th G-vector in the sorted list, jtoi(i)
-    !! returns its index in the unsorted list
-    INTEGER, INTENT(in) :: itoj(ngm_g)
-    !! itoj(i) returns the index of the G-vector in the sorted list
-    !! that was at i-th position in the unsorted list
-    !
-    ! Local variables
-    LOGICAL :: tfound
-    !! Found
-    INTEGER :: ig0
-    !! Counter on G_0 vectors
-    INTEGER :: ig1, ig2
-    !! Counter on G vectors
-    INTEGER :: i, j, k
-    !! Miller indices for G+G_0 vector
-    INTEGER :: ig1_use
-    !! Temporary G-vectors indices
-    INTEGER :: ig2_use
-    !!
-    INTEGER :: ig2_guess
-    !!
-    INTEGER :: notfound
-    !!
-    INTEGER :: guess_skip
-    !!
-    INTEGER :: indnew
-    !!
-    INTEGER :: indold
-    !! Counter on G_0 vectors indices for writing to file
-    INTEGER :: ierr
-    !! Error status
-    !
-    ALLOCATE(gmap(ngm_g, ng0vec), STAT = ierr)
-    IF (ierr /= 0) CALL errore('refold', 'Error allocating gmap', 1)
-    gmap(:, :) = 0
-    guess_skip = 0
-    !
-    !  Loop on the inequivalent G_0 vectors
-    !
-    DO ig0 = 1, ng0vec
-      !
-      IF (ig0 == 1) THEN
-        WRITE(stdout, '(/5x,"Progress kgmap: ")', ADVANCE = 'no')
-        indold = 0
-      ENDIF
-      indnew = NINT(DBLE(ig0) / DBLE(ng0vec) * 40)
-      IF (indnew /= indold) WRITE(stdout, '(a)', ADVANCE = 'no') '#'
-      indold = indnew
-      !
-      notfound = 0
-      DO ig1 = 1, ngm_g
-        !
-        ig1_use = itoj(ig1)
-        !
-        ! the initial G vector
-        i = mill_g(1, ig1_use)
-        j = mill_g(2, ig1_use)
-        k = mill_g(3, ig1_use)
-        !
-        ! the final G+G_0 vector
-        i = i + g0vec_all(1, ig0)
-        j = j + g0vec_all(2, ig0)
-        k = k + g0vec_all(3, ig0)
-        !
-        ig2 = 0
-        tfound = .FALSE.
-        !
-        ! try to guess next index
-        !
-        ig2_guess = jtoi(ig1_use) + guess_skip
-        !
-        IF ((ig2_guess > 0) .AND. (ig2_guess < ngm_g + 1)) THEN
-          !
-          ig2_guess = itoj(ig2_guess)
-          !
-          IF ((i == mill_g(1, ig2_guess)) .AND. (j == mill_g(2, ig2_guess)) .AND. (k == mill_g(3, ig2_guess))) THEN
-            !
-            ig2_use = ig2_guess
-            tfound = .TRUE.
-            !
-          ENDIF
-          !
-        ENDIF
-        !
-        DO WHILE ((.NOT.  tfound) .AND. (ig2 < ngm_g))
-          !
-          ig2 = ig2 + 1
-          ig2_use = itoj(ig2)
-          tfound = (i == mill_g(1, ig2_use)) .AND. (j == mill_g(2, ig2_use)) .AND. (k == mill_g(3, ig2_use))
-          !
-        ENDDO
-        !
-        IF (tfound) THEN
-          gmap(ig1_use, ig0) = ig2_use
-          guess_skip = jtoi(ig2_use) - jtoi(ig1_use)
-        ELSE
-          gmap(ig1_use, ig0) = 0
-          notfound = notfound + 1
-        ENDIF
-      ENDDO
-    ENDDO ! ng0vec
-    !
-    !  output on file for electron-phonon matrix elements
-    !
-    IF (.NOT. meta_ionode) iukgmap = stdout
-    !
-    DO ig1 = 1, ngm_g
-      WRITE(iukgmap, '(9i10)') (gmap(ig1, ig0), ig0 = 1, ng0vec)
-    ENDDO
-    !
-    IF (iukgmap /= stdout) CLOSE(iukgmap)
-    WRITE(stdout, *)
-    !
-    RETURN
-    !
-    !-----------------------------------------------------------------------
-    END SUBROUTINE refold
-    !-----------------------------------------------------------------------
     !
     !---------------------------------
     SUBROUTINE backtoBZ(xx, yy, zz, n1, n2, n3)

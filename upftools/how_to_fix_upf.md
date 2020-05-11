@@ -5,7 +5,6 @@ Many upf files written with by previous version of  `ld1.x` contain
     escaped.
 
 To fix your UPF  files you can:
- * use the `fix_upf.x` executable present in this directory ;
 
  *   replace using an editor the 2 or 3 occurrences of `&` with
  the corresponding escape code `&amp;`;

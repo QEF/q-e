@@ -12,7 +12,9 @@ MODULE ldaU
   ! The quantities needed in DFT+U and extended DFT+U calculations.
   !
   USE kinds,         ONLY : DP
-  USE parameters,    ONLY : lqmax, ntypx, natx
+  USE upf_params,    ONLY : lqmax
+  ! FIXME: lqmax should not be used (see starting_ns* below)
+  USE parameters,    ONLY : ntypx, natx
   USE basis,         ONLY : natomwfc
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp
   USE control_flags, ONLY : dfpt_hub
@@ -44,8 +46,10 @@ MODULE ldaU
   !! the Hubbard beta (used to calculate J0)
   REAL(DP) :: starting_ns(lqmax,2,ntypx)
   !! starting ns
+  !! FIXME: allocate dynamically
   REAL(DP) :: starting_ns_back(lqmax,2,ntypx)
   !! starting ns on background states
+  !! FIXME: allocate dynamically, or better, remove
   INTEGER :: nwfcU
   !! total no. of atomic wavefunctions having U term
   INTEGER :: niter_with_fixed_ns
@@ -169,7 +173,7 @@ MODULE ldaU
   !! Phase factor (it is 1 if we have only Hubbard U)
   INTEGER, ALLOCATABLE :: sc_at(:,:,:,:)
   !! Matrix with ranges [1:nat], gives the corresponding atom in the supercell ordering 
-  REAL(DP), PARAMETER :: eps_dist = 5.d-4     
+  REAL(DP), PARAMETER :: eps_dist = 6.d-4     
   !! Threshold for comparing inter-atomic distances
   !
   TYPE position
@@ -211,6 +215,7 @@ CONTAINS
     !
     lba = .FALSE.
     lb  = .FALSE.
+    hub_back = .FALSE.
     !
     is_hubbard(:) = .FALSE.
     is_hubbard_back(:) = .FALSE.

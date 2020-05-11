@@ -437,7 +437,6 @@ CONTAINS
     integer            :: event
 
     LOGICAL, EXTERNAL  :: matches
-    CHARACTER(LEN=1), EXTERNAL :: capital
 
 
     ! this is a temporary local variable

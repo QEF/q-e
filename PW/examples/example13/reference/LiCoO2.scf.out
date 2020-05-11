@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.5 starts on 16Apr2020 at 19:34:51 
+     Program PWSCF v.6.5 starts on 22Apr2020 at 17: 1: 0 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -40,8 +40,12 @@
 
      i    j  dist (Bohr)       stan-stan stan-bac bac-bac
      1    1   0.00000000  V =    5.0000   0.0000   0.0000
+     1    2   6.91791251  V =    0.8000   0.0000   0.0000
+     1    7   6.91791251  V =    0.8000   0.0000   0.0000
+     2    1   6.91791251  V =    0.8000   0.0000   0.0000
      2    2   0.00000000  V =    0.0000   0.0000   0.0000
      3    3   0.00000000  V =    0.0000   0.0000   0.0000
+     3  105   6.91791251  V =    0.8000   0.0000   0.0000
      4    4   0.00000000  V =    0.0000   0.0000   0.0000
  
      Parallelization info
@@ -83,7 +87,7 @@
 
 
      PseudoPot. # 1 for Co read from file:
-     /scratch/timrov/WORK_Hubbard_UV/PORTING/q-e_v5/q-e/pseudo/Co.pbesol-spn-rrkjus_psl.0.3.1.UPF
+     /scratch/timrov/WORK_Hubbard_UV/PORTING/q-e_v6/q-e/pseudo/Co.pbesol-spn-rrkjus_psl.0.3.1.UPF
      MD5 check sum: df65536841c871d28055fcb0059894d0
      Pseudo is Ultrasoft + core correction, Zval = 17.0
      Generated using "atomic" code by A. Dal Corso v.6.3
@@ -98,7 +102,7 @@
 
 
      PseudoPot. # 2 for O  read from file:
-     /scratch/timrov/WORK_Hubbard_UV/PORTING/q-e_v5/q-e/pseudo/O.pbesol-n-rrkjus_psl.0.1.UPF
+     /scratch/timrov/WORK_Hubbard_UV/PORTING/q-e_v6/q-e/pseudo/O.pbesol-n-rrkjus_psl.0.1.UPF
      MD5 check sum: f27e8aef0904343e863161fc6edd5707
      Pseudo is Ultrasoft + core correction, Zval =  6.0
      Generated using "atomic" code by A. Dal Corso v.6.3MaX
@@ -111,7 +115,7 @@
 
 
      PseudoPot. # 3 for Li read from file:
-     /scratch/timrov/WORK_Hubbard_UV/PORTING/q-e_v5/q-e/pseudo/Li.pbesol-s-rrkjus_psl.0.2.1.UPF
+     /scratch/timrov/WORK_Hubbard_UV/PORTING/q-e_v6/q-e/pseudo/Li.pbesol-s-rrkjus_psl.0.2.1.UPF
      MD5 check sum: def3ebcbbe91367824584f0aeb0e8100
      Pseudo is Ultrasoft, Zval =  3.0
      Generated using "atomic" code by A. Dal Corso v.5.0.2 svn rev. 9415
@@ -331,9 +335,9 @@ E_u    2.00 -1.00  0.00 -2.00  1.00  0.00
 
      Dynamical RAM for     wfc (w. buffer):       0.20 MB
 
-     Dynamical RAM for             U proj.:       0.01 MB
+     Dynamical RAM for             U proj.:       0.03 MB
 
-     Dynamical RAM for  U proj. (w. buff.):       0.06 MB
+     Dynamical RAM for  U proj. (w. buff.):       0.14 MB
 
      Dynamical RAM for           str. fact:       0.17 MB
 
@@ -365,11 +369,11 @@ E_u    2.00 -1.00  0.00 -2.00  1.00  0.00
 
      Dynamical RAM for           addusdens:      10.50 MB
 
-     Estimated static dynamical RAM per process >       8.88 MB
+     Estimated static dynamical RAM per process >       8.96 MB
 
-     Estimated max dynamical RAM per process >      19.38 MB
+     Estimated max dynamical RAM per process >      19.45 MB
 
-     Estimated total dynamical RAM >     155.04 MB
+     Estimated total dynamical RAM >     155.63 MB
 
      Check: negative core charge=   -0.000097
 
@@ -400,12 +404,38 @@ Hubbard energy    0.3859
   0.000  0.000  0.700  0.000  0.000
   0.000  0.000  0.000  0.700  0.000
   0.000  0.000  0.000  0.000  0.700
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.667
+  1.000  0.000  0.000
+  0.667
+  0.000  1.000  0.000
+  0.667
+  0.000  0.000  1.000
+    occupation matrix before diagonalization:
+  0.667  0.000  0.000
+  0.000  0.667  0.000
+  0.000  0.000  0.667
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.667
+  1.000  0.000  0.000
+  0.667
+  0.000  1.000  0.000
+  0.667
+  0.000  0.000  1.000
+    occupation matrix before diagonalization:
+  0.667  0.000  0.000
+  0.000  0.667  0.000
+  0.000  0.000  0.667
 atom    1   Tr[ns(na)]=   7.0000000
+atom    2   Tr[ns(na)]=   4.0000000
+atom    3   Tr[ns(na)]=   4.0000000
  --- exit write_nsg ---
  Atomic wfc used for LDA+U Projector are orthogonalized
      Starting wfcs are   20 randomized atomic wfcs
 
-     total cpu time spent up to now is        1.3 secs
+     total cpu time spent up to now is        1.1 secs
 
      Self-consistent Calculation
 
@@ -431,16 +461,42 @@ atom    1   Tr[ns(na)]=   7.0000000
   0.000  0.000  0.570 -0.302  0.000
   0.000 -0.000 -0.302  0.746 -0.000
   0.000 -0.302  0.000 -0.000  0.746
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.864
+ -0.000 -0.971 -0.238
+  0.864
+ -0.000 -0.238  0.971
+  0.897
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.897 -0.000  0.000
+ -0.000  0.864 -0.000
+  0.000 -0.000  0.864
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.864
+ -0.000 -0.971 -0.237
+  0.864
+ -0.000 -0.237  0.971
+  0.897
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.897 -0.000  0.000
+ -0.000  0.864 -0.000
+  0.000 -0.000  0.864
 atom    1   Tr[ns(na)]=   7.2175152
+atom    2   Tr[ns(na)]=   5.2495490
+atom    3   Tr[ns(na)]=   5.2495490
  --- exit write_nsg ---
  --- in v_hubbard_extended ---
 Hubbard energy    0.2881
  -----------------------------
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        1.2 secs
 
-     total energy              =    -372.95097982 Ry
-     estimated scf accuracy    <       0.60092200 Ry
+     total energy              =    -372.95098383 Ry
+     estimated scf accuracy    <       0.60092640 Ry
 
      iteration #  2     ecut=    50.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
@@ -464,16 +520,42 @@ Hubbard energy    0.2881
   0.000  0.000  0.829 -0.129  0.000
   0.000 -0.000 -0.129  0.887 -0.000
   0.000 -0.129  0.000 -0.000  0.887
-atom    1   Tr[ns(na)]=   8.8461569
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.703
+ -0.000 -0.971 -0.237
+  0.703
+ -0.000 -0.237  0.971
+  0.717
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.717 -0.000  0.000
+ -0.000  0.703 -0.000
+  0.000 -0.000  0.703
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.703
+ -0.000 -0.971 -0.238
+  0.703
+ -0.000 -0.238  0.971
+  0.717
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.717 -0.000  0.000
+ -0.000  0.703 -0.000
+  0.000 -0.000  0.703
+atom    1   Tr[ns(na)]=   8.8461439
+atom    2   Tr[ns(na)]=   4.2482161
+atom    3   Tr[ns(na)]=   4.2482161
  --- exit write_nsg ---
  --- in v_hubbard_extended ---
 Hubbard energy    0.2736
  -----------------------------
 
-     total cpu time spent up to now is        1.6 secs
+     total cpu time spent up to now is        1.4 secs
 
-     total energy              =    -372.54440341 Ry
-     estimated scf accuracy    <       3.28357383 Ry
+     total energy              =    -372.54442269 Ry
+     estimated scf accuracy    <       3.28352476 Ry
 
      iteration #  3     ecut=    50.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
@@ -482,9 +564,9 @@ Hubbard energy    0.2736
  Atom:    1   Spin:  1
     eigenvalues and eigenvectors of the occupation matrix:
   0.275
-  0.000 -0.670 -0.434 -0.328 -0.505
+  0.000 -0.669 -0.435 -0.329 -0.505
   0.275
- -0.000 -0.434  0.670  0.505 -0.328
+ -0.000 -0.435  0.669  0.505 -0.329
   0.982
  -1.000 -0.000 -0.000  0.000  0.000
   0.983
@@ -497,16 +579,42 @@ Hubbard energy    0.2736
  -0.000  0.000  0.532 -0.340  0.000
   0.000 -0.000 -0.340  0.726 -0.000
   0.000 -0.340  0.000 -0.000  0.726
-atom    1   Tr[ns(na)]=   6.9946514
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.868
+ -0.000 -0.971 -0.237
+  0.868
+ -0.000 -0.237  0.971
+  0.897
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.897 -0.000  0.000
+ -0.000  0.868 -0.000
+  0.000 -0.000  0.868
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.868
+ -0.000 -0.971 -0.238
+  0.868
+ -0.000 -0.238  0.971
+  0.897
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.897 -0.000  0.000
+ -0.000  0.868 -0.000
+  0.000 -0.000  0.868
+atom    1   Tr[ns(na)]=   6.9946721
+atom    2   Tr[ns(na)]=   5.2665733
+atom    3   Tr[ns(na)]=   5.2665733
  --- exit write_nsg ---
  --- in v_hubbard_extended ---
 Hubbard energy    0.2308
  -----------------------------
 
-     total cpu time spent up to now is        1.7 secs
+     total cpu time spent up to now is        1.5 secs
 
-     total energy              =    -373.14754547 Ry
-     estimated scf accuracy    <       0.48824721 Ry
+     total energy              =    -373.14755409 Ry
+     estimated scf accuracy    <       0.48822533 Ry
 
      iteration #  4     ecut=    50.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
@@ -515,9 +623,9 @@ Hubbard energy    0.2308
  Atom:    1   Spin:  1
     eigenvalues and eigenvectors of the occupation matrix:
   0.283
-  0.000 -0.667 -0.437 -0.331 -0.504
+  0.000 -0.668 -0.436 -0.330 -0.505
   0.283
-  0.000  0.437 -0.667 -0.504  0.331
+  0.000  0.436 -0.668 -0.505  0.330
   0.987
  -0.000 -0.141 -0.587  0.775  0.186
   0.987
@@ -530,27 +638,53 @@ Hubbard energy    0.2308
  -0.000  0.000  0.539 -0.338  0.000
   0.000 -0.000 -0.338  0.730 -0.000
   0.000 -0.338  0.000 -0.000  0.730
-atom    1   Tr[ns(na)]=   7.0537807
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.867
+ -0.000 -0.971 -0.238
+  0.867
+ -0.000 -0.238  0.971
+  0.898
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.898 -0.000  0.000
+ -0.000  0.867 -0.000
+  0.000 -0.000  0.867
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.867
+ -0.000 -0.971 -0.238
+  0.867
+ -0.000 -0.238  0.971
+  0.898
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.898 -0.000  0.000
+ -0.000  0.867 -0.000
+  0.000 -0.000  0.867
+atom    1   Tr[ns(na)]=   7.0537983
+atom    2   Tr[ns(na)]=   5.2615932
+atom    3   Tr[ns(na)]=   5.2615932
  --- exit write_nsg ---
  --- in v_hubbard_extended ---
 Hubbard energy    0.1805
  -----------------------------
 
-     total cpu time spent up to now is        1.8 secs
+     total cpu time spent up to now is        1.6 secs
 
-     total energy              =    -373.12532803 Ry
-     estimated scf accuracy    <       0.21736219 Ry
+     total energy              =    -373.12533874 Ry
+     estimated scf accuracy    <       0.21734929 Ry
 
      iteration #  5     ecut=    50.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
-     ethr =  6.79E-04,  avg # of iterations =  3.8
+     ethr =  6.79E-04,  avg # of iterations =  4.0
  --- enter write_nsg ---
  Atom:    1   Spin:  1
     eigenvalues and eigenvectors of the occupation matrix:
   0.403
- -0.000  0.662  0.442  0.336  0.503
+ -0.000  0.663  0.442  0.336  0.503
   0.403
- -0.000 -0.442  0.662  0.503 -0.336
+ -0.000 -0.442  0.663  0.503 -0.336
   0.991
   0.000  0.139  0.589 -0.775 -0.184
   0.991
@@ -559,31 +693,57 @@ Hubbard energy    0.1805
  -1.000  0.000  0.000 -0.000 -0.000
     occupation matrix before diagonalization:
   0.991  0.000  0.000  0.000  0.000
-  0.000  0.618  0.000 -0.000 -0.284
-  0.000  0.000  0.618 -0.284  0.000
-  0.000 -0.000 -0.284  0.776 -0.000
-  0.000 -0.284  0.000 -0.000  0.776
-atom    1   Tr[ns(na)]=   7.5568219
+  0.000  0.618  0.000 -0.000 -0.283
+  0.000  0.000  0.618 -0.283  0.000
+  0.000 -0.000 -0.283  0.776 -0.000
+  0.000 -0.283  0.000 -0.000  0.776
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.820
+ -0.000 -0.971 -0.238
+  0.820
+ -0.000 -0.238  0.971
+  0.860
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.860 -0.000  0.000
+ -0.000  0.820 -0.000
+  0.000 -0.000  0.820
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.820
+ -0.000 -0.971 -0.238
+  0.820
+ -0.000 -0.238  0.971
+  0.860
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.860 -0.000  0.000
+ -0.000  0.820 -0.000
+  0.000 -0.000  0.820
+atom    1   Tr[ns(na)]=   7.5569699
+atom    2   Tr[ns(na)]=   4.9994081
+atom    3   Tr[ns(na)]=   4.9994081
  --- exit write_nsg ---
  --- in v_hubbard_extended ---
 Hubbard energy    0.1799
  -----------------------------
 
-     total cpu time spent up to now is        1.9 secs
+     total cpu time spent up to now is        1.7 secs
 
-     total energy              =    -373.17385926 Ry
-     estimated scf accuracy    <       0.02877013 Ry
+     total energy              =    -373.17391650 Ry
+     estimated scf accuracy    <       0.02882425 Ry
 
      iteration #  6     ecut=    50.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
-     ethr =  8.99E-05,  avg # of iterations =  1.8
+     ethr =  9.01E-05,  avg # of iterations =  1.8
  --- enter write_nsg ---
  Atom:    1   Spin:  1
     eigenvalues and eigenvectors of the occupation matrix:
-  0.399
- -0.000  0.663  0.441  0.335  0.503
-  0.399
- -0.000 -0.441  0.663  0.503 -0.335
+  0.398
+ -0.000  0.663  0.441  0.335  0.504
+  0.398
+ -0.000 -0.441  0.663  0.504 -0.335
   0.991
   0.000  0.140  0.589 -0.775 -0.184
   0.991
@@ -596,20 +756,46 @@ Hubbard energy    0.1799
   0.000  0.000  0.615 -0.285  0.000
   0.000 -0.000 -0.285  0.774 -0.000
   0.000 -0.285  0.000 -0.000  0.774
-atom    1   Tr[ns(na)]=   7.5389727
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.822
+ -0.000 -0.971 -0.238
+  0.822
+ -0.000 -0.238  0.971
+  0.861
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.861 -0.000  0.000
+ -0.000  0.822 -0.000
+  0.000 -0.000  0.822
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.822
+ -0.000 -0.971 -0.238
+  0.822
+ -0.000 -0.238  0.971
+  0.861
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.861 -0.000  0.000
+ -0.000  0.822 -0.000
+  0.000 -0.000  0.822
+atom    1   Tr[ns(na)]=   7.5378515
+atom    2   Tr[ns(na)]=   5.0086620
+atom    3   Tr[ns(na)]=   5.0086620
  --- exit write_nsg ---
  --- in v_hubbard_extended ---
 Hubbard energy    0.1830
  -----------------------------
 
-     total cpu time spent up to now is        2.0 secs
+     total cpu time spent up to now is        1.8 secs
 
-     total energy              =    -373.17171120 Ry
-     estimated scf accuracy    <       0.01505483 Ry
+     total energy              =    -373.17174354 Ry
+     estimated scf accuracy    <       0.01483192 Ry
 
      iteration #  7     ecut=    50.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
-     ethr =  4.70E-05,  avg # of iterations =  4.0
+     ethr =  4.63E-05,  avg # of iterations =  4.0
  --- enter write_nsg ---
  Atom:    1   Spin:  1
     eigenvalues and eigenvectors of the occupation matrix:
@@ -629,27 +815,53 @@ Hubbard energy    0.1830
   0.000  0.000  0.592 -0.302  0.000
   0.000 -0.000 -0.302  0.761 -0.000
   0.000 -0.302  0.000 -0.000  0.761
-atom    1   Tr[ns(na)]=   7.3942433
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.835
+ -0.000 -0.971 -0.238
+  0.835
+ -0.000 -0.238  0.971
+  0.872
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.872 -0.000  0.000
+ -0.000  0.835 -0.000
+  0.000 -0.000  0.835
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.835
+ -0.000 -0.972 -0.237
+  0.835
+ -0.000 -0.237  0.972
+  0.872
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.872 -0.000  0.000
+ -0.000  0.835 -0.000
+  0.000 -0.000  0.835
+atom    1   Tr[ns(na)]=   7.3943849
+atom    2   Tr[ns(na)]=   5.0838084
+atom    3   Tr[ns(na)]=   5.0838084
  --- exit write_nsg ---
  --- in v_hubbard_extended ---
 Hubbard energy    0.1823
  -----------------------------
 
-     total cpu time spent up to now is        2.2 secs
+     total cpu time spent up to now is        1.9 secs
 
-     total energy              =    -373.17523397 Ry
-     estimated scf accuracy    <       0.00171809 Ry
+     total energy              =    -373.17523264 Ry
+     estimated scf accuracy    <       0.00168976 Ry
 
      iteration #  8     ecut=    50.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
-     ethr =  5.37E-06,  avg # of iterations =  2.2
+     ethr =  5.28E-06,  avg # of iterations =  2.2
  --- enter write_nsg ---
  Atom:    1   Spin:  1
     eigenvalues and eigenvectors of the occupation matrix:
   0.363
-  0.000 -0.664 -0.440 -0.334 -0.504
+  0.000 -0.664 -0.441 -0.334 -0.504
   0.363
-  0.000  0.440 -0.664 -0.504  0.334
+  0.000  0.441 -0.664 -0.504  0.334
   0.991
  -0.000 -0.140 -0.588  0.775  0.184
   0.991
@@ -662,92 +874,111 @@ Hubbard energy    0.1823
   0.000  0.000  0.592 -0.302  0.000
   0.000 -0.000 -0.302  0.761 -0.000
   0.000 -0.302  0.000 -0.000  0.761
-atom    1   Tr[ns(na)]=   7.3954420
- --- exit write_nsg ---
- --- in v_hubbard_extended ---
-Hubbard energy    0.1815
- -----------------------------
-
-     total cpu time spent up to now is        2.3 secs
-
-     total energy              =    -373.17505459 Ry
-     estimated scf accuracy    <       0.00141412 Ry
-
-     iteration #  9     ecut=    50.00 Ry     beta= 0.70
-     Davidson diagonalization with overlap
-     ethr =  4.42E-06,  avg # of iterations =  3.0
- --- enter write_nsg ---
- Atom:    1   Spin:  1
+ Atom:    2   Spin:  1
     eigenvalues and eigenvectors of the occupation matrix:
-  0.368
-  0.000 -0.664 -0.440 -0.334 -0.504
-  0.368
-  0.000  0.440 -0.664 -0.504  0.334
-  0.991
- -0.000 -0.140 -0.588  0.775  0.184
-  0.991
- -0.000 -0.588  0.140 -0.184  0.775
-  0.991
-  1.000 -0.000 -0.000  0.000  0.000
+  0.835
+ -0.000 -0.971 -0.238
+  0.835
+ -0.000 -0.238  0.971
+  0.872
+  1.000 -0.000  0.000
     occupation matrix before diagonalization:
-  0.991  0.000  0.000  0.000  0.000
-  0.000  0.596  0.000 -0.000 -0.300
-  0.000  0.000  0.596 -0.300  0.000
-  0.000 -0.000 -0.300  0.763 -0.000
-  0.000 -0.300  0.000 -0.000  0.763
-atom    1   Tr[ns(na)]=   7.4164481
- --- exit write_nsg ---
- --- in v_hubbard_extended ---
-Hubbard energy    0.1815
- -----------------------------
-
-     total cpu time spent up to now is        2.4 secs
-
-     total energy              =    -373.17514972 Ry
-     estimated scf accuracy    <       0.00008705 Ry
-
-     iteration # 10     ecut=    50.00 Ry     beta= 0.70
-     Davidson diagonalization with overlap
-     ethr =  2.72E-07,  avg # of iterations =  4.2
- --- enter write_nsg ---
- Atom:    1   Spin:  1
+  0.872 -0.000  0.000
+ -0.000  0.835 -0.000
+  0.000 -0.000  0.835
+ Atom:    3   Spin:  1
     eigenvalues and eigenvectors of the occupation matrix:
-  0.371
-  0.000 -0.664 -0.440 -0.334 -0.504
-  0.371
-  0.000  0.440 -0.664 -0.504  0.334
-  0.991
- -0.000 -0.140 -0.588  0.775  0.184
-  0.991
- -0.000 -0.588  0.140 -0.184  0.775
-  0.991
-  1.000 -0.000 -0.000  0.000  0.000
+  0.835
+ -0.000 -0.971 -0.237
+  0.835
+ -0.000 -0.237  0.971
+  0.872
+  1.000 -0.000  0.000
     occupation matrix before diagonalization:
-  0.991  0.000  0.000  0.000  0.000
-  0.000  0.597  0.000 -0.000 -0.299
-  0.000  0.000  0.597 -0.299  0.000
-  0.000 -0.000 -0.299  0.764 -0.000
-  0.000 -0.299  0.000 -0.000  0.764
-atom    1   Tr[ns(na)]=   7.4266433
+  0.872 -0.000  0.000
+ -0.000  0.835 -0.000
+  0.000 -0.000  0.835
+atom    1   Tr[ns(na)]=   7.3957079
+atom    2   Tr[ns(na)]=   5.0832559
+atom    3   Tr[ns(na)]=   5.0832559
  --- exit write_nsg ---
  --- in v_hubbard_extended ---
 Hubbard energy    0.1814
  -----------------------------
 
-     total cpu time spent up to now is        2.5 secs
+     total cpu time spent up to now is        2.1 secs
 
-     total energy              =    -373.17519506 Ry
-     estimated scf accuracy    <       0.00001152 Ry
+     total energy              =    -373.17504127 Ry
+     estimated scf accuracy    <       0.00136274 Ry
 
-     iteration # 11     ecut=    50.00 Ry     beta= 0.70
+     iteration #  9     ecut=    50.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
-     ethr =  3.60E-08,  avg # of iterations =  2.0
+     ethr =  4.26E-06,  avg # of iterations =  3.5
  --- enter write_nsg ---
  Atom:    1   Spin:  1
     eigenvalues and eigenvectors of the occupation matrix:
-  0.371
+  0.369
+  0.000 -0.664 -0.440 -0.334 -0.504
+  0.369
+  0.000  0.440 -0.664 -0.504  0.334
+  0.991
+ -0.000 -0.140 -0.588  0.775  0.184
+  0.991
+ -0.000 -0.588  0.140 -0.184  0.775
+  0.991
+  1.000 -0.000 -0.000  0.000  0.000
+    occupation matrix before diagonalization:
+  0.991  0.000  0.000  0.000  0.000
+  0.000  0.596  0.000 -0.000 -0.299
+  0.000  0.000  0.596 -0.299  0.000
+  0.000 -0.000 -0.299  0.763 -0.000
+  0.000 -0.299  0.000 -0.000  0.763
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.832
+ -0.000 -0.971 -0.237
+  0.832
+ -0.000 -0.237  0.971
+  0.870
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.870 -0.000  0.000
+ -0.000  0.832 -0.000
+  0.000 -0.000  0.832
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.832
+ -0.000 -0.971 -0.237
+  0.832
+ -0.000 -0.237  0.971
+  0.870
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.870 -0.000  0.000
+ -0.000  0.832 -0.000
+  0.000 -0.000  0.832
+atom    1   Tr[ns(na)]=   7.4202881
+atom    2   Tr[ns(na)]=   5.0695043
+atom    3   Tr[ns(na)]=   5.0695043
+ --- exit write_nsg ---
+ --- in v_hubbard_extended ---
+Hubbard energy    0.1815
+ -----------------------------
+
+     total cpu time spent up to now is        2.2 secs
+
+     total energy              =    -373.17517340 Ry
+     estimated scf accuracy    <       0.00002765 Ry
+
+     iteration # 10     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  8.64E-08,  avg # of iterations =  4.2
+ --- enter write_nsg ---
+ Atom:    1   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.370
   0.000 -0.663 -0.441 -0.335 -0.504
-  0.371
+  0.370
   0.000  0.441 -0.663 -0.504  0.335
   0.991
  -0.000 -0.140 -0.588  0.775  0.184
@@ -761,7 +992,210 @@ Hubbard energy    0.1814
   0.000  0.000  0.597 -0.299  0.000
   0.000 -0.000 -0.299  0.764 -0.000
   0.000 -0.299  0.000 -0.000  0.764
-atom    1   Tr[ns(na)]=   7.4269910
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.832
+ -0.000 -0.971 -0.238
+  0.832
+ -0.000 -0.238  0.971
+  0.869
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.869 -0.000  0.000
+ -0.000  0.832 -0.000
+  0.000 -0.000  0.832
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.832
+ -0.000 -0.971 -0.237
+  0.832
+ -0.000 -0.237  0.971
+  0.869
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.869 -0.000  0.000
+ -0.000  0.832 -0.000
+  0.000 -0.000  0.832
+atom    1   Tr[ns(na)]=   7.4247689
+atom    2   Tr[ns(na)]=   5.0671647
+atom    3   Tr[ns(na)]=   5.0671647
+ --- exit write_nsg ---
+ --- in v_hubbard_extended ---
+Hubbard energy    0.1814
+ -----------------------------
+
+     total cpu time spent up to now is        2.3 secs
+
+     total energy              =    -373.17520267 Ry
+     estimated scf accuracy    <       0.00000254 Ry
+
+     iteration # 11     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  7.95E-09,  avg # of iterations =  4.0
+ --- enter write_nsg ---
+ Atom:    1   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.370
+  0.000 -0.664 -0.440 -0.334 -0.504
+  0.370
+  0.000  0.440 -0.664 -0.504  0.334
+  0.991
+ -0.000 -0.140 -0.588  0.775  0.184
+  0.991
+ -0.000 -0.588  0.140 -0.184  0.775
+  0.991
+  1.000 -0.000 -0.000  0.000  0.000
+    occupation matrix before diagonalization:
+  0.991  0.000  0.000  0.000  0.000
+  0.000  0.597  0.000 -0.000 -0.299
+  0.000  0.000  0.597 -0.299  0.000
+  0.000 -0.000 -0.299  0.764 -0.000
+  0.000 -0.299  0.000 -0.000  0.764
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.832
+ -0.000 -0.971 -0.237
+  0.832
+ -0.000 -0.237  0.971
+  0.869
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.869 -0.000  0.000
+ -0.000  0.832 -0.000
+  0.000 -0.000  0.832
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.832
+ -0.000 -0.971 -0.237
+  0.832
+ -0.000 -0.237  0.971
+  0.869
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.869 -0.000  0.000
+ -0.000  0.832 -0.000
+  0.000 -0.000  0.832
+atom    1   Tr[ns(na)]=   7.4264026
+atom    2   Tr[ns(na)]=   5.0664166
+atom    3   Tr[ns(na)]=   5.0664166
+ --- exit write_nsg ---
+ --- in v_hubbard_extended ---
+Hubbard energy    0.1814
+ -----------------------------
+
+     total cpu time spent up to now is        2.4 secs
+
+     total energy              =    -373.17520214 Ry
+     estimated scf accuracy    <       0.00000756 Ry
+
+     iteration # 12     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  7.95E-09,  avg # of iterations =  3.5
+ --- enter write_nsg ---
+ Atom:    1   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.370
+  0.000 -0.664 -0.440 -0.334 -0.504
+  0.370
+  0.000  0.440 -0.664 -0.504  0.334
+  0.991
+ -0.000 -0.140 -0.588  0.775  0.184
+  0.991
+ -0.000 -0.588  0.140 -0.184  0.775
+  0.991
+  1.000 -0.000 -0.000  0.000  0.000
+    occupation matrix before diagonalization:
+  0.991  0.000  0.000  0.000  0.000
+  0.000  0.597  0.000 -0.000 -0.299
+  0.000  0.000  0.597 -0.299  0.000
+  0.000 -0.000 -0.299  0.764 -0.000
+  0.000 -0.299  0.000 -0.000  0.764
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.832
+ -0.000 -0.971 -0.238
+  0.832
+ -0.000 -0.238  0.971
+  0.869
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.869 -0.000  0.000
+ -0.000  0.832 -0.000
+  0.000 -0.000  0.832
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.832
+ -0.000 -0.971 -0.237
+  0.832
+ -0.000 -0.237  0.971
+  0.869
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.869 -0.000  0.000
+ -0.000  0.832 -0.000
+  0.000 -0.000  0.832
+atom    1   Tr[ns(na)]=   7.4252364
+atom    2   Tr[ns(na)]=   5.0670679
+atom    3   Tr[ns(na)]=   5.0670679
+ --- exit write_nsg ---
+ --- in v_hubbard_extended ---
+Hubbard energy    0.1814
+ -----------------------------
+
+     total cpu time spent up to now is        2.5 secs
+
+     total energy              =    -373.17520235 Ry
+     estimated scf accuracy    <       0.00000119 Ry
+
+     iteration # 13     ecut=    50.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  3.72E-09,  avg # of iterations =  2.2
+ --- enter write_nsg ---
+ Atom:    1   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.370
+  0.000 -0.664 -0.440 -0.334 -0.504
+  0.370
+  0.000  0.440 -0.664 -0.504  0.334
+  0.991
+ -0.000 -0.140 -0.588  0.775  0.184
+  0.991
+ -0.000 -0.588  0.140 -0.184  0.775
+  0.991
+  1.000 -0.000 -0.000  0.000  0.000
+    occupation matrix before diagonalization:
+  0.991  0.000  0.000  0.000  0.000
+  0.000  0.597  0.000 -0.000 -0.299
+  0.000  0.000  0.597 -0.299  0.000
+  0.000 -0.000 -0.299  0.764 -0.000
+  0.000 -0.299  0.000 -0.000  0.764
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.832
+ -0.000 -0.971 -0.238
+  0.832
+ -0.000 -0.238  0.971
+  0.869
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.869 -0.000  0.000
+ -0.000  0.832 -0.000
+  0.000 -0.000  0.832
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.832
+ -0.000 -0.971 -0.238
+  0.832
+ -0.000 -0.238  0.971
+  0.869
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.869 -0.000  0.000
+ -0.000  0.832 -0.000
+  0.000 -0.000  0.832
+atom    1   Tr[ns(na)]=   7.4248642
+atom    2   Tr[ns(na)]=   5.0672572
+atom    3   Tr[ns(na)]=   5.0672572
  --- exit write_nsg ---
  --- in v_hubbard_extended ---
 Hubbard energy    0.1814
@@ -769,45 +1203,12 @@ Hubbard energy    0.1814
 
      total cpu time spent up to now is        2.6 secs
 
-     total energy              =    -373.17519361 Ry
-     estimated scf accuracy    <       0.00001517 Ry
+     total energy              =    -373.17520238 Ry
+     estimated scf accuracy    <       0.00000033 Ry
 
-     iteration # 12     ecut=    50.00 Ry     beta= 0.70
+     iteration # 14     ecut=    50.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
-     ethr =  3.60E-08,  avg # of iterations =  1.0
- --- enter write_nsg ---
- Atom:    1   Spin:  1
-    eigenvalues and eigenvectors of the occupation matrix:
-  0.371
-  0.000 -0.663 -0.441 -0.335 -0.503
-  0.371
-  0.000  0.441 -0.663 -0.503  0.335
-  0.991
- -0.000 -0.140 -0.588  0.775  0.184
-  0.991
- -0.000 -0.588  0.140 -0.184  0.775
-  0.991
-  1.000 -0.000 -0.000  0.000  0.000
-    occupation matrix before diagonalization:
-  0.991  0.000  0.000  0.000  0.000
-  0.000  0.597  0.000 -0.000 -0.299
-  0.000  0.000  0.597 -0.299  0.000
-  0.000 -0.000 -0.299  0.764 -0.000
-  0.000 -0.299  0.000 -0.000  0.764
-atom    1   Tr[ns(na)]=   7.4267684
- --- exit write_nsg ---
- --- in v_hubbard_extended ---
-Hubbard energy    0.1814
- -----------------------------
-
-     total cpu time spent up to now is        2.7 secs
-
-     total energy              =    -373.17519247 Ry
-     estimated scf accuracy    <       0.00000879 Ry
-
-     iteration # 13     ecut=    50.00 Ry     beta= 0.70
-     Davidson diagonalization with overlap
-     ethr =  2.75E-08,  avg # of iterations =  3.5
+     ethr =  1.02E-09,  avg # of iterations =  3.0
  --- enter write_nsg ---
  Atom:    1   Spin:  1
     eigenvalues and eigenvectors of the occupation matrix:
@@ -827,7 +1228,33 @@ Hubbard energy    0.1814
   0.000  0.000  0.597 -0.299  0.000
   0.000 -0.000 -0.299  0.764 -0.000
   0.000 -0.299  0.000 -0.000  0.764
-atom    1   Tr[ns(na)]=   7.4245382
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.832
+ -0.000 -0.971 -0.238
+  0.832
+ -0.000 -0.238  0.971
+  0.869
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.869 -0.000  0.000
+ -0.000  0.832 -0.000
+  0.000 -0.000  0.832
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.832
+ -0.000 -0.971 -0.237
+  0.832
+ -0.000 -0.237  0.971
+  0.869
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.869 -0.000  0.000
+ -0.000  0.832 -0.000
+  0.000 -0.000  0.832
+atom    1   Tr[ns(na)]=   7.4242543
+atom    2   Tr[ns(na)]=   5.0675909
+atom    3   Tr[ns(na)]=   5.0675909
  --- exit write_nsg ---
  --- in v_hubbard_extended ---
 Hubbard energy    0.1814
@@ -835,12 +1262,12 @@ Hubbard energy    0.1814
 
      total cpu time spent up to now is        2.8 secs
 
-     total energy              =    -373.17519345 Ry
-     estimated scf accuracy    <       0.00000007 Ry
+     total energy              =    -373.17520245 Ry
+     estimated scf accuracy    <       0.00000002 Ry
 
-     iteration # 14     ecut=    50.00 Ry     beta= 0.70
+     iteration # 15     ecut=    50.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
-     ethr =  2.19E-10,  avg # of iterations =  4.0
+     ethr =  7.67E-11,  avg # of iterations =  4.2
  --- enter write_nsg ---
  Atom:    1   Spin:  1
     eigenvalues and eigenvectors of the occupation matrix:
@@ -860,7 +1287,33 @@ Hubbard energy    0.1814
   0.000  0.000  0.597 -0.299  0.000
   0.000 -0.000 -0.299  0.764 -0.000
   0.000 -0.299  0.000 -0.000  0.764
-atom    1   Tr[ns(na)]=   7.4245077
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.832
+ -0.000 -0.972 -0.237
+  0.832
+ -0.000 -0.237  0.972
+  0.869
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.869 -0.000  0.000
+ -0.000  0.832 -0.000
+  0.000 -0.000  0.832
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.832
+ -0.000 -0.971 -0.237
+  0.832
+ -0.000 -0.237  0.971
+  0.869
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.869 -0.000  0.000
+ -0.000  0.832 -0.000
+  0.000 -0.000  0.832
+atom    1   Tr[ns(na)]=   7.4242330
+atom    2   Tr[ns(na)]=   5.0676063
+atom    3   Tr[ns(na)]=   5.0676063
  --- exit write_nsg ---
  --- in v_hubbard_extended ---
 Hubbard energy    0.1814
@@ -868,12 +1321,12 @@ Hubbard energy    0.1814
 
      total cpu time spent up to now is        2.9 secs
 
-     total energy              =    -373.17519352 Ry
-     estimated scf accuracy    <       0.00000004 Ry
+     total energy              =    -373.17520246 Ry
+     estimated scf accuracy    <       0.00000003 Ry
 
-     iteration # 15     ecut=    50.00 Ry     beta= 0.70
+     iteration # 16     ecut=    50.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
-     ethr =  1.40E-10,  avg # of iterations =  1.8
+     ethr =  7.67E-11,  avg # of iterations =  3.0
  --- enter write_nsg ---
  Atom:    1   Spin:  1
     eigenvalues and eigenvectors of the occupation matrix:
@@ -893,7 +1346,33 @@ Hubbard energy    0.1814
   0.000  0.000  0.597 -0.299  0.000
   0.000 -0.000 -0.299  0.764 -0.000
   0.000 -0.299  0.000 -0.000  0.764
-atom    1   Tr[ns(na)]=   7.4244649
+ Atom:    2   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.832
+ -0.000 -0.971 -0.238
+  0.832
+ -0.000 -0.238  0.971
+  0.869
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.869 -0.000  0.000
+ -0.000  0.832 -0.000
+  0.000 -0.000  0.832
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.832
+ -0.000 -0.971 -0.238
+  0.832
+ -0.000 -0.238  0.971
+  0.869
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.869 -0.000  0.000
+ -0.000  0.832 -0.000
+  0.000 -0.000  0.832
+atom    1   Tr[ns(na)]=   7.4243078
+atom    2   Tr[ns(na)]=   5.0675686
+atom    3   Tr[ns(na)]=   5.0675686
  --- exit write_nsg ---
  --- in v_hubbard_extended ---
 Hubbard energy    0.1814
@@ -901,111 +1380,12 @@ Hubbard energy    0.1814
 
      total cpu time spent up to now is        3.0 secs
 
-     total energy              =    -373.17519352 Ry
-     estimated scf accuracy    <       0.00000002 Ry
-
-     iteration # 16     ecut=    50.00 Ry     beta= 0.70
-     Davidson diagonalization with overlap
-     ethr =  4.76E-11,  avg # of iterations =  4.0
- --- enter write_nsg ---
- Atom:    1   Spin:  1
-    eigenvalues and eigenvectors of the occupation matrix:
-  0.370
-  0.000 -0.664 -0.440 -0.334 -0.504
-  0.370
-  0.000  0.440 -0.664 -0.504  0.334
-  0.991
- -0.000 -0.140 -0.588  0.775  0.184
-  0.991
- -0.000 -0.588  0.140 -0.184  0.775
-  0.991
-  1.000 -0.000 -0.000  0.000  0.000
-    occupation matrix before diagonalization:
-  0.991  0.000  0.000  0.000  0.000
-  0.000  0.597  0.000 -0.000 -0.299
-  0.000  0.000  0.597 -0.299  0.000
-  0.000 -0.000 -0.299  0.764 -0.000
-  0.000 -0.299  0.000 -0.000  0.764
-atom    1   Tr[ns(na)]=   7.4241866
- --- exit write_nsg ---
- --- in v_hubbard_extended ---
-Hubbard energy    0.1814
- -----------------------------
-
-     total cpu time spent up to now is        3.2 secs
-
-     total energy              =    -373.17519353 Ry
-     estimated scf accuracy    <       0.00000006 Ry
+     total energy              =    -373.17520246 Ry
+     estimated scf accuracy    <          5.8E-09 Ry
 
      iteration # 17     ecut=    50.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
-     ethr =  4.76E-11,  avg # of iterations =  1.0
- --- enter write_nsg ---
- Atom:    1   Spin:  1
-    eigenvalues and eigenvectors of the occupation matrix:
-  0.370
-  0.000 -0.664 -0.441 -0.334 -0.504
-  0.370
-  0.000  0.441 -0.664 -0.504  0.334
-  0.991
- -0.000 -0.140 -0.588  0.775  0.184
-  0.991
- -0.000 -0.588  0.140 -0.184  0.775
-  0.991
-  1.000 -0.000 -0.000  0.000  0.000
-    occupation matrix before diagonalization:
-  0.991  0.000  0.000  0.000  0.000
-  0.000  0.597  0.000 -0.000 -0.299
-  0.000  0.000  0.597 -0.299  0.000
-  0.000 -0.000 -0.299  0.764 -0.000
-  0.000 -0.299  0.000 -0.000  0.764
-atom    1   Tr[ns(na)]=   7.4241970
- --- exit write_nsg ---
- --- in v_hubbard_extended ---
-Hubbard energy    0.1814
- -----------------------------
-
-     total cpu time spent up to now is        3.3 secs
-
-     total energy              =    -373.17519352 Ry
-     estimated scf accuracy    <       0.00000004 Ry
-
-     iteration # 18     ecut=    50.00 Ry     beta= 0.70
-     Davidson diagonalization with overlap
-     ethr =  4.76E-11,  avg # of iterations =  4.0
- --- enter write_nsg ---
- Atom:    1   Spin:  1
-    eigenvalues and eigenvectors of the occupation matrix:
-  0.370
-  0.000 -0.663 -0.441 -0.335 -0.503
-  0.370
-  0.000  0.441 -0.663 -0.503  0.335
-  0.991
- -0.000 -0.140 -0.588  0.775  0.184
-  0.991
- -0.000 -0.588  0.140 -0.184  0.775
-  0.991
-  1.000 -0.000 -0.000  0.000  0.000
-    occupation matrix before diagonalization:
-  0.991  0.000  0.000  0.000  0.000
-  0.000  0.597  0.000 -0.000 -0.299
-  0.000  0.000  0.597 -0.299  0.000
-  0.000 -0.000 -0.299  0.764 -0.000
-  0.000 -0.299  0.000 -0.000  0.764
-atom    1   Tr[ns(na)]=   7.4243754
- --- exit write_nsg ---
- --- in v_hubbard_extended ---
-Hubbard energy    0.1814
- -----------------------------
-
-     total cpu time spent up to now is        3.4 secs
-
-     total energy              =    -373.17519352 Ry
-     estimated scf accuracy    <          5.9E-10 Ry
-
-     iteration # 19     ecut=    50.00 Ry     beta= 0.70
-     Davidson diagonalization with overlap
-     ethr =  1.84E-12,  avg # of iterations =  3.2
+     ethr =  1.80E-11,  avg # of iterations =  4.2
  --- enter write_nsg ---
  Atom:    1   Spin:  1
     eigenvalues and eigenvectors of the occupation matrix:
@@ -1025,53 +1405,46 @@ Hubbard energy    0.1814
   0.000  0.000  0.597 -0.299  0.000
   0.000 -0.000 -0.299  0.764 -0.000
   0.000 -0.299  0.000 -0.000  0.764
-atom    1   Tr[ns(na)]=   7.4243760
- --- exit write_nsg ---
- --- in v_hubbard_extended ---
-Hubbard energy    0.1814
- -----------------------------
-
-     total cpu time spent up to now is        3.5 secs
-
-     total energy              =    -373.17519352 Ry
-     estimated scf accuracy    <          6.2E-10 Ry
-
-     iteration # 20     ecut=    50.00 Ry     beta= 0.70
-     Davidson diagonalization with overlap
-     ethr =  1.84E-12,  avg # of iterations =  4.0
- --- enter write_nsg ---
- Atom:    1   Spin:  1
+ Atom:    2   Spin:  1
     eigenvalues and eigenvectors of the occupation matrix:
-  0.370
-  0.000 -0.664 -0.441 -0.334 -0.504
-  0.370
-  0.000  0.441 -0.664 -0.504  0.334
-  0.991
- -0.000 -0.140 -0.588  0.775  0.184
-  0.991
- -0.000 -0.588  0.140 -0.184  0.775
-  0.991
-  1.000 -0.000 -0.000  0.000  0.000
+  0.832
+ -0.000 -0.971 -0.237
+  0.832
+ -0.000 -0.237  0.971
+  0.869
+  1.000 -0.000  0.000
     occupation matrix before diagonalization:
-  0.991  0.000  0.000  0.000  0.000
-  0.000  0.597  0.000 -0.000 -0.299
-  0.000  0.000  0.597 -0.299  0.000
-  0.000 -0.000 -0.299  0.764 -0.000
-  0.000 -0.299  0.000 -0.000  0.764
-atom    1   Tr[ns(na)]=   7.4243526
+  0.869 -0.000  0.000
+ -0.000  0.832 -0.000
+  0.000 -0.000  0.832
+ Atom:    3   Spin:  1
+    eigenvalues and eigenvectors of the occupation matrix:
+  0.832
+ -0.000 -0.971 -0.237
+  0.832
+ -0.000 -0.237  0.971
+  0.869
+  1.000 -0.000  0.000
+    occupation matrix before diagonalization:
+  0.869 -0.000  0.000
+ -0.000  0.832 -0.000
+  0.000 -0.000  0.832
+atom    1   Tr[ns(na)]=   7.4243707
+atom    2   Tr[ns(na)]=   5.0675333
+atom    3   Tr[ns(na)]=   5.0675333
  --- exit write_nsg ---
  --- in v_hubbard_extended ---
 Hubbard energy    0.1814
  -----------------------------
 
-     total cpu time spent up to now is        3.6 secs
+     total cpu time spent up to now is        3.1 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (  1273 PWs)   bands (ev):
 
-   -84.0951 -47.5245 -47.5245 -47.4205 -33.4229  -9.3292  -7.5440   3.0838
-     5.3786   5.3786   7.6019   7.6019   8.5447   8.6804   8.6804   8.7326
+   -84.0952 -47.5246 -47.5246 -47.4205 -33.4228  -9.3292  -7.5440   3.0861
+     5.3756   5.3756   7.6002   7.6002   8.5447   8.6803   8.6803   8.7302
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -1079,8 +1452,8 @@ Hubbard energy    0.1814
 
           k = 0.8804 0.5083-0.1764 (  1296 PWs)   bands (ev):
 
-   -84.0874 -47.6029 -47.5430 -47.4081 -33.3830  -7.6384  -7.5371   2.8756
-     4.9963   5.0222   5.7613   7.1403   7.3568   7.9777   8.0743   8.6199
+   -84.0875 -47.6030 -47.5431 -47.4082 -33.3830  -7.6385  -7.5372   2.8760
+     4.9990   5.0222   5.7575   7.1403   7.3567   7.9757   8.0735   8.6200
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -1088,8 +1461,8 @@ Hubbard energy    0.1814
 
           k = 0.8804-0.5083-0.3528 (  1284 PWs)   bands (ev):
 
-   -84.0872 -47.6024 -47.5432 -47.4068 -33.3842  -7.6610  -7.5034   2.7868
-     4.2751   5.8714   5.9151   7.0978   7.2774   8.0108   8.0855   8.5154
+   -84.0873 -47.6025 -47.5433 -47.4069 -33.3842  -7.6610  -7.5034   2.7864
+     4.2751   5.8687   5.9187   7.0978   7.2774   8.0124   8.0862   8.5149
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
@@ -1097,100 +1470,100 @@ Hubbard energy    0.1814
 
           k = 0.0000 0.0000-0.5293 (  1268 PWs)   bands (ev):
 
-   -84.0946 -47.5248 -47.5248 -47.4191 -33.4217  -9.1994  -7.7607   3.8977
-     5.3901   5.3901   6.9913   7.6297   7.6297   8.6057   8.6057   9.1007
+   -84.0947 -47.5249 -47.5249 -47.4191 -33.4216  -9.1995  -7.7608   3.8951
+     5.3929   5.3929   6.9912   7.6313   7.6313   8.6056   8.6056   9.1031
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
      1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
 
-     highest occupied level (ev):     9.1007
+     highest occupied level (ev):     9.1031
 
-!    total energy              =    -373.17519352 Ry
-     estimated scf accuracy    <          5.4E-11 Ry
+!    total energy              =    -373.17520246 Ry
+     estimated scf accuracy    <          9.6E-11 Ry
 
      The total energy is the sum of the following terms:
-     one-electron contribution =    -253.25314634 Ry
-     hartree contribution      =     142.35168813 Ry
-     xc contribution           =     -51.39327955 Ry
+     one-electron contribution =    -253.25327147 Ry
+     hartree contribution      =     142.35181362 Ry
+     xc contribution           =     -51.39328127 Ry
      ewald contribution        =    -211.06189316 Ry
-     Hubbard energy            =       0.18143739 Ry
+     Hubbard energy            =       0.18142982 Ry
 
-     convergence has been achieved in  20 iterations
+     convergence has been achieved in  17 iterations
 
-     Writing output data file /scratch/timrov/WORK_Hubbard_UV/PORTING/q-e_v5/q-e/tempdir/LiCoO2.save/
+     Writing output data file /scratch/timrov/WORK_Hubbard_UV/PORTING/q-e_v6/q-e/tempdir/LiCoO2.save/
  
-     init_run     :      0.34s CPU      0.35s WALL (       1 calls)
-     electrons    :      2.25s CPU      2.27s WALL (       1 calls)
+     init_run     :      0.31s CPU      0.32s WALL (       1 calls)
+     electrons    :      1.96s CPU      1.99s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.02s CPU      0.03s WALL (       1 calls)
+     wfcinit      :      0.03s CPU      0.03s WALL (       1 calls)
      wfcinit:atom :      0.00s CPU      0.00s WALL (       4 calls)
      wfcinit:wfcr :      0.02s CPU      0.02s WALL (       4 calls)
-     potinit      :      0.07s CPU      0.07s WALL (       1 calls)
-     hinit0       :      0.22s CPU      0.22s WALL (       1 calls)
+     potinit      :      0.06s CPU      0.06s WALL (       1 calls)
+     hinit0       :      0.20s CPU      0.19s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      1.04s CPU      1.07s WALL (      20 calls)
-     sum_band     :      0.60s CPU      0.60s WALL (      20 calls)
-     v_of_rho     :      0.30s CPU      0.29s WALL (      21 calls)
-     v_h          :      0.02s CPU      0.01s WALL (      21 calls)
-     v_xc         :      0.28s CPU      0.27s WALL (      21 calls)
-     newd         :      0.28s CPU      0.29s WALL (      21 calls)
-     mix_rho      :      0.03s CPU      0.03s WALL (      20 calls)
+     c_bands      :      0.92s CPU      0.94s WALL (      17 calls)
+     sum_band     :      0.50s CPU      0.52s WALL (      17 calls)
+     v_of_rho     :      0.24s CPU      0.25s WALL (      18 calls)
+     v_h          :      0.01s CPU      0.01s WALL (      18 calls)
+     v_xc         :      0.23s CPU      0.23s WALL (      18 calls)
+     newd         :      0.26s CPU      0.26s WALL (      18 calls)
+     mix_rho      :      0.04s CPU      0.02s WALL (      17 calls)
 
      Called by c_bands:
-     init_us_2    :      0.01s CPU      0.01s WALL (     168 calls)
-     cegterg      :      1.02s CPU      1.03s WALL (      80 calls)
+     init_us_2    :      0.02s CPU      0.01s WALL (     144 calls)
+     cegterg      :      0.89s CPU      0.91s WALL (      68 calls)
 
      Called by sum_band:
-     sum_band:wei :      0.00s CPU      0.00s WALL (      20 calls)
-     sum_band:loo :      0.19s CPU      0.19s WALL (      20 calls)
-     sum_band:buf :      0.00s CPU      0.00s WALL (      80 calls)
-     sum_band:ini :      0.00s CPU      0.01s WALL (      80 calls)
-     sum_band:cal :      0.01s CPU      0.00s WALL (      80 calls)
-     sum_band:bec :      0.00s CPU      0.00s WALL (      80 calls)
-     addusdens    :      0.38s CPU      0.38s WALL (      20 calls)
-     addusd:skk   :      0.00s CPU      0.00s WALL (      60 calls)
-     addusd:dgemm :      0.13s CPU      0.14s WALL (      60 calls)
-     addusd:qvan2 :      0.23s CPU      0.22s WALL (      60 calls)
+     sum_band:wei :      0.00s CPU      0.00s WALL (      17 calls)
+     sum_band:loo :      0.14s CPU      0.16s WALL (      17 calls)
+     sum_band:buf :      0.00s CPU      0.00s WALL (      68 calls)
+     sum_band:ini :      0.01s CPU      0.01s WALL (      68 calls)
+     sum_band:cal :      0.00s CPU      0.00s WALL (      68 calls)
+     sum_band:bec :      0.00s CPU      0.00s WALL (      68 calls)
+     addusdens    :      0.32s CPU      0.32s WALL (      17 calls)
+     addusd:skk   :      0.00s CPU      0.00s WALL (      51 calls)
+     addusd:dgemm :      0.12s CPU      0.12s WALL (      51 calls)
+     addusd:qvan2 :      0.20s CPU      0.19s WALL (      51 calls)
 
      Called by *egterg:
-     cdiaghg      :      0.14s CPU      0.13s WALL (     320 calls)
-     cegterg:over :      0.01s CPU      0.01s WALL (     240 calls)
-     cegterg:upda :      0.01s CPU      0.01s WALL (     240 calls)
-     cegterg:last :      0.01s CPU      0.00s WALL (      81 calls)
-     h_psi        :      0.85s CPU      0.87s WALL (     324 calls)
-     s_psi        :      0.01s CPU      0.01s WALL (     328 calls)
-     g_psi        :      0.00s CPU      0.00s WALL (     240 calls)
+     cdiaghg      :      0.12s CPU      0.12s WALL (     294 calls)
+     cegterg:over :      0.00s CPU      0.01s WALL (     226 calls)
+     cegterg:upda :      0.00s CPU      0.01s WALL (     226 calls)
+     cegterg:last :      0.00s CPU      0.00s WALL (      68 calls)
+     h_psi        :      0.79s CPU      0.76s WALL (     298 calls)
+     s_psi        :      0.00s CPU      0.01s WALL (     302 calls)
+     g_psi        :      0.00s CPU      0.00s WALL (     226 calls)
 
      Called by h_psi:
-     h_psi:calbec :      0.00s CPU      0.01s WALL (     324 calls)
-     vloc_psi     :      0.83s CPU      0.84s WALL (     324 calls)
-     add_vuspsi   :      0.02s CPU      0.01s WALL (     324 calls)
-     vhpsi        :      0.00s CPU      0.01s WALL (     324 calls)
+     h_psi:calbec :      0.00s CPU      0.01s WALL (     298 calls)
+     vloc_psi     :      0.78s CPU      0.72s WALL (     298 calls)
+     add_vuspsi   :      0.00s CPU      0.01s WALL (     298 calls)
+     vhpsi        :      0.01s CPU      0.02s WALL (     298 calls)
 
      General routines
-     calbec       :      0.01s CPU      0.02s WALL (     812 calls)
-     fft          :      0.11s CPU      0.12s WALL (     271 calls)
-     ffts         :      0.01s CPU      0.01s WALL (      41 calls)
-     fftw         :      0.90s CPU      0.92s WALL (    7964 calls)
-     interpolate  :      0.01s CPU      0.01s WALL (      21 calls)
+     calbec       :      0.00s CPU      0.02s WALL (     736 calls)
+     fft          :      0.10s CPU      0.11s WALL (     232 calls)
+     ffts         :      0.01s CPU      0.01s WALL (      35 calls)
+     fftw         :      0.80s CPU      0.79s WALL (    6842 calls)
+     interpolate  :      0.01s CPU      0.01s WALL (      18 calls)
      davcio       :      0.00s CPU      0.00s WALL (       8 calls)
  
      Parallel routines
-     fft_scatt_xy :      0.20s CPU      0.16s WALL (    8276 calls)
-     fft_scatt_yz :      0.19s CPU      0.19s WALL (    8276 calls)
+     fft_scatt_xy :      0.12s CPU      0.14s WALL (    7109 calls)
+     fft_scatt_yz :      0.17s CPU      0.16s WALL (    7109 calls)
 
      Hubbard U routines
-     new_nsg      :      0.01s CPU      0.00s WALL (      20 calls)
+     new_nsg      :      0.02s CPU      0.01s WALL (      17 calls)
      alloc_neigh  :      0.00s CPU      0.00s WALL (       1 calls)
-     vhpsi        :      0.00s CPU      0.01s WALL (     324 calls)
+     vhpsi        :      0.01s CPU      0.02s WALL (     298 calls)
  
-     PWSCF        :      3.57s CPU      3.63s WALL
+     PWSCF        :      3.06s CPU      3.12s WALL
 
  
-   This run was terminated on:  19:34:55  16Apr2020            
+   This run was terminated on:  17: 1: 3  22Apr2020            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

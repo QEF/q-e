@@ -53,7 +53,8 @@ tolerance = ( (5.0e-5, 5.0e-3, 'e1'),
               (2.0e+0,   None, 'phfreq'),
               (1.0e-3, 1.0e-5, 'rlatt_cart'),
               (1.0e-3, 1.0e-5, 'rlatt_crys'),
-              (1.0e-1,   None, 'sum_w_pot'))
+              (5.0e-1,   None, 'sum_w_pot'),
+              (5.0e-4, 1.0e-2, 'postahc_selfen'))
 skip_program = grep
 skip_args = 'not present in this version'
 
@@ -65,8 +66,10 @@ run_cmd_template = tc.program tc.args tc.input tc.output tc.error
 tolerance = ( (5.0e-5, 5.0e-3, 'e1'),
               (4.0e+0, 5.0e-1, 'n1'),
               (1.0e-3, 1.0e-5, 'f1'),
-              (1.0e-1, 1.0e-3, 'p1'),
-              (1.5e-3, 1.2e-4, 'u'))
+              (5.0e-1, 1.0e-3, 'p1'),
+              (1.5e-3, 1.2e-4, 'u'),
+              (1.5e-3, 1.2e-4, 'v1'),
+              (1.5e-3, 1.2e-4, 'v2'))
 skip_program = grep
 skip_args = 'not present in this version'
 
