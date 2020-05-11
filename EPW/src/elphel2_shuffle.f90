@@ -84,13 +84,14 @@
   USE lrus,             ONLY : becp1
   USE becmod,           ONLY : calbec
   USE elph2,            ONLY : el_ph_mat, igk_k_all, xkq, etq, ngk_all, lower_band, &
-                               upper_band, ibndstart, ibndend, nbndep, ngxx, ngxxf
+                               upper_band, ibndstart, ibndend, nbndep, ngxx, ngxxf, &
+                               ng0vec, shift, gmap, g0vec_all_r
   USE fft_base,         ONLY : dffts
   USE constants_epw,    ONLY : czero, cone, ci, zero, eps8
   USE control_flags,    ONLY : iverbosity
   USE klist,            ONLY : nkstot
   USE division,         ONLY : kpointdivision, fkbounds, fkbounds_bnd
-  USE kfold,            ONLY : ktokpmq, ng0vec, g0vec_all_r, gmap, shift
+  USE kfold,            ONLY : ktokpmq
   USE low_lvl,          ONLY : fractrasl, rotate_cart, s_crystocart
   USE io_epw,           ONLY : readwfc, readkmap
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag

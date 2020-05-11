@@ -12,7 +12,6 @@ MODULE write_upf_schema_module
   ! ...   declare modules
   USE upf_kinds,      ONLY: DP
   USE pseudo_types,   ONLY: pseudo_upf, pseudo_config, deallocate_pseudo_config
-  USE radial_grids,   ONLY: radial_grid_type
   USE Fox_wxml
   !
   IMPLICIT NONE

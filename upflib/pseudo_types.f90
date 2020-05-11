@@ -11,7 +11,6 @@ MODULE pseudo_types
   !  together with their allocation/deallocation routines
 
   USE upf_kinds,    ONLY: DP
-  use radial_grids, ONLY: radial_grid_type
 
   IMPLICIT NONE
   SAVE
@@ -19,18 +18,18 @@ MODULE pseudo_types
   ! Additional data to make a PAW setup out of an US pseudo,
   ! they are all stored on a radial grid:
   TYPE paw_in_upf
-     REAL(DP),POINTER :: ae_rho_atc(:) ! AE core charge (pseudo ccharge
+     REAL(DP),ALLOCATABLE :: ae_rho_atc(:) ! AE core charge (pseudo ccharge
      ! is already included in upf)
-     REAL(DP),POINTER :: pfunc(:,:,:),&! Psi_i(r)*Psi_j(r)
+     REAL(DP),ALLOCATABLE :: pfunc(:,:,:),&! Psi_i(r)*Psi_j(r)
           pfunc_rel(:,:,:), & ! Psi_i(r)*Psi_j(r) small component
           ptfunc(:,:,:), & ! as above, but for pseudo
           aewfc_rel(:,:) ! as above, but for pseudo
-     REAL(DP),POINTER :: ae_vloc(:)    ! AE local potential (pseudo vloc
+     REAL(DP),ALLOCATABLE :: ae_vloc(:)    ! AE local potential (pseudo vloc
      ! is already included in upf)
-     REAL(DP),POINTER :: oc(:)         ! starting occupation used to init becsum
+     REAL(DP),ALLOCATABLE :: oc(:)         ! starting occupation used to init becsum
      ! they differ from US ones because they
      ! are indexed on BETA functions, non on WFC
-     REAL(DP),POINTER :: augmom(:,:,:) ! multipole AE-pseudo (i,j,l=0:2*lmax)
+     REAL(DP),ALLOCATABLE :: augmom(:,:,:) ! multipole AE-pseudo (i,j,l=0:2*lmax)
      REAL(DP)         :: raug          ! augfunction max radius
      INTEGER          :: iraug         ! index on rgrid closer to, and >, raug
      INTEGER          :: lmax_aug      ! max angmom of augmentation functions, it is ==
@@ -65,104 +64,101 @@ MODULE pseudo_types
      CHARACTER(len=11) :: nv       ! UPF file three-digit version i.e. 2.0.0
      INTEGER :: lmax               ! maximum l component in beta
      INTEGER :: lmax_rho           ! max l component in charge (should be 2*lmax)
-     REAL(DP), POINTER :: vnl(:,:,:) ! vnl(i,l,s) = V(r_i)_{ls}
+     REAL(DP), ALLOCATABLE :: vnl(:,:,:) ! vnl(i,l,s) = V(r_i)_{ls}
      ! (semilocal form) only for single-channel NC PP
      ! Wavefunctions and projectors
      INTEGER :: nwfc               ! number of atomic wavefunctions
      INTEGER :: nbeta              ! number of projectors
-     INTEGER,  POINTER :: kbeta(:) ! kbeta(nbeta) see below
+     INTEGER,  ALLOCATABLE :: kbeta(:) ! kbeta(nbeta) see below
      INTEGER :: kkbeta             ! kkbeta=max(kbeta(:))
      !  kbeta<=mesh is the number of grid points for each beta function
      !              beta(r,nb) = 0 for r > r(kbeta(nb))
      ! kkbeta<=mesh is the largest of such number so that for all beta
      !              beta(r,nb) = 0 for r > r(kkbeta)
      !
-     INTEGER,  POINTER :: lll(:)     ! lll(nbeta) l of each projector
-     REAL(DP), POINTER :: beta(:,:)  ! beta(mesh,nbeta) projectors
+     INTEGER,  ALLOCATABLE :: lll(:)     ! lll(nbeta) l of each projector
+     REAL(DP), ALLOCATABLE :: beta(:,:)  ! beta(mesh,nbeta) projectors
      !
-     CHARACTER(LEN=2), POINTER :: els(:)  ! els(nwfc) label of wfc
-     CHARACTER(LEN=2), POINTER :: els_beta(:)  ! els(nbeta) label of beta
-     INTEGER, POINTER  :: nchi(:)    ! lchi(nwfc) value of pseudo-n for wavefcts
-     INTEGER, POINTER  :: lchi(:)    ! lchi(nwfc) value of l for wavefcts
-     REAL(DP), POINTER :: oc(:)      ! oc(nwfc) occupancies for wavefcts
-     REAL(DP), POINTER :: epseu(:)   ! pseudo one-particle energy (nwfc)
-     REAL(DP), POINTER :: rcut_chi(:)! rcut_chi(nwfc) cutoff inner radius
-     REAL(DP), POINTER :: rcutus_chi(:)! rcutus_chi(nwfc) ultrasoft outer radius
+     CHARACTER(LEN=2), ALLOCATABLE :: els(:)  ! els(nwfc) label of wfc
+     CHARACTER(LEN=2), ALLOCATABLE :: els_beta(:)  ! els(nbeta) label of beta
+     INTEGER, ALLOCATABLE  :: nchi(:)    ! lchi(nwfc) value of pseudo-n for wavefcts
+     INTEGER, ALLOCATABLE  :: lchi(:)    ! lchi(nwfc) value of l for wavefcts
+     REAL(DP), ALLOCATABLE :: oc(:)      ! oc(nwfc) occupancies for wavefcts
+     REAL(DP), ALLOCATABLE :: epseu(:)   ! pseudo one-particle energy (nwfc)
+     REAL(DP), ALLOCATABLE :: rcut_chi(:)! rcut_chi(nwfc) cutoff inner radius
+     REAL(DP), ALLOCATABLE :: rcutus_chi(:)! rcutus_chi(nwfc) ultrasoft outer radius
      ! Chi and rho_at are only used for initial density and initial wfcs:
-     REAL(DP), POINTER :: chi(:,:)   ! chi(mesh,nwfc) atomic wavefcts
-     REAL(DP), POINTER :: rho_at(:)  ! rho_at(mesh) atomic charge
+     REAL(DP), ALLOCATABLE :: chi(:,:)   ! chi(mesh,nwfc) atomic wavefcts
+     REAL(DP), ALLOCATABLE :: rho_at(:)  ! rho_at(mesh) atomic charge
      ! Minimal radial grid:
      INTEGER :: mesh               ! number of points in the radial mesh
      REAL(DP) :: xmin              ! the minimum x of the linear mesh
      REAL(DP) :: rmax              ! the maximum radius of the mesh
      REAL(DP) :: zmesh             ! the nuclear charge used for mesh
      REAL(DP) :: dx                ! the deltax of the linear mesh
-     REAL(DP), POINTER :: r(:)     ! r(mesh)  radial grid
-     REAL(DP), POINTER :: rab(:)   ! rab(mesh) dr(x)/dx (x=linear grid)
+     REAL(DP), ALLOCATABLE :: r(:)     ! r(mesh)  radial grid
+     REAL(DP), ALLOCATABLE :: rab(:)   ! rab(mesh) dr(x)/dx (x=linear grid)
      ! Pseudized core charge
-     REAL(DP), POINTER :: rho_atc(:) ! rho_atc(mesh) atomic core charge
+     REAL(DP), ALLOCATABLE :: rho_atc(:) ! rho_atc(mesh) atomic core charge
      ! Local potential
      INTEGER :: lloc                 ! L of channel used to generate local potential
      ! (if < 0 it was generated by smoothing AE potential)
      REAL(DP) :: rcloc               ! vloc = v_ae for r > rcloc
-     REAL(DP), POINTER :: vloc(:)    ! vloc(mesh) local atomic potential
+     REAL(DP), ALLOCATABLE :: vloc(:)    ! vloc(mesh) local atomic potential
      !
-     REAL(DP), POINTER :: dion(:,:)  ! dion(nbeta,nbeta) atomic D_{mu,nu}
+     REAL(DP), ALLOCATABLE :: dion(:,:)  ! dion(nbeta,nbeta) atomic D_{mu,nu}
      ! Augmentation
      LOGICAL :: q_with_l              ! if .true. qfunc is pseudized in
      ! different ways for different l
      INTEGER :: nqf                  ! number of Q coefficients
      INTEGER :: nqlc                 ! number of angular momenta in Q
      REAL(DP):: qqq_eps              ! qfunc is null if its norm is .lt. qqq_eps
-     REAL(DP), POINTER :: rinner(:)  ! rinner(0:2*lmax) r_L
-     REAL(DP), POINTER :: qqq(:,:)   ! qqq(nbeta,nbeta) q_{mu,nu}
+     REAL(DP), ALLOCATABLE :: rinner(:)  ! rinner(0:2*lmax) r_L
+     REAL(DP), ALLOCATABLE :: qqq(:,:)   ! qqq(nbeta,nbeta) q_{mu,nu}
      ! Augmentation without L dependecy
-     REAL(DP), POINTER :: qfunc(:,:) ! qfunc(mesh,nbeta*(nbeta+1)/2)
+     REAL(DP), ALLOCATABLE :: qfunc(:,:) ! qfunc(mesh,nbeta*(nbeta+1)/2)
      ! Q_{mu,nu}(|r|) function for |r|> r_L
      ! Augmentation depending on L (optional, compulsory for PAW)
-     REAL(DP), POINTER :: qfuncl(:,:,:)!  qfuncl(mesh,nbeta*(nbeta+1)/2,l)
+     REAL(DP), ALLOCATABLE :: qfuncl(:,:,:)!  qfuncl(mesh,nbeta*(nbeta+1)/2,l)
      ! Q_{mu,nu}(|r|) function for |r|> r_L
      ! Analitycal coeffs cor small r expansion of qfunc (Vanderbilt's code)
-     REAL(DP), POINTER :: qfcoef(:,:,:,:) ! qfcoef(nqf,0:2*lmax,nbeta,nbeta)
+     REAL(DP), ALLOCATABLE :: qfcoef(:,:,:,:) ! qfcoef(nqf,0:2*lmax,nbeta,nbeta)
      ! coefficients for Q for |r|<r_L
      ! All electron and pseudo wavefunction, pswfc differ from chi as they are
      ! one for each beta, not just some choosen for initial conditions
      LOGICAL           :: has_wfc    ! if true, UPF contain AE and PS wfc for each beta
-     REAL(DP), POINTER :: aewfc(:,:) ! wfc(mesh,nbeta) all-electron wfc
-     REAL(DP), POINTER :: pswfc(:,:) ! wfc(mesh,nbeta) pseudo wfc
+     REAL(DP), ALLOCATABLE :: aewfc(:,:) ! wfc(mesh,nbeta) all-electron wfc
+     REAL(DP), ALLOCATABLE :: pswfc(:,:) ! wfc(mesh,nbeta) pseudo wfc
 
      LOGICAL :: has_so             ! if .true. includes spin-orbit
-     INTEGER, POINTER :: nn(:)     ! nn(nwfc) quantum number of wfc
-     REAL(DP), POINTER :: rcut(:)  ! cut-off radius(nbeta)
-     REAL(DP), POINTER :: rcutus(:)! ultrasoft cut-off radius (nbeta)
-     REAL(DP), POINTER :: jchi(:)  ! jchi(nwfc) j=l+1/2 or l-1/2 of wfc
-     REAL(DP), POINTER :: jjj(:)   ! jjj(nbeta) j=l+1/2 or l-1/2 of beta
+     INTEGER, ALLOCATABLE :: nn(:)     ! nn(nwfc) quantum number of wfc
+     REAL(DP), ALLOCATABLE :: rcut(:)  ! cut-off radius(nbeta)
+     REAL(DP), ALLOCATABLE :: rcutus(:)! ultrasoft cut-off radius (nbeta)
+     REAL(DP), ALLOCATABLE :: jchi(:)  ! jchi(nwfc) j=l+1/2 or l-1/2 of wfc
+     REAL(DP), ALLOCATABLE :: jjj(:)   ! jjj(nbeta) j=l+1/2 or l-1/2 of beta
 
      ! PAW:
      INTEGER :: paw_data_format      ! The version of the format
      LOGICAL  :: tpawp               ! true if atom is PAW, PAW data must be present
      TYPE(paw_in_upf) :: paw         ! additional data for PAW (see above)
-     TYPE(radial_grid_type),POINTER :: grid ! pointer to the corresponding grid
-     ! in radial_grids module
-
      ! GIPAW:
      LOGICAL  :: has_gipaw           ! Whether GIPAW data is included
      LOGICAL  :: paw_as_gipaw        !EMINE
      INTEGER  :: gipaw_data_format   ! The version of the format
      INTEGER  :: gipaw_ncore_orbitals
-     REAL(DP), POINTER :: gipaw_core_orbital_n(:)
-     REAL(DP), POINTER :: gipaw_core_orbital_l(:)
-     CHARACTER(LEN=2), POINTER :: gipaw_core_orbital_el(:)
-     REAL(DP), POINTER :: gipaw_core_orbital(:,:)
-     REAL(DP), POINTER :: gipaw_vlocal_ae(:)
-     REAL(DP), POINTER :: gipaw_vlocal_ps(:)
+     REAL(DP), ALLOCATABLE :: gipaw_core_orbital_n(:)
+     REAL(DP), ALLOCATABLE :: gipaw_core_orbital_l(:)
+     CHARACTER(LEN=2), ALLOCATABLE :: gipaw_core_orbital_el(:)
+     REAL(DP), ALLOCATABLE :: gipaw_core_orbital(:,:)
+     REAL(DP), ALLOCATABLE :: gipaw_vlocal_ae(:)
+     REAL(DP), ALLOCATABLE :: gipaw_vlocal_ps(:)
      INTEGER :: gipaw_wfs_nchannels
-     CHARACTER(LEN=2), POINTER :: gipaw_wfs_el(:)
-     INTEGER, POINTER :: gipaw_wfs_ll(:)
-     REAL(DP), POINTER :: gipaw_wfs_ae(:,:)
-     REAL(DP), POINTER :: gipaw_wfs_rcut(:)
-     REAL(DP), POINTER :: gipaw_wfs_rcutus(:)
-     REAL(DP), POINTER :: gipaw_wfs_ps(:,:)
+     CHARACTER(LEN=2), ALLOCATABLE :: gipaw_wfs_el(:)
+     INTEGER, ALLOCATABLE :: gipaw_wfs_ll(:)
+     REAL(DP), ALLOCATABLE :: gipaw_wfs_ae(:,:)
+     REAL(DP), ALLOCATABLE :: gipaw_wfs_rcut(:)
+     REAL(DP), ALLOCATABLE :: gipaw_wfs_rcutus(:)
+     REAL(DP), ALLOCATABLE :: gipaw_wfs_ps(:,:)
      !
      !  MD5 checksum ... used to verify integrity of the information contained
      !  in the pseudopotential file w.r.t previous run
@@ -174,88 +170,108 @@ MODULE pseudo_types
   TYPE pseudo_config
      INTEGER :: nwfs
      CHARACTER(len=32)        :: pseud
-     CHARACTER(len=2),POINTER :: els(:)    !=> null()    ! label
-     INTEGER,POINTER          :: nns(:)    !=> null()    ! n
-     INTEGER,POINTER          :: lls(:)    !=> null()    ! l
-     REAL(DP),POINTER         :: ocs(:)    !=> null()    ! occupation
-     REAL(DP),POINTER         :: rcut(:)   !=> null()    ! NC cutoff radius
-     REAL(DP),POINTER         :: rcutus(:) !=> null()    ! US cutoff radius
-     REAL(DP),POINTER         :: enls(:)   !=> null()    ! energy
+     CHARACTER(len=2),ALLOCATABLE :: els(:)        ! label
+     INTEGER,ALLOCATABLE          :: nns(:)        ! n
+     INTEGER,ALLOCATABLE          :: lls(:)        ! l
+     REAL(DP),ALLOCATABLE         :: ocs(:)        ! occupation
+     REAL(DP),ALLOCATABLE         :: rcut(:)       ! NC cutoff radius
+     REAL(DP),ALLOCATABLE         :: rcutus(:)     ! US cutoff radius
+     REAL(DP),ALLOCATABLE         :: enls(:)       ! energy
   END TYPE pseudo_config
 
 CONTAINS
 
-  SUBROUTINE nullify_paw_in_upf( paw )
+  SUBROUTINE deallocate_paw_in_upf( paw )
     TYPE( paw_in_upf ), INTENT(INOUT) :: paw
-    NULLIFY( paw%ae_rho_atc )
-    NULLIFY( paw%aewfc_rel )
-    NULLIFY( paw%pfunc )
-    NULLIFY( paw%pfunc_rel )
-    NULLIFY( paw%ptfunc )
-    NULLIFY( paw%ae_vloc )
-    NULLIFY( paw%augmom )
-    NULLIFY( paw%oc )
+    IF( ALLOCATED( paw%ae_rho_atc ) ) DEALLOCATE ( paw%ae_rho_atc )
+    IF( ALLOCATED( paw%aewfc_rel ) )  DEALLOCATE (paw%aewfc_rel )
+    IF( ALLOCATED( paw%pfunc ) )      DEALLOCATE ( paw%pfunc )
+    IF( ALLOCATED( paw%pfunc_rel ) )  DEALLOCATE ( paw%pfunc_rel )
+    IF( ALLOCATED( paw%ptfunc ) )     DEALLOCATE ( paw%ptfunc )
+    IF( ALLOCATED( paw%ae_vloc )  )   DEALLOCATE ( paw%ae_vloc )
+    IF( ALLOCATED( paw%augmom ) )     DEALLOCATE ( paw%augmom )
+    IF( ALLOCATED( paw%oc ) )         DEALLOCATE ( paw%oc )
     paw%raug = 0.0
     paw%core_energy = 0.0
     paw%iraug = 0
     paw%lmax_aug = 0
     paw%augshape = ' '
-  END SUBROUTINE nullify_paw_in_upf
-
-  SUBROUTINE deallocate_paw_in_upf( paw )
-    TYPE( paw_in_upf ), INTENT(INOUT) :: paw
-    IF( ASSOCIATED( paw%ae_rho_atc ) ) DEALLOCATE ( paw%ae_rho_atc )
-    IF( ASSOCIATED( paw%aewfc_rel ) )  DEALLOCATE (paw%aewfc_rel )
-    IF( ASSOCIATED( paw%pfunc ) )      DEALLOCATE ( paw%pfunc )
-    IF( ASSOCIATED( paw%pfunc_rel ) )  DEALLOCATE ( paw%pfunc_rel )
-    IF( ASSOCIATED( paw%ptfunc ) )     DEALLOCATE ( paw%ptfunc )
-    IF( ASSOCIATED( paw%ae_vloc )  )   DEALLOCATE ( paw%ae_vloc )
-    IF( ASSOCIATED( paw%augmom ) )     DEALLOCATE ( paw%augmom )
-    IF( ASSOCIATED( paw%oc ) )         DEALLOCATE ( paw%oc )
   END SUBROUTINE deallocate_paw_in_upf
   !
    SUBROUTINE deallocate_pseudo_config(conf)
       TYPE(pseudo_config),INTENT(INOUT) :: conf
-      if (associated(conf%els)   ) deallocate(conf%els)
-      if (associated(conf%nns)   ) deallocate(conf%nns)
-      if (associated(conf%lls)   ) deallocate(conf%lls)
-      if (associated(conf%ocs)   ) deallocate(conf%ocs)
-      if (associated(conf%rcut)  ) deallocate(conf%rcut)
-      if (associated(conf%rcutus)) deallocate(conf%rcutus)
-      if (associated(conf%enls)  ) deallocate(conf%enls)
+      IF ( ALLOCATED(conf%els)   ) DEALLOCATE(conf%els)
+      IF ( ALLOCATED(conf%nns)   ) DEALLOCATE(conf%nns)
+      IF ( ALLOCATED(conf%lls)   ) DEALLOCATE(conf%lls)
+      IF ( ALLOCATED(conf%ocs)   ) DEALLOCATE(conf%ocs)
+      IF ( ALLOCATED(conf%rcut)  ) DEALLOCATE(conf%rcut)
+      IF ( ALLOCATED(conf%rcutus)) DEALLOCATE(conf%rcutus)
+      IF ( ALLOCATED(conf%enls)  ) DEALLOCATE(conf%enls)
    END SUBROUTINE deallocate_pseudo_config
 
 
-  !
-  SUBROUTINE nullify_pseudo_upf( upf )
+
+  SUBROUTINE deallocate_pseudo_upf( upf )
     TYPE( pseudo_upf ), INTENT(INOUT) :: upf
-    CALL nullify_paw_in_upf( upf%paw )
-    NULLIFY( upf%grid ) 
-    NULLIFY( upf%els, upf%lchi, upf%nchi, upf%jchi, upf%oc )
-    NULLIFY( upf%r, upf%rab )
-    NULLIFY( upf%rho_atc, upf%vloc )
-    NULLIFY( upf%nn)
-    NULLIFY( upf%els_beta)
-    NULLIFY( upf%rcut, upf%rcutus, upf%rcut_chi, upf%rcutus_chi )
-    NULLIFY( upf%epseu)
-    NULLIFY( upf%vnl)
-    NULLIFY( upf%lll, upf%jjj, upf%kbeta, upf%beta, upf%dion )
-    NULLIFY( upf%aewfc, upf%pswfc )
-    NULLIFY( upf%rinner, upf%qqq, upf%qfunc, upf%qfuncl, upf%qfcoef )
-    NULLIFY( upf%chi )
-    NULLIFY( upf%rho_at )
-    NULLIFY ( upf%gipaw_core_orbital_n )
-    NULLIFY ( upf%gipaw_core_orbital_l )
-    NULLIFY ( upf%gipaw_core_orbital_el )
-    NULLIFY ( upf%gipaw_core_orbital )
-    NULLIFY ( upf%gipaw_vlocal_ae )
-    NULLIFY ( upf%gipaw_vlocal_ps )
-    NULLIFY ( upf%gipaw_wfs_el )
-    NULLIFY ( upf%gipaw_wfs_ll )
-    NULLIFY ( upf%gipaw_wfs_ae )
-    NULLIFY ( upf%gipaw_wfs_rcut )
-    NULLIFY ( upf%gipaw_wfs_rcutus )
-    NULLIFY ( upf%gipaw_wfs_ps )
+    CALL deallocate_paw_in_upf( upf%paw )
+    IF( ALLOCATED( upf%els ) )     DEALLOCATE( upf%els )
+    IF( ALLOCATED( upf%lchi ) )    DEALLOCATE( upf%lchi )
+    IF( ALLOCATED( upf%nchi ) )    DEALLOCATE( upf%nchi )
+    IF( ALLOCATED( upf%jchi ) )    DEALLOCATE( upf%jchi )
+    IF( ALLOCATED( upf%oc ) )      DEALLOCATE( upf%oc )
+    !
+    IF( ALLOCATED( upf%r ) ) DEALLOCATE( upf%r )
+    IF( ALLOCATED( upf%rab ) ) DEALLOCATE( upf%rab )
+    !
+    IF( ALLOCATED( upf%nn ) )      DEALLOCATE( upf%nn )
+    IF( ALLOCATED( upf%els_beta ) )DEALLOCATE( upf%els_beta )
+    IF( ALLOCATED( upf%rcut_chi ) )  DEALLOCATE( upf%rcut_chi )
+    IF( ALLOCATED( upf%rcutus_chi ) )DEALLOCATE( upf%rcutus_chi )
+    IF( ALLOCATED( upf%rcut ) )    DEALLOCATE( upf%rcut )
+    IF( ALLOCATED( upf%rcutus ) )  DEALLOCATE( upf%rcutus )
+    IF( ALLOCATED( upf%epseu ) )   DEALLOCATE( upf%epseu )
+    IF( ALLOCATED( upf%rho_atc ) ) DEALLOCATE( upf%rho_atc )
+    IF( ALLOCATED( upf%vloc ) )    DEALLOCATE( upf%vloc )
+    IF( ALLOCATED( upf%lll ) )     DEALLOCATE( upf%lll )
+    IF( ALLOCATED( upf%jjj ) )     DEALLOCATE( upf%jjj )
+    IF( ALLOCATED( upf%kbeta ) )   DEALLOCATE( upf%kbeta )
+    IF( ALLOCATED( upf%beta ) )    DEALLOCATE( upf%beta )
+    IF( ALLOCATED( upf%vnl ) )     DEALLOCATE( upf%vnl )
+    IF( ALLOCATED( upf%aewfc ) )   DEALLOCATE( upf%aewfc )
+    IF( ALLOCATED( upf%pswfc ) )   DEALLOCATE( upf%pswfc )
+    IF( ALLOCATED( upf%dion ) )    DEALLOCATE( upf%dion )
+    IF( ALLOCATED( upf%rinner ) )  DEALLOCATE( upf%rinner )
+    IF( ALLOCATED( upf%qqq ) )     DEALLOCATE( upf%qqq )
+    IF( ALLOCATED( upf%qfunc ) )   DEALLOCATE( upf%qfunc )
+    IF( ALLOCATED( upf%qfuncl ) )  DEALLOCATE( upf%qfuncl )
+    IF( ALLOCATED( upf%qfcoef ) )  DEALLOCATE( upf%qfcoef )
+    IF( ALLOCATED( upf%chi ) )     DEALLOCATE( upf%chi )
+    IF( ALLOCATED( upf%rho_at ) )  DEALLOCATE( upf%rho_at )
+    IF ( ALLOCATED ( upf%gipaw_core_orbital_n ) ) &
+         DEALLOCATE ( upf%gipaw_core_orbital_n )
+    IF ( ALLOCATED ( upf%gipaw_core_orbital_l ) ) &
+         DEALLOCATE ( upf%gipaw_core_orbital_l )
+    IF ( ALLOCATED ( upf%gipaw_core_orbital_el ) ) &
+         DEALLOCATE ( upf%gipaw_core_orbital_el )
+    IF ( ALLOCATED ( upf%gipaw_core_orbital ) ) &
+         DEALLOCATE ( upf%gipaw_core_orbital )
+    IF ( ALLOCATED ( upf%gipaw_vlocal_ae ) ) &
+         DEALLOCATE ( upf%gipaw_vlocal_ae )
+    IF ( ALLOCATED ( upf%gipaw_vlocal_ps ) ) &
+         DEALLOCATE ( upf%gipaw_vlocal_ps )
+    IF ( ALLOCATED ( upf%gipaw_wfs_el ) ) &
+         DEALLOCATE ( upf%gipaw_wfs_el )
+    IF ( ALLOCATED ( upf%gipaw_wfs_ll ) ) &
+         DEALLOCATE ( upf%gipaw_wfs_ll )
+    IF ( ALLOCATED ( upf%gipaw_wfs_ae ) ) &
+         DEALLOCATE ( upf%gipaw_wfs_ae )
+    IF ( ALLOCATED ( upf%gipaw_wfs_rcut ) ) &
+         DEALLOCATE ( upf%gipaw_wfs_rcut )
+    IF ( ALLOCATED ( upf%gipaw_wfs_rcutus ) ) &
+         DEALLOCATE ( upf%gipaw_wfs_rcutus )
+    IF ( ALLOCATED ( upf%gipaw_wfs_ps ) ) &
+         DEALLOCATE ( upf%gipaw_wfs_ps )
+  !
     upf%tvanp = .false.
     upf%tcoulombp = .false.
     upf%nlcc = .false.
@@ -289,76 +305,7 @@ CONTAINS
     upf%gipaw_data_format = 0
     upf%gipaw_ncore_orbitals = 0
     upf%gipaw_wfs_nchannels = 0
-    RETURN
-  END SUBROUTINE nullify_pseudo_upf
 
-  SUBROUTINE deallocate_pseudo_upf( upf )
-    TYPE( pseudo_upf ), INTENT(INOUT) :: upf
-    CALL deallocate_paw_in_upf( upf%paw )
-    IF( ASSOCIATED( upf%els ) )     DEALLOCATE( upf%els )
-    IF( ASSOCIATED( upf%lchi ) )    DEALLOCATE( upf%lchi )
-    IF( ASSOCIATED( upf%nchi ) )    DEALLOCATE( upf%nchi )
-    IF( ASSOCIATED( upf%jchi ) )    DEALLOCATE( upf%jchi )
-    IF( ASSOCIATED( upf%oc ) )      DEALLOCATE( upf%oc )
-    !
-    IF(ASSOCIATED(upf%grid)) THEN
-       IF( ASSOCIATED( upf%r ) ) NULLIFY( upf%r )
-       IF( ASSOCIATED( upf%rab ) ) NULLIFY( upf%rab )
-       NULLIFY(upf%grid)
-    ELSE
-       IF( ASSOCIATED( upf%r ) ) DEALLOCATE( upf%r )
-       IF( ASSOCIATED( upf%rab ) ) DEALLOCATE( upf%rab )
-    ENDIF
-    !
-    IF( ASSOCIATED( upf%nn ) )      DEALLOCATE( upf%nn )
-    IF( ASSOCIATED( upf%els_beta ) )DEALLOCATE( upf%els_beta )
-    IF( ASSOCIATED( upf%rcut_chi ) )  DEALLOCATE( upf%rcut_chi )
-    IF( ASSOCIATED( upf%rcutus_chi ) )DEALLOCATE( upf%rcutus_chi )
-    IF( ASSOCIATED( upf%rcut ) )    DEALLOCATE( upf%rcut )
-    IF( ASSOCIATED( upf%rcutus ) )  DEALLOCATE( upf%rcutus )
-    IF( ASSOCIATED( upf%epseu ) )   DEALLOCATE( upf%epseu )
-    IF( ASSOCIATED( upf%rho_atc ) ) DEALLOCATE( upf%rho_atc )
-    IF( ASSOCIATED( upf%vloc ) )    DEALLOCATE( upf%vloc )
-    IF( ASSOCIATED( upf%lll ) )     DEALLOCATE( upf%lll )
-    IF( ASSOCIATED( upf%jjj ) )     DEALLOCATE( upf%jjj )
-    IF( ASSOCIATED( upf%kbeta ) )   DEALLOCATE( upf%kbeta )
-    IF( ASSOCIATED( upf%beta ) )    DEALLOCATE( upf%beta )
-    IF( ASSOCIATED( upf%vnl ) )     DEALLOCATE( upf%vnl )
-    IF( ASSOCIATED( upf%aewfc ) )   DEALLOCATE( upf%aewfc )
-    IF( ASSOCIATED( upf%pswfc ) )   DEALLOCATE( upf%pswfc )
-    IF( ASSOCIATED( upf%dion ) )    DEALLOCATE( upf%dion )
-    IF( ASSOCIATED( upf%rinner ) )  DEALLOCATE( upf%rinner )
-    IF( ASSOCIATED( upf%qqq ) )     DEALLOCATE( upf%qqq )
-    IF( ASSOCIATED( upf%qfunc ) )   DEALLOCATE( upf%qfunc )
-    IF( ASSOCIATED( upf%qfuncl ) )  DEALLOCATE( upf%qfuncl )
-    IF( ASSOCIATED( upf%qfcoef ) )  DEALLOCATE( upf%qfcoef )
-    IF( ASSOCIATED( upf%chi ) )     DEALLOCATE( upf%chi )
-    IF( ASSOCIATED( upf%rho_at ) )  DEALLOCATE( upf%rho_at )
-    IF ( ASSOCIATED ( upf%gipaw_core_orbital_n ) ) &
-         DEALLOCATE ( upf%gipaw_core_orbital_n )
-    IF ( ASSOCIATED ( upf%gipaw_core_orbital_l ) ) &
-         DEALLOCATE ( upf%gipaw_core_orbital_l )
-    IF ( ASSOCIATED ( upf%gipaw_core_orbital_el ) ) &
-         DEALLOCATE ( upf%gipaw_core_orbital_el )
-    IF ( ASSOCIATED ( upf%gipaw_core_orbital ) ) &
-         DEALLOCATE ( upf%gipaw_core_orbital )
-    IF ( ASSOCIATED ( upf%gipaw_vlocal_ae ) ) &
-         DEALLOCATE ( upf%gipaw_vlocal_ae )
-    IF ( ASSOCIATED ( upf%gipaw_vlocal_ps ) ) &
-         DEALLOCATE ( upf%gipaw_vlocal_ps )
-    IF ( ASSOCIATED ( upf%gipaw_wfs_el ) ) &
-         DEALLOCATE ( upf%gipaw_wfs_el )
-    IF ( ASSOCIATED ( upf%gipaw_wfs_ll ) ) &
-         DEALLOCATE ( upf%gipaw_wfs_ll )
-    IF ( ASSOCIATED ( upf%gipaw_wfs_ae ) ) &
-         DEALLOCATE ( upf%gipaw_wfs_ae )
-    IF ( ASSOCIATED ( upf%gipaw_wfs_rcut ) ) &
-         DEALLOCATE ( upf%gipaw_wfs_rcut )
-    IF ( ASSOCIATED ( upf%gipaw_wfs_rcutus ) ) &
-         DEALLOCATE ( upf%gipaw_wfs_rcutus )
-    IF ( ASSOCIATED ( upf%gipaw_wfs_ps ) ) &
-         DEALLOCATE ( upf%gipaw_wfs_ps )
-    RETURN
   END SUBROUTINE deallocate_pseudo_upf
 
 END MODULE pseudo_types

@@ -140,9 +140,6 @@ SUBROUTINE scf(ic)
         eps0 = 0.0_DP
      ENDIF
      IF (conv) THEN
-        print *, noscf
-        print *,"error", nerr
-
         IF (nerr /= 0) CALL infomsg ('scf','warning: at least one error in KS equations')
         EXIT ! exit cycle
      ENDIF

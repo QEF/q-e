@@ -54,11 +54,11 @@ write_hamiltonians.o \
 xc_vdW_scale_mod.o   # added by Yang Jiao
 
 PWOBJS = ../../PW/src/libpw.a
-QEOBJS = ../../Modules/libqemod.a ../../upflib/libupf.a ../../KS_Solvers/libks_solvers.a \
+QEMODS = ../../Modules/libqemod.a ../../upflib/libupf.a ../../KS_Solvers/libks_solvers.a \
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
          ../../dft-d3/libdftd3qe.a
 
-MODULES = $(PWOBJS) $(QEOBJS)
+MODULES = $(PWOBJS) $(QEMODS)
 
 TLDEPS= pwlibs
 
@@ -74,7 +74,7 @@ libpp.a : $(PPOBJS)
 	$(RANLIB) $@
 
 qexml.x: qexml.o qexml_example.o
-	$(LD) $(LDFLAGS) -o $@ qexml_example.o qexml.o $(QEOBJS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ qexml_example.o qexml.o $(QEMODS) $(LIBOBJS)
 
 open_grid.x : open_grid.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \

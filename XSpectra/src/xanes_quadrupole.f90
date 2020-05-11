@@ -41,10 +41,6 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
                              xkvec, xepsilon, save_file_kind,              &
                              calculated, time_limit
   USE atom,            ONLY: rgrid, msh
-  !  use atom,        ONLY : &
-  !       mesh,     &!mesh(ntypx) number of mesh points
-  !       msh ,     &!msh(ntypx)the point at rcut=end of radial integration
-  !       r   
   USE radin_mod
   USE uspp,            ONLY: vkb, nkb, okvan !CG
   USE ldaU,            ONLY: lda_plus_u, lda_plus_u_kind

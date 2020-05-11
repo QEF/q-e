@@ -67,8 +67,7 @@ function atomic_number(atm)
   end do
 
   atomic_number = 0
-  print '("Atom ",a2," not found")', atom
-  stop
+  print '("WARNING: Atom ",a2," not found")', atom
 
 end function atomic_number
 ! ------------------------------------------------------------------

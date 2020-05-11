@@ -13,7 +13,6 @@ MODULE read_upf_schema_module
    !
    USE upf_kinds,    ONLY: DP
    USE pseudo_types, ONLY: pseudo_upf
-   USE radial_grids, ONLY: radial_grid_type
    USE upf_utils,    ONLY: version_compare
    USE FoX_dom
    !
@@ -26,23 +25,19 @@ END INTERFACE searchData
 CONTAINS
 
 !------------------------------------------------+
-SUBROUTINE read_upf_schema(pseudo, upf, grid, ierr )             !
+SUBROUTINE read_upf_schema(pseudo, upf, ierr )   !
    !---------------------------------------------+
    !! Read pseudopotential data from xml files written with in UPF pseudo schema using  FoX libs.
    !! Pseudo data are stored in a  pseudo_type structure pointed by the argument upf. 
-   !! Mesh data may are optionally  stored in the "grid" radial_grid_type structure. 
    !! If ierr argument is present in case of error an error code is returned the caller, 
    !! the program is aborted with an error message. 
    !
-   USE pseudo_types, ONLY: nullify_pseudo_upf, deallocate_pseudo_upf
-   USE radial_grids, ONLY: radial_grid_type, nullify_radial_grid
+   USE pseudo_types, ONLY: deallocate_pseudo_upf
    IMPLICIT NONE
    TYPE(Node), POINTER, INTENT(IN)   :: pseudo   
    !! pointer to root node
    TYPE(pseudo_upf),INTENT(INOUT)    :: upf       
    !! the pseudo data
-   TYPE(radial_grid_type),OPTIONAL,INTENT(INOUT),TARGET :: grid
-   !! if present mesh data are stored in this structure
    INTEGER,OPTIONAL,INTENT(OUT):: ierr      
    !! /= 0 if something went wrong. Provide this argument if you want to avoid that the 
    !! program aborts on error 
@@ -71,12 +66,10 @@ SUBROUTINE read_upf_schema(pseudo, upf, grid, ierr )             !
    pointList => getElementsByTagname(info, "valence_orbital") 
    ! no need to read these data here these field will be filled later in read_pswfc 
    fileRef = TRIM(upf%psd)//'-'//TRIM(upf%typ)
-   IF(upf%tpawp .and. .not. present(grid)) &
-      CALL upf_error('read_upf_v2', 'PAW requires a radial_grid_type.', 1)
    !
    ! Read radial grid mesh
    pNode => item ( getElementsByTagname (pseudo, "pp_mesh"), 0 ) 
-   CALL read_upf_mesh(pNode, upf, grid)
+   CALL read_upf_mesh(pNode, upf)
    ! Read non-linear core correction charge
    ALLOCATE( upf%rho_atc(upf%mesh) )
    IF(upf%nlcc) THEN
@@ -193,12 +186,10 @@ SUBROUTINE read_upf_header(header, info,  upf)
    RETURN
 END SUBROUTINE read_upf_header
    !
-SUBROUTINE read_upf_mesh(u, upf, grid)
-   USE radial_grids, ONLY: allocate_radial_grid
+SUBROUTINE read_upf_mesh(u, upf)
    IMPLICIT NONE
    TYPE (Node),POINTER, INTENT(IN) :: u    ! pointer to XML node corresponding to the 
    TYPE(pseudo_upf),INTENT(INOUT)  :: upf  ! the pseudo data
-   TYPE(radial_grid_type),OPTIONAL,INTENT(INOUT),TARGET :: grid
    !
    TYPE ( Node )    , POINTER      :: locNode
    TYPE ( NodeList ), POINTER      :: nList 
@@ -214,22 +205,9 @@ SUBROUTINE read_upf_mesh(u, upf, grid)
    IF (hasAttribute(u, 'rmax')) &
       CALL extractDataAttribute(u, 'rmax', upf%rmax)
    IF (hasAttribute(u,'zmesh')) &
-      CALL extractDataAttribute(u, 'zmesh',upf%zmesh)
-   IF (present(grid)) THEN
-      CALL allocate_radial_grid(grid, upf%mesh)
-      !
-      grid%dx    = upf%dx
-      grid%mesh  = upf%mesh
-      grid%xmin  = upf%xmin
-      grid%rmax  = upf%rmax
-      grid%zmesh = upf%zmesh
-      !
-      upf%grid => grid
-      upf%r    => upf%grid%r
-      upf%rab  => upf%grid%rab
-   ELSE
-      ALLOCATE( upf%r( upf%mesh ), upf%rab( upf%mesh ) )
-   ENDIF
+        CALL extractDataAttribute(u, 'zmesh',upf%zmesh)
+   
+   ALLOCATE( upf%r( upf%mesh ), upf%rab( upf%mesh ) )
    !
    locNode => item(getElementsByTagname ( u, 'pp_r' ),0)  
    CALL extractDataContent (locNode,   upf%r(1:upf%mesh))
@@ -238,25 +216,6 @@ SUBROUTINE read_upf_mesh(u, upf, grid)
       locNode => item ( nList, 0 )  
       CALL extractDataContent(locNode, upf%rab(1:upf%mesh))
    END IF
-   !
-   IF (present(grid)) THEN
-      ! Reconstruct additional grids
-      upf%grid%r2 =  upf%r**2
-      upf%grid%sqr = sqrt(upf%r)
-      ! Prevent FP error if r(1) = 0 
-      IF ( upf%r(1) > 1.0D-16 ) THEN
-         upf%grid%rm1 = upf%r**(-1)
-         upf%grid%rm2 = upf%r**(-2)
-         upf%grid%rm3 = upf%r**(-3)
-      ELSE
-         upf%grid%rm1(1) =0.0_dp
-         upf%grid%rm2(1) =0.0_dp
-         upf%grid%rm3(1) =0.0_dp
-         upf%grid%rm1(2:)= upf%r(2:)**(-1)
-         upf%grid%rm2(2:)= upf%r(2:)**(-2)
-         upf%grid%rm3(2:)= upf%r(2:)**(-3)
-      END IF
-   ENDIF
    !
    RETURN
 END SUBROUTINE read_upf_mesh
@@ -814,8 +773,6 @@ SUBROUTINE read_upf_gipaw(u, upf)
          upf%gipaw_ncore_orbitals = 0 
          DEALLOCATE ( upf%gipaw_core_orbital_n, upf%gipaw_core_orbital_el, upf%gipaw_core_orbital_l, &
                       upf%gipaw_core_orbital )
-         NULLIFY   ( upf%gipaw_core_orbital_n, upf%gipaw_core_orbital_el, upf%gipaw_core_orbital_l, &
-                     upf%gipaw_core_orbital )
          RETURN 
       END IF
       ALLOCATE ( upf%gipaw_wfs_el(upf%gipaw_wfs_nchannels) )

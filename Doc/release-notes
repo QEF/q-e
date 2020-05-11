@@ -18,6 +18,9 @@ New in dev branch:
   * i-PI socket now supports on-the-fly change of flags for SCF, forces,
     stresses and variable cell calculations using binary-integer enconding.
     (Gabriel S. Gusmão, Georgia Tech)
+  * Phonon-induced electron self-energy implemented in ph.x and
+    a new post-processing program PHonon/postahc.x added.
+    (Jae-Mo Lihm, Seoul Natl. Univ.)
   
 Fixed in dev branch:
   * PW: Restart from interrupted calculations  simplified. As a side effect,

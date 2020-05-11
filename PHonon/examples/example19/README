@@ -1,0 +1,82 @@
+
+This example illustrates how to calculate calculate the electron-phonon
+renormalization of the valence band maximum (VBM) and conduction band
+minimum (CBM) energy of diamond.
+Also, this example demonstrates how to use Fourier interpolation of
+the phonon potential.
+
+Note that the parameters used in this example, especially the size of
+the q-point grids in ph.x and the broadening eta in postahc.x, are far
+from reaching convergence.
+
+The calculation proceeds as follows (for the meaning of the cited input
+variables see the appropriate INPUT_* file).
+
+1) make a self-consistent calculation (input=diam.scf.in,
+   output=diam.scf.out)
+
+2) make a phonon calculation for a uniform grid of q-points. We chose
+   a 333 Monkhorst-Pack grid, not translated (note the variables
+   nq, nq2, nq3). All dynamical matrices are saved with
+   a different name ("fildyn" + 1-4), while "fildyn" + 0 contains the
+   information on the q-point grid (type of grid and number of points)
+
+3) call program q2r.x to calculate IFC's in real space.
+   All dynamical matrices are read and Fourier-transformed.
+   The output file containing the force constants in a format suitable
+   for program matdyn.x is diam.ifc.
+
+4) call program dvscf_q2r.x to transform phonon potential (dvscf) from coarse
+   q grid to real space. The induced part of the phonon potential is read from
+   the diam.dvscf (or diam.dvscf1 in case of parallel compilation) files
+   (note the fildvscf variable) inside the $TMP_DIR/_ph0 folder. The bare part
+   of the potential is calculated inside the dvscf_q2r.x program.
+   Since diamond is a non-polar material, we set do_long_range to false. For
+   polar materials, one should set do_long_range to true to ensure a correct
+   treatment of the long-range dipole potential.
+
+5) make a self-consistent calculation again for the next non-self-consistent
+   (nscf) calculation.
+
+6) make a nscf calculation. The calculated k points include the VBM and CBM
+   states.
+   We disable the use of symmetry (note the nosym = .true. and noinv = .true.
+   variables) to sample the whole Brillouin zone, not the irreducible wedge,
+   in the subsequent ph.x runs for the e-ph matrix elements. This keyword
+   does not affect the performance of the nscf band energy calculation.
+   The number of bands in this nscf calculation is the number of bands in the
+   "lower" subspace. High-energy bands which are not explicitly calculated
+   consist the "upper" subspace. The contribution of the high-energy bands
+   to the Fan self-energy ("upper Fan self-energy") is approximated using
+   the solution of the Sternheimer equation.
+
+7) make a electron-phonon matrix element calculation by calling ph.x with
+   the flag electron_phonon='ahc'. A coarse 333 Monkhorst-Pack grid is
+   used. The electron self-energy is to be calculated for 8 bands in total,
+   starting from the lowest band (note the ahc_nbnd variable).
+
+8) call program matdyn.x to calculate phonon frequency and eigenmodes
+   The list of q points in the input must be identical to the q points
+   of the previous ph.x run. One can copy the q points from the dyn0 output
+   of ph.x.
+
+9) call program postahc.x to calculate electron self-energy. This run reads
+   the output of previous ph.x and matdyn.x runs (step 7 and 8).
+
+10) Repeat step 7 with a fine q-point grid. A 666 Monkhorst-Pack grid is
+   used. Here, we use the "double-grid" technique, where only the slowly
+   convergent lower Fan self-energy is calculated on a finer q-grid,
+   while the rapidly convegent upper Fan and Debye-Waller self-energy is
+   calculated on a coarse q-grid (note the skip_upperfan variable).
+   By doing so, the computational cost is reduced because the calculation of
+   the upper Fan self-energy takes the longest time in a electron_phonon='ahc'
+   calculation.
+
+11) Repeat step 8 with a fine q-point grid.
+
+12) Repeat step 9 with a fine q-point grid. This run reads the output of
+   previous ph.x and matdyn.x runs (step 10 and 11).
+   Note that the skip_upperfan and skip_dw variable is set to true because
+   we are using the double-grid technique. Hence, the upper Fan and
+   Debye-Waller self-energies are set to zero in the output.
+

@@ -43,8 +43,9 @@ SUBROUTINE run_nscf(do_band, iq)
   USE qpoint,          ONLY : xq
   USE noncollin_module,ONLY : noncolin
   USE spin_orb,        ONLY : domag
-  USE klist,           ONLY : qnorm, nelec 
+  USE klist,           ONLY : qnorm, nelec
   USE el_phon,         ONLY : elph_mat
+  USE ahc,             ONLY : elph_ahc
   !
   IMPLICIT NONE
   !
@@ -101,7 +102,7 @@ SUBROUTINE run_nscf(do_band, iq)
   CALL fft_type_allocate ( dfftp, at, bg, gcutm,  intra_bgrp_comm, nyfft=nyfft )
   CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft)
   !
-  CALL setup_nscf ( newgrid, xq, elph_mat )
+  CALL setup_nscf ( newgrid, xq, elph_mat .OR. elph_ahc )
   !
   CALL init_run()
   !

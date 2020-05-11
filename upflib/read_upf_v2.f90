@@ -14,7 +14,6 @@ MODULE read_upf_v2_module
    ! ...   declare modules
    USE upf_kinds,    ONLY: DP
    USE pseudo_types, ONLY: pseudo_upf
-   USE radial_grids, ONLY: radial_grid_type
    USE upf_utils,    ONLY: matches, version_compare
    USE FoX_dom
    !
@@ -22,12 +21,10 @@ MODULE read_upf_v2_module
    PUBLIC :: read_upf_v2
 CONTAINS
    !------------------------------------------------+
-   SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
+   SUBROUTINE read_upf_v2(u, upf, ierr)             !
    !---------------------------------------------+
       !! Read pseudopotential in UPF format version 2, uses fox libraries. 
       !! data are stored in a pseudo_upf structure ( upf argument ), 
-      !! optionally mesh data may be stored in a radial_grid_type strucure 
-      !! ( grid argument). 
       !! If ierr argument is present the error status is returned otherwise 
       !! in case of error the program stops.
       !! @Note  version 2 UPF  files generated with older versions of QE may contain 
@@ -36,15 +33,12 @@ CONTAINS
       !! sufficient to bracket  all the  text data within the PP_INPUT section with <![CDATA[
       !! and ]]>     
 
-      USE pseudo_types, ONLY: nullify_pseudo_upf, deallocate_pseudo_upf
-      USE radial_grids, ONLY: radial_grid_type, nullify_radial_grid
+      USE pseudo_types, ONLY: deallocate_pseudo_upf
       IMPLICIT NONE
       TYPE(Node),POINTER,INTENT(IN)  :: u         
       !! pointer to root DOM node. 
       TYPE(pseudo_upf),INTENT(INOUT) :: upf       
       !! pseudo_upf type structure storing the pseudo data
-      TYPE(radial_grid_type),OPTIONAL,INTENT(INOUT),TARGET :: grid
-      !! optional structure  where to store mesh data 
       INTEGER,OPTIONAL,INTENT(OUT):: ierr      
       !!  /= 0 if something went wrong
       !
@@ -58,10 +52,6 @@ CONTAINS
       !
       ! Prepare the type .  Should be done where upf is instantiated
       ! CALL deallocate_pseudo_upf(upf)
-      ! CALL nullify_pseudo_upf(upf)
-      !
-      ! IF(present(grid)) call nullify_radial_grid(grid)
-      ! nullify(upf%grid)
       !
       ! Initialize the file
       root = getTagname(u, EX = ex)
@@ -91,8 +81,6 @@ CONTAINS
       ! Read machine-readable header
       !
       CALL read_upf_header(u, upf)
-      IF(upf%tpawp .and. .not. present(grid)) &
-         CALL upf_error('read_upf_v2', 'PAW requires a radial_grid_type.', 1)
       !
       ! CHECK for bug in version 2.0.0 of UPF file
       IF ( version_compare(upf%nv, '2.0.1') == 'older' .and. upf%tvanp .and.  &
@@ -102,7 +90,7 @@ CONTAINS
                   & regenerate pseudopotential file for '//TRIM(upf%psd), 1)
 
       ! Read radial grid mesh
-      CALL read_upf_mesh(u, upf, grid)
+      CALL read_upf_mesh(u, upf)
       ! Read non-linear core correction charge
       ALLOCATE( upf%rho_atc(upf%mesh) )
       IF(upf%nlcc) THEN
@@ -311,12 +299,10 @@ SUBROUTINE read_upf_header(u, upf)
       RETURN
    END SUBROUTINE read_upf_header
    !
-   SUBROUTINE read_upf_mesh(u, upf, grid)
-      USE radial_grids, ONLY: allocate_radial_grid
+   SUBROUTINE read_upf_mesh(u, upf)
       IMPLICIT NONE
       TYPE (Node),POINTER,INTENT(IN)       :: u    ! i/o unit
       TYPE(pseudo_upf),INTENT(INOUT)         :: upf  ! the pseudo data
-      TYPE(radial_grid_type),OPTIONAL,INTENT(INOUT),TARGET :: grid
       !
       INTEGER                     :: ierr ! /= 0 if something went wrong
       TYPE (Node),POINTER         :: mshNode, locNode
@@ -330,46 +316,13 @@ SUBROUTINE read_upf_header(u, upf)
       IF ( hasAttribute ( mshNode, 'xmin') )  CALL extractDataAttribute(mshNode, 'xmin', upf%xmin ) 
       IF ( hasAttribute ( mshNode, 'rmax') ) CALL extractDataAttribute(mshNode, 'rmax', upf%rmax )
       IF ( hasAttribute ( mshNode, 'zmesh') ) CALL extractDataAttribute(mshNode, 'zmesh',upf%zmesh ) 
-      IF (present(grid)) THEN
-         CALL allocate_radial_grid(grid, upf%mesh)
-         !
-         grid%dx    = upf%dx
-         grid%mesh  = upf%mesh
-         grid%xmin  = upf%xmin
-         grid%rmax  = upf%rmax
-         grid%zmesh = upf%zmesh
-         !
-         upf%grid => grid
-         upf%r    => upf%grid%r
-         upf%rab  => upf%grid%rab
-      ELSE
-         ALLOCATE( upf%r( upf%mesh ), upf%rab( upf%mesh ) )
-      ENDIF
+      ALLOCATE( upf%r( upf%mesh ), upf%rab( upf%mesh ) )
       !
       locNode => item( getElementsByTagname( mshNode, 'PP_R'), 0 ) 
       CALL extractDataContent(locNode, upf%r(1:upf%mesh))  
       !
       locNode => item(getElementsByTagname( mshNode, 'PP_RAB'), 0)
       CALL extractDataContent(locNode, upf%rab(1:upf%mesh)) 
-      !
-      IF (present(grid)) THEN
-         ! Reconstruct additional grids
-         upf%grid%r2 =  upf%r**2
-         upf%grid%sqr = sqrt(upf%r)
-         ! Prevent FP error if r(1) = 0 
-         IF ( upf%r(1) > 1.0D-16) THEN
-            upf%grid%rm1 = upf%r**(-1)
-            upf%grid%rm2 = upf%r**(-2)
-            upf%grid%rm3 = upf%r**(-3)
-         ELSE
-            upf%grid%rm1(1) =0.0_dp
-            upf%grid%rm2(1) =0.0_dp
-            upf%grid%rm3(1) =0.0_dp
-            upf%grid%rm1(2:) = upf%r(2:)**(-1)
-            upf%grid%rm2(2:) = upf%r(2:)**(-2)
-            upf%grid%rm3(2:) = upf%r(2:)**(-3)
-         END IF
-      ENDIF
       !
       RETURN
    END SUBROUTINE read_upf_mesh
@@ -551,8 +504,8 @@ SUBROUTINE read_upf_header(u, upf)
             ALLOCATE( upf%qfcoef(1,1,1,1) )
             upf%qfcoef = 0._dp
          ELSE
-            ALLOCATE( upf%qfcoef( MAX( upf%nqf,1 ), upf%nqlc, upf%nbeta, upf%nbeta ) )
-            ALLOCATE(tmp_dbuffer(MAX( upf%nqf,1 )*upf%nqlc*upf%nbeta*upf%nbeta))
+            ALLOCATE( upf%qfcoef( upf%nqf, upf%nqlc, upf%nbeta, upf%nbeta ) )
+            ALLOCATE(tmp_dbuffer( upf%nqf*upf%nqlc*upf%nbeta*upf%nbeta))
             locNode2=> item(getElementsByTagname(locNode, 'PP_QFCOEF'),0) 
             CALL extractDataContent(locNode2, tmp_dbuffer)
             upf%qfcoef = reshape(tmp_dbuffer,[size(upf%qfcoef,1),size(upf%qfcoef,2),&

@@ -142,6 +142,11 @@ example18:
     This example shows how to use pw.x and ph.x to calculate phonon frequencies
     of LiCoO2 with Hubbard U on Co 3d states (experimental stage).
 
+example19:
+    This example shows how to use ph.x, dvscf_q2r.x and postahc.x to calculate
+    electron-phonon renormalization of the band gap of diamond within the
+    Allen-Heine-Cardona (AHC) theory.
+
 Additional feature-specific examples:
 
 Partial_example
