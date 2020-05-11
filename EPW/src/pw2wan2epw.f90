@@ -984,7 +984,6 @@
     WRITE(stdout, '(5x, a)') 'AMN'
     !
     IF (any_uspp) THEN
-      CALL deallocate_bec_type(becp)
       CALL allocate_bec_type(nkb, n_wannier, becp)
     ENDIF
     !
@@ -2454,7 +2453,6 @@
     dipole_aux(:, :, :) = czero
     !
     IF (any_uspp) THEN
-      CALL deallocate_bec_type(becp)
       CALL allocate_bec_type(nkb, n_wannier, becp)
     ENDIF
     !
@@ -2522,6 +2520,8 @@
       ENDDO
       !
     ENDDO  ! k-points
+    !
+    IF (any_uspp) CALL deallocate_bec_type(becp)
     !
     WRITE(stdout, '(/5x, a)') 'Dipole matrix elements calculated'
     WRITE(stdout, *)
