@@ -20,7 +20,7 @@
   !
   USE kinds,            ONLY : DP
   USE ions_base,        ONLY : nat, ntyp => nsp, tau
-  USE becmod,           ONLY : calbec, allocate_bec_type
+  USE becmod,           ONLY : allocate_bec_type
   USE lrus,             ONLY : becp1
   USE uspp,             ONLY : vkb, nlcc_any, okvan, nkb
   USE pwcom,            ONLY : npwx, nbnd, nks
