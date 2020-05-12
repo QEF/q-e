@@ -95,8 +95,11 @@ SUBROUTINE addusdens_g_gpu(rho)
 
   CALL start_clock_gpu ('addusdens')
   !
-  CALL dev_buf%lock_buffer(aux_d, (/ ngm, nspin_mag /), ierr ) !ALLOCATE (aux_d (ngm, nspin_mag) )
   CALL pin_buf%lock_buffer(aux_h, (/ ngm, nspin_mag /), ierr ) !ALLOCATE (aux_h (ngm, nspin_mag) )
+  CALL dev_buf%lock_buffer(aux_d, (/ ngm, nspin_mag /), ierr ) !ALLOCATE (aux_d (ngm, nspin_mag) )
+  IF( ierr /= 0 ) &
+     CALL errore( ' addusdens_gpu ',' cannot allocate aux_d ', ABS(ierr) )
+
   !
   CALL dev_memset(aux_d, (0.d0, 0.d0), [ 1, ngm ], 1, [ 1, nspin_mag ], 1)
   !
@@ -116,9 +119,11 @@ SUBROUTINE addusdens_g_gpu(rho)
   !
   !ALLOCATE (qmod_d(ngm_l), qgm_d(ngm_l) )
   !ALLOCATE (ylmk0_d(ngm_l, lmaxq * lmaxq) )
-  CALL dev_buf%lock_buffer(ylmk0_d, (/ ngm_l, lmaxq * lmaxq /), ierr )
   CALL dev_buf%lock_buffer(qmod_d, ngm_l, ierr )
   CALL dev_buf%lock_buffer(qgm_d, ngm_l, ierr )
+  CALL dev_buf%lock_buffer(ylmk0_d, (/ ngm_l, lmaxq * lmaxq /), ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' addusdens_gpu ',' cannot allocate ylmk0_d ', ABS(ierr) )
 
   CALL ylmr2_gpu (lmaxq * lmaxq, ngm_l, g_d(1,ngm_s), gg_d(ngm_s), ylmk0_d)
   
@@ -149,6 +154,8 @@ SUBROUTINE addusdens_g_gpu(rho)
         CALL dev_buf%lock_buffer(skk_d, (/ ngm_l,nab /), ierr)
         CALL dev_buf%lock_buffer(tbecsum_d, (/ nij,nab,nspin_mag /), ierr )
         CALL dev_buf%lock_buffer(aux2_d, (/ ngm_l,nij /), ierr )
+        IF( ierr /= 0 ) &
+            CALL errore( ' addusdens_gpu ',' cannot allocate aux2_d ', ABS(ierr) )
         !
         call start_clock_gpu( 'addusd:skk')
         nb = 0
