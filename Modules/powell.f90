@@ -133,7 +133,7 @@ SUBROUTINE LINMIN(FUNC,P,XI,N,FRET)
 ! calling the routines MNBRAK and BRENT.
 !----------------------------------------------------------
   IMPLICIT NONE !REAL*8 A-H,O-Z
-  REAL(DP),PARAMETER :: TOL=1.D-8
+  REAL(DP),PARAMETER :: TOL=1.D-12
   REAL(DP) :: P(N),XI(N), FRET
   INTEGER  :: N
   REAL(DP),EXTERNAL :: FUNC
@@ -261,8 +261,8 @@ REAL(DP) FUNCTION BRENT(FUNC,AX,BX,CX,TOL,XMIN)
 !-------------------------------------------------------------------
 IMPLICIT NONE !REAL*8 A-H,O-Z
 REAL(DP),EXTERNAL :: FUNC
-INTEGER,PARAMETER :: ITMAX=10000
-REAL(DP) :: CGOLD=.3819660,ZEPS=1.D-10
+INTEGER,PARAMETER :: ITMAX=100000
+REAL(DP) :: CGOLD=.3819660,ZEPS=1.D-12
 !Maximum allowed number of iterations; golden ration; and a small
 !number which protects against trying to achieve fractional accuracy
 !for a minimum that happens to be exactly zero.
