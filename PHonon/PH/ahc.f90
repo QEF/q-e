@@ -107,6 +107,8 @@ MODULE ahc
   !! Unit for ahc_dw (Debye-Waller) output
   INTEGER :: nbase_ik
   !! The position in the list of the first point that belong to this npool - 1
+  REAL(DP) :: e_degen_thr = 1.d-4
+  !! threshold for degeneracy
   COMPLEX(DP), ALLOCATABLE :: ahc_gkk(:,:,:)
   !! (nbnd, ahc_nbnd, nmodes) dV_q matrix element
   COMPLEX(DP), ALLOCATABLE :: ahc_upfan(:,:,:,:)
@@ -321,11 +323,11 @@ SUBROUTINE ahc_do_dw(ik)
 !!
 !------------------------------------------------------------------------------
   USE kinds,            ONLY : DP
-  USE io_global,        ONLY : stdout, ionode
+  USE io_global,        ONLY : stdout
   USE mp,               ONLY : mp_sum
   USE mp_pools,         ONLY : intra_pool_comm, me_pool, root_pool
   USE wavefunctions,    ONLY : evc
-  USE wvfct,            ONLY : npwx, nbnd
+  USE wvfct,            ONLY : npwx
   USE klist,            ONLY : ngk, igk_k, xk
   USE gvect,            ONLY : g
   USE noncollin_module, ONLY : noncolin
@@ -457,12 +459,11 @@ SUBROUTINE ahc_do_gkk(ik)
 !!
 !------------------------------------------------------------------------------
    USE kinds,        ONLY : DP
-   USE io_global,    ONLY : stdout, ionode
+   USE io_global,    ONLY : stdout
    USE mp,           ONLY : mp_sum
    USE mp_pools,     ONLY : intra_pool_comm, me_pool, root_pool
-   USE modes,        ONLY : u, nmodes
-   USE wvfct,        ONLY : npwx, nbnd, et
-   USE control_ph,   ONLY : current_iq
+   USE modes,        ONLY : nmodes
+   USE wvfct,        ONLY : npwx, nbnd
    USE qpoint,       ONLY : ikqs
    USE buffers,      ONLY : get_buffer
    USE noncollin_module, ONLY : npol
@@ -510,65 +511,295 @@ SUBROUTINE compute_psi_gauge(ik)
 !! n = ib_ahc_gauge_min, ..., ib_ahc_gauge_max
 !! m = ib_ahc_min, ..., ib_ahc_max
 !!
-!! psi_ref is read from outdir/prefix.wfcref. The .wfcref files are written
-!! in real space because the G vector ordering can change for different iq.
-!!
 !! The range of m is wider than the range of n because of possible degeneracy
 !! at ib_ahc_min or ib_ahc_max.
+!!
+!! The overlap is computed indirectly by comparing psi_nk at a few G vectors.
+!! G vectors with miller indices (Gx, Gy, Gz) with -3 <= Gx, Gy, Gz <= 3
+!! are used.
+!!
+!! P: projection operator to the selected G vectors.
+!! P|psi_ref_m> = P|psi_n> * psi_gauge(n, m)
+!! S_nm = <psi_ref_n|P|psi_ref_m>
+!! A_nm = <psi_n|P|psi_ref_m>
+!! psi_gauge(n, m) = (A * inv(S))_nm
 !!
 !! Implemented only for NCPP case.
 !------------------------------------------------------------------------------
   USE kinds,            ONLY : DP
-  USE io_global,        ONLY : stdout, ionode
-  USE mp,               ONLY : mp_sum
-  USE mp_pools,         ONLY : intra_pool_comm
-  USE fft_base,         ONLY : dffts
+  USE io_files,         ONLY : seqopn
+  USE mp,               ONLY : mp_bcast, mp_sum
+  USE mp_pools,         ONLY : me_pool, root_pool, intra_pool_comm
   USE buffers,          ONLY : get_buffer, save_buffer
+  USE matrix_inversion, ONLY : invmat
   USE wavefunctions,    ONLY : evc
-  USE wvfct,            ONLY : npwx, nbnd, et
+  USE gvect,            ONLY : mill, ngm
+  USE wvfct,            ONLY : npwx, et
   USE klist,            ONLY : igk_k, ngk
-  USE noncollin_module, ONLY : npol
-  USE qpoint,           ONLY : ikks, nksq
+  USE noncollin_module, ONLY : noncolin, npol
+  USE qpoint,           ONLY : ikks
+  USE disp,             ONLY : nqs
   USE control_ph,       ONLY : current_iq
   USE units_lr,         ONLY : iuwfc, lrwfc
-  USE units_ph,         ONLY : iuwfcref, lrwfcref
+  USE units_ph,         ONLY : iugauge
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: ik
   !! Current k point index
   !
+  INTEGER, PARAMETER :: gmax_search = 3
+  !! Max |G_x,y,z| to use for gauge fixing.
+  LOGICAL :: is_last_group
+  !! true if at the last degenerate group
+  INTEGER :: info
+  !! Info output of zheev
+  INTEGER :: found_g
+  !! set to 1 if given G vector is found in mill
   INTEGER :: ikk
   !! Counter on k point
+  INTEGER :: igx
+  !! Counter on plane waves
+  INTEGER :: igy
+  !! Counter on plane waves
+  INTEGER :: igz
+  !! Counter on plane waves
+  INTEGER :: ng_gauge
+  !! Number of G vectors to use in computing overlap
+  INTEGER :: ig
+  !! Counter on plane waves
+  INTEGER :: jg
+  !! Counter on plane waves
+  INTEGER :: igroup
+  !! Counter on degenerate groups
+  INTEGER :: ndegen
+  !! Degree of degeneracy
+  INTEGER :: ndegen_ref
+  !! Degree of degeneracy
   INTEGER :: npw
   !! Number of plane waves
   INTEGER :: ibnd
   !! Counter on bands
+  INTEGER :: ibnd_ref
+  !! Counter on bands
   INTEGER :: jbnd
   !! Counter on bands
-  INTEGER :: nrec
-  !! record index of wavefunction in real space
-  REAL(DP) :: error
-  !! Variable for checking unitarity
-  COMPLEX(DP) :: et_rotate
-  !! Variable for checking unitarity
-  COMPLEX(DP), ALLOCATABLE :: evc_r(:, :)
-  !! reference wavefunction in real space
-  COMPLEX(DP), ALLOCATABLE :: evc_ref(:, :)
-  !! reference wavefunction in G space
+  INTEGER :: lwork
+  !! dimension of workspace for diagonalization
+  INTEGER, ALLOCATABLE :: gauge_mill_tmp(:, :)
+  !! G-points to use for computing gauge
+  INTEGER, ALLOCATABLE :: gauge_mill(:, :)
+  !! G-points to use for computing gauge
+  INTEGER, ALLOCATABLE :: ndegen_list(:)
+  !! Degree of degeneracy for each degenerate groups.
+  REAL(DP), ALLOCATABLE :: rwork(:)
+  !! workspace for diagonalization
+  REAL(DP), ALLOCATABLE :: eigvals(:)
+  !! eigenvalues of smat
+  COMPLEX(DP), ALLOCATABLE :: evc_select_ref(:, :, :)
+  !! Reference wavefunction at selected G vectors
+  COMPLEX(DP), ALLOCATABLE :: evc_select(:, :, :)
+  !! Wavefunction at selected G vectors
+  COMPLEX(DP), ALLOCATABLE :: smat(:, :)
+  !! overlap matrix of psi_ref
+  COMPLEX(DP), ALLOCATABLE :: smat_inv(:, :)
+  !! inverse of smat
+  COMPLEX(DP), ALLOCATABLE :: amat(:, :)
+  !! overlap matrix of psi_ref and psi
+  COMPLEX(DP), ALLOCATABLE :: work(:)
+  !! workspace for diagonalization
   !
   CALL start_clock('ahc_gauge')
+  !
+  ! If there is only a single q point, no need of gauge fixing.
+  ! Set psi_gauge to identity and return.
+  !
+  IF (nqs == 1) THEN
+    psi_gauge = (0.d0, 0.d0)
+    !
+    DO ibnd = 1, ahc_nbnd
+       psi_gauge(ibnd - ib_ahc_gauge_min + ib_ahc_min, ibnd) = (1.d0, 0.d0)
+    ENDDO
+    !
+    CALL stop_clock('ahc_gauge')
+    RETURN
+    !
+  ENDIF
+  !
+  psi_gauge = (0.d0, 0.d0)
   !
   ikk = ikks(ik)
   npw = ngk(ikk)
   !
   CALL get_buffer(evc, lrwfc, iuwfc, ikk)
   !
-  ! If iq == 1, write reference wavefunction.
+  ! If iq == 1,
+  ! 1) Set gauge_mill with the G vectors to use to compute overlap.
+  ! 2) Group degenerate bands and set ndegen_list.
+  ! 3) Find selected G vectors from each pools and set evc_select_ref
+  ! 4) Write gauge_mill, ndegen_list, and evc_select_ref to file.
+  ! 5) For each degenerate group, compute inv(S) matrix and write to file.
+  ! 6) Set psi_gauge to identity and return.
   !
   IF (current_iq == 1) THEN
     !
-    ! For iq == 1, The overlap is trivial
+    ! 1) Set gauge_mill.
+    !
+    ALLOCATE(gauge_mill_tmp(3, (2 * gmax_search + 1)**3))
+    gauge_mill_tmp = 0
+    ng_gauge = 0
+    !
+    DO igx = -gmax_search, gmax_search
+      DO igy = -gmax_search, gmax_search
+        DO igz = -gmax_search, gmax_search
+          !
+          ! Check if (igx, igy, igz) is in mill_g
+          !
+          found_g = 0
+          DO ig = 1, ngm
+            IF (mill(1, ig) == igx .AND. &
+                mill(2, ig) == igy .AND. &
+                mill(3, ig) == igz) THEN
+              found_g = 1
+              EXIT
+            ENDIF
+          ENDDO
+          !
+          CALL mp_sum(found_g, intra_pool_comm)
+          !
+          ! found_g must be 0 (not found) or 1 (found)
+          !
+          IF (found_g /= 0 .AND. found_g /= 1) CALL errore(&
+            'compute_psi_gauge', 'problem setting gauge_mill', 1)
+          !
+          IF (found_g == 1) THEN
+            ng_gauge = ng_gauge + 1
+            gauge_mill_tmp(:, ng_gauge) = (/ igx, igy, igz /)
+          ENDIF
+        ENDDO
+      ENDDO
+    ENDDO
+    !
+    ! Make a smaller array containing found G vectors only.
+    !
+    ALLOCATE(gauge_mill(3, ng_gauge))
+    gauge_mill(:, 1:ng_gauge) = gauge_mill_tmp(:, 1:ng_gauge)
+    DEALLOCATE(gauge_mill_tmp)
+    !
+    ! 2) Group degenerate bands and set ndegen_list
+    !
+    ALLOCATE(ndegen_list(ahc_nbnd))
+    ndegen_list = 0
+    igroup = 1
+    !
+    DO ibnd = ib_ahc_min, ib_ahc_max
+      !
+      ! If nondegenerate, increase igroup
+      !
+      IF (ibnd > ib_ahc_min) THEN
+        IF (et(ibnd, ikk) - et(ibnd - 1, ikk) > e_degen_thr) THEN
+          igroup = igroup + 1
+        ENDIF
+      ENDIF
+      !
+      ndegen_list(igroup) = ndegen_list(igroup) + 1
+      !
+    ENDDO ! ibnd
+    !
+    ! 3) Find selected G vectors from each pools and set evc_select_ref.
+    !
+    ! In case of PW parallelization, evc_select_ref is set by the processor that
+    ! contains the G vector and is later summed by mp_sum.
+    !
+    ALLOCATE(evc_select_ref(ng_gauge, npol, ahc_nbnd))
+    evc_select_ref = (0.d0, 0.d0)
+    !
+    DO ig = 1, ng_gauge
+      DO jg = 1, npw
+        IF (mill(1, igk_k(jg, ikk)) == gauge_mill(1, ig) .AND. &
+            mill(2, igk_k(jg, ikk)) == gauge_mill(2, ig) .AND. &
+            mill(3, igk_k(jg, ikk)) == gauge_mill(3, ig)) THEN
+          !
+          DO ibnd = 1, ahc_nbnd
+            jbnd = ibnd - 1 + ib_ahc_min
+            evc_select_ref(ig, 1, ibnd) = evc(jg, jbnd)
+            IF (noncolin) THEN
+              evc_select_ref(ig, 2, ibnd) = evc(jg + npwx, jbnd)
+            ENDIF
+          ENDDO
+          !
+          EXIT
+          !
+        ENDIF
+      ENDDO ! jg
+    ENDDO ! ig
+    !
+    CALL mp_sum(evc_select_ref, intra_pool_comm)
+    !
+    ! 4) Write gauge_mill, ndegen_list, and evc_select_ref to file.
+    !
+    IF (me_pool == root_pool) THEN
+      WRITE(iugauge) ng_gauge
+      WRITE(iugauge) gauge_mill
+      WRITE(iugauge) ndegen_list
+      WRITE(iugauge) evc_select_ref
+    ENDIF
+    !
+    ! 5) For each degenerate group, compute inv(S) matrix and write to file.
+    !
+    IF (me_pool == root_pool) THEN
+      !
+      ibnd = 1
+      DO igroup = 1, ahc_nbnd
+        !
+        IF (ndegen_list(igroup) == 0) EXIT
+        ndegen = ndegen_list(igroup)
+        !
+        ! S_nm = sum_G [evc_select_ref(ig, n)]* evc_select_ref(ig, m)
+        !
+        ALLOCATE(smat(ndegen, ndegen))
+        ALLOCATE(smat_inv(ndegen, ndegen))
+        !
+        CALL ZGEMM('C', 'N', ndegen, ndegen, npol * ng_gauge, &
+          (1.d0, 0.d0), evc_select_ref(1, 1, ibnd), npol * ng_gauge, &
+                        evc_select_ref(1, 1, ibnd), npol * ng_gauge, &
+          (0.d0, 0.d0), smat, ndegen)
+        !
+        CALL invmat(ndegen, smat, smat_inv)
+        !
+        ! Check whether smat is singular by computing the eigenvalues
+        !
+        lwork = 2 * ndegen - 1
+        ALLOCATE(work(lwork))
+        ALLOCATE(eigvals(ndegen))
+        ALLOCATE(rwork(3 * ndegen - 2))
+        CALL ZHEEV('N', 'U', ndegen, smat, ndegen, eigvals, work, lwork, rwork, info)
+        IF (info /= 0) THEN
+          CALL errore('compute_psi_gauge', 'problem diagonalizing smat', info)
+        ENDIF
+        !
+        IF (eigvals(1) < 1.d-2) THEN
+          CALL errore('compute_psi_gauge', 'smat close to singluar. &
+            &Try increasing gmax_search.', 1)
+        ENDIF
+        !
+        WRITE(iugauge) smat_inv
+        !
+        DEALLOCATE(work)
+        DEALLOCATE(eigvals)
+        DEALLOCATE(rwork)
+        DEALLOCATE(smat)
+        DEALLOCATE(smat_inv)
+        !
+        ibnd = ibnd + ndegen
+        !
+      ENDDO
+    ENDIF
+    !
+    IF (ibnd /= ahc_nbnd + 1) CALL errore('compute_psi_gauge', &
+    'ibnd /= ahc_nbnd + 1 after loop over degenreate groups at first iq', 1)
+    !
+    ! 6) Set psi_gauge to identity and return.
     !
     psi_gauge = (0.d0, 0.d0)
     !
@@ -576,21 +807,9 @@ SUBROUTINE compute_psi_gauge(ik)
        psi_gauge(ibnd - ib_ahc_gauge_min + ib_ahc_min, ibnd) = (1.d0, 0.d0)
     ENDDO
     !
-    ! Save wfc in real space to iuwfcref
-    !
-    ALLOCATE(evc_r(dffts%nnr, npol))
-    !
-    DO ibnd = ib_ahc_min, ib_ahc_max
-      !
-      evc_r = (0.d0, 0.d0)
-      CALL invfft_wave(npw, igk_k(1, ikk), evc(1, ibnd), evc_r)
-      !
-      nrec = (ik - 1) * ahc_nbnd + ibnd - ahc_nbndskip
-      CALL save_buffer(evc_r, lrwfcref, iuwfcref, nrec)
-      !
-    ENDDO
-    !
-    DEALLOCATE(evc_r)
+    DEALLOCATE(gauge_mill)
+    DEALLOCATE(ndegen_list)
+    DEALLOCATE(evc_select_ref)
     !
     CALL stop_clock('ahc_gauge')
     !
@@ -598,58 +817,129 @@ SUBROUTINE compute_psi_gauge(ik)
     !
   ENDIF
   !
-  ! If iq > 1, read wavefunction from file and compute psi_gauge
+  ! If iq > 1,
+  ! 1) Read wfcgauge file from root_pool and bcast.
+  ! 2) Find selected G vectors from each pools and set evc_select.
+  ! 3) For each degenerate group:
+  !   3-1) Read inv(S) matrix from file
+  !   3-2) Compute A matrix
+  !   3-3) Compute psi_gauge.
   !
-  ALLOCATE(evc_ref(npol*npwx, ahc_nbnd))
-  ALLOCATE(evc_r(dffts%nnr, npol))
+  ! 1) Read wfcgauge file from root_pool and bcast.
   !
-  evc_ref = (0.d0, 0.d0)
+  IF (me_pool == root_pool) READ(iugauge) ng_gauge
+  CALL mp_bcast(ng_gauge, root_pool, intra_pool_comm)
   !
-  ! Read evc_r in real space and fwfft to g space evc_gamma
-  DO ibnd = 1, ahc_nbnd
-    !
-    nrec = (ik - 1) * ahc_nbnd + ibnd
-    CALL get_buffer(evc_r, lrwfcref, iuwfcref, nrec)
-    !
-    CALL fwfft_wave(npw, igk_k(1, ikk), evc_ref(1, ibnd), evc_r)
-    !
-  ENDDO ! ibnd
+  ALLOCATE(ndegen_list(ahc_nbnd))
+  ALLOCATE(gauge_mill(3, ng_gauge))
+  ALLOCATE(evc_select_ref(ng_gauge, npol, ahc_nbnd))
+  ALLOCATE(evc_select(ng_gauge, npol, ahc_nbnd_gauge))
   !
-  CALL ZGEMM('C', 'N', ahc_nbnd_gauge, ahc_nbnd, npol*npwx, &
-     (1.d0, 0.d0), evc(1, ib_ahc_gauge_min), npol*npwx, &
-                   evc_ref, npol*npwx, &
-     (0.d0, 0.d0), psi_gauge, ahc_nbnd_gauge)
-  !
-  CALL mp_sum(psi_gauge, intra_pool_comm)
-  !
-  ! Check [psi_gauge, H] = 0, where H = diag(et)
-  ! et_rotate = (psi_gauge^dagger * et * psi_gauge)_{ibnd, jbnd}
-  ! et_rotate == et(ibnd) * delta_{ibnd, jbnd} should hold.
-  !
-  error = 0.d0
-  DO jbnd = 1, ahc_nbnd
-    DO ibnd = 1, ahc_nbnd
-      !
-      et_rotate = SUM( CONJG(psi_gauge(:, ibnd)) &
-        * et(ib_ahc_gauge_min:ib_ahc_gauge_max, ikk) * psi_gauge(:, jbnd) )
-      !
-      IF (ibnd == jbnd) THEN
-        error = error + ABS(et_rotate - et(ibnd + ib_ahc_min - 1, ikk))
-      ELSE
-        error = error + ABS(et_rotate)
-      ENDIF
-      !
-    ENDDO
-  ENDDO
-  !
-  IF (error > 1.d-4) THEN
-    WRITE(stdout, '(a,2I5,ES12.3)') ' ERROR: psi_gauge wrong, &
-      &(iq, ik, error) = ', current_iq, ik, error
-    CALL errore('compute_psi_gauge', 'psi_gauge wrong', 1)
+  IF (me_pool == root_pool) THEN
+    READ(iugauge) gauge_mill
+    READ(iugauge) ndegen_list
+    READ(iugauge) evc_select_ref
   ENDIF
   !
-  DEALLOCATE(evc_ref)
-  DEALLOCATE(evc_r)
+  CALL mp_bcast(gauge_mill, root_pool, intra_pool_comm)
+  CALL mp_bcast(ndegen_list, root_pool, intra_pool_comm)
+  CALL mp_bcast(evc_select_ref, root_pool, intra_pool_comm)
+  !
+  ! 2) Find selected G vectors from each pools and set evc_select.
+  !
+  evc_select = (0.d0, 0.d0)
+  !
+  DO ig = 1, ng_gauge
+    DO jg = 1, npw
+      IF (mill(1, igk_k(jg, ikk)) == gauge_mill(1, ig) .AND. &
+          mill(2, igk_k(jg, ikk)) == gauge_mill(2, ig) .AND. &
+          mill(3, igk_k(jg, ikk)) == gauge_mill(3, ig)) THEN
+        !
+        DO ibnd = 1, ahc_nbnd_gauge
+          jbnd = ibnd - 1 + ib_ahc_gauge_min
+          evc_select(ig, 1, ibnd) = evc(jg, jbnd)
+          IF (noncolin) THEN
+            evc_select(ig, 2, ibnd) = evc(jg + npwx, jbnd)
+          ENDIF
+        ENDDO
+        !
+        EXIT
+        !
+      ENDIF
+    ENDDO ! jg
+  ENDDO ! ig
+  !
+  CALL mp_sum(evc_select, intra_pool_comm)
+  !
+  ! 3) For each degenerate group:
+  !
+  ibnd_ref = 1
+  ibnd = 1
+  !
+  DO igroup = 1, ahc_nbnd
+    !
+    IF (ndegen_list(igroup) == 0) EXIT
+    ndegen_ref = ndegen_list(igroup)
+    !
+    is_last_group = .FALSE.
+    IF (igroup == ahc_nbnd) THEN
+      is_last_group = .TRUE.
+    ELSEIF (ndegen_list(igroup + 1) == 0) THEN
+      is_last_group = .TRUE.
+    ENDIF
+    !
+    ! Enlarge ndegen when at the first or last degenerate group.
+    !
+    IF (igroup == 1) THEN
+      ! First group.
+      ndegen = ndegen_ref + ib_ahc_min - ib_ahc_gauge_min
+    ELSEIF (is_last_group) THEN
+      ! Last group.
+      ndegen = ndegen_ref - ib_ahc_max + ib_ahc_gauge_max
+    ELSE
+      ndegen = ndegen_ref
+    ENDIF
+    !
+    ALLOCATE(smat_inv(ndegen_ref, ndegen_ref))
+    ALLOCATE(amat(ndegen, ndegen_ref))
+    !
+    ! 3-1) Read inv(S) matrix from file
+    ! S_nm = sum_G [evc_select_ref(ig, n)]* evc_select_ref(ig, m)
+    !
+    IF (me_pool == root_pool) READ(iugauge) smat_inv
+    CALL mp_bcast(smat_inv, root_pool, intra_pool_comm)
+    !
+    ! 3-2) Compute A matrix
+    ! A_nm = sum_G [evc_select(ig, n)]* evc_select_ref(ig, m)
+    !
+    CALL ZGEMM('C', 'N', ndegen, ndegen_ref, npol * ng_gauge, &
+        (1.d0, 0.d0), evc_select(1, 1, ibnd), npol * ng_gauge, &
+                      evc_select_ref(1, 1, ibnd_ref), npol * ng_gauge, &
+        (0.d0, 0.d0), amat, ndegen)
+    !
+    ! 3-3) Compute psi_gauge
+    ! psi_gauge(n, m) = (A * inv(S))_nm
+    !
+    CALL ZGEMM('N', 'N', ndegen, ndegen_ref, ndegen_ref, &
+        (1.d0, 0.d0), amat, ndegen, smat_inv, ndegen_ref, &
+        (0.d0, 0.d0), psi_gauge(ibnd, ibnd_ref), ahc_nbnd_gauge)
+    !
+    DEALLOCATE(smat_inv)
+    DEALLOCATE(amat)
+    ibnd_ref = ibnd_ref + ndegen_ref
+    ibnd = ibnd + ndegen
+    !
+  ENDDO ! igroup
+  !
+  IF (ibnd_ref /= ahc_nbnd + 1) CALL errore('compute_psi_gauge', &
+    'ibnd_ref /= ahc_nbnd + 1 after loop over degenreate groups', 1)
+  IF (ibnd /= ahc_nbnd_gauge + 1) CALL errore('compute_psi_gauge', &
+    'ibnd /= ahc_nbnd_gauge + 1 after loop over degenreate groups', 1)
+  !
+  DEALLOCATE(gauge_mill)
+  DEALLOCATE(ndegen_list)
+  DEALLOCATE(evc_select)
+  DEALLOCATE(evc_select_ref)
   !
   CALL stop_clock('ahc_gauge')
   !
@@ -664,13 +954,13 @@ SUBROUTINE elph_ahc_setup()
 !! ahc_nbnd_gauge, the number of bands to compute dvpsi
 !------------------------------------------------------------------------------
   USE kinds,        ONLY : DP
-  USE io_global,    ONLY : ionode, ionode_id, stdout
+  USE io_global,    ONLY : ionode, ionode_id
   USE io_files,     ONLY : create_directory
   USE mp,           ONLY : mp_min, mp_max, mp_bcast
   USE mp_images,    ONLY : intra_image_comm
   USE mp_pools,     ONLY : intra_pool_comm, root_pool, me_pool
-  USE wvfct,        ONLY : npwx, nbnd, et
-  USE qpoint,       ONLY : nksq, ikks, ikqs, nksqtot
+  USE wvfct,        ONLY : nbnd, et
+  USE qpoint,       ONLY : nksq, ikks, nksqtot
   USE control_lr,   ONLY : lgamma
   USE control_ph,   ONLY : current_iq
   !
@@ -698,14 +988,10 @@ SUBROUTINE elph_ahc_setup()
   !! Unit for e_n(k) energy eigenvalue output
   INTEGER :: iunetq
   !! Unit for e_n(k+q) energy eigenvalue output
-  REAL(DP) :: e_degen_thr
-  !! threshold for degeneracy
   REAL(DP), ALLOCATABLE :: et_collect(:, :, :)
   !! energy eigenvalues at k and k+q for all k points
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   INTEGER, EXTERNAL :: find_free_unit
-  !
-  e_degen_thr = 1.d-4
   !
   IF (ahc_nbndskip + ahc_nbnd > nbnd) CALL errore('elph_ahc_setup', &
      'ahc_nbndskip + ahc_nbnd cannot be greater than nbnd', 1)
@@ -812,12 +1098,11 @@ SUBROUTINE elph_do_ahc()
 !------------------------------------------------------------------------------
   USE kinds,        ONLY : DP
   USE io_global,    ONLY : stdout
-  USE io_global,    ONLY : ionode
-  USE io_files,     ONLY : prefix, diropn
+  USE io_files,     ONLY : diropn
   USE mp_pools,     ONLY : npool, my_pool_id, me_pool, root_pool
-  USE wvfct,        ONLY : npwx, nbnd, et
-  USE klist,        ONLY : ngk, lgauss, igk_k
-  USE noncollin_module, ONLY : noncolin, npol
+  USE wvfct,        ONLY : npwx, nbnd
+  USE klist,        ONLY : lgauss
+  USE noncollin_module, ONLY : npol
   USE buffers,      ONLY : get_buffer
   USE qpoint,       ONLY : nksq, nksqtot
   USE modes,        ONLY : u, nmodes
@@ -825,7 +1110,6 @@ SUBROUTINE elph_do_ahc()
   USE units_ph,     ONLY : lrdvpsi, iudvpsi
   USE eqv,          ONLY : dvpsi
   USE control_ph,   ONLY : current_iq
-  USE control_lr,   ONLY : alpha_pv
   !
   IMPLICIT NONE
   !

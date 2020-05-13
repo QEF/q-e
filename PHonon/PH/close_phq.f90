@@ -13,13 +13,14 @@ SUBROUTINE close_phq( flag )
   ! ... Called at the end of the run with flag=.TRUE. (removes 'recover')
   ! ... or during execution with flag=.FALSE. (does not remove 'recover')
   !
+  USE mp_pools,      ONLY : me_pool, root_pool
   USE paw_variables, ONLY : okpaw
   USE io_global,     ONLY : ionode, stdout
   USE buffers,       ONLY : close_buffer
   USE uspp,          ONLY : okvan
   USE units_ph,      ONLY : iudwf, iubar, iudrhous, iuebar, iudrho, &
                             iudvscf, iucom, iudvkb3, iuint3paw, iudyn, &
-                            iundnsscf, iudvpsi, iuwfcref
+                            iundnsscf, iudvpsi, iugauge
   USE units_lr,      ONLY : iuwfc, iuatwfc, iuatswfc
   USE control_ph,    ONLY : zue, epsil, only_wfc
   USE recover_mod,   ONLY : clean_recover
@@ -120,8 +121,10 @@ SUBROUTINE close_phq( flag )
   ! AHC e-ph
   !
   IF (elph_ahc) THEN
-    CALL close_buffer(iuwfcref, 'KEEP')
     CALL close_buffer(iudvpsi, 'DELETE')
+    IF (me_pool == root_pool) THEN
+      CLOSE(UNIT=iugauge, STATUS='KEEP')
+    ENDIF
   ENDIF
   !
   RETURN
