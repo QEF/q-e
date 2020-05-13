@@ -63,7 +63,7 @@
   USE uspp,          ONLY : okvan
   USE spin_orb,      ONLY : lspinorb
   USE lrus,          ONLY : becp1
-  USE becmod,        ONLY : becp, deallocate_bec_type
+  USE becmod,        ONLY : deallocate_bec_type
   USE phus,          ONLY : int1, int1_nc, int2, int2_so, alphap
   USE kfold,         ONLY : createkmap_pw2, createkmap
   USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, read_disp_pattern,       &
@@ -320,10 +320,10 @@
     IF (iverbosity == 1) WRITE(stdout, 15) ngxx
 15  FORMAT(5x,'Estimated size of gmap: ngxx =', i5)
     !
-    ALLOCATE(gmapsym(ngxxf, 48), STAT = ierr)
+    ALLOCATE(gmapsym(ngxxf, nsym), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating gmapsym', 1)
     gmapsym = 0
-    ALLOCATE(eigv(ngxxf, 48), STAT = ierr)
+    ALLOCATE(eigv(ngxxf, nsym), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating eigv', 1)
     eigv = czero
     !
@@ -843,7 +843,6 @@
     ENDDO
     DEALLOCATE(becp1, STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating becp1', 1)
-    CALL deallocate_bec_type(becp)
   ENDIF ! IF (.NOT. epbread .AND. .NOT. epwread) THEN
   !
   IF (my_image_id == 0) THEN
