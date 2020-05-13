@@ -61,6 +61,7 @@ USE io_global,         ONLY : stdout, ionode
 USE fft_base,          ONLY : dfftp
 USE fft_interfaces,    ONLY : fwfft, invfft
 USE control_flags,     ONLY : iverbosity, gamma_only
+USE corr_lda,          ONLY : pw, pw_spin
 
 
 ! ----------------------------------------------------------------------
@@ -178,8 +179,8 @@ REAL(DP) :: kernel( 0:Nr_points, Nqs, Nqs ), d2phi_dk2( 0:Nr_points, Nqs, Nqs )
 REAL(DP) :: W_ab( Nintegration_points, Nintegration_points )
 ! Defined in DION equation 16.
 
-REAL(DP) :: a_points( Nintegration_points )
-! The values of the "a" points (DION equation 14).
+REAL(DP) :: a_points( Nintegration_points ), a_points2( Nintegration_points )
+! The values of the "a" points (DION equation 14) and their squares.
 
 CONTAINS
 
@@ -195,7 +196,8 @@ CONTAINS
   !                           |  functions  |
   !                           |_____________|
   !
-  ! Functions to be used in get_q0_on_grid and get_q0_on_grid_spin.
+  ! Functions to be used in get_q0_on_grid, get_q0_on_grid_spin, and
+  ! phi_value.
 
   FUNCTION Fs(s)
 
@@ -281,6 +283,19 @@ CONTAINS
      dqx_drho = dkF_drho(rho) * Fs(s) + kF(rho) * dFs_ds(s) * ds_drho(rho, s)
 
   END FUNCTION dqx_drho
+
+
+
+
+  FUNCTION h_function(y)
+
+     IMPLICIT NONE
+     REAL(DP)             :: y, h_function
+     REAL(DP), PARAMETER  :: gamma = 4.0D0*pi/9.0D0
+
+     h_function = 1.0D0 - EXP( -gamma * y**2 )
+
+  END FUNCTION
 
 
 
@@ -669,8 +684,6 @@ CONTAINS
 
   SUBROUTINE get_q0_on_grid (total_rho, grad_rho, q0, dq0_drho, dq0_dgradrho, thetas)
 
-  USE corr_lda,  ONLY: pw
-  
   IMPLICIT NONE
 
   REAL(DP), INTENT(IN)      :: total_rho(:), grad_rho(:,:)         ! Input variables needed.
@@ -813,8 +826,6 @@ CONTAINS
              grad_rho_up, grad_rho_down, q0, dq0_drho_up, dq0_drho_down, &
              dq0_dgradrho_up, dq0_dgradrho_down, thetas)
 
-  USE corr_lda,  ONLY: pw_spin
-             
   IMPLICIT NONE
 
   REAL(DP),  INTENT(IN)      :: total_rho(:), grad_rho(:,:)              ! Input variables.
@@ -2138,9 +2149,6 @@ CONTAINS
   REAL(DP) :: weights( Nintegration_points )
   ! Array to hold dx values for the Gaussian-Legendre integration of the kernel.
 
-  REAL(DP) :: a_points2( Nintegration_points )
-  ! The square of the "a" points (DION equation 14).
-
   REAL(DP) :: sin_a( Nintegration_points ), cos_a( Nintegration_points )
   ! Sine and cosine values of the aforementioned points a.
 
@@ -2570,13 +2578,6 @@ CONTAINS
   REAL(DP), INTENT(IN) :: d1, d2
   ! The point at which to evaluate the kernel. d1 = q1*r and d2 = q2*r.
 
-  REAL(DP), PARAMETER  :: gamma = 4.0D0*pi/9.0D0
-  ! Multiplicative factor for exponent in the h-function in DION.
-
-  REAL(DP), PARAMETER  :: small = 1.0D-15
-  ! Number at which to employ special algorithms to avoid numerical
-  ! problems. This is probably not needed but I like to be careful.
-
   REAL(DP) :: w, x, y, z, T
   ! Intermediate values.
 
@@ -2589,58 +2590,30 @@ CONTAINS
 
 
 
-  phi_value = 0.0D0
-  IF ( d1==0.0D0 .AND. d2==0.0D0 ) THEN
-     phi_value = 0.0D0
-     RETURN
-  END IF
-
-
   ! --------------------------------------------------------------------
   ! Loop over all integration points and calculate the value of the nu
   ! functions defined in the discussion below equation 16 in DION.
-  ! There are a number of checks here to ensure that we don't run into
-  ! numerical problems for very small d values. They are probably
-  ! unnecessary but I wanted to be careful.
 
   DO a_i = 1, Nintegration_points
-
-     IF ( a_points(a_i) <= small .AND. d1 > small) THEN
-        nu(a_i) = 9.0D0/8.0D0*d1**2/pi
-     ELSE IF (d1 <= small) THEN
-        nu(a_i) = a_points(a_i)**2/2.0D0
-     ELSE
-        nu(a_i) = a_points(a_i)**2/((-EXP(-(a_points(a_i)**2*gamma)/d1**2) + 1.0D0)*2.0D0)
-     END IF
-
-     IF ( a_points(a_i) <= small .AND. d2 > small) THEN
-        nu1(a_i) = 9.0D0/8.0D0*d2**2/pi
-     ELSE IF (d2 < small) THEN
-        nu1(a_i) = a_points(a_i)**2/2.0D0
-     ELSE
-        nu1(a_i) = a_points(a_i)**2/((-EXP(-(a_points(a_i)**2*gamma)/d2**2) + 1.0D0)*2.0D0)
-     END IF
-
+     nu(a_i)  = a_points2(a_i)/( 2.0D0 * h_function( a_points(a_i)/d1 ))
+     nu1(a_i) = a_points2(a_i)/( 2.0D0 * h_function( a_points(a_i)/d2 ))
   END DO
 
 
   ! --------------------------------------------------------------------
   ! Carry out the integration of DION equation 13.
 
+  phi_value = 0.0D0
+
   DO a_i = 1, Nintegration_points
-  DO b_i = 1, Nintegration_points
      w = nu(a_i)
-     x = nu(b_i)
      y = nu1(a_i)
-     z = nu1(b_i)
-
-     ! --------------------------------------------------------------
-     ! Again, watch out for possible numerical problems
-
-     IF (w < small .or. x<small .OR. y<small .OR. z<small) CYCLE
-     T = (1.0D0/(w+x) + 1.0D0/(y+z))*(1.0D0/((w+y)*(x+z)) + 1.0D0/((w+z)*(y+x)))
-     phi_value = phi_value + T * W_ab(a_i, b_i)
-  END DO
+     DO b_i = 1, Nintegration_points
+        x = nu(b_i)
+        z = nu1(b_i)
+        T = (1.0D0/(w+x) + 1.0D0/(y+z))*(1.0D0/((w+y)*(x+z)) + 1.0D0/((w+z)*(y+x)))
+        phi_value = phi_value + T * W_ab(a_i, b_i)
+     END DO
   END DO
 
   phi_value = 1.0D0/pi**2*phi_value
