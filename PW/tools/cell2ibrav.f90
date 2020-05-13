@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------
-PROGRAM ibrav2cell
+PROGRAM cell2ibrav
 !----------------------------------------------------------------------
   !
   USE Kinds, ONLY : DP
@@ -52,5 +52,5 @@ PROGRAM ibrav2cell
   WRITE(*,'("Discrepancy old/new in bohr = ", f12.6)') DSQRT(SUM((a*alat-e)**2))
 
   !
-END PROGRAM ibrav2cell
+END PROGRAM cell2ibrav
 !----------------------------------------------------------------------
