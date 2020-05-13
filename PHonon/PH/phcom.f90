@@ -321,8 +321,7 @@ MODULE units_ph
        iundnsscf, & ! the unit of dnsscf, for DFPT+U
        iudvpsi,   & ! unit of DV_{SCF} * psi
        lrdvpsi,   & ! length of DV_{SCF} * psi
-       iuwfcref,  & ! unit of real-space wavefunction at iq=1 in real space
-       lrwfcref     ! length of real-space wavefunction at iq=1 in real space
+       iugauge      ! Unit for reading and writing gauge information in ahc.f90
 
   logical, ALLOCATABLE :: this_dvkb3_is_on_file(:), &
                           this_pcxpsi_is_on_file(:,:)
