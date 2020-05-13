@@ -1,0 +1,20 @@
+
+/home/tommaso/Desktop/q-e-qe-6.5/PIOUD/examples/example01 : starting
+
+This example shows how to use pioud.x to calculate an NVT
+graphene Path Integral Molecular Dynamics simulation
+
+!!! Beware: pioud.x DOES NOT READ FROM STANDARD INPUT
+!!! run as 'pioud.x -inp input_file_name > output_file_name'
+
+
+  executables directory: /home/tommaso/Desktop/q-e-qe-6.5/bin
+  pseudo directory:      /home/tommaso/Desktop/q-e-qe-6.5/pseudo
+  temporary directory:   /home/tommaso/Desktop/q-e-qe-6.5/tempdir
+  checking that needed directories and files exist...
+  running Born-Oppenheimer PIOUD as: mpirun -np 4 /home/tommaso/Desktop/q-e-qe-6.5/bin/pioud.x  -nk 1 -nd 1 -nb 1 -nt 1 
+
+  cleaning /home/tommaso/Desktop/q-e-qe-6.5/tempdir... done
+  running Born-Oppenheimer pioud calculation... 
+Error condition encountered during test: exit status = 46
+Aborting
