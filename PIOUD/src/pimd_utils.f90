@@ -45,6 +45,7 @@ subroutine pimd_pw_convert_pos(abc)
   implicit none
   integer cc,k,iat,i
   character*8 abc
+  real(8), allocatable :: rpostmp(:,:,:)
   
   
   if (abc .eq. 'pw_to_md') then
@@ -58,8 +59,14 @@ subroutine pimd_pw_convert_pos(abc)
         END DO
       END DO
     end do 
-      
-    
+
+    !allocate(rpostmp(ndimMD,natMD,nbeadMD))
+    !rpostmp=0.0
+    !do k=1,nbeadMD
+    !  call refold(k,rpostmp(:,:,k))
+    !end do      
+    !rpos=rpostmp
+    !deallocate(rpostmp)
     
     rcentroid=0.0
     do k=1,nbeadMD

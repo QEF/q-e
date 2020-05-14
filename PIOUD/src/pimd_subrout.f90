@@ -210,9 +210,10 @@ subroutine prop_ceriotti_1half_irun3(intinp)
   ! primitive
     allocate(rpostmp(ndimMD,natMD,nbeadMD))
     rpostmp=0.0
-    do k=1,nbeadMD
-      call refold(k,rpostmp(:,:,k))
-    end do
+    !do k=1,nbeadMD
+    !  call refold(k,rpostmp(:,:,k))
+    !end do
+    rpostmp=rpos 
        
     ekinqp=0.d0
     do k=1,nbeadMD
@@ -685,9 +686,10 @@ subroutine prop_pioud_irun4(ekin,epot)
 ! primitive
     allocate(rpostmp(ndimMD,natMD,nbead))
     rpostmp=0.0
-    do k=1,nbead
-      call refold(k,rpostmp(:,:,k))
-    end do
+    !do k=1,nbead
+    !  call refold(k,rpostmp(:,:,k))
+    !end do
+    rpostmp=rpos
        
     ekinqp=0.d0
     do k=1,nbead
@@ -1520,9 +1522,10 @@ SUBROUTINE pimdnvt_init(epot)!,forcetmp)!(qui devo mettere forze e potenziale)
 ! primitive
        allocate(rpostmp(ndimMD,natMD,nbeadMD))
        rpostmp=0.0
-       do k=1,nbeadMD
-         call refold(k,rpostmp(:,:,k))
-       end do
+       !do k=1,nbeadMD
+       !  call refold(k,rpostmp(:,:,k))
+       !end do
+       rpostmp=rpos
        
        ekinqp=0.d0
        do k=1,nbeadMD
@@ -1797,7 +1800,7 @@ subroutine pimd_allocation
       
       deltahtilde=0.d0 
       
-    else if(irun.eq.4) then
+  else if(irun.eq.4) then
     
       ieskin=ndimMD*natMD
       iflagerr=0
