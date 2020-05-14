@@ -282,7 +282,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
      IF ( noncolin ) THEN
         CALL vhpsi_nc( lda, n, m, psi_host, hpsi_host )
      ELSE
-        CALL vhpsi( lda, n, m, psi_host, hpsi_host )
+        CALL vhpsi_gpu( lda, n, m, psi_host, hpsi_host )
      ENDIF
      CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
      !

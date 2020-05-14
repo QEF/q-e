@@ -2,6 +2,7 @@ PWLIBS += \
   g_psi_mod_gpu.o \
   g_psi_gpu.o \
   h_psi_gpu.o \
+  vhpsi_gpu.o \
   s_psi_gpu.o \
   vloc_psi_gpu.o \
   pwcom_gpu.o \
@@ -135,6 +136,10 @@ h_psi_gpu.o : pwcom.o
 h_psi_gpu.o : pwcom_gpu.o
 h_psi_gpu.o : realus.o
 h_psi_gpu.o : scf_mod_gpu.o
+h_psi_gpu.o : vhpsi_gpu.o
+vhpsi_gpu.o : ldaU.o
+vhpsi_gpu.o : pwcom.o
+vhpsi_gpu.o : scf_mod.o
 hinit1.o : scf_mod_gpu.o
 hs_1psi_gpu.o : bp_mod.o
 hs_1psi_gpu.o : realus.o
