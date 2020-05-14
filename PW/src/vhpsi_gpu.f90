@@ -24,18 +24,20 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip, hpsi )
   USE control_flags, ONLY : gamma_only
   USE mp,            ONLY : mp_sum
   !
-  
+  USE becmod_gpum,          ONLY : bec_type_d
+  USE becmod_subs_gpum,     ONLY : allocate_bec_type_gpu, deallocate_bec_type_gpu, &
+                                   synchronize_bec_type_gpu, calbec_gpu
+  !
 #if defined(__CUDA)
   use cudafor
   use cublas
 #endif  
-
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: ldap
   !! leading dimension of arrays psip, hpsi
-  INTEGER, INTENT(IN) :: np                                        !to test: 1) is_hubbard_back+gamma
+  INTEGER, INTENT(IN) :: np
   !! true dimension of psip, hpsi
   INTEGER, INTENT(IN) :: mps
   !! number of states psip
@@ -50,15 +52,44 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip, hpsi )
   COMPLEX(DP), ALLOCATABLE :: ctemp(:,:), vaux(:,:)
   TYPE(bec_type) :: proj
   !
+  !------------------------------------
+  INTEGER :: dimwf1, dimwf2
+  TYPE(bec_type_d), TARGET :: proj_d
+  REAL(DP), POINTER, DEVICE :: projr_d(:,:)
+  COMPLEX(DP), POINTER, DEVICE :: projk_d(:,:)
+  COMPLEX(DP), ALLOCATABLE, DEVICE :: wfcU_d(:,:)
+  COMPLEX(DP), ALLOCATABLE, DEVICE :: psip_d(:,:)
+  
+  !
   CALL start_clock('vhpsi')
   !
   ! Offset of atomic wavefunctions initialized in setup and stored in offsetU
   !
+  !--------------------------------
   ! Allocate the array proj
-  CALL allocate_bec_type ( nwfcU,mps, proj )
+  CALL allocate_bec_type( nwfcU ,mps, proj )
   !
   ! proj = <wfcU|psip>
   CALL calbec (np, wfcU, psip, proj)
+  !--------------------------------
+  
+  
+  !--------------------------------
+  CALL allocate_bec_type_gpu( nwfcU, mps, proj_d ) 
+  !
+  dimwf1 = SIZE(wfcU(:,1))
+  dimwf2 = SIZE(wfcU(1,:))
+  ALLOCATE( wfcU_d(dimwf1,dimwf2) )
+  wfcU_d = wfcU
+  ALLOCATE( psip_d(ldap,mps) )
+  psip_d = psip
+  !
+  CALL calbec_gpu( np, wfcU_d, psip_d, proj_d )
+  !
+  projr_d => proj_d%r_d
+  projk_d => proj_d%k_d
+  !--------------------------------
+  !
   ! 
   IF ( lda_plus_u_kind.EQ.0 .OR. lda_plus_u_kind.EQ.1 ) THEN
      CALL vhpsi_U_gpu()  ! DFT+U
@@ -66,7 +97,11 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip, hpsi )
      CALL vhpsi_UV_gpu() ! DFT+U+V
   ENDIF
   !
-  CALL deallocate_bec_type (proj)
+  CALL deallocate_bec_type( proj )
+  CALL deallocate_bec_type_gpu( proj_d )
+  !
+  DEALLOCATE( wfcU_d  )
+  DEALLOCATE( psip_d  )
   !
   CALL stop_clock('vhpsi')
   !
@@ -82,54 +117,28 @@ SUBROUTINE vhpsi_U_gpu()
   USE ldaU,      ONLY : ldim_back, ldmx_b, Hubbard_l1_back
   !
   IMPLICIT NONE
-  INTEGER :: na, nt, ldim, ldim0
   !
-  
-  !------------------------
-  INTEGER :: ldimax, dimpr1, dimpr2, dimwf1, dimwf2, offU, i, j
-  REAL(DP) :: alpha
+  INTEGER :: na, nt, ldim, ldim0, ldimax
+  !
+  !-------------------------------------
   REAL(DP), ALLOCATABLE, DEVICE :: vns_d(:,:,:), vnsb_d(:,:,:)
-  REAL(DP), ALLOCATABLE, DEVICE :: projr_d(:,:)
   REAL(DP), ALLOCATABLE, DEVICE :: rtemp_d(:,:)
-  COMPLEX(DP), ALLOCATABLE, DEVICE :: wfcU_d(:,:)
-  COMPLEX(DP), ALLOCATABLE, DEVICE :: hpsi_d(:,:)
-  ! - kpoint
   COMPLEX(DP), ALLOCATABLE, DEVICE :: ctemp_d(:,:), vaux_d(:,:)
-  COMPLEX(DP), ALLOCATABLE, DEVICE :: projk_d(:,:)
-  
-  !
+  COMPLEX(DP), ALLOCATABLE, DEVICE :: hpsi_d(:,:)
   !--------------------------------------
-  
-  dimwf1=SIZE(wfcU(:,1))
-  dimwf2=SIZE(wfcU(1,:))
-  ALLOCATE( wfcU_d(dimwf1,dimwf2) )
-  wfcU_d = wfcU
+  !--------------------------------------
   ALLOCATE( hpsi_d(ldap,mps) )
   hpsi_d = hpsi
   !
   IF (gamma_only) THEN
     ldimax = 2*Hubbard_lmax+1
     ALLOCATE( vns_d(ldimax,ldimax,nat) )
-    do na = 1, nat
-      ldim = 2*Hubbard_l(ityp(na)) + 1
-      vns_d(1:ldim,1:ldim,na)=v%ns(1:ldim,1:ldim,current_spin,na)
-    enddo
-    dimpr1 = SIZE(proj%r(:,1))
-    dimpr2 = SIZE(proj%r(1,:))
-    ALLOCATE( projr_d(dimpr1,dimpr2) )
-    projr_d = proj%r
+    vns_d = v%ns(:,:,current_spin,:)
     !
     IF (ANY(is_hubbard_back(:))) THEN
       ALLOCATE( vnsb_d(ldmx_b,ldmx_b,nat) )
       vnsb_d = v%nsb(:,:,current_spin,:)
     ENDIF
-    !
-  ELSE
-    !
-    dimpr1 = SIZE(proj%k(:,1))
-    dimpr2 = SIZE(proj%k(1,:))
-    ALLOCATE( projk_d(dimpr1,dimpr2) )
-    projk_d = proj%k
     !
   ENDIF
   !---------------------------------------
@@ -146,11 +155,11 @@ SUBROUTINE vhpsi_U_gpu()
         ldim = 2*Hubbard_l(nt) + 1
         !
         IF (gamma_only) THEN
-           ALLOCATE ( rtemp_d(ldim,mps) )
+           ALLOCATE( rtemp_d(ldim,mps) )
            !  
                       
         ELSE
-           ALLOCATE ( ctemp_d(ldim,mps) )
+           ALLOCATE( ctemp_d(ldim,mps) )
         ENDIF
         !
         
@@ -158,13 +167,12 @@ SUBROUTINE vhpsi_U_gpu()
            IF ( nt == ityp(na) ) THEN
               IF (gamma_only) THEN
                  !
-                 offU = offsetU(na)
                  CALL cublasDgemm( 'N','N', ldim,mps,ldim, 1.0_dp, &
                       vns_d(1,1,na),2*Hubbard_lmax+1, &
-                      projr_d(offU+1,1),nwfcU, 0.0_dp, rtemp_d, ldim )
+                      projr_d(offsetU(na)+1,1),nwfcU, 0.0_dp, rtemp_d, ldim )
                  !
                  CALL cublasDgemm( 'N','N', 2*np, mps, ldim, 1.0_dp, &
-                      wfcU_d(1,offU+1), 2*ldap, rtemp_d, ldim, &
+                      wfcU_d(1,offsetU(na)+1), 2*ldap, rtemp_d, ldim, &
                       1.0_dp, hpsi_d, 2*ldap )
                  !
               ELSE
@@ -299,14 +307,14 @@ SUBROUTINE vhpsi_U_gpu()
   
   hpsi = hpsi_d
   
-  DEALLOCATE( wfcU_d  )
+  !DEALLOCATE( wfcU_d  )
   DEALLOCATE( hpsi_d  )
   !
   IF (gamma_only) THEN
     DEALLOCATE( vns_d   )
-    DEALLOCATE( projr_d )
+    !DEALLOCATE( projr_d )
   ELSE
-    DEALLOCATE( projk_d )
+    !DEALLOCATE( projk_d )
   ENDIF
   
   !
