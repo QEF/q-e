@@ -9,7 +9,7 @@
 #define cublasDgemm dgemm
 #endif
 !-----------------------------------------------------------------------
-SUBROUTINE vhpsi_gpu( ldap, np, mps, psip, hpsi )
+SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
   !-----------------------------------------------------------------------
   !! This routine computes the Hubbard potential applied to the electronic
   !! structure of the current k-point. The result is added to hpsi.
@@ -44,9 +44,9 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip, hpsi )
   !! true dimension of psip, hpsi
   INTEGER, INTENT(IN) :: mps
   !! number of states psip
-  COMPLEX(DP), INTENT(IN) :: psip(ldap,mps)
+  COMPLEX(DP), INTENT(IN) :: psip_d(ldap,mps)
   !! the wavefunction
-  COMPLEX(DP), INTENT(INOUT) :: hpsi(ldap,mps)
+  COMPLEX(DP), INTENT(INOUT) :: hpsi_d(ldap,mps)
   !! Hamiltonian dot psi
   !
   ! ... local variables
@@ -55,10 +55,10 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip, hpsi )
   TYPE(bec_type_d), TARGET :: proj_d
   REAL(DP),    POINTER :: projr_d(:,:)
   COMPLEX(DP), POINTER :: projk_d(:,:)
-  COMPLEX(DP), ALLOCATABLE :: wfcU_d(:,:), psip_d(:,:)
+  COMPLEX(DP), ALLOCATABLE :: wfcU_d(:,:)
   !
 #if defined(__CUDA)
-  attributes(DEVICE) :: projr_d, projk_d, wfcU_d, psip_d
+  attributes(DEVICE) :: projr_d, projk_d, wfcU_d, psip_d, hpsi_d
 #endif
   !
   CALL start_clock( 'vhpsi' )
@@ -71,8 +71,6 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip, hpsi )
   dimwf1 = SIZE(wfcU(:,1))
   ALLOCATE( wfcU_d(dimwf1,nwfcU) )
   wfcU_d = wfcU
-  ALLOCATE( psip_d(ldap,mps) )
-  psip_d = psip
   !
   ! proj = <wfcU|psip>
   CALL calbec_gpu( np, wfcU_d, psip_d, proj_d )
@@ -88,7 +86,7 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip, hpsi )
   !
   CALL deallocate_bec_type_gpu( proj_d )
   !
-  DEALLOCATE( wfcU_d, psip_d )
+  DEALLOCATE( wfcU_d )
   !
   CALL stop_clock( 'vhpsi' )
   !
@@ -109,16 +107,10 @@ SUBROUTINE vhpsi_U_gpu()
   !
   REAL(DP),    ALLOCATABLE :: rtemp_d(:,:), vns_d(:,:,:),  vnsb_d(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: ctemp_d(:,:), vaux_d(:,:,:), vauxb_d(:,:,:)
-  COMPLEX(DP), ALLOCATABLE :: hpsi_d(:,:)
-  
   !
 #if defined(__CUDA)
-  attributes(DEVICE) :: vns_d, vnsb_d, rtemp_d, ctemp_d, vaux_d, vauxb_d, &
-                        hpsi_d
+  attributes(DEVICE) :: vns_d, vnsb_d, rtemp_d, ctemp_d, vaux_d, vauxb_d
 #endif   
-  !
-  ALLOCATE( hpsi_d(ldap,mps) )
-  hpsi_d = hpsi
   !
   ldimax = 2*Hubbard_lmax+1
   IF ( ANY(is_hubbard_back(:)) ) ldimaxt = MAX(ldimax, ldmx_b)
@@ -260,8 +252,6 @@ SUBROUTINE vhpsi_U_gpu()
      !
   ENDDO
   !
-  hpsi = hpsi_d
-  !
   IF ( ANY(is_hubbard(:)) .OR. ANY(is_hubbard_back(:)) ) THEN
     IF (gamma_only) THEN
       DEALLOCATE( rtemp_d )
@@ -274,7 +264,6 @@ SUBROUTINE vhpsi_U_gpu()
     ENDIF
   ENDIF
   !
-  DEALLOCATE( hpsi_d )
   !
   RETURN
   !

@@ -278,17 +278,18 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !
   IF ( lda_plus_u .AND. U_projection.NE."pseudo" ) THEN
      !
-     CALL dev_memcpy(hpsi_host, hpsi_d ) ! hpsi_host = hpsi_d
+     CALL dev_memcpy(hpsi_host, hpsi_d )    ! hpsi_host = hpsi_d
      IF ( noncolin ) THEN
         CALL vhpsi_nc( lda, n, m, psi_host, hpsi_host )
+        CALL dev_memcpy(hpsi_d, hpsi_host)  ! hpsi_d = hpsi_host
      ELSE
         IF ( lda_plus_u_kind.EQ.0 .OR. lda_plus_u_kind.EQ.1 ) THEN
-          CALL vhpsi_gpu( lda, n, m, psi_host, hpsi_host )  ! DFT+U
-        ELSEIF ( lda_plus_u_kind.EQ.2 ) THEN
-          CALL vhpsi( lda, n, m, psi_host, hpsi_host )      ! DFT+U+V
+          CALL vhpsi_gpu( lda, n, m, psi_d, hpsi_d )  ! DFT+U
+        ELSEIF ( lda_plus_u_kind.EQ.2 ) THEN          ! DFT+U+V
+          CALL vhpsi( lda, n, m, psi_host, hpsi_host )
+          CALL dev_memcpy(hpsi_d, hpsi_host)
         ENDIF
      ENDIF
-     CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
      !
   ENDIF
   !
