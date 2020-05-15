@@ -195,10 +195,16 @@ subroutine prop_ceriotti_1half_irun3(intinp)
 
 ! Quantum kinetic energy
 
+    allocate(rpostmp(ndimMD,natMD,nbeadMD))
+    rpostmp=0.0
+    do k=1,nbeadMD
+      call refold(k,rpostmp(:,:,k))
+    end do
+    
   ! virial
     cost=0.d0
     do ii=1,nbeadMD
-      fbead(:,:)=rcentroid(:,:)-rpos(:,:,ii)
+      fbead(:,:)=rcentroid(:,:)-rpostmp(:,:,ii)
       do jj=1,natMD
         do kk=1,ndimMD
           cost=cost+0.5d0*fbead(kk,jj)*forceMD(kk,jj,ii) ! Ry units!!
@@ -208,13 +214,6 @@ subroutine prop_ceriotti_1half_irun3(intinp)
     ekinq=cost/nbeadMD+1.5d0*tempMD*natMD
 
   ! primitive
-    allocate(rpostmp(ndimMD,natMD,nbeadMD))
-    rpostmp=0.0
-    !do k=1,nbeadMD
-    !  call refold(k,rpostmp(:,:,k))
-    !end do
-    rpostmp=rpos 
-       
     ekinqp=0.d0
     do k=1,nbeadMD
        if(k.gt.1 .and. k.lt.nbeadMD) then                 
@@ -670,11 +669,15 @@ subroutine prop_pioud_irun4(ekin,epot)
   if(yesquantum) then
 
 ! Quantum kinetic energy
-
+     allocate(rpostmp(ndimMD,natMD,nbead))
+     rpostmp=0.0
+     do k=1,nbead
+       call refold(k,rpostmp(:,:,k))
+     end do
 ! virial
      cost=0.d0
      do ii=1,nbead
-        fbead(:,:)=rcentroid(:,:)-rpos(:,:,ii)
+        fbead(:,:)=rcentroid(:,:)-rpostmp(:,:,ii)
         do jj=1,natMD
            do kk=1,ndimMD
               cost=cost+0.5d0*fbead(kk,jj)*forceMD(kk,jj,ii) 
@@ -684,13 +687,6 @@ subroutine prop_pioud_irun4(ekin,epot)
      ekinq=cost/nbead+1.5d0*temp*nion/nbead
 
 ! primitive
-    allocate(rpostmp(ndimMD,natMD,nbead))
-    rpostmp=0.0
-    !do k=1,nbead
-    !  call refold(k,rpostmp(:,:,k))
-    !end do
-    rpostmp=rpos
-       
     ekinqp=0.d0
     do k=1,nbead
        if(k.gt.1 .and. k.lt.nbead) then                 
@@ -1477,108 +1473,107 @@ SUBROUTINE pimdnvt_init(epot)!,forcetmp)!(qui devo mettere forze e potenziale)
 
       if (irun .eq. 3) forceMD_old=forceMD
       
-      write(iunpath,*)
-      write(iunpath,*) '**********************************************************'
-      write(iunpath,*) 'initial potential energy:',epot
+      if(.not.restart_pimd) then
+         write(iunpath,*)
+         write(iunpath,*) '**********************************************************'
+         write(iunpath,*) 'initial potential energy:',epot
       
 !!!! **** ...and kinetic energy averaged over quantum images **** !!!!
-      ekin=0.d0
-      do k=1,nbeadMD
-        do i=1,natMD
-          ind=indx(i)
-          do l=1,ndimMD
-            ekin=ekin+amas(ind)*vel(l,i,k)**2
-          enddo
-        enddo
-      enddo
-      ekin=0.5d0*ekin/nbeadMD
-      write(iunpath,*) 'initial kinetic energy:',ekin
+         ekin=0.d0
+         do k=1,nbeadMD
+           do i=1,natMD
+             ind=indx(i)
+             do l=1,ndimMD
+               ekin=ekin+amas(ind)*vel(l,i,k)**2
+             enddo
+           enddo
+         enddo
+         ekin=0.5d0*ekin/nbeadMD
+         write(iunpath,*) 'initial kinetic energy:',ekin
       
-      en=ekin+epot
-      h=en
+         en=ekin+epot
+         h=en
 
-      ttk=2.d0*ekin/gMD*kbm1 ! Temperature in Kelvin
-      tt=2.d0*ekin/gMD    ! Temperature in Hartree
+         ttk=2.d0*ekin/gMD*kbm1 ! Temperature in Kelvin
+         tt=2.d0*ekin/gMD    ! Temperature in Hartree
 
-      ttk=ttk/nbeadMD
-      tt=tt/nbeadMD
+         ttk=ttk/nbeadMD
+         tt=tt/nbeadMD
 
-
-      if(yesquantum) then
+         if(yesquantum) then
 ! initial EXPECTED value of Quantum kinetic energy calculated in two ways
 
 ! virial
-        cost=0.d0
-        do ii=1,nbeadMD
-           fbead(:,:)=rcentroid(:,:)-rpos(:,:,ii)
-           do jj=1,natMD
-              do kk=1,ndimMD
-                cost=cost+0.5d0*fbead(kk,jj)*forceMD(kk,jj,ii) ! Ha units!!
+           allocate(rpostmp(ndimMD,natMD,nbeadMD))
+           rpostmp=0.0
+           do k=1,nbeadMD
+             call refold(k,rpostmp(:,:,k))
+           end do
+           cost=0.d0
+           do ii=1,nbeadMD
+              fbead(:,:)=rcentroid(:,:)-rpostmp(:,:,ii)
+              do jj=1,natMD
+                do kk=1,ndimMD
+                  cost=cost+0.5d0*fbead(kk,jj)*forceMD(kk,jj,ii) ! Ha units!!
+                enddo
               enddo
            enddo
-        enddo
-        ekinq=cost/nbeadMD+1.5d0*tempMD*natMD/nbeadMD
+           ekinq=cost/nbeadMD+1.5d0*tempMD*natMD/nbeadMD
 
 ! primitive
-       allocate(rpostmp(ndimMD,natMD,nbeadMD))
-       rpostmp=0.0
-       !do k=1,nbeadMD
-       !  call refold(k,rpostmp(:,:,k))
-       !end do
-       rpostmp=rpos
-       
-       ekinqp=0.d0
-       do k=1,nbeadMD
-          if(k.gt.1 .and. k.lt.nbeadMD) then                 
-             ekinqp=ekinqp+sum(mass_ion(:,:)*(rpostmp(:,:,k)-rpostmp(:,:,k-1))**2)
-          elseif(k.eq.1) then
-             ekinqp=ekinqp+sum(mass_ion(:,:)*(rpostmp(:,:,k)-rpostmp(:,:,nbeadMD))**2)
-          else
-             ekinqp=ekinqp+sum(mass_ion(:,:)*(rpostmp(:,:,k)-rpostmp(:,:,k-1))**2)
-          endif
-       enddo
-       ekinqp=-ekinqp/nbeadMD*tempMD**2*0.5d0+1.5d0*natMD*tempMD ! Ha units!!!
-       deallocate(rpostmp)
+           ekinqp=0.d0
+           do k=1,nbeadMD
+             if(k.gt.1 .and. k.lt.nbeadMD) then                 
+               ekinqp=ekinqp+sum(mass_ion(:,:)*(rpostmp(:,:,k)-rpostmp(:,:,k-1))**2)
+             elseif(k.eq.1) then
+               ekinqp=ekinqp+sum(mass_ion(:,:)*(rpostmp(:,:,k)-rpostmp(:,:,nbeadMD))**2)
+             else
+               ekinqp=ekinqp+sum(mass_ion(:,:)*(rpostmp(:,:,k)-rpostmp(:,:,k-1))**2)
+             endif
+           enddo
+           ekinqp=-ekinqp/nbeadMD*tempMD**2*0.5d0+1.5d0*natMD*tempMD ! Ha units!!!
+           deallocate(rpostmp)
         
-     endif
-     
-     iblockMD=1
-      
-     vs = epot/natMD
-     write(iunpath,'('' initial potential energy per atom =  '', g20.10 )' ) vs
-     write(iunpath,*) 'quantities after initialization'
-     if(nbeadMD.eq.1) then
-       write(iunpath,'(//''1)block   2)nmove   3)H   4)H_Nosé   5)E_pot'' &
-         ''   6)E_kin   7)Temp(Ha)   8)Temp(K)''//)')
-       write(iunpath,'(i2,i2,g15.7,g15.7,g15.7,g15.7,g15.7,g15.7)') &
+         endif
+ 
+         vs = epot/natMD
+         write(iunpath,'('' initial potential energy per atom =  '', g20.10 )' ) vs
+         write(iunpath,*) 'quantities after initialization'
+         if(nbeadMD.eq.1) then
+           write(iunpath,'(//''1)block   2)nmove   3)H   4)H_Nosé   5)E_pot'' &
+            ''   6)E_kin   7)Temp(Ha)   8)Temp(K)''//)')
+           write(iunpath,'(i2,i2,g15.7,g15.7,g15.7,g15.7,g15.7,g15.7)') &
               0,0,h,en,epot,ekin,tt,ttk
-     else
-       write(iunpath,'(//''1)block   2)nmove   3)H   4)H_Nosé   5)E_pot'' &
+         else
+           write(iunpath,'(//''1)block   2)nmove   3)H   4)H_Nosé   5)E_pot'' &
             ''   6)E_kin   7)Temp(Ha)   8)Temp(K)'' &
             ''   9)quantum_kin_virial   10)quantum_kin_primitive  ''//)')
-       write(iunpath,'(i2,i2,g15.7,g15.7,g15.7,g15.7,g15.7,g15.7,g15.7,g15.7)') & 
+           write(iunpath,'(i2,i2,g15.7,g15.7,g15.7,g15.7,g15.7,g15.7,g15.7,g15.7)') & 
                0,0,h,en,epot,ekin,tt,ttk,ekinq,ekinqp
-     endif
-     write(iunpath,*) 
-     write(iunpath,*)
-     write(iunpath,*)'***********************************************************'
-     write(iunpath,*)'**************** start of dynamics ************************'
+         endif
+         write(iunpath,*) 
+         write(iunpath,*)
+         write(iunpath,*)'***********************************************************'
+         write(iunpath,*)'**************** start of dynamics ************************'
   
-     if (.not.restart_pimd) write(unit_dot_out,'('' initial potential =  '', f10.4 )' ) epot
-     if (.not.restart_pimd) write(unit_dot_out,'(//'' start of dynamics ''//)')
+         if (.not.restart_pimd) write(unit_dot_out,'('' initial potential =  '', f10.4 )' ) epot
+         if (.not.restart_pimd) write(unit_dot_out,'(//'' start of dynamics ''//)')
      
-     if (.not.restart_pimd) then 
-       if(nbeadMD.eq.1) then
-         write(unit_dot_out,'(//''1)block   2)nmove   3)H   4)H_Nosé   5)E_pot'' &
+         if (.not.restart_pimd) then 
+           if(nbeadMD.eq.1) then
+             write(unit_dot_out,'(//''1)block   2)nmove   3)H   4)H_Nosé   5)E_pot'' &
               ''   6)E_kin   7)Temp(Ha)   8)Temp(K)''//)')
-       else
-         write(unit_dot_out,'(//''1)block   2)nmove   3)H   4)H_Nosé   5)E_pot'' &
-             ''   6)E_kin   7)Temp(Ha)   8)Temp(K)'' &
-             ''   9)quantum_kin_virial   10)quantum_kin_primitive  ''//)')
-       endif
-     end if
+           else
+             write(unit_dot_out,'(//''1)block   2)nmove   3)H   4)H_Nosé   5)E_pot'' &
+              ''   6)E_kin   7)Temp(Ha)   8)Temp(K)'' &
+              ''   9)quantum_kin_virial   10)quantum_kin_primitive  ''//)')
+           endif
+         end if
+      end if !! endif restart_pimd
      
-     return
+      iblockMD=1
+     
+      return
      
 END SUBROUTINE pimdnvt_init
 
@@ -1952,9 +1947,9 @@ subroutine pimd_deallocation
      deallocate(cov_pimd)
      deallocate(fk)
      deallocate(tmes_bead)
-     deallocate(rcentroid)
      deallocate(mass_ion)
      if (yesquantum) then 
+       deallocate(rcentroid)
        deallocate(fbead)
        deallocate(kdyn,kdyn_eig)
      endif
@@ -2185,9 +2180,9 @@ subroutine pimd_read_input(unit)
      unit_dot_xyz  = myfind_free_unit()
      open(unit_dot_xyz,file='pimd.xyz',position='APPEND',form='formatted')
      unit_dot_positions  = myfind_free_unit()
-     open(unit_dot_positions,file='positions.dat',position='APPEND',form='formatted')
+     open(unit_dot_positions,file='positions.dat',form='formatted') !!! not append because I need to read last pos
      unit_dot_velocities  = myfind_free_unit()
-     open(unit_dot_velocities,file='velocities.dat',position='APPEND',form='formatted')
+     open(unit_dot_velocities,file='velocities.dat',form='formatted') !!! same as pos
      unit_dot_forces  = myfind_free_unit()
      open(unit_dot_forces,file='forces.dat',position='APPEND',form='formatted')
      unit_dot_localtemp  = myfind_free_unit()
@@ -2411,16 +2406,16 @@ subroutine checkpoint(ttk)
 !!!--------------------writes velocity,force and position files for postprocessing----------
 !!!--------------------if the number of unit cells > 1 (crystal system)---------------------
 !!!--------------------writes only the centroid coordinatMDes---------------------------------
-     if(nunitcells.gt.1) then
-         write(unit_dot_positions,'(400e15.5)') ((rcentroid(l,i),l=1,ndimMD),i=1,natMD)
-         flush(unit_dot_positions)
-         write(unit_dot_velocities,'(400e15.5)') ((vcentroid(l,i),l=1,ndimMD),i=1,natMD)
-         flush(unit_dot_velocities)
-         write(unit_dot_forces,'(400e15.5)') ((fcentroid(l,i),l=1,ndimMD),i=1,natMD)
-         flush(unit_dot_forces)
-         write(unit_dot_localtemp,'(e15.5)') ttk
-         flush(unit_dot_localtemp)
-      else
+     !if(nunitcells.gt.1) then
+     !    write(unit_dot_positions,'(400e15.5)') ((rcentroid(l,i),l=1,ndimMD),i=1,natMD)
+     !    flush(unit_dot_positions)
+     !    write(unit_dot_velocities,'(400e15.5)') ((vcentroid(l,i),l=1,ndimMD),i=1,natMD)
+     !    flush(unit_dot_velocities)
+     !    write(unit_dot_forces,'(400e15.5)') ((fcentroid(l,i),l=1,ndimMD),i=1,natMD)
+     !    flush(unit_dot_forces)
+     !    write(unit_dot_localtemp,'(e15.5)') ttk
+     !    flush(unit_dot_localtemp)
+     ! else
        do k=1,nbeadMD
            write(unit_dot_positions,'(400e15.5)') ((rpos(l,i,k),l=1,ndimMD),i=1,natMD)
            flush(unit_dot_positions)
@@ -2431,7 +2426,7 @@ subroutine checkpoint(ttk)
            if(k.eq.1) write(unit_dot_localtemp,'(e15.5)') ttk
            if(k.eq.1) flush(unit_dot_localtemp)
        enddo
-     end if
+     !end if
 
   else !!! nbeadMD=1 => classical particles
      

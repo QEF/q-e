@@ -270,9 +270,7 @@ MODULE path_base
     !--------------------------------------------------------------------
     SUBROUTINE initial_guess()
       !--------------------------------------------------------------------
-      !
-      ! ... linear interpolation
-      !
+
       USE path_input_parameters_module, ONLY : input_images
       USE path_variables,   ONLY : pos, dim1, num_of_images, path_length
       USE path_io_units_module,         ONLY : iunpath
@@ -285,81 +283,91 @@ MODULE path_base
       REAL(DP), ALLOCATABLE :: pos_n(:,:), dr(:,:), image_spacing(:)
       !
       !
-      IF ( meta_ionode ) THEN
+      IF ( meta_ionode) THEN    !!! <----my mod.
+        do i=2,num_of_images    !!! <----my mod.
+        
+          pos(:,i) = pos(:,1)   !!! <----my mod.
+        
+        end do    !!! <----my mod.
+        path_length = 0.0d0    !!! <----my mod.
+      END IF    !!! <----my mod.
+  
+  
+  !!    IF ( meta_ionode ) THEN
          !
-         ALLOCATE( pos_n( dim1, num_of_images ) )
-         ALLOCATE( dr( dim1, input_images - 1 ) )
-         ALLOCATE( image_spacing( input_images - 1 ) )
+  !!       ALLOCATE( pos_n( dim1, num_of_images ) )
+  !!       ALLOCATE( dr( dim1, input_images - 1 ) )
+  !!       ALLOCATE( image_spacing( input_images - 1 ) )
          !
-         tooclose = .false.
-         image_spacing(:) = 0.0_dp
-         DO i = 1, input_images - 1
+  !!       tooclose = .false.
+  !!       image_spacing(:) = 0.0_dp
+  !!       DO i = 1, input_images - 1
             !
-            dr(:,i) = ( pos(:,i+1) - pos(:,i) )
+  !!          dr(:,i) = ( pos(:,i+1) - pos(:,i) )
             !
-            image_spacing(i) = norm( dr(:,i) )
+  !!          image_spacing(i) = norm( dr(:,i) )
            !!! tooclose = tooclose .OR. ( image_spacing(i) < 0.01 )   !!! <----my mod.
-            tooclose = tooclose .OR. ( image_spacing(i) < 0.0 )    !!! <----my mod.
+  !!          tooclose = tooclose .OR. ( image_spacing(i) < 0.0 )    !!! <----my mod.
             !
-         END DO
-         IF ( tooclose) CALL errore ('initial_guess', &
-            ' something wrong: images are too close',1) 
+  !!       END DO
+  !!       IF ( tooclose) CALL errore ('initial_guess', &
+  !!          ' something wrong: images are too close',1) 
          !
-         path_length = SUM( image_spacing(:) )
+  !!       path_length = SUM( image_spacing(:) )
          !
-         DO i = 1, input_images - 1
+  !!       DO i = 1, input_images - 1
             !
-            dr(:,i) = dr(:,i) / image_spacing(i)
+  !!          dr(:,i) = dr(:,i) / image_spacing(i)
             !
-         END DO
+  !!       END DO
          !
-         pos_n(:,1) = pos(:,1)
+  !!       pos_n(:,1) = pos(:,1)
          !
-         i = 1
-         s = 0.0_DP
+  !!       i = 1
+  !!       s = 0.0_DP
          !
-         DO j = 2, num_of_images - 1
+  !!       DO j = 2, num_of_images - 1
             !
-            s = s + path_length / DBLE( num_of_images - 1 )
+  !!          s = s + path_length / DBLE( num_of_images - 1 )
             !
-            IF ( s > image_spacing(i) ) THEN
+  !!          IF ( s > image_spacing(i) ) THEN
                !
-               s = s - image_spacing(i)
+  !!             s = s - image_spacing(i)
                !
-               i = i + 1
+  !!             i = i + 1
                !
-            END IF
+  !!          END IF
             !
-            IF ( i >= input_images ) &
-               CALL errore( 'initialize_path', 'i >= input_images', i )
+  !!          IF ( i >= input_images ) &
+  !!             CALL errore( 'initialize_path', 'i >= input_images', i )
             !
-            pos_n(:,j) = pos(:,i) + s * dr(:,i)
+  !!          pos_n(:,j) = pos(:,i) + s * dr(:,i)
             !
-         END DO
+  !!       END DO
          !
-         pos_n(:,num_of_images) = pos(:,input_images)
+  !!       pos_n(:,num_of_images) = pos(:,input_images)
          !
-         pos(:,:) = pos_n(:,:)
+  !!       pos(:,:) = pos_n(:,:)
          !
-         path_length = 0.0_DP
+  !!       path_length = 0.0_DP
          !
-         DO i = 1, num_of_images - 1
+  !!       DO i = 1, num_of_images - 1
             !
-            path_length = path_length + norm( pos(:,i+1) - pos(:,i) )
+  !!          path_length = path_length + norm( pos(:,i+1) - pos(:,i) )
             !
-         END DO
+  !!       END DO
          !
-         WRITE( UNIT = iunpath, &
-                 FMT = '(/,5X,"initial path length",&
-                        & T35," = ",F7.4," bohr")' ) path_length
+  !!       WRITE( UNIT = iunpath, &
+  !!               FMT = '(/,5X,"initial path length",&
+  !!                      & T35," = ",F7.4," bohr")' ) path_length
          !
-         WRITE( UNIT = iunpath, &
-                FMT = '(5X,"initial inter-image distance",T35," = ",F7.4, &
-                       &" bohr")' ) path_length / DBLE( num_of_images - 1 )
+  !!       WRITE( UNIT = iunpath, &
+  !!              FMT = '(5X,"initial inter-image distance",T35," = ",F7.4, &
+  !!                     &" bohr")' ) path_length / DBLE( num_of_images - 1 )
          !
-         DEALLOCATE( image_spacing, dr, pos_n )
+  !!       DEALLOCATE( image_spacing, dr, pos_n )
          !
-      END IF
+  !!    END IF
       !
       CALL mp_bcast( pos,         meta_ionode_id, world_comm )
       CALL mp_bcast( path_length, meta_ionode_id, world_comm )
@@ -926,7 +934,7 @@ MODULE path_base
          
       IF (meta_ionode) CALL pimd_get_pot_from_pw(potenergy) !!! <----my mod.
       IF (meta_ionode) CALL pimd_get_force_from_pw(forceMD) !!! <----my mod.
-
+      IF (meta_ionode) CALL pimd_pw_convert_pos('pw_to_md')    !!! <----my mod.
       IF (meta_ionode) CALL pimdnvt_init(potenergy)!,forceMD) !!! <----my mod.
       !
       ! ... path optimisation loop

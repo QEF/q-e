@@ -60,23 +60,23 @@ subroutine pimd_pw_convert_pos(abc)
       END DO
     end do 
 
-    !allocate(rpostmp(ndimMD,natMD,nbeadMD))
-    !rpostmp=0.0
-    !do k=1,nbeadMD
-    !  call refold(k,rpostmp(:,:,k))
-    !end do      
-    !rpos=rpostmp
-    !deallocate(rpostmp)
+    allocate(rpostmp(ndimMD,natMD,nbeadMD))
+    rpostmp=0.0
+    do k=1,nbeadMD
+      call refold(k,rpostmp(:,:,k))
+    end do      
     
     rcentroid=0.0
     do k=1,nbeadMD
       DO iat=1,natMD
         DO i=1,ndimMD
-          rcentroid(i,iat)=rcentroid(i,iat)+rpos(i,iat,k)
+          rcentroid(i,iat)=rcentroid(i,iat)+rpostmp(i,iat,k)
         END DO
       END DO
     end do
     rcentroid=rcentroid/nbeadMD
+    deallocate(rpostmp)
+  
   else
     
     do k=1,nbeadMD
@@ -102,46 +102,35 @@ subroutine pimd_restart_traj()
  ! use path_input_parameters_module, only : pos
   use path_variables, only : pos
   use pimd_variables, only : rpos,vel,nbeadMD,natMD,ndimMD
+  use pimd_variables, only : unit_dot_positions, unit_dot_velocities
   USE path_io_units_module,         ONLY : iunpath
   
   implicit none
-  integer cc,k,iat,i,iflagerr,ngen,unit_tmp,unit_tmp2
+  integer cc,k,iat,i,iflagerr,ngen
   real(8), allocatable :: vec_tmp(:)
-  INTEGER, EXTERNAL :: myfind_free_unit
   
   allocate(vec_tmp(natMD*ndimMD))
-  
-  unit_tmp = myfind_free_unit()
-  open(unit_tmp,file='positions.dat',form='formatted',status='old',iostat=iflagerr)
-  if(iflagerr.ne.0) then
-    write(iunpath,*) "Opening positions.dat error!"
-    stop
-  endif
-  unit_tmp2 = myfind_free_unit()
-  open(unit_tmp2,file='velocities.dat',form='formatted',status='old',iostat=iflagerr)
-  if(iflagerr.ne.0) then
-    write(iunpath,*) "Opening velocities.dat error!"
-    stop
-  endif
 
   !count the number of total available snapshots
   ngen=0
+  rewind(unit_dot_positions)
+  rewind(unit_dot_velocities)
   do while(.true.)
-    read(unit_tmp,*,iostat=iflagerr)
+    read(unit_dot_positions,*,iostat=iflagerr)
     if(iflagerr/=0) exit
     ngen=ngen+1
   enddo
-  rewind(unit_tmp)
+  rewind(unit_dot_positions)
   
   do i=1,ngen-nbeadMD
-    READ(unit_tmp,*)
-    READ(unit_tmp2,*)
+    READ(unit_dot_positions,*)
+    READ(unit_dot_velocities,*)
   end do
   
   rpos=0.0
   do k=1,nbeadMD
     vec_tmp=0.0
-    read(unit_tmp,*) vec_tmp(:)
+    read(unit_dot_positions,*) vec_tmp(:)
     cc=0
     DO iat=1,natMD
       DO i=1,ndimMD
@@ -164,7 +153,7 @@ subroutine pimd_restart_traj()
   vel=0.0
   do k=1,nbeadMD
     vec_tmp=0.0
-    read(unit_tmp2,*) vec_tmp(:)
+    read(unit_dot_velocities,*) vec_tmp(:)
     cc=0
     DO iat=1,natMD
       DO i=1,ndimMD
@@ -174,9 +163,14 @@ subroutine pimd_restart_traj()
     END DO
   end do
   
+  close(unit_dot_positions)
+  close(unit_dot_velocities)
+  open(unit_dot_positions,file='positions.dat',position='APPEND',form='formatted')
+  open(unit_dot_velocities,file='velocities.dat',position='APPEND',form='formatted')
+  
+
   deallocate (vec_tmp)
-  close(unit_tmp)
-  close(unit_tmp2)
+
   
   return
 end subroutine pimd_restart_traj
@@ -284,11 +278,11 @@ SUBROUTINE refold(idx,rpostmp)
         ! translate atom by a lattice vector if needed
         ! N.B.: this solves the problem only when |p1-p0|<1.0
         !
-           IF ( ANY(ABS(pos1(:,iat) - pos0(:,iat)) > 0.5_DP) ) THEN
-              WRITE ( iunpath, '(/,5x,A,I5,A,I3,A,I3,/,5x,A)' ) "WARNING: atom", iat, &
-                 " moved more than 1/2 alat from image", idx-1, " to image", idx, &
-                 "You can set minimum_image to true to avoid jumps in the path"
-           ENDIF
+           !IF ( ANY(ABS(pos1(:,iat) - pos0(:,iat)) > 0.5_DP) ) THEN
+           !   WRITE ( iunpath, '(/,5x,A,I5,A,I3,A,I3,/,5x,A)' ) "WARNING: atom", iat, &
+           !      " moved more than 1/2 alat from image", idx-1, " to image", idx, &
+           !      "You can set minimum_image to true to avoid jumps in the path"
+           !ENDIF
            WHERE( (pos1(:,iat) - pos0(:,iat)) > 0.5_DP )
               pos1(:,iat) = pos1(:,iat) - 1.0_DP
            ENDWHERE
@@ -312,11 +306,11 @@ SUBROUTINE refold(idx,rpostmp)
         ! translate atom by a lattice vector if needed
         ! N.B.: this solves the problem only when |p1-p0|<1.0
         !
-           IF ( ANY(ABS(pos1(:,iat) - pos0(:,iat)) > 0.5_DP) ) THEN
-              WRITE ( iunpath, '(/,5x,A,I5,A,I3,A,I3,/,5x,A)' ) "WARNING: atom", iat, &
-                 " moved more than 1/2 alat from image", nbeadMD, " to image", idx, &
-                 "You can set minimum_image to true to avoid jumps in the path"
-           ENDIF
+           !IF ( ANY(ABS(pos1(:,iat) - pos0(:,iat)) > 0.5_DP) ) THEN
+           !   WRITE ( iunpath, '(/,5x,A,I5,A,I3,A,I3,/,5x,A)' ) "WARNING: atom", iat, &
+           !      " moved more than 1/2 alat from image", nbeadMD, " to image", idx, &
+           !      "You can set minimum_image to true to avoid jumps in the path"
+           !ENDIF
            WHERE( (pos1(:,iat) - pos0(:,iat)) > 0.5_DP )
               pos1(:,iat) = pos1(:,iat) - 1.0_DP
            ENDWHERE
