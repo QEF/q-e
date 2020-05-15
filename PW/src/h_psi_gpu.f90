@@ -99,7 +99,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE lsda_mod,                ONLY: current_spin
   USE scf_gpum,                ONLY: vrs_d, using_vrs_d
   USE uspp,                    ONLY: nkb
-  USE ldaU,                    ONLY: lda_plus_u, U_projection
+  USE ldaU,                    ONLY: lda_plus_u, lda_plus_u_kind, U_projection
   USE gvect,                   ONLY: gstart
   USE funct,                   ONLY: dft_is_meta
   USE control_flags,           ONLY: gamma_only
@@ -282,7 +282,11 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
      IF ( noncolin ) THEN
         CALL vhpsi_nc( lda, n, m, psi_host, hpsi_host )
      ELSE
-        CALL vhpsi_gpu( lda, n, m, psi_host, hpsi_host )
+        IF ( lda_plus_u_kind.EQ.0 .OR. lda_plus_u_kind.EQ.1 ) THEN
+          CALL vhpsi_gpu( lda, n, m, psi_host, hpsi_host )  ! DFT+U
+        ELSEIF ( lda_plus_u_kind.EQ.2 ) THEN
+          CALL vhpsi( lda, n, m, psi_host, hpsi_host )      ! DFT+U+V
+        ENDIF
      ENDIF
      CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
      !
