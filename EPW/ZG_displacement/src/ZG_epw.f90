@@ -6,7 +6,7 @@
 !
 !
 Module ifconstants
-! The Code to generate the ZG displacement
+  !! This code generates ZG displacements
   !
   ! All variables read from file that need dynamical allocation
   !
@@ -229,6 +229,7 @@ PROGRAM matdyn_ZG_EPW
      CALL mp_bcast(point_label_type, ionode_id, world_comm)
      ! mz_b
      CALL mp_bcast(ZG_conf, ionode_id, world_comm)
+     CALL mp_bcast(atm_zg, ionode_id, world_comm)
      CALL mp_bcast(nloops, ionode_id, world_comm)
      CALL mp_bcast(error_thresh, ionode_id, world_comm)
      CALL mp_bcast(T, ionode_id, world_comm)
@@ -551,7 +552,7 @@ PROGRAM matdyn_ZG_EPW
      !
      !
      !mz_b
-     IF (ZG_conf) call ZG_configuration(nq, nat, ntyp, amass, ityp, q_nq_mz, w2, z_nq_zg, ios, & 
+     IF (ionode .AND. ZG_conf) call ZG_configuration(nq, nat, ntyp, amass, ityp, q_nq_mz, w2, z_nq_zg, ios, & 
                                 dimx, dimy, dimz, nloops, error_thresh, synch,tau, alat, atm_zg, & 
                                 ntypx, at, q_in_cryst_coord, q_in_band_form, T, incl_qA)
      !mz_e
@@ -2058,12 +2059,11 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
 SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, & 
                       dimx, dimy, dimz, nloops, error_thresh, synch,tau, alat, atm, &
                       ntypx, at, q_in_cryst_coord, q_in_band_form, T, incl_qA) 
-! we start here with the WRITE_eigenvectors.f90 routine
   use kinds, only: dp
   use constants, only: amu_ry, ry_to_thz, ry_to_cmm1, H_PLANCK_SI, &  
                        K_BOLTZMANN_SI, AMU_SI, pi 
   USE cell_base,  ONLY : bg
-  USE io_global,  ONLY : ionode
+!  USE io_global,  ONLY : ionode
   implicit none
   ! input
   CHARACTER(LEN=3), intent(in) :: atm(ntypx)
