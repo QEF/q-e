@@ -13,7 +13,7 @@ Eq. (2) of Phys. Rev. Research 2, 013357, 2020. The approach for the constructio
 is based on the generalized theory of the special displacement method presented in 
 Phys. Rev. Research 2, 013357, (2020). 
 
-STEPS for generating the "ZG-displacement" for temperature dependent properties of solids: 
+STEPS for generating the "ZG-displacement" for the calculation of temperature dependent properties of solids: 
 
 0. Compile the version of Quantum Espresso 6.5.0.
    Go to "/path_to_your_espresso/EPW/ZG_displacement/src" and "make".
