@@ -867,6 +867,8 @@ CONTAINS
              grad_rho_up, grad_rho_down, q0, dq0_drho_up, dq0_drho_down, &
              dq0_dgradrho_up, dq0_dgradrho_down, thetas)
 
+  USE ldaxc_interfaces, ONLY: pw_spin
+
   IMPLICIT NONE
 
   REAL(DP),  INTENT(IN)      :: total_rho(:), grad_rho(:,:)              ! Input variables.

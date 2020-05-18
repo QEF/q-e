@@ -7,7 +7,7 @@ MODULE ldaxc_interfaces
   IMPLICIT NONE
   PRIVATE
   !
-  PUBLIC :: XC_LDA, SLATER, PZ, PW
+  PUBLIC :: XC_LDA, XC_LSDA, SLATER, SLATER_SPIN, PZ, PZ_POLARIZED, PW, PW_SPIN, LYP, LSD_LYP
   PUBLIC :: GET_LDAXC_INDEXES, GET_LDAXC_PARAM, GET_LDA_THRESHOLD
   !
   !
@@ -66,6 +66,23 @@ MODULE ldaxc_interfaces
      !
   END INTERFACE
   !
+  !
+  INTERFACE XC_LSDA
+     !
+     SUBROUTINE xc_lsda_l( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
+       !
+       USE dft_par_mod
+       USE kind_l,  ONLY: DP
+       IMPLICIT NONE
+       INTEGER,  INTENT(IN)  :: length
+       REAL(DP), INTENT(IN)  :: rho_in(length), zeta_in(length)
+       REAL(DP), INTENT(OUT) :: ex_out(length), ec_out(length), &
+                                vx_out(length,2), vc_out(length,2)
+       !
+     END SUBROUTINE xc_lsda_l
+     !
+  END INTERFACE
+  !
   !---PROVISIONAL .. for cases when functional routines are called outside xc-drivers---
   !
   INTERFACE SLATER
@@ -79,6 +96,19 @@ MODULE ldaxc_interfaces
        REAL(DP), INTENT(OUT) :: vx
        !
      END SUBROUTINE slater_ext
+     !
+  END INTERFACE
+  !
+  INTERFACE SLATER_SPIN
+     !
+     SUBROUTINE slater_spin_ext( rho, zeta, ex, vx_up, vx_dw )
+       !
+       USE kind_l,  ONLY: DP
+       IMPLICIT NONE
+       REAL(DP), INTENT(IN)  :: rho, zeta
+       REAL(DP), INTENT(OUT) :: ex, vx_up, vx_dw
+       !
+     END SUBROUTINE slater_spin_ext
      !
   END INTERFACE
   !
@@ -97,6 +127,19 @@ MODULE ldaxc_interfaces
      !
   END INTERFACE
   !
+  INTERFACE PZ_POLARIZED
+     !
+     SUBROUTINE pz_polarized_ext( rs, ec, vc )
+       !
+       USE kind_l,  ONLY: DP
+       IMPLICIT NONE
+       REAL(DP), INTENT(IN)  :: rs
+       REAL(DP), INTENT(OUT) :: ec, vc
+       !
+     END SUBROUTINE pz_polarized_ext
+     !
+  END INTERFACE
+  !
   !
   INTERFACE PW
      !
@@ -109,6 +152,46 @@ MODULE ldaxc_interfaces
        INTEGER,  INTENT(IN)  :: iflag
        !
      END SUBROUTINE pw_ext
+     !
+  END INTERFACE
+  !
+  INTERFACE PW_SPIN
+     !
+     SUBROUTINE pw_spin_ext( rs, zeta, ec, vc_up, vc_dw )
+       !
+       USE kind_l,  ONLY: DP
+       IMPLICIT NONE
+       REAL(DP), INTENT(IN)  :: rs, zeta
+       REAL(DP), INTENT(OUT) :: ec, vc_up, vc_dw
+       !
+     END SUBROUTINE pw_spin_ext
+     !
+  END INTERFACE
+  !
+  !
+  INTERFACE LYP
+     !
+     SUBROUTINE lyp_ext( rs, ec, vc )
+       !
+       USE kind_l,      ONLY: DP
+       IMPLICIT NONE
+       REAL(DP), INTENT(IN) :: rs
+       REAL(DP), INTENT(OUT) :: ec, vc
+       !
+     END SUBROUTINE
+     !
+  END INTERFACE
+  !
+  INTERFACE LSD_LYP
+     !
+     SUBROUTINE lsd_lyp_ext( rho, zeta, elyp, vlyp_up, vlyp_dw )
+     !
+     USE kind_l,       ONLY: DP
+     IMPLICIT NONE
+     REAL(DP), INTENT(IN) :: rho, zeta
+     REAL(DP), INTENT(OUT) :: elyp, vlyp_up, vlyp_dw
+     !
+     END SUBROUTINE
      !
   END INTERFACE
   !

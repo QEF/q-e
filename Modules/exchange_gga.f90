@@ -260,29 +260,6 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
      v2x = exunif * dfx * dsg / agrho
      sx  = sx_s * rho
      !
-  CASE(8)
-     !
-     agrho = SQRT(grho)
-     kf = c2 * rho**third
-     dsg = 0.5_DP / kf
-     s1 = agrho * dsg / rho
-     s2 = s1 * s1
-     f1 = exp( - mu(iflag) * s2 / k(iflag) )
-     f2 = 1._DP - f1
-     fx = k(iflag) * f2
-     !
-     exunif = - c1 * kf
-     sx_s = exunif * fx
-     !
-     dxunif = exunif * third
-     ds = - c5 * s1
-     !
-     dfx = 2._DP * mu(iflag) * s1 * exp( - mu(iflag) * s2 / k(iflag) )
-     !
-     v1x = sx_s + dxunif * fx + exunif * dfx * ds
-     v2x = exunif * dfx * dsg / agrho
-     sx  = sx_s * rho
-     !
   CASE DEFAULT
      !
      agrho = SQRT(grho)

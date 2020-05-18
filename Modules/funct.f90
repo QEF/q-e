@@ -389,7 +389,7 @@ MODULE funct
                'AHPB', 'AHPS', 'CX14', 'CX15', 'BR0',  'CX16', 'C090', &
                'B86X', 'B88X', 'BEEX', 'RPBX', 'W31X', 'W32X' /
   !
-  DATA gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC',  'HCTH', 'NONE',&
+  DATA gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'NONE',&
                'B3LP', 'PSC', 'PBE', 'xxxx', 'xxxx', 'Q2DC', 'BEEC' /
   !
   DATA meta  / 'NONE', 'TPSS', 'M06L', 'TB09', 'META', 'SCAN', 'SCA0' /
@@ -542,7 +542,8 @@ CONTAINS
        dft_defined = set_dft_values(1,4,25,0,0,0)
     ! special case : RPBE
     CASE( 'RPBE' )
-       dft_defined = set_dft_values(1,4,44,4,0,0)
+       CALL errore( 'set_dft_from_name', &
+                    'RPBE (Hammer-Hansen-Norskov) not implemented (revPBE is)', 1 )
     ! special case : PBE0
     CASE( 'PBE0' )
        dft_defined = set_dft_values(6,4,8,4,0,0)
@@ -1562,8 +1563,6 @@ CONTAINS
        shortname = 'BEEF'
     ELSEIF (iexch==5 .AND. icorr==0  .AND. igcx==0 .AND. igcc== 0) THEN
        shortname = 'HF'
-    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==44 .AND. igcc== 4) THEN
-       shortname = 'RPBE'
     ENDIF
     !
     IF (imeta==1) THEN

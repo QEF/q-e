@@ -24,7 +24,6 @@ compute_dipole.o \
 constants.o \
 constraints_module.o \
 control_flags.o \
-correlation_lda_lsda.o \
 correlation_gga.o \
 coulomb_vcut.o \
 dgcxc_drivers.o \
@@ -33,7 +32,6 @@ dmxc_drivers.o \
 dgcxc_drivers.o \
 electrons_base.o \
 environment.o \
-exchange_lda_lsda.o \
 exchange_gga.o \
 fd_gradient.o \
 fft_base.o \

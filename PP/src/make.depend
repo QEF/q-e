@@ -90,24 +90,6 @@ bands.o : ../../Modules/wavefunctions.o
 bands.o : ../../PW/src/pwcom.o
 bands.o : ../../UtilXlib/mp.o
 bands.o : ../../upflib/uspp.o
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-xctest_qe_libxc.o : ../../Modules/correlation_lda_lsda.o
-xctest_qe_libxc.o : ../../Modules/funct.o
-xctest_qe_libxc.o : ../../Modules/xc_gga_drivers.o
-xctest_qe_libxc.o : ../../Modules/xc_lda_lsda_drivers.o
-xctest_qe_libxc.o : ../../Modules/xc_mgga_drivers.o
-xctest_qe_libxc.o : ../../Modules/kind.o
-=======
-benchmark_libxc.o : ../../Modules/correlation_lda_lsda.o
-benchmark_libxc.o : ../../Modules/funct.o
-benchmark_libxc.o : ../../Modules/libxc.o
-benchmark_libxc.o : ../../Modules/xc_gga_drivers.o
-benchmark_libxc.o : ../../Modules/xc_lda_lsda_drivers.o
-benchmark_libxc.o : ../../Modules/xc_mgga_drivers.o
->>>>>>> XClib - lda - scratch
->>>>>>> XClib - lda - scratch
 chdens_bspline.o : ../../Modules/bspline.o
 chdens_bspline.o : ../../Modules/cell_base.o
 chdens_bspline.o : ../../Modules/fft_base.o
@@ -486,7 +468,6 @@ ppacf.o : ../../FFTXlib/fft_interfaces.o
 ppacf.o : ../../Modules/cell_base.o
 ppacf.o : ../../Modules/constants.o
 ppacf.o : ../../Modules/environment.o
-ppacf.o : ../../Modules/exchange_lda_lsda.o
 ppacf.o : ../../Modules/fft_base.o
 ppacf.o : ../../Modules/funct.o
 ppacf.o : ../../Modules/gvecw.o
@@ -498,7 +479,6 @@ ppacf.o : ../../Modules/mp_global.o
 ppacf.o : ../../Modules/mp_world.o
 ppacf.o : ../../Modules/recvec.o
 ppacf.o : ../../Modules/xc_gga_drivers.o
-ppacf.o : ../../Modules/xc_lda_lsda_drivers.o
 ppacf.o : ../../Modules/xc_vdW_DF.o
 ppacf.o : ../../PW/src/atomic_wfc_mod.o
 ppacf.o : ../../PW/src/exx.o
@@ -918,7 +898,6 @@ xc_vdW_scale_mod.o : ../../FFTXlib/fft_interfaces.o
 xc_vdW_scale_mod.o : ../../Modules/cell_base.o
 xc_vdW_scale_mod.o : ../../Modules/constants.o
 xc_vdW_scale_mod.o : ../../Modules/control_flags.o
-xc_vdW_scale_mod.o : ../../Modules/correlation_lda_lsda.o
 xc_vdW_scale_mod.o : ../../Modules/fft_base.o
 xc_vdW_scale_mod.o : ../../Modules/io_global.o
 xc_vdW_scale_mod.o : ../../Modules/kind.o
@@ -939,3 +918,4 @@ xctest_qe_libxc.o : ../../Modules/kind.o
 xctest_qe_libxc.o : ../../Modules/xc_gga_drivers.o
 xctest_qe_libxc.o : ../../Modules/xc_lda_lsda_drivers.o
 xctest_qe_libxc.o : ../../Modules/xc_mgga_drivers.o
+

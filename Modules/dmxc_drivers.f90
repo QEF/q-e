@@ -18,8 +18,7 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   !
   USE kinds,            ONLY: DP
   USE funct,            ONLY: get_iexch, get_icorr, is_libxc
-  USE ldaxc_interfaces, ONLY: xc_lda
-  USE xc_lda_lsda,      ONLY: xc_lsda  !xc_lda
+  USE ldaxc_interfaces, ONLY: xc_lda, xc_lsda
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
@@ -308,12 +307,9 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   !! Computes the derivative of the xc potential with respect to the 
   !! local density in the spin-polarized case.
   !
-  USE kinds,          ONLY: DP
-  USE funct,          ONLY: get_iexch, get_icorr
-  USE xc_lda_lsda,    ONLY: xc_lsda
-  !USE exch_lda,       ONLY: slater
-  USE ldaxc_interfaces, ONLY: slater
-  USE corr_lda,       ONLY: pz, pz_polarized
+  USE kinds,            ONLY: DP
+  USE funct,            ONLY: get_iexch, get_icorr
+  USE ldaxc_interfaces, ONLY: xc_lsda, slater, pz, pz_polarized
   !
   IMPLICIT NONE
   !
@@ -494,8 +490,8 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   !! Computes the derivative of the xc potential with respect to the 
   !! local density and magnetization in the non-collinear case.
   !
-  USE xc_lda_lsda,  ONLY: xc_lsda
-  USE kinds,        ONLY: DP
+  USE ldaxc_interfaces, ONLY: xc_lsda
+  USE kinds,            ONLY: DP
   !
   IMPLICIT NONE
   !

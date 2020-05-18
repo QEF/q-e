@@ -59,9 +59,7 @@ constraints_module.o : ions_base.o
 constraints_module.o : kind.o
 control_flags.o : kind.o
 control_flags.o : parameters.o
-correlation_gga.o : correlation_lda_lsda.o
 correlation_gga.o : kind.o
-correlation_lda_lsda.o : kind.o
 cryst_to_car.o : kind.o
 deviatoric.o : io_global.o
 deviatoric.o : kind.o
@@ -75,8 +73,6 @@ dist.o : io_global.o
 dist.o : ions_base.o
 dist.o : kind.o
 dmxc_drivers.o : constants.o
-dmxc_drivers.o : correlation_lda_lsda.o
-dmxc_drivers.o : exchange_lda_lsda.o
 dmxc_drivers.o : funct.o
 dmxc_drivers.o : kind.o
 dmxc_drivers.o : ../XClib/ldaxc_interfaces.o
@@ -98,8 +94,6 @@ environment.o : qeh5_module.o
 environment.o : version.o
 erf.o : kind.o
 exchange_gga.o : kind.o
-exchange_lda_lsda.o : constants.o
-exchange_lda_lsda.o : kind.o
 expint.o : kind.o
 fd_gradient.o : ../FFTXlib/fft_types.o
 fd_gradient.o : ../FFTXlib/scatter_mod.o
@@ -187,8 +181,6 @@ mdiis.o : ../UtilXlib/mp.o
 mdiis.o : kind.o
 metagga.o : constants.o
 metagga.o : correlation_gga.o
-metagga.o : correlation_lda_lsda.o
-metagga.o : exchange_lda_lsda.o
 metagga.o : kind.o
 mm_dispersion.o : ../UtilXlib/mp.o
 mm_dispersion.o : cell_base.o
@@ -416,8 +408,6 @@ xc_gga_drivers.o : correlation_gga.o
 xc_gga_drivers.o : exchange_gga.o
 xc_gga_drivers.o : funct.o
 xc_gga_drivers.o : kind.o
-xc_lda_lsda_drivers.o : correlation_lda_lsda.o
-xc_lda_lsda_drivers.o : exchange_lda_lsda.o
 xc_lda_lsda_drivers.o : funct.o
 xc_lda_lsda_drivers.o : kind.o
 xc_mgga_drivers.o : funct.o
@@ -438,7 +428,6 @@ xc_vdW_DF.o : ../UtilXlib/mp.o
 xc_vdW_DF.o : cell_base.o
 xc_vdW_DF.o : constants.o
 xc_vdW_DF.o : control_flags.o
-xc_vdW_DF.o : correlation_lda_lsda.o
 xc_vdW_DF.o : fft_base.o
 xc_vdW_DF.o : io_global.o
 xc_vdW_DF.o : kind.o
