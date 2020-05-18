@@ -36,8 +36,9 @@ STEPS for generating the "ZG-displacement" for temperature dependent properties 
 4.  Now one needs to decide the size of the supercell configuration to be used for calculating 
     temperature dependent properties. In the example "example/silicon/input/ZG_444.in" we  
     use the example for a 4x4x4 ZG configuration. One could potentially generate any supercell size
-    by simply changing "dimx","dimy","dimz", see below. "ZG.in" has the standard format 
-    as a "matdyn.in" file for Quantum Espresso. Here we use the following input parameters:
+    by simply changing "dimx","dimy","dimz", and the list of q-points (see below). 
+    "ZG.in" has the standard format as a "matdyn.in" file for Quantum Espresso. 
+    Here we use the following input parameters:
     ---------------------------------------------------------------------------------------
     i) "ZG_conf"           : logical flag that enables the creation of the ZG-displacement. 
                              (default .false.) 
@@ -63,9 +64,9 @@ STEPS for generating the "ZG-displacement" for temperature dependent properties 
                              looking for possible combinations of signs. Once this limit is reached 
                              the ZG-displacement is constructed. The threshold is usually chosen 
                              to be less than 5% of the diagonal terms, i.e. those terms that contribute 
-                             to the calculation of temperature dependent properties. 
+                             to the calculation of temperature-dependent properties. 
                              (default 0.05)
-       "incl_qA"           : logical flag, to decide whether to include phonon modes in set A. 
+       "incl_qA"           : logical flag, to decide whether to include phonon modes in set A or not. 
                              (default .true.)
        "qlist_AB.txt"      : this is the q-list in crystal coordinates that appears in the "ZG_444.in" example. 
                              It corresponds to the q-points commensurate to the supercell size. Only one
@@ -78,15 +79,15 @@ STEPS for generating the "ZG-displacement" for temperature dependent properties 
        This generates three output files: the "equil_pos.txt", "ZG-displacement.txt" and "ZG-velocities.txt". 
        The first file has the equilibrium coordinates of the nuclei and the second has the optimum set of nuclear coordinates 
        that define the ZG-displacement at a particular temperature and the required supercell size. 
-       The third one has the ZG-velocities of momenta of the nuclei generated in the same spirit with ZG displacement. 
-       The outputs for a supercell size 4x4x4 are in the folder "example/silicon/output/".
+       The third one has the ZG-velocities or momenta of the nuclei generated in the same spirit with the ZG displacement. 
+       The outputs for a supercell size of 4x4x4 are in the folder "example/silicon/output/".
     iii) The calculation of the ZG-displacement should usually takes a few seconds to few minutes with one processor. 
 
-5. The ZG-displacement can be employed for the calculation of any temperature dependent 
+5. The ZG-displacement can be employed for the calculation of any temperature-dependent 
    observable that is described by the Fermi Golden rule. The procedure is exactly the same as for 
    the calculation of the observable obtained with the nuclei clamped at their equilibrium positions, 
    but now, instead, using the ZG-displacement (supercell) that incorporates automatically 
    the electron-phonon interaction and quantum zero-point motion. 
 
-6. The ZG-displacement can also be employed for the calculation of full temperature dependent
+6. The ZG-displacement can also be employed for the calculation of full temperature-dependent
    band structures using the band unfolding procedure for supercell calculations. 
