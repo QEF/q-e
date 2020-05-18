@@ -7,6 +7,14 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #if defined(__DFTI)
+
+! compiler safeguard for OpenMP threadprivate
+#if defined(__FFT_USE_OMP_THREADPRIVATE)
+#if defined(__PGI)
+#error PGI compiler breaks the use of __FFT_USE_OMP_THREADPRIVATE
+#endif
+#endif
+
 #include "mkl_dfti.f90"
 !=----------------------------------------------------------------------=!
    MODULE fft_scalar_dfti
@@ -79,8 +87,10 @@
      LOGICAL, SAVE :: is_inplace
      INTEGER :: dfti_status = 0
      INTEGER :: placement
-
+#if defined(__FFT_USE_OMP_THREADPRIVATE)
 !$omp threadprivate(hand, dfti_first, zdims, icurrent, is_inplace)
+#endif
+
      IF (PRESENT(in_place)) THEN
        is_inplace = in_place
      ELSE
