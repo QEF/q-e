@@ -9,16 +9,15 @@ Austin, Texas 78712, USA
 -----------------------------------------------------------------------------------------
 
 Instructions for the construction of the "ZG-displacement" (Zacharias-Giustino) following 
-Eq. (2) of Phys. Rev. Research 2, 013357, (2020). The approach for the construction of the ZG-displacement 
+Eq. (2) of Phys. Rev. Research 2, 013357, 2020. The approach for the construction of the ZG-displacement 
 is based on the generalized theory of the special displacement method presented in 
 Phys. Rev. Research 2, 013357, (2020). 
 
 STEPS for generating the "ZG-displacement" for temperature dependent properties of solids: 
 
 0. Compile the version of Quantum Espresso 6.5.0.
-   Copy "src/ZG_epw.f90", "src/make.depend" and  "src/Makefile" 
-   to "/path_to_your_espresso/EPW/src/ZG_epw.f90" and "make".
-   This code is exploits some main routines of matdyn.x. In particular, our code
+   Go to "/path_to_your_espresso/EPW/src/ZG_displacement" and "make".
+   This code exploits some main routines of matdyn.x. In particular, the code
    takes advantage of the phonon interpolation scheme implemented for matdyn.x. This is 
    important, for example, in taking into account the LO-TO splitting in polar materials. 
    The necessary input files are the "interatomic force constants" and "ZG.in". 
@@ -75,7 +74,7 @@ STEPS for generating the "ZG-displacement" for temperature dependent properties 
                              "example/silicon/input/qlist.in" and run "../../../src/create_qlist.x < qlist.in > qlist.out ". 
                              Copy and paste the output in "qlist_AB.txt" ZG.in. 
                                           
-    ii)  To generate the ZG-displacement run "/path_to_your_espresso/bin/ZG_epw.x <ZG_444.in> ZG_444.out".
+    ii)  To generate the ZG-displacement run "/path_to_your_espresso/bin/ZG.x <ZG_444.in> ZG_444.out".
        This generates two output files: the "equil_pos.txt", "ZG-displacement.txt". The first file has the equilibrium 
        coordinates of the nuclei and the latter has the optimum set of nuclear coordinates that define the ZG-displacement 
        at a particular temperature and the required supercell size. The outputs for a supercell size 4x4x4 are in the 
