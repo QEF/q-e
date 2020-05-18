@@ -45,6 +45,7 @@ SUBROUTINE run_pwscf( exit_status )
   USE cellmd,               ONLY : lmovecell
   USE command_line_options, ONLY : command_line
   USE force_mod,            ONLY : lforce, lstres, sigma, force
+  USE ions_base,            ONLY : if_pos
   USE check_stop,           ONLY : check_stop_init, check_stop_now
   USE mp_images,            ONLY : intra_image_comm
   USE extrapolation,        ONLY : update_file, update_pot
@@ -171,7 +172,7 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ! ... force calculation
      !
-     IF ( lforce ) CALL forces()
+     IF ( lforce .AND. ANY( if_pos(:,:) == 1 )) CALL forces()
      !
      ! ... stress calculation
      !
