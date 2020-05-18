@@ -1974,6 +1974,7 @@ setup.o : ../../upflib/uspp.o
 setup.o : atomic_wfc_mod.o
 setup.o : bp_mod.o
 setup.o : extfield.o
+setup.o : esm.o
 setup.o : exx.o
 setup.o : exx_base.o
 setup.o : ldaU.o

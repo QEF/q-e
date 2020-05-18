@@ -91,6 +91,7 @@ SUBROUTINE setup()
   USE exx_base,           ONLY : exx_grid_init, exx_mp_init, exx_div_check
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
   USE paw_variables,      ONLY : okpaw
+  USE esm,                ONLY : esm_z_inv
   USE fcp_variables,      ONLY : lfcpopt, lfcpdyn
   USE extfield,           ONLY : gate
   USE additional_kpoints, ONLY : add_additional_kpoints
@@ -527,7 +528,8 @@ SUBROUTINE setup()
      !
      ! ... eliminate rotations that are not symmetry operations
      !
-     CALL find_sym ( nat, tau, ityp, magnetic_sym, m_loc, gate )
+     CALL find_sym ( nat, tau, ityp, magnetic_sym, m_loc, gate .OR. &
+                     (.NOT. esm_z_inv()) )
      !
      ! ... do not force FFT grid to be commensurate with fractional translations
      !

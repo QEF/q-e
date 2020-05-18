@@ -1606,16 +1606,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
                        - Requires cell with a_3 lattice vector along z,
                          normal to the xy plane, with the slab centered
-                         around z=0. Also requires symmetry checking to be
-                         disabled along z, either by setting @ref nosym = .TRUE.
-                         or by very slight displacement (i.e., 5e-4 a.u.)
-                         of the slab along z.
+                         around z=0.
 
-                       - Components of the total stress; sigma_xy, sigma_yz,
-                         sigma_zz, sigma_zy, and sigma_zx are meaningless 
-                         because ESM stress routines calculate only
-                         components of stress; sigma_xx, sigma_xy, sigma_yx,
-                         and sigma_yy.
+                       - For bc2 with an electric field and bc3 boundary
+                         conditions, the inversion symmetry along z-direction
+                         is automatically eliminated.
 
                        - In case of calculation='vc-relax', use
                          cell_dofree='2Dxy' or other parameters so that

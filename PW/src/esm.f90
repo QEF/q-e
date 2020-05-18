@@ -9,7 +9,8 @@
 MODULE esm
   !--------------------------------------------------------------------------
   !! This module contains the variables and subroutines needed for the
-  !! EFFECTIVE SCREENING MEDIUM (ESM) METHOD.
+  !! effective sreening medium (ESM) method (M. Otani and O.Sugino, Phys.
+  !! Rev. B 73, 115407 (2006)).
   !
   !! Original version by Minoru Otani (AIST), Yoshio Miura (Tohoku U.),
   !! Nicephore Bonet (MIT), Nicola Marzari (MIT), Brandon Wood (LLNL),
@@ -17,15 +18,14 @@ MODULE esm
   !! Constant bias potential (constant-mu) method by Minoru Otani (AIST) and
   !! Nicephore Bonnet (AIST).
   !
-  !! Contains modules for implementation of ESM (Effective Screening
-  !! Medium Method) developed by M. Otani and O. Sugino, Phys. Rev. B 73,
-  !! 115407 (2006).
-  !
   !! ESM enables description of a surface slab sandwiched between two
   !! semi-infinite media, making it possible to deal with polarized surfaces
   !! without using dipole corrections. It is useful for simulating interfaces
   !! with vacuum, one or more electrodes, or an electrolyte.
-
+  !!
+  !! esm_z_inv avoids finding an irrelevant inversion symmetry. (implemented
+  !! by S. Nishihara)
+  !!
   USE kinds, ONLY : DP
   USE esm_common_mod
   USE esm_hartree_mod
@@ -42,7 +42,7 @@ MODULE esm
   !
   PUBLIC :: do_comp_esm, esm_nfit, esm_efield, esm_w, esm_a, esm_bc, &
             mill_2d, imill_2d, ngm_2d, &
-            esm_init, esm_hartree, esm_local, esm_ewald, &
+            esm_init, esm_z_inv, esm_hartree, esm_local, esm_ewald, &
             esm_force_lc, esm_force_ew, &
             esm_stres_har, esm_stres_ewa, esm_stres_loclong, &
             esm_printpot, esm_summary
@@ -50,5 +50,29 @@ MODULE esm
   LOGICAL :: do_comp_esm = .FALSE.
   !
 CONTAINS
+  !
+  ! Checks inversion symmetry along z-axis
+  !
+  LOGICAL FUNCTION esm_z_inv()
+    !
+    USE constants, ONLY : eps14
+    !
+    IMPLICIT NONE
+    !
+    esm_z_inv = .TRUE.
+    !
+    IF (do_comp_esm) THEN
+      IF (TRIM(esm_bc) == 'bc1') THEN
+        esm_z_inv = .TRUE.
+      ELSE IF (TRIM(esm_bc) == 'bc2') THEN
+        esm_z_inv = (ABS(esm_efield) < eps14)
+      ELSE IF (TRIM(esm_bc) == 'bc3') THEN
+        esm_z_inv = .FALSE.
+      ELSE IF (TRIM(esm_bc) == 'bc4') THEN
+        esm_z_inv = .FALSE.
+      END IF
+    END IF
+    !
+  END FUNCTION esm_z_inv
   !
 END MODULE esm
