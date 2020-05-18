@@ -16,7 +16,7 @@ Phys. Rev. Research 2, 013357, (2020).
 STEPS for generating the "ZG-displacement" for temperature dependent properties of solids: 
 
 0. Compile the version of Quantum Espresso 6.5.0.
-   Go to "/path_to_your_espresso/EPW/src/ZG_displacement" and "make".
+   Go to "/path_to_your_espresso/EPW/ZG_displacement/src" and "make".
    This code exploits some main routines of matdyn.x. In particular, the code
    takes advantage of the phonon interpolation scheme implemented for matdyn.x. This is 
    important, for example, in taking into account the LO-TO splitting in polar materials. 
@@ -75,10 +75,11 @@ STEPS for generating the "ZG-displacement" for temperature dependent properties 
                              Copy and paste the output in "qlist_AB.txt" ZG.in. 
                                           
     ii)  To generate the ZG-displacement run "/path_to_your_espresso/bin/ZG.x <ZG_444.in> ZG_444.out".
-       This generates two output files: the "equil_pos.txt", "ZG-displacement.txt". The first file has the equilibrium 
-       coordinates of the nuclei and the latter has the optimum set of nuclear coordinates that define the ZG-displacement 
-       at a particular temperature and the required supercell size. The outputs for a supercell size 4x4x4 are in the 
-       folder "example/silicon/output/".
+       This generates three output files: the "equil_pos.txt", "ZG-displacement.txt" and "ZG-velocities.txt". 
+       The first file has the equilibrium coordinates of the nuclei and the second has the optimum set of nuclear coordinates 
+       that define the ZG-displacement at a particular temperature and the required supercell size. 
+       The third one has the ZG-velocities of momenta of the nuclei generated in the same spirit with ZG displacement. 
+       The outputs for a supercell size 4x4x4 are in the folder "example/silicon/output/".
     iii) The calculation of the ZG-displacement should usually takes a few seconds to few minutes with one processor. 
 
 5. The ZG-displacement can be employed for the calculation of any temperature dependent 
