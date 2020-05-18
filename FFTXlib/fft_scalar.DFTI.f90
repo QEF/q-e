@@ -9,7 +9,7 @@
 #if defined(__DFTI)
 
 ! compiler safeguard for OpenMP threadprivate
-#if defined(__FFT_USE_OMP_THREADPRIVATE)
+#if defined(_OPENMP) && defined(__FFT_USE_OMP_THREADPRIVATE)
 #if defined(__PGI)
 #error PGI compiler breaks the use of __FFT_USE_OMP_THREADPRIVATE
 #endif
@@ -67,18 +67,10 @@
      COMPLEX (DP) :: c(:), cout(:)
 
      REAL (DP)  :: tscale
-     INTEGER    :: i, err, idir, ip, void
+     INTEGER    :: i, ip
      INTEGER, SAVE :: zdims( 3, ndims ) = -1
      INTEGER, SAVE :: icurrent = 1
      LOGICAL :: found
-
-     INTEGER :: tid
-
-#if defined(_OPENMP)
-     INTEGER :: offset, ldz_t
-     INTEGER :: omp_get_max_threads
-     EXTERNAL :: omp_get_max_threads
-#endif
 
      !   Intel MKL native FFT driver
 
@@ -265,20 +257,12 @@
      INTEGER, INTENT(IN) :: isign, ldx, ldy, nx, ny, nzl
      INTEGER, OPTIONAL, INTENT(IN) :: pl2ix(:)
      COMPLEX (DP) :: r( : )
-     INTEGER :: i, k, j, err, idir, ip, kk, void
+     INTEGER :: i, k, j, ip
      REAL(DP) :: tscale
      INTEGER, SAVE :: icurrent = 1
      INTEGER, SAVE :: dims( 4, ndims) = -1
      LOGICAL :: dofft( nfftx ), found
      INTEGER, PARAMETER  :: stdout = 6
-
-#if defined(_OPENMP)
-     INTEGER :: offset
-     INTEGER :: nx_t, ny_t, nzl_t, ldx_t, ldy_t
-     INTEGER  :: itid, mytid, ntids
-     INTEGER  :: omp_get_thread_num, omp_get_num_threads,omp_get_max_threads
-     EXTERNAL :: omp_get_thread_num, omp_get_num_threads, omp_get_max_threads
-#endif
 
      TYPE(DFTI_DESCRIPTOR_ARRAY), SAVE :: hand( ndims )
      LOGICAL, SAVE :: dfti_first = .TRUE.
