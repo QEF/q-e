@@ -7,6 +7,7 @@
 !
 #if !defined(__CUDA)
 #define cublasDgemm dgemm
+#define cublasZgemm zgemm
 #endif
 !-----------------------------------------------------------------------
 SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
@@ -30,6 +31,7 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
   USE becmod_gpum,      ONLY : bec_type_d
   USE becmod_subs_gpum, ONLY : allocate_bec_type_gpu, deallocate_bec_type_gpu, &
                                calbec_gpu
+  USE device_util_m,    ONLY: dev_memcpy, dev_memset
   !
 #if defined(__CUDA)
   USE cudafor
@@ -53,15 +55,13 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
   !
   INTEGER :: dimwf1
   TYPE(bec_type_d), TARGET :: proj_d
-  REAL(DP),    POINTER :: projr_d(:,:)
-  COMPLEX(DP), POINTER :: projk_d(:,:)
   COMPLEX(DP), ALLOCATABLE :: wfcU_d(:,:)
   !
 #if defined(__CUDA)
-  attributes(DEVICE) :: projr_d, projk_d, wfcU_d, psip_d, hpsi_d
+  attributes(DEVICE) :: wfcU_d, psip_d, hpsi_d
 #endif
   !
-  CALL start_clock( 'vhpsi' )
+  CALL start_clock_gpu( 'vhpsi' )
   !
   ! Offset of atomic wavefunctions initialized in setup and stored in offsetU
   !
@@ -70,13 +70,10 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
   !
   dimwf1 = SIZE(wfcU(:,1))
   ALLOCATE( wfcU_d(dimwf1,nwfcU) )
-  wfcU_d = wfcU
+  CALL dev_memcpy(wfcU_d, wfcU)
   !
   ! proj = <wfcU|psip>
   CALL calbec_gpu( np, wfcU_d, psip_d, proj_d )
-  !
-  projr_d => proj_d%r_d
-  projk_d => proj_d%k_d
   !
   IF ( lda_plus_u_kind.EQ.0 .OR. lda_plus_u_kind.EQ.1 ) THEN
      CALL vhpsi_U_gpu()  ! DFT+U
@@ -88,7 +85,7 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
   !
   DEALLOCATE( wfcU_d )
   !
-  CALL stop_clock( 'vhpsi' )
+  CALL stop_clock_gpu( 'vhpsi' )
   !
   RETURN
   !
@@ -155,7 +152,7 @@ SUBROUTINE vhpsi_U_gpu()
                  !
                  CALL cublasDgemm( 'N','N', ldim,mps,ldim, 1.0_dp, &
                       vns_d(1,1,na), ldimax, &
-                      projr_d(offsetU(na)+1,1), nwfcU, 0.0_dp, rtemp_d, ldimaxt )
+                      proj_d%r_d(offsetU(na)+1,1), nwfcU, 0.0_dp, rtemp_d, ldimaxt )
                  !
                  CALL cublasDgemm( 'N','N', 2*np, mps, ldim, 1.0_dp, &
                       wfcU_d(1,offsetU(na)+1), 2*ldap, rtemp_d, ldimaxt, &
@@ -164,7 +161,7 @@ SUBROUTINE vhpsi_U_gpu()
               ELSE
                  !
                  CALL cublasZgemm( 'N', 'N', ldim, mps, ldim, (1.0_dp,0.0_dp), &
-                      vaux_d(:,:,na), ldimax, projk_d(offsetU(na)+1,1), nwfcU, &
+                      vaux_d(:,:,na), ldimax, proj_d%k_d(offsetU(na)+1,1), nwfcU, &
                       (0.0_dp,0.0_dp), ctemp_d, ldimaxt )
                  !
                  CALL cublasZgemm( 'N', 'N', np, mps, ldim, (1.0_dp,0.0_dp), &
@@ -193,7 +190,7 @@ SUBROUTINE vhpsi_U_gpu()
                  !
                  CALL cublasDgemm( 'N','N', ldim,mps,ldim, 1.0_dp, &
                       vnsb_d(1,1,na),ldmx_b, &
-                      projr_d(offsetU_back(na)+1,1), &
+                      proj_d%r_d(offsetU_back(na)+1,1), &
                       nwfcU, 0.0_dp, rtemp_d, ldimaxt )
                  !
                  CALL cublasDgemm( 'N','N', 2*np, mps, ldim, 1.0_dp, &
@@ -205,9 +202,9 @@ SUBROUTINE vhpsi_U_gpu()
                     ldim  = 2*Hubbard_l1_back(nt)+1
                     ldim0 = 2*Hubbard_l_back(nt)+1
                     !
-                    CALL cublasDgemm( 'N', 'N', ldim,mps,ldim, 1.0_dp,  &
-                         vnsb_d(ldim0+1,ldim0+1,na),                    &         
-                         ldim_back(nt), projr_d(offsetU_back1(na)+1,1), &
+                    CALL cublasDgemm( 'N', 'N', ldim,mps,ldim, 1.0_dp,     &
+                         vnsb_d(ldim0+1,ldim0+1,na),                       &
+                         ldim_back(nt), proj_d%r_d(offsetU_back1(na)+1,1), &
                          nwfcU, 0.0_dp, rtemp_d, ldimaxt )
                     !
                     CALL cublasDgemm( 'N', 'N', 2*np, mps, ldim, 1.0_dp, &
@@ -220,8 +217,8 @@ SUBROUTINE vhpsi_U_gpu()
                  !
                  ldim = 2*Hubbard_l_back(nt)+1
                  !
-                 CALL cublasZgemm( 'N', 'N', ldim,mps,ldim, (1.0_dp,0.0_dp),  &
-                      vauxb_d(:,:,na), ldmx_b, projk_d(offsetU_back(na)+1,1), &
+                 CALL cublasZgemm( 'N', 'N', ldim,mps,ldim, (1.0_dp,0.0_dp),     &
+                      vauxb_d(:,:,na), ldmx_b, proj_d%k_d(offsetU_back(na)+1,1), &
                       nwfcU, (0.0_dp,0.0_dp), ctemp_d, ldimaxt )
                  !
                  CALL cublasZgemm( 'N', 'N', np, mps, ldim, (1.0_dp,0.0_dp), &
@@ -235,7 +232,7 @@ SUBROUTINE vhpsi_U_gpu()
                     !
                     CALL cublasZgemm( 'N', 'N', ldim,mps,ldim,(1.0_dp,0.0_dp), &
                          vauxb_d(ldim0+1,ldim0+1,na),ldmx_b,                   &
-                         projk_d(offsetU_back1(na)+1,1), nwfcU,                &
+                         proj_d%k_d(offsetU_back1(na)+1,1), nwfcU,             &
                          (0.0_dp,0.0_dp), ctemp_d, ldimaxt )
                     ! 
                     CALL cublasZgemm( 'N', 'N', np, mps, ldim, (1.0_dp,0.0_dp), &
@@ -258,7 +255,7 @@ SUBROUTINE vhpsi_U_gpu()
       IF (ANY(is_hubbard(:))) DEALLOCATE( vns_d )
       IF (ANY(is_hubbard_back(:))) DEALLOCATE( vnsb_d )
     ELSE
-      DEALLOCATE( ctemp_d(ldimaxt,mps) )
+      DEALLOCATE( ctemp_d )
       IF (ANY(is_hubbard(:))) DEALLOCATE( vaux_d )
       IF (ANY(is_hubbard_back(:))) DEALLOCATE( vauxb_d )
     ENDIF
