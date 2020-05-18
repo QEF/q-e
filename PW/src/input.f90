@@ -34,7 +34,7 @@ SUBROUTINE iosys()
                             efield_cart_ => efield_cart, &
                             phase_control
   !
-  USE cell_base,     ONLY : at, alat, omega, cell_base_init, init_dofree, &
+  USE cell_base,     ONLY : at, alat, omega, bg, cell_base_init, init_dofree, &
                             press_       => press, &
                             wmass_       => wmass
   !
@@ -855,7 +855,9 @@ SUBROUTINE iosys()
      restart        = .false.
      ! ... non-scf calculation: read atomic positions and cell from file
      ! ... so that they are consistent.  FIXME: lforcet?
-     IF ( trim( ion_positions ) == 'from_file' .OR. &
+     IF (trim( ion_positions ) == 'try_from_file') THEN
+        startingconfig = 'try_from_file'
+     ELSE IF ( trim( ion_positions ) == 'from_file' .OR. &
           (.NOT. lscf .AND. .NOT. lforcet) ) THEN
         startingconfig = 'file'
      ELSE
@@ -1488,6 +1490,14 @@ SUBROUTINE iosys()
      !
      CALL read_conf_from_file( .TRUE., nat_, ntyp, tau, alat, at )
      pseudo_dir_cur = restart_dir()
+     !
+  ELSE IF ( .NOT. restart .AND. startingconfig=='try_from_file' ) THEN
+     !
+     ! ... Try to read atomic positions from the file
+     !
+     CALL read_conf_from_file( .FALSE., nat_, ntyp, tau, alat, at )
+     CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
+     CALL volume (alat, at(:,1), at(:,2), at(:,3), omega)
      !
   ELSE
      !
