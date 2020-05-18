@@ -8,10 +8,10 @@
 !
 #if defined(__DFTI)
 
-! compiler safeguard for OpenMP threadprivate
-#if defined(_OPENMP) && defined(__FFT_USE_OMP_THREADPRIVATE)
+#if defined(_OPENMP) && defined(__FFT_SCALAR_THREAD_SAFE)
+! compiler safeguard for thread-safe eligibility
 #if defined(__PGI)
-#error PGI compiler breaks the use of __FFT_USE_OMP_THREADPRIVATE
+#error PGI compiler breaks the use of __FFT_SCALAR_THREAD_SAFE in DFTI
 #endif
 #endif
 
@@ -79,7 +79,7 @@
      LOGICAL, SAVE :: is_inplace
      INTEGER :: dfti_status = 0
      INTEGER :: placement
-#if defined(__FFT_USE_OMP_THREADPRIVATE)
+#if defined(__FFT_SCALAR_THREAD_SAFE)
 !$omp threadprivate(hand, dfti_first, zdims, icurrent, is_inplace)
 #endif
 
