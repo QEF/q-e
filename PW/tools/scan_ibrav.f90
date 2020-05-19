@@ -62,7 +62,7 @@ PROGRAM ibrav2cell
     par(7) = 0._dp
     par(8) = 0._dp
     par(9) = 0._dp
-    CALL POWELL_MIN(optimize_this,par,xi,npar,npar,1.d-36,i,chisq)
+    CALL POWELL_MIN(optimize_this,par,xi,npar,npar,1.d-24,i,chisq)
     IF(chisq<1.d-6)THEN
       WRITE(*,'("____________ MATCH (chisq=",g7.1,") ____________")') chisq
       WRITE(*, '("  ibrav = ",i3)') ibrav
@@ -75,7 +75,9 @@ PROGRAM ibrav2cell
         ENDIF
       ENDDO
       IF(ANY(ABS(par(7:9))>1.d-12))THEN
-        WRITE(*, '("angles", 6f14.3)') par(7:9)
+        WRITE(*,'(a,/,a)') "WARNING! Cell is rotated. Atomic positions will also need",&
+                           " to be rotated if they are not in crystal coords!"
+        WRITE(*, '("angles (around x,y,z)", 6f14.3)') par(7:9)
       ENDIF
       WRITE(*, '("at1", 6f14.6)') at(:,1)
       WRITE(*, '("at2", 6f14.6)') at(:,2)
@@ -91,6 +93,8 @@ PROGRAM ibrav2cell
     IMPLICIT NONE
     REAL(DP),INTENT(in) :: parameters_(npar)
     REAL(DP) :: celldm_(6), angle_(3), at_(3,3), R(3,3), omega_, pars_(npar), penality
+    INTEGER :: ierr
+    CHARACTER(len=32) :: errormsg
     ! Global variables from main function: ibrav, at
 
     pars_ = parameters_ ! parameters_ is read only!
@@ -102,7 +106,8 @@ PROGRAM ibrav2cell
     angle_  = pars_(7:9)*grad_to_rad   
     
     !WRITE(*, '(6(f14.4,2x),3x,3f10.4)') celldm_, angle_
-    CALL latgen_internal( ibrav, celldm_, at_(:,1), at_(:,2), at_(:,3), omega_)
+    CALL latgen_lib( ibrav, celldm_, at_(:,1), at_(:,2), at_(:,3), omega_, ierr, errormsg)
+    !IF(ierr/=0) penalty=penalty*10
     !
     IF (ANY(angle_/=0._dp)) THEN
       R = rot(angle_(1), angle_(2), angle_(3)) 
