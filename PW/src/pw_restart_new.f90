@@ -136,7 +136,7 @@ MODULE pw_restart_new
       USE rap_point_group,      ONLY : elem, nelem, name_class
       USE rap_point_group_so,   ONLY : elem_so, nelem_so, name_class_so
       USE bfgs_module,          ONLY : bfgs_get_n_iter
-      USE fcp_variables,        ONLY : lfcpopt, lfcpdyn, fcp_mu  
+      USE fcp_module,           ONLY : lfcp, fcp_mu
       USE control_flags,        ONLY : conv_elec, conv_ions, ldftd3, do_makov_payne 
       USE Coul_cut_2D,          ONLY : do_cutoff_2D 
       USE esm,                  ONLY : do_comp_esm 
@@ -589,16 +589,15 @@ MODULE pw_restart_new
             temp(itemp) = etotefield/e2
             efield_corr => temp(itemp) 
          END IF
-         IF (lfcpopt .OR. lfcpdyn ) THEN 
-            itemp = itemp +1 
-            temp(itemp) = ef * tot_charge/e2
-            potstat_corr => temp(itemp) 
+         IF (lfcp ) THEN
+            itemp = itemp +1
+            temp(itemp) = fcp_mu * tot_charge / e2
+            potstat_corr => temp(itemp)
             output_obj%FCP_tot_charge_ispresent = .TRUE.
             output_obj%FCP_tot_charge = tot_charge
             output_obj%FCP_force_ispresent = .TRUE.
-            !FIXME ( decide what units to use here ) 
-            output_obj%FCP_force = fcp_mu - ef 
-         END IF 
+            output_obj%FCP_force = (fcp_mu - ef) / e2
+         END IF
          IF ( gate) THEN
             itemp = itemp + 1 
             temp(itemp) = etotgatefield/e2

@@ -1,26 +1,34 @@
-This example shows how to calculate the minimum energy path (MEP) 
-by using the nudged elastic band (NEB) method in conjunction with 
-the Effective Screening Medium Method (ESM) and constant bias potential 
-(constant-mu) method.
+This example shows how to calculate the minimum energy path (MEP)
+by using the nudged elastic band (NEB) method in conjunction with
+the Effective Screening Medium Method (ESM) and a constant bias potential
+methods (FCP).
 
-Before starting this example, see also examples for the ESM method in
-pw.x (PW/examples/ESM_example).
+Before starting this example, see also examples for the ESM method and
+a constant bias potential methods (FCP) in pw.x
+(PW/examples/ESM_example).
 
-The example calculation proceeds as follows:
+The example calculations are divided into the following two parts,
+1) NEB example for ESM calculation (run_example_ESM)
+2) NEB example for FCP calculation (run_example_FCP)
 
-1) make an NEB calculation for H atom diffusion on Al(001) surface with
-   ordinaly periodic boundary condition (no ESM),
-   (input=Al001+H_pbc.in, output=Al001+H_pbc.out). This calculation 
-   shows the MEP of H atom (Bridge site -> top site -> bridge site).
-   This is a reference calculation for the following ESM calculations.
+The 'run_example' file executes the above two calculations.
 
-2) make an NEB calculation for H atom diffusion on Al(001) surface with
-   ESM (bc3), (input=Al001+H_bc3.in, output=Al001+H_bc3.out).
+1) NEB example for ESM calculation (run_example_ESM)
+1-1) make a NEB calculation for H atom diffusion on Al(001) surface with
+     ordinaly periodic boundary condition (no ESM),
+     (input=Al001+H_pbc.in, output=Al001+H_pbc.out). This calculation
+     shows the MEP of H atom (Bridge site -> top site -> bridge site).
+     This is a reference calculation for the following ESM calculations.
+1-2) make an NEB calculation for H atom diffusion on Al(001) surface with
+     ESM (bc3),
+     (input=Al001+H_bc3.in, output=Al001+H_bc3.out).
 
-3) repeat #2 under a constant bias potential (constant-mu) condition.
-   The target Fermi energy is set to that for the initial geometory
-   of #2 system. This Fermi energy is the reference of the bias potential.
-
-4) repeat #3 but with a lower target Fermi energy (-0.5V)
-
-5) repeat #3 but with a higher target Fermi energy (+0.5V)
+2) NEB example for FCP calculation (run_example_FCP)
+2-1) repeat #1-2 under a constant bias potential condition using FCP.
+     The target Fermi energy is set to that for the initial geometory
+     of #1-2 system. This Fermi energy is the reference of the bias potential.
+     (input=Al001+H_FCP_v00.in, output=Al001+H_FCP_v00.out).
+2-2) repeat #2-1 but with a lower target Fermi energy (-0.5V)
+     (input=Al001+H_FCP_vm05.in, output=Al001+H_FCP_vm05.out).
+2-3) repeat #2-1 but with a higher target Fermi energy (+0.5V)
+     (input=Al001+H_FCP_vp05.in, output=Al001+H_FCP_vp05.out).

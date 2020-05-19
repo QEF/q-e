@@ -688,6 +688,9 @@ MODULE qes_types_module
     REAL(DP) :: w1
     REAL(DP) :: w2
     !
+    LOGICAL  :: ignore_wolfe_ispresent = .FALSE.
+    LOGICAL  :: ignore_wolfe
+    !
   END TYPE bfgs_type
   !
   TYPE :: md_type
@@ -1165,8 +1168,8 @@ MODULE qes_types_module
     CHARACTER(len=256) :: assume_isolated
     LOGICAL  :: esm_ispresent = .FALSE.
     TYPE(esm_type) :: esm
-    LOGICAL  :: fcp_opt_ispresent = .FALSE.
-    LOGICAL :: fcp_opt
+    LOGICAL  :: fcp_ispresent = .FALSE.
+    LOGICAL :: fcp
     LOGICAL  :: fcp_mu_ispresent = .FALSE.
     REAL(DP) :: fcp_mu
     !

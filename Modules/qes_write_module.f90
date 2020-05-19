@@ -1453,6 +1453,11 @@ MODULE qes_write_module
      CALL xml_NewElement(xp, 'w2')
         CALL xml_addCharacters(xp, obj%w2, fmt='s16')
      CALL xml_EndElement(xp, 'w2')
+     IF (obj%ignore_wolfe_ispresent) THEN
+        CALL xml_NewElement(xp, "ignore_wolfe")
+           CALL xml_addCharacters(xp, obj%ignore_wolfe)
+        CALL xml_EndElement(xp, "ignore_wolfe")
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_bfgs
 
@@ -1591,10 +1596,10 @@ MODULE qes_write_module
      IF (obj%esm_ispresent) THEN
         CALL qes_write_esm (xp, obj%esm)
      END IF
-     IF (obj%fcp_opt_ispresent) THEN
-        CALL xml_NewElement(xp, "fcp_opt")
-           CALL xml_addCharacters(xp, obj%fcp_opt)
-        CALL xml_EndElement(xp, "fcp_opt")
+     IF (obj%fcp_ispresent) THEN
+        CALL xml_NewElement(xp, "fcp")
+           CALL xml_addCharacters(xp, obj%fcp)
+        CALL xml_EndElement(xp, "fcp")
      END IF
      IF (obj%fcp_mu_ispresent) THEN
         CALL xml_NewElement(xp, "fcp_mu")

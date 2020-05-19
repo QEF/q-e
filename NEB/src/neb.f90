@@ -95,6 +95,7 @@ PROGRAM neb
     END IF
     CALL engine_to_path_pos(i)
     IF ( i == 1 ) CALL engine_to_path_fix_atom_pos()
+    CALL engine_to_path_tot_charge(i)
     !
   enddo
   !

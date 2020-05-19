@@ -412,7 +412,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE dfunct,               ONLY : newd
   USE esm,                  ONLY : do_comp_esm, esm_printpot, esm_ewald
-  USE fcp_variables,        ONLY : lfcpopt, lfcpdyn
+  USE fcp_module,           ONLY : lfcp, fcp_mu
   USE wrappers,             ONLY : memstat
   USE iso_c_binding,        ONLY : c_int
   !
@@ -949,15 +949,15 @@ SUBROUTINE electrons_scf ( printout, exxen )
         hwf_energy = hwf_energy + etotefield
      ENDIF
      ! TB gate energy
-     IF ( gate) THEN
+     IF ( gate ) THEN
         etot = etot + etotgatefield
         hwf_energy = hwf_energy + etotgatefield
      ENDIF
      !
-     IF ( lfcpopt .or. lfcpdyn ) THEN
-        etot = etot + ef * tot_charge
-        hwf_energy = hwf_energy + ef * tot_charge
-     ENDIF
+     IF ( lfcp ) THEN
+        etot = etot + fcp_mu * tot_charge
+        hwf_energy = hwf_energy + fcp_mu * tot_charge
+     END IF
      !
      ! ... adds possible external contribution from plugins to the energy
      !
@@ -1430,11 +1430,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
           ! ... free energy F = E - TS , demet is the -TS contribution
           !
           !
-          ! ... With Fictitious charge particle (FCP), etot is the grand
-          ! ... potential energy Omega = E - muN, -muN is the potentiostat
-          ! ... contribution.
+          ! ... With Fictitious charge particle (FCP) or Grand-Canonical-SCF,
+          ! ... etot is the grand potential energy Omega = E - muN,
+          ! ... -muN is the potentiostat contribution.
           !
-          IF ( lfcpopt .OR. lfcpdyn ) WRITE( stdout, 9072 ) ef*tot_charge
+          IF ( lfcp ) WRITE( stdout, 9072 ) fcp_mu*tot_charge
           !
        ELSE IF ( conv_elec ) THEN
           !

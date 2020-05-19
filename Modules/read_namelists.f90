@@ -29,7 +29,9 @@ MODULE read_namelists_module
   !
   REAL(DP), PARAMETER :: sm_not_set = -20.0_DP
   !
-  PUBLIC :: read_namelists, sm_not_set
+  REAL(DP), PARAMETER :: fcp_not_set = 1.0E+99_DP
+  !
+  PUBLIC :: read_namelists, sm_not_set, fcp_not_set
   PUBLIC :: check_namelist_read ! made public upon request of A.Jay
   ! FIXME: should the following ones be public?
   PUBLIC :: control_defaults, system_defaults, &
@@ -126,13 +128,11 @@ MODULE read_namelists_module
        lorbm = .FALSE.
        nberrycyc  = 1
        lecrpa   = .FALSE.   
+       lfcp = .FALSE.
        tqmmm = .FALSE.
        !
        saverho = .TRUE.
        memory = 'default'
-       !
-       lfcpopt = .FALSE.
-       lfcpdyn = .FALSE.
        !
        CALL get_environment_variable( 'QEXML', input_xml_schema_file )
        !
@@ -311,17 +311,6 @@ MODULE read_namelists_module
        esm_nfit=4
        esm_debug=.FALSE.
        esm_debug_gpmax=0
-       !
-       ! ... FCP
-       !
-       fcp_mu          = 0.0_DP
-       fcp_mass        = 10000.0_DP
-       fcp_tempw       = 0.0_DP
-       fcp_relax       = 'lm'
-       fcp_relax_step  = 0.5_DP
-       fcp_relax_crit  = 0.001_DP
-       fcp_mdiis_size  = 4
-       fcp_mdiis_step  = 0.2_DP
        !
        ! ... Wyckoff
        !
@@ -538,6 +527,7 @@ MODULE read_namelists_module
        trust_radius_ini = 0.5_DP   ! bohr
        w_1              = 0.01_DP
        w_2              = 0.50_DP
+       ignore_wolfe     = .FALSE.
        !
        l_mplathe=.false.
        n_muller=0
@@ -703,6 +693,68 @@ MODULE read_namelists_module
      !
      !=----------------------------------------------------------------------=!
      !
+     !  Variables initialization for Namelist FCP
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE fcp_defaults( prog, ions_are_set )
+       !-----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       CHARACTER(LEN=2)    :: prog   ! ... specify the calling program
+       LOGICAL, INTENT(IN) :: ions_are_set
+       !
+       !
+       fcp_mu = fcp_not_set
+       !
+       IF ( .NOT. ions_are_set ) THEN
+          !
+          ! ... ( 'none' | 'lm' | 'newton' | 'bfgs' | 'damp' | 'verlet' | 'velocity-verlet' )
+          !
+          fcp_dynamics = 'none'
+          !
+       END IF
+       !
+       fcp_conv_thr = 1.0E-2_DP
+       fcp_ndiis    = 4
+       fcp_rdiis    = 1.0_DP
+       fcp_mass     = -1.0_DP  ! will initialize at iosys_fcp
+       fcp_velocity = fcp_not_set
+       !
+       IF ( ions_are_set ) THEN
+          !
+          ! ... ( 'rescaling' | 'rescale-v' | 'rescale-T' | 'reduce-T' |
+          !       'berendsen' | 'andersen' | 'initial' | 'not_controlled' )
+          !
+          fcp_temperature = ion_temperature
+          fcp_tempw       = tempw
+          fcp_tolp        = tolp
+          fcp_delta_t     = delta_t
+          fcp_nraise      = nraise
+          !
+       ELSE
+          !
+          ! ... ( 'not_controlled' | 'rescaling' | 'rescale-v' | 'rescale-T' |
+          !       'reduce-T' | 'berendsen' | 'andersen' | 'initial' )
+          !
+          fcp_temperature = 'not_controlled'
+          fcp_tempw       = 300.0_DP
+          fcp_tolp        = 100.0_DP
+          fcp_delta_t     = 1.0_DP
+          fcp_nraise      = 1
+          !
+       END IF
+       !
+       freeze_all_atoms = .FALSE.
+       !
+       RETURN
+       !
+     END SUBROUTINE
+     !
+     !=----------------------------------------------------------------------=!
+     !
      !  Broadcast variables values for Namelist CONTROL
      !
      !=----------------------------------------------------------------------=!
@@ -754,10 +806,9 @@ MODULE read_namelists_module
        CALL mp_bcast( saverho,       ionode_id, intra_image_comm )
        CALL mp_bcast( lecrpa,        ionode_id, intra_image_comm )
        CALL mp_bcast( tqmmm,         ionode_id, intra_image_comm )
+       CALL mp_bcast( lfcp,          ionode_id, intra_image_comm )
        CALL mp_bcast( vdw_table_name,ionode_id, intra_image_comm )
        CALL mp_bcast( memory,        ionode_id, intra_image_comm )
-       CALL mp_bcast( lfcpopt,       ionode_id, intra_image_comm )
-       CALL mp_bcast( lfcpdyn,       ionode_id, intra_image_comm )
        CALL mp_bcast( input_xml_schema_file, ionode_id, intra_image_comm )
        CALL mp_bcast( gate,          ionode_id, intra_image_comm ) !TB
        CALL mp_bcast( mbd_vdw,        ionode_id, intra_image_comm ) !GSz
@@ -916,18 +967,6 @@ MODULE read_namelists_module
        CALL mp_bcast( esm_nfit,           ionode_id, intra_image_comm )
        CALL mp_bcast( esm_debug,          ionode_id, intra_image_comm )
        CALL mp_bcast( esm_debug_gpmax,    ionode_id, intra_image_comm )
-       !
-       ! ... FCP
-       !
-       CALL mp_bcast( fcp_mu,          ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_mass,        ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_tempw,       ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_relax,       ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_relax_step,  ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_relax_crit,  ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_mdiis_size,  ionode_id, intra_image_comm )
-       CALL mp_bcast( fcp_mdiis_step,  ionode_id, intra_image_comm )
-       !
        !
        ! ... space group information
        !
@@ -1122,6 +1161,7 @@ MODULE read_namelists_module
        CALL mp_bcast( trust_radius_ini, ionode_id, intra_image_comm )
        CALL mp_bcast( w_1,              ionode_id, intra_image_comm )
        CALL mp_bcast( w_2,              ionode_id, intra_image_comm )
+       CALL mp_bcast( ignore_wolfe,     ionode_id, intra_image_comm )
        !
        CALL mp_bcast(l_mplathe,         ionode_id, intra_image_comm )
        CALL mp_bcast(n_muller,          ionode_id, intra_image_comm ) 
@@ -1295,7 +1335,40 @@ MODULE read_namelists_module
        RETURN
        !
      END SUBROUTINE
-
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !  Broadcast variables values for Namelist FCP
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE fcp_bcast()
+       !-----------------------------------------------------------------------
+       !
+       USE io_global, ONLY: ionode_id
+       USE mp, ONLY: mp_bcast
+       USE mp_images, ONLY : intra_image_comm
+       !
+       IMPLICIT NONE
+       !
+       CALL mp_bcast( fcp_mu,           ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_dynamics,     ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_conv_thr,     ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_ndiis,        ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_rdiis,        ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_mass,         ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_velocity,     ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_temperature,  ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_tempw,        ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_tolp,         ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_delta_t,      ionode_id, intra_image_comm )
+       CALL mp_bcast( fcp_nraise,       ionode_id, intra_image_comm )
+       CALL mp_bcast( freeze_all_atoms, ionode_id, intra_image_comm )
+       !
+       RETURN
+       !
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1512,15 +1585,6 @@ MODULE read_namelists_module
           CALL errore(sub_name, ' charged plane (gate) to compensate tot_charge of 0', 1)
        RETURN
        !
-       ! ... control on FCP variables
-       !
-       allowed = .FALSE.
-       DO i = 1, SIZE(fcp_relax_allowed)
-          IF( TRIM(fcp_relax) == fcp_relax_allowed(i) ) allowed = .TRUE.
-       END DO
-       IF( .NOT. allowed ) &
-          CALL errore(sub_name, ' fcp_relax '''//TRIM(fcp_relax)//''' not allowed ', 1)
-       !
      END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
@@ -1705,6 +1769,53 @@ MODULE read_namelists_module
      !
      !=----------------------------------------------------------------------=!
      !
+     !  Check input values for Namelist FCP
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE fcp_checkin( prog )
+       !-----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
+       CHARACTER(LEN=20) :: sub_name = ' fcp_checkin '
+       INTEGER           :: i
+       LOGICAL           :: allowed = .FALSE.
+       !
+       !
+       IF( fcp_mu == fcp_not_set ) &
+          CALL errore( sub_name,' fcp_mu is not set ', 1 )
+       !
+       allowed = .FALSE.
+       DO i = 1, SIZE(fcp_dynamics_allowed)
+          IF( TRIM(fcp_dynamics) == fcp_dynamics_allowed(i) ) allowed = .TRUE.
+       END DO
+       IF( .NOT. allowed ) &
+          CALL errore(sub_name, ' fcp_dynamics '''//TRIM(fcp_dynamics)//''' not allowed ', 1)
+       !
+       IF( fcp_conv_thr < 0.0_DP ) &
+          CALL errore( sub_name,' fcp_conv_thr out of range ', 1 )
+       !
+       IF( fcp_ndiis <= 0 ) &
+          CALL errore( sub_name,' fcp_ndiis out of range ', 1 )
+       !
+       IF( fcp_rdiis <= 0.0_DP ) &
+          CALL errore( sub_name,' fcp_rdiis out of range ', 1 )
+       !
+       !IF( fcp_mass <= 0.0_DP ) &
+       !   CALL errore( sub_name,' fcp_mass out of range ', 1 )
+       !
+       IF( fcp_tempw <= 0.0_DP ) &
+          CALL errore( sub_name,' fcp_tempw out of range ', 1 )
+       !
+       RETURN
+       !
+     END SUBROUTINE
+     !
+     !=----------------------------------------------------------------------=!
+     !
      !  Set values according to the "calculation" variable
      !
      !=----------------------------------------------------------------------=!
@@ -1767,6 +1878,7 @@ MODULE read_namelists_module
                 ion_dynamics      = 'damp'
              ELSE IF( prog == 'PW' ) THEN
                 ion_dynamics = 'bfgs'
+                IF (lfcp) fcp_dynamics = 'bfgs'
              END IF
           CASE ( 'md', 'cp' )
              IF( prog == 'CP' ) THEN
@@ -1774,6 +1886,7 @@ MODULE read_namelists_module
                 ion_dynamics      = 'verlet'
              ELSE IF( prog == 'PW' ) THEN
                 ion_dynamics = 'verlet'
+                IF (lfcp) fcp_dynamics = 'velocity-verlet'
              END IF
           CASE ('vc-relax')
              IF( prog == 'CP' ) THEN
@@ -1783,6 +1896,7 @@ MODULE read_namelists_module
              ELSE IF( prog == 'PW' ) THEN
                 ion_dynamics = 'bfgs'
                 cell_dynamics= 'bfgs'
+                IF (lfcp) fcp_dynamics = 'bfgs'
              END IF
           CASE ( 'vc-md', 'vc-cp' )
              IF( prog == 'CP' ) THEN
@@ -1890,6 +2004,7 @@ MODULE read_namelists_module
        CALL electrons_defaults( prog )
        CALL ions_defaults( prog )
        CALL cell_defaults( prog )
+       CALL fcp_defaults( prog, .FALSE. )
        !
        ! ... Here start reading standard input file
        !
@@ -2016,6 +2131,21 @@ MODULE read_namelists_module
        !
        CALL wannier_ac_bcast()
        CALL wannier_ac_checkin( prog )
+       !
+       ! ... FCP namelist
+       !
+       IF( lfcp ) THEN
+          CALL fcp_defaults( prog, .TRUE. )
+          !
+          ios = 0
+          IF( ionode ) THEN
+             READ( unit_loc, fcp, iostat = ios )
+          END IF
+          CALL check_namelist_read(ios, unit_loc, "fcp")
+          !
+          CALL fcp_bcast( )
+          CALL fcp_checkin( prog )
+       END IF
        !
        RETURN
        !

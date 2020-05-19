@@ -92,7 +92,7 @@ SUBROUTINE setup()
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
   USE paw_variables,      ONLY : okpaw
   USE esm,                ONLY : esm_z_inv
-  USE fcp_variables,      ONLY : lfcpopt, lfcpdyn
+  USE fcp_module,         ONLY : lfcp
   USE extfield,           ONLY : gate
   USE additional_kpoints, ONLY : add_additional_kpoints
   !
@@ -176,7 +176,7 @@ SUBROUTINE setup()
   !
   nelec = ionic_charge - tot_charge
   !
-  IF ( .NOT. lscf .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart )) THEN 
+  IF ( lbands .OR. ( lfcp .AND. restart )) THEN
      !
      ! ... in these cases, we need (or it is useful) to read the Fermi energy
      !
@@ -197,10 +197,11 @@ SUBROUTINE setup()
      CALL mp_bcast(ef_dw, ionode_id, intra_image_comm)
      CALL qes_reset  ( output_obj )
      !
-  END IF 
-  IF ( (lfcpopt .OR. lfcpdyn) .AND. restart ) THEN  
+  END IF
+  !
+  IF ( lfcp .AND. restart ) THEN
      tot_charge = ionic_charge - nelec
-  END IF 
+  END IF
   !
   ! ... magnetism-related quantities
   !

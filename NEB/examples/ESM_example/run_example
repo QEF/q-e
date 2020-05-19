@@ -7,7 +7,7 @@ echo
 echo "run all ESM examples: starting"
 
 # run all examples
-for example in run_example_ESM;
+for example in run_example_ESM run_example_FCP;
 do 
     if test -f $example
     then

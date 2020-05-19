@@ -81,7 +81,14 @@ extfield.o \
 exx_base.o \
 exx_band.o \
 exx.o \
-fcp.o \
+fcp_capacitance.o \
+fcp_dyn_calcavg.o \
+fcp_dyn_printavg.o \
+fcp_dynamics.o \
+fcp_hessian.o \
+fcp_input.o \
+fcp_module.o \
+fcp_relaxation.o \
 find_group.o \
 forces_bp_efield.o \
 force_cc.o \
