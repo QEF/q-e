@@ -1493,7 +1493,7 @@ SUBROUTINE iosys()
      !
   ELSE IF ( .NOT. restart .AND. startingconfig=='try_from_file' ) THEN
      !
-     ! ... Try to read atomic positions from the file
+     ! ... Try to read atomic positions and cell from the file
      !
      CALL read_conf_from_file( .FALSE., nat_, ntyp, tau, alat, at )
      CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )

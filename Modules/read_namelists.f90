@@ -1932,12 +1932,12 @@ MODULE read_namelists_module
        !
        ios = 0
        IF ( ionode ) THEN
-          IF ( ( TRIM( calculation ) /= 'scf'   .AND. &
-                 TRIM( calculation ) /= 'nscf'  .AND. &
-                 TRIM( calculation ) /= 'bands' ) .OR. &
-               ( TRIM( prog_ ) == 'PW+iPi' ) ) THEN
+        !  IF ( ( TRIM( calculation ) /= 'scf'   .AND. &
+        !         TRIM( calculation ) /= 'nscf'  .AND. &
+        !         TRIM( calculation ) /= 'bands' ) .OR. &
+        !       ( TRIM( prog_ ) == 'PW+iPi' ) ) THEN
              READ( unit_loc, ions, iostat = ios )
-          END IF
+        !  END IF
        END IF
        CALL check_namelist_read(ios, unit_loc, "ions")
        !
