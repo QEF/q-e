@@ -6,7 +6,7 @@
 !
 !
 Module ifconstants
-  !! This code generates ZG displacements
+  ! This code generates ZG displacements
   !
   ! All variables read from file that need dynamical allocation
   !
@@ -24,7 +24,7 @@ Module ifconstants
 end Module ifconstants
 !
 !---------------------------------------------------------------------
-PROGRAM matdyn_ZG_EPW
+PROGRAM ZG
   !-----------------------------------------------------------------------
   !  This program generates the ZG_displacement for a list of
   !  q vectors that are comensurate to the supercell size to be employed for 
@@ -181,7 +181,7 @@ PROGRAM matdyn_ZG_EPW
 ! mz_e 
   !
   CALL mp_startup()
-  CALL environment_start('MATDYN')
+  CALL environment_start('ZG')
   !
   l1= 1
   l2 = 1
@@ -217,7 +217,7 @@ PROGRAM matdyn_ZG_EPW
      !
      IF (ionode) READ (5, input,IOSTAT=ios)
      CALL mp_bcast(ios, ionode_id, world_comm) 
-     CALL errore('matdyn_ZG_EPW', 'reading input namelist', ABS(ios))
+     CALL errore('ZG', 'reading input namelist', ABS(ios))
      CALL mp_bcast(asr, ionode_id, world_comm)
      CALL mp_bcast(flfrc, ionode_id, world_comm)
      CALL mp_bcast(amass, ionode_id, world_comm)
@@ -241,7 +241,7 @@ PROGRAM matdyn_ZG_EPW
      ! 
      ! To check that use specify supercell dimensions
      IF (ZG_conf) THEN 
-        IF ((dimx < 1)  .OR. (dimy < 1) .OR. (dimz < 1)) CALL errore('matdyn_ZG_EPW', 'reading supercell size', dimx)
+        IF ((dimx < 1)  .OR. (dimy < 1) .OR. (dimz < 1)) CALL errore('ZG', 'reading supercell size', dimx)
      ENDIF
      ! mz_e      
      !
@@ -276,7 +276,7 @@ PROGRAM matdyn_ZG_EPW
      ! set up (super)cell
      !
      IF (ntyp < 0) THEN
-        call errore ('matdyn_ZG_EPW','wrong ntyp ', ABS(ntyp))
+        call errore ('ZG','wrong ntyp ', ABS(ntyp))
      ELSE IF (ntyp == 0) THEN
         ntyp =ntyp_blk
      ENDIF
@@ -285,14 +285,14 @@ PROGRAM matdyn_ZG_EPW
      !
      DO it= 1, ntyp
         IF (amass(it) < 0.d0) THEN
-           CALL errore ('matdyn_ZG_EPW','wrong mass in the namelist', it)
+           CALL errore ('ZG','wrong mass in the namelist', it)
         ELSE IF (amass(it) == 0.d0) THEN
            IF (it.LE.ntyp_blk) THEN
               WRITE (stdout,'(a, i3, a, a)') ' mass for atomic type ', it,      &
                    &                     ' not given; uses mass from file ',flfrc
               amass(it) = amass_blk(it)
            ELSE
-              CALL errore ('matdyn_ZG_EPW','missing mass in the namelist', it)
+              CALL errore ('ZG','missing mass in the namelist', it)
            ENDIF
         ENDIF
      ENDDO
@@ -301,7 +301,7 @@ PROGRAM matdyn_ZG_EPW
      !
      IF (SUM(ABS(at(:,:))) == 0.d0) THEN
         IF (l1.LE.0 .OR. l2.LE.0 .OR. l3.LE.0) CALL                    &
-             &             errore ('matdyn_ZG_EPW',' wrong l1,l2 or l3', 1)
+             &             errore ('ZG',' wrong l1,l2 or l3', 1)
         at(:, 1) = at_blk(:, 1) *DBLE(l1)
         at(:, 2) = at_blk(:, 2) *DBLE(l2)
         at(:, 3) = at_blk(:, 3) *DBLE(l3)
@@ -313,7 +313,7 @@ PROGRAM matdyn_ZG_EPW
      !
      nsc = NINT(omega/omega_blk)
      IF (ABS(omega/omega_blk-nsc) > eps) &
-          CALL errore ('matdyn_ZG_EPW', 'volume ratio not integer', 1)
+          CALL errore ('ZG', 'volume ratio not integer', 1)
      !
      ! read/generate atomic positions of the (super)cell
      !
@@ -364,8 +364,8 @@ PROGRAM matdyn_ZG_EPW
            npk_label= 0
            DO n = 1, nq
               CALL read_line( input_line, end_of_file = tend, error = terr )
-              IF (tend) CALL errore('matdyn_ZG_EPW','Missing lines', 1)
-              IF (terr) CALL errore('matdyn_ZG_EPW','Error reading q points', 1)
+              IF (tend) CALL errore('ZG','Missing lines', 1)
+              IF (terr) CALL errore('ZG','Error reading q points', 1)
               DO j = 1, 256   ! loop over all characters of input_line
                  IF ( (ICHAR(input_line(j:j)) < 58 .AND. &   ! a digit
                        ICHAR(input_line(j:j)) > 47)      &
@@ -399,7 +399,7 @@ PROGRAM matdyn_ZG_EPW
                          ICHAR(input_line(j+2:j+2)) ==32 ) nch=2
                     buffer =input_line(j+nch:)
                     READ(buffer,*, err =20, iostat=ios) nqb(n)
-20                  IF (ios /= 0) CALL errore('matdyn_ZG_EPW',&
+20                  IF (ios /= 0) CALL errore('ZG',&
                                       'problem reading number of points', 1)
                     EXIT
                  ENDIF
@@ -498,7 +498,7 @@ PROGRAM matdyn_ZG_EPW
            IF (qh /= 0.d0) qhat(:) = qhat(:) / qh
            IF (qh /= 0.d0 .AND. .NOT. has_zstar) THEN
                 CALL infomsg  &
-                ('matdyn_ZG_EPW','Z* not found in file '//TRIM(flfrc)// &
+                ('ZG','Z* not found in file '//TRIM(flfrc)// &
                           ', TO-LO splitting at q = 0 will be ABSent!')
            ELSE
               lo_to_split=.TRUE.
@@ -569,13 +569,13 @@ PROGRAM matdyn_ZG_EPW
      DEALLOCATE(high_sym)
   !
 
-  CALL environment_end('MATDYN')
+  CALL environment_end('ZG')
   !
   CALL mp_global_end()
   !
   STOP
   !
-END PROGRAM matdyn_ZG_EPW
+END PROGRAM ZG
 !
 !-----------------------------------------------------------------------
 SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
@@ -2479,7 +2479,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   WRITE(*,*) "-----------"
   DO j = 1, 2 * pn !2** (nat3)
     IF (MOD(j, 2) == 0) M_mat(j,:) = -1 * M_mat(j,:)
-    WRITE(*,'(100i2)') M_mat(j,:)
+    WRITE(*,'(100i3)') M_mat(j,:)
   ENDDO
   ! checks_done     
   !
@@ -2632,6 +2632,8 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
     sum_error_B = 0.0d0
     ! sum_error_D : contains the error from \nu and \nu' every pn
     !!!!!!!
+    WRITE(*,*) 
+    WRITE(*,*) "Minimize error based on threshold"
     DO p = 1, combs_all
       ctr = 1
       DO i = 0, INT(ctrAB / pn) - 1 
@@ -2704,6 +2706,8 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
     !
     !IF (sum_zg == nat3) THEN
     IF (SUM(ABS(ratio_zg)) / nat3 < error_thresh ) THEN
+      WRITE(*,*) 
+      WRITE(*,*) "Print ZG configuration"
       WRITE(80,*) "Sum of diagonal terms per q-point:", DBLE(SUM(sum_diag_B) / ctrAB)
       WRITE(80,*) "Error and loop index:", SUM(ABS(ratio_zg)) / nat3, kk !
       !WRITE(80,*) "Sum of error per q-point and loop index:", SUM(sum_error_B)/ctrAB, kk !
@@ -2792,6 +2796,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
       DO p = 1, nq_tot 
          DO k = 1, nat ! k represents the atom
            WRITE(80,'(A6, 3F13.8)') atm(ityp(k)), D_tau(p, k,:) 
+           WRITE(*,'(A10, A6, 3F13.8)') "ZG_conf:", atm(ityp(k)), D_tau(p, k,:) 
            WRITE(81,'(A6, 3F15.8)') atm(ityp(k)), P_tau(p, k,:) * 1.0E-12 ! multiply to obtain picoseconds 
          ENDDO
       ENDDO 
