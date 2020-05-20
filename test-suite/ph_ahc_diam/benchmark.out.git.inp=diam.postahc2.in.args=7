@@ -1,0 +1,67 @@
+
+     Program POSTAHC v.6.5 starts on  9Apr2020 at 16:53:27 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     Fft bands division:     nmany     =       1
+ 
+     Calculating electron self-energy. Loop over q points
+       1       2       3       4       5       6       7       8 
+ 
+     Skip upper Fan: upper Fan self-energy is set to zero
+ 
+     Real part of diagonal electron self-energy in Ry
+     Self-energy of degenerate states are averaged.
+     Total_Fan = Upper_Fan + Lower_Fan
+     Total = Total_Fan + DW
+ 
+     Begin postahc output
+         ik  ibnd       Total          DW   Total_Fan   Upper_Fan   Lower_Fan
+          1     1  -0.0379190   0.0007773  -0.0386963   0.0000000  -0.0386963
+          1     2   0.0180099   0.0438047  -0.0257948   0.0000000  -0.0257948
+          1     3   0.0180099   0.0438047  -0.0257948   0.0000000  -0.0257948
+          1     4   0.0180099   0.0438047  -0.0257948   0.0000000  -0.0257948
+          2     1  -0.0400718   0.0019322  -0.0420040   0.0000000  -0.0420040
+          2     2  -0.0486684   0.0145147  -0.0631831   0.0000000  -0.0631831
+          2     3   0.0459231   0.0349731   0.0109500   0.0000000   0.0109500
+          2     4   0.0459231   0.0349731   0.0109500   0.0000000   0.0109500
+          3     1  -0.0487428   0.0023636  -0.0511064   0.0000000  -0.0511064
+          3     2   0.0331788   0.0247317   0.0084470   0.0000000   0.0084470
+          3     3   0.0969264   0.0309596   0.0659668   0.0000000   0.0659668
+          3     4   0.0524227   0.0335007   0.0189220   0.0000000   0.0189220
+          4     1  -0.0472693   0.0052949  -0.0525642   0.0000000  -0.0525642
+          4     2   0.0126477   0.0118944   0.0007533   0.0000000   0.0007533
+          4     3  -0.0418651   0.0211798  -0.0630449   0.0000000  -0.0630449
+          4     4   0.0312758   0.0321946  -0.0009188   0.0000000  -0.0009188
+          5     1  -0.0385948   0.0034158  -0.0420105   0.0000000  -0.0420105
+          5     2   0.0669594   0.0179428   0.0490166   0.0000000   0.0490166
+          5     3  -0.0143887   0.0283055  -0.0426941   0.0000000  -0.0426941
+          5     4   0.0517871   0.0314274   0.0203598   0.0000000   0.0203598
+     End postahc output
+ 
+     Full off-diagonal complex self-energy is written
+     in selfen_real.dat and selfen_imag.dat.
+     Can differ from the output above because the
+     Self-energy of degenerate states are NOT averaged.
+ 
+ 
+     debye_waller :      0.00s CPU      0.00s WALL (       8 calls)
+     lower_fan    :      0.00s CPU      0.00s WALL (       8 calls)
+ 
+     POSTAHC      :      0.01s CPU      0.01s WALL
+
+ 
+   This run was terminated on:  16:53:27   9Apr2020            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

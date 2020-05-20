@@ -36,7 +36,6 @@ MODULE cond_restart
     SUBROUTINE cond_writefile( what, kcurr, ecurr, tcurr )
       !------------------------------------------------------------------------
       !
-      USE global_version,       ONLY : version_number
       USE cond,                 ONLY : nenergy, earr, nkpts, xyk, wkpt
       !
       IMPLICIT NONE

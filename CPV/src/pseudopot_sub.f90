@@ -52,7 +52,7 @@
 
    SUBROUTINE pseudopotential_indexes_x( )
 
-      use parameters, only: lmaxx    !
+      use upf_params, only: lmaxx    !
       use ions_base,  only: nsp, &   !  number of specie
                             na, &    !  number of atoms for each specie
                             nat, &   !  total number of atom

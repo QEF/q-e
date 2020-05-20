@@ -318,8 +318,11 @@ MODULE units_ph
        iudvkb3, lrdvkb3, &
        iuint3paw, & ! the unit of the int3_paw coefficients
        lint3paw,  & ! the length of the int3_paw coefficients
-       iundnsscf    ! the unit of dnsscf, for DFPT+U  
-  
+       iundnsscf, & ! the unit of dnsscf, for DFPT+U
+       iudvpsi,   & ! unit of DV_{SCF} * psi
+       lrdvpsi,   & ! length of DV_{SCF} * psi
+       iugauge      ! Unit for reading and writing gauge information in ahc.f90
+
   logical, ALLOCATABLE :: this_dvkb3_is_on_file(:), &
                           this_pcxpsi_is_on_file(:,:)
   !

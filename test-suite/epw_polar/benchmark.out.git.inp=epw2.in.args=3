@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.1.0 starts on 30Apr2019 at 18: 2:53 
+     Program EPW v.5.2.0 starts on 22Apr2020 at 17:59:32 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -37,29 +37,30 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     1 processors
+     Parallel version (MPI), running on     4 processors
 
      MPI processes distributed on     1 nodes
+     K-points division:     npool     =       4
+     Fft bands division:     nmany     =       1
 
-     Reading data from directory:
+     Reading xml data from directory:
+
      ./sic.save/
 
      IMPORTANT: XC functional enforced from input :
-     Exchange-correlation      = PZ ( 1  1  0  0 0 0)
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
                file C.UPF: wavefunction(s)  3d renormalized
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-
+ 
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         187     187     73                 1687     1687     387
-
+ 
+     Reading collected, re-writing distributed wavefunctions
 
      --                                                                         
 
@@ -70,7 +71,8 @@
      number of atomic types    =            2
      kinetic-energy cut-off    =      20.0000  Ry
      charge density cut-off    =      80.0000  Ry
-     Exchange-correlation      = PZ ( 1  1  0  0 0 0)
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
 
 
      celldm(1)=    8.23700  celldm(2)=    0.00000  celldm(3)=    0.00000
@@ -94,7 +96,7 @@
      site n.  atom      mass           positions (a_0 units)
         1        Si  28.0855   tau( 1) = (    0.00000    0.00000    0.00000  )
         2        C   12.0108   tau( 2) = (    0.25000    0.25000    0.25000  )
-
+ 
      25 Sym.Ops. (with q -> -q+G )
 
 
@@ -146,22 +148,21 @@
      Using radial grid of  461 points,  2 beta functions with: 
                 l(1) =   0
                 l(2) =   1
-     EPW          :      0.11s CPU      0.11s WALL
+     EPW          :      0.08s CPU      0.09s WALL
 
-     EPW          :      0.13s CPU      0.13s WALL
+     EPW          :      0.09s CPU      0.10s WALL
 
-     No wavefunction gauge setting applied
      -------------------------------------------------------------------
      Wannierization on  3 x  3 x  3 electronic grid
      -------------------------------------------------------------------
-
+ 
      Spin CASE ( default = unpolarized )
-
+ 
      Initializing Wannier90
-
-
+ 
+ 
      Initial Wannier projections
-
+ 
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   1
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   2
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   3
@@ -172,94 +173,54 @@
       - Number of excluded bands is (  0)
       - Number of wannier functions is (  4)
       - All guiding functions are given 
-
+ 
   Reading data about k-point neighbours 
-
+ 
       - All neighbours are found 
-
+ 
      AMN
-      k points =    27 in    1 pools
-            1 of   27 on ionode
-            2 of   27 on ionode
-            3 of   27 on ionode
-            4 of   27 on ionode
-            5 of   27 on ionode
-            6 of   27 on ionode
-            7 of   27 on ionode
-            8 of   27 on ionode
-            9 of   27 on ionode
-           10 of   27 on ionode
-           11 of   27 on ionode
-           12 of   27 on ionode
-           13 of   27 on ionode
-           14 of   27 on ionode
-           15 of   27 on ionode
-           16 of   27 on ionode
-           17 of   27 on ionode
-           18 of   27 on ionode
-           19 of   27 on ionode
-           20 of   27 on ionode
-           21 of   27 on ionode
-           22 of   27 on ionode
-           23 of   27 on ionode
-           24 of   27 on ionode
-           25 of   27 on ionode
-           26 of   27 on ionode
-           27 of   27 on ionode
-
+      k points =    27 in    4 pools
+            1 of    7 on ionode
+            2 of    7 on ionode
+            3 of    7 on ionode
+            4 of    7 on ionode
+            5 of    7 on ionode
+            6 of    7 on ionode
+            7 of    7 on ionode
+ 
      AMN calculated
-
+ 
      MMN
-      k points =    27 in    1 pools
-            1 of   27 on ionode
-            2 of   27 on ionode
-            3 of   27 on ionode
-            4 of   27 on ionode
-            5 of   27 on ionode
-            6 of   27 on ionode
-            7 of   27 on ionode
-            8 of   27 on ionode
-            9 of   27 on ionode
-           10 of   27 on ionode
-           11 of   27 on ionode
-           12 of   27 on ionode
-           13 of   27 on ionode
-           14 of   27 on ionode
-           15 of   27 on ionode
-           16 of   27 on ionode
-           17 of   27 on ionode
-           18 of   27 on ionode
-           19 of   27 on ionode
-           20 of   27 on ionode
-           21 of   27 on ionode
-           22 of   27 on ionode
-           23 of   27 on ionode
-           24 of   27 on ionode
-           25 of   27 on ionode
-           26 of   27 on ionode
-           27 of   27 on ionode
+      k points =    27 in    4 pools
+            1 of    7 on ionode
+            2 of    7 on ionode
+            3 of    7 on ionode
+            4 of    7 on ionode
+            5 of    7 on ionode
+            6 of    7 on ionode
+            7 of    7 on ionode
      MMN calculated
-
+ 
      Running Wannier90
-
+ 
      Wannier Function centers (cartesian, alat) and spreads (ang):
-
+ 
      (   0.16068   0.16068   0.16068) :   0.89056
      (   0.16068  -0.16068  -0.16068) :   0.89056
      (  -0.16068   0.16068  -0.16068) :   0.89056
      (  -0.16068  -0.16068   0.16068) :   0.89056
-
+ 
      -------------------------------------------------------------------
-     WANNIER      :      1.45s CPU      1.45s WALL (       1 calls)
+     WANNIER      :      0.42s CPU      0.53s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Dipole matrix elements calculated
-
+ 
 
      Calculating kgmap
 
      Progress kgmap: ########################################
-     kmaps        :      0.11s CPU      0.11s WALL (       1 calls)
+     kmaps        :      0.01s CPU      0.03s WALL (       1 calls)
      Symmetries of Bravais lattice:  48
      Symmetries of crystal:          24
 
@@ -270,13 +231,13 @@
 
      Symmetries of small group of q: 24
           in addition sym. q -> -q+G:
-
+ 
      Number of q in the star =    1
      List of q in the star:
           1   0.000000000   0.000000000   0.000000000
      Imposing acoustic sum rule on the dynamical matrix
      Read dielectric tensor and effective charges
-
+ 
         q(    1 ) = (   0.0000000   0.0000000   0.0000000 )
 
 
@@ -285,7 +246,7 @@
      ===================================================================
 
      Symmetries of small group of q:  6
-
+ 
      Number of q in the star =    4
      List of q in the star:
           1  -0.333333333   0.333333333  -0.333333333
@@ -297,9 +258,9 @@
           2  -0.333333333  -0.333333333  -0.333333333
           3  -0.333333333   0.333333333   0.333333333
           4   0.333333333   0.333333333  -0.333333333
-
+ 
         q(    2 ) = (  -0.3333333   0.3333333  -0.3333333 )
-
+ 
         q(    3 ) = (   0.3333333  -0.3333333   0.3333333 )
         q(    4 ) = (   0.3333333   0.3333333   0.3333333 )
         q(    5 ) = (  -0.3333333  -0.3333333  -0.3333333 )
@@ -314,7 +275,7 @@
      ===================================================================
 
      Symmetries of small group of q:  4
-
+ 
      Number of q in the star =    6
      List of q in the star:
           1   0.000000000   0.666666667   0.000000000
@@ -323,7 +284,7 @@
           4   0.666666667   0.000000000   0.000000000
           5   0.000000000  -0.666666667   0.000000000
           6   0.000000000   0.000000000   0.666666667
-
+ 
         q(   10 ) = (   0.0000000   0.6666667   0.0000000 )
         q(   11 ) = (   0.0000000   0.0000000  -0.6666667 )
         q(   12 ) = (  -0.6666667   0.0000000   0.0000000 )
@@ -337,7 +298,7 @@
      ===================================================================
 
      Symmetries of small group of q:  2
-
+ 
      Number of q in the star =   12
      List of q in the star:
           1   0.666666667   0.000000000   0.666666667
@@ -352,7 +313,7 @@
          10   0.666666667   0.000000000  -0.666666667
          11   0.000000000   0.666666667   0.666666667
          12   0.000000000   0.666666667  -0.666666667
-
+ 
         q(   16 ) = (   0.6666667   0.0000000   0.6666667 )
         q(   17 ) = (  -0.6666667   0.0000000  -0.6666667 )
         q(   18 ) = (   0.6666667  -0.6666667   0.0000000 )
@@ -372,7 +333,7 @@
      The .epb files have been correctly written
 
 
-     Band disentanglement is used:  nbndsub =    4
+     Band disentanglement is used: nbndsub =    4
 
      Computes the analytic long-range interaction for polar materials [lpolar]
       
@@ -381,26 +342,24 @@
      Number of WS vectors for phonons       43
      Number of WS vectors for electron-phonon       43
      Maximum number of cores for efficient parallelization      258
-     Results may improve by using use_ws == .true. 
+     Results may improve by using use_ws == .TRUE. 
 
      Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file
 
      ===================================================================
-     Memory usage:  VmHWM =        32Mb
-                   VmPeak =       299Mb
+     Memory usage:  VmHWM =       178Mb
+                   VmPeak =      2725Mb
      ===================================================================
      
      Using uniform q-mesh:    6   6   6
      Size of q point mesh for interpolation:        216
      Using uniform k-mesh:    6   6   6
      Size of k point mesh for interpolation:        432
-     Max number of k points per pool:              432
+     Max number of k points per pool:              108
 
-     Fermi energy coarse grid =   0.000000 eV
+     Fermi energy coarse grid =  10.054850 eV
 
-     Fermi energy is calculated from the fine k-mesh: Ef =  10.139039 eV
-
-     Warning: check if difference with Fermi level fine grid makes sense
+     Fermi energy is calculated from the fine k-mesh: Ef =  10.139036 eV
 
      ===================================================================
 
@@ -408,11 +367,11 @@
               ibndmax =     4  ebndmax =     0.739
 
 
-     Number of ep-matrix elements per pool :        11664 ~=   91.12 Kb (@ 8 bytes/ DP)
+     Number of ep-matrix elements per pool :         2916 ~=   22.78 Kb (@ 8 bytes/ DP)
       
-     A selecq.fmt file was found but re-created because selecqread == .false. 
-     Number selected, total     100     100
-     Number selected, total     200     200
+     A selecq.fmt file was found but re-created because selecqread == .FALSE. 
+     Number selected, total            100            100
+     Number selected, total            200            200
      We only need to compute      216 q-points
       
 
@@ -433,73 +392,73 @@
 
      ik =       1 coord.:    0.0000000   0.0000000   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -0.0842 eV   Re[Sigma]=      66.268429 meV Im[Sigma]=       4.277622 meV     Z=       0.923226 lam=       0.083158
-     E(   3 )=  -0.0842 eV   Re[Sigma]=      66.268429 meV Im[Sigma]=       4.277622 meV     Z=       0.923226 lam=       0.083158
-     E(   4 )=  -0.0842 eV   Re[Sigma]=      66.268429 meV Im[Sigma]=       4.277622 meV     Z=       0.923226 lam=       0.083158
+     E(   2 )=  -0.0842 eV   Re[Sigma]=      66.268191 meV Im[Sigma]=       4.277624 meV     Z=       0.923227 lam=       0.083158
+     E(   3 )=  -0.0842 eV   Re[Sigma]=      66.268191 meV Im[Sigma]=       4.277624 meV     Z=       0.923227 lam=       0.083158
+     E(   4 )=  -0.0842 eV   Re[Sigma]=      66.268191 meV Im[Sigma]=       4.277624 meV     Z=       0.923227 lam=       0.083158
      -------------------------------------------------------------------
 
 
      ik =       2 coord.:    0.0000000   0.0000000   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -2.1472 eV   Re[Sigma]=     -61.220329 meV Im[Sigma]=      60.262165 meV     Z=       0.876311 lam=       0.141147
-     E(   3 )=  -0.3746 eV   Re[Sigma]=      82.350376 meV Im[Sigma]=      52.082576 meV     Z=       0.971266 lam=       0.029584
-     E(   4 )=  -0.3746 eV   Re[Sigma]=      82.350376 meV Im[Sigma]=      52.082576 meV     Z=       0.971266 lam=       0.029584
+     E(   2 )=  -2.1472 eV   Re[Sigma]=     -61.220154 meV Im[Sigma]=      60.263404 meV     Z=       0.876314 lam=       0.141144
+     E(   3 )=  -0.3746 eV   Re[Sigma]=      82.349409 meV Im[Sigma]=      52.081409 meV     Z=       0.971265 lam=       0.029585
+     E(   4 )=  -0.3746 eV   Re[Sigma]=      82.349409 meV Im[Sigma]=      52.081409 meV     Z=       0.971265 lam=       0.029585
      -------------------------------------------------------------------
 
 
      ik =       3 coord.:    0.0000000   0.0000000   0.3333333
      -------------------------------------------------------------------
-     E(   2 )=  -6.8685 eV   Re[Sigma]=       0.240468 meV Im[Sigma]=      10.691642 meV     Z=       0.997048 lam=       0.002961
-     E(   3 )=  -1.1730 eV   Re[Sigma]=      43.930374 meV Im[Sigma]=      85.864620 meV     Z=       1.085376 lam=      -0.078660
-     E(   4 )=  -1.1730 eV   Re[Sigma]=      43.930374 meV Im[Sigma]=      85.864620 meV     Z=       1.085376 lam=      -0.078660
+     E(   2 )=  -6.8685 eV   Re[Sigma]=       0.240517 meV Im[Sigma]=      10.691741 meV     Z=       0.997048 lam=       0.002961
+     E(   3 )=  -1.1730 eV   Re[Sigma]=      43.930279 meV Im[Sigma]=      85.863739 meV     Z=       1.085376 lam=      -0.078661
+     E(   4 )=  -1.1730 eV   Re[Sigma]=      43.930279 meV Im[Sigma]=      85.863739 meV     Z=       1.085376 lam=      -0.078661
      -------------------------------------------------------------------
 
 
      ik =       4 coord.:    0.0000000   0.0000000   0.5000000
      -------------------------------------------------------------------
-     E(   2 )=  -9.4227 eV   Re[Sigma]=      -6.805981 meV Im[Sigma]=       6.716595 meV     Z=       1.006639 lam=      -0.006596
-     E(   3 )=  -1.6810 eV   Re[Sigma]=      23.064922 meV Im[Sigma]=      79.526538 meV     Z=       0.880306 lam=       0.135969
-     E(   4 )=  -1.6810 eV   Re[Sigma]=      23.064922 meV Im[Sigma]=      79.526538 meV     Z=       0.880306 lam=       0.135969
+     E(   2 )=  -9.4227 eV   Re[Sigma]=      -6.806023 meV Im[Sigma]=       6.716643 meV     Z=       1.006640 lam=      -0.006596
+     E(   3 )=  -1.6810 eV   Re[Sigma]=      23.064779 meV Im[Sigma]=      79.526794 meV     Z=       0.880307 lam=       0.135968
+     E(   4 )=  -1.6810 eV   Re[Sigma]=      23.064779 meV Im[Sigma]=      79.526794 meV     Z=       0.880307 lam=       0.135968
      -------------------------------------------------------------------
 
 
      ik =       5 coord.:    0.0000000   0.0000000   0.6666667
      -------------------------------------------------------------------
-     E(   2 )=  -6.8685 eV   Re[Sigma]=       0.240516 meV Im[Sigma]=      10.691688 meV     Z=       0.997048 lam=       0.002961
-     E(   3 )=  -1.1730 eV   Re[Sigma]=      43.930031 meV Im[Sigma]=      85.864073 meV     Z=       1.085375 lam=      -0.078660
-     E(   4 )=  -1.1730 eV   Re[Sigma]=      43.930031 meV Im[Sigma]=      85.864073 meV     Z=       1.085375 lam=      -0.078660
+     E(   2 )=  -6.8685 eV   Re[Sigma]=       0.240502 meV Im[Sigma]=      10.691790 meV     Z=       0.997049 lam=       0.002960
+     E(   3 )=  -1.1730 eV   Re[Sigma]=      43.930361 meV Im[Sigma]=      85.864736 meV     Z=       1.085376 lam=      -0.078660
+     E(   4 )=  -1.1730 eV   Re[Sigma]=      43.930361 meV Im[Sigma]=      85.864736 meV     Z=       1.085376 lam=      -0.078660
      -------------------------------------------------------------------
 
 
      ik =       6 coord.:    0.0000000   0.0000000   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -2.1472 eV   Re[Sigma]=     -61.220799 meV Im[Sigma]=      60.262590 meV     Z=       0.876311 lam=       0.141148
-     E(   3 )=  -0.3746 eV   Re[Sigma]=      82.350117 meV Im[Sigma]=      52.082428 meV     Z=       0.971266 lam=       0.029584
-     E(   4 )=  -0.3746 eV   Re[Sigma]=      82.350117 meV Im[Sigma]=      52.082428 meV     Z=       0.971266 lam=       0.029584
+     E(   2 )=  -2.1472 eV   Re[Sigma]=     -61.220689 meV Im[Sigma]=      60.262188 meV     Z=       0.876311 lam=       0.141148
+     E(   3 )=  -0.3746 eV   Re[Sigma]=      82.350433 meV Im[Sigma]=      52.083275 meV     Z=       0.971270 lam=       0.029580
+     E(   4 )=  -0.3746 eV   Re[Sigma]=      82.350433 meV Im[Sigma]=      52.083275 meV     Z=       0.971270 lam=       0.029580
      -------------------------------------------------------------------
 
 
      ik =       7 coord.:    0.0000000   0.1666667   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -2.1472 eV   Re[Sigma]=     -63.080537 meV Im[Sigma]=      61.256152 meV     Z=       0.877452 lam=       0.139663
-     E(   3 )=  -0.3746 eV   Re[Sigma]=      80.959614 meV Im[Sigma]=      53.874905 meV     Z=       0.980719 lam=       0.019660
-     E(   4 )=  -0.3746 eV   Re[Sigma]=      80.959614 meV Im[Sigma]=      53.874905 meV     Z=       0.980719 lam=       0.019660
+     E(   2 )=  -2.1472 eV   Re[Sigma]=     -63.080594 meV Im[Sigma]=      61.256867 meV     Z=       0.877452 lam=       0.139663
+     E(   3 )=  -0.3746 eV   Re[Sigma]=      80.960550 meV Im[Sigma]=      53.873375 meV     Z=       0.980711 lam=       0.019669
+     E(   4 )=  -0.3746 eV   Re[Sigma]=      80.960550 meV Im[Sigma]=      53.873375 meV     Z=       0.980711 lam=       0.019669
      -------------------------------------------------------------------
 
 
      ik =       8 coord.:    0.0000000   0.1666667   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -1.7072 eV   Re[Sigma]=      33.028049 meV Im[Sigma]=     114.438515 meV     Z=       0.972265 lam=       0.028526
-     E(   3 )=  -1.0239 eV   Re[Sigma]=      65.264511 meV Im[Sigma]=      30.075424 meV     Z=       0.892455 lam=       0.120505
-     E(   4 )=  -1.0239 eV   Re[Sigma]=      65.264511 meV Im[Sigma]=      30.075424 meV     Z=       0.892455 lam=       0.120505
+     E(   2 )=  -1.7072 eV   Re[Sigma]=      33.028294 meV Im[Sigma]=     114.438721 meV     Z=       0.972266 lam=       0.028525
+     E(   3 )=  -1.0239 eV   Re[Sigma]=      65.264482 meV Im[Sigma]=      30.075340 meV     Z=       0.892455 lam=       0.120504
+     E(   4 )=  -1.0239 eV   Re[Sigma]=      65.264482 meV Im[Sigma]=      30.075340 meV     Z=       0.892455 lam=       0.120504
      -------------------------------------------------------------------
 
 
      ik =       9 coord.:    0.0000000   0.1666667   0.3333333
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.139067 meV Im[Sigma]=      46.863417 meV     Z=       1.057487 lam=      -0.054362
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.729710 meV Im[Sigma]=      74.142319 meV     Z=       0.892439 lam=       0.120525
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      25.136030 meV Im[Sigma]=     114.846185 meV     Z=       1.057538 lam=      -0.054408
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.138598 meV Im[Sigma]=      46.863911 meV     Z=       1.057489 lam=      -0.054364
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.728514 meV Im[Sigma]=      74.141727 meV     Z=       0.892442 lam=       0.120521
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      25.138100 meV Im[Sigma]=     114.846004 meV     Z=       1.057543 lam=      -0.054412
      -------------------------------------------------------------------
 
 
@@ -513,33 +472,33 @@
 
      ik =      11 coord.:    0.0000000   0.1666667   0.6666667
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.727073 meV Im[Sigma]=      51.540266 meV     Z=       1.112386 lam=      -0.101031
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.594629 meV Im[Sigma]=      40.274457 meV     Z=       1.047038 lam=      -0.044925
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.097380 meV Im[Sigma]=      57.814112 meV     Z=       0.900408 lam=       0.110608
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.726854 meV Im[Sigma]=      51.540479 meV     Z=       1.112390 lam=      -0.101035
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.594523 meV Im[Sigma]=      40.274777 meV     Z=       1.047039 lam=      -0.044926
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.097126 meV Im[Sigma]=      57.815513 meV     Z=       0.900414 lam=       0.110601
      -------------------------------------------------------------------
 
 
      ik =      12 coord.:    0.0000000   0.1666667   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.627000 meV Im[Sigma]=      23.283989 meV     Z=       0.995659 lam=       0.004360
-     E(   3 )=  -2.2152 eV   Re[Sigma]=     -48.954014 meV Im[Sigma]=      64.776752 meV     Z=       1.034430 lam=      -0.033284
-     E(   4 )=  -0.4858 eV   Re[Sigma]=      47.706094 meV Im[Sigma]=     135.985598 meV     Z=       2.006849 lam=      -0.501706
+     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.627047 meV Im[Sigma]=      23.284008 meV     Z=       0.995659 lam=       0.004360
+     E(   3 )=  -2.2152 eV   Re[Sigma]=     -48.953964 meV Im[Sigma]=      64.776810 meV     Z=       1.034429 lam=      -0.033283
+     E(   4 )=  -0.4858 eV   Re[Sigma]=      47.706203 meV Im[Sigma]=     135.986101 meV     Z=       2.006866 lam=      -0.501711
      -------------------------------------------------------------------
 
 
      ik =      13 coord.:    0.0000000   0.3333333   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -6.8685 eV   Re[Sigma]=      -0.028555 meV Im[Sigma]=      10.691642 meV     Z=       0.997185 lam=       0.002823
-     E(   3 )=  -1.1730 eV   Re[Sigma]=      43.307280 meV Im[Sigma]=      85.714998 meV     Z=       1.086304 lam=      -0.079447
-     E(   4 )=  -1.1730 eV   Re[Sigma]=      43.307280 meV Im[Sigma]=      85.714998 meV     Z=       1.086304 lam=      -0.079447
+     E(   2 )=  -6.8685 eV   Re[Sigma]=      -0.028556 meV Im[Sigma]=      10.691741 meV     Z=       0.997185 lam=       0.002823
+     E(   3 )=  -1.1730 eV   Re[Sigma]=      43.306974 meV Im[Sigma]=      85.714454 meV     Z=       1.086306 lam=      -0.079449
+     E(   4 )=  -1.1730 eV   Re[Sigma]=      43.306974 meV Im[Sigma]=      85.714454 meV     Z=       1.086306 lam=      -0.079449
      -------------------------------------------------------------------
 
 
      ik =      14 coord.:    0.0000000   0.3333333   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.080131 meV Im[Sigma]=      44.953087 meV     Z=       1.045893 lam=      -0.043879
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.425102 meV Im[Sigma]=      73.512550 meV     Z=       0.885654 lam=       0.129109
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      26.928828 meV Im[Sigma]=     116.840723 meV     Z=       1.081651 lam=      -0.075487
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.080148 meV Im[Sigma]=      44.953716 meV     Z=       1.045895 lam=      -0.043881
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.424665 meV Im[Sigma]=      73.512640 meV     Z=       0.885656 lam=       0.129106
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      26.929297 meV Im[Sigma]=     116.839795 meV     Z=       1.081645 lam=      -0.075482
      -------------------------------------------------------------------
 
 
@@ -569,17 +528,17 @@
 
      ik =      18 coord.:    0.0000000   0.3333333   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.321546 meV Im[Sigma]=      48.396235 meV     Z=       1.098239 lam=      -0.089451
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.978560 meV Im[Sigma]=      40.434209 meV     Z=       1.049672 lam=      -0.047321
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.640568 meV Im[Sigma]=      57.031114 meV     Z=       0.893479 lam=       0.119220
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.321461 meV Im[Sigma]=      48.396758 meV     Z=       1.098242 lam=      -0.089454
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.978842 meV Im[Sigma]=      40.433796 meV     Z=       1.049672 lam=      -0.047321
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.640073 meV Im[Sigma]=      57.030398 meV     Z=       0.893474 lam=       0.119226
      -------------------------------------------------------------------
 
 
      ik =      19 coord.:    0.0000000   0.5000000   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -9.4227 eV   Re[Sigma]=      -6.746619 meV Im[Sigma]=       6.652611 meV     Z=       1.006287 lam=      -0.006248
-     E(   3 )=  -1.6810 eV   Re[Sigma]=      23.809192 meV Im[Sigma]=      78.209968 meV     Z=       0.884327 lam=       0.130804
-     E(   4 )=  -1.6810 eV   Re[Sigma]=      23.809192 meV Im[Sigma]=      78.209968 meV     Z=       0.884327 lam=       0.130804
+     E(   2 )=  -9.4227 eV   Re[Sigma]=      -6.746642 meV Im[Sigma]=       6.652674 meV     Z=       1.006288 lam=      -0.006248
+     E(   3 )=  -1.6810 eV   Re[Sigma]=      23.809050 meV Im[Sigma]=      78.210140 meV     Z=       0.884328 lam=       0.130802
+     E(   4 )=  -1.6810 eV   Re[Sigma]=      23.809050 meV Im[Sigma]=      78.210140 meV     Z=       0.884328 lam=       0.130802
      -------------------------------------------------------------------
 
 
@@ -625,17 +584,17 @@
 
      ik =      25 coord.:    0.0000000   0.6666667   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -6.8685 eV   Re[Sigma]=      -0.028484 meV Im[Sigma]=      10.691688 meV     Z=       0.997185 lam=       0.002823
-     E(   3 )=  -1.1730 eV   Re[Sigma]=      43.306947 meV Im[Sigma]=      85.714802 meV     Z=       1.086305 lam=      -0.079448
-     E(   4 )=  -1.1730 eV   Re[Sigma]=      43.306947 meV Im[Sigma]=      85.714802 meV     Z=       1.086305 lam=      -0.079448
+     E(   2 )=  -6.8685 eV   Re[Sigma]=      -0.028491 meV Im[Sigma]=      10.691790 meV     Z=       0.997186 lam=       0.002822
+     E(   3 )=  -1.1730 eV   Re[Sigma]=      43.307460 meV Im[Sigma]=      85.715043 meV     Z=       1.086304 lam=      -0.079447
+     E(   4 )=  -1.1730 eV   Re[Sigma]=      43.307460 meV Im[Sigma]=      85.715043 meV     Z=       1.086304 lam=      -0.079447
      -------------------------------------------------------------------
 
 
      ik =      26 coord.:    0.0000000   0.6666667   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.321650 meV Im[Sigma]=      48.396556 meV     Z=       1.098239 lam=      -0.089452
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.978912 meV Im[Sigma]=      40.434211 meV     Z=       1.049673 lam=      -0.047322
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.639674 meV Im[Sigma]=      57.030938 meV     Z=       0.893476 lam=       0.119224
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.321582 meV Im[Sigma]=      48.397001 meV     Z=       1.098243 lam=      -0.089455
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.979079 meV Im[Sigma]=      40.434685 meV     Z=       1.049673 lam=      -0.047323
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.639336 meV Im[Sigma]=      57.032170 meV     Z=       0.893482 lam=       0.119217
      -------------------------------------------------------------------
 
 
@@ -665,33 +624,33 @@
 
      ik =      30 coord.:    0.0000000   0.6666667   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.080220 meV Im[Sigma]=      44.953288 meV     Z=       1.045893 lam=      -0.043879
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.425356 meV Im[Sigma]=      73.511996 meV     Z=       0.885654 lam=       0.129109
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      26.929210 meV Im[Sigma]=     116.840664 meV     Z=       1.081650 lam=      -0.075486
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.080020 meV Im[Sigma]=      44.953008 meV     Z=       1.045893 lam=      -0.043879
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.425533 meV Im[Sigma]=      73.511906 meV     Z=       0.885653 lam=       0.129111
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      26.928619 meV Im[Sigma]=     116.841615 meV     Z=       1.081659 lam=      -0.075494
      -------------------------------------------------------------------
 
 
      ik =      31 coord.:    0.0000000   0.8333333   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -2.1472 eV   Re[Sigma]=     -63.080828 meV Im[Sigma]=      61.256514 meV     Z=       0.877452 lam=       0.139664
-     E(   3 )=  -0.3746 eV   Re[Sigma]=      80.960653 meV Im[Sigma]=      53.874451 meV     Z=       0.980715 lam=       0.019664
-     E(   4 )=  -0.3746 eV   Re[Sigma]=      80.960653 meV Im[Sigma]=      53.874451 meV     Z=       0.980715 lam=       0.019664
+     E(   2 )=  -2.1472 eV   Re[Sigma]=     -63.080683 meV Im[Sigma]=      61.256723 meV     Z=       0.877454 lam=       0.139661
+     E(   3 )=  -0.3746 eV   Re[Sigma]=      80.960289 meV Im[Sigma]=      53.875356 meV     Z=       0.980722 lam=       0.019657
+     E(   4 )=  -0.3746 eV   Re[Sigma]=      80.960289 meV Im[Sigma]=      53.875356 meV     Z=       0.980722 lam=       0.019657
      -------------------------------------------------------------------
 
 
      ik =      32 coord.:    0.0000000   0.8333333   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.626932 meV Im[Sigma]=      23.283940 meV     Z=       0.995659 lam=       0.004360
-     E(   3 )=  -2.2152 eV   Re[Sigma]=     -48.953948 meV Im[Sigma]=      64.776824 meV     Z=       1.034430 lam=      -0.033284
-     E(   4 )=  -0.4858 eV   Re[Sigma]=      47.706161 meV Im[Sigma]=     135.985577 meV     Z=       2.006850 lam=      -0.501707
+     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.627003 meV Im[Sigma]=      23.283982 meV     Z=       0.995659 lam=       0.004360
+     E(   3 )=  -2.2152 eV   Re[Sigma]=     -48.953786 meV Im[Sigma]=      64.776601 meV     Z=       1.034429 lam=      -0.033284
+     E(   4 )=  -0.4858 eV   Re[Sigma]=      47.706221 meV Im[Sigma]=     135.984286 meV     Z=       2.006833 lam=      -0.501702
      -------------------------------------------------------------------
 
 
      ik =      33 coord.:    0.0000000   0.8333333   0.3333333
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.726912 meV Im[Sigma]=      51.539912 meV     Z=       1.112386 lam=      -0.101031
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.594615 meV Im[Sigma]=      40.274411 meV     Z=       1.047037 lam=      -0.044924
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.097385 meV Im[Sigma]=      57.814298 meV     Z=       0.900408 lam=       0.110607
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.727008 meV Im[Sigma]=      51.540566 meV     Z=       1.112388 lam=      -0.101033
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.594754 meV Im[Sigma]=      40.274365 meV     Z=       1.047038 lam=      -0.044924
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.097586 meV Im[Sigma]=      57.813354 meV     Z=       0.900405 lam=       0.110611
      -------------------------------------------------------------------
 
 
@@ -705,41 +664,41 @@
 
      ik =      35 coord.:    0.0000000   0.8333333   0.6666667
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.138677 meV Im[Sigma]=      46.863350 meV     Z=       1.057486 lam=      -0.054361
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.728832 meV Im[Sigma]=      74.141954 meV     Z=       0.892441 lam=       0.120523
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      25.138359 meV Im[Sigma]=     114.846055 meV     Z=       1.057540 lam=      -0.054410
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.138714 meV Im[Sigma]=      46.862918 meV     Z=       1.057484 lam=      -0.054359
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.729067 meV Im[Sigma]=      74.142338 meV     Z=       0.892439 lam=       0.120525
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      25.138258 meV Im[Sigma]=     114.846570 meV     Z=       1.057545 lam=      -0.054414
      -------------------------------------------------------------------
 
 
      ik =      36 coord.:    0.0000000   0.8333333   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -1.7072 eV   Re[Sigma]=      33.027965 meV Im[Sigma]=     114.438150 meV     Z=       0.972264 lam=       0.028527
-     E(   3 )=  -1.0239 eV   Re[Sigma]=      65.264534 meV Im[Sigma]=      30.075378 meV     Z=       0.892455 lam=       0.120505
-     E(   4 )=  -1.0239 eV   Re[Sigma]=      65.264534 meV Im[Sigma]=      30.075378 meV     Z=       0.892455 lam=       0.120505
+     E(   2 )=  -1.7072 eV   Re[Sigma]=      33.027630 meV Im[Sigma]=     114.437728 meV     Z=       0.972265 lam=       0.028526
+     E(   3 )=  -1.0239 eV   Re[Sigma]=      65.264218 meV Im[Sigma]=      30.075356 meV     Z=       0.892456 lam=       0.120503
+     E(   4 )=  -1.0239 eV   Re[Sigma]=      65.264218 meV Im[Sigma]=      30.075356 meV     Z=       0.892456 lam=       0.120503
      -------------------------------------------------------------------
 
 
      ik =      37 coord.:    0.1666667   0.0000000   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -2.1472 eV   Re[Sigma]=     -61.220329 meV Im[Sigma]=      60.262166 meV     Z=       0.876311 lam=       0.141147
-     E(   3 )=  -0.3746 eV   Re[Sigma]=      82.350375 meV Im[Sigma]=      52.082575 meV     Z=       0.971266 lam=       0.029584
-     E(   4 )=  -0.3746 eV   Re[Sigma]=      82.350375 meV Im[Sigma]=      52.082575 meV     Z=       0.971266 lam=       0.029584
+     E(   2 )=  -2.1472 eV   Re[Sigma]=     -61.220156 meV Im[Sigma]=      60.263405 meV     Z=       0.876314 lam=       0.141144
+     E(   3 )=  -0.3746 eV   Re[Sigma]=      82.349408 meV Im[Sigma]=      52.081407 meV     Z=       0.971265 lam=       0.029585
+     E(   4 )=  -0.3746 eV   Re[Sigma]=      82.349408 meV Im[Sigma]=      52.081407 meV     Z=       0.971265 lam=       0.029585
      -------------------------------------------------------------------
 
 
      ik =      38 coord.:    0.1666667   0.0000000   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -1.7072 eV   Re[Sigma]=      33.027965 meV Im[Sigma]=     114.438149 meV     Z=       0.972264 lam=       0.028527
-     E(   3 )=  -1.0239 eV   Re[Sigma]=      65.264534 meV Im[Sigma]=      30.075378 meV     Z=       0.892455 lam=       0.120505
-     E(   4 )=  -1.0239 eV   Re[Sigma]=      65.264534 meV Im[Sigma]=      30.075378 meV     Z=       0.892455 lam=       0.120505
+     E(   2 )=  -1.7072 eV   Re[Sigma]=      33.027630 meV Im[Sigma]=     114.437728 meV     Z=       0.972265 lam=       0.028526
+     E(   3 )=  -1.0239 eV   Re[Sigma]=      65.264219 meV Im[Sigma]=      30.075357 meV     Z=       0.892456 lam=       0.120503
+     E(   4 )=  -1.0239 eV   Re[Sigma]=      65.264219 meV Im[Sigma]=      30.075357 meV     Z=       0.892456 lam=       0.120503
      -------------------------------------------------------------------
 
 
      ik =      39 coord.:    0.1666667   0.0000000   0.3333333
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206718 meV Im[Sigma]=      45.747428 meV     Z=       1.050107 lam=      -0.047716
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.332992 meV Im[Sigma]=      74.265071 meV     Z=       0.885053 lam=       0.129876
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343228 meV Im[Sigma]=     117.190724 meV     Z=       1.078459 lam=      -0.072751
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206679 meV Im[Sigma]=      45.747977 meV     Z=       1.050110 lam=      -0.047719
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.332192 meV Im[Sigma]=      74.265010 meV     Z=       0.885056 lam=       0.129872
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343075 meV Im[Sigma]=     117.189836 meV     Z=       1.078457 lam=      -0.072749
      -------------------------------------------------------------------
 
 
@@ -753,49 +712,49 @@
 
      ik =      41 coord.:    0.1666667   0.0000000   0.6666667
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826992 meV Im[Sigma]=      50.499186 meV     Z=       1.107293 lam=      -0.096897
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870297 meV Im[Sigma]=      40.191245 meV     Z=       1.047355 lam=      -0.045214
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213009 meV Im[Sigma]=      58.297284 meV     Z=       0.891653 lam=       0.121512
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826917 meV Im[Sigma]=      50.499635 meV     Z=       1.107298 lam=      -0.096900
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870391 meV Im[Sigma]=      40.191753 meV     Z=       1.047356 lam=      -0.045215
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213042 meV Im[Sigma]=      58.297822 meV     Z=       0.891655 lam=       0.121511
      -------------------------------------------------------------------
 
 
      ik =      42 coord.:    0.1666667   0.0000000   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.347769 meV Im[Sigma]=      23.182924 meV     Z=       0.995593 lam=       0.004427
-     E(   3 )=  -2.2152 eV   Re[Sigma]=     -49.090062 meV Im[Sigma]=      63.915408 meV     Z=       1.030921 lam=      -0.029993
-     E(   4 )=  -0.4858 eV   Re[Sigma]=      49.402287 meV Im[Sigma]=     137.927326 meV     Z=       2.060670 lam=      -0.514721
+     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.347785 meV Im[Sigma]=      23.182969 meV     Z=       0.995593 lam=       0.004427
+     E(   3 )=  -2.2152 eV   Re[Sigma]=     -49.090050 meV Im[Sigma]=      63.915428 meV     Z=       1.030921 lam=      -0.029993
+     E(   4 )=  -0.4858 eV   Re[Sigma]=      49.402266 meV Im[Sigma]=     137.926686 meV     Z=       2.060662 lam=      -0.514719
      -------------------------------------------------------------------
 
 
      ik =      43 coord.:    0.1666667   0.1666667   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -1.7072 eV   Re[Sigma]=      33.028049 meV Im[Sigma]=     114.438480 meV     Z=       0.972265 lam=       0.028526
-     E(   3 )=  -1.0239 eV   Re[Sigma]=      65.264508 meV Im[Sigma]=      30.075424 meV     Z=       0.892455 lam=       0.120505
-     E(   4 )=  -1.0239 eV   Re[Sigma]=      65.264508 meV Im[Sigma]=      30.075424 meV     Z=       0.892455 lam=       0.120505
+     E(   2 )=  -1.7072 eV   Re[Sigma]=      33.028293 meV Im[Sigma]=     114.438722 meV     Z=       0.972266 lam=       0.028525
+     E(   3 )=  -1.0239 eV   Re[Sigma]=      65.264481 meV Im[Sigma]=      30.075339 meV     Z=       0.892455 lam=       0.120504
+     E(   4 )=  -1.0239 eV   Re[Sigma]=      65.264481 meV Im[Sigma]=      30.075339 meV     Z=       0.892455 lam=       0.120504
      -------------------------------------------------------------------
 
 
      ik =      44 coord.:    0.1666667   0.1666667   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -2.1472 eV   Re[Sigma]=     -61.220797 meV Im[Sigma]=      60.262589 meV     Z=       0.876311 lam=       0.141148
-     E(   3 )=  -0.3746 eV   Re[Sigma]=      82.350118 meV Im[Sigma]=      52.082429 meV     Z=       0.971266 lam=       0.029584
-     E(   4 )=  -0.3746 eV   Re[Sigma]=      82.350118 meV Im[Sigma]=      52.082429 meV     Z=       0.971266 lam=       0.029584
+     E(   2 )=  -2.1472 eV   Re[Sigma]=     -61.220688 meV Im[Sigma]=      60.262186 meV     Z=       0.876311 lam=       0.141148
+     E(   3 )=  -0.3746 eV   Re[Sigma]=      82.350434 meV Im[Sigma]=      52.083275 meV     Z=       0.971270 lam=       0.029580
+     E(   4 )=  -0.3746 eV   Re[Sigma]=      82.350434 meV Im[Sigma]=      52.083275 meV     Z=       0.971270 lam=       0.029580
      -------------------------------------------------------------------
 
 
      ik =      45 coord.:    0.1666667   0.1666667   0.3333333
      -------------------------------------------------------------------
-     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.347769 meV Im[Sigma]=      23.182923 meV     Z=       0.995593 lam=       0.004427
-     E(   3 )=  -2.2152 eV   Re[Sigma]=     -49.090062 meV Im[Sigma]=      63.915410 meV     Z=       1.030921 lam=      -0.029993
-     E(   4 )=  -0.4858 eV   Re[Sigma]=      49.402287 meV Im[Sigma]=     137.927327 meV     Z=       2.060670 lam=      -0.514721
+     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.347785 meV Im[Sigma]=      23.182968 meV     Z=       0.995593 lam=       0.004427
+     E(   3 )=  -2.2152 eV   Re[Sigma]=     -49.090049 meV Im[Sigma]=      63.915429 meV     Z=       1.030921 lam=      -0.029993
+     E(   4 )=  -0.4858 eV   Re[Sigma]=      49.402267 meV Im[Sigma]=     137.926689 meV     Z=       2.060662 lam=      -0.514719
      -------------------------------------------------------------------
 
 
      ik =      46 coord.:    0.1666667   0.1666667   0.5000000
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826902 meV Im[Sigma]=      50.499190 meV     Z=       1.107295 lam=      -0.096898
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870252 meV Im[Sigma]=      40.191331 meV     Z=       1.047355 lam=      -0.045214
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213037 meV Im[Sigma]=      58.297250 meV     Z=       0.891653 lam=       0.121513
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826858 meV Im[Sigma]=      50.499560 meV     Z=       1.107297 lam=      -0.096900
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870193 meV Im[Sigma]=      40.190966 meV     Z=       1.047354 lam=      -0.045213
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213105 meV Im[Sigma]=      58.297230 meV     Z=       0.891654 lam=       0.121511
      -------------------------------------------------------------------
 
 
@@ -809,33 +768,33 @@
 
      ik =      48 coord.:    0.1666667   0.1666667   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206636 meV Im[Sigma]=      45.747586 meV     Z=       1.050108 lam=      -0.047717
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.332594 meV Im[Sigma]=      74.264640 meV     Z=       0.885054 lam=       0.129874
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343443 meV Im[Sigma]=     117.190622 meV     Z=       1.078458 lam=      -0.072751
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206534 meV Im[Sigma]=      45.747139 meV     Z=       1.050106 lam=      -0.047716
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.333025 meV Im[Sigma]=      74.264900 meV     Z=       0.885053 lam=       0.129876
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343323 meV Im[Sigma]=     117.191441 meV     Z=       1.078463 lam=      -0.072755
      -------------------------------------------------------------------
 
 
      ik =      49 coord.:    0.1666667   0.3333333   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.080146 meV Im[Sigma]=      44.953086 meV     Z=       1.045893 lam=      -0.043879
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.425333 meV Im[Sigma]=      73.512549 meV     Z=       0.885654 lam=       0.129110
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      26.929003 meV Im[Sigma]=     116.840724 meV     Z=       1.081651 lam=      -0.075487
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.080148 meV Im[Sigma]=      44.953715 meV     Z=       1.045895 lam=      -0.043881
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.424667 meV Im[Sigma]=      73.512639 meV     Z=       0.885656 lam=       0.129106
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      26.929296 meV Im[Sigma]=     116.839795 meV     Z=       1.081645 lam=      -0.075482
      -------------------------------------------------------------------
 
 
      ik =      50 coord.:    0.1666667   0.3333333   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.627000 meV Im[Sigma]=      23.283990 meV     Z=       0.995659 lam=       0.004360
-     E(   3 )=  -2.2152 eV   Re[Sigma]=     -48.954014 meV Im[Sigma]=      64.776751 meV     Z=       1.034430 lam=      -0.033284
-     E(   4 )=  -0.4858 eV   Re[Sigma]=      47.706094 meV Im[Sigma]=     135.985598 meV     Z=       2.006849 lam=      -0.501706
+     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.627047 meV Im[Sigma]=      23.284009 meV     Z=       0.995659 lam=       0.004360
+     E(   3 )=  -2.2152 eV   Re[Sigma]=     -48.953964 meV Im[Sigma]=      64.776809 meV     Z=       1.034429 lam=      -0.033283
+     E(   4 )=  -0.4858 eV   Re[Sigma]=      47.706204 meV Im[Sigma]=     135.986102 meV     Z=       2.006866 lam=      -0.501711
      -------------------------------------------------------------------
 
 
      ik =      51 coord.:    0.1666667   0.3333333   0.3333333
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206636 meV Im[Sigma]=      45.747585 meV     Z=       1.050108 lam=      -0.047717
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.332594 meV Im[Sigma]=      74.264641 meV     Z=       0.885054 lam=       0.129874
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343442 meV Im[Sigma]=     117.190627 meV     Z=       1.078459 lam=      -0.072751
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206534 meV Im[Sigma]=      45.747138 meV     Z=       1.050106 lam=      -0.047716
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.333027 meV Im[Sigma]=      74.264901 meV     Z=       0.885053 lam=       0.129876
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343324 meV Im[Sigma]=     117.191447 meV     Z=       1.078463 lam=      -0.072755
      -------------------------------------------------------------------
 
 
@@ -849,7 +808,7 @@
 
      ik =      53 coord.:    0.1666667   0.3333333   0.6666667
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -873,9 +832,9 @@
 
      ik =      56 coord.:    0.1666667   0.5000000   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.321510 meV Im[Sigma]=      48.396234 meV     Z=       1.098239 lam=      -0.089451
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.978944 meV Im[Sigma]=      40.434209 meV     Z=       1.049672 lam=      -0.047322
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.639618 meV Im[Sigma]=      57.031085 meV     Z=       0.893477 lam=       0.119223
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.321461 meV Im[Sigma]=      48.396758 meV     Z=       1.098242 lam=      -0.089454
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.978842 meV Im[Sigma]=      40.433795 meV     Z=       1.049672 lam=      -0.047321
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.640071 meV Im[Sigma]=      57.030398 meV     Z=       0.893474 lam=       0.119226
      -------------------------------------------------------------------
 
 
@@ -905,7 +864,7 @@
 
      ik =      60 coord.:    0.1666667   0.5000000   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -913,9 +872,9 @@
 
      ik =      61 coord.:    0.1666667   0.6666667   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.321651 meV Im[Sigma]=      48.396555 meV     Z=       1.098239 lam=      -0.089452
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.978912 meV Im[Sigma]=      40.434209 meV     Z=       1.049673 lam=      -0.047322
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.639674 meV Im[Sigma]=      57.030938 meV     Z=       0.893476 lam=       0.119224
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.321582 meV Im[Sigma]=      48.397000 meV     Z=       1.098243 lam=      -0.089455
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.979078 meV Im[Sigma]=      40.434684 meV     Z=       1.049673 lam=      -0.047323
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.639334 meV Im[Sigma]=      57.032169 meV     Z=       0.893482 lam=       0.119217
      -------------------------------------------------------------------
 
 
@@ -929,7 +888,7 @@
 
      ik =      63 coord.:    0.1666667   0.6666667   0.3333333
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -961,17 +920,17 @@
 
      ik =      67 coord.:    0.1666667   0.8333333   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.626932 meV Im[Sigma]=      23.283940 meV     Z=       0.995659 lam=       0.004360
-     E(   3 )=  -2.2152 eV   Re[Sigma]=     -48.953948 meV Im[Sigma]=      64.776823 meV     Z=       1.034430 lam=      -0.033284
-     E(   4 )=  -0.4858 eV   Re[Sigma]=      47.706160 meV Im[Sigma]=     135.985574 meV     Z=       2.006850 lam=      -0.501707
+     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.627003 meV Im[Sigma]=      23.283983 meV     Z=       0.995659 lam=       0.004360
+     E(   3 )=  -2.2152 eV   Re[Sigma]=     -48.953785 meV Im[Sigma]=      64.776599 meV     Z=       1.034429 lam=      -0.033283
+     E(   4 )=  -0.4858 eV   Re[Sigma]=      47.706220 meV Im[Sigma]=     135.984283 meV     Z=       2.006833 lam=      -0.501702
      -------------------------------------------------------------------
 
 
      ik =      68 coord.:    0.1666667   0.8333333   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.080152 meV Im[Sigma]=      44.953288 meV     Z=       1.045893 lam=      -0.043879
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.424992 meV Im[Sigma]=      73.511996 meV     Z=       0.885654 lam=       0.129109
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      26.929235 meV Im[Sigma]=     116.840662 meV     Z=       1.081650 lam=      -0.075486
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.080021 meV Im[Sigma]=      44.953008 meV     Z=       1.045893 lam=      -0.043879
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.425534 meV Im[Sigma]=      73.511907 meV     Z=       0.885653 lam=       0.129111
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      26.928618 meV Im[Sigma]=     116.841613 meV     Z=       1.081659 lam=      -0.075494
      -------------------------------------------------------------------
 
 
@@ -985,7 +944,7 @@
 
      ik =      70 coord.:    0.1666667   0.8333333   0.5000000
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -1001,25 +960,25 @@
 
      ik =      72 coord.:    0.1666667   0.8333333   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206718 meV Im[Sigma]=      45.747428 meV     Z=       1.050107 lam=      -0.047716
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.332993 meV Im[Sigma]=      74.265071 meV     Z=       0.885053 lam=       0.129876
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343228 meV Im[Sigma]=     117.190723 meV     Z=       1.078459 lam=      -0.072751
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206679 meV Im[Sigma]=      45.747976 meV     Z=       1.050110 lam=      -0.047719
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.332195 meV Im[Sigma]=      74.265013 meV     Z=       0.885056 lam=       0.129872
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343075 meV Im[Sigma]=     117.189832 meV     Z=       1.078457 lam=      -0.072749
      -------------------------------------------------------------------
 
 
      ik =      73 coord.:    0.3333333   0.0000000   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -6.8685 eV   Re[Sigma]=       0.240467 meV Im[Sigma]=      10.691642 meV     Z=       0.997048 lam=       0.002961
-     E(   3 )=  -1.1730 eV   Re[Sigma]=      43.930374 meV Im[Sigma]=      85.864618 meV     Z=       1.085376 lam=      -0.078660
-     E(   4 )=  -1.1730 eV   Re[Sigma]=      43.930374 meV Im[Sigma]=      85.864618 meV     Z=       1.085376 lam=      -0.078660
+     E(   2 )=  -6.8685 eV   Re[Sigma]=       0.240517 meV Im[Sigma]=      10.691741 meV     Z=       0.997048 lam=       0.002961
+     E(   3 )=  -1.1730 eV   Re[Sigma]=      43.930279 meV Im[Sigma]=      85.863737 meV     Z=       1.085376 lam=      -0.078661
+     E(   4 )=  -1.1730 eV   Re[Sigma]=      43.930279 meV Im[Sigma]=      85.863737 meV     Z=       1.085376 lam=      -0.078661
      -------------------------------------------------------------------
 
 
      ik =      74 coord.:    0.3333333   0.0000000   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206718 meV Im[Sigma]=      45.747428 meV     Z=       1.050107 lam=      -0.047716
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.332992 meV Im[Sigma]=      74.265070 meV     Z=       0.885053 lam=       0.129876
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343228 meV Im[Sigma]=     117.190723 meV     Z=       1.078459 lam=      -0.072751
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206679 meV Im[Sigma]=      45.747977 meV     Z=       1.050110 lam=      -0.047719
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.332191 meV Im[Sigma]=      74.265008 meV     Z=       0.885056 lam=       0.129872
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343076 meV Im[Sigma]=     117.189835 meV     Z=       1.078457 lam=      -0.072749
      -------------------------------------------------------------------
 
 
@@ -1049,33 +1008,33 @@
 
      ik =      78 coord.:    0.3333333   0.0000000   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826902 meV Im[Sigma]=      50.499192 meV     Z=       1.107295 lam=      -0.096898
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870253 meV Im[Sigma]=      40.191330 meV     Z=       1.047355 lam=      -0.045214
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213037 meV Im[Sigma]=      58.297250 meV     Z=       0.891653 lam=       0.121513
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826857 meV Im[Sigma]=      50.499559 meV     Z=       1.107297 lam=      -0.096900
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870193 meV Im[Sigma]=      40.190966 meV     Z=       1.047354 lam=      -0.045213
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213104 meV Im[Sigma]=      58.297229 meV     Z=       0.891654 lam=       0.121511
      -------------------------------------------------------------------
 
 
      ik =      79 coord.:    0.3333333   0.1666667   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.138710 meV Im[Sigma]=      46.863419 meV     Z=       1.057487 lam=      -0.054362
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.729180 meV Im[Sigma]=      74.142318 meV     Z=       0.892439 lam=       0.120525
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      25.138286 meV Im[Sigma]=     114.846196 meV     Z=       1.057542 lam=      -0.054412
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.138598 meV Im[Sigma]=      46.863911 meV     Z=       1.057489 lam=      -0.054364
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.728514 meV Im[Sigma]=      74.141724 meV     Z=       0.892442 lam=       0.120521
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      25.138099 meV Im[Sigma]=     114.846003 meV     Z=       1.057543 lam=      -0.054412
      -------------------------------------------------------------------
 
 
      ik =      80 coord.:    0.3333333   0.1666667   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.347769 meV Im[Sigma]=      23.182925 meV     Z=       0.995593 lam=       0.004427
-     E(   3 )=  -2.2152 eV   Re[Sigma]=     -49.090064 meV Im[Sigma]=      63.915409 meV     Z=       1.030921 lam=      -0.029993
-     E(   4 )=  -0.4858 eV   Re[Sigma]=      49.402286 meV Im[Sigma]=     137.927324 meV     Z=       2.060670 lam=      -0.514721
+     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.347785 meV Im[Sigma]=      23.182969 meV     Z=       0.995593 lam=       0.004427
+     E(   3 )=  -2.2152 eV   Re[Sigma]=     -49.090049 meV Im[Sigma]=      63.915426 meV     Z=       1.030921 lam=      -0.029993
+     E(   4 )=  -0.4858 eV   Re[Sigma]=      49.402268 meV Im[Sigma]=     137.926690 meV     Z=       2.060662 lam=      -0.514719
      -------------------------------------------------------------------
 
 
      ik =      81 coord.:    0.3333333   0.1666667   0.3333333
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.138677 meV Im[Sigma]=      46.863349 meV     Z=       1.057486 lam=      -0.054361
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.728833 meV Im[Sigma]=      74.141956 meV     Z=       0.892441 lam=       0.120523
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      25.138360 meV Im[Sigma]=     114.846054 meV     Z=       1.057540 lam=      -0.054410
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.138713 meV Im[Sigma]=      46.862917 meV     Z=       1.057484 lam=      -0.054359
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.729069 meV Im[Sigma]=      74.142341 meV     Z=       0.892439 lam=       0.120525
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      25.138258 meV Im[Sigma]=     114.846568 meV     Z=       1.057545 lam=      -0.054414
      -------------------------------------------------------------------
 
 
@@ -1089,7 +1048,7 @@
 
      ik =      83 coord.:    0.3333333   0.1666667   0.6666667
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -1113,25 +1072,25 @@
 
      ik =      86 coord.:    0.3333333   0.3333333   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206636 meV Im[Sigma]=      45.747587 meV     Z=       1.050108 lam=      -0.047717
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.332594 meV Im[Sigma]=      74.264641 meV     Z=       0.885054 lam=       0.129874
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343443 meV Im[Sigma]=     117.190624 meV     Z=       1.078459 lam=      -0.072751
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206533 meV Im[Sigma]=      45.747138 meV     Z=       1.050106 lam=      -0.047716
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.333026 meV Im[Sigma]=      74.264900 meV     Z=       0.885053 lam=       0.129876
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343324 meV Im[Sigma]=     117.191445 meV     Z=       1.078463 lam=      -0.072755
      -------------------------------------------------------------------
 
 
      ik =      87 coord.:    0.3333333   0.3333333   0.3333333
      -------------------------------------------------------------------
-     E(   2 )=  -6.8685 eV   Re[Sigma]=       0.240516 meV Im[Sigma]=      10.691687 meV     Z=       0.997048 lam=       0.002961
-     E(   3 )=  -1.1730 eV   Re[Sigma]=      43.930032 meV Im[Sigma]=      85.864074 meV     Z=       1.085375 lam=      -0.078660
-     E(   4 )=  -1.1730 eV   Re[Sigma]=      43.930032 meV Im[Sigma]=      85.864074 meV     Z=       1.085375 lam=      -0.078660
+     E(   2 )=  -6.8685 eV   Re[Sigma]=       0.240502 meV Im[Sigma]=      10.691790 meV     Z=       0.997049 lam=       0.002960
+     E(   3 )=  -1.1730 eV   Re[Sigma]=      43.930362 meV Im[Sigma]=      85.864737 meV     Z=       1.085376 lam=      -0.078660
+     E(   4 )=  -1.1730 eV   Re[Sigma]=      43.930362 meV Im[Sigma]=      85.864737 meV     Z=       1.085376 lam=      -0.078660
      -------------------------------------------------------------------
 
 
      ik =      88 coord.:    0.3333333   0.3333333   0.5000000
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826992 meV Im[Sigma]=      50.499185 meV     Z=       1.107293 lam=      -0.096897
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870298 meV Im[Sigma]=      40.191246 meV     Z=       1.047355 lam=      -0.045214
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213009 meV Im[Sigma]=      58.297284 meV     Z=       0.891653 lam=       0.121512
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826917 meV Im[Sigma]=      50.499636 meV     Z=       1.107298 lam=      -0.096900
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870391 meV Im[Sigma]=      40.191755 meV     Z=       1.047356 lam=      -0.045215
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213043 meV Im[Sigma]=      58.297823 meV     Z=       0.891655 lam=       0.121511
      -------------------------------------------------------------------
 
 
@@ -1169,9 +1128,9 @@
 
      ik =      93 coord.:    0.3333333   0.5000000   0.3333333
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.727073 meV Im[Sigma]=      51.540265 meV     Z=       1.112386 lam=      -0.101031
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.594629 meV Im[Sigma]=      40.274457 meV     Z=       1.047038 lam=      -0.044925
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.097380 meV Im[Sigma]=      57.814112 meV     Z=       0.900408 lam=       0.110608
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.726854 meV Im[Sigma]=      51.540478 meV     Z=       1.112390 lam=      -0.101034
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.594523 meV Im[Sigma]=      40.274778 meV     Z=       1.047039 lam=      -0.044926
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.097125 meV Im[Sigma]=      57.815513 meV     Z=       0.900414 lam=       0.110601
      -------------------------------------------------------------------
 
 
@@ -1185,7 +1144,7 @@
 
      ik =      95 coord.:    0.3333333   0.5000000   0.6666667
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -1209,7 +1168,7 @@
 
      ik =      98 coord.:    0.3333333   0.6666667   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -1225,7 +1184,7 @@
 
      ik =     100 coord.:    0.3333333   0.6666667   0.5000000
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -1241,7 +1200,7 @@
 
      ik =     102 coord.:    0.3333333   0.6666667   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -1249,9 +1208,9 @@
 
      ik =     103 coord.:    0.3333333   0.8333333   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.726912 meV Im[Sigma]=      51.539912 meV     Z=       1.112386 lam=      -0.101031
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.594615 meV Im[Sigma]=      40.274411 meV     Z=       1.047037 lam=      -0.044924
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.097385 meV Im[Sigma]=      57.814297 meV     Z=       0.900408 lam=       0.110607
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.727008 meV Im[Sigma]=      51.540566 meV     Z=       1.112388 lam=      -0.101033
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.594755 meV Im[Sigma]=      40.274366 meV     Z=       1.047038 lam=      -0.044924
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.097586 meV Im[Sigma]=      57.813354 meV     Z=       0.900405 lam=       0.110611
      -------------------------------------------------------------------
 
 
@@ -1281,7 +1240,7 @@
 
      ik =     107 coord.:    0.3333333   0.8333333   0.6666667
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -1297,9 +1256,9 @@
 
      ik =     109 coord.:    0.5000000   0.0000000   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -9.4227 eV   Re[Sigma]=      -6.805981 meV Im[Sigma]=       6.716594 meV     Z=       1.006639 lam=      -0.006596
-     E(   3 )=  -1.6810 eV   Re[Sigma]=      23.064922 meV Im[Sigma]=      79.526539 meV     Z=       0.880306 lam=       0.135969
-     E(   4 )=  -1.6810 eV   Re[Sigma]=      23.064922 meV Im[Sigma]=      79.526539 meV     Z=       0.880306 lam=       0.135969
+     E(   2 )=  -9.4227 eV   Re[Sigma]=      -6.806023 meV Im[Sigma]=       6.716643 meV     Z=       1.006640 lam=      -0.006596
+     E(   3 )=  -1.6810 eV   Re[Sigma]=      23.064780 meV Im[Sigma]=      79.526795 meV     Z=       0.880307 lam=       0.135968
+     E(   4 )=  -1.6810 eV   Re[Sigma]=      23.064780 meV Im[Sigma]=      79.526795 meV     Z=       0.880307 lam=       0.135968
      -------------------------------------------------------------------
 
 
@@ -1353,9 +1312,9 @@
 
      ik =     116 coord.:    0.5000000   0.1666667   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826902 meV Im[Sigma]=      50.499192 meV     Z=       1.107295 lam=      -0.096898
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870252 meV Im[Sigma]=      40.191331 meV     Z=       1.047355 lam=      -0.045214
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213036 meV Im[Sigma]=      58.297250 meV     Z=       0.891653 lam=       0.121513
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826857 meV Im[Sigma]=      50.499559 meV     Z=       1.107297 lam=      -0.096900
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870193 meV Im[Sigma]=      40.190966 meV     Z=       1.047354 lam=      -0.045213
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213106 meV Im[Sigma]=      58.297232 meV     Z=       0.891654 lam=       0.121511
      -------------------------------------------------------------------
 
 
@@ -1385,7 +1344,7 @@
 
      ik =     120 coord.:    0.5000000   0.1666667   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -1409,9 +1368,9 @@
 
      ik =     123 coord.:    0.5000000   0.3333333   0.3333333
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826992 meV Im[Sigma]=      50.499185 meV     Z=       1.107293 lam=      -0.096897
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870297 meV Im[Sigma]=      40.191246 meV     Z=       1.047355 lam=      -0.045214
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213009 meV Im[Sigma]=      58.297285 meV     Z=       0.891653 lam=       0.121512
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826917 meV Im[Sigma]=      50.499635 meV     Z=       1.107298 lam=      -0.096900
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870391 meV Im[Sigma]=      40.191754 meV     Z=       1.047356 lam=      -0.045215
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213044 meV Im[Sigma]=      58.297823 meV     Z=       0.891655 lam=       0.121511
      -------------------------------------------------------------------
 
 
@@ -1425,7 +1384,7 @@
 
      ik =     125 coord.:    0.5000000   0.3333333   0.6666667
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -1465,9 +1424,9 @@
 
      ik =     130 coord.:    0.5000000   0.5000000   0.5000000
      -------------------------------------------------------------------
-     E(   2 )=  -9.4227 eV   Re[Sigma]=      -6.805981 meV Im[Sigma]=       6.716595 meV     Z=       1.006639 lam=      -0.006596
-     E(   3 )=  -1.6810 eV   Re[Sigma]=      23.064922 meV Im[Sigma]=      79.526537 meV     Z=       0.880306 lam=       0.135969
-     E(   4 )=  -1.6810 eV   Re[Sigma]=      23.064922 meV Im[Sigma]=      79.526537 meV     Z=       0.880306 lam=       0.135969
+     E(   2 )=  -9.4227 eV   Re[Sigma]=      -6.806023 meV Im[Sigma]=       6.716643 meV     Z=       1.006640 lam=      -0.006596
+     E(   3 )=  -1.6810 eV   Re[Sigma]=      23.064779 meV Im[Sigma]=      79.526794 meV     Z=       0.880307 lam=       0.135968
+     E(   4 )=  -1.6810 eV   Re[Sigma]=      23.064779 meV Im[Sigma]=      79.526794 meV     Z=       0.880307 lam=       0.135968
      -------------------------------------------------------------------
 
 
@@ -1505,7 +1464,7 @@
 
      ik =     135 coord.:    0.5000000   0.6666667   0.3333333
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -1521,9 +1480,9 @@
 
      ik =     137 coord.:    0.5000000   0.6666667   0.6666667
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826902 meV Im[Sigma]=      50.499191 meV     Z=       1.107295 lam=      -0.096898
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870252 meV Im[Sigma]=      40.191330 meV     Z=       1.047355 lam=      -0.045214
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213037 meV Im[Sigma]=      58.297251 meV     Z=       0.891653 lam=       0.121513
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826858 meV Im[Sigma]=      50.499559 meV     Z=       1.107297 lam=      -0.096900
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870193 meV Im[Sigma]=      40.190967 meV     Z=       1.047354 lam=      -0.045213
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213105 meV Im[Sigma]=      58.297230 meV     Z=       0.891654 lam=       0.121511
      -------------------------------------------------------------------
 
 
@@ -1545,7 +1504,7 @@
 
      ik =     140 coord.:    0.5000000   0.8333333   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -1577,25 +1536,25 @@
 
      ik =     144 coord.:    0.5000000   0.8333333   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826992 meV Im[Sigma]=      50.499185 meV     Z=       1.107293 lam=      -0.096897
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870297 meV Im[Sigma]=      40.191246 meV     Z=       1.047355 lam=      -0.045214
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213010 meV Im[Sigma]=      58.297285 meV     Z=       0.891653 lam=       0.121512
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826917 meV Im[Sigma]=      50.499635 meV     Z=       1.107298 lam=      -0.096900
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870391 meV Im[Sigma]=      40.191755 meV     Z=       1.047356 lam=      -0.045215
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213044 meV Im[Sigma]=      58.297824 meV     Z=       0.891655 lam=       0.121511
      -------------------------------------------------------------------
 
 
      ik =     145 coord.:    0.6666667   0.0000000   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -6.8685 eV   Re[Sigma]=       0.240516 meV Im[Sigma]=      10.691687 meV     Z=       0.997048 lam=       0.002961
-     E(   3 )=  -1.1730 eV   Re[Sigma]=      43.930033 meV Im[Sigma]=      85.864074 meV     Z=       1.085375 lam=      -0.078660
-     E(   4 )=  -1.1730 eV   Re[Sigma]=      43.930033 meV Im[Sigma]=      85.864074 meV     Z=       1.085375 lam=      -0.078660
+     E(   2 )=  -6.8685 eV   Re[Sigma]=       0.240502 meV Im[Sigma]=      10.691790 meV     Z=       0.997049 lam=       0.002960
+     E(   3 )=  -1.1730 eV   Re[Sigma]=      43.930363 meV Im[Sigma]=      85.864737 meV     Z=       1.085376 lam=      -0.078660
+     E(   4 )=  -1.1730 eV   Re[Sigma]=      43.930363 meV Im[Sigma]=      85.864737 meV     Z=       1.085376 lam=      -0.078660
      -------------------------------------------------------------------
 
 
      ik =     146 coord.:    0.6666667   0.0000000   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826992 meV Im[Sigma]=      50.499186 meV     Z=       1.107293 lam=      -0.096897
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870298 meV Im[Sigma]=      40.191247 meV     Z=       1.047355 lam=      -0.045214
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213010 meV Im[Sigma]=      58.297286 meV     Z=       0.891653 lam=       0.121512
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826917 meV Im[Sigma]=      50.499635 meV     Z=       1.107298 lam=      -0.096900
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870391 meV Im[Sigma]=      40.191756 meV     Z=       1.047356 lam=      -0.045215
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213043 meV Im[Sigma]=      58.297823 meV     Z=       0.891655 lam=       0.121511
      -------------------------------------------------------------------
 
 
@@ -1625,17 +1584,17 @@
 
      ik =     150 coord.:    0.6666667   0.0000000   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206636 meV Im[Sigma]=      45.747586 meV     Z=       1.050108 lam=      -0.047717
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.332593 meV Im[Sigma]=      74.264640 meV     Z=       0.885054 lam=       0.129874
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343443 meV Im[Sigma]=     117.190626 meV     Z=       1.078459 lam=      -0.072751
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206534 meV Im[Sigma]=      45.747139 meV     Z=       1.050106 lam=      -0.047716
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.333026 meV Im[Sigma]=      74.264900 meV     Z=       0.885053 lam=       0.129876
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343325 meV Im[Sigma]=     117.191447 meV     Z=       1.078463 lam=      -0.072755
      -------------------------------------------------------------------
 
 
      ik =     151 coord.:    0.6666667   0.1666667   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.727073 meV Im[Sigma]=      51.540265 meV     Z=       1.112386 lam=      -0.101031
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.594629 meV Im[Sigma]=      40.274458 meV     Z=       1.047038 lam=      -0.044925
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.097381 meV Im[Sigma]=      57.814113 meV     Z=       0.900408 lam=       0.110608
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.726854 meV Im[Sigma]=      51.540478 meV     Z=       1.112390 lam=      -0.101034
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.594523 meV Im[Sigma]=      40.274778 meV     Z=       1.047039 lam=      -0.044926
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.097127 meV Im[Sigma]=      57.815514 meV     Z=       0.900414 lam=       0.110601
      -------------------------------------------------------------------
 
 
@@ -1649,7 +1608,7 @@
 
      ik =     153 coord.:    0.6666667   0.1666667   0.3333333
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -1689,7 +1648,7 @@
 
      ik =     158 coord.:    0.6666667   0.3333333   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -1705,7 +1664,7 @@
 
      ik =     160 coord.:    0.6666667   0.3333333   0.5000000
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -1721,7 +1680,7 @@
 
      ik =     162 coord.:    0.6666667   0.3333333   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -1745,7 +1704,7 @@
 
      ik =     165 coord.:    0.6666667   0.5000000   0.3333333
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -1761,9 +1720,9 @@
 
      ik =     167 coord.:    0.6666667   0.5000000   0.6666667
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.726912 meV Im[Sigma]=      51.539912 meV     Z=       1.112386 lam=      -0.101031
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.594615 meV Im[Sigma]=      40.274412 meV     Z=       1.047037 lam=      -0.044924
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.097384 meV Im[Sigma]=      57.814297 meV     Z=       0.900408 lam=       0.110607
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.727008 meV Im[Sigma]=      51.540566 meV     Z=       1.112388 lam=      -0.101033
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.594755 meV Im[Sigma]=      40.274366 meV     Z=       1.047038 lam=      -0.044924
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.097587 meV Im[Sigma]=      57.813355 meV     Z=       0.900405 lam=       0.110611
      -------------------------------------------------------------------
 
 
@@ -1801,33 +1760,33 @@
 
      ik =     172 coord.:    0.6666667   0.6666667   0.5000000
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826902 meV Im[Sigma]=      50.499191 meV     Z=       1.107295 lam=      -0.096898
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870253 meV Im[Sigma]=      40.191330 meV     Z=       1.047355 lam=      -0.045214
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213036 meV Im[Sigma]=      58.297249 meV     Z=       0.891653 lam=       0.121513
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826857 meV Im[Sigma]=      50.499560 meV     Z=       1.107297 lam=      -0.096900
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870193 meV Im[Sigma]=      40.190966 meV     Z=       1.047354 lam=      -0.045213
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213105 meV Im[Sigma]=      58.297230 meV     Z=       0.891654 lam=       0.121511
      -------------------------------------------------------------------
 
 
      ik =     173 coord.:    0.6666667   0.6666667   0.6666667
      -------------------------------------------------------------------
-     E(   2 )=  -6.8685 eV   Re[Sigma]=       0.240467 meV Im[Sigma]=      10.691642 meV     Z=       0.997048 lam=       0.002961
-     E(   3 )=  -1.1730 eV   Re[Sigma]=      43.930373 meV Im[Sigma]=      85.864618 meV     Z=       1.085376 lam=      -0.078660
-     E(   4 )=  -1.1730 eV   Re[Sigma]=      43.930373 meV Im[Sigma]=      85.864618 meV     Z=       1.085376 lam=      -0.078660
+     E(   2 )=  -6.8685 eV   Re[Sigma]=       0.240517 meV Im[Sigma]=      10.691741 meV     Z=       0.997048 lam=       0.002961
+     E(   3 )=  -1.1730 eV   Re[Sigma]=      43.930279 meV Im[Sigma]=      85.863738 meV     Z=       1.085376 lam=      -0.078661
+     E(   4 )=  -1.1730 eV   Re[Sigma]=      43.930279 meV Im[Sigma]=      85.863738 meV     Z=       1.085376 lam=      -0.078661
      -------------------------------------------------------------------
 
 
      ik =     174 coord.:    0.6666667   0.6666667   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206718 meV Im[Sigma]=      45.747427 meV     Z=       1.050107 lam=      -0.047716
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.332992 meV Im[Sigma]=      74.265070 meV     Z=       0.885053 lam=       0.129876
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343228 meV Im[Sigma]=     117.190722 meV     Z=       1.078459 lam=      -0.072751
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206679 meV Im[Sigma]=      45.747976 meV     Z=       1.050110 lam=      -0.047719
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.332192 meV Im[Sigma]=      74.265010 meV     Z=       0.885056 lam=       0.129872
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343076 meV Im[Sigma]=     117.189835 meV     Z=       1.078457 lam=      -0.072749
      -------------------------------------------------------------------
 
 
      ik =     175 coord.:    0.6666667   0.8333333   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.138677 meV Im[Sigma]=      46.863350 meV     Z=       1.057486 lam=      -0.054361
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.728832 meV Im[Sigma]=      74.141955 meV     Z=       0.892441 lam=       0.120523
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      25.138359 meV Im[Sigma]=     114.846053 meV     Z=       1.057540 lam=      -0.054410
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.138713 meV Im[Sigma]=      46.862918 meV     Z=       1.057484 lam=      -0.054359
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.729068 meV Im[Sigma]=      74.142341 meV     Z=       0.892439 lam=       0.120525
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      25.138258 meV Im[Sigma]=     114.846571 meV     Z=       1.057545 lam=      -0.054414
      -------------------------------------------------------------------
 
 
@@ -1841,7 +1800,7 @@
 
      ik =     177 coord.:    0.6666667   0.8333333   0.3333333
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -1857,41 +1816,41 @@
 
      ik =     179 coord.:    0.6666667   0.8333333   0.6666667
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.138710 meV Im[Sigma]=      46.863418 meV     Z=       1.057487 lam=      -0.054362
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.729181 meV Im[Sigma]=      74.142322 meV     Z=       0.892439 lam=       0.120525
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      25.138286 meV Im[Sigma]=     114.846195 meV     Z=       1.057542 lam=      -0.054412
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.138598 meV Im[Sigma]=      46.863910 meV     Z=       1.057489 lam=      -0.054364
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.728516 meV Im[Sigma]=      74.141730 meV     Z=       0.892442 lam=       0.120521
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      25.138099 meV Im[Sigma]=     114.846003 meV     Z=       1.057543 lam=      -0.054412
      -------------------------------------------------------------------
 
 
      ik =     180 coord.:    0.6666667   0.8333333   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.347769 meV Im[Sigma]=      23.182923 meV     Z=       0.995593 lam=       0.004427
-     E(   3 )=  -2.2152 eV   Re[Sigma]=     -49.090064 meV Im[Sigma]=      63.915412 meV     Z=       1.030921 lam=      -0.029993
-     E(   4 )=  -0.4858 eV   Re[Sigma]=      49.402286 meV Im[Sigma]=     137.927323 meV     Z=       2.060670 lam=      -0.514721
+     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.347785 meV Im[Sigma]=      23.182968 meV     Z=       0.995593 lam=       0.004427
+     E(   3 )=  -2.2152 eV   Re[Sigma]=     -49.090051 meV Im[Sigma]=      63.915431 meV     Z=       1.030921 lam=      -0.029993
+     E(   4 )=  -0.4858 eV   Re[Sigma]=      49.402267 meV Im[Sigma]=     137.926688 meV     Z=       2.060662 lam=      -0.514719
      -------------------------------------------------------------------
 
 
      ik =     181 coord.:    0.8333333   0.0000000   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -2.1472 eV   Re[Sigma]=     -61.220798 meV Im[Sigma]=      60.262591 meV     Z=       0.876311 lam=       0.141148
-     E(   3 )=  -0.3746 eV   Re[Sigma]=      82.350115 meV Im[Sigma]=      52.082428 meV     Z=       0.971266 lam=       0.029584
-     E(   4 )=  -0.3746 eV   Re[Sigma]=      82.350115 meV Im[Sigma]=      52.082428 meV     Z=       0.971266 lam=       0.029584
+     E(   2 )=  -2.1472 eV   Re[Sigma]=     -61.220691 meV Im[Sigma]=      60.262188 meV     Z=       0.876311 lam=       0.141148
+     E(   3 )=  -0.3746 eV   Re[Sigma]=      82.350432 meV Im[Sigma]=      52.083275 meV     Z=       0.971270 lam=       0.029580
+     E(   4 )=  -0.3746 eV   Re[Sigma]=      82.350432 meV Im[Sigma]=      52.083275 meV     Z=       0.971270 lam=       0.029580
      -------------------------------------------------------------------
 
 
      ik =     182 coord.:    0.8333333   0.0000000   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.347770 meV Im[Sigma]=      23.182924 meV     Z=       0.995593 lam=       0.004427
-     E(   3 )=  -2.2152 eV   Re[Sigma]=     -49.090062 meV Im[Sigma]=      63.915410 meV     Z=       1.030921 lam=      -0.029993
-     E(   4 )=  -0.4858 eV   Re[Sigma]=      49.402287 meV Im[Sigma]=     137.927325 meV     Z=       2.060670 lam=      -0.514721
+     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.347785 meV Im[Sigma]=      23.182969 meV     Z=       0.995593 lam=       0.004427
+     E(   3 )=  -2.2152 eV   Re[Sigma]=     -49.090050 meV Im[Sigma]=      63.915430 meV     Z=       1.030921 lam=      -0.029993
+     E(   4 )=  -0.4858 eV   Re[Sigma]=      49.402267 meV Im[Sigma]=     137.926687 meV     Z=       2.060662 lam=      -0.514719
      -------------------------------------------------------------------
 
 
      ik =     183 coord.:    0.8333333   0.0000000   0.3333333
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826902 meV Im[Sigma]=      50.499192 meV     Z=       1.107295 lam=      -0.096898
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870252 meV Im[Sigma]=      40.191331 meV     Z=       1.047355 lam=      -0.045214
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213037 meV Im[Sigma]=      58.297251 meV     Z=       0.891653 lam=       0.121513
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826858 meV Im[Sigma]=      50.499560 meV     Z=       1.107297 lam=      -0.096900
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870193 meV Im[Sigma]=      40.190967 meV     Z=       1.047354 lam=      -0.045213
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213105 meV Im[Sigma]=      58.297230 meV     Z=       0.891654 lam=       0.121511
      -------------------------------------------------------------------
 
 
@@ -1905,33 +1864,33 @@
 
      ik =     185 coord.:    0.8333333   0.0000000   0.6666667
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206637 meV Im[Sigma]=      45.747586 meV     Z=       1.050108 lam=      -0.047717
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.332593 meV Im[Sigma]=      74.264639 meV     Z=       0.885054 lam=       0.129874
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343443 meV Im[Sigma]=     117.190629 meV     Z=       1.078459 lam=      -0.072751
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206534 meV Im[Sigma]=      45.747139 meV     Z=       1.050106 lam=      -0.047716
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.333026 meV Im[Sigma]=      74.264900 meV     Z=       0.885053 lam=       0.129876
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343325 meV Im[Sigma]=     117.191448 meV     Z=       1.078463 lam=      -0.072755
      -------------------------------------------------------------------
 
 
      ik =     186 coord.:    0.8333333   0.0000000   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -1.7072 eV   Re[Sigma]=      33.028048 meV Im[Sigma]=     114.438475 meV     Z=       0.972265 lam=       0.028526
-     E(   3 )=  -1.0239 eV   Re[Sigma]=      65.264510 meV Im[Sigma]=      30.075425 meV     Z=       0.892455 lam=       0.120505
-     E(   4 )=  -1.0239 eV   Re[Sigma]=      65.264510 meV Im[Sigma]=      30.075425 meV     Z=       0.892455 lam=       0.120505
+     E(   2 )=  -1.7072 eV   Re[Sigma]=      33.028293 meV Im[Sigma]=     114.438718 meV     Z=       0.972266 lam=       0.028525
+     E(   3 )=  -1.0239 eV   Re[Sigma]=      65.264482 meV Im[Sigma]=      30.075341 meV     Z=       0.892455 lam=       0.120504
+     E(   4 )=  -1.0239 eV   Re[Sigma]=      65.264482 meV Im[Sigma]=      30.075341 meV     Z=       0.892455 lam=       0.120504
      -------------------------------------------------------------------
 
 
      ik =     187 coord.:    0.8333333   0.1666667   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.627000 meV Im[Sigma]=      23.283990 meV     Z=       0.995659 lam=       0.004360
-     E(   3 )=  -2.2152 eV   Re[Sigma]=     -48.954013 meV Im[Sigma]=      64.776750 meV     Z=       1.034430 lam=      -0.033284
-     E(   4 )=  -0.4858 eV   Re[Sigma]=      47.706093 meV Im[Sigma]=     135.985597 meV     Z=       2.006849 lam=      -0.501706
+     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.627047 meV Im[Sigma]=      23.284009 meV     Z=       0.995659 lam=       0.004360
+     E(   3 )=  -2.2152 eV   Re[Sigma]=     -48.953965 meV Im[Sigma]=      64.776809 meV     Z=       1.034429 lam=      -0.033283
+     E(   4 )=  -0.4858 eV   Re[Sigma]=      47.706203 meV Im[Sigma]=     135.986102 meV     Z=       2.006866 lam=      -0.501711
      -------------------------------------------------------------------
 
 
      ik =     188 coord.:    0.8333333   0.1666667   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206636 meV Im[Sigma]=      45.747586 meV     Z=       1.050108 lam=      -0.047717
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.332594 meV Im[Sigma]=      74.264640 meV     Z=       0.885054 lam=       0.129874
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343443 meV Im[Sigma]=     117.190627 meV     Z=       1.078459 lam=      -0.072751
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206533 meV Im[Sigma]=      45.747139 meV     Z=       1.050106 lam=      -0.047716
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.333028 meV Im[Sigma]=      74.264903 meV     Z=       0.885053 lam=       0.129876
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343324 meV Im[Sigma]=     117.191445 meV     Z=       1.078463 lam=      -0.072755
      -------------------------------------------------------------------
 
 
@@ -1945,7 +1904,7 @@
 
      ik =     190 coord.:    0.8333333   0.1666667   0.5000000
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -1961,17 +1920,17 @@
 
      ik =     192 coord.:    0.8333333   0.1666667   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.080146 meV Im[Sigma]=      44.953086 meV     Z=       1.045893 lam=      -0.043879
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.425335 meV Im[Sigma]=      73.512553 meV     Z=       0.885654 lam=       0.129110
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      26.929004 meV Im[Sigma]=     116.840722 meV     Z=       1.081651 lam=      -0.075487
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.080148 meV Im[Sigma]=      44.953715 meV     Z=       1.045895 lam=      -0.043881
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.424667 meV Im[Sigma]=      73.512642 meV     Z=       0.885656 lam=       0.129106
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      26.929297 meV Im[Sigma]=     116.839795 meV     Z=       1.081645 lam=      -0.075482
      -------------------------------------------------------------------
 
 
      ik =     193 coord.:    0.8333333   0.3333333   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.321510 meV Im[Sigma]=      48.396234 meV     Z=       1.098239 lam=      -0.089451
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.978943 meV Im[Sigma]=      40.434209 meV     Z=       1.049672 lam=      -0.047322
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.639620 meV Im[Sigma]=      57.031086 meV     Z=       0.893477 lam=       0.119223
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.321461 meV Im[Sigma]=      48.396758 meV     Z=       1.098242 lam=      -0.089454
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.978842 meV Im[Sigma]=      40.433795 meV     Z=       1.049672 lam=      -0.047321
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.640074 meV Im[Sigma]=      57.030400 meV     Z=       0.893474 lam=       0.119226
      -------------------------------------------------------------------
 
 
@@ -2001,7 +1960,7 @@
 
      ik =     197 coord.:    0.8333333   0.3333333   0.6666667
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -2025,7 +1984,7 @@
 
      ik =     200 coord.:    0.8333333   0.5000000   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -2057,17 +2016,17 @@
 
      ik =     204 coord.:    0.8333333   0.5000000   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.321650 meV Im[Sigma]=      48.396555 meV     Z=       1.098239 lam=      -0.089452
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.978912 meV Im[Sigma]=      40.434211 meV     Z=       1.049673 lam=      -0.047322
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.639673 meV Im[Sigma]=      57.030938 meV     Z=       0.893476 lam=       0.119224
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.321582 meV Im[Sigma]=      48.397001 meV     Z=       1.098243 lam=      -0.089455
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.979079 meV Im[Sigma]=      40.434684 meV     Z=       1.049673 lam=      -0.047323
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      44.639334 meV Im[Sigma]=      57.032169 meV     Z=       0.893482 lam=       0.119217
      -------------------------------------------------------------------
 
 
      ik =     205 coord.:    0.8333333   0.6666667   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.080152 meV Im[Sigma]=      44.953287 meV     Z=       1.045893 lam=      -0.043879
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.424991 meV Im[Sigma]=      73.511995 meV     Z=       0.885654 lam=       0.129109
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      26.929235 meV Im[Sigma]=     116.840666 meV     Z=       1.081650 lam=      -0.075486
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.080021 meV Im[Sigma]=      44.953008 meV     Z=       1.045893 lam=      -0.043879
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -30.425534 meV Im[Sigma]=      73.511909 meV     Z=       0.885653 lam=       0.129111
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      26.928618 meV Im[Sigma]=     116.841616 meV     Z=       1.081659 lam=      -0.075494
      -------------------------------------------------------------------
 
 
@@ -2081,7 +2040,7 @@
 
      ik =     207 coord.:    0.8333333   0.6666667   0.3333333
      -------------------------------------------------------------------
-     E(   2 )=  -8.1182 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
+     E(   2 )=  -8.1181 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   3 )=  -5.4137 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      E(   4 )=  -3.2174 eV   Re[Sigma]=       0.000000 meV Im[Sigma]=       0.000000 meV     Z=       1.000000 lam=       0.000000
      -------------------------------------------------------------------
@@ -2097,33 +2056,33 @@
 
      ik =     209 coord.:    0.8333333   0.6666667   0.6666667
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206718 meV Im[Sigma]=      45.747428 meV     Z=       1.050107 lam=      -0.047716
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.332992 meV Im[Sigma]=      74.265070 meV     Z=       0.885053 lam=       0.129876
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343227 meV Im[Sigma]=     117.190723 meV     Z=       1.078459 lam=      -0.072751
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206679 meV Im[Sigma]=      45.747976 meV     Z=       1.050110 lam=      -0.047719
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.332193 meV Im[Sigma]=      74.265010 meV     Z=       0.885056 lam=       0.129872
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343074 meV Im[Sigma]=     117.189835 meV     Z=       1.078457 lam=      -0.072749
      -------------------------------------------------------------------
 
 
      ik =     210 coord.:    0.8333333   0.6666667   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.626932 meV Im[Sigma]=      23.283940 meV     Z=       0.995659 lam=       0.004360
-     E(   3 )=  -2.2152 eV   Re[Sigma]=     -48.953947 meV Im[Sigma]=      64.776823 meV     Z=       1.034430 lam=      -0.033284
-     E(   4 )=  -0.4858 eV   Re[Sigma]=      47.706160 meV Im[Sigma]=     135.985575 meV     Z=       2.006850 lam=      -0.501707
+     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.627003 meV Im[Sigma]=      23.283982 meV     Z=       0.995659 lam=       0.004360
+     E(   3 )=  -2.2152 eV   Re[Sigma]=     -48.953784 meV Im[Sigma]=      64.776598 meV     Z=       1.034429 lam=      -0.033283
+     E(   4 )=  -0.4858 eV   Re[Sigma]=      47.706220 meV Im[Sigma]=     135.984286 meV     Z=       2.006833 lam=      -0.501702
      -------------------------------------------------------------------
 
 
      ik =     211 coord.:    0.8333333   0.8333333   0.0000000
      -------------------------------------------------------------------
-     E(   2 )=  -1.7072 eV   Re[Sigma]=      33.027965 meV Im[Sigma]=     114.438147 meV     Z=       0.972264 lam=       0.028527
-     E(   3 )=  -1.0239 eV   Re[Sigma]=      65.264533 meV Im[Sigma]=      30.075379 meV     Z=       0.892455 lam=       0.120505
-     E(   4 )=  -1.0239 eV   Re[Sigma]=      65.264533 meV Im[Sigma]=      30.075379 meV     Z=       0.892455 lam=       0.120505
+     E(   2 )=  -1.7072 eV   Re[Sigma]=      33.027631 meV Im[Sigma]=     114.437726 meV     Z=       0.972265 lam=       0.028526
+     E(   3 )=  -1.0239 eV   Re[Sigma]=      65.264219 meV Im[Sigma]=      30.075358 meV     Z=       0.892456 lam=       0.120503
+     E(   4 )=  -1.0239 eV   Re[Sigma]=      65.264219 meV Im[Sigma]=      30.075358 meV     Z=       0.892456 lam=       0.120503
      -------------------------------------------------------------------
 
 
      ik =     212 coord.:    0.8333333   0.8333333   0.1666667
      -------------------------------------------------------------------
-     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206718 meV Im[Sigma]=      45.747427 meV     Z=       1.050107 lam=      -0.047716
-     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.332992 meV Im[Sigma]=      74.265071 meV     Z=       0.885053 lam=       0.129876
-     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343228 meV Im[Sigma]=     117.190723 meV     Z=       1.078459 lam=      -0.072751
+     E(   2 )=  -5.3050 eV   Re[Sigma]=      11.206679 meV Im[Sigma]=      45.747976 meV     Z=       1.050110 lam=      -0.047719
+     E(   3 )=  -1.9550 eV   Re[Sigma]=     -31.332193 meV Im[Sigma]=      74.265011 meV     Z=       0.885056 lam=       0.129872
+     E(   4 )=  -1.7220 eV   Re[Sigma]=      27.343075 meV Im[Sigma]=     117.189835 meV     Z=       1.078457 lam=      -0.072749
      -------------------------------------------------------------------
 
 
@@ -2137,134 +2096,134 @@
 
      ik =     214 coord.:    0.8333333   0.8333333   0.5000000
      -------------------------------------------------------------------
-     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826992 meV Im[Sigma]=      50.499186 meV     Z=       1.107293 lam=      -0.096897
-     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870297 meV Im[Sigma]=      40.191245 meV     Z=       1.047355 lam=      -0.045214
-     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213009 meV Im[Sigma]=      58.297285 meV     Z=       0.891653 lam=       0.121512
+     E(   2 )=  -7.7841 eV   Re[Sigma]=      10.826917 meV Im[Sigma]=      50.499637 meV     Z=       1.107298 lam=      -0.096900
+     E(   3 )=  -3.5170 eV   Re[Sigma]=       6.870391 meV Im[Sigma]=      40.191755 meV     Z=       1.047356 lam=      -0.045215
+     E(   4 )=  -1.4636 eV   Re[Sigma]=      45.213044 meV Im[Sigma]=      58.297824 meV     Z=       0.891655 lam=       0.121511
      -------------------------------------------------------------------
 
 
      ik =     215 coord.:    0.8333333   0.8333333   0.6666667
      -------------------------------------------------------------------
-     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.347769 meV Im[Sigma]=      23.182924 meV     Z=       0.995593 lam=       0.004427
-     E(   3 )=  -2.2152 eV   Re[Sigma]=     -49.090063 meV Im[Sigma]=      63.915410 meV     Z=       1.030921 lam=      -0.029993
-     E(   4 )=  -0.4858 eV   Re[Sigma]=      49.402287 meV Im[Sigma]=     137.927326 meV     Z=       2.060670 lam=      -0.514721
+     E(   2 )=  -4.2102 eV   Re[Sigma]=      -6.347784 meV Im[Sigma]=      23.182968 meV     Z=       0.995593 lam=       0.004427
+     E(   3 )=  -2.2152 eV   Re[Sigma]=     -49.090049 meV Im[Sigma]=      63.915430 meV     Z=       1.030921 lam=      -0.029993
+     E(   4 )=  -0.4858 eV   Re[Sigma]=      49.402267 meV Im[Sigma]=     137.926689 meV     Z=       2.060662 lam=      -0.514719
      -------------------------------------------------------------------
 
 
      ik =     216 coord.:    0.8333333   0.8333333   0.8333333
      -------------------------------------------------------------------
-     E(   2 )=  -2.1472 eV   Re[Sigma]=     -61.220327 meV Im[Sigma]=      60.262164 meV     Z=       0.876311 lam=       0.141147
-     E(   3 )=  -0.3746 eV   Re[Sigma]=      82.350376 meV Im[Sigma]=      52.082576 meV     Z=       0.971266 lam=       0.029584
-     E(   4 )=  -0.3746 eV   Re[Sigma]=      82.350376 meV Im[Sigma]=      52.082576 meV     Z=       0.971266 lam=       0.029584
+     E(   2 )=  -2.1472 eV   Re[Sigma]=     -61.220153 meV Im[Sigma]=      60.263403 meV     Z=       0.876314 lam=       0.141144
+     E(   3 )=  -0.3746 eV   Re[Sigma]=      82.349410 meV Im[Sigma]=      52.081409 meV     Z=       0.971265 lam=       0.029585
+     E(   4 )=  -0.3746 eV   Re[Sigma]=      82.349410 meV Im[Sigma]=      52.081409 meV     Z=       0.971265 lam=       0.029585
      -------------------------------------------------------------------
 
-        1        2     -0.0842     66.2684      4.2776      0.9232      0.0832
-        2        2     -2.1472    -61.2203     60.2622      0.8763      0.1411
-        3        2     -6.8685      0.2405     10.6916      0.9970      0.0030
+        1        2     -0.0842     66.2682      4.2776      0.9232      0.0832
+        2        2     -2.1472    -61.2202     60.2634      0.8763      0.1411
+        3        2     -6.8685      0.2405     10.6917      0.9970      0.0030
         4        2     -9.4227     -6.8060      6.7166      1.0066     -0.0066
-        5        2     -6.8685      0.2405     10.6917      0.9970      0.0030
-        6        2     -2.1472    -61.2208     60.2626      0.8763      0.1411
-        7        2     -2.1472    -63.0805     61.2562      0.8775      0.1397
-        8        2     -1.7072     33.0280    114.4385      0.9723      0.0285
-        9        2     -5.3050     11.1391     46.8634      1.0575     -0.0544
+        5        2     -6.8685      0.2405     10.6918      0.9970      0.0030
+        6        2     -2.1472    -61.2207     60.2622      0.8763      0.1411
+        7        2     -2.1472    -63.0806     61.2569      0.8775      0.1397
+        8        2     -1.7072     33.0283    114.4387      0.9723      0.0285
+        9        2     -5.3050     11.1386     46.8639      1.0575     -0.0544
        10        2     -8.6498      0.0000      0.0000      1.0000      0.0000
-       11        2     -7.7841     10.7271     51.5403      1.1124     -0.1010
+       11        2     -7.7841     10.7269     51.5405      1.1124     -0.1010
        12        2     -4.2102     -6.6270     23.2840      0.9957      0.0044
-       13        2     -6.8685     -0.0286     10.6916      0.9972      0.0028
-       14        2     -5.3050     11.0801     44.9531      1.0459     -0.0439
+       13        2     -6.8685     -0.0286     10.6917      0.9972      0.0028
+       14        2     -5.3050     11.0801     44.9537      1.0459     -0.0439
        15        2     -5.7377      0.0000      0.0000      1.0000      0.0000
        16        2     -7.6363      0.0000      0.0000      1.0000      0.0000
        17        2     -7.7256      0.0000      0.0000      1.0000      0.0000
-       18        2     -7.7841     10.3215     48.3962      1.0982     -0.0895
-       19        2     -9.4227     -6.7466      6.6526      1.0063     -0.0062
+       18        2     -7.7841     10.3215     48.3968      1.0982     -0.0895
+       19        2     -9.4227     -6.7466      6.6527      1.0063     -0.0062
        20        2     -8.6498      0.0000      0.0000      1.0000      0.0000
        21        2     -7.6363      0.0000      0.0000      1.0000      0.0000
        22        2     -8.1432      0.0000      0.0000      1.0000      0.0000
        23        2     -7.6363      0.0000      0.0000      1.0000      0.0000
        24        2     -8.6498      0.0000      0.0000      1.0000      0.0000
-       25        2     -6.8685     -0.0285     10.6917      0.9972      0.0028
-       26        2     -7.7841     10.3217     48.3966      1.0982     -0.0895
+       25        2     -6.8685     -0.0285     10.6918      0.9972      0.0028
+       26        2     -7.7841     10.3216     48.3970      1.0982     -0.0895
        27        2     -7.7256      0.0000      0.0000      1.0000      0.0000
        28        2     -7.6363      0.0000      0.0000      1.0000      0.0000
        29        2     -5.7377      0.0000      0.0000      1.0000      0.0000
-       30        2     -5.3050     11.0802     44.9533      1.0459     -0.0439
-       31        2     -2.1472    -63.0808     61.2565      0.8775      0.1397
-       32        2     -4.2102     -6.6269     23.2839      0.9957      0.0044
-       33        2     -7.7841     10.7269     51.5399      1.1124     -0.1010
+       30        2     -5.3050     11.0800     44.9530      1.0459     -0.0439
+       31        2     -2.1472    -63.0807     61.2567      0.8775      0.1397
+       32        2     -4.2102     -6.6270     23.2840      0.9957      0.0044
+       33        2     -7.7841     10.7270     51.5406      1.1124     -0.1010
        34        2     -8.6498      0.0000      0.0000      1.0000      0.0000
-       35        2     -5.3050     11.1387     46.8633      1.0575     -0.0544
-       36        2     -1.7072     33.0280    114.4382      0.9723      0.0285
-       37        2     -2.1472    -61.2203     60.2622      0.8763      0.1411
-       38        2     -1.7072     33.0280    114.4381      0.9723      0.0285
-       39        2     -5.3050     11.2067     45.7474      1.0501     -0.0477
+       35        2     -5.3050     11.1387     46.8629      1.0575     -0.0544
+       36        2     -1.7072     33.0276    114.4377      0.9723      0.0285
+       37        2     -2.1472    -61.2202     60.2634      0.8763      0.1411
+       38        2     -1.7072     33.0276    114.4377      0.9723      0.0285
+       39        2     -5.3050     11.2067     45.7480      1.0501     -0.0477
        40        2     -8.6498      0.0000      0.0000      1.0000      0.0000
-       41        2     -7.7841     10.8270     50.4992      1.1073     -0.0969
-       42        2     -4.2102     -6.3478     23.1829      0.9956      0.0044
-       43        2     -1.7072     33.0280    114.4385      0.9723      0.0285
-       44        2     -2.1472    -61.2208     60.2626      0.8763      0.1411
-       45        2     -4.2102     -6.3478     23.1829      0.9956      0.0044
-       46        2     -7.7841     10.8269     50.4992      1.1073     -0.0969
+       41        2     -7.7841     10.8269     50.4996      1.1073     -0.0969
+       42        2     -4.2102     -6.3478     23.1830      0.9956      0.0044
+       43        2     -1.7072     33.0283    114.4387      0.9723      0.0285
+       44        2     -2.1472    -61.2207     60.2622      0.8763      0.1411
+       45        2     -4.2102     -6.3478     23.1830      0.9956      0.0044
+       46        2     -7.7841     10.8269     50.4996      1.1073     -0.0969
        47        2     -8.6498      0.0000      0.0000      1.0000      0.0000
-       48        2     -5.3050     11.2066     45.7476      1.0501     -0.0477
-       49        2     -5.3050     11.0801     44.9531      1.0459     -0.0439
+       48        2     -5.3050     11.2065     45.7471      1.0501     -0.0477
+       49        2     -5.3050     11.0801     44.9537      1.0459     -0.0439
        50        2     -4.2102     -6.6270     23.2840      0.9957      0.0044
-       51        2     -5.3050     11.2066     45.7476      1.0501     -0.0477
+       51        2     -5.3050     11.2065     45.7471      1.0501     -0.0477
        52        2     -6.8089      0.0000      0.0000      1.0000      0.0000
-       53        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+       53        2     -8.1181      0.0000      0.0000      1.0000      0.0000
        54        2     -6.8089      0.0000      0.0000      1.0000      0.0000
        55        2     -8.6498      0.0000      0.0000      1.0000      0.0000
-       56        2     -7.7841     10.3215     48.3962      1.0982     -0.0895
+       56        2     -7.7841     10.3215     48.3968      1.0982     -0.0895
        57        2     -6.8089      0.0000      0.0000      1.0000      0.0000
        58        2     -7.6363      0.0000      0.0000      1.0000      0.0000
        59        2     -7.8765      0.0000      0.0000      1.0000      0.0000
-       60        2     -8.1182      0.0000      0.0000      1.0000      0.0000
-       61        2     -7.7841     10.3217     48.3966      1.0982     -0.0895
+       60        2     -8.1181      0.0000      0.0000      1.0000      0.0000
+       61        2     -7.7841     10.3216     48.3970      1.0982     -0.0895
        62        2     -8.6498      0.0000      0.0000      1.0000      0.0000
-       63        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+       63        2     -8.1181      0.0000      0.0000      1.0000      0.0000
        64        2     -7.8765      0.0000      0.0000      1.0000      0.0000
        65        2     -7.6363      0.0000      0.0000      1.0000      0.0000
        66        2     -6.8089      0.0000      0.0000      1.0000      0.0000
-       67        2     -4.2102     -6.6269     23.2839      0.9957      0.0044
-       68        2     -5.3050     11.0802     44.9533      1.0459     -0.0439
+       67        2     -4.2102     -6.6270     23.2840      0.9957      0.0044
+       68        2     -5.3050     11.0800     44.9530      1.0459     -0.0439
        69        2     -6.8089      0.0000      0.0000      1.0000      0.0000
-       70        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+       70        2     -8.1181      0.0000      0.0000      1.0000      0.0000
        71        2     -6.8089      0.0000      0.0000      1.0000      0.0000
-       72        2     -5.3050     11.2067     45.7474      1.0501     -0.0477
-       73        2     -6.8685      0.2405     10.6916      0.9970      0.0030
-       74        2     -5.3050     11.2067     45.7474      1.0501     -0.0477
+       72        2     -5.3050     11.2067     45.7480      1.0501     -0.0477
+       73        2     -6.8685      0.2405     10.6917      0.9970      0.0030
+       74        2     -5.3050     11.2067     45.7480      1.0501     -0.0477
        75        2     -5.7377      0.0000      0.0000      1.0000      0.0000
        76        2     -7.6363      0.0000      0.0000      1.0000      0.0000
        77        2     -7.7256      0.0000      0.0000      1.0000      0.0000
-       78        2     -7.7841     10.8269     50.4992      1.1073     -0.0969
-       79        2     -5.3050     11.1387     46.8634      1.0575     -0.0544
-       80        2     -4.2102     -6.3478     23.1829      0.9956      0.0044
-       81        2     -5.3050     11.1387     46.8633      1.0575     -0.0544
+       78        2     -7.7841     10.8269     50.4996      1.1073     -0.0969
+       79        2     -5.3050     11.1386     46.8639      1.0575     -0.0544
+       80        2     -4.2102     -6.3478     23.1830      0.9956      0.0044
+       81        2     -5.3050     11.1387     46.8629      1.0575     -0.0544
        82        2     -6.8089      0.0000      0.0000      1.0000      0.0000
-       83        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+       83        2     -8.1181      0.0000      0.0000      1.0000      0.0000
        84        2     -6.8089      0.0000      0.0000      1.0000      0.0000
        85        2     -5.7377      0.0000      0.0000      1.0000      0.0000
-       86        2     -5.3050     11.2066     45.7476      1.0501     -0.0477
-       87        2     -6.8685      0.2405     10.6917      0.9970      0.0030
-       88        2     -7.7841     10.8270     50.4992      1.1073     -0.0969
+       86        2     -5.3050     11.2065     45.7471      1.0501     -0.0477
+       87        2     -6.8685      0.2405     10.6918      0.9970      0.0030
+       88        2     -7.7841     10.8269     50.4996      1.1073     -0.0969
        89        2     -7.7256      0.0000      0.0000      1.0000      0.0000
        90        2     -7.6363      0.0000      0.0000      1.0000      0.0000
        91        2     -7.6363      0.0000      0.0000      1.0000      0.0000
        92        2     -6.8089      0.0000      0.0000      1.0000      0.0000
-       93        2     -7.7841     10.7271     51.5403      1.1124     -0.1010
+       93        2     -7.7841     10.7269     51.5405      1.1124     -0.1010
        94        2     -8.6498      0.0000      0.0000      1.0000      0.0000
-       95        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+       95        2     -8.1181      0.0000      0.0000      1.0000      0.0000
        96        2     -7.8765      0.0000      0.0000      1.0000      0.0000
        97        2     -7.7256      0.0000      0.0000      1.0000      0.0000
-       98        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+       98        2     -8.1181      0.0000      0.0000      1.0000      0.0000
        99        2     -7.7256      0.0000      0.0000      1.0000      0.0000
-      100        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+      100        2     -8.1181      0.0000      0.0000      1.0000      0.0000
       101        2     -7.7256      0.0000      0.0000      1.0000      0.0000
-      102        2     -8.1182      0.0000      0.0000      1.0000      0.0000
-      103        2     -7.7841     10.7269     51.5399      1.1124     -0.1010
+      102        2     -8.1181      0.0000      0.0000      1.0000      0.0000
+      103        2     -7.7841     10.7270     51.5406      1.1124     -0.1010
       104        2     -6.8089      0.0000      0.0000      1.0000      0.0000
       105        2     -7.6363      0.0000      0.0000      1.0000      0.0000
       106        2     -7.8765      0.0000      0.0000      1.0000      0.0000
-      107        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+      107        2     -8.1181      0.0000      0.0000      1.0000      0.0000
       108        2     -8.6498      0.0000      0.0000      1.0000      0.0000
       109        2     -9.4227     -6.8060      6.7166      1.0066     -0.0066
       110        2     -8.6498      0.0000      0.0000      1.0000      0.0000
@@ -2273,16 +2232,16 @@
       113        2     -7.6363      0.0000      0.0000      1.0000      0.0000
       114        2     -8.6498      0.0000      0.0000      1.0000      0.0000
       115        2     -8.6498      0.0000      0.0000      1.0000      0.0000
-      116        2     -7.7841     10.8269     50.4992      1.1073     -0.0969
+      116        2     -7.7841     10.8269     50.4996      1.1073     -0.0969
       117        2     -6.8089      0.0000      0.0000      1.0000      0.0000
       118        2     -7.6363      0.0000      0.0000      1.0000      0.0000
       119        2     -7.8765      0.0000      0.0000      1.0000      0.0000
-      120        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+      120        2     -8.1181      0.0000      0.0000      1.0000      0.0000
       121        2     -7.6363      0.0000      0.0000      1.0000      0.0000
       122        2     -6.8089      0.0000      0.0000      1.0000      0.0000
-      123        2     -7.7841     10.8270     50.4992      1.1073     -0.0969
+      123        2     -7.7841     10.8269     50.4996      1.1073     -0.0969
       124        2     -8.6498      0.0000      0.0000      1.0000      0.0000
-      125        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+      125        2     -8.1181      0.0000      0.0000      1.0000      0.0000
       126        2     -7.8765      0.0000      0.0000      1.0000      0.0000
       127        2     -8.1432      0.0000      0.0000      1.0000      0.0000
       128        2     -7.6363      0.0000      0.0000      1.0000      0.0000
@@ -2292,182 +2251,182 @@
       132        2     -7.6363      0.0000      0.0000      1.0000      0.0000
       133        2     -7.6363      0.0000      0.0000      1.0000      0.0000
       134        2     -7.8765      0.0000      0.0000      1.0000      0.0000
-      135        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+      135        2     -8.1181      0.0000      0.0000      1.0000      0.0000
       136        2     -8.6498      0.0000      0.0000      1.0000      0.0000
-      137        2     -7.7841     10.8269     50.4992      1.1073     -0.0969
+      137        2     -7.7841     10.8269     50.4996      1.1073     -0.0969
       138        2     -6.8089      0.0000      0.0000      1.0000      0.0000
       139        2     -8.6498      0.0000      0.0000      1.0000      0.0000
-      140        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+      140        2     -8.1181      0.0000      0.0000      1.0000      0.0000
       141        2     -7.8765      0.0000      0.0000      1.0000      0.0000
       142        2     -7.6363      0.0000      0.0000      1.0000      0.0000
       143        2     -6.8089      0.0000      0.0000      1.0000      0.0000
-      144        2     -7.7841     10.8270     50.4992      1.1073     -0.0969
-      145        2     -6.8685      0.2405     10.6917      0.9970      0.0030
-      146        2     -7.7841     10.8270     50.4992      1.1073     -0.0969
+      144        2     -7.7841     10.8269     50.4996      1.1073     -0.0969
+      145        2     -6.8685      0.2405     10.6918      0.9970      0.0030
+      146        2     -7.7841     10.8269     50.4996      1.1073     -0.0969
       147        2     -7.7256      0.0000      0.0000      1.0000      0.0000
       148        2     -7.6363      0.0000      0.0000      1.0000      0.0000
       149        2     -5.7377      0.0000      0.0000      1.0000      0.0000
-      150        2     -5.3050     11.2066     45.7476      1.0501     -0.0477
-      151        2     -7.7841     10.7271     51.5403      1.1124     -0.1010
+      150        2     -5.3050     11.2065     45.7471      1.0501     -0.0477
+      151        2     -7.7841     10.7269     51.5405      1.1124     -0.1010
       152        2     -8.6498      0.0000      0.0000      1.0000      0.0000
-      153        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+      153        2     -8.1181      0.0000      0.0000      1.0000      0.0000
       154        2     -7.8765      0.0000      0.0000      1.0000      0.0000
       155        2     -7.6363      0.0000      0.0000      1.0000      0.0000
       156        2     -6.8089      0.0000      0.0000      1.0000      0.0000
       157        2     -7.7256      0.0000      0.0000      1.0000      0.0000
-      158        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+      158        2     -8.1181      0.0000      0.0000      1.0000      0.0000
       159        2     -7.7256      0.0000      0.0000      1.0000      0.0000
-      160        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+      160        2     -8.1181      0.0000      0.0000      1.0000      0.0000
       161        2     -7.7256      0.0000      0.0000      1.0000      0.0000
-      162        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+      162        2     -8.1181      0.0000      0.0000      1.0000      0.0000
       163        2     -7.6363      0.0000      0.0000      1.0000      0.0000
       164        2     -7.8765      0.0000      0.0000      1.0000      0.0000
-      165        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+      165        2     -8.1181      0.0000      0.0000      1.0000      0.0000
       166        2     -8.6498      0.0000      0.0000      1.0000      0.0000
-      167        2     -7.7841     10.7269     51.5399      1.1124     -0.1010
+      167        2     -7.7841     10.7270     51.5406      1.1124     -0.1010
       168        2     -6.8089      0.0000      0.0000      1.0000      0.0000
       169        2     -5.7377      0.0000      0.0000      1.0000      0.0000
       170        2     -7.6363      0.0000      0.0000      1.0000      0.0000
       171        2     -7.7256      0.0000      0.0000      1.0000      0.0000
-      172        2     -7.7841     10.8269     50.4992      1.1073     -0.0969
-      173        2     -6.8685      0.2405     10.6916      0.9970      0.0030
-      174        2     -5.3050     11.2067     45.7474      1.0501     -0.0477
-      175        2     -5.3050     11.1387     46.8633      1.0575     -0.0544
+      172        2     -7.7841     10.8269     50.4996      1.1073     -0.0969
+      173        2     -6.8685      0.2405     10.6917      0.9970      0.0030
+      174        2     -5.3050     11.2067     45.7480      1.0501     -0.0477
+      175        2     -5.3050     11.1387     46.8629      1.0575     -0.0544
       176        2     -6.8089      0.0000      0.0000      1.0000      0.0000
-      177        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+      177        2     -8.1181      0.0000      0.0000      1.0000      0.0000
       178        2     -6.8089      0.0000      0.0000      1.0000      0.0000
-      179        2     -5.3050     11.1387     46.8634      1.0575     -0.0544
-      180        2     -4.2102     -6.3478     23.1829      0.9956      0.0044
-      181        2     -2.1472    -61.2208     60.2626      0.8763      0.1411
-      182        2     -4.2102     -6.3478     23.1829      0.9956      0.0044
-      183        2     -7.7841     10.8269     50.4992      1.1073     -0.0969
+      179        2     -5.3050     11.1386     46.8639      1.0575     -0.0544
+      180        2     -4.2102     -6.3478     23.1830      0.9956      0.0044
+      181        2     -2.1472    -61.2207     60.2622      0.8763      0.1411
+      182        2     -4.2102     -6.3478     23.1830      0.9956      0.0044
+      183        2     -7.7841     10.8269     50.4996      1.1073     -0.0969
       184        2     -8.6498      0.0000      0.0000      1.0000      0.0000
-      185        2     -5.3050     11.2066     45.7476      1.0501     -0.0477
-      186        2     -1.7072     33.0280    114.4385      0.9723      0.0285
+      185        2     -5.3050     11.2065     45.7471      1.0501     -0.0477
+      186        2     -1.7072     33.0283    114.4387      0.9723      0.0285
       187        2     -4.2102     -6.6270     23.2840      0.9957      0.0044
-      188        2     -5.3050     11.2066     45.7476      1.0501     -0.0477
+      188        2     -5.3050     11.2065     45.7471      1.0501     -0.0477
       189        2     -6.8089      0.0000      0.0000      1.0000      0.0000
-      190        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+      190        2     -8.1181      0.0000      0.0000      1.0000      0.0000
       191        2     -6.8089      0.0000      0.0000      1.0000      0.0000
-      192        2     -5.3050     11.0801     44.9531      1.0459     -0.0439
-      193        2     -7.7841     10.3215     48.3962      1.0982     -0.0895
+      192        2     -5.3050     11.0801     44.9537      1.0459     -0.0439
+      193        2     -7.7841     10.3215     48.3968      1.0982     -0.0895
       194        2     -6.8089      0.0000      0.0000      1.0000      0.0000
       195        2     -7.6363      0.0000      0.0000      1.0000      0.0000
       196        2     -7.8765      0.0000      0.0000      1.0000      0.0000
-      197        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+      197        2     -8.1181      0.0000      0.0000      1.0000      0.0000
       198        2     -8.6498      0.0000      0.0000      1.0000      0.0000
       199        2     -8.6498      0.0000      0.0000      1.0000      0.0000
-      200        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+      200        2     -8.1181      0.0000      0.0000      1.0000      0.0000
       201        2     -7.8765      0.0000      0.0000      1.0000      0.0000
       202        2     -7.6363      0.0000      0.0000      1.0000      0.0000
       203        2     -6.8089      0.0000      0.0000      1.0000      0.0000
-      204        2     -7.7841     10.3217     48.3966      1.0982     -0.0895
-      205        2     -5.3050     11.0802     44.9533      1.0459     -0.0439
+      204        2     -7.7841     10.3216     48.3970      1.0982     -0.0895
+      205        2     -5.3050     11.0800     44.9530      1.0459     -0.0439
       206        2     -6.8089      0.0000      0.0000      1.0000      0.0000
-      207        2     -8.1182      0.0000      0.0000      1.0000      0.0000
+      207        2     -8.1181      0.0000      0.0000      1.0000      0.0000
       208        2     -6.8089      0.0000      0.0000      1.0000      0.0000
-      209        2     -5.3050     11.2067     45.7474      1.0501     -0.0477
-      210        2     -4.2102     -6.6269     23.2839      0.9957      0.0044
-      211        2     -1.7072     33.0280    114.4381      0.9723      0.0285
-      212        2     -5.3050     11.2067     45.7474      1.0501     -0.0477
+      209        2     -5.3050     11.2067     45.7480      1.0501     -0.0477
+      210        2     -4.2102     -6.6270     23.2840      0.9957      0.0044
+      211        2     -1.7072     33.0276    114.4377      0.9723      0.0285
+      212        2     -5.3050     11.2067     45.7480      1.0501     -0.0477
       213        2     -8.6498      0.0000      0.0000      1.0000      0.0000
-      214        2     -7.7841     10.8270     50.4992      1.1073     -0.0969
-      215        2     -4.2102     -6.3478     23.1829      0.9956      0.0044
-      216        2     -2.1472    -61.2203     60.2622      0.8763      0.1411
+      214        2     -7.7841     10.8269     50.4996      1.1073     -0.0969
+      215        2     -4.2102     -6.3478     23.1830      0.9956      0.0044
+      216        2     -2.1472    -61.2202     60.2634      0.8763      0.1411
   
-        1        3     -0.0842     66.2684      4.2776      0.9232      0.0832
-        2        3     -0.3746     82.3504     52.0826      0.9713      0.0296
-        3        3     -1.1730     43.9304     85.8646      1.0854     -0.0787
-        4        3     -1.6810     23.0649     79.5265      0.8803      0.1360
-        5        3     -1.1730     43.9300     85.8641      1.0854     -0.0787
-        6        3     -0.3746     82.3501     52.0824      0.9713      0.0296
-        7        3     -0.3746     80.9596     53.8749      0.9807      0.0197
-        8        3     -1.0239     65.2645     30.0754      0.8925      0.1205
-        9        3     -1.9550    -30.7297     74.1423      0.8924      0.1205
+        1        3     -0.0842     66.2682      4.2776      0.9232      0.0832
+        2        3     -0.3746     82.3494     52.0814      0.9713      0.0296
+        3        3     -1.1730     43.9303     85.8637      1.0854     -0.0787
+        4        3     -1.6810     23.0648     79.5268      0.8803      0.1360
+        5        3     -1.1730     43.9304     85.8647      1.0854     -0.0787
+        6        3     -0.3746     82.3504     52.0833      0.9713      0.0296
+        7        3     -0.3746     80.9605     53.8734      0.9807      0.0197
+        8        3     -1.0239     65.2645     30.0753      0.8925      0.1205
+        9        3     -1.9550    -30.7285     74.1417      0.8924      0.1205
        10        3     -3.0372      0.0000      0.0000      1.0000      0.0000
-       11        3     -3.5170      6.5946     40.2745      1.0470     -0.0449
+       11        3     -3.5170      6.5945     40.2748      1.0470     -0.0449
        12        3     -2.2152    -48.9540     64.7768      1.0344     -0.0333
-       13        3     -1.1730     43.3073     85.7150      1.0863     -0.0794
-       14        3     -1.9550    -30.4251     73.5126      0.8857      0.1291
+       13        3     -1.1730     43.3070     85.7145      1.0863     -0.0794
+       14        3     -1.9550    -30.4247     73.5126      0.8857      0.1291
        15        3     -3.1516      0.0000      0.0000      1.0000      0.0000
        16        3     -4.8087      0.0000      0.0000      1.0000      0.0000
        17        3     -6.3198      0.0000      0.0000      1.0000      0.0000
-       18        3     -3.5170      6.9786     40.4342      1.0497     -0.0473
-       19        3     -1.6810     23.8092     78.2100      0.8843      0.1308
+       18        3     -3.5170      6.9788     40.4338      1.0497     -0.0473
+       19        3     -1.6810     23.8090     78.2101      0.8843      0.1308
        20        3     -3.0372      0.0000      0.0000      1.0000      0.0000
        21        3     -4.8087      0.0000      0.0000      1.0000      0.0000
        22        3     -4.3397      0.0000      0.0000      1.0000      0.0000
        23        3     -4.8087      0.0000      0.0000      1.0000      0.0000
        24        3     -3.0372      0.0000      0.0000      1.0000      0.0000
-       25        3     -1.1730     43.3069     85.7148      1.0863     -0.0794
-       26        3     -3.5170      6.9789     40.4342      1.0497     -0.0473
+       25        3     -1.1730     43.3075     85.7150      1.0863     -0.0794
+       26        3     -3.5170      6.9791     40.4347      1.0497     -0.0473
        27        3     -6.3198      0.0000      0.0000      1.0000      0.0000
        28        3     -4.8087      0.0000      0.0000      1.0000      0.0000
        29        3     -3.1516      0.0000      0.0000      1.0000      0.0000
-       30        3     -1.9550    -30.4254     73.5120      0.8857      0.1291
-       31        3     -0.3746     80.9607     53.8745      0.9807      0.0197
-       32        3     -2.2152    -48.9539     64.7768      1.0344     -0.0333
-       33        3     -3.5170      6.5946     40.2744      1.0470     -0.0449
+       30        3     -1.9550    -30.4255     73.5119      0.8857      0.1291
+       31        3     -0.3746     80.9603     53.8754      0.9807      0.0197
+       32        3     -2.2152    -48.9538     64.7766      1.0344     -0.0333
+       33        3     -3.5170      6.5948     40.2744      1.0470     -0.0449
        34        3     -3.0372      0.0000      0.0000      1.0000      0.0000
-       35        3     -1.9550    -30.7288     74.1420      0.8924      0.1205
-       36        3     -1.0239     65.2645     30.0754      0.8925      0.1205
-       37        3     -0.3746     82.3504     52.0826      0.9713      0.0296
-       38        3     -1.0239     65.2645     30.0754      0.8925      0.1205
-       39        3     -1.9550    -31.3330     74.2651      0.8851      0.1299
+       35        3     -1.9550    -30.7291     74.1423      0.8924      0.1205
+       36        3     -1.0239     65.2642     30.0754      0.8925      0.1205
+       37        3     -0.3746     82.3494     52.0814      0.9713      0.0296
+       38        3     -1.0239     65.2642     30.0754      0.8925      0.1205
+       39        3     -1.9550    -31.3322     74.2650      0.8851      0.1299
        40        3     -3.0372      0.0000      0.0000      1.0000      0.0000
-       41        3     -3.5170      6.8703     40.1912      1.0474     -0.0452
-       42        3     -2.2152    -49.0901     63.9154      1.0309     -0.0300
-       43        3     -1.0239     65.2645     30.0754      0.8925      0.1205
-       44        3     -0.3746     82.3501     52.0824      0.9713      0.0296
-       45        3     -2.2152    -49.0901     63.9154      1.0309     -0.0300
-       46        3     -3.5170      6.8703     40.1913      1.0474     -0.0452
+       41        3     -3.5170      6.8704     40.1918      1.0474     -0.0452
+       42        3     -2.2152    -49.0900     63.9154      1.0309     -0.0300
+       43        3     -1.0239     65.2645     30.0753      0.8925      0.1205
+       44        3     -0.3746     82.3504     52.0833      0.9713      0.0296
+       45        3     -2.2152    -49.0900     63.9154      1.0309     -0.0300
+       46        3     -3.5170      6.8702     40.1910      1.0474     -0.0452
        47        3     -3.0372      0.0000      0.0000      1.0000      0.0000
-       48        3     -1.9550    -31.3326     74.2646      0.8851      0.1299
-       49        3     -1.9550    -30.4253     73.5125      0.8857      0.1291
+       48        3     -1.9550    -31.3330     74.2649      0.8851      0.1299
+       49        3     -1.9550    -30.4247     73.5126      0.8857      0.1291
        50        3     -2.2152    -48.9540     64.7768      1.0344     -0.0333
-       51        3     -1.9550    -31.3326     74.2646      0.8851      0.1299
+       51        3     -1.9550    -31.3330     74.2649      0.8851      0.1299
        52        3     -4.5766      0.0000      0.0000      1.0000      0.0000
        53        3     -5.4137      0.0000      0.0000      1.0000      0.0000
        54        3     -4.5766      0.0000      0.0000      1.0000      0.0000
        55        3     -3.0372      0.0000      0.0000      1.0000      0.0000
-       56        3     -3.5170      6.9789     40.4342      1.0497     -0.0473
+       56        3     -3.5170      6.9788     40.4338      1.0497     -0.0473
        57        3     -4.5766      0.0000      0.0000      1.0000      0.0000
        58        3     -4.8087      0.0000      0.0000      1.0000      0.0000
        59        3     -5.6007      0.0000      0.0000      1.0000      0.0000
        60        3     -5.4137      0.0000      0.0000      1.0000      0.0000
-       61        3     -3.5170      6.9789     40.4342      1.0497     -0.0473
+       61        3     -3.5170      6.9791     40.4347      1.0497     -0.0473
        62        3     -3.0372      0.0000      0.0000      1.0000      0.0000
        63        3     -5.4137      0.0000      0.0000      1.0000      0.0000
        64        3     -5.6007      0.0000      0.0000      1.0000      0.0000
        65        3     -4.8087      0.0000      0.0000      1.0000      0.0000
        66        3     -4.5766      0.0000      0.0000      1.0000      0.0000
-       67        3     -2.2152    -48.9539     64.7768      1.0344     -0.0333
-       68        3     -1.9550    -30.4250     73.5120      0.8857      0.1291
+       67        3     -2.2152    -48.9538     64.7766      1.0344     -0.0333
+       68        3     -1.9550    -30.4255     73.5119      0.8857      0.1291
        69        3     -4.5766      0.0000      0.0000      1.0000      0.0000
        70        3     -5.4137      0.0000      0.0000      1.0000      0.0000
        71        3     -4.5766      0.0000      0.0000      1.0000      0.0000
-       72        3     -1.9550    -31.3330     74.2651      0.8851      0.1299
-       73        3     -1.1730     43.9304     85.8646      1.0854     -0.0787
-       74        3     -1.9550    -31.3330     74.2651      0.8851      0.1299
+       72        3     -1.9550    -31.3322     74.2650      0.8851      0.1299
+       73        3     -1.1730     43.9303     85.8637      1.0854     -0.0787
+       74        3     -1.9550    -31.3322     74.2650      0.8851      0.1299
        75        3     -3.1516      0.0000      0.0000      1.0000      0.0000
        76        3     -4.8087      0.0000      0.0000      1.0000      0.0000
        77        3     -6.3198      0.0000      0.0000      1.0000      0.0000
-       78        3     -3.5170      6.8703     40.1913      1.0474     -0.0452
-       79        3     -1.9550    -30.7292     74.1423      0.8924      0.1205
-       80        3     -2.2152    -49.0901     63.9154      1.0309     -0.0300
-       81        3     -1.9550    -30.7288     74.1420      0.8924      0.1205
+       78        3     -3.5170      6.8702     40.1910      1.0474     -0.0452
+       79        3     -1.9550    -30.7285     74.1417      0.8924      0.1205
+       80        3     -2.2152    -49.0900     63.9154      1.0309     -0.0300
+       81        3     -1.9550    -30.7291     74.1423      0.8924      0.1205
        82        3     -4.5766      0.0000      0.0000      1.0000      0.0000
        83        3     -5.4137      0.0000      0.0000      1.0000      0.0000
        84        3     -4.5766      0.0000      0.0000      1.0000      0.0000
        85        3     -3.1516      0.0000      0.0000      1.0000      0.0000
-       86        3     -1.9550    -31.3326     74.2646      0.8851      0.1299
-       87        3     -1.1730     43.9300     85.8641      1.0854     -0.0787
-       88        3     -3.5170      6.8703     40.1912      1.0474     -0.0452
+       86        3     -1.9550    -31.3330     74.2649      0.8851      0.1299
+       87        3     -1.1730     43.9304     85.8647      1.0854     -0.0787
+       88        3     -3.5170      6.8704     40.1918      1.0474     -0.0452
        89        3     -6.3198      0.0000      0.0000      1.0000      0.0000
        90        3     -4.8087      0.0000      0.0000      1.0000      0.0000
        91        3     -4.8087      0.0000      0.0000      1.0000      0.0000
        92        3     -4.5766      0.0000      0.0000      1.0000      0.0000
-       93        3     -3.5170      6.5946     40.2745      1.0470     -0.0449
+       93        3     -3.5170      6.5945     40.2748      1.0470     -0.0449
        94        3     -3.0372      0.0000      0.0000      1.0000      0.0000
        95        3     -5.4137      0.0000      0.0000      1.0000      0.0000
        96        3     -5.6007      0.0000      0.0000      1.0000      0.0000
@@ -2477,55 +2436,55 @@
       100        3     -5.4137      0.0000      0.0000      1.0000      0.0000
       101        3     -6.3198      0.0000      0.0000      1.0000      0.0000
       102        3     -5.4137      0.0000      0.0000      1.0000      0.0000
-      103        3     -3.5170      6.5946     40.2744      1.0470     -0.0449
+      103        3     -3.5170      6.5948     40.2744      1.0470     -0.0449
       104        3     -4.5766      0.0000      0.0000      1.0000      0.0000
       105        3     -4.8087      0.0000      0.0000      1.0000      0.0000
       106        3     -5.6007      0.0000      0.0000      1.0000      0.0000
       107        3     -5.4137      0.0000      0.0000      1.0000      0.0000
       108        3     -3.0372      0.0000      0.0000      1.0000      0.0000
-      109        3     -1.6810     23.0649     79.5265      0.8803      0.1360
+      109        3     -1.6810     23.0648     79.5268      0.8803      0.1360
       110        3     -3.0372      0.0000      0.0000      1.0000      0.0000
       111        3     -4.8087      0.0000      0.0000      1.0000      0.0000
       112        3     -4.3397      0.0000      0.0000      1.0000      0.0000
       113        3     -4.8087      0.0000      0.0000      1.0000      0.0000
       114        3     -3.0372      0.0000      0.0000      1.0000      0.0000
       115        3     -3.0372      0.0000      0.0000      1.0000      0.0000
-      116        3     -3.5170      6.8703     40.1913      1.0474     -0.0452
+      116        3     -3.5170      6.8702     40.1910      1.0474     -0.0452
       117        3     -4.5766      0.0000      0.0000      1.0000      0.0000
       118        3     -4.8087      0.0000      0.0000      1.0000      0.0000
       119        3     -5.6007      0.0000      0.0000      1.0000      0.0000
       120        3     -5.4137      0.0000      0.0000      1.0000      0.0000
       121        3     -4.8087      0.0000      0.0000      1.0000      0.0000
       122        3     -4.5766      0.0000      0.0000      1.0000      0.0000
-      123        3     -3.5170      6.8703     40.1912      1.0474     -0.0452
+      123        3     -3.5170      6.8704     40.1918      1.0474     -0.0452
       124        3     -3.0372      0.0000      0.0000      1.0000      0.0000
       125        3     -5.4137      0.0000      0.0000      1.0000      0.0000
       126        3     -5.6007      0.0000      0.0000      1.0000      0.0000
       127        3     -4.3397      0.0000      0.0000      1.0000      0.0000
       128        3     -4.8087      0.0000      0.0000      1.0000      0.0000
       129        3     -3.0372      0.0000      0.0000      1.0000      0.0000
-      130        3     -1.6810     23.0649     79.5265      0.8803      0.1360
+      130        3     -1.6810     23.0648     79.5268      0.8803      0.1360
       131        3     -3.0372      0.0000      0.0000      1.0000      0.0000
       132        3     -4.8087      0.0000      0.0000      1.0000      0.0000
       133        3     -4.8087      0.0000      0.0000      1.0000      0.0000
       134        3     -5.6007      0.0000      0.0000      1.0000      0.0000
       135        3     -5.4137      0.0000      0.0000      1.0000      0.0000
       136        3     -3.0372      0.0000      0.0000      1.0000      0.0000
-      137        3     -3.5170      6.8703     40.1913      1.0474     -0.0452
+      137        3     -3.5170      6.8702     40.1910      1.0474     -0.0452
       138        3     -4.5766      0.0000      0.0000      1.0000      0.0000
       139        3     -3.0372      0.0000      0.0000      1.0000      0.0000
       140        3     -5.4137      0.0000      0.0000      1.0000      0.0000
       141        3     -5.6007      0.0000      0.0000      1.0000      0.0000
       142        3     -4.8087      0.0000      0.0000      1.0000      0.0000
       143        3     -4.5766      0.0000      0.0000      1.0000      0.0000
-      144        3     -3.5170      6.8703     40.1912      1.0474     -0.0452
-      145        3     -1.1730     43.9300     85.8641      1.0854     -0.0787
-      146        3     -3.5170      6.8703     40.1912      1.0474     -0.0452
+      144        3     -3.5170      6.8704     40.1918      1.0474     -0.0452
+      145        3     -1.1730     43.9304     85.8647      1.0854     -0.0787
+      146        3     -3.5170      6.8704     40.1918      1.0474     -0.0452
       147        3     -6.3198      0.0000      0.0000      1.0000      0.0000
       148        3     -4.8087      0.0000      0.0000      1.0000      0.0000
       149        3     -3.1516      0.0000      0.0000      1.0000      0.0000
-      150        3     -1.9550    -31.3326     74.2646      0.8851      0.1299
-      151        3     -3.5170      6.5946     40.2745      1.0470     -0.0449
+      150        3     -1.9550    -31.3330     74.2649      0.8851      0.1299
+      151        3     -3.5170      6.5945     40.2748      1.0470     -0.0449
       152        3     -3.0372      0.0000      0.0000      1.0000      0.0000
       153        3     -5.4137      0.0000      0.0000      1.0000      0.0000
       154        3     -5.6007      0.0000      0.0000      1.0000      0.0000
@@ -2541,33 +2500,33 @@
       164        3     -5.6007      0.0000      0.0000      1.0000      0.0000
       165        3     -5.4137      0.0000      0.0000      1.0000      0.0000
       166        3     -3.0372      0.0000      0.0000      1.0000      0.0000
-      167        3     -3.5170      6.5946     40.2744      1.0470     -0.0449
+      167        3     -3.5170      6.5948     40.2744      1.0470     -0.0449
       168        3     -4.5766      0.0000      0.0000      1.0000      0.0000
       169        3     -3.1516      0.0000      0.0000      1.0000      0.0000
       170        3     -4.8087      0.0000      0.0000      1.0000      0.0000
       171        3     -6.3198      0.0000      0.0000      1.0000      0.0000
-      172        3     -3.5170      6.8703     40.1913      1.0474     -0.0452
-      173        3     -1.1730     43.9304     85.8646      1.0854     -0.0787
-      174        3     -1.9550    -31.3330     74.2651      0.8851      0.1299
-      175        3     -1.9550    -30.7288     74.1420      0.8924      0.1205
+      172        3     -3.5170      6.8702     40.1910      1.0474     -0.0452
+      173        3     -1.1730     43.9303     85.8637      1.0854     -0.0787
+      174        3     -1.9550    -31.3322     74.2650      0.8851      0.1299
+      175        3     -1.9550    -30.7291     74.1423      0.8924      0.1205
       176        3     -4.5766      0.0000      0.0000      1.0000      0.0000
       177        3     -5.4137      0.0000      0.0000      1.0000      0.0000
       178        3     -4.5766      0.0000      0.0000      1.0000      0.0000
-      179        3     -1.9550    -30.7292     74.1423      0.8924      0.1205
+      179        3     -1.9550    -30.7285     74.1417      0.8924      0.1205
       180        3     -2.2152    -49.0901     63.9154      1.0309     -0.0300
-      181        3     -0.3746     82.3501     52.0824      0.9713      0.0296
-      182        3     -2.2152    -49.0901     63.9154      1.0309     -0.0300
-      183        3     -3.5170      6.8703     40.1913      1.0474     -0.0452
+      181        3     -0.3746     82.3504     52.0833      0.9713      0.0296
+      182        3     -2.2152    -49.0900     63.9154      1.0309     -0.0300
+      183        3     -3.5170      6.8702     40.1910      1.0474     -0.0452
       184        3     -3.0372      0.0000      0.0000      1.0000      0.0000
-      185        3     -1.9550    -31.3326     74.2646      0.8851      0.1299
-      186        3     -1.0239     65.2645     30.0754      0.8925      0.1205
-      187        3     -2.2152    -48.9540     64.7767      1.0344     -0.0333
-      188        3     -1.9550    -31.3326     74.2646      0.8851      0.1299
+      185        3     -1.9550    -31.3330     74.2649      0.8851      0.1299
+      186        3     -1.0239     65.2645     30.0753      0.8925      0.1205
+      187        3     -2.2152    -48.9540     64.7768      1.0344     -0.0333
+      188        3     -1.9550    -31.3330     74.2649      0.8851      0.1299
       189        3     -4.5766      0.0000      0.0000      1.0000      0.0000
       190        3     -5.4137      0.0000      0.0000      1.0000      0.0000
       191        3     -4.5766      0.0000      0.0000      1.0000      0.0000
-      192        3     -1.9550    -30.4253     73.5126      0.8857      0.1291
-      193        3     -3.5170      6.9789     40.4342      1.0497     -0.0473
+      192        3     -1.9550    -30.4247     73.5126      0.8857      0.1291
+      193        3     -3.5170      6.9788     40.4338      1.0497     -0.0473
       194        3     -4.5766      0.0000      0.0000      1.0000      0.0000
       195        3     -4.8087      0.0000      0.0000      1.0000      0.0000
       196        3     -5.6007      0.0000      0.0000      1.0000      0.0000
@@ -2578,113 +2537,113 @@
       201        3     -5.6007      0.0000      0.0000      1.0000      0.0000
       202        3     -4.8087      0.0000      0.0000      1.0000      0.0000
       203        3     -4.5766      0.0000      0.0000      1.0000      0.0000
-      204        3     -3.5170      6.9789     40.4342      1.0497     -0.0473
-      205        3     -1.9550    -30.4250     73.5120      0.8857      0.1291
+      204        3     -3.5170      6.9791     40.4347      1.0497     -0.0473
+      205        3     -1.9550    -30.4255     73.5119      0.8857      0.1291
       206        3     -4.5766      0.0000      0.0000      1.0000      0.0000
       207        3     -5.4137      0.0000      0.0000      1.0000      0.0000
       208        3     -4.5766      0.0000      0.0000      1.0000      0.0000
-      209        3     -1.9550    -31.3330     74.2651      0.8851      0.1299
-      210        3     -2.2152    -48.9539     64.7768      1.0344     -0.0333
-      211        3     -1.0239     65.2645     30.0754      0.8925      0.1205
-      212        3     -1.9550    -31.3330     74.2651      0.8851      0.1299
+      209        3     -1.9550    -31.3322     74.2650      0.8851      0.1299
+      210        3     -2.2152    -48.9538     64.7766      1.0344     -0.0333
+      211        3     -1.0239     65.2642     30.0754      0.8925      0.1205
+      212        3     -1.9550    -31.3322     74.2650      0.8851      0.1299
       213        3     -3.0372      0.0000      0.0000      1.0000      0.0000
-      214        3     -3.5170      6.8703     40.1912      1.0474     -0.0452
-      215        3     -2.2152    -49.0901     63.9154      1.0309     -0.0300
-      216        3     -0.3746     82.3504     52.0826      0.9713      0.0296
+      214        3     -3.5170      6.8704     40.1918      1.0474     -0.0452
+      215        3     -2.2152    -49.0900     63.9154      1.0309     -0.0300
+      216        3     -0.3746     82.3494     52.0814      0.9713      0.0296
   
-        1        4     -0.0842     66.2684      4.2776      0.9232      0.0832
-        2        4     -0.3746     82.3504     52.0826      0.9713      0.0296
-        3        4     -1.1730     43.9304     85.8646      1.0854     -0.0787
-        4        4     -1.6810     23.0649     79.5265      0.8803      0.1360
-        5        4     -1.1730     43.9300     85.8641      1.0854     -0.0787
-        6        4     -0.3746     82.3501     52.0824      0.9713      0.0296
-        7        4     -0.3746     80.9596     53.8749      0.9807      0.0197
-        8        4     -1.0239     65.2645     30.0754      0.8925      0.1205
-        9        4     -1.7220     25.1360    114.8462      1.0575     -0.0544
+        1        4     -0.0842     66.2682      4.2776      0.9232      0.0832
+        2        4     -0.3746     82.3494     52.0814      0.9713      0.0296
+        3        4     -1.1730     43.9303     85.8637      1.0854     -0.0787
+        4        4     -1.6810     23.0648     79.5268      0.8803      0.1360
+        5        4     -1.1730     43.9304     85.8647      1.0854     -0.0787
+        6        4     -0.3746     82.3504     52.0833      0.9713      0.0296
+        7        4     -0.3746     80.9605     53.8734      0.9807      0.0197
+        8        4     -1.0239     65.2645     30.0753      0.8925      0.1205
+        9        4     -1.7220     25.1381    114.8460      1.0575     -0.0544
        10        4     -2.2836      0.0000      0.0000      1.0000      0.0000
-       11        4     -1.4636     44.0974     57.8141      0.9004      0.1106
-       12        4     -0.4858     47.7061    135.9856      2.0068     -0.5017
-       13        4     -1.1730     43.3073     85.7150      1.0863     -0.0794
-       14        4     -1.7220     26.9288    116.8407      1.0817     -0.0755
+       11        4     -1.4636     44.0971     57.8155      0.9004      0.1106
+       12        4     -0.4858     47.7062    135.9861      2.0069     -0.5017
+       13        4     -1.1730     43.3070     85.7145      1.0863     -0.0794
+       14        4     -1.7220     26.9293    116.8398      1.0816     -0.0755
        15        4     -3.1516      0.0000      0.0000      1.0000      0.0000
        16        4     -3.6130      0.0000      0.0000      1.0000      0.0000
        17        4     -2.7070      0.0000      0.0000      1.0000      0.0000
-       18        4     -1.4636     44.6406     57.0311      0.8935      0.1192
-       19        4     -1.6810     23.8092     78.2100      0.8843      0.1308
+       18        4     -1.4636     44.6401     57.0304      0.8935      0.1192
+       19        4     -1.6810     23.8090     78.2101      0.8843      0.1308
        20        4     -2.2836      0.0000      0.0000      1.0000      0.0000
        21        4     -3.6130      0.0000      0.0000      1.0000      0.0000
        22        4     -4.3397      0.0000      0.0000      1.0000      0.0000
        23        4     -3.6130      0.0000      0.0000      1.0000      0.0000
        24        4     -2.2836      0.0000      0.0000      1.0000      0.0000
-       25        4     -1.1730     43.3069     85.7148      1.0863     -0.0794
-       26        4     -1.4636     44.6397     57.0309      0.8935      0.1192
+       25        4     -1.1730     43.3075     85.7150      1.0863     -0.0794
+       26        4     -1.4636     44.6393     57.0322      0.8935      0.1192
        27        4     -2.7070      0.0000      0.0000      1.0000      0.0000
        28        4     -3.6130      0.0000      0.0000      1.0000      0.0000
        29        4     -3.1516      0.0000      0.0000      1.0000      0.0000
-       30        4     -1.7220     26.9292    116.8407      1.0816     -0.0755
-       31        4     -0.3746     80.9607     53.8745      0.9807      0.0197
-       32        4     -0.4858     47.7062    135.9856      2.0069     -0.5017
-       33        4     -1.4636     44.0974     57.8143      0.9004      0.1106
+       30        4     -1.7220     26.9286    116.8416      1.0817     -0.0755
+       31        4     -0.3746     80.9603     53.8754      0.9807      0.0197
+       32        4     -0.4858     47.7062    135.9843      2.0068     -0.5017
+       33        4     -1.4636     44.0976     57.8134      0.9004      0.1106
        34        4     -2.2836      0.0000      0.0000      1.0000      0.0000
-       35        4     -1.7220     25.1384    114.8461      1.0575     -0.0544
-       36        4     -1.0239     65.2645     30.0754      0.8925      0.1205
-       37        4     -0.3746     82.3504     52.0826      0.9713      0.0296
-       38        4     -1.0239     65.2645     30.0754      0.8925      0.1205
-       39        4     -1.7220     27.3432    117.1907      1.0785     -0.0728
+       35        4     -1.7220     25.1383    114.8466      1.0575     -0.0544
+       36        4     -1.0239     65.2642     30.0754      0.8925      0.1205
+       37        4     -0.3746     82.3494     52.0814      0.9713      0.0296
+       38        4     -1.0239     65.2642     30.0754      0.8925      0.1205
+       39        4     -1.7220     27.3431    117.1898      1.0785     -0.0727
        40        4     -2.2836      0.0000      0.0000      1.0000      0.0000
-       41        4     -1.4636     45.2130     58.2973      0.8917      0.1215
-       42        4     -0.4858     49.4023    137.9273      2.0607     -0.5147
-       43        4     -1.0239     65.2645     30.0754      0.8925      0.1205
-       44        4     -0.3746     82.3501     52.0824      0.9713      0.0296
-       45        4     -0.4858     49.4023    137.9273      2.0607     -0.5147
-       46        4     -1.4636     45.2130     58.2972      0.8917      0.1215
+       41        4     -1.4636     45.2130     58.2978      0.8917      0.1215
+       42        4     -0.4858     49.4023    137.9267      2.0607     -0.5147
+       43        4     -1.0239     65.2645     30.0753      0.8925      0.1205
+       44        4     -0.3746     82.3504     52.0833      0.9713      0.0296
+       45        4     -0.4858     49.4023    137.9267      2.0607     -0.5147
+       46        4     -1.4636     45.2131     58.2972      0.8917      0.1215
        47        4     -2.2836      0.0000      0.0000      1.0000      0.0000
-       48        4     -1.7220     27.3434    117.1906      1.0785     -0.0728
-       49        4     -1.7220     26.9290    116.8407      1.0817     -0.0755
-       50        4     -0.4858     47.7061    135.9856      2.0068     -0.5017
-       51        4     -1.7220     27.3434    117.1906      1.0785     -0.0728
+       48        4     -1.7220     27.3433    117.1914      1.0785     -0.0728
+       49        4     -1.7220     26.9293    116.8398      1.0816     -0.0755
+       50        4     -0.4858     47.7062    135.9861      2.0069     -0.5017
+       51        4     -1.7220     27.3433    117.1914      1.0785     -0.0728
        52        4     -2.4092      0.0000      0.0000      1.0000      0.0000
        53        4     -3.2174      0.0000      0.0000      1.0000      0.0000
        54        4     -2.4092      0.0000      0.0000      1.0000      0.0000
        55        4     -2.2836      0.0000      0.0000      1.0000      0.0000
-       56        4     -1.4636     44.6396     57.0311      0.8935      0.1192
+       56        4     -1.4636     44.6401     57.0304      0.8935      0.1192
        57        4     -2.4092      0.0000      0.0000      1.0000      0.0000
        58        4     -3.6130      0.0000      0.0000      1.0000      0.0000
        59        4     -4.3908      0.0000      0.0000      1.0000      0.0000
        60        4     -3.2174      0.0000      0.0000      1.0000      0.0000
-       61        4     -1.4636     44.6397     57.0309      0.8935      0.1192
+       61        4     -1.4636     44.6393     57.0322      0.8935      0.1192
        62        4     -2.2836      0.0000      0.0000      1.0000      0.0000
        63        4     -3.2174      0.0000      0.0000      1.0000      0.0000
        64        4     -4.3908      0.0000      0.0000      1.0000      0.0000
        65        4     -3.6130      0.0000      0.0000      1.0000      0.0000
        66        4     -2.4092      0.0000      0.0000      1.0000      0.0000
-       67        4     -0.4858     47.7062    135.9856      2.0069     -0.5017
-       68        4     -1.7220     26.9292    116.8407      1.0816     -0.0755
+       67        4     -0.4858     47.7062    135.9843      2.0068     -0.5017
+       68        4     -1.7220     26.9286    116.8416      1.0817     -0.0755
        69        4     -2.4092      0.0000      0.0000      1.0000      0.0000
        70        4     -3.2174      0.0000      0.0000      1.0000      0.0000
        71        4     -2.4092      0.0000      0.0000      1.0000      0.0000
-       72        4     -1.7220     27.3432    117.1907      1.0785     -0.0728
-       73        4     -1.1730     43.9304     85.8646      1.0854     -0.0787
-       74        4     -1.7220     27.3432    117.1907      1.0785     -0.0728
+       72        4     -1.7220     27.3431    117.1898      1.0785     -0.0727
+       73        4     -1.1730     43.9303     85.8637      1.0854     -0.0787
+       74        4     -1.7220     27.3431    117.1898      1.0785     -0.0727
        75        4     -3.1516      0.0000      0.0000      1.0000      0.0000
        76        4     -3.6130      0.0000      0.0000      1.0000      0.0000
        77        4     -2.7070      0.0000      0.0000      1.0000      0.0000
-       78        4     -1.4636     45.2130     58.2973      0.8917      0.1215
-       79        4     -1.7220     25.1383    114.8462      1.0575     -0.0544
-       80        4     -0.4858     49.4023    137.9273      2.0607     -0.5147
-       81        4     -1.7220     25.1384    114.8461      1.0575     -0.0544
+       78        4     -1.4636     45.2131     58.2972      0.8917      0.1215
+       79        4     -1.7220     25.1381    114.8460      1.0575     -0.0544
+       80        4     -0.4858     49.4023    137.9267      2.0607     -0.5147
+       81        4     -1.7220     25.1383    114.8466      1.0575     -0.0544
        82        4     -2.4092      0.0000      0.0000      1.0000      0.0000
        83        4     -3.2174      0.0000      0.0000      1.0000      0.0000
        84        4     -2.4092      0.0000      0.0000      1.0000      0.0000
        85        4     -3.1516      0.0000      0.0000      1.0000      0.0000
-       86        4     -1.7220     27.3434    117.1906      1.0785     -0.0728
-       87        4     -1.1730     43.9300     85.8641      1.0854     -0.0787
-       88        4     -1.4636     45.2130     58.2973      0.8917      0.1215
+       86        4     -1.7220     27.3433    117.1914      1.0785     -0.0728
+       87        4     -1.1730     43.9304     85.8647      1.0854     -0.0787
+       88        4     -1.4636     45.2130     58.2978      0.8917      0.1215
        89        4     -2.7070      0.0000      0.0000      1.0000      0.0000
        90        4     -3.6130      0.0000      0.0000      1.0000      0.0000
        91        4     -3.6130      0.0000      0.0000      1.0000      0.0000
        92        4     -2.4092      0.0000      0.0000      1.0000      0.0000
-       93        4     -1.4636     44.0974     57.8141      0.9004      0.1106
+       93        4     -1.4636     44.0971     57.8155      0.9004      0.1106
        94        4     -2.2836      0.0000      0.0000      1.0000      0.0000
        95        4     -3.2174      0.0000      0.0000      1.0000      0.0000
        96        4     -4.3908      0.0000      0.0000      1.0000      0.0000
@@ -2694,55 +2653,55 @@
       100        4     -3.2174      0.0000      0.0000      1.0000      0.0000
       101        4     -2.7070      0.0000      0.0000      1.0000      0.0000
       102        4     -3.2174      0.0000      0.0000      1.0000      0.0000
-      103        4     -1.4636     44.0974     57.8143      0.9004      0.1106
+      103        4     -1.4636     44.0976     57.8134      0.9004      0.1106
       104        4     -2.4092      0.0000      0.0000      1.0000      0.0000
       105        4     -3.6130      0.0000      0.0000      1.0000      0.0000
       106        4     -4.3908      0.0000      0.0000      1.0000      0.0000
       107        4     -3.2174      0.0000      0.0000      1.0000      0.0000
       108        4     -2.2836      0.0000      0.0000      1.0000      0.0000
-      109        4     -1.6810     23.0649     79.5265      0.8803      0.1360
+      109        4     -1.6810     23.0648     79.5268      0.8803      0.1360
       110        4     -2.2836      0.0000      0.0000      1.0000      0.0000
       111        4     -3.6130      0.0000      0.0000      1.0000      0.0000
       112        4     -4.3397      0.0000      0.0000      1.0000      0.0000
       113        4     -3.6130      0.0000      0.0000      1.0000      0.0000
       114        4     -2.2836      0.0000      0.0000      1.0000      0.0000
       115        4     -2.2836      0.0000      0.0000      1.0000      0.0000
-      116        4     -1.4636     45.2130     58.2972      0.8917      0.1215
+      116        4     -1.4636     45.2131     58.2972      0.8917      0.1215
       117        4     -2.4092      0.0000      0.0000      1.0000      0.0000
       118        4     -3.6130      0.0000      0.0000      1.0000      0.0000
       119        4     -4.3908      0.0000      0.0000      1.0000      0.0000
       120        4     -3.2174      0.0000      0.0000      1.0000      0.0000
       121        4     -3.6130      0.0000      0.0000      1.0000      0.0000
       122        4     -2.4092      0.0000      0.0000      1.0000      0.0000
-      123        4     -1.4636     45.2130     58.2973      0.8917      0.1215
+      123        4     -1.4636     45.2130     58.2978      0.8917      0.1215
       124        4     -2.2836      0.0000      0.0000      1.0000      0.0000
       125        4     -3.2174      0.0000      0.0000      1.0000      0.0000
       126        4     -4.3908      0.0000      0.0000      1.0000      0.0000
       127        4     -4.3397      0.0000      0.0000      1.0000      0.0000
       128        4     -3.6130      0.0000      0.0000      1.0000      0.0000
       129        4     -2.2836      0.0000      0.0000      1.0000      0.0000
-      130        4     -1.6810     23.0649     79.5265      0.8803      0.1360
+      130        4     -1.6810     23.0648     79.5268      0.8803      0.1360
       131        4     -2.2836      0.0000      0.0000      1.0000      0.0000
       132        4     -3.6130      0.0000      0.0000      1.0000      0.0000
       133        4     -3.6130      0.0000      0.0000      1.0000      0.0000
       134        4     -4.3908      0.0000      0.0000      1.0000      0.0000
       135        4     -3.2174      0.0000      0.0000      1.0000      0.0000
       136        4     -2.2836      0.0000      0.0000      1.0000      0.0000
-      137        4     -1.4636     45.2130     58.2973      0.8917      0.1215
+      137        4     -1.4636     45.2131     58.2972      0.8917      0.1215
       138        4     -2.4092      0.0000      0.0000      1.0000      0.0000
       139        4     -2.2836      0.0000      0.0000      1.0000      0.0000
       140        4     -3.2174      0.0000      0.0000      1.0000      0.0000
       141        4     -4.3908      0.0000      0.0000      1.0000      0.0000
       142        4     -3.6130      0.0000      0.0000      1.0000      0.0000
       143        4     -2.4092      0.0000      0.0000      1.0000      0.0000
-      144        4     -1.4636     45.2130     58.2973      0.8917      0.1215
-      145        4     -1.1730     43.9300     85.8641      1.0854     -0.0787
-      146        4     -1.4636     45.2130     58.2973      0.8917      0.1215
+      144        4     -1.4636     45.2130     58.2978      0.8917      0.1215
+      145        4     -1.1730     43.9304     85.8647      1.0854     -0.0787
+      146        4     -1.4636     45.2130     58.2978      0.8917      0.1215
       147        4     -2.7070      0.0000      0.0000      1.0000      0.0000
       148        4     -3.6130      0.0000      0.0000      1.0000      0.0000
       149        4     -3.1516      0.0000      0.0000      1.0000      0.0000
-      150        4     -1.7220     27.3434    117.1906      1.0785     -0.0728
-      151        4     -1.4636     44.0974     57.8141      0.9004      0.1106
+      150        4     -1.7220     27.3433    117.1914      1.0785     -0.0728
+      151        4     -1.4636     44.0971     57.8155      0.9004      0.1106
       152        4     -2.2836      0.0000      0.0000      1.0000      0.0000
       153        4     -3.2174      0.0000      0.0000      1.0000      0.0000
       154        4     -4.3908      0.0000      0.0000      1.0000      0.0000
@@ -2758,33 +2717,33 @@
       164        4     -4.3908      0.0000      0.0000      1.0000      0.0000
       165        4     -3.2174      0.0000      0.0000      1.0000      0.0000
       166        4     -2.2836      0.0000      0.0000      1.0000      0.0000
-      167        4     -1.4636     44.0974     57.8143      0.9004      0.1106
+      167        4     -1.4636     44.0976     57.8134      0.9004      0.1106
       168        4     -2.4092      0.0000      0.0000      1.0000      0.0000
       169        4     -3.1516      0.0000      0.0000      1.0000      0.0000
       170        4     -3.6130      0.0000      0.0000      1.0000      0.0000
       171        4     -2.7070      0.0000      0.0000      1.0000      0.0000
-      172        4     -1.4636     45.2130     58.2972      0.8917      0.1215
-      173        4     -1.1730     43.9304     85.8646      1.0854     -0.0787
-      174        4     -1.7220     27.3432    117.1907      1.0785     -0.0728
-      175        4     -1.7220     25.1384    114.8461      1.0575     -0.0544
+      172        4     -1.4636     45.2131     58.2972      0.8917      0.1215
+      173        4     -1.1730     43.9303     85.8637      1.0854     -0.0787
+      174        4     -1.7220     27.3431    117.1898      1.0785     -0.0727
+      175        4     -1.7220     25.1383    114.8466      1.0575     -0.0544
       176        4     -2.4092      0.0000      0.0000      1.0000      0.0000
       177        4     -3.2174      0.0000      0.0000      1.0000      0.0000
       178        4     -2.4092      0.0000      0.0000      1.0000      0.0000
-      179        4     -1.7220     25.1383    114.8462      1.0575     -0.0544
-      180        4     -0.4858     49.4023    137.9273      2.0607     -0.5147
-      181        4     -0.3746     82.3501     52.0824      0.9713      0.0296
-      182        4     -0.4858     49.4023    137.9273      2.0607     -0.5147
-      183        4     -1.4636     45.2130     58.2973      0.8917      0.1215
+      179        4     -1.7220     25.1381    114.8460      1.0575     -0.0544
+      180        4     -0.4858     49.4023    137.9267      2.0607     -0.5147
+      181        4     -0.3746     82.3504     52.0833      0.9713      0.0296
+      182        4     -0.4858     49.4023    137.9267      2.0607     -0.5147
+      183        4     -1.4636     45.2131     58.2972      0.8917      0.1215
       184        4     -2.2836      0.0000      0.0000      1.0000      0.0000
-      185        4     -1.7220     27.3434    117.1906      1.0785     -0.0728
-      186        4     -1.0239     65.2645     30.0754      0.8925      0.1205
-      187        4     -0.4858     47.7061    135.9856      2.0068     -0.5017
-      188        4     -1.7220     27.3434    117.1906      1.0785     -0.0728
+      185        4     -1.7220     27.3433    117.1914      1.0785     -0.0728
+      186        4     -1.0239     65.2645     30.0753      0.8925      0.1205
+      187        4     -0.4858     47.7062    135.9861      2.0069     -0.5017
+      188        4     -1.7220     27.3433    117.1914      1.0785     -0.0728
       189        4     -2.4092      0.0000      0.0000      1.0000      0.0000
       190        4     -3.2174      0.0000      0.0000      1.0000      0.0000
       191        4     -2.4092      0.0000      0.0000      1.0000      0.0000
-      192        4     -1.7220     26.9290    116.8407      1.0817     -0.0755
-      193        4     -1.4636     44.6396     57.0311      0.8935      0.1192
+      192        4     -1.7220     26.9293    116.8398      1.0816     -0.0755
+      193        4     -1.4636     44.6401     57.0304      0.8935      0.1192
       194        4     -2.4092      0.0000      0.0000      1.0000      0.0000
       195        4     -3.6130      0.0000      0.0000      1.0000      0.0000
       196        4     -4.3908      0.0000      0.0000      1.0000      0.0000
@@ -2795,56 +2754,53 @@
       201        4     -4.3908      0.0000      0.0000      1.0000      0.0000
       202        4     -3.6130      0.0000      0.0000      1.0000      0.0000
       203        4     -2.4092      0.0000      0.0000      1.0000      0.0000
-      204        4     -1.4636     44.6397     57.0309      0.8935      0.1192
-      205        4     -1.7220     26.9292    116.8407      1.0816     -0.0755
+      204        4     -1.4636     44.6393     57.0322      0.8935      0.1192
+      205        4     -1.7220     26.9286    116.8416      1.0817     -0.0755
       206        4     -2.4092      0.0000      0.0000      1.0000      0.0000
       207        4     -3.2174      0.0000      0.0000      1.0000      0.0000
       208        4     -2.4092      0.0000      0.0000      1.0000      0.0000
-      209        4     -1.7220     27.3432    117.1907      1.0785     -0.0728
-      210        4     -0.4858     47.7062    135.9856      2.0069     -0.5017
-      211        4     -1.0239     65.2645     30.0754      0.8925      0.1205
-      212        4     -1.7220     27.3432    117.1907      1.0785     -0.0728
+      209        4     -1.7220     27.3431    117.1898      1.0785     -0.0727
+      210        4     -0.4858     47.7062    135.9843      2.0068     -0.5017
+      211        4     -1.0239     65.2642     30.0754      0.8925      0.1205
+      212        4     -1.7220     27.3431    117.1898      1.0785     -0.0727
       213        4     -2.2836      0.0000      0.0000      1.0000      0.0000
-      214        4     -1.4636     45.2130     58.2973      0.8917      0.1215
-      215        4     -0.4858     49.4023    137.9273      2.0607     -0.5147
-      216        4     -0.3746     82.3504     52.0826      0.9713      0.0296
+      214        4     -1.4636     45.2130     58.2978      0.8917      0.1215
+      215        4     -0.4858     49.4023    137.9267      2.0607     -0.5147
+      216        4     -0.3746     82.3494     52.0814      0.9713      0.0296
   
      ===================================================================
-     Memory usage:  VmHWM =        32Mb
-                   VmPeak =       300Mb
+     Memory usage:  VmHWM =       181Mb
+                   VmPeak =      2760Mb
      ===================================================================
 
 
      Unfolding on the coarse grid
-     elphon_wrap  :     12.00s CPU     12.22s WALL (       1 calls)
+     elphon_wrap  :      2.74s CPU      3.32s WALL (       1 calls)
 
      INITIALIZATION: 
 
      init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
-     init_us_1    :      0.01s CPU      0.01s WALL (       1 calls)
+     init_us_1    :      0.01s CPU      0.01s WALL (       2 calls)
+
 
 
      Electron-Phonon interpolation
-     ephwann      :      7.80s CPU      8.22s WALL (       1 calls)
-     ep-interp    :      7.66s CPU      8.06s WALL (     216 calls)
+     ephwann      :      2.55s CPU      2.93s WALL (       1 calls)
+     ep-interp    :      2.44s CPU      2.66s WALL (     216 calls)
 
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
      Ham: step 2  :      0.00s CPU      0.00s WALL (       1 calls)
      ep: step 1   :      0.00s CPU      0.00s WALL (     162 calls)
-     ep: step 2   :      0.03s CPU      0.03s WALL (     162 calls)
+     ep: step 2   :      0.03s CPU      0.12s WALL (     162 calls)
      DynW2B       :      0.01s CPU      0.01s WALL (     216 calls)
-     HamW2B       :      2.61s CPU      2.73s WALL (  560520 calls)
-     ephW2Bp      :      0.15s CPU      0.15s WALL (    1296 calls)
+     HamW2B       :      1.00s CPU      1.10s WALL (  140130 calls)
+     ephW2Bp      :      0.38s CPU      0.42s WALL (    1296 calls)
 
 
      Total program execution
-     EPW          :     21.38s CPU     22.02s WALL
+     EPW          :      5.80s CPU      6.87s WALL
 
                                                                                           
  Please consider citing:                                                                  
  S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
                                                                                           
- In addition, if you used anisotropic Eliashberg superconductivity please cite:           
-              E. R. Margine and F. Giustino, Phys. Rev. B 87, 024505 (2013)               
-              if you used transport properties (scattering rates, mobility) please cite:  
-              S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)     

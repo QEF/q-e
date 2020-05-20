@@ -820,7 +820,7 @@ CONTAINS
     ALLOCATE(iatom(nat))
     iatom = 0
     DO ia = 1, nat
-       IF (ASSOCIATED(upf(ityp(ia))%paw%pfunc)) iatom(ia) = iatom(ia) + 1
+       IF (ALLOCATED(upf(ityp(ia))%paw%pfunc)) iatom(ia) = iatom(ia) + 1
     END DO
     CALL mp_sum(iatom,intra_image_comm)
 
@@ -833,7 +833,7 @@ CONTAINS
        i%l = upf(i%t)%lmax_rho+1     ! max ang.mom. in augmentation for ia
 
        IF (.NOT.upf(i%t)%tpawp) call errore('paw_make_ae_charge_xdm','non-paw pseudo',1)
-       IF (.NOT.ASSOCIATED(upf(i%t)%paw%pfunc)) CYCLE
+       IF (.NOT.ALLOCATED(upf(i%t)%paw%pfunc)) CYCLE
 
        ALLOCATE(rho_lm_ae(i%m,i%l**2,nspin), rho_lm_ps(i%m,i%l**2,nspin))
 

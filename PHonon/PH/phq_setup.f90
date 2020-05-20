@@ -102,6 +102,7 @@ subroutine phq_setup
   USE ldaU_ph,       ONLY : effU
   USE constants,     ONLY : rytoev
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, dvscf_interpol_setup
+  USE ahc,           ONLY : elph_ahc, elph_ahc_setup
 
   implicit none
 
@@ -456,6 +457,10 @@ subroutine phq_setup
   IF (ldvscf_interpolate) THEN
     CALL dvscf_interpol_setup()
   ENDIF
+  !
+  ! AHC e-ph coupling
+  !
+  IF (elph_ahc) CALL elph_ahc_setup()
   !
   CALL stop_clock ('phq_setup')
   !

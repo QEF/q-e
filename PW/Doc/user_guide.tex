@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.5MaX}
+\def\version{6.5+}
 \def\PWscf{\texttt{PWscf}}
 \def\qe{{\sc Quantum ESPRESSO}}
 
@@ -535,8 +535,9 @@ Silva: the new damping algorithm is the default since v. 3.1).
 
 \subsection{Direct interface with \texttt{CASINO}} \label{pw2casino_info}
 
-\texttt{PWscf} now supports the Cambridge quantum Monte Carlo program CASINO directly. For more information
-on the \texttt{CASINO} code see \texttt{http://www.tcm.phy.cam.ac.uk/\~{}mdt26/casino.html}. 
+\texttt{PWscf} supports the Quantum Monte Carlo program CASINO directly.
+For more information on the \texttt{CASINO} code,
+see \texttt{https://vallico.net/casinoqmc}. 
 \texttt{CASINO} may take the output of \texttt{PWSCF} and
 'improve it' giving considerably more accurate total energies and other
 quantities than DFT is capable of.
@@ -562,12 +563,6 @@ espresso distribution:
 \end{itemize}
 Relevant behavior of \texttt{PWscf} may be modified through an optional auxiliary input 
 file, named \texttt{pw2casino.dat} (see below).
-
-Note that in versions prior to 4.3, this functionality was provided through
-separate post-processing utilities available in the PP directory: these are 
-no longer supported. For QMC-MD runs, PWSCF etc previously needed to be 
-'patched' using the patch script PP/pw2casino-MDloop.sh - this is no longer 
-necessary.
 
 \paragraph{How to generate \texttt{xwfn.data} files with \texttt{PWscf}}
 Use the '-pw2casino' option when invoking \pwx, e.g.: 
@@ -643,9 +638,13 @@ must be generated using the same pseudopotential as in the subsequent QMC
 calculation. This requires the use of tools to switch between the different 
 file formats used by the two codes.
 
-\texttt{CASINO} uses the `\texttt{CASINO} tabulated format', \texttt{PWSCF} officially supports 
-the UPFv2 format (though it will read other `deprecated' formats).
-This can be done through the `casino2upf' and `upf2casino' tools included in the upftools directory (see the upftools/README file for instructions). An alternative converter `casinogon' is included in the \texttt{CASINO} distribution which produces the deprecated GON format but which can be useful when using non-standard grids.
+\texttt{CASINO} uses the `\texttt{CASINO} tabulated format', \texttt{PWSCF} 
+uses the UPF format. Two converters, `casino2upf.x' and `upf2casino.x',
+are included in the upftools/ directory until (see the upftools/README 
+file for instructions). {\br NOTA BENE}: these utilities were unmaintained 
+and have been removed from versions later than v.6.5.
+
+An alternative converter `casinogon' is included in the \texttt{CASINO} distribution which produces the deprecated GON format but which can be useful when using non-standard grids.
 
 \subsection{Socket interface with i-PI}
 

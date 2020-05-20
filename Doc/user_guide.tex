@@ -183,8 +183,8 @@ mentioned in Sec.\ref{SubSec:Terms}, include:
   \item \`Eric Germaneau for TB09 meta-GGA functional, using \libxc;
   \item Guido Roma (CEA Saclay) for  vdw-df-obk8  e vdw-df-ob86 functionals; 
   \item Yves Ferro (Univ. Provence) for SOGGA and M06L functionals; 
-  \item Ikutaro Hamada (NIMS, Japan) for OPTB86B-vdW, REV-vdW-DF2
-    functionals, fixes to pw2xsf utility;
+  \item Ikutaro Hamada (NIMS, Japan) for RPBE, OPTB86B-vdW, REV-vdW-DF2
+	  functionals, fixes to pw2xsf utility;
   \item Daniel Forrer (Padua Univ.) and Michele Pavone
   (Naples Univ. Federico II) for dispersions interaction in the
   framework of DFT-D;
@@ -364,6 +364,7 @@ common to all packages:
 
 \begin{tabular}{ll}
 \texttt{Modules/} &  Fortran modules and utilities used by all programs\\
+\texttt{upflib/}  &  pseudopotential-related code, plus conversion tools\\
 \texttt{include/} &  files *.h included by fortran and C source files\\
 \texttt{clib/}    &  libraries and utilities written in C\\
 \texttt{FFTXlib/} &  FFT libraries\\
@@ -372,7 +373,6 @@ common to all packages:
 \texttt{UtilXlib/}&  Miscellaneous timing, error handling, MPI utilites\\
 \texttt{install/} &  installation scripts and utilities\\
 \texttt{pseudo}/  &  pseudopotential files used by examples\\
-\texttt{upftools/}&  converters to unified pseudopotential format (UPF)\\
 \texttt{Doc/}     &  general documentation\\
 \texttt{archive/} &  external libraries in .tar.gz form\\
 \texttt{test-suite/} &  automated tests\\
@@ -836,8 +836,6 @@ At your choice, you may compile the complete \qe\ suite of programs
 \item \texttt{make xspectra} compiles the package \texttt{XSpectra}.
 			All executables are linked
 			in main \texttt{bin} directory
-\item \texttt{make upf} produces utilities for pseudopotential conversion in
-                        directory \texttt{upftools/}
 \item \texttt{make all} produces all of the above
 \item \texttt{make epw} compiles package \texttt{EPW}
 \item \texttt{make plumed} unpacks \texttt{PLUMED}, patches several routines

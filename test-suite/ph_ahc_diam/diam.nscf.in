@@ -1,0 +1,36 @@
+ &control
+    calculation     = 'nscf'
+    prefix          = 'diam'
+    restart_mode    = 'from_scratch'
+    pseudo_dir      = '../../pseudo/'
+    outdir          = './'
+ /
+ &system
+    ibrav           = 2
+    celldm(1)       = 6.64
+    nat             = 2
+    ntyp            = 1
+    ecutwfc         = 20
+    occupations     = 'fixed'
+    nbnd = 12
+ /
+ &electrons
+    diago_full_acc  = .true.
+    diagonalization = 'david'
+    mixing_beta     = 0.7
+    diago_david_ndim = 2
+    conv_thr        = 1.0d-10
+ /
+ATOMIC_SPECIES
+  C  12.01078  C.UPF
+ATOMIC_POSITIONS alat
+  C   0.00  0.00  0.00
+  C   0.25  0.25  0.25
+K_POINTS crystal
+ 5
+   0.0  0.0  0.0   1.0
+   0.5  0.5  0.5   1.0
+   0.1  0.2  0.3   1.0
+  -0.3  0.4 -0.1   1.0
+  -0.4 -0.3 -0.2   1.0
+

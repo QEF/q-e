@@ -780,12 +780,12 @@ SUBROUTINE v_hubbard_b (ns, v_hub, eth)
   !
   v_hub(:,:,:,:) = 0.d0
   !
-  IF (Hubbard_J0(nt).NE.0.d0 .OR. Hubbard_beta(nt).NE.0.d0) &
-     CALL errore('v_hubbard_b', 'Hubbard_J0 and Hubbard_beta are not supported',1) 
-  !
   DO na = 1, nat
      !
      nt = ityp (na)
+     !
+     IF (Hubbard_J0(nt).NE.0.d0 .OR. Hubbard_beta(nt).NE.0.d0) &
+     CALL errore('v_hubbard_b', 'Hubbard_J0 and Hubbard_beta are not supported',1) 
      !
      IF (is_hubbard_back(nt)) THEN
         !

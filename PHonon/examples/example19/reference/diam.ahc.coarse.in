@@ -1,0 +1,21 @@
+electron-phonon of diamond on a coarse 333 grid
+&inputph
+  prefix   = 'diam'
+  outdir   = '/group2/jmlim/program/qe-dev-dvscf/tempdir/'
+  fildyn   = 'dyn_dir_ahc_coarse/diam.dyn'
+  tr2_ph   =  1.0d-20
+
+  ldisp    = .true.
+  nq1      = 3
+  nq2      = 3
+  nq3      = 3
+
+  ldvscf_interpolate = .true.
+  wpot_dir = 'wpot/'
+
+  trans    = .false.
+  electron_phonon = 'ahc'
+  ahc_nbnd = 8
+
+  ahc_dir = 'ahc_dir_coarse'
+ /

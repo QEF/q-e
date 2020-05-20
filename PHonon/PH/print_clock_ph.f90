@@ -9,12 +9,15 @@
 subroutine print_clock_ph
   !-----------------------------------------------------------------------
 
-  USE io_global,  ONLY : stdout
-  USE uspp,       ONLY : okvan, nlcc_any
-  USE control_ph, ONLY : trans, zue, epsil
-  USE ramanm,     ONLY : lraman, elop
-  USE ldau,       ONLY : lda_plus_u
+  USE io_global,         ONLY : stdout
+  USE uspp,              ONLY : okvan, nlcc_any
+  USE control_ph,        ONLY : trans, zue, epsil
+  USE ramanm,            ONLY : lraman, elop
+  USE ldau,              ONLY : lda_plus_u
+  USE el_phon,           ONLY : elph
   USE dvscf_interpolate, ONLY : ldvscf_interpolate
+  USE ahc,        ONLY : elph_ahc
+  USE el_phon,    ONLY : elph
   !
   implicit none
   !
@@ -165,6 +168,14 @@ subroutine print_clock_ph
      WRITE( stdout, * )
   ENDIF
 
+  IF (elph) THEN
+     WRITE( stdout, * ) '     Electron-phonon coupling'
+     CALL print_clock('elphon')
+     CALL print_clock('elphel')
+     CALL print_clock('elphsum')
+     WRITE( stdout, * )
+  ENDIF
+
   IF (ldvscf_interpolate) THEN
      WRITE( stdout, * ) '     Fourier interpolation of dVscf'
      ! CALL print_clock('dvscf_setup')
@@ -178,6 +189,16 @@ subroutine print_clock_ph
      ! CALL print_clock('dvscf_long')
      CALL print_clock('dvscf_bare')
      ! CALL print_clock('dvscf_cart2u')
+     WRITE( stdout, * )
+  ENDIF
+
+  IF (elph_ahc) THEN
+     WRITE( stdout, * ) '     El-ph coupling for electron self-energy'
+     CALL print_clock('ahc_elph')
+     CALL print_clock('ahc_upfan')
+     CALL print_clock('ahc_dw')
+     CALL print_clock('ahc_gkk')
+     CALL print_clock('ahc_gauge')
      WRITE( stdout, * )
   ENDIF
 

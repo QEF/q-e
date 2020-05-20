@@ -45,6 +45,7 @@ SUBROUTINE do_phonon(auxdyn)
   ! FIXME: see below setup_pw
   USE noncollin_module, ONLY : noncolin
   USE spin_orb,         ONLY : domag
+  USE ahc,            ONLY : elph_ahc, elph_do_ahc
 
   IMPLICIT NONE
   !
@@ -136,6 +137,8 @@ SUBROUTINE do_phonon(auxdyn)
            CALL elph_tetra_gamma()
         ELSEIF(elph_tetra == 3) THEN
            CALL elph_scdft()
+        ELSEIF( elph_ahc ) THEN
+           CALL elph_do_ahc()
         ELSE 
            CALL elphsum()
         END IF

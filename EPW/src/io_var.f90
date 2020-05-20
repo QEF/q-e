@@ -26,7 +26,7 @@
             iospectral_cum, iuwanep, iuwane, iunukk, iudvscf, iuqpeig, iures, &
             iuint3paw
   PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb,&
-            iufilfreq, iufilegnv, iufileph, iufilkqmap, &
+            iufilfreq, iufilegnv, iufileph, iufilkqmap, iunpattern, &
             iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, &
             iufileig, iukmap, crystal, iunifc, iunimem, iunepmatwp2
   PUBLIC :: iuwinfil, iun_plot, iuprojfil, iudecayH, iudecayP, &
@@ -44,7 +44,6 @@
   !
   ! Output of physically relevant quantities (60-100)
   !
-  INTEGER :: iuqpeig         = 59  ! Reading quasi-particle eigenenergies from file
   INTEGER :: lambda_phself   = 60  ! Lambda factor of the phonon self-energy
                                    ! [lambda.phself]
   INTEGER :: linewidth_phself= 61  ! Imaginary part of the phonon self-energy
@@ -127,7 +126,8 @@
   INTEGER :: iunepmatcb      = 141  ! Opening the epmatkqcb file
   INTEGER :: iuntau          = 142  ! Opening the tau file
   INTEGER :: iuntaucb        = 143  ! Opening the taucb file
-
+  INTEGER :: iuqpeig         = 144  ! Reading quasi-particle eigenenergies from file
+  INTEGER :: iunpattern      = 145  ! Unit for reading the pattern files.
   !
   ! Output quantites related to Wannier (201-250)
   !

@@ -379,12 +379,9 @@ PROGRAM ev
       SUBROUTINE find_minimum(npar,par,chisq)
 !-----------------------------------------------------------------------
 !
-      USE random_numbers, ONLY : randy
       USE powell, ONLY : POWELL_MIN
       IMPLICIT NONE
-      INTEGER ,INTENT(in)  :: npar !, npt, istat
-!      REAL(DP),INTENT(in)  :: v0(npt),etot(npt)
-!      REAL(DP),INTENT(out) :: efit(npt), emin
+      INTEGER ,INTENT(in)  :: npar
       REAL(DP),INTENT(out) :: par(nmaxpar)
       REAL(DP),INTENT(out) :: chisq
       !
