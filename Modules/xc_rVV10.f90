@@ -49,7 +49,7 @@ MODULE rVV10
   public :: xc_rVV10,  &
             interpolate_kernel, &
             initialize_spline_interpolation, &
-            stress_rVV10, b_value, &
+            rVV10_stress, b_value, &
             q_mesh, Nr_points, r_max, q_min, q_cut, Nqs
 
 CONTAINS
@@ -241,10 +241,10 @@ CONTAINS
 
   !! #################################################################################################
   !!                   |                 |
-  !!                   |  STRESS_rVV10   |
+  !!                   |  rVV10_STRESS   |
   !!                   |_________________|
 
-  SUBROUTINE stress_rVV10(rho_valence, rho_core, nspin, sigma)
+  SUBROUTINE rVV10_stress (rho_valence, rho_core, nspin, sigma)
 
       USE fft_base,        ONLY : dfftp
       use gvect,           ONLY : ngm, g
@@ -274,8 +274,7 @@ CONTAINS
       !!   Tests
       !! --------------------------------------------------------------------------------------------------------
 
-      !call errore('stress_rVV10','vdW functional not implemented for spin polarized runs', size(rho_valence,2)-1)
-      if (nspin>2) call errore('xc_vdW_DF','vdW functional not implemented for nspin > 2', nspin)
+      if (nspin>2) call errore('rV10_stress',' rVV10 stress not implemented for nspin > 2', nspin)
 
       sigma(:,:) = 0.0_DP
       sigma_grad(:,:) = 0.0_DP
@@ -316,10 +315,10 @@ CONTAINS
       !! ---------------------------------------------------------------------------------------
       !! Stress
       !! ---------------------------------------------------------------------------------------
-      CALL stress_rVV10_gradient(total_rho, gradient_rho, q0, dq0_drho, &
+      CALL rVV10_stress_gradient(total_rho, gradient_rho, q0, dq0_drho, &
                                   dq0_dgradrho, thetas, sigma_grad)
 
-      CALL stress_rVV10_kernel(total_rho, q0, thetas, sigma_ker)
+      CALL rVV10_stress_kernel(total_rho, q0, thetas, sigma_ker)
 
       sigma = - (sigma_grad + sigma_ker) 
 
@@ -331,13 +330,13 @@ CONTAINS
 
       deallocate( gradient_rho, total_rho, q0, dq0_drho, dq0_dgradrho, thetas )
  
-   END SUBROUTINE stress_rVV10
+   END SUBROUTINE rVV10_stress
 
    !! ###############################################################################################################
    !!                             |                          |
-   !!                             |  stress_rVV10_gradient   |
+   !!                             |  rVV10_stress_gradient   |
 
-   SUBROUTINE stress_rVV10_gradient (total_rho, gradient_rho, q0, dq0_drho, &
+   SUBROUTINE rVV10_stress_gradient (total_rho, gradient_rho, q0, dq0_drho, &
                                       dq0_dgradrho, thetas, sigma)
 
       !!-----------------------------------------------------------------------------------
@@ -485,16 +484,16 @@ CONTAINS
 
       deallocate( d2y_dx2, u_vdW )
 
-   END SUBROUTINE stress_rVV10_gradient
+   END SUBROUTINE rVV10_stress_gradient
 
 
 
    !! ###############################################################################################################
    !!                      |                        |
-   !!                      |  stress_rVV10_kernel   |
+   !!                      |  rVV10_stress_kernel   |
    !!                      |                        |
 
-   SUBROUTINE stress_rVV10_kernel (total_rho, q0, thetas, sigma)
+   SUBROUTINE rVV10_stress_kernel (total_rho, q0, thetas, sigma)
 
       !! Modules to include
       !! ----------------------------------------------------------------------------------
@@ -562,7 +561,7 @@ CONTAINS
       
       deallocate( dkernel_of_dk )
       
-   END SUBROUTINE stress_rVV10_kernel
+   END SUBROUTINE rVV10_stress_kernel
 
 
   !! ###############################################################################################################

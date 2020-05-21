@@ -53,7 +53,7 @@ MODULE vdW_DF
 
 
 USE kinds,             ONLY : dp
-USE constants,         ONLY : pi, e2
+USE constants,         ONLY : pi, fpi, e2
 USE mp,                ONLY : mp_sum, mp_barrier, mp_get, mp_size, mp_rank, mp_bcast
 USE mp_images,         ONLY : intra_image_comm
 USE mp_bands,          ONLY : intra_bgrp_comm
@@ -202,11 +202,15 @@ CONTAINS
   FUNCTION Fs(s)
 
      IMPLICIT NONE
-     REAL(DP) :: s, Fs, Z_ab=0.0D0
+     REAL(DP) :: s, Fs, Z_ab = 0.0D0
 
-     IF (inlc == 1) Z_ab = -0.8491D0
-     IF (inlc == 2) Z_ab = -1.887D0
-     Fs = 1.0D0 - Z_ab * s**2 / 9.0D0
+     IF ( inlc == 1 .OR. inlc == 3 ) THEN
+        Z_ab = -0.8491D0
+     ELSE IF ( inlc == 2 .OR. inlc == 4 .OR. inlc == 5 ) THEN
+        Z_ab = -1.887D0
+     END IF
+
+     Fs = 1.0D0 - Z_ab * s * s / 9.0D0
 
   END FUNCTION Fs
 
@@ -216,11 +220,16 @@ CONTAINS
   FUNCTION dFs_ds(s)
 
      IMPLICIT NONE
-     REAL(DP) :: s, dFs_ds, Z_ab=0.0D0
+     REAL(DP)             :: s, dFs_ds, Z_ab = 0.0D0
+     REAL(DP), PARAMETER  :: prefac = -2.0D0/9.0D0
 
-     IF (inlc == 1) Z_ab = -0.8491D0
-     IF (inlc == 2) Z_ab = -1.887D0
-     dFs_ds =  -2.0D0 * s * Z_ab / 9.0D0
+     IF ( inlc == 1 .OR. inlc == 3 ) THEN
+        Z_ab = -0.8491D0
+     ELSE IF ( inlc == 2 .OR. inlc == 4 .OR. inlc == 5 ) THEN
+        Z_ab = -1.887D0
+     END IF
+
+     dFs_ds =  prefac * s * Z_ab
 
   END FUNCTION dFs_ds
 
@@ -230,9 +239,10 @@ CONTAINS
   FUNCTION kF(rho)
 
      IMPLICIT NONE
-     REAL(DP) :: rho, kF
+     REAL(DP)             :: rho, kF
+     REAL(DP), PARAMETER  :: ex = 1.0D0/3.0D0
 
-     kF = ( 3.0D0 * pi**2 * rho )**(1.0D0/3.0D0)
+     kF = ( 3.0D0 * pi * pi * rho )**ex
 
   END FUNCTION kF
 
@@ -242,9 +252,10 @@ CONTAINS
   FUNCTION dkF_drho(rho)
 
      IMPLICIT NONE
-     REAL(DP) :: rho, dkF_drho
+     REAL(DP)             :: rho, dkF_drho
+     REAL(DP), PARAMETER  :: prefac = 1.0D0/3.0D0
 
-     dkF_drho = (1.0D0/3.0D0) * kF(rho) / rho
+     dkF_drho = prefac * kF(rho) / rho
 
   END FUNCTION dkF_drho
 
@@ -268,7 +279,7 @@ CONTAINS
      IMPLICIT NONE
      REAL(DP) :: rho, ds_dgradrho
 
-     ds_dgradrho = 1.0D0 / (2.0D0 * kF(rho) * rho)
+     ds_dgradrho = 0.5D0 / (kF(rho) * rho)
 
   END FUNCTION ds_dgradrho
 
@@ -290,10 +301,36 @@ CONTAINS
   FUNCTION h_function(y)
 
      IMPLICIT NONE
-     REAL(DP)             :: y, h_function
-     REAL(DP), PARAMETER  :: gamma = 4.0D0*pi/9.0D0
+     REAL(DP)             :: y, y2, y4, h_function
+     REAL(DP), PARAMETER  :: g1 = fpi/9.0D0                                     ! vdW-DF1/2
+     REAL(DP), PARAMETER  :: a3 = 0.94950D0, g3 = 1.12D0, g32 = g3*g3           ! vdW-DF3-opt1
+     REAL(DP), PARAMETER  :: a4 = 0.28248D0, g4 = 1.29D0, g42 = g4*g4           ! vdW-DF3-opt2
+     REAL(DP), PARAMETER  :: a5 = 2.01059D0, b5 = 8.17471D0, g5 = 1.84981D0, &  ! vdW-DF-C6
+                             AA = ( b5 + a5*(a5/2.0D0-g5) ) / ( 1.0D0+g5-a5 )   !
 
-     h_function = 1.0D0 - EXP( -gamma * y**2 )
+
+     y2 = y*y
+
+     IF ( inlc == 1 .OR. inlc == 2 ) THEN
+
+        h_function = 1.0D0 - EXP( -g1*y2 )
+     
+     ELSE IF ( inlc == 3 ) THEN
+
+        y4 = y2*y2
+        h_function = 1.0D0 - 1.0D0 / ( 1.0D0 + g3*y2 + g32*y4 + a3*y4*y4 )
+
+     ELSE IF ( inlc == 4 ) THEN 
+
+        y4 = y2*y2
+        h_function = 1.0D0 - 1.0D0 / ( 1.0D0 + g4*y2 + g42*y4 + a4*y4*y4 )
+
+     ELSE IF ( inlc == 5 ) THEN
+     
+        y4 = y2*y2
+        h_function = 1.0D0 - ( 1.0D0 + ( (a5-g5)*y2 + AA*y4 ) / ( 1.0D0+AA*y2 ) ) * EXP( -a5*y2 ) 
+
+     END IF
 
   END FUNCTION
 
@@ -371,6 +408,7 @@ CONTAINS
   ! Write out the vdW-DF information and initialize the calculation.
 
   IF ( first_iteration ) THEN
+     IF ( inlc > 5 ) CALL errore( 'xc_vdW_DF', 'inlc not implemented', 1 )
      CALL generate_kernel
      IF ( ionode ) CALL vdW_info
      first_iteration = .FALSE.
@@ -550,6 +588,7 @@ CONTAINS
   ! Write out the vdW-DF information and initialize the calculation.
 
   IF ( first_iteration ) THEN
+     IF ( inlc > 5 ) CALL errore( 'xc_vdW_DF_spin', 'inlc not implemented', 1 )
      CALL generate_kernel
      IF ( ionode ) CALL vdW_info
      first_iteration = .FALSE.
@@ -1665,16 +1704,18 @@ CONTAINS
 
   ! --------------------------------------------------------------------
   ! Tests
+ 
+  IF ( inlc > 5 ) CALL errore( 'xc_vdW_DF', 'inlc not implemented', 1 )
 
 #if defined (__SPIN_BALANCED)
   IF ( nspin==2 ) THEN
      WRITE(stdout,'(/,/ "     Performing spin-balanced Ecnl stress calculation!")')
   ELSE IF ( nspin > 2 ) THEN
-     CALL errore ('stres_vdW_DF', 'noncollinear vdW stress not implemented', 1)
+     CALL errore ('vdW_DF_stress', 'noncollinear vdW stress not implemented', 1)
   END IF
 #else
   IF ( nspin>=2 ) THEN
-     CALL errore ('vdW_DF_stress',   'vdW stress not implemented for nspin > 1', 1)
+     CALL errore ('vdW_DF_stress', 'vdW stress not implemented for nspin > 1', 1)
   END IF
 #endif
 
@@ -1848,11 +1889,11 @@ CONTAINS
         prefactor = u_vdW(i_grid,q_i) * dP_dq0 * dq0_dgradrho(i_grid) / grad2
 
         DO l = 1, 3
-            DO m = 1, l
+        DO m = 1, l
 
-                sigma (l, m) = sigma (l, m) -  e2 * prefactor * &
-                               (grad_rho(l,i_grid) * grad_rho(m,i_grid))
-            END DO
+            sigma (l, m) = sigma (l, m) -  e2 * prefactor * &
+                           (grad_rho(l,i_grid) * grad_rho(m,i_grid))
+        END DO
         END DO
 
      END DO
@@ -1926,16 +1967,16 @@ CONTAINS
      END IF
 
      DO q2_i = 1, Nqs
-        DO q1_i = 1, Nqs
-           DO l = 1, 3
-              DO m = 1, l
+     DO q1_i = 1, Nqs
+        DO l = 1, 3
+        DO m = 1, l
 
-              sigma (l, m) = sigma (l, m) - G_multiplier * 0.5 * e2 * thetas(dfftp%nl(g_i),q1_i) * &
-                             dkernel_of_dk(q1_i,q2_i)*conjg(thetas(dfftp%nl(g_i),q2_i))* &
-                             (g (l, g_i) * g (m, g_i) * tpiba2) / g_kernel
-              END DO
-           END DO
+           sigma (l, m) = sigma (l, m) - G_multiplier * 0.5 * e2 * thetas(dfftp%nl(g_i),q1_i) * &
+                          dkernel_of_dk(q1_i,q2_i)*conjg(thetas(dfftp%nl(g_i),q2_i))* &
+                          (g (l, g_i) * g (m, g_i) * tpiba2) / g_kernel
         END DO
+        END DO
+     END DO
      END DO
 
      IF ( g_i < gstart ) sigma(:,:) = sigma(:,:) / G_multiplier
