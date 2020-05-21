@@ -1,5 +1,5 @@
  &CONTROL
-   calculation =   "nscf"   ,
+   calculation =   "scf"   ,
    dt = 150
  /
  &SYSTEM
