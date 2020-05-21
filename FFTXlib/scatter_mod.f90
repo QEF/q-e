@@ -48,7 +48,7 @@
 SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn, comm )
   !-----------------------------------------------------------------------
   !
-  ! transpose of the fft xy planes across the desc%comm2 communicator
+  ! transpose of the fft xy planes across the comm communicator
   !
   ! a) From Y-oriented columns to X-oriented partial slices (isgn > 0)
   !    Active columns along the Y direction corresponding to a subset of the
@@ -850,7 +850,7 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
 END SUBROUTINE fft_scatter_yz
 !
 !-----------------------------------------------------------------------
-SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, nxx_, isgn, howmany )
+SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
   !-----------------------------------------------------------------------
   !
   ! transpose of the fft yz planes across the desc%comm3 communicator
@@ -888,8 +888,8 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, nxx_, isgn, howmany )
   IMPLICIT NONE
 
   TYPE (fft_type_descriptor), INTENT(in), TARGET :: desc
-  INTEGER, INTENT(in)                            :: isgn, howmany, nxx_
-  COMPLEX (DP), INTENT(inout)                    :: f_in(nxx_), f_aux(nxx_)
+  COMPLEX (DP), INTENT(inout)                    :: f_in(:), f_aux(:)
+  INTEGER, INTENT(in)                            :: isgn, howmany
 
 #if defined(__MPI)
   !
@@ -943,16 +943,17 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, nxx_, isgn, howmany )
            ENDDO
         ENDDO
 !$omp end do
-!$omp do collapse(3)
+!$omp do collapse(2)
         DO k=0, howmany-1
            DO j = 1, ncp_(desc%iproc( me2, 1))
+              it = (j-1)*nr3px + k*ncpx*nr3px
+              mc = desc%ismap( j + desc%iss(desc%iproc( me2, 1)) )
+              m1 = mod (mc-1,desc%nr1x) + 1
+              m2 = (mc-1)/desc%nr1x + 1
+              i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x
               DO i = 1, desc%my_nr3p
-                 it = (j-1)*nr3px + k*ncpx*nr3px
-                 mc = desc%ismap( j + desc%iss(desc%iproc( me2, 1)) )
-                 m1 = mod (mc-1,desc%nr1x) + 1
-                 m2 = (mc-1)/desc%nr1x + 1
-                 i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x + (i-1)*desc%nr2x * my_nr1p_
                  f_aux( i1 + k*desc%nnr ) = f_in( it + i)
+                 i1 = i1 + desc%nr2x * my_nr1p_
               ENDDO
            ENDDO
         ENDDO
@@ -963,15 +964,16 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, nxx_, isgn, howmany )
 !$omp          private(i, j, k, kdest, kfrom, iproc3)          &
 !$omp&         private(it, mc, m1, m2, i1)                     &
 !$omp&         shared(nproc3, howmany, ncpx, sendsize, nr3px)  &
-!$omp&         shared(ncp_, ir1p_, my_nr1p_, ierr, nxx_)       &
+!$omp&         shared(ncp_, ir1p_, my_nr1p_, ierr)             &
 !$omp&         shared(desc, f_aux, f_in, me2, me3)
 !$omp do collapse(3)
         DO iproc3 = 1, nproc3
            DO k = 0, howmany-1
-              DO j = 0, ncpx-1
+              DO j = 0, ncp_(desc%iproc(me2,me3))-1
+                 kdest = ( iproc3 - 1 ) * sendsize + nr3px * (j + k*ncpx)
+                 kfrom = desc%nr3p_offset(iproc3)  + desc%nr3x * (j + k*ncpx)
                  DO i = 1, desc%nr3p( iproc3 )
-                    f_aux ( (iproc3-1)*sendsize + nr3px * (j+k*ncpx) + i ) =  &
-                    f_in ( desc%nr3p_offset(iproc3) + desc%nr3x * (j + k*ncpx) + i )
+                    f_aux ( kdest + i ) =  f_in ( kfrom + i )
                  ENDDO
               ENDDO
            ENDDO
@@ -990,22 +992,26 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, nxx_, isgn, howmany )
         IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
 !$omp end single
         !
-!$omp do
-        DO k=1, nxx_
-           f_aux(k) = (0.0_DP, 0.0_DP)
+!$omp do collapse(2)
+        DO k=0, howmany-1
+           DO j = 1, desc%my_nr3p*desc%nr2x*my_nr1p_
+              f_aux(j+k*desc%nnr) = (0.0_DP, 0.0_DP)
+           ENDDO
         ENDDO
 !$omp end do
 !$omp do collapse(2)
         DO iproc3 = 1, nproc3
            DO k=0, howmany-1
               DO j = 1, ncp_(desc%iproc( me2, iproc3))
+                 !IF ( j>ncp_(desc%iproc( me2, iproc3)) ) CYCLE
+                 it = (iproc3 - 1) * sendsize + (j-1)*nr3px + k*ncpx*nr3px
+                 mc = desc%ismap( j + desc%iss(desc%iproc( me2, iproc3)) )
+                 m1 = mod (mc-1,desc%nr1x) + 1
+                 m2 = (mc-1)/desc%nr1x + 1
+                 i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x
                  DO i = 1, desc%my_nr3p
-                    it = (iproc3 - 1) * sendsize + (j-1)*nr3px + k*ncpx*nr3px
-                    mc = desc%ismap( j + desc%iss(desc%iproc( me2, iproc3)) )
-                    m1 = mod (mc-1,desc%nr1x) + 1
-                    m2 = (mc-1)/desc%nr1x + 1
-                    i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x + (i-1)*desc%nr2x * my_nr1p_
                     f_aux( i1 + k*desc%nnr ) = f_in( it + i)
+                    i1 = i1 + desc%nr2x * my_nr1p_
                  ENDDO
               ENDDO
            ENDDO
@@ -1023,16 +1029,17 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, nxx_, isgn, howmany )
 !$omp          private(i, j, k, it, mc, m1, m2, i1)            &
 !$omp          shared(howmany, ncpx, nr3px, desc, f_aux, f_in) &
 !$omp&         shared(ncp_, me2, ir1p_, my_nr1p_)
-!$omp do collapse(3)
+!$omp do collapse(2)
         DO k = 0, howmany - 1
            DO j = 1, ncp_(desc%iproc(me2,1))
+              it = (j-1)*nr3px + k*ncpx*nr3px
+              mc = desc%ismap( j + desc%iss(desc%iproc(me2,1)))
+              m1 = mod (mc-1,desc%nr1x) + 1
+              m2 = (mc-1)/desc%nr1x + 1
+              i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x
               DO i = 1, desc%my_nr3p
-                 it = (j-1)*nr3px + k*ncpx*nr3px
-                 mc = desc%ismap( j + desc%iss(desc%iproc(me2,1)))
-                 m1 = mod (mc-1,desc%nr1x) + 1
-                 m2 = (mc-1)/desc%nr1x + 1
-                 i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x + (i-1)*desc%nr2x*my_nr1p_
                  f_in( i + it ) = f_aux( i1  + k*desc%nnr )
+                 i1 = i1 + desc%nr2x*my_nr1p_
               ENDDO
            ENDDO
         ENDDO
@@ -1041,25 +1048,27 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, nxx_, isgn, howmany )
      ELSE
      !
 !$omp parallel default(none)                                             &
-!$omp          private(iproc3, i, j, k, ip, it, mc, m1, m2, i1, it0)     &
+!$omp          private(iproc3, i, j, k, ip, it, mc, m1, m2, i1, it0,kdest,kfrom)     &
 !$omp          shared(nproc3, howmany, ncpx, sendsize, nr3px, desc, me3) &
 !$omp&         shared(f_aux, f_in, ncp_, me2, ir1p_, my_nr1p_, ierr)
+!$omp do collapse(2)
         DO iproc3 = 1, nproc3
-!$omp do collapse(3)
            DO k = 0, howmany - 1
-              DO j = 1, ncp_(desc%iproc(me2,iproc3))
+              DO j = 1, ncp_(desc%iproc( me2, iproc3))
+                 !IF ( j>ncp_(desc%iproc( me2, iproc3)) ) CYCLE
+                 it = (iproc3-1) * sendsize + (j-1)*nr3px + k*ncpx*nr3px
+                 mc = desc%ismap( j + desc%iss(desc%iproc( me2, iproc3)) )
+                 m1 = mod (mc-1,desc%nr1x) + 1
+                 m2 = (mc-1)/desc%nr1x + 1
+                 i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x
                  DO i = 1, desc%my_nr3p
-                    it = (iproc3-1) * sendsize + (j-1)*nr3px + k*ncpx*nr3px
-                    mc = desc%ismap( j + desc%iss(desc%iproc( me2, iproc3)) )
-                    m1 = mod (mc-1,desc%nr1x) + 1
-                    m2 = (mc-1)/desc%nr1x + 1
-                    i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x + (i-1)*desc%nr2x*my_nr1p_
                     f_in( i + it ) = f_aux( i1  + k*desc%nnr )
+                    i1 = i1 + desc%nr2x*my_nr1p_
                  ENDDO
               ENDDO
            ENDDO
-!$omp end do
         ENDDO
+!$omp end do
         !
 !$omp single
         !
@@ -1073,21 +1082,22 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, nxx_, isgn, howmany )
         !
         !  step one: store contiguously the columns
         !
-        DO iproc3 = 1, nproc3
 !$omp do collapse(3)
+        DO iproc3 = 1, nproc3
            DO k = 0, howmany-1
               DO j = 0, ncp_(desc%iproc(me2,me3))-1
+                 kdest = ( iproc3 - 1 ) * sendsize + nr3px * (j + k*ncpx)
+                 kfrom = desc%nr3p_offset(iproc3)  + desc%nr3x * (j + k*ncpx)
                  DO i = 1, desc%nr3p( iproc3 )
-                    f_in( desc%nr3p_offset(iproc3) + desc%nr3x * (j + k*ncpx) + i ) = &
-                    f_aux( (iproc3-1) * sendsize + nr3px * (j + k*ncpx) + i )
+                    f_in( kfrom + i ) = f_aux( kdest + i )
                  ENDDO
               ENDDO
            ENDDO
-!$omp end do
         ENDDO
+!$omp end do
         ! clean extra array elements in each stick
         IF( desc%nr3x /= desc%nr3 ) THEN
-!$omp do collapse(3)
+!$omp do collapse(2)
            DO k = 0, howmany-1
               DO j = 1, ncp_ ( desc%mype+1 )
                  DO i = desc%nr3+1, desc%nr3x
