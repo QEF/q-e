@@ -22,6 +22,7 @@
                     conv_thr  =  1.0d-7 
  /
  &IONS
+ ion_positions = 'from_file'
  /
  &CELL
    cell_dynamics = 'damp-w' ,

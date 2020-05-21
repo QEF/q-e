@@ -340,7 +340,7 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256):: dft_
   !
   INTEGER  :: ia, nt, inlc, tempunit, i, j
-  LOGICAL  :: exst, parallelfs, domag
+  LOGICAL  :: exst, parallelfs, domag, stop_on_error
   REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp, V
   CHARACTER(len=256) :: tempfile
   INTEGER, EXTERNAL  :: find_free_unit
@@ -855,9 +855,7 @@ SUBROUTINE iosys()
      restart        = .false.
      ! ... non-scf calculation: read atomic positions and cell from file
      ! ... so that they are consistent.  FIXME: lforcet?
-     IF (trim( ion_positions ) == 'try_from_file') THEN
-        startingconfig = 'try_from_file'
-     ELSE IF ( trim( ion_positions ) == 'from_file' .OR. &
+     IF ( trim( ion_positions ) == 'from_file' .OR. &
           (.NOT. lscf .AND. .NOT. lforcet) ) THEN
         startingconfig = 'file'
      ELSE
@@ -1488,14 +1486,19 @@ SUBROUTINE iosys()
      !
      ! ... Read atomic positions from file
      !
-     CALL read_conf_from_file( .TRUE., nat_, ntyp, tau, alat, at )
-     pseudo_dir_cur = restart_dir()
+     ! If this is not an nscf run don't stop on error also keep the pseudo
+     ! directory as is
+     IF (lscf) THEN
+        stop_on_error = .FALSE.
+     ELSE
+        stop_on_error = .TRUE.
+        pseudo_dir_cur = restart_dir()
+     END IF
      !
-  ELSE IF ( .NOT. restart .AND. startingconfig=='try_from_file' ) THEN
+     CALL read_conf_from_file( stop_on_error, nat_, ntyp, tau, alat, at )
      !
-     ! ... Try to read atomic positions and cell from the file
+     ! Update reciprocal lattice and volume (may be updated if coming from a vc run)
      !
-     CALL read_conf_from_file( .FALSE., nat_, ntyp, tau, alat, at )
      CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
      CALL volume (alat, at(:,1), at(:,2), at(:,3), omega)
      !
