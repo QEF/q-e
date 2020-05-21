@@ -121,16 +121,15 @@ SUBROUTINE orthoUwfc_gpu
      
      CALL using_becp_d_auto(2)
      CALL calbec_gpu( npw, vkb_d, wfcatom_d, becp_d )
-     
+     !
      CALL s_psi_gpu( npwx, npw, natomwfc, wfcatom_d, swfcatom_d )
-     
-     !---
+     !
+     IF (orthogonalize_wfc) CALL ortho_swfc_gpu( npw, normalize_only, &
+                                 natomwfc, wfcatom_d, swfcatom_d, .TRUE. )
+     !
      wfcatom  = wfcatom_d
      swfcatom = swfcatom_d
-     !---
-     
-     !IF (orthogonalize_wfc) &              ! --questa è da convertire qui sotto
-        CALL ortho_swfc_gpu( npw, normalize_only, natomwfc, wfcatom, swfcatom, .TRUE. )
+     !
      !
      ! copy atomic wavefunctions with Hubbard U term only in wfcU
      ! (this is then used to compute Hubbard forces and stresses)
@@ -228,7 +227,7 @@ SUBROUTINE orthoatwfc_gpu( orthogonalize_wfc )
 END SUBROUTINE orthoatwfc_gpu
 !
 !-----------------------------------------------------------------------
-SUBROUTINE ortho_swfc_gpu( npw, normalize_only, m, wfc, swfc, lflag )
+SUBROUTINE ortho_swfc_gpu( npw, normalize_only, m, wfc_d, swfc_d, lflag )
   !-----------------------------------------------------------------------
   !
   ! On input : wfc (npwx*npol,m) =  \psi = a set of "m" (atomic) wavefcts
@@ -245,57 +244,42 @@ SUBROUTINE ortho_swfc_gpu( npw, normalize_only, m, wfc, swfc, lflag )
   !                    wfc = O^{-1/2} \psi, <wfc_i|S|wfc_j> = \delta_{ij}
   !
 #if defined(__CUDA)
-  USE cudafor
   USE cublas
-#endif  
+#endif
   !
   USE kinds,            ONLY : DP
   USE wvfct,            ONLY : npwx
-  USE mp_bands,         ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
   USE mp,               ONLY : mp_sum
   USE noncollin_module, ONLY : noncolin, npol
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: m, npw
   LOGICAL, INTENT(IN) :: normalize_only
-  COMPLEX(dp), INTENT(INOUT) :: wfc (npwx*npol,m)
-  COMPLEX(dp), INTENT(INOUT) :: swfc(npwx*npol,m)
+  COMPLEX(DP), INTENT(INOUT) :: wfc_d(npwx*npol,m)
+  COMPLEX(DP), INTENT(INOUT) :: swfc_d(npwx*npol,m)
   LOGICAL, INTENT(IN) :: lflag
-
-  COMPLEX(DP) :: temp 
-  COMPLEX(DP), ALLOCATABLE :: work(:,:)
-  
-  REAL(DP) , ALLOCATABLE :: e(:)
-  COMPLEX(DP), ALLOCATABLE :: overlap(:,:)
-  
-  COMPLEX(DP), ALLOCATABLE, DEVICE :: overlap_d(:,:)
-  COMPLEX(DP), ALLOCATABLE, DEVICE :: wfc_d(:,:)
-  COMPLEX(DP), ALLOCATABLE, DEVICE :: swfc_d(:,:)
-  COMPLEX(DP), ALLOCATABLE, DEVICE :: work_d(:,:)
-  REAL(DP) , ALLOCATABLE, DEVICE :: e_d(:)
+  !
+  ! ... local variables
+  !
   INTEGER :: i, j, k, ipol
-
-  
-  ALLOCATE( overlap(m,m) )
-  ALLOCATE( work(m,m) )
-  ALLOCATE( e(m) )
-  
-  
-  !---gpu
+  COMPLEX(DP) :: temp 
+  !
+  COMPLEX(DP), ALLOCATABLE :: overlap_d(:,:)
+  COMPLEX(DP), ALLOCATABLE :: work_d(:,:), s_d(:,:)
+  REAL(DP) , ALLOCATABLE :: e_d(:)
+  !
+#if defined(__CUDA)
+  attributes(DEVICE) :: wfc_d, swfc_d, overlap_d, work_d, s_d, e_d
+#endif  
+  !
   ALLOCATE( overlap_d(m,m) )
-  ALLOCATE( wfc_d(npwx*npol,m) )
-  ALLOCATE( swfc_d(npwx*npol,m) )
-  ALLOCATE( work_d(m,m) )
+  ALLOCATE( work_d(m,m), s_d(m,m) )
   ALLOCATE( e_d(m) )
-  wfc_d = wfc
-  swfc_d = swfc
-  !---
-  
-  print *, 'ososososososo2'
-  
   !
   overlap_d(:,:) = (0.d0,0.d0)
-  work(:,:) = (0.d0,0.d0)
+  work_d(:,:) = (0.d0,0.d0)
   !
   ! calculate overlap matrix
   !
@@ -321,14 +305,15 @@ SUBROUTINE ortho_swfc_gpu( npw, normalize_only, m, wfc, swfc, lflag )
   !
   ! find O^(-1/2)
   !
-  
-  overlap = overlap_d
-  
-  CALL cdiagh( m, overlap, m, e, work )  !_gpu
-  
-  e_d = e
-  work_d = work
-  
+  s_d = CMPLX(0.d0,0.d0, kind=dp)
+  !$cuf kernel do (1)
+  DO i = 1, m
+    s_d(i,i) = CMPLX(1.d0,0.d0, kind=dp)
+  ENDDO
+  !
+  CALL laxlib_cdiaghg_gpu( m, m, overlap_d, s_d, m, e_d, work_d, me_bgrp, &
+                           root_bgrp, intra_bgrp_comm )
+  !
   !$cuf kernel do (1) <<<*,*>>>
   DO i = 1, m
      e_d(i) = 1.d0 / SQRT(e_d(i))
@@ -338,36 +323,29 @@ SUBROUTINE ortho_swfc_gpu( npw, normalize_only, m, wfc, swfc, lflag )
      DO j = i, m
         temp = (0.d0, 0.d0)
         DO k = 1, m
-           temp = temp + e_d(k) * work_d(j,k) * CONJG(work_d(i,k) )
+           temp = temp + e_d(k) * work_d(j,k) * CONJG(work_d(i,k))
         ENDDO
         overlap_d(i,j) = temp
         IF (j /= i) overlap_d(j,i) = CONJG(temp)
      ENDDO
   ENDDO
   !
-  
-  
-  overlap = overlap_d
-  e = e_d
-  
-  DEALLOCATE( wfc_d, swfc_d, overlap_d, work_d, e_d )
-  
   ! transform atomic orbitals O^(-1/2) S\psi
   ! FIXME: can be done in a faster way by using wfc as work space 
   !
   DO i = 1, npw
-     work(:,1) = (0.d0,0.d0)
+     work_d(:,1) = (0.d0,0.d0)
      IF (noncolin) THEN
         DO ipol=1,npol
            j = i + (ipol-1)*npwx
-           CALL zgemv('n',m,m,(1.d0,0.d0),overlap, &
-                m, swfc(j,1), npwx*npol, (0.d0,0.d0),work,1)
-           CALL zcopy(m,work,1,swfc(j,1),npwx*npol)
+           CALL cublasZgemv( 'N', m, m, (1.d0,0.d0), overlap_d, &
+                             m, swfc_d(j,1), npwx*npol, (0.d0,0.d0), work_d, 1 )
+           CALL cublasZcopy( m, work_d, 1, swfc_d(j,1), npwx*npol )
         END DO
      ELSE
-        CALL zgemv('n', m, m, (1.d0, 0.d0) , overlap, &
-             m, swfc (i, 1) , npwx, (0.d0, 0.d0) , work, 1)
-        CALL zcopy(m, work, 1, swfc (i, 1), npwx)
+        CALL cublasZgemv( 'N', m, m, (1.d0,0.d0), overlap_d, &
+                          m, swfc_d(i,1), npwx, (0.d0,0.d0), work_d, 1 )
+        CALL cublasZcopy( m, work_d, 1, swfc_d(i,1), npwx )
      END IF
   ENDDO
   !
@@ -376,23 +354,24 @@ SUBROUTINE ortho_swfc_gpu( npw, normalize_only, m, wfc, swfc, lflag )
   !
   IF (lflag) THEN
    DO i = 1, npw
-     work(:,1) = (0.d0,0.d0)
+     work_d(:,1) = (0.d0,0.d0)
      IF (noncolin) THEN
-        DO ipol=1,npol
+        DO ipol = 1, npol
            j = i + (ipol-1)*npwx
-           CALL zgemv ('n',m,m,(1.d0,0.d0),overlap, &
-                m, wfc(j,1), npwx*npol, (0.d0,0.d0),work,1)
-           CALL zcopy (m,work,1,wfc(j,1),npwx*npol)
+           CALL cublasZgemv( 'N', m, m, (1.d0,0.d0), overlap_d, &
+                             m, wfc_d(j,1), npwx*npol, (0.d0,0.d0), work_d, 1 )
+           CALL cublasZcopy( m, work_d, 1, wfc_d(j,1), npwx*npol )
         END DO
      ELSE
-        CALL zgemv ('n', m, m, (1.d0, 0.d0) , overlap, &
-             m, wfc (i, 1) , npwx, (0.d0, 0.d0) , work, 1)
-        CALL zcopy (m, work, 1, wfc (i, 1), npwx)
+        CALL cublasZgemv( 'N', m, m, (1.d0,0.d0), overlap_d, &
+                          m, wfc_d(i,1), npwx, (0.d0,0.d0), work_d, 1 )
+        CALL cublasZcopy( m, work_d, 1, wfc_d(i,1), npwx )
      END IF
    ENDDO
   ENDIF
   !
-  DEALLOCATE( wfc_d, swfc_d )
+  DEALLOCATE( overlap_d, s_d )
+  DEALLOCATE( work_d, e_d )
   !
   RETURN
   !      
