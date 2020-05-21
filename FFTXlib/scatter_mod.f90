@@ -48,7 +48,9 @@
 SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn, comm )
   !-----------------------------------------------------------------------
   !
-  ! transpose of the fft xy planes across the comm communicator
+  ! Transpose of the fft xy planes across the comm communicator.
+  ! If the optional comm is not provided as input, the transpose is made
+  ! across desc%comm2 communicator.
   !
   ! a) From Y-oriented columns to X-oriented partial slices (isgn > 0)
   !    Active columns along the Y direction corresponding to a subset of the
@@ -967,8 +969,8 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
 !$omp&         shared(ncp_, ir1p_, my_nr1p_, ierr)             &
 !$omp&         shared(desc, f_aux, f_in, me2, me3)
 !$omp do collapse(3)
-        DO iproc3 = 1, nproc3
-           DO k = 0, howmany-1
+        DO k = 0, howmany-1
+           DO iproc3 = 1, nproc3
               DO j = 0, ncp_(desc%iproc(me2,me3))-1
                  kdest = ( iproc3 - 1 ) * sendsize + nr3px * (j + k*ncpx)
                  kfrom = desc%nr3p_offset(iproc3)  + desc%nr3x * (j + k*ncpx)
@@ -999,11 +1001,11 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
            ENDDO
         ENDDO
 !$omp end do
-!$omp do collapse(2)
-        DO iproc3 = 1, nproc3
-           DO k=0, howmany-1
-              DO j = 1, ncp_(desc%iproc( me2, iproc3))
-                 !IF ( j>ncp_(desc%iproc( me2, iproc3)) ) CYCLE
+!$omp do collapse(3)
+        DO k=0, howmany-1
+           DO iproc3 = 1, nproc3
+              DO j = 1, ncpx
+                 IF ( j>ncp_(desc%iproc( me2, iproc3)) ) CYCLE
                  it = (iproc3 - 1) * sendsize + (j-1)*nr3px + k*ncpx*nr3px
                  mc = desc%ismap( j + desc%iss(desc%iproc( me2, iproc3)) )
                  m1 = mod (mc-1,desc%nr1x) + 1
@@ -1051,11 +1053,11 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
 !$omp          private(iproc3, i, j, k, ip, it, mc, m1, m2, i1, it0,kdest,kfrom)     &
 !$omp          shared(nproc3, howmany, ncpx, sendsize, nr3px, desc, me3) &
 !$omp&         shared(f_aux, f_in, ncp_, me2, ir1p_, my_nr1p_, ierr)
-!$omp do collapse(2)
-        DO iproc3 = 1, nproc3
-           DO k = 0, howmany - 1
-              DO j = 1, ncp_(desc%iproc( me2, iproc3))
-                 !IF ( j>ncp_(desc%iproc( me2, iproc3)) ) CYCLE
+!$omp do collapse(3)
+        DO k = 0, howmany - 1
+           DO iproc3 = 1, nproc3
+              DO j = 1, ncpx
+                 IF ( j>ncp_(desc%iproc( me2, iproc3)) ) CYCLE
                  it = (iproc3-1) * sendsize + (j-1)*nr3px + k*ncpx*nr3px
                  mc = desc%ismap( j + desc%iss(desc%iproc( me2, iproc3)) )
                  m1 = mod (mc-1,desc%nr1x) + 1
@@ -1083,8 +1085,8 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
         !  step one: store contiguously the columns
         !
 !$omp do collapse(3)
-        DO iproc3 = 1, nproc3
-           DO k = 0, howmany-1
+        DO k = 0, howmany-1
+           DO iproc3 = 1, nproc3
               DO j = 0, ncp_(desc%iproc(me2,me3))-1
                  kdest = ( iproc3 - 1 ) * sendsize + nr3px * (j + k*ncpx)
                  kfrom = desc%nr3p_offset(iproc3)  + desc%nr3x * (j + k*ncpx)
