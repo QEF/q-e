@@ -51,12 +51,14 @@ SUBROUTINE orthoUwfc_gpu
   ! ibnd: counter on bands
   LOGICAL :: orthogonalize_wfc, normalize_only, save_flag
   COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:)
-  
-  !----gpu
-  COMPLEX(DP) , ALLOCATABLE, DEVICE :: wfcatom_d(:,:)
-  COMPLEX(DP) , ALLOCATABLE, DEVICE :: swfcatom_d(:,:)
-  !---
-
+  !
+  COMPLEX(DP) , ALLOCATABLE :: wfcatom_d(:,:)
+  COMPLEX(DP) , ALLOCATABLE :: swfcatom_d(:,:)
+  !
+#if defined(__CUDA)
+  attributes(DEVICE) :: wfcatom_d, swfcatom_d
+#endif  
+  !
   IF ( U_projection == "pseudo" ) THEN
      WRITE( stdout,*) 'Beta functions used for LDA+U Projector'
      RETURN
@@ -90,14 +92,11 @@ SUBROUTINE orthoUwfc_gpu
      WRITE( stdout,*) "U_projection_type =", U_projection
      CALL errore ("orthoatwfc"," this U_projection_type is not valid",1)
   END IF
-
+  !
   ALLOCATE( wfcatom(npwx*npol,natomwfc), swfcatom(npwx*npol,natomwfc) )
-  
-  !-----gpu
-  ALLOCATE( wfcatom_d(npwx*npol,natomwfc), swfcatom_d(npwx*npol,natomwfc) )               !..
-  !----
+  ALLOCATE( wfcatom_d(npwx*npol,natomwfc), swfcatom_d(npwx*npol,natomwfc) )               !
   save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
-
+  !
   ! Allocate the array becp = <beta|wfcatom>
   CALL allocate_bec_type( nkb, natomwfc, becp ) 
   CALL using_becp_auto(2)
@@ -106,19 +105,16 @@ SUBROUTINE orthoUwfc_gpu
   DO ik = 1, nks
      !
      IF (noncolin) THEN
-       CALL atomic_wfc_nc_updown (ik, wfcatom)
+       CALL atomic_wfc_nc_updown( ik, wfcatom )
      ELSE
-       CALL atomic_wfc (ik, wfcatom)       ! --> da fare in gpu dopo
+       CALL atomic_wfc_gpu( ik, wfcatom_d )
      ENDIF
-     !---
-     wfcatom_d = wfcatom
-     !----
-     
+     !
      npw = ngk(ik)
      !CALL using_vkb(1)
      CALL using_vkb_d(2)
      CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
-     
+     !
      CALL using_becp_d_auto(2)
      CALL calbec_gpu( npw, vkb_d, wfcatom_d, becp_d )
      !
@@ -127,13 +123,12 @@ SUBROUTINE orthoUwfc_gpu
      IF (orthogonalize_wfc) CALL ortho_swfc_gpu( npw, normalize_only, &
                                  natomwfc, wfcatom_d, swfcatom_d, .TRUE. )
      !
-     wfcatom  = wfcatom_d
-     swfcatom = swfcatom_d
-     !
-     !
      ! copy atomic wavefunctions with Hubbard U term only in wfcU
      ! (this is then used to compute Hubbard forces and stresses)
      ! save to unit iunhub2
+     !
+     wfcatom  = wfcatom_d
+     swfcatom = swfcatom_d
      !
      CALL copy_U_wfc( wfcatom, noncolin )
      CALL save_buffer( wfcU, nwordwfcU, iunhub2, ik )
@@ -142,14 +137,18 @@ SUBROUTINE orthoUwfc_gpu
      ! (this is used during the self-consistent solution of Kohn-Sham equations)
      ! save to unit iunhub
      !
-     CALL copy_U_wfc (swfcatom, noncolin)
+     CALL copy_U_wfc( swfcatom, noncolin )
      IF ( nks > 1 ) &
-          CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
+          CALL save_buffer( wfcU, nwordwfcU, iunhub, ik )
      !
   ENDDO
-  DEALLOCATE (wfcatom, swfcatom)
-  CALL deallocate_bec_type ( becp )
+  !
+  DEALLOCATE( wfcatom, swfcatom )
+  DEALLOCATE( wfcatom_d, swfcatom_d )
+  !
+  CALL deallocate_bec_type( becp )
   CALL using_becp_auto(2)
+  !
   use_bgrp_in_hpsi = save_flag
   !
   RETURN

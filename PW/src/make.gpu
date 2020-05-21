@@ -40,7 +40,8 @@ PWLIBS += \
   compute_deff_gpu.o \
   gen_us_dj_gpu.o \
   gen_us_dy_gpu.o \
-  orthoatwfc_gpu.o
+  orthoatwfc_gpu.o \
+  atomic_wfc_gpu.o
 
 MODFLAGS += \
          $(MOD_FLAG)../../GScratch
