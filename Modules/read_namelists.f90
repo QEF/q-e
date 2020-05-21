@@ -1866,6 +1866,7 @@ MODULE read_namelists_module
        CHARACTER(LEN=2) :: prog
        INTEGER :: ios
        INTEGER :: unit_loc=5
+       LOGICAL :: required, success
        !
        ! ... end of declarations
        !
@@ -1894,7 +1895,7 @@ MODULE read_namelists_module
        IF( ionode ) THEN
           READ( unit_loc, control, iostat = ios )
        END IF
-       CALL check_namelist_read(ios, unit_loc, "control")
+       success = check_namelist_read(ios, unit_loc, "control")
        !
        CALL control_bcast( )
        CALL control_checkin( prog )
@@ -1910,7 +1911,7 @@ MODULE read_namelists_module
        IF( ionode ) THEN
           READ( unit_loc, system, iostat = ios )
        END IF
-       CALL check_namelist_read(ios, unit_loc, "system")
+       success = check_namelist_read(ios, unit_loc, "system")
        !
        CALL system_bcast( )
        !
@@ -1921,8 +1922,9 @@ MODULE read_namelists_module
        ios = 0
        IF( ionode ) THEN
           READ( unit_loc, electrons, iostat = ios )
+          WRITE(*, *) 'electrons = ', ios
        END IF
-       CALL check_namelist_read(ios, unit_loc, "electrons")
+       success = check_namelist_read(ios, unit_loc, "electrons")
        !
        CALL electrons_bcast( )
        CALL electrons_checkin( prog )
@@ -1932,17 +1934,22 @@ MODULE read_namelists_module
        !
        ios = 0
        IF ( ionode ) THEN
-        !  IF ( ( TRIM( calculation ) /= 'scf'   .AND. &
-        !         TRIM( calculation ) /= 'nscf'  .AND. &
-        !         TRIM( calculation ) /= 'bands' ) .OR. &
-        !       ( TRIM( prog_ ) == 'PW+iPi' ) ) THEN
+        IF ( ( TRIM( calculation ) /= 'nscf'  .AND. &
+                 TRIM( calculation ) /= 'bands' ) .OR. &
+               ( TRIM( prog_ ) == 'PW+iPi' ) ) THEN
              READ( unit_loc, ions, iostat = ios )
-        !  END IF
+          END IF
        END IF
-       CALL check_namelist_read(ios, unit_loc, "ions")
        !
-       CALL ions_bcast( )
-       CALL ions_checkin( prog )
+       ! SCF might have &ions :: ion_positions = 'from_file'
+       IF ( TRIM( calculation ) == 'scf' ) required = .FALSE.
+       !
+       success = check_namelist_read(ios, unit_loc, "ions", required)
+       !
+       IF (success) THEN
+          CALL ions_bcast( )
+          CALL ions_checkin( prog )
+       END IF
        !
        ! ... CELL namelist
        !
@@ -1956,7 +1963,7 @@ MODULE read_namelists_module
              READ( unit_loc, cell, iostat = ios )
           END IF
        END IF
-       CALL check_namelist_read(ios, unit_loc, "cell")
+       success = check_namelist_read(ios, unit_loc, "cell")
        !
        CALL cell_bcast()
        CALL cell_checkin( prog )
@@ -1967,7 +1974,7 @@ MODULE read_namelists_module
              READ( unit_loc, press_ai, iostat = ios )
           end if
        END IF
-       CALL check_namelist_read(ios, unit_loc, "press_ai")
+       success = check_namelist_read(ios, unit_loc, "press_ai")
        !
        CALL press_ai_bcast()
        !
@@ -1982,7 +1989,7 @@ MODULE read_namelists_module
              READ( unit_loc, wannier, iostat = ios )
           END IF
        END IF
-       CALL check_namelist_read(ios, unit_loc, "wannier")
+       success = check_namelist_read(ios, unit_loc, "wannier")
        !
        CALL wannier_bcast()
        CALL wannier_checkin( prog )
@@ -1996,7 +2003,7 @@ MODULE read_namelists_module
              READ( unit_loc, wannier_ac, iostat = ios )
           END IF
        END IF
-       CALL check_namelist_read(ios, unit_loc, "wannier_ac")
+       success = check_namelist_read(ios, unit_loc, "wannier_ac")
        !
        CALL wannier_ac_bcast()
        CALL wannier_ac_checkin( prog )
@@ -2005,14 +2012,21 @@ MODULE read_namelists_module
        !
      END SUBROUTINE read_namelists
      !
-     SUBROUTINE check_namelist_read(ios, unit_loc, nl_name)
+     FUNCTION check_namelist_read(ios, unit_loc, nl_name, required)
+       ! Set required = .TRUE. if nl_name card is required
+       ! The presence/absence of the card is returned
        USE io_global, ONLY : ionode, ionode_id
        USE mp,        ONLY : mp_bcast
        USE mp_images, ONLY : intra_image_comm
        !
        IMPLICIT NONE
-       INTEGER,INTENT(in) :: ios, unit_loc
-       CHARACTER(LEN=*) :: nl_name
+       INTEGER, INTENT(in) :: ios, unit_loc
+       CHARACTER(LEN=*), INTENT(in) :: nl_name
+       LOGICAL, INTENT(in), OPTIONAL :: required
+       !
+       ! ... local variables
+       !
+       LOGICAL :: check_namelist_read
        CHARACTER(len=512) :: line
        INTEGER :: ios2
        !
@@ -2023,8 +2037,14 @@ MODULE read_namelists_module
            READ(unit_loc,'(A512)', iostat=ios2) line
          END IF
        END IF
-
+       !
        CALL mp_bcast( ios2, ionode_id, intra_image_comm )
+       !
+       IF( ios2 /= 0 .AND. PRESENT(required) .AND. .NOT. required) THEN
+          check_namelist_read = .FALSE.
+          RETURN
+       END IF
+       !
        IF( ios2 /= 0 ) THEN
           CALL errore( ' read_namelists ', ' could not find namelist &'//TRIM(nl_name), 2)
        ENDIF
@@ -2038,6 +2058,8 @@ MODULE read_namelists_module
                        1 )
        END IF
        !
-     END SUBROUTINE check_namelist_read
+       check_namelist_read = .TRUE.
+       RETURN
+     END FUNCTION check_namelist_read
      !
 END MODULE read_namelists_module

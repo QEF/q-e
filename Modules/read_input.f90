@@ -63,6 +63,10 @@ MODULE read_input
         !
         CALL read_namelists( prog, qestdin )
         !
+        ! ... Rewind the input unit to prepare for CARDS reading
+        !
+        REWIND(qestdin)
+        !
         ! ... Read CARDS (requires in input only first two letters of prog)
         !
         CALL read_cards ( prog(1:2), qestdin )
