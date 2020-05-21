@@ -110,7 +110,7 @@ SUBROUTINE vhpsi_U_gpu()
 #endif   
   !
   ldimax = 2*Hubbard_lmax+1
-  IF ( ANY(is_hubbard_back(:)) ) ldimaxt = MAX(ldimax, ldmx_b)
+  ldimaxt = MAX(ldimax, ldmx_b)
   !
   IF ( ANY(is_hubbard(:)) .OR. ANY(is_hubbard_back(:)) ) THEN
     IF (gamma_only) THEN
