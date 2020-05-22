@@ -1922,7 +1922,6 @@ MODULE read_namelists_module
        ios = 0
        IF( ionode ) THEN
           READ( unit_loc, electrons, iostat = ios )
-          WRITE(*, *) 'electrons = ', ios
        END IF
        success = check_namelist_read(ios, unit_loc, "electrons")
        !
@@ -1942,7 +1941,11 @@ MODULE read_namelists_module
        END IF
        !
        ! SCF might have &ions :: ion_positions = 'from_file'
-       IF ( TRIM( calculation ) == 'scf' ) required = .FALSE.
+       IF ( TRIM( calculation ) == 'scf' ) THEN
+          required = .FALSE.
+       ELSE
+          required = .TRUE.
+       END IF
        !
        success = check_namelist_read(ios, unit_loc, "ions", required)
        !
