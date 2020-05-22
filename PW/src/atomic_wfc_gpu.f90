@@ -42,7 +42,6 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   !
   INTEGER :: n_starting_wfc, lmax_wfc, nt, l, nb, na, m, lm, ig, iig, &
              i0, i1, i2, i3, nwfcm, npw
-  COMPLEX(DP), ALLOCATABLE :: aux(:)
   COMPLEX(DP) :: kphase, lphase
   REAL(DP)    :: arg, px, ux, vx, wx
   INTEGER     :: ig_start, ig_end, mil1, mil2, mil3
@@ -50,10 +49,10 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   REAL(DP) :: xk1, xk2, xk3, qgr
   REAL(DP), ALLOCATABLE :: chiq_d(:,:,:)
   REAL(DP), ALLOCATABLE :: ylm_d(:,:), gk_d(:,:), qg_d(:)
-  COMPLEX(DP), ALLOCATABLE :: sk_d(:)
+  COMPLEX(DP), ALLOCATABLE :: sk_d(:), aux_d(:)
   !
 #if defined(__CUDA)
-  attributes(DEVICE) :: wfcatom_d, ylm_d, gk_d, qg_d, sk_d, chiq_d
+  attributes(DEVICE) :: wfcatom_d, ylm_d, gk_d, qg_d, sk_d, chiq_d, aux_d
 #endif  
   !
   CALL start_clock( 'atomic_wfc' )
@@ -132,7 +131,7 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
 
   DEALLOCATE( qg_d, gk_d )
   !
-  ALLOCATE( aux(npw) )
+  IF (noncolin) ALLOCATE( aux_d(npw) )
   !
   wfcatom_d(:,:,:) = (0.0_dp, 0.0_dp)
   !
@@ -163,21 +162,21 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
            !  wavefunctions for k=0 that are real in real space
            !
            IF ( noncolin ) THEN
-!               !
-!               IF ( upf(nt)%has_so ) THEN
-!                  !
-!                  IF (starting_spin_angle.OR..NOT.domag) THEN
-!                     CALL atomic_wfc_so( )
-!                  ELSE
-!                     CALL atomic_wfc_so_mag( )
-!                  END IF
-!                  !
-!               ELSE
-!                  !
-!                  CALL atomic_wfc_nc( )
-!                  !
-!               END IF
-!               !
+              !
+              IF ( upf(nt)%has_so ) THEN
+                 !
+                 IF (starting_spin_angle.OR..NOT.domag) THEN
+                    CALL atomic_wfc_so_gpu( )
+                 ELSE
+                    CALL atomic_wfc_so_mag_gpu( )
+                 END IF
+                 !
+              ELSE
+                 !
+                 CALL atomic_wfc_nc_gpu( )
+                 !
+              END IF
+              !
            ELSE
               !
               CALL atomic_wfc___gpu( )
@@ -193,7 +192,7 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
   IF ( n_starting_wfc /= natomwfc) call errore ('atomic_wfc', &
        'internal error: some wfcs were lost ', 1 )
 
-  DEALLOCATE( aux )
+  IF (noncolin) DEALLOCATE( aux_d )
   DEALLOCATE( sk_d, chiq_d, ylm_d )
 
   ! collect results across bgrp
@@ -204,191 +203,220 @@ SUBROUTINE atomic_wfc_gpu( ik, wfcatom_d )
 
 CONTAINS
 !----------------------------------------------------------------
-!   SUBROUTINE atomic_wfc_so( )
-!    !------------------------------------------------------------
-!    !! Spin-orbit case.
-!    !
-!    REAL(DP) :: fact(2), j
-!    REAL(DP), EXTERNAL :: spinor
-!    INTEGER :: ind, ind1, n1, is, sph_ind
-!    !
-!    j = upf(nt)%jchi(nb)
-!    DO m = -l-1, l
-!       fact(1) = spinor(l,j,m,1)
-!       fact(2) = spinor(l,j,m,2)
-!       IF ( ABS(fact(1)) > 1.d-8 .OR. ABS(fact(2)) > 1.d-8 ) THEN
-!          n_starting_wfc = n_starting_wfc + 1
-!          IF (n_starting_wfc > natomwfc) CALL errore &
-!               ('atomic_wfc_so', 'internal error: too many wfcs', 1)
-!          DO is=1,2
-!             IF (abs(fact(is)) > 1.d-8) THEN
-!                ind=lmaxx+1+sph_ind(l,j,m,is)
-!                aux=(0.d0,0.d0)
-!                DO n1=1,2*l+1
-!                   ind1=l**2+n1
-!                   if (abs(rot_ylm(ind,n1)) > 1.d-8) &
-!                       aux(:)=aux(:)+rot_ylm(ind,n1)*ylm(:,ind1)
-!                ENDDO
-!                do ig = ig_start, ig_end
-!                   wfcatom(ig,is,n_starting_wfc) = lphase*fact(is)*&
-!                         sk(ig)*aux(ig)*chiq (ig, nb, nt)
-!                END DO
-!             ELSE
-!                 wfcatom(:,is,n_starting_wfc) = (0.d0,0.d0)
-!             END IF
-!          END DO
-!       END IF
-!    END DO
-!    !
-!    END SUBROUTINE atomic_wfc_so
-!    ! 
-!    SUBROUTINE atomic_wfc_so_mag( )
-!    !
-!    !! Spin-orbit case, magnetization along "angle1" and "angle2"
-!    !! In the magnetic case we always assume that magnetism is much larger
-!    !! than spin-orbit and average the wavefunctions at l+1/2 and l-1/2
-!    !! filling then the up and down spinors with the average wavefunctions,
-!    !! according to the direction of the magnetization, following what is
-!    !! done in the noncollinear case.
-!    !
-!    REAL(DP) :: alpha, gamman, j
-!    COMPLEX(DP) :: fup, fdown  
-!    REAL(DP), ALLOCATABLE :: chiaux(:)
-!    INTEGER :: nc, ib
-!    !
-!    j = upf(nt)%jchi(nb)
-!    !
-!    !  This routine creates two functions only in the case j=l+1/2 or exit in the
-!    !  other case 
-!    !    
-!    IF (ABS(j-l+0.5_DP)<1.d-4) RETURN
-! 
-!    ALLOCATE(chiaux(npw))
-!    !
-!    !  Find the functions j=l-1/2
-!    !
-!    IF (l == 0)  THEN
-!       chiaux(:)=chiq(:,nb,nt)
-!    ELSE
-!       DO ib=1, upf(nt)%nwfc
-!          IF ((upf(nt)%lchi(ib) == l).AND. &
-!                       (ABS(upf(nt)%jchi(ib)-l+0.5_DP)<1.d-4)) THEN
-!             nc=ib
-!             EXIT
-!          ENDIF
-!       ENDDO
-!       !
-!       !  Average the two functions
-!       !
-!       chiaux(:)=(chiq(:,nb,nt)*(l+1.0_DP)+chiq(:,nc,nt)*l)/(2.0_DP*l+1.0_DP)
-!       !
-!    ENDIF 
-!    !
-!    !  and construct the starting wavefunctions as in the noncollinear case.
-!    !
-!    alpha = angle1(nt)
-!    gamman = - angle2(nt) + 0.5d0*pi
-!    !
-!    DO m = 1, 2 * l + 1
-!       lm = l**2 + m
-!       n_starting_wfc = n_starting_wfc + 1
-!       IF ( n_starting_wfc + 2*l+1 > natomwfc ) CALL errore &
-!             ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
-!       DO ig = ig_start, ig_end
-!          aux(ig) = sk(ig)*ylm(ig,lm)*chiaux(ig)
-!       END DO
-!       !
-!       ! now, rotate wfc as needed
-!       ! first : rotation with angle alpha around (OX)
-!       !
-!       DO ig = ig_start, ig_end
-!          fup = cos(0.5d0*alpha)*aux(ig)
-!          fdown = (0.d0,1.d0)*sin(0.5d0*alpha)*aux(ig)
-!          !
-!          ! Now, build the orthogonal wfc
-!          ! first rotation with angle (alpha+pi) around (OX)
-!          !
-!          wfcatom(ig,1,n_starting_wfc) = (cos(0.5d0*gamman) &
-!                         +(0.d0,1.d0)*sin(0.5d0*gamman))*fup
-!          wfcatom(ig,2,n_starting_wfc) = (cos(0.5d0*gamman) &
-!                         -(0.d0,1.d0)*sin(0.5d0*gamman))*fdown
-!          !
-!          ! second: rotation with angle gamma around (OZ)
-!          !
-!          ! Now, build the orthogonal wfc
-!          ! first rotation with angle (alpha+pi) around (OX)
-!          !
-!          fup = cos(0.5d0*(alpha+pi))*aux(ig)
-!          fdown = (0.d0,1.d0)*sin(0.5d0*(alpha+pi))*aux(ig)
-!          !
-!          ! second, rotation with angle gamma around (OZ)
-!          !
-!          wfcatom(ig,1,n_starting_wfc+2*l+1) = (cos(0.5d0*gamman) &
-!                   +(0.d0,1.d0)*sin(0.5d0 *gamman))*fup
-!          wfcatom(ig,2,n_starting_wfc+2*l+1) = (cos(0.5d0*gamman) &
-!                   -(0.d0,1.d0)*sin(0.5d0*gamman))*fdown
-!       END DO
-!    END DO
-!    n_starting_wfc = n_starting_wfc + 2*l+1
-!    DEALLOCATE( chiaux )
-!    !
-!    END SUBROUTINE atomic_wfc_so_mag
-!    !
-!    SUBROUTINE atomic_wfc_nc( )
-!    !
-!    !! noncolinear case, magnetization along "angle1" and "angle2"
-!    !
-!    REAL(DP) :: alpha, gamman
-!    COMPLEX(DP) :: fup, fdown  
-!    !
-!    alpha = angle1(nt)
-!    gamman = - angle2(nt) + 0.5d0*pi
-!    !
-!    DO m = 1, 2 * l + 1
-!       lm = l**2 + m
-!       n_starting_wfc = n_starting_wfc + 1
-!       IF ( n_starting_wfc + 2*l+1 > natomwfc) CALL errore &
-!             ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
-!       DO ig = ig_start, ig_end
-!          aux(ig) = sk(ig)*ylm(ig,lm)*chiq(ig,nb,nt)
-!       END DO
-!       !
-!       ! now, rotate wfc as needed
-!       ! first : rotation with angle alpha around (OX)
-!       !
-!       DO ig = ig_start, ig_end
-!          fup = cos(0.5d0*alpha)*aux(ig)
-!          fdown = (0.d0,1.d0)*sin(0.5d0*alpha)*aux(ig)
-!          !
-!          ! Now, build the orthogonal wfc
-!          ! first rotation with angle (alpha+pi) around (OX)
-!          !
-!          wfcatom(ig,1,n_starting_wfc) = (cos(0.5d0*gamman) &
-!                         +(0.d0,1.d0)*sin(0.5d0*gamman))*fup
-!          wfcatom(ig,2,n_starting_wfc) = (cos(0.5d0*gamman) &
-!                         -(0.d0,1.d0)*sin(0.5d0*gamman))*fdown
-!          !
-!          ! second: rotation with angle gamma around (OZ)
-!          !
-!          ! Now, build the orthogonal wfc
-!          ! first rotation with angle (alpha+pi) around (OX)
-!          !
-!          fup = cos(0.5d0*(alpha+pi))*aux(ig)
-!          fdown = (0.d0,1.d0)*sin(0.5d0*(alpha+pi))*aux(ig)
-!          !
-!          ! second, rotation with angle gamma around (OZ)
-!          !
-!          wfcatom(ig,1,n_starting_wfc+2*l+1) = (cos(0.5d0*gamman) &
-!                   +(0.d0,1.d0)*sin(0.5d0 *gamman))*fup
-!          wfcatom(ig,2,n_starting_wfc+2*l+1) = (cos(0.5d0*gamman) &
-!                   -(0.d0,1.d0)*sin(0.5d0*gamman))*fdown
-!       END DO
-!    END DO
-!    n_starting_wfc = n_starting_wfc + 2*l+1
-!    !
-!    END SUBROUTINE atomic_wfc_nc
+  SUBROUTINE atomic_wfc_so_gpu( )
+   !------------------------------------------------------------
+   !! Spin-orbit case.
+   !
+   REAL(DP) :: fact(2), fact_is, j
+   COMPLEX(DP) :: rot_ylm_in1
+   REAL(DP), EXTERNAL :: spinor
+   INTEGER :: ind, ind1, n1, is, sph_ind
+   !
+   j = upf(nt)%jchi(nb)
+   DO m = -l-1, l
+      fact(1) = spinor(l,j,m,1)
+      fact(2) = spinor(l,j,m,2)
+      IF ( ABS(fact(1)) > 1.d-8 .OR. ABS(fact(2)) > 1.d-8 ) THEN
+         n_starting_wfc = n_starting_wfc + 1
+         IF (n_starting_wfc > natomwfc) CALL errore &
+              ('atomic_wfc_so', 'internal error: too many wfcs', 1)
+         !     
+         DO is = 1, 2
+            fact_is = fact(is)
+            IF (ABS(fact(is)) > 1.d-8) THEN
+               ind = lmaxx + 1 + sph_ind(l,j,m,is)
+               aux_d = (0.d0,0.d0)
+               DO n1 = 1, 2*l+1
+                  ind1 = l**2+n1
+                  rot_ylm_in1 = rot_ylm(ind,n1)
+                  IF (ABS(rot_ylm_in1) > 1.d-8) THEN
+                    !$cuf kernel do (1) <<<*,*>>>
+                    DO ig = ig_start, ig_end
+                      aux_d(ig) = aux_d(ig) + rot_ylm_in1 * &
+                                  CMPLX(ylm_d(ig,ind1))
+                    ENDDO
+                  ENDIF
+               ENDDO
+               !$cuf kernel do (1) <<<*,*>>>
+               DO ig = ig_start, ig_end
+                  wfcatom_d(ig,is,n_starting_wfc) = lphase * &
+                                sk_d(ig)*aux_d(ig)*CMPLX(fact_is* &
+                                chiq_d(ig,nb,nt))
+               END DO
+            ELSE
+                wfcatom_d(:,is,n_starting_wfc) = (0.d0,0.d0)
+            END IF
+         END DO
+         !
+      END IF
+   END DO
+   !
+  END SUBROUTINE atomic_wfc_so_gpu
+  ! 
+  SUBROUTINE atomic_wfc_so_mag_gpu( )
+   !
+   !! Spin-orbit case, magnetization along "angle1" and "angle2"
+   !! In the magnetic case we always assume that magnetism is much larger
+   !! than spin-orbit and average the wavefunctions at l+1/2 and l-1/2
+   !! filling then the up and down spinors with the average wavefunctions,
+   !! according to the direction of the magnetization, following what is
+   !! done in the noncollinear case.
+   !
+   REAL(DP) :: alpha, gamman, j
+   COMPLEX(DP) :: fup, fdown  
+   REAL(DP), ALLOCATABLE :: chiaux_d(:)
+   INTEGER :: nc, ib
+   !
+#if defined(__CUDA)
+   ATTRIBUTES(DEVICE) :: chiaux_d
+#endif
+   !
+   j = upf(nt)%jchi(nb)
+   !
+   !  This routine creates two functions only in the case j=l+1/2 or exit in the
+   !  other case 
+   !    
+   IF (ABS(j-l+0.5_DP)<1.d-4) RETURN
 
-   SUBROUTINE atomic_wfc___gpu( )
+   ALLOCATE( chiaux_d(npw) )
+   !
+   !  Find the functions j=l-1/2
+   !
+   IF (l == 0)  THEN
+      chiaux_d(:) = chiq_d(:,nb,nt)
+   ELSE
+      DO ib = 1, upf(nt)%nwfc
+         IF ((upf(nt)%lchi(ib) == l).AND. &
+                      (ABS(upf(nt)%jchi(ib)-l+0.5_DP)<1.d-4)) THEN
+            nc = ib
+            EXIT
+         ENDIF
+      ENDDO
+      !
+      !  Average the two functions
+      !
+      !$cuf kernel do (1) <<<*,*>>>
+      DO ig = 1, npw
+        chiaux_d(ig) = (chiq_d(ig,nb,nt)*DBLE(l+1)+chiq_d(ig,nc,nt)*l)/ &
+                       DBLE(2*l+1)
+      ENDDO
+      !
+   ENDIF
+   !
+   !  and construct the starting wavefunctions as in the noncollinear case.
+   !
+   alpha = angle1(nt)
+   gamman = - angle2(nt) + 0.5d0*pi
+   !
+   DO m = 1, 2*l+1
+      lm = l**2+m
+      n_starting_wfc = n_starting_wfc + 1
+      IF ( n_starting_wfc + 2*l+1 > natomwfc ) CALL errore &
+            ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
+      !
+      !$cuf kernel do (1) <<<*,*>>>
+      DO ig = ig_start, ig_end
+        aux_d(ig) = sk_d(ig)* CMPLX(ylm_d(ig,lm)*chiaux_d(ig))
+      END DO
+      !
+      ! now, rotate wfc as needed
+      ! first : rotation with angle alpha around (OX)
+      !
+      !$cuf kernel do (1) <<<*,*>>>
+      DO ig = ig_start, ig_end
+         fup = CMPLX(COS(0.5d0*alpha))*aux_d(ig)
+         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*alpha))*aux_d(ig)
+         !
+         ! Now, build the orthogonal wfc
+         ! first rotation with angle (alpha+pi) around (OX)
+         !
+         wfcatom_d(ig,1,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman)) &
+                        +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fup
+         wfcatom_d(ig,2,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman)) &
+                        -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fdown
+         !
+         ! second: rotation with angle gamma around (OZ)
+         !
+         ! Now, build the orthogonal wfc
+         ! first rotation with angle (alpha+pi) around (OX)
+         !
+         fup = CMPLX(COS(0.5d0*(alpha+pi)))*aux_d(ig)
+         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*(alpha+pi)))*aux_d(ig)
+         !
+         ! second, rotation with angle gamma around (OZ)
+         !
+         wfcatom_d(ig,1,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman)) &
+                  +(0.d0,1.d0)*CMPLX(SIN(0.5d0 *gamman)))*fup
+         wfcatom_d(ig,2,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman)) &
+                  -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fdown
+      END DO
+   END DO
+   !
+   n_starting_wfc = n_starting_wfc + 2*l+1
+   !
+   DEALLOCATE( chiaux_d )
+   !
+  END SUBROUTINE atomic_wfc_so_mag_gpu
+  !
+  !
+  SUBROUTINE atomic_wfc_nc_gpu( )
+   !
+   !! noncolinear case, magnetization along "angle1" and "angle2"
+   !
+   REAL(DP) :: alpha, gamman
+   COMPLEX(DP) :: fup, fdown  
+   !
+   alpha = angle1(nt)
+   gamman = - angle2(nt) + 0.5d0*pi
+   !
+   DO m = 1, 2*l+1
+      lm = l**2 + m
+      n_starting_wfc = n_starting_wfc + 1
+      IF ( n_starting_wfc + 2*l+1 > natomwfc) CALL errore &
+            ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
+      !$cuf kernel do (1) <<<*,*>>>
+      DO ig = ig_start, ig_end
+         aux_d(ig) = sk_d(ig)*CMPLX(ylm_d(ig,lm)*chiq_d(ig,nb,nt))
+      END DO
+      !
+      ! now, rotate wfc as needed
+      ! first : rotation with angle alpha around (OX)
+      !
+      !$cuf kernel do (1) <<<*,*>>>
+      DO ig = ig_start, ig_end
+         fup = CMPLX(COS(0.5d0*alpha))*aux_d(ig)
+         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*alpha))*aux_d(ig)
+         !
+         ! Now, build the orthogonal wfc
+         ! first rotation with angle (alpha+pi) around (OX)
+         !
+         wfcatom_d(ig,1,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman)) &
+                        +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fup
+         wfcatom_d(ig,2,n_starting_wfc) = (CMPLX(COS(0.5d0*gamman)) &
+                        -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fdown
+         !
+         ! second: rotation with angle gamma around (OZ)
+         !
+         ! Now, build the orthogonal wfc
+         ! first rotation with angle (alpha+pi) around (OX)
+         !
+         fup = CMPLX(COS(0.5d0*(alpha+pi)))*aux_d(ig)
+         fdown = (0.d0,1.d0)*CMPLX(SIN(0.5d0*(alpha+pi)))*aux_d(ig)
+         !
+         ! second, rotation with angle gamma around (OZ)
+         !
+         wfcatom_d(ig,1,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman)) &
+                  +(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fup
+         wfcatom_d(ig,2,n_starting_wfc+2*l+1) = (CMPLX(COS(0.5d0*gamman)) &
+                  -(0.d0,1.d0)*CMPLX(SIN(0.5d0*gamman)))*fdown
+      END DO
+   END DO
+   n_starting_wfc = n_starting_wfc + 2*l+1
+   !
+  END SUBROUTINE atomic_wfc_nc_gpu
+  !
+  !
+  SUBROUTINE atomic_wfc___gpu( )
    !
    ! ... LSDA or nonmagnetic case
    !
@@ -406,6 +434,6 @@ CONTAINS
       !
    END DO
    !
-   END SUBROUTINE atomic_wfc___gpu
-   !
+  END SUBROUTINE atomic_wfc___gpu
+  !
 END SUBROUTINE atomic_wfc_gpu
