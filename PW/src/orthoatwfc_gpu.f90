@@ -106,6 +106,7 @@ SUBROUTINE orthoUwfc_gpu
      !
      IF (noncolin) THEN
        CALL atomic_wfc_nc_updown( ik, wfcatom )
+       wfcatom_d = wfcatom
      ELSE
        CALL atomic_wfc_gpu( ik, wfcatom_d )
      ENDIF
@@ -170,7 +171,7 @@ SUBROUTINE orthoatwfc_gpu( orthogonalize_wfc )
   USE io_files,   ONLY : iunsat, nwordatwfc
   USE ions_base,  ONLY : nat
   USE basis,      ONLY : natomwfc, swfcatom
-  USE klist,      ONLY : nks, xk, ngk, igk_k
+  USE klist,      ONLY : nks, xk, ngk, igk_k, igk_k_d
   USE wvfct,      ONLY : npwx
   USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
@@ -178,51 +179,70 @@ SUBROUTINE orthoatwfc_gpu( orthogonalize_wfc )
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
   !
-  USE uspp_gpum, ONLY : using_vkb
+  USE uspp_gpum,        ONLY : using_vkb, using_vkb_d, vkb_d
+  USE becmod_gpum,      ONLY : becp_d
+  USE becmod_subs_gpum, ONLY : using_becp_auto, using_becp_d_auto, &
+                               calbec_gpu
   ! 
   IMPLICIT NONE
   !
-  LOGICAL, INTENT(in) :: orthogonalize_wfc
+  LOGICAL, INTENT(IN) :: orthogonalize_wfc
   !
   INTEGER :: ik, ibnd, info, i, j, k, na, nb, nt, isym, n, ntemp, m, &
-       l, lm, ltot, ntot, ipol, npw
+             l, lm, ltot, ntot, ipol, npw
   ! ik: the k point under consideration
   ! ibnd: counter on bands
   LOGICAL :: normalize_only = .FALSE.
-  COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:)
-
+  COMPLEX(DP), ALLOCATABLE :: wfcatom(:,:)
+  COMPLEX(DP), ALLOCATABLE :: wfcatom_d(:,:), swfcatom_d(:,:)
+  !
+#if defined(__CUDA)
+  attributes(DEVICE) :: wfcatom_d, swfcatom_d
+#endif
+  !
   normalize_only=.FALSE.
-  ALLOCATE (wfcatom( npwx*npol, natomwfc))
-  
+  ALLOCATE( wfcatom(npwx*npol,natomwfc) )
+  ALLOCATE( wfcatom_d(npwx*npol,natomwfc), swfcatom_d(npwx*npol,natomwfc) )
+  !
   ! Allocate the array becp = <beta|wfcatom>
-  CALL allocate_bec_type (nkb,natomwfc, becp) 
-  
+  CALL allocate_bec_type( nkb, natomwfc, becp )
+  !
   DO ik = 1, nks
-     
+     !
      IF (noncolin) THEN
-       CALL atomic_wfc_nc_updown (ik, wfcatom)
+       CALL atomic_wfc_nc_updown( ik, wfcatom )
+       wfcatom_d = wfcatom
      ELSE
-       CALL atomic_wfc (ik, wfcatom)
+       CALL atomic_wfc_gpu( ik, wfcatom_d )
      ENDIF
-     npw = ngk (ik)
-     CALL using_vkb(1)
-     CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
-     CALL calbec (npw, vkb, wfcatom, becp) 
-     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
-
-     IF (orthogonalize_wfc) &
-        CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
+     !
+     npw = ngk(ik)
+     !CALL using_vkb(1)
+     CALL using_vkb_d(2)
+     CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
+     !
+     CALL using_becp_d_auto(2)
+     CALL calbec_gpu( npw, vkb_d, wfcatom_d, becp_d )
+     !
+     CALL s_psi_gpu( npwx, npw, natomwfc, wfcatom_d, swfcatom_d )
+     !
+     IF (orthogonalize_wfc) CALL ortho_swfc_gpu( npw, normalize_only, &
+                                 natomwfc, wfcatom_d, swfcatom_d, .FALSE. )
      !
      ! write S * atomic wfc to unit iunsat
      !
-     CALL save_buffer (swfcatom, nwordatwfc, iunsat, ik)
+     swfcatom = swfcatom_d
+     !
+     CALL save_buffer( swfcatom, nwordatwfc, iunsat, ik )
      !
   ENDDO
-  DEALLOCATE (wfcatom)
-  CALL deallocate_bec_type ( becp )
+  !
+  DEALLOCATE( wfcatom )
+  DEALLOCATE( wfcatom_d, swfcatom_d )
+  CALL deallocate_bec_type( becp )
   !
   RETURN
-     
+  !
 END SUBROUTINE orthoatwfc_gpu
 !
 !-----------------------------------------------------------------------
