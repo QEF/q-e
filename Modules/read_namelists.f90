@@ -1952,6 +1952,13 @@ MODULE read_namelists_module
        IF (success) THEN
           CALL ions_bcast( )
           CALL ions_checkin( prog )
+       ELSE
+          ! Rewind the file pointer to the location of the previous present
+          ! section, in this case electrons
+          IF ( ionode ) THEN
+            REWIND( unit_loc )
+            READ( unit_loc, electrons, iostat = ios )
+          END IF
        END IF
        !
        ! ... CELL namelist

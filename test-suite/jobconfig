@@ -62,6 +62,10 @@ inputs_args = ('relax1.in' ,'1'), ('relax2.in' ,'2')
 program = PW
 inputs_args = ('vc-relax1.in' ,'1'), ('scf2.in' ,'2')
 
+[pw_workflow_scf_dos/]
+program = PW
+inputs_args = ('scf1.in' ,'1'), ('dos2.in' ,'2')
+
 [ph_base/]
 program = PH
 inputs_args = ('c.scf.in', '1'), ('c.phG.in', '2'), ('ni.scf.in', '1'), ('ni.phX.in', '2'), ('si.scf.in', '1'), ('si.phG.in', '2'), ('si.phX.in', '2'), ('nipaw.scf.in', '1'), ('nipaw.phX.in', '2')

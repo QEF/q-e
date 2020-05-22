@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.5 starts on 21May2020 at 13:45:18 
+     Program PWSCF v.6.5 starts on 22May2020 at 10:45:36 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -26,7 +26,7 @@ Warning: card  / ignored
      Max angular momentum in pseudopotentials (lmaxx) =  3
 
      Atomic positions and unit cell read from directory:
-     ./pwscf.save/                                                                                                                                                                                                                                                   
+     ./pwscf.save/
      Atomic positions from file used, from input discarded
  
 
@@ -316,29 +316,29 @@ Warning: card  / ignored
      Writing output data file ./pwscf.save/
  
      init_run     :      0.04s CPU      0.04s WALL (       1 calls)
-     electrons    :      1.37s CPU      1.39s WALL (       1 calls)
+     electrons    :      1.38s CPU      1.40s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
-     potinit      :      0.02s CPU      0.02s WALL (       1 calls)
+     potinit      :      0.01s CPU      0.02s WALL (       1 calls)
      hinit0       :      0.02s CPU      0.02s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      1.37s CPU      1.39s WALL (       1 calls)
+     c_bands      :      1.38s CPU      1.40s WALL (       1 calls)
      v_of_rho     :      0.00s CPU      0.00s WALL (       1 calls)
 
      Called by c_bands:
      init_us_2    :      0.00s CPU      0.00s WALL (      32 calls)
-     cegterg      :      1.28s CPU      1.29s WALL (      51 calls)
+     cegterg      :      1.29s CPU      1.30s WALL (      51 calls)
 
      Called by *egterg:
      cdiaghg      :      0.11s CPU      0.11s WALL (     800 calls)
-     h_psi        :      1.09s CPU      1.10s WALL (     851 calls)
+     h_psi        :      1.10s CPU      1.11s WALL (     851 calls)
      g_psi        :      0.01s CPU      0.01s WALL (     768 calls)
 
      Called by h_psi:
      h_psi:calbec :      0.02s CPU      0.02s WALL (     851 calls)
-     vloc_psi     :      1.04s CPU      1.06s WALL (     851 calls)
+     vloc_psi     :      1.05s CPU      1.06s WALL (     851 calls)
      add_vuspsi   :      0.02s CPU      0.02s WALL (     851 calls)
 
      General routines
@@ -349,10 +349,10 @@ Warning: card  / ignored
  
      Parallel routines
  
-     PWSCF        :      1.54s CPU      2.95s WALL
+     PWSCF        :      1.55s CPU      2.48s WALL
 
  
-   This run was terminated on:  13:45:21  21May2020            
+   This run was terminated on:  10:45:38  22May2020            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

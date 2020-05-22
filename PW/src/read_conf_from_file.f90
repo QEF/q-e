@@ -41,7 +41,7 @@ SUBROUTINE read_conf_from_file( stop_on_error, nat, nsp, tau, alat, at )
   CHARACTER (LEN=3) :: atm_(nsp)
   !
   WRITE( stdout, '(/5X,"Atomic positions and unit cell read from directory:", &
-                &  /,5X,A)') restart_dir()
+                &  /,5X,A)') TRIM(restart_dir())
   !
   ! ... check if restart file is present, if so read config parameters
   !
