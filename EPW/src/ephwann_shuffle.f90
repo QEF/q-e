@@ -754,11 +754,7 @@
   !
   ! Re-order the k-point according to weather they are in or out of the fshick
   ! windows
-  IF (iterative_bte .AND. mp_mesh_k) THEN
-    CALL load_rebal
-  ENDIF
-  !
-  IF (ephwrite .AND. mp_mesh_k) THEN
+  IF ((iterative_bte .OR. ephwrite) .AND. mp_mesh_k) THEN
     CALL load_rebal
   ENDIF
   !
@@ -1142,7 +1138,7 @@
         iq_restart = iq_restart + 1
         !
         IF (iq_restart > totq) THEN
-          WRITE(stdout, '(5x,a/)') 'All q-points are done! No need to restart '
+          WRITE(stdout, '(5x,a/)') 'All q-points are done !!'
         ELSE
           WRITE(stdout, '(5x,a,i8,a/)') 'We restart from ', iq_restart, ' q-points'
         ENDIF

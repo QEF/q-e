@@ -659,7 +659,7 @@
     CHARACTER(LEN = 256) :: dirname
     !! Name of the directory where ikmap/egnv/freq/ephmat files are saved
     !
-    INTEGER :: iq, iqq
+    INTEGER :: iq
     !! Counter on q points
     INTEGER :: imode
     !! Counter on modes
@@ -669,8 +669,12 @@
     !! IO error message
     INTEGER :: ierr
     !! Error status
-    INTEGER :: totq, nqtot
+    INTEGER :: iqq
+    !! Q-point index from selecq.fmt window
+    INTEGER :: totq
     !! Total number of q-points inside fsthick
+    INTEGER :: nqtot
+    !! Total number of q-point for verifications
     INTEGER, ALLOCATABLE :: selecq(:)
     !! List of selected q-points
     !
@@ -751,7 +755,10 @@
       wsph(iwph) = DBLE(iwph) * dwsph
     ENDDO
     !
-    WRITE(stdout,'(/5x,a/)') 'Finish reading selecq.fmt and freq files'
+    DEALLOCATE(selecq, STAT = ierr)
+    IF (ierr /= 0) CALL errore('read_frequencies', 'Error deallocating selecq', 1)
+    !
+    WRITE(stdout,'(/5x,a/)') 'Finish reading freq file'
     !
     RETURN
     !
@@ -940,12 +947,12 @@
     !
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout, ionode_id
-    USE io_var,    ONLY : iufilikmap
+    USE io_var,    ONLY : iufilikmap, iunselecq
     USE io_files,  ONLY : prefix, tmp_dir
     USE symm_base, ONLY : t_rev, time_reversal, s, set_sym_bl
     USE phcom,     ONLY : nmodes
     USE epwcom,    ONLY : nkf1, nkf2, nkf3, nqstep
-    USE elph2,     ONLY : nqtotf, nktotf
+    USE elph2,     ONLY : nqtotf, xqf
     USE eliashbergcom, ONLY : ixkf, ixkff, xkff, xkfs, nkfs, ixkqf, ixqfs, nbndfs, nqfs, memlt_pool
     USE constants_epw, ONLY : zero
     USE symm_base, ONLY : nrot
@@ -985,12 +992,19 @@
     INTEGER, ALLOCATABLE :: index_(:, :)
     !! Index of q-point on the full q-mesh for which k+sign*q is within the Fermi shell
     !
-    REAL(KIND = DP) :: xx, yy, zz
-    !! Temporary variables
     REAL(KIND = DP) :: xk(3)
     !! coordinates of k points
     REAL(KIND = DP) :: xq(3)
     !! coordinates of q points
+    !
+    INTEGER :: iqq
+    !! Q-point index from selecq.fmt window
+    INTEGER :: totq
+    !! Total number of q-points inside fsthick
+    INTEGER :: nqtot
+    !! Total number of q-point for verifications
+    INTEGER, ALLOCATABLE :: selecq(:)
+    !! List of selected q-points
     !
     ALLOCATE(memlt_pool(npool), STAT = ierr)
     IF (ierr /= 0) CALL errore('read_kqmap', 'Error allocating memlt_pool', 1)
@@ -1005,12 +1019,18 @@
     !
     ALLOCATE(ixkff(nkftot), STAT = ierr)
     IF (ierr /= 0) CALL errore('read_kqmap', 'Error allocating ixkff', 1)
-    ALLOCATE(ixkqf(nkfs, nqtotf), STAT = ierr)
-    IF (ierr /= 0) CALL errore('read_kqmap', 'Error allocating ixkqf', 1)
     ixkff(:) = 0
-    ixkqf(:, :) = 0
     !
     IF (mpime == ionode_id) THEN
+      ! read 'selecq.fmt' file
+      OPEN(UNIT = iunselecq, FILE = 'selecq.fmt', STATUS = 'old', IOSTAT = ios)
+      READ(iunselecq, *) totq
+      ALLOCATE(selecq(totq), STAT = ierr)
+      IF (ierr /= 0) CALL errore('read_kqmap', 'Error allocating selecq', 1)
+      selecq(:) = 0
+      READ(iunselecq, *) nqtot
+      READ(iunselecq, *) selecq(:)
+      CLOSE(iunselecq)
       !
       dirname = TRIM(tmp_dir) // TRIM(prefix) // '.ephmat'
       filikmap = TRIM(dirname) // '/' // 'ikmap'
@@ -1018,22 +1038,16 @@
       OPEN(UNIT = iufilikmap, FILE = filikmap, STATUS = 'unknown', FORM = 'unformatted', IOSTAT = ios)
       IF (ios /= 0) CALL errore('read_kqmap', 'error opening file ' // filikmap, iufilikmap)
       !
-      DO ik = 1, nkftot
-        !READ(iufilikmap,'(i7)') ixkff(ik)
-        READ(iufilikmap) ixkff(ik)
-      ENDDO
+      !READ(iufilikmap, *) ixkff(1:nkftot)
+      READ(iufilikmap) ixkff(1:nkftot)
       !
-      DO ik = 1, nkfs
-        DO iq = 1, nqtotf
-          !READ(iufilikmap, '(i7)') ixkqf(ik, iq)
-          READ(iufilikmap) ixkqf(ik, iq)
-        ENDDO
-      ENDDO
       CLOSE(iufilikmap)
     ENDIF
     !
+    CALL mp_bcast(totq, ionode_id, inter_pool_comm)
+    IF (mpime /= ionode_id) ALLOCATE(selecq(totq))
+    CALL mp_bcast(selecq, ionode_id, inter_pool_comm)
     CALL mp_bcast(ixkff, ionode_id, inter_pool_comm)
-    CALL mp_bcast(ixkqf, ionode_id, inter_pool_comm)
     CALL mp_barrier(inter_pool_comm)
     !
     CALL fkbounds(nkfs, lower_bnd, upper_bnd)
@@ -1042,15 +1056,38 @@
     imelt = (nqtotf + 1) * nkfs + (upper_bnd - lower_bnd + 1) * nqtotf
     CALL mem_size_eliashberg(1, imelt)
     !
+    ALLOCATE(ixkqf(nkfs, nqtotf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('read_kqmap', 'Error allocating ixkqf', 1)
     ALLOCATE(nqfs(nkfs), STAT = ierr)
     IF (ierr /= 0) CALL errore('read_kqmap', 'Error allocating nqfs', 1)
     ALLOCATE(index_(lower_bnd:upper_bnd, nqtotf), STAT = ierr)
     IF (ierr /= 0) CALL errore('read_kqmap', 'Error allocating index_', 1)
+    ixkqf(:, :) = 0
     nqfs(:) = 0
     index_(:, :) = 0
     !
+    !
+    ! find the index of k+sign*q on the fine k-mesh
+    ! nkfs - total nr. of k-points within the Fermi shell (fine mesh)
+    !      - these are irreducible k-points if mp_mesh_k=.TRUE.
+    ! nqtotf - total nr of q-points on the fine mesh
+    !
     DO ik = lower_bnd, upper_bnd
-      DO iq = 1, nqtotf
+      DO iqq = 1, totq
+        iq = selecq(iqq)
+        xk(:) = xkfs(:, ik)
+        xq(:) = xqf(:, iq)
+        !
+        !  nkq - index of k+sign*q on the full fine k-mesh.
+        !
+        CALL kpmq_map(xk, xq, +1, nkq)
+        !
+        !  ixkqf(ik,iq) - index of k+sign*q on the fine k-mesh within the Fermi shell
+        !
+        ixkqf(ik, iq) = ixkff(nkq)
+        !
+        ! nqfs(ik) - nr of q-points at each k-point for which k+sign*q is within the Fermi shell
+        ! index_   - index q-point on the full q-mesh for which k+sign*q is within the Fermi shell
         !
         IF (ixkqf(ik, iq) > 0) THEN
           nqfs(ik) = nqfs(ik) + 1
@@ -1060,6 +1097,7 @@
     ENDDO
     !
     ! collect contributions from all pools (sum over k-points)
+    CALL mp_sum(ixkqf, inter_pool_comm)
     CALL mp_sum(nqfs,  inter_pool_comm)
     CALL mp_barrier(inter_pool_comm)
     !
@@ -1074,8 +1112,7 @@
     DO ik = lower_bnd, upper_bnd
       DO iq = 1, nqfs(ik)
         !
-        ! ixqfs - index q-point on the full q-mesh for which k+sign*q is within
-        ! the Fermi shell
+        ! ixqfs - index q-point on the full q-mesh for which k+sign*q is within the Fermi shell
         !
         ixqfs(ik,iq) = index_(ik,iq)
       ENDDO
@@ -1091,6 +1128,9 @@
     ! remove memory allocated for index_
     imelt = nqtotf * (upper_bnd - lower_bnd + 1)
     CALL mem_size_eliashberg(1, -imelt)
+    !
+    DEALLOCATE(selecq, STAT = ierr)
+    IF (ierr /= 0) CALL errore('read_kqmap', 'Error allocating selecq', 1)
     !
     WRITE(stdout, '(/5x, a, i9/)') 'Max nr of q-points = ', MAXVAL(nqfs(:))
     WRITE(stdout, '(/5x, a/)') 'Finish reading ikmap files'
@@ -1307,9 +1347,9 @@
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: iqq
-    !! Current q-points (inside fsthick)
+    !! Q-point index from selecq.fmt window
     INTEGER, INTENT(in) :: iq
-    !! Current q-points (full grid)
+    !! Q-point index from full grid
     !
     ! Local variables
     !
@@ -1489,47 +1529,36 @@
       !
       ! go only over irreducible k-points
       !
-      !
       ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
       !
-      !   IF (ixkf(lower_bnd+ik-1) > 0 .AND. ixkqf(ixkf(lower_bnd+ik-1),iq) > 0) THEN
-      ! FG: here it can happen that ixkf is 0 and this leads to ixqf(0,iq) after .AND.
-      !     modified to prevent crash
-      IF (ixkf(lower_bnd + ik - 1) > 0) THEN
-        IF (ixkqf(ixkf(lower_bnd + ik - 1), iq) > 0) THEN
-          !
-          !
-          DO imode = 1, nmodes ! phonon modes
-            wq = wf(imode, iq)
-            inv_wq =  1.0 / (two * wq)
-            !
-            DO ibnd = 1, nbndfst
-              IF (ABS(ekfs(ibnd, ixkf(lower_bnd + ik - 1)) - ef0) < fsthick) THEN
-                DO jbnd = 1, nbndfst
-                  IF (ABS(ekfs(jbnd, ixkqf(ixkf(lower_bnd + ik - 1), iq)) - ef0) < fsthick) THEN
-                    !
-                    ! here we take into account the zero-point DSQRT(hbar/2M\omega)
-                    ! with hbar = 1 and M already contained in the eigenmodes
-                    ! g2 is Ry^2, wkf must already account for the spin factor
-                    !
-                    IF (shortrange .AND. (ABS(xqf(1, iq)) > eps8 .OR. ABS(xqf(2, iq)) > eps8 &
-                         .OR. ABS(xqf(3, iq)) > eps8 )) THEN
-                      ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary
-                      !     number, in which case its square will be a negative number.
-                      g2 = REAL((epf17(jbnd, ibnd, imode, ik)**two) * inv_wq)
-                    ELSE
-                      g2 = ABS(epf17(jbnd, ibnd, imode, ik))**two * inv_wq
-                    ENDIF
-                    ind(my_pool_id + 1) = ind(my_pool_id + 1) + 1
-                    tmp_g2(ind(my_pool_id + 1)) = g2
-                  ENDIF
-                ENDDO ! jbnd
+      DO imode = 1, nmodes ! phonon modes
+        wq = wf(imode, iq)
+        inv_wq =  1.0 / (two * wq)
+        !
+        DO ibnd = 1, nbndfst
+          IF (ABS(ekfs(ibnd, ixkf(lower_bnd + ik - 1)) - ef0) < fsthick) THEN
+            DO jbnd = 1, nbndfst
+              IF (ABS(ekfs(jbnd, ixkqf(ixkf(lower_bnd + ik - 1), iq)) - ef0) < fsthick) THEN
+                !
+                ! here we take into account the zero-point DSQRT(hbar/2M\omega)
+                ! with hbar = 1 and M already contained in the eigenmodes
+                ! g2 is Ry^2, wkf must already account for the spin factor
+                !
+                IF (shortrange .AND. (ABS(xqf(1, iq)) > eps8 .OR. ABS(xqf(2, iq)) > eps8 &
+                     .OR. ABS(xqf(3, iq)) > eps8 )) THEN
+                  ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary
+                  !     number, in which case its square will be a negative number.
+                  g2 = REAL((epf17(jbnd, ibnd, imode, ik)**two) * inv_wq)
+                ELSE
+                  g2 = ABS(epf17(jbnd, ibnd, imode, ik))**two * inv_wq
+                ENDIF
+                ind(my_pool_id + 1) = ind(my_pool_id + 1) + 1
+                tmp_g2(ind(my_pool_id + 1)) = g2
               ENDIF
-            ENDDO ! ibnd
-          ENDDO ! imode
-          !
-        ENDIF
-      ENDIF ! fsthick
+            ENDDO ! jbnd
+          ENDIF
+        ENDDO ! ibnd
+      ENDDO ! imode
       !
     ENDDO ! ik's
     !
@@ -1904,6 +1933,21 @@
       !
     ENDIF
     !
+    dirname = TRIM(tmp_dir) // TRIM(prefix) // '.ephmat'
+    CALL create_directory(TRIM(dirname))
+    !
+    IF (mpime == ionode_id) THEN
+      filikmap = TRIM(dirname) // '/' // 'ikmap'
+      !OPEN(UNIT = iufilikmap, FILE = filikmap, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
+      OPEN(UNIT = iufilikmap, FILE = filikmap, STATUS = 'unknown', FORM = 'unformatted', IOSTAT = ios)
+      IF (ios /= 0) CALL errore('kqmap_fine', 'error opening file ' // filikmap, iufilikmap)
+      !
+      !WRITE(iufilikmap, *) ixkff(1:nkftot)
+      WRITE(iufilikmap) ixkff(1:nkftot)
+      !
+      CLOSE(iufilikmap)
+    ENDIF
+    !
     CALL fkbounds(nkfs, lower_bnd, upper_bnd)
     !
     IF (.NOT. ALLOCATED(ixkqf)) ALLOCATE(ixkqf(nkfs, nqtotf), STAT = ierr)
@@ -1948,29 +1992,6 @@
     CALL mp_sum(ixkqf, inter_pool_comm)
     CALL mp_sum(nqfs, inter_pool_comm)
     CALL mp_barrier(inter_pool_comm)
-    !
-    dirname = TRIM(tmp_dir) // TRIM(prefix) // '.ephmat'
-    CALL create_directory(TRIM(dirname))
-    !
-    IF (mpime == ionode_id) THEN
-      filikmap = TRIM(dirname) // '/' // 'ikmap'
-      !OPEN(UNIT = iufilikmap, FILE = filikmap, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
-      OPEN(UNIT = iufilikmap, FILE = filikmap, STATUS = 'unknown', FORM = 'unformatted', IOSTAT = ios)
-      IF (ios /= 0) CALL errore('kqmap_fine', 'error opening file ' // filikmap, iufilikmap)
-      !
-      DO ik = 1, nkftot
-        !WRITE(iufilikmap, '(i7)') ixkff(ik)
-        WRITE(iufilikmap) ixkff(ik)
-      ENDDO
-      !
-      DO ik = 1, nkfs
-        DO iq = 1, nqtotf
-          !WRITE(iufilikmap, '(i7)') ixkqf(ik, iq)
-          WRITE(iufilikmap) ixkqf(ik, iq)
-        ENDDO
-      ENDDO
-      CLOSE(iufilikmap)
-    ENDIF
     !
     IF (.NOT. ALLOCATED(ixqfs)) ALLOCATE(ixqfs(nkfs, MAXVAL(nqfs(:))), STAT = ierr)
     IF (ierr /= 0) CALL errore('kqmap_fine', 'Error allocating ixqfs', 1)

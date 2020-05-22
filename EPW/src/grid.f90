@@ -1450,19 +1450,11 @@
           ! What we get from this call is bztoibz
           CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, bztoibz, s_bztoibz)
           !
-          IF (iterative_bte) THEN
+          IF (iterative_bte .OR. ephwrite) THEN
             bztoibz_tmp(:) = 0
             DO ikbz = 1, nkf1 * nkf2 * nkf3
               bztoibz_tmp(ikbz) = map_rebal(bztoibz(ikbz))
             ENDDO
-            bztoibz(:) = bztoibz_tmp(:)
-          ENDIF
-          !
-          IF (ephwrite) THEN
-            bztoibz_tmp(:) = 0
-            DO ikbz = 1, nkf1 * nkf2 * nkf3
-              bztoibz_tmp(ikbz) = map_rebal(bztoibz(ikbz))
-           ENDDO
             bztoibz(:) = bztoibz_tmp(:)
           ENDIF
           !
