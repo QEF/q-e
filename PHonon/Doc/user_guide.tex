@@ -318,7 +318,7 @@ $\lambda$, and an estimate of the critical temperature $T_c$.
 See the appendix for the relevant formulae.
 {\bf Important notice}: the $q\rightarrow 0$ limit of the contribution 
 to the electron-phonon coefficient diverges for optical modes! please 
-be very careful, consult the relevant literature. . 
+be very careful, consult the relevant literature.
 
 \subsection{DFPT with the tetrahedron method}
 
@@ -392,15 +392,16 @@ See example  \verb|PHonon/example/example18/|.
 The potential perturbation caused by the displacement of a single atom is
 spatially localized. Hence, the phonon potential can be interpolated from
 $q$ points on a coarse grid to other $q$ points using Fourier interpolation.
-To use this functionality, first, a \phx calculation of $q$ points on a coarse
-grid is required. Then, a \texttt{dvscf\_q2r.x} run performs an inverse Fourier
+To use this functionality, first, one shoud run a \phx\ calculation for $q$
+points on a regular coarse grid.
+Then, a \texttt{dvscf\_q2r.x} run performs an inverse Fourier
 transformation of the phonon potentials from a $q$ grid to a real-space
 supercell. Finally, by specifying \texttt{ldvscf\_interpolation=.true.} in
 \phx, the phonon potentials are Fourier transformed to given $q$ points.
 
 For insulators, the nonanalytic long-ranged dipole part of the potential needs
 to be subtracted and added before and after the interpolation, respectively.
-This treatment is activated specifying \texttt{do\_long\_range=.true.} in the
+This treatment is activated by specifying \texttt{do\_long\_range=.true.} in the
 input files of \texttt{dvscf\_q2r.x} and \phx.
 
 Due to numerical inaccuracies, the calculated Born effective charges may not
@@ -420,6 +421,24 @@ A.~Eiguren and C.~Ambrosch-Draxl, Phys. Rev. B {\bf 78}, 045124 (2008);
 S.~ Ponce et al, J. Chem. Phys. {\bf 143}, 102813 (2015);
 
 X.~Gonze et al, Comput. Phys. Commun., {\bf 248}, 107042 (2020).
+
+\subsection{Calculation of phonon-renormalization of electron bands}
+The phonon-induced renormalization of electron bands can be computed using \PHonon.
+After SCF, PHONON, and NSCF calculations, one can run \phx\ with the
+\texttt{electron\_phonon=`ahc'} option, which generates binary files containing
+quantities required for the calculation of electron self-energy.
+Then, a \texttt{postahc.x} run reads these binary files and compute the
+phonon-induced electron self-energy at a given temperature.
+
+For more details, see the \verb|PHonon/Doc/dfpt_self_energy.pdf| file.
+
+Also, there is an example in \verb|PHonon/example/example19/|.
+
+Implementation of this functionality in \qe\ is described in the following
+paper:
+
+J.-M.~Lihm and C.-H.~Park, Phys. Rev. B {\bf 101}, 121102 (2020).
+
 
 \section{Parallelism}
 \label{Sec:para}

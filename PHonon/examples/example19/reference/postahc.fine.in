@@ -1,0 +1,20 @@
+&input
+  ahc_dir = 'ahc_dir_fine/'
+  flvec = 'diam.modes_fine'
+  nk = 2
+  nbnd = 15
+  ahc_nbnd = 8
+  ahc_nbndskip = 0
+  nat = 2
+  nq = 64
+
+  eta = 0.01
+  efermi = 0.4766
+  temp_kelvin = 300.0
+
+  skip_upperfan = .true.
+  skip_dw = .true.
+
+  amass_amu(1) = 12.01078
+  amass_amu(2) = 12.01078
+/

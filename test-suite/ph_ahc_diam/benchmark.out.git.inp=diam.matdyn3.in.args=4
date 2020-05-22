@@ -1,0 +1,28 @@
+
+     Program MATDYN v.6.5 starts on  9Apr2020 at 16:53:14 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     Fft bands division:     nmany     =       1
+Norm of the difference between old and new effective charges:    0.00000000000000000000
+Norm of the difference between old and new force-constants:   0.00001785666483663805
+     Message from routine matdyn:
+     loto_disable is true. Disable LO-TO splitting at q=0.
+ 
+     MATDYN       :      0.02s CPU      0.02s WALL
+
+ 
+   This run was terminated on:  16:53:14   9Apr2020            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

@@ -205,26 +205,22 @@ SUBROUTINE conv_upf2xml( upf )
   !
   IF ( version_compare(upf%nv,"2.0.1") == 'equal') RETURN
   upf%nv="2.0.1"
-  IF ( .not. ALLOCATED (upf%epseu) ) THEN
-     ALLOCATE ( upf%epseu( upf%nwfc) )
-     upf%epseu=0
-  ENDIF
-  ALLOCATE ( upf%nchi( upf%nwfc) )
-  IF ( .not. ALLOCATED(upf%nn) ) THEN
-     upf%nchi=0
-  ELSE
-     upf%nchi=upf%nn(1:upf%nwfc)
-  ENDIF
-  ALLOCATE ( upf%rcut_chi( upf%nwfc ) )
-  ALLOCATE ( upf%rcutus_chi( upf%nwfc ) )
-  upf%rcut_chi=upf%rcut(1:upf%nwfc)
-  upf%rcutus_chi=upf%rcutus(1:upf%nwfc)
   !
-  upf%rmax = upf%r(upf%mesh)
-  upf%zmesh = atomic_number( upf%psd )
-  IF (upf%r(1) .GT. 1.d-16) THEN 
-     upf%dx = log(upf%rmax/upf%r(1))/(upf%mesh-1)
-     upf%xmin = log(upf%r(1)*upf%zmesh )
+  IF ( .NOT. ALLOCATED(upf%nchi) ) THEN
+     ALLOCATE(upf%nchi(upf%nwfc))
+     upf%nchi(:) = 0
+  END IF
+  IF ( .NOT. ALLOCATED(upf%rcut_chi) ) THEN
+     ALLOCATE(upf%rcut_chi(upf%nwfc))
+     upf%rcut_chi(:) = upf%rcut(:)
+  END IF
+  IF ( .NOT. ALLOCATED(upf%rcutus_chi) ) THEN
+     ALLOCATE(upf%rcutus_chi(upf%nwfc))
+     upf%rcutus_chi(:) = upf%rcutus(:)
+  END IF
+  IF ( .NOT. ALLOCATED(upf%epseu) ) THEN
+     ALLOCATE(upf%epseu(upf%nwfc))
+     upf%epseu(:) = 0.0
   END IF
   IF ( upf%has_so) THEN
      upf%rel="full"
@@ -233,5 +229,14 @@ SUBROUTINE conv_upf2xml( upf )
   ELSE
      upf%rel="no"
   ENDIF
+  !
+  IF ( .not. upf%has_so) THEN
+     upf%rmax = upf%r(upf%mesh)
+     upf%zmesh = atomic_number( upf%psd )
+     IF (upf%r(1) .GT. 1.d-16) THEN 
+        upf%dx = log(upf%rmax/upf%r(1))/(upf%mesh-1)
+        upf%xmin = log(upf%r(1)*upf%zmesh )
+     END IF
+  END IF
   !
 END SUBROUTINE conv_upf2xml

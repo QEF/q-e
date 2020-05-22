@@ -7,6 +7,14 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #if defined(__DFTI)
+
+#if defined(_OPENMP) && defined(__FFT_SCALAR_THREAD_SAFE)
+! compiler safeguard for thread-safe eligibility
+#if defined(__PGI)
+#error PGI compiler breaks the use of __FFT_SCALAR_THREAD_SAFE in DFTI
+#endif
+#endif
+
 #include "mkl_dfti.f90"
 !=----------------------------------------------------------------------=!
    MODULE fft_scalar_dfti
@@ -59,18 +67,10 @@
      COMPLEX (DP) :: c(:), cout(:)
 
      REAL (DP)  :: tscale
-     INTEGER    :: i, err, idir, ip, void
+     INTEGER    :: i, ip
      INTEGER, SAVE :: zdims( 3, ndims ) = -1
      INTEGER, SAVE :: icurrent = 1
      LOGICAL :: found
-
-     INTEGER :: tid
-
-#if defined(_OPENMP)
-     INTEGER :: offset, ldz_t
-     INTEGER :: omp_get_max_threads
-     EXTERNAL :: omp_get_max_threads
-#endif
 
      !   Intel MKL native FFT driver
 
@@ -79,8 +79,10 @@
      LOGICAL, SAVE :: is_inplace
      INTEGER :: dfti_status = 0
      INTEGER :: placement
-
+#if defined(__FFT_SCALAR_THREAD_SAFE)
 !$omp threadprivate(hand, dfti_first, zdims, icurrent, is_inplace)
+#endif
+
      IF (PRESENT(in_place)) THEN
        is_inplace = in_place
      ELSE
@@ -255,20 +257,12 @@
      INTEGER, INTENT(IN) :: isign, ldx, ldy, nx, ny, nzl
      INTEGER, OPTIONAL, INTENT(IN) :: pl2ix(:)
      COMPLEX (DP) :: r( : )
-     INTEGER :: i, k, j, err, idir, ip, kk, void
+     INTEGER :: i, k, j, ip
      REAL(DP) :: tscale
      INTEGER, SAVE :: icurrent = 1
      INTEGER, SAVE :: dims( 4, ndims) = -1
      LOGICAL :: dofft( nfftx ), found
      INTEGER, PARAMETER  :: stdout = 6
-
-#if defined(_OPENMP)
-     INTEGER :: offset
-     INTEGER :: nx_t, ny_t, nzl_t, ldx_t, ldy_t
-     INTEGER  :: itid, mytid, ntids
-     INTEGER  :: omp_get_thread_num, omp_get_num_threads,omp_get_max_threads
-     EXTERNAL :: omp_get_thread_num, omp_get_num_threads, omp_get_max_threads
-#endif
 
      TYPE(DFTI_DESCRIPTOR_ARRAY), SAVE :: hand( ndims )
      LOGICAL, SAVE :: dfti_first = .TRUE.
