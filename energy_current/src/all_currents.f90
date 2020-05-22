@@ -233,19 +233,23 @@ contains
       use io_global, ONLY: ionode, ionode_id
       use mp_world, ONLY: mpime, world_comm
       use mp, ONLY: mp_bcast
+      use ions_base, ONLY: nsp
       implicit none
-      integer :: iun, step, ios, step1
+      integer :: iun, step, ios, i, step1
       integer, external :: find_free_unit
-      real(dp) :: time, J(3), time1, J1(3)
+      real(dp) :: time, J(3), time1, J1(3), Jdummy(3)
 
       if (.not. restart) return
       if (ionode) then
          iun = find_free_unit()
+         ios=0
          step1 = -1
          open (iun, file=trim(file_output)//'.dat')
+         write(*,*) 'reading file ', trim(file_output)//'.dat'
          do while (ios == 0)
-            read (iun, *, iostat=ios) step, time, J
+            read (iun, *, iostat=ios) step, time, J, (Jdummy, i=1,nsp)
             if (ios == 0) then
+               write(*,*) 'found: ', step, time, J
                step1 = step
                time1 = time
                J1 = J

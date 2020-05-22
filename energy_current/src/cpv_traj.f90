@@ -80,10 +80,48 @@ contains
       t%is_open = .false.
    end subroutine
 
+   subroutine read_header(iounit, nstep, tps, err, eof, tps_not_set)
+      implicit none
+      logical, intent(out) :: err, eof, tps_not_set
+      character(len=256) :: line_read, tps_str
+      integer, intent(in) :: iounit
+      integer, intent(out) :: nstep
+      real(dp), intent(out) :: tps
+
+      !default values
+      err=.false.
+      eof=.false.
+      tps_not_set=.false.    
+      tps=0.0_dp
+      nstep=0
+
+      !read line as string
+      read(unit=iounit, fmt='(A)', err=200, end=210) line_read
+      !read nstep and tps as string
+      read(unit=line_read, fmt=*, err=200, end=210) nstep, tps_str
+      !read tps
+      read(unit=tps_str, fmt=*, err=190, end=190) tps 
+    
+      return
+      190 continue
+         write (*,*) '!WARNING! Error reading time. Header was'
+         write (*,*) trim(line_read)
+         tps_not_set=.true.
+      return
+      200 continue
+         write (*,*) '!ERROR! Error reading header. Header was'
+         write (*,*) trim(line_read)
+         err=.true.
+      return
+      210 continue
+         eof=.true.
+      return
+   end subroutine
+
    function cpv_trajectory_read_step(t) result(res)
       implicit none
       type(cpv_trajectory), intent(inout) :: t
-      logical :: res
+      logical :: res, eof, err, tps_not_set
       type(timestep) :: tstep !this internally is only a pointer to a bigger allocated array
       real(dp) :: tps_
       integer :: nstep_, iatom, i
@@ -96,9 +134,11 @@ contains
       !get some space (that can be used again
       call trajectory_get_temporary(t%traj, t%traj%natoms, tstep) ! first get a temporary, then eventually confirm it as valid
 
-      !read header
-      read (t%iounit_pos, *, err=100, end=100) tstep%nstep, tstep%tps
-      read (t%iounit_vel, *, err=100, end=100) nstep_, tps_
+      !read headers
+      call read_header(t%iounit_pos, tstep%nstep, tstep%tps, err, eof, tps_not_set)
+         if (err .or. eof)  goto 100
+      call read_header(t%iounit_vel, nstep_, tps_, err, eof, tps_not_set)
+         if (err .or. eof)  goto 100
       if (tstep%nstep /= nstep_ .or. tstep%tps /= tps_) then
          write (*, *) 'error in reading: inconsistent timestep headers in .pos and .vel files!', &
             nstep_, tps_, tstep%nstep, tstep%tps
