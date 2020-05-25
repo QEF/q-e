@@ -167,11 +167,10 @@ MODULE io_rho_xml
       !
       ! read kinetic energy density
       IF ( dft_is_meta() ) THEN
-         INQUIRE ( FILE = TRIM(dirname) // "ekin-density", EXIST=lexist )
-         IF ( lexist ) THEN
-            CALL read_rhog( TRIM(dirname) // "ekin-density", &
-               root_bgrp, intra_bgrp_comm, &
-               ig_l2g, nspin_, rho%kin_g, gamma_only )
+         CALL read_rhog( TRIM(dirname) // "ekin-density", &
+              root_bgrp, intra_bgrp_comm, &
+              ig_l2g, nspin_, rho%kin_g, gamma_only, ierr )
+         IF ( ierr == 0 ) THEN
             WRITE(stdout,'(5x,"Reading meta-gga kinetic term")')
          ELSE
             rho%kin_g(:,:) = (0.0_dp, 0.0_dp)
