@@ -948,7 +948,7 @@ MODULE path_base
          ! ... restart file is written again as soon as the energies and
          ! ... forces have been computed.
          !
-         CALL write_restart()
+       !!!  CALL write_restart()   !!! <----my mod.
          !
 
          IF ( meta_ionode ) &
@@ -1021,15 +1021,15 @@ MODULE path_base
          !
          ! ... information is written on the files
          !
-         CALL write_dat_files()
+      !!!   CALL write_dat_files()   !!! <----my mod.
          !
          ! ... information is written on the standard output
          !
-         CALL write_output()
+         CALL write_output()   
          !
          ! ... the restart file is written
          !
-         CALL write_restart()
+      !!!   CALL write_restart()    !!! <----my mod.
          !
          ! ... exit conditions
          !
