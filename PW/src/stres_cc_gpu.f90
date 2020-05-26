@@ -39,7 +39,7 @@ SUBROUTINE stres_cc_gpu( sigmaxcc )
   REAL(DP) :: sigmaxcc(3,3)
   ! local variables
 
-  INTEGER :: nt, ng, l, m, ir, igl0
+  INTEGER :: nt, ng, l, m, ir
   ! counters
   REAL(DP) :: fact
   REAL(DP), ALLOCATABLE :: vxc(:,:)
@@ -140,10 +140,8 @@ SUBROUTINE stres_cc_gpu( sigmaxcc )
         !
         
         !
-        igl0 = 1
-        IF (gl(1) < 1.0E-8_DP) igl0 = 2
         CALL deriv_drhoc_gpu( ngl, gl_d, omega, tpiba2, msh(nt), &
-                              r_d, rab_d, rhoc_d, rhocg_d, igl0 )
+                              r_d, rab_d, rhoc_d, rhocg_d )
         !
         ! non diagonal term (g=0 contribution missing)
         !
