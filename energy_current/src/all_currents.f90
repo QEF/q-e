@@ -157,8 +157,12 @@ contains
          write (iun, '(A,3E20.12)') 'total: ', J_xc + J_hartree + J_kohn + i_current + z_current
          write (*, '(A,3E20.12)') 'total energy current: ', J_xc + J_hartree + J_kohn + i_current + z_current
          close (iun)
+         !WARNING: if you modify the following lines
+         !remember to modify the set_first_step_restart() subroutine,
+         !so we can read the file that here we are writing in the correct way
          open (iun, file=trim(file_output)//'.dat', position='append')
-         write (iun, '(1I7,1E14.6,3E20.12)', advance='no') step, time, J_xc + J_hartree + J_kohn + i_current + z_current
+         write (iun, '(1I7,1E14.6,3E20.12,3E20.12)', advance='no') step, time, &
+                 J_xc + J_hartree + J_kohn + i_current + z_current, J_electron(1:3)
          do itype=1,nsp
              write (iun, '(3E20.12)', advance='no') v_cm(:,itype)
              write (*, '(A,1I3,A,3E20.12)') 'center of mass velocity of type ',itype ,': ', v_cm(:,itype)
@@ -247,7 +251,7 @@ contains
          open (iun, file=trim(file_output)//'.dat')
          write(*,*) 'reading file ', trim(file_output)//'.dat'
          do while (ios == 0)
-            read (iun, *, iostat=ios) step, time, J, (Jdummy, i=1,nsp)
+            read (iun, *, iostat=ios) step, time, J, (Jdummy, i=1,nsp+1)
             if (ios == 0) then
                write(*,*) 'found: ', step, time, J
                step1 = step
