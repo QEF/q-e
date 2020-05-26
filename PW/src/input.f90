@@ -339,7 +339,7 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   CHARACTER(LEN=256):: dft_
   !
-  INTEGER  :: ia, nt, inlc, tempunit, i, j
+  INTEGER  :: ia, nt, tempunit, i, j
   LOGICAL  :: exst, parallelfs, domag, stop_on_error
   REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp, V
   CHARACTER(len=256) :: tempfile
