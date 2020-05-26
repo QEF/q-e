@@ -117,22 +117,22 @@ MODULE funct
   !              "x3lyp"                        = X3LYP
   !              "vwn-rpa" = VWN LDA using vwn1-rpa parametrization
   !              "gaupbe"= "sla+pw+gaup+pbc"   = Gau-PBE (also "gaup")
-  !              "vdw-df"       ="sla+pw+rpb +vdw1"   = vdW-DF1
-  !              "vdw-df2"      ="sla+pw+rw86+vdw2"   = vdW-DF2
-  !              "vdw-df-c09"   ="sla+pw+c09x+vdw1"   = vdW-DF-C09
-  !              "vdw-df2-c09"  ="sla+pw+c09x+vdw2"   = vdW-DF2-C09
-  !              "vdw-df-obk8"  ="sla+pw+obk8+vdw1"   = vdW-DF-obk8 (optB88-vdW)
-  !              "vdw-df-ob86"  ="sla+pw+ob86+vdw1"   = vdW-DF-ob86 (optB86b-vdW)
-  !              "vdw-df2-b86r" ="sla+pw+b86r+vdw2"   = vdW-DF2-B86R (rev-vdw-df2)
-  !              "vdw-df-cx"    ="sla+pw+cx13+vdW1"   = vdW-DF-cx
-  !              "vdw-df-cx0"    ="sla+pw+cx13+vdW1+HF/4"   = vdW-DF-cx-0
-  !              "vdw-df2-0"     ="sla+pw+rw86+vdw2+HF/4"   = vdW-DF2-0
-  !              "vdw-df2-br0"  ="sla+pw+b86r+vdW2+HF/4"   = vdW-DF2-b86r-0
-  !              "vdw-df-c090"   ="sla+pw+c09x+vdw1+HF/4"   = vdW-DF-C09-0
-  !              "vdw-df-x"     ="sla+pw+????+vdwx"   = vdW-DF-x, reserved Thonhauser, not implemented
-  !              "vdw-df-y"     ="sla+pw+????+vdwy"   = vdW-DF-y, reserved Thonhauser, not implemented
-  !              "vdw-df-z"     ="sla+pw+????+vdwz"   = vdW-DF-z, reserved Thonhauser, not implemented
-  !              "rvv10" = "sla+pw+rw86+pbc+vv10"     = rVV10
+  !              "vdw-df"       ="sla+pw+rpb +vdw1"      = vdW-DF1
+  !              "vdw-df2"      ="sla+pw+rw86+vdw2"      = vdW-DF2
+  !              "vdw-df-c09"   ="sla+pw+c09x+vdw1"      = vdW-DF-C09
+  !              "vdw-df2-c09"  ="sla+pw+c09x+vdw2"      = vdW-DF2-C09
+  !              "vdw-df-obk8"  ="sla+pw+obk8+vdw1"      = vdW-DF-obk8 (optB88-vdW)
+  !              "vdw-df-ob86"  ="sla+pw+ob86+vdw1"      = vdW-DF-ob86 (optB86b-vdW)
+  !              "vdw-df2-b86r" ="sla+pw+b86r+vdw2"      = vdW-DF2-B86R (rev-vdw-df2)
+  !              "vdw-df-cx"    ="sla+pw+cx13+vdW1"      = vdW-DF-cx
+  !              "vdw-df-cx0"   ="sla+pw+cx13+vdW1+HF/4" = vdW-DF-cx-0
+  !              "vdw-df2-0"    ="sla+pw+rw86+vdw2+HF/4" = vdW-DF2-0
+  !              "vdw-df2-br0"  ="sla+pw+b86r+vdW2+HF/4" = vdW-DF2-b86r-0
+  !              "vdw-df-c090"  ="sla+pw+c09x+vdw1+HF/4" = vdW-DF-C09-0
+  !              "vdw-df3-opt1" ="sla+pw+w31x+w31c"      = vdW-DF3-opt1
+  !              "vdw-df3-opt2" ="sla+pw+w32x+w32c"      = vdW-DF3-opt2
+  !              "vdw-df-C6"    ="sla+pw+b86r+wc6"       = vdW-DF-C6
+  !              "rvv10" = "sla+pw+rw86+pbc+vv10"        = rVV10
   !
   ! Any nonconflicting combination of the following keywords is acceptable:
   !
@@ -209,6 +209,8 @@ MODULE funct
   !              "b88x"   B88 exchange * 0.50            igcx =42
   !              "beex"   BEE exchange                   igcx =43 
   !              "rpbe"   Hammer-Hansen-Norskov          igcx =44
+  !              "w31x"   vdW-DF3-opt1 exchange          igcx =45
+  !              "w32x"   vdW-DF3-opt2 exchange          igcx =46
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -232,17 +234,19 @@ MODULE funct
   !              "scan"   SCAN Meta-GGA                  imeta=5
   !              "sca0"   SCAN0  Meta-GGA                imeta=6
   !
-  ! Van der Waals functionals (nonlocal term only)
+  ! van der Waals functionals (nonlocal term only)
   !              "nonlc"  none                           inlc =0 (default)
+  !--------------inlc = 1 to inlc = 25 reserved for vdW-DF--------------
   !              "vdw1"   vdW-DF1                        inlc =1
   !              "vdw2"   vdW-DF2                        inlc =2
-  !              "vv10"   rVV10                          inlc =3
-  !              "vdwx"   vdW-DF-x                       inlc =4, reserved Thonhauser, not implemented
-  !              "vdwy"   vdW-DF-y                       inlc =5, reserved Thonhauser, not implemented
-  !              "vdwz"   vdW-DF-z                       inlc =6, reserved Thonhauser, not implemented
+  !              "w31c"   vdW-DF3-opt1                   inlc =3
+  !              "w32c"   vdW-DF3-opt2                   inlc =4
+  !              "wc6"    vdW-DF-C6                      inlc =5
+  !---------------------------------------------------------------------
+  !              "vv10"   rVV10                          inlc =26
   !
-  ! Meta-GGA with Van der Waals
-  !              "rvv10-scan" rVV10 (with b=15.7) and scan inlc=3 (PRX 6, 041005 (2016))
+  ! Meta-GGA with van der Waals
+  !              "rvv10-scan" rVV10 (with b=15.7) and scan inlc=26 (PRX 6, 041005 (2016))
   !
   ! Note: as a rule, all keywords should be unique, and should be different
   ! from the short name, but there are a few exceptions.
@@ -263,6 +267,8 @@ MODULE funct
   !              b86b    A.D.Becke, J.Chem.Phys. 85, 7184 (1986)
   !              ob86    Klimes, Bowler, Michaelides, PRB 83, 195131 (2011)
   !              b86r    I. Hamada, Phys. Rev. B 89, 121103(R) (2014)
+  !              w31x    D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
+  !              w32x    D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
   !              pbe     J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)
   !              pw91    J.P.Perdew and Y. Wang, PRB 46, 6671 (1992)
   !              blyp    C.Lee, W.Yang, R.G.Parr, PRB 37, 785 (1988)
@@ -291,6 +297,9 @@ MODULE funct
   !                           J. Chem. Phys. 148, 194115 (2018)
   !              vdW-DF-obk8  Klimes et al, J. Phys. Cond. Matter, 22, 022201 (2010)
   !              vdW-DF-ob86  Klimes et al, Phys. Rev. B, 83, 195131 (2011)
+  !              vdW-DF3-opt1 D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
+  !              vdW-DF3-opt2 D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
+  !              vdW-DF-C6    K. Berland, D. Chakraborty, and T. Thonhauser, PRB 99, 195418 (2019)
   !              c09x    V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)
   !              tpss    J.Tao, J.P.Perdew, V.N.Staroverov, G.E. Scuseria,
   !                      PRL 91, 146401 (2003)
@@ -363,7 +372,7 @@ MODULE funct
   INTEGER  :: beefvdw = 0
 #endif
   !
-  INTEGER, PARAMETER :: nxc=8, ncc=10, ngcx=44, ngcc=13, nmeta=6, ncnl=6
+  INTEGER, PARAMETER :: nxc=8, ncc=10, ngcx=46, ngcc=13, nmeta=6, ncnl=26
   CHARACTER(LEN=4) :: exc, corr, gradx, gradc, meta, nonlocc
   DIMENSION :: exc(0:nxc), corr(0:ncc), gradx(0:ngcx), gradc(0:ngcc), &
                meta(0:nmeta), nonlocc(0:ncnl)
@@ -378,14 +387,14 @@ MODULE funct
                'OBK8', 'OB86', 'EVX',  'B86R', 'CX13', 'X3LP', &
                'CX0',  'R860', 'CX0P', 'AHCX', 'AHF2', &
                'AHPB', 'AHPS', 'CX14', 'CX15', 'BR0',  'CX16', 'C090', &
-               'B86X', 'B88X', 'BEEX', 'RPBX'/
+               'B86X', 'B88X', 'BEEX', 'RPBX', 'W31X', 'W32X' /
   !
   DATA gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC',  'HCTH', 'NONE',&
                'B3LP', 'PSC', 'PBE', 'xxxx', 'xxxx', 'Q2DC', 'BEEC' /
   !
   DATA meta  / 'NONE', 'TPSS', 'M06L', 'TB09', 'META', 'SCAN', 'SCA0' /
   !
-  DATA nonlocc/ 'NONE', 'VDW1', 'VDW2', 'VV10', 'VDWX', 'VDWY', 'VDWZ' /
+  DATA nonlocc/ 'NONE', 'VDW1', 'VDW2', 'W31C', 'W32C', 'WC6', 20*'NONE', 'VV10' /
   !
 #if defined(__LIBXC)
   INTEGER :: libxc_major=0, libxc_minor=0, libxc_micro=0
@@ -575,6 +584,15 @@ CONTAINS
     ! Special case vdW-DF2
     CASE( 'VDW-DF2' )
        dft_defined = set_dft_values(1,4,13,0,2,0)
+    ! Special case vdW-DF3-opt1
+    CASE( 'VDW-DF3-OPT1' )
+       dft_defined = set_dft_values(1,4,45,0,3,0)
+    ! Special case vdW-DF3-opt2
+    CASE( 'VDW-DF3-OPT2' )
+       dft_defined = set_dft_values(1,4,46,0,4,0)
+    ! Special case vdW-DF-C6
+    CASE( 'VDW-DF-C6' )
+       dft_defined = set_dft_values(1,4,26,0,5,0)
     ! Special case vdW-DF with C09 exchange
     CASE( 'VDW-DF-C09' )
        dft_defined = set_dft_values(1,4,16,0,1,0)
@@ -610,10 +628,10 @@ CONTAINS
        dft_defined = set_dft_values(6,4,40,0,1,0)
     ! Special case rVV10
     CASE( 'RVV10' )
-       dft_defined = set_dft_values(1,4,13,4,3,0)
+       dft_defined = set_dft_values(1,4,13,4,26,0)
     ! Special case rVV10+scan
     CASE( 'RVV10-SCAN' )
-       dft_defined = set_dft_values(0,0,0,0,3,5)
+       dft_defined = set_dft_values(0,0,0,0,26,5)
     ! special case : B3LYP hybrid
     CASE( 'B3LYP' )
        dft_defined = set_dft_values(7,12,9,7,0,0)
@@ -1575,6 +1593,12 @@ CONTAINS
           shortname = 'VDW-DF2-BR0'
        ENDIF
     ELSEIF (inlc==3) THEN
+       shortname = 'VDW-DF3-OPT1'
+    ELSEIF (inlc==4) THEN
+       shortname = 'VDW-DF3-OPT2'
+    ELSEIF (inlc==5) THEN
+       shortname = 'VDW-DF-C6'
+    ELSEIF (inlc==26) THEN
        shortname = 'RVV10'
     ENDIF
     !
@@ -1659,7 +1683,7 @@ SUBROUTINE nlc (rho_valence, rho_core, nspin, enl, vnl, v)
   REAL(DP), INTENT(INOUT) :: v(:,:)
   REAL(DP), INTENT(INOUT) :: enl, vnl
   !
-  IF ( inlc == 1 .OR. inlc == 2) THEN
+  IF ( inlc > 0 .AND. inlc < 26 ) THEN
      !
      inlc_ = inlc
      IF ( nspin == 1 ) THEN
@@ -1670,7 +1694,7 @@ SUBROUTINE nlc (rho_valence, rho_core, nspin, enl, vnl, v)
         CALL errore ('nlc', 'vdW-DF not available for noncollinear spin case',1)
      END If
      !
-  ELSE IF ( inlc == 3 ) THEN
+  ELSE IF ( inlc == 26 ) THEN
      !
      IF ( imeta == 0 ) THEN
        CALL xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v)
