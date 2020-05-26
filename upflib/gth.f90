@@ -580,7 +580,7 @@ end subroutine dvloc_gth
 !
 !
 !-------------------------------------------------------------------------------
-SUBROUTINE dvloc_gth_gpu( itype, zion, tpiba2, ngl, gl_d, omega, dvloc_d, igl0 )
+SUBROUTINE dvloc_gth_gpu( itype, zion, tpiba2, ngl, gl_d, omega, dvloc_d )
   !------------------------------------------------------------------------------
   !! GPU version of 'dvloc_gth' from 'Modules/gth.f90'
   !! dvloc = D Vloc (g^2) / D g^2 = (1/2g) * D Vloc(g) / D g
@@ -599,7 +599,7 @@ SUBROUTINE dvloc_gth_gpu( itype, zion, tpiba2, ngl, gl_d, omega, dvloc_d, igl0 )
   !
   ! Local variables
   INTEGER :: ii, my_gth, igl, igl0
-  REAL(DP) :: cc1, cc2, cc3, cc4, rloc, &
+  REAL(DP) :: cc1, cc2, cc3, cc4, rloc, gl1, &
               gx, gx2, gx3, rl2, rl3, rq2, r2q, r4g3, r6g5, e_rq2h, fact
   !
 #if defined(__CUDA)
@@ -624,7 +624,17 @@ SUBROUTINE dvloc_gth_gpu( itype, zion, tpiba2, ngl, gl_d, omega, dvloc_d, igl0 )
   cc3  = gth_p(my_gth)%cc(3)
   cc4  = gth_p(my_gth)%cc(4)
   !
-  IF ( igl0==2 ) dvloc_d(1) = 0._DP
+  ! Compute vloc(q)
+  gl1 = gl_d(1)
+  IF (gl1 < eps8) THEN
+     !
+     ! first the G=0 term
+     !
+     dvloc_d(1) = 0.0_DP
+     igl0 = 2
+  ELSE
+     igl0 = 1
+  ENDIF
   !
   !   here the G<>0 terms, we first compute the part of the integrand 
   !   function independent of |G| in real space
