@@ -656,6 +656,14 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
         CALL pbex( rho, grho, 8, sx, v1x, v2x )
         !
+     CASE( 45 ) ! 'W31X'
+        !
+        CALL pbex( rho, grho, 9, sx, v1x, v2x )
+        !
+     CASE( 46 ) ! 'W32X'
+        !
+        CALL b86b( rho, grho, 4, sx, v1x, v2x )
+        !
      CASE DEFAULT
         !
         sx  = 0.0_DP
@@ -849,10 +857,10 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         sx_tot(ir) = 0.5_DP * ( sx(1)*rnull(1) + sx(2)*rnull(2) )
         v2x = 2.0_DP * v2x
         !
-     CASE( 3, 4, 8, 10, 12, 20, 23, 24, 25, 44 )
-        ! igcx=3: PBE, igcx=4: revised PBE, igcx=8: PBE0, igcx=10: PBEsol
-        ! igcx=12: HSE,  igcx=20: gau-pbe, igcx=23: obk8, igcx=24: ob86, igcx=25: ev93
-        ! igcx=44: RPBE
+     CASE( 3, 4, 8, 10, 12, 20, 23, 24, 25, 44, 45 )
+        ! igcx=3:  PBE,  igcx=4:  revised PBE, igcx=8:  PBE0, igcx=10: PBEsol
+        ! igcx=12: HSE,  igcx=20: gau-pbe,     igcx=23: obk8, igcx=24: ob86,
+        ! igcx=25: ev93, igcx=44: RPBE,        igcx=45: W31X
         !
         iflag = 1
         IF ( igcx== 4 ) iflag = 2
@@ -860,7 +868,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         IF ( igcx==23 ) iflag = 5
         IF ( igcx==24 ) iflag = 6
         IF ( igcx==25 ) iflag = 7
-        IF ( igcx==43 ) iflag = 8
+        IF ( igcx==44 ) iflag = 8
+        IF ( igcx==45 ) iflag = 9
         !
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
@@ -969,13 +978,15 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         sx_tot(ir) = 0.5_DP * ( sx(1)*rnull(1) + sx(2)*rnull(2) )
         v2x = 2.0_DP * v2x
         !
-      CASE( 26 )                  ! 'B86R for rev-vdW-DF2'
+      CASE( 26, 46 )                  ! 'B86R for rev-vdW-DF2'
         !
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
         !
-        CALL b86b( rho(1), grho2(1), 3, sx(1), v1x(1), v2x(1) )
-        CALL b86b( rho(2), grho2(2), 3, sx(2), v1x(2), v2x(2) )
+        IF ( igcx==26 ) iflag = 3 ! B86R for rev-vdW-DF2
+        IF ( igcx==46 ) iflag = 4 ! W32X for vdW-DF3-opt2
+        CALL b86b( rho(1), grho2(1), iflag, sx(1), v1x(1), v2x(1) )
+        CALL b86b( rho(2), grho2(2), iflag, sx(2), v1x(2), v2x(2) )
         !
         sx_tot(ir) = 0.5_DP * ( sx(1)*rnull(1) + sx(2)*rnull(2) )
         v2x = 2.0_DP * v2x

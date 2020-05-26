@@ -1,4 +1,6 @@
 New in dev branch:
+  * vdW-DF3-opt1, vdW-DF3-opt2, and vdW-DF-C6 van der Waals functionals
+    implemented (T. Thonhauser, supported by NSF Grant No. 1712425)
   * More FORD documentation
   * Stress for noncolinear case
   * QE can be compiled on Windows 10 using PGI v.19.10 Community Edition
@@ -40,6 +42,8 @@ Fixed in dev branch:
     read from file because read_file had been replaced by read_file_new
  
 Incompatible changes in dev branch:
+  * Grouping of inlc values into ranges for different developments.
+    WARNING: inlc for rVV10 has been changed to inlc=26.
   * Conversion from 1D FFT real-space index to 3D positions moved into a
     small routine for all cases where such conversion is used
   * CP: atomic positions are now in array tau(1:3,1:nat), information on the

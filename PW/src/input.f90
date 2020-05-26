@@ -15,7 +15,7 @@ SUBROUTINE iosys()
   !
   USE kinds,         ONLY : DP
   USE funct,         ONLY : dft_is_hybrid, dft_has_finite_size_correction, &
-                            set_finite_size_volume, get_inlc, get_dft_short
+                            set_finite_size_volume, get_dft_short
   USE funct,         ONLY : set_exx_fraction, set_screening_parameter
   USE control_flags, ONLY : adapt_thr, tr2_init, tr2_multi  
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
@@ -339,7 +339,7 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   CHARACTER(LEN=256):: dft_
   !
-  INTEGER  :: ia, nt, inlc, tempunit, i, j
+  INTEGER  :: ia, nt, tempunit, i, j
   LOGICAL  :: exst, parallelfs, domag
   REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp, V
   CHARACTER(len=256) :: tempfile
