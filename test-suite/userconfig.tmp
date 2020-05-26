@@ -1,6 +1,6 @@
 [PW]
 exe = XXXXXX/test-suite/run-pw.sh
-extract_program = XXXXXX/test-suite/extract-pw.x
+extract_program = XXXXXX/test-suite/extract-pw.sh
 inputs_args = ('*.in', '')
 run_cmd_template = tc.program tc.input tc.output tc.error
 tolerance = ( (8.0e-4, 1.0e-4, 'e1'),
@@ -18,7 +18,7 @@ skip_args = 'not present in this version'
 
 [CP]
 exe = XXXXXX/test-suite/run-cp.sh
-extract_program = XXXXXX/test-suite/extract-cp.x
+extract_program = XXXXXX/test-suite/extract-cp.sh
 inputs_args = ('*.in', '')
 run_cmd_template = tc.program -input tc.input tc.args > tc.output 2> tc.error
 tolerance = ( (1.0e-5, 1.0e-5, 'e1'),
@@ -31,7 +31,7 @@ skip_args = 'not present in this version'
 
 [PH]
 exe = XXXXXX/test-suite/run-ph.sh
-extract_program = XXXXXX/test-suite/extract-ph.x
+extract_program = XXXXXX/test-suite/extract-ph.sh
 inputs_args = ('*.in', '')
 run_cmd_template = tc.program tc.args tc.input tc.output tc.error
 tolerance = ( (5.0e-5, 5.0e-3, 'e1'),
@@ -60,7 +60,7 @@ skip_args = 'not present in this version'
 
 [HP]
 exe = XXXXXX/test-suite/run-hp.sh
-extract_program = XXXXXX/test-suite/extract-hp.x
+extract_program = XXXXXX/test-suite/extract-hp.sh
 inputs_args = ('*.in', '')
 run_cmd_template = tc.program tc.args tc.input tc.output tc.error
 tolerance = ( (5.0e-5, 5.0e-3, 'e1'),
@@ -76,7 +76,7 @@ skip_args = 'not present in this version'
 
 [EPW]
 exe = XXXXXX/test-suite/run-epw.sh
-extract_program = XXXXXX/test-suite/extract-epw.x
+extract_program = XXXXXX/test-suite/extract-epw.sh
 inputs_args = ('*.in', '')
 run_cmd_template = tc.program tc.args tc.input tc.output tc.error
 tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
@@ -130,7 +130,7 @@ skip_args = 'not present in this version'
 
 [TDDFPT]
 exe = XXXXXX/test-suite/run-tddfpt.sh
-extract_program = XXXXXX/test-suite/extract-tddfpt.x
+extract_program = XXXXXX/test-suite/extract-tddfpt.sh
 inputs_args = ('*.in', '')
 run_cmd_template = tc.program tc.args tc.input tc.output tc.error
 tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
@@ -145,6 +145,16 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (1.0e-4, 1.0e-4, 'epsm1'),
               (1.0e-5, 5.0e-4, 'averageosc'))
 
+skip_program = grep
+skip_args = 'not present in this version'
+
+[PP]
+exe = XXXXXX/test-suite/run-pp.sh
+extract_program = XXXXXX/test-suite/extract-pp.sh
+inputs_args = ('*.in', '')
+run_cmd_template = tc.program tc.args tc.input tc.output tc.error
+tolerance = ( (1.0e-5, 1.0e-4, 'e1') ,
+              (1.0e-5, 1.0e-4, 'efock') )
 skip_program = grep
 skip_args = 'not present in this version'
 
