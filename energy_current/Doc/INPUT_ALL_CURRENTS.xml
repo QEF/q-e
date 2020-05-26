@@ -100,10 +100,12 @@ in order to compute some parts of the current. Note that is in the pw.x units.
 The program will write the output in <ref>file_output</ref> and <ref>file_output</ref>  + &apos;.dat&apos;.
 In the latter file the format of the output is:
 
-   NSTEP t_ps J_x J_y J_z v_cm(1)_x v_cm(1)_y v_cm(1)_z ...
+   NSTEP t_ps J_x J_y J_z Jele_x Jele_y Jele_z v_cm(1)_x v_cm(1)_y v_cm(1)_z ...
 
 where J_x, J_y, J_z are the three components of the DFT energy current,
 and can be easily post-processed by other external programs.
+Jele_* are the components of a part of the energy current that you may use
+for decorrelation and better data analysis.
 v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomic species.
          </info>
       </var>

@@ -107,10 +107,12 @@ NAMELIST: &ENERGY_CURRENT
    Description:    The program will write the output in "file_output" and "file_output"  + '.dat'.
                    In the latter file the format of the output is:
                    
-                      NSTEP t_ps J_x J_y J_z v_cm(1)_x v_cm(1)_y v_cm(1)_z ...
+                      NSTEP t_ps J_x J_y J_z Jele_x Jele_y Jele_z v_cm(1)_x v_cm(1)_y v_cm(1)_z ...
                    
                    where J_x, J_y, J_z are the three components of the DFT energy current,
                    and can be easily post-processed by other external programs.
+                   Jele_* are the components of a part of the energy current that you may use
+                   for decorrelation and better data analysis.
                    v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomic species.
    +--------------------------------------------------------------------
    
@@ -252,4 +254,4 @@ NAMELIST: &ENERGY_CURRENT
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Sat May 09 22:14:56 CEST 2020
+This file has been created by helpdoc utility on Tue May 26 12:09:02 CEST 2020
