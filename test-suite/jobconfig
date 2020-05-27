@@ -178,6 +178,10 @@ inputs_args = ('Fe.scf.in', '2'), ('Fe.hp.in', '4')
 program = HP
 inputs_args = ('LiNiO2.scf.in', '2'), ('LiNiO2.hp.in', '4')
 
+[pp_acf/]
+program = PP
+inputs_args = ('scf_vdw.in', '1'), ('ppacf_fock.in', '2')
+
 [pw_*/]
 program = PW
 
@@ -186,6 +190,9 @@ program = CP
 
 [ph_*/]
 program = PH
+
+[pp_*/]
+program = PP
 
 [epw_*/]
 program = EPW
@@ -197,6 +204,7 @@ program = HP
 pw_all = pw_*?? 
 cp_all = cp_*??
 ph_all = ph_*??
+pp_all = pp_*??
 epw_all = epw_*??
 hp_all = hp_*??
 epw_partial = epw_base epw_trev epw_trev_uspp epw_metal epw_soc epw_super epw_polar epw_pl epw_mob 
