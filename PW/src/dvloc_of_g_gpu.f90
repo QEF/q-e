@@ -200,7 +200,7 @@ END MODULE compute_dvloc_gpu_m
 
 !----------------------------------------------------------------------
 SUBROUTINE dvloc_of_g_gpu( mesh, msh, rab_d, r_d, vloc_at_d, zp, tpiba2, &
-                           ngl, gl_d, omega, dvloc_d, igl0 )
+                           ngl, gl_d, omega, dvloc_d ) !, igl0 )
   !----------------------------------------------------------------------
   !
   ! dvloc = D Vloc (g^2) / D g^2 = (1/2g) * D Vloc(g) / D g
@@ -220,7 +220,7 @@ SUBROUTINE dvloc_of_g_gpu( mesh, msh, rab_d, r_d, vloc_at_d, zp, tpiba2, &
   !
   !    first the dummy variables
   !
-  INTEGER, INTENT(IN) :: mesh, msh, ngl, igl0
+  INTEGER, INTENT(IN) :: mesh, msh, ngl !, igl0
   ! the number of shell of G vectors
   ! max number of mesh points
   ! number of mesh points for radial integration
@@ -252,14 +252,21 @@ SUBROUTINE dvloc_of_g_gpu( mesh, msh, rab_d, r_d, vloc_at_d, zp, tpiba2, &
   TYPE(dim3) :: threads
 #endif
   !
-  INTEGER :: i, igl, blocks
+  REAL(DP) :: gl1
+  INTEGER :: i, igl, blocks, igl0
   !
   ! counter on erf functions or gaussians
   ! counter on g shells vectors
   ! first shell with g != 0
   !
   ! the  G=0 component is not computed
-  IF (igl0==2) dvloc_d(1) = 0.d0
+  gl1 = gl_d(1)
+  IF (gl1 < eps8) THEN
+     dvloc_d(1) = 0.0_DP
+     igl0 = 2
+  ELSE
+     igl0 = 1
+  ENDIF
   !
   ! Pseudopotentials in numerical form (Vloc contains the local part)
   ! In order to perform the Fourier transform, a term erf(r)/r is
@@ -297,17 +304,17 @@ END SUBROUTINE dvloc_of_g_gpu
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE dvloc_coul_gpu( zp, tpiba2, ngl, gl_d, omega, dvloc_d, igl0 )
+SUBROUTINE dvloc_coul_gpu( zp, tpiba2, ngl, gl_d, omega, dvloc_d )
   !----------------------------------------------------------------------
   !! Fourier transform of the Coulomb potential - For all-electron
   !! calculations, in specific cases only, for testing purposes.
   !
   USE kinds
-  USE constants,    ONLY : fpi, e2
+  USE constants,    ONLY : fpi, e2, eps8
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: ngl, igl0
+  INTEGER, INTENT(IN) :: ngl
   ! the number of shell of G vectors
   ! first shell with g != 0
   REAL(DP), INTENT(IN) :: zp, tpiba2, omega
@@ -318,14 +325,21 @@ SUBROUTINE dvloc_coul_gpu( zp, tpiba2, ngl, gl_d, omega, dvloc_d, igl0 )
   ! the moduli of g vectors for each s
   REAL(DP), INTENT(OUT) :: dvloc_d(ngl)
   ! fourier transform: dvloc = D Vloc (g^2) / D g^2 = 4pi e^2/omegai /G^4
-  INTEGER :: j
+  INTEGER :: j, igl0
+  REAL(DP) :: gl1
   !
 #if defined(__CUDA)
   attributes(DEVICE) ::  dvloc_d, gl_d
 #endif
   !
   ! the  G=0 component is 0
-  IF (igl0==2) dvloc_d(1) = 0._DP
+  gl1 = gl_d(1)
+  IF (gl1 < eps8) then
+     dvloc_d(1) = 0.0_DP
+     igl0 = 2
+  ELSE
+     igl0 = 1
+  ENDIF
   !
   !$cuf kernel do(1) <<<*,*>>>
   DO j = igl0, ngl

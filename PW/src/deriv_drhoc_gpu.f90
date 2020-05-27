@@ -78,7 +78,7 @@ END MODULE compute_drhocg_gpu_m
 !
 !----------------------------------------------------------------------------
 SUBROUTINE deriv_drhoc_gpu( ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, &
-                            drhocg_d, igl0 )
+                            drhocg_d )
   !--------------------------------------------------------------------------
   !! Calculates the Fourier transform of \(d\text{Rho}_c/dG\).
   !---cuda kernel version
@@ -94,8 +94,6 @@ SUBROUTINE deriv_drhoc_gpu( ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, 
   !! input: the number of g shell
   INTEGER :: mesh
   !! input: the number of radial mesh points
-  INTEGER, INTENT(IN) :: igl0
-  !! lower limit for loop on ngl
   REAL(DP), INTENT(IN), DEVICE :: gl_d(ngl)
   !! input: the number of G shells
   REAL(DP), INTENT(IN), DEVICE :: r_d(mesh)
@@ -113,10 +111,9 @@ SUBROUTINE deriv_drhoc_gpu( ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, 
   !
   ! ... local variables
   !
-  REAL(DP) :: gx
+  REAL(DP) :: gx, gl1
   ! the modulus of g for a given shell
-  ! the fourier transform
-  INTEGER :: igl, blocks
+  INTEGER :: igl, blocks, igl0
   TYPE(dim3) :: threads
   ! counter on radial mesh points
   ! counter on g shells
@@ -124,7 +121,13 @@ SUBROUTINE deriv_drhoc_gpu( ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, 
   !
   ! G=0 term
   !
-  IF (igl0==2) drhocg_d(1) = 0._DP
+  gl1 = gl_d(1)
+  IF (gl1 < 1.0d-8) THEN
+     drhocg_d(1) = 0.0_DP
+     igl0 = 2
+  ELSE
+     igl0 = 1
+  ENDIF
   !
   ! G <> 0 term
   !
@@ -142,7 +145,7 @@ END SUBROUTINE deriv_drhoc_gpu
 !
 !
 SUBROUTINE deriv_drhoc_gpu( ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, &
-                            drhocg_d, igl0 )
+                            drhocg_d )
   !--------------------------------------------------------------------------
   !! Calculates the Fourier transform of \(d\text{Rho}_c/dG\).
   !---cuf kernel loop version---
@@ -162,8 +165,6 @@ SUBROUTINE deriv_drhoc_gpu( ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, 
   !! input: the number of g shell
   INTEGER :: mesh
   !! input: the number of radial mesh points
-  INTEGER, INTENT(IN) :: igl0
-  !! lower limit for loop on ngl
   REAL(DP), INTENT(IN) :: gl_d(ngl)
   !! input: the number of G shells
   REAL(DP), INTENT(IN) :: r_d(mesh)
@@ -181,15 +182,13 @@ SUBROUTINE deriv_drhoc_gpu( ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, 
   !
   ! ... local variables
   !
-  REAL(DP) :: gx
+  REAL(DP) :: gx, gl1
   ! the modulus of g for a given shell
-  ! the fourier transform
   REAL(DP), ALLOCATABLE :: aux_d(:,:)
   ! auxiliary memory for integration
-  INTEGER :: ir, igl
+  INTEGER :: ir, igl, igl0
   ! counter on radial mesh points
   ! counter on g shells
-  ! 
   !
 #if defined(__CUDA)
   attributes(DEVICE) :: gl_d, r_d, rab_d, rhoc_d, drhocg_d, aux_d
@@ -197,7 +196,13 @@ SUBROUTINE deriv_drhoc_gpu( ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, 
   !
   ! G=0 term
   !
-  IF (igl0==2) drhocg_d(1) = 0._DP
+  gl1 = gl_d(1)
+  IF (gl1 < 1.0d-8) THEN
+     drhocg_d(1) = 0.0_DP
+     igl0 = 2
+  ELSE
+     igl0 = 1
+  ENDIF
   !
   ! G <> 0 term
   !

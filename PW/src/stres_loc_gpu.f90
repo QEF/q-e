@@ -48,7 +48,7 @@ SUBROUTINE stres_loc_gpu( sigmaloc )
   REAL(DP) :: evloc_d, zp_d
   REAL(DP) :: spart, sigma11, sigma21, sigma22, sigma31, sigma32, sigma33
   !
-  INTEGER :: mshd, igl0
+  INTEGER :: mshd
   !
   INTEGER,  POINTER :: nl_d(:)
   REAL(DP), POINTER :: rab_d(:), r_d(:), vloc_d(:,:), dvloc_d(:), &
@@ -128,17 +128,13 @@ SUBROUTINE stres_loc_gpu( sigmaloc )
            !
            ! special case: GTH pseudopotential
            !
-           igl0 = 1
-           IF (gl(1) < 1.0E-8_DP) igl0 = 2
-           CALL dvloc_gth_gpu( nt, upf(nt)%zp, tpiba2, ngl, gl_d, omega, dvloc_d, igl0 )
+           CALL dvloc_gth_gpu( nt, upf(nt)%zp, tpiba2, ngl, gl_d, omega, dvloc_d )
            !
         ELSE
            !
            ! special case: pseudopotential is coulomb 1/r potential
            !
-           igl0 = 1
-           IF (gl(1) < 1.0E-8_DP) igl0 = 2
-           CALL dvloc_coul_gpu( upf(nt)%zp, tpiba2, ngl, gl_d, omega, dvloc_d, igl0 )
+           CALL dvloc_coul_gpu( upf(nt)%zp, tpiba2, ngl, gl_d, omega, dvloc_d )
            !
         ENDIF
      ELSE
@@ -151,11 +147,9 @@ SUBROUTINE stres_loc_gpu( sigmaloc )
         upfvloc_d(1:msh(nt)) = upf(nt)%vloc(1:msh(nt))
         zp_d                 = upf(nt)%zp
         !
-        igl0 = 1
-        IF (gl(1) < 1.0E-8_DP) igl0 = 2
         CALL dvloc_of_g_gpu( rgrid(nt)%mesh, msh(nt), rab_d(1:rgrid(nt)%mesh),   &
                              r_d(1:rgrid(nt)%mesh), upfvloc_d(1:rgrid(nt)%mesh), &
-                             zp_d, tpiba2, ngl, gl_d, omega, dvloc_d, igl0 )
+                             zp_d, tpiba2, ngl, gl_d, omega, dvloc_d )
      ENDIF
      !
      sigma11 = 0._DP ; sigma21 = 0._DP ; sigma22 = 0._DP
