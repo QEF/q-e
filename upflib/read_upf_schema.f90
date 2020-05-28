@@ -32,7 +32,7 @@ SUBROUTINE read_upf_schema(pseudo, upf, ierr )   !
    !! If ierr argument is present in case of error an error code is returned the caller, 
    !! the program is aborted with an error message. 
    !
-   USE pseudo_types, ONLY: nullify_pseudo_upf, deallocate_pseudo_upf
+   USE pseudo_types, ONLY: deallocate_pseudo_upf
    IMPLICIT NONE
    TYPE(Node), POINTER, INTENT(IN)   :: pseudo   
    !! pointer to root node
@@ -773,8 +773,6 @@ SUBROUTINE read_upf_gipaw(u, upf)
          upf%gipaw_ncore_orbitals = 0 
          DEALLOCATE ( upf%gipaw_core_orbital_n, upf%gipaw_core_orbital_el, upf%gipaw_core_orbital_l, &
                       upf%gipaw_core_orbital )
-         NULLIFY   ( upf%gipaw_core_orbital_n, upf%gipaw_core_orbital_el, upf%gipaw_core_orbital_l, &
-                     upf%gipaw_core_orbital )
          RETURN 
       END IF
       ALLOCATE ( upf%gipaw_wfs_el(upf%gipaw_wfs_nchannels) )

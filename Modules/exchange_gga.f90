@@ -98,13 +98,15 @@ END SUBROUTINE ggax
 SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVICE>
   !---------------------------------------------------------------
   !! PBE exchange (without Slater exchange):
-  !! iflag=1  J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996);
-  !! iflag=2  "revised' PBE: Y. Zhang et al., PRL 80, 890 (1998);
-  !! iflag=3  PBEsol: J.P.Perdew et al., PRL 100, 136406 (2008);
-  !! iflag=4  PBEQ2D: L. Chiodo et al., PRL 108, 126402 (2012);
-  !! iflag=5  optB88: Klimes et al., J. Phys. Cond. Matter, 22, 022201 (2010);
-  !! iflag=6  optB86b: Klimes et al., Phys. Rev. B 83, 195131 (2011);
-  !! iflag=7  ev: Engel and Vosko, PRB 47, 13164 (1991).
+  !! iflag=1  J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)
+  !! iflag=2  "revised' PBE: Y. Zhang et al., PRL 80, 890 (1998)
+  !! iflag=3  PBEsol: J.P.Perdew et al., PRL 100, 136406 (2008)
+  !! iflag=4  PBEQ2D: L. Chiodo et al., PRL 108, 126402 (2012)
+  !! iflag=5  optB88: Klimes et al., J. Phys. Cond. Matter, 22, 022201 (2010)
+  !! iflag=6  optB86b: Klimes et al., Phys. Rev. B 83, 195131 (2011)
+  !! iflag=7  ev: Engel and Vosko, PRB 47, 13164 (1991)
+  !! iflag=8  RPBE: B. Hammer, et al., Phys. Rev. B 59, 7413 (1999)
+  !! iflag=9  W31X: D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
   !
   USE kinds,      ONLY : DP
   !
@@ -134,16 +136,19 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
   REAL(DP), PARAMETER :: pi=3.14159265358979323846d0
   REAL(DP), PARAMETER :: third=1._DP/3._DP, c1=0.75_DP/pi,        &
                          c2=3.093667726280136_DP, c5=4._DP*third, &
-                         c6=c2*2.51984210_DP, c7=5._DP/6._DP, c8=0.8_DP
+                         c6=c2*2.51984210_DP, c7=0.8_DP
                          ! (3pi^2)^(1/3)*2^(4/3)
   ! parameters of the functional
-  REAL(DP) :: k(6), mu(6), ev(6)
-  !           pbe        rpbe        pbesol   pbeq2d      optB88  optB86b
-  DATA k  / 0.804_DP,   1.2450_DP,   0.804_DP , 0.804_DP,  0.0_DP,  0.0_DP/,      &
+  REAL(DP) :: k(9), mu(9), ev(6)
+  !         pbe         revpbe       pbesol     pbeq2d     optB88   optB86b
+  !         ev          rpbe         W31x
+  DATA k  / 0.804_DP,   1.2450_DP,   0.804_DP , 0.804_DP,  1.2_DP,  0.0_DP,       &
+            0.000_DP,   0.8040_DP,   1.10_DP /,                                   &
        mu / 0.2195149727645171_DP, 0.2195149727645171_DP, 0.12345679012345679_DP, &
-            0.12345679012345679_DP,  0.22_DP, 0.1234_DP/,                         &
+            0.12345679012345679_DP, 0.22_DP, 0.1234_DP, 0.000_DP,                 &
+            0.2195149727645171_DP, 0.12345679012345679_DP /,                      &
        ev / 1.647127_DP, 0.980118_DP, 0.017399_DP, 1.523671_DP, 0.367229_DP,      &
-                                   0.011282_DP /  ! a and b parameters of Engel and Vosko
+            0.011282_DP /  ! a and b parameters of Engel and Vosko
   !
   SELECT CASE( iflag )
   CASE( 4 )
@@ -184,13 +189,13 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
      v2x = exunif * dfx * dsg / agrho
      sx  = sx_s * rho
      !
-  CASE( 5 )
+  CASE( 5, 9 )
      !
      agrho = SQRT(grho)
      kf = c2 * rho**third
      dsg = 0.5_DP / kf
      s1 = agrho * dsg / rho
-     ab = mu(iflag)*c7 ! mu/ab=1.2
+     ab = mu(iflag) / k(iflag)
      p = s1*c6
      c = LOG(p + SQRT(p*p+1)) ! asinh(p)
      dfx1 = 1 + ab*s1*c
@@ -215,14 +220,14 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
      dsg = 0.5_DP / kf
      s1 = agrho * dsg / rho
      p = mu(iflag)*s1*s1
-     fx =  p / ( 1._DP + p )**c8
+     fx =  p / ( 1._DP + p )**c7
      !
      exunif = - c1 * kf
      sx_s = exunif * fx
      !
      dxunif = exunif * third
      !
-     dfx = 2*mu(iflag)*s1*fx*(1+(1-c8)*p)/(p*(1+p))
+     dfx = 2*mu(iflag)*s1*fx*(1+(1-c7)*p)/(p*(1+p))
      ds = - c5 * s1
      !
      v1x = sx_s + dxunif * fx + exunif * dfx * ds
@@ -250,6 +255,29 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
      dfx  =  ev(1) + 2*ev(2)*s2 + 3*ev(3)*s
      dfx1 =  ev(4) + 2*ev(5)*s2 + 3*ev(6)*s
      dfx  = 2 * s1 * ( dfx - f1*dfx1/f2 ) / f2
+     !
+     v1x = sx_s + dxunif * fx + exunif * dfx * ds
+     v2x = exunif * dfx * dsg / agrho
+     sx  = sx_s * rho
+     !
+  CASE(8)
+     !
+     agrho = SQRT(grho)
+     kf = c2 * rho**third
+     dsg = 0.5_DP / kf
+     s1 = agrho * dsg / rho
+     s2 = s1 * s1
+     f1 = exp( - mu(iflag) * s2 / k(iflag) )
+     f2 = 1._DP - f1
+     fx = k(iflag) * f2
+     !
+     exunif = - c1 * kf
+     sx_s = exunif * fx
+     !
+     dxunif = exunif * third
+     ds = - c5 * s1
+     !
+     dfx = 2._DP * mu(iflag) * s1 * exp( - mu(iflag) * s2 / k(iflag) )
      !
      v1x = sx_s + dxunif * fx + exunif * dfx * ds
      v2x = exunif * dfx * dsg / agrho
@@ -1043,6 +1071,7 @@ SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
   !! iflag=1: A. D. Becke, J. Chem. Phys. 85, 7184 (1986) (B86b)
   !! iflag=2: J. Klimes, Phys. Rev. B 83, 195131 (2011). (OptB86b)
   !! iflag=3: I. Hamada, Phys. Rev. B 89, 121103(R) (B86R)
+  !! iflag=4: D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
   !
   !! Ikutaro Hamada - HAMADA.Ikutaro@nims.go.jp
   !! National Institute for Materials Science
@@ -1071,9 +1100,9 @@ SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
   REAL(DP), PARAMETER :: third=1._DP/3._DP, c1=0.75_DP/pi, &
                          c2=3.093667726280136_DP, c5=4._DP*third
   ! parameters of the functional
-  REAL(DP) :: k(3), mu(3)
-  DATA k / 0.5757_DP, 1.0000_DP, 0.711357_DP/, &
-       mu/ 0.2449_DP, 0.1234_DP, 0.1234_DP  /
+  REAL(DP) :: k(4), mu(4)
+  DATA k / 0.5757_DP, 1.0000_DP, 0.711357_DP, 0.58_DP /, &
+       mu/ 0.2449_DP, 0.1234_DP, 0.1234_DP, 0.12345679012345679_DP /
   !
   agrho = SQRT(grho)
   kf = c2 * rho**third

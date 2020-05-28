@@ -176,7 +176,7 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
            IF ( ityp(na) == nt ) nab = nab + 1
         ENDDO
         !
-        CALL dev_buf%lock_buffer(aux1_d, [ngm_l, na, 3], ierr )
+        CALL dev_buf%lock_buffer(aux1_d, [ngm_l, nab, 3], ierr )
         IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', -1 )
         !
         CALL dev_buf%lock_buffer( ddeeq_d, [nij, nab, 3, nspin_mag],ierr )

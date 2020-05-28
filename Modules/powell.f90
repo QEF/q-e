@@ -12,6 +12,9 @@
 ! which is released under LGPL, hence I guess everything is LGPL, 
 ! but it is not made explicit by the author.
 !
+! Author gave permission by email, see merge request 845
+! https://gitlab.com/QEF/q-e/-/merge_requests/845
+!
 MODULE POWELL
   USE kinds, ONLY : DP
 
@@ -67,7 +70,7 @@ SUBROUTINE POWELL_MIN(FUNC,P,XI,N,NP,FTOL,ITER,FRET)
 !------------------------------------------------------------
   IMPLICIT NONE  !REAL*8 A-H,O-Z
   ! NMAX: number of degrees of freedom
-  INTEGER,PARAMETER :: NMAX=20,ITMAX=2000
+  INTEGER,PARAMETER :: NMAX=20,ITMAX=20000
   REAL(DP) :: P(NP),XI(NP,NP), FTOL, FRET
   INTEGER :: N,NP,ITER
   REAL(DP),EXTERNAL :: FUNC
@@ -261,7 +264,7 @@ REAL(DP) FUNCTION BRENT(FUNC,AX,BX,CX,TOL,XMIN)
 !-------------------------------------------------------------------
 IMPLICIT NONE !REAL*8 A-H,O-Z
 REAL(DP),EXTERNAL :: FUNC
-INTEGER,PARAMETER :: ITMAX=10000
+INTEGER,PARAMETER :: ITMAX=100000
 REAL(DP) :: CGOLD=.3819660,ZEPS=1.D-10
 !Maximum allowed number of iterations; golden ration; and a small
 !number which protects against trying to achieve fractional accuracy

@@ -1,0 +1,21 @@
+ &input
+    asr = 'crystal'
+    amass(1) = 12.01078
+    flfrc = 'diam.ifc'
+    flvec = 'diam.modes2'
+    flfrq = ''
+    q_in_band_form = .false.
+    q_in_cryst_coord = .false.
+
+    loto_disable = .true.
+ /
+     8
+   0.0   0.0   0.0
+   0.5  -0.5   0.5
+  -0.5  -0.5  -0.5
+   0.0  -1.0   0.0
+   0.5   0.5  -0.5
+   1.0   0.0   0.0
+   0.0   0.0  -1.0
+   0.5  -0.5  -0.5
+

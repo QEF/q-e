@@ -46,6 +46,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   ! YAMBO >
   USE YAMBO,           ONLY : elph_yambo,yambo_elph_file_name,dvscf_yambo
   ! YAMBO <
+  USE ahc,             ONLY : elph_ahc
   !
   IMPLICIT NONE
   !
@@ -173,7 +174,15 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
         !
         !
      END IF
-     ! 
+     !
+  ENDIF
+  !
+  ! If elph_ahc, disable epsil calculation
+  !
+  IF (elph_ahc) THEN
+     epsil = .FALSE.
+     zeu = .FALSE.
+     zue = .FALSE.
   ENDIF
   !
   !  Save the current status of the run: all the flags, the list of q,

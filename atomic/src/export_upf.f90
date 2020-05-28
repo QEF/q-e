@@ -27,7 +27,7 @@ SUBROUTINE export_upf(filename, unit_loc)
   use global_version, only: version_number
   !
   use pseudo_types, only : pseudo_upf, pseudo_config, &
-       nullify_pseudo_upf, deallocate_pseudo_upf, deallocate_pseudo_config
+       deallocate_pseudo_upf, deallocate_pseudo_config
   use write_upf_module, only: write_upf
   !
   implicit none
@@ -46,8 +46,6 @@ SUBROUTINE export_upf(filename, unit_loc)
   CHARACTER(len=9) :: day, hour
 
   call date_and_tim(day,hour)
-  !
-  CALL nullify_pseudo_upf( upf )
   !
   IF (iswitch < 4 ) THEN
      upf%generated='Generated using "atomic" code by A. Dal Corso &
@@ -114,8 +112,8 @@ SUBROUTINE export_upf(filename, unit_loc)
   upf%zmesh = grid%zmesh
   upf%rmax  = grid%rmax
   !
-  upf%r   => grid%r
-  upf%rab => grid%rab
+  upf%r     = grid%r
+  upf%rab   = grid%rab
   !
   ! when possible, write semilocal PP's in the UPF file - may be
   ! useful if one wants to use PPs in the UPF format in other codes

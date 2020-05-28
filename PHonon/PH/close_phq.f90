@@ -13,13 +13,14 @@ SUBROUTINE close_phq( flag )
   ! ... Called at the end of the run with flag=.TRUE. (removes 'recover')
   ! ... or during execution with flag=.FALSE. (does not remove 'recover')
   !
+  USE mp_pools,      ONLY : me_pool, root_pool
   USE paw_variables, ONLY : okpaw
   USE io_global,     ONLY : ionode, stdout
   USE buffers,       ONLY : close_buffer
   USE uspp,          ONLY : okvan
   USE units_ph,      ONLY : iudwf, iubar, iudrhous, iuebar, iudrho, &
                             iudvscf, iucom, iudvkb3, iuint3paw, iudyn, &
-                            iundnsscf
+                            iundnsscf, iudvpsi, iugauge
   USE units_lr,      ONLY : iuwfc, iuatwfc, iuatswfc
   USE control_ph,    ONLY : zue, epsil, only_wfc
   USE recover_mod,   ONLY : clean_recover
@@ -28,6 +29,7 @@ SUBROUTINE close_phq( flag )
   USE el_phon,       ONLY : elph_mat,iunwfcwann
   USE ldaU,          ONLY : lda_plus_u
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, dvscf_interpol_close
+  USE ahc,           ONLY : elph_ahc
   !
   IMPLICIT NONE
   !
@@ -114,6 +116,15 @@ SUBROUTINE close_phq( flag )
   !
   IF (flag .AND. ldvscf_interpolate) THEN
     CALL dvscf_interpol_close()
+  ENDIF
+  !
+  ! AHC e-ph
+  !
+  IF (elph_ahc) THEN
+    CALL close_buffer(iudvpsi, 'DELETE')
+    IF (me_pool == root_pool) THEN
+      CLOSE(UNIT=iugauge, STATUS='KEEP')
+    ENDIF
   ENDIF
   !
   RETURN

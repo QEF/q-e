@@ -120,7 +120,7 @@ subroutine write_rrkj (iunps)
   integer :: nb, mb, & ! counters on beta functions
              ios,    & ! I/O control
              ir        ! counter on mesh points
-  integer :: iexch, icorr, igcx, igcc, inlc
+  integer :: iexch, icorr, igcx, igcc
   logical :: nonlocc
   !
   !
@@ -140,7 +140,7 @@ subroutine write_rrkj (iunps)
   icorr = get_icorr()
   igcx  = get_igcx()
   igcc  = get_igcc()
-  inlc  = 0
+
   write( iunps, '(4i5)',err=100, iostat=ios ) iexch, icorr, igcx, igcc
 
   write( iunps, '(2e17.11,i5)') zval, etots, lmax

@@ -27,14 +27,13 @@ SUBROUTINE stres_loc_gpu( sigmaloc )
   USE uspp_param,           ONLY : upf
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
-  USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_stres_evloc_gpu, &
-                                   cutoff_stres_sigmaloc_gpu
+  USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_stres_evloc_gpu, cutoff_stres_sigmaloc_gpu
   !
   USE wavefunctions_gpum,   ONLY : using_psic, using_psic_d, psic_d
   USE gbuffers ,            ONLY : dev_buf
   USE device_util_m,        ONLY : dev_memcpy
   !
-  IMPLICIT NONE
+  implicit none
   !
   REAL(DP) :: sigmaloc(3,3)
   REAL(DP) :: evloc, fact
@@ -122,21 +121,18 @@ SUBROUTINE stres_loc_gpu( sigmaloc )
   !      WRITE( 6,*) ' evloc ', evloc, evloc*omega   ! DEBUG
   !
   DO nt = 1, ntyp
-     !
-     IF ( .NOT. ASSOCIATED ( upf(nt)%vloc ) ) THEN
-        IF ( upf(nt)%is_gth ) THEN
-           !
-           ! special case: GTH pseudopotential
-           !
-           CALL dvloc_gth_gpu( nt, upf(nt)%zp, tpiba2, ngl, gl_d, omega, dvloc_d )
-           !
-        ELSE
-           !
-           ! special case: pseudopotential is coulomb 1/r potential
-           !
-           CALL dvloc_coul_gpu( upf(nt)%zp, tpiba2, ngl, gl_d, omega, dvloc_d )
-           !
-        ENDIF
+     IF ( upf(nt)%is_gth ) THEN
+        !
+        ! special case: GTH pseudopotential
+        !
+        CALL dvloc_gth_gpu( nt, upf(nt)%zp, tpiba2, ngl, gl_d, omega, dvloc_d )
+        !
+     ELSE IF ( upf(nt)%tcoulombp ) THEN
+        !
+        ! special case: pseudopotential is coulomb 1/r potential
+        !
+        CALL dvloc_coul_gpu( upf(nt)%zp, tpiba2, ngl, gl_d, omega, dvloc_d )
+        !
      ELSE
         !
         ! normal case: dvloc contains dV_loc(G)/dG
@@ -150,7 +146,8 @@ SUBROUTINE stres_loc_gpu( sigmaloc )
         CALL dvloc_of_g_gpu( rgrid(nt)%mesh, msh(nt), rab_d(1:rgrid(nt)%mesh),   &
                              r_d(1:rgrid(nt)%mesh), upfvloc_d(1:rgrid(nt)%mesh), &
                              zp_d, tpiba2, ngl, gl_d, omega, dvloc_d )
-     ENDIF
+        !
+     END IF
      !
      sigma11 = 0._DP ; sigma21 = 0._DP ; sigma22 = 0._DP
      sigma31 = 0._DP ; sigma32 = 0._DP ; sigma33 = 0._DP
@@ -176,26 +173,22 @@ SUBROUTINE stres_loc_gpu( sigmaloc )
      !
   ENDDO
   !
+  IF (do_cutoff_2D) CALL cutoff_stres_sigmaloc_gpu( psic_d, strf_d, sigmaloc ) ! 2D: re-add LR Vloc to sigma here
   !
-  IF (do_cutoff_2D) CALL cutoff_stres_sigmaloc_gpu( psic_d, strf_d, sigmaloc )
-  ! 2D: re-add LR Vloc to sigma here
+  do l = 1, 3
+     sigmaloc (l, l) = sigmaloc (l, l) + evloc
+     do m = 1, l - 1
+        sigmaloc (m, l) = sigmaloc (l, m)
+     enddo
+  enddo
+  !
+  call mp_sum(  sigmaloc, intra_bgrp_comm )
   !
   CALL dev_buf%release_buffer( strf_d, ierrs(1) )
   CALL dev_buf%release_buffer( dvloc_d, ierrs(2) )
   CALL dev_buf%release_buffer( rab_d, ierrs(3) )
   CALL dev_buf%release_buffer( r_d, ierrs(4) )
   CALL dev_buf%release_buffer( upfvloc_d, ierrs(5) )
-  !
-  !
-  DO l = 1, 3
-     sigmaloc(l,l) = sigmaloc(l,l) + evloc
-     DO m = 1, l-1
-        sigmaloc(m,l) = sigmaloc(l,m)
-     ENDDO
-  ENDDO
-  !
-  CALL mp_sum( sigmaloc, intra_bgrp_comm )
-  !
   !
   RETURN
   !

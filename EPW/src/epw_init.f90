@@ -20,7 +20,7 @@
   !
   USE kinds,            ONLY : DP
   USE ions_base,        ONLY : nat, ntyp => nsp, tau
-  USE becmod,           ONLY : calbec, becp, allocate_bec_type
+  USE becmod,           ONLY : allocate_bec_type
   USE lrus,             ONLY : becp1
   USE uspp,             ONLY : vkb, nlcc_any, okvan, nkb
   USE pwcom,            ONLY : npwx, nbnd, nks
@@ -53,9 +53,12 @@
   USE fft_base,         ONLY : dfftp
   USE fft_interfaces,   ONLY : fwfft
   USE mp_images,        ONLY : nproc_image, me_image
-  !Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  ! --------------------------------------------------------------------------------
+  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  ! Shell implementation for future use.
   USE epwcom,           ONLY : polaron_wf
   USE grid,             ONLY : loadqmesh_serial, loadkmesh_para
+  ! --------------------------------------------------------------------------------
   !
   IMPLICIT NONE
   !
@@ -138,7 +141,6 @@
         CALL allocate_bec_type(nkb, nbnd, alphap(ipol,ik))
       ENDDO
     ENDDO
-    CALL allocate_bec_type(nkb, nbnd, becp)
   ENDIF
   !
   DO na = 1, nat
@@ -223,7 +225,7 @@
       !
 #else
       !
-      ig_s = 1      
+      ig_s = 1
       ig_e = ngm
       !
 #endif
@@ -235,13 +237,16 @@
     CALL dvanqq2()
   ENDIF
   !
+  ! ------------------------------------------------------------------------------- 
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
-!  if ( polaron_wf ) then
-!     CALL loadqmesh_serial
-!     CALL loadkmesh_para
-!     call KSstate_extract ( )
-!     stop
-!  endif
+  ! Shell implementation for future use. 
+  ! IF (polaron_wf) then
+  !   CALL loadqmesh_serial
+  !    CALL loadkmesh_para
+  !    CALL KSstate_extract()
+  !   STOP
+  ! ENDIF
+  ! -------------------------------------------------------------------------------
   !
   CALL stop_clock('epw_init')
   !

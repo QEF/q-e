@@ -80,6 +80,12 @@ run-tests-hp-serial : prolog pseudo
 run-tests-hp-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=hp_all
 
+run-tests-pp-serial : prolog pseudo
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pp_all
+
+run-tests-pp-parallel : prolog pseudo
+	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pp_all
+
 run-travis : clean prolog pseudo
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_base
 
@@ -128,19 +134,11 @@ compare-epw : prolog
 
 clean:
 # output files
-	@for x in `find pw_* -name "test*"`; do rm -rf $$x; done
-	@for x in `find ph_* -name "test*"`; do rm -rf $$x; done
-	@for x in `find cp_* -name "test*"`; do rm -rf $$x; done
-	@for x in `find hp_* -name "test*"`; do rm -rf $$x; done
-	@for x in `find epw_* -name "test*"`; do rm -rf $$x; done
+	@rm -rf pw_*/test* ph_*/test* cp_*/test* hp_*/test* pp_*/test* epw_*/test*
 # error files
-	@for x in `find pw_* -name "CRASH"`; do rm -rf $$x; done
-	@for x in `find ph_* -name "CRASH*"`; do rm -rf $$x; done
-	@for x in `find cp_* -name "CRASH"`; do rm -rf $$x; done
-	@for x in `find hp_* -name "CRASH"`; do rm -rf $$x; done
-	@for x in `find epw_* -name "CRASH"`; do rm -rf $$x; done
+	@rm -rf pw_*/CRASH ph_*/CRASH* cp_*/CRASH hp_*/CRASH pp_*/CRASH epw_*/CRASH
 # pwscf data files
-	@rm -rf pw_*/pwscf.* ph_*/pwscf.* epw_*/pwscf.*
+	@rm -rf pw_*/pwscf.* ph_*/pwscf.* pp_*/pwscf.* epw_*/pwscf.*
 # cp data files
 	@rm -rf cp_si/si_*.* cp_o2/o2_*.* cp_h2o/h2o_*.* cp_sio2/sio2_*.*
 	@rm -rf cp_si/si.??? cp_o2/o2.??? cp_h2o/h2o.??? cp_sio2/sio2.???
@@ -158,6 +156,9 @@ clean:
 	        ph_U_metal_us/iron.* ph_U_insulator_us/bn.* ph_U_metal_paw/nickel.* ph_U_insulator_paw/bn.*
 # Special case for PH dvscf_q2r
 	@rm -rf ph_interpol*/w_pot/ ph_interpol*/*.dyn*.elph.* ph_interpol*/*.wfc* ph_interpol*/*.dyn.freq
+# Special case for PH ahc
+	@rm -rf ph_ahc*/wpot*/ ph_ahc*/selfen_*.dat ph_ahc*/diam.modes? ph_ahc*/*.ifc ph_ahc*/ahc_dir* \
+	  ph_ahc*/*.wfc*
 # Cleaning HP final files
 	@rm -rf hp_*/HP hp_*/*hub* hp_*/*.xml hp_*/*.wfc* hp_*/*.save hp_*/*Hubbard_parameters* \
 		hp_*/*HubbardV* hp_*/*mix* hp_*/*parameters.out

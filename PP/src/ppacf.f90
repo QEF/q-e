@@ -224,7 +224,11 @@ PROGRAM do_ppacf
   IF (code_num == 1) THEN
      !
      tmp_dir = TRIM(outdir) 
-     CALL read_file_new ( needwf )
+     IF ( lfock .OR. (lplot.AND.ltks) ) THEN
+        CALL read_file ( )
+     ELSE
+        CALL read_file_new ( needwf )
+     ENDIF
      !
      ! Check exchange correlation functional
      iexch = get_iexch()

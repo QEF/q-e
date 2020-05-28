@@ -355,7 +355,7 @@ END SUBROUTINE cutoff_force_lc
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE cutoff_stres_evloc( psic_G, evloc )
+SUBROUTINE cutoff_stres_evloc( psic_G, strf, evloc )
   !----------------------------------------------------------------------
   !! This subroutine adds the contribution from the cutoff long-range part
   !! of the local part of the ionic potential to \(\text{evloc}\).  
@@ -367,7 +367,6 @@ SUBROUTINE cutoff_stres_evloc( psic_G, evloc )
   !
   USE kinds
   USE ions_base,  ONLY : ntyp => nsp
-  USE vlocal,     ONLY : strf
   USE gvect,      ONLY : ngm , gstart
   USE io_global,  ONLY : stdout
   USE fft_base,   ONLY : dfftp
@@ -376,6 +375,8 @@ SUBROUTINE cutoff_stres_evloc( psic_G, evloc )
   !
   COMPLEX(DP), INTENT(IN) :: psic_G(dfftp%nnr)
   !! charge density in G space
+  COMPLEX(DP), INTENT(IN) :: strf(ngm,ntyp)
+  !! the structure factor
   REAL(DP), INTENT(INOUT) :: evloc
   !! the energy of the electrons in the local ionic potential
   !
@@ -450,7 +451,7 @@ END SUBROUTINE cutoff_stres_evloc_gpu
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE cutoff_stres_sigmaloc( psic_G, sigmaloc )
+SUBROUTINE cutoff_stres_sigmaloc( psic_G, strf, sigmaloc )
   !----------------------------------------------------------------------
   !! This subroutine adds the contribution from the cutoff long-range part 
   !! of the local part of the ionic potential to the rest of the 
@@ -458,7 +459,6 @@ SUBROUTINE cutoff_stres_sigmaloc( psic_G, sigmaloc )
   !
   USE kinds
   USE ions_base,   ONLY : ntyp => nsp
-  USE vlocal,      ONLY : strf
   USE constants,   ONLY : eps8
   USE gvect,       ONLY : ngm, g, gg, gstart
   USE cell_base,   ONLY : tpiba, tpiba2, alat, omega
@@ -469,6 +469,8 @@ SUBROUTINE cutoff_stres_sigmaloc( psic_G, sigmaloc )
   !
   COMPLEX(DP), INTENT(IN) :: psic_G(dfftp%nnr)
   !! charge density in G space
+  COMPLEX(DP), INTENT(IN) :: strf(ngm,ntyp)
+  !! the structure factor
   REAL(DP), INTENT(INOUT) :: sigmaloc(3,3)
   !! stress contribution for the local ionic potential
   !

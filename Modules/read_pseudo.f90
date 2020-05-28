@@ -44,12 +44,13 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   USE mp,           ONLY: mp_bcast, mp_sum
   USE mp_images,    ONLY: intra_image_comm
   USE io_global,    ONLY: stdout, ionode, ionode_id
-  USE pseudo_types, ONLY: pseudo_upf, nullify_pseudo_upf, deallocate_pseudo_upf
+  USE pseudo_types, ONLY: pseudo_upf, deallocate_pseudo_upf
   USE funct,        ONLY: enforce_input_dft, set_dft_from_name, &
        get_iexch, get_icorr, get_igcx, get_igcc, get_inlc
   use radial_grids, ONLY: deallocate_radial_grid, nullify_radial_grid
   USE wrappers,     ONLY: md5_from_file, f_remove
-  USE upf_module,   ONLY: read_upf
+  USE read_upf_v1_module,   ONLY: read_upf_v1
+  USE upf_module,   ONLY: read_upf_new
   USE upf_auxtools, ONLY: upf_get_pp_format, upf_check_atwfc_norm
   USE emend_upf_module, ONLY: make_emended_upf_copy
   USE upf_to_internal,  ONLY: add_upf_grid, set_upf_q
@@ -78,18 +79,11 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   IF( ALLOCATED( upf ) ) THEN
      DO nt = 1, SIZE( upf )
         CALL deallocate_pseudo_upf( upf( nt ) )
-        CALL nullify_pseudo_upf( upf( nt ) )
      END DO
      DEALLOCATE( upf )
   END IF
   !
   ALLOCATE ( upf( ntyp ) )
-  !
-  !  nullify upf objects as soon as they are instantiated
-  !
-  do nt = 1, ntyp 
-     CALL nullify_pseudo_upf( upf( nt ) )
-  end do
   !
   IF ( PRESENT(printout) ) THEN
      printout_ = printout .AND. ionode
@@ -132,7 +126,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !
      IF ( ionode ) THEN
         isupf = 0
-        CALL  read_upf(upf(nt), isupf, filename = file_pseudo )
+        CALL  read_upf_new( file_pseudo, upf(nt), isupf )
         !
         !! start reading - check  first if files are readable as xml files,
         !! then as UPF v.2, then as UPF v.1
@@ -148,19 +142,18 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
            !
            IF (is_xml) THEN
               !
-              CALL  read_upf(upf(nt), isupf, filename = TRIM(file_fixed) )
-             !! try again to read from the corrected file 
-             WRITE ( msg, '(A)') 'Pseudo file '// trim(psfile(nt)) // ' has been fixed on the fly.' &
+              CALL  read_upf_new( file_fixed, upf(nt), isupf )
+              !! try again to read from the corrected file
+              WRITE ( msg, '(A)') 'Pseudo file '// trim(psfile(nt)) // ' has been fixed on the fly.' &
             &    // new_line('a') // '     To avoid this message in the future, permanently fix ' &
             &    // new_line('a') // '     your pseudo files following these instructions: ' &
             &    // new_line('a') // '     https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md'
-             CALL infomsg('read_upf:', trim(msg) )    
+             CALL infomsg('read_upf', trim(msg) )
            ELSE
               !
-              OPEN ( UNIT = iunps, FILE = file_pseudo, STATUS = 'old', FORM = 'formatted' ) 
-              CALL  read_upf(upf(nt), isupf, UNIT = iunps )
+              CALL  read_upf_v1 (file_pseudo, upf(nt), isupf )
               !! try to read UPF v.1 file
-              CLOSE (iunps)
+              IF ( isupf == 0 ) isupf = -1
               !
            END IF
            !
@@ -484,7 +477,6 @@ SUBROUTINE upf_bcast(upf, ionode, ionode_id, comm)
               ALLOCATE( upf%qfcoef( upf%nqf, upf%nqlc, &
                    upf%nbeta, upf%nbeta ) )
            END IF
-     print *, size(upf%qfcoef,1),size(upf%qfcoef,2),size(upf%qfcoef,3),size(upf%qfcoef,4)
         END IF
      ENDIF
      CALL mp_bcast (upf%qqq   , ionode_id, comm )

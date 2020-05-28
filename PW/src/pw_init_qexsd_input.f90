@@ -67,7 +67,7 @@
   USE constants,         ONLY:   e2,bohr_radius_angs
   USE ions_base,         ONLY:   iob_tau=>tau
   USE cell_base,         ONLY:   cb_at => at, cb_alat => alat, cb_iforceh => iforceh
-  USE funct,             ONLY:   get_dft_is_hybrid => dft_is_hybrid, get_inlc,        &
+  USE funct,             ONLY:   get_dft_is_hybrid => dft_is_hybrid, &
                                  get_dft_is_nonlocc => dft_is_nonlocc, get_nonlocc_name, get_dft_short
   USE uspp_param,        ONLY:   upf
   USE control_flags,     ONLY:   cf_nstep => nstep 
@@ -85,7 +85,7 @@
   CHARACTER(256)                           ::   tagname
   REAL(DP),ALLOCATABLE                     ::   tau(:,:)
   REAL(DP)                                 ::   alat, a1(3), a2(3), a3(3), gamma_xk(3,1), gamma_wk(1)
-  INTEGER                                  ::   inlc,nt
+  INTEGER                                  ::   nt
   LOGICAL                                  ::   lsda,dft_is_hybrid,  dft_is_nonlocc,  is_hubbard(ntypx)=.FALSE.,&
                                                 is_hubbard_back(ntypx) = .FALSE.,  ibrav_lattice 
   INTEGER                                  ::   Hubbard_l=0,hublmax=0
