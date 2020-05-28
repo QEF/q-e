@@ -207,6 +207,7 @@ SUBROUTINE orthoatwfc_gpu( orthogonalize_wfc )
   ! Allocate the array becp = <beta|wfcatom>
   CALL allocate_bec_type( nkb, natomwfc, becp )
   !
+  
   DO ik = 1, nks
      !
      IF (noncolin) THEN
@@ -221,6 +222,7 @@ SUBROUTINE orthoatwfc_gpu( orthogonalize_wfc )
      CALL using_vkb_d(2)
      CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
      !
+     CALL using_becp_auto(2)
      CALL using_becp_d_auto(2)
      CALL calbec_gpu( npw, vkb_d, wfcatom_d, becp_d )
      !
@@ -301,6 +303,7 @@ SUBROUTINE ortho_swfc_gpu( npw, normalize_only, m, wfc_d, swfc_d, lflag )
   work_d(:,:) = (0.d0,0.d0)
   !
   ! calculate overlap matrix
+  
   !
   IF (noncolin) THEN
      CALL cublasZgemm( 'C', 'N', m, m, npwx*npol, (1.d0,0.d0), wfc_d, &
