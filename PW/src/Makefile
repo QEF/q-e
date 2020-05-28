@@ -100,6 +100,8 @@ force_us.o \
 forces.o \
 g_psi.o \
 g_psi_mod.o \
+gcscf_input.o \
+gcscf_module.o \
 gen_at_dj.o \
 gen_at_dy.o \
 gen_us_dj.o \

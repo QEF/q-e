@@ -577,6 +577,27 @@ MODULE input_parameters
           ! if esm_debug is .TRUE., calculate v_hartree and v_local
           ! for abs(gp)<=esm_debug_gpmax (gp is integer and has tpiba unit)
 
+        LOGICAL :: lgcscf = .FALSE.
+          ! if .TRUE., GC-SCF is used
+
+        LOGICAL :: gcscf_ignore_mun = .FALSE.
+          ! if .TRUE., ignore the term of -mu * N
+
+        REAL(DP) :: gcscf_mu = 0.0_DP
+          ! target Fermi energy of GC-SCF (in eV)
+
+        REAL(DP) :: gcscf_conv_thr = 1.0E-2_DP
+          ! convergence threshold of GC-SCF (in eV)
+
+        REAL(DP) :: gcscf_gk = 0.4_DP
+          ! wavenumber shift for Kerker operator (in 1/bohr)
+
+        REAL(DP) :: gcscf_gh = 1.5_DP
+          ! wavenumber shift for Hartree metric (in 1/bohr)
+
+        REAL(DP) :: gcscf_beta = 0.05_DP
+          ! mixing rate of Fermi energy
+
         INTEGER :: space_group = 0
           ! space group number for coordinates given in crystallographic form
           !
@@ -610,7 +631,7 @@ MODULE input_parameters
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
              U_projection_type, input_dft, la2F, assume_isolated,             &
              nqx1, nqx2, nqx3, ecutfock, localization_thr, scdm, ace,         &
-             scdmden, scdmgrd, nscdm, n_proj,                                 &
+             scdmden, scdmgrd, nscdm, n_proj,                                        &
              exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
              exx_fraction, screening_parameter, ref_alat,                     &
              noncolin, lspinorb, starting_spin_angle, lambda, angle1, angle2, &
@@ -625,6 +646,8 @@ MODULE input_parameters
              step_pen, A_pen, sigma_pen, alpha_pen, no_t_rev,                 &
              esm_bc, esm_efield, esm_w, esm_nfit, esm_debug, esm_debug_gpmax, &
              esm_a, esm_zb,                                                   &
+             lgcscf, gcscf_ignore_mun, gcscf_mu, gcscf_conv_thr,              &
+             gcscf_gk, gcscf_gh, gcscf_beta,                                  &
              space_group, uniqueb, origin_choice, rhombohedral,               &
              zgate, relaxz, block, block_1, block_2, block_height, mbd_vdw
 

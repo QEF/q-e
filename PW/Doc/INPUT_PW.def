@@ -1704,12 +1704,48 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
-        var fcp_mu -type REAL {
-            see { lfcpopt }
-            default { 0.d0 }
+        var lgcscf -type LOGICAL {
+            default { .FALSE. }
             info {
-                If @ref lfcpopt = .TRUE., gives the target Fermi energy [Ry]. One can start 
-                with appropriate total charge of the system by giving 'tot_charge'.
+                If .TRUE. perform a constant bias potential (constant-mu) calculation
+                with Grand-Canonical SCF. (JCP 146, 114104 (2017), R.Sundararaman, et al.)
+
+                NB:
+                - The total energy displayed in output includes the potentiostat
+                  contribution (-mu*N).
+                - @ref assume_isolated = 'esm' and @ref esm_bc = 'bc2' or 'bc3' must be set
+                  in @ref SYSTEM namelist.
+                - ESM-RISM is also supported (@ref assume_isolated = 'esm' and @ref esm_bc = 'bc1'
+                  and @ref trism = .TRUE.).
+                - @ref mixing_mode has to be 'TF' or 'local-TF', also its default is 'TF.'
+                - The default of @ref mixing_beta is 0.1 with ESM-RISM, 0.2 without ESM-RISM.
+                - The default of @ref diago_thr_init is 1.D-5.
+                - @ref diago_full_acc is always .TRUE. .
+                - @ref diago_rmm_conv is always .TRUE. .
+            }
+        }
+
+        var gcscf_mu -type REAL {
+            status { REQUIRED }
+            info {
+                The target Fermi energy (eV) of GC-SCF. One can start 
+                with appropriate total charge of the system by giving @ref tot_charge .
+            }
+        }
+
+        var gcscf_conv_thr -type REAL {
+            default { 1.D-2 }
+            info {
+                Convergence threshold of Fermi energy (eV) for GC-SCF.
+            }
+        }
+
+        var gcscf_beta -type REAL { 
+            default { 0.05D0 }
+            info {
+                Mixing factor for GC-SCF.
+                Larger values are recommended,
+                if systems with small DOS on Fermi surface as graphite.
             }
         }
 

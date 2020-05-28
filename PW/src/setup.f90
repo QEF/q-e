@@ -93,6 +93,7 @@ SUBROUTINE setup()
   USE paw_variables,      ONLY : okpaw
   USE esm,                ONLY : esm_z_inv
   USE fcp_module,         ONLY : lfcp
+  USE gcscf_module,       ONLY : lgcscf
   USE extfield,           ONLY : gate
   USE additional_kpoints, ONLY : add_additional_kpoints
   !
@@ -176,7 +177,7 @@ SUBROUTINE setup()
   !
   nelec = ionic_charge - tot_charge
   !
-  IF ( lbands .OR. ( lfcp .AND. restart )) THEN
+  IF ( lbands .OR. ( (lfcp .OR. lgcscf) .AND. restart )) THEN
      !
      ! ... in these cases, we need (or it is useful) to read the Fermi energy
      !
@@ -199,7 +200,7 @@ SUBROUTINE setup()
      !
   END IF
   !
-  IF ( lfcp .AND. restart ) THEN
+  IF ( (lfcp .OR. lgcscf) .AND. restart ) THEN
      tot_charge = ionic_charge - nelec
   END IF
   !
@@ -381,14 +382,30 @@ SUBROUTINE setup()
            ! ... do not spoil it with a lousy first diagonalization :
            ! ... set a strict ethr in the input file (diago_thr_init)
            !
-           ethr = 1.D-5
+           IF ( lgcscf ) THEN
+              !
+              ethr = 1.D-8
+              !
+           ELSE
+              !
+              ethr = 1.D-5
+              !
+           END IF
            !
         ELSE
            !
            ! ... starting atomic potential is probably far from scf
            ! ... do not waste iterations in the first diagonalizations
            !
-           ethr = 1.0D-2
+           IF ( lgcscf ) THEN
+              !
+              ethr = 1.0D-5
+              !
+           ELSE
+              !
+              ethr = 1.0D-2
+              !
+           END IF
            !
         END IF
         !

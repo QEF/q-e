@@ -53,6 +53,12 @@ MODULE path_formats
     fcp_output = "(5X,I5,1X,3F14.6,1PE14.2)"
   !
   CHARACTER (LEN=*), PARAMETER :: &
+    gcscf_info = "(/,5X,'image',5X,'Fermi (eV)',4X,'charge (e)',5X,'error (V)',/)"
+  !
+  CHARACTER (LEN=*), PARAMETER :: &
+    gcscf_output = "(5X,I5,1X,3F14.6)"
+  !
+  CHARACTER (LEN=*), PARAMETER :: &
     summary_fmt = "(5X,A,T35,' = ',3X,A)"
   !
   CHARACTER (LEN=*), PARAMETER :: &

@@ -14,6 +14,7 @@ compute_scf.o : ../../PW/src/pwcom.o
 compute_scf.o : ../../PW/src/update_pot.o
 compute_scf.o : ../../UtilXlib/mp.o
 compute_scf.o : fcp_variables.o
+compute_scf.o : gcscf_variables.o
 compute_scf.o : path_formats.o
 compute_scf.o : path_io_routines.o
 compute_scf.o : path_io_units_module.o
@@ -48,6 +49,8 @@ fcp_opt_routines.o : path_variables.o
 fcp_variables.o : ../../Modules/kind.o
 fcp_variables.o : ../../Modules/mdiis.o
 fcp_variables.o : path_variables.o
+gcscf_variables.o : ../../Modules/kind.o
+gcscf_variables.o : path_variables.o
 input.o : ../../Modules/constants.o
 input.o : ../../Modules/io_files.o
 input.o : ../../Modules/io_global.o
@@ -86,10 +89,12 @@ path_base.o : ../../Modules/kind.o
 path_base.o : ../../Modules/mp_images.o
 path_base.o : ../../Modules/mp_world.o
 path_base.o : ../../Modules/random_numbers.o
+path_base.o : ../../PW/src/gcscf_module.o
 path_base.o : ../../PW/src/pwcom.o
 path_base.o : ../../UtilXlib/mp.o
 path_base.o : fcp_opt_routines.o
 path_base.o : fcp_variables.o
+path_base.o : gcscf_variables.o
 path_base.o : path_formats.o
 path_base.o : path_input_parameters_module.o
 path_base.o : path_io_routines.o
@@ -116,6 +121,7 @@ path_io_routines.o : ../../Modules/kind.o
 path_io_routines.o : ../../Modules/mp_world.o
 path_io_routines.o : ../../UtilXlib/mp.o
 path_io_routines.o : fcp_variables.o
+path_io_routines.o : gcscf_variables.o
 path_io_routines.o : path_formats.o
 path_io_routines.o : path_input_parameters_module.o
 path_io_routines.o : path_io_units_module.o
@@ -160,5 +166,6 @@ stop_run_path.o : ../../Modules/environment.o
 stop_run_path.o : ../../Modules/io_global.o
 stop_run_path.o : ../../Modules/mp_global.o
 stop_run_path.o : fcp_variables.o
+stop_run_path.o : gcscf_variables.o
 stop_run_path.o : path_io_units_module.o
 stop_run_path.o : path_variables.o

@@ -212,6 +212,8 @@ SUBROUTINE iosys()
 
   USE fcp_module,            ONLY : fcp_iosys
 
+  USE gcscf_module,          ONLY : gcscf_iosys
+
   USE vlocal,        ONLY : starting_charge_ => starting_charge
   !
   ! ... CONTROL namelist
@@ -259,6 +261,7 @@ SUBROUTINE iosys()
                                xdm, xdm_a1, xdm_a2, lforcet,                  &
                                one_atom_occupations,                          &
                                esm_bc, esm_efield, esm_w, esm_nfit, esm_a,    &
+                               lgcscf,                                        &
                                zgate, relaxz, block, block_1, block_2,        &
                                block_height
   !
@@ -1143,6 +1146,18 @@ SUBROUTINE iosys()
      CALL errore( 'iosys', 'unknown mixing ' // trim( mixing_mode ), 1 )
   END SELECT
   !
+  IF ( mixing_beta < 0.0_DP ) THEN
+     !
+     IF ( lgcscf ) THEN
+        ! GC-SCF with ESM-BC2 or ESM-BC3
+        mixing_beta = 0.2_DP
+     ELSE
+        ! default
+        mixing_beta = 0.7_DP
+     END IF
+     !
+  END IF
+  !
   starting_scf_threshold = tr2
   nmix                   = mixing_ndim
   mixing_beta_           = mixing_beta
@@ -1657,6 +1672,10 @@ SUBROUTINE iosys()
   ! ... set variables for FCP
   !
   CALL fcp_iosys(lfcp)
+  !
+  ! ... set variables for GC-SCF (this must be after FCP, to check condition)
+  !
+  CALL gcscf_iosys(lgcscf)
   !
   ! ... End of reading input parameters
   !

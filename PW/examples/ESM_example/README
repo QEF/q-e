@@ -12,11 +12,13 @@ The method is described in detail in M. Otani and O. Sugino,
 A plane-wave nonrepeated slab approach," PRB 73, 115407 (2006).
 
 Using the constant bias potential (constant-mu) method, one can control
-the Fermi energy, i.e. applied bias during a simulation.  The fictitious
-charge particle (FCP) method. The methods are described in detail in
-N. Bonnet, T. Morishita, O. Sugino, and M. Otani, "First-Principles
-Molecular Dynamics at a Constant Electrode Potential", PRL 109, 266101
-(2012)
+the Fermi energy, i.e. applied bias during a simulation. Two different
+constant-mu schemes are shown: the fictitious charge particle (FCP) method
+and the grand canonical scf (GCSCF) method. The methods are described in
+detail in N. Bonnet, T. Morishita, O. Sugino, and M. Otani,
+"First-Principles Molecular Dynamics at a Constant Electrode Potential",
+PRL 109, 266101 (2012) and R. Sundararaman, W. A. Goddard-III, and
+T. A. Arias, J. Chem. Phys. 146, 114104 (2017), respectively.
 
 In addition to 'pbc' (ordinary periodic boundary conditions with ESM
 disabled), the code allows three different sets of boundary conditions
@@ -33,11 +35,12 @@ perpendicular to the polarized slab:
 Two dimensional (xy-plane) average charge density and electrostatic
 potentials are printed out into the 'esm1' file.
 
-The example calculations are divided into the following two parts,
+The example calculations are divided into the following three parts,
 1) Example for ESM calculations (run_example_ESM)
 2) Example for FCP calculations (run_example_FCP)
+3) Example for GCSCF calculations (run_example_GCSCF)
 
-The 'run_example' file executes the above two calculations.
+The 'run_example' file executes the above three calculations.
 
 1) Example for ESM calculations (run_example_ESM)
 1-1) make a self-consistent calculation for H2O with esm_bc = 'pbc' (ESM off)
@@ -90,3 +93,22 @@ The 'run_example' file executes the above two calculations.
      (input=Al001_bc3_FCP_vp05.in, output=Al001_bc3_FCP_vp05.out).
 2-6) repeat #2-4 but with a lower target fermi energy (-0.5v vs vpzc).
      (input=Al001_bc3_FCP_vm05.in, output=Al001_bc3_FCP_vm05.out).
+
+3) Example for GCSCF calculations (run_example_GCSCF)
+3-1) make a self-consistent calculation for Al(001) with esm_bc = 'bc2'.
+     The Fermi energy will converge to the target Fermi energy using 
+     the GCSCF schecme. The target Fermi energy is set to that of the neutral
+     surface (#1-5, Vpzc).
+     (input=Al001_bc2_GCSCF_v00.in, output=Al001_bc2_GCSCF_v00.out).
+3-2) repeat #2-1 but with a higher target fermi energy (+0.5v vs vpzc).
+     (input=Al001_bc2_GCSCF_vp05.in, output=Al001_bc2_GCSCF_vp05.out).
+3-3) repeat #2-1 but with a lower target fermi energy (-0.5v vs vpzc).
+     (input=Al001_bc2_GCSCF_vm05.in, output=Al001_bc2_GCSCF_vm05.out).
+3-4) make a 'relax' calculation on the Fermi energy for Al(001) with
+     esm_bc = 'bc3'. The target Fermi energy is set to that of the neutral
+     surface (#1-7, Vpzc).
+     (input=Al001_bc3_GCSCF_v00.in, output=Al001_bc3_GCSCF_v00.out).
+3-5) repeat #2-4 but with a higher target fermi energy (+0.5v vs vpzc).
+     (input=Al001_bc3_GCSCF_vp05.in, output=Al001_bc3_GCSCF_vp05.out).
+3-6) repeat #2-4 but with a lower target fermi energy (-0.5v vs vpzc).
+     (input=Al001_bc3_GCSCF_vm05.in, output=Al001_bc3_GCSCF_vm05.out).

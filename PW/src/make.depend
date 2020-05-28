@@ -242,6 +242,7 @@ c_bands.o : atomic_wfc_mod.o
 c_bands.o : bp_mod.o
 c_bands.o : buffers.o
 c_bands.o : g_psi_mod.o
+c_bands.o : gcscf_module.o
 c_bands.o : ldaU.o
 c_bands.o : pwcom.o
 c_bands.o : scf_mod.o
@@ -444,6 +445,7 @@ electrons.o : esm.o
 electrons.o : extfield.o
 electrons.o : exx.o
 electrons.o : fcp_module.o
+electrons.o : gcscf_module.o
 electrons.o : io_rho_xml.o
 electrons.o : ldaU.o
 electrons.o : loc_scdm.o
@@ -801,6 +803,23 @@ g_psi.o : ../../Modules/kind.o
 g_psi.o : ../../Modules/noncol.o
 g_psi.o : g_psi_mod.o
 g_psi_mod.o : ../../Modules/kind.o
+gcscf_input.o : ../../Modules/constants.o
+gcscf_input.o : ../../Modules/control_flags.o
+gcscf_input.o : ../../Modules/input_parameters.o
+gcscf_input.o : ../../Modules/kind.o
+gcscf_input.o : gcscf_module.o
+gcscf_module.o : ../../Modules/constants.o
+gcscf_module.o : ../../Modules/control_flags.o
+gcscf_module.o : ../../Modules/funct.o
+gcscf_module.o : ../../Modules/io_global.o
+gcscf_module.o : ../../Modules/ions_base.o
+gcscf_module.o : ../../Modules/kind.o
+gcscf_module.o : ../../Modules/mp_pools.o
+gcscf_module.o : ../../UtilXlib/mp.o
+gcscf_module.o : esm.o
+gcscf_module.o : exx_base.o
+gcscf_module.o : fcp_module.o
+gcscf_module.o : pwcom.o
 gen_at_dj.o : ../../Modules/cell_base.o
 gen_at_dj.o : ../../Modules/constants.o
 gen_at_dj.o : ../../Modules/io_global.o
@@ -1092,6 +1111,7 @@ input.o : extfield.o
 input.o : exx.o
 input.o : exx_base.o
 input.o : fcp_module.o
+input.o : gcscf_module.o
 input.o : ldaU.o
 input.o : loc_scdm.o
 input.o : martyna_tuckerman.o
@@ -1262,6 +1282,7 @@ mix_rho.o : ../../Modules/recvec.o
 mix_rho.o : ../../Modules/wavefunctions.o
 mix_rho.o : ../../UtilXlib/mp.o
 mix_rho.o : ../../upflib/uspp.o
+mix_rho.o : gcscf_module.o
 mix_rho.o : ldaU.o
 mix_rho.o : pwcom.o
 mix_rho.o : scf_mod.o
@@ -2008,6 +2029,7 @@ setup.o : esm.o
 setup.o : exx.o
 setup.o : exx_base.o
 setup.o : fcp_module.o
+setup.o : gcscf_module.o
 setup.o : ldaU.o
 setup.o : pwcom.o
 setup.o : start_k.o
@@ -2192,6 +2214,7 @@ sum_band.o : ../../Modules/wavefunctions.o
 sum_band.o : ../../UtilXlib/mp.o
 sum_band.o : ../../upflib/uspp.o
 sum_band.o : buffers.o
+sum_band.o : gcscf_module.o
 sum_band.o : ldaU.o
 sum_band.o : paw_symmetry.o
 sum_band.o : pwcom.o
@@ -2224,6 +2247,7 @@ summary.o : bp_mod.o
 summary.o : esm.o
 summary.o : exx.o
 summary.o : fcp_module.o
+summary.o : gcscf_module.o
 summary.o : ldaU.o
 summary.o : martyna_tuckerman.o
 summary.o : pwcom.o
@@ -2414,6 +2438,7 @@ weights.o : ../../Modules/kind.o
 weights.o : ../../Modules/mp_images.o
 weights.o : ../../Modules/mp_pools.o
 weights.o : ../../UtilXlib/mp.o
+weights.o : gcscf_module.o
 weights.o : pwcom.o
 weights.o : tetra.o
 wfcinit.o : ../../Modules/becmod.o

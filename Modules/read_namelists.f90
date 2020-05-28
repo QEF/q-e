@@ -31,7 +31,9 @@ MODULE read_namelists_module
   !
   REAL(DP), PARAMETER :: fcp_not_set = 1.0E+99_DP
   !
-  PUBLIC :: read_namelists, sm_not_set, fcp_not_set
+  REAL(DP), PARAMETER :: gcscf_not_set = 1.0E+99_DP
+  !
+  PUBLIC :: read_namelists, sm_not_set, fcp_not_set, gcscf_not_set
   PUBLIC :: check_namelist_read ! made public upon request of A.Jay
   ! FIXME: should the following ones be public?
   PUBLIC :: control_defaults, system_defaults, &
@@ -311,6 +313,16 @@ MODULE read_namelists_module
        esm_nfit=4
        esm_debug=.FALSE.
        esm_debug_gpmax=0
+       !
+       ! ... GC-SCF
+       !
+       lgcscf = .FALSE.
+       gcscf_ignore_mun = .FALSE.
+       gcscf_mu = gcscf_not_set
+       gcscf_conv_thr = 1.0E-2_DP
+       gcscf_gk = 0.4_DP
+       gcscf_gh = 1.5_DP
+       gcscf_beta = 0.05_DP
        !
        ! ... Wyckoff
        !
@@ -968,6 +980,16 @@ MODULE read_namelists_module
        CALL mp_bcast( esm_debug,          ionode_id, intra_image_comm )
        CALL mp_bcast( esm_debug_gpmax,    ionode_id, intra_image_comm )
        !
+       ! ... GC-SCF method broadcast
+       !
+       CALL mp_bcast( lgcscf,             ionode_id, intra_image_comm )
+       CALL mp_bcast( gcscf_ignore_mun,   ionode_id, intra_image_comm )
+       CALL mp_bcast( gcscf_mu,           ionode_id, intra_image_comm )
+       CALL mp_bcast( gcscf_conv_thr,     ionode_id, intra_image_comm )
+       CALL mp_bcast( gcscf_gk,           ionode_id, intra_image_comm )
+       CALL mp_bcast( gcscf_gh,           ionode_id, intra_image_comm )
+       CALL mp_bcast( gcscf_beta,         ionode_id, intra_image_comm )
+       !
        ! ... space group information
        !
        CALL mp_bcast( space_group,        ionode_id, intra_image_comm )
@@ -1583,6 +1605,28 @@ MODULE read_namelists_module
        !
        IF ( gate .and. tot_charge == 0 ) &
           CALL errore(sub_name, ' charged plane (gate) to compensate tot_charge of 0', 1)
+       !
+       ! ... control on GC-SCF variables
+       !
+       IF( lgcscf ) THEN
+          !
+          IF( gcscf_mu == gcscf_not_set ) &
+             CALL errore( sub_name,' gcscf_mu is not set ', 1 )
+          !
+          IF( gcscf_conv_thr < 0.0_DP ) &
+             CALL errore( sub_name,' gcscf_conv_thr out of range ',1)
+          !
+          IF( gcscf_gk <= 0.0_DP ) &
+             CALL errore( sub_name,' gcscf_gk out of range ',1)
+          !
+          IF( gcscf_gh <= 0.0_DP ) &
+             CALL errore( sub_name,' gcscf_gh out of range ',1)
+          !
+          IF( gcscf_beta < 0.0_DP .OR. 1.0_DP < gcscf_beta ) &
+             CALL errore( sub_name,' gcscf_beta out of range ',1)
+          !
+       END IF
+       !
        RETURN
        !
      END SUBROUTINE
