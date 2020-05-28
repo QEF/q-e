@@ -418,14 +418,16 @@ CONTAINS
     IF ( ALLOCATED( desc%srh ) )   DEALLOCATE( desc%srh )
     ierr = cudaStreamDestroy( desc%a2a_comp )
 
-    nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
-    DO i = 1, nsubbatches
-      ierr = cudaStreamDestroy( desc%bstreams(i) )
-      ierr = cudaEventDestroy( desc%bevents(i) )
-    ENDDO
-
-    DEALLOCATE( desc%bstreams )
-    DEALLOCATE( desc%bevents )
+    IF ( ALLOCATED(desc%bstreams) ) THEN
+        nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
+        DO i = 1, nsubbatches
+          ierr = cudaStreamDestroy( desc%bstreams(i) )
+          ierr = cudaEventDestroy( desc%bevents(i) )
+        ENDDO
+        !
+        DEALLOCATE( desc%bstreams )
+        DEALLOCATE( desc%bevents )
+    END IF
 
 #endif
 
