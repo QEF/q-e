@@ -359,7 +359,7 @@ SUBROUTINE write_nsg
                          nsgnew, backall, ldim_back
   !
   IMPLICIT NONE
-  INTEGER :: is, na, nt, m1, m2, ldim, equiv_2
+  INTEGER :: is, na, nt, m1, m2, ldim
   ! counter on spin component
   ! counters on atoms and their type
   ! counters on d components

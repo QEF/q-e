@@ -6,8 +6,21 @@ New in dev branch:
   * ParO and PPCG iterative diagonalization algorithms
   * Fourier interpolation of phonon potential implemented in ph.x
     (Jae-Mo Lihm, Seoul Natl. Univ.)
-  * DFT+U+V in pw.x, J. Phys.: Condens. Matter 22, 055602 (2010)
-    (V.L. Campo Jr, I. Timrov, N. Marzari, M. Cococcioni)
+  * Extension of the PW code to DFT+U+V [JPCM 22, 055602 (2010)];
+    Extension of the HP code to compute also inter-site Hubbard V parameters;
+    Extension of the XSpectra code to work on top of DFT+U+V [arXiv:2004.04142]
+    (I. Timrov, N. Marzari, M. Cococcioni).
+  * Support for BEEF-vdW XC (by Johannes Voss) compilation link has been included; 
+    e.g. BEEF_LIBS="-L$LIBBEEF/src -lbeef", where $LIBBEEF is the path 
+    to the compiled libbeef folder. If "calculation='ensemble'", 
+    BEEF-vdW nscf ensemble energies will be generated at the end of PWscf.
+    (Gabriel S. Gusmão, Georgia Tech)
+  * i-PI socket now supports on-the-fly change of flags for SCF, forces,
+    stresses and variable cell calculations using binary-integer enconding.
+    (Gabriel S. Gusmão, Georgia Tech)
+  * Phonon-induced electron self-energy implemented in ph.x and
+    a new post-processing program PHonon/postahc.x added.
+    (Jae-Mo Lihm, Seoul Natl. Univ.)
   
 Fixed in dev branch:
   * PW: Restart from interrupted calculations  simplified. As a side effect,
@@ -20,6 +33,9 @@ Fixed in dev branch:
     now works properly - courtesy Andrea Urru and Andrea Dal Corso.
   * Incorrect forces, and slightly inconsistent atomic positions, were
     written to xml file for structural optimization and molecular dynamics
+  * Some Bravais lattices with special axis orientations were not correctly
+    written to xml file, leading to errors in some codes (e.g., thermo_pw)
+    using that piece of information (fixed by Alberto Otero de la Roza)
  
 Incompatible changes in dev branch:
   * Conversion from 1D FFT real-space index to 3D positions moved into a
@@ -31,6 +47,8 @@ Incompatible changes in dev branch:
   * Calls to LAXlib routines changed: module to be included replaced by file
     'laxlib.fh', descriptors replaced by integer values
   * Interpolation table for Q(G) is in a.u. and no longer in 2pi/a units
+  * Part of pseudopotential-related code moved to new directory upflib/ and
+    into library libupf.a. Directory upftools/ deleted.
 
 New in 6.5 branch:
   * For non-local functionals of the vdW-DF and rVV10 families the kernel is
@@ -87,6 +105,7 @@ Problems fixed in 6.5 branch :
   * Option rescale-T and reduce-T now update the target temperature based on
     the previous target temperature, not based on instantaneous temperature
     as before.
+  * cppp.x works again
 
 Incompatible changes in 6.5 branch :
   * Major changes inside the exchange-correlation code; XC routines moved
@@ -1833,4 +1852,3 @@ Fixed in version 1.0.1:
   * Asymptotic high- and low-density formulae used in PW91 and PBE
     unpolarized functionals gave a small but not negligible error,
     leading to bad convergence of structural optimization
-

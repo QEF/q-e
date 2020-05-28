@@ -13,6 +13,13 @@ e1=`grep ! $fname | tail -1 | awk '{printf "%12.6f\n", $5}'`
 n1=`grep 'convergence has' $fname | tail -1 | awk '{print $6}'`
 f1=`grep "Total force" $fname | head -1 | awk '{printf "%8.4f\n", $4}'`
 p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
+band=`sed -n "/bands (ev)/{n;n;p}" $fname | awk '{print $1; print $2; print $3; print $4; print $5 }' | head -$num_band`
+
+# NSCF
+ef1=`grep Fermi $fname | head -$max_iter | awk '{print $5}'`
+eh1=`grep "highest occupied" $fname | tail -1 | awk '{print $5}'`
+ehl1=`grep "highest occupied, lowest unoccupied" $fname | tail -1 | awk '{print $7; print $8}'`
+tf1=`grep " P = " $fname | head -1 | awk '{printf "%7.5f", $3}'`
 
 # PH
 diel=`grep -A 4 '  Dielectric constant in cartesian' $fname | grep -v '  Dielectric constant' | awk '{print $2; print $3; print $4 }'`
@@ -71,7 +78,10 @@ lambda=$(awk '
 }' $fname)
 
 # Q2R
-qpt=`grep "q= " $fname | awk '{print $2; print $3; print $4}'` 
+qpt=`grep "q= " $fname | awk '{print $2; print $3; print $4}'`
+
+# MATDYN
+born_diff=`grep "Norm of the difference between" $fname | awk '{print $NF}'`
 
 # LAMBDA
 lambda2=`grep "lambda =" $fname | awk '{print $3; print $5; print $9 ;print $12; print $15}'`
@@ -80,6 +90,10 @@ lambda2=`grep "lambda =" $fname | awk '{print $3; print $5; print $9 ;print $12;
 rlatt_cart=`grep "rlatt_cart" $fname | awk '{print $2; print $3; print $4}'`
 rlatt_crys=`grep "rlatt_crys" $fname | awk '{print $2; print $3; print $4}'`
 sum_w_pot=`grep "sum_w_pot" $fname | awk '{print $2; print $3; print $4}'`
+
+#POSTAHC
+postahc_selfen=`sed -n '/Begin postahc output/,/End postahc output/p' $fname \
+    | head -n -3 | tail -n +6 | awk '{print $3; print $4; print $5 ; print $6 ; print $7}'`
 
 if test "$e1" != ""; then
         echo e1
@@ -101,11 +115,36 @@ if test "$p1" != ""; then
         echo $p1
 fi
 
+if test "$band" != ""; then
+        echo band
+        for x in $band; do echo $x; done
+fi
+
+if test "$ef1" != ""; then
+  echo ef1
+  for x in $ef1; do echo $x; done
+fi
+
+if test "$eh1" != ""; then
+        echo eh1
+        for x in $eh1; do echo $x; done
+fi
+
+if test "$ehl1" != ""; then
+        echo ehl1
+        for x in $ehl1; do echo $x; done
+fi
+
+if test "$tf1" != ""; then
+        echo tf1
+        for x in $tf1; do echo $x; done
+fi
+
 if test "$diel" != ""; then
         echo diel
         for x in $diel; do echo $x; done
 fi
- 
+
 if test "$born" != ""; then
         echo born
         for x in $born; do echo $x; done
@@ -131,6 +170,11 @@ if test "$qpt" != ""; then
         for x in $qpt; do echo $x; done
 fi
 
+if test "$born_diff" != ""; then
+        echo born_diff
+        for x in $born_diff; do echo $x; done
+fi
+
 if test "$lambda2" != ""; then
         echo lambda2
         for x in $lambda2; do echo $x; done
@@ -147,4 +191,8 @@ fi
 if test "$sum_w_pot" != ""; then
         echo sum_w_pot
         for x in $sum_w_pot; do echo $x; done
+fi
+if test "$postahc_selfen" != ""; then
+        echo postahc_selfen
+        for x in $postahc_selfen; do echo $x; done
 fi

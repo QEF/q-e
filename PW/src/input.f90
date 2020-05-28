@@ -159,6 +159,7 @@ SUBROUTINE iosys()
                             io_level, ethr, lscf, lbfgs, lmd, &
                             lbands, lconstrain, restart, &
                             llondon, ldftd3, do_makov_payne, lxdm, &
+                            lensemb, &
                             remove_rigid_rot_ => remove_rigid_rot, &
                             diago_full_acc_   => diago_full_acc, &
                             tolp_             => tolp, &
@@ -338,10 +339,9 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   CHARACTER(LEN=256):: dft_
   !
-  INTEGER  :: ia, nt, inlc, tempunit, na, nb
+  INTEGER  :: ia, nt, inlc, tempunit, i, j
   LOGICAL  :: exst, parallelfs, domag
-  REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp, &
-              interaction
+  REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp, V
   CHARACTER(len=256) :: tempfile
   INTEGER, EXTERNAL  :: find_free_unit
   !
@@ -358,6 +358,12 @@ SUBROUTINE iosys()
   CASE( 'scf' )
      !
      lscf  = .true.
+     nstep = 1
+     !
+  CASE( 'ensemble' )
+     !
+     lscf  = .true.
+     lensemb = .true.
      nstep = 1
      !
   CASE( 'nscf' )
@@ -390,6 +396,10 @@ SUBROUTINE iosys()
         calc    = 'vm'
         !
         ntcheck = nstep + 1
+        !
+     CASE ( 'ipi' )
+        !
+        CONTINUE
         !
      CASE DEFAULT
         !
@@ -459,6 +469,10 @@ SUBROUTINE iosys()
         lbfgs = .true.
         lmd   = .false.
         !
+     CASE ( 'ipi' )
+        !
+        CONTINUE
+        !
      CASE DEFAULT
         !
         CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
@@ -493,6 +507,10 @@ SUBROUTINE iosys()
      CASE( 'w' )
         !
         calc = 'nd'
+        !
+     CASE ( 'ipi' )
+        !
+        CONTINUE
         !
      CASE DEFAULT
         !
@@ -1210,8 +1228,8 @@ SUBROUTINE iosys()
         !
         OPEN( UNIT = tempunit, FILE = tempfile, FORM = 'formatted', STATUS = 'unknown' )
         READ(tempunit,*)
-10      READ(tempunit,*,END=11) na, nb, interaction
-        Hubbard_V(na,nb,1) = interaction
+10      READ(tempunit,*,END=11) i, j, V
+        Hubbard_V(i,j,1) = V
         GO TO 10
 11      CLOSE( UNIT = tempunit, STATUS = 'KEEP' )
         !
@@ -1223,16 +1241,22 @@ SUBROUTINE iosys()
      !
   ENDIF
   !
-  Hubbard_U_(1:ntyp)      = hubbard_u(1:ntyp) / rytoev
-  Hubbard_J_(1:3,1:ntyp)  = hubbard_j(1:3,1:ntyp) / rytoev
-  Hubbard_J0_(1:ntyp)     = hubbard_j0(1:ntyp) / rytoev
-  Hubbard_V_(:,:,:)       = hubbard_V(:,:,:) / rytoev
-  Hubbard_U_back_(:)      = hubbard_U_back(:) / rytoev
-  Hubbard_alpha_(1:ntyp)  = hubbard_alpha(1:ntyp) / rytoev
-  Hubbard_beta_(1:ntyp)   = hubbard_beta(1:ntyp) / rytoev
-  Hubbard_alpha_back_(:)  = hubbard_alpha_back(:) / rytoev
-  U_projection            = U_projection_type
-  starting_ns             = starting_ns_eigenvalue
+  Hubbard_U_(1:ntyp)          = hubbard_u(1:ntyp) / rytoev
+  Hubbard_J_(1:3,1:ntyp)      = hubbard_j(1:3,1:ntyp) / rytoev
+  Hubbard_J0_(1:ntyp)         = hubbard_j0(1:ntyp) / rytoev
+  Hubbard_V_(:,:,:)           = hubbard_V(:,:,:) / rytoev
+  Hubbard_U_back_(:)          = hubbard_U_back(:) / rytoev
+  Hubbard_alpha_(1:ntyp)      = hubbard_alpha(1:ntyp) / rytoev
+  Hubbard_beta_(1:ntyp)       = hubbard_beta(1:ntyp) / rytoev
+  Hubbard_alpha_back_(1:ntyp) = hubbard_alpha_back(1:ntyp) / rytoev
+  U_projection                = U_projection_type
+  starting_ns                 = starting_ns_eigenvalue
+  backall_(1:ntyp)            = backall(1:ntyp)
+  lback_(1:ntyp)              = lback(1:ntyp)
+  l1back_(1:ntyp)             = l1back(1:ntyp)
+  hub_pot_fix_                = hub_pot_fix
+  reserv_                     = reserv
+  reserv_back_                = reserv_back
   !
   IF ( lda_plus_u .AND. lda_plus_u_kind == 0 .AND. noncolin ) THEN
      CALL errore('iosys', 'simplified LDA+U not implemented with &

@@ -1,0 +1,8 @@
+
+
+[energy_current_*/]
+program = ALL_CURRENTS
+
+
+[categories]
+all_currents_all = energy_current_*

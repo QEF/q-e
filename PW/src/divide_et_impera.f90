@@ -8,7 +8,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE divide_et_impera( nkstot, xk, wk, isk, nks )
-  !! Author: Paolo Giannozzi
+  !! Author: Paolo Giannozzi (for recent additions and cleanup), others
 
   !! This routine divides the k points across nodes, sets the variable
   !! nks equal to the local (on this processors) number of k-points
@@ -119,7 +119,7 @@ END FUNCTION global_kpoint_index
 !----------------------------------------------------------------------------
 FUNCTION local_kpoint_index ( nkstot, ik_g ) RESULT (ik)
   !----------------------------------------------------------------------------
-  !! Returns the local index index of a k-point, if it belongs to
+  !! Returns the local index of a k-point, if it belongs to
   !! current pool, or -1 if it does not
   !
   USE mp_pools,   ONLY: npool, my_pool_id, kunit

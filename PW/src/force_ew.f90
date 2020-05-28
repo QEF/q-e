@@ -120,10 +120,12 @@ SUBROUTINE force_ew( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
   IF (do_cutoff_2D) THEN 
      CALL cutoff_force_ew( aux, alpha )
   ELSE
+!$omp parallel do default(none) shared(gstart, ngm, aux, gg, tpiba2, alpha)
      DO ig = gstart, ngm
         aux(ig) = aux(ig) * EXP(-gg(ig) * tpiba2 / alpha / 4.d0) / &
                   (gg(ig) * tpiba2)
      ENDDO
+!$omp end parallel do
   ENDIF
   !
   IF (gamma_only) THEN
@@ -132,6 +134,8 @@ SUBROUTINE force_ew( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
      fact = 2.0_DP
   ENDIF
   !
+!$omp parallel do default(none) shared(nat, gstart, ngm, g, tau, forceion, omega, alat, zv, fact, aux, ityp)&
+!$omp                           &private(arg, sumnb)
   DO na = 1, nat
      DO ig = gstart, ngm
         arg = tpi * (g(1,ig) * tau(1,na) + g(2,ig) * tau(2,na) &
@@ -146,6 +150,7 @@ SUBROUTINE force_ew( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
                             omega / alat * forceion(ipol,na)
      ENDDO
   ENDDO
+!$omp end parallel do
   DEALLOCATE( aux )
   !
   ! R-space sum here (see ewald.f90 for details on parallelization)
@@ -156,6 +161,8 @@ SUBROUTINE force_ew( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
   !
   ! with this choice terms up to ZiZj*erfc(5) are counted (erfc(5)=2x10^-1
   !
+!$omp parallel do default(none) shared(na_s, na_e, nat, at, bg, ityp, zv, alpha, forceion, alat, rmax, tau)&
+!$omp                           &private(nb, dtau, nrm, r, r2, rr, fact)
   DO na = na_s, na_e
      DO nb = 1, nat
         IF (nb == na) GOTO 50
@@ -176,6 +183,7 @@ SUBROUTINE force_ew( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
 50      CONTINUE
      ENDDO
   ENDDO
+!$omp end parallel do
 100 CONTINUE
   !
   CALL mp_sum( forceion, intra_bgrp_comm )

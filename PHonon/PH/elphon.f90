@@ -39,6 +39,7 @@ SUBROUTINE elphon()
   USE lrus,   ONLY : int3, int3_nc, int3_paw
   USE qpoint, ONLY : xq
   USE dvscf_interpolate, ONLY : ldvscf_interpolate, dvscf_r2q
+  USE ahc,    ONLY : elph_ahc
   !
   IMPLICIT NONE
   !
@@ -125,6 +126,12 @@ SUBROUTINE elphon()
   ENDDO
   !
   IF (ldvscf_interpolate) DEALLOCATE(dvscfin_all)
+  !
+  ! In AHC calculation, we do not need the dynamical matrix. So return here.
+  IF (elph_ahc) THEN
+     CALL stop_clock('elphon')
+     RETURN
+  ENDIF
   !
   ! now read the eigenvalues and eigenvectors of the dynamical matrix
   ! calculated in a previous run
@@ -320,17 +327,16 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE ions_base,  ONLY : nat, ityp
   USE control_flags,  ONLY : iverbosity
   USE wavefunctions,  ONLY : evc
-  USE buffers,    ONLY : get_buffer
+  USE buffers,    ONLY : get_buffer, save_buffer
   USE klist,      ONLY : xk, ngk, igk_k
   USE lsda_mod,   ONLY : lsda, current_spin, isk, nspin
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wvfct,      ONLY : nbnd, npwx
-  USE buffers,    ONLY : get_buffer
   USE uspp,       ONLY : vkb
   USE el_phon,    ONLY : el_ph_mat, el_ph_mat_rec, el_ph_mat_rec_col, &
                          comp_elph, done_elph, elph_nbnd_min, elph_nbnd_max
   USE modes,      ONLY : u, nmodes
-  USE units_ph,   ONLY : iubar, lrbar, iundnsscf
+  USE units_ph,   ONLY : iubar, lrbar, iundnsscf, iudvpsi, lrdvpsi
   USE units_lr,   ONLY : iuwfc, lrwfc
   USE control_ph, ONLY : trans, current_iq
   USE ph_restart, ONLY : ph_writefile
@@ -349,6 +355,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE io_global,  ONLY : ionode, ionode_id
   USE lrus,       ONLY : becp1
   USE phus,       ONLY : alphap
+  USE ahc,        ONLY : elph_ahc, ib_ahc_gauge_min, ib_ahc_gauge_max
 
   IMPLICIT NONE
   !
@@ -356,14 +363,19 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   COMPLEX(DP), INTENT(IN) :: dvscfins (dffts%nnr, nspin_mag, npe)
   ! LOCAL variables
   INTEGER :: npw, npwq, nrec, ik, ikk, ikq, ipert, mode, ibnd, jbnd, ir, ig, &
-             ipol, ios, ierr
+             ipol, ios, ierr, nrec_ahc
   COMPLEX(DP) , ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:), tg_dv(:,:), &
                                tg_psic(:,:), aux2(:,:)
   INTEGER :: v_siz, incr
   COMPLEX(DP), EXTERNAL :: zdotc
   integer :: ibnd_fst, ibnd_lst
   !
-  if(elph_tetra == 0) then
+  CALL start_clock('elphel')
+  !
+  IF (elph_ahc) THEN
+     ibnd_fst = ib_ahc_gauge_min
+     ibnd_lst = ib_ahc_gauge_max
+  elseif(elph_tetra == 0) then
      ibnd_fst = 1
      ibnd_lst = nbnd
   else
@@ -494,6 +506,18 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
            CALL adddvhubscf (ipert, ik)
         ENDIF
         !
+        ! If doing Allen-Heine-Cardona (AHC) calculation, we need dvpsi
+        ! later. So, write to buffer.
+        !
+        IF (elph_ahc) THEN
+           nrec_ahc = (ik - 1) * nmodes + ipert + imode0
+           CALL save_buffer(dvpsi(1, ibnd_fst), lrdvpsi, iudvpsi, nrec_ahc)
+           !
+           ! If elph_ahc, the matrix elements are computed in ahc.f90
+           CYCLE
+           !
+        ENDIF
+        !
         ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
         !
         DO ibnd = ibnd_fst, ibnd_lst
@@ -506,6 +530,9 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
            ENDDO
         ENDDO
      ENDDO
+     !
+     ! If elph_ahc, the matrix elements are computed in ahc.f90
+     IF (elph_ahc) CYCLE
      !
      CALL mp_sum (elphmat, intra_bgrp_comm)
      !
@@ -522,7 +549,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   ENDDO
   !
   done_elph(irr)=.TRUE.
-  if(elph_tetra == 0) then
+  if(elph_tetra == 0 .AND. .NOT. elph_ahc) then
      IF (npool>1) THEN
         ALLOCATE(el_ph_mat_rec_col(nbnd,nbnd,nksqtot,npe))
         CALL el_ph_collect(npe,el_ph_mat_rec,el_ph_mat_rec_col,nksqtot,nksq)
@@ -546,6 +573,8 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
      DEALLOCATE (dnsscf_all_modes)
      DEALLOCATE (dnsscf)
   ENDIF
+  !
+  CALL stop_clock('elphel')
   !
   RETURN
   !
@@ -652,8 +681,9 @@ SUBROUTINE elphsum ( )
   USE modes,       ONLY : u, nirr
   USE dynmat,      ONLY : dyn, w2
   USE io_global,   ONLY : stdout, ionode, ionode_id
+  USE parallel_include
   USE mp_pools,    ONLY : my_pool_id, npool, kunit
-  USE mp_images,   ONLY : intra_image_comm
+  USE mp_images,   ONLY : intra_image_comm, me_image, nproc_image
   USE mp,          ONLY : mp_bcast
   USE control_ph,  ONLY : tmp_dir_phq, xmldyn, current_iq
   USE save_ph,     ONLY : tmp_dir_save
@@ -711,7 +741,7 @@ SUBROUTINE elphsum ( )
   REAL(DP), ALLOCATABLE :: xk_collect(:,:)
   REAL(DP), POINTER :: wkfit_dist(:), etfit_dist(:,:)
   INTEGER :: nksfit_dist, rest, kunit_save
-  INTEGER :: nks_real, ispin, nksqtot, irr
+  INTEGER :: nks_real, ispin, nksqtot, irr, ierr
   CHARACTER(LEN=256) :: elph_dir
   CHARACTER(LEN=6) :: int_to_char
   !
@@ -723,6 +753,9 @@ SUBROUTINE elphsum ( )
   DO irr=1,nirr
      IF (.NOT.done_elph(irr)) RETURN
   ENDDO
+
+  CALL start_clock('elphsum')
+
   elph_dir='elph_dir/'
   IF (ionode) INQUIRE(file=TRIM(elph_dir), EXIST=exst)
   CALL mp_bcast(exst, ionode_id, intra_image_comm) 
@@ -901,7 +934,11 @@ SUBROUTINE elphsum ( )
   wqa  = 1.0d0/nkfit
   IF (nspin==1) wqa=degspin*wqa
   !
+#if defined(__MPI)
+  do ibnd = me_image+1, nbnd, nproc_image
+#else
   do ibnd = 1, nbnd
+#endif
      do jbnd = 1, nbnd
         allocate (g2(nkBZ*nspin_lsda,3*nat,3*nat))
         allocate (g1(nksqtot,3*nat,3*nat))
@@ -966,6 +1003,11 @@ SUBROUTINE elphsum ( )
         !
      enddo    ! ibnd
   enddo    ! jbnd
+
+#if defined(__MPI)
+  CALL MPI_ALLREDUCE(MPI_IN_PLACE,gf,3*nat*3*nat*el_ph_nsigma, &
+                     MPI_DOUBLE_COMPLEX,MPI_SUM,intra_image_comm,ierr)
+#endif
 
   deallocate (eqqfit, eqkfit)
   deallocate (etfit)
@@ -1081,6 +1123,8 @@ SUBROUTINE elphsum ( )
   DEALLOCATE( dosfit )
   DEALLOCATE( xk_collect )
   IF (npool /= 1) DEALLOCATE(el_ph_mat_collect)
+
+  call stop_clock('elphsum')
 
   !
 9000 FORMAT(5x,'Gaussian Broadening: ',f7.3,' Ry, ngauss=',i4)

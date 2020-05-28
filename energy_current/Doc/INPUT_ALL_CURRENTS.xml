@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="input_xx.xsl"?>
+<!-- FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST -->
+    
+<input_description distribution="Quantum Espresso" package="energy_current" program="all_currents.x" >
+   <toc>
+   </toc>
+   <intro>
+Program to compute energy current given the atomic configuration and the velocities of the atoms.
+
+Note that a very small conv_thr must be given in the ELECTRONS namelist, in the order of 1.D-11.
+The numerical derivative is very sensitive to this parameter and to <ref>delta_t</ref>. Careful convergence
+tests are needed. Note that if too relaxed values are chosen, the result can depend on the algorithm
+used to diagonalize the hamiltonian a lot (the 4th/3rd digit can be wrong).
+Performance of the calculation can be tuned a little bit with the parameters <ref>ethr_small_step</ref>
+and <ref>ethr_big_step</ref>, that can avoid the waste of some iterations in the diagonalization of the
+hamiltonian in the first scf step of every scf calculation (the program does 2 scf for each step).
+Note that in order to read atomic velocities, in the namelist CONTROL you must set calculation=&apos;md&apos;,
+and in the namelist IONS you must set ion_velocities=&apos;from_input&apos;
+
+This program implements
+
+Marcolongo, A., Umari, P. &amp; Baroni, S.
+Microscopic theory and quantum simulation of atomic heat transport.
+Nature Phys 12, 80-84 (2016). <link>https://doi.org/10.1038/nphys3509</link>
+
+and was originally written by Aris Marcolongo in 2014 at SISSA for his PhD thesis
+( <link>https://iris.sissa.it/handle/20.500.11767/3897</link> )
+The <b>all_current</b> driver program was rewritten from scratch by Riccardo Bertossa at SISSA in 2020.
+Other contributions are from Loris Ercole (SISSA - EPFL ) , Davide Tisi (SISSA) and Federico Grasselli (SISSA).
+
+All the namilist but <ref>ENERGY_CURRENT</ref> are the same as the program pw.x
+
+<b>Structure of the input data:</b>
+===============================================================================
+
+<b>&amp;ENERGY_CURRENT</b>
+  ...
+<b>/</b>
+
+<b>&amp;CONTROL</b>
+  MUST SET calculation=&apos;md&apos;
+  ...
+<b>/</b>
+
+<b>&amp;SYSTEM</b>
+  ...
+<b>/</b>
+
+<b>&amp;ELECTRONS</b>
+  ...
+<b>/</b>
+
+[ <b>&amp;IONS</b>
+  MUST SET ion_velocities=&apos;from_input&apos;
+  ...
+ <b>/</b> ]
+
+[ <b>&amp;CELL</b>
+  ...
+ <b>/</b> ]
+
+<b>ATOMIC_SPECIES</b>
+ X  Mass_X  PseudoPot_X
+ Y  Mass_Y  PseudoPot_Y
+ Z  Mass_Z  PseudoPot_Z
+
+<b>ATOMIC_POSITIONS</b> { alat | bohr | crystal | angstrom | crystal_sg }
+  X 0.0  0.0  0.0  {if_pos(1) if_pos(2) if_pos(3)}
+  Y 0.5  0.0  0.0
+  Z O.0  0.2  0.2
+
+<b>ATOMIC_VELOCITIES</b>
+  X 0.0  0.0  0.0
+  Y 0.5  0.0  0.0
+  Z O.0  0.2  0.2
+
+<b>K_POINTS</b> { gamma }
+if (gamma)
+   nothing to read
+
+[ <b>CELL_PARAMETERS</b> { alat | bohr | angstrom }
+   v1(1) v1(2) v1(3)
+   v2(1) v2(2) v2(3)
+   v3(1) v3(2) v3(3) ]
+   </intro>
+   <namelist name="ENERGY_CURRENT" >
+      <var name="delta_t" type="REAL" >
+         <default> 1.D0
+         </default>
+         <info>
+Small timestep used to do the numerical derivative needed
+in order to compute some parts of the current. Note that is in the pw.x units.
+         </info>
+      </var>
+      <var name="file_output" type="CHARACTER" >
+         <default> &apos;current_hz&apos;
+         </default>
+         <info>
+The program will write the output in <ref>file_output</ref> and <ref>file_output</ref>  + &apos;.dat&apos;.
+In the latter file the format of the output is:
+
+   NSTEP t_ps J_x J_y J_z Jele_x Jele_y Jele_z v_cm(1)_x v_cm(1)_y v_cm(1)_z ...
+
+where J_x, J_y, J_z are the three components of the DFT energy current,
+and can be easily post-processed by other external programs.
+Jele_* are the components of a part of the energy current that you may use
+for decorrelation and better data analysis.
+v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomic species.
+         </info>
+      </var>
+      <var name="trajdir" type="CHARACTER" >
+         <default> &apos;&apos;
+         </default>
+         <info>
+Prefix of the cp.x trajectory. The program will try to open the files
+<ref>trajdir</ref> .pos and <ref>trajdir</ref> .vel
+The files, for n atoms, are formatted like this:
+
+   NSTEP1 t_ps1
+   x(1) y(1) z(2)
+   .    .    .
+   .    .    .
+   .    .    .
+   x(n) y(n) z(n)
+   NSTEP2 t_ps2
+   x(1) y(1) z(2)
+   .    .    .
+   .    .    .
+   .    .    .
+   x(n) y(n) z(n)
+   ...
+
+the order of the atomic types must be the same of the one provided in the input file.
+If the files are not found, only the positions and the velocities from the input file will be used.
+Note that the units are specified by the input file. The units of the velocities are the same of
+the positions with time in atomic units. If a cp.x trajectory is provided (see <ref>vel_input_units</ref> )
+a factor 2 can be used for the velocities.
+         </info>
+      </var>
+      <var name="vel_input_units" type="CHARACTER" >
+         <default> &apos;CP&apos;
+         </default>
+         <options>
+            <info>
+This multiplies or not by a factor 2 the velocities given in the input.
+                      Available options are:
+            </info>
+            <opt val="'CP'" >
+assume velocities are given in cp.x time units
+            </opt>
+            <opt val="'PW'" >
+assume velocities are given in pw.x time units
+            </opt>
+         </options>
+      </var>
+      <var name="eta" type="REAL" >
+         <default> 1.D0
+         </default>
+         <info> Convergence parameter for Ewald-like sums
+         </info>
+      </var>
+      <var name="n_max" type="INTEGER" >
+         <default> 5
+         </default>
+         <info> Number of images in each direction used to converge some sums.
+         </info>
+      </var>
+      <var name="first_step" type="INTEGER" >
+         <default> 0
+         </default>
+         <info>
+The program will start with step  istep &gt;= <ref>first_step</ref>.
+If greater than zero the input file&apos;s positions and velocities will be ignored.
+         </info>
+      </var>
+      <var name="last_step" type="INTEGER" >
+         <default> 0
+         </default>
+         <info>
+The program will end with step  istep &lt;= <ref>last_step</ref>.
+If 0, it will stop at the end of the trajectory file
+         </info>
+      </var>
+      <var name="step_mul" type="INTEGER" >
+         <default> 1
+         </default>
+         <info>
+The program will use the step only if
+MOD(step, <ref>step_mul</ref>) == <ref>step_rem</ref>.
+         </info>
+      </var>
+      <var name="step_rem" type="INTEGER" >
+         <default> 0
+         </default>
+         <info>
+The program will use the step only if
+MOD(step, <ref>step_mul</ref>) == <ref>step_rem</ref>.
+         </info>
+      </var>
+      <var name="ethr_small_step" type="REAL" >
+         <default> 1.D-7
+         </default>
+         <info>
+Diagonalization threshold after the small <ref>delta_t</ref> numerical derivative step.
+(the system changed a very little)
+         </info>
+      </var>
+      <var name="ethr_big_step" type="REAL" >
+         <default> 1.D-3
+         </default>
+         <info>
+Diagonalization threshold at the beginning of each step but the first,
+for wich the pw.x input value is used.
+         </info>
+      </var>
+      <var name="restart" type="LOGICAL" >
+         <default> .false.
+         </default>
+         <info>
+If true try to read <ref>file_output</ref> .dat and try to set <ref>first_step</ref> to the
+last step in the file + 1
+         </info>
+      </var>
+      <var name="subtract_cm_vel" type="LOGICAL" >
+         <default> .false.
+         </default>
+         <info>
+If true subtract from the velocities of all atoms for every step
+the center of mass velocity for each atomic type.
+It help to decorrelate a little the mass flux from the energy flux
+         </info>
+      </var>
+   </namelist>
+</input_description>

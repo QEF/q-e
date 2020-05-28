@@ -78,6 +78,8 @@ SUBROUTINE do_stop( exit_status )
      STOP 3
   ELSEIF ( exit_status == 4 ) THEN
      STOP 4
+  ELSEIF ( exit_status == 130) THEN
+     STOP
   ELSEIF ( exit_status == 255 ) THEN
      STOP 255
   ELSEIF ( exit_status == 254 ) THEN

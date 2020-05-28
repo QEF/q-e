@@ -107,7 +107,8 @@ atomic_paw.o \
 ld1inc.o \
 parameters.o
 
-QEMODS=../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../UtilXlib/libutil.a
+QEMODS=../../Modules/libqemod.a ../../upflib/libupf.a \
+       ../../FFTXlib/libqefft.a ../../UtilXlib/libutil.a
 
 TLDEPS= bindir libs mods
 

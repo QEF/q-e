@@ -23,7 +23,6 @@ PROGRAM lr_eels_main
                                   & plot_type, nbnd_total, pseudo_hermitian, &
                                   & itermax_int, revc0, lr_io_level, code2, &
                                   & eels, approximation 
-  USE global_version,        ONLY : version_number
   USE ions_base,             ONLY : tau,nat,atm,ityp
   USE environment,           ONLY : environment_start
   USE mp_global,             ONLY : mp_startup

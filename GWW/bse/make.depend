@@ -90,9 +90,9 @@ diago_exc.o : ../../Modules/io_global.o
 diago_exc.o : ../../Modules/kind.o
 diago_exc.o : ../../Modules/noncol.o
 diago_exc.o : ../../Modules/recvec.o
-diago_exc.o : ../../Modules/uspp.o
 diago_exc.o : ../../PW/src/g_psi_mod.o
 diago_exc.o : ../../PW/src/pwcom.o
+diago_exc.o : ../../upflib/uspp.o
 diago_exc.o : bse_basic_structure.o
 diago_exc.o : bse_wannier.o
 diago_exc.o : exciton.o
@@ -134,10 +134,10 @@ dvpsi_bse.o : ../../Modules/ions_base.o
 dvpsi_bse.o : ../../Modules/kind.o
 dvpsi_bse.o : ../../Modules/mp_world.o
 dvpsi_bse.o : ../../Modules/recvec.o
-dvpsi_bse.o : ../../Modules/uspp.o
 dvpsi_bse.o : ../../Modules/wavefunctions.o
 dvpsi_bse.o : ../../PW/src/pwcom.o
 dvpsi_bse.o : ../../UtilXlib/mp.o
+dvpsi_bse.o : ../../upflib/uspp.o
 dvpsi_bse.o : bse_wannier.o
 exc_h_a.o : ../../GWW/pw4gww/fft_custom.o
 exc_h_a.o : ../../Modules/io_files.o
@@ -191,9 +191,9 @@ h_h.o : ../../Modules/becmod.o
 h_h.o : ../../Modules/electrons_base.o
 h_h.o : ../../Modules/kind.o
 h_h.o : ../../Modules/recvec.o
-h_h.o : ../../Modules/uspp.o
 h_h.o : ../../PW/src/pwcom.o
 h_h.o : ../../PW/src/scf_mod.o
+h_h.o : ../../upflib/uspp.o
 h_h.o : bse_wannier.o
 lanczos.o : ../../GWW/pw4gww/fft_custom.o
 lanczos.o : ../../Modules/constants.o
@@ -210,9 +210,9 @@ lanczos.o : exciton.o
 openfil_bse.o : ../../Modules/io_files.o
 openfil_bse.o : ../../Modules/ions_base.o
 openfil_bse.o : ../../Modules/noncol.o
-openfil_bse.o : ../../Modules/uspp.o
 openfil_bse.o : ../../PW/src/atomic_wfc_mod.o
 openfil_bse.o : ../../PW/src/pwcom.o
+openfil_bse.o : ../../upflib/uspp.o
 plot_excwfn.o : ../../GWW/pw4gww/fft_custom.o
 plot_excwfn.o : ../../Modules/cell_base.o
 plot_excwfn.o : ../../Modules/io_files.o
@@ -255,11 +255,11 @@ read_export.o : ../../Modules/kind.o
 read_export.o : ../../Modules/mp_pools.o
 read_export.o : ../../Modules/mp_world.o
 read_export.o : ../../Modules/recvec.o
-read_export.o : ../../Modules/uspp.o
 read_export.o : ../../Modules/wavefunctions.o
 read_export.o : ../../PW/src/ldaU.o
 read_export.o : ../../PW/src/pwcom.o
 read_export.o : ../../UtilXlib/mp.o
+read_export.o : ../../upflib/uspp.o
 rotate_wannier.o : ../../Modules/cell_base.o
 rotate_wannier.o : ../../Modules/constants.o
 rotate_wannier.o : ../../Modules/io_files.o

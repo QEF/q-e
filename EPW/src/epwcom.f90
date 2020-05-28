@@ -176,8 +176,6 @@
   !! nr. of bins for frequency scan in \delta( e_k - e_k+q - w ) when strict sel. rule is applied
   INTEGER :: nbndsub
   !! nr. of bands in the optimal subspace (when disentanglement is used)
-  INTEGER :: nbndskip
-  !! nr. of bands to be skipped when we use only a subspace (this is nfirstwin-1 in Marzari's notation)
   INTEGER :: num_iter
   !! nr. of steps used in creating the maximally localized Wannier functions
   INTEGER :: iprint
@@ -247,6 +245,14 @@
   !! change in energy for each additional smearing in the selfen_phon
   !
   ! Wannierization
+  CHARACTER(LEN = 255) :: wannier_plot_list
+  !! Field read for parsing Wannier function list
+  LOGICAL :: wannier_plot
+  !! if .TRUE. plot Wannier functions
+  LOGICAL :: reduce_unk
+  !! if .TRUE. plot Wannier functions on reduced grids
+  INTEGER :: wannier_plot_supercell(3)
+  !! Size of supercell for plotting Wannier functions
   REAL(KIND = DP) :: dis_win_min
   !! min energy of the Wannier disentanglement window
   REAL(KIND = DP) :: dis_win_max
@@ -259,6 +265,10 @@
   !! parameter for Wannier functions via SCDM algorithm
   REAL(KIND = DP) :: scdm_sigma
   !! parameter for Wannier functions via SCDM algorithm
+  REAL(KIND = DP) :: wannier_plot_scale
+  !! Scaling parameter for cube files
+  REAL(KIND = DP) :: wannier_plot_radius
+  !! Cut-off radius for plotting Wannier functions
   !
   ! Superconductivity
   REAL(KIND = DP) :: eps_acustic
@@ -331,7 +341,9 @@
   REAL(KIND = DP) :: n_r
   !! Refractive index
   !
+  ! ----------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  ! Shell implementation for future use.
   INTEGER :: num_cbands
   !! number of conduction bands accounted in the Hilbert space of polaron Hamilontian
   INTEGER :: start_band
@@ -354,23 +366,23 @@
   !! initial polaron wavefuntion with 1:Gaussian package and 2:Random number
   INTEGER :: niterPlrn
   !! Maximum number of polaron SCF loops.
-  REAL (KIND=DP) :: spherical_cutoff
+  REAL(KIND = DP) :: spherical_cutoff
   !!  spherical_cutoff for fast convergence in polaron calculation
-  REAL (KIND=DP) :: conv_thr_polaron
+  REAL(KIND = DP) :: conv_thr_polaron
   !!  convergent threshold for polaron calculation
-  REAL (KIND=DP) :: r01, r02, r03
+  REAL(KIND = DP) :: r01, r02, r03
   !!  x,y,z Carsteian coordinate of polaron centre
-  REAL (KIND=DP) :: emin_plrn, emax_plrn, sigma_edos_plrn
+  REAL(KIND = DP) :: emin_plrn, emax_plrn, sigma_edos_plrn
   !! Electron Energy range in polaron DOS calculation
-  REAL (KIND=DP) :: pmin_plrn, pmax_plrn, sigma_pdos_plrn
+  REAL(KIND = DP) :: pmin_plrn, pmax_plrn, sigma_pdos_plrn
   !! Phonon Energy range in polaron DOS calculation
-  REAL (KIND=DP) :: n_dop
+  REAL(KIND = DP) :: n_dop
   !! extra added charge per cell (as tot_charge, with opposite sign)
-  REAL (KIND=DP) :: sigma_plrn
+  REAL(KIND = DP) :: sigma_plrn
   !! decay radius of polaron wavefunction in initialization
-  REAL (KIND=DP) :: ethr_Plrn
+  REAL(KIND = DP) :: ethr_Plrn
   !! decay radius of polaron wavefunction in initialization
-  REAL (KIND=DP) :: mixing_Plrn
+  REAL(KIND = DP) :: mixing_Plrn
   !! Mixing weight in Self-consistency
   LOGICAL :: wfcelec
   !! if .true. calculates perturbated part of the wavefunction
@@ -394,6 +406,7 @@
   !! if .true. calculating contributed electron dos
   LOGICAL :: phonon_dos
   !! if .true. calculating excited phonon dos
+  ! ----------------------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
   END MODULE control_epw

@@ -12,7 +12,8 @@ PROGRAM X_Spectra
   USE io_global,       ONLY : stdout,ionode,ionode_id   ! Modules/io_global.f90
   USE io_files,        ONLY : prefix, iunwfc, nwordwfc, tmp_dir, diropn
   USE cell_base,       ONLY : bg, at, celldm
-  USE parameters,      ONLY : ntypx,lmaxx,lqmax
+  USE parameters,      ONLY : ntypx
+  USE upf_params,      ONLY : lmaxx
   USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
   USE start_k,         ONLY : nk1, nk2, nk3, k1, k2, k3
   USE wvfct,           ONLY : npwx ,nbnd, et, wg ! et(nbnd,nkstot)
@@ -457,7 +458,7 @@ SUBROUTINE define_index_arrays(paw_iltonhb)
   !----------------------------------------------------------------------------
   USE paw_gipaw,   ONLY: paw_lmaxkb, paw_recon
   USE ions_base,   ONLY: ntyp => nsp
-  USE parameters,  ONLY: lmaxx
+  USE upf_params,  ONLY: lmaxx
   USE xspectra_paw_variables, ONLY : xspectra_paw_nhm ! CG
 
   IMPLICIT NONE
@@ -671,10 +672,6 @@ SUBROUTINE check_paw_projectors(xiabs)
   USE paw_gipaw,       ONLY: paw_lmaxkb, paw_recon
   USE xspectra_paw_variables, ONLY: xspectra_paw_nhm
   USE atom,            ONLY: rgrid, msh
-  !  USE atom,  ONLY : &
-  !       mesh,     &!mesh(ntypx) number of mesh points              
-  !       msh ,     &!msh(ntypx)the point at rcut=end of radial integration 
-  !       r, rab
   USE ions_base,       ONLY: ntyp => nsp
   USE io_global,       ONLY: stdout
   USE radin_mod

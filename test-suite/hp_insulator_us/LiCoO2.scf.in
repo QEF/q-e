@@ -4,7 +4,8 @@
     prefix      ='LiCoO2'
     pseudo_dir  = '../../pseudo/'
     outdir      ='./'
-    verbosity   ='high'
+    tprnfor = .true.
+    tstress = .true.
  /
  &system
     ibrav     = 5,
@@ -16,8 +17,8 @@
     ecutrho   = 200.0
     lda_plus_u        = .true.,
     lda_plus_u_kind   = 0,
-    U_projection_type = 'ortho-atomic',
-    Hubbard_U(1)      = 1.d-8
+    U_projection_type = 'atomic',
+    Hubbard_U(1)      = 7.75
  /
  &electrons
     conv_thr    =  1.d-10

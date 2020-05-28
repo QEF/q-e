@@ -1,0 +1,257 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: all_currents.x / energy_current / Quantum Espresso (version: git)
+------------------------------------------------------------------------
+
+
+Program to compute energy current given the atomic configuration and the velocities of the atoms.
+
+Note that a very small conv_thr must be given in the ELECTRONS namelist, in the order of 1.D-11.
+The numerical derivative is very sensitive to this parameter and to "delta_t". Careful convergence
+tests are needed. Note that if too relaxed values are chosen, the result can depend on the algorithm
+used to diagonalize the hamiltonian a lot (the 4th/3rd digit can be wrong).
+Performance of the calculation can be tuned a little bit with the parameters "ethr_small_step"
+and "ethr_big_step", that can avoid the waste of some iterations in the diagonalization of the
+hamiltonian in the first scf step of every scf calculation (the program does 2 scf for each step).
+Note that in order to read atomic velocities, in the namelist CONTROL you must set calculation='md',
+and in the namelist IONS you must set ion_velocities='from_input'
+
+This program implements
+
+Marcolongo, A., Umari, P. & Baroni, S.
+Microscopic theory and quantum simulation of atomic heat transport.
+Nature Phys 12, 80-84 (2016). https://doi.org/10.1038/nphys3509
+
+and was originally written by Aris Marcolongo in 2014 at SISSA for his PhD thesis
+( https://iris.sissa.it/handle/20.500.11767/3897 )
+The all_current driver program was rewritten from scratch by Riccardo Bertossa at SISSA in 2020.
+Other contributions are from Loris Ercole (SISSA - EPFL ) , Davide Tisi (SISSA) and Federico Grasselli (SISSA).
+
+All the namilist but "ENERGY_CURRENT" are the same as the program pw.x
+
+Structure of the input data:
+===============================================================================
+
+&ENERGY_CURRENT
+  ...
+/
+
+&CONTROL
+  MUST SET calculation='md'
+  ...
+/
+
+&SYSTEM
+  ...
+/
+
+&ELECTRONS
+  ...
+/
+
+[ &IONS
+  MUST SET ion_velocities='from_input'
+  ...
+ / ]
+
+[ &CELL
+  ...
+ / ]
+
+ATOMIC_SPECIES
+ X  Mass_X  PseudoPot_X
+ Y  Mass_Y  PseudoPot_Y
+ Z  Mass_Z  PseudoPot_Z
+
+ATOMIC_POSITIONS { alat | bohr | crystal | angstrom | crystal_sg }
+  X 0.0  0.0  0.0  {if_pos(1) if_pos(2) if_pos(3)}
+  Y 0.5  0.0  0.0
+  Z O.0  0.2  0.2
+
+ATOMIC_VELOCITIES
+  X 0.0  0.0  0.0
+  Y 0.5  0.0  0.0
+  Z O.0  0.2  0.2
+
+K_POINTS { gamma }
+if (gamma)
+   nothing to read
+
+[ CELL_PARAMETERS { alat | bohr | angstrom }
+   v1(1) v1(2) v1(3)
+   v2(1) v2(2) v2(3)
+   v3(1) v3(2) v3(3) ]
+
+
+
+========================================================================
+NAMELIST: &ENERGY_CURRENT
+
+   +--------------------------------------------------------------------
+   Variable:       delta_t
+   
+   Type:           REAL
+   Default:        1.D0
+   Description:    Small timestep used to do the numerical derivative needed
+                   in order to compute some parts of the current. Note that is in the pw.x units.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       file_output
+   
+   Type:           CHARACTER
+   Default:        'current_hz'
+   Description:    The program will write the output in "file_output" and "file_output"  + '.dat'.
+                   In the latter file the format of the output is:
+                   
+                      NSTEP t_ps J_x J_y J_z Jele_x Jele_y Jele_z v_cm(1)_x v_cm(1)_y v_cm(1)_z ...
+                   
+                   where J_x, J_y, J_z are the three components of the DFT energy current,
+                   and can be easily post-processed by other external programs.
+                   Jele_* are the components of a part of the energy current that you may use
+                   for decorrelation and better data analysis.
+                   v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomic species.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       trajdir
+   
+   Type:           CHARACTER
+   Default:        ''
+   Description:    Prefix of the cp.x trajectory. The program will try to open the files
+                   "trajdir" .pos and "trajdir" .vel
+                   The files, for n atoms, are formatted like this:
+                   
+                      NSTEP1 t_ps1
+                      x(1) y(1) z(2)
+                      .    .    .
+                      .    .    .
+                      .    .    .
+                      x(n) y(n) z(n)
+                      NSTEP2 t_ps2
+                      x(1) y(1) z(2)
+                      .    .    .
+                      .    .    .
+                      .    .    .
+                      x(n) y(n) z(n)
+                      ...
+                   
+                   the order of the atomic types must be the same of the one provided in the input file.
+                   If the files are not found, only the positions and the velocities from the input file will be used.
+                   Note that the units are specified by the input file. The units of the velocities are the same of
+                   the positions with time in atomic units. If a cp.x trajectory is provided (see "vel_input_units" )
+                   a factor 2 can be used for the velocities.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vel_input_units
+   
+   Type:           CHARACTER
+   Default:        'CP'
+   Description:   
+                   This multiplies or not by a factor 2 the velocities given in the input.
+                                         Available options are:
+    
+                   'CP' :
+                        assume velocities are given in cp.x time units
+    
+                   'PW' :
+                        assume velocities are given in pw.x time units
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       eta
+   
+   Type:           REAL
+   Default:        1.D0
+   Description:    Convergence parameter for Ewald-like sums
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       n_max
+   
+   Type:           INTEGER
+   Default:        5
+   Description:    Number of images in each direction used to converge some sums.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       first_step
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    The program will start with step  istep >= "first_step".
+                   If greater than zero the input file's positions and velocities will be ignored.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       last_step
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    The program will end with step  istep <= "last_step".
+                   If 0, it will stop at the end of the trajectory file
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       step_mul
+   
+   Type:           INTEGER
+   Default:        1
+   Description:    The program will use the step only if
+                   MOD(step, "step_mul") == "step_rem".
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       step_rem
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    The program will use the step only if
+                   MOD(step, "step_mul") == "step_rem".
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ethr_small_step
+   
+   Type:           REAL
+   Default:        1.D-7
+   Description:    Diagonalization threshold after the small "delta_t" numerical derivative step.
+                   (the system changed a very little)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ethr_big_step
+   
+   Type:           REAL
+   Default:        1.D-3
+   Description:    Diagonalization threshold at the beginning of each step but the first,
+                   for wich the pw.x input value is used.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       restart
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If true try to read "file_output" .dat and try to set "first_step" to the
+                   last step in the file + 1
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       subtract_cm_vel
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If true subtract from the velocities of all atoms for every step
+                   the center of mass velocity for each atomic type.
+                   It help to decorrelate a little the mass flux from the energy flux
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+This file has been created by helpdoc utility on Tue May 26 12:09:02 CEST 2020

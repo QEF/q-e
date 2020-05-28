@@ -158,8 +158,12 @@ clean:
 	        ph_U_metal_us/iron.* ph_U_insulator_us/bn.* ph_U_metal_paw/nickel.* ph_U_insulator_paw/bn.*
 # Special case for PH dvscf_q2r
 	@rm -rf ph_interpol*/w_pot/ ph_interpol*/*.dyn*.elph.* ph_interpol*/*.wfc* ph_interpol*/*.dyn.freq
+# Special case for PH ahc
+	@rm -rf ph_ahc*/wpot*/ ph_ahc*/selfen_*.dat ph_ahc*/diam.modes? ph_ahc*/*.ifc ph_ahc*/ahc_dir* \
+	  ph_ahc*/*.wfc*
 # Cleaning HP final files
-	@rm -rf hp_*/HP hp_*/*hub* hp_*/*.xml hp_*/*.wfc* hp_*/*.save hp_*/*Hubbard_parameters*
+	@rm -rf hp_*/HP hp_*/*hub* hp_*/*.xml hp_*/*.wfc* hp_*/*.save hp_*/*Hubbard_parameters* \
+		hp_*/*HubbardV* hp_*/*mix* hp_*/*parameters.out
 # Cleaning EPW final files
 	@rm -rf epw_*/_ph0 epw_*/*.save epw_*/*.wfc* epw_*/*.dyn* \
 		epw_*/*.qdos_25.00 epw_*/*.P epw_*/*.freq epw_*/*.wout \
@@ -181,7 +185,8 @@ clean:
                 epw_*/epsilon2_indabs.dat epw_*/epsilon2_indabs_lorenz.dat \
                 epw_mob_ibte_sym/save epw_*/*.bvec epw_*/*.fc epw_*/*.xml epw_*/*.labelinfo.dat \
                 epw_mob_ibte/save epw_mob/save epw_*/Fepmatkq1 epw_*/Fepmatkqcb1 epw_*/Fsparse \
-                epw_*/Fsparsecb epw_*/inv_taucb_tmp epw_*/inv_tau_tmp epw_mob_polar/save
+                epw_*/Fsparsecb epw_*/inv_taucb_tmp epw_*/inv_tau_tmp epw_mob_polar/save \
+                epw_base/*.cube
                 
 # Special cases for EPW
 	@rm -rf epw_base/save epw_super/save epw_pl/save/ epw_polar/save/ \
