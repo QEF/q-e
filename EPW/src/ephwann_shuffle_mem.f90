@@ -820,16 +820,16 @@
     !
     totq = 0
     !
-    ! This is implemented for the Superconductivity
+    ! HP: This is implemented for the Superconductivity
     !IF (ephwrite) THEN
-      !
-      totq = nqf
-      ALLOCATE(selecq(nqf), STAT = ierr)
-      IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating selecq', 1)
-      DO iq = 1, nqf
-        selecq(iq) = iq
-      ENDDO
-      !
+    !  !
+    !  totq = nqf
+    !  ALLOCATE(selecq(nqf), STAT = ierr)
+    !  IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating selecq', 1)
+    !  DO iq = 1, nqf
+    !    selecq(iq) = iq
+    !  ENDDO
+    !  !
     !ELSE ! ephwrite
       ! Check if the file has been pre-computed
       IF (mpime == ionode_id) THEN
@@ -965,16 +965,16 @@
     ! We just do one loop to get interpolated eigenenergies.
     IF(scatread) iq_restart = totq - 1
     !
-    ! Restart in IBTE case
-    IF (iterative_bte) THEN
+    ! Restart in IBTE and Superconductivity cases
+    IF (iterative_bte .OR. ephwrite) THEN
       IF (mpime == ionode_id) THEN
-        INQUIRE(FILE = 'restart_ibte.fmt', EXIST = exst)
+        INQUIRE(FILE = 'restart.fmt', EXIST = exst)
       ENDIF
       CALL mp_bcast(exst, ionode_id, world_comm)
       !
       IF (exst) THEN
         IF (mpime == ionode_id) THEN
-          OPEN(UNIT = iunrestart, FILE = 'restart_ibte.fmt', STATUS = 'old', IOSTAT = ios)
+          OPEN(UNIT = iunrestart, FILE = 'restart.fmt', STATUS = 'old', IOSTAT = ios)
           READ(iunrestart, *) iq_restart
           READ(iunrestart, *) ind_tot
           READ(iunrestart, *) ind_totcb
@@ -986,29 +986,33 @@
             READ(iunrestart, *) lrepmatw5_restart(ipool)
           ENDDO
           CLOSE(iunrestart)
-          !
-          OPEN(UNIT = iuntau, FORM = 'unformatted', FILE = 'inv_tau_tmp', STATUS = 'old')
-          READ(iuntau) inv_tau_all
-          CLOSE(iuntau)
-          !
-          OPEN(UNIT = iuntaucb, FORM = 'unformatted', FILE = 'inv_taucb_tmp', STATUS = 'old')
-          READ(iuntaucb) inv_tau_allcb
-          CLOSE(iuntaucb)
         ENDIF
         CALL mp_bcast(iq_restart, ionode_id, world_comm)
         CALL mp_bcast(npool_tmp, ionode_id, world_comm)
         CALL mp_bcast(lrepmatw2_restart, ionode_id, world_comm)
         CALL mp_bcast(lrepmatw5_restart, ionode_id, world_comm)
-        CALL mp_bcast(inv_tau_all, ionode_id, world_comm)
-        CALL mp_bcast(inv_tau_allcb, ionode_id, world_comm)
-        IF (npool /= npool_tmp) CALL errore('ephwann_shuffle','Number of cores is different',1)
-        IF (lower_bnd - 1 >= 1) THEN
-          inv_tau_all(:, 1:lower_bnd - 1, :) = 0d0
-          inv_tau_allcb(:, 1:lower_bnd - 1, :) = 0d0
-        ENDIF
-        IF (upper_bnd + 1 <= nktotf) THEN
-          inv_tau_all(:, upper_bnd + 1:nktotf, :) = 0d0
-          inv_tau_allcb(:, upper_bnd + 1:nktotf, :) = 0d0
+        ! 
+        IF (iterative_bte) THEN
+          IF (mpime == ionode_id) THEN
+            OPEN(UNIT = iuntau, FORM = 'unformatted', FILE = 'inv_tau_tmp', STATUS = 'old')
+            READ(iuntau) inv_tau_all
+            CLOSE(iuntau)
+            !
+            OPEN(UNIT = iuntaucb, FORM = 'unformatted', FILE = 'inv_taucb_tmp', STATUS = 'old')
+            READ(iuntaucb) inv_tau_allcb
+            CLOSE(iuntaucb)
+          ENDIF
+          CALL mp_bcast(inv_tau_all, ionode_id, world_comm)
+          CALL mp_bcast(inv_tau_allcb, ionode_id, world_comm)
+          IF (npool /= npool_tmp) CALL errore('ephwann_shuffle','Number of cores is different',1)
+          IF (lower_bnd - 1 >= 1) THEN
+            inv_tau_all(:, 1:lower_bnd - 1, :) = 0d0
+            inv_tau_allcb(:, 1:lower_bnd - 1, :) = 0d0
+          ENDIF
+          IF (upper_bnd + 1 <= nktotf) THEN
+            inv_tau_all(:, upper_bnd + 1:nktotf, :) = 0d0
+            inv_tau_allcb(:, upper_bnd + 1:nktotf, :) = 0d0
+          ENDIF
         ENDIF
         !
 #if defined(__MPI)
@@ -1017,45 +1021,14 @@
 #endif
         IF (ierr /= 0) CALL errore('ephwann_shuffle', 'error in MPI_BCAST', 1)
         !
+        IF(ephwrite .AND. iq_restart > 1) first_cycle = .TRUE.
+        !
         ! Now, the iq_restart point has been done, so we need to do the next
         iq_restart = iq_restart + 1
         WRITE(stdout, '(5x,a,i8,a)')'We restart from ', iq_restart, ' q-points'
         !
       ENDIF ! exst
     ENDIF
-    !
-    ! Restart in ephwrite case
-    IF (ephwrite) THEN
-      IF (mpime == ionode_id) THEN
-        INQUIRE(FILE = 'restart_ephmat.fmt', EXIST = exst)
-      ENDIF
-      CALL mp_bcast(exst, ionode_id, world_comm)
-      !
-      IF (exst) THEN
-        IF (mpime == ionode_id) THEN
-          OPEN(UNIT = iunrestart, FILE = 'restart_ephmat.fmt', STATUS = 'old', IOSTAT = ios)
-          READ(iunrestart, *) iq_restart
-          READ(iunrestart, *) npool_tmp
-          CLOSE(iunrestart)
-          !
-        ENDIF
-        CALL mp_bcast(iq_restart, ionode_id, world_comm)
-        CALL mp_bcast(npool_tmp, ionode_id, world_comm)
-        IF (npool /= npool_tmp) CALL errore('ephwann_shuffle','Number of cores is different',1)
-        !
-        iq_restart = iq_restart + 1
-        !
-        IF (iq_restart > totq) THEN
-          WRITE(stdout, '(5x,a/)') 'All q-points are done !!'
-        ELSE
-          WRITE(stdout, '(5x,a,i8,a/)') 'We restart from ', iq_restart, ' q-points'
-        ENDIF
-        !
-        IF (iq_restart > 1) first_cycle = .TRUE.
-        !
-      ENDIF ! exst
-    ENDIF
-    !
     ! Adaptative smearing when degauss = 0
     adapt_smearing = .FALSE.
     IF (ABS(degaussw) < eps16) THEN
@@ -1567,17 +1540,11 @@
     !
   ENDIF ! (iterative_bte .AND. epmatkqread)
   !
-  IF (mp_mesh_k .AND. iterative_bte) THEN
+  IF ((iterative_bte .OR. ephwrite) .AND. mp_mesh_k) THEN
     DEALLOCATE(map_rebal, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating map_rebal', 1)
     DEALLOCATE(map_rebal_inv, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating map_rebal_inv', 1)
-  ENDIF
-  IF (mp_mesh_k .AND. ephwrite) THEN
-    DEALLOCATE(map_rebal, STAT = ierr)
-    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating map_rebal', 1)
-    DEALLOCATE(map_rebal_inv, STAT = ierr)
-    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating map_rebal_inv', 1)
   ENDIF
   IF (vme) THEN
     DEALLOCATE(vmef, STAT = ierr)

@@ -1295,7 +1295,6 @@
     USE cell_base,     ONLY : bg
     USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE wan2bloch,     ONLY : hamwan2bloch
-    USE io_eliashberg, ONLY : kpmq_map
     USE kinds_epw,     ONLY : SIK2
     USE poolgathering, ONLY : poolgather
     !
@@ -1965,6 +1964,65 @@
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE special_points
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE kpmq_map(xk, xq, sign1, nkq)
+    !-----------------------------------------------------------------------
+    !!
+    !! this routine finds the index of k+q or k-q point on the fine k-mesh
+    !!
+    USE kinds,     ONLY : DP
+    USE epwcom,    ONLY : nkf1, nkf2, nkf3
+    USE constants_epw, ONLY : eps5
+    USE mp,        ONLY : mp_bcast, mp_barrier
+    USE kfold,     ONLY : backtoBZ
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: sign1
+    !! +1 for searching k+q, -1 for k-q
+    INTEGER, INTENT(out) :: nkq
+    !! the index of k+sign*q
+    !
+    REAL(KIND = DP), INTENT(in) :: xk(3)
+    !! coordinates of k points
+    REAL(KIND = DP), INTENT(in) :: xq(3)
+    !! coordinates of q points
+    !
+    ! Local variables
+    LOGICAL :: in_the_list
+    !! Check if k point is in the list
+    !
+    REAL(KIND = DP) :: xx, yy, zz
+    !! Temporary variables
+    REAL(KIND = DP) :: xxk(3)
+    !! k + (sign1) * q
+    !
+    xxk(:) = xk(:) + DBLE(sign1) * xq(:)
+    xx = xxk(1) * nkf1
+    yy = xxk(2) * nkf2
+    zz = xxk(3) * nkf3
+    in_the_list = ABS(xx - NINT(xx)) <= eps5 .AND. &
+                  ABS(yy - NINT(yy)) <= eps5 .AND. &
+                  ABS(zz - NINT(zz)) <= eps5
+    IF (.NOT. in_the_list) CALL errore('kpmq_map', 'k+q does not fall on k-grid', 1)
+    !
+    !  find the index of this k+q or k-q in the k-grid
+    !  make sure xx, yy, zz are in the 1st BZ
+    !
+    CALL backtoBZ(xx, yy, zz, nkf1, nkf2, nkf3)
+    !
+    ! since k- and q- meshes are commensurate, nkq can be easily found
+    !
+    nkq = NINT(xx) * nkf2 * nkf3 + NINT(yy) * nkf3 + NINT(zz) + 1
+    !
+    !  Now nkq represents the index of k+sign*q on the fine k-grid.
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE kpmq_map
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------

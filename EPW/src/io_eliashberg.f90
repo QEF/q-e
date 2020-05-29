@@ -953,6 +953,7 @@
     USE phcom,     ONLY : nmodes
     USE epwcom,    ONLY : nkf1, nkf2, nkf3, nqstep
     USE elph2,     ONLY : nqtotf, xqf
+    USE grid,     ONLY : kpmq_map
     USE eliashbergcom, ONLY : ixkf, ixkff, xkff, xkfs, nkfs, ixkqf, ixqfs, nbndfs, nqfs, memlt_pool
     USE constants_epw, ONLY : zero
     USE symm_base, ONLY : nrot
@@ -1369,6 +1370,8 @@
     !! Counter on bands
     INTEGER :: imode
     !! Counter on mode
+    INTEGER :: ipool
+    !! Counter on npool
     INTEGER :: fermicount
     !! Number of states on the Fermi surface
     INTEGER :: nkftot
@@ -1399,11 +1402,14 @@
     !! Function to compute the density of states at the Fermi level
     REAL(KIND = DP), EXTERNAL :: efermig
     !! Return the fermi energy
+    INTEGER :: dummy
+    !! Dummy variable for writing
     CHARACTER(LEN = 256) :: dirname
     !! Name of the directory to save ikmap/egnv/freq/ephmat files
     !
     ind(:)    = 0
     tmp_g2(:) = 0
+    dummy     = 0
     !
     dirname = TRIM(tmp_dir) // TRIM(prefix) // '.ephmat'
     !
@@ -1571,9 +1577,18 @@
     CLOSE(iufileph)
     !
     IF (my_pool_id == 0) THEN
-      OPEN(UNIT = iunrestart, FILE = 'restart_ephmat.fmt')
+      ! format is compatible with IBTE
+      OPEN(UNIT = iunrestart, FILE = 'restart.fmt')
       WRITE(iunrestart, *) iqq
+      WRITE(iunrestart, *) dummy
+      WRITE(iunrestart, *) dummy
       WRITE(iunrestart, *) npool
+      DO ipool = 1, npool
+        WRITE(iunrestart, *) dummy
+      ENDDO
+      DO ipool = 1, npool
+       WRITE(iunrestart, *) dummy
+      ENDDO
       CLOSE(iunrestart)
     ENDIF
     !
@@ -1857,7 +1872,7 @@
     USE mp_world,  ONLY : mpime
     USE division,  ONLY : fkbounds
     USE kinds_epw, ONLY : SIK2
-    USE grid,      ONLY : kpoint_grid_epw
+    USE grid,      ONLY : kpmq_map, kpoint_grid_epw
     USE io_files,  ONLY : prefix, tmp_dir, create_directory
     USE io_var,    ONLY : iufilikmap
     !
@@ -2031,65 +2046,6 @@
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE kqmap_fine
-    !-----------------------------------------------------------------------
-    !
-    !-----------------------------------------------------------------------
-    SUBROUTINE kpmq_map(xk, xq, sign1, nkq)
-    !-----------------------------------------------------------------------
-    !!
-    !! this routine finds the index of k+q or k-q point on the fine k-mesh
-    !!
-    USE kinds,     ONLY : DP
-    USE epwcom,    ONLY : nkf1, nkf2, nkf3
-    USE constants_epw, ONLY : eps5
-    USE mp,        ONLY : mp_bcast, mp_barrier
-    USE kfold,     ONLY : backtoBZ
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(in) :: sign1
-    !! +1 for searching k+q, -1 for k-q
-    INTEGER, INTENT(out) :: nkq
-    !! the index of k+sign*q
-    !
-    REAL(KIND = DP), INTENT(in) :: xk(3)
-    !! coordinates of k points
-    REAL(KIND = DP), INTENT(in) :: xq(3)
-    !! coordinates of q points
-    !
-    ! Local variables
-    LOGICAL :: in_the_list
-    !! Check if k point is in the list
-    !
-    REAL(KIND = DP) :: xx, yy, zz
-    !! Temporary variables
-    REAL(KIND = DP) :: xxk(3)
-    !! k + (sign1) * q
-    !
-    xxk(:) = xk(:) + DBLE(sign1) * xq(:)
-    xx = xxk(1) * nkf1
-    yy = xxk(2) * nkf2
-    zz = xxk(3) * nkf3
-    in_the_list = ABS(xx - NINT(xx)) <= eps5 .AND. &
-                  ABS(yy - NINT(yy)) <= eps5 .AND. &
-                  ABS(zz - NINT(zz)) <= eps5
-    IF (.NOT. in_the_list) CALL errore('kpmq_map', 'k+q does not fall on k-grid', 1)
-    !
-    !  find the index of this k+q or k-q in the k-grid
-    !  make sure xx, yy, zz are in the 1st BZ
-    !
-    CALL backtoBZ(xx, yy, zz, nkf1, nkf2, nkf3)
-    !
-    ! since k- and q- meshes are commensurate, nkq can be easily found
-    !
-    nkq = NINT(xx) * nkf2 * nkf3 + NINT(yy) * nkf3 + NINT(zz) + 1
-    !
-    !  Now nkq represents the index of k+sign*q on the fine k-grid.
-    !
-    RETURN
-    !
-    !-----------------------------------------------------------------------
-    END SUBROUTINE kpmq_map
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
