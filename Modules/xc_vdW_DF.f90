@@ -61,8 +61,7 @@ USE io_global,         ONLY : stdout, ionode
 USE fft_base,          ONLY : dfftp
 USE fft_interfaces,    ONLY : fwfft, invfft
 USE control_flags,     ONLY : iverbosity, gamma_only
-USE corr_lda,          ONLY : pw, pw_spin
-
+USE ldaxc_interfaces,  ONLY : pw, pw_spin
 
 ! ----------------------------------------------------------------------
 ! No implicit variables
@@ -722,8 +721,6 @@ CONTAINS
   !     dq0_dgradrho = total_rho / |grad_rho| * d q0 / d |grad_rho|
 
   SUBROUTINE get_q0_on_grid (total_rho, grad_rho, q0, dq0_drho, dq0_dgradrho, thetas)
-
-  USE ldaxc_interfaces, ONLY: pw
   
   IMPLICIT NONE
 
@@ -866,8 +863,6 @@ CONTAINS
   SUBROUTINE get_q0_on_grid_spin (total_rho, rho_up, rho_down, grad_rho, &
              grad_rho_up, grad_rho_down, q0, dq0_drho_up, dq0_drho_down, &
              dq0_dgradrho_up, dq0_dgradrho_down, thetas)
-
-  USE ldaxc_interfaces, ONLY: pw_spin
 
   IMPLICIT NONE
 
