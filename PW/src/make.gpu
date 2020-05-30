@@ -61,6 +61,7 @@ allocate_nlpot.o : pwcom_gpu.o
 allocate_nlpot.o : pwcom_gpu.o
 allocate_wfc.o : pwcom_gpu.o
 atomic_wfc.o : pwcom_gpu.o
+atomic_wfc_gpu.o : pwcom_gpu.o
 c_bands.o : g_psi_mod_gpu.o
 c_bands.o : pwcom_gpu.o
 clean_pw.o : pwcom_gpu.o
@@ -89,6 +90,7 @@ forces.o : force_us_gpu.o
 forces.o : force_lc_gpu.o
 dvloc_of_g_gpu.o : Coul_cut_2D.o
 dvloc_of_g_gpu.o : esm.o
+orthoatwfc_gpu.o : ldaU.o
 stres_loc_gpu.o : dvloc_of_g_gpu.o
 stres_loc_gpu.o : buffers.o
 stres_loc_gpu.o : Coul_cut_2D.o
