@@ -40,15 +40,13 @@
     USE mp,               ONLY : mp_barrier, mp_sum, mp_bcast
     USE mp_global,        ONLY : world_comm
     USE symm_base,        ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
-    USE io_eliashberg,    ONLY : kpmq_map
     USE printing,         ONLY : print_mob, print_mob_sym
-    USE grid,             ONLY : k_avg
     USE io_transport,     ONLY : fin_write, fin_read
     USE io_files,         ONLY : diropn
     USE control_flags,    ONLY : iverbosity
     USE kinds_epw,        ONLY : SIK2
     USE wigner,           ONLY : backtoWS
-    USE grid,             ONLY : special_points, kpoint_grid_epw
+    USE grid,             ONLY : k_avg, special_points, kpoint_grid_epw, kpmq_map
     USE poolgathering,    ONLY : poolgather2
     !
     IMPLICIT NONE
