@@ -265,7 +265,7 @@ CONTAINS
    REAL(DP) :: alpha, gamman, j
    COMPLEX(DP) :: fup, fdown  
    REAL(DP), ALLOCATABLE :: chiaux_d(:)
-   INTEGER :: nc, ib
+   INTEGER :: nc, ib, ig
    !
 #if defined(__CUDA)
    ATTRIBUTES(DEVICE) :: chiaux_d
@@ -283,7 +283,10 @@ CONTAINS
    !  Find the functions j=l-1/2
    !
    IF (l == 0)  THEN
-      chiaux_d(:) = chiq_d(:,nb,nt)
+      !$cuf kernel do
+      DO ig = 1, npw
+         chiaux_d(ig) = chiq_d(ig,nb,nt)
+      END DO
    ELSE
       DO ib = 1, upf(nt)%nwfc
          IF ((upf(nt)%lchi(ib) == l).AND. &
