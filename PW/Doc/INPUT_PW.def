@@ -2094,16 +2094,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
 
         var diago_david_ndim -type INTEGER { 
-            default { 4 }
+            default { 2 }
             info {
                 For Davidson diagonalization: dimension of workspace
                 (number of wavefunction packets, at least 2 needed).
                 A larger value may yield a smaller number of iterations in
                 the algorithm but uses more memory and more CPU time in 
-                subspace diagonalization.
-                Try @ref diago_david_ndim=2 if you are tight on memory or if
-                the time spent in subspace diagonalization (cdiaghg/rdiaghg)
-                is significant compared to the time spent in h_psi
+                subspace diagonalization (cdiaghg/rdiaghg). You may try
+                @ref diago_david_ndim=4 if you are not tight on memory 
+                and if the time spent in subspace diagonalization is small
+                compared to the time spent in h_psi
             }
         }
 

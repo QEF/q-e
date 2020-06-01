@@ -339,7 +339,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                         npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
              !
              avg_iter = avg_iter + nhpsi/float(nbnd) 
-             write (6,*) ntry, avg_iter, nhpsi
+             ! write (6,*) ntry, avg_iter, nhpsi
              !
           ENDIF
           !
@@ -505,8 +505,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                         npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
              !
              avg_iter = avg_iter + nhpsi/float(nbnd) 
-             write (6,*) ntry, avg_iter, nhpsi
-
+             ! write (6,*) ntry, avg_iter, nhpsi
+             !
           ENDIF
           ntry = ntry + 1
           !
