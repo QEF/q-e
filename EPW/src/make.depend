@@ -380,7 +380,6 @@ grid.o : constants_epw.o
 grid.o : division.o
 grid.o : elph2.o
 grid.o : epwcom.o
-grid.o : io_eliashberg.o
 grid.o : io_var.o
 grid.o : kinds_epw.o
 grid.o : low_lvl.o
@@ -414,6 +413,7 @@ io_eliashberg.o : division.o
 io_eliashberg.o : eliashbergcom.o
 io_eliashberg.o : elph2.o
 io_eliashberg.o : epwcom.o
+io_eliashberg.o : grid.o
 io_eliashberg.o : io_var.o
 io_eliashberg.o : kfold.o
 io_eliashberg.o : low_lvl.o

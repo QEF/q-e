@@ -528,7 +528,7 @@
       CALL mp_sum(inv_tau_allcb_MPI, world_comm)
       !
       IF (my_pool_id == 0) THEN
-        OPEN(UNIT = iunrestart, FILE = 'restart_ibte.fmt')
+        OPEN(UNIT = iunrestart, FILE = 'restart.fmt')
         WRITE(iunrestart, *) iqq
         WRITE(iunrestart, *) ind_tot
         WRITE(iunrestart, *) ind_totcb
@@ -1256,11 +1256,11 @@
     dirnamecb(1) = 'Fepmatkqcb1'
     dirnamecb(2) = 'Fsparsecb'
     !
-    INQUIRE(FILE = 'restart_ibte.fmt', EXIST = exst)
+    INQUIRE(FILE = 'restart.fmt', EXIST = exst)
     !
     IF (my_pool_id == ionode_id) THEN
       IF (exst) THEN
-        OPEN(UNIT = iunrestart, FILE = 'restart_ibte.fmt', STATUS = 'old')
+        OPEN(UNIT = iunrestart, FILE = 'restart.fmt', STATUS = 'old')
         READ(iunrestart, *)
         READ(iunrestart, *)
         READ(iunrestart, *)
@@ -1278,7 +1278,7 @@
     CALL mp_bcast(lrepmatw2_restart, ionode_id, world_comm )
     CALL mp_bcast(lrepmatw5_restart, ionode_id, world_comm )
     !
-    ! The restart_ibte.fmt exist - we try to restart
+    ! The restart.fmt exist - we try to restart
     IF (exst) THEN
       ! Hole (or metals)
       IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 1E5)) &
@@ -1296,7 +1296,7 @@
             READ(iunepmat, POS=position_byte) dummy_real
           ENDIF
         ELSE
-          CALL errore('iter_open', 'A restart_ibte.fmt is present but not the Fepmatkq1 folder', 1)
+          CALL errore('iter_open', 'A restart.fmt is present but not the Fepmatkq1 folder', 1)
         ENDIF
         !
         filint = './' // ADJUSTL(TRIM(dirname(2))) // '/' // 'sparse' // '_' // TRIM(my_pool_id_ch)
@@ -1310,7 +1310,7 @@
             READ(iunsparseq, POS = position_byte) dummy_int
           ENDIF
         ELSE
-          CALL errore('iter_open', 'A restart_ibte.fmt is present but not the Fsparse folder', 1)
+          CALL errore('iter_open', 'A restart.fmt is present but not the Fsparse folder', 1)
         ENDIF
         !
       ENDIF ! Hole
@@ -1329,7 +1329,7 @@
             READ(iunepmatcb, POS = position_byte) dummy_real
           ENDIF
         ELSE
-          CALL errore('iter_open', 'A restart_ibte.fmt is present but not the Fepmatkqcb1 folder', 1)
+          CALL errore('iter_open', 'A restart.fmt is present but not the Fepmatkqcb1 folder', 1)
         ENDIF
         !
         filint = './' // ADJUSTL(TRIM(dirnamecb(2))) // '/' // 'sparsecb' // '_' // TRIM(my_pool_id_ch)
@@ -1343,7 +1343,7 @@
             READ(iunsparseqcb, POS = position_byte) dummy_int
           ENDIF
         ELSE
-          CALL errore('iter_open', 'A restart_ibte.fmt is present but not the Fsparse folder', 1)
+          CALL errore('iter_open', 'A restart.fmt is present but not the Fsparse folder', 1)
         ENDIF
         !
       ENDIF ! electron
