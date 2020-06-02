@@ -23,6 +23,7 @@
     mixing_mode = 'plain'
     mixing_beta = 0.3
     conv_thr =  1.0d-10
+    diago_david_ndim=4
  /
 ATOMIC_SPECIES
  Fe1  1.  Fe.pz-nd-rrkjus.UPF
