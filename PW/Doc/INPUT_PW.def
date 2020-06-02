@@ -599,7 +599,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     v3 = (c*cos(beta),   0,   c*sin(beta)),
                     where beta=angle between axis a and c projected on xz plane
                IMPORTANT NOTICE: until QE v.6.4.1, axis for ibrav=-13 had a 
-               different definition: v1(old) = v2(now), v2(old) = -v1(now)
+               different definition: v1(old) =-v2(now), v2(old) = v1(now)
 
                14          Triclinic                       celldm(2)= b/a,
                                                            celldm(3)= c/a,
