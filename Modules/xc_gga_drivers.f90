@@ -12,13 +12,16 @@ USE funct,     ONLY: get_igcx, get_igcc, is_libxc,    &
                      exx_is_active, get_exx_fraction, &
                      get_screening_parameter, get_gau_parameter
 !
+USE xc_interfaces,     ONLY: gcxc, get_ggaxc_param, &
+                             get_gga_threshold
+!
 IMPLICIT NONE
 !
 PRIVATE
 SAVE
 !
 !  GGA exchange-correlation drivers
-PUBLIC :: xc_gcx, gcxc, gcx_spin, gcc_spin, gcc_spin_more, &
+PUBLIC :: xc_gcx, gcx_spin, gcc_spin, gcc_spin_more, &
           change_threshold_gga
 !
 !  input thresholds (default values)
@@ -117,8 +120,9 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   INTEGER :: igcx, igcc
   INTEGER :: k, is
-  REAL(DP) :: sgn(2)
+  REAL(DP) :: sgn(2), exx_fraction, gau_parameter, screening_parameter
   REAL(DP), PARAMETER :: small = 1.E-10_DP
+  LOGICAL :: exx_started
   !
   !
   IF (ns==2 .AND. .NOT. PRESENT(v2c_ud)) CALL errore( 'xc_gga', 'cross &
@@ -130,6 +134,9 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   ex = 0.0_DP ;  v1x = 0.0_DP ;  v2x = 0.0_DP
   ec = 0.0_DP ;  v1c = 0.0_DP ;  v2c = 0.0_DP
   IF ( PRESENT(v2c_ud) ) v2c_ud = 0.0_DP
+  !
+  !set LDA threshold
+  IF ( ANY(.NOT.is_libxc(3:4)) ) CALL get_gga_threshold( rho_threshold, grho_threshold )
   !
 #if defined(__LIBXC)
   !
@@ -179,6 +186,17 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   ENDIF
   !
   IF ( ns==1 .AND. ANY(.NOT.is_libxc(3:4)) ) THEN
+     !
+     exx_started  = exx_is_active()
+     exx_fraction = get_exx_fraction()
+     CALL get_ggaxc_param( 0.d0, exx_started, exx_fraction )
+     IF ( igcx==12 ) THEN
+       gau_parameter = get_gau_parameter()
+       CALL get_ggaxc_param( gau_parameter )
+     ELSEIF (igcx==20 ) THEN
+       screening_parameter = get_screening_parameter()
+       CALL get_ggaxc_param( screening_parameter )
+     ENDIF
      !
      CALL gcxc( length, ABS(rho(:,1)), sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )  
      !
@@ -340,6 +358,17 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
           grho2(k,1) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
      ENDDO
      !
+     exx_started  = exx_is_active()
+     exx_fraction = get_exx_fraction()
+     CALL get_ggaxc_param( 0.d0, exx_started, exx_fraction )
+     IF ( igcx==12 ) THEN
+       gau_parameter = get_gau_parameter()
+       CALL get_ggaxc_param( gau_parameter )
+     ELSEIF (igcx==20 ) THEN
+       screening_parameter = get_screening_parameter()
+       CALL get_ggaxc_param( screening_parameter )
+     ENDIF
+     !
      CALL gcxc( length, ABS(rho(:,1)), grho2(:,1), ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
      !
      DO k = 1, length
@@ -406,365 +435,6 @@ END SUBROUTINE xc_gcx
 !-----------------------------------------------------------------------
 !------- GRADIENT CORRECTION DRIVERS ----------------------------------
 !-----------------------------------------------------------------------
-!
-!-----------------------------------------------------------------------
-SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
-                                          v2x_out, v1c_out, v2c_out )
-  !---------------------------------------------------------------------
-  !! Gradient corrections for exchange and correlation - Hartree a.u. 
-  !! See comments at the beginning of module for implemented cases
-  !
-  ! Input:  rho, grho=|\nabla rho|^2
-  ! Definition:  E_x = \int E_x(rho,grho) dr
-  ! Output: sx = E_x(rho,grho)
-  !         v1x= D(E_x)/D(rho)
-  !         v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
-  !         sc, v1c, v2c as above for correlation
-  !
-  USE exch_gga
-  USE corr_gga
-  !
-  USE beef_interface, ONLY: beefx, beeflocalcorr
-  !
-  IMPLICIT NONE
-  !
-  INTEGER,  INTENT(IN) :: length
-  REAL(DP), INTENT(IN),  DIMENSION(length) :: rho_in, grho_in
-  REAL(DP), INTENT(OUT), DIMENSION(length) :: sx_out, sc_out, v1x_out, &
-                                              v2x_out, v1c_out, v2c_out
-  !
-  ! ... local variables
-  !
-  INTEGER :: ir, igcx, igcc
-  REAL(DP) :: rho, grho
-  REAL(DP) :: sx, v1x, v2x
-  REAL(DP) :: sx_, v1x_, v2x_
-  REAL(DP) :: sxsr, v1xsr, v2xsr
-  REAL(DP) :: sc, v1c, v2c
-  REAL(DP) :: screening_parameter, gau_parameter
-  REAL(DP) :: exx_fraction
-  LOGICAL  :: exx_started
-  
-#if defined(_OPENMP)
-  INTEGER :: ntids
-  INTEGER, EXTERNAL :: omp_get_num_threads
-  !
-  ntids = omp_get_num_threads()
-#endif
-  !
-  igcx = get_igcx()
-  igcc = get_igcc()
-  exx_started = exx_is_active()
-  exx_fraction = get_exx_fraction()
-  IF (igcx == 12) screening_parameter = get_screening_parameter()
-  IF (igcx == 20) gau_parameter = get_gau_parameter()
-  !
-!$omp parallel if(ntids==1)
-!$omp do private( rho, grho, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
-!$omp             v2x, v2x_, v2xsr, sc, v1c, v2c )
-  DO ir = 1, length  
-     !
-     grho = grho_in(ir)
-     !
-     IF ( rho_in(ir) <= rho_threshold .OR. grho <= grho_threshold ) THEN
-        sx_out(ir)  = 0.0_DP ;   sc_out(ir)  = 0.0_DP
-        v1x_out(ir) = 0.0_DP ;   v1c_out(ir) = 0.0_DP
-        v2x_out(ir) = 0.0_DP ;   v2c_out(ir) = 0.0_DP
-        CYCLE
-     ENDIF
-     !
-     rho  = ABS(rho_in(ir))
-     !
-     ! ... EXCHANGE
-     !  
-     SELECT CASE( igcx )
-     CASE( 1 )
-        !
-        CALL becke88( rho, grho, sx, v1x, v2x )
-        !
-     CASE( 2 )
-        !
-        CALL ggax( rho, grho, sx, v1x, v2x )
-        !
-     CASE( 3 )
-        !
-        CALL pbex( rho, grho, 1, sx, v1x, v2x )
-        !
-     CASE( 4 )
-        !
-        CALL pbex( rho, grho, 2, sx, v1x, v2x )
-        !
-     CASE( 5 )
-        !
-        IF (igcc == 5) CALL hcth( rho, grho, sx, v1x, v2x )
-        !
-     CASE( 6 )
-        !
-        CALL optx( rho, grho, sx, v1x, v2x )
-        !
-     ! case igcx == 7 (meta-GGA) must be treated in a separate call to another
-     ! routine: needs kinetic energy density in addition to rho and grad rho
-     CASE( 8 ) ! 'PBE0'
-        !
-        CALL pbex( rho, grho, 1, sx, v1x, v2x )
-        IF (exx_started) THEN
-           sx  = (1.0_DP - exx_fraction) * sx
-           v1x = (1.0_DP - exx_fraction) * v1x
-           v2x = (1.0_DP - exx_fraction) * v2x
-        ENDIF
-        !
-     CASE( 9 ) ! 'B3LYP'
-        !
-        CALL becke88( rho, grho, sx, v1x, v2x )
-        IF (exx_started) THEN
-           sx  = 0.72_DP * sx
-           v1x = 0.72_DP * v1x
-           v2x = 0.72_DP * v2x
-        ENDIF
-        !
-     CASE( 10 ) ! 'pbesol'
-        !
-        CALL pbex( rho, grho, 3, sx, v1x, v2x )
-        !
-     CASE( 11 ) ! 'wc'
-        !
-        CALL wcx( rho, grho, sx, v1x, v2x )
-        !
-     CASE( 12 ) ! 'pbexsr'
-        !
-        CALL pbex( rho, grho, 1, sx, v1x, v2x )
-        !
-        IF (exx_started) THEN
-          CALL pbexsr( rho, grho, sxsr, v1xsr, v2xsr, screening_parameter )
-          sx  = sx  - exx_fraction * sxsr
-          v1x = v1x - exx_fraction * v1xsr
-          v2x = v2x - exx_fraction * v2xsr
-        ENDIF
-        !
-     CASE( 13 ) ! 'rPW86'
-        !
-        CALL rPW86( rho, grho, sx, v1x, v2x )
-        !
-     CASE( 16 ) ! 'C09x'
-        !
-        CALL c09x( rho, grho, sx, v1x, v2x )
-        !
-     CASE( 17 ) ! 'sogga'
-        !
-        CALL sogga( rho, grho, sx, v1x, v2x )
-        !
-     CASE( 19 ) ! 'pbeq2d'
-        !
-        CALL pbex( rho, grho, 4, sx, v1x, v2x )
-        !
-     CASE( 20 ) ! 'gau-pbe'
-        !
-        CALL pbex( rho, grho, 1, sx, v1x, v2x )
-        IF (exx_started) THEN
-          CALL pbexgau( rho, grho, sxsr, v1xsr, v2xsr, gau_parameter )
-          sx  = sx  - exx_fraction * sxsr
-          v1x = v1x - exx_fraction * v1xsr
-          v2x = v2x - exx_fraction * v2xsr
-        ENDIF
-        !
-     CASE( 21 ) ! 'pw86'
-        !
-        CALL pw86( rho, grho, sx, v1x, v2x )
-        !
-     CASE( 22 ) ! 'b86b'
-        !
-        CALL becke86b( rho, grho, sx, v1x, v2x )
-        ! CALL b86b( rho, grho, 1, sx, v1x, v2x )
-        !
-     CASE( 23 ) ! 'optB88'
-        !
-        CALL pbex( rho, grho, 5, sx, v1x, v2x )
-        !
-     CASE( 24 ) ! 'optB86b'
-        !
-        CALL pbex( rho, grho, 6, sx, v1x, v2x )
-        ! CALL b86b (rho, grho, 2, sx, v1x, v2x)
-        !
-     CASE( 25 ) ! 'ev93'
-        !
-        CALL pbex( rho, grho, 7, sx, v1x, v2x )
-        !
-     CASE( 26 ) ! 'b86r'
-        !
-        CALL b86b( rho, grho, 3, sx, v1x, v2x )
-        !
-     CASE( 27 ) ! 'cx13'
-        !
-        CALL cx13( rho, grho, sx, v1x, v2x )
-        !
-     CASE( 28 ) ! 'X3LYP'
-        !
-        CALL becke88( rho, grho, sx, v1x, v2x )
-        CALL pbex( rho, grho, 1, sx_, v1x_, v2x_ )
-        IF (exx_started) THEN
-           sx  = REAL(0.765*0.709,DP) * sx
-           v1x = REAL(0.765*0.709,DP) * v1x
-           v2x = REAL(0.765*0.709,DP) * v2x
-           sx  = sx  + REAL(0.235*0.709,DP) * sx_
-           v1x = v1x + REAL(0.235*0.709,DP) * v1x_
-           v2x = v2x + REAL(0.235*0.709,DP) * v2x_
-        ENDIF
-        !
-     CASE( 29, 31 ) ! 'cx0'or `cx0p'
-        !
-        CALL cx13( rho, grho, sx, v1x, v2x )
-        IF (exx_started) THEN
-           sx  = (1.0_DP - exx_fraction) * sx
-           v1x = (1.0_DP - exx_fraction) * v1x
-           v2x = (1.0_DP - exx_fraction) * v2x
-        ENDIF
-        !
-     CASE( 30 ) ! 'r860'
-        !
-        CALL rPW86( rho, grho, sx, v1x, v2x )
-        !
-        IF (exx_started) then
-           sx  = (1.0_DP - exx_fraction) * sx
-           v1x = (1.0_DP - exx_fraction) * v1x
-           v2x = (1.0_DP - exx_fraction) * v2x
-        ENDIF
-        !
-     CASE( 38 ) ! 'BR0'
-        !
-        CALL b86b( rho, grho, 3, sx, v1x, v2x )
-        IF (exx_started) THEN
-           sx  = (1.0_DP - exx_fraction) * sx
-           v1x = (1.0_DP - exx_fraction) * v1x
-           v2x = (1.0_DP - exx_fraction) * v2x
-        ENDIF
-        !
-     CASE( 40 ) ! 'c090'
-        !
-        CALL c09x( rho, grho, sx, v1x, v2x )
-        IF (exx_started) THEN
-           sx  = (1.0_DP - exx_fraction) * sx
-           v1x = (1.0_DP - exx_fraction) * v1x
-           v2x = (1.0_DP - exx_fraction) * v2x
-        ENDIF
-        !
-     CASE( 41 ) ! 'B86BPBEX'
-        !
-        CALL becke86b( rho, grho, sx, v1x, v2x )
-        IF (exx_started) THEN
-           sx  = (1.0_DP - exx_fraction) * sx
-           v1x = (1.0_DP - exx_fraction) * v1x
-           v2x = (1.0_DP - exx_fraction) * v2x
-        ENDIF
-        !
-     CASE( 42 ) ! 'BHANDHLYP'
-        !
-        CALL becke88( rho, grho, sx, v1x, v2x )
-        IF (exx_started) THEN
-           sx  = (1.0_DP - exx_fraction) * sx
-           v1x = (1.0_DP - exx_fraction) * v1x
-           v2x = (1.0_DP - exx_fraction) * v2x
-        ENDIF
-     CASE( 43 ) ! 'beefx'
-        ! last parameter = 0 means do not add LDA (=Slater) exchange
-        ! (espresso) will add it itself
-        CALL beefx(rho, grho, sx, v1x, v2x, 0)
-        !
-     CASE( 44 ) ! 'RPBE'
-        !
-        CALL pbex( rho, grho, 8, sx, v1x, v2x )
-        !
-     CASE( 45 ) ! 'W31X'
-        !
-        CALL pbex( rho, grho, 9, sx, v1x, v2x )
-        !
-     CASE( 46 ) ! 'W32X'
-        !
-        CALL b86b( rho, grho, 4, sx, v1x, v2x )
-        !
-     CASE DEFAULT
-        !
-        sx  = 0.0_DP
-        v1x = 0.0_DP
-        v2x = 0.0_DP
-        !
-     END SELECT
-     !
-     !
-     ! ... CORRELATION
-     !
-     SELECT CASE( igcc )
-     CASE( 1 )
-        !
-        CALL perdew86( rho, grho, sc, v1c, v2c )
-        !
-     CASE( 2 )
-        !
-        CALL ggac( rho, grho, sc, v1c, v2c )
-        !
-     CASE( 3 )
-        !
-        CALL glyp( rho, grho, sc, v1c, v2c )
-        !
-     CASE( 4 )
-        !
-        CALL pbec( rho, grho, 1, sc, v1c, v2c )
-        !
-     ! igcc == 5 (HCTH) is calculated together with case igcx=5
-     ! igcc == 6 (meta-GGA) is treated in a different routine
-     CASE( 7 ) !'B3LYP'
-        !
-        CALL glyp( rho, grho, sc, v1c, v2c )
-        IF (exx_started) THEN
-           sc  = 0.81_DP * sc
-           v1c = 0.81_DP * v1c
-           v2c = 0.81_DP * v2c
-        ENDIF
-        !
-     CASE( 8 ) ! 'PBEsol'
-        !
-        CALL pbec( rho, grho, 2, sc, v1c, v2c )
-        !
-     ! igcc ==  9 set to 5, back-compatibility
-     ! igcc == 10 set to 6, back-compatibility
-     ! igcc == 11 M06L calculated in another routine
-     CASE( 12 ) ! 'Q2D'
-        !
-        CALL pbec( rho, grho, 3, sc, v1c, v2c )
-        !
-     CASE( 13 ) !'X3LYP'
-        !
-        CALL glyp( rho, grho, sc, v1c, v2c )
-        IF (exx_started) THEN
-           sc  = 0.871_DP * sc
-           v1c = 0.871_DP * v1c
-           v2c = 0.871_DP * v2c
-        ENDIF
-     CASE( 14 ) ! 'BEEF'
-        ! last parameter 0 means: do not add lda contributions
-        ! espresso will do that itself
-        call beeflocalcorr(rho, grho, sc, v1c, v2c, 0)
-        !
-     CASE DEFAULT
-        !
-        sc = 0.0_DP
-        v1c = 0.0_DP
-        v2c = 0.0_DP
-        !
-     END SELECT
-     !
-     sx_out(ir)  = sx    ;  sc_out(ir)  = sc
-     v1x_out(ir) = v1x   ;  v1c_out(ir) = v1c
-     v2x_out(ir) = v2x   ;  v2c_out(ir) = v2c
-     !
-  ENDDO 
-!$omp end do
-!$omp end parallel
-  !
-  !
-  RETURN
-  !
-END SUBROUTINE gcxc
-!
 !
 !===============> SPIN <===============!
 !

@@ -1,17 +1,15 @@
 !
-MODULE exch_gga !<GPU:exch_gga=>exch_gga_gpu>
+MODULE exch_gga_l !<GPU:exch_gga=>exch_gga_gpu>
 !
 CONTAINS
 !
-!
-
 !-----------------------------------------------------------------------
-SUBROUTINE becke88( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE becke88_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Becke exchange: A.D. Becke, PRA 38, 3098 (1988)
   !! only gradient-corrected part, no Slater term included
   !
-  USE kinds, ONLY: DP
+  USE kind_l, ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -45,16 +43,16 @@ SUBROUTINE becke88( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE becke88
+END SUBROUTINE becke88_l
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE ggax( rho, grho, sx, v1x, v2x ) !<GPU:DEVICE>
+SUBROUTINE ggax_l( rho, grho, sx, v1x, v2x ) !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Perdew-Wang GGA (PW91), exchange part:
   !! J.P. Perdew et al.,PRB 46, 6671 (1992)
   !
-  USE kinds, ONLY: DP
+  USE kind_l, ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -93,11 +91,11 @@ SUBROUTINE ggax( rho, grho, sx, v1x, v2x ) !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE ggax
+END SUBROUTINE ggax_l
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE pbex_l( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVICE>
   !---------------------------------------------------------------
   !! PBE exchange (without Slater exchange):
   !! iflag=1  J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)
@@ -108,9 +106,9 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
   !! iflag=6  optB86b: Klimes et al., Phys. Rev. B 83, 195131 (2011)
   !! iflag=7  ev: Engel and Vosko, PRB 47, 13164 (1991)
   !! iflag=8  RPBE: B. Hammer, et al., Phys. Rev. B 59, 7413 (1999)
-  !! iflag=9  W31X: D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)
+  !! iflag=9  W31X: D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
   !
-  USE kinds,      ONLY : DP
+  USE kind_l,      ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -138,16 +136,19 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
   REAL(DP), PARAMETER :: pi=3.14159265358979323846d0
   REAL(DP), PARAMETER :: third=1._DP/3._DP, c1=0.75_DP/pi,        &
                          c2=3.093667726280136_DP, c5=4._DP*third, &
-                         c6=c2*2.51984210_DP, c7=5._DP/6._DP, c8=0.8_DP
+                         c6=c2*2.51984210_DP, c7=0.8_DP
                          ! (3pi^2)^(1/3)*2^(4/3)
   ! parameters of the functional
-  REAL(DP) :: k(6), mu(6), ev(6)
-  !           pbe        rpbe        pbesol   pbeq2d      optB88  optB86b
-  DATA k  / 0.804_DP,   1.2450_DP,   0.804_DP , 0.804_DP,  0.0_DP,  0.0_DP/,      &
+  REAL(DP) :: k(9), mu(9), ev(6)
+  !         pbe         revpbe       pbesol     pbeq2d     optB88   optB86b
+  !         ev          rpbe         W31x
+  DATA k  / 0.804_DP,   1.2450_DP,   0.804_DP , 0.804_DP,  1.2_DP,  0.0_DP,       &
+            0.000_DP,   0.8040_DP,   1.10_DP /,                                   &
        mu / 0.2195149727645171_DP, 0.2195149727645171_DP, 0.12345679012345679_DP, &
-            0.12345679012345679_DP,  0.22_DP, 0.1234_DP/,                         &
+            0.12345679012345679_DP, 0.22_DP, 0.1234_DP, 0.000_DP,                 &
+            0.2195149727645171_DP, 0.12345679012345679_DP /,                      &
        ev / 1.647127_DP, 0.980118_DP, 0.017399_DP, 1.523671_DP, 0.367229_DP,      &
-                                   0.011282_DP /  ! a and b parameters of Engel and Vosko
+            0.011282_DP /  ! a and b parameters of Engel and Vosko
   !
   SELECT CASE( iflag )
   CASE( 4 )
@@ -188,13 +189,13 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
      v2x = exunif * dfx * dsg / agrho
      sx  = sx_s * rho
      !
-  CASE( 5 )
+  CASE( 5, 9 )
      !
      agrho = SQRT(grho)
      kf = c2 * rho**third
      dsg = 0.5_DP / kf
      s1 = agrho * dsg / rho
-     ab = mu(iflag)*c7 ! mu/ab=1.2
+     ab = mu(iflag) / k(iflag)
      p = s1*c6
      c = LOG(p + SQRT(p*p+1)) ! asinh(p)
      dfx1 = 1 + ab*s1*c
@@ -219,14 +220,14 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
      dsg = 0.5_DP / kf
      s1 = agrho * dsg / rho
      p = mu(iflag)*s1*s1
-     fx =  p / ( 1._DP + p )**c8
+     fx =  p / ( 1._DP + p )**c7
      !
      exunif = - c1 * kf
      sx_s = exunif * fx
      !
      dxunif = exunif * third
      !
-     dfx = 2*mu(iflag)*s1*fx*(1+(1-c8)*p)/(p*(1+p))
+     dfx = 2*mu(iflag)*s1*fx*(1+(1-c7)*p)/(p*(1+p))
      ds = - c5 * s1
      !
      v1x = sx_s + dxunif * fx + exunif * dfx * ds
@@ -289,11 +290,11 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
   !
   RETURN
   !
-END SUBROUTINE pbex
+END SUBROUTINE pbex_l
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE hcth( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE hcth_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !--------------------------------------------------------------------------
   !! HCTH/120, JCP 109, p. 6264 (1998)
   !! Parameters set-up after N.L. Doltsisnis & M. Sprik (1999)
@@ -305,7 +306,7 @@ SUBROUTINE hcth( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !! * v1x : d(sx)/drho  (eq. dfdra = dfdrb in original)
   !! * v2x : 1/gr*d(sx)/d(gr) (eq. 0.5 * dfdza = 0.5 * dfdzb in original)
   !
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -368,10 +369,10 @@ SUBROUTINE hcth( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   rab = r3q2*ra
   dra_drho = -0.260530881d0/rho_o34
   drab_drho = r3q2*dra_drho
-  CALL pwcorr( ra, cg1, g, dg )                           !<GPU:pwcorr=>pwcorr_d>
+  CALL pwcorr_l( ra, cg1, g, dg )                           !<GPU:pwcorr_l=>pwcorr_l_d>
   era1 = g
   dera1_dra = dg
-  CALL pwcorr( rab, cg0, g, dg )                          !<GPU:pwcorr=>pwcorr_d>
+  CALL pwcorr_l( rab, cg0, g, dg )                          !<GPU:pwcorr_l=>pwcorr_l_d>
   erab0 = g
   derab0_drab = dg
   ex = -0.75d0*r3pi*rho_o34
@@ -416,13 +417,13 @@ SUBROUTINE hcth( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE hcth
+END SUBROUTINE hcth_l
     !
     !-------------------------------------------------------
-    SUBROUTINE pwcorr( r, c, g, dg )                    !<GPU:DEVICE>
+    SUBROUTINE pwcorr_l( r, c, g, dg )                    !<GPU:DEVICE>
       !-----------------------------------------------------
       !
-      USE kinds,   ONLY: DP
+      USE kind_l,   ONLY: DP
       !
       IMPLICIT NONE
       !
@@ -444,11 +445,11 @@ END SUBROUTINE hcth
       !
       RETURN
       !
-    END SUBROUTINE pwcorr
+    END SUBROUTINE pwcorr_l
 !
 !
 !-----------------------------------------------------------------------------
-SUBROUTINE optx( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE optx_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !---------------------------------------------------------------------------
   !! OPTX, Handy et al. JCP 116, p. 5411 (2002) and refs. therein
   !! Present release: Mauro Boero, Tsukuba, 10/9/2002
@@ -459,7 +460,7 @@ SUBROUTINE optx( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !! v1x : d(sx)/drho
   !! v2x : 1/gr*d(sx)/d(gr)
   !
-  USE kinds,   ONLY: DP
+  USE kind_l,   ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -490,16 +491,16 @@ SUBROUTINE optx( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE optx
+END SUBROUTINE optx_l
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE wcx( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE wcx_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !---------------------------------------------------------------
   !!  Wu-Cohen exchange (without Slater exchange):
   !!  Z. Wu and R. E. Cohen, PRB 73, 235116 (2006)
   !
-  USE kinds,   ONLY: DP
+  USE kind_l,   ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -562,14 +563,14 @@ SUBROUTINE wcx( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE wcx
+END SUBROUTINE wcx_l
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega )                    !<GPU:DEVICE>
+SUBROUTINE pbexsr_l( rho, grho, sxsr, v1xsr, v2xsr, omega )                    !<GPU:DEVICE>
   !---------------------------------------------------------------------
   ! INCLUDE 'cnst.inc'
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -616,15 +617,15 @@ SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega )                    !<G
   !
   RETURN
   !
-END SUBROUTINE pbexsr
+END SUBROUTINE pbexsr_l
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE rPW86( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE rPW86_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !---------------------------------------------------------------------
   !! PRB 33, 8800 (1986) and J. Chem. Theory comp. 5, 2754 (2009).
   !
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -660,11 +661,11 @@ SUBROUTINE rPW86( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !
   v2x = Ax * df_ds/(s_prefactor*grad_rho)
   !
-END SUBROUTINE rPW86
+END SUBROUTINE rPW86_l
 !
 !
 !-----------------------------------------------------------------
-SUBROUTINE c09x( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE c09x_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !---------------------------------------------------------------
   !! Cooper '09 exchange for vdW-DF (without Slater exchange):
   !! V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)
@@ -673,7 +674,7 @@ SUBROUTINE c09x( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !! Ikutaro Hamada - ikutaro@wpi-aimr.tohoku.ac.jp
   !! WPI-Advanced Institute of Materials Research, Tohoku University
   !
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -731,15 +732,15 @@ SUBROUTINE c09x( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE c09x
+END SUBROUTINE c09x_l
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE sogga( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE sogga_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-------------------------------------------------------------
   !! SOGGA exchange
   !
-  USE kinds,      ONLY: DP
+  USE kind_l,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -790,14 +791,14 @@ SUBROUTINE sogga( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   v1x = dex_drho * Fx  +  ex * dFx_dxs2 * dxs2_drho
   v2x = two * ex * dFx_dxs2 * dxs2_dgrho2
   !
-END SUBROUTINE sogga
+END SUBROUTINE sogga_l
 !
 !
 !-------------------------------------------------------------------------
-SUBROUTINE pbexgau( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )                    !<GPU:DEVICE>
+SUBROUTINE pbexgau_l( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !
-  USE kinds,  ONLY: DP
+  USE kind_l,  ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -838,7 +839,7 @@ SUBROUTINE pbexgau( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )                  
   !
   RETURN
   !
-END SUBROUTINE pbexgau
+END SUBROUTINE pbexgau_l
     !
     !-----------------------------------------------------------------------
 SUBROUTINE pbe_gauscheme( rho, s, alpha_gau, Fx, dFxdr, dFxds )                    !<GPU:DEVICE>
@@ -932,7 +933,7 @@ END SUBROUTINE pbe_gauscheme
 !-------------------------------------------------
 FUNCTION TayExp(X)                         !<GPU:DEVICE>
   !-------------------------------------------
-  USE kinds,   ONLY: DP
+  USE kind_l,   ONLY: DP
   IMPLICIT NONE
   REAL(DP), INTENT(IN) :: X
   REAL(DP) :: TAYEXP                        !<GPU:TAYEXP=>TAYEXP_d>
@@ -957,11 +958,11 @@ END FUNCTION TayExp
 !
 !
 !-------------------------------------------------------------------------
-SUBROUTINE PW86( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE PW86_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Perdew-Wang 1986 exchange gradient correction: PRB 33, 8800 (1986)
   !
-  USE kinds,  ONLY: DP
+  USE kind_l,  ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -997,16 +998,16 @@ SUBROUTINE PW86( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !
   v2x = Ax * df_ds/(s_prefactor*grad_rho)
   !
-END SUBROUTINE PW86
+END SUBROUTINE PW86_l
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE becke86b( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE becke86b_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Becke 1986 gradient correction to exchange
   !! A.D. Becke, J. Chem. Phys. 85 (1986) 7184
   !
-  USE kinds, ONLY: DP
+  USE kind_l, ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -1037,22 +1038,22 @@ SUBROUTINE becke86b( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   v1x = -beta * (-4d0/3d0*rdg2_73*sgp1_45 + 32d0/15d0*gamma*rdg4_5*sgp1_95)
   v2x = -beta * (sgp1_45*rdg2_43/agrho - 4d0/5d0 *gamma*rdg2_4*sgp1_95)
   !
-END SUBROUTINE becke86b
+END SUBROUTINE becke86b_l
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE b86b_l( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-------------------------------------------------------------
   !! Becke exchange (without Slater exchange):
   !! iflag=1: A. D. Becke, J. Chem. Phys. 85, 7184 (1986) (B86b)
   !! iflag=2: J. Klimes, Phys. Rev. B 83, 195131 (2011). (OptB86b)
   !! iflag=3: I. Hamada, Phys. Rev. B 89, 121103(R) (B86R)
-  !! iflag=4: D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)
+  !! iflag=4: D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
   !
   !! Ikutaro Hamada - HAMADA.Ikutaro@nims.go.jp
   !! National Institute for Materials Science
   !
-  USE kinds,     ONLY : DP
+  USE kind_l,     ONLY : DP
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: iflag                  !<GPU:VALUE>
@@ -1076,9 +1077,9 @@ SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
   REAL(DP), PARAMETER :: third=1._DP/3._DP, c1=0.75_DP/pi, &
                          c2=3.093667726280136_DP, c5=4._DP*third
   ! parameters of the functional
-  REAL(DP) :: k(3), mu(3)
-  DATA k / 0.5757_DP, 1.0000_DP, 0.711357_DP/, &
-       mu/ 0.2449_DP, 0.1234_DP, 0.1234_DP  /
+  REAL(DP) :: k(4), mu(4)
+  DATA k / 0.5757_DP, 1.0000_DP, 0.711357_DP, 0.58_DP /, &
+       mu/ 0.2449_DP, 0.1234_DP, 0.1234_DP, 0.12345679012345679_DP /
   !
   agrho = SQRT(grho)
   kf = c2 * rho**third
@@ -1107,17 +1108,17 @@ SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
   !
   RETURN
   !
-END SUBROUTINE b86b
+END SUBROUTINE b86b_l
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE cx13( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE cx13_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! The new exchange partner for a vdW-DF1-cx suggested
   !! by K. Berland and P. Hyldgaard, see PRB 89, 035412 (2014),
   !! to test the plasmon nature of the vdW-DF1 inner functional.
   !
-  USE kinds, ONLY : DP
+  USE kind_l, ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -1161,70 +1162,7 @@ SUBROUTINE cx13( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
         -grad_rho/(s_prefactor * rho)*df_ds)
   v2x = Ax * df_ds/(s_prefactor*grad_rho)
   !
-END SUBROUTINE cx13
-
-
-! ===========> SPIN <===========
-!
-!-----------------------------------------------------------------------
-SUBROUTINE becke88_spin( rho_up, rho_dw, grho_up, grho_dw, sx_up, sx_dw, v1x_up, v1x_dw, v2x_up, v2x_dw )                     !<GPU:DEVICE>
-  !-----------------------------------------------------------------------
-  !! Becke exchange: A.D. Becke, PRA 38, 3098 (1988) - Spin polarized case
-  !
-  USE kinds,    ONLY: DP
-  !
-  IMPLICIT NONE
-  !
-  REAL(DP), INTENT(IN) :: rho_up, rho_dw
-  !! charge
-  REAL(DP), INTENT(IN) :: grho_up, grho_dw
-  !! gradient
-  REAL(DP), INTENT(OUT) :: sx_up, sx_dw
-  !! the up and down energies
-  REAL(DP), INTENT(OUT) :: v1x_up, v1x_dw
-  !! first part of the potential
-  REAL(DP), INTENT(OUT) :: v2x_up, v2x_dw
-  !! second part of the potential
-  !
-  ! ... local variables
-  !
-  INTEGER :: is
-  REAL(DP), PARAMETER :: beta = 0.0042_DP, third = 1._DP/3._DP
-  REAL(DP) :: rho13, rho43, xs, xs2, sa2b8, shm1, dd, dd2, ee
-  !
-  !
-  !DO is = 1, 2
-     rho13 = rho_up**third
-     rho43 = rho13**4
-     xs  = SQRT(grho_up) / rho43
-     xs2 = xs * xs
-     sa2b8 = SQRT(1.0d0 + xs2)
-     shm1  = LOG(xs + sa2b8)
-     dd  = 1.0d0 + 6.0d0 * beta * xs * shm1
-     dd2 = dd * dd
-     ee = 6.0d0 * beta * xs2 / sa2b8 - 1.d0
-     sx_up  = grho_up / rho43 * (-beta/dd)
-     v1x_up = -(4.d0/3.d0) * xs2 * beta * rho13 * ee / dd2
-     v2x_up = beta * (ee-dd) / (rho43*dd2)
-
-     rho13 = rho_dw**third
-     rho43 = rho13**4
-     xs  = SQRT(grho_dw) / rho43
-     xs2 = xs * xs
-     sa2b8 = SQRT(1.0d0 + xs2)
-     shm1  = LOG(xs + sa2b8)
-     dd  = 1.0d0 + 6.0d0 * beta * xs * shm1
-     dd2 = dd * dd
-     ee = 6.0d0 * beta * xs2 / sa2b8 - 1.d0
-     sx_dw  = grho_dw / rho43 * (-beta/dd)
-     v1x_dw = -(4.d0/3.d0) * xs2 * beta * rho13 * ee / dd2
-     v2x_dw = beta * (ee-dd) / (rho43*dd2)
-  !ENDDO
-  !
-  RETURN
-  !
-END SUBROUTINE becke88_spin
-!
+END SUBROUTINE cx13_l
 !
 !-----------------------------------------------------------------------------
 SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )                     !<GPU:DEVICE>
@@ -1234,7 +1172,7 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )  
       !
       !--------------------------------------------------------------------
       !
-      USE kinds,    ONLY: DP
+      USE kind_l,    ONLY: DP
       IMPLICIT NONE
       !
       REAL(DP) rho,s,omega,Fx_wpbe,d1sfx,d1rfx
@@ -1833,7 +1771,7 @@ function qe_erf(x)                      !<GPU:DEVICE>
   !
   !     for abs(x) le 0.47 erf is calculated directly
   !     for abs(x) gt 0.47 erf is calculated via erf(x)=1-erfc(x)
-  USE kinds,   ONLY: DP
+  USE kind_l,   ONLY: DP
   implicit none
   REAL(DP), intent(in) :: x
   REAL(DP) :: x2, p1 (4), q1 (4)
@@ -1867,7 +1805,7 @@ function qe_erfc(x)                      !<GPU:DEVICE>
   !
   !     erfc(x) = 1-erf(x)  - See comments in erf
   !
-  USE kinds,   ONLY: DP
+  USE kind_l,   ONLY: DP
   implicit none
   !
   REAL(DP),intent(in) :: x
@@ -1932,7 +1870,7 @@ FUNCTION EXPINT(n, x)                     !<GPU:DEVICE>
 ! big is a number near the largest representable floating-point number,
 ! Inspired from Numerical Recipes
 !
-      USE kinds,   ONLY: DP
+      USE kind_l,   ONLY: DP
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: n
       REAL(DP), INTENT(IN) :: x

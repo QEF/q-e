@@ -67,7 +67,7 @@ SUBROUTINE xc_lda_l( length, rho_in, ex_out, ec_out, vx_out, vc_out )
      !
      ! ... RHO THRESHOLD
      !
-     IF ( rho > rho_threshold ) THEN
+     IF ( rho > rho_threshold_lda ) THEN
         rs = pi34 / rho**third
      ELSE
         ex_out(ir) = 0.0_DP  ;  ec_out(ir) = 0.0_DP
@@ -284,7 +284,7 @@ SUBROUTINE xc_lsda_l( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
      !
      rho = ABS(rho_in(ir))
      !
-     IF ( rho > rho_threshold ) THEN
+     IF ( rho > rho_threshold_lda ) THEN
         rs = pi34 / rho**third
      ELSE
         ex_out(ir) = 0.0_DP  ;  vx_out(ir,:) = 0.0_DP

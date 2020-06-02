@@ -368,7 +368,7 @@ CONTAINS
 
   USE vdW_DF,               ONLY : spline_interpolation
   !USE corr_lda,             ONLY : pw
-  use ldaxc_interfaces, only : pw
+  use xc_interfaces, only : pw
 
   implicit none
 
@@ -494,7 +494,7 @@ CONTAINS
              grad_rho_up, grad_rho_down, q0, thetas)
 
   USE vdW_DF,               ONLY : spline_interpolation
-  USE ldaxc_interfaces,     ONLY : pw_spin
+  USE xc_interfaces,        ONLY : pw_spin
 
   implicit none
 

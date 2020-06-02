@@ -453,6 +453,71 @@ SUBROUTINE lsd_lyp_ext( rho, zeta, elyp, vlyp_up, vlyp_dw )                    !
   !
 END SUBROUTINE lsd_lyp_ext
 
-
+!---------------------------------------------------------------
+SUBROUTINE pbec_ext( rho, grho, iflag, sc, v1c, v2c )                    !<GPU:DEVICE>
+  !---------------------------------------------------------------
+  !! PBE correlation (without LDA part)
+  !
+  !! * iflag=1: J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996).
+  !! * iflag=2: J.P.Perdew et al., PRL 100, 136406 (2008).
+  !! * iflag=3: L. Chiodo et al, PRL 108, 126402 (2012)  (PBEQ2D)
+  !
+  USE kind_l,    ONLY: DP
+  USE corr_lda_l, ONLY: pw_l
+  USE corr_gga_l, ONLY: cpbe2d
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN) :: iflag              !<GPU:VALUE>
+  REAL(DP), INTENT(IN) :: rho, grho
+  ! input: charge and squared gradient
+  REAL(DP), INTENT(OUT) :: sc, v1c, v2c
+  ! output: energy, potential
+  REAL(DP), PARAMETER :: ga = 0.0310906908696548950_DP
+  REAL(DP) :: be(3)
+  !             pbe           pbesol   pbeq2d
+  DATA be / 0.06672455060314922_DP, 0.046_DP, 0.06672455060314922_DP/
+  REAL(DP), PARAMETER :: third = 1.d0 / 3.d0, pi34 = 0.6203504908994d0
+  REAL(DP), PARAMETER :: xkf = 1.919158292677513d0, xks = 1.128379167095513d0
+  ! pi34=(3/4pi)^(1/3), xkf=(9 pi/4)^(1/3), xks= sqrt(4/pi)
+  !
+  REAL(DP) :: rs, ec, vc
+  !
+  REAL(DP) :: kf, ks, t, expe, af, bf, y, xy, qy
+  REAL(DP) :: s1, h0, dh0, ddh0, sc2D, v1c2D, v2c2D
+  !
+  rs = pi34 / rho**third
+  !
+  CALL pw_l( rs, 1, ec, vc )                      !<GPU:pw_l=>pw_l_d>
+  !
+  kf = xkf / rs
+  ks = xks * SQRT(kf)
+  t = SQRT(grho) / (2._DP * ks * rho)
+  expe = EXP( - ec / ga )
+  af = be(iflag) / ga * (1._DP / (expe-1._DP))
+  bf = expe * (vc - ec)
+  y = af * t * t
+  xy = (1._DP + y) / (1._DP + y + y * y)
+  qy = y * y * (2._DP + y) / (1._DP + y + y * y)**2
+  s1 = 1._DP + be(iflag) / ga * t * t * xy
+  h0 = ga * LOG(s1)
+  dh0 = be(iflag) * t * t / s1 * ( - 7._DP / 3._DP * xy - qy * (af * bf / &
+        be(iflag)-7._DP / 3._DP) )
+  ddh0 = be(iflag) / (2._DP * ks * ks * rho) * (xy - qy) / s1
+  !
+  sc  = rho * h0
+  v1c = h0 + dh0
+  v2c = ddh0
+  ! q2D
+  IF (iflag == 3) THEN
+     CALL cpbe2d( rho, grho, sc2D, v1c2D, v2c2D )       !<GPU:cpbe2d=>cpbe2d_d>
+     sc  = sc  + sc2D
+     v1c = v1c + v1c2D
+     v2c = v2c + v2c2D
+  ENDIF
+  !
+  RETURN
+  !
+END SUBROUTINE pbec_ext
 
 

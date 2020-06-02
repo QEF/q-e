@@ -5,15 +5,18 @@ include ../make.inc
 MODFLAGS= $(BASEMOD_FLAGS)
 
 LDAL = \
-kind_l.o  \
-constants_l.o  \
-dft_par_mod.o  \
-ldaxc_interfaces.o  \
-correlation_lda_lsda.o  \
+kind_l.o \
+constants_l.o \
+correlation_lda_lsda.o \
+correlation_gga.o \
+dft_par_mod.o \
+drivers_lda_lsda.o \
+drivers_gga.o \
+exchange_lda_lsda.o \
+exchange_gga.o \
 external.o \
-get_ldaxc.o  \
-exchange_lda_lsda.o  \
-drivers_lda_lsda.o
+get_xc.o \
+xc_interfaces.o
 
 all: libqeldaxc.a
 

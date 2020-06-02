@@ -397,6 +397,7 @@ MODULE funct
   DATA nonlocc/ 'NONE', 'VDW1', 'VDW2', 'W31C', 'W32C', 'WC6', 20*'NONE', 'VV10' /
   !
 #if defined(__LIBXC)
+  INTEGER :: iexch_qe, icorr_qe, igcx_qe, igcc_qe
   INTEGER :: libxc_major=0, libxc_minor=0, libxc_micro=0
   PUBLIC :: libxc_major, libxc_minor, libxc_micro, get_libxc_version
   PUBLIC :: get_libxc_flags_exc
@@ -412,7 +413,7 @@ CONTAINS
     !! Translates a string containing the exchange-correlation name
     !! into internal indices iexch, icorr, igcx, igcc, inlc, imeta.
     !
-    USE ldaxc_interfaces,  ONLY: get_ldaxc_indexes, get_ldaxc_param
+    USE xc_interfaces,  ONLY: get_xc_indexes, get_ldaxc_param
 #if defined(__LIBXC)
     USE xc_f03_lib_m
 #endif
@@ -822,11 +823,13 @@ CONTAINS
     dft_defined = .TRUE.
     !
 #if defined(__LIBXC)
-    IF (.NOT. is_libxc(1) .AND. .NOT. is_libxc(2)) CALL get_ldaxc_indexes( iexch, icorr )
-    IF (.NOT. is_libxc(1)) CALL get_ldaxc_indexes( iexch, 0 )
-    IF (.NOT. is_libxc(2)) CALL get_ldaxc_indexes( 0, icorr )
+    IF ( is_libxc(1) ) iexch_qe = 0
+    IF ( is_libxc(2) ) icorr_qe = 0
+    IF ( is_libxc(3) ) igcx_qe  = 0
+    IF ( is_libxc(4) ) igcc_qe  = 0
+    CALL get_xc_indexes( iexch_qe, icorr_qe, igcx_qe, igcc_qe )
 #else
-    CALL get_ldaxc_indexes( iexch, icorr )
+    CALL get_xc_indexes( iexch, icorr, igcx, igcc )
 #endif
     !
     !dft_longname = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &

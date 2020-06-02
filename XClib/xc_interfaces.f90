@@ -2,22 +2,24 @@
 ! ... LDAlib
 !
 !=---------------------------------------------------------------------------=!
-MODULE ldaxc_interfaces
+MODULE xc_interfaces
   !
   IMPLICIT NONE
   PRIVATE
   !
-  PUBLIC :: XC_LDA, XC_LSDA, SLATER, SLATER_SPIN, PZ, PZ_POLARIZED, PW, PW_SPIN, LYP, LSD_LYP
-  PUBLIC :: GET_LDAXC_INDEXES, GET_LDAXC_PARAM, GET_LDA_THRESHOLD
+  PUBLIC :: XC_LDA, XC_LSDA, GCXC, SLATER, SLATER_SPIN, PZ, PZ_POLARIZED, PW, PW_SPIN, LYP, LSD_LYP, PBEC
+  PUBLIC :: GET_XC_INDEXES, GET_LDAXC_PARAM, GET_LDA_THRESHOLD, &
+            GET_GGAXC_PARAM, GET_GGA_THRESHOLD
   !
   !
-  INTERFACE GET_LDAXC_INDEXES
+  INTERFACE GET_XC_INDEXES
      !
-     SUBROUTINE get_ldaxclib( iexch_, icorr_ )
+     SUBROUTINE get_xclib_IDs( iexch_, icorr_, igcx_, igcc_ )
        !
        USE kind_l,  ONLY: DP
        IMPLICIT NONE
        INTEGER, INTENT(IN) :: iexch_, icorr_
+       INTEGER, INTENT(IN) :: igcx_, igcc_
        !
      END SUBROUTINE
      !
@@ -37,13 +39,40 @@ MODULE ldaxc_interfaces
      !
   END INTERFACE
   !
+  INTERFACE GET_GGAXC_PARAM
+     !
+     SUBROUTINE get_ggaxcparlib( gau_scr_par_, exx_started_, exx_fraction_ )
+       !
+       USE kind_l,  ONLY: DP
+       IMPLICIT NONE
+       REAL(DP), OPTIONAL, INTENT(IN) :: gau_scr_par_
+       LOGICAL , OPTIONAL, INTENT(IN) :: exx_started_
+       REAL(DP), OPTIONAL, INTENT(IN) :: exx_fraction_
+       !
+     END SUBROUTINE
+     !
+  END INTERFACE
+  !
   INTERFACE GET_LDA_THRESHOLD
      !
-     SUBROUTINE get_threshold( rho_threshold_ )
+     SUBROUTINE get_lda_threshold( rho_threshold_ )
        !
        USE kind_l,  ONLY: DP
        IMPLICIT NONE
        REAL(DP), INTENT(IN) :: rho_threshold_
+       !
+     END SUBROUTINE
+     !
+  END INTERFACE
+  !
+  INTERFACE GET_GGA_THRESHOLD
+     !
+     SUBROUTINE get_GGA_threshold( rho_threshold_, grho_threshold_ )
+       !
+       USE kind_l,  ONLY: DP
+       IMPLICIT NONE
+       REAL(DP), INTENT(IN) :: rho_threshold_
+       REAL(DP), INTENT(IN) :: grho_threshold_
        !
      END SUBROUTINE
      !
@@ -80,6 +109,24 @@ MODULE ldaxc_interfaces
                                 vx_out(length,2), vc_out(length,2)
        !
      END SUBROUTINE xc_lsda_l
+     !
+  END INTERFACE
+  !
+  !
+  INTERFACE GCXC
+     !
+     SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
+                                          v2x_out, v1c_out, v2c_out )
+       USE kind_l, ONLY: DP
+       USE dft_par_mod
+       USE exch_gga_l
+       USE corr_gga_l
+       IMPLICIT NONE
+       INTEGER,  INTENT(IN) :: length 
+       REAL(DP), INTENT(IN),  DIMENSION(length) :: rho_in, grho_in
+       REAL(DP), INTENT(OUT), DIMENSION(length) :: sx_out, sc_out, v1x_out, &
+                                                   v2x_out, v1c_out, v2c_out
+     END SUBROUTINE gcxc_l
      !
   END INTERFACE
   !
@@ -185,16 +232,30 @@ MODULE ldaxc_interfaces
   INTERFACE LSD_LYP
      !
      SUBROUTINE lsd_lyp_ext( rho, zeta, elyp, vlyp_up, vlyp_dw )
-     !
-     USE kind_l,       ONLY: DP
-     IMPLICIT NONE
-     REAL(DP), INTENT(IN) :: rho, zeta
-     REAL(DP), INTENT(OUT) :: elyp, vlyp_up, vlyp_dw
-     !
+       !
+       USE kind_l,       ONLY: DP
+       IMPLICIT NONE
+       REAL(DP), INTENT(IN) :: rho, zeta
+       REAL(DP), INTENT(OUT) :: elyp, vlyp_up, vlyp_dw
+       !
      END SUBROUTINE
      !
   END INTERFACE
   !
   !
-END MODULE ldaxc_interfaces
+  INTERFACE PBEC
+     !
+     SUBROUTINE pbec_ext( rho, grho, iflag, sc, v1c, v2c )
+       !
+       USE kind_l,    ONLY: DP
+       IMPLICIT NONE
+       INTEGER,  INTENT(IN) :: iflag
+       REAL(DP), INTENT(IN) :: rho, grho
+       REAL(DP), INTENT(OUT) :: sc, v1c, v2c
+       !
+     END SUBROUTINE
+     !
+  END INTERFACE
+  !
+END MODULE xc_interfaces
 !=---------------------------------------------------------------------------=!

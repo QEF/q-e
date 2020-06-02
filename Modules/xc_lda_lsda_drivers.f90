@@ -12,7 +12,9 @@ USE kinds,     ONLY: DP
 USE funct,     ONLY: get_iexch, get_icorr, is_libxc,  &
                      exx_is_active, get_exx_fraction, &
                      get_finite_size_cell_volume
-USE ldaxc_interfaces, ONLY: xc_lda, xc_lsda, get_ldaxc_param, get_lda_threshold
+!
+USE xc_interfaces,     ONLY: xc_lda, xc_lsda, get_ldaxc_param, &
+                             get_lda_threshold
 !
 IMPLICIT NONE
 !
@@ -20,11 +22,10 @@ PRIVATE
 SAVE
 !
 !  LDA and LSDA exchange-correlation drivers
-PUBLIC :: xc !, xc_lsda !,xc_lda
+PUBLIC :: xc
 PUBLIC :: change_threshold_lda
 !
-!  density threshold (set to default value)
-REAL(DP) :: rho_threshold = 1.E-10_DP
+REAL(DP) :: rho_threshold = 1.0E-10
 !
  CONTAINS
 !
@@ -107,6 +108,9 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   ex_out = 0.0_DP ; vx_out = 0.0_DP
   ec_out = 0.0_DP ; vc_out = 0.0_DP
   !
+  !set LDA threshold
+  IF ( ANY(.NOT.is_libxc(1:2)) ) CALL get_lda_threshold( rho_threshold )
+  !
 #if defined(__LIBXC)
   !
   fkind_x = -1
@@ -175,7 +179,6 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
         exx_started  = exx_is_active()
         exx_fraction = get_exx_fraction()
         CALL get_ldaxc_param( 0.d0, exx_started, exx_fraction )
-        CALL get_lda_threshold( rho_threshold )
         IF (iexch==8 .OR. icorr==10) THEN
           CALL get_finite_size_cell_volume( is_there_finite_size_corr, &
                                             finite_size_cell_volume )
@@ -244,7 +247,6 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
      exx_started  = exx_is_active()
      exx_fraction = get_exx_fraction()
      CALL get_ldaxc_param( 0.d0, exx_started, exx_fraction )
-     CALL get_lda_threshold( rho_threshold )
      IF (iexch==8 .OR. icorr==10) THEN
        CALL get_finite_size_cell_volume( is_there_finite_size_corr, &
                                          finite_size_cell_volume )

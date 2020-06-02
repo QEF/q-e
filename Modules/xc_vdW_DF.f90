@@ -61,7 +61,7 @@ USE io_global,         ONLY : stdout, ionode
 USE fft_base,          ONLY : dfftp
 USE fft_interfaces,    ONLY : fwfft, invfft
 USE control_flags,     ONLY : iverbosity, gamma_only
-USE ldaxc_interfaces,  ONLY : pw, pw_spin
+USE xc_interfaces,     ONLY : pw, pw_spin
 
 ! ----------------------------------------------------------------------
 ! No implicit variables
