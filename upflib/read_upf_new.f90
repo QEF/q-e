@@ -88,13 +88,14 @@ CONTAINS
     !
     !CALL read_pp_nonlocal ( upf )
     !
-    !CALL read_pp_pswfc ( upf )
+    CALL read_pp_pswfc ( upf )
     !
     !CALL read_pp_full_wfc ( upf )
     !
     allocate( upf%rho_at(1:upf%mesh) )
     CALL xmlr_readtag( capitalize_if_v2('pp_rhoatom'), &
-         upf%rho_at(1:upf%mesh) )
+         upf%rho_at(1:upf%mesh), ierr )
+    if ( ierr == -1 ) rewind( iun )
     !
     !CALL read_pp_paw ( upf )
     !
@@ -286,7 +287,15 @@ CONTAINS
     INTEGER :: nw, ind, l
     CHARACTER(LEN=8) :: tag
     !
-    allocate ( upf%chi(1:upf%mesh,upf%nwfc) ) 
+    allocate ( upf%chi(1:upf%mesh,upf%nwfc) )
+    allocate ( upf%els(upf%nwfc), &
+                upf%oc(upf%nwfc), &
+                upf%lchi(upf%nwfc), &
+                upf%nchi(upf%nwfc), &
+                upf%rcut_chi(upf%nwfc), &
+                upf%rcutus_chi(upf%nwfc), &
+                upf%epseu(upf%nwfc) )
+    !
     CALL xmlr_opentag( capitalize_if_v2('pp_pswfc') )
     DO nw=1,upf%nwfc
        IF ( v2 ) THEN
@@ -310,7 +319,7 @@ CONTAINS
        call get_attr( 'cutoff_radius', upf%rcut_chi(nw) )
        call get_attr( 'ultrasoft_cutoff_radius', upf%rcutus_chi(nw) )
     END DO
-    CALL xmlw_closetag( ) ! end pp_pswfc
+    CALL xmlr_closetag( ) ! end pp_pswfc
     !
   END SUBROUTINE read_pp_pswfc
   !

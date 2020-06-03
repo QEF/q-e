@@ -59,7 +59,11 @@ CONTAINS
     CHARACTER(LEN=80) :: attrval_c
     !
     CALL get_c_attr ( attrname, attrval_c )
-    READ (attrval_c,*) attrval_i
+    if ( len_trim(attrval_c) > 0 ) then
+       READ (attrval_c,*) attrval_i
+    else
+       attrval_i = 0
+    end if
     !
   END SUBROUTINE get_i_attr
   !
@@ -72,7 +76,11 @@ CONTAINS
     CHARACTER(LEN=80) :: attrval_c
     !
     CALL get_c_attr ( attrname, attrval_c )
-    READ (attrval_c,*) attrval_l
+    if ( len_trim(attrval_c) > 0 ) then
+       READ (attrval_c,*) attrval_l
+    else
+       attrval_l = .false.
+    end if
     !
   END SUBROUTINE get_l_attr
   !
@@ -85,7 +93,11 @@ CONTAINS
     CHARACTER(LEN=80) :: attrval_c
     !
     CALL get_c_attr ( attrname, attrval_c )
-    READ (attrval_c,*) attrval_r
+    if ( len_trim(attrval_c) > 0 ) then
+       READ (attrval_c,*) attrval_r
+    else
+       attrval_r = 0.0_dp
+    end if
     !
   END SUBROUTINE get_r_attr
   !
@@ -93,25 +105,45 @@ CONTAINS
     !
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN) :: attrname
-    CHARACTER(LEN=*), INTENT(OUt) :: attrval_c
+    CHARACTER(LEN=*), INTENT(OUT) :: attrval_c
     !
-    INTEGER :: i0, i1, i
+    INTEGER :: i0, i1, i, j0, j1
     !
-    ! for every comma found in attrlist before attrname is found,
-    ! skip to the field after a comma in attrvals
+    ! search for attrname in attrlist
+    !
+    j0 = 1
+    do while ( j0 < len_trim(attrlist) )
+       j1 = index ( attrlist(j0:), ',' )
+       if ( j1 == 0 ) then
+          ! no more commas: check if found
+          if ( attrname == attrlist(j0:) ) exit
+          ! here if not found
+          attrval_c = ' '
+          return
+       else
+          ! check if found: need exact match between commas
+          if ( trim(attrname) == attrlist(j0:j0+j1-2) ) exit
+       end if
+       j0 = j0+j1
+    end do
+    !
+    ! for every comma found in attrlist before attrname is found
+    ! (at position j0) skip to the field after a comma in attrvals
+    !
     i0 = 1
-    DO i = 1, index ( attrlist, trim(attrname) )
+    DO i = 1, j0
        if ( attrlist(i:i) == ',' ) then
           i1 = index ( attrvals(i0:), ',' )
           i0 = i1 + i0
        end if
     END DO
+    ! now find next comma
     i1 = index ( attrvals(i0:), ',' )
     IF ( i1 == 0 ) THEN
        ! no more commas?
        attrval_c = attrvals(i0:)
     ELSE IF ( i1 == 1 ) THEN
-       ! two commas one after the other 
+       ! two commas, one after the other (,,) ?
        attrval_c = ' '
     ELSE
        ! take field between two commas
@@ -481,7 +513,11 @@ CONTAINS
     CHARACTER(LEN=80) :: cval
     !
     CALL readtag_c (name, cval, ierr )
-    READ(cval,*) ival
+    if ( len_trim(cval) > 0 ) then
+       READ (cval,*) ival
+    else
+       ival = 0
+    end if
     !
   END SUBROUTINE readtag_i
   !
@@ -495,7 +531,11 @@ CONTAINS
     CHARACTER(LEN=80) :: cval
     !
     CALL readtag_c (name, cval, ierr )
-    READ(cval,*) lval
+    if ( len_trim(cval) > 0 ) then
+       READ (cval,*) lval
+    else
+       lval = .false.
+    end if
     !
   END SUBROUTINE readtag_l
   !
@@ -509,22 +549,32 @@ CONTAINS
     CHARACTER(LEN=80) :: cval
     !
     CALL readtag_c (name, cval, ierr )
-    READ(cval,*) rval
+    if ( len_trim(cval) > 0 ) then
+       READ (cval,*) rval
+    else
+       rval = 0.0_dp
+    end if
     !
   END SUBROUTINE readtag_r
   !
-  SUBROUTINE readtag_rv (name, rval, ierr )
+  SUBROUTINE readtag_rv (name, rval, ierr)
     !
     ! As readtag_c, for an array of real values
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
     REAL(8), INTENT(OUT)         :: rval(:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    INTEGER :: ier_
     CHARACTER(LEN=80) :: cval    
     !
-    CALL xmlr_opentag (name, ierr )
-    READ(xmlunit, *) rval
-    CALL xmlr_closetag ( IERR = ierr)
+    CALL xmlr_opentag (name, ier_)
+    if ( ier_ == 0  ) then
+       READ(xmlunit, *) rval
+    else
+       rval = 0.0_dp
+    end if
+    CALL xmlr_closetag ( )
+    IF ( present (ierr) ) ierr = ier_
     !
   END SUBROUTINE readtag_rv
   !
