@@ -1,7 +1,8 @@
 !
-MODULE exch_gga_l !<GPU:exch_gga=>exch_gga_gpu>
+MODULE exch_gga_l !<GPU:exch_gga_l=>exch_gga_l_gpu>
 !
 CONTAINS
+!
 !
 !-----------------------------------------------------------------------
 SUBROUTINE becke88_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
@@ -106,7 +107,7 @@ SUBROUTINE pbex_l( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEV
   !! iflag=6  optB86b: Klimes et al., Phys. Rev. B 83, 195131 (2011)
   !! iflag=7  ev: Engel and Vosko, PRB 47, 13164 (1991)
   !! iflag=8  RPBE: B. Hammer, et al., Phys. Rev. B 59, 7413 (1999)
-  !! iflag=9  W31X: D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
+  !! iflag=9  W31X: D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)
   !
   USE kind_l,      ONLY : DP
   !
@@ -136,19 +137,16 @@ SUBROUTINE pbex_l( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEV
   REAL(DP), PARAMETER :: pi=3.14159265358979323846d0
   REAL(DP), PARAMETER :: third=1._DP/3._DP, c1=0.75_DP/pi,        &
                          c2=3.093667726280136_DP, c5=4._DP*third, &
-                         c6=c2*2.51984210_DP, c7=0.8_DP
+                         c6=c2*2.51984210_DP, c7=5._DP/6._DP, c8=0.8_DP
                          ! (3pi^2)^(1/3)*2^(4/3)
   ! parameters of the functional
-  REAL(DP) :: k(9), mu(9), ev(6)
-  !         pbe         revpbe       pbesol     pbeq2d     optB88   optB86b
-  !         ev          rpbe         W31x
-  DATA k  / 0.804_DP,   1.2450_DP,   0.804_DP , 0.804_DP,  1.2_DP,  0.0_DP,       &
-            0.000_DP,   0.8040_DP,   1.10_DP /,                                   &
+  REAL(DP) :: k(6), mu(6), ev(6)
+  !           pbe        rpbe        pbesol   pbeq2d      optB88  optB86b
+  DATA k  / 0.804_DP,   1.2450_DP,   0.804_DP , 0.804_DP,  0.0_DP,  0.0_DP/,      &
        mu / 0.2195149727645171_DP, 0.2195149727645171_DP, 0.12345679012345679_DP, &
-            0.12345679012345679_DP, 0.22_DP, 0.1234_DP, 0.000_DP,                 &
-            0.2195149727645171_DP, 0.12345679012345679_DP /,                      &
+            0.12345679012345679_DP,  0.22_DP, 0.1234_DP/,                         &
        ev / 1.647127_DP, 0.980118_DP, 0.017399_DP, 1.523671_DP, 0.367229_DP,      &
-            0.011282_DP /  ! a and b parameters of Engel and Vosko
+                                   0.011282_DP /  ! a and b parameters of Engel and Vosko
   !
   SELECT CASE( iflag )
   CASE( 4 )
@@ -189,13 +187,13 @@ SUBROUTINE pbex_l( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEV
      v2x = exunif * dfx * dsg / agrho
      sx  = sx_s * rho
      !
-  CASE( 5, 9 )
+  CASE( 5 )
      !
      agrho = SQRT(grho)
      kf = c2 * rho**third
      dsg = 0.5_DP / kf
      s1 = agrho * dsg / rho
-     ab = mu(iflag) / k(iflag)
+     ab = mu(iflag)*c7 ! mu/ab=1.2
      p = s1*c6
      c = LOG(p + SQRT(p*p+1)) ! asinh(p)
      dfx1 = 1 + ab*s1*c
@@ -220,14 +218,14 @@ SUBROUTINE pbex_l( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEV
      dsg = 0.5_DP / kf
      s1 = agrho * dsg / rho
      p = mu(iflag)*s1*s1
-     fx =  p / ( 1._DP + p )**c7
+     fx =  p / ( 1._DP + p )**c8
      !
      exunif = - c1 * kf
      sx_s = exunif * fx
      !
      dxunif = exunif * third
      !
-     dfx = 2*mu(iflag)*s1*fx*(1+(1-c7)*p)/(p*(1+p))
+     dfx = 2*mu(iflag)*s1*fx*(1+(1-c8)*p)/(p*(1+p))
      ds = - c5 * s1
      !
      v1x = sx_s + dxunif * fx + exunif * dfx * ds
@@ -369,10 +367,10 @@ SUBROUTINE hcth_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   rab = r3q2*ra
   dra_drho = -0.260530881d0/rho_o34
   drab_drho = r3q2*dra_drho
-  CALL pwcorr_l( ra, cg1, g, dg )                           !<GPU:pwcorr_l=>pwcorr_l_d>
+  CALL pwcorr_l( ra, cg1, g, dg )                           !<GPU:pwcorr=>pwcorr_d>
   era1 = g
   dera1_dra = dg
-  CALL pwcorr_l( rab, cg0, g, dg )                          !<GPU:pwcorr_l=>pwcorr_l_d>
+  CALL pwcorr_l( rab, cg0, g, dg )                          !<GPU:pwcorr=>pwcorr_d>
   erab0 = g
   derab0_drab = dg
   ex = -0.75d0*r3pi*rho_o34
@@ -826,7 +824,7 @@ SUBROUTINE pbexgau_l( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )                
   IF (s > 10.D0) THEN
      s = 10.D0
   ENDIF
-  CALL pbe_gauscheme( rho, s, alpha_gau, fx, d1x, d2x )   !<GPU:pbe_gauscheme=>pbe_gauscheme_d>
+  CALL pbe_gauscheme_l( rho, s, alpha_gau, fx, d1x, d2x )   !<GPU:pbe_gauscheme=>pbe_gauscheme_d>
   sxsr = ex*fx                        ! - EX
   dsdn = -4.D0/3.D0*s/rho
   v1xsr = vx*fx + (dsdn*d2x+d1x)*ex   ! - VX
@@ -842,7 +840,7 @@ SUBROUTINE pbexgau_l( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )                
 END SUBROUTINE pbexgau_l
     !
     !-----------------------------------------------------------------------
-SUBROUTINE pbe_gauscheme( rho, s, alpha_gau, Fx, dFxdr, dFxds )                    !<GPU:DEVICE>
+SUBROUTINE pbe_gauscheme_l( rho, s, alpha_gau, Fx, dFxdr, dFxds )                    !<GPU:DEVICE>
        !--------------------------------------------------------------------
        !
        IMPLICIT NONE
@@ -927,7 +925,7 @@ SUBROUTINE pbe_gauscheme( rho, s, alpha_gau, Fx, dFxdr, dFxds )                 
        !
        RETURN
        !
-END SUBROUTINE pbe_gauscheme
+END SUBROUTINE pbe_gauscheme_l
 !
 !
 !-------------------------------------------------
@@ -1048,7 +1046,7 @@ SUBROUTINE b86b_l( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEV
   !! iflag=1: A. D. Becke, J. Chem. Phys. 85, 7184 (1986) (B86b)
   !! iflag=2: J. Klimes, Phys. Rev. B 83, 195131 (2011). (OptB86b)
   !! iflag=3: I. Hamada, Phys. Rev. B 89, 121103(R) (B86R)
-  !! iflag=4: D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
+  !! iflag=4: D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)
   !
   !! Ikutaro Hamada - HAMADA.Ikutaro@nims.go.jp
   !! National Institute for Materials Science
@@ -1077,9 +1075,9 @@ SUBROUTINE b86b_l( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEV
   REAL(DP), PARAMETER :: third=1._DP/3._DP, c1=0.75_DP/pi, &
                          c2=3.093667726280136_DP, c5=4._DP*third
   ! parameters of the functional
-  REAL(DP) :: k(4), mu(4)
-  DATA k / 0.5757_DP, 1.0000_DP, 0.711357_DP, 0.58_DP /, &
-       mu/ 0.2449_DP, 0.1234_DP, 0.1234_DP, 0.12345679012345679_DP /
+  REAL(DP) :: k(3), mu(3)
+  DATA k / 0.5757_DP, 1.0000_DP, 0.711357_DP/, &
+       mu/ 0.2449_DP, 0.1234_DP, 0.1234_DP  /
   !
   agrho = SQRT(grho)
   kf = c2 * rho**third
@@ -1163,6 +1161,69 @@ SUBROUTINE cx13_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   v2x = Ax * df_ds/(s_prefactor*grad_rho)
   !
 END SUBROUTINE cx13_l
+
+
+! ===========> SPIN <===========
+!
+!-----------------------------------------------------------------------
+SUBROUTINE becke88_spin_l( rho_up, rho_dw, grho_up, grho_dw, sx_up, sx_dw, v1x_up, v1x_dw, v2x_up, v2x_dw )                     !<GPU:DEVICE>
+  !-----------------------------------------------------------------------
+  !! Becke exchange: A.D. Becke, PRA 38, 3098 (1988) - Spin polarized case
+  !
+  USE kind_l,    ONLY: DP
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: rho_up, rho_dw
+  !! charge
+  REAL(DP), INTENT(IN) :: grho_up, grho_dw
+  !! gradient
+  REAL(DP), INTENT(OUT) :: sx_up, sx_dw
+  !! the up and down energies
+  REAL(DP), INTENT(OUT) :: v1x_up, v1x_dw
+  !! first part of the potential
+  REAL(DP), INTENT(OUT) :: v2x_up, v2x_dw
+  !! second part of the potential
+  !
+  ! ... local variables
+  !
+  INTEGER :: is
+  REAL(DP), PARAMETER :: beta = 0.0042_DP, third = 1._DP/3._DP
+  REAL(DP) :: rho13, rho43, xs, xs2, sa2b8, shm1, dd, dd2, ee
+  !
+  !
+  !DO is = 1, 2
+     rho13 = rho_up**third
+     rho43 = rho13**4
+     xs  = SQRT(grho_up) / rho43
+     xs2 = xs * xs
+     sa2b8 = SQRT(1.0d0 + xs2)
+     shm1  = LOG(xs + sa2b8)
+     dd  = 1.0d0 + 6.0d0 * beta * xs * shm1
+     dd2 = dd * dd
+     ee = 6.0d0 * beta * xs2 / sa2b8 - 1.d0
+     sx_up  = grho_up / rho43 * (-beta/dd)
+     v1x_up = -(4.d0/3.d0) * xs2 * beta * rho13 * ee / dd2
+     v2x_up = beta * (ee-dd) / (rho43*dd2)
+
+     rho13 = rho_dw**third
+     rho43 = rho13**4
+     xs  = SQRT(grho_dw) / rho43
+     xs2 = xs * xs
+     sa2b8 = SQRT(1.0d0 + xs2)
+     shm1  = LOG(xs + sa2b8)
+     dd  = 1.0d0 + 6.0d0 * beta * xs * shm1
+     dd2 = dd * dd
+     ee = 6.0d0 * beta * xs2 / sa2b8 - 1.d0
+     sx_dw  = grho_dw / rho43 * (-beta/dd)
+     v1x_dw = -(4.d0/3.d0) * xs2 * beta * rho13 * ee / dd2
+     v2x_dw = beta * (ee-dd) / (rho43*dd2)
+  !ENDDO
+  !
+  RETURN
+  !
+END SUBROUTINE becke88_spin_l
+!
 !
 !-----------------------------------------------------------------------------
 SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )                     !<GPU:DEVICE>

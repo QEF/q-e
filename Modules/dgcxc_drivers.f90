@@ -11,8 +11,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   USE constants,        ONLY: e2
   USE kinds,            ONLY: DP
   USE funct,            ONLY: get_igcx, get_igcc, is_libxc
-  USE xc_gga,           ONLY: gcx_spin
-  USE xc_interfaces,    ONLY: gcxc
+  USE xc_interfaces,    ONLY: gcxc, gcx_spin
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
@@ -372,8 +371,8 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   !! This routine computes the derivative of the exchange and correlation
   !! potentials in the spin-polarized case.
   !
-  USE xc_gga,       ONLY: gcx_spin, gcc_spin
-  USE kinds,        ONLY: DP
+  USE xc_interfaces,  ONLY: gcx_spin, gcc_spin
+  USE kinds,          ONLY: DP
   !
   IMPLICIT NONE
   !

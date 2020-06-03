@@ -21,9 +21,8 @@
 MODULE metagga                       !<GPU:metagga=>metagga_gpu>
 !
 USE xc_interfaces, ONLY: slater, &     !<GPU:slater=>slater_d,exch_lda=>exch_lda_gpu>
-                            pw, pw_spin   !<GPU:pw=>pw_d,pw_spin=>pw_spin_d,corr_lda=>corr_lda_gpu> 
-USE corr_gga,  ONLY : pbec_spin     !<GPU:pbec=>pbec_d,pbec_spin=>pbec_spin_d,corr_gga=>corr_gga_gpu>
-USE xc_interfaces,     ONLY: pbec
+                            pw, pw_spin   !<GPU:pw=>pw_d,pw_spin=>pw_spin_d,corr_lda=>corr_lda_gpu>    
+USE xc_interfaces,     ONLY: pbec, pbec_spin        !<GPU:pbec=>pbec_d,pbec_spin=>pbec_spin_d,corr_gga=>corr_gga_gpu>
 !
  CONTAINS
 !                             TPSS

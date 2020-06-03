@@ -24,7 +24,6 @@ compute_dipole.o \
 constants.o \
 constraints_module.o \
 control_flags.o \
-correlation_gga.o \
 coulomb_vcut.o \
 dgcxc_drivers.o \
 dist.o \
@@ -32,7 +31,6 @@ dmxc_drivers.o \
 dgcxc_drivers.o \
 electrons_base.o \
 environment.o \
-exchange_gga.o \
 fd_gradient.o \
 fft_base.o \
 fft_rho.o \
@@ -119,10 +117,8 @@ zvscal.o
 OBJS = \
 atom_weight.o \
 capital.o \
-correlation_gga.o \
 cryst_to_car.o \
 erf.o \
-exchange_gga.o \
 expint.o \
 generate_k_along_lines.o \
 more_functionals.o \

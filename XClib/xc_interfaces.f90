@@ -7,7 +7,11 @@ MODULE xc_interfaces
   IMPLICIT NONE
   PRIVATE
   !
-  PUBLIC :: XC_LDA, XC_LSDA, GCXC, SLATER, SLATER_SPIN, PZ, PZ_POLARIZED, PW, PW_SPIN, LYP, LSD_LYP, PBEC
+  PUBLIC :: XC_LDA, XC_LSDA
+  PUBLIC :: SLATER, SLATER_SPIN, PZ, PZ_POLARIZED, PW, PW_SPIN, LYP, &
+            LSD_LYP
+  PUBLIC :: GCXC, GCX_SPIN, GCC_SPIN, GCC_SPIN_MORE
+  PUBLIC :: PBEC, PBEC_SPIN, LSD_GLYP
   PUBLIC :: GET_XC_INDEXES, GET_LDAXC_PARAM, GET_LDA_THRESHOLD, &
             GET_GGAXC_PARAM, GET_GGA_THRESHOLD
   !
@@ -127,6 +131,66 @@ MODULE xc_interfaces
        REAL(DP), INTENT(OUT), DIMENSION(length) :: sx_out, sc_out, v1x_out, &
                                                    v2x_out, v1c_out, v2c_out
      END SUBROUTINE gcxc_l
+     !
+  END INTERFACE
+  !
+  !
+  INTERFACE GCX_SPIN
+     !
+     SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
+       !
+       USE kind_l, ONLY: DP
+       USE dft_par_mod
+       USE exch_gga_l
+       IMPLICIT NONE
+       INTEGER, INTENT(IN) :: length
+       REAL(DP), INTENT(IN),  DIMENSION(length,2) :: rho_in, grho2_in
+       REAL(DP), INTENT(OUT), DIMENSION(length) :: sx_tot
+       REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v1x_out, v2x_out
+       !
+     END SUBROUTINE
+     !
+  END INTERFACE
+  !
+  !
+  INTERFACE GCC_SPIN
+     !
+     SUBROUTINE gcc_spin_l( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out )
+       !
+       USE kind_l, ONLY: DP
+       USE dft_par_mod
+       USE corr_gga_l
+       IMPLICIT NONE
+       INTEGER, INTENT(IN) :: length
+       REAL(DP), INTENT(IN), DIMENSION(length) :: rho_in
+       REAL(DP), INTENT(INOUT), DIMENSION(length) :: zeta_io
+       REAL(DP), INTENT(IN), DIMENSION(length) :: grho_in
+       REAL(DP), INTENT(OUT), DIMENSION(length) :: sc_out
+       REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v1c_out
+       REAL(DP), INTENT(OUT), DIMENSION(length) :: v2c_out
+       !
+     END SUBROUTINE
+     !
+  END INTERFACE
+  !
+  !
+  INTERFACE GCC_SPIN_MORE
+     !
+     SUBROUTINE gcc_spin_more_l( length, rho_in, grho_in, grho_ud_in, &
+                                                 sc, v1c, v2c, v2c_ud )
+       !
+       USE kind_l, ONLY: DP
+       USE dft_par_mod
+       USE corr_gga_l
+       IMPLICIT NONE 
+       INTEGER, INTENT(IN) :: length
+       REAL(DP), INTENT(IN), DIMENSION(length,2) :: rho_in, grho_in
+       REAL(DP), INTENT(IN), DIMENSION(length) :: grho_ud_in
+       REAL(DP), INTENT(OUT), DIMENSION(length) :: sc
+       REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v1c, v2c
+       REAL(DP), INTENT(OUT), DIMENSION(length) :: v2c_ud
+       !
+     END SUBROUTINE
      !
   END INTERFACE
   !
@@ -256,6 +320,41 @@ MODULE xc_interfaces
      END SUBROUTINE
      !
   END INTERFACE
+  !
+  !
+  INTERFACE PBEC_SPIN
+     !
+     SUBROUTINE pbec_spin_ext( rho, zeta, grho, iflag, sc, v1c_up, v1c_dw, v2c )                    !<GPU:DEVICE>
+       !
+       USE corr_lda_l, ONLY: pw_spin_l
+       USE kind_l,     ONLY : DP
+       IMPLICIT NONE
+       INTEGER,  INTENT(IN) :: iflag        !<GPU:VALUE>
+       REAL(DP), INTENT(IN) :: rho, zeta, grho
+       REAL(DP), INTENT(OUT) :: sc, v1c_up, v1c_dw, v2c
+       !
+     END SUBROUTINE
+     !
+  END INTERFACE     
+  !
+  !
+  INTERFACE LSD_GLYP
+     !
+     SUBROUTINE lsd_glyp_ext( rho_in_up, rho_in_dw, grho_up, grho_dw, grho_ud, sc, v1c_up, v1c_dw, v2c_up, v2c_dw, v2c_ud )                     !<GPU:DEVICE>
+       !
+       USE kind_l, ONLY: DP
+       IMPLICIT NONE
+       REAL(DP), INTENT(IN) :: rho_in_up, rho_in_dw
+       REAL(DP), INTENT(IN) :: grho_up, grho_dw
+       REAL(DP), INTENT(IN) :: grho_ud
+       REAL(DP), INTENT(OUT) :: sc
+       REAL(DP), INTENT(OUT) :: v1c_up, v1c_dw
+       REAL(DP), INTENT(OUT) :: v2c_up, v2c_dw
+       REAL(DP), INTENT(OUT) :: v2c_ud
+       !
+     END SUBROUTINE
+     !
+  END INTERFACE   
   !
 END MODULE xc_interfaces
 !=---------------------------------------------------------------------------=!

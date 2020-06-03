@@ -464,7 +464,7 @@ SUBROUTINE pbec_ext( rho, grho, iflag, sc, v1c, v2c )                    !<GPU:D
   !
   USE kind_l,    ONLY: DP
   USE corr_lda_l, ONLY: pw_l
-  USE corr_gga_l, ONLY: cpbe2d
+  USE corr_gga_l, ONLY: cpbe2d_l
   !
   IMPLICIT NONE
   !
@@ -510,7 +510,7 @@ SUBROUTINE pbec_ext( rho, grho, iflag, sc, v1c, v2c )                    !<GPU:D
   v2c = ddh0
   ! q2D
   IF (iflag == 3) THEN
-     CALL cpbe2d( rho, grho, sc2D, v1c2D, v2c2D )       !<GPU:cpbe2d=>cpbe2d_d>
+     CALL cpbe2d_l( rho, grho, sc2D, v1c2D, v2c2D )       !<GPU:cpbe2d=>cpbe2d_d>
      sc  = sc  + sc2D
      v1c = v1c + v1c2D
      v2c = v2c + v2c2D
@@ -519,5 +519,178 @@ SUBROUTINE pbec_ext( rho, grho, iflag, sc, v1c, v2c )                    !<GPU:D
   RETURN
   !
 END SUBROUTINE pbec_ext
-
-
+!
+!
+!-------------------------------------------------------------------
+SUBROUTINE pbec_spin_ext( rho, zeta, grho, iflag, sc, v1c_up, v1c_dw, v2c )                    !<GPU:DEVICE>
+  !-----------------------------------------------------------------
+  !! PBE correlation (without LDA part) - spin-polarized.
+  !
+  !! * iflag = 1: J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996);
+  !! * iflag = 2: J.P.Perdew et al., PRL 100, 136406 (2008).
+  !
+  USE corr_lda_l, ONLY: pw_spin_l
+  USE kind_l,     ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: iflag        !<GPU:VALUE>
+  !! see main comments
+  REAL(DP), INTENT(IN) :: rho
+  !! the total charge density
+  REAL(DP), INTENT(IN) :: zeta
+  !! the magnetization
+  REAL(DP), INTENT(IN) :: grho
+  !! the gradient of the charge squared
+  REAL(DP), INTENT(OUT) :: sc
+  !! correlation energies
+  REAL(DP), INTENT(OUT) :: v1c_up, v1c_dw
+  !! derivative of correlation wr. rho
+  REAL(DP), INTENT(OUT) :: v2c
+  !! derivatives of correlation wr. grho
+  !
+  ! ... local variables
+  !
+  REAL(DP) :: rs, ec, vc_up, vc_dn
+  !
+  REAL(DP), PARAMETER :: ga=0.031091_DP
+  REAL(DP) :: be(2)
+  DATA be / 0.06672455060314922_DP, 0.046_DP /
+  REAL(DP), PARAMETER :: third=1.D0/3.D0, pi34=0.6203504908994_DP
+  !                                         pi34=(3/4pi)^(1/3)
+  REAL(DP), PARAMETER :: xkf=1.919158292677513_DP, xks=1.128379167095513_DP
+  !                      xkf=(9 pi/4)^(1/3)      , xks=sqrt(4/pi)
+  REAL(DP) :: kf, ks, t, expe, af, y, xy, qy, s1, h0, ddh0
+  REAL(DP) :: fz, fz2, fz3, fz4, dfz, bfup, bfdw, dh0up, dh0dw, &
+              dh0zup, dh0zdw
+  !
+  !
+  rs = pi34 / rho**third
+  !
+  CALL pw_spin_l( rs, zeta, ec, vc_up, vc_dn )                                 !<GPU:pw_spin=>pw_spin_d>
+  !
+  kf = xkf / rs
+  ks = xks * SQRT(kf)
+  !
+  fz = 0.5_DP*( (1._DP+zeta)**(2._DP/3._DP) + (1._DP-zeta)**(2._DP/3._DP) )
+  fz2 = fz * fz
+  fz3 = fz2 * fz
+  fz4 = fz3 * fz
+  dfz = ( (1._DP+zeta)**(-1._DP/3._DP) - (1._DP - zeta)**(-1._DP/3._DP) ) &
+         / 3._DP
+  !
+  t  = SQRT(grho) / (2._DP * fz * ks * rho)
+  expe = EXP( - ec / (fz3 * ga) )
+  af   = be(iflag) / ga * (1._DP / (expe-1._DP) )
+  bfup = expe * (vc_up - ec) / fz3
+  bfdw = expe * (vc_dn - ec) / fz3
+  !
+  y  = af * t * t
+  xy = (1._DP + y) / (1._DP + y + y * y)
+  qy = y * y * (2._DP + y) / (1._DP + y + y * y)**2
+  s1 = 1._DP + be(iflag) / ga * t * t * xy
+  !
+  h0 = fz3 * ga * LOG(s1)
+  !
+  dh0up = be(iflag) * t * t * fz3 / s1 * ( -7._DP/3._DP * xy - qy * &
+          (af * bfup / be(iflag)-7._DP/3._DP) )
+  !
+  dh0dw = be(iflag) * t * t * fz3 / s1 * ( -7._DP/3._DP * xy - qy * &
+          (af * bfdw / be(iflag)-7._DP/3._DP) )
+  !
+  dh0zup =   (3._DP * h0 / fz - be(iflag) * t * t * fz2 / s1 *  &
+             (2._DP * xy - qy * (3._DP * af * expe * ec / fz3 / &
+             be(iflag)+2._DP) ) ) * dfz * (1._DP - zeta)
+  !
+  dh0zdw = - (3._DP * h0 / fz - be(iflag) * t * t * fz2 / s1 *  &
+             (2._DP * xy - qy * (3._DP * af * expe * ec / fz3 / &
+             be(iflag)+2._DP) ) ) * dfz * (1._DP + zeta)
+  !
+  ddh0 = be(iflag) * fz / (2._DP * ks * ks * rho) * (xy - qy) / s1
+  !
+  sc     = rho * h0
+  v1c_up = h0 + dh0up + dh0zup
+  v1c_dw = h0 + dh0dw + dh0zdw
+  v2c    = ddh0
+  !
+  !
+  RETURN
+  !
+END SUBROUTINE pbec_spin_ext
+!
+!
+!------------------------------------------------------------------------
+SUBROUTINE lsd_glyp_ext( rho_in_up, rho_in_dw, grho_up, grho_dw, grho_ud, sc, v1c_up, v1c_dw, v2c_up, v2c_dw, v2c_ud )                     !<GPU:DEVICE>
+  !----------------------------------------------------------------------
+  !! Lee, Yang, Parr: gradient correction part.
+  !
+  USE kind_l, ONLY: DP
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: rho_in_up, rho_in_dw
+  !! the total charge density
+  REAL(DP), INTENT(IN) :: grho_up, grho_dw
+  !! the gradient of the charge squared
+  REAL(DP), INTENT(IN) :: grho_ud
+  !! gradient off-diagonal term up-down
+  REAL(DP), INTENT(OUT) :: sc
+  !! correlation energy
+  REAL(DP), INTENT(OUT) :: v1c_up, v1c_dw
+  !! derivative of correlation wr. rho
+  REAL(DP), INTENT(OUT) :: v2c_up, v2c_dw
+  !! derivatives of correlation wr. grho
+  REAL(DP), INTENT(OUT) :: v2c_ud
+  !! derivative of correlation wr. grho, off-diag. term
+  !
+  ! ... local variables
+  !
+  REAL(DP) :: ra, rb, rho, grhoaa, grhoab, grhobb
+  REAL(DP) :: rm3, dr, or, dor, der, dder
+  REAL(DP) :: dlaa, dlab, dlbb, dlaaa, dlaab, dlaba, dlabb, dlbba, dlbbb
+  REAL(DP), PARAMETER :: a=0.04918_DP, b=0.132_DP, c=0.2533_DP, d=0.349_DP
+  !
+  ra = rho_in_up
+  rb = rho_in_dw
+  rho = ra + rb
+  rm3 = rho**(-1._DP/3._DP)
+  !
+  dr = ( 1._DP + d*rm3 )
+  or = EXP(-c*rm3) / dr * rm3**11._DP
+  dor = -1._DP/3._DP * rm3**4 * or * (11._DP/rm3-c-d/dr)
+  !
+  der  = c*rm3 + d*rm3/dr
+  dder = 1._DP/3._DP * (d*d*rm3**5/dr/dr - der/rho)
+  !
+  dlaa = -a*b*or*( ra*rb/9._DP*(1._DP-3*der-(der-11._DP)*ra/rho)-rb*rb )
+  dlab = -a*b*or*( ra*rb/9._DP*(47._DP-7._DP*der)-4._DP/3._DP*rho*rho  )
+  dlbb = -a*b*or*( ra*rb/9._DP*(1._DP-3*der-(der-11._DP)*rb/rho)-ra*ra )
+  !
+  dlaaa = dor/or*dlaa-a*b*or*(rb/9._DP*(1._DP-3*der-(der-11._DP)*ra/rho)-     &
+          ra*rb/9._DP*((3._DP+ra/rho)*dder+(der-11._DP)*rb/rho/rho))
+  dlaab = dor/or*dlaa-a*b*or*(ra/9._DP*(1._DP-3._DP*der-(der-11._DP)*ra/rho)- &
+          ra*rb/9._DP*((3._DP+ra/rho)*dder-(der-11._DP)*ra/rho/rho)-2._DP*rb)
+  dlaba = dor/or*dlab-a*b*or*(rb/9._DP*(47._DP-7._DP*der)-7._DP/9._DP*ra*rb*dder- &
+          8._DP/3._DP*rho)
+  dlabb = dor/or*dlab-a*b*or*(ra/9._DP*(47._DP-7._DP*der)-7._DP/9._DP*ra*rb*dder- &
+          8._DP/3._DP*rho)
+  dlbba = dor/or*dlbb-a*b*or*(rb/9._DP*(1._DP-3._DP*der-(der-11._DP)*rb/rho)- &
+          ra*rb/9._DP*((3._DP+rb/rho)*dder-(der-11._DP)*rb/rho/rho)-2._DP*ra)
+  dlbbb = dor/or*dlbb-a*b*or*(ra/9._DP*(1._DP-3*der-(der-11._DP)*rb/rho)-     &
+          ra*rb/9._DP*((3._DP+rb/rho)*dder+(der-11._DP)*ra/rho/rho))
+  !
+  grhoaa = grho_up
+  grhobb = grho_dw
+  grhoab = grho_ud
+  !
+  sc     = dlaa *grhoaa + dlab *grhoab + dlbb *grhobb
+  v1c_up = dlaaa*grhoaa + dlaba*grhoab + dlbba*grhobb
+  v1c_dw = dlaab*grhoaa + dlabb*grhoab + dlbbb*grhobb
+  v2c_up = 2._DP*dlaa
+  v2c_dw = 2._DP*dlbb
+  v2c_ud = dlab
+  !
+  !
+  RETURN
+  !
+END SUBROUTINE lsd_glyp_ext

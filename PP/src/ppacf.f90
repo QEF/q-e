@@ -56,8 +56,8 @@ PROGRAM do_ppacf
   USE funct,                ONLY : get_iexch, get_icorr, get_igcx, get_igcc
   USE funct,                ONLY : set_exx_fraction, set_auxiliary_flags, &
                                    enforce_input_dft
-  USE xc_interfaces,        ONLY : gcxc, slater, slater_spin
-  USE xc_gga,               ONLY : gcx_spin, gcc_spin
+  USE xc_interfaces,        ONLY : gcxc, gcx_spin, gcc_spin, slater, &
+                                   slater_spin
   USE xc_lda_lsda,          ONLY : xc
   USE wvfct,                ONLY : npw, npwx
   USE environment,          ONLY : environment_start, environment_end
@@ -555,7 +555,7 @@ PROGRAM do_ppacf
              etx = etx + e2*sx(1)
              etxgc = etxgc + e2*sx(1)
              r_v(1,1) = rhox
-             CALL gcc_spin( 1, r_v(1,1), zeta, grh2, sc, v1cs, v2c )
+             CALL gcc_spin( 1, r_v(1:1,1), zeta, grh2, sc, v1cs, v2c )
              etcgc = etcgc + e2*sc(1)
              etc = etc + e2*sc(1)
              IF ( icc == ncc ) THEN

@@ -59,7 +59,6 @@ constraints_module.o : ions_base.o
 constraints_module.o : kind.o
 control_flags.o : kind.o
 control_flags.o : parameters.o
-correlation_gga.o : kind.o
 cryst_to_car.o : kind.o
 deviatoric.o : io_global.o
 deviatoric.o : kind.o
@@ -93,7 +92,6 @@ environment.o : mp_world.o
 environment.o : qeh5_module.o
 environment.o : version.o
 erf.o : kind.o
-exchange_gga.o : kind.o
 expint.o : kind.o
 fd_gradient.o : ../FFTXlib/fft_types.o
 fd_gradient.o : ../FFTXlib/scatter_mod.o
@@ -180,7 +178,6 @@ mbdlib.o : tsvdw.o
 mdiis.o : ../UtilXlib/mp.o
 mdiis.o : kind.o
 metagga.o : constants.o
-metagga.o : correlation_gga.o
 metagga.o : kind.o
 mm_dispersion.o : ../UtilXlib/mp.o
 mm_dispersion.o : cell_base.o
@@ -191,7 +188,6 @@ mm_dispersion.o : kind.o
 mm_dispersion.o : mp_images.o
 mm_dispersion.o : parameters.o
 more_functionals.o : constants.o
-more_functionals.o : correlation_gga.o
 more_functionals.o : kind.o
 mp_bands.o : ../UtilXlib/mp.o
 mp_bands.o : ../UtilXlib/parallel_include.o
@@ -403,9 +399,6 @@ ws_base.o : kind.o
 wyckoff.o : kind.o
 wyckoff.o : space_group.o
 wypos.o : kind.o
-xc_gga_drivers.o : beef_interface.o
-xc_gga_drivers.o : correlation_gga.o
-xc_gga_drivers.o : exchange_gga.o
 xc_gga_drivers.o : funct.o
 xc_gga_drivers.o : kind.o
 xc_lda_lsda_drivers.o : funct.o
