@@ -570,10 +570,11 @@ CONTAINS
     CALL xmlr_opentag (name, ier_)
     if ( ier_ == 0  ) then
        READ(xmlunit, *) rval
+       CALL xmlr_closetag ( )
     else
        rval = 0.0_dp
+       REWIND( xmlunit )
     end if
-    CALL xmlr_closetag ( )
     IF ( present (ierr) ) ierr = ier_
     !
   END SUBROUTINE readtag_rv
@@ -616,6 +617,7 @@ CONTAINS
              cval = adjustl(trim(line(j:j+i-2)))
              ! print *, 'value=',cval
           end if
+    print '("closed at level ",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
           nlevel = nlevel -1
           !
           return
@@ -735,6 +737,7 @@ CONTAINS
                    if (present(ierr)) ierr = 3
                 else
                    open_tags(nlevel) = trim(tag)
+    print '("opened at level ",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
                 end if
                 !
                 return
@@ -808,6 +811,8 @@ CONTAINS
     IF ( nlevel < 0 ) &
          print '("severe error: closing tag that was never opened")'
     stat=0
+    write(6,'("closing at level ",i1," tag ",A,"...")',advance='no') &
+         nlevel,trim(open_tags(nlevel))
     do while (.true.)
        read(xmlunit,'(a)', end=10) line
        ll = len_trim(line)
@@ -870,6 +875,7 @@ CONTAINS
                 ! </tag ... > found
                 ! print *, '</tag> found'
                 if ( present(ierr) ) ierr = 0
+    print '("closed")'
                 nlevel = nlevel - 1
                 !
                 return

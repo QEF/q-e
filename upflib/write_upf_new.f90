@@ -516,6 +516,7 @@ CONTAINS
     IF (upf%tvanp .or. upf%tpawp) THEN
        CALL xmlw_opentag( capitalize_if_v2('pp_augmentation') )
        !
+       IF ( v2 ) print *, 'FIXME! INCORRECT FORMAT, USE ATTRIBUTES'
        CALL xmlw_writetag( 'q_with_l', upf%q_with_l )
        CALL xmlw_writetag( 'nqf', upf%nqf )
        CALL xmlw_writetag( 'nqlc', upf%nqlc )
@@ -683,7 +684,8 @@ CONTAINS
              ELSE
                 tag = 'pp_aewfc_rel'
              END IF
-             CALL xmlw_writetag(tag, upf%aewfc(1:upf%mesh,nb), 'index,label,l',&
+             CALL xmlw_writetag(tag, upf%paw%aewfc_rel(1:upf%mesh,nb), &
+                  'index,label,l', &
                   i2c(nb)//','//trim(upf%els_beta(nb))//','//i2c(upf%lll(nb)) )
           END DO
        END IF

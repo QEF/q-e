@@ -86,20 +86,19 @@ CONTAINS
     !
     CALL read_pp_semilocal ( upf )
     !
-    !CALL read_pp_nonlocal ( upf )
+    CALL read_pp_nonlocal ( upf )
     !
     CALL read_pp_pswfc ( upf )
     !
-    !CALL read_pp_full_wfc ( upf )
+    CALL read_pp_full_wfc ( upf )
     !
     allocate( upf%rho_at(1:upf%mesh) )
     CALL xmlr_readtag( capitalize_if_v2('pp_rhoatom'), &
-         upf%rho_at(1:upf%mesh), ierr )
-    if ( ierr == -1 ) rewind( iun )
+         upf%rho_at(1:upf%mesh) )
     !
-    !CALL read_pp_paw ( upf )
+    CALL read_pp_paw ( upf )
     !
-    !CALL read_pp_gipaw ( upf )
+    CALL read_pp_gipaw ( upf )
     !
     ! close initial tag, qe_pp:pseudo or UPF
     !
@@ -108,6 +107,29 @@ CONTAINS
     CALL xml_closefile ( )
     !
   END SUBROUTINE read_upf_new_
+  !
+  FUNCTION capitalize_if_v2 ( strin ) RESULT ( strout )
+    !
+    ! returns a capitalized string for UPF v.2, the same string otherwise
+    ! (UPF v.2 uses capitalized tags, UPF with schema use lowercase)
+    !
+    USE upf_utils, ONLY: capital
+    IMPLICIT NONE
+    CHARACTER(LEN=*) :: strin
+    !
+    INTEGER :: n
+    CHARACTER(LEN=:), ALLOCATABLE :: strout
+    !
+    IF ( v2 ) THEN
+       strout = ''
+       DO n = 1,LEN_TRIM(strin)
+          strout = strout // capital(strin(n:n))
+       END DO
+    ELSE
+       strout = TRIM(strin)
+    END IF
+    !
+  END FUNCTION capitalize_if_v2
   !--------------------------------------------------------
   SUBROUTINE read_pp_header_schema ( upf )
     !--------------------------------------------------------
@@ -278,6 +300,178 @@ CONTAINS
   END SUBROUTINE read_pp_semilocal
   !
   !--------------------------------------------------------
+  SUBROUTINE read_pp_nonlocal ( upf )
+    !--------------------------------------------------------
+    !
+    IMPLICIT NONE
+    TYPE(pseudo_upf),INTENT(INOUT) :: upf ! the pseudo data
+    !
+    LOGICAL :: isnull
+    INTEGER :: nb, ind, l, l_, ln, lm, mb, nmb
+    CHARACTER(LEN=15) :: tag
+    REAL(dp), ALLOCATABLE :: aux(:)
+    !
+    nb = upf%nbeta
+    IF ( nb == 0 ) nb = 1
+    ALLOCATE (upf%beta(upf%mesh,nb) )
+    ALLOCATE (upf%els_beta(nb), &
+              upf%lll(nb),      &
+              upf%jjj(nb),      &
+              upf%kbeta(nb),    &
+              upf%rcut(nb),     &
+              upf%rcutus(nb),   &
+              upf%dion(nb,nb),  &
+              upf%qqq(nb,nb)    )
+    !
+    IF ( upf%nbeta == 0 ) THEN
+       upf%nqf = 0
+       upf%nqlc= 0
+       upf%kkbeta = 0
+       upf%qqq_eps=-1.0_dp
+       RETURN
+    END IF
+    !
+    CALL xmlr_opentag( capitalize_if_v2('pp_nonlocal') )
+    !
+    DO nb = 1,upf%nbeta
+       !
+       IF ( v2 ) THEN
+          tag = 'PP_BETA.'//i2c(nb)
+       ELSE
+          tag = 'pp_beta'
+       END IF
+       CALL xmlr_readtag( tag, upf%beta(1:upf%mesh,nb) )
+       CALL get_attr('index', mb)
+       IF ( nb /= mb ) CALL upf_error('read_pp_nonlocal','mismatch',nb)
+       CALL get_attr('label', upf%els_beta(nb))
+       CALL get_attr('angular_momentum', upf%lll(nb))
+       IF ( .NOT. v2 .AND. upf%has_so ) &
+            CALL get_attr('tot_ang_mom', upf%jjj(nb))
+       CALL get_attr('cutoff_radius_index', upf%kbeta(nb))
+       CALL get_attr('cutoff_radius', upf%rcut(nb))
+       CALL get_attr('ultrasoft_cutoff_radius', upf%rcutus(nb))
+       
+    END DO
+    !
+    ! pp_dij (D_lm matrix)
+    !
+    CALL xmlr_opentag( capitalize_if_v2 ('pp_dij') )
+    READ(iun,*) upf%dion(1:upf%nbeta,1:upf%nbeta)
+    CALL xmlr_closetag( ) 
+    !
+    ! pp_augmentation
+    !
+    IF (upf%tvanp .or. upf%tpawp) THEN
+       CALL xmlr_opentag( capitalize_if_v2('pp_augmentation') )
+       !
+       IF ( v2 ) THEN
+          CALL get_attr ( 'q_with_l', upf%q_with_l )
+          CALL get_attr ( 'nqf', upf%nqf )
+          CALL get_attr ( 'nqlc', upf%nqlc )
+          IF (upf%tpawp) THEN
+             CALL get_attr ( 'shape', upf%paw%augshape )
+             CALL get_attr ( 'cutoff_r', upf%paw%raug )
+             CALL get_attr ( 'cutoff_r_index', upf%paw%iraug )
+             CALL get_attr ( 'augmentation_epsilon', upf%qqq_eps )
+             CALL get_attr ( 'l_max_aug', upf%paw%lmax_aug )
+          ENDIF
+       ELSE
+          CALL xmlr_readtag( 'q_with_l', upf%q_with_l )
+          CALL xmlr_readtag( 'nqf', upf%nqf )
+          CALL xmlr_readtag( 'nqlc', upf%nqlc )
+          IF (upf%tpawp) THEN
+             CALL xmlr_readtag( 'shape', upf%paw%augshape )
+             CALL xmlr_readtag( 'cutoff_r', upf%paw%raug )
+             CALL xmlr_readtag( 'cutoff_r_index', upf%paw%iraug )
+             CALL xmlr_readtag( 'augmentation_epsilon', upf%qqq_eps )
+             CALL xmlr_readtag( 'l_max_aug', upf%paw%lmax_aug )
+          ENDIF
+       ENDIF
+       !
+       CALL xmlr_opentag( capitalize_if_v2('pp_q') )
+       READ(iun,*) upf%qqq(1:upf%nbeta,1:upf%nbeta)
+       CALL xmlr_closetag( )
+       !
+       IF ( upf%tpawp ) THEN
+          CALL xmlr_opentag( capitalize_if_v2('pp_multipoles') )
+          ALLOCATE ( upf%paw%augmom(1:upf%nbeta,1:upf%nbeta,0:2*upf%lmax) )
+          READ(iun,*) upf%paw%augmom(1:upf%nbeta,1:upf%nbeta,0:2*upf%lmax)
+          CALL xmlr_closetag ()
+       ENDIF
+       !
+    END IF
+    !
+    ! read polinomial coefficients for Q_ij expansion at small radius
+    !
+    IF ( v2 .AND. upf%nqf > 0) THEN
+       ALLOCATE ( upf%qfcoef(upf%nqf, upf%nqlc, upf%nbeta, upf%nbeta) )
+       CALL xmlr_opentag('PP_QFCOEF')
+       READ(iun,*) upf%qfcoef
+       CALL xmlr_closetag ()
+       ALLOCATE( upf%rinner( upf%nqlc ) )
+       CALL xmlr_readtag('PP_RINNER',upf%rinner)
+    ENDIF
+    !
+    IF ( upf%tpawp .or. upf%tvanp ) THEN
+       !
+       ! Read augmentation charge Q_ij
+       !
+       IF( upf%q_with_l ) THEN
+          ALLOCATE( upf%qfuncl(upf%mesh,upf%nbeta*(upf%nbeta+1)/2,0:2*upf%lmax) )
+       ELSE
+          ALLOCATE ( upf%qfunc(upf%mesh,upf%nbeta*(upf%nbeta+1)/2) )
+       END IF
+       ALLOCATE ( aux(upf%mesh) )
+       loop_on_nb: DO nb = 1,upf%nbeta
+          ln = upf%lll(nb)
+          loop_on_mb: DO mb = nb,upf%nbeta
+             lm = upf%lll(mb)
+             IF( upf%q_with_l ) THEN
+                loop_on_l: DO l = abs(ln-lm),ln+lm,2 ! only even terms
+                   isnull = .FALSE. 
+                   IF( upf%tpawp ) isnull = (abs(upf%paw%augmom(nb,mb,l)) < upf%qqq_eps)
+                   IF(isnull) CYCLE loop_on_l
+                   IF ( v2 ) THEN
+                      tag = 'PP_QIJL.'//i2c(nb)//'.'//i2c(mb)//'.'//i2c(l)
+                   ELSE
+                      tag = 'pp_qijl'
+                   END IF
+                   CALL xmlr_readtag( tag, aux )
+                   CALL get_attr ('composite_index', nmb)
+                   IF ( nmb /= mb*(mb-1)/2 + nb ) &
+                        CALL upf_error ('read_pp_nonlocal','mismatch',1)
+                   CALL get_attr ('angular_momentum', l_)
+                   IF ( l /= l_ ) CALL upf_error ('read_pp_nonlocal','mismatch',2)                 
+                   upf%qfuncl(:,nmb,l) = aux(:)
+                ENDDO loop_on_l
+             ELSE
+                isnull = .FALSE. 
+                IF  ( upf%tpawp ) isnull = ( abs(upf%qqq(nb,mb)) < upf%qqq_eps )
+                IF (isnull) CYCLE loop_on_mb
+                IF ( v2 ) THEN
+                   tag = 'PP_QIJ.'//i2c(nb)//'.'//i2c(mb)
+                ELSE
+                   tag = 'pp_qij'
+                END IF
+                CALL xmlr_readtag( tag, aux )
+                CALL get_attr ('composite_index', nmb)
+                IF ( nmb /= mb*(mb-1)/2 + nb ) &
+                     CALL upf_error ('read_pp_nonlocal','mismatch',3)
+                upf%qfunc(:,nmb) = aux(:)
+                !
+             ENDIF
+          ENDDO loop_on_mb
+       ENDDO  loop_on_nb
+       !
+       DEALLOCATE (aux)
+       CALL xmlr_closetag( ) ! end pp_augmentation
+       !
+    END IF
+    CALL xmlr_closetag( ) ! end pp_nonlocal
+    !
+  END SUBROUTINE read_pp_nonlocal
+  !
+  !--------------------------------------------------------
   SUBROUTINE read_pp_pswfc ( upf )
     !--------------------------------------------------------
     !
@@ -323,27 +517,178 @@ CONTAINS
     !
   END SUBROUTINE read_pp_pswfc
   !
-  FUNCTION capitalize_if_v2 ( strin ) RESULT ( strout )
+  !--------------------------------------------------------
+  SUBROUTINE read_pp_full_wfc ( upf )
+    !--------------------------------------------------------
     !
-    ! returns a capitalized string for UPF v.2, the same string otherwise
-    ! (UPF v.2 uses capitalized tags, UPF with schema use lowercase)
-    !
-    USE upf_utils, ONLY: capital
     IMPLICIT NONE
-    CHARACTER(LEN=*) :: strin
+    TYPE(pseudo_upf),INTENT(INOUT) :: upf ! the pseudo data
     !
-    INTEGER :: n
-    CHARACTER(LEN=:), ALLOCATABLE :: strout
+    INTEGER :: nb, mb
+    CHARACTER(LEN=15) :: tag
     !
-    IF ( v2 ) THEN
-       strout = ''
-       DO n = 1,LEN_TRIM(strin)
-          strout = strout // capital(strin(n:n))
+    IF ( upf%has_wfc ) THEN
+       !
+       ALLOCATE (upf%aewfc(1:upf%mesh,upf%nbeta) )
+       CALL xmlr_opentag( capitalize_if_v2('pp_full_wfc') )
+       !
+       DO nb = 1, upf%nbeta
+          IF ( v2 ) THEN
+             tag = 'PP_AEWFC.'//i2c(nb)
+          ELSE
+             tag = 'pp_aewfc'
+          END IF
+          CALL xmlr_readtag( tag, upf%aewfc(1:upf%mesh,nb) )
+          CALL get_attr ('index',mb)
+          IF ( nb /= mb ) CALL upf_error('read_pp_full_wfc','mismatch',1)
        END DO
-    ELSE
-       strout = TRIM(strin)
+       !
+       IF ( upf%has_so .AND. upf%tpawp ) THEN
+          ALLOCATE (upf%paw%aewfc_rel(1:upf%mesh,upf%nbeta) )
+          DO nb = 1, upf%nbeta
+             IF ( v2 ) THEN
+                tag = 'PP_AEWFC_rel.'//i2c(nb)
+             ELSE
+                tag = 'pp_aewfc_rel'
+             END IF
+             CALL xmlr_readtag(tag, upf%paw%aewfc_rel(1:upf%mesh,nb) )
+             CALL get_attr ('index',mb)
+             IF ( nb /= mb ) CALL upf_error('read_pp_full_wfc','mismatch',2)
+          END DO
+       END IF
+       !
+       ALLOCATE (upf%pswfc(1:upf%mesh,upf%nbeta) )
+       DO nb = 1, upf%nbeta
+          IF ( v2 ) THEN
+             tag = 'PP_PSWFC.'//i2c(nb)
+          ELSE
+             tag = 'pp_pswfc'
+          END IF
+          IF ( nb /= mb ) CALL upf_error('read_pp_full_wfc','mismatch',3)
+       END DO
+       !
+       CALL xmlr_closetag( )
+       !
     END IF
     !
-  END FUNCTION capitalize_if_v2
+  END SUBROUTINE read_pp_full_wfc
+  !
+  !--------------------------------------------------------
+  SUBROUTINE read_pp_paw ( upf )
+    !--------------------------------------------------------
     !
+    IMPLICIT NONE
+    TYPE(pseudo_upf),INTENT(INOUT) :: upf ! the pseudo data
+    !
+    IF ( upf%tpawp ) THEN
+       CALL xmlr_opentag( capitalize_if_v2('pp_paw') )
+       CALL get_attr ('paw_data_format', upf%paw_data_format)
+       CALL get_attr ('core_energy', upf%paw%core_energy) 
+       ! Full occupation (not only > 0 ones)
+       ALLOCATE (upf%paw%oc(upf%nbeta) )
+       ALLOCATE (upf%paw%ae_rho_atc(upf%mesh) )
+       ALLOCATE (upf%paw%ae_vloc(upf%mesh) )
+       CALL xmlr_readtag( capitalize_if_v2('pp_occupations'), &
+            upf%paw%oc(1:upf%nbeta) )
+       ! All-electron core charge
+       CALL xmlr_readtag( capitalize_if_v2('pp_ae_nlcc'), &
+            upf%paw%ae_rho_atc(1:upf%mesh) )
+       ! All-electron local potential
+       CALL xmlr_readtag( capitalize_if_v2('pp_ae_vloc'), &
+            upf%paw%ae_vloc(1:upf%mesh) )
+       CALL xmlr_closetag () ! end pp_paw
+    END IF
+    !
+  END SUBROUTINE read_pp_paw
+  !--------------------------------------------------------
+  SUBROUTINE read_pp_gipaw ( upf )
+    !--------------------------------------------------------
+    !
+    IMPLICIT NONE
+    TYPE(pseudo_upf),INTENT(INOUT) :: upf ! the pseudo data
+    !
+    INTEGER :: nb, mb
+    CHARACTER(LEN=24) :: tag
+    !
+    IF (upf%has_gipaw) THEN
+       CALL xmlr_opentag( capitalize_if_v2('pp_gipaw') )
+       CALL get_attr ('gipaw_data_format', upf%gipaw_data_format ) 
+       IF ( v2 ) THEN
+          CALL xmlr_opentag( 'PP_GIPAW_CORE_ORBITALS')
+          CALL get_attr ('number_of_core_orbitals', upf%gipaw_ncore_orbitals)
+       ELSE
+          print *, 'FIXME! upf%gipaw_ncore_orbitals'
+       END IF
+       ALLOCATE ( upf%gipaw_core_orbital(upf%mesh,upf%gipaw_ncore_orbitals) )
+       ALLOCATE ( upf%gipaw_core_orbital_n(upf%gipaw_ncore_orbitals) )
+       ALLOCATE ( upf%gipaw_core_orbital_el(upf%gipaw_ncore_orbitals) )
+       ALLOCATE ( upf%gipaw_core_orbital_l(upf%gipaw_ncore_orbitals) )
+       DO nb = 1,upf%gipaw_ncore_orbitals
+          IF ( v2 ) THEN
+             tag = "PP_GIPAW_CORE_ORBITAL."//i2c(nb)
+          ELSE
+             tag = 'pp_gipaw_core_orbital'
+          END IF
+          CALL xmlr_readtag( tag, upf%gipaw_core_orbital(1:upf%mesh,nb) )
+          CALL get_attr ('index', mb)
+          IF ( nb /= mb ) CALL upf_error('read_pp_gipaw','mismatch',1)
+          CALL get_attr ('label', upf%gipaw_core_orbital_el(nb) )
+          CALL get_attr ('n', upf%gipaw_core_orbital_n(nb) )
+          CALL get_attr ('l', upf%gipaw_core_orbital_l(nb) )
+       END DO
+       IF ( v2 ) CALL xmlr_closetag ( )
+       ! Only read core orbitals in the PAW as GIPAW case
+       IF ( .NOT. upf%paw_as_gipaw) THEN
+          !
+          ! Read valence all-electron and pseudo orbitals
+          !
+          IF ( v2 ) THEN
+             CALL xmlr_opentag( 'PP_GIPAW_ORBITALS' )
+             CALL get_attr( 'number_of_valence_orbitals', &
+                  upf%gipaw_wfs_nchannels )
+          ELSE
+             print *, 'FIXME! upf%gipaw_wfs_nchannel'
+          END IF
+          ALLOCATE ( upf%gipaw_wfs_el(upf%gipaw_wfs_nchannels) )
+          ALLOCATE ( upf%gipaw_wfs_ll(upf%gipaw_wfs_nchannels) )
+          ALLOCATE ( upf%gipaw_wfs_rcut(upf%gipaw_wfs_nchannels) )
+          ALLOCATE ( upf%gipaw_wfs_rcutus(upf%gipaw_wfs_nchannels) )
+          ALLOCATE ( upf%gipaw_wfs_ae(upf%mesh,upf%gipaw_wfs_nchannels) )
+          ALLOCATE ( upf%gipaw_wfs_ps(upf%mesh,upf%gipaw_wfs_nchannels) )
+          ALLOCATE ( upf%gipaw_vlocal_ae(upf%mesh) )
+          ALLOCATE ( upf%gipaw_vlocal_ps(upf%mesh) )
+          DO nb = 1,upf%gipaw_wfs_nchannels
+             IF ( v2 ) THEN
+                tag = "PP_GIPAW_ORBITAL."//i2c(nb)
+             ELSE
+                tag = 'pp_gipaw_orbital'
+             END IF
+             CALL xmlr_opentag( tag )
+             CALL get_attr ('index', mb)
+             IF ( nb /= mb ) CALL upf_error('read_pp_gipaw','mismatch',2)
+             CALL get_attr ('label', upf%gipaw_wfs_el(nb) )
+             CALL get_attr ('l',     upf%gipaw_wfs_ll(nb) )
+             CALL get_attr ('cutoff_radius', upf%gipaw_wfs_rcut(nb) )
+             CALL get_attr ('ultrasoft_cutoff_radius', upf%gipaw_wfs_rcutus(nb) )
+             CALL xmlr_readtag( capitalize_if_v2('pp_gipaw_wfs_ae'), &
+                  upf%gipaw_wfs_ae(1:upf%mesh,nb) )
+             CALL xmlr_readtag( capitalize_if_v2('pp_gipaw_wfs_ps'),&
+                  upf%gipaw_wfs_ps(1:upf%mesh,nb) )
+             CALL xmlr_closetag ()
+          END DO
+          IF ( v2 ) CALL xmlr_closetag( )
+          !
+          ! Read all-electron and pseudo local potentials
+          CALL xmlr_opentag( capitalize_if_v2('pp_gipaw_vlocal') )
+          CALL xmlr_readtag( capitalize_if_v2('pp_gipaw_vlocal_ae'), &
+               upf%gipaw_vlocal_ae(1:upf%mesh) )
+          CALL xmlr_readtag( capitalize_if_v2('pp_gipaw_vlocal_ps'), &
+               upf%gipaw_vlocal_ps(1:upf%mesh) )
+          CALL xmlr_closetag ()
+       END IF
+       CALL xmlr_closetag () ! end pp_gipaw
+    END IF
+    !
+  END SUBROUTINE read_pp_gipaw
+  !
 END MODULE read_upf_new__
