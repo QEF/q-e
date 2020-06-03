@@ -255,7 +255,7 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
 !$omp end do
      !
 !$omp single
-     CALL fft_scatter_many_yz( dfft, aux, f, howmany*nnr_, isgn, howmany )
+     CALL fft_scatter_many_yz( dfft, aux, f, isgn, howmany )
      !
      DO i = 0, howmany-1
 !$omp task depend(out:f(i*nnr_+1:(i+1)*nnr_))
@@ -306,7 +306,7 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
      ENDDO
 !$omp end taskgroup
      !
-     CALL fft_scatter_many_yz( dfft, aux, f, howmany*nnr_, isgn, howmany )
+     CALL fft_scatter_many_yz( dfft, aux, f, isgn, howmany )
 !$omp end single
      !
 !$omp do
