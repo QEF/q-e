@@ -52,7 +52,7 @@
 !=----------------------------------------------------------------------=!
 !
 
-   SUBROUTINE cft_1z(c, nsl, nz, ldz, isign, cout)
+   SUBROUTINE cft_1z(c, nsl, nz, ldz, isign, cout, in_place)
 
 !     driver routine for nsl 1d complex fft's of length nz
 !     ldz >= nz is the distance between sequences to be transformed
@@ -65,6 +65,7 @@
 
      INTEGER, INTENT(IN) :: isign
      INTEGER, INTENT(IN) :: nsl, nz, ldz
+     LOGICAL, INTENT(IN), optional :: in_place
 
      COMPLEX (DP) :: c(:), cout(:)
 
@@ -74,6 +75,7 @@
      INTEGER, SAVE :: icurrent = 1
      LOGICAL :: done
      INTEGER :: tid
+     LOGICAL :: is_inplace
 
 #if defined(_OPENMP)
      INTEGER :: offset, ldz_t
@@ -93,14 +95,14 @@
      !
      !   Here initialize table only if necessary
      !
-     
+
      CALL lookup()
 
      IF( .NOT. done ) THEN
 
        !   no table exist for these parameters
        !   initialize a new one
-      
+
        CALL init_plan()
 
      END IF
@@ -108,6 +110,11 @@
      !
      !   Now perform the FFTs using machine specific drivers
      !
+     IF ( present( in_place ) ) THEN
+       is_inplace = in_place
+     ELSE
+       is_inplace = .false.
+     END IF
 
 #if defined(__FFT_CLOCKS)
      CALL start_clock( 'cft_1z' )
@@ -116,9 +123,14 @@
      IF (isign < 0) THEN
         CALL dfftw_execute_dft( fw_planz( ip), c, cout)
         tscale = 1.0_DP / nz
-        cout( 1 : ldz * nsl ) = cout( 1 : ldz * nsl ) * tscale
+        IF (is_inplace) THEN
+           c( 1 : ldz * nsl ) = cout( 1 : ldz * nsl ) * tscale
+        ELSE
+           cout( 1 : ldz * nsl ) = cout( 1 : ldz * nsl ) * tscale
+        ENDIF
      ELSE IF (isign > 0) THEN
         CALL dfftw_execute_dft( bw_planz( ip), c, cout)
+        IF (is_inplace) c( 1 : ldz * nsl ) = cout( 1 : ldz * nsl )
      END IF
 
 #if defined(__FFT_CLOCKS)
@@ -130,7 +142,7 @@
    CONTAINS
 
      SUBROUTINE lookup()
-        ! lookup for stored plan 
+        ! lookup for stored plan
         DO ip = 1, ndims
            !   first check if there is already a table initialized
            !   for this combination of parameters
@@ -143,9 +155,9 @@
 
      SUBROUTINE init_plan()
 #if defined(_OPENMP)
-       CALL dfftw_cleanup_threads() 
+       CALL dfftw_cleanup_threads()
        void = fftw_init_threads()
-       CALL dfftw_plan_with_nthreads(omp_get_max_threads())      
+       CALL dfftw_plan_with_nthreads(omp_get_max_threads())
 #endif
 
        IF( C_ASSOCIATED(fw_planz( icurrent)) ) CALL dfftw_destroy_plan( fw_planz( icurrent) )
@@ -222,7 +234,7 @@
      !
      !   Here initialize table only if necessary
      !
- 
+
      CALL lookup()
 
      IF( .NOT. done ) THEN
@@ -303,9 +315,9 @@
      SUBROUTINE init_plan()
 
 #if defined(_OPENMP)
-       CALL dfftw_cleanup_threads() 
+       CALL dfftw_cleanup_threads()
        void = fftw_init_threads()
-       CALL dfftw_plan_with_nthreads(omp_get_max_threads())      
+       CALL dfftw_plan_with_nthreads(omp_get_max_threads())
 #endif
 
        IF ( ldx /= nx .OR. ldy /= ny ) THEN
@@ -506,7 +518,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
   INTEGER, SAVE :: icurrent = 1
   INTEGER, SAVE :: dims(3,ndims) = -1
 
-
   TYPE(C_PTR), SAVE :: fw_plan ( 3, ndims ) = C_NULL_PTR
   TYPE(C_PTR), SAVE :: bw_plan ( 3, ndims ) = C_NULL_PTR
 
@@ -527,7 +538,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
        CALL init_plan()
 
      END IF
-
 
      IF ( isign > 0 ) THEN
 
@@ -593,7 +603,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
         !
 
         incx1 = ldx * ny;  incx2 = 1;  m = 1
- 
+
         do i = 1, nx
            do j = 1, ny
               ii = i + ldx * (j-1)
@@ -609,7 +619,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
      RETURN
 
    CONTAINS
-
 
      SUBROUTINE lookup()
      ip = -1

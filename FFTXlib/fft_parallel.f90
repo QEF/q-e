@@ -200,31 +200,33 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
   !
   IMPLICIT NONE
   !
-  TYPE (fft_type_descriptor), INTENT(inout) :: dfft     ! descriptor of fft data layout
-  COMPLEX(DP), INTENT(inout)                :: f( : )   ! array containing data to be transformed
-  INTEGER, INTENT(in)                       :: isgn     ! fft direction (potential: +/-1, wave: +/-2, wave_tg: +/-3)
-  INTEGER, INTENT(in)                       :: howmany  ! number of FFTs grouped together
+  TYPE (fft_type_descriptor), INTENT(inout), TARGET :: dfft     ! descriptor of fft data layout
+  COMPLEX(DP), INTENT(inout)                        :: f( : )   ! array containing data to be transformed
+  INTEGER, INTENT(in)                               :: isgn     ! fft direction (potential: +/-1, wave: +/-2, wave_tg: +/-3)
+  INTEGER, INTENT(in)                               :: howmany  ! number of FFTs grouped together
   !
   INTEGER                          :: n1, n2, n3, nx1, nx2, nx3
   INTEGER                          :: nnr_
   INTEGER                          :: nsticks_x, nsticks_y, nsticks_z
   INTEGER                          :: nsticks_yx, nsticks_zx
   INTEGER                          :: i, j
+  COMPLEX(DP), POINTER             :: aux(:)
+#if defined(__FFT_OPENMP_TASKS)
+  INTEGER :: comm2s
+#endif
   !
   !write (6,*) 'enter tg_cft3s ',isgn ; write(6,*) ; FLUSH(6)
   n1  = dfft%nr1  ; n2  = dfft%nr2  ; n3  = dfft%nr3
   nx1 = dfft%nr1x ; nx2 = dfft%nr2x ; nx3 = dfft%nr3x
   !
+  nnr_ = dfft%nnr
+  nsticks_x  = dfft%my_nr2p  * dfft%my_nr3p
   if (abs(isgn) == 1 ) then       ! potential fft
-     nnr_ = dfft%nnr
-     nsticks_x  = dfft%my_nr2p  * dfft%my_nr3p
      nsticks_y  = dfft%nr1p(dfft%mype2+1) * dfft%my_nr3p
      nsticks_yx = MAXVAL(dfft%nr1p) * MAXVAL(dfft%nr3p)
      nsticks_z  = dfft%nsp(dfft%mype+1)
      nsticks_zx = MAXVAL(dfft%nsp)
   else if (abs(isgn) == 2 ) then  ! wave func fft
-     nnr_ = dfft%nnr
-     nsticks_x  = dfft%my_nr2p  * dfft%my_nr3p
      nsticks_y  = dfft%nr1w(dfft%mype2+1) * dfft%my_nr3p
      nsticks_yx = MAXVAL(dfft%nr1w) * MAXVAL(dfft%nr3p)
      nsticks_z  = dfft%nsw(dfft%mype+1)
@@ -234,27 +236,115 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
   else
      CALL fftx_error__( ' many_cft3s', ' wrong value of isgn ', 10+abs(isgn) )
   end if
+  aux => dfft%aux
   !
+#if defined(__FFT_OPENMP_TASKS)
   IF ( isgn > 0 ) THEN  ! G -> R
-!$omp parallel default(none)                                   &
-!$omp          private(i, j)                                   &
-!$omp          shared(howmany, f, nnr_, isgn, dfft)            &
-!$omp          shared(nsticks_z, n3, nx3)                      &
-!$omp          shared(nsticks_y, n2, nx2)                      &
-!$omp          shared(nsticks_x, n1, nx1)                      &
+!$omp parallel default(none)                        &
+!$omp          private(i, j, comm2s)                &
+!$omp          shared(howmany, f, nnr_, isgn, dfft) &
+!$omp          shared(nsticks_z, n3, nx3)           &
+!$omp          shared(nsticks_y, n2, nx2)           &
+!$omp          shared(nsticks_x, n1, nx1)           &
+!$omp          shared(nsticks_zx, nsticks_yx, aux)
+     !
+!$omp do
+     DO i = 0, howmany-1
+        CALL cft_1z( f(i*nnr_+1:), nsticks_z, n3, nx3, isgn, aux(nx3*nsticks_zx*i+1:) )
+     ENDDO
+!$omp end do
+     !
+!$omp single
+     CALL fft_scatter_many_yz( dfft, aux, f, howmany*nnr_, isgn, howmany )
+     !
+     DO i = 0, howmany-1
+!$omp task depend(out:f(i*nnr_+1:(i+1)*nnr_))
+        CALL cft_1z( f(i*nnr_+1:), nsticks_y, n2, nx2, isgn, aux(i*nnr_+1:), in_place=.true. )
+!$omp end task
+!$omp task depend(in:f(i*nnr_+1:(i+1)*nnr_)) depend(out:aux(i*nnr_+1:(i+1)*nnr_))
+        comm2s = dfft%comm2s( i + 1 )
+        CALL fft_scatter_xy( dfft, f(i*nnr_+1:), aux(i*nnr_+1:), nnr_, isgn, comm2s )
+!$omp end task
+!$omp task depend(in:aux(i*nnr_+1:(i+1)*nnr_))
+        CALL cft_1z( aux(i*nnr_+1:), nsticks_x, n1, nx1, isgn, f(i*nnr_+1:) )
+!$omp end task
+     ENDDO
+!$omp end single
+     !
+     if (nsticks_x*nx1 < nnr_) then
+!$omp do collapse(2)
+        DO i = 0, howmany-1
+           do j=nsticks_x*nx1+1, nnr_
+               f(j+i*nnr_) = (0.0_DP,0.0_DP)
+           end do
+        END DO
+!$omp end do
+     endif
+!$omp end parallel
+  ELSE                  ! R -> G
+!$omp parallel default(none)                        &
+!$omp          private(i, j, comm2s)                &
+!$omp          shared(howmany, f, isgn, nnr_, dfft) &
+!$omp          shared(nsticks_z, n3, nx3)           &
+!$omp          shared(nsticks_y, n2, nx2)           &
+!$omp          shared(nsticks_x, n1, nx1)           &
+!$omp          shared(nsticks_zx, nsticks_yx, aux)
+     !
+!$omp single
+!$omp taskgroup
+     DO i = 0, howmany-1
+!$omp task depend(out:aux(i*nnr_+1:(i+1)*nnr_))
+        CALL cft_1z( f(i*nnr_+1:), nsticks_x, n1, nx1, isgn, aux(i*nnr_+1:) )
+!$omp end task
+!$omp task depend(in:aux(i*nnr_+1:(i+1)*nnr_)) depend(out:f(i*nnr_+1:(i+1)*nnr_))
+        comm2s = dfft%comm2s( i + 1 )
+        CALL fft_scatter_xy( dfft, f(i*nnr_+1:), aux(i*nnr_+1:), nnr_, isgn, comm2s )
+!$omp end task
+!$omp task depend(in:f(i*nnr_+1:(i+1)*nnr_))
+        CALL cft_1z( f(i*nnr_+1:), nsticks_y, n2, nx2, isgn, aux(i*nnr_+1:), in_place=.true. )
+!$omp end task
+     ENDDO
+!$omp end taskgroup
+     !
+     CALL fft_scatter_many_yz( dfft, aux, f, howmany*nnr_, isgn, howmany )
+!$omp end single
+     !
+!$omp do
+     DO i = 0, howmany-1
+        CALL cft_1z( aux(nx3*nsticks_zx*i+1:), nsticks_z, n3, nx3, isgn, f(i*nnr_+1:) )
+     ENDDO
+!$omp end do
+     !
+!$omp do collapse(2)
+     DO i = 0, howmany-1
+        DO j=nsticks_z*nx3+1, nnr_
+           f(j+i*nnr_) = (0.0_DP,0.0_DP)
+        ENDDO
+     ENDDO
+!$omp end do
+!$omp end parallel
+  ENDIF
+#else
+  IF ( isgn > 0 ) THEN  ! G -> R
+!$omp parallel default(none)                                        &
+!$omp          private(i, j)                                        &
+!$omp          shared(howmany, f, nnr_, isgn, dfft, aux)            &
+!$omp          shared(nsticks_z, n3, nx3)                           &
+!$omp          shared(nsticks_y, n2, nx2)                           &
+!$omp          shared(nsticks_x, n1, nx1)                           &
 !$omp          shared(nsticks_zx, nsticks_yx)
   !
 !$omp do
      DO i = 0, howmany-1
         DO j=1, nsticks_z*nx3
-           dfft%aux(j+i*nnr_) = f(j+i*nnr_)
+           aux(j+i*nnr_) = f(j+i*nnr_)
         ENDDO
      ENDDO
 !$omp end do
      !
 !$omp do
      DO i = 0, howmany-1
-        CALL cft_1z( dfft%aux(i*nnr_+1:), nsticks_z, n3, nx3, isgn, f(nx3*nsticks_zx*i+1:) )
+        CALL cft_1z( aux(i*nnr_+1:), nsticks_z, n3, nx3, isgn, f(nx3*nsticks_zx*i+1:) )
      ENDDO
 !$omp end do
      !
@@ -264,17 +354,17 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
      !
 !$omp do
      DO i = 0, howmany-1
-        CALL cft_1z( dfft%aux(i*nnr_+1:), nsticks_y, n2, nx2, isgn, f(nx2*nsticks_yx*i+1:) )
+        CALL cft_1z( aux(i*nnr_+1:), nsticks_y, n2, nx2, isgn, f(nx2*nsticks_yx*i+1:) )
      ENDDO
 !$omp end do
      !
 !$omp single
-     CALL fft_scatter_many_xy ( dfft, f, dfft%aux, isgn, howmany )
+     CALL fft_scatter_many_xy ( dfft, f, aux, isgn, howmany )
 !$omp end single
      !
 !$omp do
      DO i = 0, howmany-1
-        CALL cft_1z( dfft%aux(i*nnr_+1:), nsticks_x, n1, nx1, isgn, f(i*nnr_+1:) )
+        CALL cft_1z( aux(i*nnr_+1:), nsticks_x, n1, nx1, isgn, f(i*nnr_+1:) )
      ENDDO
 !$omp end do
      !
@@ -289,27 +379,27 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
 !$omp end do
 !$omp end parallel
   ELSE                  ! R -> G
-!$omp parallel default(none)                                   &
-!$omp          private(i)                                      &
-!$omp          shared(howmany, f, isgn, nnr_, dfft)            &
-!$omp          shared(nsticks_z, n3, nx3)                      &
-!$omp          shared(nsticks_y, n2, nx2)                      &
-!$omp          shared(nsticks_x, n1, nx1)                      &
+!$omp parallel default(none)                                        &
+!$omp          private(i)                                           &
+!$omp          shared(howmany, f, isgn, nnr_, dfft, aux)            &
+!$omp          shared(nsticks_z, n3, nx3)                           &
+!$omp          shared(nsticks_y, n2, nx2)                           &
+!$omp          shared(nsticks_x, n1, nx1)                           &
 !$omp          shared(nsticks_zx, nsticks_yx)
      !
 !$omp do
      DO i = 0, howmany-1
-        CALL cft_1z( f(i*nnr_+1:), nsticks_x, n1, nx1, isgn, dfft%aux(i*nnr_+1:) )
+        CALL cft_1z( f(i*nnr_+1:), nsticks_x, n1, nx1, isgn, aux(i*nnr_+1:) )
      ENDDO
 !$omp end do
      !
 !$omp single
-     CALL fft_scatter_many_xy ( dfft, f, dfft%aux, isgn, howmany )
+     CALL fft_scatter_many_xy ( dfft, f, aux, isgn, howmany )
 !$omp end single
      !
 !$omp do
      DO i = 0, howmany-1
-        CALL cft_1z( f(nx2*nsticks_yx*i+1:), nsticks_y, n2, nx2, isgn, dfft%aux(i*nnr_+1:))
+        CALL cft_1z( f(nx2*nsticks_yx*i+1:), nsticks_y, n2, nx2, isgn, aux(i*nnr_+1:))
      ENDDO
 !$omp end do
      !
@@ -319,19 +409,20 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
      !
 !$omp do
      DO i = 0, howmany-1
-        CALL cft_1z( f(nx3*nsticks_zx*i+1:), nsticks_z, n3, nx3, isgn, dfft%aux(i*nnr_+1:) )
+        CALL cft_1z( f(nx3*nsticks_zx*i+1:), nsticks_z, n3, nx3, isgn, aux(i*nnr_+1:) )
      ENDDO
 !$omp end do
      !
 !$omp do
      DO i = 0, howmany-1
         DO j=0, nsticks_z-1
-           f(i*nnr_+j*nx3+1:i*nnr_+j*nx3+n3) = dfft%aux(i*nnr_+j*nx3+1:i*nnr_+j*nx3+n3)
+           f(i*nnr_+j*nx3+1:i*nnr_+j*nx3+n3) = aux(i*nnr_+j*nx3+1:i*nnr_+j*nx3+n3)
         ENDDO
      ENDDO
 !$omp end do
 !$omp end parallel
   ENDIF
+#endif
   !write (6,99) f_d(1:400); write(6,*); FLUSH(6)
   !
   RETURN

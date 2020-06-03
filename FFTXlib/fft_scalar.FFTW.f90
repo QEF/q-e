@@ -14,7 +14,7 @@
 !! iso_c_binding provides C_PTR, C_NULL_PTR, C_ASSOCIATED
        USE iso_c_binding
        USE fftw_interfaces
-       
+
        IMPLICIT NONE
        SAVE
        PRIVATE
@@ -36,7 +36,7 @@
 !=----------------------------------------------------------------------=!
 !
 
-   SUBROUTINE cft_1z(c, nsl, nz, ldz, isign, cout)
+   SUBROUTINE cft_1z(c, nsl, nz, ldz, isign, cout, in_place)
 
 !     driver routine for nsl 1d complex fft's of length nz
 !     ldz >= nz is the distance between sequences to be transformed
@@ -49,6 +49,7 @@
 
      INTEGER, INTENT(IN) :: isign
      INTEGER, INTENT(IN) :: nsl, nz, ldz
+     LOGICAL, INTENT(IN), optional :: in_place
 
      COMPLEX (DP) :: c(:), cout(:)
 
@@ -59,6 +60,7 @@
      LOGICAL :: found
 
      INTEGER :: tid
+     LOGICAL :: is_inplace
 
 #if defined(_OPENMP)
      INTEGER :: offset, ldz_t
@@ -92,18 +94,22 @@
      !
      !   Now perform the FFTs using machine specific drivers
      !
+     IF ( present( in_place ) ) THEN
+       is_inplace = in_place
+     ELSE
+       is_inplace = .false.
+     END IF
 
 #if defined(__FFT_CLOCKS)
      CALL start_clock( 'cft_1z' )
 #endif
-
 
 #if defined(_OPENMP)
 
      ldz_t = ldz
      !
      IF (isign < 0) THEN
-!$omp parallel default(none) private(tid,offset,i,tscale) shared(c,isign,nsl,fw_planz,ip,nz,cout,ldz) &
+!$omp parallel default(none) private(tid,offset,i,tscale) shared(c,isign,nsl,fw_planz,ip,nz,cout,ldz,is_inplace) &
 !$omp &        firstprivate(ldz_t)
 !$omp do
        DO i=1, nsl
@@ -113,9 +119,13 @@
 !$omp end do
 !$omp end parallel
        tscale = 1.0_DP / nz
-       cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) * tscale
+       IF (is_inplace) THEN
+          c( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) * tscale
+       ELSE
+          cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) * tscale
+       ENDIF
      ELSE IF (isign > 0) THEN
-!$omp parallel default(none) private(tid,offset,i) shared(c,isign,nsl,bw_planz,ip,cout,ldz) &
+!$omp parallel default(none) private(tid,offset,i) shared(c,isign,nsl,bw_planz,ip,cout,ldz,is_inplace) &
 !$omp &        firstprivate(ldz_t)
 !$omp do
        DO i=1, nsl
@@ -123,22 +133,27 @@
           CALL FFT_Z_STICK_SINGLE(bw_planz( ip), c(offset), ldz_t)
        END DO
 !$omp end do
+       IF (.not.(is_inplace)) THEN
 !$omp workshare
-       cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
+          cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
 !$omp end workshare
+       ENDIF
 !$omp end parallel
      END IF
-
 
 #else
 
      IF (isign < 0) THEN
         CALL FFT_Z_STICK(fw_planz( ip), c(1), ldz, nsl)
         tscale = 1.0_DP / nz
-        cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) * tscale
+        IF (is_inplace) THEN
+           c( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) * tscale
+        ELSE
+           cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) * tscale
+        ENDIF
      ELSE IF (isign > 0) THEN
         CALL FFT_Z_STICK(bw_planz( ip), c(1), ldz, nsl)
-        cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
+        IF (.not.(is_inplace)) cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
      END IF
 
 #endif
@@ -218,7 +233,6 @@
      EXTERNAL :: omp_get_thread_num, omp_get_num_threads, omp_get_max_threads
 #endif
 
-
 #if defined(__FFTW_ALL_XY_PLANES)
      TYPE(C_PTR), SAVE :: fw_plan_2d( ndims ) = C_NULL_PTR
      TYPE(C_PTR), SAVE :: bw_plan_2d( ndims ) = C_NULL_PTR
@@ -226,7 +240,6 @@
      TYPE(C_PTR), SAVE :: fw_plan( 2, ndims ) = C_NULL_PTR
      TYPE(C_PTR), SAVE :: bw_plan( 2, ndims ) = C_NULL_PTR
 #endif
-
 
      dofft( 1 : nx ) = .TRUE.
      IF( PRESENT( pl2ix ) ) THEN
@@ -260,7 +273,6 @@
      CALL start_clock( 'cft_2xy' )
 #endif
 
-
 #if defined(__FFTW_ALL_XY_PLANES)
 
      IF( isign < 0 ) THEN
@@ -281,7 +293,7 @@
      nx_t  = nx
      ny_t  = ny
      nzl_t = nzl
-     ldx_t = ldx 
+     ldx_t = ldx
      ldy_t = ldy
      !
      IF( isign < 0 ) THEN
@@ -315,7 +327,7 @@
         end do
 
 !$omp barrier
- 
+
 !$omp workshare
         r = r * tscale
 !$omp end workshare
@@ -390,7 +402,6 @@
 
 #endif
 
-
 #if defined(__FFT_CLOCKS)
      CALL stop_clock( 'cft_2xy' )
 #endif
@@ -433,7 +444,6 @@
      END SUBROUTINE init_plan
 
    END SUBROUTINE cft_2xy
-
 
 !
 !=----------------------------------------------------------------------=!
@@ -512,7 +522,7 @@
 
      RETURN
 
-   CONTAINS 
+   CONTAINS
 
      SUBROUTINE lookup()
      ip = -1
@@ -606,7 +616,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
 
      END IF
 
-
      IF ( isign > 0 ) THEN
 
         DO h = 0, howmany - 1
@@ -630,7 +639,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
            !
 
            incx1 = ldx;  incx2 = ldx*ldy;  m = nz
-   
+
            do i = 1, nx
               if ( do_fft_y( i ) == 1 ) then
                 call FFTW_INPLACE_DRV_1D( bw_plan( 2, ip), m, f( i + h*ldh ), incx1, incx2 )
@@ -675,7 +684,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
            !
 
            incx1 = ldx * ny;  incx2 = 1;  m = 1
- 
+
            do i = 1, nx
               do j = 1, ny
                  ii = i + ldx * (j -1)
