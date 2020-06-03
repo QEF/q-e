@@ -36,7 +36,7 @@
 !=----------------------------------------------------------------------=!
 !
 
-   SUBROUTINE cft_1z(c, nsl, nz, ldz, isign, cout, in_place)
+   SUBROUTINE cft_1z(c, nsl, nz, ldz, isign, cout)
 
 !     driver routine for nsl 1d complex fft's of length nz
 !     ldz >= nz is the distance between sequences to be transformed
@@ -49,7 +49,6 @@
 
      INTEGER, INTENT(IN) :: isign
      INTEGER, INTENT(IN) :: nsl, nz, ldz
-     LOGICAL, INTENT(IN), optional :: in_place
 
      COMPLEX (DP) :: c(:), cout(:)
 
@@ -60,7 +59,6 @@
      LOGICAL :: found
 
      INTEGER :: tid
-     LOGICAL :: is_inplace
 
 #if defined(_OPENMP)
      INTEGER :: offset, ldz_t
@@ -94,11 +92,6 @@
      !
      !   Now perform the FFTs using machine specific drivers
      !
-     IF ( present( in_place ) ) THEN
-       is_inplace = in_place
-     ELSE
-       is_inplace = .false.
-     END IF
 
 #if defined(__FFT_CLOCKS)
      CALL start_clock( 'cft_1z' )
@@ -109,7 +102,7 @@
      ldz_t = ldz
      !
      IF (isign < 0) THEN
-!$omp parallel default(none) private(tid,offset,i,tscale) shared(c,isign,nsl,fw_planz,ip,nz,cout,ldz,is_inplace) &
+!$omp parallel default(none) private(tid,offset,i,tscale) shared(c,isign,nsl,fw_planz,ip,nz,cout,ldz) &
 !$omp &        firstprivate(ldz_t)
 !$omp do
        DO i=1, nsl
@@ -119,13 +112,9 @@
 !$omp end do
 !$omp end parallel
        tscale = 1.0_DP / nz
-       IF (is_inplace) THEN
-          c( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) * tscale
-       ELSE
-          cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) * tscale
-       ENDIF
+       cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) * tscale
      ELSE IF (isign > 0) THEN
-!$omp parallel default(none) private(tid,offset,i) shared(c,isign,nsl,bw_planz,ip,cout,ldz,is_inplace) &
+!$omp parallel default(none) private(tid,offset,i) shared(c,isign,nsl,bw_planz,ip,cout,ldz) &
 !$omp &        firstprivate(ldz_t)
 !$omp do
        DO i=1, nsl
@@ -133,11 +122,9 @@
           CALL FFT_Z_STICK_SINGLE(bw_planz( ip), c(offset), ldz_t)
        END DO
 !$omp end do
-       IF (.not.(is_inplace)) THEN
 !$omp workshare
-          cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
+       cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
 !$omp end workshare
-       ENDIF
 !$omp end parallel
      END IF
 
@@ -146,14 +133,10 @@
      IF (isign < 0) THEN
         CALL FFT_Z_STICK(fw_planz( ip), c(1), ldz, nsl)
         tscale = 1.0_DP / nz
-        IF (is_inplace) THEN
-           c( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) * tscale
-        ELSE
-           cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) * tscale
-        ENDIF
+        cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) * tscale
      ELSE IF (isign > 0) THEN
         CALL FFT_Z_STICK(bw_planz( ip), c(1), ldz, nsl)
-        IF (.not.(is_inplace)) cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
+        cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
      END IF
 
 #endif

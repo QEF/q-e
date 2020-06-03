@@ -52,7 +52,7 @@
 !=----------------------------------------------------------------------=!
 !
 
-   SUBROUTINE cft_1z(c, nsl, nz, ldz, isign, cout, in_place)
+   SUBROUTINE cft_1z(c, nsl, nz, ldz, isign, cout)
 
 !     driver routine for nsl 1d complex fft's of length nz
 !     ldz >= nz is the distance between sequences to be transformed
@@ -65,7 +65,6 @@
 
      INTEGER, INTENT(IN) :: isign
      INTEGER, INTENT(IN) :: nsl, nz, ldz
-     LOGICAL, INTENT(IN), optional :: in_place
 
      COMPLEX (DP) :: c(:), cout(:)
 
@@ -75,7 +74,6 @@
      INTEGER, SAVE :: icurrent = 1
      LOGICAL :: done
      INTEGER :: tid
-     LOGICAL :: is_inplace
 
 #if defined(_OPENMP)
      INTEGER :: offset, ldz_t
@@ -110,11 +108,6 @@
      !
      !   Now perform the FFTs using machine specific drivers
      !
-     IF ( present( in_place ) ) THEN
-       is_inplace = in_place
-     ELSE
-       is_inplace = .false.
-     END IF
 
 #if defined(__FFT_CLOCKS)
      CALL start_clock( 'cft_1z' )
@@ -123,14 +116,9 @@
      IF (isign < 0) THEN
         CALL dfftw_execute_dft( fw_planz( ip), c, cout)
         tscale = 1.0_DP / nz
-        IF (is_inplace) THEN
-           c( 1 : ldz * nsl ) = cout( 1 : ldz * nsl ) * tscale
-        ELSE
-           cout( 1 : ldz * nsl ) = cout( 1 : ldz * nsl ) * tscale
-        ENDIF
+        cout( 1 : ldz * nsl ) = cout( 1 : ldz * nsl ) * tscale
      ELSE IF (isign > 0) THEN
         CALL dfftw_execute_dft( bw_planz( ip), c, cout)
-        IF (is_inplace) c( 1 : ldz * nsl ) = cout( 1 : ldz * nsl )
      END IF
 
 #if defined(__FFT_CLOCKS)
