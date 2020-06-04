@@ -182,11 +182,10 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   !! Computes the derivative of the xc potential with respect to the 
   !! local density.
   !
-  !USE xc_lda_lsda,  ONLY: xc_lda
-  !USE exch_lda,     ONLY: slater
-  USE xc_interfaces, ONLY: xc_lda, slater, pz
-  USE funct,        ONLY: get_iexch, get_icorr
-  USE kinds,        ONLY: DP
+  USE xc_interfaces, ONLY: xc_lda, slater, pz, &
+                           get_lda_threshold
+  USE funct,         ONLY: get_iexch, get_icorr, is_libxc
+  USE kinds,         ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -222,6 +221,8 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   !
   iexch = get_iexch()
   icorr = get_icorr()
+  !
+  IF ( ANY(.NOT.is_libxc(1:2)) ) CALL get_lda_threshold( 1.E-10_DP )
   !
   dmuxc = 0.0_DP
   !
@@ -308,8 +309,9 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   !! local density in the spin-polarized case.
   !
   USE kinds,            ONLY: DP
-  USE funct,            ONLY: get_iexch, get_icorr
-  USE xc_interfaces, ONLY: xc_lsda, slater, pz, pz_polarized
+  USE funct,            ONLY: get_iexch, get_icorr, is_libxc
+  USE xc_interfaces,    ONLY: xc_lsda, slater, pz, pz_polarized, &
+                              get_lda_threshold
   !
   IMPLICIT NONE
   !
@@ -347,6 +349,8 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   !
   iexch = get_iexch()
   icorr = get_icorr()
+  !
+  IF ( ANY(.NOT.is_libxc(1:2)) ) CALL get_lda_threshold( 1.E-10_DP )
   !
   dmuxc = 0.0_DP
   ALLOCATE(rhotot(length)) 
@@ -490,7 +494,8 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   !! Computes the derivative of the xc potential with respect to the 
   !! local density and magnetization in the non-collinear case.
   !
-  USE xc_interfaces, ONLY: xc_lsda
+  USE funct,            ONLY: is_libxc
+  USE xc_interfaces,    ONLY: xc_lsda, get_lda_threshold
   USE kinds,            ONLY: DP
   !
   IMPLICIT NONE
@@ -526,6 +531,8 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP, &
                          rho_trash = 0.5_DP, zeta_trash = 0.5_DP, &
                          amag_trash= 0.025_DP
+  !
+  IF ( ANY(.NOT.is_libxc(1:2)) ) CALL get_lda_threshold( 1.E-10_DP )
   !
   dmuxc = 0.0_DP
   !

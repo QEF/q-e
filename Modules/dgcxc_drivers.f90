@@ -303,7 +303,8 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   !! potentials.
   !
   USE kinds,         ONLY: DP
-  USE xc_interfaces, ONLY: gcxc
+  USE funct,         ONLY: is_libxc
+  USE xc_interfaces, ONLY: gcxc, get_gga_threshold
   !
   IMPLICIT NONE
   !
@@ -320,6 +321,8 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   REAL(DP), ALLOCATABLE :: v1x(:), v2x(:), v1c(:), v2c(:)
   REAL(DP), ALLOCATABLE :: sx(:), sc(:)
   REAL(DP), PARAMETER :: small = 1.E-30_DP
+  !
+  IF ( ANY(.NOT.is_libxc(3:4)) ) CALL get_gga_threshold( 1.E-10_DP, 1.E-10_DP )
   !
   ALLOCATE( v1x(4*length), v2x(4*length), sx(4*length) )
   ALLOCATE( v1c(4*length), v2c(4*length), sc(4*length) )
@@ -371,6 +374,7 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   !! This routine computes the derivative of the exchange and correlation
   !! potentials in the spin-polarized case.
   !
+  USE funct,          ONLY: is_libxc
   USE xc_interfaces,  ONLY: gcx_spin, gcc_spin
   USE kinds,          ONLY: DP
   !
@@ -412,6 +416,8 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   REAL(DP), PARAMETER :: eps = 1.D-6
   REAL(DP), PARAMETER :: rho_trash = 0.4_DP, zeta_trash = 0.2_DP, &
                          s2_trash = 0.1_DP
+  !
+  IF ( ANY(.NOT.is_libxc(3:4)) ) CALL get_gga_threshold( 1.E-10_DP, 1.E-10_DP )
   !
   vrrx = 0.0_DP ; vrsx = 0.0_DP ; vssx = 0.0_DP
   vrrc = 0.0_DP ; vrsc = 0.0_DP ; vrzc = 0.0_DP
@@ -578,6 +584,7 @@ SUBROUTINE d3gcxc( r, s2, vrrrx, vsrrx, vssrx, vsssx, &
   !                 same for (c)
   !
   USE kinds,     ONLY : DP
+  USE funct,     ONLY: is_libxc
   !
   IMPLICIT NONE
   !
@@ -590,6 +597,8 @@ SUBROUTINE d3gcxc( r, s2, vrrrx, vsrrx, vssrx, vsssx, &
   REAL(DP), DIMENSION(4) :: raux, s2aux
   REAL(DP), DIMENSION(4) :: vrrx_rs, vsrx_rs, vssx_rs, vrrc_rs, &
                             vsrc_rs, vssc_rs
+  !
+  IF ( ANY(.NOT.is_libxc(3:4)) ) CALL get_gga_threshold( 1.E-10_DP, 1.E-10_DP )
   !
   s = SQRT(s2)
   dr = MIN(1.d-4, 1.d-2 * r)
