@@ -8,6 +8,8 @@
 !
 #if !defined(__CUDA)
 #define cublasZgemm zgemm
+#define cublasZgemv zgemv
+#define cublasZcopy zcopy
 #endif
 !
 !-----------------------------------------------------------------------
@@ -327,10 +329,13 @@ SUBROUTINE ortho_swfc_gpu( npw, normalize_only, m, wfc_d, swfc_d, lflag )
   !
   ! find O^(-1/2)
   !
-  s_d = CMPLX(0.d0,0.d0, kind=dp)
-  !$cuf kernel do (1)
+  ! s_d = CMPLX(0.d0,0.d0, kind=dp)  ! fused below
+  !$cuf kernel do (2)
   DO i = 1, m
-    s_d(i,i) = CMPLX(1.d0,0.d0, kind=dp)
+     DO j = 1, m
+        s_d(j,i) = CMPLX(0.d0,0.d0, kind=dp)
+        IF (i == j) s_d(j,i) = CMPLX(1.d0,0.d0, kind=dp)
+     ENDDO
   ENDDO
   !
   CALL laxlib_cdiaghg_gpu( m, m, overlap_d, s_d, m, e_d, work_d, me_bgrp, &
@@ -340,9 +345,10 @@ SUBROUTINE ortho_swfc_gpu( npw, normalize_only, m, wfc_d, swfc_d, lflag )
   DO i = 1, m
      e_d(i) = 1.d0 / SQRT(e_d(i))
   ENDDO
-  !$cuf kernel do (1) <<<*,*>>>
+  !$cuf kernel do (2) <<<*,*>>>
   DO i = 1, m
-     DO j = i, m
+     DO j = 1, m
+        IF ( j < i ) CYCLE
         temp = (0.d0, 0.d0)
         DO k = 1, m
            temp = temp + e_d(k) * work_d(j,k) * CONJG(work_d(i,k))

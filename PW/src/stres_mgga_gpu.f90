@@ -32,7 +32,7 @@ SUBROUTINE stres_mgga_gpu( sigmaxc )
   USE wavefunctions_gpum,     ONLY : using_evc
   !
   USE gbuffers ,              ONLY : dev_buf
-  USE device_util_m,          ONLY : dev_memcpy
+  USE device_util_m,          ONLY : dev_memcpy, dev_memset
   !
   IMPLICIT NONE
   !
@@ -40,13 +40,11 @@ SUBROUTINE stres_mgga_gpu( sigmaxc )
   !
   ! Internal variables
   !
-  INTEGER :: ix, iy, ir, ipol, iss, incr, ibnd, ik, npw
+  INTEGER :: ix, iy, K, ir, ipol, iss, incr, ibnd, ik, npw
   !
   INTEGER :: ierrs(4)
   !
   REAL(DP), PARAMETER :: epsr = 1.E-6_DP, epsg = 1.E-10_DP, e2 = 2._DP
-  !
-  COMPLEX(DP), ALLOCATABLE :: crosstaus(:,:,:)
   !
   COMPLEX(DP), POINTER :: gradwfc_d(:,:), crosstaus_d(:,:,:)
   INTEGER :: ix_d(6), iy_d(6)
@@ -74,8 +72,8 @@ SUBROUTINE stres_mgga_gpu( sigmaxc )
   CALL dev_buf%lock_buffer( gradwfc_d, (/ dffts%nnr, 3 /), ierrs(1) )
   CALL dev_buf%lock_buffer( crosstaus_d, (/ dffts%nnr, 6, nspin /), ierrs(2) )
   IF (ANY(ierrs(1:2) /= 0)) CALL errore( 'stres_mgga_gpu', 'cannot allocate buffers', -1 )
-  ALLOCATE( crosstaus(dffts%nnr,6,nspin) )
-  crosstaus = (0._DP,0._DP)
+  !
+  CALL dev_memset(crosstaus_d , (0._DP,0._DP) )
   !
   ! For gamma_only efficiency
   !
@@ -83,12 +81,12 @@ SUBROUTINE stres_mgga_gpu( sigmaxc )
   IF ( gamma_only ) incr = 2
   !
   !Polarization indexes
-  ix_d(1) = 1  ;  iy_d(1) = 1
-  ix_d(2) = 2  ;  iy_d(2) = 1
-  ix_d(3) = 3  ;  iy_d(3) = 1
-  ix_d(4) = 2  ;  iy_d(4) = 2
-  ix_d(5) = 3  ;  iy_d(5) = 2
-  ix_d(6) = 3  ;  iy_d(6) = 3
+  ! ix_d(1) = 1  ;  iy_d(1) = 1
+  ! ix_d(2) = 2  ;  iy_d(2) = 1
+  ! ix_d(3) = 3  ;  iy_d(3) = 1
+  ! ix_d(4) = 2  ;  iy_d(4) = 2
+  ! ix_d(5) = 3  ;  iy_d(5) = 2
+  ! ix_d(6) = 3  ;  iy_d(6) = 3
   !
   ! Loop over the k points
   !
@@ -129,19 +127,27 @@ SUBROUTINE stres_mgga_gpu( sigmaxc )
        !
        ! Cross terms of kinetic energy density
        !
-       !$cuf kernel do (2) <<<*,*>>>
+       ! FIX ME: PGI complains here if I set do(2)
+       !$cuf kernel do (1) <<<*,*>>>
        DO ir = 1, dffts%nnr
          DO ipol = 1, 6
-            ix = ix_d(ipol)
-            iy = iy_d(ipol)
-            crosstaus_d(ir,ipol,current_spin) = &
+            !
+            ! explenation here: https://stackoverflow.com/a/244550
+            !
+            !      M*(M+1)/ 2
+            K = (3.0*4.0)/2.0 - 1 - (ipol - 1)
+            K = floor((SQRT(FLOAT(8*K+1))-1)/2)
+            ix = (ipol-1) - (3.0*4.0)/2.0 + (K+1)*(K+2)/2.0 + 1 + (2-K)
+            iy = 3 - K
+            !
+            crosstaus_d(ir,ipol,current_spin) = crosstaus_d(ir,ipol,current_spin) + &
                        2.0_DP*w1*DBLE(gradwfc_d(ir,ix))*DBLE(gradwfc_d(ir,iy)) + &
                        2.0_DP*w2*AIMAG(gradwfc_d(ir,ix))*AIMAG(gradwfc_d(ir,iy))
          ENDDO
        ENDDO
        !
-       crosstaus(:,:,current_spin) = crosstaus(:,:,current_spin) + &
-                                     crosstaus_d(:,:,current_spin)
+       !crosstaus(:,:,current_spin) = crosstaus(:,:,current_spin) + &
+       !                              crosstaus_d(:,:,current_spin)
        !
     ENDDO !ibnd
     !
@@ -149,8 +155,6 @@ SUBROUTINE stres_mgga_gpu( sigmaxc )
   !
   !
   CALL dev_buf%release_buffer( gradwfc_d, ierrs(1) )
-  !
-  CALL dev_memcpy( crosstaus_d, crosstaus )
   !
   CALL mp_sum( crosstaus_d, inter_pool_comm )
   !
@@ -197,7 +201,6 @@ SUBROUTINE stres_mgga_gpu( sigmaxc )
   CALL dev_buf%release_buffer( vkin_d, ierrs(3) )
   CALL dev_buf%release_buffer( rhokin_d, ierrs(4) )
   CALL dev_buf%release_buffer( crosstaus_d, ierrs(2) )
-  DEALLOCATE( crosstaus )
   !
   CALL mp_sum( sigma_mgga, intra_bgrp_comm )
   !
