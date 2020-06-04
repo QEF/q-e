@@ -367,7 +367,8 @@ CONTAINS
    !! noncolinear case, magnetization along "angle1" and "angle2"
    !
    REAL(DP) :: alpha, gamman
-   COMPLEX(DP) :: fup, fdown  
+   COMPLEX(DP) :: fup, fdown
+   INTEGER :: m, lm, ig  
    !
    alpha = angle1(nt)
    gamman = - angle2(nt) + 0.5d0*pi
@@ -422,6 +423,8 @@ CONTAINS
   SUBROUTINE atomic_wfc___gpu( )
    !
    ! ... LSDA or nonmagnetic case
+   !
+   INTEGER :: m, lm, ig
    !
    DO m = 1, 2 * l + 1
       lm = l**2 + m
