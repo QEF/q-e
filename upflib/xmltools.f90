@@ -118,47 +118,40 @@ CONTAINS
     CHARACTER(LEN=*), INTENT(IN) :: attrname
     CHARACTER(LEN=*), INTENT(OUT) :: attrval_c
     !
+    CHARACTER(LEN=1) :: quote
     INTEGER :: j0, j1
+    LOGICAL :: found
     !
-    ! search for attrname in attrlist
+    ! search for attribute name in attrlist: attr1="val1" attr2="val2" ...
     !
-    if ( .not. allocated(attrlist) ) then
-       attrval_c = ''
-       return
-    else if ( len_trim(attrlist) < 1 ) then
-       attrval_c = ''
-       return
-    end if
+    attrval_c = ''
+    if ( .not. allocated(attrlist) ) return
+    if ( len_trim(attrlist) < 1 ) return
+    !
     j0 = 1
     do while ( j0 < len_trim(attrlist) )
-       j1 = index ( attrlist(j0:), ',' )
-       if ( j1 == 0 ) then
-          ! no more commas: check if found
-          if ( attrname == attrlist(j0:) ) exit
-          ! here if not found
-          attrval_c = ' '
+       ! locate = and first quote
+       j1 = index ( attrlist(j0:), '=' )
+       quote = attrlist(j0+j1:j0+j1)
+       ! next line: something is not right
+       if ( quote /= '"' .and. quote /= "'" ) return
+       ! check if attribute found: need exact match 
+       found =  ( trim(attrname) == adjustl(trim(attrlist(j0:j0+j1-2))) )
+       ! locate next quote
+       j0 = j0+j1+1
+       j1 = index ( attrlist(j0:), quote )
+       if ( found) then
+          if ( j1 == 1 ) then
+             ! two quotes, one after the other ("")
+             attrval_c = ' '
+          else
+             ! get value between two quotes
+             attrval_c = adjustl(trim(attrlist(j0:j0+j1-2)))
+          end if
           return
-       else
-          ! check if found: need exact match between commas
-          if ( trim(attrname) == attrlist(j0:j0+j1-2) ) exit
        end if
        j0 = j0+j1
     end do
-    !
-    ! next item between commas is the value
-    !
-    j0 = j0+j1
-    j1 = index ( attrlist(j0:), ',' )
-    if ( j1 == 0 ) then
-       ! no more commas
-       attrval_c = attrlist(j0:)
-    else if ( j1 == 1 ) then
-       ! two commas, one after the other (,,)
-       attrval_c = ' '
-    else
-       ! take field between two commas
-       attrval_c = attrlist(j0:j0+j1-2)
-    end if
     !
   END SUBROUTINE get_c_attr
   !
@@ -743,29 +736,28 @@ CONTAINS
                 return
                 !
              else if ( line(j:j) == '=' ) then
-                ! end of attribute located: save attribute
+                ! end of attribute located: save attribute (with final =)
                 nattr=nattr+1
                 ! print *, 'attr=',line(j0:j-1)
                 if ( nattr == 1 ) then
-                   attrlist = line(j0:j-1)
+                   attrlist = line(j0:j)
                 else
-                   attrlist = attrlist//','//line(j0:j-1)
+                   attrlist = attrlist//' '//line(j0:j)
                 end if
                 ! continue searching for attribute value
                 j = j+1
              else if ( line(j:j) == '"' .or. line(j:j) =="'" ) then
                 ! first occurrence of ' or " found, look for next
                 quote = line(j:j)
-                j=j+1
-                i = index(line(j:),quote)
+                i = index(line(j+1:),quote)
                 if ( i < 1 ) then
                    ! print *, 'Error: matching quote not found'
                    go to 10
                 else
-                   ! save attribute value and continue scanning
+                   ! save attribute value (with quotes) and continue scanning
                    ! print *, 'attrval=',line(j:j+i-2)
-                   attrlist = attrlist//','//line(j:j+i-2)
-                   j = j+i
+                   attrlist = attrlist//line(j:j+i)
+                   j = j+i+1
                 end if
              else
                 ! continue scanning until end of attribute
