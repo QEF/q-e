@@ -62,7 +62,8 @@ CONTAINS
     !
     IF ( v2 ) THEN
        !
-       CALL xmlw_opentag ( 'UPF', 'version', upf%nv )
+       CALL add_attr ('version', upf%nv )
+       CALL xmlw_opentag ( 'UPF')
        !
        ! pp_info
        !
@@ -74,10 +75,13 @@ CONTAINS
        !
     ELSE
        !
-       CALL xmlw_writetag ( 'xml', '?', 'version,encoding','1.0,UTF-8')
-       CALL xmlw_opentag ( 'qe_pp:pseudo', &
-            'xsi:schemalocation,xmlns:xsi,xmlns:qe_pp', &
-            QE_PP_URI//' '//QE_PP_URI//'.xsd,'//XSI//','//QE_PP_URI )
+       call add_attr( 'version','1.0')
+       call add_attr( 'encoding','UTF-8')
+       CALL xmlw_writetag ( 'xml', '?' )
+       call add_attr( 'xsi:schemalocation', QE_PP_URI//' '//QE_PP_URI//'.xsd')
+       call add_attr( 'xmlns:xsi',XSI)
+       call add_attr( 'xmlns:qe_pp', QE_PP_URI)
+       CALL xmlw_opentag ( 'qe_pp:pseudo' )
        CALL xmlw_writetag ( 'xsd_version', XSD_VERSION )
        !
        ! pp_info
@@ -96,11 +100,14 @@ CONTAINS
     !
     CALL write_pp_mesh ( upf )
     !
-    IF(upf%nlcc) CALL xmlw_writetag( capitalize_if_v2('pp_nlcc'), &
-         upf%rho_atc(1:upf%mesh), 'size', i2c(upf%mesh) )
-    IF( .NOT. upf%tcoulombp) &
-         CALL xmlw_writetag( capitalize_if_v2('pp_local'), &
-         upf%vloc(1:upf%mesh), 'size', i2c(upf%mesh) )
+    IF( upf%nlcc ) THEN
+       CALL add_attr( 'size', upf%mesh )
+       CALL xmlw_writetag(capitalize_if_v2('pp_nlcc'), upf%rho_atc(1:upf%mesh))
+    END IF
+    IF( .NOT. upf%tcoulombp ) THEN
+       CALL add_attr( 'size', upf%mesh )
+       CALL xmlw_writetag( capitalize_if_v2('pp_local'), upf%vloc(1:upf%mesh))
+    END IF
     !
     CALL write_pp_semilocal ( upf )
     !
@@ -110,8 +117,8 @@ CONTAINS
     !
     CALL write_pp_full_wfc ( upf )
     !
-    CALL xmlw_writetag( capitalize_if_v2('pp_rhoatom'), &
-         upf%rho_at(1:upf%mesh), 'size', i2c(upf%mesh) )
+    CALL add_attr( 'size', upf%mesh )
+    CALL xmlw_writetag( capitalize_if_v2('pp_rhoatom'), upf%rho_at(1:upf%mesh))
     !
     CALL write_pp_paw ( upf )
     !
@@ -166,9 +173,11 @@ CONTAINS
     !
     CALL xmlw_opentag ( 'pp_info' )
     CALL xmlw_writetag ( 'generated', xml_protect(upf%generated) )
-    CALL xmlw_writetag ( 'creator', upf%author, &
-         'NAME,VERSION', 'QE Atomic Code,'//version_number )
-    CALL xmlw_writetag ( 'created', '', 'DATE', upf%date )
+    CALL add_attr( 'NAME', 'QE Atomic Code' )
+    CALL add_attr( 'VERSION', version_number )
+    CALL xmlw_writetag ( 'creator', upf%author )
+    CALL add_attr( 'DATE', upf%date )
+    CALL xmlw_writetag ( 'created', '' )
     !
     IF ( PRESENT(u_input) ) CALL copy_input_data ( u_input )
     !
@@ -180,19 +189,19 @@ CONTAINS
     ENDIF
     CALL xmlw_writetag ( 'element', upf%psd )
     CALL xmlw_writetag ( 'functional', upf%dft )
+    CALL add_attr( 'ecutwfc', upf%ecutwfc )
     IF (upf%tpawp .OR. upf%tvanp ) THEN
-       CALL xmlw_writetag ( 'suggested_basis', '', &
-            'ecutwfc,ecutrho', &
-            r2c(upf%ecutwfc)//','//r2c(upf%ecutrho) )
+       CALL add_attr( 'ecutrho', upf%ecutrho )
+       CALL xmlw_writetag ( 'suggested_basis', '' )
     ELSE
-       CALL xmlw_writetag ( 'suggested_basis', '', &
-            'ecutwfc', r2c(upf%ecutwfc) )
+       CALL xmlw_writetag ( 'suggested_basis', '' )
     END IF
     DO nw =1, upf%nwfc
        IF( upf%oc(nw) >= 0.0_dp) THEN 
-          CALL xmlw_opentag ( "valence_orbital", &
-               'nl,pn,l',  &
-               upf%els(nw)//','//i2c(upf%nchi(nw))//','//i2c(upf%lchi(nw)) )
+          CALL add_attr( 'nl', upf%els(nw) )
+          CALL add_attr( 'pn', upf%nchi(nw) )
+          CALL add_attr( 'l', upf%lchi(nw) )
+          CALL xmlw_opentag ( "valence_orbital" )
           CALL xmlw_writetag ( "occupation", upf%oc(nw) )
           CALL xmlw_writetag ( "Rcut", upf%rcut_chi(nw) )
           IF (upf%rcutus_chi(nw) > 0.0_dp) &
@@ -351,26 +360,35 @@ CONTAINS
     !
     IMPLICIT NONE
     TYPE(pseudo_upf),INTENT(IN) :: upf ! the pseudo data
-    CHARACTER(LEN=:), ALLOCATABLE :: attr_list, attr_vals
     !
-    attr_list="generated,author,date,comment,element,pseudo_type,relativistic," // &
-         & "is_ultrasoft,is_paw,is_coulomb,has_so,has_wfc,has_gipaw," // &
-         & "paw_as_gipaw,core_correction,functional,z_valence," // &
-         & "total_psenergy,wfc_cutoff,rho_cutoff,l_max,l_max_rho,l_local," // &
-         & "mesh_size,number_of_wfc,number_of_proj"
-
-    attr_vals=xml_protect(upf%generated) //','// TRIM(upf%author) //','// &
-         &TRIM(upf%date) //','// xml_protect(upf%comment) //','// &
-         &TRIM(upf%psd) //','// TRIM(upf%typ) //','// TRIM(upf%rel) //','// &
-         &l2c(upf%tvanp)//','// l2c(upf%tpawp)//','// l2c(upf%tcoulombp)//','//&
-         &l2c(upf%has_so)//','// l2c(upf%has_wfc)//','//l2c(upf%has_gipaw) &
-         &//','//l2c(upf%paw_as_gipaw) //','//l2c(upf%nlcc)//','// &
-         &TRIM(upf%dft)//','//r2c(upf%zp)//','//r2c(upf%etotps)//','//&
-         &r2c(upf%ecutwfc)//','//r2c(upf%ecutrho)//','//i2c(upf%lmax)//&
-         & i2c(upf%lmax_rho)//i2c(upf%lloc)//i2c(upf%mesh)//i2c(upf%nwfc)&
-         &//','//i2c(upf%nbeta)
+    call add_attr("generated", xml_protect(upf%generated) )
+    call add_attr("author", upf%author )
+    call add_attr("date", upf%date )
+    call add_attr("comment", xml_protect(upf%comment) )
+    call add_attr("element", upf%psd )
+    call add_attr("pseudo_type", upf%typ )
+    call add_attr("relativistic", upf%rel )
+    call add_attr("is_ultrasoft", upf%tvanp )
+    call add_attr("is_paw", upf%tpawp )
+    call add_attr("is_coulomb", upf%tcoulombp )
+    call add_attr("has_so", upf%has_so )
+    call add_attr("has_wfc", upf%has_wfc )
+    call add_attr("has_gipaw", upf%has_gipaw )
+    call add_attr("paw_as_gipaw", upf%paw_as_gipaw )
+    call add_attr("core_correction", upf%nlcc )
+    call add_attr("functional", upf%dft )
+    call add_attr("z_valence", upf%zp )
+    call add_attr("total_psenergy", upf%etotps )
+    call add_attr("wfc_cutoff", upf%ecutwfc )
+    call add_attr("rho_cutoff", upf%ecutrho )
+    call add_attr("l_max", upf%lmax )
+    call add_attr("l_max_rho", upf%lmax_rho )
+    call add_attr("l_local", upf%lloc )
+    call add_attr("mesh_size", upf%mesh )
+    call add_attr("number_of_wfc", upf%nwfc )
+    call add_attr("number_of_proj", upf%nbeta )
     !
-    CALL xmlw_writetag ( "PP_HEADER", '', attr_list, attr_vals )
+    CALL xmlw_writetag ( "PP_HEADER", '')
     !
   END SUBROUTINE write_pp_header_v2
   !
@@ -390,7 +408,8 @@ CONTAINS
        IF ( v2 ) THEN
           CALL xmlw_opentag ( 'PP_INPUTFILE' )
        ELSE
-          CALL xmlw_opentag ( 'input', 'program', 'ld1.x' )
+          CALL add_attr ('program', 'ld1.x' )
+          CALL xmlw_opentag ( 'input' ) 
        END IF
        REWIND (unit=u_input)
        read_write_loop: DO
@@ -415,12 +434,14 @@ CONTAINS
     TYPE(pseudo_upf),INTENT(IN) :: upf ! the pseudo data
     !
     IF ( upf%dx > 0.d0) THEN
-       CALL xmlw_opentag( capitalize_if_v2('pp_mesh'), &
-            'mesh,dx,xmin,rmax,zmesh', &
-            & i2c(upf%mesh)//','//r2c(upf%dx)//','//r2c(upf%xmin)//','&
-            & //r2c(upf%rmax)//','//r2c(upf%zmesh) )
+       CALL add_attr( 'mesh', upf%mesh )
+       CALL add_attr( 'dx', upf%dx )
+       CALL add_attr( 'xmin', upf%xmin )
+       CALL add_attr( 'rmax', upf%rmax )
+       CALL add_attr( 'zmesh', upf%zmesh )
+       CALL xmlw_opentag( capitalize_if_v2('pp_mesh') )
     ELSE
-       CALL xmlw_opentag( capitalize_if_v2('pp_mesh'), 'mesh', i2c(upf%mesh) )
+       CALL xmlw_opentag( capitalize_if_v2('pp_mesh') )
     END IF
     CALL xmlw_writetag( capitalize_if_v2('pp_r'), upf%r(1:upf%mesh) )
     CALL xmlw_writetag( capitalize_if_v2('pp_rab'), upf%rab(1:upf%mesh) )
@@ -453,12 +474,12 @@ CONTAINS
           ELSE
              tag = 'vnl'
           END IF
+          CALL add_attr( 'l', l )
           IF ( upf%has_so ) THEN
-             CALL xmlw_writetag( tag, upf%vnl(1:upf%mesh,l,ind), &
-                  'l,j', i2c(l)//','//r2c(upf%jjj(nb)) )
+             CALL add_attr( 'j', upf%jjj(nb) )
+             CALL xmlw_writetag( tag, upf%vnl(1:upf%mesh,l,ind) )
           ELSE
-             CALL xmlw_writetag( tag, upf%vnl(1:upf%mesh,l,ind), &
-                  'l', i2c(l) )
+             CALL xmlw_writetag( tag, upf%vnl(1:upf%mesh,l,ind) )
           END IF
        END DO
        CALL xmlw_closetag( ) ! end pp_semilocal
@@ -486,58 +507,70 @@ CONTAINS
        ELSE
           tag = 'pp_beta'
        END IF
+       call add_attr( 'index', nb )
+       call add_attr( 'label', upf%els_beta(nb) )
+       call add_attr( 'angular_momentum', upf%lll(nb) )
+       call add_attr( 'cutoff_radius_index', upf%kbeta(nb) )
+       call add_attr( 'cutoff_radius', upf%rcut(nb) )
+       call add_attr( 'ultrasoft_cutoff_radius', upf%rcutus(nb) )
        IF ( .NOT. v2 .AND. upf%has_so ) THEN
-          CALL xmlw_writetag( tag, upf%beta(1:upf%mesh,nb), &
-     &      'index,label,angular_momentum,tot_ang_mom,cutoff_radius_index,' &
-     &      //'cutoff_radius,ultrasoft_cutoff_radius',&
-     &      i2c(nb)//','//trim(upf%els_beta(nb))//',' &
-     &               //i2c(upf%lll(nb))//','//r2c(upf%jjj(nb))//','&
-     &               //i2c(upf%kbeta(nb))//','//r2c(upf%rcut(nb))//','&
-     &               //r2c(upf%rcutus(nb)) )
+          call add_attr( 'tot_ang_mom', upf%jjj(nb) )
+          CALL xmlw_writetag( tag, upf%beta(1:upf%mesh,nb) )
        ELSE
-          CALL xmlw_writetag( tag, upf%beta(1:upf%mesh,nb), &
-     &      'index,label,angular_momentum,cutoff_radius_index,' &
-     &      //'cutoff_radius,ultrasoft_cutoff_radius',&
-     &      i2c(nb)//','//trim(upf%els_beta(nb))//',' &
-     &               //i2c(upf%lll(nb))//','//i2c(upf%kbeta(nb))//',' &
-     &               //r2c(upf%rcut(nb))//','//r2c(upf%rcutus(nb)) )
+          CALL xmlw_writetag( tag, upf%beta(1:upf%mesh,nb) )
        END IF
     END DO
     !
     ! pp_dij (D_lm matrix)
     !
-    CALL xmlw_opentag( capitalize_if_v2 ('pp_dij'), 'columns,rows', &
-         i2c(upf%nbeta)//','//i2c(upf%nbeta) )
+    call add_attr( 'columns',  upf%nbeta )
+    call add_attr( 'rows', upf%nbeta )
+    CALL xmlw_opentag( capitalize_if_v2 ('pp_dij') )
     WRITE(iun,*) upf%dion(1:upf%nbeta,1:upf%nbeta)
     CALL xmlw_closetag( ) 
     !
     ! pp_augmentation
     !
     IF (upf%tvanp .or. upf%tpawp) THEN
+       IF ( v2 ) THEN
+          call add_attr('q_with_l', upf%q_with_l )
+          call add_attr('nqf', upf%nqf )
+          call add_attr('nqlc', upf%nqlc )
+          IF (upf%tpawp) THEN
+             CALL add_attr( 'shape', upf%paw%augshape )
+             CALL add_attr( 'cutoff_r', upf%paw%raug )
+             CALL add_attr( 'cutoff_r_index', upf%paw%iraug )
+             CALL add_attr( 'augmentation_epsilon', upf%qqq_eps )
+             CALL add_attr( 'l_max_aug', upf%paw%lmax_aug )
+          ENDIF
+       END IF
        CALL xmlw_opentag( capitalize_if_v2('pp_augmentation') )
        !
-       IF ( v2 ) print *, 'FIXME! INCORRECT FORMAT, USE ATTRIBUTES'
-       CALL xmlw_writetag( 'q_with_l', upf%q_with_l )
-       CALL xmlw_writetag( 'nqf', upf%nqf )
-       CALL xmlw_writetag( 'nqlc', upf%nqlc )
-       IF (upf%tpawp) THEN
-          CALL xmlw_writetag( 'shape', upf%paw%augshape )
-          CALL xmlw_writetag( 'cutoff_r', upf%paw%raug )
-          CALL xmlw_writetag( 'cutoff_r_index', upf%paw%iraug )
-          CALL xmlw_writetag( 'augmentation_epsilon', upf%qqq_eps )
-          CALL xmlw_writetag( 'l_max_aug', upf%paw%lmax_aug )
-       ENDIF
+       IF ( .NOT. v2 ) THEN
+          CALL xmlw_writetag( 'q_with_l', upf%q_with_l )
+          CALL xmlw_writetag( 'nqf', upf%nqf )
+          CALL xmlw_writetag( 'nqlc', upf%nqlc )
+          IF (upf%tpawp) THEN
+             CALL xmlw_writetag( 'shape', upf%paw%augshape )
+             CALL xmlw_writetag( 'cutoff_r', upf%paw%raug )
+             CALL xmlw_writetag( 'cutoff_r_index', upf%paw%iraug )
+             CALL xmlw_writetag( 'augmentation_epsilon', upf%qqq_eps )
+             CALL xmlw_writetag( 'l_max_aug', upf%paw%lmax_aug )
+          ENDIF
+       END IF
        !
        nb = upf%nbeta*upf%nbeta
-       CALL xmlw_opentag( capitalize_if_v2('pp_q'), 'size', i2c(nb) )
+       call add_attr( 'size', nb )
+       CALL xmlw_opentag( capitalize_if_v2('pp_q') )
        WRITE(iun,*) upf%qqq(1:upf%nbeta,1:upf%nbeta)
        CALL xmlw_closetag( )
        !
        IF ( upf%tpawp ) THEN
           WRITE(iun,"('<!--augmentation charge multipoles ( only for PAW) ',/,&
                &      'multipole array dims = (nbeta,nbeta,2*lmax+1)-->')")
-          CALL xmlw_opentag( capitalize_if_v2('pp_multipoles'), 'nbeta,lmax', &
-               i2c(upf%nbeta)//','//i2c(upf%lmax) )
+          call add_attr( 'nbeta', upf%nbeta )
+          call add_attr( 'lmax', upf%lmax )
+          CALL xmlw_opentag( capitalize_if_v2('pp_multipoles') )
           WRITE(iun,*) upf%paw%augmom(1:upf%nbeta,1:upf%nbeta,0:2*upf%lmax)
           CALL xmlw_closetag ()
        ENDIF
@@ -574,9 +607,12 @@ CONTAINS
                    ELSE
                       tag = 'pp_qijl'
                    END IF
-                   CALL xmlw_writetag( tag, upf%qfuncl(1:upf%mesh,nmb,l), &
-                        'first_index,second_index,composite_index,angular_momentum,size', &
-                        i2c(nb)//','//i2c(mb)//','//i2c(nmb)//','//i2c(l)//','//i2c(upf%mesh) )
+                   call add_attr( 'first_index', nb )
+                   call add_attr( 'second_index', mb )
+                   call add_attr( 'composite_index', nmb )
+                   call add_attr( 'angular_momentum', l )
+                   call add_attr( 'size', upf%mesh )
+                   CALL xmlw_writetag( tag, upf%qfuncl(1:upf%mesh,nmb,l) )
                 ENDDO loop_on_l
              ELSE
                 isnull = .FALSE. 
@@ -587,9 +623,11 @@ CONTAINS
                 ELSE
                    tag = 'pp_qij'
                 END IF
-                CALL xmlw_writetag( tag, upf%qfunc(1:upf%mesh,nmb), &
-                     'size,first_index,second_index,composite_index', &
-                     i2c(upf%mesh)//','//i2c(nb)//','//i2c(mb)//','//i2c(nmb) )
+                call add_attr( 'size', upf%mesh )
+                call add_attr( 'first_index', nb )
+                call add_attr( 'second_index', mb )
+                call add_attr( 'composite_index', nmb )
+                CALL xmlw_writetag( tag, upf%qfunc(1:upf%mesh,nmb) )
                 !
              ENDIF
           ENDDO loop_on_mb
@@ -611,42 +649,32 @@ CONTAINS
     !
     INTEGER :: nw, ind, l
     CHARACTER(LEN=8) :: tag
-    CHARACTER(LEN=:), ALLOCATABLE :: attr_list, attr_vals
     !
     CALL xmlw_opentag( capitalize_if_v2('pp_pswfc') )
     DO nw =1, upf%nwfc
-       attr_list = 'size,index,label,l'
-       attr_vals = i2c(upf%mesh)//','//i2c(nw)//','//trim(upf%els(nw))// &
-            & ','//i2c(upf%lchi(nw))
+       call add_attr( 'size', upf%mesh )
+       call add_attr( 'index', nw )
+       call add_attr( 'label', upf%els(nw) )
+       call add_attr( 'l', upf%lchi(nw) )
        IF ( upf%has_so) THEN
-          attr_list = attr_list//',nn,jchi' 
-          attr_vals = attr_vals//','//i2c(upf%nn(nw))//',' //r2c(upf%jchi(nw))
+          call add_attr( 'nn', upf%nn(nw) )
+          call add_attr( 'jchi', upf%jchi(nw) )
        END IF
-       attr_list = attr_list//',occupation'
-       attr_vals = attr_vals//','//r2c(upf%oc(nw))
-       IF ( upf%nchi(nw) > upf%lchi(nw) ) THEN
-          attr_list = attr_list//',n'
-          attr_vals = attr_vals//','//i2c(upf%nchi(nw))
-       END IF
-       IF ( upf%epseu(nw) > 0.0_dp ) THEN
-          attr_list = attr_list//',pseudo_energy'
-          attr_vals = attr_vals//','//r2c(upf%epseu(nw))
-       END IF
-       IF ( upf%rcut_chi(nw) > 0.0_dp) THEN
-          attr_list = attr_list//',cutoff_radius'
-          attr_vals = attr_vals//','//r2c(upf%rcut_chi(nw))
-       END IF
-       IF ( upf%rcut_chi(nw) > 0.0_dp)THEN
-          attr_list = attr_list//',ultrasoft_cutoff_radius' 
-          attr_vals = attr_vals//','//r2c(upf%rcutus_chi(nw))
-       END IF
+       call add_attr( 'occupation', upf%oc(nw) )
+       IF ( upf%nchi(nw) > upf%lchi(nw) ) call add_attr( 'n', upf%nchi(nw) )
+       IF ( upf%epseu(nw) > 0.0_dp ) &
+            call add_attr( 'pseudo_energy',upf%epseu(nw) )
+       IF ( upf%rcut_chi(nw) > 0.0_dp ) &
+            call add_attr( 'cutoff_radius',upf%rcut_chi(nw) )
+       IF ( upf%rcutus_chi(nw) > 0.0_dp ) &
+            call add_attr( 'ultrasoft_cutoff_radius',upf%rcutus_chi(nw) )
+       !
        IF ( v2 ) THEN
           tag = 'PP_CHI.'//i2c(nw)
        ELSE
           tag = 'pp_chi'
        END IF
-       CALL xmlw_writetag( tag, upf%chi(1:upf%mesh,nw), &
-            attr_list, attr_vals )
+       CALL xmlw_writetag( tag, upf%chi(1:upf%mesh,nw) )
     END DO
     CALL xmlw_closetag( ) ! end pp_pswfc
     !
@@ -664,8 +692,8 @@ CONTAINS
     !
     IF ( upf%has_wfc ) THEN
        !
-       CALL xmlw_opentag( capitalize_if_v2('pp_full_wfc'), &
-            'number_of_wfc', i2c(upf%nbeta) )
+       call add_attr( 'number_of_wfc', upf%nbeta )
+       CALL xmlw_opentag( capitalize_if_v2('pp_full_wfc') )
        !
        DO nb = 1, upf%nbeta
           IF ( v2 ) THEN
@@ -673,8 +701,10 @@ CONTAINS
           ELSE
              tag = 'pp_aewfc'
           END IF
-          CALL xmlw_writetag( tag, upf%aewfc(1:upf%mesh,nb), 'index,label,l',&
-               i2c(nb)//','//trim(upf%els_beta(nb))//','//i2c(upf%lll(nb)) )
+          call add_attr( 'index', nb )
+          call add_attr( 'label', upf%els_beta(nb) )
+          call add_attr( 'l', upf%lll(nb) )
+          CALL xmlw_writetag( tag, upf%aewfc(1:upf%mesh,nb) )
        END DO
        !
        IF ( upf%has_so .AND. upf%tpawp ) THEN
@@ -684,9 +714,10 @@ CONTAINS
              ELSE
                 tag = 'pp_aewfc_rel'
              END IF
-             CALL xmlw_writetag(tag, upf%paw%aewfc_rel(1:upf%mesh,nb), &
-                  'index,label,l', &
-                  i2c(nb)//','//trim(upf%els_beta(nb))//','//i2c(upf%lll(nb)) )
+             call add_attr( 'index', nb )
+             call add_attr( 'label', upf%els_beta(nb) )
+             call add_attr( 'l', upf%lll(nb) )
+             CALL xmlw_writetag(tag, upf%paw%aewfc_rel(1:upf%mesh,nb) )
           END DO
        END IF
        !
@@ -696,9 +727,11 @@ CONTAINS
           ELSE
              tag = 'pp_pswfc'
           END IF
-          CALL xmlw_writetag( tag, upf%pswfc(1:upf%mesh,nb), &
-              & 'size,index,label,l', i2c(upf%mesh)//','// &
-              & i2c(nb)//','//trim(upf%els_beta(nb))//','//i2c(upf%lll(nb)) )
+          call add_attr( 'size', upf%mesh )
+          call add_attr( 'index', nb )
+          call add_attr( 'label', upf%els_beta(nb) )
+          call add_attr( 'l', upf%lll(nb) )
+          CALL xmlw_writetag( tag, upf%pswfc(1:upf%mesh,nb) )
        END DO
        !
        CALL xmlw_closetag( )
@@ -714,18 +747,21 @@ CONTAINS
     TYPE(pseudo_upf),INTENT(IN) :: upf ! the pseudo data
     !
     IF ( upf%tpawp ) THEN
-       CALL xmlw_opentag( capitalize_if_v2('pp_paw'), &
-            'paw_data_format,core_energy', &
-            i2c(upf%paw_data_format)//','//r2c(upf%paw%core_energy) ) 
+       call add_attr( 'paw_data_format', upf%paw_data_format )
+       call add_attr( 'core_energy', upf%paw%core_energy )
+       CALL xmlw_opentag( capitalize_if_v2('pp_paw') )
        ! Full occupation (not only > 0 ones)
+       call add_attr( 'size', upf%nbeta )
        CALL xmlw_writetag( capitalize_if_v2('pp_occupations'), &
-            upf%paw%oc(1:upf%nbeta), 'size', i2c(upf%nbeta) )
+            upf%paw%oc(1:upf%nbeta) )
        ! All-electron core charge
+       call add_attr( 'size', upf%mesh )
        CALL xmlw_writetag( capitalize_if_v2('pp_ae_nlcc'), &
-            upf%paw%ae_rho_atc(1:upf%mesh), 'size', i2c(upf%mesh) )
+            upf%paw%ae_rho_atc(1:upf%mesh) )
        ! All-electron local potential
+       call add_attr( 'size', upf%mesh )
        CALL xmlw_writetag( capitalize_if_v2('pp_ae_vloc'), &
-            upf%paw%ae_vloc(1:upf%mesh), 'size', i2c(upf%mesh) )
+            upf%paw%ae_vloc(1:upf%mesh) )
        CALL xmlw_closetag () ! end pp_paw
     END IF
     !
@@ -741,23 +777,24 @@ CONTAINS
     CHARACTER(LEN=24) :: tag
     !
     IF (upf%has_gipaw) THEN
-       CALL xmlw_opentag( capitalize_if_v2('pp_gipaw'), &
-            'gipaw_data_format', i2c(upf%gipaw_data_format) ) 
-       IF ( v2 ) CALL xmlw_opentag( 'PP_GIPAW_CORE_ORBITALS', &
-            'number_of_core_orbitals', i2c(upf%gipaw_ncore_orbitals) )
+       call add_attr( 'gipaw_data_format', upf%gipaw_data_format )
+       CALL xmlw_opentag( capitalize_if_v2('pp_gipaw') )
+       IF ( v2 ) THEN
+          call add_attr( 'number_of_core_orbitals', upf%gipaw_ncore_orbitals )
+          CALL xmlw_opentag( 'PP_GIPAW_CORE_ORBITALS' )
+       END IF
        DO nb = 1,upf%gipaw_ncore_orbitals
           IF ( v2 ) THEN
              tag = "PP_GIPAW_CORE_ORBITAL."//i2c(nb)
           ELSE
              tag = 'pp_gipaw_core_orbital'
           END IF
-          CALL xmlw_writetag( tag, &
-               & upf%gipaw_core_orbital(1:upf%mesh,nb), &
-               & 'size,index,label,n,l', &
-               & i2c(upf%mesh) // ',' // i2c(nb) // ',' // &
-               & trim(upf%gipaw_core_orbital_el(nb)) // ',' // & 
-               & r2c(upf%gipaw_core_orbital_n(nb)) // ',' // & 
-               & r2c(upf%gipaw_core_orbital_l(nb)) )
+          call add_attr( 'size', upf%mesh )
+          call add_attr( 'index', nb )
+          call add_attr( 'label', upf%gipaw_core_orbital_el(nb) )
+          call add_attr( 'n', upf%gipaw_core_orbital_n(nb) )
+          call add_attr( 'l', upf%gipaw_core_orbital_l(nb) )
+          CALL xmlw_writetag( tag, upf%gipaw_core_orbital(1:upf%mesh,nb) )
        END DO
        IF ( v2 ) CALL xmlw_closetag ( )
        ! Only write core orbitals in the PAW as GIPAW case
@@ -765,36 +802,41 @@ CONTAINS
           !
           ! Write valence all-electron and pseudo orbitals
           !
-          IF ( v2 ) CALL xmlw_opentag( 'PP_GIPAW_ORBITALS', &
-               'number_of_valence_orbitals', i2c(upf%gipaw_wfs_nchannels) )
+          IF ( v2 ) THEN
+             call add_attr( 'number_of_valence_orbitals', upf%gipaw_wfs_nchannels )
+             CALL xmlw_opentag( 'PP_GIPAW_ORBITALS' )
+          END IF
           DO nb = 1,upf%gipaw_wfs_nchannels
              IF ( v2 ) THEN
                 tag = "PP_GIPAW_ORBITAL."//i2c(nb)
              ELSE
                 tag = 'pp_gipaw_orbital'
              END IF
-             CALL xmlw_opentag( tag, &
-               & 'index,label,l,cutoff_radius,ultrasoft_cutoff_radius', &
-               & i2c(nb) // ',' // &
-               & trim(upf%gipaw_wfs_el(nb)) // ',' // & 
-               & i2c(upf%gipaw_wfs_ll(nb)) // ',' // &
-               & r2c(upf%gipaw_wfs_rcut(nb)) // ',' // &
-               & r2c(upf%gipaw_wfs_rcutus(nb)) )
+             call add_attr( 'index', nb )
+             call add_attr( 'label', upf%gipaw_wfs_el(nb) )
+             call add_attr( 'l', upf%gipaw_wfs_ll(nb) )
+             call add_attr( 'cutoff_radius', upf%gipaw_wfs_rcut(nb) )
+             call add_attr( 'ultrasoft_cutoff_radius', upf%gipaw_wfs_rcutus(nb) )
+             CALL xmlw_opentag( tag)
              !
+             call add_attr( 'size', upf%mesh )
              CALL xmlw_writetag( capitalize_if_v2('pp_gipaw_wfs_ae'), &
-                  upf%gipaw_wfs_ae(1:upf%mesh,nb), 'size', i2c(upf%mesh) )
+                  upf%gipaw_wfs_ae(1:upf%mesh,nb) )
+             call add_attr( 'size', upf%mesh )
              CALL xmlw_writetag( capitalize_if_v2('pp_gipaw_wfs_ps'),&
-                  upf%gipaw_wfs_ps(1:upf%mesh,nb), 'size', i2c(upf%mesh) )
+                  upf%gipaw_wfs_ps(1:upf%mesh,nb) )
              CALL xmlw_closetag ()
           END DO
           IF ( v2 ) CALL xmlw_closetag( )
           !
           ! Write all-electron and pseudo local potentials
           CALL xmlw_opentag( capitalize_if_v2('pp_gipaw_vlocal') )
+          call add_attr( 'size', upf%mesh )
           CALL xmlw_writetag( capitalize_if_v2('pp_gipaw_vlocal_ae'), &
-               upf%gipaw_vlocal_ae(1:upf%mesh), 'size', i2c(upf%mesh) )
+               upf%gipaw_vlocal_ae(1:upf%mesh) )
+          call add_attr( 'size', upf%mesh )
           CALL xmlw_writetag( capitalize_if_v2('pp_gipaw_vlocal_ps'), &
-               upf%gipaw_vlocal_ps(1:upf%mesh), 'size', i2c(upf%mesh) )
+               upf%gipaw_vlocal_ps(1:upf%mesh) )
           CALL xmlw_closetag ()
        END IF
        CALL xmlw_closetag () ! end pp_gipaw

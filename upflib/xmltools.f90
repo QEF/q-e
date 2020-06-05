@@ -30,6 +30,7 @@ MODULE xmltools
   !
   PRIVATE
   PUBLIC :: xml_openfile, xml_closefile
+  PUBLIC :: add_attr
   PUBLIC :: xmlw_writetag, xmlw_opentag, xmlw_closetag
   PUBLIC :: xml_protect
   PUBLIC :: i2c, l2c, r2c
@@ -47,6 +48,10 @@ MODULE xmltools
   INTERFACE get_attr
      MODULE PROCEDURE get_i_attr, get_l_attr, get_r_attr, get_c_attr
   END INTERFACE get_attr
+
+  INTERFACE add_attr
+     MODULE PROCEDURE add_i_attr, add_l_attr, add_r_attr, add_c_attr
+  END INTERFACE add_attr
   
 CONTAINS
 
@@ -152,6 +157,49 @@ CONTAINS
     !
   END SUBROUTINE get_c_attr
   !
+  SUBROUTINE add_i_attr ( attrname, attrval_i )
+    !
+    IMPLICIT NONE
+    CHARACTER(LEN=*), INTENT(IN) :: attrname
+    INTEGER, INTENT(IN) :: attrval_i
+    !
+    CALL add_c_attr ( attrname, i2c(attrval_i) )
+    !
+  END SUBROUTINE add_i_attr
+  !
+  SUBROUTINE add_l_attr ( attrname, attrval_l )
+    !
+    IMPLICIT NONE
+    CHARACTER(LEN=*), INTENT(IN) :: attrname
+    LOGICAL, INTENT(IN) :: attrval_l
+    !
+    CALL add_c_attr ( attrname, l2c(attrval_l) )
+    !
+  END SUBROUTINE add_l_attr
+  !
+  SUBROUTINE add_r_attr ( attrname, attrval_r )
+    !
+    IMPLICIT NONE
+    CHARACTER(LEN=*), INTENT(IN) :: attrname
+    REAL(dp), INTENT(IN) :: attrval_r
+    !
+    CALL add_c_attr ( attrname, r2c(attrval_r) )
+    !
+  END SUBROUTINE add_r_attr
+  !
+  SUBROUTINE add_c_attr ( attrname, attrval_c )
+    !
+    IMPLICIT NONE
+    CHARACTER(LEN=*), INTENT(IN) :: attrname, attrval_c
+    !
+    IF ( .NOT. ALLOCATED(attrlist) ) THEN
+       attrlist = ' '//TRIM(attrname)//'="'//TRIM(attrval_c)//'"'
+    ELSE
+       attrlist = attrlist // ' ' // TRIM(attrname)//'="'//TRIM(attrval_c)//'"'
+    END IF
+    !
+  END SUBROUTINE add_c_attr
+  !
   FUNCTION xml_openfile ( filexml ) RESULT (iun)
     !
     ! returns on output the opened unit number if opened successfully
@@ -166,6 +214,8 @@ CONTAINS
     xmlunit = iun
     nlevel = 0
     open_tags(nlevel) = 'root'
+    if ( allocated(attrlist) ) DEALLOCATE ( attrlist) 
+    if ( allocated(attrvals) ) DEALLOCATE ( attrvals) 
     !
   END FUNCTION xml_openfile
   !
@@ -181,11 +231,9 @@ CONTAINS
     !
   END SUBROUTINE xml_closefile
   !
-  SUBROUTINE xmlw_opentag (name, attrlist, attrvals, ierr )
+  SUBROUTINE xmlw_opentag (name, ierr )
     ! On input:
     ! name      required, character: tag name
-    ! attrlist  optional, character: list of comma-separated attributes
-    ! attrvals  optional, character: list of comma-separated attrbute values
     ! On output: the tag is left open, ready for addition of data -
     !            the tag must be subsequently closed with close_xml_tag
     ! If ierr is present, the following value is returned:
@@ -197,14 +245,12 @@ CONTAINS
     ! If absent, the above error messages are printed.
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
-    CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: attrlist
-    CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: attrvals
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     INTEGER :: ier_
     CHARACTER(LEN=1) :: tag_end='>'
     !
-    ier_ = write_tag_and_attr (name, attrlist, attrvals )
+    ier_ = write_tag_and_attr (name)
     IF ( ier_ < 0 ) ier_ = 0
     ! complete tag, leaving it open for further data
     WRITE (xmlunit, "(A1)", ERR=100) tag_end
@@ -217,7 +263,7 @@ CONTAINS
     !
   END SUBROUTINE xmlw_opentag
 
-  SUBROUTINE writetag_c (name, cval, attrlist, attrvals, ierr )
+  SUBROUTINE writetag_c (name, cval, ierr )
     ! On input, same as xmlw_opentag, plus:
     ! cval   character, value of the tag.
     ! If cval=' ' write <name  attr1="val1" attr2="val2" ... /> 
@@ -228,8 +274,6 @@ CONTAINS
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
     CHARACTER(LEN=*), INTENT(IN) :: cval
-    CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: attrlist
-    CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: attrvals
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     INTEGER :: ier_
@@ -237,9 +281,9 @@ CONTAINS
     !
     is_proc = (LEN_TRIM(cval) == 1 .AND. cval(1:1) == '?')
     IF (is_proc) THEN
-       ier_ = write_tag_and_attr ( '?'//name, attrlist, attrvals)
+       ier_ = write_tag_and_attr ( '?'//name )
     ELSE
-       ier_ = write_tag_and_attr ( name, attrlist, attrvals)
+       ier_ = write_tag_and_attr ( name )
     END IF
     IF ( ier_ > 0 ) GO TO 10
     !
@@ -268,69 +312,59 @@ CONTAINS
     !
   END SUBROUTINE writetag_c
   !
-  SUBROUTINE writetag_i (name, ival, attrlist, attrvals, ierr )
+  SUBROUTINE writetag_i (name, ival, ierr )
     !
     ! As writetag_c, for integer value
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
     INTEGER, INTENT(IN)          :: ival
-    CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: attrlist
-    CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: attrvals
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
-    CALL writetag_c (name, i2c(ival), attrlist, attrvals, ierr )
+    CALL writetag_c (name, i2c(ival), ierr )
     !
   END SUBROUTINE writetag_i
   !
-  SUBROUTINE writetag_l (name, lval, attrlist, attrvals, ierr )
+  SUBROUTINE writetag_l (name, lval, ierr )
     !
     ! As writetag_c, for logical value
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
     LOGICAL, INTENT(IN)          :: lval
-    CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: attrlist
-    CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: attrvals
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
-    CALL writetag_c (name, l2c(lval), attrlist, attrvals, ierr )
+    CALL writetag_c (name, l2c(lval), ierr )
     !
   END SUBROUTINE writetag_l
   !
-  SUBROUTINE writetag_r (name, rval, attrlist, attrvals, ierr )
+  SUBROUTINE writetag_r (name, rval, ierr )
     !
     ! As writetag_c, for real value
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
     REAL(dp), INTENT(IN)         :: rval
-    CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: attrlist
-    CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: attrvals
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
-    CALL writetag_c (name, r2c(rval), attrlist, attrvals, ierr )
+    CALL writetag_c (name, r2c(rval), ierr )
     !
   END SUBROUTINE writetag_r
   !
-  SUBROUTINE writetag_rv (name, rval, attrlist, attrvals, ierr )
+  SUBROUTINE writetag_rv (name, rval, ierr )
     !
     ! As writetag_c, for an array of real values
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
     REAL(dp), INTENT(IN)         :: rval(:)
-    CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: attrlist
-    CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: attrvals
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
-    CALL xmlw_opentag (name, attrlist, attrvals, ierr )
+    CALL xmlw_opentag (name, ierr )
     WRITE( xmlunit, *) rval
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_rv
   
-  FUNCTION write_tag_and_attr (name, attrlist, attrvals) RESULT (ierr)
+  FUNCTION write_tag_and_attr (name) RESULT (ierr)
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
-    CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: attrlist
-    CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: attrvals
     INTEGER :: ierr
     !
     LOGICAL :: have_list, have_vals
@@ -360,49 +394,10 @@ CONTAINS
     ! attributes (if present)
     !
     ierr = 10
-    have_list = PRESENT(attrlist)
-    have_vals = PRESENT(attrvals)
-    ! return with error code
-    IF ( ( have_list .AND. .NOT. have_vals ) .OR. &
-         ( have_vals .AND. .NOT. have_list ) ) RETURN
-    IF ( have_list .AND. have_vals ) THEN
-       !
-       la=len_trim(attrlist)
-       lv=len_trim(attrvals)
-       ! skip initial white spaces. Alternatively:
-       ! n1a=1; do while (attrlist(n1a:n1a) == ' '); n1a=n1a+1; end do
-       do n1a = 1, la
-          if ( attrlist(n1a:n1a) /= ' ' ) exit
-       end do
-       do n1v = 1, lv
-          if ( attrvals(n1v:n1v) /= ' ' ) exit
-       end do
-       do while ( (n1a <= la) .AND. (n1v <= lv) )
-          !
-          ! comma is the separator
-          !
-          n2a = INDEX( attrlist(n1a:), ',' )
-          n2v = INDEX( attrvals(n1v:), ',' )
-          ! mismatch between the number of attributes and of values:
-          ! return with error code
-          IF ( ( n2a == 0 .and. n2v /= 0 ) .or. &
-               ( n2a /= 0 .and. n2v == 0 ) ) RETURN
-          !
-          IF ( ( n2a == 0 .and. n2v == 0 ) ) THEN
-             ! last attribute and respective value
-             WRITE (xmlunit, "(' ',A,'=""',A,'""')", ADVANCE='no', ERR=10) &
-                  attrlist(n1a:la), attrvals(n1v:lv)
-             EXIT
-          ELSE
-             WRITE (xmlunit, "(' ',A,'=""',A,'""')", ADVANCE='no', ERR=10) &
-                  attrlist(n1a:n1a+n2a-2), attrvals(n1v:n1v+n2v-2)
-             n1a = n1a+n2a
-             n1v = n1v+n2v
-          END IF
-          !
-       END DO
-       !
-    END IF
+    if ( allocated (attrlist) ) then
+       WRITE (xmlunit, "(A)", ADVANCE='no', ERR=10) attrlist
+       deallocate (attrlist)
+    end if
     ! normal exit here
     ierr = 0
 10  RETURN
@@ -436,6 +431,7 @@ CONTAINS
     END IF
     print '("closed at level ",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
     nlevel = nlevel-1
+    !
   END SUBROUTINE xmlw_closetag
   !
   !--------------------------------------------------------
