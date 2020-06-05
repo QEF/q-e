@@ -1256,7 +1256,7 @@ MODULE realus
 
          !- define the target dimension of the broken boxes
          recv_target = 1 + ( target_ndata - 1 )/ nproc_bbox
-         send_target =       target_ndata / nproc_bbox
+         send_target = tollerable_unbalance * target_ndata / nproc_bbox
 
          WRITE ( stdout, * ) 'targets ', target_ndata, recv_target, send_target ; FLUSH(6)
          !
@@ -1367,6 +1367,7 @@ MODULE realus
       !
       INTEGER :: ia, box_ir, capel
       INTEGER, ALLOCATABLE :: grid_check(:)
+      LOGICAL :: bbox_is_ordered ! .true. if bbox grid points are already ordered after send/recv
 
       !$omp parallel
       CALL threaded_barrier_memset(box_psic, 0.D0, max(boxtot,bboxtot)*2)
@@ -1404,7 +1405,11 @@ MODULE realus
          ia = nint( dble (box_psic (box_ir ) ) )
          grid_check(ia) = grid_check(ia) + 1
          bbox_ind ( box_ir ) = bbox0(ia)+grid_check(ia)
+         bbox_is_ordered = bbox_is_ordered .AND. ( bbox_ind ( box_ir ) .EQ. box_ir )
       end do
+      if ( bbox_is_ordered ) DEALLOCATE ( bbox_ind, bbox_aux)
+      WRITE(stdout,*) 'bbox_is_ordered', bbox_is_ordered
+
       capel = MAXVAL (ABS ( grid_check(1:nat)-maxbbox_beta(1:nat) ) )
       IF ( capel > 0 ) THEN
          write (stdout,*) 'bbox atomic grids'
@@ -1436,9 +1441,10 @@ MODULE realus
       if ( present(nsend_) ) nsend_ = 0 ! initialize nsend_ if present
       if ( .not. tbbox ) return
 
+      call start_clock( 'box_to_bbox' )
 !      write ( stdout, * ) 'enter  box_to_bbox '; FLUSH(6)
 !      write ( stdout, * ) 'me_bbox = ', me_bbox; FLUSH(6)
-      call mp_barrier ( intra_bbox_comm )
+!      call mp_barrier ( intra_bbox_comm )
 
       my_size = boxtot
 
@@ -1493,14 +1499,19 @@ MODULE realus
 
 !      write ( stdout, * ) 'exit  box_to_bbox '; FLUSH(6)
 
-      if (.not. ALLOCATED( bbox_ind ) )  RETURN
+      !- perform the final turn-around for bbox (if needed ... users should know what they do)
+      !- NB: bbox_ind is not allocated at the first call or if the bbox grid points are already in order
 
-      CALL threaded_memcpy( bbox_aux, box_psic, 2 * bboxtot )
-      !$omp parallel do
-      do box_ir =1, bboxtot
-         box_psic ( bbox_ind( box_ir ) ) = bbox_aux ( box_ir )
-      end do
-      !$omp end parallel do
+      IF ( ALLOCATED ( bbox_ind ) ) THEN 
+         CALL threaded_memcpy( bbox_aux, box_psic, 2 * bboxtot )
+         !$omp parallel do
+         do box_ir =1, bboxtot
+            box_psic ( bbox_ind( box_ir ) ) = bbox_aux ( box_ir )
+         end do
+         !$omp end parallel do
+      END IF
+
+      call stop_clock( 'box_to_bbox' )
       !
       RETURN
     END SUBROUTINE box_to_bbox
@@ -1540,19 +1551,23 @@ MODULE realus
       nsend = 0 ! initialize nsend
       if ( .not. tbbox ) return
 
+      call start_clock( 'bbox_to_box' )
 !      write ( stdout, * ) 'enter  bbox_to_box '; FLUSH(6)
 !      write ( stdout, * ) 'me_bbox = ', me_bbox; FLUSH(6)
 
-      if (.not. ALLOCATED( bbox_ind ) ) CALL errore ( 'bbox_to_box',' bbox_ind not yet initialized',1)
-!
-      !$omp parallel do
-      do box_ir =1, bboxtot
-         bbox_aux ( box_ir ) = box_psic ( bbox_ind( box_ir ) )
-      end do
-      !$omp end parallel do
-      CALL threaded_memcpy( box_psic, bbox_aux, 2 * bboxtot )
+      !- perform the initial turn-around for bbox (if needed ... users should know what they do)
+      !- NB: bbox_ind should not be allocated only if the bbox grid points are already in order
 
-      call mp_barrier ( intra_bbox_comm )
+      if ( ALLOCATED( bbox_ind ) ) THEN
+         !$omp parallel do
+         do box_ir =1, bboxtot
+            bbox_aux ( box_ir ) = box_psic ( bbox_ind( box_ir ) )
+         end do
+         !$omp end parallel do
+         CALL threaded_memcpy( box_psic, bbox_aux, 2 * bboxtot )
+      end if
+
+!      call mp_barrier ( intra_bbox_comm )
 
       my_size = bboxtot
 
@@ -1594,11 +1609,12 @@ MODULE realus
 
       end do
 
-      call mp_barrier ( intra_bbox_comm )
+!      call mp_barrier ( intra_bbox_comm )
 
       if (my_size .ne. boxtot) call errore('bbox_to_box',' wrong size ', nproc_bbox )
 
 !      write ( stdout, * ) 'exit  bbox_to_box '; FLUSH(6)
+      call stop_clock( 'bbox_to_box' )
       !
       RETURN
     END SUBROUTINE bbox_to_box
