@@ -437,7 +437,9 @@ CONTAINS
     !--------------------------------------------------------
     ! 
     ! poor-man escaping of a string so that it conforms to xml standard:
-    ! replace & with @, < and > with *. data_out is also left-justified
+    ! replace & with @, < and > with *.
+    ! To prevent problems with attributes, double quotes " are replaced
+    ! with single quotes '. data_out is left-justified
     !
     character(len=*), intent(in) :: data_in
     character(len=:), allocatable :: data_out
@@ -452,6 +454,7 @@ CONTAINS
     do i=1,n
        if ( data_out(i:i) == '&' ) data_out(i:i) = '@'
        if ( data_out(i:i) == '<' .or. data_out(i:i) == '>') data_out(i:i) = '*'
+       if ( data_out(i:i) == '"' ) data_out(i:i) = "'"
     end do
     ! a more complete version should escape & as &amp;, < as &lt;
     ! (escaping > as &gt; , " as &quotes; , ' as &apo; is not strictly needed) 

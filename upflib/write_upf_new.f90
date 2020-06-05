@@ -175,7 +175,7 @@ CONTAINS
     CALL xmlw_writetag ( 'generated', xml_protect(upf%generated) )
     CALL add_attr( 'NAME', 'QE Atomic Code' )
     CALL add_attr( 'VERSION', version_number )
-    CALL xmlw_writetag ( 'creator', upf%author )
+    CALL xmlw_writetag ( 'creator', xml_protect(upf%author) )
     CALL add_attr( 'DATE', upf%date )
     CALL xmlw_writetag ( 'created', '' )
     !
@@ -362,7 +362,7 @@ CONTAINS
     TYPE(pseudo_upf),INTENT(IN) :: upf ! the pseudo data
     !
     call add_attr("generated", xml_protect(upf%generated) )
-    call add_attr("author", upf%author )
+    call add_attr("author", xml_protect(upf%author) )
     call add_attr("date", upf%date )
     call add_attr("comment", xml_protect(upf%comment) )
     call add_attr("element", upf%psd )
