@@ -1,0 +1,16 @@
+There has been a few change of the indabs.f90 for calculating indirect optical properties: 
+1. From line 252-259, the velocity matrix element had a false factor of 0.5, casuing wrong factor of 0.25 in the spectra. This is not fixed. 
+2. From line 389-392, two new variables are added: cufkkd and cufkqd. 
+3. Corresponding to (2), From line 445-448, the rotation matrices are modified from cufkk/cufkq to cufkkd/cufkqd. 
+4. Line 233, a minus sign is added before degaussw
+
+
+(2) and (3) are done since we use finite difference to generate the correction of VME's when QP eigenvalues are read. 
+For this purpose, a slightly shifted grid is used to generate the eigenvalues to use for the finite difference. 
+The original usage of cufkk and cufkq, and the reuse of these rotation matrices later on caused a problem that
+the VME's generated later used this wrong rotation matrix on the shifted grid.
+
+(4) is done since this line tells the code to exclude transitions that are larger than (6*degaussw) above maximum frequency, 
+and smaller than (6*degaussw) below the minimum frequency. This is to account for the fact that gaussian tails 
+can also contribute to the transitions. Originally, the minus sign in the lower limit is missing, causing the code to exclude
+transitions (6*degaussw) ABOVE the minimum frequency, not BELOW, and this causes problems for free carrier absorption/metals, etc. 
