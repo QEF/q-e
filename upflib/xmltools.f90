@@ -283,7 +283,8 @@ CONTAINS
     INTEGER :: ier_
     LOGICAL :: is_proc
     !
-    is_proc = (LEN_TRIM(cval) == 1 .AND. cval(1:1) == '?')
+    is_proc = (LEN_TRIM(cval) == 1)
+    IF ( is_proc ) is_proc = is_proc .AND. ( cval(1:1) == '?')
     IF (is_proc) THEN
        ier_ = write_tag_and_attr ( '?'//name )
     ELSE
@@ -393,7 +394,7 @@ CONTAINS
        WRITE (xmlunit, "('  ')", ADVANCE="no", ERR=10)
     END DO
     WRITE (xmlunit, "('<',A)", ADVANCE="no", ERR=10) trim(name)
-    print '("opened at level ",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
+    ! print '("opened at level ",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
     !
     ! attributes (if present)
     !
@@ -433,7 +434,7 @@ CONTAINS
           WRITE (xmlunit, '("</",A,">")') trim(tag)
        END IF
     END IF
-    print '("closed at level ",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
+    !print '("closed at level ",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
     nlevel = nlevel-1
     !
   END SUBROUTINE xmlw_closetag
@@ -616,7 +617,7 @@ CONTAINS
              cval = adjustl(trim(line(j:j+i-2)))
              ! print *, 'value=',cval
           end if
-    print '("closed at level ",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
+          ! print '("closed at level ",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
           nlevel = nlevel -1
           !
           return
@@ -735,7 +736,8 @@ CONTAINS
                    if (present(ierr)) ierr = 3
                 else
                    open_tags(nlevel) = trim(tag)
-    print '("opened at level ",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
+                   !print '("opened at level ",i1," tag ",A)', &
+                   !   nlevel, trim(open_tags(nlevel))
                 end if
                 !
                 return
@@ -806,8 +808,8 @@ CONTAINS
     IF ( nlevel < 0 ) &
          print '("severe error: closing tag that was never opened")'
     stat=0
-    write(6,'("closing at level ",i1," tag ",A,"...")',advance='no') &
-         nlevel,trim(open_tags(nlevel))
+    !write(6,'("closing at level ",i1," tag ",A,"...")',advance='no') &
+    !     nlevel,trim(open_tags(nlevel))
     do while (.true.)
        read(xmlunit,'(a)', end=10) line
        ll = len_trim(line)
@@ -870,7 +872,7 @@ CONTAINS
                 ! </tag ... > found
                 ! print *, '</tag> found'
                 if ( present(ierr) ) ierr = 0
-    print '("closed")'
+                !print '("closed")'
                 nlevel = nlevel - 1
                 !
                 return

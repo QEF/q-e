@@ -27,7 +27,7 @@ SUBROUTINE read_ps ( filein, upf_in )
   ! stripped-down version of readpp in Modules/read_pseudo.f90:
   ! for serial execution only
   !
-  USE read_upf_new__,     ONLY: read_upf_new_
+  USE read_upf_new_module,ONLY: read_upf_new
   USE read_upf_v1_module, ONLY: read_upf_v1
   USE emend_upf_module, ONLY: make_emended_upf_copy
   USE pseudo_types,     ONLY: pseudo_upf
@@ -47,11 +47,11 @@ SUBROUTINE read_ps ( filein, upf_in )
   !
   is_xml = .false.
   isupf = 0
-  CALL read_upf_new_( filein, upf_in, isupf )
+  CALL read_upf_new( filein, upf_in, isupf )
   IF (isupf ==-81 ) THEN
      is_xml = make_emended_upf_copy( filein, 'tmp.upf' )
      IF (is_xml) THEN
-        CALL  read_upf_new_( 'tmp.upf', upf_in, isupf )
+        CALL  read_upf_new( 'tmp.upf', upf_in, isupf )
         !! correction succeeded, try to read corrected file
         OPEN ( unit=iunps, iostat=isupf, file='tmp.upf', status='old')
         CLOSE( unit=iunps, status='delete' )

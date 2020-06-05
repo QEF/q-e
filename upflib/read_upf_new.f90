@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------
-MODULE  read_upf_new__
+MODULE  read_upf_new_module
   !-----------------------------------------------------
   !! this module contains the simplified code for reading
   !! pseudopotential files in either UPF v.2 or xml
@@ -25,7 +25,7 @@ MODULE  read_upf_new__
 CONTAINS
   !
   !------------------------------------------------+
-  SUBROUTINE read_upf_new_ (filename, upf, ierr)         !
+  SUBROUTINE read_upf_new (filename, upf, ierr)         !
     !---------------------------------------------+
     !! Reads pseudopotential in UPF format (either v.2 or upf_schema).
     !! Derived-type variable *upf* store in output the data read from file. 
@@ -42,6 +42,7 @@ CONTAINS
     !
     iun = xml_openfile ( filename )
     IF ( iun == -1 ) CALL upf_error('read_upf', 'cannot open file',1)
+    print *, ' READ_UPF_NEW'
     call xmlr_opentag ( 'qe_pp:pseudo', IERR = ierr )
     if ( ierr == 0 ) then
        v2 =.false.
@@ -73,15 +74,17 @@ CONTAINS
     !
     CALL read_pp_mesh ( upf )
     !
+    allocate ( upf%rho_atc(upf%mesh) )
     IF(upf%nlcc) then
-       allocate ( upf%rho_atc(1:upf%mesh) )
        CALL xmlr_readtag( capitalize_if_v2('pp_nlcc'), &
-            upf%rho_atc(1:upf%mesh) )
+            upf%rho_atc(:) )
+    else
+       upf%rho_atc(:) = 0.0_dp
     end if
     IF( .NOT. upf%tcoulombp) then
-       allocate ( upf%vloc(1:upf%mesh) )
+       allocate ( upf%vloc(upf%mesh) )
        CALL xmlr_readtag( capitalize_if_v2('pp_local'), &
-            upf%vloc(1:upf%mesh) )
+            upf%vloc(:) )
     end if
     !
     CALL read_pp_semilocal ( upf )
@@ -106,7 +109,7 @@ CONTAINS
     !
     CALL xml_closefile ( )
     !
-  END SUBROUTINE read_upf_new_
+  END SUBROUTINE read_upf_new
   !
   FUNCTION capitalize_if_v2 ( strin ) RESULT ( strout )
     !
@@ -410,6 +413,9 @@ CONTAINS
        CALL xmlr_closetag ()
        ALLOCATE( upf%rinner( upf%nqlc ) )
        CALL xmlr_readtag('PP_RINNER',upf%rinner)
+    ELSE IF ( upf%nqf == 0 ) THEN
+       ALLOCATE( upf%rinner(1), upf%qfcoef(1,1,1,1) )
+       upf%rinner = 0.0_dp; upf%qfcoef =0.0_dp
     ENDIF
     !
     IF ( upf%tpawp .or. upf%tvanp ) THEN
@@ -691,4 +697,4 @@ CONTAINS
     !
   END SUBROUTINE read_pp_gipaw
   !
-END MODULE read_upf_new__
+END MODULE read_upf_new_module
