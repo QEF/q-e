@@ -10,6 +10,12 @@ MODULE xmltools
   !--------------------------------------------------------
   !
   ! Poor-man tools for reading and writing xml files
+  ! Limitations: too many to be listed in detail. Main ones:
+  ! * lines no more than 1024 characters long (see maxline parameter)
+  ! * no more than 9 levels of tags (see maxlevel parameter)
+  ! * length of tags no more than 80 characters (see maxlength parameter)
+  ! * can read tags only in the correct order
+  ! * no commas in attribute values
   !
   USE upf_kinds, ONLY : dp
   IMPLICIT NONE
@@ -17,10 +23,11 @@ MODULE xmltools
   ! internal variables for reading and writing
   !
   INTEGER :: xmlunit
-  character(len=1024) :: line
+  INTEGER, PARAMETER :: maxline=1024
+  character(len=maxline) :: line
   integer :: eot
   integer :: nattr
-  CHARACTER(LEN=:), ALLOCATABLE :: attrlist, attrvals
+  CHARACTER(LEN=:), ALLOCATABLE :: attrlist
   !
   ! variables used keep track of open tags
   !
@@ -32,10 +39,9 @@ MODULE xmltools
   PUBLIC :: xml_openfile, xml_closefile
   PUBLIC :: add_attr
   PUBLIC :: xmlw_writetag, xmlw_opentag, xmlw_closetag
-  PUBLIC :: xml_protect
-  PUBLIC :: i2c, l2c, r2c
   PUBLIC :: xmlr_readtag, xmlr_opentag, xmlr_closetag
   PUBLIC :: get_attr
+  PUBLIC :: xml_protect, i2c, l2c, r2c
   !
   INTERFACE xmlr_readtag
      MODULE PROCEDURE readtag_c, readtag_r, readtag_l, readtag_i, readtag_rv
@@ -112,10 +118,17 @@ CONTAINS
     CHARACTER(LEN=*), INTENT(IN) :: attrname
     CHARACTER(LEN=*), INTENT(OUT) :: attrval_c
     !
-    INTEGER :: i0, i1, i, j0, j1
+    INTEGER :: j0, j1
     !
     ! search for attrname in attrlist
     !
+    if ( .not. allocated(attrlist) ) then
+       attrval_c = ''
+       return
+    else if ( len_trim(attrlist) < 1 ) then
+       attrval_c = ''
+       return
+    end if
     j0 = 1
     do while ( j0 < len_trim(attrlist) )
        j1 = index ( attrlist(j0:), ',' )
@@ -132,28 +145,20 @@ CONTAINS
        j0 = j0+j1
     end do
     !
-    ! for every comma found in attrlist before attrname is found
-    ! (at position j0) skip to the field after a comma in attrvals
+    ! next item between commas is the value
     !
-    i0 = 1
-    DO i = 1, j0
-       if ( attrlist(i:i) == ',' ) then
-          i1 = index ( attrvals(i0:), ',' )
-          i0 = i1 + i0
-       end if
-    END DO
-    ! now find next comma
-    i1 = index ( attrvals(i0:), ',' )
-    IF ( i1 == 0 ) THEN
-       ! no more commas?
-       attrval_c = attrvals(i0:)
-    ELSE IF ( i1 == 1 ) THEN
-       ! two commas, one after the other (,,) ?
+    j0 = j0+j1
+    j1 = index ( attrlist(j0:), ',' )
+    if ( j1 == 0 ) then
+       ! no more commas
+       attrval_c = attrlist(j0:)
+    else if ( j1 == 1 ) then
+       ! two commas, one after the other (,,)
        attrval_c = ' '
-    ELSE
+    else
        ! take field between two commas
-       attrval_c = attrvals(i0:i0+i1-2)
-    END IF
+       attrval_c = attrlist(j0:j0+j1-2)
+    end if
     !
   END SUBROUTINE get_c_attr
   !
@@ -215,7 +220,6 @@ CONTAINS
     nlevel = 0
     open_tags(nlevel) = 'root'
     if ( allocated(attrlist) ) DEALLOCATE ( attrlist) 
-    if ( allocated(attrvals) ) DEALLOCATE ( attrvals) 
     !
   END FUNCTION xml_openfile
   !
@@ -540,7 +544,7 @@ CONTAINS
     ! As readtag_c, for real value
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
-    REAL(8), INTENT(OUT)         :: rval
+    REAL(dp), INTENT(OUT)         :: rval
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     CHARACTER(LEN=80) :: cval
     !
@@ -558,7 +562,7 @@ CONTAINS
     ! As readtag_c, for an array of real values
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
-    REAL(8), INTENT(OUT)         :: rval(:)
+    REAL(dp), INTENT(OUT)         :: rval(:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     INTEGER :: ier_
     CHARACTER(LEN=80) :: cval    
@@ -569,7 +573,6 @@ CONTAINS
        CALL xmlr_closetag ( )
     else
        rval = 0.0_dp
-       REWIND( xmlunit )
     end if
     IF ( present (ierr) ) ierr = ier_
     !
@@ -648,11 +651,8 @@ CONTAINS
     !
     character(len=1) :: quote
     !
-    nattr =0
-    if ( allocated (attrlist) ) deallocate(attrlist)
-    if ( allocated (attrvals) ) deallocate(attrvals)
-    attrlist=''
-    attrvals=''
+    nattr=0
+    if ( allocated(attrlist) ) deallocate (attrlist)
     !
     lt = len_trim(tag)
     stat=0
@@ -660,13 +660,15 @@ CONTAINS
     do while (.true.)
        read(xmlunit,'(a)', end=10) line
        ll = len_trim(line)
-       if ( ll == 1024 ) then
+       if ( ll == maxline ) then
           print *, 'line too long'
           if (present(ierr)) ierr = 2
           return
        end if
        ! j is the current scan position
        j = 1
+       ! j0 is the start of attributes and values
+       j0 = 1
        parse: do while ( j <= ll )
           !
           if ( stat ==-1 ) then
@@ -755,15 +757,12 @@ CONTAINS
                 j=j+1
                 i = index(line(j:),quote)
                 if ( i < 1 ) then
-                   print *, 'Error: matching quote not found'
+                   ! print *, 'Error: matching quote not found'
+                   go to 10
                 else
                    ! save attribute value and continue scanning
                    ! print *, 'attrval=',line(j:j+i-2)
-                   if ( nattr == 1 ) then
-                      attrvals = line(j:j+i-2)
-                   else
-                      attrvals = attrvals//','//line(j:j+i-2)
-                   end if
+                   attrlist = attrlist//','//line(j:j+i-2)
                    j = j+i
                 end if
              else
@@ -812,7 +811,7 @@ CONTAINS
     do while (.true.)
        read(xmlunit,'(a)', end=10) line
        ll = len_trim(line)
-       if ( ll == 1024 ) then
+       if ( ll == maxline ) then
           print *, 'line too long'
           if (present(ierr)) ierr = 1
           return
