@@ -20,7 +20,7 @@ MODULE xc_interfaces
      !
      SUBROUTINE get_xclib_IDs( iexch_, icorr_, igcx_, igcc_ )
        !
-       USE kind_l,  ONLY: DP
+       USE dft_par_mod
        IMPLICIT NONE
        INTEGER, INTENT(IN) :: iexch_, icorr_
        INTEGER, INTENT(IN) :: igcx_, igcc_
@@ -34,6 +34,7 @@ MODULE xc_interfaces
      SUBROUTINE get_ldaxcparlib( finite_size_cell_volume_, exx_started_, exx_fraction_ )
        !
        USE kind_l,  ONLY: DP
+       USE dft_par_mod
        IMPLICIT NONE
        REAL(DP), OPTIONAL, INTENT(IN) :: finite_size_cell_volume_
        LOGICAL , OPTIONAL, INTENT(IN) :: exx_started_
@@ -48,8 +49,9 @@ MODULE xc_interfaces
      SUBROUTINE get_ggaxcparlib( gau_scr_par_, exx_started_, exx_fraction_ )
        !
        USE kind_l,  ONLY: DP
+       USE dft_par_mod
        IMPLICIT NONE
-       REAL(DP), OPTIONAL, INTENT(IN) :: gau_scr_par_
+       REAL(DP), INTENT(IN) :: gau_scr_par_
        LOGICAL , OPTIONAL, INTENT(IN) :: exx_started_
        REAL(DP), OPTIONAL, INTENT(IN) :: exx_fraction_
        !
@@ -62,6 +64,7 @@ MODULE xc_interfaces
      SUBROUTINE get_lda_threshold( rho_threshold_ )
        !
        USE kind_l,  ONLY: DP
+       USE dft_par_mod
        IMPLICIT NONE
        REAL(DP), INTENT(IN) :: rho_threshold_
        !
@@ -74,6 +77,7 @@ MODULE xc_interfaces
      SUBROUTINE get_GGA_threshold( rho_threshold_, grho_threshold_ )
        !
        USE kind_l,  ONLY: DP
+       USE dft_par_mod
        IMPLICIT NONE
        REAL(DP), INTENT(IN) :: rho_threshold_
        REAL(DP), INTENT(IN) :: grho_threshold_

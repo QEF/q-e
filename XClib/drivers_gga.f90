@@ -44,6 +44,10 @@ SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   ntids = omp_get_num_threads()
 #endif
   !
+  
+  !print *, 'ooooo', exx_started, exx_fraction, gau_parameter
+  
+  
 !$omp parallel if(ntids==1)
 !$omp do private( rho, grho, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
 !$omp             v2x, v2x_, v2xsr, sc, v1c, v2c )

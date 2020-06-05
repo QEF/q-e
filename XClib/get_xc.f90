@@ -53,8 +53,8 @@ SUBROUTINE get_ggaxcparlib( gau_scr_par_, exx_started_, exx_fraction_ )
    !
    IMPLICIT NONE
    !
-   REAL(DP), OPTIONAL, INTENT(IN) :: gau_scr_par_
-   LOGICAL,  OPTIONAL, INTENT(IN) :: exx_started_
+   REAL(DP), INTENT(IN) :: gau_scr_par_
+   LOGICAL, OPTIONAL, INTENT(IN) :: exx_started_
    REAL(DP), OPTIONAL, INTENT(IN) :: exx_fraction_
    !
    IF ( igcx == 12 ) &
@@ -62,12 +62,14 @@ SUBROUTINE get_ggaxcparlib( gau_scr_par_, exx_started_, exx_fraction_ )
    IF ( igcx == 20 ) &
       gau_parameter = gau_scr_par_
    !
-   exx_started = .FALSE.
+   !exx_started = .FALSE.
    IF ( present(exx_started_) ) &
       exx_started = exx_started_
-   exx_fraction = 0.d0
-   IF ( present(exx_fraction_) ) &
-      exx_fraction = exx_fraction_
+   !exx_fraction = 0.d0
+   IF ( present(exx_fraction_) ) THEN
+      exx_fraction = 0.d0
+      IF ( exx_started ) exx_fraction = exx_fraction_ 
+   ENDIF
    !
    RETURN
    !

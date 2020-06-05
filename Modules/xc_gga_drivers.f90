@@ -131,12 +131,26 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   igcx = get_igcx()
   igcc = get_igcc()
   !
+  !----PROVISIONAL ---
+  IF ( ANY(.NOT.is_libxc(3:4)) ) THEN
+     CALL get_gga_threshold( rho_threshold, grho_threshold )
+     exx_started  = exx_is_active()
+     exx_fraction = get_exx_fraction()
+     CALL get_ggaxc_param( 0.d0, exx_started, exx_fraction )
+     IF ( igcx==12 ) THEN
+       screening_parameter = get_screening_parameter()
+       CALL get_ggaxc_param( screening_parameter )
+     ELSEIF (igcx==20 ) THEN
+       gau_parameter = get_gau_parameter()
+       CALL get_ggaxc_param( gau_parameter )
+     ENDIF
+  ENDIF
+  !----
+  !
   ex = 0.0_DP ;  v1x = 0.0_DP ;  v2x = 0.0_DP
   ec = 0.0_DP ;  v1c = 0.0_DP ;  v2c = 0.0_DP
   IF ( PRESENT(v2c_ud) ) v2c_ud = 0.0_DP
   !
-  !set LDA threshold
-  IF ( ANY(.NOT.is_libxc(3:4)) ) CALL get_gga_threshold( rho_threshold, grho_threshold )
   !
 #if defined(__LIBXC)
   !
@@ -186,17 +200,6 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   ENDIF
   !
   IF ( ns==1 .AND. ANY(.NOT.is_libxc(3:4)) ) THEN
-     !
-     exx_started  = exx_is_active()
-     exx_fraction = get_exx_fraction()
-     CALL get_ggaxc_param( 0.d0, exx_started, exx_fraction )
-     IF ( igcx==12 ) THEN
-       gau_parameter = get_gau_parameter()
-       CALL get_ggaxc_param( gau_parameter )
-     ELSEIF (igcx==20 ) THEN
-       screening_parameter = get_screening_parameter()
-       CALL get_ggaxc_param( screening_parameter )
-     ENDIF
      !
      CALL gcxc( length, ABS(rho(:,1)), sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )  
      !
@@ -349,17 +352,6 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   ALLOCATE( arho(length,ns), grho2(length,ns) )
   arho  = 0.0_DP
   grho2 = 0.0_DP
-  !
-  exx_started  = exx_is_active()
-  exx_fraction = get_exx_fraction()
-  CALL get_ggaxc_param( 0.d0, exx_started, exx_fraction )
-  IF ( igcx==12 ) THEN
-    gau_parameter = get_gau_parameter()
-    CALL get_ggaxc_param( gau_parameter )
-  ELSEIF (igcx==20 ) THEN
-    screening_parameter = get_screening_parameter()
-    CALL get_ggaxc_param( screening_parameter )
-  ENDIF
   !
   IF ( ns == 1 ) THEN
      !
