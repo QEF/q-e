@@ -60,6 +60,9 @@ MODULE realus
   !! collection of the ranks of the members of the bbox group in order of appearance
   INTEGER, ALLOCATABLE :: send_id(:), recv_id(:), datasize(:), break_at(:), break_ir0(:), offset(:)
   !! MPI send/recv info
+  INTEGER, ALLOCATABLE :: send_request(:)
+  !! MPI list of active non-blocking send requests in box_to_bbox/bbox_to_box conversions;
+  !! used to delay completion in order to hide communication time
   LOGICAL :: tbbox
   !! .true. if atomic boxes are broken and redistributed
   !
@@ -827,6 +830,8 @@ MODULE realus
       REAL(DP),ALLOCATABLE :: xsp(:), ysp(:), wsp(:), d1y(:), d2y(:)
       REAL(DP)             :: mbr, mbx, mby, mbz, dmbx, dmby, dmbz
       REAL(DP)             :: inv_nr1s, inv_nr2s, inv_nr3s, tau_ia(3), boxradsq_ia, boxrad_ia
+
+      integer              :: nsend ! number of non-blocking sends left behind by box_to_bbox
       !
       initialisation_level = initialisation_level + 5
       IF ( .not. okvan ) CALL errore &
@@ -986,20 +991,30 @@ MODULE realus
       do ia =1,nat
          ! store  box_psic -> psic index (used in add_box_to_psic)
          box_beta ( box_s(ia):box_e(ia) ) =  tmp_box_beta(  1:maxbox_beta(ia),ia)
-         ! convert positions and distances from box to bbox and store them (uses box_psic as vector)
-         !-xy components
+      end do
+      ! convert positions and distances from box to bbox and store them (uses box_psic as vector)
+      !-xy components
+      do ia =1,nat
          box_psic ( box_s(ia):box_e(ia) ) = CMPLX( tmp_xyz_beta( 1, 1:maxbox_beta(ia), ia), &
                                                    tmp_xyz_beta( 2, 1:maxbox_beta(ia), ia)  )
-         if (tbbox) call box_to_bbox
+      end do
+      if (tbbox) call box_to_bbox ( nsend )
+      do ia =1,nat
          xyz_beta ( 1, bbox_s(ia):bbox_e(ia) ) = dble ( box_psic ( bbox_s(ia):bbox_e(ia) ) )
          xyz_beta ( 2, bbox_s(ia):bbox_e(ia) ) = aimag( box_psic ( bbox_s(ia):bbox_e(ia) ) )
-         !-z component & dist^2
+      end do
+      if (tbbox) call wait_bbox_send_to_complete ( nsend )
+      !-z component & dist^2
+      do ia =1,nat
          box_psic ( box_s(ia):box_e(ia) ) = CMPLX( tmp_xyz_beta( 3, 1:maxbox_beta(ia), ia), &
                                                    tmp_boxdist_beta( 1:maxbox_beta(ia), ia) )
-         if (tbbox) call box_to_bbox
+      end do
+      if (tbbox) call box_to_bbox ( nsend )
+      do ia =1,nat
          xyz_beta ( 3, bbox_s(ia):bbox_e(ia) ) = dble ( box_psic ( bbox_s(ia):bbox_e(ia) ) )
          boxdist_beta( bbox_s(ia):bbox_e(ia) ) = aimag( box_psic ( bbox_s(ia):bbox_e(ia) ) )
       end do
+      if (tbbox) call wait_bbox_send_to_complete ( nsend )
       !
       call set_xkphase(1)
       !
@@ -1235,6 +1250,7 @@ MODULE realus
          !
          ALLOCATE ( send_id(nproc_bbox-1), recv_id(nproc_bbox-1), datasize(nproc_bbox-1) )
          ALLOCATE ( break_at(nproc_bbox-1), break_ir0(nproc_bbox-1), offset(nproc_bbox-1) )
+         ALLOCATE ( send_request(nproc_bbox-1) )
 
          ! collected atomic box dimensions to plan grid point redistribution
          ALLOCATE ( mbox(nat,nproc_bbox) )
@@ -1322,7 +1338,7 @@ MODULE realus
     !
     SUBROUTINE beta_box_turning(nat, maxbox_beta, maxbbox_beta, tbbox )
       !! This routine complete the box/bbox redistribution by findig the permutation needed to
-      !! pack the grid pointis in bbox in contigous list for each atom
+      !! pack the grid points in bbox in contiguous lists for each atom
       !
       IMPLICIT NONE
       !
@@ -1365,7 +1381,7 @@ MODULE realus
       if ( ALLOCATED ( bbox_ind ) ) DEALLOCATE( bbox_ind )
       if ( ALLOCATED ( bbox_aux ) ) DEALLOCATE( bbox_aux )
 
-      if (tbbox) call box_to_bbox
+      if (tbbox) call box_to_bbox ()
 
       ALLOCATE ( bbox_ind ( bboxtot ), bbox_aux ( bboxtot ) )
 
@@ -1390,7 +1406,7 @@ MODULE realus
     END SUBROUTINE beta_box_turning
     !
     !------------------------------------------------------------------------
-    SUBROUTINE box_to_bbox
+    SUBROUTINE box_to_bbox ( nsend_ )
       !-----------------------------------------------------------------------
       !! This routine redistributes box_psic inplace from the box to the bbox ordering
       !! a final index turn-around is neeed to bring same atom points in contiguous positions
@@ -1399,9 +1415,11 @@ MODULE realus
       !
       IMPLICIT NONE
       !
-      INTEGER :: ip, id_send, id_recv, ndata, ir0, msg_tag, my_size, box_ir
+      INTEGER, OPTIONAL, INTENT(OUT) :: nsend_
+      INTEGER :: ip, id_send, id_recv, ndata, ir0, msg_tag, my_size, box_ir, nsend
       LOGICAL :: sending, recving
       !
+      if ( present(nsend_) ) nsend_ = 0 ! initialize nsend_ if present
       if ( .not. tbbox ) return
 
 !      write ( stdout, * ) 'enter  box_to_bbox '; FLUSH(6)
@@ -1410,6 +1428,7 @@ MODULE realus
 
       my_size = boxtot
 
+      nsend = 0
       do ip =1, nproc_bbox -1
 
          msg_tag = ip
@@ -1427,24 +1446,33 @@ MODULE realus
 !         write (*,*) 'offset is', ir0; FLUSH(6)
 !         write (*,*) 'sending is', sending,' recving is', recving ; FLUSH(6)
 
+!recv should be blocking as box_psic is accesssed immediately after
          if (recving) then ! id_recv is receiving ndata from id_send
 !            write ( stdout, * )  id_recv, ' receives ',ndata,' from ', id_send ; FLUSH(6)
             call mp_recv ( box_psic(my_size+1:my_size+ndata), bbox_rank(id_send), msg_tag, intra_bbox_comm )
             my_size = my_size + ndata
          end if
-
+!send could be non-blocking so that computation can start with the unmodified part of box_psic
          if (sending) then ! id_send is sending ndata to id_recv
 !            write ( stdout, * )  id_send, ' sends ',ndata,' to ', id_recv ; FLUSH(6)
+            nsend = nsend + 1
             my_size = my_size - ndata
             if (ir0 .ne. my_size) call errore('box_to_bbox',' wrong size ', ip)
-            call mp_send ( box_psic(my_size+1:my_size+ndata), bbox_rank(id_recv), msg_tag, intra_bbox_comm )
+            call mp_send ( box_psic(my_size+1:my_size+ndata), bbox_rank(id_recv), msg_tag, intra_bbox_comm, &
+                                                                                        send_request(nsend) )
          end if
 
 !         write(stdout,*) 'done', my_size ; FLUSH(6)
 
       end do
 
-      call mp_barrier ( intra_bbox_comm )
+      if (present(nsend_)) then ! return nsend_ for a delayed completion of the non-blocking sends
+         nsend_ = nsend
+      else ! wait here for the completion of the non-blocking sends (if any)
+         call wait_bbox_send_to_complete ( nsend )
+      end if
+
+!      call mp_barrier ( intra_bbox_comm )
 
       if (my_size .ne. bboxtot) call errore('box_to_bbox',' wrong size ', nproc_bbox )
 
@@ -1461,6 +1489,23 @@ MODULE realus
       !
       RETURN
     END SUBROUTINE box_to_bbox
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE wait_bbox_send_to_complete ( nsend )
+      !-----------------------------------------------------------------------
+      !! wait for the non blocking send in box_to_bbox to complete
+      !! so that box_psic can be freely modified again
+      !
+      USE mp,         ONLY : mp_waitall
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN) :: nsend
+
+      if (nsend > 0) call mp_waitall( send_request(1:nsend) )
+
+      RETURN
+    END SUBROUTINE wait_bbox_send_to_complete
     !
     !------------------------------------------------------------------------
     SUBROUTINE bbox_to_box
@@ -1510,12 +1555,13 @@ MODULE realus
 !         write (*,*) 'offset is', ir0; FLUSH(6)
 !         write (*,*) 'un-sending is', sending,' un-recving is', recving ; FLUSH(6)
 
+!send could be blocking or non-blocking it (should be starting before receiving because it has less work)
          if (recving) then ! id_recv is actually sending ndata to id_send
 !            write ( stdout, * )  id_recv, ' sends ',ndata,' to ', id_send ; FLUSH(6)
             my_size = my_size - ndata
             call mp_send ( box_psic(my_size+1:my_size+ndata), bbox_rank(id_send), msg_tag, intra_bbox_comm )
          end if
-
+!receive must be blocking as data are needed immediately after and it should be the bottleneck
          if (sending) then ! id_send is actually receiving ndata from id_recv
 !            write ( stdout, * )  id_send, ' receives ',ndata,' from ', id_recv ; FLUSH(6)
             if (ir0 .ne. my_size) call errore('bbox_to_box',' wrong size ', ip)
@@ -1972,7 +2018,7 @@ MODULE realus
     REAL(DP), ALLOCATABLE, DIMENSION(:) :: wr, wi
     REAL(DP) :: bcr, bci
     REAL(DP), DIMENSION(:,:), INTENT(out) :: becp_r
-    integer :: ir, box_ir, maxbox, ijkb0, nh_nt
+    integer :: ir, box_ir, maxbox, ijkb0, nh_nt, nsend
     !
     REAL(DP), EXTERNAL :: ddot
     !
@@ -1998,7 +2044,7 @@ MODULE realus
     END DO
     !$omp end parallel do
 
-    if (tbbox) call box_to_bbox
+    if (tbbox) call box_to_bbox ( nsend )
 
     ALLOCATE( wr(maxbox), wi(maxbox) )
     ! working arrays to order the points in the clever way
@@ -2052,6 +2098,8 @@ MODULE realus
        !
     ENDDO
     DEALLOCATE( wr, wi )
+
+    if (tbbox) call wait_bbox_send_to_complete ( nsend )
     !
     CALL mp_sum( becp_r( :, ibnd ), intra_bgrp_comm )
     IF ( ibnd+1 <= last ) CALL mp_sum( becp_r( :, ibnd+1 ), intra_bgrp_comm )
@@ -2090,7 +2138,7 @@ MODULE realus
     REAL(DP) :: fac
     REAL(DP), ALLOCATABLE, DIMENSION(:) :: wr, wi
     REAL(DP) :: bcr, bci
-    integer :: ir, box_ir, maxbox, ijkb0, nh_nt
+    integer :: ir, box_ir, maxbox, ijkb0, nh_nt, nsend
     !
     REAL(DP), EXTERNAL :: ddot
     !
@@ -2114,7 +2162,7 @@ MODULE realus
     END DO
     !$omp end parallel do
 
-    if (tbbox) call box_to_bbox
+    if (tbbox) call box_to_bbox ( nsend )
 
     ALLOCATE( wr(maxbox), wi(maxbox) )
     ! working arrays to order the points in the clever way
@@ -2153,6 +2201,8 @@ MODULE realus
        !
     ENDDO
     DEALLOCATE( wr, wi )
+
+    if (tbbox) call wait_bbox_send_to_complete ( nsend )
     !
     CALL mp_sum( becp%k( :, ibnd ), intra_bgrp_comm )
     CALL stop_clock( 'calbec_rs' )
