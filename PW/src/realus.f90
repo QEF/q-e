@@ -60,7 +60,7 @@ MODULE realus
   !! collection of the ranks of the members of the bbox group in order of appearance
   INTEGER, ALLOCATABLE :: send_id(:), recv_id(:), datasize(:), break_at(:), break_ir0(:), offset(:)
   !! MPI send/recv info
-  INTEGER, ALLOCATABLE :: send_request(:)
+  INTEGER, ALLOCATABLE :: send_requests(:)
   !! MPI list of active non-blocking send requests in box_to_bbox/bbox_to_box conversions;
   !! used to delay completion in order to hide communication time
   LOGICAL :: tbbox
@@ -978,9 +978,9 @@ MODULE realus
       !
       ! ... now store grid point in a more convenient place (sometime in box sometime in bbox) ...
       !
-      ALLOCATE( box_beta     ( boxtot ) )           ! the box_psic -> psic index (in box)
+      ALLOCATE( box_beta     ( boxtot ) )            ! the box_psic -> psic index (in box)
       ALLOCATE( xyz_beta  ( 3, bboxtot ) )           ! the relative position (in bbox)
-      ALLOCATE( boxdist_beta ( bboxtot ) )           ! and its lenght squared (in bbox)
+      ALLOCATE( boxdist_beta ( bboxtot ) )           ! and its length squared (in bbox)
       ALLOCATE( xkphase      ( bboxtot ) )           ! the phase (in bbox)
       ALLOCATE( box_psic( max( bboxtot, boxtot ) ) ) ! used to communicate between box and bbox
       !
@@ -1198,7 +1198,7 @@ MODULE realus
 
 ! collect optimal colors for reporting and redistribution
          color(:) = 0 ; color(me_bgrp+1) = my_color
-         CALL mp_sum(  color, intra_bgrp_comm )
+         CALL mp_sum( color, intra_bgrp_comm )
 
          np = nproc_bgrp / nn
 
@@ -1250,7 +1250,7 @@ MODULE realus
          !
          ALLOCATE ( send_id(nproc_bbox-1), recv_id(nproc_bbox-1), datasize(nproc_bbox-1) )
          ALLOCATE ( break_at(nproc_bbox-1), break_ir0(nproc_bbox-1), offset(nproc_bbox-1) )
-         ALLOCATE ( send_request(nproc_bbox-1) )
+         ALLOCATE ( send_requests(300) ) ! hopefully a safe allocation. should be fixed
 
          ! collected atomic box dimensions to plan grid point redistribution
          ALLOCATE ( mbox(nat,nproc_bbox) )
@@ -1312,7 +1312,9 @@ MODULE realus
             end do
          end do
          do id =1, nproc_bbox
-            WRITE ( stdout, * ) ind(id),':', data(id); FLUSH(6)
+            do ib =1, nproc_bbox
+               if (ind0(ib) == id ) WRITE ( stdout, * ) ind(id),':', data(ib); FLUSH(6)
+            end do
          end do
          WRITE ( stdout, * ) 'total number of points moved ', delta_tot; FLUSH(6)
          maxbbox_beta(:) = mbox(:, my_id )  ! these are the atomic dimensions after redistribution
@@ -1367,7 +1369,7 @@ MODULE realus
 
       ALLOCATE ( grid_check(nat) ); grid_check(1:nat) = 0
       do box_ir =  1, boxtot
-         ia = nint( real (box_psic ( box_ir ) ) )
+         ia = nint( dble (box_psic ( box_ir ) ) )
          grid_check(ia) = grid_check(ia) + 1
       end do
       capel = MAXVAL (ABS ( grid_check(1:nat)-maxbox_beta(1:nat) ) )
@@ -1375,7 +1377,7 @@ MODULE realus
          write (stdout,*) 'box atomic grids'
          write (stdout,*) (grid_check(ia),ia=1,nat)
          write (stdout,*) (maxbox_beta(ia),ia=1,nat)
-         call errore ('beta_box_turning',' wrong bbox grid number ', capel )
+         call errore ('beta_box_turning',' wrong box grid number ', capel )
       END IF
 
       if ( ALLOCATED ( bbox_ind ) ) DEALLOCATE( bbox_ind )
@@ -1384,10 +1386,10 @@ MODULE realus
       if (tbbox) call box_to_bbox ()
 
       ALLOCATE ( bbox_ind ( bboxtot ), bbox_aux ( bboxtot ) )
-
-      grid_check(1:nat) = 0
+      grid_check(1:nat) = 0 ; bbox_is_ordered = .true.
+      WRITE(stdout,*) 'BBOXTOT', bboxtot
       do box_ir =  1, bboxtot
-         ia = nint( real (box_psic (box_ir ) ) )
+         ia = nint( dble (box_psic (box_ir ) ) )
          grid_check(ia) = grid_check(ia) + 1
          bbox_ind ( box_ir ) = bbox0(ia)+grid_check(ia)
       end do
@@ -1438,13 +1440,13 @@ MODULE realus
          ndata = datasize(ip)
          ir0   = offset(ip)
 
-         !NB this s the intended direct operation so variable name means mean what they say
-!         write (*,*) 'msg_tag is',msg_tag; FLUSH(6)
-!         write (*,*) 'sending is',id_send, bbox_rank(id_send); FLUSH(6)
-!         write (*,*) 'recving is',id_recv, bbox_rank(id_recv); FLUSH(6)
-!         write (*,*) 'ndata is', datasize(ip); FLUSH(6)
-!         write (*,*) 'offset is', ir0; FLUSH(6)
-!         write (*,*) 'sending is', sending,' recving is', recving ; FLUSH(6)
+         !NB this is the intended direct operation so variable names mean what they say
+!         write (stdout,*) 'msg_tag is',msg_tag; FLUSH(6)
+!         write (stdout,*) 'sending is',id_send, bbox_rank(id_send); FLUSH(6)
+!         write (stdout,*) 'recving is',id_recv, bbox_rank(id_recv); FLUSH(6)
+!         write (stdout,*) 'ndata is', datasize(ip); FLUSH(6)
+!         write (stdout,*) 'offset is', ir0; FLUSH(6)
+!         write (stdout,*) 'sending is', sending,' recving is', recving ; FLUSH(6)
 
          if ( ndata == 0 ) cycle
 
@@ -1457,11 +1459,10 @@ MODULE realus
 !send could be non-blocking so that computation can start with the unmodified part of box_psic
          if (sending) then ! id_send is sending ndata to id_recv
 !            write ( stdout, * )  id_send, ' sends ',ndata,' to ', id_recv ; FLUSH(6)
-            nsend = nsend + 1
             my_size = my_size - ndata
             if (ir0 .ne. my_size) call errore('box_to_bbox',' wrong size ', ip)
             call mp_send ( box_psic(my_size+1:my_size+ndata), bbox_rank(id_recv), msg_tag, intra_bbox_comm, &
-                                                                                        send_request(nsend) )
+                                                                                       send_requests, nsend )
          end if
 
 !         write(stdout,*) 'done', my_size ; FLUSH(6)
@@ -1504,13 +1505,13 @@ MODULE realus
       !
       INTEGER, INTENT(IN) :: nsend
 
-      if (nsend > 0) call mp_waitall( send_request(1:nsend) )
+      if (nsend > 0) call mp_waitall( send_requests(1:nsend) )
 
       RETURN
     END SUBROUTINE wait_bbox_send_to_complete
     !
     !------------------------------------------------------------------------
-    SUBROUTINE bbox_to_box
+    SUBROUTINE bbox_to_box ( nsend )
       !-----------------------------------------------------------------------
       !! This routine redistributes box_psic inplace from the box to the bbox ordering
       !! an initial index turn-around brings atom points in the needed send/recv locations
@@ -1519,9 +1520,12 @@ MODULE realus
       !
       IMPLICIT NONE
       !
+      INTEGER, INTENT(OUT) :: nsend
+      !
       INTEGER :: ip, id_send, id_recv, ndata, ir0, msg_tag, my_size, box_ir
       LOGICAL :: sending, recving
       !
+      nsend = 0 ! initialize nsend
       if ( .not. tbbox ) return
 
 !      write ( stdout, * ) 'enter  bbox_to_box '; FLUSH(6)
@@ -1549,19 +1553,22 @@ MODULE realus
          ndata = datasize(ip)
          ir0   = offset(ip)
 
-         !NB this the inverse of box_to_bbox so variable name means their opposite
-!         write (*,*) 'msg_tag is',msg_tag; FLUSH(6)
-!         write (*,*) 'un-sending is',id_send, bbox_rank(id_send); FLUSH(6)
-!         write (*,*) 'un-recving is',id_recv, bbox_rank(id_recv); FLUSH(6)
-!         write (*,*) 'ndata is', datasize(ip); FLUSH(6)
-!         write (*,*) 'offset is', ir0; FLUSH(6)
-!         write (*,*) 'un-sending is', sending,' un-recving is', recving ; FLUSH(6)
+         !NB this is the inverse of box_to_bbox so variable names mean their opposite
+!         write (stdout,*) 'msg_tag is',msg_tag; FLUSH(6)
+!         write (stdout,*) 'un-sending is',id_send, bbox_rank(id_send); FLUSH(6)
+!         write (stdout,*) 'un-recving is',id_recv, bbox_rank(id_recv); FLUSH(6)
+!         write (stdout,*) 'ndata is', datasize(ip); FLUSH(6)
+!         write (stdout,*) 'offset is', ir0; FLUSH(6)
+!         write (stdout,*) 'un-sending is', sending,' un-recving is', recving ; FLUSH(6)
 
-!send could be blocking or non-blocking it (should be starting before receiving because it has less work)
+         if ( ndata == 0 ) cycle
+
+!send could be non-blocking so it can start before receive proc is ready and data are immediately ready.
          if (recving) then ! id_recv is actually sending ndata to id_send
 !            write ( stdout, * )  id_recv, ' sends ',ndata,' to ', id_send ; FLUSH(6)
             my_size = my_size - ndata
-            call mp_send ( box_psic(my_size+1:my_size+ndata), bbox_rank(id_send), msg_tag, intra_bbox_comm )
+            call mp_send ( box_psic(my_size+1:my_size+ndata), bbox_rank(id_send), msg_tag, intra_bbox_comm, &
+                                                                                       send_requests, nsend )
          end if
 !receive must be blocking as data are needed immediately after and it should be the bottleneck
          if (sending) then ! id_send is actually receiving ndata from id_recv
@@ -2535,9 +2542,9 @@ MODULE realus
     !
     IMPLICIT NONE
     !
-    INTEGER :: ia, box_ir
+    INTEGER :: ia, box_ir, nsend
 
-    if (tbbox) call bbox_to_box
+    if (tbbox) call bbox_to_box ( nsend )
 
     !$omp parallel
     DO ia = 1, nat
@@ -2548,6 +2555,8 @@ MODULE realus
        !$omp end do
     END DO
     !$omp end parallel
+
+    if (tbbox) call wait_bbox_send_to_complete ( nsend )
 
     RETURN
 
