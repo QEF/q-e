@@ -50,6 +50,22 @@ inputs_args = ('uspp.in' ,''), ('uspp-2.in' ,''), ('uspp-cg.in' ,''), ('uspp-hyb
 program = PW
 inputs_args = ('vdW-DF3-opt1.in',''), ('vdW-DF3-opt2.in',''), ('rVV10.in',''), ('vdw-d2.in',''), ('vdw-d3.in',''), ('vdw-ts.in',''), ('xdm.in','')
 
+[pw_workflow_vc-relax_dos/]
+program = PW
+inputs_args = ('vc-relax1.in' ,'1'), ('dos2.in' ,'2')
+
+[pw_workflow_relax_relax/]
+program = PW
+inputs_args = ('relax1.in' ,'1'), ('relax2.in' ,'2')
+
+[pw_workflow_vc-relax_scf/]
+program = PW
+inputs_args = ('vc-relax1.in' ,'1'), ('scf2.in' ,'2')
+
+[pw_workflow_scf_dos/]
+program = PW
+inputs_args = ('scf1.in' ,'1'), ('dos2.in' ,'2')
+
 [ph_base/]
 program = PH
 inputs_args = ('c.scf.in', '1'), ('c.phG.in', '2'), ('ni.scf.in', '1'), ('ni.phX.in', '2'), ('si.scf.in', '1'), ('si.phG.in', '2'), ('si.phX.in', '2'), ('nipaw.scf.in', '1'), ('nipaw.phX.in', '2')

@@ -1932,13 +1932,23 @@ MODULE read_namelists_module
        !
        ios = 0
        IF ( ionode ) THEN
-          IF ( ( TRIM( calculation ) /= 'scf'   .AND. &
-                 TRIM( calculation ) /= 'nscf'  .AND. &
+          IF ( ( TRIM( calculation ) /= 'nscf'  .AND. &
                  TRIM( calculation ) /= 'bands' ) .OR. &
                ( TRIM( prog_ ) == 'PW+iPi' ) ) THEN
              READ( unit_loc, ions, iostat = ios )
           END IF
+          !
+          ! SCF might (optionally) have &ions :: ion_positions = 'from_file'
+          !
+          IF ( (ios /= 0) .AND. TRIM( calculation ) == 'scf' ) THEN
+             ! presumably, not found: rewind the file pointer to the location
+             ! of the previous present section, in this case electrons
+             REWIND( unit_loc )
+             READ( unit_loc, electrons, iostat = ios )
+          END IF
+          !
        END IF
+       !
        CALL check_namelist_read(ios, unit_loc, "ions")
        !
        CALL ions_bcast( )
