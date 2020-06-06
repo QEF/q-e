@@ -34,7 +34,7 @@ SUBROUTINE iosys()
                             efield_cart_ => efield_cart, &
                             phase_control
   !
-  USE cell_base,     ONLY : at, alat, omega, cell_base_init, init_dofree, &
+  USE cell_base,     ONLY : at, alat, omega, bg, cell_base_init, init_dofree, &
                             press_       => press, &
                             wmass_       => wmass
   !
@@ -340,7 +340,7 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256):: dft_
   !
   INTEGER  :: ia, nt, tempunit, i, j
-  LOGICAL  :: exst, parallelfs, domag
+  LOGICAL  :: exst, parallelfs, domag, stop_on_error
   REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp, V
   CHARACTER(len=256) :: tempfile
   INTEGER, EXTERNAL  :: find_free_unit
@@ -1486,8 +1486,21 @@ SUBROUTINE iosys()
      !
      ! ... Read atomic positions from file
      !
-     CALL read_conf_from_file( .TRUE., nat_, ntyp, tau, alat, at )
-     pseudo_dir_cur = restart_dir()
+     ! If this is not an nscf run don't stop on error also keep the pseudo
+     ! directory as is
+     IF (lscf) THEN
+        stop_on_error = .FALSE.
+     ELSE
+        stop_on_error = .TRUE.
+        pseudo_dir_cur = restart_dir()
+     END IF
+     !
+     CALL read_conf_from_file( stop_on_error, nat_, ntyp, tau, alat, at )
+     !
+     ! Update reciprocal lattice and volume (may be updated if coming from a vc run)
+     !
+     CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
+     CALL volume (alat, at(:,1), at(:,2), at(:,3), omega)
      !
   ELSE
      !
