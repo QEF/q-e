@@ -2058,7 +2058,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
                 opt -val 'cg' {
                     Conjugate-gradient-like band-by-band diagonalization.
-                    Slower than 'david' but uses less memory and is 
+                    MUCH slower than 'david' but uses less memory and is 
                     (a little bit) more robust.
                 }
 
@@ -2231,7 +2231,25 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
     
     namelist IONS  {
         label { 
-            input this namelist only if @ref calculation == 'relax', 'md', 'vc-relax', or 'vc-md' 
+            REQUIRED if @ref calculation == 'relax', 'md', 'vc-relax', or 'vc-md' 
+            OPTIONAL for @ref calculation == 'scf' (only @ref ions_positions is used)
+        }
+ 
+
+        var ion_positions -type CHARACTER {
+            default { 'default' }
+            options {
+                info { Available options are: }
+                
+                opt -val 'default' {
+                    if restarting, use atomic positions read from the
+                    restart file; in all other cases, use atomic
+                    positions from standard input.
+                }
+                opt -val 'from_input' {
+                    read atomic positions from standard input, even if restarting.
+                }
+            }
         }
     
         var ion_dynamics -type CHARACTER {
@@ -2291,23 +2309,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
-        var ion_positions -type CHARACTER {
-            default { 'default' }
-            options {
-                info { Available options are: }
-                
-                opt -val 'default' {
-                    if restarting, use atomic positions read from the
-                    restart file; in all other cases, use atomic
-                    positions from standard input.
-                }
-                opt -val 'from_input' {
-                    restart the simulation with atomic positions read
-                    from standard input, even if restarting.
-                }
-            }
-        }
- 
         var pot_extrapolation -type CHARACTER { 
             default { 'atomic' }
             options {
