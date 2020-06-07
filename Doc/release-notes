@@ -42,6 +42,8 @@ Fixed in dev branch:
     read from file because read_file had been replaced by read_file_new
  
 Incompatible changes in dev branch:
+  * Default value of parameter "diago_david_ndim" changed to 2:
+    uses less RAM, execution time sometimes sherter, sometimes longer.
   * Grouping of inlc values into ranges for different developments.
     WARNING: inlc for rVV10 has been changed to inlc=26.
   * Conversion from 1D FFT real-space index to 3D positions moved into a
@@ -54,7 +56,7 @@ Incompatible changes in dev branch:
     'laxlib.fh', descriptors replaced by integer values
   * Interpolation table for Q(G) is in a.u. and no longer in 2pi/a units
   * Part of pseudopotential-related code moved to new directory upflib/ and
-    into library libupf.a. Directory upftools/ deleted.
+    into library libupf.a. Directory upftools/ is obsolescent.
 
 New in 6.5 branch:
   * For non-local functionals of the vdW-DF and rVV10 families the kernel is

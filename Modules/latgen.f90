@@ -798,7 +798,7 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
   real(DP), INTENT(inout) :: a1(3), a2(3), a3(3)
   real(DP), INTENT(out) :: omega
   !
-  character(len=32) :: errormsg
+  character(len=54) :: errormsg
   integer :: ierr
 
   CALL latgen_lib(ibrav,celldm,a1,a2,a3,omega, ierr, errormsg)

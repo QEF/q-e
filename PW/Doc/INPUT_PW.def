@@ -2058,7 +2058,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
                 opt -val 'cg' {
                     Conjugate-gradient-like band-by-band diagonalization.
-                    Slower than 'david' but uses less memory and is 
+                    MUCH slower than 'david' but uses less memory and is 
                     (a little bit) more robust.
                 }
 
@@ -2231,9 +2231,41 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
     
     namelist IONS  {
         label { 
-            input this namelist only if @ref calculation == 'relax', 'md', 'vc-relax', or 'vc-md' 
+            REQUIRED if @ref calculation == 'relax', 'md', 'vc-relax', or 'vc-md' 
+            OPTIONAL for @ref calculation == 'scf' (only @ref ion_positions is used)
         }
-    
+ 
+
+        var ion_positions -type CHARACTER {
+            default { 'default' }
+            options {
+                info { Available options are: }
+                
+                opt -val 'default' {
+                    if restarting, use atomic positions read from the
+                    restart file; in all other cases, use atomic
+                    positions from standard input.
+                }
+                opt -val 'from_input' {
+                    read atomic positions from standard input, even if restarting.
+                }
+            }
+        }
+
+        var ion_velocities -type CHARACTER {
+            default { 'default' }
+            info {
+               initial ionic velocities
+               'default'     : start a new simulation from random thermalized
+	                       distribution of velocities if @ref tempw is set,
+			       with zero velocities otherwise; restart from
+			       atomic velocities read from the restart file
+               'from_input'  : start or continue the simulation with atomic
+	                       velocities read from standard input - see card
+			       @ref ATOMIC_VELOCITIES
+            }
+        }
+
         var ion_dynamics -type CHARACTER {
             options {
                 info {
@@ -2291,23 +2323,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
-        var ion_positions -type CHARACTER {
-            default { 'default' }
-            options {
-                info { Available options are: }
-                
-                opt -val 'default' {
-                    if restarting, use atomic positions read from the
-                    restart file; in all other cases, use atomic
-                    positions from standard input.
-                }
-                opt -val 'from_input' {
-                    restart the simulation with atomic positions read
-                    from standard input, even if restarting.
-                }
-            }
-        }
- 
         var pot_extrapolation -type CHARACTER { 
             default { 'atomic' }
             options {
@@ -3200,6 +3215,36 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
     }    
+
+    #
+    # ATOMIC_VELOCITIES
+    #
+    card ATOMIC_VELOCITIES {
+	flag atomvel_type -use optional {
+	    enum {  a.u }
+	    	}
+
+	label { 
+	    Optional card, reads velocities from standard input  
+	}
+
+	syntax {
+                    table atomic_velocities {
+                       rows -start 1 -end nat {
+                            col V -type CHARACTER {
+                                info { label of the atom as specified in ATOMIC_SPECIES }
+                            }
+
+                            colgroup -type REAL {
+                                info { atomic velocities along x y and z direction}
+                                col vx
+                                col vy
+                                col vz
+                            }
+                       }
+                    }
+	}
+    }
 
     #
     # card ATOMIC_FORCES
