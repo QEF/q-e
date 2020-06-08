@@ -421,6 +421,7 @@ subroutine dvxc_dn(mesh, rho, dvxc)
    ! some routine in PH and flibs will be called
    !
    use funct,  only : dft_is_gradient
+   use xc_interfaces, only : dmxc_lda, get_lda_threshold
    !
    implicit none
    !
@@ -440,6 +441,7 @@ subroutine dvxc_dn(mesh, rho, dvxc)
    !
    ! LDA only
    !
+   CALL get_lda_threshold( 1.d-10 )
    CALL dmxc_lda( mesh, rho, dvxc )   
    !
    return

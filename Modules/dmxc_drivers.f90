@@ -18,7 +18,8 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   !
   USE kinds,            ONLY: DP
   USE funct,            ONLY: get_iexch, get_icorr, is_libxc
-  USE xc_interfaces,    ONLY: xc_lda, xc_lsda
+  USE xc_interfaces,    ONLY: xc_lda, xc_lsda, dmxc_lda, &
+                              get_lda_threshold
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
@@ -137,6 +138,8 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
     !
   ELSEIF ((.NOT.is_libxc(1)) .AND. (.NOT.is_libxc(2)) ) THEN
     !
+    CALL get_lda_threshold( 1.E-10_DP )
+    !
     IF ( sr_d == 1 ) CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )
     IF ( sr_d == 2 ) CALL dmxc_lsda( length, rho_in, dmuxc )
     !
@@ -151,6 +154,8 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   !
   SELECT CASE( sr_d )
   CASE( 1 )
+     !
+     CALL get_lda_threshold( 1.E-10_DP )
      !
      CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )
      !

@@ -421,6 +421,7 @@ SUBROUTINE cg_neweps
   USE ions_base, ONLY : nat, tau
   USE fft_base,  ONLY : dfftp
   USE scf,       ONLY : rho, rho_core
+  USE xc_interfaces, ONLY: dmxc_lda, get_lda_threshold
   USE cgcom
   !
   IMPLICIT NONE
@@ -435,6 +436,7 @@ SUBROUTINE cg_neweps
   !
   rhotot(:) = rho%of_r(:,1) + rho_core(:)
   !
+  CALL get_lda_threshold( 1.E-10_DP )
   CALL dmxc_lda( dfftp%nnr, rhotot, dmuxc )
   !
   !
