@@ -132,7 +132,8 @@ MODULE xc_interfaces
        INTEGER,  INTENT(IN) :: length
        REAL(DP), INTENT(IN),  DIMENSION(length) :: rho_in
        REAL(DP), INTENT(OUT), DIMENSION(length) :: dmuxc
-     END SUBROUTINE
+       !
+     END SUBROUTINE dmxc_lda_l
      !
   END INTERFACE
   !

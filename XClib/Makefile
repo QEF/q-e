@@ -11,6 +11,7 @@ correlation_lda_lsda.o \
 correlation_gga.o \
 dft_par_mod.o \
 drivers_lda_lsda.o \
+drivers_d_lda_lsda.o \
 drivers_gga.o \
 exchange_lda_lsda.o \
 exchange_gga.o \
