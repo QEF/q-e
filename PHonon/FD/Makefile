@@ -11,7 +11,7 @@ FDOBJS = \
         stop_pp.o 
 
 
-QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
+QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../upflib/libupf.a \
          ../../KS_Solvers/libks_solvers.a \
          ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 PWOBJS = ../../PW/src/libpw.a
