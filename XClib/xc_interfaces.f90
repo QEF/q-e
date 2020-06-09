@@ -10,7 +10,7 @@ MODULE xc_interfaces
   PUBLIC :: XC_LDA, XC_LSDA, DMXC_LDA, DMXC_LSDA, DMXC_NC
   PUBLIC :: SLATER, SLATER_SPIN, PZ, PZ_POLARIZED, PW, PW_SPIN, LYP, &
             LSD_LYP
-  PUBLIC :: GCXC, GCX_SPIN, GCC_SPIN, GCC_SPIN_MORE
+  PUBLIC :: GCXC, GCX_SPIN, GCC_SPIN, GCC_SPIN_MORE, DGCXC_UNPOL
   PUBLIC :: PBEC, PBEC_SPIN, LSD_GLYP
   PUBLIC :: GET_XC_INDEXES, GET_LDAXC_PARAM, GET_LDA_THRESHOLD, &
             GET_GGAXC_PARAM, GET_GGA_THRESHOLD
@@ -227,7 +227,6 @@ MODULE xc_interfaces
      !
   END INTERFACE
   !
-  !
   INTERFACE GCC_SPIN_MORE
      !
      SUBROUTINE gcc_spin_more_l( length, rho_in, grho_in, grho_ud_in, &
@@ -243,6 +242,21 @@ MODULE xc_interfaces
        REAL(DP), INTENT(OUT), DIMENSION(length) :: sc
        REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v1c, v2c
        REAL(DP), INTENT(OUT), DIMENSION(length) :: v2c_ud
+       !
+     END SUBROUTINE
+     !
+  END INTERFACE
+  !
+  !
+  INTERFACE DGCXC_UNPOL
+     !
+     SUBROUTINE dgcxc_unpol_l( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc )
+       USE kind_l,         ONLY: DP
+       IMPLICIT NONE
+       INTEGER,  INTENT(IN) :: length
+       REAL(DP), INTENT(IN),  DIMENSION(length) :: r_in, s2_in
+       REAL(DP), INTENT(OUT), DIMENSION(length) :: vrrx, vsrx, vssx
+       REAL(DP), INTENT(OUT), DIMENSION(length) :: vrrc, vsrc, vssc
        !
      END SUBROUTINE
      !

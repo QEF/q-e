@@ -10,6 +10,7 @@ drivers_gga.o : kind_l.o
 drivers_gga.o : dft_par_mod.o
 drivers_gga.o : correlation_gga.o
 drivers_gga.o : exchange_gga.o
+drivers_d_gga.o : kind_l.o
 xc_interfaces.o : dft_par_mod.o
 xc_interfaces.o : kind_l.o
 correlation_lda_lsda.o : kind_l.o
