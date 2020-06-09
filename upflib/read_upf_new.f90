@@ -449,6 +449,7 @@ CONTAINS
                    CALL get_attr ('angular_momentum', l_)
                    IF ( l /= l_ ) CALL upf_error ('read_pp_nonlocal','mismatch',2)                 
                    upf%qfuncl(:,nmb,l) = aux(:)
+                   IF (upf%tpawp) upf%qfuncl(upf%paw%iraug+1:,nmb,l) = 0._DP
                 ENDDO loop_on_l
              ELSE
                 isnull = .FALSE. 
@@ -474,6 +475,11 @@ CONTAINS
        !
     END IF
     CALL xmlr_closetag( ) ! end pp_nonlocal
+    !
+    ! Maximum radius of beta projector: outer radius to integrate
+    upf%kkbeta = MAXVAL(upf%kbeta(1:upf%nbeta))
+    ! For PAW, augmentation charge may extend a bit further:
+    IF(upf%tpawp) upf%kkbeta = MAX(upf%kkbeta, upf%paw%iraug)
     !
   END SUBROUTINE read_pp_nonlocal
   !
@@ -570,6 +576,8 @@ CONTAINS
           ELSE
              tag = 'pp_pswfc'
           END IF
+          CALL xmlr_readtag(tag, upf%pswfc(1:upf%mesh,nb) )
+          CALL get_attr ('index',mb)
           IF ( nb /= mb ) CALL upf_error('read_pp_full_wfc','mismatch',3)
        END DO
        !
@@ -585,25 +593,70 @@ CONTAINS
     !
     IMPLICIT NONE
     TYPE(pseudo_upf),INTENT(INOUT) :: upf ! the pseudo data
+    INTEGER :: nb, mb
     !
-    IF ( upf%tpawp ) THEN
-       CALL xmlr_opentag( capitalize_if_v2('pp_paw') )
-       CALL get_attr ('paw_data_format', upf%paw_data_format)
-       CALL get_attr ('core_energy', upf%paw%core_energy) 
-       ! Full occupation (not only > 0 ones)
-       ALLOCATE (upf%paw%oc(upf%nbeta) )
-       ALLOCATE (upf%paw%ae_rho_atc(upf%mesh) )
-       ALLOCATE (upf%paw%ae_vloc(upf%mesh) )
-       CALL xmlr_readtag( capitalize_if_v2('pp_occupations'), &
-            upf%paw%oc(1:upf%nbeta) )
-       ! All-electron core charge
-       CALL xmlr_readtag( capitalize_if_v2('pp_ae_nlcc'), &
-            upf%paw%ae_rho_atc(1:upf%mesh) )
-       ! All-electron local potential
-       CALL xmlr_readtag( capitalize_if_v2('pp_ae_vloc'), &
-            upf%paw%ae_vloc(1:upf%mesh) )
-       CALL xmlr_closetag () ! end pp_paw
-    END IF
+    IF ( .NOT. upf%tpawp ) RETURN
+    !
+    CALL xmlr_opentag( capitalize_if_v2('pp_paw') )
+    CALL get_attr ('paw_data_format', upf%paw_data_format)
+    CALL get_attr ('core_energy', upf%paw%core_energy) 
+    ! Full occupation (not only > 0 ones)
+    ALLOCATE (upf%paw%oc(upf%nbeta) )
+    ALLOCATE (upf%paw%ae_rho_atc(upf%mesh) )
+    ALLOCATE (upf%paw%ae_vloc(upf%mesh) )
+    CALL xmlr_readtag( capitalize_if_v2('pp_occupations'), &
+         upf%paw%oc(1:upf%nbeta) )
+    ! All-electron core charge
+    CALL xmlr_readtag( capitalize_if_v2('pp_ae_nlcc'), &
+         upf%paw%ae_rho_atc(1:upf%mesh) )
+    ! All-electron local potential
+    CALL xmlr_readtag( capitalize_if_v2('pp_ae_vloc'), &
+         upf%paw%ae_vloc(1:upf%mesh) )
+    CALL xmlr_closetag () ! end pp_paw
+    !
+    ALLOCATE(upf%paw%pfunc(upf%mesh, upf%nbeta,upf%nbeta) )
+    upf%paw%pfunc(:,:,:) = 0._dp
+    IF (upf%has_so) THEN
+       ALLOCATE(upf%paw%pfunc_rel(upf%mesh, upf%nbeta,upf%nbeta) )
+       upf%paw%pfunc_rel(:,:,:) = 0._dp
+    ENDIF
+    DO nb=1,upf%nbeta
+       DO mb=1,nb
+          upf%paw%pfunc (1:upf%mesh, nb, mb) = &
+               upf%aewfc(1:upf%mesh, nb) * upf%aewfc(1:upf%mesh, mb)
+          IF (upf%has_so) THEN
+             upf%paw%pfunc_rel (1:upf%paw%iraug, nb, mb) =  &
+                  upf%paw%aewfc_rel(1:upf%paw%iraug, nb) *   &
+                  upf%paw%aewfc_rel(1:upf%paw%iraug, mb)
+!
+!    The small component is added to pfunc. pfunc_rel is useful only
+!    to add a small magnetic contribution
+!
+             upf%paw%pfunc (1:upf%paw%iraug, nb, mb) = &
+                        upf%paw%pfunc (1:upf%paw%iraug, nb, mb) + &
+                        upf%paw%pfunc_rel (1:upf%paw%iraug, nb, mb)
+          ENDIF
+          upf%paw%pfunc(upf%paw%iraug+1:,nb,mb) = 0._dp
+          !
+          upf%paw%pfunc (1:upf%mesh, mb, nb) = upf%paw%pfunc (1:upf%mesh, nb, mb)
+          IF (upf%has_so) upf%paw%pfunc_rel (1:upf%mesh, mb, nb) =  &
+               upf%paw%pfunc_rel (1:upf%mesh, nb, mb)
+       ENDDO
+    ENDDO
+    !
+    ! Pseudo wavefunctions (not only the ones for oc > 0)
+    ! All-electron wavefunctions
+    ALLOCATE(upf%paw%ptfunc(upf%mesh, upf%nbeta,upf%nbeta) )
+    upf%paw%ptfunc(:,:,:) = 0._dp
+    DO nb=1,upf%nbeta
+       DO mb=1,upf%nbeta
+          upf%paw%ptfunc (1:upf%mesh, nb, mb) = &
+               upf%pswfc(1:upf%mesh, nb) * upf%pswfc(1:upf%mesh, mb)
+          upf%paw%ptfunc(upf%paw%iraug+1:,nb,mb) = 0._dp
+          !
+          upf%paw%ptfunc (1:upf%mesh, mb, nb) = upf%paw%ptfunc (1:upf%mesh, nb, mb)
+       ENDDO
+    ENDDO
     !
   END SUBROUTINE read_pp_paw
   !--------------------------------------------------------
