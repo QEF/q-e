@@ -7,7 +7,7 @@ MODULE xc_interfaces
   IMPLICIT NONE
   PRIVATE
   !
-  PUBLIC :: XC_LDA, XC_LSDA, DMXC_LDA
+  PUBLIC :: XC_LDA, XC_LSDA, DMXC_LDA, DMXC_LSDA
   PUBLIC :: SLATER, SLATER_SPIN, PZ, PZ_POLARIZED, PW, PW_SPIN, LYP, &
             LSD_LYP
   PUBLIC :: GCXC, GCX_SPIN, GCC_SPIN, GCC_SPIN_MORE
@@ -134,6 +134,23 @@ MODULE xc_interfaces
        REAL(DP), INTENT(OUT), DIMENSION(length) :: dmuxc
        !
      END SUBROUTINE dmxc_lda_l
+     !
+  END INTERFACE
+  !
+  INTERFACE DMXC_LSDA
+     !
+     SUBROUTINE dmxc_lsda_l( length, rho_in, dmuxc )
+       !
+       USE dft_par_mod
+       USE exch_lda_l,   ONLY: slater_l
+       USE corr_lda_l,   ONLY: pz_l, pz_polarized_l
+       USE kind_l,       ONLY: DP
+       IMPLICIT NONE
+       INTEGER,  INTENT(IN) :: length
+       REAL(DP), INTENT(IN), DIMENSION(length,2) :: rho_in
+       REAL(DP), INTENT(OUT), DIMENSION(length,2,2) :: dmuxc
+       !
+     END SUBROUTINE dmxc_lsda_l
      !
   END INTERFACE
   !
