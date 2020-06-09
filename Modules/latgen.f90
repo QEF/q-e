@@ -501,7 +501,6 @@ FUNCTION at2ibrav (a1, a2, a3) RESULT (ibrav)
   REAL(dp) :: v1, v2, v3, cosab, cosac, cosbc
   !
   INTEGER :: ibrav
-  ibrav =0
   !
   v1 = sqrt( dot_product( a1,a1 ) )
   v2 = sqrt( dot_product( a2,a2 ) )
@@ -510,6 +509,9 @@ FUNCTION at2ibrav (a1, a2, a3) RESULT (ibrav)
   cosac = dot_product(a1,a3)/v1/v3
   cosab = dot_product(a1,a2)/v1/v2
   !
+  ! Assume triclinic if nothing suitable found
+  !
+  ibrav = 14
   IF ( eqq(v1,v2) .and. eqq(v1,v3) ) THEN
      ! Case: a=b=c
      IF (eqq(cosab,cosac) .and. eqq(cosab,cosbc)) THEN
@@ -570,7 +572,7 @@ FUNCTION at2ibrav (a1, a2, a3) RESULT (ibrav)
         ELSEIF ( eqq(a1(1),-a2(1)) .and. eqq(a1(2),a2(2))) THEN
            ibrav = 9
         ENDIF
-     ELSE
+     ELSEIF ( eqq(cosac,-cosbc) ) THEN
         ! bco (unique axis b)
         ibrav =-13
      ENDIF

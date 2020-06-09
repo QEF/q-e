@@ -62,7 +62,7 @@ subroutine phq_setup
   USE gvect,         ONLY : ngm
   USE gvecs,         ONLY : doublegrid
   USE symm_base,     ONLY : nrot, nsym, s, irt, t_rev, time_reversal, &
-                            sr, invs, inverse_s, d1, d2, d3
+                            sr, invs, inverse_s, d1, d2, d3, check_grid_sym
   USE uspp_param,    ONLY : upf
   USE uspp,          ONLY : nlcc_any, deeq_nc, okvan
   USE spin_orb,      ONLY : domag
@@ -193,19 +193,19 @@ subroutine phq_setup
   !
   call setup_dgc()
   !
-  ! 4) Computes the inverse of each matrix of the crystal symmetry group
-  !
-  call inverse_s()
-  !
-  ! 5) Computes the number of occupied bands for each k point
+  ! 4) Computes the number of occupied bands for each k point
   !
   call setup_nbnd_occ()
   !
-  ! 6) Computes alpha_pv
+  ! 5) Computes alpha_pv
   !
   call setup_alpha_pv()
   !
-  ! 7) set all the variables needed to use the pattern representation
+  ! 6) Set all symmetries and variables needed to use the pattern representation
+  !
+  call inverse_s()
+  IF ( .NOT. check_grid_sym (dfftp%nr1,dfftp%nr2,dfftp%nr3) ) &
+          CALL errore('phq_setup','FFT grid incompatible with symmetry',1)
   !
   magnetic_sym = noncolin .AND. domag
   time_reversal = .NOT. noinv .AND. .NOT. magnetic_sym
