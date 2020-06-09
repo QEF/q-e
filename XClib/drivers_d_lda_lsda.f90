@@ -303,9 +303,190 @@ SUBROUTINE dmxc_lsda_l( length, rho_in, dmuxc )
   !
 END SUBROUTINE dmxc_lsda_l
 !
-
-
-
+!
+!-----------------------------------------------------------------------
+SUBROUTINE dmxc_nc_l( length, rho_in, m, dmuxc )
+!-----------------------------------------------------------------------
+  !! Computes the derivative of the xc potential with respect to the 
+  !! local density and magnetization in the non-collinear case.
+  !
+  USE dft_par_mod
+  USE kind_l,       ONLY: DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN) :: length
+  !! length of the input/output arrays
+  REAL(DP), INTENT(IN), DIMENSION(length) :: rho_in
+  !! total charge density
+  REAL(DP), INTENT(IN), DIMENSION(length,3) :: m
+  !! magnetization vector
+  REAL(DP), INTENT(OUT), DIMENSION(length,4,4) :: dmuxc
+  !! derivative of XC functional
+  !
+  ! ... local variables
+  !
+  REAL(DP), DIMENSION(length) :: rhotot, amag, zeta, zeta_eff, dr, dz
+  REAL(DP), DIMENSION(length) :: vs
+  LOGICAL,  DIMENSION(length) :: is_null
+  REAL(DP), ALLOCATABLE, DIMENSION(:) :: rhoaux, zetaux
+  REAL(DP), ALLOCATABLE, DIMENSION(:) :: aux1, aux2
+  REAL(DP), ALLOCATABLE, DIMENSION(:,:) :: vx, vc
+  REAL(DP), DIMENSION(length) :: dvxc_rho, dbx_rho, dby_rho, dbz_rho
+  !
+  REAL(DP) :: dvxc_mx, dvxc_my, dvxc_mz, &
+              dbx_mx, dbx_my, dbx_mz,    &
+              dby_mx, dby_my, dby_mz,    &
+              dbz_mx, dbz_my, dbz_mz
+  REAL(DP) :: zeta_s
+  !
+  INTEGER :: i1, i2, i3, i4, i5, i
+  INTEGER :: f1, f2, f3, f4, f5
+  !
+  REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP, &
+                         rho_trash = 0.5_DP, zeta_trash = 0.5_DP, &
+                         amag_trash= 0.025_DP
+  !
+  dmuxc = 0.0_DP
+  !
+  ALLOCATE( rhoaux(length*5), zetaux(length*5) )
+  ALLOCATE( aux1(length*5), aux2(length*5) )
+  ALLOCATE( vx(length*5,2), vc(length*5,2) )
+  !
+  rhotot = rho_in
+  zeta   = zeta_trash
+  amag   = amag_trash
+  is_null = .FALSE.
+  !
+  i1 = 1     ;   f1 = length    !           five blocks:  [ rho    , zeta    ]   
+  i2 = f1+1  ;   f2 = 2*length  !                         [ rho+dr , zeta    ]   
+  i3 = f2+1  ;   f3 = 3*length  !                         [ rho-dr , zeta    ]   
+  i4 = f3+1  ;   f4 = 4*length  !                         [ rho    , zeta+dz ]   
+  i5 = f4+1  ;   f5 = 5*length  !                         [ rho    , zeta-dz ]   
+  !
+  dz = 1.0E-6_DP     !dz = MIN( 1.d-6, 1.d-4*ABS(zeta) ) 
+  !
+  DO i = 1, length
+     zeta_s = zeta_trash
+     IF (rhotot(i) <= small) THEN
+        rhotot(i) = rho_trash
+        is_null(i) = .TRUE.
+     ENDIF
+     amag(i) = SQRT( m(i,1)**2 + m(i,2)**2 + m(i,3)**2 )
+     IF (rhotot(i) > small) zeta_s = amag(i) / rhotot(i)
+     zeta(i) = zeta_s
+     zeta_eff(i) = SIGN( MIN( ABS(zeta_s), (1.0_DP-2.0_DP*dz(i)) ), zeta_s )
+     IF (ABS(zeta_s) > 1.0_DP) is_null(i) = .TRUE.
+  ENDDO
+  !
+  dr = MIN( 1.E-6_DP, 1.E-4_DP * rhotot )
+  !
+  rhoaux(i1:f1) = rhotot         ;   zetaux(i1:f1) = zeta
+  rhoaux(i2:f2) = rhotot + dr    ;   zetaux(i2:f2) = zeta
+  rhoaux(i3:f3) = rhotot - dr    ;   zetaux(i3:f3) = zeta
+  rhoaux(i4:f4) = rhotot         ;   zetaux(i4:f4) = zeta_eff + dz
+  rhoaux(i5:f5) = rhotot         ;   zetaux(i5:f5) = zeta_eff - dz
+  !
+  !
+  CALL xc_lsda_l( length*5, rhoaux, zetaux, aux1, aux2, vx, vc )
+  !
+  !
+  vs(:) = 0.5_DP*( vx(i1:f1,1)+vc(i1:f1,1)-vx(i1:f1,2)-vc(i1:f1,2) )
+  !
+  dvxc_rho(:) = ((vx(i2:f2,1) + vc(i2:f2,1) - vx(i3:f3,1) - vc(i3:f3,1)) + &
+                (vx(i2:f2,2) + vc(i2:f2,2) - vx(i3:f3,2) - vc(i3:f3,2))) / (4.0_DP*dr)
+  !
+  aux2(1:length) =  vx(i2:f2,1) + vc(i2:f2,1) - vx(i3:f3,1) - vc(i3:f3,1) - &
+                  ( vx(i2:f2,2) + vc(i2:f2,2) - vx(i3:f3,2) - vc(i3:f3,2) )
+  !
+  WHERE (amag > 1.E-10_DP)
+    dbx_rho(:) = aux2(1:length) * m(:,1) / (4.0_DP*dr*amag)
+    dby_rho(:) = aux2(1:length) * m(:,2) / (4.0_DP*dr*amag)
+    dbz_rho(:) = aux2(1:length) * m(:,3) / (4.0_DP*dr*amag)
+  END WHERE  
+  !
+  aux1(1:length) =  vx(i4:f4,1) + vc(i4:f4,1) - vx(i5:f5,1) - vc(i5:f5,1) + &
+                    vx(i4:f4,2) + vc(i4:f4,2) - vx(i5:f5,2) - vc(i5:f5,2)
+  aux2(1:length) =  vx(i4:f4,1) + vc(i4:f4,1) - vx(i5:f5,1) - vc(i5:f5,1) - &
+                  ( vx(i4:f4,2) + vc(i4:f4,2) - vx(i5:f5,2) - vc(i5:f5,2) )
+  !
+  DO i = 1, length
+     !
+     IF ( is_null(i) ) THEN
+        dmuxc(i,:,:) = 0.0_DP
+        CYCLE
+     ENDIF
+     !
+     IF (amag(i) <= 1.E-10_DP) THEN
+        dmuxc(i,1,1) = dvxc_rho(i)
+        CYCLE
+     ENDIF
+     !
+     dvxc_rho(i) = dvxc_rho(i) - aux1(i) * zeta(i)/rhotot(i) / (4.0_DP*dz(i))
+     dbx_rho(i)  = dbx_rho(i)  - aux2(i) * m(i,1) * zeta(i)/rhotot(i) / (4.0_DP*dz(i)*amag(i))
+     dby_rho(i)  = dby_rho(i)  - aux2(i) * m(i,2) * zeta(i)/rhotot(i) / (4.0_DP*dz(i)*amag(i))
+     dbz_rho(i)  = dbz_rho(i)  - aux2(i) * m(i,3) * zeta(i)/rhotot(i) / (4.0_DP*dz(i)*amag(i))
+     !
+     dmuxc(i,1,1) = dvxc_rho(i)
+     dmuxc(i,2,1) = dbx_rho(i)
+     dmuxc(i,3,1) = dby_rho(i)
+     dmuxc(i,4,1) = dbz_rho(i)
+     !
+     ! ... Here the derivatives with respect to m
+     !
+     dvxc_mx = aux1(i) * m(i,1) / rhotot(i) / (4.0_DP*dz(i)*amag(i))
+     dvxc_my = aux1(i) * m(i,2) / rhotot(i) / (4.0_DP*dz(i)*amag(i))
+     dvxc_mz = aux1(i) * m(i,3) / rhotot(i) / (4.0_DP*dz(i)*amag(i))
+     !
+     dbx_mx  = (aux2(i) * m(i,1) * m(i,1) * amag(i)/rhotot(i) / (4.0_DP*dz(i)) + &
+                vs(i) * (m(i,2)**2+m(i,3)**2)) / amag(i)**3
+     dbx_my  = (aux2(i) * m(i,1) * m(i,2) * amag(i)/rhotot(i) / (4.0_DP*dz(i)) - &
+                vs(i) * m(i,1) * m(i,2) ) / amag(i)**3
+     dbx_mz  = (aux2(i) * m(i,1) * m(i,3) * amag(i)/rhotot(i) / (4.0_DP*dz(i)) - &
+                vs(i) * m(i,1) * m(i,3) ) / amag(i)**3
+     !
+     dby_mx  = dbx_my
+     dby_my  = (aux2(i) * m(i,2) * m(i,2) * amag(i)/rhotot(i) / (4.0_DP*dz(i)) + &
+                vs(i) * (m(i,1)**2 + m(i,3)**2)) / amag(i)**3
+     dby_mz  = (aux2(i) * m(i,2) * m(i,3) * amag(i)/rhotot(i) / (4.0_DP*dz(i)) - &
+                vs(i) * m(i,2) * m(i,3)) / amag(i)**3
+     !
+     dbz_mx  = dbx_mz
+     dbz_my  = dby_mz
+     dbz_mz  = (aux2(i) * m(i,3) * m(i,3) * amag(i)/rhotot(i) / (4.0_DP*dz(i)) + &
+                vs(i)*(m(i,1)**2 + m(i,2)**2)) / amag(i)**3
+     !
+     ! ... assigns values to dmuxc and sets to zero trash points
+     !
+     dmuxc(i,1,2) = dvxc_mx 
+     dmuxc(i,1,3) = dvxc_my  
+     dmuxc(i,1,4) = dvxc_mz 
+     !
+     dmuxc(i,2,2) = dbx_mx 
+     dmuxc(i,2,3) = dbx_my 
+     dmuxc(i,2,4) = dbx_mz 
+     !
+     dmuxc(i,3,2) = dby_mx 
+     dmuxc(i,3,3) = dby_my 
+     dmuxc(i,3,4) = dby_mz 
+     !
+     dmuxc(i,4,2) = dbz_mx 
+     dmuxc(i,4,3) = dbz_my 
+     dmuxc(i,4,4) = dbz_mz 
+     !
+  ENDDO
+  !
+  ! ... brings to rydberg units
+  !
+  dmuxc = e2 * dmuxc
+  !
+  DEALLOCATE( rhoaux, zetaux)
+  DEALLOCATE( aux1, aux2 )
+  DEALLOCATE( vx, vc )
+  !
+  RETURN
+  !
+END SUBROUTINE dmxc_nc_l
 !
 !-----------------------------------------------------------------------
 FUNCTION dpz_l( rs, iflg )
