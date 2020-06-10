@@ -67,6 +67,9 @@ CONTAINS
     ELSE
        CALL read_pp_header_schema ( upf )
     END IF
+    ! compatibility
+    upf%is_gth = .false.
+    upf%is_multiproj = .true.
     !
     ! From here on the format of v2 and schema do not differ much:
     ! the most frequent difference is capitalization of tags
@@ -405,23 +408,19 @@ CONTAINS
           CALL xmlr_closetag ()
        ENDIF
        !
-    END IF
-    !
-    ! read polinomial coefficients for Q_ij expansion at small radius
-    !
-    IF ( v2 .AND. upf%nqf > 0) THEN
-       ALLOCATE ( upf%qfcoef(upf%nqf, upf%nqlc, upf%nbeta, upf%nbeta) )
-       CALL xmlr_opentag('PP_QFCOEF')
-       READ(iun,*) upf%qfcoef
-       CALL xmlr_closetag ()
-       ALLOCATE( upf%rinner( upf%nqlc ) )
-       CALL xmlr_readtag('PP_RINNER',upf%rinner)
-    ELSE IF ( upf%nqf == 0 ) THEN
-       ALLOCATE( upf%rinner(1), upf%qfcoef(1,1,1,1) )
-       upf%rinner = 0.0_dp; upf%qfcoef =0.0_dp
-    ENDIF
-    !
-    IF ( upf%tpawp .or. upf%tvanp ) THEN
+       ! read polinomial coefficients for Q_ij expansion at small radius
+       !
+       IF ( v2 .AND. upf%nqf > 0) THEN
+          ALLOCATE ( upf%qfcoef(upf%nqf, upf%nqlc, upf%nbeta, upf%nbeta) )
+          CALL xmlr_opentag('PP_QFCOEF')
+          READ(iun,*) upf%qfcoef
+          CALL xmlr_closetag ()
+          ALLOCATE( upf%rinner( upf%nqlc ) )
+          CALL xmlr_readtag('PP_RINNER',upf%rinner)
+       ELSE IF ( upf%nqf == 0 ) THEN
+          ALLOCATE( upf%rinner(1), upf%qfcoef(1,1,1,1) )
+          upf%rinner = 0.0_dp; upf%qfcoef =0.0_dp
+       ENDIF
        !
        ! Read augmentation charge Q_ij
        !
