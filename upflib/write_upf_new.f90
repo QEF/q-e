@@ -832,7 +832,9 @@ CONTAINS
           CALL xmlw_writetag( tag, upf%gipaw_core_orbital(1:upf%mesh,nb) )
        END DO
        IF ( v2 ) CALL xmlw_closetag ( )
-       ! Only write core orbitals in the PAW as GIPAW case
+       !
+       ! Only core orbitals are written in the PAW as GIPAW case
+       !
        IF ( .NOT. upf%paw_as_gipaw) THEN
           !
           ! Write valence all-electron and pseudo orbitals

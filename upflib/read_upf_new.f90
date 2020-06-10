@@ -709,84 +709,113 @@ CONTAINS
     INTEGER :: nb, mb
     CHARACTER(LEN=24) :: tag
     !
-    IF (upf%has_gipaw) THEN
-       CALL xmlr_opentag( capitalize_if_v2('pp_gipaw') )
-       CALL get_attr ('gipaw_data_format', upf%gipaw_data_format ) 
-       IF ( v2 ) THEN
-          CALL xmlr_opentag( 'PP_GIPAW_CORE_ORBITALS')
-          CALL get_attr ('number_of_core_orbitals', upf%gipaw_ncore_orbitals)
-       ELSE
-          print *, 'FIXME! upf%gipaw_ncore_orbitals'
-       END IF
-       ALLOCATE ( upf%gipaw_core_orbital(upf%mesh,upf%gipaw_ncore_orbitals) )
-       ALLOCATE ( upf%gipaw_core_orbital_n(upf%gipaw_ncore_orbitals) )
-       ALLOCATE ( upf%gipaw_core_orbital_el(upf%gipaw_ncore_orbitals) )
-       ALLOCATE ( upf%gipaw_core_orbital_l(upf%gipaw_ncore_orbitals) )
-       DO nb = 1,upf%gipaw_ncore_orbitals
-          IF ( v2 ) THEN
-             tag = "PP_GIPAW_CORE_ORBITAL."//i2c(nb)
-          ELSE
-             tag = 'pp_gipaw_core_orbital'
-          END IF
-          CALL xmlr_readtag( tag, upf%gipaw_core_orbital(1:upf%mesh,nb) )
-          CALL get_attr ('index', mb)
-          IF ( nb /= mb ) CALL upf_error('read_pp_gipaw','mismatch',1)
-          CALL get_attr ('label', upf%gipaw_core_orbital_el(nb) )
-          CALL get_attr ('n', upf%gipaw_core_orbital_n(nb) )
-          CALL get_attr ('l', upf%gipaw_core_orbital_l(nb) )
-       END DO
-       IF ( v2 ) CALL xmlr_closetag ( )
-       ! Only read core orbitals in the PAW as GIPAW case
-       IF ( .NOT. upf%paw_as_gipaw) THEN
-          !
-          ! Read valence all-electron and pseudo orbitals
-          !
-          IF ( v2 ) THEN
-             CALL xmlr_opentag( 'PP_GIPAW_ORBITALS' )
-             CALL get_attr( 'number_of_valence_orbitals', &
-                  upf%gipaw_wfs_nchannels )
-          ELSE
-             print *, 'FIXME! upf%gipaw_wfs_nchannel'
-          END IF
-          ALLOCATE ( upf%gipaw_wfs_el(upf%gipaw_wfs_nchannels) )
-          ALLOCATE ( upf%gipaw_wfs_ll(upf%gipaw_wfs_nchannels) )
-          ALLOCATE ( upf%gipaw_wfs_rcut(upf%gipaw_wfs_nchannels) )
-          ALLOCATE ( upf%gipaw_wfs_rcutus(upf%gipaw_wfs_nchannels) )
-          ALLOCATE ( upf%gipaw_wfs_ae(upf%mesh,upf%gipaw_wfs_nchannels) )
-          ALLOCATE ( upf%gipaw_wfs_ps(upf%mesh,upf%gipaw_wfs_nchannels) )
-          ALLOCATE ( upf%gipaw_vlocal_ae(upf%mesh) )
-          ALLOCATE ( upf%gipaw_vlocal_ps(upf%mesh) )
-          DO nb = 1,upf%gipaw_wfs_nchannels
-             IF ( v2 ) THEN
-                tag = "PP_GIPAW_ORBITAL."//i2c(nb)
-             ELSE
-                tag = 'pp_gipaw_orbital'
-             END IF
-             CALL xmlr_opentag( tag )
-             CALL get_attr ('index', mb)
-             IF ( nb /= mb ) CALL upf_error('read_pp_gipaw','mismatch',2)
-             CALL get_attr ('label', upf%gipaw_wfs_el(nb) )
-             CALL get_attr ('l',     upf%gipaw_wfs_ll(nb) )
-             CALL get_attr ('cutoff_radius', upf%gipaw_wfs_rcut(nb) )
-             CALL get_attr ('ultrasoft_cutoff_radius', upf%gipaw_wfs_rcutus(nb) )
-             CALL xmlr_readtag( capitalize_if_v2('pp_gipaw_wfs_ae'), &
-                  upf%gipaw_wfs_ae(1:upf%mesh,nb) )
-             CALL xmlr_readtag( capitalize_if_v2('pp_gipaw_wfs_ps'),&
-                  upf%gipaw_wfs_ps(1:upf%mesh,nb) )
-             CALL xmlr_closetag ()
-          END DO
-          IF ( v2 ) CALL xmlr_closetag( )
-          !
-          ! Read all-electron and pseudo local potentials
-          CALL xmlr_opentag( capitalize_if_v2('pp_gipaw_vlocal') )
-          CALL xmlr_readtag( capitalize_if_v2('pp_gipaw_vlocal_ae'), &
-               upf%gipaw_vlocal_ae(1:upf%mesh) )
-          CALL xmlr_readtag( capitalize_if_v2('pp_gipaw_vlocal_ps'), &
-               upf%gipaw_vlocal_ps(1:upf%mesh) )
-          CALL xmlr_closetag ()
-       END IF
-       CALL xmlr_closetag () ! end pp_gipaw
+    IF (.NOT. upf%has_gipaw) RETURN
+    !
+    CALL xmlr_opentag( capitalize_if_v2('pp_gipaw') )
+    CALL get_attr ('gipaw_data_format', upf%gipaw_data_format ) 
+    IF ( v2 ) THEN
+       CALL xmlr_opentag( 'PP_GIPAW_CORE_ORBITALS')
+       CALL get_attr ('number_of_core_orbitals', upf%gipaw_ncore_orbitals)
+    ELSE
+       print *, 'FIXME! upf%gipaw_ncore_orbitals'
     END IF
+    ALLOCATE ( upf%gipaw_core_orbital(upf%mesh,upf%gipaw_ncore_orbitals) )
+    ALLOCATE ( upf%gipaw_core_orbital_n(upf%gipaw_ncore_orbitals) )
+    ALLOCATE ( upf%gipaw_core_orbital_el(upf%gipaw_ncore_orbitals) )
+    ALLOCATE ( upf%gipaw_core_orbital_l(upf%gipaw_ncore_orbitals) )
+    DO nb = 1,upf%gipaw_ncore_orbitals
+       IF ( v2 ) THEN
+          tag = "PP_GIPAW_CORE_ORBITAL."//i2c(nb)
+       ELSE
+          tag = 'pp_gipaw_core_orbital'
+       END IF
+       CALL xmlr_readtag( tag, upf%gipaw_core_orbital(1:upf%mesh,nb) )
+       CALL get_attr ('index', mb)
+       IF ( nb /= mb ) CALL upf_error('read_pp_gipaw','mismatch',1)
+       CALL get_attr ('label', upf%gipaw_core_orbital_el(nb) )
+       CALL get_attr ('n', upf%gipaw_core_orbital_n(nb) )
+       CALL get_attr ('l', upf%gipaw_core_orbital_l(nb) )
+    END DO
+    IF ( v2 ) CALL xmlr_closetag ( )
+    !
+    IF ( upf%paw_as_gipaw) THEN
+       !
+       !    PAW as GIPAW case: all-electron and pseudo-orbitals not read here
+       !
+       upf%gipaw_wfs_nchannels = upf%nbeta
+       ALLOCATE ( upf%gipaw_wfs_el(upf%gipaw_wfs_nchannels) )
+       ALLOCATE ( upf%gipaw_wfs_ll(upf%gipaw_wfs_nchannels) )
+       ALLOCATE ( upf%gipaw_wfs_rcut(upf%gipaw_wfs_nchannels) )
+       ALLOCATE ( upf%gipaw_wfs_rcutus(upf%gipaw_wfs_nchannels) )
+       ALLOCATE ( upf%gipaw_wfs_ae(upf%mesh,upf%gipaw_wfs_nchannels) )
+       ALLOCATE ( upf%gipaw_wfs_ps(upf%mesh,upf%gipaw_wfs_nchannels) )
+       DO nb = 1,upf%gipaw_wfs_nchannels
+          upf%gipaw_wfs_el(nb) = upf%els_beta(nb)
+          upf%gipaw_wfs_ll(nb) = upf%lll(nb)
+          upf%gipaw_wfs_ae(:,nb) = upf%aewfc(:,nb)
+       ENDDO
+       DO nb = 1,upf%gipaw_wfs_nchannels
+          upf%gipaw_wfs_ps(:,nb) = upf%pswfc(:,nb) 
+       ENDDO
+       ALLOCATE ( upf%gipaw_vlocal_ae(upf%mesh) )
+       ALLOCATE ( upf%gipaw_vlocal_ps(upf%mesh) )
+       upf%gipaw_vlocal_ae(:)= upf%paw%ae_vloc(:)  
+       upf%gipaw_vlocal_ps(:)= upf%vloc(:)
+       DO nb = 1,upf%gipaw_wfs_nchannels
+          upf%gipaw_wfs_rcut(nb)=upf%rcut(nb)
+          upf%gipaw_wfs_rcutus(nb)=upf%rcutus(nb)
+       ENDDO
+       !
+    ELSE
+       !
+       ! Read valence all-electron and pseudo orbitals
+       !
+       IF ( v2 ) THEN
+          CALL xmlr_opentag( 'PP_GIPAW_ORBITALS' )
+          CALL get_attr( 'number_of_valence_orbitals', &
+               upf%gipaw_wfs_nchannels )
+       ELSE
+          print *, 'FIXME! upf%gipaw_wfs_nchannel'
+       END IF
+       ALLOCATE ( upf%gipaw_wfs_el(upf%gipaw_wfs_nchannels) )
+       ALLOCATE ( upf%gipaw_wfs_ll(upf%gipaw_wfs_nchannels) )
+       ALLOCATE ( upf%gipaw_wfs_rcut(upf%gipaw_wfs_nchannels) )
+       ALLOCATE ( upf%gipaw_wfs_rcutus(upf%gipaw_wfs_nchannels) )
+       ALLOCATE ( upf%gipaw_wfs_ae(upf%mesh,upf%gipaw_wfs_nchannels) )
+       ALLOCATE ( upf%gipaw_wfs_ps(upf%mesh,upf%gipaw_wfs_nchannels) )
+       ALLOCATE ( upf%gipaw_vlocal_ae(upf%mesh) )
+       ALLOCATE ( upf%gipaw_vlocal_ps(upf%mesh) )
+       DO nb = 1,upf%gipaw_wfs_nchannels
+          IF ( v2 ) THEN
+             tag = "PP_GIPAW_ORBITAL."//i2c(nb)
+          ELSE
+             tag = 'pp_gipaw_orbital'
+          END IF
+          CALL xmlr_opentag( tag )
+          CALL get_attr ('index', mb)
+          IF ( nb /= mb ) CALL upf_error('read_pp_gipaw','mismatch',2)
+          CALL get_attr ('label', upf%gipaw_wfs_el(nb) )
+          CALL get_attr ('l',     upf%gipaw_wfs_ll(nb) )
+          CALL get_attr ('cutoff_radius', upf%gipaw_wfs_rcut(nb) )
+          CALL get_attr ('ultrasoft_cutoff_radius', upf%gipaw_wfs_rcutus(nb) )
+          CALL xmlr_readtag( capitalize_if_v2('pp_gipaw_wfs_ae'), &
+               upf%gipaw_wfs_ae(1:upf%mesh,nb) )
+          CALL xmlr_readtag( capitalize_if_v2('pp_gipaw_wfs_ps'),&
+               upf%gipaw_wfs_ps(1:upf%mesh,nb) )
+          CALL xmlr_closetag ()
+       END DO
+       IF ( v2 ) CALL xmlr_closetag( )
+       !
+       ! Read all-electron and pseudo local potentials
+       !
+       CALL xmlr_opentag( capitalize_if_v2('pp_gipaw_vlocal') )
+       CALL xmlr_readtag( capitalize_if_v2('pp_gipaw_vlocal_ae'), &
+            upf%gipaw_vlocal_ae(1:upf%mesh) )
+       CALL xmlr_readtag( capitalize_if_v2('pp_gipaw_vlocal_ps'), &
+            upf%gipaw_vlocal_ps(1:upf%mesh) )
+       CALL xmlr_closetag ()
+    END IF
+    CALL xmlr_closetag () ! end pp_gipaw
     !
   END SUBROUTINE read_pp_gipaw
   !
