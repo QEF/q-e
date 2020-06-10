@@ -99,6 +99,8 @@ CONTAINS
     CALL xmlr_readtag( capitalize_if_v2('pp_rhoatom'), &
          upf%rho_at(1:upf%mesh) )
     !
+    CALL read_pp_spinorb ( upf )
+    !
     CALL read_pp_paw ( upf )
     !
     CALL read_pp_gipaw ( upf )
@@ -319,12 +321,13 @@ CONTAINS
     ALLOCATE (upf%beta(upf%mesh,nb) )
     ALLOCATE (upf%els_beta(nb), &
               upf%lll(nb),      &
-              upf%jjj(nb),      &
               upf%kbeta(nb),    &
               upf%rcut(nb),     &
               upf%rcutus(nb),   &
               upf%dion(nb,nb),  &
               upf%qqq(nb,nb)    )
+    !
+    IF (upf%has_so) ALLOCATE( upf%jjj(upf%nbeta)) 
     !
     IF ( upf%nbeta == 0 ) THEN
        upf%nqf = 0
@@ -501,6 +504,10 @@ CONTAINS
                 upf%rcut_chi(upf%nwfc), &
                 upf%rcutus_chi(upf%nwfc), &
                 upf%epseu(upf%nwfc) )
+    IF ( upf%has_so ) THEN
+       allocate ( upf%nn(upf%nwfc) )
+       allocate ( upf%jchi(upf%nwfc) )
+    END IF
     !
     CALL xmlr_opentag( capitalize_if_v2('pp_pswfc') )
     DO nw=1,upf%nwfc
@@ -515,7 +522,7 @@ CONTAINS
             call upf_error('read_pp_pswfc','mismatch reading PSWFC', nw)
        call get_attr( 'label', upf%els(nw) )
        call get_attr( 'l', upf%lchi(nw) )
-       IF ( upf%has_so) THEN
+       IF ( .not. v2 .and. upf%has_so ) THEN
           call get_attr( 'nn', upf%nn(nw) )
           call get_attr( 'jchi', upf%jchi(nw) )
        END IF
@@ -586,6 +593,40 @@ CONTAINS
     END IF
     !
   END SUBROUTINE read_pp_full_wfc
+  !
+  !--------------------------------------------------------
+  SUBROUTINE read_pp_spinorb ( upf )
+    !--------------------------------------------------------
+    !
+    IMPLICIT NONE
+    TYPE(pseudo_upf),INTENT(INOUT) :: upf ! the pseudo data
+    INTEGER :: nw, nb
+    CHARACTER(LEN=1) :: dummy
+    !
+    IF ( .NOT. v2 .OR. .NOT. upf%has_so ) RETURN
+    !
+    CALL xmlr_opentag( 'PP_SPIN_ORB' )
+    DO nw = 1,upf%nwfc
+       CALL xmlr_readtag( 'PP_RELWFC.'//i2c(nw), dummy )
+       CALL get_attr( 'index' , nb )
+       IF ( nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',1)
+       CALL get_attr( 'els',   upf%els(nw) )
+       CALL get_attr( 'nn',    upf%nn(nw) )
+       CALL get_attr( 'lchi',  upf%lchi(nw) )
+       CALL get_attr( 'jchi',  upf%jchi(nw) )
+       CALL get_attr( 'oc',    upf%oc(nw) )
+    ENDDO
+    !
+    DO nb = 1,upf%nbeta
+       CALL xmlr_readtag( 'PP_RELBETA.'//i2c(nb), dummy )
+       CALL get_attr( 'index' , nw )
+       IF ( nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',2)
+       CALL get_attr( 'lll',  upf%lll(nb) )
+       CALL get_attr( 'jjj',  upf%jjj(nb) )
+    ENDDO
+    CALL xmlr_closetag () ! end pp_spin_orb
+    !
+  END SUBROUTINE read_pp_spinorb
   !
   !--------------------------------------------------------
   SUBROUTINE read_pp_paw ( upf )

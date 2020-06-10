@@ -121,6 +121,8 @@ CONTAINS
     CALL add_attr( 'size', upf%mesh )
     CALL xmlw_writetag( capitalize_if_v2('pp_rhoatom'), upf%rho_at(1:upf%mesh))
     !
+    CALL write_pp_spinorb ( upf )
+    !
     CALL write_pp_paw ( upf )
     !
     CALL write_pp_gipaw ( upf )
@@ -740,6 +742,38 @@ CONTAINS
     END IF
     !
   END SUBROUTINE write_pp_full_wfc
+  !
+  !--------------------------------------------------------
+  SUBROUTINE write_pp_spinorb ( upf )
+    !--------------------------------------------------------
+    !
+    IMPLICIT NONE
+    TYPE(pseudo_upf),INTENT(IN) :: upf ! the pseudo data
+    INTEGER :: nw, nb
+    !
+    IF ( .NOT. v2 .OR. .NOT. upf%has_so ) RETURN
+    !
+    CALL xmlw_opentag( 'PP_SPIN_ORB' )
+    DO nw = 1,upf%nwfc
+       CALL add_attr( 'index' , nw )
+       CALL add_attr( 'els',   upf%els(nw) )
+       CALL add_attr( 'nn',    upf%nn(nw) )
+       CALL add_attr( 'lchi',  upf%lchi(nw) )
+       CALL add_attr( 'jchi',  upf%jchi(nw) )
+       CALL add_attr( 'oc',    upf%oc(nw) )
+       CALL xmlw_writetag( 'PP_RELWFC.'//i2c(nw), '' )
+    ENDDO
+    !
+    DO nb = 1,upf%nbeta
+       CALL add_attr( 'index' , nb )
+       CALL add_attr( 'lll',  upf%lll(nb) )
+       CALL add_attr( 'jjj',  upf%jjj(nb) )
+       CALL xmlw_writetag( 'PP_RELBETA.'//i2c(nb), '' )
+    ENDDO
+    CALL xmlw_closetag () ! end pp_spin_orb
+    !
+  END SUBROUTINE write_pp_spinorb
+  !
   !--------------------------------------------------------
   SUBROUTINE write_pp_paw ( upf )
     !--------------------------------------------------------
