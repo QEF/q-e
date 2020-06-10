@@ -101,9 +101,9 @@ CONTAINS
     DEALLOCATE( gk )
 #if defined (__CUDA)
     IF(ALLOCATED(igk_k_d)) DEALLOCATE(igk_k_d)
-    ALLOCATE ( igk_k_d, source=igk_k)
+    IF (nks > 0) ALLOCATE ( igk_k_d, source=igk_k)
     IF(ALLOCATED(ngk_d)) DEALLOCATE(ngk_d)
-    ALLOCATE ( ngk_d, source=ngk)
+    IF (nks > 0) ALLOCATE ( ngk_d, source=ngk)
 #endif
     !
   END SUBROUTINE init_igk
