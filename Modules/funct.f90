@@ -397,7 +397,7 @@ MODULE funct
   DATA nonlocc/ 'NONE', 'VDW1', 'VDW2', 'W31C', 'W32C', 'WC6', 20*'NONE', 'VV10' /
   !
 #if defined(__LIBXC)
-  INTEGER :: iexch_qe, icorr_qe, igcx_qe, igcc_qe
+  INTEGER :: iexch_qe, icorr_qe, igcx_qe, igcc_qe, imeta_qe
   INTEGER :: libxc_major=0, libxc_minor=0, libxc_micro=0
   PUBLIC :: libxc_major, libxc_minor, libxc_micro, get_libxc_version
   PUBLIC :: get_libxc_flags_exc
@@ -827,9 +827,10 @@ CONTAINS
     IF ( is_libxc(2) ) icorr_qe = 0
     IF ( is_libxc(3) ) igcx_qe  = 0
     IF ( is_libxc(4) ) igcc_qe  = 0
-    CALL get_xc_indexes( iexch_qe, icorr_qe, igcx_qe, igcc_qe )
+    IF ( is_libxc(5) .OR. is_libxc(6) ) imeta_qe = 0
+    CALL get_xc_indexes( iexch_qe, icorr_qe, igcx_qe, igcc_qe, imeta_qe )
 #else
-    CALL get_xc_indexes( iexch, icorr, igcx, igcc )
+    CALL get_xc_indexes( iexch, icorr, igcx, igcc, imeta )
 #endif
     !
     !dft_longname = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &

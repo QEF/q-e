@@ -694,3 +694,63 @@ SUBROUTINE lsd_glyp_ext( rho_in_up, rho_in_dw, grho_up, grho_dw, grho_ud, sc, v1
   RETURN
   !
 END SUBROUTINE lsd_glyp_ext
+
+!-------------------------------------------------------------------------
+SUBROUTINE tpsscxc_ext( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )                    !<GPU:DEVICE>
+  !-----------------------------------------------------------------------
+  !! TPSS metaGGA corrections for exchange and correlation - Hartree a.u.
+  !
+  !! Definition:  E_x = \int E_x(rho,grho) dr
+  !
+  USE kind_l,      ONLY : DP
+  USE metagga_l  , ONLY : metax, metac
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: rho
+  !! the charge density
+  REAL(DP), INTENT(IN) :: grho
+  !! grho = |\nabla rho|^2
+  REAL(DP), INTENT(IN) :: tau
+  !! kinetic energy density
+  REAL(DP), INTENT(OUT) :: sx
+  !! sx = E_x(rho,grho)
+  REAL(DP), INTENT(OUT) :: sc
+  !! sc = E_c(rho,grho)
+  REAL(DP), INTENT(OUT) :: v1x
+  !! v1x = D(E_x)/D(rho)
+  REAL(DP), INTENT(OUT) :: v2x
+  !! v2x = D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
+  REAL(DP), INTENT(OUT) :: v3x
+  !! v3x = D(E_x)/D(tau)
+  REAL(DP), INTENT(OUT) :: v1c
+  !! v1c = D(E_c)/D(rho)
+  REAL(DP), INTENT(OUT) :: v2c
+  !! v2c = D(E_c)/D( D rho/D r_alpha ) / |\nabla rho|
+  REAL(DP), INTENT(OUT) :: v3c
+  !! v3c = D(E_c)/D(tau)
+  !
+  ! ... local variables
+  !
+  REAL(DP), PARAMETER :: small = 1.E-10_DP
+  !
+  IF (rho <= small) THEN
+     sx  = 0.0_DP
+     v1x = 0.0_DP
+     v2x = 0.0_DP
+     sc  = 0.0_DP
+     v1c = 0.0_DP
+     v2c = 0.0_DP
+     v3x = 0.0_DP
+     v3c = 0.0_DP
+     RETURN
+  ENDIF
+  !
+  ! exchange
+  CALL metax( rho, grho, tau, sx, v1x, v2x, v3x )                   !<GPU:metax=>metax_d>
+  ! correlation
+  CALL metac( rho, grho, tau, sc, v1c, v2c, v3c )                   !<GPU:metac=>metac_d>
+  !
+  RETURN
+  !
+END SUBROUTINE tpsscxc_ext

@@ -177,8 +177,6 @@ mbdlib.o : kind.o
 mbdlib.o : tsvdw.o
 mdiis.o : ../UtilXlib/mp.o
 mdiis.o : kind.o
-metagga.o : constants.o
-metagga.o : kind.o
 mm_dispersion.o : ../UtilXlib/mp.o
 mm_dispersion.o : cell_base.o
 mm_dispersion.o : constants.o
@@ -405,7 +403,6 @@ xc_lda_lsda_drivers.o : funct.o
 xc_lda_lsda_drivers.o : kind.o
 xc_mgga_drivers.o : funct.o
 xc_mgga_drivers.o : kind.o
-xc_mgga_drivers.o : metagga.o
 xc_rVV10.o : ../FFTXlib/fft_interfaces.o
 xc_rVV10.o : ../UtilXlib/mp.o
 xc_rVV10.o : cell_base.o

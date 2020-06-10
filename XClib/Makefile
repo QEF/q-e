@@ -14,8 +14,10 @@ drivers_lda_lsda.o \
 drivers_d_lda_lsda.o \
 drivers_gga.o \
 drivers_d_gga.o \
+drivers_mgga.o \
 exchange_lda_lsda.o \
 exchange_gga.o \
+metagga.o \
 external.o \
 get_xc.o \
 xc_interfaces.o

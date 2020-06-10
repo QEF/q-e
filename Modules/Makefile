@@ -127,7 +127,6 @@ inpfile.o \
 int_to_char.o \
 latgen.o \
 linpack.o \
-metagga.o \
 matches.o \
 plot_io.o \
 radial_gradients.o \

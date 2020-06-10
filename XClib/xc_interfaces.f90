@@ -7,24 +7,31 @@ MODULE xc_interfaces
   IMPLICIT NONE
   PRIVATE
   !
+  ! LDA
   PUBLIC :: XC_LDA, XC_LSDA, DMXC_LDA, DMXC_LSDA, DMXC_NC
   PUBLIC :: SLATER, SLATER_SPIN, PZ, PZ_POLARIZED, PW, PW_SPIN, LYP, &
             LSD_LYP
+  ! GGA
   PUBLIC :: GCXC, GCX_SPIN, GCC_SPIN, GCC_SPIN_MORE, DGCXC_UNPOL, &
             DGCXC_SPIN
   PUBLIC :: PBEC, PBEC_SPIN, LSD_GLYP
+  ! MGGA
+  PUBLIC :: TAU_XC, TAU_XC_SPIN
+  PUBLIC :: TPSSCXC
+  ! 
   PUBLIC :: GET_XC_INDEXES, GET_LDAXC_PARAM, GET_LDA_THRESHOLD, &
-            GET_GGAXC_PARAM, GET_GGA_THRESHOLD
+            GET_GGAXC_PARAM, GET_GGA_THRESHOLD, GET_MGGA_THRESHOLD
   !
   !
   INTERFACE GET_XC_INDEXES
      !
-     SUBROUTINE get_xclib_IDs( iexch_, icorr_, igcx_, igcc_ )
+     SUBROUTINE get_xclib_IDs( iexch_, icorr_, igcx_, igcc_, imeta_ )
        !
        USE dft_par_mod
        IMPLICIT NONE
        INTEGER, INTENT(IN) :: iexch_, icorr_
        INTEGER, INTENT(IN) :: igcx_, igcc_
+       INTEGER, INTENT(IN) :: imeta_
        !
      END SUBROUTINE
      !
@@ -75,13 +82,28 @@ MODULE xc_interfaces
   !
   INTERFACE GET_GGA_THRESHOLD
      !
-     SUBROUTINE get_GGA_threshold( rho_threshold_, grho_threshold_ )
+     SUBROUTINE get_gga_threshold( rho_threshold_, grho_threshold_ )
        !
        USE kind_l,  ONLY: DP
        USE dft_par_mod
        IMPLICIT NONE
        REAL(DP), INTENT(IN) :: rho_threshold_
        REAL(DP), INTENT(IN) :: grho_threshold_
+       !
+     END SUBROUTINE
+     !
+  END INTERFACE
+  !
+  INTERFACE GET_MGGA_THRESHOLD
+     !
+     SUBROUTINE get_mgga_threshold( rho_threshold_, grho2_threshold_, tau_threshold_ )
+       !
+       USE kind_l,  ONLY: DP
+       USE dft_par_mod
+       IMPLICIT NONE
+       REAL(DP), INTENT(IN) :: rho_threshold_
+       REAL(DP), INTENT(IN) :: grho2_threshold_
+       REAL(DP), INTENT(IN) :: tau_threshold_
        !
      END SUBROUTINE
      !
@@ -281,6 +303,43 @@ MODULE xc_interfaces
      !
   END INTERFACE
   !
+  !
+  INTERFACE TAU_XC
+     !
+     SUBROUTINE tau_xc_l( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
+       !
+       USE kind_l
+       USE dft_par_mod
+       USE metagga_l
+       IMPLICIT NONE
+       INTEGER, INTENT(IN) :: length
+       REAL(DP), DIMENSION(length) :: rho, grho2, tau, &
+                                      ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
+       !
+     END SUBROUTINE tau_xc_l
+     !
+  END INTERFACE
+  !
+  INTERFACE TAU_XC_SPIN
+     !
+     SUBROUTINE tau_xc_spin_l( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
+       !
+       USE kind_l
+       USE dft_par_mod
+       USE metagga_l
+       IMPLICIT NONE
+       INTEGER,  INTENT(IN) :: length
+       REAL(DP), INTENT(IN) :: rho(length,2), tau(length,2)
+       REAL(DP), INTENT(IN) :: grho(3,length,2)
+       REAL(DP), INTENT(OUT) :: ex(length), ec(length), v1x(length,2), v2x(length,2), &
+                                v3x(length,2), v1c(length,2), v3c(length,2)
+       REAL(DP), INTENT(OUT) :: v2c(3,length,2)
+       !
+     END SUBROUTINE tau_xc_spin_l
+     !
+  END INTERFACE
+  !
+  !
   !---PROVISIONAL .. for cases when functional routines are called outside xc-drivers---
   !
   INTERFACE SLATER
@@ -439,6 +498,22 @@ MODULE xc_interfaces
        REAL(DP), INTENT(OUT) :: v2c_up, v2c_dw
        REAL(DP), INTENT(OUT) :: v2c_ud
        !
+     END SUBROUTINE
+     !
+  END INTERFACE   
+  !
+  !
+  INTERFACE TPSSCXC
+     !
+     SUBROUTINE tpsscxc_ext( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
+       !
+       USE kind_l,      ONLY : DP
+       USE metagga_l  , ONLY : metax, metac
+       IMPLICIT NONE
+       REAL(DP), INTENT(IN) :: rho, grho, tau
+       REAL(DP), INTENT(OUT) :: sx, sc
+       REAL(DP), INTENT(OUT) :: v1x, v2x, v3x
+       REAL(DP), INTENT(OUT) :: v1c, v2c, v3c
      END SUBROUTINE
      !
   END INTERFACE   

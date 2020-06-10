@@ -1,6 +1,6 @@
 !
 !
-SUBROUTINE get_xclib_IDs( iexch_, icorr_, igcx_, igcc_ )
+SUBROUTINE get_xclib_IDs( iexch_, icorr_, igcx_, igcc_, imeta_ )
    !
    USE dft_par_mod
    !
@@ -8,11 +8,13 @@ SUBROUTINE get_xclib_IDs( iexch_, icorr_, igcx_, igcc_ )
    !
    INTEGER, INTENT(IN) :: iexch_, icorr_
    INTEGER, INTENT(IN) :: igcx_, igcc_
+   INTEGER, INTENT(IN) :: imeta_
    !
    iexch = iexch_
    icorr = icorr_
    igcx  = igcx_
    igcc  = igcc_
+   imeta = imeta_
    !
    RETURN
    !
@@ -104,6 +106,26 @@ SUBROUTINE get_gga_threshold( rho_threshold_, grho_threshold_ )
    !
    rho_threshold_gga = rho_threshold_
    rho_threshold_gga = grho_threshold_
+   !
+   RETURN
+   !
+END SUBROUTINE
+
+
+SUBROUTINE get_mgga_threshold( rho_threshold_, grho2_threshold_, tau_threshold_ )
+   !
+   USE kind_l, ONLY: DP
+   USE dft_par_mod
+   !
+   IMPLICIT NONE
+   !
+   REAL(DP), INTENT(IN) :: rho_threshold_
+   REAL(DP), INTENT(IN) :: grho2_threshold_
+   REAL(DP), INTENT(IN) :: tau_threshold_
+   !
+   rho_threshold_mgga = rho_threshold_
+   grho2_threshold_mgga = grho2_threshold_
+   tau_threshold_mgga  = tau_threshold_
    !
    RETURN
    !
