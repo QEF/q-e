@@ -9,12 +9,12 @@ MODULE xc_interfaces
   !
   ! LDA
   PUBLIC :: XC_LDA, XC_LSDA, DMXC_LDA, DMXC_LSDA, DMXC_NC
-  PUBLIC :: SLATER, SLATER_SPIN, PZ, PZ_POLARIZED, PW, PW_SPIN, LYP, &
+  PUBLIC :: SLATER, SLATER_SPIN, PW, PW_SPIN, LYP, &
             LSD_LYP
   ! GGA
   PUBLIC :: GCXC, GCX_SPIN, GCC_SPIN, GCC_SPIN_MORE, DGCXC_UNPOL, &
             DGCXC_SPIN
-  PUBLIC :: PBEC, PBEC_SPIN, LSD_GLYP
+  PUBLIC :: LSD_GLYP
   ! MGGA
   PUBLIC :: TAU_XC, TAU_XC_SPIN
   PUBLIC :: TPSSCXC
@@ -370,34 +370,6 @@ MODULE xc_interfaces
   END INTERFACE
   !
   !
-  INTERFACE PZ
-     !
-     SUBROUTINE pz_ext( rs, iflag, ec, vc )
-       !
-       USE kind_l,  ONLY: DP
-       IMPLICIT NONE
-       REAL(DP), INTENT(IN)  :: rs
-       REAL(DP), INTENT(OUT) :: ec, vc
-       INTEGER,  INTENT(IN)  :: iflag
-       !
-     END SUBROUTINE pz_ext
-     !
-  END INTERFACE
-  !
-  INTERFACE PZ_POLARIZED
-     !
-     SUBROUTINE pz_polarized_ext( rs, ec, vc )
-       !
-       USE kind_l,  ONLY: DP
-       IMPLICIT NONE
-       REAL(DP), INTENT(IN)  :: rs
-       REAL(DP), INTENT(OUT) :: ec, vc
-       !
-     END SUBROUTINE pz_polarized_ext
-     !
-  END INTERFACE
-  !
-  !
   INTERFACE PW
      !
      SUBROUTINE pw_ext( rs, iflag, ec, vc )
@@ -451,37 +423,6 @@ MODULE xc_interfaces
      END SUBROUTINE
      !
   END INTERFACE
-  !
-  !
-  INTERFACE PBEC
-     !
-     SUBROUTINE pbec_ext( rho, grho, iflag, sc, v1c, v2c )
-       !
-       USE kind_l,    ONLY: DP
-       IMPLICIT NONE
-       INTEGER,  INTENT(IN) :: iflag
-       REAL(DP), INTENT(IN) :: rho, grho
-       REAL(DP), INTENT(OUT) :: sc, v1c, v2c
-       !
-     END SUBROUTINE
-     !
-  END INTERFACE
-  !
-  !
-  INTERFACE PBEC_SPIN
-     !
-     SUBROUTINE pbec_spin_ext( rho, zeta, grho, iflag, sc, v1c_up, v1c_dw, v2c )                    !<GPU:DEVICE>
-       !
-       USE corr_lda_l, ONLY: pw_spin_l
-       USE kind_l,     ONLY : DP
-       IMPLICIT NONE
-       INTEGER,  INTENT(IN) :: iflag        !<GPU:VALUE>
-       REAL(DP), INTENT(IN) :: rho, zeta, grho
-       REAL(DP), INTENT(OUT) :: sc, v1c_up, v1c_dw, v2c
-       !
-     END SUBROUTINE
-     !
-  END INTERFACE     
   !
   !
   INTERFACE LSD_GLYP
