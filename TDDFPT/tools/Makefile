@@ -6,9 +6,9 @@ include ../../make.inc
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../LR_Modules
 
-QEMODS = ../../Modules/libqemod.a \
-         ../../KS_Solvers/libks_solvers.a \
-         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a
+QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
+	 ../../upflib/libupf.a    ../../KS_Solvers/libks_solvers.a \
+         ../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a
 PWOBJS = ../../PW/src/libpw.a
 
 TLDEPS=pwlibs

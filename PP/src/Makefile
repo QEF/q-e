@@ -59,7 +59,7 @@ QEMODS = ../../Modules/libqemod.a ../../upflib/libupf.a ../../KS_Solvers/libks_s
          ../../dft-d3/libdftd3qe.a ../../GScratch/libgscratch.a 
 
 
-MODULES = $(PWOBJS) $(QEOBJS)
+MODULES = $(PWOBJS) $(QEMODS)
 
 TLDEPS= pwlibs
 
@@ -70,7 +70,7 @@ all : tldeps open_grid.x average.x bands.x dos.x epsilon.x initial_state.x fs.x 
       pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x benchmark_libxc.x
 
 
-libpp.a : $(PPOBJS)
+libpp.a : $(PPOBJS) 
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
