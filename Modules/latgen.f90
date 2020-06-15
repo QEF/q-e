@@ -48,10 +48,7 @@ SUBROUTINE latgen_lib(ibrav,celldm,a1,a2,a3,omega, ierr, errormsg)
   INTEGER :: i,j,k,l,iperm,ir
   real(DP) :: term, cbya, s, term1, term2, singam, sen
   !
-  ! pre-set everything to zero, in case we quit because of error
-  a1=0._dp
-  a2=0._dp
-  a3=0._dp
+  ! pre-set to zero, in case we quit because of error
   Omega = 0._dp
   ierr = 0
   errormsg = ''
