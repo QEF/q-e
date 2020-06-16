@@ -1345,15 +1345,13 @@ CONTAINS
   FUNCTION get_exx_fraction()
      REAL(DP) :: get_exx_fraction
 #if defined(__LIBXC)
-     !INTEGER :: family
      TYPE(xc_f03_func_t) :: xc_func
-     !TYPE(xc_f03_func_info_t) :: xc_info
      !
-     IF ( is_libxc(3) ) THEN
-        CALL xc_f03_func_init( xc_func, igcx, 1 )  
-        !xc_info = xc_f03_func_get_info( xc_func )
-        !family = xc_f03_func_info_get_family( xc_info )
-        IF ( lxc_hyb ) exx_fraction = xc_f03_hyb_exx_coef( xc_func )
+     IF ( lxc_hyb .AND. (is_libxc(1) .OR. is_libxc(3) .OR. is_libxc(5)) ) THEN
+        IF ( is_libxc(1) )  CALL xc_f03_func_init( xc_func, iexch, 1 )
+        IF ( is_libxc(3) )  CALL xc_f03_func_init( xc_func, igcx,  1 )
+        IF ( is_libxc(5) )  CALL xc_f03_func_init( xc_func, imeta, 1 )
+        exx_fraction = xc_f03_hyb_exx_coef( xc_func )
         CALL xc_f03_func_end( xc_func )
      ENDIF
 #endif
@@ -1434,6 +1432,19 @@ CONTAINS
        IF ( ii==0 ) eflag = 1
      ENDDO
      RETURN
+  END SUBROUTINE
+  !
+  SUBROUTINE set_libxc_ext_params( xc_func, ext_pars, npar )
+    !! Sets external parameters for libxc functionals, if needed.
+    !
+    INTEGER, INTENT(IN)  :: npar
+    !! total number of external parameters
+    REAL(DP), INTENT(IN) :: ext_pars(npar)
+    !! array of external parameters
+    TYPE(xc_f03_func_t)  :: xc_func
+    !
+    CALL xc_f03_func_set_ext_params( xc_func, ext_pars )
+    !
   END SUBROUTINE
 #endif
   !
