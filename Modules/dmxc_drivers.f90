@@ -43,6 +43,7 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   REAL(DP), ALLOCATABLE :: rho_lxc(:)
   REAL(DP), ALLOCATABLE :: dmxc_lxc(:), dmex_lxc(:), dmcr_lxc(:)
   LOGICAL :: exch_lxc_avail, corr_lxc_avail
+  INTEGER(8) :: length8
 #endif
   !
   INTEGER :: iexch, icorr
@@ -53,6 +54,8 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   icorr = get_icorr()
   !
 #if defined(__LIBXC)
+  !
+  length8 = length
   !
   IF ( (is_libxc(1) .OR. iexch==0) .AND. (is_libxc(2) .OR. icorr==0)) THEN
     !
@@ -98,7 +101,7 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
     IF (iexch /= 0) THEN    
        CALL xc_f03_func_init( xc_func, iexch, pol_unpol )
         xc_info1 = xc_f03_func_get_info( xc_func )
-        CALL xc_f03_lda_fxc( xc_func, length, rho_lxc(1), dmex_lxc(1) )
+        CALL xc_f03_lda_fxc( xc_func, length8, rho_lxc(1), dmex_lxc(1) )
        CALL xc_f03_func_end( xc_func )
     ENDIF    
     !
@@ -107,7 +110,7 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
     IF (icorr /= 0) THEN
        CALL xc_f03_func_init( xc_func, icorr, pol_unpol )
         xc_info2 = xc_f03_func_get_info( xc_func )
-        CALL xc_f03_lda_fxc( xc_func, length, rho_lxc(1), dmcr_lxc(1) )
+        CALL xc_f03_lda_fxc( xc_func, length8, rho_lxc(1), dmcr_lxc(1) )
        CALL xc_f03_func_end( xc_func )
     ENDIF
     !

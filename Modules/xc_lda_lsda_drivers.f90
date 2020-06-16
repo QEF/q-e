@@ -85,6 +85,7 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   REAL(DP) :: amag
   REAL(DP), ALLOCATABLE :: rho_lxc(:)
   REAL(DP), ALLOCATABLE :: vx_lxc(:), vc_lxc(:)
+  INTEGER(8) :: length8
 #endif
   !
   REAL(DP), ALLOCATABLE :: arho(:), zeta(:)
@@ -98,6 +99,8 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   ec_out = 0.0_DP ; vc_out = 0.0_DP
   !
 #if defined(__LIBXC)
+  !
+  length8 = length
   !
   IF ( ANY(is_libxc(1:2)) ) THEN
     !
@@ -140,7 +143,7 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
        xc_info1 = xc_f03_func_get_info( xc_func )
        CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold )
        fkind_x  = xc_f03_func_info_get_kind( xc_info1 )
-       CALL xc_f03_lda_exc_vxc( xc_func, length, rho_lxc(1), ex_out(1), vx_lxc(1) )
+       CALL xc_f03_lda_exc_vxc( xc_func, length8, rho_lxc(1), ex_out(1), vx_lxc(1) )
      CALL xc_f03_func_end( xc_func )
   ENDIF
   !
@@ -149,7 +152,7 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
      CALL xc_f03_func_init( xc_func, icorr, sv_d )
       xc_info2 = xc_f03_func_get_info( xc_func )
       CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold )
-      CALL xc_f03_lda_exc_vxc( xc_func, length, rho_lxc(1), ec_out(1), vc_lxc(1) )
+      CALL xc_f03_lda_exc_vxc( xc_func, length8, rho_lxc(1), ec_out(1), vc_lxc(1) )
      CALL xc_f03_func_end( xc_func )
   ENDIF
   !

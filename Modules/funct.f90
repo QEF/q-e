@@ -402,6 +402,8 @@ MODULE funct
   INTEGER :: libxc_major=0, libxc_minor=0, libxc_micro=0
   PUBLIC :: libxc_major, libxc_minor, libxc_micro, get_libxc_version
   PUBLIC :: get_libxc_flags_exc
+  LOGICAL :: lxc_hyb = .FALSE.
+  PRIVATE :: lxc_hyb
 #endif
   !
 CONTAINS
@@ -931,6 +933,7 @@ CONTAINS
           xc_info = xc_f03_func_get_info( xc_func )
           fkind = xc_f03_func_info_get_kind( xc_info )
           family = xc_f03_func_info_get_family( xc_info )
+          IF ( matches(TRIM(name), '_HYB') ) lxc_hyb = .TRUE.
           CALL xc_f03_func_end( xc_func )
           !   
           SELECT CASE( family )
@@ -946,7 +949,7 @@ CONTAINS
              ENDIF
              fkind_v(1) = fkind
              !
-          CASE( XC_FAMILY_GGA, XC_FAMILY_HYB_GGA )
+          CASE( XC_FAMILY_GGA ) !, XC_FAMILY_HYB_GGA )
              IF (fkind==XC_EXCHANGE .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
                 IF ( LEN(TRIM(name)) > prev_len(3) ) igcx = i
                 is_libxc(3) = .TRUE.
@@ -958,7 +961,7 @@ CONTAINS
              ENDIF
              fkind_v(2) = fkind
              !
-          CASE( XC_FAMILY_MGGA, XC_FAMILY_HYB_MGGA )
+          CASE( XC_FAMILY_MGGA ) !, XC_FAMILY_HYB_MGGA )
              IF (fkind==XC_EXCHANGE .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
                 IF ( LEN(TRIM(name)) > prev_len(5) ) imeta = i
                 is_libxc(5) = .TRUE.
@@ -1342,15 +1345,15 @@ CONTAINS
   FUNCTION get_exx_fraction()
      REAL(DP) :: get_exx_fraction
 #if defined(__LIBXC)
-     INTEGER :: family
+     !INTEGER :: family
      TYPE(xc_f03_func_t) :: xc_func
-     TYPE(xc_f03_func_info_t) :: xc_info
+     !TYPE(xc_f03_func_info_t) :: xc_info
      !
      IF ( is_libxc(3) ) THEN
         CALL xc_f03_func_init( xc_func, igcx, 1 )  
-        xc_info = xc_f03_func_get_info( xc_func )
-        family = xc_f03_func_info_get_family( xc_info )
-        IF (family == XC_FAMILY_HYB_GGA) exx_fraction = xc_f03_hyb_exx_coef( xc_func )
+        !xc_info = xc_f03_func_get_info( xc_func )
+        !family = xc_f03_func_info_get_family( xc_info )
+        IF ( lxc_hyb ) exx_fraction = xc_f03_hyb_exx_coef( xc_func )
         CALL xc_f03_func_end( xc_func )
      ENDIF
 #endif
