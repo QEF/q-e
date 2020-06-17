@@ -21,6 +21,7 @@ radial_grids.o \
 read_cpmd.o \
 read_fhi.o \
 read_ncpp.o \
+read_upf_new.o \
 read_upf_schema.o \
 read_upf_v1.o \
 read_upf_v2.o \
@@ -40,8 +41,10 @@ upf_parallel_include.o \
 upf_to_internal.o \
 uspp.o \
 write_upf.o \
+write_upf_new.o \
 write_upf_schema.o \
-write_upf_v2.o
+write_upf_v2.o \
+xmltools.o
 
 TLDEPS=libfox
 

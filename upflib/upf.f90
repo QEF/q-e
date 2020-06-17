@@ -27,6 +27,7 @@ SUBROUTINE read_ps ( filein, upf_in )
   ! stripped-down version of readpp in Modules/read_pseudo.f90:
   ! for serial execution only
   !
+  !USE read_upf_new_module,ONLY: read_upf_new
   USE read_upf_v1_module, ONLY: read_upf_v1
   USE emend_upf_module, ONLY: make_emended_upf_copy
   USE pseudo_types,     ONLY: pseudo_upf

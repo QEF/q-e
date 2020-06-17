@@ -51,6 +51,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   USE wrappers,     ONLY: md5_from_file, f_remove
   USE read_upf_v1_module,   ONLY: read_upf_v1
   USE upf_module,   ONLY: read_upf_new
+  !USE read_upf_new_module,  ONLY: read_upf_new
   USE upf_auxtools, ONLY: upf_get_pp_format, upf_check_atwfc_norm
   USE emend_upf_module, ONLY: make_emended_upf_copy
   USE upf_to_internal,  ONLY: add_upf_grid, set_upf_q
