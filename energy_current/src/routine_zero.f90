@@ -291,7 +291,7 @@ subroutine routine_zero()
    &ion_vel(2, iatom)**2 + ion_vel(3, iatom)**2))
 !
 !         i_current(:) = i_current(:) + 2./3.*e2*zv(ityp(iatom))**2*ion_vel(:, iatom)*I_primo
-!         i_current_b(:) = i_current_b(:) + 2./3.*e2*zv(ityp(iatom))**2*ion_vel(:, iatom)*I_primo
+         i_current_b(:) = i_current_b(:) + 2./3.*e2*zv(ityp(iatom))**2*ion_vel(:, iatom)*I_primo
    end do
 
    l_scambio = .true.
