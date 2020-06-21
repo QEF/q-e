@@ -825,6 +825,10 @@ MODULE us_exx
     IF (noncolin) CALL errore( "rotate_becxx", "Ultrasoft/PAW+EXX+noncolin &
                                &not yet implemented", 1 )
     !
+    IF (.not. ALLOCATED(becxx)) THEN
+      WRITE(stdout, *) "WARNING becx not stored, SKIPPING!"
+      RETURN
+    ENDIF
     !
     CALL start_clock( 'becxx' )
     !
