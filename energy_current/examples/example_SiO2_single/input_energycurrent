@@ -23,7 +23,7 @@
     conv_thr = 1.D-11,
     mixing_beta = 0.7,
 /
- & IONS
+ &IONS
     ion_velocities = 'from_input',
 /
  ATOMIC_SPECIES
