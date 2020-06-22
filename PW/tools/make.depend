@@ -11,3 +11,6 @@ ibrav2cell.o : ../../Modules/kind.o
 kpoints.o : ../../Modules/cell_base.o
 kpoints.o : ../../Modules/kind.o
 kpoints.o : ../../PW/src/symm_base.o
+scan_ibrav.o : ../../Modules/constants.o
+scan_ibrav.o : ../../Modules/kind.o
+scan_ibrav.o : ../../Modules/powell.o

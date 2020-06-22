@@ -88,7 +88,9 @@ MODULE symm_base
   ! ... Exported routines
   !
   PUBLIC ::  find_sym, inverse_s, copy_sym, checkallsym, &
-             s_axis_to_cart, set_sym, set_sym_bl, find_sym_ifc, remove_sym 
+             s_axis_to_cart, set_sym, set_sym_bl, check_grid_sym 
+  PUBLIC ::  find_sym_ifc ! FIXME: should be merged with find_sym
+  PUBLIC ::  remove_sym   ! FIXME: is this still useful?
   !
 CONTAINS
    !
@@ -1181,6 +1183,37 @@ CONTAINS
       !
     END SUBROUTINE sgam_at_ifc
     !
+    !-----------------------------------------------------------------------
+    FUNCTION check_grid_sym ( nr1, nr2, nr3 ) RESULT ( compatible )
+      !---------------------------------------------------------------------
+      !! Check that symmetry operations and FFT grid are compatible
+      !! Needed to prevent trouble with real-space symmetrization
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN) :: nr1, nr2, nr3
+      LOGICAL :: compatible, bad
+      INTEGER :: isym,i,j
+      !
+      compatible = .true.
+      DO isym = 1, nsym
+         !
+         bad = ( MOD( s(2,1,isym)*nr1, nr2) /= 0 .OR. &
+                 MOD( s(3,1,isym)*nr1, nr3) /= 0 .OR. &
+                 MOD( s(1,2,isym)*nr2, nr1) /= 0 .OR. &
+                 MOD( s(3,2,isym)*nr2, nr3) /= 0 .OR. &
+                 MOD( s(1,3,isym)*nr3, nr1) /= 0 .OR. &
+                 MOD( s(2,3,isym)*nr3, nr2) /= 0 ) 
+         IF ( bad ) THEN
+            WRITE( stdout, '(5x,"warning: symmetry operation # ",i2, &
+                 &         " not compatible with FFT grid. ")') isym
+            WRITE( stdout, '(3i4)') ( (s(i,j,isym), j=1,3), i=1,3 )
+            compatible = .false.
+         ENDIF
+         !
+      ENDDO
+      !
+    END FUNCTION check_grid_sym
     !
     !-----------------------------------------------------------------------
     SUBROUTINE remove_sym( nr1, nr2, nr3 )

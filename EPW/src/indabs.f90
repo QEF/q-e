@@ -230,7 +230,7 @@
               wgkq = wgauss(-ekq * inv_eptemp0, -99)
               !
               IF (ekq - ekk - wq(nmodes) - omegamax > 6.0 * degaussw) CYCLE
-              IF (ekq - ekk + wq(nmodes) - omegamin < 6.0 * degaussw) CYCLE
+              IF (ekq - ekk + wq(nmodes) - omegamin < - 6.0 * degaussw) CYCLE
               !
               DO imode = 1, nmodes
                 !
@@ -249,13 +249,13 @@
                       ! The energy of the electron at k+q (relative to Ef)
                       ekmq = etf(ibndmin - 1 + mbnd, ikq) - ef0
                       !
-                      s1a(:) = s1a(:) + epf(mbnd, jbnd,imode) * 0.5 * vkk(:, ibnd, mbnd) / &
+                      s1a(:) = s1a(:) + epf(mbnd, jbnd,imode) * vkk(:, ibnd, mbnd) / &
                                (ekmk  - ekq + wq(imode) + ci * eta(m))
-                      s1e(:) = s1e(:) + epf(mbnd, jbnd,imode) * 0.5 * vkk(:, ibnd, mbnd) / &
+                      s1e(:) = s1e(:) + epf(mbnd, jbnd,imode) * vkk(:, ibnd, mbnd) / &
                                (ekmk  - ekq - wq(imode) + ci * eta(m))
-                      s2a(:) =  s2a(:) + epf(ibnd, mbnd,imode) * 0.5 * vkq(:, mbnd, jbnd) / &
+                      s2a(:) =  s2a(:) + epf(ibnd, mbnd,imode) * vkq(:, mbnd, jbnd) / &
                                (ekmq  - ekk - wq(imode)+ ci * eta(m))
-                      s2e(:) =  s2e(:) + epf(ibnd, mbnd,imode) * 0.5 * vkq(:, mbnd, jbnd) / &
+                      s2e(:) =  s2e(:) + epf(ibnd, mbnd,imode) * vkq(:, mbnd, jbnd) / &
                                (ekmq  - ekk + wq(imode)+ ci * eta(m))
                     ENDDO
                     !
@@ -386,6 +386,10 @@
     !! Rotation matrix, fine mesh, points k
     COMPLEX(KIND = DP), INTENT(inout) :: cufkq(nbndsub, nbndsub)
     !! the same, for points k+q
+    COMPLEX(KIND = DP)  :: cufkkd(nbndsub,nbndsub)
+    !! Rotation matrix, shifted mesh, points k
+    COMPLEX(KIND = DP)  :: cufkqd(nbndsub,nbndsub)
+    !! Rotation matrix, shifted mesh, k+q
     COMPLEX(KIND = DP), INTENT(in) :: cfac(nrr_k, dims, dims)
     !! Exponential factor
     COMPLEX(KIND = DP), INTENT(in) :: cfacq(nrr_k, dims, dims)
@@ -438,10 +442,10 @@
         cfacqd(:, 1, 1, icounter) = EXP(ci * rdotk2(:)) / ndegen_k(:, 1, 1)
       ENDIF
       !
-      CALL hamwan2bloch(nbndsub, nrr_k, cufkk, etfd(:, ikk, icounter), chw, cfacd, dims)
-      CALL hamwan2bloch(nbndsub, nrr_k, cufkq, etfd(:, ikq, icounter), chw, cfacqd, dims)
-      CALL hamwan2bloch(nbndsub, nrr_k, cufkk, etfd_ks(:, ikk, icounter), chw_ks, cfacd, dims)
-      CALL hamwan2bloch(nbndsub, nrr_k, cufkq, etfd_ks(:, ikq, icounter), chw_ks, cfacqd, dims)
+      CALL hamwan2bloch(nbndsub, nrr_k, cufkkd, etfd(:, ikk, icounter), chw, cfacd, dims)
+      CALL hamwan2bloch(nbndsub, nrr_k, cufkqd, etfd(:, ikq, icounter), chw, cfacqd, dims)
+      CALL hamwan2bloch(nbndsub, nrr_k, cufkkd, etfd_ks(:, ikk, icounter), chw_ks, cfacd, dims)
+      CALL hamwan2bloch(nbndsub, nrr_k, cufkqd, etfd_ks(:, ikq, icounter), chw_ks, cfacqd, dims)
     ENDDO ! icounter
     ! -----------------------------------------------------------------------------------------
     CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkk, vmef(:, :, :, ikk), &

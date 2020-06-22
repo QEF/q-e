@@ -48,7 +48,6 @@ MODULE io_rho_xml
       INTEGER,          INTENT(IN)           :: nspin
       !
       CHARACTER (LEN=256) :: dirname
-      LOGICAL :: lexist
       INTEGER :: nspin_, iunocc, iunpaw, ierr
       INTEGER, EXTERNAL :: find_free_unit
 
@@ -169,9 +168,15 @@ MODULE io_rho_xml
       ! read kinetic energy density
       IF ( dft_is_meta() ) THEN
          CALL read_rhog( TRIM(dirname) // "ekin-density", &
-           root_bgrp, intra_bgrp_comm, &
-           ig_l2g, nspin_, rho%kin_g, gamma_only )
-         WRITE(stdout,'(5x,"Reading meta-gga kinetic term")')
+              root_bgrp, intra_bgrp_comm, &
+              ig_l2g, nspin_, rho%kin_g, gamma_only, ierr )
+         IF ( ierr == 0 ) THEN
+            WRITE(stdout,'(5x,"Reading meta-gga kinetic term")')
+         ELSE
+            rho%kin_g(:,:) = (0.0_dp, 0.0_dp)
+            WRITE(stdout,'(5x,"BEWARE: kinetic-energy density file not found,",&
+                    & " Kinetic-energy density set to 0")')
+         ENDIF
       END IF
 
       IF ( lda_plus_u ) THEN

@@ -7,7 +7,7 @@
 !
 !
 !-------------------------------------------------------------------------
-SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
+SUBROUTINE latgen_lib(ibrav,celldm,a1,a2,a3,omega, ierr, errormsg)
   !-----------------------------------------------------------------------
   !     sets up the crystallographic vectors a1, a2, and a3.
   !
@@ -40,20 +40,28 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
   real(DP), INTENT(inout) :: a1(3), a2(3), a3(3)
   real(DP), INTENT(out) :: omega
   !
+  character(len=*),INTENT(out) :: errormsg
+  integer,INTENT(out) :: ierr
+  !
   real(DP), PARAMETER:: sr2 = 1.414213562373d0, &
                         sr3 = 1.732050807569d0
   INTEGER :: i,j,k,l,iperm,ir
   real(DP) :: term, cbya, s, term1, term2, singam, sen
   !
+  ! pre-set to zero, in case we quit because of error
+  Omega = 0._dp
+  ierr = 0
+  errormsg = ''
+  !
   !  user-supplied lattice vectors
   !
   IF (ibrav == 0) THEN
      IF (sqrt( a1(1)**2 + a1(2)**2 + a1(3)**2 ) == 0 )  &
-         CALL errore ('latgen', 'wrong at for ibrav=0', 1)
+         THEN; errormsg='wrong at for ibrav=0'; ierr= 1; RETURN; ENDIF
      IF (sqrt( a2(1)**2 + a2(2)**2 + a2(3)**2 ) == 0 )  &
-         CALL errore ('latgen', 'wrong at for ibrav=0', 2)
+         THEN; errormsg='wrong at for ibrav=0'; ierr= 2; RETURN; ENDIF
      IF (sqrt( a3(1)**2 + a3(2)**2 + a3(3)**2 ) == 0 )  &
-         CALL errore ('latgen', 'wrong at for ibrav=0', 3)
+         THEN; errormsg='wrong at for ibrav=0'; ierr= 3; RETURN; ENDIF
 
      IF ( celldm(1) /= 0.D0 ) THEN
      !
@@ -75,7 +83,7 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
      a3(:) = 0.d0
   ENDIF
   !
-  IF (celldm (1) <= 0.d0) CALL errore ('latgen', 'wrong celldm(1)', abs(ibrav) )
+  IF (celldm (1) <= 0.d0) THEN; errormsg='wrong celldm(1)'; ierr= abs(ibrav); RETURN; ENDIF
   !
   !  index of bravais lattice supplied
   !
@@ -123,7 +131,7 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     hexagonal lattice
      !
-     IF (celldm (3) <= 0.d0) CALL errore ('latgen', 'wrong celldm(3)', ibrav)
+     IF (celldm (3) <= 0.d0) THEN; errormsg='wrong celldm(3)'; ierr= ibrav; RETURN; ENDIF
      !
      cbya=celldm(3)
      a1(1)=celldm(1)
@@ -136,7 +144,7 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
      !     trigonal lattice
      !
      IF (celldm (4) <= -0.5_dp .or. celldm (4) >= 1.0_dp) &
-          CALL errore ('latgen', 'wrong celldm(4)', abs(ibrav))
+             THEN; errormsg='wrong celldm(4)'; ierr=5; RETURN; ENDIF
      !
      term1=sqrt(1.0_dp + 2.0_dp*celldm(4))
      term2=sqrt(1.0_dp - celldm(4))
@@ -176,7 +184,7 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     tetragonal lattice
      !
-     IF (celldm (3) <= 0.d0) CALL errore ('latgen', 'wrong celldm(3)', ibrav)
+     IF (celldm (3) <= 0.d0) THEN; errormsg='wrong celldm(3)'; ierr=6; RETURN; ENDIF
      !
      cbya=celldm(3)
      a1(1)=celldm(1)
@@ -187,7 +195,7 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     body centered tetragonal lattice
      !
-     IF (celldm (3) <= 0.d0) CALL errore ('latgen', 'wrong celldm(3)', ibrav)
+     IF (celldm (3) <= 0.d0) THEN; errormsg='wrong celldm(3)'; ierr=7; RETURN; ENDIF
      !
      cbya=celldm(3)
      a2(1)=celldm(1)/2.d0
@@ -204,8 +212,8 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     Simple orthorhombic lattice
      !
-     IF (celldm (2) <= 0.d0) CALL errore ('latgen', 'wrong celldm(2)', ibrav)
-     IF (celldm (3) <= 0.d0) CALL errore ('latgen', 'wrong celldm(3)', ibrav)
+     IF (celldm (2) <= 0.d0) THEN; errormsg='wrong celldm(2)'; ierr=8; RETURN; ENDIF
+     IF (celldm (3) <= 0.d0) THEN; errormsg='wrong celldm(3)'; ierr=8; RETURN; ENDIF
      !
      a1(1)=celldm(1)
      a2(2)=celldm(1)*celldm(2)
@@ -215,10 +223,8 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     One face (base) centered orthorhombic lattice  (C type)
      !
-     IF (celldm (2) <= 0.d0) CALL errore ('latgen', 'wrong celldm(2)', &
-                                                                 abs(ibrav))
-     IF (celldm (3) <= 0.d0) CALL errore ('latgen', 'wrong celldm(3)', &
-                                                                 abs(ibrav))
+     IF (celldm (2) <= 0.d0) THEN; errormsg='wrong celldm(2)'; ierr=9; RETURN; ENDIF
+     IF (celldm (3) <= 0.d0) THEN; errormsg='wrong celldm(3)'; ierr=9; RETURN; ENDIF
      !
      IF ( ibrav == 9 ) THEN
         !   old PWscf description
@@ -239,8 +245,8 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     One face (base) centered orthorhombic lattice  (A type)
      !
-     IF (celldm (2) <= 0.d0) CALL errore ('latgen', 'wrong celldm(2)', ibrav)
-     IF (celldm (3) <= 0.d0) CALL errore ('latgen', 'wrong celldm(3)', ibrav)
+     IF (celldm (2) <= 0.d0) THEN; errormsg='wrong celldm(2)'; ierr=91; RETURN; ENDIF
+     IF (celldm (3) <= 0.d0) THEN; errormsg='wrong celldm(3)'; ierr=91; RETURN; ENDIF
      !
      a1(1) = celldm(1)
      a2(2) = celldm(1) * celldm(2) * 0.5_DP
@@ -252,8 +258,8 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     All face centered orthorhombic lattice
      !
-     IF (celldm (2) <= 0.d0) CALL errore ('latgen', 'wrong celldm(2)', ibrav)
-     IF (celldm (3) <= 0.d0) CALL errore ('latgen', 'wrong celldm(3)', ibrav)
+     IF (celldm (2) <= 0.d0) THEN; errormsg='wrong celldm(2)'; ierr=10; RETURN; ENDIF
+     IF (celldm (3) <= 0.d0) THEN; errormsg='wrong celldm(3)'; ierr=10; RETURN; ENDIF
      !
      a2(1) = 0.5d0 * celldm(1)
      a2(2) = a2(1) * celldm(2)
@@ -266,8 +272,8 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     Body centered orthorhombic lattice
      !
-     IF (celldm (2) <= 0.d0) CALL errore ('latgen', 'wrong celldm(2)', ibrav)
-     IF (celldm (3) <= 0.d0) CALL errore ('latgen', 'wrong celldm(3)', ibrav)
+     IF (celldm (2) <= 0.d0) THEN; errormsg='wrong celldm(2)'; ierr=11; RETURN; ENDIF
+     IF (celldm (3) <= 0.d0) THEN; errormsg='wrong celldm(3)'; ierr=11; RETURN; ENDIF
      !
      a1(1) = 0.5d0 * celldm(1)
      a1(2) = a1(1) * celldm(2)
@@ -283,9 +289,9 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     Simple monoclinic lattice, unique (i.e. orthogonal to a) axis: c
      !
-     IF (celldm (2) <= 0.d0) CALL errore ('latgen', 'wrong celldm(2)', ibrav)
-     IF (celldm (3) <= 0.d0) CALL errore ('latgen', 'wrong celldm(3)', ibrav)
-     IF (abs(celldm(4))>=1.d0) CALL errore ('latgen', 'wrong celldm(4)', ibrav)
+     IF (celldm (2) <= 0.d0)   THEN; errormsg='wrong celldm(2)'; ierr=12; RETURN; ENDIF
+     IF (celldm (3) <= 0.d0)   THEN; errormsg='wrong celldm(3)'; ierr=12; RETURN; ENDIF
+     IF (abs(celldm(4))>=1.d0) THEN; errormsg='wrong celldm(4)'; ierr=12; RETURN; ENDIF
      !
      sen=sqrt(1.d0-celldm(4)**2)
      a1(1)=celldm(1)
@@ -297,9 +303,9 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     Simple monoclinic lattice, unique axis: b (more common)
      !
-     IF (celldm (2) <= 0.d0) CALL errore ('latgen', 'wrong celldm(2)',-ibrav)
-     IF (celldm (3) <= 0.d0) CALL errore ('latgen', 'wrong celldm(3)',-ibrav)
-     IF (abs(celldm(5))>=1.d0) CALL errore ('latgen', 'wrong celldm(5)',-ibrav)
+     IF (celldm (2) <= 0.d0)   THEN; errormsg='wrong celldm(2)'; ierr=12; RETURN; ENDIF
+     IF (celldm (3) <= 0.d0)   THEN; errormsg='wrong celldm(3)'; ierr=12; RETURN; ENDIF
+     IF (abs(celldm(5))>=1.d0) THEN; errormsg='wrong celldm(5)'; ierr=12; RETURN; ENDIF
      !
      sen=sqrt(1.d0-celldm(5)**2)
      a1(1)=celldm(1)
@@ -311,9 +317,9 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     One face centered monoclinic lattice unique axis c
      !
-     IF (celldm (2) <= 0.d0) CALL errore ('latgen', 'wrong celldm(2)', ibrav)
-     IF (celldm (3) <= 0.d0) CALL errore ('latgen', 'wrong celldm(3)', ibrav)
-     IF (abs(celldm(4))>=1.d0) CALL errore ('latgen', 'wrong celldm(4)', ibrav)
+     IF (celldm (2) <= 0.d0)   THEN; errormsg='wrong celldm(2)'; ierr=13; RETURN; ENDIF
+     IF (celldm (3) <= 0.d0)   THEN; errormsg='wrong celldm(3)'; ierr=13; RETURN; ENDIF
+     IF (abs(celldm(4))>=1.d0) THEN; errormsg='wrong celldm(4)'; ierr=13; RETURN; ENDIF
      !
      sen = sqrt( 1.d0 - celldm(4) ** 2 )
      a1(1) = 0.5d0 * celldm(1)
@@ -323,13 +329,14 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
      a3(1) = a1(1)
      a3(3) =-a1(3)
   ELSEIF (ibrav == -13) THEN
-     CALL infomsg('latgen','BEWARE: axis for ibrav=-13 changed, see documentation!')
+     errormsg='BEWARE: axis for ibrav=-13 changed, see documentation!'
+     !CALL infomsg('latgen','BEWARE: axis for ibrav=-13 changed, see documentation!')
      !
      !     One face centered monoclinic lattice unique axis b
      !
-     IF (celldm (2) <= 0.d0) CALL errore ('latgen', 'wrong celldm(2)',-ibrav)
-     IF (celldm (3) <= 0.d0) CALL errore ('latgen', 'wrong celldm(3)',-ibrav)
-     IF (abs(celldm(5))>=1.d0) CALL errore ('latgen', 'wrong celldm(5)',-ibrav)
+     IF (celldm (2) <= 0.d0)   THEN; errormsg='wrong celldm(2)'; ierr=13; RETURN; ENDIF
+     IF (celldm (3) <= 0.d0)   THEN; errormsg='wrong celldm(3)'; ierr=13; RETURN; ENDIF
+     IF (abs(celldm(5))>=1.d0) THEN; errormsg='wrong celldm(5)'; ierr=13; RETURN; ENDIF
      !
      sen = sqrt( 1.d0 - celldm(5) ** 2 )
      a1(1) = 0.5d0 * celldm(1)
@@ -343,17 +350,16 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     Triclinic lattice
      !
-     IF (celldm (2) <= 0.d0) CALL errore ('latgen', 'wrong celldm(2)', ibrav)
-     IF (celldm (3) <= 0.d0) CALL errore ('latgen', 'wrong celldm(3)', ibrav)
-     IF (abs(celldm(4))>=1.d0) CALL errore ('latgen', 'wrong celldm(4)', ibrav)
-     IF (abs(celldm(5))>=1.d0) CALL errore ('latgen', 'wrong celldm(5)', ibrav)
-     IF (abs(celldm(6))>=1.d0) CALL errore ('latgen', 'wrong celldm(6)', ibrav)
+     IF (celldm (2) <= 0.d0)   THEN; errormsg='wrong celldm(2)'; ierr=14; RETURN; ENDIF
+     IF (celldm (3) <= 0.d0)   THEN; errormsg='wrong celldm(3)'; ierr=14; RETURN; ENDIF
+     IF (abs(celldm(4))>=1.d0) THEN; errormsg='wrong celldm(4)'; ierr=14; RETURN; ENDIF
+     IF (abs(celldm(5))>=1.d0) THEN; errormsg='wrong celldm(5)'; ierr=14; RETURN; ENDIF
+     IF (abs(celldm(6))>=1.d0) THEN; errormsg='wrong celldm(6)'; ierr=14; RETURN; ENDIF
      !
      singam=sqrt(1.d0-celldm(6)**2)
      term= (1.d0+2.d0*celldm(4)*celldm(5)*celldm(6)             &
           -celldm(4)**2-celldm(5)**2-celldm(6)**2)
-     IF (term < 0.d0) CALL errore &
-        ('latgen', 'celldm do not make sense, check your data', ibrav)
+     IF (term < 0.d0) THEN; errormsg='celldm do not make sense, check your data'; ierr=14; RETURN; ENDIF
      term= sqrt(term/(1.d0-celldm(6)**2))
      a1(1)=celldm(1)
      a2(1)=celldm(1)*celldm(2)*celldm(6)
@@ -364,7 +370,9 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
      !
   ELSE
      !
-     CALL errore('latgen',' nonexistent bravais lattice',ibrav)
+     errormsg='nonexistent bravais lattice'
+     ierr=ABS(ibrav)
+     RETURN
      !
   ENDIF
   !
@@ -374,7 +382,7 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
   !
   RETURN
   !
-END SUBROUTINE latgen
+END SUBROUTINE latgen_lib
 !
 !-------------------------------------------------------------------------
 SUBROUTINE at2celldm (ibrav,alat,a1,a2,a3,celldm)
@@ -490,7 +498,6 @@ FUNCTION at2ibrav (a1, a2, a3) RESULT (ibrav)
   REAL(dp) :: v1, v2, v3, cosab, cosac, cosbc
   !
   INTEGER :: ibrav
-  ibrav =0
   !
   v1 = sqrt( dot_product( a1,a1 ) )
   v2 = sqrt( dot_product( a2,a2 ) )
@@ -499,6 +506,9 @@ FUNCTION at2ibrav (a1, a2, a3) RESULT (ibrav)
   cosac = dot_product(a1,a3)/v1/v3
   cosab = dot_product(a1,a2)/v1/v2
   !
+  ! Assume triclinic if nothing suitable found
+  !
+  ibrav = 14
   IF ( eqq(v1,v2) .and. eqq(v1,v3) ) THEN
      ! Case: a=b=c
      IF (eqq(cosab,cosac) .and. eqq(cosab,cosbc)) THEN
@@ -559,7 +569,7 @@ FUNCTION at2ibrav (a1, a2, a3) RESULT (ibrav)
         ELSEIF ( eqq(a1(1),-a2(1)) .and. eqq(a1(2),a2(2))) THEN
            ibrav = 9
         ENDIF
-     ELSE
+     ELSEIF ( eqq(cosac,-cosbc) ) THEN
         ! bco (unique axis b)
         ibrav =-13
      ENDIF
@@ -776,4 +786,26 @@ SUBROUTINE remake_cell(ibrav, alat, a1,a2,a3)
 
 
 END SUBROUTINE
+
+!-------------------------------------------------------------------------
+SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
+  !-----------------------------------------------------------------------
+  USE kinds, ONLY: DP
+  IMPLICIT NONE
+  INTEGER, INTENT(in) :: ibrav
+  real(DP), INTENT(inout) :: celldm(6)
+  real(DP), INTENT(inout) :: a1(3), a2(3), a3(3)
+  real(DP), INTENT(out) :: omega
+  !
+  character(len=54) :: errormsg
+  integer :: ierr
+
+  CALL latgen_lib(ibrav,celldm,a1,a2,a3,omega, ierr, errormsg)
+  IF(ierr /= 0 ) THEN
+            CALL errore("latgen", errormsg, abs(ierr)) 
+  ELSE
+    IF(errormsg/='') CALL infomsg('latgen',errormsg)
+  ENDIF
+  !
+END SUBROUTINE 
 

@@ -37,8 +37,8 @@ CONTAINS
      IMPLICIT NONE
      REAL(DP) :: s, Fs, Z_ab=0.0D0
 
-     IF (inlc == 1) Z_ab = -0.8491D0
-     IF (inlc == 2) Z_ab = -1.887D0
+     IF ( inlc == 1 .OR. inlc == 3 )                Z_ab = -0.8491D0
+     IF ( inlc == 2 .OR. inlc == 4 .OR. inlc == 5 ) Z_ab = -1.887D0
      Fs = 1.0D0 - Z_ab * s**2 / 9.0D0
   END FUNCTION Fs
 
@@ -139,7 +139,7 @@ CONTAINS
   ! --------------------------------------------------------------------
   ! Check that the requested non-local functional is implemented.
 
-  if ( inlc /= 1 .AND. inlc /= 2) call errore('xc_vdW_DF','E^nl_c not implemented',1)
+  if ( inlc > 5 ) call errore('xc_vdW_DF','E^nl_c not implemented',1)
 
 
   ! --------------------------------------------------------------------
@@ -275,7 +275,7 @@ CONTAINS
   ! --------------------------------------------------------------------
   ! Check that the requested non-local functional is implemented.
 
-  if ( inlc /= 1 .AND. inlc /= 2) call errore('xc_vdW_DF','E^nl_c not implemented',1)
+  if ( inlc > 5 ) call errore('xc_vdW_DF','E^nl_c not implemented',1)
 
 
   ! --------------------------------------------------------------------

@@ -1,0 +1,43 @@
+&control
+   calculation     = 'vc-relax'
+   tstress         = .true.
+   tprnfor         = .true.
+   forc_conv_thr   = 1.0D-3
+/
+
+&system
+   ibrav           = 4 
+   celldm(1)       = 4.64117
+   celldm(3)       = 2.72640
+   nat             = 4 
+   ntyp            = 1
+   occupations     = 'fixed'
+   smearing        = 'methfessel-paxton'
+   degauss         = 0.02
+   ecutwfc         = 30.0
+   ecutrho         = 180.0
+   input_dft  	   = 'vdW-DF3-opt1'
+/
+
+&electrons
+   conv_thr        = 1.0d-8
+/
+
+&ions
+/
+
+&cell
+   cell_dofree     = 'z'
+/
+
+ATOMIC_SPECIES
+C  12.00   C.pbe-rrkjus.UPF
+
+ATOMIC_POSITIONS {crystal}
+C  0.0000000000    0.0000000000    0.0000000000
+C  0.3333333333    0.6666666667    0.0000000000
+C  0.0000000000    0.0000000000    0.5000000000
+C  0.6666666667    0.3333333333    0.5000000000 
+
+K_POINTS automatic
+4 4 4 1 1 1

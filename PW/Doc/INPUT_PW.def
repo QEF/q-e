@@ -599,7 +599,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     v3 = (c*cos(beta),   0,   c*sin(beta)),
                     where beta=angle between axis a and c projected on xz plane
                IMPORTANT NOTICE: until QE v.6.4.1, axis for ibrav=-13 had a 
-               different definition: v1(old) = v2(now), v2(old) = -v1(now)
+               different definition: v1(old) =-v2(now), v2(old) = v1(now)
 
                14          Triclinic                       celldm(2)= b/a,
                                                            celldm(3)= c/a,
@@ -2058,7 +2058,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
                 opt -val 'cg' {
                     Conjugate-gradient-like band-by-band diagonalization.
-                    Slower than 'david' but uses less memory and is 
+                    MUCH slower than 'david' but uses less memory and is 
                     (a little bit) more robust.
                 }
 
@@ -2094,16 +2094,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
 
         var diago_david_ndim -type INTEGER { 
-            default { 4 }
+            default { 2 }
             info {
                 For Davidson diagonalization: dimension of workspace
                 (number of wavefunction packets, at least 2 needed).
                 A larger value may yield a smaller number of iterations in
                 the algorithm but uses more memory and more CPU time in 
-                subspace diagonalization.
-                Try @ref diago_david_ndim=2 if you are tight on memory or if
-                the time spent in subspace diagonalization (cdiaghg/rdiaghg)
-                is significant compared to the time spent in h_psi
+                subspace diagonalization (cdiaghg/rdiaghg). You may try
+                @ref diago_david_ndim=4 if you are not tight on memory 
+                and if the time spent in subspace diagonalization is small
+                compared to the time spent in h_psi
             }
         }
 
@@ -2231,9 +2231,41 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
     
     namelist IONS  {
         label { 
-            input this namelist only if @ref calculation == 'relax', 'md', 'vc-relax', or 'vc-md' 
+            REQUIRED if @ref calculation == 'relax', 'md', 'vc-relax', or 'vc-md' 
+            OPTIONAL for @ref calculation == 'scf' (only @ref ion_positions is used)
         }
-    
+ 
+
+        var ion_positions -type CHARACTER {
+            default { 'default' }
+            options {
+                info { Available options are: }
+                
+                opt -val 'default' {
+                    if restarting, use atomic positions read from the
+                    restart file; in all other cases, use atomic
+                    positions from standard input.
+                }
+                opt -val 'from_input' {
+                    read atomic positions from standard input, even if restarting.
+                }
+            }
+        }
+
+        var ion_velocities -type CHARACTER {
+            default { 'default' }
+            info {
+               initial ionic velocities
+               'default'     : start a new simulation from random thermalized
+	                       distribution of velocities if @ref tempw is set,
+			       with zero velocities otherwise; restart from
+			       atomic velocities read from the restart file
+               'from_input'  : start or continue the simulation with atomic
+	                       velocities read from standard input - see card
+			       @ref ATOMIC_VELOCITIES
+            }
+        }
+
         var ion_dynamics -type CHARACTER {
             options {
                 info {
@@ -2291,23 +2323,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
-        var ion_positions -type CHARACTER {
-            default { 'default' }
-            options {
-                info { Available options are: }
-                
-                opt -val 'default' {
-                    if restarting, use atomic positions read from the
-                    restart file; in all other cases, use atomic
-                    positions from standard input.
-                }
-                opt -val 'from_input' {
-                    restart the simulation with atomic positions read
-                    from standard input, even if restarting.
-                }
-            }
-        }
- 
         var pot_extrapolation -type CHARACTER { 
             default { 'atomic' }
             options {
@@ -3200,6 +3215,36 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
     }    
+
+    #
+    # ATOMIC_VELOCITIES
+    #
+    card ATOMIC_VELOCITIES {
+	flag atomvel_type -use optional {
+	    enum {  a.u }
+	    	}
+
+	label { 
+	    Optional card, reads velocities from standard input  
+	}
+
+	syntax {
+                    table atomic_velocities {
+                       rows -start 1 -end nat {
+                            col V -type CHARACTER {
+                                info { label of the atom as specified in ATOMIC_SPECIES }
+                            }
+
+                            colgroup -type REAL {
+                                info { atomic velocities along x y and z direction}
+                                col vx
+                                col vy
+                                col vz
+                            }
+                       }
+                    }
+	}
+    }
 
     #
     # card ATOMIC_FORCES

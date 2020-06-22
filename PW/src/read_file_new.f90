@@ -134,7 +134,7 @@ SUBROUTINE post_xml_init (  )
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
   USE paw_onecenter,        ONLY : paw_potential
   USE dfunct,               ONLY : newd
-  USE funct,                ONLY : get_inlc, get_dft_name
+  USE funct,                ONLY : get_dft_name
   USE ldaU,                 ONLY : lda_plus_u, eth, init_lda_plus_u, U_projection, &
                                    lda_plus_u_kind
   USE esm,                  ONLY : do_comp_esm, esm_init
@@ -163,7 +163,6 @@ SUBROUTINE post_xml_init (  )
   !
   IMPLICIT NONE
   !
-  INTEGER  :: inlc
   REAL(DP) :: ehart, etxc, vtxc, etotefield, charge
   CHARACTER(LEN=20) :: dft_name
   !
