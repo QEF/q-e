@@ -13,6 +13,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   USE funct,            ONLY: get_igcx, get_igcc, is_libxc
   USE xc_gga,           ONLY: gcxc, gcx_spin
 #if defined(__LIBXC)
+#include "xc_version.h"
   USE xc_f03_lib_m
 #endif
   !
@@ -41,7 +42,11 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   REAL(DP), ALLOCATABLE :: rho_lbxc(:)
   REAL(DP), ALLOCATABLE :: v2rho2_x(:), v2rhosigma_x(:), v2sigma2_x(:) 
   REAL(DP), ALLOCATABLE :: v2rho2_c(:), v2rhosigma_c(:), v2sigma2_c(:) 
-  INTEGER(8) :: length8
+#if (XC_MAJOR_VERSION > 4)
+  INTEGER(8) :: lengthxc
+#else
+  INTEGER :: lengthxc
+#endif
 #endif
   !
   INTEGER :: igcx, igcc
@@ -56,7 +61,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   !
 #if defined(__LIBXC)
   !
-  length8 = length
+  lengthxc = length
   !
   IF ( (is_libxc(3) .OR. igcx==0) .AND. (is_libxc(4) .OR. igcc==0)) THEN
     !
@@ -107,7 +112,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
       CALL xc_f03_func_init( xc_func, igcx, sp )
        xc_info1 = xc_f03_func_get_info( xc_func )
        fkind  = xc_f03_func_info_get_kind( xc_info1 )
-       CALL xc_f03_gga_fxc( xc_func, length8, rho_lbxc(1), sigma(1), v2rho2_x(1), v2rhosigma_x(1), v2sigma2_x(1) )
+       CALL xc_f03_gga_fxc( xc_func, lengthxc, rho_lbxc(1), sigma(1), v2rho2_x(1), v2rhosigma_x(1), v2sigma2_x(1) )
       CALL xc_f03_func_end( xc_func )
     ENDIF
     !
@@ -116,7 +121,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     IF (igcc /= 0) THEN 
       CALL xc_f03_func_init( xc_func, igcc, sp )
        xc_info2 = xc_f03_func_get_info( xc_func )
-       CALL xc_f03_gga_fxc( xc_func, length8, rho_lbxc(1), sigma(1), v2rho2_c(1), v2rhosigma_c(1), v2sigma2_c(1) )
+       CALL xc_f03_gga_fxc( xc_func, lengthxc, rho_lbxc(1), sigma(1), v2rho2_c(1), v2rhosigma_c(1), v2sigma2_c(1) )
       CALL xc_f03_func_end( xc_func )
     ENDIF
     !
