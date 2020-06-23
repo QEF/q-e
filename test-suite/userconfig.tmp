@@ -4,8 +4,8 @@ extract_program = XXXXXX/test-suite/extract-pw.sh
 inputs_args = ('*.in', '')
 run_cmd_template = tc.program tc.input tc.output tc.error
 tolerance = ( (8.0e-4, 1.0e-4, 'e1'),
-              (8.0e+0, 1.5e+1, 'n1'),
-              (1.0e-3, 1.5e+0, 'f1'),
+              (5.0e+0, 1.0e+1, 'n1'),
+              (1.0e-3, None,   'f1'),
               (9.0e-1, None,   'p1'),
               (1.0e-2, 1.0e-2, 'ef1'),
               (1.0e-2, 1.0e-2, 'eh1'),
@@ -64,12 +64,12 @@ extract_program = XXXXXX/test-suite/extract-hp.sh
 inputs_args = ('*.in', '')
 run_cmd_template = tc.program tc.args tc.input tc.output tc.error
 tolerance = ( (5.0e-5, 5.0e-3, 'e1'),
-              (4.0e+0, 5.0e-1, 'n1'),
+              (5.0e+0, 5.0e-1, 'n1'),
               (1.0e-3, 1.0e-5, 'f1'),
               (5.0e-1, 1.0e-3, 'p1'),
               (1.5e-3, 1.2e-4, 'u'),
               (1.5e-3, 1.2e-4, 'v1'),
-              (1.5e-3, 1.2e-4, 'v2'))
+              (1.5e-3, 1.8e-4, 'v2'))
 skip_program = grep
 skip_args = 'not present in this version'
 
@@ -80,7 +80,7 @@ extract_program = XXXXXX/test-suite/extract-epw.sh
 inputs_args = ('*.in', '')
 run_cmd_template = tc.program tc.args tc.input tc.output tc.error
 tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
-              (4.0e+0, 5.0e-1, 'n1'),
+              (5.0e+0, 5.0e-1, 'n1'),
               (1.0e-3, 1.0e-5, 'f1'),
               (1.0e-1, 5.0e-3, 'p1'),
               (1.0e-2, 1.0e-4, 'ef1'),

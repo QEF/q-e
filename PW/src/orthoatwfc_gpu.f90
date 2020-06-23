@@ -163,7 +163,7 @@ SUBROUTINE orthoatwfc_gpu( orthogonalize_wfc )
   !-----------------------------------------------------------------------
   !
   ! This routine calculates atomic wavefunctions, orthogonalizes them
-  ! if "orthogonalzie_wfc" is .true., saves them into buffer "iunsat".
+  ! if "orthogonalize_wfc" is .true., saves them into buffer "iunsat".
   ! "swfcatom" must be allocated on input.
   ! Useful for options "wannier" and "one_atom_occupations"
   !

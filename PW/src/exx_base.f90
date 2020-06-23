@@ -628,7 +628,7 @@ MODULE exx_base
     !! Uses \(\text{nkqs}\) and \(\text{index_sym}\) from module \(\texttt{exx}\),
     !! computes \(\text{rir}\).
     !
-    USE symm_base,  ONLY : nsym, s, sr, ft
+    USE symm_base,  ONLY : nsym, s, ft
     !
     IMPLICIT NONE
     !
@@ -636,9 +636,8 @@ MODULE exx_base
     !
     ! ... local variables
     !
-    INTEGER :: ftau(3), ikq, isym, i,j,k, ri,rj,rk, ir, nxxs
-    LOGICAL :: ispresent(nsym)
-    REAL(DP) :: ft_(3), eps2 = 1.0d-5
+    INTEGER :: ikq, isym, i,j,k, ri,rj,rk, ir, nxxs
+    INTEGER, allocatable :: ftau(:,:), s_scaled(:,:,:)
     !
     nxxs = nr1x*nr2x*nr3x
     !
@@ -650,51 +649,22 @@ MODULE exx_base
     ENDIF
     !
     rir = 0
-    ispresent(1:nsym) = .FALSE.
-    !
-    DO ikq = 1, nkqs
-       !
-       isym = ABS(index_sym(ikq))
-       IF ( .NOT. ispresent(isym) ) THEN
-          ispresent(isym) = .TRUE.
-          IF ( MOD(s(2,1,isym) * nr1, nr2) /= 0 .OR. &
-               MOD(s(3,1,isym) * nr1, nr3) /= 0 .OR. &
-               MOD(s(1,2,isym) * nr2, nr1) /= 0 .OR. &
-               MOD(s(3,2,isym) * nr2, nr3) /= 0 .OR. &
-               MOD(s(1,3,isym) * nr3, nr1) /= 0 .OR. &
-               MOD(s(2,3,isym) * nr3, nr2) /= 0 ) THEN
-             CALL errore( 'exx_set_symm', ' EXX smooth grid is not compatible &
-                          & with symmetry: change ecutfock', isym )
-          ENDIF
-          DO ir = 1, nxxs
-             rir(ir,isym) = ir
-          ENDDO
-          ! fractional translation in FFT grid coordinates
-          ft_(1) = ft(1,isym)*nr1
-          ft_(2) = ft(2,isym)*nr2
-          ft_(3) = ft(3,isym)*nr3
-          ftau(:) = NINT(ft_(:))
-          !
-          IF ( ABS( ft_(1) - ftau(1) ) / nr1 > eps2 .OR. &
-               ABS( ft_(2) - ftau(2) ) / nr2 > eps2 .OR. &
-               ABS( ft_(3) - ftau(3) ) / nr3 > eps2 ) THEN
-             CALL infomsg( 'exx_set_symm', ' EXX smooth grid is not compatible &
-                  & with fractional translation: change ecutfock' )
-          ENDIF
-          !
-          DO k = 1, nr3
-             DO j = 1, nr2
-                DO i = 1, nr1
-                   CALL ruotaijk( s(1,1,isym), ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
-                   ir = i + (j-1)*nr1x + (k-1)*nr1x*nr2x
-                   rir(ir,isym) = ri + (rj-1)*nr1x + (rk-1)*nr1x*nr2x
-                ENDDO
+    ALLOCATE ( ftau(3,nsym), s_scaled(3,3,nsym) )
+    CALL scale_sym_ops (nsym, s, ft, nr1, nr2, nr3, s_scaled, ftau)
+    DO isym = 1, nsym
+       DO k = 1, nr3
+          DO j = 1, nr2
+             DO i = 1, nr1
+                CALL rotate_grid_point( s_scaled(1,1,isym), ftau(1,isym), &
+                     i, j, k, nr1, nr2, nr3, ri, rj, rk )
+                ir = i + (j-1)*nr1x + (k-1)*nr1x*nr2x
+                rir(ir,isym) = ri + (rj-1)*nr1x + (rk-1)*nr1x*nr2x
              ENDDO
           ENDDO
-          !
-       ENDIF
-       !
+       ENDDO
     ENDDO
+    !
+    DEALLOCATE ( s_scaled, ftau )
     !
   END SUBROUTINE exx_set_symm
   !

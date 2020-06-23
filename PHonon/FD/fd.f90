@@ -34,7 +34,7 @@ program fd
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   character(len=200) :: pp_file
   logical :: uspp_spsi, ascii, single_file, raw, disp_only
-
+  logical :: needwf=.false.
   INTEGER :: i, ipol, apol, na, nt
   ! counter on the celldm elements
   ! counter on polarizations
@@ -102,8 +102,8 @@ program fd
   CALL mp_bcast( tmp_dir, ionode_id, world_comm )
   CALL mp_bcast( prefix, ionode_id, world_comm )
 
-  !reading the xml file - WILL CRASH, input variable needed
-  call read_file_new ( )
+  !reading the xml file
+  call read_file_new ( needwf )
 
   if (ionode) then
     write(6,*) '**************************************************'
