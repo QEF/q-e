@@ -78,7 +78,9 @@ CONTAINS
 #if defined(__CUDA)
     ierr = cudaGetDeviceCount( ndev )
     IF (ierr/=0) CALL mp_stop( 9000 + ierr )
+!$omp parallel firstprivate(key, ndev)
     ierr = cudaSetDevice(mod(key, ndev))
+!$omp end parallel
     IF (ierr/=0) CALL mp_stop( 9100 + ierr )
     ierr = cudaDeviceSynchronize()
     IF (ierr/=0) CALL mp_stop( 9200 + ierr )
