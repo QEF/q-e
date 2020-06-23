@@ -960,86 +960,9 @@
     END FUNCTION eqvect_strict
     !----------------------------------------------------------------------
     !
-    !---------------------------------------------------------------------------
-    SUBROUTINE read_disp_pattern(iunpun, current_iq, ierr)
-    !---------------------------------------------------------------------------
-    !!
-    !! This routine reads the displacement patterns.
-    !!
-    USE modes,        ONLY : nirr, npert, u
-    USE lr_symm_base, ONLY : minus_q, nsymq
-    USE iotk_module,  ONLY : iotk_index, iotk_scan_dat, iotk_scan_begin, &
-                             iotk_scan_end
-    USE io_global,    ONLY : meta_ionode, meta_ionode_id
-    USE mp,           ONLY : mp_bcast
-    USE mp_global,    ONLY : world_comm
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(in) :: current_iq
-    !! Current q-point
-    INTEGER, INTENT(in) :: iunpun
-    !! Current q-point
-    INTEGER, INTENT(out) :: ierr
-    !! Error
-    !
-    ! Local variables
-    INTEGER :: imode0, imode
-    !! Counter on modes
-    INTEGER :: irr
-    !! Counter on irreducible representations
-    INTEGER :: ipert
-    !! Counter on perturbations at each irr
-    INTEGER :: iq
-    !! Current q-point
-    !
-    ierr = 0
-    IF (meta_ionode) THEN
-      CALL iotk_scan_begin(iunpun, "IRREPS_INFO")
-      !
-      CALL iotk_scan_dat(iunpun, "QPOINT_NUMBER", iq)
-    ENDIF
-    CALL mp_bcast(iq,  meta_ionode_id, world_comm)
-    IF (iq /= current_iq) CALL errore('read_disp_pattern', ' Problems with current_iq', 1)
-    !
-    IF (meta_ionode) THEN
-      !
-      CALL iotk_scan_dat(iunpun, "QPOINT_GROUP_RANK", nsymq)
-      CALL iotk_scan_dat(iunpun, "MINUS_Q_SYM", minus_q)
-      CALL iotk_scan_dat(iunpun, "NUMBER_IRR_REP", nirr)
-      imode0 = 0
-      DO irr = 1, nirr
-        CALL iotk_scan_begin(iunpun, "REPRESENTION" // TRIM(iotk_index(irr)))
-        CALL iotk_scan_dat(iunpun, "NUMBER_OF_PERTURBATIONS", npert(irr))
-        DO ipert = 1, npert(irr)
-          imode = imode0 + ipert
-          CALL iotk_scan_begin(iunpun, "PERTURBATION" // TRIM(iotk_index(ipert)))
-          CALL iotk_scan_dat(iunpun, "DISPLACEMENT_PATTERN", u(:, imode))
-          CALL iotk_scan_end(iunpun, "PERTURBATION" // TRIM(iotk_index(ipert)))
-        ENDDO
-        imode0 = imode0 + npert(irr)
-        CALL iotk_scan_end(iunpun, "REPRESENTION" // TRIM(iotk_index(irr)))
-      ENDDO
-      !
-      CALL iotk_scan_end(iunpun, "IRREPS_INFO")
-      !
-    ENDIF
-    !
-    CALL mp_bcast(nirr   , meta_ionode_id, world_comm)
-    CALL mp_bcast(npert  , meta_ionode_id, world_comm)
-    CALL mp_bcast(nsymq  , meta_ionode_id, world_comm)
-    CALL mp_bcast(minus_q, meta_ionode_id, world_comm)
-    CALL mp_bcast(u      , meta_ionode_id, world_comm)
-    !
-    RETURN
-    !
-    !---------------------------------------------------------------------------
-    END SUBROUTINE read_disp_pattern
-    !---------------------------------------------------------------------------
-    !
-    !------------------------------------------------------------
+    !----------------------------------------------------------------------
     SUBROUTINE fractrasl(npw, igk, evc, eigv1, eig0v)
-    !------------------------------------------------------------
+    !----------------------------------------------------------------------
     !!
     !! Routine to compute fractional translations
     !!

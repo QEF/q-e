@@ -66,8 +66,8 @@
   USE becmod,        ONLY : deallocate_bec_type
   USE phus,          ONLY : int1, int1_nc, int2, int2_so, alphap
   USE kfold,         ONLY : createkmap_pw2, createkmap
-  USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, read_disp_pattern,       &
-                            copy_sym_epw
+  USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, copy_sym_epw
+  USE ph_restart,    ONLY : read_disp_pattern                  
   USE io_epw,        ONLY : read_ifc_epw, readdvscf, readgmap
   USE poolgathering, ONLY : poolgather
   USE rigid_epw,     ONLY : compute_umn_c
