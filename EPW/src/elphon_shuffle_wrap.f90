@@ -57,8 +57,6 @@
   USE fft_base,      ONLY : dfftp
   USE control_ph,    ONLY : u_from_file
   USE noncollin_module, ONLY : m_loc, npol, noncolin
-  USE iotk_module,   ONLY : iotk_open_read, iotk_scan_dat, iotk_free_unit,      &
-                            iotk_close_read
   USE division,      ONLY : fkbounds
   USE uspp,          ONLY : okvan
   USE spin_orb,      ONLY : lspinorb
@@ -67,7 +65,7 @@
   USE phus,          ONLY : int1, int1_nc, int2, int2_so, alphap
   USE kfold,         ONLY : createkmap_pw2, createkmap
   USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, copy_sym_epw
-  USE ph_restart,    ONLY : read_disp_pattern                  
+  USE ph_restart,    ONLY : read_disp_pattern_only
   USE io_epw,        ONLY : read_ifc_epw, readdvscf, readgmap
   USE poolgathering, ONLY : poolgather
   USE rigid_epw,     ONLY : compute_umn_c
@@ -491,18 +489,13 @@
       !
       IF (u_from_file) THEN
          ierr = 0
-         ! ... look for an empty unit (only ionode needs it)
-         !IF (meta_ionode) CALL iotk_free_unit(iunpun, ierr)
          dirname = TRIM(dvscf_dir) // TRIM(prefix) // '.phsave'
          filename = TRIM(dirname) // '/patterns.' // TRIM(int_to_char(iq_irr)) // '.xml'
          INQUIRE(FILE = TRIM(filename), EXIST = exst)
          IF (.NOT. exst) CALL errore('elphon_shuffle_wrap', &
                    'cannot open file for reading or writing', ierr)
-         CALL iotk_open_read(iunpattern, FILE = TRIM(filename), binary = .FALSE., ierr = ierr)
-         CALL read_disp_pattern(iunpattern, iq_irr, ierr)
+         CALL read_disp_pattern_only (iunpattern, filename, iq_irr, ierr)
          IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', ' Problem with modes file', 1)
-         !IF (meta_ionode) CALL iotk_close_read(iunpattern)
-         CALL iotk_close_read(iunpattern)
       ENDIF
       !
       WRITE(stdout, '(//5x, a)') REPEAT('=', 67)
