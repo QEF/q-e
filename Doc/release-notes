@@ -43,6 +43,8 @@ Fixed in dev branch:
   * Wrong phonons could result in some cases from an incompatibility between
     the FFT grid and the symmetry (typically occurrence: actual symmetry higher
     than the symmetry of the Bravais lattice) - Noticed by Matteo Calandra.
+  * Bug in PHonon+U for the symmetrization in the spin-polarized case when 
+    the Hubbard channel is "s" (noticed by Jin-Jian Zhou)
  
 Incompatible changes in dev branch:
   * Default value of parameter "diago_david_ndim" changed to 2:
