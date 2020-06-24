@@ -91,6 +91,7 @@ forces.o : force_lc_gpu.o
 dvloc_of_g_gpu.o : Coul_cut_2D.o
 dvloc_of_g_gpu.o : esm.o
 orthoatwfc_gpu.o : ldaU.o
+orthoatwfc_gpu.o : orthoatwfc.o
 stres_loc_gpu.o : dvloc_of_g_gpu.o
 stres_loc_gpu.o : buffers.o
 stres_loc_gpu.o : Coul_cut_2D.o
