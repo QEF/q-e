@@ -261,34 +261,47 @@ SUBROUTINE openfilq()
      iuatswfc = 35
      CALL open_buffer (iuatswfc, 'satwfc', nwordwfcU, io_level, exst_mem, exst, tmp_dir)
      !
-     ! Check whether the necessary files for the elph calculation exist 
-     ! and are read correctly
+     ! Open a file to write dnsscf_all_modes
      !
-     IF (trans.OR.elph) THEN
+     iundnsscf = 36
+     IF (trans .OR. elph) THEN
         !
-        iundnsscf = 36
+        ! Open a file
+        ! Note: if trans=.true. then dnsscf_all_modes will be written to file (see phqscf)
         !
-        IF (ionode) THEN
+        IF (ionode) CALL seqopn (iundnsscf, 'dnsscf', 'formatted', exst)
+        !
+        ! If elph=.true. and trans=.true., then dnsscf (dnsscf_all_modes) is computed and 
+        ! kept in memory and hence we can directly use it in elphel.
+        ! If elph=.true. and trans=.false. (i.e. phonons must be computed in advance),
+        ! then we read dnsscf (dnsscf_all_modes) from file.
+        !
+        IF (elph .AND. .NOT.trans) THEN ! In this case we read dnsscf_all_modes
            !
-           CALL seqopn (iundnsscf, 'dnsscf', 'formatted', exst)
-           !
-           IF (.NOT.exst .AND. elph) &
-             CALL errore ('openfilq', 'dnsscf file not found, necessary for el-ph calculation, stopping ', 1)
-           ! 
-           IF (exst) THEN
-              !
-              ALLOCATE (dnsscf_all_modes (2*Hubbard_lmax+1, 2*Hubbard_lmax+1, nspin, nat, nmodes))
-              READ(iundnsscf,*,iostat=ios) dnsscf_all_modes
-              REWIND(iundnsscf)
-              !
-              IF (elph .AND. ios.NE.0) &
-                 CALL errore ('openfilq', 'dnsscf file corrupted, necessary for el-ph calculation, stopping ', 1)
-              ! 
-              IF (elph .AND. ios==0) &
-                 WRITE( stdout,*) 'THE DNSSCF MATRIX WAS CORRECTLY READ FROM FILE, NECESSARY FOR ELPH+U'
-              !
-              DEALLOCATE(dnsscf_all_modes)
-              !
+           IF (ionode) THEN
+             !
+             IF (.NOT.exst) &
+                CALL errore ('openfilq', 'dnsscf file not found, necessary for el-ph calculation, stopping ', 1)
+             ! 
+             IF (exst) THEN
+                !
+                ! Here we allocate and deallocate dnsscf_all_modes just to check that it is read from file properly.
+                ! In elphel, dnsscf_all_modes will be allocated and read again (for production purposes).
+                !
+                ALLOCATE (dnsscf_all_modes (2*Hubbard_lmax+1, 2*Hubbard_lmax+1, nspin, nat, nmodes))
+                READ(iundnsscf,*,iostat=ios) dnsscf_all_modes
+                REWIND(iundnsscf)
+                !
+                IF (ios.NE.0) &
+                   CALL errore ('openfilq', 'dnsscf file corrupted, necessary for el-ph calculation, stopping ', 1)
+                ! 
+                IF (ios==0) &
+                   WRITE( stdout,*) 'THE DNSSCF MATRIX WAS CORRECTLY READ FROM FILE, NECESSARY FOR ELPH+U'
+                !
+                DEALLOCATE(dnsscf_all_modes)
+                !
+             ENDIF
+             !
            ENDIF
            !
         ENDIF
