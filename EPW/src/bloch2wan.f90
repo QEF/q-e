@@ -1010,7 +1010,6 @@
     USE kinds,     ONLY : DP
     USE cell_base, ONLY : at, bg, alat
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero, cone
-    USE io_var,    ONLY : iuwane
     USE io_global, ONLY : ionode_id
     USE mp_global, ONLY : inter_pool_comm
     USE mp       , ONLY : mp_sum
@@ -1058,8 +1057,6 @@
     !! Counter on WS points
     REAL(KIND = DP) :: rdotk
     !! $$ mathbf{r}\cdot\mathbf{k} $$
-    REAL(KIND = DP) :: tmp
-    !! Temporary variables
     !
     COMPLEX(KIND = DP) :: cfac
     !! $$ e^{-i\mathbf{r}\cdot\mathbf{k}} $$
@@ -1127,27 +1124,6 @@
     !
     CALL cryst_to_cart(nks, xk, bg, 1)
     !
-    !
-    !  Check spatial decay of EP matrix elements in electron-Wannier basis
-    !  the unit in r-space is angstrom, and I am plotting
-    !  the matrix for the first mode only
-    !
-    IF (mpime == ionode_id) THEN
-      OPEN(UNIT = iuwane, FILE = 'decay.epwane')
-      WRITE(iuwane, '(a)') '# Spatial decay of e-p matrix elements in electron Wannier basis'
-      WRITE(iuwane, '(a)') '# R_e [Ang]        max_{m,n,nu} |g(m,n,nu;R_e)| [Ry] '
-      DO ir = 1, nrr
-        !
-        tmp = MAXVAL(ABS(epmatw(:, :, ir)))
-        WRITE(iuwane, *) wslen(ir) * alat * bohr2ang, tmp
-        !
-      ENDDO
-      !
-      CLOSE(iuwane)
-    ENDIF
-    !
-    CALL stop_clock ('ep: step 2')
-    !
     !--------------------------------------------------------------------------
     END SUBROUTINE ephbloch2wane
     !--------------------------------------------------------------------------
@@ -1165,7 +1141,7 @@
     USE cell_base,     ONLY : at, bg, alat
     USE elph2,         ONLY : epmatwp
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero
-    USE io_var,        ONLY : iuwanep
+    USE io_var,        ONLY : iuwanep, iuwane
     USE io_global,     ONLY : ionode_id
     USE mp,            ONLY : mp_barrier
     USE mp_world,      ONLY : mpime
@@ -1207,16 +1183,16 @@
     !
     REAL(KIND = DP) :: rdotk
     !! $$ mathbf{r}\cdot\mathbf{k} $$
-    REAL(KIND = DP) :: tmp
-    !! Temporary variables
+    REAL(KIND = DP) :: tmp(nrr_k, nrr_g)
+    !! Max electron-phonon value 
     REAL(KIND = DP) :: rvec1(3)
-    !!
+    !! WS vectors
     REAL(KIND = DP) :: rvec2(3)
-    !!
-    REAL(KIND = DP) :: len1
-    !!
-    REAL(KIND = DP) :: len2
-    !!
+    !! WS vectors
+    REAL(KIND = DP) :: len1(nrr_k)
+    !! Electron distance when printing the decay files
+    REAL(KIND = DP) :: len2(nrr_g)
+    !! Phonon distance when printing the decay files
     COMPLEX(KIND = DP) :: cfac
     !! $$ e^{-i\mathbf{r}\cdot\mathbf{k}} $$
     !
@@ -1243,34 +1219,39 @@
         !
       ENDDO
       !
-      !  check spatial decay of EP matrix elements in wannier basis - electrons + phonons
+      ! Check spatial decay of EP matrix elements in wannier basis - electrons + phonons
       !
-      !  we plot: R_e, R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)|
+      rvec2 = DBLE(irvec_g(1, ir)) * at(:, 1) + DBLE(irvec_g(2, ir)) * at(:, 2) + DBLE(irvec_g(3, ir)) * at(:, 3)
+      ! phonon - electron0 distance
+      len2(ir) = DSQRT(rvec2(1)**2.d0 + rvec2(2)**2.d0 + rvec2(3)**2.d0)
+      DO ire = 1, nrr_k
+        tmp(ire, ir)  = MAXVAL(ABS(epmatwp(:, :, ire, :, ir))) 
+      ENDDO
       !
-      IF (mpime == ionode_id) THEN
-        IF (ir == 1) OPEN(UNIT = iuwanep, FILE = 'decay.epmat_wanep', STATUS = 'unknown')
-        IF (ir == 1) WRITE(iuwanep, '(a)') '#     R_e [Ang]      R_p [Ang]       max_{m,n,nu} |g(m,n,nu;R_e,R_p)| [Ry] '
-        DO ire = 1, nrr_k
-          !
-          rvec1 = DBLE(irvec_k(1, ire)) * at(:, 1) + &
-                  DBLE(irvec_k(2, ire)) * at(:, 2) + &
-                  DBLE(irvec_k(3, ire)) * at(:, 3)
-          rvec2 = DBLE(irvec_g(1, ir)) * at(: ,1) + &
-                  DBLE(irvec_g(2, ir)) * at(: ,2) + &
-                  DBLE(irvec_g(3, ir)) * at(: ,3)
-          len1 = DSQRT(rvec1(1)**2.d0 + rvec1(2)**2.d0 + rvec1(3)**2.d0)
-          len2 = DSQRT(rvec2(1)**2.d0 + rvec2(2)**2.d0 + rvec2(3)**2.d0)
-          tmp =  MAXVAL(ABS(epmatwp(:, :, ire, :, ir)))
-          !
-          ! rvec1 : electron-electron0 distance
-          ! rvec2 : phonon - electron0 distance
-          !
-          WRITE(iuwanep, '(5f15.10)') len1 * alat * bohr2ang, len2 * alat * bohr2ang, tmp
-        ENDDO
-        IF (ir == nrr_g) CLOSE(iuwanep)
-      ENDIF
-      !
+    ENDDO ! ir
+    ! 
+    !  Check spatial decay of EP matrix elements in wannier basis - electrons + phonons
+    !  We plot: R_e, R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)|
+    !
+    ! electron-electron0 distance        
+    DO ire = 1, nrr_k
+      rvec1 = DBLE(irvec_k(1, ire)) * at(:, 1) + DBLE(irvec_k(2, ire)) * at(:, 2) + DBLE(irvec_k(3, ire)) * at(:, 3)
+      len1(ire) = DSQRT(rvec1(1)**2.d0 + rvec1(2)**2.d0 + rvec1(3)**2.d0)
     ENDDO
+    ! 
+    OPEN(UNIT = iuwane, FILE = 'decay.epmate', STATUS = 'unknown')
+    WRITE(iuwane, '(a)') '#   R_e [Ang]    max_{m,n,nu} |g(m, n, nu, R_e, :)| [Ry] '
+    DO ire = 1, nrr_k
+      WRITE(iuwane, '(2f15.10, 1E20.10)') len1(ire) * alat * bohr2ang, MAXVAL(tmp(ire, :))
+    ENDDO
+    CLOSE(iuwane)
+    !  
+    OPEN(UNIT = iuwanep, FILE = 'decay.epmatp', STATUS = 'unknown')
+    WRITE(iuwanep, '(a)') '#   R_p [Ang]    max_{m,n,nu} |g(m, n, nu, :, R_p)| [Ry] '
+    DO ir = 1, nrr_g
+      WRITE(iuwanep, '(2f15.10, 1E20.10)') len2(ir) * alat * bohr2ang, MAXVAL(tmp(:, ir))
+    ENDDO
+    CLOSE(iuwanep)
     !
     ! bring xk back into cart coord
     !
@@ -1294,7 +1275,7 @@
     USE kinds,            ONLY : DP
     USE cell_base,        ONLY : at, bg, alat
     USE constants_epw,    ONLY : bohr2ang, twopi, ci, czero, zero
-    USE io_var,           ONLY : iunepmatwe, iunepmatwp, iuwanep
+    USE io_var,           ONLY : iunepmatwe, iunepmatwp, iuwanep, iuwane
     USE io_global,        ONLY : ionode_id, stdout
     USE mp_global,        ONLY : world_comm
     USE mp,               ONLY : mp_barrier, mp_bcast, mp_sum
@@ -1513,12 +1494,17 @@
         len1(ire) = DSQRT(rvec1(1)**2.d0 + rvec1(2)**2.d0 + rvec1(3)**2.d0)
       ENDDO  
       ! 
-      OPEN(UNIT = iuwanep, FILE = 'decay.epmat_wanep', STATUS = 'unknown')
-      WRITE(iuwanep, '(a)') '#     R_e [Ang]      R_p [Ang]       max_{m,n,nu} |g(m,n,nu;R_e,R_p)| [Ry] '
+      OPEN(UNIT = iuwane, FILE = 'decay.epmate', STATUS = 'unknown')
+      WRITE(iuwane, '(a)') '#   R_e [Ang]    max_{m,n,nu} |g(m, n, nu, R_e, :)| [Ry] '
+      DO ire = 1, nrr_k
+        WRITE(iuwane, '(2f15.10, 1E20.10)') len1(ire) * alat * bohr2ang, MAXVAL(tmp(ire, :))
+      ENDDO
+      CLOSE(iuwane)
+      !  
+      OPEN(UNIT = iuwanep, FILE = 'decay.epmatp', STATUS = 'unknown')
+      WRITE(iuwanep, '(a)') '#   R_p [Ang]    max_{m,n,nu} |g(m, n, nu, :, R_p)| [Ry] '
       DO ir = 1, nrr_g
-        DO ire = 1, nrr_k
-          WRITE(iuwanep, '(5f15.10)') len1(ire) * alat * bohr2ang, len2(ir) * alat * bohr2ang, tmp(ire, ir)
-        ENDDO
+        WRITE(iuwanep, '(2f15.10, 1E20.10)') len2(ir) * alat * bohr2ang, MAXVAL(tmp(:, ir))
       ENDDO  
       CLOSE(iuwanep)
     ENDIF
