@@ -209,7 +209,8 @@
     IF (mpime == ionode_id) THEN
       !
       OPEN(UNIT = iudecayH,FILE = 'decay.H')
-      WRITE(iudecayH, '(/3x,a/)') '#Spatial decay of Hamiltonian in Wannier basis'
+      WRITE(iudecayH, '(a)') '# Spatial decay of Hamiltonian in Wannier basis'
+      WRITE(iudecayH, '(a)') '# R_e [Ang]      max_{n,m} |H(n,m)| [Ry] '
       DO ir = 1, nrr
         !
         tmp = MAXVAL(ABS(chw(:, :, ir)))
@@ -440,7 +441,7 @@
     !
     IF (mpime == ionode_id) THEN
       OPEN(UNIT = iudecayP, FILE = 'decay.P')
-      WRITE(iudecayP, '(/3x,a/)') '#Spatial decay of dipole in Wannier basis'
+      WRITE(iudecayP, '(a)') '# Spatial decay of dipole in Wannier basis'
       DO ir = 1, nrr
         !
         tmp =  MAXVAL(ABS(cdmew(:, :,:,ir)))
@@ -563,7 +564,8 @@
     !
     IF (mpime == ionode_id) THEN
       OPEN(UNIT = iudecaydyn, FILE = 'decay.dynmat')
-      WRITE(iudecaydyn, '(/3x,a/)') '#Spatial decay of Dynamical matrix in Wannier basis'
+      WRITE(iudecaydyn, '(a)') '# Spatial decay of Dynamical matrix in Wannier basis'
+      WRITE(iudecaydyn, '(a)') '# R_p [Ang]      max_{mu,nu} |D(mu,nu)| [Ry] '
       DO ir = 1, nrr
         !
         tmp =  MAXVAL(ABS(rdw(:, :, ir)))
@@ -972,7 +974,8 @@
     !
     IF (mpime == ionode_id) then
       OPEN(UNIT = iudecayv, FILE = 'decay.v')
-      WRITE(iudecayv, '(/3x,a/)') '#Spatial decay of Velocity matrix element in Wannier basis'
+      WRITE(iudecayv, '(a)') '# Spatial decay of Velocity matrix element in Wannier basis'
+      WRITE(iudecayv, '(a)') '# R_e [Ang]       max_{a,m,n} |v(a,m,n)| [Bohr/2.418E-17s]    '
       DO ir = 1, nrr
         !
         tmp =  MAXVAL(ABS(cvmew(:, :, :, ir)))
@@ -1132,6 +1135,7 @@
     IF (mpime == ionode_id) THEN
       OPEN(UNIT = iuwane, FILE = 'decay.epwane')
       WRITE(iuwane, '(a)') '# Spatial decay of e-p matrix elements in electron Wannier basis'
+      WRITE(iuwane, '(a)') '# R_e [Ang]        max_{m,n,nu} |g(m,n,nu;R_e)| [Ry] '
       DO ir = 1, nrr
         !
         tmp = MAXVAL(ABS(epmatw(:, :, ir)))
@@ -1245,7 +1249,7 @@
       !
       IF (mpime == ionode_id) THEN
         IF (ir == 1) OPEN(UNIT = iuwanep, FILE = 'decay.epmat_wanep', STATUS = 'unknown')
-        IF (ir == 1) WRITE(iuwanep, '(a)') '#  R_e,    R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)| '
+        IF (ir == 1) WRITE(iuwanep, '(a)') '#     R_e [Ang]      R_p [Ang]       max_{m,n,nu} |g(m,n,nu;R_e,R_p)| [Ry] '
         DO ire = 1, nrr_k
           !
           rvec1 = DBLE(irvec_k(1, ire)) * at(:, 1) + &
@@ -1284,15 +1288,16 @@
     !!  phonon-Bloch representation (coarse mesh), find the corresponding matrix
     !!  electron-Wannier representation and phonon-Wannier representation
     !!
-    !!  SP - Apr 2020 - MPI-IO parallelization
+    !!  SP - June 2020 - Update decays printing. 
+    !!  SP - Apr 2020 - MPI-IO parallelization.
     !
     USE kinds,            ONLY : DP
     USE cell_base,        ONLY : at, bg, alat
-    USE constants_epw,    ONLY : bohr2ang, twopi, ci, czero
+    USE constants_epw,    ONLY : bohr2ang, twopi, ci, czero, zero
     USE io_var,           ONLY : iunepmatwe, iunepmatwp, iuwanep
     USE io_global,        ONLY : ionode_id, stdout
     USE mp_global,        ONLY : world_comm
-    USE mp,               ONLY : mp_barrier, mp_bcast
+    USE mp,               ONLY : mp_barrier, mp_bcast, mp_sum
     USE mp_world,         ONLY : mpime
     USE io_epw,           ONLY : rwepmatw
     USE division,         ONLY : para_bounds
@@ -1359,16 +1364,16 @@
 #endif
     REAL(KIND = DP) :: rdotk
     !! $$ mathbf{r}\cdot\mathbf{k} $$
-    REAL(KIND = DP) :: tmp
-    !! Temporary variables
+    REAL(KIND = DP) :: tmp(nrr_k, nrr_g)
+    !! Max electron-phonon value 
     REAL(KIND = DP) :: rvec1(3)
     !! WS vectors
     REAL(KIND = DP) :: rvec2(3)
     !! WS vectors
-    REAL(KIND = DP) :: len1
-    !! Distance when printing the decay files
-    REAL(KIND = DP) :: len2
-    !! Distance when printing the decay files
+    REAL(KIND = DP) :: len1(nrr_k)
+    !! Electron distance when printing the decay files
+    REAL(KIND = DP) :: len2(nrr_g)
+    !! Phonon distance when printing the decay files
     COMPLEX(KIND = DP) :: cfac
     !! $$ e^{-i\mathbf{r}\cdot\mathbf{k}} $$
     COMPLEX(KIND = DP) :: epmatwe(nbnd, nbnd, nrr_k, nmodes)
@@ -1377,6 +1382,9 @@
     COMPLEX(KIND = DP) :: epmatwp_mem(nbnd, nbnd, nrr_k, nmodes)
     !!  e-p matrix in Wannier basis
     !
+    len1(:) = zero
+    len2(:) = zero
+    tmp(:, :) = zero
     !----------------------------------------------------------
     !  Fourier transform to go into Wannier basis
     !----------------------------------------------------------
@@ -1482,34 +1490,38 @@
       CALL rwepmatw(epmatwp_mem, nbnd, nrr_k, nmodes, ir, iunepmatwp, +1)
 #endif
       !
-      !  check spatial decay of EP matrix elements in wannier basis - electrons + phonons
+      ! Check spatial decay of EP matrix elements in wannier basis - electrons + phonons
       !
-      !  we plot: R_e, R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)|
+      rvec2 = DBLE(irvec_g(1, ir)) * at(:, 1) + DBLE(irvec_g(2, ir)) * at(:, 2) + DBLE(irvec_g(3, ir)) * at(:, 3)
+      ! phonon - electron0 distance
+      len2(ir) = DSQRT(rvec2(1)**2.d0 + rvec2(2)**2.d0 + rvec2(3)**2.d0)
+      DO ire = 1, nrr_k
+        tmp(ire, ir)  = MAXVAL(ABS(epmatwp_mem(:, :, ire, :)))
+      ENDDO
       !
-      IF (mpime == ionode_id) THEN
-        IF (ir == 1) OPEN(UNIT = iuwanep, FILE = 'decay.epmat_wanep', STATUS = 'unknown')
-        IF (ir == 1) WRITE(iuwanep, '(a)') '#  R_e,    R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)| '
+    ENDDO ! ir
+    ! 
+    !  Check spatial decay of EP matrix elements in wannier basis - electrons + phonons
+    !  We plot: R_e, R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)|
+    !
+    CALL mp_sum(len2, world_comm)
+    CALL mp_sum(tmp, world_comm)
+    IF (mpime == ionode_id) THEN
+      ! electron-electron0 distance        
+      DO ire = 1, nrr_k
+        rvec1 = DBLE(irvec_k(1, ire)) * at(:, 1) + DBLE(irvec_k(2, ire)) * at(:, 2) + DBLE(irvec_k(3, ire)) * at(:, 3)
+        len1(ire) = DSQRT(rvec1(1)**2.d0 + rvec1(2)**2.d0 + rvec1(3)**2.d0)
+      ENDDO  
+      ! 
+      OPEN(UNIT = iuwanep, FILE = 'decay.epmat_wanep', STATUS = 'unknown')
+      WRITE(iuwanep, '(a)') '#     R_e [Ang]      R_p [Ang]       max_{m,n,nu} |g(m,n,nu;R_e,R_p)| [Ry] '
+      DO ir = 1, nrr_g
         DO ire = 1, nrr_k
-          !
-          rvec1 = DBLE(irvec_k(1, ire)) * at(:, 1) + &
-                  DBLE(irvec_k(2, ire)) * at(:, 2) + &
-                  DBLE(irvec_k(3, ire)) * at(:, 3)
-          rvec2 = DBLE(irvec_g(1, ir)) * at(:, 1) + &
-                  DBLE(irvec_g(2, ir)) * at(:, 2) + &
-                  DBLE(irvec_g(3, ir)) * at(:, 3)
-          len1 = DSQRT(rvec1(1)**2.d0 + rvec1(2)**2.d0 + rvec1(3)**2.d0)
-          len2 = DSQRT(rvec2(1)**2.d0 + rvec2(2)**2.d0 + rvec2(3)**2.d0)
-          tmp =  MAXVAL(ABS(epmatwp_mem(:, :, ire, :)))
-          !
-          ! rvec1 : electron-electron0 distance
-          ! rvec2 : phonon - electron0 distance
-          !
-          WRITE(iuwanep, '(5f15.10)') len1 * alat * bohr2ang, len2 * alat * bohr2ang, tmp
+          WRITE(iuwanep, '(5f15.10)') len1(ire) * alat * bohr2ang, len2(ir) * alat * bohr2ang, tmp(ire, ir)
         ENDDO
-        IF (ir == nrr_g) CLOSE(iuwanep)
-      ENDIF
-      !
-    ENDDO
+      ENDDO  
+      CLOSE(iuwanep)
+    ENDIF
     !
     ! bring xk back into cart coord
     !
