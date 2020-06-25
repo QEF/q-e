@@ -211,20 +211,22 @@
   !
   transp_temp(:) = zero
   ! In case of scattering calculation
-  IF (scattering) THEN
+!  IF (scattering) THEN ! Make transp_temp universal
     !
-    IF (MAXVAL(temps(:)) > zero) THEN
-      transp_temp(:) = temps(:)
+  IF (MAXVAL(temps(:)) > zero) THEN
+    DO itemp = 1, nstemp
+      transp_temp(itemp)=temp(itemp)
+    ENDDO
+  ELSE
+    IF (nstemp == 1) THEN
+      transp_temp(1) = tempsmin
     ELSE
-      IF (nstemp == 1) THEN
-        transp_temp(1) = tempsmin
-      ELSE
-        DO itemp = 1, nstemp
-          transp_temp(itemp) = tempsmin + DBLE(itemp - 1) * (tempsmax - tempsmin) / DBLE(nstemp - 1)
-        ENDDO
-      ENDIF
+      DO itemp = 1, nstemp
+        transp_temp(itemp) = tempsmin + DBLE(itemp - 1) * (tempsmax - tempsmin) / DBLE(nstemp - 1)
+      ENDDO
     ENDIF
   ENDIF
+!  ENDIF
   ! We have to bcast here because before it has not been allocated
   CALL mp_bcast(transp_temp, ionode_id, world_comm)
   !
@@ -263,19 +265,21 @@
   !
   transp_temp(:) = zero
   ! In case of scattering calculation
-  IF (scattering) THEN
-    IF (MAXVAL(temps(:)) > zero) THEN
-      transp_temp(:) = temps(:)
+!  IF (scattering) THEN ! Make transp_temp universal
+  IF (MAXVAL(temps(:)) > zero) THEN
+    DO itemp= 1, nstemp
+      transp_temp(itemp) = temps(itemp)
+    ENDDO
+  ELSE
+    IF (nstemp == 1) THEN
+      transp_temp(1) = tempsmin
     ELSE
-      IF (nstemp == 1) THEN
-        transp_temp(1) = tempsmin
-      ELSE
-        DO itemp = 1, nstemp
-          transp_temp(itemp) = tempsmin + DBLE(itemp - 1) * (tempsmax - tempsmin) / DBLE(nstemp - 1)
-        ENDDO
-      ENDIF
+      DO itemp = 1, nstemp
+        transp_temp(itemp) = tempsmin + DBLE(itemp - 1) * (tempsmax - tempsmin) / DBLE(nstemp - 1)
+      ENDDO
     ENDIF
   ENDIF
+!  ENDIF
   !
   ! We have to bcast here because before it has not been allocated
   CALL mp_bcast(transp_temp, ionode_id, world_comm)

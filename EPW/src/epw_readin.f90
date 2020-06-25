@@ -790,19 +790,16 @@
   omegamin = omegamin / ryd2ev
   omegamax = omegamax / ryd2ev
   omegastep = omegastep / ryd2ev
-  IF (scattering) THEN
-    DO i = 1, ntempxx
-      IF (temps(i) > 0.d0) THEN
-        nstemp = i
-      ENDIF
-    ENDDO
-    !
-    ! go from K to Ry
-    temps(:) = temps(:) * kelvin2eV / ryd2ev
-    tempsmin = tempsmin * kelvin2eV / ryd2ev
-    tempsmax = tempsmax * kelvin2eV / ryd2ev
-    !
-  ENDIF
+  DO i = 1, ntempxx
+    IF (temps(i) > 0.d0) THEN
+      nstemp = i
+    ENDIF
+  ENDDO
+  !
+  ! go from K to Ry
+  temps(:) = temps(:) * kelvin2eV / ryd2ev
+  tempsmin = tempsmin * kelvin2eV / ryd2ev
+  tempsmax = tempsmax * kelvin2eV / ryd2ev
   !
   xq(:) = zero
   !
