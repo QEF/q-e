@@ -215,7 +215,7 @@
     !
   IF (MAXVAL(temps(:)) > zero) THEN
     DO itemp = 1, nstemp
-      transp_temp(itemp)=temp(itemp)
+      transp_temp(itemp)=temps(itemp)
     ENDDO
   ELSE
     IF (nstemp == 1) THEN
