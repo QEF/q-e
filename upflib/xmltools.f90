@@ -55,12 +55,14 @@ MODULE xmltools
   !
   INTERFACE xmlr_readtag
      MODULE PROCEDURE readtag_c, readtag_r, readtag_l, readtag_i, &
-          readtag_rv, readtag_rm, readtag_rt, readtag_zv, readtag_zm
+          readtag_iv, readtag_rv, readtag_rm, readtag_rt, &
+          readtag_zv, readtag_zm
   END INTERFACE xmlr_readtag
   !
   INTERFACE xmlw_writetag
      MODULE PROCEDURE writetag_c, writetag_r, writetag_l, writetag_i, &
-          writetag_rv, writetag_rm, writetag_rt, writetag_zv, writetag_zm
+          writetag_iv, writetag_rv, writetag_rm, writetag_rt, &
+          writetag_zv, writetag_zm
   END INTERFACE xmlw_writetag
   !
   INTERFACE get_attr
@@ -334,6 +336,20 @@ CONTAINS
     !
   END SUBROUTINE writetag_i
   !
+  SUBROUTINE writetag_iv (name, ivec, ierr )
+    !
+    ! As writetag_c, for integer value
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    INTEGER, INTENT(IN)          :: ivec(:)
+    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    !
+    CALL xmlw_opentag (name, ierr )
+    WRITE( xmlunit, *) ivec
+    CALL xmlw_closetag ( )
+    !
+  END SUBROUTINE writetag_iv
+  !
   SUBROUTINE writetag_l (name, lval, ierr )
     !
     ! As writetag_c, for logical value
@@ -585,6 +601,26 @@ CONTAINS
     end if
     !
   END SUBROUTINE readtag_i
+  !
+  SUBROUTINE readtag_iv (name, ivec, ierr)
+    !
+    ! As readtag_c, for a vector of integer values
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    INTEGER, INTENT(OUT)         :: ivec(:)
+    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    INTEGER :: ier_
+    !
+    CALL xmlr_opentag (name, ier_)
+    if ( ier_ == 0  ) then
+       READ(xmlunit, *) ivec
+       CALL xmlr_closetag ( )
+    else
+       ivec = 0.0_dp
+    end if
+    IF ( present (ierr) ) ierr = ier_
+    !
+  END SUBROUTINE readtag_iv
   !
   SUBROUTINE readtag_l (name, lval, ierr )
     !
