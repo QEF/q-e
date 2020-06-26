@@ -16,5 +16,7 @@ MODULE hartree_mod
    integer :: first_step, last_step, step_mul, step_rem
    logical :: restart ! if true try to read last calculated step from output and set first_step
    logical :: subtract_cm_vel ! if true do velocity renormalization
+   logical :: ec_test ! activates tests for debugging purposes
+
 END MODULE hartree_mod
 

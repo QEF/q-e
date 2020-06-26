@@ -290,7 +290,7 @@ subroutine routine_zero()
       i_current_a(:) = i_current_a(:) + ion_vel(:, iatom)*(1./2.*amconv*amass(ityp(iatom))*(ion_vel(1, iatom)**2 +&
    &ion_vel(2, iatom)**2 + ion_vel(3, iatom)**2))
 !
-!         i_current(:) = i_current(:) + 2./3.*e2*zv(ityp(iatom))**2*ion_vel(:, iatom)*I_primo
+         i_current(:) = i_current(:) + 2./3.*e2*zv(ityp(iatom))**2*ion_vel(:, iatom)*I_primo
          i_current_b(:) = i_current_b(:) + 2./3.*e2*zv(ityp(iatom))**2*ion_vel(:, iatom)*I_primo
    end do
 
