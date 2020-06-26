@@ -61,14 +61,11 @@ subroutine init_us_3(npw_, xvkb_)
    !
    !local variables for UT
    !
-   complex(DP) :: vkbr(1:dffts%nnr), vkbr_2(1:dffts%nnr), vkbr_3(1:dffts%nnr, 3)
-   real(DP)    :: stampa(nkb, 1:dffts%nnr, 3, 3), stampa_b(nkb, 1:dffts%nnr, 3, 3), ris(4, 4)
    complex(DP) :: add
    integer     :: cont_1, cont_2, cont_3, icont, a, b, ikb, ipol
    integer     :: ir, ir_found
    real(DP)    :: u(3), u_x(3), u_y(3), u_z(3), modulus, value
    integer     :: iqq, ix, iy, iz
-!  integer     :: nr3s_end,nr3s_start,ii
    logical     :: l_spline
    !
    !
@@ -86,7 +83,11 @@ subroutine init_us_3(npw_, xvkb_)
    integer :: iq
 
    
-! testing variables
+! testing variables used only for ec_test
+
+   complex(DP) :: vkbr(1:dffts%nnr), vkbr_2(1:dffts%nnr), vkbr_3(1:dffts%nnr, 3)
+   complex(DP) :: vkbr(1:dffts%nnr), vkbr_2(1:dffts%nnr), vkbr_3(1:dffts%nnr, 3)
+   real(DP)    :: stampa(nkb, 1:dffts%nnr, 3, 3), stampa_b(nkb, 1:dffts%nnr, 3, 3) !, ris(4, 4)
    integer, external :: find_free_unit
    integer :: iun
    integer :: ii,nr3s_end, nr3s_start, vkb_pol 
@@ -347,13 +348,13 @@ subroutine init_us_3(npw_, xvkb_)
 !
 !!!!!!!!!!!! First test: we print the x-vkb in real space along the three principal axes of the cell computed in two ways:
 !
-! 1- fourier transforming x-vkb in real space
-! 2- fourier transforming vkb in real space a manually multiplying by x
+! (1) fourier transforming xvkb_ in real space
+! (2) fourier transforming vkb in real space a manually multiplying by x or y or z 
 !
 ! The test produces different files of name "total_axes_x/y/z_ikb" where axes_x/y/z runs thorugh the three principal directions (axes) of the cell, which
 ! is supposed to be cubic.
 !
-! Each file contains 6 records. Three for each x-vbk polarizazion (xvkb, yvkab and zvkab) calculated in way (1) and other three for method 2.
+! Each file contains 6 records. Three for each xvbk polarizazion (xvkb, yvkb and zvkb) calculated in way (1) and other three for method (2).
 !
         do vkb_pol=1,3
          do ikb=1,nkb   
@@ -374,6 +375,7 @@ subroutine init_us_3(npw_, xvkb_)
             call invfft ('Wave', psic, dffts)
             vkbr(1:dffts%nnr)=1/sqrt(omega)*psic(1:dffts%nnr)
 
+            ! vkbr_2 constains vkb in real space
             psic=0.d0
             psic(dffts%nl(1:npw))=vkb(1:npw,ikb)
             psic(dffts%nlm(1:npw))=CONJG(vkb(1:npw,ikb))
@@ -395,7 +397,8 @@ subroutine init_us_3(npw_, xvkb_)
                      u_z(1:3)=real(iz+nr3s_start-1-1)/real(dffts%nr3)*at(1:3,3)*alat
                      u(1:3) = u_x(1:3)+u_y(1:3)+u_z(1:3)
                       modulus=sqrt(u(1)**2+u(2)**2+u(3)**2)
-!inizializza stampa
+
+                      !init "stampa" variable
                      if ((iz==1).and.(iy==1)) then
                           cont_1=cont_1+1
                           stampa(ikb, cont_1,1, vkb_pol)=dble(vkbr(iqq))
@@ -482,8 +485,10 @@ subroutine init_us_3(npw_, xvkb_)
             end do   
         end if
      
-     
-!!test per xvkb: We evaluate xvkb by transforming vkb in real space and multiplying by x. The zero current should be only slightly changed.
+!!!!!!!!!!!!!!!!!!!!!!!!        
+!!!!!!!!!!!!!! Second est per xvkb: We evaluate xvkb by transforming vkb in real space and multiplying by x. In this test
+! the xvkb_ is updated. The zero current should be only slightly changed w.r.t. a calculation done with ec_test = .false.
+! 
 
         xvkb_=0.d0
         do ikb=1,nkb
