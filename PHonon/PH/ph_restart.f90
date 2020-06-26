@@ -223,8 +223,12 @@ MODULE ph_restart
             USE modes, ONLY : nirr, npert, u, name_rap_mode, num_rap_mode
 
             USE lr_symm_base, ONLY : nsymq, minus_q
+            ! Workaround
+            use ions_base, only: nat
 
             IMPLICIT NONE
+            ! Workaround
+            REAL(dp) :: aux(2,3*nat)
             INTEGER :: imode0, imode, irr, ipert, iq
 
             CALL xmlw_opentag( "IRREPS_INFO" )
@@ -239,14 +243,18 @@ MODULE ph_restart
             !
             imode0=0
             DO irr=1,nirr
-               CALL xmlw_opentag( "REPRESENTION"//i2c(irr) )
+               CALL xmlw_opentag( "REPRESENTION."//i2c(irr) )
                CALL xmlw_writetag( "NUMBER_OF_PERTURBATIONS", npert(irr) )
                DO ipert=1,npert(irr)
                   imode=imode0+ipert
-                  CALL xmlw_opentag( "PERTURBATION"//i2c(ipert) )
+                  CALL xmlw_opentag( "PERTURBATION."//i2c(ipert) )
                   !CALL xmlw_writetag( "SYMMETRY_TYPE_CODE", num_rap_mode(imode))
                   !CALL xmlw_writetag( "SYMMETRY_TYPE", name_rap_mode(imode) )
-                  CALL xmlw_writetag( "DISPLACEMENT_PATTERN", u(:,imode) )
+                  ! Workaround
+                  aux(1,:) =  DBLE( u(:,imode) )
+                  aux(2,:) = DIMAG( u(:,imode) )
+                  CALL xmlw_writetag( "DISPLACEMENT_PATTERN", aux )
+                  ! CALL xmlw_writetag( "DISPLACEMENT_PATTERN", u(:,imode) )
                   CALL xmlw_closetag(  )
                ENDDO
                imode0=imode0+npert(irr)
@@ -789,7 +797,7 @@ MODULE ph_restart
 
     RETURN
     END SUBROUTINE read_el_phon
-
+    !
     !---------------------------------------------------------------------------
     SUBROUTINE read_disp_pattern_only(iunpun, filename, current_iq, ierr)
     !---------------------------------------------------------------------------
@@ -814,7 +822,7 @@ MODULE ph_restart
        ierr = 1
        return
     end if
-    CALL read_disp_pattern(iunpun, current_iq, ierr)
+    CALL read_disp_pattern(iun, current_iq, ierr)
     CALL xml_closefile ()
     !
     END SUBROUTINE read_disp_pattern_only
@@ -830,7 +838,9 @@ MODULE ph_restart
     USE io_global,    ONLY : ionode, ionode_id
     USE mp,           ONLY : mp_bcast
     USE mp_global,    ONLY : world_comm
-    !
+    ! Workaround
+    USE ions_base,  ONLY : nat
+   !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: current_iq
@@ -849,6 +859,8 @@ MODULE ph_restart
     !! Counter on perturbations at each irr
     INTEGER :: iq
     !! Current q-point
+    ! Workaround
+    REAL(dp) :: aux(2,3*nat)
     !
     ierr = 0
     IF (ionode) THEN
@@ -865,15 +877,18 @@ MODULE ph_restart
       CALL xmlr_readtag( "NUMBER_IRR_REP", nirr )
       imode0 = 0
       DO irr = 1, nirr
-        CALL xmlr_opentag( "REPRESENTION"// i2c(irr) )
+        CALL xmlr_opentag( "REPRESENTION."// i2c(irr) )
         CALL xmlr_readtag( "NUMBER_OF_PERTURBATIONS", npert(irr) )
         DO ipert = 1, npert(irr)
           imode = imode0 + ipert
-          CALL xmlr_opentag( "PERTURBATION"// i2c(ipert) )
+          CALL xmlr_opentag( "PERTURBATION."// i2c(ipert) )
           ! not sure why these two lines break epw
           !CALL xmlr_readtag( "SYMMETRY_TYPE_CODE", num_rap_mode(imode) )
           !CALL xmlr_readtag( "SYMMETRY_TYPE", name_rap_mode(imode) )
-          CALL xmlr_readtag( "DISPLACEMENT_PATTERN", u(:,imode) )
+          ! Workaround: free format for complex number is unreliable 
+          CALL xmlr_readtag( "DISPLACEMENT_PATTERN", aux )
+          u(:,imode) = CMPLX ( aux(1,:), aux(2,:), kind=dp )
+          !CALL xmlr_readtag( "DISPLACEMENT_PATTERN", u(:,imode) )
           CALL xmlr_closetag( )
         ENDDO
         imode0 = imode0 + npert(irr)
@@ -894,11 +909,11 @@ MODULE ph_restart
     !
     RETURN
     !
+  END SUBROUTINE read_disp_pattern
+  !
+  !---------------------------------------------------------------------------
+  SUBROUTINE read_tensors( ierr )
     !---------------------------------------------------------------------------
-    END SUBROUTINE read_disp_pattern
-    !---------------------------------------------------------------------------
-    ! 
-    SUBROUTINE read_tensors( ierr )
 !
 !   This routine reads the tensors that have been already calculated 
 !

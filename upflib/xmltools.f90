@@ -16,12 +16,10 @@ MODULE xmltools
   ! * lines no more than 1024 characters long (see maxline parameter)
   ! * no more than 9 levels of tags (see maxlevel parameter)
   ! * length of tags no more than 80 characters (see maxlength parameter)
-  ! Can read tags only in the correct order and in the following format:
-  ! * tags holding a single value should begin and end in the same line
-  ! * tags holding arrays of values should be opened in a single line,
-  !   then the array in free format, then a single line with closing tag
   ! * attributes should not contain commas or strange characters
-  ! Unpredictable results may follow otherwise.
+  ! * can read tags only in the correct order
+  ! * can read arrays of values only if there is a line break before and
+  !   after the array
   !
   USE upf_kinds, ONLY : dp
   IMPLICIT NONE
@@ -32,6 +30,7 @@ MODULE xmltools
   INTEGER, PARAMETER :: maxline=1024
   character(len=maxline) :: line
   integer :: eot
+  ! eot points to the end of tag in line just scanned
   integer :: nattr
   CHARACTER(LEN=:), ALLOCATABLE :: attrlist
   !
@@ -309,7 +308,11 @@ CONTAINS
        CALL xmlw_closetag ( '?' )
     ELSE
        ! write value (character)
+#if defined (__iotk_style)
+       WRITE (xmlunit, "('>',/,A)") trim(cval)
+#else
        WRITE (xmlunit, "('>',A)", ADVANCE='no') trim(cval)
+#endif
        ! close here the tag
        CALL xmlw_closetag ( name )
     END IF
@@ -770,44 +773,60 @@ CONTAINS
     ! 1: error parsing file
     ! 2: error in arguments
     !
-    integer ::  i, j, lt
+    integer ::  i, j, lt, ll
     character(len=1) :: endtag
     !
     call xmlr_opentag ( tag, ierr )
     !
-    if ( eot > 0 ) then
-       j = eot
-       lt = len_trim(tag)
-       ! beginning of val at line(j:j): search for end tag
-       i = index ( line(j:), '</'//trim(tag) )
-       if ( i < 1 ) then
-          ! </tag> not found on this line
-          ! print *, 'tag </',trim(tag),'> not found'
-          ierr = 1
-          return
-       else
-          ! maybe found end tag?
-          endtag = adjustl( line(j+i+1+lt:) )
-          if ( endtag /= '>' ) then
-             ! print *, 'tag ',trim(tag),' not correctly closed'
-             if (present(ierr)) ierr = 1
-          else
-             ! <tag ....>val</tag> found, exit
-             cval = adjustl(trim(line(j:j+i-2)))
-             ! print *, 'value=',cval
-          end if
-          ! print '("closed at level ",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
-          nlevel = nlevel -1
-          !
-          return
-          !
-       endif
-    else if ( eot == 0 ) then
+    cval = ''
+    if ( eot < 0 ) then
        ! print *, 'end of file reached, tag not found'
        if ( present(ierr) ) ierr =-1
-    else if ( eot < 0 ) then
+    else if ( eot == 0 ) then
        ! print *, 'tag found, no value to read on line'
-       cval = ''
+       return
+    else
+       ! scan current line if there is something after the end of tag 
+       ! (variable "eot"); read a new line otherwise
+       do while(.true.)
+          if ( eot > len_trim(line) ) then
+             read(xmlunit,'(a)', end=10) line
+             j = 1
+          else
+             j = eot
+          end if
+          ! beginning of val at line(j:j): search for end tag
+          i = index ( line(j:), '</'//trim(tag) )
+          if ( i < 1 ) then
+             ! </tag> not found on this line: read value and continue
+             cval = trim(cval) // adjustl(trim(line(j:)))
+          else
+             ! possible end tag found
+             lt = len_trim(tag)
+             endtag = adjustl( line(j+i+1+lt:) )
+             if ( endtag /= '>' ) then
+                ! print *, 'tag ',trim(tag),' not correctly closed'
+                if (present(ierr)) ierr = 1
+             else
+                ! end of tag found, read value (if any) and exit
+                if ( i > 1 ) cval = trim(cval) // adjustl(trim(line(j:j+i-2)))
+                ! print *, 'value=',cval
+             end if
+             ! print '("closed at level ",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
+             nlevel = nlevel -1
+             !
+             return
+             !
+          endif
+          !
+       end do
+       !
+    end if
+    ! print *, 'tag </',trim(tag),'> not found'
+10  if ( present(ierr) ) then
+       ierr = 1
+    else
+       print *, 'end of file reached, tag </'//trim(tag)//'> not found'
     end if
     !
   end subroutine readtag_c
@@ -836,7 +855,7 @@ CONTAINS
     !
     lt = len_trim(tag)
     stat=0
-    eot =0
+    eot =-1
     do while (.true.)
        read(xmlunit,'(a)', end=10) line
        ll = len_trim(line)
@@ -895,20 +914,15 @@ CONTAINS
              else if ( line(j:j+1) == '/>' ) then
                 ! <tag ... /> found : return
                 if (present(ierr)) ierr = 0
-                ! eot = -2: tag with no value found
-                eot = -2
+                ! eot = 0: tag with no value found
+                eot = 0
                 !
                 return
                 !
              else if ( line(j:j) == '>' ) then
                 ! <tag ... > found
-                if ( j+1 > ll ) then
-                   ! eot = -1: tag found, line ends
-                   eot = -1
-                else
-                   ! eot points to the rest of the line
-                   eot = j+1
-                end if
+                ! eot points to the rest of the line
+                eot = j+1
                 if (present(ierr)) ierr = 0
                 nlevel = nlevel+1
                 IF ( nlevel > maxlevel ) THEN
