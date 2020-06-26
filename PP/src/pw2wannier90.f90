@@ -1224,28 +1224,40 @@ SUBROUTINE pw2wan_set_symm (nsym, sr, tvec)
    ispresent(1:nsym) = .false.
 
    DO isym = 1, nsym
-         IF ( mod(s_in(2, 1, isym) * nr1, nr2) /= 0 .or. &
-              mod(s_in(3, 1, isym) * nr1, nr3) /= 0 .or. &
-              mod(s_in(1, 2, isym) * nr2, nr1) /= 0 .or. &
-              mod(s_in(3, 2, isym) * nr2, nr3) /= 0 .or. &
-              mod(s_in(1, 3, isym) * nr3, nr1) /= 0 .or. &
-              mod(s_in(2, 3, isym) * nr3, nr2) /= 0 ) THEN
-            CALL errore ('pw2waninit',' smooth grid is not compatible with &
+      ! scale sym.ops. with FFT dimensions, check consistency
+      ! FIXME: what happens with fractional translations?
+      IF ( mod(s_in(2, 1, isym) * nr1, nr2) /= 0 .or. &
+           mod(s_in(3, 1, isym) * nr1, nr3) /= 0 .or. &
+           mod(s_in(1, 2, isym) * nr2, nr1) /= 0 .or. &
+           mod(s_in(3, 2, isym) * nr2, nr3) /= 0 .or. &
+           mod(s_in(1, 3, isym) * nr3, nr1) /= 0 .or. &
+           mod(s_in(2, 3, isym) * nr3, nr2) /= 0 ) THEN
+         CALL errore ('pw2waninit',' smooth grid is not compatible with &
                                    & symmetry: change cutoff',isym)
-         ENDIF
-         DO ir=1, nxxs
-            rir(ir,isym) = ir
-         ENDDO
-         DO k = 1, nr3
-            DO j = 1, nr2
-               DO i = 1, nr1
-                  CALL ruotaijk (s_in(:,:,isym), (/0,0,0/), i,j,k, nr1,nr2,nr3, ri,rj,rk)
-                  !
-                  ir =   i + ( j-1)*nr1x + ( k-1)*nr1x*nr2x
-                  rir(ir,isym) = ri + (rj-1)*nr1x + (rk-1)*nr1x*nr2x
-               ENDDO
+      ENDIF
+      s_in (2,1,isym) = s_in (2,1,isym) * nr1 / nr2
+      s_in (3,1,isym) = s_in (3,1,isym) * nr1 / nr3
+      s_in (1,2,isym) = s_in (1,2,isym) * nr2 / nr1
+      s_in (2,2,isym) = s_in (2,2,isym)
+      s_in (3,2,isym) = s_in (3,2,isym) * nr2 / nr3
+      s_in (1,3,isym) = s_in (1,3,isym) * nr3 / nr1
+      s_in (2,3,isym) = s_in (2,3,isym) * nr3 / nr2
+      s_in (3,3,isym) = s_in (3,3,isym)
+
+      DO ir=1, nxxs
+         rir(ir,isym) = ir
+      ENDDO
+      DO k = 1, nr3
+         DO j = 1, nr2
+            DO i = 1, nr1
+               CALL rotate_grid_point (s_in(:,:,isym), (/0,0,0/), i,j,k, &
+                    nr1,nr2,nr3, ri,rj,rk)
+               !
+               ir =   i + ( j-1)*nr1x + ( k-1)*nr1x*nr2x
+               rir(ir,isym) = ri + (rj-1)*nr1x + (rk-1)*nr1x*nr2x
             ENDDO
          ENDDO
+      ENDDO
    ENDDO
    DEALLOCATE(s_in, ft_in)
 END SUBROUTINE pw2wan_set_symm

@@ -14,6 +14,7 @@
     ecutrho =250.0,
  /
  &electrons
+    conv_thr=1.0e-8
  /
 ATOMIC_SPECIES
 Pt  79.90    Pt.rel-pbe-n-rrkjus.UPF

@@ -784,8 +784,10 @@ SUBROUTINE read_rotate_dvscf()
   !! index of q in the star for a given sym
   INTEGER :: lrdrho
   !! the length of the deltarho files ( = length of dvscf files)
-  INTEGER :: ftau(3)
+  INTEGER :: ftau(3,nsym)
   !! fractional translation in fft grid
+  INTEGER :: s_scaled(3,3,nsym)
+  !! scaled rotations
   REAL(DP) :: xq_tau
   !! xq dot tau phase factor
   REAL(DP) :: xqtmp(3)
@@ -987,6 +989,9 @@ SUBROUTINE read_rotate_dvscf()
     !
     ! take away the phase due to the q-point
     !
+    CALL scale_sym_ops( nsym, s, ft, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+         s_scaled, ftau )
+    !
     IF (me_pool == root_pool) THEN
       DO iat = 1, nat
         !
@@ -1018,9 +1023,6 @@ SUBROUTINE read_rotate_dvscf()
       IF (me_pool == root_pool) THEN
         dvscf_p_rotated = (0.d0, 0.d0)
         !
-        ftau(1) = NINT( ft(1, isym_inv) * dfftp%nr1 )
-        ftau(2) = NINT( ft(2, isym_inv) * dfftp%nr2 )
-        ftau(3) = NINT( ft(3, isym_inv) * dfftp%nr3 )
         DO is = 1, nspin_mag
           KLOOP : DO k = 1, dfftp%nr3
             JLOOP : DO j = 1, dfftp%nr2
@@ -1028,8 +1030,8 @@ SUBROUTINE read_rotate_dvscf()
                 !
                 ! Here I rotate r
                 !
-                CALL ruotaijk(s(1,1,isym_inv), ftau, i, j, k, &
-                              dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
+                 CALL rotate_grid_point(s_scaled(1,1,isym_inv),ftau(1,isym_inv),&
+                      i, j, k, dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
                 !
                 n  = (i-1)  + (j-1)*dfftp%nr1  + (k-1)*dfftp%nr2*dfftp%nr1  + 1
                 nn = (ri-1) + (rj-1)*dfftp%nr1 + (rk-1)*dfftp%nr2*dfftp%nr1 + 1

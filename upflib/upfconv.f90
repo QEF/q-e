@@ -28,7 +28,7 @@ PROGRAM upfconv
   USE pseudo_types, ONLY : pseudo_upf, deallocate_pseudo_upf
   USE casino_pp,    ONLY : conv_upf2casino, write_casino_tab
   USE upf_module,   ONLY : read_ps
-  USE write_upf_module,    ONLY : write_upf
+  USE write_upf_new,ONLY : write_upf
   !
   IMPLICIT NONE
   TYPE(pseudo_upf) :: upf_in
@@ -222,12 +222,14 @@ SUBROUTINE conv_upf2xml( upf )
      ALLOCATE(upf%epseu(upf%nwfc))
      upf%epseu(:) = 0.0
   END IF
-  IF ( upf%has_so) THEN
-     upf%rel="full"
-  ELSEIF ( upf%zmesh > 18 ) THEN
-     upf%rel="scalar"
-  ELSE
-     upf%rel="no"
+  IF ( TRIM(upf%rel) == '' ) THEN 
+     IF (upf%has_so) THEN
+        upf%rel="full"
+     ELSE IF ( upf%zmesh > 18 ) THEN
+        upf%rel="scalar"
+     ELSE
+        upf%rel="no"
+     ENDIF
   ENDIF
   !
   IF ( .not. upf%has_so) THEN

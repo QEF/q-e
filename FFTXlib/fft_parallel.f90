@@ -224,7 +224,7 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
      nsticks_zx = MAXVAL(dfft%nsp)
   else if (abs(isgn) == 2 ) then  ! wave func fft
      nnr_ = dfft%nnr
-     nsticks_x  = dfft%my_nr2p * dfft%my_nr3p
+     nsticks_x  = dfft%my_nr2p  * dfft%my_nr3p
      nsticks_y  = dfft%nr1w(dfft%mype2+1) * dfft%my_nr3p
      nsticks_yx = MAXVAL(dfft%nr1w) * MAXVAL(dfft%nr3p)
      nsticks_z  = dfft%nsw(dfft%mype+1)
@@ -236,12 +236,12 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
   end if
   !
   IF ( isgn > 0 ) THEN  ! G -> R
-!$omp parallel default(none)                                        &
-!$omp          private(i, j)                                        &
-!$omp          shared(howmany, f, nnr_, isgn, dfft)   &
-!$omp          shared(nsticks_z, n3, nx3)   &
-!$omp          shared(nsticks_y, n2, nx2)   &
-!$omp          shared(nsticks_x, n1, nx1)   &
+!$omp parallel default(none)                                   &
+!$omp          private(i, j)                                   &
+!$omp          shared(howmany, f, nnr_, isgn, dfft)            &
+!$omp          shared(nsticks_z, n3, nx3)                      &
+!$omp          shared(nsticks_y, n2, nx2)                      &
+!$omp          shared(nsticks_x, n1, nx1)                      &
 !$omp          shared(nsticks_zx, nsticks_yx)
   !
 !$omp do
@@ -258,7 +258,9 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
      ENDDO
 !$omp end do
      !
+!$omp single
      CALL fft_scatter_many_yz( dfft, f, dfft%aux, isgn, howmany )
+!$omp end single
      !
 !$omp do
      DO i = 0, howmany-1
@@ -266,7 +268,9 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
      ENDDO
 !$omp end do
      !
+!$omp single
      CALL fft_scatter_many_xy ( dfft, f, dfft%aux, isgn, howmany )
+!$omp end single
      !
 !$omp do
      DO i = 0, howmany-1
@@ -285,12 +289,12 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
 !$omp end do
 !$omp end parallel
   ELSE                  ! R -> G
-!$omp parallel default(none)                                        &
-!$omp          private(i)                                           &
-!$omp          shared(howmany, f, isgn, nnr_, dfft)                 &
-!$omp          shared(nsticks_z, n3, nx3)   &
-!$omp          shared(nsticks_y, n2, nx2)   &
-!$omp          shared(nsticks_x, n1, nx1)   &
+!$omp parallel default(none)                                   &
+!$omp          private(i)                                      &
+!$omp          shared(howmany, f, isgn, nnr_, dfft)            &
+!$omp          shared(nsticks_z, n3, nx3)                      &
+!$omp          shared(nsticks_y, n2, nx2)                      &
+!$omp          shared(nsticks_x, n1, nx1)                      &
 !$omp          shared(nsticks_zx, nsticks_yx)
      !
 !$omp do
@@ -299,7 +303,9 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
      ENDDO
 !$omp end do
      !
+!$omp single
      CALL fft_scatter_many_xy ( dfft, f, dfft%aux, isgn, howmany )
+!$omp end single
      !
 !$omp do
      DO i = 0, howmany-1
@@ -307,7 +313,9 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
      ENDDO
 !$omp end do
      !
+!$omp single
      CALL fft_scatter_many_yz( dfft, f, dfft%aux, isgn, howmany )
+!$omp end single
      !
 !$omp do
      DO i = 0, howmany-1

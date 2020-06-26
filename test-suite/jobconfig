@@ -48,7 +48,23 @@ inputs_args = ('uspp.in' ,''), ('uspp-2.in' ,''), ('uspp-cg.in' ,''), ('uspp-hyb
 
 [pw_vdw/]
 program = PW
-inputs_args = ('vdw1.in' ,''), ('vdw2.in' ,''), ('vdw3.in' ,''), ('vdw5.in' ,''), ('vdw6.in' ,''), ('vdw-d2.in',''), ('vdw-d3.in',''),('vdw-ts.in',''),('xdm.in','')
+inputs_args = ('vdW-DF3-opt1.in',''), ('vdW-DF3-opt2.in',''), ('rVV10.in',''), ('vdw-d2.in',''), ('vdw-d3.in',''), ('vdw-ts.in',''), ('xdm.in','')
+
+[pw_workflow_vc-relax_dos/]
+program = PW
+inputs_args = ('vc-relax1.in' ,'1'), ('dos2.in' ,'2')
+
+[pw_workflow_relax_relax/]
+program = PW
+inputs_args = ('relax1.in' ,'1'), ('relax2.in' ,'2')
+
+[pw_workflow_vc-relax_scf/]
+program = PW
+inputs_args = ('vc-relax1.in' ,'1'), ('scf2.in' ,'2')
+
+[pw_workflow_scf_dos/]
+program = PW
+inputs_args = ('scf1.in' ,'1'), ('dos2.in' ,'2')
 
 [ph_base/]
 program = PH
@@ -178,6 +194,10 @@ inputs_args = ('Fe.scf.in', '2'), ('Fe.hp.in', '4')
 program = HP
 inputs_args = ('LiNiO2.scf.in', '2'), ('LiNiO2.hp.in', '4')
 
+[pp_acf/]
+program = PP
+inputs_args = ('scf_vdw.in', '1'), ('ppacf_fock.in', '2')
+
 [pw_*/]
 program = PW
 
@@ -186,6 +206,9 @@ program = CP
 
 [ph_*/]
 program = PH
+
+[pp_*/]
+program = PP
 
 [epw_*/]
 program = EPW
@@ -197,6 +220,7 @@ program = HP
 pw_all = pw_*?? 
 cp_all = cp_*??
 ph_all = ph_*??
+pp_all = pp_*??
 epw_all = epw_*??
 hp_all = hp_*??
 epw_partial = epw_base epw_trev epw_trev_uspp epw_metal epw_soc epw_super epw_polar epw_pl epw_mob 

@@ -1,4 +1,6 @@
 New in dev branch:
+  * vdW-DF3-opt1, vdW-DF3-opt2, and vdW-DF-C6 van der Waals functionals
+    implemented (T. Thonhauser, supported by NSF Grant No. 1712425)
   * More FORD documentation
   * Stress for noncolinear case
   * QE can be compiled on Windows 10 using PGI v.19.10 Community Edition
@@ -36,8 +38,17 @@ Fixed in dev branch:
   * Some Bravais lattices with special axis orientations were not correctly
     written to xml file, leading to errors in some codes (e.g., thermo_pw)
     using that piece of information (fixed by Alberto Otero de la Roza)
+  * PPACF wasn't working with the "lfock" option: wavefunctions were no longer
+    read from file because read_file had been replaced by read_file_new
+  * Wrong phonons could result in some cases from an incompatibility between
+    the FFT grid and the symmetry (typically occurrence: actual symmetry higher
+    than the symmetry of the Bravais lattice) - Noticed by Matteo Calandra.
  
 Incompatible changes in dev branch:
+  * Default value of parameter "diago_david_ndim" changed to 2:
+    uses less RAM, execution time sometimes shorter, sometimes longer.
+  * Grouping of inlc values into ranges for different developments.
+    WARNING: inlc for rVV10 has been changed to inlc=26.
   * Conversion from 1D FFT real-space index to 3D positions moved into a
     small routine for all cases where such conversion is used
   * CP: atomic positions are now in array tau(1:3,1:nat), information on the
@@ -48,7 +59,7 @@ Incompatible changes in dev branch:
     'laxlib.fh', descriptors replaced by integer values
   * Interpolation table for Q(G) is in a.u. and no longer in 2pi/a units
   * Part of pseudopotential-related code moved to new directory upflib/ and
-    into library libupf.a. Directory upftools/ deleted.
+    into library libupf.a. Directory upftools/ is obsolescent.
 
 New in 6.5 branch:
   * For non-local functionals of the vdW-DF and rVV10 families the kernel is

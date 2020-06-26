@@ -18,7 +18,7 @@ SUBROUTINE openfilq()
                               iudrhous, iuebar, iudrho, iudyn, iudvscf, &
                               lrdwf, lrbar, lrcom, lrdvkb3, &
                               lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw, &
-                              iundnsscf, iuwfcref, lrwfcref, iudvpsi, lrdvpsi
+                              iundnsscf, iudvpsi, lrdvpsi, iugauge
   USE units_lr,         ONLY : iuwfc, lrwfc
   USE io_files,         ONLY : tmp_dir, diropn, seqopn, nwordwfcU
   USE control_ph,       ONLY : epsil, zue, ext_recover, trans, &
@@ -345,21 +345,19 @@ SUBROUTINE openfilq()
   !
   IF (elph_ahc) THEN
     !
-    ! Write wavefunctions at iq = 1 in real space. Read them at iq > 1 to fix
-    ! the gauge of the wavefunctions psi_nk.
-    !
-    iuwfcref = 41
-    lrwfcref = dffts%nnr * npol
-    CALL open_buffer (iuwfcref, 'wfcr', lrwfcref, &
-        io_level, exst_mem, exst, tmp_dir_save)
-    !
     ! File containing delta V_{SCF} * psi
     !
-    iudvpsi = 42
+    iudvpsi = 41
     lrdvpsi = ahc_nbnd_gauge * npwx * npol
     CALL open_buffer(iudvpsi, 'dvpsi', lrdvpsi, io_level, exst_mem, exst, tmp_dir)
     IF (ext_recover .AND. .NOT. exst) &
        CALL errore ('openfilq', 'file '//trim(prefix)//'.dvpsi not found', 1)
+    !
+    ! File for computing gauge
+    iugauge = 42
+    IF (me_pool == root_pool) THEN
+      CALL seqopn(iugauge, 'wfcgauge', 'unformatted', exst, tmp_dir_save)
+    ENDIF
     !
   ENDIF
   !

@@ -14,20 +14,6 @@ module cpv_traj
 
 contains
 
-   function newunit() result(unit)
-      implicit none
-      integer  :: unit
-      integer, parameter :: LUN_MIN = 123, LUN_MAX = 2000
-      logical :: opened
-      integer :: lun
-      do lun = LUN_MIN, LUN_MAX
-         inquire (unit=lun, opened=opened)
-         if (.not. opened) then
-            unit = lun
-            exit
-         end if
-      end do
-   end function newunit
 
    subroutine cpv_trajectory_initialize(t, fname, natoms, tau_fac, vel_fac, tps_fac, circular, ios)
       implicit none
@@ -38,15 +24,16 @@ contains
       logical, intent(in), optional :: circular
       integer, intent(out), optional :: ios
       integer :: iostat
+      integer, external :: find_free_unit
       ! try to open fname, allocate traj
-      t%iounit_pos = newunit()
+      t%iounit_pos = find_free_unit()
       open (unit=t%iounit_pos, file=trim(fname)//'.pos', iostat=iostat, action='read')
       if (.not. present(ios) .and. iostat /= 0) &
          call errore('cpv_trajectory_initialize', 'error opening file "'//trim(fname)//'.pos"', 1)
       if (present(ios)) &
          ios = iostat
       if (iostat /= 0) return
-      t%iounit_vel = newunit()
+      t%iounit_vel = find_free_unit()
       open (unit=t%iounit_vel, file=trim(fname)//'.vel', iostat=iostat, action='read')
       if (.not. present(ios) .and. iostat /= 0) &
          call errore('cpv_trajectory_initialize', 'error opening file "'//trim(fname)//'.vel"', 1)
