@@ -29,7 +29,7 @@
     USE io_global,     ONLY : stdout
     USE io_var,        ONLY : iuindabs
     USE phcom,         ONLY : nmodes
-    USE epwcom,        ONLY : nstemp, fsthick, eptemp, degaussw, &
+    USE epwcom,        ONLY : nstemp, fsthick, degaussw, &
                               eps_acustic, efermi_read, fermi_energy,&
                               vme, omegamin, omegamax, omegastep
     USE elph2,         ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf, &
@@ -132,7 +132,6 @@
     !
     ! SP: Define the inverse so that we can efficiently multiply instead of dividing
     !
-!    inv_eptemp0 = 1.0 / eptemp
     inv_degaussw = 1.0 / degaussw
     !
     nomega = INT((omegamax - omegamin) / omegastep) + 1
