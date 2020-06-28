@@ -13,12 +13,11 @@ MODULE io_dyn_mat
   ! ... this module contains methods to read and write the dynamical
   !     matrix and the interatomic force constants files in xml format.
   !
-  USE iotk_module
-  !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : ionode, ionode_id
   USE mp_images, ONLY : intra_image_comm
   USE mp,        ONLY : mp_bcast
+  USE xmltools
   !
   IMPLICIT NONE
   !
@@ -31,8 +30,6 @@ MODULE io_dyn_mat
             read_dyn_mat_tail, read_ifc, read_ifc_param
   !
   INTEGER, PRIVATE :: iunout
-  !
-  CHARACTER(iotk_attlenx)  :: attr
   !
   CONTAINS
     !
@@ -59,87 +56,86 @@ MODULE io_dyn_mat
 
     INTEGER, INTENT(IN) :: ityp(nat)
 
-    INTEGER :: ierr, na, nt, kc
+    LOGICAL :: epsil_,raman_, zstareu_
+
+    INTEGER :: na, nt, kc
     REAL(DP) :: aux(3,3)
     REAL (DP), PARAMETER ::   convfact = BOHR_RADIUS_ANGS**2
 
-
-    IF ( ionode ) THEN
-       !
-       CALL iotk_free_unit( iunout, ierr )
-       !
-    END IF
-    CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-    !
-    CALL errore( 'write_dyn_mat_header', 'no free units to write ', ierr )
     IF ( ionode ) THEN
        !
        ! ... open XML descriptor
        !
-       ierr=0
-       CALL iotk_open_write( iunout, FILE = TRIM( fildyn ) // '.xml', &
-                          BINARY = .FALSE., IERR = ierr )
+       iunout = xml_openfile (TRIM( fildyn ) // '.xml' )
+       !
     ENDIF
-    CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+    CALL mp_bcast( iunout, ionode_id, intra_image_comm )
     !
-    CALL errore( 'write_dyn_mat_header', 'error opening the dyn mat file ', ierr )
+    IF ( iunout == -1 ) CALL errore( 'write_dyn_mat_header', &
+         'error opening the dyn mat file ', 1 )
     !
     IF (ionode) THEN
-       CALL iotk_write_begin(iunout, "GEOMETRY_INFO" )
        !
-       CALL iotk_write_dat(iunout, "NUMBER_OF_TYPES", ntyp )
-       CALL iotk_write_dat(iunout, "NUMBER_OF_ATOMS", nat )
-       CALL iotk_write_dat(iunout, "BRAVAIS_LATTICE_INDEX", ibrav )
-       CALL iotk_write_dat(iunout, "SPIN_COMPONENTS", nspin_mag )
-       CALL iotk_write_dat(iunout, "CELL_DIMENSIONS", celldm )
-       CALL iotk_write_dat(iunout, "AT", at, COLUMNS=3 )
-       CALL iotk_write_dat(iunout, "BG", bg, COLUMNS=3 )
-       CALL iotk_write_dat(iunout, "UNIT_CELL_VOLUME_AU", omega )
+       CALL xmlw_opentag("GEOMETRY_INFO" )
+       !
+       CALL xmlw_writetag ( "NUMBER_OF_TYPES", ntyp )
+       CALL xmlw_writetag( "NUMBER_OF_ATOMS", nat )
+       CALL xmlw_writetag( "BRAVAIS_LATTICE_INDEX", ibrav )
+       CALL xmlw_writetag( "SPIN_COMPONENTS", nspin_mag )
+       CALL xmlw_writetag( "CELL_DIMENSIONS", celldm )
+       CALL xmlw_writetag( "AT", at )
+       CALL xmlw_writetag( "BG", bg )
+       CALL xmlw_writetag( "UNIT_CELL_VOLUME_AU", omega )
        DO nt=1, ntyp
-          CALL iotk_write_dat(iunout,"TYPE_NAME"//TRIM(iotk_index(nt)),atm(nt))
-          CALL iotk_write_dat(iunout,"MASS" // TRIM(iotk_index(nt)),amass(nt))
+          CALL xmlw_writetag( "TYPE_NAME."//i2c(nt),atm(nt))
+          CALL xmlw_writetag( "MASS." // i2c(nt),amass(nt))
        ENDDO
        DO na=1,nat
-          CALL iotk_write_attr( attr, "SPECIES", &
-                           & atm( ityp(na) ), FIRST = .TRUE. )
-          CALL iotk_write_attr( attr, "INDEX", ityp(na) )
-          CALL iotk_write_attr( attr, "TAU", tau(:,na) )
-          CALL iotk_write_empty( iunout, &
-                           & "ATOM" // TRIM(iotk_index(na)), attr )
+          CALL add_attr( "SPECIES", atm(ityp(na)) )
+          CALL add_attr( "INDEX", ityp(na) )
+          CALL add_attr( "TAUX", tau(1,na) )
+          CALL add_attr( "TAUY", tau(2,na) )
+          CALL add_attr( "TAUZ", tau(3,na) )
+          CALL xmlw_writetag( "ATOM." // i2c(na), '' )
           IF (nspin_mag==4) &
-             CALL iotk_write_dat(iunout,"STARTING_MAG_"//TRIM(iotk_index(na)),&
-                                 m_loc(:,na),COLUMNS=3)
+             CALL xmlw_writetag( "STARTING_MAG_."//i2c(na), m_loc(:,na) )
        END DO
-       CALL iotk_write_dat(iunout,"NUMBER_OF_Q",nqs)
-
-       CALL iotk_write_end(iunout, "GEOMETRY_INFO" )
-       IF (present(epsil)) THEN
-          CALL iotk_write_begin(iunout, "DIELECTRIC_PROPERTIES" )
-          CALL iotk_write_dat(iunout,"EPSILON",epsil,COLUMNS=3)
-          IF (present(zstareu)) THEN
-             CALL iotk_write_begin(iunout, "ZSTAR" )
+       CALL xmlw_writetag( "NUMBER_OF_Q",nqs )
+       CALL xmlw_closetag( )
+       !
+       epsil_=.false.
+       IF (present(epsil)) epsil_=.true.
+       zstareu_=.false.
+       IF (present(zstareu)) zstareu_=.true.
+       raman_=.false.
+       IF (PRESENT(lraman)) raman_=.true.
+       !
+       CALL add_attr ( "epsil", epsil_)
+       CALL add_attr ( "zstar", zstareu_)
+       CALL add_attr ( "raman", raman_)
+       CALL xmlw_opentag( "DIELECTRIC_PROPERTIES" )
+       IF ( epsil_ ) THEN
+          CALL xmlw_writetag( "EPSILON",epsil)
+          IF ( zstareu_ ) THEN
+             CALL xmlw_opentag( "ZSTAR" )
              DO na=1, nat
-                CALL iotk_write_dat(iunout,"Z_AT_"//TRIM(iotk_index(na)),&
-                                         zstareu(:,:,na),COLUMNS=3)
+                CALL xmlw_writetag( "Z_AT_."//i2c(na), zstareu(:,:,na) )
              ENDDO
-             CALL iotk_write_end(iunout, "ZSTAR" )
+             CALL xmlw_closetag( )
           ENDIF
-          IF (PRESENT(lraman)) THEN
-             IF (lraman) THEN
-                CALL iotk_write_begin(iunout,"RAMAN_TENSOR_A2")
-                DO na = 1, nat
-                   DO kc = 1, 3
-                      aux(:,:) = ramtns(:, :, kc, na)*omega/fpi*convfact
-                      CALL iotk_write_dat(iunout, &
-                             "RAMAN_S_ALPHA"//TRIM(iotk_index(na)) &
-                              // TRIM(iotk_index(kc)),aux, COLUMNS=3)
-                   ENDDO
+          IF ( raman_) THEN
+             CALL xmlw_opentag( "RAMAN_TENSOR_A2")
+             DO na = 1, nat
+                DO kc = 1, 3
+                   aux(:,:) = ramtns(:, :, kc, na)*omega/fpi*convfact
+                   CALL xmlw_writetag( "RAMAN_S_ALPHA."//i2c(na)//'.'//i2c(kc),&
+                           aux )
                 ENDDO
-                CALL iotk_write_END(iunout,"RAMAN_TENSOR_A2")
-             ENDIF
+             ENDDO
+             CALL xmlw_closetag( )
           ENDIF
-          CALL iotk_write_end(iunout, "DIELECTRIC_PROPERTIES" )
        ENDIF
+       CALL xmlw_closetag( )
     ENDIF
     !
     RETURN
@@ -155,18 +151,17 @@ MODULE io_dyn_mat
 
     IF (.NOT.ionode) RETURN
 
-    CALL iotk_write_begin(iunout, "DYNAMICAL_MAT_"//TRIM(iotk_index(iq)) )
+    CALL xmlw_opentag( "DYNAMICAL_MAT_."//i2c(iq) )
 
-    CALL iotk_write_dat(iunout,"Q_POINT",xq,COLUMNS=3)
+    CALL xmlw_writetag( "Q_POINT", xq )
 
     DO na=1, nat
        DO nb=1,nat
-          CALL iotk_write_dat(iunout,"PHI"//TRIM(iotk_index(na))&
-                   &//TRIM(iotk_index(nb)),phi(:,:,na,nb),COLUMNS=1)
+          CALL xmlw_writetag( "PHI."//i2c(na)//'.'//i2c(nb),phi(:,:,na,nb) )
        ENDDO
     ENDDO
 
-    CALL iotk_write_end(iunout, "DYNAMICAL_MAT_"//TRIM(iotk_index(iq)) )
+    CALL xmlw_closetag( )
 
     RETURN
     END SUBROUTINE write_dyn_mat
@@ -184,21 +179,19 @@ MODULE io_dyn_mat
 
     IF (.NOT. ionode) RETURN
 
-    CALL iotk_write_begin( iunout, "FREQUENCIES_THZ_CMM1" )
+    CALL xmlw_opentag( "FREQUENCIES_THZ_CMM1" )
 
     DO mu=1,3*nat
        om = SIGN( SQRT( ABS(omega2(mu)) ),  omega2(mu) )
        omega(1) = om * RY_TO_THZ
        omega(2) = om * RY_TO_CMM1
-       CALL iotk_write_dat(iunout,"OMEGA"//TRIM(iotk_index(mu)),&
-                                                omega, COLUMNS=2)
-       CALL iotk_write_dat(iunout,"DISPLACEMENT"//TRIM(iotk_index(mu)),&
-                                                u(:,mu), COLUMNS=1)
+       CALL xmlw_writetag( "OMEGA."//i2c(mu), omega )
+       CALL xmlw_writetag( "DISPLACEMENT."//i2c(mu), u(:,mu) )
     END DO
 
-    CALL iotk_write_end( iunout, "FREQUENCIES_THZ_CMM1" )
-
-    CALL iotk_close_write( iunout )
+    CALL xmlw_closetag( )
+    CALL xml_closefile( )
+    !
     RETURN
     END SUBROUTINE write_dyn_mat_tail
 
@@ -216,8 +209,8 @@ MODULE io_dyn_mat
     meshfft(1)=nr1
     meshfft(2)=nr2
     meshfft(3)=nr3
-    CALL iotk_write_begin( iunout, "INTERATOMIC_FORCE_CONSTANTS" )
-    CALL iotk_write_dat( iunout, "MESH_NQ1_NQ2_NQ3", meshfft, COLUMNS=3 )
+    CALL xmlw_opentag( "INTERATOMIC_FORCE_CONSTANTS" )
+    CALL xmlw_writetag( "MESH_NQ1_NQ2_NQ3", meshfft )
 
     DO na=1,nat
        DO nb=1,nat
@@ -226,24 +219,19 @@ MODULE io_dyn_mat
              DO m2=1,nr2
                 DO m1=1,nr1
                    nn=nn+1
-                   CALL iotk_write_begin( iunout, "s_s1_m1_m2_m3" //     &
-                        TRIM(iotk_index(na)) // TRIM(iotk_index(nb)) //  &
-                        TRIM(iotk_index(m1)) // TRIM(iotk_index(m2)) //  &
-                        TRIM(iotk_index(m3)) )
+                   CALL xmlw_opentag( "s_s1_m1_m2_m3." // i2c(na) //'.'// &
+                      i2c(nb) //'.'// i2c(m1) //'.'// i2c(m2) //'.'// i2c(m3))
                    aux(:,:)=DBLE(phid(nn,:,:,na,nb))
-                   CALL iotk_write_dat( iunout, 'IFC', aux, COLUMNS=3 )
-                   CALL iotk_write_end( iunout, "s_s1_m1_m2_m3" //     &
-                        TRIM(iotk_index(na)) // TRIM(iotk_index(nb)) //  &
-                        TRIM(iotk_index(m1)) // TRIM(iotk_index(m2)) //  &
-                        TRIM(iotk_index(m3)) )
+                   CALL xmlw_writetag( 'IFC', aux )
+                   CALL xmlw_closetag( )
                 ENDDO
              ENDDO
           ENDDO
        ENDDO
     ENDDO
 
-    CALL iotk_write_end( iunout, "INTERATOMIC_FORCE_CONSTANTS" )
-    CALL iotk_close_write( iunout )
+    CALL xmlw_closetag( )
+    CALL xml_closefile( )
     RETURN
     END SUBROUTINE write_ifc
 
@@ -253,10 +241,7 @@ MODULE io_dyn_mat
     !!
     !! Read paramters from the dynamical matrix
     !!
-    USE iotk_module, ONLY : iotk_scan_begin, iotk_open_read,     &
-                            iotk_scan_dat, iotk_scan_end, iotk_free_unit
     USE io_global,   ONLY : ionode
-    USE mp_world,    ONLY : world_comm
     !
     IMPLICIT NONE
     !
@@ -267,33 +252,20 @@ MODULE io_dyn_mat
     INTEGER, INTENT(out) :: nat
     !! Number of atoms
     !
-    ! Local variables
-    INTEGER :: ierr
-    !! Error status
+    ! Open XML descriptor
+    !
+    IF (ionode)  iunout = xml_openfile( TRIM(fildyn) // '.xml')
+    !
+    CALL mp_bcast(iunout, ionode_id, intra_image_comm)
+    IF ( iunout == -1 ) &
+         CALL errore('read_dyn_mat_param', 'error opening the dyn mat file ',1)
     !
     IF (ionode) THEN
-      !
-      CALL iotk_free_unit(iunout, ierr)
-      !
-    ENDIF
-    CALL mp_bcast(ierr, ionode_id, intra_image_comm)
-    !
-    CALL errore('read_dyn_mat_param', 'no free units to write ', ierr)
-    IF (ionode) THEN
-      !
-      ! Open XML descriptor 
-      ierr = 0
-      CALL iotk_open_read(iunout, FILE = TRIM(fildyn) // '.xml', BINARY = .FALSE., IERR = ierr)
-    ENDIF
-    CALL mp_bcast(ierr, ionode_id, intra_image_comm)
-    !
-    CALL errore('read_dyn_mat_param', 'error opening the dyn mat file ', ierr)
-    !
-    IF (ionode) THEN
-      CALL iotk_scan_begin(iunout, "GEOMETRY_INFO")
-      CALL iotk_scan_dat(iunout, "NUMBER_OF_TYPES", ntyp)
-      CALL iotk_scan_dat(iunout, "NUMBER_OF_ATOMS", nat)
-      CALL iotk_scan_end(iunout, "GEOMETRY_INFO")
+      CALL xmlr_opentag( "GEOMETRY_INFO")
+      CALL xmlr_readtag( "NUMBER_OF_TYPES", ntyp)
+      CALL xmlr_readtag( "NUMBER_OF_ATOMS", nat)
+      CALL xmlr_closetag( )
+      REWIND (iunout)
     ENDIF
     ! 
     CALL mp_bcast(ntyp, ionode_id, intra_image_comm)
@@ -313,10 +285,6 @@ MODULE io_dyn_mat
     !! Read the dynamical matrix
     !!
     USE kinds,       ONLY : DP
-    USE iotk_module, ONLY : iotk_index, iotk_scan_begin, iotk_open_read,     &
-                            iotk_attlenx, iotk_scan_dat, iotk_scan_end,      &
-                            iotk_scan_attr, iotk_free_unit, iotk_close_read, &
-                            iotk_scan_empty
     USE io_global,   ONLY : ionode
     !
     IMPLICIT NONE
@@ -358,14 +326,13 @@ MODULE io_dyn_mat
     REAL(KIND = DP), INTENT(out), OPTIONAL :: zstareu(3, 3, nat)
     !!
     REAL(KIND = DP), INTENT(out), OPTIONAL :: ramtns(3, 3, 3, nat)
-    !! 
-    !
-    ! Local work
-    CHARACTER(iotk_attlenx) :: attr
-    !! Attribute
+    !!
+    CHARACTER(LEN=1) :: dummy
     LOGICAL :: found_z
     !!
     LOGICAL :: lrigid_
+    !!
+    LOGICAL :: raman_
     !!
     INTEGER :: nt
     !! Type of atoms
@@ -373,69 +340,84 @@ MODULE io_dyn_mat
     !! Number of atoms
     INTEGER :: kc
     !! Cartesian direction
+    INTEGER :: ierr
     REAL(KIND = DP) :: aux(3, 3)
-    !! Auxillary
+    !! Auxiliary
     !
     IF (ionode) THEN
-      CALL iotk_scan_begin(iunout, "GEOMETRY_INFO")
-      CALL iotk_scan_dat(iunout, "BRAVAIS_LATTICE_INDEX", ibrav)
-      CALL iotk_scan_dat(iunout, "SPIN_COMPONENTS", nspin_mag)
-      CALL iotk_scan_dat(iunout, "CELL_DIMENSIONS", celldm)
-      CALL iotk_scan_dat(iunout, "AT", at)
-      CALL iotk_scan_dat(iunout, "BG", bg)
-      CALL iotk_scan_dat(iunout, "UNIT_CELL_VOLUME_AU", omega)
+      CALL xmlr_opentag( "GEOMETRY_INFO")
+      CALL xmlr_readtag( "BRAVAIS_LATTICE_INDEX", ibrav)
+      CALL xmlr_readtag( "SPIN_COMPONENTS", nspin_mag)
+      CALL xmlr_readtag( "CELL_DIMENSIONS", celldm)
+      CALL xmlr_readtag( "AT", at)
+      CALL xmlr_readtag( "BG", bg)
+      CALL xmlr_readtag( "UNIT_CELL_VOLUME_AU", omega)
       DO nt = 1, ntyp
-        CALL iotk_scan_dat(iunout, "TYPE_NAME"//TRIM(iotk_index(nt)), atm(nt))
-        CALL iotk_scan_dat(iunout, "MASS" // TRIM(iotk_index(nt)), amass(nt))
+        CALL xmlr_readtag( "TYPE_NAME."//i2c(nt), atm(nt))
+        CALL xmlr_readtag( "MASS." // i2c(nt), amass(nt))
       ENDDO
       DO na = 1, nat
-        CALL iotk_scan_empty(iunout,"ATOM" // TRIM(iotk_index(na)), attr)
-        CALL iotk_scan_attr(attr, "INDEX",  ityp(na))
-        CALL iotk_scan_attr(attr, "TAU", tau(:, na))
+        CALL xmlr_readtag( "ATOM." // i2c(na), dummy)
+        CALL get_attr( "INDEX",  ityp(na))
+        CALL get_attr( "TAUX", tau(1, na))
+        CALL get_attr( "TAUY", tau(2, na))
+        CALL get_attr( "TAUZ", tau(3, na))
         IF (nspin_mag == 4) THEN
-          CALL iotk_scan_dat(iunout, "STARTING_MAG_"//TRIM(iotk_index(na)), m_loc(:, na))
-        ENDIF         
-      ENDDO
-      CALL iotk_scan_dat(iunout, "NUMBER_OF_Q", nqs)
-      CALL iotk_scan_end(iunout, "GEOMETRY_INFO")
-      IF (PRESENT(lrigid)) lrigid = .FALSE.
-      IF (PRESENT(epsil)) THEN
-        CALL iotk_scan_begin(iunout, "DIELECTRIC_PROPERTIES", FOUND = lrigid_)
-        IF (PRESENT(lrigid)) lrigid = lrigid_
-        IF (lrigid_) THEN
-          CALL iotk_scan_dat(iunout,"EPSILON", epsil)
-          CALL iotk_scan_begin(iunout, "ZSTAR", FOUND = found_z)
-          IF (found_z) THEN
-            DO na = 1, nat
-              CALL iotk_scan_dat(iunout,"Z_AT_"//TRIM(iotk_index(na)), aux(:, :))
-              IF (PRESENT(zstareu)) zstareu(:, :, na) = aux
-            ENDDO
-            CALL iotk_scan_end(iunout, "ZSTAR")
-          ELSE
-            IF (PRESENT(zstareu)) zstareu = 0.0_DP
-          ENDIF
-          IF (PRESENT(lraman)) THEN
-            CALL iotk_scan_begin(iunout, "RAMAN_TENSOR_A2", found = lraman)
-            IF (lraman) THEN
-              DO na = 1, nat
-                DO kc = 1, 3
-                  CALL iotk_scan_dat(iunout, &
-                     "RAMAN_S_ALPHA"//TRIM(iotk_index(na))//TRIM(iotk_index(kc)), aux)
-                  IF (PRESENT(ramtns)) ramtns(:, :, kc, na) = aux(:, :)
-                ENDDO
-              ENDDO
-              CALL iotk_scan_END(iunout, "RAMAN_TENSOR_A2")
-            ELSE
-              IF (PRESENT(ramtns)) ramtns = 0.0_DP
-            ENDIF
-          ENDIF
-          CALL iotk_scan_end(iunout, "DIELECTRIC_PROPERTIES")
-        ELSE
-          IF (PRESENT(epsil)) epsil = 0.0_DP
-          IF (PRESENT(zstareu)) zstareu = 0.0_DP
-          IF (PRESENT(ramtns)) ramtns = 0.0_DP
+          CALL xmlr_readtag( "STARTING_MAG_."//i2c(na), m_loc(:, na))
         ENDIF
+      ENDDO
+      CALL xmlr_readtag( "NUMBER_OF_Q", nqs)
+      CALL xmlr_closetag( )
+      !
+      IF (PRESENT(epsil)) THEN
+         CALL xmlr_opentag( "DIELECTRIC_PROPERTIES", ierr )
+         IF ( ierr == -1 ) THEN
+            IF (PRESENT(lrigid))  lrigid = .false.
+            IF (PRESENT(lraman))  lraman = .false.
+            epsil = 0.0_dp
+            IF (PRESENT(zstareu)) zstareu = 0.0_DP
+            IF (PRESENT(ramtns))  ramtns = 0.0_DP
+            GO TO 10
+         END IF
+         CALL get_attr ( "epsil", lrigid_)
+         IF (PRESENT(lrigid)) lrigid = lrigid_
+         CALL get_attr ( "zstar", found_z)
+         CALL get_attr ( "raman", raman_)
+         IF (PRESENT(lraman)) lraman=raman_
+         IF (lrigid_) THEN
+            CALL xmlr_readtag( "EPSILON", epsil)
+            IF (found_z) THEN
+               CALL xmlr_opentag( "ZSTAR" )
+               DO na = 1, nat
+                 CALL xmlr_readtag( "Z_AT_."//i2c(na), aux(:, :))
+                 IF (PRESENT(zstareu)) zstareu(:, :, na) = aux
+               ENDDO
+               CALL xmlr_closetag( )
+            ELSE
+               IF (PRESENT(zstareu)) zstareu = 0.0_DP
+            ENDIF
+            IF ( raman_ ) THEN
+               CALL xmlr_opentag( "RAMAN_TENSOR_A2" )
+               IF ( PRESENT(ramtns) ) THEN
+                 DO na = 1, nat
+                   DO kc = 1, 3
+                     CALL xmlr_readtag( "RAMAN_S_ALPHA."//i2c(na)//'.'//i2c(kc), aux)
+                     IF (PRESENT(ramtns)) ramtns(:, :, kc, na) = aux(:, :)
+                   ENDDO
+                 ENDDO
+                 CALL xmlr_closetag( )
+               ELSE
+                 IF (PRESENT(ramtns)) ramtns = 0.0_DP
+               ENDIF
+            ENDIF
+         ELSE
+            IF (PRESENT(epsil)) epsil = 0.0_DP
+            IF (PRESENT(zstareu)) zstareu = 0.0_DP
+            IF (PRESENT(ramtns)) ramtns = 0.0_DP
+         ENDIF
+         CALL xmlr_closetag( )
       ENDIF
+      10 CONTINUE
     ENDIF
     CALL mp_bcast(ibrav, ionode_id, intra_image_comm)
     CALL mp_bcast(nspin_mag, ionode_id, intra_image_comm)
@@ -466,8 +448,6 @@ MODULE io_dyn_mat
     !! This routine reads the dynamical matrix file. The file is assumed to
     !! be already opened. iq is the number of the dynamical matrix to read.
     !!
-    USE iotk_module, ONLY : iotk_index, iotk_scan_begin,  &
-                            iotk_scan_dat, iotk_scan_end
     USE kinds,       ONLY : DP
     USE io_global,   ONLY : ionode
     !
@@ -487,14 +467,14 @@ MODULE io_dyn_mat
     !! Number of atoms
     !  
     IF (ionode) THEN
-      CALL iotk_scan_begin(iunout, "DYNAMICAL_MAT_"//TRIM(iotk_index(iq)))
-      CALL iotk_scan_dat(iunout, "Q_POINT", xq)
+      CALL xmlr_opentag( "DYNAMICAL_MAT_."//i2c(iq))
+      CALL xmlr_readtag( "Q_POINT", xq)
       DO na = 1, nat
         DO nb = 1,nat
-          CALL iotk_scan_dat(iunout, "PHI"//TRIM(iotk_index(na))//TRIM(iotk_index(nb)), dyn(:, :, na, nb))
+          CALL xmlr_readtag( "PHI."//i2c(na)//'.'//i2c(nb), dyn(:, :, na, nb))
         ENDDO
       ENDDO
-      CALL iotk_scan_end(iunout, "DYNAMICAL_MAT_"//TRIM(iotk_index(iq)))
+      CALL xmlr_closetag( )
     ENDIF
     CALL mp_bcast(xq, ionode_id, intra_image_comm)
     CALL mp_bcast(dyn, ionode_id, intra_image_comm)
@@ -521,17 +501,15 @@ MODULE io_dyn_mat
 
     IF (ionode) THEN
        IF (PRESENT(omega)) THEN
-          CALL iotk_scan_begin( iunout, "FREQUENCIES_THZ_CMM1" )
+          CALL xmlr_opentag( "FREQUENCIES_THZ_CMM1" )
           DO mu=1,3*nat
-             CALL iotk_scan_dat(iunout,"OMEGA"//TRIM(iotk_index(mu)), omega_)
+             CALL xmlr_readtag( "OMEGA."//i2c(mu), omega_)
              omega(mu)=omega_(1) / RY_TO_THZ
-             IF (PRESENT(u)) CALL iotk_scan_dat(iunout, &
-                             "DISPLACEMENT"//TRIM(iotk_index(mu)),u(:,mu))
+             IF (PRESENT(u)) CALL xmlr_readtag("DISPLACEMENT."//i2c(mu),u(:,mu))
           END DO
-          CALL iotk_scan_end( iunout, "FREQUENCIES_THZ_CMM1" )
+          CALL xmlr_closetag( )
        ENDIF
-
-       CALL iotk_close_read( iunout )
+       CALL xml_closefile( )
     END IF
     IF (PRESENT(omega)) CALL mp_bcast(omega, ionode_id, intra_image_comm)
     IF (PRESENT(u)) CALL mp_bcast(u, ionode_id, intra_image_comm)
@@ -560,12 +538,12 @@ MODULE io_dyn_mat
     INTEGER :: meshfft(3)
     !! Mesh
     IF (ionode) THEN
-      CALL iotk_scan_begin(iunout, "INTERATOMIC_FORCE_CONSTANTS")
-      CALL iotk_scan_dat(iunout, "MESH_NQ1_NQ2_NQ3", meshfft)
+      CALL xmlr_opentag( "INTERATOMIC_FORCE_CONSTANTS")
+      CALL xmlr_readtag( "MESH_NQ1_NQ2_NQ3", meshfft)
       nr1 = meshfft(1)
       nr2 = meshfft(2)
       nr3 = meshfft(3)
-      CALL iotk_scan_end(iunout, "INTERATOMIC_FORCE_CONSTANTS")
+      !!! CALL xmlr_closetag( ) FIXME
     ENDIF
     CALL mp_bcast(nr1, ionode_id, intra_image_comm)
     CALL mp_bcast(nr2, ionode_id, intra_image_comm)
@@ -581,10 +559,6 @@ MODULE io_dyn_mat
     !!
     !! Read IFC in XML format
     !!
-    USE iotk_module, ONLY : iotk_index, iotk_scan_begin, iotk_open_read,     &
-                            iotk_attlenx, iotk_scan_dat, iotk_scan_end,      &
-                            iotk_scan_attr, iotk_free_unit, iotk_close_read, &
-                            iotk_scan_empty
     USE kinds,       ONLY : DP
     USE io_global,   ONLY : ionode
     !
@@ -607,7 +581,7 @@ MODULE io_dyn_mat
     !! Auxillary
     ! 
     IF (ionode) THEN
-      CALL iotk_scan_begin(iunout, "INTERATOMIC_FORCE_CONSTANTS")
+      !!! CALL xmlr_opentag( "INTERATOMIC_FORCE_CONSTANTS") FIXME
       DO na = 1, nat
         DO nb = 1, nat
           nn = 0
@@ -615,23 +589,18 @@ MODULE io_dyn_mat
             DO m2 = 1, nr2
               DO m1 = 1, nr1
                 nn = nn + 1
-                CALL iotk_scan_begin(iunout, "s_s1_m1_m2_m3" //     &
-                    TRIM(iotk_index(na)) // TRIM(iotk_index(nb)) // &
-                    TRIM(iotk_index(m1)) // TRIM(iotk_index(m2)) // &
-                    TRIM(iotk_index(m3)))
-                CALL iotk_scan_dat(iunout, 'IFC', aux)
+                CALL xmlr_opentag( "s_s1_m1_m2_m3." // i2c(na) //'.'// &
+                      i2c(nb) //'.'// i2c(m1) //'.'// i2c(m2) //'.'// i2c(m3))
+                CALL xmlr_readtag( 'IFC', aux)
                 phid(nn, :, :, na, nb) = aux(:, :)
-                CALL iotk_scan_end(iunout, "s_s1_m1_m2_m3" //        &
-                     TRIM(iotk_index(na)) // TRIM(iotk_index(nb)) // &
-                     TRIM(iotk_index(m1)) // TRIM(iotk_index(m2)) // &
-                     TRIM(iotk_index(m3)))
+                CALL xmlr_closetag( )
               ENDDO ! m1
             ENDDO ! m2
           ENDDO ! m3
         ENDDO ! nb
       ENDDO ! na
-      CALL iotk_scan_end(iunout, "INTERATOMIC_FORCE_CONSTANTS")
-      CALL iotk_close_read(iunout)
+      CALL xmlr_closetag( )
+      CALL xml_closefile( )
     ENDIF
     CALL mp_bcast(phid, ionode_id, intra_image_comm)
     RETURN

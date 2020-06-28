@@ -228,7 +228,6 @@ MODULE ph_restart
 
             IMPLICIT NONE
             ! Workaround
-            REAL(dp) :: aux(2,3*nat)
             INTEGER :: imode0, imode, irr, ipert, iq
 
             CALL xmlw_opentag( "IRREPS_INFO" )
@@ -250,11 +249,7 @@ MODULE ph_restart
                   CALL xmlw_opentag( "PERTURBATION."//i2c(ipert) )
                   !CALL xmlw_writetag( "SYMMETRY_TYPE_CODE", num_rap_mode(imode))
                   !CALL xmlw_writetag( "SYMMETRY_TYPE", name_rap_mode(imode) )
-                  ! Workaround
-                  aux(1,:) =  DBLE( u(:,imode) )
-                  aux(2,:) = DIMAG( u(:,imode) )
-                  CALL xmlw_writetag( "DISPLACEMENT_PATTERN", aux )
-                  ! CALL xmlw_writetag( "DISPLACEMENT_PATTERN", u(:,imode) )
+                  CALL xmlw_writetag( "DISPLACEMENT_PATTERN", u(:,imode) )
                   CALL xmlw_closetag(  )
                ENDDO
                imode0=imode0+npert(irr)
@@ -312,7 +307,7 @@ MODULE ph_restart
            DO ik=1,nksqtot
               ikk = 2 * ik - 1
               IF (lgamma) ikk = ik 
-              CALL xmlw_opentag( "K_POINT" // i2c(ik) )
+              CALL xmlw_opentag( "K_POINT." // i2c(ik) )
               CALL xmlw_writetag(  "COORDINATES_XK", xk_col(:,ikk) )
               DO np = 1, npert(irr)
                  CALL add_attr("perturbation",np)
@@ -775,7 +770,7 @@ MODULE ph_restart
        CALL xmlr_readtag( "NUMBER_OF_K", idum )
        CALL xmlr_readtag( "NUMBER_OF_BANDS", idum )
        DO ik=1,nksqtot
-          CALL xmlr_opentag( "K_POINT" // i2c(ik) )
+          CALL xmlr_opentag( "K_POINT." // i2c(ik) )
           CALL xmlr_readtag( "COORDINATES_XK", xkdum(:) )
           DO np = 1, npert(irr)
              CALL xmlr_readtag( "PARTIAL_ELPH", el_ph_mat_rec_col(:,:,ik,np) )
@@ -859,8 +854,6 @@ MODULE ph_restart
     !! Counter on perturbations at each irr
     INTEGER :: iq
     !! Current q-point
-    ! Workaround
-    REAL(dp) :: aux(2,3*nat)
     !
     ierr = 0
     IF (ionode) THEN
@@ -885,10 +878,7 @@ MODULE ph_restart
           ! not sure why these two lines break epw
           !CALL xmlr_readtag( "SYMMETRY_TYPE_CODE", num_rap_mode(imode) )
           !CALL xmlr_readtag( "SYMMETRY_TYPE", name_rap_mode(imode) )
-          ! Workaround: free format for complex number is unreliable 
-          CALL xmlr_readtag( "DISPLACEMENT_PATTERN", aux )
-          u(:,imode) = CMPLX ( aux(1,:), aux(2,:), kind=dp )
-          !CALL xmlr_readtag( "DISPLACEMENT_PATTERN", u(:,imode) )
+          CALL xmlr_readtag( "DISPLACEMENT_PATTERN", u(:,imode) )
           CALL xmlr_closetag( )
         ENDDO
         imode0 = imode0 + npert(irr)
@@ -1316,98 +1306,58 @@ MODULE ph_restart
          ierr=0
          IF (what=='init') THEN
             filename = TRIM( dirname ) // 'control_ph.xml'
-            IF (iflag==1) THEN
-               iunpun = xml_openfile( filename )
-            ELSE
-               INQUIRE( FILE=TRIM(filename), EXIST=exst )
-               IF (.NOT.exst) GOTO 100
-               iunpun = xml_openfile( filename )
-            ENDIF
          ELSEIF (what=='status_ph') THEN
             filename=TRIM( dirname ) //'status_run.xml'
-            IF (iflag==1) THEN
-               iunpun = xml_openfile( filename )
-            ELSE
-               INQUIRE( FILE=TRIM(filename), EXIST=exst )
-               IF (.NOT.exst) GOTO 100
-               iunpun = xml_openfile( filename )
-            ENDIF
          ELSEIF (what=='data_u') THEN
             filename= TRIM( dirname ) // 'patterns.' // &
                       TRIM(int_to_char(current_iq)) // '.xml'
-            IF (iflag==1) THEN
-               iunpun = xml_openfile( filename )
-            ELSE
-               INQUIRE( FILE=TRIM(filename), EXIST=exst )
-               IF (.NOT.exst) GOTO 100
-               iunpun = xml_openfile( filename )
-            ENDIF
          ELSEIF (what=='data_dyn') THEN
             filename= TRIM( dirname ) // 'dynmat.' // &
                       TRIM(int_to_char(current_iq)) // '.' //  &
                       TRIM(int_to_char(irr)) // '.xml'
-            IF (iflag==1) THEN
-               iunpun = xml_openfile( filename )
-            ELSE
-               INQUIRE( FILE=TRIM(filename), EXIST=exst )
-               IF (.NOT.exst) GOTO 100
-               iunpun = xml_openfile( filename )
-            ENDIF
          ELSEIF (what=='tensors') THEN
             filename= TRIM( dirname ) // 'tensors.xml'
-            IF (iflag==1) THEN
-               iunpun = xml_openfile( filename )
-            ELSE
-               INQUIRE( FILE=TRIM(filename), EXIST=exst )
-               IF (.NOT.exst) GOTO 100
-               iunpun = xml_openfile( filename )
-            ENDIF
          ELSEIF (what=='polarization') THEN
             IF (.NOT. fpol) RETURN
             filename= TRIM( dirname ) // 'polarization.'// &
                       TRIM(int_to_char(irr)) // '.xml'
-            IF (iflag==1) THEN
-               iunpun = xml_openfile( filename )
-            ELSE
-               INQUIRE( FILE=TRIM(filename), EXIST=exst )
-               IF (.NOT.exst) GOTO 100
-               iunpun = xml_openfile( filename )
-            ENDIF
          ELSEIF (what=='el_phon') THEN
             filename= TRIM( dirname ) // 'elph.' // &
                       TRIM(int_to_char(current_iq)) // '.' //  &
                       TRIM(int_to_char(irr)) // '.xml'
-            IF (iflag==1) THEN
-               iunpun = xml_openfile( filename )
-            ELSE
-               INQUIRE( FILE=TRIM(filename), EXIST=exst )
-               IF (.NOT.exst) GOTO 100
-               iunpun = xml_openfile( filename )
-            ENDIF
          ELSE
-            iunpun = -1
+            CALL errore( 'ph_restart_set_filename ', &
+              'no filename', 1 )
          ENDIF
          !
-      END IF
-      IF ( iunpun == -1 ) ierr = 1
-100   IF (iflag /= 0) THEN
-         CALL mp_bcast( exst, ionode_id, intra_image_comm )
-!
-!     If the file does not exist and we must read from it, we return with
-!     an error message.
-!
-         IF (.NOT.exst) THEN
-            ierr=100
-            RETURN
+         IF (iflag/=1) THEN
+            INQUIRE( FILE=TRIM(filename), EXIST=exst )
+            IF (.NOT.exst) GOTO 100
          ENDIF
+
+         iunpun = xml_openfile( filename )
+         !
+         exst = (iunpun /= -1)
+         IF (.NOT.exst) GOTO 100
+         !
+         IF ( iflag == 1 ) THEN
+            call add_attr( 'version','1.0')
+            call add_attr( 'encoding','UTF-8')
+            CALL xmlw_writetag ( 'xml', '?' )
+         END IF
+         !
+      END IF
+100   CALL mp_bcast( exst, ionode_id, intra_image_comm )
+      !
+      !     If the file does not exist and we must read from it, we return with
+      !     or if it cannot be opened, we return with an error message.
+      !
+      IF (.NOT.exst) THEN
+         CALL infomsg( 'ph_restart_set_filename ', &
+              'cannot open file for reading or writing' )
+         ierr=100
       ENDIF
       !
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
-      CALL errore( 'ph_restart_set_filename ', &
-                   'cannot open file for reading or writing', ierr )
-  
-    RETURN
     END SUBROUTINE ph_restart_set_filename
     !
 END MODULE ph_restart

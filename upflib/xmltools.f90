@@ -16,6 +16,7 @@ MODULE xmltools
   ! * lines no more than 1024 characters long (see maxline parameter)
   ! * no more than 9 levels of tags (see maxlevel parameter)
   ! * length of tags no more than 80 characters (see maxlength parameter)
+  ! * only single values (e.g. no vectors) in attributes
   ! * attributes should not contain commas or strange characters
   ! * can read tags only in the correct order
   ! * can read arrays of values only if there is a line break before and
@@ -57,6 +58,10 @@ MODULE xmltools
           readtag_iv, readtag_rv, readtag_rm, readtag_rt, &
           readtag_zv, readtag_zm
   END INTERFACE xmlr_readtag
+  !
+  ! IMPORTANT NOTICE: complex numbers, z=a+ib, are written as two reals:
+  ! "a b" or "a,b", but not in fortran free format "(a,b)". Reason:
+  ! make the file readable by non-fortran tools, e.g. python
   !
   INTERFACE xmlw_writetag
      MODULE PROCEDURE writetag_c, writetag_r, writetag_l, writetag_i, &
@@ -423,26 +428,49 @@ CONTAINS
     !
     ! As writetag_c, for a vector of complex values
     !
+    USE iso_c_binding
     CHARACTER(LEN=*), INTENT(IN) :: name
     COMPLEX(dp), INTENT(IN)       :: zvec(:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
+    ! Casts a real pointer to a complex array via C pointer (!)
+    ! in order to write complexes as two reals
+    !
+    TYPE (c_ptr) :: cp
+    REAL(dp), POINTER  :: rvec(:)
+    INTEGER :: n, ndim
+    !
+    NULLIFY (rvec)
+    cp = c_loc(zvec)
+    CALL c_f_pointer (cp, rvec, shape(zvec)*[2])
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, *) zvec
+    ndim = SIZE (zvec)
+    DO n=1,2*ndim,2
+       WRITE( xmlunit, *) rvec(n), rvec(n+1)
+    END DO
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_zv
   !
   SUBROUTINE writetag_zm (name, zmat, ierr )
     !
-    ! As writetag_c, for a matrix of complex values
+    ! As writetag_c for a matrix of complex values - see comments in writetag_zv
     !
+    USE iso_c_binding
     CHARACTER(LEN=*), INTENT(IN) :: name
     COMPLEX(dp), INTENT(IN)      :: zmat(:,:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
+    TYPE (c_ptr) :: cp
+    REAL(dp), POINTER  :: rmat(:)
+    INTEGER :: n, nvec
+    !
+    NULLIFY (rmat)
+    cp = c_loc(zmat)
+    CALL c_f_pointer (cp, rmat, shape(zmat)*[2,1])
+    !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, *) zmat
+    WRITE( xmlunit, *) rmat
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_zm
@@ -723,16 +751,23 @@ CONTAINS
   !
   SUBROUTINE readtag_zv (name, zvec, ierr)
     !
-    ! As readtag_c, for a vector of complex values
+    ! As readtag_c, for a vector of complex values - see comments in writetag_zv
     !
+    USE iso_c_binding
     CHARACTER(LEN=*), INTENT(IN) :: name
     COMPLEX(dp), INTENT(OUT)     :: zvec(:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    !
+    TYPE (c_ptr) :: cp
+    REAL(dp), POINTER  :: rvec(:)
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
     if ( ier_ == 0  ) then
-       READ(xmlunit, *) zvec
+       NULLIFY (rvec)
+       cp = c_loc(zvec)
+       CALL c_f_pointer ( cp, rvec, shape(zvec)*[2])
+       READ( xmlunit, *) rvec
        CALL xmlr_closetag ( )
     else
        zvec = 0.0_dp
@@ -743,16 +778,22 @@ CONTAINS
   !
   SUBROUTINE readtag_zm (name, zmat, ierr)
     !
-    ! As readtag_c, for a matrix of complex values
+    ! As readtag_c, for a matrix of complex values - see comments in writetag_zv
     !
+    USE iso_c_binding
     CHARACTER(LEN=*), INTENT(IN) :: name
     COMPLEX(dp), INTENT(OUT)     :: zmat(:,:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    TYPE (c_ptr) :: cp
+    REAL(dp), POINTER  :: rmat(:)
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
     if ( ier_ == 0  ) then
-       READ(xmlunit, *) zmat
+       NULLIFY (rmat)
+       cp = c_loc(zmat)
+       CALL c_f_pointer (cp, rmat, shape(zmat)*[2,1])
+       READ(xmlunit, *) rmat
        CALL xmlr_closetag ( )
     else
        zmat = 0.0_dp
@@ -973,6 +1014,9 @@ CONTAINS
 10  if ( stat == 0 ) then
        if ( present(ierr) ) then
           ierr =-1
+          ! quick-and-dirty pseudo-fix to deal with tags not found:
+          ! rewind and hope for the best at next step!
+          rewind(xmlunit)
        else
           print *, 'end of file reached, tag '//trim(tag)//' not found'
        end if
