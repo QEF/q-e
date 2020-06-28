@@ -29,8 +29,8 @@ MODULE ph_restart
   PRIVATE
   !
   PUBLIC :: ph_writefile, ph_readfile, allocate_grid_variables, &
-                         check_directory_phsave, destroy_status_run, &
-                         check_available_bands
+       check_directory_phsave, destroy_status_run, check_available_bands, &
+       read_disp_pattern_only
   !
   INTEGER :: iunpun
   !
@@ -475,7 +475,7 @@ MODULE ph_restart
          !
       CASE( 'data_u' )
          !
-         CALL read_modes( iq, ierr )
+         CALL read_disp_pattern( iunpun, iq, ierr )
          IF ( ierr /= 0 ) RETURN
          !
       CASE( 'polarization' )
@@ -819,75 +819,113 @@ MODULE ph_restart
     RETURN
     END SUBROUTINE read_el_phon
 
-    SUBROUTINE read_modes( current_iq, ierr )
-!
-!   This routine reads the displacement patterns.
-!
-    USE modes, ONLY : nirr, npert, u, name_rap_mode, num_rap_mode
-    USE el_phon, ONLY : elph 
-    USE control_ph, ONLY : trans, zeu
-
-    USE lr_symm_base, ONLY : nsymq, minus_q
-
-    IMPLICIT NONE
-
-    INTEGER,          INTENT(IN) :: current_iq
-    INTEGER,          INTENT(OUT) :: ierr
-    INTEGER :: imode0, imode, irr, ipert, iq, iu
-
-    LOGICAL :: exst
+    !---------------------------------------------------------------------------
+    SUBROUTINE read_disp_pattern_only(iunpun, filename, current_iq, ierr)
+    !---------------------------------------------------------------------------
+    !!
+    !! Wrapper routine used by EPW: open file, calls read_disp_pattern
+    !!
     !
-    ierr=0
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: iunpun
+    !! Unit
+    INTEGER, INTENT(in) :: current_iq
+    !! Current q-point
+    CHARACTER(LEN=*), INTENT(in) :: filename
+    !! self-explanatory
+    INTEGER, INTENT(out) :: ierr
+    !! Error code
+    !
+    CALL iotk_open_read ( iunpun, FILE = TRIM(filename), binary = .FALSE., &
+         ierr = ierr)
+    CALL read_disp_pattern(iunpun, current_iq, ierr)
+    CALL iotk_close_read(iunpun)
+    !
+    END SUBROUTINE read_disp_pattern_only
+    !
+    !---------------------------------------------------------------------------
+    SUBROUTINE read_disp_pattern(iunpun, current_iq, ierr)
+    !---------------------------------------------------------------------------
+    !!
+    !! This routine reads the displacement patterns.
+    !!
+    USE modes,        ONLY : nirr, npert, u, name_rap_mode, num_rap_mode
+    USE lr_symm_base, ONLY : minus_q, nsymq
+    USE iotk_module,  ONLY : iotk_index, iotk_scan_dat, iotk_scan_begin, &
+                             iotk_scan_end
+    USE io_global,    ONLY : ionode, ionode_id
+    USE mp,           ONLY : mp_bcast
+    USE mp_global,    ONLY : world_comm
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: current_iq
+    !! Current q-point
+    INTEGER, INTENT(in) :: iunpun
+    !! Current q-point
+    INTEGER, INTENT(out) :: ierr
+    !! Error
+    !
+    ! Local variables
+    INTEGER :: imode0, imode
+    !! Counter on modes
+    INTEGER :: irr
+    !! Counter on irreducible representations
+    INTEGER :: ipert
+    !! Counter on perturbations at each irr
+    INTEGER :: iq
+    !! Current q-point
+    !
+    ierr = 0
     IF (ionode) THEN
-       CALL iotk_scan_begin( iunpun, "IRREPS_INFO" )
-       !
-       CALL iotk_scan_dat(iunpun,"QPOINT_NUMBER",iq)
+      CALL iotk_scan_begin(iunpun, "IRREPS_INFO")
+      !
+      CALL iotk_scan_dat(iunpun, "QPOINT_NUMBER", iq)
     ENDIF
-    CALL mp_bcast( iq,  ionode_id, intra_image_comm )
-    IF (iq /= current_iq) CALL errore('read_modes', &
-              'problems with current_iq', 1 )
-
+    CALL mp_bcast(iq, ionode_id, intra_image_comm)
+    IF (iq /= current_iq) CALL errore('read_disp_pattern', ' Problems with current_iq', 1)
+    !
     IF (ionode) THEN
-
-       CALL iotk_scan_dat(iunpun, "QPOINT_GROUP_RANK", nsymq)
-       CALL iotk_scan_dat(iunpun, "MINUS_Q_SYM", minus_q)
-       CALL iotk_scan_dat(iunpun, "NUMBER_IRR_REP", nirr)
-       imode0=0
-       DO irr=1,nirr
-          CALL iotk_scan_begin( iunpun, "REPRESENTION"// &
-                                     TRIM( iotk_index( irr ) ) )
-          CALL iotk_scan_dat(iunpun,"NUMBER_OF_PERTURBATIONS", npert(irr))
-          DO ipert=1,npert(irr)
-             imode=imode0+ipert
-             CALL iotk_scan_begin( iunpun, "PERTURBATION"// &
-                                     TRIM( iotk_index( ipert ) ) )
-             CALL iotk_scan_dat(iunpun,"SYMMETRY_TYPE_CODE", &
-                                                        num_rap_mode(imode))
-             CALL iotk_scan_dat(iunpun,"SYMMETRY_TYPE", name_rap_mode(imode))
-             CALL iotk_scan_dat(iunpun,"DISPLACEMENT_PATTERN",u(:,imode))
-             CALL iotk_scan_end( iunpun, "PERTURBATION"// &
-                                     TRIM( iotk_index( ipert ) ) )
-          ENDDO
-          imode0=imode0+npert(irr)
-          CALL iotk_scan_end( iunpun, "REPRESENTION"// &
-                                     TRIM( iotk_index( irr ) ) )
-       ENDDO
-       !
-       CALL iotk_scan_end( iunpun, "IRREPS_INFO" )
-       !
+      !
+      CALL iotk_scan_dat(iunpun, "QPOINT_GROUP_RANK", nsymq)
+      CALL iotk_scan_dat(iunpun, "MINUS_Q_SYM", minus_q)
+      CALL iotk_scan_dat(iunpun, "NUMBER_IRR_REP", nirr)
+      imode0 = 0
+      DO irr = 1, nirr
+        CALL iotk_scan_begin(iunpun, "REPRESENTION" // TRIM(iotk_index(irr)))
+        CALL iotk_scan_dat(iunpun, "NUMBER_OF_PERTURBATIONS", npert(irr))
+        DO ipert = 1, npert(irr)
+          imode = imode0 + ipert
+          CALL iotk_scan_begin(iunpun, "PERTURBATION" // TRIM(iotk_index(ipert)))
+          ! SP: Does not seem to be present in the pattern files. 
+          !CALL iotk_scan_dat(iunpun, "SYMMETRY_TYPE_CODE", num_rap_mode(imode))
+          !CALL iotk_scan_dat(iunpun, "SYMMETRY_TYPE", name_rap_mode(imode))
+          CALL iotk_scan_dat(iunpun, "DISPLACEMENT_PATTERN", u(:, imode))
+          CALL iotk_scan_end(iunpun, "PERTURBATION" // TRIM(iotk_index(ipert)))
+        ENDDO
+        imode0 = imode0 + npert(irr)
+        CALL iotk_scan_end(iunpun, "REPRESENTION" // TRIM(iotk_index(irr)))
+      ENDDO
+      !
+      CALL iotk_scan_end(iunpun, "IRREPS_INFO")
+      !
     ENDIF
-
-    CALL mp_bcast( nirr,  ionode_id, intra_image_comm )
-    CALL mp_bcast( npert,  ionode_id, intra_image_comm )
-    CALL mp_bcast( nsymq,  ionode_id, intra_image_comm )
-    CALL mp_bcast( minus_q,  ionode_id, intra_image_comm )
-    CALL mp_bcast( u,  ionode_id, intra_image_comm )
-    CALL mp_bcast( name_rap_mode,  ionode_id, intra_image_comm )
-    CALL mp_bcast( num_rap_mode,  ionode_id, intra_image_comm )
-
+    !
+    CALL mp_bcast(nirr   , ionode_id, intra_image_comm)
+    CALL mp_bcast(npert  , ionode_id, intra_image_comm)
+    CALL mp_bcast(nsymq  , ionode_id, intra_image_comm)
+    CALL mp_bcast(minus_q, ionode_id, intra_image_comm)
+    CALL mp_bcast(u      , ionode_id, intra_image_comm)
+    !CALL mp_bcast(name_rap_mode,  ionode_id, intra_image_comm)
+    !CALL mp_bcast(num_rap_mode,   ionode_id, intra_image_comm)
+    !
     RETURN
-    END SUBROUTINE read_modes
-
+    !
+    !---------------------------------------------------------------------------
+    END SUBROUTINE read_disp_pattern
+    !---------------------------------------------------------------------------
+    ! 
     SUBROUTINE read_tensors( ierr )
 !
 !   This routine reads the tensors that have been already calculated 
