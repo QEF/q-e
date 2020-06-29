@@ -430,11 +430,12 @@ CONTAINS
     !
     USE iso_c_binding
     CHARACTER(LEN=*), INTENT(IN) :: name
-    COMPLEX(dp), INTENT(IN)       :: zvec(:)
-    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    COMPLEX(dp), INTENT(IN), TARGET:: zvec(:)
+    INTEGER, INTENT(OUT), OPTIONAL :: ierr
     !
-    ! Casts a real pointer to a complex array via C pointer (!)
-    ! in order to write complexes as two reals
+    ! Casts a real pointer (rvec) to a complex array (zvec) via C pointer (!)
+    ! in order to write complexes as two reals. Some compilers require that
+    ! the argument of c_loc (zvec) is a pointer or has the "target" attribute
     !
     TYPE (c_ptr) :: cp
     REAL(dp), POINTER  :: rvec(:)
@@ -458,8 +459,8 @@ CONTAINS
     !
     USE iso_c_binding
     CHARACTER(LEN=*), INTENT(IN) :: name
-    COMPLEX(dp), INTENT(IN)      :: zmat(:,:)
-    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    COMPLEX(dp), INTENT(IN), TARGET:: zmat(:,:)
+    INTEGER, INTENT(OUT), OPTIONAL :: ierr
     !
     TYPE (c_ptr) :: cp
     REAL(dp), POINTER  :: rmat(:,:)
@@ -755,7 +756,7 @@ CONTAINS
     !
     USE iso_c_binding
     CHARACTER(LEN=*), INTENT(IN) :: name
-    COMPLEX(dp), INTENT(OUT)     :: zvec(:)
+    COMPLEX(dp), INTENT(OUT), target     :: zvec(:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     TYPE (c_ptr) :: cp
@@ -782,7 +783,7 @@ CONTAINS
     !
     USE iso_c_binding
     CHARACTER(LEN=*), INTENT(IN) :: name
-    COMPLEX(dp), INTENT(OUT)     :: zmat(:,:)
+    COMPLEX(dp), INTENT(OUT), target     :: zmat(:,:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     TYPE (c_ptr) :: cp
     REAL(dp), POINTER  :: rmat(:,:)
