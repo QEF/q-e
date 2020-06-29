@@ -462,7 +462,7 @@ CONTAINS
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     TYPE (c_ptr) :: cp
-    REAL(dp), POINTER  :: rmat(:)
+    REAL(dp), POINTER  :: rmat(:,:)
     INTEGER :: n, nvec
     !
     NULLIFY (rmat)
