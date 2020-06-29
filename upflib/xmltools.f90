@@ -785,7 +785,7 @@ CONTAINS
     COMPLEX(dp), INTENT(OUT)     :: zmat(:,:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     TYPE (c_ptr) :: cp
-    REAL(dp), POINTER  :: rmat(:)
+    REAL(dp), POINTER  :: rmat(:,:)
     INTEGER :: ier_
     !
     CALL xmlr_opentag (name, ier_)
