@@ -13,7 +13,6 @@ subroutine init_zero()
    logical :: exst
    call start_clock('init_zero')
 !
-!inizializzazione delle funzioni da scrivere
    call init_us_1all()
    call init_reciprocal_parts_tab()
 !
@@ -44,7 +43,7 @@ subroutine read_zero()
    character(256) :: pref_box
    integer, external :: find_free_unit
    logical :: exst
-!lettura di H_g e simmetrizzazione
+!read H_g
    pref_box = prefix
    prefix = 'thermal'
 !
@@ -103,7 +102,7 @@ subroutine read_wfc_uno()
    integer :: iun, iatom, iv
 
 !
-!calcolo della carica a partire dalle funzioni d'onda
+! computation of the charge starting from wave functions
    charge = 0.d0
    do iv = 1, nbnd, 2
       psic = 0.d0
@@ -121,9 +120,9 @@ subroutine read_wfc_uno()
       end if
    end do
 !
-!moltiplico per due causa degenerazione di spin
+!multiply by two due to spin degeneracy 
    charge(1:dffts%nnr) = charge(1:dffts%nnr)*2.d0
-!carica in spazio reciproco
+!chatge in reciprocal space
    psic = 0.d0
    psic(1:dffts%nnr) = dcmplx(charge(1:dffts%nnr), 0.d0)
    call fwfft('Rho', psic, dffts)
@@ -153,7 +152,7 @@ subroutine read_step_data()
    logical ::  exst
    integer :: iun, iatom, iv
 
-!lettura velocita'
+!read velocity
    if (ionode) then
       iun = find_free_unit()
       open (unit=iun, file=trim('THIS ROUTINE SHOLD NOT BE CALLED'), access='sequential', status='old')
@@ -167,7 +166,7 @@ subroutine read_step_data()
    end if
    call mp_bcast(ion_vel(:, :), ionode_id, intra_pool_comm)
 
-!cambio unità di misure da velocità CP a velocità PW
+!change units from CP velocity to PW velocity
    ion_vel(1:3, 1:nat) = 2.d0*ion_vel(1:3, 1:nat)
 
 end subroutine
@@ -241,7 +240,7 @@ subroutine routine_zero()
 
    call read_wfc_uno()
 !
-!inizializzazione di u_g
+!initialization of  u_g
    u_g = 0.d0
    do a = 1, 3
       do b = 1, 3
@@ -254,7 +253,7 @@ subroutine routine_zero()
       end do
    end do
 !
-!calcolo della corrente
+!computation of the current
    z_current = 0.d0
    do a = 1, 3
       do igm = gstart, ngm
@@ -294,113 +293,42 @@ subroutine routine_zero()
          i_current_b(:) = i_current_b(:) + 2./3.*e2*zv(ityp(iatom))**2*ion_vel(:, iatom)*I_primo
    end do
 
-   l_scambio = .true.
-   if (l_scambio) then
-      l_scambio_alt = .true.
-      if (l_scambio_alt) then
-         do iatom = 1, nat
-            do jatom = 1, nat
-               if (iatom > jatom) then
-                  dtauij(:) = tau(:, iatom) - tau(:, jatom)
-                  !u(1:3) = matmul(dtauij,at)*alat
-                  u(1:3) = (tau(:, iatom) - tau(:, jatom))*alat
-                  call pbc_ortho(u(1:3), u_pbc(1:3))
-                  call I_due_value(value, u_pbc, 1)
-                  i_current(:) = i_current(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom)) &
-                                 *(ion_vel(:, iatom) + ion_vel(:, jatom))*value
-                  i_current_c(:) = i_current_c(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))* &
-                                   (ion_vel(:, iatom) + ion_vel(:, jatom))*value
+   do iatom = 1, nat
+      do jatom = 1, nat
+         if (iatom > jatom) then
+            u(1:3) = (tau(:, iatom) - tau(:, jatom))*alat
+            call pbc_ortho(u(1:3), u_pbc(1:3))
+            call I_due_value(value, u_pbc, 1)
+            i_current(:) = i_current(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom)) &
+                           *(ion_vel(:, iatom) + ion_vel(:, jatom))*value
+            i_current_c(:) = i_current_c(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))* &
+                             (ion_vel(:, iatom) + ion_vel(:, jatom))*value
 
-                  do a = 1, 3
-                     do b = 1, 3
-                        if (a > b) then
-                           call I_uno_value(value, u_pbc, a, b, 1)
-                           !if (ionode) print *,'value, a, b iatom, jatom='
-                           !if (ionode) print *,value, a, b ,iatom, jatom
-                           !value=100.0
-                           i_current_e(a) = i_current_e(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
- &(ion_vel(b, jatom) + ion_vel(b, iatom))*value
-                           i_current_e(b) = i_current_e(b) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
- &(ion_vel(a, jatom) + ion_vel(a, iatom))*value
-                           i_current(a) = i_current(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
- &(ion_vel(b, jatom) + ion_vel(b, iatom))*value
-                           i_current(b) = i_current(b) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-&(ion_vel(a, jatom) + ion_vel(a, iatom))*value
-                        end if
-                        if (a == b) then
-                           call I_uno_value(value, u_pbc, a, b, 1)
-                           !if (ionode) print *,'value, a, b iatom, jatom='
-                           !if (ionode) print *,value, a, b ,iatom, jatom
-                           !value=100.0
-                           i_current_d(a) = i_current_d(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-  &(ion_vel(b, jatom) + ion_vel(b, iatom))*value
-                           i_current(a) = i_current(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
- &(ion_vel(b, jatom) + ion_vel(b, iatom))*value
-                        end if
-                     end do
-                  end do
-               end if
-            end do
-         end do
-      else  ! if (l_scambio_alt) but l_scambio_alt=.true. so it will never go here
-         do iatom = 1, nat
-            do jatom = 1, nat
-               if (iatom > jatom) then
-                  dtauij(:) = tau(:, iatom) - tau(:, jatom)
-                  u(1:3) = matmul(dtauij, at)*alat
-                  call pbc_ortho(u(1:3), u_pbc(1:3))
-                  call I_due_value(value, u_pbc, 1)
-                  i_current(:) = i_current(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom)) &
-                                 *(ion_vel(:, iatom) + ion_vel(:, jatom))*value
-                  i_current_c(:) = i_current_c(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))* &
-                                   (ion_vel(:, iatom) + ion_vel(:, jatom))*value
-                  do a = 1, 3
-                     do b = 1, 3
-                        call I_uno_value(value, u_pbc, a, b, 1)
-                        if (a == b) then
-                           i_current_d(a) = i_current_d(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-  &(ion_vel(b, jatom) + ion_vel(b, iatom))*value
-                        else
-                           i_current_e(a) = i_current_e(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-  &(ion_vel(b, jatom) + ion_vel(b, iatom))*value
-                        end if
-                        i_current(a) = i_current(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-      &(ion_vel(b, jatom) + ion_vel(b, iatom))*value
-                     end do
-                  end do
-               end if
-            end do
-         end do
-      end if
-   else ! if (l_scambio) but l_scambio=.true. is hard coded so it will never go here
-      do iatom = 1, nat
-         do jatom = 1, nat
-            if (iatom .ne. jatom) then
-               dtauij(:) = tau(:, iatom) - tau(:, jatom)
-               u(1:3) = matmul(dtauij, at)*alat
-               !u(1:3) = (tau(:, iatom) - tau(:, jatom))*alat
-               call pbc_ortho(u(1:3), u_pbc(1:3))
-               call I_due_value(value, u_pbc, 1)
-               i_current(:) = i_current(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*ion_vel(:, iatom)*value
-               i_current_c(:) = i_current_c(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*ion_vel(:, iatom)*value
-               do a = 1, 3
-                  do b = 1, 3
+            do a = 1, 3
+               do b = 1, 3
+                  if (a > b) then
                      call I_uno_value(value, u_pbc, a, b, 1)
-                     if (a == b) then
-                        i_current_d(a) = i_current_d(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-  &ion_vel(b, jatom)*value
-                     else
-                        i_current_e(a) = i_current_e(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-   &ion_vel(b, jatom)*value
-                     end if
+                     i_current_e(a) = i_current_e(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
+                                      &(ion_vel(b, jatom) + ion_vel(b, iatom))*value
+                     i_current_e(b) = i_current_e(b) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
+                                      &(ion_vel(a, jatom) + ion_vel(a, iatom))*value
                      i_current(a) = i_current(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-      &ion_vel(b, jatom)*value
-                  end do
+                                    &(ion_vel(b, jatom) + ion_vel(b, iatom))*value
+                     i_current(b) = i_current(b) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
+                                    &(ion_vel(a, jatom) + ion_vel(a, iatom))*value
+                  end if
+                  if (a == b) then
+                     call I_uno_value(value, u_pbc, a, b, 1)
+                     i_current_d(a) = i_current_d(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
+                                      &(ion_vel(b, jatom) + ion_vel(b, iatom))*value
+                     i_current(a) = i_current(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
+                                    &(ion_vel(b, jatom) + ion_vel(b, iatom))*value
+                  end if
                end do
-            end if
-         end do
+            end do
+         end if
       end do
-   end if
+   end do
    call stop_clock('calcolo_i')
    call print_clock('calcolo_i')
    if (ionode) print *, 'CORRENTE IONIC CALCOLATA'
