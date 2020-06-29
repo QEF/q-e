@@ -68,7 +68,6 @@ MODULE io_files
   INTEGER :: iunoldwfc   = 11 ! unit with old wavefunctions
   INTEGER :: iunoldwfc2  = 12 ! as above at step -2
   INTEGER :: iunhub      = 13 ! unit for saving Hubbard-U atomic wfcs * S 
-  INTEGER :: iunhub2     = 17 ! unit for saving Hubbard-U atomic wfcs 
   INTEGER :: iunsat      = 14 ! unit for saving (orthogonal) atomic wfcs * S
   INTEGER :: iunmix      = 15 ! unit for saving mixing information
   INTEGER :: iunwfc_exx  = 16 ! unit with exx wavefunctions
