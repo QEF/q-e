@@ -193,7 +193,7 @@ EOF
 $ECHO "  running projuected DOS for Pt with spin-orbit ...\c"
 $PDOS_COMMAND -in pt.pdos.in > pt.pdos.out
 check_failure $?
-$ECHO " done\c"
+$ECHO " done"
 
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/Pt.*
