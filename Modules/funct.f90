@@ -54,6 +54,7 @@ MODULE funct
   PUBLIC  :: get_dft_name, get_dft_short, get_dft_long,&
              get_nonlocc_name
   PUBLIC  :: get_iexch, get_icorr, get_igcx, get_igcc, get_meta, get_metac, get_inlc
+  PUBLIC  :: reset_dft
   PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid, dft_is_nonlocc, igcc_is_lyp
   PUBLIC  :: set_auxiliary_flags
   !
@@ -419,7 +420,7 @@ CONTAINS
     CHARACTER(LEN=*), INTENT(IN) :: dft_
     INTEGER :: len, l, i
     CHARACTER(len=150):: dftout
-    LOGICAL :: dft_defined = .FALSE.
+    LOGICAL :: dft_defined
     LOGICAL :: check_libxc
 #if defined(__LIBXC)
     INTEGER :: ii, id_vec(6), n_ext_params
@@ -435,6 +436,8 @@ CONTAINS
     IF ( discard_input_dft ) RETURN
     !
     ! save current status of XC indices
+    !
+    dft_defined = .FALSE.
     !
     save_iexch = iexch
     save_icorr = icorr
@@ -644,6 +647,9 @@ CONTAINS
     ! special case : TPSS meta-GGA Exc
     CASE( 'TPSS' )
        dft_defined = set_dft_values(1,4,7,6,0,1)
+    ! special case : TPSS meta-GGA - mgga term only
+    CASE( 'TPSS-only' )
+       dft_defined = set_dft_values(0,0,0,0,0,1)
     ! special case : M06L Meta GGA
     CASE( 'M06L' )
        dft_defined = set_dft_values(0,0,0,0,0,2)
@@ -812,6 +818,8 @@ CONTAINS
     ! Fill variables and exit
     !
     dft = dftout
+    !
+    dft_defined = .TRUE.
     !
     !dft_longname = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
     !     &//gradc (igcc) //'-'// nonlocc(inlc)
@@ -1323,6 +1331,12 @@ CONTAINS
     get_metac = imetac
     RETURN
   END FUNCTION get_metac
+  !-----------------------------------------------------------------------
+  SUBROUTINE reset_dft()
+    iexch  = notset ; icorr  = notset
+    igcx   = notset ; igcc   = notset
+    imeta  = notset ; imetac = notset
+  END SUBROUTINE
   !-----------------------------------------------------------------------
   FUNCTION get_inlc()
      INTEGER get_inlc
