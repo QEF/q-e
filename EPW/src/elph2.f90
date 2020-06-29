@@ -109,9 +109,9 @@
     zi_allcb(:, :, :),       &!  Second Z-factor in scattering rate (for both VB and CB calculations)
     ifc(:,:,:,:,:,:,:),      &!  Interatomic force constant in real space
     omegap(:),               &!  Photon energy for phonon-assisted absorption
-    epsilon2_abs(:, :, :),   &!  Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
+    epsilon2_abs(:, :, :, :),   &!  Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
     wscache(:, :, :, :, :),  &!  Use as cache when doing IFC when lifc = .TRUE.
-    epsilon2_abs_lorenz(:, :, :), &! Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
+    epsilon2_abs_lorenz(:, :, :, :), &! Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
     transp_temp(:),          &!  Temperatures used for the transport module
     mobilityh_save(:),       &!  Error in the hole mobility
     mobilityel_save(:)        !  Error in the electron mobility
