@@ -31,7 +31,7 @@
   USE start_k,       ONLY : nk1, nk2, nk3
   USe disp,          ONLY : nq1, nq2, nq3
   USE epwcom,        ONLY : delta_smear, nsmear, dis_win_min, dis_win_max, wannierize, &
-                            ngaussw, dvscf_dir, eptemp, bands_skipped, wdata, kmaps,   &
+                            ngaussw, dvscf_dir, bands_skipped, wdata, kmaps,           &
                             num_iter, dis_froz_max, fsthick, dis_froz_min, eig_read,   &
                             vme, degaussw, epexst, epwwrite, epbread, phonselfen, nqc2,&
                             elecselfen, a2f, plselfen, specfun_pl, nest_fn, filukk,    &
@@ -39,7 +39,7 @@
                             nqc3, nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, eps_acustic, nw, &
                             wmax, wmin, mp_mesh_q, mp_mesh_k, filqf, filkf, nswi, nc,  &
                             delta_qsmear, degaussq, band_plot, ephwrite, nstemp,       &
-                            broyden_beta, conv_thr_raxis, tempsmax, tempsmin, temps,   &
+                            broyden_beta, conv_thr_raxis, temps,                       &
                             broyden_ndim, wscut, wsfc, nqstep, limag, lreal, muc,      &
                             gap_edge, conv_thr_iaxis, nqsmear, iprint, wepexst, nswfc, &
                             epwread, eliashberg, imag_read, kerread, kerwrite, lunif,  &
@@ -47,7 +47,7 @@
                             ep_coupling, nw_specfun, wmax_specfun, wmin_specfun,       &
                             laniso, lpolar, lifc, asr_typ, lscreen, scr_typ, nbndsub,  &
                             fermi_diff, smear_rpa, cumulant, bnd_cum, proj, write_wfn, &
-                            iswitch, ntempxx, liso, lacon, lpade, etf_mem, epbwrite,   &
+                            iswitch, liso, lacon, lpade, etf_mem, epbwrite,            &
                             nsiter, conv_thr_racon, specfun_el, specfun_ph,            &
                             system_2d, delta_approx, title, int_mob, scissor,          &
                             iterative_bte, scattering, selecqread, epmatkqread,        &
@@ -128,7 +128,7 @@
        elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndsub,                            &
        filukk, epbread, epbwrite, epwread, epwwrite, etf_mem, kmaps,           &
        eig_read, wepexst, epexst, vme,                                         &
-       degaussw, fsthick, eptemp,  nsmear, delta_smear,                        &
+       degaussw, fsthick, nsmear, delta_smear,                                 &
        dvscf_dir, ngaussw, epmatkqread, selecqread,                            &
        wannierize, dis_win_max, dis_win_min, dis_froz_min, dis_froz_max,       &
        num_iter, proj, bands_skipped, wdata, iprint, write_wfn,                &
@@ -139,7 +139,7 @@
        mp_mesh_k, mp_mesh_q, filqf, filkf, ephwrite,                           &
        band_plot, degaussq, delta_qsmear, nqsmear, nqstep,                     &
        nswfc, nswc, nswi, pwc, wsfc, wscut, system_2d,                         &
-       broyden_beta, broyden_ndim, nstemp, tempsmin, tempsmax, temps,          &
+       broyden_beta, broyden_ndim, nstemp, temps,                              &
        conv_thr_raxis, conv_thr_iaxis, conv_thr_racon,                         &
        gap_edge, nsiter, muc, lreal, limag, lpade, lacon, liso, laniso, lpolar,&
        lscreen, scr_typ, fermi_diff, smear_rpa, cumulant, bnd_cum,             &
@@ -431,7 +431,7 @@
   eps_acustic  = 5.d0 ! cm-1
   nw           = 10
   fsthick      = 1.d10 ! eV
-  eptemp       = 300.0d0
+  !eptemp       = 300.0d0
   degaussw     = 0.025d0 ! eV
   a2f          = .FALSE.
   etf_mem      = 1
@@ -511,9 +511,9 @@
   conv_thr_iaxis = 1.d-05
   conv_thr_racon = 5.d-04
   gap_edge = 0.d0
-  nstemp   = 1
-  tempsmin = 0.d0
-  tempsmax = 0.d0
+  nstemp   = 0
+  !tempsmin = 0.d0
+  !tempsmax = 0.d0
   temps(:) = 0.d0
   nsiter   = 40
   muc     = 0.d0
@@ -702,10 +702,8 @@
      'You should define either filqf or nqf when band_plot = .true.', 1)
   IF (filkf /= ' ' .AND. .NOT. efermi_read) CALL errore('epw_readin', &
      'WARNING: if k-points are along a line, then efermi_read=.true. and fermi_energy must be given in the input file', -1)
-  IF (scattering .AND. nstemp < 1) CALL errore('epw_readin', 'wrong number of nstemp', 1)
-  IF (scattering .AND. MAXVAL(temps(:)) > 0.d0 .AND. tempsmin > 0.d0 .AND. tempsmax > 0.d0) &
-    CALL errore('epw_readin', 'define either (tempsmin and tempsmax) or temps(:)', 1)
-  IF (scattering .AND. tempsmax < tempsmin) CALL errore('epw_readin', 'tempsmax should be greater than tempsmin', 1)
+  IF (MAXVAL(temps(:)) == 0.d0 .AND. nstemp > 0) &
+    CALL errore('epw_readin', 'temps(:) must be specified if nstemp > 0', 1)
   IF ((ABS(ncarrier) > 1E+5) .AND. .NOT. carrier) CALL errore('epw_readin', &
       'carrier must be .TRUE. if you specify ncarrier.', 1)
   IF (carrier .AND. (ABS(ncarrier) < 1E+5))  CALL errore('epw_readin', &
@@ -768,7 +766,7 @@
   ! 1 K in eV = 8.6173423e-5
   ! from K to Ryd
   ! Out-of bound issue with GCC compiler. Multiple Fermi temp is not used anyway.
-  eptemp = eptemp * kelvin2eV / ryd2ev
+  !eptemp = eptemp * kelvin2eV / ryd2ev - no longer use eptemp as input variable
   !
   ! from cm-1 to Ryd
   eps_acustic = eps_acustic / ev2cmm1 / ryd2ev
@@ -790,16 +788,6 @@
   omegamin = omegamin / ryd2ev
   omegamax = omegamax / ryd2ev
   omegastep = omegastep / ryd2ev
-  DO i = 1, ntempxx
-    IF (temps(i) > 0.d0) THEN
-      nstemp = i
-    ENDIF
-  ENDDO
-  !
-  ! go from K to Ry
-  temps(:) = temps(:) * kelvin2eV / ryd2ev
-  tempsmin = tempsmin * kelvin2eV / ryd2ev
-  tempsmax = tempsmax * kelvin2eV / ryd2ev
   !
   xq(:) = zero
   !
