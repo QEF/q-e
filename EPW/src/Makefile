@@ -11,7 +11,7 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
           $(MOD_FLAG)../../PHonon/PH \
           $(MOD_FLAG)../../LR_Modules \
-          $(MOD_FLAG)../../wannier90-3.0.0/src/obj \
+          $(MOD_FLAG)../../wannier90-3.1.0/src/obj \
           $(MOD_FLAG)../../dft-d3
 
 #
@@ -78,7 +78,7 @@ EPWOBJS += ephblochkq.o wfc_elec.o test_tools.o
 
 PHOBJS = ../../PHonon/PH/libph.a
 PWOBJS = ../../PW/src/libpw.a
-W90LIB = ../../wannier90-3.0.0/libwannier.a 
+W90LIB = ../../wannier90-3.1.0/libwannier.a 
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a 
 QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
@@ -105,7 +105,7 @@ ph :
 	cd ../../ ; make ph
 
 wannier :
-	cd ../../ ; make w90 ; cd wannier90-3.0.0/ ; make lib
+	cd ../../ ; make w90 ; cd wannier90-3.1.0/ ; make lib
 
 pp : 
 	cd ../../ ; make pp
