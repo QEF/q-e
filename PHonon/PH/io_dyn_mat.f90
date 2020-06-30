@@ -76,6 +76,11 @@ MODULE io_dyn_mat
     !
     IF (ionode) THEN
        !
+       call add_attr( 'version','1.0')
+       call add_attr( 'encoding','UTF-8')
+       CALL xmlw_writetag ( 'xml', '?' )
+       CALL xmlw_opentag ( 'Root' )
+       !
        CALL xmlw_opentag("GEOMETRY_INFO" )
        !
        CALL xmlw_writetag ( "NUMBER_OF_TYPES", ntyp )
@@ -93,9 +98,8 @@ MODULE io_dyn_mat
        DO na=1,nat
           CALL add_attr( "SPECIES", atm(ityp(na)) )
           CALL add_attr( "INDEX", ityp(na) )
-          CALL add_attr( "TAUX", tau(1,na) )
-          CALL add_attr( "TAUY", tau(2,na) )
-          CALL add_attr( "TAUZ", tau(3,na) )
+          CALL add_attr( "TAU", &
+               r2c(tau(1,na)) //' '// r2c(tau(2,na)) //' '// r2c(tau(3,na)) )
           CALL xmlw_writetag( "ATOM." // i2c(na), '' )
           IF (nspin_mag==4) &
              CALL xmlw_writetag( "STARTING_MAG_."//i2c(na), m_loc(:,na) )
@@ -188,8 +192,9 @@ MODULE io_dyn_mat
        CALL xmlw_writetag( "OMEGA."//i2c(mu), omega )
        CALL xmlw_writetag( "DISPLACEMENT."//i2c(mu), u(:,mu) )
     END DO
-
     CALL xmlw_closetag( )
+    !
+    CALL xmlw_closetag( ) ! Root
     CALL xml_closefile( )
     !
     RETURN
@@ -229,10 +234,11 @@ MODULE io_dyn_mat
           ENDDO
        ENDDO
     ENDDO
-
     CALL xmlw_closetag( )
+    !
+    CALL xmlw_closetag( ) ! Root
     CALL xml_closefile( )
-    RETURN
+    !
     END SUBROUTINE write_ifc
 
     !----------------------------------------------------------------------------
@@ -261,6 +267,7 @@ MODULE io_dyn_mat
          CALL errore('read_dyn_mat_param', 'error opening the dyn mat file ',1)
     !
     IF (ionode) THEN
+      CALL xmlr_opentag ( 'Root' )
       CALL xmlr_opentag( "GEOMETRY_INFO")
       CALL xmlr_readtag( "NUMBER_OF_TYPES", ntyp)
       CALL xmlr_readtag( "NUMBER_OF_ATOMS", nat)
@@ -327,7 +334,7 @@ MODULE io_dyn_mat
     !!
     REAL(KIND = DP), INTENT(out), OPTIONAL :: ramtns(3, 3, 3, nat)
     !!
-    CHARACTER(LEN=1) :: dummy
+    CHARACTER(LEN=80) :: dummy
     LOGICAL :: found_z
     !!
     LOGICAL :: lrigid_
@@ -359,9 +366,8 @@ MODULE io_dyn_mat
       DO na = 1, nat
         CALL xmlr_readtag( "ATOM." // i2c(na), dummy)
         CALL get_attr( "INDEX",  ityp(na))
-        CALL get_attr( "TAUX", tau(1, na))
-        CALL get_attr( "TAUY", tau(2, na))
-        CALL get_attr( "TAUZ", tau(3, na))
+        CALL get_attr( "TAU", dummy )
+        READ(dummy,*) tau(1, na), tau(2, na), tau(3, na)
         IF (nspin_mag == 4) THEN
           CALL xmlr_readtag( "STARTING_MAG_."//i2c(na), m_loc(:, na))
         ENDIF
@@ -509,6 +515,7 @@ MODULE io_dyn_mat
           END DO
           CALL xmlr_closetag( )
        ENDIF
+       CALL xmlr_closetag( ) ! Root
        CALL xml_closefile( )
     END IF
     IF (PRESENT(omega)) CALL mp_bcast(omega, ionode_id, intra_image_comm)
@@ -600,6 +607,7 @@ MODULE io_dyn_mat
         ENDDO ! nb
       ENDDO ! na
       CALL xmlr_closetag( )
+      CALL xmlr_closetag( ) ! Root
       CALL xml_closefile( )
     ENDIF
     CALL mp_bcast(phid, ionode_id, intra_image_comm)

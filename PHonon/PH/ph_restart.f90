@@ -140,6 +140,7 @@ MODULE ph_restart
              CALL write_el_phon(irr)
 
          END IF
+         CALL xmlw_closetag ( ) ! Root
          CALL xml_closefile ( )
       END IF
 
@@ -301,18 +302,17 @@ MODULE ph_restart
            CALL xmlw_opentag ( "EL_PHON_HEADER")
            CALL xmlw_writetag( "DONE_ELPH", done_elph(irr))
            CALL xmlw_closetag( )
-           CALL xmlw_closetag( "PARTIAL_EL_PHON")
+           CALL xmlw_closetag( ) ! partial_el_phon
            CALL xmlw_writetag( "NUMBER_OF_K", nksqtot)
            CALL xmlw_writetag( "NUMBER_OF_BANDS", nbnd)
            DO ik=1,nksqtot
               ikk = 2 * ik - 1
               IF (lgamma) ikk = ik 
               CALL xmlw_opentag( "K_POINT." // i2c(ik) )
-              CALL xmlw_writetag(  "COORDINATES_XK", xk_col(:,ikk) )
+              CALL xmlw_writetag( "COORDINATES_XK", xk_col(:,ikk) )
               DO np = 1, npert(irr)
                  CALL add_attr("perturbation",np)
-                 CALL xmlw_writetag(  "PARTIAL_ELPH", &
-                      el_ph_mat_rec_col(:,:,ik,np) )
+                 CALL xmlw_writetag( "PARTIAL_ELPH", el_ph_mat_rec_col(:,:,ik,np) )
               END DO
               CALL xmlw_closetag( )
            ENDDO
@@ -486,7 +486,10 @@ MODULE ph_restart
          !
       END SELECT
       !
-      IF (ionode) CALL xml_closefile( )
+      IF (ionode) THEN
+         CALL xmlr_closetag ( ) ! Root
+         CALL xml_closefile( )
+      END IF
       !
       RETURN
       !
@@ -817,7 +820,9 @@ MODULE ph_restart
        ierr = 1
        return
     end if
+    CALL xmlr_opentag ( 'Root' )
     CALL read_disp_pattern(iun, current_iq, ierr)
+    CALL xmlr_closetag () ! Root
     CALL xml_closefile ()
     !
     END SUBROUTINE read_disp_pattern_only
@@ -1057,9 +1062,11 @@ MODULE ph_restart
                     ierr = 1
                     GOTO 100
                  end if
+                 CALL xmlr_opentag( "Root" )
                  CALL xmlr_opentag( "PM_HEADER" )
                  CALL xmlr_readtag( "DONE_IRR", done_irr_iq(irr,iq) )
-                 CALL xmlr_closetag( )
+                 CALL xmlr_closetag( ) ! PM_HEADER
+                 CALL xmlr_closetag( ) ! Root
                  CALL xml_closefile( )
               ENDIF
            END DO
@@ -1080,9 +1087,11 @@ MODULE ph_restart
                        ierr = 1
                        GOTO 100
                     END IF
+                    CALL xmlr_opentag( "Root")
                     CALL xmlr_opentag( "EL_PHON_HEADER")
                     CALL xmlr_readtag( "DONE_ELPH", done_elph_iq(irr,iq))
-                    CALL xmlr_closetag( )
+                    CALL xmlr_closetag( ) ! EL_PHON_HEADER
+                    CALL xmlr_closetag( ) ! Root
                     CALL xml_closefile( )
                  ENDIF
               ENDDO
@@ -1344,6 +1353,9 @@ MODULE ph_restart
             call add_attr( 'version','1.0')
             call add_attr( 'encoding','UTF-8')
             CALL xmlw_writetag ( 'xml', '?' )
+            CALL xmlw_opentag ( 'Root' )
+         ELSE
+            CALL xmlr_opentag ( 'Root' )
          END IF
          !
       END IF
