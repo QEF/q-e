@@ -16,23 +16,33 @@ MODULE xmltools
   ! * lines no more than 1024 characters long (see maxline parameter)
   ! * no more than 9 levels of tags (see maxlevel parameter)
   ! * length of tags no more than 80 characters (see maxlength parameter)
+  ! * can read tags only in the correct order: if a tag is not found,
+  !   we rewind the file and continue - may or may not work
   ! * only single values (e.g. no vectors) in attributes
   ! * attributes should not contain commas or strange characters
-  ! * can read tags only in the correct order
-  ! * can read arrays of values only if there is a line break before and
-  !   after the array
   !
   USE upf_kinds, ONLY : dp
   IMPLICIT NONE
+  !
+#undef __debug
+  !! define __debug to print information on opened and closed tags
+  LOGICAL, PARAMETER :: one_line_tags=.true.
+  !! if true, write tags with one value in a single line: 
+  !! <tag attr1="val1" ... >value</tag>
+  !! otherwise, as in iotk:
+  !! <tag attr1="val1" ... >
+  !! value
+  !! </tag>
+  !! Only for single values; arrays are always written as in iotk
   !
   ! internal variables for reading and writing
   !
   INTEGER :: xmlunit
   INTEGER, PARAMETER :: maxline=1024
-  character(len=maxline) :: line
-  integer :: eot
+  CHARACTER(LEN=maxline) :: line
+  INTEGER :: eot
   ! eot points to the end of tag in line just scanned
-  integer :: nattr
+  INTEGER :: nattr
   CHARACTER(LEN=:), ALLOCATABLE :: attrlist
   !
   ! variables used keep track of open tags
@@ -60,7 +70,7 @@ MODULE xmltools
   END INTERFACE xmlr_readtag
   !
   ! IMPORTANT NOTICE: complex numbers, z=a+ib, are written as two reals:
-  ! "a b" or "a,b", but not in fortran free format "(a,b)". Reason:
+  ! "a b", not in fortran free format as "(a,b)". Reason:
   ! make the file readable by non-fortran tools, e.g. python
   !
   INTERFACE xmlw_writetag
@@ -230,18 +240,22 @@ CONTAINS
     xmlunit = iun
     nlevel = 0
     open_tags(nlevel) = 'root'
-    if ( allocated(attrlist) ) DEALLOCATE ( attrlist) 
+    if ( allocated(attrlist) ) DEALLOCATE ( attrlist)
+#if defined ( __debug )
+    print "('file ',a,' opened with unit ',i5)",trim(filexml),iun
+#endif
     !
   END FUNCTION xml_openfile
   !
   SUBROUTINE xml_closefile ( )
     !
     CLOSE ( UNIT=xmlunit, STATUS='keep' )
+#if defined ( __debug )
+    print "('unit ',i5,': file closed')", xmlunit
+#endif
     xmlunit = -1
-    IF ( nlevel > 0 ) THEN
-       print '("severe error: file closed at level ",i1," with tag ",A," open")', &
-            nlevel, trim(open_tags(nlevel))
-    END IF
+    IF (nlevel > 0) print '("warning: file closed at level ",i1,&
+            & " with tag ",A," open")', nlevel, trim(open_tags(nlevel))
     nlevel = 0
     !
   END SUBROUTINE xml_closefile
@@ -284,7 +298,7 @@ CONTAINS
     ! If cval=' ' write <name  attr1="val1" attr2="val2" ... /> 
     ! If cval='?' write <?name attr1="val1" attr2="val2" ...?> 
     ! otherwise,  write <name  attr1="val1" attr2="val2" ...>cval</name> 
-    !             (su di una stessa riga)
+    !             (on a same line if one_line_tags=.true.)
     ! On output, same as xmlw_opentag
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
@@ -313,11 +327,11 @@ CONTAINS
        CALL xmlw_closetag ( '?' )
     ELSE
        ! write value (character)
-#if defined (__iotk_style)
-       WRITE (xmlunit, "('>',/,A)") trim(cval)
-#else
-       WRITE (xmlunit, "('>',A)", ADVANCE='no') trim(cval)
-#endif
+       IF (one_line_tags) THEN
+          WRITE (xmlunit, "('>',A)", ADVANCE='no') trim(cval)
+       ELSE
+          WRITE (xmlunit, "('>',/,A)") trim(cval)
+       ENDIF
        ! close here the tag
        CALL xmlw_closetag ( name )
     END IF
@@ -327,7 +341,6 @@ CONTAINS
        ierr = ier_
     ELSE IF ( ier_ > 0 ) THEN
        print '("Fatal error ",i2," in xmlw_writetag!")', ier_
-       stop
     END IF
     !
   END SUBROUTINE writetag_c
@@ -503,7 +516,9 @@ CONTAINS
        WRITE (xmlunit, "('  ')", ADVANCE="no", ERR=10)
     END DO
     WRITE (xmlunit, "('<',A)", ADVANCE="no", ERR=10) trim(name)
-    ! print '("opened at level ",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
+#if defined ( __debug )
+    print '("opened (write) level-",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
+#endif
     !
     ! attributes (if present)
     !
@@ -526,24 +541,35 @@ CONTAINS
     CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: tag
     INTEGER :: i
     !
-    IF ( nlevel < 0 ) &
-         print '("severe error: closing tag that was never opened")'
+    IF ( nlevel < 0 ) print "('severe error: closing tag that was never opened')"
     IF ( .NOT.PRESENT(tag) ) THEN
        DO i=2,nlevel
           WRITE (xmlunit, '("  ")', ADVANCE='NO')
        END DO
        WRITE (xmlunit, '("</",A,">")') trim(open_tags(nlevel))
+#if defined ( __debug )
+    print '("closed (write) level-",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
+#endif
     ELSE
        i = len_trim(tag)
        IF ( i == 0 ) THEN
           WRITE (xmlunit, '("/>")')
+#if defined ( __debug )
+          print '("closed (write) level-",i1," tag ",A)', &
+               nlevel, trim(open_tags(nlevel))
+#endif
        ELSE IF ( i == 1 .AND. tag(1:1) == '?' ) THEN
           WRITE (xmlunit, '("?>")')
+#if defined ( __debug )
+          print '("closed (write) level-",i1," tag ",A)', nlevel, tag
+#endif
        ELSE
           WRITE (xmlunit, '("</",A,">")') trim(tag)
+#if defined ( __debug )
+          print '("closed (write) level-",i1," tag ",A)', nlevel, tag
+#endif
        END IF
     END IF
-    !print '("closed at level ",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
     nlevel = nlevel-1
     !
   END SUBROUTINE xmlw_closetag
@@ -824,6 +850,7 @@ CONTAINS
     if ( eot < 0 ) then
        ! print *, 'end of file reached, tag not found'
        if ( present(ierr) ) ierr =-1
+       return
     else if ( eot == 0 ) then
        ! print *, 'tag found, no value to read on line'
        return
@@ -854,7 +881,10 @@ CONTAINS
                 if ( i > 1 ) cval = trim(cval) // adjustl(trim(line(j:j+i-2)))
                 ! print *, 'value=',cval
              end if
-             ! print '("closed at level ",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
+#if defined ( __debug )
+             print '("closed (read) level-",i1," tag ",A)', &
+                     nlevel, trim(open_tags(nlevel))
+#endif
              nlevel = nlevel -1
              !
              return
@@ -902,7 +932,7 @@ CONTAINS
        read(xmlunit,'(a)', end=10) line
        ll = len_trim(line)
        if ( ll == maxline ) then
-          print *, 'line too long'
+          print *, 'severe error: line too long'
           if (present(ierr)) ierr = 2
           return
        end if
@@ -937,11 +967,12 @@ CONTAINS
                 ! tag found? check what follows our would-be tag
                 j = j+i+lt
                 if ( j > ll ) then
-                   print *, 'oops... opened tag not closed on same line'
+                   stat = 1
+                   ! <tag continues in next line
                    exit parse
                 else if ( line(j:j) == ' ' .or. line(j:j) == '>' &
                                            .or. line(j:j+1)=='/>') then
-                   ! print *, '<tag found'
+                   ! <tag or <tag> or <tag/> found
                    stat = 1
                 end if
              end if
@@ -968,12 +999,14 @@ CONTAINS
                 if (present(ierr)) ierr = 0
                 nlevel = nlevel+1
                 IF ( nlevel > maxlevel ) THEN
-                   print *, ' too many levels'
+                   print *, ' severe error: too many levels'
                    if (present(ierr)) ierr = 3
                 else
                    open_tags(nlevel) = trim(tag)
-                   !print '("opened at level ",i1," tag ",A)', &
-                   !   nlevel, trim(open_tags(nlevel))
+#if defined ( __debug )
+                   print '("opened (read) level-",i1," tag ",A)',&
+                       nlevel, trim(open_tags(nlevel))
+#endif
                 end if
                 !
                 return
@@ -1022,7 +1055,7 @@ CONTAINS
           print *, 'end of file reached, tag '//trim(tag)//' not found'
        end if
     else
-       print *, 'parsing error'
+       print *, 'severe parsing error'
        if ( present(ierr) ) ierr = 1
     end if
     !
@@ -1043,16 +1076,22 @@ CONTAINS
     ! stat= 0: begin
     ! stat= 1: end
     !
-    IF ( nlevel < 0 ) &
+    if ( nlevel < 0 ) &
          print '("severe error: closing tag that was never opened")'
     stat=0
-    !write(6,'("closing at level ",i1," tag ",A,"...")',advance='no') &
-    !     nlevel,trim(open_tags(nlevel))
+#if defined ( __debug )
+    if ( .not. present(tag) ) then
+       print '("closed (read) level-",i1," tag ",A)', &
+            nlevel, trim(open_tags(nlevel))
+    else
+       print '("closed (read) level-",i1," tag ",A)', nlevel, tag
+    end if
+#endif
     do while (.true.)
        read(xmlunit,'(a)', end=10) line
        ll = len_trim(line)
        if ( ll == maxline ) then
-          print *, 'line too long'
+          print *, 'Fatal error: line too long'
           if (present(ierr)) ierr = 1
           return
        end if
@@ -1091,10 +1130,11 @@ CONTAINS
                 ! tag found? check what follows our would-be tag
                 j = j+i+1+lt
                 if ( j > ll ) then
-                   print *, 'oops... opened tag not closed on same line'
+                   stat = 1
+                   ! </tag continues in next line
                    exit parse
                 else if ( line(j:j) == ' ' .or. line(j:j) == '>') then
-                   ! print *, '</tag found'
+                   ! </tag or </tag> found
                    stat = 1
                 end if
              end if

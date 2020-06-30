@@ -87,7 +87,10 @@ CONTAINS
     IF( .NOT. upf%tcoulombp) then
        allocate ( upf%vloc(upf%mesh) )
        CALL xmlr_readtag( capitalize_if_v2('pp_local'), &
-            upf%vloc(:) )
+            upf%vloc(:), ierr )
+       ! FIXME: workaroud for "disordered" PP files
+       if ( ierr == -1 ) CALL xmlr_readtag( capitalize_if_v2('pp_local'), &
+            upf%vloc(:), ierr )
     end if
     !
     CALL read_pp_semilocal ( upf )
@@ -340,7 +343,7 @@ CONTAINS
        CALL get_attr('cutoff_radius_index', upf%kbeta(nb))
        CALL get_attr('cutoff_radius', upf%rcut(nb))
        CALL get_attr('ultrasoft_cutoff_radius', upf%rcutus(nb))
-       
+       !
     END DO
     !
     ! pp_dij (D_lm matrix)
@@ -580,7 +583,7 @@ CONTAINS
     !
     IMPLICIT NONE
     TYPE(pseudo_upf),INTENT(INOUT) :: upf ! the pseudo data
-    INTEGER :: nw, nb
+    INTEGER :: nw, nb, ierr
     CHARACTER(LEN=1) :: dummy
     !
     IF ( .NOT. v2 .OR. .NOT. upf%has_so ) RETURN
@@ -598,7 +601,13 @@ CONTAINS
     ENDDO
     !
     DO nb = 1,upf%nbeta
-       CALL xmlr_readtag( 'PP_RELBETA.'//i2c(nb), dummy )
+       CALL xmlr_readtag( 'PP_RELBETA.'//i2c(nb), dummy, ierr )
+       !
+       ! very lousy workaround: existing PP files may have pp_relbeta first,
+       ! pp_relwfc later, but also the other way round - if not found, try
+       ! to re-read the file (it is rewound if tag not found) - FIXME
+       if ( ierr == -1 ) CALL xmlr_readtag( 'PP_RELBETA.'//i2c(nb), dummy, ierr)
+       !
        CALL get_attr( 'index' , nw )
        IF ( nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',2)
        CALL get_attr( 'lll',  upf%lll(nb) )
