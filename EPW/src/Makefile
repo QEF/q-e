@@ -87,7 +87,7 @@ LIBOBJS =../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../clib/clib.a ../..
 
 TLDEPS= pw ph
 
-all :   pw ph wannier pp libepw.a epw.x 
+all :   pw ph wannier libepw.a epw.x 
 
 libepw.a : $(EPWOBJS)
 	$(AR) $(ARFLAGS) $@ $?
@@ -106,9 +106,6 @@ ph :
 
 wannier :
 	cd ../../ ; make w90 ; cd wannier90-3.1.0/ ; make lib
-
-pp : 
-	cd ../../ ; make pp
 
 ld1 :
 	cd ../../ ; make ld1
