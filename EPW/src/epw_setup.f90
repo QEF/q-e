@@ -42,7 +42,7 @@
   USE mp,            ONLY : mp_bcast
   USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, temps, &
                             ntempxx, nkc1, nkc2, nkc3
-  USE elph2,         ONLY : global_temps
+  USE elph2,         ONLY : gtemp
   USE klist_epw,     ONLY : xk_cryst
   USE fft_base,      ONLY : dfftp
   USE gvecs,         ONLY : doublegrid
@@ -241,14 +241,14 @@
   END IF
   ! go from K to Ry
   temps(:) = temps(:) * kelvin2eV / ryd2ev
-  ALLOCATE(global_temps(nstemp), STAT = ierr)
-  IF (ierr /= 0) CALL errore('epw_setup', 'Error allocating global_temps', 1)
+  ALLOCATE(gtemp(nstemp), STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_setup', 'Error allocating gtemp', 1)
   !
-  global_temps(:) = temps(1:nstemp)
+  gtemp(:) = temps(1:nstemp)
   ! We have to bcast here because before it has not been allocated
   ! in some cases nstemp may have been changed
   CALL mp_bcast(nstemp, ionode_id, world_comm)
-  CALL mp_bcast(global_temps, ionode_id, world_comm)
+  CALL mp_bcast(gtemp, ionode_id, world_comm)
   !
   CALL stop_clock('epw_setup')
   RETURN
@@ -270,7 +270,7 @@
   USE mp,            ONLY : mp_bcast
   USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, temps, &
                             ntempxx
-  USE elph2,         ONLY : global_temps
+  USE elph2,         ONLY : gtemp
   !
   IMPLICIT NONE
   !
@@ -315,14 +315,14 @@
   END IF
   ! go from K to Ry
   temps(:) = temps(:) * kelvin2eV / ryd2ev
-  ALLOCATE(global_temps(nstemp), STAT = ierr)
-  IF (ierr /= 0) CALL errore('epw_setup', 'Error allocating global_temps', 1)
+  ALLOCATE(gtemp(nstemp), STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_setup', 'Error allocating gtemp', 1)
   !
-  global_temps(:) = temps(1:nstemp)
+  gtemp(:) = temps(1:nstemp)
   ! We have to bcast here because before it has not been allocated
   ! in some cases nstemp may have been changed
   CALL mp_bcast(nstemp, ionode_id, world_comm)
-  CALL mp_bcast(global_temps, ionode_id, world_comm)
+  CALL mp_bcast(gtemp, ionode_id, world_comm)
   !
   CALL stop_clock('epw_setup')
   !

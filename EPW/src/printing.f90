@@ -260,7 +260,7 @@
     !!
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3, assume_metal
-    USE elph2,         ONLY : nbndfst, global_temps, nktotf
+    USE elph2,         ONLY : nbndfst, gtemp, nktotf
     USE constants_epw, ONLY : zero, two, kelvin2eV, ryd2ev, eps10, &
                               bohr2ang, ang2cm, hbarJ
     USE symm_base,     ONLY : nrot
@@ -317,7 +317,7 @@
     ! compute conductivity
     DO itemp = 1, nstemp
       carrier_density = 0.0
-      etemp = global_temps(itemp)
+      etemp = gtemp(itemp)
       sigma(:, :) = zero
       fi_check(:) = zero
       DO ik = 1,  nktotf
@@ -464,7 +464,7 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3, assume_metal
-    USE elph2,         ONLY : nbndfst, global_temps, nktotf
+    USE elph2,         ONLY : nbndfst, gtemp, nktotf
     USE constants_epw, ONLY : zero, two, kelvin2eV, ryd2ev, eps10, &
                               bohr2ang, ang2cm, hbarJ
     USE noncollin_module, ONLY : noncolin
@@ -519,7 +519,7 @@
     CALL prtheader_mob()
     DO itemp = 1, nstemp
       carrier_density = 0.0
-      etemp = global_temps(itemp)
+      etemp = gtemp(itemp)
       sigma(:, :) = zero
       fi_check(:) = zero
       DO ik = 1,  nktotf
