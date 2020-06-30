@@ -42,7 +42,7 @@
                               shortrange, efermi_read, fermi_energy, restart, &
                               restart_step, nstemp
     USE pwcom,         ONLY : ef
-    USE elph2,         ONLY : transp_temp, etf, ibndmin, ibndmax, nkqf, xqf, nktotf, efnew, &
+    USE elph2,         ONLY : global_temps, etf, ibndmin, ibndmax, nkqf, xqf, nktotf, efnew, &
                               epf17, wkf, nkf, wf, wqf, xkf, nkqtotf, adapt_smearing, &
                               esigmar_all, esigmai_all, a_all, nbndfst, lower_bnd
     USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, ci, eps8
@@ -150,7 +150,7 @@
     !
     DO itemp = 1, nstemp !loop over temperatures
       ! SP: Define the inverse so that we can efficiently multiply instead of dividing
-      inv_eptemp   = one / transp_temp(itemp)
+      inv_eptemp   = one / global_temps(itemp)
       inv_degaussw = one / degaussw
       !
       ! energy range and spacing for spectral function
@@ -184,7 +184,7 @@
         WRITE(stdout, '(5x, a/)') REPEAT('=', 67)
         !
         IF (fsthick < 1.d3) WRITE(stdout, '(/5x, a ,f10.6, a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
-        WRITE(stdout, '(/5x, a, f10.6, a)' ) 'Golden Rule strictly enforced with T = ', transp_temp(itemp) * ryd2ev, ' eV'
+        WRITE(stdout, '(/5x, a, f10.6, a)' ) 'Golden Rule strictly enforced with T = ', global_temps(itemp) * ryd2ev, ' eV'
         !
       ENDIF
       !
@@ -299,7 +299,7 @@
         ! Creation of a restart point
         IF (restart) THEN
           IF (MOD(iqq, restart_step) == 0) THEN
-            WRITE(stdout, '(5x, a, i10, a, f8.1)' ) 'Creation of a restart point at ', iqq, 'and T = ', transp_temp(itemp)
+            WRITE(stdout, '(5x, a, i10, a, f8.1)' ) 'Creation of a restart point at ', iqq, 'and T = ', global_temps(itemp)
             CALL mp_sum(esigmar_all, inter_pool_comm)
             CALL mp_sum(esigmai_all, inter_pool_comm)
             CALL mp_sum(fermicount, inter_pool_comm)
@@ -347,7 +347,7 @@
         ! and constant matrix elements for dipole transitions)
         !
         IF (me_pool == 0) THEN
-          WRITE(tp, "(f8.3)") transp_temp(itemp) * ryd2ev / kelvin2eV
+          WRITE(tp, "(f8.3)") global_temps(itemp) * ryd2ev / kelvin2eV
           filespec = 'specfun.elself.' // trim(adjustl(tp)) // 'K'
           filespecsup = 'specfun_sup.elself' // trim(adjustl(tp)) // 'K'
           OPEN(UNIT = iospectral, FILE = filespec )
@@ -478,7 +478,7 @@
                            nstemp, wmin_specfun, wmax_specfun, nw_specfun
     USE pwcom,     ONLY : nelec, ef
     USE klist_epw, ONLY : isk_dummy
-    USE elph2,     ONLY : transp_temp, epf17, ibndmax, ibndmin, etf, nbndfst, &
+    USE elph2,     ONLY : global_temps, epf17, ibndmax, ibndmin, etf, nbndfst, &
                           wkf, xqf, nkqf, nkf, wf, a_all_ph, efnew
     USE constants_epw, ONLY : kelvin2eV, ryd2mev, ryd2ev, one, two, zero, cone, ci, eps8
     USE constants,     ONLY : pi
@@ -613,12 +613,12 @@
         WRITE(stdout, '(5x, a/)') REPEAT('=', 67)
         !
         IF (fsthick < 1.d3) WRITE(stdout, '(/5x, a, f10.6, a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
-        WRITE(stdout, '(/5x, a, f10.6, a)' ) 'Golden Rule strictly enforced with T = ', transp_temp(itemp) * ryd2ev, ' eV'
+        WRITE(stdout, '(/5x, a, f10.6, a)' ) 'Golden Rule strictly enforced with T = ', global_temps(itemp) * ryd2ev, ' eV'
       ENDIF
       !
       ! SP: Multiplication is faster than division ==> Important if called a lot in inner loops
       inv_degaussw = one / degaussw
-      inv_eptemp   = one / transp_temp(itemp)
+      inv_eptemp   = one / global_temps(itemp)
       inv_pi       = one / pi
       !
       ! Fermi level and corresponding DOS
@@ -739,7 +739,7 @@
       !
       IF (iqq == 1) THEN
         IF (mpime == ionode_id) THEN
-          WRITE(tp, "(f8.1)") transp_temp(itemp) * ryd2ev / kelvin2eV
+          WRITE(tp, "(f8.1)") global_temps(itemp) * ryd2ev / kelvin2eV
           filespec = 'specfun.phon.' // trim(adjustl(tp)) // 'K'
           filespecsup = 'specfun_sup.phon.' // trim(adjustl(tp)) // 'K'
           OPEN(UNIT = iospectral, FILE = filespec)
@@ -755,7 +755,7 @@
       ENDIF
       !
       ! Write to output file
-      WRITE(tp, "(f8.3)") transp_temp(itemp) * ryd2ev / kelvin2eV
+      WRITE(tp, "(f8.3)") global_temps(itemp) * ryd2ev / kelvin2eV
       filespec = 'specfun.phon.' // trim(adjustl(tp)) // 'K'
       filespecsup = 'specfun_sup.phon.' // trim(adjustl(tp)) // 'K'
       OPEN(UNIT = iospectral, FILE = filespec, position = 'append')
@@ -840,7 +840,7 @@
     USE pwcom,         ONLY : nelec, ef
     USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, nbndfst, wkf, nkf, wqf, xkf, &
                               nkqtotf, xqf, dmef, esigmar_all, esigmai_all, a_all, &
-                              transp_temp, nktotf, lower_bnd, efnew
+                              global_temps, nktotf, lower_bnd, efnew
     USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, ci, eps6
     USE constants,     ONLY : pi
     USE mp,            ONLY : mp_barrier, mp_sum
@@ -977,7 +977,7 @@
     ! loop over temperatures can be introduced
     !
     DO itemp = 1, nstemp
-      inv_eptemp   = one / transp_temp(itemp)
+      inv_eptemp   = one / global_temps(itemp)
       inv_degaussw = one / degaussw 
       ! energy range and spacing for spectral function
       !
@@ -993,7 +993,7 @@
         WRITE(stdout, '(5x, a/)') REPEAT('=', 67)
         !
         IF (fsthick < 1.d3) WRITE(stdout, '(/5x, a, f10.6, a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
-        WRITE(stdout, '(/5x, a, f10.6, a)' ) 'Golden Rule strictly enforced with T = ', transp_temp(itemp) * ryd2ev, ' eV'
+        WRITE(stdout, '(/5x, a, f10.6, a)' ) 'Golden Rule strictly enforced with T = ', global_temps(itemp) * ryd2ev, ' eV'
         !
       ENDIF
       !
@@ -1178,7 +1178,7 @@
         ! Creation of a restart point
         IF (restart) THEN
           IF (MOD(iqq, restart_step) == 0) THEN
-            WRITE(stdout, '(5x, a, i10, a, f8.1)' ) 'Creation of a restart point at ', iqq, 'and T = ', transp_temp(itemp)
+            WRITE(stdout, '(5x, a, i10, a, f8.1)' ) 'Creation of a restart point at ', iqq, 'and T = ', global_temps(itemp)
             CALL mp_sum(esigmar_all, inter_pool_comm)
             CALL mp_sum(esigmai_all, inter_pool_comm)
             CALL mp_sum(fermicount, inter_pool_comm)
@@ -1225,7 +1225,7 @@
         ! and constant matrix elements for dipole transitions)
         !
         IF (me_pool == 0) then
-          WRITE(tp, "(f8.3)") transp_temp(itemp) * ryd2ev / kelvin2eV
+          WRITE(tp, "(f8.3)") global_temps(itemp) * ryd2ev / kelvin2eV
           filespec = 'specfun.plself.' // trim(adjustl(tp)) // 'K'
           filespecsup = 'specfun_sup.plself.' // trim(adjustl(tp)) // 'K'
           OPEN(UNIT = iospectral, FILE = filespec )

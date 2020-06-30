@@ -222,8 +222,6 @@
   !! max. temperature - deprecated as an input parameter
   REAL(KIND = DP) :: temps(50)
   !! input temperature array (units of Kelvin)
-  REAL(KIND = DP), ALLOCATABLE :: global_temps(:)
-  !! temperature array passed to all modules that use temperature (units of Ry)
   !
   ! Superconductivity
   INTEGER :: nswfc

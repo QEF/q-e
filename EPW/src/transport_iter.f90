@@ -32,7 +32,7 @@
     USE epwcom,           ONLY : mob_maxiter, nstemp, broyden_beta,            &
                                  mp_mesh_k, nkf1, nkf2, nkf3
     USE elph2,            ONLY : nkqf, wkf, xkf, nkqtotf, nbndfst,             &
-                                 nktotf, map_rebal, xqf, transp_temp,          &
+                                 nktotf, map_rebal, xqf, global_temps,          &
                                  ixkqf_tr, s_bztoibz_full
     USE constants_epw,    ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, eps10,     &
                                  bohr2ang, ang2cm, hbarJ, eps6, eps8, &
@@ -224,7 +224,7 @@
       WRITE(stdout, *) 'temp k-index  ibnd       k-point          eig[Ry]        F_SERTA   '
     ENDIF
     DO itemp = 1, nstemp
-      etemp = transp_temp(itemp)
+      etemp = global_temps(itemp)
       DO ik = 1, nktotf
         DO ibnd = 1, nbndfst
           IF (ABS(inv_tau(ibnd, ik, itemp)) > eps160) THEN

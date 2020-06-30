@@ -41,7 +41,8 @@
   USE mp_global,     ONLY : world_comm
   USE mp,            ONLY : mp_bcast
   USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, temps, &
-                            global_temps, ntempxx, nkc1, nkc2, nkc3
+                            ntempxx, nkc1, nkc2, nkc3
+  USE elph2,         ONLY : global_temps
   USE klist_epw,     ONLY : xk_cryst
   USE fft_base,      ONLY : dfftp
   USE gvecs,         ONLY : doublegrid
@@ -268,7 +269,8 @@
   USE mp_global,     ONLY : world_comm
   USE mp,            ONLY : mp_bcast
   USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, temps, &
-                            global_temps, ntempxx
+                            ntempxx
+  USE elph2,         ONLY : global_temps
   !
   IMPLICIT NONE
   !

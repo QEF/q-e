@@ -112,7 +112,7 @@
     epsilon2_abs(:, :, :, :),   &!  Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
     wscache(:, :, :, :, :),  &!  Use as cache when doing IFC when lifc = .TRUE.
     epsilon2_abs_lorenz(:, :, :, :), &! Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
-    transp_temp(:),          &!  Temperatures used for the transport module
+    global_temps(:),         &!  Temperature used globally (units of Ry)
     mobilityh_save(:),       &!  Error in the hole mobility
     mobilityel_save(:)        !  Error in the electron mobility
   COMPLEX(KIND = DP), ALLOCATABLE :: &

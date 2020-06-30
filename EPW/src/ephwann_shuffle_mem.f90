@@ -57,7 +57,7 @@
                             inv_tau_allcb, zi_allcb, exband, nbndskip,          &
                             gamma_v_all, esigmar_all, esigmai_all,              &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
-                            nktotf,  transp_temp, xkq, lower_bnd, upper_bnd, dos,&
+                            nktotf,  global_temps, xkq, lower_bnd, upper_bnd, dos,&
                             nbndep
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
@@ -1331,7 +1331,7 @@
           ! This is only done once for the first iq. Also compute the dos at the same time
           IF (iqq == iq_restart) THEN
             DO itemp = 1, nstemp
-              etemp = transp_temp(itemp)
+              etemp = global_temps(itemp)
               CALL fermicarrier(itemp, etemp, ef0, efcb, ctype)
               ! compute dos for metals
               IF (assume_metal) THEN
@@ -1441,7 +1441,7 @@
         WRITE( stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
       ENDIF
       DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
+        etemp = global_temps(itemp)
         IF (int_mob .OR. carrier) THEN
           ! SP: Determination of the Fermi level for intrinsic or doped carrier
           !     One also need to apply scissor before calling it.
@@ -1622,8 +1622,8 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating wslen_g', 1)
   DEALLOCATE(etf_all, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating etf_all', 1)
-  DEALLOCATE(transp_temp, STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating transp_temp', 1)
+  DEALLOCATE(global_temps, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating global_temps', 1)
   DEALLOCATE(et_ks, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating et_ks', 1)
   IF (assume_metal) THEN

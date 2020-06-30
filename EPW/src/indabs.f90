@@ -33,7 +33,7 @@
                               eps_acustic, efermi_read, fermi_energy,&
                               vme, omegamin, omegamax, omegastep
     USE elph2,         ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf, &
-                              sigmar_all, efnew, transp_temp, &
+                              sigmar_all, efnew, global_temps, &
                               dmef, omegap, epsilon2_abs, epsilon2_abs_lorenz, vmef, &
                               nbndfst, nktotf
     USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, czero
@@ -150,7 +150,7 @@
       IF (fsthick < 1.d3) WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
       WRITE(stdout, '(/5x,a)') 'The following temperatures are calculated:'
       DO itemp = 1, nstemp
-        WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Temperature T = ', transp_temp(itemp) * ryd2ev, ' eV'
+        WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Temperature T = ', global_temps(itemp) * ryd2ev, ' eV'
       ENDDO
       !
       !IF (.NOT. ALLOCATED (omegap) )    ALLOCATE(omegap(nomega))
@@ -183,7 +183,7 @@
     ENDIF
     !
     DO itemp = 1, nstemp
-      inv_eptemp0 = 1.0 / transp_temp(itemp)
+      inv_eptemp0 = 1.0 / global_temps(itemp)
       DO ik = 1, nkf
         !
         ikk = 2 * ik - 1
@@ -196,7 +196,7 @@
           !
           epf(:, :, imode) = epf17(:, :, imode,ik)
           IF (wq(imode) > eps_acustic) THEN
-            nqv(imode) = wgauss(-wq(imode) / transp_temp(itemp), -99)
+            nqv(imode) = wgauss(-wq(imode) / global_temps(itemp), -99)
             nqv(imode) = nqv(imode) / (one - two * nqv(imode))
           ENDIF
         ENDDO
@@ -339,7 +339,7 @@
       ! Output to file
       DO itemp = 1,nstemp
         WRITE(c,"(i0)") neta + 1
-        WRITE(tp,"(f8.1)") transp_temp(itemp) * ryd2ev / kelvin2eV
+        WRITE(tp,"(f8.1)") global_temps(itemp) * ryd2ev / kelvin2eV
         format_string = "("//TRIM(c) // "E22.14)"
         nameF = 'epsilon2_indabs_' // trim(adjustl(tp)) // 'K.dat'
         OPEN(UNIT = iuindabs, FILE = nameF)
