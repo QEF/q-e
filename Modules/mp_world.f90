@@ -78,7 +78,11 @@ CONTAINS
 #if defined(__CUDA)
     ierr = cudaGetDeviceCount( ndev )
     IF (ierr/=0) CALL mp_stop( 9000 + ierr )
-!$omp parallel firstprivate(key, ndev)
+    !
+    ! WARNING: the OpenMP standard does not guarantee that the thread
+    !          pool remains the same in different parallel regions.
+    !          However, this is apparently what all major implementations do.
+!$omp parallel firstprivate(key, ndev) reduction(max:ierr)
     ierr = cudaSetDevice(mod(key, ndev))
 !$omp end parallel
     IF (ierr/=0) CALL mp_stop( 9100 + ierr )
