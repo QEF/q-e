@@ -347,6 +347,12 @@ MODULE force_mod
   !! if .TRUE. compute the forces
   LOGICAL :: lstres
   !! if .TRUE. compute the stress
+  REAL(DP), ALLOCATABLE :: eigenval(:)
+  !! eigenvalues of the overlap matrix
+  COMPLEX(DP), ALLOCATABLE :: eigenvect(:,:)
+  !! eigenvectors of the overlap matrix
+  COMPLEX(DP), ALLOCATABLE :: overlap_inv(:,:)
+  !! overlap matrix (transposed): (O^{-1/2})^T
   !
 END MODULE force_mod
 !
