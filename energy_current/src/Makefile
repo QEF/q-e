@@ -19,13 +19,11 @@ hartree_mod.o\
 zero_mod.o\
 diropn_due.o\
 all_currents.o \
-stop_pp.o\
 routine_hartree.o\
 project.o\
 init_us_3.o \
 init_us_1a.o \
 add_nc_curr.o \
-stop_pp.o\
 routine_zero.o\
 init_reciprocal_parts_tab.o\
 allocate_zero.o \

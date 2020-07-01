@@ -144,10 +144,6 @@ routine_zero.o : hartree_mod.o
 routine_zero.o : zero_mod.o
 start_all_currents.o : ../../Modules/environment.o
 start_all_currents.o : ../../Modules/mp_global.o
-stop_pp.o : ../../Modules/control_flags.o
-stop_pp.o : ../../Modules/io_files.o
-stop_pp.o : ../../Modules/mp_global.o
-stop_pp.o : ../../UtilXlib/parallel_include.o
 zero_mod.o : ../../CPV/src/spline.o
 zero_mod.o : ../../Modules/becmod.o
 zero_mod.o : ../../Modules/cell_base.o
