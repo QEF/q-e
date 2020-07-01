@@ -28,7 +28,7 @@ subroutine init_us_3(npw_, xvkb_)
    USE uspp, ONLY: nkb, nhtol, nhtolm, indv, ap, aainit, vkb
    USE uspp_param, ONLY: upf, lmaxkb, nhm, nh
    use zero_mod, ONLY: tabr, tabr_d2y
-   use hartree_mod, ONLY: ec_test  
+   use hartree_mod, ONLY: ec_test
    USE cell_base, ONLY: omega
    use mp, ONLY: mp_sum, mp_min
 !
@@ -82,16 +82,15 @@ subroutine init_us_3(npw_, xvkb_)
    real(DP), allocatable :: xdata(:)
    integer :: iq
 
-   
 ! testing variables used only for ec_test
 
    complex(DP) :: vkbr(1:dffts%nnr), vkbr_2(1:dffts%nnr), vkbr_3(1:dffts%nnr, 3)
    real(DP)    :: stampa(nkb, 1:dffts%nnr, 3, 3), stampa_b(nkb, 1:dffts%nnr, 3, 3) !, ris(4, 4)
    integer, external :: find_free_unit
    integer :: iun
-   integer :: ii,nr3s_end, nr3s_start, vkb_pol 
+   integer :: ii, nr3s_end, nr3s_start, vkb_pol
    character(len=20) :: string
-   
+
 !
    if (lmaxkb .lt. 0) return
    call start_clock('init_us_3')
@@ -335,83 +334,83 @@ subroutine init_us_3(npw_, xvkb_)
 !!test per xvkb
 
    if (ec_test) then
-     
-        if (nat>1) then
-           CALL errore('init_us_3', 'Test not working with nat > 1', 1)
-        end if
-        if  ( sqrt(tau(1,1)**2+tau(2,1)**2+tau(3,1)**2)  > 1.E-3 ) then
-           print*, sqrt(tau(1,1)**2+tau(2,1)**2+tau(3,1)**2) 
-           CALL errore('init_us_3', 'Test not working if atom is not in the origin', 1)   
-        end if
-                   
+
+      if (nat > 1) then
+         CALL errore('init_us_3', 'Test not working with nat > 1', 1)
+      end if
+      if (sqrt(tau(1, 1)**2 + tau(2, 1)**2 + tau(3, 1)**2) > 1.E-3) then
+         print *, sqrt(tau(1, 1)**2 + tau(2, 1)**2 + tau(3, 1)**2)
+         CALL errore('init_us_3', 'Test not working if atom is not in the origin', 1)
+      end if
+
 !
 !!!!!!!!!!!! First test: we print the x-vkb in real space along the three principal axes of the cell computed in two ways:
 !
 ! (1) fourier transforming xvkb_ in real space
-! (2) fourier transforming vkb in real space a manually multiplying by x or y or z 
+! (2) fourier transforming vkb in real space a manually multiplying by x or y or z
 !
 ! The test produces different files of name "total_axes_x/y/z_ikb" where axes_x/y/z runs thorugh the three principal directions (axes) of the cell, which
 ! is supposed to be cubic.
 !
 ! Each file contains 6 records. Three for each xvbk polarizazion (xvkb, yvkb and zvkb) calculated in way (1) and other three for method (2).
 !
-        do vkb_pol=1,3
-         do ikb=1,nkb   
-         
-            cont_1=0
-            cont_2=0
-            cont_3=0
+      do vkb_pol = 1, 3
+         do ikb = 1, nkb
 
-            print*,"Comincia il test per test", vkb_pol
-            print*,"Testiamo: ", ikb
-            print*,"CONTROLLO",nkb,nh(1),nbnd,nkb
-            print*,"CONTROLLO_POS", tau(:,:)*alat
+            cont_1 = 0
+            cont_2 = 0
+            cont_3 = 0
+
+            print *, "Comincia il test per test", vkb_pol
+            print *, "Testiamo: ", ikb
+            print *, "CONTROLLO", nkb, nh(1), nbnd, nkb
+            print *, "CONTROLLO_POS", tau(:, :)*alat
 
             ! vkbr contains xvkb_ in real space
-            psic=0.d0
-            psic(dffts%nl(1:npw))=xvkb_(1:npw,ikb,vkb_pol)
-            psic(dffts%nlm(1:npw))=CONJG(xvkb_(1:npw,ikb,vkb_pol))
-            call invfft ('Wave', psic, dffts)
-            vkbr(1:dffts%nnr)=1/sqrt(omega)*psic(1:dffts%nnr)
+            psic = 0.d0
+            psic(dffts%nl(1:npw)) = xvkb_(1:npw, ikb, vkb_pol)
+            psic(dffts%nlm(1:npw)) = CONJG(xvkb_(1:npw, ikb, vkb_pol))
+            call invfft('Wave', psic, dffts)
+            vkbr(1:dffts%nnr) = 1/sqrt(omega)*psic(1:dffts%nnr)
 
             ! vkbr_2 constains vkb in real space
-            psic=0.d0
-            psic(dffts%nl(1:npw))=vkb(1:npw,ikb)
-            psic(dffts%nlm(1:npw))=CONJG(vkb(1:npw,ikb))
-            call invfft ('Wave', psic, dffts)
-            vkbr_2(1:dffts%nnr)=1/sqrt(omega)*psic(1:dffts%nnr)
+            psic = 0.d0
+            psic(dffts%nl(1:npw)) = vkb(1:npw, ikb)
+            psic(dffts%nlm(1:npw)) = CONJG(vkb(1:npw, ikb))
+            call invfft('Wave', psic, dffts)
+            vkbr_2(1:dffts%nnr) = 1/sqrt(omega)*psic(1:dffts%nnr)
 !
-            nr3s_start=0
-            nr3s_end =0
-            do ii=1,mpime + 1
-               nr3s_start=nr3s_end+1
-               nr3s_end=nr3s_end+dffts%nr3p(ii)
+            nr3s_start = 0
+            nr3s_end = 0
+            do ii = 1, mpime + 1
+               nr3s_start = nr3s_end + 1
+               nr3s_end = nr3s_end + dffts%nr3p(ii)
             end do
-            do iz=1,dffts%nr3p(mpime+1)     !primo ciclo   sui punti x
-               do iy=1,dffts%nr2           !secondo ciclo sui punti x
-                  do ix=1,dffts%nr1        !terzo ciclo   sui punti x
-                     iqq=(iz-1)*(dffts%nr1x*dffts%nr2x)+(iy-1)*dffts%nr1+ix
-                     u_x(1:3)=real(ix-1)/real(dffts%nr1)*at(1:3,1)*alat
-                     u_y(1:3)=real(iy-1)/real(dffts%nr2)*at(1:3,2)*alat
-                     u_z(1:3)=real(iz+nr3s_start-1-1)/real(dffts%nr3)*at(1:3,3)*alat
-                     u(1:3) = u_x(1:3)+u_y(1:3)+u_z(1:3)
-                      modulus=sqrt(u(1)**2+u(2)**2+u(3)**2)
+            do iz = 1, dffts%nr3p(mpime + 1)     !primo ciclo   sui punti x
+               do iy = 1, dffts%nr2           !secondo ciclo sui punti x
+                  do ix = 1, dffts%nr1        !terzo ciclo   sui punti x
+                     iqq = (iz - 1)*(dffts%nr1x*dffts%nr2x) + (iy - 1)*dffts%nr1 + ix
+                     u_x(1:3) = real(ix - 1)/real(dffts%nr1)*at(1:3, 1)*alat
+                     u_y(1:3) = real(iy - 1)/real(dffts%nr2)*at(1:3, 2)*alat
+                     u_z(1:3) = real(iz + nr3s_start - 1 - 1)/real(dffts%nr3)*at(1:3, 3)*alat
+                     u(1:3) = u_x(1:3) + u_y(1:3) + u_z(1:3)
+                     modulus = sqrt(u(1)**2 + u(2)**2 + u(3)**2)
 
-                      !init "stampa" variable
-                     if ((iz==1).and.(iy==1)) then
-                          cont_1=cont_1+1
-                          stampa(ikb, cont_1,1, vkb_pol)=dble(vkbr(iqq))
-                          stampa_b(ikb, cont_1,1, vkb_pol)=u(vkb_pol)*dble(vkbr_2(iqq))
+                     !init "stampa" variable
+                     if ((iz == 1) .and. (iy == 1)) then
+                        cont_1 = cont_1 + 1
+                        stampa(ikb, cont_1, 1, vkb_pol) = dble(vkbr(iqq))
+                        stampa_b(ikb, cont_1, 1, vkb_pol) = u(vkb_pol)*dble(vkbr_2(iqq))
                      end if
-                     if ((ix==1).and.(iz==1)) then!
-                          cont_2=cont_2+1
-                          stampa(ikb,cont_2,2, vkb_pol)=dble(vkbr(iqq))
-                          stampa_b(ikb,cont_2,2, vkb_pol)=u(vkb_pol)*dble(vkbr_2(iqq))
+                     if ((ix == 1) .and. (iz == 1)) then!
+                        cont_2 = cont_2 + 1
+                        stampa(ikb, cont_2, 2, vkb_pol) = dble(vkbr(iqq))
+                        stampa_b(ikb, cont_2, 2, vkb_pol) = u(vkb_pol)*dble(vkbr_2(iqq))
                      end if!
-                     if ((ix==1).and.(iy==1)) then
-                          cont_3=cont_3+1
-                          stampa(ikb, cont_3,3, vkb_pol)=dble(vkbr(iqq))
-                          stampa_b(ikb, cont_3,3, vkb_pol)=u(vkb_pol)*dble(vkbr_2(iqq))
+                     if ((ix == 1) .and. (iy == 1)) then
+                        cont_3 = cont_3 + 1
+                        stampa(ikb, cont_3, 3, vkb_pol) = dble(vkbr(iqq))
+                        stampa_b(ikb, cont_3, 3, vkb_pol) = u(vkb_pol)*dble(vkbr_2(iqq))
                      end if
 !!fine
 !!                      do ir=1,rgrid(1)%mesh
@@ -449,91 +448,91 @@ subroutine init_us_3(npw_, xvkb_)
                   end do
                end do
             end do
-            
-         end do   
-        end do     
-     
-        if (ionode) then
-            do ikb=1,nkb
-               iun = find_free_unit()
-               
-               write(string,'(I0)') ikb
-               open(unit=iun,file='total_axes_x_'//trim(string),status='unknown')
-               do icont=1,cont_1
-                   write(iun,"(6F12.7)") stampa(ikb,icont,1, 1),stampa(ikb,icont,1, 2), stampa(ikb,icont,1,3),&
-                   stampa_b(ikb,icont,1, 1), stampa_b(ikb,icont,1, 2),stampa_b(ikb,icont,1,3) 
-               end do
-               close(iun)
-               
-               write(string,'(I0)') ikb
-               open(unit=iun,file='total_axes_y_'//trim(string),status='unknown')
-               do icont=1,cont_1
-                   write(iun,"(6F12.7)") stampa(ikb,icont,2, 1),stampa(ikb,icont,2, 2), stampa(ikb,icont,2,3),&
-                   stampa_b(ikb,icont,2,1), stampa_b(ikb,icont,2,2),stampa_b(ikb,icont,2,3) 
-               end do
-               close(iun)
-               
-               write(string,'(I0)') ikb
-               open(unit=iun,file='total_axes_z_'//trim(string),status='unknown')
-               do icont=1,cont_1
-                   write(iun,"(6F12.7)") stampa(ikb,icont,3, 1),stampa(ikb,icont,3,2), stampa(ikb,icont,3,3),&
-                   stampa_b(ikb,icont,3,1), stampa_b(ikb,icont,3,2),stampa_b(ikb,icont,3,3) 
-               end do
-               close(iun)
-               
-            end do   
-        end if
-     
-!!!!!!!!!!!!!!!!!!!!!!!!        
+
+         end do
+      end do
+
+      if (ionode) then
+         do ikb = 1, nkb
+            iun = find_free_unit()
+
+            write (string, '(I0)') ikb
+            open (unit=iun, file='total_axes_x_'//trim(string), status='unknown')
+            do icont = 1, cont_1
+               write (iun, "(6F12.7)") stampa(ikb, icont, 1, 1), stampa(ikb, icont, 1, 2), stampa(ikb, icont, 1, 3), &
+                  stampa_b(ikb, icont, 1, 1), stampa_b(ikb, icont, 1, 2), stampa_b(ikb, icont, 1, 3)
+            end do
+            close (iun)
+
+            write (string, '(I0)') ikb
+            open (unit=iun, file='total_axes_y_'//trim(string), status='unknown')
+            do icont = 1, cont_1
+               write (iun, "(6F12.7)") stampa(ikb, icont, 2, 1), stampa(ikb, icont, 2, 2), stampa(ikb, icont, 2, 3), &
+                  stampa_b(ikb, icont, 2, 1), stampa_b(ikb, icont, 2, 2), stampa_b(ikb, icont, 2, 3)
+            end do
+            close (iun)
+
+            write (string, '(I0)') ikb
+            open (unit=iun, file='total_axes_z_'//trim(string), status='unknown')
+            do icont = 1, cont_1
+               write (iun, "(6F12.7)") stampa(ikb, icont, 3, 1), stampa(ikb, icont, 3, 2), stampa(ikb, icont, 3, 3), &
+                  stampa_b(ikb, icont, 3, 1), stampa_b(ikb, icont, 3, 2), stampa_b(ikb, icont, 3, 3)
+            end do
+            close (iun)
+
+         end do
+      end if
+
+!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!! Second est per xvkb: We evaluate xvkb by transforming vkb in real space and multiplying by x. In this test
 ! the xvkb_ is updated. The zero current should be only slightly changed w.r.t. a calculation done with ec_test = .false.
-! 
+!
 
-        xvkb_=0.d0
-        do ikb=1,nkb
-          psic=0.d0
-          psic(dffts%nl(1:npw))=vkb(1:npw,ikb)
-          psic(dffts%nlm(1:npw))=CONJG(vkb(1:npw,ikb))
-          call invfft ('Wave', psic, dffts)
-          vkbr_2(1:dffts%nnr)=psic(1:dffts%nnr)
+      xvkb_ = 0.d0
+      do ikb = 1, nkb
+         psic = 0.d0
+         psic(dffts%nl(1:npw)) = vkb(1:npw, ikb)
+         psic(dffts%nlm(1:npw)) = CONJG(vkb(1:npw, ikb))
+         call invfft('Wave', psic, dffts)
+         vkbr_2(1:dffts%nnr) = psic(1:dffts%nnr)
 
-          !vkbr_2 contains the 3D beta function in real space beta(r)
+         !vkbr_2 contains the 3D beta function in real space beta(r)
 
-          nr3s_start=0
-          nr3s_end =0
-          do ii=1,mpime + 1
-             nr3s_start=nr3s_end+1
-             nr3s_end=nr3s_end+dffts%nr3p(ii)
-          end do
-          do iz=1,dffts%nr3p(mpime+1)     !primo ciclo   sui punti x
-             do iy=1,dffts%nr2           !secondo ciclo sui punti x
-                do ix=1,dffts%nr1        !terzo ciclo   sui punti x
-                   iqq=(iz-1)*(dffts%nr1x*dffts%nr2x)+(iy-1)*dffts%nr1+ix
-                   u_x(1:3)=real(ix-1)/real(dffts%nr1)*at(1:3,1)*alat
-                   u_y(1:3)=real(iy-1)/real(dffts%nr2)*at(1:3,2)*alat
-                   u_z(1:3)=real(iz+nr3s_start-1-1)/real(dffts%nr3)*at(1:3,3)*alat
-                   u(1:3) = u_x(1:3)+u_y(1:3)+u_z(1:3)
+         nr3s_start = 0
+         nr3s_end = 0
+         do ii = 1, mpime + 1
+            nr3s_start = nr3s_end + 1
+            nr3s_end = nr3s_end + dffts%nr3p(ii)
+         end do
+         do iz = 1, dffts%nr3p(mpime + 1)     !primo ciclo   sui punti x
+            do iy = 1, dffts%nr2           !secondo ciclo sui punti x
+               do ix = 1, dffts%nr1        !terzo ciclo   sui punti x
+                  iqq = (iz - 1)*(dffts%nr1x*dffts%nr2x) + (iy - 1)*dffts%nr1 + ix
+                  u_x(1:3) = real(ix - 1)/real(dffts%nr1)*at(1:3, 1)*alat
+                  u_y(1:3) = real(iy - 1)/real(dffts%nr2)*at(1:3, 2)*alat
+                  u_z(1:3) = real(iz + nr3s_start - 1 - 1)/real(dffts%nr3)*at(1:3, 3)*alat
+                  u(1:3) = u_x(1:3) + u_y(1:3) + u_z(1:3)
 
-                   !using vkbr_2 we muliply bx x in real space: x*beta(r) We multiply by x. Note that we have to be carefully of pbc.  
-                   do ipol=1,3
-                      if (u(ipol).le.(alat/2.d0)) then
-                          vkbr_3(iqq,ipol)=vkbr_2(iqq)*u(ipol)
-                      else
-                          vkbr_3(iqq,ipol)=vkbr_2(iqq)*(-alat+u(ipol))
-                      end if
-                   end do
-                end do
-             end do
-          end do
+                  !using vkbr_2 we muliply bx x in real space: x*beta(r) We multiply by x. Note that we have to be carefully of pbc.
+                  do ipol = 1, 3
+                     if (u(ipol) .le. (alat/2.d0)) then
+                        vkbr_3(iqq, ipol) = vkbr_2(iqq)*u(ipol)
+                     else
+                        vkbr_3(iqq, ipol) = vkbr_2(iqq)*(-alat + u(ipol))
+                     end if
+                  end do
+               end do
+            end do
+         end do
 
-          !We transform x*beta(r) back to reciprocal space.
-          do ipol=1,3
-             psic=0.d0
-             psic(1:dffts%nnr)=vkbr_3(1:dffts%nnr,ipol)
-             call fwfft ('Wave', psic, dffts)
-             xvkb_(1:npw,ikb,ipol)=psic(dffts%nl(1:npw))
-          end do
-        end do
+         !We transform x*beta(r) back to reciprocal space.
+         do ipol = 1, 3
+            psic = 0.d0
+            psic(1:dffts%nnr) = vkbr_3(1:dffts%nnr, ipol)
+            call fwfft('Wave', psic, dffts)
+            xvkb_(1:npw, ikb, ipol) = psic(dffts%nl(1:npw))
+         end do
+      end do
    end if
 !!----------------------------------------------------------------------------------------F
 !!----------------------------------------------------------------------------------------I

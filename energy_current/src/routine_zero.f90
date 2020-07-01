@@ -120,7 +120,7 @@ subroutine read_wfc_uno()
       end if
    end do
 !
-!multiply by two due to spin degeneracy 
+!multiply by two due to spin degeneracy
    charge(1:dffts%nnr) = charge(1:dffts%nnr)*2.d0
 !chatge in reciprocal space
    psic = 0.d0
@@ -289,10 +289,10 @@ subroutine routine_zero()
       i_current_a(:) = i_current_a(:) + ion_vel(:, iatom)*(1./2.*amconv*amass(ityp(iatom))*(ion_vel(1, iatom)**2 +&
    &ion_vel(2, iatom)**2 + ion_vel(3, iatom)**2))
 !
-         if (add_i_current_b) then
-             i_current(:) = i_current(:) + 2./3.*e2*zv(ityp(iatom))**2*ion_vel(:, iatom)*I_primo
-         end if
-         i_current_b(:) = i_current_b(:) + 2./3.*e2*zv(ityp(iatom))**2*ion_vel(:, iatom)*I_primo
+      if (add_i_current_b) then
+         i_current(:) = i_current(:) + 2./3.*e2*zv(ityp(iatom))**2*ion_vel(:, iatom)*I_primo
+      end if
+      i_current_b(:) = i_current_b(:) + 2./3.*e2*zv(ityp(iatom))**2*ion_vel(:, iatom)*I_primo
    end do
 
    do iatom = 1, nat

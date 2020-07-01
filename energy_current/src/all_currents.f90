@@ -7,7 +7,7 @@ program all_currents
    !trajectory reading stuff
    use ions_base, only: nat
    use cpv_traj, only: cpv_trajectory, &
-      cpv_trajectory_initialize, cpv_trajectory_deallocate
+                       cpv_trajectory_initialize, cpv_trajectory_deallocate
 
 !from ../PW/src/pwscf.f90
    USE mp_global, ONLY: mp_startup
@@ -162,12 +162,12 @@ contains
          !so we can read the file that here we are writing in the correct way
          open (iun, file=trim(file_output)//'.dat', position='append')
          write (iun, '(1I7,1E14.6,3E20.12,3E20.12)', advance='no') step, time, &
-                 J_xc + J_hartree + J_kohn + i_current + z_current, J_electron(1:3)
-         do itype=1,nsp
-             write (iun, '(3E20.12)', advance='no') v_cm(:,itype)
-             write (*, '(A,1I3,A,3E20.12)') 'center of mass velocity of type ',itype ,': ', v_cm(:,itype)
+            J_xc + J_hartree + J_kohn + i_current + z_current, J_electron(1:3)
+         do itype = 1, nsp
+            write (iun, '(3E20.12)', advance='no') v_cm(:, itype)
+            write (*, '(A,1I3,A,3E20.12)') 'center of mass velocity of type ', itype, ': ', v_cm(:, itype)
          end do
-         write (iun,'(A)') ''
+         write (iun, '(A)') ''
          close (iun)
       end if
 
@@ -202,8 +202,8 @@ contains
       last_step = 0
       restart = .false.
       subtract_cm_vel = .false.
-      step_mul=1
-      step_rem=0
+      step_mul = 1
+      step_rem = 0
       ec_test = .false.
       add_i_current_b = .false.
       READ (iunit, energy_current, IOSTAT=ios)
@@ -232,7 +232,7 @@ contains
       CALL mp_bcast(file_output, ionode_id, world_comm)
       CALL mp_bcast(step_mul, ionode_id, world_comm)
       CALL mp_bcast(step_rem, ionode_id, world_comm)
-      CALL mp_bcast(ec_test, ionode_id, world_comm) 
+      CALL mp_bcast(ec_test, ionode_id, world_comm)
       CALL mp_bcast(add_i_current_b, ionode_id, world_comm)
    end subroutine
 
@@ -250,14 +250,14 @@ contains
       if (.not. restart) return
       if (ionode) then
          iun = find_free_unit()
-         ios=0
+         ios = 0
          step1 = -1
          open (iun, file=trim(file_output)//'.dat')
-         write(*,*) 'reading file ', trim(file_output)//'.dat'
+         write (*, *) 'reading file ', trim(file_output)//'.dat'
          do while (ios == 0)
-            read (iun, *, iostat=ios) step, time, J, (Jdummy, i=1,nsp+1)
+            read (iun, *, iostat=ios) step, time, J, (Jdummy, i=1, nsp + 1)
             if (ios == 0) then
-               write(*,*) 'found: ', step, time, J
+               write (*, *) 'found: ', step, time, J
                step1 = step
                time1 = time
                J1 = J
@@ -321,30 +321,30 @@ contains
       use dynamics_module, only: vel
       use hartree_mod, only: v_cm
       implicit none
-      real(dp), intent(out), optional :: vel_cm(:,:)
+      real(dp), intent(out), optional :: vel_cm(:, :)
       integer :: iatom, itype
       integer, allocatable :: counter(:)
       real(dp) :: delta(3), mean(3)
       if (.not. allocated(v_cm)) &
-         allocate(v_cm(3,nsp))
-      allocate(counter(nsp))
+         allocate (v_cm(3, nsp))
+      allocate (counter(nsp))
       counter = 0
-      v_cm=0.0_dp
+      v_cm = 0.0_dp
 
-      do iatom=1,nat
-          itype=ityp(iatom)
-          counter(itype) = counter(itype) + 1
-          delta = (vel(:,iatom)-v_cm(:,itype))/real(counter(itype),dp)
-          v_cm(:,itype) = v_cm(:,itype) + delta
+      do iatom = 1, nat
+         itype = ityp(iatom)
+         counter(itype) = counter(itype) + 1
+         delta = (vel(:, iatom) - v_cm(:, itype))/real(counter(itype), dp)
+         v_cm(:, itype) = v_cm(:, itype) + delta
       end do
       if (present(vel_cm)) then
-          do iatom=1,nat
-              itype=ityp(iatom)
-              vel_cm(:,iatom)=vel_cm(:,iatom)-v_cm(:,itype)
-          end do
+         do iatom = 1, nat
+            itype = ityp(iatom)
+            vel_cm(:, iatom) = vel_cm(:, iatom) - v_cm(:, itype)
+         end do
       end if
-      
-      deallocate(counter)
+
+      deallocate (counter)
    end subroutine
 
    subroutine prepare_next_step()
@@ -376,8 +376,8 @@ contains
          else
             call errore('read_vel', 'error: unknown vel_input_units', 1)
          endif
-         if ( subtract_cm_vel ) then
-         !calculate center of mass velocity for each atomic species and subtract it
+         if (subtract_cm_vel) then
+            !calculate center of mass velocity for each atomic species and subtract it
             call cm_vel(vel)
          else
             call cm_vel()
@@ -403,7 +403,7 @@ contains
       USE extrapolation, ONLY: update_pot
       USE control_flags, ONLY: ethr
       use cpv_traj, only: cpv_trajectory, cpv_trajectory_initialize, cpv_trajectory_deallocate, &
-         cpv_trajectory_read_step, cpv_trajectory_get_step
+                          cpv_trajectory_read_step, cpv_trajectory_get_step
       use traj_object, only: timestep ! type for timestep data
       use kinds, only: dp
       use ions_base, ONLY: tau, tau_format, nat
@@ -433,7 +433,7 @@ contains
                exit
             end if
             !if needed go on in the reading of trajectory
-            if (ts%nstep < first_step .or. mod(ts%nstep,step_mul) /= step_rem) then
+            if (ts%nstep < first_step .or. mod(ts%nstep, step_mul) /= step_rem) then
                write (*, *) 'SKIPPED STEP ', ts%nstep, ts%tps
                cycle
             end if
