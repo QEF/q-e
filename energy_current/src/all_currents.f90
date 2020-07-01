@@ -15,7 +15,6 @@ program all_currents
    use mp, ONLY: mp_bcast, mp_barrier
    USE mp_pools, ONLY: intra_pool_comm
    USE mp_bands, ONLY: intra_bgrp_comm, inter_bgrp_comm
-   !USE mp_exx,               ONLY : negrp
    USE read_input, ONLY: read_input_file
    USE command_line_options, ONLY: input_file_, command_line, ndiag_, nimage_
    USE check_stop, ONLY: check_stop_init
@@ -289,9 +288,6 @@ contains
          if (tavel) &
             write (*, *) 'WARNING: VELOCITIES FROM INPUT FILE WILL BE IGNORED'
       end if
-
-      !eventually set first_step if restart
-
    end subroutine
 
    subroutine run_pwscf(exit_status)

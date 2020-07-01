@@ -17,7 +17,6 @@ subroutine routine_hartree()
    use mp, only: mp_sum, mp_barrier
    use io_global, only: stdout, ionode
    use gvect, only: g, ngm, gstart
-   !USE gvecs, ONLY: dffts%nl, dffts%nlm   !moved to fft type
    USE cell_base, ONLY: tpiba, omega, tpiba2, alat, at
    USE constants, ONLY: e2, fpi, pi
    USE fft_interfaces, ONLY: fwfft, invfft
@@ -35,7 +34,6 @@ subroutine routine_hartree()
 
    implicit none
 
-   !complex(kind=DP), allocatable :: evc_uno(:, :), evc_due(:, :), evp(:, :), tmp(:, :)
    complex(kind=DP), allocatable ::  evp(:, :), tmp(:, :)
    integer :: iun, iv, igm, ibnd, i
    logical :: exst
@@ -57,7 +55,7 @@ subroutine routine_hartree()
    integer  :: inbd, jbnd, ig, ipol
    integer, external :: find_free_unit
 
-   write (stdout, *) 'INIZIO ROUTINE HARTREE & KOHN'
+   write (stdout, *) 'BEGIN: HARTREE & KOHN'
    !npwold=npw
    npw = npwx ! only gamma
    call start_clock('routine_hartree')
@@ -261,7 +259,6 @@ subroutine routine_hartree()
    call stop_clock('xc_current')
    call print_clock('xc_current')
    if (ionode) print *, 'CORRENTE X-C CALCOLATA'
-!!la corrente appena calcolata si può fare senza scrivere più di 5 righe di codice probabilmente usando quello che c'è già in QE
 
 !---------------------------------KOHN------------------------------------------------
    call start_clock('kohn_current')
@@ -364,7 +361,7 @@ subroutine routine_hartree()
       call stop_clock('kohn-second')
       call print_clock('kohn-second')
 
-      if (ionode) write (*, "('  KOHN POLARIZZAZIONE ',I3,' COMPLETATA')") ipol
+      if (ionode) write (*, "('  KOHN POLARIZATION ',I3,' COMPLETED')") ipol
 
    end do polariz
    J_kohn = 0.d0
@@ -384,7 +381,7 @@ subroutine routine_hartree()
    call stop_clock('kohn_current')
    call print_clock('kohn_current')
    !npw=npwold
-   if (ionode) print *, 'CORRENTE KOHN CALCOLATA'
+   if (ionode) print *, 'KOHN CURRENT CALCULATED'
 !---------------------------------------------------------------------------
    deallocate (charge)
    deallocate (charge_g)

@@ -1,6 +1,5 @@
-
 subroutine init_zero()
-
+!called once to init stuff that does not depend on the atomic positions
    use io_files, only: nwordwfc, diropn, iunwfc, prefix, tmp_dir
    use gvect, only: ngm, gg, g, gstart
    use zero_mod
@@ -12,11 +11,8 @@ subroutine init_zero()
    integer, external :: find_free_unit
    logical :: exst
    call start_clock('init_zero')
-!
    call init_us_1all()
    call init_reciprocal_parts_tab()
-!
-!questo è necessario?
    do a = 1, 3
       do b = 1, 3
          if (a > b) then
@@ -31,56 +27,6 @@ subroutine init_zero()
 
 end subroutine
 
-subroutine read_zero()
-   use io_files, only: nwordwfc, diropn, iunwfc, prefix, tmp_dir
-   use gvect, only: ngm, gg, g, gstart
-   use zero_mod
-   use hartree_mod
-   use ions_base, only: nsp
-   implicit none
-
-   integer :: isp, iun, a, b
-   character(256) :: pref_box
-   integer, external :: find_free_unit
-   logical :: exst
-!read H_g
-   pref_box = prefix
-   prefix = 'thermal'
-!
-!call start_clock( 'lett_H' )
-   iun = find_free_unit()
-   call errore('!', 'THIS SUB SHOULD NOT BE CALLED', 42)
-   call diropn(iun, 'ecur', ngm, exst, '$errore')
-   do isp = 1, nsp
-      call davcio(H_g(:, 1, 1, isp), ngm, iun, (isp - 1)*6 + 1, -1)
-      call davcio(H_g(:, 2, 2, isp), ngm, iun, (isp - 1)*6 + 2, -1)
-      call davcio(H_g(:, 3, 3, isp), ngm, iun, (isp - 1)*6 + 3, -1)
-      call davcio(H_g(:, 2, 1, isp), ngm, iun, (isp - 1)*6 + 4, -1)
-      call davcio(H_g(:, 3, 1, isp), ngm, iun, (isp - 1)*6 + 5, -1)
-      call davcio(H_g(:, 3, 2, isp), ngm, iun, (isp - 1)*6 + 6, -1)
-   end do
-   close (iun)
-!
-   iun = find_free_unit()
-   call diropn(iun, 'i_uno', ngm, exst, '$errore')
-   call davcio(I_uno_g(:, 1, 1), ngm, iun, 1, -1)
-   call davcio(I_uno_g(:, 2, 2), ngm, iun, 2, -1)
-   call davcio(I_uno_g(:, 3, 3), ngm, iun, 3, -1)
-   call davcio(I_uno_g(:, 2, 1), ngm, iun, 4, -1)
-   call davcio(I_uno_g(:, 3, 1), ngm, iun, 5, -1)
-   call davcio(I_uno_g(:, 3, 2), ngm, iun, 6, -1)
-   close (iun)
-!
-   iun = find_free_unit()
-   call diropn(iun, 'i_due+i_primo', ngm, exst, '$errore')
-   call davcio(I_due_g(:), ngm, iun, 1, -1)
-   call davcio(I_primo, 1, iun, 2, -1)
-   close (iun)
-!
-   prefix = pref_box
-!
-
-end subroutine
 
 subroutine read_wfc_uno()
    use kinds, only: dp
@@ -130,44 +76,6 @@ subroutine read_wfc_uno()
 !call stop_clock( 'lett_car' )
 !call print_clock( 'lett_car' )
 !
-
-end subroutine
-
-subroutine read_step_data()
-   use kinds, only: dp
-   use io_global, only: ionode, stdout, ionode_id
-   !use hartree_mod, only: file_dativel
-   use zero_mod, only: ion_vel, charge, charge_g
-   use ions_base, only: nsp, zv, nat, ityp, amass, tau
-   use mp, only: mp_sum, mp_bcast, mp_get
-   use wavefunctions, only: psic
-   use io_files, only: nwordwfc, diropn, iunwfc, prefix, tmp_dir
-   use wvfct, only: nbnd, npwx, npw
-   use fft_base, only: dffts
-   use gvect, only: ngm, gg, g, gstart
-   use mp_pools, only: intra_pool_comm
-   use fft_interfaces, only: invfft, fwfft
-   implicit none
-   integer, external :: find_free_unit
-   logical ::  exst
-   integer :: iun, iatom, iv
-
-!read velocity
-   if (ionode) then
-      iun = find_free_unit()
-      open (unit=iun, file=trim('THIS ROUTINE SHOLD NOT BE CALLED'), access='sequential', status='old')
-      call errore('!', 'THIS ROUTINE SHOLD NOT BE CALLED', 42)
-!! New reading method for .vel CP format. Only first step read.
-      read (iun, *)
-      do iatom = 1, nat
-         read (iun, *) ion_vel(1:3, iatom)
-      end do
-      close (iun)
-   end if
-   call mp_bcast(ion_vel(:, :), ionode_id, intra_pool_comm)
-
-!change units from CP velocity to PW velocity
-   ion_vel(1:3, 1:nat) = 2.d0*ion_vel(1:3, 1:nat)
 
 end subroutine
 
