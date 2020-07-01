@@ -19,7 +19,6 @@ hartree_mod.o\
 zero_mod.o\
 diropn_due.o\
 all_currents.o \
-openfil_all_currents.o\
 stop_pp.o\
 routine_hartree.o\
 project.o\
