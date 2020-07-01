@@ -49,7 +49,7 @@ PROGRAM xctest_qe_libxc
   !-------- Common vars ----------------------
   INTEGER, PARAMETER :: DP = SELECTED_REAL_KIND(14,200)
   INTEGER :: nnr
-  CHARACTER(LEN=120) :: aprx, e_q, f_q, input
+  CHARACTER(LEN=120) :: aprx, e_q, f_q
   INTEGER :: ii, ns, np, ipol, quit, i_sub, family, ithr, nthr
   REAL(DP) :: exx_frctn
   LOGICAL :: LDA, GGA, MGGA, POLARIZED, ENERGY_ONLY, DF_OK
@@ -168,8 +168,6 @@ PROGRAM xctest_qe_libxc
   !
   PRINT *, CHAR(10)//" --- XC TEST BETWEEN QE AND LIBXC ---"//CHAR(10)//" "
   !
-  WRITE (*,'(/,1x,a)', ADVANCE='no') "Input (auto/file_path)? "
-  READ(*,*) input
   WRITE (*,'(/,1x,a)', ADVANCE='no') "# points? "
   READ(*,*) nnr
   !
@@ -351,60 +349,45 @@ PROGRAM xctest_qe_libxc
      ALLOCATE( grho2(ns) )
   ENDIF
   !
-  IF (TRIM(input) /= 'auto') THEN
-    !
-    OPEN( unit=23, file=input )
-    !
-    DO ii = 1, nnr
-      IF ( LDA .AND. .NOT. GGA ) READ(23,*) rho(ii,:)
-      IF ( GGA  ) READ(23,*) rho(ii,:), grho(:,ii,1), grho(:,ii,2)
-      IF ( MGGA ) READ(23,*) rho(ii,:), grho(:,ii,1), grho(:,ii,2), tau(ii,:)
-    ENDDO
-    !
-    CLOSE( 23 )
-    !
-  ELSE !input=auto
-    !
-    !----- BUILD INPUT -----
-    !
-    rho  = 0.0_DP
-    IF ( GGA .OR. MGGA ) grho = 0.0_DP
-    IF ( MGGA ) tau = 0.0_DP
-    !
-    DO ii = 1, nnr
-       !
-       ! LDA: tot,diff
-       ! GGA: up,dw
-       rho(ii,1) = DBLE(ii)/DBLE(nnr+2)
-       IF (.NOT. POLARIZED) rho_tz(ii,1) = rho(ii,1)
-       !
-       IF ( GGA .OR. MGGA ) THEN
-         grho(1,ii,1) = ABS( 0.05_DP + 0.8_DP*SIN(DBLE(ii)) ) !0.1d0
-         grho(2,ii,1) = ABS( 0.05_DP + 0.7_DP*SIN(DBLE(ii)) ) !0.1d0
-         grho(3,ii,1) = ABS( 0.05_DP + 0.6_DP*SIN(DBLE(ii)) ) !0.1d0
-       ENDIF
-       !
-       IF ( MGGA ) tau(ii,1) = ABS( 0.05_DP + 0.8_DP*SIN(DBLE(ii)) )*0.5_DP
-       !
-       IF ( POLARIZED ) THEN
-          !
-          rho(ii,2) = (1.0_DP - rho(ii,1))*0.7_DP
-          rho_tz(ii,1) = rho(ii,1) + rho(ii,2)
-          rho_tz(ii,2) = rho(ii,1) - rho(ii,2)
-          !
-          IF ( GGA .OR. MGGA ) THEN
-             grho(1,ii,2) = ABS( (1.0_DP - grho(1,ii,1))*0.7_DP ) !0.1d0 
-             grho(2,ii,2) = ABS( (1.0_DP - grho(2,ii,1))*0.6_DP ) !0.1d0 
-             grho(3,ii,2) = ABS( (1.0_DP - grho(3,ii,1))*0.5_DP ) !0.1d0 
-          ENDIF
-          !
-          IF ( MGGA ) tau(ii,2) = ABS( 0.05_DP + 0.8_DP*SIN(DBLE(ii)) )*0.2_DP
-          !
-       ENDIF
-       !
-    ENDDO
-    !
-  ENDIF
+  !----- BUILD INPUT -----  
+  !  
+  rho  = 0.0_DP  
+  IF ( GGA .OR. MGGA ) grho = 0.0_DP  
+  IF ( MGGA ) tau = 0.0_DP  
+  !  
+  DO ii = 1, nnr
+     !  
+     ! LDA: tot,diff  
+     ! GGA: up,dw  
+     rho(ii,1) = DBLE(ii)/DBLE(nnr+2)  
+     IF (.NOT. POLARIZED) rho_tz(ii,1) = rho(ii,1)  
+     !  
+     IF ( GGA .OR. MGGA ) THEN  
+       grho(1,ii,1) = ABS( 0.05_DP + 0.8_DP*SIN(DBLE(ii)) ) !0.1d0  
+       grho(2,ii,1) = ABS( 0.05_DP + 0.7_DP*SIN(DBLE(ii)) ) !0.1d0  
+       grho(3,ii,1) = ABS( 0.05_DP + 0.6_DP*SIN(DBLE(ii)) ) !0.1d0  
+     ENDIF  
+     !  
+     IF ( MGGA ) tau(ii,1) = ABS( 0.05_DP + 0.8_DP*SIN(DBLE(ii)) )*0.5_DP  
+     !  
+     IF ( POLARIZED ) THEN  
+        !  
+        rho(ii,2) = (1.0_DP - rho(ii,1))*0.7_DP  
+        rho_tz(ii,1) = rho(ii,1) + rho(ii,2)  
+        rho_tz(ii,2) = rho(ii,1) - rho(ii,2)  
+        !  
+        IF ( GGA .OR. MGGA ) THEN  
+           grho(1,ii,2) = ABS( (1.0_DP - grho(1,ii,1))*0.7_DP ) !0.1d0   
+           grho(2,ii,2) = ABS( (1.0_DP - grho(2,ii,1))*0.6_DP ) !0.1d0   
+           grho(3,ii,2) = ABS( (1.0_DP - grho(3,ii,1))*0.5_DP ) !0.1d0   
+        ENDIF  
+        !  
+        IF ( MGGA ) tau(ii,2) = ABS( 0.05_DP + 0.8_DP*SIN(DBLE(ii)) )*0.2_DP  
+        !  
+     ENDIF  
+     !  
+  ENDDO  
+  !  
   !  
   !--- THRESHOLD POINTS ---  
   rho(nnr+1,1) = thresh_lda/3.0_DP  
