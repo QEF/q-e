@@ -89,17 +89,6 @@ init_us_3.o : ../../Modules/wavefunctions.o
 init_us_3.o : ../../PW/src/pwcom.o
 init_us_3.o : ../../UtilXlib/mp.o
 init_us_3.o : zero_mod.o
-orthogonalize2.o : ../../Modules/becmod.o
-orthogonalize2.o : ../../Modules/control_flags.o
-orthogonalize2.o : ../../Modules/kind.o
-orthogonalize2.o : ../../Modules/mp_global.o
-orthogonalize2.o : ../../Modules/noncol.o
-orthogonalize2.o : ../../Modules/recvec.o
-orthogonalize2.o : ../../upflib/uspp.o
-orthogonalize2.o : ../../PHonon/PH/phcom.o
-orthogonalize2.o : ../../PW/src/pwcom.o
-orthogonalize2.o : ../../PW/src/realus.o
-orthogonalize2.o : ../../UtilXlib/mp.o
 project.o : ../../LR_Modules/lrcom.o
 project.o : ../../Modules/becmod.o
 project.o : ../../Modules/cell_base.o
