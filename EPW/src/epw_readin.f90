@@ -31,7 +31,7 @@
   USE start_k,       ONLY : nk1, nk2, nk3
   USe disp,          ONLY : nq1, nq2, nq3
   USE epwcom,        ONLY : delta_smear, nsmear, dis_win_min, dis_win_max, wannierize, &
-                            ngaussw, dvscf_dir, bands_skipped, wdata, kmaps,           &
+                            ngaussw, dvscf_dir, bands_skipped, wdata, kmaps, ntempxx,  &
                             num_iter, dis_froz_max, fsthick, dis_froz_min, eig_read,   &
                             vme, degaussw, epexst, epwwrite, epbread, phonselfen, nqc2,&
                             elecselfen, a2f, plselfen, specfun_pl, nest_fn, filukk,    &
@@ -39,7 +39,7 @@
                             nqc3, nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, eps_acustic, nw, &
                             wmax, wmin, mp_mesh_q, mp_mesh_k, filqf, filkf, nswi, nc,  &
                             delta_qsmear, degaussq, band_plot, ephwrite, nstemp,       &
-                            broyden_beta, conv_thr_raxis, temps,                       &
+                            broyden_beta, conv_thr_raxis, temps, tempsmin, tempsmax,   &
                             broyden_ndim, wscut, wsfc, nqstep, limag, lreal, muc,      &
                             gap_edge, conv_thr_iaxis, nqsmear, iprint, wepexst, nswfc, &
                             epwread, eliashberg, imag_read, kerread, kerwrite, lunif,  &
@@ -60,7 +60,7 @@
                             wannier_plot_supercell, wannier_plot_scale, reduce_unk,    &
                             wannier_plot_radius
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
-  USE elph2,         ONLY : elph, num_wannier_plot, wanplotlist
+  USE elph2,         ONLY : elph, num_wannier_plot, wanplotlist, gtemp
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, ang2m
   USE io_files,      ONLY : tmp_dir, prefix
   USE control_flags, ONLY : iverbosity, modenum, gamma_only
@@ -114,6 +114,10 @@
   !! Counter for loops
   INTEGER :: ik
   !! Counter on k-points
+  INTEGER :: itemp
+  !! counter on temperatures
+  INTEGER :: nstemp_hold = 0
+  !! placeholder for nstemp
   INTEGER :: nk1tmp
   !! temp vars for saving kgrid info
   INTEGER :: nk2tmp
@@ -740,6 +744,51 @@
       'Cannot specify both auto_projections and projections block', 1)
   IF ((auto_projections .AND. .NOT. scdm_proj) .OR. (.NOT. auto_projections .AND. scdm_proj)) &
     CALL errore('epw_readin', 'auto_projections require both scdm_proj=.true. and auto_projections=.true.', 1)
+  !
+  ! setup temperature array
+  DO itemp = 1, ntempxx
+    IF (temps(itemp) > 0.d0) THEN
+      nstemp_hold = itemp
+    ENDIF
+  ENDDO
+
+  !case of nstemp > 0 but temps(:) = 0 is caught above
+  IF (nstemp_hold == 0 .AND. nstemp == 0) THEN !default mode (nstemp_hold == 0 if temps(:) = 0)
+    nstemp = 1
+    temps(1) = 300    
+    WRITE(stdout, '(/,5x,a)') 'No temperature supplied. Setting temps(:) to 300 K.'
+  ELSE IF (nstemp == 0 .OR. nstemp_hold == nstemp) THEN !list mode
+    nstemp = nstemp_hold !catches if nstemp not supplied, no effect if it is
+    tempsmin = temps(1)
+    tempsmax = temps(nstemp)
+    WRITE(stdout, '(/,5x,a)') 'Reading supplied temperature list.'
+  ELSE IF (nstemp_hold < nstemp .AND. nstemp_hold == 2) THEN !even spacing mode 
+    tempsmin = temps(1)
+    tempsmax = temps(2)
+    IF (tempsmin >= tempsmax) THEN !bad start and end points
+      CALL errore('epw_readin', 'Error generating temperatures: need temps(1) < temps(2)', 1)
+    ELSE
+      DO itemp = 1, nstemp
+        temps(itemp) = tempsmin + DBLE(itemp - 1) * (tempsmax - tempsmin) / DBLE(nstemp - 1)
+      END DO
+    END IF
+    WRITE(stdout, '(/,5x,a)') 'Generating evenly spaced temperature list.'
+  ELSE IF (nstemp_hold > nstemp) THEN !temps is too long
+      CALL errore('epw_readin', 'Error: too many temperatures for given nstemp', 1)
+  ELSE IF (nstemp > nstemp_hold) THEN !need more temps
+      CALL errore('epw_readin', 'Error: not enough temperatures given in temps(:)', 1)
+  ELSE
+      CALL errore('epw_readin', 'Error generating temperatures: unknown error', 1)
+  END IF
+  ! go from K to Ry
+  tempsmin = tempsmin * kelvin2eV / ryd2ev
+  tempsmax = tempsmax * kelvin2eV / ryd2ev
+  temps(:) = temps(:) * kelvin2eV / ryd2ev
+  ALLOCATE(gtemp(nstemp), STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_readin', 'Error allocating gtemp', 1)
+  !
+  gtemp(:) = temps(1:nstemp)
+
   !
   ! In the case of Fermi-Dirac distribution one should probably etemp instead of degauss.
   ! This is achieved with assume_metal == .true.

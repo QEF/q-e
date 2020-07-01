@@ -19,7 +19,6 @@
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp
   USE cell_base,     ONLY : at, bg
-  USE io_global,     ONLY : ionode_id
   USE klist,         ONLY : nkstot
   USE lsda_mod,      ONLY : nspin, starting_magnetization
   USE scf,           ONLY : v, vrs, vltot, kedtau
@@ -40,9 +39,7 @@
   USE funct,         ONLY : dft_is_gradient
   USE mp_global,     ONLY : world_comm
   USE mp,            ONLY : mp_bcast
-  USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, temps, &
-                            ntempxx, nkc1, nkc2, nkc3
-  USE elph2,         ONLY : gtemp
+  USE epwcom,        ONLY : scattering, nkc1, nkc2, nkc3
   USE klist_epw,     ONLY : xk_cryst
   USE fft_base,      ONLY : dfftp
   USE gvecs,         ONLY : doublegrid
@@ -65,10 +62,6 @@
   !! counter on irrepr
   INTEGER :: na
   !! counter on atoms
-  INTEGER :: itemp
-  !! counter on temperatures
-  INTEGER :: nstemp_hold = 0
-  !! placeholder for nstemp
   INTEGER :: ierr
   !! Error status
   REAL(KIND = DP) :: xx_c, yy_c, zz_c
@@ -208,125 +201,9 @@
     npertx = MAX(npertx, npert(irr))
   ENDDO
   !
-
-  !temperature setup
-  DO itemp = 1, ntempxx
-    IF (temps(itemp) > 0.d0) THEN
-      nstemp_hold = itemp
-    ENDIF
-  ENDDO
-
-  !case of nstemp > 0 but temps(:) = 0 is caught during readin
-  IF (nstemp_hold == 0 .AND. nstemp == 0) THEN !default mode (nstemp_hold == 0 if temps(:) = 0)
-    nstemp = 1
-    temps(1) = 300    
-  ELSE IF (nstemp == 0 .OR. nstemp_hold == nstemp) THEN !list mode
-    nstemp = nstemp_hold !catches if nstemp not supplied, no effect if it is
-  ELSE IF (nstemp_hold < nstemp .AND. nstemp_hold == 2) THEN !even spacing mode 
-    tempsmin = temps(1)
-    tempsmax = temps(2)
-    IF (tempsmin >= tempsmax) THEN !bad start and end points
-      CALL errore('epw_setup', 'Error generating temperatures: need temps(1) < temps(2)', 1)
-    ELSE
-      DO itemp = 1, nstemp
-        temps(itemp) = tempsmin + DBLE(itemp - 1) * (tempsmax - tempsmin) / DBLE(nstemp - 1)
-      END DO
-    END IF
-  ELSE IF (nstemp_hold > nstemp) THEN !temps is too long
-      CALL errore('epw_setup', 'Error: too many temperatures for given nstemp', 1)
-  ELSE IF (nstemp > nstemp_hold) THEN !need more temps
-      CALL errore('epw_setup', 'Error: not enough temperatures given in temps(:)', 1)
-  ELSE
-      CALL errore('epw_setup', 'Error generating temperatures: unknown error', 1)
-  END IF
-  ! go from K to Ry
-  temps(:) = temps(:) * kelvin2eV / ryd2ev
-  ALLOCATE(gtemp(nstemp), STAT = ierr)
-  IF (ierr /= 0) CALL errore('epw_setup', 'Error allocating gtemp', 1)
-  !
-  gtemp(:) = temps(1:nstemp)
-  ! We have to bcast here because before it has not been allocated
-  ! in some cases nstemp may have been changed
-  CALL mp_bcast(nstemp, ionode_id, world_comm)
-  CALL mp_bcast(gtemp, ionode_id, world_comm)
-  !
   CALL stop_clock('epw_setup')
   RETURN
   !
   !-----------------------------------------------------------------------
   END SUBROUTINE epw_setup
-  !-----------------------------------------------------------------------
-  !
-  !-----------------------------------------------------------------------
-  SUBROUTINE epw_setup_restart()
-  !-----------------------------------------------------------------------
-  !!
-  !! Setup in the case of a restart
-  !!
-  ! ----------------------------------------------------------------------
-  USE constants_epw, ONLY : zero, ryd2ev, kelvin2ev
-  USE io_global,     ONLY : ionode_id
-  USE mp_global,     ONLY : world_comm
-  USE mp,            ONLY : mp_bcast
-  USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, temps, &
-                            ntempxx
-  USE elph2,         ONLY : gtemp
-  !
-  IMPLICIT NONE
-  !
-  INTEGER :: itemp
-  !! Counter on temperature
-  INTEGER :: nstemp_hold = 0
-  !! placeholder for nstemp
-  INTEGER :: ierr
-  !! Error status
-  !
-  CALL start_clock('epw_setup')
-  !
-  !temperature setup
-  DO itemp = 1, ntempxx
-    IF (temps(itemp) > 0.d0) THEN
-      nstemp_hold = itemp
-    ENDIF
-  ENDDO
-
-  !case of nstemp > 0 but temps(:) = 0 is caught during readin
-  IF (nstemp_hold == 0 .AND. nstemp == 0) THEN !default mode (nstemp_hold == 0 if temps(:) = 0)
-    nstemp = 1
-    temps(1) = 300    
-  ELSE IF (nstemp == 0 .OR. nstemp_hold == nstemp) THEN !list mode
-    nstemp = nstemp_hold !catches if nstemp not supplied, no effect if it is
-  ELSE IF (nstemp_hold < nstemp .AND. nstemp_hold == 2) THEN !even spacing mode 
-    tempsmin = temps(1)
-    tempsmax = temps(2)
-    IF (tempsmin >= tempsmax) THEN !bad start and end points
-      CALL errore('epw_setup', 'Error generating temperatures: need temps(1) < temps(2)', 1)
-    ELSE
-      DO itemp = 1, nstemp
-        temps(itemp) = tempsmin + DBLE(itemp - 1) * (tempsmax - tempsmin) / DBLE(nstemp - 1)
-      END DO
-    END IF
-  ELSE IF (nstemp_hold > nstemp) THEN !temps is too long
-      CALL errore('epw_setup', 'Error: too many temperatures for given nstemp', 1)
-  ELSE IF (nstemp > nstemp_hold) THEN !need more temps
-      CALL errore('epw_setup', 'Error: not enough temperatures given in temps(:)', 1)
-  ELSE
-      CALL errore('epw_setup', 'Error generating temperatures: unknown error', 1)
-  END IF
-  ! go from K to Ry
-  temps(:) = temps(:) * kelvin2eV / ryd2ev
-  ALLOCATE(gtemp(nstemp), STAT = ierr)
-  IF (ierr /= 0) CALL errore('epw_setup', 'Error allocating gtemp', 1)
-  !
-  gtemp(:) = temps(1:nstemp)
-  ! We have to bcast here because before it has not been allocated
-  ! in some cases nstemp may have been changed
-  CALL mp_bcast(nstemp, ionode_id, world_comm)
-  CALL mp_bcast(gtemp, ionode_id, world_comm)
-  !
-  CALL stop_clock('epw_setup')
-  !
-  RETURN
-  !-----------------------------------------------------------------------
-  END SUBROUTINE epw_setup_restart
   !-----------------------------------------------------------------------

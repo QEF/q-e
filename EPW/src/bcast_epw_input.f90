@@ -41,7 +41,7 @@
                             wsfc, wscut, write_wfn, wmin_specfun, wmin,       &
                             wmax_specfun, wmax, wepexst, wannierize,          &
                             vme, longrange, shortrange, system_2d, lindabs,   &
-                            temps, delta_approx, title,                       &
+                            temps, tempsmin, tempsmax, delta_approx, title,   &
                             scattering, scattering_serta, scattering_0rta,    &
                             int_mob, scissor, carrier, ncarrier,              &
                             restart, restart_step, prtgkk, nel, meff, epsiheg,&
@@ -51,7 +51,7 @@
                             scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma,&
                             assume_metal, wannier_plot_scale, reduce_unk,     &
                             wannier_plot_supercell, wannier_plot_radius
-  USE elph2,         ONLY : elph
+  USE elph2,         ONLY : elph, gtemp
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
   USE io_files,      ONLY : prefix, tmp_dir
@@ -203,9 +203,10 @@
   CALL mp_bcast(wsfc          , meta_ionode_id, world_comm)
   CALL mp_bcast(wscut         , meta_ionode_id, world_comm)
   CALL mp_bcast(broyden_beta  , meta_ionode_id, world_comm)
-  !CALL mp_bcast(tempsmin      , meta_ionode_id, world_comm)
-  !CALL mp_bcast(tempsmax      , meta_ionode_id, world_comm)
+  CALL mp_bcast(tempsmin      , meta_ionode_id, world_comm)
+  CALL mp_bcast(tempsmax      , meta_ionode_id, world_comm)
   CALL mp_bcast(temps         , meta_ionode_id, world_comm)
+  CALL mp_bcast(gtemp         , meta_ionode_id, world_comm)
   CALL mp_bcast(conv_thr_raxis, meta_ionode_id, world_comm)
   CALL mp_bcast(conv_thr_iaxis, meta_ionode_id, world_comm)
   CALL mp_bcast(conv_thr_racon, meta_ionode_id, world_comm)
