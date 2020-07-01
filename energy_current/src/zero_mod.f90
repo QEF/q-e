@@ -6,7 +6,7 @@ MODULE zero_mod
    use becmod
 
    SAVE
-!variabili per potenziale non locale
+!non local potential variables
    logical  ::l_non_loc, l_tab
    real(DP), allocatable :: tabr(:, :, :, :)
    real(DP), allocatable :: tabr_d2y(:, :, :, :)
@@ -21,6 +21,9 @@ MODULE zero_mod
 
    !the component of the current here computed
    real(dp) ::z_current(3), i_current(3), i_current_a(3), i_current_b(3), i_current_c(3), i_current_d(3), i_current_e(3)
+
+   !sum or not i_current_b in i_current
+   logical :: add_i_current_b = .false.
 
    !variables depending on the step
    !wavefunction

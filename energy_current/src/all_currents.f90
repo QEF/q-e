@@ -187,7 +187,7 @@ contains
          eta, n_max, first_step, last_step, &
          ethr_small_step, ethr_big_step, &
          restart, subtract_cm_vel, step_mul, &
-         step_rem, ec_test
+         step_rem, ec_test, add_i_current_b
       !
       !   set default values for variables in namelist
       !
@@ -205,6 +205,7 @@ contains
       step_mul=1
       step_rem=0
       ec_test = .false.
+      add_i_current_b = .false.
       READ (iunit, energy_current, IOSTAT=ios)
       IF (ios /= 0) CALL errore('main', 'reading energy_current namelist', ABS(ios))
 
@@ -232,6 +233,7 @@ contains
       CALL mp_bcast(step_mul, ionode_id, world_comm)
       CALL mp_bcast(step_rem, ionode_id, world_comm)
       CALL mp_bcast(ec_test, ionode_id, world_comm) 
+      CALL mp_bcast(add_i_current_b, ionode_id, world_comm)
    end subroutine
 
    subroutine set_first_step_restart()
