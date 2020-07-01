@@ -1478,7 +1478,8 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    REAL(DP) :: gvec
    COMPLEX(DP), ALLOCATABLE :: dwfc(:,:), dbeta(:,:)
    REAL(DP), ALLOCATABLE :: dproj0(:,:), betapsi(:,:), dbetapsi(:,:), &
-                            wfatbeta(:,:), wfatdbeta(:,:), bproj(:,:)
+                            wfatbeta(:,:), wfatdbeta(:,:), bproj(:,:), &
+                            betapsi0(:,:)
    !      dwfc(npwx,ldim),       ! the derivative of the atomic wavefunction
    !      dbeta(npwx,nhm),       ! the derivative of the beta function
    !      betapsi(nhm,nbnd),     ! <beta|evc>
@@ -1563,6 +1564,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
       !
    END IF
    !
+   ALLOCATE( betapsi0(nh(nt),nbnd)   )
    ALLOCATE( dbetapsi(nh(nt),nbnd)   ) 
    ALLOCATE( wfatdbeta(nwfcU,nh(nt)) )
    ALLOCATE( wfatbeta(nwfcU,nh(nt))  )
@@ -1577,6 +1579,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
 ! !omp end parallel do
    !
    CALL calbec( npw, wfcU, dbeta, wfatbeta ) 
+   CALL calbec( npw, dbeta, evc, betapsi0 )
    !
 ! !omp parallel do default(shared) private(ih,ig,gvec)
    DO ih = 1, nh(nt)
@@ -1620,7 +1623,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
       DO ibnd = nb_s, nb_e
          DO jh = 1, nh(nt)
             betapsi(ih,ibnd) = betapsi(ih,ibnd) + &
-                               qq_at(ih,jh,alpha) * becp%r(ijkb0+jh,ibnd)
+                               qq_at(ih,jh,alpha) * betapsi0(jh,ibnd)
          ENDDO
       ENDDO
    ENDDO
@@ -1638,6 +1641,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
            dproj(1,nb_s), nwfcU)
    ENDIF
    ! end band parallelization - only dproj(1,nb_s:nb_e) are calculated
+   DEALLOCATE ( betapsi0 )
    DEALLOCATE ( betapsi )
    DEALLOCATE ( wfatbeta ) 
    DEALLOCATE (wfatdbeta )
