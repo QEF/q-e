@@ -251,7 +251,19 @@ NAMELIST: &ENERGY_CURRENT
                    It help to decorrelate a little the mass flux from the energy flux
    +--------------------------------------------------------------------
    
+   +--------------------------------------------------------------------
+   Variable:       add_i_current_b
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If true adds to the energy current a part that is correctly implemented only for cubic cells.
+                   This part is in the form of a sum over the atomic types of a constant time the center of mass velocity
+                   of the atomic type. It does not change the value of the thermal conductivity when the formula for the
+                   multicomponent case with the inverse of the Schur complement is used, and in the single component
+                   or solid case this is a non-diffusive contribution.
+   +--------------------------------------------------------------------
+   
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Tue May 26 12:09:02 CEST 2020
+This file has been created by helpdoc utility on Wed Jul 01 11:21:52 CEST 2020

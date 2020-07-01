@@ -58,7 +58,7 @@
    <p><a href="#idm3">INTRODUCTION</a></p>
    <p><a href="#idm29">&amp;ENERGY_CURRENT</a></p>
 <blockquote>
-<a href="#idm30">delta_t</a> | <a href="#idm33">file_output</a> | <a href="#idm38">trajdir</a> | <a href="#idm44">vel_input_units</a> | <a href="#idm50">eta</a> | <a href="#idm53">n_max</a> | <a href="#idm56">first_step</a> | <a href="#idm60">last_step</a> | <a href="#idm64">step_mul</a> | <a href="#idm69">step_rem</a> | <a href="#idm74">ethr_small_step</a> | <a href="#idm78">ethr_big_step</a> | <a href="#idm81">restart</a> | <a href="#idm86">subtract_cm_vel</a>
+<a href="#idm30">delta_t</a> | <a href="#idm33">file_output</a> | <a href="#idm38">trajdir</a> | <a href="#idm44">vel_input_units</a> | <a href="#idm50">eta</a> | <a href="#idm53">n_max</a> | <a href="#idm56">first_step</a> | <a href="#idm60">last_step</a> | <a href="#idm64">step_mul</a> | <a href="#idm69">step_rem</a> | <a href="#idm74">ethr_small_step</a> | <a href="#idm78">ethr_big_step</a> | <a href="#idm81">restart</a> | <a href="#idm86">subtract_cm_vel</a> | <a href="#idm89">add_i_current_b</a>
 </blockquote>
 </blockquote>
 </blockquote>
@@ -412,12 +412,31 @@ It help to decorrelate a little the mass flux from the energy flux
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm89"></a><a name="add_i_current_b"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">add_i_current_b</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If true adds to the energy current a part that is correctly implemented only for cubic cells.
+This part is in the form of a sum over the atomic types of a constant time the center of mass velocity
+of the atomic type. It does not change the value of the thermal conductivity when the formula for the
+multicomponent case with the inverse of the Schur complement is used, and in the single component
+or solid case this is a non-diffusive contribution.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
    </td></tr></tbody></table></td></tr>
 </table>
 </td></tr>
 </table>
 <small>
-	  This file has been created by helpdoc utility on Tue May 26 12:09:02 CEST 2020.
+	  This file has been created by helpdoc utility on Wed Jul 01 11:21:52 CEST 2020.
 	</small>
 </body>
 </html>

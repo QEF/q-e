@@ -231,5 +231,16 @@ the center of mass velocity for each atomic type.
 It help to decorrelate a little the mass flux from the energy flux
          </info>
       </var>
+      <var name="add_i_current_b" type="LOGICAL" >
+         <default> .false.
+         </default>
+         <info>
+If true adds to the energy current a part that is correctly implemented only for cubic cells.
+This part is in the form of a sum over the atomic types of a constant time the center of mass velocity
+of the atomic type. It does not change the value of the thermal conductivity when the formula for the
+multicomponent case with the inverse of the Schur complement is used, and in the single component
+or solid case this is a non-diffusive contribution.
+         </info>
+      </var>
    </namelist>
 </input_description>
