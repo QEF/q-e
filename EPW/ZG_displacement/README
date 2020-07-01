@@ -20,18 +20,18 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
    This code exploits some main routines of matdyn.x. In particular, the code
    takes advantage of the phonon interpolation scheme implemented for matdyn.x. This is 
    important, for example, in taking into account the LO-TO splitting in polar materials. 
-   The necessary input files are the "interatomic force constants" and "ZG.in". 
+   The necessary input files are the interatomic force constants "file.fc" and "ZG.in". 
    See for example files in the "example/silicon/input" folder.
 
 1. Run a scf calculation: for example "/path_to_your_espresso/bin/pw.x < si.scf.in > si.scf.out" 
-   of silicon unit cell. 
+   for the silicon unit cell. 
 
 2. Run a phonon calculation: for example "/path_to_your_espresso/bin/ph.x < si.ph.in > si.ph.out" 
-   for a relatively "dense" q-grid so one can obtain a converged phonon dispersion. 
+   for a relatively "dense" q-grid to obtain a converged phonon dispersion. 
 
 3. Run /path_to_your_espresso/bin/q2r.x <q2r.in> <q2r.out>.
    The input q2r.in has the standard format of Quantum Espresso for 
-   calculating the interatomic force constant matrix elements to be used in "ZG.in" file. 
+   calculating the interatomic force constant matrix elements to be used from "ZG.in" file. 
 
 4.  Now one needs to decide the size of the supercell configuration to be used for calculating 
     temperature dependent properties. In the example "example/silicon/input/ZG_444.in" we  
@@ -40,18 +40,18 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
     "ZG.in" has the standard format as a "matdyn.in" file for Quantum Espresso. 
     Here we use the following input parameters:
     ---------------------------------------------------------------------------------------
-    i) "ZG_conf"           : logical flag that enables the creation of the ZG-displacement. 
+    i) "ZG_conf"           : Logical flag that enables the creation of the ZG-displacement. 
                              (default .false.) 
        "T"                 : Real number indicating the temperature at which the calculations will be performed. 
                              "T" essentially defines the amplitude of the normal coordinates. 
                              (default 0.00)
-       "dimx","dimy","dimz": integers corresponding to the dimensionality of the supercell.
+       "dimx","dimy","dimz": Integers corresponding to the dimensionality of the supercell.
                              (default 0,0,0)
-       "atm_zg(1), etc.."  : string describing the element of each atomic species
+       "atm_zg(1), etc.."  : String describing the element of each atomic species
                              (default "Element")
-       "synch"             : logical flag that enables the synchronization of the modes. 
+       "synch"             : Logical flag that enables the synchronization of the modes. 
                              (default .false.)
-       "nloops"            : integer for the number of loops the algorithm needs to 
+       "nloops"            : Integer for the number of loops the algorithm needs to 
                              go through for finding the optimum configuration. The algorithm 
                              generates a set of "+,-,+,-" signs and its possible permutations, 
                              trying to minimize the error coming from the coupling of modes with 
@@ -60,25 +60,26 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
                              important giving different results. Therefore the algorithm checks 
                              the combination that brings the error lower than a threshold.
                              (default 15000)
-       "threshold"         : real number indicating the error at which the algorithm stops while it's 
+       "threshold"         : Real number indicating the error at which the algorithm stops while it's 
                              looking for possible combinations of signs. Once this limit is reached 
                              the ZG-displacement is constructed. The threshold is usually chosen 
                              to be less than 5% of the diagonal terms, i.e. those terms that contribute 
                              to the calculation of temperature-dependent properties. 
                              (default 0.05)
-       "incl_qA"           : logical flag, to decide whether to include phonon modes in set A or not. 
+       "incl_qA"           : Logical flag, to decide whether to include phonon modes in set A or not. 
                              (default .true.)
-       "qlist_AB.txt"      : this is the q-list in crystal coordinates that appears in the "ZG_444.in" example. 
-                             It corresponds to the q-points commensurate to the supercell size. Only one
-                             of the q-point pairs related by inversion symmetry is kept for the construction of the 
-                             ZG-displacement. For the generation of the "qlist_AB.txt" set the q-gird in file 
+       "qlist_AB.txt"      : This file containes the q-list in crystal coordinates that appears in the "ZG_444.in" example after 
+                             the input flags. It corresponds to the q-points commensurate to the supercell size. Only one
+                             of the q-point time-reversal partners is kept for the construction of the ZG-displacement. 
+                             The calculations, for the moment, assume systems with time-reversal symmetry. 
+                             For the generation of the "qlist_AB.txt" set the q-gird in file 
                              "example/silicon/input/qlist.in" and run "../../../src/create_qlist.x < qlist.in > qlist.out ". 
-                             Copy and paste the output in "qlist_AB.txt" ZG.in. 
+                             Copy and paste the output in "qlist_AB.txt" to "ZG.in". 
                                           
     ii)  To generate the ZG-displacement run "/path_to_your_espresso/bin/ZG.x <ZG_444.in> ZG_444.out".
        This generates three output files: the "equil_pos.txt", "ZG-displacement.txt" and "ZG-velocities.txt". 
        The first file has the equilibrium coordinates of the nuclei and the second has the optimum set of nuclear coordinates 
-       that define the ZG-displacement at a particular temperature and the required supercell size. 
+       that define the ZG-displacement for a particular temperature and supercell size. 
        The third one has the ZG-velocities or momenta of the nuclei generated in the same spirit with the ZG displacement. 
        The outputs for a supercell size of 4x4x4 are in the folder "example/silicon/output/".
     iii) The calculation of the ZG-displacement should usually takes a few seconds to few minutes with one processor. 
@@ -90,4 +91,4 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
    the electron-phonon interaction and quantum zero-point motion. 
 
 6. The ZG-displacement can also be employed for the calculation of full temperature-dependent
-   band structures using the band unfolding procedure for supercell calculations. 
+   band structures using the unfolding technique for supercell calculations. 
