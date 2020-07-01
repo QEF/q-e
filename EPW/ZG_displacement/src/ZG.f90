@@ -4,7 +4,6 @@
 ! License. See the file `LICENSE' in the root directory of the               
 ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
 !
-!
 Module ifconstants
   ! This code generates ZG displacements
   !
@@ -91,7 +90,7 @@ PROGRAM ZG
   !
   USE kinds,      ONLY : DP
   USE mp,         ONLY : mp_bcast
-  USE mp_world,   ONLY : world_comm
+  USE mp_world,   ONLY : world_comm 
   USE mp_global,  ONLY : mp_startup, mp_global_end
   USE environment, ONLY : environment_start, environment_end
   USE io_global,  ONLY : ionode, ionode_id, stdout
@@ -164,7 +163,7 @@ PROGRAM ZG
   CHARACTER(len=80) :: k_points = 'tpiba'
   ! mz_b
   COMPLEX(DP), ALLOCATABLE :: z_nq_zg(:,:,:) ! nomdes, nmodes, nq
-  REAL(DP),    ALLOCATABLE :: q_nq_mz(:,:) ! 3, nq
+  REAL(DP),    ALLOCATABLE :: q_nq_zg(:,:) ! 3, nq
   LOGICAL                  :: ZG_conf, synch, incl_qA
   INTEGER                  :: dimx, dimy, dimz, nloops 
   REAL(DP)                 :: error_thresh, T
@@ -438,10 +437,10 @@ PROGRAM ZG
      ALLOCATE ( dyn(3, 3, nat, nat), dyn_blk(3, 3, nat_blk, nat_blk) )
      ALLOCATE ( z(3*nat, 3*nat), w2(3*nat, nq), f_of_q(3, 3, nat, nat) )
      ! mz_b
-     IF (ZG_conf) THEN
-      ALLOCATE ( z_nq_zg(3*nat, 3*nat, nq),q_nq_mz(3, nq))
+     IF (ionode .AND. ZG_conf) THEN
+      ALLOCATE ( z_nq_zg(3*nat, 3*nat, nq),q_nq_zg(3, nq))
       z_nq_zg(:,:,:) = (0.d0, 0.d0)
-      q_nq_mz(:,:) = 0.d0
+      q_nq_zg(:,:) = 0.d0
      ENDIF
      ! mz_e
 
@@ -514,9 +513,10 @@ PROGRAM ZG
 
         CALL dyndiag(nat, ntyp, amass, ityp, dyn, w2(1, n), z)
         ! mz_b fill a 3D matrix with all eigenvectors
-        IF (ZG_conf) THEN
+        CALL mp_bcast(z, ionode_id, world_comm)
+        IF (ionode .AND. ZG_conf) THEN
            z_nq_zg(:,:, n) = z(:,:)               
-           q_nq_mz(:, n) = q(:, n)
+           q_nq_zg(:, n) = q(:, n)
         ENDIF
         ! mz_e 
         !!!!! mz comments out ! IF (ionode.and.iout_eig.ne.0) &
@@ -552,7 +552,9 @@ PROGRAM ZG
      !
      !
      !mz_b
-     IF (ionode .AND. ZG_conf) call ZG_configuration(nq, nat, ntyp, amass, ityp, q_nq_mz, w2, z_nq_zg, ios, & 
+     CALL mp_bcast(w2, ionode_id, world_comm)
+     IF ( ionode .AND. ZG_conf ) call ZG_configuration(nq, nat, ntyp, amass, &
+                                ityp, q_nq_zg, w2, z_nq_zg, ios, & 
                                 dimx, dimy, dimz, nloops, error_thresh, synch,tau, alat, atm_zg, & 
                                 ntypx, at, q_in_cryst_coord, q_in_band_form, T, incl_qA)
      !mz_e
@@ -560,7 +562,7 @@ PROGRAM ZG
      !
      DEALLOCATE (z, w2, dyn, dyn_blk)
      ! mz_b
-     IF (ZG_conf) DEALLOCATE (z_nq_zg,q_nq_mz) 
+     IF (ionode .AND. ZG_conf) DEALLOCATE (z_nq_zg,q_nq_zg) 
      ! mz_e
      !
      !    for a2F
@@ -2063,7 +2065,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   use constants, only: amu_ry, ry_to_thz, ry_to_cmm1, H_PLANCK_SI, &  
                        K_BOLTZMANN_SI, AMU_SI, pi 
   USE cell_base,  ONLY : bg
-!  USE io_global,  ONLY : ionode
+  USE io_global,  ONLY : ionode
   implicit none
   ! input
   CHARACTER(LEN=3), intent(in) :: atm(ntypx)
@@ -2793,91 +2795,93 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
         ENDDO ! end k loop over nat
       ENDDO ! end p loop over unit cells
       ! print displacements
-      DO p = 1, nq_tot 
-         DO k = 1, nat ! k represents the atom
-           WRITE(80,'(A6, 3F13.8)') atm(ityp(k)), D_tau(p, k,:) 
-           WRITE(*,'(A10, A6, 3F13.8)') "ZG_conf:", atm(ityp(k)), D_tau(p, k,:) 
-           WRITE(81,'(A6, 3F15.8)') atm(ityp(k)), P_tau(p, k,:) * 1.0E-12 ! multiply to obtain picoseconds 
-         ENDDO
-      ENDDO 
-      !WRITE(80,*) "sign matrices" 
-      !DO i = 1, pn
-      !    WRITE(80,*) Mx_mat(i,:)
-      !ENDDO
-      WRITE(80,*) 'Anisotropic displacement tensor vs exact values:'
-      WRITE(81,*) 'ZG-velocities vs exact velocities from momentum operator in second quantization:'
-      !
-      ! Exact anisotropic displacement parameter
-      DW_fact  = 0.0d0
-      DWp_fact = 0.0d0
-      ctr = 1
-      DO k = 1, nat ! k represents the atom
-        nta = ityp(k)
-        DO i = 1, 3  ! i is for cart directions
+      IF (ionode) THEN
+        DO p = 1, nq_tot 
+           DO k = 1, nat ! k represents the atom
+             WRITE(80,'(A6, 3F13.8)') atm(ityp(k)), D_tau(p, k,:) 
+             WRITE(*,'(A10, A6, 3F13.8)') "ZG_conf:", atm(ityp(k)), D_tau(p, k,:) 
+             WRITE(81,'(A6, 3F15.8)') atm(ityp(k)), P_tau(p, k,:) * 1.0E-12 ! multiply to obtain picoseconds 
+           ENDDO
+        ENDDO 
+        !WRITE(80,*) "sign matrices" 
+        !DO i = 1, pn
+        !    WRITE(80,*) Mx_mat(i,:)
+        !ENDDO
+        WRITE(80,*) 'Anisotropic displacement tensor vs exact values:'
+        WRITE(81,*) 'ZG-velocities vs exact velocities from momentum operator in second quantization:'
         !
-          DO qp = 1, ctrB
-            DO j = 1, nat3
-              DW_fact(k, i) = DW_fact(k, i) + 2.0d0 / DBLE(nq_tot * amass(nta)) * z_nq_B(ctr, j, qp) & 
-                                         * CONJG(z_nq_B(ctr, j, qp)) * Cx_matB(j, qp)**2
-              DWp_fact(k, i) = DWp_fact(k, i) + 2.0d0 * amass(nta) / DBLE(nq_tot) * z_nq_B(ctr, j, qp) & 
-                                        * CONJG(z_nq_B(ctr, j, qp)) * Cpx_matB(j, qp)**2 & 
-                                        / ((amass(nta) * AMU_SI)**2) * 1.0E-24
-            ENDDO
-          ENDDO
+        ! Exact anisotropic displacement parameter
+        DW_fact  = 0.0d0
+        DWp_fact = 0.0d0
+        ctr = 1
+        DO k = 1, nat ! k represents the atom
+          nta = ityp(k)
+          DO i = 1, 3  ! i is for cart directions
           !
-          IF (incl_qA) THEN ! 
-            DO qp = 1, ctrA
+            DO qp = 1, ctrB
               DO j = 1, nat3
-                DW_fact(k, i) = DW_fact(k, i) + 1.0d0 / DBLE(nq_tot * amass(nta)) * z_nq_A(ctr, j, qp) & 
-                                         * CONJG(z_nq_A(ctr, j, qp)) * Cx_matA(j, qp)**2
-                DWp_fact(k, i) = DWp_fact(k, i) + amass(nta) / DBLE(nq_tot) * z_nq_A(ctr, j, qp) * CONJG(z_nq_A(ctr, j, qp)) & 
-                                              * Cpx_matA(j, qp)**2 / ((amass(nta) * AMU_SI)**2) * 1.0E-24
+                DW_fact(k, i) = DW_fact(k, i) + 2.0d0 / DBLE(nq_tot * amass(nta)) * z_nq_B(ctr, j, qp) & 
+                                           * CONJG(z_nq_B(ctr, j, qp)) * Cx_matB(j, qp)**2
+                DWp_fact(k, i) = DWp_fact(k, i) + 2.0d0 * amass(nta) / DBLE(nq_tot) * z_nq_B(ctr, j, qp) & 
+                                          * CONJG(z_nq_B(ctr, j, qp)) * Cpx_matB(j, qp)**2 & 
+                                          / ((amass(nta) * AMU_SI)**2) * 1.0E-24
               ENDDO
             ENDDO
-          ENDIF
-         !
-          ctr = ctr + 1 ! for k and i
-        ENDDO ! end i for cart directions
-      ENDDO ! end k loop over nat
-      !
-      T_fact(:,:) = 0.d0
-      Tp_fact(:,:) = 0.d0
-      DO k = 1, nat
-        nta = ityp(k)
-        DO p = 1, nq_tot
-          T_fact(k, 1) =  T_fact(k, 1) + (D_tau(p, k, 1) - equil_p(p, k, 1))**2 / nq_tot
-          T_fact(k, 2) =  T_fact(k, 2) + (D_tau(p, k, 2) - equil_p(p, k, 2))**2 / nq_tot
-          T_fact(k, 3) =  T_fact(k, 3) + (D_tau(p, k, 3) - equil_p(p, k, 3))**2 / nq_tot
-          Tp_fact(k, 1) =  Tp_fact(k, 1) + (P_tau(p, k, 1))**2 / nq_tot * 1.0E-24
-          Tp_fact(k, 2) =  Tp_fact(k, 2) + (P_tau(p, k, 2))**2 / nq_tot * 1.0E-24
-          Tp_fact(k, 3) =  Tp_fact(k, 3) + (P_tau(p, k, 3))**2 / nq_tot * 1.0E-24
+            !
+            IF (incl_qA) THEN ! 
+              DO qp = 1, ctrA
+                DO j = 1, nat3
+                  DW_fact(k, i) = DW_fact(k, i) + 1.0d0 / DBLE(nq_tot * amass(nta)) * z_nq_A(ctr, j, qp) & 
+                                           * CONJG(z_nq_A(ctr, j, qp)) * Cx_matA(j, qp)**2
+                  DWp_fact(k, i) = DWp_fact(k, i) + amass(nta) / DBLE(nq_tot) * z_nq_A(ctr, j, qp) * CONJG(z_nq_A(ctr, j, qp)) & 
+                                                * Cpx_matA(j, qp)**2 / ((amass(nta) * AMU_SI)**2) * 1.0E-24
+                ENDDO
+              ENDDO
+            ENDIF
+           !
+            ctr = ctr + 1 ! for k and i
+          ENDDO ! end i for cart directions
+        ENDDO ! end k loop over nat
+        !
+        T_fact(:,:) = 0.d0
+        Tp_fact(:,:) = 0.d0
+        DO k = 1, nat
+          nta = ityp(k)
+          DO p = 1, nq_tot
+            T_fact(k, 1) =  T_fact(k, 1) + (D_tau(p, k, 1) - equil_p(p, k, 1))**2 / nq_tot
+            T_fact(k, 2) =  T_fact(k, 2) + (D_tau(p, k, 2) - equil_p(p, k, 2))**2 / nq_tot
+            T_fact(k, 3) =  T_fact(k, 3) + (D_tau(p, k, 3) - equil_p(p, k, 3))**2 / nq_tot
+            Tp_fact(k, 1) =  Tp_fact(k, 1) + (P_tau(p, k, 1))**2 / nq_tot * 1.0E-24
+            Tp_fact(k, 2) =  Tp_fact(k, 2) + (P_tau(p, k, 2))**2 / nq_tot * 1.0E-24
+            Tp_fact(k, 3) =  Tp_fact(k, 3) + (P_tau(p, k, 3))**2 / nq_tot * 1.0E-24
+          ENDDO
+          WRITE(80,'(A6, 2i1)') "Atom: ", k 
+          WRITE(80,'(A6, 3F11.6)') atm(nta), T_fact(k, 1) * 8 * pi**2, T_fact(k, 2) * 8 * pi**2, T_fact(k, 3) * 8 * pi**2
+          WRITE(80,'(A20, 3F11.6)') "Exact values" 
+          WRITE(80,'(A6, 3F11.6)') atm(nta), DW_fact(k, 1) * 8 * pi**2, DW_fact(k, 2) * 8 * pi**2, DW_fact(k, 3) * 8 * pi**2
+          !Here we print the DW velocities, in the same spirit that with DW factor. see p.237 of Maradudin Book
+          WRITE(81,'(A6, 3F12.8)') atm(nta), SQRT(Tp_fact(k, 1)), SQRT(Tp_fact(k, 2)), SQRT(Tp_fact(k, 3))
+          WRITE(81,'(A6, 3F12.8)') atm(nta), SQRT(DWp_fact(k, 1)), SQRT(DWp_fact(k, 2)), SQRT(DWp_fact(k, 3))
         ENDDO
-        WRITE(80,'(A6, 2i1)') "Atom: ", k 
-        WRITE(80,'(A6, 3F11.6)') atm(nta), T_fact(k, 1) * 8 * pi**2, T_fact(k, 2) * 8 * pi**2, T_fact(k, 3) * 8 * pi**2
-        WRITE(80,'(A20, 3F11.6)') "Exact values" 
-        WRITE(80,'(A6, 3F11.6)') atm(nta), DW_fact(k, 1) * 8 * pi**2, DW_fact(k, 2) * 8 * pi**2, DW_fact(k, 3) * 8 * pi**2
-        !Here we print the DW velocities, in the same spirit that with DW factor. see p.237 of Maradudin Book
-        WRITE(81,'(A6, 3F12.8)') atm(nta), SQRT(Tp_fact(k, 1)), SQRT(Tp_fact(k, 2)), SQRT(Tp_fact(k, 3))
-        WRITE(81,'(A6, 3F12.8)') atm(nta), SQRT(DWp_fact(k, 1)), SQRT(DWp_fact(k, 2)), SQRT(DWp_fact(k, 3))
-      ENDDO
-      !
-      ! off-diagonal terms of tensor
-      WRITE(80,*) "off-diagonal terms"
-      T_fact(:,:) = 0.d0
-      Tp_fact(:,:) = 0.d0
-      DO k = 1, nat
-        nta = ityp(k)
-        DO p = 1, nq_tot
-          T_fact(k, 1) =  T_fact(k, 1) + (D_tau(p, k, 1) - equil_p(p, k, 1)) * & 
-                                         (D_tau(p, k, 2) - equil_p(p, k, 2)) / nq_tot
-          T_fact(k, 2) =  T_fact(k, 2) + (D_tau(p, k, 1) - equil_p(p, k, 1)) * & 
-                                         (D_tau(p, k, 3) - equil_p(p, k, 3)) / nq_tot
-          T_fact(k, 3) =  T_fact(k, 3) + (D_tau(p, k, 2) - equil_p(p, k, 2)) * & 
-                                         (D_tau(p, k, 3) - equil_p(p, k, 3)) / nq_tot
+        !
+        ! off-diagonal terms of tensor
+        WRITE(80,*) "off-diagonal terms"
+        T_fact(:,:) = 0.d0
+        Tp_fact(:,:) = 0.d0
+        DO k = 1, nat
+          nta = ityp(k)
+          DO p = 1, nq_tot
+            T_fact(k, 1) =  T_fact(k, 1) + (D_tau(p, k, 1) - equil_p(p, k, 1)) * & 
+                                           (D_tau(p, k, 2) - equil_p(p, k, 2)) / nq_tot
+            T_fact(k, 2) =  T_fact(k, 2) + (D_tau(p, k, 1) - equil_p(p, k, 1)) * & 
+                                           (D_tau(p, k, 3) - equil_p(p, k, 3)) / nq_tot
+            T_fact(k, 3) =  T_fact(k, 3) + (D_tau(p, k, 2) - equil_p(p, k, 2)) * & 
+                                           (D_tau(p, k, 3) - equil_p(p, k, 3)) / nq_tot
+          ENDDO
+          WRITE(80,'(A6, 3F11.6)') atm(nta), T_fact(k, 1) * 8 * pi**2, T_fact(k, 2) * 8 * pi**2, T_fact(k, 3) * 8 * pi**2
+         !!  WRITE(80,'(A6, 3F11.6)') atm(nta), DW_fact(k, 1) *8*pi**2, DW_fact(k, 2) *8*pi**2, DW_fact(k, 3) *8*pi**2
         ENDDO
-        WRITE(80,'(A6, 3F11.6)') atm(nta), T_fact(k, 1) * 8 * pi**2, T_fact(k, 2) * 8 * pi**2, T_fact(k, 3) * 8 * pi**2
-       !!  WRITE(80,'(A6, 3F11.6)') atm(nta), DW_fact(k, 1) *8*pi**2, DW_fact(k, 2) *8*pi**2, DW_fact(k, 3) *8*pi**2
-      ENDDO
+      ENDIF ! (ionode)
       EXIT ! exit kk-loop if the error is less than a threshold
     ENDIF
 !!!!!
