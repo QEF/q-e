@@ -918,8 +918,11 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE gvect,                ONLY : g
    USE klist,                ONLY : nks, xk, igk_k, ngk
-   USE ldaU,                 ONLY : nwfcU, wfcU, is_hubbard, is_hubbard_back, &
-                                    offsetU, oatwfc, ldim_u, U_projection
+   USE ldaU,                 ONLY : nwfcU, wfcU, is_hubbard, is_hubbard_back,  &
+                                    offsetU, offsetU_back, offsetU_back1,      &
+                                    oatwfc, oatwfc_back, oatwfc_back1, ldim_u, &
+                                    U_projection, Hubbard_l, Hubbard_l_back,   &
+                                    backall
    USE lsda_mod,             ONLY : lsda, nspin, isk
    USE wvfct,                ONLY : nbnd, npwx, wg
    USE uspp,                 ONLY : nkb, vkb, qq_at, okvan
@@ -955,7 +958,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    ! ... local variables
    !
    INTEGER :: i, ig, ijkb0, na, ibnd, iwf, nt, ih, jh, npw, offpm, offpmU, &
-              m1, m2
+              m1, m2, ldim_std
    REAL (DP) :: xyz(3,3), q, a1, a2
    REAL (DP), PARAMETER :: eps = 1.0d-8
    COMPLEX (DP), ALLOCATABLE :: &
@@ -1022,13 +1025,25 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
       !
       DO na = 1, nat
          nt = ityp(na)
+         ldim_std = 2*Hubbard_l(nt)+1
          IF (is_hubbard(nt) .OR. is_hubbard_back(nt)) THEN
-            offpmU = offsetU(na)
-            offpm  = oatwfc(na)
             DO m1 = 1, ldim_u(nt)
+               IF (m1.LE.ldim_std) THEN
+                  offpmU = offsetU(na)
+                  offpm  = oatwfc(na)
+               ELSE
+                  offpmU = offsetU_back(na) - ldim_std
+                  offpm  = oatwfc_back(na)  - ldim_std
+                  IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l_back(nt)+1) THEN
+                     offpmU = offsetU_back1(na) - ldim_std - 2*Hubbard_l_back(nt) - 1
+                     offpm  = oatwfc_back1(na)  - ldim_std - 2*Hubbard_l_back(nt) - 1
+                  ENDIF
+               ENDIF
                IF (U_projection.EQ."atomic") THEN
                   dwfc(ig,offpmU+m1) = dy(ig,offpm+m1) * a1 + dj(ig,offpm+m1) * a2
                ELSEIF (U_projection.EQ."ortho-atomic") THEN
+                  IF (m1>ldim_std) CALL errore("dprojdtau_k", &
+                        " Stress with background and ortho-atomic is not supported",1)
                   DO m2 = 1, natomwfc
                      dwfc(ig,offpmU+m1) = dwfc(ig,offpmU+m1) + &
                          overlap_inv(offpm+m1,m2) * ( dy(ig,m2) * a1 + dj(ig,m2) * a2 )
@@ -1036,7 +1051,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
                ENDIF
             ENDDO
          ENDIF
-      ENDDO 
+      ENDDO
       !
    ENDDO
    !
@@ -1358,13 +1373,18 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE gvect,                ONLY : g, gstart
    USE klist,                ONLY : nks, xk, igk_k, ngk
-   USE ldaU,                 ONLY : nwfcU, wfcU
+   USE ldaU,                 ONLY : nwfcU, wfcU, is_hubbard, is_hubbard_back,  &
+                                    offsetU, offsetU_back, offsetU_back1,      &
+                                    oatwfc, oatwfc_back, oatwfc_back1, ldim_u, &
+                                    U_projection, Hubbard_l, Hubbard_l_back,   &
+                                    backall
    USE lsda_mod,             ONLY : lsda, nspin, isk
    USE wvfct,                ONLY : nbnd, npwx, wg
    USE uspp,                 ONLY : nkb, vkb, qq_at
    USE uspp_param,           ONLY : upf, nhm, nh
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : becp, calbec
+   USE basis,                ONLY : natomwfc
 
    IMPLICIT NONE
    !
@@ -1389,17 +1409,18 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    !
    ! ... local variables
    !
-   INTEGER :: i, ig, ijkb0, na, ibnd, iwf, nt, ih, jh, npw
+   INTEGER :: i, ig, ijkb0, na, ibnd, iwf, nt, ih, jh, npw, &
+              offpm, offpmU, m1, ldim_std
    REAL (DP) :: xyz(3,3), q, a1, a2
    REAL (DP), PARAMETER :: eps=1.0d-8
    COMPLEX (DP), ALLOCATABLE :: &
-           dwfc(:,:), aux(:,:), dbeta(:,:), aux0(:,:), aux1(:,:)
+           dwfc(:,:), dbeta(:,:), aux0(:,:), aux1(:,:)
    !       dwfc(npwx,nwfcU),   ! the derivative of the atomic d wfc
-   !       aux(npwx,nwfcU),    ! auxiliary array
    !       dbeta(npwx,nkb),    ! the derivative of the beta function
-   !       aux0,aux1(npwx,nkb) ! auxiliary arrays
+   !       aux0,aux1           ! auxiliary arrays
    REAL (DP), ALLOCATABLE :: &
-           betapsi(:,:), dbetapsi(:,:), wfatbeta(:,:), wfatdbeta(:,:)
+           betapsi(:,:), dbetapsi(:,:), wfatbeta(:,:), wfatdbeta(:,:), &
+           betapsi0(:,:)
    !       betapsi(nhm,nbnd),     ! <beta|evc>
    !       dbetapsi(nhm,nbnd),    ! <dbeta|evc>
    !       wfatbeta(nwfcU,nhm),! <wfc|beta>
@@ -1409,51 +1430,74 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    !       gk(3,npwx),
    !       qm1(npwx)
    !
+   ! See the implementation in dprojdepsilon_k
+   IF (U_projection.EQ."ortho-atomic") CALL errore("dprojdtau_gamma", &
+                    " Forces with gamma-only and ortho-atomic are not supported",1)
+   !
    ! xyz are the three unit vectors in the x,y,z directions
    xyz(:,:) = 0.d0
    DO i=1,3
       xyz(i,i) = 1.d0
    END DO
-
+   !
+   ! Number of plane waves at the k point with the index ik
+   npw = ngk(ik)
+   !
    dproj(:,:) = 0.d0
    !
    ! At first the derivatives of the atomic wfcs: we compute the term
    ! <d\fi^{at}_{I,m1}/d\epsilon(ipol,jpol)|S|\psi_{k,v,s}>
    !
    ALLOCATE ( qm1(npwx), gk(3,npwx) )
-   ALLOCATE ( dwfc(npwx,nwfcU), aux(npwx,nwfcU) )
+   ALLOCATE ( dwfc(npwx,nwfcU) )
+   ALLOCATE ( aux0(npwx,natomwfc), aux1(npwx,natomwfc) )
    !
    ! The derivative of the Bessel function
    !
-   CALL gen_at_dj ( ik, dwfc )
+   CALL gen_at_dj ( ik, aux0 )
    !
    ! The derivative of the spherical harmonic
    !
-   CALL gen_at_dy ( ik, xyz(1,ipol), aux)
-   !
-   ! Number of plane waves at the k point with the index ik
-   !
-   npw = ngk(ik)
+   CALL gen_at_dy ( ik, xyz(1,ipol), aux1)
    !
    DO ig = 1, npw
       !
-      gk(1,ig) = (xk(1,ik) + g(1,igk_k(ig,ik))) * tpiba
-      gk(2,ig) = (xk(2,ik) + g(2,igk_k(ig,ik))) * tpiba
-      gk(3,ig) = (xk(3,ik) + g(3,igk_k(ig,ik))) * tpiba
-      !
-      q = SQRT(gk(1,ig)**2+gk(2,ig)**2+gk(3,ig)**2)
-      !
+      ! Compute k+G and 1/|k+G|
+      DO i = 1, 3
+         gk(i,ig) = (xk(i,ik) + g(i,igk_k(ig,ik))) * tpiba
+      ENDDO
+      q = SQRT(gk(1,ig)**2 + gk(2,ig)**2 + gk(3,ig)**2)
       IF (q.GT.eps) THEN
          qm1(ig) = 1.d0/q
       ELSE
          qm1(ig) = 0.d0
       ENDIF
       !
+      ! - (k+G)_jpol
       a1 = -gk(jpol,ig)
+      !
+      ! - (k+G)_ipol * (k+G)_jpol / |k+G|
       a2 = -gk(ipol,ig)*gk(jpol,ig)*qm1(ig)
       !
-      DO iwf = 1, nwfcU
-         dwfc(ig,iwf) = aux(ig,iwf)*a1 + dwfc(ig,iwf)*a2
+      DO na = 1, nat
+         nt = ityp(na)
+         ldim_std = 2*Hubbard_l(nt)+1
+         IF (is_hubbard(nt) .OR. is_hubbard_back(nt)) THEN
+            DO m1 = 1, ldim_u(nt)
+               IF (m1.LE.ldim_std) THEN
+                  offpmU = offsetU(na)
+                  offpm  = oatwfc(na)
+               ELSE
+                  offpmU = offsetU_back(na) - ldim_std
+                  offpm  = oatwfc_back(na)  - ldim_std
+                  IF (backall(nt) .AND. m1.GT.ldim_std+2*Hubbard_l_back(nt)+1) THEN
+                     offpmU = offsetU_back1(na) - ldim_std - 2*Hubbard_l_back(nt) - 1
+                     offpm  = oatwfc_back1(na)  - ldim_std - 2*Hubbard_l_back(nt) - 1
+                  ENDIF
+               ENDIF
+               dwfc(ig,offpmU+m1) = aux1(ig,offpm+m1) * a1 + aux0(ig,offpm+m1) * a2
+            ENDDO
+         ENDIF
       ENDDO
       !
    ENDDO
@@ -1462,7 +1506,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    !
    CALL calbec ( npw, dwfc, spsi, dproj )
    !
-   DEALLOCATE ( dwfc, aux )
+   DEALLOCATE ( aux0, aux1, dwfc)
    !
    ! Now the derivatives of the beta functions: we compute the term
    ! <\fi^{at}_{I,m1}|dS/d\epsilon(ipol,jpol)|\psi_{k,v,s}>
@@ -1482,7 +1526,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    DO nt = 1, ntyp
       !
       ALLOCATE (dbeta(npwx,nh(nt)), dbetapsi(nh(nt),nbnd), betapsi(nh(nt),nbnd), &
-                wfatbeta(nwfcU,nh(nt)), wfatdbeta(nwfcU,nh(nt)) )
+                wfatbeta(nwfcU,nh(nt)), wfatdbeta(nwfcU,nh(nt)), betapsi0(nh(nt),nbnd) )
       !
       DO na = 1, nat
          !
@@ -1509,6 +1553,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
             ENDDO
             !
             CALL calbec(npw, wfcU, dbeta, wfatbeta )
+            CALL calbec(npw, dbeta, evc, betapsi0 )
             !
             ! here starts band parallelization
             ! beta is here used as work space to calculate dbetapsi
@@ -1530,7 +1575,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
                   betapsi(ih,ibnd) = 0.0_dp
                   DO jh = 1, nh(nt)
                      betapsi(ih,ibnd) = betapsi(ih,ibnd) + &
-                          qq_at(ih,jh,na) * becp%r(ijkb0+jh,ibnd)
+                          qq_at(ih,jh,na) * betapsi0(jh,ibnd)
                   ENDDO
                ENDDO
             ENDDO
@@ -1551,7 +1596,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
             ! end band parallelization - only dproj(1,nb_s:nb_e) are calculated
          ENDIF
       ENDDO
-      DEALLOCATE (dbeta, dbetapsi, betapsi, wfatbeta, wfatdbeta )
+      DEALLOCATE (dbeta, dbetapsi, betapsi, wfatbeta, wfatdbeta, betapsi0)
    ENDDO
    !
    DEALLOCATE ( aux0, aux1 )

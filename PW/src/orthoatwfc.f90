@@ -452,32 +452,32 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
   !! auxiliary array
   !
   ALLOCATE (aux(m,m))
-  aux(:,:)  = (0.0d0, 0.0d0)
-  doverlap_inv(:,:) = (0.0d0, 0.0d0)
+  !
+  ! Compute (work^T) * (doverlap^T) * ((work^H)^T) 
+  ! and put the result back in doverlap
+  !
+  ! Compute aux = (work^H)*doverlap
+  CALL ZGEMM('C','N', m, m, m, (1.d0,0.d0), work, &
+              m, doverlap, m, (0.d0,0.d0), aux, m)
+  ! Compute (work^T) * (aux^T)
+  CALL ZGEMM('T','T', m, m, m, (1.d0,0.d0), work, &
+              m, aux, m, (0.d0,0.d0), doverlap, m)
   !
   DO m1 = 1, m
      DO m2 = 1, m
-        DO m3 = 1, m
-           DO m4 = 1, m
-              aux(m1,m2) = aux(m1,m2) + &
-                 work(m3,m1) * doverlap(m4,m3) * CONJG(work(m4,m2))
-           ENDDO
-        ENDDO
+        aux(m1,m2) = doverlap(m1,m2) / &
+                    (e(m1)*DSQRT(e(m2))+e(m2)*DSQRT(e(m1)))
      ENDDO
   ENDDO
   !
-  DO m1 = 1, m
-     DO m2 = 1, m
-        DO m3 = 1, m
-           DO m4 = 1, m
-              doverlap_inv(m1,m2) = doverlap_inv(m1,m2) - &
-                 CONJG(work(m1,m3)) * (1.d0/e(m3)) * aux(m3,m4) * &
-                 (1.d0/e(m4)) * work(m2,m4) / &
-                 ( (1.d0/SQRT(e(m3))) + (1.d0/SQRT(e(m4))) )
-           ENDDO
-        ENDDO
-     ENDDO
-  ENDDO
+  ! Compute ((work^H)^T) * aux * (work^T)
+  !
+  ! Compute doverlap = (aux^T)*(work^H)
+  CALL ZGEMM('T','C', m, m, m, (1.d0,0.d0), aux, &
+              m, work, m, (0.d0,0.d0), doverlap, m)
+  ! Compute doverlap_inv = (doverlap^T)*(work^T)
+  CALL ZGEMM('T','T', m, m, m, (-1.d0,0.d0), doverlap, &
+              m, work, m, (0.d0,0.d0), doverlap_inv, m)
   !
   DEALLOCATE (aux)
   !
