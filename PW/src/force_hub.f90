@@ -1314,7 +1314,7 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
    REAL(DP) :: gvec
    COMPLEX (DP), ALLOCATABLE :: Adbeta(:,:), Abeta(:,:), &
                                 dbetaB(:,:), betaB(:,:), &
-                                aux(:,:)
+                                aux(:,:), qq(:,:)
    !
    A_dS_B(:,:) = (0.0d0, 0.0d0)
    !
@@ -1322,11 +1322,14 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
    !
    nt = ityp(alpha)
    npw = ngk(ik)
-   ! 
+   !
    ALLOCATE ( Adbeta(lA,nh(nt)) )
    ALLOCATE ( Abeta(lA,nh(nt)) )
    ALLOCATE ( dbetaB(nh(nt),lB) )
    ALLOCATE ( betaB(nh(nt),lB) )
+   ALLOCATE ( qq(nh(nt),nh(nt)) )
+   !
+   qq(:,:) = CMPLX(qq_at(:,:,alpha), 0.0d0, kind=DP)
    !
    ! aux is used as a workspace
    ALLOCATE ( aux(npwx,nh(nt)) )
@@ -1347,7 +1350,7 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
    ! Calculate betaB = <beta|B>
    CALL calbec( npw, aux, B, betaB )
    !
-   !!omp parallel do default(shared) private(ig,ih)
+!!omp parallel do default(shared) private(ig,ih)
    ! Calculate the derivative of the beta function
    DO ih = 1, nh(nt)
       DO ig = 1, npw
@@ -1365,53 +1368,33 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
    !
    DEALLOCATE ( aux )
    !
-   ALLOCATE ( aux(nh(nt), lB) )
-   aux(:,:) = (0.0d0, 0.0d0)
+   ALLOCATE ( aux(nh(nt),lB) )
    !
-!!omp parallel do default(shared) private(ih,iB,jh)
    ! Calculate \sum_jh qq_at(ih,jh) * dbetaB(jh)
-   DO ih = 1, nh(nt)
-      DO iB = 1, lB
-         DO jh = 1, nh(nt)
-            aux(ih,iB) = aux(ih,iB) + &
-                         qq_at(ih,jh,alpha) * dbetaB(jh,iB)
-         ENDDO
-      ENDDO
-   ENDDO
-!!omp end parallel do
-   !
+   CALL ZGEMM('N', 'N', nh(nt), lB, nh(nt), (1.0d0,0.0d0), &
+               qq, nh(nt), dbetaB, nh(nt),(0.0d0,0.0d0), aux, nh(nt))
    dbetaB(:,:) = aux(:,:)
-   aux(:,:) = (0.0_dp, 0.0_dp)
    !
-!!omp parallel do default(shared) private(ih,iB,jh)
    ! Calculate \sum_jh qq_at(ih,jh) * betaB(jh)
-   DO ih = 1, nh(nt)
-      DO iB = 1, lB
-         DO jh = 1, nh(nt)
-            aux(ih,iB) = aux(ih,iB) + &
-                         qq_at(ih,jh,alpha) * betaB(jh,iB)
-         ENDDO
-      ENDDO
-   ENDDO
-!!omp end parallel do
-   !
+   CALL ZGEMM('N', 'N', nh(nt), lB, nh(nt), (1.0d0,0.0d0), &
+               qq, nh(nt), betaB, nh(nt),(0.0d0,0.0d0), aux, nh(nt))
    betaB(:,:) = aux(:,:)
+   !
    DEALLOCATE ( aux )
    !
    ! dproj(iA,iB) = \sum_ih [Adbeta(iA,ih) * betaB(ih,iB) +
    !                         Abeta(iA,ih)  * dbetaB(ih,iB)] 
    !
-   IF ( nh(nt) > 0 ) THEN
-      CALL ZGEMM('N', 'N', lA, lB, nh(nt), (1.0d0,0.0d0), &
-           Adbeta, lA, betaB,  nh(nt), (0.0d0,0.0d0), A_dS_B, lA)
-      CALL ZGEMM('N', 'N', lA, lB, nh(nt), (1.0d0,0.0d0), &
-           Abeta,  lA, dbetaB, nh(nt), (1.0d0,0.0d0), A_dS_B, lA)
-   ENDIF
+   CALL ZGEMM('N', 'N', lA, lB, nh(nt), (1.0d0,0.0d0), &
+              Adbeta, lA, betaB,  nh(nt), (0.0d0,0.0d0), A_dS_B, lA)
+   CALL ZGEMM('N', 'N', lA, lB, nh(nt), (1.0d0,0.0d0), &
+              Abeta,  lA, dbetaB, nh(nt), (1.0d0,0.0d0), A_dS_B, lA)
    !
    DEALLOCATE ( Abeta )
    DEALLOCATE ( Adbeta )
    DEALLOCATE ( dbetaB )
    DEALLOCATE ( betaB )
+   DEALLOCATE ( qq )
    !    
    RETURN
    !
