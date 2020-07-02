@@ -889,15 +889,15 @@
       gamma_v_all(:, :, :)  = zero
     ENDIF
     IF (specfun_el .OR. specfun_pl) THEN
-      ALLOCATE(esigmar_all(nbndfst, nktotf, nw_specfun), STAT = ierr)
+      ALLOCATE(esigmar_all(nbndfst, nktotf, nw_specfun, nstemp), STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating esigmar_all', 1)
-      ALLOCATE(esigmai_all(nbndfst, nktotf, nw_specfun), STAT = ierr)
+      ALLOCATE(esigmai_all(nbndfst, nktotf, nw_specfun, nstemp), STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating esigmai_all', 1)
-      ALLOCATE(a_all(nw_specfun, nktotf), STAT = ierr)
+      ALLOCATE(a_all(nw_specfun, nktotf, nstemp), STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating a_all', 1)
-      esigmar_all(:, :, :) = zero
-      esigmai_all(:, :, :) = zero
-      a_all(:, :) = zero
+      esigmar_all(:, :, :, :) = zero
+      esigmai_all(:, :, :, :) = zero
+      a_all(:, :, :) = zero
     ENDIF
     IF (specfun_ph) THEN
       ALLOCATE(a_all_ph(nw_specfun, totq), STAT = ierr)

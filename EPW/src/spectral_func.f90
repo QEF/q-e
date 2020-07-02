@@ -122,7 +122,7 @@
     !! Phonon frequency on the fine grid
     REAL(KIND = DP) :: inv_wq(nmodes)
     !! $frac{1}{2\omega_{q\nu}}$ defined for efficiency reasons
-    REAL(KIND = DP) :: wgq(nmodes)
+    REAL(KIND = DP) :: wgq(nmodes, nstemp)
     !! Bose occupation factor $n_{q\nu}(T)$
     REAL(KIND = DP) :: g2_tmp(nmodes)
     !! If the phonon frequency is too small discart g
@@ -167,12 +167,12 @@
         wq(imode) = wf(imode, iq)
         IF (wq(imode) > eps_acustic) THEN
           g2_tmp(imode) = one
-          wgq(imode)    = wgauss(-wq(imode) * inv_eptemp, -99)
-          wgq(imode)    = wgq(imode) / (one - two * wgq(imode))
+          wgq(imode, itemp)    = wgauss(-wq(imode) * inv_eptemp, -99)
+          wgq(imode, itemp)    = wgq(imode, itemp) / (one - two * wgq(imode, itemp))
           inv_wq(imode) = one / (two * wq(imode))
         ELSE
           g2_tmp(imode) = zero
-          wgq(imode)    = zero
+          wgq(imode, itemp)    = zero
           inv_wq(imode) = zero
         ENDIF
       ENDDO
@@ -211,10 +211,10 @@
       !
       IF (restart) THEN
         ! Make everythin 0 except the range of k-points we are working on
-        esigmar_all(:, 1:lower_bnd - 1, :) = zero
-        esigmar_all(:, lower_bnd + nkf:nktotf, :) = zero
-        esigmai_all(:, 1:lower_bnd - 1, :) = zero
-        esigmai_all(:, lower_bnd + nkf:nktotf, :) = zero
+        esigmar_all(:, 1:lower_bnd - 1, :, :) = zero
+        esigmar_all(:, lower_bnd + nkf:nktotf, :, :) = zero
+        esigmai_all(:, 1:lower_bnd - 1, :, :) = zero
+        esigmai_all(:, lower_bnd + nkf:nktotf, :, :) = zero
         !
       ENDIF
       !
@@ -263,8 +263,8 @@
                     g2 = (ABS(epf17(jbnd, ibnd, imode, ik))**two) * inv_wq(imode) * g2_tmp(imode)
                   ENDIF
                   !
-                  fact1 =       wgkq + wgq(imode)
-                  fact2 = one - wgkq + wgq(imode)
+                  fact1 =       wgkq + wgq(imode, itemp)
+                  fact2 = one - wgkq + wgq(imode, itemp)
                   etmp1 = ekq - wq(imode) + ci * degaussw
                   etmp2 = ekq + wq(imode) + ci * degaussw
                   !
@@ -278,16 +278,16 @@
                     weight = wqf(iq) * REAL(fact)
                     !
                     ! \Re\Sigma [Eq. 3 in Comput. Phys. Commun. 209, 116 (2016)]
-                    esigmar_all(ibnd, ik + lower_bnd - 1, iw) = esigmar_all(ibnd, ik + lower_bnd - 1, iw) + g2 * weight
+                    esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) = esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) + g2 * weight
                     !
                     ! SP : Application of the sum rule
                     esigmar0 = - g2 *  wqf(iq) * REAL((fact1 / etmp1) + (fact2 / etmp2))
-                    esigmar_all(ibnd, ik + lower_bnd - 1, iw) = esigmar_all(ibnd, ik + lower_bnd - 1, iw) - esigmar0
+                    esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) = esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) - esigmar0
                     !
                     weight = wqf(iq) * AIMAG(fact)
                     !
                     ! \Im\Sigma [Eq. 3 in Comput. Phys. Commun. 209, 116 (2016)]
-                    esigmai_all(ibnd, ik + lower_bnd - 1, iw) = esigmai_all(ibnd, ik + lower_bnd - 1, iw) + g2 * weight
+                    esigmai_all(ibnd, ik + lower_bnd - 1, iw, itemp) = esigmai_all(ibnd, ik + lower_bnd - 1, iw, itemp) + g2 * weight
                     !
                   ENDDO
                 ENDDO !jbnd
@@ -311,32 +311,35 @@
       !
       ! The k points are distributed among pools: here we collect them
       !
-      IF (iqq == totq) THEN
+    ENDDO ! first itemp
+    IF (iqq == totq) THEN
         !
-        ALLOCATE(xkf_all(3, nkqtotf), STAT = ierr)
-        IF (ierr /= 0) CALL errore('spectral_func_el_q', 'Error allocating xkf_all', 1)
-        ALLOCATE(etf_all(nbndsub, nkqtotf), STAT = ierr)
-        IF (ierr /= 0) CALL errore('spectral_func_el_q', 'Error allocating etf_all', 1)
-        xkf_all(:, :) = zero
-        etf_all(:, :) = zero
-        !
+      ALLOCATE(xkf_all(3, nkqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('spectral_func_el_q', 'Error allocating xkf_all', 1)
+      ALLOCATE(etf_all(nbndsub, nkqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('spectral_func_el_q', 'Error allocating etf_all', 1)
+      xkf_all(:, :) = zero
+      etf_all(:, :) = zero
+      !
 #if defined(__MPI)
-        !
-        ! note that poolgather2 works with the doubled grid (k and k+q)
-        !
-        CALL poolgather2(3,       nkqtotf, nkqf, xkf, xkf_all)
-        CALL poolgather2(nbndsub, nkqtotf, nkqf, etf, etf_all)
-        CALL mp_sum(esigmar_all, inter_pool_comm)
-        CALL mp_sum(esigmai_all, inter_pool_comm)
-        CALL mp_sum(fermicount, inter_pool_comm)
-        CALL mp_barrier(inter_pool_comm)
-        !
+      !
+      ! note that poolgather2 works with the doubled grid (k and k+q)
+      !
+      CALL poolgather2(3,       nkqtotf, nkqf, xkf, xkf_all)
+      CALL poolgather2(nbndsub, nkqtotf, nkqf, etf, etf_all)
+      CALL mp_sum(esigmar_all, inter_pool_comm)
+      CALL mp_sum(esigmai_all, inter_pool_comm)
+      CALL mp_sum(fermicount, inter_pool_comm)
+      CALL mp_barrier(inter_pool_comm)
+      !
 #else
-        !
-        xkf_all = xkf
-        etf_all = etf
-        !
+      !
+      xkf_all = xkf
+      etf_all = etf
+      !
 #endif
+      DO itemp = 1, nstemp ! second temperature loop to write data
+        inv_eptemp = one / gtemp(itemp)
         !
         ! Output electron spectral function here after looping over all q-points
         ! (with their contributions summed in a etc.)
@@ -363,7 +366,7 @@
           ikk = 2 * ik - 1
           ikq = ikk + 1
           !
-          WRITE(stdout, '(/5x, "ik = ", i5, " coord.: ", 3f12.7)') ik, xkf_all(:, ikk)
+          WRITE(stdout, '(/5x, "ik = ", i5, " coord.: ", 3f12.7, " Temp. : ", f8.3)') ik, xkf_all(:, ikk), gtemp(itemp) * ryd2ev / kelvin2eV
           WRITE(stdout, '(5x, a)') REPEAT('-', 67)
           !
           DO iw = 1, nw_specfun
@@ -373,12 +376,12 @@
               !  the energy of the electron at k
               ekk = etf_all(ibndmin - 1 + ibnd, ikk) - ef0
               !
-              a_all(iw, ik) = a_all(iw, ik) + ABS(esigmai_all(ibnd, ik, iw)) / pi / &
-                   ((ww(iw) - ekk - esigmar_all(ibnd, ik, iw))**two + (esigmai_all(ibnd, ik, iw))**two)
+              a_all(iw, ik, itemp) = a_all(iw, ik, itemp) + ABS(esigmai_all(ibnd, ik, iw, itemp)) / pi / &
+                   ((ww(iw) - ekk - esigmar_all(ibnd, ik, iw, itemp))**two + (esigmai_all(ibnd, ik, iw, itemp))**two)
               !
             ENDDO
             !
-            WRITE(stdout, 101) ik, ryd2ev * ww(iw), a_all(iw, ik) / ryd2mev
+            WRITE(stdout, 101) ik, ryd2ev * ww(iw), a_all(iw, ik, itemp) / ryd2mev
             !
           ENDDO
           !
@@ -395,9 +398,9 @@
             !
             fermi(iw) = wgauss(-ww(iw) * inv_eptemp, -99)
             !
-            specfun_sum = specfun_sum + a_all(iw, ik) * fermi(iw) * dw
+            specfun_sum = specfun_sum + a_all(iw, ik, itemp) * fermi(iw) * dw
             !
-            IF (me_pool == 0) WRITE(iospectral, '(2x, i7, 2x, f10.5, 2x, E12.5)') ik, ryd2ev * ww(iw), a_all(iw, ik) / ryd2mev
+            IF (me_pool == 0) WRITE(iospectral, '(2x, i7, 2x, f10.5, 2x, E12.5)') ik, ryd2ev * ww(iw), a_all(iw, ik, itemp) / ryd2mev
             !
           ENDDO
           !
@@ -420,11 +423,11 @@
             DO iw = 1, nw_specfun
               !
               WRITE(stdout, 102) ik, ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2ev * ww(iw), &
-                    ryd2mev * esigmar_all(ibnd, ik, iw), ryd2mev * esigmai_all(ibnd, ik, iw)
+                    ryd2mev * esigmar_all(ibnd, ik, iw, itemp), ryd2mev * esigmai_all(ibnd, ik, iw, itemp)
               !
               IF (me_pool == 0) &
               WRITE(iospectral_sup, 102) ik, ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2ev * ww(iw), &
-                    ryd2mev * esigmar_all(ibnd, ik, iw), ryd2mev * esigmai_all(ibnd, ik, iw)
+                    ryd2mev * esigmar_all(ibnd, ik, iw, itemp), ryd2mev * esigmai_all(ibnd, ik, iw, itemp)
               !
             ENDDO
             !
@@ -436,18 +439,18 @@
         !
         IF (me_pool == 0) CLOSE(iospectral_sup)
         !
-        DEALLOCATE(xkf_all, STAT = ierr)
-        IF (ierr /= 0) CALL errore('spectral_func_el_q', 'Error deallocating xkf_all', 1)
-        DEALLOCATE(etf_all, STAT = ierr)
-        IF (ierr /= 0) CALL errore('spectral_func_el_q', 'Error deallocating etf_all', 1)
-        !
-      ENDIF
+      ENDDO ! itemp
+      DEALLOCATE(xkf_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('spectral_func_el_q', 'Error deallocating xkf_all', 1)
+      DEALLOCATE(etf_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('spectral_func_el_q', 'Error deallocating etf_all', 1)
       !
-      100 FORMAT(5x, 'Gaussian Broadening: ', f10.6, ' eV, ngauss=', i4)
-      101 FORMAT(5x, 'ik = ', i7, '  w = ', f9.4, ' eV   A(k,w) = ', e12.5, ' meV^-1')
-      102 FORMAT(2i9, 2x, f12.4, 2x, f12.4, 2x, f12.4, 2x, f12.4, 2x, f12.4)
-      !
-    ENDDO  ! itemp
+    ENDIF
+    !
+    100 FORMAT(5x, 'Gaussian Broadening: ', f10.6, ' eV, ngauss=', i4)
+    101 FORMAT(5x, 'ik = ', i7, '  w = ', f9.4, ' eV   A(k,w) = ', e12.5, ' meV^-1')
+    102 FORMAT(2i9, 2x, f12.4, 2x, f12.4, 2x, f12.4, 2x, f12.4, 2x, f12.4)
+    !
     RETURN
     !
     !-----------------------------------------------------------------------
@@ -1074,10 +1077,10 @@
       !
       IF (restart) THEN
         ! Make everythin 0 except the range of k-points we are working on
-        esigmar_all(:, 1:lower_bnd - 1, :) = zero
-        esigmar_all(:, lower_bnd + nkf:nktotf, :) = zero
-        esigmai_all(:, 1:lower_bnd - 1, :) = zero
-        esigmai_all(:, lower_bnd + nkf:nktotf, :) = zero
+        esigmar_all(:, 1:lower_bnd - 1, :, :) = zero
+        esigmar_all(:, lower_bnd + nkf:nktotf, :, :) = zero
+        esigmai_all(:, 1:lower_bnd - 1, :, :) = zero
+        esigmai_all(:, lower_bnd + nkf:nktotf, :, :) = zero
         !
       ENDIF
       !
@@ -1157,16 +1160,16 @@
                     weight = wqf(iq) * REAL(fact)
                     !
                     ! \Re\Sigma [Eq. 3 in Comput. Phys. Commun. 209, 116 (2016)]
-                    esigmar_all(ibnd, ik + lower_bnd - 1, iw) = esigmar_all(ibnd, ik + lower_bnd - 1, iw) + g2 * weight
+                    esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) = esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) + g2 * weight
                     !
                     ! SP : Application of the sum rule
                     esigmar0 = - g2 *  wqf(iq) * REAL((fact1 / etmp1) + (fact2 / etmp2))
-                    esigmar_all(ibnd, ik + lower_bnd - 1, iw) = esigmar_all(ibnd, ik + lower_bnd - 1, iw) - esigmar0
+                    esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) = esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) - esigmar0
                     !
                     weight = wqf(iq) * AIMAG(fact)
                     !
                     ! \Im\Sigma [Eq. 3 in Comput. Phys. Commun. 209, 116 (2016)]
-                    esigmai_all(ibnd, ik + lower_bnd - 1, iw) = esigmai_all(ibnd, ik + lower_bnd - 1, iw) + g2 * weight
+                    esigmai_all(ibnd, ik + lower_bnd - 1, iw, itemp) = esigmai_all(ibnd, ik + lower_bnd - 1, iw, itemp) + g2 * weight
                     !
                   ENDDO
                 ENDDO !jbnd
@@ -1187,35 +1190,39 @@
           ENDIF
         ENDIF
       ENDIF ! in case of restart, do not do the first one
+    ENDDO ! itemp
+    !
+    ! The k points are distributed among pools: here we collect them
+    ! 
+    IF (iqq == totq) THEN
+      ! Collect pools and write the spectral function
       !
-      ! The k points are distributed among pools: here we collect them
+      ALLOCATE(xkf_all(3, nkqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('spectral_func_pl_q', 'Error allocating xkf_all', 1)
+      ALLOCATE(etf_all(nbndsub, nkqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('spectral_func_pl_q', 'Error allocating etf_all', 1)
+      xkf_all(:, :) = zero
+      etf_all(:, :) = zero
       !
-      IF (iqq == totq) THEN
-        !
-        ALLOCATE(xkf_all(3, nkqtotf), STAT = ierr)
-        IF (ierr /= 0) CALL errore('spectral_func_pl_q', 'Error allocating xkf_all', 1)
-        ALLOCATE(etf_all(nbndsub, nkqtotf), STAT = ierr)
-        IF (ierr /= 0) CALL errore('spectral_func_pl_q', 'Error allocating etf_all', 1)
-        xkf_all(:, :) = zero
-        etf_all(:, :) = zero
-        !
 #if defined(__MPI)
-        !
-        ! Note that poolgather2 works with the doubled grid (k and k+q)
-        !
-        CALL poolgather2(3, nkqtotf, nkqf, xkf, xkf_all)
-        CALL poolgather2(nbndsub, nkqtotf, nkqf, etf, etf_all)
-        CALL mp_sum(esigmar_all, inter_pool_comm)
-        CALL mp_sum(esigmai_all, inter_pool_comm)
-        CALL mp_sum(fermicount, inter_pool_comm)
-        CALL mp_barrier(inter_pool_comm)
-        !
+      !
+      ! Note that poolgather2 works with the doubled grid (k and k+q)
+      !
+      CALL poolgather2(3, nkqtotf, nkqf, xkf, xkf_all)
+      CALL poolgather2(nbndsub, nkqtotf, nkqf, etf, etf_all)
+      CALL mp_sum(esigmar_all, inter_pool_comm)
+      CALL mp_sum(esigmai_all, inter_pool_comm)
+      CALL mp_sum(fermicount, inter_pool_comm)
+      CALL mp_barrier(inter_pool_comm)
+      !
 #else
-        !
-        xkf_all = xkf
-        etf_all = etf
-        !
+      !
+      xkf_all = xkf
+      etf_all = etf
+      !
 #endif
+      DO itemp = 1, nstemp
+        inv_eptemp = one / gtemp(itemp)
         !
         ! Output electron spectral function here after looping over all q-points (with their contributions summed in a etc.)
         !
@@ -1241,7 +1248,7 @@
           ikk = 2 * ik - 1
           ikq = ikk + 1
           !
-          WRITE(stdout, '(/5x, "ik = ", i5, " coord.: ", 3f12.7)') ik, xkf_all(:, ikk)
+          WRITE(stdout, '(/5x, "ik = ", i5, " coord.: ", 3f12.7, " Temp.: ", f8.3 )') ik, xkf_all(:, ikk), gtemp(itemp) * ryd2ev / kelvin2eV
           WRITE(stdout, '(5x, a)') REPEAT('-', 67)
           !
           DO iw = 1, nw_specfun
@@ -1251,12 +1258,12 @@
               !  the energy of the electron at k
               ekk = etf_all(ibndmin - 1 + ibnd, ikk) - ef0
               !
-              a_all(iw, ik) = a_all(iw, ik) + ABS(esigmai_all(ibnd, ik, iw) ) / pi / &
-                   ((ww(iw) - ekk - esigmar_all(ibnd, ik, iw))**two + (esigmai_all(ibnd, ik, iw))**two)
+              a_all(iw, ik, itemp) = a_all(iw, ik, itemp) + ABS(esigmai_all(ibnd, ik, iw, itemp) ) / pi / &
+                   ((ww(iw) - ekk - esigmar_all(ibnd, ik, iw, itemp))**two + (esigmai_all(ibnd, ik, iw, itemp))**two)
               !
             ENDDO
             !
-            WRITE(stdout, 101) ik, ryd2ev * ww(iw), a_all(iw, ik) / ryd2mev
+            WRITE(stdout, 101) ik, ryd2ev * ww(iw), a_all(iw, ik, itemp) / ryd2mev
             !
           ENDDO
           !
@@ -1272,9 +1279,9 @@
           DO iw = 1, nw_specfun
             !
             fermi(iw) = wgauss(-ww(iw) * inv_eptemp, -99)
-            specfun_sum = specfun_sum + a_all(iw, ik) * fermi(iw) * dw !/ ryd2mev
+            specfun_sum = specfun_sum + a_all(iw, ik, itemp) * fermi(iw) * dw !/ ryd2mev
             !
-           IF (me_pool == 0) WRITE(iospectral, '(2x, i7, 2x, f10.5, 2x, E12.5)') ik, ryd2ev * ww(iw), a_all(iw, ik) / ryd2mev
+           IF (me_pool == 0) WRITE(iospectral, '(2x, i7, 2x, f10.5, 2x, E12.5)') ik, ryd2ev * ww(iw), a_all(iw, ik, itemp) / ryd2mev
           ENDDO
           !
           IF (me_pool == 0) WRITE(iospectral, '(a)') ' '
@@ -1296,11 +1303,11 @@
             DO iw = 1, nw_specfun
               !
               WRITE(stdout, 102) ik, ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2ev * ww(iw), &
-                    ryd2mev * esigmar_all(ibnd, ik, iw), ryd2mev * esigmai_all(ibnd, ik, iw)
+                    ryd2mev * esigmar_all(ibnd, ik, iw, itemp), ryd2mev * esigmai_all(ibnd, ik, iw, itemp)
               !
               IF (me_pool == 0) &
               WRITE(iospectral_sup, 102) ik, ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2ev * ww(iw), &
-                    ryd2mev * esigmar_all(ibnd, ik, iw), ryd2mev * esigmai_all(ibnd, ik, iw)
+                    ryd2mev * esigmar_all(ibnd, ik, iw, itemp), ryd2mev * esigmai_all(ibnd, ik, iw, itemp)
               !
             ENDDO
             !
@@ -1312,17 +1319,17 @@
         !
         IF (me_pool == 0) CLOSE(iospectral_sup)
         !
-        DEALLOCATE(xkf_all, STAT = ierr)
-        IF (ierr /= 0) CALL errore('spectral_func_pl_q', 'Error deallocating xkf_all', 1)
-        DEALLOCATE(etf_all, STAT = ierr)
-        IF (ierr /= 0) CALL errore('spectral_func_pl_q', 'Error deallocating etf_all', 1)
-      ENDIF
-      !
-      100 FORMAT(5x, 'Gaussian Broadening: ', f10.6, ' eV, ngauss=', i4)
-      101 FORMAT(5x, 'ik = ', i7, '  w = ', f9.4, ' eV   A(k,w) = ', e12.5, ' meV^-1')
-      102 FORMAT(2i9, 2x, f12.4, 2x, f12.4, 2x, f12.4, 2x, f12.4, 2x, f12.4)
-      !
-    ENDDO ! itemp
+      ENDDO ! itemp
+      DEALLOCATE(xkf_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('spectral_func_pl_q', 'Error deallocating xkf_all', 1)
+      DEALLOCATE(etf_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('spectral_func_pl_q', 'Error deallocating etf_all', 1)
+    ENDIF
+    !
+    100 FORMAT(5x, 'Gaussian Broadening: ', f10.6, ' eV, ngauss=', i4)
+    101 FORMAT(5x, 'ik = ', i7, '  w = ', f9.4, ' eV   A(k,w) = ', e12.5, ' meV^-1')
+    102 FORMAT(2i9, 2x, f12.4, 2x, f12.4, 2x, f12.4, 2x, f12.4, 2x, f12.4)
+    !
     RETURN
     !
     !-----------------------------------------------------------------------
