@@ -25,7 +25,7 @@ SUBROUTINE stres_hub ( sigmah )
                              wfcU, nwfcU, copy_U_wfc
    USE becmod,        ONLY : bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
    USE lsda_mod,      ONLY : lsda, nspin, current_spin, isk
-   USE uspp,          ONLY : nkb, vkb
+   USE uspp,          ONLY : nkb, vkb, okvan
    USE klist,         ONLY : nks, xk, ngk, igk_k
    USE basis,         ONLY : natomwfc, wfcatom, swfcatom
    USE io_files,      ONLY : nwordwfc, iunwfc, nwordwfcU
@@ -38,7 +38,8 @@ SUBROUTINE stres_hub ( sigmah )
    USE control_flags, ONLY : gamma_only
    USE mp_bands,      ONLY : use_bgrp_in_hpsi
    USE noncollin_module, ONLY : noncolin
-   USE force_mod,        ONLY : eigenval, eigenvect, overlap_inv
+   USE force_mod,        ONLY : eigenval, eigenvect, overlap_inv, at_dy, at_dj, &
+                                us_dy, us_dj
    !
    IMPLICIT NONE
    !
@@ -48,8 +49,9 @@ SUBROUTINE stres_hub ( sigmah )
    ! ... local variables
    !
    INTEGER :: ipol, jpol, na, nt, is, m1, m2, na1, nt1, na2, nt2, viz, ik, npw
-   INTEGER :: ldim, ldim1, ldim2, ldimb, equiv_na2, i_type, nb_s, nb_e, mykey
+   INTEGER :: ldim, ldim1, ldim2, ldimb, equiv_na2, i_type, nb_s, nb_e, mykey, i
    REAL(DP), ALLOCATABLE :: dns(:,:,:,:), dnsb(:,:,:,:)
+   REAL(DP) :: xyz(3,3)
    COMPLEX(DP), ALLOCATABLE ::  dnsg(:,:,:,:,:)
    !! the derivative of the atomic occupations
    COMPLEX(DP), ALLOCATABLE :: spsi(:,:)
@@ -73,8 +75,10 @@ SUBROUTINE stres_hub ( sigmah )
    !
    sigmah(:,:) = 0.d0
    !
-   ALLOCATE ( spsi(npwx,nbnd) )
+   ALLOCATE (spsi(npwx,nbnd))
    ALLOCATE (wfcatom(npwx,natomwfc))
+   ALLOCATE (at_dy(npwx,natomwfc), at_dj(npwx,natomwfc))
+   IF (okvan) ALLOCATE (us_dy(npwx,nkb), us_dj(npwx,nkb))
    IF (U_projection.EQ."ortho-atomic") THEN
       ALLOCATE (swfcatom(npwx,natomwfc))
       ALLOCATE (eigenval(natomwfc))
@@ -153,6 +157,18 @@ SUBROUTINE stres_hub ( sigmah )
       ! proj=<wfcU|S|evc>
       CALL calbec ( npw, wfcU, spsi, proj)
       !
+      ! Compute derivatives of spherical harmonics and spherical Bessel functions
+      !
+      ! xyz are the three unit vectors in the x,y,z directions
+      xyz(:,:) = 0.d0
+      DO i=1,3
+         xyz(i,i) = 1.d0
+      ENDDO 
+      ! The derivative of spherical Bessel functions (for atomic functions)
+      CALL gen_at_dj (ik, at_dj)
+      ! The derivative of spherical Bessel functions (for beta functions)
+      IF (okvan) CALL gen_us_dj (ik, us_dj)
+      !
       ! NB: both ipol and jpol must run from 1 to 3 because this stress 
       !     contribution is not in general symmetric when computed only 
       !     from k-points in the irreducible wedge of the BZ. 
@@ -160,6 +176,12 @@ SUBROUTINE stres_hub ( sigmah )
       !     the full stress tensor not only its upper triangular part.
       !
       DO ipol = 1, 3
+         !
+         ! The derivative of spherical harmonics (for atomic functions)
+         CALL gen_at_dy (ik, xyz(1,ipol), at_dy) 
+         ! The derivative of spherical harmonics (for beta functions)
+         IF (okvan) CALL gen_us_dy (ik, xyz(1,ipol), us_dy)
+         !
          DO jpol = 1, 3
             !
             IF (lda_plus_u_kind.EQ.0) THEN
@@ -293,6 +315,8 @@ SUBROUTINE stres_hub ( sigmah )
    IF (ALLOCATED(dnsg)) DEALLOCATE (dnsg)
    DEALLOCATE (spsi)
    DEALLOCATE (wfcatom)
+   DEALLOCATE (at_dy, at_dj)
+   IF (okvan) DEALLOCATE (us_dy, us_dj)
    IF (U_projection.EQ."ortho-atomic") THEN
       DEALLOCATE (swfcatom)
       DEALLOCATE (eigenval)
@@ -930,7 +954,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : becp, calbec
    USE basis,                ONLY : natomwfc, wfcatom, swfcatom
-   USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv
+   USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv, at_dy, at_dj
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
 
@@ -959,7 +983,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    !
    INTEGER :: i, ig, ijkb0, na, ibnd, iwf, nt, ih, jh, npw, offpm, offpmU, &
               m1, m2, ldim_std
-   REAL (DP) :: xyz(3,3), q, a1, a2
+   REAL (DP) :: q, a1, a2
    REAL (DP), PARAMETER :: eps = 1.0d-8
    COMPLEX (DP), ALLOCATABLE :: &
    dproj0(:,:),       & ! derivative of the projector
@@ -967,21 +991,13 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    dwfc(:,:),         & ! the derivative of the (ortho-atomic) wavefunction
    doverlap(:,:),     & ! derivative of the overlap matrix  
    doverlap_us(:,:),  & ! USPP contribution to doverlap
-   doverlap_inv(:,:), & ! derivative of (O^{-1/2})_JI (note the transposition)   
-   dy(:,:),           & ! derivatives of spherical harmonics
-   dj(:,:)              ! derivatives of spherical Bessel functions
+   doverlap_inv(:,:)    ! derivative of (O^{-1/2})_JI (note the transposition)   
    REAL (DP), ALLOCATABLE :: &
    gk(:,:), & ! k+G
    qm1(:)     ! 1/|k+G|
    !
    CALL start_clock('dprojdepsilon')
    ! 
-   ! xyz are the three unit vectors in the x,y,z directions
-   xyz(:,:) = 0.d0
-   DO i=1,3
-      xyz(i,i) = 1.d0
-   END DO
-   !
    ! Number of plane waves at the k point with the index ik
    npw = ngk(ik)
    !
@@ -992,14 +1008,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    !
    ALLOCATE ( qm1(npwx), gk(3,npwx) )
    ALLOCATE ( dwfc(npwx,nwfcU) )
-   ALLOCATE ( dy(npwx,natomwfc), dj(npwx,natomwfc) )
    dwfc(:,:) = (0.d0, 0.d0)
-   !
-   ! The derivative of the Bessel function
-   CALL gen_at_dj ( ik, dj )
-   !
-   ! The derivative of the spherical harmonic
-   CALL gen_at_dy ( ik, xyz(1,ipol), dy)
    !
    ! 1. Derivative of the atomic wavefunctions
    !    (and then multiplied by (O^{-1/2})_JI in the ortho-atomic case)
@@ -1040,13 +1049,13 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
                   ENDIF
                ENDIF
                IF (U_projection.EQ."atomic") THEN
-                  dwfc(ig,offpmU+m1) = dy(ig,offpm+m1) * a1 + dj(ig,offpm+m1) * a2
+                  dwfc(ig,offpmU+m1) = at_dy(ig,offpm+m1) * a1 + at_dj(ig,offpm+m1) * a2
                ELSEIF (U_projection.EQ."ortho-atomic") THEN
                   IF (m1>ldim_std) CALL errore("dprojdtau_k", &
                         " Stress with background and ortho-atomic is not supported",1)
                   DO m2 = 1, natomwfc
                      dwfc(ig,offpmU+m1) = dwfc(ig,offpmU+m1) + &
-                         overlap_inv(offpm+m1,m2) * ( dy(ig,m2) * a1 + dj(ig,m2) * a2 )
+                         overlap_inv(offpm+m1,m2) * ( at_dy(ig,m2) * a1 + at_dj(ig,m2) * a2 )
                   ENDDO
                ENDIF
             ENDDO
@@ -1085,8 +1094,8 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
          DO m1 = 1, natomwfc
             DO m2 = 1, natomwfc
                doverlap(m1,m2) = doverlap(m1,m2) &
-                       + CONJG((dy(ig,m1)*a1 + dj(ig,m1)*a2)) * swfcatom(ig,m2) &
-                       + CONJG(swfcatom(ig,m1)) * (dy(ig,m2)*a1 + dj(ig,m2)*a2)
+                       + CONJG((at_dy(ig,m1)*a1 + at_dj(ig,m1)*a2)) * swfcatom(ig,m2) &
+                       + CONJG(swfcatom(ig,m1)) * (at_dy(ig,m2)*a1 + at_dj(ig,m2)*a2)
                IF (ipol.EQ.jpol) THEN
                   doverlap(m1,m2) = doverlap(m1,m2) &
                        + CONJG((-wfcatom(ig,m1)*0.5d0)) * swfcatom(ig,m2) &
@@ -1148,7 +1157,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    ! Compute dproj = <dwfc|S|psi> = <dwfc|spsi>
    CALL calbec ( npw, dwfc, spsi, dproj )
    !
-   DEALLOCATE ( dwfc, dy, dj, qm1, gk)
+   DEALLOCATE ( dwfc, qm1, gk)
    !
    ! Now the derivatives of the beta functions: we compute the term
    ! <\phi^{at}_{I,m1}|dS/d\epsilon(ipol,jpol)|\psi_{k,v,s}>
@@ -1189,6 +1198,7 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B)
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : calbec
    USE klist,                ONLY : xk, igk_k, ngk
+   USE force_mod,            ONLY : us_dy, us_dj
    !
    IMPLICIT NONE
    !
@@ -1206,13 +1216,9 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B)
    INTEGER :: npw, i, nt, na, ih, jh, ig, iA, iB, ijkb0
    REAL(DP) :: gvec
    COMPLEX (DP), ALLOCATABLE :: Adbeta(:,:), Abeta(:,:), &
-                                dbetaB(:,:), betaB(:,:)
-   COMPLEX (DP), ALLOCATABLE :: dy(:,:), dj(:,:), aux(:,:)
-   ! dy(npwx,natomwfc),  ! derivatives of spherical harmonics
-   ! dj(npwx,natomwfc),  ! derivatives of spherical Bessel functions
-   ! aux                 ! auxiliary array
-   REAL (DP) :: xyz(3,3), q, a1, a2
-   ! xyz are the three unit vectors in the x,y,z directions
+                                dbetaB(:,:), betaB(:,:), &
+                                aux(:,:), qq(:,:)
+   REAL (DP) :: q, a1, a2
    REAL (DP), PARAMETER :: eps = 1.0d-8
    REAL (DP), ALLOCATABLE :: gk(:,:), qm1(:)
    !
@@ -1222,19 +1228,7 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B)
    !
    npw = ngk(ik)
    !
-   ! Define the three unit vectors
-   xyz(:,:) = 0.d0
-   DO i = 1, 3
-      xyz(i,i) = 1.d0
-   ENDDO
-   !
    ALLOCATE ( qm1(npwx), gk(3,npwx) )
-   ALLOCATE ( dj(npwx,nkb), dy(npwx,nkb) )
-   !
-   ! here the derivative of the Bessel function
-   CALL gen_us_dj (ik, dj)
-   ! and here the derivative of the spherical harmonic
-   CALL gen_us_dy (ik, xyz(1,ipol), dy)
    !
    ! Compute k+G and 1/|k+G|
    DO ig = 1, npw
@@ -1257,10 +1251,13 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B)
       ALLOCATE ( Abeta(lA,nh(nt)) )
       ALLOCATE ( dbetaB(nh(nt),lB) )
       ALLOCATE ( betaB(nh(nt),lB) )
+      ALLOCATE ( qq(nh(nt),nh(nt)) )
       !
       DO na = 1, nat
          !
          IF ( ityp(na).EQ.nt ) THEN
+            !
+            qq(:,:) = CMPLX(qq_at(:,:,na), 0.0d0, kind=DP)
             !
             ! aux is used as a workspace
             ALLOCATE ( aux(npwx,nh(nt)) )
@@ -1275,7 +1272,7 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B)
                   ! - (k+G)_ipol * (k+G)_jpol / |k+G|
                   a2 = -gk(ipol,ig)*gk(jpol,ig)*qm1(ig)
                   !
-                  aux(ig,ih) = dy(ig,ijkb0+ih) * a1 + dj(ig,ijkb0+ih) * a2
+                  aux(ig,ih) = us_dy(ig,ijkb0+ih) * a1 + us_dj(ig,ijkb0+ih) * a2
                   !
                   IF (ipol.EQ.jpol) aux(ig,ih) = aux(ig,ih) - vkb(ig,ijkb0+ih)*0.5d0
                   !
@@ -1304,53 +1301,37 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B)
             DEALLOCATE ( aux )
             !
             ALLOCATE ( aux(nh(nt), lB) )
-            aux(:,:) = (0.0d0, 0.0d0)
             ! 
             ! Calculate \sum_jh qq(ih,jh) * dbetaB(jh)
-            DO ih = 1, nh(nt)
-               DO iB = 1, lB
-                  DO jh = 1, nh(nt)
-                     aux(ih,iB) = aux(ih,iB) + &
-                                  qq_at(ih,jh,na) * dbetaB(jh,iB)
-                  ENDDO
-               ENDDO
-            ENDDO
+            CALL ZGEMM('N', 'N', nh(nt), lB, nh(nt), (1.0d0,0.0d0), &
+                       qq, nh(nt), dbetaB, nh(nt),(0.0d0,0.0d0), aux, nh(nt))
             dbetaB(:,:) = aux(:,:)
-            aux(:,:) = (0.0d0, 0.0d0)
             !
             ! Calculate \sum_jh qq(ih,jh) * betaB(jh)
-            DO ih = 1, nh(nt)
-               DO iB = 1, lB
-                  DO jh = 1, nh(nt)
-                     aux(ih,iB) = aux(ih,iB) + &
-                                  qq_at(ih,jh,na) * betaB(jh,iB)
-                  ENDDO
-               ENDDO
-            ENDDO
+            CALL ZGEMM('N', 'N', nh(nt), lB, nh(nt), (1.0d0,0.0d0), &
+                       qq, nh(nt), betaB, nh(nt),(0.0d0,0.0d0), aux, nh(nt))
             betaB(:,:) = aux(:,:)
             !
-            ijkb0 = ijkb0 + nh(nt)
             DEALLOCATE ( aux )
+            !
+            ijkb0 = ijkb0 + nh(nt)
             !
             ! dproj(iA,iB) = \sum_ih [Adbeta(iA,ih) * betapsi(ih,iB) +
             !                         Abeta(iA,ih)  * dbetaB(ih,iB)] 
             !
-            IF ( nh(nt) > 0 ) THEN
-               CALL ZGEMM('N', 'N', lA, lB, nh(nt), (1.0d0,0.0d0), &
-                    Adbeta, lA, betaB, nh(nt),(1.0d0,0.0d0), A_dS_B, lA)
-               CALL ZGEMM('N', 'N', lA, lB, nh(nt), (1.0d0,0.0d0), &
-                    Abeta, lA, dbetaB, nh(nt), (1.0d0,0.0d0), A_dS_B, lA)
-            ENDIF
+            CALL ZGEMM('N', 'N', lA, lB, nh(nt), (1.0d0,0.0d0), &
+                       Adbeta, lA, betaB, nh(nt),(1.0d0,0.0d0), A_dS_B, lA)
+            CALL ZGEMM('N', 'N', lA, lB, nh(nt), (1.0d0,0.0d0), &
+                       Abeta, lA, dbetaB, nh(nt), (1.0d0,0.0d0), A_dS_B, lA)
             !
          ENDIF
          !
       ENDDO
       !
-      DEALLOCATE (dbetaB, betaB, Abeta, Adbeta)
+      DEALLOCATE (dbetaB, betaB, Abeta, Adbeta, qq)
       ! 
    ENDDO
    !
-   DEALLOCATE ( dj, dy )
    DEALLOCATE ( qm1, gk )
    !
    RETURN
@@ -1380,12 +1361,13 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
                                     backall
    USE lsda_mod,             ONLY : lsda, nspin, isk
    USE wvfct,                ONLY : nbnd, npwx, wg
-   USE uspp,                 ONLY : nkb, vkb, qq_at
+   USE uspp,                 ONLY : nkb, vkb, qq_at, okvan
    USE uspp_param,           ONLY : upf, nhm, nh
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : becp, calbec
    USE basis,                ONLY : natomwfc
-
+   USE force_mod,            ONLY : at_dy, at_dj, us_dy, us_dj
+ 
    IMPLICIT NONE
    !
    ! I/O variables
@@ -1411,13 +1393,12 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    !
    INTEGER :: i, ig, ijkb0, na, ibnd, iwf, nt, ih, jh, npw, &
               offpm, offpmU, m1, ldim_std
-   REAL (DP) :: xyz(3,3), q, a1, a2
+   REAL (DP) :: q, a1, a2
    REAL (DP), PARAMETER :: eps=1.0d-8
    COMPLEX (DP), ALLOCATABLE :: &
-           dwfc(:,:), dbeta(:,:), aux0(:,:), aux1(:,:)
+           dwfc(:,:), dbeta(:,:)
    !       dwfc(npwx,nwfcU),   ! the derivative of the atomic d wfc
    !       dbeta(npwx,nkb),    ! the derivative of the beta function
-   !       aux0,aux1           ! auxiliary arrays
    REAL (DP), ALLOCATABLE :: &
            betapsi(:,:), dbetapsi(:,:), wfatbeta(:,:), wfatdbeta(:,:), &
            betapsi0(:,:)
@@ -1434,12 +1415,6 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    IF (U_projection.EQ."ortho-atomic") CALL errore("dprojdtau_gamma", &
                     " Forces with gamma-only and ortho-atomic are not supported",1)
    !
-   ! xyz are the three unit vectors in the x,y,z directions
-   xyz(:,:) = 0.d0
-   DO i=1,3
-      xyz(i,i) = 1.d0
-   END DO
-   !
    ! Number of plane waves at the k point with the index ik
    npw = ngk(ik)
    !
@@ -1450,15 +1425,6 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    !
    ALLOCATE ( qm1(npwx), gk(3,npwx) )
    ALLOCATE ( dwfc(npwx,nwfcU) )
-   ALLOCATE ( aux0(npwx,natomwfc), aux1(npwx,natomwfc) )
-   !
-   ! The derivative of the Bessel function
-   !
-   CALL gen_at_dj ( ik, aux0 )
-   !
-   ! The derivative of the spherical harmonic
-   !
-   CALL gen_at_dy ( ik, xyz(1,ipol), aux1)
    !
    DO ig = 1, npw
       !
@@ -1495,7 +1461,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
                      offpm  = oatwfc_back1(na)  - ldim_std - 2*Hubbard_l_back(nt) - 1
                   ENDIF
                ENDIF
-               dwfc(ig,offpmU+m1) = aux1(ig,offpm+m1) * a1 + aux0(ig,offpm+m1) * a2
+               dwfc(ig,offpmU+m1) = at_dy(ig,offpm+m1) * a1 + at_dj(ig,offpm+m1) * a2
             ENDDO
          ENDIF
       ENDDO
@@ -1506,24 +1472,16 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    !
    CALL calbec ( npw, dwfc, spsi, dproj )
    !
-   DEALLOCATE ( aux0, aux1, dwfc)
+   DEALLOCATE (dwfc)
    !
    ! Now the derivatives of the beta functions: we compute the term
    ! <\fi^{at}_{I,m1}|dS/d\epsilon(ipol,jpol)|\psi_{k,v,s}>
    !
-   ALLOCATE (aux0(npwx,nkb), aux1(npwx,nkb) )
-   !
-   ! The derivative of the Bessel function
-   !
-   CALL gen_us_dj (ik, aux0)
-   !
-   ! The derivative of the spherical harmonic
-   !
-   CALL gen_us_dy (ik, xyz(1,ipol), aux1)
-   !
-   ijkb0 = 0
-   !
-   DO nt = 1, ntyp
+   IF (okvan) THEN
+    !
+    ijkb0 = 0
+    !
+    DO nt = 1, ntyp
       !
       ALLOCATE (dbeta(npwx,nh(nt)), dbetapsi(nh(nt),nbnd), betapsi(nh(nt),nbnd), &
                 wfatbeta(nwfcU,nh(nt)), wfatdbeta(nwfcU,nh(nt)), betapsi0(nh(nt),nbnd) )
@@ -1535,8 +1493,8 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
             DO ih = 1, nh(nt)
                ! now we compute the true dbeta function
                DO ig = 1, npw
-                  dbeta(ig,ih) = - aux1(ig,ijkb0+ih)*gk(jpol,ig) - &
-                       aux0(ig,ijkb0+ih) * gk(ipol,ig) * gk(jpol,ig) * qm1(ig)
+                  dbeta(ig,ih) = - us_dy(ig,ijkb0+ih)*gk(jpol,ig) - &
+                       us_dj(ig,ijkb0+ih) * gk(ipol,ig) * gk(jpol,ig) * qm1(ig)
                   IF (ipol.EQ.jpol) &
                        dbeta(ig,ih) = dbeta(ig,ih) - vkb(ig,ijkb0+ih)*0.5d0
                ENDDO
@@ -1597,9 +1555,10 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
          ENDIF
       ENDDO
       DEALLOCATE (dbeta, dbetapsi, betapsi, wfatbeta, wfatdbeta, betapsi0)
-   ENDDO
+    ENDDO
+    ! 
+   ENDIF
    !
-   DEALLOCATE ( aux0, aux1 )
    DEALLOCATE ( qm1, gk )
    !
    RETURN
