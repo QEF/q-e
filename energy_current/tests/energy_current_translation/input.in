@@ -3,6 +3,7 @@
     file_output= 'current_hz',
     eta=   0.100,
     n_max=     5,
+    add_i_current_b = .true. ,
  /
  &CONTROL
     calculation='md',

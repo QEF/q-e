@@ -4,6 +4,7 @@
     eta=   0.100,
     n_max=     5,
     ec_test= .true.,
+    add_i_current_b= .true.,
  /
  &CONTROL
     calculation='md',
