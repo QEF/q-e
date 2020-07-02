@@ -516,8 +516,6 @@
   conv_thr_racon = 5.d-04
   gap_edge = 0.d0
   nstemp   = 0
-  !tempsmin = 0.d0
-  !tempsmax = 0.d0
   temps(:) = 0.d0
   nsiter   = 40
   muc     = 0.d0
@@ -756,6 +754,8 @@
   IF (nstemp_hold == 0 .AND. nstemp == 0) THEN !default mode (nstemp_hold == 0 if temps(:) = 0)
     nstemp = 1
     temps(1) = 300    
+    tempsmin = 300
+    tempsmax = 300
     WRITE(stdout, '(/,5x,a)') 'No temperature supplied. Setting temps(:) to 300 K.'
   ELSE IF (nstemp == 0 .OR. nstemp_hold == nstemp) THEN !list mode
     nstemp = nstemp_hold !catches if nstemp not supplied, no effect if it is
@@ -786,7 +786,6 @@
   temps(:) = temps(:) * kelvin2eV / ryd2ev
   ALLOCATE(gtemp(nstemp), STAT = ierr)
   IF (ierr /= 0) CALL errore('epw_readin', 'Error allocating gtemp', 1)
-  !
   gtemp(:) = temps(1:nstemp)
 
   !
@@ -854,6 +853,13 @@
   IF (wannier_plot) CALL mp_bcast(wanplotlist, meta_ionode_id, world_comm)
   !
   CALL bcast_epw_input()
+  IF (.NOT. meta_ionode) THEN
+    ! need to allocate gtemp after the initial bcast_epw_input so all nodes have nstemp
+    ALLOCATE(gtemp(nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_readin', 'Error allocating gtemp', 1)
+  ENDIF
+  !bcast gtemp following allocation 
+  CALL mp_bcast(gtemp, meta_ionode_id, world_comm)
   !
   !   Here we finished the reading of the input file.
   !   Now allocate space for pwscf variables, read and check them.

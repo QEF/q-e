@@ -51,7 +51,7 @@
                             scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma,&
                             assume_metal, wannier_plot_scale, reduce_unk,     &
                             wannier_plot_supercell, wannier_plot_radius
-  USE elph2,         ONLY : elph, gtemp
+  USE elph2,         ONLY : elph
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
   USE io_files,      ONLY : prefix, tmp_dir
@@ -206,7 +206,6 @@
   CALL mp_bcast(tempsmin      , meta_ionode_id, world_comm)
   CALL mp_bcast(tempsmax      , meta_ionode_id, world_comm)
   CALL mp_bcast(temps         , meta_ionode_id, world_comm)
-  CALL mp_bcast(gtemp         , meta_ionode_id, world_comm)
   CALL mp_bcast(conv_thr_raxis, meta_ionode_id, world_comm)
   CALL mp_bcast(conv_thr_iaxis, meta_ionode_id, world_comm)
   CALL mp_bcast(conv_thr_racon, meta_ionode_id, world_comm)
@@ -214,7 +213,6 @@
   CALL mp_bcast(muc           , meta_ionode_id, world_comm)
   CALL mp_bcast(max_memlt     , meta_ionode_id, world_comm)
   CALL mp_bcast(fermi_energy  , meta_ionode_id, world_comm)
-  !CALL mp_bcast(eptemp        , meta_ionode_id, world_comm)
   CALL mp_bcast(scissor       , meta_ionode_id, world_comm)
   CALL mp_bcast(ncarrier      , meta_ionode_id, world_comm)
   CALL mp_bcast(nel           , meta_ionode_id, world_comm)
