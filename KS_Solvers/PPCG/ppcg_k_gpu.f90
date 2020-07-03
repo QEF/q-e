@@ -112,7 +112,8 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
 #if defined(__CUDA)
   attributes(device) :: e_d, psi_d, precondition_d
   attributes(device) :: hpsi_d, spsi_d, w_d, hw_d, sw_d, p_d, hp_d, sp_d
-  attributes(device) :: G_d, act_idx_d, buffer_d, buffer1_d, col_idx_d, K_d, M_d, coord_psi_d, coord_w_d, coord_p_d, Gl_d
+  attributes(device) :: G_d, act_idx_d, buffer_d, buffer1_d, col_idx_d, K_d, M_d, coord_psi_d, coord_w_d, coord_p_d 
+  attributes(device) :: Gl_d
 #endif
   !
   !
@@ -243,10 +244,12 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
      CALL divide(inter_bgrp_comm,nbnd,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbnd,n_start,n_end
      if (overlap) then
         if (n_start .le. n_end) &
-        CALL gpu_ZGEMM( 'C','N', my_n, nact, kdim, C_ONE, spsi_d(1,n_start), kdimx, buffer_d, kdimx, C_ZERO, G_d(n_start,1), nbnd )
+        CALL gpu_ZGEMM( 'C','N', my_n, nact, kdim, C_ONE, spsi_d(1,n_start), kdimx, buffer_d, kdimx, &
+                         C_ZERO, G_d(n_start,1), nbnd )
      else
         if (n_start .le. n_end) &
-        CALL gpu_ZGEMM( 'C','N', my_n, nact, kdim, C_ONE,psi_d(1,n_start), kdimx, buffer_d, kdimx, C_ZERO, G_d(n_start,1), nbnd )
+        CALL gpu_ZGEMM( 'C','N', my_n, nact, kdim, C_ONE,psi_d(1,n_start), kdimx, buffer_d, kdimx, &
+                         C_ZERO, G_d(n_start,1), nbnd )
      end if
      G = G_d
      CALL mp_sum( G(1:nbnd,1:nact), inter_bgrp_comm )
@@ -259,7 +262,8 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
      call start_clock('ppcg:zgemm')
      call gpu_threaded_assign( buffer_d, w_d, kdimx, nact, .true., act_idx_d, .true. )
      if (n_start .le. n_end) &
-     CALL gpu_ZGEMM('N','N', kdim, nact, my_n, -C_ONE, psi_d(1,n_start), kdimx, G_d(n_start,1), nbnd, C_ONE, buffer_d, kdimx)
+     CALL gpu_ZGEMM('N','N', kdim, nact, my_n, -C_ONE, psi_d(1,n_start), kdimx, G_d(n_start,1), nbnd, C_ONE, &
+                     buffer_d, kdimx)
      CALL mp_sum( buffer_d(:,1:nact), inter_bgrp_comm )
 !$cuf kernel DO(2)
      DO i = 1, kdimx
@@ -326,7 +330,8 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
         call gpu_threaded_assign( buffer1_d, p_d, kdimx, nact, .true., act_idx_d, .false. )
         CALL divide(inter_bgrp_comm,nact,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nact,n_start,n_end
         if (n_start .le. n_end) &
-        CALL gpu_ZGEMM('C','N', my_n, nact, kdim, C_ONE, buffer_d(1,n_start), kdimx, buffer1_d, kdimx, C_ZERO, G_d(n_start,1), nbnd)
+        CALL gpu_ZGEMM('C','N', my_n, nact, kdim, C_ONE, buffer_d(1,n_start), kdimx, buffer1_d, &
+                        kdimx, C_ZERO, G_d(n_start,1), nbnd)
         G = G_d
         CALL mp_sum( G(1:nact,1:nact), inter_bgrp_comm )
         !
@@ -339,7 +344,8 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
         call gpu_threaded_assign( buffer_d, p_d, kdimx, nact, .true., act_idx_d, .true. )
         call gpu_threaded_assign( buffer1_d, psi_d, kdimx, nact, .true., act_idx_d, .false. )
         if (n_start .le. n_end) & ! could be done differently
-        CALL gpu_ZGEMM('N','N', kdim, nact, my_n, -C_ONE, buffer1_d(1,n_start), kdimx, G_d(n_start,1), nbnd, C_ONE, buffer_d, kdimx)
+        CALL gpu_ZGEMM('N','N', kdim, nact, my_n, -C_ONE, buffer1_d(1,n_start), kdimx, G_d(n_start,1), &
+                         nbnd, C_ONE, buffer_d, kdimx)
         CALL mp_sum( buffer_d(:,1:nact), inter_bgrp_comm )
 !$cuf kernel do(2) 
         DO i = 1, kdimx
@@ -353,7 +359,8 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
         call gpu_threaded_assign( buffer_d, hp_d, kdimx, nact, .true., act_idx_d, .true. )
         call gpu_threaded_assign( buffer1_d, hpsi_d, kdimx, nact, .true., act_idx_d, .false. )
         if (n_start .le. n_end) &
-        CALL gpu_ZGEMM('N','N', kdim, nact, my_n, -C_ONE, buffer1_d(1,n_start), kdimx, G_d(n_start,1), nbnd, C_ONE, buffer_d, kdimx)
+        CALL gpu_ZGEMM('N','N', kdim, nact, my_n, -C_ONE, buffer1_d(1,n_start), kdimx, G_d(n_start,1), & 
+                        nbnd, C_ONE, buffer_d, kdimx)
         CALL mp_sum( buffer_d(:,1:nact), inter_bgrp_comm )
 !$cuf kernel do(2)
         DO i = 1, kdimx
@@ -368,7 +375,8 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
            call gpu_threaded_assign( buffer_d, sp_d, kdimx, nact, .true., act_idx_d, .true. )
            call gpu_threaded_assign( buffer1_d, spsi_d, kdimx, nact, .true., act_idx_d, .false. )
            if (n_start .le. n_end) &
-           CALL gpu_ZGEMM('N','N', kdim, nact, my_n, -C_ONE, buffer1_d(1,n_start), kdimx, G_d(n_start,1), nbnd, C_ONE, buffer_d, kdimx)
+           CALL gpu_ZGEMM('N','N', kdim, nact, my_n, -C_ONE, buffer1_d(1,n_start), kdimx, G_d(n_start,1), &
+                           nbnd, C_ONE, buffer_d, kdimx)
            CALL mp_sum( buffer_d(:,1:nact), inter_bgrp_comm )
 !$cuf kernel do(2)
            DO i = 1, kdimx
@@ -462,19 +470,22 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
           call start_clock('ppcg:zgemm')
           call gpu_threaded_assign( buffer_d,  p_d, kdimx, l, .true., col_idx_d, .false. )
           call gpu_threaded_assign( buffer1_d,  hp_d, kdimx, l, .true., col_idx_d, .false. )
-          CALL gpu_ZGEMM('C','N', l, l, kdim, C_ONE, buffer_d, kdimx, buffer1_d, kdimx, C_ZERO, K_d(2*l + 1, 2*l+1), sbsize3)
+          CALL gpu_ZGEMM('C','N', l, l, kdim, C_ONE, buffer_d, kdimx, buffer1_d, kdimx, C_ZERO, &
+                          K_d(2*l + 1, 2*l+1), sbsize3)
           !
           if (overlap) then
              call gpu_threaded_assign( buffer1_d,  sp_d, kdimx, l, .true., col_idx_d, .false. )
           else
              call gpu_threaded_assign( buffer1_d,  buffer_d, kdimx, l, .false., col_idx_d, .false. )
           end if
-          CALL gpu_ZGEMM('C','N', l, l, kdim, C_ONE, buffer_d, kdimx, buffer1_d, kdimx, C_ZERO, M_d(2*l + 1, 2*l+1), sbsize3)
+          CALL gpu_ZGEMM('C','N', l, l, kdim, C_ONE, buffer_d, kdimx, buffer1_d, kdimx, C_ZERO, &
+                            M_d(2*l + 1, 2*l+1), sbsize3)
           !
           ! ---
           call gpu_threaded_assign( buffer_d,  psi_d, kdimx, l, .true., col_idx_d, .false. )
           call gpu_threaded_assign( buffer1_d,  hp_d, kdimx, l, .true., col_idx_d, .false. )
-          CALL gpu_ZGEMM('C','N', l, l, kdim, C_ONE, buffer_d, kdimx, buffer1_d, kdimx, C_ZERO, K_d(1, 2*l+1), sbsize3)
+          CALL gpu_ZGEMM('C','N', l, l, kdim, C_ONE, buffer_d, kdimx, buffer1_d, kdimx, C_ZERO, &
+                            K_d(1, 2*l+1), sbsize3)
           !
           if (overlap) then
              call gpu_threaded_assign( buffer1_d,  sp_d, kdimx, l, .true., col_idx_d, .false. )
@@ -489,14 +500,16 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
           call start_clock('ppcg:zgemm')
           call gpu_threaded_assign( buffer_d,  w_d, kdimx, l, .true., col_idx_d, .false. )
           call gpu_threaded_assign( buffer1_d,  hp_d, kdimx, l, .true., col_idx_d, .false. )
-          CALL gpu_ZGEMM('C','N', l, l, kdim, C_ONE, buffer_d, kdimx, buffer1_d, kdimx, C_ZERO, K_d(l+1, 2*l+1), sbsize3)
+          CALL gpu_ZGEMM('C','N', l, l, kdim, C_ONE, buffer_d, kdimx, buffer1_d, kdimx, C_ZERO, &
+                                K_d(l+1, 2*l+1), sbsize3)
           !
           if (overlap) then
              call gpu_threaded_assign( buffer1_d,  sp_d, kdimx, l, .true., col_idx_d, .false. )
           else
              call gpu_threaded_assign( buffer1_d,  p_d, kdimx, l, .true., col_idx_d, .false. )
           end if
-          CALL gpu_ZGEMM('C','N', l, l, kdim, C_ONE, buffer_d, kdimx, buffer1_d, kdimx, C_ZERO, M_d(l+1, 2*l+1), sbsize3)
+          CALL gpu_ZGEMM('C','N', l, l, kdim, C_ONE, buffer_d, kdimx, buffer1_d, kdimx, C_ZERO, &
+                           M_d(l+1, 2*l+1), sbsize3)
           call stop_clock('ppcg:zgemm')
           !
         END IF
@@ -898,7 +911,8 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
        END DO 
        CALL divide(inter_bgrp_comm,nact,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nact,n_start,n_end
        if (n_start .le. n_end) &
-       CALL gpu_ZGEMM('C','N', nact, my_n, kdim, C_ONE, buffer_d, kdimx, buffer1_d(1,n_start), kdimx, C_ZERO, G_d(1,n_start), nbnd)
+       CALL gpu_ZGEMM('C','N', nact, my_n, kdim, C_ONE, buffer_d, kdimx, buffer1_d(1,n_start), kdimx, &
+                            C_ZERO, G_d(1,n_start), nbnd)
        G = G_d
        CALL mp_sum(G(1:nact,1:nact), inter_bgrp_comm)
        !
@@ -915,7 +929,8 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
        end if
        call start_clock('ppcg:zgemm')
        if (n_start .le. n_end) &
-       CALL gpu_ZGEMM('N','N', kdim, nact, my_n, -C_ONE, buffer1_d(1,n_start), kdimx, G_d(n_start,1), nbnd, C_ONE, buffer_d, kdimx)
+       CALL gpu_ZGEMM('N','N', kdim, nact, my_n, -C_ONE, buffer1_d(1,n_start), kdimx, G_d(n_start,1), &
+                       nbnd, C_ONE, buffer_d, kdimx)
        CALL mp_sum( buffer_d(:,1:nact), inter_bgrp_comm )
 !$cuf kernel do(2)
        DO ii = 1, kdimx
@@ -937,7 +952,8 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
     !
     ! Print iteration info ...
     IF (print_info >= 1) THEN
-       WRITE(stdout, '("iter: ", I5, " nact = ", I5, ", trdif = ", 1pD9.2, ", trtol = ", 1pD9.2 )') iter, nact, trdif, trtol
+       WRITE(stdout, '("iter: ", I5, " nact = ", I5, ", trdif = ", 1pD9.2, ", trtol = ", 1pD9.2 )') &
+                                                                     iter, nact, trdif, trtol
        IF (print_info == 3) THEN
           CALL print_rnrm
           WRITE(stdout,'("Res. norm:  ", 1pD9.2)') res_array(iter)
@@ -1054,7 +1070,8 @@ CONTAINS
     IF (ierr /= 0) CALL errore( 'ppcg ',' cannot allocate w ', ABS(ierr) )
     ALLOCATE ( K(sbsize3, sbsize3), M(sbsize3,sbsize3), stat = ierr )
     IF (ierr /= 0) CALL errore( 'ppcg ',' cannot allocate K and M ', ABS(ierr) )
-    ALLOCATE ( cwork( 1 + 18*sbsize + 18*sbsize**2 ), rwork( 1 + 18*sbsize + 18*sbsize**2 ), iwork(3 + 15*sbsize), stat = ierr )
+    ALLOCATE ( cwork( 1 + 18*sbsize + 18*sbsize**2 ), rwork( 1 + 18*sbsize + 18*sbsize**2 ), &
+                                                        iwork(3 + 15*sbsize), stat = ierr )
     IF (ierr /= 0) CALL errore( 'ppcg ',' cannot allocate lapack work arrays ', ABS(ierr) )
     !
     CALL desc_init( nbnd, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip  )
@@ -1963,13 +1980,15 @@ nguard = 0 ! 24 ! 50
   IF (present(act_idx) ) THEN
      !$omp parallel do collapse(2)
      DO i=1, nact ; DO j=1,nblock
-        array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) = array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), act_idx( i ) ) 
+        array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) = &
+                    array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), act_idx( i ) ) 
      ENDDO ; ENDDO
      !$omp end parallel do
   ELSE
      !$omp parallel do collapse(2)
      DO i=1, nact ; DO j=1,nblock
-        array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) = array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) 
+        array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) = &
+                             array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) 
      ENDDO ; ENDDO
      !$omp end parallel do
   END IF
