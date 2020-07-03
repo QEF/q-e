@@ -98,20 +98,24 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
   INTEGER :: np_ortho(2), ortho_parent_comm, ortho_cntx
   LOGICAL :: do_distr_diag_inside_bgrp
   ! device arrays and variables for GPU computation
-  COMPLEX (DP), device, INTENT(INOUT) :: psi_d(npwx,nbnd)
-  REAL (DP), device,  INTENT(INOUT) :: e_d(nbnd)
-  REAL (DP), device, INTENT(IN)    :: precondition_d(npw)
-  COMPLEX(DP), device, ALLOCATABLE ::  hpsi_d(:,:), spsi_d(:,:)
-  COMPLEX(DP), device, ALLOCATABLE :: w_d(:,:), hw_d(:,:), sw_d(:,:)
-  REAL(DP), device, ALLOCATABLE :: G_d(:,:)
-  INTEGER, device :: act_idx_d(nbnd)
-  COMPLEX(DP), device :: buffer_d(npwx,nbnd), buffer1_d(npwx,nbnd)
-  COMPLEX(DP), device, ALLOCATABLE :: p_d(:,:), hp_d(:,:), sp_d(:,:)
-  REAL(DP), device, ALLOCATABLE    ::  K_d(:,:), M_d(:,:)
-  INTEGER, device :: col_idx_d(sbsize)
-  INTEGER, device :: idx_d(nbnd)
-  REAL (DP), device   ::  coord_psi_d(sbsize,sbsize), coord_w_d(sbsize,sbsize), coord_p_d(sbsize,sbsize)
-  REAL (DP), device, ALLOCATABLE    ::  Gl_d(:,:)
+  COMPLEX (DP), INTENT(INOUT) :: psi_d(npwx,nbnd)
+  REAL (DP),  INTENT(INOUT) :: e_d(nbnd)
+  REAL (DP), INTENT(IN)    :: precondition_d(npw)
+  COMPLEX(DP), ALLOCATABLE ::  hpsi_d(:,:), spsi_d(:,:)
+  COMPLEX(DP), ALLOCATABLE :: w_d(:,:), hw_d(:,:), sw_d(:,:)
+  REAL(DP), ALLOCATABLE :: G_d(:,:)
+  INTEGER :: act_idx_d(nbnd)
+  COMPLEX(DP) :: buffer_d(npwx,nbnd), buffer1_d(npwx,nbnd)
+  COMPLEX(DP), ALLOCATABLE :: p_d(:,:), hp_d(:,:), sp_d(:,:)
+  REAL(DP), ALLOCATABLE    ::  K_d(:,:), M_d(:,:)
+  INTEGER :: col_idx_d(sbsize)
+  INTEGER :: idx_d(nbnd)
+  REAL (DP)  ::  coord_psi_d(sbsize,sbsize), coord_w_d(sbsize,sbsize), coord_p_d(sbsize,sbsize)
+  REAL (DP), ALLOCATABLE    ::  Gl_d(:,:)
+#if defined(__CUDA)
+  attributes(device) :: psi_d, e_d, precondition_d, hpsi_d, spsi_d, w_d, hw_d, sw_d, G_d, act_idx_d
+  attributes(device) :: buffer_d, buffer1_d, p_d, hp_d, sp_d, K_d, M_d, col_idx_d, idx_d, coord_psi_d, coord_w_d, coord_p_d, Gl_d
+#endif
 
   nblock = (npw -1) /blocksz + 1      ! used to optimize some omp parallel do loops
 
@@ -1687,16 +1691,22 @@ CONTAINS
      INTEGER, INTENT(IN) :: idesc(:)
      ! descriptor of G
      REAL(DP),    INTENT(IN)      ::  alpha, beta
-     COMPLEX(DP), device, INTENT (IN)     ::  X(ld, k)
-     COMPLEX(DP), device, INTENT (INOUT)  ::  Y(ld, k)
-     REAL(DP),    device, INTENT(IN)      ::  Gl( :, :)
+     COMPLEX(DP), INTENT (IN)     ::  X(ld, k)
+     COMPLEX(DP), INTENT (INOUT)  ::  Y(ld, k)
+     REAL(DP),    INTENT(IN)      ::  Gl( :, :)
+#if defined(__CUDA)
+     attributes(device) :: X, Y, Gl
+#endif
      !
      ! ... local variables
      !
      INTEGER :: ipc, ipr
      INTEGER :: nr, nc, ir, ic, root
-     REAL(DP), device, ALLOCATABLE :: Gltmp( :, : )
-     COMPLEX(DP), device, ALLOCATABLE :: Xtmp( :, : )
+     REAL(DP), ALLOCATABLE :: Gltmp( :, : )
+     COMPLEX(DP), ALLOCATABLE :: Xtmp( :, : )
+#if defined(__CUDA)
+     attributes(device) :: Gltmp, Xtmp 
+#endif
      REAL(DP) :: gamm
      INTEGER :: n2, ld2
      INTEGER :: nx

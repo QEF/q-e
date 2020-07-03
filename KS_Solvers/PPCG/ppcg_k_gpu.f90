@@ -9,7 +9,9 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
   ! SdG  restore btype use in the eigenvalue locking procedure
   ! IC gpu version
   !
+#if defined(__CUDA)
   USE cudafor
+#endif
   USE util_param,         ONLY : DP, stdout
   USE mp,                 ONLY : mp_bcast, mp_root_sum, mp_sum
   USE mp_bands_util,      ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
@@ -96,17 +98,22 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
   LOGICAL :: do_distr_diag_inside_bgrp
   ! device arrays and variables for GPU computation
   INTEGER :: ii, jj
-  REAL (DP),    device, INTENT(INOUT) :: e_d(nbnd)
-  COMPLEX (DP), device, INTENT(INOUT) :: psi_d(npwx*npol,nbnd)
-  REAL (DP),    device, INTENT(IN)    :: precondition_d(npw)
-  COMPLEX(DP), device, ALLOCATABLE ::  hpsi_d(:,:), spsi_d(:,:), w_d(:,:), hw_d(:,:), sw_d(:,:), p_d(:,:), hp_d(:,:), sp_d(:,:)
-  COMPLEX(DP), device      ::  G_d(nbnd,nbnd)
-  INTEGER, device :: act_idx_d(nbnd)
-  COMPLEX(DP), device      ::  buffer_d(npwx*npol,nbnd), buffer1_d(npwx*npol,nbnd)
-  INTEGER, device  :: col_idx_d(sbsize)
-  COMPLEX(DP), device, ALLOCATABLE ::  K_d(:,:), M_d(:,:)
-  COMPLEX(DP), device     ::  coord_psi_d(sbsize,sbsize), coord_w_d(sbsize,sbsize), coord_p_d(sbsize,sbsize)
-  COMPLEX (DP), device, ALLOCATABLE    ::  Gl_d(:,:)
+  REAL (DP),    INTENT(INOUT) :: e_d(nbnd)
+  COMPLEX (DP), INTENT(INOUT) :: psi_d(npwx*npol,nbnd)
+  REAL (DP),    INTENT(IN)    :: precondition_d(npw)
+  COMPLEX(DP), ALLOCATABLE ::  hpsi_d(:,:), spsi_d(:,:), w_d(:,:), hw_d(:,:), sw_d(:,:), p_d(:,:), hp_d(:,:), sp_d(:,:)
+  COMPLEX(DP)     ::  G_d(nbnd,nbnd)
+  INTEGER :: act_idx_d(nbnd)
+  COMPLEX(DP)    ::  buffer_d(npwx*npol,nbnd), buffer1_d(npwx*npol,nbnd)
+  INTEGER :: col_idx_d(sbsize)
+  COMPLEX(DP), ALLOCATABLE ::  K_d(:,:), M_d(:,:)
+  COMPLEX(DP)     ::  coord_psi_d(sbsize,sbsize), coord_w_d(sbsize,sbsize), coord_p_d(sbsize,sbsize)
+  COMPLEX (DP), ALLOCATABLE    ::  Gl_d(:,:)
+#if defined(__CUDA)
+  attributes(device) :: e_d, psi_d, precondition_d
+  attributes(device) :: hpsi_d, spsi_d, w_d, hw_d, sw_d, p_d, hp_d, sp_d
+  attributes(device) :: G_d, act_idx_d, buffer_d, buffer1_d, col_idx_d, K_d, M_d, coord_psi_d, coord_w_d, coord_p_d, Gl_d
+#endif
   !
   !
   res_array     = 0.0
@@ -1664,16 +1671,22 @@ CONTAINS
      INTEGER, INTENT(IN) :: idesc(:)
      ! descriptor of G
      COMPLEX(DP), INTENT(IN)      ::  alpha, beta
-     COMPLEX(DP), device, INTENT (IN)     ::  X(ld, k)
-     COMPLEX(DP), device, INTENT (INOUT)  ::  Y(ld, k)
-     COMPLEX(DP), device, INTENT(IN)      ::  Gl( :, :)
+     COMPLEX(DP), INTENT (IN)     ::  X(ld, k)
+     COMPLEX(DP), INTENT (INOUT)  ::  Y(ld, k)
+     COMPLEX(DP), INTENT(IN)      ::  Gl( :, :)
+#if defined(__CUDA)
+     attributes(device) :: X, Y,  Gl
+#endif
      !
      ! ... local variables
      !
      INTEGER :: ipc, ipr
      INTEGER :: nr, nc, ir, ic, root
-     COMPLEX(DP), device, ALLOCATABLE :: Gltmp( :, : )
-     COMPLEX(DP), device, ALLOCATABLE :: Xtmp( :, : )
+     COMPLEX(DP), ALLOCATABLE :: Gltmp( :, : )
+     COMPLEX(DP), ALLOCATABLE :: Xtmp( :, : )
+#if defined(__CUDA)
+     attributes(device) :: Gltmp, Xtmp
+#endif
      COMPLEX(DP) :: gamm
      INTEGER :: nx
      INTEGER :: ii, jj
