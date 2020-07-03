@@ -98,6 +98,7 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
   INTEGER :: np_ortho(2), ortho_parent_comm, ortho_cntx
   LOGICAL :: do_distr_diag_inside_bgrp
   ! device arrays and variables for GPU computation
+  INTEGER :: ii, jj
   COMPLEX (DP), INTENT(INOUT) :: psi_d(npwx,nbnd)
   REAL (DP),  INTENT(INOUT) :: e_d(nbnd)
   REAL (DP), INTENT(IN)    :: precondition_d(npw)
@@ -270,8 +271,8 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
      call start_clock('ppcg:hpsi')
      IF ( gstart == 2 ) THEN 
 !$cuf kernel DO(1)
-       DO i = 1, nact 
-         w_d(1,act_idx_d(i)) = CMPLX( DBLE( w_d(1,act_idx_d(i)) ), 0.D0, kind=DP)
+       DO ii = 1, nact 
+         w_d(1,act_idx_d(ii)) = CMPLX( DBLE( w_d(1,act_idx_d(ii)) ), 0.D0, kind=DP)
        END DO 
      END IF
      call gpu_threaded_assign( buffer1_d, w_d, npwx, nact, .true., act_idx_d, .false. )
@@ -480,12 +481,12 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
      idx_d = 0  ! find the inactive columns to be kept by root_bgrp_id only 
      if (my_bgrp_id == root_bgrp_id) then
 !$cuf kernel do(1)
-        DO i = 1, nbnd 
-          idx_d(i) = 1
+        DO ii = 1, nbnd 
+          idx_d(ii) = 1
         END DO 
 !$cuf kernel do(1)
-        DO i = 1, nact
-          idx_d(act_idx_d(i)) = 0
+        DO ii = 1, nact
+          idx_d(act_idx_d(ii)) = 0
         END DO 
      end if
 
@@ -530,10 +531,10 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
        M_d = M 
        !
 !$cuf kernel DO(2)
-       DO i = 1, l  
-         DO j = 1, l
-           coord_psi_d(i, j) = K_d(i, j)
-           coord_w_d(i, j) = K_d(l+i, j)
+       DO ii = 1, l  
+         DO jj = 1, l
+           coord_psi_d(ii, jj) = K_d(ii, jj)
+           coord_w_d(ii, jj) = K_d(l+ii, jj)
          END DO        
        END DO        
        !
@@ -543,9 +544,9 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
        IF ( dimp == 3*l ) THEN
           !
 !$cuf kernel do(2)
-          DO i = 1, l  
-            DO j = 1, l
-              coord_p_d(i, j) = K_d(2*l+i, j)
+          DO ii = 1, l  
+            DO jj = 1, l
+              coord_p_d(ii, jj) = K_d(2*l+ii, jj)
             END DO        
           END DO        
           !
@@ -628,8 +629,8 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
        end if
        !
 !$cuf kernel do(1)
-       DO i = 1, l 
-         idx_d(col_idx_d(i)) = 1 ! keep track of which columns this bgrp has acted on
+       DO ii = 1, l 
+         idx_d(col_idx_d(ii)) = 1 ! keep track of which columns this bgrp has acted on
        END DO 
      END DO  ! end 'separate RQ minimizations'
      ! set to zero the columns not assigned to this bgrp, inactive colums are assigned to root_bgrp
@@ -637,14 +638,14 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
      do j=1,nbnd
         if (idx(j)==0) then
 !$cuf kernel do(1)
-           DO i = 1, npwx
-             psi_d (i,j) = C_ZERO 
-             hpsi_d (i,j) = C_ZERO 
-             p_d(i,j) = C_ZERO 
-             hp_d(i,j) = C_ZERO
+           DO ii = 1, npwx
+             psi_d (ii,j) = C_ZERO 
+             hpsi_d (ii,j) = C_ZERO 
+             p_d(ii,j) = C_ZERO 
+             hp_d(ii,j) = C_ZERO
              if (overlap) then
-                spsi_d (i,j) = C_ZERO 
-                sp_d(i,j) = C_ZERO
+                spsi_d (ii,j) = C_ZERO 
+                sp_d(ii,j) = C_ZERO
              end if
            END DO
         end if
@@ -1760,16 +1761,16 @@ CONTAINS
      !
      IF (beta /= 0.D0) THEN
 !$cuf kernel do(2)
-        DO i = 1, ld
-          DO j = 1, k 
-            Y(i,j) = alpha * Xtmp(i,j) + beta * Y(i,j)
+        DO ii = 1, ld
+          DO jj = 1, k 
+            Y(ii,jj) = alpha * Xtmp(ii,jj) + beta * Y(ii,jj)
           END DO   
         END DO   
      ELSE
 !$cuf kernel do(2)
-        DO i = 1, ld
-          DO j = 1, k 
-            Y(i,j) = alpha * Xtmp(i,j) 
+        DO ii = 1, ld
+          DO jj = 1, k 
+            Y(ii,jj) = alpha * Xtmp(ii,jj) 
           END DO   
         END DO   
      END IF
