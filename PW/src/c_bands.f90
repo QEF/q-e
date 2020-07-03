@@ -388,9 +388,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                avg_iter = avg_iter + ppcg_iter
                !
              ELSE
-               CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) ! precontidtion has intent(in)
-               CALL ppcg_gamma_gpu( h_psi, s_psi, okvan, h_diag, &
-                           npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
+               CALL using_evc_d(1);  CALL using_et_d(1); CALL using_h_diag_d(0) ! precontidtion has intent(in)
+               CALL ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, okvan, h_diag_d, &
+                           npwx, npw, nbnd, evc_d, et_d(1,ik), btype(1,ik), &
                            0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
                !
                avg_iter = avg_iter + ppcg_iter
@@ -614,10 +614,10 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                avg_iter = avg_iter + ppcg_iter
                !
              ELSE
-               CALL using_evc(1); CALL using_et(1); CALL using_h_diag(0)
+               CALL using_evc_d(1); CALL using_et_d(1); CALL using_h_diag_d(0)
                ! BEWARE npol should be added to the arguments
-               CALL ppcg_k_gpu( h_psi, s_psi, okvan, h_diag, &
-                           npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
+               CALL ppcg_k_gpu( h_psi_gpu, s_psi_gpu, okvan, h_diag_d, &
+                           npwx, npw, nbnd, npol, evc_d, et_d(1,ik), btype(1,ik), &
                            0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
                !
                avg_iter = avg_iter + ppcg_iter

@@ -1,6 +1,6 @@
 !
-SUBROUTINE ppcg_k_gpu( h_psi, s_psi, overlap, precondition, &
-                 npwx, npw, nbnd, npol, psi, e, btype, &
+SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
+                 npwx, npw, nbnd, npol, psi_d, e_d, btype, &
                  ethr, maxter, notconv, avg_iter, sbsize, rr_step, scf_iter)
   !
   !----------------------------------------------------------------------------
@@ -27,11 +27,12 @@ SUBROUTINE ppcg_k_gpu( h_psi, s_psi, overlap, precondition, &
   ! number of bands
   ! number of independent spin components of the wfc.
   ! maximum number of iterations
-  COMPLEX (DP), INTENT(INOUT) :: psi(npwx*npol,nbnd)
+  COMPLEX (DP) :: psi(npwx*npol,nbnd)
   INTEGER,      INTENT(IN)    :: btype(nbnd) ! one if the corresponding state has to be
                                              ! ...converged to full accuracy, zero otherwise (src/pwcom.f90)
-  REAL (DP),    INTENT(INOUT) :: e(nbnd)
-  REAL (DP),    INTENT(IN)    :: precondition(npw), ethr
+  REAL (DP) :: e(nbnd)
+  REAL (DP) :: precondition(npw) 
+  REAL(DP), INTENT(IN) :: ethr
   ! the diagonal preconditioner
   ! the convergence threshold for eigenvalues
   INTEGER,      INTENT(OUT)   :: notconv
@@ -67,7 +68,7 @@ SUBROUTINE ppcg_k_gpu( h_psi, s_psi, overlap, precondition, &
   LOGICAL                  ::  clean
   REAL(DP), EXTERNAL :: ZLANGE
 
-  EXTERNAL h_psi, s_psi
+  EXTERNAL h_psi_gpu, s_psi_gpu
     ! h_psi(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
     ! s_psi(npwx,npw,nvec,psi,spsi)
@@ -93,10 +94,12 @@ SUBROUTINE ppcg_k_gpu( h_psi, s_psi, overlap, precondition, &
   !
   INTEGER :: np_ortho(2), ortho_parent_comm, ortho_cntx
   LOGICAL :: do_distr_diag_inside_bgrp
-!civn 
+  ! device arrays and variables for GPU computation
   INTEGER :: ii, jj
+  REAL (DP),    device, INTENT(INOUT) :: e_d(nbnd)
+  COMPLEX (DP), device, INTENT(INOUT) :: psi_d(npwx*npol,nbnd)
+  REAL (DP),    device, INTENT(IN)    :: precondition_d(npw)
   COMPLEX(DP), device, ALLOCATABLE ::  hpsi_d(:,:), spsi_d(:,:), w_d(:,:), hw_d(:,:), sw_d(:,:), p_d(:,:), hp_d(:,:), sp_d(:,:)
-  COMPLEX (DP), device, ALLOCATABLE :: psi_d(:,:)
   COMPLEX(DP), device      ::  G_d(nbnd,nbnd)
   INTEGER, device :: act_idx_d(nbnd)
   COMPLEX(DP), device      ::  buffer_d(npwx*npol,nbnd), buffer1_d(npwx*npol,nbnd)
@@ -109,6 +112,11 @@ SUBROUTINE ppcg_k_gpu( h_psi, s_psi, overlap, precondition, &
   res_array     = 0.0
   !
   CALL start_clock( 'ppcg_k' )
+!civn 
+  ! ... these alignments will be eventually removed
+  precondition = precondition_d
+  e = e_d
+  psi = psi_d
   !
   !  ... Initialization and validation
 
@@ -208,7 +216,6 @@ SUBROUTINE ppcg_k_gpu( h_psi, s_psi, overlap, precondition, &
   !---Begin the main loop
   !
   DO WHILE ( ((trdif > trtol) .OR. (trdif == -1.D0))  .AND. (iter <= maxter) .AND. (nact > 0) )
-!2fix
      w = w_d
      !
      ! ... apply the diagonal preconditioner
@@ -980,7 +987,11 @@ SUBROUTINE ppcg_k_gpu( h_psi, s_psi, overlap, precondition, &
     !
  END IF
  !
-! E.V. notconv issue comment
+!civn 
+ ! ... these alignments will be eventually removed
+ e_d = e
+ !
+ ! E.V. notconv issue comment
  notconv = 0 ! nact
  !
  IF (print_info >= 1) THEN
@@ -1011,9 +1022,7 @@ CONTAINS
     INTEGER :: nx
     ! maximum local block dimension
     !
-!civn 
-    ALLOCATE ( psi_d(npwx*npol,nbnd), stat = ierr )
-    IF (ierr /= 0) CALL errore( 'ppcg ',' cannot allocate psi_d ', ABS(ierr) )
+    ! device memory allocations
     ALLOCATE ( hpsi_d(kdimx,nbnd), stat = ierr )
     IF (ierr /= 0) CALL errore( 'ppcg ',' cannot allocate hpsi_d ', ABS(ierr) )
     if (overlap) ALLOCATE ( spsi_d(kdimx,nbnd), stat = ierr )
@@ -1028,7 +1037,8 @@ CONTAINS
     IF (ierr /= 0) CALL errore( 'ppcg ',' cannot allocate sp_d ', ABS(ierr) )
     ALLOCATE ( K_d(sbsize3, sbsize3), M_d(sbsize3,sbsize3), stat = ierr )
     IF (ierr /= 0) CALL errore( 'ppcg ',' cannot allocate K_d and M_d ', ABS(ierr) )
-
+    !
+    ! host memory allocations
     ALLOCATE ( hpsi(kdimx,nbnd), stat = ierr )
     IF (ierr /= 0) CALL errore( 'ppcg ',' cannot allocate hpsi ', ABS(ierr) )
     if (overlap) ALLOCATE ( spsi(kdimx,nbnd), stat = ierr )
@@ -1540,8 +1550,7 @@ CONTAINS
     !
     ! This subroutine releases the allocated memory
     !
-!civn
-    IF ( ALLOCATED(psi_d) )    DEALLOCATE ( psi_d )
+    ! device memory deallocations
     IF ( ALLOCATED(hpsi_d) )    DEALLOCATE ( hpsi_d )
     IF ( ALLOCATED(spsi_d) )    DEALLOCATE ( spsi_d )
     IF ( ALLOCATED(w_d) )       DEALLOCATE ( w_d )
@@ -1550,7 +1559,8 @@ CONTAINS
     IF ( ALLOCATED(p_d) )       DEALLOCATE ( p_d )
     IF ( ALLOCATED(hp_d) )      DEALLOCATE ( hp_d )
     IF ( ALLOCATED(sp_d) )      DEALLOCATE ( sp_d )
-
+    !
+    ! host memory deallocations
     IF ( ALLOCATED(hpsi) )    DEALLOCATE ( hpsi )
     IF ( ALLOCATED(spsi) )    DEALLOCATE ( spsi )
     IF ( ALLOCATED(w) )       DEALLOCATE ( w )

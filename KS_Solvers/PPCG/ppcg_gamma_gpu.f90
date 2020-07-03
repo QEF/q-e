@@ -1,6 +1,6 @@
 !
-SUBROUTINE ppcg_gamma_gpu( h_psi, s_psi, overlap, precondition, &
-                 npwx, npw, nbnd, psi, e, btype, &
+SUBROUTINE ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
+                 npwx, npw, nbnd, psi_d, e_d, btype, &
                  ethr, maxter, notconv, avg_iter, sbsize, rr_step, scf_iter)
   !
   !----------------------------------------------------------------------------
@@ -9,9 +9,9 @@ SUBROUTINE ppcg_gamma_gpu( h_psi, s_psi, overlap, precondition, &
   ! SdG  restore btype use in the eigenvalue locking procedure
   ! IC gpu version
   !
-!civn 
+#if defined(__CUDA)
   USE cudafor
-!
+#endif
   USE util_param,         ONLY : DP, stdout
   USE mp,                 ONLY : mp_bcast, mp_root_sum, mp_sum
   USE mp_bands_util,      ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
@@ -32,11 +32,12 @@ SUBROUTINE ppcg_gamma_gpu( h_psi, s_psi, overlap, precondition, &
   ! the number of plane waves
   ! number of bands
   ! maximum number of iterations
-  COMPLEX (DP), INTENT(INOUT) :: psi(npwx,nbnd)
+  COMPLEX (DP) :: psi(npwx,nbnd)
   INTEGER,      INTENT(IN)    :: btype(nbnd) ! one if the corresponding state has to be
                                              ! ...converged to full accuracy, zero otherwise (src/pwcom.f90)
-  REAL (DP),    INTENT(INOUT) :: e(nbnd)
-  REAL (DP),    INTENT(IN)    :: precondition(npw), ethr
+  REAL (DP) :: e(nbnd)
+  REAL (DP) :: precondition(npw)
+  REAL (DP),    INTENT(IN)    :: ethr
   ! the diagonal preconditioner
   ! the convergence threshold for eigenvalues
   INTEGER,      INTENT(OUT)   :: notconv
@@ -69,7 +70,7 @@ SUBROUTINE ppcg_gamma_gpu( h_psi, s_psi, overlap, precondition, &
   INTEGER                  ::  print_info     ! If > 0 then iteration information is printed
   REAL(DP), EXTERNAL :: DLANGE, DDOT
 
-  EXTERNAL h_psi, s_psi, h_psi_gpu, s_psi_gpu
+  EXTERNAL h_psi_gpu, s_psi_gpu
     ! h_psi(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
     ! s_psi(npwx,npw,nvec,psi,spsi)
@@ -96,11 +97,13 @@ SUBROUTINE ppcg_gamma_gpu( h_psi, s_psi, overlap, precondition, &
 
   INTEGER :: np_ortho(2), ortho_parent_comm, ortho_cntx
   LOGICAL :: do_distr_diag_inside_bgrp
-!civn  
-  COMPLEX(DP), device, ALLOCATABLE :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
+  ! device arrays and variables for GPU computation
+  COMPLEX (DP), device, INTENT(INOUT) :: psi_d(npwx,nbnd)
+  REAL (DP), device,  INTENT(INOUT) :: e_d(nbnd)
+  REAL (DP), device, INTENT(IN)    :: precondition_d(npw)
+  COMPLEX(DP), device, ALLOCATABLE ::  hpsi_d(:,:), spsi_d(:,:)
   COMPLEX(DP), device, ALLOCATABLE :: w_d(:,:), hw_d(:,:), sw_d(:,:)
   REAL(DP), device, ALLOCATABLE :: G_d(:,:)
-  REAL(DP), device, ALLOCATABLE :: precondition_d(:)
   INTEGER, device :: act_idx_d(nbnd)
   COMPLEX(DP), device :: buffer_d(npwx,nbnd), buffer1_d(npwx,nbnd)
   COMPLEX(DP), device, ALLOCATABLE :: p_d(:,:), hp_d(:,:), sp_d(:,:)
@@ -109,13 +112,17 @@ SUBROUTINE ppcg_gamma_gpu( h_psi, s_psi, overlap, precondition, &
   INTEGER, device :: idx_d(nbnd)
   REAL (DP), device   ::  coord_psi_d(sbsize,sbsize), coord_w_d(sbsize,sbsize), coord_p_d(sbsize,sbsize)
   REAL (DP), device, ALLOCATABLE    ::  Gl_d(:,:)
-  REAL (DP), device :: e_d(nbnd)
 
   nblock = (npw -1) /blocksz + 1      ! used to optimize some omp parallel do loops
 
   res_array     = 0.0
   !
   CALL start_clock( 'ppcg_gamma' )
+!civn 
+  ! ... these alignments will be eventually removed
+  precondition = precondition_d
+  e = e_d
+  psi = psi_d
   !
   !  ... Initialization and validation
   !
@@ -198,8 +205,7 @@ SUBROUTINE ppcg_gamma_gpu( h_psi, s_psi, overlap, precondition, &
   trG = get_trace( G1, nbnd, nact )
   !
   ! Print initial info ...
-!civn
-  !IF (print_info >= 1)  THEN
+  IF (print_info >= 1)  THEN
      WRITE(stdout, '("Ethr: ",1pD9.2,", npw: ", I10, ", nbnd: ", I10, " , ",   &
               &  "maxter: ",I5, ", sbsize:  ", I10,", nsb: ", I10 ,", nact: ", I10, ", trtol: ", 1pD9.2 )')  &
                 ethr, npw, nbnd, maxter, sbsize, nsb, nact, trtol
@@ -208,11 +214,10 @@ SUBROUTINE ppcg_gamma_gpu( h_psi, s_psi, overlap, precondition, &
         WRITE(stdout,'("Res. norm:  ", 1pD9.2)') res_array(iter)
      END IF
      FLUSH( stdout )
-  !END IF
+  END IF
   !
   !---Begin the main loop
   !
-  precondition_d = precondition 
   DO WHILE ( ((trdif > trtol) .OR. (trdif == -1.D0))  .AND. (iter <= maxter) .AND. (nact > 0) )
      !
      ! ... apply the diagonal preconditioner
@@ -259,9 +264,6 @@ SUBROUTINE ppcg_gamma_gpu( h_psi, s_psi, overlap, precondition, &
      !
      ! ... Compute h*w
      call start_clock('ppcg:hpsi')
-!     w = w_d
-!     IF ( gstart == 2 ) w(1,act_idx(1:nact)) = CMPLX( DBLE( w(1,act_idx(1:nact)) ), 0.D0, kind=DP)
-!     w_d = w
      IF ( gstart == 2 ) THEN 
 !$cuf kernel DO(1)
        DO i = 1, nact 
@@ -858,12 +860,13 @@ SUBROUTINE ppcg_gamma_gpu( h_psi, s_psi, overlap, precondition, &
     !
     !
  END DO   !---End the main loop
- psi = psi_d
- hpsi = hpsi_d
- spsi = spsi_d
- w = w_d
+!civn 
+  psi = psi_d
+  hpsi = hpsi_d
+  spsi = spsi_d
+  w = w_d
  !
-! IF (nact > 0) THEN
+ ! IF (nact > 0) THEN
  IF ( MOD(iter-1, rr_step) /= 0 ) THEN        ! if RR has not just been performed
  ! if nact==0 then the RR has just been performed
  ! in the main loop
@@ -908,7 +911,10 @@ SUBROUTINE ppcg_gamma_gpu( h_psi, s_psi, overlap, precondition, &
     !
  END IF
  !
-! E.V. notconv issue comment
+!civn 
+ ! ... these alignments will be eventually removed
+ e_d = e
+ ! E.V. notconv issue comment
  notconv = 0 ! nact
  !
  IF (print_info >= 1) THEN
@@ -939,13 +945,9 @@ CONTAINS
     INTEGER :: nx
     ! maximum local block dimension
     !
-!civn 
-    ALLOCATE ( precondition_d(npw), stat = ierr )
-    IF (ierr /= 0) CALL errore( 'ppcg ',' cannot allocate precondition_d ', ABS(ierr) )
+    ! device memory allocations
     ALLOCATE ( G_d(nbnd,nbnd), stat = ierr )
     IF (ierr /= 0) CALL errore( 'ppcg ',' cannot allocate G_d ', ABS(ierr) )
-    ALLOCATE ( psi_d(npwx,nbnd), stat = ierr )
-    IF (ierr /= 0) CALL errore( 'ppcg ',' cannot allocate psi_d ', ABS(ierr) )
     ALLOCATE ( hpsi_d(npwx,nbnd), stat = ierr )
     IF (ierr /= 0) CALL errore( 'ppcg ',' cannot allocate hpsi_d ', ABS(ierr) )
     IF (overlap) ALLOCATE ( spsi_d(npwx,nbnd), stat = ierr )
@@ -960,7 +962,8 @@ CONTAINS
     IF (ierr /= 0) CALL errore( 'ppcg ',' cannot allocate sp_d ', ABS(ierr) )
     ALLOCATE ( K_d(sbsize3, sbsize3), M_d(sbsize3,sbsize3), stat = ierr )
     IF (ierr /= 0) CALL errore( 'ppcg ',' cannot allocate K_d and M_d ', ABS(ierr) )
-   
+    !
+    ! host memory allocations
     ALLOCATE ( hpsi(npwx,nbnd), stat = ierr )
     IF (ierr /= 0) CALL errore( 'ppcg ',' cannot allocate hpsi ', ABS(ierr) )
     if (overlap) ALLOCATE ( spsi(npwx,nbnd), stat = ierr )
@@ -1478,9 +1481,7 @@ CONTAINS
     ! This subroutine releases the allocated memory
     !
 !civn 
-    IF ( ALLOCATED(precondition_d) )    DEALLOCATE ( precondition_d )
     IF ( ALLOCATED(G_d) )    DEALLOCATE ( G_d )
-    IF ( ALLOCATED(psi_d) )    DEALLOCATE ( psi_d )
     IF ( ALLOCATED(hpsi) )    DEALLOCATE ( hpsi_d )
     IF ( ALLOCATED(spsi_d) )    DEALLOCATE ( spsi_d )
     IF ( ALLOCATED(w_d) )       DEALLOCATE ( w_d )
