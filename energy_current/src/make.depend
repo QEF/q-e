@@ -45,8 +45,6 @@ allocate_zero.o : ../../upflib/uspp.o
 allocate_zero.o : ../../PW/src/pwcom.o
 allocate_zero.o : zero_mod.o
 deallocate_zero.o : zero_mod.o
-diropn_due.o : ../../Modules/io_files.o
-diropn_due.o : ../../Modules/kind.o
 hartree_mod.o : ../../Modules/kind.o
 init_reciprocal_parts_tab.o : ../../FFTXlib/fft_interfaces.o
 init_reciprocal_parts_tab.o : ../../upflib/atom.o
