@@ -1329,7 +1329,7 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
    ALLOCATE ( betaB(nh(nt),lB) )
    ALLOCATE ( qq(nh(nt),nh(nt)) )
    !
-   qq(:,:) = CMPLX(qq_at(:,:,alpha), 0.0d0, kind=DP)
+   qq(:,:) = CMPLX(qq_at(1:nh(nt),1:nh(nt),alpha), 0.0d0, kind=DP)
    !
    ! aux is used as a workspace
    ALLOCATE ( aux(npwx,nh(nt)) )

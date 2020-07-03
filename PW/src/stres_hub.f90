@@ -949,7 +949,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
                                     backall
    USE lsda_mod,             ONLY : lsda, nspin, isk
    USE wvfct,                ONLY : nbnd, npwx, wg
-   USE uspp,                 ONLY : nkb, vkb, qq_at, okvan
+   USE uspp,                 ONLY : nkb, vkb, okvan
    USE uspp_param,           ONLY : upf, nhm, nh
    USE wavefunctions,        ONLY : evc
    USE becmod,               ONLY : becp, calbec
@@ -1257,7 +1257,7 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B)
          !
          IF ( ityp(na).EQ.nt ) THEN
             !
-            qq(:,:) = CMPLX(qq_at(:,:,na), 0.0d0, kind=DP)
+            qq(:,:) = CMPLX(qq_at(1:nh(nt),1:nh(nt),na), 0.0d0, kind=DP)
             !
             ! aux is used as a workspace
             ALLOCATE ( aux(npwx,nh(nt)) )
