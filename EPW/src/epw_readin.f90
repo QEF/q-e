@@ -773,12 +773,16 @@
       END DO
     END IF
     WRITE(stdout, '(/,5x,a)') 'Generating evenly spaced temperature list.'
-  ELSE IF (nstemp_hold > nstemp) THEN !temps is too long
-      CALL errore('epw_readin', 'Error: too many temperatures for given nstemp', 1)
-  ELSE IF (nstemp > nstemp_hold) THEN !need more temps
-      CALL errore('epw_readin', 'Error: not enough temperatures given in temps(:)', 1)
+  ELSE IF (nstemp_hold .NE. nstemp) THEN !temps and nstemp not match
+    ! Ignore nstemp setting, print warning
+    WRITE(stdout, '(/,5x,a)') 'WARNING: Mismatch between temps(:) and nstemp'
+    WRITE(stdout, '(/,5x,a)') 'WARNING: Using supplied temperature list and ignoring nstemp'
+    nstemp = nstemp_hold
+!      CALL errore('epw_readin', 'Error: too many temperatures for given nstemp', 1)
+!  ELSE IF (nstemp > nstemp_hold) THEN !need more temps
+!      CALL errore('epw_readin', 'Error: not enough temperatures given in temps(:)', 1)
   ELSE
-      CALL errore('epw_readin', 'Error generating temperatures: unknown error', 1)
+    CALL errore('epw_readin', 'Error generating temperatures: unknown error', 1)
   END IF
   ! go from K to Ry
   tempsmin = tempsmin * kelvin2eV / ryd2ev
