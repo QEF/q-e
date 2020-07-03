@@ -62,7 +62,8 @@
                                vmebloch2wan, ephbloch2wane, ephbloch2wanp,         &
                                ephbloch2wanp_mem
   USE wigner,           ONLY : wigner_seitz_wrap
-  USE io_eliashberg,    ONLY : write_ephmat, count_kpoints, kmesh_fine, kqmap_fine
+  USE io_eliashberg,    ONLY : write_ephmat, count_kpoints, kmesh_fine, kqmap_fine,&
+                               check_restart_ephwrite
   USE transport,        ONLY : transport_coeffs, scattering_rate_q
   USE grid,             ONLY : qwindow
   USE printing,         ONLY : print_gkk, plot_band
@@ -1112,11 +1113,19 @@
 #endif
         IF (ierr /= 0) CALL errore('ephwann_shuffle', 'error in MPI_BCAST', 1)
         !
-        IF(ephwrite .AND. iq_restart > 1) first_cycle = .TRUE.
+        IF(ephwrite .AND. iq_restart > 1) THEN
+          first_cycle = .TRUE.
+          CALL check_restart_ephwrite
+        ENDIF
         !
         ! Now, the iq_restart point has been done, so we need to do the next
         iq_restart = iq_restart + 1
-        WRITE(stdout, '(5x,a,i8,a)')'We restart from ', iq_restart, ' q-points'
+        !
+        IF (iq_restart < totq) THEN
+          WRITE(stdout, '(5x,a,i8,a)')'We restart from ', iq_restart, ' q-points'
+        ELSE
+          WRITE(stdout, '(5x,a)')'All q-points are done, no need to restart !!'
+        ENDIF
         !
       ENDIF ! exst
     ENDIF
@@ -1412,7 +1421,7 @@
            CALL count_kpoints
            first_cycle = .FALSE.
         ENDIF
-        CALL write_ephmat(iqq, iq)
+        CALL write_ephmat(iqq, iq, totq)
       ENDIF
       !
       IF (.NOT. scatread) THEN
