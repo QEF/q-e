@@ -475,8 +475,10 @@ The following features of the code are tested:
 # epw_super: MgB2 #
 ###################
 The following features of the code are tested:
-- Test isotropic Eliashberg superconductivity (epw_iso.in)
-- Test anisotropic Eliashberg superconductivity (epw_aniso.in)
+- Test isotropic Eliashberg superconductivity (epw1.in)
+- Test anisotropic Eliashberg superconductivity (epw2.in)
+- Test anisotropic Eliashberg superconductivity restart from interrupted q-point while writing ephmat using 'restart.fmt' (epw3.in)
+- Test anisotropic Eliashberg superconductivity restart by reading ephmat files (after writing ephmat files) (epw4.in)
 
 #################
 # epw_trev: SiC #
