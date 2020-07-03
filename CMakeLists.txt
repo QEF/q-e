@@ -18,6 +18,7 @@ project(qe
 # Build helpers
 ###########################################################
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 include(cmake/qeHelpers.cmake)
 
 ###########################################################
@@ -388,6 +389,8 @@ add_subdirectory(dft-d3)
 add_subdirectory(PW)
 add_subdirectory(CPV)
 add_subdirectory(atomic)
+add_subdirectory(upflib)
+add_subdirectory(LIBBEEF)
 add_subdirectory(COUPLE)
 add_subdirectory(LR_Modules)
 add_subdirectory(PHonon)
@@ -400,7 +403,6 @@ add_subdirectory(PlotPhon)
 add_subdirectory(PWCOND)
 add_subdirectory(QHA)
 add_subdirectory(TDDFPT)
-add_subdirectory(upftools)
 add_subdirectory(XSpectra)
 if(QE_ENABLE_DOC)
     add_subdirectory(Doc)
