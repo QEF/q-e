@@ -41,7 +41,7 @@ subroutine project(ipol)
    use mp, ONLY: mp_sum, mp_min, mp_max
    USE mp_global, ONLY: inter_pool_comm, intra_pool_comm
    USE eqv, ONLY: evq
-   use hartree_mod, only: init_linear
+!   use hartree_mod, only: init_linear
 
    implicit none
    !
@@ -209,15 +209,17 @@ subroutine project(ipol)
 !
 !!!!!!!!!!!!!!!!!!!!!!!! inizializzazione partenza per cg
 
-   if (trim(init_linear) == 'restart') then
-      iun = find_free_unit()
-      call diropn_due(prefix_restart_cg, iun, 'save', 2*nwordwfc, exst, tmp_dir)
-      print *, 'PROJECT,DIROPN', exst, prefix_restart_cg, trim(c_ipol)
-      call davcio(dvpsi, 2*nwordwfc, iun, 1, -1)
-      close (iun)
-   else
-      dvpsi(:, :) = (0.d0, 0.d0)
-   end if
+!   if (trim(init_linear) == 'restart') then
+!      iun = find_free_unit()
+!      call diropn_due(prefix_restart_cg, iun, 'save', 2*nwordwfc, exst, tmp_dir)
+!      print *, 'PROJECT,DIROPN', exst, prefix_restart_cg, trim(c_ipol)
+!      call davcio(dvpsi, 2*nwordwfc, iun, 1, -1)
+!      close (iun)
+!   else
+
+   dvpsi(:, :) = (0.d0, 0.d0)
+
+!   end if
 !!!!!!!!!!!!!!!!!!!!!!!!!
 
 !
@@ -240,13 +242,13 @@ subroutine project(ipol)
    !CALL flush_unit( stdout )
 
 !!!!!!!!!! scriviamo la soluzione su disco per un restart successivo
-   if ((trim(init_linear) == 'restart') .or. (trim(init_linear) == 'scratch')) then
-      iun = find_free_unit()
-      call diropn_due(prefix_restart_cg, iun, 'save', 2*nwordwfc, exst)
-      print *, 'PROJECT,DIROPN', exst, prefix_restart_cg, trim(c_ipol)
-      call davcio(dvpsi, 2*nwordwfc, iun, 1, +1)
-      close (iun)
-   end if
+!   if ((trim(init_linear) == 'restart') .or. (trim(init_linear) == 'scratch')) then
+!      iun = find_free_unit()
+!      call diropn_due(prefix_restart_cg, iun, 'save', 2*nwordwfc, exst)
+!      print *, 'PROJECT,DIROPN', exst, prefix_restart_cg, trim(c_ipol)
+!      call davcio(dvpsi, 2*nwordwfc, iun, 1, +1)
+!      close (iun)
+!   end if
 !!!!!!!!!!!!!!!!!!!!!!!!!
 
    !

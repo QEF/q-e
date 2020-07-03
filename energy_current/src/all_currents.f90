@@ -193,7 +193,7 @@ contains
       delta_t = 1.d0
       n_max = 5 ! number of periodic cells in each direction used to sum stuff in zero current
       eta = 1.d0 ! ewald sum convergence parameter
-      init_linear = "nothing" ! 'scratch' or 'restart'. If 'scratch', saves a restart file in project routine. If 'restart', it starts from the saved restart file, and then save again it.
+!      init_linear = "nothing" ! 'scratch' or 'restart'. If 'scratch', saves a restart file in project routine. If 'restart', it starts from the saved restart file, and then save again it.
       file_output = "current_hz"
       ethr_small_step = 1.d-7
       ethr_big_step = 1.d-3
@@ -227,7 +227,7 @@ contains
       CALL mp_bcast(ethr_small_step, ionode_id, world_comm)
       CALL mp_bcast(ethr_big_step, ionode_id, world_comm)
       CALL mp_bcast(n_max, ionode_id, world_comm)
-      CALL mp_bcast(init_linear, ionode_id, world_comm)
+ !     CALL mp_bcast(init_linear, ionode_id, world_comm)
       CALL mp_bcast(file_output, ionode_id, world_comm)
       CALL mp_bcast(step_mul, ionode_id, world_comm)
       CALL mp_bcast(step_rem, ionode_id, world_comm)

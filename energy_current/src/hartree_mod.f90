@@ -4,7 +4,7 @@ MODULE hartree_mod
 
    SAVE
 
-   CHARACTER(len=256) :: init_linear, file_output, trajdir = ''
+   CHARACTER(len=256) :: file_output, trajdir = '' !, init_linear
    real(kind=DP) ::J_kohn(3), J_kohn_a(3), J_kohn_b(3), J_hartree(3), J_xc(3), J_electron(3)
    real(kind=DP), allocatable :: v_cm(:, :)
 
