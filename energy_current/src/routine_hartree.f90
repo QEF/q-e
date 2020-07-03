@@ -1,8 +1,18 @@
 subroutine init_hartree()
    use qpoint, only: ikqs
+   use hartree_mod, only : dvpsi_save, save_dvpsi
+   use wvfct, only: nbnd, npwx
    implicit none
 
    if (.not. allocated(ikqs)) allocate (ikqs(1))
+   if (save_dvpsi) then
+       if (.not. allocated(dvpsi_save)) then
+               allocate (dvpsi_save(npwx, nbnd,3))
+               dvpsi_save = (0.d0, 0.d0)
+       end if
+   end if
+
+
    ikqs(1) = 1
 
 end subroutine

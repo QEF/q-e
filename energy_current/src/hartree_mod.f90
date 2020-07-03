@@ -12,6 +12,8 @@ MODULE hartree_mod
    complex(kind=DP), allocatable :: evc_uno(:, :), evc_due(:, :) ! TODO: maybe save one allocation of npwx*nb
    !evc_uno will be a copy of last evc
    !evc_due will be a copy of evc of the first electrons() call
+   complex(kind=DP), allocatable :: dvpsi_save(:,:,:) ! to save the solution of the system between iterations
+   logical :: save_dvpsi = .true. ! if true dvpsi_save is allocated and used
 
    integer :: first_step, last_step, step_mul, step_rem
    logical :: restart ! if true try to read last calculated step from output and set first_step

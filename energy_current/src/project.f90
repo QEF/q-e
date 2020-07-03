@@ -41,7 +41,7 @@ subroutine project(ipol)
    use mp, ONLY: mp_sum, mp_min, mp_max
    USE mp_global, ONLY: inter_pool_comm, intra_pool_comm
    USE eqv, ONLY: evq
-!   use hartree_mod, only: init_linear
+   use hartree_mod, only: dvpsi_save, save_dvpsi
 
    implicit none
    !
@@ -216,8 +216,11 @@ subroutine project(ipol)
 !      call davcio(dvpsi, 2*nwordwfc, iun, 1, -1)
 !      close (iun)
 !   else
-
-   dvpsi(:, :) = (0.d0, 0.d0)
+   if (save_dvpsi) then
+       dvpsi = dvpsi_save(:,:,ipol)
+   else
+       dvpsi(:, :) = (0.d0, 0.d0)
+   end if
 
 !   end if
 !!!!!!!!!!!!!!!!!!!!!!!!!
@@ -232,13 +235,16 @@ subroutine project(ipol)
    !
    eth_rps = 1.D-10
    thresh = eth_rps
-   !
+   !dvpsi is the initial estimate of the solution
    call cgsolve_all(ch_psi_all, cg_psi, et(1, 1), dpsi, dvpsi, &
                     h_diag, npwx, npw, thresh, 1, lter, conv_root, anorm, &
                     nbnd, npol)
    if (.not. conv_root) WRITE (stdout, '(5x,"ik",i4," ibnd",i4, &
         & " linter: root not converged ",e10.3)') &
         ik, ibnd, anorm
+   if (save_dvpsi) then
+        dvpsi_save(:,:,ipol) = dvpsi
+   end if
    !CALL flush_unit( stdout )
 
 !!!!!!!!!! scriviamo la soluzione su disco per un restart successivo

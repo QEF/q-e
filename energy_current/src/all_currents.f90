@@ -1,5 +1,5 @@
 program all_currents
-   use hartree_mod, only: evc_uno, evc_due, trajdir, first_step
+   use hartree_mod, only: evc_uno, evc_due, trajdir, first_step, dvpsi_save
    USE environment, ONLY: environment_start, environment_end
    use io_global, ONLY: ionode
    use wavefunctions, only: evc
@@ -109,6 +109,7 @@ program all_currents
    call deallocate_zero()
    if (allocated(evc_uno)) deallocate (evc_uno)
    if (allocated(evc_due)) deallocate (evc_due)
+   if (allocated(dvpsi_save)) deallocate(dvpsi_save)
    call stop_run(exit_status)
    call do_stop(exit_status)
    stop
