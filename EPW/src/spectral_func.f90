@@ -352,7 +352,7 @@
         IF (me_pool == 0) THEN
           WRITE(tp, "(f8.3)") gtemp(itemp) * ryd2ev / kelvin2eV
           filespec = 'specfun.elself.' // trim(adjustl(tp)) // 'K'
-          filespecsup = 'specfun_sup.elself' // trim(adjustl(tp)) // 'K'
+          filespecsup = 'specfun_sup.elself.' // trim(adjustl(tp)) // 'K'
           OPEN(UNIT = iospectral, FILE = filespec )
           OPEN(UNIT = iospectral_sup, FILE = filespecsup )
           WRITE(iospectral, '(/2x, a/)') '#Electronic spectral function (meV)'
@@ -520,6 +520,8 @@
     !! Counter on frequency for the phonon spectra
     INTEGER :: itemp
     !! Counter on temperature
+    INTEGER :: iqq_write
+    !! Counter on q-point to write files
     !
     REAL(KIND = DP) :: g2
     !! Electron-phonon matrix elements squared in Ry^2
@@ -598,18 +600,18 @@
       ENDIF
     ENDDO
     !
-    gammar_all(:, :) = zero
-    gammai_all(:, :) = zero
-    !
-    ! Thomas-Fermi screening according to Resta PRB 1977
-    ! Here specific case of Diamond
-    !eps0   = 5.7
-    !rtf    = 2.76
-    !qtf    = 1.36
-    !qsquared = (xqf(1,iq)**2 + xqf(2,iq)**2 + xqf(3,iq)**2) * tpiba2
-    !epstf =  (qtf**2 + qsquared) / (qtf**2/eps0 * sin (sqrt(qsquared)*rtf)/(sqrt(qsquared)*rtf)+qsquared)
-    !
     DO itemp = 1, nstemp
+      gammar_all(:, :) = zero
+      gammai_all(:, :) = zero
+      !
+      ! Thomas-Fermi screening according to Resta PRB 1977
+      ! Here specific case of Diamond
+      !eps0   = 5.7
+      !rtf    = 2.76
+      !qtf    = 1.36
+      !qsquared = (xqf(1,iq)**2 + xqf(2,iq)**2 + xqf(3,iq)**2) * tpiba2
+      !epstf =  (qtf**2 + qsquared) / (qtf**2/eps0 * sin (sqrt(qsquared)*rtf)/(sqrt(qsquared)*rtf)+qsquared)
+      !
       IF (iqq == 1) THEN
         WRITE(stdout, '(/5x, a)') REPEAT('=', 67)
         WRITE(stdout, '(5x, "Phonon Spectral Function Self-Energy in the Migdal Approximation (on the fly)")')
@@ -740,29 +742,23 @@
       !
       WRITE(stdout, '(5x, a)')
       !
-      IF (iqq == 1) THEN
+      IF (iqq == 1 .and. itemp == 1) THEN
         IF (mpime == ionode_id) THEN
           WRITE(tp, "(f8.1)") gtemp(itemp) * ryd2ev / kelvin2eV
-          filespec = 'specfun.phon.' // trim(adjustl(tp)) // 'K'
-          filespecsup = 'specfun_sup.phon.' // trim(adjustl(tp)) // 'K'
-          OPEN(UNIT = iospectral, FILE = filespec)
+          filespecsup = 'specfun_sup.phon'! // trim(adjustl(tp)) // 'K'
           OPEN(UNIT = iospectral_sup, FILE = filespecsup)
-          WRITE(iospectral, '(/2x, a)') '#Phonon spectral function (meV)'
           WRITE(iospectral_sup, '(2x, a)') '#Phonon eigenenergies + real and im part of phonon self-energy (meV)'
-          WRITE(iospectral, '(/2x, a)') '#Q-point    Energy[eV]     A(q,w)[meV^-1]'
-          WRITE(iospectral_sup, '(2x, a)') '#Q-point    Mode       w_q[eV]        w[eV]    &
+          WRITE(iospectral_sup, '(2x, a)') '#Q-point    Mode      Temp.[K]       w_q[eV]        w[eV]    &
                                            &Real Sigma(w)[meV]   Real Sigma(w=0)[meV]     Im Sigma(w)[meV]'
-          CLOSE(iospectral)
-          CLOSE(iospectral_sup)
         ENDIF
       ENDIF
       !
       ! Write to output file
-      WRITE(tp, "(f8.3)") gtemp(itemp) * ryd2ev / kelvin2eV
-      filespec = 'specfun.phon.' // trim(adjustl(tp)) // 'K'
-      filespecsup = 'specfun_sup.phon.' // trim(adjustl(tp)) // 'K'
-      OPEN(UNIT = iospectral, FILE = filespec, position = 'append')
-      OPEN(UNIT = iospectral_sup, FILE = filespecsup, position = 'append')
+!      WRITE(tp, "(f8.3)") gtemp(itemp) * ryd2ev / kelvin2eV
+!      filespec = 'specfun.phon.' // trim(adjustl(tp)) // 'K'
+!      filespecsup = 'specfun_sup.phon.' // trim(adjustl(tp)) // 'K'
+!      OPEN(UNIT = iospectral, FILE = filespec, position = 'append')
+!      OPEN(UNIT = iospectral_sup, FILE = filespecsup, position = 'append')
       ! Write to output file
       WRITE(stdout, '(/5x, a)') 'Real and Imaginary part of the phonon self-energy (omega=0) without gamma0.'
       DO imode = 1, nmodes
@@ -780,38 +776,50 @@
           !      ( ( ww - wq - gammar_all (imode,iq,iw) + gamma0 (imode))**two + (gammai_all(imode,iq,iw) )**two )
           ! SP: From Eq. 16 of PRB 9, 4733 (1974)
           !    Also in Eq.2 of PRL 119, 017001 (2017).
-          a_all_ph(iw, iqq) = a_all_ph(iw, iqq) + inv_pi * dwq(imode)**two * ABS(gammai_all(iw, imode)) / &
+          a_all_ph(iw, iqq, itemp) = a_all_ph(iw, iqq, itemp) + inv_pi * dwq(imode)**two * ABS(gammai_all(iw, imode)) / &
                               ((ww(iw)**two - wq(imode)**two - dwq(imode) * (gammar_all(iw, imode) - gamma0(imode)))**two + &
                                (dwq(imode) * gammai_all(iw, imode))**two)
           !
           IF (mpime == ionode_id) THEN
-            WRITE(iospectral_sup, 102) iq, imode, ryd2ev * wq(imode), ryd2ev * ww(iw), ryd2mev * gammar_all(iw, imode), &
-                                       ryd2mev * gamma0(imode), ryd2mev * gammai_all(iw, imode)
+            WRITE(iospectral_sup, 102) iq, imode, gtemp(itemp) * ryd2ev / kelvin2eV, ryd2ev * wq(imode), ryd2ev * ww(iw), &
+                                       ryd2mev * gammar_all(iw, imode), ryd2mev * gamma0(imode), ryd2mev * gammai_all(iw, imode)
           ENDIF
           !
         ENDDO
         !
-        IF (mpime == ionode_id) THEN
-          WRITE(iospectral, 103) iq, ryd2ev * ww(iw), a_all_ph(iw, iqq) / ryd2mev ! print to file
-        ENDIF
+!        IF (mpime == ionode_id) THEN
+!          WRITE(iospectral, 103) iq, ryd2ev * ww(iw), a_all_ph(iw, iqq) / ryd2mev ! print to file
+!        ENDIF
         !
       ENDDO
-      !
-      IF (iqq == totq) THEN
-        IF (mpime == ionode_id) THEN
-          CLOSE(iospectral)
-          CLOSE(iospectral_sup)
-        ENDIF
-      ENDIF
-      WRITE(stdout, '(5x, a/)') REPEAT('-',67)
-      !
-      100 FORMAT(5x, 'Gaussian Broadening: ', f10.6, ' eV, ngauss=', i4)
-      101 FORMAT(5x, 'DOS =', f10.6,' states/spin/eV/Unit Cell at Ef=', f10.6, ' eV')
-      102 FORMAT(2i9, 2x, f12.5, 2x, f12.5, 2x, E22.14, 2x, E22.14, 2x, E22.14)
-      103 FORMAT(2x, i7, 2x, f12.5, 2x, E22.14)
-      105 FORMAT(5x, 'Omega( ', i3, ' )=', f9.4,' eV   Re[Pi]=', f15.6, ' meV Im[Pi]=', f15.6, ' meV')
-      !
     ENDDO ! itemp
+      !
+    IF (iqq == totq) THEN
+      IF (mpime == ionode_id) THEN
+        DO itemp = 1, nstemp
+          WRITE(tp, "(f8.3)") gtemp(itemp) * ryd2ev / kelvin2eV
+          filespec = 'specfun.phon.' // trim(adjustl(tp)) // 'K'
+          OPEN(UNIT = iospectral, FILE = filespec)
+          WRITE(iospectral, '(/2x, a)') '#Phonon spectral function (meV)'
+          WRITE(iospectral, '(/2x, a)') '#Q-point    Energy[eV]     A(q,w)[meV^-1]'
+          DO iqq_write = 1, totq
+            DO iw = 1, nw_specfun
+              WRITE(iospectral, 103) iqq_write, ryd2ev * ww(iw), a_all_ph(iw, iqq_write, itemp) / ryd2mev ! print to file
+            ENDDO
+          ENDDO
+          CLOSE(iospectral)
+        ENDDO
+        CLOSE(iospectral_sup)
+      ENDIF
+    ENDIF
+    WRITE(stdout, '(5x, a/)') REPEAT('-',67)
+    !
+    100 FORMAT(5x, 'Gaussian Broadening: ', f10.6, ' eV, ngauss=', i4)
+    101 FORMAT(5x, 'DOS =', f10.6,' states/spin/eV/Unit Cell at Ef=', f10.6, ' eV')
+    102 FORMAT(2i9, 2x, f8.3, 2x, f12.5, 2x, f12.5, 2x, E22.14, 2x, E22.14, 2x, E22.14)
+    103 FORMAT(2x, i7, 2x, f12.5, 2x, E22.14)
+    105 FORMAT(5x, 'Omega( ', i3, ' )=', f9.4,' eV   Re[Pi]=', f15.6, ' meV Im[Pi]=', f15.6, ' meV')
+    !
     RETURN
     !
     !-----------------------------------------------------------------------

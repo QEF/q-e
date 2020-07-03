@@ -958,9 +958,9 @@
       a_all(:, :, :) = zero
     ENDIF
     IF (specfun_ph) THEN
-      ALLOCATE(a_all_ph(nw_specfun, totq), STAT = ierr)
+      ALLOCATE(a_all_ph(nw_specfun, totq, nstemp), STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating a_all_ph', 1)
-      a_all_ph(:, :) = zero
+      a_all_ph(:, :, :) = zero
     ENDIF
     IF (scattering .AND. .NOT. iterative_bte) THEN
       ALLOCATE(inv_tau_all(nstemp, nbndfst, nktotf), STAT = ierr)

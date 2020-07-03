@@ -73,7 +73,7 @@
     g0vec_all_r(3, 125)       ! G-vectors needed to fold the k+q grid into the k grid, cartesian coord.
   REAL(KIND = DP), ALLOCATABLE ::&
     a_all(:, :, :),          &!  electronic spectral function du to electron-phonon interaction
-    a_all_ph(:, :),       &!  phononic spectral function du to electron-phonon interaction
+    a_all_ph(:, :, :),       &!  phononic spectral function du to electron-phonon interaction
     dos(:),                  &!  Density of states at the chemical potential.
     et_ks(:, :),             &!  lda eigenvalues
     xkq(:, :),               &!  local k+q grid, coarse (3, nks)
