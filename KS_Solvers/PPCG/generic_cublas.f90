@@ -1,71 +1,101 @@
 subroutine gpu_DGEMM (transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc)
+#if defined(__CUDA)
 USE cublas
+#endif
 implicit none
   character*1 transa, transb
   integer :: m, n, k, lda, ldb, ldc
   DOUBLE PRECISION :: alpha, beta 
-  DOUBLE PRECISION, device, dimension(lda, *)  :: A
-  DOUBLE PRECISION, device, dimension(ldb, *)  :: B
-  DOUBLE PRECISION, device, dimension(ldc, *)  :: C
+  DOUBLE PRECISION, dimension(lda, *)  :: A
+  DOUBLE PRECISION, dimension(ldb, *)  :: B
+  DOUBLE PRECISION, dimension(ldc, *)  :: C
+#if defined(__CUDA)  
+  attributes(device) :: A, B, C  
   call cublasDGEMM(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc)
+#endif
   return
 end subroutine gpu_DGEMM
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 subroutine gpu_ZGEMM (transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc)
+#if defined(__CUDA)
 USE cublas
+#endif
 implicit none
   character*1 transa, transb
   integer :: m, n, k, lda, ldb, ldc
   DOUBLE COMPLEX :: alpha, beta 
-  DOUBLE COMPLEX, device, dimension(lda, *)  :: A
-  DOUBLE COMPLEX, device, dimension(ldb, *)  :: B
-  DOUBLE COMPLEX, device, dimension(ldc, *)  :: C
+  DOUBLE COMPLEX, dimension(lda, *)  :: A
+  DOUBLE COMPLEX, dimension(ldb, *)  :: B
+  DOUBLE COMPLEX, dimension(ldc, *)  :: C
+#if defined(__CUDA)
+  attributes(device) :: A, B, C
   call cublasZGEMM(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc)
+#endif
   return
 end subroutine gpu_ZGEMM
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 subroutine gpu_DGER (m, n, alpha, x, incx, y, incy, a, lda)
+#if defined(__CUDA)
 USE cublas
+#endif
 implicit none
   integer :: m, n, lda, incx, incy
   DOUBLE PRECISION :: alpha
-  DOUBLE PRECISION, device, dimension(lda, *)  :: A
-  DOUBLE PRECISION, device, dimension(*)  :: x, y 
+  DOUBLE PRECISION, dimension(lda, *)  :: A
+  DOUBLE PRECISION, dimension(*)  :: x, y 
+#if defined(__CUDA)
+  attributes(device) :: A, x, y
   call cublasDGER(m, n, alpha, x, incx, y, incy, a, lda)  
+#endif
   return
 end subroutine gpu_DGER 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 function gpu_DDOT (n, dx, incx, dy, incy)
+#if defined(__CUDA)
 USE cublas
+#endif
 implicit none
   DOUBLE PRECISION :: gpu_DDOT
   integer :: n, incx, incy
-  DOUBLE PRECISION, device, dimension(*)  :: dx, dy 
+  DOUBLE PRECISION, dimension(*)  :: dx, dy 
+#if defined(__CUDA)
+  attributes(device) :: dx, dy
   gpu_DDOT=cublasDDOT(n, dx, incx, dy, incy)  
+#endif
   return
 end function gpu_DDOT 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 subroutine gpu_DTRSM(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb) 
+#if defined(__CUDA)
 USE cublas
+#endif
 implicit none
   character*1 :: side, uplo, transa, diag 
   integer :: m, n, lda, ldb 
   DOUBLE PRECISION :: alpha 
-  DOUBLE PRECISION, device, dimension(lda, *) :: a 
-  DOUBLE PRECISION, device, dimension(ldb, *) :: b 
+  DOUBLE PRECISION, dimension(lda, *) :: a 
+  DOUBLE PRECISION, dimension(ldb, *) :: b 
+#if defined(__CUDA)
+  attributes(device) :: a, b 
   call cublasDTRSM(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  
+#endif
   return
 end subroutine gpu_DTRSM
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE gpu_threaded_memset(array, val, length)
   !
+#if defined(__CUDA)
   USE cudafor
+#endif
   USE util_param,   ONLY : DP
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: length
-  REAL(DP), device, INTENT(OUT) :: array(length)
+  REAL(DP), INTENT(OUT) :: array(length)
+#if defined(__CUDA)
+  attributes(device) :: array
+#endif
   REAL(DP), INTENT(IN) :: val
   !
   INTEGER :: i
@@ -86,16 +116,21 @@ SUBROUTINE gpu_threaded_assign(array_out, array_in, kdimx, nact, use_idx, idx, b
   !  if the index array idx is given
   !  if  bgrp_root_only is present and .true. the assignement is made only by the 
   !  MPI root process of the bgrp and array_out is zeroed otherwise
+#if defined(__CUDA)
   USE cudafor
+#endif
   USE util_param,   ONLY : DP
   USE mp_bands_util,      ONLY : root_bgrp_id, nbgrp, my_bgrp_id
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)      :: kdimx, nact
-  COMPLEX(DP), device, INTENT(OUT) :: array_out( kdimx, nact )
-  COMPLEX(DP), device, INTENT(IN)  :: array_in ( kdimx, * )
-  INTEGER, device, INTENT(IN) :: idx( * )
+  COMPLEX(DP), INTENT(OUT) :: array_out( kdimx, nact )
+  COMPLEX(DP), INTENT(IN)  :: array_in ( kdimx, * )
+  INTEGER, INTENT(IN) :: idx( * )
+#if defined(__CUDA)
+  attributes(device) :: array_out, array_in, idx
+#endif
   LOGICAL, INTENT(IN) :: bgrp_root_only
   LOGICAL, INTENT(IN) :: use_idx
   !
@@ -137,16 +172,21 @@ SUBROUTINE gpu_threaded_backassign(array_out, idx, array_in, kdimx, nact, use_a2
   !  array_out( 1:kdimx, idx(1:nact) ) = array_in( 1:kdimx, 1:nact )  + a2_in( 1:kdimx, idx(1:nact) (
   !  if a2_in is present
   !  the index array idx is mandatory otherwise one could use previous routine)
+#if defined(__CUDA)
   USE cudafor
+#endif
   USE util_param,   ONLY : DP
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)      :: kdimx, nact
-  COMPLEX(DP), device, INTENT(INOUT) :: array_out( kdimx, * ) ! we don't want to mess with un referenced columns
-  COMPLEX(DP), device, INTENT(IN)  :: array_in ( kdimx, nact )
-  COMPLEX(DP), device, INTENT(IN)  :: a2_in ( kdimx, * )
-  INTEGER, device, INTENT(IN)      :: idx( * )
+  COMPLEX(DP), INTENT(INOUT) :: array_out( kdimx, * ) ! we don't want to mess with un referenced columns
+  COMPLEX(DP), INTENT(IN)  :: array_in ( kdimx, nact )
+  COMPLEX(DP), INTENT(IN)  :: a2_in ( kdimx, * )
+  INTEGER, INTENT(IN)      :: idx( * )
+#if defined(__CUDA)
+  attributes(device) :: array_out, array_in, a2_in, idx
+#endif
   LOGICAL, INTENT(IN) :: use_a2
   !
   INTEGER, PARAMETER :: blocksz = 256
