@@ -21,9 +21,16 @@
   USE io_global, ONLY : stdout
   USE printing,  ONLY : print_clock_epw
   USE epwcom,    ONLY : eliashberg, plselfen, specfun_pl, scattering, iterative_bte
-  USE elph2,     ONLY : adapt_smearing
+  USE elph2,     ONLY : adapt_smearing, gtemp
   !
   IMPLICIT NONE
+  !
+  INTEGER :: ierr
+  !! Error status
+  !
+  ! deallocate global temperature
+  DEALLOCATE(gtemp, STAT = ierr)
+  IF (ierr /= 0) CALL errore('stop_epw', 'Error deallocating gtemp', 1)
   !
   CALL print_clock_epw()
   !
