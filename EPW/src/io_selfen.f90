@@ -239,7 +239,7 @@
     !!
     USE kinds,     ONLY : DP
     USE elph2,     ONLY : lower_bnd, upper_bnd, nbndfst
-    USE epwcom,    ONLY : wmin_specfun, wmax_specfun, nw_specfun
+    USE epwcom,    ONLY : nstemp, wmin_specfun, wmax_specfun, nw_specfun
     USE io_var,    ONLY : iufilesigma_all
     USE io_files,  ONLY : diropn
     USE constants_epw, ONLY : zero
@@ -255,9 +255,9 @@
     !! Total number of q-points
     INTEGER, INTENT(in) :: nktotf
     !! Total number of k-points
-    REAL(KIND = DP), INTENT(inout) :: esigmar_all(nbndfst, nktotf, nw_specfun)
+    REAL(KIND = DP), INTENT(inout) :: esigmar_all(nbndfst, nktotf, nw_specfun, nstemp)
     !! Real part of the electron-phonon self-energy accross all pools
-    REAL(KIND = DP), INTENT(inout) :: esigmai_all(nbndfst, nktotf, nw_specfun)
+    REAL(KIND = DP), INTENT(inout) :: esigmai_all(nbndfst, nktotf, nw_specfun, nstemp)
     !! Imaginary part of the electron-phonon self-energy accross all pools
     !
     ! Local variables
@@ -273,6 +273,8 @@
     !! Counter on the frequency
     INTEGER :: lesigma_all
     !! Length of the vector
+    INTEGER :: itemp
+    !! Counter on temperature
     REAL(KIND = DP) :: dw
     !! Frequency intervals
     REAL(KIND = DP) :: ww(nw_specfun)
@@ -289,26 +291,30 @@
         ww(iw) = wmin_specfun + DBLE(iw - 1) * dw
       ENDDO
       !
-      lesigma_all = 2 * nbndfst * nktotf * nw_specfun + 2
+      lesigma_all = 2 * nbndfst * nktotf * nw_specfun * nstemp + 2
       ! First element is the current q-point
       aux(1) = REAL(iqq - 1, KIND = DP) ! we need to start at the next q
       ! Second element is the total number of q-points
       aux(2) = REAL(totq, KIND = DP)
       !
       i = 2
-      DO ik = 1, nktotf
-        DO ibnd = 1, nbndfst
-          DO iw = 1, nw_specfun
-            i = i + 1
-            aux(i) = esigmar_all(ibnd, ik, iw)
+      DO itemp = 1, nstemp
+        DO ik = 1, nktotf
+          DO ibnd = 1, nbndfst
+            DO iw = 1, nw_specfun
+              i = i + 1
+              aux(i) = esigmar_all(ibnd, ik, iw)
+            ENDDO
           ENDDO
         ENDDO
       ENDDO
-      DO ik = 1, nktotf
-        DO ibnd = 1, nbndfst
-          DO iw = 1, nw_specfun
-            i = i + 1
-            aux(i) = esigmai_all(ibnd, ik, iw)
+      DO itemp = 1, nstemp
+        DO ik = 1, nktotf
+          DO ibnd = 1, nbndfst
+            DO iw = 1, nw_specfun
+              i = i + 1
+              aux(i) = esigmai_all(ibnd, ik, iw)
+            ENDDO
           ENDDO
         ENDDO
       ENDDO
@@ -319,12 +325,12 @@
     !
     ! Make everythin 0 except the range of k-points we are working on
     IF (lower_bnd > 1) THEN
-      esigmar_all(:, 1:lower_bnd - 1, :) = zero
-      esigmai_all(:, 1:lower_bnd - 1, :) = zero
+      esigmar_all(:, 1:lower_bnd - 1, :, :) = zero
+      esigmai_all(:, 1:lower_bnd - 1, :, :) = zero
     ENDIF
     IF (upper_bnd < nktotf) THEN
-      esigmar_all(:, upper_bnd + 1:nktotf, :) = zero
-      esigmai_all(:, upper_bnd + 1:nktotf, :) = zero
+      esigmar_all(:, upper_bnd + 1:nktotf, :, :) = zero
+      esigmai_all(:, upper_bnd + 1:nktotf, :, :) = zero
     ENDIF
     !
     !----------------------------------------------------------------------------
@@ -340,7 +346,7 @@
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
     USE elph2,     ONLY : lower_bnd, upper_bnd, nbndfst
-    USE epwcom,    ONLY : wmin_specfun, wmax_specfun, nw_specfun
+    USE epwcom,    ONLY : nstemp, wmin_specfun, wmax_specfun, nw_specfun
     USE io_var,    ONLY : iufilesigma_all
     USE io_files,  ONLY : prefix, tmp_dir, diropn
     USE constants_epw, ONLY : zero
@@ -356,9 +362,9 @@
     !! Total number of q-points
     INTEGER, INTENT(in) :: nktotf
     !! Total number of k-points
-    REAL(KIND = DP), INTENT(out) :: esigmar_all(nbndfst, nktotf, nw_specfun)
+    REAL(KIND = DP), INTENT(out) :: esigmar_all(nbndfst, nktotf, nw_specfun, nstemp)
     !! Real part of the electron-phonon self-energy accross all pools
-    REAL(KIND = DP), INTENT(out) :: esigmai_all(nbndfst, nktotf, nw_specfun)
+    REAL(KIND = DP), INTENT(out) :: esigmai_all(nbndfst, nktotf, nw_specfun, nstemp)
     !! Imaginary part of the electron-phonon self-energy accross all pools
     !
     ! Local variables
@@ -376,6 +382,8 @@
     !! Length of the vector
     INTEGER :: nqtotf_read
     !! Total number of q-point read
+    INTEGER :: itemp
+    !! Counter on temperatures
     REAL(KIND = DP) :: dw
     !! Frequency intervals
     REAL(KIND = DP) :: ww(nw_specfun)
@@ -398,7 +406,7 @@
       !
       IF (exst) THEN ! read the file
         !
-        lesigma_all = 2 * nbndfst * nktotf * nw_specfun + 2
+        lesigma_all = 2 * nbndfst * nktotf * nw_specfun * nstemp + 2
         CALL diropn(iufilesigma_all, 'esigma_restart', lesigma_all, exst)
         CALL davcio(aux, lesigma_all, iufilesigma_all, 1, -1)
         !
@@ -410,19 +418,23 @@
           &'Error: The current total number of q-point is not the same as the read one. ', 1)
         !
         i = 2
-        DO ik = 1, nktotf
-          DO ibnd = 1, nbndfst
-            DO iw = 1, nw_specfun
-              i = i + 1
-              esigmar_all(ibnd, ik, iw) = aux(i)
+        DO itemp = 1, nstemp
+          DO ik = 1, nktotf
+            DO ibnd = 1, nbndfst
+              DO iw = 1, nw_specfun
+                i = i + 1
+                esigmar_all(ibnd, ik, iw) = aux(i)
+              ENDDO
             ENDDO
           ENDDO
         ENDDO
-        DO ik = 1, nktotf
-          DO ibnd = 1, nbndfst
-            DO iw = 1, nw_specfun
-              i = i + 1
-              esigmai_all(ibnd, ik, iw) = aux(i)
+        DO itemp = 1, nstemp
+          DO ik = 1, nktotf
+            DO ibnd = 1, nbndfst
+              DO iw = 1, nw_specfun
+                i = i + 1
+                esigmai_all(ibnd, ik, iw) = aux(i)
+              ENDDO
             ENDDO
           ENDDO
         ENDDO
@@ -439,12 +451,12 @@
       !
       ! Make everythin 0 except the range of k-points we are working on
       IF (lower_bnd > 1) THEN
-        esigmar_all(:, 1:lower_bnd - 1, :) = zero
-        esigmai_all(:, 1:lower_bnd - 1, :) = zero
+        esigmar_all(:, 1:lower_bnd - 1, :, :) = zero
+        esigmai_all(:, 1:lower_bnd - 1, :, :) = zero
       ENDIF
       IF (upper_bnd < nktotf) THEN
-        esigmar_all(:, upper_bnd + 1:nktotf, :) = zero
-        esigmai_all(:, upper_bnd + 1:nktotf, :) = zero
+        esigmar_all(:, upper_bnd + 1:nktotf, :, :) = zero
+        esigmai_all(:, upper_bnd + 1:nktotf, :, :) = zero
       ENDIF
       !
       WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from: ', iqq,'/', totq

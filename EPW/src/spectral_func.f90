@@ -298,8 +298,8 @@
         !
         ! Creation of a restart point
         IF (restart) THEN
-          IF (MOD(iqq, restart_step) == 0) THEN
-            WRITE(stdout, '(5x, a, i10, a, f8.1)' ) 'Creation of a restart point at ', iqq, 'and T = ', gtemp(itemp)
+          IF (MOD(iqq, restart_step) == 0 .and. itemp == nstemp) THEN
+            WRITE(stdout, '(5x, a, i10)' ) 'Creation of a restart point at ', iqq
             CALL mp_sum(esigmar_all, inter_pool_comm)
             CALL mp_sum(esigmai_all, inter_pool_comm)
             CALL mp_sum(fermicount, inter_pool_comm)
@@ -1188,8 +1188,8 @@
         !
         ! Creation of a restart point
         IF (restart) THEN
-          IF (MOD(iqq, restart_step) == 0) THEN
-            WRITE(stdout, '(5x, a, i10, a, f8.1)' ) 'Creation of a restart point at ', iqq, 'and T = ', gtemp(itemp)
+          IF (MOD(iqq, restart_step) == 0 .and. itemp == nstemp) THEN
+            WRITE(stdout, '(5x, a, i10)' ) 'Creation of a restart point at ', iqq
             CALL mp_sum(esigmar_all, inter_pool_comm)
             CALL mp_sum(esigmai_all, inter_pool_comm)
             CALL mp_sum(fermicount, inter_pool_comm)
