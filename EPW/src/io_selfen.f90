@@ -303,7 +303,7 @@
           DO ibnd = 1, nbndfst
             DO iw = 1, nw_specfun
               i = i + 1
-              aux(i) = esigmar_all(ibnd, ik, iw)
+              aux(i) = esigmar_all(ibnd, ik, iw, itemp)
             ENDDO
           ENDDO
         ENDDO
@@ -313,7 +313,7 @@
           DO ibnd = 1, nbndfst
             DO iw = 1, nw_specfun
               i = i + 1
-              aux(i) = esigmai_all(ibnd, ik, iw)
+              aux(i) = esigmai_all(ibnd, ik, iw, itemp)
             ENDDO
           ENDDO
         ENDDO
@@ -423,7 +423,7 @@
             DO ibnd = 1, nbndfst
               DO iw = 1, nw_specfun
                 i = i + 1
-                esigmar_all(ibnd, ik, iw) = aux(i)
+                esigmar_all(ibnd, ik, iw, itemp) = aux(i)
               ENDDO
             ENDDO
           ENDDO
@@ -433,7 +433,7 @@
             DO ibnd = 1, nbndfst
               DO iw = 1, nw_specfun
                 i = i + 1
-                esigmai_all(ibnd, ik, iw) = aux(i)
+                esigmai_all(ibnd, ik, iw, itemp) = aux(i)
               ENDDO
             ENDDO
           ENDDO
