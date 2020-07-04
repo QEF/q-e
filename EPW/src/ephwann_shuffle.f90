@@ -1802,8 +1802,8 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating wslen_g', 1)
   DEALLOCATE(etf_all, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating etf_all', 1)
-  DEALLOCATE(gtemp, STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating gtemp', 1)
+!  DEALLOCATE(gtemp, STAT = ierr)
+!  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating gtemp', 1)
   DEALLOCATE(et_ks, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating et_ks', 1)
   IF (assume_metal) THEN

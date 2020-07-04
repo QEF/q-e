@@ -716,7 +716,8 @@
     !!
     USE io_global,     ONLY : stdout
     USE epwcom,        ONLY : liso, laniso, lreal, imag_read, wscut
-    USE eliashbergcom, ONLY : nsiw, nsw, estemp
+    USE elph2,         ONLY : gtemp
+    USE eliashbergcom, ONLY : nsiw, nsw
     USE constants_epw, ONLY : kelvin2eV
     USE constants,     ONLY : pi
     !
@@ -729,7 +730,7 @@
     !
     IF (cal_type == 1) THEN
       WRITE(stdout, '(a)') '    '
-      WRITE(stdout, '(5x, a, i3, a, f12.5, a, a, i3, a)') 'temp(', itemp, ') = ', estemp(itemp) / kelvin2eV, ' K'
+      WRITE(stdout, '(5x, a, i3, a, f12.5, a, a, i3, a)') 'temp(', itemp, ') = ', gtemp(itemp) / kelvin2eV, ' K'
       WRITE(stdout, '(a)') '    '
       IF (liso) &
         WRITE(stdout, '(5x, a)') 'Solve isotropic Eliashberg equations on imaginary-axis'
@@ -739,7 +740,7 @@
         WRITE(stdout, '(5x, a)') 'Read from file delta and znorm on imaginary-axis '
       WRITE(stdout, '(a)') '    '
       WRITE(stdout, '(5x, a, i6, a, i6)') 'Total number of frequency points nsiw(', itemp, ') = ', nsiw(itemp)
-      WRITE(stdout, '(5x, a, f10.4)') 'Cutoff frequency wscut = ', (2.d0 * nsiw(itemp) + 1) * pi * estemp(itemp)
+      WRITE(stdout, '(5x, a, f10.4)') 'Cutoff frequency wscut = ', (2.d0 * nsiw(itemp) + 1) * pi * gtemp(itemp)
       WRITE(stdout, '(a)') '    '
     ENDIF
     !
@@ -767,7 +768,7 @@
     !
     IF (cal_type == 4) THEN
       WRITE(stdout, '(a)') '    '
-      WRITE(stdout, '(5x, a, i3, a, f12.5, a, a, i3, a)') 'temp(', itemp, ') = ', estemp(itemp) / kelvin2eV, ' K'
+      WRITE(stdout, '(5x, a, i3, a, f12.5, a, a, i3, a)') 'temp(', itemp, ') = ', gtemp(itemp) / kelvin2eV, ' K'
       WRITE(stdout, '(a)') '    '
       IF (liso .AND. lreal) &
         WRITE(stdout, '(5x, a)') 'Solve isotropic Eliashberg equations on real-axis'
