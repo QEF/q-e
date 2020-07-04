@@ -67,8 +67,8 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   REAL(DP), parameter :: rcut = 10.d0 
   ! 2D Coulomb cutoff: modify this (at your own risks) if problems with cutoff 
   ! being smaller than pseudo rcut. original value=10.0
-  CHARACTER(len=256) :: file_pseudo ! file name complete with path
-  CHARACTER(len=256) :: file_fixed, msg
+  CHARACTER(len=512) :: file_pseudo ! file name complete with path
+  CHARACTER(len=512) :: file_fixed, msg
   LOGICAL :: printout_ = .FALSE., exst, is_xml
   INTEGER :: iunps, isupf, nt, nb, ir, ios
   INTEGER :: iexch_, icorr_, igcx_, igcc_, inlc_

@@ -1695,7 +1695,9 @@
     INTEGER :: rest
     !! Rest of the points
     INTEGER :: tot
-    !! Total number of k-point
+    !! Total number of k-point (quotient)
+    INTEGER :: counter
+    !! temp variable
     INTEGER :: ierr
     !! Error status
     INTEGER :: kpt_in(nkqtotf)
@@ -1780,17 +1782,19 @@
     ! We then split those k-points such that the first core has the first k-point,
     ! the second core has the second k-point etc
     !
-    tot = (nkqtotf / (2 * npool))
-    rest = (nktotf - tot * npool)
-    !
+    tot = (nkqtotf / (2 * npool))         ! quotient
+    rest = (nktotf - tot * npool)         ! reminder
+    counter = 0
     DO ipool = 1, npool
       DO ik = 1,  tot
-        map_rebal_inv_tmp(ik + (ipool - 1) * tot) = map_rebal_inv(npool * ik - (npool - ipool))
+        counter = counter + 1
+        map_rebal_inv_tmp(counter) = map_rebal_inv(npool * ik - (npool - ipool))
       ENDDO
-    ENDDO
-    ! Do the rest
-    DO ik = 1, rest
-      map_rebal_inv_tmp(ik + npool * tot) = map_rebal_inv(npool * tot + ik)
+      !Do the rest
+      IF (ipool <= rest) THEN
+        counter = counter + 1
+        map_rebal_inv_tmp(counter) = map_rebal_inv(npool * (tot + 1) - (npool - ipool))
+      ENDIF
     ENDDO
     map_rebal_inv(:) = map_rebal_inv_tmp(:)
     !

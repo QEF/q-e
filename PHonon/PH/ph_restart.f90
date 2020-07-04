@@ -29,8 +29,8 @@ MODULE ph_restart
   PRIVATE
   !
   PUBLIC :: ph_writefile, ph_readfile, allocate_grid_variables, &
-                         check_directory_phsave, destroy_status_run, &
-                         check_available_bands, read_disp_pattern
+       check_directory_phsave, destroy_status_run, check_available_bands, &
+       read_disp_pattern_only
   !
   INTEGER :: iunpun
   !
@@ -819,6 +819,31 @@ MODULE ph_restart
     RETURN
     END SUBROUTINE read_el_phon
 
+    !---------------------------------------------------------------------------
+    SUBROUTINE read_disp_pattern_only(iunpun, filename, current_iq, ierr)
+    !---------------------------------------------------------------------------
+    !!
+    !! Wrapper routine used by EPW: open file, calls read_disp_pattern
+    !!
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: iunpun
+    !! Unit
+    INTEGER, INTENT(in) :: current_iq
+    !! Current q-point
+    CHARACTER(LEN=*), INTENT(in) :: filename
+    !! self-explanatory
+    INTEGER, INTENT(out) :: ierr
+    !! Error code
+    !
+    CALL iotk_open_read ( iunpun, FILE = TRIM(filename), binary = .FALSE., &
+         ierr = ierr)
+    CALL read_disp_pattern(iunpun, current_iq, ierr)
+    CALL iotk_close_read(iunpun)
+    !
+    END SUBROUTINE read_disp_pattern_only
+    !
     !---------------------------------------------------------------------------
     SUBROUTINE read_disp_pattern(iunpun, current_iq, ierr)
     !---------------------------------------------------------------------------

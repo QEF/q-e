@@ -353,6 +353,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE ldaU,       ONLY : lda_plus_u, Hubbard_lmax
   USE ldaU_ph,    ONLY : dnsscf_all_modes, dnsscf
   USE io_global,  ONLY : ionode, ionode_id
+  USE io_files,   ONLY : seqopn
   USE lrus,       ONLY : becp1
   USE phus,       ONLY : alphap
   USE ahc,        ONLY : elph_ahc, ib_ahc_gauge_min, ib_ahc_gauge_max
@@ -367,6 +368,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   COMPLEX(DP) , ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:), tg_dv(:,:), &
                                tg_psic(:,:), aux2(:,:)
   INTEGER :: v_siz, incr
+  LOGICAL :: exst
   COMPLEX(DP), EXTERNAL :: zdotc
   integer :: ibnd_fst, ibnd_lst
   !
@@ -402,12 +404,13 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   !
   ! DFPT+U case
   !
-  IF (lda_plus_u) THEN
+  IF (lda_plus_u .AND. .NOT.trans) THEN
      !
-     ! Allocate and re-read dnsscf_all_modes from file 
+     ! Allocate and read dnsscf_all_modes from file 
      !
      ALLOCATE (dnsscf_all_modes(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, nspin, nat, nmodes))
      dnsscf_all_modes = (0.d0, 0.d0)
+     !
      IF (ionode) READ(iundnsscf,*) dnsscf_all_modes
      CALL mp_bcast(dnsscf_all_modes, ionode_id, world_comm)
      REWIND(iundnsscf)
@@ -502,7 +505,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
         ! DFPT+U: add to dvpsi the scf part of the perturbed Hubbard potential 
         !
         IF (lda_plus_u) THEN
-           dnsscf(:,:,:,:,ipert) = dnsscf_all_modes(:,:,:,:,mode)
+           IF (.NOT.trans) dnsscf(:,:,:,:,ipert) = dnsscf_all_modes(:,:,:,:,mode)
            CALL adddvhubscf (ipert, ik)
         ENDIF
         !
@@ -569,7 +572,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
      DEALLOCATE( tg_psic )
   ENDIF
   !
-  IF (lda_plus_u) THEN
+  IF (lda_plus_u .AND. .NOT.trans) THEN
      DEALLOCATE (dnsscf_all_modes)
      DEALLOCATE (dnsscf)
   ENDIF

@@ -9,13 +9,19 @@
 MODULE xmltools
   !--------------------------------------------------------
   !
-  ! Poor-man tools for reading and writing xml files
+  ! Poor-man set of tools for reading and writing xml files
+  ! Similar to iotk but much simpler - Paolo Giannozzi, June 2020 
   ! Limitations: too many to be listed in detail. Main ones:
+  ! * works on a single opened file at the time
   ! * lines no more than 1024 characters long (see maxline parameter)
   ! * no more than 9 levels of tags (see maxlevel parameter)
   ! * length of tags no more than 80 characters (see maxlength parameter)
-  ! * can read tags only in the correct order
-  ! * no commas in attribute values
+  ! Can read tags only in the correct order and in the following format:
+  ! * tags holding a single value should begin and end in the same line
+  ! * tags holding arrays of values should be opened in a single line,
+  !   then the array in free format, then a single line with closing tag
+  ! * attributes should not contain commas or strange characters
+  ! Unpredictable results may follow otherwise.
   !
   USE upf_kinds, ONLY : dp
   IMPLICIT NONE
@@ -36,19 +42,25 @@ MODULE xmltools
   CHARACTER(LEN=maxlength), DIMENSION(0:maxlevel) :: open_tags
   !
   PRIVATE
+  ! general subroutines
   PUBLIC :: xml_openfile, xml_closefile
+  ! subroutines for writing
   PUBLIC :: add_attr
   PUBLIC :: xmlw_writetag, xmlw_opentag, xmlw_closetag
+  ! subroutines for reading
   PUBLIC :: xmlr_readtag, xmlr_opentag, xmlr_closetag
   PUBLIC :: get_attr
+  ! utility functions
   PUBLIC :: xml_protect, i2c, l2c, r2c
   !
   INTERFACE xmlr_readtag
-     MODULE PROCEDURE readtag_c, readtag_r, readtag_l, readtag_i, readtag_rv
+     MODULE PROCEDURE readtag_c, readtag_r, readtag_l, readtag_i, &
+          readtag_rv, readtag_rm, readtag_rt, readtag_zv, readtag_zm
   END INTERFACE xmlr_readtag
   !
   INTERFACE xmlw_writetag
-     MODULE PROCEDURE writetag_c, writetag_r, writetag_l, writetag_i, writetag_rv
+     MODULE PROCEDURE writetag_c, writetag_r, writetag_l, writetag_i, &
+          writetag_rv, writetag_rm, writetag_rt, writetag_zv, writetag_zm
   END INTERFACE xmlw_writetag
   !
   INTERFACE get_attr
@@ -346,20 +358,76 @@ CONTAINS
     !
   END SUBROUTINE writetag_r
   !
-  SUBROUTINE writetag_rv (name, rval, ierr )
+  SUBROUTINE writetag_rv (name, rvec, ierr )
     !
-    ! As writetag_c, for an array of real values
+    ! As writetag_c, for a vector of real values
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
-    REAL(dp), INTENT(IN)         :: rval(:)
+    REAL(dp), INTENT(IN)         :: rvec(:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, *) rval
+    WRITE( xmlunit, *) rvec
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_rv
-  
+  !
+  SUBROUTINE writetag_rm (name, rmat, ierr )
+    !
+    ! As writetag_c, for a matrix of real values
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    REAL(dp), INTENT(IN)         :: rmat(:,:)
+    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    !
+    CALL xmlw_opentag (name, ierr )
+    WRITE( xmlunit, *) rmat
+    CALL xmlw_closetag ( )
+    !
+  END SUBROUTINE writetag_rm
+  !
+  SUBROUTINE writetag_rt (name, rtens, ierr )
+    !
+    ! As writetag_c, for a 3-dim tensor of real values
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    REAL(dp), INTENT(IN)         :: rtens(:,:,:)
+    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    !
+    CALL xmlw_opentag (name, ierr )
+    WRITE( xmlunit, *) rtens
+    CALL xmlw_closetag ( )
+    !
+  END SUBROUTINE writetag_rt
+  !
+  SUBROUTINE writetag_zv (name, zvec, ierr )
+    !
+    ! As writetag_c, for a vector of complex values
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    COMPLEX(dp), INTENT(IN)       :: zvec(:)
+    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    !
+    CALL xmlw_opentag (name, ierr )
+    WRITE( xmlunit, *) zvec
+    CALL xmlw_closetag ( )
+    !
+  END SUBROUTINE writetag_zv
+  !
+  SUBROUTINE writetag_zm (name, zmat, ierr )
+    !
+    ! As writetag_c, for a matrix of complex values
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    COMPLEX(dp), INTENT(IN)      :: zmat(:,:)
+    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    !
+    CALL xmlw_opentag (name, ierr )
+    WRITE( xmlunit, *) zmat
+    CALL xmlw_closetag ( )
+    !
+  END SUBROUTINE writetag_zm
+  !
   FUNCTION write_tag_and_attr (name) RESULT (ierr)
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
@@ -554,27 +622,106 @@ CONTAINS
     !
   END SUBROUTINE readtag_r
   !
-  SUBROUTINE readtag_rv (name, rval, ierr)
+  SUBROUTINE readtag_rv (name, rvec, ierr)
     !
-    ! As readtag_c, for an array of real values
+    ! As readtag_c, for a vector of real values
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
-    REAL(dp), INTENT(OUT)         :: rval(:)
+    REAL(dp), INTENT(OUT)         :: rvec(:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     INTEGER :: ier_
-    CHARACTER(LEN=80) :: cval    
     !
     CALL xmlr_opentag (name, ier_)
     if ( ier_ == 0  ) then
-       READ(xmlunit, *) rval
+       READ(xmlunit, *) rvec
        CALL xmlr_closetag ( )
     else
-       rval = 0.0_dp
+       rvec = 0.0_dp
     end if
     IF ( present (ierr) ) ierr = ier_
     !
   END SUBROUTINE readtag_rv
   !
+  SUBROUTINE readtag_rm (name, rmat, ierr)
+    !
+    ! As readtag_c, for a matrix of real values
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    REAL(dp), INTENT(OUT)         :: rmat(:,:)
+    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    INTEGER :: ier_
+    !
+    CALL xmlr_opentag (name, ier_)
+    if ( ier_ == 0  ) then
+       READ(xmlunit, *) rmat
+       CALL xmlr_closetag ( )
+    else
+       rmat = 0.0_dp
+    end if
+    IF ( present (ierr) ) ierr = ier_
+    !
+  END SUBROUTINE readtag_rm
+  !
+  SUBROUTINE readtag_rt (name, rtens, ierr)
+    !
+    ! As readtag_c, for a 3-dim tensor of real values
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    REAL(dp), INTENT(OUT)         :: rtens(:,:,:)
+    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    INTEGER :: ier_
+    !
+    CALL xmlr_opentag (name, ier_)
+    if ( ier_ == 0  ) then
+       READ(xmlunit, *) rtens
+       CALL xmlr_closetag ( )
+    else
+       rtens = 0.0_dp
+    end if
+    IF ( present (ierr) ) ierr = ier_
+    !
+  END SUBROUTINE readtag_rt
+  !
+  SUBROUTINE readtag_zv (name, zvec, ierr)
+    !
+    ! As readtag_c, for a vector of complex values
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    COMPLEX(dp), INTENT(OUT)     :: zvec(:)
+    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    INTEGER :: ier_
+    !
+    CALL xmlr_opentag (name, ier_)
+    if ( ier_ == 0  ) then
+       READ(xmlunit, *) zvec
+       CALL xmlr_closetag ( )
+    else
+       zvec = 0.0_dp
+    end if
+    IF ( present (ierr) ) ierr = ier_
+    !
+  END SUBROUTINE readtag_zv
+  !
+  SUBROUTINE readtag_zm (name, zmat, ierr)
+    !
+    ! As readtag_c, for a matrix of complex values
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    COMPLEX(dp), INTENT(OUT)     :: zmat(:,:)
+    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    INTEGER :: ier_
+    !
+    CALL xmlr_opentag (name, ier_)
+    if ( ier_ == 0  ) then
+       READ(xmlunit, *) zmat
+       CALL xmlr_closetag ( )
+    else
+       zmat = 0.0_dp
+    end if
+    IF ( present (ierr) ) ierr = ier_
+    !
+  END SUBROUTINE readtag_zm
+    !
   subroutine readtag_c ( tag, cval, ierr)
     !
     implicit none
@@ -695,7 +842,8 @@ CONTAINS
                 if ( j > ll ) then
                    print *, 'oops... opened tag not closed on same line'
                    exit parse
-                else if ( line(j:j) == ' ' .or. line(j:j) == '>') then
+                else if ( line(j:j) == ' ' .or. line(j:j) == '>' &
+                                           .or. line(j:j+1)=='/>') then
                    ! print *, '<tag found'
                    stat = 1
                 end if

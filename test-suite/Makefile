@@ -170,7 +170,7 @@ clean:
 		epw_*/*.acon_iso_25.00 epw_*/*.crystal.fmt epw_*/*.a2f_iso epw_*/*.ephmat* \
 		epw_*/*.kmap epw_*/*.lambda_k_pairs epw_*/*.ukk epw_*/*.imag_aniso_25.00 \
 		epw_*/*.pade_aniso_gap0_25.00 epw_*/*.win epw_*/*.imag_aniso_gap0_25.00 \
-		epw_*/*.chk epw_*/*.phdos_proj epw_*/*..a2f epw_*/*.imag_aniso_gap_FS_25.00 \
+		epw_*/*.chk epw_*/*.phdos_proj epw_*/*.a2f_proj epw_*/*.imag_aniso_gap_FS_25.00 \
 		epw_*/*.epmatwp epw_*/*.phdos epw_*/*.epwane epw_*/*.ephmat \
 		epw_*/*.fmt epw_*/*.H epw_*/*.epb* epw_*/*self epw_*/*.a2f epw_*/*.01 \
 		epw_*/*.kpt epw_*/*.gnu epw_*/*.eig epw_*/*.lambda_FS epw_*/*.sigma_restart* \
