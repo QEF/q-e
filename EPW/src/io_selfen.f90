@@ -279,7 +279,7 @@
     !! Frequency intervals
     REAL(KIND = DP) :: ww(nw_specfun)
     !! Current frequency
-    REAL(KIND = DP) :: aux(2 * nbndfst * nktotf * nw_specfun + 2)
+    REAL(KIND = DP) :: aux(2 * nbndfst * nktotf * nw_specfun * nstemp + 2)
     !! Vector to store the array
     !
     IF (mpime == ionode_id) THEN
@@ -388,7 +388,7 @@
     !! Frequency intervals
     REAL(KIND = DP) :: ww(nw_specfun)
     !! Current frequency
-    REAL(KIND = DP) :: aux(2 * nbndfst * nktotf * nw_specfun + 2)
+    REAL(KIND = DP) :: aux(2 * nbndfst * nktotf * nw_specfun * nstemp + 2)
     !! Vector to store the array
     !
     CHARACTER(LEN = 256) :: name1
