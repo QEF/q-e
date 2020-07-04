@@ -27,11 +27,11 @@
     USE kinds,           ONLY : DP
     USE io_global,       ONLY : stdout
     USE epwcom,          ONLY : eliashberg, nkf1, nkf2, nkf3, nsiter, &
-                                nqf1, nqf2, nqf3, ntempxx, nswi, nstemp, temps, &
-                                muc, lreal, lpade, liso, limag, laniso, lacon, &
-                                kerwrite, kerread, imag_read, fila2f, wsfc, wscut, &
-                                tempsmin, tempsmax, rand_q, rand_k
-    USE constants_epw,   ONLY : kelvin2eV
+                                nqf1, nqf2, nqf3, nswi, muc, lreal, lpade, &
+                                liso, limag, laniso, lacon, kerwrite, kerread, &
+                                imag_read, fila2f, wsfc, wscut, rand_q, &
+                                rand_k, nstemp, temps 
+    USE constants_epw,   ONLY : ryd2ev
     USE eliashbergcom,   ONLY : estemp
     !
     IMPLICIT NONE
@@ -80,12 +80,6 @@
       CALL errore('eliashberg_init', 'nswi should be > 0', 1)
     IF (eliashberg .AND. wscut < 0.d0 ) &
       CALL errore('eliashberg_init', 'wscut should be > 0.d0', 1)
-    IF (eliashberg .AND. nstemp < 1) &
-      CALL errore('eliashberg_init', 'wrong number of nstemp', 1)
-    IF (eliashberg .AND. MAXVAL(temps(:)) > 0.d0 .AND. tempsmin > 0.d0 .AND. tempsmax > 0.d0) &
-      CALL errore('eliashberg_init', 'define either (tempsmin and tempsmax) or temps(:)', 1)
-    IF (eliashberg .AND. tempsmax < tempsmin) &
-      CALL errore('eliashberg_init', 'tempsmax should be greater than tempsmin', 1)
     IF (eliashberg .AND. nsiter < 1) &
       CALL errore('eliashberg_init', 'wrong number of nsiter', 1)
     IF (eliashberg .AND. muc < 0.d0) &
@@ -96,31 +90,13 @@
       CALL errore('eliashberg_init', &
                   'eliashberg requires nkf1,nkf2,nkf3 to be multiple of nqf1,nqf2,nqf3 when fila2f is not used', 1)
     !
-    DO itemp = 1, ntempxx
-      IF (temps(itemp) > 0.d0) THEN
-        nstemp = itemp
-      ENDIF
-    ENDDO
-    !
     ALLOCATE(estemp(nstemp), STAT = ierr)
     IF (ierr /= 0) CALL errore('eliashberg_init', 'Error allocating estemp', 1)
     estemp(:) = 0.d0
-    !
-    ! go from K to eV
-    IF (MAXVAL(temps(:)) > 0.d0) THEN
-      DO itemp= 1, nstemp
-        estemp(itemp) = temps(itemp) * kelvin2eV
-      ENDDO
-    ELSE
-      IF (nstemp == 1) THEN
-        estemp(1) = tempsmin * kelvin2eV
-      ELSE
-        dtemp = (tempsmax - tempsmin) * kelvin2eV / DBLE(nstemp - 1)
-        DO itemp = 1, nstemp
-          estemp(itemp) = tempsmin * kelvin2eV + DBLE(itemp - 1) * dtemp
-        ENDDO
-      ENDIF
-    ENDIF
+    ! go from Ryd to eV
+    DO itemp = 1, nstemp
+      estemp(itemp) = temps(itemp) * ryd2ev
+    ENDDO
     !
     RETURN
     !
