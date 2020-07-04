@@ -79,7 +79,7 @@ def extract_tagged_data(data_tag, filename):
             else:
                 data[key] = [val]
     # We shouldn't change the data from this point: convert entries to tuples.
-    for (key, val) in data.items():
+    for (key, val) in list(data.items()):
         data[key] = tuple(val)
     return data
 
@@ -130,7 +130,7 @@ and
                 # overwrite the previous column with the same heading.
                 data_dict[head[ind]].append(val)
     # We shouldn't change the data from this point: convert entries to tuples.
-    for (key, val) in data_dict.items():
+    for (key, val) in list(data_dict.items()):
         data_dict[key] = tuple(val)
     return data_dict
 
