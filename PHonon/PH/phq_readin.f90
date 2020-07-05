@@ -606,14 +606,6 @@ SUBROUTINE phq_readin()
   !
   IF (elph_ahc .AND. trans) CALL errore ('phq_readin', &
     'elph_ahc can be used only when trans = .false.', 1)
-  IF (elph_ahc .AND. domag) CALL errore ('phq_readin', &
-    'elph_ahc and magnetism not implemented', 1)
-  IF (elph_ahc .AND. okpaw) CALL errore ('phq_readin', &
-    'elph_ahc and PAW not tested.', 1)
-  IF (elph_ahc .AND. okvan) CALL errore ('phq_readin', &
-    'elph_ahc and PAW not tested.', 1)
-  IF (elph_ahc .AND. lda_plus_u) CALL errore ('phq_readin', &
-    'elph_ahc and lda_plus_u not tested.', 1)
   !
   ! reads the frequencies ( just if fpol = .true. )
   !
@@ -749,7 +741,7 @@ SUBROUTINE phq_readin()
   ! DFPT+U: the occupation matrix ns is read via read_file
   !
   CALL read_file ( )
-
+  !
   magnetic_sym=noncolin .AND. domag
   !
   ! init_start_grid returns .true. if a new k-point grid is set from values
@@ -782,6 +774,15 @@ SUBROUTINE phq_readin()
           " The phonon code with Raman and Hubbard U is not implemented",1)
      !
   ENDIF
+  ! checks
+  IF (elph_ahc .AND. domag) CALL errore ('phq_readin', &
+    'elph_ahc and magnetism not implemented', 1)
+  IF (elph_ahc .AND. okpaw) CALL errore ('phq_readin', &
+    'elph_ahc and PAW not tested.', 1)
+  IF (elph_ahc .AND. okvan) CALL errore ('phq_readin', &
+    'elph_ahc and PAW not tested.', 1)
+  IF (elph_ahc .AND. lda_plus_u) CALL errore ('phq_readin', &
+    'elph_ahc and lda_plus_u not tested.', 1)
 
   IF (ts_vdw) CALL errore('phq_readin',&
      'The phonon code with TS-VdW is not yet available',1)
@@ -832,9 +833,6 @@ SUBROUTINE phq_readin()
   IF(elph.and.nimage>1) call errore('phq_readin',&
        'el-ph with images not implemented',1)
   
-  IF( fildvscf /= ' ' .and. nimage > 1 ) call errore('phq_readin',&
-       'saving dvscf to file images not implemented',1)
-
   IF (elph.OR.fildvscf /= ' ') lqdir=.TRUE.
 
   IF(dvscf_star%open.and.nimage>1) CALL errore('phq_readin',&
