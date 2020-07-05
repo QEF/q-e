@@ -555,9 +555,8 @@ Assume function is executed in self.path.'''
                     if verbose > 2:
                         print(('Analysing output using %s in %s.' %
                                 (cmd, self.path)))
-                    extract_popen = subprocess.Popen(cmd, shell=True,
+                    extract_popen = subprocess.run(cmd, shell=True,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    extract_popen.wait()
                 except OSError:
                     # slightly odd syntax in order to be compatible with python
                     # 2.5 and python 2.6/3
@@ -568,7 +567,7 @@ Assume function is executed in self.path.'''
                     err = extract_popen.communicate()[1].decode('utf-8')
                     err = 'Analysing output failed: %s' % (err)
                     raise exceptions.AnalysisError(err)
-                data_string = extract_popen.communicate()[0].decode('utf-8')
+                data_string = extract_popen.stdout.decode('utf-8')
                 if self.test_program.extract_fmt == 'table':
                     outputs.append(util.dict_table_string(data_string))
                 elif self.test_program.extract_fmt == 'yaml':
