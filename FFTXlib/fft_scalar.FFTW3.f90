@@ -16,6 +16,13 @@
 ! stick and plane revision - Stefano de Gironcoli - September 2016
 !--------------------------------------------------------------------------!
 
+#if defined(__FFTW3)
+
+#if defined(_OPENMP) && defined(__FFT_SCALAR_THREAD_SAFE)
+! thread safety guard
+#error FFTW3 is not compatiable with __FFT_SCALAR_THREAD_SAFE
+#endif
+
 !=----------------------------------------------------------------------=!
    MODULE fft_scalar_fftw3
 !=----------------------------------------------------------------------=!
@@ -24,7 +31,6 @@
        USE fft_param
        IMPLICIT NONE
        SAVE
-#if defined(__FFTW3)
        PRIVATE
        PUBLIC :: cft_1z, cft_2xy, cfft3d, cfft3ds
 
@@ -665,7 +671,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
      END SUBROUTINE init_plan
 
    END SUBROUTINE cfft3ds
-#endif
 !=----------------------------------------------------------------------=!
  END MODULE fft_scalar_fftw3
 !=----------------------------------------------------------------------=!
+#endif
