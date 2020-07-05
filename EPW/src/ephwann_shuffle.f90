@@ -303,21 +303,23 @@
   !
   IF (nbndsub /= nbndep) WRITE(stdout, '(/,5x,a,i4)' ) 'Band disentanglement is used: nbndsub = ', nbndsub
   !
-  ALLOCATE(cu(nbndep, nbndsub, nks), STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cu', 1)
-  ALLOCATE(cuq(nbndep, nbndsub, nks), STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cuq', 1)
-  ALLOCATE(lwin(nbndep, nks), STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating lwin', 1)
-  ALLOCATE(lwinq(nbndep, nks), STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating lwinq', 1)
-  ALLOCATE(exband(nbnd), STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating exband', 1)
-  cu(:, :, :)  = czero
-  cuq(:, :, :) = czero
-  lwin(:, :)   = .FALSE.
-  lwinq(:, :)  = .FALSE.
-  exband(:)    = .FALSE.
+  IF (.NOT. (epwread .AND. .NOT. epbread)) THEN
+    ALLOCATE(cu(nbndep, nbndsub, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cu', 1)
+    ALLOCATE(cuq(nbndep, nbndsub, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cuq', 1)
+    ALLOCATE(lwin(nbndep, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating lwin', 1)
+    ALLOCATE(lwinq(nbndep, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating lwinq', 1)
+    ALLOCATE(exband(nbnd), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating exband', 1)
+    cu(:, :, :)  = czero
+    cuq(:, :, :) = czero
+    lwin(:, :)   = .FALSE.
+    lwinq(:, :)  = .FALSE.
+    exband(:)    = .FALSE.
+  ENDIF
   !
   ALLOCATE(w2(3 * nat), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating w2', 1)
@@ -521,18 +523,17 @@
       DEALLOCATE(epmatwe_mem, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epmatwe_mem', 1)
     ENDIF
+    DEALLOCATE(cu, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cu', 1)
+    DEALLOCATE(cuq, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cuq', 1)
+    DEALLOCATE(lwin, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating lwin', 1)
+    DEALLOCATE(lwinq, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating lwinq', 1)
+    DEALLOCATE(exband, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating exband', 1)
   ENDIF ! (epwread .AND. .NOT. epbread)
-  !
-  DEALLOCATE(cu, STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cu', 1)
-  DEALLOCATE(cuq, STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cuq', 1)
-  DEALLOCATE(lwin, STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating lwin', 1)
-  DEALLOCATE(lwinq, STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating lwinq', 1)
-  DEALLOCATE(exband, STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating exband', 1)
   !
   ! Check Memory usage
   CALL system_mem_usage(valueRSS)
