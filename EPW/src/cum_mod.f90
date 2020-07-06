@@ -39,7 +39,7 @@
     USE constants,     ONLY : pi
     USE io_global,     ONLY : stdout
     USE io_var,        ONLY : iospectral_sup, iospectral_cum
-    USE epwcom,        ONLY : eptemp, wmin_specfun, wmax_specfun, nw_specfun, &
+    USE epwcom,        ONLY : wmin_specfun, wmax_specfun, nw_specfun, &
                               bnd_cum, nstemp
     USE elph2,         ONLY : ibndmin, ibndmax, gtemp
     !
