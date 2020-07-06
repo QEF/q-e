@@ -18,9 +18,9 @@ default :
 	@echo 'where <target> identifies an action'
 	@echo ' run-tests                   : run-tests-serial (default)'
 	@echo ' run-tests-serial            : run all tests in SERIAL' 
-	@echo ' run-tests-XX-serial         : run tests for XX={pw,cp} only, as above' 
+	@echo ' run-tests-XX-serial         : run tests for XX={pw,cp,ph,epw,hp} only, as above' 
 	@echo ' run-tests-parallel          : run all tests in PARALLEL (4 MPI)'
-	@echo ' run-tests-XX-parallel       : run tests for XX={pw,cp} only, as above' 
+	@echo ' run-tests-XX-parallel       : run tests for XX={pw,cp,ph,epw,hp} only, as above' 
 	@echo ' run-custom-test testdir=DIR : run test in DIR only (serial)'
 	@echo ' run-custom-test-parallel testdir=DIR : run test in DIR only (parallel 4 MPI)'
 	@echo ' compare                     : compare last output with reference'
@@ -43,7 +43,7 @@ pseudo :
 
 run-tests : run-tests-serial
 
-run-tests-serial : run-tests-pw-serial run-tests-cp-serial 
+run-tests-serial : run-tests-pw-serial run-tests-cp-serial run-tests-ph-serial run-tests-epw-serial run-tests-hp-serial  
 
 run-tests-parallel : run-tests-pw-parallel run-tests-cp-parallel run-tests-ph-parallel run-tests-epw-parallel run-tests-hp-parallel
 
