@@ -14,6 +14,8 @@ MODULE beef_interface
     !
     PRIVATE
     !
+#if defined(use_beef)
+    !
     PUBLIC :: beefx, beeflocalcorr, beeflocalcorrspin, beefsetmode, &
         beefrandinit, beefrandinitdef, beefensemble
     !
@@ -44,7 +46,7 @@ MODULE beef_interface
         INTEGER(C_INT), INTENT(IN) :: mode
     END SUBROUTINE beefsetmode
     !
-    SUBROUTINE beefrandinit(seed) bind(c)
+    SUBROUTINE beefrandinit(seed) BIND(C, NAME="beefrandinit_")
     USE iso_c_binding
         INTEGER(C_INT), INTENT(IN) :: seed
     END SUBROUTINE beefrandinit
@@ -64,6 +66,8 @@ MODULE beef_interface
     END FUNCTION beef_set_type
     !
     END INTERFACE
+    !
+#endif
     !
 END MODULE beef_interface
 !
