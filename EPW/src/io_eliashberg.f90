@@ -1228,7 +1228,7 @@
 #if defined(__MPI)
       filephmat = TRIM(dirname) // '/' // 'ephmat' // filelab
 #else
-      filephmat = TRIM(tmp_dir) // '/' // 'ephmat'
+      filephmat = TRIM(dirname) // '/' // 'ephmat'
 #endif
       !OPEN(UNIT = iufileph, FILE = filephmat, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
       OPEN(UNIT = iufileph, FILE = filephmat, STATUS = 'unknown', FORM = 'unformatted', IOSTAT = ios)
