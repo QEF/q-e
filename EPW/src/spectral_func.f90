@@ -219,7 +219,7 @@
       ENDIF
       !
       ! In the case of a restart do not add the first step
-      IF (first_cycle .and. itemp = nstemp) THEN
+      IF (first_cycle .and. itemp == nstemp) THEN
         first_cycle = .FALSE.
       ELSE
         !
@@ -1093,7 +1093,7 @@
       ENDIF
       !
       ! In the case of a restart do not add the first step
-      IF (first_cycle .and. itemp = nstemp) THEN
+      IF (first_cycle .and. itemp == nstemp) THEN
         first_cycle = .FALSE.
       ELSE
         IF (qnorm < qcut) THEN
