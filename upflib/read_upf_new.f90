@@ -88,9 +88,14 @@ CONTAINS
        allocate ( upf%vloc(upf%mesh) )
        CALL xmlr_readtag( capitalize_if_v2('pp_local'), &
             upf%vloc(:), ierr )
-       ! FIXME: workaroud for "disordered" PP files
-       if ( ierr == -1 ) CALL xmlr_readtag( capitalize_if_v2('pp_local'), &
-            upf%vloc(:), ierr )
+       !
+       ! existing PP files may have pp_nlcc first, pp_local later,
+       ! but also the other way round - check that everything was right
+       !
+       if ( ierr /= 0 ) then
+          ierr = -81
+          return
+       end if
     end if
     !
     CALL read_pp_semilocal ( upf )
@@ -603,11 +608,13 @@ CONTAINS
     DO nb = 1,upf%nbeta
        CALL xmlr_readtag( 'PP_RELBETA.'//i2c(nb), dummy, ierr )
        !
-       ! very lousy workaround: existing PP files may have pp_relbeta first,
-       ! pp_relwfc later, but also the other way round - if not found, try
-       ! to re-read the file (it is rewound if tag not found) - FIXME
-       if ( ierr == -1 ) CALL xmlr_readtag( 'PP_RELBETA.'//i2c(nb), dummy, ierr)
+       ! existing PP files may have pp_relbeta first, pp_relwfc later,
+       ! but also the other way round - check that everything was right
        !
+       if ( ierr /= 0 ) then
+          ierr = -81
+          return
+       end if
        CALL get_attr( 'index' , nw )
        IF ( nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',2)
        CALL get_attr( 'lll',  upf%lll(nb) )

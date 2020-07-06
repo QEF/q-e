@@ -16,8 +16,10 @@ MODULE xmltools
   ! * lines no more than 1024 characters long (see maxline parameter)
   ! * no more than 9 levels of tags (see maxlevel parameter)
   ! * length of tags no more than 80 characters (see maxlength parameter)
-  ! * can read tags only in the correct order: if a tag is not found,
-  !   we rewind the file and continue - may or may not work
+  ! * can read tags only in the correct order. If a tag is not found, the
+  !   file is rewound. If "ierr" is present, a second attempt to find the
+  !   tag is done starting from the top of the file - may work if the searched
+  !   tag is found only above the current position, and nowhere else
   ! * only single values (e.g. no vectors) in attributes
   ! * attributes should not contain commas or strange characters
   !
@@ -915,7 +917,7 @@ CONTAINS
     ! 2: line too long
     ! 3: too many levels of tags
     !
-    integer :: stat, ll, lt, i, j, j0
+    integer :: stat, ntry, ll, lt, i, j, j0
     ! stat= 0: begin
     ! stat=-1: in comment
     ! stat=1 : tag found
@@ -923,9 +925,11 @@ CONTAINS
     character(len=1) :: quote
     !
     nattr=0
+    ntry =0
     if ( allocated(attrlist) ) deallocate (attrlist)
-    !
     lt = len_trim(tag)
+    !
+ 1  ntry = ntry+1
     stat=0
     eot =-1
     do while (.true.)
@@ -1049,8 +1053,10 @@ CONTAINS
        if ( present(ierr) ) then
           ierr =-1
           ! quick-and-dirty pseudo-fix to deal with tags not found:
-          ! rewind and hope for the best at next step!
+          ! rewind and try again - will work if the desired tag is
+          ! found above the current position (and nowhere else)
           rewind(xmlunit)
+          if ( ntry == 1 ) go to 1
        else
           print *, 'end of file reached, tag '//trim(tag)//' not found'
        end if

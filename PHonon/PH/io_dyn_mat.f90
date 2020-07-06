@@ -550,7 +550,7 @@ MODULE io_dyn_mat
       nr1 = meshfft(1)
       nr2 = meshfft(2)
       nr3 = meshfft(3)
-      !!! CALL xmlr_closetag( ) FIXME
+      CALL xmlr_closetag( )
     ENDIF
     CALL mp_bcast(nr1, ionode_id, intra_image_comm)
     CALL mp_bcast(nr2, ionode_id, intra_image_comm)
@@ -580,15 +580,15 @@ MODULE io_dyn_mat
     ! Local variables
     INTEGER :: na, nb
     !! Atoms
-    INTEGER :: nn
+    INTEGER :: nn, ierr
     !!
     INTEGER :: m1, m2, m3
     !! nr dimension
     REAL(KIND = DP) :: aux(3, 3)
-    !! Auxillary
+    !! Auxiliary
     ! 
     IF (ionode) THEN
-      !!! CALL xmlr_opentag( "INTERATOMIC_FORCE_CONSTANTS") FIXME
+      CALL xmlr_opentag( "INTERATOMIC_FORCE_CONSTANTS", ierr)
       DO na = 1, nat
         DO nb = 1, nat
           nn = 0
