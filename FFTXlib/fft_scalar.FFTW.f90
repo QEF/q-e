@@ -6,10 +6,16 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 
+#if defined(__FFTW)
+
+#if defined(_OPENMP) && defined(__FFT_SCALAR_THREAD_SAFE)
+! thread safety guard
+#error FFTW is not compatiable with __FFT_SCALAR_THREAD_SAFE
+#endif
+
 !=----------------------------------------------------------------------=!
    MODULE fft_scalar_FFTW
 !=----------------------------------------------------------------------=!
-
        USE fft_param
 !! iso_c_binding provides C_PTR, C_NULL_PTR, C_ASSOCIATED
        USE iso_c_binding
@@ -718,8 +724,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
      END SUBROUTINE init_plan
 
    END SUBROUTINE cfft3ds
-
 !=----------------------------------------------------------------------=!
  END MODULE fft_scalar_FFTW
 !=----------------------------------------------------------------------=!
-
+#endif

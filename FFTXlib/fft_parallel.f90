@@ -257,6 +257,10 @@ CONTAINS
     !
     INTEGER :: comm2s
     !
+#if defined(_OPENMP) && !defined(__FFT_SCALAR_THREAD_SAFE)
+    CALL errore('many_cft3s::execute_using_tasks','needs thread-safe fft_scalar backend selected at compile time.',1)
+#endif
+    !
     IF ( isgn > 0 ) THEN  ! G -> R
 !$omp parallel default(none)                        &
 !$omp          private(i, j, comm2s)                &
@@ -350,6 +354,11 @@ CONTAINS
     ! This implementation requires thread-safe cft_1z
     !
     IMPLICIT NONE
+    !
+#if defined(_OPENMP) && !defined(__FFT_SCALAR_THREAD_SAFE)
+    CALL errore('many_cft3s::execute_using_threads','needs thread-safe fft_scalar backend selected at compile time.',1)
+#endif
+    !
     IF ( isgn > 0 ) THEN  ! G -> R
 !$omp parallel default(none)                                        &
 !$omp          private(i, j)                                        &
