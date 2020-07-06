@@ -47,7 +47,11 @@ SUBROUTINE beef_energies( )
 
   USE ener,                 ONLY : vtxc, etxc
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
-
+  !
+#if defined(use_beef)
+  USE beef_interface, ONLY: beefsetmode, beefrandinitdef, beefensemble
+#endif
+  !
   implicit none
   !real(DP), allocatable      :: beefxc(:), energies(:)
   real(DP)                    :: ldaxc
