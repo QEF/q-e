@@ -18,6 +18,7 @@ MODULE beef_interface
         beefrandinit, beefrandinitdef, beefensemble
     !
     INTERFACE
+    !
     SUBROUTINE beefx( r, g, e, dr, dg, addlda ) BIND(C, NAME="beefx_")
     USE iso_c_binding
         REAL (C_DOUBLE), INTENT(INOUT) :: r, g, e, dr, dg
