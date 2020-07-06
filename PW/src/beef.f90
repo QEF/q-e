@@ -22,6 +22,7 @@ MODULE beef
   !real(DP), save              :: ldaxc
   !
   !
+  !
   real(DP), allocatable       :: beefxc(:), energies(:)
   real(DP)                    :: ldaxc
 
