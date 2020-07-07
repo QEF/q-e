@@ -123,8 +123,7 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
   res_array     = 0.0
   !
   CALL start_clock( 'ppcg_gamma' )
-!civn 
-  ! ... these alignments will be eventually removed
+  ! ... these alignments should be eventually removed
   precondition = precondition_d
   e = e_d
   psi = psi_d
@@ -865,11 +864,6 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
     !
     !
  END DO   !---End the main loop
-!civn 
-  psi = psi_d
-  hpsi = hpsi_d
-  spsi = spsi_d
-  w = w_d
  !
  ! IF (nact > 0) THEN
  IF ( MOD(iter-1, rr_step) /= 0 ) THEN        ! if RR has not just been performed
@@ -916,8 +910,7 @@ SUBROUTINE ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
     !
  END IF
  !
-!civn 
- ! ... these alignments will be eventually removed
+ ! ... these alignments should be eventually removed
  e_d = e
  ! E.V. notconv issue comment
  notconv = 0 ! nact
@@ -1485,7 +1478,7 @@ CONTAINS
     !
     ! This subroutine releases the allocated memory
     !
-!civn 
+    ! device allocations
     IF ( ALLOCATED(G_d) )    DEALLOCATE ( G_d )
     IF ( ALLOCATED(hpsi) )    DEALLOCATE ( hpsi_d )
     IF ( ALLOCATED(spsi_d) )    DEALLOCATE ( spsi_d )
@@ -1497,7 +1490,8 @@ CONTAINS
     IF ( ALLOCATED(sp_d) )      DEALLOCATE ( sp_d )
     IF ( ALLOCATED(K_d) )       DEALLOCATE ( K_d )
     IF ( ALLOCATED(M_d) )       DEALLOCATE ( M_d )
-   
+    ! 
+    ! host allocations
     IF ( ALLOCATED(hpsi) )    DEALLOCATE ( hpsi )
     IF ( ALLOCATED(spsi) )    DEALLOCATE ( spsi )
     IF ( ALLOCATED(w) )       DEALLOCATE ( w )
