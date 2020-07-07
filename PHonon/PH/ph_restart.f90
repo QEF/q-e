@@ -856,7 +856,6 @@ MODULE ph_restart
                              iotk_scan_end
     USE io_global,    ONLY : ionode, ionode_id
     USE mp,           ONLY : mp_bcast
-    USE mp_global,    ONLY : world_comm
     !
     IMPLICIT NONE
     !
