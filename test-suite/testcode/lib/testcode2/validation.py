@@ -74,11 +74,11 @@ vspace: print out extra new line afterwards if verbose > 1.
             elif self.status == self._passed:
                 print('Passed.')
             elif self.status == self._skipped:
-                print('%s.' % ansi.ansi_format('SKIPPED', 'blue'))
+                print(('%s.' % ansi.ansi_format('SKIPPED', 'blue')))
             elif self.status == self._partial:
-                print('%s.' % ansi.ansi_format('WARNING', 'blue'))
+                print(('%s.' % ansi.ansi_format('WARNING', 'blue')))
             else:
-                print('%s.' % ansi.ansi_format('**FAILED**', 'red', 'normal', 'bold'))
+                print(('%s.' % ansi.ansi_format('**FAILED**', 'red', 'normal', 'bold')))
             if msg and verbose > 1:
                 print(msg)
             if vspace and verbose >  1:
@@ -220,13 +220,13 @@ def compare_data(benchmark, test, default_tolerance, tolerances,
     # different numbers of duplicate keys.
     comparable = (bench_params == test_params)
     key_counts = dict((key,0) for key in bench_params | test_params)
-    for (key, val) in benchmark.items():
+    for (key, val) in list(benchmark.items()):
         if key not in ignored_params:
             key_counts[key] += len(val)
-    for (key, val) in test.items():
+    for (key, val) in list(test.items()):
         if key not in ignored_params:
             key_counts[key] -= len(val)
-    comparable = comparable and compat.compat_all(kc == 0 for kc in key_counts.values())
+    comparable = comparable and compat.compat_all(kc == 0 for kc in list(key_counts.values()))
     status = Status()
     msg = []
     
@@ -254,7 +254,7 @@ def compare_data(benchmark, test, default_tolerance, tolerances,
         param_tol = tolerances.get(param, default_tolerance)
         if param_tol == default_tolerance:
             # See if there's a regex that matches.
-            tol_matches = [tol for tol in tolerances.values()
+            tol_matches = [tol for tol in list(tolerances.values())
                                if tol.name and re.match(tol.name, param)]
             if tol_matches:
                 param_tol = tol_matches[0]

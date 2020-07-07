@@ -58,12 +58,11 @@ necsx )
 ppc64 )
         try_mpif90="mpxlf90_r mpf90_r mpif90"
         try_f90="xlf90_r $try_f90"
-        try_dflags="-D__XLF"
         ;;
-# PowerPC MareNostrum
-ppc64-mn )
+# PowerPC little endian
+ppc64le )
+        try_mpif90="$try_mpif90 mpixlf"
         try_f90="xlf90_r"
-        try_dflags="-D__XLF"
         ;;
 # IBM BlueGene - obsolete
 ppc64-bg | ppc64-bgq )
@@ -78,7 +77,6 @@ ppc64-bg | ppc64-bgq )
           try_f90="bgxlf90_r"
 	fi
         try_arflags="ruv"
-        try_dflags="-D__XLF"
         ;;
 * )
         AC_MSG_WARN($arch : unsupported architecture?)
@@ -155,7 +153,7 @@ case "$arch" in
         elif test "$xlf_version" != ""
         then
                 echo "${ECHO_T}xlf (version unknonw)"
-                f90_in_mpif90="xlf"
+                f90_in_mpif90="xlf90_r"
                 try_dflags="-D__XLF"
         elif test "$armflang_version" != "" 
         then 

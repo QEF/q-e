@@ -6,6 +6,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 
+#if defined(__SX6)
+
+#if defined(_OPENMP) && defined(__FFT_SCALAR_THREAD_SAFE)
+! thread safety guard
+#error SX6 is not compatiable with __FFT_SCALAR_THREAD_SAFE
+#endif
+
 !=----------------------------------------------------------------------=!
    MODULE fft_scalar_sx6
 !=----------------------------------------------------------------------=!
@@ -14,9 +21,8 @@
        
      IMPLICIT NONE
      SAVE
-#if defined(__SX6)
-        PRIVATE
-        PUBLIC :: cft_1z, cft_2xy, cfft3d, cfft3ds
+     PRIVATE
+     PUBLIC :: cft_1z, cft_2xy, cfft3d, cfft3ds
 
 !=----------------------------------------------------------------------=!
    CONTAINS
@@ -504,7 +510,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
   CALL cfft3d (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign)
   RETURN
 END SUBROUTINE cfft3ds
-#endif
 !=----------------------------------------------------------------------=!
 END MODULE fft_scalar_sx6
 !=----------------------------------------------------------------------=!
+#endif
