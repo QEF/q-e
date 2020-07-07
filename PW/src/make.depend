@@ -180,6 +180,7 @@ atomic_wfc_mod.o : ../../Modules/kind.o
 average_pp.o : ../../Modules/kind.o
 average_pp.o : ../../upflib/atom.o
 average_pp.o : ../../upflib/uspp.o
+beef.o : ../../Modules/beef_interface.o
 beef.o : ../../Modules/control_flags.o
 beef.o : ../../Modules/funct.o
 beef.o : ../../Modules/io_global.o
