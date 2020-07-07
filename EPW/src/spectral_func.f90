@@ -1367,8 +1367,8 @@
     USE phcom,     ONLY : nmodes
     USE cell_base, ONLY : omega
     USE epwcom,    ONLY : degaussq, delta_qsmear, nqsmear, nqstep, nsmear, eps_acustic, &
-                          delta_smear, degaussw, fsthick, nc
-    USE elph2,     ONLY : nqtotf, wf, wqf, lambda_all, lambda_v_all
+                          nstemp, delta_smear, degaussw, fsthick, nc
+    USE elph2,     ONLY : gtemp, nqtotf, wf, wqf, lambda_all, lambda_v_all
     USE constants_epw, ONLY : ryd2mev, ryd2ev, kelvin2eV, one, two, zero, kelvin2Ry
     USE constants, ONLY : pi
     USE mp,        ONLY : mp_barrier, mp_sum
@@ -1380,6 +1380,7 @@
     !
     IMPLICIT NONE
     !
+    CHARACTER(LEN = 20) :: tp
     CHARACTER(LEN = 256) :: fila2f
     !! File name for Eliashberg spectral function
     CHARACTER(LEN = 256) :: fila2ftr
@@ -1403,6 +1404,8 @@
     !! Counter on mu
     INTEGER :: itemp
     !! Counter on temperature
+    INTEGER :: itemprho
+    !! Counter on temparture for rho
     INTEGER :: ierr
     !! Error status
     !
@@ -1481,181 +1484,184 @@
       ALLOCATE(rho(100, nqsmear), STAT = ierr)
       IF (ierr /= 0) CALL errore('a2f_main', 'Error allocating rho', 1)
       !
-      DO isig = 1, nsmear
-        !
-        IF (isig < 10) THEN
-          WRITE(fila2f,   '(a, a6, i1)') TRIM(prefix), '.a2f.0', isig
-          WRITE(fila2ftr, '(a, a9, i1)') TRIM(prefix), '.a2f_tr.0', isig
-          WRITE(filres,   '(a, a6, i1)') TRIM(prefix), '.res.0', isig
-          WRITE(fildos,   '(a, a8, i1)') TRIM(prefix), '.phdos.0', isig
-        ELSE
-          WRITE(fila2f,   '(a, a5, i2)') TRIM(prefix), '.a2f.', isig
-          WRITE(fila2ftr, '(a, a8, i2)') TRIM(prefix), '.a2f_tr.', isig
-          WRITE(filres,   '(a, a5, i2)') TRIM(prefix), '.res.', isig
-          WRITE(fildos,   '(a, a7, i2)') TRIM(prefix), '.phdos.', isig
-        ENDIF
-        OPEN(UNIT = iua2ffil, FILE = fila2f, FORM = 'formatted')
-        OPEN(UNIT = iua2ftrfil, FILE = fila2ftr, FORM = 'formatted')
-        OPEN(UNIT = iures, FILE = filres, FORM = 'formatted')
-        OPEN(UNIT = iudosfil, FILE = fildos, FORM = 'formatted')
-        !
-        WRITE(stdout, '(/5x, a)') REPEAT('=',67)
-        WRITE(stdout, '(5x, "Eliashberg Spectral Function in the Migdal Approximation")')
-        WRITE(stdout, '(5x, a/)') REPEAT('=',67)
-        !
-        om_max = 1.1d0 * MAXVAL(wf(:, :)) ! increase by 10%
-        dw = om_max / DBLE(nqstep)
-        DO iw = 1, nqstep  !
-          ww(iw) = DBLE(iw) * dw
-        ENDDO
-        !
-        lambda_tot    = zero
-        l_a2f(:)      = zero
-        a2f_(:, :)    = zero
-        lambda_tr_tot = zero
-        l_a2f_tr(:)   = zero
-        a2f_tr(:, :)  = zero
-        dosph(:, :)   = zero
-        logavg(:)     = zero
-        !
-        DO ismear = 1, nqsmear
+      DO itemp = 1, nstemp
+        DO isig = 1, nsmear
           !
-          degaussq0 = degaussq + (ismear - 1) * delta_qsmear
-          inv_degaussq0 = one / degaussq0
-          !
-          DO iw = 1, nqstep  ! loop over points on the a2F(w) graph
-            !
-            DO iq = 1, nqtotf ! loop over q-points
-              DO imode = 1, nmodes ! loop over modes
-                w0 = wf(imode, iq)
-                !
-                IF (w0 > eps_acustic) THEN
-                  !
-                  l = lambda_all(imode, iq, isig)
-                  IF (lambda_all(imode, iq, isig) < 0.d0) l = zero ! sanity check
-                  !
-                  a2f_tmp = wqf(iq) * w0 * l / two
-                  !
-                  weight = w0gauss((ww(iw) - w0) * inv_degaussq0, 0) * inv_degaussq0
-                  a2f_(iw, ismear) = a2f_(iw, ismear) + a2f_tmp * weight
-                  dosph(iw, ismear) = dosph(iw, ismear) + wqf(iq) * weight
-                  !
-                  l_tr = lambda_v_all(imode, iq, isig)
-                  IF (lambda_v_all(imode, iq, isig) < 0.d0) l_tr = zero !sanity check
-                  !
-                  a2f_tr_tmp = wqf(iq) * w0 * l_tr / two
-                  !
-                  a2f_tr(iw, ismear) = a2f_tr(iw, ismear) + a2f_tr_tmp * weight
-                  !
-                ENDIF
-              ENDDO
-            ENDDO
-            !
-            ! output a2f
-            !
-            IF (ismear == nqsmear) WRITE(iua2ffil,   '(f12.7, 15f12.7)') ww(iw) * ryd2mev, a2f_(iw, :)
-            IF (ismear == nqsmear) WRITE(iua2ftrfil, '(f12.7, 15f12.7)') ww(iw) * ryd2mev, a2f_tr(iw, :)
-            IF (ismear == nqsmear) WRITE(iudosfil,   '(f12.7, 15f12.7)') ww(iw) * ryd2mev, dosph(iw, :) / ryd2mev
-            !
-            ! do the integral 2 int (a2F(w)/w dw)
-            !
-            l_a2f(ismear) = l_a2f(ismear) + two * a2f_(iw, ismear) / ww(iw) * dw
-            l_a2f_tr(ismear) = l_a2f_tr(ismear) + two * a2f_tr(iw, ismear) / ww(iw) * dw
-            logavg(ismear) = logavg(ismear) + two *  a2f_(iw, ismear) * LOG(ww(iw)) / ww(iw) * dw
-            !
-          ENDDO
-          !
-          logavg(ismear) = EXP(logavg(ismear) / l_a2f(ismear))
-          !
-        ENDDO
-        !
-        DO iq = 1, nqtotf ! loop over q-points
-          DO imode = 1, nmodes ! loop over modes
-            IF (lambda_all(imode, iq, isig) > 0.d0 .AND. wf(imode, iq) > eps_acustic ) &
-              lambda_tot = lambda_tot + wqf(iq) * lambda_all(imode, iq, isig)
-            IF (lambda_v_all(imode, iq, isig) > 0.d0 .AND. wf(imode, iq) > eps_acustic) &
-              lambda_tr_tot = lambda_tr_tot + wqf(iq) * lambda_v_all(imode, iq, isig)
-          ENDDO
-        ENDDO
-        WRITE(stdout, '(5x, a, f12.7)') "lambda : ", lambda_tot
-        WRITE(stdout, '(5x, a, f12.7)') "lambda_tr : ", lambda_tr_tot
-        WRITE(stdout, '(a)') " "
-        !
-        !
-        ! Allen-Dynes estimate of Tc for ismear = 1
-        !
-        WRITE(stdout, '(5x, a, f12.7, a)') "Estimated Allen-Dynes Tc"
-        WRITE(stdout, '(a)') " "
-        WRITE(stdout, '(5x, a, f12.7, a, f12.7)') "logavg = ", logavg(1), " l_a2f = ", l_a2f(1)
-        DO i = 1, 6
-          !
-          mu = 0.1d0 + 0.02d0 * DBLE(i - 1)
-          tc = logavg(1) / 1.2d0 * EXP(-1.04d0 * (1.d0 + l_a2f(1)) / (l_a2f(1) - mu * ( 1.d0 + 0.62d0 * l_a2f(1))))
-          ! tc in K
-          !
-          tc = tc * ryd2ev / kelvin2eV
-          !SP: IF Tc is too big, it is not physical
-          IF (tc < 1000.0) THEN
-            WRITE(stdout, '(5x, a, f6.2, a, f22.12, a)') "mu = ", mu, " Tc = ", tc, " K"
+          WRITE(tp, "(f8.3)") gtemp(itemp) * ryd2ev / kelvin2eV
+          IF (isig < 10) THEN
+            WRITE(fila2f,   '(a, a6, i1, a, a)') TRIM(prefix), '.a2f.0', isig, '.', trim(adjustl(tp))
+            WRITE(fila2ftr, '(a, a9, i1, a, a)') TRIM(prefix), '.a2f_tr.0', isig, '.', trim(adjustl(tp))
+            WRITE(filres,   '(a, a6, i1, a, a)') TRIM(prefix), '.res.0', isig, '.', trim(adjustl(tp))
+            WRITE(fildos,   '(a, a8, i1, a, a)') TRIM(prefix), '.phdos.0', isig, '.', trim(adjustl(tp))
+          ELSE
+            WRITE(fila2f,   '(a, a5, i2, a, a)') TRIM(prefix), '.a2f.', isig, '.', trim(adjustl(tp))
+            WRITE(fila2ftr, '(a, a8, i2, a, a)') TRIM(prefix), '.a2f_tr.', isig, '.', trim(adjustl(tp))
+            WRITE(filres,   '(a, a5, i2, a, a)') TRIM(prefix), '.res.', isig, '.', trim(adjustl(tp))
+            WRITE(fildos,   '(a, a7, i2, a ,a)') TRIM(prefix), '.phdos.', isig, '.', trim(adjustl(tp))
           ENDIF
+          OPEN(UNIT = iua2ffil, FILE = fila2f, FORM = 'formatted')
+          OPEN(UNIT = iua2ftrfil, FILE = fila2ftr, FORM = 'formatted')
+          OPEN(UNIT = iures, FILE = filres, FORM = 'formatted')
+          OPEN(UNIT = iudosfil, FILE = fildos, FORM = 'formatted')
           !
-        ENDDO
-        !
-        rho(:, :) = zero
-        ! Now compute the Resistivity of Metal using the Ziman formula
-        ! rho(T,smearing) = 4 * pi * me/(n * e**2 * kb * T) int dw hbar w a2F_tr(w,smearing) n(w,T)(1+n(w,T))
-        ! n is the number of electron per unit volume and n(w,T) is the Bose-Einstein distribution
-        ! Usually this means "the number of electrons that contribute to the mobility" and so it is typically 8 (full shell)
-        ! but not always. You might want to check this.
-        !
-        n = nc / omega
-        WRITE(iures, '(a)') '# Temperature [K]                &
-                            Resistivity [micro Ohm cm] for different Phonon smearing (meV)        '
-        WRITE(iures, '("#     ", 15f12.7)') ((degaussq + (ismear - 1) * delta_qsmear) * ryd2mev, ismear = 1, nqsmear)
-        DO ismear = 1, nqsmear
-          DO itemp = 1, 100 ! Per step of 10K
-            temp = itemp * 10.d0 * kelvin2Ry
-            ! omega is the volume of the primitive cell in a.u.
+          WRITE(stdout, '(/5x, a)') REPEAT('=',67)
+          WRITE(stdout, '(5x, "Eliashberg Spectral Function in the Migdal Approximation")')
+          WRITE(stdout, '(5x, a/)') REPEAT('=',67)
+          !
+          om_max = 1.1d0 * MAXVAL(wf(:, :)) ! increase by 10%
+          dw = om_max / DBLE(nqstep)
+          DO iw = 1, nqstep  !
+            ww(iw) = DBLE(iw) * dw
+          ENDDO
+          !
+          lambda_tot    = zero
+          l_a2f(:)      = zero
+          a2f_(:, :)    = zero
+          lambda_tr_tot = zero
+          l_a2f_tr(:)   = zero
+          a2f_tr(:, :)  = zero
+          dosph(:, :)   = zero
+          logavg(:)     = zero
+          !
+          DO ismear = 1, nqsmear
             !
-            prefact = 4.d0 * pi / (temp * n)
-            DO iw = 1, nqstep  ! loop over points on the a2F(w)
+            degaussq0 = degaussq + (ismear - 1) * delta_qsmear
+            inv_degaussq0 = one / degaussq0
+            !
+            DO iw = 1, nqstep  ! loop over points on the a2F(w) graph
               !
-              be = one / (EXP(ww(iw) / temp) - one)
-              ! Perform the integral with rectangle.
-              rho(itemp, ismear) = rho(itemp, ismear) + prefact * ww(iw) * a2f_tr(iw, ismear) * be * (1.d0 + be) * dw
+              DO iq = 1, nqtotf ! loop over q-points
+                DO imode = 1, nmodes ! loop over modes
+                  w0 = wf(imode, iq)
+                  !
+                  IF (w0 > eps_acustic) THEN
+                    !
+                    l = lambda_all(imode, iq, isig, itemp)
+                    IF (lambda_all(imode, iq, isig, itemp) < 0.d0) l = zero ! sanity check
+                    !
+                    a2f_tmp = wqf(iq) * w0 * l / two
+                    !
+                    weight = w0gauss((ww(iw) - w0) * inv_degaussq0, 0) * inv_degaussq0
+                    a2f_(iw, ismear) = a2f_(iw, ismear) + a2f_tmp * weight
+                    dosph(iw, ismear) = dosph(iw, ismear) + wqf(iq) * weight
+                    !
+                    l_tr = lambda_v_all(imode, iq, isig, itemp)
+                    IF (lambda_v_all(imode, iq, isig, itemp) < 0.d0) l_tr = zero !sanity check
+                    !
+                    a2f_tr_tmp = wqf(iq) * w0 * l_tr / two
+                    !
+                    a2f_tr(iw, ismear) = a2f_tr(iw, ismear) + a2f_tr_tmp * weight
+                    !
+                  ENDIF
+                ENDDO
+              ENDDO
+              !
+              ! output a2f
+              !
+              IF (ismear == nqsmear) WRITE(iua2ffil,   '(f12.7, 15f12.7)') ww(iw) * ryd2mev, a2f_(iw, :)
+              IF (ismear == nqsmear) WRITE(iua2ftrfil, '(f12.7, 15f12.7)') ww(iw) * ryd2mev, a2f_tr(iw, :)
+              IF (ismear == nqsmear) WRITE(iudosfil,   '(f12.7, 15f12.7)') ww(iw) * ryd2mev, dosph(iw, :) / ryd2mev
+              !
+              ! do the integral 2 int (a2F(w)/w dw)
+              !
+              l_a2f(ismear) = l_a2f(ismear) + two * a2f_(iw, ismear) / ww(iw) * dw
+              l_a2f_tr(ismear) = l_a2f_tr(ismear) + two * a2f_tr(iw, ismear) / ww(iw) * dw
+              logavg(ismear) = logavg(ismear) + two *  a2f_(iw, ismear) * LOG(ww(iw)) / ww(iw) * dw
               !
             ENDDO
-            ! From a.u. to micro Ohm cm
-            ! Conductivity 1 a.u. = 2.2999241E6 S/m
-            ! Now to go from Ohm*m to micro Ohm cm we need to multiply by 1E8
-            rho(itemp, ismear) = rho(itemp, ismear) * 1E8 / 2.2999241E6
-            IF (ismear == nqsmear) WRITE (iures, '(i8, 15f12.7)') itemp * 10, rho(itemp, :)
+            !
+            logavg(ismear) = EXP(logavg(ismear) / l_a2f(ismear))
+            !
           ENDDO
-        ENDDO
-        CLOSE(iures)
+          !
+          DO iq = 1, nqtotf ! loop over q-points
+            DO imode = 1, nmodes ! loop over modes
+              IF (lambda_all(imode, iq, isig, itemp) > 0.d0 .AND. wf(imode, iq) > eps_acustic ) &
+                lambda_tot = lambda_tot + wqf(iq) * lambda_all(imode, iq, isig, itemp)
+              IF (lambda_v_all(imode, iq, isig, itemp) > 0.d0 .AND. wf(imode, iq) > eps_acustic) &
+                lambda_tr_tot = lambda_tr_tot + wqf(iq) * lambda_v_all(imode, iq, isig, itemp)
+            ENDDO
+          ENDDO
+          WRITE(stdout, '(5x, a, f12.7)') "lambda : ", lambda_tot
+          WRITE(stdout, '(5x, a, f12.7)') "lambda_tr : ", lambda_tr_tot
+          WRITE(stdout, '(a)') " "
+          !
+          !
+          ! Allen-Dynes estimate of Tc for ismear = 1
+          !
+          WRITE(stdout, '(5x, a, f12.7, a)') "Estimated Allen-Dynes Tc"
+          WRITE(stdout, '(a)') " "
+          WRITE(stdout, '(5x, a, f12.7, a, f12.7)') "logavg = ", logavg(1), " l_a2f = ", l_a2f(1)
+          DO i = 1, 6
+            !
+            mu = 0.1d0 + 0.02d0 * DBLE(i - 1)
+            tc = logavg(1) / 1.2d0 * EXP(-1.04d0 * (1.d0 + l_a2f(1)) / (l_a2f(1) - mu * ( 1.d0 + 0.62d0 * l_a2f(1))))
+            ! tc in K
+            !
+            tc = tc * ryd2ev / kelvin2eV
+            !SP: IF Tc is too big, it is not physical
+            IF (tc < 1000.0) THEN
+              WRITE(stdout, '(5x, a, f6.2, a, f22.12, a)') "mu = ", mu, " Tc = ", tc, " K"
+            ENDIF
+            !
+          ENDDO
+          !
+          rho(:, :) = zero
+          ! Now compute the Resistivity of Metal using the Ziman formula
+          ! rho(T,smearing) = 4 * pi * me/(n * e**2 * kb * T) int dw hbar w a2F_tr(w,smearing) n(w,T)(1+n(w,T))
+          ! n is the number of electron per unit volume and n(w,T) is the Bose-Einstein distribution
+          ! Usually this means "the number of electrons that contribute to the mobility" and so it is typically 8 (full shell)
+          ! but not always. You might want to check this.
+          !
+          n = nc / omega
+          WRITE(iures, '(a)') '# Temperature [K]                &
+                              Resistivity [micro Ohm cm] for different Phonon smearing (meV)        '
+          WRITE(iures, '("#     ", 15f12.7)') ((degaussq + (ismear - 1) * delta_qsmear) * ryd2mev, ismear = 1, nqsmear)
+          DO ismear = 1, nqsmear
+            DO itemprho = 1, 100 ! Per step of 10K
+              temp = itemprho * 10.d0 * kelvin2Ry
+              ! omega is the volume of the primitive cell in a.u.
+              !
+              prefact = 4.d0 * pi / (temp * n)
+              DO iw = 1, nqstep  ! loop over points on the a2F(w)
+                !
+                be = one / (EXP(ww(iw) / temp) - one)
+                ! Perform the integral with rectangle.
+                rho(itemprho, ismear) = rho(itemprho, ismear) + prefact * ww(iw) * a2f_tr(iw, ismear) * be * (1.d0 + be) * dw
+                !
+              ENDDO
+              ! From a.u. to micro Ohm cm
+              ! Conductivity 1 a.u. = 2.2999241E6 S/m
+              ! Now to go from Ohm*m to micro Ohm cm we need to multiply by 1E8
+              rho(itemprho, ismear) = rho(itemprho, ismear) * 1E8 / 2.2999241E6
+              IF (ismear == nqsmear) WRITE (iures, '(i8, 15f12.7)') itemprho * 10, rho(itemprho, :)
+            ENDDO
+          ENDDO
+          CLOSE(iures)
+          !
+          WRITE(iua2ffil, *) "Integrated el-ph coupling"
+          WRITE(iua2ffil, '("  #         ", 15f12.7)') l_a2f(:)
+          WRITE(iua2ffil, *) "Phonon smearing (meV)"
+          WRITE(iua2ffil, '("  #         ", 15f12.7)') ((degaussq + (ismear - 1) * delta_qsmear) * ryd2mev, ismear = 1, nqsmear)
+          WRITE(iua2ffil, '(" Electron smearing (eV)", f12.7)') ((isig - 1) * delta_smear + degaussw) * ryd2ev
+          WRITE(iua2ffil, '(" Fermi window (eV)", f12.7)') fsthick * ryd2ev
+          WRITE(iua2ffil, '(" Summed el-ph coupling ", f12.7)') lambda_tot
+          CLOSE(iua2ffil)
+          !
+          WRITE(iua2ftrfil, *) "Integrated el-ph coupling"
+          WRITE(iua2ftrfil, '("  #         ", 15f12.7)') l_a2f_tr(:)
+          WRITE(iua2ftrfil, *) "Phonon smearing (meV)"
+          WRITE(iua2ftrfil, '("  #         ", 15f12.7)') ((degaussq + (ismear - 1) * delta_qsmear) * ryd2mev, ismear = 1, nqsmear)
+          WRITE(iua2ftrfil, '(" Electron smearing (eV)", f12.7)') ((isig - 1) * delta_smear + degaussw) * ryd2ev
+          WRITE(iua2ftrfil, '(" Fermi window (eV)", f12.7)') fsthick * ryd2ev
+          WRITE(iua2ftrfil, '(" Summed el-ph coupling ", f12.7)') lambda_tot
+          CLOSE(iua2ftrfil)
+          !
+          CLOSE(iudosfil)
+          !
+        ENDDO ! isig
         !
-        WRITE(iua2ffil, *) "Integrated el-ph coupling"
-        WRITE(iua2ffil, '("  #         ", 15f12.7)') l_a2f(:)
-        WRITE(iua2ffil, *) "Phonon smearing (meV)"
-        WRITE(iua2ffil, '("  #         ", 15f12.7)') ((degaussq + (ismear - 1) * delta_qsmear) * ryd2mev, ismear = 1, nqsmear)
-        WRITE(iua2ffil, '(" Electron smearing (eV)", f12.7)') ((isig - 1) * delta_smear + degaussw) * ryd2ev
-        WRITE(iua2ffil, '(" Fermi window (eV)", f12.7)') fsthick * ryd2ev
-        WRITE(iua2ffil, '(" Summed el-ph coupling ", f12.7)') lambda_tot
-        CLOSE(iua2ffil)
-        !
-        WRITE(iua2ftrfil, *) "Integrated el-ph coupling"
-        WRITE(iua2ftrfil, '("  #         ", 15f12.7)') l_a2f_tr(:)
-        WRITE(iua2ftrfil, *) "Phonon smearing (meV)"
-        WRITE(iua2ftrfil, '("  #         ", 15f12.7)') ((degaussq + (ismear - 1) * delta_qsmear) * ryd2mev, ismear = 1, nqsmear)
-        WRITE(iua2ftrfil, '(" Electron smearing (eV)", f12.7)') ((isig - 1) * delta_smear + degaussw) * ryd2ev
-        WRITE(iua2ftrfil, '(" Fermi window (eV)", f12.7)') fsthick * ryd2ev
-        WRITE(iua2ftrfil, '(" Summed el-ph coupling ", f12.7)') lambda_tot
-        CLOSE(iua2ftrfil)
-        !
-        CLOSE(iudosfil)
-        !
-      ENDDO ! isig
-      !
+      ENDDO ! itemp
       DEALLOCATE(l_a2f, STAT = ierr)
       IF (ierr /= 0) CALL errore('eliashberg_a2f', 'Error deallocating l_a2f', 1)
       DEALLOCATE(l_a2f_tr, STAT = ierr)

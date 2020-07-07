@@ -105,6 +105,12 @@
   !! Wannier centers
   !
   ! Local  variables
+  CHARACTER(LEN = 20) :: tp
+  !! string for temperature
+  CHARACTER(LEN = 256) :: filephselfen
+  !! file name of phonon selfenergy
+  CHARACTER(LEN = 256) :: filephlinewid
+  !! file name of phonon linewidth
   CHARACTER(LEN = 256) :: filint
   !! Name of the file to write/read
   CHARACTER(LEN = 30)  :: myfmt
@@ -173,6 +179,8 @@
   !! Counter on bands when use_ws == .TRUE.
   INTEGER :: itemp
   !! Temperature index
+  INTEGER :: itempphen
+  !! Temperature counter for writing phonon selfen
   INTEGER :: icbm
   !! Index of the CBM
   INTEGER :: totq
@@ -876,18 +884,18 @@
     ALLOCATE(epmatlrT(nbndsub, nbndsub, nmodes, nkf), STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating epmatlrT', 1)
     IF (phonselfen) THEN
-      ALLOCATE(lambda_all(nmodes, totq, nsmear), STAT = ierr)
+      ALLOCATE(lambda_all(nmodes, totq, nsmear, nstemp), STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating lambda_all', 1)
-      ALLOCATE(lambda_v_all(nmodes, totq, nsmear), STAT = ierr)
+      ALLOCATE(lambda_v_all(nmodes, totq, nsmear, nstemp), STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating lambda_v_all', 1)
-      ALLOCATE(gamma_all(nmodes, totq, nsmear), STAT = ierr)
+      ALLOCATE(gamma_all(nmodes, totq, nsmear, nstemp), STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating gamma_all', 1)
-      ALLOCATE(gamma_v_all(nmodes, totq, nsmear), STAT = ierr)
+      ALLOCATE(gamma_v_all(nmodes, totq, nsmear, nstemp), STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating gamma_v_all', 1)
-      lambda_all(:, :, :)   = zero
-      lambda_v_all(:, :, :) = zero
-      gamma_all(:, :, :)    = zero
-      gamma_v_all(:, :, :)  = zero
+      lambda_all(:, :, :, :)   = zero
+      lambda_v_all(:, :, :, :) = zero
+      gamma_all(:, :, :, :)    = zero
+      gamma_v_all(:, :, :, :)  = zero
     ENDIF
     IF (specfun_el .OR. specfun_pl) THEN
       ALLOCATE(esigmar_all(nbndfst, nktotf, nw_specfun, nstemp), STAT = ierr)
@@ -922,19 +930,19 @@
       zi_allcb(:, :, :)      = zero
     ENDIF
     IF (elecselfen .OR. plselfen) THEN
-      ALLOCATE(sigmar_all(nbndfst, nktotf), STAT = ierr)
+      ALLOCATE(sigmar_all(nbndfst, nktotf, nstemp), STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating sigmar_all', 1)
-      ALLOCATE(sigmai_all(nbndfst, nktotf), STAT = ierr)
+      ALLOCATE(sigmai_all(nbndfst, nktotf, nstemp), STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating sigmai_all', 1)
-      ALLOCATE(zi_all(nbndfst, nktotf), STAT = ierr)
+      ALLOCATE(zi_all(nbndfst, nktotf, nstemp), STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating zi_all', 1)
-      sigmar_all(:, :) = zero
-      sigmai_all(:, :) = zero
-      zi_all(:, :)     = zero
+      sigmar_all(:, :, :) = zero
+      sigmai_all(:, :, :) = zero
+      zi_all(:, :, :)     = zero
       IF (iverbosity == 3) THEN
-        ALLOCATE(sigmai_mode(nbndfst, nmodes, nktotf), STAT = ierr)
+        ALLOCATE(sigmai_mode(nbndfst, nmodes, nktotf, nstemp), STAT = ierr)
         IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating sigmai_mode', 1)
-        sigmai_mode(:, :, :) = zero
+        sigmai_mode(:, :, :, :) = zero
       ENDIF
     ENDIF ! elecselfen
     !
@@ -1399,37 +1407,42 @@
     IF (mpime == ionode_id) THEN
       !
       IF (phonselfen) THEN
-        OPEN(UNIT = lambda_phself, FILE = 'lambda.phself')
-        WRITE(lambda_phself, '(/2x,a/)') '#Lambda phonon self-energy'
-        WRITE(lambda_phself, *) '#Modes     ',(imode, imode = 1, nmodes)
-        DO iqq = 1, nqtotf
-            !
-            !myfmt = "(*(3x,E15.5))"  This does not work with PGI
-          myfmt = "(1000(3x,E15.5))"
-          WRITE(lambda_phself,'(i9,4x)', ADVANCE = 'no') iqq
-          WRITE(lambda_phself, FMT = myfmt) (REAL(lambda_all(imode, iqq, 1)), imode = 1, nmodes)
-            !
-        ENDDO
-        CLOSE(lambda_phself)
-        !
-        ! SP - 03/2019
-        ! \Gamma = 1/\tau = phonon lifetime
-        ! \Gamma = - 2 * Im \Pi^R where \Pi^R is the retarted phonon self-energy.
-        ! Im \Pi^R = pi*k-point weight*[f(E_k+q) - f(E_k)]*delta[E_k+q - E_k - w_q]
-        ! Since gamma_all = pi*k-point weight*[f(E_k) - f(E_k+q)]*delta[E_k+q - E_k - w_q] we have
-        ! \Gamma = 2 * gamma_all
-        OPEN(UNIT = linewidth_phself, FILE = 'linewidth.phself')
-        WRITE(linewidth_phself, '(a)') '# Phonon frequency and phonon lifetime in meV '
-        WRITE(linewidth_phself, '(a)') '# Q-point  Mode   Phonon freq (meV)   Phonon linewidth (meV)'
-        DO iqq = 1, nqtotf
-          !
-          DO imode = 1, nmodes
-            WRITE(linewidth_phself, '(i9,i6,E20.8,E22.10)') iqq, imode, &
-                                   ryd2mev * wf(imode, iqq), 2.0d0 * ryd2mev * REAL(gamma_all(imode, iqq, 1))
+        DO itempphen = 1, nstemp
+          WRITE(tp, "(f8.3)") gtemp(itempphen) * ryd2ev / kelvin2eV
+          filephselfen = 'lambda.phself.' // trim(adjustl(tp)) // 'K'
+          OPEN(UNIT = lambda_phself, FILE = filephselfen)
+          WRITE(lambda_phself, '(/2x,a/)') '#Lambda phonon self-energy'
+          WRITE(lambda_phself, *) '#Modes     ',(imode, imode = 1, nmodes)
+          DO iqq = 1, nqtotf
+              !
+              !myfmt = "(*(3x,E15.5))"  This does not work with PGI
+            myfmt = "(1000(3x,E15.5))"
+            WRITE(lambda_phself,'(i9,4x)', ADVANCE = 'no') iqq
+            WRITE(lambda_phself, FMT = myfmt) (REAL(lambda_all(imode, iqq, 1, itempphen)), imode = 1, nmodes)
+              !
           ENDDO
+          CLOSE(lambda_phself)
           !
-        ENDDO
-        CLOSE(linewidth_phself)
+          ! SP - 03/2019
+          ! \Gamma = 1/\tau = phonon lifetime
+          ! \Gamma = - 2 * Im \Pi^R where \Pi^R is the retarted phonon self-energy.
+          ! Im \Pi^R = pi*k-point weight*[f(E_k+q) - f(E_k)]*delta[E_k+q - E_k - w_q]
+          ! Since gamma_all = pi*k-point weight*[f(E_k) - f(E_k+q)]*delta[E_k+q - E_k - w_q] we have
+          ! \Gamma = 2 * gamma_all
+          filephlinewid = 'linewidth.phself.' // trim(adjustl(tp)) // 'K'
+          OPEN(UNIT = linewidth_phself, FILE = filephlinewid)
+          WRITE(linewidth_phself, '(a)') '# Phonon frequency and phonon lifetime in meV '
+          WRITE(linewidth_phself, '(a)') '# Q-point  Mode   Phonon freq (meV)   Phonon linewidth (meV)'
+          DO iqq = 1, nqtotf
+            !
+            DO imode = 1, nmodes
+              WRITE(linewidth_phself, '(i9,i6,E20.8,E22.10)') iqq, imode, &
+                                     ryd2mev * wf(imode, iqq), 2.0d0 * ryd2mev * REAL(gamma_all(imode, iqq, 1, itempphen))
+            ENDDO
+            !
+          ENDDO
+          CLOSE(linewidth_phself)
+        ENDDO ! itempphen
       ENDIF
     ENDIF
     IF (band_plot) CALL plot_band()

@@ -31,6 +31,7 @@
     USE mp,        ONLY : mp_barrier
     USE mp_world,  ONLY : mpime
     USE io_global, ONLY : ionode_id
+    USE epwcom,    ONLY : nstemp
     !
     IMPLICIT NONE
     !
@@ -40,11 +41,11 @@
     !! Total number of q-points
     INTEGER, INTENT(in) :: nktotf
     !! Total number of k-points
-    REAL(KIND = DP), INTENT(inout) :: sigmar_all(nbndfst, nktotf)
+    REAL(KIND = DP), INTENT(inout) :: sigmar_all(nbndfst, nktotf, nstemp)
     !! Real part of the electron-phonon self-energy accross all pools
-    REAL(KIND = DP), INTENT(inout) :: sigmai_all(nbndfst, nktotf)
+    REAL(KIND = DP), INTENT(inout) :: sigmai_all(nbndfst, nktotf, nstemp)
     !! Imaginary part of the electron-phonon self-energy accross all pools
-    REAL(KIND = DP), INTENT(inout) :: zi_all(nbndfst, nktotf)
+    REAL(KIND = DP), INTENT(inout) :: zi_all(nbndfst, nktotf, nstemp)
     !! Z parameter of electron-phonon self-energy accross all pools
     !
     ! Local variables
@@ -58,34 +59,42 @@
     !! Local band index
     INTEGER :: lsigma_all
     !! Length of the vector
-    REAL(KIND = DP) :: aux(3 * nbndfst * nktotf + 2)
+    INTEGER :: itemp
+    !! Counter on temperatures
+    REAL(KIND = DP) :: aux(3 * nbndfst * nktotf * nstemp + 2)
     !! Vector to store the array
     !
     IF (mpime == ionode_id) THEN
       !
-      lsigma_all = 3 * nbndfst * nktotf + 2
+      lsigma_all = 3 * nbndfst * nktotf * nstemp + 2
       ! First element is the current q-point
       aux(1) = REAL(iqq - 1, KIND = DP) ! we need to start at the next q
       ! Second element is the total number of q-points
       aux(2) = REAL(totq, KIND = DP)
       !
       i = 2
-      DO ik = 1, nktotf
-        DO ibnd = 1, nbndfst
-          i = i + 1
-          aux(i) = sigmar_all(ibnd, ik)
+      DO itemp = 1, nstemp
+        DO ik = 1, nktotf
+          DO ibnd = 1, nbndfst
+            i = i + 1
+            aux(i) = sigmar_all(ibnd, ik, itemp)
+          ENDDO
         ENDDO
       ENDDO
-      DO ik = 1, nktotf
-        DO ibnd = 1, nbndfst
-          i = i + 1
-          aux(i) = sigmai_all(ibnd, ik)
+      DO itemp = 1, nstemp
+        DO ik = 1, nktotf
+          DO ibnd = 1, nbndfst
+            i = i + 1
+            aux(i) = sigmai_all(ibnd, ik, itemp)
+          ENDDO
         ENDDO
       ENDDO
-      DO ik = 1, nktotf
-        DO ibnd = 1, nbndfst
-          i = i + 1
-          aux(i) = zi_all(ibnd, ik)
+      DO itemp = 1, nstemp
+        DO ik = 1, nktotf
+          DO ibnd = 1, nbndfst
+            i = i + 1
+            aux(i) = zi_all(ibnd, ik, itemp)
+          ENDDO
         ENDDO
       ENDDO
       CALL diropn(iufilsigma_all, 'sigma_restart', lsigma_all, exst)
@@ -95,14 +104,14 @@
     !
     ! Make everythin 0 except the range of k-points we are working on
     IF (lower_bnd > 1) THEN
-      sigmar_all(:, 1:lower_bnd - 1) = zero
-      sigmai_all(:, 1:lower_bnd - 1) = zero
-      zi_all(:, 1:lower_bnd - 1) = zero
+      sigmar_all(:, 1:lower_bnd - 1, :) = zero
+      sigmai_all(:, 1:lower_bnd - 1, :) = zero
+      zi_all(:, 1:lower_bnd - 1, :) = zero
     ENDIF
     IF (upper_bnd < nktotf) THEN
-      sigmar_all(:, upper_bnd + 1:nktotf) = zero
-      sigmai_all(:, upper_bnd + 1:nktotf) = zero
-      zi_all(:, upper_bnd + 1:nktotf) = zero
+      sigmar_all(:, upper_bnd + 1:nktotf, :) = zero
+      sigmai_all(:, upper_bnd + 1:nktotf, :) = zero
+      zi_all(:, upper_bnd + 1:nktotf, :) = zero
     ENDIF
     !
     !----------------------------------------------------------------------------
@@ -124,6 +133,7 @@
     USE mp,        ONLY : mp_barrier, mp_bcast
     USE mp_world,  ONLY : mpime, world_comm
     USE io_global, ONLY : ionode_id
+    USE epwcom,    ONLY : nstemp
     !
     IMPLICIT NONE
     !
@@ -133,11 +143,11 @@
     !! Total number of q-points
     INTEGER, INTENT(in) :: nktotf
     !! Total number of k-points
-    REAL(KIND = DP), INTENT(out) :: sigmar_all(nbndfst, nktotf)
+    REAL(KIND = DP), INTENT(out) :: sigmar_all(nbndfst, nktotf, nstemp)
     !! Real part of the electron-phonon self-energy accross all pools
-    REAL(KIND = DP), INTENT(out) :: sigmai_all(nbndfst, nktotf)
+    REAL(KIND = DP), INTENT(out) :: sigmai_all(nbndfst, nktotf, nstemp)
     !! Imaginary part of the electron-phonon self-energy accross all pools
-    REAL(KIND = DP), INTENT(out) :: zi_all(nbndfst, nktotf)
+    REAL(KIND = DP), INTENT(out) :: zi_all(nbndfst, nktotf, nstemp)
     !! Z parameter of electron-phonon self-energy accross all pools
     !
     ! Local variables
@@ -153,7 +163,9 @@
     !! Length of the vector
     INTEGER :: nqtotf_read
     !! Total number of q-point read
-    REAL(KIND = DP) :: aux(3 * nbndfst * nktotf + 2)
+    INTEGER :: itemp
+    !! Counter on temperatures
+    REAL(KIND = DP) :: aux(3 * nbndfst * nktotf * nstemp + 2)
     !! Vector to store the array
     !
     CHARACTER(LEN = 256) :: name1
@@ -170,7 +182,7 @@
       !
       IF (exst) THEN ! read the file
         !
-        lsigma_all = 3 * nbndfst * nktotf + 2
+        lsigma_all = 3 * nbndfst * nktotf * nstemp + 2
         CALL diropn(iufilsigma_all, 'sigma_restart', lsigma_all, exst)
         CALL davcio(aux, lsigma_all, iufilsigma_all, 1, -1)
         !
@@ -182,22 +194,28 @@
           &'Error: The current total number of q-point is not the same as the read one. ', 1)
         !
         i = 2
-        DO ik = 1, nktotf
-          DO ibnd = 1, nbndfst
-            i = i + 1
-            sigmar_all(ibnd, ik) = aux(i)
+        DO itemp = 1, nstemp
+          DO ik = 1, nktotf
+            DO ibnd = 1, nbndfst
+              i = i + 1
+              sigmar_all(ibnd, ik, itemp) = aux(i)
+            ENDDO
           ENDDO
         ENDDO
-        DO ik = 1, nktotf
-          DO ibnd = 1, nbndfst
-            i = i + 1
-            sigmai_all(ibnd, ik) = aux(i)
+        DO itemp = 1, nstemp
+          DO ik = 1, nktotf
+            DO ibnd = 1, nbndfst
+              i = i + 1
+              sigmai_all(ibnd, ik, itemp) = aux(i)
+            ENDDO
           ENDDO
         ENDDO
-        DO ik = 1, nktotf
-          DO ibnd = 1, nbndfst
-            i = i + 1
-            zi_all(ibnd, ik) = aux(i)
+        DO itemp = 1, nstemp
+          DO ik = 1, nktotf
+            DO ibnd = 1, nbndfst
+              i = i + 1
+              zi_all(ibnd, ik, itemp) = aux(i)
+            ENDDO
           ENDDO
         ENDDO
         CLOSE(iufilsigma_all)
@@ -214,14 +232,14 @@
       !
       ! Make everythin 0 except the range of k-points we are working on
       IF (lower_bnd > 1) THEN
-        sigmar_all(:, 1:lower_bnd - 1) = zero
-        sigmai_all(:, 1:lower_bnd - 1) = zero
-        zi_all(:, 1:lower_bnd - 1) = zero
+        sigmar_all(:, 1:lower_bnd - 1, :) = zero
+        sigmai_all(:, 1:lower_bnd - 1, :) = zero
+        zi_all(:, 1:lower_bnd - 1, :) = zero
       ENDIF
       IF (upper_bnd < nktotf) THEN
-        sigmar_all(:, upper_bnd + 1:nktotf) = zero
-        sigmai_all(:, upper_bnd + 1:nktotf) = zero
-        zi_all(:, upper_bnd + 1:nktotf) = zero
+        sigmar_all(:, upper_bnd + 1:nktotf, :) = zero
+        sigmai_all(:, upper_bnd + 1:nktotf, :) = zero
+        zi_all(:, upper_bnd + 1:nktotf, :) = zero
       ENDIF
       !
       WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from: ', iqq,'/', totq

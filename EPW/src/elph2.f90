@@ -87,15 +87,15 @@
     etf_k(:, :),             &!  Saved interpolated KS eigenenergies for later used in q-parallelization (nbnd, nkqf)
     etf_ks(:, :),            &!  interpolated eigenvalues (nbnd, nkqf) KS eigenvalues in the case of eig_read
     wf(:, :),                &!  interpolated eigenfrequencies
-    gamma_all(:, :, :),      &!  Gamma
+    gamma_all(:, :, :, :),      &!  Gamma
     gamma_nest(:, :),        &!  Nesting function in the case of q-parallelization
-    gamma_v_all(:, :, :),    &!  Gamma
-    lambda_all(:, :, :),     &!  Electron-phonon coupling parameter
-    lambda_v_all(:, :, :),   &!  Electron-phonon coupling parameter (transport)
-    sigmar_all(:, :),        &!  Real part of the electron-phonon self-energy
-    sigmai_all(:, :),        &!  Imaginary part of the electron-phonon self-energy
-    sigmai_mode(:, :, :),    &!  Mode resolved imaginary electron self-energy
-    zi_all(:, :),            &!  Z renormalization factor
+    gamma_v_all(:, :, :, :),    &!  Gamma
+    lambda_all(:, :, :, :),     &!  Electron-phonon coupling parameter
+    lambda_v_all(:, :, :, :),   &!  Electron-phonon coupling parameter (transport)
+    sigmar_all(:, :, :),        &!  Real part of the electron-phonon self-energy
+    sigmai_all(:, :, :),        &!  Imaginary part of the electron-phonon self-energy
+    sigmai_mode(:, :, :, :),    &!  Mode resolved imaginary electron self-energy
+    zi_all(:, :, :),            &!  Z renormalization factor
     eta(:, :, :),            &!  Adaptative smearing
     esigmar_all(:, :, :, :), &!  energy of the real self-energy
     esigmai_all(:, :, :, :), &!  energy of the imaginary self-energy
