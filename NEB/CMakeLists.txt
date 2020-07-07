@@ -53,7 +53,8 @@ set_target_properties(qe_neb_pathinterpolation_exe PROPERTIES OUTPUT_NAME path_i
 target_link_libraries(qe_neb_pathinterpolation_exe
     PRIVATE
         QE::Modules
-        QE::NEB)
+        QE::NEB
+        QE::UPF)
 
 ###########################################################
 

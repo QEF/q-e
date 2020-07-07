@@ -37,13 +37,13 @@ set(sources
 )
 
 qe_add_library(qe_upflib ${sources})
-add_library(QE::upflib ALIAS qe_upflib)
+add_library(QE::UPF ALIAS qe_upflib)
 target_link_libraries(qe_upflib
     PRIVATE
         QE::MPI_Fortran
+        QE::LAPACK
     PUBLIC
-        QE::FOX
-)
+        QE::FOX)
 
 ###########################################################
 

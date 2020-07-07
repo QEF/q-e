@@ -181,7 +181,10 @@ set(sources_ph
     PH/non_scf_ph.f90
     PH/adddvscf_ph_mag.f90
     PH/apply_trev.f90
-    PH/c_bands_ph.f90)
+    PH/c_bands_ph.f90
+    PH/dvscf_interpolate.f90
+    PH/ahc.f90
+    PH/postahc.f90)
 
 set(sources_phaux
     PH/write_eigenvectors.f90)

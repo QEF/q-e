@@ -152,7 +152,7 @@ target_link_libraries(qe_modules
         QE::OpenMP_Fortran
         QE::FFTX
         QE::LAX
-	QE::upflib
+        QE::UPF
         QE::CLIB # this is needed only by wrappers.f90
         QE::MPI_Fortran
     PUBLIC
