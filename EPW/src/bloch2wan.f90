@@ -1443,6 +1443,7 @@
         epmatwe = czero
         CALL MPI_FILE_READ_AT(iunepmatwe, lrepmatw, epmatwe, lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
         IF (ierr /= 0) CALL errore('ephbloch2wanp_mem', 'error in MPI_FILE_READ_AT', 1)
+        IF (add == 1 .AND. ir == ir_stop + add) CYCLE
 #else
         epmatwe = czero
         CALL rwepmatw(epmatwe, nbnd, nrr_k, nmodes, iq, iunepmatwe, -1)
