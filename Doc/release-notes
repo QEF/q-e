@@ -12,6 +12,8 @@ New in dev branch:
     Extension of the HP code to compute also inter-site Hubbard V parameters;
     Extension of the XSpectra code to work on top of DFT+U+V [arXiv:2004.04142]
     (I. Timrov, N. Marzari, M. Cococcioni).
+    Extension of Hubbard forces and stress to ortho-atomic orbitals
+    (I. Timrov, F. Aquilante, L. Binci, N. Marzari)
   * Support for BEEF-vdW XC (by Johannes Voss) compilation link has been included; 
     e.g. BEEF_LIBS="-L$LIBBEEF/src -lbeef", where $LIBBEEF is the path 
     to the compiled libbeef folder. If "calculation='ensemble'", 
