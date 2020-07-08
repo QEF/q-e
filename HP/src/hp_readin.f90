@@ -139,6 +139,7 @@ SUBROUTINE input_sanity()
   USE cellmd,           ONLY : lmovecell
   USE noncollin_module, ONLY : i_cons, noncolin
   USE mp_bands,         ONLY : nbgrp
+  USE funct,            ONLY : dft_is_meta, dft_is_hybrid
   USE ldaU,             ONLY : lda_plus_u, U_projection, lda_plus_u_kind, Hubbard_J0, &
                                is_hubbard_back, Hubbard_V
   !
@@ -216,6 +217,12 @@ SUBROUTINE input_sanity()
   !
   IF (tfixed_occ) CALL errore('hp_readin', &
      & 'The HP code with arbitrary occupations not tested',1)
+  !
+  IF ( dft_is_meta() ) CALL errore('hp_readin',&
+     'The HP code with meta-GGA functionals is not yet available',1)
+  !
+  IF ( dft_is_hybrid() ) CALL errore('hp_readin',&
+     'The HP code with hybrid functionals is not yet available',1)
   !
   RETURN
   !
