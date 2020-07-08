@@ -1549,7 +1549,7 @@
     !-----------------------------------------------------------------------
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
-    USE epwcom,    ONLY : nbndsub, fsthick, eptemp, ngaussw, degaussw, &
+    USE epwcom,    ONLY : nbndsub, fsthick, ngaussw, degaussw, &
                           nsmear, delta_smear, efermi_read, fermi_energy
     USE pwcom,     ONLY : ef
     USE elph2,     ONLY : ibndmin, etf, wkf, xqf, wqf, nkqf, nktotf, &
@@ -1614,7 +1614,7 @@
       !
       IF (fsthick < 1.d3) WRITE(stdout, '(/5x, a, f10.6, a)' ) &
         'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
-      WRITE(stdout, '(/5x, a, f10.6, a)' ) 'Golden Rule strictly enforced with T = ', eptemp * ryd2ev, ' eV'
+!      WRITE(stdout, '(/5x, a, f10.6, a)' ) 'Golden Rule strictly enforced with T = ', eptemp * ryd2ev, ' eV'
     ENDIF
     !
     ! SP: The Gamma function needs to be put to 0 for each q
