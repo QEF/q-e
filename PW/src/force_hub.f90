@@ -1100,6 +1100,10 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       !    NOTE: overlap_inv is already transposed (it is O^{-1/2}_JI),
       !          hence we obtain \sum_J O^{-1/2}_JI \dphi_J/d\tau(alpha,ipol)  
       !
+#if defined(__XLF)
+      ! IBM XL 16.1.1 gives INTERNAL COMPILER ERROR
+      CALL errore('dprojdtau_k','disabled when it is compiled by xlf.',1)
+#else
       offpm = oatwfc(na) ! offset
       DO ig = 1, npw
          gvec = (g(ipol,igk_k(ig,ik)) + xk(ipol,ik)) * tpiba
@@ -1110,6 +1114,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
             ENDDO
          ENDDO
       ENDDO
+#endif
       !
       ! 2. Contribution due to the derivative of (O^{-1/2})_JI which
       !    is multiplied by atomic wavefunctions
