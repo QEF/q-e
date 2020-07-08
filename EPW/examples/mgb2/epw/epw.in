@@ -32,7 +32,6 @@
   ephwrite    = .true. ! Writes .ephmat files used when Eliasberg = .true.
 
   fsthick     = 0.4  ! eV
-  eptemp      = 300  ! K
   degaussw    = 0.10 ! eV
   nsmear      = 1
   delta_smear = 0.04 ! eV
