@@ -29,8 +29,7 @@
   epmatkqread  = .false.
 
   nstemp      = 2
-  tempsmin    = 100
-  tempsmax    = 300
+  temps       = 100 300
 
   lpolar      = .true.
   etf_mem     = 1

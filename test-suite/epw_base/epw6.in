@@ -37,7 +37,7 @@
   nw_specfun   = 20
 
   fsthick     = 15 ! eV 
-  eptemp      = 300 ! K 
+  temps       = 300 ! K 
   degaussw    = 1.0 ! eV
 
   dvscf_dir   = './save/'
