@@ -79,7 +79,7 @@ MODULE beef_interface
         INTEGER             :: ionode_ = 0
         INTEGER             :: r_
         !
-        IF ( ionode /= 0 ) ionode_ = 1
+        IF ( ionode ) ionode_ = 1
         !
         r_ = beef_set_type_interface(tbeef, ionode_)
         !
