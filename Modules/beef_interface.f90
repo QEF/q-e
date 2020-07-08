@@ -76,15 +76,18 @@ MODULE beef_interface
         LOGICAL, INTENT(IN) :: ionode
         LOGICAL             :: r
         ! ... local variables ...
-        INTEGER             :: ionode_, r_
+        INTEGER             :: ionode_ = 0
+        INTEGER             :: r_
         !
-        ionode_ = 0
-        IF ( ionode ) ionode_ = 1
+        IF ( ionode /= 0 ) ionode_ = 1
         !
         r_ = beef_set_type_interface(tbeef, ionode_)
         !
-        r = .FALSE.
-        IF ( r_ ) r = .TRUE.
+        IF ( r_ /= 0 ) THEN
+            r = .TRUE.
+        ELSE
+            r = .FALSE.
+        END IF
         !
     END FUNCTION beef_set_type
     !
