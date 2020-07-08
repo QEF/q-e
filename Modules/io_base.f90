@@ -675,7 +675,7 @@ MODULE io_base
 #if defined (__HDF5) 
          CALL qeh5_openfile(h5file, TRIM(filename)//'.hdf5', ACTION = 'read', &
               error = ierr)
-         IF ( ierr /= 0 . AND. PRESENT(ier_) ) THEN
+         IF ( ierr /= 0 .AND. PRESENT(ier_) ) THEN
             ier_ = ierr
             RETURN
          END IF

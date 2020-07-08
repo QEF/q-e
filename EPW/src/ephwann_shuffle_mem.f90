@@ -66,7 +66,8 @@
                             vmebloch2wan, ephbloch2wane, ephbloch2wanp,         &
                             ephbloch2wanp_mem
   USE wigner,        ONLY : wigner_seitz_wrap
-  USE io_eliashberg, ONLY : write_ephmat, count_kpoints, kmesh_fine, kqmap_fine
+  USE io_eliashberg, ONLY : write_ephmat, count_kpoints, kmesh_fine,kqmap_fine, &
+                            check_restart_ephwrite
   USE transport,     ONLY : transport_coeffs, scattering_rate_q
   USE grid,          ONLY : qwindow
   USE printing,      ONLY : print_gkk, plot_band
@@ -286,21 +287,23 @@
   !
   IF (nbndsub /= nbndep) WRITE(stdout, '(/,5x,a,i4)' ) 'Band disentanglement is used: nbndsub = ', nbndsub
   !
-  ALLOCATE(cu(nbndep, nbndsub, nks), STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating cu', 1)
-  ALLOCATE(cuq(nbndep, nbndsub, nks), STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating cuq', 1)
-  ALLOCATE(lwin(nbndep, nks), STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating lwin', 1)
-  ALLOCATE(lwinq(nbndep, nks), STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating lwinq', 1)
-  ALLOCATE(exband(nbnd), STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating exband', 1)
-  cu(:, :, :)  = czero
-  cuq(:, :, :) = czero
-  lwin(:, :)   = .FALSE.
-  lwinq(:, :)  = .FALSE.
-  exband(:)    = .FALSE.
+  IF (.NOT. (epwread .AND. .NOT. epbread)) THEN
+    ALLOCATE(cu(nbndep, nbndsub, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating cu', 1)
+    ALLOCATE(cuq(nbndep, nbndsub, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating cuq', 1)
+    ALLOCATE(lwin(nbndep, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating lwin', 1)
+    ALLOCATE(lwinq(nbndep, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating lwinq', 1)
+    ALLOCATE(exband(nbnd), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating exband', 1)
+    cu(:, :, :)  = czero
+    cuq(:, :, :) = czero
+    lwin(:, :)   = .FALSE.
+    lwinq(:, :)  = .FALSE.
+    exband(:)    = .FALSE.
+  ENDIF
   !
   ALLOCATE(w2(3 * nat), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating w2', 1)
@@ -474,18 +477,17 @@
     IF (.NOT. vme) DEALLOCATE(dmec)
     DEALLOCATE(epmatwe_mem, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating epmatwe_mem', 1)
+    DEALLOCATE(cu, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating cu', 1)
+    DEALLOCATE(cuq, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating cuq', 1)
+    DEALLOCATE(lwin, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating lwin', 1)
+    DEALLOCATE(lwinq, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating lwinq', 1)
+    DEALLOCATE(exband, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating exband', 1)
   ENDIF ! (epwread .AND. .NOT. epbread)
-  !
-  DEALLOCATE(cu, STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating cu', 1)
-  DEALLOCATE(cuq, STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating cuq', 1)
-  DEALLOCATE(lwin, STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating lwin', 1)
-  DEALLOCATE(lwinq, STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating lwinq', 1)
-  DEALLOCATE(exband, STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating exband', 1)
   !
   ! Check Memory usage
   CALL system_mem_usage(valueRSS)
@@ -1021,11 +1023,19 @@
 #endif
         IF (ierr /= 0) CALL errore('ephwann_shuffle', 'error in MPI_BCAST', 1)
         !
-        IF(ephwrite .AND. iq_restart > 1) first_cycle = .TRUE.
+        IF(ephwrite .AND. iq_restart > 1) THEN
+          first_cycle = .TRUE.
+          CALL check_restart_ephwrite
+        ENDIF
         !
         ! Now, the iq_restart point has been done, so we need to do the next
         iq_restart = iq_restart + 1
-        WRITE(stdout, '(5x,a,i8,a)')'We restart from ', iq_restart, ' q-points'
+        !
+        IF (iq_restart < totq) THEN
+          WRITE(stdout, '(5x,a,i8,a)')'We restart from ', iq_restart, ' q-points'
+        ELSE
+          WRITE(stdout, '(5x,a)')'All q-points are done, no need to restart !!'
+        ENDIF
         !
       ENDIF ! exst
     ENDIF
@@ -1308,7 +1318,7 @@
            CALL count_kpoints
            first_cycle = .FALSE.
         ENDIF
-        CALL write_ephmat(iqq, iq)
+        CALL write_ephmat(iqq, iq, totq)
       ENDIF
       !
       IF (.NOT. scatread) THEN

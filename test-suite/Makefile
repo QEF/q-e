@@ -18,9 +18,9 @@ default :
 	@echo 'where <target> identifies an action'
 	@echo ' run-tests                   : run-tests-serial (default)'
 	@echo ' run-tests-serial            : run all tests in SERIAL' 
-	@echo ' run-tests-XX-serial         : run tests for XX={pw,cp} only, as above' 
+	@echo ' run-tests-XX-serial         : run tests for XX={pw,cp,ph,epw,hp} only, as above' 
 	@echo ' run-tests-parallel          : run all tests in PARALLEL (4 MPI)'
-	@echo ' run-tests-XX-parallel       : run tests for XX={pw,cp} only, as above' 
+	@echo ' run-tests-XX-parallel       : run tests for XX={pw,cp,ph,epw,hp} only, as above' 
 	@echo ' run-custom-test testdir=DIR : run test in DIR only (serial)'
 	@echo ' run-custom-test-parallel testdir=DIR : run test in DIR only (parallel 4 MPI)'
 	@echo ' compare                     : compare last output with reference'
@@ -43,7 +43,7 @@ pseudo :
 
 run-tests : run-tests-serial
 
-run-tests-serial : run-tests-pw-serial run-tests-cp-serial 
+run-tests-serial : run-tests-pw-serial run-tests-cp-serial run-tests-ph-serial run-tests-epw-serial run-tests-hp-serial  
 
 run-tests-parallel : run-tests-pw-parallel run-tests-cp-parallel run-tests-ph-parallel run-tests-epw-parallel run-tests-hp-parallel
 
@@ -170,7 +170,7 @@ clean:
 		epw_*/*.acon_iso_25.00 epw_*/*.crystal.fmt epw_*/*.a2f_iso epw_*/*.ephmat* \
 		epw_*/*.kmap epw_*/*.lambda_k_pairs epw_*/*.ukk epw_*/*.imag_aniso_25.00 \
 		epw_*/*.pade_aniso_gap0_25.00 epw_*/*.win epw_*/*.imag_aniso_gap0_25.00 \
-		epw_*/*.chk epw_*/*.phdos_proj epw_*/*..a2f epw_*/*.imag_aniso_gap_FS_25.00 \
+		epw_*/*.chk epw_*/*.phdos_proj epw_*/*.a2f_proj epw_*/*.imag_aniso_gap_FS_25.00 \
 		epw_*/*.epmatwp epw_*/*.phdos epw_*/*.epwane epw_*/*.ephmat \
 		epw_*/*.fmt epw_*/*.H epw_*/*.epb* epw_*/*self epw_*/*.a2f epw_*/*.01 \
 		epw_*/*.kpt epw_*/*.gnu epw_*/*.eig epw_*/*.lambda_FS epw_*/*.sigma_restart* \

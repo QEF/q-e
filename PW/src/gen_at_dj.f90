@@ -24,30 +24,31 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
    USE wvfct,       ONLY: npwx
    USE us,          ONLY: tab_at, dq
    USE uspp_param,  ONLY: upf
-   USE ldaU,        ONLY : is_hubbard, is_hubbard_back, Hubbard_l, &
-                           Hubbard_l_back, nwfcU, backall, Hubbard_l1_back
+   USE basis,       ONLY: natomwfc
    !
    IMPLICIT NONE
    !
    INTEGER, INTENT(IN) :: ik
    !! k-point index
-   !! .TRUE. if this atom species has U correction
-   COMPLEX(DP), INTENT(OUT) :: dwfcat(npwx,nwfcU)
-   !! the derivative of the atomic d wfc
+   COMPLEX(DP), INTENT(OUT) :: dwfcat(npwx,natomwfc)
+   !! the derivative of the atomic wfcs (all)
    !
    ! ... local variables
    !
    INTEGER :: l, na, nt, nb, iatw, iig, ig, i0, i1, i2 ,i3, m, lm, &
-              nwfcm, lmax_wfc, npw, natw
+              nwfcm, lmax_wfc, npw
    REAL(DP) :: qt, arg, px, ux, vx, wx
    COMPLEX(DP) :: phase, pref
    REAL(DP),    ALLOCATABLE :: gk(:,:), q(:), ylm(:,:), djl(:,:,:)
    COMPLEX(DP), ALLOCATABLE :: sk(:)
    ! 
-   natw = nwfcU
    npw = ngk(ik)
    nwfcm = MAXVAL( upf(1:ntyp)%nwfc )
-   lmax_wfc = MAX ( MAXVAL(Hubbard_l(:)), MAXVAL(Hubbard_l_back(:)), MAXVAL(Hubbard_l1_back(:)))
+   ! calculate max angular momentum required in wavefunctions
+   lmax_wfc = 0
+   do nt = 1, ntyp
+      lmax_wfc = MAX ( lmax_wfc, MAXVAL (upf(nt)%lchi(1:upf(nt)%nwfc) ) )
+   enddo
    !
    ALLOCATE( ylm (npw,(lmax_wfc+1)**2), djl (npw,nwfcm,ntyp) )
    ALLOCATE( gk(3,npw), q (npw) )
@@ -59,7 +60,6 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
       gk(3,ig) = xk(3,ik) + g(3,iig)
       q(ig) = gk(1,ig)**2 + gk(2,ig)**2 + gk(3,ig)**2
    ENDDO
-   !
    !
    !  ylm = spherical harmonics
    !
@@ -96,7 +96,6 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
    iatw = 0
    DO na=1,nat
       nt=ityp(na)
-      IF ( .NOT. is_hubbard(nt) .AND. .NOT.is_hubbard_back(nt) ) CYCLE
       arg = ( xk(1,ik) * tau(1,na) + &
               xk(2,ik) * tau(2,na) + &
               xk(3,ik) * tau(3,na) ) * tpi
@@ -109,12 +108,9 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
       ENDDO
       !
       DO nb = 1,upf(nt)%nwfc
-         l = upf(nt)%lchi(nb)
-         IF ( upf(nt)%oc(nb) > 0.d0 .AND. &
-              ( l == Hubbard_l(nt)  .OR.  &
-                is_hubbard_back(nt) .AND. &
-                ( l == Hubbard_l_back(nt) .OR. &
-                  (backall(nt) .AND. l == Hubbard_l1_back(nt)) ) ) ) THEN
+         ! Note: here we put ">=" to be consistent with "atomic_wfc"/"n_atom_wfc" 
+         IF ( upf(nt)%oc(nb) >= 0.d0 ) THEN
+            l = upf(nt)%lchi(nb)
             pref = (0.d0,1.d0)**l
             DO m = 1,2*l+1
                lm = l*l+m
@@ -127,8 +123,8 @@ SUBROUTINE gen_at_dj( ik, dwfcat )
       ENDDO
    ENDDO
    !
-   IF (iatw /= natw) THEN
-      WRITE( stdout,*) 'iatw =', iatw, 'natw =', natw
+   IF (iatw /= natomwfc) THEN
+      WRITE( stdout,*) 'iatw =', iatw, 'natomwfc =', natomwfc
       CALL errore( 'gen_at_dj', 'unexpected error', 1 )
    ENDIF
 

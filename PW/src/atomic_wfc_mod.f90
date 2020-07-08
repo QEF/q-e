@@ -17,6 +17,8 @@ MODULE basis
   !
   INTEGER :: natomwfc
   !! number of (starting) atomic wavefunctions
+  COMPLEX(DP), ALLOCATABLE :: wfcatom(:,:)
+  !! (starting) atomic wavefunctions
   COMPLEX(DP), ALLOCATABLE :: swfcatom(:,:)
   !! S * (starting) atomic wavefunctions
   CHARACTER(len=30) :: starting_wfc

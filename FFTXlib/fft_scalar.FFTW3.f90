@@ -16,6 +16,13 @@
 ! stick and plane revision - Stefano de Gironcoli - September 2016
 !--------------------------------------------------------------------------!
 
+#if defined(__FFTW3)
+
+#if defined(_OPENMP) && defined(__FFT_SCALAR_THREAD_SAFE)
+! thread safety guard
+#error FFTW3 is not compatiable with __FFT_SCALAR_THREAD_SAFE
+#endif
+
 !=----------------------------------------------------------------------=!
    MODULE fft_scalar_fftw3
 !=----------------------------------------------------------------------=!
@@ -24,7 +31,6 @@
        USE fft_param
        IMPLICIT NONE
        SAVE
-#if defined(__FFTW3)
        PRIVATE
        PUBLIC :: cft_1z, cft_2xy, cfft3d, cfft3ds
 
@@ -93,14 +99,14 @@
      !
      !   Here initialize table only if necessary
      !
-     
+
      CALL lookup()
 
      IF( .NOT. done ) THEN
 
        !   no table exist for these parameters
        !   initialize a new one
-      
+
        CALL init_plan()
 
      END IF
@@ -130,7 +136,7 @@
    CONTAINS
 
      SUBROUTINE lookup()
-        ! lookup for stored plan 
+        ! lookup for stored plan
         DO ip = 1, ndims
            !   first check if there is already a table initialized
            !   for this combination of parameters
@@ -143,9 +149,9 @@
 
      SUBROUTINE init_plan()
 #if defined(_OPENMP)
-       CALL dfftw_cleanup_threads() 
+       CALL dfftw_cleanup_threads()
        void = fftw_init_threads()
-       CALL dfftw_plan_with_nthreads(omp_get_max_threads())      
+       CALL dfftw_plan_with_nthreads(omp_get_max_threads())
 #endif
 
        IF( C_ASSOCIATED(fw_planz( icurrent)) ) CALL dfftw_destroy_plan( fw_planz( icurrent) )
@@ -222,7 +228,7 @@
      !
      !   Here initialize table only if necessary
      !
- 
+
      CALL lookup()
 
      IF( .NOT. done ) THEN
@@ -303,9 +309,9 @@
      SUBROUTINE init_plan()
 
 #if defined(_OPENMP)
-       CALL dfftw_cleanup_threads() 
+       CALL dfftw_cleanup_threads()
        void = fftw_init_threads()
-       CALL dfftw_plan_with_nthreads(omp_get_max_threads())      
+       CALL dfftw_plan_with_nthreads(omp_get_max_threads())
 #endif
 
        IF ( ldx /= nx .OR. ldy /= ny ) THEN
@@ -506,7 +512,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
   INTEGER, SAVE :: icurrent = 1
   INTEGER, SAVE :: dims(3,ndims) = -1
 
-
   TYPE(C_PTR), SAVE :: fw_plan ( 3, ndims ) = C_NULL_PTR
   TYPE(C_PTR), SAVE :: bw_plan ( 3, ndims ) = C_NULL_PTR
 
@@ -527,7 +532,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
        CALL init_plan()
 
      END IF
-
 
      IF ( isign > 0 ) THEN
 
@@ -593,7 +597,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
         !
 
         incx1 = ldx * ny;  incx2 = 1;  m = 1
- 
+
         do i = 1, nx
            do j = 1, ny
               ii = i + ldx * (j-1)
@@ -609,7 +613,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
      RETURN
 
    CONTAINS
-
 
      SUBROUTINE lookup()
      ip = -1
@@ -668,7 +671,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
      END SUBROUTINE init_plan
 
    END SUBROUTINE cfft3ds
-#endif
 !=----------------------------------------------------------------------=!
  END MODULE fft_scalar_fftw3
 !=----------------------------------------------------------------------=!
+#endif

@@ -115,6 +115,7 @@ fft_rho.o : kind.o
 fox_init_module.o : ../UtilXlib/mp.o
 fox_init_module.o : io_global.o
 fox_init_module.o : mp_images.o
+funct.o : beef_interface.o
 funct.o : io_global.o
 funct.o : kind.o
 funct.o : libxc.o
@@ -402,6 +403,7 @@ ws_base.o : kind.o
 wyckoff.o : kind.o
 wyckoff.o : space_group.o
 wypos.o : kind.o
+xc_gga_drivers.o : beef_interface.o
 xc_gga_drivers.o : correlation_gga.o
 xc_gga_drivers.o : exchange_gga.o
 xc_gga_drivers.o : funct.o

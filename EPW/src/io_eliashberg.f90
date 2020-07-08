@@ -673,8 +673,8 @@
     !! Q-point index from selecq.fmt window
     INTEGER :: totq
     !! Total number of q-points inside fsthick
-    INTEGER :: nqtot
-    !! Total number of q-point for verifications
+    INTEGER :: nqf1_, nqf2_, nqf3_
+    !! Temporary variable for number of q-points along each direction
     INTEGER, ALLOCATABLE :: selecq(:)
     !! List of selected q-points
     !
@@ -685,7 +685,9 @@
       ALLOCATE(selecq(totq), STAT = ierr)
       IF (ierr /= 0) CALL errore('read_frequencies', 'Error allocating selecq', 1)
       selecq(:) = 0
-      READ(iunselecq, *) nqtot
+      READ(iunselecq, *) nqtotf
+      IF (nqtotf /= nqf1 * nqf2 * nqf3) &
+        CALL errore('read_frequencies', 'selecq.fmt is not calculated on the nqf1, nqf2, nqf3 mesh', 1)
       READ(iunselecq, *) selecq(:)
       CLOSE(iunselecq)
       !
@@ -695,12 +697,10 @@
       !OPEN(UNIT = iufilfreq, FILE = filfreq, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
       OPEN(UNIT = iufilfreq, FILE = filfreq, STATUS = 'unknown', FORM = 'unformatted', IOSTAT = ios)
       IF (ios /= 0) CALL errore('read_frequencies', 'error opening file ' // filfreq, iufilfreq)
-      !READ(iufilfreq, '(2i7)') nqtotf, nmodes
-      READ(iufilfreq) nqtotf, nmodes
+      !READ(iufilfreq, '(5i7)') nqtotf, nqf1_, nqf2_, nqf3_, nmodes
+      READ(iufilfreq) nqtotf, nqf1_, nqf2_, nqf3_, nmodes
       IF (nqtotf /= nqf1 * nqf2 * nqf3) &
         CALL errore('read_frequencies', 'e-ph mat elements were not calculated on the nqf1, nqf2, nqf3 mesh', 1)
-      IF (nqtotf /= nqtot) &
-        CALL errore('read_frequencies', 'selecq.fmt and .freq files were not calculated on the nqf1, nqf2, nqf3 mesh', 1)
     !
     ENDIF
     CALL mp_bcast(totq, ionode_id, inter_pool_comm)
@@ -1067,7 +1067,6 @@
     nqfs(:) = 0
     index_(:, :) = 0
     !
-    !
     ! find the index of k+sign*q on the fine k-mesh
     ! nkfs - total nr. of k-points within the Fermi shell (fine mesh)
     !      - these are irreducible k-points if mp_mesh_k=.TRUE.
@@ -1229,7 +1228,7 @@
 #if defined(__MPI)
       filephmat = TRIM(dirname) // '/' // 'ephmat' // filelab
 #else
-      filephmat = TRIM(tmp_dir) // '/' // 'ephmat'
+      filephmat = TRIM(dirname) // '/' // 'ephmat'
 #endif
       !OPEN(UNIT = iufileph, FILE = filephmat, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
       OPEN(UNIT = iufileph, FILE = filephmat, STATUS = 'unknown', FORM = 'unformatted', IOSTAT = ios)
@@ -1318,7 +1317,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE write_ephmat(iqq, iq)
+    SUBROUTINE write_ephmat(iqq, iq, totq)
     !-----------------------------------------------------------------------
     !!
     !!  This routine writes the elph matrix elements in a format required
@@ -1334,7 +1333,8 @@
     USE io_files,   ONLY : prefix, tmp_dir
     USE phcom,      ONLY : nmodes
     USE epwcom,     ONLY : nbndsub, fsthick, ngaussw, degaussw, shortrange, &
-                           nkf1, nkf2, nkf3, efermi_read, fermi_energy
+                           nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, efermi_read, &
+                           fermi_energy
     USE pwcom,      ONLY : ef
     USE elph2,      ONLY : etf, ibndmin, ibndmax, nkqf, epf17, wkf, nkf, &
                            nqtotf, wf, xqf, nkqtotf, efnew, nbndfst, nktotf
@@ -1351,6 +1351,8 @@
     !! Q-point index from selecq.fmt window
     INTEGER, INTENT(in) :: iq
     !! Q-point index from full grid
+    INTEGER :: totq
+    !! Total number of q-points inside fsthick
     !
     ! Local variables
     !
@@ -1425,8 +1427,8 @@
         OPEN(UNIT = iufilfreq, FILE = filfreq, STATUS = 'unknown', POSITION = 'append', FORM = 'unformatted', IOSTAT = ios)
       ENDIF
       IF (ios /= 0) CALL errore('write_ephmat', 'error opening file ' // filfreq, iufilfreq)
-      !IF (iq == 1) WRITE(iufilfreq, '(2i7)') nqtotf, nmodes
-      IF (iq == 1) WRITE(iufilfreq) nqtotf, nmodes
+      !IF (iq == 1) WRITE(iufilfreq, '(5i7)') nqtotf, nqf1, nqf2, nqf3, nmodes
+      IF (iq == 1) WRITE(iufilfreq) nqtotf, nqf1, nqf2, nqf3, nmodes
       !WRITE(iufilfreq, '(3f15.9)') xqf(:, iq)
       WRITE(iufilfreq) xqf(:, iq)
       DO imode = 1, nmodes
@@ -1514,6 +1516,7 @@
 #else
     filephmat = TRIM(dirname) // '/' // 'ephmat'
 #endif
+    !
     IF (iq == 1) THEN
       !OPEN(UNIT = iufileph, FILE = filephmat, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
       OPEN(UNIT = iufileph, FILE = filephmat, STATUS = 'unknown', FORM = 'unformatted', IOSTAT = ios)
@@ -1592,7 +1595,7 @@
       CLOSE(iunrestart)
     ENDIF
     !
-    IF (iq == nqtotf) THEN
+    IF (iqq == totq) THEN
       DEALLOCATE(ekfs, STAT = ierr)
       IF (ierr /= 0) CALL errore('write_ephmat', 'Error deallocating ekfs', 1)
       DEALLOCATE(wkfs, STAT = ierr)
@@ -1757,7 +1760,7 @@
     IF (ierr /= 0) CALL errore('kmesh_fine', 'Error allocating wkf_', 1)
     ALLOCATE(xkf_(3, nkf_mesh), STAT = ierr)
     IF (ierr /= 0) CALL errore('kmesh_fine', 'Error allocating xkf_', 1)
-    IF (.NOT. ALLOCATED(ixkf)) ALLOCATE(ixkf(nkf_mesh), STAT = ierr)
+    ALLOCATE(ixkf(nkf_mesh), STAT = ierr)
     IF (ierr /= 0) CALL errore('kmesh_fine', 'Error allocating ixkf', 1)
     xkf_(:, :) = zero
     ekf_(:, :) = zero
@@ -1810,11 +1813,11 @@
     ENDIF
     CALL mp_bcast(nkfs, ionode_id, inter_pool_comm)
     !
-    IF (.NOT. ALLOCATED(ekfs)) ALLOCATE(ekfs(nbndfs, nkfs), STAT = ierr)
+    ALLOCATE(ekfs(nbndfs, nkfs), STAT = ierr)
     IF (ierr /= 0) CALL errore('kmesh_fine', 'Error allocating ekfs', 1)
-    IF (.NOT. ALLOCATED(wkfs)) ALLOCATE(wkfs(nkfs), STAT = ierr)
+    ALLOCATE(wkfs(nkfs), STAT = ierr)
     IF (ierr /= 0) CALL errore('kmesh_fine', 'Error allocating wkf_', 1)
-    IF (.NOT. ALLOCATED(xkfs)) ALLOCATE(xkfs(3, nkfs), STAT = ierr)
+    ALLOCATE(xkfs(3, nkfs), STAT = ierr)
     IF (ierr /= 0) CALL errore('kmesh_fine', 'Error allocating xkfs', 1)
     xkfs(:, :) = zero
     wkfs(:) = zero
@@ -1919,7 +1922,7 @@
     !
     nkftot = nkf1 * nkf2 * nkf3
     !
-    IF (.NOT. ALLOCATED(ixkff)) ALLOCATE(ixkff(nkftot), STAT = ierr)
+    ALLOCATE(ixkff(nkftot), STAT = ierr)
     IF (ierr /= 0) CALL errore('kqmap_fine', 'Error allocating ixkff', 1)
     ixkff(:) = 0
     !
@@ -1965,11 +1968,11 @@
     !
     CALL fkbounds(nkfs, lower_bnd, upper_bnd)
     !
-    IF (.NOT. ALLOCATED(ixkqf)) ALLOCATE(ixkqf(nkfs, nqtotf), STAT = ierr)
+    ALLOCATE(ixkqf(nkfs, nqtotf), STAT = ierr)
     IF (ierr /= 0) CALL errore('kqmap_fine', 'Error allocating ixkqf', 1)
-    IF (.NOT. ALLOCATED(nqfs)) ALLOCATE(nqfs(nkfs), STAT = ierr)
+    ALLOCATE(nqfs(nkfs), STAT = ierr)
     IF (ierr /= 0) CALL errore('kqmap_fine', 'Error allocating nqfs', 1)
-    IF (.NOT. ALLOCATED(index_)) ALLOCATE(index_(lower_bnd:upper_bnd, nqtotf), STAT = ierr)
+    ALLOCATE(index_(lower_bnd:upper_bnd, nqtotf), STAT = ierr)
     IF (ierr /= 0) CALL errore('kqmap_fine', 'Error allocating index_', 1)
     ixkqf(:, :) = 0
     nqfs(:) = 0
@@ -2008,7 +2011,7 @@
     CALL mp_sum(nqfs, inter_pool_comm)
     CALL mp_barrier(inter_pool_comm)
     !
-    IF (.NOT. ALLOCATED(ixqfs)) ALLOCATE(ixqfs(nkfs, MAXVAL(nqfs(:))), STAT = ierr)
+    ALLOCATE(ixqfs(nkfs, MAXVAL(nqfs(:))), STAT = ierr)
     IF (ierr /= 0) CALL errore('kqmap_fine', 'Error allocating ixqfs', 1)
     ixqfs(:, :) = 0
     !
@@ -2046,6 +2049,86 @@
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE kqmap_fine
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE check_restart_ephwrite()
+    !-----------------------------------------------------------------------
+    !!
+    !!   This routine checks the variables in restart while writing ephmat 
+    !!   6/28/2020 Hari Paudyal
+    !!
+    USE io_files,  ONLY : prefix, tmp_dir
+    USE epwcom,    ONLY : nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, fsthick, mp_mesh_k
+    USE io_var,     ONLY : iufilfreq, iufilegnv
+    !
+    IMPLICIT NONE
+    !
+    INTEGER ::  nkftot_
+    !! Temporary variable for number of k-points
+    INTEGER ::  nkfs_
+    !! Temporary variable for number of irr k-points
+    INTEGER :: nkf1_, nkf2_, nkf3_
+    !! Temporary variable for number of k-points along each direction
+    INTEGER ::  nqtotf_
+    !! Temporary variable for number of q-points
+    INTEGER ::  nmodes_
+    !! Temporary variable for number of modes
+    INTEGER :: nqf1_, nqf2_, nqf3_
+    !! Temporary variable for number of q-points along each direction
+    LOGICAL :: exst
+    !! Logical for existence of files
+    LOGICAL :: exst2
+    !! Logical for existence of files
+    INTEGER :: ios
+    !! IO error message
+    CHARACTER(LEN = 256) :: filfreq
+    !! file name
+    CHARACTER(LEN = 256) :: filegnv
+    !! file name
+    CHARACTER(LEN = 256) :: dirname
+    !! Name of the directory to save ikmap/egnv/freq/ephmat files
+    !
+    dirname = TRIM(tmp_dir) // TRIM(prefix) // '.ephmat'
+    !
+    INQUIRE(FILE = 'restart.fmt', EXIST = exst)
+    !
+    IF (exst) THEN
+      INQUIRE(FILE = TRIM(dirname) // '/' // 'ikmap', EXIST = exst2)
+      IF (.NOT. exst2) THEN
+        CALL errore('check_restart_ephwrite', 'A restart.fmt is present but the directory ' // TRIM(prefix) // '.ephmat' // &
+                    ' is not found. Remove the restart.fmt file and restart.', 1)
+      ENDIF
+      !
+      ! read header of egnv file
+      filegnv = TRIM(dirname) // '/' // 'egnv'
+      !OPEN(UNIT = iufilegnv, FILE = filegnv, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
+      OPEN(UNIT = iufilegnv, FILE = filegnv, STATUS = 'unknown', FORM = 'unformatted', IOSTAT = ios)
+      IF (ios /= 0) CALL errore('check_restart_ephwrite', 'error opening file '//filegnv, iufilegnv)
+      !
+      !READ(iufilegnv, '(5i7)') nkftot_, nkf1_, nkf2_, nkf3_, nkfs_
+      READ(iufilegnv) nkftot_, nkf1_, nkf2_, nkf3_, nkfs_
+      IF (nkf1 /= nkf1_ .OR. nkf2 /= nkf2_ .OR. nkf3 /= nkf3_) &
+        CALL errore('check_restart_ephwrite', 'nkf1, nkf2, nkf3 is not consistent with restart.fmt', 1)
+      CLOSE(iufilegnv)
+      !
+      ! read header of freq file
+      filfreq = TRIM(dirname) // '/' // 'freq'
+      !OPEN(UNIT = iufilfreq, FILE = filfreq, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
+      OPEN(UNIT = iufilfreq, FILE = filfreq, STATUS = 'unknown', FORM = 'unformatted', IOSTAT = ios)
+      IF (ios /= 0) CALL errore('kmap_fine', 'error opening file ' // filfreq, iufilfreq)
+      !READ(iufilfreq, '(5i7)') nqtotf_, nqf1_, nqf2_, nqf3_, nmodes_
+      READ(iufilfreq) nqtotf_, nqf1_, nqf2_, nqf3_, nmodes_
+      IF (nqf1 /= nqf1_ .OR. nqf2 /= nqf2_ .OR. nqf3 /= nqf3_) &
+        CALL errore('check_restart_ephwrite', 'nqf1, nqf2, nqf3 is not consistent with restart.fmt', 1)
+      CLOSE(iufilfreq)
+      !
+    ENDIF
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE check_restart_ephwrite
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------

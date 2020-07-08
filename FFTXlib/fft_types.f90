@@ -133,6 +133,10 @@ MODULE fft_types
 
     INTEGER :: grid_id
     COMPLEX(DP), ALLOCATABLE, DIMENSION(:) :: aux
+#if defined(__FFT_OPENMP_TASKS)
+    INTEGER, ALLOCATABLE :: comm2s(:) ! multiple communicator for the fft group along the second direction
+    INTEGER, ALLOCATABLE :: comm3s(:) ! multiple communicator for the fft group along the third direction
+#endif
   END TYPE
 
   REAL(DP) :: fft_dual = 4.0d0
@@ -156,10 +160,9 @@ CONTAINS
     INTEGER, INTENT(IN), OPTIONAL :: fft_fact(3)
     INTEGER, INTENT(IN), OPTIONAL :: nyfft
     INTEGER, INTENT(in) :: comm ! mype starting from 0
-    INTEGER :: nx, ny, ierr, nzfft
-    INTEGER :: i
-    INTEGER :: mype, root, nproc, nproc2, nproc3, iproc, iproc2, iproc3 ! mype starting from 0
-    INTEGER :: color, key, comm2, comm3
+    INTEGER :: nx, ny, ierr, nzfft, i
+    INTEGER :: mype, root, nproc, iproc, iproc2, iproc3 ! mype starting from 0
+    INTEGER :: color, key
      !write (6,*) ' inside fft_type_allocate' ; FLUSH(6)
 
     IF ( ALLOCATED( desc%nsp ) ) &
@@ -203,6 +206,14 @@ CONTAINS
       CALL MPI_COMM_SPLIT( comm, color, key, desc%comm3, ierr )
       CALL MPI_COMM_RANK( desc%comm3, desc%mype3, ierr )
       CALL MPI_COMM_SIZE( desc%comm3, desc%nproc3, ierr )
+#if defined(__FFT_OPENMP_TASKS)
+      ALLOCATE( desc%comm2s( omp_get_max_threads() ))
+      ALLOCATE( desc%comm3s( omp_get_max_threads() ))
+      DO i=1, OMP_GET_MAX_THREADS()
+         CALL MPI_COMM_DUP(desc%comm2, desc%comm2s(i), ierr)
+         CALL MPI_COMM_DUP(desc%comm3, desc%comm3s(i), ierr)
+      ENDDO
+#endif
 #else
       desc%comm2 = desc%comm ; desc%mype2 = desc%mype ; desc%nproc2 = desc%nproc
       desc%comm3 = desc%comm ; desc%mype3 = desc%mype ; desc%nproc3 = desc%nproc
@@ -267,7 +278,7 @@ CONTAINS
 
   SUBROUTINE fft_type_deallocate( desc )
     TYPE (fft_type_descriptor) :: desc
-    INTEGER :: ierr, i
+    INTEGER :: i, ierr
      !write (6,*) ' inside fft_type_deallocate' ; FLUSH(6)
     IF ( ALLOCATED( desc%nr2p ) )   DEALLOCATE( desc%nr2p )
     IF ( ALLOCATED( desc%nr2p_offset ) )   DEALLOCATE( desc%nr2p_offset )
@@ -311,6 +322,14 @@ CONTAINS
 #if defined(__MPI)
     IF (desc%comm2 /= MPI_COMM_NULL) CALL MPI_COMM_FREE( desc%comm2, ierr )
     IF (desc%comm3 /= MPI_COMM_NULL) CALL MPI_COMM_FREE( desc%comm3, ierr )
+#if defined(__FFT_OPENMP_TASKS)
+    DO i=1, SIZE(desc%comm2s)
+       IF (desc%comm2s(i) /= MPI_COMM_NULL) CALL MPI_COMM_FREE( desc%comm2s(i), ierr )
+       IF (desc%comm3s(i) /= MPI_COMM_NULL) CALL MPI_COMM_FREE( desc%comm3s(i), ierr )
+    ENDDO
+    DEALLOCATE( desc%comm2s )
+    DEALLOCATE( desc%comm3s )
+#endif
 #else
     desc%comm2 = MPI_COMM_NULL
     desc%comm3 = MPI_COMM_NULL
@@ -343,7 +362,7 @@ CONTAINS
     INTEGER, INTENT(in) :: nmany            ! number of FFT bands
 
     INTEGER :: nsp( desc%nproc ), nsw_tg, nr1w_tg
-    INTEGER :: np, nq, i, is, iss, itg, i1, i2, m1, m2, ip
+    INTEGER :: np, nq, i, is, iss, i1, i2, m1, m2, ip
     INTEGER :: ncpx, nr1px, nr2px, nr3px
     INTEGER :: nr1, nr2, nr3    ! size of real space grid
     INTEGER :: nr1x, nr2x, nr3x ! padded size of real space grid
@@ -351,6 +370,31 @@ CONTAINS
      !write (6,*) ' inside fft_type_set' ; FLUSH(6)
     !
     !
+#if defined(__MPI)
+#if defined(__FFT_OPENMP_TASKS)
+    IF (nmany > OMP_GET_MAX_THREADS()) THEN
+       DO i=1, SIZE(desc%comm2s)
+          IF (desc%comm2s(i) /= MPI_COMM_NULL) CALL MPI_COMM_FREE( desc%comm2s(i), ierr )
+          IF (desc%comm3s(i) /= MPI_COMM_NULL) CALL MPI_COMM_FREE( desc%comm3s(i), ierr )
+       ENDDO
+       DEALLOCATE( desc%comm2s )
+       DEALLOCATE( desc%comm3s )
+       ALLOCATE( desc%comm2s( nmany ))
+       ALLOCATE( desc%comm3s( nmany ))
+       DO i=1, nmany
+          CALL MPI_COMM_DUP(desc%comm2, desc%comm2s(i), ierr)
+          CALL MPI_COMM_DUP(desc%comm3, desc%comm3s(i), ierr)
+       ENDDO
+       !ELSEIF (nmany == 1) THEN
+       !  DO i=1, SIZE(desc%comm2s)
+       !     IF (desc%comm2s(i) /= MPI_COMM_NULL) CALL MPI_COMM_FREE( desc%comm2s(i), ierr )
+       !     IF (desc%comm3s(i) /= MPI_COMM_NULL) CALL MPI_COMM_FREE( desc%comm3s(i), ierr )
+       !  ENDDO
+       !  DEALLOCATE( desc%comm2s )
+       !  DEALLOCATE( desc%comm3s )
+       ENDIF
+#endif
+#endif
     IF (.NOT. ALLOCATED( desc%nsp ) ) &
         CALL fftx_error__(' fft_type_set ', ' fft arrays not yet allocated ', 1 )
 
@@ -929,7 +973,7 @@ CONTAINS
       REAL(DP), INTENT(IN) :: bg(3,3), gcut
 
 ! ... declare other variables
-      INTEGER :: i, j, k, nr, nb(3)
+      INTEGER :: i, j, k, nb(3)
       REAL(DP) :: gsq, g(3)
      !write (6,*) ' inside grid_set' ; FLUSH(6)
 

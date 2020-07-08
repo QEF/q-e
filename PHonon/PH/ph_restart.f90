@@ -837,10 +837,7 @@ MODULE ph_restart
     USE lr_symm_base, ONLY : minus_q, nsymq
     USE io_global,    ONLY : ionode, ionode_id
     USE mp,           ONLY : mp_bcast
-    USE mp_global,    ONLY : world_comm
-    ! Workaround
-    USE ions_base,  ONLY : nat
-   !
+    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: current_iq
