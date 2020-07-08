@@ -25,6 +25,7 @@ SUBROUTINE  write_xml_proj (filename, projs, lwrite_ovp, ovps )
   COMPLEX(DP),   INTENT(IN) :: ovps(natomwfc,natomwfc,nkstot)
   LOGICAL,       INTENT(IN) :: lwrite_ovp
   !
+  COMPLEX(DP) :: proj(nbnd)
   INTEGER :: ik, ik_eff, is, nwfc, ibnd, nspin_lsda, num_k_points
   !
   !
@@ -64,7 +65,12 @@ SUBROUTINE  write_xml_proj (filename, projs, lwrite_ovp, ovps )
         DO nwfc = 1, natomwfc
            CALL add_attr ( "index", nwfc )
            CALL add_attr ( "spin", is )
-           CALL xmlw_writetag ("ATOMIC_WFC", projs(nwfc,:,ik_eff) )
+           ! NOTE: the complex to real conversion done inside xmlw_writetag
+           !       using C pointer does not work  on intel compilers
+           !       with an array section (non-contiguous memory)
+           ! CALL xmlw_writetag ("ATOMIC_WFC", projs(nwfc,:,ik_eff) )
+           proj(:) =  projs(nwfc,:,ik_eff)
+           CALL xmlw_writetag ("ATOMIC_WFC", proj )
         ENDDO
         CALL xmlw_closetag ( )
         !
