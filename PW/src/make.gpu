@@ -25,6 +25,7 @@ PWLIBS += \
   force_lc_gpu.o \
   force_us_gpu.o \
   force_cc_gpu.o \
+  force_hub_gpu.o \
   drhoc_gpu.o \
   addusforce_gpu.o \
   force_corr_gpu.o \
