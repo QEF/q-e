@@ -1001,6 +1001,7 @@
         CALL mp_bcast(npool_tmp, ionode_id, world_comm)
         CALL mp_bcast(lrepmatw2_restart, ionode_id, world_comm)
         CALL mp_bcast(lrepmatw5_restart, ionode_id, world_comm)
+        IF (npool /= npool_tmp) CALL errore('ephwann_shuffle','Number of cores is different',1)
         ! 
         IF (iterative_bte) THEN
           IF (mpime == ionode_id) THEN
@@ -1014,7 +1015,6 @@
           ENDIF
           CALL mp_bcast(inv_tau_all, ionode_id, world_comm)
           CALL mp_bcast(inv_tau_allcb, ionode_id, world_comm)
-          IF (npool /= npool_tmp) CALL errore('ephwann_shuffle','Number of cores is different',1)
           IF (lower_bnd - 1 >= 1) THEN
             inv_tau_all(:, 1:lower_bnd - 1, :) = 0d0
             inv_tau_allcb(:, 1:lower_bnd - 1, :) = 0d0

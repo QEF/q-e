@@ -1239,7 +1239,6 @@
     !!  deallocates the variables allocated by eliashberg_init and read_a2f
     !!
     USE epwcom,        ONLY : limag
-    USE elph2,         ONLY : gtemp
     USE eliashbergcom, ONLY : a2f_iso, wsph, nsiw
     !
     IMPLICIT NONE
@@ -1247,8 +1246,6 @@
     INTEGER :: ierr
     !! Error status
     !
-    DEALLOCATE(gtemp, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_eliashberg_iso', 'Error deallocating gtemp', 1)
     DEALLOCATE(wsph, STAT = ierr)
     IF (ierr /= 0) CALL errore('deallocate_eliashberg_iso', 'Error deallocating wsph', 1)
     IF (limag) THEN
@@ -1273,7 +1270,7 @@
     !!  and evaluate_a2f_lambda subroutines
     !!
     USE epwcom,        ONLY : limag
-    USE elph2,         ONLY : wf, wqf, xqf, gtemp
+    USE elph2,         ONLY : wf, wqf, xqf
     USE eliashbergcom, ONLY : ekfs, xkfs, wkfs, g2, a2f_iso, w0g, &
                               ixkff, ixkqf, ixqfs, nqfs, memlt_pool, &
                               wsph, nsiw
@@ -1283,8 +1280,6 @@
     INTEGER :: ierr
     !! Error status
     !
-    DEALLOCATE(gtemp, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_eliashberg_aniso', 'Error deallocating gtemp', 1)
     DEALLOCATE(wsph, STAT = ierr)
     IF (ierr /= 0) CALL errore('deallocate_eliashberg_aniso', 'Error deallocating wsph', 1)
     IF (limag) THEN
