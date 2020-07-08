@@ -39,6 +39,7 @@ MODULE funct
   USE xc_f90_types_m
   USE xc_f90_lib_m
 #endif
+  !
 #if defined(use_beef)
   USE beef_interface, ONLY: beef_set_type
 #endif
