@@ -31,7 +31,7 @@
 
 
   fsthick     = 3.0
-  eptemp      = 300.0
+  temps       = 300.0
   degaussw    = 0.1
   efermi_read = .true.
   fermi_energy= 9.9775

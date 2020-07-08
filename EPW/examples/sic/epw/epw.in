@@ -30,7 +30,7 @@
 
 
   fsthick     = 2.80284905 ! eV
-  eptemp      = 200 ! K
+  temps       = 200 ! K
   degaussw    = 0.1 ! eV
 
   dvscf_dir   = '../phonons/save'

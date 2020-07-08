@@ -41,7 +41,7 @@
 
 
   fsthick     = 6 ! eV
-  eptemp      = 0.0 ! K
+  temps       = 0.0 ! K
   degaussw    = 0.005 ! eV
   degaussq    = 0.05 !meV
 
