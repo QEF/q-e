@@ -326,6 +326,10 @@
     !! Temporary quantity to compute the convolution
     REAL(KIND = DP) :: a_s1(nw_specfun), a_s2(nw_specfun), a_s3(nw_specfun)
     !! satellites
+    ! 
+    ! Initialization
+    diS = zero
+    drS = zero 
     !
     dw = (wmax_specfun - wmin_specfun) / DBLE(nw_specfun - 1)
     i0 = MINLOC(ABS(ww(:)), DIM = 1)
@@ -339,8 +343,8 @@
     si_qp = ABS(sigmai(iqp))
     si_ks = ABS(sigmai(iks))
     ! finite difference derivatives of Im and Re Sigma
-    diS = (ABS(sigmai(iks + 1)) - ABS(sigmai(iks - 1))) / (2.d0 * dw)
-    drS = (sigmar(iqp + 1) - sigmar(iqp - 1)) / (2.d0 * dw)
+    IF (iks - 1 > 0) diS = (ABS(sigmai(iks + 1)) - ABS(sigmai(iks - 1))) / (2.d0 * dw)
+    IF (iqp - 1 > 0) drS = (sigmar(iqp + 1) - sigmar(iqp - 1)) / (2.d0 * dw)
     zeta = EXP(drS)
     !
     ! calculate Aqp and As1
