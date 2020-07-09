@@ -128,6 +128,16 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
 skip_program = grep
 skip_args = 'not present in this version'
 
+[ZG]
+exe = XXXXXX/test-suite/run-zg.sh
+extract_program = XXXXXX/test-suite/extract-zg.sh
+inputs_args = ('*.in', '')
+run_cmd_template = tc.program tc.args tc.input tc.output tc.error
+tolerance = ( (1.0e-6, 5.0e-3, 'conf') )
+
+skip_program = grep
+skip_args = 'not present in this version'
+
 [TDDFPT]
 exe = XXXXXX/test-suite/run-tddfpt.sh
 extract_program = XXXXXX/test-suite/extract-tddfpt.sh
