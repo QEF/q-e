@@ -130,6 +130,7 @@ SUBROUTINE orthoUwfc_gpu
      ! (this is used during the self-consistent solution of Kohn-Sham equations)
      ! save to unit iunhub
      !
+     swfcatom = swfcatom_d
      CALL copy_U_wfc (swfcatom, noncolin)
      IF ( nks > 1 ) &
           CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
