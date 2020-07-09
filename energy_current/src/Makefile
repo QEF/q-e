@@ -27,7 +27,7 @@ routine_zero.o\
 init_reciprocal_parts_tab.o\
 allocate_zero.o \
 deallocate_zero.o \
-aris_functionals.o
+ec_functionals.o
 
 TEST_CPV_TRAJ_OBJ= \
 traj_object.o \

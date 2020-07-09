@@ -1,5 +1,3 @@
-aris_functional.o : ../../Modules/exchange_gga.o
-aris_functional.o : ../../Modules/correlation_gga.o
 add_nc_curr.o : ../../Modules/becmod.o
 add_nc_curr.o : ../../Modules/cell_base.o
 add_nc_curr.o : ../../Modules/io_files.o
@@ -45,6 +43,8 @@ allocate_zero.o : ../../upflib/uspp.o
 allocate_zero.o : ../../PW/src/pwcom.o
 allocate_zero.o : zero_mod.o
 deallocate_zero.o : zero_mod.o
+ec_functionals.o : ../../Modules/exchange_gga.o
+ec_functionals.o : ../../Modules/correlation_gga.o
 hartree_mod.o : ../../Modules/kind.o
 init_reciprocal_parts_tab.o : ../../FFTXlib/fft_interfaces.o
 init_reciprocal_parts_tab.o : ../../upflib/atom.o
