@@ -256,7 +256,6 @@ MODULE io_dyn_mat
     USE iotk_module, ONLY : iotk_scan_begin, iotk_open_read,     &
                             iotk_scan_dat, iotk_scan_end, iotk_free_unit
     USE io_global,   ONLY : ionode
-    USE mp_world,    ONLY : world_comm
     !
     IMPLICIT NONE
     !

@@ -18,8 +18,9 @@ SUBROUTINE alloc_neighborhood()
   USE cell_base,       ONLY : at, alat
   USE kinds,           ONLY : DP
   USE constants,       ONLY : rytoev
+  USE parameters,      ONLY : sc_size
   USE control_flags,   ONLY : dfpt_hub
-  USE ldaU,            ONLY : sc_size, num_uc, max_num_neighbors, neighood, &
+  USE ldaU,            ONLY : num_uc, max_num_neighbors, neighood, &
                               at_sc, sc_at, Hubbard_V, is_hubbard, is_hubbard_back, &
                               dist_s, ityp_s, deallocate_at_center_type, eps_dist
   !
@@ -34,9 +35,6 @@ SUBROUTINE alloc_neighborhood()
              viz, atom, nb1, nb2, isym, l1, l2, l3, na, nb
   !
   CALL start_clock( 'alloc_neigh' )
-  !
-  ! Number of cells in the supercell
-  num_uc = (2*sc_size+1)**3.0d0
   !
   ! Number of atoms in the supercell
   dimn = num_uc * nat       
@@ -537,7 +535,7 @@ SUBROUTINE symonpair (at1, at2, p_sym, rat1, rat2)
   USE ions_base,       ONLY : nat,ityp
   USE cell_base,       ONLY : bg
   USE fft_base,        ONLY : dfftp
-  USE ldaU,            ONLY : atom_pos, at_sc, sc_at, sc_size
+  USE ldaU,            ONLY : atom_pos, at_sc, sc_at, num_uc
   USE kinds
   USE io_global,       ONLY : stdout
   !
@@ -549,14 +547,11 @@ SUBROUTINE symonpair (at1, at2, p_sym, rat1, rat2)
   !
   ! Local variables
   !
-  INTEGER :: i, j, at, dr(3), equiv_2, num_uc, dimn
+  INTEGER :: i, j, at, dr(3), equiv_2, dimn
   ! dr(1), dr(2), dr(3) = location of the unit cell where at2 goes after sym. operation
   !
   REAL(DP) :: diff, x2(3), r1(3), r2(3), dx(3), ss(3,3)
   REAL(DP), PARAMETER :: eps = 5.d-6
-  !
-  ! Number of cells in the supercell
-  num_uc = (2*sc_size+1)**3.0d0
   !
   ! Number of atoms in the supercell
   dimn = num_uc * nat
@@ -727,7 +722,7 @@ SUBROUTINE phase_factor (ik)
   USE klist,           ONLY : xk
   USE ions_base,       ONLY : nat, ityp
   USE cell_base,       ONLY : at, tpiba
-  USE ldaU,            ONLY : at_sc, ldim_u, neighood, phase_fac, sc_size
+  USE ldaU,            ONLY : at_sc, ldim_u, neighood, phase_fac, num_uc
   USE constants,       ONLY : tpi
   !
   IMPLICIT NONE
@@ -739,7 +734,7 @@ SUBROUTINE phase_factor (ik)
   REAL(DP) :: angle, sum_j
   !
   ! Number of atoms in the supercell 
-  dimn = nat*(2*sc_size+1)**3
+  dimn = num_uc * nat
   !
   IF (.NOT.ALLOCATED(phase_fac)) ALLOCATE(phase_fac(dimn))
   !
