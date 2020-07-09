@@ -688,12 +688,14 @@
   IF ((nbndsub > 200)) CALL errore('epw_readin', 'too many wannier functions increase size of projx', 1)
   IF ((phonselfen .OR. elecselfen .OR. specfun_el .OR. specfun_ph) .AND. (mp_mesh_k .OR. mp_mesh_q)) &
     CALL errore('epw_readin', 'can only work with full uniform mesh', 1)
-  IF (ephwrite .AND. .NOT. ep_coupling .AND. .NOT. elph) CALL errore('epw_readin', &
+  IF (ephwrite) THEN
+    IF (.NOT. ep_coupling .AND. .NOT. elph) CALL errore('epw_readin', &
       'ephwrite requires ep_coupling=.TRUE., elph=.TRUE.', 1)
-  IF (ephwrite .AND. (rand_k .OR. rand_q)) &
-    CALL errore('epw_readin', 'ephwrite requires a uniform grid', 1)
-  IF (ephwrite .AND. (MOD(nkf1, nqf1) /= 0 .OR. MOD(nkf2, nqf2) /= 0 .OR. MOD(nkf3, nqf3) /= 0)) &
+    IF (rand_k .OR. rand_q) &
+      CALL errore('epw_readin', 'ephwrite requires a uniform grid', 1)
+    IF (MOD(nkf1,nqf1) /= 0 .OR. MOD(nkf2,nqf2) /= 0 .OR. MOD(nkf3,nqf3) /= 0) &
     CALL errore('epw_readin', 'ephwrite requires nkf1,nkf2,nkf3 to be multiple of nqf1,nqf2,nqf3', 1)
+  ENDIF
   IF (band_plot .AND. filkf == ' ' .AND. filqf == ' ') CALL errore('epw_readin', &
       'plot band structure and phonon dispersion requires k- and q-points read from filkf and filqf files', 1)
   IF (band_plot .AND. filkf /= ' ' .AND. (nkf1 > 0 .OR. nkf2 > 0 .OR. nkf3 > 0)) CALL errore('epw_readin', &
