@@ -105,6 +105,7 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
 #if defined(__LIBXC)
   !
+  fkind_x = -1
   lengthxc = length
   !
   IF ( ANY(is_libxc(1:2)) ) THEN
@@ -691,7 +692,8 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE DEFAULT
         !
-        CALL errore( 'xc_lda_lsda_drivers (xc_lsda)', 'not implemented', icorr )
+        ec = 0.0_DP
+        vc = 0.0_DP
         !
      END SELECT
      !

@@ -6485,14 +6485,14 @@ fi
 
 if test "$with_libxc" -ne 0; then
 
+lxcf="f90"
+lxcf2="f03"
+if test ! -z "$with_libxc_prefix"; then
 lxc_version=`grep "XC_MAJOR_VERSION" "$with_libxc_prefix/xc_version.h" | tr -dc '1-9'`
 if test "$lxc_version" -lt 5; then
   lxcf="f03"
   lxcf2="f90"
 fi
-if test "$lxc_version" -gt 4; then
-  lxcf="f90"
-  lxcf2="f03"
 fi
 
 if test x"$FCFLAGS_LIBXC" = x; then

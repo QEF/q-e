@@ -126,6 +126,7 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
 #if defined(__LIBXC)
   !
+  fkind_x = -1
   lengthxc = length
   !
   POLARIZED = .FALSE.
@@ -1168,7 +1169,9 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
      !
      CASE DEFAULT
         !
-        CALL errore( 'gcx_spin', 'not implemented', igcx )
+        sx = 0.0_DP
+        v1x = 0.0_DP
+        v2x = 0.0_DP
         !
      END SELECT
      !
@@ -1276,7 +1279,9 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
 #endif
     CASE DEFAULT
        !
-       CALL errore( 'xc_gga_drivers (gcc_spin)', 'not implemented', igcc )
+       sc = 0.0_DP
+       v1c = 0.0_DP
+       v2c = 0.0_DP
        !
     END SELECT
     !

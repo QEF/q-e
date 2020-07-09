@@ -61,6 +61,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   !
 #if defined(__LIBXC)
   !
+  fkind = -1
   lengthxc = length
   !
   IF ( (is_libxc(3) .OR. igcx==0) .AND. (is_libxc(4) .OR. igcc==0)) THEN

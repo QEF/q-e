@@ -1447,19 +1447,6 @@ CONTAINS
      ENDDO
      RETURN
   END SUBROUTINE
-  !
-  SUBROUTINE set_libxc_ext_params( xc_func, ext_pars, npar )
-    !! Sets external parameters for libxc functionals, if needed.
-    !
-    INTEGER, INTENT(IN)  :: npar
-    !! total number of external parameters
-    REAL(DP), INTENT(IN) :: ext_pars(npar)
-    !! array of external parameters
-    TYPE(xc_f03_func_t)  :: xc_func
-    !
-    CALL xc_f03_func_set_ext_params( xc_func, ext_pars )
-    !
-  END SUBROUTINE
 #endif
   !
   !-----------------------------------------------------------------------
