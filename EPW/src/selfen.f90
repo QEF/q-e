@@ -333,7 +333,8 @@
                   !
                   ! Mode-resolved
                   IF (iverbosity == 3) THEN
-                    sigmai_mode(ibnd, imode, ik + lower_bnd - 1, itemp) = sigmai_mode(ibnd, imode, ik + lower_bnd - 1, itemp) + g2 * weight
+                    sigmai_mode(ibnd, imode, ik + lower_bnd - 1, itemp) = sigmai_mode(ibnd, imode, ik + lower_bnd - 1, itemp) + &
+                            g2 * weight
                   ENDIF
                   !
                   ! Z FACTOR: -\frac{\partial\Re\Sigma}{\partial\omega}
@@ -465,7 +466,8 @@
               zi_all(ibnd, ik, itemp) = one / (one + zi_all(ibnd, ik, itemp))
               !
               WRITE(stdout, 102) ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2mev * sigmar_all(ibnd, ik, itemp), &
-                                 ryd2mev * sigmai_all(ibnd,ik, itemp), zi_all(ibnd, ik, itemp), one / zi_all(ibnd, ik, itemp) - one
+                                 ryd2mev * sigmai_all(ibnd,ik, itemp), zi_all(ibnd, ik, itemp), &
+                                 one / zi_all(ibnd, ik, itemp) - one
               IF (iverbosity == 3) THEN
                 DO imode = 1, nmodes
                   WRITE(linewidth_elself, '(i9, 2x)', ADVANCE = 'no') ik
@@ -501,7 +503,8 @@
             !zi_all(ibnd,ik) = one / (one + zi_all(ibnd,ik))
             !
             WRITE(stdout, '(2i9, 5f12.4)') ik, ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2mev * sigmar_all(ibnd, ik, itemp), &
-                           ryd2mev * sigmai_all(ibnd, ik, itemp), zi_all(ibnd, ik, itemp), one / zi_all(ibnd, ik, itemp) - one
+                           ryd2mev * sigmai_all(ibnd, ik, itemp), zi_all(ibnd, ik, itemp), &
+                           one / zi_all(ibnd, ik, itemp) - one
             !
           ENDDO
           !
@@ -906,8 +909,10 @@
         !
         DO imode = 1, nmodes
           !
-          WRITE(stdout, 102) imode, lambda_all(imode, iq, ismear, itemp), ryd2mev * gamma_all(imode, iq, ismear, itemp), ryd2mev * wq(imode)
-          WRITE(stdout, 104) imode, lambda_v_all(imode, iq, ismear, itemp), ryd2mev * gamma_v_all(imode, iq, ismear, itemp), ryd2mev * wq(imode)
+          WRITE(stdout, 102) imode, lambda_all(imode, iq, ismear, itemp), &
+                             ryd2mev * gamma_all(imode, iq, ismear, itemp), ryd2mev * wq(imode)
+          WRITE(stdout, 104) imode, lambda_v_all(imode, iq, ismear, itemp), &
+                             ryd2mev * gamma_v_all(imode, iq, ismear, itemp), ryd2mev * wq(imode)
           !
         ENDDO
         !
@@ -1410,7 +1415,8 @@
               zi_all(ibnd, ik, itemp) = one / (one + zi_all(ibnd, ik, itemp))
               !
               WRITE(stdout, 102) ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2mev * sigmar_all(ibnd, ik, itemp), &
-                                 ryd2mev * sigmai_all(ibnd, ik, itemp), zi_all(ibnd, ik, itemp), one / zi_all(ibnd, ik, itemp) - one
+                                 ryd2mev * sigmai_all(ibnd, ik, itemp), zi_all(ibnd, ik, itemp), &
+                                 one / zi_all(ibnd, ik, itemp) - one
               WRITE(linewidth_elself, '(i9, 2x)', ADVANCE = 'no') ik
               WRITE(linewidth_elself, '(i9, 2x)', ADVANCE = 'no') ibndmin - 1 + ibnd
               WRITE(linewidth_elself, '(E22.14, 2x)', ADVANCE = 'no') ryd2ev * ekk

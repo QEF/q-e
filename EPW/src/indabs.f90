@@ -152,6 +152,11 @@
       DO itemp = 1, nstemp
         WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Temperature T = ', gtemp(itemp) * ryd2ev, ' eV'
       ENDDO
+      IF (nstemp .GT. 1) THEN
+        WRITE(stdout, '(/5x,a)') 'Indirect optical calculations with multiple temperatures.'
+        WRITE(stdout, '(/5x,a)') 'This type of calculations can be very expensive.'
+        WRITE(stdout, '(/5x,a)') 'Consider calculting one temperature per calculation instead. '
+      ENDIF
       !
       !IF (.NOT. ALLOCATED (omegap) )    ALLOCATE(omegap(nomega))
       !IF (.NOT. ALLOCATED (epsilon2_abs) ) ALLOCATE(epsilon2_abs(3, nomega, neta))
@@ -283,10 +288,12 @@
                                cfac / omegap(iw)**2 * pfac  * weighta * ABS(s1a(ipol) + s2a(ipol))**2 / (2 * wq(imode) * omega)
                           epsilon2_abs(ipol, iw, m, itemp) = epsilon2_abs(ipol, iw, m, itemp) + (wkf(ikk) / 2.0) * wqf(iq) * &
                                cfac / omegap(iw)**2 * pface * weighte * ABS(s1e(ipol) + s2e(ipol))**2 / (2 * wq(imode) * omega)
-                          epsilon2_abs_lorenz(ipol, iw, m, itemp) = epsilon2_abs_lorenz(ipol, iw, m, itemp) + (wkf(ikk) / 2.0) * wqf(iq) * &
+                          epsilon2_abs_lorenz(ipol, iw, m, itemp) = epsilon2_abs_lorenz(ipol, iw, m, itemp) + &
+                                (wkf(ikk) / 2.0) * wqf(iq) * &
                                cfac / omegap(iw)**2 * pfac  * ABS(s1a(ipol) + s2a(ipol))**2 / (2 * wq(imode) * omega) * &
                                (degaussw / (degaussw**2 + (ekq - ekk - omegap(iw) - wq(imode))**2)) / pi
-                          epsilon2_abs_lorenz(ipol, iw, m, itemp) = epsilon2_abs_lorenz(ipol, iw, m, itemp)  + (wkf(ikk) / 2.0) * wqf(iq) * &
+                          epsilon2_abs_lorenz(ipol, iw, m, itemp) = epsilon2_abs_lorenz(ipol, iw, m, itemp)  + &
+                               (wkf(ikk) / 2.0) * wqf(iq) * &
                                cfac / omegap(iw)**2 * pface * ABS(s1e(ipol) + s2e(ipol))**2 / (2 * wq(imode) * omega) * &
                                (degaussw / (degaussw**2 + (ekq - ekk - omegap(iw) + wq(imode))**2 )) / pi
                         ENDDO ! ipol

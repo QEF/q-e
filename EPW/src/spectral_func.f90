@@ -278,7 +278,8 @@
                     weight = wqf(iq) * REAL(fact)
                     !
                     ! \Re\Sigma [Eq. 3 in Comput. Phys. Commun. 209, 116 (2016)]
-                    esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) = esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) + g2 * weight
+                    esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) = esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) + &
+                                                                       g2 * weight
                     !
                     ! SP : Application of the sum rule
                     esigmar0 = - g2 *  wqf(iq) * REAL((fact1 / etmp1) + (fact2 / etmp2))
@@ -287,7 +288,8 @@
                     weight = wqf(iq) * AIMAG(fact)
                     !
                     ! \Im\Sigma [Eq. 3 in Comput. Phys. Commun. 209, 116 (2016)]
-                    esigmai_all(ibnd, ik + lower_bnd - 1, iw, itemp) = esigmai_all(ibnd, ik + lower_bnd - 1, iw, itemp) + g2 * weight
+                    esigmai_all(ibnd, ik + lower_bnd - 1, iw, itemp) = esigmai_all(ibnd, ik + lower_bnd - 1, iw, itemp) + &
+                                                                       g2 * weight
                     !
                   ENDDO
                 ENDDO !jbnd
@@ -366,7 +368,8 @@
           ikk = 2 * ik - 1
           ikq = ikk + 1
           !
-          WRITE(stdout, '(/5x, "ik = ", i5, " coord.: ", 3f12.7, " Temp. : ", f8.3)') ik, xkf_all(:, ikk), gtemp(itemp) * ryd2ev / kelvin2eV
+          WRITE(stdout, '(/5x, "ik = ", i5, " coord.: ", 3f12.7, " Temp. : ", f8.3)') ik, xkf_all(:, ikk), &
+                                                                                      gtemp(itemp) * ryd2ev / kelvin2eV
           WRITE(stdout, '(5x, a)') REPEAT('-', 67)
           !
           DO iw = 1, nw_specfun
@@ -400,7 +403,8 @@
             !
             specfun_sum = specfun_sum + a_all(iw, ik, itemp) * fermi(iw) * dw
             !
-            IF (me_pool == 0) WRITE(iospectral, '(2x, i7, 2x, f10.5, 2x, E12.5)') ik, ryd2ev * ww(iw), a_all(iw, ik, itemp) / ryd2mev
+            IF (me_pool == 0) WRITE(iospectral, '(2x, i7, 2x, f10.5, 2x, E12.5)') ik, ryd2ev * ww(iw), &
+                                                                                  a_all(iw, ik, itemp) / ryd2mev
             !
           ENDDO
           !
@@ -1168,16 +1172,19 @@
                     weight = wqf(iq) * REAL(fact)
                     !
                     ! \Re\Sigma [Eq. 3 in Comput. Phys. Commun. 209, 116 (2016)]
-                    esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) = esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) + g2 * weight
+                    esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) = esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) + &
+                                                                       g2 * weight
                     !
                     ! SP : Application of the sum rule
                     esigmar0 = - g2 *  wqf(iq) * REAL((fact1 / etmp1) + (fact2 / etmp2))
-                    esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) = esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) - esigmar0
+                    esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) = esigmar_all(ibnd, ik + lower_bnd - 1, iw, itemp) - &
+                                                                       esigmar0
                     !
                     weight = wqf(iq) * AIMAG(fact)
                     !
                     ! \Im\Sigma [Eq. 3 in Comput. Phys. Commun. 209, 116 (2016)]
-                    esigmai_all(ibnd, ik + lower_bnd - 1, iw, itemp) = esigmai_all(ibnd, ik + lower_bnd - 1, iw, itemp) + g2 * weight
+                    esigmai_all(ibnd, ik + lower_bnd - 1, iw, itemp) = esigmai_all(ibnd, ik + lower_bnd - 1, iw, itemp) + &
+                                                                       g2 * weight
                     !
                   ENDDO
                 ENDDO !jbnd
@@ -1256,7 +1263,8 @@
           ikk = 2 * ik - 1
           ikq = ikk + 1
           !
-          WRITE(stdout, '(/5x, "ik = ", i5, " coord.: ", 3f12.7, " Temp.: ", f8.3 )') ik, xkf_all(:, ikk), gtemp(itemp) * ryd2ev / kelvin2eV
+          WRITE(stdout, '(/5x, "ik = ", i5, " coord.: ", 3f12.7, " Temp.: ", f8.3 )') ik, xkf_all(:, ikk), &
+                                                                                      gtemp(itemp) * ryd2ev / kelvin2eV
           WRITE(stdout, '(5x, a)') REPEAT('-', 67)
           !
           DO iw = 1, nw_specfun
@@ -1289,7 +1297,8 @@
             fermi(iw) = wgauss(-ww(iw) * inv_eptemp, -99)
             specfun_sum = specfun_sum + a_all(iw, ik, itemp) * fermi(iw) * dw !/ ryd2mev
             !
-           IF (me_pool == 0) WRITE(iospectral, '(2x, i7, 2x, f10.5, 2x, E12.5)') ik, ryd2ev * ww(iw), a_all(iw, ik, itemp) / ryd2mev
+           IF (me_pool == 0) WRITE(iospectral, '(2x, i7, 2x, f10.5, 2x, E12.5)') ik, ryd2ev * ww(iw), &
+                                                                                 a_all(iw, ik, itemp) / ryd2mev
           ENDDO
           !
           IF (me_pool == 0) WRITE(iospectral, '(a)') ' '
