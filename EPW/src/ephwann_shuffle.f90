@@ -96,9 +96,7 @@
   USE epwcom,           ONLY : wfcelec, start_band, polaron_wf, restart_polaron,   &
                                polaron_interpol, polaron_bq, polaron_dos, nPlrn,   &
                                wfcelec_old
-  USE elph2,            ONLY : g2_4,  ngk_all, igk_k_all
-  USE phcom,            ONLY : evq
-  USE wavefunctions,    ONLY : evc
+  USE elph2,            ONLY : g2_4 
   USE ephblochkq,       ONLY : interpol_bq, interpol_a_k, compute_a_re
   USE polaron,          ONLY : wfc_elec, epfall, ufall, Hamil, eigVec,             &
                                interp_plrn_wf, interp_plrn_bq, plot_plrn_wf
@@ -876,9 +874,10 @@
     ! Check if the grids are homogeneous and commensurate
     homogeneous = .FALSE.
     IF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0) .AND. &
-        (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0) .AND. &
-        (MOD(nkf1, nqf1) == 0) .AND. (MOD(nkf2, nqf2) == 0) .AND. (MOD(nkf3, nqf3) == 0)) THEN
-      homogeneous = .TRUE.
+        (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0)) THEN
+      IF ((MOD(nkf1, nqf1) == 0) .AND. (MOD(nkf2, nqf2) == 0) .AND. (MOD(nkf3, nqf3) == 0)) THEN
+        homogeneous = .TRUE.
+      ENDIF
     ELSE
       homogeneous = .FALSE.
     ENDIF
