@@ -24,7 +24,7 @@ ppc64-bg*:*xlf90_r )
 ppc64-bg*:*xlf90 )
         try_cc="bgxlc"
         ;;
-ppc64:*xlf* | ppc64-mn:*xlf* )
+ppc64:*xlf* | ppc64le:*xlf* )
         try_cc="xlc_r $try_cc"
         ;;
 esac
@@ -57,8 +57,8 @@ necsx:* )
         #try_cflags="-D__SX6 \$(IFLAGS) \$(MODFLAGS)"
         try_cflags=""
         ;;
-ppc64-mn:* )
-        try_cflags="-O3 -q64"
+ppc64le:* )
+        try_cflags="-O3"
         ;;
 ppc64-bg:* )
         try_cflags="-O3 -q32"

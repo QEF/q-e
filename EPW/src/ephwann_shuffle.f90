@@ -62,7 +62,8 @@
                                vmebloch2wan, ephbloch2wane, ephbloch2wanp,         &
                                ephbloch2wanp_mem
   USE wigner,           ONLY : wigner_seitz_wrap
-  USE io_eliashberg,    ONLY : write_ephmat, count_kpoints, kmesh_fine, kqmap_fine
+  USE io_eliashberg,    ONLY : write_ephmat, count_kpoints, kmesh_fine, kqmap_fine,&
+                               check_restart_ephwrite
   USE transport,        ONLY : transport_coeffs, scattering_rate_q
   USE grid,             ONLY : qwindow
   USE printing,         ONLY : print_gkk, plot_band
@@ -83,7 +84,6 @@
                                nesting_fn_q
   USE spectral_func,    ONLY : spectral_func_el_q, spectral_func_ph_q, a2f_main,   &
                                spectral_func_pl_q
-  USE io_epw,           ONLY : read_ifc
   USE rigid_epw,        ONLY : rpa_epsilon, tf_epsilon, compute_umn_f, rgd_blk_epw_fine
   USE indabs,           ONLY : indabs_main, renorm_eig
 #if defined(__MPI)
@@ -96,9 +96,7 @@
   USE epwcom,           ONLY : wfcelec, start_band, polaron_wf, restart_polaron,   &
                                polaron_interpol, polaron_bq, polaron_dos, nPlrn,   &
                                wfcelec_old
-  USE elph2,            ONLY : g2_4,  ngk_all, igk_k_all
-  USE phcom,            ONLY : evq
-  USE wavefunctions,    ONLY : evc
+  USE elph2,            ONLY : g2_4 
   USE ephblochkq,       ONLY : interpol_bq, interpol_a_k, compute_a_re
   USE polaron,          ONLY : wfc_elec, epfall, ufall, Hamil, eigVec,             &
                                interp_plrn_wf, interp_plrn_bq, plot_plrn_wf
@@ -303,21 +301,23 @@
   !
   IF (nbndsub /= nbndep) WRITE(stdout, '(/,5x,a,i4)' ) 'Band disentanglement is used: nbndsub = ', nbndsub
   !
-  ALLOCATE(cu(nbndep, nbndsub, nks), STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cu', 1)
-  ALLOCATE(cuq(nbndep, nbndsub, nks), STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cuq', 1)
-  ALLOCATE(lwin(nbndep, nks), STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating lwin', 1)
-  ALLOCATE(lwinq(nbndep, nks), STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating lwinq', 1)
-  ALLOCATE(exband(nbnd), STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating exband', 1)
-  cu(:, :, :)  = czero
-  cuq(:, :, :) = czero
-  lwin(:, :)   = .FALSE.
-  lwinq(:, :)  = .FALSE.
-  exband(:)    = .FALSE.
+  IF (.NOT. (epwread .AND. .NOT. epbread)) THEN
+    ALLOCATE(cu(nbndep, nbndsub, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cu', 1)
+    ALLOCATE(cuq(nbndep, nbndsub, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cuq', 1)
+    ALLOCATE(lwin(nbndep, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating lwin', 1)
+    ALLOCATE(lwinq(nbndep, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating lwinq', 1)
+    ALLOCATE(exband(nbnd), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating exband', 1)
+    cu(:, :, :)  = czero
+    cuq(:, :, :) = czero
+    lwin(:, :)   = .FALSE.
+    lwinq(:, :)  = .FALSE.
+    exband(:)    = .FALSE.
+  ENDIF
   !
   ALLOCATE(w2(3 * nat), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating w2', 1)
@@ -521,18 +521,17 @@
       DEALLOCATE(epmatwe_mem, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epmatwe_mem', 1)
     ENDIF
+    DEALLOCATE(cu, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cu', 1)
+    DEALLOCATE(cuq, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cuq', 1)
+    DEALLOCATE(lwin, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating lwin', 1)
+    DEALLOCATE(lwinq, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating lwinq', 1)
+    DEALLOCATE(exband, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating exband', 1)
   ENDIF ! (epwread .AND. .NOT. epbread)
-  !
-  DEALLOCATE(cu, STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cu', 1)
-  DEALLOCATE(cuq, STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cuq', 1)
-  DEALLOCATE(lwin, STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating lwin', 1)
-  DEALLOCATE(lwinq, STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating lwinq', 1)
-  DEALLOCATE(exband, STAT = ierr)
-  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating exband', 1)
   !
   ! Check Memory usage
   CALL system_mem_usage(valueRSS)
@@ -754,7 +753,7 @@
   !
   ! Re-order the k-point according to weather they are in or out of the fshick
   ! windows
-  IF (iterative_bte .AND. mp_mesh_k) THEN
+  IF ((iterative_bte .OR. ephwrite) .AND. mp_mesh_k) THEN
     CALL load_rebal
   ENDIF
   !
@@ -884,9 +883,7 @@
     !
     totq = 0
     !
-    ! Check if we are doing Superconductivity
-    ! If Eliashberg, then do not use fewer q-points within the fsthick window.
-    IF (ephwrite .OR. wfcelec) THEN
+    IF (wfcelec) THEN
       !
       totq = nqf
       ALLOCATE(selecq(nqf), STAT = ierr)
@@ -895,7 +892,7 @@
         selecq(iq) = iq
       ENDDO
       !
-    ELSE ! ephwrite
+    ELSE ! wfcelec
       ! Check if the file has been pre-computed
       IF (mpime == ionode_id) THEN
         INQUIRE(FILE = 'selecq.fmt', EXIST = exst)
@@ -923,7 +920,7 @@
       WRITE(stdout, '(5x,a,i8,a)')'We only need to compute ', totq, ' q-points'
       WRITE(stdout, '(5x,a)')' '
       !
-    ENDIF ! ephwrite
+    ENDIF ! wfcelec
     !
     ! -----------------------------------------------------------------------
     ! Possible restart during step 1)
@@ -1059,16 +1056,16 @@
     ! We just do one loop to get interpolated eigenenergies.
     IF(scatread) iq_restart = totq - 1
     !
-    ! Restart in IBTE case
-    IF (iterative_bte) THEN
+    ! Restart in IBTE and Superconductivity cases
+    IF (iterative_bte .OR. ephwrite) THEN
       IF (mpime == ionode_id) THEN
-        INQUIRE(FILE = 'restart_ibte.fmt', EXIST = exst)
+        INQUIRE(FILE = 'restart.fmt', EXIST = exst)
       ENDIF
       CALL mp_bcast(exst, ionode_id, world_comm)
       !
       IF (exst) THEN
         IF (mpime == ionode_id) THEN
-          OPEN(UNIT = iunrestart, FILE = 'restart_ibte.fmt', STATUS = 'old', IOSTAT = ios)
+          OPEN(UNIT = iunrestart, FILE = 'restart.fmt', STATUS = 'old', IOSTAT = ios)
           READ(iunrestart, *) iq_restart
           READ(iunrestart, *) ind_tot
           READ(iunrestart, *) ind_totcb
@@ -1080,29 +1077,33 @@
             READ(iunrestart, *) lrepmatw5_restart(ipool)
           ENDDO
           CLOSE(iunrestart)
-          !
-          OPEN(UNIT = iuntau, FORM = 'unformatted', FILE = 'inv_tau_tmp', STATUS = 'old')
-          READ(iuntau) inv_tau_all
-          CLOSE(iuntau)
-          !
-          OPEN(UNIT = iuntaucb, FORM = 'unformatted', FILE = 'inv_taucb_tmp', STATUS = 'old')
-          READ(iuntaucb) inv_tau_allcb
-          CLOSE(iuntaucb)
         ENDIF
         CALL mp_bcast(iq_restart, ionode_id, world_comm)
         CALL mp_bcast(npool_tmp, ionode_id, world_comm)
         CALL mp_bcast(lrepmatw2_restart, ionode_id, world_comm)
         CALL mp_bcast(lrepmatw5_restart, ionode_id, world_comm)
-        CALL mp_bcast(inv_tau_all, ionode_id, world_comm)
-        CALL mp_bcast(inv_tau_allcb, ionode_id, world_comm)
-        IF (npool /= npool_tmp) CALL errore('ephwann_shuffle','Number of cores is different',1)
-        IF (lower_bnd - 1 >= 1) THEN
-          inv_tau_all(:, 1:lower_bnd - 1, :) = 0d0
-          inv_tau_allcb(:, 1:lower_bnd - 1, :) = 0d0
-        ENDIF
-        IF (upper_bnd + 1 <= nktotf) THEN
-          inv_tau_all(:, upper_bnd + 1:nktotf, :) = 0d0
-          inv_tau_allcb(:, upper_bnd + 1:nktotf, :) = 0d0
+        ! 
+        IF (iterative_bte) THEN
+          IF (mpime == ionode_id) THEN
+            OPEN(UNIT = iuntau, FORM = 'unformatted', FILE = 'inv_tau_tmp', STATUS = 'old')
+            READ(iuntau) inv_tau_all
+            CLOSE(iuntau)
+            !
+            OPEN(UNIT = iuntaucb, FORM = 'unformatted', FILE = 'inv_taucb_tmp', STATUS = 'old')
+            READ(iuntaucb) inv_tau_allcb
+            CLOSE(iuntaucb)
+          ENDIF
+          CALL mp_bcast(inv_tau_all, ionode_id, world_comm)
+          CALL mp_bcast(inv_tau_allcb, ionode_id, world_comm)
+          IF (npool /= npool_tmp) CALL errore('ephwann_shuffle','Number of cores is different',1)
+          IF (lower_bnd - 1 >= 1) THEN
+            inv_tau_all(:, 1:lower_bnd - 1, :) = 0d0
+            inv_tau_allcb(:, 1:lower_bnd - 1, :) = 0d0
+          ENDIF
+          IF (upper_bnd + 1 <= nktotf) THEN
+            inv_tau_all(:, upper_bnd + 1:nktotf, :) = 0d0
+            inv_tau_allcb(:, upper_bnd + 1:nktotf, :) = 0d0
+          ENDIF
         ENDIF
         !
 #if defined(__MPI)
@@ -1111,9 +1112,19 @@
 #endif
         IF (ierr /= 0) CALL errore('ephwann_shuffle', 'error in MPI_BCAST', 1)
         !
+        IF(ephwrite .AND. iq_restart > 1) THEN
+          first_cycle = .TRUE.
+          CALL check_restart_ephwrite
+        ENDIF
+        !
         ! Now, the iq_restart point has been done, so we need to do the next
         iq_restart = iq_restart + 1
-        WRITE(stdout, '(5x,a,i8,a)')'We restart from ', iq_restart, ' q-points'
+        !
+        IF (iq_restart < totq) THEN
+          WRITE(stdout, '(5x,a,i8,a)')'We restart from ', iq_restart, ' q-points'
+        ELSE
+          WRITE(stdout, '(5x,a)')'All q-points are done, no need to restart !!'
+        ENDIF
         !
       ENDIF ! exst
     ENDIF
@@ -1403,12 +1414,13 @@
       IF (specfun_ph) CALL spectral_func_ph_q(iqq, iq, totq)
       IF (specfun_pl .AND. .NOT. vme) CALL spectral_func_pl_q(iqq, iq, totq, first_cycle)
       IF (ephwrite) THEN
-        IF (iq == 1) THEN
+        IF (first_cycle .OR. iq == 1) THEN
            CALL kmesh_fine
            CALL kqmap_fine
+           CALL count_kpoints
+           first_cycle = .FALSE.
         ENDIF
-        CALL write_ephmat(iq)
-        CALL count_kpoints(iq)
+        CALL write_ephmat(iqq, iq, totq)
       ENDIF
       !
       IF (.NOT. scatread) THEN
@@ -1703,7 +1715,7 @@
     !
   ENDIF ! (iterative_bte .AND. epmatkqread)
   !
-  IF (mp_mesh_k .AND. iterative_bte) THEN
+  IF ((iterative_bte .OR. ephwrite) .AND. mp_mesh_k) THEN
     DEALLOCATE(map_rebal, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating map_rebal', 1)
     DEALLOCATE(map_rebal_inv, STAT = ierr)

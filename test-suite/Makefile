@@ -18,9 +18,9 @@ default :
 	@echo 'where <target> identifies an action'
 	@echo ' run-tests                   : run-tests-serial (default)'
 	@echo ' run-tests-serial            : run all tests in SERIAL' 
-	@echo ' run-tests-XX-serial         : run tests for XX={pw,cp} only, as above' 
+	@echo ' run-tests-XX-serial         : run tests for XX={pw,cp,ph,epw,hp} only, as above' 
 	@echo ' run-tests-parallel          : run all tests in PARALLEL (4 MPI)'
-	@echo ' run-tests-XX-parallel       : run tests for XX={pw,cp} only, as above' 
+	@echo ' run-tests-XX-parallel       : run tests for XX={pw,cp,ph,epw,hp} only, as above' 
 	@echo ' run-custom-test testdir=DIR : run test in DIR only (serial)'
 	@echo ' run-custom-test-parallel testdir=DIR : run test in DIR only (parallel 4 MPI)'
 	@echo ' compare                     : compare last output with reference'
@@ -43,7 +43,7 @@ pseudo :
 
 run-tests : run-tests-serial
 
-run-tests-serial : run-tests-pw-serial run-tests-cp-serial 
+run-tests-serial : run-tests-pw-serial run-tests-cp-serial run-tests-ph-serial run-tests-epw-serial run-tests-hp-serial  
 
 run-tests-parallel : run-tests-pw-parallel run-tests-cp-parallel run-tests-ph-parallel run-tests-epw-parallel run-tests-hp-parallel
 
@@ -79,6 +79,12 @@ run-tests-hp-serial : prolog pseudo
 
 run-tests-hp-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=hp_all
+
+run-tests-pp-serial : prolog pseudo
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pp_all
+
+run-tests-pp-parallel : prolog pseudo
+	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=pp_all
 
 run-travis : clean prolog pseudo
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_base
@@ -128,19 +134,11 @@ compare-epw : prolog
 
 clean:
 # output files
-	@for x in `find pw_* -name "test*"`; do rm -rf $$x; done
-	@for x in `find ph_* -name "test*"`; do rm -rf $$x; done
-	@for x in `find cp_* -name "test*"`; do rm -rf $$x; done
-	@for x in `find hp_* -name "test*"`; do rm -rf $$x; done
-	@for x in `find epw_* -name "test*"`; do rm -rf $$x; done
+	@rm -rf pw_*/test* ph_*/test* cp_*/test* hp_*/test* pp_*/test* epw_*/test*
 # error files
-	@for x in `find pw_* -name "CRASH"`; do rm -rf $$x; done
-	@for x in `find ph_* -name "CRASH*"`; do rm -rf $$x; done
-	@for x in `find cp_* -name "CRASH"`; do rm -rf $$x; done
-	@for x in `find hp_* -name "CRASH"`; do rm -rf $$x; done
-	@for x in `find epw_* -name "CRASH"`; do rm -rf $$x; done
+	@rm -rf pw_*/CRASH ph_*/CRASH* cp_*/CRASH hp_*/CRASH pp_*/CRASH epw_*/CRASH
 # pwscf data files
-	@rm -rf pw_*/pwscf.* ph_*/pwscf.* epw_*/pwscf.*
+	@rm -rf pw_*/pwscf.* ph_*/pwscf.* pp_*/pwscf.* epw_*/pwscf.*
 # cp data files
 	@rm -rf cp_si/si_*.* cp_o2/o2_*.* cp_h2o/h2o_*.* cp_sio2/sio2_*.*
 	@rm -rf cp_si/si.??? cp_o2/o2.??? cp_h2o/h2o.??? cp_sio2/sio2.???
@@ -172,7 +170,7 @@ clean:
 		epw_*/*.acon_iso_25.00 epw_*/*.crystal.fmt epw_*/*.a2f_iso epw_*/*.ephmat* \
 		epw_*/*.kmap epw_*/*.lambda_k_pairs epw_*/*.ukk epw_*/*.imag_aniso_25.00 \
 		epw_*/*.pade_aniso_gap0_25.00 epw_*/*.win epw_*/*.imag_aniso_gap0_25.00 \
-		epw_*/*.chk epw_*/*.phdos_proj epw_*/*..a2f epw_*/*.imag_aniso_gap_FS_25.00 \
+		epw_*/*.chk epw_*/*.phdos_proj epw_*/*.a2f_proj epw_*/*.imag_aniso_gap_FS_25.00 \
 		epw_*/*.epmatwp epw_*/*.phdos epw_*/*.epwane epw_*/*.ephmat \
 		epw_*/*.fmt epw_*/*.H epw_*/*.epb* epw_*/*self epw_*/*.a2f epw_*/*.01 \
 		epw_*/*.kpt epw_*/*.gnu epw_*/*.eig epw_*/*.lambda_FS epw_*/*.sigma_restart* \

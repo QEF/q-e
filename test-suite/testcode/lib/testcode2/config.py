@@ -74,8 +74,8 @@ config_file: location of the userconfig file, either relative or absolute.'''
 
     # Alter config file with additional settings provided.
     if settings:
-        for (section_key, section) in settings.items():
-            for (option_key, value) in section.items():
+        for (section_key, section) in list(settings.items()):
+            for (option_key, value) in list(section.items()):
                 userconfig.set(section_key, option_key, value)
 
     # Sensible defaults for the user options.
@@ -201,15 +201,15 @@ config_file: location of the jobconfig file, either relative or absolute.'''
 
     # Alter config file with additional settings provided.
     if settings:
-        for (section_key, section) in settings.items():
-            for (option_key, value) in section.items():
+        for (section_key, section) in list(settings.items()):
+            for (option_key, value) in list(section.items()):
                 jobconfig.set(section_key, option_key, value)
 
     # Parse job categories.
     # Just store as list of test names for now.
     if jobconfig.has_section('categories'):
         test_categories = dict(jobconfig.items('categories'))
-        for (key, val) in test_categories.items():
+        for (key, val) in list(test_categories.items()):
             test_categories[key] = val.split()
         jobconfig.remove_section('categories')
     else:
@@ -316,7 +316,7 @@ config_file: location of the jobconfig file, either relative or absolute.'''
 
     # Now create the tests (after finding out what the input files are).
     tests = []
-    for ((name, path), (test_program, test_dict)) in test_info.items():
+    for ((name, path), (test_program, test_dict)) in list(test_info.items()):
         old_dir = os.getcwd()
         os.chdir(path)
         # Expand any globs in the input files.
@@ -455,7 +455,7 @@ def select_tests(all_tests, test_categories, selected_categories, prefix=''):
                 found = True
                 tests.append(test)
         if not found:
-            print('WARNING: %s test/category not found.\n' % cat)
+            print(('WARNING: %s test/category not found.\n' % cat))
     # Only want to run each test once.
     tests = list(compat.compat_set(tests))
     return tests
@@ -483,7 +483,7 @@ the full path.
             # Cannot find program.
             # This still allows us to manipulate previously run tests, just not
             # run new ones...
-            print('WARNING: cannot find program: %s.' % (program))
+            print(('WARNING: cannot find program: %s.' % (program)))
             # Allow things to proceed with the original path -- the user might
             # know what they're doing and the above tests are not always
             # sufficient (e.g. if using cygwin but using an MPI implementation

@@ -74,7 +74,7 @@ SUBROUTINE hp_ns_trace
               IF (na2==na1) THEN
                  DO is = 1, nspin
                     DO m1 = 1, ldim
-                       nsaux(na1,is) = nsaux(na1,is) + DBLE(nsg(na1,m1,viz,m1,is))
+                       nsaux(na1,is) = nsaux(na1,is) + DBLE(nsg(m1,m1,viz,na1,is))
                     ENDDO
                  ENDDO
                  IF (nspin==1) THEN

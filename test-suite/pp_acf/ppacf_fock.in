@@ -1,0 +1,8 @@
+&ppacf
+    outdir = './'
+    prefix = 'pwscf'
+    n_lambda = 1
+    lfock = .true.
+    lplot = .true.
+/
+

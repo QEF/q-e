@@ -23,6 +23,10 @@ read_ncpp.o : pseudo_types.o
 read_ncpp.o : upf_const.o
 read_ncpp.o : upf_kinds.o
 read_ncpp.o : upf_params.o
+read_upf_new.o : pseudo_types.o
+read_upf_new.o : upf_kinds.o
+read_upf_new.o : upf_utils.o
+read_upf_new.o : xmltools.o
 read_upf_schema.o : pseudo_types.o
 read_upf_schema.o : upf_kinds.o
 read_upf_schema.o : upf_utils.o
@@ -69,6 +73,7 @@ upfconv.o : upf.o
 upfconv.o : upf_const.o
 upfconv.o : upf_utils.o
 upfconv.o : write_upf.o
+upfconv.o : write_upf_new.o
 uspp.o : pseudo_types.o
 uspp.o : upf_const.o
 uspp.o : upf_invmat.o
@@ -84,8 +89,14 @@ virtual_v2.o : write_upf.o
 write_upf.o : pseudo_types.o
 write_upf.o : write_upf_schema.o
 write_upf.o : write_upf_v2.o
+write_upf_new.o : pseudo_types.o
+write_upf_new.o : upf_kinds.o
+write_upf_new.o : upf_utils.o
+write_upf_new.o : xmltools.o
 write_upf_schema.o : pseudo_types.o
 write_upf_schema.o : upf_kinds.o
 write_upf_v2.o : pseudo_types.o
 write_upf_v2.o : upf_kinds.o
+xmltools.o : upf_kinds.o
+write_upf_new.o : ../include/version.h
 write_upf_schema.o : ../include/version.h

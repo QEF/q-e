@@ -20,13 +20,13 @@ if [ $QE_USE_MPI == 1 ]; then
 #                  -nd n        number of processors for linear algebra 
 #                                            (or -ndiag, -northo) 
 #
-  export PARA_POSTFIX=" -nk 1 -nd 1 -nb 1 -nt 1 "
+  export PARA_SUFFIX=" -nk 1 -nd 1 -nb 1 -nt 1 "
 else
   unset PARA_PREFIX
-  unset PARA_POSTFIX
+  unset PARA_SUFFIX
 fi
 
-echo ' RUNNING ',${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/cp.x ${PARA_POSTFIX} "$@"
-${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/cp.x ${PARA_POSTFIX} "$@"
+echo ' RUNNING ',${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/cp.x ${PARA_SUFFIX} "$@"
+${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/cp.x ${PARA_SUFFIX} "$@"
 
 rm -f input_tmp.in

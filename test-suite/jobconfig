@@ -36,7 +36,7 @@ inputs_args = ('plugin-pw2casino_1.in', '1'), ('plugin-pw2casino_2.in', '1')
 
 [pw_scf/]
 program = PW
-inputs_args = ('scf.in' ,''), ('scf-1.in' ,''), ('scf-2.in' ,''), ('scf-allfrac.in' ,''), ('scf-cg.in' ,''), ('scf-disk_io.in' ,''), ('scf-disk_io-1.in' ,''), ('scf-disk_io-2.in' ,''), ('scf-gamma.in' ,''), ('scf-k0.in' ,''), ('scf-kauto.in' ,''), ('scf-kcrys.in' ,''), ('scf-mixing_TF.in' ,''), ('scf-mixing_beta.in' ,''), ('scf-mixing_localTF.in' ,''), ('scf-mixing_ndim.in' ,''), ('scf-ncpp.in' ,''), ('scf-nofrac.in' ,''), ('scf-occ.in' ,'')
+inputs_args = ('scf.in' ,''), ('scf-1.in' ,''), ('scf-2.in' ,''), ('scf-allfrac.in' ,''), ('scf-beef.in' ,''), ('scf-cg.in' ,''), ('scf-disk_io.in' ,''), ('scf-disk_io-1.in' ,''), ('scf-disk_io-2.in' ,''), ('scf-gamma.in' ,''), ('scf-k0.in' ,''), ('scf-kauto.in' ,''), ('scf-kcrys.in' ,''), ('scf-mixing_TF.in' ,''), ('scf-mixing_beta.in' ,''), ('scf-mixing_localTF.in' ,''), ('scf-mixing_ndim.in' ,''), ('scf-ncpp.in' ,''), ('scf-nofrac.in' ,''), ('scf-occ.in' ,'')
 
 [pw_spinorbit/]
 program = PW
@@ -48,7 +48,23 @@ inputs_args = ('uspp.in' ,''), ('uspp-2.in' ,''), ('uspp-cg.in' ,''), ('uspp-hyb
 
 [pw_vdw/]
 program = PW
-inputs_args = ('vdw1.in' ,''), ('vdw2.in' ,''), ('vdw3.in' ,''), ('vdw5.in' ,''), ('vdw6.in' ,''), ('vdw-d2.in',''), ('vdw-d3.in',''),('vdw-ts.in',''),('xdm.in','')
+inputs_args = ('vdW-DF3-opt1.in',''), ('vdW-DF3-opt2.in',''), ('rVV10.in',''), ('vdw-d2.in',''), ('vdw-d3.in',''), ('vdw-ts.in',''), ('xdm.in','')
+
+[pw_workflow_vc-relax_dos/]
+program = PW
+inputs_args = ('vc-relax1.in' ,'1'), ('dos2.in' ,'2')
+
+[pw_workflow_relax_relax/]
+program = PW
+inputs_args = ('relax1.in' ,'1'), ('relax2.in' ,'2')
+
+[pw_workflow_vc-relax_scf/]
+program = PW
+inputs_args = ('vc-relax1.in' ,'1'), ('scf2.in' ,'2')
+
+[pw_workflow_scf_dos/]
+program = PW
+inputs_args = ('scf1.in' ,'1'), ('dos2.in' ,'2')
 
 [ph_base/]
 program = PH
@@ -108,7 +124,7 @@ inputs_args = ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw
 
 [epw_super/]
 program = EPW
-inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3')
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3')
 
 [epw_polar/]
 program = EPW
@@ -178,6 +194,10 @@ inputs_args = ('Fe.scf.in', '2'), ('Fe.hp.in', '4')
 program = HP
 inputs_args = ('LiNiO2.scf.in', '2'), ('LiNiO2.hp.in', '4')
 
+[pp_acf/]
+program = PP
+inputs_args = ('scf_vdw.in', '1'), ('ppacf_fock.in', '2')
+
 [pw_*/]
 program = PW
 
@@ -186,6 +206,9 @@ program = CP
 
 [ph_*/]
 program = PH
+
+[pp_*/]
+program = PP
 
 [epw_*/]
 program = EPW
@@ -197,6 +220,7 @@ program = HP
 pw_all = pw_*?? 
 cp_all = cp_*??
 ph_all = ph_*??
+pp_all = pp_*??
 epw_all = epw_*??
 hp_all = hp_*??
 epw_partial = epw_base epw_trev epw_trev_uspp epw_metal epw_soc epw_super epw_polar epw_pl epw_mob 

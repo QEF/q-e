@@ -15,7 +15,7 @@ ppc64-bg*:*xlf90_r )
 ppc64-bg*:*xlf90 )
         try_f77="bgxlf"
         ;;
-ppc64:*xlf* | ppc64-mn:*xlf* )
+ppc64:*xlf* | ppc64le:*xlf* )
         try_f77="xlf_r $f90"
         ;;
 esac
