@@ -25,6 +25,7 @@ CONTAINS
   COMPLEX(dp), INTENT(OUT), ALLOCATABLE :: projs(:,:,:)
   COMPLEX(dp), INTENT(OUT), OPTIONAL, ALLOCATABLE :: ovps(:,:,:)
   !
+  COMPLEX(dp), ALLOCATABLE :: proj(:)
   INTEGER :: num_k_points
   INTEGER :: iun, nw, nw_, ik, ik_eff, is, is_
   LOGICAL :: found
@@ -60,6 +61,7 @@ CONTAINS
   ALLOCATE ( xk(3,nkstot) , wk(nkstot) )
   ALLOCATE ( et(nbnd, nkstot) )
   ALLOCATE ( projs(natomwfc, nbnd, nkstot) )
+  ALLOCATE ( proj(nbnd) )
   !
   DO is = 1, nspin
      DO ik = 1, num_k_points
@@ -70,7 +72,10 @@ CONTAINS
         !
         CALL xmlr_opentag ("PROJS")
         DO nw = 1, natomwfc
-           CALL xmlr_readtag ("ATOMIC_WFC", projs(nw,:,ik_eff) )
+           ! see comment in write_proj when writing this tag
+           ! CALL xmlr_readtag ("ATOMIC_WFC", projs(nw,:,ik_eff) )
+           CALL xmlr_readtag ("ATOMIC_WFC", proj)
+           projs(nw,:,ik_eff) = proj(:)
            CALL get_attr ( "index", nw_ )
            CALL get_attr ( "spin", is_ )
         ENDDO
@@ -80,6 +85,7 @@ CONTAINS
      !
   ENDDO
   CALL xmlr_closetag ( )
+  DEALLOCATE (proj)
   !
   ! </EIGENSTATES>
   !

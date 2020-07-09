@@ -159,6 +159,14 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
                 is used (no exchange and correlation).
                 }
         }
+
+        var scissor -type REAL {
+            default {0.0}
+            info {
+                Scissor shift (in Rydberg units).
+                }
+        }
+ 
 	var charge_response -type INTEGER {
 	    default {0}
 	    info {

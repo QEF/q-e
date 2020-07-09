@@ -407,6 +407,10 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   USE exch_gga
   USE corr_gga
   !
+#if defined(use_beef)
+  USE beef_interface, ONLY: beefx, beeflocalcorr
+#endif
+  !
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN) :: length
@@ -759,6 +763,9 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !! Gradient corrections for exchange - Hartree a.u.
   !
   USE exch_gga
+#if defined(use_beef)
+  USE beef_interface, ONLY: beefx
+#endif
   !
   IMPLICIT NONE
   !
@@ -1176,6 +1183,10 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
   !! Implemented: Perdew86, GGA (PW91), PBE
   !
   USE corr_gga
+  !
+#if defined(use_beef)
+  USE beef_interface, ONLY: beeflocalcorrspin
+#endif
   !
   IMPLICIT NONE
   !

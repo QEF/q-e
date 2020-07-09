@@ -9,6 +9,7 @@ QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
          ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a \
          ../../UtilXlib/libutil.a ../../LAXlib/libqela.a \
          ../../GScratch/libgscratch.a
+
 # libqela required by xlf for obscure reasons
 
 PWOBJS = ../src/libpw.a

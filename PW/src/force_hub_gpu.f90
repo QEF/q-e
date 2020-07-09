@@ -15,7 +15,7 @@ SUBROUTINE force_hub_gpu( forceh )
    !! {du}(\alpha,\text{ipol}) \ ,$$
    !! which is the force acting on the atom at \(\text{tau_alpha}\)
    !! (in the unit cell) along the direction \(\text{ipol}\).
-   !  Note: DFT+U+V force does not support OpenMP.
+   !!  Note: DFT+U+V force does not support OpenMP.
    !
    USE kinds,                ONLY : DP
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
@@ -26,7 +26,7 @@ SUBROUTINE force_hub_gpu( forceh )
                                     ldim_back, ldmx_b, ldmx_tot, ll, Hubbard_l_back, &
                                     nsg, v_nsg, max_num_neighbors, ldim_u, Hubbard_V, &
                                     at_sc, neighood
-   USE basis,                ONLY : natomwfc
+   USE basis,                ONLY : natomwfc, wfcatom, swfcatom
    USE symme,                ONLY : symvector
    USE io_files,             ONLY : prefix
    USE wvfct,                ONLY : nbnd, npwx
@@ -43,9 +43,11 @@ SUBROUTINE force_hub_gpu( forceh )
    USE uspp_param,           ONLY : nh
    USE wavefunctions,        ONLY : evc
    USE klist,                ONLY : nks, xk, ngk, igk_k, igk_k_d
-   USE io_files,             ONLY : nwordwfc, iunwfc, iunhub2, nwordwfcU
+   USE io_files,             ONLY : nwordwfc, iunwfc, nwordwfcU
    USE buffers,              ONLY : get_buffer
    USE mp_bands,             ONLY : use_bgrp_in_hpsi
+   USE noncollin_module,     ONLY : noncolin
+   USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv
    !
    USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
    USE uspp_gpum,            ONLY : vkb_d, using_vkb_d, using_indv_ijkb0
@@ -83,14 +85,18 @@ SUBROUTINE force_hub_gpu( forceh )
    attributes(DEVICE) :: wfcU_d
 #endif
    !
+   CALL start_clock_gpu( 'force_hub' )
+   !
    save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi = .false.
    !
-   IF (U_projection .NE. "atomic") CALL errore( "force_hub", &
-                   " forces for this U_projection_type not implemented", 1 )
+   IF (.NOT.((U_projection.EQ."atomic") .OR. (U_projection.EQ."ortho-atomic"))) &
+      CALL errore("force_hub", &
+                   " forces for this U_projection_type not implemented",1)
+   !
    IF (lda_plus_u_kind == 1) CALL errore("force_hub", &
                    " forces in full LDA+U scheme are not yet implemented", 1 )
    !
-   CALL start_clock_gpu( 'force_hub' )
+   IF (noncolin) CALL errore ("forceh","Noncollinear case is not supported",1)
    !
    IF (lda_plus_u_kind.EQ.0) THEN
       ! DFT+U
@@ -150,10 +156,10 @@ SUBROUTINE force_hub_gpu( forceh )
       CALL calbec_gpu( npw, vkb_d, evc_d, becp_d )
       CALL s_psi_gpu( npwx, npw, nbnd, evc_d, spsi_d )
       !
-      ! Read the (ortho-)atomic orbitals from file (it does not include 
-      ! the ultrasoft operator S)
       !
-      CALL get_buffer( wfcU, nwordwfcU, iunhub2, ik )
+      ! Set up various quantities, in particular wfcU which 
+      ! contains Hubbard-U (ortho-)atomic wavefunctions (without ultrasoft S)
+      CALL orthoUwfc2 (ik)
       CALL dev_memcpy( wfcU_d , wfcU )
       !
       ! wfcU contains Hubbard-U atomic wavefunctions
@@ -163,7 +169,7 @@ SUBROUTINE force_hub_gpu( forceh )
       !
       ! now we need the first derivative of proj with respect to tau(alpha,ipol)
       !
-      DO alpha = 1, nat  ! forces are calculated for atom alpha ...
+      DO alpha = 1, nat  ! forces are calculated by displacing atom alpha ...
          !
          ijkb0 = indv_ijkb0(alpha) ! positions of beta functions for atom alpha
          !

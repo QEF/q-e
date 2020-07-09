@@ -26,7 +26,7 @@ SUBROUTINE orthoUwfc_gpu
   USE kinds,      ONLY : DP
   USE buffers,    ONLY : get_buffer, save_buffer
   USE io_global,  ONLY : stdout
-  USE io_files,   ONLY : iunhub, iunhub2, nwordwfcU
+  USE io_files,   ONLY : iunhub, nwordwfcU
   USE ions_base,  ONLY : nat
   USE basis,      ONLY : natomwfc, swfcatom
   USE klist,      ONLY : nks, xk, ngk, igk_k, igk_k_d
@@ -123,26 +123,16 @@ SUBROUTINE orthoUwfc_gpu
      !
      CALL s_psi_gpu( npwx, npw, natomwfc, wfcatom_d, swfcatom_d )
      !
-     IF (orthogonalize_wfc) CALL ortho_swfc_gpu( npw, normalize_only, &
-                                 natomwfc, wfcatom_d, swfcatom_d, .TRUE. )
-     !
-     ! copy atomic wavefunctions with Hubbard U term only in wfcU
-     ! (this is then used to compute Hubbard forces and stresses)
-     ! save to unit iunhub2
-     !
-     wfcatom  = wfcatom_d
-     swfcatom = swfcatom_d
-     !
-     CALL copy_U_wfc( wfcatom, noncolin )
-     CALL save_buffer( wfcU, nwordwfcU, iunhub2, ik )
+     IF (orthogonalize_wfc) &
+        CALL ortho_swfc_gpu( npw, normalize_only, natomwfc, wfcatom_d, swfcatom_d, .FALSE. )
      !
      ! copy S * atomic wavefunctions with Hubbard U term only in wfcU
      ! (this is used during the self-consistent solution of Kohn-Sham equations)
      ! save to unit iunhub
      !
-     CALL copy_U_wfc( swfcatom, noncolin )
+     CALL copy_U_wfc (swfcatom, noncolin)
      IF ( nks > 1 ) &
-          CALL save_buffer( wfcU, nwordwfcU, iunhub, ik )
+          CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
      !
   ENDDO
   !
@@ -253,18 +243,15 @@ END SUBROUTINE orthoatwfc_gpu
 SUBROUTINE ortho_swfc_gpu( npw, normalize_only, m, wfc_d, swfc_d, lflag )
   !-----------------------------------------------------------------------
   !
-  ! On input : wfc (npwx*npol,m) =  \psi = a set of "m" (atomic) wavefcts
-  !            swfc(npwx*npol,m) = S\psi 
-  !            normalize_only    = only normalize, do not orthonormalize
+  ! On input : 
+  ! wfc (npwx*npol,m) =  \phi = a set of "m" (atomic) wavefcts
+  ! swfc(npwx*npol,m) = S\phi 
+  ! normalize_only    = only normalize, do not orthonormalize
   !
-  ! This routine will compute the overlap matrix O: 
+  ! On output this routine will compute the overlap matrix O: 
   ! O_ij = <wfc_i|S|wfc_j> = <wfc_i|swfc_j>
-  !
-  ! On output: swfc = O^{-1/2} S\psi, i.e. S * orthonormalized wavefunctions
-  ! If lflag=.FALSE. : wfc are unchanged on output (not orthonormalized), i.e.
-  !                    wfc = \psi
-  ! If lflag=.TRUE.  : wfc are orthonormalized on output, i.e.
-  !                    wfc = O^{-1/2} \psi, <wfc_i|S|wfc_j> = \delta_{ij}
+  ! If lflag=.FALSE. : wfc are unchanged,   swfc = O^{-1/2} S\phi.
+  ! If lflag=.TRUE.  : wfc = O^{-1/2} \phi, swfc are unchanged.
   !
 #if defined(__CUDA)
   USE cublas
@@ -275,6 +262,7 @@ SUBROUTINE ortho_swfc_gpu( npw, normalize_only, m, wfc_d, swfc_d, lflag )
   USE mp_bands,         ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
   USE mp,               ONLY : mp_sum
   USE noncollin_module, ONLY : noncolin, npol
+  USE force_mod,        ONLY : eigenval, eigenvect, overlap_inv
   !
   IMPLICIT NONE
   !
@@ -305,7 +293,6 @@ SUBROUTINE ortho_swfc_gpu( npw, normalize_only, m, wfc_d, swfc_d, lflag )
   work_d(:,:) = (0.d0,0.d0)
   !
   ! calculate overlap matrix
-  
   !
   IF (noncolin) THEN
      CALL cublasZgemm( 'C', 'N', m, m, npwx*npol, (1.d0,0.d0), wfc_d, &
@@ -358,44 +345,57 @@ SUBROUTINE ortho_swfc_gpu( npw, normalize_only, m, wfc_d, swfc_d, lflag )
      ENDDO
   ENDDO
   !
-  ! transform atomic orbitals O^(-1/2) S\psi
-  ! FIXME: can be done in a faster way by using wfc as work space 
-  !
-  DO i = 1, npw
-     work_d(:,1) = (0.d0,0.d0)
-     IF (noncolin) THEN
-        DO ipol=1,npol
-           j = i + (ipol-1)*npwx
-           CALL cublasZgemv( 'N', m, m, (1.d0,0.d0), overlap_d, &
-                             m, swfc_d(j,1), npwx*npol, (0.d0,0.d0), work_d, 1 )
-           CALL cublasZcopy( m, work_d, 1, swfc_d(j,1), npwx*npol )
-        END DO
-     ELSE
-        CALL cublasZgemv( 'N', m, m, (1.d0,0.d0), overlap_d, &
-                          m, swfc_d(i,1), npwx, (0.d0,0.d0), work_d, 1 )
-        CALL cublasZcopy( m, work_d, 1, swfc_d(i,1), npwx )
-     END IF
-  ENDDO
-  !
-  ! If lflag=.TRUE. transform atomic orbitals without
-  ! the ultrasoft S operator O^(-1/2) \psi
-  !
   IF (lflag) THEN
-   DO i = 1, npw
-     work_d(:,1) = (0.d0,0.d0)
-     IF (noncolin) THEN
-        DO ipol = 1, npol
-           j = i + (ipol-1)*npwx
+     !
+     ! Save quantities which are needed for 
+     ! calculations of Hubbard forces and stress
+     eigenval(:) = e_d(:)
+     eigenvect(:,:) = work_d(:,:)
+     overlap_inv(:,:) = overlap_d(:,:)
+     !
+     ! Transform atomic orbitals WITHOUT the ultrasoft S operator 
+     ! O^(-1/2) \psi (note the transposition):
+     ! \phi_I = \sum_J O^{-1/2}_JI \phi_J
+     !
+     DO i = 1, npw
+        work_d(:,1) = (0.d0,0.d0)
+        IF (noncolin) THEN
+           DO ipol=1,npol
+              j = i + (ipol-1)*npwx
+              CALL cublasZgemv ('n',m,m,(1.d0,0.d0),overlap_d, &
+                   m, wfc_d(j,1), npwx*npol, (0.d0,0.d0),work_d,1)
+              CALL zcopy (m,work_d,1,wfc_d(j,1),npwx*npol)
+           END DO
+        ELSE
+           CALL cublasZgemv ('n', m, m, (1.d0, 0.d0) , overlap_d, &
+                m, wfc_d (i, 1) , npwx, (0.d0, 0.d0) , work_d, 1)
+           CALL zcopy (m, work_d, 1, wfc_d (i, 1), npwx)
+        END IF
+     ENDDO
+     !
+  ELSE
+     !
+     ! Transform atomic orbitals WITH the ultrasoft S operator 
+     ! O^(-1/2) \Spsi (note the transposition):
+     ! \Sphi_I = \sum_J O^{-1/2}_JI \Sphi_J
+     ! FIXME: can be done in a faster way by using wfc as work space 
+     !
+     DO i = 1, npw
+        work_d(:,1) = (0.d0,0.d0)
+        IF (noncolin) THEN
+           DO ipol=1,npol
+              j = i + (ipol-1)*npwx
+              CALL cublasZgemv( 'N', m, m, (1.d0,0.d0), overlap_d, &
+                                m, swfc_d(j,1), npwx*npol, (0.d0,0.d0), work_d, 1 )
+              CALL cublasZcopy( m, work_d, 1, swfc_d(j,1), npwx*npol )
+           END DO
+        ELSE
            CALL cublasZgemv( 'N', m, m, (1.d0,0.d0), overlap_d, &
-                             m, wfc_d(j,1), npwx*npol, (0.d0,0.d0), work_d, 1 )
-           CALL cublasZcopy( m, work_d, 1, wfc_d(j,1), npwx*npol )
-        END DO
-     ELSE
-        CALL cublasZgemv( 'N', m, m, (1.d0,0.d0), overlap_d, &
-                          m, wfc_d(i,1), npwx, (0.d0,0.d0), work_d, 1 )
-        CALL cublasZcopy( m, work_d, 1, wfc_d(i,1), npwx )
-     END IF
-   ENDDO
+                             m, swfc_d(i,1), npwx, (0.d0,0.d0), work_d, 1 )
+           CALL cublasZcopy( m, work_d, 1, swfc_d(i,1), npwx )
+        END IF
+     ENDDO
+     !
   ENDIF
   !
   DEALLOCATE( overlap_d, s_d )
@@ -404,3 +404,4 @@ SUBROUTINE ortho_swfc_gpu( npw, normalize_only, m, wfc_d, swfc_d, lflag )
   RETURN
   !      
 END SUBROUTINE ortho_swfc_gpu
+

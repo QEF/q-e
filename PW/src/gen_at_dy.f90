@@ -24,8 +24,7 @@ SUBROUTINE gen_at_dy( ik, u, dwfcat )
    USE wvfct,      ONLY: npwx
    USE us,         ONLY: tab_at, dq
    USE uspp_param, ONLY: upf
-   USE ldaU,       ONLY : is_hubbard, is_hubbard_back, Hubbard_l, &
-                          backall, Hubbard_l_back, Hubbard_l1_back, nwfcU
+   USE basis,      ONLY : natomwfc
    !
    USE us_gpum,    ONLY : using_tab_at
    !
@@ -35,23 +34,28 @@ SUBROUTINE gen_at_dy( ik, u, dwfcat )
    !! k-point index
    REAL(DP), INTENT(IN) :: u(3)
    !! unit vector
-   COMPLEX(DP) :: dwfcat(npwx,nwfcU)
+   COMPLEX(DP) :: dwfcat(npwx,natomwfc)
    !! atomic wfc
    !
    ! ... local variables
    !
    INTEGER     :: ig, na, nt, nb, l, lm, m, iig, ipol, iatw, i0, i1, i2, i3, &
-                  lmax_wfc, nwfcm, npw, natw
-   REAL(DP)    :: arg, px, ux, vx, wx
+                  lmax_wfc, nwfcm, npw
+   REAL(DP)    :: qt, arg, px, ux, vx, wx
    COMPLEX(DP) :: phase, pref
    !
    REAL(DP),    ALLOCATABLE :: q(:), gk(:,:), dylm(:,:), dylm_u(:,:), &
                                chiq(:,:,:)
    COMPLEX(DP), ALLOCATABLE :: sk(:)
    !
-   natw = nwfcU
-   nwfcm = MAXVAL( upf(1:ntyp)%nwfc )
    npw = ngk(ik)
+   nwfcm = MAXVAL( upf(1:ntyp)%nwfc )
+   ! calculate max angular momentum required in wavefunctions
+   lmax_wfc = 0
+   do nt = 1, ntyp
+      lmax_wfc = MAX ( lmax_wfc, MAXVAL (upf(nt)%lchi(1:upf(nt)%nwfc) ) )
+   enddo
+   !
    ALLOCATE( q(npw), gk(3,npw), chiq(npwx,nwfcm,ntyp) )
    !
    dwfcat(:,:) = (0.d0,0.d0)
@@ -62,10 +66,12 @@ SUBROUTINE gen_at_dy( ik, u, dwfcat )
       gk(3, ig) = xk(3, ik) + g(3,iig)
       q(ig) = gk(1, ig)**2 +  gk(2, ig)**2 + gk(3, ig)**2
    ENDDO
-   lmax_wfc = MAX ( MAXVAL(Hubbard_l(:)), MAXVAL(Hubbard_l_back(:)), MAXVAL(Hubbard_l1_back(:)) )
+   !
    ALLOCATE( dylm_u(npw,(lmax_wfc+1)**2) )
    ALLOCATE( dylm(npw,(lmax_wfc+1)**2)   )
    dylm_u(:,:) = 0.d0
+   !
+   !  Derivatives of spherical harmonics
    !
    DO ipol=1,3
       CALL dylmr2( (lmax_wfc+1)**2, npw, gk, q, dylm, ipol )
@@ -74,22 +80,22 @@ SUBROUTINE gen_at_dy( ik, u, dwfcat )
    !
    DEALLOCATE( dylm )
    !
-   q(:) = SQRT(q(:)) * tpiba
-   !
    !
    !    here we compute the radial fourier transform of the chi functions
    !
    CALL using_tab_at(0)
+   q(:) = SQRT(q(:))
    !
    DO nt = 1, ntyp
       DO nb = 1, upf(nt)%nwfc
          IF (upf(nt)%oc(nb) >= 0.d0) THEN
             DO ig = 1, npw
-               px = q(ig) / dq - INT(q(ig)/dq)
+               qt=q(ig)*tpiba
+               px = qt / dq - INT(qt/dq)
                ux = 1.d0 - px
                vx = 2.d0 - px
                wx = 3.d0 - px
-               i0 = q (ig) / dq + 1
+               i0 = qt / dq + 1
                i1 = i0 + 1
                i2 = i0 + 2
                i3 = i0 + 3
@@ -107,8 +113,9 @@ SUBROUTINE gen_at_dy( ik, u, dwfcat )
    iatw=0
    DO na = 1, nat
       nt = ityp(na)
-      IF ( .NOT. is_hubbard(nt) .AND. .NOT.is_hubbard_back(nt)) CYCLE
-      arg = ( xk(1,ik)*tau(1,na) + xk(2,ik)*tau(2,na) + xk(3,ik)*tau(3,na) )*tpi
+      arg = ( xk(1,ik)*tau(1,na) + &
+              xk(2,ik)*tau(2,na) + &
+              xk(3,ik)*tau(3,na) )*tpi
       phase = CMPLX( COS(arg), -SIN(arg), KIND=DP )
       DO ig =1, npw
          iig = igk_k(ig,ik)
@@ -117,12 +124,9 @@ SUBROUTINE gen_at_dy( ik, u, dwfcat )
                   eigts3(mill(3,iig),na) * phase
       ENDDO
       DO nb = 1,upf(nt)%nwfc
-         l  = upf(nt)%lchi(nb)
-         IF ( upf(nt)%oc(nb) > 0.d0 .AND. &
-              ( l == Hubbard_l(nt)  .OR.  &
-                is_hubbard_back(nt) .AND. &
-                ( l == Hubbard_l_back(nt) .OR. &
-                  (backall(nt) .AND. l == Hubbard_l1_back(nt)) ) ) ) THEN 
+         ! Note: here we put ">=" to be consistent with "atomic_wfc"/"n_atom_wfc"
+         IF ( upf(nt)%oc(nb) >= 0.d0 ) THEN
+            l  = upf(nt)%lchi(nb)
             pref = (0.d0,1.d0)**l
             DO m = 1, 2*l+1
                lm = l*l+m
@@ -136,8 +140,8 @@ SUBROUTINE gen_at_dy( ik, u, dwfcat )
       ENDDO
    ENDDO
    !
-   IF (iatw /= natw) THEN
-      WRITE( stdout,*) 'iatw =',iatw,'natw =',natw
+   IF (iatw /= natomwfc) THEN
+      WRITE( stdout,*) 'iatw =',iatw,'natomwfc =',natomwfc
       CALL errore( 'gen_at_dy','unexpected error', 1 )
    ENDIF
    !

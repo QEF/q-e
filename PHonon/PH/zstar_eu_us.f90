@@ -98,7 +98,7 @@ subroutine zstar_eu_us
         call get_buffer(dpsi, lrdwf, iudwf, nrec)
         if (noncolin) then
            call incdrhoscf_nc (dvscf(1,1,jpol),weight,ik, &
-                              dbecsum_nc(1,1,1,1,jpol), dpsi, 1)
+                              dbecsum_nc(1,1,1,1,jpol), dpsi, 1.0d0)
         else
            call incdrhoscf (dvscf(1,current_spin,jpol),weight,ik, &
                             dbecsum(1,1,current_spin,jpol), dpsi)

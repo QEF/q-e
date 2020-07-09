@@ -15,7 +15,6 @@ MODULE qexsd_init
   !
   !
   USE kinds,            ONLY : DP
-  USE parameters,       ONLY : natx 
   ! 
   USE qes_types_module
   USE qes_reset_module, ONLY:  qes_reset 
