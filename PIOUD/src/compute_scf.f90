@@ -45,6 +45,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE klist,            ONLY : nelec, tot_charge
   USE extrapolation,    ONLY : update_neb
   USE funct,            ONLY : stop_exx, dft_is_hybrid
+  
+  USE pimd_variables,   ONLY : nbeadMD
   !
   IMPLICIT NONE
   !
@@ -180,8 +182,10 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   ! ... after the first call to compute_scf the input values of startingpot
   ! ... and startingwfc are both set to 'file'
   !
-  starting_pot = 'file'
-  starting_wfc = 'file'
+  if (nat .gt. 3) then   !!! <----my mod.
+    starting_pot = 'file'   !!! <----my mod.
+    starting_wfc = 'file'   !!! <----my mod.
+  end if  !!! <----my mod.
   !
   ! ... finalization of the job (this point is also reached in case of error
   ! ... condition)
@@ -192,10 +196,17 @@ SUBROUTINE compute_scf( fii, lii, stat  )
      !
      ! ... pes and grad_pes are communicated among "image" pools
      !
-     CALL mp_sum( pes(fii:lii),        inter_image_comm )
-     CALL mp_sum( grad_pes(:,fii:lii), inter_image_comm )
-     IF ( lfcpopt ) CALL mp_sum( fcp_neb_ef(fii:lii), inter_image_comm )
-     CALL mp_sum( istat,               inter_image_comm )
+      if (nbeadMD.eq.1) then   !!! <----my mod.
+         CALL mp_sum( pes(fii:lii-1),        inter_image_comm )  !!! <----my mod.
+         CALL mp_sum( grad_pes(:,fii:lii-1), inter_image_comm )  !!! <----my mod.
+         IF ( lfcpopt ) CALL mp_sum( fcp_neb_ef(fii:lii-1), inter_image_comm )   !!! <----my mod.
+         CALL mp_sum( istat,               inter_image_comm )   !!! <----my mod.
+      else
+         CALL mp_sum( pes(fii:lii),        inter_image_comm )  !!! <----my mod.
+         CALL mp_sum( grad_pes(:,fii:lii), inter_image_comm )  !!! <----my mod.
+         IF ( lfcpopt ) CALL mp_sum( fcp_neb_ef(fii:lii), inter_image_comm )  !!! <----my mod.
+         CALL mp_sum( istat,               inter_image_comm )  !!! <----my mod.
+      end if  !!! <----my mod.
      !
   END IF
   !

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-PROGRAM neb
+PROGRAM pioud
   !----------------------------------------------------------------------------
   !
   ! ... Nudged Elastic Band / Strings Method algorithm
@@ -23,7 +23,6 @@ PROGRAM neb
   USE read_input,        ONLY : read_input_file
   USE command_line_options,  ONLY : input_file_, ndiag_
   !
-  USE path_variables,    ONLY : conv_path
   USE path_base,         ONLY : initialize_path, search_mep
   USE path_io_routines,  ONLY : path_summary
   USE path_read_namelists_module, ONLY : path_read_namelist
@@ -85,16 +84,13 @@ PROGRAM neb
      close(unit=unit_tmp)                 !!! <----my mod.
   END IF                                  !!! <----my mod.
   
-  
   unit_tmp = find_free_unit () 
   open(unit=unit_tmp,file="neb.dat",status="old")
   CALL path_read_namelist(unit_tmp)
   CALL path_read_cards(unit_tmp)
   close(unit=unit_tmp)
   
-
   call match_neb_and_pimd_var   !!! <----my mod.
- 
   !
   do i=1,input_images
     !
@@ -115,7 +111,6 @@ PROGRAM neb
   enddo
   
   if (meta_ionode)  call pimd_get_amas_and_nat  !!! <----my mod.
-  
   !
   CALL path_to_engine_fix_atom_pos()
   !
@@ -132,12 +127,12 @@ PROGRAM neb
   CALL search_mep()
   !
   CALL laxlib_free_ortho_group()
-  CALL stop_run_path( .true. )     !!! <----my mod.
   
   if ( meta_ionode) call pimd_deallocation    !!! <----my mod.
   if ( meta_ionode) call pimd_close_files   !!! <----my mod.
   
+  CALL stop_run_path( .true. )     !!! <----my mod.
   !
   STOP
   !
-END PROGRAM neb
+END PROGRAM pioud

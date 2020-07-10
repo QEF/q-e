@@ -19,6 +19,7 @@ compute_scf.o : path_formats.o
 compute_scf.o : path_io_routines.o
 compute_scf.o : path_io_units_module.o
 compute_scf.o : path_variables.o
+compute_scf.o : pimd_variables.o
 engine_to_path_alat.o : ../../Modules/cell_base.o
 engine_to_path_alat.o : ../../Modules/kind.o
 engine_to_path_alat.o : path_input_parameters_module.o
@@ -74,6 +75,7 @@ pioud.o : path_io_units_module.o
 pioud.o : path_read_cards_module.o
 pioud.o : path_read_namelists_module.o
 pioud.o : path_variables.o
+pioud.o : pimd_variables.o
 path_base.o : ../../Modules/basic_algebra_routines.o
 path_base.o : ../../Modules/constants.o
 path_base.o : ../../Modules/control_flags.o

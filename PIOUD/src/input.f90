@@ -108,9 +108,9 @@ SUBROUTINE ioneb()
 !                       'NEB, SMD do not work with "disk_io" set to "none"', 1)
      !
      !
-     IF ( num_of_images < 2 ) &
-        CALL errore( 'ioneb', 'string_method=' // trim( string_method ) // &
-                   & ': num_of_images must be at least 2', 1 )
+    !! IF ( num_of_images < 2 ) &  !!! <----my mod.
+    !!    CALL errore( 'ioneb', 'string_method=' // trim( string_method ) // &   !!! <----my mod.
+    !!               & ': num_of_images must be at least 2', 1 )  !!! <----my mod.
      !
      IF ( ( CI_scheme /= "no-CI"  ) .and. &
           ( CI_scheme /= "auto"   ) .and. &

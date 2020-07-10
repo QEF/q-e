@@ -1637,20 +1637,20 @@ SUBROUTINE pimdnvt( ep)!,forcetmp)
 !  ** write out runtime information in quantum case**
 !           write(iunpath,*) '**********************************************************'
            write(iunpath,*)
-           write(iunpath,'(2i6,8g15.4)') & 
+           write(iunpath,'(2i6,8g15.7)') & 
                 iblockMD,step_blockMD,h,enh,ep,enk,tt,ttk,ekinq,ekinqp
            write(iunpath,*) '**********************************************************'
-           write(unit_dot_out,'(2i6,8g15.5)') & 
+           write(unit_dot_out,'(2i6,8g15.7)') & 
                 iblockMD,step_blockMD,h,enh,ep,enk,tt,ttk,ekinq,ekinqp
            flush(unit_dot_out)
         else
 !  ** write out runtime information in classical case**
 !           write(iunpath,*) '**********************************************************'
            write(iunpath,*)
-           write(iunpath,'(2i6,6g15.5)') &
+           write(iunpath,'(2i6,6g15.7)') &
                 iblockMD,step_blockMD,h,enh,ep,enk,tt,ttk
            write(iunpath,*) '**********************************************************'
-           write(unit_dot_out,'(2i6,6g15.5)') &
+           write(unit_dot_out,'(2i6,6g15.7)') &
                      iblockMD,step_blockMD,h,enh,ep,enk,tt,ttk
            flush(unit_dot_out)
         endif
@@ -2148,18 +2148,27 @@ subroutine pimd_read_input(unit)
      open(unit_dot_xyz,file='pimd.xyz',form='formatted')
      unit_dot_positions   = myfind_free_unit()
      open(unit_dot_positions,file='positions.dat',form='formatted')
+     unit_dot_positions_cen   = myfind_free_unit()
+     open(unit_dot_positions_cen,file='positions_cen.dat',form='formatted')
      unit_dot_velocities  = myfind_free_unit()
      open(unit_dot_velocities,file='velocities.dat',form='formatted')
+     unit_dot_velocities_cen  = myfind_free_unit()
+     open(unit_dot_velocities_cen,file='velocities_cen.dat',form='formatted')
      unit_dot_forces = myfind_free_unit()
      open(unit_dot_forces,file='forces.dat',form='formatted')
+     unit_dot_forces_cen = myfind_free_unit()
+     open(unit_dot_forces_cen,file='forces_cen.dat',form='formatted')
      unit_dot_localtemp = myfind_free_unit()
      open(unit_dot_localtemp,file='local_temp.dat',form='formatted')
      unit_dot_sigma   = myfind_free_unit()
      open(unit_dot_sigma,file='sigma.dat',form='formatted')
      rewind(unit_dot_xyz)
      rewind(unit_dot_positions)
+     rewind(unit_dot_positions_cen)
      rewind(unit_dot_velocities)
+     rewind(unit_dot_velocities_cen)
      rewind(unit_dot_forces)
+     rewind(unit_dot_forces_cen)
      rewind(unit_dot_localtemp)
      rewind(unit_dot_sigma)
   
@@ -2179,12 +2188,20 @@ subroutine pimd_read_input(unit)
      open(unit_dot_ek,file='pimd.ek',position='APPEND',form='formatted')
      unit_dot_xyz  = myfind_free_unit()
      open(unit_dot_xyz,file='pimd.xyz',position='APPEND',form='formatted')
+     
      unit_dot_positions  = myfind_free_unit()
      open(unit_dot_positions,file='positions.dat',form='formatted') !!! not append because I need to read last pos
      unit_dot_velocities  = myfind_free_unit()
      open(unit_dot_velocities,file='velocities.dat',form='formatted') !!! same as pos
+
+     unit_dot_positions_cen  = myfind_free_unit()
+     open(unit_dot_positions_cen,file='positions_cen.dat',position='APPEND',form='formatted')      
+     unit_dot_velocities_cen  = myfind_free_unit()
+     open(unit_dot_velocities_cen,file='velocities_cen.dat',position='APPEND',form='formatted') 
      unit_dot_forces  = myfind_free_unit()
      open(unit_dot_forces,file='forces.dat',position='APPEND',form='formatted')
+     unit_dot_forces_cen  = myfind_free_unit()
+     open(unit_dot_forces_cen,file='forces_cen.dat',position='APPEND',form='formatted')
      unit_dot_localtemp  = myfind_free_unit()
      open(unit_dot_localtemp,file='local_temp.dat',position='APPEND',form='formatted')
      unit_dot_sigma  = myfind_free_unit()
@@ -2372,7 +2389,10 @@ subroutine checkpoint(ttk)
                              forceMD,vel,natMD,ion_name,rcentroid,&
                              ndimMD,unit_dot_positions,&
                              unit_dot_velocities,unit_dot_forces,&
-                             unit_dot_localtemp,rpos
+                             unit_dot_localtemp,rpos,&
+                             unit_dot_positions_cen,&
+                             unit_dot_forces_cen,&
+                             unit_dot_velocities_cen
   
   implicit none
 !    *******************************************************************
@@ -2406,17 +2426,18 @@ subroutine checkpoint(ttk)
 !!!--------------------writes velocity,force and position files for postprocessing----------
 !!!--------------------if the number of unit cells > 1 (crystal system)---------------------
 !!!--------------------writes only the centroid coordinatMDes---------------------------------
-     !if(nunitcells.gt.1) then
-     !    write(unit_dot_positions,'(400e15.5)') ((rcentroid(l,i),l=1,ndimMD),i=1,natMD)
-     !    flush(unit_dot_positions)
-     !    write(unit_dot_velocities,'(400e15.5)') ((vcentroid(l,i),l=1,ndimMD),i=1,natMD)
-     !    flush(unit_dot_velocities)
-     !    write(unit_dot_forces,'(400e15.5)') ((fcentroid(l,i),l=1,ndimMD),i=1,natMD)
-     !    flush(unit_dot_forces)
-     !    write(unit_dot_localtemp,'(e15.5)') ttk
-     !    flush(unit_dot_localtemp)
-     ! else
-       do k=1,nbeadMD
+     if(nunitcells.gt.1) then
+         write(unit_dot_positions_cen,'(400e15.5)') ((rcentroid(l,i),l=1,ndimMD),i=1,natMD)
+         flush(unit_dot_positions_cen)
+         write(unit_dot_velocities_cen,'(400e15.5)') ((vcentroid(l,i),l=1,ndimMD),i=1,natMD)
+         flush(unit_dot_velocities_cen)
+         write(unit_dot_forces_cen,'(400e15.5)') ((fcentroid(l,i),l=1,ndimMD),i=1,natMD)
+         flush(unit_dot_forces_cen)
+       !  write(unit_dot_localtemp,'(e15.5)') ttk
+       !  flush(unit_dot_localtemp)
+     end if
+     
+     do k=1,nbeadMD
            write(unit_dot_positions,'(400e15.5)') ((rpos(l,i,k),l=1,ndimMD),i=1,natMD)
            flush(unit_dot_positions)
            write(unit_dot_velocities,'(400e15.5)') ((vel(l,i,k),l=1,ndimMD),i=1,natMD)
@@ -2425,9 +2446,8 @@ subroutine checkpoint(ttk)
            flush(unit_dot_forces)
            if(k.eq.1) write(unit_dot_localtemp,'(e15.5)') ttk
            if(k.eq.1) flush(unit_dot_localtemp)
-       enddo
-     !end if
-
+     enddo
+     
   else !!! nbeadMD=1 => classical particles
      
      write (unit_dot_xyz,*) natMD
@@ -2498,7 +2518,10 @@ subroutine pimd_close_files()
                              unit_dot_epsr, unit_dot_forces,&
                              unit_dot_localtemp, unit_dot_out,&
                              unit_dot_positions, unit_dot_sigma,&
-                             unit_dot_velocities, unit_dot_xyz
+                             unit_dot_velocities, unit_dot_xyz,&
+                             unit_dot_velocities_cen,&
+                             unit_dot_positions_cen,&
+                             unit_dot_forces_cen
 
   implicit none
   
@@ -2508,11 +2531,14 @@ subroutine pimd_close_files()
   close(unit_dot_eplr)
   close(unit_dot_epsr)
   close(unit_dot_forces)
+  close(unit_dot_forces_cen)
   close(unit_dot_localtemp)
   close(unit_dot_out)
   close(unit_dot_positions)
+  close(unit_dot_positions_cen)
   close(unit_dot_sigma)
   close(unit_dot_velocities)
+  close(unit_dot_velocities_cen)
   close(unit_dot_xyz)
    
 end subroutine

@@ -61,8 +61,11 @@ MODULE pimd_variables
        unit_dot_eplr, &
        unit_dot_ek,   &
        unit_dot_positions, &
+       unit_dot_positions_cen, &
        unit_dot_forces,    &
+       unit_dot_forces_cen,    &
        unit_dot_velocities, &
+       unit_dot_velocities_cen, &
        unit_dot_xyz,        &
        unit_dot_localtemp,  &
        unit_dot_sigma,      &

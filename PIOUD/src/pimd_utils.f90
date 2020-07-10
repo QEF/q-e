@@ -28,7 +28,11 @@ subroutine pimd_get_pot_from_pw(epMD)
    implicit none
    real(8) :: epMD
      
-   epMD=sum(pes)/nbeadMD
+   if (nbeadMD.gt.1) then
+     epMD=sum(pes)/nbeadMD
+   else
+     epMD=pes(1)
+   end if
    
    return
 end subroutine pimd_get_pot_from_pw
@@ -62,21 +66,28 @@ subroutine pimd_pw_convert_pos(abc)
 
     allocate(rpostmp(ndimMD,natMD,nbeadMD))
     rpostmp=0.0
-    do k=1,nbeadMD
-      call refold(k,rpostmp(:,:,k))
-    end do      
     
-    rcentroid=0.0
-    do k=1,nbeadMD
-      DO iat=1,natMD
-        DO i=1,ndimMD
-          rcentroid(i,iat)=rcentroid(i,iat)+rpostmp(i,iat,k)
+    if (nbeadMD.gt.1) then
+      do k=1,nbeadMD
+        call refold(k,rpostmp(:,:,k))
+      end do
+    else
+      rpostmp=rpos      
+    end if
+    
+    if (nbeadMD.gt.1) then
+      rcentroid=0.0
+      do k=1,nbeadMD
+        DO iat=1,natMD
+          DO i=1,ndimMD
+            rcentroid(i,iat)=rcentroid(i,iat)+rpostmp(i,iat,k)
+          END DO
         END DO
-      END DO
-    end do
-    rcentroid=rcentroid/nbeadMD
+      end do
+      rcentroid=rcentroid/nbeadMD
+    end if  
     deallocate(rpostmp)
-  
+     
   else
     
     do k=1,nbeadMD
@@ -200,10 +211,9 @@ SUBROUTINE pimd_get_amas_and_nat
   if(.not.allocated(amas)) allocate(amas(natMD))
   if(.not.allocated(ion_name)) allocate(ion_name(natMD))
   amas(:) = 0.0
-  !ion_name(:)='H'
   mtot=0.0
   DO iat=1,natMD
-     amas(iat)=amass(ityp(iat))*1836.15258541d0
+     amas(iat)=amass(ityp(iat))*10000.d0/5.48579909065d0
      mtot=mtot+amas(iat)
      ion_name(iat)=atm(ityp(iat))
   END DO
@@ -223,7 +233,8 @@ SUBROUTINE match_neb_and_pimd_var
   implicit none
   
   nstep_path = nblocks*nstep_block
-  num_of_images = nbeadMD  !!! there is something that it's not working after that
+  num_of_images = nbeadMD
+  if (nbeadMD.eq.1) num_of_images=2
   first_last_opt=.true.
   CALL mp_bcast( nstep_path,  meta_ionode_id, world_comm )
   CALL mp_bcast( num_of_images,  meta_ionode_id, world_comm )
@@ -332,4 +343,3 @@ SUBROUTINE refold(idx,rpostmp)
   !
 END SUBROUTINE refold
 !
-

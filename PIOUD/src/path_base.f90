@@ -284,12 +284,16 @@ MODULE path_base
       !
       !
       IF ( meta_ionode) THEN    !!! <----my mod.
-        do i=2,num_of_images    !!! <----my mod.
+        if( num_of_images .gt.1) then  !!! <----my mod.
+          do i=2,num_of_images    !!! <----my mod.
         
-          pos(:,i) = pos(:,1)   !!! <----my mod.
+            pos(:,i) = pos(:,1)   !!! <----my mod.
         
-        end do    !!! <----my mod.
+          end do    !!! <----my mod.
+        end if   !!! <----my mod.
+        
         path_length = 0.0d0    !!! <----my mod.
+        
       END IF    !!! <----my mod.
   
   
@@ -814,6 +818,7 @@ MODULE path_base
       USE path_variables, ONLY : num_of_images, &
                                  pending_image, istep_path, pes, &
                                  first_last_opt, Emin, Emax, Emax_index
+      USE pimd_variables, ONLY : nbeadMD
       !
       IMPLICIT NONE
       !
@@ -832,6 +837,11 @@ MODULE path_base
          fii = 2
          lii = num_of_images - 1
          !
+      END IF
+      
+      IF (nbeadMD .eq. 1) THEN
+        fii = 1
+        lii = 2
       END IF
       !
       IF ( pending_image /= 0 ) fii = pending_image
