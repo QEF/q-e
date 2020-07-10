@@ -706,6 +706,8 @@
      'WARNING: if k-points are along a line, then efermi_read=.true. and fermi_energy must be given in the input file', -1)
   IF (MAXVAL(temps(:)) == 0.d0 .AND. nstemp > 0) &
     CALL errore('epw_readin', 'temps(:) must be specified if nstemp > 0', 1)
+  IF (nstemp > ntempxx) &
+    CALL errore('epw_readin', 'Maximum value of nstemp that can be used is 50', 1)
   IF ((ABS(ncarrier) > 1E+5) .AND. .NOT. carrier) CALL errore('epw_readin', &
       'carrier must be .TRUE. if you specify ncarrier.', 1)
   IF (carrier .AND. (ABS(ncarrier) < 1E+5))  CALL errore('epw_readin', &
@@ -749,18 +751,14 @@
       nstemp_hold = itemp
     ENDIF
   ENDDO
-
+  !
   !case of nstemp > 0 but temps(:) = 0 is caught above
   IF (nstemp_hold == 0 .AND. nstemp == 0) THEN !default mode (nstemp_hold == 0 if temps(:) = 0)
     nstemp = 1
     temps(1) = 300    
-    tempsmin = 300
-    tempsmax = 300
     WRITE(stdout, '(/,5x,a)') 'No temperature supplied. Setting temps(:) to 300 K.'
   ELSE IF (nstemp == 0 .OR. nstemp_hold == nstemp) THEN !list mode
     nstemp = nstemp_hold !catches if nstemp not supplied, no effect if it is
-    tempsmin = temps(1)
-    tempsmax = temps(nstemp)
     WRITE(stdout, '(/,5x,a)') 'Reading supplied temperature list.'
   ELSE IF (nstemp_hold < nstemp .AND. nstemp_hold == 2) THEN !even spacing mode 
     tempsmin = temps(1)
@@ -785,13 +783,11 @@
     CALL errore('epw_readin', 'Error generating temperatures: unknown error', 1)
   END IF
   ! go from K to Ry
-  tempsmin = tempsmin * kelvin2eV / ryd2ev
-  tempsmax = tempsmax * kelvin2eV / ryd2ev
   temps(:) = temps(:) * kelvin2eV / ryd2ev
+  !
   ALLOCATE(gtemp(nstemp), STAT = ierr)
   IF (ierr /= 0) CALL errore('epw_readin', 'Error allocating gtemp', 1)
   gtemp(:) = temps(1:nstemp)
-
   !
   ! In the case of Fermi-Dirac distribution one should probably etemp instead of degauss.
   ! This is achieved with assume_metal == .true.
