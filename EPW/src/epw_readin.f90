@@ -410,10 +410,10 @@
   wepexst      = .FALSE.
   epexst       = .FALSE.
   eig_read     = .FALSE.
-  dis_win_max  = 1d3
-  dis_win_min  = -1d3
-  dis_froz_max =  1d3
-  dis_froz_min = -1d3
+  dis_win_max  = 9999.d0
+  dis_win_min  = -9999.d0
+  dis_froz_max = 9999.d0
+  dis_froz_min = -9999.d0
   num_iter     = 200
   proj(:)      = ''
   auto_projections = .FALSE.
@@ -690,12 +690,14 @@
   IF ((nbndsub > 200)) CALL errore('epw_readin', 'too many wannier functions increase size of projx', 1)
   IF ((phonselfen .OR. elecselfen .OR. specfun_el .OR. specfun_ph) .AND. (mp_mesh_k .OR. mp_mesh_q)) &
     CALL errore('epw_readin', 'can only work with full uniform mesh', 1)
-  IF (ephwrite .AND. .NOT. ep_coupling .AND. .NOT. elph) CALL errore('epw_readin', &
+  IF (ephwrite) THEN
+    IF (.NOT. ep_coupling .AND. .NOT. elph) CALL errore('epw_readin', &
       'ephwrite requires ep_coupling=.TRUE., elph=.TRUE.', 1)
-  IF (ephwrite .AND. (rand_k .OR. rand_q)) &
-    CALL errore('epw_readin', 'ephwrite requires a uniform grid', 1)
-  IF (ephwrite .AND. (MOD(nkf1, nqf1) /= 0 .OR. MOD(nkf2, nqf2) /= 0 .OR. MOD(nkf3, nqf3) /= 0)) &
+    IF (rand_k .OR. rand_q) &
+      CALL errore('epw_readin', 'ephwrite requires a uniform grid', 1)
+    IF (MOD(nkf1,nqf1) /= 0 .OR. MOD(nkf2,nqf2) /= 0 .OR. MOD(nkf3,nqf3) /= 0) &
     CALL errore('epw_readin', 'ephwrite requires nkf1,nkf2,nkf3 to be multiple of nqf1,nqf2,nqf3', 1)
+  ENDIF
   IF (band_plot .AND. filkf == ' ' .AND. filqf == ' ') CALL errore('epw_readin', &
       'plot band structure and phonon dispersion requires k- and q-points read from filkf and filqf files', 1)
   IF (band_plot .AND. filkf /= ' ' .AND. (nkf1 > 0 .OR. nkf2 > 0 .OR. nkf3 > 0)) CALL errore('epw_readin', &
@@ -744,6 +746,12 @@
       'Cannot specify both auto_projections and projections block', 1)
   IF ((auto_projections .AND. .NOT. scdm_proj) .OR. (.NOT. auto_projections .AND. scdm_proj)) &
     CALL errore('epw_readin', 'auto_projections require both scdm_proj=.true. and auto_projections=.true.', 1)
+  IF (dis_win_min > -9999.d0 + eps16) THEN
+    dis_win_min  = -9999.d0
+    WRITE(stdout, '(/,5x,a)') 'WARNING: The specified dis_win_min is ignored.'
+    WRITE(stdout, '(5x,a)') "         You should instead use bands_skipped = 'exclude_bands = ...'"
+    WRITE(stdout, '(5x,a)') "         to control the lower bound of band manifold."
+  ENDIF
   !
   ! setup temperature array
   DO itemp = 1, ntempxx

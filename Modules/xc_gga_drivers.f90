@@ -763,6 +763,9 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !! Gradient corrections for exchange - Hartree a.u.
   !
   USE exch_gga
+#if defined(use_beef)
+  USE beef_interface, ONLY: beefx
+#endif
   !
   IMPLICIT NONE
   !

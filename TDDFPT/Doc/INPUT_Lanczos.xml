@@ -161,6 +161,13 @@ When set to .true. the Random Phase Approximation
 is used (no exchange and correlation).
          </info>
       </var>
+      <var name="scissor" type="REAL" >
+         <default> 0.0
+         </default>
+         <info>
+Scissor shift (in Rydberg units).
+         </info>
+      </var>
       <var name="charge_response" type="INTEGER" >
          <default> 0
          </default>

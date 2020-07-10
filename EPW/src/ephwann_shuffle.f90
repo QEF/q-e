@@ -884,9 +884,10 @@
     ! Check if the grids are homogeneous and commensurate
     homogeneous = .FALSE.
     IF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0) .AND. &
-        (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0) .AND. &
-        (MOD(nkf1, nqf1) == 0) .AND. (MOD(nkf2, nqf2) == 0) .AND. (MOD(nkf3, nqf3) == 0)) THEN
-      homogeneous = .TRUE.
+        (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0)) THEN
+      IF ((MOD(nkf1, nqf1) == 0) .AND. (MOD(nkf2, nqf2) == 0) .AND. (MOD(nkf3, nqf3) == 0)) THEN
+        homogeneous = .TRUE.
+      ENDIF
     ELSE
       homogeneous = .FALSE.
     ENDIF
