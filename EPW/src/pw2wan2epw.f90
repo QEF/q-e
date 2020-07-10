@@ -3366,13 +3366,6 @@
           ENDDO
         ENDDO
       ENDDO
-!!$      !
-!!$    ALLOCATE(wann_func(fgrid(1):lgrid(1), fgrid(2):lgrid(2), fgrid(3):lgrid(3), &
-!!$                       npol), STAT = ierr)
-!!$    IF (ierr /= 0) CALL errore('write_plot', 'Error allocating wann_func', 1)
-!!$    ENDDO
-!!$    !
-!!$    DO loop_w = 1, num_wannier_plot
       !
       ngridwf = ilength(1) * ilength(2) * ilength(3)
       IF (loop_w == 1) THEN
