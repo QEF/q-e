@@ -170,31 +170,38 @@
     REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
     !! Collect eigenenergies from all pools in parallel case
     !
-    DO itemp = 1, nstemp
-      ! SP: Define the inverse so that we can efficiently multiply instead of dividing
+    IF (nstemp .GT. 1) THEN
+      WRITE(stdout, '(/5x,a)') '=========================================================================='
+      WRITE(stdout, '(/5x,a)') 'Calculating self energy with multiple temperatures is not recommanded.'
+      WRITE(stdout, '(/5x,a)') 'This type of calculations can be very expensive.'
+      WRITE(stdout, '(/5x,a)') 'Consider calculting one temperature per calculation instead. '
+      WRITE(stdout, '(/5x,a)') '=========================================================================='
+    ENDIF
+    ! SP: Define the inverse so that we can efficiently multiply instead of dividing
+    inv_degaussw = one /degaussw
+    ! To avoid if branching in the loop
+    inv_eta(:, :, :) = zero
+    IF (adapt_smearing) THEN
+      DO ik = 1, nkf
+        DO ibnd = 1, nbndfst
+          DO imode = 1, nmodes
+            inv_eta(ibnd, imode, ik) = one / (DSQRT(two) * eta(imode, ibnd, ik))
+            eta2(ibnd, imode, ik) = DSQRT(two) * eta(imode, ibnd, ik)
+          ENDDO
+        ENDDO
+      ENDDO
+    ELSE
+      DO ik = 1, nkf
+        DO ibnd = 1, nbndfst
+          DO imode = 1, nmodes
+            inv_eta(ibnd, imode, ik) = inv_degaussw
+            eta2(ibnd, imode, ik) = degaussw
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDIF
+    DO itemp = 1, nstemp ! loop over temperatures
       inv_eptemp   = one / gtemp(itemp)
-      inv_degaussw = one /degaussw
-      ! To avoid if branching in the loop
-      inv_eta(:, :, :) = zero
-      IF (adapt_smearing) THEN
-        DO ik = 1, nkf
-          DO ibnd = 1, nbndfst
-            DO imode = 1, nmodes
-              inv_eta(ibnd, imode, ik) = one / (DSQRT(two) * eta(imode, ibnd, ik))
-              eta2(ibnd, imode, ik) = DSQRT(two) * eta(imode, ibnd, ik)
-            ENDDO
-          ENDDO
-        ENDDO
-      ELSE
-        DO ik = 1, nkf
-          DO ibnd = 1, nbndfst
-            DO imode = 1, nmodes
-              inv_eta(ibnd, imode, ik) = inv_degaussw
-              eta2(ibnd, imode, ik) = degaussw
-            ENDDO
-          ENDDO
-        ENDDO
-      ENDIF
       !
       ! Now pre-treat phonon modes for efficiency
       ! Treat phonon frequency and Bose occupation
@@ -684,6 +691,14 @@
     !
     IF (adapt_smearing) CALL errore('selfen_phon_q', 'adapt_smearing cannot be used with phonon self-energy', 1)
     !
+    IF (nstemp .GT. 1) THEN
+      WRITE(stdout, '(/5x,a)') '=========================================================================='
+      WRITE(stdout, '(/5x,a)') 'Calculating self energy with multiple temperatures is not recommanded.'
+      WRITE(stdout, '(/5x,a)') 'This type of calculations can be very expensive.'
+      WRITE(stdout, '(/5x,a)') 'Consider calculting one temperature per calculation instead. '
+      WRITE(stdout, '(/5x,a)') '=========================================================================='
+    ENDIF
+    !
     DO itemp = 1, nstemp
       IF (iq == 1) THEN
         WRITE(stdout, '(/5x, a)') REPEAT('=',67)
@@ -1109,6 +1124,15 @@
     !! Collect eigenenergies from all pools in parallel case
     !
     IF (adapt_smearing) CALL errore('selfen_pl_q', 'adapt_smearing cannot be used with plasmon self-energy', 1)
+    !
+    IF (nstemp .GT. 1) THEN
+      WRITE(stdout, '(/5x,a)') '=========================================================================='
+      WRITE(stdout, '(/5x,a)') 'Calculating self energy with multiple temperatures is not recommanded.'
+      WRITE(stdout, '(/5x,a)') 'This type of calculations can be very expensive.'
+      WRITE(stdout, '(/5x,a)') 'Consider calculting one temperature per calculation instead. '
+      WRITE(stdout, '(/5x,a)') '=========================================================================='
+    ENDIF
+    !
     DO itemp = 1, nstemp
       ! SP: Define the inverse so that we can efficiently multiply instead of dividing
       inv_eptemp   = one / gtemp(itemp)

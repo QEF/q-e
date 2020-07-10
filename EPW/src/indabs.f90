@@ -153,9 +153,11 @@
         WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Temperature T = ', gtemp(itemp) * ryd2ev, ' eV'
       ENDDO
       IF (nstemp .GT. 1) THEN
-        WRITE(stdout, '(/5x,a)') 'Indirect optical calculations with multiple temperatures.'
+        WRITE(stdout, '(/5x,a)') '=========================================================================='
+        WRITE(stdout, '(/5x,a)') 'Calculating indirect optics with multiple temperatures is not recommanded.'
         WRITE(stdout, '(/5x,a)') 'This type of calculations can be very expensive.'
         WRITE(stdout, '(/5x,a)') 'Consider calculting one temperature per calculation instead. '
+        WRITE(stdout, '(/5x,a)') '=========================================================================='
       ENDIF
       !
       !IF (.NOT. ALLOCATED (omegap) )    ALLOCATE(omegap(nomega))
