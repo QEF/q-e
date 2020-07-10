@@ -26,7 +26,7 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
     takes advantage of the phonon interpolation scheme implemented for matdyn.x. This is 
     important, for example, in taking into account the LO-TO splitting in polar materials. 
     The necessary input files are the interatomic force constants "file.fc" and "ZG.in". 
-    See for example files in the "example/silicon/input" folder.
+    See for example files in the "example/silicon/inputs" folder.
 
 1.  Run a scf calculation: for example "/path_to_your_espresso/bin/pw.x < si.scf.in > si.scf.out" 
     for the silicon unit cell. 
