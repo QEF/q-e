@@ -169,7 +169,7 @@ SUBROUTINE sym_dns (ldim, npe, irr, dns)
                           do jp=1, npe
                              IF (Hubbard_l(nt).EQ.0) THEN
                                 dns(m1,m2,:,na,ip) = dns(m1,m2,:,na,ip) +  &
-                                dnr(m0,m00,is,nb,jp) * t(jp,ip,irot,irr) * &
+                                dnr(m0,m00,:,nb,jp) * t(jp,ip,irot,irr) * &
                                 phase 
                              ELSE IF (Hubbard_l(nt).EQ.1) THEN
                                 dns(m1,m2,:,na,ip) = dns(m1,m2,:,na,ip) + &

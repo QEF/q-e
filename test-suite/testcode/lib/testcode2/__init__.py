@@ -79,7 +79,7 @@ class TestProgram:
         self.vcs = None
 
         # Set values passed in as keyword options.
-        for (attr, val) in kwargs.items():
+        for (attr, val) in list(kwargs.items()):
             setattr(self, attr, val)
 
         # If using an external verification program, then set the default
@@ -196,7 +196,7 @@ class Test:
         self.tolerances = {}
 
         # Set values passed in as keyword options.
-        for (attr, val) in kwargs.items():
+        for (attr, val) in list(kwargs.items()):
             setattr(self, attr, val)
 
         if not self.inputs_args:
@@ -318,13 +318,13 @@ class Test:
             # weren't run.
             err = 'Previous test in %s caused a system failure.' % (self.path)
             status = validation.Status(name='skipped')
-            for ((test_input, test_arg), stat) in self.status.items():
+            for ((test_input, test_arg), stat) in list(self.status.items()):
                 if not self.status[(test_input,test_arg)]:
                     self._update_status(status, (test_input, test_arg))
                     if verbose > 2:
                         cmd = self.test_program.run_cmd(test_input, test_arg,
                                                         self.nprocs)
-                        print('Test using %s in %s' % (cmd, self.path))
+                        print(('Test using %s in %s' % (cmd, self.path)))
                     elif verbose > 0:
                         info_line = util.info_line(self.path, test_input,
                                                    test_arg, rundir)
@@ -348,13 +348,13 @@ first, during initialisation.'''
             job.create_submit_file(tp_ptr.submit_pattern, cmd,
                                    self.submit_template)
             if verbose > 2:
-                print('Submitting tests using %s (template submit file) in %s'
-                           % (self.submit_template, self.path))
+                print(('Submitting tests using %s (template submit file) in %s'
+                           % (self.submit_template, self.path)))
             job.start_job()
         else:
             # Run locally via subprocess.
             if verbose > 2:
-                print('Running test using %s in %s\n' % (cmd, self.path))
+                print(('Running test using %s in %s\n' % (cmd, self.path)))
             try:
                 job = subprocess.Popen(cmd, shell=True)
             except OSError:
@@ -407,10 +407,10 @@ enters self.path.
             if old_out_files:
                 out_dir = 'test.prev.output.%s' % (self.test_program.test_id)
                 if verbose > 2:
-                    print('WARNING: found existing files matching output '
-                          'pattern: %s.' % self.output)
-                    print('WARNING: moving existing output files (%s) to %s.\n'
-                          % (', '.join(old_out_files), out_dir))
+                    print(('WARNING: found existing files matching output '
+                          'pattern: %s.' % self.output))
+                    print(('WARNING: moving existing output files (%s) to %s.\n'
+                          % (', '.join(old_out_files), out_dir)))
                 if not os.path.exists(out_dir):
                     os.mkdir(out_dir)
                 for out_file in old_out_files:
@@ -485,8 +485,8 @@ first, during initialisation.'''
             cmd = self.test_program.skip_cmd(input_file, args)
             try:
                 if verbose > 2:
-                    print('Testing whether to skip test using %s in %s.' %
-                            (cmd, self.path))
+                    print(('Testing whether to skip test using %s in %s.' %
+                            (cmd, self.path)))
                 skip_popen = subprocess.Popen(cmd, shell=True,
                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 skip_popen.wait()
@@ -497,7 +497,7 @@ first, during initialisation.'''
                 # slightly odd syntax in order to be compatible with python
                 # 2.5 and python 2.6/3
                 if verbose > 2:
-                    print('Test to skip test: %s' % (sys.exc_info()[1],))
+                    print(('Test to skip test: %s' % (sys.exc_info()[1],)))
         return (status, '')
 
     def verify_job_external(self, input_file, args, verbose=1):
@@ -507,8 +507,8 @@ Assume function is executed in self.path.'''
         verify_cmd, = self.test_program.extract_cmd(self.path, input_file, args)
         try:
             if verbose > 2:
-                print('Analysing test using %s in %s.' %
-                        (verify_cmd, self.path))
+                print(('Analysing test using %s in %s.' %
+                        (verify_cmd, self.path)))
             verify_popen = subprocess.Popen(verify_cmd, shell=True,
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             verify_popen.wait()
@@ -539,8 +539,8 @@ Assume function is executed in self.path.'''
                             tp_ptr.test_id, input_file, args),
                          ]
             if verbose > 2:
-                print('Analysing output using data_tag %s in %s on files %s.' %
-                        (tp_ptr.data_tag, self.path, ' and '.join(data_files)))
+                print(('Analysing output using data_tag %s in %s on files %s.' %
+                        (tp_ptr.data_tag, self.path, ' and '.join(data_files))))
             outputs = [util.extract_tagged_data(tp_ptr.data_tag, dfile)
                     for dfile in data_files]
         else:
@@ -553,41 +553,21 @@ Assume function is executed in self.path.'''
             for cmd in extract_cmds:
                 try:
                     if verbose > 2:
-                        print('Analysing output using %s in %s.' %
-                                (cmd, self.path))
-                    # Samuel Ponce: Popen.wait() creates deadlock if the data is too large
-                    # See documented issue for example in: 
-                    # https://docs.python.org/2/library/subprocess.html#subprocess.Popen.returncode
-                    #
-                    # Previous code that create deadlock:
-                    #extract_popen = subprocess.Popen(cmd, shell=True,
-                    #        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    #extract_popen.wait()
-                    #
-                    # New code (this might not be the best but work for me):
-                    extract_popen = subprocess.Popen(cmd, bufsize=1, shell=True,
-                         stdin=open(os.devnull), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-                    lines = []
-                    for line in iter(extract_popen.stdout.readline, ''):
-                      #print line,
-                      lines.append(line)                    
-
+                        print(('Analysing output using %s in %s.' %
+                                (cmd, self.path)))
+                    extract_popen = subprocess.run(cmd, shell=True,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 except OSError:
                     # slightly odd syntax in order to be compatible with python
                     # 2.5 and python 2.6/3
                     err = 'Analysing output failed: %s' % (sys.exc_info()[1],)
                     raise exceptions.AnalysisError(err)
                 # Convert data string from extract command to dictionary format.
-                
-                # SP: Because of the above change, the test below cannot be done:
-                #if extract_popen.returncode != 0:
-                #    err = extract_popen.communicate()[1].decode('utf-8')
-                #    err = 'Analysing output failed: %s' % (err)
-                #    raise exceptions.AnalysisError(err)
-                #data_string = extract_popen.communicate()[0].decode('utf-8')
-                data_string = ''.join(lines)                 
-
+                if extract_popen.returncode != 0:
+                    err = extract_popen.communicate()[1].decode('utf-8')
+                    err = 'Analysing output failed: %s' % (err)
+                    raise exceptions.AnalysisError(err)
+                data_string = extract_popen.stdout.decode('utf-8')
                 if self.test_program.extract_fmt == 'table':
                     outputs.append(util.dict_table_string(data_string))
                 elif self.test_program.extract_fmt == 'yaml':
@@ -596,7 +576,7 @@ Assume function is executed in self.path.'''
                     # that from dict_table_string.
                     # ensure all keys are strings so they can be sorted
                     # (different data types cause problems!)
-                    for (key, val) in yaml.safe_load(data_string).items():
+                    for (key, val) in list(yaml.safe_load(data_string).items()):
                         if isinstance(val, list):
                             outputs[-1][str(key)] = tuple(val)
                         else:
@@ -654,15 +634,15 @@ Assume function is executed in self.path.'''
         # dict entry in self.status, then that test must have ran (albeit not
         # necessarily successfuly!).
         status = {}
-        status['passed'] = sum(True for stat in self.status.values()
+        status['passed'] = sum(True for stat in list(self.status.values())
                         if stat and stat.passed())
-        status['warning'] = sum(True for stat in self.status.values()
+        status['warning'] = sum(True for stat in list(self.status.values())
                         if stat and stat.warning())
-        status['skipped'] = sum(True for stat in self.status.values()
+        status['skipped'] = sum(True for stat in list(self.status.values())
                         if stat and stat.skipped())
-        status['failed'] = sum(True for stat in self.status.values()
+        status['failed'] = sum(True for stat in list(self.status.values())
                         if stat and stat.failed())
-        status['unknown'] = sum(True for stat in self.status.values()
+        status['unknown'] = sum(True for stat in list(self.status.values())
                         if stat and stat.unknown())
-        status['ran'] = sum(True for stat in self.status.values() if stat)
+        status['ran'] = sum(True for stat in list(self.status.values()) if stat)
         return status

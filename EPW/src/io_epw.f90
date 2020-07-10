@@ -410,7 +410,7 @@
     ENDIF
     !
     IF (lifc) THEN
-      CALL read_ifc
+      CALL read_ifc_epw
     ENDIF
     !
     IF (etf_mem == 0) THEN
@@ -460,349 +460,8 @@
     END SUBROUTINE epw_read
     !------------------------------------------------------------------------------
     !
-    !----------------------------------------------------------------------------
-    SUBROUTINE read_dyn_mat_param(fildyn, ntyp, nat)
-    !----------------------------------------------------------------------------
-    !!
-    !! Read paramters from the dynamical matrix
-    !!
-    USE iotk_module, ONLY : iotk_index, iotk_scan_begin, iotk_open_read,     &
-                            iotk_attlenx, iotk_scan_dat, iotk_scan_end,      &
-                            iotk_scan_attr, iotk_free_unit, iotk_close_read, &
-                            iotk_scan_empty
-    USE kinds,       ONLY : DP
-    USE io_global,   ONLY : meta_ionode
-    USE io_var,      ONLY : iudyn
-    !
-    IMPLICIT NONE
-    !
-    CHARACTER(LEN = 256), INTENT(in) :: fildyn
-    !! Name of the file to read
-    INTEGER, INTENT(out) :: ntyp
-    !! Number of type of atoms
-    INTEGER, INTENT(out) :: nat
-    !! Number of atoms
-    !
-    ! Local variables
-    INTEGER :: ierr
-    !! Error status
-    !
-    IF (meta_ionode) THEN
-      !
-      CALL iotk_free_unit(iudyn, ierr)
-      !
-    ENDIF
-    !
-    CALL errore('read_dyn_mat_param', 'no free units to write ', ierr)
-    IF (meta_ionode) THEN
-      !
-      ! Open XML descriptor
-      ierr = 0
-      CALL iotk_open_read(iudyn, FILE = TRIM(fildyn) // '.xml', BINARY = .FALSE., IERR = ierr)
-    ENDIF
-    !
-    CALL errore('read_dyn_mat_param', 'error opening the dyn mat file ', ierr)
-    !
-    IF (meta_ionode) THEN
-      CALL iotk_scan_begin(iudyn, "GEOMETRY_INFO")
-      CALL iotk_scan_dat(iudyn, "NUMBER_OF_TYPES", ntyp)
-      CALL iotk_scan_dat(iudyn, "NUMBER_OF_ATOMS", nat)
-      CALL iotk_scan_end(iudyn, "GEOMETRY_INFO")
-    ENDIF
-    !
-    RETURN
-    !----------------------------------------------------------------------------
-    END SUBROUTINE read_dyn_mat_param
-    !----------------------------------------------------------------------------
-    !
-    !----------------------------------------------------------------------------
-    SUBROUTINE read_dyn_mat_header(ntyp, nat, ibrav, nspin_mag,     &
-               celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, &
-               nqs, lrigid, epsil, zstareu, lraman, ramtns)
-    !----------------------------------------------------------------------------
-    !!
-    !! Read the dynamical matrix
-    !!
-    USE iotk_module, ONLY : iotk_index, iotk_scan_begin, iotk_open_read,     &
-                            iotk_attlenx, iotk_scan_dat, iotk_scan_end,      &
-                            iotk_scan_attr, iotk_free_unit, iotk_close_read, &
-                            iotk_scan_empty
-    USE kinds,       ONLY : DP
-    USE io_global,   ONLY : meta_ionode
-    USE io_var,      ONLY : iudyn
-    !
-    IMPLICIT NONE
-    !
-    CHARACTER(LEN = 3), INTENT(out) :: atm(ntyp)
-    !! Atom
-    LOGICAL, INTENT(out), OPTIONAL :: lrigid
-    !!
-    LOGICAL, INTENT(out), OPTIONAL :: lraman
-    !! Raman
-    INTEGER, INTENT(in) :: ntyp
-    !! Number of type of atoms
-    INTEGER, INTENT(in) :: nat
-    !! Number of atoms
-    INTEGER, INTENT(out) :: ibrav
-    !! Bravais lattice
-    INTEGER, INTENT(out) :: nspin_mag
-    !!
-    INTEGER, INTENT(out) :: nqs
-    !!
-    INTEGER,  INTENT(out) :: ityp(nat)
-    !! Atom type
-    REAL(KIND = DP), INTENT(out) :: celldm(6)
-    !! Celldm
-    REAL(KIND = DP), INTENT(out) :: at(3, 3)
-    !! Real-space lattice
-    REAL(KIND = DP), INTENT(out) :: bg(3, 3)
-    !! Reciprocal-space latrice
-    REAL(KIND = DP), INTENT(out) :: omega
-    !! Volume of primitive cell
-    REAL(KIND = DP), INTENT(out) :: amass(ntyp)
-    !! Atom mass
-    REAL(KIND = DP), INTENT(out) :: tau(3, nat)
-    !! Atom position
-    REAL(KIND = DP), INTENT(out) :: m_loc(3, nat)
-    !!
-    REAL(KIND = DP), INTENT(out), OPTIONAL :: epsil(3, 3)
-    !! Dielectric cst
-    REAL(KIND = DP), INTENT(out), OPTIONAL :: zstareu(3, 3, nat)
-    !!
-    REAL(KIND = DP), INTENT(out), OPTIONAL :: ramtns(3, 3, 3, nat)
-    !!
-    !
-    ! Local work
-    CHARACTER(iotk_attlenx) :: attr
-    !! Attribute
-    LOGICAL :: found_z
-    !!
-    LOGICAL :: lrigid_
-    !!
-    INTEGER :: nt
-    !! Type of atoms
-    INTEGER :: na
-    !! Number of atoms
-    INTEGER :: kc
-    !! Cartesian direction
-    REAL(KIND = DP) :: aux(3, 3)
-    !! Auxillary
-    !
-    IF (meta_ionode) THEN
-      CALL iotk_scan_begin(iudyn, "GEOMETRY_INFO")
-      CALL iotk_scan_dat(iudyn, "BRAVAIS_LATTICE_INDEX", ibrav)
-      CALL iotk_scan_dat(iudyn, "SPIN_COMPONENTS", nspin_mag)
-      CALL iotk_scan_dat(iudyn, "CELL_DIMENSIONS", celldm)
-      CALL iotk_scan_dat(iudyn, "AT", at)
-      CALL iotk_scan_dat(iudyn, "BG", bg)
-      CALL iotk_scan_dat(iudyn, "UNIT_CELL_VOLUME_AU", omega)
-      !
-      DO nt = 1, ntyp
-        CALL iotk_scan_dat(iudyn, "TYPE_NAME"//TRIM(iotk_index(nt)), atm(nt))
-        CALL iotk_scan_dat(iudyn, "MASS" // TRIM(iotk_index(nt)), amass(nt))
-      ENDDO
-      DO na = 1, nat
-        CALL iotk_scan_empty(iudyn,"ATOM" // TRIM(iotk_index(na)), attr)
-        CALL iotk_scan_attr(attr, "INDEX",  ityp(na))
-        CALL iotk_scan_attr(attr, "TAU", tau(:, na))
-        IF (nspin_mag == 4) THEN
-          CALL iotk_scan_dat(iudyn, "STARTING_MAG_" // TRIM(iotk_index(na)), m_loc(:, na))
-        ENDIF
-      ENDDO
-      CALL iotk_scan_dat(iudyn, "NUMBER_OF_Q", nqs)
-
-      CALL iotk_scan_end(iudyn, "GEOMETRY_INFO")
-      IF (PRESENT(lrigid)) lrigid = .FALSE.
-      IF (PRESENT(epsil)) THEN
-        CALL iotk_scan_begin(iudyn, "DIELECTRIC_PROPERTIES", FOUND = lrigid_)
-        IF (PRESENT(lrigid)) lrigid = lrigid_
-        IF (lrigid_) THEN
-          CALL iotk_scan_dat(iudyn, "EPSILON", epsil)
-          CALL iotk_scan_begin(iudyn, "ZSTAR", FOUND = found_z)
-          IF (found_z) THEN
-            DO na = 1, nat
-              CALL iotk_scan_dat(iudyn, "Z_AT_" // TRIM(iotk_index(na)), aux(:, :))
-              IF (PRESENT(zstareu)) zstareu(:, :, na) = aux
-            ENDDO
-            CALL iotk_scan_end(iudyn, "ZSTAR")
-          ELSE
-            IF (PRESENT(zstareu)) zstareu = 0.0_DP
-          ENDIF
-          IF (PRESENT(lraman)) THEN
-            CALL iotk_scan_begin(iudyn, "RAMAN_TENSOR_A2", found = lraman)
-            IF (lraman) THEN
-              DO na = 1, nat
-                DO kc = 1, 3
-                  CALL iotk_scan_dat(iudyn, "RAMAN_S_ALPHA" // TRIM(iotk_index(na)) &
-                      // TRIM(iotk_index(kc)), aux)
-                  IF (PRESENT(ramtns)) ramtns(:, :, kc, na) = aux(:, :)
-                ENDDO
-              ENDDO
-              CALL iotk_scan_END(iudyn, "RAMAN_TENSOR_A2")
-            ELSE
-              IF (PRESENT(ramtns)) ramtns = 0.0_DP
-            ENDIF
-          ENDIF
-          CALL iotk_scan_end(iudyn, "DIELECTRIC_PROPERTIES")
-        ELSE
-          IF (PRESENT(epsil)) epsil = 0.0_DP
-          IF (PRESENT(zstareu)) zstareu = 0.0_DP
-          IF (PRESENT(ramtns)) ramtns = 0.0_DP
-        ENDIF
-      ENDIF
-    ENDIF
-    RETURN
-    !----------------------------------------------------------------------------
-    END SUBROUTINE read_dyn_mat_header
-    !----------------------------------------------------------------------------
-    !
-    !----------------------------------------------------------------------------
-    SUBROUTINE read_dyn_mat(nat, iq, xq, dyn)
-    !----------------------------------------------------------------------------
-    !!
-    !! This routine reads the dynamical matrix file. The file is assumed to
-    !! be already opened. iq is the number of the dynamical matrix to read.
-    !!
-    USE iotk_module, ONLY : iotk_index, iotk_scan_begin, iotk_open_read,     &
-                            iotk_attlenx, iotk_scan_dat, iotk_scan_end,      &
-                            iotk_scan_attr, iotk_free_unit, iotk_close_read, &
-                            iotk_scan_empty
-    USE kinds,       ONLY : DP
-    USE io_global,   ONLY : meta_ionode
-    USE io_var,      ONLY : iudyn
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(in) :: nat
-    !! Number of atoms
-    INTEGER, INTENT(in) :: iq
-    !! Q-point index
-    REAL(KIND = DP), INTENT(out) :: xq(3)
-    !! Q-point value
-    COMPLEX(KIND = DP), INTENT(out) :: dyn(3, 3, nat, nat)
-    !! Dynamical matrix
-    !
-    ! Local variables
-    INTEGER :: na, nb
-    !! Number of atoms
-    !
-    IF (meta_ionode) THEN
-      CALL iotk_scan_begin(iudyn, "DYNAMICAL_MAT_" // TRIM(iotk_index(iq)))
-      CALL iotk_scan_dat(iudyn, "Q_POINT", xq)
-      !
-      DO na = 1, nat
-        DO nb = 1, nat
-          CALL iotk_scan_dat(iudyn, "PHI"//TRIM(iotk_index(na)) // TRIM(iotk_index(nb)), dyn(:, :, na, nb))
-        ENDDO
-      ENDDO
-      !
-      CALL iotk_scan_end(iudyn, "DYNAMICAL_MAT_" // TRIM(iotk_index(iq)))
-    ENDIF
-    !
-    RETURN
-    !----------------------------------------------------------------------------
-    END SUBROUTINE read_dyn_mat
-    !----------------------------------------------------------------------------
-    !
-    !----------------------------------------------------------------------------
-    SUBROUTINE read_ifc_param(nr1, nr2, nr3)
-    !----------------------------------------------------------------------------
-    !!
-    !! Read IFC parameters
-    !!
-    USE iotk_module, ONLY : iotk_index, iotk_scan_begin, iotk_open_read,     &
-                            iotk_attlenx, iotk_scan_dat, iotk_scan_end
-    USE kinds,       ONLY : DP
-    USE io_global,   ONLY : meta_ionode
-    USE io_var,      ONLY : iudyn
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(out) :: nr1, nr2, nr3
-    !! Grid size
-    ! Local varialbes
-    INTEGER :: meshfft(3)
-    !! Mesh
-    !
-    IF (meta_ionode) THEN
-      CALL iotk_scan_begin(iudyn, "INTERATOMIC_FORCE_CONSTANTS")
-      CALL iotk_scan_dat(iudyn, "MESH_NQ1_NQ2_NQ3", meshfft)
-      nr1 = meshfft(1)
-      nr2 = meshfft(2)
-      nr3 = meshfft(3)
-      CALL iotk_scan_end(iudyn, "INTERATOMIC_FORCE_CONSTANTS")
-    ENDIF
-    RETURN
-    !----------------------------------------------------------------------------
-    END SUBROUTINE read_ifc_param
-    !----------------------------------------------------------------------------
-    !
-    !----------------------------------------------------------------------------
-    SUBROUTINE read_ifc_xml(nr1, nr2, nr3, nat, phid)
-    !----------------------------------------------------------------------------
-    !!
-    !! Read IFC in XML format
-    !!
-    USE iotk_module, ONLY : iotk_index, iotk_scan_begin, iotk_open_read,     &
-                            iotk_attlenx, iotk_scan_dat, iotk_scan_end,      &
-                            iotk_scan_attr, iotk_free_unit, iotk_close_read, &
-                            iotk_scan_empty
-    USE kinds,       ONLY : DP
-    USE io_global,   ONLY : meta_ionode
-    USE io_var,      ONLY : iudyn
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(in) :: nr1, nr2, nr3
-    !! Grid size
-    INTEGER, INTENT(in) :: nat
-    !! Number of atoms
-    REAL(KIND = DP), INTENT(out) :: phid(nr1 * nr2 * nr3, 3, 3, nat, nat)
-    !!
-    ! Local variables
-    INTEGER :: na, nb
-    !! Atoms
-    INTEGER :: nn
-    !!
-    INTEGER :: m1, m2, m3
-    !! nr dimension
-    REAL(KIND = DP) :: aux(3, 3)
-    !! Auxillary
-    !
-    IF (meta_ionode) THEN
-      CALL iotk_scan_begin(iudyn, "INTERATOMIC_FORCE_CONSTANTS")
-      DO na = 1, nat
-        DO nb = 1, nat
-          nn = 0
-          DO m3 = 1, nr3
-            DO m2 = 1, nr2
-              DO m1 = 1, nr1
-                nn = nn + 1
-                CALL iotk_scan_begin(iudyn, "s_s1_m1_m2_m3" //     &
-                    TRIM(iotk_index(na)) // TRIM(iotk_index(nb)) // &
-                    TRIM(iotk_index(m1)) // TRIM(iotk_index(m2)) // &
-                    TRIM(iotk_index(m3)))
-                CALL iotk_scan_dat(iudyn, 'IFC', aux)
-                phid(nn, :, :, na, nb) = aux(:, :)
-                CALL iotk_scan_end(iudyn, "s_s1_m1_m2_m3" //        &
-                     TRIM(iotk_index(na)) // TRIM(iotk_index(nb)) // &
-                     TRIM(iotk_index(m1)) // TRIM(iotk_index(m2)) // &
-                     TRIM(iotk_index(m3)))
-              ENDDO ! m1
-            ENDDO ! m2
-          ENDDO ! m3
-        ENDDO ! nb
-      ENDDO ! na
-      CALL iotk_scan_end(iudyn, "INTERATOMIC_FORCE_CONSTANTS")
-      CALL iotk_close_read(iudyn)
-    ENDIF ! meta_ionode
-    RETURN
-    !----------------------------------------------------------------------------
-    END SUBROUTINE read_ifc_xml
-    !----------------------------------------------------------------------------
-    !
     !---------------------------------------------------------------------------------
-    SUBROUTINE read_ifc()
+    SUBROUTINE read_ifc_epw()
     !---------------------------------------------------------------------------------
     !!
     !! Read IFC in real space from the file generated by q2r.
@@ -817,10 +476,12 @@
     USE io_global, ONLY : stdout
     USE io_var,    ONLY : iunifc
     USE noncollin_module, ONLY : nspin_mag
-    USE io_global, ONLY : ionode_id
+    USE io_global, ONLY : ionode_id, ionode
     USE mp,        ONLY : mp_barrier, mp_bcast
     USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, root_pool
     USE mp_world,  ONLY : mpime, world_comm
+    USE io_dyn_mat,ONLY : read_dyn_mat_param, read_dyn_mat_header, &
+                          read_ifc_param, read_ifc
 #if defined(__NAG)
     USE f90_unix_io, ONLY : flush
 #endif
@@ -887,30 +548,35 @@
     ! The following function will check if the file exists in xml format
     CALL check_is_xml_file(tempfile, is_xml_file)
     !
-    IF (mpime == ionode_id) THEN
+    IF (is_xml_file) THEN
+      !IF (mpime == 0) THEN
+      !  ionode = .TRUE.
+      !ELSE
+      !  ionode = .FALSE.
+      !ENDIF            
       !
-      IF (is_xml_file) THEN
-        ! pass the 'tempfile' as the '.xml' extension is added in the next routine
-        CALL read_dyn_mat_param(tempfile, ntyp_, nat_)
-        ALLOCATE(m_loc(3, nat_), STAT = ierr)
-        IF (ierr /= 0) CALL errore('read_ifc', 'Error allocating m_loc', 1)
-        ALLOCATE(atm(ntyp_), STAT = ierr)
-        IF (ierr /= 0) CALL errore('read_ifc', 'Error allocating atm', 1)
-        CALL read_dyn_mat_header(ntyp_, nat_, ibrav, nspin_mag, &
-                 celldm, at, bg, omega, atm, amass2, &
-                 tau_, ityp_,  m_loc, nqs, has_zstar, epsi, zstar)
-        call volume(alat, at(1, 1), at(1, 2), at(1, 3), omega)
-        CALL read_ifc_param(nqc1, nqc2, nqc3)
-        CALL read_ifc_xml(nqc1, nqc2, nqc3, nat_, ifc)
-        DEALLOCATE(m_loc, STAT = ierr)
-        IF (ierr /= 0) CALL errore('read_ifc', 'Error deallocating m_loc', 1)
-        DEALLOCATE(atm, STAT = ierr)
-        IF (ierr /= 0) CALL errore('read_ifc', 'Error deallocating atm', 1)
-        !
-      ELSE
+      ! pass the 'tempfile' as the '.xml' extension is added in the next routine
+      CALL read_dyn_mat_param(tempfile, ntyp_, nat_)
+      ALLOCATE(m_loc(3, nat_), STAT = ierr)
+      IF (ierr /= 0) CALL errore('read_ifc_epw', 'Error allocating m_loc', 1)
+      ALLOCATE(atm(ntyp_), STAT = ierr)
+      IF (ierr /= 0) CALL errore('read_ifc_epw', 'Error allocating atm', 1)
+      CALL read_dyn_mat_header(ntyp_, nat_, ibrav, nspin_mag, &
+               celldm, at, bg, omega, atm, amass2, &
+               tau_, ityp_,  m_loc, nqs, has_zstar, epsi, zstar)
+      CALL volume(alat, at(1, 1), at(1, 2), at(1, 3), omega)
+      CALL read_ifc_param(nqc1, nqc2, nqc3)
+      CALL read_ifc(nqc1, nqc2, nqc3, nat_, ifc)
+      DEALLOCATE(m_loc, STAT = ierr)
+      IF (ierr /= 0) CALL errore('read_ifc_epw', 'Error deallocating m_loc', 1)
+      DEALLOCATE(atm, STAT = ierr)
+      IF (ierr /= 0) CALL errore('read_ifc_epw', 'Error deallocating atm', 1)
+      !
+    ELSE ! is_xml_file
+      IF (mpime == ionode_id) THEN      
         !
         OPEN(UNIT = iunifc, FILE = tempfile, STATUS = 'old', IOSTAT = ios)
-        IF (ios /= 0) call errore ('read_ifc', 'error opening ifc.q2r', iunifc)
+        IF (ios /= 0) call errore ('read_ifc_epw', 'error opening ifc.q2r', iunifc)
         !
         !  read real-space interatomic force constants
         !
@@ -953,39 +619,33 @@
             ENDDO
           ENDDO
         ENDDO
-      ENDIF ! noncol
-    ENDIF
-    !
-    ! It has to be casted like this because mpi cannot cast 7 indices
-    DO i = 1, 3
-      DO j = 1, 3
-        DO na = 1, nat
-          DO nb = 1, nat
-            CALL mp_bcast(ifc(:, :, :, i, j, na, nb), ionode_id, inter_pool_comm)
-            CALL mp_bcast(ifc(:, :, :, i, j, na, nb), root_pool, intra_pool_comm)
+        CLOSE(iunifc)
+      ENDIF ! mpime
+      ! It has to be casted like this because mpi cannot cast 7 indices
+      DO i = 1, 3
+        DO j = 1, 3
+          DO na = 1, nat
+            DO nb = 1, nat
+              CALL mp_bcast(ifc(:, :, :, i, j, na, nb), ionode_id, inter_pool_comm)
+              CALL mp_bcast(ifc(:, :, :, i, j, na, nb), root_pool, intra_pool_comm)
+            ENDDO
           ENDDO
         ENDDO
       ENDDO
-    ENDDO
-    !
-    CALL mp_bcast(zstar, ionode_id, world_comm)
-    CALL mp_bcast(epsi, ionode_id, world_comm)
-    CALL mp_bcast(tau_, ionode_id, world_comm)
-    CALL mp_bcast(ibrav_, ionode_id, world_comm)
-    !
+      CALL mp_bcast(zstar, ionode_id, world_comm)
+      CALL mp_bcast(epsi, ionode_id, world_comm)
+      CALL mp_bcast(tau_, ionode_id, world_comm)
+      CALL mp_bcast(ibrav_, ionode_id, world_comm)
+    ENDIF ! has_xml
+    ! 
     WRITE(stdout,'(5x,"IFC last ", 1f12.7)') ifc(nqc1, nqc2, nqc3, 3, 3, nat, nat)
     !
     CALL set_asr2(asr_typ, nqc1, nqc2, nqc3, ifc, zstar, nat, ibrav_, tau_)
     !
-    !CALL mp_barrier(inter_pool_comm)
-    IF (mpime == ionode_id) THEN
-      CLOSE(iunifc)
-    ENDIF
-    !
     WRITE(stdout, '(/5x,"Finished reading ifcs"/)')
     !
     !-------------------------------------------------------------------------------
-    END SUBROUTINE read_ifc
+    END SUBROUTINE read_ifc_epw
     !-------------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------

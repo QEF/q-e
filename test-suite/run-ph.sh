@@ -16,7 +16,7 @@ else
   unset PARA_SUFFIX
 fi
 
-echo $0" "$@
+# echo $0" "$@
 if [[ "$1" == "1" ]]
 then
   echo "Running PW ..."

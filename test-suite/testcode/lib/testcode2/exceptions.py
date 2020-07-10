@@ -13,7 +13,7 @@ import sys
 
 def signal_handler(sig, frame):
     '''Capture signal and leave quietly.'''
-    print('Signal: %s has been caught.  Bye!' % (sig))
+    print(('Signal: %s has been caught.  Bye!' % (sig)))
     sys.exit(1)
 
 

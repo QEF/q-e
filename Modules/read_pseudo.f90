@@ -51,6 +51,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   USE wrappers,     ONLY: md5_from_file, f_remove
   USE read_upf_v1_module,   ONLY: read_upf_v1
   USE upf_module,   ONLY: read_upf_new
+  !USE read_upf_new_module,  ONLY: read_upf_new
   USE upf_auxtools, ONLY: upf_get_pp_format, upf_check_atwfc_norm
   USE emend_upf_module, ONLY: make_emended_upf_copy
   USE upf_to_internal,  ONLY: add_upf_grid, set_upf_q
@@ -66,8 +67,8 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   REAL(DP), parameter :: rcut = 10.d0 
   ! 2D Coulomb cutoff: modify this (at your own risks) if problems with cutoff 
   ! being smaller than pseudo rcut. original value=10.0
-  CHARACTER(len=256) :: file_pseudo ! file name complete with path
-  CHARACTER(len=256) :: file_fixed, msg
+  CHARACTER(len=512) :: file_pseudo ! file name complete with path
+  CHARACTER(len=512) :: file_fixed, msg
   LOGICAL :: printout_ = .FALSE., exst, is_xml
   INTEGER :: iunps, isupf, nt, nb, ir, ios
   INTEGER :: iexch_, icorr_, igcx_, igcc_, inlc_

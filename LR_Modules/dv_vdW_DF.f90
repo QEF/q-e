@@ -469,9 +469,9 @@ end subroutine get_delta_v
   
   integer                    :: i_grid, index, count=0                    !! Indexing variables
  
-  if (inlc==1) Z_ab = -0.8491D0
-  if (inlc==2) Z_ab = -1.887D0
-  
+  if ( inlc == 1 .OR. inlc == 3 )                Z_ab = -0.8491D0
+  if ( inlc == 2 .OR. inlc == 4 .OR. inlc == 5 ) Z_ab = -1.887D0
+ 
  
   ! initialize q0-related arrays ... 
   q0(:) = q_cut

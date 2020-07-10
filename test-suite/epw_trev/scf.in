@@ -22,6 +22,7 @@
  &electrons
     diagonalization = 'david'
     mixing_beta     = 0.7
+    diago_david_ndim= 4
     conv_thr        = 1.0d-10
  /
 ATOMIC_SPECIES

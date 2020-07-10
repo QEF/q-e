@@ -505,6 +505,7 @@
           DO ibnd = 1, nbndfs
             IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
               weight = 0.5d0 * wkfs(ik) * w0g(ibnd, ik) / dosef
+              nznormi(iw) = nznormi(iw) + weight * naznormi(ibnd, ik, iw)
               znormi(iw) = znormi(iw) + weight * aznormi(ibnd, ik, iw)
               deltai(iw) = deltai(iw) + weight * adeltai(ibnd, ik, iw)
               naznormi(ibnd, ik, iw) = 1.d0 + pi * estemp(itemp) * naznormi(ibnd, ik, iw) / wsi(iw)
