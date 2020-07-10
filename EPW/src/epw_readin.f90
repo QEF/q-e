@@ -406,10 +406,10 @@
   wepexst      = .FALSE.
   epexst       = .FALSE.
   eig_read     = .FALSE.
-  dis_win_max  = 1d3
-  dis_win_min  = -1d3
-  dis_froz_max =  1d3
-  dis_froz_min = -1d3
+  dis_win_max  = 9999.d0
+  dis_win_min  = -9999.d0
+  dis_froz_max = 9999.d0
+  dis_froz_min = -9999.d0
   num_iter     = 200
   proj(:)      = ''
   auto_projections = .FALSE.
@@ -744,6 +744,12 @@
       'Cannot specify both auto_projections and projections block', 1)
   IF ((auto_projections .AND. .NOT. scdm_proj) .OR. (.NOT. auto_projections .AND. scdm_proj)) &
     CALL errore('epw_readin', 'auto_projections require both scdm_proj=.true. and auto_projections=.true.', 1)
+  IF (dis_win_min > -9999.d0 + eps16) THEN
+    dis_win_min  = -9999.d0
+    WRITE(stdout, '(/,5x,a)') 'WARNING: The specified dis_win_min is ignored.'
+    WRITE(stdout, '(5x,a)') "         You should instead use bands_skipped = 'exclude_bands = ...'"
+    WRITE(stdout, '(5x,a)') "         to control the lower bound of band manifold."
+  ENDIF
   !
   ! In the case of Fermi-Dirac distribution one should probably etemp instead of degauss.
   ! This is achieved with assume_metal == .true.

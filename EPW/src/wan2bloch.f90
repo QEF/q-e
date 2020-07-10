@@ -224,7 +224,7 @@
       ! Size of the degenerate subspace
       length   = ending - starting + 1
       !
-      ALLOCATE(rwork(length**2 + 2 * length), STAT = ierr)
+      ALLOCATE(rwork(1 + 5 * length + 2 * length**2), STAT = ierr)
       IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating rwork', 1)
       ALLOCATE(iwork(3 + 5 * length), STAT = ierr)
       IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating iwork', 1)
