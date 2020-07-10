@@ -36,6 +36,7 @@ MODULE funct
   USE io_global,   ONLY: stdout, ionode
   USE kinds,       ONLY: DP
 #if defined(__LIBXC)
+#include "xc_version.h"
   USE xc_f03_lib_m
 #endif
   !
@@ -919,6 +920,12 @@ CONTAINS
     TYPE(xc_f03_func_info_t) :: xc_info
     LOGICAL, EXTERNAL :: matches
     CHARACTER(LEN=1), EXTERNAL :: capital
+#if (XC_MAJOR_VERSION > 4)
+    INTEGER :: XC_FAMILY_HYB_GGA, XC_FAMILY_HYB_MGGA
+    !
+    XC_FAMILY_HYB_GGA  = XC_FAMILY_GGA
+    XC_FAMILY_HYB_MGGA = XC_FAMILY_MGGA
+#endif
     !
     prev_len(:) = 1
     !
@@ -941,7 +948,10 @@ CONTAINS
           xc_info = xc_f03_func_get_info( xc_func )
           fkind = xc_f03_func_info_get_kind( xc_info )
           family = xc_f03_func_info_get_family( xc_info )
-          IF ( matches(TRIM(name), '_HYB') ) lxc_hyb = .TRUE.
+          IF ( matches('HYB_', TRIM(name)) ) THEN
+            lxc_hyb = .TRUE.
+            exx_fraction = xc_f03_hyb_exx_coef( xc_func )
+          ENDIF
           CALL xc_f03_func_end( xc_func )
           !   
           SELECT CASE( family )
@@ -957,7 +967,7 @@ CONTAINS
              ENDIF
              fkind_v(1) = fkind
              !
-          CASE( XC_FAMILY_GGA ) !, XC_FAMILY_HYB_GGA )
+          CASE( XC_FAMILY_GGA, XC_FAMILY_HYB_GGA )
              IF (fkind==XC_EXCHANGE .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
                 IF ( LEN(TRIM(name)) > prev_len(3) ) igcx = i
                 is_libxc(3) = .TRUE.
@@ -969,7 +979,7 @@ CONTAINS
              ENDIF
              fkind_v(2) = fkind
              !
-          CASE( XC_FAMILY_MGGA ) !, XC_FAMILY_HYB_MGGA )
+          CASE( XC_FAMILY_MGGA, XC_FAMILY_HYB_MGGA )
              IF (fkind==XC_EXCHANGE .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
                 IF ( LEN(TRIM(name)) > prev_len(5) ) imeta = i
                 is_libxc(5) = .TRUE.
@@ -1358,17 +1368,6 @@ CONTAINS
   !-----------------------------------------------------------------------
   FUNCTION get_exx_fraction()
      REAL(DP) :: get_exx_fraction
-#if defined(__LIBXC)
-     TYPE(xc_f03_func_t) :: xc_func
-     !
-     IF ( lxc_hyb .AND. (is_libxc(1) .OR. is_libxc(3) .OR. is_libxc(5)) ) THEN
-        IF ( is_libxc(1) )  CALL xc_f03_func_init( xc_func, iexch, 1 )
-        IF ( is_libxc(3) )  CALL xc_f03_func_init( xc_func, igcx,  1 )
-        IF ( is_libxc(5) )  CALL xc_f03_func_init( xc_func, imeta, 1 )
-        exx_fraction = xc_f03_hyb_exx_coef( xc_func )
-        CALL xc_f03_func_end( xc_func )
-     ENDIF
-#endif
      get_exx_fraction = exx_fraction
      RETURN
   END FUNCTION get_exx_fraction

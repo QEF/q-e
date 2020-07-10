@@ -6485,7 +6485,7 @@ fi
 
 if test "$with_libxc" -ne 0; then
 
-lxcf="f90"
+lxcf="f03"
 lxcf2="f03"
 if test ! -z "$with_libxc_prefix"; then
 lxc_version=`grep "XC_MAJOR_VERSION" "$with_libxc_prefix/xc_version.h" | tr -dc '1-9'`
@@ -6521,12 +6521,12 @@ FCFLAGS="$FCFLAGS_LIBXC $acx_libxc_save_FCFLAGS"
 
 testprog="      program main
 
-  use xc_${lxcf2}_lib_m
+  use xc_${lxcf}_lib_m
   implicit none
   integer :: major
   integer :: minor
   integer :: micro
-  call xc_${lxcf2}_version(major, minor, micro)
+  call xc_${lxcf}_version(major, minor, micro)
       end"
 
 if test ! -z "$LIBS_LIBXC"; then
