@@ -71,15 +71,16 @@ subroutine routine_hartree()
    call start_clock('routine_hartree')
    call start_clock('hartree_current')
    call init_hartree()
-!-------------------------------HARTREE---------------------------------------------------------
-!call flush_unit(stdout)
-!Il calcolo della corrente di Hartree e quella di Kohn-Sham
-!richiedono che in memoria esistano contemporaneamente le funzioni d'onda a due tempi diversi t e t'= t-Dt,
-!dove Dt e' l'intervallo usato per la derivata numerica.
-!Quantita' con indice uno o prive di indici si riferiscono a quantita' calcolate al tempo t (i.e. prefix,charge_g,evc_uno)
-!e l'indice due si riferisce a quantita' calcolate al tempo t'=t-Dt (i.e. prefix_due,charge_due,evc_due)
 
-!-------STEP1: lettura e allocazione (npwx = number of plane waves (npwx>npw per comodita'), nbnd = number of bands (n_electrons/2 per insulators))
+!-------------------------------HARTREE---------------------------------------------------------
+! Calculation of Hartree, exchange and Kohn-Sham currents require that there is access in memory
+! simultaneously to the wavefunctions evaluated at two different time steps t and t'=t-Dt
+! , where Dt is the time step used for the numerical derivative.
+! In the following, quantities with index "uno" or without indexes refer to quantities evaluated at time t 
+! ( e.g. prefix, charge_g, evc_uno).
+! Variables with index "due" refer to quantities evaluated at t'=t-Dt (e.g. prefix_due, charge_due, evc_due) 
+
+!-------STEP1: reading and allocation (npwx = number of plane waves (npwx>npw), nbnd = number of bands (n_electrons/2 for insulators))
    allocate (tmp(npwx, nbnd))
    allocate (evp(npwx, nbnd))
    allocate (charge_g(ngm))
@@ -96,9 +97,9 @@ subroutine routine_hartree()
    allocate (exgradcharge_g(3, ngm))
    allocate (exdotcharge_r(dffts%nnr))
 
-!-------STEP2.1: inizializzazione di charge_g, la carica al tempo t.
-! charge_g = densità di carica nello spazio reciproco. Si ottiene dalla FFT di |evc(r)|^2, dove evc(r)=IFFT(evc)
-! per ottimizzare: fa 2 bande alla volta con una sola IFFT
+!-------STEP2.1: calculation of charge_g, the charge in reciprocal space at time t.
+! charge_g is obtained from a  FFT of |evc(r)|^2, where evc(r)=IFFT(evc)
+! Optimization: 2 bands done with a single IFFT
 
 !TODO: call QE routine
 !TODO: use qe computed charge
@@ -127,17 +128,21 @@ subroutine routine_hartree()
    IF (ionode) THEN
       print *, 'check_charge', q_tot
    ENDIF
-!moltiplico per due causa degenerazione di spin
+
+!We need to multiply by 2 for spin degeneracy
    charge(1:dffts%nnr) = charge(1:dffts%nnr)*2.d0
 !
-!calcolo carica in spazio reciproco (FFT di psic)
+
+!computation of charge in reciprocal space (FFT of psic)
    psic = 0.d0
    psic(1:dffts%nnr) = dcmplx(charge(1:dffts%nnr), 0.d0)
    call fwfft('Rho', psic, dffts)
    charge_g(1:ngm) = psic(dffts%nl(1:ngm))
 
-!!!!!!!!!!!!------------primo exchange-corr_intermezzo 1/2  -------------!!!!!!!!!!!!!!!!!!
-!copio la densità di carica in spazio reale
+
+!!!!!!!!!!!!------------ Saving some quantities for the evaluation of the Exchange-correlation current 1/2  -------------!!!!!!!!!!!!!!!!!!
+
+! copying of charge in real space
    excharge_r(1:dffts%nnr) = charge(1:dffts%nnr)
    do icoord = 1, 3
 !
@@ -154,10 +159,11 @@ subroutine routine_hartree()
       exgradcharge_r(icoord, 1:dffts%nnr) = dble(psic(1:dffts%nnr))
    end do
 !
-!!!!!!!!!!!!------------- fine intermezzo----------------- !!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!------------- end saving quantities for XC current----------------- !!!!!!!!!!!!!!!!!!!!
 
 !TODO: use sum_bands?
-!-------STEP2.2-------inizializzazione di chargeg_due, la carica al tempo t-Dt.
+
+!-------STEP2.2-------inizializing chargeg_due, charge at tempo t-Dt.
    charge = 0.d0
    do iv = 1, nbnd, 2
       psic = 0.d0
@@ -181,27 +187,29 @@ subroutine routine_hartree()
    q_tot = q_tot/(dffts%nr1*dffts%nr2*dffts%nr3)
    call mp_sum(q_tot, intra_pool_comm)
    if (ionode) print *, 'check_charge', q_tot
-!moltiplico per due causa degenerazione di spin
+
+   ! spin degeneracy
    charge(1:dffts%nnr) = charge(1:dffts%nnr)*2.d0
 
-!!!!!!!!!!!!------------secondo exchange-corr_intermezzo 2/2 -------------!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!------------Saving quantities for XC current 2/2 -------------!!!!!!!!!!!!!!!!!!
 !
    exdotcharge_r(1:dffts%nnr) = (excharge_r(1:dffts%nnr) - charge(1:dffts%nnr))/delta_t
 !
-!!!!!!!!!!!!------------- fine intermezzo----------------- !!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!------------- End saving quantities for XC current----------------- !!!!!!!!!!!!!!!!!!!!
 
 !
-!calcolo carica due in spazio reciproco (FFT di psic)
+!computation of charge in reciprocal space (FFT of psic)
    psic = 0.d0
    psic(1:dffts%nnr) = dcmplx(charge(1:dffts%nnr), 0.d0)
    call fwfft('Rho', psic, dffts)
    charge_g_due(1:ngm) = psic(dffts%nl(1:ngm))
 
-!-------STEP3----- calcolo dei potenziali di Hartree a partire dalle cariche appena trovate.
+!-------STEP3----- computation of Hartree potentials from the charges just computed.
 !TODO: use qe routine!!
-!calcolo del potenziale v_uno e di fac
+! calculation of v_uno and fac
 ! fac(G) = e2*fpi/(tpiba2*G^2*omega)
 ! v(G) = charge(G)*fac
+
    if (gstart == 2) fac(1) = 0.d0
    do igm = gstart, ngm
       qq_fact = g(1, igm)**2.d0 + g(2, igm)**2.d0 + g(3, igm)**2.d0
@@ -213,14 +221,14 @@ subroutine routine_hartree()
       v_uno(igm) = charge_g(igm)*fac(igm)
    end do
 
-!medesimo codice per il calcolo di v_due
+!same code to compute v_due
    do igm = 1, ngm
       v_due(igm) = charge_g_due(igm)*fac(igm)
    end do
 
-!-------STEP4----- derivate numeriche dei potenziali
+!-------STEP4----- numerical derivatives of Hartree potentials
 
-!A questo punto si esegue il calcolo di v_point e v_mean
+!We compute v_point and v_mean
    do igm = 1, ngm
       v_point(igm) = (v_uno(igm) - v_due(igm))/delta_t
    end do
@@ -228,7 +236,7 @@ subroutine routine_hartree()
       v_mean(igm) = (v_uno(igm) + v_due(igm))/2.d0
    end do
 
-!-------STEP 5----- applicazione formula finale, formula 1.17 del manuale.
+!-------STEP 5----- Application of final formula.
 
    J_hartree = 0.d0
    do igm = gstart, ngm
@@ -238,9 +246,10 @@ subroutine routine_hartree()
 
    call stop_clock('hartree_current')
    call print_clock('hartree_current')
-   if (ionode) print *, 'CORRENTE HARTREE CALCOLATA'
+   if (ionode) print *, 'HARTREE CURRENT CALCULATED'
 
 !-----------------EXCHANGE-CORRELATION-----------------------------------------------
+
    call start_clock('xc_current')
 
    exdotcharge_r(1:dffts%nnr) = exdotcharge_r(1:dffts%nnr)/omega
@@ -261,27 +270,27 @@ subroutine routine_hartree()
 !
    call mp_sum(J_xc, intra_pool_comm)
 !
-!elemento di volume
+!Volume element
 !
    J_xc(1:3) = J_xc(1:3)*omega/(dffts%nr1*dffts%nr2*dffts%nr3)
 !
 
    call stop_clock('xc_current')
    call print_clock('xc_current')
-   if (ionode) print *, 'CORRENTE X-C CALCOLATA'
+   if (ionode) print *, 'CORRENTE X-C CALCULATED'
 
 !---------------------------------KOHN------------------------------------------------
    call start_clock('kohn_current')
    allocate (dpsi(npwx, nbnd))
    allocate (dvpsi(npwx, nbnd))
-! per il preconditioning:
+! For preconditioning:
    do ig = 1, npw
       igk_k(ig, 1) = ig
       g2kin(ig) = ((xk(1, 1) + g(1, igk_k(ig, 1)))**2 + &
                    (xk(2, 1) + g(2, igk_k(ig, 1)))**2 + &
                    (xk(3, 1) + g(3, igk_k(ig, 1)))**2)*tpiba2
    end do
-! inizializzazioni potenziali che servono per fare  H|psi>
+! init potentials needed to evaluate  H|psi>
 ! TODO: sono già inizializzati
    call init_us_1()
    call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
@@ -291,7 +300,7 @@ subroutine routine_hartree()
    l_test = .true.
    if (l_test) then
       s = 0.d0
-! calcola s = < evc_due, evc_uno >, toglie un contributo a G=0
+! computed s = < evc_due, evc_uno >, remove contribution at G=0
       call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, evc_due, 2*npwx, evc_uno, 2*npwx, 0.d0, s, nbnd)
       if (gstart == 2) then
          do ibnd = 1, nbnd
@@ -301,7 +310,7 @@ subroutine routine_hartree()
          end do
       end if
       call mp_sum(s, intra_pool_comm)
-! calcola phi_v^c_punto usando <s,s>
+! computes phi_v^c_punto using <s,s>
       call dgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, s, nbnd, s, nbnd, 0.d0, ss, nbnd)
       evp = 0.d0
       do ibnd = 1, nbnd
@@ -316,7 +325,7 @@ subroutine routine_hartree()
    end if
 
    tmp(:, :) = (0.d0, 0.d0)
-!fa H|evp>  cioe' H|phi_v^c_punto> e lo mette in tmp:
+   !does H|evp>  i.e. H|phi_v^c_punto> and saves it into tmp:
    call h_psi(npwx, npw, nbnd, evp, tmp)
    kcurrent = 0.d0
    kcurrent_a = 0.d0
@@ -324,14 +333,15 @@ subroutine routine_hartree()
    ecurrent = 0.d0
    polariz: do ipol = 1, 3
       call start_clock('project')
-      ! calcola la proiezione sulla banda di conduzione
+      ! computes projection
       call project(ipol)
       call stop_clock('project')
       call print_clock('project')
 
       call start_clock('kohn-first')
       emme = 0.d0
-      ! prodotto scalare
+
+      ! scalar product
       call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, dvpsi, 2*npwx, tmp, 2*npwx, 0.d0, emme, nbnd)
       if (gstart == 2) then
          do ibnd = 1, nbnd
@@ -361,7 +371,7 @@ subroutine routine_hartree()
       end if
       call mp_sum(emme, intra_pool_comm)
 
-      ! et contiene gli autovalori
+      ! et containes the eigvenvalues
       do ibnd = 1, nbnd
          kcurrent(ipol) = kcurrent(ipol) + et(ibnd, 1)*emme(ibnd, ibnd)
          kcurrent_b(ipol) = kcurrent_b(ipol) + et(ibnd, 1)*emme(ibnd, ibnd)
