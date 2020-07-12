@@ -41,12 +41,14 @@ subroutine routine_hartree()
    use constants, only: rytoev
    USE eqv, ONLY: dpsi, dvpsi
    USE mp_pools, ONLY: intra_pool_comm
-
+   USE funct, ONLY : get_igcx, get_igcc
+    
    implicit none
 
+   character(LEN=20) :: dft_name  
    complex(kind=DP), allocatable ::  evp(:, :), tmp(:, :)
    integer :: iun, iv, igm, ibnd, i
-   logical :: exst
+   logical :: exst, do_xc_curr
    real(kind=DP), allocatable ::charge(:), fac(:)
    real(kind=DP), allocatable ::excharge_r(:), exgradcharge_r(:, :), exdotcharge_r(:)
    real(kind=DP) :: qq_fact, q_tot
@@ -67,6 +69,16 @@ subroutine routine_hartree()
 
    write (stdout, *) 'BEGIN: HARTREE & KOHN'
    !npwold=npw
+
+   if ( (get_igcx() /= 3) .or. (get_igcc() /=4 ) ) then
+           do_xc_curr=.false.
+           if ( (get_igcx() /= 0) .or. (get_igcc() /=0 ) ) then
+                call errore('ENERGY CURRENT', 'XC NOT PBE OR LDA. ABORT.', 1)  
+           end if        
+   else
+           do_xc_curr=.true.
+   end if 
+
    npw = npwx ! only gamma
    call start_clock('routine_hartree')
    call start_clock('hartree_current')
@@ -142,22 +154,24 @@ subroutine routine_hartree()
 
 !!!!!!!!!!!!------------ Saving some quantities for the evaluation of the Exchange-correlation current 1/2  -------------!!!!!!!!!!!!!!!!!!
 
+   if (do_xc_curr) then
 ! copying of charge in real space
-   excharge_r(1:dffts%nnr) = charge(1:dffts%nnr)
-   do icoord = 1, 3
+     excharge_r(1:dffts%nnr) = charge(1:dffts%nnr)
+     do icoord = 1, 3
 !
-      do igm = 1, ngm
-         exgradcharge_g(icoord, igm) = charge_g(igm)*(0.d0, 1.d0)*g(icoord, igm)*tpiba
-      end do
+       do igm = 1, ngm
+          exgradcharge_g(icoord, igm) = charge_g(igm)*(0.d0, 1.d0)*g(icoord, igm)*tpiba
+       end do
 !
-      psic = 0.d0
-      psic(dffts%nl(1:ngm)) = exgradcharge_g(icoord, 1:ngm)
-      psic(dffts%nlm(1:ngm)) = CONJG(exgradcharge_g(icoord, 1:ngm))
+       psic = 0.d0
+       psic(dffts%nl(1:ngm)) = exgradcharge_g(icoord, 1:ngm)
+       psic(dffts%nlm(1:ngm)) = CONJG(exgradcharge_g(icoord, 1:ngm))
 !
-      call invfft('Rho', psic, dffts)
+       call invfft('Rho', psic, dffts)
 !
-      exgradcharge_r(icoord, 1:dffts%nnr) = dble(psic(1:dffts%nnr))
-   end do
+       exgradcharge_r(icoord, 1:dffts%nnr) = dble(psic(1:dffts%nnr))
+     end do
+   end if   
 !
 !!!!!!!!!!!!------------- end saving quantities for XC current----------------- !!!!!!!!!!!!!!!!!!!!
 
@@ -193,8 +207,10 @@ subroutine routine_hartree()
 
 !!!!!!!!!!!!------------Saving quantities for XC current 2/2 -------------!!!!!!!!!!!!!!!!!!
 !
-   exdotcharge_r(1:dffts%nnr) = (excharge_r(1:dffts%nnr) - charge(1:dffts%nnr))/delta_t
-!
+   if (do_xc_curr) then
+       exdotcharge_r(1:dffts%nnr) = (excharge_r(1:dffts%nnr) - charge(1:dffts%nnr))/delta_t
+   end if
+       !
 !!!!!!!!!!!!------------- End saving quantities for XC current----------------- !!!!!!!!!!!!!!!!!!!!
 
 !
@@ -252,28 +268,31 @@ subroutine routine_hartree()
 
    call start_clock('xc_current')
 
-   exdotcharge_r(1:dffts%nnr) = exdotcharge_r(1:dffts%nnr)/omega
-   excharge_r(1:dffts%nnr) = excharge_r(1:dffts%nnr)/omega
-   exgradcharge_r(1:3, 1:dffts%nnr) = exgradcharge_r(1:3, 1:dffts%nnr)/omega
-!
    J_xc(1:3) = 0.d0
+
+   if (do_xc_curr) then 
+       exdotcharge_r(1:dffts%nnr) = exdotcharge_r(1:dffts%nnr)/omega
+       excharge_r(1:dffts%nnr) = excharge_r(1:dffts%nnr)/omega
+       exgradcharge_r(1:3, 1:dffts%nnr) = exgradcharge_r(1:3, 1:dffts%nnr)/omega
 !
-   do ir = 1, dffts%nnr
-      if (excharge_r(ir) > 1.0E-10_DP) then
-         call pbex_current(abs(excharge_r(ir)), exgradcharge_r(1:3, ir), 1, update_a(1:3))
-         call pbec_current(abs(excharge_r(ir)), exgradcharge_r(1:3, ir), 1, update_b(1:3))
-         update(1:3) = e2*(update_a(1:3) + update_b(1:3))
-         update(1:3) = -update(1:3)*exdotcharge_r(ir)*excharge_r(ir)
-         J_xc(1:3) = J_xc(1:3) + update(1:3)
-      end if
-   end do
 !
-   call mp_sum(J_xc, intra_pool_comm)
+       do ir = 1, dffts%nnr
+          if (excharge_r(ir) > 1.0E-10_DP) then
+             call pbex_current(abs(excharge_r(ir)), exgradcharge_r(1:3, ir), 1, update_a(1:3))
+             call pbec_current(abs(excharge_r(ir)), exgradcharge_r(1:3, ir), 1, update_b(1:3))
+             update(1:3) = e2*(update_a(1:3) + update_b(1:3))
+             update(1:3) = -update(1:3)*exdotcharge_r(ir)*excharge_r(ir)
+             J_xc(1:3) = J_xc(1:3) + update(1:3)
+          end if
+       end do
+!
+       call mp_sum(J_xc, intra_pool_comm)    
 !
 !Volume element
 !
-   J_xc(1:3) = J_xc(1:3)*omega/(dffts%nr1*dffts%nr2*dffts%nr3)
+       J_xc(1:3) = J_xc(1:3)*omega/(dffts%nr1*dffts%nr2*dffts%nr3)
 !
+   end if
 
    call stop_clock('xc_current')
    call print_clock('xc_current')
