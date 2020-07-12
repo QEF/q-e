@@ -16,6 +16,7 @@ FUNCTION lr_dot(x,y)
   ! Brent Walker, ICTP, 2004
   ! Modified by Osman Baris Malcioglu, SISSA, 2009
   ! Modified by Iurii Timrov, SISSA, 2013 (extension to EELS)
+  ! Modified by PG, 2020: replacement of zdotc with dot_product
   !
   USE kinds,                ONLY : dp
   USE io_global,            ONLY : stdout
@@ -235,9 +236,8 @@ SUBROUTINE check_vector_f (x)
    ! local variables
    !
    COMPLEX(kind=dp) :: temp_f
-   COMPLEX(kind=dp), EXTERNAL :: ZDOTC
    !
-   temp_f = ZDOTC(ngk(1),x(:),1,x(:),1)
+   temp_f = dot_product( x(1:ngk(1)), x(1:ngk(1)) )
    !
 #if defined(__MPI)
    CALL mp_sum(temp_f, intra_bgrp_comm)
