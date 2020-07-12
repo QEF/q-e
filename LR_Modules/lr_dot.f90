@@ -39,7 +39,6 @@ FUNCTION lr_dot(x,y)
   REAL(kind=dp) :: temp_gamma, degspin
   INTEGER :: ibnd, ik
   REAL(kind=dp), EXTERNAL    :: DDOT
-  COMPLEX(kind=dp), EXTERNAL :: ZDOTC
   !
   CALL start_clock ('lr_dot')
   !
@@ -120,7 +119,7 @@ CONTAINS
        !
        DO ibnd = 1, nbnd_occ(ikk)
           !
-          lr_dot = lr_dot + wk(ikk) *ZDOTC(npwx*npol,x(1,ibnd,ik),1,y(1,ibnd,ik),1)
+          lr_dot = lr_dot + wk(ikk) * dot_product(x(:,ibnd,ik),y(:,ibnd,ik))
           !
        ENDDO
        !
@@ -156,7 +155,8 @@ CONTAINS
        !
        DO ibnd = 1, nbnd_occ(ikk)
           !
-          lr_dot = lr_dot + wk(ikk) * ZDOTC(npwq,x(1,ibnd,ik),1,y(1,ibnd,ik),1)
+          lr_dot = lr_dot + wk(ikk) * &
+                  dot_product( x(1:npwq,ibnd,ik), y(1:npwq,ibnd,ik) )
           !
        ENDDO
        !
