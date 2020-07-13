@@ -10,9 +10,11 @@ PROGRAM lr_eels_main
   !---------------------------------------------------------------------
   !
   ! This is the main driver of the turboEELS code for Electron Energy Loss Spectroscopy.
-  ! It applys the Lanczos algorithm to the matrix of equations coming from TDDFPT. 
+  ! It applys the Lanczos or Sternheimer algorithm to the matrix of 
+  ! equations coming from TDDFPT. 
   !
   ! Iurii Timrov (Ecole Polytechnique, SISSA, and EPFL) 2010-2018
+  ! Oscar Baseggio (SISSA) 2020
   !
   USE lr_lanczos,            ONLY : one_lanczos_step
   USE io_global,             ONLY : stdout
@@ -22,7 +24,9 @@ PROGRAM lr_eels_main
                                   & d0psi, d0psi2, LR_iteration, LR_polarization, &
                                   & plot_type, nbnd_total, pseudo_hermitian, &
                                   & itermax_int, revc0, lr_io_level, code2, &
-                                  & eels, approximation 
+                                  & eels, approximation, sternheimer, fru, fiu, &
+                                  & current_w, nfs, start_freq, last_freq, chirr, &
+                                  & chirz, chizz, chizr, epsm1 
   USE ions_base,             ONLY : tau,nat,atm,ityp
   USE environment,           ONLY : environment_start
   USE mp_global,             ONLY : mp_startup
@@ -38,6 +42,13 @@ PROGRAM lr_eels_main
   USE fft_base,              ONLY : dffts
   USE uspp,                  ONLY : okvan
   USE wrappers,              ONLY : memstat
+  USE lr_sternheimer,        ONLY : one_sternheimer_step
+  USE control_lr,            ONLY : flmixdpot
+  USE qpoint,                ONLY : xq
+  USE uspp_param,            ONLY : nhm
+  USE noncollin_module,      ONLY : noncolin
+  USE lsda_mod,              ONLY : nspin
+  USE lrus,                  ONLY : intq, intq_nc
   !
   IMPLICIT NONE
   !
@@ -45,7 +56,7 @@ PROGRAM lr_eels_main
   !
   ! Local variables
   !
-  INTEGER             :: ip, na, pol_index, ibnd
+  INTEGER             :: ip, na, pol_index, ibnd, iu
   INTEGER             :: iter_restart, iteration
   LOGICAL             :: rflag
   INTEGER             :: kilobytes
@@ -127,90 +138,149 @@ PROGRAM lr_eels_main
   !
   CALL lr_dv_setup()
   !
-  WRITE(stdout,'(/,5X,"LANCZOS LINEAR-RESPONSE SPECTRUM CALCULATION")')
-  WRITE(stdout,'(5X," ")')
-  WRITE(stdout,'(5x,"Number of Lanczos iterations = ",i6)') itermax
-  !
-  ! Lanczos loop where the real work happens
-  !
-  DO ip = 1, n_ipol
+  IF (sternheimer) THEN
      !
-     IF (n_ipol/=1) THEN
-        LR_polarization = ip
-        pol_index = LR_polarization
+     ! Sternheimer algorithm
+     !
+     IF (okvan) THEN
+        ALLOCATE (intq (nhm, nhm, nat) )
+        IF (noncolin) ALLOCATE(intq_nc( nhm, nhm, nat, nspin))
      ENDIF
      !
-     ! Read the starting Lanczos vectors d0psi (EELS: and d0psi2) from the file,
-     ! which was written above by lr_solve_e.
+     CALL lr_compute_intq
      !
-     CALL lr_read_d0psi()
+     ! Set flmixdpot
      !
-     ! Normalization of the starting Lanczos vectors,
-     ! or reading of the data from the restart file.
+     flmixdpot = 'mixd'
      !
-     IF (test_restart(2)) THEN 
+     ALLOCATE(chirr(nfs))
+     ALLOCATE(chirz(nfs))
+     ALLOCATE(chizr(nfs))
+     ALLOCATE(chizz(nfs))
+     ALLOCATE(epsm1(nfs))
+     chirr=(0.0_DP,0.0_DP)
+     chizr=(0.0_DP,0.0_DP)
+     chirz=(0.0_DP,0.0_DP)
+     chizz=(0.0_DP,0.0_DP)
+     epsm1=(0.0_DP,0.0_DP)
+     !
+     ! frequencies loop
+     !
+     DO iu = start_freq, last_freq
         !
-        CALL lr_restart(iter_restart,rflag)
+        current_w=CMPLX(fru(iu), fiu(iu))
+        WRITE( stdout, '(/,5x,70("-"))')
+        WRITE( stdout, '(10x,"q=(",3f15.5,")")') xq(1:3)
+
+        WRITE( stdout, '(/,10x,"Susceptibility at &
+              &frequency",f9.4," +",f9.4," i Ry",i6," / ", i6)') current_w, &
+                                                         iu, nfs
         !
-        WRITE(stdout,'(/5x,"Restarting Lanczos loop",1x,i8)') LR_polarization
-        !
-     ELSE
-        !
-        ! The two starting Lanczos vectors are equal.
-        !
-        evc1(:,:,:,1) = d0psi(:,:,:,pol_index)
-        !
-        ! The new structure of the Lanczos algorithm
-        ! does not need the normalisation of the starting Lanczos 
-        ! vectors here.
-        !
-        evc1(:,:,:,2) = evc1(:,:,:,1)
-        !
-        evc1_old(:,:,:,1) = (0.0d0,0.0d0)
-        evc1_old(:,:,:,2) = (0.0d0,0.0d0)
-        !
-        iter_restart = 1
-        !
-        IF (.NOT. eels) WRITE(stdout,'(/5x,"Starting Lanczos loop",1x,i8)') LR_polarization
-        !
+        CALL one_sternheimer_step( iu, 1 )
+        ! 
+        CALL write_chi_on_disk(iu)
+        !  
+     ENDDO
+     !
+     DEALLOCATE(chirr)
+     DEALLOCATE(chirz)
+     DEALLOCATE(chizr)
+     DEALLOCATE(chizz)
+     DEALLOCATE(epsm1)
+     !
+     IF (okvan) THEN
+        DEALLOCATE (intq )
+        IF (noncolin) DEALLOCATE(intq_nc)
      ENDIF
      !
-     ! Loop on the Lanczos iterations
-     ! 
-     lancz_loop1 : DO iteration = iter_restart, itermax
+  ELSE
+     !
+     WRITE(stdout,'(/,5X,"LANCZOS LINEAR-RESPONSE SPECTRUM CALCULATION")')
+     WRITE(stdout,'(5X," ")')
+     WRITE(stdout,'(5x,"Number of Lanczos iterations = ",i6)') itermax
+     !
+     ! Lanczos loop where the real work happens
+     !
+     DO ip = 1, n_ipol
         !
-        LR_iteration = iteration
+        IF (n_ipol/=1) THEN
+           LR_polarization = ip
+           pol_index = LR_polarization
+        ENDIF
         !
-        WRITE(stdout,'(/5x,"Lanczos iteration:",1x,i6)') LR_iteration
+        ! Read the starting Lanczos vectors d0psi (EELS: and d0psi2) from the file,
+        ! which was written above by lr_solve_e.
         !
-        CALL one_lanczos_step()
+        CALL lr_read_d0psi()
         !
-        IF ( lr_io_level > 0 .and. (mod(LR_iteration,restart_step)==0 .or. &
-                           & LR_iteration==itermax .or. LR_iteration==1) ) &
-                           CALL lr_write_restart()
+        ! Normalization of the starting Lanczos vectors,
+        ! or reading of the data from the restart file.
         !
-        ! Check to see if the wall time limit has been exceeded.
-        ! if it has exit gracefully saving the last set of Lanczos
-        ! iterations.
-        !
-        IF ( check_stop_now() ) THEN
+        IF (test_restart(2)) THEN 
            !
-           CALL lr_write_restart()
+           CALL lr_restart(iter_restart,rflag)
            !
-           ! Deallocate PW variables.
+           WRITE(stdout,'(/5x,"Restarting Lanczos loop",1x,i8)') LR_polarization
            !
-           CALL clean_pw( .FALSE. )
-           CALL stop_clock('lr_main')
-           CALL print_clock_lr()
-           CALL stop_lr( .FALSE. )
+        ELSE
+           !
+           ! The two starting Lanczos vectors are equal.
+           !
+           evc1(:,:,:,1) = d0psi(:,:,:,pol_index)
+           !
+           ! The new structure of the Lanczos algorithm
+           ! does not need the normalisation of the starting Lanczos 
+           ! vectors here.
+           !
+           evc1(:,:,:,2) = evc1(:,:,:,1)
+           !
+           evc1_old(:,:,:,1) = (0.0d0,0.0d0)
+           evc1_old(:,:,:,2) = (0.0d0,0.0d0)
+           !
+           iter_restart = 1
+           !
+           IF (.NOT. eels) WRITE(stdout,'(/5x,"Starting Lanczos loop",1x,i8)') LR_polarization
            !
         ENDIF
         !
-     ENDDO lancz_loop1
+        ! Loop on the Lanczos iterations
+        ! 
+        lancz_loop1 : DO iteration = iter_restart, itermax
+           !
+           LR_iteration = iteration
+           !
+           WRITE(stdout,'(/5x,"Lanczos iteration:",1x,i6)') LR_iteration
+           !
+           CALL one_lanczos_step()
+           !
+           IF ( lr_io_level > 0 .and. (mod(LR_iteration,restart_step)==0 .or. &
+                              & LR_iteration==itermax .or. LR_iteration==1) ) &
+                              CALL lr_write_restart()
+           !
+           ! Check to see if the wall time limit has been exceeded.
+           ! if it has exit gracefully saving the last set of Lanczos
+           ! iterations.
+           !
+           IF ( check_stop_now() ) THEN
+              !
+              CALL lr_write_restart()
+              !
+              ! Deallocate PW variables.
+              !
+              CALL clean_pw( .FALSE. )
+              CALL stop_clock('lr_main')
+              CALL print_clock_lr()
+              CALL stop_lr( .FALSE. )
+              !
+           ENDIF
+           !
+        ENDDO lancz_loop1
+        !
+     ENDDO
+     ! 
+     WRITE(stdout,'(5x,"End of Lanczos iterations")')
      !
-  ENDDO
-  ! 
-  WRITE(stdout,'(5x,"End of Lanczos iterations")')
+  ENDIF
   !
   ! Deallocate PW variables
   !
@@ -249,9 +319,19 @@ SUBROUTINE lr_print_preamble_eels()
                    & /5x,"inelastic X-ray scattering spectra using the Liouville - Lanczos approach", &
                    & /5x,"to time-dependent density-functional perturbation theory", &
                    & /5x,"Comp. Phys. Commun. 196, 460 (2015). ")' )
+    WRITE( stdout, '(/5x,"and for Sternheimer")' )
+    WRITE( stdout, '(/5x,"Oleksandr Motornyi1, Nathalie Vast, Iurii Timrov, Oscar Baseggio,",         &
+                   & /5x,"Stefano Baroni, and Andrea Dal Corso,",                                     &
+                   & /5x,"Electron energy loss spectroscopy of bulk gold with ultrasoft",             &
+                   & /5x,"pseudopotentials and theLiouville-Lanczos method",                          &
+                   & /5x,"Phys. Rev. B (2020). ")' )
+
+
     WRITE( stdout, '(/5x,"----------------------------------------")' )
     !
     WRITE( stdout, '(/5x,"Using the ' // trim(approximation) // ' approximation.")' )
+    !
+    if (sternheimer) WRITE( stdout, '(/5x,"Using Sternheimer algorithm.")' )
     !
     If (pseudo_hermitian) THEN
        WRITE( stdout, '(/5x,"Using the pseudo-Hermitian Lanczos algorithm.")' )
@@ -264,6 +344,127 @@ SUBROUTINE lr_print_preamble_eels()
     RETURN
     !
 END SUBROUTINE lr_print_preamble_eels
+
+SUBROUTINE write_chi_on_disk(iu)
+    USE kinds,            ONLY : DP
+    USE lr_variables,     ONLY : current_w, fru, fiu, &
+                                 chirr, chirz, chizz, &
+                                 chizr, epsm1
+    USE lsda_mod,         ONLY : nspin, lsda
+    USE mp_images,        ONLY : my_image_id
+    USE io_global,        ONLY : stdout, ionode
+    USE noncollin_module, ONLY : noncolin, nspin_mag
+
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: iu
+    INTEGER :: iu_epsil
+    COMPLEX(DP) :: epsi
+    CHARACTER(LEN=6) :: int_to_char
+    CHARACTER(LEN=256) :: filename
+
+    LOGICAL :: exst
+
+    IF (ionode) THEN
+       IF (nspin_mag==1) THEN
+          !
+          !   nonmagnetic case or noncollinear with time reversal
+          !
+          iu_epsil=2
+          filename='chirr'
+          IF (my_image_id>0) filename=TRIM(filename)//'_'//int_to_char(my_image_id)
+          INQUIRE(FILE=TRIM(filename), exist=exst)
+          IF (exst.AND.iu>1) THEN
+             OPEN (UNIT=iu_epsil, FILE=TRIM(filename), STATUS='old', &
+                                  POSITION='append', FORM='formatted')
+          ELSE
+             OPEN (UNIT=iu_epsil, FILE=TRIM(filename), &
+                                    STATUS='unknown', FORM='formatted')
+             WRITE(iu_epsil,'("#    Re(w)     Im(w)     Re(chirr)       Im(chirr)&
+                                &      Re (1/chirr)      Im(1/chirr) ")')
+          END IF
+          !
+          epsi = (0.0_DP,0.0_DP)
+          IF (ABS(chirr(iu))>1.D-10) epsi = CMPLX(1.0_DP,0.0_DP) / chirr(iu)
+          WRITE(iu_epsil,'(2f10.5, 4e15.7)') fru(iu), fiu(iu),   &
+               DREAL(chirr(iu)), DIMAG(chirr(iu)), &
+               DREAL(epsi), DIMAG(epsi)
+          CLOSE(iu_epsil)
+       ELSEIF (nspin_mag==2) THEN
+          !
+          !  lsda case
+          !
+          iu_epsil=2
+          filename='chimag_re'
+          IF (my_image_id>0) filename=TRIM(filename)//'_'//int_to_char(my_image_id)
+          INQUIRE(FILE=TRIM(filename), exist=exst)
+          IF (exst.AND.iu>1) THEN
+             OPEN (UNIT=iu_epsil, FILE=TRIM(filename), &
+                             STATUS='old', POSITION='append', FORM='formatted')
+          ELSE
+             OPEN (UNIT=iu_epsil, FILE=TRIM(filename), STATUS='unknown', &
+                                                FORM='formatted')
+             WRITE(iu_epsil,'("#  Re(w)     Im(w)     rr       rz        zz&
+                              &         +-        -+       xx        xy")')
+          ENDIF
+          !
+          WRITE(iu_epsil,'(2f10.5,3e15.7)') fru(iu), fiu(iu),   &
+                     DREAL(chirr(iu)), DREAL(chirz(iu)), &
+                     DREAL(chizz(iu))
+          !
+          CLOSE(iu_epsil)
+          !
+          iu_epsil=2
+          filename='chimag_im'
+          IF (my_image_id>0) filename=TRIM(filename)//'_'//int_to_char(my_image_id)
+          INQUIRE(FILE=TRIM(filename), exist=exst)
+          IF (exst.AND.iu>1) THEN
+             OPEN (UNIT=iu_epsil, FILE=TRIM(filename), &
+                           STATUS='old', POSITION='append', FORM='formatted')
+          ELSE
+             OPEN (UNIT=iu_epsil, FILE=TRIM(filename), &
+                               STATUS='unknown', FORM='formatted')
+             WRITE(iu_epsil,'("#  Re(w)     Im(w)     rr       rz        zz&
+                              &         +-        -+       xx        xy")')
+          ENDIF
+          !
+          WRITE(iu_epsil,'(2f10.5,3e15.7)') fru(iu), fiu(iu),   &
+                        DIMAG(chirr(iu)), DIMAG(chirz(iu)), &
+                        DIMAG(chizz(iu))
+          !
+          CLOSE(iu_epsil)
+       ELSE
+          !
+          ! Noncollinear case: not yet implemented
+          !
+       ENDIF
+       !
+       IF (.NOT.lsda) THEN
+          iu_epsil=2
+          filename='epsilon'
+          IF (my_image_id>0) filename=TRIM(filename)//'_'//int_to_char(my_image_id)
+          INQUIRE(FILE=TRIM(filename), exist=exst)
+          IF (exst.AND.iu>1) THEN
+             OPEN (UNIT=iu_epsil, FILE=TRIM(filename), STATUS='old', &
+                                  POSITION='append', FORM='formatted')
+          ELSE
+             OPEN (UNIT=iu_epsil, FILE=TRIM(filename), STATUS='unknown', &
+                                                            FORM='formatted')
+             WRITE(iu_epsil,'("#       Re(w)     Im(w)     Re(1/eps)      Im(1/eps)&
+                           &      Re (eps)      Im(eps) ")')
+          ENDIF
+          !
+          epsi = (0.0_DP,0.0_DP)
+          IF (ABS(epsm1(iu))>1.D-10) epsi = CMPLX(1.0_DP,0.0_DP) / epsm1(iu)
+             WRITE(iu_epsil,'(i6, 2f8.5, 4e14.6)') iu, fru(iu), fiu(iu),   &
+                     DREAL(epsm1(iu)), DIMAG(epsm1(iu)), &
+                     DREAL(epsi), DIMAG(epsi)
+          !
+          CLOSE(iu_epsil)
+       ENDIF
+    ENDIF
+    !
+    RETURN
+END SUBROUTINE write_chi_on_disk
 
 END PROGRAM lr_eels_main
 !-----------------------------------------------------------------------

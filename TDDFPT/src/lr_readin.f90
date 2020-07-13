@@ -27,7 +27,7 @@ SUBROUTINE lr_readin
   USE wvfct,               ONLY : nbnd, et, wg, current_k
   USE lsda_mod,            ONLY : isk
   USE ener,                ONLY : ef
-  USE io_global,           ONLY : ionode, ionode_id, stdout
+  USE io_global,           ONLY : ionode, ionode_id, stdout, meta_ionode, meta_ionode_id
   USE klist,               ONLY : nks, wk, nelec, lgauss, ltetra
   USE fixed_occ,           ONLY : tfixed_occ
   USE symm_base,           ONLY : nosym
@@ -50,7 +50,8 @@ SUBROUTINE lr_readin
   USE io_rho_xml,          ONLY : write_scf
   USE mp_bands,            ONLY : ntask_groups
   USE constants,           ONLY : eps4
-  USE control_lr,          ONLY : lrpa
+  USE control_lr,          ONLY : lrpa, alpha_mix
+  USE mp_world,            ONLY : world_comm
 
   IMPLICIT NONE
   !
@@ -65,12 +66,15 @@ SUBROUTINE lr_readin
   INTEGER :: ios, iunout, ierr, ipol
   LOGICAL, EXTERNAL  :: check_para_diag
   !
+  CHARACTER(LEN=80)          :: card
+  INTEGER :: i
+  !
   NAMELIST / lr_input /   restart, restart_step ,lr_verbosity, prefix, outdir, &
                         & test_case_no, wfcdir, disk_io, max_seconds
   NAMELIST / lr_control / itermax, ipol, ltammd, lrpa,   &
                         & charge_response, no_hxc, n_ipol, project,      &
                         & scissor, pseudo_hermitian, d0psi_rs, lshift_d0psi, &
-                        & q1, q2, q3, approximation
+                        & q1, q2, q3, approximation, sternheimer, alpha_mix
   NAMELIST / lr_post /    omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int,sum_rule
   namelist / lr_dav /     num_eign, num_init, num_basis_max, residue_conv_thr, precondition,         &
                         & dav_debug, reference,single_pole, sort_contr, diag_of_h, close_pre,        &
@@ -122,6 +126,14 @@ SUBROUTINE lr_readin
      q2 = 1.0d0
      q3 = 1.0d0
      approximation = 'TDDFT'
+     !
+     ! Sternheimer
+     !
+     sternheimer = .FALSE.
+     start_freq=1
+     last_freq=0
+     alpha_mix(:) = 0.D0
+     alpha_mix(1) = 0.7D0
      !
      ! For lr_dav (Davidson program)
      !
@@ -303,8 +315,58 @@ SUBROUTINE lr_readin
   ENDIF
   !
   CALL bcast_lr_input
-
+  !
 #endif
+  !
+  IF ( sternheimer ) THEN
+     nfs=0
+     IF (meta_ionode) THEN
+        READ (5, *, iostat = ios) card
+        IF ( TRIM(card)=='FREQUENCIES'.OR. &
+             TRIM(card)=='frequencies'.OR. &
+             TRIM(card)=='Frequencies') THEN
+           READ (5, *, iostat = ios) nfs
+        ENDIF
+     ENDIF
+     CALL mp_bcast(ios, meta_ionode_id, world_comm  )
+     CALL errore ('phq_readin', 'reading number of FREQUENCIES', ABS(ios) )
+     CALL mp_bcast(nfs, meta_ionode_id, world_comm  )
+     if (nfs < 1) call errore('phq_readin','Too few frequencies',1)
+     ALLOCATE(fiu(nfs))
+     ALLOCATE(fru(nfs))
+     ALLOCATE(comp_f(nfs))
+     comp_f=.TRUE.
+     IF (meta_ionode) THEN
+        IF ( TRIM(card) == 'FREQUENCIES' .OR. &
+             TRIM(card) == 'frequencies' .OR. &
+             TRIM(card) == 'Frequencies' ) THEN
+           READ (5, *, iostat = ios) fru(1), fiu(1)
+           READ (5, *, iostat = ios) fru(nfs), fiu(nfs)
+           deltaf =(fru(nfs) - fru(1)) / (nfs -1)
+           DO i=2,nfs-1
+              fru(i)=fru(1) + (i-1) * deltaf
+           ENDDO
+           deltaf= ( fiu(nfs) -fiu(1) ) / (nfs -1)
+           DO i=2,nfs-1
+              fiu(i)=fiu(1) + (i-1) * deltaf
+           ENDDO
+        END IF
+     END IF
+     CALL mp_bcast(ios, meta_ionode_id, world_comm )
+     CALL errore ('phq_readin', 'reading FREQUENCIES card', ABS(ios) )
+     CALL mp_bcast(fru, meta_ionode_id, world_comm  )
+     CALL mp_bcast(fiu, meta_ionode_id, world_comm  )
+     IF (start_freq<=0) start_freq=1
+     IF (last_freq<=0.OR.last_freq>nfs) last_freq=nfs
+  ELSE
+     nfs=1
+     ALLOCATE(fru(1))
+     ALLOCATE(fiu(1))
+     ALLOCATE(comp_f(1))
+     fru=0.0_DP
+     fiu=0.0_DP
+     comp_f=.TRUE.
+  END IF
   !
   ! Required for restart runs as this never gets initialized.
   !
