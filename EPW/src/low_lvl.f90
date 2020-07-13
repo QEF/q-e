@@ -1351,6 +1351,34 @@
     !-----------------------------------------------------------------------
     END FUNCTION copy_sym_epw
     !-----------------------------------------------------------------------
+    !
+    !----------------------------------------------------------------------
+    SUBROUTINE fix_sym()
+    !----------------------------------------------------------------------
+    !!
+    !! This routine tries to fix some symmetry-related issues in EPW.
+    !! This is just a temporary fix before restructuring the code.
+    !!
+    !! HL - July 2020
+    !!
+    USE symm_base,     ONLY : t_rev, time_reversal, nrot, nsym, invsym
+    USE epwcom,        ONLY : epw_no_t_rev, epw_tr, epw_nosym
+    !
+    IMPLICIT NONE
+    !
+    IF (epw_no_t_rev) t_rev = 0
+    !
+    time_reversal = epw_tr
+    !
+    IF (epw_nosym) THEN
+      nrot = 1
+      nsym = 1
+      invsym = .FALSE.
+    ENDIF
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE fix_sym
+    !-----------------------------------------------------------------------
   !-------------------------------------------------------------------------
   END MODULE low_lvl
   !-------------------------------------------------------------------------
