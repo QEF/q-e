@@ -407,6 +407,7 @@
       DO itemp = 1, nstemp
         ! Average over degenerate eigenstates:
         WRITE(stdout, '(5x,"Average over degenerate eigenstates is performed")')
+        WRITE(stdout, '(5x, a, f8.3, a)') "Temperature: ", gtemp(itemp) * ryd2ev / kelvin2eV, "K"
         !
         DO ik = 1, nktotf
           ikk = 2 * ik - 1
@@ -919,7 +920,8 @@
         lambda_tot    = SUM(lambda_all(:, iq, ismear, itemp))
         lambda_tr_tot = SUM(lambda_v_all(:, iq, ismear, itemp))
         !
-        WRITE(stdout, '(/5x, "ismear = ",i5," iq = ",i7," coord.: ", 3f9.5, " wt: ", f9.5)') ismear, iq, xqf(:, iq), wqf(iq)
+        WRITE(stdout, '(/5x, "ismear = ",i5," iq = ",i7," coord.: ", 3f9.5, " wt: ", f9.5, " Temp: ", f8.3, "K")') ismear, iq, &
+                                                                      xqf(:, iq), wqf(iq), gtemp(itemp) * ryd2ev / kelvin2eV
         WRITE(stdout, '(5x, a)') REPEAT('-', 67)
         !
         DO imode = 1, nmodes
@@ -1378,6 +1380,7 @@
         !
         ! Average over degenerate eigenstates:
         WRITE(stdout, '(5x, "Average over degenerate eigenstates is performed")')
+        WRITE(stdout, '(5x, a, f8.3, a)') "Temperature: ", gtemp(itemp) * ryd2ev / kelvin2eV, "K"
         !
         DO ik = 1, nktotf
           ikk = 2 * ik - 1
