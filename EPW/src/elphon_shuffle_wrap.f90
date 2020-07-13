@@ -47,7 +47,8 @@
   USE lr_symm_base,  ONLY : minus_q, rtau, gi, gimq, irotmq, nsymq, invsymq
   USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem, vme,     &
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir,       &
-                            nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, lpolar, system_2d
+                            nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, lpolar, system_2d, &
+                            fixsym, epw_noinv
   USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, umat, umat_all, veff,&
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat, nbndep,    &
                             ngxx, exband, wscache, area, ngxxf, ng0vec, shift,  &
@@ -64,7 +65,7 @@
   USE becmod,        ONLY : deallocate_bec_type
   USE phus,          ONLY : int1, int1_nc, int2, int2_so, alphap
   USE kfold,         ONLY : createkmap_pw2, createkmap
-  USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, copy_sym_epw
+  USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, copy_sym_epw, fix_sym
   USE ph_restart,    ONLY : read_disp_pattern_only
   USE io_epw,        ONLY : read_ifc_epw, readdvscf, readgmap
   USE poolgathering, ONLY : poolgather
@@ -430,6 +431,7 @@
     !
     ! ~~~~~~~~ setup crystal symmetry ~~~~~~~~
     CALL find_sym(nat, tau, ityp, .FALSE., m_loc)
+    IF (fixsym) CALL fix_sym()
     IF (.NOT. allfrac) CALL remove_sym(dfftp%nr1, dfftp%nr2, dfftp%nr3)
     WRITE(stdout, '(5x, a, i3)') "Symmetries of crystal:         ", nsym
     !
@@ -532,6 +534,9 @@
       !
       sym_smallq(:) = 0
       CALL star_q2(xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, .TRUE., sym_smallq)
+      IF (fixsym) THEN
+        IF (epw_noinv) imq = 1 ! Any non-zero integer is ok.
+      ENDIF
       !
       ! The reason for xq instead of xq0 in the above is because xq is passed to QE through module
       xq0 = xq
