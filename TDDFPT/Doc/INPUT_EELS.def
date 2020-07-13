@@ -90,8 +90,19 @@ input_description -distribution {Quantum Espresso} -package turboEELS -program t
 	    default {500}
 	    info {
 		Number of Lanczos iterations to be performed.
+                Maximum number of iterations in a scf step with 
+                Sternheimer algorithm.
 		}
 	}
+
+        var sternheimer -type LOGICAL {
+            default {.false.}
+            info {
+                When set to .false. the Liouvillian Lanczos
+                algorithm is used. When set to .false. the
+                Sternheimer algorithm is used.
+                }
+        }
 
         var pseudo_hermitian -type LOGICAL {
             default {.true.}

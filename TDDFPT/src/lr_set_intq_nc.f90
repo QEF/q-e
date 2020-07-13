@@ -11,7 +11,8 @@ SUBROUTINE lr_set_intq_nc()
   !
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp
   USE uspp_param,    ONLY : upf
-  USE lr_variables,  ONLY : intq, intq_nc
+!  USE lr_variables,  ONLY : intq, intq_nc
+  USE lrus,          ONLY : intq, intq_nc
 
   IMPLICIT NONE
   INTEGER :: np, na

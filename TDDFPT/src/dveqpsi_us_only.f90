@@ -1,45 +1,35 @@
 !
-! Copyright (C) 2001-2019 Quantum ESPRESSO group
+! Copyright (C) 2016 Andrea Dal Corso
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!-----------------------------------------------------------------------------
-SUBROUTINE lr_addus_dvpsi (npwq, ik, psi, dvpsi)
+!----------------------------------------------------------------------
+SUBROUTINE dveqpsi_us_only (npwq, ik)
   !----------------------------------------------------------------------
-  !---------------------------------------------------------------------------
   !
-  ! ... Calculate the ultrasoft term of the perturbation exp(iq*r),
-  ! ... and then sum up the input wavefunction and the ultrasoft term.
+  !     This routine computes the contribution of the Fourier transform 
+  !     of the augmentation function at the given q, and adds it to
+  !     dvpsi.
   !
-  ! ... input:
-  ! ...    ik     given k point
-  ! ...    npwq   true dimension of psi
-  ! ...    psi    input array
-  !
-  ! Written by Iurii Timrov (2015)
-  ! Generalized to the relativistic case by Andrea Dal Corso (2018)
-  !
-  USE kinds,            ONLY : DP
-  USE uspp_param,       ONLY : upf, nh
-  USE uspp,             ONLY : vkb, okvan
-  USE lsda_mod,         ONLY : lsda, current_spin, isk
-  USE ions_base,        ONLY : ntyp => nsp, nat, ityp
-  USE wvfct,            ONLY : nbnd, npwx
+  USE kinds,      ONLY : DP
+  USE uspp_param, ONLY : upf, nh
+  USE uspp,       ONLY : vkb, okvan
+!  USE lr_variables, ONLY : intq, intq_nc
+! modules from pwcom
+  USE lsda_mod,   ONLY : lsda, current_spin, isk
+  USE ions_base,  ONLY : ntyp => nsp, nat, ityp
+  USE wvfct,      ONLY : nbnd, npwx
   USE noncollin_module, ONLY : noncolin, npol
-  USE qpoint,           ONLY : ikks
-!  USE lr_variables,     ONLY : intq, intq_nc
-  USE lrus,             ONLY : becp1, intq, intq_nc
-  
+! modules from phcom
+  USE qpoint,     ONLY : ikks
+  USE lrus,       ONLY : becp1, intq, intq_nc
+  USE eqv,        ONLY : dvpsi
   IMPLICIT NONE
   !
   !   The dummy variables
   !
-  COMPLEX(DP), INTENT(in) :: psi(npwx*npol,nbnd)
-  ! input: wavefunction u_n,k
-  COMPLEX(DP), INTENT(out) :: dvpsi(npwx*npol,nbnd)
-  ! output: sum of the input wavefunction and the USPP term
   INTEGER :: ik, npwq
   ! input: the k point
   ! input: number of plane waves at the q point
@@ -60,8 +50,9 @@ SUBROUTINE lr_addus_dvpsi (npwq, ik, psi, dvpsi)
   ! auxiliary variable
 
   IF (.NOT.okvan) RETURN
-  CALL start_clock ('lr_addus_dvpsi')
-  dvpsi=psi
+
+
+  CALL start_clock ('dveqpsi_us_only')
   ikk = ikks(ik)
   IF (lsda) current_spin = isk (ikk)
   ijkb0 = 0
@@ -116,6 +107,6 @@ SUBROUTINE lr_addus_dvpsi (npwq, ik, psi, dvpsi)
      ENDIF
   ENDDO
 
-  CALL stop_clock ('lr_addus_dvpsi')
+  CALL stop_clock ('dveqpsi_us_only')
   RETURN
-END SUBROUTINE lr_addus_dvpsi
+END SUBROUTINE dveqpsi_us_only
