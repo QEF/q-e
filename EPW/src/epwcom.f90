@@ -169,6 +169,16 @@
   !! if .TRUE. compute the long range interaction of el-ph. Can only be .TRUE. if lpolar is also true.
   LOGICAL :: shortrange
   !! if .TRUE. compute the long range interaction of el-ph. Can only be .TRUE. if lpolar is also true.
+  LOGICAL :: fixsym
+  !! if .TRUE. try to fix the symmetry-related issues
+  LOGICAL :: epw_no_t_rev
+  !! if .TRUE. set t_rev = 0
+  LOGICAL :: epw_tr
+  !! set time_reversal to epw_tr
+  LOGICAL :: epw_nosym
+  !! If .TRUE. set nsym=1 (nrot=1) and invsym=.FALSE.
+  LOGICAL :: epw_noinv
+  !! If .TRUE. set imq to non-zero value
   !
   INTEGER :: ngaussw
   !! smearing type for Fermi surface average in e-ph coupling after wann. interp.

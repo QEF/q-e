@@ -58,7 +58,8 @@
                             auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   &
                             scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, &
                             wannier_plot_supercell, wannier_plot_scale, reduce_unk,    &
-                            wannier_plot_radius
+                            wannier_plot_radius,                                       &
+                            fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
   USE elph2,         ONLY : elph, num_wannier_plot, wanplotlist, gtemp
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, ang2m
@@ -157,6 +158,7 @@
        mob_maxiter, auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   &
        scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, reduce_unk,  &
        wannier_plot_supercell, wannier_plot_scale, wannier_plot_radius,        &
+       fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv,                     &
   !---------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
   ! Shell implementation for future use.
@@ -554,6 +556,11 @@
   selecqread   = .FALSE.
   nc           = 4.0d0
   assume_metal = .FALSE.  ! default is we deal with an insulator
+  fixsym       = .FALSE.
+  epw_no_t_rev = .TRUE.
+  epw_tr       = .TRUE.
+  epw_nosym    = .FALSE.
+  epw_noinv    = .FALSE.
   !
   ! --------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
