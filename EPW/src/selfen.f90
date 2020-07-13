@@ -573,7 +573,7 @@
                            gtemp, nktotf, adapt_smearing
     USE mp,         ONLY : mp_barrier, mp_sum
     USE mp_global,  ONLY : inter_pool_comm
-    USE constants_epw, ONLY : ryd2mev, ryd2ev, one, two, zero, eps4, eps6, eps8
+    USE constants_epw, ONLY : kelvin2eV, ryd2mev, ryd2ev, one, two, zero, eps4, eps6, eps8
     USE constants,  ONLY : pi
     !
     IMPLICIT NONE
