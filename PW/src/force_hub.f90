@@ -135,7 +135,7 @@ SUBROUTINE force_hub( forceh )
       IF (nks > 1) &
          CALL get_buffer( evc, nwordwfc, iunwfc, ik )
       !
-      CALL using_vkb(0)
+      CALL using_vkb(2)
       !
       CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
       ! Compute spsi = S * psi
