@@ -66,6 +66,19 @@ MODULE control_lr
   LOGICAL  :: lrpa           ! if .TRUE. uses the Random Phace Approximation
   REAL(DP) :: ethr_nscf      ! convergence threshol for KS eigenvalues in the
                              ! NSCF calculation
+  ! Sternheimer case 
+  LOGICAL :: lgamma_gamma,&! if .TRUE. this is a q=0 computation with k=0 only
+             convt,       &! if .TRUE. the phonon has converged
+             ext_recover, &! if .TRUE. there is a recover file
+             lnoloc        ! if .TRUE. calculates the dielectric constant
+                           ! neglecting local field effects
+  INTEGER :: rec_code=-1000,    & ! code for recover
+             rec_code_read=-1000  ! code for recover. Not changed during the run
+  CHARACTER(LEN=256) :: flmixdpot
+  REAL(DP) :: tr2_ph  ! threshold for phonon calculation
+  REAL(DP) :: alpha_mix(100)  ! the mixing parameter
+  INTEGER :: niter_ph         ! maximum number of iterations (read from input)
+
   !
 END MODULE control_lr
 !
@@ -149,10 +162,14 @@ MODULE lrus
   COMPLEX (DP), ALLOCATABLE :: &
        int3(:,:,:,:,:),     &! nhm, nhm, nat, nspin, npert)
        int3_paw(:,:,:,:,:), &! nhm, nhm, nat, nspin, npert)
-       int3_nc(:,:,:,:,:)    ! nhm, nhm, nat, nspin, npert)
+       int3_nc(:,:,:,:,:),  &! nhm, nhm, nat, nspin, npert)
+       intq(:,:,:),         &! nhm, nhm, nat)
+       intq_nc(:,:,:,:)      ! nhm, nhm, nat, nspin)
   ! int3 -> \int (Delta V_Hxc) Q d^3r
   ! similarly for int_nc while
   ! int3_paw contains Delta (D^1-\tilde D^1)
+  ! intq integral of e^iqr Q
+  ! intq_nc integral of e^iqr Q in the noncollinear case
   !
   REAL (DP), ALLOCATABLE ::    dpqq(:,:,:,:)       ! nhm, nhm, 3, ntyp)
   COMPLEX (DP), ALLOCATABLE :: dpqq_so(:,:,:,:,:)  ! nhm, nhm, nspin, 3, ntyp)
@@ -187,3 +204,32 @@ MODULE units_lr
              iuatswfc   ! unit for atomic wavefunctions * S
   !
 END MODULE units_lr
+!
+MODULE modes
+  USE kinds,  ONLY : DP
+  !
+  ! ... The variables needed to describe the modes and the small group of q
+  !
+  SAVE
+  !
+ INTEGER :: nirr, nmodes
+  ! number of irreducible representations contained in the dynamical matrix
+  ! number of modes
+  INTEGER, ALLOCATABLE, TARGET :: npert(:) !3 * nat )
+  ! the number of perturbations per IR
+  INTEGER :: npertx
+  ! max number of perturbations per IR
+  COMPLEX (DP), POINTER :: &
+       u(:,:),                     &!  3 * nat, 3 * nat),
+       t(:,:,:,:),                 &! npertx, npertx, 48,3 * nat),
+       tmq(:,:,:)                   ! npertx, npertx, 3 * nat)
+  ! the transformation modes patterns
+  ! the mode for deltarho
+  ! the symmetry in the base of the pattern
+  ! the symmetry q<->-q in the base of the pa
+
+  CHARACTER(15), ALLOCATABLE :: name_rap_mode(:) ! symmetry type of each mode
+  INTEGER, ALLOCATABLE :: num_rap_mode(:)  ! number of the representation for
+                                           ! each mode
+  !
+END MODULE modes
