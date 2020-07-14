@@ -40,10 +40,10 @@ MODULE lr_variables
                                ! in Cartesian coordinates
   CHARACTER(len=30) :: approximation ! Level of approximation in TDDFPT  
   CHARACTER(LEN=256) :: tmp_dir_lr   ! Name of a temporary directory 
+  CHARACTER(LEN=256) :: calculator   ! 'lanczos' or 'sternheimer'
   !
   ! sternheimer-eels
   !
-  LOGICAL :: sternheimer
   INTEGER :: nfs, & !number of frequencies for Sternheimer
              start_freq, &
              last_freq

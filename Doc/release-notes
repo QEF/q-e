@@ -25,6 +25,8 @@ New in dev branch:
   * Phonon-induced electron self-energy implemented in ph.x and
     a new post-processing program PHonon/postahc.x added.
     (Jae-Mo Lihm, Seoul Natl. Univ.)
+  * Implementation of the Sternheimer algorithm in the turboEELS code
+    (O. Baseggio, O. Motornyi, N. Vast, A. Dal Corso, I. Timrov, and S. Baroni)
   
 Fixed in dev branch:
   * PW: Restart from interrupted calculations  simplified. As a side effect,
