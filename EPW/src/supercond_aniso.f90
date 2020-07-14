@@ -596,7 +596,7 @@
     ! reference F. Marsiglio, M. Schossmann, and J. Carbotte, Phys. Rev. B 37, 4965 (1988)
     !
     USE kinds,         ONLY : DP
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE elph2,         ONLY : wqf, wf
     USE epwcom,        ONLY : nqstep, degaussq, nsiter, conv_thr_racon, fsthick, &
                               lpade, eps_acustic
@@ -1170,7 +1170,7 @@
     ! reference H. Choi et. al, Physica C 385, 66 (2003)
     !
     USE kinds,         ONLY : DP
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE elph2,         ONLY : wf
     USE epwcom,        ONLY : eps_acustic
     USE eliashbergcom, ONLY : ixqfs, g2, dosef
@@ -1398,7 +1398,7 @@
     !! reference F. Masiglio, M. Schossmann, and J. Carbotte, PRB 37, 4965 (1988)
     !!
     USE kinds,         ONLY : DP
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE elph2,         ONLY : wf
     USE epwcom,        ONLY : eps_acustic
     USE eliashbergcom, ONLY : ixqfs, g2, dosef
@@ -1497,7 +1497,7 @@
     !! computes the anisotropic spectral function a2F(k, k', w)
     !!
     USE kinds,         ONLY : DP
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE elph2,         ONLY : wf
     USE epwcom,        ONLY : fsthick, eps_acustic, nqstep, degaussq
     USE eliashbergcom, ONLY : nkfs, nbndfs, g2, a2fij, ixkqf, ixqfs, nqfs, ekfs, ef0, &

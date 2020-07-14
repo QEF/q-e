@@ -36,7 +36,7 @@
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
     USE io_var,        ONLY : iospectral_sup, iospectral
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub, eps_acustic, fsthick, eptemp, ngaussw, &
                               degaussw, wmin_specfun, wmax_specfun, nw_specfun, &
                               shortrange, efermi_read, fermi_energy, restart, &
@@ -462,7 +462,7 @@
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
     USE io_var,    ONLY : iospectral_sup, iospectral
-    USE phcom,     ONLY : nmodes
+    USE modes,     ONLY : nmodes
     USE epwcom,    ONLY : nbndsub, fsthick, eptemp, shortrange, ngaussw, degaussw, &
                           nsmear, delta_smear, eps_acustic, efermi_read, fermi_energy, &
                           wmin_specfun, wmax_specfun, nw_specfun
@@ -1309,7 +1309,7 @@
     !!
     !
     USE kinds,     ONLY : DP
-    USE phcom,     ONLY : nmodes
+    USE modes,     ONLY : nmodes
     USE cell_base, ONLY : omega
     USE epwcom,    ONLY : degaussq, delta_qsmear, nqsmear, nqstep, nsmear, eps_acustic, &
                           delta_smear, degaussw, fsthick, nc

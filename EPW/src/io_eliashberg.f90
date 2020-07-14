@@ -643,7 +643,7 @@
     USE io_global, ONLY : stdout, ionode_id
     USE io_var,    ONLY : iufilfreq, iunselecq
     USE io_files,  ONLY : prefix, tmp_dir
-    USE phcom,     ONLY : nmodes
+    USE modes,     ONLY : nmodes
     USE elph2,     ONLY : nqtotf, wf, wqf, xqf
     USE epwcom,    ONLY : nqf1, nqf2, nqf3, nqstep
     USE eliashbergcom, ONLY : wsphmax, dwsph, wsph
@@ -950,7 +950,7 @@
     USE io_var,    ONLY : iufilikmap, iunselecq
     USE io_files,  ONLY : prefix, tmp_dir
     USE symm_base, ONLY : t_rev, time_reversal, s, set_sym_bl
-    USE phcom,     ONLY : nmodes
+    USE modes,     ONLY : nmodes
     USE epwcom,    ONLY : nkf1, nkf2, nkf3, nqstep
     USE elph2,     ONLY : nqtotf, xqf
     USE grid,     ONLY : kpmq_map
@@ -1151,7 +1151,7 @@
     USE io_global,     ONLY : stdout
     USE io_var,        ONLY : iufileph
     USE io_files,      ONLY : prefix, tmp_dir
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE elph2,         ONLY : nqtotf, wf
     USE epwcom,        ONLY : eps_acustic, fsthick
     USE eliashbergcom, ONLY : nkfs, nbndfs, ef0, ekfs, g2, ixkqf, nqfs
@@ -1331,7 +1331,7 @@
     USE io_global,  ONLY : stdout, ionode_id
     USE io_var,     ONLY : iufilfreq, iufilegnv, iufileph, iunrestart
     USE io_files,   ONLY : prefix, tmp_dir
-    USE phcom,      ONLY : nmodes
+    USE modes,      ONLY : nmodes
     USE epwcom,     ONLY : nbndsub, fsthick, ngaussw, degaussw, shortrange, &
                            nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, efermi_read, &
                            fermi_energy
