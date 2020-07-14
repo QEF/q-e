@@ -1102,7 +1102,6 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
    COMPLEX(DP), ALLOCATABLE :: &
    dproj0_d(:,:),       & ! derivative of the projector
    dproj_us_d(:,:),     & ! USPP contribution to dproj0
-   dwfc(:,:),           & ! USPP contribution to dproj0
    dwfc_d(:,:),         & ! USPP contribution to dproj0
    doverlap(:,:),       & ! the derivative of the (ortho-atomic) wavefunction
    doverlap_d(:,:),     & ! the derivative of the (ortho-atomic) wavefunction
@@ -1136,11 +1135,6 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
    nh_nt = nh(nt)
    !
    CALL dev_buf%lock_buffer( wfcU_d, SHAPE(wfcU) , ierr )
-   CALL dev_buf%lock_buffer( wfcatom_d, SHAPE(wfcatom) , ierr )
-   IF (ALLOCATED(swfcatom)) CALL dev_buf%lock_buffer( swfcatom_d, SHAPE(swfcatom) , ierr )
-   IF (ALLOCATED(eigenval)) ALLOCATE(eigenval_d, source=eigenval)
-   IF (ALLOCATED(eigenvect)) CALL dev_buf%lock_buffer( eigenvect_d, SHAPE(eigenvect) , ierr )
-   IF (ALLOCATED(overlap_inv))  CALL dev_buf%lock_buffer( overlap_inv_d, SHAPE(overlap_inv) , ierr )
    IF ( ierr /= 0 ) CALL errore( 'force_hub_gpu', 'cannot allocate buffers', ierr )
    CALL dev_memcpy( wfcU_d , wfcU )
    !
@@ -1230,8 +1224,13 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
       IF (is_hubbard_back(nt)) CALL errore("dprojdtau_k", &
                  " Forces with background and  ortho-atomic are not supported",1)
       !
+      CALL dev_buf%lock_buffer( wfcatom_d, SHAPE(wfcatom) , ierr )
+      CALL dev_buf%lock_buffer( swfcatom_d, SHAPE(swfcatom) , ierr )
+      ALLOCATE(eigenval_d, source=eigenval)
+      CALL dev_buf%lock_buffer( eigenvect_d, SHAPE(eigenvect) , ierr )
+      CALL dev_buf%lock_buffer( overlap_inv_d, SHAPE(overlap_inv) , ierr )
+      !
       ALLOCATE (dwfc_d(npwx,ldim))
-      ALLOCATE (dwfc(npwx,ldim))
       dwfc_d(:,:) = (0.d0, 0.d0)
       !
       ! Determine how many atomic wafefunctions there are for atom 'alpha'
@@ -1249,7 +1248,8 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
       CALL errore('dprojdtau_k','disabled when it is compiled by xlf.',1)
 #else
       offpm = oatwfc(na) ! offset
-      IF (ALLOCATED(overlap_inv)) CALL dev_memcpy( overlap_inv_d, overlap_inv )
+      !
+      CALL dev_memcpy( overlap_inv_d, overlap_inv )
       CALL dev_memcpy( wfcatom_d, wfcatom )
       !$cuf kernel do(1)
       DO ig = 1, npw
@@ -1273,10 +1273,7 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
       ALLOCATE (doverlap_inv_d(natomwfc,natomwfc))
       doverlap_inv_d(:,:) = (0.0d0, 0.0d0)
       doverlap(:,:) = (0.0d0, 0.0d0)
-      IF (allocated(swfcatom)) CALL dev_memcpy( swfcatom_d, swfcatom )
-      IF (allocated(eigenval)) CALL dev_memcpy( eigenval_d, eigenval )
-      IF (allocated(eigenvect)) CALL dev_memcpy( eigenvect_d, eigenvect )
-
+      CALL dev_memcpy( swfcatom_d, swfcatom )
       !
       ! Calculate < dphi_I/d\tau(alpha,ipol) | S | phi_J >
       DO m1 = m_start, m_end
@@ -1330,7 +1327,8 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
       !
       ! Now compute dO^{-1/2}_JI/d\tau(alpha,ipol) using dO_IJ/d\tau(alpha,ipol)
       ! Note the transposition!
-      !
+      CALL dev_memcpy( eigenvect_d, eigenvect )
+      ! eigenval_d already copied
       CALL calculate_doverlap_inv_gpu (natomwfc, eigenval_d, eigenvect_d, &
                                      doverlap_d, doverlap_inv_d)
       !
@@ -1370,6 +1368,12 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
       DEALLOCATE (doverlap_inv_d)
       DEALLOCATE (dwfc_d)
       !
+      CALL dev_buf%release_buffer( wfcatom_d, ierr )
+      CALL dev_buf%release_buffer( swfcatom_d, ierr )
+      CALL dev_buf%release_buffer( eigenvect_d, ierr )
+      DEALLOCATE(eigenval_d)
+      CALL dev_buf%release_buffer( overlap_inv_d, ierr )
+      !
    ENDIF
    ! 
    ! Finally, the derivative of the US operator: 
@@ -1407,11 +1411,6 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
    ENDIF
    !
    CALL dev_buf%release_buffer( wfcU_d, ierr )
-   CALL dev_buf%release_buffer( wfcatom_d, ierr )
-   IF (ALLOCATED(swfcatom))    CALL dev_buf%release_buffer( swfcatom_d, ierr )
-   IF (ALLOCATED(eigenvect))   CALL dev_buf%release_buffer( eigenvect_d, ierr )
-   IF (ALLOCATED(eigenval))    DEALLOCATE(eigenval_d)
-   IF (ALLOCATED(overlap_inv)) CALL dev_buf%release_buffer( overlap_inv_d, ierr )
    !
    CALL stop_clock_gpu( 'dprojdtau' )
    !
