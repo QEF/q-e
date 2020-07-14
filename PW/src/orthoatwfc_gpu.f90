@@ -406,3 +406,77 @@ SUBROUTINE ortho_swfc_gpu( npw, normalize_only, m, wfc_d, swfc_d, lflag )
   !      
 END SUBROUTINE ortho_swfc_gpu
 
+!
+!-----------------------------------------------------------------------
+SUBROUTINE calculate_doverlap_inv_gpu (m, e, work, doverlap, doverlap_inv)
+  !---------------------------------------------------------------------
+  !! This routine computes the derivative of transposed O^{-1/2}, i.e.
+  !! [d((O^{-1/2})^T)]_IJ, where O_IJ is the overlap matrix. 
+  !! Note, on the input this routine requires dO not transposed.
+  !! The solution is written in a closed form by solving the Lyapunov
+  !! equation (a particular case of the Sylvester equation).
+  !! Written by I. Timrov (June 2020)
+  !
+#if defined(__CUDA)  
+  USE cublas
+#endif
+  USE kinds,       ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  ! I/O variables
+  !
+  INTEGER, INTENT(IN)      :: m
+  !! The total number of atomic functions 
+  REAL(DP), INTENT(IN)     :: e(m)
+  !! The eigenvalues of the overlap matrix
+  COMPLEX(DP), INTENT(IN)  :: work(m,m)
+  !! The eigenvectors of the overlap matrix
+  COMPLEX(DP), INTENT(IN)  :: doverlap(m,m)
+  !! The derivative of the overlap matrix O_IJ (not transposed)  
+  COMPLEX(DP), INTENT(OUT) :: doverlap_inv(m,m)
+  !! The derivative of transposed O^{-1/2}
+  !
+  ! Local variables
+  INTEGER :: m1, m2, m3, m4
+  COMPLEX(DP), ALLOCATABLE :: aux(:,:)
+  !! eigenvectors of the overlap matrix
+  !! auxiliary array
+  !
+#if defined(__CUDA)  
+  attributes(DEVICE) :: e, work, doverlap, doverlap_inv, aux
+#endif
+  ALLOCATE (aux(m,m))
+  !
+  ! Compute (work^T) * (doverlap^T) * ((work^H)^T) 
+  ! and put the result back in doverlap
+  !
+  ! Compute aux = (work^H)*doverlap
+  CALL ZGEMM('C','N', m, m, m, (1.d0,0.d0), work, &
+              m, doverlap, m, (0.d0,0.d0), aux, m)
+  ! Compute (work^T) * (aux^T)
+  CALL ZGEMM('T','T', m, m, m, (1.d0,0.d0), work, &
+              m, aux, m, (0.d0,0.d0), doverlap, m)
+  !
+  !$cuf kernel do(2)
+  DO m1 = 1, m
+     DO m2 = 1, m
+        aux(m1,m2) = doverlap(m1,m2) / &
+                    (e(m1)*DSQRT(e(m2))+e(m2)*DSQRT(e(m1)))
+     ENDDO
+  ENDDO
+  !
+  ! Compute ((work^H)^T) * aux * (work^T)
+  !
+  ! Compute doverlap = (aux^T)*(work^H)
+  CALL ZGEMM('T','C', m, m, m, (1.d0,0.d0), aux, &
+              m, work, m, (0.d0,0.d0), doverlap, m)
+  ! Compute doverlap_inv = (doverlap^T)*(work^T)
+  CALL ZGEMM('T','T', m, m, m, (-1.d0,0.d0), doverlap, &
+              m, work, m, (0.d0,0.d0), doverlap_inv, m)
+  !
+  DEALLOCATE (aux)
+  !
+  RETURN
+  !
+END SUBROUTINE calculate_doverlap_inv_gpu

@@ -1137,13 +1137,12 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
    !
    CALL dev_buf%lock_buffer( wfcU_d, SHAPE(wfcU) , ierr )
    CALL dev_buf%lock_buffer( wfcatom_d, SHAPE(wfcatom) , ierr )
-   if (allocated(swfcatom)) CALL dev_buf%lock_buffer( swfcatom_d, SHAPE(swfcatom) , ierr )
-   if (allocated(eigenval)) ALLOCATE(eigenval_d, source=eigenval)
-   if (allocated(eigenvect)) CALL dev_buf%lock_buffer( eigenvect_d, SHAPE(eigenvect) , ierr )
-  if (allocated(overlap_inv))  CALL dev_buf%lock_buffer( overlap_inv_d, SHAPE(overlap_inv) , ierr )
+   IF (ALLOCATED(swfcatom)) CALL dev_buf%lock_buffer( swfcatom_d, SHAPE(swfcatom) , ierr )
+   IF (ALLOCATED(eigenval)) ALLOCATE(eigenval_d, source=eigenval)
+   IF (ALLOCATED(eigenvect)) CALL dev_buf%lock_buffer( eigenvect_d, SHAPE(eigenvect) , ierr )
+   IF (ALLOCATED(overlap_inv))  CALL dev_buf%lock_buffer( overlap_inv_d, SHAPE(overlap_inv) , ierr )
    IF ( ierr /= 0 ) CALL errore( 'force_hub_gpu', 'cannot allocate buffers', ierr )
    CALL dev_memcpy( wfcU_d , wfcU )
-   CALL dev_memcpy( wfcatom_d, wfcatom )
    !
    CALL dev_memset( dproj_d , (0.d0, 0.d0) )
    !
@@ -1206,8 +1205,11 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
                offpm = offsetU_back1(alpha) + m1 &
                        - ldim_std - 2*Hubbard_l_back(nt) - 1
          ENDIF
-         ! TODO: CUF KERNELS ARE FASTER HERE
-         dproj_d(offpm, :) = dproj0_d(m1, nb_s:nb_e)
+         !
+         !$cuf kernel do
+         DO ibnd=nb_s, nb_e
+            dproj_d(offpm, ibnd) = dproj0_d(m1, ibnd)
+         ENDDO
       ENDDO
       DEALLOCATE(dproj0_d) 
       !
@@ -1247,7 +1249,8 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
       CALL errore('dprojdtau_k','disabled when it is compiled by xlf.',1)
 #else
       offpm = oatwfc(na) ! offset
-   if (allocated(overlap_inv)) CALL dev_memcpy( overlap_inv_d, overlap_inv )
+      IF (ALLOCATED(overlap_inv)) CALL dev_memcpy( overlap_inv_d, overlap_inv )
+      CALL dev_memcpy( wfcatom_d, wfcatom )
       !$cuf kernel do(1)
       DO ig = 1, npw
          gvec = (g_d(ipol,igk_k_d(ig,ik)) + xk_d) * tpiba
@@ -1437,6 +1440,7 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
    !
    USE gvect_gpum,           ONLY : g_d
    USE uspp_gpum,            ONLY : vkb_d, qq_at_d, using_vkb_d, using_qq_at_d
+   USE device_util_m,        ONLY : dev_memcpy
    !
    IMPLICIT NONE
    !
@@ -1535,12 +1539,12 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
    ! Calculate \sum_jh qq_at(ih,jh) * dbetaB(jh)
    CALL ZGEMM('N', 'N', nh(nt), lB, nh(nt), (1.0d0,0.0d0), &
                qq, nh(nt), dbetaB, nh(nt),(0.0d0,0.0d0), aux, nh(nt))
-   dbetaB(:,:) = aux(:,:)
+   CALL dev_memcpy(dbetaB, aux)
    !
    ! Calculate \sum_jh qq_at(ih,jh) * betaB(jh)
    CALL ZGEMM('N', 'N', nh(nt), lB, nh(nt), (1.0d0,0.0d0), &
                qq, nh(nt), betaB, nh(nt),(0.0d0,0.0d0), aux, nh(nt))
-   betaB(:,:) = aux(:,:)
+   CALL dev_memcpy(betaB, aux)
    !
    DEALLOCATE ( aux )
    !
@@ -1729,10 +1733,19 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
                offpm = offsetU_back1(alpha) + m1 &
                        - ldim_std - 2*Hubbard_l_back(nt) - 1
          ENDIF
-         dproj_d(offpm, :) = dproj0_d(m1, nb_s:nb_e)
+         !$cuf kernel do
+         DO ibnd=nb_s, nb_e
+            dproj_d(offpm, ibnd) = dproj0_d(m1, ibnd)
+         ENDDO
       ENDDO
       !
-      dproj_d( offsetU(alpha)+1:offsetU(alpha)+ldim, :) = dproj0_d(:, nb_s:nb_e)
+      offpm = offsetU(alpha)
+      !$cuf kernel do(2)
+      DO ibnd=nb_s, nb_e
+         DO m1=1,ldim
+            dproj_d( m1 + offpm, ibnd) = dproj0_d(m1, ibnd)
+         ENDDO
+      ENDDO
       !
       DEALLOCATE( dproj0_d ) 
       !

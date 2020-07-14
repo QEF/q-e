@@ -1754,16 +1754,18 @@ CONTAINS
      END DO
      !
      IF (beta /= 0.D0) THEN
-!$cuf kernel do(2)
-        DO ii = 1, ld
-          DO jj = 1, k 
+      !!!! NOTA BENE: a bug in old compilers identifies these as non-tightly nested loops!
+      !!!!            to be fixed in next release.
+!$cuf kernel do(1)
+        DO jj = 1, k 
+          DO ii = 1, ld
             Y(ii,jj) = alpha * Xtmp(ii,jj) + beta * Y(ii,jj)
           END DO   
         END DO   
      ELSE
-!$cuf kernel do(2)
-        DO ii = 1, ld
-          DO jj = 1, k 
+!$cuf kernel do(1)
+        DO jj = 1, k 
+          DO ii = 1, ld
             Y(ii,jj) = alpha * Xtmp(ii,jj) 
           END DO   
         END DO   

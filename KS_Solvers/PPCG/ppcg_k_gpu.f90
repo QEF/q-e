@@ -571,15 +571,25 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
        K_d = K
        M_d = M 
        !
-       coord_psi_d(1 : l, 1 : l) = K_d(1 : l, 1 : l)
-       coord_w_d(1 : l, 1 : l) = K_d(l+1 : 2*l, 1 : l)
+       !$cuf kernel do(2)
+       do jj=1,l
+          do ii=1,l
+             coord_psi_d(ii, jj) = K_d(ii, jj)
+             coord_w_d(ii, jj) = K_d(ii+l, jj)
+          enddo
+       enddo
        !
        ! ... update the sub-block of P and AP
 !ev       IF ( MOD(iter, rr_step) /= 1 ) THEN
 !sdg      IF ( iter /= 1 ) THEN
        IF ( dimp == 3*l ) THEN
           !
-          coord_p_d(1 : l, 1 : l) = K_d(2*l+1 : 3*l, 1 : l)
+          !$cuf kernel do(2)
+          do jj=1,l
+             do ii=1,l
+                coord_p_d(ii, jj) = K_d(2*l+ii , jj)
+             enddo
+          enddo
           !
           call start_clock('ppcg:zgemm')
           call gpu_threaded_assign( buffer1_d,  p_d, kdimx, l, .true., col_idx_d, .false. )
