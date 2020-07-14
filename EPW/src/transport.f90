@@ -25,7 +25,7 @@
     !
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub, fsthick, eps_acustic, degaussw, restart,      &
                               nstemp, scattering_serta, scattering_0rta, shortrange, &
                               restart_step, restart_filq, vme, assume_metal

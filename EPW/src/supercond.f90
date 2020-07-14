@@ -179,7 +179,7 @@
     USE kinds,         ONLY : DP
     USE io_var,        ONLY : iua2ffil, iudosfil, iufillambda, iufillambdaFS
     USE io_files,      ONLY : prefix
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE cell_base,     ONLY : bg
     USE control_flags, ONLY : iverbosity
     USE elph2,         ONLY : nqtotf, wqf, wf

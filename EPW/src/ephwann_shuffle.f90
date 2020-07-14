@@ -22,7 +22,7 @@
   USE klist_epw,        ONLY : et_loc, xk_loc, isk_dummy
   USE cell_base,        ONLY : at, bg
   USE ions_base,        ONLY : nat, amass, ityp, tau
-  USE phcom,            ONLY : nmodes
+  USE modes,            ONLY : nmodes
   USE epwcom,           ONLY : nbndsub, fsthick, epwread, longrange,               &
                                epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
                                etf_mem, scr_typ, nw_specfun,                       &

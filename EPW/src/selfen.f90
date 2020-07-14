@@ -41,7 +41,7 @@
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
     USE io_var,        ONLY : linewidth_elself
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE epwcom,        ONLY : nstemp, nbndsub, shortrange, fsthick, ngaussw, degaussw, &
                               eps_acustic, efermi_read, fermi_energy, restart, restart_step
     USE pwcom,         ONLY : ef
@@ -560,7 +560,7 @@
     !-----------------------------------------------------------------------
     USE kinds,      ONLY : DP
     USE io_global,  ONLY : stdout
-    use phcom,      ONLY : nmodes
+    use modes,      ONLY : nmodes
     use epwcom,     ONLY : nbndsub, fsthick, efermi_read, fermi_energy,  &
                            nstemp, ngaussw, degaussw, shortrange,        &
                            nsmear, delta_smear, eps_acustic, specfun_ph, &

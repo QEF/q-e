@@ -28,7 +28,7 @@
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
     USE io_var,        ONLY : iuindabs
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE epwcom,        ONLY : nstemp, fsthick, degaussw, &
                               eps_acustic, efermi_read, fermi_energy,&
                               vme, omegamin, omegamax, omegastep

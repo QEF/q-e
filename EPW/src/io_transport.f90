@@ -28,7 +28,7 @@
     USE kinds,         ONLY : DP, i4b, i8b
     USE cell_base,     ONLY : omega
     USE io_global,     ONLY : stdout
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE epwcom,        ONLY : fsthick, eps_acustic, degaussw, nstemp, vme, ncarrier, &
                               assume_metal
     USE pwcom,         ONLY : ef
