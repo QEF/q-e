@@ -94,7 +94,6 @@
     WRITE(stdout,'(a)') "     Be aware that some consistency checks are therefore not done.                  "
     WRITE(stdout,'(a)') "     ------------------------------------------------------------------------ "
     WRITE(stdout,'(a)') "                      "
-    CALL epw_setup_restart()
   ELSE
     CALL epw_setup()
   ENDIF

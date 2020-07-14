@@ -25,7 +25,7 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub
     USE elph2,         ONLY : etf, ibndmin, nkqf, xqf, nbndfst,    &
                               nkf, epf17, xkf, nkqtotf, wf, nktotf
@@ -260,7 +260,7 @@
     !!
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3, assume_metal
-    USE elph2,         ONLY : nbndfst, transp_temp, nktotf
+    USE elph2,         ONLY : nbndfst, gtemp, nktotf
     USE constants_epw, ONLY : zero, two, kelvin2eV, ryd2ev, eps10, &
                               bohr2ang, ang2cm, hbarJ
     USE symm_base,     ONLY : nrot
@@ -317,7 +317,7 @@
     ! compute conductivity
     DO itemp = 1, nstemp
       carrier_density = 0.0
-      etemp = transp_temp(itemp)
+      etemp = gtemp(itemp)
       sigma(:, :) = zero
       fi_check(:) = zero
       DO ik = 1,  nktotf
@@ -464,7 +464,7 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3, assume_metal
-    USE elph2,         ONLY : nbndfst, transp_temp, nktotf
+    USE elph2,         ONLY : nbndfst, gtemp, nktotf
     USE constants_epw, ONLY : zero, two, kelvin2eV, ryd2ev, eps10, &
                               bohr2ang, ang2cm, hbarJ
     USE noncollin_module, ONLY : noncolin
@@ -519,7 +519,7 @@
     CALL prtheader_mob()
     DO itemp = 1, nstemp
       carrier_density = 0.0
-      etemp = transp_temp(itemp)
+      etemp = gtemp(itemp)
       sigma(:, :) = zero
       fi_check(:) = zero
       DO ik = 1,  nktotf
@@ -716,7 +716,8 @@
     !!
     USE io_global,     ONLY : stdout
     USE epwcom,        ONLY : liso, laniso, lreal, imag_read, wscut
-    USE eliashbergcom, ONLY : nsiw, nsw, estemp
+    USE elph2,         ONLY : gtemp
+    USE eliashbergcom, ONLY : nsiw, nsw
     USE constants_epw, ONLY : kelvin2eV
     USE constants,     ONLY : pi
     !
@@ -729,7 +730,7 @@
     !
     IF (cal_type == 1) THEN
       WRITE(stdout, '(a)') '    '
-      WRITE(stdout, '(5x, a, i3, a, f12.5, a, a, i3, a)') 'temp(', itemp, ') = ', estemp(itemp) / kelvin2eV, ' K'
+      WRITE(stdout, '(5x, a, i3, a, f12.5, a, a, i3, a)') 'temp(', itemp, ') = ', gtemp(itemp) / kelvin2eV, ' K'
       WRITE(stdout, '(a)') '    '
       IF (liso) &
         WRITE(stdout, '(5x, a)') 'Solve isotropic Eliashberg equations on imaginary-axis'
@@ -739,7 +740,7 @@
         WRITE(stdout, '(5x, a)') 'Read from file delta and znorm on imaginary-axis '
       WRITE(stdout, '(a)') '    '
       WRITE(stdout, '(5x, a, i6, a, i6)') 'Total number of frequency points nsiw(', itemp, ') = ', nsiw(itemp)
-      WRITE(stdout, '(5x, a, f10.4)') 'Cutoff frequency wscut = ', (2.d0 * nsiw(itemp) + 1) * pi * estemp(itemp)
+      WRITE(stdout, '(5x, a, f10.4)') 'Cutoff frequency wscut = ', (2.d0 * nsiw(itemp) + 1) * pi * gtemp(itemp)
       WRITE(stdout, '(a)') '    '
     ENDIF
     !
@@ -767,7 +768,7 @@
     !
     IF (cal_type == 4) THEN
       WRITE(stdout, '(a)') '    '
-      WRITE(stdout, '(5x, a, i3, a, f12.5, a, a, i3, a)') 'temp(', itemp, ') = ', estemp(itemp) / kelvin2eV, ' K'
+      WRITE(stdout, '(5x, a, i3, a, f12.5, a, a, i3, a)') 'temp(', itemp, ') = ', gtemp(itemp) / kelvin2eV, ' K'
       WRITE(stdout, '(a)') '    '
       IF (liso .AND. lreal) &
         WRITE(stdout, '(5x, a)') 'Solve isotropic Eliashberg equations on real-axis'
@@ -863,7 +864,7 @@
     !!
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub, filqf, filkf
     USE elph2,         ONLY : etf, nkf, nqtotf, wf, xkf, xqf, nkqtotf, nktotf
     USE constants_epw, ONLY : ryd2mev, ryd2ev, zero

@@ -51,7 +51,7 @@
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
     USE elph2,         ONLY : dynq
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE constants_epw, ONLY : cone, czero, twopi, rydcm1, eps10, cmm12meV
     USE control_flags, ONLY : iverbosity
     USE cell_base,     ONLY : at, bg

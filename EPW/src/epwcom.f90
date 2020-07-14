@@ -212,8 +212,8 @@
   !! Switch for symmetry operations
   INTEGER :: nwanxx = 200
   !! parameter used in writing prefix.win file.
-  INTEGER :: ntempxx = 25
-  !! Maximum number of wannier functions
+  INTEGER :: ntempxx = 50
+  !! Maximum number of temperatures
   INTEGER :: etf_mem
   !! If 0, all in memory. If 1, less is stored in memory (read files).
   INTEGER :: scr_typ
@@ -222,6 +222,16 @@
   !! band index for which the cumulant calculation is done
   INTEGER :: mob_maxiter
   !! Maximum number of iteration for the IBTE
+  INTEGER :: nstemp
+  !! nr. of temperature points for temperature dependent caclulations
+  REAL(KIND = DP) :: eptemp
+  ! temperature for the electronic Fermi occupations in the e-p calculation - deprecated as an input parameter
+  REAL(KIND = DP) :: tempsmin
+  !! min. temperature in Eliashberg equations - deprecated as an input parameter
+  REAL(KIND = DP) :: tempsmax
+  !! max. temperature - deprecated as an input parameter
+  REAL(KIND = DP) :: temps(50)
+  !! input temperature array (units of Kelvin)
   !
   ! Superconductivity
   INTEGER :: nswfc
@@ -230,8 +240,6 @@
   !! nr. of grid points between (wsfc,wscut)
   INTEGER :: nswi
   !! nr. of grid points for Eliashberg equations of imaginary axis
-  INTEGER :: nstemp
-  !! nr. of temperature points for Eliashberg equations
   INTEGER :: nsiter
   !! nr. of iterations for self-consistency
   INTEGER :: broyden_ndim
@@ -245,8 +253,6 @@
   !! smearing width for Fermi surface average in e-ph coupling after wann interp
   REAL(KIND = DP) :: fsthick
   !! thickness of the Fermi shell for averaging the e-ph matrix element
-  REAL(KIND = DP) :: eptemp
-  ! temperature for the electronic Fermi occupations in the e-p calculation
   REAL(KIND = DP) :: wmin
   !! min frequency for frequency scan in \delta( e_k - e_k+q - w ) when strict sel. rule is applied
   REAL(KIND = DP) :: wmax
@@ -295,10 +301,6 @@
   !! power used to define a non-uniform grid between wsfc and wscut
   REAL(KIND = DP) :: wscut
   !! upper limit cutoff frequency in Eliashberg equations (at least 5 times wsphmax)
-  REAL(KIND = DP) :: tempsmin
-  !! min. temperature in Eliashberg equations
-  REAL(KIND = DP) :: tempsmax
-  !! max. temperature
   REAL(KIND = DP) :: broyden_beta
   !! mixing factor for broyden mixing
   REAL(KIND = DP) :: conv_thr_raxis
@@ -311,15 +313,13 @@
   REAL(KIND = DP) :: gap_edge
   !! initial guess of the superconducting gap
   REAL(KIND = DP) :: max_memlt
-  !! maximum memory that can be allocated per pool
+  !! maximum memory that can be allocated per poolnstemp) 
   REAL(KIND = DP) :: fermi_energy
   !! fermi energy is given in the input file
   REAL(KIND = DP) :: wmin_specfun
   !! min frequency in electron spectral function due to e-p interaction
   REAL(KIND = DP) :: wmax_specfun
   !! max frequency in electron spectral function due to e-p `interaction
-  REAL(KIND = DP) :: temps(50)
-  !! temperature entering in the Eliashberg equtions (units of Kelvin)
   !
   ! Conductivity
   REAL(KIND = DP) :: scissor

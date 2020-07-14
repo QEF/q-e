@@ -47,7 +47,7 @@
   a2f         = .true.
 
   fsthick     = 20 ! eV
-  eptemp      = 500 ! K
+  temps       = 500 ! K
   degaussw    = 0.2  ! eV
   degaussq    = 0.1 ! meV
 
