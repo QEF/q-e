@@ -991,9 +991,10 @@
     !
     ! loop over temperatures can be introduced
     !
+    inv_degaussw = one / degaussw
+    sq_degaussw = degaussw * degaussw
     DO itemp = 1, nstemp
       inv_eptemp   = one / gtemp(itemp)
-      inv_degaussw = one / degaussw 
       ! energy range and spacing for spectral function
       !
       dw = (wmax_specfun - wmin_specfun) / DBLE(nw_specfun - 1)
@@ -1186,6 +1187,7 @@
                     esigmai_all(ibnd, ik + lower_bnd - 1, iw, itemp) = esigmai_all(ibnd, ik + lower_bnd - 1, iw, itemp) + &
                                                                        g2 * weight
                     !
+!                    WRITE(stdout, '(5x, f8.5, f8.5)') g2_tmp, dipole
                   ENDDO
                 ENDDO !jbnd
               ENDDO !ibnd
