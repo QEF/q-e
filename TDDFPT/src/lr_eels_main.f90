@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,7 +24,7 @@ PROGRAM lr_eels_main
                                   & d0psi, d0psi2, LR_iteration, LR_polarization, &
                                   & plot_type, nbnd_total, pseudo_hermitian, &
                                   & itermax_int, revc0, lr_io_level, code2, &
-                                  & eels, approximation, sternheimer, fru, fiu, &
+                                  & eels, approximation, calculator, fru, fiu, &
                                   & current_w, nfs, start_freq, last_freq, chirr, &
                                   & chirz, chizz, chizr, epsm1 
   USE ions_base,             ONLY : tau,nat,atm,ityp
@@ -138,9 +138,12 @@ PROGRAM lr_eels_main
   !
   CALL lr_dv_setup()
   !
-  IF (sternheimer) THEN
+  IF (trim(calculator)=='sternheimer') THEN
      !
      ! Sternheimer algorithm
+     !
+     WRITE(stdout,'(/,5X,"STERNHEIMER LINEAR-RESPONSE SPECTRUM CALCULATION")')
+     WRITE(stdout,'(5X," ")')
      !
      IF (okvan) THEN
         ALLOCATE (intq (nhm, nhm, nat) )
@@ -164,17 +167,18 @@ PROGRAM lr_eels_main
      chizz=(0.0_DP,0.0_DP)
      epsm1=(0.0_DP,0.0_DP)
      !
+     WRITE( stdout, '(10x,"q = (",3f10.5,")")') xq(1:3)
+     !
      ! frequencies loop
      !
      DO iu = start_freq, last_freq
         !
         current_w=CMPLX(fru(iu), fiu(iu))
+        !
         WRITE( stdout, '(/,5x,70("-"))')
-        WRITE( stdout, '(10x,"q=(",3f15.5,")")') xq(1:3)
-
-        WRITE( stdout, '(/,10x,"Susceptibility at &
-              &frequency",f9.4," +",f9.4," i Ry",i6," / ", i6)') current_w, &
-                                                         iu, nfs
+        WRITE( stdout, '(/,20x," Step ",i5,"  /",i5)') iu, nfs
+        WRITE( stdout, '(/,10x," &
+              &  Frequency = (",f8.4,", ",f8.4,") Ry")') current_w
         !
         CALL one_sternheimer_step( iu, 1 )
         ! 
@@ -193,11 +197,19 @@ PROGRAM lr_eels_main
         IF (noncolin) DEALLOCATE(intq_nc)
      ENDIF
      !
-  ELSE
+  ELSEIF (trim(calculator)=='lanczos') THEN
+     !
+     ! Lanczos algorithm
      !
      WRITE(stdout,'(/,5X,"LANCZOS LINEAR-RESPONSE SPECTRUM CALCULATION")')
      WRITE(stdout,'(5X," ")')
      WRITE(stdout,'(5x,"Number of Lanczos iterations = ",i6)') itermax
+     !
+     IF (pseudo_hermitian) THEN
+        WRITE( stdout, '(/5x,"Using the pseudo-Hermitian Lanczos algorithm.")' )
+     ELSE
+        WRITE( stdout, '(/5x,"Using the non-Hermitian Lanczos algorithm.")' )
+     ENDIF
      !
      ! Lanczos loop where the real work happens
      !
@@ -280,13 +292,17 @@ PROGRAM lr_eels_main
      ! 
      WRITE(stdout,'(5x,"End of Lanczos iterations")')
      !
+  ELSE
+     !
+     CALL errore('lr_eels_main', 'Not known type of the calculator',1)
+     !
   ENDIF
   !
   ! Deallocate PW variables
   !
   CALL clean_pw( .FALSE. )
   !
-  WRITE(stdout,'(5x,"Finished linear response calculation...")')
+  WRITE(stdout,'(/5x,"Finished linear response calculation...")')
   !
   CALL stop_clock('lr_eels_main')
   !
@@ -313,31 +329,20 @@ SUBROUTINE lr_print_preamble_eels()
                    & /5x,"Electron energy loss and inelastic x-ray scattering cross sections",   &
                    & /5x,"from time-dependent density-functional perturbation theory",           &
                    & /5x,"Phys. Rev. B 88, 064301 (2013); ibid. 91, 139901 (2015). ")' )
-    WRITE( stdout, '(/5x,"and")' )
     WRITE( stdout, '(/5x,"I. Timrov, N. Vast, R. Gebauer, and S. Baroni,",                            &
                    & /5x,"turboEELS - A code for the simulation of the electron energy loss and",     &
                    & /5x,"inelastic X-ray scattering spectra using the Liouville - Lanczos approach", &
                    & /5x,"to time-dependent density-functional perturbation theory", &
                    & /5x,"Comp. Phys. Commun. 196, 460 (2015). ")' )
-    WRITE( stdout, '(/5x,"and for Sternheimer")' )
-    WRITE( stdout, '(/5x,"Oleksandr Motornyi1, Nathalie Vast, Iurii Timrov, Oscar Baseggio,",         &
-                   & /5x,"Stefano Baroni, and Andrea Dal Corso,",                                     &
+    WRITE( stdout, '(/5x,"O. Motornyi, N. Vast, I. Timrov, O. Baseggio, S. Baroni, and A. Dal Corso", &
                    & /5x,"Electron energy loss spectroscopy of bulk gold with ultrasoft",             &
-                   & /5x,"pseudopotentials and theLiouville-Lanczos method",                          &
-                   & /5x,"Phys. Rev. B (2020). ")' )
+                   & /5x,"pseudopotentials and the Liouville-Lanczos method",                         &
+                   & /5x,"accepted to Phys. Rev. B (2020). ")' )
 
 
     WRITE( stdout, '(/5x,"----------------------------------------")' )
     !
     WRITE( stdout, '(/5x,"Using the ' // trim(approximation) // ' approximation.")' )
-    !
-    if (sternheimer) WRITE( stdout, '(/5x,"Using Sternheimer algorithm.")' )
-    !
-    If (pseudo_hermitian) THEN
-       WRITE( stdout, '(/5x,"Using the pseudo-Hermitian Lanczos algorithm.")' )
-    ELSE
-       WRITE( stdout, '(/5x,"Using the non-Hermitian Lanczos algorithm.")' )
-    ENDIF
     !
     IF (okvan) WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")')
     !
@@ -346,6 +351,7 @@ SUBROUTINE lr_print_preamble_eels()
 END SUBROUTINE lr_print_preamble_eels
 
 SUBROUTINE write_chi_on_disk(iu)
+
     USE kinds,            ONLY : DP
     USE lr_variables,     ONLY : current_w, fru, fiu, &
                                  chirr, chirz, chizz, &
@@ -353,6 +359,7 @@ SUBROUTINE write_chi_on_disk(iu)
     USE lsda_mod,         ONLY : nspin, lsda
     USE mp_images,        ONLY : my_image_id
     USE io_global,        ONLY : stdout, ionode
+    USE io_files,         ONLY : prefix
     USE noncollin_module, ONLY : noncolin, nspin_mag
 
     IMPLICIT NONE
@@ -370,7 +377,7 @@ SUBROUTINE write_chi_on_disk(iu)
           !   nonmagnetic case or noncollinear with time reversal
           !
           iu_epsil=2
-          filename='chirr'
+          filename = trim(prefix) // '.plot_chi.dat'
           IF (my_image_id>0) filename=TRIM(filename)//'_'//int_to_char(my_image_id)
           INQUIRE(FILE=TRIM(filename), exist=exst)
           IF (exst.AND.iu>1) THEN
@@ -379,22 +386,18 @@ SUBROUTINE write_chi_on_disk(iu)
           ELSE
              OPEN (UNIT=iu_epsil, FILE=TRIM(filename), &
                                     STATUS='unknown', FORM='formatted')
-             WRITE(iu_epsil,'("#    Re(w)     Im(w)     Re(chirr)       Im(chirr)&
-                                &      Re (1/chirr)      Im(1/chirr) ")')
+             WRITE(iu_epsil,'("# \hbar \omega(Ry)       Re(chi)         Im(chi) ")')
           END IF
           !
-          epsi = (0.0_DP,0.0_DP)
-          IF (ABS(chirr(iu))>1.D-10) epsi = CMPLX(1.0_DP,0.0_DP) / chirr(iu)
-          WRITE(iu_epsil,'(2f10.5, 4e15.7)') fru(iu), fiu(iu),   &
-               DREAL(chirr(iu)), DIMAG(chirr(iu)), &
-               DREAL(epsi), DIMAG(epsi)
+          WRITE(iu_epsil,'(4x,f12.8,4x,e15.7,2x,e15.7)') fru(iu), &
+               DREAL(chirr(iu)), DIMAG(chirr(iu))
           CLOSE(iu_epsil)
        ELSEIF (nspin_mag==2) THEN
           !
           !  lsda case
           !
           iu_epsil=2
-          filename='chimag_re'
+          filename = trim(prefix) // '.plot_re_chi_mag.dat'
           IF (my_image_id>0) filename=TRIM(filename)//'_'//int_to_char(my_image_id)
           INQUIRE(FILE=TRIM(filename), exist=exst)
           IF (exst.AND.iu>1) THEN
@@ -403,18 +406,18 @@ SUBROUTINE write_chi_on_disk(iu)
           ELSE
              OPEN (UNIT=iu_epsil, FILE=TRIM(filename), STATUS='unknown', &
                                                 FORM='formatted')
-             WRITE(iu_epsil,'("#  Re(w)     Im(w)     rr       rz        zz&
+             WRITE(iu_epsil,'("#  \hbar \omega(Ry)        rr       rz        zz&
                               &         +-        -+       xx        xy")')
           ENDIF
           !
-          WRITE(iu_epsil,'(2f10.5,3e15.7)') fru(iu), fiu(iu),   &
-                     DREAL(chirr(iu)), DREAL(chirz(iu)), &
+          WRITE(iu_epsil,'(4x,f12.8,4x,3e15.7)') fru(iu), &
+                     DREAL(chirr(iu)), DREAL(chirz(iu)),  &
                      DREAL(chizz(iu))
           !
           CLOSE(iu_epsil)
           !
           iu_epsil=2
-          filename='chimag_im'
+          filename = trim(prefix) // '.plot_im_chi_mag.dat'
           IF (my_image_id>0) filename=TRIM(filename)//'_'//int_to_char(my_image_id)
           INQUIRE(FILE=TRIM(filename), exist=exst)
           IF (exst.AND.iu>1) THEN
@@ -423,11 +426,11 @@ SUBROUTINE write_chi_on_disk(iu)
           ELSE
              OPEN (UNIT=iu_epsil, FILE=TRIM(filename), &
                                STATUS='unknown', FORM='formatted')
-             WRITE(iu_epsil,'("#  Re(w)     Im(w)     rr       rz        zz&
+             WRITE(iu_epsil,'("#  \hbar \omega(Ry)     rr       rz        zz &
                               &         +-        -+       xx        xy")')
           ENDIF
           !
-          WRITE(iu_epsil,'(2f10.5,3e15.7)') fru(iu), fiu(iu),   &
+          WRITE(iu_epsil,'(4x,f12.8,4x,3e15.7)') fru(iu),   &
                         DIMAG(chirr(iu)), DIMAG(chirz(iu)), &
                         DIMAG(chizz(iu))
           !
@@ -435,12 +438,13 @@ SUBROUTINE write_chi_on_disk(iu)
        ELSE
           !
           ! Noncollinear case: not yet implemented
+          CALL errore('write_chi_on_disk', 'Noncollinear case not implemented yet',1)
           !
        ENDIF
        !
        IF (.NOT.lsda) THEN
           iu_epsil=2
-          filename='epsilon'
+          filename = trim(prefix) // '.plot_eps.dat'
           IF (my_image_id>0) filename=TRIM(filename)//'_'//int_to_char(my_image_id)
           INQUIRE(FILE=TRIM(filename), exist=exst)
           IF (exst.AND.iu>1) THEN
@@ -449,18 +453,19 @@ SUBROUTINE write_chi_on_disk(iu)
           ELSE
              OPEN (UNIT=iu_epsil, FILE=TRIM(filename), STATUS='unknown', &
                                                             FORM='formatted')
-             WRITE(iu_epsil,'("#       Re(w)     Im(w)     Re(1/eps)      Im(1/eps)&
-                           &      Re (eps)      Im(eps) ")')
+             WRITE(iu_epsil,'("#  \hbar \omega(Ry)     Re(1/eps)     -Im(1/eps)&
+                           &      Re(eps)      Im(eps) ")')
           ENDIF
           !
           epsi = (0.0_DP,0.0_DP)
           IF (ABS(epsm1(iu))>1.D-10) epsi = CMPLX(1.0_DP,0.0_DP) / epsm1(iu)
-             WRITE(iu_epsil,'(i6, 2f8.5, 4e14.6)') iu, fru(iu), fiu(iu),   &
-                     DREAL(epsm1(iu)), DIMAG(epsm1(iu)), &
+             WRITE(iu_epsil,'(4x,f12.8,4x,4e14.6)') fru(iu),  &
+                     DREAL(epsm1(iu)), -DIMAG(epsm1(iu)), &
                      DREAL(epsi), DIMAG(epsi)
           !
           CLOSE(iu_epsil)
        ENDIF
+       !
     ENDIF
     !
     RETURN

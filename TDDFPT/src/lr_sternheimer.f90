@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -679,7 +679,7 @@ dvpsi =(0.0d0, 0.0d0)
        WRITE(stdout, '(46x,f9.4," +",f9.4," i eV")') current_w * rytoev
        WRITE(stdout,'(/,6x,"epsilon^-1(q,w) =",2f15.6)') epsm1(iu)
        !
-       WRITE( stdout, '(/,5x,"Charge-charge susceptibility:")')
+       WRITE( stdout, '(/,6x,"Charge-charge susceptibility:")')
        !
        WRITE(stdout,'(/,6x,"chirr(q,w) =",2f15.6)') chirr(iu)
        IF (lsda) THEN

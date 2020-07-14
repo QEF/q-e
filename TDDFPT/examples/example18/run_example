@@ -10,8 +10,9 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use pw.x, turbo_eels.x, and turbo_spectrum.x"
-$ECHO "to calculate the electron energy loss spectrum of bulk bismuth."
+$ECHO "This example shows how to use pw.x and turbo_eels.x"
+$ECHO "to calculate the electron energy loss spectrum of bulk Al"
+$ECHO "using the Sternheimer algorithm."
 
 # set the needed environment variables
 . ../../../environment_variables
@@ -127,18 +128,17 @@ cat > $PREFIX.tddfpt.in << EOF
    restart = .false.
 /
 &lr_control
-    itermax = 100
-    sternheimer      = .true.
-    q1               = 0.621
-    q2               = 0.0
-    q3               = 0.0
+   calculator = 'sternheimer'
+   itermax = 100
+   q1 = 0.621
+   q2 = 0.0
+   q3 = 0.0
 /
 FREQUENCIES
 100
 0.01  0.1
 3.6   0.1
 /
-
 EOF
 $ECHO "  Running the TDDFPT calculation for $PREFIX..."
 $TURBO_EELS_COMMAND < $PREFIX.tddfpt.in > $PREFIX.tddfpt.out

@@ -20,7 +20,7 @@ SUBROUTINE lr_init_nfo()
   USE ions_base,            ONLY : nat, tau
   USE klist,                ONLY : nks,xk,ngk,igk_k
   USE wvfct,                ONLY : nbnd
-  USE lr_variables,         ONLY : lr_verbosity, eels, size_evc, sternheimer, &
+  USE lr_variables,         ONLY : lr_verbosity, eels, size_evc, calculator, &
                                  & lrdrho, nwordd0psi, iund0psi, iudwf, iu1dwf,&
                                  & iundvpsi
   USE io_global,            ONLY : stdout
@@ -98,7 +98,7 @@ SUBROUTINE lr_init_nfo()
      !
      size_evc = nbnd * npwx * npol * nksq
      nwordwfc = nbnd * npwx * npol
-     IF (sternheimer) THEN
+     IF (trim(calculator)=='sternheimer') THEN
         lrdrho = 2 * dfftp%nr1x * dfftp%nr2x * dfftp%nr3x * nspin_mag
         nwordd0psi = nbnd * npwx * npol * nksq
         CALL open_buffer ( iundvpsi, 'dvpsi.', nwordd0psi, io_level, exst_mem, exst)
@@ -164,7 +164,7 @@ SUBROUTINE lr_init_nfo()
      !
      alpha_pv = 0.0d0
      !
-     IF (sternheimer) THEN
+     IF (trim(calculator)=='sternheimer') THEN
         !
         ! Setup all gradient correction stuff
         !
