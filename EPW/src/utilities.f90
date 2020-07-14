@@ -393,7 +393,7 @@
     USE cell_base,     ONLY : alat, bg
     USE elph2,         ONLY : nbndfst, nkf, dmef, vmef, ibndmin, etf
     USE epwcom,        ONLY : vme, nqf1, nqf2, nqf3
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE constants_epw, ONLY : eps40, ryd2mev, twopi, zero, two, eps6, eps8, eps4
     !
     IMPLICIT NONE

@@ -21,7 +21,8 @@ CONTAINS
         USE cell_base,     ONLY : at, bg, omega, alat
         USE start_k,       ONLY : nk1, nk2, nk3
         USE ions_base,     ONLY : nat, amass, ityp, tau
-        USE phcom,         ONLY : nq1, nq2, nq3, nmodes
+        USE phcom,         ONLY : nq1, nq2, nq3
+        USE modes,         ONLY : nmodes
         USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange, &
             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
             etf_mem, scr_typ, &
@@ -131,7 +132,8 @@ CONTAINS
         USE cell_base,     ONLY : at, bg, omega, alat
         USE start_k,       ONLY : nk1, nk2, nk3
         USE ions_base,     ONLY : nat, amass, ityp, tau
-        USE phcom,         ONLY : nq1, nq2, nq3, nmodes
+        USE phcom,         ONLY : nq1, nq2, nq3
+        USE modes,         ONLY : nmodes
         USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange, &
             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen,&
             etf_mem, scr_typ,&
@@ -301,7 +303,8 @@ CONTAINS
         USE cell_base,     ONLY : at, bg, omega, alat
         USE start_k,       ONLY : nk1, nk2, nk3
         USE ions_base,     ONLY : nat, amass, ityp, atm, ntyp => nsp, tau
-        USE phcom,         ONLY : nq1, nq2, nq3, nmodes
+        USE phcom,         ONLY : nq1, nq2, nq3
+        USE modes,         ONLY : nmodes
         USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange, &
             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
             etf_mem, scr_typ, &
@@ -467,7 +470,8 @@ CONTAINS
         USE cell_base,     ONLY : at, bg, omega, alat
         USE start_k,       ONLY : nk1, nk2, nk3
         USE ions_base,     ONLY : nat, amass, ityp, atm, ntyp => nsp, tau
-        USE phcom,         ONLY : nq1, nq2, nq3, nmodes
+        USE phcom,         ONLY : nq1, nq2, nq3
+        USE modes,         ONLY : nmodes
         USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange, &
             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
             etf_mem, scr_typ, &
@@ -634,7 +638,8 @@ CONTAINS
         USE cell_base,     ONLY : at, bg, omega, alat
         USE start_k,       ONLY : nk1, nk2, nk3
         USE ions_base,     ONLY : nat, amass, ityp, atm, ntyp => nsp, tau
-        USE phcom,         ONLY : nq1, nq2, nq3, nmodes
+        USE phcom,         ONLY : nq1, nq2, nq3
+        USE modes,         ONLY : nmodes
         USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange, &
             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
             etf_mem, scr_typ, &
@@ -899,7 +904,7 @@ CONTAINS
         USE kinds,         ONLY : dp
         use test_tools, only : para_write
         USE io_global,     ONLY : stdout,ionode_id, meta_ionode_id
-        USE phcom,         ONLY : nmodes
+        USE modes,         ONLY : nmodes
         USE epwcom,        ONLY : nbndsub, shortrange, restart_polaron,&
             fsthick, eptemp, ngaussw, degaussw,spherical_cutoff,&
             eps_acustic, efermi_read, fermi_energy, lscreen, &

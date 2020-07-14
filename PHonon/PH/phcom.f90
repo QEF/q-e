@@ -9,35 +9,6 @@
 !
 ! ... Common variables for the phonon program
 !
-!MODULE modes
-!  USE kinds,  ONLY : DP
-!  !
-!  ! ... The variables needed to describe the modes and the small group of q
-!  !
-!  SAVE
-!  !
-! INTEGER :: nirr, nmodes
-!  ! number of irreducible representations contained in the dynamical matrix
-!  ! number of modes
-!  INTEGER, ALLOCATABLE, TARGET :: npert(:) !3 * nat )
-!  ! the number of perturbations per IR
-!  INTEGER :: npertx
-!  ! max number of perturbations per IR
-!  COMPLEX (DP), POINTER :: &
-!       u(:,:),                     &!  3 * nat, 3 * nat),
-!       t(:,:,:,:),                 &! npertx, npertx, 48,3 * nat),
-!       tmq(:,:,:)                   ! npertx, npertx, 3 * nat)
-!  ! the transformation modes patterns
-!  ! the mode for deltarho
-!  ! the symmetry in the base of the pattern
-!  ! the symmetry q<->-q in the base of the pa
-!
-!  CHARACTER(15), ALLOCATABLE :: name_rap_mode(:) ! symmetry type of each mode
-!  INTEGER, ALLOCATABLE :: num_rap_mode(:)  ! number of the representation for
-!                                           ! each mode
-!  !
-!END MODULE modes
-!
 MODULE cryst_ph
    !  
    USE kinds,  ONLY : DP

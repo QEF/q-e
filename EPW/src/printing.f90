@@ -25,7 +25,7 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub
     USE elph2,         ONLY : etf, ibndmin, nkqf, xqf, nbndfst,    &
                               nkf, epf17, xkf, nkqtotf, wf, nktotf
@@ -863,7 +863,7 @@
     !!
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub, filqf, filkf
     USE elph2,         ONLY : etf, nkf, nqtotf, wf, xkf, xqf, nkqtotf, nktotf
     USE constants_epw, ONLY : ryd2mev, ryd2ev, zero
