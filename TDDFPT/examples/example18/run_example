@@ -10,15 +10,16 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use pw.x, turbo_eels.x, and turbo_spectrum.x"
-$ECHO "to calculate the electron energy loss spectrum of bulk bismuth."
+$ECHO "This example shows how to use pw.x and turbo_eels.x"
+$ECHO "to calculate the electron energy loss spectrum of bulk Al"
+$ECHO "using the Sternheimer algorithm."
 
 # set the needed environment variables
 . ../../../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pw.x turbo_eels.x turbo_spectrum.x"
-PSEUDO_LIST="Bi.rel-pz-dn-rrkjus_psl.1.0.0.UPF"
+BIN_LIST="pw.x turbo_eels.x"
+PSEUDO_LIST="Al.pz-vbc.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -73,11 +74,9 @@ $ECHO " done"
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 TURBO_EELS_COMMAND="$PARA_PREFIX $BIN_DIR/turbo_eels.x $PARA_POSTFIX"
-TURBO_SPECTRUM_COMMAND="$PARA_PREFIX $BIN_DIR/turbo_spectrum.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running pw.x as:             $PW_COMMAND"
 $ECHO "  running turbo_eels.x as:     $TURBO_EELS_COMMAND"
-$ECHO "  running turbo_spectrum.x as: $TURBO_SPECTRUM_COMMAND"
 $ECHO
 
 # clean TMP_DIR
@@ -85,7 +84,7 @@ $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
 $ECHO " done"
 
-PREFIX='Bi'
+PREFIX='Al'
 
 # self-consistent calculation
 cat > $PREFIX.scf.in << EOF
@@ -97,29 +96,24 @@ cat > $PREFIX.scf.in << EOF
     outdir='$TMP_DIR/'
  /
  &system
-    ibrav = 5,
-    celldm(1) = 8.880,
-    celldm(4) = 0.530,
-    nat = 2,
-    ntyp = 1,
-    ecutwfc= 20,
-    ecutrho= 160,
-    occupations = 'smearing',
-    smearing = 'mv',
-    degauss = 0.02,
-    lspinorb = .true.
-    noncolin = .true.
+    ibrav=  2,
+    celldm(1) =7.60,
+    nat=  1,
+    ntyp= 1,
+    smearing='mp'
+    degauss=0.02,
+    occupations='smearing'
+    ecutwfc =16.0,
  /
  &electrons
     conv_thr =  1.0d-10
  /
 ATOMIC_SPECIES
-Bi  208.98038  Bi.rel-pz-dn-rrkjus_psl.1.0.0.UPF
-ATOMIC_POSITIONS {alat}
-Bi   0.235588863   0.235588863   0.235588863
-Bi  -0.235588863  -0.235588863  -0.235588863
-K_POINTS {automatic}
-2 2 2 0 0 0
+ Al  0.0  Al.pz-vbc.UPF
+ATOMIC_POSITIONS (alat)
+ Al 0.00 0.00 0.00
+K_POINTS AUTOMATIC
+3 3 3 1 1 1
 EOF
 $ECHO "  Running the SCF calculation for $PREFIX..."
 $PW_COMMAND < $PREFIX.scf.in > $PREFIX.scf.out
@@ -131,38 +125,22 @@ cat > $PREFIX.tddfpt.in << EOF
  &lr_input
    prefix = '$PREFIX',
    outdir = '$TMP_DIR/',
-   restart_step = 250,
    restart = .false.
- /
- &lr_control
-   calculator = 'lanczos',
-   itermax = 500,
-   q1 = 0.000,
-   q2 = 0.000,
-   q3 = 0.150
- /
+/
+&lr_control
+   calculator = 'sternheimer'
+   itermax = 100
+   q1 = 0.621
+   q2 = 0.0
+   q3 = 0.0
+/
+FREQUENCIES
+100
+0.01  0.1
+3.6   0.1
+/
 EOF
 $ECHO "  Running the TDDFPT calculation for $PREFIX..."
 $TURBO_EELS_COMMAND < $PREFIX.tddfpt.in > $PREFIX.tddfpt.out
 $ECHO " done"
 
-
-# Perform the postprocessing spectrum calculation
-cat > $PREFIX.tddfpt_pp.in << EOF
- &lr_input
-   prefix = '$PREFIX',
-   outdir = '$TMP_DIR/',
-   eels = .true.
-   itermax0 = 500,
-   itermax  = 10000,
-   extrapolation = "osc",
-   epsil = 0.035,
-   units = 1,
-   start = 0.0,
-   end   = 50.0,
-   increment = 0.1
- /
-EOF
-$ECHO "  Running the postprocessing spectrum calculation for $PREFIX..."
-$TURBO_SPECTRUM_COMMAND < $PREFIX.tddfpt_pp.in > $PREFIX.tddfpt_pp.out
-$ECHO " done"

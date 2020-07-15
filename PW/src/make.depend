@@ -614,10 +614,12 @@ force_hub.o : ../../Modules/becmod.o
 force_hub.o : ../../Modules/cell_base.o
 force_hub.o : ../../Modules/control_flags.o
 force_hub.o : ../../Modules/io_files.o
+force_hub.o : ../../Modules/io_global.o
 force_hub.o : ../../Modules/ions_base.o
 force_hub.o : ../../Modules/kind.o
 force_hub.o : ../../Modules/mp_bands.o
 force_hub.o : ../../Modules/mp_pools.o
+force_hub.o : ../../Modules/noncol.o
 force_hub.o : ../../Modules/recvec.o
 force_hub.o : ../../Modules/wavefunctions.o
 force_hub.o : ../../UtilXlib/mp.o
@@ -712,7 +714,7 @@ gen_at_dj.o : ../../Modules/kind.o
 gen_at_dj.o : ../../Modules/recvec.o
 gen_at_dj.o : ../../upflib/atom.o
 gen_at_dj.o : ../../upflib/uspp.o
-gen_at_dj.o : ldaU.o
+gen_at_dj.o : atomic_wfc_mod.o
 gen_at_dj.o : pwcom.o
 gen_at_dy.o : ../../Modules/cell_base.o
 gen_at_dy.o : ../../Modules/constants.o
@@ -722,7 +724,7 @@ gen_at_dy.o : ../../Modules/kind.o
 gen_at_dy.o : ../../Modules/recvec.o
 gen_at_dy.o : ../../upflib/atom.o
 gen_at_dy.o : ../../upflib/uspp.o
-gen_at_dy.o : ldaU.o
+gen_at_dy.o : atomic_wfc_mod.o
 gen_at_dy.o : pwcom.o
 gen_us_dj.o : ../../Modules/cell_base.o
 gen_us_dj.o : ../../Modules/constants.o
@@ -1014,6 +1016,7 @@ intersite_V.o : ../../Modules/io_global.o
 intersite_V.o : ../../Modules/ions_base.o
 intersite_V.o : ../../Modules/kind.o
 intersite_V.o : ../../Modules/mp_images.o
+intersite_V.o : ../../Modules/parameters.o
 intersite_V.o : ../../UtilXlib/mp.o
 intersite_V.o : ldaU.o
 intersite_V.o : pwcom.o
@@ -1969,6 +1972,7 @@ stres_hub.o : ../../Modules/ions_base.o
 stres_hub.o : ../../Modules/kind.o
 stres_hub.o : ../../Modules/mp_bands.o
 stres_hub.o : ../../Modules/mp_pools.o
+stres_hub.o : ../../Modules/noncol.o
 stres_hub.o : ../../Modules/recvec.o
 stres_hub.o : ../../Modules/wavefunctions.o
 stres_hub.o : ../../UtilXlib/mp.o

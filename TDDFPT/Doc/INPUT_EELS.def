@@ -86,26 +86,20 @@ input_description -distribution {Quantum Espresso} -package turboEELS -program t
 	}
     }
     namelist lr_control {
-	var itermax -type INTEGER {
-	    default {500}
-	    info {
-		Number of Lanczos iterations to be performed.
-		}
-	}
-
-        var pseudo_hermitian -type LOGICAL {
-            default {.true.}
+        var calculator -type CHARACTER {
+            default {'lanczos'}
             info {
-                When set to .true. the pseudo-Hermitian Lanczos 
-                algorithm is used. When set to .false. the 
-                non-Hermitian Lanczos biorthogonalization algorithm 
-                is used (which is two times slower).
+                Variable that control which algorithm is used
+                to compute EELS spectra. 'lanczos' corresponds
+                to the Lanczos recursive algorithm, and
+                'sternheimer' corresponds to the Sternheimer
+                algorithm.
                 }
         }
-	
-	var approximation -type CHARACTER {
-	    default { 'TDDFT' }
-	    info {
+
+        var approximation -type CHARACTER {
+            default { 'TDDFT' }
+            info {
                 A string describing a level of theory:
                 'TDDFT'            - Time-Dependent Local Density Approximation or
                                      Time-Dependent Generalized Gradient Approximation
@@ -113,18 +107,47 @@ input_description -distribution {Quantum Espresso} -package turboEELS -program t
                 'IPA'              - Independent Particle Approximation,
                 'RPA_with_CLFE'    - Random Phase Approximation with
                                      Crystal Local Field Effects.
-		}
-	}
+                }
+        }
 
         var qi -type INTEGER {
             default {1.0}
             info {
-                The values of the transferred momentum 
-                in Cartesian coordinates (i=1,2,3) 
-                in units of 2pi/a0 (a0 = lattice parameter). 
+                The values of the transferred momentum
+                in Cartesian coordinates (i=1,2,3)
+                in units of 2pi/a0 (a0 = lattice parameter).
                 It must be specified as q1, q2, q3.
                 }
         }
+
+	var itermax -type INTEGER {
+	    default {500}
+	    info {
+		Lanczos: number of iterations to be performed.
+                Sternheimer: maximum number of iterations in a SCF step.
+		}
+	}
+
+        var pseudo_hermitian -type LOGICAL {
+            default {.true.}
+            info {
+                This variable is used only in the Lanczos algorithm.
+                When set to .true. the pseudo-Hermitian Lanczos 
+                algorithm is used. When set to .false. the 
+                non-Hermitian Lanczos biorthogonalization algorithm 
+                is used (which is two times slower).
+                }
+        }
+
+        var alpha_mix(i)  -type REAL {
+            default { alpha_mix(1)=0.7 }
+            info {
+                This variable is used only in the Sternheimer algorithm.
+                Mixing parameter (for the i-th iteration) for updating
+                the response SCF potential using the modified Broyden
+                method: D.D. Johnson, PRB 38, 12807 (1988).
+            }
+        }	
 
 
     }			

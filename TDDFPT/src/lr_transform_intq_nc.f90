@@ -15,7 +15,8 @@ SUBROUTINE lr_transform_intq_nc(intq,na)
   USE kinds,            ONLY : DP
   USE ions_base,        ONLY : nat, ityp
   USE uspp_param,       ONLY : nh, nhm
-  USE lr_variables,     ONLY : intq_nc
+!  USE lr_variables,     ONLY : intq_nc
+  USE lrus,             ONLY : intq_nc
 
   IMPLICIT NONE
   INTEGER :: na

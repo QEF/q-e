@@ -278,7 +278,6 @@ qexsd_init.o : mp_images.o
 qexsd_init.o : mp_pools.o
 qexsd_init.o : mp_world.o
 qexsd_init.o : noncol.o
-qexsd_init.o : parameters.o
 qexsd_init.o : qes_init_module.o
 qexsd_init.o : qes_libs_module.o
 qexsd_init.o : qes_reset_module.o

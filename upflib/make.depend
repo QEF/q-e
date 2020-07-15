@@ -72,7 +72,6 @@ upfconv.o : pseudo_types.o
 upfconv.o : upf.o
 upfconv.o : upf_const.o
 upfconv.o : upf_utils.o
-upfconv.o : write_upf.o
 upfconv.o : write_upf_new.o
 uspp.o : pseudo_types.o
 uspp.o : upf_const.o
