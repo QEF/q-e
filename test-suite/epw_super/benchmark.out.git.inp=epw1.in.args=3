@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.2.0 starts on  1Jul2020 at 11:12: 9 
+     Program EPW v.5.2.0 starts on 15Jul2020 at 10:37:19 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -42,6 +42,8 @@
      MPI processes distributed on     1 nodes
      K-points division:     npool     =       4
      Fft bands division:     nmany     =       1
+
+     Reading supplied temperature list.
 
      Reading xml data from directory:
 
@@ -149,7 +151,7 @@
                 l(1) =   0
      EPW          :      0.10s CPU      0.12s WALL
 
-     EPW          :      0.12s CPU      0.14s WALL
+     EPW          :      0.13s CPU      0.15s WALL
 
      -------------------------------------------------------------------
      Wannierization on  3 x  3 x  3 electronic grid
@@ -212,7 +214,7 @@
      (   0.25000   0.43301   0.66488) :   1.07400
  
      -------------------------------------------------------------------
-     WANNIER      :      1.14s CPU      1.22s WALL (       1 calls)
+     WANNIER      :      1.54s CPU      1.62s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Dipole matrix elements calculated
@@ -221,7 +223,7 @@
      Calculating kgmap
 
      Progress kgmap: ########################################
-     kmaps        :      0.02s CPU      0.06s WALL (       1 calls)
+     kmaps        :      0.02s CPU      0.05s WALL (       1 calls)
      Symmetries of Bravais lattice:  24
      Symmetries of crystal:          24
 
@@ -393,8 +395,8 @@
      Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file
 
      ===================================================================
-     Memory usage:  VmHWM =        88Mb
-                   VmPeak =       690Mb
+     Memory usage:  VmHWM =        44Mb
+                   VmPeak =       618Mb
      ===================================================================
      
      Using uniform q-mesh:    6   6   6
@@ -431,16 +433,16 @@
 
      Progression iq (fine) =        100/       216
      Progression iq (fine) =        200/       216
-                  Fermi level (eV) =    0.766447471440237D+01
-     DOS(states/spin/eV/Unit Cell) =    0.913085695277060D+00
+                  Fermi level (eV) =    0.766447471508788D+01
+     DOS(states/spin/eV/Unit Cell) =    0.913085693176451D+00
             Electron smearing (eV) =    0.100000000000000D+00
                  Fermi window (eV) =    0.200000000000000D+02
       
      Finish writing .ephmat files
 
      ===================================================================
-     Memory usage:  VmHWM =        88Mb
-                   VmPeak =       690Mb
+     Memory usage:  VmHWM =        44Mb
+                   VmPeak =       618Mb
      ===================================================================
 
 
@@ -451,8 +453,8 @@
 
      Finish reading freq file
 
-                  Fermi level (eV) =     7.6644747144E+00
-     DOS(states/spin/eV/Unit Cell) =     9.1308569528E-01
+                  Fermi level (eV) =     7.6644747151E+00
+     DOS(states/spin/eV/Unit Cell) =     9.1308569318E-01
             Electron smearing (eV) =     1.0000000000E-01
                  Fermi window (eV) =     2.0000000000E+01
      Nr irreducible k-points within the Fermi shell =        28 out of        28
@@ -474,14 +476,14 @@
 
      Finish reading .ephmat files
 
-     lambda_max =           126.3925342   lambda_k_max =             3.2058369
+     lambda_max =           126.3963398   lambda_k_max =             3.2058367
  
 
      Finish reading a2f file
 
-     Electron-phonon coupling strength =    0.8715332
+     Electron-phonon coupling strength =    0.8715331
  
-     Estimated Allen-Dynes Tc =    26.410311 K for muc =    0.16000
+     Estimated Allen-Dynes Tc =    26.410306 K for muc =    0.16000
   
      Estimated BCS superconducting gap =     0.004006 eV
   
@@ -494,12 +496,12 @@
      Cutoff frequency wscut =     0.5076
     
         iter      ethr        znormi [eV]    deltai [eV]
-          1   2.532354E+00   1.842516E+00   4.449680E-03
-          2   7.635767E-02   1.841969E+00   4.682792E-03
-          3   4.520722E-02   1.840749E+00   4.928651E-03
-          4   3.432847E-02   1.839600E+00   5.113775E-03
-          5   7.511482E-02   1.837146E+00   5.503711E-03
-          6   1.990148E-03   1.837113E+00   5.510305E-03
+          1   2.532354E+00   1.842516E+00   4.449679E-03
+          2   7.635767E-02   1.841969E+00   4.682791E-03
+          3   4.520722E-02   1.840749E+00   4.928650E-03
+          4   3.432847E-02   1.839600E+00   5.113774E-03
+          5   7.511483E-02   1.837146E+00   5.503710E-03
+          6   1.990152E-03   1.837113E+00   5.510304E-03
      Convergence was reached in nsiter =      6
  
      iaxis_imag   :      0.00s CPU      0.01s WALL (       1 calls)
@@ -509,10 +511,10 @@
      Cutoff frequency wscut =     0.5000
     
         pade Re[znorm] [eV] Re[delta] [eV]
-         56   1.839946E+00   5.526960E-03
+         56   1.838340E+00   5.526959E-03
      Convergence was reached for N =     56 Pade approximants
  
-     raxis_pade   :      0.01s CPU      0.03s WALL (       1 calls)
+     raxis_pade   :      0.01s CPU      0.04s WALL (       1 calls)
  
     
      Analytic continuation of isotropic Eliashberg equations from imaginary-axis to real-axis
@@ -521,44 +523,44 @@
      Cutoff frequency wscut =     0.5000
     
         iter      ethr      Re[znorm] [eV] Re[delta] [eV]
-          1   1.397095E-01   1.838880E+00   5.530900E-03
-          2   2.413655E-02   1.838880E+00   5.530900E-03
-          3   1.306278E-02   1.838880E+00   5.530900E-03
-          4   3.909383E-03   1.838880E+00   5.530900E-03
+          1   1.657058E-01   1.838880E+00   5.530899E-03
+          2   2.794971E-02   1.838880E+00   5.530899E-03
+          3   1.383756E-02   1.838880E+00   5.530899E-03
+          4   3.575528E-03   1.838880E+00   5.530899E-03
      Convergence was reached in nsiter =      4
  
-     raxis_acon   :      1.34s CPU      1.36s WALL (       1 calls)
+     raxis_acon   :      1.29s CPU      1.32s WALL (       1 calls)
  
      itemp =   1   total cpu time :     1.4 secs
 
      Unfolding on the coarse grid
-     elphon_wrap  :     11.74s CPU     13.22s WALL (       1 calls)
+     elphon_wrap  :     13.53s CPU     15.05s WALL (       1 calls)
 
      INITIALIZATION: 
 
-     set_drhoc    :      0.19s CPU      0.19s WALL (      28 calls)
+     set_drhoc    :      0.36s CPU      0.36s WALL (      28 calls)
      init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
      init_us_1    :      0.01s CPU      0.01s WALL (       2 calls)
 
 
 
      Electron-Phonon interpolation
-     ephwann      :      2.98s CPU      4.69s WALL (       1 calls)
-     ep-interp    :      2.82s CPU      4.46s WALL (     216 calls)
+     ephwann      :      1.59s CPU      3.57s WALL (       1 calls)
+     ep-interp    :      1.46s CPU      3.39s WALL (     216 calls)
 
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
      Ham: step 2  :      0.00s CPU      0.00s WALL (       1 calls)
      ep: step 1   :      0.00s CPU      0.00s WALL (     243 calls)
-     ep: step 2   :     48.44s CPU     50.28s WALL (       1 calls)
+     ep: step 2   :     64.23s CPU     66.42s WALL (       1 calls)
      DynW2B       :      0.01s CPU      0.01s WALL (     216 calls)
-     HamW2B       :      0.04s CPU      0.04s WALL (    3045 calls)
-     ephW2Bp      :      2.31s CPU      2.32s WALL (     216 calls)
-     ephW2B       :      0.03s CPU      0.03s WALL (    1512 calls)
+     HamW2B       :      0.05s CPU      0.05s WALL (    3045 calls)
+     ephW2Bp      :      1.01s CPU      1.02s WALL (     216 calls)
+     ephW2B       :      0.04s CPU      0.04s WALL (    1512 calls)
 
-     ELIASHBERG   :     45.54s CPU     45.69s WALL (       1 calls)
+     ELIASHBERG   :     62.69s CPU     62.90s WALL (       1 calls)
 
      Total program execution
-     EPW          :   1m 1.52s CPU   1m 4.96s WALL
+     EPW          :   1m19.48s CPU   1m23.31s WALL
 
                                                                                           
  Please consider citing:                                                                  
