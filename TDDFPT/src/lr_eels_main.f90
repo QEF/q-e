@@ -355,12 +355,13 @@ SUBROUTINE write_chi_on_disk(iu)
     USE kinds,            ONLY : DP
     USE lr_variables,     ONLY : current_w, fru, fiu, &
                                  chirr, chirz, chizz, &
-                                 chizr, epsm1
+                                 chizr, epsm1, units
     USE lsda_mod,         ONLY : nspin, lsda
     USE mp_images,        ONLY : my_image_id
     USE io_global,        ONLY : stdout, ionode
     USE io_files,         ONLY : prefix
     USE noncollin_module, ONLY : noncolin, nspin_mag
+    USE constants,        ONLY : rytoev
 
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: iu
@@ -386,11 +387,20 @@ SUBROUTINE write_chi_on_disk(iu)
           ELSE
              OPEN (UNIT=iu_epsil, FILE=TRIM(filename), &
                                     STATUS='unknown', FORM='formatted')
-             WRITE(iu_epsil,'("# \hbar \omega(Ry)       Re(chi)         Im(chi) ")')
+             IF (units == 0) THEN
+                WRITE(iu_epsil,'("# \hbar \omega(Ry)       Re(chi)         Im(chi) ")')
+             ELSEIF (units == 1) THEN
+                WRITE(iu_epsil,'("# \hbar \omega(eV)       Re(chi)         Im(chi) ")')
+             ENDIF
           END IF
           !
-          WRITE(iu_epsil,'(4x,f12.8,4x,e15.7,2x,e15.7)') fru(iu), &
-               DREAL(chirr(iu)), DIMAG(chirr(iu))
+          IF (units == 0) THEN
+             WRITE(iu_epsil,'(4x,f12.8,4x,e15.7,2x,e15.7)') fru(iu), &
+                  DREAL(chirr(iu)), DIMAG(chirr(iu))
+          ELSEIF (units == 1) THEN
+             WRITE(iu_epsil,'(4x,f12.8,4x,e15.7,2x,e15.7)') fru(iu)*rytoev, &
+                  DREAL(chirr(iu)), DIMAG(chirr(iu))
+          ENDIF
           CLOSE(iu_epsil)
        ELSEIF (nspin_mag==2) THEN
           !
@@ -453,15 +463,26 @@ SUBROUTINE write_chi_on_disk(iu)
           ELSE
              OPEN (UNIT=iu_epsil, FILE=TRIM(filename), STATUS='unknown', &
                                                             FORM='formatted')
-             WRITE(iu_epsil,'("#  \hbar \omega(Ry)     Re(1/eps)     -Im(1/eps)&
-                           &      Re(eps)      Im(eps) ")')
+             IF (units == 0) THEN
+                WRITE(iu_epsil,'("#  \hbar \omega(Ry)     Re(1/eps)     -Im(1/eps)&
+                              &      Re(eps)      Im(eps) ")')
+             ELSEIF (units == 1) THEN
+                WRITE(iu_epsil,'("#  \hbar \omega(eV)     Re(1/eps)     -Im(1/eps)&
+                              &      Re(eps)      Im(eps) ")')
+             ENDIF
           ENDIF
           !
           epsi = (0.0_DP,0.0_DP)
           IF (ABS(epsm1(iu))>1.D-10) epsi = CMPLX(1.0_DP,0.0_DP) / epsm1(iu)
+          IF (units == 0 ) THEN
              WRITE(iu_epsil,'(4x,f12.8,4x,4e14.6)') fru(iu),  &
-                     DREAL(epsm1(iu)), -DIMAG(epsm1(iu)), &
-                     DREAL(epsi), DIMAG(epsi)
+                    DREAL(epsm1(iu)), -DIMAG(epsm1(iu)), &
+                    DREAL(epsi), DIMAG(epsi)
+          ELSEIF (units == 1) THEN
+             WRITE(iu_epsil,'(4x,f12.8,4x,4e14.6)') fru(iu)*rytoev,  &
+                    DREAL(epsm1(iu)), -DIMAG(epsm1(iu)), &
+                    DREAL(epsi), DIMAG(epsi)
+          ENDIF
           !
           CLOSE(iu_epsil)
        ENDIF

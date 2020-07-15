@@ -149,6 +149,47 @@ input_description -distribution {Quantum Espresso} -package turboEELS -program t
             }
         }	
 
+        var epsil -type REAL {
+            default {0.02}
+            info {
+                The broadening/damping term (in Rydberg units).
+                }
+        }
+
+        var units -type INTEGER {
+            default {0}
+            info {
+                 The unit system used for the output and the start, end and increment
+                 input parameters.
+
+                 0 = Rydbergs, 1 = Electron volts.
+                 }
+        }
+
+        var start -type REAL {
+            default {0.0}
+            info {
+                 The polarizability and the absorption coefficient are computed
+                 starting from this value. In units set by the units variable.
+                }
+        }
+
+        var finish -type REAL {
+            default {2.5}
+            info {
+                 The polarizability and the absorption coefficient are computed
+                 up to this value. In units set by the units variable.
+                }
+        }
+
+        var increment -type REAL {
+            default {0.001}
+            info {
+                 Incremental step used to define the mesh between start and end.
+                 In units set by the units variable.
+                }
+        }
+
 
     }			
 

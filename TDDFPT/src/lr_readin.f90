@@ -49,7 +49,7 @@ SUBROUTINE lr_readin
   USE qpoint,              ONLY : xq
   USE io_rho_xml,          ONLY : write_scf
   USE mp_bands,            ONLY : ntask_groups
-  USE constants,           ONLY : eps4
+  USE constants,           ONLY : eps4, rytoev
   USE control_lr,          ONLY : lrpa, alpha_mix
   USE mp_world,            ONLY : world_comm
 
@@ -74,7 +74,8 @@ SUBROUTINE lr_readin
   NAMELIST / lr_control / itermax, ipol, ltammd, lrpa,   &
                         & charge_response, no_hxc, n_ipol, project,      &
                         & scissor, pseudo_hermitian, d0psi_rs, lshift_d0psi, &
-                        & q1, q2, q3, approximation, calculator, alpha_mix
+                        & q1, q2, q3, approximation, calculator, alpha_mix, start, &
+                        & finish, increment, epsil, units 
   NAMELIST / lr_post /    omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int,sum_rule
   namelist / lr_dav /     num_eign, num_init, num_basis_max, residue_conv_thr, precondition,         &
                         & dav_debug, reference,single_pole, sort_contr, diag_of_h, close_pre,        &
@@ -134,6 +135,7 @@ SUBROUTINE lr_readin
      last_freq=0
      alpha_mix(:) = 0.D0
      alpha_mix(1) = 0.7D0
+     units = 0
      !
      ! For lr_dav (Davidson program)
      !
@@ -320,42 +322,25 @@ SUBROUTINE lr_readin
   !
   IF ( trim(calculator)=='sternheimer' ) THEN
      nfs=0
-     IF (meta_ionode) THEN
-        READ (5, *, iostat = ios) card
-        IF ( TRIM(card)=='FREQUENCIES'.OR. &
-             TRIM(card)=='frequencies'.OR. &
-             TRIM(card)=='Frequencies') THEN
-           READ (5, *, iostat = ios) nfs
-        ENDIF
-     ENDIF
-     CALL mp_bcast(ios, meta_ionode_id, world_comm  )
-     CALL errore ('phq_readin', 'reading number of FREQUENCIES', ABS(ios) )
-     CALL mp_bcast(nfs, meta_ionode_id, world_comm  )
-     if (nfs < 1) call errore('phq_readin','Too few frequencies',1)
+     nfs = ((finish-start) / increment) + 1
+     if (nfs < 1) call errore('lr_readin','Too few frequencies',1)
      ALLOCATE(fiu(nfs))
      ALLOCATE(fru(nfs))
      ALLOCATE(comp_f(nfs))
      comp_f=.TRUE.
-     IF (meta_ionode) THEN
-        IF ( TRIM(card) == 'FREQUENCIES' .OR. &
-             TRIM(card) == 'frequencies' .OR. &
-             TRIM(card) == 'Frequencies' ) THEN
-           READ (5, *, iostat = ios) fru(1), fiu(1)
-           READ (5, *, iostat = ios) fru(nfs), fiu(nfs)
-           deltaf =(fru(nfs) - fru(1)) / (nfs -1)
-           DO i=2,nfs-1
-              fru(i)=fru(1) + (i-1) * deltaf
-           ENDDO
-           deltaf= ( fiu(nfs) -fiu(1) ) / (nfs -1)
-           DO i=2,nfs-1
-              fiu(i)=fiu(1) + (i-1) * deltaf
-           ENDDO
-        END IF
-     END IF
-     CALL mp_bcast(ios, meta_ionode_id, world_comm )
-     CALL errore ('phq_readin', 'reading FREQUENCIES card', ABS(ios) )
-     CALL mp_bcast(fru, meta_ionode_id, world_comm  )
-     CALL mp_bcast(fiu, meta_ionode_id, world_comm  )
+     IF (units == 0) THEN
+        fru(1) =start
+        fru(nfs) = finish 
+        deltaf = increment
+     ELSEIF (units == 1) THEN 
+        fru(1) =start/rytoev
+        fru(nfs) = finish/rytoev
+        deltaf = increment/rytoev
+     ENDIF
+     fiu(:) = epsil
+     DO i=2,nfs-1
+        fru(i)=fru(1) + (i-1) * deltaf
+     ENDDO
      IF (start_freq<=0) start_freq=1
      IF (last_freq<=0.OR.last_freq>nfs) last_freq=nfs
   ELSE

@@ -2,8 +2,8 @@
     calculation='scf'
     restart_mode='from_scratch',
     prefix='Al'
-    pseudo_dir = '/marconi/home/userexternal/obaseggi/q-e-stern-final/pseudo/'
-    outdir='/marconi/home/userexternal/obaseggi/q-e-stern-final/tempdir/'
+    pseudo_dir = '/marconi/home/userexternal/obaseggi/q-e/pseudo/'
+    outdir='/marconi/home/userexternal/obaseggi/q-e/tempdir/'
  /
  &system
     ibrav=  2,
