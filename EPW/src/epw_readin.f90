@@ -437,7 +437,6 @@
   eps_acustic  = 5.d0 ! cm-1
   nw           = 10
   fsthick      = 1.d10 ! eV
-  !eptemp       = 300.0d0
   degaussw     = 0.025d0 ! eV
   a2f          = .FALSE.
   etf_mem      = 1
@@ -829,7 +828,6 @@
   ! 1 K in eV = 8.6173423e-5
   ! from K to Ryd
   ! Out-of bound issue with GCC compiler. Multiple Fermi temp is not used anyway.
-  !eptemp = eptemp * kelvin2eV / ryd2ev - no longer use eptemp as input variable
   !
   ! from cm-1 to Ryd
   eps_acustic = eps_acustic / ev2cmm1 / ryd2ev

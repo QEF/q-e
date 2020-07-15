@@ -98,7 +98,6 @@
                                polaron_interpol, polaron_bq, polaron_dos, nPlrn,   &
                                wfcelec_old
   USE elph2,            ONLY : g2_4
-  USE wavefunctions,    ONLY : evc
   USE ephblochkq,       ONLY : interpol_bq, interpol_a_k, compute_a_re
   USE polaron,          ONLY : wfc_elec, epfall, ufall, Hamil, eigVec,             &
                                interp_plrn_wf, interp_plrn_bq, plot_plrn_wf
@@ -1817,7 +1816,7 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating wslen_g', 1)
   DEALLOCATE(etf_all, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating etf_all', 1)
-  ! Deallcote temperature when no cumulant or supercond
+  ! Deallocate temperature when no cumulant or supercond
   IF ((.NOT. cumulant) .AND. (.NOT. eliashberg)) THEN
     DEALLOCATE(gtemp, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating gtemp', 1)

@@ -224,8 +224,6 @@
   !! Maximum number of iteration for the IBTE
   INTEGER :: nstemp
   !! nr. of temperature points for temperature dependent caclulations
-  REAL(KIND = DP) :: eptemp
-  ! temperature for the electronic Fermi occupations in the e-p calculation - deprecated as an input parameter
   REAL(KIND = DP) :: tempsmin
   !! min. temperature in Eliashberg equations - deprecated as an input parameter
   REAL(KIND = DP) :: tempsmax
@@ -313,7 +311,7 @@
   REAL(KIND = DP) :: gap_edge
   !! initial guess of the superconducting gap
   REAL(KIND = DP) :: max_memlt
-  !! maximum memory that can be allocated per poolnstemp) 
+  !! maximum memory that can be allocated per pool 
   REAL(KIND = DP) :: fermi_energy
   !! fermi energy is given in the input file
   REAL(KIND = DP) :: wmin_specfun

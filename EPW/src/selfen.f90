@@ -62,7 +62,9 @@
     IMPLICIT NONE
     !
     CHARACTER(LEN = 20) :: tp
+    !! string for temperatures
     CHARACTER(LEN = 256) :: fileselfen
+    !! file name for self energy
     LOGICAL, INTENT(inout) :: first_cycle
     !! Use to determine weather this is the first cycle after restart
     INTEGER, INTENT(in) :: iqq
@@ -170,13 +172,6 @@
     REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
     !! Collect eigenenergies from all pools in parallel case
     !
-    IF (nstemp .GT. 1) THEN
-      WRITE(stdout, '(/5x,a)') '=========================================================================='
-      WRITE(stdout, '(/5x,a)') 'Calculating self energy with multiple temperatures is not recommanded.'
-      WRITE(stdout, '(/5x,a)') 'This type of calculations can be very expensive.'
-      WRITE(stdout, '(/5x,a)') 'Consider calculting one temperature per calculation instead. '
-      WRITE(stdout, '(/5x,a)') '=========================================================================='
-    ENDIF
     ! SP: Define the inverse so that we can efficiently multiply instead of dividing
     inv_degaussw = one /degaussw
     ! To avoid if branching in the loop
@@ -588,7 +583,9 @@
     ! Local variables
     !
     CHARACTER(LEN = 20) :: tp
+    !! String for temperatures
     CHARACTER(LEN = 256) :: filephself
+    !! File name for phonon self energy
     INTEGER :: ik
     !! Counter on the k-point index
     INTEGER :: ikk
@@ -692,13 +689,6 @@
     !
     IF (adapt_smearing) CALL errore('selfen_phon_q', 'adapt_smearing cannot be used with phonon self-energy', 1)
     !
-    IF (nstemp .GT. 1) THEN
-      WRITE(stdout, '(/5x,a)') '=========================================================================='
-      WRITE(stdout, '(/5x,a)') 'Calculating self energy with multiple temperatures is not recommanded.'
-      WRITE(stdout, '(/5x,a)') 'This type of calculations can be very expensive.'
-      WRITE(stdout, '(/5x,a)') 'Consider calculting one temperature per calculation instead. '
-      WRITE(stdout, '(/5x,a)') '=========================================================================='
-    ENDIF
     !
     DO itemp = 1, nstemp
       IF (iq == 1) THEN
@@ -1009,7 +999,9 @@
     !
     ! Local varialbes
     CHARACTER(LEN = 20) :: tp
+    !! String for temperatures
     CHARACTER(LEN = 256) :: fileselfen
+    !! File name for self energy
     INTEGER :: ik
     !! Counter on k-points
     INTEGER :: ikk
@@ -1127,13 +1119,6 @@
     !
     IF (adapt_smearing) CALL errore('selfen_pl_q', 'adapt_smearing cannot be used with plasmon self-energy', 1)
     !
-    IF (nstemp .GT. 1) THEN
-      WRITE(stdout, '(/5x,a)') '=========================================================================='
-      WRITE(stdout, '(/5x,a)') 'Calculating self energy with multiple temperatures is not recommanded.'
-      WRITE(stdout, '(/5x,a)') 'This type of calculations can be very expensive.'
-      WRITE(stdout, '(/5x,a)') 'Consider calculting one temperature per calculation instead. '
-      WRITE(stdout, '(/5x,a)') '=========================================================================='
-    ENDIF
     !
     DO itemp = 1, nstemp
       ! SP: Define the inverse so that we can efficiently multiply instead of dividing
@@ -1647,7 +1632,6 @@
       !
       IF (fsthick < 1.d3) WRITE(stdout, '(/5x, a, f10.6, a)' ) &
         'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
-!      WRITE(stdout, '(/5x, a, f10.6, a)' ) 'Golden Rule strictly enforced with T = ', eptemp * ryd2ev, ' eV'
     ENDIF
     !
     ! SP: The Gamma function needs to be put to 0 for each q

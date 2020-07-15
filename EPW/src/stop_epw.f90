@@ -25,8 +25,6 @@
   !
   IMPLICIT NONE
   !
-  INTEGER :: ierr
-  !! Error status
   !
   CALL print_clock_epw()
   !
