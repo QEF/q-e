@@ -17,7 +17,7 @@ SUBROUTINE compute_intq
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
   USE noncollin_module,     ONLY : noncolin
-  USE cell_base,            ONLY : omega
+  USE cell_base,            ONLY : omega, tpiba
   USE uspp,                 ONLY : okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
 
@@ -50,7 +50,7 @@ SUBROUTINE compute_intq
   zero=0.0_DP
   CALL setqmod (1, xq, zero, qmod, qg)
   CALL ylmr2 (lmaxq * lmaxq, 1, qg, qmod, ylmk0)
-  qmod(1) = SQRT (qmod(1)  )
+  qmod(1) = SQRT (qmod(1))*tpiba
 
   DO nt = 1, ntyp
      IF (upf(nt)%tvanp ) THEN
