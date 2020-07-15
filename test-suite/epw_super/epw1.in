@@ -14,7 +14,7 @@
   epwwrite = .true.
   epwread  = .false.
 
-  etf_mem     = 1
+  etf_mem     = 0
   vme         = .false.
 
   nbndsub     =  5,

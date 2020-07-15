@@ -12,10 +12,14 @@ addusdbec_nc.o \
 apply_dpot.o \
 addusldos.o \
 adddvepsi_us.o \
+addusddenseq.o \
 cft_wave.o \
 cgsolve_all.o \
+ccgsolve_all.o \
 cg_psi.o \
+ccg_psi.o \
 ch_psi_all.o \
+ch_psi_all_complex.o \
 commutator_Hx_psi.o \
 commutator_Vhubx_psi.o \
 Coul_cut_2D_ph.o \
@@ -31,6 +35,9 @@ dnonloccorr.o \
 dv_vdW_DF.o \
 dv_rVV10.o \
 newdq.o \
+compute_intq.o \
+set_intq_nc.o \
+lr_sym_mod.o \
 orthogonalize.o \
 setup_offset_beta.o \
 setup_nscf.o \

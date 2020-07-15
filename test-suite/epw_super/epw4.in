@@ -46,8 +46,8 @@
 
   wscut = 0.5   ! eV   Upper limit over frequency integration/summation in the Elisashberg eq
 
-  nstemp   = 1     ! Nr. of temps 
-  temps    = 17.00 ! K  provide list of temperetures OR (nstemp and temps = tempsmin  tempsmax for even space mode)
+!  nstemp   = 1     ! Nr. of temps (not required for the list mode in this example)
+  temps    = 17 20 30 ! K  provide list of temperetures OR (nstemp and temps = tempsmin  tempsmax for even space mode)
 
   nsiter   = 500
   muc     = 0.16

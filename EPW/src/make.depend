@@ -207,7 +207,6 @@ ephwann_shuffle.o : ../../Modules/kind.o
 ephwann_shuffle.o : ../../Modules/mp_global.o
 ephwann_shuffle.o : ../../Modules/mp_world.o
 ephwann_shuffle.o : ../../Modules/noncol.o
-ephwann_shuffle.o : ../../Modules/wavefunctions.o
 ephwann_shuffle.o : ../../PHonon/PH/phcom.o
 ephwann_shuffle.o : ../../PW/src/pwcom.o
 ephwann_shuffle.o : ../../UtilXlib/mp.o
@@ -485,14 +484,14 @@ kfold.o : elph2.o
 kfold.o : epwcom.o
 kfold.o : io_var.o
 loadbm.o : ../../Modules/io_global.o
-loadbm.o : ../../Modules/mp_global.o
+loadbm.o : ../../Modules/mp_world.o
 loadbm.o : ../../UtilXlib/mp.o
 loadbm.o : elph2.o
 loadbm.o : epwcom.o
 loadbm.o : io_var.o
 loadumat.o : ../../Modules/io_global.o
 loadumat.o : ../../Modules/kind.o
-loadumat.o : ../../Modules/mp_global.o
+loadumat.o : ../../Modules/mp_world.o
 loadumat.o : ../../PW/src/pwcom.o
 loadumat.o : ../../UtilXlib/mp.o
 loadumat.o : constants_epw.o

@@ -34,7 +34,8 @@
                                nqf2, nqf3, mp_mesh_k, restart, plselfen,           &
                                specfun_pl, lindabs, use_ws, epbread,               &
                                epmatkqread, selecqread, restart_step, nsmear,      &
-                               nqc1, nqc2, nqc3, nkc1, nkc2, nkc3, assume_metal
+                               nqc1, nqc2, nqc3, nkc1, nkc2, nkc3, assume_metal,   &
+                               cumulant, eliashberg
   USE control_flags,    ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw,    ONLY : ryd2ev, ryd2mev, one, two, zero, czero, eps40,      &
@@ -96,8 +97,7 @@
   USE epwcom,           ONLY : wfcelec, start_band, polaron_wf, restart_polaron,   &
                                polaron_interpol, polaron_bq, polaron_dos, nPlrn,   &
                                wfcelec_old
-  USE elph2,            ONLY : g2_4,  ngk_all, igk_k_all
-  USE phcom,            ONLY : evq
+  USE elph2,            ONLY : g2_4
   USE wavefunctions,    ONLY : evc
   USE ephblochkq,       ONLY : interpol_bq, interpol_a_k, compute_a_re
   USE polaron,          ONLY : wfc_elec, epfall, ufall, Hamil, eigVec,             &
@@ -1817,8 +1817,12 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating wslen_g', 1)
   DEALLOCATE(etf_all, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating etf_all', 1)
-!  DEALLOCATE(gtemp, STAT = ierr)
-!  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating gtemp', 1)
+  ! Deallcote temperature when no cumulant or supercond
+  IF ((.NOT. cumulant) .AND. (.NOT. eliashberg)) THEN
+    DEALLOCATE(gtemp, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating gtemp', 1)
+  ENDIF
+  !
   DEALLOCATE(et_ks, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating et_ks', 1)
   IF (assume_metal) THEN
