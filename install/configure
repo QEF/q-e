@@ -6514,7 +6514,7 @@ acx_libxc_save_FCFLAGS="$FCFLAGS"
 $as_echo_n "checking for libxc... " >&6; }
 ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
+ac_link='$FC -o conftest$ac_exeext $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 FCFLAGS="$FCFLAGS_LIBXC $acx_libxc_save_FCFLAGS"

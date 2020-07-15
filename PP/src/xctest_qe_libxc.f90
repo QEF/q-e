@@ -14,14 +14,6 @@ PROGRAM xctest_qe_libxc
   !! It also tests the xc-derivative part (mainly used in PHonon) by comparing q-e
   !! derivative of xc (for LDA and GGA) with the libxc one.
   !
-  ! ... use also to test variations in xc part (e.g. gpu mods etc)
-  !
-  
-  !-------------------OLD-------
-  !! This program compares the output results (energies and potentials) from the libxc 
-  !! routines with the ones from q-e internal library of xc functionals.  
-  !! Available options:
-  !
   !! * LDA ;
   !! * derivative of LDA (dmxc) ;
   !! * GGA ;
@@ -129,31 +121,13 @@ PROGRAM xctest_qe_libxc
               dvxcsr_aver(2,3), dvxcsr_max(2,3), dvxcsr_min(2,3), &
               dvxcss_aver(2,3), dvxcss_max(2,3), dvxcss_min(2,3)
   !
-  !
   ! *******************************************************************************
   ! *-----------------------------------------------------------------------------*
-  ! * To find libxc functional indexes: look for the names at:                    *
+  ! * To find the names of the Libxc functionals look at:                         *
   ! *                                                                             *
   ! *        https://tddft.org/programs/libxc/functionals/                        *
   ! *                                                                             *
-  ! * and then use the function: xc_functional_get_number( 'XC_name' ).           *
-  ! * NOTE: the prefix XC_ is always necessary.                                   *
-  ! * For q-e indexes see the comments in Modules/funct.f90                       *
-  ! *-----------------------------------------------------------------------------*
-  ! *                                                                             *
-  ! *  ... a few examples:                                                        *
-  ! *                                                                             *
-  ! *                LDA                    GGA                  mGGA             *
-  ! *             |qe |lxc|              |qe |lxc |           |qe |lxc |          *
-  ! *             |___|___|              |___|____|           |___|____|          *
-  ! *  Slater (x) | 1 | 1 |  Becke88 (x) | 1 |106 |  TPSS (x) | 1 |202 |          *
-  ! *  PZ (c)     | 1 | 9 |  PW86(c)-POL | 1 |132 |  TPSS (c) | 1 |231 |          *
-  ! *  Wigner (c) | 5 | 2 |  PW86(c)-UNP |21 | "  |  m06l (x) | 2 |203 |          *
-  ! *  VWN (c)    | 2 | 7 |  PBE (c)     | 4 |130 |  m06l (c) | 2 |233 |          *
-  ! *  PW (c)     | 4 |12 |  LYP (c)     | 3 |131 |           |   |    |          *
-  ! *             |   |   |  PW91 (c)    | 2 |134 |           |   |    |          *
-  ! *  ...        |...|...|  ...         |...|... |  ...      |...|... |          *
-  ! *                                                                             *
+  ! * For QE names see the comments in Modules/funct.f90                          *
   ! *******************************************************************************
   !
   !
@@ -492,8 +466,6 @@ PROGRAM xctest_qe_libxc
      DEALLOCATE( v2cm )
   ENDIF
   !
-  !manca il caso noncolin
-  !
   !-----------------------------------------------LXC
   !
   CALL reset_dft()
@@ -557,9 +529,9 @@ PROGRAM xctest_qe_libxc
   !
   IF ( MGGA ) THEN
     ALLOCATE( v2cm(np,nnr+nthr,ns) )
-    CALL xc_metagcx( nnr+nthr, ns, np, rho, grho, tau, ex_lxc, &         !--------con v4.3.4 coincide, con la 5.0.0 ci sono differenze.
-                     ec_lxc, v1x_lxc, v2x_lxc, v3x_lxc,   &              !        ........cosa è cambiato????????? guarda se è 
-                     v1c_lxc, v2cm, v3c_lxc )                            !          tutto mgga o solo il tpss
+    CALL xc_metagcx( nnr+nthr, ns, np, rho, grho, tau, ex_lxc, &
+                     ec_lxc, v1x_lxc, v2x_lxc, v3x_lxc,   &
+                     v1c_lxc, v2cm, v3c_lxc )
     v2c_lxc = v2cm(1,:,:)
     DEALLOCATE( v2cm )
   ENDIF
@@ -1517,11 +1489,3 @@ FUNCTION calc_perc_diff( thr, x_qe, x_lxc )
   RETURN
   !
 END FUNCTION calc_perc_diff
-
-! Da rivedere
-! 1) fai media pesata..
-! 2)* parte di threshold dà problemi... es in gga c'è differenza tra ec e vc tra qe e lxc
-! 2)* ma se rho(2) non è sotto thr il Vx(2) non 
-!     dovrebbe essere diverso da 0?
-! 4) caso noncolin?
-! 5)* problemi con mgga (vedi m06l polar) 

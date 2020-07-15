@@ -921,10 +921,9 @@ CONTAINS
     LOGICAL, EXTERNAL :: matches
     CHARACTER(LEN=1), EXTERNAL :: capital
 #if (XC_MAJOR_VERSION > 4)
-    INTEGER :: XC_FAMILY_HYB_GGA, XC_FAMILY_HYB_MGGA
-    !
-    XC_FAMILY_HYB_GGA  = XC_FAMILY_GGA
-    XC_FAMILY_HYB_MGGA = XC_FAMILY_MGGA
+    !workaround to keep compatibility with libxc v4.3.4
+    INTEGER, PARAMETER :: XC_FAMILY_HYB_GGA  = -10 
+    INTEGER, PARAMETER :: XC_FAMILY_HYB_MGGA = -11 
 #endif
     !
     prev_len(:) = 1
