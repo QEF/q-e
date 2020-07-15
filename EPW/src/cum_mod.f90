@@ -40,7 +40,7 @@
     USE io_global,     ONLY : stdout
     USE io_var,        ONLY : iospectral_sup, iospectral_cum
     USE epwcom,        ONLY : wmin_specfun, wmax_specfun, nw_specfun, &
-                              bnd_cum, nstemp
+                              bnd_cum, nstemp, eliashberg
     USE elph2,         ONLY : ibndmin, ibndmax, gtemp
     !
     IMPLICIT NONE
@@ -264,6 +264,12 @@
       DEALLOCATE(a_tmp, STAT = ierr)
       IF (ierr /= 0) CALL errore('spectral_cumulant', 'Error deallocating a_tmp', 1)
     ENDDO !itemp
+    !
+    ! Deallcote temperature when no  supercond
+    IF (.NOT. eliashberg) THEN
+      DEALLOCATE(gtemp, STAT = ierr)
+      IF (ierr /= 0) CALL errore('cum_mod', 'Error deallocating gtemp', 1)
+    ENDIF
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE spectral_cumulant

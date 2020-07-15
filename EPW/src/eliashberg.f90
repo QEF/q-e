@@ -22,6 +22,7 @@
                                 read_ephmat, read_kqmap
   USE supercond_iso,     ONLY : eliashberg_iso_iaxis, eliashberg_iso_raxis
   USE supercond_aniso,   ONLY : eliashberg_aniso_iaxis
+  USE elph2,             ONLY : gtemp
   !
   IMPLICIT NONE
   !
@@ -81,6 +82,8 @@
     CALL deallocate_eliashberg_aniso()
   ENDIF
   !
+  DEALLOCATE(gtemp, STAT = ierr)
+  IF (ierr /= 0) CALL errore('eliashberg_eqs', 'Error deallocating gtemp', 1)
   CALL stop_clock('ELIASHBERG')
   !
   RETURN
