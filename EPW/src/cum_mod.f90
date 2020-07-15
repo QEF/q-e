@@ -265,7 +265,7 @@
       IF (ierr /= 0) CALL errore('spectral_cumulant', 'Error deallocating a_tmp', 1)
     ENDDO !itemp
     !
-    ! Deallcote temperature when no  supercond
+    ! Deallocate temperature when no  supercond
     IF (.NOT. eliashberg) THEN
       DEALLOCATE(gtemp, STAT = ierr)
       IF (ierr /= 0) CALL errore('cum_mod', 'Error deallocating gtemp', 1)

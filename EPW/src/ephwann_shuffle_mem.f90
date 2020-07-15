@@ -1646,7 +1646,7 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating wslen_g', 1)
   DEALLOCATE(etf_all, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating etf_all', 1)
-  ! Deallcote temperature when no cumulant or supercond
+  ! Deallocate temperature when no cumulant or supercond
   IF ((.NOT. cumulant) .AND. (.NOT. eliashberg)) THEN
     DEALLOCATE(gtemp, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating gtemp', 1)

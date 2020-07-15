@@ -65,8 +65,11 @@
     !
     ! Local variables
     CHARACTER(LEN = 20) :: tp
+    !! String for temperatures
     CHARACTER(LEN = 256) :: filespec
+    !! File name for spectral function
     CHARACTER(LEN = 256) :: filespecsup
+    !! File name for supporting information
     INTEGER :: iw
     !! Counter on the frequency
     INTEGER :: ik
@@ -496,8 +499,11 @@
     IMPLICIT NONE
     !
     CHARACTER(LEN = 20) :: tp
+    !! String for temperatures
     CHARACTER(LEN = 256) :: filespec
+    !! File name for spectral function
     CHARACTER(LEN = 256) :: filespecsup
+    !! File name for supporting information
     INTEGER, INTENT(in) :: iqq
     !! Current q-point index from selecq
     INTEGER, INTENT(in) :: iq
@@ -758,12 +764,6 @@
       ENDIF
       !
       ! Write to output file
-!      WRITE(tp, "(f8.3)") gtemp(itemp) * ryd2ev / kelvin2eV
-!      filespec = 'specfun.phon.' // trim(adjustl(tp)) // 'K'
-!      filespecsup = 'specfun_sup.phon.' // trim(adjustl(tp)) // 'K'
-!      OPEN(UNIT = iospectral, FILE = filespec, position = 'append')
-!      OPEN(UNIT = iospectral_sup, FILE = filespecsup, position = 'append')
-      ! Write to output file
       WRITE(stdout, '(/5x, a)') 'Real and Imaginary part of the phonon self-energy (omega=0) without gamma0.'
       DO imode = 1, nmodes
         ! Real and Im part of Phonon self-energy at 0 freq.
@@ -878,8 +878,11 @@
     !
     ! Local variables
     CHARACTER(LEN = 20) :: tp
+    !! String for temperatures
     CHARACTER(LEN = 256) :: filespec
+    !! File name for spectral function
     CHARACTER(LEN = 256) :: filespecsup
+    !! File name for supporting information
     INTEGER :: iw
     !! Counter on the frequency
     INTEGER :: ik

@@ -1,5 +1,4 @@
-tempsmax    = 500
-6-
+-
 &inputepw
   prefix      = 'si'
   amass(1)    = 28.0855
