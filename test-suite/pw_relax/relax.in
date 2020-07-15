@@ -10,6 +10,7 @@
   ecutrho   = 144.D0,
 /
 &ELECTRONS
+  conv_thr  = 1.0e-7
 /
 &IONS
 /
