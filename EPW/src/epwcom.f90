@@ -228,7 +228,7 @@
   !! min. temperature in Eliashberg equations - deprecated as an input parameter
   REAL(KIND = DP) :: tempsmax
   !! max. temperature - deprecated as an input parameter
-  REAL(KIND = DP) :: temps(ntempxx)
+  REAL(KIND = DP) :: temps(50)
   !! input temperature array (units of Kelvin)
   !
   ! Superconductivity
