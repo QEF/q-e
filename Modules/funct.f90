@@ -436,6 +436,8 @@ CONTAINS
     !
     IF ( discard_input_dft ) RETURN
     !
+    is_libxc(:) = .FALSE.
+    !
     ! save current status of XC indices
     !
     dft_defined = .FALSE.
@@ -920,8 +922,8 @@ CONTAINS
     TYPE(xc_f03_func_info_t) :: xc_info
     LOGICAL, EXTERNAL :: matches
     CHARACTER(LEN=1), EXTERNAL :: capital
-#if (XC_MAJOR_VERSION > 4)
-    !workaround to keep compatibility with libxc v4.3.4
+#if (XC_MAJOR_VERSION > 5)
+    !workaround to keep compatibility with libxc develop version
     INTEGER, PARAMETER :: XC_FAMILY_HYB_GGA  = -10 
     INTEGER, PARAMETER :: XC_FAMILY_HYB_MGGA = -11 
 #endif
