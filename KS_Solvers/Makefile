@@ -30,6 +30,7 @@ ParO/pcg_gamma.o \
 ParO/paro_k.o \
 ParO/pcg_k.o \
 ParO/paro_gamma_new.o \
+ParO/paro_gamma_new_gpu.o \
 ParO/paro_k_new.o \
 DENSE/rotate_HSpsi_gamma.o \
 DENSE/rotate_HSpsi_k.o \
