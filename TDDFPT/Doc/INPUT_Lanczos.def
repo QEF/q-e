@@ -229,7 +229,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 	}
 
 	var epsil -type REAL {
-	    default {0.0}
+	    default {0.02}
 	    info {
 	    	The broadening/damping term (in Rydberg units).
 		}

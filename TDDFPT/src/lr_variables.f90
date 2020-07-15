@@ -61,6 +61,9 @@ MODULE lr_variables
   INTEGER :: iudrho = 23
   INTEGER :: iu1dwf = 25
   INTEGER :: lrdrho
+  REAL(kind=dp) :: increment
+  INTEGER :: units
+  REAL(kind=dp) :: end
   !
   !------------------------------------------------------------------------!
   !
