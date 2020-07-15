@@ -26,6 +26,8 @@
   !
   IMPLICIT NONE
   !
+  INTEGER :: ierr
+  !! Error status
   CALL start_clock('ELIASHBERG')
   !
   IF (liso) THEN
