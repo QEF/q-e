@@ -11,7 +11,7 @@
    q3 = 0.0
    units = 0
    start = 0.0
-   finish = 3.6 
+   end = 3.6 
    increment = 0.036
    epsil = 0.1
 /
