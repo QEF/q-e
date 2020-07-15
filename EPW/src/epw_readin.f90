@@ -58,7 +58,8 @@
                             auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   &
                             scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, &
                             wannier_plot_supercell, wannier_plot_scale, reduce_unk,    &
-                            wannier_plot_radius
+                            wannier_plot_radius,                                       &
+                            fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
   USE elph2,         ONLY : elph, num_wannier_plot, wanplotlist
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, ang2m
@@ -153,6 +154,7 @@
        mob_maxiter, auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   &
        scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, reduce_unk,  &
        wannier_plot_supercell, wannier_plot_scale, wannier_plot_radius,        &
+       fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv,                     &
   !---------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
   ! Shell implementation for future use.
@@ -406,10 +408,10 @@
   wepexst      = .FALSE.
   epexst       = .FALSE.
   eig_read     = .FALSE.
-  dis_win_max  = 1d3
-  dis_win_min  = -1d3
-  dis_froz_max =  1d3
-  dis_froz_min = -1d3
+  dis_win_max  = 9999.d0
+  dis_win_min  = -9999.d0
+  dis_froz_max = 9999.d0
+  dis_froz_min = -9999.d0
   num_iter     = 200
   proj(:)      = ''
   auto_projections = .FALSE.
@@ -552,6 +554,11 @@
   selecqread   = .FALSE.
   nc           = 4.0d0
   assume_metal = .FALSE.  ! default is we deal with an insulator
+  fixsym       = .FALSE.
+  epw_no_t_rev = .TRUE.
+  epw_tr       = .TRUE.
+  epw_nosym    = .FALSE.
+  epw_noinv    = .FALSE.
   !
   ! --------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
@@ -688,12 +695,14 @@
   IF ((nbndsub > 200)) CALL errore('epw_readin', 'too many wannier functions increase size of projx', 1)
   IF ((phonselfen .OR. elecselfen .OR. specfun_el .OR. specfun_ph) .AND. (mp_mesh_k .OR. mp_mesh_q)) &
     CALL errore('epw_readin', 'can only work with full uniform mesh', 1)
-  IF (ephwrite .AND. .NOT. ep_coupling .AND. .NOT. elph) CALL errore('epw_readin', &
+  IF (ephwrite) THEN
+    IF (.NOT. ep_coupling .AND. .NOT. elph) CALL errore('epw_readin', &
       'ephwrite requires ep_coupling=.TRUE., elph=.TRUE.', 1)
-  IF (ephwrite .AND. (rand_k .OR. rand_q)) &
-    CALL errore('epw_readin', 'ephwrite requires a uniform grid', 1)
-  IF (ephwrite .AND. (MOD(nkf1, nqf1) /= 0 .OR. MOD(nkf2, nqf2) /= 0 .OR. MOD(nkf3, nqf3) /= 0)) &
+    IF (rand_k .OR. rand_q) &
+      CALL errore('epw_readin', 'ephwrite requires a uniform grid', 1)
+    IF (MOD(nkf1,nqf1) /= 0 .OR. MOD(nkf2,nqf2) /= 0 .OR. MOD(nkf3,nqf3) /= 0) &
     CALL errore('epw_readin', 'ephwrite requires nkf1,nkf2,nkf3 to be multiple of nqf1,nqf2,nqf3', 1)
+  ENDIF
   IF (band_plot .AND. filkf == ' ' .AND. filqf == ' ') CALL errore('epw_readin', &
       'plot band structure and phonon dispersion requires k- and q-points read from filkf and filqf files', 1)
   IF (band_plot .AND. filkf /= ' ' .AND. (nkf1 > 0 .OR. nkf2 > 0 .OR. nkf3 > 0)) CALL errore('epw_readin', &
@@ -742,6 +751,12 @@
       'Cannot specify both auto_projections and projections block', 1)
   IF ((auto_projections .AND. .NOT. scdm_proj) .OR. (.NOT. auto_projections .AND. scdm_proj)) &
     CALL errore('epw_readin', 'auto_projections require both scdm_proj=.true. and auto_projections=.true.', 1)
+  IF (dis_win_min > -9999.d0 + eps16) THEN
+    dis_win_min  = -9999.d0
+    WRITE(stdout, '(/,5x,a)') 'WARNING: The specified dis_win_min is ignored.'
+    WRITE(stdout, '(5x,a)') "         You should instead use bands_skipped = 'exclude_bands = ...'"
+    WRITE(stdout, '(5x,a)') "         to control the lower bound of band manifold."
+  ENDIF
   !
   ! In the case of Fermi-Dirac distribution one should probably etemp instead of degauss.
   ! This is achieved with assume_metal == .true.

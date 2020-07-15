@@ -29,12 +29,13 @@
     USE mp_world,  ONLY : mpime
     USE kinds,     ONLY : DP
     USE epwcom,    ONLY : filkf, nkf1, nkf2, nkf3, iterative_bte, &
-                          rand_k, rand_nk, mp_mesh_k, system_2d, eig_read, vme
+                          rand_k, rand_nk, mp_mesh_k, system_2d, eig_read, vme, &
+                          fixsym
     USE elph2,     ONLY : nkqtotf, nkqf, xkf, wkf, nkf, xkfd, deltaq
     USE cell_base, ONLY : at, bg
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_var,    ONLY : iunkf
-    USE low_lvl,   ONLY : init_random_seed
+    USE low_lvl,   ONLY : init_random_seed, fix_sym
     USE constants_epw, ONLY : eps4
     USE noncollin_module, ONLY : noncolin
     !
@@ -120,6 +121,7 @@
           ! get size of the mp_mesh in the irr wedge
           WRITE(stdout,'(a,3i4)') '     Using uniform MP k-mesh: ', nkf1, nkf2, nkf3
           call set_sym_bl()
+          IF (fixsym) CALL fix_sym()
           !
           ALLOCATE(xkf_(3, 2 * nkf1 * nkf2 * nkf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating xkf_', 1)
@@ -355,12 +357,13 @@
     USE mp_world,  ONLY : mpime
     USE kinds,     ONLY : DP
     USE epwcom,    ONLY : filkf, nkf1, nkf2, nkf3, &
-                          rand_k, rand_nk, mp_mesh_k, system_2d, eig_read, vme
+                          rand_k, rand_nk, mp_mesh_k, system_2d, eig_read, vme, &
+                          fixsym
     USE elph2,     ONLY : xkf, wkf, nkqtotf, nkf, nkqf, xkfd, deltaq
     USE cell_base, ONLY : at, bg
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_var,    ONLY : iunkf
-    USE low_lvl,   ONLY : init_random_seed
+    USE low_lvl,   ONLY : init_random_seed, fix_sym
     USE constants_epw, ONLY : eps4
     !
     IMPLICIT NONE
@@ -435,6 +438,7 @@
           ! get size of the mp_mesh in the irr wedge
           WRITE(stdout, '(a,3i4)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
           CALL set_sym_bl()
+          IF (fixsym) CALL fix_sym()
           !
           ALLOCATE(xkf(3, 2 * nkf1 * nkf2 * nkf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating xkf', 1)
@@ -888,14 +892,15 @@
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
     USE epwcom,    ONLY : filqf, nqf1, nqf2, nqf3, plselfen, specfun_pl, &
-                          rand_q, rand_nq, mp_mesh_q, system_2d, lscreen
+                          rand_q, rand_nq, mp_mesh_q, system_2d, lscreen, &
+                          fixsym
     USE elph2,     ONLY : xqf, wqf, nqf, nqtotf
     USE cell_base, ONLY : at, bg
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_var,    ONLY : iunqf
     USE noncollin_module, ONLY : noncolin
     USE constants_epw, ONLY : eps4
-    USE low_lvl,   ONLY : init_random_seed
+    USE low_lvl,   ONLY : init_random_seed, fix_sym
     !
     IMPLICIT NONE
     !
@@ -955,6 +960,7 @@
           ! get size of the mp_mesh in the irr wedge
           WRITE(stdout, '(a,3i4)') '     Using uniform MP q-mesh: ', nqf1, nqf2, nqf3
           call set_sym_bl()
+          IF (fixsym) CALL fix_sym()
           !
           ALLOCATE(xqf_(3, nqf1 * nqf2 * nqf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating xqf_ ', 1)
@@ -1107,12 +1113,12 @@
     USE io_global, ONLY : stdout
     USE epwcom,    ONLY : filqf, nqf1, nqf2, nqf3, &
                           rand_q, rand_nq, mp_mesh_q, system_2d, lscreen, &
-                          plselfen, specfun_pl
+                          plselfen, specfun_pl, fixsym
     USE elph2,     ONLY : xqf, wqf, nqtotf, nqf
     USE cell_base, ONLY : at, bg
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_var,    ONLY : iunqf
-    USE low_lvl,   ONLY : init_random_seed
+    USE low_lvl,   ONLY : init_random_seed, fix_sym
     USE constants_epw, ONLY : eps4
     !
     IMPLICIT NONE
@@ -1165,6 +1171,7 @@
           ! get size of the mp_mesh in the irr wedge
           WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
           call set_sym_bl()
+          IF (fixsym) CALL fix_sym()
           !
           ALLOCATE(xqf(3, nqf1 * nqf2 * nqf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating xqf', 1)
@@ -1289,7 +1296,8 @@
     USE mp,            ONLY : mp_sum, mp_bcast
     USE constants_epw, ONLY : twopi, ci, zero, eps6, ryd2ev, czero
     USE epwcom,        ONLY : nbndsub, fsthick, use_ws, mp_mesh_k, nkf1, nkf2, &
-                              nkf3, iterative_bte, restart_step, scissor, ephwrite
+                              nkf3, iterative_bte, restart_step, scissor, ephwrite, &
+                              fixsym
     USE noncollin_module, ONLY : noncolin
     USE pwcom,         ONLY : ef, nelec
     USE cell_base,     ONLY : bg
@@ -1297,6 +1305,7 @@
     USE wan2bloch,     ONLY : hamwan2bloch
     USE kinds_epw,     ONLY : SIK2
     USE poolgathering, ONLY : poolgather
+    USE low_lvl,       ONLY : fix_sym
     !
     IMPLICIT NONE
     !
@@ -1445,6 +1454,7 @@
           s_bztoibz(:) = 0
           !
           CALL set_sym_bl()
+          IF (fixsym) CALL fix_sym()
           !
           ! What we get from this call is bztoibz
           CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, bztoibz, s_bztoibz)

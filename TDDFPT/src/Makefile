@@ -30,8 +30,12 @@ lr_apply_liouvillian.o \
 lr_dv_setup.o \
 lr_compute_intq.o \
 lr_set_intq_nc.o \
+mix_pot.o \
+paw_add_symmetry.o \
 lr_transform_intq_nc.o \
 lr_transform_intq_so.o  \
+dveqpsi_us.o \
+dveqpsi_us_only.o \
 lr_solve_e.o \
 lr_dvpsi_e.o \
 stop_lr.o \
@@ -59,7 +63,10 @@ lr_dav_routines.o\
 lr_us.o\
 lr_test_restart.o\
 lr_dav_debug.o\
-plugin_tddfpt_potential.o
+plugin_tddfpt_potential.o\
+linear_solvers.o\
+orthogonalize_omega.o\
+lr_sternheimer.o
 
 TLDEPS=lrmods
 

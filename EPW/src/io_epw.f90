@@ -123,7 +123,7 @@
                           zstar, epsi, epmatwp
     USE ions_base, ONLY : amass, ityp, nat, tau
     USE cell_base, ONLY : at, bg, omega, alat
-    USE phcom,     ONLY : nmodes
+    USE modes,     ONLY : nmodes
     USE io_var,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, iunepmatwp, &
                           crystal
     USE noncollin_module, ONLY : noncolin
@@ -268,7 +268,7 @@
     USE pwcom,     ONLY : ef
     USE elph2,     ONLY : chw, rdw, epmatwp, cdmew, cvmew, chw_ks, zstar, epsi
     USE ions_base, ONLY : nat
-    USE phcom,     ONLY : nmodes
+    USE modes,     ONLY : nmodes
     USE io_global, ONLY : stdout
     USE io_files,  ONLY : prefix, diropn
     USE io_var,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, iunepmatwp

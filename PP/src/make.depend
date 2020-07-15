@@ -667,6 +667,7 @@ pw2wannier90.o : ../../PW/src/symm_base.o
 pw2wannier90.o : ../../UtilXlib/mp.o
 pw2wannier90.o : ../../upflib/uspp.o
 read_proj.o : ../../Modules/kind.o
+read_proj.o : ../../upflib/xmltools.o
 smallgk.o : ../../Modules/kind.o
 stm.o : ../../FFTXlib/fft_interfaces.o
 stm.o : ../../FFTXlib/scatter_mod.o
@@ -897,6 +898,7 @@ write_proj.o : ../../Modules/recvec.o
 write_proj.o : ../../Modules/run_info.o
 write_proj.o : ../../PW/src/atomic_wfc_mod.o
 write_proj.o : ../../PW/src/pwcom.o
+write_proj.o : ../../upflib/xmltools.o
 write_proj.o : projections_mod.o
 xc_vdW_scale_mod.o : ../../FFTXlib/fft_interfaces.o
 xc_vdW_scale_mod.o : ../../Modules/cell_base.o
