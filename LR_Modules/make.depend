@@ -138,6 +138,7 @@ commutator_Vhubx_psi.o : ../Modules/kind.o
 commutator_Vhubx_psi.o : ../Modules/mp_pools.o
 commutator_Vhubx_psi.o : ../Modules/recvec.o
 commutator_Vhubx_psi.o : ../Modules/wavefunctions.o
+commutator_Vhubx_psi.o : ../PW/src/atomic_wfc_mod.o
 commutator_Vhubx_psi.o : ../PW/src/buffers.o
 commutator_Vhubx_psi.o : ../PW/src/ldaU.o
 commutator_Vhubx_psi.o : ../PW/src/pwcom.o
@@ -368,7 +369,6 @@ qdipol_cryst.o : ../Modules/kind.o
 qdipol_cryst.o : ../PW/src/pwcom.o
 qdipol_cryst.o : ../upflib/uspp.o
 qdipol_cryst.o : lrcom.o
-ruotaijk_tpw.o : ../Modules/kind.o
 set_dbecsum_nc.o : ../Modules/ions_base.o
 set_dbecsum_nc.o : ../Modules/kind.o
 set_dbecsum_nc.o : ../Modules/noncol.o

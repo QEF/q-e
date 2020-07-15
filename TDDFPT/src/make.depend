@@ -263,6 +263,7 @@ lr_eels_main.o : ../../Modules/check_stop.o
 lr_eels_main.o : ../../Modules/command_line_options.o
 lr_eels_main.o : ../../Modules/environment.o
 lr_eels_main.o : ../../Modules/fft_base.o
+lr_eels_main.o : ../../Modules/io_files.o
 lr_eels_main.o : ../../Modules/io_global.o
 lr_eels_main.o : ../../Modules/ions_base.o
 lr_eels_main.o : ../../Modules/kind.o
@@ -504,6 +505,7 @@ lr_solve_e.o : lr_variables.o
 lr_sternheimer.o : ../../FFTXlib/fft_helper_subroutines.o
 lr_sternheimer.o : ../../FFTXlib/fft_interfaces.o
 lr_sternheimer.o : ../../LR_Modules/dv_of_drho.o
+lr_sternheimer.o : ../../LR_Modules/lr_sym_mod.o
 lr_sternheimer.o : ../../LR_Modules/lrcom.o
 lr_sternheimer.o : ../../Modules/cell_base.o
 lr_sternheimer.o : ../../Modules/check_stop.o
@@ -643,13 +645,3 @@ stop_lr.o : ../../Modules/noncol.o
 stop_lr.o : ../../PW/src/buffers.o
 stop_lr.o : ../../PW/src/pwcom.o
 stop_lr.o : lr_variables.o
-symmetrize_drho.o : ../../LR_Modules/lr_sym_mod.o
-symmetrize_drho.o : ../../LR_Modules/lrcom.o
-symmetrize_drho.o : ../../Modules/fft_base.o
-symmetrize_drho.o : ../../Modules/ions_base.o
-symmetrize_drho.o : ../../Modules/kind.o
-symmetrize_drho.o : ../../Modules/noncol.o
-symmetrize_drho.o : ../../Modules/paw_variables.o
-symmetrize_drho.o : ../../PW/src/paw_symmetry.o
-symmetrize_drho.o : ../../PW/src/pwcom.o
-symmetrize_drho.o : ../../upflib/uspp.o

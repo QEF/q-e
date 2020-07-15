@@ -169,6 +169,7 @@ hp_postproc.o : ../../Modules/io_files.o
 hp_postproc.o : ../../Modules/io_global.o
 hp_postproc.o : ../../Modules/ions_base.o
 hp_postproc.o : ../../Modules/kind.o
+hp_postproc.o : ../../Modules/parameters.o
 hp_postproc.o : ../../PW/src/ldaU.o
 hp_postproc.o : ../../PW/src/pwcom.o
 hp_postproc.o : hpcom.o
@@ -205,6 +206,7 @@ hp_read_dnsq.o : hpcom.o
 hp_readin.o : ../../LR_Modules/lrcom.o
 hp_readin.o : ../../Modules/check_stop.o
 hp_readin.o : ../../Modules/control_flags.o
+hp_readin.o : ../../Modules/funct.o
 hp_readin.o : ../../Modules/io_files.o
 hp_readin.o : ../../Modules/io_global.o
 hp_readin.o : ../../Modules/kind.o

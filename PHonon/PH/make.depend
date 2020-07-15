@@ -110,7 +110,6 @@ addusddense.o : ../../Modules/kind.o
 addusddense.o : ../../Modules/noncol.o
 addusddense.o : ../../Modules/recvec.o
 addusddense.o : ../../upflib/uspp.o
-addusdynmat.o : ../../LR_Modules/lrcom.o
 addusdynmat.o : ../../Modules/ions_base.o
 addusdynmat.o : ../../Modules/kind.o
 addusdynmat.o : ../../Modules/noncol.o
@@ -135,8 +134,8 @@ ahc.o : ../../upflib/uspp.o
 ahc.o : phcom.o
 allocate_part.o : elph.o
 allocate_part.o : phcom.o
-allocate_pert.o : ../../LR_Modules/lrcom.o
 allocate_pert.o : ../../Modules/ions_base.o
+allocate_pert.o : phcom.o
 allocate_phq.o : ../../LR_Modules/lrcom.o
 allocate_phq.o : ../../Modules/becmod.o
 allocate_phq.o : ../../Modules/fft_base.o
@@ -152,7 +151,6 @@ allocate_phq.o : ../../upflib/uspp.o
 allocate_phq.o : elph.o
 allocate_phq.o : phcom.o
 allocate_phq.o : ramanm.o
-alpha2f.o : ../../LR_Modules/lrcom.o
 alpha2f.o : ../../Modules/cell_base.o
 alpha2f.o : ../../Modules/constants.o
 alpha2f.o : ../../Modules/environment.o
@@ -326,6 +324,7 @@ compute_dvloc.o : ../../Modules/ions_base.o
 compute_dvloc.o : ../../Modules/kind.o
 compute_dvloc.o : ../../Modules/recvec.o
 compute_dvloc.o : ../../PW/src/Coul_cut_2D.o
+compute_dvloc.o : phcom.o
 compute_nldyn.o : ../../LR_Modules/lrcom.o
 compute_nldyn.o : ../../Modules/becmod.o
 compute_nldyn.o : ../../Modules/ions_base.o
@@ -1590,7 +1589,6 @@ set_irr.o : ../../PW/src/pwcom.o
 set_irr.o : ../../PW/src/symm_base.o
 set_irr.o : ../../UtilXlib/mp.o
 set_irr.o : phcom.o
-set_irr_nosym.o : ../../LR_Modules/lrcom.o
 set_irr_nosym.o : ../../Modules/ions_base.o
 set_irr_nosym.o : ../../Modules/kind.o
 set_irr_nosym.o : phcom.o
@@ -1604,6 +1602,7 @@ set_irr_sym.o : ../../Modules/kind.o
 set_irr_sym.o : ../../Modules/mp_images.o
 set_irr_sym.o : ../../PW/src/symm_base.o
 set_irr_sym.o : ../../UtilXlib/mp.o
+set_irr_sym.o : phcom.o
 setlocq.o : ../../Modules/constants.o
 setlocq.o : ../../Modules/kind.o
 setlocq.o : ../../PW/src/Coul_cut_2D.o
@@ -1734,7 +1733,6 @@ swfc.o : ../../Modules/becmod.o
 swfc.o : ../../Modules/kind.o
 swfc.o : ../../PW/src/pwcom.o
 swfc.o : ../../upflib/uspp.o
-sym_and_write_zue.o : ../../LR_Modules/lrcom.o
 sym_and_write_zue.o : ../../Modules/cell_base.o
 sym_and_write_zue.o : ../../Modules/io_global.o
 sym_and_write_zue.o : ../../Modules/ions_base.o
@@ -1744,6 +1742,7 @@ sym_and_write_zue.o : ph_restart.o
 sym_and_write_zue.o : phcom.o
 sym_def.o : ../../LR_Modules/lrcom.o
 sym_def.o : ../../Modules/kind.o
+sym_def.o : phcom.o
 sym_dmag.o : ../../LR_Modules/lrcom.o
 sym_dmag.o : ../../Modules/cell_base.o
 sym_dmag.o : ../../Modules/constants.o
@@ -1751,6 +1750,7 @@ sym_dmag.o : ../../Modules/fft_base.o
 sym_dmag.o : ../../Modules/kind.o
 sym_dmag.o : ../../Modules/noncol.o
 sym_dmag.o : ../../PW/src/symm_base.o
+sym_dmag.o : phcom.o
 sym_dmage.o : ../../Modules/cell_base.o
 sym_dmage.o : ../../Modules/fft_base.o
 sym_dmage.o : ../../Modules/kind.o
@@ -1764,10 +1764,11 @@ sym_dns.o : ../../PW/src/ldaU.o
 sym_dns.o : ../../PW/src/pwcom.o
 sym_dns.o : ../../PW/src/symm_base.o
 sym_dns.o : ../../upflib/uspp.o
-sym_dns_wrapper.o : ../../LR_Modules/lrcom.o
+sym_dns.o : phcom.o
 sym_dns_wrapper.o : ../../Modules/ions_base.o
 sym_dns_wrapper.o : ../../Modules/kind.o
 sym_dns_wrapper.o : ../../PW/src/pwcom.o
+sym_dns_wrapper.o : phcom.o
 symdvscf.o : ../../LR_Modules/lrcom.o
 symdvscf.o : ../../Modules/cell_base.o
 symdvscf.o : ../../Modules/constants.o
@@ -1775,6 +1776,7 @@ symdvscf.o : ../../Modules/fft_base.o
 symdvscf.o : ../../Modules/kind.o
 symdvscf.o : ../../Modules/noncol.o
 symdvscf.o : ../../PW/src/symm_base.o
+symdvscf.o : phcom.o
 symdyn_munu.o : ../../Modules/kind.o
 symdynph_gq.o : ../../Modules/constants.o
 symdynph_gq.o : ../../Modules/kind.o
@@ -1837,7 +1839,6 @@ write_eigenvectors.o : ../../Modules/kind.o
 write_epsilon_and_zeu.o : ../../Modules/io_global.o
 write_epsilon_and_zeu.o : ../../Modules/kind.o
 write_epsilon_and_zeu.o : phcom.o
-write_hub.o : ../../LR_Modules/lrcom.o
 write_hub.o : ../../Modules/cell_base.o
 write_hub.o : ../../Modules/control_flags.o
 write_hub.o : ../../Modules/io_global.o
@@ -1848,10 +1849,10 @@ write_hub.o : ../../PW/src/pwcom.o
 write_hub.o : phcom.o
 write_matrix.o : ../../Modules/io_global.o
 write_matrix.o : ../../Modules/kind.o
-write_modes.o : ../../LR_Modules/lrcom.o
 write_modes.o : ../../Modules/io_global.o
 write_modes.o : ../../Modules/ions_base.o
 write_modes.o : ../../Modules/kind.o
+write_modes.o : phcom.o
 write_qplot_data.o : ../../Modules/constants.o
 write_qplot_data.o : ../../Modules/io_global.o
 write_qplot_data.o : ../../Modules/ions_base.o
