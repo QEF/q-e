@@ -75,7 +75,7 @@ SUBROUTINE lr_readin
                         & charge_response, no_hxc, n_ipol, project,      &
                         & scissor, pseudo_hermitian, d0psi_rs, lshift_d0psi, &
                         & q1, q2, q3, approximation, calculator, alpha_mix, start, &
-                        & finish, increment, epsil, units 
+                        & end, increment, epsil, units 
   NAMELIST / lr_post /    omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int,sum_rule
   namelist / lr_dav /     num_eign, num_init, num_basis_max, residue_conv_thr, precondition,         &
                         & dav_debug, reference,single_pole, sort_contr, diag_of_h, close_pre,        &
@@ -114,7 +114,6 @@ SUBROUTINE lr_readin
      test_case_no = 0
      beta_gamma_z_prefix = 'undefined'
      omeg= 0.0_DP
-     epsil = 0.0_DP
      w_T_npol = 1
      plot_type = 1
      project = .FALSE.
@@ -133,9 +132,12 @@ SUBROUTINE lr_readin
      !
      start_freq=1
      last_freq=0
-     alpha_mix(:) = 0.D0
+     alpha_mix(:) = 0.0D0
      alpha_mix(1) = 0.7D0
      units = 0
+     end = 2.5D0
+     epsil = 0.02D0
+     increment = 0.001D0
      !
      ! For lr_dav (Davidson program)
      !
@@ -322,7 +324,7 @@ SUBROUTINE lr_readin
   !
   IF ( trim(calculator)=='sternheimer' ) THEN
      nfs=0
-     nfs = ((finish-start) / increment) + 1
+     nfs = ((end-start) / increment) + 1
      if (nfs < 1) call errore('lr_readin','Too few frequencies',1)
      ALLOCATE(fiu(nfs))
      ALLOCATE(fru(nfs))
@@ -330,11 +332,11 @@ SUBROUTINE lr_readin
      comp_f=.TRUE.
      IF (units == 0) THEN
         fru(1) =start
-        fru(nfs) = finish 
+        fru(nfs) = end
         deltaf = increment
      ELSEIF (units == 1) THEN 
         fru(1) =start/rytoev
-        fru(nfs) = finish/rytoev
+        fru(nfs) = end/rytoev
         deltaf = increment/rytoev
      ENDIF
      fiu(:) = epsil

@@ -153,6 +153,7 @@ input_description -distribution {Quantum Espresso} -package turboEELS -program t
             default {0.02}
             info {
                 The broadening/damping term (in Rydberg units).
+                this variable can ONLY be used when calculator = 'sternheimer'
                 }
         }
 
@@ -160,7 +161,8 @@ input_description -distribution {Quantum Espresso} -package turboEELS -program t
             default {0}
             info {
                  The unit system used for the output and the start, end and increment
-                 input parameters.
+                 input parameters. 
+                 this variable can ONLY be used when calculator = 'sternheimer'
 
                  0 = Rydbergs, 1 = Electron volts.
                  }
@@ -171,22 +173,25 @@ input_description -distribution {Quantum Espresso} -package turboEELS -program t
             info {
                  The polarizability and the absorption coefficient are computed
                  starting from this value. In units set by the units variable.
+                 this variable can ONLY be used when calculator = 'sternheimer'
                 }
         }
 
-        var finish -type REAL {
+        var end -type REAL {
             default {2.5}
             info {
                  The polarizability and the absorption coefficient are computed
                  up to this value. In units set by the units variable.
+                 this variable can ONLY be used when calculator = 'sternheimer'
                 }
         }
 
         var increment -type REAL {
             default {0.001}
             info {
-                 Incremental step used to define the mesh between start and finish.
+                 Incremental step used to define the mesh between start and end.
                  In units set by the units variable.
+                 this variable can ONLY be used when calculator = 'sternheimer'
                 }
         }
 

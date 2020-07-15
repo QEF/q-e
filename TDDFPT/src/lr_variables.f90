@@ -63,6 +63,7 @@ MODULE lr_variables
   INTEGER :: lrdrho
   REAL(kind=dp) :: increment
   INTEGER :: units
+  REAL(kind=dp) :: end
   !
   !------------------------------------------------------------------------!
   !

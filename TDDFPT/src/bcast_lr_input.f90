@@ -70,6 +70,7 @@ SUBROUTINE bcast_lr_input
   call mp_bcast (alpha_mix, ionode_id, world_comm )
   call mp_bcast (increment, ionode_id, world_comm )
   call mp_bcast (units, ionode_id, world_comm )
+  call mp_bcast (end, ionode_id, world_comm )
 
   ! for lr_dav
   CALL mp_bcast (davidson, ionode_id, world_comm )
