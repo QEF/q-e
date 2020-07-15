@@ -44,7 +44,10 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
                  npwx, npw, nbnd, evc, eig, btype, ethr, notconv, nhpsi )
   !-------------------------------------------------------------------------------
   !paro_flag = 1: modified parallel orbital-updating method
-
+!civn 
+#if defined (__CUDA) 
+  USE cudafor
+#endif  
   ! global variables
   USE util_param,          ONLY : DP, stdout
   USE mp_bands_util,       ONLY : inter_bgrp_comm, nbgrp, my_bgrp_id
@@ -86,11 +89,21 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
 
   INTEGER :: ibnd, ibnd_start, ibnd_end, how_many, lbnd, kbnd, last_unconverged, &
              recv_counts(nbgrp), displs(nbgrp), column_type
+!civn 
+  !device variables
+  EXTERNAL h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu
+  INTEGER :: ii, jj, kk 
+  COMPLEX(DP), ALLOCATABLE :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
+#if defined (__CUDA)
+  attributes(device) :: psi_d, hpsi_d, spsi_d
+#endif 
   !
   ! ... init local variables
   !
 !civn 
-  write(*,*) 'civn ' 
+#if defined (__CUDA)
+  write(*,*) 'civn __CUDA' 
+#endif
 
   CALL laxlib_getval( nproc_ortho = nproc_ortho )
   paro_ntr = 20
@@ -102,14 +115,28 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   CALL mp_type_create_column_section(evc(1,1), 0, npwx, npwx, column_type)
 
   ALLOCATE ( psi(npwx,nvecx), hpsi(npwx,nvecx), spsi(npwx,nvecx), ew(nvecx), conv(nbnd) )
+!civn 
+  ALLOCATE ( psi_d(npwx,nvecx), hpsi_d(npwx,nvecx), spsi_d(npwx,nvecx) )
 
   CALL start_clock( 'paro:init' ); 
   conv(:) =  .FALSE. ; nconv = COUNT ( conv(:) )
-  psi(:,1:nbnd) = evc(:,1:nbnd) ! copy input evc into work vector
-  call h_psi  (npwx,npw,nbnd,psi,hpsi) ! computes H*psi
-  call s_psi  (npwx,npw,nbnd,psi,spsi) ! computes S*psi
+!civn 
+!  psi(:,1:nbnd) = evc(:,1:nbnd) ! copy input evc into work vector
+!!!$cuf kernel do(2) 
+  DO ii = 1, npwx
+    DO jj = 1, nbnd
+      psi_d(ii,jj) = evc(ii,jj) 
+    END DO 
+  END DO 
+
+  call h_psi_gpu  (npwx,npw,nbnd,psi_d,hpsi_d) ! computes H*psi
+  call s_psi_gpu  (npwx,npw,nbnd,psi_d,spsi_d) ! computes S*psi
   nhpsi = 0 ; IF (my_bgrp_id==0) nhpsi = nbnd
   CALL stop_clock( 'paro:init' ); 
+!civn 2fix
+  psi  = psi_d
+  hpsi = hpsi_d
+  spsi = spsi_d
 
 #if defined(__MPI)
   IF ( nproc_ortho == 1 ) THEN
@@ -120,12 +147,18 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
      CALL protate_HSpsi_gamma(  npwx, npw, nbnd, nbnd, psi, hpsi, overlap, spsi, eig )
   ENDIF
 #endif
+
   !write (6,'(10f10.4)') psi(1:5,1:3)
 
   !write (6,*) eig(1:nbnd)
 
   ParO_loop : &
   DO itry = 1,paro_ntr
+
+!civn 2fix
+     psi_d = psi
+     hpsi_d = hpsi
+     spsi_d = spsi
 
      !write (6,*) ' paro_itry =', itry, ethr
 
@@ -157,24 +190,41 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
      lbnd = 1; kbnd = 1
      DO ibnd = 1, ntrust ! pack unconverged roots in the available space
         IF (.NOT.conv(ibnd) ) THEN
-           psi (:,nbase+kbnd)  = psi(:,ibnd)
-           hpsi(:,nbase+kbnd) = hpsi(:,ibnd)
-           spsi(:,nbase+kbnd) = spsi(:,ibnd)
+!$cuf kernel do(1)
+           DO ii = 1, npwx
+             psi_d (ii,nbase+kbnd)  = psi_d(ii,ibnd)
+             hpsi_d(ii,nbase+kbnd) = hpsi_d(ii,ibnd)
+             spsi_d(ii,nbase+kbnd) = spsi_d(ii,ibnd)
+           END DO 
            ew(kbnd) = eig(ibnd) ; last_unconverged = ibnd
            lbnd=lbnd+1 ; kbnd=kbnd+recv_counts(mod(lbnd-2,nbgrp)+1); if (kbnd>nactive) kbnd=kbnd+1-nactive
         END IF
      END DO
      DO ibnd = nbnd+1, nbase   ! add extra vectors if it is the case
-        psi (:,nbase+kbnd)  = psi(:,ibnd)
-        hpsi(:,nbase+kbnd) = hpsi(:,ibnd)
-        spsi(:,nbase+kbnd) = spsi(:,ibnd)
+!$cuf kernel do(1)
+        DO ii = 1, npwx
+          psi_d (ii,nbase+kbnd)  = psi_d(ii,ibnd)
+          hpsi_d(ii,nbase+kbnd) = hpsi_d(ii,ibnd)
+          spsi_d(ii,nbase+kbnd) = spsi_d(ii,ibnd)
+        END DO 
         ew(kbnd) = eig(last_unconverged)
         lbnd=lbnd+1 ; kbnd=kbnd+recv_counts(mod(lbnd-2,nbgrp)+1); if (kbnd>nactive) kbnd=kbnd+1-nactive
      END DO
-     psi (:,nbase+1:nbase+how_many) = psi (:,nbase+ibnd_start:nbase+ibnd_end)
-     hpsi(:,nbase+1:nbase+how_many) = hpsi(:,nbase+ibnd_start:nbase+ibnd_end)
-     spsi(:,nbase+1:nbase+how_many) = spsi(:,nbase+ibnd_start:nbase+ibnd_end)
+!$cuf kernel do(2)
+     DO ii = 1, npwx
+       DO jj = nbase+1, nbase+how_many  
+         kk = jj + ibnd_start - 1
+         psi_d (ii,jj) = psi_d (ii,kk)
+         hpsi_d(ii,jj) = hpsi_d(ii,kk)
+         spsi_d(ii,jj) = spsi_d(ii,kk)
+       END DO 
+     END DO 
      ew(1:how_many) = ew(ibnd_start:ibnd_end)
+!civn 2fix
+     psi   =  psi_d  
+     hpsi  =  hpsi_d 
+     spsi  =  spsi_d 
+
      CALL stop_clock( 'paro:pack' ); 
    
 !     write (6,*) ' check nactive = ', lbnd, nactive
@@ -221,6 +271,9 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   CALL mp_sum(nhpsi,inter_bgrp_comm)
 
   DEALLOCATE ( ew, conv, psi, hpsi, spsi )
+!civn 
+  DEALLOCATE ( psi_d, hpsi_d, spsi_d )
+
   CALL mp_type_free( column_type )
 
   CALL stop_clock( 'paro_gamma' ); !write (6,*) ' exit paro diag'
