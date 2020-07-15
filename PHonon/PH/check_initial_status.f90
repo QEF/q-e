@@ -96,6 +96,8 @@ SUBROUTINE check_initial_status(auxdyn)
   USE mp,              ONLY : mp_bcast
   USE mp_global,       ONLY : mp_global_end
   USE el_phon,         ONLY : elph_mat
+  USE noncollin_module, ONLY : noncolin
+  USE spin_orb,        ONLY : domag
   ! YAMBO >
   USE YAMBO,           ONLY : elph_yambo,dvscf_yambo
   ! YAMBO <
@@ -282,7 +284,7 @@ SUBROUTINE check_initial_status(auxdyn)
   ELSE  
      ! this is the standard treatment
      IF ( ( ( ldisp.OR..NOT.lgamma .OR. modenum/=0 ) .AND. (.NOT.lqdir) ) &
-          .OR. newgrid .OR. always_run ) CALL write_scf( rho, nspin )
+          .OR. newgrid .OR. always_run .OR. (noncolin.AND.domag) ) CALL write_scf( rho, nspin )
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
   !
