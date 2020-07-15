@@ -185,7 +185,7 @@ input_description -distribution {Quantum Espresso} -package turboEELS -program t
         var increment -type REAL {
             default {0.001}
             info {
-                 Incremental step used to define the mesh between start and end.
+                 Incremental step used to define the mesh between start and finish.
                  In units set by the units variable.
                 }
         }
