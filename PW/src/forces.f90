@@ -149,7 +149,11 @@ SUBROUTINE forces()
   ! ... The Hubbard contribution
   !     (included by force_us if using beta as local projectors)
   !
-  IF ( lda_plus_u .AND. U_projection.NE.'pseudo' ) CALL force_hub( forceh )
+  IF (.not. use_gpu) THEN
+     IF ( lda_plus_u .AND. U_projection.NE.'pseudo' ) CALL force_hub( forceh )
+  ELSE
+     IF ( lda_plus_u .AND. U_projection.NE.'pseudo' ) CALL force_hub_gpu( forceh )
+  ENDIF
   !
   ! ... The ionic contribution is computed here
   !
