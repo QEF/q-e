@@ -1880,6 +1880,7 @@ setlocal.o : extfield.o
 setlocal.o : martyna_tuckerman.o
 setlocal.o : pwcom.o
 setlocal.o : scf_mod.o
+setup.o : ../../Modules/additional_kpoints.o
 setup.o : ../../Modules/cell_base.o
 setup.o : ../../Modules/constants.o
 setup.o : ../../Modules/control_flags.o

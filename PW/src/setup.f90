@@ -93,6 +93,7 @@ SUBROUTINE setup()
   USE paw_variables,      ONLY : okpaw
   USE fcp_variables,      ONLY : lfcpopt, lfcpdyn
   USE extfield,           ONLY : gate
+  USE additional_kpoints, ONLY : add_additional_kpoints
   !
   IMPLICIT NONE
   !
@@ -511,6 +512,8 @@ SUBROUTINE setup()
         !
      END IF
   END IF
+  !
+  CALL add_additional_kpoints(nkstot, xk, wk)
   !
   IF ( nat==0 ) THEN
      !

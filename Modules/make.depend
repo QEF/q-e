@@ -1,3 +1,8 @@
+additional_kpoints.o : cell_base.o
+additional_kpoints.o : input_parameters.o
+additional_kpoints.o : io_global.o
+additional_kpoints.o : kind.o
+additional_kpoints.o : parameters.o
 atom_weight.o : kind.o
 autopilot.o : ../UtilXlib/mp.o
 autopilot.o : io_global.o
@@ -299,6 +304,7 @@ qmmm.o : mp_pools.o
 qmmm.o : mp_world.o
 radial_gradients.o : kind.o
 random_numbers.o : kind.o
+read_cards.o : additional_kpoints.o
 read_cards.o : autopilot.o
 read_cards.o : bz_form.o
 read_cards.o : cell_base.o
