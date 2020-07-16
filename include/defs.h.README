@@ -50,9 +50,10 @@ Libraries:
                    (linux version; aix version no longer supported)
       __SCALAPACK   Use Scalapack routines instead of internal ones
                     for parallel subspace diagonalization
-      __ELPA_2015   Use ELPA library (version 2015, backward compatibility)
-      __ELPA_2016   Use ELPA library (version 2016, supported)
+      __ELPA_201X   Use ELPA library, version 201X, X=5,6,7,8,9
+      __ELPA        Use ELPA library, last version
       __MASS        Use mathematical routines from IBM MASS library
+                    (obsolete?)
       __SX6         Use MathKeisan libraries for NEC SX machines
       ASL, MICRO    SX-6 specific libraries (obsolescent)
 
