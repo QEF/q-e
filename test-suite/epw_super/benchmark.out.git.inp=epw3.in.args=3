@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.2.0 starts on  1Jul2020 at 11:14:40 
+     Program EPW v.5.2.0 starts on 15Jul2020 at 10:40:28 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -42,6 +42,8 @@
      MPI processes distributed on     1 nodes
      K-points division:     npool     =       4
      Fft bands division:     nmany     =       1
+
+     Reading supplied temperature list.
                       
      ------------------------------------------------------------------------ 
                    RESTART - RESTART - RESTART - RESTART                         
@@ -89,9 +91,9 @@
      G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
      number of k points=    0
                        cart. coord. in units 2pi/a_0
-     EPW          :      0.00s CPU      0.05s WALL
+     EPW          :      0.00s CPU      0.01s WALL
 
-     EPW          :      0.00s CPU      0.05s WALL
+     EPW          :      0.00s CPU      0.01s WALL
 
 
      -------------------------------------------------------------------
@@ -116,8 +118,8 @@
      Finished reading Wann rep data from file
 
      ===================================================================
-     Memory usage:  VmHWM =        71Mb
-                   VmPeak =       667Mb
+     Memory usage:  VmHWM =        21Mb
+                   VmPeak =       602Mb
      ===================================================================
      
      Using uniform q-mesh:    6   6   6
@@ -147,8 +149,8 @@
       
      All q-points are done, no need to restart !!
      ===================================================================
-     Memory usage:  VmHWM =        72Mb
-                   VmPeak =       667Mb
+     Memory usage:  VmHWM =        23Mb
+                   VmPeak =       629Mb
      ===================================================================
 
 
@@ -159,8 +161,8 @@
 
      Finish reading freq file
 
-                  Fermi level (eV) =     7.6644747144E+00
-     DOS(states/spin/eV/Unit Cell) =     9.1308569528E-01
+                  Fermi level (eV) =     7.6644747151E+00
+     DOS(states/spin/eV/Unit Cell) =     9.1308569318E-01
             Electron smearing (eV) =     1.0000000000E-01
                  Fermi window (eV) =     2.0000000000E+01
      Nr irreducible k-points within the Fermi shell =        28 out of        28
@@ -182,11 +184,11 @@
 
      Finish reading .ephmat files
 
-     lambda_max =           126.3925342   lambda_k_max =             3.2058369
+     lambda_max =           126.3963398   lambda_k_max =             3.2058367
  
-     Electron-phonon coupling strength =    0.8715332
+     Electron-phonon coupling strength =    0.8715331
  
-     Estimated Allen-Dynes Tc =    26.410310 K for muc =    0.16000
+     Estimated Allen-Dynes Tc =    26.410306 K for muc =    0.16000
   
      Estimated BCS superconducting gap =     0.004006 eV
   
@@ -201,30 +203,30 @@
 
      Size of allocated memory per pool: ~=    0.0357 Gb
         iter      ethr        znormi [eV]    deltai [eV]
-          1   2.324585E+00   1.842446E+00   5.071400E-03
-          2   1.050021E-01   1.838424E+00   5.747030E-03
-          3   1.139816E-01   1.832860E+00   6.561657E-03
-          4   8.845982E-02   1.828464E+00   7.170242E-03
-          5   1.774058E-01   1.817191E+00   8.498221E-03
-          6   9.894098E-02   1.823272E+00   7.840917E-03
-          7   1.447663E-02   1.822481E+00   7.932340E-03
-          8   2.983707E-03   1.822322E+00   7.955351E-03
+          1   2.324585E+00   1.842446E+00   5.071399E-03
+          2   1.050021E-01   1.838424E+00   5.747029E-03
+          3   1.139816E-01   1.832860E+00   6.561656E-03
+          4   8.845982E-02   1.828464E+00   7.170240E-03
+          5   1.774059E-01   1.817191E+00   8.498220E-03
+          6   9.894108E-02   1.823272E+00   7.840916E-03
+          7   1.447665E-02   1.822481E+00   7.932339E-03
+          8   2.983689E-03   1.822322E+00   7.955349E-03
      Convergence was reached in nsiter =      8
  
-     iaxis_imag   :     20.51s CPU     20.58s WALL (       1 calls)
+     iaxis_imag   :     22.41s CPU     22.46s WALL (       1 calls)
  
     
      Pade approximant of anisotropic Eliashberg equations from imaginary-axis to real-axis
      Cutoff frequency wscut =     0.5000
     
         pade Re[znorm] [eV] Re[delta] [eV]
-         52   1.678092E+00   7.358501E-03
+         52   1.678152E+00   7.358502E-03
  
      Convergence was reached for N =     52 Pade approximants
  
-     raxis_pade   :      0.08s CPU      0.09s WALL (       1 calls)
+     raxis_pade   :      0.09s CPU      0.10s WALL (       1 calls)
  
-     itemp =   1   total cpu time :             20.67 secs
+     itemp =   1   total cpu time :             22.57 secs
  
 
      Unfolding on the coarse grid
@@ -236,14 +238,14 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :      0.07s CPU      0.08s WALL (       1 calls)
+     ephwann      :      0.06s CPU      0.07s WALL (       1 calls)
 
      HamW2B       :      0.00s CPU      0.00s WALL (      21 calls)
 
-     ELIASHBERG   :     64.43s CPU     64.56s WALL (       1 calls)
+     ELIASHBERG   :     83.83s CPU     83.86s WALL (       1 calls)
 
      Total program execution
-     EPW          :   1m 4.50s CPU   1m 4.70s WALL
+     EPW          :   1m23.89s CPU   1m23.94s WALL
 
                                                                                           
  Please consider citing:                                                                  

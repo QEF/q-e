@@ -37,7 +37,7 @@
 
 
   fsthick     = 1.36056981 ! eV 
-  eptemp      = 0.01 ! K (same as PRB 76, 165108)
+  temps       = 0.01 ! K (same as PRB 76, 165108)
   degaussw    = 0.1 ! eV
 
   dvscf_dir   = '../phonons/save'

@@ -46,7 +46,7 @@
   asr_typ     = 'crystal'
 
   fsthick     = 6 ! eV
-  eptemp      = 300 ! K
+  temps       = 300 ! K
   degaussw    = 0.1  ! eV
   degaussq    = 0.05 ! meV
   assume_metal = .TRUE.
