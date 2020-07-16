@@ -121,7 +121,7 @@
           ! get size of the mp_mesh in the irr wedge
           WRITE(stdout,'(a,3i4)') '     Using uniform MP k-mesh: ', nkf1, nkf2, nkf3
           call set_sym_bl()
-          IF (fixsym) CALL fix_sym()
+          IF (fixsym) CALL fix_sym(.TRUE.)
           !
           ALLOCATE(xkf_(3, 2 * nkf1 * nkf2 * nkf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating xkf_', 1)
@@ -438,14 +438,14 @@
           ! get size of the mp_mesh in the irr wedge
           WRITE(stdout, '(a,3i4)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
           CALL set_sym_bl()
-          IF (fixsym) CALL fix_sym()
+          IF (fixsym) CALL fix_sym(.TRUE.)
           !
           ALLOCATE(xkf(3, 2 * nkf1 * nkf2 * nkf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating xkf', 1)
           ALLOCATE(wkf(2 * nkf1 * nkf2 * nkf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating wkf', 1)
           ! the result of this call is just nkqtotf
-          CALL kpoint_grid(nrot, time_reversal, s, t_rev, bg, nkf1 * nkf2 * nkf3, &
+          CALL kpoint_grid(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1 * nkf2 * nkf3, &
                0, 0, 0, nkf1, nkf2, nkf3, nkqtotf, xkf, wkf)
           DEALLOCATE(xkf, STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error deallocating xkf', 1)
@@ -459,7 +459,7 @@
           IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating xkf_tmp', 1)
           ALLOCATE(wkf_tmp(nkqtotf), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating wkf_tmp', 1)
-          CALL kpoint_grid(nrot, time_reversal, s, t_rev, bg, nkf1 * nkf2 * nkf3, &
+          CALL kpoint_grid(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1 * nkf2 * nkf3, &
                0, 0, 0, nkf1, nkf2, nkf3, nkqtotf, xkf_tmp, wkf_tmp)
           !
           ! assign to k and k+q for xkf and wkf
@@ -960,7 +960,7 @@
           ! get size of the mp_mesh in the irr wedge
           WRITE(stdout, '(a,3i4)') '     Using uniform MP q-mesh: ', nqf1, nqf2, nqf3
           call set_sym_bl()
-          IF (fixsym) CALL fix_sym()
+          IF (fixsym) CALL fix_sym(.TRUE.)
           !
           ALLOCATE(xqf_(3, nqf1 * nqf2 * nqf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating xqf_ ', 1)
@@ -1171,14 +1171,14 @@
           ! get size of the mp_mesh in the irr wedge
           WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
           call set_sym_bl()
-          IF (fixsym) CALL fix_sym()
+          IF (fixsym) CALL fix_sym(.TRUE.)
           !
           ALLOCATE(xqf(3, nqf1 * nqf2 * nqf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating xqf', 1)
           ALLOCATE(wqf(nqf1 * nqf2 * nqf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating wqf', 1)
           ! the result of this call is just nkqtotf
-          CALL kpoint_grid(nrot, time_reversal, s, t_rev, bg, nqf1 * nqf2 * nqf3, &
+          CALL kpoint_grid(nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1 * nqf2 * nqf3, &
                0, 0, 0, nqf1, nqf2, nqf3, nqtotf, xqf, wqf)
           DEALLOCATE(xqf, STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error deallocating xqf', 1)
@@ -1188,7 +1188,7 @@
           IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating xqf', 1)
           ALLOCATE(wqf(nqtotf), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating wqf', 1)
-          CALL kpoint_grid(nrot, time_reversal, s, t_rev, bg, nqf1 * nqf2 * nqf3, &
+          CALL kpoint_grid(nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1 * nqf2 * nqf3, &
                0,0,0, nqf1, nqf2, nqf3, nqtotf, xqf, wqf)
           !
           ! bring xqf in crystal coordinates
@@ -1454,7 +1454,7 @@
           s_bztoibz(:) = 0
           !
           CALL set_sym_bl()
-          IF (fixsym) CALL fix_sym()
+          IF (fixsym) CALL fix_sym(.TRUE.)
           !
           ! What we get from this call is bztoibz
           CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, bztoibz, s_bztoibz)

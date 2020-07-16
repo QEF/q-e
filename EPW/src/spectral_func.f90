@@ -34,7 +34,7 @@
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
+    USE io_global,     ONLY : stdout, ionode_id
     USE io_var,        ONLY : iospectral_sup, iospectral
     USE modes,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub, eps_acustic, fsthick, ngaussw, &
@@ -48,7 +48,8 @@
     USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, ci, eps8
     USE constants,     ONLY : pi
     USE mp,            ONLY : mp_barrier, mp_sum
-    USE mp_global,     ONLY : me_pool, inter_pool_comm
+    USE mp_global,     ONLY : inter_pool_comm
+    USE mp_world,      ONLY : mpime
     USE io_selfen,     ONLY : spectral_write
     USE poolgathering, ONLY : poolgather2
     !
@@ -354,7 +355,7 @@
         ! construct the trace of the spectral function (assume diagonal selfenergy
         ! and constant matrix elements for dipole transitions)
         !
-        IF (me_pool == 0) THEN
+        IF (mpime == ionode_id) THEN
           WRITE(tp, "(f8.3)") gtemp(itemp) * ryd2ev / kelvin2eV
           filespec = 'specfun.elself.' // trim(adjustl(tp)) // 'K'
           filespecsup = 'specfun_sup.elself.' // trim(adjustl(tp)) // 'K'
@@ -406,17 +407,17 @@
             !
             specfun_sum = specfun_sum + a_all(iw, ik, itemp) * fermi(iw) * dw
             !
-            IF (me_pool == 0) WRITE(iospectral, '(2x, i7, 2x, f10.5, 2x, E12.5)') ik, ryd2ev * ww(iw), &
+            IF (mpime == ionode_id) WRITE(iospectral, '(2x, i7, 2x, f10.5, 2x, E12.5)') ik, ryd2ev * ww(iw), &
                                                                                   a_all(iw, ik, itemp) / ryd2mev
             !
           ENDDO
           !
-          IF (me_pool == 0) WRITE(iospectral, '(a)') ' '
-          IF (me_pool == 0) WRITE(iospectral, '(2x, a, 2x, E12.5)') '# Integrated spectral function ', specfun_sum
+          IF (mpime == ionode_id) WRITE(iospectral, '(a)') ' '
+          IF (mpime == ionode_id) WRITE(iospectral, '(2x, a, 2x, E12.5)') '# Integrated spectral function ', specfun_sum
           !
         ENDDO
         !
-        IF (me_pool == 0) CLOSE(iospectral)
+        IF (mpime == ionode_id) CLOSE(iospectral)
         !
         DO ibnd = 1, nbndfst
           DO ik = 1, nktotf
@@ -432,7 +433,7 @@
               WRITE(stdout, 102) ik, ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2ev * ww(iw), &
                     ryd2mev * esigmar_all(ibnd, ik, iw, itemp), ryd2mev * esigmai_all(ibnd, ik, iw, itemp)
               !
-              IF (me_pool == 0) &
+              IF (mpime == ionode_id) &
               WRITE(iospectral_sup, 102) ik, ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2ev * ww(iw), &
                     ryd2mev * esigmar_all(ibnd, ik, iw, itemp), ryd2mev * esigmai_all(ibnd, ik, iw, itemp)
               !
@@ -444,7 +445,7 @@
           !
         ENDDO
         !
-        IF (me_pool == 0) CLOSE(iospectral_sup)
+        IF (mpime == ionode_id) CLOSE(iospectral_sup)
         !
       ENDDO ! itemp
       DEALLOCATE(xkf_all, STAT = ierr)
@@ -480,7 +481,7 @@
     !!
     !-----------------------------------------------------------------------
     USE kinds,     ONLY : DP
-    USE io_global, ONLY : stdout
+    USE io_global, ONLY : stdout, ionode_id
     USE io_var,    ONLY : iospectral_sup, iospectral
     USE modes,     ONLY : nmodes
     USE epwcom,    ONLY : nbndsub, fsthick, shortrange, ngaussw, degaussw, &
@@ -494,7 +495,7 @@
     USE constants,     ONLY : pi
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_barrier, mp_sum
-    USE mp_global,     ONLY : inter_pool_comm, ionode_id
+    USE mp_global,     ONLY : inter_pool_comm
     !
     IMPLICIT NONE
     !
@@ -847,7 +848,7 @@
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
+    USE io_global,     ONLY : stdout, ionode_id
     USE io_var,        ONLY : iospectral_sup, iospectral
     USE epwcom,        ONLY : nbndsub, fsthick, ngaussw, degaussw, nw_specfun, &
                               wmin_specfun, wmax_specfun, efermi_read, fermi_energy, &
@@ -859,7 +860,8 @@
     USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, ci, eps6
     USE constants,     ONLY : pi
     USE mp,            ONLY : mp_barrier, mp_sum
-    USE mp_global,     ONLY : me_pool, inter_pool_comm
+    USE mp_global,     ONLY : inter_pool_comm
+    USE mp_world,      ONLY : mpime
     USE cell_base,     ONLY : omega, alat, bg
     USE selfen,        ONLY : get_eps_mahan
     USE io_selfen,     ONLY : spectral_write
@@ -1251,7 +1253,7 @@
         ! construct the trace of the spectral function (assume diagonal selfenergy
         ! and constant matrix elements for dipole transitions)
         !
-        IF (me_pool == 0) then
+        IF (mpime == ionode_id) then
           WRITE(tp, "(f8.3)") gtemp(itemp) * ryd2ev / kelvin2eV
           filespec = 'specfun.plself.' // trim(adjustl(tp)) // 'K'
           filespecsup = 'specfun_sup.plself.' // trim(adjustl(tp)) // 'K'
@@ -1302,15 +1304,15 @@
             fermi(iw) = wgauss(-ww(iw) * inv_eptemp, -99)
             specfun_sum = specfun_sum + a_all(iw, ik, itemp) * fermi(iw) * dw !/ ryd2mev
             !
-           IF (me_pool == 0) WRITE(iospectral, '(2x, i7, 2x, f10.5, 2x, E12.5)') ik, ryd2ev * ww(iw), &
+           IF (mpime == ionode_id) WRITE(iospectral, '(2x, i7, 2x, f10.5, 2x, E12.5)') ik, ryd2ev * ww(iw), &
                                                                                  a_all(iw, ik, itemp) / ryd2mev
           ENDDO
           !
-          IF (me_pool == 0) WRITE(iospectral, '(a)') ' '
-          IF (me_pool == 0) WRITE(iospectral, '(2x, a, 2x, E12.5)') '# Integrated spectral function ', specfun_sum
+          IF (mpime == ionode_id) WRITE(iospectral, '(a)') ' '
+          IF (mpime == ionode_id) WRITE(iospectral, '(2x, a, 2x, E12.5)') '# Integrated spectral function ', specfun_sum
         ENDDO
         !
-        IF (me_pool == 0) CLOSE(iospectral)
+        IF (mpime == ionode_id) CLOSE(iospectral)
         !
         DO ibnd = 1, nbndfst
           !
@@ -1327,7 +1329,7 @@
               WRITE(stdout, 102) ik, ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2ev * ww(iw), &
                     ryd2mev * esigmar_all(ibnd, ik, iw, itemp), ryd2mev * esigmai_all(ibnd, ik, iw, itemp)
               !
-              IF (me_pool == 0) &
+              IF (mpime == ionode_id) &
               WRITE(iospectral_sup, 102) ik, ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2ev * ww(iw), &
                     ryd2mev * esigmar_all(ibnd, ik, iw, itemp), ryd2mev * esigmai_all(ibnd, ik, iw, itemp)
               !
@@ -1339,7 +1341,7 @@
           !
         ENDDO
         !
-        IF (me_pool == 0) CLOSE(iospectral_sup)
+        IF (mpime == ionode_id) CLOSE(iospectral_sup)
         !
       ENDDO ! itemp
       DEALLOCATE(xkf_all, STAT = ierr)
@@ -1387,8 +1389,7 @@
     USE constants, ONLY : pi
     USE mp,        ONLY : mp_barrier, mp_sum
     USE mp_world,  ONLY : mpime
-    USE io_global, ONLY : ionode_id
-    USE io_global, ONLY : stdout
+    USE io_global, ONLY : ionode_id, stdout
     USE io_var,    ONLY : iua2ffil, iudosfil, iua2ftrfil, iures
     USE io_files,  ONLY : prefix
     !
