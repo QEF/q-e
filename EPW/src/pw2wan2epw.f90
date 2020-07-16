@@ -3285,6 +3285,8 @@
       !
     ENDDO
     !
+    CALL mp_barrier(world_comm)
+    !
     ! Lengths of real and reciprocal lattice vectors
     !
     DO i = 1, 3
@@ -3343,7 +3345,7 @@
           WRITE(stdout, *) 'Error plotting WF cube. Try one of the following:'
           WRITE(stdout, *) '   (1) increase wannier_plot_supercell;'
           WRITE(stdout, *) '   (2) decrease wannier_plot_radius;'
-          CALL errore('write_plot', 'Error plotting WF cube.', 1)
+          CALL errore('write_plot', 'Wrong range in plotting WF cube.', 1)
         ENDIF
         DO nyy = 1, ilength(2)
           qyy = nyy + istart(2) - 1
@@ -3352,7 +3354,7 @@
             WRITE(stdout, *) 'Error plotting WF cube. Try one of the following:'
             WRITE(stdout, *) '   (1) increase wannier_plot_supercell;'
             WRITE(stdout, *) '   (2) decrease wannier_plot_radius;'
-            CALL errore('write_plot', 'Error plotting WF cube.', 1)
+            CALL errore('write_plot', 'Wrong range in plotting WF cube.', 1)
           ENDIF
           DO nxx = 1, ilength(1)
             qxx = nxx + istart(1) - 1
@@ -3361,7 +3363,7 @@
               WRITE(stdout, *) 'Error plotting WF cube. Try one of the following:'
               WRITE(stdout, *) '   (1) increase wannier_plot_supercell;'
               WRITE(stdout, *) '   (2) decrease wannier_plot_radius;'
-              CALL errore('write_plot', 'Error plotting WF cube.', 1)
+              CALL errore('write_plot', 'Wrong range in plotting WF cube.', 1)
             ENDIF
           ENDDO
         ENDDO

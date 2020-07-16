@@ -1868,7 +1868,7 @@
     !!
     USE kinds,     ONLY : DP
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl
-    USE epwcom,    ONLY : nkf1, nkf2, nkf3, mp_mesh_k
+    USE epwcom,    ONLY : nkf1, nkf2, nkf3, mp_mesh_k, fixsym
     USE elph2,     ONLY : nqtotf, nktotf, xqf, map_rebal
     USE eliashbergcom, ONLY : ixkff, ixkf, xkfs, nkfs, ixkqf, ixqfs, nqfs
     USE constants_epw, ONLY : eps5, zero
@@ -1882,6 +1882,7 @@
     USE grid,      ONLY : kpmq_map, kpoint_grid_epw
     USE io_files,  ONLY : prefix, tmp_dir, create_directory
     USE io_var,    ONLY : iufilikmap
+    USE low_lvl,   ONLY : fix_sym
     !
     IMPLICIT NONE
     !
@@ -1938,6 +1939,7 @@
       s_bztoibz(:) = 0
       !
       CALL set_sym_bl()
+      IF (fixsym) CALL fix_sym(.TRUE.)
       CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, bztoibz, s_bztoibz)
       ! 
       bztoibz_tmp(:) = 0
