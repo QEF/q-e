@@ -1075,6 +1075,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
+        var ace -type LOGICAL {
+            default {true } 
+            info {
+                Use Adaptively Compressed Exchange operator as in 
+                Lin Lin, J. Chem. Theory Comput. 2016, 12, 5, 2242–2249
+                Set to false to use standard Exchange (much slower)
+            }
+        }
+
+
         var exx_fraction -type REAL { 
             default { it depends on the specified functional }
             info {
