@@ -4216,6 +4216,7 @@ end associate
     !
     USE becmod,               ONLY : bec_type
     USE wvfct,                ONLY : current_k, npwx
+    USE klist,                ONLY : wk
     USE noncollin_module,     ONLY : npol
     !
     IMPLICIT NONE
@@ -4265,8 +4266,11 @@ end associate
       WRITE( stdout,'(3(A,I3),A,I9,A,f12.6)') 'aceinit_k: nbnd=', nbnd, ' nbndproj=',nbndproj, &
                                               ' k=',current_k,' npw=',nnpw,' Ex(k)=',exxe
 #endif
-    ! |xi> = -One * Vx[phi]|phi> * rmexx^T
-    CALL aceupdate_k( nbndproj, nnpw, xitmp, mexx )
+    ! Skip k-points that have exactly zero weight
+    IF(wk(current_k)/=0._dp)THEN
+      ! |xi> = -One * Vx[phi]|phi> * rmexx^T
+      CALL aceupdate_k( nbndproj, nnpw, xitmp, mexx )
+    ENDIF
     !
     DEALLOCATE( mexx )
     !

@@ -31,7 +31,7 @@
   USE start_k,       ONLY : nk1, nk2, nk3
   USe disp,          ONLY : nq1, nq2, nq3
   USE epwcom,        ONLY : delta_smear, nsmear, dis_win_min, dis_win_max, wannierize, &
-                            ngaussw, dvscf_dir, eptemp, bands_skipped, wdata, kmaps,   &
+                            ngaussw, dvscf_dir, bands_skipped, wdata, kmaps, ntempxx,  &
                             num_iter, dis_froz_max, fsthick, dis_froz_min, eig_read,   &
                             vme, degaussw, epexst, epwwrite, epbread, phonselfen, nqc2,&
                             elecselfen, a2f, plselfen, specfun_pl, nest_fn, filukk,    &
@@ -39,7 +39,7 @@
                             nqc3, nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, eps_acustic, nw, &
                             wmax, wmin, mp_mesh_q, mp_mesh_k, filqf, filkf, nswi, nc,  &
                             delta_qsmear, degaussq, band_plot, ephwrite, nstemp,       &
-                            broyden_beta, conv_thr_raxis, tempsmax, tempsmin, temps,   &
+                            broyden_beta, conv_thr_raxis, temps, tempsmin, tempsmax,   &
                             broyden_ndim, wscut, wsfc, nqstep, limag, lreal, muc,      &
                             gap_edge, conv_thr_iaxis, nqsmear, iprint, wepexst, nswfc, &
                             epwread, eliashberg, imag_read, kerread, kerwrite, lunif,  &
@@ -47,7 +47,7 @@
                             ep_coupling, nw_specfun, wmax_specfun, wmin_specfun,       &
                             laniso, lpolar, lifc, asr_typ, lscreen, scr_typ, nbndsub,  &
                             fermi_diff, smear_rpa, cumulant, bnd_cum, proj, write_wfn, &
-                            iswitch, ntempxx, liso, lacon, lpade, etf_mem, epbwrite,   &
+                            iswitch, liso, lacon, lpade, etf_mem, epbwrite,            &
                             nsiter, conv_thr_racon, specfun_el, specfun_ph,            &
                             system_2d, delta_approx, title, int_mob, scissor,          &
                             iterative_bte, scattering, selecqread, epmatkqread,        &
@@ -61,7 +61,7 @@
                             wannier_plot_radius,                                       &
                             fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
-  USE elph2,         ONLY : elph, num_wannier_plot, wanplotlist
+  USE elph2,         ONLY : elph, num_wannier_plot, wanplotlist, gtemp
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, ang2m
   USE io_files,      ONLY : tmp_dir, prefix
   USE control_flags, ONLY : iverbosity, modenum, gamma_only
@@ -115,6 +115,10 @@
   !! Counter for loops
   INTEGER :: ik
   !! Counter on k-points
+  INTEGER :: itemp
+  !! counter on temperatures
+  INTEGER :: nstemp_hold = 0
+  !! placeholder for nstemp
   INTEGER :: nk1tmp
   !! temp vars for saving kgrid info
   INTEGER :: nk2tmp
@@ -129,7 +133,7 @@
        elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndsub,                            &
        filukk, epbread, epbwrite, epwread, epwwrite, etf_mem, kmaps,           &
        eig_read, wepexst, epexst, vme,                                         &
-       degaussw, fsthick, eptemp,  nsmear, delta_smear,                        &
+       degaussw, fsthick, nsmear, delta_smear,                                 &
        dvscf_dir, ngaussw, epmatkqread, selecqread,                            &
        wannierize, dis_win_max, dis_win_min, dis_froz_min, dis_froz_max,       &
        num_iter, proj, bands_skipped, wdata, iprint, write_wfn,                &
@@ -140,7 +144,7 @@
        mp_mesh_k, mp_mesh_q, filqf, filkf, ephwrite,                           &
        band_plot, degaussq, delta_qsmear, nqsmear, nqstep,                     &
        nswfc, nswc, nswi, pwc, wsfc, wscut, system_2d,                         &
-       broyden_beta, broyden_ndim, nstemp, tempsmin, tempsmax, temps,          &
+       broyden_beta, broyden_ndim, nstemp, temps,                              &
        conv_thr_raxis, conv_thr_iaxis, conv_thr_racon,                         &
        gap_edge, nsiter, muc, lreal, limag, lpade, lacon, liso, laniso, lpolar,&
        lscreen, scr_typ, fermi_diff, smear_rpa, cumulant, bnd_cum,             &
@@ -433,7 +437,6 @@
   eps_acustic  = 5.d0 ! cm-1
   nw           = 10
   fsthick      = 1.d10 ! eV
-  eptemp       = 300.0d0
   degaussw     = 0.025d0 ! eV
   a2f          = .FALSE.
   etf_mem      = 1
@@ -513,9 +516,7 @@
   conv_thr_iaxis = 1.d-05
   conv_thr_racon = 5.d-04
   gap_edge = 0.d0
-  nstemp   = 1
-  tempsmin = 0.d0
-  tempsmax = 0.d0
+  nstemp   = 0
   temps(:) = 0.d0
   nsiter   = 40
   muc     = 0.d0
@@ -711,10 +712,10 @@
      'You should define either filqf or nqf when band_plot = .true.', 1)
   IF (filkf /= ' ' .AND. .NOT. efermi_read) CALL errore('epw_readin', &
      'WARNING: if k-points are along a line, then efermi_read=.true. and fermi_energy must be given in the input file', -1)
-  IF (scattering .AND. nstemp < 1) CALL errore('epw_readin', 'wrong number of nstemp', 1)
-  IF (scattering .AND. MAXVAL(temps(:)) > 0.d0 .AND. tempsmin > 0.d0 .AND. tempsmax > 0.d0) &
-    CALL errore('epw_readin', 'define either (tempsmin and tempsmax) or temps(:)', 1)
-  IF (scattering .AND. tempsmax < tempsmin) CALL errore('epw_readin', 'tempsmax should be greater than tempsmin', 1)
+  IF (MAXVAL(temps(:)) == 0.d0 .AND. nstemp > 0) &
+    CALL errore('epw_readin', 'temps(:) must be specified if nstemp > 0', 1)
+  IF (nstemp > ntempxx) &
+    CALL errore('epw_readin', 'Maximum value of nstemp that can be used is 50', 1)
   IF ((ABS(ncarrier) > 1E+5) .AND. .NOT. carrier) CALL errore('epw_readin', &
       'carrier must be .TRUE. if you specify ncarrier.', 1)
   IF (carrier .AND. (ABS(ncarrier) < 1E+5))  CALL errore('epw_readin', &
@@ -758,6 +759,50 @@
     WRITE(stdout, '(5x,a)') "         to control the lower bound of band manifold."
   ENDIF
   !
+  ! setup temperature array
+  DO itemp = 1, ntempxx
+    IF (temps(itemp) > 0.d0) THEN
+      nstemp_hold = itemp
+    ENDIF
+  ENDDO
+  !
+  !case of nstemp > 0 but temps(:) = 0 is caught above
+  IF (nstemp_hold == 0 .AND. nstemp == 0) THEN !default mode (nstemp_hold == 0 if temps(:) = 0)
+    nstemp = 1
+    temps(1) = 300    
+    WRITE(stdout, '(/,5x,a)') 'No temperature supplied. Setting temps(:) to 300 K.'
+  ELSE IF (nstemp == 0 .OR. nstemp_hold == nstemp) THEN !list mode
+    nstemp = nstemp_hold !catches if nstemp not supplied, no effect if it is
+    WRITE(stdout, '(/,5x,a)') 'Reading supplied temperature list.'
+  ELSE IF (nstemp_hold < nstemp .AND. nstemp_hold == 2) THEN !even spacing mode 
+    tempsmin = temps(1)
+    tempsmax = temps(2)
+    IF (tempsmin >= tempsmax) THEN !bad start and end points
+      CALL errore('epw_readin', 'Error generating temperatures: need temps(1) < temps(2)', 1)
+    ELSE
+      DO itemp = 1, nstemp
+        temps(itemp) = tempsmin + DBLE(itemp - 1) * (tempsmax - tempsmin) / DBLE(nstemp - 1)
+      END DO
+    END IF
+    WRITE(stdout, '(/,5x,a)') 'Generating evenly spaced temperature list.'
+  ELSE IF (nstemp_hold .NE. nstemp) THEN !temps and nstemp not match
+    ! Ignore nstemp setting, print warning
+    WRITE(stdout, '(/,5x,a)') 'WARNING: Mismatch between temps(:) and nstemp'
+    WRITE(stdout, '(/,5x,a)') 'WARNING: Using supplied temperature list and ignoring nstemp'
+    nstemp = nstemp_hold
+!      CALL errore('epw_readin', 'Error: too many temperatures for given nstemp', 1)
+!  ELSE IF (nstemp > nstemp_hold) THEN !need more temps
+!      CALL errore('epw_readin', 'Error: not enough temperatures given in temps(:)', 1)
+  ELSE
+    CALL errore('epw_readin', 'Error generating temperatures: unknown error', 1)
+  END IF
+  ! go from K to Ry
+  temps(:) = temps(:) * kelvin2eV / ryd2ev
+  !
+  ALLOCATE(gtemp(nstemp), STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_readin', 'Error allocating gtemp', 1)
+  gtemp(:) = temps(1:nstemp)
+  !
   ! In the case of Fermi-Dirac distribution one should probably etemp instead of degauss.
   ! This is achieved with assume_metal == .true.
   IF (ngaussw == -99 .AND. .NOT. assume_metal) THEN
@@ -783,7 +828,6 @@
   ! 1 K in eV = 8.6173423e-5
   ! from K to Ryd
   ! Out-of bound issue with GCC compiler. Multiple Fermi temp is not used anyway.
-  eptemp = eptemp * kelvin2eV / ryd2ev
   !
   ! from cm-1 to Ryd
   eps_acustic = eps_acustic / ev2cmm1 / ryd2ev
@@ -805,19 +849,6 @@
   omegamin = omegamin / ryd2ev
   omegamax = omegamax / ryd2ev
   omegastep = omegastep / ryd2ev
-  IF (scattering) THEN
-    DO i = 1, ntempxx
-      IF (temps(i) > 0.d0) THEN
-        nstemp = i
-      ENDIF
-    ENDDO
-    !
-    ! go from K to Ry
-    temps(:) = temps(:) * kelvin2eV / ryd2ev
-    tempsmin = tempsmin * kelvin2eV / ryd2ev
-    tempsmax = tempsmax * kelvin2eV / ryd2ev
-    !
-  ENDIF
   !
   xq(:) = zero
   !
@@ -835,6 +866,13 @@
   IF (wannier_plot) CALL mp_bcast(wanplotlist, meta_ionode_id, world_comm)
   !
   CALL bcast_epw_input()
+  IF (.NOT. meta_ionode) THEN
+    ! need to allocate gtemp after the initial bcast_epw_input so all nodes have nstemp
+    ALLOCATE(gtemp(nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_readin', 'Error allocating gtemp', 1)
+  ENDIF
+  !bcast gtemp following allocation 
+  CALL mp_bcast(gtemp, meta_ionode_id, world_comm)
   !
   !   Here we finished the reading of the input file.
   !   Now allocate space for pwscf variables, read and check them.

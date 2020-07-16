@@ -18,6 +18,7 @@
 /
 
 &electrons
+  diago_david_ndim=4
 /
 ATOMIC_SPECIES
    C   12.01060   C.pbe-rrkjus.UPF

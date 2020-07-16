@@ -34,7 +34,7 @@
     USE pwcom,         ONLY : ef
     USE elph2,         ONLY : ibndmin, etf, nkf, dmef, vmef, wf, wqf,             &
                               epf17, inv_tau_all, inv_tau_allcb, adapt_smearing,  &
-                              wkf, dmef, vmef, eta, transp_temp, lower_bnd, dos,  &
+                              wkf, dmef, vmef, eta, gtemp, lower_bnd, dos,  &
                               nbndfst, nktotf
     USE constants_epw, ONLY : zero, one, two, ryd2mev, kelvin2eV, ryd2ev, eps4, eps8, &
                               eps6, eps10, bohr2ang, ang2cm
@@ -321,7 +321,7 @@
       DO itemp = 1, nstemp
         !
         ! Define the inverse so that we can efficiently multiply instead of dividing
-        etemp = transp_temp(itemp)
+        etemp = gtemp(itemp)
         inv_etemp = 1.0 / etemp
         !
         ! Now pre-treat phonon modes for efficiency for this specific current q-point.
@@ -629,7 +629,7 @@
       ! Now print the carrier density for checking (for non-metals)
       IF (.NOT. assume_metal) THEN
         DO itemp = 1, nstemp
-          etemp = transp_temp(itemp)
+          etemp = gtemp(itemp)
           carrier_density = 0.0
           !
           IF (ncarrier < 0.0) THEN ! VB

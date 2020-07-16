@@ -32,7 +32,8 @@
     USE io_files,      ONLY : prefix
     USE control_flags, ONLY : iverbosity
     USE epwcom,        ONLY : nstemp, fsthick
-    USE eliashbergcom, ONLY : nsiw, estemp, gap0, gap, agap, wsi, nznormi, znormi, deltai, &
+    USE elph2,         ONLY : gtemp
+    USE eliashbergcom, ONLY : nsiw, gap0, gap, agap, wsi, nznormi, znormi, deltai, &
                               aznormi, naznormi, adeltai, adeltaip, nkfs, nbndfs, ef0, ekfs, &
                               dosef, wkfs, w0g
     USE constants_epw, ONLY : kelvin2eV, eps6, zero
@@ -109,7 +110,7 @@
     !
     IF (mpime == ionode_id) THEN
       !
-      temp = estemp(itemp) / kelvin2eV
+      temp = gtemp(itemp) / kelvin2eV
       ! anisotropic case
       IF (temp < 10.d0) THEN
         WRITE(name1, 101) TRIM(prefix), '.imag_aniso_00', temp
@@ -193,7 +194,8 @@
     USE io_files,      ONLY : prefix
     USE control_flags, ONLY : iverbosity
     USE epwcom,        ONLY : fsthick, laniso, liso
-    USE eliashbergcom, ONLY : nsiw, estemp, agap, wsi, &
+    USE elph2,         ONLY : gtemp
+    USE eliashbergcom, ONLY : nsiw, agap, wsi, &
                               naznormi, aznormi, adeltai, nznormi, znormi, &
                               deltai, nkfs, nbndfs, ef0, ekfs
     USE constants_epw, ONLY : kelvin2eV
@@ -221,7 +223,7 @@
     REAL(KIND = DP) :: temp
     !! Temperature in K
     !
-    temp = estemp(itemp) / kelvin2eV
+    temp = gtemp(itemp) / kelvin2eV
     !
     cname = 'imag'
     !
@@ -304,7 +306,8 @@
     USE io_files,      ONLY : prefix
     USE control_flags, ONLY : iverbosity
     USE epwcom,        ONLY : nqstep, fsthick, laniso, liso
-    USE eliashbergcom, ONLY : nsw, estemp, ws, gap, agap, delta, znorm, adelta, aznorm, &
+    USE elph2,         ONLY : gtemp
+    USE eliashbergcom, ONLY : nsw, ws, gap, agap, delta, znorm, adelta, aznorm, &
                               nkfs, nbndfs, ef0, ekfs
     USE constants_epw, ONLY : kelvin2eV
     !
@@ -336,7 +339,7 @@
     REAL(KIND = DP) :: var1, var2, var3, var4
     !! Temporary working variables
     !
-    temp = estemp(itemp) / kelvin2eV
+    temp = gtemp(itemp) / kelvin2eV
     !
     IF (laniso) THEN
       IF (iverbosity == 2) THEN
@@ -444,7 +447,8 @@
     USE io_files,      ONLY : prefix
     USE control_flags, ONLY : iverbosity
     USE epwcom,        ONLY : nqstep, fsthick, laniso, liso
-    USE eliashbergcom, ONLY : nsw, estemp, ws, gap, agap, delta, znorm, adelta, aznorm, &
+    USE elph2,         ONLY : gtemp
+    USE eliashbergcom, ONLY : nsw, ws, gap, agap, delta, znorm, adelta, aznorm, &
                               nkfs, nbndfs, ef0, ekfs
     USE constants_epw, ONLY : kelvin2eV
     !
@@ -476,7 +480,7 @@
     REAL(KIND = DP) :: var1, var2, var3, var4
     !! Temporary working variables
     !
-    temp = estemp(itemp) / kelvin2eV
+    temp = gtemp(itemp) / kelvin2eV
     !
     IF (laniso) THEN
       IF (iverbosity == 2) THEN
@@ -2142,7 +2146,8 @@
     USE io_var,        ONLY : iufilgap
     USE io_files,      ONLY : prefix
     USE epwcom,        ONLY : fsthick
-    USE eliashbergcom, ONLY : estemp, agap, nkfs, nbndfs, ef0, ekfs, w0g
+    USE elph2,         ONLY : gtemp
+    USE eliashbergcom, ONLY : agap, nkfs, nbndfs, ef0, ekfs, w0g
     USE constants_epw, ONLY : kelvin2eV, zero, eps5
     !
     IMPLICIT NONE
@@ -2182,7 +2187,7 @@
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! This function computes the derivative of the Fermi-Dirac function
     !! It is therefore an approximation for a delta function
-    temp = estemp(itemp) / kelvin2eV
+    temp = gtemp(itemp) / kelvin2eV
     !
     delta_max = 1.1d0 * MAXVAL(agap(:,:,itemp))
     nbin = NINT(delta_max / eps5) + 1
@@ -2241,7 +2246,8 @@
     USE cell_base,     ONLY : bg
     USE control_flags, ONLY : iverbosity
     USE epwcom,        ONLY : fsthick, nkf1, nkf2, nkf3
-    USE eliashbergcom, ONLY : estemp, agap, nkfs, nbndfs, ef0, ekfs, ixkff
+    USE elph2,         ONLY : gtemp
+    USE eliashbergcom, ONLY : agap, nkfs, nbndfs, ef0, ekfs, ixkff
     USE constants_epw, ONLY : kelvin2eV, zero
     !
     IMPLICIT NONE
@@ -2273,7 +2279,7 @@
     REAL(KIND = DP), ALLOCATABLE :: agap_tmp(:, :)
     !! Temporary array for superconducting gap at ik, ibnd
     !
-    temp = estemp(itemp) / kelvin2eV
+    temp = gtemp(itemp) / kelvin2eV
     !
     cname = 'imag'
     !

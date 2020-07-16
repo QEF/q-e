@@ -27,12 +27,12 @@
     USE kinds,           ONLY : DP
     USE io_global,       ONLY : stdout
     USE epwcom,          ONLY : eliashberg, nkf1, nkf2, nkf3, nsiter, &
-                                nqf1, nqf2, nqf3, ntempxx, nswi, nstemp, temps, &
-                                muc, lreal, lpade, liso, limag, laniso, lacon, &
-                                kerwrite, kerread, imag_read, fila2f, wsfc, wscut, &
-                                tempsmin, tempsmax, rand_q, rand_k
-    USE constants_epw,   ONLY : kelvin2eV
-    USE eliashbergcom,   ONLY : estemp
+                                nqf1, nqf2, nqf3, nswi, muc, lreal, lpade, &
+                                liso, limag, laniso, lacon, kerwrite, kerread, &
+                                imag_read, fila2f, wsfc, wscut, rand_q, &
+                                rand_k 
+    USE constants_epw,   ONLY : ryd2ev
+    USE elph2,           ONLY : gtemp
     !
     IMPLICIT NONE
     !
@@ -80,12 +80,6 @@
       CALL errore('eliashberg_init', 'nswi should be > 0', 1)
     IF (eliashberg .AND. wscut < 0.d0 ) &
       CALL errore('eliashberg_init', 'wscut should be > 0.d0', 1)
-    IF (eliashberg .AND. nstemp < 1) &
-      CALL errore('eliashberg_init', 'wrong number of nstemp', 1)
-    IF (eliashberg .AND. MAXVAL(temps(:)) > 0.d0 .AND. tempsmin > 0.d0 .AND. tempsmax > 0.d0) &
-      CALL errore('eliashberg_init', 'define either (tempsmin and tempsmax) or temps(:)', 1)
-    IF (eliashberg .AND. tempsmax < tempsmin) &
-      CALL errore('eliashberg_init', 'tempsmax should be greater than tempsmin', 1)
     IF (eliashberg .AND. nsiter < 1) &
       CALL errore('eliashberg_init', 'wrong number of nsiter', 1)
     IF (eliashberg .AND. muc < 0.d0) &
@@ -96,31 +90,8 @@
       CALL errore('eliashberg_init', &
                   'eliashberg requires nkf1,nkf2,nkf3 to be multiple of nqf1,nqf2,nqf3 when fila2f is not used', 1)
     !
-    DO itemp = 1, ntempxx
-      IF (temps(itemp) > 0.d0) THEN
-        nstemp = itemp
-      ENDIF
-    ENDDO
-    !
-    ALLOCATE(estemp(nstemp), STAT = ierr)
-    IF (ierr /= 0) CALL errore('eliashberg_init', 'Error allocating estemp', 1)
-    estemp(:) = 0.d0
-    !
-    ! go from K to eV
-    IF (MAXVAL(temps(:)) > 0.d0) THEN
-      DO itemp= 1, nstemp
-        estemp(itemp) = temps(itemp) * kelvin2eV
-      ENDDO
-    ELSE
-      IF (nstemp == 1) THEN
-        estemp(1) = tempsmin * kelvin2eV
-      ELSE
-        dtemp = (tempsmax - tempsmin) * kelvin2eV / DBLE(nstemp - 1)
-        DO itemp = 1, nstemp
-          estemp(itemp) = tempsmin * kelvin2eV + DBLE(itemp - 1) * dtemp
-        ENDDO
-      ENDIF
-    ENDIF
+    ! Ryd to eV
+    gtemp(:) = gtemp * ryd2ev
     !
     RETURN
     !
@@ -139,9 +110,10 @@
     USE io_global,       ONLY : stdout
     USE epwcom,          ONLY : nqstep, nswi, nswfc, nswc, nstemp, &
                                 lreal, lpade, limag, lacon, wsfc, wscut
+    USE elph2,           ONLY : gtemp
     USE constants_epw,   ONLY : eps6
     USE constants,       ONLY : pi
-    USE eliashbergcom,   ONLY : estemp, nsw, nsiw, wsphmax
+    USE eliashbergcom,   ONLY : nsw, nsiw, wsphmax
     !
     IMPLICIT NONE
     !
@@ -173,7 +145,7 @@
         nsiw(:) = nswi
       ELSEIF (wscut > 0.d0) THEN
         DO itemp = 1, nstemp
-           nsiw(itemp) = int(0.5d0 * (wscut / pi / estemp(itemp) - 1.d0)) + 1
+           nsiw(itemp) = int(0.5d0 * (wscut / pi / gtemp(itemp) - 1.d0)) + 1
         ENDDO
       ELSEIF (nswi > 0 .AND. wscut > 0.d0) THEN
         nsiw(:) = nswi
@@ -675,12 +647,13 @@
     !
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : nqstep, muc, nstemp
-    USE eliashbergcom, ONLY : estemp, wsph, dwsph, a2f_iso, gap0
+    USE elph2,         ONLY : gtemp
+    USE eliashbergcom, ONLY : wsph, dwsph, a2f_iso, gap0
     USE constants_epw, ONLY : kelvin2eV, zero
-    USE io_global, ONLY : stdout, ionode_id
-    USE mp_global, ONLY : inter_pool_comm
-    USE mp_world,  ONLY : mpime
-    USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
+    USE io_global,     ONLY : stdout, ionode_id
+    USE mp_global,     ONLY : inter_pool_comm
+    USE mp_world,      ONLY : mpime
+    USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
     !
     IMPLICIT NONE
     !
@@ -726,18 +699,18 @@
       WRITE(stdout, '(5x, a, f12.6, a)') 'Estimated BCS superconducting gap = ', gap0, ' eV'
       WRITE(stdout, '(a)') '  '
       !
-      IF (estemp(1) / kelvin2eV > tc) THEN
+      IF (gtemp(1) / kelvin2eV > tc) THEN
         WRITE(stdout, '(a)') '  '
         WRITE(stdout, '(5x, a)') 'WARNING WARNING WARNING '
         WRITE(stdout, '(a)') '  '
         WRITE(stdout, '(5x, a, f9.3, a, f9.3, a)') 'The code may crash since tempsmin =', &
-                        estemp(1) / kelvin2eV, ' K is larger than Allen-Dynes Tc = ', tc, ' K'
-      ELSEIF (estemp(nstemp) / kelvin2eV > tc) THEN
+                        gtemp(1) / kelvin2eV, ' K is larger than Allen-Dynes Tc = ', tc, ' K'
+      ELSEIF (gtemp(nstemp) / kelvin2eV > tc) THEN
         WRITE(stdout, '(a)') '  '
         WRITE(stdout, '(5x, a)') 'WARNING WARNING WARNING '
         WRITE(stdout, '(a)') '  '
         WRITE(stdout, '(5x, a, f9.3, a, f9.3, a)') 'The code may crash since tempsmax =', &
-                        estemp(nstemp) / kelvin2eV, ' K is larger than Allen-Dynes Tc = ', tc, ' K'
+                        gtemp(nstemp) / kelvin2eV, ' K is larger than Allen-Dynes Tc = ', tc, ' K'
       ENDIF
       !
     ENDIF
@@ -838,7 +811,8 @@
     ! itemp  - temperature point
     !
     USE epwcom,        ONLY : nqstep, lpade, lacon, laniso
-    USE eliashbergcom, ONLY : nsw, nsiw, ws, wsi, wsph, dwsph, estemp, wsphmax
+    USE elph2,         ONLY : gtemp
+    USE eliashbergcom, ONLY : nsw, nsiw, ws, wsi, wsph, dwsph, wsphmax
     USE constants_epw, ONLY : zero
     USE constants,     ONLY : pi
     USE low_lvl,       ONLY : mem_size_eliashberg
@@ -872,7 +846,7 @@
     wsi(:) = zero
     DO iw = 1, nsiw(itemp)
       n = iw - 1
-      wsi(iw) = DBLE(2 * n + 1) * pi * estemp(itemp)
+      wsi(iw) = DBLE(2 * n + 1) * pi * gtemp(itemp)
       !WRITE(*, *) iw, wsi(iw)
     ENDDO
     !
@@ -950,7 +924,8 @@
     USE io_var,        ONLY : iuqdos
     USE io_files,      ONLY : prefix
     USE epwcom,        ONLY : lreal, limag, liso, laniso, fsthick
-    USE eliashbergcom, ONLY : nsw, estemp, dwsph, ws, dws, delta, adelta, &
+    USE elph2,         ONLY : gtemp
+    USE eliashbergcom, ONLY : nsw, dwsph, ws, dws, delta, adelta, &
                               wkfs, w0g, nkfs, nbndfs, ef0, ekfs
     USE constants_epw, ONLY : kelvin2eV, zero, ci
     !
@@ -992,7 +967,7 @@
       degaussw0 = 1.d0 * dwsph
     ENDIF
     !
-    temp = estemp(itemp) / kelvin2eV
+    temp = gtemp(itemp) / kelvin2eV
     IF (temp < 10.d0) THEN
       WRITE(fildos, '(a, a8, f4.2)') TRIM(prefix), '.qdos_00', temp
     ELSEIF (temp >= 10.d0 .AND. temp < 100.d0) THEN
@@ -1053,7 +1028,8 @@
     USE io_var,        ONLY : iufe
     USE io_files,      ONLY : prefix
     USE epwcom,        ONLY : liso, laniso, fsthick
-    USE eliashbergcom, ONLY : estemp, wsi, nsiw, adeltai, aznormi, naznormi, &
+    USE elph2,         ONLY : gtemp
+    USE eliashbergcom, ONLY : wsi, nsiw, adeltai, aznormi, naznormi, &
                               deltai, znormi, nznormi, &
                               wkfs, w0g, nkfs, nbndfs, ef0, ekfs
     USE constants_epw, ONLY : kelvin2eV, zero
@@ -1086,7 +1062,7 @@
     REAL(KIND = DP) :: dFE
     !! free energy difference between supercond and normal states
     !
-    temp = estemp(itemp) / kelvin2eV
+    temp = gtemp(itemp) / kelvin2eV
     IF (temp < 10.d0) THEN
       WRITE(filfe, '(a, a6, f4.2)') TRIM(prefix), '.fe_00', temp
     ELSEIF (temp >= 10.d0 .AND. temp < 100.d0) THEN
@@ -1118,7 +1094,7 @@
             * (znormi(iw) - nznormi(iw) * wsi(iw) / omega)
       ENDDO
     ENDIF
-    dFE = dFE * pi * estemp(itemp)
+    dFE = dFE * pi * gtemp(itemp)
     WRITE(iufe, '(2ES20.10)') temp, dFE
     CLOSE(iufe)
     !
@@ -1263,15 +1239,16 @@
     !!  deallocates the variables allocated by eliashberg_init and read_a2f
     !!
     USE epwcom,        ONLY : limag
-    USE eliashbergcom, ONLY : a2f_iso, wsph, estemp, nsiw
+    USE eliashbergcom, ONLY : a2f_iso, wsph, nsiw
+    USE elph2,         ONLY : gtemp
     !
     IMPLICIT NONE
     !
     INTEGER :: ierr
     !! Error status
     !
-    DEALLOCATE(estemp, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_eliashberg_iso', 'Error deallocating estemp', 1)
+    DEALLOCATE(gtemp, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_eliashberg_iso', 'Error deallocating gtemp', 1)
     DEALLOCATE(wsph, STAT = ierr)
     IF (ierr /= 0) CALL errore('deallocate_eliashberg_iso', 'Error deallocating wsph', 1)
     IF (limag) THEN
@@ -1296,18 +1273,18 @@
     !!  and evaluate_a2f_lambda subroutines
     !!
     USE epwcom,        ONLY : limag
-    USE elph2,         ONLY : wf, wqf, xqf
+    USE elph2,         ONLY : wf, wqf, xqf, gtemp
     USE eliashbergcom, ONLY : ekfs, xkfs, wkfs, g2, a2f_iso, w0g, &
                               ixkff, ixkqf, ixqfs, nqfs, memlt_pool, &
-                              wsph, estemp, nsiw
+                              wsph, nsiw
     !
     IMPLICIT NONE
     !
     INTEGER :: ierr
     !! Error status
     !
-    DEALLOCATE(estemp, STAT = ierr)
-    IF (ierr /= 0) CALL errore('deallocate_eliashberg_aniso', 'Error deallocating estemp', 1)
+    DEALLOCATE(gtemp, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_eliashberg_aniso', 'Error deallocating gtemp', 1)
     DEALLOCATE(wsph, STAT = ierr)
     IF (ierr /= 0) CALL errore('deallocate_eliashberg_aniso', 'Error deallocating wsph', 1)
     IF (limag) THEN

@@ -906,7 +906,7 @@ CONTAINS
         USE io_global,     ONLY : stdout,ionode_id, meta_ionode_id
         USE modes,         ONLY : nmodes
         USE epwcom,        ONLY : nbndsub, shortrange, restart_polaron,&
-            fsthick, eptemp, ngaussw, degaussw,spherical_cutoff,&
+            fsthick, ngaussw, degaussw,spherical_cutoff,&
             eps_acustic, efermi_read, fermi_energy, lscreen, &
             model_vertex, nkf1, nkf2, nkf3, conv_thr_polaron, &
             r01, r02, r03, num_cbands, start_mode, cb_shift, &
