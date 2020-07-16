@@ -1100,12 +1100,13 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
    INTEGER :: nh_nt, ierr
    COMPLEX(DP) :: temp
    COMPLEX(DP), ALLOCATABLE :: &
+   doverlap(:,:),       & ! the derivative of the (ortho-atomic) wavefunction
+   doverlap_us(:,:)       ! USPP contribution to doverlap
+   COMPLEX(DP), POINTER :: &
    dproj0_d(:,:),       & ! derivative of the projector
    dproj_us_d(:,:),     & ! USPP contribution to dproj0
    dwfc_d(:,:),         & ! USPP contribution to dproj0
-   doverlap(:,:),       & ! the derivative of the (ortho-atomic) wavefunction
    doverlap_d(:,:),     & ! the derivative of the (ortho-atomic) wavefunction
-   doverlap_us(:,:),    & ! USPP contribution to doverlap
    doverlap_us_d(:,:),  & ! USPP contribution to doverlap
    doverlap_inv_d(:,:)    ! derivative of (O^{-1/2})_JI (note the transposition)
    !
@@ -1150,7 +1151,7 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
    !
    IF ((U_projection.EQ."atomic") .AND. (na==alpha)) THEN
       !
-      ALLOCATE( dwfc_d(npwx,ldim) )
+      CALL dev_buf%lock_buffer( dwfc_d, [npwx,ldim] , ierr ) ! ALLOCATE( dwfc_d(npwx,ldim) )
       CALL dev_memset( dwfc_d , (0.d0, 0.d0) )
       !
       ! DFT+U: In the expression of dwfc we don't need (k+G) but just G; k always
@@ -1180,12 +1181,12 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
       ENDDO
 ! !omp end parallel do
       !
-      ALLOCATE ( dproj0_d(ldim,nbnd) )
+      CALL dev_buf%lock_buffer( dproj0_d, [ldim,nbnd] , ierr ) ! ALLOCATE ( dproj0_d(ldim,nbnd) )
       CALL ZGEMM( 'C','N',ldim, nbnd, npw, (1.d0,0.d0), &
                   dwfc_d, npwx, spsi_d, npwx, (0.d0,0.d0),  &
                   dproj0_d, ldim )
       !
-      DEALLOCATE(dwfc_d)
+      CALL dev_buf%release_buffer(dwfc_d, ierr) ! DEALLOCATE(dwfc_d)
       CALL mp_sum( dproj0_d, intra_bgrp_comm )
       !
       ! Copy to dproj results for the bands treated by this processor
@@ -1205,7 +1206,7 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
             dproj_d(offpm, ibnd) = dproj0_d(m1, ibnd)
          ENDDO
       ENDDO
-      DEALLOCATE(dproj0_d) 
+      CALL dev_buf%release_buffer(dproj0_d, ierr) ! DEALLOCATE(dproj0_d) 
       !
    ENDIF
    !
@@ -1385,16 +1386,16 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
    !
    IF (okvan) THEN
       CALL using_evc_d(0)
-      ALLOCATE(dproj0_d(nwfcU,nbnd))
+      CALL dev_buf%lock_buffer( dproj0_d, [nwfcU,nbnd] , ierr )  ! ALLOCATE(dproj0_d(nwfcU,nbnd))
 
       CALL matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, &
                                nwfcU, wfcU_d, nbnd, evc_d, dproj0_d)
-      ALLOCATE(dproj_us_d(nwfcU,nb_s:nb_e))
-      dproj_us_d(:,:) = (0.0d0, 0.0d0)
+      CALL dev_buf%lock_buffer( dproj_us_d, [nwfcU,nb_e - nb_s + 1] , ierr ) !ALLOCATE(dproj_us_d(nwfcU,nb_s:nb_e))
+      ! dproj_us_d(:,:) = (0.0d0, 0.0d0)
       !$cuf kernel do(2)
       DO ibnd = nb_s, nb_e
          DO m1 = 1, nwfcU
-            dproj_us_d(m1,ibnd) = dproj0_d(m1,ibnd)
+            dproj_us_d(m1,ibnd-nb_s + 1) = dproj0_d(m1,ibnd)
          ENDDO
       ENDDO
       ! dproj + dproj_us
@@ -1402,12 +1403,12 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
          !$cuf kernel do(2)
          DO ibnd = nb_s, nb_e
             DO m1 = 1, nwfcU
-               dproj_d(m1,ibnd) = dproj_d(m1,ibnd) + dproj_us_d(m1,ibnd)
+               dproj_d(m1,ibnd) = dproj_d(m1,ibnd) + dproj_us_d(m1,ibnd-nb_s+1)
             ENDDO
          ENDDO
       ENDIF
-      DEALLOCATE(dproj0_d)
-      DEALLOCATE(dproj_us_d)
+      CALL dev_buf%release_buffer( dproj0_d, ierr )  ! DEALLOCATE(dproj0_d)
+      CALL dev_buf%release_buffer( dproj_us_d, ierr )! DEALLOCATE(dproj_us_d)
    ENDIF
    !
    CALL dev_buf%release_buffer( wfcU_d, ierr )
@@ -1439,7 +1440,8 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
    !
    USE gvect_gpum,           ONLY : g_d
    USE uspp_gpum,            ONLY : vkb_d, qq_at_d, using_vkb_d, using_qq_at_d
-   USE device_util_m,        ONLY : dev_memcpy
+   USE device_util_m,        ONLY : dev_memcpy, dev_memset
+   USE gbuffers,             ONLY : dev_buf
    !
    IMPLICIT NONE
    !
@@ -1459,9 +1461,9 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
    !
    ! Local variables
    !
-   INTEGER :: npw, nt, ih, jh, ig, iA, iB, nh_nt
+   INTEGER :: npw, nt, ih, jh, ig, iA, iB, nh_nt, ierr
    REAL(DP) :: gvec
-   COMPLEX (DP), ALLOCATABLE :: Adbeta(:,:), Abeta(:,:), &
+   COMPLEX (DP), POINTER :: Adbeta(:,:), Abeta(:,:), &
                                 dbetaB(:,:), betaB(:,:), &
                                 aux(:,:), qq(:,:)
 #if defined(__CUDA)
@@ -1478,23 +1480,23 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
    npw = ngk(ik)
    nh_nt = nh(nt)
    !
-   ALLOCATE ( Adbeta(lA,nh(nt)) )
-   ALLOCATE ( Abeta(lA,nh(nt)) )
-   ALLOCATE ( dbetaB(nh(nt),lB) )
-   ALLOCATE ( betaB(nh(nt),lB) )
-   ALLOCATE ( qq(nh(nt),nh(nt)) )
+   CALL dev_buf%lock_buffer(Adbeta , [lA,nh(nt)]    , ierr) ! ALLOCATE ( Adbeta(lA,nh(nt)) )
+   CALL dev_buf%lock_buffer(Abeta  , [lA,nh(nt)]    , ierr) ! ALLOCATE ( Abeta(lA,nh(nt)) )
+   CALL dev_buf%lock_buffer(dbetaB , [nh(nt),lB]    , ierr) ! ALLOCATE ( dbetaB(nh(nt),lB) )
+   CALL dev_buf%lock_buffer(betaB  , [nh(nt),lB]    , ierr) ! ALLOCATE ( betaB(nh(nt),lB) )
+   CALL dev_buf%lock_buffer(qq     , [nh(nt),nh(nt)], ierr) ! ALLOCATE ( qq(nh(nt),nh(nt)) )
    !
    CALL using_qq_at_d(0)
    !$cuf kernel do(2)
-   do jh=1,nh_nt
-      do ih=1,nh_nt
+   DO jh=1,nh_nt
+      DO ih=1,nh_nt
          qq(ih,jh) = CMPLX(qq_at_d(ih,jh,alpha), 0.0d0, kind=DP)
-      end do
-   end do
+      ENDDO
+   ENDDO
    !
    ! aux is used as a workspace
-   ALLOCATE ( aux(npwx,nh(nt)) )
-   aux(:,:) = (0.0d0, 0.0d0)
+   CALL dev_buf%lock_buffer(aux, [npwx,nh_nt], ierr)!   ALLOCATE ( aux(npwx,nh(nt)) )
+   !aux(:,:) = (0.0d0, 0.0d0) ! done below
    !
    !
    CALL using_vkb_d(0)
@@ -1502,8 +1504,12 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
    ! Beta function
 !$cuf kernel do(2)
    DO ih = 1, nh_nt
-      DO ig = 1, npw
-         aux(ig,ih) = vkb_d(ig,ijkb0+ih)
+      DO ig = 1, npwx
+         IF (ig <= npw) THEN
+            aux(ig,ih) = vkb_d(ig,ijkb0+ih)
+         ELSE
+            aux(ig,ih) = (0.0d0, 0.0d0)
+         ENDIF
       ENDDO
    ENDDO
 !!omp end parallel do
@@ -1531,9 +1537,9 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
    ! Calculate dbetaB = <dbeta|B>
    CALL calbec_gpu ( npw, aux, B, dbetaB )
    !
-   DEALLOCATE ( aux )
+   CALL dev_buf%release_buffer( aux, ierr )  ! DEALLOCATE ( aux )
    !
-   ALLOCATE ( aux(nh(nt),lB) )
+   CALL dev_buf%lock_buffer( aux, [nh(nt),lB] , ierr )  ! ALLOCATE ( aux(nh(nt),lB) )
    !
    ! Calculate \sum_jh qq_at(ih,jh) * dbetaB(jh)
    CALL ZGEMM('N', 'N', nh(nt), lB, nh(nt), (1.0d0,0.0d0), &
@@ -1545,7 +1551,7 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
                qq, nh(nt), betaB, nh(nt),(0.0d0,0.0d0), aux, nh(nt))
    CALL dev_memcpy(betaB, aux)
    !
-   DEALLOCATE ( aux )
+   CALL dev_buf%release_buffer( aux, ierr ) !DEALLOCATE ( aux )
    !
    ! dproj(iA,iB) = \sum_ih [Adbeta(iA,ih) * betaB(ih,iB) +
    !                         Abeta(iA,ih)  * dbetaB(ih,iB)] 
@@ -1555,11 +1561,11 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
    CALL ZGEMM('N', 'N', lA, lB, nh(nt), (1.0d0,0.0d0), &
               Abeta,  lA, dbetaB, nh(nt), (1.0d0,0.0d0), A_dS_B, lA)
    !
-   DEALLOCATE ( Abeta )
-   DEALLOCATE ( Adbeta )
-   DEALLOCATE ( dbetaB )
-   DEALLOCATE ( betaB )
-   DEALLOCATE ( qq )
+   CALL dev_buf%release_buffer(Abeta , ierr) ! DEALLOCATE ( Abeta )
+   CALL dev_buf%release_buffer(Adbeta, ierr)  ! DEALLOCATE ( Adbeta )
+   CALL dev_buf%release_buffer(dbetaB, ierr)  ! DEALLOCATE ( dbetaB )
+   CALL dev_buf%release_buffer( betaB, ierr) ! DEALLOCATE ( betaB )
+   CALL dev_buf%release_buffer( qq , ierr) ! DEALLOCATE ( qq )
    !    
    RETURN
    !
@@ -1638,8 +1644,8 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
               ldim_std, offpm
    INTEGER :: nh_nt, ierr
    REAL(DP) :: gvec
-   COMPLEX(DP), ALLOCATABLE :: dwfc_d(:,:), dbeta_d(:,:)
-   REAL(DP), ALLOCATABLE :: dproj0_d(:,:), betapsi_d(:,:), dbetapsi_d(:,:), &
+   COMPLEX(DP), POINTER :: dwfc_d(:,:), dbeta_d(:,:)
+   REAL(DP), POINTER    :: dproj0_d(:,:), betapsi_d(:,:), dbetapsi_d(:,:), &
                             wfatbeta_d(:,:), wfatdbeta_d(:,:), bproj_d(:,:), &
                             betapsi0_d(:,:)
    !      dwfc(npwx,ldim),       ! the derivative of the atomic wavefunction
@@ -1683,8 +1689,8 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    !
    IF ( is_hubbard(nt) .OR. is_hubbard_back(nt) ) THEN
       !
-      ALLOCATE( dproj0_d(ldim,nbnd) )
-      ALLOCATE( dwfc_d(npwx,ldim) )
+      CALL dev_buf%lock_buffer( dproj0_d, [ldim,nbnd], ierr ) ! ALLOCATE( dproj0_d(ldim,nbnd) )
+      CALL dev_buf%lock_buffer( dwfc_d, [npwx,ldim], ierr ) ! ALLOCATE( dwfc_d(npwx,ldim)
       dproj0_d(:,:) =  0.d0
       dwfc_d(:,:)   = (0.d0,0.d0)
       !
@@ -1717,7 +1723,7 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
                   dwfc_d, 2*npwx, spsi_d, 2*npwx, 0.0_dp,&
                   dproj0_d, ldim)
       !
-      DEALLOCATE( dwfc_d ) 
+      CALL dev_buf%release_buffer( dwfc_d , ierr) ! DEALLOCATE( dwfc_d ) 
       !
       CALL mp_sum( dproj0_d, intra_bgrp_comm )
       !
@@ -1746,15 +1752,15 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
          ENDDO
       ENDDO
       !
-      DEALLOCATE( dproj0_d ) 
+      CALL dev_buf%release_buffer( dproj0_d, ierr ) ! DEALLOCATE( dproj0_d ) 
       !
    END IF
    !
-   ALLOCATE( betapsi0_d(nh(nt),nbnd)   )
-   ALLOCATE( dbetapsi_d(nh(nt),nbnd)   )
-   ALLOCATE( wfatdbeta_d(nwfcU,nh(nt)) )
-   ALLOCATE( wfatbeta_d(nwfcU,nh(nt))  )
-   ALLOCATE( dbeta_d(npwx,nh(nt))      )
+   CALL dev_buf%lock_buffer(betapsi0_d, [nh(nt),nbnd]  , ierr)  ! ALLOCATE( betapsi0_d(nh(nt),nbnd)   )
+   CALL dev_buf%lock_buffer(dbetapsi_d, [nh(nt),nbnd]  , ierr)  ! ALLOCATE( dbetapsi_d(nh(nt),nbnd)   )
+   CALL dev_buf%lock_buffer(wfatdbeta_d,[nwfcU,nh(nt)] , ierr) ! ALLOCATE( wfatdbeta_d(nwfcU,nh(nt)) )
+   CALL dev_buf%lock_buffer(wfatbeta_d, [nwfcU,nh(nt)] , ierr)  ! ALLOCATE( wfatbeta_d(nwfcU,nh(nt))  )
+   CALL dev_buf%lock_buffer(dbeta_d,    [npwx,nh(nt)]  , ierr)     ! ALLOCATE( dbeta_d(npwx,nh(nt))      )
    !
    CALL using_vkb_d(0)
    CALL using_qq_at_d(0)
@@ -1782,12 +1788,12 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    CALL using_evc_d(0)
    CALL calbec_gpu( npw, dbeta_d, evc_d, dbetapsi_d ) 
    CALL calbec_gpu( npw, wfcU_d, dbeta_d, wfatdbeta_d ) 
-   DEALLOCATE( dbeta_d )
+   CALL dev_buf%release_buffer( dbeta_d , ierr ) ! DEALLOCATE( dbeta_d )
    !
    ! calculate \sum_j qq(i,j)*dbetapsi(j)
    ! betapsi is used here as work space 
    !
-   ALLOCATE( betapsi_d(nh(nt), nbnd) )
+   CALL dev_buf%lock_buffer( betapsi_d, [nh(nt), nbnd] , ierr ) ! ALLOCATE( betapsi_d(nh(nt), nbnd) )
    ! TODO : CAN WE RESET ONLY from nb_s to nb_e ??
    CALL dev_memset ( betapsi_d,  0.0_dp )
    !
@@ -1833,11 +1839,11 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
            dproj_d(1,nb_s), nwfcU)
    ENDIF
    ! end band parallelization - only dproj(1,nb_s:nb_e) are calculated
-   DEALLOCATE ( betapsi0_d )
-   DEALLOCATE ( betapsi_d )
-   DEALLOCATE ( wfatbeta_d ) 
-   DEALLOCATE (wfatdbeta_d )
-   DEALLOCATE (dbetapsi_d )
+   CALL dev_buf%release_buffer( betapsi0_d  , ierr ) ! DEALLOCATE ( betapsi0_d )
+   CALL dev_buf%release_buffer( betapsi_d   , ierr ) ! DEALLOCATE ( betapsi_d )
+   CALL dev_buf%release_buffer( wfatbeta_d  , ierr ) ! DEALLOCATE ( wfatbeta_d ) 
+   CALL dev_buf%release_buffer( wfatdbeta_d , ierr ) ! DEALLOCATE (wfatdbeta_d )
+   CALL dev_buf%release_buffer( dbetapsi_d  , ierr ) ! DEALLOCATE (dbetapsi_d )
    !
    CALL dev_buf%release_buffer( wfcU_d, ierr )
    !
