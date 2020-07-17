@@ -142,6 +142,9 @@ PROGRAM lr_eels_main
      !
      ! Sternheimer algorithm
      !
+     IF (noncolin) CALL errore('lr_eels_main', 'sternheimer with noncolin is not &
+                              & yet implemented',1)
+
      WRITE(stdout,'(/,5X,"STERNHEIMER LINEAR-RESPONSE SPECTRUM CALCULATION")')
      !
      WRITE(stdout,'(/5x,"Number of frequencies = ",i6)') nfs
