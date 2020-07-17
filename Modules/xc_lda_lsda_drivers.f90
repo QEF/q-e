@@ -1202,7 +1202,9 @@ SUBROUTINE xc_lsda_gpu( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out 
         !
      CASE DEFAULT
         !
-        !CALL errore( 'xc_lda_lsda_drivers (xc_lsda)', 'not implemented', icorr )
+        ec_d(ir) = 0.0d0
+        vc_d(ir,1) = 0.0d0
+        vc_d(ir,2) = 0.0d0
         !
      END SELECT
      !
