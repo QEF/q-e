@@ -303,7 +303,7 @@ $ECHO " done"
 cat > o2_nc.phG.in << EOF
 phonons of O2 at Gamma
  &inputph
-  tr2_ph=1.0d-15,
+  tr2_ph=1.0d-12,
   epsil=.true.,
   zue=.true.,
   prefix='o2_nc_mol',
