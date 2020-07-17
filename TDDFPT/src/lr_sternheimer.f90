@@ -495,7 +495,7 @@ dvpsi =(0.0d0, 0.0d0)
              ENDIF
              IF (noncolin) THEN
                 CALL incdrhoscf_nc(dvscfout(1,1,ipol), weight, ik, &
-                                   dbecsum_nc(1,1,1,1,ipol), dpsi, 1.0)
+                                   dbecsum_nc(1,1,1,1,ipol), dpsi, 1.0d0)
              ELSE
 
                 CALL incdrhoscf (dvscfout(1,current_spin,ipol), weight, &
