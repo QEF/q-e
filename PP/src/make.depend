@@ -94,6 +94,7 @@ xctest_qe_libxc.o : ../../Modules/funct.o
 xctest_qe_libxc.o : ../../Modules/xc_gga_drivers.o
 xctest_qe_libxc.o : ../../Modules/xc_lda_lsda_drivers.o
 xctest_qe_libxc.o : ../../Modules/xc_mgga_drivers.o
+xctest_qe_libxc.o : ../../Modules/kind.o
 chdens_bspline.o : ../../Modules/bspline.o
 chdens_bspline.o : ../../Modules/cell_base.o
 chdens_bspline.o : ../../Modules/fft_base.o
