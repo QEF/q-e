@@ -59,8 +59,8 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
         var max_seconds -type REAL {
             default { 1.D+7, or 150 days, i.e. no time limit }
             info {
-                jobs stops after "max_seconds" CPU time. Use this option 
-                in conjunction with option "restart" if you need to
+                jobs stops after @ref max_seconds CPU time. Use this option 
+                in conjunction with option @ref restart if you need to
                 split a job too long to complete into shorter jobs that
                 fit into your batch queues.
             }
@@ -70,7 +70,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 	    default {.false.}
 	    info {
 		When set to .true., turbo_davidson.x will attempt to restart 
-		from a previous interrupted calculation if "max_seconds"
+		from a previous interrupted calculation if @ref max_seconds
                 was specified. 
 		Beware, if set to .false. turbo_davidson.x will OVERWRITE any
 		previous runs.
@@ -106,7 +106,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
             default {2}
             info {
                 Number of trial vectors. Usually it is twice as large as
-                the number of eigenstates to be calculated (see "num_eign").
+                the number of eigenstates to be calculated (see @ref num_eign).
                 }
         }
 
@@ -115,9 +115,9 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
             info { 
                 When set to .true. trial vectors are chosen randomly, otherwise
                 they are guessed from the ground-state calculation. 
-                If p_nbnd_occ * p_nbnd_virt < num_init, this term is forced to 
-                be .true. The usage of random trial vectors should cause only 
-                a slower convergence, and do not affect the final results.
+                If @ref p_nbnd_occ * @ref p_nbnd_virt < @ref num_init, this term 
+                is forced to be .true. The usage of random trial vectors should 
+                cause only a slower convergence, and do not affect the final results.
                 }
         }
 
@@ -215,11 +215,11 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
                 of occupied states computed by PWscf. This variable is
                 useful if there are too many occupied states but your
                 are interested in only some of them.
-                In priciple this variable and "p_nbnd_virt" affect only 
+                In priciple this variable and @ref p_nbnd_virt affect only 
                 the interpretation of the eigenstates, but do not effect
                 their energy and the final absorption spectrum.
                 Make sure that min(p_nbnd_occ,nbnd_occ)*min(p_nbnd_virt,nbnd_virt) 
-                is lager than the number of initial vectors ("num_init"), 
+                is lager than the number of initial vectors (@ref num_init), 
                 so you will not end up using random trial vectors which would 
                 slow down the convergence.
                 }
@@ -232,11 +232,11 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
                 of empty states computed by PWscf. This variable is
                 useful if there are too many empty states but your
                 are interested in only some of them.
-                In priciple this variable and "p_nbnd_occ" affect only 
+                In priciple this variable and @ref p_nbnd_occ affect only 
                 the interpretation of the eigenstates, but do not effect 
                 their energy and the final absorption spectrum.
                 Make sure that min(p_nbnd_occ,nbnd_occ)*min(p_nbnd_virt,nbnd_virt) 
-                is lager than the number of initial vectors ("num_init"),
+                is lager than the number of initial vectors (@ref num_init),
                 so you will not end up using random trial vectors which would
                 slow down the convergence.
                 }
@@ -325,7 +325,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
                 computed in the reciprocal space by computing [H,r].
                 Note, currently the commutator does not contain
                 a contribution for hybrids [V_EXX,r]. See also
-                the variable lshift_d0psi.
+                the variable @ref lshift_d0psi.
                 Important: Treatment of the dipole in the real space
                 is allowed only if the system is finite.
                 }
@@ -334,16 +334,16 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
         var lshift_d0psi -type LOGICAL {
             default {.true.}
             info {
-                This variable is used only when d0psi_rs=.true.
+                This variable is used only when @ref d0psi_rs = .true.
                 a) If a molecule is placed in the corner of the
                 supercell, there is a discontinuity problem for the
                 position operator r, which is not periodic. By setting
-                lshift_d0psi=.true. the discontinuity problem is
+                @ref lshift_d0psi = .true. the discontinuity problem is
                 solved by shifting the position operator r such that
                 it is continuous and well defined.
                 b) If a molecule is placed in the center of the supercell,
                 there is no discontinuity problem for the position operator r,
-                and thus you can set lshift_d0psi=.false. But if you still
+                and thus you can set @ref lshift_d0psi = .false. But if you still
                 set it to .true., this will not harm, because the position
                 operator will basically remain as it is, since it is always
                 centered wrt the center of the molecule.

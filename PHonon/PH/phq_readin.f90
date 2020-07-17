@@ -805,9 +805,9 @@ SUBROUTINE phq_readin()
      WRITE(stdout,'(5x,a)')  "please cite A. Urru and A. Dal Corso, Phys. Rev. B 100," 
      WRITE(stdout,'(5x,a)')  "045115 (2019) for the theoretical background."
 
-     IF (epsil) CALL errore('phq_readin',&
-          'The calculation of Born effective charges in the non collinear &
-           magnetic case does not work yet and is temporarily disabled',1)
+     !IF (epsil) CALL errore('phq_readin',&
+     !     'The calculation of Born effective charges in the non collinear &
+     !      magnetic case does not work yet and is temporarily disabled',1)
 
      IF (okpaw) CALL errore('phq_readin',&
           'The phonon code with paw and domag is not available yet',1)

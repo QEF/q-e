@@ -1,4 +1,4 @@
-New in dev branch:
+New in v. 6.6:
   * vdW-DF3-opt1, vdW-DF3-opt2, and vdW-DF-C6 van der Waals functionals
     implemented (T. Thonhauser, supported by NSF Grant No. 1712425)
   * More FORD documentation
@@ -35,7 +35,7 @@ New in dev branch:
     please visit the Releases page of the EPW documentation site 
     [https://docs.epw-code.org/doc/Releases.html].
   
-Fixed in dev branch:
+Fixed in v.6.6:
   * PW: Restart from interrupted calculations  simplified. As a side effect,
     NEB restart now works again
   * A few LIBXC glitches
@@ -57,7 +57,7 @@ Fixed in dev branch:
   * Bug in PHonon+U for the symmetrization in the spin-polarized case when 
     the Hubbard channel is "s" (noticed by Jin-Jian Zhou)
  
-Incompatible changes in dev branch:
+Incompatible changes in v.6.6:
   * Default value of parameter "diago_david_ndim" changed to 2:
     uses less RAM, execution time sometimes shorter, sometimes longer.
   * Grouping of inlc values into ranges for different developments.

@@ -20,7 +20,7 @@ subroutine add_zstar_ue (imode0, npe)
   USE wavefunctions,  ONLY: evc
   USE noncollin_module,      ONLY: noncolin
   USE buffers,  ONLY : get_buffer
-  USE qpoint,   ONLY: nksq
+  USE qpoint,   ONLY: nksq, ikks
   USE eqv,      ONLY: dpsi, dvpsi
   USE efield_mod, ONLY: zstarue0_rec
   USE units_ph,   ONLY : iudwf, lrdwf
@@ -31,7 +31,7 @@ subroutine add_zstar_ue (imode0, npe)
 
   integer, intent(in) :: imode0, npe
 
-  integer :: ibnd, jpol, ipert, nrec, mode, ik
+  integer :: ibnd, jpol, ipert, nrec, mode, ik, ikk
   ! counter on bands
   ! counter on polarization
   ! counter on pertubations
@@ -42,16 +42,15 @@ subroutine add_zstar_ue (imode0, npe)
 
   real(DP) :: weight
 
-  complex(DP), external :: zdotc
-
   call start_clock('add_zstar_ue')
   zstarue0_rec=(0.0_DP,0.0_DP)
   do ik = 1, nksq
-     npw = ngk(ik)
+     ikk=ikks(ik)
+     npw = ngk(ikk)
      npwq = npw
-     weight = wk (ik)
-     if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ik)
-     call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
+     weight = wk (ikk)
+     if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ikk)
+     call init_us_2 (npw, igk_k(1,ikk), xk (1, ikk), vkb)
      do jpol = 1, 3
         !
         ! read/compute DeltaV*psi(bare) for electric field
@@ -68,10 +67,10 @@ subroutine add_zstar_ue (imode0, npe)
            call get_buffer (dpsi, lrdwf, iudwf, nrec)
            do ibnd = 1, nbnd_occ(ik)
               zstarue0_rec (mode, jpol) = zstarue0_rec (mode, jpol) - 2.d0 * weight * &
-                   zdotc (npw, dpsi (1, ibnd), 1, dvpsi (1, ibnd), 1)
+                   dot_product (dpsi(1:npw,ibnd), dvpsi(1:npw,ibnd))
               IF (noncolin) &
                  zstarue0_rec(mode,jpol)=zstarue0_rec (mode, jpol) - 2.d0 * weight * &
-                   zdotc (npw, dpsi (1+npwx, ibnd), 1, dvpsi (1+npwx, ibnd), 1)
+                   dot_product (dpsi(1+npwx:npw+npwx,ibnd), dvpsi(1+npwx:npw+npwx,ibnd))
 
            enddo
         enddo

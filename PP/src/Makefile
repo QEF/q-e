@@ -13,7 +13,7 @@ add_shift_cc.o \
 add_shift_lc.o \
 add_shift_us.o \
 atomic_wfc_nc_proj.o \
-benchmark_libxc.o \
+xctest_qe_libxc.o \
 chdens_module.o \
 chdens_bspline.o \
 compute_ppsi.o \
@@ -66,7 +66,7 @@ all : tldeps open_grid.x average.x bands.x dos.x epsilon.x initial_state.x fs.x 
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x pw2wannier90.x pw2critic.x pw2gw.x \
       wannier_ham.x wannier_plot.x molecularpdos.x \
-      pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x benchmark_libxc.x
+      pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x xctest_qe_libxc.x
 
 
 libpp.a : $(PPOBJS) 
@@ -228,9 +228,9 @@ ppacf.x : ppacf.o libpp.a $(MODULES) $(LIBOBJS)
 		ppacf.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-benchmark_libxc.x : benchmark_libxc.o libpp.a $(MODULES) $(LIBOBJS)
+xctest_qe_libxc.x : xctest_qe_libxc.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LD_LIBS) $(LDFLAGS) $(DFLAGS) -o $@ \
-		benchmark_libxc.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		xctest_qe_libxc.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 clean :
