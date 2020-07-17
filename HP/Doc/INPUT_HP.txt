@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: hp.x / PWscf / Quantum Espresso (version: 6.5)
+Program: hp.x / PWscf / Quantum Espresso (version: 6.6)
 ------------------------------------------------------------------------
 
 
@@ -325,4 +325,4 @@ NAMELIST: &INPUTHP
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Wed Apr 15 18:09:01 CEST 2020
+This file has been created by helpdoc utility on Fri Jul 17 10:28:25 CEST 2020

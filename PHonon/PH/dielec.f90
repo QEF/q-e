@@ -40,8 +40,6 @@ subroutine dielec()
   ! counter on k points
   real(DP) :: w, weight
 
-  complex(DP), external :: zdotc
-
   IF (.NOT.epsil.OR.done_epsil) RETURN
 
   call start_clock ('dielec')
@@ -60,8 +58,9 @@ subroutine dielec()
               !
               !  this is the real part of <DeltaV*psi(E)|DeltaPsi(E)>
               !
+              ! FIXME: use zgemm instead of dot_product
               epsilon(ipol,jpol)=epsilon(ipol,jpol)-4.d0*w* DBLE( &
-                   zdotc(npwx*npol, dvpsi (1, ibnd), 1, dpsi (1, ibnd), 1))
+                   dot_product(dvpsi(:,ibnd),dpsi(:,ibnd)) )
            enddo
         enddo
      enddo
