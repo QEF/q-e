@@ -49,7 +49,7 @@ PROGRAM head
   USE check_stop,      ONLY : check_stop_init
   USE ph_restart,      ONLY : ph_writefile, destroy_status_run
   USE save_ph,         ONLY : clean_input_variables
-  USE mp_global,       ONLY: mp_startup, nimage
+  USE mp_global,       ONLY: mp_startup !, nimage
   !USE path_io_routines, ONLY : io_path_start
   USE environment,     ONLY: environment_start
   USE wannier_gw,     ONLY : l_head
@@ -104,7 +104,6 @@ PROGRAM head
      !
      !  If necessary the bands are recalculated
      !
-     !IF (setup_pw) CALL run_pwscf(do_band)
      IF (setup_pw) CALL run_nscf(do_band, iq)
      !
      !  Initialize the quantities which do not depend on

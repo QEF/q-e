@@ -9,9 +9,8 @@
 !----------------------------------------------------------------------------
 SUBROUTINE stres_us( ik, gk, sigmanlc )
   !----------------------------------------------------------------------------
-  !
-  ! nonlocal (separable pseudopotential) contribution to the stress
-  ! NOTICE: sum of partial results over procs is performed in calling routine
+  !! nonlocal (separable pseudopotential) contribution to the stress
+  !! NOTICE: sum of partial results over procs is performed in calling routine
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
@@ -22,7 +21,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE control_flags,        ONLY : gamma_only
   USE uspp_param,           ONLY : upf, lmaxkb, nh, nhm
   USE uspp,                 ONLY : nkb, vkb, deeq, deeq_nc
-  USE wavefunctions, ONLY : evc
+  USE wavefunctions,        ONLY : evc
   USE spin_orb,             ONLY : lspinorb
   USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : noncolin, npol
@@ -34,13 +33,16 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN)    :: ik
-  REAL(DP), INTENT(IN)   :: gk(3,npwx)
-  REAL(DP), INTENT(INOUT):: sigmanlc(3,3)
+  INTEGER,  INTENT(IN)    :: ik
+  !! k-point index
+  REAL(DP), INTENT(IN)    :: gk(npwx,3)
+  !! wave function components for fixed k-point
+  REAL(DP), INTENT(INOUT) :: sigmanlc(3,3)
+  !! stress tensor, non-local contribution
   !
-  REAL(DP), ALLOCATABLE  :: qm1(:)
-  REAL(DP)               :: q
-  INTEGER                :: npw, i
+  REAL(DP), ALLOCATABLE   :: qm1(:)
+  REAL(DP)                :: q
+  INTEGER                 :: npw, i
   !
   !
   IF ( nkb == 0 ) RETURN
@@ -54,7 +56,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   !
   ALLOCATE( qm1( npwx ) )
   DO i = 1, npw
-     q = SQRT( gk(1,i)**2 + gk(2,i)**2 + gk(3,i)**2 )
+     q = SQRT( gk(i, 1)**2 + gk(i, 2)**2 + gk(i, 3)**2 )
      IF ( q > eps8 ) THEN
         qm1(i) = 1.D0 / q
      ELSE
@@ -73,7 +75,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   END IF
   !
   DEALLOCATE( qm1 )
-  CALL deallocate_bec_type ( becp ) 
+  CALL deallocate_bec_type( becp ) 
   !
   RETURN
   !
@@ -82,16 +84,15 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
      !-----------------------------------------------------------------------
      SUBROUTINE stres_us_gamma()
        !-----------------------------------------------------------------------
-       ! 
-       ! ... gamma version
+       !! nonlocal contribution to the stress - gamma version
        !
        IMPLICIT NONE
        !
        ! ... local variables
        !
-       INTEGER                       :: na, np, ibnd, ipol, jpol, l, i, &
-                                        ikb, jkb, ih, jh, ijkb0, ibnd_loc, &
-                                        nproc, nbnd_loc, nbnd_begin, icyc
+       INTEGER                  :: na, np, ibnd, ipol, jpol, l, i,    &
+                                   ikb, jkb, ih, jh, ijkb0, ibnd_loc, &
+                                   nproc, nbnd_loc, nbnd_begin, icyc
        REAL(DP)                 :: fac, xyz(3,3), evps, ddot
        REAL(DP), ALLOCATABLE    :: deff(:,:,:)
        COMPLEX(DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
@@ -102,13 +103,13 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        !
        IF( becp%comm /= mp_get_comm_null() ) THEN
-          nproc   = becp%nproc
+          nproc      = becp%nproc
           nbnd_loc   = becp%nbnd_loc
           nbnd_begin = becp%ibnd_begin
           IF( ( nbnd_begin + nbnd_loc - 1 ) > nbnd ) nbnd_loc = nbnd - nbnd_begin + 1
        ELSE
-          nproc = 1
-          nbnd_loc = nbnd
+          nproc      = 1
+          nbnd_loc   = nbnd
           nbnd_begin = 1
        END IF
 
@@ -157,7 +158,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
 100    CONTINUE
        !
        ! ... non diagonal contribution - derivative of the bessel function
-       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+       !------------------------------------
        ALLOCATE( dvkb( npwx, nkb ) )
        !
        CALL gen_us_dj( ik, dvkb )
@@ -200,7 +201,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              DO ipol = 1, 3
                 DO jpol = 1, ipol
                    DO i = 1, npw
-                      work1(i) = evc(i,ibnd) * gk(ipol,i) * gk(jpol,i) * qm1(i)
+                      work1(i) = evc(i,ibnd) * gk(i, ipol) * gk(i, jpol) * qm1(i)
                    END DO
                    sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
                         4.D0 * wg(ibnd,ik) * &
@@ -220,12 +221,13 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        IF ( lmaxkb == 0 ) GO TO 10
        !
-       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+       !------------------------------------
        DO ipol = 1, 3
+          !
           CALL gen_us_dy( ik, xyz(1,ipol), dvkb )
-                
+          !
           DO icyc = 0, nproc -1
-                
+             !
              DO ibnd_loc = 1, nbnd_loc
                 ibnd = ibnd_loc + becp%ibnd_begin - 1 
                 CALL compute_deff ( deff, et(ibnd,ik) )
@@ -260,7 +262,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                 !
                 DO jpol = 1, ipol
                    DO i = 1, npw
-                      work1(i) = evc(i,ibnd) * gk(jpol,i)
+                      work1(i) = evc(i,ibnd) * gk(i, jpol)
                    END DO
                    sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
                         4.D0 * wg(ibnd,ik) * &
@@ -294,14 +296,13 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
      !----------------------------------------------------------------------
      SUBROUTINE stres_us_k()
        !----------------------------------------------------------------------  
-       !
-       ! ... k-points version
+       !! nonlocal contribution to the stress - k-points version
        !
        IMPLICIT NONE
        !
        ! ... local variables
        !
-       INTEGER                       :: na, np, ibnd, ipol, jpol, l, i, &
+       INTEGER                       :: na, np, ibnd, ipol, jpol, l, i, ipw, &
                                         ikb, jkb, ih, jh, ijkb0, is, js, ijs
        REAL(DP)                 :: fac, xyz (3, 3), evps, ddot
        COMPLEX(DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
@@ -412,6 +413,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              work2 = (0.D0,0.D0)
              CALL compute_deff(deff,et(ibnd,ik))
           ENDIF
+          !$omp parallel private(ijkb0, ikb, ijs, ps_nc, ps, jkb)
           ijkb0 = 0
           DO np = 1, ntyp
              DO na = 1, nat
@@ -458,25 +460,33 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                       END IF
                       IF (noncolin) THEN
                          DO is=1,npol
-                            CALL zaxpy(npw,ps_nc(is),dvkb(1,ikb),1,&
-                                                      work2_nc(1,is),1)
+                            !$omp do
+                            DO ipw = 1, npw
+                               work2_nc(ipw,is) = ps_nc(is) * dvkb(ipw, ikb) + work2_nc(ipw,is)
+                            END DO
+                            !$omp end do nowait
                          END DO
                       ELSE
-                         CALL zaxpy( npw, ps, dvkb(1,ikb), 1, work2, 1 )
+                         !$omp do
+                         DO ipw = 1, npw
+                            work2(ipw) = ps * dvkb(ipw, ikb) + work2(ipw)
+                         END DO
+                         !$omp end do nowait
                       END IF
                    END DO
                    ijkb0 = ijkb0 + nh(np)
                 END IF
              END DO
           END DO
+          !$omp end parallel
           DO ipol = 1, 3
              DO jpol = 1, ipol
                 IF (noncolin) THEN
                    DO i = 1, npw
-                      work1(i) = evc(i     ,ibnd)*gk(ipol,i)* &
-                                                  gk(jpol,i)*qm1(i)
-                      work2(i) = evc(i+npwx,ibnd)*gk(ipol,i)* &
-                                                  gk(jpol,i)*qm1(i)
+                      work1(i) = evc(   i  ,ibnd)*gk(i,ipol)* &
+                                                  gk(i,jpol)*qm1(i)
+                      work2(i) = evc(i+npwx,ibnd)*gk(i,ipol)* &
+                                                  gk(i,jpol)*qm1(i)
                    END DO
                    sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
                                    2.D0 * wg(ibnd,ik) * &
@@ -484,11 +494,11 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                    ddot(2*npw,work2,1,work2_nc(1,2), 1) )
                 ELSE
                    DO i = 1, npw
-                      work1(i) = evc(i,ibnd)*gk(ipol,i)*gk(jpol,i)*qm1(i)
+                      work1(i) = evc(i,ibnd)*gk(i, ipol)*gk(i, jpol)*qm1(i)
                    END DO
                    sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                                      2.D0 * wg(ibnd,ik) * &
-                                      ddot( 2 * npw, work1, 1, work2, 1 )
+                                         2.D0 * wg(ibnd,ik) * &
+                                         ddot( 2*npw, work1, 1, work2, 1 )
                 END IF
              END DO
           END DO
@@ -504,12 +514,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           DO ibnd = 1, nbnd
              IF (noncolin) THEN
                 work2_nc = (0.D0,0.D0)
-                CALL compute_deff_nc(deff_nc,et(ibnd,ik))
+                CALL compute_deff_nc( deff_nc, et(ibnd,ik) )
              ELSE
                 work2 = (0.D0,0.D0)
-                CALL compute_deff(deff,et(ibnd,ik))
+                CALL compute_deff( deff, et(ibnd,ik) )
              ENDIF
-
+             !$omp parallel private(ijkb0, ikb, ijs, ps_nc, ps, jkb)
              ijkb0 = 0
              DO np = 1, ntyp
                 DO na = 1, nat
@@ -523,8 +533,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                DO is=1,npol
                                   DO js=1,npol
                                      ijs=ijs+1
-                                     ps_nc(is)=ps_nc(is)+becp%nc(ikb,js,ibnd)* &
-                                         deff_nc(ih,ih,na,ijs)
+                                     ps_nc(is) = ps_nc(is) + becp%nc( ikb,js,ibnd )* &
+                                                 deff_nc( ih,ih,na,ijs )
                                   END DO
                                END DO
                             ELSE
@@ -556,22 +566,30 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                          END IF
                          IF (noncolin) THEN
                             DO is=1,npol
-                               CALL zaxpy(npw,ps_nc(is),dvkb(1,ikb),1, &
-                                          work2_nc(1,is),1)
+                               !$omp do
+                               DO ipw = 1, npw
+                                  work2_nc(ipw,is) = ps_nc(is) * dvkb(ipw, ikb) + work2_nc(ipw,is)
+                               END DO
+                               !$omp end do nowait
                             END DO
                          ELSE
-                            CALL zaxpy( npw, ps, dvkb(1,ikb), 1, work2, 1 )
+                            !$omp do
+                            DO ipw = 1, npw
+                               work2(ipw) = ps * dvkb(ipw, ikb) + work2(ipw)
+                            END DO
+                            !$omp end do nowait
                          END IF
                       END DO
                       ijkb0 = ijkb0 + nh(np)
                    END IF
                 END DO
              END DO
+             !$omp end parallel
              DO jpol = 1, ipol
                 IF (noncolin) THEN
                    DO i = 1, npw
-                      work1(i) = evc(i     ,ibnd) * gk(jpol,i)
-                      work2(i) = evc(i+npwx,ibnd) * gk(jpol,i)
+                      work1(i) = evc(i     ,ibnd) * gk(i, jpol)
+                      work2(i) = evc(i+npwx,ibnd) * gk(i, jpol)
                    END DO
                    sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
                               2.D0 * wg(ibnd,ik) * & 
@@ -579,7 +597,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                               ddot( 2 * npw, work2, 1, work2_nc(1,2), 1 ) )
                 ELSE
                    DO i = 1, npw
-                      work1(i) = evc(i,ibnd) * gk(jpol,i)
+                      work1(i) = evc(i,ibnd) * gk(i, jpol)
                    END DO
                    sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
                                       2.D0 * wg(ibnd,ik) * & 

@@ -45,7 +45,7 @@ MODULE bfgs_module
    USE kinds,     ONLY : DP
    USE io_files,  ONLY : iunbfgs, prefix
    USE constants, ONLY : eps8, eps16
-   USE cell_base, ONLY : iforceh
+   USE cell_base, ONLY : iforceh      ! FIXME: should be passed as argument
    !
    USE basic_algebra_routines
    USE matrix_inversion
@@ -259,6 +259,8 @@ CONTAINS
       !
       ! ... converged (or useless to go on): quick return
       !
+      IF ( .NOT. conv_bfgs .AND. ( tr_min_hit > 1 ) ) CALL infomsg( 'bfgs',&
+              'history already reset at previous step: stopping' )
       conv_bfgs = conv_bfgs .OR. ( tr_min_hit > 1 )
       IF ( conv_bfgs ) GOTO 1000
       !
@@ -336,6 +338,7 @@ CONTAINS
             CALL reset_bfgs( n )
             !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
+            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*iforceh(i,j)
             ! normalize step but remember its length
             nr_step_length = scnorm(step)
             step(:) = step(:) / nr_step_length
@@ -386,6 +389,7 @@ CONTAINS
             ! ... standard Newton-Raphson step
             !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
+            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*iforceh(i,j)
             !
          END IF
          IF ( ( grad(:) .dot. step(:) ) > 0.0_DP ) THEN
@@ -395,6 +399,7 @@ CONTAINS
             !
             CALL reset_bfgs( n )
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
+            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*iforceh(i,j)
             !
          END IF
          !
@@ -548,6 +553,7 @@ CONTAINS
             ! ... last gradient and reset gdiis history
             !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
+            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*iforceh(i,j)
             !
             gdiis_iter = 0
             !
@@ -913,7 +919,7 @@ CONTAINS
                               lmovecell, stdout, scratch )
       !------------------------------------------------------------------------
       !
-      USE io_files, ONLY : prefix, delete_if_present
+      USE io_files, ONLY : delete_if_present
       !
       IMPLICIT NONE
       REAL(DP),         INTENT(IN) :: energy, energy_thr, grad_thr, cell_thr

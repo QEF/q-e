@@ -11,19 +11,24 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
   !-----------------------------------------------------------------------
   !
   ! DFPT+U 
-  ! This routines calculates the bare derivative of the Hubbard potential times psi.
-  ! |Delta V_(k+q) psi> = 
-  !     +{\sum_(I,m1,m2,is) Hubbard_U(I) * [0.5\delta_m1m2-ns(m1, m2, is, I)] *
-  !                         |dqsphi(imode,I,k+q,m1)><S\phi(I,k,m2)| psi(ibnd,k,is> + 
-  !                         |S\phi(I,k+q,m1)><dmqsphi(imode,I,k,m2)| psi(ibnd,k,is> } 
-  !     -{\sum_(I,m1,m2,is) Hubbard_U(I) * dnsbare(m2, m1, is, I,imode)
+  ! This routines calculates the BARE derivative of the Hubbard potential times psi.
+  ! is  = current_spin
+  ! isi = opposite of the current_spin 
   !
-  ! J terms
+  ! |Delta V_BARE_(k+q,is) psi(ibnd,k,is)> = 
+  !     + \sum_(I,m1,m2) Hubbard_U(I) * [0.5\delta_(m1,m2) - ns(m1,m2,is,I)] *
+  !                         { |dqsphi(imode,I,k+q,m1)><S\phi(I,k,m2)|psi(ibnd,k,is)> + 
+  !                           |S\phi(I,k+q,m1)><dmqsphi(imode,I,k,m2)|psi(ibnd,k,is)> } 
+  !     - \sum_(I,m1,m2) Hubbard_U(I) * dnsbare(m1,m2,is,I,imode) *
+  !                           |S\phi(I,k+q,m1)><S\phi(I,k,m2)|psi(ibnd,k,is)>
   !
-  !     +{\sum_(I,m1,m2,is) Hubbard_J0(I) * ns(m1, m2, isi, I) *
-  !                         |dqsphi(imode,I,k+q,m1)><S\phi(I,k,m2)| psi(ibnd,k,is> + 
-  !                         |S\phi(I,k+q,m1)><dmqsphi(imode,I,k,m2)| psi(ibnd,k,is> } 
-  !     -{\sum_(I,m1,m2,is) Hubbard_U(I) * dnsbare(m2, m1, is, I,imode)
+  ! Addition of the J0 terms:
+  !
+  !     + \sum_(I,m1,m2) Hubbard_J0(I) * ns(m1,m2,isi,I) *
+  !                         { |dqsphi(imode,I,k+q,m1)><S\phi(I,k,m2)|psi(ibnd,k,is)> + 
+  !                           |S\phi(I,k+q,m1)><dmqsphi(imode,I,k,m2)|psi(ibnd,k,is)> } 
+  !     + \sum_(I,m1,m2) Hubbard_J0(I) * dnsbare(m1,m2,isi,I,imode) *
+  !                           |S\phi(I,k+q,m1)><S\phi(I,k,m2)|psi(ibnd,k,is)>
   !
   ! Important: in this routine vkb is a beta function at k+q, and vkb_ is beta at k.
   ! This is done so because vkb is calculated at k+q in solve_linter (i.e. before calling
@@ -47,7 +52,7 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
   USE control_lr,    ONLY : lgamma, ofsbeta
   USE units_lr,      ONLY : iuatwfc, iuatswfc
   USE uspp_param,    ONLY : nh
-  USE lsda_mod,      ONLY : nspin, lsda, current_spin, isk
+  USE lsda_mod,      ONLY : lsda, current_spin, isk
   USE wavefunctions, ONLY : evc
   USE eqv,           ONLY : dvpsi
   USE scf,           ONLY : rho
@@ -67,11 +72,9 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
   INTEGER :: i, j, k, icart, counter, na, nt, l, ih, n, mu, ig, &
              ihubst, ihubst1, ihubst2, nah, m, m1, m2, ibnd, op_spin, &
              ikk, ikq, npw, npwq, ibeta
-  COMPLEX(DP) :: rhons_m1m2
   COMPLEX(DP), ALLOCATABLE :: aux1(:), aux2(:), aux3(:), aux4(:), aux5(:), &
                               dqsphi(:,:), dmqsphi(:,:), dvqi(:,:), dvqhbar(:,:,:,:), &
                               vkb_(:,:), dwfcatom_(:)
-  REAL(DP) :: sgn_cs, sgn_op
   COMPLEX(DP), EXTERNAL :: ZDOTC
   !  
   ALLOCATE (proj1(nbnd,nwfcU))
@@ -252,14 +255,11 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
                        !
                        ihubst2 = offsetU(nah) + m2
                        !
-                       rhons_m1m2 = ( rho%ns(m1,m2,1,nah) + sgn_cs * &
-                                                       rho%ns(m1,m2,nspin,nah) )*0.5d0
-                       !
                        DO ig = 1, npwq 
                           !                         
-                          aux2(ig) = dqsphi(ig,ihubst1) * rhons_m1m2 &
+                          aux2(ig) = dqsphi(ig,ihubst1) * rho%ns(m1,m2,current_spin,nah) &
                                      * proj1(ibnd, ihubst2)
-                          aux4(ig) = swfcatomkpq(ig,ihubst1) * rhons_m1m2 &
+                          aux4(ig) = swfcatomkpq(ig,ihubst1) * rho%ns(m1,m2,current_spin,nah) &
                                      * proj2(ibnd, ihubst2)
                           aux5(ig) = swfcatomkpq(ig,ihubst1) &
                                      * dnsbare(m1,m2,current_spin,nah,icart,na) &
@@ -302,13 +302,11 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
                     DO m2 = 1, 2*Hubbard_l(nt)+1
                        ! 
                        ihubst2 = offsetU(nah) + m2
-                       !
-                       rhons_m1m2 = ( rho%ns(m1,m2,1,nah) + sgn_op * &
-                                                      rho%ns(m1,m2,nspin,nah) )*0.5d0
+                       ! 
                        DO ig = 1, npwq                          
-                          aux2(ig) = dqsphi(ig, ihubst1) * rhons_m1m2 &
+                          aux2(ig) = dqsphi(ig, ihubst1) * rho%ns(m1,m2,op_spin,nah) &
                                      * proj1(ibnd, ihubst2)
-                          aux4(ig) = swfcatomkpq(ig,ihubst1) * rhons_m1m2 &
+                          aux4(ig) = swfcatomkpq(ig,ihubst1) * rho%ns(m1,m2,op_spin,nah) &
                                      * proj2(ibnd, ihubst2)
                           aux5(ig) = swfcatomkpq(ig,ihubst1) &
                                      * dnsbare (m1,m2,op_spin,nah,icart,na) &

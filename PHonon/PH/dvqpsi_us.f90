@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine dvqpsi_us (ik, uact, addnlcc)
+subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
   !----------------------------------------------------------------------
   !
   ! This routine calculates dV_bare/dtau * psi for one perturbation
@@ -28,9 +28,9 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   USE gvect,     ONLY : eigts1, eigts2, eigts3, mill, g, &
                         ngm
   USE gvecs,     ONLY : ngms, doublegrid
-  USE lsda_mod,  ONLY : lsda, isk
-  USE scf,       ONLY : rho, rho_core, rhoz_or_updw
-  USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag, npol
+  USE lsda_mod,  ONLY : nspin, lsda, isk
+  USE scf,       ONLY : rho, rho_core
+  USE noncollin_module, ONLY : nspin_gga, npol
   use uspp_param,ONLY : upf
   USE wvfct,     ONLY : nbnd, npwx
   USE wavefunctions,  ONLY: evc
@@ -43,6 +43,8 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
 
   USE Coul_cut_2D, ONLY: do_cutoff_2D  
   USE Coul_cut_2D_ph, ONLY : cutoff_localq
+  USE qpoint,     ONLY : nksq
+  USE becmod,     ONLY : bec_type
   ! 
   IMPLICIT NONE
   !
@@ -83,20 +85,15 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   !! 
   INTEGER :: ip
   !!
+  TYPE(bec_type) :: becp1(nksq), alphap(3,nksq)
   ! 
   complex(DP) :: gtau, gu, fact, u1, u2, u3, gu0
-  complex(DP) , allocatable, target :: aux (:)
+  complex(DP) , allocatable :: aux (:,:)
   complex(DP) , allocatable :: aux1 (:), aux2 (:)
   complex(DP) , pointer :: auxs (:)
-  REAL(DP) :: fac
-  COMPLEX(DP), ALLOCATABLE :: drhoc(:)
+  COMPLEX(DP), ALLOCATABLE :: drhoc(:,:)
   ! 
   call start_clock ('dvqpsi_us')
-  if (nlcc_any.and.addnlcc) then
-     allocate (drhoc( dfftp%nnr))
-     allocate (aux( dfftp%nnr))
-     allocate (auxs(dffts%nnr))
-  endif
   allocate (aux1(dffts%nnr))
   allocate (aux2(dffts%nnr))
   !
@@ -139,7 +136,10 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   ! add NLCC when present
   !
   if (nlcc_any.and.addnlcc) then
-     drhoc(:) = (0.d0, 0.d0)
+     allocate (drhoc( dfftp%nnr,nspin))
+     allocate (aux( dfftp%nnr,nspin))
+     drhoc(:,:) = (0.d0, 0.d0)
+     aux(:,:) = (0.0_dp, 0.0_dp)
      do na = 1,nat
         fact = tpiba*(0.d0,-1.d0)*eigqts(na)
         mu = 3*(na-1)
@@ -156,61 +156,49 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
                         eigts2(mill(2,ig),na)*   &
                         eigts3(mill(3,ig),na)
                  gu = gu0+g(1,ig)*u1+g(2,ig)*u2+g(3,ig)*u3
-                 drhoc(dfftp%nl(ig))=drhoc(dfftp%nl(ig))+drc(ig,nt)*gu*fact*gtau
+                 drhoc(dfftp%nl(ig),1)=drhoc(dfftp%nl(ig),1)+drc(ig,nt)*gu*fact*gtau
               enddo
            endif
         endif
      enddo
-     CALL invfft ('Rho', drhoc, dfftp)
+     CALL invfft ('Rho', drhoc(:,1), dfftp)
      if (.not.lsda) then
         do ir=1,dfftp%nnr
-           aux(ir) = drhoc(ir) * dmuxc(ir,1,1)
+           aux(ir,1) = drhoc(ir,1) * dmuxc(ir,1,1)
         end do
      else
         is=isk(ikk)
         do ir=1,dfftp%nnr
-           aux(ir) = drhoc(ir) * 0.5d0 *  &
-                (dmuxc(ir,is,1)+dmuxc(ir,is,2))
+           drhoc(ir,1) = 0.5d0 * drhoc(ir,1)
+           drhoc(ir,2) = drhoc(ir,1)
+           aux(ir,1) = drhoc(ir,1) * ( dmuxc(ir,is,1) + &
+                                       dmuxc(ir,is,2) )
         enddo
      endif
 
-     fac = 1.d0 / DBLE (nspin_lsda)
+     rho%of_r(:,1) = rho%of_r(:,1) + rho_core(:)
 
-     rho%of_r(:,1) = rho%of_r(:,1) + rho_core
+     IF ( dft_is_gradient() ) CALL dgradcorr (dfftp, rho%of_r, grho, dvxc_rr, &
+                    dvxc_sr, dvxc_ss, dvxc_s, xq, drhoc, nspin, nspin_gga, g, aux)       
 
-     IF ( dft_is_gradient() ) THEN
-        !^
-        IF (nspin_lsda == 2) CALL rhoz_or_updw(rho, 'only_r', 'rhoz_updw')
-        !
-        CALL dgradcorr (dfftp, rho%of_r, grho, dvxc_rr, dvxc_sr, &
-                        dvxc_ss, dvxc_s, xq, drhoc, 1, nspin_gga, g, aux)
-        !
-        IF (nspin_lsda == 2) CALL rhoz_or_updw(rho, 'only_r', 'updw_rhoz')
-        !^
-     ENDIF         
+     IF (dft_is_nonlocc()) CALL dnonloccorr(rho%of_r, drhoc, xq, aux)
+     deallocate (drhoc)
 
-     IF (dft_is_nonlocc()) THEN
-        !^
-        IF (nspin_lsda == 2) CALL rhoz_or_updw(rho, 'only_r', 'rhoz_updw')
-        !
-        CALL dnonloccorr(rho%of_r, drhoc, xq, aux)
-        !
-        IF (nspin_lsda == 2) CALL rhoz_or_updw(rho, 'only_r', 'updw_rhoz')
-        !^
-     ENDIF
+     rho%of_r(:,1) = rho%of_r(:,1) - rho_core(:)
 
-     rho%of_r(:,1) = rho%of_r(:,1) - rho_core
-
-     CALL fwfft ('Rho', aux, dfftp)
+     CALL fwfft ('Rho', aux(:,1), dfftp)
 ! 
 !  This is needed also when the smooth and the thick grids coincide to
 !  cut the potential at the cut-off
 !
+     allocate (auxs(dffts%nnr))
      auxs(:) = (0.d0, 0.d0)
      do ig=1,ngms
-        auxs(dffts%nl(ig)) = aux(dfftp%nl(ig))
+        auxs(dffts%nl(ig)) = aux(dfftp%nl(ig),1)
      enddo
      aux1(:) = aux1(:) + auxs(:)
+     deallocate (aux)
+     deallocate (auxs)
   endif
   !
   ! Now we compute dV_loc/dtau in real space
@@ -253,17 +241,12 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   !
   deallocate (aux2)
   deallocate (aux1)
-  if (nlcc_any.and.addnlcc) then
-     deallocate (drhoc)
-     deallocate (aux)
-     deallocate (auxs)
-  endif
   !
   !   We add the contribution of the nonlocal potential in the US form
   !   First a term similar to the KB case.
   !   Then a term due to the change of the D coefficients.
   !
-  call dvqpsi_us_only (ik, uact)
+  call dvqpsi_us_only (ik, uact, becp1, alphap)
 
   call stop_clock ('dvqpsi_us')
   return

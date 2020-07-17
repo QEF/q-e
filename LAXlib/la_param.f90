@@ -6,16 +6,20 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-MODULE la_param
-
-#if defined(__MPI)
-#if defined(__MPI_MODULE)
-  USE mpi
+MODULE laxlib_parallel_include
+#if defined (__MPI)
+        !
+        !     Include file for MPI
+        !
+#if defined (__MPI_MODULE)
+        USE mpi
 #else
-  INCLUDE 'mpif.h'
+        INCLUDE 'mpif.h'
 #endif
+#else
+        ! dummy world and null communicator
+        INTEGER, PARAMETER :: MPI_COMM_WORLD =  0
+        INTEGER, PARAMETER :: MPI_COMM_NULL  = -1
+        INTEGER, PARAMETER :: MPI_COMM_SELF  = -2
 #endif
-  
-  INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
-
-END MODULE la_param
+END MODULE laxlib_parallel_include

@@ -13,13 +13,12 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 ! sname is in symme which is now outside pwcom
   use  uspp,          ONLY : nkb, vkb
   use wavefunctions,  ONLY : evc
-  use io_files,       ONLY : nd_nmbr, prefix, iunwfc, nwordwfc, iunsat, nwordatwfc
+  use io_files,       ONLY : prefix, iunwfc, nwordwfc, iunsat, nwordatwfc
   use io_files,       ONLY : pseudo_dir, psfile
   use io_global,      ONLY : ionode, stdout
   USE ions_base,      ONLY : atm, nat, ityp, tau, nsp
-  use mp_global,      ONLY :  nproc_pool
-  use mp_global,      ONLY : my_pool_id, intra_pool_comm, inter_pool_comm
-  USE mp_world, ONLY : world_comm, mpime,nproc
+  use mp_pools,       ONLY : nproc_pool, my_pool_id, intra_pool_comm, inter_pool_comm
+  USE mp_world, ONLY : world_comm, nproc
   use mp,             ONLY : mp_sum, mp_max
   use ldaU,           ONLY :  lda_plus_u
   USE gvecw,     ONLY : ecutwfc
@@ -251,9 +250,6 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
        ALLOCATE( sevc(npwx,nbnd), STAT=ierr )
        IF (ierr/=0) CALL errore( ' read_export ',' Unable to allocate SEVC ', ABS(ierr) )
-
-       CALL init_us_1
-       CALL init_at_1
 
        CALL allocate_bec_type (nkb,nbnd,becp)
 

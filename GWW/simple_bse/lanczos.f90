@@ -89,6 +89,13 @@ subroutine lanczos(data_input)
         call hamiltonian(data_input, 1, bd, pp, pt, pm, x, Hx,0)
         csca=x*Hx
         a(i) = cmplx(dble(csca),0.d0)
+!added this 22/1/18                                                                                                            
+        if(i>1) then
+             csca=xm1*Hx
+             b(i-1) = cmplx(dble(csca),0.d0)
+
+        endif
+
         if (i==1) then
            etmp1=a(i)*(-1.d0,0.d0)*x
            call sum_exc_sub(etmp2,Hx,etmp1)
@@ -128,6 +135,7 @@ subroutine lanczos(data_input)
            call sum_exc_sub(etmp3,etmp1,etmp2)
            call sum_exc_sub(etmp4,Hx,etmp3)
            x1= (1/b(i))*etmp4
+           call normalize_exc(x1)!Added 22/2/18      
           ! x1 = (1/b(i))*(Hx+(-1.d0,0.d0)*(a(i)*x+b(i-1)*xm1))! (|i+1>= H|i>-a_i|i>-b_{i-1}|i-1>)/b_i
            
            xm1 = x!|i-1> = |i>

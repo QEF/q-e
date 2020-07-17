@@ -12,7 +12,8 @@ PROGRAM X_Spectra
   USE io_global,       ONLY : stdout,ionode,ionode_id   ! Modules/io_global.f90
   USE io_files,        ONLY : prefix, iunwfc, nwordwfc, tmp_dir, diropn
   USE cell_base,       ONLY : bg, at, celldm
-  USE parameters,      ONLY : ntypx,lmaxx,lqmax
+  USE parameters,      ONLY : ntypx
+  USE upf_params,      ONLY : lmaxx
   USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
   USE start_k,         ONLY : nk1, nk2, nk3, k1, k2, k3
   USE wvfct,           ONLY : npwx ,nbnd, et, wg ! et(nbnd,nkstot)
@@ -42,7 +43,6 @@ PROGRAM X_Spectra
        degauss,lgauss,ngauss,    &
        two_fermi_energies
   USE lsda_mod,        ONLY : nspin,lsda,isk,current_spin
-  USE noncollin_module,ONLY : noncolin
   USE mp,              ONLY : mp_bcast, mp_sum             !parallelization
   USE mp_global,       ONLY : mp_startup, mp_global_end
   USE mp_pools,        ONLY : intra_pool_comm, npool
@@ -63,7 +63,6 @@ PROGRAM X_Spectra
        cut_nmeml,&      ! size of the memory of the values of the green function, lower side
        cut_occ_states  ! true if you want tou remove occupied states from the spectrum
 
-  USE control_flags,   ONLY : twfcollect
   !<CG>
   USE gamma_variable_mod, ONLY : gamma_value, gamma_energy, &
                                  gamma_lines, gamma_tab, gamma_points, &
@@ -434,7 +433,6 @@ SUBROUTINE stop_xspectra
   !
   ! Synchronize processes before stopping. This is a copy of stop_pp.
   !
-  USE control_flags, ONLY: twfcollect
   USE io_files, ONLY: iunwfc
   USE mp_global, ONLY: mp_global_end
   !
@@ -445,13 +443,7 @@ SUBROUTINE stop_xspectra
 
   INQUIRE ( iunwfc, opened = op )
 
-  IF ( op ) THEN
-     IF (twfcollect) THEN
-        CLOSE (unit = iunwfc, status = 'delete')
-     ELSE
-        CLOSE (unit = iunwfc, status = 'keep')
-     ENDIF
-  ENDIF
+  IF ( op ) CLOSE (unit = iunwfc, status = 'delete')
 
   CALL mp_global_end()
 
@@ -466,7 +458,7 @@ SUBROUTINE define_index_arrays(paw_iltonhb)
   !----------------------------------------------------------------------------
   USE paw_gipaw,   ONLY: paw_lmaxkb, paw_recon
   USE ions_base,   ONLY: ntyp => nsp
-  USE parameters,  ONLY: lmaxx
+  USE upf_params,  ONLY: lmaxx
   USE xspectra_paw_variables, ONLY : xspectra_paw_nhm ! CG
 
   IMPLICIT NONE
@@ -680,10 +672,6 @@ SUBROUTINE check_paw_projectors(xiabs)
   USE paw_gipaw,       ONLY: paw_lmaxkb, paw_recon
   USE xspectra_paw_variables, ONLY: xspectra_paw_nhm
   USE atom,            ONLY: rgrid, msh
-  !  USE atom,  ONLY : &
-  !       mesh,     &!mesh(ntypx) number of mesh points              
-  !       msh ,     &!msh(ntypx)the point at rcut=end of radial integration 
-  !       r, rab
   USE ions_base,       ONLY: ntyp => nsp
   USE io_global,       ONLY: stdout
   USE radin_mod

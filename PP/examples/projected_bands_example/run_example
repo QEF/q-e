@@ -1,0 +1,796 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use PostProc codes to calculate and visualize"
+$ECHO "projected (\"fat\") bands."
+$ECHO "In all cases shown, pw.x \"scf\" and \"bands\" calculations are performed"
+$ECHO "followed by a projwfc.x execution."
+$ECHO "To represent the results, different possibilities are exemplified:"
+$ECHO " - plotting k-resolved DOS as a color map: Ni, spin-polarized;"
+$ECHO " - using the codes bands.x plotband.x : Pt with spin-orbit;"
+$ECHO " - extracting projections written in stdout by projwfc.x: 2D Si (silicene)."
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x dos.x projwfc.x bands.x plotband.x"
+PSEUDO_LIST="Ni.pz-nd-rrkjus.UPF Pt.rel-pz-n-rrkjus.UPF Si.pz-vbc.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for gnuplot
+GP_COMMAND=`which gnuplot 2>/dev/null`
+if [ "$GP_COMMAND" = "" ]; then
+        $ECHO
+        $ECHO "gnuplot not in PATH"
+        $ECHO "Results will not be plotted"
+fi
+ 
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PROJWFC_COMMAND="$PARA_PREFIX $BIN_DIR/projwfc.x $PARA_POSTFIX"
+BANDS_COMMAND="$PARA_PREFIX $BIN_DIR/bands.x $PARA_POSTFIX"
+PLOTBAND_COMMAND="$BIN_DIR/plotband.x"
+$ECHO
+$ECHO "  running pw.x as:      $PW_COMMAND"
+$ECHO "  running projwfc.x as: $PROJWFC_COMMAND"
+$ECHO "  running bands.x as:   $BANDS_COMMAND"
+$ECHO "  running gnuplot as:   $GP_COMMAND"
+$ECHO
+
+# self-consistent calculation
+cat > ni.scf.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='ni',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,
+    nspin = 2,  starting_magnetization(1)=0.7,
+    ecutwfc = 24.0, ecutrho = 288.0,
+    occupations='smearing', smearing='mv', degauss=0.02
+ /
+ &electrons
+    conv_thr = 1.0e-10
+    mixing_beta = 0.7 
+ /
+ATOMIC_SPECIES
+ Ni 58.69 Ni.pz-nd-rrkjus.UPF
+ATOMIC_POSITIONS alat
+ Ni 0.0 0.0 0.0
+K_POINTS
+  60
+   0.0625000  0.0625000  0.0625000   1.00
+   0.0625000  0.0625000  0.1875000   3.00
+   0.0625000  0.0625000  0.3125000   3.00
+   0.0625000  0.0625000  0.4375000   3.00
+   0.0625000  0.0625000  0.5625000   3.00
+   0.0625000  0.0625000  0.6875000   3.00
+   0.0625000  0.0625000  0.8125000   3.00
+   0.0625000  0.0625000  0.9375000   3.00
+   0.0625000  0.1875000  0.1875000   3.00
+   0.0625000  0.1875000  0.3125000   6.00
+   0.0625000  0.1875000  0.4375000   6.00
+   0.0625000  0.1875000  0.5625000   6.00
+   0.0625000  0.1875000  0.6875000   6.00
+   0.0625000  0.1875000  0.8125000   6.00
+   0.0625000  0.1875000  0.9375000   6.00
+   0.0625000  0.3125000  0.3125000   3.00
+   0.0625000  0.3125000  0.4375000   6.00
+   0.0625000  0.3125000  0.5625000   6.00
+   0.0625000  0.3125000  0.6875000   6.00
+   0.0625000  0.3125000  0.8125000   6.00
+   0.0625000  0.3125000  0.9375000   6.00
+   0.0625000  0.4375000  0.4375000   3.00
+   0.0625000  0.4375000  0.5625000   6.00
+   0.0625000  0.4375000  0.6875000   6.00
+   0.0625000  0.4375000  0.8125000   6.00
+   0.0625000  0.4375000  0.9375000   6.00
+   0.0625000  0.5625000  0.5625000   3.00
+   0.0625000  0.5625000  0.6875000   6.00
+   0.0625000  0.5625000  0.8125000   6.00
+   0.0625000  0.6875000  0.6875000   3.00
+   0.0625000  0.6875000  0.8125000   6.00
+   0.0625000  0.8125000  0.8125000   3.00
+   0.1875000  0.1875000  0.1875000   1.00
+   0.1875000  0.1875000  0.3125000   3.00
+   0.1875000  0.1875000  0.4375000   3.00
+   0.1875000  0.1875000  0.5625000   3.00
+   0.1875000  0.1875000  0.6875000   3.00
+   0.1875000  0.1875000  0.8125000   3.00
+   0.1875000  0.3125000  0.3125000   3.00
+   0.1875000  0.3125000  0.4375000   6.00
+   0.1875000  0.3125000  0.5625000   6.00
+   0.1875000  0.3125000  0.6875000   6.00
+   0.1875000  0.3125000  0.8125000   6.00
+   0.1875000  0.4375000  0.4375000   3.00
+   0.1875000  0.4375000  0.5625000   6.00
+   0.1875000  0.4375000  0.6875000   6.00
+   0.1875000  0.4375000  0.8125000   6.00
+   0.1875000  0.5625000  0.5625000   3.00
+   0.1875000  0.5625000  0.6875000   6.00
+   0.1875000  0.6875000  0.6875000   3.00
+   0.3125000  0.3125000  0.3125000   1.00
+   0.3125000  0.3125000  0.4375000   3.00
+   0.3125000  0.3125000  0.5625000   3.00
+   0.3125000  0.3125000  0.6875000   3.00
+   0.3125000  0.4375000  0.4375000   3.00
+   0.3125000  0.4375000  0.5625000   6.00
+   0.3125000  0.4375000  0.6875000   6.00
+   0.3125000  0.5625000  0.5625000   3.00
+   0.4375000  0.4375000  0.4375000   1.00
+   0.4375000  0.4375000  0.5625000   3.00
+EOF
+$ECHO "  running the scf calculation for Ni...\c"
+$PW_COMMAND < ni.scf.in > ni.scf.out
+check_failure $?
+$ECHO " done"
+
+# band structure calculation along Delta and Sigma lines
+cat > ni.band.in << EOF
+ &control
+    calculation='bands'
+    restart_mode='from_scratch',
+    prefix='ni',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,
+    nspin = 2,  starting_magnetization(1)=0.7,
+    ecutwfc = 24.0, ecutrho = 288.0,
+    occupations='smearing', smearing='mv', degauss=0.02
+ /
+ &electrons
+    conv_thr = 1.0e-10
+    mixing_beta = 0.7 
+ /
+ATOMIC_SPECIES
+ Ni 58.69 Ni.pz-nd-rrkjus.UPF
+ATOMIC_POSITIONS alat
+ Ni 0.0 0.0 0.0
+K_POINTS
+97
+1.000000000 0.000000000 0.000000000 1
+0.975000000 0.000000000 0.000000000 2
+0.950000000 0.000000000 0.000000000 3
+0.925000000 0.000000000 0.000000000 4
+0.900000000 0.000000000 0.000000000 5
+0.875000000 0.000000000 0.000000000 6
+0.850000000 0.000000000 0.000000000 7
+0.825000000 0.000000000 0.000000000 8
+0.800000000 0.000000000 0.000000000 9
+0.775000000 0.000000000 0.000000000 10
+0.750000000 0.000000000 0.000000000 11
+0.725000000 0.000000000 0.000000000 12
+0.700000000 0.000000000 0.000000000 13
+0.675000000 0.000000000 0.000000000 14
+0.650000000 0.000000000 0.000000000 15
+0.625000000 0.000000000 0.000000000 16
+0.600000000 0.000000000 0.000000000 17
+0.575000000 0.000000000 0.000000000 18
+0.550000000 0.000000000 0.000000000 19
+0.525000000 0.000000000 0.000000000 20
+0.500000000 0.000000000 0.000000000 21
+0.475000000 0.000000000 0.000000000 22
+0.450000000 0.000000000 0.000000000 23
+0.425000000 0.000000000 0.000000000 24
+0.400000000 0.000000000 0.000000000 25
+0.375000000 0.000000000 0.000000000 26
+0.350000000 0.000000000 0.000000000 27
+0.325000000 0.000000000 0.000000000 28
+0.300000000 0.000000000 0.000000000 29
+0.275000000 0.000000000 0.000000000 30
+0.250000000 0.000000000 0.000000000 31
+0.225000000 0.000000000 0.000000000 32
+0.200000000 0.000000000 0.000000000 33
+0.175000000 0.000000000 0.000000000 34
+0.150000000 0.000000000 0.000000000 35
+0.125000000 0.000000000 0.000000000 36
+0.100000000 0.000000000 0.000000000 37
+0.075000000 0.000000000 0.000000000 38
+0.050000000 0.000000000 0.000000000 39
+0.025000000 0.000000000 0.000000000 40
+0.000000000 0.000000000 0.000000000 41
+0.017857142 0.017857142 0.000000000 42
+0.035714285 0.035714285 0.000000000 43
+0.053571428 0.053571428 0.000000000 44
+0.071428571 0.071428571 0.000000000 45
+0.089285714 0.089285714 0.000000000 46
+0.107142857 0.107142857 0.000000000 47
+0.125000000 0.125000000 0.000000000 48
+0.142857142 0.142857142 0.000000000 49
+0.160714285 0.160714285 0.000000000 50
+0.178571428 0.178571428 0.000000000 51
+0.196428571 0.196428571 0.000000000 52
+0.214285714 0.214285714 0.000000000 53
+0.232142857 0.232142857 0.000000000 54
+0.250000000 0.250000000 0.000000000 55
+0.267857142 0.267857142 0.000000000 56
+0.285714285 0.285714285 0.000000000 57
+0.303571428 0.303571428 0.000000000 58
+0.321428571 0.321428571 0.000000000 59
+0.339285714 0.339285714 0.000000000 60
+0.357142857 0.357142857 0.000000000 61
+0.375000000 0.375000000 0.000000000 62
+0.392857142 0.392857142 0.000000000 63
+0.410714285 0.410714285 0.000000000 64
+0.428571428 0.428571428 0.000000000 65
+0.446428571 0.446428571 0.000000000 66
+0.464285714 0.464285714 0.000000000 67
+0.482142857 0.482142857 0.000000000 68
+0.500000000 0.500000000 0.000000000 69
+0.517857142 0.517857142 0.000000000 70
+0.535714285 0.535714285 0.000000000 71
+0.553571428 0.553571428 0.000000000 72
+0.571428571 0.571428571 0.000000000 73
+0.589285714 0.589285714 0.000000000 74
+0.607142857 0.607142857 0.000000000 75
+0.625000000 0.625000000 0.000000000 76
+0.642857142 0.642857142 0.000000000 77
+0.660714285 0.660714285 0.000000000 78
+0.678571428 0.678571428 0.000000000 79
+0.696428571 0.696428571 0.000000000 80
+0.714285714 0.714285714 0.000000000 81
+0.732142857 0.732142857 0.000000000 82
+0.750000000 0.750000000 0.000000000 83
+0.767857142 0.767857142 0.000000000 84
+0.785714285 0.785714285 0.000000000 85
+0.803571428 0.803571428 0.000000000 86
+0.821428571 0.821428571 0.000000000 87
+0.839285714 0.839285714 0.000000000 88
+0.857142857 0.857142857 0.000000000 89
+0.875000000 0.875000000 0.000000000 90
+0.892857142 0.892857142 0.000000000 91
+0.910714285 0.910714285 0.000000000 92
+0.928571428 0.928571428 0.000000000 93
+0.946428571 0.946428571 0.000000000 94
+0.964285714 0.964285714 0.000000000 95
+0.982142857 0.982142857 0.000000000 96
+1.000000000 1.000000000 0.000000000 97
+EOF
+$ECHO "  running the band-structure calculation for Ni...\c"
+$PW_COMMAND < ni.band.in > ni.band.out
+check_failure $?
+$ECHO " done"
+
+# K-resolved PDOS calculation along Delta and Sigma lines computed above
+cat > ni.kpdos.in << EOF
+ &projwfc
+    outdir='$TMP_DIR/'
+    prefix='ni'
+    ngauss=0, degauss=0.036748
+    DeltaE=0.01
+    kresolveddos=.true.
+    filpdos='ni.k'
+ /
+EOF
+$ECHO "  running k-resolved PDOS calculation for Ni...\c"
+$PROJWFC_COMMAND < ni.kpdos.in > ni.kpdos.out
+check_failure $?
+$ECHO " done"
+
+#
+#  if gnuplot was found, the results are plotted
+#
+if [ "$GP_COMMAND" = "" ]; then
+    break
+else
+cat > ni.gnuplot <<EOF
+#!$GP_COMMAND
+#
+set term png enh size 1000,500
+set pm3d
+set view 0,0
+#
+f(z)=z**(0.7)  # tune image contrast
+ef=15.2874
+#
+unset xtics
+set xtics out nomirror ("X" 1,"Gamma" 41,"K" 83, "X" 97)
+set xra[1:97]
+set label 1 "E-E_F(eV)" at 98,2.5
+set ytics out nomirror
+set yra [-10.9:20.9]
+unset ztics
+unset key
+unset colorbox
+#
+set out 'ni.kpdos_up.png'
+set origin 0,0
+set size 1,1
+set multiplot
+dx=.1 ; dy=.30   # reduce margins
+set title offset 0,-7
+set size 1./3+1.4*dx,1.+2*dy
+set origin 0./3-dx,0-dy
+set title "Total DOS"
+splot 'ni.k.pdos_tot' u 1:(\$2-ef):(f(\$3)) w pm3d
+set origin 1./3-dx,0-dy
+set title "s-DOS"
+splot 'ni.k.pdos_atm#1(Ni)_wfc#1(s)' u 1:(\$2-ef):(f(\$3)) w pm3d
+set origin 2./3-dx,0-dy
+set title "d-DOS"
+splot 'ni.k.pdos_atm#1(Ni)_wfc#2(d)' u 1:(\$2-ef):(f(\$3)) w pm3d
+unset multiplot
+#
+set out 'ni.kpdos_dw.png'
+set origin 0,0
+set size 1,1
+set multiplot
+dx=.1 ; dy=.30   # reduce margins
+set title offset 0,-7
+set size 1./3+1.4*dx,1.+2*dy
+set origin 0./3-dx,0-dy
+set title "Total DOS"
+splot 'ni.k.pdos_tot' u 1:(\$2-ef):(f(\$4)) w pm3d
+set origin 1./3-dx,0-dy
+set title "s-DOS"
+splot 'ni.k.pdos_atm#1(Ni)_wfc#1(s)' u 1:(\$2-ef):(f(\$4)) w pm3d
+set origin 2./3-dx,0-dy
+set title "d-DOS"
+splot 'ni.k.pdos_atm#1(Ni)_wfc#2(d)' u 1:(\$2-ef):(f(\$4)) w pm3d
+unset multiplot
+#
+EOF
+$ECHO
+$ECHO "  plotting k-resolved DOS ...\c"
+$GP_COMMAND < ni.gnuplot
+$ECHO " done"
+fi
+
+
+################################################################################
+
+# self-consistent calculation
+cat > pt.scf.in << EOF
+Pt
+Pt
+ &control
+    calculation = 'scf'
+    restart_mode='from_scratch',
+    prefix='Pt',
+    tprnfor = .true.,
+    tstress =.true.,
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav=  2, celldm(1) =7.42, nat=  1, ntyp= 1,
+    lspinorb=.true.,
+    noncolin=.true.,
+    starting_magnetization=0.0,
+    occupations='smearing',
+    smearing = 'marzari-vanderbilt'
+    degauss=0.02,
+    ecutwfc =30.0,
+    ecutrho =250.0,
+ /
+ &electrons
+    mixing_beta = 0.7,
+    conv_thr =  1.0d-8
+ /
+ATOMIC_SPECIES
+Pt  0.0   Pt.rel-pz-n-rrkjus.UPF
+ATOMIC_POSITIONS alat
+Pt  0.0000000   0.00000000   0.0
+K_POINTS AUTOMATIC
+4 4 4 1 1 1
+EOF
+$ECHO "  running the scf calculation for Pt with spin-orbit coupling...\c"
+$PW_COMMAND < pt.scf.in > pt.scf.out
+check_failure $?
+$ECHO " done"
+
+# band structure calculation along Delta and Sigma lines
+cat > pt.band.in << EOF
+Pt
+Pt
+ &control
+    calculation = 'bands'
+    restart_mode='from_scratch',
+    prefix='Pt',
+    tprnfor = .true.
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav=  2, celldm(1) =7.42, nat=  1, ntyp= 1,
+    lspinorb=.true.,
+    noncolin=.true.,
+    starting_magnetization=0.0,
+    occupations='smearing',
+    smearing = 'marzari-vanderbilt'
+    degauss=0.02,
+    ecutwfc =30.0,
+    ecutrho =250.0,
+ /
+ &electrons
+    mixing_beta = 0.7,
+    conv_thr =  1.0d-8
+ /
+ATOMIC_SPECIES
+Pt  0.0   Pt.rel-pz-n-rrkjus.UPF 
+ATOMIC_POSITIONS alat
+Pt  0.0000000   0.00000000   0.0
+K_POINTS
+97
+1.000000000 0.000000000 0.000000000 1
+0.975000000 0.000000000 0.000000000 2
+0.950000000 0.000000000 0.000000000 3
+0.925000000 0.000000000 0.000000000 4
+0.900000000 0.000000000 0.000000000 5
+0.875000000 0.000000000 0.000000000 6
+0.850000000 0.000000000 0.000000000 7
+0.825000000 0.000000000 0.000000000 8
+0.800000000 0.000000000 0.000000000 9
+0.775000000 0.000000000 0.000000000 10
+0.750000000 0.000000000 0.000000000 11
+0.725000000 0.000000000 0.000000000 12
+0.700000000 0.000000000 0.000000000 13
+0.675000000 0.000000000 0.000000000 14
+0.650000000 0.000000000 0.000000000 15
+0.625000000 0.000000000 0.000000000 16
+0.600000000 0.000000000 0.000000000 17
+0.575000000 0.000000000 0.000000000 18
+0.550000000 0.000000000 0.000000000 19
+0.525000000 0.000000000 0.000000000 20
+0.500000000 0.000000000 0.000000000 21
+0.475000000 0.000000000 0.000000000 22
+0.450000000 0.000000000 0.000000000 23
+0.425000000 0.000000000 0.000000000 24
+0.400000000 0.000000000 0.000000000 25
+0.375000000 0.000000000 0.000000000 26
+0.350000000 0.000000000 0.000000000 27
+0.325000000 0.000000000 0.000000000 28
+0.300000000 0.000000000 0.000000000 29
+0.275000000 0.000000000 0.000000000 30
+0.250000000 0.000000000 0.000000000 31
+0.225000000 0.000000000 0.000000000 32
+0.200000000 0.000000000 0.000000000 33
+0.175000000 0.000000000 0.000000000 34
+0.150000000 0.000000000 0.000000000 35
+0.125000000 0.000000000 0.000000000 36
+0.100000000 0.000000000 0.000000000 37
+0.075000000 0.000000000 0.000000000 38
+0.050000000 0.000000000 0.000000000 39
+0.025000000 0.000000000 0.000000000 40
+0.000000000 0.000000000 0.000000000 41
+0.017857142 0.017857142 0.000000000 42
+0.035714285 0.035714285 0.000000000 43
+0.053571428 0.053571428 0.000000000 44
+0.071428571 0.071428571 0.000000000 45
+0.089285714 0.089285714 0.000000000 46
+0.107142857 0.107142857 0.000000000 47
+0.125000000 0.125000000 0.000000000 48
+0.142857142 0.142857142 0.000000000 49
+0.160714285 0.160714285 0.000000000 50
+0.178571428 0.178571428 0.000000000 51
+0.196428571 0.196428571 0.000000000 52
+0.214285714 0.214285714 0.000000000 53
+0.232142857 0.232142857 0.000000000 54
+0.250000000 0.250000000 0.000000000 55
+0.267857142 0.267857142 0.000000000 56
+0.285714285 0.285714285 0.000000000 57
+0.303571428 0.303571428 0.000000000 58
+0.321428571 0.321428571 0.000000000 59
+0.339285714 0.339285714 0.000000000 60
+0.357142857 0.357142857 0.000000000 61
+0.375000000 0.375000000 0.000000000 62
+0.392857142 0.392857142 0.000000000 63
+0.410714285 0.410714285 0.000000000 64
+0.428571428 0.428571428 0.000000000 65
+0.446428571 0.446428571 0.000000000 66
+0.464285714 0.464285714 0.000000000 67
+0.482142857 0.482142857 0.000000000 68
+0.500000000 0.500000000 0.000000000 69
+0.517857142 0.517857142 0.000000000 70
+0.535714285 0.535714285 0.000000000 71
+0.553571428 0.553571428 0.000000000 72
+0.571428571 0.571428571 0.000000000 73
+0.589285714 0.589285714 0.000000000 74
+0.607142857 0.607142857 0.000000000 75
+0.625000000 0.625000000 0.000000000 76
+0.642857142 0.642857142 0.000000000 77
+0.660714285 0.660714285 0.000000000 78
+0.678571428 0.678571428 0.000000000 79
+0.696428571 0.696428571 0.000000000 80
+0.714285714 0.714285714 0.000000000 81
+0.732142857 0.732142857 0.000000000 82
+0.750000000 0.750000000 0.000000000 83
+0.767857142 0.767857142 0.000000000 84
+0.785714285 0.785714285 0.000000000 85
+0.803571428 0.803571428 0.000000000 86
+0.821428571 0.821428571 0.000000000 87
+0.839285714 0.839285714 0.000000000 88
+0.857142857 0.857142857 0.000000000 89
+0.875000000 0.875000000 0.000000000 90
+0.892857142 0.892857142 0.000000000 91
+0.910714285 0.910714285 0.000000000 92
+0.928571428 0.928571428 0.000000000 93
+0.946428571 0.946428571 0.000000000 94
+0.964285714 0.964285714 0.000000000 95
+0.982142857 0.982142857 0.000000000 96
+1.000000000 1.000000000 0.000000000 97
+EOF
+$ECHO "  running the band-structure calculation for Pt with spin-orbit coupling...\c"
+$PW_COMMAND < pt.band.in > pt.band.out
+check_failure $?
+$ECHO " done"
+
+# K-resolved PDOS calculation along Delta and Sigma lines computed above
+cat > pt.kpdos.in << EOF
+ &projwfc
+    outdir='$TMP_DIR/'
+    prefix='Pt'
+    ngauss=0, degauss=0.036748
+    DeltaE=0.01
+    kresolveddos=.true.
+    filpdos='pt.k'
+    lsym = .FALSE.,
+    filproj = 'pt.proj.dat'
+ /
+EOF
+$ECHO "  running k-resolved PDOS calculation for Pt...\c"
+$PROJWFC_COMMAND < pt.kpdos.in > pt.kpdos.out
+check_failure $?
+$ECHO " done"
+
+# extract the bands
+cat > pt.bands.in << EOF
+ &bands
+    prefix = 'Pt',
+    outdir = '$TMP_DIR/',
+    lsym = .TRUE.,
+    filband = 'pt.bands.dat',
+ /
+EOF
+$ECHO "  performing symmetry analysis of bands ...\c"
+$BANDS_COMMAND < pt.bands.in > pt.bands.out
+check_failure $?
+$ECHO " done"
+
+# plotband run using the projection weights from .proj
+# automatically extract Fermi energy from SCF calculation
+eFermi=`grep Fermi pt.scf.out | awk '{print $5}'`
+# make a link to the projection file using the name expected by plotband.x
+ln -s pt.proj.dat.projwfc_up pt.bands.dat.proj
+# if pt.bands.dat.proj is found, one must supply an additional line with
+# the list of atomic wavefunctions (here, the 6s of Pt atoms, #11 and #12)
+cat > pt.plotband.in << EOF
+pt.bands.dat
+11 12
+7 32
+pt.bands
+pt.bands.ps
+ $eFermi
+ 2.0  $eFermi
+EOF
+$ECHO "  using plotband to obtain projected bands for Pt 6s states ...\c"
+$PLOTBAND_COMMAND < pt.plotband.in > pt.plotband.out
+check_failure $?
+$ECHO " done"
+# merge files to be plotted by a single command
+cat pt.bands.?.? > pt.bands.all
+
+#
+#  if gnuplot was found, the results are plotted
+#
+if [ "$GP_COMMAND" = "" ]; then
+    break
+else
+cat > pt.gnuplot <<EOF
+#!$GP_COMMAND
+#
+set term png enh size 700,500
+eFermi=$eFermi
+#
+unset xtics
+set xtics out nomirror ("X" 0,"{/Symbol G}" 1,"K" 2.06066, "X" 2.41421)
+set ylabel "E-E_F(eV)"
+set ytics out nomirror
+set yra [-11:9]
+unset key
+set grid xtics
+#
+set out 'pt.s-bands.png'
+set palette defined ( 0 "blue", 0.25 "black" , 0.5 "red", 1.0 "orange" )
+plot "pt.bands.all" u 1:(\$2-eFermi):3 w l lw 2 palette
+#
+EOF
+$ECHO
+$ECHO "  plotting Pt projected bands ...\c"
+$GP_COMMAND < pt.gnuplot
+$ECHO " done"
+fi
+
+
+
+################################################################################
+
+ 
+# self-consistent calculation
+cat > silicene.scf.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='silicene',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav=4, a=3.866, c=10.00, nat=2, ntyp=1, ecutwfc=18.0,
+ /
+ &electrons
+    conv_thr = 1.0e-10
+    mixing_beta = 0.7 
+ /
+ATOMIC_SPECIES
+ Si  28.086  Si.pz-vbc.UPF
+ATOMIC_POSITIONS crystal
+Si      0.666666666667      0.333333333333      0.0225
+Si      0.333333333333      0.666666666667     -0.0225
+K_POINTS {automatic}
+ 12 12 1  0 0 0
+EOF
+$ECHO "  running the scf calculation for silicene...\c"
+$PW_COMMAND < silicene.scf.in > silicene.scf.out
+check_failure $?
+$ECHO " done"
+
+
+# band structure calculation (Gamma-M-K-Gamma in the 2D Brillouin zone)
+cat > silicene.band.in << EOF
+ &control
+    calculation='bands'
+    restart_mode='from_scratch',
+    prefix='silicene',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav=4, a=3.866, c=10.00, nat=2, ntyp=1, ecutwfc=18.0,
+    nbnd=12,
+ /
+ &electrons
+    conv_thr = 1.0e-10
+    mixing_beta = 0.7 
+    conv_thr_init = 1.0e-6
+ /
+ATOMIC_SPECIES
+ Si  28.086  Si.pz-vbc.UPF
+ATOMIC_POSITIONS crystal
+Si      0.666666666667      0.333333333333      0.0225
+Si      0.333333333333      0.666666666667     -0.0225
+K_POINTS crystal_b
+4
+0.000000000 0.000000000 0.000000000 17
+0.500000000 0.000000000 0.000000000 10
+0.333333333 0.333333333 0.000000000 20
+0.000000000 0.000000000 0.000000000 0
+EOF
+$ECHO "  running the band-structure calculation for silicene...\c"
+$PW_COMMAND < silicene.band.in > silicene.band.out
+check_failure $?
+$ECHO " done"
+
+# K-resolved PDOS calculation (Gamma-M-K-Gamma computed above)
+cat > silicene.kpdos.in << EOF
+ &projwfc
+    outdir='$TMP_DIR/'
+    prefix='silicene'
+    ngauss=0, degauss=0.036748
+    DeltaE=0.01
+    kresolveddos=.true.
+    filpdos='silicene.k'
+ /
+EOF
+$ECHO "  running k-resolved PDOS calculation for silicene...\c"
+$PROJWFC_COMMAND < silicene.kpdos.in > silicene.kpdos.out
+check_failure $?
+$ECHO " done"
+
+# Extract the projected bands from the stdout of projwfc.x
+# Including atomic states from 1-4 (s,pz,px,py of Si atom#1)
+awk -v firststate=1 -v laststate=4 -v ef=-1.3230 -f ../projwfc_to_bands.awk silicene.kpdos.out > silicene.projbands
+
+#
+#  if gnuplot was found, the results are plotted
+#
+if [ "$GP_COMMAND" = "" ]; then
+    break
+else
+cat > silicene.gnuplot <<EOF
+#!$GP_COMMAND
+#
+set term png enh size 700,500
+set out 'silicene.projbands.png'
+set xtics ("{/Symbol G}"0,"M"0.57735,"K"0.91068,"{/Symbol G}"1.57735)
+set grid xtics
+set xra [0:1.57735]
+set yra [-12:5]
+set ylabel "E - E_F (eV)"
+set xzeroaxis
+set key opaque box width 1.0
+set style fill solid noborder
+#radius(proj)=sqrt(proj)/40.
+radius(proj)=proj/30.
+p 'silicene.projbands'  u 2:3:(radius(\$5+\$7+\$8)) w circles lc rgb "green" t "{/Symbol s}", 'silicene.projbands' u 2:3:(radius(\$6)) w circles lc rgb "orange" t "{/Symbol p}"
+
+EOF
+$ECHO
+$ECHO "  plotting projected band structure ...\c"
+$GP_COMMAND < silicene.gnuplot
+$ECHO " done"
+fi
+
+################################################################################
+
+
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/ni.* $TMP_DIR/Pt.* $TMP_DIR/silicene.*
+
+$ECHO "  To remove large files:"
+$ECHO "rm -f results/*.k.pdos_* results/*.kpdos.out results/pt.proj.dat"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"

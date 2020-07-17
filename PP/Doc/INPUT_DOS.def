@@ -60,7 +60,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dos.x
                     see M. Kawamura, PRB 89, 094515 (2014).
                 }
               }
-              default { 'smearing' if degauss in given in input 'smearing', 
+              default { 'smearing' if degauss is given in input; 
                          options read from the xml data file otherwise. }  
                }
 
@@ -74,7 +74,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dos.x
 		
 		    =  1  Methfessel-Paxton of order 1
 		    
-		    = -1  Marzari-Vanderbilt "cold smearing"
+		    = -1  "cold smearing" (Marzari-Vanderbilt-DeVita-Payne)
 		    
 		    =-99  Fermi-Dirac function
 	    }

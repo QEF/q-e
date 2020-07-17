@@ -54,7 +54,7 @@ END MODULE geomcell_cond
 !
 !
 MODULE orbcell_cond
-  USE parameters, only : npsx
+  USE upf_params,   only: npsx
   use radial_grids, only: ndmx
   USE kinds, only : DP
   !

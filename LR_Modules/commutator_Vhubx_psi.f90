@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -29,7 +29,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   USE wvfct,          ONLY : npwx, nbnd
   USE ions_base,      ONLY : nat, ityp, ntyp => nsp
   USE ldaU,           ONLY : Hubbard_l, Hubbard_U, Hubbard_J0, &
-                             is_hubbard, nwfcU, offsetU   
+                             is_hubbard, nwfcU, offsetU, oatwfc   
   USE uspp,           ONLY : vkb, nkb, okvan 
   USE uspp_param,     ONLY : nh, upf  
   USE eqv,            ONLY : dpsi
@@ -39,9 +39,10 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   USE gvect,          ONLY : g 
   USE scf,            ONLY : rho
   USE mp,             ONLY : mp_sum
-  USE mp_global,      ONLY : intra_pool_comm
+  USE mp_pools,       ONLY : intra_pool_comm
   USE units_lr,       ONLY : iuatwfc, iuatswfc
   USE buffers,        ONLY : get_buffer
+  USE basis,          ONLY : natomwfc
   !
   IMPLICIT NONE
   !
@@ -51,14 +52,14 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   !
   REAL(DP), PARAMETER :: eps = 1.0d-8
   INTEGER     :: na, n ,l, nt, nah, ikb , m, m1, m2, ibnd, ib, ig, jkb, i, &
-                 ihubst, ihubst1,  ihubst2, icart, op_spin, npw
-  REAL(DP)    :: nsaux, sgn
+                 ihubst, ihubst1,  ihubst2, icart, op_spin, npw, offpm, offpmU
+  REAL(DP)    :: nsaux
   REAL(DP), ALLOCATABLE :: xyz(:,:), gk(:,:), g2k(:)
   COMPLEX(DP), ALLOCATABLE :: dkwfcbessel(:,:), dkwfcylmr(:,:), dkwfcatomk(:,:),   &
                  dpqq26(:,:), dpqq38(:,:), dpqq47(:,:), dkvkbbessel(:,:),          &
                  dkvkbylmr(:,:), dkvkb(:,:), aux_1234(:), termi(:,:), trm(:,:),    &
                  wfcatomk(:,:), swfcatomk(:,:), proj1(:,:), proj2(:,:), proj3(:,:)               
-  COMPLEX(DP), EXTERNAL :: ZDOTC
+  COMPLEX(DP), EXTERNAL :: zdotc
   !
   CALL start_clock( 'commutator_Vhubx_psi' )
   !
@@ -68,8 +69,8 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   ALLOCATE (proj1(nbnd,nwfcU))
   ALLOCATE (proj2(nbnd,nwfcU))
   ALLOCATE (proj3(nbnd,nwfcU))
-  ALLOCATE (dkwfcbessel(npwx,nwfcU))
-  ALLOCATE (dkwfcylmr(npwx,nwfcU))
+  ALLOCATE (dkwfcbessel(npwx,natomwfc))
+  ALLOCATE (dkwfcylmr(npwx,natomwfc))
   ALLOCATE (dkwfcatomk(npwx,nwfcU))
   ALLOCATE (dpqq26(npwx,nwfcU))
   ALLOCATE (dpqq38(npwx,nwfcU))
@@ -119,8 +120,8 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   !
   ! Derivative of Bessel functions and spherical harmonics wrt to crystal axis ipol
   !
-  CALL gen_at_dj (ik, nwfcU, is_hubbard, Hubbard_l, dkwfcbessel)
-  CALL gen_at_dy (ik, nwfcU, is_hubbard, Hubbard_l, at(:,ipol), dkwfcylmr)
+  CALL gen_at_dj (ik, dkwfcbessel)
+  CALL gen_at_dy (ik, at(:,ipol), dkwfcylmr)
   !
   DO ig = 1, npw
      !
@@ -141,12 +142,22 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
      !
      ! Derivative wrt crystal axis ipol 
      ! d|k+G|/d(k+G)_ipol = \sum_{icart} d|k+G|/d(k+G)_icart * at (icart,ipol)
-     ! The derivative is done for all the atomic wfc and for each ig        
+     ! The derivative is done for all the atomic wfc and for each ig
      !
-     dkwfcatomk(ig,:) = dkwfcylmr(ig,:) + dkwfcbessel(ig,:) * &
-                       ( at (1, ipol) * gk (1, ig) + &
-                         at (2, ipol) * gk (2, ig) + &
-                         at (3, ipol) * gk (3, ig) ) 
+     DO na = 1, nat
+         nt = ityp(na)
+         IF (is_hubbard(nt)) THEN
+            offpmU = offsetU(na)
+            offpm  = oatwfc(na)
+            DO m1 = 1, 2*Hubbard_l(nt)+1
+               dkwfcatomk(ig,offpmU+m1) = dkwfcylmr(ig,offpm+m1)        &
+                                        + dkwfcbessel(ig,offpm+m1) *    &
+                                          ( at (1, ipol) * gk (1, ig) + &
+                                            at (2, ipol) * gk (2, ig) + &
+                                            at (3, ipol) * gk (3, ig) ) 
+            ENDDO
+         ENDIF
+     ENDDO
      !
   ENDDO
   !
@@ -204,9 +215,9 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
               CALL vecqqproj (npw, vkb, dkvkb, wfcatomk(:,ihubst), dpqq47(:,ihubst))
               !     
               DO ibnd = 1, nbnd_occ(ik)
-                 proj3(ibnd,ihubst) = ZDOTC (npw, dpqq26(:,ihubst), 1, evc(:,ibnd), 1) + &
-                                      ZDOTC (npw, dpqq47(:,ihubst), 1, evc(:,ibnd), 1) + &
-                                      ZDOTC (npw, dpqq38(:,ihubst), 1, evc(:,ibnd), 1)      
+                 proj3(ibnd,ihubst) = zdotc (npw, dpqq26(:,ihubst), 1, evc(:,ibnd), 1) + &
+                                      zdotc (npw, dpqq47(:,ihubst), 1, evc(:,ibnd), 1) + &
+                                      zdotc (npw, dpqq38(:,ihubst), 1, evc(:,ibnd), 1)      
               ENDDO
               !     
            ENDIF
@@ -216,8 +227,8 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
               ! Calculate proj (ihubst,ibnd) = < S_{k}\phi_(k,I,m)| psi(ibnd,ik) > 
               ! at ihubst (i.e. I, m).    
               !              
-              proj1(ibnd,ihubst) = ZDOTC (npw, swfcatomk(:,ihubst),  1, evc(:,ibnd), 1)
-              proj2(ibnd,ihubst) = ZDOTC (npw, dkwfcatomk(:,ihubst), 1, evc(:,ibnd), 1) 
+              proj1(ibnd,ihubst) = zdotc (npw, swfcatomk(:,ihubst),  1, evc(:,ibnd), 1)
+              proj2(ibnd,ihubst) = zdotc (npw, dkwfcatomk(:,ihubst), 1, evc(:,ibnd), 1) 
               !
            ENDDO 
            !
@@ -262,8 +273,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
                   !
                   trm = (0.d0, 0.d0)
                   ! 
-                  sgn= REAL( 2*MOD(current_spin,2)-1 )
-                  nsaux = ( rho%ns(m1, m2, 1, nah) + sgn*rho%ns(m1, m2, nspin, nah) )*0.5d0
+                  nsaux = rho%ns(m1, m2, current_spin, nah)
                   !
                   DO ibnd = 1, nbnd_occ(ik)
                      trm(:,ibnd) = aux_1234(:) * proj1(ibnd,ihubst2)  + &     ! term_1234
@@ -323,8 +333,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
                      !
                      trm = (0.d0, 0.d0)
                      ! 
-                     sgn = REAL( 2*MOD(op_spin,2)-1 )
-                     nsaux = ( rho%ns(m1, m2, 1, nah) + sgn*rho%ns(m1, m2, nspin, nah) )*0.5d0
+                     nsaux = rho%ns(m1, m2, op_spin, nah)
                      !
                      DO ibnd = 1, nbnd_occ(ik)
                         trm(:,ibnd) = aux_1234(:) * proj1(ibnd,ihubst2)  + & ! term_1234
@@ -398,7 +407,7 @@ SUBROUTINE vecqqproj (npw, vec1, vec2, vec3, dpqq)
     USE uspp,       ONLY : qq_nt, nkb
     USE wvfct,      ONLY : npwx
     USE mp,         ONLY : mp_sum
-    USE mp_global,  ONLY : intra_pool_comm
+    USE mp_pools,   ONLY : intra_pool_comm
     USE control_lr, ONLY : ofsbeta
     !    
     IMPLICIT NONE
@@ -416,7 +425,7 @@ SUBROUTINE vecqqproj (npw, vec1, vec2, vec3, dpqq)
     INTEGER     :: na, nt, l1, l2, ig, ibeta1, ibeta2, ibnd
     COMPLEX(DP), ALLOCATABLE :: aux1(:)
     COMPLEX(DP) :: projaux1vec3
-    COMPLEX(DP), EXTERNAL :: ZDOTC
+    COMPLEX(DP), EXTERNAL :: zdotc
     !    
     dpqq = (0.d0, 0.d0)
     !
@@ -439,7 +448,7 @@ SUBROUTINE vecqqproj (npw, vec1, vec2, vec3, dpqq)
              aux1(:) = aux1(:) + qq_nt(l1,l2,nt) * vec2(:,ibeta2)
           ENDDO
           !
-          projaux1vec3 = ZDOTC (npw, aux1, 1, vec3, 1)
+          projaux1vec3 = zdotc (npw, aux1, 1, vec3, 1)
           !
 #if defined(__MPI)
           CALL mp_sum(projaux1vec3, intra_pool_comm)

@@ -14,11 +14,11 @@
   epwread     = .false.
 
   etf_mem     = 2
+  vme         = .false. 
   lpolar      = .true.
   lphase      = .true.
 
   nbndsub     =  4
-  nbndskip    =  0
 
   wannierize  = .true.
   num_iter    = 300
@@ -40,9 +40,8 @@
   phonselfen  = .false.
   a2f         = .false.
 
-
   fsthick     = 2.0 ! eV
-  eptemp      = 300 ! K
+  temps       = 300 ! K
   degaussw    = 0.1 ! eV
 
   dvscf_dir   = './save'
@@ -63,8 +62,3 @@
   nq2         = 3
   nq3         = 3
  /
-      4 cartesian
-  0.000000000000   0.000000000000   0.000000000000  
- -0.333333333333   0.333333333333  -0.333333333333  
-  0.000000000000   0.666666666667   0.000000000000  
-  0.666666666667   0.000000000000   0.666666666667  

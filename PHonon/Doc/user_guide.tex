@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.3}
+\def\version{6.6}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -116,8 +116,8 @@ We quote in particular:
   tetrahedron method in phonon and electron-phonon calculations;
   \item Thibault Sohier, Matteo Calandra, Francesco Mauri, for 
 	phonons in two-dimensional systems;
-  \item Andrea Floris, Iurii Timrov, Burak Himmetoglu, Stefano de Gironcoli, 
-        Nicola Marzari, and Matteo Cococcioni, for phonons using 
+  \item Andrea Floris, Iurii Timrov, Burak Himmetoglu, Nicola Marzari, 
+        Stefano de Gironcoli, and Matteo Cococcioni, for phonons using 
         Hubbard-corrected DFPT (DFPT+$U$).
 \end{itemize}
 
@@ -170,12 +170,14 @@ from the \PHonon\ directory, produces the following codes:
   (\verb|lshiftq=.true.| in \phx).
 \item \texttt{PH/fqha.x}: a simple code to calculate vibrational entropy with
    the quasi-harmonic approximation
-\item \texttt{Gamma/phcg.x}: 
+\item \texttt{PH/dvscf\_q2r.x}: performs inverse Fourier transformation of phonon
+   potential from a regular {\bf q} grid to real space.
+\item \texttt{Gamma/phcg.x}:
   a version of \phx\ that calculates phonons at ${\bf q} = 0$ using
   conjugate-gradient minimization of the density functional expanded to
-  second-order. Only the $\Gamma$ (${\bf k} = 0$) point is used for Brillouin zone
-  integration. It is faster and takes less memory than \phx, but does
-  not support USPP and PAW.
+  second-order. Only the $\Gamma$ (${\bf k} = 0$) point is used for
+  Brillouin zone integration. It is faster and takes less memory than
+  \phx, but does not support spin polarization, USPP and PAW.
 \end{itemize}
 Links to the main \qe\ \texttt{bin/} directory are automatically generated.
    
@@ -316,7 +318,7 @@ $\lambda$, and an estimate of the critical temperature $T_c$.
 See the appendix for the relevant formulae.
 {\bf Important notice}: the $q\rightarrow 0$ limit of the contribution 
 to the electron-phonon coefficient diverges for optical modes! please 
-be very careful, consult the relevant literature. . 
+be very careful, consult the relevant literature.
 
 \subsection{DFPT with the tetrahedron method}
 
@@ -381,9 +383,62 @@ A.~Floris, S.~de~Gironcoli, E.~K.~U.~Gross, M.~Cococcioni, Phys. Rev. B {\bf 84}
 161102(R), (2011);
 
 A.~Floris, I.~Timrov, B.~Himmetoglu, N.~Marzari, S.~de~Gironcoli, and M.~Cococcioni, 
-in preparation.
+Phys. Rev. B {\bf 101}, 064305 (2020).
 
 See example  \verb|PHonon/example/example18/|.
+
+\subsection{Fourier interpolation of phonon potential}
+
+The potential perturbation caused by the displacement of a single atom is
+spatially localized. Hence, the phonon potential can be interpolated from
+$q$ points on a coarse grid to other $q$ points using Fourier interpolation.
+To use this functionality, first, one shoud run a \phx\ calculation for $q$
+points on a regular coarse grid.
+Then, a \texttt{dvscf\_q2r.x} run performs an inverse Fourier
+transformation of the phonon potentials from a $q$ grid to a real-space
+supercell. Finally, by specifying \texttt{ldvscf\_interpolation=.true.} in
+\phx, the phonon potentials are Fourier transformed to given $q$ points.
+
+For insulators, the nonanalytic long-ranged dipole part of the potential needs
+to be subtracted and added before and after the interpolation, respectively.
+This treatment is activated by specifying \texttt{do\_long\_range=.true.} in the
+input files of \texttt{dvscf\_q2r.x} and \phx.
+
+Due to numerical inaccuracies, the calculated Born effective charges may not
+add up to zero, violating the charge neutrality condition. This error may lead
+to nonphysical polar divergence of the phonon potential for $q$ points close
+to $\Gamma$, even in IR-inactive materials. To avoid this problem, one can
+specify \texttt{do\_charge\_neutral=.true.} in the input files of
+\texttt{dvscf\_q2r.x} and \phx. Then, the phonon potentials and the Born
+effective charges are renormalized by enforcing the charge neutrality condition,
+following the scheme of S.~ Ponce et al, J. Chem. Phys. (2015).
+
+The Fourier interpolation of phonon potential is proposed and described in the
+following papers:
+
+A.~Eiguren and C.~Ambrosch-Draxl, Phys. Rev. B {\bf 78}, 045124 (2008);
+
+S.~ Ponce et al, J. Chem. Phys. {\bf 143}, 102813 (2015);
+
+X.~Gonze et al, Comput. Phys. Commun., {\bf 248}, 107042 (2020).
+
+\subsection{Calculation of phonon-renormalization of electron bands}
+The phonon-induced renormalization of electron bands can be computed using \PHonon.
+After SCF, PHONON, and NSCF calculations, one can run \phx\ with the
+\texttt{electron\_phonon=`ahc'} option, which generates binary files containing
+quantities required for the calculation of electron self-energy.
+Then, a \texttt{postahc.x} run reads these binary files and compute the
+phonon-induced electron self-energy at a given temperature.
+
+For more details, see the \verb|PHonon/Doc/dfpt_self_energy.pdf| file.
+
+Also, there is an example in \verb|PHonon/example/example19/|.
+
+Implementation of this functionality in \qe\ is described in the following
+paper:
+
+J.-M.~Lihm and C.-H.~Park, Phys. Rev. B {\bf 101}, 121102 (2020).
+
 
 \section{Parallelism}
 \label{Sec:para}
@@ -454,9 +509,6 @@ in \texttt{examples/GRID\_example}. Reference:\\
 \paragraph{ph.x stops with {\em error reading file}}
 The data file produced by \pwx\ is bad or incomplete or produced
 by an incompatible version of the code.
-In parallel execution: if you did not set \texttt{wf\_collect=.true.}, the number
-of processors and pools for the phonon run should be the same as for the
-self-consistent run; all files must be visible to all processors.
 
 \paragraph{ph.x mumbles something like {\em cannot recover} or {\em error
   reading recover file}} 
@@ -529,9 +581,18 @@ sign flags eigenvalues of the dynamical matrix for which $\omega^2 <
 Verify the {\bf q}-vector for which you are calculating phonons. In order to
 check whether a symmetry operation belongs to the small group of ${\bf q}$,
 the code compares ${\bf q}$ and the rotated ${\bf q}$, with an acceptance tolerance of  
-$10^{-5}$ (set in routine \texttt{PW/eqvect.f90}). You may run into trouble if
+$10^{-5}$ (set in routine \texttt{PW/src/eqvect.f90}). You may run into trouble if
 your {\bf q}-vector differs from a high-symmetry point by an amount in that
 order of magnitude.
+
+\paragraph{Mysterious symmetry-related errors} 
+Symmetry-related errors like {\em symmetry operation is non orthogonal}, 
+or {\em Wrong representation}, or {\em Wrong degeneracy}, are almost 
+invariably a consequence of atomic positions that are close to, 
+but not sufficiently close to, symmetry positions. If such errors occur,
+set the Bravais lattice using the correct \texttt{ibrav} value (i.e. do
+not use \texttt{ibrav=0}), use Wyckoff positions if known. This must be
+done in the self-consistent calculation.
 
 \appendix
 \section{Appendix: Electron-phonon coefficients}

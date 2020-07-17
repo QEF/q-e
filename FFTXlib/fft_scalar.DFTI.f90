@@ -7,6 +7,14 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #if defined(__DFTI)
+
+#if defined(_OPENMP) && defined(__FFT_SCALAR_THREAD_SAFE)
+! compiler safeguard for thread-safe eligibility
+#if defined(__PGI)
+#error PGI compiler breaks the use of __FFT_SCALAR_THREAD_SAFE in DFTI
+#endif
+#endif
+
 #include "mkl_dfti.f90"
 !=----------------------------------------------------------------------=!
    MODULE fft_scalar_dfti
@@ -41,7 +49,7 @@
 !=----------------------------------------------------------------------=!
 !
 
-   SUBROUTINE cft_1z(c, nsl, nz, ldz, isign, cout)
+   SUBROUTINE cft_1z(c, nsl, nz, ldz, isign, cout, in_place)
 
 !     driver routine for nsl 1d complex fft's of length nz
 !     ldz >= nz is the distance between sequences to be transformed
@@ -52,32 +60,46 @@
 !     Up to "ndims" initializations (for different combinations of input
 !     parameters nz, nsl, ldz) are stored and re-used if available
 
-     INTEGER, INTENT(IN) :: isign
-     INTEGER, INTENT(IN) :: nsl, nz, ldz
+     INTEGER, INTENT(IN)           :: isign
+     INTEGER, INTENT(IN)           :: nsl, nz, ldz
+     LOGICAL, INTENT(IN), OPTIONAL :: in_place
 
      COMPLEX (DP) :: c(:), cout(:)
 
      REAL (DP)  :: tscale
-     INTEGER    :: i, err, idir, ip, void
+     INTEGER    :: i, ip
      INTEGER, SAVE :: zdims( 3, ndims ) = -1
      INTEGER, SAVE :: icurrent = 1
      LOGICAL :: found
-
-     INTEGER :: tid
-
-#if defined(_OPENMP)
-     INTEGER :: offset, ldz_t
-     INTEGER :: omp_get_max_threads
-     EXTERNAL :: omp_get_max_threads
-#endif
 
      !   Intel MKL native FFT driver
 
      TYPE(DFTI_DESCRIPTOR_ARRAY), SAVE :: hand( ndims )
      LOGICAL, SAVE :: dfti_first = .TRUE.
+     LOGICAL, SAVE :: is_inplace
      INTEGER :: dfti_status = 0
+     INTEGER :: placement
+#if defined(__FFT_SCALAR_THREAD_SAFE)
+!$omp threadprivate(hand, dfti_first, zdims, icurrent, is_inplace)
+#endif
+
+     IF (PRESENT(in_place)) THEN
+       is_inplace = in_place
+     ELSE
+       is_inplace = .false.
+     endif
      !
-     CALL check_dims()
+     ! Check dimensions and corner cases.
+     !
+     IF ( nsl <= 0 ) THEN
+
+       IF ( nsl < 0 ) CALL fftx_error__(" fft_scalar: cft_1z ", " nsl out of range ", nsl)
+
+       ! Starting from MKL 2019 it is no longer possible to define "empty" plans,
+       ! i.e. plans with 0 FFTs. Just return immediately in this case.
+       RETURN
+
+     END IF
      !
      !   Here initialize table only if necessary
      !
@@ -101,13 +123,21 @@
 #endif
 
      IF (isign < 0) THEN
-        dfti_status = DftiComputeForward(hand(ip)%desc, c, cout )
+        IF (is_inplace) THEN
+          dfti_status = DftiComputeForward(hand(ip)%desc, c )
+        ELSE
+          dfti_status = DftiComputeForward(hand(ip)%desc, c, cout )
+        ENDIF
         IF(dfti_status /= 0) &
-           CALL fftx_error__(' cft_1z ',' stopped in DftiComputeForward ', dfti_status )
+           CALL fftx_error__(' cft_1z ',' stopped in DftiComputeForward '// DftiErrorMessage(dfti_status), dfti_status )
      ELSE IF (isign > 0) THEN
-        dfti_status = DftiComputeBackward(hand(ip)%desc, c, cout )
+        IF (is_inplace) THEN
+          dfti_status = DftiComputeBackward(hand(ip)%desc, c)
+        ELSE
+          dfti_status = DftiComputeBackward(hand(ip)%desc, c, cout )
+        ENDIF
         IF(dfti_status /= 0) &
-           CALL fftx_error__(' cft_1z ',' stopped in DftiComputeBackward ', dfti_status )
+           CALL fftx_error__(' cft_1z ',' stopped in DftiComputeBackward '// DftiErrorMessage(dfti_status), dfti_status )
      END IF
 
 #if defined(__FFT_CLOCKS)
@@ -117,12 +147,6 @@
      RETURN
 
    CONTAINS !=------------------------------------------------=!
-
-     SUBROUTINE check_dims()
-     IF( nsl < 0 ) THEN
-       CALL fftx_error__(" fft_scalar: cft_1z ", " nsl out of range ", nsl)
-     END IF
-     END SUBROUTINE check_dims
 
      SUBROUTINE lookup()
      IF( dfti_first ) THEN
@@ -137,6 +161,8 @@
         found = ( nz == zdims(1,ip) )
         !   The initialization in ESSL and FFTW v.3 depends on all three parameters
         found = found .AND. ( nsl == zdims(2,ip) ) .AND. ( ldz == zdims(3,ip) )
+        dfti_status = DftiGetValue(hand(ip)%desc, DFTI_PLACEMENT, placement)
+        found = found .AND. is_inplace .AND. (placement == DFTI_INPLACE)
         IF (found) EXIT
      END DO
      END SUBROUTINE lookup
@@ -163,7 +189,11 @@
        IF(dfti_status /= 0) &
          CALL fftx_error__(' cft_1z ',' stopped in DFTI_INPUT_DISTANCE ', dfti_status )
 
-       dfti_status = DftiSetValue(hand( icurrent )%desc, DFTI_PLACEMENT, DFTI_NOT_INPLACE)
+       IF (is_inplace) THEN
+         dfti_status = DftiSetValue(hand( icurrent )%desc, DFTI_PLACEMENT, DFTI_INPLACE)
+       ELSE
+         dfti_status = DftiSetValue(hand( icurrent )%desc, DFTI_PLACEMENT, DFTI_NOT_INPLACE)
+       ENDIF
        IF(dfti_status /= 0) &
          CALL fftx_error__(' cft_1z ',' stopped in DFTI_PLACEMENT ', dfti_status )
 
@@ -180,6 +210,10 @@
        IF(dfti_status /= 0) &
          CALL fftx_error__(' cft_1z ',' stopped in DFTI_BACKWARD_SCALE ', dfti_status )
 
+       !dfti_status = DftiSetValue( hand( icurrent )%desc, DFTI_THREAD_LIMIT, 1 );
+       !IF(dfti_status /= 0) &
+       !  CALL fftx_error__(' cft_1z ',' stopped in DFTI_THREAD_LIMIT ', dfti_status )
+
        dfti_status = DftiCommitDescriptor(hand( icurrent )%desc)
        IF(dfti_status /= 0) &
          CALL fftx_error__(' cft_1z ',' stopped in DftiCommitDescriptor ', dfti_status )
@@ -189,7 +223,6 @@
        icurrent = MOD( icurrent, ndims ) + 1
 
      END SUBROUTINE init_dfti
-
 
    END SUBROUTINE cft_1z
 
@@ -224,20 +257,12 @@
      INTEGER, INTENT(IN) :: isign, ldx, ldy, nx, ny, nzl
      INTEGER, OPTIONAL, INTENT(IN) :: pl2ix(:)
      COMPLEX (DP) :: r( : )
-     INTEGER :: i, k, j, err, idir, ip, kk, void
+     INTEGER :: i, k, j, ip
      REAL(DP) :: tscale
      INTEGER, SAVE :: icurrent = 1
      INTEGER, SAVE :: dims( 4, ndims) = -1
      LOGICAL :: dofft( nfftx ), found
      INTEGER, PARAMETER  :: stdout = 6
-
-#if defined(_OPENMP)
-     INTEGER :: offset
-     INTEGER :: nx_t, ny_t, nzl_t, ldx_t, ldy_t
-     INTEGER  :: itid, mytid, ntids
-     INTEGER  :: omp_get_thread_num, omp_get_num_threads,omp_get_max_threads
-     EXTERNAL :: omp_get_thread_num, omp_get_num_threads, omp_get_max_threads
-#endif
 
      TYPE(DFTI_DESCRIPTOR_ARRAY), SAVE :: hand( ndims )
      LOGICAL, SAVE :: dfti_first = .TRUE.
@@ -292,7 +317,6 @@
         ENDIF
         !
      END IF
-
 
 #if defined(__FFT_CLOCKS)
      CALL stop_clock( 'cft_2xy' )
@@ -375,7 +399,6 @@
      END SUBROUTINE init_dfti
 
    END SUBROUTINE cft_2xy
-
 
 !
 !=----------------------------------------------------------------------=!

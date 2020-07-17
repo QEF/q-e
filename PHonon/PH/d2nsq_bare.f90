@@ -24,7 +24,7 @@ SUBROUTINE doubleprojqq (na, vec1, vec2, vec3, vec4, npw1, npw2, dpqq)
    USE ions_base,   ONLY : ityp
    USE uspp,        ONLY : qq_nt
    USE wvfct,       ONLY : npwx, nbnd
-   USE mp_global,   ONLY : intra_pool_comm
+   USE mp_pools,    ONLY : intra_pool_comm
    USE mp,          ONLY : mp_sum
    USE control_lr,  ONLY : ofsbeta
    !
@@ -114,7 +114,7 @@ SUBROUTINE doubleprojqq2 (na, proj, vec3, vec4, npw2, dpqq)
    USE ions_base,  ONLY : ityp
    USE uspp,       ONLY : qq_nt
    USE wvfct,      ONLY : npwx, nbnd
-   USE mp_global,  ONLY : intra_pool_comm
+   USE mp_pools,   ONLY : intra_pool_comm
    USE mp,         ONLY : mp_sum
    USE control_lr, ONLY : ofsbeta
    !
@@ -184,7 +184,7 @@ END MODULE doubleprojqq_module
 !--------------------------------------------------------
 MODULE term_one_1_module
 !--------------------------------------------------------  
-  USE mp_global,  ONLY : intra_pool_comm       
+  USE mp_pools,   ONLY : intra_pool_comm
   USE mp,         ONLY:  mp_sum  
 !  
 CONTAINS
@@ -347,7 +347,6 @@ SUBROUTINE term_one (ik, icart, jcart, na, nap, nah, ihubst1, ihubst2, &
                    resone_6_9
     COMPLEX(DP), ALLOCATABLE :: dpqq(:), dpqq1(:), dpqq2(:), &
                                 dpqq3(:), dpqq4(:), d2vkb(:,:)
-    COMPLEX(DP), EXTERNAL :: ZDOTC  
     !
     res_one = 0.d0
     !
@@ -537,7 +536,6 @@ SUBROUTINE term_one_diag (ik, icart, jcart, na, nap, nah, ihubst1, ihubst2, &
     COMPLEX(DP), ALLOCATABLE :: dpqq(:), dpqq1(:), dpqq2(:), dpqq3(:), dpqq4(:), d2vkb(:,:)
     COMPLEX(DP) :: resone_1, resone_2,resone_3, resone_4, resone_5, &
                    resone_6_9
-    COMPLEX(DP), EXTERNAL :: ZDOTC  
     !
     res_one = 0.d0
     !
@@ -687,7 +685,7 @@ END MODULE term_one_module
 !-------------------------------------------------------------------------
 MODULE term_three_module
 !-------------------------------------------------------------------------
-  USE mp_global,  ONLY : intra_pool_comm
+  USE mp_pools,   ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum 
 !
 CONTAINS
@@ -1116,7 +1114,6 @@ SUBROUTINE d2nsq_bare_k (ik, icart, jcart, na, nap, nah, &
     INTEGER  :: ikk, ikq, npw, npwq, icar, &
                 nt, ic, nti, ina, ih, ibeta, ibnd 
     COMPLEX(DP) :: res_one, res_two, res_three, res_four 
-    COMPLEX(DP), EXTERNAL :: ZDOTC 
     !
     CALL start_clock( 'd2nsq_bare_k' )
     !
@@ -1296,7 +1293,6 @@ SUBROUTINE d2nsq_bare_k_diag (ik, icart, jcart, na, nap, nah, &
     !
     INTEGER :: ikk, ikq, npw, npwq, icar, nt, ic, nti, ina, ih, ibeta, ibnd 
     COMPLEX(DP) :: res_one,res_two,res_three,res_four 
-    COMPLEX(DP), EXTERNAL :: ZDOTC 
     !
     CALL start_clock( 'd2nsq_bare_k_diag' )
     !

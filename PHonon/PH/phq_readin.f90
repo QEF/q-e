@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,11 +22,10 @@ SUBROUTINE phq_readin()
   USE mp_world,      ONLY : world_comm
   USE ions_base,     ONLY : amass, atm
   USE check_stop,    ONLY : max_seconds
-  USE input_parameters, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE start_k,       ONLY : reset_grid
   USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, ltetra
-  USE control_flags, ONLY : gamma_only, tqr, restart, lkpoint_dir, io_level, &
-                            ts_vdw, ldftd3, lxdm
+  USE control_flags, ONLY : gamma_only, tqr, restart, io_level, &
+                            ts_vdw, ldftd3, lxdm, isolve
   USE funct,         ONLY : dft_is_meta, dft_is_hybrid
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
@@ -43,8 +42,7 @@ SUBROUTINE phq_readin()
                             ext_recover, ext_restart, u_from_file, ldiag, &
                             search_sym, lqdir, electron_phonon, tmp_dir_phq, &
                             rec_code_read, qplot, only_init, only_wfc, &
-                            low_directory_check
-
+                            low_directory_check, nk1, nk2, nk3, k1, k2, k3
   USE save_ph,       ONLY : tmp_dir_save, save_ph_input_variables
   USE gamma_gamma,   ONLY : asr
   USE partial,       ONLY : atomo, nat_todo, nat_todo_input
@@ -53,14 +51,11 @@ SUBROUTINE phq_readin()
   USE io_files,      ONLY : tmp_dir, prefix, postfix, create_directory, &
                             check_tempdir, xmlpun_schema
   USE noncollin_module, ONLY : i_cons, noncolin
-  USE control_flags, ONLY : iverbosity, modenum, twfcollect
+  USE control_flags, ONLY : iverbosity, modenum
   USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode, ionode_id, stdout
   USE mp_images,     ONLY : nimage, my_image_id, intra_image_comm,   &
                             me_image, nproc_image
-  USE mp_global,     ONLY : nproc_pool_file, &
-                            nproc_bgrp_file, nproc_image_file
-  USE mp_pools,      ONLY : nproc_pool, npool 
-  USE mp_bands,      ONLY : nproc_bgrp, ntask_groups
+  USE mp_pools,      ONLY : npool
   USE paw_variables, ONLY : okpaw
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
   USE freq_ph,       ONLY : fpol, fiu, nfs
@@ -78,7 +73,11 @@ SUBROUTINE phq_readin()
   USE elph_tetra_mod,ONLY : elph_tetra, lshift_q, in_alpha2f
   USE ktetra,        ONLY : tetra_type
   USE ldaU,          ONLY : lda_plus_u, U_projection, lda_plus_u_kind
-  USE ldaU_ph,       ONLY : read_dns_bare, d2ns_type 
+  USE ldaU_ph,       ONLY : read_dns_bare, d2ns_type
+  USE dvscf_interpolate, ONLY : ldvscf_interpolate, do_long_range, &
+      do_charge_neutral, wpot_dir
+  USE ahc,           ONLY : elph_ahc, ahc_dir, ahc_nbnd, ahc_nbndskip, &
+      skip_upperfan
   !
   IMPLICIT NONE
   !
@@ -95,7 +94,6 @@ SUBROUTINE phq_readin()
   CHARACTER (LEN=256) :: outdir, filename
   CHARACTER (LEN=8)   :: verbosity
   CHARACTER(LEN=80)          :: card
-  CHARACTER(LEN=1), EXTERNAL :: capital
   CHARACTER(LEN=6) :: int_to_char
   INTEGER                    :: i
   LOGICAL                    :: nogg
@@ -108,6 +106,7 @@ SUBROUTINE phq_readin()
   REAL(DP), ALLOCATABLE :: xqaux(:,:)
   INTEGER, ALLOCATABLE :: wqaux(:)
   INTEGER :: nqaux, iq
+  CHARACTER(len=80) :: diagonalization='david'
   !
   NAMELIST / INPUTPH / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph,  &
                        nat_todo, verbosity, iverbosity, outdir, epsil,  &
@@ -122,7 +121,10 @@ SUBROUTINE phq_readin()
                        elph_nbnd_min, elph_nbnd_max, el_ph_ngauss, &
                        el_ph_nsigma, el_ph_sigma,  electron_phonon, &
                        q_in_band_form, q2d, qplot, low_directory_check, &
-                       lshift_q
+                       lshift_q, read_dns_bare, d2ns_type, diagonalization, &
+                       ldvscf_interpolate, do_long_range, do_charge_neutral, &
+                       wpot_dir, ahc_dir, ahc_nbnd, ahc_nbndskip, &
+                       skip_upperfan
 
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
@@ -162,9 +164,9 @@ SUBROUTINE phq_readin()
   ! ldiag        : if .true. force diagonalization of the dyn mat
   ! lqdir        : if .true. each q writes in its own directory
   ! search_sym   : if .true. analyze symmetry if possible
-  ! nk1,nk2,nk3,
-  ! ik1, ik2, ik3: when specified in input it uses for the phonon run
-  !                a different mesh than that used for the charge density.
+  ! nk1,nk2,nk3, k1,k2,k3 : 
+  !              when specified in input, the phonon run uses a different
+  !              k-point mesh from that used for the charge density.
   !
   ! dvscf_star%open : if .true. write in dvscf_star%dir the dvscf_q
   !                   'for all q' in the star of q with suffix dvscf_star%ext. 
@@ -196,7 +198,16 @@ SUBROUTINE phq_readin()
   !                 d2ns_type='diag': if okvan=.true. the matrix is calculated retaining only
   !                                     for <\beta_J|\phi_I> products where for J==I.   
   !                 d2ns_type='dmmp': same as 'diag', but also assuming a m <=> m'.
-  ! 
+  ! diagonalization : diagonalization method used in the nscf calc
+  ! ldvscf_interpolate: if .true., use Fourier interpolation of phonon potential
+  ! do_long_range: if .true., add the long-range part of the potential to dvscf
+  ! do_charge_neutral: if .true., impose the neutrality condition on Born effective charges
+  ! wpot_dir: folder where w_pot binary files are located
+  ! ahc_dir: Directory where the output binary files for AHC e-ph coupling are written
+  ! ahc_nbnd: Number of bands where the electron self-energy is to be computed.
+  ! ahc_nbndskip: Number of bands to exclude when computing the self-energy.
+  ! skip_upperfan: If .true., skip the calculation of upper Fan self-energy.
+  !
   ! Note: meta_ionode is a single processor that reads the input
   !       (ionode is also a single processor but per image)
   !       Data read from input is subsequently broadcast to all processors
@@ -221,7 +232,7 @@ SUBROUTINE phq_readin()
   ! Rewind the input if the title is actually the beginning of inputph namelist
   !
   IF( imatches("&inputph", title) ) THEN
-    WRITE(*, '(6x,a)') "Title line not specified: using 'default'."
+    WRITE(stdout,'(6x,a)') "Title line not specified: using 'default'."
     title='default'
     IF (meta_ionode) REWIND(5, iostat=ios)
     CALL mp_bcast(ios, meta_ionode_id, world_comm  )
@@ -252,8 +263,8 @@ SUBROUTINE phq_readin()
   electron_phonon=' '
   elph_nbnd_min = 1
   elph_nbnd_max = 0
-  el_ph_sigma = 0.02
-  el_ph_nsigma = 30
+  el_ph_sigma  = 0.02
+  el_ph_nsigma = 10
   el_ph_ngauss = 1
   lraman       = .FALSE.
   elop         = .FALSE.
@@ -292,6 +303,19 @@ SUBROUTINE phq_readin()
   k1       = 0
   k2       = 0
   k3       = 0
+  !
+  ! dvscf_interpolate
+  ldvscf_interpolate = .FALSE.
+  do_charge_neutral = .FALSE.
+  do_long_range = .FALSE.
+  wpot_dir = ' '
+  !
+  ! electron_phonon == 'ahc'
+  ahc_dir = ' '
+  ahc_nbnd = 0
+  ahc_nbndskip = 0
+  skip_upperfan = .FALSE.
+  elph_ahc = .FALSE.
   !
   drho_star%open = .FALSE.
   drho_star%basis = 'modes'
@@ -341,6 +365,16 @@ SUBROUTINE phq_readin()
   ELSE IF ( ABS(ios) /= 0 ) THEN
      CALL errore( 'phq_readin', 'reading inputph namelist', ABS( ios ) )
   END IF
+  ! diagonalization option
+  SELECT CASE(TRIM(diagonalization))
+  CASE ('david','davidson')
+     isolve = 0
+  CASE ('cg')
+     isolve = 1
+  CASE DEFAULT
+     CALL errore('phq_readin','diagonalization '//trim(diagonalization)//' not implemented',1)
+  END SELECT
+
   !
   ! ...  broadcast all input variables
   !
@@ -442,18 +476,20 @@ SUBROUTINE phq_readin()
      elph_simple=.false.
      trans = .false.
      elph_tetra = 3
+  CASE( 'ahc' )
+     elph = .true.
+     elph_ahc = .true.
+     elph_mat = .false.
+     elph_simple = .false.
+     elph_epa = .false.
+     trans = .false.
+     nogg = .true.
   CASE DEFAULT
      elph=.false.
      elph_mat=.false.
      elph_simple=.false.
      elph_epa=.false.
   END SELECT
-  ! YAMBO >
-  IF (.not.elph_yambo) then
-    ! YAMBO <
-    IF (elph.AND.qplot) &
-       CALL errore('phq_readin', 'qplot and elph not implemented',1)
-  ENDIF
 
   ! YAMBO >
   IF (.not.elph_yambo.and..not.dvscf_yambo) then
@@ -469,9 +505,9 @@ SUBROUTINE phq_readin()
   epsil = epsil .OR. lraman .OR. elop
 
   IF (modenum /= 0) search_sym=.FALSE.
-  
-  IF (elph_mat) THEN
-     trans=.false.
+
+  IF (elph_mat .OR. elph_ahc) THEN
+     trans = .FALSE.
   ELSEIF (.NOT. elph) THEN
      trans = trans .OR. ldisp
   ENDIF
@@ -530,6 +566,46 @@ SUBROUTINE phq_readin()
      lraman=.FALSE.
      elop = .FALSE.
   ENDIF
+  !
+  ! dvscf_interpolate
+  !
+  IF (ldvscf_interpolate) THEN
+    !
+    IF (wpot_dir == ' ') wpot_dir = TRIM(tmp_dir) // "w_pot/"
+    wpot_dir = trimcheck(wpot_dir)
+    !
+    IF (do_charge_neutral .AND. (.NOT. do_long_range)) THEN
+      WRITE(stdout, '(5x,a)') 'charge neutrality for dvscf_interpolate is &
+        & meaningful only if do_long_range is true.'
+      WRITE(stdout, '(5x,a)') 'Set do_charge_neutral = .false.'
+      do_charge_neutral = .FALSE.
+    ENDIF
+    !
+  ENDIF
+  !
+  IF (trans .AND. ldvscf_interpolate) CALL errore ('phq_readin', &
+    'ldvscf_interpolate should be used only when trans = .false.', 1)
+  IF (domag .AND. ldvscf_interpolate) CALL errore ('phq_readin', &
+    'ldvscf_interpolate and magnetism not implemented', 1)
+  IF (okpaw .AND. ldvscf_interpolate) CALL errore ('phq_readin', &
+    'PAW and ldvscf_interpolate not tested.', 1)
+  !
+  ! AHC e-ph coupling
+  !
+  IF (elph_ahc) THEN
+    !
+    IF (ahc_nbnd <= 0) CALL errore('phq_readin', &
+      'ahc_nbnd must be specified as a positive integer')
+    IF (ahc_nbndskip < 0) CALL errore('phq_readin', &
+      'ahc_nbndskip cannot be negative')
+    !
+    IF (ahc_dir == ' ') ahc_dir = TRIM(tmp_dir) // "ahc_dir/"
+    ahc_dir = trimcheck(ahc_dir)
+    !
+  ENDIF ! elph_ahc
+  !
+  IF (elph_ahc .AND. trans) CALL errore ('phq_readin', &
+    'elph_ahc can be used only when trans = .false.', 1)
   !
   ! reads the frequencies ( just if fpol = .true. )
   !
@@ -665,12 +741,12 @@ SUBROUTINE phq_readin()
   ! DFPT+U: the occupation matrix ns is read via read_file
   !
   CALL read_file ( )
-
+  !
   magnetic_sym=noncolin .AND. domag
   !
   ! init_start_grid returns .true. if a new k-point grid is set from values
-  ! read from input (this happens if nk1*nk2*nk3, else it returns .false.,
-  ! leaves the current values, as read in read_file, unchanged)
+  ! read from input (this happens if nk1*nk2*nk3 > 0; otherwise reset_grid
+  ! returns .false., leaves the current values, read in read_file, unchanged)
   !
   newgrid = reset_grid (nk1, nk2, nk3, k1, k2, k3) 
   !
@@ -685,6 +761,7 @@ SUBROUTINE phq_readin()
      ! 
      WRITE(stdout,'(/5x,a)') "Phonon calculation with DFPT+U; please cite"
      WRITE(stdout,'(5x,a)')  "A. Floris et al., Phys. Rev. B 84, 161102(R) (2011)"
+     WRITE(stdout,'(5x,a)')  "A. Floris et al., Phys. Rev. B 101, 064305 (2020)"
      WRITE(stdout,'(5x,a)')  "in publications or presentations arising from this work."
      ! 
      IF (U_projection.NE."atomic") CALL errore("phq_readin", &
@@ -697,12 +774,18 @@ SUBROUTINE phq_readin()
           " The phonon code with Raman and Hubbard U is not implemented",1)
      !
   ENDIF
+  ! checks
+  IF (elph_ahc .AND. domag) CALL errore ('phq_readin', &
+    'elph_ahc and magnetism not implemented', 1)
+  IF (elph_ahc .AND. okpaw) CALL errore ('phq_readin', &
+    'elph_ahc and PAW not tested.', 1)
+  IF (elph_ahc .AND. okvan) CALL errore ('phq_readin', &
+    'elph_ahc and PAW not tested.', 1)
+  IF (elph_ahc .AND. lda_plus_u) CALL errore ('phq_readin', &
+    'elph_ahc and lda_plus_u not tested.', 1)
 
   IF (ts_vdw) CALL errore('phq_readin',&
      'The phonon code with TS-VdW is not yet available',1)
-  
-  IF (lxdm) CALL errore('phq_readin',&
-     'The phonon code with XDM is not yet available',1)
   
   IF (ldftd3) CALL errore('phq_readin',&
      'The phonon code with Grimme''s DFT-D3 is not yet available',1)
@@ -716,8 +799,19 @@ SUBROUTINE phq_readin()
   IF (okpaw.and.(lraman.or.elop)) CALL errore('phq_readin',&
      'The phonon code with paw and raman or elop is not yet available',1)
 
-  IF (okpaw.and.noncolin.and.domag) CALL errore('phq_readin',&
-     'The phonon code with paw and domag is not available yet',1)
+  IF (magnetic_sym) THEN 
+     
+     WRITE(stdout,'(/5x,a)') "Phonon calculation in the non-collinear magnetic case;"
+     WRITE(stdout,'(5x,a)')  "please cite A. Urru and A. Dal Corso, Phys. Rev. B 100," 
+     WRITE(stdout,'(5x,a)')  "045115 (2019) for the theoretical background."
+
+     !IF (epsil) CALL errore('phq_readin',&
+     !     'The calculation of Born effective charges in the non collinear &
+     !      magnetic case does not work yet and is temporarily disabled',1)
+
+     IF (okpaw) CALL errore('phq_readin',&
+          'The phonon code with paw and domag is not available yet',1)
+  ENDIF
 
   IF (okvan.and.(lraman.or.elop)) CALL errore('phq_readin',&
      'The phonon code with US-PP and raman or elop not yet available',1)
@@ -728,19 +822,8 @@ SUBROUTINE phq_readin()
   IF (lmovecell) CALL errore('phq_readin', &
       'The phonon code is not working after vc-relax',1)
 
-  IF (reduce_io) io_level=0
+  IF (reduce_io) io_level=1
 
-  IF (nproc_image /= nproc_image_file .and. .not. twfcollect  .AND. .NOT. in_alpha2f)  &
-     CALL errore('phq_readin',&
-     'pw.x run with a different number of processors. Use wf_collect=.true.',1)
-
-  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect .AND. .NOT. in_alpha2f)  &
-     CALL errore('phq_readin',&
-     'pw.x run with a different number of pools. Use wf_collect=.true.',1)
-  !
-  IF (nproc_bgrp_file /= nproc_bgrp .AND. .NOT. twfcollect .AND. .NOT. in_alpha2f) &
-     CALL errore('phq_readin','pw.x run with different band parallelization',1)
-  
   if(elph_mat.and.fildvscf.eq.' ') call errore('phq_readin',&
        'el-ph with wannier requires fildvscf',1)
 
@@ -750,9 +833,6 @@ SUBROUTINE phq_readin()
   IF(elph.and.nimage>1) call errore('phq_readin',&
        'el-ph with images not implemented',1)
   
-  IF( fildvscf /= ' ' .and. nimage > 1 ) call errore('phq_readin',&
-       'saving dvscf to file images not implemented',1)
-
   IF (elph.OR.fildvscf /= ' ') lqdir=.TRUE.
 
   IF(dvscf_star%open.and.nimage>1) CALL errore('phq_readin',&
@@ -788,7 +868,6 @@ SUBROUTINE phq_readin()
   ! If a band structure calculation needs to be done do not open a file
   ! for k point
   !
-  lkpoint_dir=.FALSE.
   restart = recover
   !
   !  set masses to values read from input, if available;
@@ -822,16 +901,18 @@ SUBROUTINE phq_readin()
      ENDIF
   ENDIF
   IF (lgamma_gamma.AND.ldiag) CALL errore('phq_readin','incompatible flags',1)
+  IF (lgamma_gamma.AND.elph ) CALL errore('phq_readin','lgamma_gamma and electron-phonon are incompatible',1)
   !
   IF (tfixed_occ) &
      CALL errore('phq_readin','phonon with arbitrary occupations not tested',1)
   !
   !YAMBO >
-  IF (elph.AND..NOT.(lgauss .or. ltetra).and..NOT.elph_yambo) CALL errore ('phq_readin', 'Electron-&
-       &phonon only for metals', 1)
+  IF (elph .AND. .NOT.(lgauss .OR. ltetra) &
+      .AND. .NOT. (elph_yambo .OR. elph_ahc)) &
+          CALL errore ('phq_readin', 'Electron-phonon only for metals', 1)
   !YAMBO <
-  IF (elph.AND.fildvscf.EQ.' ') CALL errore ('phq_readin', 'El-ph needs &
-       &a DeltaVscf file', 1)
+  IF (elph .AND. fildvscf.EQ.' ' .AND. .NOT. ldvscf_interpolate) &
+      CALL errore ('phq_readin', 'El-ph needs a DeltaVscf file', 1)
   !   There might be other variables in the input file which describe
   !   partial computation of the dynamical matrix. Read them here
   !

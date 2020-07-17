@@ -1,25 +1,33 @@
-! Module for the calculation of the XDM dispersion correction. See:
-!   A. Otero de la Roza and E. R. Johnson, J. Chem. Phys. 136 (2012) 174109 and 138, 204109 (2013).
-!   A. D. Becke and E. R. Johnson, J. Chem. Phys. 127, 154108 (2007) and references therein.
-
+!
 ! Copyright (C) 2013 A. Otero-de-la-Roza and E. R. Johnson, University of California-Merced.
 ! Copyright (C) 2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-module xdm_module
-  USE kinds, ONLY: DP
-  USE constants, ONLY: bohr_radius_angs, pi, fpi
+!
+!---------------------------------------------------------------------------------------
+MODULE xdm_module
+  !--------------------------------------------------------------------------------------
+  !! Module for the calculation of the XDM dispersion correction.
+  !
+  !! See:  
+  !! A. Otero de la Roza and E. R. Johnson, J. Chem. Phys. 136 (2012) 174109 and 138, 204109 (2013).  
+  !! A. D. Becke and E. R. Johnson, J. Chem. Phys. 127, 154108 (2007) and references therein.
+  !
+  USE kinds,     ONLY : DP
+  USE constants, ONLY : bohr_radius_angs, pi, fpi
+  !
   IMPLICIT NONE
-
+  !
   PRIVATE
-  PUBLIC :: a1i, a2i    ! the damping function coefficients (real_dp)
-  PUBLIC :: init_xdm    ! initialize XDM: calculate atomic volumes, radial densities,...
-  PUBLIC :: energy_xdm  ! compute the XDM dispersion energy and derivatives 
-  PUBLIC :: force_xdm   ! fetch the forces calculated by energy_xdm
-  PUBLIC :: stress_xdm  ! fetch the stresses calculated by energy_xdm
-  PUBLIC :: cleanup_xdm ! deallocate arrays
+  PUBLIC :: a1i, a2i     ! the damping function coefficients (real_dp)
+  PUBLIC :: init_xdm     ! initialize XDM: calculate atomic volumes, radial densities,...
+  PUBLIC :: energy_xdm   ! compute the XDM dispersion energy and derivatives 
+  PUBLIC :: force_xdm    ! fetch the forces calculated by energy_xdm
+  PUBLIC :: stress_xdm   ! fetch the stresses calculated by energy_xdm
+  PUBLIC :: write_xdmdat ! write the xdm.dat file
+  PUBLIC :: cleanup_xdm  ! deallocate arrays
 
   ! is this a PAW calculation?
   LOGICAL :: ispaw
@@ -29,11 +37,13 @@ module xdm_module
   REAL(DP), ALLOCATABLE :: xenv(:,:)
   INTEGER, ALLOCATABLE :: ienv(:), lvec(:,:)
   INTEGER :: nvec
+  INTEGER :: lmax(3) = 0
 
   ! moments, polarizabilities, radii, dispersion coefficients
   REAL(DP), ALLOCATABLE :: alpha(:), ml(:,:)
   REAL(DP), ALLOCATABLE :: cx(:,:,:), rvdw(:,:)
   REAL(DP) :: maxc6
+  REAL(DP) :: rmax2 = 0d0
 
   ! energies, forces and stresses
   REAL(DP) :: esave = 0._DP
@@ -75,18 +85,21 @@ module xdm_module
 
 CONTAINS
 
+  !------------------------------------------------------------------------------
   SUBROUTINE init_xdm()
-    ! Initialize storage arrays, calculate the atomic and core radial densities
-    ! and integrate the free volumes.
-    USE ions_base, ONLY: nat
-    USE uspp_param, ONLY : upf
-    USE ions_base, ONLY: ntyp => nsp
-    USE atom, ONLY : rgrid, msh
-    USE splinelib, ONLY : spline
-
+    !-----------------------------------------------------------------------------
+    !! Initialize storage arrays, calculate the atomic and core radial densities
+    !! and integrate the free volumes.
+    !
+    USE ions_base,   ONLY : nat
+    USE uspp_param,  ONLY : upf
+    USE ions_base,   ONLY : ntyp => nsp
+    USE atom,        ONLY : rgrid, msh
+    USE splinelib,   ONLY : spline
+    !
     INTEGER :: i, j, ialloc, nn
     REAL(DP), ALLOCATABLE :: d1y(:), d2y(:)
-
+    !
     CALL start_clock('init_xdm')
 
     ispaw = ALL(upf(1:ntyp)%tpawp)
@@ -155,9 +168,11 @@ CONTAINS
 
   END SUBROUTINE init_xdm
 
+  !--------------------------------------------------------------
   SUBROUTINE cleanup_xdm()
-    ! Free all the allocated arrays.
-
+    !--------------------------------------------------------------
+    !! Free all the allocated arrays.
+    !
     IF (ALLOCATED(rvdw)) DEALLOCATE(rvdw)
     IF (ALLOCATED(cx)) DEALLOCATE(cx)
     IF (ALLOCATED(alpha)) DEALLOCATE(alpha)
@@ -176,34 +191,42 @@ CONTAINS
     IF (ALLOCATED(lvec)) DEALLOCATE(lvec)
 
   END SUBROUTINE cleanup_xdm
-
-  FUNCTION energy_xdm() RESULT(evdw)
-    ! Calculate the XDM dispersion energy correction, forces (Cx coefficients are assumed constant)
-    ! and stresses using the electron density and the kinetic energy density to obtain
-    ! the dispersion coefficients. The computed coefficients are saved for geometry optimization 
-    ! runs. In addition, forces and stresses are saved for subsequent calls to force_xdm
-    ! and stress_xdm.
-    USE control_flags, ONLY: lbfgs, lmd
-    USE scf, ONLY: rho
-    USE io_global, ONLY: stdout, ionode
-    USE fft_base, ONLY : dfftp
-    USE cell_base, ONLY : at, alat, omega
-    USE ions_base, ONLY: nat, tau, atm, ityp, ntyp => nsp
-    USE constants, ONLY: au_gpa
-    USE lsda_mod, ONLY: nspin
-    USE atom, ONLY: msh, rgrid
-    USE splinelib, ONLY : splint
-    USE mp_images, ONLY : me_image, nproc_image, intra_image_comm
-    USE mp, ONLY : mp_sum
-    USE mp_bands, ONLY : intra_bgrp_comm
-
+  !
+  !
+  !--------------------------------------------------------------------------------------------
+  FUNCTION energy_xdm() RESULT( evdw )
+    !------------------------------------------------------------------------------------------
+    !! Calculate the XDM dispersion energy correction, forces (Cx coefficients are assumed constant)
+    !! and stresses using the electron density and the kinetic energy density to obtain
+    !! the dispersion coefficients. The computed coefficients are saved for geometry optimization 
+    !! runs. In addition, forces and stresses are saved for subsequent calls to \(\texttt{force_xdm}\)
+    !! and \(\texttt{stress_xdm}\).
+    !
+    USE control_flags, ONLY : lbfgs, lmd
+    USE scf,           ONLY : rho, rhoz_or_updw
+    USE io_global,     ONLY : stdout, ionode
+    USE fft_base,      ONLY : dfftp
+    USE fft_types,     ONLY : fft_index_to_3d
+    USE cell_base,     ONLY : at, alat, omega
+    USE ions_base,     ONLY : nat, tau, atm, ityp, ntyp => nsp
+    USE constants,     ONLY : au_gpa
+    USE lsda_mod,      ONLY : nspin
+    USE atom,          ONLY : msh, rgrid
+    USE splinelib,     ONLY : splint
+    USE mp_images,     ONLY : me_image, nproc_image, intra_image_comm
+    USE mp,            ONLY : mp_sum
+    USE mp_bands,      ONLY : intra_bgrp_comm
+    !
     REAL(DP) :: evdw
-
+    !! Van der Waals energy
+    !
+    ! ... local variables
+    !
     ! energy cutoff for max. interaction distance
     REAL(DP), PARAMETER :: ecut = 1e-11_DP
-
+    !
     INTEGER :: ialloc
-    INTEGER :: i, iat, n, ix, iy, iz, j, jj, iy0, iz0
+    INTEGER :: i, iat, n, ix, iy, iz, j, jj
     REAL(DP), ALLOCATABLE :: gaux(:,:), ggaux(:,:,:), rhoat(:), rhocor(:), rhoae(:)
     REAL(DP), ALLOCATABLE :: lapr(:), gmod(:), avol(:), b(:)
     REAL(DP) :: taus, rhos, ds, qs, rhs, xroot, xshift, xold, expx, gx, fx, ffx
@@ -211,16 +234,17 @@ CONTAINS
     REAL(DP) :: x(3), wei, weic, db, ri, atb(3,3), taub(3)
     REAL(DP) :: xij(3), ehadd(6:10), eat, ee
     INTEGER :: l1, l2, ll, m1, m2
-    LOGICAL :: docalc
-    REAL(DP) :: a1, a2, rmax, rmax2, den, den2
+    LOGICAL :: docalc, lexist, offrange
+    REAL(DP) :: a1, a2, rmax, den, den2
     REAL(DP) :: dij2
     REAL(DP) :: rvdwx, dijx, dijxm2, fxx, cn0
     INTEGER :: i3, nn
     REAL(DP) :: for(3,nat), sigma(3,3), sat(3,3)
     INTEGER :: resto, divid, first, last, it
-    INTEGER :: idx, ispin
-    INTEGER, EXTERNAL :: atomic_number
+    INTEGER :: ispin
     REAL(DP) :: iix, iiy, iiz
+
+    INTEGER, EXTERNAL :: atomic_number
 
     CALL start_clock('energy_xdm')
 
@@ -230,6 +254,9 @@ CONTAINS
     fsave = 0._DP
     ssave = 0._DP
     atb = at * alat
+    !
+    ! for convenience rho is converted in (up,down) format, if LSDA
+    IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', '->updw' )
 
     ! do we need to recalculate the coefficients?
     docalc = .NOT.saved .OR. .NOT.(lbfgs .OR. lmd)
@@ -256,7 +283,7 @@ CONTAINS
 
        ! set up the atomic environment for densities
        rmax = SQRT(MAXVAL(rmaxg2))
-       CALL set_environ(rmax)
+       CALL set_environ(rmax,lmax(1),lmax(2),lmax(3))
 
        ! total and core promolecular density
        ALLOCATE(rhoat(dfftp%nnr),rhocor(dfftp%nnr),STAT=ialloc)
@@ -269,11 +296,6 @@ CONTAINS
        IF (ispaw) THEN
           CALL PAW_make_ae_charge_xdm(rho,rhoae)
           rhoae = (rhoae + rhocor) / REAL(nspin,DP)
-       ELSE
-          rhoae = 0._DP
-          DO i = 1, nspin
-             rhoae = rho%of_r(:,i)
-          END DO
        ENDIF
 
        ! don't need the core anymore
@@ -294,6 +316,10 @@ CONTAINS
 
        ! loop over spins
        DO ispin = 1, nspin
+          ! spin-contribution to rhoae; this is used in the calculation of the volume
+          IF (.NOT.ispaw) THEN
+             rhoae = rho%of_r(:,ispin)
+          END IF
           ALLOCATE(gaux(3,dfftp%nnr),ggaux(3,3,dfftp%nnr),STAT=ialloc)
           IF (ialloc /= 0) CALL alloc_failed("gaux, ggaux")
 
@@ -361,20 +387,11 @@ CONTAINS
              nn = msh(it)
              taub = tau(:,iat) * alat
 
-             iy0 = dfftp%my_i0r2p ; iz0 = dfftp%my_i0r3p
              DO n = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
+                ! three dimensional indexes
+                CALL fft_index_to_3d (n, dfftp, ix,iy,iz, offrange)
+                !IF ( offrange ) CYCLE ! NB this was absent before
                 !
-                ! ... three dimensional indexes
-                !
-                idx = n -1
-                iz  = idx / (dfftp%nr1x*dfftp%my_nr2p)
-                idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*iz
-                iz  = iz + iz0
-                iy  = idx / dfftp%nr1x
-                idx = idx - dfftp%nr1x * iy
-                iy  = iy + iy0
-                ix  = idx
-
                 iix = ix / REAL(dfftp%nr1,DP)
                 iiy = iy / REAL(dfftp%nr2,DP)
                 iiz = iz / REAL(dfftp%nr3,DP)
@@ -486,7 +503,7 @@ CONTAINS
     ! in the international tables for crystallography.
     rmax = (maxc6/ecut)**(1._DP/6._DP)
     rmax2 = rmax*rmax
-    CALL set_environ(rmax)
+    CALL set_environ(rmax,lmax(1),lmax(2),lmax(3))
 
     ! parallelize over atoms
 #if defined __MPI
@@ -560,7 +577,9 @@ CONTAINS
        CALL mp_sum(ehadd(nn),intra_image_comm)
     ENDDO
 
-    ! Convert to Ry
+    IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', '->rhoz' )
+
+    ! convert to Ry
     evdw = evdw * 2
     for = for * 2
     sigma = sigma * 2
@@ -573,6 +592,7 @@ CONTAINS
     ssave = sigma
 
     IF (ionode) THEN
+       ! write to output
        WRITE (stdout,'("  Evdw(total,Ry)   = ",1p,E20.12)') evdw
        WRITE (stdout,'("  Evdw(C6,Ry)      = ",1p,E20.12)') ehadd(6)
        WRITE (stdout,'("  Evdw(C8,Ry)      = ",1p,E20.12)') ehadd(8)
@@ -592,60 +612,88 @@ CONTAINS
     CALL stop_clock('energy_xdm')
 
   END FUNCTION energy_xdm
-
+  !
+  !---------------------------------------------------------------------------------------
   FUNCTION force_xdm(nat) RESULT(fvdw)
-    ! Fetch the dispersion contribution to forces from a previous energy_xdm execution.
+    !--------------------------------------------------------------------------------------
+    !! Fetch the dispersion contribution to forces from a previous \(\texttt{energy_xdm}\)
+    !! execution.
     INTEGER, INTENT(IN) :: nat
     REAL(DP) :: fvdw(3,nat)
-
+    !
     fvdw = fsave
-
+    !
   END FUNCTION force_xdm
-
+  !
+  !-------------------------------------------------------------------------------------
   FUNCTION stress_xdm() RESULT(svdw)
-    ! Fetch the dispersion contribution to stress from a previous energy_xdm execution.
+    !------------------------------------------------------------------------------------
+    !! Fetch the dispersion contribution to stress from a previous \(\texttt{energy_xdm}\)
+    !! execution.
     REAL(DP) :: svdw(3,3)
-
+    !! Van der Waals stress
+    !
     svdw = ssave
-
+    !
   END FUNCTION stress_xdm
+  !
+  !---------------------------------------------------------------------------------------
+  SUBROUTINE write_xdmdat()
+    !-----------------------------------------------------------------------------------
+    !! Save the XDM coefficients and vdw radii to the xdm.dat file for ph.x
+    !
+    USE io_files,   ONLY : restart_dir
+    USE io_global,  ONLY : ionode
+    USE ions_base,  ONLY : nat
+    !
+    INTEGER :: iunxdm, ierr
+    LOGICAL :: lexist
 
+    INTEGER, EXTERNAL :: find_free_unit
+
+    IF (ionode .AND.ALLOCATED(cx).AND.ALLOCATED(rvdw)) THEN
+       iunxdm = find_free_unit ()
+       OPEN ( UNIT=iunxdm, FILE = TRIM(restart_dir() ) // 'xdm.dat', &
+            FORM='unformatted', STATUS='unknown' )
+       WRITE (iunxdm,iostat=ierr) 1 ! version
+       IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',1)
+       WRITE (iunxdm,iostat=ierr) lmax, rmax2
+       IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',2)
+       WRITE (iunxdm,iostat=ierr) 2d0 * cx(1:nat,1:nat,2:4), rvdw(1:nat,1:nat)
+       IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',3)
+       CLOSE (UNIT=iunxdm, STATUS='KEEP')
+    ENDIF
+
+  END SUBROUTINE write_xdmdat
+  !
   ! --- private ---
-  SUBROUTINE set_environ (rcut)
-    ! Calculate an atomic environemnt of the entire unit cell up to a distance rcut. 
-    ! This environment is saved in the host module arrays ienv, xenv and lvec.
-    USE cell_base, ONLY: at, bg, alat, omega, tpiba2
-    USE ions_base, ONLY: nat, tau, ityp, atm
-    USE io_global, ONLY: stdout, ionode
-
+  !----------------------------------------------------------------------------------
+  SUBROUTINE set_environ( rcut, imax, jmax, kmax )
+    !--------------------------------------------------------------------------------
+    !! Calculate an atomic environment of the entire unit cell up to a distance rcut.  
+    !! This environment is saved in the host module arrays ienv, xenv and lvec.
+    !
+    USE cell_base,  ONLY : at, bg, alat, omega, tpiba2
+    USE ions_base,  ONLY : nat, tau, ityp, atm
+    USE io_global,  ONLY : stdout, ionode
+    !
     REAL(DP), INTENT(IN) :: rcut
-
-    INTEGER :: nadd, imax, jmax, kmax, ialloc
+    !! see main comment
+    INTEGER, INTENT(OUT) :: imax
+    !! max cell index along 1st direction
+    INTEGER , INTENT(OUT) :: jmax
+    !! max cell index along 2nd direction
+    INTEGER, INTENT(OUT) :: kmax
+    !! max cell index along 3rd direction
+    !
+    ! ... local variables
+    !
+    INTEGER :: nadd, ialloc
     REAL(DP) :: rmat(3,3), gtensor(3,3), alp, bet, gam, aa, bb, cc, xx(3)
-    INTEGER :: ii, jj, kk, m, nsize, lsize
-    INTEGER, ALLOCATABLE :: ienvaux(:), lvecaux(:,:)
-    REAL(DP), ALLOCATABLE :: xenvaux(:,:)
-    INTEGER, PARAMETER :: menv = 1000, lenv=100
-
-    CALL start_clock('exdm:environ')
-
-    ! allocate the initial environment
-    nenv = 0
-    IF (ALLOCATED(ienv)) DEALLOCATE(ienv)
-    IF (ALLOCATED(xenv)) DEALLOCATE(xenv)
-    ALLOCATE(ienv(menv),STAT=ialloc)
-    IF (ialloc /= 0) CALL alloc_failed("ienv")
-    ALLOCATE(xenv(3,menv),STAT=ialloc)
-    IF (ialloc /= 0) CALL alloc_failed("xenv")
-    nsize = menv
-
-    ! allocate the array of lattice vectors
-    nvec = 0
-    IF (ALLOCATED(lvec)) DEALLOCATE(lvec)
-    ALLOCATE(lvec(3,lenv),STAT=ialloc)
-    IF (ialloc /= 0) CALL alloc_failed("lenv")
-    lsize = lenv
-
+    INTEGER :: ii, jj, kk, m
+    !
+    CALL start_clock( 'exdm:environ' )
+    !
     ! determine number of cells (adapted from gulp, by J. Gale)
     rmat = at * alat
     gtensor = MATMUL(TRANSPOSE(rmat),rmat)
@@ -668,68 +716,47 @@ CONTAINS
     jmax = NINT(rcut / bb) + nadd
     kmax = NINT(rcut / cc) + nadd
 
+    ! pre-allocate the environment arrays
+    nvec = (2*imax+1)*(2*jmax+1)*(2*kmax+1)
+    nenv = (2*imax+1)*(2*jmax+1)*(2*kmax+1) * nat
+    IF (ALLOCATED(xenv)) DEALLOCATE(xenv)
+    IF (ALLOCATED(ienv)) DEALLOCATE(ienv)
+    IF (ALLOCATED(lvec)) DEALLOCATE(lvec)
+    ALLOCATE(xenv(3,nenv),ienv(nenv),lvec(3,nvec))
+
     ! build the environment arrays
+    nenv = 0
+    nvec = 0
     DO ii = -imax, imax
        DO jj = -jmax, jmax
           DO kk = -kmax, kmax
 
              ! run over the ions in the (i,j,k) cell:
              DO m = 1, nat
-                xx = tau(:,m) + ii*at(:,1) + jj*at(:,2) + kk*at(:,3)
-
-                ! dynamically increase the array size
                 nenv = nenv + 1
-                IF (nenv > nsize) THEN
-                   ALLOCATE(ienvaux(NINT(1.5*nsize)),STAT=ialloc)
-                   IF (ialloc /= 0) CALL alloc_failed("ienvaux")
-                   ALLOCATE(xenvaux(3,NINT(1.5*nsize)),STAT=ialloc)
-                   IF (ialloc /= 0) CALL alloc_failed("xenvaux")
-                   ienvaux(1:nsize) = ienv
-                   xenvaux(:,1:nsize) = xenv
-                   CALL move_alloc(ienvaux,ienv)
-                   CALL move_alloc(xenvaux,xenv)
-                   nsize = NINT(1.5*nsize)
-                END IF
+                xx = tau(:,m) + ii*at(:,1) + jj*at(:,2) + kk*at(:,3)
                 xenv(:,nenv) = xx * alat
                 ienv(nenv) = m
              ENDDO  ! m
 
              ! one more lattice vector
              nvec = nvec + 1
-             IF (nvec > lsize) THEN
-                ALLOCATE(lvecaux(3,NINT(1.5*lsize)),STAT=ialloc)
-                IF (ialloc /= 0) CALL alloc_failed("lvecaux")
-                lvecaux(:,1:lsize) = lvec
-                CALL move_alloc(lvecaux,lvec)
-                lsize = NINT(1.5*lsize)
-             END IF
              lvec(:,nvec) = (/ii,jj,kk/)
           END DO ! kk
        END DO ! jj
     END DO ! ii
 
-    ! fit memory snugly
-    ALLOCATE(ienvaux(nsize),STAT=ialloc)
-    IF (ialloc /= 0) CALL alloc_failed("ienvaux")
-    ienvaux(1:nsize) = ienv
-    CALL move_alloc(ienvaux,ienv)
-    ALLOCATE(xenvaux(3,nsize),STAT=ialloc)
-    IF (ialloc /= 0) CALL alloc_failed("xenvaux")
-    xenvaux(:,1:nsize) = xenv
-    CALL move_alloc(xenvaux,xenv)
-    ALLOCATE(lvecaux(3,lsize),STAT=ialloc)
-    IF (ialloc /= 0) CALL alloc_failed("lvecaux")
-    lvecaux(:,1:lsize) = lvec
-    CALL move_alloc(lvecaux,lvec)
-
     CALL stop_clock('exdm:environ')
 
   END SUBROUTINE set_environ
-
-  SUBROUTINE PAW_make_ae_charge_xdm(rho,rhoout)
-    ! Build the true valence electron density from the pseudo-electron density using
-    ! the PAW transformation. This is necessary for the calculation of the atom-in-molecule
-    ! volumes. Adapted from PP.
+  
+  !---------------------------------------------------------------------------------------
+  SUBROUTINE PAW_make_ae_charge_xdm( rho, rhoout )
+    !---------------------------------------------------------------------------------------
+    !! Build the true valence electron density from the pseudo-electron density using
+    !! the PAW transformation. This is necessary for the calculation of the atom-in-molecule
+    !! volumes. Adapted from PP.
+    !
     USE paw_variables, ONLY : paw_info
     USE paw_onecenter, ONLY : paw_rho_lm
     USE atom,          ONLY : g => rgrid
@@ -738,19 +765,25 @@ CONTAINS
     USE uspp_param,    ONLY : nh, nhm, upf
     USE scf,           ONLY : scf_type
     USE fft_base,      ONLY : dfftp
+    USE fft_types,     ONLY : fft_index_to_3d
     USE mp,            ONLY : mp_sum
     USE mp_images,     ONLY : intra_image_comm
     USE io_global,     ONLY : ionode_id
     USE splinelib,     ONLY : spline, splint
     USE cell_base,     ONLY : at, bg, alat
-
+    !
     TYPE(scf_type), INTENT(IN) :: rho
+    !! input pseudo-electron density (scf_type)
     REAL(DP), INTENT(OUT) :: rhoout(dfftp%nnr)
-
+    !! the true valence electron density
+    !
+    ! ... local variables
+    !
     TYPE(paw_info)          :: i
     INTEGER                 :: ipol, ir, is, it, lm
-    INTEGER                 :: j, k, l, j0, k0, idx
+    INTEGER                 :: j, k, l
     INTEGER                 :: ia, il, im, ml, mm
+    LOGICAL                 :: offrange
     REAL(DP),ALLOCATABLE    :: wsp_lm(:,:), ylm_posi(:,:), d1y(:,:), d2y(:,:)
     REAL(DP),ALLOCATABLE    :: rho_lm(:,:,:), rho_lm_ae(:,:,:), rho_lm_ps(:,:,:)
     REAL(DP)                :: posi(3), first, second
@@ -787,7 +820,7 @@ CONTAINS
     ALLOCATE(iatom(nat))
     iatom = 0
     DO ia = 1, nat
-       IF (ASSOCIATED(upf(ityp(ia))%paw%pfunc)) iatom(ia) = iatom(ia) + 1
+       IF (ALLOCATED(upf(ityp(ia))%paw%pfunc)) iatom(ia) = iatom(ia) + 1
     END DO
     CALL mp_sum(iatom,intra_image_comm)
 
@@ -800,7 +833,7 @@ CONTAINS
        i%l = upf(i%t)%lmax_rho+1     ! max ang.mom. in augmentation for ia
 
        IF (.NOT.upf(i%t)%tpawp) call errore('paw_make_ae_charge_xdm','non-paw pseudo',1)
-       IF (.NOT.ASSOCIATED(upf(i%t)%paw%pfunc)) CYCLE
+       IF (.NOT.ALLOCATED(upf(i%t)%paw%pfunc)) CYCLE
 
        ALLOCATE(rho_lm_ae(i%m,i%l**2,nspin), rho_lm_ps(i%m,i%l**2,nspin))
 
@@ -842,20 +875,11 @@ CONTAINS
        DEALLOCATE(d1y,d2y)
 
        ALLOCATE(ylm_posi(1,i%l**2))
-       j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
+
        rsp_point : DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
           ! three dimensional indices (i,j,k)
-          idx = ir -1
-          k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-          idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-          k   = k + k0
-          j   = idx / dfftp%nr1x
-          idx = idx - dfftp%nr1x * j
-          j   = j + j0
-          l   = idx
-
-          ! ... do not include points outside the physical range!
-          IF ( l >=  dfftp%nr1 .OR. j >=  dfftp%nr2 .OR. k >=  dfftp%nr3 ) CYCLE rsp_point
+          CALL fft_index_to_3d (ir, dfftp, l,j,k, offrange)
+          IF ( offrange ) CYCLE
           !
           DO ipol = 1, 3
              posi(ipol) = DBLE( l )*inv_nr1*at(ipol,1) + &
@@ -897,46 +921,48 @@ CONTAINS
 
   END SUBROUTINE PAW_make_ae_charge_xdm
 
-  SUBROUTINE promolecular_rho(rhot,rhoc)
-    ! Calculate the promolecular density (i.e. the sum of atomic
-    ! densitites) and the sum of core densities on the real-space
-    ! grid. Unfortunately, aliasing errors prevent using the atomic
-    ! form factor trick, so we're stuck with summing over an
-    ! environment. 
-    USE io_global, ONLY: ionode
-    USE kinds,     ONLY : DP
-    USE atom,      ONLY : rgrid, msh
-    USE ions_base, ONLY : ityp, ntyp => nsp
-    USE cell_base, ONLY : at
-    USE fft_base,  ONLY : dfftp
-    USE splinelib, ONLY : splint
-    use cell_base, ONLY : alat
-    implicit none
-
-    real(DP), intent(out) :: rhoc(dfftp%nnr) ! sum of core densities in the real-space grid
-    real(DP), intent(out) :: rhot(dfftp%nnr) ! all-electron sum of atomic densities in the real-space grid
-
-    integer :: i, it, nn
-    integer :: n, idx, ix, iy, iz, iy0, iz0
-    real(DP) :: x(3), xx(3), r, r2, rrho
+  
+  !---------------------------------------------------------------------------------------
+  SUBROUTINE promolecular_rho( rhot, rhoc )
+    !--------------------------------------------------------------------------------------
+    !! Calculate the promolecular density (i.e. the sum of atomic densitites) and the
+    !! sum of core densities on the real-space grid. Unfortunately, aliasing errors 
+    !! prevent using the atomic form factor trick, so we're stuck with summing over an
+    !! environment. 
+    !
+    USE io_global,  ONLY : ionode
+    USE kinds,      ONLY : DP
+    USE atom,       ONLY : rgrid, msh
+    USE ions_base,  ONLY : ityp, ntyp => nsp
+    USE cell_base,  ONLY : at
+    USE fft_base,   ONLY : dfftp
+    USE fft_types,  ONLY : fft_index_to_3d
+    USE splinelib,  ONLY : splint
+    USE cell_base,  ONLY : alat
+    !
+    IMPLICIT NONE
+    !
+    REAL(DP), INTENT(OUT) :: rhoc(dfftp%nnr)
+    !! sum of core densities in the real-space grid
+    REAL(DP), INTENT(OUT) :: rhot(dfftp%nnr)
+    !! all-electron sum of atomic densities in the real-space grid
+    !
+    ! ... local variables
+    !
+    INTEGER :: i, it, nn, n, ix, iy, iz
+    LOGICAL :: offrange
+    REAL(DP) :: x(3), xx(3), r, r2, rrho
 
     CALL start_clock('exdm:rho')
 
     rhot = 0._DP
     rhoc = 0._DP
 
-    iy0 = dfftp%my_i0r2p ; iz0 = dfftp%my_i0r3p
     ! run over the real-space density grid
     DO n = 1, dfftp%nnr
        ! three dimensional indices (i,j,k)
-       idx  = n -1
-       iz   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-       idx  = idx - (dfftp%nr1x*dfftp%my_nr2p)*iz
-       iz   = iz + iz0
-       iy   = idx / dfftp%nr1x
-       idx  = idx - dfftp%nr1x * iy
-       iy   = iy + iy0
-       ix   = idx
+       CALL fft_index_to_3d (n, dfftp, ix,iy,iz, offrange)
+       ! IF ( offrange ) CYCLE ! NB this was absent before
 
        x = ix / REAL(dfftp%nr1,DP) * at(:,1) + iy / REAL(dfftp%nr2,DP) * at(:,2) + &
           iz / REAL(dfftp%nr3,DP) * at(:,3)
@@ -966,12 +992,19 @@ CONTAINS
 
   END SUBROUTINE promolecular_rho
 
-  ! Set the default a1 and a2 values using the xc flags.
-  SUBROUTINE setxdm_a1a2(a1i,a2i)
-    USE io_global, ONLY: stdout, ionode
-    USE funct, ONLY : get_iexch, get_icorr, get_igcx, get_igcc
+  
+  !---------------------------------------------------------------------------------
+  SUBROUTINE setxdm_a1a2( a1i, a2i )
+    !----------------------------------------------------------------------------------
+    !! Set the default \(\text{a1}\) and \(\text{a2}\) values using the XC flags.
+    !
+    USE io_global,  ONLY : stdout, ionode
+    USE funct,      ONLY : get_iexch, get_icorr, get_igcx, get_igcc
+    !
     REAL*8, INTENT(INOUT) :: a1i, a2i
-    
+    !
+    ! ... local variables
+    !
     INTEGER :: idx, ispin, iexch, icorr, igcx, igcc
     
     iexch = get_iexch()
@@ -1071,8 +1104,11 @@ CONTAINS
 
   END SUBROUTINE setxdm_a1a2
 
-  SUBROUTINE alloc_failed(message)
-    ! Error message and horrible death
+  !-----------------------------------------------------------------------------------
+  SUBROUTINE alloc_failed( message )
+    !-----------------------------------------------------------------------------------
+    !! Error message and horrible death.
+    
     CHARACTER*(*), INTENT(IN) :: message
 
     CALL errore('energy_xdm','allocation failed: '//TRIM(ADJUSTL(message)),1)

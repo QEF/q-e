@@ -18,7 +18,7 @@ subroutine set_irr_sym_new ( t, tmq, npertx )
   USE constants, ONLY: tpi
   USE ions_base, ONLY : nat
   USE cell_base, ONLY : at, bg
-  USE symm_base, ONLY : s, irt
+  USE symm_base, ONLY : s, irt, t_rev
   USE modes,     ONLY : u, nirr, npert
   USE control_flags, ONLY : modenum
   USE mp,        ONLY : mp_bcast
@@ -99,7 +99,7 @@ subroutine set_irr_sym_new ( t, tmq, npertx )
                  arg = arg + xq (ipol) * rtau (ipol, irot, na)
               enddo
               arg = arg * tpi
-              if (isymq.eq.nsymtot.and.minus_q) then
+              if ((isymq.eq.nsymtot.and.minus_q).OR.(t_rev(irot)==1)) then
                  fase = CMPLX (cos (arg), sin (arg), KIND=dp )
               else
                  fase = CMPLX (cos (arg),-sin (arg), KIND=dp )
@@ -130,8 +130,13 @@ subroutine set_irr_sym_new ( t, tmq, npertx )
                        tmq (jpert, ipert, irr) = tmq (jpert, ipert, irr) + CONJG(u ( &
                             jmode, imode) * wrk_ru (ipol, na) )
                     else
-                       t (jpert, ipert, irot, irr) = t (jpert, ipert, irot, irr) &
-                            + CONJG(u (jmode, imode) ) * wrk_ru (ipol, na)
+                       IF (t_rev(irot)==1) THEN
+                          t (jpert,ipert,irot,irr)=t(jpert,ipert,irot,irr) &
+                               + CONJG(u (jmode, imode) * wrk_ru (ipol, na))
+                       ELSE
+                          t (jpert,ipert,irot,irr)=t(jpert,ipert,irot,irr) &
+                               + CONJG(u (jmode, imode) ) * wrk_ru (ipol, na)
+                       ENDIF
                     endif
                  enddo
               enddo

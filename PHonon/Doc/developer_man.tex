@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.2.1}
+\def\version{6.6}
 \def\qe{{\sc Quantum ESPRESSO}}
 \def\qeforge{\texttt{qe-forge.org}}
 \textwidth = 17cm
@@ -128,8 +128,8 @@ nq1, nq2, nq3     ! the mesh of q points
 or
 xq                ! the coordinates of a q point
 
-start_iq          ! initial q to calculate
-last_iq           ! last q to calculate
+start_q           ! initial q to calculate
+last_q            ! last q to calculate
 start_irr         ! initial representation to calculate
 last_irr          ! last representation to calculate
 \end{verbatim}
@@ -211,11 +211,11 @@ the routines where these quantities are calculated are:
 on output.
 
 \item
-4.4) The dielectric constant is a real \texttt{3x3} tensor: 
+4.5) The dielectric constant is a real \texttt{3x3} tensor: 
 \texttt{epsilon} (calculated in \texttt{dielec}). 
 
 \item
-4.5) Zeu is a real array: \texttt{zstareu(3,3,nat)}. The first index is 
+4.6) Zeu is a real array: \texttt{zstareu(3,3,nat)}. The first index is 
 the electric field, while the other two indices give the atom that moves and the
 direction. 
 
@@ -225,7 +225,7 @@ that is calculated by the routine \texttt{el\_opt}. It requires the response
 to the electric field perturbation.
 
 \item
-The raman tensor is a real array \texttt{zstarue(3,3,3,nat)} that
+The raman tensor is a real array \texttt{ramtns(3,3,3,nat)} that
 gives the derivatives of the dielectric constant when the atom nat moves.
 The third index give the direction of the displacement.
 It requires the first and the second order response of the wavefunctions
@@ -241,7 +241,7 @@ The US and PAW schemes have additional parts,
 one of them calculated inside \texttt{dynmat0} with a call to
 \texttt{addusdynmat}, and another part calculated in \texttt{drho}.
 There is then a contribution that requires the response of the
-wavefunctions calculated in \texttt{drhodv} and \texttt{drhodv\_loc}
+wavefunctions calculated in \texttt{drhodv} and \texttt{drhodvloc}
 which is common to the NC, US, and PAW schemes. The latter two schemes
 have other contributions calculated in \texttt{drhodvus}. This
 routine contains also the additional PAW term.
@@ -293,21 +293,21 @@ done_start_zstar,   if .TRUE. zstareu0 is known
 done_zeu,           if .TRUE. zeu is known
 done_lraman,        if .TRUE. the raman tensor is known
 done_elop,          if .TRUE. the electron-optical coefficient is known
-done_trans,         if .TRUE. the dynamical matrix is known
 done_zue,           if .TRUE. zue is known
 done_elph           if .TRUE. the electron-phonon coupling coefficient is known
 \end{verbatim}
+%done_trans,         if .TRUE. the dynamical matrix is known
 
 The variables that control the grid are:
 
 \begin{verbatim}
 comp_iq(nqs)=.TRUE.              ! .FALSE. when this q is not computed in 
-                                 ! this run (controlled by start_iq, last_iq,
+                                 ! this run (controlled by start_q, last_q,
                                  ! or by the image controller)
 
 comp_irr_iq(0:3*nat,nqs)=.TRUE.  ! .FALSE. for the representations that are
                                  !  not calculated in this run.
-                                 ! (controlled by start_iq, last_iq, 
+                                 ! (controlled by start_q, last_q, 
                                  !  start_irr, last_irr, 
                                  !  or by the image controller)
 
@@ -612,14 +612,16 @@ clean_pw_ph.f90     Clean all variables of pw.x and of ph.x. Used to
 \end{verbatim}
 
 Starting point and main programs. The directory \texttt{PHonon/PH} contains 
-five executables whose main programs are:
+seven executables whose main programs are:
 
 \begin{verbatim}
-phonon.f90  This is the main program of ph.x
-q2r.f90     This is the main program of q2r.x
-matdyn.f90  This is the main program of matdyn.x
-dynmat.f90  This is the main program of dynmat.x
-fqha.f90    This is the main program for fqha.x                      
+phonon.f90     This is the main program of ph.x
+q2r.f90        This is the main program of q2r.x
+matdyn.f90     This is the main program of matdyn.x
+dynmat.f90     This is the main program of dynmat.x
+fqha.f90       This is the main program for fqha.x
+dvscf_q2r.f90  This is the main program for dvscf_q2r.x
+postahc.f90    This is the main program for postahc.x
 \end{verbatim}
 
 Reading input, pseudopotentials, and files written by \texttt{pw.x}:
@@ -652,7 +654,9 @@ check_restart_recover.f90 Check if a restart or recover file is present
                           in the outdir directory       
 \end{verbatim}
 
-Routines that select the small group of {\bf q} and other symmetry related
+Note: in the following some of the listed routines are contained in folder
+\texttt{LR\_Modules}).
+Routines that select the small group of {\bf q} and other symmetry related 
 quantities used by the \phx\ code:
 
 \begin{verbatim}
@@ -664,12 +668,14 @@ set_small_group_of_q.f90  This is a driver that selects among the s matrices
 mode_group.f90 Find the small group of q and of the mode (used with modenum)
 
 smallgq.f90 (set_giq)  Find the G vectors associated to each rotation: Sq=q+G.
-
-sgam_ph.f90    Finds the rtau vectors. These are Bravais lattice vectors that
-               link an atom na to its rotated atom nb if these two atoms are
-               not in the same cell. These quantities are needed to rotate 
-               the modes and to symmetrize the potentials.
 \end{verbatim}
+
+%.....sgam_ph is present in the old versions only....
+%sgam_ph.f90    Finds the rtau vectors. These are Bravais lattice vectors that
+%               link an atom na to its rotated atom nb if these two atoms are
+%               not in the same cell. These quantities are needed to rotate 
+%               the modes and to symmetrize the potentials.
+%\end{verbatim}
 
 Routines that manipulate or generate the irreducible representations, 
 the {\bf q}-point mesh and all the preparatory stuff that is needed by the
@@ -1024,7 +1030,9 @@ elphon.f90   This is a driver that in the case trans=.false. reads the
     (elphsum_simple) As elphsum but without the interpolation. It can be
               used at arbitrary q.
 el_ph_collect.f90  Collect the electron-phonon matrix elements among pools.
-clinear.f90          
+clinear.f90
+ahc.f90       Calculate first- and second-order electron-phonon quantities
+              for the calculation of phonon-induced electron self-energy.
 \end{verbatim}
 
 Routines that write the output quantities:
@@ -1185,6 +1193,12 @@ find_equiv_sites.f90
 generate_dynamical_matrix_c.f90   
 generate_effective_charges_c.f90 
 set_asr_c.f90
+\end{verbatim}
+
+Routine for the Fourier interpolation of the phonon potential:
+
+\begin{verbatim}
+dvscf_interpolate.f90
 \end{verbatim}
 
 Miscellaneous routines:

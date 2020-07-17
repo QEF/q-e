@@ -1,5 +1,5 @@
 TOPDIR   = $(shell cd ../..; pwd)
-VERSION  = svn
+VERSION  = 6.6
 GEN_MODE = $(TOPDIR)/dev-tools/gen-emacs-mode
 LATEX    = pdflatex
 
@@ -20,7 +20,6 @@ ALL_DEF_FILES = $(shell find $(TOPDIR) | grep INPUT_ | egrep def$$)
 #	$(TOPDIR)/PP/Doc/INPUT_PP.def \
 #	$(TOPDIR)/PP/Doc/INPUT_molecularpdos.def \
 #	$(TOPDIR)/PP/Doc/INPUT_DOS.def \
-#	$(TOPDIR)/PP/Doc/INPUT_pw_export.def \
 #	$(TOPDIR)/PHonon/Doc/INPUT_PH.def \
 #	$(TOPDIR)/PHonon/Doc/INPUT_D3.def \
 #	$(TOPDIR)/atomic/Doc/INPUT_LD1.def \
@@ -98,7 +97,6 @@ doc:
 	cd Doc; $(MAKE)
 
 clean:
-	- rm -f qe-modes/$(ELISP_FILES)	
 	- cd Doc; $(MAKE) clean
 
 veryclean: clean

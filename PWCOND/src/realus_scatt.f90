@@ -26,12 +26,13 @@ MODULE realus_scatt
    USE realus,           ONLY : qpointlist, tabp, boxrad
    USE uspp,             ONLY : okvan
    USE uspp_param,       ONLY : upf
-   USE mp_global,        ONLY : me_pool
    USE fft_base,         ONLY : dfftp
+   USE fft_types,        ONLY : fft_index_to_3d
 
    IMPLICIT NONE
 
-   INTEGER  :: ia, ir, mbia, roughestimate, j0, k0, idx, i, j, k, i_lr, ipol
+   INTEGER  :: ia, ir, mbia, roughestimate, i, j, k, i_lr, ipol
+   LOGICAL  :: offrange
    REAL(DP) :: mbr, mbx, mby, mbz, dmbx, dmby, dmbz, distsq
    REAL(DP) :: inv_nr1, inv_nr2, inv_nr3, boxradsq_ia, posi(3)
 
@@ -61,24 +62,13 @@ MODULE realus_scatt
        IF ( .NOT. upf(ityp(ia))%tvanp ) CYCLE
        mbia = 0
        boxradsq_ia = boxrad(ityp(ia))**2
-       j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
        DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
          !
          ! ... three dimensional indices (i,j,k)
          !
-         idx = ir -1
-         k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-         idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-         k   = k + k0
-         j   = idx / dfftp%nr1x
-         idx = idx - dfftp%nr1x * j
-         j   = j + j0
-         i   = idx
+         CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+         IF ( offrange ) CYCLE
          !
-         ! ... do not include points outside the physical range 
-         !
-         IF ( i >= dfftp%nr1 .OR. j >= dfftp%nr2 .OR. k >= dfftp%nr3 ) CYCLE
-
          DO ipol = 1, 3
            posi(ipol) = DBLE( i )*inv_nr1*at(ipol,1) + &
                         DBLE( j )*inv_nr2*at(ipol,2) + &
@@ -122,7 +112,6 @@ MODULE realus_scatt
 
    INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, nspin0, mbia, nhnt, iqs
    REAL(DP) :: becsum_orig(nhm*(nhm+1)/2,nat,nspin)
-   REAL(DP) :: rho_add
 
    IF (.NOT.okvan) RETURN
 
@@ -143,17 +132,11 @@ MODULE realus_scatt
               DO ir = 1, mbia
                  irb = tabp(ia)%box(ir)
                  iqs = iqs + 1
-                 if(orig_or_copy(ir,ia).eq.1) then
-                    rho_add=tabp(ia)%qr(ir,ijtoh(ih,jh,nt))*becsum_orig(ijh,ia,is)
-                 else
-                    rho_add=tabp(ia)%qr(ir,ijtoh(ih,jh,nt))*becsum(ijh,ia,is)
-                 endif
-                 if (nspin /= 2) then
-                    rho%of_r(irb,is) = rho%of_r(irb,is) + rho_add
-                 else
-                    rho%of_r(irb,1) = rho%of_r(irb,1) + rho_add
-                    rho%of_r(irb,2) = rho%of_r(irb,2) + DBLE(1-is/2*2) * rho_add
-                 endif
+                 IF (orig_or_copy(ir,ia) == 1) THEN
+                  rho%of_r(irb,is) = rho%of_r(irb,is) + tabp(ia)%qr(ir,ijtoh(ih,jh,nt))*becsum_orig(ijh,ia,is)
+                 ELSE
+                  rho%of_r(irb,is) = rho%of_r(irb,is) + tabp(ia)%qr(ir,ijtoh(ih,jh,nt))*becsum(ijh,ia,is)
+                 ENDIF
               ENDDO
            ENDDO
         ENDDO

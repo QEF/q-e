@@ -11,7 +11,7 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   !--------------------------------------------------------------------
   !
   !  Add gradient correction contribution to 
-  !  the responce exchange-correlation potential dvxc.
+  !  the response exchange-correlation potential dvxc.
   !  LSDA is allowed.         ADC (September 1999)
   !  Noncollinear is allowed. ADC (June 2007)
   !
@@ -42,9 +42,10 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   complex(DP), allocatable  :: gdrho (:,:,:), h (:,:,:), dh (:)
   complex(DP), allocatable  :: gdmag (:,:,:), dvxcsave(:,:), vgg(:,:)
   complex(DP), allocatable  :: drhoout(:,:)
-  real(DP), allocatable :: rhoout(:,:)
   integer :: k, ipol, jpol, is, js, ks, ls
 
+  IF ( nspin < nspin0 .OR. nspin < 1 .OR. nspin > 4 ) &
+       CALL errore('dgradcorr', 'incorrect number of spin components',1)
   if (noncolin.and.domag) then
      allocate (gdmag(3, dfft%nnr, nspin))
      allocate (dvxcsave(dfft%nnr, nspin))
@@ -52,12 +53,11 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
      dvxcsave=dvxc
      dvxc=(0.0_dp,0.0_dp)
   endif
-  allocate (rhoout( dfft%nnr, nspin0))
   allocate (drhoout( dfft%nnr, nspin0))
   allocate (gdrho( 3, dfft%nnr, nspin0))
   allocate (h( 3, dfft%nnr, nspin0))
   allocate (dh( dfft%nnr))
-
+  
   h (:, :, :) = (0.d0, 0.d0)
   if (noncolin.and.domag) then
      do is = 1, nspin
@@ -66,7 +66,6 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
      DO is=1,nspin0
         IF (is==1) seg0=0.5_dp
         IF (is==2) seg0=-0.5_dp
-        rhoout(:,is) = 0.5_dp*rho(:,1)
         drhoout(:,is) = 0.5_dp*drho(:,1)
         DO ipol=1,3
            gdrho(ipol,:,is) = 0.5_dp*gdmag(ipol,:,1)
@@ -75,7 +74,6 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
            seg=seg0*segni(k)
            amag=sqrt(rho(k,2)**2+rho(k,3)**2+rho(k,4)**2)
            IF (amag>1.d-12) THEN
-              rhoout(k,is) = rhoout(k,is)+seg*amag
               DO jpol=2,4
                  drhoout(k,is) = drhoout(k,is)+seg*rho(k,jpol)* &
                                                  drho(k,jpol)/amag
@@ -96,11 +94,12 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
         END DO
      END DO
   ELSE
+     !
      DO is = 1, nspin0
         CALL fft_qgradient (dfft, drho(1,is), xq, g, gdrho (1, 1, is) )
-        rhoout(:,is)=rho(:,is)
         drhoout(:,is)=drho(:,is)
      ENDDO
+     !
   ENDIF
 
   do k = 1, dfft%nnr
@@ -228,7 +227,6 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   deallocate (dh)
   deallocate (h)
   deallocate (gdrho)
-  deallocate (rhoout)
   deallocate (drhoout)
   if (noncolin.and.domag) then
      deallocate (gdmag)

@@ -15,7 +15,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   USE ions_base, ONLY : nat
   use funct, only : dft_is_gradient, dft_is_nonlocc
   USE cell_base, ONLY : omega
-  use scf, only : rho, rho_core, rhoz_or_updw
+  use scf, only : rho, rho_core
   USE gvect, ONLY : g, ngm
   USE fft_base, ONLY : dfftp
   USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag
@@ -55,9 +55,6 @@ subroutine addnlcc (imode0, drhoscf, npe)
 
   real(DP) :: fac
   ! auxiliary factor
-  complex(DP), external :: zdotc
-  ! the scalar product function
-
 
   if (.not.nlcc_any) return
 
@@ -96,27 +93,12 @@ subroutine addnlcc (imode0, drhoscf, npe)
      ! add gradient correction to xc, NB: if nlcc is true we need to add here
      ! its contribution. grho contains already the core charge
      !
-     if ( dft_is_gradient() ) then
-        !^
-        if (nspin_lsda == 2) call rhoz_or_updw(rho, 'only_r', 'rhoz_updw')
-        !
-        call dgradcorr (dfftp, rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
-          dvxc_s, xq, drhoscf (1, 1, ipert), nspin_mag, nspin_gga, g, dvaux)
-        !
-        if (nspin_lsda == 2) call rhoz_or_updw(rho, 'only_r', 'updw_rhoz')
-        !^
-     endif
+     if ( dft_is_gradient() ) call dgradcorr (dfftp, rho%of_r, grho, dvxc_rr, &
+                          dvxc_sr, dvxc_ss, dvxc_s, xq, drhoscf(1, 1, ipert), &
+                          nspin_mag, nspin_gga, g, dvaux)
      !
-     if (dft_is_nonlocc()) then
-        !^
-        if (nspin_lsda == 2) call rhoz_or_updw(rho, 'only_r', 'rhoz_updw')
-        !
-        call dnonloccorr(rho%of_r, drhoscf (1, 1, ipert), xq, dvaux)
-        !
-        if (nspin_lsda == 2) call rhoz_or_updw(rho, 'only_r', 'updw_rhoz')
-        !^
-     endif
-
+     if (dft_is_nonlocc()) call dnonloccorr(rho%of_r, drhoscf(1,1,ipert), xq, dvaux)
+     !
      do is = 1, nspin_lsda
         call daxpy (2 * dfftp%nnr, - fac, drhoc, 1, drhoscf (1, is, ipert), 1)
      enddo
@@ -127,7 +109,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
            call addcore (mode1, drhoc)
            do is = 1, nspin_lsda
               dyn1 (mode, mode1) = dyn1 (mode, mode1) + &
-                   zdotc (dfftp%nnr, dvaux (1, is), 1, drhoc, 1) * &
+                   dot_product (dvaux (:,is), drhoc) * &
                    omega * fac / DBLE (nrtot)
            enddo
         enddo

@@ -94,7 +94,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   USE fft_base,         ONLY : dfftp
   USE cell_base,        ONLY : at, bg
   USE ions_base,        ONLY : nat, tau, amass
-  USE symm_base,        ONLY : ftau, t_rev
+  USE symm_base,        ONLY : ft, t_rev
   USE lsda_mod,         ONLY : nspin
   USE modes,            ONLY : nirr, npert, npertx
   USE units_ph,         ONLY : lrdrho
@@ -152,7 +152,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   CHARACTER(LEN=256) :: dfile_rot_name
   COMPLEX(DP) :: phase_xq
   INTEGER     :: ipol,iq,index0,nar
-  INTEGER     :: ichosen_sym(48)
+  INTEGER     :: ichosen_sym(48), ftau(3,nsym) , s_scaled(3,3,nsym)
   COMPLEX(DP), ALLOCATABLE :: phase_sxq(:)
   ! fake vars for cartesian "patterns"
   TYPE(rotated_pattern_repr) :: rpat
@@ -258,12 +258,15 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   !
   dfile_at=dfile_rot
   !
-  ! Now I rotate the dvscf
+  CALL scale_sym_ops( nsym, s, ft, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+       s_scaled, ftau )
   !
+  ! Now I rotate the dvscf
+  ! 
   ALLOCATE(phase_sxq(nat))
   !
   CALL allocate_rotated_pattern_repr(rpat, nat, npertx)
-  ! 
+  !
   Q_IN_THE_STAR : &
   DO iq=1,nq
     dfile_rot = (0._dp,0._dp)
@@ -286,8 +289,8 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
             !
             ! Here I rotate r
             !
-            CALL ruotaijk(s(1,1,isym_inv), ftau(1,isym_inv), i, j, k, &
-                          dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
+            CALL rotate_grid_point( s_scaled(1,1,isym_inv), ftau(1,isym_inv),&
+                 i,j,k,dfftp%nr1,dfftp%nr2,dfftp%nr3,ri,rj,rk)
             !
             n  = (i-1)  + (j-1)*dfftp%nr1  + (k-1)*dfftp%nr2*dfftp%nr1  + 1
             nn = (ri-1) + (rj-1)*dfftp%nr1 + (rk-1)*dfftp%nr2*dfftp%nr1 + 1

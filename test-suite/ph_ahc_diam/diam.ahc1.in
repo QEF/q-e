@@ -1,0 +1,18 @@
+--
+&inputph
+  prefix   = 'diam'
+  outdir   = '.'
+  fildyn   = 'diam.ahc1.dyn'
+  fildvscf = 'dvscf'
+  tr2_ph   =  1.0d-15
+  ldisp    = .true.
+  nq1 = 3
+  nq2 = 3
+  nq3 = 3
+
+  trans = .false.
+  electron_phonon = 'ahc'
+  ahc_nbnd = 8
+  ahc_dir = 'ahc_dir.1/'
+ /
+

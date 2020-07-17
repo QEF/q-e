@@ -13,20 +13,20 @@ MODULE fft_custom_gwl
 
   USE kinds, ONLY: DP
   USE parallel_include
-  
+
   USE fft_types, ONLY: fft_type_descriptor
   USE stick_base, ONLY: sticks_map
-  
+
   IMPLICIT NONE
 
   TYPE fft_cus
-  
+
         ! ... data structure containing all information
         ! ... about fft data distribution for a given
         ! ... potential grid, and its wave functions sub-grid.
 
      TYPE ( fft_type_descriptor ) :: dfftt ! descriptor for custom grim
-  
+
      REAL(kind=DP) :: ecutt!custom cutoff in rydberg
      REAL(kind=DP) :: dual_t!dual facor
      REAL(kind=DP) :: gcutmt
@@ -37,13 +37,12 @@ MODULE fft_custom_gwl
      INTEGER, DIMENSION(:), POINTER :: nlt,nltm
      REAL(kind=DP), DIMENSION(:), POINTER :: ggt
      REAL(kind=DP), DIMENSION(:,:),POINTER :: gt
-     INTEGER, DIMENSION(:), POINTER :: ig_l2gt 
+     INTEGER, DIMENSION(:), POINTER :: ig_l2gt
      INTEGER :: gstart_t
      INTEGER,  DIMENSION(:), POINTER :: ig1t,ig2t,ig3t
      INTEGER :: nlgt
      INTEGER :: npwt,npwxt
      TYPE(sticks_map) :: smapt
-
 
 !we redifine the cell for arbitrary cell possibility
 
@@ -53,10 +52,7 @@ MODULE fft_custom_gwl
      REAL(DP) :: at_t(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
      REAL(DP) :: bg_t(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
 
-  
-     
   END TYPE fft_cus
-
 
 !=-------------------------------------------------------
 
@@ -64,7 +60,7 @@ MODULE fft_custom_gwl
 CONTAINS
 !=----------------------------------------------------------------------=!
 !
-  
+
   SUBROUTINE set_custom_grid(fc)
 
   !-----------------------------------------------------------------------
@@ -148,17 +144,16 @@ CONTAINS
   !
   !    here we compute nr3s if it is not in input
   !
-  
+
   if(fc%dual_t==4.d0) then
      fc%nr1t=dfftp%nr1
      fc%nr2t=dfftp%nr2
      fc%nr3t=dfftp%nr3
   endif
   !
-  
+
     return
   END SUBROUTINE set_custom_grid
-
 
   SUBROUTINE data_structure_custom(fc)
   !-----------------------------------------------------------------------
@@ -173,13 +168,13 @@ CONTAINS
 !                         ngm, ngm_l, ngm_g, gcutm, ecutwfc
 !  USE gsmooth,    ONLY : nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs, &
 !                         ngms, ngms_l, ngms_g, gcutms
-  USE mp,         ONLY : mp_sum, mp_max,mp_barrier
-  USE mp_global,  ONLY : intra_pool_comm, nproc_pool, me_pool, my_image_id, &
+  USE mp,         ONLY : mp_sum, mp_max
+  USE mp_pools,   ONLY : intra_pool_comm, nproc_pool, me_pool, &
                          inter_pool_comm,root_pool
-  USE mp_world,   ONLY : world_comm, nproc
   USE stick_base
   USE fft_support, ONLY : good_fft_dimension
   USE fft_types,  ONLY :  fft_type_init
+  USE command_line_options, ONLY : nmany_
   !
   !
   IMPLICIT NONE
@@ -218,7 +213,7 @@ CONTAINS
   !
   CALL calculate_gkcut()
   CALL fft_type_init( fc%dfftt, fc%smapt, "rho", .not. tk, .true., intra_pool_comm, fc%at_t, fc%bg_t, fc%gcutmt,fc%dual_t, &
-                      nyfft=nyfft)
+                      nyfft=nyfft, nmany=nmany_)
   ! define the clock labels ( this enables the corresponding fft too ! )
   fc%dfftt%rho_clock_label = 'fftc' ; fc%dfftt%wave_clock_label = 'fftcw'
   !CALL fft_type_init( fc%dfftt, fc%smapt, "rho", .not. tk, .true., intra_pool_comm, fc%at_t, fc%bg_t, fc%gcutmt/gkcut )
@@ -237,18 +232,18 @@ CONTAINS
   ! check the number of plane per process
   !
   IF ( fc%nr3t < nproc_pool ) &
-    CALL infomsg ('data_structure', 'some processors have no planes ')
+    CALL infomsg ('data_structure_custom', 'some processors have no planes ')
   !
   !  set the total number of G vectors
 
   fc%ngmt  = fc%dfftt%ngl ( me_pool + 1 )
   IF( .not. tk ) THEN
-     fc%ngmt = ( fc%ngmt + 1 ) / 2 
+     fc%ngmt = ( fc%ngmt + 1 ) / 2
   ENDIF
 
-  IF ( fc%dfftt%nnp /= ncplane )    &
-     &    CALL errore('data_structure','inconsistent plane dimension on dense grid', abs(fc%dfftt%nnp-ncplane) )
-  
+  IF ( fc%dfftt%nnp /= ncplane )  CALL errore('data_structure_custom', &
+     'inconsistent plane dimension on dense grid', abs(fc%dfftt%nnp-ncplane) )
+
   WRITE( stdout, '(/5x,"Planes per process (custom) : nr3t =", &
        &        i4," nr3p = ",i4," ncplane =",i6)') fc%nr3t, fc%dfftt%my_nr3p , ncplane
 
@@ -271,13 +266,12 @@ CONTAINS
   nxx   = fc%nrxxt
   nxxs  = fc%nrxxt
 
-
 #else
 
   CALL calculate_gkcut()
 
   CALL fft_type_init( fc%dfftt, fc%smapt, "rho", .not. tk, .false., intra_pool_comm, fc%at_t, fc%bg_t, fc%gcutmt/gkcut, &
-                      nyfft=nyfft )
+                      nyfft=nyfft, nmany=nmany_ )
   fc%dfftt%rho_clock_label = 'fftc' ; fc%dfftt%wave_clock_label = 'fftcw'
 
   fc%nrx1t  = fc%dfftt%nr1x
@@ -285,7 +279,7 @@ CONTAINS
   fc%nrx3t  = fc%dfftt%nr3x
 
   fc%nrxxt = fc%nrx1t * fc%nrx2t * fc%nrx3t
-  
+
   ! nxx is just a copy
   !
   nxx   = fc%nrxxt
@@ -296,14 +290,13 @@ CONTAINS
   !!! fc%ngmt  = fc%dfftt%ngl (dffts%mype + 1 )
   !!!
   IF( .not. tk ) THEN
-     fc%ngmt = ( fc%ngmt + 1 ) / 2 
+     fc%ngmt = ( fc%ngmt + 1 ) / 2
   ENDIF
- 
 
 #endif
 
-  IF( nxx < fc%dfftt%nnr ) &
-     CALL errore( ' data_structure ', ' inconsistent value for nxx ', abs( nxx - fc%dfftt%nnr ) )
+  IF( nxx < fc%dfftt%nnr ) CALL errore( ' data_structure_custom ', &
+          ' inconsistent value for nxx ', abs( nxx - fc%dfftt%nnr ) )
 
   !
   !     compute the global number of g, i.e. the sum over all processors
@@ -312,17 +305,14 @@ CONTAINS
   fc%ngmt_l  = fc%ngmt
   fc%ngmt_g  = fc%ngmt  ; CALL mp_sum( fc%ngmt_g , intra_pool_comm )
 
-
 !  IF( use_task_groups ) THEN
-  IF(.false.) THEN !ATTENZIONE
     !
     !  Initialize task groups.
     !  Note that this call modify dffts adding task group data.
     !
-    CALL task_groups_init( fc%dfftt )
+!    CALL task_groups_init( fc%dfftt ) FIXME: nonexistent
     !
-  ENDIF
-
+!  ENDIF
 
 CONTAINS
 
@@ -332,13 +322,12 @@ CONTAINS
 
     INTEGER :: kpoint
 
-   
     IF (nks == 0) THEN
        !
        ! if k-points are automatically generated (which happens later)
        ! use max(bg)/2 as an estimate of the largest k-point
        !
-      
+
        gkcut = 0.5d0 * max ( &
           sqrt (sum(fc%bg_t (1:3, 1)**2) ), &
           sqrt (sum(fc%bg_t (1:3, 2)**2) ), &
@@ -357,11 +346,7 @@ CONTAINS
 
   END SUBROUTINE calculate_gkcut
 
-
 END SUBROUTINE data_structure_custom
-
-
-
 
 SUBROUTINE initialize_fft_custom(fc)
 !this subroutines initialize all the fft stuff for the custom defined grid
@@ -371,8 +356,6 @@ SUBROUTINE initialize_fft_custom(fc)
   USE cell_base,          ONLY : at, bg,tpiba2,tpiba,omega,alat
   USE io_global,          ONLY : stdout
   use control_flags, ONLY : gamma_only
-  USE mp, ONLY : mp_barrier
-  USE mp_world, ONLY : world_comm
 
   implicit none
 
@@ -380,7 +363,6 @@ SUBROUTINE initialize_fft_custom(fc)
 
   INTEGER :: ng,n1t,n2t,n3t
 
- 
   fc%at_t(1:3,1:3)=at(1:3,1:3)
   fc%bg_t(1:3,1:3)=bg(1:3,1:3)
   fc%alat_t=alat
@@ -388,23 +370,17 @@ SUBROUTINE initialize_fft_custom(fc)
   fc%tpiba_t=tpiba
   fc%tpiba2_t=tpiba2
 
-
   call  set_custom_grid(fc)
-
 
   call data_structure_custom(fc)
 
-
-  
   allocate(fc%nlt(fc%ngmt))
   allocate(fc%nltm(fc%ngmt))
 
-  
   call ggent(fc)
 
   return
 END SUBROUTINE initialize_fft_custom
-
 
 SUBROUTINE initialize_fft_custom_cell(fc)
 !this subroutines initialize all the fft stuff for the custom defined grid
@@ -415,8 +391,6 @@ SUBROUTINE initialize_fft_custom_cell(fc)
   USE cell_base,          ONLY : at, bg,tpiba2,tpiba,omega,alat
   USE io_global,          ONLY : stdout
   use control_flags, ONLY : gamma_only
-  USE mp, ONLY : mp_barrier
-  USE mp_world, ONLY : world_comm
 
   implicit none
 
@@ -425,7 +399,7 @@ SUBROUTINE initialize_fft_custom_cell(fc)
   INTEGER :: ng,n1t,n2t,n3t
 
 !the following must be provided from input
- 
+
   !fc%at_t(1:3,1:3)=at(1:3,1:3)
   !fc%bg_t(1:3,1:3)=bg(1:3,1:3)
   !fc%alat_t=alat
@@ -433,25 +407,17 @@ SUBROUTINE initialize_fft_custom_cell(fc)
   !fc%tpiba_t=tpiba
   !fc%tpiba2_t=tpiba2
 
-
   call  set_custom_grid(fc)
-
-
 
   call data_structure_custom(fc)
 
-
-  
   allocate(fc%nlt(fc%ngmt))
   allocate(fc%nltm(fc%ngmt))
 
-  
   call ggent(fc)
-  
+
   return
 END SUBROUTINE initialize_fft_custom_cell
-
-
 
 SUBROUTINE ggent(fc)
   USE kinds,              ONLY : DP
@@ -481,16 +447,14 @@ SUBROUTINE ggent(fc)
 #endif
    INTEGER :: i, j, k, ipol, ng, igl, iswap, indsw
 
-
    allocate(fc%gt(3,fc%ngmt),fc%ggt(fc%ngmt))
-
 
    ALLOCATE( fc%ig_l2gt( fc%ngmt_l ) )
    ALLOCATE( mill_g( 3, fc%ngmt_g ),mill_unsorted( 3, fc%ngmt_g ) )
    ALLOCATE( igsrt( fc%ngmt_g ) )
    ALLOCATE( g2sort_g( fc%ngmt_g ) )
    ALLOCATE(fc%ig1t(fc%ngmt),fc%ig2t(fc%ngmt),fc%ig3t(fc%ngmt))
-   
+
    g2sort_g(:) = 1.0d20
    !
    ! save present value of ngm in ngmx variable
@@ -538,7 +502,7 @@ SUBROUTINE ggent(fc)
    mill_g(3,:) = mill_unsorted(3,igsrt(:))
    DEALLOCATE( g2sort_g, igsrt, mill_unsorted )
    fc%ngmt = 0
-  
+
    ngloop: DO ng = 1, fc%ngmt_g
       i = mill_g(1, ng)
       j = mill_g(2, ng)
@@ -584,17 +548,14 @@ SUBROUTINE ggent(fc)
       n1 = nint (sum(fc%gt (:, ng) * fc%at_t (:, 1))) + 1
       fc%ig1t (ng) = n1 - 1
       IF (n1<1) n1 = n1 + fc%nr1t
-      
 
       n2 = nint (sum(fc%gt (:, ng) * fc%at_t (:, 2))) + 1
       fc%ig2t (ng) = n2 - 1
       IF (n2<1) n2 = n2 + fc%nr2t
-      
 
       n3 = nint (sum(fc%gt (:, ng) * fc%at_t (:, 3))) + 1
       fc%ig3t (ng) = n3 - 1
       IF (n3<1) n3 = n3 + fc%nr3t
-      
 
       IF (n1>fc%nr1t .or. n2>fc%nr2t .or. n3>fc%nr3t) &
          CALL errore('ggent','Mesh too small?',ng)
@@ -616,15 +577,12 @@ SUBROUTINE ggent(fc)
       DO ng = 1, fc%ngmt
       n1 = -fc%ig1t (ng) + 1
       IF (n1 < 1) n1 = n1 + fc%nr1t
-      
 
       n2 = -fc%ig2t (ng) + 1
       IF (n2 < 1) n2 = n2 + fc%nr2t
-      
 
       n3 = -fc%ig3t (ng) + 1
       IF (n3 < 1) n3 = n3 + fc%nr3t
-      
 
       IF (n1>fc%nr1t .or. n2>fc%nr2t .or. n3>fc%nr3t) THEN
          CALL errore('ggent meno','Mesh too small?',ng)
@@ -632,16 +590,15 @@ SUBROUTINE ggent(fc)
 
 #if defined (__MPI) && !defined (__USE_3D_FFT)
       fc%nltm(ng) = n3 + (fc%dfftt%isind (n1 + (n2 - 1) * fc%nrx1t) - 1) * fc%nrx3t
-     
+
 #else
       fc%nltm(ng) = n1 + (n2 - 1) * fc%nrx1t + (n3 - 1) * fc%nrx1t * fc%nrx2t
-      
+
 #endif
    ENDDO
 
-
    ENDIF
- 
+
 !set npwt,npwxt
 
    if(gamma_only) then
@@ -662,7 +619,7 @@ SUBROUTINE ggent(fc)
   return
 
 END SUBROUTINE ggent
-        
+
 SUBROUTINE deallocate_fft_custom(fc)
 !this subroutine deallocates all the fft custom stuff
   USE fft_types, ONLY : fft_type_deallocate
@@ -679,8 +636,6 @@ SUBROUTINE deallocate_fft_custom(fc)
   return
 
 END SUBROUTINE deallocate_fft_custom
-  
-
 
 SUBROUTINE cft3t( fc, f, n1, n2, n3, nx1, nx2, nx3, sign )
   !----------------------------------------------------------------------------
@@ -719,7 +674,6 @@ SUBROUTINE cft3t( fc, f, n1, n2, n3, nx1, nx2, nx3, sign )
   TYPE(fft_cus) :: fc
   INTEGER,     INTENT(IN)    :: n1, n2, n3, nx1, nx2, nx3, sign
 
-
 #if defined (__MPI) && !defined(__USE_3D_FFT)
 !
   COMPLEX(DP), INTENT(INOUT) :: f( fc%dfftt%nnr )
@@ -732,14 +686,14 @@ SUBROUTINE cft3t( fc, f, n1, n2, n3, nx1, nx2, nx3, sign )
   call stop_clock('cft3t')
   !
 #else
-   
+
   !
   ! ... serial case
   !
   COMPLEX(DP), INTENT(INOUT) :: f(nx1*nx2*nx3)
   !
   !
- 
+
   !
   ! ... sign = +-1 : complete 3d fft (for rho and for the potential)
   !
@@ -775,8 +729,5 @@ SUBROUTINE cft3t( fc, f, n1, n2, n3, nx1, nx2, nx3, sign )
   RETURN
   !
 END SUBROUTINE cft3t
-
-
-
 
 END MODULE fft_custom_gwl

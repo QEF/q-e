@@ -243,8 +243,8 @@ END SUBROUTINE clean_spacegroup
             tmpx=outco(1,i,k)
             tmpy=outco(2,i,k)
       
-            outco(1,i,k)=tmpx-tmpy
-            outco(2,i,k)=tmpy+tmpx
+            outco(1,i,k)=tmpx+tmpy
+            outco(2,i,k)=tmpy-tmpx
          END DO
       END DO
       

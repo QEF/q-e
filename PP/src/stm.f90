@@ -27,16 +27,17 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
   USE fft_interfaces, ONLY : fwfft, invfft
   USE gvect, ONLY: ngm, g
   USE klist, ONLY: xk, lgauss, degauss, ngauss, wk, nks, nelec, ngk, igk_k
-  USE ener, ONLY: ef
+  USE ener,  ONLY: ef
   USE symme, ONLY : sym_rho, sym_rho_init
-  USE scf, ONLY: rho
+  USE scf,   ONLY: rho
   USE wvfct, ONLY: npwx, nbnd, wg, et
   USE control_flags, ONLY : gamma_only
-  USE wavefunctions,  ONLY : evc, psic
-  USE io_files, ONLY: iunwfc, nwordwfc
-  USE constants,      ONLY : degspin
+  USE wavefunctions, ONLY : evc, psic
+  USE io_files,  ONLY: restart_dir
+  USE constants, ONLY : degspin
   USE mp,        ONLY : mp_max, mp_min, mp_sum
-  USE mp_global, ONLY : inter_pool_comm
+  USE mp_pools,  ONLY : inter_pool_comm
+  USE pw_restart_new,ONLY : read_collected_wfc
   !
   IMPLICIT NONE
   !
@@ -149,7 +150,7 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
      istates = istates +  (last_band - first_band + 1)
 
      npw = ngk(ik)
-     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+     CALL read_collected_wfc ( restart_dir(), ik, evc )
      !
      IF (gamma_only) THEN
         !

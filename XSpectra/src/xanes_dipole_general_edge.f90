@@ -33,9 +33,9 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
   USE becmod,          ONLY : becp, allocate_bec_type, deallocate_bec_type !CG
   USE scf,             ONLY : vltot, vrs, v, kedtau
   USE gvecs,           ONLY : doublegrid
-  USE mp_global,       ONLY : intra_pool_comm, root_pool, world_comm
   USE mp,              ONLY : mp_sum, mp_bcast, mp_barrier !CG
-  USE mp_pools,        ONLY : npool
+  USE mp_images,       ONLY : intra_image_comm
+  USE mp_pools,        ONLY : npool, intra_pool_comm, root_pool
   USE io_global,       ONLY : ionode
 
   USE xspectra,        ONLY : edge, n_lanczos, xiabs, xang_mom, xniter, &
@@ -46,7 +46,7 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
   USE atom,            ONLY : rgrid, msh
   USE radin_mod
   USE uspp,   ONLY : vkb, nkb, okvan !CG
-  USE ldaU,   ONLY : lda_plus_u
+  USE ldaU,   ONLY : lda_plus_u, lda_plus_u_kind
   !<CG>
   USE xspectra_paw_variables, ONLY : xspectra_paw_nhm
   !</CG>
@@ -70,7 +70,7 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
   REAL (dp) norm, mss, s, j, mj, dl, disg, CG
   REAL (dp), ALLOCATABLE :: aux(:)
   REAL (dp), ALLOCATABLE :: Mxanes(:,:)
-  COMPLEX(KIND=DP), EXTERNAL :: zdotc
+  REAL(KIND=DP), EXTERNAL :: ddot
   COMPLEX(dp), ALLOCATABLE :: paw_vkb_cplx(:,:)
   LOGICAL :: terminator
   REAL(dp) :: normps
@@ -305,9 +305,14 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
         !<CG>        
         CALL init_gipaw_2(npw,igk_k(1,ik),xk(1,ik),paw_vkb)
         !</CG>
-        IF (.NOT.lda_plus_u) CALL init_us_2(npw,igk_k(1,ik),xk(1,ik),vkb)
-        IF (lda_plus_u) CALL orthoUwfc_k(ik)
         
+        IF (lda_plus_u) THEN
+           CALL orthoUwfc_k(ik)
+           ! Compute the phase factor for each k point in the case of DFT+U+V
+           IF (lda_plus_u_kind.EQ.2) CALL phase_factor(ik)
+        ELSE
+           CALL init_us_2(npw,igk_k(1,ik),xk(1,ik),vkb)
+        ENDIF 
         
         ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
         ! Angular Matrix element
@@ -562,10 +567,10 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
            spsiwfc(:)=(0.d0,0.d0)
            recalc=.true.
            CALL sm1_psi(recalc,npwx, npw, 1, psiwfc, spsiwfc)
-           xnorm_partial=zdotc(npw,psiwfc,1,spsiwfc,1)
+           xnorm_partial=ddot(2*npw,psiwfc,1,spsiwfc,1)
            DEALLOCATE(spsiwfc)
         ELSE
-           xnorm_partial=zdotc(npw,psiwfc,1,psiwfc,1)
+           xnorm_partial=ddot(2*npw,psiwfc,1,psiwfc,1)
         ENDIF
         !</CG>
         
@@ -611,8 +616,8 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
         WRITE( stdout,'(" total cpu time spent 4 is ",F9.2," secs")') timenow
         
      ENDDO  !on k points
-     CALL mp_barrier(world_comm)
-     CALL mp_sum(nunfinished, world_comm)
+     CALL mp_barrier(intra_image_comm)
+     CALL mp_sum(nunfinished, intra_image_comm)
 
 !     WRITE(6,'(3f16.8)') ((a(jloop,i_lanczos,ik),jloop=1,ncalcv(i_lanczos,ik)),ik=1,1)
 !     write(stdout,*)
@@ -624,7 +629,7 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
   ! Array deallocation
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
   
-  CALL mp_barrier(world_comm)
+  CALL mp_barrier(intra_image_comm)
   
 
   IF (nunfinished >= 1) THEN 

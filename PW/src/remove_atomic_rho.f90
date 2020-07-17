@@ -10,7 +10,7 @@ SUBROUTINE remove_atomic_rho
   !-----------------------------------------------------------------------
   USE kinds,        ONLY: DP
   USE io_global,    ONLY: stdout
-  USE io_files,     ONLY: output_drho, tmp_dir, prefix, postfix
+  USE io_files,     ONLY: output_drho, restart_dir
   USE control_flags,ONLY: gamma_only
   USE gvect,        ONLY: ngm, ig_l2g, mill
   USE lsda_mod,     ONLY: nspin
@@ -22,7 +22,6 @@ SUBROUTINE remove_atomic_rho
   USE cell_base,    ONLY: bg, tpiba
   !
   IMPLICIT NONE
-  CHARACTER(LEN=256) :: filename
   COMPLEX(DP), ALLOCATABLE :: drhog(:,:)
   !
   IF ( nspin > 1 ) CALL errore &
@@ -36,9 +35,9 @@ SUBROUTINE remove_atomic_rho
   CALL atomic_rho_g ( drhog, nspin)
   drhog = rho%of_g - drhog
   !
-  filename = TRIM(tmp_dir) // TRIM(prefix) // postfix // output_drho
   IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
-       CALL write_rhog( filename, root_bgrp, intra_bgrp_comm, &
+       CALL write_rhog( TRIM( restart_dir( ) ) // output_drho, &
+       root_bgrp, intra_bgrp_comm, &
        bg(:,1)*tpiba, bg(:,2)*tpiba, bg(:,3)*tpiba, &
        gamma_only, mill, ig_l2g, drhog )
   !

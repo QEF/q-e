@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -84,8 +84,9 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
      !
      CALL get_buffer (wfcU, nwordwfcU, iuatswfc, current_k)
      !
-     ! Compute the phase factor at k+q
-     !IF (lda_plus_u_kind.EQ.2) CALL phase_factor(ikq)
+     ! Compute the phase factor at k+q (needed for DFT+U+V)
+     !
+     IF (lda_plus_u_kind.EQ.2) CALL phase_factor (current_k)
      !
   ENDIF
   !

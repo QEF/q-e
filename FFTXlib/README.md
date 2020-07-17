@@ -35,3 +35,46 @@ A python script to extract the parameters from an output file of pw.x is also av
 
 Replace `X` and `Y` with appropriate values for your simualtion.
     
+## Files
+Compile time parameters:
+
+    fft_param.f90
+
+Descriptor types:
+
+    stick_base.f90
+    fft_types.f90
+    fft_smallbox_type.f90
+
+Parallel execution routines:
+
+    fft_interfaces.f90 fft_fwinv.f90
+      fft_parallel.f90
+        scatter_mod.f90
+          tg_gather.f90
+      fft_interpolate.f90
+      fft_smallbox.f90
+
+Low level library wrappers:
+
+    fft_scalar.f90
+    fft_scalar.ARM_LIB.f90
+    fft_scalar.DFTI.f90
+    fft_scalar.ESSL.f90
+    fft_scalar.FFTW.f90 fftw_interfaces.f90
+      fft_stick.c fftw.c fftw_dp.c fftw_sp.c fftw_dp.h fftw.h fftw_sp.h konst.h
+    fft_scalar.FFTW3.f90
+    fft_scalar.SX6.f90
+
+Misc. helper routines:
+
+    fft_ggen.f90
+    fft_error.f90
+    fft_helper_subroutines.f90
+    fft_support.f90
+
+Tests:
+
+    test0.f90
+    test.f90
+

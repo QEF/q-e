@@ -12,8 +12,9 @@
 #define ONE  ( 1.D0, 0.D0 )
 
 module david_rci_m
-  use david_param
-  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
+  use util_param
+  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
+                            me_bgrp, root_bgrp
   USE mp,            ONLY : mp_sum, mp_bcast
   implicit none
   private
@@ -128,6 +129,9 @@ contains
     ! work space
     integer, intent(out) :: task
     ! Next task to be performed by the calling program
+    !
+    !
+    include 'laxlib.fh'
     !
     ! ... LOCAL variables
     !
@@ -249,7 +253,7 @@ contains
         ! ... diagonalize the reduced hamiltonian
         !
         IF( my_bgrp_id == root_bgrp_id ) THEN
-          CALL cdiaghg( nbase, nvec, hc, sc, nvecx, work%ew, vc )
+          CALL diaghg( nbase, nvec, hc, sc, nvecx, work%ew, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
         END IF
         IF( nbgrp > 1 ) THEN
           CALL mp_bcast( vc, root_bgrp_id, inter_bgrp_comm )
@@ -336,7 +340,7 @@ contains
       !
       ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in
       ! ... order to improve numerical stability of subspace diagonalization
-      ! ... (cdiaghg) ew is used as work array :
+      ! ... (diaghg) ew is used as work array :
       !
       ! ...         ew = <psi_i|psi_i>,  i = nbase + 1, nbase + notcnv
       !
@@ -422,7 +426,7 @@ contains
       ! ... diagonalize the reduced hamiltonian
       !
       IF( my_bgrp_id == root_bgrp_id ) THEN
-        CALL cdiaghg( nbase, nvec, hc, sc, nvecx, work%ew, vc )
+        CALL diaghg( nbase, nvec, hc, sc, nvecx, work%ew, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
       END IF
       IF( nbgrp > 1 ) THEN
         CALL mp_bcast( vc, root_bgrp_id, inter_bgrp_comm )

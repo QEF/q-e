@@ -7,17 +7,8 @@
 !
 MODULE zhpev_module
 
-   USE la_param
    IMPLICIT NONE
    SAVE
-
-   PRIVATE
-
-   PUBLIC :: pzhpev_drv, zhpev_drv
-#if defined __SCALAPACK
-   PUBLIC :: pzheevd_drv
-#endif
-
 
 CONTAINS
    !
@@ -45,8 +36,11 @@ CONTAINS
       !     Courant Institute, Argonne National Lab, and Rice University
       !
 
+      USE laxlib_parallel_include
 
       IMPLICIT NONE
+
+      include 'laxlib_kinds.fh'
 
 !     .. __SCALAR Arguments ..
       INTEGER            LDA, N, NRL, NPROC, ME, comm
@@ -163,11 +157,13 @@ CONTAINS
       EXTERNAL           zdscal, zscal                                          
 !     ..
 !     .. External Functions ..
-      COMPLEX(DP)         zdotc
-      EXTERNAL           zdotc
+      ! some compiler don't like complex functions
+      !COMPLEX(DP)         zdotc
+      !EXTERNAL           zdotc
+      !COMPLEX(DP)         ZLADIV
+      !EXTERNAL            ZLADIV
       REAL(DP)             DLAMCH, DLAPY3, DZNRM2
-      COMPLEX(DP)         ZLADIV
-      EXTERNAL           DLAMCH, DLAPY3, DZNRM2, ZLADIV
+      EXTERNAL           DLAMCH, DLAPY3, DZNRM2
 !     ..
 !     .. Intrinsic Functions ..
       INTRINSIC          DABS, DBLE, AIMAG, SIGN
@@ -273,7 +269,9 @@ CONTAINS
                   ALPHA = CMPLX( ALPHR, ALPHI, KIND=DP )
                   BETA = -SIGN( DLAPY3( ALPHR, ALPHI, XNORM ), ALPHR )
                   TAUI = CMPLX( (BETA-ALPHR)/BETA, -ALPHI/BETA, KIND=DP )
-                  ALPHA = ZLADIV( ONE, ALPHA-BETA )
+                  ! next line yields problems on some compilers
+                  ! ALPHA = ZLADIV( ONE, ALPHA-BETA )
+                  ALPHA = ONE / (ALPHA-BETA)
 
                   IF(NI1.GT.0) THEN
                     CALL zscal( NI1, ALPHA, AP( I2, I ), 1 )
@@ -287,7 +285,9 @@ CONTAINS
                 ELSE
 
                   TAUI = CMPLX( (BETA-ALPHR)/BETA, -ALPHI/BETA, KIND=DP )
-                  ALPHA = ZLADIV( ONE, ALPHA-BETA )
+                  ! next line yields problems on some compilers
+                  ! ALPHA = ZLADIV( ONE, ALPHA-BETA )
+                  ALPHA = ONE / (ALPHA-BETA)
 
                   IF(NI1.GT.0) THEN
                     CALL zscal( NI1, ALPHA, AP( I2, I ), 1 )
@@ -381,7 +381,9 @@ CONTAINS
                ENDIF
                NI1 = NRL - I1 + 1          ! N-I
                IF ( NI1 > 0 ) THEN
-                  ALPHA = -HALF*TAUI*zdotc(NI1,TAUL(1),1,AP(I1,I),1)
+                  ! next line yields problems on some compilers
+                  !ALPHA = -HALF*TAUI*zdotc(NI1,TAUL(1),1,AP(I1,I),1)
+                  ALPHA = -HALF*TAUI*dot_product(TAUL(1:NI1),AP(I1:I1+NI1-1,I))
                ELSE
                   ALPHA = 0.0_DP
                END IF
@@ -496,8 +498,11 @@ CONTAINS
 !     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
 !     Courant Institute, Argonne National Lab, and Rice University
 
+      USE laxlib_parallel_include
+
       IMPLICIT NONE
 
+      include 'laxlib_kinds.fh'
 !
 !     .. __SCALAR Arguments ..
 
@@ -762,8 +767,11 @@ CONTAINS
 !     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
 !     Courant Institute, Argonne National Lab, and Rice University
 !
+      USE laxlib_parallel_include
 
       IMPLICIT NONE
+
+      include 'laxlib_kinds.fh'
 
 !     .. __SCALAR Arguments ..
       CHARACTER          COMPZ
@@ -1411,73 +1419,22 @@ CONTAINS
 
 !==----------------------------------------------==!
 
-   SUBROUTINE zhpev_drv( JOBZ, UPLO, N, AP, W, Z, LDZ )
-
-
-        IMPLICIT NONE
-
-        CHARACTER ::       JOBZ, UPLO
-        INTEGER   ::       IOPT, INFO, LDZ, N
-        COMPLEX(DP) ::  AP( * ), Z( LDZ, * )
-        REAL(DP) ::  W( * )
-        REAL(DP), ALLOCATABLE :: RWORK(:)
-        COMPLEX(DP), ALLOCATABLE :: ZWORK(:)
-
-        ALLOCATE( rwork( MAX(1, 3*n-2) ), zwork( MAX(1, 2*n-1)) )
-        CALL ZHPEV(jobz, uplo, n, ap, w, z, ldz, zwork, rwork, INFO)
-        DEALLOCATE( rwork, zwork )
-        IF( INFO .NE. 0 ) THEN
-          CALL lax_error__( ' dspev_drv ', ' diagonalization failed ',INFO )
-        END IF
-
-        RETURN
-   END SUBROUTINE zhpev_drv
-
-!==----------------------------------------------==!
-
-   SUBROUTINE pzhpev_drv( jobz, ap, lda, w, z, ldz, &
-                          nrl, n, nproc, mpime, comm )
-
-
-     IMPLICIT NONE
-     CHARACTER :: JOBZ
-     INTEGER, INTENT(IN) :: lda, ldz, nrl, n, nproc, mpime
-     INTEGER, INTENT(IN) :: comm
-     COMPLEX(DP) :: ap( lda, * ), z( ldz, * )
-     REAL(DP) :: w( * )
-     REAL(DP), ALLOCATABLE :: rwork( : )
-     COMPLEX(DP), ALLOCATABLE :: cwork( : )
-     !
-     ALLOCATE( rwork( n ) )
-     ALLOCATE( cwork( n ) )
-     !
-     CALL pzhptrd( n, nrl, ap, lda, w, rwork, cwork, nproc, mpime, comm)
-
-     IF( jobz == 'V' .OR. jobz == 'v' ) THEN
-        CALL pzupgtr( n, nrl, ap, lda, cwork, z, ldz, nproc, mpime, comm)
-     END IF
-
-     CALL pzsteqr( jobz, n, nrl, w, rwork, z, ldz, nproc, mpime, comm)
-
-     DEALLOCATE( cwork )
-     DEALLOCATE( rwork )
-
-     RETURN
-   END SUBROUTINE pzhpev_drv
-
-
-!==----------------------------------------------==!
-
 
 #if defined __SCALAPACK
 
-
   SUBROUTINE pzheevd_drv( tv, n, nb, h, w, ortho_cntx, ortho_comm )
 
-#if defined(__ELPA) || defined(__ELPA_2016) || defined(__ELPA_2015)
+#if  defined(__ELPA_2015)|| defined(__ELPA_2016) || defined(__ELPA_2017)
      USE elpa1
+
+#elif defined(__ELPA) || defined(__ELPA_2018) || defined(__ELPA_2019)
+     use elpa
+
 #endif
+     USE laxlib_parallel_include
      IMPLICIT NONE
+
+     include 'laxlib_kinds.fh'
 
      LOGICAL, INTENT(IN)  :: tv
        ! if tv is true compute eigenvalues and eigenvectors (not used)
@@ -1499,11 +1456,13 @@ CONTAINS
      INTEGER     :: LWORK, LRWORK, LIWORK
      INTEGER     :: desch( 10 ), info, ierr
      CHARACTER   :: jobv
-#if defined(__ELPA) || defined(__ELPA_2016) || defined(__ELPA_2015)
+#if defined(__ELPA)   || defined(__ELPA_2015) || defined(__ELPA_2016)|| defined(__ELPA_2017)  || defined(__ELPA_2018) || defined(__ELPA_2019)    
      INTEGER     :: nprow,npcol,my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols
      LOGICAL     :: success
+#endif
+#if defined(__ELPA) || defined(__ELPA_2018) || defined(__ELPA_2019)
+     class(elpa_t), pointer :: elpa_h
 #endif 
-
      !
      IF( tv ) THEN
         ALLOCATE( v( SIZE( h, 1 ), SIZE( h, 2 ) ) )
@@ -1514,11 +1473,49 @@ CONTAINS
 
      call descinit( desch, n, n, nb, nb, 0, 0, ortho_cntx, size(h,1), info )
      
-#if defined(__ELPA) || defined(__ELPA_2016) || defined(__ELPA_2015)
+#if defined(__ELPA)   || defined(__ELPA_2015) || defined(__ELPA_2016)|| defined(__ELPA_2017)  || defined(__ELPA_2018) || defined(__ELPA_2019)
      CALL BLACS_Gridinfo(ortho_cntx,nprow, npcol, my_prow,my_pcol)
 
-#if defined(__ELPA_2016)
-     ! -> ELPA 2016.11.001_pre
+#if defined(__ELPA)  || defined(__ELPA_2018) || defined(__ELPA_2019)
+  ! => from elpa-2018.11.001 to 2019.xx.xx
+  if (elpa_init(20181101) /= ELPA_OK) then        
+    print *, "ELPA API version in use not supported"
+    stop
+  endif
+
+  elpa_h => elpa_allocate(ierr)
+  if (ierr /= ELPA_OK) then
+    print *, "ELPA API version in use is not supported"
+    stop
+  endif
+
+  call elpa_h%set("debug",1,ierr)
+
+  ! set parameters describing the matrix and it's MPI distribution
+  call elpa_h%set("na", n, ierr)
+  call elpa_h%set("nev", n, ierr)
+  call elpa_h%set("nblk", size(h,2), ierr) 
+  call elpa_h%set("local_nrows", size(h,1),ierr)      
+  call elpa_h%set("local_ncols", nb,ierr) 
+  call elpa_h%set("mpi_comm_parent", ortho_comm, ierr) 
+  call elpa_h%set("process_row", my_prow, ierr) 
+  call elpa_h%set("process_col", my_pcol, ierr)
+
+  ierr = elpa_h%setup()
+  if (ierr .ne. ELPA_OK) then
+     print *,"Problem setting up options. Aborting ..."
+     stop
+  endif
+
+  call elpa_h%set("solver", ELPA_SOLVER_1STAGE, ierr)
+  call elpa_h%eigenvectors(h, w, v, ierr)
+  
+  call elpa_deallocate(elpa_h)
+  call elpa_uninit()
+
+
+#elif defined(__ELPA_2016) || defined(__ELPA_2017)
+     ! -> from ELPA 2016.11.001_pre thru 2017.XX.XX to elpa-2018.05.001
      ierr = elpa_get_communicators(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
      success = solve_evp_complex_1stage_double(n, n, h, size(h,1), w,  v, size(h,1), size(h,2), nb, &
                            mpi_comm_rows, mpi_comm_cols, ortho_comm)
@@ -1530,15 +1527,11 @@ CONTAINS
      ierr = get_elpa_row_col_comms(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
      ierr = solve_evp_complex(n, n, h, size(h,1), w,  v, size(h,1), size(h,2), nb, &
                            mpi_comm_rows, mpi_comm_cols)
-#elif defined(__ELPA)
-     CALL get_elpa_row_col_comms(ortho_comm, my_prow, my_pcol,mpi_comm_rows,mpi_comm_cols)
-     CALL solve_evp_complex(n, n, h, size(h,1), w, v, size(h,1), nb, &
-                          mpi_comm_rows, mpi_comm_cols)
 #endif
 
      h = v
 
-#if defined __MPI
+#if defined(__MPI) && (defined(__ELPA_2015) || defined(__ELPA_2016) || defined(__ELPA_2017)) 
      CALL mpi_comm_free( mpi_comm_rows, ierr )
      CALL mpi_comm_free( mpi_comm_cols, ierr )
 #endif
@@ -1580,3 +1573,63 @@ CONTAINS
 #endif
 
 END MODULE zhpev_module
+
+
+!==----------------------------------------------==!
+
+
+   SUBROUTINE zhpev_drv_x( JOBZ, UPLO, N, AP, W, Z, LDZ )
+
+        use zhpev_module
+        IMPLICIT NONE
+        include 'laxlib_kinds.fh'
+
+        CHARACTER ::       JOBZ, UPLO
+        INTEGER   ::       IOPT, INFO, LDZ, N
+        COMPLEX(DP) ::  AP( * ), Z( LDZ, * )
+        REAL(DP) ::  W( * )
+        REAL(DP), ALLOCATABLE :: RWORK(:)
+        COMPLEX(DP), ALLOCATABLE :: ZWORK(:)
+
+        ALLOCATE( rwork( MAX(1, 3*n-2) ), zwork( MAX(1, 2*n-1)) )
+        CALL ZHPEV(jobz, uplo, n, ap, w, z, ldz, zwork, rwork, INFO)
+        DEALLOCATE( rwork, zwork )
+        IF( INFO .NE. 0 ) THEN
+          CALL lax_error__( ' zhpev_drv ', ' diagonalization failed ',INFO )
+        END IF
+
+        RETURN
+   END SUBROUTINE 
+
+!==----------------------------------------------==!
+
+   SUBROUTINE pzhpev_drv_x( jobz, ap, lda, w, z, ldz, nrl, n, nproc, mpime, comm )
+
+     use zhpev_module
+
+     IMPLICIT NONE
+     include 'laxlib_kinds.fh'
+     CHARACTER :: JOBZ
+     INTEGER, INTENT(IN) :: lda, ldz, nrl, n, nproc, mpime
+     INTEGER, INTENT(IN) :: comm
+     COMPLEX(DP) :: ap( lda, * ), z( ldz, * )
+     REAL(DP) :: w( * )
+     REAL(DP), ALLOCATABLE :: rwork( : )
+     COMPLEX(DP), ALLOCATABLE :: cwork( : )
+     !
+     ALLOCATE( rwork( n ) )
+     ALLOCATE( cwork( n ) )
+     !
+     CALL pzhptrd( n, nrl, ap, lda, w, rwork, cwork, nproc, mpime, comm)
+
+     IF( jobz == 'V' .OR. jobz == 'v' ) THEN
+        CALL pzupgtr( n, nrl, ap, lda, cwork, z, ldz, nproc, mpime, comm)
+     END IF
+
+     CALL pzsteqr( jobz, n, nrl, w, rwork, z, ldz, nproc, mpime, comm)
+
+     DEALLOCATE( cwork )
+     DEALLOCATE( rwork )
+
+     RETURN
+   END SUBROUTINE 

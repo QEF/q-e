@@ -49,7 +49,7 @@ SUBROUTINE calcchi (dns_, chi_, name_)
   !
   IMPLICIT NONE
   !
-  CHARACTER(len=4), INTENT(IN)    :: name_
+  CHARACTER(len=*), INTENT(IN)    :: name_
   COMPLEX(DP),      INTENT(IN)    :: dns_(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, nspin, nat, nqsh)
   REAL(DP),         INTENT(INOUT) :: chi_(nath_sc, nat)
   !

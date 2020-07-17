@@ -7,13 +7,12 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE transform_becsum_so(becsum_nc,becsum,na)
+SUBROUTINE transform_becsum_so( becsum_nc, becsum, na )
 !----------------------------------------------------------------------------
-!
-! This routine multiply becsum_nc by the identity and the Pauli
-! matrices, rotate it as appropriate for the spin-orbit case
-! and saves it in becsum for the calculation of 
-! augmentation charge and magnetization.
+!! This routine multiply becsum_nc by the identity and the Pauli
+!! matrices, rotate it as appropriate for the spin-orbit case
+!! and saves it in becsum for the calculation of 
+!! augmentation charge and magnetization.
 !
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ntyp => nsp, ityp
@@ -24,10 +23,13 @@ USE noncollin_module,     ONLY : npol, nspin_mag
 USE spin_orb,             ONLY : fcoef, domag
 !
 IMPLICIT NONE
-
+!
 COMPLEX(DP) :: becsum_nc(nhm*(nhm+1)/2,nat,npol,npol)
+!! see routine comments
 REAL(DP) :: becsum(nhm*(nhm+1)/2,nat,nspin_mag)
+!! see routine comments
 INTEGER :: na
+!! atom index
 !
 ! ... local variables
 !
@@ -35,7 +37,7 @@ INTEGER :: ih, jh, lh, kh, ijh, np, is1, is2
 COMPLEX(DP) :: fac
 INTEGER :: ijh_l
 LOGICAL :: same_lj
-
+!
 np=ityp(na)
 DO ih = 1, nh(np)
    DO jh = 1, nh(np)
@@ -78,19 +80,30 @@ END DO
 RETURN
 END SUBROUTINE transform_becsum_so
 
-FUNCTION same_lj(ih,jh,np)
-
-USE uspp, ONLY : nhtol, nhtoj, indv
-
-IMPLICIT NONE
-
-LOGICAL :: same_lj
-INTEGER :: ih, jh, np
-
-same_lj = ((nhtol(ih,np)==nhtol(jh,np)).AND. &
-           (ABS(nhtoj(ih,np)-nhtoj(jh,np))<1.d8).AND. &
-           (indv(ih,np)==indv(jh,np)) )
-
-RETURN
+!----------------------------------------------------------------
+FUNCTION same_lj( ih, jh, np) 
+  !-------------------------------------------------------------
+  !! TRUE if the beta function indexes \(ih\) and \(jh\) are related
+  !! to the same lj couple.
+  !
+  USE uspp, ONLY : nhtol, nhtoj, indv
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: ih
+  !! beta function index
+  INTEGER :: jh
+  !! beta function index
+  INTEGER :: np
+  !! the type of the atom
+  LOGICAL :: same_lj
+  !! See main comment
+  !
+  same_lj = ((nhtol(ih,np)==nhtol(jh,np)).AND. &
+             (ABS(nhtoj(ih,np)-nhtoj(jh,np))<1.d8).AND. &
+             (indv(ih,np)==indv(jh,np)) )
+  !
+  RETURN
+  !
 END FUNCTION same_lj
 

@@ -27,6 +27,7 @@ SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nnr, f, grad )
   USE kinds,         ONLY : DP
   USE cell_base,     ONLY : at, bg, alat
   USE fft_base,      ONLY : dfftp
+  USE fft_types,     ONLY : fft_index_to_3d
   USE scatter_mod,   ONLY : scatter_grid
   USE mp,            ONLY : mp_sum
   USE mp_bands,      ONLY : me_bgrp, intra_bgrp_comm
@@ -40,10 +41,11 @@ SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nnr, f, grad )
   REAL( DP ), DIMENSION( nnr ), INTENT(IN) :: f
   REAL( DP ), DIMENSION( 3, nnr ), INTENT(OUT) :: grad
 
-  INTEGER :: idx, j0, k0, i, ir, ir_end, ipol, in
+  INTEGER :: i, ir, ir_end, ipol, in
   INTEGER :: ix(-nfdpoint:nfdpoint),iy(-nfdpoint:nfdpoint),iz(-nfdpoint:nfdpoint)
   INTEGER :: ixc, iyc, izc, ixp, ixm, iyp, iym, izp, izm
   REAL( DP ), DIMENSION( :, : ), ALLOCATABLE :: gradtmp, gradaux
+  LOGICAL  :: offrange
   !
   grad = 0.D0
   !
@@ -51,26 +53,15 @@ SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nnr, f, grad )
   gradtmp = 0.D0
   !
 #if defined (__MPI)
-  j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
   ir_end = MIN(nnr,dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p)
 #else
-  j0 = 0 ; k0 = 0
   ir_end = nnr
 #endif
   !
   DO ir = 1, ir_end
     !
-    idx   = ir - 1
-    iz(0) = idx / (dfftp%nr1x*dfftp%my_nr2p)
-    idx   = idx - (dfftp%nr1x*dfftp%my_nr2p)*iz(0)
-    iz(0) = iz(0) + k0
-    IF ( iz(0) .GE. dfftp%nr3 ) CYCLE ! if nr3x > nr3 skip unphysical part of the grid
-    iy(0) = idx / dfftp%nr1x
-    idx   = idx - dfftp%nr1x*iy(0)
-    iy(0) = iy(0) + j0
-    IF ( iy(0) .GE. dfftp%nr2 ) CYCLE ! if nr2x > nr2 skip unphysical part of the grid
-    ix(0) = idx 
-    IF ( ix(0) .GE. dfftp%nr1 ) CYCLE ! if nr1x > nr1 skip unphysical part of the grid
+    CALL fft_index_to_3d (ir, dfftp, ix(0), iy(0), iz(0), offrange)
+    IF ( offrange ) CYCLE
     !
     DO in = 1, nfdpoint
       ix(in) = ix(in-1) + 1

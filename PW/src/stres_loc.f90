@@ -18,7 +18,6 @@ subroutine stres_loc (sigmaloc)
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE gvect,                ONLY : ngm, gstart, g, ngl, gl, igtongl
-  USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho
   USE vlocal,               ONLY : strf, vloc
   USE control_flags,        ONLY : gamma_only
@@ -41,8 +40,7 @@ subroutine stres_loc (sigmaloc)
 
   allocate(dvloc(ngl))
   sigmaloc(:,:) = 0.d0
-  psic(:)=(0.d0,0.d0)
-  call daxpy (dfftp%nnr, 1.d0, rho%of_r (1, 1), 1, psic, 2)
+  psic(:) = CMPLX(rho%of_r(:,1), KIND=dp)
 
   CALL fwfft ('Rho', psic, dfftp)
   ! psic contains now the charge density in G space
@@ -61,25 +59,23 @@ subroutine stres_loc (sigmaloc)
      enddo
   enddo
   ! 2D:  add contribution from cutoff long-range part of Vloc
-  IF (do_cutoff_2D) call cutoff_stres_evloc ( psic, evloc )
+  IF (do_cutoff_2D)  call cutoff_stres_evloc( psic, strf, evloc )
   !
   !      WRITE( 6,*) ' evloc ', evloc, evloc*omega   ! DEBUG
   !
   do nt = 1, ntyp
-     IF ( .NOT. ASSOCIATED ( upf(nt)%vloc ) ) THEN
-        IF ( upf(nt)%is_gth ) THEN
-           !
-           ! special case: GTH pseudopotential
-           !
-           call dvloc_gth (nt, upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc)
-           !
-        ELSE
-           !
-           ! special case: pseudopotential is coulomb 1/r potential
-           !
-           call dvloc_coul (upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc)
-           !
-        END IF
+     IF ( upf(nt)%is_gth ) THEN
+        !
+        ! special case: GTH pseudopotential
+        !
+        call dvloc_gth (nt, upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc)
+        !
+     ELSE IF ( upf(nt)%tcoulombp ) THEN
+        !
+        ! special case: pseudopotential is coulomb 1/r potential
+        !
+        call dvloc_coul (upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc)
+        !
      ELSE
         !
         ! normal case: dvloc contains dV_loc(G)/dG
@@ -99,7 +95,7 @@ subroutine stres_loc (sigmaloc)
         enddo
      enddo
   enddo
-  IF (do_cutoff_2D) call cutoff_stres_sigmaloc( psic, sigmaloc) ! 2D: re-add LR Vloc to sigma here
+  IF (do_cutoff_2D)  call cutoff_stres_sigmaloc( psic, strf, sigmaloc) ! 2D: re-add LR Vloc to sigma here
   !
   do l = 1, 3
      sigmaloc (l, l) = sigmaloc (l, l) + evloc

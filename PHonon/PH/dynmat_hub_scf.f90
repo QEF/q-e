@@ -118,7 +118,7 @@ SUBROUTINE dynmat_hub_scf (irr, nu_i0, nper)
   ! interrupted before the call of this routine)
   !
   IF (rec_code_read==10) THEN
-     WRITE(stdout,*) 'rec_code_read', rec_code_read
+     !WRITE(stdout,*) 'rec_code_read', rec_code_read
      CALL dnsq_scf (nper, lmetq0, nu_i0, irr, .true.)  
   ENDIF
   !

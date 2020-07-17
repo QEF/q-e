@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,7 @@ SUBROUTINE hp_readin()
   USE io_global,        ONLY : meta_ionode, meta_ionode_id
   USE mp,               ONLY : mp_bcast
   USE mp_world,         ONLY : world_comm
-  USE input_parameters, ONLY : max_seconds
+  USE check_stop,       ONLY : max_seconds
   USE io_files,         ONLY : tmp_dir, prefix, create_directory
   USE control_flags,    ONLY : iverbosity
   USE control_lr,       ONLY : ethr_nscf, lrpa
@@ -138,11 +138,10 @@ SUBROUTINE input_sanity()
   USE fixed_occ,        ONLY : tfixed_occ
   USE cellmd,           ONLY : lmovecell
   USE noncollin_module, ONLY : i_cons, noncolin
-  USE control_flags,    ONLY : twfcollect
-  USE mp_global,        ONLY : nproc_pool, nproc_pool_file, &
-                               nproc_image_file, nproc_image, nproc_bgrp_file
-  USE ldaU,             ONLY : lda_plus_u, U_projection, lda_plus_u_kind, Hubbard_J0
-                               !is_hubbard_back
+  USE mp_bands,         ONLY : nbgrp
+  USE funct,            ONLY : dft_is_meta, dft_is_hybrid
+  USE ldaU,             ONLY : lda_plus_u, U_projection, lda_plus_u_kind, Hubbard_J0, &
+                               is_hubbard_back, Hubbard_V
   !
   IMPLICIT NONE
   !
@@ -156,8 +155,13 @@ SUBROUTINE input_sanity()
   IF (compute_hp .AND. ANY(perturb_only_atom(:))) &
      CALL errore ('hp_readin', 'compute_hp and perturb_only_atom are not allowed to be true together', 1)
   !
-  !IF (ANY(is_hubbard_back(:))) &
-  !   CALL errore ('hp_readin', 'Calculation of Hubbard parameters with the background is not implemented', 1)
+  IF (ANY(is_hubbard_back(:))) &
+     CALL errore ('hp_readin', 'Calculation of Hubbard parameters with the background is not implemented', 1)
+  !
+  IF ( ANY(Hubbard_V(:,:,2).NE.0.d0) .OR. &
+       ANY(Hubbard_V(:,:,3).NE.0.d0) .OR. &
+       ANY(Hubbard_V(:,:,4).NE.0.d0) ) &
+     CALL errore ('hp_readin', 'The HP code does not support DFT+U+V with the background', 1)
   !
   IF (ANY(Hubbard_J0(:).NE.0.d0)) &
      CALL errore ('hp_readin', 'Hubbard_J0 /= 0 is not allowed.', 1)
@@ -188,8 +192,8 @@ SUBROUTINE input_sanity()
   IF (.NOT.lda_plus_u) CALL errore('hp_readin',&
      & 'The HP code can be used only when lda_plus_u=.true.',1)
   !
-  IF (lda_plus_u_kind/=0) CALL errore("hp_readin", &
-     & ' The HP code supports only lda_plus_u_kind=0',1)
+  IF (lda_plus_u_kind.EQ.1) CALL errore("hp_readin", &
+     & ' The HP code does not support lda_plus_u_kind=1',1)
   !
   IF (U_projection.NE."atomic" .AND. U_projection.NE."ortho-atomic") &
      CALL errore("hp_readin", &
@@ -199,13 +203,7 @@ SUBROUTINE input_sanity()
   !
   IF (lmovecell) CALL errore('hp_readin','The HP code is not working after vc-relax',1)
   !
-  IF (nproc_image /= nproc_image_file .and. .not. twfcollect) CALL errore('hp_readin', &
-     & 'pw.x run with a different number of processors. Use wf_collect=.true.',1)
-  !
-  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  CALL errore('hp_readin', &
-     & 'pw.x run with a different number of pools. Use wf_collect=.true.',1)
-  !
-  IF (nproc_bgrp_file /= nproc_pool_file) CALL errore('hp_readin', &
+  IF (nbgrp > 1) CALL errore('hp_readin', &
      & 'band parallelization is not implemented in HP',1)
   !
   IF (i_cons /= 0) CALL errore('hp_readin',&
@@ -219,6 +217,12 @@ SUBROUTINE input_sanity()
   !
   IF (tfixed_occ) CALL errore('hp_readin', &
      & 'The HP code with arbitrary occupations not tested',1)
+  !
+  IF ( dft_is_meta() ) CALL errore('hp_readin',&
+     'The HP code with meta-GGA functionals is not yet available',1)
+  !
+  IF ( dft_is_hybrid() ) CALL errore('hp_readin',&
+     'The HP code with hybrid functionals is not yet available',1)
   !
   RETURN
   !

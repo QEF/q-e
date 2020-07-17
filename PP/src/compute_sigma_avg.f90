@@ -23,7 +23,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
   USE gvecs,                ONLY : doublegrid
   USE scf,                  ONLY : rho
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE mp_global,            ONLY : me_pool, intra_bgrp_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   USE fft_base,             ONLY : dffts, dfftp
   USE fft_interfaces,       ONLY : invfft, fft_interpolate
@@ -45,7 +45,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
   COMPLEX(DP), ALLOCATABLE :: be1(:,:), qq_lz(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: dfx(:), dfy(:)
 
-  COMPLEX(DP) :: c_aux, zdotc
+  COMPLEX(DP) :: c_aux
 
   IF (.not.(lsigma(1).or.lsigma(2).or.lsigma(3).or.lsigma(4))) RETURN
 
@@ -176,7 +176,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
                  ENDIF
               ENDDO
            ENDDO
-           c_aux = zdotc(dffts%nnr, psic_nc(1,ipol), 1, dfx, 1)
+           c_aux = DOT_PRODUCT (psic_nc(:,ipol), dfx(:) )
            magtot1(4) = magtot1(4) + aimag(c_aux)
         ENDDO
         CALL mp_sum( magtot1(4), intra_bgrp_comm )

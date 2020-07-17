@@ -59,7 +59,7 @@ MODULE path_base
       USE control_flags,    ONLY : conv_elec
       USE ions_base,        ONLY : amass, ityp
       USE io_files,         ONLY : prefix, tmp_dir
-      USE mp_global,        ONLY : nimage
+      USE mp_images,        ONLY : nimage
       USE path_input_parameters_module, ONLY : pos_      => pos, &
                                    climbing_ => climbing, &
                                    input_images, nstep_path_ => nstep_path
@@ -291,6 +291,7 @@ MODULE path_base
          ALLOCATE( image_spacing( input_images - 1 ) )
          !
          tooclose = .false.
+         image_spacing(:) = 0.0_dp
          DO i = 1, input_images - 1
             !
             dr(:,i) = ( pos(:,i+1) - pos(:,i) )
@@ -645,7 +646,7 @@ MODULE path_base
       USE path_variables, ONLY : pos, posold, num_of_images, grad, &
                                  use_freezing, first_last_opt, path_thr, &
                                  error, frozen, lquick_min
-      USE mp_global,      ONLY : nimage
+      USE mp_images,      ONLY : nimage
       !
       IMPLICIT NONE
       !

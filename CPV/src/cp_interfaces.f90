@@ -81,8 +81,6 @@
    PUBLIC :: set_eitot
    PUBLIC :: set_evtot
    !
-   PUBLIC :: print_lambda
-   !
    PUBLIC :: move_electrons
    !
    PUBLIC :: compute_stress
@@ -106,7 +104,8 @@
    PUBLIC :: dennl
    PUBLIC :: nlfq_bgrp
    PUBLIC :: collect_bec
-   PUBLIC :: distribute_lambda
+   PUBLIC :: beta_eigr
+   PUBLIC :: nlsm1us
 
    ! ------------------------------------ !
 
@@ -285,10 +284,9 @@
    INTERFACE writefile
       SUBROUTINE writefile_x &
       &     ( h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
-      &       lambda,lambdam,descla,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
+      &       lambda,lambdam,idesc,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
       &       xnhh0,xnhhm,vnhh,velh, fion, tps, mat_z, occ_f, rho )
          USE kinds,            ONLY: DP
-         USE descriptors,      ONLY: la_descriptor
          implicit none
          integer, INTENT(IN) :: nfi
          REAL(DP), INTENT(IN) :: h(3,3), hold(3,3)
@@ -296,7 +294,7 @@
          REAL(DP), INTENT(IN) :: tausm(:,:), taus(:,:), fion(:,:)
          REAL(DP), INTENT(IN) :: vels(:,:), velsm(:,:)
          REAL(DP), INTENT(IN) :: acc(:), lambda(:,:,:), lambdam(:,:,:)
-         TYPE(la_descriptor),  INTENT(IN) :: descla( : )
+         INTEGER,  INTENT(IN) :: idesc( :, : )
          REAL(DP), INTENT(IN) :: xnhe0, xnhem, vnhe, ekincm
          REAL(DP), INTENT(IN) :: xnhp0(:), xnhpm(:), vnhp(:)
          integer,      INTENT(in) :: nhpcl, nhpdim
@@ -347,13 +345,12 @@
 
 
    INTERFACE eigs
-      SUBROUTINE cp_eigs_x( nfi, lambdap, lambda, desc )
+      SUBROUTINE cp_eigs_x( nfi, lambdap, lambda, idesc )
          USE kinds,            ONLY: DP
-         USE descriptors,      ONLY: la_descriptor
          IMPLICIT NONE
          INTEGER :: nfi
          REAL(DP) :: lambda( :, :, : ), lambdap( :, :, : )
-         TYPE(la_descriptor), INTENT(IN) :: desc( : )
+         INTEGER, INTENT(IN) :: idesc( :, : )
       END SUBROUTINE
    END INTERFACE
 
@@ -380,11 +377,10 @@
 
    INTERFACE ortho
       SUBROUTINE ortho_x &
-         ( eigr, cp_bgrp, phi_bgrp, x0, descla, diff, iter, ccc, bephi, becp_bgrp )
+         ( eigr, cp_bgrp, phi_bgrp, x0, idesc, diff, iter, ccc, bephi, becp_bgrp )
          USE kinds,          ONLY: DP
-         USE descriptors,    ONLY: la_descriptor
          IMPLICIT NONE
-         TYPE(la_descriptor),  INTENT(IN) :: descla( : )
+         INTEGER,  INTENT(IN) :: idesc( :, : )
          COMPLEX(DP) :: eigr( :, : )
          COMPLEX(DP) :: cp_bgrp( :, : ), phi_bgrp( :, : )
          REAL(DP)    :: x0( :, :, : ), diff, ccc
@@ -397,9 +393,8 @@
    INTERFACE ortho_gamma
       SUBROUTINE ortho_gamma_x &
          ( iopt, cp, ngwx, phi, becp_dist, qbecp, nkbx, bephi, qbephi, &
-           x0, nx0, descla, diff, iter, n, nss, istart )
+           x0, nx0, idesc, diff, iter, n, nss, istart )
          USE kinds,          ONLY: DP
-         USE descriptors,    ONLY: la_descriptor
          IMPLICIT NONE
          INTEGER,  INTENT(IN)  :: iopt
          INTEGER,  INTENT(IN)  :: ngwx, nkbx, nx0
@@ -409,7 +404,7 @@
          REAL(DP)    :: becp_dist(:,:)
          REAL(DP)    :: qbephi( :, : ), qbecp( :, : )
          REAL(DP)    :: x0( nx0, nx0 )
-         TYPE(la_descriptor),  INTENT(IN) :: descla
+         INTEGER,  INTENT(IN) :: idesc( : )
          INTEGER,  INTENT(OUT) :: iter
          REAL(DP), INTENT(OUT) :: diff
       END SUBROUTINE
@@ -729,14 +724,13 @@
    END INTERFACE
 
    INTERFACE set_evtot
-      SUBROUTINE set_evtot_x( c0, ctot, lambda, descla, iupdwn_tot, nupdwn_tot )
+      SUBROUTINE set_evtot_x( c0, ctot, lambda, idesc, iupdwn_tot, nupdwn_tot )
          USE kinds,            ONLY: DP
-         USE descriptors,      ONLY: la_descriptor
          IMPLICIT NONE
          COMPLEX(DP), INTENT(IN)  :: c0(:,:)
          COMPLEX(DP), INTENT(OUT) :: ctot(:,:)
          REAL(DP),    INTENT(IN)  :: lambda(:,:,:)
-         TYPE(la_descriptor), INTENT(IN) :: descla(:)
+         INTEGER, INTENT(IN) :: idesc(:,:)
          INTEGER,     INTENT(IN)  :: iupdwn_tot(2), nupdwn_tot(2)
       END SUBROUTINE
    END INTERFACE
@@ -783,49 +777,34 @@
    END INTERFACE
 
    INTERFACE nlfh
-      SUBROUTINE nlfh_x( stress, bec, dbec, lambda, descla )
+      SUBROUTINE nlfh_x( stress, bec, dbec, lambda, idesc )
          USE kinds, ONLY : DP
-         USE descriptors,       ONLY: la_descriptor
          IMPLICIT NONE
          REAL(DP), INTENT(INOUT) :: stress(3,3) 
          REAL(DP), INTENT(IN)    :: bec( :, : ), dbec( :, :, :, : )
          REAL(DP), INTENT(IN)    :: lambda( :, :, : )
-         TYPE(la_descriptor), INTENT(IN) :: descla(:)
+         INTEGER, INTENT(IN) :: idesc(:,:)
       END SUBROUTINE
    END INTERFACE
 
    INTERFACE nlfl_bgrp
-      SUBROUTINE nlfl_bgrp_x( bec_bgrp, becdr_bgrp, lambda, descla, fion )
+      SUBROUTINE nlfl_bgrp_x( bec_bgrp, becdr_bgrp, lambda, idesc, fion )
          USE kinds,             ONLY: DP
-         USE descriptors,       ONLY: la_descriptor
          IMPLICIT NONE
          REAL(DP) :: bec_bgrp(:,:), becdr_bgrp(:,:,:)
          REAL(DP), INTENT(IN) :: lambda(:,:,:)
-         TYPE(la_descriptor), INTENT(IN) :: descla(:)
+         INTEGER, INTENT(IN) :: idesc(:,:)
          REAL(DP), INTENT(INOUT) :: fion(:,:)
-      END SUBROUTINE
-   END INTERFACE
-
-
-   INTERFACE print_lambda
-      SUBROUTINE print_lambda_x( lambda, descla, n, nshow, ccc, iunit )
-         USE kinds, ONLY : DP
-         USE descriptors,       ONLY: la_descriptor
-         IMPLICIT NONE
-         REAL(DP), INTENT(IN) :: lambda(:,:,:), ccc
-         TYPE(la_descriptor), INTENT(IN) :: descla(:)
-         INTEGER, INTENT(IN) :: n, nshow
-         INTEGER, INTENT(IN), OPTIONAL :: iunit
       END SUBROUTINE
    END INTERFACE
 
    INTERFACE protate
       SUBROUTINE protate_x ( c0, bec, c0rot, becrot, ngwl, nss, noff, lambda, nrl, &
-                           na, nsp, ish, nh, np_rot, me_rot, comm_rot  )
+                           ityp, nat, indv_ijkb0, nh, np_rot, me_rot, comm_rot  )
          USE kinds,            ONLY: DP
          IMPLICIT NONE
          INTEGER, INTENT(IN) :: ngwl, nss, nrl, noff
-         INTEGER, INTENT(IN) :: na(:), nsp, ish(:), nh(:)
+         INTEGER, INTENT(IN) :: ityp(:), nat, indv_ijkb0(:), nh(:)
          INTEGER, INTENT(IN) :: np_rot, me_rot, comm_rot  
          COMPLEX(DP), INTENT(IN) :: c0(:,:)
          COMPLEX(DP), INTENT(OUT) :: c0rot(:,:)
@@ -919,12 +898,13 @@
    END INTERFACE
 
    INTERFACE nlsm1
-      SUBROUTINE nlsm1_x ( n, nspmn, nspmx, eigr, c, becp )
+      SUBROUTINE nlsm1_x ( n, nspmn, nspmx, eigr, c, becp, pptype_ )
          USE kinds,      ONLY : DP
          IMPLICIT NONE
          INTEGER,     INTENT(IN)  :: n, nspmn, nspmx
          COMPLEX(DP), INTENT(IN)  :: eigr( :, : ), c( :, : )
          REAL(DP),    INTENT(OUT) :: becp( :, : )
+         INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
       END SUBROUTINE nlsm1_x 
    END INTERFACE
 
@@ -939,12 +919,13 @@
    END INTERFACE
 
    INTERFACE calbec_bgrp
-      SUBROUTINE calbec_bgrp_x ( nspmn, nspmx, eigr, c_bgrp, bec_bgrp )
+      SUBROUTINE calbec_bgrp_x ( nspmn, nspmx, eigr, c_bgrp, bec_bgrp, pptype_ )
          USE kinds,      ONLY : DP
          IMPLICIT NONE
          INTEGER,     INTENT(IN)  :: nspmn, nspmx
          COMPLEX(DP), INTENT(IN)  :: eigr( :, : ), c_bgrp( :, : )
          REAL(DP),    INTENT(OUT) :: bec_bgrp( :, : )
+         INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
       END SUBROUTINE calbec_bgrp_x 
    END INTERFACE
 
@@ -969,36 +950,35 @@
    END INTERFACE
 
    INTERFACE calbec
-      SUBROUTINE calbec_x( nspmn, nspmx, eigr, c, bec )
+      SUBROUTINE calbec_x( nspmn, nspmx, eigr, c, bec, pptype_ )
          USE kinds,              ONLY: DP
          IMPLICIT NONE
          INTEGER,     INTENT(IN)  ::  nspmn, nspmx
          REAL(DP),    INTENT(OUT) ::  bec( :, : )
          COMPLEX(DP), INTENT(IN)  ::  c( :, : ), eigr( :, : )
+         INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
       END SUBROUTINE calbec_x
    END INTERFACE
 
    INTERFACE caldbec_bgrp
-      SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, descla )
+      SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, idesc )
          USE kinds,              ONLY: DP
-         USE descriptors,        ONLY: la_descriptor
          IMPLICIT NONE
          COMPLEX(DP), INTENT(IN)  ::  c_bgrp( :, : ), eigr( :, : )
          REAL(DP),    INTENT(OUT) ::  dbec( :, :, :, : )
-         TYPE(la_descriptor), INTENT(IN) :: descla( : )
+         INTEGER, INTENT(IN) :: idesc( :, : )
       END SUBROUTINE caldbec_bgrp_x
    END INTERFACE
 
    INTERFACE dennl
-      SUBROUTINE dennl_x( bec_bgrp, dbec, drhovan, denl, descla )
+      SUBROUTINE dennl_x( bec_bgrp, dbec, drhovan, denl, idesc )
          USE kinds,              ONLY: DP
-         USE descriptors,        ONLY: la_descriptor
          IMPLICIT NONE
          REAL(DP),    INTENT(IN)  ::  dbec( :, :, :, : )
          REAL(DP),    INTENT(IN)  ::  bec_bgrp( :, : )
          REAL(DP),    INTENT(OUT) ::  drhovan( :, :, :, :, : )
          REAL(DP),    INTENT(OUT) ::  denl( 3, 3 )
-         TYPE(la_descriptor), INTENT(IN) :: descla( : )
+         INTEGER, INTENT(IN) :: idesc( :, : )
       END SUBROUTINE dennl_x
    END INTERFACE
 
@@ -1014,69 +994,35 @@
    END INTERFACE
 
    INTERFACE collect_bec
-      SUBROUTINE collect_bec_x( bec_repl, bec_dist, desc, nspin )
+      SUBROUTINE collect_bec_x( bec_repl, bec_dist, idesc, nspin )
          USE kinds,       ONLY : DP
-         USE descriptors, ONLY : la_descriptor
          REAL(DP), INTENT(OUT) :: bec_repl(:,:)
          REAL(DP), INTENT(IN)  :: bec_dist(:,:)
-         TYPE(la_descriptor), INTENT(IN)  :: desc(:)
+         INTEGER, INTENT(IN)   :: idesc(:,:)
          INTEGER,  INTENT(IN)  :: nspin
       END SUBROUTINE collect_bec_x
    END INTERFACE
 
-   INTERFACE distribute_lambda
-      SUBROUTINE distribute_lambda_x( lambda_repl, lambda_dist, desc )
-         USE kinds,       ONLY : DP
-         USE descriptors, ONLY : la_descriptor
-         REAL(DP), INTENT(IN)  :: lambda_repl(:,:)
-         REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
-         TYPE(la_descriptor), INTENT(IN)  :: desc
-      END SUBROUTINE distribute_lambda_x
+   INTERFACE beta_eigr
+      SUBROUTINE beta_eigr_x ( beigr, nspmn, nspmx, eigr, pptype_ )
+         USE kinds,      ONLY : DP
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN)  :: nspmn, nspmx
+         COMPLEX(DP), INTENT(IN)  :: eigr( :, : )
+         COMPLEX(DP), INTENT(OUT) :: beigr( :, : )
+         INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
+      END SUBROUTINE beta_eigr_x
    END INTERFACE
 
-   PUBLIC :: collect_lambda
-   INTERFACE collect_lambda
-      SUBROUTINE collect_lambda_x( lambda_repl, lambda_dist, desc )
-         USE kinds,       ONLY : DP
-         USE descriptors, ONLY : la_descriptor
-         REAL(DP), INTENT(OUT) :: lambda_repl(:,:)
-         REAL(DP), INTENT(IN)  :: lambda_dist(:,:)
-         TYPE(la_descriptor), INTENT(IN)  :: desc
-      END SUBROUTINE collect_lambda_x
-   END INTERFACE
-
-   PUBLIC :: setval_lambda
-   INTERFACE setval_lambda
-      SUBROUTINE setval_lambda_x( lambda_dist, i, j, val, desc )
-         USE kinds,       ONLY : DP
-         USE descriptors, ONLY : la_descriptor
-         REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
-         INTEGER,  INTENT(IN)  :: i, j
-         REAL(DP), INTENT(IN)  :: val
-         TYPE(la_descriptor), INTENT(IN)  :: desc
-      END SUBROUTINE setval_lambda_x
-   END INTERFACE
-
-   PUBLIC :: distribute_zmat
-   INTERFACE distribute_zmat
-      SUBROUTINE distribute_zmat_x( zmat_repl, zmat_dist, desc )
-         USE kinds,       ONLY : DP
-         USE descriptors, ONLY : la_descriptor
-         REAL(DP), INTENT(IN)  :: zmat_repl(:,:)
-         REAL(DP), INTENT(OUT) :: zmat_dist(:,:)
-         TYPE(la_descriptor), INTENT(IN)  :: desc
-      END SUBROUTINE distribute_zmat_x
-   END INTERFACE
-
-   PUBLIC :: collect_zmat
-   INTERFACE collect_zmat
-      SUBROUTINE collect_zmat_x( zmat_repl, zmat_dist, desc )
-         USE kinds,       ONLY : DP
-         USE descriptors, ONLY : la_descriptor
-         REAL(DP), INTENT(OUT) :: zmat_repl(:,:)
-         REAL(DP), INTENT(IN)  :: zmat_dist(:,:)
-         TYPE(la_descriptor), INTENT(IN)  :: desc
-      END SUBROUTINE collect_zmat_x
+   INTERFACE nlsm1us
+      SUBROUTINE nlsm1us_x ( n, beigr, c, becp )
+         USE kinds,      ONLY : DP
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN)  :: n
+         COMPLEX(DP), INTENT(IN)  :: beigr( :, : )
+         COMPLEX(DP), INTENT(IN)  :: c( :, : )
+         REAL(DP),    INTENT(OUT) :: becp( :, : )
+      END SUBROUTINE nlsm1us_x
    END INTERFACE
 
 

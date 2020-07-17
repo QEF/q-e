@@ -157,5 +157,22 @@ $PH_COMMAND < pt.phX.in > pt.phX.out
 check_failure $?
 $ECHO " done"
 
+cat > pt.ph.in << EOF
+phonon dispersions of Pt
+ &inputph
+  amass(1)=195.078,
+  prefix='platinum',
+  outdir='$TMP_DIR'
+  fildyn='ptdyn',
+  tr2_ph=1.0d-16, 
+  ldisp=.true., nq1=4,nq2=4,nq3=4
+ /
+EOF
+$ECHO "  running the phonon dispersions calculation for Pt with spin-orbit coupling...\c"
+$PH_COMMAND < pt.ph.in > pt.ph.out
+check_failure $?
+$ECHO " done"
+
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"
+

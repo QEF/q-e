@@ -81,6 +81,9 @@ SUBROUTINE hp_find_inequiv_sites()
      !
      IF (perturb_only_atom(na)) THEN
         !
+        IF (.NOT.is_hubbard(nt)) CALL errore('hp_find_inequiv_sites', &
+             & 'You are trying to perturb a non-Hubbard atom. Stopping...',1)
+        !
         todo_atom(:)  = .false.
         todo_atom(na) = .true. 
         !

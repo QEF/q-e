@@ -31,7 +31,7 @@ subroutine hp_dvpsi_pert (ik)
   USE klist,                ONLY : ngk
   USE buffers,              ONLY : save_buffer, get_buffer
   USE wvfct,                ONLY : npwx, nbnd
-  USE mp_global,            ONLY : intra_pool_comm
+  USE mp_pools,             ONLY : intra_pool_comm
   USE mp,                   ONLY : mp_sum
   USE eqv,                  ONLY : dvpsi
   USE qpoint,               ONLY : nksq, ikks, ikqs
@@ -50,7 +50,6 @@ subroutine hp_dvpsi_pert (ik)
   INTEGER :: npw, npwq
   ! number of plane waves at k and k+q
   COMPLEX (DP), ALLOCATABLE :: proj(:,:) 
-  COMPLEX(DP), EXTERNAL :: ZDOTC
   !
   CALL start_clock ('hp_dvpsi_pert')
   !
@@ -98,7 +97,8 @@ subroutine hp_dvpsi_pert (ik)
         DO m = 1, 2 * Hubbard_l(nt) + 1
            ihubst = offsetU(na) + m   ! I m index
            DO ibnd = 1, nbnd
-              proj(ibnd, ihubst) = ZDOTC(npw, swfcatomk(:,ihubst ), 1, evc(:,ibnd), 1)
+              ! FIXME: use ZGEMM instead of dot_product
+              proj(ibnd, ihubst) = DOT_PRODUCT( swfcatomk(1:npw,ihubst ), evc(1:npw,ibnd) )
            ENDDO
         ENDDO
      ENDIF

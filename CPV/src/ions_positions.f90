@@ -89,42 +89,34 @@ MODULE ions_positions
   END SUBROUTINE deallocate_ions_positions
 
   !--------------------------------------------------------------------------
-  SUBROUTINE ions_hmove( taus, tausm, iforce, pmass, fion, ainv, delt, na, nsp )
+  SUBROUTINE ions_hmove( taus, tausm, iforce, pmass, fion, ainv, delt, ityp, nat )
     !--------------------------------------------------------------------------
     !
     REAL(DP), INTENT(IN)  :: tausm(:,:), pmass(:), fion(:,:)
     INTEGER,  INTENT(IN)  :: iforce(:,:)
     REAL(DP), INTENT(IN)  :: ainv(3,3), delt
     REAL(DP), INTENT(OUT) :: taus(:,:) 
-    INTEGER,  INTENT(IN)  :: na(:), nsp
-    INTEGER               :: is, ia, i, isa
+    INTEGER,  INTENT(IN)  :: ityp(:), nat
+    INTEGER               :: ia, i
     REAL(DP)              :: dt2by2, fac, fions(3)
     !
     !
     dt2by2 = 0.5D0 * delt * delt
     !
-    isa = 0
-    !
-    DO is = 1, nsp
+    DO ia = 1, nat
        !
-       fac = dt2by2  / pmass(is)
+       fac = dt2by2  / pmass(ityp(ia))
        !
-       DO ia = 1, na(is)
+       DO i = 1, 3
           !
-          isa = isa + 1
-          !
-          DO i = 1, 3
-             !
-             fions(i) = fion(1,isa) * ainv(i,1) + &
-                        fion(2,isa) * ainv(i,2) + &
-                        fion(3,isa) * ainv(i,3)
-             !
-          END DO
-          !
-          taus(:,isa) = tausm(:,isa) + iforce(:,isa) * fac * fions(:)
+          fions(i) = fion(1,ia) * ainv(i,1) + &
+                     fion(2,ia) * ainv(i,2) + &
+                     fion(3,ia) * ainv(i,3)
           !
        END DO
-       
+       !
+       taus(:,ia) = tausm(:,ia) + iforce(:,ia) * fac * fions(:)
+       !
     END DO
     !
     RETURN
@@ -133,7 +125,7 @@ MODULE ions_positions
   !
   !--------------------------------------------------------------------------
   SUBROUTINE ions_move( tausp, taus, tausm, iforce, pmass, fion, ainv, &
-                        delt, na, nsp, fricp, hgamma, vels, tsdp, tnosep, &
+                        delt, ityp, nat, fricp, hgamma, vels, tsdp, tnosep, &
                         fionm, vnhp, velsp, velsm, nhpcl, nhpdim, atm2nhp )
     !--------------------------------------------------------------------------
     !
@@ -143,14 +135,14 @@ MODULE ions_positions
     INTEGER,  INTENT(IN)    :: iforce(:,:)
     REAL(DP), INTENT(IN)    :: ainv(3,3), delt
     REAL(DP), INTENT(OUT)   :: tausp(:,:)
-    INTEGER,  INTENT(IN)    :: na(:), nsp, nhpcl, nhpdim, atm2nhp(:)
+    INTEGER,  INTENT(IN)    :: ityp(:), nat, nhpcl, nhpdim, atm2nhp(:)
     REAL(DP), INTENT(IN)    :: fricp, hgamma(3,3), vels(:,:)
     LOGICAL,  INTENT(IN)    :: tsdp, tnosep
     REAL(DP), INTENT(INOUT) :: fionm(:,:)
     REAL(DP), INTENT(IN)    :: vnhp(nhpcl,nhpdim)
     REAL(DP), INTENT(OUT)   :: velsp(:,:)
     REAL(DP), INTENT(IN)    :: velsm(:,:)
-    INTEGER                 :: is, ia, i, isa
+    INTEGER                 :: is, ia, i
     REAL(DP)                :: dt2by2, fac, dt2, twodel
     REAL(DP)                :: verl1, verl2, verl3
     REAL(DP)                :: ftmp(3)
@@ -166,26 +158,19 @@ MODULE ions_positions
     !
     IF ( tsdp ) THEN
        !
-       isa = 0
-       !
-       DO is = 1, nsp
+       DO ia = 1, nat
+          is = ityp(ia)
           !
-          DO ia = 1, na(is)
+          DO i = 1, 3
              !
-             isa = isa + 1
-             !
-             DO i = 1, 3
-                !
-                tausp(i,isa) = taus(i,isa) - pmass(is) * &
-                                             ( hgamma(i,1) * vels(1,isa) + &
-                                               hgamma(i,2) * vels(2,isa) + &
-                                               hgamma(i,3) * vels(3,isa) ) + &
-                               iforce(i,isa) * dt2 / pmass(is) * &
-                                             ( fion(1,isa) * ainv(i,1) + &
-                                               fion(2,isa) * ainv(i,2) + &
-                                               fion(3,isa) * ainv(i,3) )
-                !
-             END DO
+             tausp(i,ia) = taus(i,ia) - pmass(is) * &
+                                          ( hgamma(i,1) * vels(1,ia) + &
+                                            hgamma(i,2) * vels(2,ia) + &
+                                            hgamma(i,3) * vels(3,ia) ) + &
+                            iforce(i,ia) * dt2 / pmass(is) * &
+                                          ( fion(1,ia) * ainv(i,1) + &
+                                            fion(2,ia) * ainv(i,2) + &
+                                            fion(3,ia) * ainv(i,3) )
              !
           END DO
           !
@@ -193,68 +178,54 @@ MODULE ions_positions
        !
     ELSE IF ( tnosep ) THEN
        !
-       isa = 0
-       !
-       DO is = 1, nsp
+       DO ia = 1, nat
+          is = ityp(ia)
           !
-          DO ia = 1, na(is)
+          DO i = 1, 3
              !
-             isa = isa + 1
-             !
-             DO i = 1, 3
-                !
-                fionm(i,isa) = ainv(i,1) * fion(1,isa) + &
-                               ainv(i,2) * fion(2,isa) + &
-                               ainv(i,3) * fion(3,isa) - &
-                               vnhp(1,atm2nhp(isa)) * vels(i,isa) * pmass(is) - &
-                               pmass(is) * ( hgamma(i,1) * vels(1,isa) + &
-                                             hgamma(i,2) * vels(2,isa) + &
-                                             hgamma(i,3) * vels(3,isa) )
-                !
-             END DO
-             !
-             tausp(:,isa) = 2.D0 * taus(:,isa) - tausm(:,isa) + &
-                            dt2 * iforce(:,isa) * fionm(:,isa) / pmass(is)
-             !
-             velsp(:,isa) = velsm(:,isa) + twodel * fionm(:,isa) / pmass(is)
+             fionm(i,ia) = ainv(i,1) * fion(1,ia) + &
+                            ainv(i,2) * fion(2,ia) + &
+                            ainv(i,3) * fion(3,ia) - &
+                            vnhp(1,atm2nhp(ia)) * vels(i,ia) * pmass(is) - &
+                            pmass(is) * ( hgamma(i,1) * vels(1,ia) + &
+                                          hgamma(i,2) * vels(2,ia) + &
+                                          hgamma(i,3) * vels(3,ia) )
              !
           END DO
+          !
+          tausp(:,ia) = 2.D0 * taus(:,ia) - tausm(:,ia) + &
+                         dt2 * iforce(:,ia) * fionm(:,ia) / pmass(is)
+          !
+          velsp(:,ia) = velsm(:,ia) + twodel * fionm(:,ia) / pmass(is)
           !
        END DO
        !
     ELSE
        !
-       isa = 0
-       !
-       DO is = 1, nsp
+       DO ia = 1, nat
+          is = ityp(ia)
           !
-          DO ia = 1, na(is)
+          DO i = 1, 3
              !
-             isa = isa + 1
+             tausp(i,ia) = verl1 * taus(i,ia) + verl2 * tausm(i,ia) + &
+                            verl3 / pmass(is) * iforce(i,ia) * &
+                                            ( ainv(i,1) * fion(1,ia) + &
+                                              ainv(i,2) * fion(2,ia) + &
+                                              ainv(i,3) * fion(3,ia) ) - &
+                            verl3 * iforce(i,ia) * &
+                                            ( hgamma(i,1) * vels(1,ia) + &
+                                              hgamma(i,2) * vels(2,ia) + &
+                                              hgamma(i,3) * vels(3,ia) )
              !
-             DO i = 1, 3
-                !
-                tausp(i,isa) = verl1 * taus(i,isa) + verl2 * tausm(i,isa) + &
-                               verl3 / pmass(is) * iforce(i,isa) * &
-                                               ( ainv(i,1) * fion(1,isa) + &
-                                                 ainv(i,2) * fion(2,isa) + &
-                                                 ainv(i,3) * fion(3,isa) ) - &
-                               verl3 * iforce(i,isa) * &
-                                               ( hgamma(i,1) * vels(1,isa) + &
-                                                 hgamma(i,2) * vels(2,isa) + &
-                                                 hgamma(i,3) * vels(3,isa) )
-                !
-                velsp(i,isa) = velsm(i,isa) - 4.D0 * fricp * vels(i,isa) + &
-                               twodel / pmass(is) * iforce(i,isa) * &
-                                               ( ainv(i,1) * fion(1,isa) + &
-                                                 ainv(i,2) * fion(2,isa) + &
-                                                 ainv(i,3) * fion(3,isa) ) - &
-                               twodel * iforce(i,isa) * &
-                                               ( hgamma(i,1) * vels(1,isa) + &
-                                                 hgamma(i,2) * vels(2,isa) + &
-                                                 hgamma(i,3) * vels(3,isa) )
-                !
-             END DO
+             velsp(i,ia) = velsm(i,ia) - 4.D0 * fricp * vels(i,ia) + &
+                            twodel / pmass(is) * iforce(i,ia) * &
+                                            ( ainv(i,1) * fion(1,ia) + &
+                                              ainv(i,2) * fion(2,ia) + &
+                                              ainv(i,3) * fion(3,ia) ) - &
+                            twodel * iforce(i,ia) * &
+                                            ( hgamma(i,1) * vels(1,ia) + &
+                                              hgamma(i,2) * vels(2,ia) + &
+                                              hgamma(i,3) * vels(3,ia) )
              !
           END DO
           !

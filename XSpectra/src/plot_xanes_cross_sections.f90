@@ -17,7 +17,7 @@ SUBROUTINE plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e1s_ry,ispectra)
                         wk        ! k-points weight
   !USE ener,       ONLY: ef
   USE io_global,  ONLY: stdout, ionode  
-  USE mp_global,  ONLY: inter_pool_comm !CG
+  USE mp_pools,   ONLY: inter_pool_comm !CG
   USE lsda_mod,   ONLY: nspin,isk
   USE mp,         ONLY: mp_sum
   USE uspp_param, ONLY: upf
@@ -505,7 +505,7 @@ SUBROUTINE plot_xanes_quadrupole(a,b,xnorm,ncalcv,terminator,e1s_ry)
                         wk       ! k-points weight
   !USE ener,       ONLY: ef
   USE io_global,  ONLY: stdout,ionode  
-  USE mp_global,  ONLY: inter_pool_comm
+  USE mp_pools,   ONLY: inter_pool_comm
   USE lsda_mod,   ONLY: nspin,isk
   USE mp,         ONLY: mp_sum
   USE uspp_param, ONLY: upf

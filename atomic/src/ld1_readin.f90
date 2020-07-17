@@ -14,7 +14,7 @@ subroutine ld1_readin(input_file)
   use kinds,      ONLY : dp
   use radial_grids, only: ndmx, nullify_radial_grid
   use ld1_parameters, only: ncmax1, nwfx, nwfsx
-  use parameters,     only: lmaxx
+  use upf_params, only: lmaxx
   use constants,  ONLY : rytoev, c_au
   USE io_global,  ONLY : ionode, ionode_id, qestdin, stdout
   USE mp,         ONLY : mp_bcast
@@ -381,8 +381,8 @@ subroutine ld1_readin(input_file)
      lnc2paw = .false.
      rmatch_augfun=-1.0_dp   ! force a crash
      rmatch_augfun_nc =.false.
-     lgipaw_reconstruction = .true.
-     use_paw_as_gipaw = .true. 
+     lgipaw_reconstruction = .false.
+     use_paw_as_gipaw = .false. 
 
      if (ionode) read(qestdin,inputp,err=500,iostat=ios)
 500  call mp_bcast(ios, ionode_id, world_comm)
@@ -500,7 +500,7 @@ subroutine ld1_readin(input_file)
   if (iswitch == 3 .and. ios /= 0 ) then
      !
      ! use for testing the same configuration as for PP generation
-     ! (unless a different one is explicitely specified in namelist &test)
+     ! (unless a different one is explicitly specified in namelist &test)
      !
      ns1 = 0
      do ns=1,nwfs

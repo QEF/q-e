@@ -12,15 +12,15 @@
   epbread     = .false.
 
   etf_mem     = 2
+  vme         = .false.
 
   restart      = .true.
-  restart_freq = 50      ! We test the restart feature
+  restart_step = 50      ! We test the restart feature
 
   epwwrite    = .false.
   epwread     = .true.
 
   nbndsub     =  4
-  nbndskip    =  0
 
   wannierize  = .false.
   num_iter    = 300
@@ -34,9 +34,8 @@
   phonselfen  = .false.
   a2f         = .false.
 
-
   fsthick     = 1.5 ! eV 
-  eptemp      = 300 ! K (same as PRB 76, 165108)
+  temps       = 300 ! K (same as PRB 76, 165108)
   degaussw    = 0.3 ! eV
 
   dvscf_dir   = './save/'
@@ -57,9 +56,3 @@
   nq2         = 3
   nq3         = 3
  /
-      4 cartesian
-  0.000000000000   0.000000000000   0.000000000000 
- -0.333333333333   0.333333333333  -0.333333333333 
-  0.000000000000   0.666666666667   0.000000000000 
-  0.666666666667   0.000000000000   0.666666666667 
-

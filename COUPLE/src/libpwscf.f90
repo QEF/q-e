@@ -49,15 +49,21 @@ SUBROUTINE f2libpwscf(lib_comm,nim,npt,npl,nta,nbn,ndg,retval,infile)
   !
   USE environment,       ONLY : environment_start
   USE mp_global,         ONLY : mp_startup
+  USE mp_bands,          ONLY : intra_bgrp_comm, inter_bgrp_comm
+  USE mp_pools,          ONLY  : intra_pool_comm 
   USE read_input,        ONLY : read_input_file
   USE command_line_options, ONLY: set_command_line
   USE parallel_include
   !
   IMPLICIT NONE
+  !
+  include 'laxlib.fh'
+  !
   INTEGER, INTENT(IN)    :: lib_comm, nim, npt, npl, nta, nbn, ndg
   INTEGER, INTENT(INOUT) :: retval
   CHARACTER(LEN=80)      :: infile
   !
+  INTEGER                :: ndiag_ 
 #if defined(DEBUG_QECOUPLE)
   INTEGER :: me, num, ierr
   CALL MPI_COMM_SIZE(lib_comm,num,ierr)
@@ -82,7 +88,10 @@ SUBROUTINE f2libpwscf(lib_comm,nim,npt,npl,nta,nbn,ndg,retval,infile)
   !
   CALL set_command_line( nimage=nim, npool=npl, ntg=nta, &
       nband=nbn, ndiag=ndg )
-  CALL mp_startup ( my_world_comm=lib_comm )
+  CALL mp_startup ( my_world_comm=lib_comm , start_images = .true. )
+  ndiag_ = ndg 
+  CALL laxlib_start( ndiag_ , lib_comm, intra_pool_comm, do_distr_diag_inside_bgrp_ = .false.) 
+  CALL set_mpi_comm_4_solvers ( intra_pool_comm, intra_bgrp_comm, inter_bgrp_comm)  
   CALL environment_start ( 'PWSCF' )
   !
   CALL read_input_file ('PW', infile )
@@ -91,6 +100,7 @@ SUBROUTINE f2libpwscf(lib_comm,nim,npt,npl,nta,nbn,ndg,retval,infile)
   !
   CALL run_pwscf  ( retval )
   !
+  CALL laxlib_end()
   CALL stop_run( retval )
   !
 END SUBROUTINE f2libpwscf

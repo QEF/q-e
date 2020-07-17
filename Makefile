@@ -29,14 +29,13 @@ default :
 	@echo '  tddfpt       time dependent dft code'
 	@echo '  gwl          GW with Lanczos chains'
 	@echo '  ld1          utilities for pseudopotential generation'
-	@echo '  upf          utilities for pseudopotential conversion'
 	@echo '  xspectra     X-ray core-hole spectroscopy calculations'
 	@echo '  couple       Library interface for coupling to external codes'
 	@echo '  epw          Electron-Phonon Coupling with wannier functions'
 	@echo '  gui          Graphical User Interface'
 	@echo '  examples     fetch from web examples for all core packages'
 	@echo '  test-suite   run semi-automated test-suite for regression testing'
-	@echo '  all          same as "make pwall cp ld1 upf tddfpt hp"'
+	@echo '  all          same as "make pwall cp ld1 tddfpt hp"'
 	@echo ' '
 	@echo 'where target identifies one or multiple THIRD-PARTIES PACKAGES:'
 	@echo '  gipaw        NMR and EPR spectra'
@@ -80,19 +79,19 @@ cp : bindir libs mods
 
 ph : phlibs
 	if test -d PHonon; then \
-	( cd PHonon; $(MAKE) all || exit 1) ; fi
+	( cd PHonon; $(MAKE) TLDEPS= all || exit 1) ; fi
 
 hp : hplibs
 	if test -d HP; then \
-	( cd HP; $(MAKE) all || exit 1) ; fi
+	( cd HP; $(MAKE) TLDEPS= all || exit 1) ; fi
 
 neb : pwlibs
 	if test -d NEB; then \
-	( cd NEB; $(MAKE) all || exit 1) ; fi
+	( cd NEB; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-tddfpt : phlibs
+tddfpt : lrmods
 	if test -d TDDFPT; then \
-	( cd TDDFPT; $(MAKE) all || exit 1) ; fi
+	( cd TDDFPT; $(MAKE) TLDEPS= all || exit 1) ; fi
 
 pp : pwlibs
 	if test -d PP ; then \
@@ -124,14 +123,6 @@ ld1 : bindir libs mods
 	if test -d atomic ; then \
 	( cd atomic ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-upf : libs mods
-	if test -d upftools ; then \
-	( cd upftools ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
-
-pw_export : pwlibs
-	if test -d PP ; then \
-	( cd PP ; $(MAKE) TLDEPS= pw_export.x || exit 1 ) ; fi
-
 xspectra : pwlibs
 	if test -d XSpectra ; then \
 	( cd XSpectra ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
@@ -150,15 +141,28 @@ travis : pwall epw
 	( cd test-suite ; make run-travis || exit 1 ) ; fi
 
 gui :
-	@echo 'Check "GUI/README" how to access the Graphical User Interface'
-#@echo 'Check "PWgui-X.Y/README" how to access the Graphical User Interface'
+	@if test -d GUI/PWgui ; then \
+	    cd GUI/PWgui ; \
+	    $(MAKE) TLDEPS= init; \
+	    echo ; \
+	    echo "  PWgui has been built in ./GUI/PWgui/. You may try it either as:  "; \
+	    echo "         ./GUI/PWgui/pwgui" ; \
+	    echo "     or"; \
+	    echo "         cd ./GUI/PWgui";\
+	    echo "         ./pwgui" ; \
+	    echo ; \
+	else \
+	    echo ; \
+	    echo "  Sorry, gui works only for git sources !!!" ; \
+	    echo ; \
+	fi
 
 examples :
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 pwall : pw neb ph pp pwcond acfdt
 
-all   : pwall cp ld1 upf tddfpt hp xspectra gwl 
+all   : pwall cp ld1 tddfpt hp xspectra gwl 
 
 ###########################################################
 # Auxiliary targets used by main targets:
@@ -185,7 +189,7 @@ pw4gwwlib : phlibs
 	if test -d GWW ; then \
 	( cd GWW ; $(MAKE) pw4gwwa || exit 1 ) ; fi
 
-mods : libiotk libfox libutil libla libfft
+mods : libiotk libfox libutil libla libfft libupf libbeef
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 libks_solvers : libs libutil libla
@@ -199,6 +203,9 @@ libfft :
 
 libutil : 
 	( cd UtilXlib ; $(MAKE) TLDEPS= all || exit 1 )
+
+libupf : libiotk libfox libutil
+	( cd upflib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libs :
 	( cd clib ; $(MAKE) TLDEPS= all || exit 1 )
@@ -229,6 +236,9 @@ libfox:
 
 libcuda: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
+
+libbeef:
+	cd install ; $(MAKE) -f extlibs_makefile $@
 # In case of trouble with iotk and compilers, add
 # FFLAGS="$(FFLAGS_NOOPT)" after $(MFLAGS)
 
@@ -257,7 +267,7 @@ plumed:
 west: pw
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-SternheimerGW: pw lrmods 
+SternheimerGW: lrmods 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #########################################################
@@ -295,7 +305,7 @@ install :
 #########################################################
 # Run test-suite for numerical regression testing
 # NB: it is assumed that reference outputs have been 
-#     already computed once (usualy during release)
+#     already computed once (usually during release)
 #########################################################
 
 test-suite: pw cp 
@@ -309,10 +319,10 @@ test-suite: pw cp
 clean : 
 	touch make.inc 
 	for dir in \
-		CPV LAXlib FFTXlib UtilXlib Modules PP PW EPW KS_Solvers \
+		CPV LAXlib FFTXlib UtilXlib upflib Modules PP PW EPW KS_Solvers \
 		NEB ACFDT COUPLE GWW XSpectra PWCOND dft-d3 \
-		atomic clib LR_Modules pwtools upftools \
-		dev-tools extlibs Environ TDDFPT PHonon HP GWW \
+		atomic clib LR_Modules pwtools upflib \
+		dev-tools extlibs Environ TDDFPT PHonon HP GWW Doc GUI \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
@@ -328,8 +338,7 @@ veryclean : clean
 	- @(cd install ; $(MAKE) -f plugins_makefile veryclean)
 	- @(cd install ; $(MAKE) -f extlibs_makefile veryclean)
 	- rm -rf install/patch-plumed
-	- cd install ; rm -f config.log configure.msg config.status \
-		CPV/version.h ChangeLog* intel.pcl */intel.pcl
+	- cd install ; rm -f config.log configure.msg config.status
 	- rm -rf include/configure.h install/make_wannier90.inc
 	- cd install ; rm -fr autom4te.cache
 	- cd install; ./clean.sh ; cd -
@@ -356,11 +365,11 @@ tar :
 tar-gui :
 	@if test -d GUI/PWgui ; then \
 	    cd GUI/PWgui ; \
-	    $(MAKE) TLDEPS= clean svninit pwgui-source; \
+	    $(MAKE) TLDEPS= clean init pwgui-source; \
 	    mv PWgui-*.tgz ../.. ; \
 	else \
 	    echo ; \
-	    echo "  Sorry, tar-gui works only for svn sources !!!" ; \
+	    echo "  Sorry, tar-gui works only for git sources !!!" ; \
 	    echo ; \
 	fi
 
@@ -371,7 +380,7 @@ tar-qe-modes :
 	    mv QE-modes-*.tar.gz ../.. ; \
 	else \
 	    echo ; \
-	    echo "  Sorry, tar-qe-modes works only for svn sources !!!" ; \
+	    echo "  Sorry, tar-qe-modes works only for git sources !!!" ; \
 	    echo ; \
 	fi
 
@@ -382,10 +391,10 @@ tar-qe-modes :
 # "latex2html" and "convert" (from Image-Magick) are needed.
 doc : 
 	if test -d Doc ; then \
-	( cd Doc ; $(MAKE) TLDEPS= all ) ; fi
+	( cd Doc ; $(MAKE) VERSION=6.6 TLDEPS= all ) ; fi
 	for dir in */Doc; do \
 	( if test -f $$dir/Makefile ; then \
-	( cd $$dir; $(MAKE) TLDEPS= all ) ; fi ) ;  done
+	( cd $$dir; $(MAKE) VERSION=6.6 TLDEPS= all ) ; fi ) ;  done
 
 doc_clean :
 	if test -d Doc ; then \

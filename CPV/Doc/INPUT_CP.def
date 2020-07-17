@@ -295,7 +295,8 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	var memory -type CHARACTER { 
 	    default { 'default' }
 	    info {
-               'small': memory-saving tricks are implemented. Currently:
+               'small': NO LONGER IMPLEMENTED SINCE v.6.3
+                        memory-saving tricks are implemented. Currently:
                         - the G-vectors are sorted only locally, not globally
                         - they are not collected and written to file
                         For large systems, the memory and time gain is sizable
@@ -425,10 +426,12 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
               -13          Monoclinic base-centered        celldm(2)=b/a
                            (unique axis b)                 celldm(3)=c/a,
                                                            celldm(5)=cos(beta)
-                    v1 = (  a/2,      -b/2,             0),
-                    v2 = (  a/2,       b/2,             0),
+                    v1 = (  a/2,       b/2,             0),
+                    v2 = ( -a/2,       b/2,             0),
                     v3 = (c*cos(beta),   0,   c*sin(beta)),
                     where beta=angle between axis a and c projected on xz plane
+               IMPORTANT NOTICE: until QE v.6.4.1, axis for ibrav=-13 had a 
+               different definition: v1(old) = v2(now), v2(old) = -v1(now)
 
                14          Triclinic                       celldm(2)= b/a,
                                                            celldm(3)= c/a,

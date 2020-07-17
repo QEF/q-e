@@ -82,7 +82,7 @@ example03:
 example04:
     This example shows how to use bands.x to check the band symmetry
     of fcc-Pt with a fully relativistic pseudo-potential including 
-    spin-orbit coupling.
+    spin-orbit coupling, and to compute the projected DOS.
 
 example05:
     This example shows how to use pmw.x to generate better projectors for
@@ -92,7 +92,8 @@ example06:
     This example calculates the band structure of ferromagnetic bcc-Fe
     in the noncollinear spin-orbit case.
 
-Additional feature-specific examples:
+projected_bands_example:
+    This example shows how to produce projected ("fat") band plots
 
 dipole_example:
     This example will calculate the water dipole and calculate the work
@@ -137,4 +138,9 @@ fermisurf_example:
 BGW_example:
     This example generates output files for BerkeleyGW using the pw2bgw.x
     utility
-   
+
+ACF_example:
+    This example tests the ppacf.x utility
+    Y. Jiao, E. Schr\"oder, and P. Hyldgaard, Phys. Rev. B 97, 085115 (2018);
+    Y. Jiao, E. Schr\"oder, P. Hyldgaard, J. Chem. Phys. 148, 194115 (2018).
+

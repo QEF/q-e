@@ -15,11 +15,12 @@
 !
       USE kinds,             ONLY: DP
       use electrons_base,    ONLY: nudx, nspin, nupdwn, iupdwn, nx => nbspx
-      USE cp_main_variables, ONLY: descla
-      USE descriptors,       ONLY: la_descriptor , ldim_cyclic
+      USE cp_main_variables, ONLY: idesc
       USE mp,                ONLY: mp_sum, mp_bcast
 
       implicit none
+
+      include 'laxlib.fh'
 
       integer, intent(in)  :: nrlx
       real(DP) :: zmat( nrlx, nudx, nspin ), fmat( nrlx, nudx, nspin )
@@ -41,14 +42,14 @@
 
          nss      = nupdwn( iss )
          istart   = iupdwn( iss )
-         np_rot   = descla( iss )%npr * descla( iss )%npc
-         me_rot   = descla( iss )%mype
-         nrl      = descla( iss )%nrl
-         comm_rot = descla( iss )%comm
+         np_rot   = idesc( LAX_DESC_NPR, iss ) * idesc( LAX_DESC_NPC, iss )
+         me_rot   = idesc( LAX_DESC_MYPE, iss )
+         nrl      = idesc( LAX_DESC_NRL, iss )
+         comm_rot = idesc( LAX_DESC_COMM, iss )
 
-         IF( descla( iss )%active_node > 0 ) THEN
+         IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
 
-            ALLOCATE( mtmp( MAXVAL(descla(:)%nrlx), nudx ) )
+            ALLOCATE( mtmp( MAXVAL(idesc(LAX_DESC_NRLX, :)), nudx ) )
 
             DO ip = 1, np_rot
 
@@ -88,18 +89,18 @@
 !-----------------------------------------------------------------------
       use kinds, only: dp
       use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbspx, n => nbsp
-      use uspp_param, only: nh, ish, nvb
-      use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq_nt
+      use uspp_param, only: nh, upf
+      use uspp, only :nkb, nkbus, qq_nt, indv_ijkb0
       use gvecw, only: ngw
-      use ions_base, only: nsp, na
-      USE cp_main_variables, ONLY: descla
-      USE descriptors,       ONLY: la_descriptor
+      use ions_base, only: nat, ityp
+      USE cp_main_variables, ONLY: idesc
       USE cp_interfaces,     ONLY: protate
 
       implicit none
+      include 'laxlib.fh'
       integer, intent(in) :: nrlx
       real(kind=DP)    z0( nrlx, nudx, nspin )
-      real(kind=DP)    bec( nhsa, n ), becdiag( nhsa, n )
+      real(kind=DP)    bec( nkb, n ), becdiag( nkb, n )
       complex(kind=DP) c0( ngw, nx ), c0diag( ngw, nx )
       integer :: np_rot, me_rot, nrl, comm_rot
       integer iss, nss, istart
@@ -109,51 +110,18 @@
       DO iss = 1, nspin
          istart   = iupdwn( iss )
          nss      = nupdwn( iss )
-         np_rot   = descla( iss )%npr * descla( iss )%npc
-         me_rot   = descla( iss )%mype
-         nrl      = descla( iss )%nrl
-         comm_rot = descla( iss )%comm
+         np_rot   = idesc( LAX_DESC_NPR, iss ) * idesc( LAX_DESC_NPC, iss )
+         me_rot   = idesc( LAX_DESC_MYPE, iss )
+         nrl      = idesc( LAX_DESC_NRL, iss )
+         comm_rot = idesc( LAX_DESC_COMM, iss )
          CALL protate ( c0, bec, c0diag, becdiag, ngw, nss, istart, z0(:,:,iss), nrl, &
-                        na, nsp, ish, nh, np_rot, me_rot, comm_rot )
+                        ityp, nat, indv_ijkb0, nh, np_rot, me_rot, comm_rot )
       END DO
 
       CALL stop_clock( 'rotate' )
       return
       end subroutine rotate
 
-
-!-----------------------------------------------------------------------
-      subroutine ddiag(nx,n,amat,dval,dvec,iflag)
-!-----------------------------------------------------------------------
-!
-      use dspev_module, only: dspev_drv
-      use kinds , only : dp
-
-      implicit none
-
-      integer nx,n,ndim,iflag,k,i,j
-      real(dp)   dval(n)
-      real(dp) amat(nx,n), dvec(nx,n)
-      real(dp), allocatable::  ap(:)
-
-      ndim=(n*(n+1))/2
-      allocate(ap(ndim))
-      ap(:)=0.d0
-
-      k=0
-      do j=1,n
-       do i=1,j
-        k=k+1
-        ap(k)=amat(i,j)
-       end do
-      end do
-
-      CALL dspev_drv( 'V', 'U', n, ap, dval, dvec, nx )
-
-      deallocate(ap)
-
-      return
-    end subroutine ddiag
 
     subroutine minparabola(ene0,dene0,ene1,passop,passo,stima)
 !this subroutines finds the minimum of a quadratic real function
@@ -195,7 +163,7 @@ subroutine pc2(a,beca,b,becb)
 !    b output:b_i =b_i-a_j><a_j|S|b_i>
     
       use kinds, only: dp 
-      use ions_base, only: na, nsp
+      use ions_base, only: na, nsp, nat, ityp
       use io_global, only: stdout
       use mp_global, only: intra_bgrp_comm
       use gvecw, only: ngw
@@ -203,17 +171,16 @@ subroutine pc2(a,beca,b,becb)
       use gvect, only: gstart
       use mp, only: mp_sum
       use electrons_base, only: n => nbsp, ispin,  nupdwn, iupdwn, nspin
-      use uspp_param, only: nh, nvb, ish
-      use uspp, only :nhsa=>nkb
+      use uspp_param, only: nh, upf
+      use uspp, only :nkb, nkbus, indv_ijkb0
       use uspp, only :qq_nt
-      use parallel_toolkit, only : rep_matmul_drv
       
                            
       implicit none        
                            
       complex(kind=DP) a(ngw,n), b(ngw,n)
                      
-      real(kind=DP)    beca(nhsa,n),becb(nhsa,n)
+      real(kind=DP)    beca(nkb,n),becb(nkb,n)
 ! local variables
       integer is, iv, jv, ia, inl, jnl, i, j,ig
       real(kind=DP) sca
@@ -246,34 +213,35 @@ subroutine pc2(a,beca,b,becb)
          enddo
          deallocate(zbectmp)
          call mp_sum( bectmp(:,:), intra_bgrp_comm)
-         if(nvb >= 0) then
+         if(nkbus >= 0) then
 
             nl_max=0
-            do is=1,nvb
+            do is=1,nsp
                nl_max=nl_max+nh(is)*na(is)
             enddo
             allocate (qq_tmp(nl_max,nl_max))
             allocate (qqb_tmp(nl_max,nss))
             qq_tmp(:,:)=0.d0
-            do is=1,nvb
-               do iv=1,nh(is)
-                  do jv=1,nh(is)
-                     do ia=1,na(is)
-                        inl=ish(is)+(iv-1)*na(is)+ia
-                        jnl=ish(is)+(jv-1)*na(is)+ia
+            do ia=1,nat
+               is = ityp(ia) 
+               IF( upf(is)%tvanp ) THEN
+                  do iv=1,nh(is)
+                     do jv=1,nh(is)
+                        inl = indv_ijkb0(ia) + iv
+                        jnl = indv_ijkb0(ia) + jv
                         qq_tmp(inl,jnl)=qq_nt(iv,jv,is)
                      enddo
                   enddo
-               enddo
+               ENDIF
             enddo
             if(.not. mat_par)  then
-               call dgemm('N','N',nl_max,nss,nl_max,1.d0,qq_tmp,nl_max,becb(:,istart),nhsa,0.d0,qqb_tmp,nl_max)
-               call dgemm('T','N',nss,nss,nl_max,1.d0,beca(:,istart),nhsa,qqb_tmp,nl_max,1.d0,bectmp,nss)
+               call dgemm('N','N',nl_max,nss,nl_max,1.d0,qq_tmp,nl_max,becb(:,istart),nkb,0.d0,qqb_tmp,nl_max)
+               call dgemm('T','N',nss,nss,nl_max,1.d0,beca(:,istart),nkb,qqb_tmp,nl_max,1.d0,bectmp,nss)
             else
                call para_dgemm &
-& ('N','N',nl_max,nss,nl_max,1.d0,qq_tmp,nl_max,becb(:,istart),nhsa,0.d0,qqb_tmp,nl_max, intra_bgrp_comm)
+& ('N','N',nl_max,nss,nl_max,1.d0,qq_tmp,nl_max,becb(:,istart),nkb,0.d0,qqb_tmp,nl_max, intra_bgrp_comm)
                call para_dgemm &
-&('T','N',nss,nss,nl_max,1.d0,beca(:,istart),nhsa,qqb_tmp,nl_max,1.d0,bectmp,nss, intra_bgrp_comm)
+&('T','N',nss,nss,nl_max,1.d0,beca(:,istart),nkb,qqb_tmp,nl_max,1.d0,bectmp,nss, intra_bgrp_comm)
             endif
             deallocate(qq_tmp,qqb_tmp)
          endif
@@ -285,7 +253,7 @@ subroutine pc2(a,beca,b,becb)
          enddo
          call zgemm('N','N',ngw,nss,nss,(-1.d0,0.d0),a(:,istart),ngw,zbectmp,nss,(1.d0,0.d0),b(:,istart),ngw)
          deallocate(zbectmp)
-         call dgemm('N','N',nhsa,nss,nss,1.0d0,beca(:,istart),nhsa,bectmp,nss,1.0d0,becb(:,istart),nhsa)
+         call dgemm('N','N',nkb,nss,nss,1.0d0,beca(:,istart),nkb,bectmp,nss,1.0d0,becb(:,istart),nkb)
          deallocate(bectmp)
       enddo!on spin
       CALL stop_clock( 'pc2' )
@@ -303,7 +271,6 @@ subroutine pc2(a,beca,b,becb)
 !    b output:b_i =b_i - S|a_j><a_j|b_i>
 
       use kinds
-      use ions_base, only: na, nsp
       use io_global, only: stdout
       use mp_global, only: intra_bgrp_comm
       use gvecw, only: ngw
@@ -311,9 +278,6 @@ subroutine pc2(a,beca,b,becb)
       use gvect, only: gstart
       use mp, only: mp_sum
       use electrons_base, only: n => nbsp, ispin
-      use uspp_param, only: nh, ish, nvb
-      use uspp, only :nhsa=>nkb
-
 
       implicit none
 
@@ -365,7 +329,7 @@ subroutine pc2(a,beca,b,becb)
 ! it takes care of the preconditioning
 
       use kinds, only: dp
-      use ions_base, only: na, nsp
+      use ions_base, only: nsp, nat, ityp
       use io_global, only: stdout
       use mp_global, only: intra_bgrp_comm
       use gvecw, only: ngw
@@ -373,14 +337,14 @@ subroutine pc2(a,beca,b,becb)
       use gvect, only: gstart
       use mp, only: mp_sum, mp_bcast
       use electrons_base, only: n => nbsp, ispin
-      use uspp_param, only: nh, ish, nvb
-      use uspp, only :nhsa=>nkb,qq_nt,nhsavb=>nkbus
+      use uspp_param, only: nh, upf
+      use uspp, only :nkb,qq_nt,nkbus, indv_ijkb0
       use io_global, ONLY: ionode, ionode_id
 
       implicit none
 
-      complex(DP) :: betae(ngw,nhsa)
-      real(DP)    :: m_minus1(nhsavb,nhsavb)
+      complex(DP) :: betae(ngw,nkb)
+      real(DP)    :: m_minus1(nkb,nkb)
       real(DP)    :: ema0bg(ngw)
       logical     :: use_ema
 
@@ -394,38 +358,41 @@ subroutine pc2(a,beca,b,becb)
       real(dp),allocatable :: work(:)
 
       call start_clock('set_x_minus1')
-      allocate(ipiv(nhsavb))
-      allocate(work(nhsavb))
+      allocate(ipiv(nkb))
+      allocate(work(nkb))
 
-      lwork=nhsavb
+      lwork=nkb
 
-      allocate(q_matrix(nhsavb,nhsavb),c_matrix(nhsavb,nhsavb))
+      allocate(q_matrix(nkb,nkb),c_matrix(nkb,nkb))
 !construct q matrix
       q_matrix(:,:) = 0.d0
 
-      do is=1,nvb
-         do iv=1,nh(is)
-            do jv=1,nh(is)
-               do ia=1,na(is)
-                    inl=ish(is)+(iv-1)*na(is)+ia
-                    jnl=ish(is)+(jv-1)*na(is)+ia
+      do ia=1,nat
+         is = ityp(ia)
+         IF( upf(is)%tvanp ) THEN
+            do iv=1,nh(is)
+               do jv=1,nh(is)
+                    inl = indv_ijkb0(ia) + iv
+                    jnl = indv_ijkb0(ia) + jv
                     q_matrix(inl,jnl)= qq_nt(iv,jv,is)
                enddo
             enddo
-         enddo
+         END IF
       enddo
 
 !construct b matrix
 ! m_minus1 used to be b matrix
       m_minus1(:,:) = 0.d0
-      do is=1,nvb
-         do ia=1,na(is)
+      do ia=1,nat
+         is = ityp(ia)
+         IF( upf(is)%tvanp ) THEN
             do iv=1,nh(is)
-               do js=1,nvb
-                  do ja=1,na(js)
+               do ja=1,nat
+                  js=ityp(ja)
+                  IF( upf(js)%tvanp ) THEN
                      do jv=1,nh(js)
-                        inl=ish(is)+(iv-1)*na(is)+ia
-                        jnl=ish(js)+(jv-1)*na(js)+ja
+                        inl = indv_ijkb0(ia) + iv
+                        jnl = indv_ijkb0(ja) + jv
                         sca=0.d0
                         if (use_ema) then
                            ! k_minus case
@@ -444,30 +411,30 @@ subroutine pc2(a,beca,b,becb)
                         endif
                         m_minus1(inl,jnl)=sca
                      enddo
-                  enddo
+                  END IF
                enddo
             enddo
-         enddo
+         END IF
       enddo
       call mp_sum( m_minus1, intra_bgrp_comm )
 
 !calculate -(1+QB)**(-1) * Q
-      CALL dgemm('N','N',nhsavb,nhsavb,nhsavb,1.0d0,q_matrix,nhsavb,m_minus1,nhsavb,0.0d0,c_matrix,nhsavb)
+      CALL dgemm('N','N',nkb,nkb,nkb,1.0d0,q_matrix,nkb,m_minus1,nkb,0.0d0,c_matrix,nkb)
 
-      do i=1,nhsavb
+      do i=1,nkb
          c_matrix(i,i)=c_matrix(i,i)+1.d0
       enddo
 
       if(ionode) then
-        call dgetrf(nhsavb,nhsavb,c_matrix,nhsavb,ipiv,info)
+        call dgetrf(nkb,nkb,c_matrix,nkb,ipiv,info)
         if(info .ne. 0) write(stdout,*) 'set_k_minus1 Problem with dgetrf :', info
-        call dgetri(nhsavb,c_matrix,nhsavb,ipiv,work,lwork,info)
+        call dgetri(nkb,c_matrix,nkb,ipiv,work,lwork,info)
         if(info .ne. 0) write(stdout,*) 'set_k_minus1 Problem with dgetri :', info
       endif
       call mp_bcast( c_matrix, ionode_id, intra_bgrp_comm )
 
 
-      CALL dgemm('N','N',nhsavb,nhsavb,nhsavb,-1.0d0,c_matrix,nhsavb,q_matrix,nhsavb,0.0d0,m_minus1,nhsavb)
+      CALL dgemm('N','N',nkb,nkb,nkb,-1.0d0,c_matrix,nkb,q_matrix,nkb,0.0d0,m_minus1,nkb)
 
       deallocate(q_matrix,c_matrix)
       deallocate(ipiv,work)
@@ -488,11 +455,11 @@ subroutine pc2(a,beca,b,becb)
 !       where  |phi> = s^{-1}|c0> 
 ! endif
       use kinds, only: dp
-      use ions_base, only: na, nsp
+      use ions_base, only: nsp, nat, ityp
       use io_global, only: stdout
       use mp_global, only: intra_bgrp_comm
-      use uspp_param, only: nh, nvb, ish
-      use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq_nt
+      use uspp_param, only: nh, upf
+      use uspp, only :nkb, nkbus, qq_nt, indv_ijkb0
       use electrons_base, only: n => nbsp
       use gvecw, only: ngw
       use constants, only: pi, fpi
@@ -500,9 +467,9 @@ subroutine pc2(a,beca,b,becb)
       use gvect, only: gstart
 !
       implicit none
-      complex(dp) c0(ngw,n), betae(ngw,nhsa)
-      real(dp)    beck(nhsa,n), ema0bg(ngw)
-      real(DP)    :: m_minus1(nhsavb,nhsavb)
+      complex(dp) c0(ngw,n), betae(ngw,nkb)
+      real(dp)    beck(nkb,n), ema0bg(ngw)
+      real(DP)    :: m_minus1(nkb,nkb)
       logical :: do_k
 ! local variables
       complex(dp), allocatable :: phi(:,:)
@@ -514,15 +481,16 @@ subroutine pc2(a,beca,b,becb)
       logical :: mat_par=.true.!if true uses parallel routines      
 
       call start_clock('xminus1')
-      if (nvb.gt.0) then
+
+      if (nkbus.gt.0) then
 !calculates beck
          if (do_k) then
             beck(:,:) = 0.d0
-
-            do is=1,nvb
-               do iv=1,nh(is)
-                  do ia=1,na(is)
-                     inl=ish(is)+(iv-1)*na(is)+ia
+            do ia=1,nat
+               is=ityp(ia)
+               IF( upf(is)%tvanp ) THEN
+                  do iv=1,nh(is)
+                     inl = indv_ijkb0(ia) + iv
                      do i=1,n
                         becktmp = 0.0d0
                         do ig=1,ngw
@@ -533,29 +501,29 @@ subroutine pc2(a,beca,b,becb)
                         beck(inl,i) = beck(inl,i) + becktmp
                      enddo
                   enddo
-               enddo
+               END IF
             enddo
             call mp_sum( beck, intra_bgrp_comm )
          endif
 !
 !
       allocate(phi(ngw,n))
-      allocate(qtemp(nhsavb,n))
+      allocate(qtemp(nkb,n))
       phi(1:ngw,1:n) = 0.0d0
       qtemp(:,:) = 0.0d0
       if(.not.mat_par) then
-         call dgemm( 'N', 'N', nhsavb, n, nhsavb, 1.0d0, m_minus1,nhsavb ,    &
-                    beck, nhsa, 0.0d0, qtemp,nhsavb )
+         call dgemm( 'N', 'N', nkb, n, nkb, 1.0d0, m_minus1,nkb ,    &
+                    beck, nkb, 0.0d0, qtemp,nkb )
       else
-         call para_dgemm( 'N', 'N', nhsavb, n, nhsavb, 1.0d0, m_minus1,nhsavb ,    &
-                    beck, nhsa, 0.0d0, qtemp,nhsavb,intra_bgrp_comm )
+         call para_dgemm( 'N', 'N', nkb, n, nkb, 1.0d0, m_minus1,nkb ,    &
+                    beck, nkb, 0.0d0, qtemp,nkb,intra_bgrp_comm )
       endif
 
-!NB  nhsavb is the total number of US projectors
+!NB  nkb is the total number of US projectors
 !    it works because the first pseudos are the vanderbilt's ones
 
-         CALL dgemm( 'N', 'N', 2*ngw, n, nhsavb, 1.0d0, betae, 2*ngw,    &
-                    qtemp, nhsavb, 0.0d0, phi, 2*ngw )
+         CALL dgemm( 'N', 'N', 2*ngw, n, nkb, 1.0d0, betae, 2*ngw,    &
+                    qtemp, nkb, 0.0d0, phi, 2*ngw )
          if (do_k) then
             do j=1,n
                do ig=1,ngw
@@ -662,11 +630,11 @@ subroutine pc2(a,beca,b,becb)
 ! endif
 !adapted for state by state
       use kinds, only: dp
-      use ions_base, only: na, nsp
+      use ions_base, only: nat, ityp
       use io_global, only: stdout
       use mp_global, only: intra_bgrp_comm
-      use uspp_param, only: nh, nvb, ish
-      use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq_nt
+      use uspp_param, only: nh, upf
+      use uspp, only :nkb, nkbus, qq_nt, indv_ijkb0
       use electrons_base, only: n => nbsp
       use gvecw, only: ngw
       use constants, only: pi, fpi
@@ -678,9 +646,9 @@ subroutine pc2(a,beca,b,becb)
 
 !
       implicit none
-      complex(dp) c0(ngw,n), betae(ngw,nhsa)
-      real(dp)    beck(nhsa,n), ema0bg(ngw)
-      real(DP)    :: m_minus1(nhsavb,nhsavb)
+      complex(dp) c0(ngw,n), betae(ngw,nkb)
+      real(dp)    beck(nkb,n), ema0bg(ngw)
+      real(DP)    :: m_minus1(nkb,nkb)
       logical :: do_k
       real(kind=DP) :: ave_kin(n)!average kinetic energy per state
 ! local variables
@@ -692,15 +660,16 @@ subroutine pc2(a,beca,b,becb)
 
  
       call start_clock('xminus1')
-      if (nvb.gt.0) then
+      if (nkbus.gt.0) then
 !calculates beck
          if (do_k) then
             beck(:,:) = 0.d0
  
-            do is=1,nvb
-               do iv=1,nh(is)
-                  do ia=1,na(is)
-                     inl=ish(is)+(iv-1)*na(is)+ia
+            do ia=1,nat
+               is = ityp(ia) 
+               IF( upf(is)%tvanp ) THEN
+                  do iv=1,nh(is)
+                     inl = indv_ijkb0(ia) + iv
                      do i=1,n
                         becktmp = 0.0d0
                         do ig=1,ngw
@@ -711,25 +680,25 @@ subroutine pc2(a,beca,b,becb)
                         beck(inl,i) = beck(inl,i) + becktmp
                      enddo
                   enddo
-               enddo
+               END IF
             enddo
             call mp_sum( beck, intra_bgrp_comm )
          endif
 !
 !
       allocate(phi(ngw,n))
-      allocate(qtemp(nhsavb,n))
+      allocate(qtemp(nkb,n))
       phi(1:ngw,1:n) = 0.0d0
       qtemp(:,:) = 0.0d0
-      call dgemm( 'N', 'N', nhsavb, n, nhsavb, 1.0d0, m_minus1,nhsavb ,    &
-                    beck, nhsa, 0.0d0, qtemp,nhsavb )
+      call dgemm( 'N', 'N', nkb, n, nkb, 1.0d0, m_minus1,nkb ,    &
+                    beck, nkb, 0.0d0, qtemp,nkb )
  
  
  
-!NB nhsavb is the total number of US projectors, it works because the first pseudos are the vanderbilt's ones
+!NB nkb is the total number of US projectors, it works because the first pseudos are the vanderbilt's ones
 
-      CALL dgemm( 'N', 'N', 2*ngw, n, nhsavb, 1.0d0, betae, 2*ngw,    &
-           qtemp, nhsavb, 0.0d0, phi, 2*ngw )
+      CALL dgemm( 'N', 'N', 2*ngw, n, nkb, 1.0d0, betae, 2*ngw,    &
+           qtemp, nkb, 0.0d0, phi, 2*ngw )
       if (do_k) then
          do j=1,n
             do ig=1,ngw
@@ -776,7 +745,6 @@ SUBROUTINE para_dgemm( transa, transb, m, n, k, &
   ! ... trivial parallelization (splitting matrix B by columns) of dgemm 
   !
   USE kinds, ONLY : DP
-  USE parallel_toolkit
   !
   IMPLICIT NONE
   !

@@ -14,7 +14,7 @@ SUBROUTINE lr_run_nscf( )
   !
   ! Created by Iurii Timrov (2013)
   !
-  USE control_flags,   ONLY : conv_ions, twfcollect, restart
+  USE control_flags,   ONLY : conv_ions, restart
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE io_files,        ONLY : prefix, tmp_dir, wfc_dir, seqopn
   USE io_global,       ONLY : stdout
@@ -32,7 +32,8 @@ SUBROUTINE lr_run_nscf( )
   !
   CALL start_clock( 'lr_run_nscf' )
   !
-  WRITE( stdout, '(/,5X,"------------ Nscf calculation ---------------")')
+  WRITE( stdout, '(/5x,28("-")," NSCF calculation ",28("-"))')
+  !WRITE( stdout, '(/,5X,"----------------------- NSCF calculation --------------------------------")')
   !   
   CALL clean_pw(.FALSE.)
   !   
@@ -65,7 +66,7 @@ SUBROUTINE lr_run_nscf( )
   !
   ! The variables igk_k and ngk are re-set up here (because there 
   ! are not only poins k but also points k+q) through the path:
-  ! init_run -> hinit0 -> init_igk
+  ! init_run -> allocate_wfc_k -> init_igk
   ! 
   CALL init_run()
   !
@@ -75,7 +76,6 @@ SUBROUTINE lr_run_nscf( )
   !
   ! Save information for further processing
   !
-  twfcollect = .FALSE.
   CALL punch( 'all' ) 
   !
   CALL seqopn( 4, 'restart', 'UNFORMATTED', exst )

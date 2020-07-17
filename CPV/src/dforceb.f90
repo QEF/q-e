@@ -33,10 +33,10 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
   use  parameters
   use electrons_base, only: nx => nbspx, n => nbsp, nspin, f
   use constants, only :
-  use ions_base, only : nat, nax, na, nsp
+  use ions_base, only : nat, nax, nsp, ityp
   use cell_base, only: at, alat
-  use uspp_param, only: nh, nhm, nvb, ish
-  use uspp, only : nhsa=> nkb
+  use uspp_param, only: nh, nhm, upf
+  use uspp, only : nkb, nkbus, indv_ijkb0
   use efield_module, ONLY : ctabin_missing_1,ctabin_missing_2,n_g_missing_m,&
        &      ctabin_missing_rev_1,ctabin_missing_rev_2
   use mp_global, only: intra_bgrp_comm, nproc_bgrp
@@ -47,21 +47,21 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
   implicit none
       
       
-  complex(DP) c0(ngw, n), betae(ngw,nhsa), df(ngw),&
+  complex(DP) c0(ngw, n), betae(ngw,nkb), df(ngw),&
        &   gqq(nhm,nhm,nax,nsp),gqqm(nhm,nhm,nax,nsp),&
        &   qmat(nx,nx)
-  real(DP) bec0(nhsa,n), dq2(nat,nhm,nhm,nspin),  gmes
+  real(DP) bec0(nkb,n), dq2(nat,nhm,nhm,nspin),  gmes
   real(DP), EXTERNAL :: g_mes
 
   integer i, ipol, ctabin(ngw,2)
 
 ! local variables
 
-  integer j,k,ig,iv,jv,ix,jx,is,ia, isa,iss,iss1,mism
+  integer j,k,ig,iv,jv,ix,jx,is,ia, iss,iss1,mism
   integer ir,ism,itemp,itempa,jnl,inl
   complex(DP) ci ,fi, fp, fm
-  real(DP) afr(nhsa), dd
-  complex(DP)  afrc(nhsa)
+  real(DP) afr(nkb), dd
+  complex(DP)  afrc(nkb)
   complex(DP), allocatable::  dtemp(:)
   complex(DP), allocatable :: sndbuf(:,:,:),rcvbuf(:,:,:)
   integer :: ierr, ip
@@ -191,17 +191,18 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
 
 
 
-  if(nhsa.gt.0) then
-     do inl=1,nhsa
+  if(nkb > 0) then
+     do inl=1,nkb
         afrc(inl)=(0.d0,0.d0)
      end do
  
-     do is=1,nvb!loop on species
-        do iv=1,nh(is)      !loop on projectors           
-           do jv=1,nh(is)   !loop on projectors                               
-               do ia=1,na(is)
-                  inl=ish(is)+(iv-1)*na(is)+ia
-                  jnl=ish(is)+(jv-1)*na(is)+ia              
+     do ia=1,nat
+        is=ityp(ia)
+        IF(upf(is)%tvanp) THEN
+           do iv=1,nh(is)      !loop on projectors           
+              do jv=1,nh(is)   !loop on projectors                               
+                  inl = indv_ijkb0(ia) + iv
+                  jnl = indv_ijkb0(ia) + jv
                   do j=1,n  !loop on states
                      afrc(inl)=afrc(inl)+gqq(iv,jv,ia,is)*bec0(jnl,j)*qmat(j,i)&
                           &     -CONJG(gqq(jv,iv,ia,is))*bec0(jnl,j)*conjg(qmat(i,j))
@@ -210,13 +211,13 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
                   end do
                end do
             end do
-         end do
-      enddo
+         ENDIF
+      end do
 
       do ig=1,ngw
          dtemp(ig)=(0.d0,0.d0)
       end do
-      do inl=1,nhsa
+      do inl=1,nkb
          do ig=1,ngw
             dtemp(ig)=dtemp(ig)+afrc(inl)*betae(ig,inl)
          enddo

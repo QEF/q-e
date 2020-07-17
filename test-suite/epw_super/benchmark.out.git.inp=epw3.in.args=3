@@ -1,0 +1,255 @@
+                                                                                      
+                                       ``:oss/                                        
+                           `.+s+.     .+ys--yh+     `./ss+.                           
+                          -sh//yy+`   +yy   +yy    -+h+-oyy                           
+                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           
+                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  
+               `/+ssys+-` `sh+      `                   oys`   .:osyo`                
+               -yh- ./syyooyo`                          .sys+/oyo--yh/                
+               `yy+    .-:-.                             `-/+/:`  -sh-                
+                /yh.                                              oys                 
+          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             
+       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        
+       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       
+       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        
+        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        
+         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          
+          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           
+    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      
+   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   
+   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   
+   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   
+   -yh-        ````````````````    `````````              ``        ``          oys   
+   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
+   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
+                                                                                      
+  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 
+                                                Comput. Phys. Commun. 209, 116 (2016) 
+                                                                                      
+
+     Program EPW v.5.2.0 starts on 15Jul2020 at 10:40:28 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     K-points division:     npool     =       4
+     Fft bands division:     nmany     =       1
+
+     Reading supplied temperature list.
+                      
+     ------------------------------------------------------------------------ 
+                   RESTART - RESTART - RESTART - RESTART                         
+     Restart is done without reading PWSCF save file.                  
+     Be aware that some consistency checks are therefore not done.                  
+     ------------------------------------------------------------------------ 
+                      
+
+     --                                                                         
+
+     bravais-lattice index     =            0
+     lattice parameter (a_0)   =       0.0000  a.u.
+     unit-cell volume          =       0.0000 (a.u.)^3
+     number of atoms/cell      =            0
+     number of atomic types    =            0
+     kinetic-energy cut-off    =       0.0000  Ry
+     charge density cut-off    =       0.0000  Ry
+     Exchange-correlation= not set
+                           (  -1  -1  -1  -1  -1  -1  -1)
+
+
+     celldm(1)=    0.00000  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  0.0000  0.0000  0.0000 )  
+               a(2) = (  0.0000  0.0000  0.0000 )  
+               a(3) = (  0.0000  0.0000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  0.0000  0.0000  0.0000 )  
+               b(2) = (  0.0000  0.0000  0.0000 )  
+               b(3) = (  0.0000  0.0000  0.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+
+ 
+     No symmetry!
+
+     G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
+     number of k points=    0
+                       cart. coord. in units 2pi/a_0
+     EPW          :      0.00s CPU      0.01s WALL
+
+     EPW          :      0.00s CPU      0.01s WALL
+
+
+     -------------------------------------------------------------------
+     Using MgB2.ukk from disk
+     -------------------------------------------------------------------
+
+
+     Do not need to read .epb files; read .fmt files
+
+
+     Band disentanglement is used: nbndsub =    5
+     Use zone-centred Wigner-Seitz cells 
+     Number of WS vectors for electrons       39
+     Number of WS vectors for phonons       39
+     Number of WS vectors for electron-phonon       39
+     Maximum number of cores for efficient parallelization      351
+     Results may improve by using use_ws == .TRUE. 
+
+     Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
+
+
+     Finished reading Wann rep data from file
+
+     ===================================================================
+     Memory usage:  VmHWM =        21Mb
+                   VmPeak =       602Mb
+     ===================================================================
+     
+     Using uniform q-mesh:    6   6   6
+     Size of q point mesh for interpolation:        216
+     Using uniform MP k-mesh:    6   6   6
+     Size of k point mesh for interpolation:         56
+     Max number of k points per pool:               14
+
+     Fermi energy coarse grid =   8.175337 eV
+
+     Fermi energy is calculated from the fine k-mesh: Ef =   7.664475 eV
+
+     Warning: check if difference with Fermi level fine grid makes sense
+
+     ===================================================================
+
+              ibndmin =     1  ebndmin =    -0.357
+              ibndmax =     5  ebndmax =     1.152
+
+
+     Number of ep-matrix elements per pool :         1575 ~=   12.30 Kb (@ 8 bytes/ DP)
+      
+     A selecq.fmt file was found but re-created because selecqread == .FALSE. 
+     Number selected, total            100            100
+     Number selected, total            200            200
+     We only need to compute      216 q-points
+      
+     All q-points are done, no need to restart !!
+     ===================================================================
+     Memory usage:  VmHWM =        23Mb
+                   VmPeak =       629Mb
+     ===================================================================
+
+
+     ===================================================================
+     Solve anisotropic Eliashberg equations
+     ===================================================================
+
+
+     Finish reading freq file
+
+                  Fermi level (eV) =     7.6644747151E+00
+     DOS(states/spin/eV/Unit Cell) =     9.1308569318E-01
+            Electron smearing (eV) =     1.0000000000E-01
+                 Fermi window (eV) =     2.0000000000E+01
+     Nr irreducible k-points within the Fermi shell =        28 out of        28
+
+           5 bands within the Fermi window
+
+
+     Finish reading egnv file 
+
+
+     Max nr of q-points =       216
+
+
+     Finish reading ikmap files
+
+
+     Start reading .ephmat files
+
+
+     Finish reading .ephmat files
+
+     lambda_max =           126.3963398   lambda_k_max =             3.2058367
+ 
+     Electron-phonon coupling strength =    0.8715331
+ 
+     Estimated Allen-Dynes Tc =    26.410306 K for muc =    0.16000
+  
+     Estimated BCS superconducting gap =     0.004006 eV
+  
+    
+     temp(  1) =     16.00000 K
+    
+     Solve anisotropic Eliashberg equations on imaginary-axis
+    
+     Total number of frequency points nsiw(     1) =     58
+     Cutoff frequency wscut =     0.5068
+    
+
+     Size of allocated memory per pool: ~=    0.0357 Gb
+        iter      ethr        znormi [eV]    deltai [eV]
+          1   2.324585E+00   1.842446E+00   5.071399E-03
+          2   1.050021E-01   1.838424E+00   5.747029E-03
+          3   1.139816E-01   1.832860E+00   6.561656E-03
+          4   8.845982E-02   1.828464E+00   7.170240E-03
+          5   1.774059E-01   1.817191E+00   8.498220E-03
+          6   9.894108E-02   1.823272E+00   7.840916E-03
+          7   1.447665E-02   1.822481E+00   7.932339E-03
+          8   2.983689E-03   1.822322E+00   7.955349E-03
+     Convergence was reached in nsiter =      8
+ 
+     iaxis_imag   :     22.41s CPU     22.46s WALL (       1 calls)
+ 
+    
+     Pade approximant of anisotropic Eliashberg equations from imaginary-axis to real-axis
+     Cutoff frequency wscut =     0.5000
+    
+        pade Re[znorm] [eV] Re[delta] [eV]
+         52   1.678152E+00   7.358502E-03
+ 
+     Convergence was reached for N =     52 Pade approximants
+ 
+     raxis_pade   :      0.09s CPU      0.10s WALL (       1 calls)
+ 
+     itemp =   1   total cpu time :             22.57 secs
+ 
+
+     Unfolding on the coarse grid
+     elphon_wrap  :      0.00s CPU      0.01s WALL (       1 calls)
+
+     INITIALIZATION: 
+
+
+
+
+     Electron-Phonon interpolation
+     ephwann      :      0.06s CPU      0.07s WALL (       1 calls)
+
+     HamW2B       :      0.00s CPU      0.00s WALL (      21 calls)
+
+     ELIASHBERG   :     83.83s CPU     83.86s WALL (       1 calls)
+
+     Total program execution
+     EPW          :   1m23.89s CPU   1m23.94s WALL
+
+                                                                                          
+ Please consider citing:                                                                  
+ S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+                                                                                          
+ In addition, since you have used the following functionalities, please cite:             
+   eliashberg :: E. R. Margine and F. Giustino, Phys. Rev. B 87, 024505 (2013)              

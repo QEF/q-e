@@ -1,4 +1,4 @@
---
+-
 &inputepw
   prefix      = 'si'
   amass(1)    = 28.0855
@@ -21,20 +21,19 @@
 
   scissor     =  0.7
   nstemp      =   5
-  tempsmin    = 300
-  tempsmax    = 500
+  temps    = 300 500
 
   restart    = .true.
-  restart_freq = 1000
+  restart_step = 1000
   selecqread = .true.
 
   lifc        = .true.
   asr_typ     = 'crystal'
 
   etf_mem     = 1
+  vme         = .false. 
 
   nbndsub     =  16
-  nbndskip    =  0
 
   wannierize  = .false.
   num_iter    = 1500
@@ -61,7 +60,6 @@
   a2f         = .false.
 
   fsthick     = 2.0 ! eV 
-  eptemp      = 1 ! K 
   degaussw    = 0.05 ! eV
 
   dvscf_dir   = './save/'
@@ -80,7 +78,3 @@
   nq2         = 2
   nq3         = 2
  /
-      3 cartesian
- 0.000000000   0.000000000   0.000000000
- 0.500000000  -0.500000000   0.500000000
- 0.000000000  -1.000000000   0.000000000

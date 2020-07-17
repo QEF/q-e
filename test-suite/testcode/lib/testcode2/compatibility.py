@@ -94,14 +94,14 @@ Essentially a backport of the literal_eval function in python 2.6 onwards.
 From: http://mail.python.org/pipermail/python-list/2009-September/1219992.html
         """
         _safe_names = {'None': None, 'True': True, 'False': False}
-        if isinstance(node_or_string, basestring):
+        if isinstance(node_or_string, str):
             node_or_string = parse(node_or_string, mode='eval')
         if isinstance(node_or_string, ast.Expression):
             node_or_string = node_or_string.node
         def _convert(node):
             '''Convert node/string to expression.'''
             if isinstance(node, ast.Const) and isinstance(node.value,
-                    (basestring, int, float, long, complex)):
+                    (str, int, float, complex)):
                 return node.value
             elif isinstance(node, ast.Tuple):
                 return tuple(_convert(element) for element in node.nodes)
@@ -146,7 +146,7 @@ except ImportError:
 try:
     import configparser
 except ImportError:
-    import ConfigParser as configparser
+    import configparser as configparser
 
 try:
     compat_input = raw_input
@@ -154,6 +154,6 @@ except NameError:
     compat_input = input
 
 try:
-    maxint = sys.maxint
+    maxint = sys.maxsize
 except AttributeError:
     maxint = sys.maxsize

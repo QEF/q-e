@@ -10,7 +10,7 @@
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
+SUBROUTINE laxlib_cdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
   !----------------------------------------------------------------------------
   !
   ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -19,11 +19,9 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... LAPACK version - uses both ZHEGV and ZHEGVX
   !
-  USE la_param,          ONLY : DP
-  USE mp,                ONLY : mp_bcast, mp_sum, mp_barrier, mp_max
-  USE mp_bands_util,     ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
-  !
+  USE laxlib_parallel_include
   IMPLICIT NONE
+  INCLUDE 'laxlib_kinds.fh'
   !
   INTEGER, INTENT(IN) :: n, m, ldh
     ! dimension of the matrix to be diagonalized
@@ -37,6 +35,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
     ! eigenvalues
   COMPLEX(DP), INTENT(OUT) :: v(ldh,m)
     ! eigenvectors (column-wise)
+  INTEGER, INTENT(IN) :: me_bgrp, root_bgrp, intra_bgrp_comm
   !
   INTEGER                  :: lwork, nb, mm, info, i, j
     ! mm = number of calculated eigenvectors
@@ -155,11 +154,11 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      DEALLOCATE( work )
      !
      IF ( info > n ) THEN
-        CALL errore( 'cdiaghg', 'S matrix not positive definite', ABS( info ) )
+        CALL lax_error__( 'cdiaghg', 'S matrix not positive definite', ABS( info ) )
      ELSE IF ( info > 0 ) THEN
-        CALL errore( 'cdiaghg', 'eigenvectors failed to converge', ABS( info ) )
+        CALL lax_error__( 'cdiaghg', 'eigenvectors failed to converge', ABS( info ) )
      ELSE IF ( info < 0 ) THEN
-        CALL errore( 'cdiaghg', 'incorrect call to ZHEGV*', ABS( info ) )
+        CALL lax_error__( 'cdiaghg', 'incorrect call to ZHEGV*', ABS( info ) )
      END IF
      !
      ! ... restore input S matrix from saved diagonal and lower triangle
@@ -180,17 +179,308 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... broadcast eigenvectors and eigenvalues to all other processors
   !
-  CALL mp_bcast( e, root_bgrp, intra_bgrp_comm )
-  CALL mp_bcast( v, root_bgrp, intra_bgrp_comm )
+#if defined __MPI
+  CALL MPI_BCAST( e, SIZE(e), MPI_DOUBLE_PRECISION, root_bgrp, intra_bgrp_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error broadcasting array e', ABS( info ) )
+  CALL MPI_BCAST( v, SIZE(v), MPI_DOUBLE_COMPLEX, root_bgrp, intra_bgrp_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error broadcasting array v', ABS( info ) )
+#endif
   !
   CALL stop_clock( 'cdiaghg' )
   !
   RETURN
   !
-END SUBROUTINE cdiaghg
+END SUBROUTINE laxlib_cdiaghg
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
+SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm)
+  !----------------------------------------------------------------------------
+  !
+  ! ... calculates eigenvalues and eigenvectors of the generalized problem
+  ! ... Hv=eSv, with H hermitean matrix, S overlap matrix.
+  ! ... On output both matrix are unchanged
+  !
+  !
+#if defined(__CUDA)
+  USE cudafor
+  !
+#if defined(__USE_CUSOLVER)
+  USE cusolverdn
+#else
+  USE zhegvdx_gpu
+#endif
+#endif
+  !
+  USE laxlib_parallel_include
+  !
+!define __USE_GLOBAL_BUFFER
+#if defined(__USE_GLOBAL_BUFFER)
+  USE gbuffers,        ONLY : dev=>dev_buf, pin=>pin_buf
+#define VARTYPE POINTER
+#else
+#define VARTYPE ALLOCATABLE
+#endif
+  !
+  IMPLICIT NONE
+  INCLUDE 'laxlib_kinds.fh'
+  !
+  INTEGER, INTENT(IN) :: n, m, ldh
+    ! dimension of the matrix to be diagonalized
+    ! number of eigenstates to be calculate
+    ! leading dimension of h, as declared in the calling pgm unit
+  COMPLEX(DP), INTENT(INOUT) :: h_d(ldh,n), s_d(ldh,n)
+    ! actually intent(in) but compilers don't know and complain
+    ! matrix to be diagonalized, allocated on the GPU
+    ! overlap matrix, allocated on the GPU
+  REAL(DP), INTENT(OUT) :: e_d(n)
+    ! eigenvalues, , allocated on the GPU
+  COMPLEX(DP),  INTENT(OUT) :: v_d(ldh,n)
+    ! eigenvectors (column-wise), , allocated on the GPU
+    ! NB: the dimension of v_d this is different from cdiaghg !!
+#if defined(__CUDA)
+    ATTRIBUTES(DEVICE) :: h_d, s_d, e_d, v_d
+#endif
+  INTEGER, INTENT(IN) :: me_bgrp, root_bgrp, intra_bgrp_comm
+  !
+  INTEGER              :: lwork, info
+  !
+  REAL(DP)             :: abstol
+  INTEGER, ALLOCATABLE :: ifail(:)
+  INTEGER, VARTYPE     :: iwork(:)
+  REAL(DP), VARTYPE    :: rwork(:)
+  COMPLEX(DP), VARTYPE :: work(:)
+  !
+  COMPLEX(DP), VARTYPE :: v_h(:,:)
+  REAL(DP), VARTYPE    :: e_h(:)
+#if (! defined(__USE_GLOBAL_BUFFER)) && defined(__CUDA)
+  ATTRIBUTES( PINNED ) :: work, iwork, rwork, v_h, e_h
+#endif
+  !
+  INTEGER              :: lwork_d, lrwork_d, liwork, lrwork
+  REAL(DP), VARTYPE    :: rwork_d(:)
+  COMPLEX(DP), VARTYPE :: work_d(:)
+  ! various work space
+  !
+  ! Temp arrays to save H and S.
+  REAL(DP), VARTYPE    :: h_diag_d(:), s_diag_d(:)
+#if defined(__CUDA)
+  ATTRIBUTES( DEVICE ) :: work_d, rwork_d, h_diag_d, s_diag_d
+#endif
+  INTEGER :: i, j
+#if defined( __USE_CUSOLVER )
+  INTEGER                :: devInfo_d, h_meig
+  ATTRIBUTES( DEVICE )   :: devInfo_d
+  TYPE(cusolverDnHandle) :: cuSolverHandle
+  !
+  COMPLEX(DP), VARTYPE   :: h_bkp_d(:,:), s_bkp_d(:,:)
+  ATTRIBUTES( DEVICE )   :: h_bkp_d, s_bkp_d
+#endif
+#undef VARTYPE
+  !
+  !
+  !
+  !
+  CALL start_clock_gpu( 'cdiaghg' )
+  !
+  ! ... only the first processor diagonalizes the matrix
+  !
+  IF ( me_bgrp == root_bgrp ) THEN
+      !
+      ! Keeping compatibility for both CUSolver and CustomEigensolver, CUSolver below
+      !
+#if defined(__USE_CUSOLVER) && defined(__CUDA)
+!
+! vvv __USE_CUSOLVER
+
+#if ! defined(__USE_GLOBAL_BUFFER)
+      ALLOCATE(h_bkp_d(n,n), s_bkp_d(n,n), STAT = info)
+      IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' cannot allocate h_bkp_d or s_bkp_d ', ABS( info ) )
+#else
+      CALL dev%lock_buffer( h_bkp_d,  (/ n, n /), info )
+      CALL dev%lock_buffer( s_bkp_d,  (/ n, n /), info )
+#endif
+      !
+!$cuf kernel do(2)
+      DO j=1,n
+         DO i=1,n
+            h_bkp_d(i,j) = h_d(i,j)
+            s_bkp_d(i,j) = s_d(i,j)
+         ENDDO
+      ENDDO
+      !
+      info = cusolverDnCreate(cuSolverHandle)
+      IF ( info /= CUSOLVER_STATUS_SUCCESS ) CALL lax_error__( ' cdiaghg_gpu ', 'cusolverDnCreate',  ABS( info ) )
+      !
+      info = cusolverDnZhegvdx_bufferSize(cuSolverHandle, CUSOLVER_EIG_TYPE_1, CUSOLVER_EIG_MODE_VECTOR, CUSOLVER_EIG_RANGE_I, CUBLAS_FILL_MODE_UPPER, &
+                                               n, h_d, ldh, s_d, ldh, 0.D0, 0.D0, 1, m, h_meig, e_d, lwork_d)
+      IF( info /= CUSOLVER_STATUS_SUCCESS ) CALL lax_error__( ' cdiaghg_gpu ', ' cusolverDnZhegvdx_bufferSize failed ', ABS( info ) )
+      !
+#if ! defined(__USE_GLOBAL_BUFFER)
+      ALLOCATE(work_d(1*lwork_d), STAT = info)
+      IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' cannot allocate work_d ', ABS( info ) )
+#else
+      CALL dev%lock_buffer( work_d,  lwork_d, info )
+      IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' cannot allocate work_d ', ABS( info ) )
+#endif
+      !
+      info = cusolverDnZhegvdx(cuSolverHandle, CUSOLVER_EIG_TYPE_1, CUSOLVER_EIG_MODE_VECTOR, CUSOLVER_EIG_RANGE_I, CUBLAS_FILL_MODE_UPPER, &
+                                  n, h_d, ldh, s_d, ldh, 0.D0, 0.D0, 1, m, h_meig, e_d, work_d, lwork, devInfo_d)
+      IF( info /= CUSOLVER_STATUS_SUCCESS ) CALL lax_error__( ' cdiaghg_gpu ', ' cusolverDnZhegvdx failed ', ABS( info ) )
+!$cuf kernel do(2)
+      DO j=1,n
+         DO i=1,n
+            IF(j <= m) v_d(i,j) = h_d(i,j)
+            h_d(i,j) = h_bkp_d(i,j)
+            s_d(i,j) = s_bkp_d(i,j)
+         ENDDO
+      ENDDO
+      !
+      info = cusolverDnDestroy(cuSolverHandle)
+      IF( info /= CUSOLVER_STATUS_SUCCESS ) CALL lax_error__( ' cdiaghg_gpu ', ' cusolverDnDestroy failed ', ABS( info ) )
+      !
+#if ! defined(__USE_GLOBAL_BUFFER)
+      DEALLOCATE(work_d)
+      DEALLOCATE(h_bkp_d, s_bkp_d)
+#else
+      CALL dev%release_buffer( work_d,  info )
+      CALL dev%release_buffer( h_bkp_d, info )
+      CALL dev%release_buffer( s_bkp_d, info )
+#endif
+! ^^^ __USE_CUSOLVER
+      !
+      ! Keeping compatibility for both CUSolver and CustomEigensolver, CustomEigensolver below
+      !
+#elif defined(__CUDA)
+! vvv not __USE_CUSOLVER
+#if ! defined(__USE_GLOBAL_BUFFER)
+      ! NB: dimension is different!
+      ALLOCATE(v_h(ldh,n), e_h(n))
+      ALLOCATE(h_diag_d(n) , s_diag_d(n))
+#else
+      CALL pin%lock_buffer( v_h, (/ldh,n/), info )
+      CALL pin%lock_buffer( e_h, n, info )
+      !
+      CALL dev%lock_buffer( h_diag_d, n, info )
+      CALL dev%lock_buffer( s_diag_d, n, info )
+#endif
+      !
+      lwork  = n
+      lrwork = 1+5*n+2*n*n
+      liwork = 3+5*n
+      !
+      lwork_d  = 2*64*64 + 65 * n
+      lrwork_d = n
+      !
+#if ! defined(__USE_GLOBAL_BUFFER)
+      ALLOCATE(work(lwork), rwork(lrwork), iwork(liwork))
+      !
+      ALLOCATE(work_d(1*lwork_d), STAT = info)
+      IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' allocate work_d ', ABS( info ) )
+      !
+      ALLOCATE(rwork_d(1*lrwork_d), STAT = info)
+      IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' allocate rwork_d ', ABS( info ) )
+#else
+      CALL pin%lock_buffer(work, lwork, info)
+      CALL pin%lock_buffer(rwork, lrwork, info)
+      CALL pin%lock_buffer(iwork, liwork, info)
+      CALL dev%lock_buffer( work_d,  lwork_d, info)
+      CALL dev%lock_buffer( rwork_d, lrwork_d, info)
+#endif
+      !
+      !$cuf kernel do(1) <<<*,*>>>
+      DO i = 1, n
+         h_diag_d(i) = DBLE( h_d(i,i) )
+         s_diag_d(i) = DBLE( s_d(i,i) )
+      END DO
+      CALL zhegvdx_gpu(n, h_d, ldh, s_d, ldh, v_d, ldh, 1, m, e_d, work_d,&
+                       lwork_d, rwork_d, lrwork_d, &
+                       work, lwork, rwork, lrwork, &
+                       iwork, liwork, v_h, SIZE(v_h, 1), e_h, info, .TRUE.)
+      !
+
+      IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' zhegvdx_gpu failed ', ABS( info ) )
+      !
+!$cuf kernel do(1) <<<*,*>>>
+      DO i = 1, n
+         h_d(i,i) = DCMPLX( h_diag_d(i), 0.0_DP)
+         s_d(i,i) = DCMPLX( s_diag_d(i), 0.0_DP)
+         DO j = i + 1, n
+            h_d(i,j) = DCONJG( h_d(j,i) )
+            s_d(i,j) = DCONJG( s_d(j,i) )
+         END DO
+         DO j = n + 1, ldh
+            h_d(j,i) = ( 0.0_DP, 0.0_DP )
+            s_d(j,i) = ( 0.0_DP, 0.0_DP )
+         END DO
+      END DO
+#if ! defined(__USE_GLOBAL_BUFFER)
+      DEALLOCATE(h_diag_d, s_diag_d)
+      !
+      DEALLOCATE(work, rwork, iwork)
+      DEALLOCATE(work_d, rwork_d)
+      DEALLOCATE(v_h, e_h)
+#else
+      CALL dev%release_buffer( h_diag_d, info )
+      CALL dev%release_buffer( s_diag_d, info)
+      !
+      CALL pin%release_buffer(work, info)
+      CALL pin%release_buffer(rwork, info)
+      CALL pin%release_buffer(iwork, info)
+      CALL dev%release_buffer( work_d,  info)
+      CALL dev%release_buffer( rwork_d, info)
+      CALL pin%release_buffer(v_h, info)
+      CALL pin%release_buffer(e_h, info)
+#endif
+! ^^^ not __USE_CUSOLVER
+#else
+     CALL lax_error__( 'cdiaghg', 'Called GPU eigensolver without GPU support', 1 )
+#endif
+     !
+  END IF
+  !
+  ! ... broadcast eigenvectors and eigenvalues to all other processors
+  !
+#if defined __MPI
+#if defined __GPU_MPI
+  info = cudaDeviceSynchronize()
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error synchronizing device (first)', ABS( info ) )
+  CALL MPI_BCAST( e_d, n, MPI_DOUBLE_PRECISION, root_bgrp, intra_bgrp_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error broadcasting array e_d', ABS( info ) )
+  CALL MPI_BCAST( v_d, ldh*m, MPI_DOUBLE_COMPLEX, root_bgrp, intra_bgrp_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error broadcasting array v_d', ABS( info ) )
+  info = cudaDeviceSynchronize() ! this is probably redundant...
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error synchronizing device (second)', ABS( info ) )
+#else
+  ALLOCATE(e_h(n), v_h(ldh,m))
+  e_h(1:n) = e_d(1:n)
+  v_h(1:ldh, 1:m) = v_d(1:ldh, 1:m)
+  CALL MPI_BCAST( e_h, n, MPI_DOUBLE_PRECISION, root_bgrp, intra_bgrp_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error broadcasting array e_d', ABS( info ) )
+  CALL MPI_BCAST( v_h, ldh*m, MPI_DOUBLE_COMPLEX, root_bgrp, intra_bgrp_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error broadcasting array v_d', ABS( info ) )
+  e_d(1:n) = e_h(1:n)
+  v_d(1:ldh, 1:m) = v_h(1:ldh, 1:m)
+  DEALLOCATE(e_h, v_h)
+#endif
+#endif
+  !
+  CALL stop_clock_gpu( 'cdiaghg' )
+  !
+  RETURN
+  !
+END SUBROUTINE laxlib_cdiaghg_gpu
+!
+!----------------------------------------------------------------------------
+!----------------------------------------------------------------------------
+SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, idesc )
   !----------------------------------------------------------------------------
   !
   ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -199,19 +489,20 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   ! ... Parallel version, with full data distribution
   !
-  USE la_param,         ONLY : DP
-  USE mp,               ONLY : mp_bcast
-  USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
-  USE descriptors,      ONLY : la_descriptor
-  USE parallel_toolkit, ONLY : zsqmdst, zsqmcll
-  USE mp_diag,          ONLY : ortho_parent_comm
+  USE laxlib_parallel_include
+  USE laxlib_descriptor,      ONLY : la_descriptor, laxlib_intarray_to_desc
+  USE laxlib_processors_grid, ONLY : ortho_parent_comm
 #if defined __SCALAPACK
-  USE mp_diag,          ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
+  USE laxlib_processors_grid, ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
   USE zhpev_module,     ONLY : pzheevd_drv
 #endif
-
   !
   IMPLICIT NONE
+  !
+  INCLUDE 'laxlib_kinds.fh'
+  include 'laxlib_param.fh'
+  include 'laxlib_mid.fh'
+  include 'laxlib_low.fh'
   !
   INTEGER, INTENT(IN) :: n, ldh
     ! dimension of the matrix to be diagonalized
@@ -224,12 +515,14 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
     ! eigenvalues
   COMPLEX(DP), INTENT(OUT) :: v(ldh,ldh)
     ! eigenvectors (column-wise)
-  TYPE(la_descriptor), INTENT(IN) :: desc
+  INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+  !
+  TYPE(la_descriptor) :: desc
   !
   INTEGER, PARAMETER  :: root = 0
-  INTEGER             :: nx
+  INTEGER             :: nx, info
 #if defined __SCALAPACK
-  INTEGER             :: descsca( 16 ), info
+  INTEGER             :: descsca( 16 )
 #endif
     ! local block size
   COMPLEX(DP), ALLOCATABLE :: ss(:,:), hh(:,:), tt(:,:)
@@ -239,12 +532,14 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   CALL start_clock( 'cdiaghg' )
   !
+  CALL laxlib_intarray_to_desc(desc,idesc)
+  !
   IF( desc%active_node > 0 ) THEN
      !
      nx   = desc%nrcx
      !
      IF( nx /= ldh ) &
-        CALL errore(" pcdiaghg ", " inconsistent leading dimension ", ldh )
+        CALL lax_error__(" pcdiaghg ", " inconsistent leading dimension ", ldh )
      !
      ALLOCATE( hh( nx, nx ) )
      ALLOCATE( ss( nx, nx ) )
@@ -263,16 +558,16 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
 #if defined __SCALAPACK
      CALL descinit( descsca, n, n, desc%nrcx, desc%nrcx, 0, 0, ortho_cntx, SIZE( ss, 1 ) , info )
      !
-     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' desckinit ', ABS( info ) )
+     IF( info /= 0 ) CALL lax_error__( ' cdiaghg ', ' desckinit ', ABS( info ) )
 #endif
      !
 #if defined __SCALAPACK
 
      CALL pzpotrf( 'L', n, ss, 1, 1, descsca, info )
 
-     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' problems computing cholesky ', ABS( info ) )
+     IF( info /= 0 ) CALL lax_error__( ' cdiaghg ', ' problems computing cholesky ', ABS( info ) )
 #else
-     CALL qe_pzpotrf( ss, nx, n, desc )
+     CALL laxlib_pzpotrf( ss, nx, n, idesc )
 #endif
      !
   END IF
@@ -289,13 +584,13 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      !CALL clear_upper_tr( ss )
      ! set to zero the upper triangle of ss
      !
-     CALL sqr_zsetmat( 'U', n, ZERO, ss, size(ss,1), desc )
+     CALL sqr_setmat( 'U', n, ZERO, ss, size(ss,1), idesc )
      !
      CALL pztrtri( 'L', 'N', n, ss, 1, 1, descsca, info )
      !
-     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' problems computing inverse ', ABS( info ) )
+     IF( info /= 0 ) CALL lax_error__( ' cdiaghg ', ' problems computing inverse ', ABS( info ) )
 #else
-     CALL qe_pztrtri( ss, nx, n, desc )
+     CALL laxlib_pztrtri( ss, nx, n, idesc )
 #endif
      !
   END IF
@@ -308,7 +603,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   IF( desc%active_node > 0 ) THEN
      !
-     CALL sqr_zmm_cannon( 'N', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, desc )
+     CALL sqr_mm_cannon( 'N', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, idesc )
      !
   END IF
   !
@@ -316,12 +611,12 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   IF( desc%active_node > 0 ) THEN
      !
-     CALL sqr_zmm_cannon( 'N', 'C', n, ONE, v, nx, ss, nx, ZERO, hh, nx, desc )
+     CALL sqr_mm_cannon( 'N', 'C', n, ONE, v, nx, ss, nx, ZERO, hh, nx, idesc )
      !
      ! ensure that "hh" is really Hermitian, it is sufficient to set the diagonal
      ! properly, because only the lower triangle of hh will be used
      ! 
-     CALL sqr_zsetmat( 'H', n, ZERO, hh, size(hh,1), desc )
+     CALL sqr_setmat( 'H', n, ZERO, hh, size(hh,1), idesc )
      !
   END IF
   !
@@ -340,7 +635,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      !
 #else
      !
-     CALL qe_pzheevd( .true., n, desc, hh, SIZE( hh, 1 ), e )
+     CALL laxlib_pzheevd( .true., n, idesc, hh, SIZE( hh, 1 ), e )
      !
 #endif
      !
@@ -356,11 +651,15 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   IF ( desc%active_node > 0 ) THEN
      !
-     CALL sqr_zmm_cannon( 'C', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, desc )
+     CALL sqr_mm_cannon( 'C', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, idesc )
      !
   END IF
   !
-  CALL mp_bcast( e, root, ortho_parent_comm )
+#if defined __MPI
+  CALL MPI_BCAST( e, SIZE(e), MPI_DOUBLE_PRECISION, root, ortho_parent_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'pcdiaghg', 'error broadcasting array e', ABS( info ) )
+#endif
   !
   CALL stop_clock( 'cdiaghg:paragemm' )
   !
@@ -376,7 +675,7 @@ CONTAINS
   !
   SUBROUTINE test_drv_begin()
      ALLOCATE( tt( n, n ) )
-     CALL zsqmcll( n, hh, nx, tt, n, desc, desc%comm )
+     CALL laxlib_zsqmcll_x( n, hh, nx, tt, n, desc, desc%comm )
      RETURN
   END SUBROUTINE test_drv_begin
   !
@@ -410,12 +709,16 @@ CONTAINS
         close(100)
         DEALLOCATE( diag )
      END IF
-     CALL mp_bcast( tt, 0, desc%comm )
-     CALL zsqmdst( n, tt, n, hh, nx, desc )
+#if defined __MPI
+     CALL MPI_BCAST( tt, SIZE(tt), MPI_DOUBLE_COMPLEX, 0, desc%comm, info )
+     IF ( info /= 0 ) &
+        CALL lax_error__( 'test_drv_end', 'error broadcasting array e', ABS( info ) )
+#endif
+     CALL laxlib_zsqmdst_x( n, tt, n, hh, nx, desc )
      DEALLOCATE( tt )
-     CALL errore('cdiaghg','stop serial',1)
+     CALL lax_error__('cdiaghg','stop serial',1)
      RETURN
   END SUBROUTINE test_drv_end
   !
-END SUBROUTINE pcdiaghg
+END SUBROUTINE laxlib_pcdiaghg
 !

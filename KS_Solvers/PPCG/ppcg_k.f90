@@ -8,15 +8,12 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   ! E.V. Ignore btype, use ethr as threshold on subspace residual subspace
   ! SdG  restore btype use in the eigenvalue locking procedure
   !
-  USE ppcg_param,         ONLY : DP, stdout
+  USE util_param,         ONLY : DP, stdout
   USE mp,                 ONLY : mp_bcast, mp_root_sum, mp_sum
   USE mp_bands_util,      ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
-  USE descriptors,        ONLY : la_descriptor, descla_init, descla_local_dims
-  USE parallel_toolkit,   ONLY : zsqmher
-  USE mp_diag,            ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho, &
-                                 ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp
   !
   IMPLICIT NONE
+  include 'laxlib.fh'
   COMPLEX (DP), PARAMETER :: C_ONE = (1.D0,0.D0), C_ZERO = (0.D0,0.D0)
   !
   ! ... I/O variables
@@ -78,7 +75,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
 
   COMPLEX (DP), ALLOCATABLE    ::  Gl(:,:)
   !
-  TYPE(la_descriptor)  :: desc
+  INTEGER :: idesc(LAX_DESC_SIZE)
   ! descriptor of the current distributed Gram matrix
   LOGICAL :: la_proc
   ! flag to distinguish procs involved in linear algebra
@@ -92,13 +89,21 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
 
   INTEGER, PARAMETER   :: blocksz = 256 ! used to optimize some omp parallel do loops
   INTEGER   :: nblock
-
+  !
+  INTEGER :: np_ortho(2), ortho_parent_comm, ortho_cntx
+  LOGICAL :: do_distr_diag_inside_bgrp
+  !
+  !
   res_array     = 0.0
   !
   CALL start_clock( 'ppcg_k' )
   !
   !  ... Initialization and validation
-!
+
+  CALL laxlib_getval( np_ortho = np_ortho, ortho_cntx = ortho_cntx, &
+       ortho_parent_comm = ortho_parent_comm, &
+       do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
+  !
   print_info = 0 ! 3 
   sbsize3 = sbsize*3
   kdim  = npwx*(npol-1) + npw
@@ -174,9 +179,9 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   !
   ! Print initial info ...
   IF (print_info >= 1)  THEN
-     WRITE(stdout, '("Ethr: ",1pD9.2,", npw: ", I10, ", nbnd: ", I10, " , "   &
-                "maxter: ",I5, ", sbsize:  ", I10,", nsb: ", I10 ,", nact: ", I10, ", trtol: ", 1pD9.2 )')  &
-                ethr, npw, nbnd, maxter, sbsize, nsb, nact, trtol
+     WRITE(stdout, '("Ethr: ",1pD9.2,", npw: ", I10, ", nbnd: ", I10, " , ",  &
+              & "maxter: ",I5, ", sbsize:  ", I10,", nsb: ", I10 ,", nact: ", &
+              & I10, ", trtol: ", 1pD9.2 )')  ethr, npw, nbnd, maxter, sbsize, nsb, nact, trtol
      IF (print_info == 3) THEN
         CALL print_rnrm
         WRITE(stdout,'("Res. norm:  ", 1pD9.2)') res_array(iter)
@@ -604,14 +609,14 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
          end if
          !
          call start_clock('ppcg:cholQR')
-         CALL cholQR_dmat(kdim, nact, buffer, buffer1, kdimx, Gl, desc)
+         CALL cholQR_dmat(kdim, nact, buffer, buffer1, kdimx, Gl, idesc)
          call stop_clock('ppcg:cholQR')
          !
          psi(:,act_idx(1:nact)) = buffer(:,1:nact)
          !
          call threaded_assign( buffer1,  hpsi, kdimx, nact, act_idx )
          call start_clock('ppcg:ZTRSM')
-         CALL zgemm_dmat( kdim, nact, kdimx, desc, C_ONE, buffer1, Gl, C_ZERO, buffer )
+         CALL zgemm_dmat( kdim, nact, kdimx, idesc, C_ONE, buffer1, Gl, C_ZERO, buffer )
          call stop_clock('ppcg:ZTRSM')
          !
          hpsi(:,act_idx(1:nact)) = buffer(:,1:nact)
@@ -619,7 +624,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
          if (overlap) then
             call threaded_assign( buffer1,  spsi, kdimx, nact, act_idx )
             call start_clock('ppcg:ZTRSM')
-            CALL zgemm_dmat( kdim, nact, kdimx, desc, C_ONE, buffer1, Gl, C_ZERO, buffer )
+            CALL zgemm_dmat( kdim, nact, kdimx, idesc, C_ONE, buffer1, Gl, C_ZERO, buffer )
             call stop_clock('ppcg:ZTRSM')
             !
             spsi(:,act_idx(1:nact)) = buffer(:,1:nact)
@@ -795,16 +800,7 @@ CONTAINS
     ALLOCATE ( cwork( 1 + 18*sbsize + 18*sbsize**2 ), rwork( 1 + 18*sbsize + 18*sbsize**2 ), iwork(3 + 15*sbsize), stat = ierr )
     IF (ierr /= 0) CALL errore( 'ppcg ',' cannot allocate lapack work arrays ', ABS(ierr) )
     !
-    ALLOCATE( irc_ip( np_ortho(1) ), STAT=ierr )
-    IF( ierr /= 0 ) CALL errore( 'ppcg ',' cannot allocate irc_ip ', ABS(ierr) )
-    ALLOCATE( nrc_ip( np_ortho(1) ), STAT=ierr )
-    IF( ierr /= 0 ) CALL errore( 'ppcg ',' cannot allocate nrc_ip ', ABS(ierr) )
-    ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ), STAT=ierr )
-    IF( ierr /= 0 ) CALL errore( 'ppcg ',' cannot allocate rank_ip ', ABS(ierr) )
-    !
-    CALL desc_init( nbnd, desc, irc_ip, nrc_ip  )
-    !
-    nx = desc%nrcx
+    CALL desc_init( nbnd, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip  )
     !
     IF ( la_proc ) THEN
        ALLOCATE( Gl( nx, nx ), STAT=ierr )
@@ -878,7 +874,7 @@ CONTAINS
   !
   !
   !
-  SUBROUTINE cholQR_dmat(kdim, k, X, SX, kdimx,  Rl, desc)
+  SUBROUTINE cholQR_dmat(kdim, k, X, SX, kdimx,  Rl, idesc)
     !
     ! Distributed version of cholQR
     !
@@ -888,7 +884,7 @@ CONTAINS
     !
     INTEGER,     INTENT (IN) :: kdim, k, kdimx
     COMPLEX(DP), INTENT (INOUT) :: X(kdimx,k), SX(kdimx,k)
-    TYPE(la_descriptor), INTENT (IN)  :: desc
+    INTEGER, INTENT (IN)  :: idesc(:)
     COMPLEX(DP), INTENT(OUT) :: Rl(:, :)
     ! inverse of the upper triangular Cholesky factor
     !
@@ -901,7 +897,7 @@ CONTAINS
     INTEGER     :: desc_sca( 16 ), info
 #endif
     !
-    nx = desc%nrcx
+    nx = idesc(LAX_DESC_NRCX)
     !
     IF ( la_proc ) THEN
        !
@@ -919,7 +915,7 @@ CONTAINS
     !
     ! ... Perform Cholesky of X'X
     !
-    CALL compute_distmat(XTXl, desc, X, SX, k)
+    CALL compute_distmat(XTXl, idesc, X, SX, k)
     !
     IF ( la_proc ) THEN
        !
@@ -940,7 +936,7 @@ CONTAINS
           IF( info /= 0 ) CALL errore( ' ppcg ', ' problems computing inverse ', ABS( info ) )
           !
           ! set the lower triangular part to zero
-          CALL sqr_zsetmat( 'L', k, C_ZERO, XTXl, size(XTXl,1), desc )
+          CALL sqr_setmat( 'L', k, C_ZERO, XTXl, size(XTXl,1), idesc )
        !
        ELSE
        ! TBD: QR
@@ -961,15 +957,15 @@ CONTAINS
 !           !
        END IF
 #else
-       CALL qe_pzpotrf( XTXl, nx, k, desc )
+       CALL laxlib_pzpotrf( XTXl, nx, k, idesc )
        !
-       CALL qe_pztrtri ( XTXl, nx, k, desc )
+       CALL laxlib_pztrtri ( XTXl, nx, k, idesc )
 #endif
     !
     !
     END IF
     !
-    CALL zgemm_dmat( kdim, k, kdimx, desc, C_ONE, X, XTXl, C_ZERO, buffer )
+    CALL zgemm_dmat( kdim, k, kdimx, idesc, C_ONE, X, XTXl, C_ZERO, buffer )
     !
     X = buffer
     ! ... also return R factor
@@ -1091,9 +1087,7 @@ CONTAINS
         !
         IF ( ALLOCATED(Gl) ) DEALLOCATE(Gl)
         !
-        CALL desc_init( nact, desc, irc_ip, nrc_ip  )
-        !
-        nx = desc%nrcx
+        CALL desc_init( nact, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip  )
         !
         IF ( la_proc ) THEN
            !
@@ -1163,7 +1157,7 @@ CONTAINS
      !
      COMPLEX (DP), ALLOCATABLE    :: Hl(:,:), Sl(:,:)
      ! local part of projected Hamiltonian and of the overlap matrix
-     TYPE(la_descriptor)       :: desc
+     INTEGER :: idesc(LAX_DESC_SIZE)
      !
      ! Matrix distribution descriptors to temporary store the "global" current descriptor
      LOGICAL :: la_proc_store
@@ -1198,9 +1192,7 @@ CONTAINS
      nrc_ip_store  = nrc_ip
      rank_ip_store = rank_ip
      !
-     CALL desc_init( nbnd, desc, irc_ip, nrc_ip  )
-     !
-     nx = desc%nrcx
+     CALL desc_init( nbnd, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip  )
      !
      IF ( la_proc ) THEN
         !
@@ -1234,32 +1226,32 @@ CONTAINS
      !
      !
      !  G = psi'*hpsi
-     CALL compute_distmat(Hl, desc, psi, hpsi, nbnd)
+     CALL compute_distmat(Hl, idesc, psi, hpsi, nbnd)
      if (overlap) then
-        CALL compute_distmat(Sl, desc, psi, spsi, nbnd)
+        CALL compute_distmat(Sl, idesc, psi, spsi, nbnd)
      else
-        CALL compute_distmat(Sl, desc, psi,  psi, nbnd)
+        CALL compute_distmat(Sl, idesc, psi,  psi, nbnd)
      end if
      !
      ! ... diagonalize the reduced hamiltonian
      !     Calling block parallel algorithm
      !
-     IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pcdiaghg e and vl are the same across ortho_parent_comm
+     IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pdiaghg e and vl are the same across ortho_parent_comm
         ! only the first bgrp performs the diagonalization
-        IF( my_bgrp_id == root_bgrp_id) CALL pcdiaghg( nbnd, Hl, Sl, nx, e, vl, desc )
+        IF( my_bgrp_id == root_bgrp_id) CALL pdiaghg( nbnd, Hl, Sl, nx, e, vl, idesc )
         IF( nbgrp > 1 ) THEN ! results must be brodcast to the other band groups
           CALL mp_bcast( vl, root_bgrp_id, inter_bgrp_comm )
           CALL mp_bcast( e,  root_bgrp_id, inter_bgrp_comm )
         ENDIF
      ELSE
-        CALL pcdiaghg( nbnd, Hl, Sl, nx, e, vl, desc )
+        CALL pdiaghg( nbnd, Hl, Sl, nx, e, vl, idesc )
      END IF
      !
      ! "Rotate" psi to eigenvectors
      !
-     CALL zgemm_dmat( kdim, nbnd, kdimx, desc, C_ONE,  psi, vl, C_ZERO,  psi_t )
-     CALL zgemm_dmat( kdim, nbnd, kdimx, desc, C_ONE, hpsi, vl, C_ZERO, hpsi_t )
-     if (overlap) CALL zgemm_dmat( kdim, nbnd, kdimx, desc, C_ONE, spsi, vl, C_ZERO, spsi_t )
+     CALL zgemm_dmat( kdim, nbnd, kdimx, idesc, C_ONE,  psi, vl, C_ZERO,  psi_t )
+     CALL zgemm_dmat( kdim, nbnd, kdimx, idesc, C_ONE, hpsi, vl, C_ZERO, hpsi_t )
+     if (overlap) CALL zgemm_dmat( kdim, nbnd, kdimx, idesc, C_ONE, spsi, vl, C_ZERO, spsi_t )
      !
      psi   = psi_t ; hpsi  = hpsi_t ;  if (overlap) spsi  = spsi_t
      !
@@ -1333,37 +1325,7 @@ CONTAINS
   END SUBROUTINE deallocate_all
   !
   !
-! dmat begin
-  SUBROUTINE desc_init( nsiz, desc, irc_ip, nrc_ip )
-!    copy-paste from pregterg
-     !
-     INTEGER, INTENT(IN)  :: nsiz
-     TYPE(la_descriptor), INTENT(OUT) :: desc
-     INTEGER, INTENT(OUT) :: irc_ip(:)
-     INTEGER, INTENT(OUT) :: nrc_ip(:)
-
-     INTEGER :: i, j, rank
-     !
-     CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id)
-!     !
-!     nx = desc%nrcx   ! nx should be initialized outside whenever needed
-     !
-     DO j = 0, desc%npc - 1
-        CALL descla_local_dims( irc_ip( j + 1 ), nrc_ip( j + 1 ), desc%n, desc%nx, np_ortho(1), j )
-        DO i = 0, desc%npr - 1
-           CALL GRID2D_RANK( 'R', desc%npr, desc%npc, i, j, rank )
-           rank_ip( i+1, j+1 ) = rank * leg_ortho
-        END DO
-     END DO
-     !
-     la_proc = .FALSE.
-     IF( desc%active_node > 0 ) la_proc = .TRUE.
-     !
-     RETURN
-  END SUBROUTINE desc_init
-  !
-  !
-  SUBROUTINE compute_distmat( dm, desc, v, w, k)
+  SUBROUTINE compute_distmat( dm, idesc, v, w, k)
 !    Copy-paste from pcegterg and desc added as a parameter
      !
      !  This subroutine compute <vi|wj> and store the
@@ -1374,7 +1336,7 @@ CONTAINS
      ! ... I/O variables
      !
      COMPLEX(DP), INTENT(OUT)   :: dm( :, : )
-     TYPE(la_descriptor), INTENT(IN) :: desc
+     INTEGER, INTENT(IN) :: idesc(:)
      COMPLEX(DP), INTENT(IN) :: v(:,:), w(:,:)
      INTEGER, INTENT(IN)     :: k
      ! global size of dm = number of vectors in v and w blocks
@@ -1387,13 +1349,13 @@ CONTAINS
      INTEGER :: nx
      ! maximum local block dimension
      !
-     nx = desc%nrcx
+     nx = idesc(LAX_DESC_NRCX)
      !
      ALLOCATE( work( nx, nx ) )
      !
      work = C_ZERO
      !
-     DO ipc = 1, desc%npc !  loop on column procs
+     DO ipc = 1, idesc(LAX_DESC_NPC) !  loop on column procs
         !
         nc = nrc_ip( ipc )
         ic = irc_ip( ipc )
@@ -1421,8 +1383,7 @@ CONTAINS
      !
      if (ortho_parent_comm.ne.intra_bgrp_comm .and. nbgrp > 1) dm = dm/nbgrp
      !
-!     CALL zsqmher( nbnd, dm, nx, desc )
-     CALL zsqmher( k, dm, nx, desc )
+     CALL laxlib_zsqmher( k, dm, nx, idesc )
      !
      DEALLOCATE( work )
      !
@@ -1430,7 +1391,7 @@ CONTAINS
   END SUBROUTINE compute_distmat
   !
   !
-  SUBROUTINE zgemm_dmat( n, k, ld, desc, alpha, X, Gl, beta, Y  )
+  SUBROUTINE zgemm_dmat( n, k, ld, idesc, alpha, X, Gl, beta, Y  )
 !    Copy-paste from refresh_evc in pregterg with some modifications
      !
      ! Compute Y = alpha*(X*G) + beta*Y, where G is distributed across la processor group
@@ -1444,7 +1405,7 @@ CONTAINS
      ! number of rows of X and Y
      ! number of columns of X,Y  and size/leading dimension of (global) G
      ! leading dimension of X and Y
-     TYPE(la_descriptor), INTENT(IN) :: desc
+     INTEGER, INTENT(IN) :: idesc(:)
      ! descriptor of G
      COMPLEX(DP), INTENT(IN)      ::  alpha, beta
      COMPLEX(DP), INTENT (IN)     ::  X(ld, k)
@@ -1460,12 +1421,12 @@ CONTAINS
      COMPLEX(DP) :: gamm
      INTEGER :: nx
      !
-     nx = desc%nrcx
+     nx = idesc(LAX_DESC_NRCX)
      !
      ALLOCATE( Gltmp( nx, nx ) )
      ALLOCATE( Xtmp( ld, k ) )
      !
-     DO ipc = 1, desc%npc
+     DO ipc = 1, idesc(LAX_DESC_NPC)
         !
         nc = nrc_ip( ipc )
         ic = irc_ip( ipc )
@@ -1476,13 +1437,13 @@ CONTAINS
            !
            gamm = C_ZERO
 
-           DO ipr = 1, desc%npr
+           DO ipr = 1, idesc(LAX_DESC_NPR)
               !
               nr = nrc_ip( ipr )
               ir = irc_ip( ipr )
               !
               root = rank_ip( ipr, ipc )
-              IF( ipr-1 == desc%myr .AND. ipc-1 == desc%myc .AND. la_proc ) THEN
+              IF( ipr-1 == idesc(LAX_DESC_MYR) .AND. ipc-1 == idesc(LAX_DESC_MYC) .AND. la_proc ) THEN
                  !
                  !  this proc sends his block
                  !
@@ -1607,9 +1568,9 @@ nguard = 0 ! 24 ! 50
   !
   IMPLICIT NONE
   !
+  INTEGER, INTENT(IN)      :: kdimx, nact
   COMPLEX(DP), INTENT(OUT) :: array_out( kdimx, nact )
   COMPLEX(DP), INTENT(IN)  :: array_in ( kdimx, * )
-  INTEGER, INTENT(IN)      :: kdimx, nact
   INTEGER, INTENT(IN), OPTIONAL :: act_idx( * )
   LOGICAL, INTENT(IN), OPTIONAL :: bgrp_root_only
   !

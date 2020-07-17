@@ -25,7 +25,6 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
                                   tprnfor, iesr, textfor
       USE io_global,        ONLY: stdout
       USE ions_base,        ONLY: nsp, na, nat, rcmax, compute_eextfor
-      USE ions_base,        ONLY: ind_srt, ind_bck
       USE cell_base,        ONLY: omega, r_to_s
       USE cell_base,        ONLY: alat, at, tpiba2, h, ainv
       USE cell_base,        ONLY: ibrav, isotropic  !True if volume option is chosen for cell_dofree
@@ -44,8 +43,8 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE mp_global,        ONLY: intra_bgrp_comm
       USE funct,            ONLY: dft_is_meta, dft_is_nonlocc, nlc, get_inlc,&
                                   dft_is_hybrid, exx_is_active
-      USE vdW_DF,           ONLY: stress_vdW_DF
-      use rVV10,            ONLY: stress_rVV10 
+      USE vdW_DF,           ONLY: vdW_DF_stress
+      use rVV10,            ONLY: rVV10_stress
       USE pres_ai_mod,      ONLY: abivol, abisur, v_vol, P_ext, volclu,  &
                                   Surf_t, surfclu
       USE fft_interfaces,   ONLY: fwfft, invfft
@@ -115,10 +114,18 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       IF (ts_vdw) THEN
         !
         CALL start_clock( 'ts_vdw' )
-        ALLOCATE (stmp(3,nat))
-        stmp(:,:) = tau0(:,ind_bck(:))
-        CALL tsvdw_calculate(stmp,rhor)
-        DEALLOCATE (stmp)
+        ALLOCATE (stmp(3,nat), rhocsave(dfftp%nnr) )
+        stmp(:,:) = tau0(:,:)
+        !
+        IF ( nspin==2 ) THEN
+           rhocsave(:) = rhor(:,1) + rhor(:,2) 
+        ELSE
+           rhocsave(:) = rhor(:,1)
+        ENDIF
+        !
+        CALL tsvdw_calculate(stmp,rhocsave)
+        !
+        DEALLOCATE (rhocsave,stmp)
         CALL stop_clock( 'ts_vdw' )
         !
       END IF
@@ -168,7 +175,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          !
          ALLOCATE( stmp( 3, nat ) )
          !
-         CALL r_to_s( tau0, stmp, na, nsp, ainv )
+         CALL r_to_s( tau0, stmp, nat, ainv )
          !
          CALL vofesr( iesr, esr, dsr6, fion, stmp, tpre, h )
          !
@@ -384,15 +391,21 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
                 END DO
              END DO
              denlc(:,:) = 0.0_dp
+             !
+             !^^ ... TEMPORARY FIX (newlsda) ...
+             IF ( nspin==2 ) THEN
+               rhosave(:,1) = rhosave(:,1) + rhosave(:,2) 
+               CALL errore('stres_vdW', 'LSDA+stress+vdW-DF not implemented',1)
+             END IF
+             !^^.......................
+             !   
              inlc = get_inlc()
-
-             if (inlc==1 .or. inlc==2) then
-               if (nspin>2) call errore('stres_vdW_DF', 'vdW+DF non implemented in spin polarized calculations',1)
-               CALL stress_vdW_DF(rhosave, rhocsave, nspin, denlc )
-             elseif (inlc == 3) then
-               if (nspin>2) call errore('stress_rVV10', 'rVV10 non implemented with nspin>2',1)
-               CALL stress_rVV10(rhosave, rhocsave, nspin, denlc )
-             end if
+             IF ( inlc > 0 .AND. inlc < 26 ) THEN
+               CALL vdW_DF_stress ( rhosave(:,1), rhocsave, nspin, denlc )
+             ELSEIF ( inlc == 26 ) then
+               CALL rVV10_stress  ( rhosave(:,1), rhocsave, nspin, denlc )
+             END IF
+             !
              dxc(:,:) = dxc(:,:) - omega/e2 * MATMUL(denlc,TRANSPOSE(ainv))
          END IF
          DEALLOCATE ( rhocsave, rhosave )
@@ -456,7 +469,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          !    Add TS-vdW ion forces to fion here... (RAD)
          !
          IF (ts_vdw) THEN
-            fion1(:,:) = FtsvdW(:,ind_srt(:))
+            fion1(:,:) = FtsvdW(:,:)
             fion = fion + fion1
             !fion=fion+FtsvdW
          END IF

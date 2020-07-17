@@ -12,7 +12,7 @@ SUBROUTINE drhodv(nu_i)
   !
   !  calculate the electronic term <psi|dv|dpsi> of the dynamical matrix
   !
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_pools,  ONLY : intra_pool_comm
   USE mp,        ONLY : mp_sum
   USE klist,     ONLY : wk, ngk
   USE wvfct,     ONLY : nbnd, npwx

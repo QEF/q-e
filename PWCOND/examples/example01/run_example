@@ -114,7 +114,7 @@ cat > al.scf.in << EOF
  /
 ATOMIC_SPECIES
  Al 26.98 Al.pz-vbc.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  Al 0. 0. 0.0
  Al 0.5 0.5 0.707
 K_POINTS (automatic)
@@ -175,7 +175,7 @@ cat > alwire.scf.in << EOF
  /
 ATOMIC_SPECIES
  Al 26.98 Al.pz-vbc.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  Al 0.0 0.0 0.000
 K_POINTS (automatic)
  1 1 15 0 0 0
@@ -237,7 +237,7 @@ cat > ni.scf.in << EOF
  /
 ATOMIC_SPECIES
  Ni 58.69 Ni.pz-nd-rrkjus.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  Ni 0. 0. 0.
  Ni 0.5 0.5 0.707
 K_POINTS (automatic)
@@ -299,7 +299,7 @@ cat > alwire1.scf.in << EOF
  /
 ATOMIC_SPECIES
  Al 26.98 Al.pz-vbc.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  Al 0.0 0.0 0.000
 K_POINTS (automatic)
  2 2 24 1 1 1
@@ -337,7 +337,7 @@ cat > AlwireH.scf.in << EOF
 ATOMIC_SPECIES
  Al 26.98 Al.pz-vbc.UPF
  H  1.0   H.pz-vbc.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
 Al     0.00000000     0.00000000     0.0000
 Al     0.00000000     0.00000000     0.375
 Al    -0.02779870     0.00000000     .75537515

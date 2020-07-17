@@ -34,14 +34,15 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   USE uspp,      ONLY: okvan
   USE noncollin_module, ONLY: noncolin, npol
   USE wavefunctions, ONLY: evc,    psic, psic_nc
-  USE io_files,             ONLY : iunwfc, nwordwfc
+  USE io_files,             ONLY : restart_dir
   USE scf,                  ONLY : rho
   USE projections_ldos,     ONLY : proj
   USE fft_base,             ONLY : dfftp
   USE scatter_mod,          ONLY : scatter_grid
   USE fft_interfaces,       ONLY : invfft
-  USE mp_global,            ONLY : intra_pool_comm
+  USE mp_pools,             ONLY : intra_pool_comm
   USE mp,                   ONLY : mp_sum
+  USE pw_restart_new,       ONLY : read_collected_wfc
 !
   !
   IMPLICIT NONE
@@ -222,7 +223,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
      !
      IF ( lsda ) current_spin = isk(ik)
      npw = ngk(ik)
-     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+     CALL read_collected_wfc ( restart_dir(), ik, evc )
      !
      bnd_loop: DO ibnd = 1, nbnd
         !
@@ -449,7 +450,7 @@ SUBROUTINE partialdos_boxes(Emin, Emax, DeltaE, kresolveddos, filpdos, n_proj_bo
            WRITE (4,'(i5," ")', advance="NO") ik
         ENDIF
         etev = Emin + ie * DeltaE
-        WRITE (4,'(f7.3,4(2e11.3),999(2e11.3))') etev*rytoev,  &
+        WRITE (4,'(f8.3,4(2e11.3),999(2e11.3))') etev*rytoev,  &
              dostot(ie,1:nspin0,ik), dosboxtot(ie,1:nspin0,ik), &
              ( dosbox(ie,ibox,1:nspin0,ik), ibox = 1, n_proj_boxes )
      ENDDO

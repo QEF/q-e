@@ -3,12 +3,12 @@
 # compilation rules
 
 .SUFFIXES :
-.SUFFIXES : .o .c .f .f90
+.SUFFIXES : .o .c .f .f90 .h .fh
 
 # most fortran compilers can directly preprocess c-like directives: use
 # 	$(MPIF90) $(F90FLAGS) -c $<
 # if explicit preprocessing by the C preprocessor is needed, use:
-# 	$(CPP) $(CPPFLAGS) $< -o $*.F90
+#	$(CPP) $(CPPFLAGS) $< -o $*.F90
 #	$(MPIF90) $(F90FLAGS) -c $*.F90 -o $*.o
 # remember the tabulator in the first column !!!
 
@@ -22,6 +22,9 @@
 
 .c.o:
 	$(CC) $(CFLAGS)  -c $<
+
+.h.fh:
+	$(CPP) $(CPPFLAGS) $< -o $*.fh
 
 @SET_MAKE@
 
@@ -61,6 +64,7 @@ MOD_FLAG      = @imod@
 # Each Makefile can add directories to MODFLAGS and libraries to QEMODS
 
 BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/iotk/src \
+               $(MOD_FLAG)$(TOPDIR)/upflib \
                $(MOD_FLAG)$(TOPDIR)/Modules \
                $(MOD_FLAG)$(TOPDIR)/FFTXlib \
 	       $(MOD_FLAG)$(TOPDIR)/LAXlib \
@@ -118,6 +122,7 @@ FFLAGS_NOMAIN   = @fflags_nomain@
 # Linker, linker-specific flags (if any)
 # Typically LD coincides with F90 or MPIF90, LD_LIBS is empty
 # for libxc, set LD_LIBS=-L/path/to/libxc/lib/ -lxcf90 -lxc
+# If libxc is older than v5.0.0 replace -lxcf90 with -lxcf03
 
 LD             = @ld@
 LDFLAGS        = @ldflags@
@@ -149,7 +154,7 @@ SCALAPACK_LIBS = @scalapack_libs@
 FFT_LIBS       = @fft_libs@
 
 # HDF5
-HDF5_LIB = @hdf5_libs@
+HDF5_LIBS = @hdf5_libs@
 FOX_LIB  = -L$(TOPDIR)/FoX/lib  -lFoX_dom -lFoX_sax -lFoX_wxml -lFoX_common\
             -lFoX_utils -lFoX_fsys 
 FOX_FLAGS = @foxflags@
@@ -161,6 +166,11 @@ MPI_LIBS       = @mpi_libs@
 # IBM-specific: MASS libraries, if available and if -D__MASS is defined in FDFLAGS
 
 MASS_LIBS      = @mass_libs@
+
+# library for bayesian error estimate functionals
+
+BEEF_LIBS      = @beef_libs@
+BEEF_LIBS_SWITCH = @beef_libs_switch@
 
 # CUDA libraries
 CUDA_LIBS=@cuda_libs@
@@ -181,7 +191,8 @@ RANLIB         = @ranlib@
 FLIB_TARGETS   = all
 
 LIBOBJS        = $(TOPDIR)/clib/clib.a  $(TOPDIR)/iotk/src/libiotk.a
-QELIBS         = $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIB) $(LD_LIBS)
+LIBXC_LIBS     = @LIBS_LIBXC@
+QELIBS         = $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(BEEF_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LIBXC_LIBS) $(LD_LIBS)
 
 # wget or curl - useful to download from network
 WGET = @wget@

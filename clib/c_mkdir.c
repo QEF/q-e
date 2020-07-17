@@ -13,10 +13,11 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <time.h>
-#include <unistd.h>
 
 #if defined(_WIN32)
 #include <direct.h>
+#else
+#include <unistd.h>
 #endif
 
 int check_writable_dir(const char *filename) {

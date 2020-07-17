@@ -93,7 +93,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
   USE ions_base,            ONLY : nat, ntyp =>nsp, ityp
   USE uspp_param,           ONLY : lmaxq,upf,nh, nhm
   USE lsda_mod,             ONLY : nspin
-  USE mp_global,            ONLY : intra_image_comm, me_pool
+  USE mp_pools,             ONLY : me_pool
   USE mp,                   ONLY : mp_bcast,mp_barrier,mp_sum
   USE mp_world,             ONLY : world_comm
   USE fft_base,             ONLY : dffts,dfftp

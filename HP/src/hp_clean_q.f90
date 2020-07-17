@@ -14,13 +14,10 @@ SUBROUTINE hp_clean_q (flag)
   ! HP code, and resets the same variables as after reading input in
   ! hp_readin, so that it is possible to start a calculation at a new q.
   !
-  USE control_flags,   ONLY : twfcollect
   USE lr_symm_base,    ONLY : nsymq
   !
   IMPLICIT NONE
   LOGICAL :: flag
-  !
-  twfcollect = .FALSE.
   !
   CALL clean_pw(.FALSE.)
   !

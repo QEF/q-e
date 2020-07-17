@@ -12,7 +12,6 @@ CGOBJS = \
 a_h.o \
 cg_readin.o \
 cg_setup.o \
-cg_setupdgc.o \
 cgcom.o \
 cgsolve.o \
 d2ion.o \
@@ -30,23 +29,22 @@ generate_dynamical_matrix.o \
 generate_effective_charges.o \
 h_h.o \
 macro.o \
-phcg.o \
 rhod2vkb.o \
 solve_e.o \
 solve_ph.o \
 writedyn.o 
 
 PWOBJS = ../../PW/src/libpw.a
-QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
-         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
+QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a \
+         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a ../../LR_Modules/liblrmod.a
 
 TLDEPS= pwlibs
 
-all : tldeps phcg.x libcg.a
+all : tldeps phcg.x
 
-phcg.x : $(PWOBJS) $(CGOBJS) $(QEMODS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o phcg.x \
-		$(CGOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+phcg.x : phcg.o libphcg.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		phcg.o libphcg.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/Gamma/phcg.x . )
 tldeps :
 	if test -n "$(TLDEPS)" ; then \
@@ -56,7 +54,7 @@ clean :
 	- /bin/rm -f *.x *.o *.d *.i *~ *_tmp.f90 *.mod *.L *.a
 	- /bin/rm -f ../../bin/phcg.x
 
-libcg.a : $(CGOBJS)
+libphcg.a : $(CGOBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 

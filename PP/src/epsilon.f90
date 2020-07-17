@@ -48,14 +48,17 @@ CONTAINS
   INTEGER         :: iw,ik,i,ierr
 
   !
-  ! check on the number of bands: we need to include empty bands in order to allow
-  ! to write the transitions
+  ! check on the number of bands: we need to include empty bands in order
+  ! to compute the transitions
   !
   IF ( nspin == 1) full_occ = 2.0d0
   IF ( nspin == 2 .OR. nspin == 4) full_occ = 1.0d0
   !
-  IF ( REAL(nbnd,DP)*full_occ <= nelec ) CALL errore('epsilon', 'bad band number', 1)
-
+  IF ( nspin == 2 ) THEN
+     IF ( nbnd*full_occ <= nelec/2.d0 ) CALL errore('epsilon', 'bad band number', 2)
+  ELSE
+     IF ( nbnd*full_occ <= nelec ) CALL errore('epsilon', 'bad band number', 1)
+  ENDIF
   !
   ! USPP are not implemented (dipole matrix elements are not trivial at all)
   !
@@ -83,7 +86,7 @@ CONTAINS
   DO ik = 2, nks
      !
      IF ( abs( wk(1) - wk(ik) ) > 1.0d-8 ) &
-        CALL errore('grid_build','non unifrom kpt grid', ik )
+        CALL errore('grid_build','non uniform kpt grid', ik )
      !
   ENDDO
   !
@@ -100,7 +103,7 @@ CONTAINS
   ! set the energy grid
   !
   IF ( metalcalc .AND. ABS(wmin) <= 0.001d0 ) wmin=0.001d0
-  IF ( ionode ) WRITE(stdout,"(5x,a,f12.6)") "metalling system: redefining wmin = ", wmin  
+  IF ( ionode ) WRITE(stdout,"(5x,a,f12.6)") "metallic system: redefining wmin = ", wmin  
   !
   alpha = (wmax - wmin) / REAL(nw-1, KIND=DP)
   !
@@ -147,14 +150,14 @@ PROGRAM epsilon
   USE kinds,       ONLY : DP
   USE io_global,   ONLY : stdout, ionode, ionode_id
   USE mp,          ONLY : mp_bcast
-  USE mp_world,    ONLY : world_comm
+  USE mp_global,   ONLY : mp_startup
+  USE mp_images,   ONLY : intra_image_comm
   USE io_files,    ONLY : tmp_dir, prefix
   USE constants,   ONLY : RYTOEV
   USE ener,        ONLY : ef
   USE klist,       ONLY : lgauss, ltetra
   USE wvfct,       ONLY : nbnd
   USE lsda_mod,    ONLY : nspin
-  USE mp_global,   ONLY : mp_startup
   USE environment, ONLY : environment_start, environment_end
   USE grid_module, ONLY : grid_build, grid_destroy
   !
@@ -177,6 +180,7 @@ PROGRAM epsilon
   ! local variables
   !
   INTEGER :: ios
+  LOGICAL :: needwf = .TRUE.
 
 !---------------------------------------------
 ! program body
@@ -219,7 +223,7 @@ PROGRAM epsilon
   !
   IF ( ionode ) READ (5, inputpp, IOSTAT=ios)
   !
-  CALL mp_bcast ( ios, ionode_id, world_comm )
+  CALL mp_bcast ( ios, ionode_id, intra_image_comm )
   IF (ios/=0) CALL errore('epsilon', 'reading namelist INPUTPP', abs(ios))
   !
   IF ( ionode ) THEN
@@ -230,34 +234,32 @@ PROGRAM epsilon
      !
   ENDIF
   !
-  CALL mp_bcast ( ios, ionode_id, world_comm )
+  CALL mp_bcast ( ios, ionode_id, intra_image_comm )
   IF (ios/=0) CALL errore('epsilon', 'reading namelist ENERGY_GRID', abs(ios))
   !
   ! ... Broadcast variables
   !
   IF (ionode) WRITE( stdout, "( 5x, 'Broadcasting variables...' ) " )
 
-  CALL mp_bcast( smeartype, ionode_id, world_comm )
-  CALL mp_bcast( calculation, ionode_id, world_comm )
-  CALL mp_bcast( prefix, ionode_id, world_comm )
-  CALL mp_bcast( tmp_dir, ionode_id, world_comm )
-  CALL mp_bcast( shift, ionode_id, world_comm )
-  CALL mp_bcast( intrasmear, ionode_id, world_comm )
-  CALL mp_bcast( intersmear, ionode_id, world_comm)
-  CALL mp_bcast( wmax, ionode_id, world_comm )
-  CALL mp_bcast( wmin, ionode_id, world_comm )
-  CALL mp_bcast( nw, ionode_id, world_comm )
-  CALL mp_bcast( nbndmin, ionode_id, world_comm )
-  CALL mp_bcast( nbndmax, ionode_id, world_comm )
+  CALL mp_bcast( smeartype, ionode_id, intra_image_comm )
+  CALL mp_bcast( calculation, ionode_id, intra_image_comm )
+  CALL mp_bcast( prefix, ionode_id, intra_image_comm )
+  CALL mp_bcast( tmp_dir, ionode_id, intra_image_comm )
+  CALL mp_bcast( shift, ionode_id, intra_image_comm )
+  CALL mp_bcast( intrasmear, ionode_id, intra_image_comm )
+  CALL mp_bcast( intersmear, ionode_id, intra_image_comm)
+  CALL mp_bcast( wmax, ionode_id, intra_image_comm )
+  CALL mp_bcast( wmin, ionode_id, intra_image_comm )
+  CALL mp_bcast( nw, ionode_id, intra_image_comm )
+  CALL mp_bcast( nbndmin, ionode_id, intra_image_comm )
+  CALL mp_bcast( nbndmax, ionode_id, intra_image_comm )
 
   !
   ! read PW simulation parameters from prefix.save/data-file.xml
   !
   IF (ionode) WRITE( stdout, "( 5x, 'Reading PW restart file...' ) " )
 
-  CALL read_file
-  CALL openfil_pp
-
+  CALL read_file_new( needwf )
   !
   ! few conversions
   !
@@ -336,7 +338,7 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nbndmin, nbndmax, shift, metalcalc 
   USE io_global,            ONLY : ionode, stdout
   !
   USE grid_module,          ONLY : alpha, focc, full_occ, nw, wgrid, grid_destroy
-  USE mp_global,            ONLY : inter_pool_comm
+  USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -867,7 +869,7 @@ SUBROUTINE offdiag_calc ( intersmear, intrasmear, nbndmin, nbndmax, shift, metal
   USE klist,                ONLY : nks, nkstot, degauss
   USE grid_module,          ONLY : focc, wgrid, grid_build, grid_destroy
   USE io_global,            ONLY : ionode, stdout
-  USE mp_global,            ONLY : inter_pool_comm
+  USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
   USE grid_module,          ONLY : focc, nw, wgrid
 
@@ -1064,12 +1066,13 @@ SUBROUTINE dipole_calc( ik, dipole_aux, metalcalc, nbndmin, nbndmax )
   !
   USE kinds,                ONLY : DP
   USE wvfct,                ONLY : nbnd, npwx
-  USE wavefunctions, ONLY : evc
+  USE wavefunctions,        ONLY : evc
   USE klist,                ONLY : xk, ngk, igk_k
   USE gvect,                ONLY : ngm, g
-  USE io_files,             ONLY : nwordwfc, iunwfc
+  USE io_files,             ONLY : restart_dir
+  USE pw_restart_new,       ONLY : read_collected_wfc
   USE grid_module,          ONLY : focc, full_occ
-  USE mp_global,            ONLY : intra_bgrp_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   USE lsda_mod,             ONLY : nspin
   !
@@ -1091,7 +1094,7 @@ SUBROUTINE dipole_calc( ik, dipole_aux, metalcalc, nbndmin, nbndmax )
   !
   ! read wfc for the given kpt
   !
-  CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+  CALL read_collected_wfc ( restart_dir(), ik, evc )
   !
   ! compute matrix elements
   !

@@ -46,7 +46,7 @@ else:
             if 'runtimeVersion' in line:
                 _, conf_rt = line.split(':')
                 conf_rt = conf_rt.strip()
-                conf_rt = conf_rt[0]+'.'+conf_rt[2]
+                conf_rt = '{0:.1f}'.format(float(conf_rt)/1000.)
             if 'minor' in line:
                 _, minor = line.split(':')
                 minor = str(5 if int(minor)>=5 else 0)
