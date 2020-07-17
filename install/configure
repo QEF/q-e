@@ -6485,6 +6485,16 @@ fi
 
 if test "$with_libxc" -ne 0; then
 
+lxcf="f03"
+lxcf2="f03"
+if test ! -z "$with_libxc_prefix"; then
+lxc_version=`grep "XC_MAJOR_VERSION" "$with_libxc_prefix/xc_version.h" | tr -dc '1-9'`
+if test "$lxc_version" -lt 5; then
+  lxcf="f03"
+  lxcf2="f90"
+fi
+fi
+
 if test x"$FCFLAGS_LIBXC" = x; then
   case $with_libxc_prefix in
     "") FCFLAGS_LIBXC="$imod/usr/include" ;;
@@ -6504,19 +6514,19 @@ acx_libxc_save_FCFLAGS="$FCFLAGS"
 $as_echo_n "checking for libxc... " >&6; }
 ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
+ac_link='$FC -o conftest$ac_exeext $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 FCFLAGS="$FCFLAGS_LIBXC $acx_libxc_save_FCFLAGS"
 
 testprog="      program main
 
-  use xc_f90_lib_m
+  use xc_${lxcf}_lib_m
   implicit none
   integer :: major
   integer :: minor
   integer :: micro
-  call xc_f90_version(major, minor, micro)
+  call xc_${lxcf}_version(major, minor, micro)
       end"
 
 if test ! -z "$LIBS_LIBXC"; then
@@ -6533,7 +6543,7 @@ fi
 
 if test ! -z "$with_libxc_prefix"; then
   if test x"$acx_libxc_ok" = xno; then
-    LIBS_LIBXC="-L$with_libxc_prefix/lib -lxcf90 -lxc"
+    LIBS_LIBXC="-L$with_libxc_prefix/lib -lxc$lxcf -lxc"
     LIBS="$LIBS_LIBXC $acx_libxc_save_LIBS"
     cat > conftest.$ac_ext <<_ACEOF
 $testprog
@@ -6545,7 +6555,7 @@ rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
   fi
 else
-  LIBS_LIBXC="-lxcf90 -lxc"
+  LIBS_LIBXC="-lxc$lxcf -lxc"
   LIBS="$LIBS_LIBXC $acx_libxc_save_LIBS"
   cat > conftest.$ac_ext <<_ACEOF
 $testprog

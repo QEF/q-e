@@ -756,14 +756,6 @@ serial or parallel HDF5 library, and will  set the flag
 \texttt{-D\_\_HDF5\_SERIAL} in the \texttt{make.inc} file accordingly. 
 
 
-\paragraph{LIBXC}
-\qe\ can use the \libxc\ library. You need to install \libxc\ first, then:
-\verb|configure --with-libxc --with-libxc-prefix=... --with-libxc-include=...|.
-You may look for "libxc" in \texttt{make.inc}  in case of trouble. Note that
-currently only a subset of functionals implemented in \libxc\ can be
-used and that the \libxc-enabled version cannot use functionals from \qe.
-This will change in the future.
-
 \paragraph{Other libraries}
 \qe\ can use the MASS vector math
 library from IBM, if available (only on machines with XLF compiler:
@@ -790,6 +782,75 @@ and retry. For example:
 \end{verbatim}
 Beware that in this case, \configure\ will blindly accept the specified value,
 and won't do any extra search.
+
+\subsection{Libxc library}
+
+\qe\ is compatible with \libxc\ version 4.3.0 or later (compatibility with older versions is not guaranteed).\\
+The \libxc\ functionals are available for LDA, GGA and metaGGA, however, not all of them are straightforwardly usable. Some of them may depend on specific external parameters and some others may provide as output the energy or the potential, but not both. Therefore some attention has to be paid when using \libxc. Warning messages should appear in the output when particular cases whose correct operation in \qe\ is not guaranteed are chosen.
+
+\subsubsection{Linking in \qe}
+Once installed \libxc, the linking with \qe\ can be enabled directly through the configuration script by adding the two switches \texttt{--with-libxc} and \texttt{--with-libxc-prefix}, e.g.:
+\begin{verbatim}
+./configure --with-libxc --with-libxc-prefix='/path/to/libxc/'
+\end{verbatim}
+By adding the first switch only an automatic search for the libxc folder will be attempted, but its success is not guaranteed. It is always preferable to specify the second switch too. Optionally, a third switch can be added, namely \texttt{--with-libxc-include='/path/to/libxc/include'}, which specifies the path to the Fortran headers (usually it is not necessary).
+
+Alternatively, the link to \libxc\ can be activated after the configuration of  \qe\ by modifying the \texttt{make.inc} file in the main folder in this way:
+\begin{itemize}
+	\item add \texttt{-D\_\_LIBXC} to \texttt{DFLAGS}
+	\item add \texttt{-I/path/to/libxc/include/} to \texttt{IFLAGS}
+	\item set \texttt{LD\_LIBS=-L/path/to/libxc/lib/ -lxcf90 -lxc}
+\end{itemize}
+Then \qe\ can be compiled as usual. If the version of \libxc\ is older than 5.0.0, the last point must be replaced by:
+\begin{itemize}
+	\item set \texttt{LD\_LIBS=-L/path/to/libxc/lib/ -lxcf03 -lxc}
+\end{itemize}
+\paragraph{Note for version 5.0.0:} the \texttt{f03} interfaces are no longer available in \libxc\ 5.0.0. They have been reintroduced in the current develop version. Version 5.0.0 is still usable, but, before compiling \qe, a string replacement is necessary, namely `\texttt{xc\_f03}' must be repalced with `\texttt{xc\_f90}' everywhere in the following files: \texttt{funct.f90}, \texttt{xc\_lda\_lsda\_drivers.f90}, \texttt{xc\_gga\_drivers.f90}, \texttt{xc\_mgga\_drivers.f90}, \texttt{dmxc\_drivers.f90} and \texttt{dgcxc\_drivers.f90} in \texttt{Modules} folder and \texttt{xctest\_qe\_libxc.f90} in \texttt{PP/src} folder.
+
+\subsubsection{Usage}
+In order to use \libxc\ functionals, you must enforce them from input by including the \texttt{input\_dft} string in the \texttt{system} namelist. For example, to use the \libxc\ version of the PBE functionals (both exchange and correlation):
+\begin{verbatim}
+input_dft = `gga_x_pbe gga_c_pbe'
+\end{verbatim}
+%
+Capital or lowercase is not relevant, neither the separation between one name and the other. The complete list of \libxc\ functionals is available at:
+\begin{verbatim}
+https://www.tddft.org/programs/libxc/functionals/
+\end{verbatim}
+%
+Combinations of \qe\ and \libxc\ functionals are allowed in \texttt{PW}, but some attention has to be paid to their reciprocal compatibility (see section below). In these cases, again, the functionals must be enforced from input. For example, the exchange term of PBE in \qe\ together with the correlation term of PBE in \libxc\ is obtained by putting:
+\begin{verbatim}
+input_dft = `sla pbe gga_c_pbe'
+\end{verbatim}
+Note that when using GGA functionals of \qe\ you must always specify the LDA term too, while it is not the case for the \libxc\ ones. \\
+Outside \texttt{PW} (\texttt{PHonon}, \texttt{PP}, etc.), \libxc\ functionals are still usable, but in these cases it is highly recommended to avoid combinations of QE and \libxc\ functionals together, since, at present, they may lead to some issues in the dft detection.
+%
+\subsubsection{Differences between Libxc and internal functionals}
+There are some differences between \qe\ functionals and \libxc\ ones. In \qe\ the LDA and the GGA terms are separated and must be specified independently. In \libxc\ the GGA functionals already include the LDA part (Slater exchange and Perdew\&Wang correlation in most of the cases with the exception, for example, of Lee Yang Parr functionals).\\
+The \libxc\ metaGGA functionals may or may not need the LDA and GGA terms, depending on the cases, therefore a good check of the chosen functionals is recommended before doing expensive runs.\\
+Some functionals in \libxc\ incorporate the exchange part and the correlation one into one term only (e.g. the ones that include the `\texttt{\_xc}' label in their name). In these cases the whole functional is formally treated as `exchange only' by \qe. This does not imply any loss of information.
+%
+\subsubsection{Special cases}
+A number of \libxc\ functional routines need extra information on input and/or provide only partial information on output (e.g. the energy or the potential only). In these cases the use of such functionals may not be straightforward and, depending on the cases, may require some work on the \qe\ source code.
+%
+\paragraph{External parameters.}
+Several functionals in \libxc\ depend on one or more external parameters. Some of these can be recovered inside \qe, some others are not directly available. In all these cases a direct intervention on the \qe\ source code is necessary in order to be able to properly use such functionals.\\
+The \libxc\ routine \texttt{xc\_f03\_func\_set\_ext\_params} allows to set the value of the external parameters, which are contained in a single array. A trace for the usage of this routine is present, among the comments, in the XC-drivers of \qe\ (in \texttt{Modules} folder: \texttt{xc\_lda\_lsda\_drivers.f90}, \texttt{xc\_gga\_drivers.f90}, etc.).\\
+Without setting the external parameters inside the code, their default value will be assumed. This could lead to results different from the expectations.
+To get the default values, the \texttt{xc\_f03\-\_func\-\_info\_get\-\_ext\-\_params\-\_default\-\_value} routine is available in \libxc. For more details we refer to the official documentation of \libxc.\\
+In any case, when external parameters are needed by the chosen functionals, a warning message will appear in the output of \qe.
+%
+\paragraph{Hybrid functionals.} The hybrid functionals of \libxc\ are allowed, but, as in the previous case, their correct operation is not guaranteed by default. It is important to ensure that the \texttt{exx\_fraction} in \qe\ assumes the desired value when the XC routines are called. To do this you need to act on the external parameters of the functionals, as explained previously. Moreover it is important to ensure that the starting value of the variable \texttt{exx\_fraction} in \qe\ , which is set in the \texttt{matching\_libxc} routine in \texttt{Modules/funct.f90}, is the desired one (\texttt{exx\_fraction} may not always coincide with the \texttt{exx\_coef} of \libxc).
+%
+\paragraph{Functionals with partial output.}
+A few \libxc\ functional routines provides the energy and some others the potential only, but not both of them. At present, \qe, assumes that both the energy and the potential are provided when a XC-functional routine is called, therefore, in order to use these functionals, some modifications on the code will be necessary.
+%
+\paragraph{Other functionals.} Besides exchange (\texttt{\_x}), correlation (\texttt{\_c}) and exchange plus correlation (\texttt{\_xc}), a fourth kind of functionals is available in \libxc, the kinetic functionals (\texttt{\_k}). At present, they are not usable in \qe.
+%
+\subsubsection{XC test}
+A simple testing program, \texttt{xctest\_qe\_libxc.f90}, for the XC part of \qe\ is available in the \texttt{PP/src} folder.\\
+The program tests the output (energies and potentials) of the XC-driver routines by comparing the results obtained with the \qe\ internal library of XC functionals with those obtained with the \libxc\ library.\\
+It also tests the XC-derivative part (mainly used in PHonon) by comparing the QE derivative of the XC potential (for LDA and GGA) with the \libxc\ one.
 
 \subsection{Compilation}
 \label{SubSec:Compilation}
