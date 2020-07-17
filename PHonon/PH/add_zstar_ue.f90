@@ -42,8 +42,6 @@ subroutine add_zstar_ue (imode0, npe)
 
   real(DP) :: weight
 
-  complex(DP), external :: zdotc
-
   call start_clock('add_zstar_ue')
   zstarue0_rec=(0.0_DP,0.0_DP)
   do ik = 1, nksq
@@ -69,10 +67,10 @@ subroutine add_zstar_ue (imode0, npe)
            call get_buffer (dpsi, lrdwf, iudwf, nrec)
            do ibnd = 1, nbnd_occ(ik)
               zstarue0_rec (mode, jpol) = zstarue0_rec (mode, jpol) - 2.d0 * weight * &
-                   zdotc (npw, dpsi (1, ibnd), 1, dvpsi (1, ibnd), 1)
+                   dot_product (dpsi(1:npw,ibnd), dvpsi(1:npw,ibnd))
               IF (noncolin) &
                  zstarue0_rec(mode,jpol)=zstarue0_rec (mode, jpol) - 2.d0 * weight * &
-                   zdotc (npw, dpsi (1+npwx, ibnd), 1, dvpsi (1+npwx, ibnd), 1)
+                   dot_product (dpsi(1+npwx:npw+npwx,ibnd), dvpsi(1+npwx:npw+npwx,ibnd))
 
            enddo
         enddo

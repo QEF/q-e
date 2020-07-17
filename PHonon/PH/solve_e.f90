@@ -89,8 +89,6 @@ subroutine solve_e
                    tg_dv(:,:), &
                    tg_psic(:,:), aux2(:,:)
 
-  complex(DP), EXTERNAL :: zdotc      ! the scalar product function
-
   logical :: conv_root, exst
   ! conv_root: true if linear system is converged
 

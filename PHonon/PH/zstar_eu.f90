@@ -46,8 +46,6 @@ subroutine zstar_eu
        imode, nrec, mode, ik, ikk, ierr, npw
   ! counters
   real(DP) :: weight
-  complex(DP), external :: zdotc
-  !  scalar product
   !
   call start_clock ('zstar_eu')
 
@@ -83,7 +81,7 @@ subroutine zstar_eu
               call get_buffer (dpsi, lrdwf, iudwf, nrec)
               do ibnd = 1, nbnd_occ(ikk)
                  zstareu0(jpol,mode)=zstareu0(jpol, mode)-2.d0*weight*&
-                      zdotc(npwx*npol,dpsi(1,ibnd),1,dvpsi(1,ibnd),1)
+                      dot_product( dpsi(:,ibnd), dvpsi(:,ibnd) )
               enddo
            enddo
         enddo
