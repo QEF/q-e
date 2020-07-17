@@ -53,8 +53,8 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !!       between q-e and libxc libraries.
   !
 #if defined(__LIBXC)
-  USE xc_f90_types_m
-  USE xc_f90_lib_m
+#include "xc_version.h"
+  USE xc_f03_lib_m
 #endif
   !
   IMPLICIT NONE
@@ -85,8 +85,8 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   ! ... local variables
   !
 #if defined(__LIBXC)
-  TYPE(xc_f90_pointer_t) :: xc_func
-  TYPE(xc_f90_pointer_t) :: xc_info1, xc_info2
+  TYPE(xc_f03_func_t) :: xc_func
+  TYPE(xc_f03_func_info_t) :: xc_info1, xc_info2
   REAL(DP), ALLOCATABLE :: rho_lxc(:), sigma(:)
   REAL(DP), ALLOCATABLE :: ex_lxc(:), ec_lxc(:)
   REAL(DP), ALLOCATABLE :: vx_rho(:), vx_sigma(:)
@@ -98,6 +98,11 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   LOGICAL :: POLARIZED
   INTEGER :: ildax, ildac, pol_unpol
+#if (XC_MAJOR_VERSION > 4)
+  INTEGER(8) :: lengthxc
+#else
+  INTEGER :: lengthxc
+#endif
 #endif
   REAL(DP), ALLOCATABLE :: arho(:,:)
   REAL(DP), ALLOCATABLE :: rh(:), zeta(:)
@@ -120,6 +125,9 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   IF ( PRESENT(v2c_ud) ) v2c_ud = 0.0_DP
   !
 #if defined(__LIBXC)
+  !
+  fkind_x = -1
+  lengthxc = length
   !
   POLARIZED = .FALSE.
   IF (ns == 2) THEN
@@ -179,11 +187,12 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   IF ( is_libxc(3) ) THEN
     !
-    CALL xc_f90_func_init( xc_func, xc_info1, igcx, pol_unpol )
-    CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold )
-    fkind_x  = xc_f90_info_kind( xc_info1 )
-     CALL xc_f90_gga_exc_vxc( xc_func, length, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
-    CALL xc_f90_func_end( xc_func )
+    CALL xc_f03_func_init( xc_func, igcx, pol_unpol )
+     xc_info1 = xc_f03_func_get_info( xc_func )
+     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold )
+     fkind_x  = xc_f03_func_info_get_kind( xc_info1 )
+     CALL xc_f03_gga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
+    CALL xc_f03_func_end( xc_func )
     !
     IF (.NOT. POLARIZED) THEN
       DO k = 1, length
@@ -223,10 +232,11 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   IF ( is_libxc(4) ) THEN  !lda part of LYP not present in libxc
     !
-    CALL xc_f90_func_init( xc_func, xc_info2, igcc, pol_unpol )
-    CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold )
-     CALL xc_f90_gga_exc_vxc( xc_func, length, rho_lxc(1), sigma(1), ec_lxc(1), vc_rho(1), vc_sigma(1) )
-    CALL xc_f90_func_end( xc_func )
+    CALL xc_f03_func_init( xc_func, igcc, pol_unpol )
+     xc_info2 = xc_f03_func_get_info( xc_func )
+     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold )
+     CALL xc_f03_gga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), ec_lxc(1), vc_rho(1), vc_sigma(1) )
+    CALL xc_f03_func_end( xc_func )
     !
     IF (.NOT. POLARIZED) THEN
       DO k = 1, length
@@ -1159,7 +1169,9 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
      !
      CASE DEFAULT
         !
-        CALL errore( 'gcx_spin', 'not implemented', igcx )
+        sx = 0.0_DP
+        v1x = 0.0_DP
+        v2x = 0.0_DP
         !
      END SELECT
      !
@@ -1267,7 +1279,9 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
 #endif
     CASE DEFAULT
        !
-       CALL errore( 'xc_gga_drivers (gcc_spin)', 'not implemented', igcc )
+       sc = 0.0_DP
+       v1c = 0.0_DP
+       v2c = 0.0_DP
        !
     END SELECT
     !

@@ -584,7 +584,7 @@
     USE symm_base,        ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE cell_base,        ONLY : bg
     USE mp,               ONLY : mp_bcast
-    USE epwcom,           ONLY : mp_mesh_k, nkf1, nkf2, nkf3
+    USE epwcom,           ONLY : mp_mesh_k, nkf1, nkf2, nkf3, fixsym
     USE constants_epw,    ONLY : eps6, eps4
     USE io_transport,     ONLY : scattering_read
     USE division,         ONLY : fkbounds
@@ -592,6 +592,7 @@
     USE kinds_epw,        ONLY : SIK2
     USE poolgathering,    ONLY : poolgatherc4, poolgather2
     USE noncollin_module, ONLY : noncolin
+    USE low_lvl,          ONLY : fix_sym
     !
     IMPLICIT NONE
     !
@@ -932,6 +933,7 @@
         s_bztoibz(:) = 0
         !
         CALL set_sym_bl()
+        IF (fixsym) CALL fix_sym(.TRUE.)
         ! What we get from this call is bztoibz
         CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, bztoibz, s_bztoibz)
         !
