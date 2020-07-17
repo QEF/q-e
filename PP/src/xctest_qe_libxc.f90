@@ -28,6 +28,7 @@ PROGRAM xctest_qe_libxc
   !
   USE xc_f03_lib_m
   !
+  USE kinds,          ONLY: DP
   USE funct,          ONLY: set_dft_from_name, set_exx_fraction
   USE funct,          ONLY: get_iexch, get_icorr, get_igcx, get_igcc, &
                             get_meta, get_metac, reset_dft
@@ -39,7 +40,6 @@ PROGRAM xctest_qe_libxc
   IMPLICIT NONE
   !
   !-------- Common vars ----------------------
-  INTEGER, PARAMETER :: DP = SELECTED_REAL_KIND(14,200)
   INTEGER :: nnr
   CHARACTER(LEN=120) :: aprx, e_q, f_q
   INTEGER :: ii, ns, np, ipol, quit, i_sub, family, ithr, nthr
@@ -1106,6 +1106,7 @@ PROGRAM xctest_qe_libxc
 #endif
 10 STOP
   !
+#if defined(__LIBXC)
   !
  CONTAINS
 !
@@ -1463,10 +1464,12 @@ FUNCTION is_dit_out( diff_thr, dx_qe, dx_lxc )
   !
 END FUNCTION
 !
+#endif
 !
 END PROGRAM xctest_qe_libxc
 !
 !
+#if defined(__LIBXC)
 !------------------------------------------------------------------------
 FUNCTION calc_perc_diff( thr, x_qe, x_lxc )
   !----------------------------------------------------------------------
@@ -1489,3 +1492,4 @@ FUNCTION calc_perc_diff( thr, x_qe, x_lxc )
   RETURN
   !
 END FUNCTION calc_perc_diff
+#endif
