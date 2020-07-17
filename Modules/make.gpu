@@ -61,4 +61,3 @@ xc_lda_lsda_drivers.o : correlation_lda_lsda_gpu.o
 xc_lda_lsda_drivers.o : exchange_lda_lsda_gpu.o
 xc_lda_lsda_drivers.o : control_flags.o
 xc_lda_lsda_drivers.o : kind.o
-xc_lda_lsda_drivers.o : libxc.o
