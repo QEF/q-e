@@ -3,8 +3,8 @@
     restart_mode='from_scratch',
     tprnfor = .true.
     prefix='ni_so',
-    pseudo_dir = '/u/a/aurru/Documents/Espresso/QEF_fork_Urru/q-e/pseudo/',
-    outdir='/u/a/aurru/Documents/Espresso/QEF_fork_Urru/q-e/tempdir/'
+    pseudo_dir = '../../pseudo',
+    outdir='../../tempdir/'
  /
  &system
     ibrav=2, celldm(1) =6.65, nat=  1, ntyp= 1,

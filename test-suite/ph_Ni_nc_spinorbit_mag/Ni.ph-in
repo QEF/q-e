@@ -3,6 +3,6 @@ phonons of Ni at X/2
   tr2_ph=1.0d-12,
   prefix='ni_so',
   fildyn='nix.dyn',
-  outdir='/u/a/aurru/Documents/Espresso/QEF_fork_Urru/q-e/tempdir/'
+  outdir='../../tempdir'
  /
 0.0 0.0 0.5
