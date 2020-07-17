@@ -27,13 +27,6 @@ New in dev branch:
     (Jae-Mo Lihm, Seoul Natl. Univ.)
   * Implementation of the Sternheimer algorithm in the turboEELS code
     (O. Baseggio, O. Motornyi, N. Vast, A. Dal Corso, I. Timrov, and S. Baroni)
-  * EPW:
-    (1) Use of the band manifold determined by Wannierization step
-        when evaluating electron-phonon vertex on coarse grids
-    (2) Support for PAW
-    For the full list of new features and changes leading to backward incompatibility issues,
-    please visit the Releases page of the EPW documentation site 
-    [https://docs.epw-code.org/doc/Releases.html].
   
 Fixed in dev branch:
   * PW: Restart from interrupted calculations  simplified. As a side effect,

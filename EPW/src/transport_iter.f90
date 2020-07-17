@@ -30,7 +30,7 @@
     USE io_global,        ONLY : stdout
     USE cell_base,        ONLY : at, bg
     USE epwcom,           ONLY : mob_maxiter, nstemp, broyden_beta,            &
-                                 mp_mesh_k, nkf1, nkf2, nkf3, fixsym
+                                 mp_mesh_k, nkf1, nkf2, nkf3
     USE elph2,            ONLY : nkqf, wkf, xkf, nkqtotf, nbndfst,             &
                                  nktotf, map_rebal, xqf, gtemp,          &
                                  ixkqf_tr, s_bztoibz_full
@@ -48,7 +48,6 @@
     USE wigner,           ONLY : backtoWS
     USE grid,             ONLY : k_avg, special_points, kpoint_grid_epw, kpmq_map
     USE poolgathering,    ONLY : poolgather2
-    USE low_lvl,          ONLY : fix_sym
     !
     IMPLICIT NONE
     !
@@ -184,7 +183,6 @@
       nsym(:) = 0
       !
       CALL set_sym_bl()
-      IF (fixsym) CALL fix_sym(.TRUE.)
       wkf(:) = 0d0
       ! What we get from this call is bztoibz
       CALL start_clock('kpoint_paral')

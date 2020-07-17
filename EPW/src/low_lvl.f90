@@ -1353,7 +1353,7 @@
     !-----------------------------------------------------------------------
     !
     !----------------------------------------------------------------------
-    SUBROUTINE fix_sym(lcase)
+    SUBROUTINE fix_sym()
     !----------------------------------------------------------------------
     !!
     !! This routine tries to fix some symmetry-related issues in EPW.
@@ -1361,42 +1361,14 @@
     !!
     !! HL - July 2020
     !!
-    USE kinds,         ONLY : DP
-    USE symm_base,     ONLY : t_rev, time_reversal, nrot, nsym, invsym, &
-                              nofrac, nosym_evc, find_sym
-    USE ions_base,     ONLY : nat, tau, ityp
-    USE epwcom,        ONLY : epw_no_t_rev, epw_tr, epw_nosym, epw_crysym, &
-                              mp_mesh_k, mp_mesh_q
-    USE io_global,     ONLY : stdout
+    USE symm_base,     ONLY : t_rev, time_reversal, nrot, nsym, invsym
+    USE epwcom,        ONLY : epw_no_t_rev, epw_tr, epw_nosym
     !
     IMPLICIT NONE
-    !
-    LOGICAL, INTENT(in) :: lcase
-    !! .FALSE.: before interpolation
-    !! .TRUE.: after interpolation
-    !
-    REAL(DP) :: mdum(3,nat)
-    !! Dummy values for local magnitization
     !
     IF (epw_no_t_rev) t_rev = 0
     !
     time_reversal = epw_tr
-    !
-    IF (lcase) THEN
-      IF (epw_crysym) THEN
-        IF (mp_mesh_k .OR. mp_mesh_q) THEN
-          !
-          nosym_evc = .FALSE.
-          nofrac = .FALSE.
-          !
-          CALL find_sym(nat, tau, ityp, .FALSE., mdum)
-          WRITE(stdout, '(a,i3)') 'fix_sym: nrot=', nrot
-          WRITE(stdout, '(a,i3)') 'fix_sym: nsym=', nsym
-          nrot = nsym
-          !
-        ENDIF
-      ENDIF
-    ENDIF
     !
     IF (epw_nosym) THEN
       nrot = 1

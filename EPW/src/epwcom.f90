@@ -179,8 +179,6 @@
   !! If .TRUE. set nsym=1 (nrot=1) and invsym=.FALSE.
   LOGICAL :: epw_noinv
   !! If .TRUE. set imq to non-zero value
-  LOGICAL :: epw_crysym
-  !! If .TRUE. calculate the symmetry of the crystal
   !
   INTEGER :: ngaussw
   !! smearing type for Fermi surface average in e-ph coupling after wann. interp.

@@ -431,7 +431,7 @@
     !
     ! ~~~~~~~~ setup crystal symmetry ~~~~~~~~
     CALL find_sym(nat, tau, ityp, .FALSE., m_loc)
-    IF (fixsym) CALL fix_sym(.FALSE.)
+    IF (fixsym) CALL fix_sym()
     IF (.NOT. allfrac) CALL remove_sym(dfftp%nr1, dfftp%nr2, dfftp%nr3)
     WRITE(stdout, '(5x, a, i3)') "Symmetries of crystal:         ", nsym
     !
