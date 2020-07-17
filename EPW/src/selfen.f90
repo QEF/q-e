@@ -555,14 +555,14 @@
     !-----------------------------------------------------------------------
     USE kinds,      ONLY : DP
     USE io_global,  ONLY : stdout
-    use modes,      ONLY : nmodes
-    use epwcom,     ONLY : nbndsub, fsthick, efermi_read, fermi_energy,  &
+    USE modes,      ONLY : nmodes
+    USE epwcom,     ONLY : nbndsub, fsthick, efermi_read, fermi_energy,  &
                            nstemp, ngaussw, degaussw, shortrange,        &
                            nsmear, delta_smear, eps_acustic, specfun_ph, &
                            delta_approx, vme
-    use pwcom,      ONLY : nelec, ef
+    USE pwcom,      ONLY : nelec, ef
     USE klist_epw,  ONLY : isk_dummy
-    use elph2,      ONLY : epf17, ibndmax, ibndmin, etf, wkf, xqf, wqf, nkqf,   &
+    USE elph2,      ONLY : epf17, ibndmax, ibndmin, etf, wkf, xqf, wqf, nkqf,   &
                            nkf, wf, nkqtotf, xqf, lambda_all, lambda_v_all,     &
                            dmef, vmef, gamma_all, gamma_v_all, efnew, nbndfst, &
                            gtemp, nktotf, adapt_smearing
