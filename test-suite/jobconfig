@@ -100,7 +100,7 @@ inputs_args = ('diam.scf.in', '1'), ('diam.ph.in', '2'), ('diam.q2r.in', '3'), (
 
 [ph_Ni_nc_spinorbit_mag/]
 program = PH
-inputs_args = ('Ni.pw-in', '1'), ('Ni.ph-in', '2')
+inputs_args = ('Ni.scf.in', '1'), ('Ni.ph.in', '2')
 
 [epw_base/]
 program = EPW
