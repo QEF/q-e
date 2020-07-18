@@ -156,7 +156,7 @@ subroutine drho
         do is = 1, nspin_lsda
         ! FIXME: use zgemm instead of dot_product
            wdyn (nu_j, nu_i) = wdyn (nu_j, nu_i) + &
-                dot_product (drhous(:,is,nu_j), dvlocin) * &
+                dot_product (drhous(1:dffts%nnr,is,nu_j), dvlocin) * &
                 omega / DBLE (nrstot)
         enddo
      enddo
