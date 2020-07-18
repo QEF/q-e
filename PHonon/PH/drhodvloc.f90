@@ -54,7 +54,7 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
         do is = 1, nspin_lsda
         ! FIXME : use zgemm instead of dot_product
            dynwrk (nu_i, nu_j) = dynwrk (nu_i, nu_j) + &
-                dot_product(drhoscf (:, is, ipert), dvloc) * &
+                dot_product(drhoscf (1:dffts%nnr, is, ipert), dvloc) * &
                   omega / (dffts%nr1 * dffts%nr2 * dffts%nr3)
         enddo
      enddo
