@@ -29,8 +29,9 @@ SUBROUTINE move_ions( idone, ions_status )
   USE io_files,               ONLY : tmp_dir
   USE kinds,                  ONLY : DP
   USE cell_base,              ONLY : alat, at, bg, omega, cell_force, &
-                                     fix_volume, fix_area, ibrav, enforce_ibrav
-  USE cellmd,                 ONLY : omega_old, at_old, press, lmovecell, calc
+                                     fix_volume, fix_area, ibrav, press, &
+                                     enforce_ibrav
+  USE cellmd,                 ONLY : omega_old, at_old, lmovecell, calc
   USE ions_base,              ONLY : nat, ityp, zv, tau, if_pos
   USE symm_base,              ONLY : checkallsym
   USE ener,                   ONLY : etot, ef
@@ -137,8 +138,8 @@ SUBROUTINE move_ions( idone, ions_status )
         !
         CALL cryst_to_cart( nat, pos,  at, 1 )
         tau    =  RESHAPE( pos,  (/ 3, nat /) )
-        CALL cryst_to_cart( nat, grad, bg, 1 )
-        force = - RESHAPE( grad, (/ 3, nat /) )
+        !
+        DEALLOCATE( pos, grad, fixion )
         !
         IF ( conv_ions ) THEN
            !
@@ -230,8 +231,6 @@ SUBROUTINE move_ions( idone, ions_status )
         ENDIF
         !
         CALL output_tau( lmovecell, conv_ions )
-        !
-        DEALLOCATE( pos, grad, fixion )
         !
      ENDIF bfgs_minimization
      !

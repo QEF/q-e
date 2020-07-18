@@ -36,7 +36,7 @@ subroutine dvpsi_e (ik, ipol)
                               lrebar, iuebar
 
   USE lrus,            ONLY : becp1
-  USE qpoint,          ONLY : nksq
+  USE qpoint,          ONLY : nksq, ikks
   USE eqv,             ONLY : dpsi, dvpsi
   USE control_lr,      ONLY : nbnd_occ
 
@@ -48,7 +48,7 @@ subroutine dvpsi_e (ik, ipol)
   !
   integer :: npw
   integer :: ig, na, ibnd, jbnd, ikb, jkb, nt, lter, ih, jh, ijkb0,  &
-             nrec, is, js, ijs
+             nrec, is, js, ijs, ikk
   ! counters
 
   real(DP), allocatable  :: h_diag (:,:)
@@ -74,24 +74,25 @@ subroutine dvpsi_e (ik, ipol)
      return
   end if
   !
+  ikk=ikks(ik)
   call allocate_bec_type ( nkb, nbnd, becp2)
 
   ! calculate the commutator [H,x_ipol]  psi > and store it in dpsi
 
-  call commutator_Hx_psi (ik, nbnd_occ(ik), becp1(ik), becp2, ipol, dpsi )
+  call commutator_Hx_psi (ikk, nbnd_occ(ikk), becp1(ik), becp2, ipol, dpsi )
   !
   !    orthogonalize dpsi to the valence subspace: ps = <evc|dpsi>
   !    Apply -P^+_c
   !    NB it uses dvpsi as workspace
   !
-  npw = ngk(ik)
-  CALL orthogonalize(dpsi, evc, ik, ik, dvpsi, npw, .false.)
+  npw = ngk(ikk)
+  CALL orthogonalize(dpsi, evc, ikk, ikk, dvpsi, npw, .false.)
   dpsi=-dpsi
   !
   !   dpsi contains P^+_c [H-eS,x] psi_v for the three crystal polarizations
   !   Now solve the linear systems (H-e_vS)*P_c(x*psi_v)=P_c^+ [H-e_vS,x]*psi_v
   !
-  CALL g2_kin(ik)
+  CALL g2_kin(ikk)
   !
   ! compute preconditioning matrix h_diag used by cgsolve_all
   !
@@ -101,9 +102,9 @@ subroutine dvpsi_e (ik, ipol)
   dvpsi(:,:) = (0.d0, 0.d0)
   !
   thresh = eth_rps
-  call cgsolve_all (ch_psi_all, cg_psi, et (1, ik), dpsi, dvpsi, &
+  call cgsolve_all (ch_psi_all, cg_psi, et (1, ikk), dpsi, dvpsi, &
        h_diag, npwx, npw, thresh, ik, lter, conv_root, anorm, &
-       nbnd_occ (ik), npol)
+       nbnd_occ (ikk), npol)
 
   if (.not.conv_root) WRITE( stdout, '(5x,"ik",i4," ibnd",i4, &
        & " linter: root not converged ",es10.3)') &
@@ -137,7 +138,7 @@ subroutine dvpsi_e (ik, ipol)
      CALL s_psi(npwx,npw,nbnd,dvpsi,spsi)
      call dcopy(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
      deallocate (spsi)
-     CALL adddvepsi_us(becp1(ik),becp2,ipol,ik,dvpsi)
+     CALL adddvepsi_us(becp1(ik),becp2,ipol,ikk,dvpsi)
   endif
 
   IF (nkb > 0) call deallocate_bec_type (becp2)

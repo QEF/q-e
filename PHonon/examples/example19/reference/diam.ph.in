@@ -1,0 +1,12 @@
+phonons of diamond on a coarse 333 grid
+&inputph
+  prefix   = 'diam'
+  outdir   = '/group2/jmlim/program/qe-dev-dvscf/tempdir/'
+  fildyn   = 'diam.dyn'
+  fildvscf = 'dvscf'
+  ldisp    = .true.
+  nq1 = 3
+  nq2 = 3
+  nq3 = 3
+  tr2_ph   =  1.0d-16
+ /

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2016-2019 Quantum ESPRESSO group
+! Copyright (C) 2016-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -134,8 +134,9 @@ SUBROUTINE post_xml_init (  )
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
   USE paw_onecenter,        ONLY : paw_potential
   USE dfunct,               ONLY : newd
-  USE funct,                ONLY : get_inlc, get_dft_name
-  USE ldaU,                 ONLY : lda_plus_u, eth, init_lda_plus_u, U_projection
+  USE funct,                ONLY : get_dft_name
+  USE ldaU,                 ONLY : lda_plus_u, eth, init_lda_plus_u, U_projection, &
+                                   lda_plus_u_kind
   USE esm,                  ONLY : do_comp_esm, esm_init
   USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact 
   USE ions_base,            ONLY : nat, nsp, tau, ityp
@@ -162,7 +163,6 @@ SUBROUTINE post_xml_init (  )
   !
   IMPLICIT NONE
   !
-  INTEGER  :: inlc
   REAL(DP) :: ehart, etxc, vtxc, etotefield, charge
   CHARACTER(LEN=20) :: dft_name
   !
@@ -183,7 +183,10 @@ SUBROUTINE post_xml_init (  )
   okpaw = ANY ( upf(1:nsp)%tpawp )
   IF ( .NOT. lspinorb ) CALL average_pp ( nsp )
   !! average_pp must be called before init_lda_plus_u
-  IF ( lda_plus_u ) CALL init_lda_plus_u ( upf(1:nsp)%psd, noncolin )
+  IF ( lda_plus_u ) THEN
+     IF (lda_plus_u_kind == 2) CALL read_V
+     CALL init_lda_plus_u ( upf(1:nsp)%psd, nspin, noncolin )
+  ENDIF
   !
   ! ... allocate memory for G- and R-space fft arrays (from init_run.f90)
   !

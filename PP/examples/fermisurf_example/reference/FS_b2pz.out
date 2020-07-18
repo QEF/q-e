@@ -1,21 +1,27 @@
 
-     Program FERMI_PROJ v.6.1 starts on 16Mar2017 at 22:39:43 
+     Program FERMI_PROJ v.6.5 starts on 22Jan2020 at 14:43:34 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     1 processors
+     Parallel version (MPI & OpenMP), running on       1 processor cores
+     Number of MPI processes:                 1
+     Threads/MPI process:                     1
 
-   Info: using nr1, nr2, nr3 values from input
+     MPI processes distributed on     1 nodes
 
-   Info: using nr1, nr2, nr3 values from input
+     Reading xml data from directory:
+
+     /home/kawamura/program/qe/qe-dev/tempdir/mgb2.save/
 
      IMPORTANT: XC functional enforced from input :
-     Exchange-correlation      =  SLA  PW   PBX  PBC ( 1  4  3  4 0 0)
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
@@ -28,7 +34,7 @@
      Sum        1159     463    151                36773     9263    1619
 
 
-     Check: negative/imaginary core charge=   -0.000006    0.000000
+     Check: negative core charge=   -0.000006
 
      Number of bands :       8
      Number of k times spin :     210
@@ -37,12 +43,12 @@
      Highest band which contains FS :       5
      Number of target wavefunction :      2
      Target wavefunction :      6    10
-     Max :         0.98120354     Min :         0.00000000
+     Max :         0.98121209     Min :         0.00000000
 
-     FERMI_PROJ   :     1.86s CPU         2.57s WALL
+     FERMI_PROJ   :      3.80s CPU      4.22s WALL
 
 
-   This run was terminated on:  22:39:45  16Mar2017            
+   This run was terminated on:  14:43:38  22Jan2020            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

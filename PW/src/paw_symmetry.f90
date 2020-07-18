@@ -34,7 +34,7 @@ SUBROUTINE PAW_symmetrize( becsum )
     !
     USE lsda_mod,          ONLY : nspin
     USE cell_base,         ONLY : at, bg
-    USE noncollin_module,  ONLY : nspin_mag, nspin_lsda
+    USE noncollin_module,  ONLY : nspin_lsda
     USE spin_orb,          ONLY : domag
     USE uspp_param,        ONLY : nhm
     USE ions_base,         ONLY : nat, ityp
@@ -297,7 +297,7 @@ SUBROUTINE PAW_symmetrize_ddd( ddd )
     !
     USE lsda_mod,          ONLY : nspin
     USE cell_base,         ONLY : at, bg
-    USE noncollin_module,  ONLY : nspin_mag, nspin_lsda
+    USE noncollin_module,  ONLY : nspin_lsda
     USE spin_orb,          ONLY : domag
     USE uspp_param,        ONLY : nhm
     USE ions_base,         ONLY : nat, ityp

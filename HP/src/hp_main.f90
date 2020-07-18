@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,16 +18,18 @@ PROGRAM hp_main
   USE mp_world,          ONLY : world_comm
   USE mp_pools,          ONLY : intra_pool_comm
   USE mp_bands,          ONLY : intra_bgrp_comm, inter_bgrp_comm
-  USE mp_diag,           ONLY : mp_start_diag
   USE command_line_options,  ONLY : input_file_, ndiag_
   USE environment,       ONLY : environment_start, environment_end
   USE ions_base,         ONLY : nat, ityp, atm, tau, amass
   USE io_files,          ONLY : tmp_dir
+  USE control_flags,     ONLY : dfpt_hub
   USE ldaU_hp,           ONLY : perturbed_atom, start_q, last_q, nqs, code, &
                                 compute_hp, sum_pertq, perturb_only_atom,   &
                                 determine_num_pert_only, tmp_dir_save
   !
   IMPLICIT NONE
+  !
+  include 'laxlib.fh'
   !
   INTEGER :: iq, na, ipol
   LOGICAL :: do_iq, setup_pw
@@ -35,13 +37,17 @@ PROGRAM hp_main
   ! Initialize MPI, clocks, print initial messages
   !
   CALL mp_startup()
-  CALL mp_start_diag ( ndiag_, world_comm, intra_bgrp_comm, &
+  CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
        do_distr_diag_inside_bgrp_ = .true. )
   CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
        inter_bgrp_comm )
   !
   CALL environment_start(code)
   !
+  ! Inform the PW routines that we are performing the HP calculation
+  !
+  dfpt_hub = .TRUE.
+  ! 
   ! Print the preamble
   !
   CALL hp_print_preamble()
@@ -226,7 +232,7 @@ PROGRAM hp_main
   !
   CALL environment_end(code)
   !
-  CALL laxlib_free_ortho_group() 
+  CALL laxlib_end() 
   CALL mp_global_end()
   !
 3336 FORMAT('     ',69('='))

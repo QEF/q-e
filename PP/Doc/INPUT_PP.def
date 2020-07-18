@@ -36,6 +36,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 
         All output quantities are in ATOMIC (RYDBERG) UNITS unless
         otherwise explicitly specified.
+        All charge densities integrate to the NUMBER of electrons
+        not to the total charge.
+        All potentials have the dimension of an energy (e*V, not V).
     }
 
     namelist INPUTPP {
@@ -177,7 +180,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                     info {
                         upper boundary of energy grid (in eV).
 
-                        If not specified, LDOS is computed just for energy @ref emin
+                        Defaults to Fermi energy.
                     }
                 }
 

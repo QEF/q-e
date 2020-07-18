@@ -13,7 +13,7 @@
 !     around atoms
 !
       USE kinds,                    ONLY: DP
-      USE ions_base,                ONLY: nsp, na, nat
+      USE ions_base,                ONLY: nat
       USE control_flags,            ONLY: iverbosity
       USE io_global,                ONLY: stdout
       USE mp_global,                ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
@@ -28,7 +28,7 @@
       REAL(DP), INTENT(out) :: taub(3,nat)
 ! local
       REAL(DP) :: x(3), xmod
-      INTEGER  :: nr(3), nrb(3), xint, is, ia, i, isa
+      INTEGER  :: nr(3), nrb(3), xint, ia, i
 !
       IF ( dfftb%nr1 < 1) CALL errore ('initbox', 'incorrect value for box grid dimensions', 1)
       IF ( dfftb%nr2 < 1) CALL errore ('initbox', 'incorrect value for box grid dimensions', 2)
@@ -41,18 +41,15 @@
       nrb(2)=dfftb%nr2
       nrb(3)=dfftb%nr3
 !
-      isa = 0
-      DO is=1,nsp
-         DO ia=1,na(is)
-           isa = isa + 1
+      DO ia=1,nat
 !
             DO i=1,3
 !
 ! bring atomic positions to crystal axis
 !
-               x(i) = ainv(i,1)*tau0(1,isa) +                         &
-     &                ainv(i,2)*tau0(2,isa) +                         &
-     &                ainv(i,3)*tau0(3,isa)
+               x(i) = ainv(i,1)*tau0(1,ia) +                         &
+     &                ainv(i,2)*tau0(2,ia) +                         &
+     &                ainv(i,3)*tau0(3,ia)
 !
 ! bring x in the range between 0 and 1
 !
@@ -67,8 +64,8 @@
 !           (the indices of the small box run from irb to irb+nrb-1)
 !
                   xint=INT(x(i)*nr(i))
-                  irb (i,isa)=xint+1-nrb(i)/2+1
-                  IF(irb(i,isa).LT.1) irb(i,isa)=irb(i,isa)+nr(i)
+                  irb (i,ia)=xint+1-nrb(i)/2+1
+                  IF(irb(i,ia).LT.1) irb(i,ia)=irb(i,ia)+nr(i)
 !
 ! x(i) are the atomic positions in crystal coordinates, where the
 ! "crystal lattice" is the small box lattice and the origin is at
@@ -81,8 +78,8 @@
 ! case of nrb(i) odd - see above for comments
 !
                   xint=NINT(x(i)*nr(i))
-                  irb (i,isa)=xint+1-(nrb(i)-1)/2
-                  IF(irb(i,isa).LT.1) irb(i,isa)=irb(i,isa)+nr(i)
+                  irb (i,ia)=xint+1-(nrb(i)-1)/2
+                  IF(irb(i,ia).LT.1) irb(i,ia)=irb(i,ia)+nr(i)
                   xmod=x(i)*nr(i)-xint
                   x(i)=(xmod+(nrb(i)-1)/2)/nr(i)
                END IF
@@ -91,9 +88,8 @@
 ! bring back taub in cartesian coordinates
 !
             DO i=1,3
-               taub(i,isa)=(x(1)*at(i,1) + x(2)*at(i,2) + x(3)*at(i,3))*alat
+               taub(i,ia)=(x(1)*at(i,1) + x(2)*at(i,2) + x(3)*at(i,3))*alat
             END DO
-         END DO
       END DO
 
       ! initialize FFT descriptor
@@ -101,15 +97,10 @@
       CALL fft_box_set( dfftb, nat, irb, dfftp )
 
       IF( iverbosity > 1 ) THEN
-           isa = 1
-           DO is=1,nsp
-              WRITE( stdout, '( /, 2x, "species= ", i2 )' ) is
-              DO ia=1,na(is)
-                 WRITE( stdout,2000) ia, (irb(i,isa),i=1,3)
-2000             FORMAT(2x, 'atom= ', i3, ' irb1= ', i3, ' irb2= ', i3, ' irb3= ', i3)
-                 isa = isa + 1
-               END DO
-            END DO
+           DO ia=1,nat
+              WRITE( stdout,2000) ia, (irb(i,ia),i=1,3)
+           END DO
+2000       FORMAT(2x, 'atom= ', i3, ' irb1= ', i3, ' irb2= ', i3, ' irb3= ', i3)
       ENDIF
 
 #if defined(__MPI)
@@ -147,7 +138,7 @@
       INTEGER, INTENT(IN) :: iverbosity
 ! local           
       REAL(DP)    :: ainvb(3,3)
-      integer :: i,j,k, is, ia, ig, isa
+      integer :: i, ia, ig
       complex(dp), allocatable:: ei1b(:,:), ei2b(:,:), ei3b(:,:)
       real(dp), allocatable :: taus(:,:)
 !
@@ -158,39 +149,25 @@
 !
       if(iverbosity > 2) then
          WRITE( stdout,*) ' phbox: taub '
-         WRITE( stdout,*) ( (taub(i,isa), i=1, 3 ), isa=1, nat )
+         WRITE( stdout,*) ( (taub(i,ia), i=1, 3 ), ia=1, nat )
       endif
 
       ainvb(1,:) = bgb(:,1)/alatb
       ainvb(2,:) = bgb(:,2)/alatb
       ainvb(3,:) = bgb(:,3)/alatb
 
-      CALL r_to_s( taub, taus, na, nsp, ainvb )
+      CALL r_to_s( taub, taus, nat, ainvb )
       CALL phfacs( ei1b, ei2b, ei3b, eigrb, mill_b, taus, dfftb%nr1,dfftb%nr2,dfftb%nr3, nat )
 !
       if(iverbosity > 2) then
          WRITE( stdout,*)
-         if(nsp.gt.1) then
-            isa = 0
-            do is=1,nsp
-               WRITE( stdout,'(33x,a,i4)') ' ei1b, ei2b, ei3b (is)',is
-               do ig=1,4
-                  WRITE( stdout,'(6f9.4)')                                    &
-     &                 ei1b(ig,1+isa),ei2b(ig,1+isa),ei3b(ig,1+isa)
-               end do
-               WRITE( stdout,*)
-               isa = isa + na(is)
+         do ia=1,nat
+            WRITE( stdout,'(33x,a,i4)') ' ei1b, ei2b, ei3b (ia)',ia
+            do ig=1,4
+               WRITE( stdout,'(6f9.4)') ei1b(ig,ia),ei2b(ig,ia),ei3b(ig,ia)
             end do
-         else
-            do ia=1,na(1)
-               WRITE( stdout,'(33x,a,i4)') ' ei1b, ei2b, ei3b (ia)',ia
-               do ig=1,4
-                  WRITE( stdout,'(6f9.4)')                                    &
-     &                 ei1b(ig,ia),ei2b(ig,ia),ei3b(ig,ia)
-               end do
-               WRITE( stdout,*)
-            end do
-         endif
+            WRITE( stdout,*)
+         end do
       endif
 !
       deallocate(ei3b)

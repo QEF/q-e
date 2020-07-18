@@ -10,7 +10,8 @@
 SUBROUTINE allocate_wfc()
   !----------------------------------------------------------------------------
   !! Dynamical allocation of arrays: wavefunctions.  
-  !! Requires dimensions: npwx, nbnd, npol, natomwfc, nwfcU
+  !! Requires dimensions: \(\text{npwx}\), \(\text{nbnd}\), \(\text{npol}\), 
+  !! \(\text{natomwfc}\), \(\text{nwfcU}\).
   !
   USE io_global,           ONLY : stdout
   USE wvfct,               ONLY : npwx, nbnd
@@ -39,9 +40,10 @@ END SUBROUTINE allocate_wfc
 SUBROUTINE allocate_wfc_k()
   !----------------------------------------------------------------------------
   !! Dynamical allocation of k-point-dependent arrays: wavefunctions, betas
-  !! kinetic energy, k+G indices. Computes max no. of plane waves npwx and
-  !! k+G indices igk_k (needs G-vectors and cutoff gcutw).  
-  !! Requires dimensions nbnd, npol, natomwfc, nwfcU.  
+  !! kinetic energy, k+G indices. Computes max no. of plane waves \(\text{npwx}\)
+  !! and k+G indices \(\text{igk_k}\) (needs G-vectors and cutoff \(\text{gcutw}\)).  
+  !! Requires dimensions \(\text{nbnd}\), \(\text{npol}\), \(\text{natomwfc}\),
+  !! \(\text{nwfcU}\).  
   !! Requires that k-points are set up and distributed (if parallelized).
   !
   USE wvfct,            ONLY : npwx, g2kin

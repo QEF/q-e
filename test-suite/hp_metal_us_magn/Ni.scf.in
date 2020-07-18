@@ -4,7 +4,6 @@
     prefix       ='Ni'
     pseudo_dir   = '../../pseudo/'
     outdir       = './'
-    verbosity    = 'high'
  /
  &system
     ibrav       = 2, 

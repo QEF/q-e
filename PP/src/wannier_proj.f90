@@ -41,9 +41,6 @@ subroutine wannier_proj(ik, wan_func)
   
   INTEGER :: current_spin, npw, i,j,k, ierr, ibnd, iwan
   
-  REAL(DP), EXTERNAL :: ddot
-  COMPLEX(DP) :: zdotc
-
   ALLOCATE(trialwf(npwx,nwan))
   ALLOCATE(pp(nwan, nbnd))
   
@@ -75,10 +72,11 @@ subroutine wannier_proj(ik, wan_func)
   
   ! computes <\Psi|\hat S|\phi> for all \Psi and \phi
   ! later one should select only few columns 
+  ! FIXME: use ZGEMM instead of DOT_PRODUCT
   pp = ZERO
   DO ibnd = 1, nbnd
      DO iwan = 1, nwan
-        pp (iwan, ibnd) = zdotc (npw, trialwf (1, iwan), 1, evc (1, ibnd), 1)
+        pp (iwan, ibnd) = DOT_PRODUCT (trialwf (1:npw, iwan), evc (1:npw, ibnd) )
      ENDDO
   ENDDO
 

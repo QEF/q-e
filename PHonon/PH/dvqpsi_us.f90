@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine dvqpsi_us (ik, uact, addnlcc)
+subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
   !----------------------------------------------------------------------
   !
   ! This routine calculates dV_bare/dtau * psi for one perturbation
@@ -30,7 +30,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   USE gvecs,     ONLY : ngms, doublegrid
   USE lsda_mod,  ONLY : nspin, lsda, isk
   USE scf,       ONLY : rho, rho_core
-  USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag, npol
+  USE noncollin_module, ONLY : nspin_gga, npol
   use uspp_param,ONLY : upf
   USE wvfct,     ONLY : nbnd, npwx
   USE wavefunctions,  ONLY: evc
@@ -43,6 +43,8 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
 
   USE Coul_cut_2D, ONLY: do_cutoff_2D  
   USE Coul_cut_2D_ph, ONLY : cutoff_localq
+  USE qpoint,     ONLY : nksq
+  USE becmod,     ONLY : bec_type
   ! 
   IMPLICIT NONE
   !
@@ -83,6 +85,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   !! 
   INTEGER :: ip
   !!
+  TYPE(bec_type) :: becp1(nksq), alphap(3,nksq)
   ! 
   complex(DP) :: gtau, gu, fact, u1, u2, u3, gu0
   complex(DP) , allocatable :: aux (:,:)
@@ -243,7 +246,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   !   First a term similar to the KB case.
   !   Then a term due to the change of the D coefficients.
   !
-  call dvqpsi_us_only (ik, uact)
+  call dvqpsi_us_only (ik, uact, becp1, alphap)
 
   call stop_clock ('dvqpsi_us')
   return

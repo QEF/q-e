@@ -7,33 +7,43 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
+SUBROUTINE vloc_psi_gamma( lda, n, m, psi, v, hpsi )
   !-----------------------------------------------------------------------
-  !
-  ! Calculation of Vloc*psi using dual-space technique - Gamma point
+  !! Calculation of Vloc*psi using dual-space technique - Gamma point.
   !
   USE parallel_include
-  USE kinds,   ONLY : DP
-  USE mp_bands,      ONLY : me_bgrp
-  USE fft_base,      ONLY : dffts
-  USE fft_interfaces,ONLY : fwfft, invfft
-  USE wavefunctions, ONLY: psic
-  USE fft_helper_subroutines, ONLY : fftx_ntgrp, tg_get_nnr, &
-          tg_get_group_nr3, tg_get_recip_inc
+  USE kinds,                   ONLY : DP
+  USE mp_bands,                ONLY : me_bgrp
+  USE fft_base,                ONLY : dffts
+  USE fft_interfaces,          ONLY : fwfft, invfft
+  USE wavefunctions,           ONLY : psic
+  USE fft_helper_subroutines,  ONLY : fftx_ntgrp, tg_get_nnr, &
+                                      tg_get_group_nr3, tg_get_recip_inc
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(in) :: lda, n, m
-  COMPLEX(DP), INTENT(in)   :: psi (lda, m)
-  COMPLEX(DP), INTENT(inout):: hpsi (lda, m)
-  REAL(DP), INTENT(in) :: v(dffts%nnr)
+  INTEGER, INTENT(IN) :: lda
+  !! leading dimension of arrays psi, hpsi
+  INTEGER, INTENT(IN) :: n
+  !! true dimension of psi, hpsi
+  INTEGER, INTENT(IN) :: m
+  !! number of states psi
+  COMPLEX(DP), INTENT(IN) :: psi(lda,m)
+  !! the wavefunction
+  COMPLEX(DP), INTENT(INOUT) :: hpsi(lda,m)
+  !! Hamiltonian dot psi
+  REAL(DP), INTENT(IN) :: v(dffts%nnr)
+  !! the total pot. in real space (smooth grid) for current spin
   !
-  INTEGER :: ibnd, j, incr, right_nnr, right_nr3, right_inc
+  ! ... local variables
+  !
+  INTEGER :: ibnd, j, incr
+  INTEGER :: right_nnr, right_nr3, right_inc
   COMPLEX(DP) :: fp, fm
   !
+  !Variables for task groups
   LOGICAL :: use_tg
-  ! Variables for task groups
-  REAL(DP),    ALLOCATABLE :: tg_v(:)
+  REAL(DP), ALLOCATABLE :: tg_v(:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
   INTEGER :: v_siz, idx, ioff
   !
@@ -197,44 +207,53 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
 END SUBROUTINE vloc_psi_gamma
 !
 !-----------------------------------------------------------------------
-SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
+SUBROUTINE vloc_psi_k( lda, n, m, psi, v, hpsi )
   !-----------------------------------------------------------------------
+  !! Calculation of Vloc*psi using dual-space technique - k-points:
   !
-  ! Calculation of Vloc*psi using dual-space technique - k-points
-  !
-  !   fft to real space
-  !   product with the potential v on the smooth grid
-  !   back to reciprocal space
-  !   addition to the hpsi
+  !! * fft to real space;
+  !! * product with the potential v on the smooth grid;
+  !! * back to reciprocal space;
+  !! * addition to the hpsi.
   !
   USE parallel_include
-  USE kinds, ONLY : DP
-  USE wvfct, ONLY : current_k
-  USE klist, ONLY : igk_k
-  USE mp_bands,      ONLY : me_bgrp
-  USE fft_base,      ONLY : dffts
-  USE fft_interfaces,ONLY : fwfft, invfft
+  USE kinds,                  ONLY : DP
+  USE wvfct,                  ONLY : current_k
+  USE klist,                  ONLY : igk_k
+  USE mp_bands,               ONLY : me_bgrp
+  USE fft_base,               ONLY : dffts
+  USE fft_interfaces,         ONLY : fwfft, invfft
   USE fft_helper_subroutines, ONLY : fftx_ntgrp, tg_get_nnr, &
-          tg_get_group_nr3, tg_get_recip_inc
-  USE wavefunctions,  ONLY: psic
+                                     tg_get_group_nr3, tg_get_recip_inc
+  USE wavefunctions,          ONLY : psic
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(in) :: lda, n, m
-  COMPLEX(DP), INTENT(in)   :: psi (lda, m)
-  COMPLEX(DP), INTENT(inout):: hpsi (lda, m)
-  REAL(DP), INTENT(in) :: v(dffts%nnr)
+  INTEGER, INTENT(IN) :: lda
+  !! leading dimension of arrays psi, hpsi
+  INTEGER, INTENT(IN) :: n
+  !! true dimension of psi, hpsi
+  INTEGER, INTENT(IN) :: m
+  !! number of states psi
+  COMPLEX(DP), INTENT(IN) :: psi(lda,m)
+  !! the wavefunction
+  COMPLEX(DP), INTENT(INOUT) :: hpsi(lda,m)
+  !! Hamiltonian dot psi
+  REAL(DP), INTENT(IN) :: v(dffts%nnr)
+  !! the total pot. in real space (smooth grid) for current spin
+  !
+  ! ... local variables
   !
   INTEGER :: ibnd, j, incr
   INTEGER :: i, right_nnr, right_nr3, right_inc
   !
   ! chunking parameters
-  integer, parameter :: blocksize = 256
-  integer :: numblock
+  INTEGER, PARAMETER :: blocksize = 256
+  INTEGER :: numblock
   !
   ! Task Groups
   LOGICAL :: use_tg
-  REAL(DP),    ALLOCATABLE :: tg_v(:)
+  REAL(DP), ALLOCATABLE :: tg_v(:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
   INTEGER :: v_siz, idx
   !
@@ -361,38 +380,47 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
 END SUBROUTINE vloc_psi_k
 !
 !-----------------------------------------------------------------------
-SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
+SUBROUTINE vloc_psi_nc( lda, n, m, psi, v, hpsi )
   !-----------------------------------------------------------------------
-  !
-  ! Calculation of Vloc*psi using dual-space technique - noncolinear
+  !! Calculation of Vloc*psi using dual-space technique - noncollinear.
   !
   USE parallel_include
-  USE kinds,   ONLY : DP
-  USE wvfct, ONLY : current_k
-  USE klist, ONLY : igk_k
-  USE mp_bands,      ONLY : me_bgrp
-  USE fft_base,      ONLY : dffts, dfftp
-  USE fft_interfaces,ONLY : fwfft, invfft
-  USE lsda_mod,      ONLY : nspin
-  USE spin_orb,      ONLY : domag
-  USE noncollin_module,     ONLY: npol
-  USE wavefunctions, ONLY: psic_nc
+  USE kinds,                  ONLY : DP
+  USE wvfct,                  ONLY : current_k
+  USE klist,                  ONLY : igk_k
+  USE mp_bands,               ONLY : me_bgrp
+  USE fft_base,               ONLY : dffts, dfftp
+  USE fft_interfaces,         ONLY : fwfft, invfft
+  USE lsda_mod,               ONLY : nspin
+  USE spin_orb,               ONLY : domag
+  USE noncollin_module,       ONLY : npol
+  USE wavefunctions,          ONLY : psic_nc
   USE fft_helper_subroutines, ONLY : fftx_ntgrp, tg_get_nnr, &
-          tg_get_group_nr3, tg_get_recip_inc
+                                     tg_get_group_nr3, tg_get_recip_inc
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(in) :: lda, n, m
-  REAL(DP), INTENT(in) :: v(dfftp%nnr,4) ! beware dimensions!
-  COMPLEX(DP), INTENT(in)   :: psi (lda*npol, m)
-  COMPLEX(DP), INTENT(inout):: hpsi (lda,npol,m)
+  INTEGER, INTENT(IN) :: lda
+  !! leading dimension of arrays psi, hpsi
+  INTEGER, INTENT(IN) :: n
+  !! true dimension of psi, hpsi
+  INTEGER, INTENT(IN) :: m
+  !! number of states psi
+  REAL(DP), INTENT(IN) :: v(dfftp%nnr,4) ! beware dimensions!
+  !! the total pot. in real space (smooth grid)
+  COMPLEX(DP), INTENT(IN) :: psi(lda*npol,m)
+  !! the wavefunction
+  COMPLEX(DP), INTENT(INOUT) :: hpsi(lda,npol,m)
+  !! Hamiltonian dot psi
+  !
+  ! ... local variables
   !
   INTEGER :: ibnd, j,ipol, incr, is
   COMPLEX(DP) :: sup, sdwn
   !
-  LOGICAL :: use_tg
   ! Variables for task groups
-  REAL(DP),    ALLOCATABLE :: tg_v(:,:)
+  LOGICAL :: use_tg
+  REAL(DP), ALLOCATABLE :: tg_v(:,:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:,:)
   INTEGER :: v_siz, idx, ioff
   INTEGER :: right_nnr, right_nr3, right_inc

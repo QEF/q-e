@@ -34,10 +34,11 @@ SUBROUTINE run_pwscf( exit_status )
   !!
   !
   USE io_global,            ONLY : stdout, ionode, ionode_id
-  USE parameters,           ONLY : ntypx, npk, lmaxx
+  USE parameters,           ONLY : ntypx, npk
+  USE upf_params,           ONLY : lmaxx
   USE cell_base,            ONLY : fix_volume, fix_area
   USE control_flags,        ONLY : conv_elec, gamma_only, ethr, lscf, treinit_gvecs
-  USE control_flags,        ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs
+  USE control_flags,        ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs, lensemb
   USE cellmd,               ONLY : lmovecell
   USE command_line_options, ONLY : command_line
   USE force_mod,            ONLY : lforce, lstres, sigma, force
@@ -51,6 +52,9 @@ SUBROUTINE run_pwscf( exit_status )
                                    qmmm_update_positions, qmmm_update_forces
   USE qexsd_module,         ONLY : qexsd_set_status
   USE funct,                ONLY : dft_is_hybrid, stop_exx 
+#ifdef use_beef
+  USE beef,                 ONLY : beef_energies
+#endif 
   !
   IMPLICIT NONE
   !
@@ -64,12 +68,13 @@ SUBROUTINE run_pwscf( exit_status )
   !
   INTEGER :: idone 
   ! counter of electronic + ionic steps done in this run
-  INTEGER :: ions_status = 3
+  INTEGER :: ions_status
   ! ions_status =  3  not yet converged
   ! ions_status =  2  converged, restart with nonzero magnetization
   ! ions_status =  1  converged, final step with current cell needed
   ! ions_status =  0  converged, exiting
   !
+  ions_status = 3
   exit_status = 0
   IF ( ionode ) WRITE( UNIT = stdout, FMT = 9010 ) ntypx, npk, lmaxx
   !
@@ -149,15 +154,6 @@ SUBROUTINE run_pwscf( exit_status )
         RETURN
      ENDIF
      !
-     ! ... ionic section starts here
-     !
-     CALL start_clock( 'ions' ); !write(*,*)' start ions' ; FLUSH(6)
-     conv_ions = .TRUE.
-     !
-     ! ... recover from a previous run, if appropriate
-     !
-     !IF ( restart .AND. lscf ) CALL restart_in_ions()
-     !
      ! ... file in CASINO format written here if required
      !
      IF ( lmd ) THEN
@@ -165,6 +161,11 @@ SUBROUTINE run_pwscf( exit_status )
      ELSE
         CALL pw2casino( 0 )
      END IF
+     !
+     ! ... ionic section starts here
+     !
+     CALL start_clock( 'ions' ); !write(*,*)' start ions' ; FLUSH(6)
+     conv_ions = .TRUE.
      !
      ! ... force calculation
      !
@@ -175,6 +176,10 @@ SUBROUTINE run_pwscf( exit_status )
      IF ( lstres ) CALL stress( sigma )
      !
      IF ( lmd .OR. lbfgs ) THEN
+        !
+        ! ... add information on this ionic step to xml file
+        !
+        CALL add_qexsd_step( idone )
         !
         IF (fix_volume) CALL impose_deviatoric_stress( sigma )
         IF (fix_area)   CALL impose_deviatoric_stress_2d( sigma )
@@ -189,14 +194,15 @@ SUBROUTINE run_pwscf( exit_status )
         conv_ions = ( ions_status == 0 ) .OR. &
                     ( ions_status == 1 .AND. treinit_gvecs )
         !
-        ! ... then we save restart information for the new configuration
+        IF (dft_is_hybrid() )  CALL stop_exx()
         !
-        IF ( idone <= nstep .AND. .NOT. conv_ions ) THEN 
+        ! ... save restart information for the new configuration
+        !
+        IF ( idone <= nstep .AND. .NOT. conv_ions ) THEN
             CALL qexsd_set_status( 255 )
-            CALL punch( 'config-nowf' )
+            CALL punch( 'config-only' )
         END IF
         !
-        IF (dft_is_hybrid() )  CALL stop_exx()
      END IF
      !
      CALL stop_clock( 'ions' ); !write(*,*)' stop ions' ; FLUSH(6)
@@ -207,7 +213,6 @@ SUBROUTINE run_pwscf( exit_status )
      !
      ! ... exit condition (ionic convergence) is checked here
      !
-     IF ( lmd .OR. lbfgs ) CALL add_qexsd_step( idone )
      IF ( conv_ions ) EXIT main_loop
      !
      ! ... receive new positions from MM code in QM/MM run
@@ -268,6 +273,9 @@ SUBROUTINE run_pwscf( exit_status )
   ! ... save final data file
   !
   CALL qexsd_set_status( exit_status )
+#ifdef use_beef
+  IF ( lensemb ) CALL beef_energies( )
+#endif 
   CALL punch( 'all' )
   !
   CALL qmmm_shutdown()

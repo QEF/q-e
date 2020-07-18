@@ -4,8 +4,8 @@
                            Hubbard U parameters:
 
        site n.  type  label  spin  new_type  new_label  Hubbard U (eV)
-         1        1    Ni1     1      1         Ni1        7.9248
-         2        2    Ni2    -1      1         Ni1        7.9248
+         1        1    Ni1     1      1         Ni1        7.0514
+         2        2    Ni2    -1      1         Ni1        7.0514
 
   =-------------------------------------------------------------------=
 

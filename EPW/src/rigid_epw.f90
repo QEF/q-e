@@ -1,29 +1,28 @@
   !
-  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino 
+  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2001-2008 Quantum-Espresso group
   ! This file is distributed under the terms of the
   ! GNU General Public License. See the file `License'
   ! in the root directory of the present distribution,
   ! or http://www.gnu.org/copyleft/gpl.txt .
   !
-  !
   !----------------------------------------------------------------------
   MODULE rigid_epw
   !----------------------------------------------------------------------
-  !! 
-  !! This module contains routine linked with the calculation of the rigid-ion 
-  !! (long-range) term for q.  
-  !! 
+  !!
+  !! This module contains routine linked with the calculation of the rigid-ion
+  !! (long-range) term for q.
+  !!
   IMPLICIT NONE
-  ! 
+  !
   CONTAINS
-    ! 
+    !
     !--------------------------------------------------------------------------
     COMPLEX(KIND = DP) FUNCTION H_eps(z)
     !--------------------------------------------------------------------------
-    !!  
+    !!
     !! Function used in the Lindhard function. See Eq.(56) of Hedin (1965)
-    !! 
+    !!
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : eps10
     !
@@ -46,23 +45,24 @@
     !-----------------------------------------------------------------------
     SUBROUTINE rgd_blk(nqc1, nqc2, nqc3, nat, dyn, q, tau, epsil, zeu, signe)
     !-----------------------------------------------------------------------
-    !! This is adapted from QE PH/rigid.f90 
+    !! This is adapted from QE PH/rigid.f90
     !!
-    !! compute the rigid-ion (long-range) term for q 
+    !! compute the rigid-ion (long-range) term for q
     !! The long-range term used here, to be added to or subtracted from the
     !! dynamical matrices, is exactly the same of the formula introduced
     !! in:
-    !! X. Gonze et al, PRB 50. 13035 (1994) . Only the G-space term is 
-    !! implemented: the Ewald parameter alpha must be large enough to 
+    !! X. Gonze et al, PRB 50. 13035 (1994) . Only the G-space term is
+    !! implemented: the Ewald parameter alpha must be large enough to
     !! have negligible r-space contribution
     !!
     !! This implements Eq. 98 of Rev. Mod. Phys., 73, 515 (2001)
-    !! SP: April 2019 - Using nrx1 is overkill. 
+    !! SP: April 2019 - Using nrx1 is overkill.
     !!
-    !! SP - 11/2019 - Addition of system_2d (we assume z is the vacuum direction).  
+    !! SP - 11/2019 - Addition of system_2d (we assume z is the vacuum direction).
     !!
     USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : pi, fpi, e2
+    USE constants_epw, ONLY : fpi, e2
+    USE constants,     ONLY : pi
     USE cell_base,     ONLY : bg, omega
     USE constants_epw, ONLY : eps6
     USE epwcom,        ONLY : system_2d
@@ -70,11 +70,11 @@
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nqc1
-    !! Coarse q-point grid 
+    !! Coarse q-point grid
     INTEGER, INTENT(in) :: nqc2
-    !! Coarse q-point grid 
+    !! Coarse q-point grid
     INTEGER, INTENT(in) :: nqc3
-    !! Coarse q-point grid 
+    !! Coarse q-point grid
     INTEGER, INTENT(in) :: nat
     !! Number of atoms
     REAL (KIND = DP), INTENT(in) :: q(3)
@@ -92,7 +92,7 @@
     !
     ! Local variables
     INTEGER :: na
-    !! Atom index 1 
+    !! Atom index 1
     INTEGER :: nb
     !! Atom index 2
     INTEGER :: i
@@ -101,7 +101,7 @@
     !! Cartesian direction 1
     INTEGER :: m1, m2, m3
     !! Loop over q-points
-    REAL(KIND = DP):: geg                    
+    REAL(KIND = DP):: geg
     !! <q+G| epsil | q+G>
     REAL(KIND = DP) :: alph
     !! Ewald parameter
@@ -128,11 +128,11 @@
     !
     ! alph is the Ewald parameter, geg is an estimate of G^2
     ! such that the G-space sum is convergent for that alph
-    ! very rough estimate: geg/4/alph > gmax = 14 
+    ! very rough estimate: geg/4/alph > gmax = 14
     ! (exp (-14) = 10^-6)
     !
     IF (ABS(ABS(signe) - 1.0) > eps6) CALL errore('rgd_blk', ' wrong value for signe ', 1)
-    ! 
+    !
     IF (system_2d) THEN
       !fac = (signe * e2 * fpi) / omega*0.5d0*alat/bg(3,3)
       !reff=0.0d0
@@ -144,11 +144,11 @@
       !DO i=1,2
       !   reff(i,i)=reff(i,i)-0.5d0*tpi/bg(3,3) ! (-1)*c/2 in 2pi/a units
       !ENDDO
-    ELSE 
+    ELSE
       ! (e^2 * 4\pi) / Volume
       fac = (signe * e2 * fpi) / omega
     ENDIF
-    ! 
+    !
     gmax = 14.d0
     alph = 1.0d0
     geg = gmax * alph * 4.0d0
@@ -182,10 +182,10 @@
                 zcg(:)  = g1 * zeu(1, :, nb) + g2 * zeu(2, :, nb) + g3 * zeu(3, :, nb)
                 fnat(:) = fnat(:) + zcg(:) * COS(arg)
               ENDDO
-              DO j = 1, 3 
-                DO i = 1, 3 
-                  dyn((na - 1) * 3 + i, (na - 1) * 3 + j) = dyn((na - 1) * 3 + i,(na - 1) * 3 + j) & 
-                                               - facgd * zag(i) * fnat(j) 
+              DO j = 1, 3
+                DO i = 1, 3
+                  dyn((na - 1) * 3 + i, (na - 1) * 3 + j) = dyn((na - 1) * 3 + i,(na - 1) * 3 + j) &
+                                               - facgd * zag(i) * fnat(j)
                 ENDDO ! i
               ENDDO ! j
             ENDDO ! nat
@@ -212,9 +212,9 @@
                                 g3 * (tau(3, na) - tau(3, nb)) )
                 !
                 facg = facgd * CMPLX(COS(arg), SIN(arg), DP)
-                DO j = 1, 3 
-                  DO i = 1, 3 
-                    dyn((na - 1) * 3 + i, (nb - 1) * 3 + j) = dyn((na - 1) * 3 + i, (nb - 1) * 3 + j) & 
+                DO j = 1, 3
+                  DO i = 1, 3
+                    dyn((na - 1) * 3 + i, (nb - 1) * 3 + j) = dyn((na - 1) * 3 + i, (nb - 1) * 3 + j) &
                                                  + facg * zag(i) * zbg(j)
                   ENDDO ! i
                 ENDDO ! j
@@ -222,8 +222,8 @@
             ENDDO ! nb
           ENDIF
         ENDDO ! m3
-      ENDDO ! m2 
-    ENDDO ! m1 
+      ENDDO ! m2
+    ENDDO ! m1
     !
     !-------------------------------------------------------------------------------
     END SUBROUTINE rgd_blk
@@ -237,20 +237,20 @@
     !! to be added or subtracted from the vertex
     !!
     !! The long-range part can be computed using Eq. (4) of PRL 115, 176401 (2015).
-    !! The sum over G is converged using the Ewald summation technique (see for example 
+    !! The sum over G is converged using the Ewald summation technique (see for example
     !! F.2, p.500 in Martin Electronic structure book) where the Ewald factor is ((q+G)**2)/alph/4.0d0.
     !!
-    !! Technical note: From the solution of the Poisson equation, there is an additional factor 
+    !! Technical note: From the solution of the Poisson equation, there is an additional factor
     !! e^{-i(q+G)\tau_\kappa} with respect to Eq. (4) of PRL 115, 176401 (2015).
     !! The full equation can be found in Eq. (S4) of the supplemental materials of PRL 115, 176401 (2015).
-    !! 
     !!
-    !! The final implemented formula is:  
+    !!
+    !! The final implemented formula is:
     !!
     !! $$ g_{mn\nu}^{\mathcal L}({\bf k},{\bf q) = i\frac{4\pi e^2}{\Omega} \sum_{\kappa}
     !!   \left(\frac{\hbar}{2 {M_\kappa \omega_{{\bf q}\nu}}}\right)^{\!\!\frac{1}{2}}
     !!   \sum_{{\bf G}\ne -{\bf q}} e^{-({\bf q}+{\bf G})^2/4\alpha}
-    !! \frac{ ({\bf q}+{\bf G})\cdot{\bf Z}^*_\kappa \cdot {\bf e}_{\kappa\nu}({\bf q}) } 
+    !! \frac{ ({\bf q}+{\bf G})\cdot{\bf Z}^*_\kappa \cdot {\bf e}_{\kappa\nu}({\bf q}) }
     !!  {({\bf q}+{\bf G})\cdot\bm\epsilon^\infty\!\cdot({\bf q}+{\bf G})}\,
     !!   \left[ U_{{\bf k}+{\bf q}}\:U_{{\bf k}}^{\dagger} \right]_{mn} $$
     !!
@@ -263,11 +263,11 @@
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nqc1
-    !! Coarse q-point grid 
+    !! Coarse q-point grid
     INTEGER, INTENT(in) :: nqc2
-    !! Coarse q-point grid 
+    !! Coarse q-point grid
     INTEGER, INTENT(in) :: nqc3
-    !! Coarse q-point grid 
+    !! Coarse q-point grid
     INTEGER, INTENT(in) :: nmodes
     !! Max number of modes
     REAL(KIND = DP), INTENT(in) :: q(3)
@@ -281,13 +281,13 @@
     COMPLEX(KIND = DP), INTENT(in) :: uq(nmodes, nmodes)
     !! phonon eigenvec associated with q
     COMPLEX(KIND = DP), INTENT(inout) :: epmat(nmodes)
-    !! e-ph matrix elements 
-    COMPLEX(KIND = DP), INTENT(in) :: bmat 
+    !! e-ph matrix elements
+    COMPLEX(KIND = DP), INTENT(in) :: bmat
     !! Overlap matrix elements $$<U_{mk+q}|U_{nk}>$$
     !
     ! Local variables
     INTEGER :: na
-    !! Atom index 1 
+    !! Atom index 1
     INTEGER :: ipol
     !! Polarison
     INTEGER :: m1, m2, m3
@@ -323,7 +323,7 @@
     fac = signe * e2 * fpi / omega * ci
     !
     !
-    epmatl(:) = czero   
+    epmatl(:) = czero
     !DO m1 = -nrx1, nrx1
     DO m1 = -nqc1, nqc1
       DO m2 = -nqc2, nqc2
@@ -355,21 +355,21 @@
             ENDDO !nat
           ENDIF
           !
-        ENDDO ! m3 
-      ENDDO ! m2 
-    ENDDO ! m1 
+        ENDDO ! m3
+      ENDDO ! m2
+    ENDDO ! m1
     !
     ! In case we want only the short-range we do
     ! g_s = DSQRT(g*g - g_l*g_l)
-    ! 
-    ! Important notice: It is possible that (g*g - g_l*g_l) < 0, in which 
-    ! case the sqrt will give an pure imaginary number. If it is positive we 
+    !
+    ! Important notice: It is possible that (g*g - g_l*g_l) < 0, in which
+    ! case the sqrt will give an pure imaginary number. If it is positive we
     ! will get a pure real number.
-    ! In any case, when g_s will be squared both will become real numbers. 
+    ! In any case, when g_s will be squared both will become real numbers.
     IF (shortrange) THEN
       !epmat = ZSQRT(epmat*CONJG(epmat) - epmatl*CONJG(epmatl))
       epmat = SQRT(epmat * CONJG(epmat) - epmatl * CONJG(epmatl))
-    ENDIF        
+    ENDIF
     !
     !-------------------------------------------------------------------------------
     END SUBROUTINE rgd_blk_epw
@@ -383,23 +383,23 @@
     !! to be added or subtracted from the vertex
     !!
     !! The long-range part can be computed using Eq. (4) of PRL 115, 176401 (2015).
-    !! The sum over G is converged using the Ewald summation technique (see for example 
+    !! The sum over G is converged using the Ewald summation technique (see for example
     !! F.2, p.500 in Martin Electronic structure book) where the Ewald factor is ((q+G)**2)/alph/4.0d0.
     !!
-    !! Technical note: From the solution of the Poisson equation, there is an additional factor 
+    !! Technical note: From the solution of the Poisson equation, there is an additional factor
     !! e^{-i(q+G)\tau_\kappa} with respect to Eq. (4) of PRL 115, 176401 (2015).
     !! The full equation can be found in Eq. (S4) of the supplemental materials of PRL 115, 176401 (2015).
-    !! 
-    !! The final implemented formula is:  
+    !!
+    !! The final implemented formula is:
     !!
     !! $$ g_{mn\nu}^{\mathcal L}({\bf k},{\bf q) = i\frac{4\pi e^2}{\Omega} \sum_{\kappa}
     !!   \left(\frac{\hbar}{2 {M_\kappa \omega_{{\bf q}\nu}}}\right)^{\!\!\frac{1}{2}}
     !!   \sum_{{\bf G}\ne -{\bf q}} e^{-({\bf q}+{\bf G})^2/4\alpha}
-    !! \frac{ ({\bf q}+{\bf G})\cdot{\bf Z}^*_\kappa \cdot {\bf e}_{\kappa\nu}({\bf q}) } 
+    !! \frac{ ({\bf q}+{\bf G})\cdot{\bf Z}^*_\kappa \cdot {\bf e}_{\kappa\nu}({\bf q}) }
     !!  {({\bf q}+{\bf G})\cdot\bm\epsilon^\infty\!\cdot({\bf q}+{\bf G})}\,
     !!   \left[ U_{{\bf k}+{\bf q}}\:U_{{\bf k}}^{\dagger} \right]_{mn} $$
     !!
-    !! 10/2016 - SP: Optimization  
+    !! 10/2016 - SP: Optimization
     !!
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : bg, omega, alat
@@ -410,11 +410,11 @@
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nqc1
-    !! Coarse q-point grid 
+    !! Coarse q-point grid
     INTEGER, INTENT(in) :: nqc2
-    !! Coarse q-point grid 
+    !! Coarse q-point grid
     INTEGER, INTENT(in) :: nqc3
-    !! Coarse q-point grid 
+    !! Coarse q-point grid
     INTEGER, INTENT(in) :: nmodes
     !! Max number of modes
     REAL (KIND = DP), INTENT(in) :: q(3)
@@ -428,13 +428,13 @@
     COMPLEX (KIND = DP), INTENT(in) :: uq(nmodes, nmodes)
     !! phonon eigenvec associated with q
     COMPLEX (KIND = DP), INTENT(inout) :: epmat(nbndsub, nbndsub, nmodes)
-    !! e-ph matrix elements 
-    COMPLEX (KIND = DP), INTENT(in) :: bmat(nbndsub, nbndsub) 
+    !! e-ph matrix elements
+    COMPLEX (KIND = DP), INTENT(in) :: bmat(nbndsub, nbndsub)
     !! Overlap matrix elements $$<U_{mk+q}|U_{nk}>$$
     !
     ! Local variables
     INTEGER :: na
-    !! Atom index 1 
+    !! Atom index 1
     INTEGER :: ipol
     !! Polarison
     INTEGER :: m1, m2, m3
@@ -471,7 +471,7 @@
     geg = gmax * alph * 4.0d0
     fac = signe * e2 * fpi / omega * ci
     !
-    epmatl(:, :, :) = czero   
+    epmatl(:, :, :) = czero
     !
     DO m1 = -nqc1, nqc1
       DO m2 = -nqc2, nqc2
@@ -506,20 +506,20 @@
           ENDIF
           !
         ENDDO ! m3
-      ENDDO ! m2 
+      ENDDO ! m2
     ENDDO ! m1
     !
     ! In case we want only the short-range we do
     ! g_s = DSQRT(g*g - g_l*g_l)
-    ! 
-    ! Important notice: It is possible that (g*g - g_l*g_l) < 0, in which 
-    ! case the sqrt will give an pure imaginary number. If it is positive we 
+    !
+    ! Important notice: It is possible that (g*g - g_l*g_l) < 0, in which
+    ! case the sqrt will give an pure imaginary number. If it is positive we
     ! will get a pure real number.
-    ! In any case, when g_s will be squared both will become real numbers. 
+    ! In any case, when g_s will be squared both will become real numbers.
     IF (shortrange) THEN
       !epmat = ZSQRT(epmat*CONJG(epmat) - epmatl*CONJG(epmatl))
       epmat = SQRT(epmat * CONJG(epmat) - epmatl * CONJG(epmatl))
-    ENDIF        
+    ENDIF
     !
     !-----------------------------------------------------------------------------
     END SUBROUTINE rgd_blk_epw_fine
@@ -533,7 +533,8 @@
     !!
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg, omega, alat
-    USE constants_epw, ONLY : pi, twopi, ha2ev, cone, ci, eps5, eps10
+    USE constants_epw, ONLY : twopi, ha2ev, cone, ci, eps5, eps10
+    USE constants,     ONLY : pi
     USE epwcom,        ONLY : meff, fermi_diff, nel, smear_rpa
     USE io_global,     ONLY : stdout
     !
@@ -545,26 +546,26 @@
     !! q vector (in crystal coordinates
     REAL (KIND = DP), INTENT(inout) :: w(nmodes)
     !! phonon frequencies associated with q
-    REAL (KIND = DP), INTENT(in) :: epsil(3, 3) 
+    REAL (KIND = DP), INTENT(in) :: epsil(3, 3)
     !! dielectric constant tensor
-    COMPLEX(KIND = DP), INTENT(out) :: eps_rpa(nmodes) 
+    COMPLEX(KIND = DP), INTENT(out) :: eps_rpa(nmodes)
     !! electronic screening
     !
     ! Local variable
     LOGICAL, SAVE :: first_call = .TRUE.
-    !! Logical for first_call the routine 
-    INTEGER :: im 
+    !! Logical for first_call the routine
+    INTEGER :: im
     !! Mode counter
     REAL(KIND = DP) :: n
     !! Electron density in atomic units
     REAL(KIND = DP) :: rs
-    !! Prefactor for the dielectric screening 
+    !! Prefactor for the dielectric screening
     REAL(KIND = DP) :: EF
     !! Fermi-level in eV
     REAL(KIND = DP) :: kF
     !! Fermi wavevector
     REAL(KIND = DP) :: pref
-    !! Prefactor for the dielectric function 
+    !! Prefactor for the dielectric function
     REAL(KIND = DP) :: eta
     !! Broadening for the dielectric function
     REAL(KIND = DP) :: q2
@@ -604,7 +605,7 @@
         u = w(im) + SIGN(eta, w(im)) * ci
         eps_rpa(im) = 1.d0 + pref * (H_eps(qm + u / qm) + H_eps(qm - u / qm)) / qm**3
       ENDDO
-    ELSE 
+    ELSE
       eps_rpa = cone
     ENDIF
     !
@@ -623,7 +624,8 @@
     !!
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg, omega, alat
-    USE constants_epw, ONLY : pi, twopi, ha2ev, cone, eps5, eps10
+    USE constants_epw, ONLY : twopi, ha2ev, cone, eps5, eps10
+    USE constants,     ONLY : pi
     USE epwcom,        ONLY : fermi_diff, nel
     USE io_global,     ONLY : stdout
     !
@@ -640,7 +642,7 @@
     !
     ! Local variable
     LOGICAL, SAVE :: first_call = .TRUE.
-    !! Logical for first_call the routine 
+    !! Logical for first_call the routine
     REAL(KIND = DP) :: n
     !! Electron density in atomic units
     REAL(KIND = DP) :: EF
@@ -652,10 +654,10 @@
     REAL(KIND = DP) :: qtfc
     !! Thomas-Fermi wavector in unit of 2pi/a
     REAL(KIND = DP) :: qm
-    !! Modulus of q 
+    !! Modulus of q
     REAL(KIND = DP) :: eps_ave
     !! Average dielectric function (semiconductor/insulator)
-    ! 
+    !
     n = nel / omega
     EF = fermi_diff / ha2ev
     eps_ave = (epsil(1, 1) + epsil(2, 2) + epsil(3, 3)) / 3.d0
@@ -691,15 +693,15 @@
     SUBROUTINE compute_umn_f(nbnd, cufkk, cufkq, bmatf)
     !-----------------------------------------------------------------------
     !!
-    !! Calculates $$ U_{k+q} U_k^\dagger = <\Psi_{mk+q}|e^{i{q+G}r}|\Psi_{nk}> $$ 
+    !! Calculates $$ U_{k+q} U_k^\dagger = <\Psi_{mk+q}|e^{i{q+G}r}|\Psi_{nk}> $$
     !! in the approximation q+G->0 on the fine grids.
     !!
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : czero, cone
-    ! 
+    !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in) :: nbnd 
+    INTEGER, INTENT(in) :: nbnd
     !! number of bands (possibly in the optimal subspace)
     COMPLEX(KIND = DP), INTENT(in) :: cufkk(nbnd, nbnd)
     !! rotation matrix U(k)^\dagger, fine mesh
@@ -723,12 +725,12 @@
     SUBROUTINE compute_umn_c(nbnd, nbndsub, nks, cuk, cukq, bmat)
     !-----------------------------------------------------------------------
     !!
-    !! Calculates $$ U_{k+q} U_k^\dagger = <\Psi_{mk+q}|e^{i(q+G)r}|\Psi_{nk}> $$ 
-    !! in the approximation q+G->0 on the coarse grids. 
+    !! Calculates $$ U_{k+q} U_k^\dagger = <\Psi_{mk+q}|e^{i(q+G)r}|\Psi_{nk}> $$
+    !! in the approximation q+G->0 on the coarse grids.
     !!
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : czero, cone
-    ! 
+    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nbnd
@@ -744,14 +746,14 @@
     COMPLEX(KIND = DP), INTENT(out) :: bmat(nbnd, nbnd, nks)
     !! overlap wfcs in Bloch representation, fine grid
     !
-    ! Local variables 
+    ! Local variables
     INTEGER :: ik
     !! k-point index
     !
     ! Every pool works with its own subset of k points on the fine grid
     bmat = czero
     !
-    !  U(k+q) * U(k)^\dagger 
+    !  U(k+q) * U(k)^\dagger
     !
     DO ik = 1, nks
       CALL ZGEMM('n', 'c', nbnd, nbnd, nbndsub, cone, cukq(:, :, ik), &
@@ -761,26 +763,27 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE compute_umn_c
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE rgd_blk_der(nqc1, nqc2, nqc3, nat, dyn_der, q, tau, epsil, zeu, signe)
     !-----------------------------------------------------------------------
     !!
-    !! compute the rigid-ion (long-range) derivative term for q 
+    !! compute the rigid-ion (long-range) derivative term for q
     !!
     USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : pi, fpi, e2, ci, twopi
+    USE constants_epw, ONLY : fpi, e2, ci, twopi
+    USE constants,     ONLY : pi
     USE cell_base,     ONLY : bg, omega, alat
     USE constants_epw, ONLY : eps6
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nqc1
-    !! Coarse q-point grid 
+    !! Coarse q-point grid
     INTEGER, INTENT(in) :: nqc2
-    !! Coarse q-point grid 
+    !! Coarse q-point grid
     INTEGER, INTENT(in) :: nqc3
-    !! Coarse q-point grid 
+    !! Coarse q-point grid
     INTEGER, INTENT(in) :: nat
     !! Number of atoms
     REAL(KIND = DP), INTENT(in) :: q(3)
@@ -800,20 +803,20 @@
     !
     ! Local variables
     INTEGER :: na
-    !! Atom index 1 
+    !! Atom index 1
     INTEGER :: nb
     !! Atom index 2
-    INTEGER :: i 
+    INTEGER :: i
     !! Cartesian direction 1
     INTEGER :: j
     !! Cartesian direction 1
-    INTEGER :: m1, m2, m3 
+    INTEGER :: m1, m2, m3
     !! Loop over q-points
     INTEGER :: isum
     !! Index to sum the different component of the derivative
-    REAL(KIND = DP):: geg                    
+    REAL(KIND = DP):: geg
     !! <q+G| epsil | q+G>
-    REAL(KIND = DP) :: alph  
+    REAL(KIND = DP) :: alph
     !! Missing definition
     REAL(KIND = DP) :: fac
     !! Missing definition
@@ -829,7 +832,7 @@
     !! Missing definition
     REAL(KIND = DP) :: zag(3)
     !! Missing definition
-    REAL(KIND = DP) :: zbg(3) 
+    REAL(KIND = DP) :: zbg(3)
     !! Missing definition
     REAL(KIND = DP) :: zbg_der(3, 3)
     !! Missing definition
@@ -840,7 +843,7 @@
     !
     ! alph is the Ewald parameter, geg is an estimate of G^2
     ! such that the G-space sum is convergent for that alph
-    ! very rough estimate: geg/4/alph > gmax = 14 
+    ! very rough estimate: geg/4/alph > gmax = 14
     ! (exp (-14) = 10^-6)
     !
     gmax = 14.d0
@@ -848,11 +851,11 @@
     geg = gmax * alph * 4.0d0
     !
     IF (ABS(ABS(signe) - 1.0) > eps6) CALL errore('rgd_blk_der', ' wrong value for signe ', 1)
-    ! 
+    !
     gmax = 14.d0
     alph = 1.0d0
     geg = gmax * alph * 4.0d0
-    fac = signe * e2 * fpi / omega 
+    fac = signe * e2 * fpi / omega
     !
     DO m1 = -nqc1, nqc1
       DO m2 = -nqc2, nqc2
@@ -879,15 +882,15 @@
               zbg_der(:, :) = zeu(:, :, nb)
               DO na = 1, nat
                 zag(:) = g1 * zeu(1, :, na) + g2 * zeu(2, :, na) + g3 * zeu(3, :, na)
-                zag_der(:, :) = zeu(:, :, na) 
+                zag_der(:, :) = zeu(:, :, na)
                 arg = 2.d0 * pi * (g1 * (tau(1, na) - tau(1, nb)) + &
                                    g2 * (tau(2, na) - tau(2, nb)) + &
                                    g3 * (tau(3, na) - tau(3, nb)))
                 arg_no_g(:) = 2.d0 * pi * (tau(:,na) - tau(:,nb))
                 !
                 facg = facgd * CMPLX(COS(arg), SIN(arg), DP)
-                DO j = 1, 3 
-                  DO i = 1, 3 
+                DO j = 1, 3
+                  DO i = 1, 3
                     dyn_der_part(1, :, (na - 1) * 3 + i, (nb - 1) * 3 + j) = facg * zag_der(:, i) * zbg(j)
                     dyn_der_part(2, :, (na - 1) * 3 + i, (nb - 1) * 3 + j) = facg * zag(i) * zbg_der(:, j)
                     dyn_der_part(3, :, (na - 1) * 3 + i,( nb - 1) * 3 + j) =-facg * zag(i) * zbg(j) &
@@ -910,7 +913,7 @@
           ENDIF ! geg >
         ENDDO ! m3
       ENDDO ! m2
-    ENDDO ! m1 
+    ENDDO ! m1
     !
     !-------------------------------------------------------------------------------
     END SUBROUTINE rgd_blk_der
@@ -924,23 +927,23 @@
     !! to be added or subtracted from the vertex
     !!
     !! The long-range part can be computed using Eq. (4) of PRL 115, 176401 (2015).
-    !! The sum over G is converged using the Ewald summation technique (see for example 
+    !! The sum over G is converged using the Ewald summation technique (see for example
     !! F.2, p.500 in Martin Electronic structure book) where the Ewald factor is ((q+G)**2)/alph/4.0_DP.
     !!
-    !! Technical note: From the solution of the Poisson equation, there is an additional factor 
+    !! Technical note: From the solution of the Poisson equation, there is an additional factor
     !! e^{-i(q+G)\tau_\kappa} with respect to Eq. (4) of PRL 115, 176401 (2015).
     !! The full equation can be found in Eq. (S4) of the supplemental materials of PRL 115, 176401 (2015).
-    !! 
-    !! The final implemented formula is:  
+    !!
+    !! The final implemented formula is:
     !!
     !! $$ g_{mn\nu}^{\mathcal L}({\bf k},{\bf q) = i\frac{4\pi e^2}{\Omega} \sum_{\kappa}
     !!   \left(\frac{\hbar}{2 {M_\kappa \omega_{{\bf q}\nu}}}\right)^{\!\!\frac{1}{2}}
     !!   \sum_{{\bf G}\ne -{\bf q}} e^{-({\bf q}+{\bf G})^2/4\alpha}
-    !! \frac{ ({\bf q}+{\bf G})\cdot{\bf Z}^*_\kappa \cdot {\bf e}_{\kappa\nu}({\bf q}) } 
+    !! \frac{ ({\bf q}+{\bf G})\cdot{\bf Z}^*_\kappa \cdot {\bf e}_{\kappa\nu}({\bf q}) }
     !!  {({\bf q}+{\bf G})\cdot\bm\epsilon^\infty\!\cdot({\bf q}+{\bf G})}\,
     !!   \left[ U_{{\bf k}+{\bf q}}\:U_{{\bf k}}^{\dagger} \right]_{mn} $$
     !!
-    !! 10/2016 - SP: Optimization  
+    !! 10/2016 - SP: Optimization
     !!
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : bg, omega, alat
@@ -951,13 +954,13 @@
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: imode
-    !! Coarse q-point grid 
+    !! Coarse q-point grid
     INTEGER, INTENT(in) :: nqc1
-    !! Coarse q-point grid 
+    !! Coarse q-point grid
     INTEGER, INTENT(in) :: nqc2
-    !! Coarse q-point grid 
+    !! Coarse q-point grid
     INTEGER, INTENT(in) :: nqc3
-    !! Coarse q-point grid 
+    !! Coarse q-point grid
     INTEGER, INTENT(in) :: nmodes
     !! Max number of modes
     REAL(KIND = DP), INTENT(in) :: q(3)
@@ -971,13 +974,13 @@
     COMPLEX(KIND = DP), INTENT(in) :: uq(nmodes, nmodes)
     !! phonon eigenvec associated with q
     COMPLEX(KIND = DP), INTENT(inout) :: epmat(nbndsub, nbndsub)
-    !! e-ph matrix elements 
-    COMPLEX(KIND = DP), INTENT(in) :: bmat(nbndsub, nbndsub) 
+    !! e-ph matrix elements
+    COMPLEX(KIND = DP), INTENT(in) :: bmat(nbndsub, nbndsub)
     !! Overlap matrix elements $$<U_{mk+q}|U_{nk}>$$
     !
     ! Local variables
     INTEGER :: na
-    !! Atom index 1 
+    !! Atom index 1
     INTEGER :: ipol
     !! Polarison
     INTEGER :: m1, m2, m3
@@ -1004,7 +1007,7 @@
     !!
     COMPLEX(KIND = DP) :: epmatl(nbndsub, nbndsub)
     !! Long-range part of the matrix element
-    ! 
+    !
     IF (ABS(ABS(signe) - 1.0) > eps12) CALL errore('rgd_blk_epw_fine_mem', ' wrong value for signe ', 1)
     !
     gmax = 14.d0
@@ -1012,7 +1015,7 @@
     geg  = gmax * alph * 4.0d0
     fac  = signe * e2 * fpi / omega * ci
     !
-    epmatl(:, :) = czero   
+    epmatl(:, :) = czero
     !
     DO m1 = -nqc1, nqc1
       DO m2 = -nqc2, nqc2
@@ -1049,15 +1052,15 @@
     !
     ! In case we want only the short-range we do
     ! g_s = DSQRT(g*g - g_l*g_l)
-    ! 
-    ! Important notice: It is possible that (g*g - g_l*g_l) < 0, in which 
-    ! case the sqrt will give an pure imaginary number. If it is positive we 
+    !
+    ! Important notice: It is possible that (g*g - g_l*g_l) < 0, in which
+    ! case the sqrt will give an pure imaginary number. If it is positive we
     ! will get a pure real number.
-    ! In any case, when g_s will be squared both will become real numbers. 
+    ! In any case, when g_s will be squared both will become real numbers.
     IF (shortrange) THEN
       !epmat = ZSQRT(epmat*CONJG(epmat) - epmatl*CONJG(epmatl))
       epmat = SQRT(epmat * CONJG(epmat) - epmatl * CONJG(epmatl))
-    ENDIF        
+    ENDIF
     !
     !-------------------------------------------------------------------------------
     END SUBROUTINE rgd_blk_epw_fine_mem

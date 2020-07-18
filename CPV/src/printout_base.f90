@@ -172,18 +172,17 @@ CONTAINS
   END SUBROUTINE printout_base_close
 
   
-  SUBROUTINE printout_pos( iunit, tau, nat, what, nfi, tps, label, fact, sort, head )
+  SUBROUTINE printout_pos( iunit, tau, nat, ityp, what, nfi, tps, label, fact, head )
     !
     USE kinds
     !
-    INTEGER,          INTENT(IN)           :: iunit, nat
+    INTEGER,          INTENT(IN)           :: iunit, nat, ityp(:)
     REAL(DP),        INTENT(IN)           :: tau( :, : )
     CHARACTER(LEN=3), INTENT(IN), OPTIONAL :: what
     INTEGER,          INTENT(IN), OPTIONAL :: nfi
     REAL(DP),        INTENT(IN), OPTIONAL :: tps
     CHARACTER(LEN=3), INTENT(IN), OPTIONAL :: label( : )
     REAL(DP),        INTENT(IN), OPTIONAL :: fact
-    INTEGER,          INTENT(IN), OPTIONAL :: sort( : )
     CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: head
     !
     INTEGER   :: ia, k
@@ -216,15 +215,9 @@ CONTAINS
     END IF
     !
     IF( PRESENT( label ) ) THEN
-       IF( PRESENT( sort ) ) THEN
-         DO ia = 1, nat
-           WRITE( iunit, 255 ) label( sort(ia) ), ( f * tau(k, sort(ia) ),k = 1,3)
-         END DO
-       ELSE
-         DO ia = 1, nat
-           WRITE( iunit, 255 ) label(ia), ( f * tau(k,ia),k = 1,3)
-         END DO
-       END IF
+       DO ia = 1, nat
+         WRITE( iunit, 255 ) label(ityp(ia)), ( f * tau(k,ia),k = 1,3)
+       END DO
     ELSE
        DO ia = 1, nat
          WRITE( iunit, 252 ) (tau(k,ia),k = 1,3)

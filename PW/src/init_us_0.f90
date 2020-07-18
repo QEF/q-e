@@ -1,4 +1,4 @@
-!
+
 ! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -10,16 +10,16 @@
 SUBROUTINE init_us_0
   !---------------------------------------------------------------------------------
   !! This routine performs the following task: for each uspp or paw pseudopotential
-  !! the l-dependent aumentation charge \(textrm{ q_nb_mb_l}\)(r), stored in
-  !! \(\textrm{qfuncl}\)(ir,nmb,l), is:
+  !! the l-dependent aumentation charge \(\text{ q_nb_mb_l}\)(r), stored in
+  !! \(\text{qfuncl}\)(ir,nmb,l), is:
   !
   !! * transformed in reciprocal space by bessel transform up to qmax = sqrt(ecutrho);
   !! * smoothed by multiplying with a filter function \(\textrm{filter}\)(q/qmax,a,nn);
   !! * brought back in real space,
   !
   !! where it overwrites the original array. The filter function is:
-  !! \[ text{filter}(x,a,\text{nn}) = e^{-\text{axx}} \sum_{k=0,\text{nn}} 
-  !!                                  \frac{\text{axx}^k}{k!}\ . \]
+  !! \[ \text{filter}(x,a,\text{nn}) = e^{-\text{axx}} \sum_{k=0,\text{nn}} 
+  !!                                   \frac{\text{axx}^k}{k!}\ . \]
   !
   USE kinds,        ONLY: DP
   USE gvect,        ONLY: ecutrho
@@ -28,7 +28,7 @@ SUBROUTINE init_us_0
   USE atom,         ONLY: rgrid
   USE ions_base,    ONLY: ntyp => nsp
   USE cell_base,    ONLY: omega, tpiba
-  USE us,           ONLY: nqxq, dq
+  USE us,           ONLY: dq
   USE uspp_param,   ONLY: upf, lmaxq, nbetam
   USE mp_bands,     ONLY: intra_bgrp_comm
   USE mp,           ONLY: mp_sum
@@ -47,6 +47,7 @@ SUBROUTINE init_us_0
   !
   INTEGER :: nt, ih, jh, nb, mb, ijv, l, m, ir, ir0, iq, is, startq, lastq, ilast, ndm, ia
   ! various counters
+  INTEGER :: nqxq
   REAL(DP), ALLOCATABLE :: qrad_q(:,:,:), qrad_r(:,:,:), qrad_rs(:,:,:), ffrr(:)
   REAL(DP), ALLOCATABLE :: power_0(:,:), power_r(:,:), power_q(:,:), power_rs(:,:), power_qs(:,:)
   REAL(DP), ALLOCATABLE :: aux(:), aux1(:)
@@ -80,6 +81,7 @@ SUBROUTINE init_us_0
   ENDDO
   !
   ndm = MAXVAL( upf(:)%kkbeta )
+  nqxq = INT( SQRT(ecutrho) / dq + 4 )
   !
   IF (tprint) THEN
      WRITE (stdout,*) " PSEUDOPOTENTIAL REPORT "
@@ -114,7 +116,7 @@ SUBROUTINE init_us_0
   CALL divide( intra_bgrp_comm, nqxq, startq, lastq )
   !
   qmax = SQRT(ecutrho)
-  WRITE (stdout, *) ' qmax : sqrt(ecutrho) =', SQRT(ecutrho), dq*nqxq*tpiba, tpiba 
+  WRITE (stdout, *) ' qmax : sqrt(ecutrho) =', SQRT(ecutrho), dq*nqxq
   WRITE (stdout,'(a,f6.2,a,i4,4(a,f11.8))') 'FILTER : a=',a,', nn=',nn, &
                                 ', filter(1.1d0)=', filter(1.1d0,a,nn), &
                                 ', filter(1.0d0)=', filter(1.0d0,a,nn), &
@@ -178,12 +180,12 @@ SUBROUTINE init_us_0
               ENDDO
            ENDDO
            !
-           ! 2) compute the fourier transform of the Qs and their itegrated power spectum in
-           !    reciprocal space.
+           ! 2) compute the fourier transform of the Qs and their integrated power spectum in
+           !    reciprocal space - FIXME: use routine compute_qrad in init_us_1
            !
            DO iq = startq, lastq
               !
-              q = (iq - 1) * dq * tpiba
+              q = (iq - 1) * dq
               !
               ! ... here we compute the spherical bessel function for the given |q|
               !
@@ -210,7 +212,7 @@ SUBROUTINE init_us_0
                        !
                        ! ... and update the integrated power spectrum in reciprocal space
                        !
-                       power_q(ijv,l+1) = power_q(ijv,l+1) + q*q * dq * tpiba * qrad_q(iq,ijv,l+1)**2
+                       power_q(ijv,l+1) = power_q(ijv,l+1) + q*q * dq * qrad_q(iq,ijv,l+1)**2
                        !
                     ENDIF
                     !
@@ -219,12 +221,12 @@ SUBROUTINE init_us_0
               !
               ! 3) back-fourier transform of the Qs to real space.
               !
-              DO ir = 1, upf(nt)%kkbeta
+              DO ir =1, upf(nt)%kkbeta
                  !
                  ! ... q_nb_mb_l(r) from the back fourier transform up to qmax of q_nb_mb_l(q)
                  !
                  qrad_r(ir,1:nbetam*(nbetam+1)/2,l+1) = qrad_r(ir,1:nbetam*(nbetam+1)/2,l+1) + &
-                                               q*q * dq*tpiba * aux(ir) * rgrid(nt)%r(ir)**2 * &
+                                               q*q * dq * aux(ir) * rgrid(nt)%r(ir)**2 * &
                                                qrad_q(iq,1:nbetam*(nbetam+1)/2,l+1)
               ENDDO
               !
@@ -236,7 +238,7 @@ SUBROUTINE init_us_0
         CALL mp_sum( power_q, intra_bgrp_comm ) ; power_q (:,:) = power_q (:,:) * 8.0_DP/fpi 
         CALL mp_sum( qrad_r , intra_bgrp_comm ) ; qrad_r(:,:,:) = qrad_r(:,:,:) * 8.0_DP/fpi 
         !
-        ! 4) compute intergrated power spectrum of the Qs in real space (completeness check).
+        ! 4) compute integrated power spectrum of the Qs in real space (completeness check).
         !
         DO l = 0, upf(nt)%nqlc-1
            !
@@ -314,8 +316,8 @@ SUBROUTINE init_us_0
                  !
                  IF ( (l >= ABS(lnb-lmb)) .AND. (l <= lnb+lmb) .AND. (MOD(l+lnb+lmb,2)==0) ) THEN
                     DO iq = startq, lastq
-                       q = (iq - 1) * dq * tpiba
-                       power_qs(ijv,l+1) = power_qs(ijv,l+1) + q*q * dq * tpiba * &
+                       q = (iq - 1) * dq
+                       power_qs(ijv,l+1) = power_qs(ijv,l+1) + q*q * dq * &
                                            (qrad_q(iq,ijv,l+1)*filter(fac*q/qmax,a,nn))**2
                     ENDDO
                  ENDIF
@@ -350,7 +352,7 @@ SUBROUTINE init_us_0
            !
            DO iq = startq, lastq
               !
-              q = (iq - 1) * dq * tpiba
+              q = (iq - 1) * dq
               !
               ! ... here we compute the spherical bessel function for the given |q| ...
               !
@@ -365,13 +367,13 @@ SUBROUTINE init_us_0
                  ! ... q_nb_mb_l(r) from the back fourier transform up to qmax of q_nb_mb_l(q)
                  !
                  qrad_rs(ir,1:nbetam*(nbetam+1)/2,l+1) = qrad_rs(ir,1:nbetam*(nbetam+1)/2,l+1) &
-                                 + aux(ir) * q*q * dq*tpiba * rgrid(nt)%r(ir)**2               &
+                                 + aux(ir) * q*q * dq * rgrid(nt)%r(ir)**2               &
                                  * qrad_q(iq,1:nbetam*(nbetam+1)/2,l+1) * filter(fac*q/qmax,a,nn)
                  !
                  ! ... build the filter function in real space from the back fourier transform up
                  ! to qmax 
                  !
-                 IF (l==0) ffrr(ir) = ffrr(ir) + q*q * dq*tpiba * aux(ir) * rgrid(nt)%r(ir)**2 &
+                 IF (l==0) ffrr(ir) = ffrr(ir) + q*q * dq * aux(ir) * rgrid(nt)%r(ir)**2 &
                                                                       * filter(fac*q/qmax,a,nn)
                  !
               ENDDO
@@ -471,7 +473,7 @@ SUBROUTINE init_us_0
         WRITE (4, *) '# filter function : a=',a,', nn=',nn,', fac=', fac
         WRITE (4, *) '# nqxq :', nqxq,' dq :',dq, ' qmax :',qmax
         DO iq = 1, nqxq
-           q = (iq-1)*dq*tpiba
+           q = (iq-1)*dq
            WRITE (4,'(2f16.10)')  q, filter( fac*q/qmax, a, nn )
         ENDDO
         CLOSE (4)
@@ -494,22 +496,22 @@ SUBROUTINE init_us_0
               WRITE (filename(5:5),'(i1)') mb
               WRITE (filename(6:6),'(i1)') nt
               !-
-              filename(1:3) = 'qq_'    ! the radial fourier transform of q_l in reciprcal space
+              filename(1:3) = 'qq_'    ! the radial fourier transform of q_l in reciprocal space
               OPEN (4, FILE=filename, FORM='formatted', STATUS='unknown')
-              WRITE (4,*) '# the radial fourier transform of q_l in reciprcal space'
+              WRITE (4,*) '# the radial fourier transform of q_l in reciprocal space'
               WRITE (4,*) '# nb :', nb, lnb,' mb :', mb, lmb,' lmax :', lnb+lmb, ' nqxq :', nqxq
               DO iq=1,nqxq
-                 q = (iq-1)*dq*tpiba
+                 q = (iq-1)*dq
                  WRITE (4,'(12f16.10)')  q, (qrad_q(iq,ijv,l+1), l=0,lnb+lmb )
               ENDDO
               CLOSE (4)
               !-
-              filename(1:3) = 'qqs'    ! the smoothed radial fourier transform of q_l in reciprcal space
+              filename(1:3) = 'qqs'    ! the smoothed radial fourier transform of q_l in reciprocal space
               OPEN (4, FILE=filename, FORM='formatted', STATUS='unknown')
-              WRITE (4,*) '# the smoothed radial fourier transform of q_l in reciprcal space'
+              WRITE (4,*) '# the smoothed radial fourier transform of q_l in reciprocal space'
               WRITE (4,*) '# nb :', nb,lnb,' mb :',mb,lmb,' lmax :',lnb+lmb, ' nqxq :',nqxq
               DO iq = 1, nqxq
-                 q = (iq-1)*dq*tpiba
+                 q = (iq-1)*dq
                  WRITE (4,'(12f16.10)')  q,(qrad_q(iq,ijv,l+1)*filter(fac*q/qmax,a,nn), l=0,lnb+lmb )
               ENDDO
               CLOSE (4)

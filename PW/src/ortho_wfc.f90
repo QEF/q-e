@@ -16,7 +16,6 @@ SUBROUTINE ortho_wfc( lda, ldb, wfc, ierr )
   USE io_global,        ONLY: stdout
   USE mp_bands,         ONLY: intra_bgrp_comm
   USE mp,               ONLY: mp_sum
-  USE noncollin_module, ONLY: noncolin, npol
   !
   IMPLICIT NONE
   !
@@ -103,7 +102,6 @@ SUBROUTINE check_ortho( lda, ldb, wfc )
   !
   USE kinds,            ONLY: DP
   USE io_global,        ONLY: stdout
-  USE noncollin_module, ONLY: noncolin, npol
   !
   IMPLICIT NONE
   !

@@ -14,7 +14,7 @@ SUBROUTINE hinit0()
   USE kinds,            ONLY : DP
   USE ions_base,        ONLY : nat, nsp, ityp, tau
   USE basis,            ONLY : startingconfig
-  USE cell_base,        ONLY : at, bg, omega, tpiba2
+  USE cell_base,        ONLY : alat, at, bg, omega
   USE cellmd,           ONLY : omega_old, at_old, lmovecell
   USE fft_base,         ONLY : dfftp
   USE gvect,            ONLY : ngm, g, eigts1, eigts2, eigts3
@@ -22,15 +22,12 @@ SUBROUTINE hinit0()
   USE realus,           ONLY : generate_qpointlist, betapointlist, &
                                init_realspace_vars, real_space
   USE ldaU,             ONLY : lda_plus_U, U_projection
-  USE control_flags,    ONLY : tqr, tq_smoothing, tbeta_smoothing
+  USE control_flags,    ONLY : tqr, tq_smoothing, tbeta_smoothing, restart
   USE io_global,        ONLY : stdout
+  USE noncollin_module, ONLY : report
   !
   IMPLICIT NONE
-  !
-  INTEGER :: ik
-  ! counter on k points
-  REAL(DP), ALLOCATABLE :: gk(:)
-  ! work space
+  REAL (dp) :: alat_old
   !
   CALL start_clock( 'hinit0' )
   !
@@ -46,23 +43,25 @@ SUBROUTINE hinit0()
   IF ( lda_plus_U .AND. ( U_projection == 'pseudo' ) ) CALL init_q_aeps()
   CALL init_at_1()
   !
-  IF ( lmovecell .AND. startingconfig == 'file' ) THEN
+  IF ( restart .AND. startingconfig == 'file' ) THEN
      !
-     ! ... If lmovecell and restart are both true the cell shape is read from
-     ! ... the restart file and stored. The xxx_old variables are used instead 
-     ! ... of the current (read from input) ones.
-     ! ... xxx and xxx_old are swapped, the atomic positions rescaled and 
-     ! ... the hamiltonian scaled.
-     !
-     CALL cryst_to_cart( nat, tau, bg, - 1 )
-     !
-     CALL dswap( 9, at, 1, at_old, 1 )
-     CALL dswap( 1, omega, 1, omega_old, 1 )
-     !
-     CALL cryst_to_cart( nat, tau, at, + 1 )
-     !
-     CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
-     CALL scale_h()
+     IF ( lmovecell ) THEN
+        !
+        ! ... store initial values of at and omega, used for G-vectors etc.
+        !
+        at_old    = at
+        omega_old = omega
+        !
+        CALL read_conf_from_file( lmovecell, nat, nsp, tau, alat, at )
+        CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
+        CALL volume (alat, at(:,1), at(:,2), at(:,3), omega)
+        CALL scale_h( )
+        !
+     ELSE
+        !
+        CALL read_conf_from_file( lmovecell, nat, nsp, tau, alat_old, at_old )
+        !
+     END IF
      !
   ENDIF
   !
@@ -86,6 +85,8 @@ SUBROUTINE hinit0()
   !
   CALL set_rhoc()
   !
+  ! ... more position-dependent initializations
+  !
   IF ( tqr ) CALL generate_qpointlist()
   !
   IF (real_space ) THEN
@@ -93,6 +94,8 @@ SUBROUTINE hinit0()
      CALL init_realspace_vars()
      WRITE(stdout,'(5X,"Real space initialisation completed")')    
   ENDIF
+  !
+  IF ( report /= 0 ) CALL make_pointlists( )
   !
   CALL stop_clock( 'hinit0' )
   !

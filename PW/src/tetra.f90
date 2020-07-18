@@ -611,7 +611,7 @@ SUBROUTINE tetra_weights_only( nks, nspin, is, isk, nbnd, nelec, et, ef, wg )
   !! the weight of each k point and band
   ! wg must be (inout) and not (out) because if is/=0 only terms for
   ! spin=is are initialized; the remaining terms should be kept, not lost.
-  REAL(DP), INTENT(OUT) :: ef
+  REAL(DP), INTENT(IN) :: ef
   !! Fermi energy
   !
   ! ... local variables
@@ -853,12 +853,12 @@ SUBROUTINE opt_tetra_weights_only( nks, nspin, nbnd, et, ef, &
   !! Kohn Sham energy [Ry]
   REAL(DP), INTENT(INOUT) :: wg(nbnd,nks)
   !! Intetration weight of each k
-  REAL(DP), INTENT(INOUT) :: ef
+  REAL(DP), INTENT(IN) :: ef
   !! The Fermi energy
   !
   ! ... local variables
   !
-  INTEGER :: ns, ik, nt, ibnd, jbnd, kbnd, ii, itetra(4), nk
+  INTEGER :: ns, ik, nt, ibnd, jbnd, kbnd, i, ii, itetra(4), nk
   REAL(DP) :: e(4), wg0(4), C(3), a(4,4), wg1
   INTEGER :: nspin_lsda
   !
@@ -908,7 +908,13 @@ SUBROUTINE opt_tetra_weights_only( nks, nspin, nbnd, et, ef, &
            CALL hpsort( 4, e, itetra )
            !
            DO ii = 1, 4
-              a(ii,1:4) = ( ef - e(1:4) ) / (e(ii) - e(1:4) )
+              DO i = 1, 4
+                 IF ( ABS(e(i)-e(ii)) < 1.d-12 ) THEN
+                     a(ii,i) = 0.0_dp
+                 ELSE
+                     a(ii,i) = ( ef - e(i) ) / (e(ii) - e(i) )
+                 END IF
+              ENDDO
            ENDDO
            !
            IF( e(1) <= ef .AND. ef < e(2) ) THEN
@@ -1187,7 +1193,6 @@ SUBROUTINE opt_tetra_partialdos( nspin0, kresolveddos, ne, natomwfc, nkseff, &
   USE wvfct,              ONLY : et, nbnd
   USE klist,              ONLY : nkstot, wk
   USE spin_orb,           ONLY : lspinorb
-  USE noncollin_module,   ONLY : noncolin
   USE constants,          ONLY : rytoev
   !
   IMPLICIT NONE

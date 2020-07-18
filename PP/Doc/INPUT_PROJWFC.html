@@ -46,7 +46,7 @@
 <tr><th style="margin: 3 3 3 10; background: #005789; background: linear-gradient(rgba(0,87,137,1),rgba(0,119,189,1)); color: #ffffee; ">
 <h1 style="margin: 10 10 10 15; text-align: left;"> Input File Description </h1>
 <h2 style="margin: 10 10 10 15; text-align: left;"> Program:
-	      projwfc.x / PWscf / Quantum Espresso<span style="font-weight: normal;"> (version: 6.4)</span>
+	      projwfc.x / PWscf / Quantum Espresso<span style="font-weight: normal;"> (version: 6.6)</span>
 </h2>
 </th></tr>
 <tr><td style="padding: 10 3 3 3; background: #ffffff; color: #222222; ">
@@ -257,7 +257,9 @@ file containing the projections
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
 if <b>.true.,</b> the overlap matrix of the atomic orbitals
-prior to orthogonalization is written to the atomic_proj datafile.
+prior to orthogonalization is written to the atomic_proj
+datafile. Does not work together with linear-algebra
+diagonalization: run as "mpirun -np N projwfc.x -nd 1 ... "
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -273,6 +275,7 @@ prior to orthogonalization is written to the atomic_proj datafile.
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
 if <b>.true.,</b> the atomic_proj datafile is written in binary fmt.
+Currently disabled.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -512,7 +515,7 @@ Obsolete variables, ignored:
 </td></tr>
 </table>
 <small>
-	  This file has been created by helpdoc utility on Thu Nov 28 10:42:25 CET 2019.
+	  This file has been created by helpdoc utility on Fri Jul 17 10:28:28 CEST 2020.
 	</small>
 </body>
 </html>

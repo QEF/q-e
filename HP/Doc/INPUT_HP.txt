@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: hp.x / PWscf / Quantum Espresso (version: 6.4)
+Program: hp.x / PWscf / Quantum Espresso (version: 6.6)
 ------------------------------------------------------------------------
 
 
@@ -281,7 +281,48 @@ NAMELIST: &INPUTHP
                    D.D. Johnson, PRB 38, 12807 (1988).
    +--------------------------------------------------------------------
    
+   +--------------------------------------------------------------------
+   Variable:       num_neigh
+   
+   Type:           INTEGER
+   Default:        6
+   Description:    Number of nearest neighbors of every Hubbard atom which
+                   will be considered when writting Hubbard V parameters to
+                   the file parameters.out, which can be used in the
+                   subsequent DFT+U+V calculation. This keyword is used only
+                   when lda_plus_u_kind = 2 (post-processing stage).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lmin
+   
+   Type:           INTEGER
+   Default:        2
+   Description:    Minimum value of the orbital quantum number of the Hubbard
+                   atoms starting from which (and up to the maximum l in the
+                   system) Hubbard V will be written to the file parameters.out.
+                   lmin refers to the orbital quantum number of the atom
+                   corresponding to the first site-index in Hubbard_V(:,:,:).
+                   This keyword is used only when lda_plus_u_kind = 2 and only
+                   in the post-processing stage. Example: lmin=1 corresponds to
+                   writing to file V between e.g. oxygen (with p states) and its
+                   neighbors, and including V between transition metals (with d
+                   states) and their neighbors. Instead, when lmin=2 only the
+                   latter will be written to parameters.out.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       rmax
+   
+   Type:           REAL
+   Default:        100.D0
+   Description:    Maximum distance (in Bohr) between two atoms to search
+                   neighbors (used only at the postprocessing step when
+                   lda_plus_u_kind = 2). This keyword is useful when there
+                   are e.g. defects in the system.
+   +--------------------------------------------------------------------
+   
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Mar 01 17:56:48 CET 2019
+This file has been created by helpdoc utility on Fri Jul 17 10:28:25 CEST 2020

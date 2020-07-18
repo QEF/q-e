@@ -44,7 +44,7 @@ xlf_flags=0
 echo using F90... $f90
 
 case "$arch:$f90_flavor" in
-ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort* | crayxt*:ifort* )
+*:ifort* )
         try_fflags="-O2 -assume byterecl -g -traceback"
         if test "$use_debug" -eq 1; then
             try_fflags="$try_fflags -fpe0 -CB"
@@ -63,6 +63,20 @@ ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort* | crayxt*:ifort* )
         fi
         pre_fdflags="-fpp "
         ;;
+arm:armflang )
+        try_fflags="-O3 -mcpu=native $try_fflags"
+        if test "$use_debug" -eq 1; then 
+           try_fflags="$try_fflags -g" 
+        fi   
+        try_ldflags="-mcpu=native"
+        try_fflags_openmp="-fopenmp"
+        try_ldfflags_openmp="-fopenmp" 
+        try_f90flags="\$(FFLAGS) -cpp"
+        try_ldflags="-g -mcpu=native"
+        try_ldflags_openmp="-fopenmp"
+        try_ldflags_static="-static -static-flang-libs"
+
+        ;;
 x86_64:nagfor* )
         try_fflags="-O3 -kind=byte -dcfuns -mismatch"
         if test "$use_debug" -eq 1; then
@@ -76,14 +90,6 @@ x86_64:nagfor* )
         try_ldflags_static="-unsharedrts"
         try_ldflags_openmp="-openmp"
         try_dflags="$try_dflags -D__NAG"
-        have_cpp=0
-        ;;
-ia32:path* | ia64:path* | x86_64:path* )
-        try_fflags="-march=auto -O2"
-        try_f90flags="\$(FFLAGS)"
-        try_fflags_noopt="-O0"
-        try_ldflags=""
-        try_ldflags_static="-static"
         have_cpp=0
         ;;
 crayxt*:cray* )
@@ -114,14 +120,6 @@ crayxt*:pgf* )
         try_dflags="$try_dflags -D__PGI -D__IOTK_WORKAROUND1"
         have_cpp=1
         ;;
-crayxt*:pathf* )
-        try_fflags="-march=auto -O2 -cpp"
-        try_f90flags="\$(FFLAGS)"
-        try_fflags_noopt="-O0"
-        try_ldflags=""
-        try_ldflags_static="-static"
-        have_cpp=1
-        ;;
 necsx:* )
         try_fflags='      -float0 -Cvopt -eab -R5 -Wf,-Ncont,-A dbl4,-P nh,-ptr byte,-pvctl noifopt loopcnt=9999999 expand=12 fullmsg vwork=stack,-fusion,-O noif,-init stack=nan heap=nan'
         try_f90flags='  -f2003  -float0 -Cvopt -eab -R5 -Wf,-Ncont,-A dbl4,-P nh,-ptr byte,-pvctl noifopt loopcnt=9999999 expand=12 fullmsg vwork=stack,-fusion,-O noif,-init stack=nan heap=nan'
@@ -146,18 +144,22 @@ ppc64:*xlf* )
         try_f90flags="\$(FFLAGS) -qfree=f90"
         try_fflags_noopt="-q64 -qthreaded -O0"
         try_ldflags="-q64 -qthreaded"
+        try_dflags="-D__XLF"
         pre_fdflags="-WF,"
         xlf_flags=1
         ;;
-ppc64-mn:*xlf* )
+ppc64le:*xlf* )
     if test "$use_debug" -eq 1; then
-        try_fflags="-g -C -q64 -qstrict -qsuffix=cpp=f90 -qdpc -qalias=nointptr -Q -qtune=ppc970 -qarch=ppc970 -qcache=auto -qhot=vector,simd -qenablevmx"
+        try_fflags="-g -C -qstrict -qdpc -qalias=nointptr -qarch=auto"
     else
-        try_fflags="-O3 -q64 -qstrict -qsuffix=cpp=f90 -qdpc -qalias=nointptr -Q -qtune=ppc970 -qarch=ppc970 -qcache=auto -qhot=vector,simd -qenablevmx"
+        try_fflags="-O3 -qstrict -qdpc -qalias=nointptr -qarch=auto"
     fi
-        try_f90flags="\$(FFLAGS) -qfree=f90"
-        try_fflags_noopt="-O0 -q64"
+        try_fflags_openmp="-qsmp=noauto:omp"
+        try_f90flags="\$(FFLAGS) -qsuffix=cpp=f90"
+        try_fflags_noopt="-O0"
         try_ldflags=""
+        try_ldflags_openmp="-qsmp=noauto:omp"
+        try_dflags="-D__XLF"
         pre_fdflags="-WF,"
         xlf_flags=1
         ;;
@@ -172,6 +174,7 @@ ppc64-bg:*xlf* )
         try_fflags_noopt="-q32 -O0"
         try_ldflags="-q32"
         try_ldflags_openmp="-qsmp=omp -qthreaded"
+        try_dflags="-D__XLF"
         pre_fdflags="-WF,"
         xlf_flags=1
         ;;
@@ -186,6 +189,7 @@ ppc64-bgq:*xlf* )
         try_fflags_noopt="-O0"
         try_ldflags=""
         try_ldflags_openmp="-qstatic -qsmp=noauto:omp -qtm -qthreaded"
+        try_dflags="-D__XLF"
         pre_fdflags="-WF,"
         xlf_flags=1
         ;;
@@ -193,7 +197,11 @@ ppc64-bgq:*xlf* )
 	try_fflags_nomain="-Mnomain"
         try_fflags="-fast"
         try_fflags_openmp="-mp"
-        try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
+        if test "$use_debug" -eq 1; then
+           try_f90flags="-g -C -Mcache_align -Mpreprocess -Mlarge_arrays"
+        else
+           try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
+        fi
         try_foxflags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
         try_fflags_noopt="-O0"
         try_ldflags=""
@@ -204,6 +212,9 @@ ppc64-bgq:*xlf* )
         ;;
 *:*gfortran )
 	try_fflags="-O3 -g"
+        if test "$f90_major_version" -ge 10; then
+ 	   try_fflags="$try_fflags -fallow-argument-mismatch"
+        fi
         if test "$use_debug" -eq 1; then
             try_fflags="-O3 -g  -Wall -fbounds-check -frange-check -finit-integer=987654321 -finit-real=nan -finit-logical=true -finit-character=64"
         fi
@@ -211,7 +222,7 @@ ppc64-bgq:*xlf* )
             try_fflags="-O2 -g -pedantic -Wall -Wextra -Wconversion -fimplicit-none -fbacktrace -ffree-line-length-0 -fcheck=all"
         fi
         try_fflags_openmp="-fopenmp"
-        try_f90flags="\$(FFLAGS) -x f95-cpp-input"
+        try_f90flags="\$(FFLAGS) -cpp"
         try_fflags_noopt="-O0 -g"
         try_ldflags="-g"
         try_ldflags_openmp="-pthread -fopenmp"

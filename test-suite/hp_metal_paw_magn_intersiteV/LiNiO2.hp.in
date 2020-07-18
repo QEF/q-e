@@ -1,0 +1,9 @@
+ &inputhp
+   prefix = 'LiNiO2',
+   outdir = './',
+   nq1    = 1,  
+   nq2    = 1, 
+   nq3    = 1,
+   conv_thr_chi = 1.0d-5,
+   iverbosity   = 2
+ /

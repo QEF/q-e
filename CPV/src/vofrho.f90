@@ -25,7 +25,6 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
                                   tprnfor, iesr, textfor
       USE io_global,        ONLY: stdout
       USE ions_base,        ONLY: nsp, na, nat, rcmax, compute_eextfor
-      USE ions_base,        ONLY: ind_srt, ind_bck
       USE cell_base,        ONLY: omega, r_to_s
       USE cell_base,        ONLY: alat, at, tpiba2, h, ainv
       USE cell_base,        ONLY: ibrav, isotropic  !True if volume option is chosen for cell_dofree
@@ -45,7 +44,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE funct,            ONLY: dft_is_meta, dft_is_nonlocc, nlc, get_inlc,&
                                   dft_is_hybrid, exx_is_active
       USE vdW_DF,           ONLY: vdW_DF_stress
-      use rVV10,            ONLY: stress_rVV10 
+      use rVV10,            ONLY: rVV10_stress
       USE pres_ai_mod,      ONLY: abivol, abisur, v_vol, P_ext, volclu,  &
                                   Surf_t, surfclu
       USE fft_interfaces,   ONLY: fwfft, invfft
@@ -116,7 +115,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
         !
         CALL start_clock( 'ts_vdw' )
         ALLOCATE (stmp(3,nat), rhocsave(dfftp%nnr) )
-        stmp(:,:) = tau0(:,ind_bck(:))
+        stmp(:,:) = tau0(:,:)
         !
         IF ( nspin==2 ) THEN
            rhocsave(:) = rhor(:,1) + rhor(:,2) 
@@ -176,7 +175,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          !
          ALLOCATE( stmp( 3, nat ) )
          !
-         CALL r_to_s( tau0, stmp, na, nsp, ainv )
+         CALL r_to_s( tau0, stmp, nat, ainv )
          !
          CALL vofesr( iesr, esr, dsr6, fion, stmp, tpre, h )
          !
@@ -392,7 +391,6 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
                 END DO
              END DO
              denlc(:,:) = 0.0_dp
-             inlc = get_inlc()
              !
              !^^ ... TEMPORARY FIX (newlsda) ...
              IF ( nspin==2 ) THEN
@@ -401,11 +399,12 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
              END IF
              !^^.......................
              !   
-             if (inlc==1 .or. inlc==2) then
-               CALL vdW_DF_stress(rhosave(:,1), rhocsave, nspin, denlc )
-             elseif (inlc == 3) then
-               CALL stress_rVV10(rhosave(:,1), rhocsave, nspin, denlc )
-             end if
+             inlc = get_inlc()
+             IF ( inlc > 0 .AND. inlc < 26 ) THEN
+               CALL vdW_DF_stress ( rhosave(:,1), rhocsave, nspin, denlc )
+             ELSEIF ( inlc == 26 ) then
+               CALL rVV10_stress  ( rhosave(:,1), rhocsave, nspin, denlc )
+             END IF
              !
              dxc(:,:) = dxc(:,:) - omega/e2 * MATMUL(denlc,TRANSPOSE(ainv))
          END IF
@@ -470,7 +469,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          !    Add TS-vdW ion forces to fion here... (RAD)
          !
          IF (ts_vdw) THEN
-            fion1(:,:) = FtsvdW(:,ind_srt(:))
+            fion1(:,:) = FtsvdW(:,:)
             fion = fion + fion1
             !fion=fion+FtsvdW
          END IF

@@ -1,21 +1,21 @@
-  !                                                                            
-  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino 
-  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino  
-  !                                                                            
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
-  !                                                                            
+  !
+  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
+  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
+  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
+  !
   !----------------------------------------------------------------------
   MODULE division
   !----------------------------------------------------------------------
-  !! 
+  !!
   !! This module contains various core splitting routines
-  !! 
+  !!
   IMPLICIT NONE
-  ! 
+  !
   CONTAINS
-    ! 
+    !
     !--------------------------------------------------------------------
     SUBROUTINE para_bounds(lower, upper, total)
     !--------------------------------------------------------------------
@@ -28,7 +28,7 @@
     USE mp_global,   ONLY : my_pool_id, npool
     !
     IMPLICIT NONE
-    ! 
+    !
     INTEGER, INTENT(out) :: lower
     !! Lower bound
     INTEGER, INTENT(out) :: upper
@@ -37,12 +37,12 @@
     !! Total quantity
     !
 #if defined(__MPI)
-    !  
+    !
     ! Local variables
     INTEGER :: rest
     !! Remaining
     INTEGER :: nrst
-    !! 
+    !!
     !
     IF (total <= npool) THEN
       IF (my_pool_id < total) THEN
@@ -72,7 +72,7 @@
     ! --------------------------------------------------------------------
     END SUBROUTINE para_bounds
     !---------------------------------------------------------------------
-    ! 
+    !
     !---------------------------------------------------------------------
     SUBROUTINE kpointdivision(ik0)
     !---------------------------------------------------------------------
@@ -83,19 +83,19 @@
     !
     USE mp_global,   ONLY : my_pool_id,npool
     USE pwcom,       ONLY : nkstot
-    ! 
+    !
     IMPLICIT NONE
-    !  
+    !
     INTEGER, INTENT(out) :: ik0
     !! Return the first kpoint in the pool
-    !  
+    !
     ! Local variables
     INTEGER :: nkl
     !! Number of kpoints block
     INTEGER :: nkr
     !! Reminder
     INTEGER :: iks
-    !! Index of the first kpoint in the pool 
+    !! Index of the first kpoint in the pool
     !
 #if defined(__MPI)
     !
@@ -123,14 +123,14 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE kpointdivision
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE fkbounds(nktot, lower_bnd, upper_bnd)
     !-----------------------------------------------------------------------
     !!
     !!   Subroutine finds the lower and upper bounds a k-grid in parallel
     !!
-    !! @ Note: 
+    !! @ Note:
     !!    If you have 19 kpts and 2 pool, this routine will return
     !!    lower_bnd= 1 and upper_bnd=10 for the first pool
     !!    lower_bnd= 1 and upper_bnd=9 for the second pool
@@ -143,7 +143,7 @@
     INTEGER, INTENT(in) :: nktot
     !! nktot k-points splited over pools
     INTEGER, INTENT(out) :: lower_bnd
-    !! Lower kpt bounds for that image pool 
+    !! Lower kpt bounds for that image pool
     INTEGER, INTENT(out) :: upper_bnd
     !! Upper kpt for that image pool
     !
@@ -170,14 +170,14 @@
     !
     upper_bnd = lower_bnd + nkl - 1
     !
-#else  
-    !     
-    ! In serial the definitions are much easier 
-    !     
+#else
+    !
+    ! In serial the definitions are much easier
+    !
     lower_bnd = 1
     upper_bnd = nktot
-    !     
-#endif 
+    !
+#endif
     !
     RETURN
     !
@@ -191,7 +191,7 @@
     !!
     !!   Subroutine finds the lower and upper bounds a k-grid in parallel
     !!
-    !! @ Note: 
+    !! @ Note:
     !!    If you have 19 kpts and 2 pool, this routine will return
     !!    lower_bnd= 1 and upper_bnd=10 for the first pool
     !!    lower_bnd= 1 and upper_bnd=9 for the second pool
@@ -208,14 +208,14 @@
     INTEGER(KIND = MPI_OFFSET_KIND), INTENT(in) :: nktot
     !! nktot k-points splited over pools
     INTEGER(KIND = MPI_OFFSET_KIND), INTENT(out) :: lower_bnd
-    !! Lower kpt bounds for that image pool 
+    !! Lower kpt bounds for that image pool
     INTEGER(KIND = MPI_OFFSET_KIND), INTENT(out) :: upper_bnd
     !! Upper kpt for that image pool
 #else
     INTEGER(KIND = 8), INTENT(in)  :: nktot
     !! nktot k-points splited over pools
     INTEGER(KIND = 8), INTENT(out) :: lower_bnd
-    !! Lower kpt bounds for that image pool 
+    !! Lower kpt bounds for that image pool
     INTEGER(KIND = 8), INTENT(out) :: upper_bnd
     !! Upper kpt for that image pool
 #endif
@@ -247,14 +247,14 @@
     !
     upper_bnd = lower_bnd + nkl - 1
     !
-#else  
-    !     
-    ! In serial the definitions are much easier 
-    !     
+#else
+    !
+    ! In serial the definitions are much easier
+    !
     lower_bnd = 1
     upper_bnd = nktot
-    !     
-#endif 
+    !
+#endif
     !
     RETURN
     !
@@ -268,7 +268,7 @@
     !!
     !!   Subroutine finds the lower and upper bounds in band parallelization
     !!
-    !! @ Note: 
+    !! @ Note:
     !!    If you have 20 bands and 2 images, this routine will return
     !!    lower_bnd= 1 and upper_bnd=10 for the first pool
     !!    lower_bnd= 11 and upper_bnd=19 for the second pool
@@ -282,13 +282,13 @@
     INTEGER, INTENT(in) :: nbnd
     !! Total number of band to be splitted among images
     INTEGER, INTENT(out) :: lower_bnd
-    !! Lower band bounds for that image pool 
-    INTEGER, INTENT(out) :: upper_bnd 
+    !! Lower band bounds for that image pool
+    INTEGER, INTENT(out) :: upper_bnd
     !! Upper band bound for that image pool
     !
 #if defined(__MPI)
     !
-    ! Local variables 
+    ! Local variables
     INTEGER :: nkl
     !! ADD
     INTEGER :: nkr
@@ -313,14 +313,14 @@
     !
     upper_bnd = lower_bnd + nkl - 1
     !
-#else  
-    !     
-    ! In serial the definitions are much easier 
-    !     
+#else
+    !
+    ! In serial the definitions are much easier
+    !
     lower_bnd = 1
     upper_bnd = nbnd
-    !     
-#endif 
+    !
+#endif
     !
     RETURN
     !

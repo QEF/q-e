@@ -6,6 +6,9 @@
     ecutwfc = 25.0,ecutrho = 200.0,
     occupations='tetrahedra',
     noncolin = .true.,
+    starting_magnetization(1) = 0.5
+    angle1(1) = 90.0
+    angle2(1) =  0.0
     nbnd=16
  /
  &electrons

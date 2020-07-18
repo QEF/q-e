@@ -64,10 +64,12 @@ CONTAINS
   !--------------------------------------------------------------
   SUBROUTINE init_igk( npwx, ngm, g, gcutw )
     !--------------------------------------------------------------
-    !! Initialize indices igk_k and number of plane waves per k-point:  
-    !! * (k_ik + G)_i = k_ik + G_igk;
-    !! * i = 1, ngk(ik);
-    !! * igk = igk_k(i,ik).
+    !! Initialize indices \(\text{igk_k}\) and number of plane waves
+    !! per k-point:
+    !
+    !! * \((k_{ik} + G)_i = k_{ik} + G_\text{igk}\);
+    !! * i = 1, \text{ngk}(\text{ik});
+    !! * \text{igk} = \text{igk}_k(i,ik).
     !
     INTEGER, INTENT (IN) :: npwx, ngm
     REAL(DP), INTENT(IN) :: gcutw, g(3,ngm)
@@ -107,7 +109,7 @@ END MODULE klist
 !--------------------------------------------------------------
 MODULE lsda_mod
   !
-  !! It contains the variables needed for the lsda calculation.
+  !! It contains the variables needed for the LSDA calculation.
   !
   USE kinds,      ONLY : DP
   USE parameters, ONLY : ntypx, npk
@@ -345,6 +347,16 @@ MODULE force_mod
   !! if .TRUE. compute the forces
   LOGICAL :: lstres
   !! if .TRUE. compute the stress
+  REAL(DP), ALLOCATABLE :: eigenval(:)
+  !! eigenvalues of the overlap matrix
+  COMPLEX(DP), ALLOCATABLE :: eigenvect(:,:)
+  !! eigenvectors of the overlap matrix
+  COMPLEX(DP), ALLOCATABLE :: overlap_inv(:,:)
+  !! overlap matrix (transposed): (O^{-1/2})^T
+  COMPLEX (DP), ALLOCATABLE :: at_dy(:,:), at_dj(:,:)
+  !! derivatives of spherical harmonics and spherical Bessel functions (for atomic functions)
+  COMPLEX (DP), ALLOCATABLE :: us_dy(:,:), us_dj(:,:)
+  !! derivatives of spherical harmonics and spherical Bessel functions (for beta functions)
   !
 END MODULE force_mod
 !
@@ -379,10 +391,6 @@ MODULE cellmd
   !
   SAVE
   !
-  REAL(DP) :: press
-  !! target pressure
-  REAL(DP) :: cmass
-  !! target cell mass
   REAL(DP) :: at_old(3,3)
   !! the lattice vectors at the previous step
   REAL(DP) :: omega_old
@@ -461,7 +469,8 @@ MODULE spin_orb
   !! Variables needed for calculations with spin-orbit
   !
   USE kinds,       ONLY : DP
-  USE parameters,  ONLY : lmaxx
+  USE upf_params,  ONLY : lmaxx, lqmax
+  !! FIXME: rot_ylm could be dynamically allocated
   !
   SAVE
   !
@@ -473,7 +482,7 @@ MODULE spin_orb
   !! if .TRUE. the initial wavefunctions are spin-angle functions. 
   LOGICAL :: domag
   !! if .TRUE. magnetization is computed
-  COMPLEX (DP) :: rot_ylm(2*lmaxx+1,2*lmaxx+1)
+  COMPLEX (DP) :: rot_ylm(lqmax,lqmax)
   !! transform real spherical harmonics into complex ones
   COMPLEX (DP), ALLOCATABLE :: fcoef(:,:,:,:,:)
   !! function needed to account for spinors.
@@ -492,7 +501,6 @@ MODULE pwcom
   USE force_mod
   USE relax
   USE cellmd
-  USE us
   USE fixed_occ
   USE spin_orb
   !

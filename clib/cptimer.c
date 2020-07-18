@@ -8,13 +8,38 @@
 
 #if defined(_WIN32)
 #include <windows.h>
-#include <sys/time.h>
 #include <stdint.h>
 #else
 #include <sys/time.h>
 #include <sys/resource.h>
-#endif
 #include <unistd.h>
+#endif
+
+#if defined(_WIN32)
+
+int qe_gettimeofday(struct timeval * tp, struct timezone * tzp)
+{
+    // Note: some broken versions only have 8 trailing zero's, the correct epoch has 9 trailing zero's
+    // This magic number is the number of 100 nanosecond intervals since January 1, 1601 (UTC)
+    // until 00:00:00 January 1, 1970 
+    static const uint64_t EPOCH = ((uint64_t) 116444736000000000ULL);
+
+    SYSTEMTIME  system_time;
+    FILETIME    file_time;
+    uint64_t    time;
+
+    GetSystemTime( &system_time );
+    SystemTimeToFileTime( &system_time, &file_time );
+    time =  ((uint64_t)file_time.dwLowDateTime )      ;
+    time += ((uint64_t)file_time.dwHighDateTime) << 32;
+
+    tp->tv_sec  = (long) ((time - EPOCH) / 10000000L);
+    tp->tv_usec = (long) (system_time.wMilliseconds * 1000);
+    return 0;
+}
+
+#endif
+
 
 double cclock()
 
@@ -25,7 +50,11 @@ double cclock()
 
     struct timeval tmp;
     double sec;
+#if defined(_WIN32)
+	qe_gettimeofday( &tmp, (struct timezone *)0 );
+#else
     gettimeofday( &tmp, (struct timezone *)0 );
+#endif
     sec = tmp.tv_sec + ((double)tmp.tv_usec)/1000000.0;
     return sec;
 

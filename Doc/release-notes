@@ -1,3 +1,79 @@
+New in v. 6.6:
+  * vdW-DF3-opt1, vdW-DF3-opt2, and vdW-DF-C6 van der Waals functionals
+    implemented (T. Thonhauser, supported by NSF Grant No. 1712425)
+  * More FORD documentation
+  * Stress for noncolinear case
+  * QE can be compiled on Windows 10 using PGI v.19.10 Community Edition
+    configure works, except FoX: use script install/build_fox_with_pgi.sh
+  * ParO and PPCG iterative diagonalization algorithms
+  * Fourier interpolation of phonon potential implemented in ph.x
+    (Jae-Mo Lihm, Seoul Natl. Univ.)
+  * Extension of the PW code to DFT+U+V [JPCM 22, 055602 (2010)];
+    Extension of the HP code to compute also inter-site Hubbard V parameters;
+    Extension of the XSpectra code to work on top of DFT+U+V [arXiv:2004.04142]
+    (I. Timrov, N. Marzari, M. Cococcioni).
+    Extension of Hubbard forces and stress to ortho-atomic orbitals
+    (I. Timrov, F. Aquilante, L. Binci, N. Marzari)
+  * Support for BEEF-vdW XC (by Johannes Voss) compilation link has been included; 
+    e.g. BEEF_LIBS="-L$LIBBEEF/src -lbeef", where $LIBBEEF is the path 
+    to the compiled libbeef folder. If "calculation='ensemble'", 
+    BEEF-vdW nscf ensemble energies will be generated at the end of PWscf.
+    (Gabriel S. Gusmão, Georgia Tech)
+  * i-PI socket now supports on-the-fly change of flags for SCF, forces,
+    stresses and variable cell calculations using binary-integer enconding.
+    (Gabriel S. Gusmão, Georgia Tech)
+  * Phonon-induced electron self-energy implemented in ph.x and
+    a new post-processing program PHonon/postahc.x added.
+    (Jae-Mo Lihm, Seoul Natl. Univ.)
+  * Implementation of the Sternheimer algorithm in the turboEELS code
+    (O. Baseggio, O. Motornyi, N. Vast, A. Dal Corso, I. Timrov, and S. Baroni)
+  * EPW:
+    (1) Use of the band manifold determined by Wannierization step
+        when evaluating electron-phonon vertex on coarse grids
+    (2) Support for PAW
+    For the full list of new features and changes leading to backward incompatibility issues,
+    please visit the Releases page of the EPW documentation site 
+    [https://docs.epw-code.org/doc/Releases.html].
+  
+Fixed in v.6.6:
+  * PW: Restart from interrupted calculations  simplified. As a side effect,
+    NEB restart now works again
+  * A few LIBXC glitches
+  * Fermi energy incorrectly written to xml file in 'bands' calculation
+    (did not affect results, just Fermi energy position in band plotting)
+    Also: Fermi energy always written to xml file, also for insulators
+  * Phonon code in the noncolinear case with magnetization ("domag" case)
+    now works properly - courtesy Andrea Urru and Andrea Dal Corso.
+  * Incorrect forces, and slightly inconsistent atomic positions, were
+    written to xml file for structural optimization and molecular dynamics
+  * Some Bravais lattices with special axis orientations were not correctly
+    written to xml file, leading to errors in some codes (e.g., thermo_pw)
+    using that piece of information (fixed by Alberto Otero de la Roza)
+  * PPACF wasn't working with the "lfock" option: wavefunctions were no longer
+    read from file because read_file had been replaced by read_file_new
+  * Wrong phonons could result in some cases from an incompatibility between
+    the FFT grid and the symmetry (typically occurrence: actual symmetry higher
+    than the symmetry of the Bravais lattice) - Noticed by Matteo Calandra.
+  * Bug in PHonon+U for the symmetrization in the spin-polarized case when 
+    the Hubbard channel is "s" (noticed by Jin-Jian Zhou)
+ 
+Incompatible changes in v.6.6:
+  * Default value of parameter "diago_david_ndim" changed to 2:
+    uses less RAM, execution time sometimes shorter, sometimes longer.
+  * Grouping of inlc values into ranges for different developments.
+    WARNING: inlc for rVV10 has been changed to inlc=26.
+  * Conversion from 1D FFT real-space index to 3D positions moved into a
+    small routine for all cases where such conversion is used
+  * CP: atomic positions are now in array tau(1:3,1:nat), information on the
+    type of atom is in array ityp(:). The logic is now the same as for all
+    other codes and there is no need to re-order atoms or to put ultrasoft
+    pseudopotentials first, non-conserving second.
+  * Calls to LAXlib routines changed: module to be included replaced by file
+    'laxlib.fh', descriptors replaced by integer values
+  * Interpolation table for Q(G) is in a.u. and no longer in 2pi/a units
+  * Part of pseudopotential-related code moved to new directory upflib/ and
+    into library libupf.a. Directory upftools/ is obsolescent.
+
 New in 6.5 branch:
   * For non-local functionals of the vdW-DF and rVV10 families the kernel is
     now calculated on-the-fly rather than read from file. Thus, the kernel
@@ -22,7 +98,7 @@ Known problems in 6.5 branch:
 
 Problems fixed in 6.5 branch :
   * at2celldm wasn't properly converting vectors into celldm parameters
-    in the ibtrav=91 case (Tone)
+    in the ibrav=91 case (Tone)
   * PP: plot_num=1 wasn't working any longer as expected due to forgotten 
     local potential term (noticed by Manoar Hossain, NISER)
   * DOS calculation wasn't honoring "bz_sum='smearing'" if the nscf 
@@ -53,8 +129,11 @@ Problems fixed in 6.5 branch :
   * Option rescale-T and reduce-T now update the target temperature based on
     the previous target temperature, not based on instantaneous temperature
     as before.
+  * cppp.x works again
 
 Incompatible changes in 6.5 branch :
+  * Major changes inside the exchange-correlation code; XC routines moved
+    inside modules but no other changes are needed for calling routines
   * ibrav=-13 crystal axis converted to a more standard orientation.
     Atomic positions in crystal axis for the previous convention can
     be converted by applying the transformation (x,y,z) => (y,-x,z)
@@ -1797,4 +1876,3 @@ Fixed in version 1.0.1:
   * Asymptotic high- and low-density formulae used in PW91 and PBE
     unpolarized functionals gave a small but not negligible error,
     leading to bad convergence of structural optimization
-

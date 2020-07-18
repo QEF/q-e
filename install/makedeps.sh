@@ -11,9 +11,10 @@ TOPDIR=`pwd`
 
 if test $# = 0
 then
-    dirs=" LAXlib FFTXlib UtilXlib Modules clib LR_Modules upftools \
+    dirs=" LAXlib FFTXlib UtilXlib upflib Modules clib LR_Modules \
            KS_Solvers/Davidson KS_Solvers/Davidson_RCI KS_Solvers/CG KS_Solvers/PPCG \
-           PW/src CPV/src PW/tools upftools PP/src PWCOND/src \
+           KS_Solvers/ParO  KS_Solvers/DENSE  \
+           PW/src CPV/src PW/tools PP/src PWCOND/src \
            PHonon/Gamma PHonon/PH PHonon/FD HP/src atomic/src \
            EPW/src XSpectra/src ACFDT/src NEB/src TDDFPT/src \
            GWW/pw4gww GWW/gww GWW/head GWW/bse GWW/simple \
@@ -55,24 +56,22 @@ for dir in $dirs; do
     # for convenience, used later
     DEPEND1="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/FFTXlib $LEVEL1/LAXlib $LEVEL1/UtilXlib"
     DEPEND2="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/LAXlib $LEVEL2/UtilXlib \
-             $LEVEL2/Modules"
+             $LEVEL2/Modules $LEVEL2/upflib "
     DEPEND3="$LEVEL2/include $LEVEL2/FFTXlib $LEVEL2/LAXlib $LEVEL2/UtilXlib"
     case $DIR in 
         Modules )
-             DEPENDS="$DEPEND1 $LEVEL1/UtilXlib" ;;
+             DEPENDS="$DEPEND1 $LEVEL1/UtilXlib $LEVEL1/upflib" ;;
         LAXlib )
              DEPENDS="$LEVEL1/UtilXlib " ;;
-        upftools )
-             DEPENDS="$DEPEND1 $LEVEL1/Modules" ;;
         LR_Modules )
-             DEPENDS="$DEPEND1 $LEVEL1/Modules $LEVEL1/PW/src" ;;
+             DEPENDS="$DEPEND1 $LEVEL1/Modules $LEVEL1/upflib $LEVEL1/PW/src" ;;
 	ACFDT/src ) 
              DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;
 	atomic/src | GWW/gww )
 	     DEPENDS="$DEPEND2" ;;
 	PW/src | CPV/src )
-	     DEPENDS="$DEPEND2 ../../KS_Solvers/Davidson ../../KS_Solvers/CG ../../KS_Solvers/PPCG ../../dft-d3" ;;
-	KS_Solvers/Davidson | KS_Solvers/Davidson_RCI | KS_Solvers/CG | KS_Solvers/PPCG )
+	     DEPENDS="$DEPEND2 ../../KS_Solvers/Davidson ../../KS_Solvers/CG ../../KS_Solvers/PPCG ../../KS_Solvers/ParO ../../KS_Solvers/DENSE ../../dft-d3" ;;
+	KS_Solvers/Davidson | KS_Solvers/Davidson_RCI | KS_Solvers/CG | KS_Solvers/PPCG | KS_Solvers/ParO | KS_Solvers/DENSE )
 	     DEPENDS="$DEPEND3" ;;
 	PW/tools | PP/src | PWCOND/src | GWW/pw4gww | NEB/src )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src" ;;
@@ -113,14 +112,17 @@ for dir in $dirs; do
 
         if test "$DIR" = "FFTXlib"
         then
-            sed '/@mkl_dfti/d' make.depend > make.depend.tmp
+            sed '/@mkl_dfti/d;/@omp_lib@/d' make.depend > make.depend.tmp
             sed '/@fftw3.f/d;s/@fftw.c@/fftw.c/' make.depend.tmp > make.depend
         fi
 
         if test "$DIR" = "LAXlib"
         then
-            sed '/@elpa1@/d' make.depend > make.depend.tmp
-            cp make.depend.tmp make.depend
+            sed '/@elpa1@/d;/@elpa@/d' make.depend > make.depend.tmp
+            sed '/@cudafor@/d;/@cusolverdn@/d;/@gbuffers@/d' make.depend.tmp > make.depend
+            sed '/@zhegvdx_gpu@/d;/@dsyevd_gpu@/d;/@dsygvdx_gpu@/d' make.depend > make.depend.tmp
+            sed '/@cublas@/d;/@eigsolve_vars@/d;/@nvtx_inters@/d' make.depend.tmp > make.depend
+            /bin/rm make.depend.tmp
         fi
 
         if test "$DIR" = "UtilXlib"

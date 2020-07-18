@@ -30,6 +30,7 @@ atomic_wfc_mod.o \
 average_pp.o \
 acfdt_in_pw.o \
 newd.o \
+beef.o \
 bp_mod.o \
 bp_c_phase.o \
 bp_calc_btq.o \
@@ -95,6 +96,7 @@ gk_sort.o \
 gradcorr.o \
 gweights.o \
 g2_kin.o \
+hs_psi.o \
 hs_1psi.o \
 h_epsi_her_apply.o \
 h_epsi_her_set.o \
@@ -115,6 +117,9 @@ input.o \
 io_rho_xml.o \
 irrek.o \
 iweights.o \
+intersite_V.o \
+init_nsg.o \
+nsg_adj.o \
 start_k.o \
 kpoint_grid.o \
 lchk_tauxk.o \
@@ -129,6 +134,8 @@ move_ions.o \
 multable.o \
 n_plane_waves.o \
 new_ns.o \
+new_nsb.o \
+new_nsg.o \
 new_occ.o \
 ns_adj.o \
 non_scf.o \
@@ -244,8 +251,7 @@ wannier_check.o \
 wannier_clean.o \
 wannier_occ.o
 
-QEMODS=../../Modules/libqemod.a \
-       ../../KS_Solvers/libks_solvers.a \
+QEMODS=../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a \
        ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 
 TLDEPS= bindir libs mods libks_solvers dftd3

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,7 +23,7 @@ SUBROUTINE c_bands( iter )
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_flags,        ONLY : ethr, isolve, restart
-  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
+  USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, wfcU
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions,        ONLY : evc
   USE bp,                   ONLY : lelfield
@@ -67,6 +67,8 @@ SUBROUTINE c_bands( iter )
      WRITE( stdout, '(5X,"CG style diagonalization")')
   ELSEIF ( isolve == 2 ) THEN
      WRITE( stdout, '(5X,"PPCG style diagonalization")')
+  ELSEIF ( isolve == 3 ) THEN
+     WRITE( stdout, '(5X,"ParO style diagonalization")')
   ELSE
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve)
   ENDIF
@@ -78,7 +80,11 @@ SUBROUTINE c_bands( iter )
      ! ... Set k-point, spin, kinetic energy, needed by Hpsi
      !
      current_k = ik
+     !
+     IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) CALL phase_factor(ik)
+     !
      IF ( lsda ) current_spin = isk(ik)
+     !
      CALL g2_kin( ik )
      !
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
@@ -142,7 +148,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   !! * Davidson algorithm (all-band);
   !! * Conjugate Gradient (band-by-band);
-  !! * Projected Preconditioned Conjugate Gradient (block).
+  !! * Projected Preconditioned Conjugate Gradient (block);
+  !! * Parallel Orbital update (all-band).
   !
   !! Internal procedures:
   !
@@ -161,7 +168,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE wvfct,                ONLY : g2kin, nbndx, et, nbnd, npwx, btype
   USE control_flags,        ONLY : ethr, lscf, max_cg_iter, max_ppcg_iter, isolve, &
                                    gamma_only, use_para_diag
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : npol
   USE wavefunctions,        ONLY : evc
   USE g_psi_mod,            ONLY : h_diag, s_diag
   USE scf,                  ONLY : v_of_0
@@ -187,7 +194,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   REAL(KIND=DP) :: cg_iter, ppcg_iter
   ! (weighted) number of iterations in Conjugate-Gradient
-  INTEGER :: npw, ig, dav_iter, ntry, notconv
+  INTEGER :: npw, ig, dav_iter, ntry, notconv, nhpsi
   ! number of iterations in Davidson
   ! number or repeated call to diagonalization in case of non convergence
   ! number of notconverged elements
@@ -206,15 +213,21 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   ! subroutine g_psi(npwx,npw,nvec,psi,eig)   computes G*psi -> psi
   !------------------------------------------------------------------------
   ! CG diagonalization uses these external routines on a single band
-  EXTERNAL hs_1psi, s_1psi
+  EXTERNAL hs_1psi, s_1psi, hs_psi
   ! subroutine hs_1psi(npwx,npw,psi,hpsi,spsi)  computes H*psi and S*psi
   ! subroutine s_1psi(npwx,npw,psi,spsi)        computes S*psi (if needed)
-  ! In addition to the above ithe initial wfc rotation uses h_psi, and s_psi
+  ! In addition to the above the initial wfc rotation uses h_psi, and s_psi
   !------------------------------------------------------------------------
   ! PPCG diagonalization uses these external routines on groups of bands
   ! subroutine h_psi(npwx,npw,nvec,psi,hpsi)  computes H*psi
   ! subroutine s_psi(npwx,npw,nvec,psi,spsi)  computes S*psi (if needed)
-  !
+  !------------------------------------------------------------------------
+  ! ParO diagonalization uses these external routines on a single band
+  ! subroutine hs_1psi(npwx,npw,psi,hpsi,spsi)  computes H*psi and S*psi
+  ! subroutine g_1psi(npwx,npw,psi,eig)         computes G*psi -> psi
+  ! In addition to the above the initial wfc rotation uses h_psi, and s_psi
+  external g_1psi
+
   ALLOCATE( h_diag( npwx, npol ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' diag_bands ', ' cannot allocate h_diag ', ABS(ierr) )
@@ -251,13 +264,11 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   IF ( notconv > MAX( 5, nbnd / 4 ) ) THEN
      !
-     CALL errore( 'c_bands', &
-          & 'too many bands are not converged', 1 )
+     CALL errore( 'c_bands', 'too many bands are not converged', 1 )
      !
   ELSEIF ( notconv > 0 ) THEN
      !
-     WRITE( stdout, '(5X,"c_bands: ",I2, &
-               &   " eigenvalues not converged")' ) notconv
+     WRITE( stdout, '(5X,"c_bands: ",I2, " eigenvalues not converged")' ) notconv
      !
   ENDIF
   !
@@ -275,30 +286,37 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
     !
     IMPLICIT NONE
     !
-    IF ( isolve == 1 .OR. isolve == 2 ) THEN
+    IF ( isolve == 1 .OR. isolve == 2 .OR. isolve == 3) THEN
        !
        ! ... (Projected Preconditioned) Conjugate-Gradient diagonalization
        !
        ! ... h_diag is the precondition matrix
        !
-       FORALL( ig = 1 : npw )
-          !
-          h_diag(ig,1) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
-          !
-       END FORALL
+       IF ( isolve == 1 .OR. isolve == 2 ) THEN
+          FORALL( ig = 1 : npw )
+             h_diag(ig,1) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
+          END FORALL
+       ELSE
+          FORALL( ig = 1 : npw )
+             h_diag(ig, 1) = g2kin(ig) + v_of_0
+          END FORALL
+          CALL usnldiag( npw, h_diag, s_diag )
+       END IF
        !
        ntry = 0
        !
        CG_loop : DO
           !
-          lrot = ( iter == 1 .AND. ntry == 0 )
-          !
-          IF ( .NOT. lrot ) THEN
+          IF ( isolve == 1 .OR. isolve == 2 ) THEN
+             lrot = ( iter == 1 .AND. ntry == 0 )
              !
-             CALL rotate_wfc( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
-             !
-             avg_iter = avg_iter + 1.D0
-             !
+             IF ( .NOT. lrot ) THEN
+                !
+                CALL rotate_wfc( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
+                !
+                avg_iter = avg_iter + 1.D0
+                !
+             ENDIF
           ENDIF
           !
           IF ( isolve == 1 ) THEN
@@ -308,12 +326,20 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              !
              avg_iter = avg_iter + cg_iter
              !
-          ELSE
+          ELSE IF ( isolve == 2 ) THEN
              CALL ppcg_gamma( h_psi, s_psi, okvan, h_diag, &
                          npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
                          0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
              !
              avg_iter = avg_iter + ppcg_iter
+             !
+          ELSE
+             !
+             CALL paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
+                        npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
+             !
+             avg_iter = avg_iter + nhpsi/float(nbnd) 
+             ! write (6,*) ntry, avg_iter, nhpsi
              !
           ENDIF
           !
@@ -349,14 +375,14 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
 !             ! make sure that all processors have the same wfc
              CALL pregterg( h_psi, s_psi, okvan, g_psi, &
                          npw, npwx, nbnd, nbndx, evc, ethr, &
-                         et(1,ik), btype(1,ik), notconv, lrot, dav_iter )
+                         et(1,ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
                                    !    BEWARE gstart has been removed from call 
              !
           ELSE
              !
              CALL regterg (  h_psi, s_psi, okvan, g_psi, &
                          npw, npwx, nbnd, nbndx, evc, ethr, &
-                         et(1,ik), btype(1,ik), notconv, lrot, dav_iter )
+                         et(1,ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
                                    !    BEWARE gstart has been removed from call
           ENDIF
           !
@@ -422,33 +448,40 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
     ENDIF
     !
     !write (*,*) ' current isolve value ( 0 Davidson, 1 CG, 2 PPCG)', isolve; FLUSH(6)
-    IF ( isolve == 1 .OR. isolve == 2) THEN
+    IF ( isolve == 1 .OR. isolve == 2 .OR. isolve == 3 ) THEN
        !
        ! ... (Projected Preconditioned) Conjugate-Gradient diagonalization
        !
        ! ... h_diag is the precondition matrix
        !
        !write (*,*) ' inside CG solver branch '
-       h_diag = 1.D0
        !
-       FORALL( ig = 1 : npwx )
-          !
-          h_diag(ig,:) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
-          !
-       END FORALL
+       h_diag = 1.D0
+       IF ( isolve == 1 .OR. isolve == 2) THEN
+          FORALL( ig = 1 : npwx )
+             h_diag(ig,:) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
+          END FORALL
+       ELSE
+          FORALL( ig = 1 : npwx )
+             h_diag(ig, :) = g2kin(ig) + v_of_0
+          END FORALL
+          CALL usnldiag( npw, h_diag, s_diag )
+       ENDIF
        !
        ntry = 0
        !
        CG_loop : DO
           !
-          lrot = ( iter == 1 .AND. ntry == 0 )
-          !
-          IF ( .NOT. lrot ) THEN
+          IF ( isolve == 1 .OR. isolve == 2 ) THEN
+             lrot = ( iter == 1 .AND. ntry == 0 )
              !
-             CALL rotate_wfc( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
-             !
-             avg_iter = avg_iter + 1.D0
-             !
+             IF ( .NOT. lrot ) THEN
+                !
+                CALL rotate_wfc( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
+                !
+                avg_iter = avg_iter + 1.D0
+                !
+             ENDIF
           ENDIF
           !
           IF ( isolve == 1) then
@@ -458,13 +491,21 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              !
              avg_iter = avg_iter + cg_iter
              !
-          ELSE
+          ELSE IF ( isolve == 2) then
              ! BEWARE npol should be added to the arguments
              CALL ppcg_k( h_psi, s_psi, okvan, h_diag, &
                          npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
                          0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
              !
              avg_iter = avg_iter + ppcg_iter
+             !
+          ELSE 
+             !
+             CALL paro_k_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
+                        npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
+             !
+             avg_iter = avg_iter + nhpsi/float(nbnd) 
+             ! write (6,*) ntry, avg_iter, nhpsi
              !
           ENDIF
           ntry = ntry + 1
@@ -501,13 +542,13 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              !
              CALL pcegterg( h_psi, s_psi, okvan, g_psi, &
                             npw, npwx, nbnd, nbndx, npol, evc, ethr, &
-                            et(1,ik), btype(1,ik), notconv, lrot, dav_iter )
+                            et(1,ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
              !
           ELSE
              !
              CALL cegterg( h_psi, s_psi, okvan, g_psi, &
                            npw, npwx, nbnd, nbndx, npol, evc, ethr, &
-                           et(1,ik), btype(1,ik), notconv, lrot, dav_iter )
+                           et(1,ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
           ENDIF
           !
           avg_iter = avg_iter + dav_iter
@@ -556,7 +597,7 @@ SUBROUTINE c_bands_efield( iter )
   !----------------------------------------------------------------------------
   !! Driver routine for Hamiltonian diagonalization under an electric field.
   !
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : npol
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : nberrycyc, fact_hepsi, &
                                    evcel, evcelp, evcelm, gdir, l3dstring,&
@@ -631,7 +672,7 @@ SUBROUTINE c_bands_nscf( )
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_flags,        ONLY : ethr, restart, isolve, io_level, iverbosity
-  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
+  USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, wfcU
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions,        ONLY : evc
   USE mp_pools,             ONLY : npool, kunit, inter_pool_comm
@@ -670,6 +711,8 @@ SUBROUTINE c_bands_nscf( )
      WRITE( stdout, '(5X,"CG style diagonalization")' )
   ELSEIF ( isolve == 2 ) THEN
      WRITE( stdout, '(5X,"PPCG style diagonalization")' )
+  ELSEIF ( isolve == 3 ) THEN
+     WRITE( stdout, '(5X,"ParO style diagonalization")')
   ELSE
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve )
   ENDIF
@@ -682,7 +725,11 @@ SUBROUTINE c_bands_nscf( )
      ! ... Set k-point, spin, kinetic energy, needed by Hpsi
      !
      current_k = ik
+     !
+     IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) CALL phase_factor(ik)
+     !
      IF ( lsda ) current_spin = isk(ik)
+     !
      CALL g2_kin( ik )
      ! 
      ! ... More stuff needed by the hamiltonian: nonlocal projectors

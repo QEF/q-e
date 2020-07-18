@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2013 Quantum ESPRESSO group
+! Copyright (C) 2002-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,8 +12,8 @@ MODULE io_files
   USE parameters, ONLY: ntypx
   USE kinds,      ONLY: dp
   USE io_global,  ONLY: ionode, ionode_id, stdout
-  USE mp,         ONLY : mp_barrier, mp_bcast, mp_sum
-  USE mp_images,  ONLY : me_image, intra_image_comm, nproc_image
+  USE mp,         ONLY: mp_barrier, mp_bcast, mp_sum
+  USE mp_images,  ONLY: me_image, intra_image_comm, nproc_image
   !
   ! ... I/O related variables: file names, units, utilities
   ! ... IMPORTANT: when directory names are set, they must always end with "/"
@@ -32,7 +32,11 @@ MODULE io_files
   CHARACTER(len=256) :: prefix  = 'os'
   ! ... postfix is appended to directory names
 #if defined (_WIN32)
+#if defined (__PGI)
+  CHARACTER(len=6) :: postfix  = '.save/'
+#else
   CHARACTER(len=6) :: postfix  = '.save\'
+#endif
 #else
   CHARACTER(len=6) :: postfix  = '.save/'
 #endif
@@ -63,7 +67,7 @@ MODULE io_files
   INTEGER :: iunwfc      = 10 ! unit with wavefunctions
   INTEGER :: iunoldwfc   = 11 ! unit with old wavefunctions
   INTEGER :: iunoldwfc2  = 12 ! as above at step -2
-  INTEGER :: iunhub      = 13 ! unit for saving Hubbard-U atomic wfcs 
+  INTEGER :: iunhub      = 13 ! unit for saving Hubbard-U atomic wfcs * S 
   INTEGER :: iunsat      = 14 ! unit for saving (orthogonal) atomic wfcs * S
   INTEGER :: iunmix      = 15 ! unit for saving mixing information
   INTEGER :: iunwfc_exx  = 16 ! unit with exx wavefunctions
@@ -116,7 +120,11 @@ CONTAINS
     length = LEN_TRIM(dirname)
 #if defined (_WIN32)
     ! Windows returns error if tmp_dir ends with a backslash
+#if defined (__PGI)
+    IF ( dirname(length:length) == '\\' ) length=length-1
+#else
     IF ( dirname(length:length) == '\' ) length=length-1
+#endif
 #endif
     IF ( ionode ) ierr = f_mkdir_safe( dirname(1:length ) )
     CALL mp_bcast ( ierr, ionode_id, intra_image_comm )
@@ -168,7 +176,11 @@ CONTAINS
     length = LEN_TRIM(tmp_dir)
 #if defined (_WIN32)
     ! Windows returns error if tmp_dir ends with a backslash
+#if defined (__PGI)
+    IF ( tmp_dir(length:length) == '\\' ) length=length-1
+#else
     IF ( tmp_dir(length:length) == '\' ) length=length-1
+#endif
 #endif
     IF ( ionode ) ios = f_mkdir_safe( tmp_dir(1:length) )
     CALL mp_bcast ( ios, ionode_id, intra_image_comm )
@@ -234,41 +246,54 @@ CONTAINS
   END FUNCTION check_file_exist
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE delete_if_present( filename, in_warning )
-    !--------------------------------------------------------------------------
+  SUBROUTINE delete_if_present(filename, para)
+  !--------------------------------------------------------------------------
+  !!
+  !! Same as the delete_if_present subroutine but allows for other cores to 
+  !! enters (SP - Jan 2020). Ideally, both could be merged. 
+  !!  
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER(len = *), INTENT(in) :: filename
+  !! Name of the file 
+  LOGICAL, OPTIONAL, INTENT(in) :: para
+  !! Optionally, the remove can be done by all the cores. 
+  ! 
+  ! Local variables
+  LOGICAL :: exst
+  !! Check if the file exist
+  INTEGER :: iunit
+  !! UNit of the file 
+  INTEGER, EXTERNAL :: find_free_unit
+  !! Find a unallocated unit
+  ! 
+  IF (PRESENT(para)) THEN
+    IF (.NOT. para) THEN
+      IF (.NOT. ionode) RETURN
+    ENDIF
+  ELSE ! Default if not present
+    IF (.NOT. ionode) RETURN
+  ENDIF
+  !
+  INQUIRE(FILE = filename, EXIST = exst)
+  !
+  IF (exst) THEN
     !
-    IMPLICIT NONE
+    iunit = find_free_unit()
     !
-    CHARACTER(LEN=*),  INTENT(IN) :: filename
-    LOGICAL, OPTIONAL, INTENT(IN) :: in_warning
-    LOGICAL                       :: exst, warning
-    INTEGER                       :: iunit
-    INTEGER, EXTERNAL :: find_free_unit
+    OPEN(UNIT = iunit, FILE = filename, STATUS = 'OLD')
+    CLOSE(UNIT = iunit, STATUS = 'DELETE')
     !
-    IF ( .NOT. ionode ) RETURN
+    WRITE(UNIT = stdout, FMT = '(/,5X,"File ", A, " deleted, as requested")') TRIM(filename)
     !
-    INQUIRE( FILE = filename, EXIST = exst )
-    !
-    IF ( exst ) THEN
-       !
-       iunit = find_free_unit()
-       !
-       warning = .FALSE.
-       !
-       IF ( PRESENT( in_warning ) ) warning = in_warning
-       !
-       OPEN(  UNIT = iunit, FILE = filename , STATUS = 'OLD' )
-       CLOSE( UNIT = iunit, STATUS = 'DELETE' )
-       !
-       IF ( warning ) &
-          WRITE( UNIT = stdout, FMT = '(/,5X,"WARNING: ",A, &
-               & " file was present; old file deleted")' ) filename
-       !
-    END IF
-    !
-    RETURN
-    !
+  ENDIF
+  !
+  RETURN
+  ! 
+  !--------------------------------------------------------------------------
   END SUBROUTINE delete_if_present
+  !--------------------------------------------------------------------------
   !
   !--------------------------------------------------------------------------
   FUNCTION check_writable ( file_path, process_id ) RESULT ( ios )

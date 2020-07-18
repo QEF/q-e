@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -33,9 +33,9 @@ SUBROUTINE openfil()
   !
   LOGICAL :: exst
   !
-  ! ... Files needed for LDA+U
+  ! ... Files needed for DFT+U(+V)
   ! ... iunsat contains the (orthogonalized) atomic wfcs * S
-  ! ... iunhub as above, only wfcs with a U correction
+  ! ... iunhub  as above, only wfcs * S with a U correction
   !
   ! ... nwordwfc is the record length (IN COMPLEX WORDS)
   ! ... for the direct-access file containing wavefunctions
@@ -45,8 +45,9 @@ SUBROUTINE openfil()
   nwordatwfc= npwx*natomwfc*npol
   nwordwfcU = npwx*nwfcU*npol
   !
-  IF ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) &
-     CALL open_buffer( iunhub, 'hub',    nwordwfcU, io_level, exst )
+  IF ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) THEN
+     CALL open_buffer( iunhub,  'hub',  nwordwfcU, io_level, exst )
+  ENDIF
   IF ( use_wannier .OR. one_atom_occupations ) &
      CALL open_buffer( iunsat, 'satwfc', nwordatwfc, io_level, exst )
   !

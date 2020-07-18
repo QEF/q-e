@@ -7,26 +7,19 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE atomic_rho_g (rhocg, nspina)
+SUBROUTINE atomic_rho_g( rhocg, nspina )
   !-----------------------------------------------------------------------
-  ! Compute superposition of atomic charges in reciprocal space.
+  !! Compute superposition of atomic charges in reciprocal space.
   !
-  ! On input:
-  ! nspina (integer) is the number of spin components to be calculated
-  ! (may differ from nspin because in some cases the total charge only
-  !  is needed, even in a LSDA calculation)
-  ! if nspina = 1 the total atomic charge density is calculated
-  ! if nspina = 2 collinear case. The total density is calculated
-  !               in the first component and the magnetization in 
-  !               the second.
-  ! if nspina = 4 noncollinear case. Total density in the first
-  !               component and magnetization vector in the
-  !               other three.
+  !! Three cases:
   !
-  ! On output:
-  ! rhocg(ngm,nspina) (complex) contains G-space components of the
-  ! superposition of atomic charges contained in the array upf%rho_at
-  ! (read from pseudopotential files)
+  !! * if \(\text{nspina}=1\) the total atomic charge density is calculated;
+  !! * if \(\text{nspina}=2\) collinear case. The total density is calculated
+  !!               in the first component and the magnetization in 
+  !!               the second;
+  !! * if \(\text{nspina}=4\) noncollinear case. Total density in the first
+  !!               component and magnetization vector in the
+  !!               other three.
   !
   USE kinds,                ONLY : DP
   USE constants,            ONLY : eps8
@@ -42,12 +35,17 @@ SUBROUTINE atomic_rho_g (rhocg, nspina)
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: nspina
-  COMPLEX(DP), INTENT(OUT) :: rhocg (ngm, nspina)
+  !! number of spin components to be calculated. It may differ from
+  !! nspin because in some cases the total charge only is needed, 
+  !! even in a LSDA calculation.
+  COMPLEX(DP), INTENT(OUT) :: rhocg(ngm,nspina)
+  !! contains G-space components of the superposition of atomic charges
+  !! contained in the array upf%rho_at (read from pseudopotential files).
   !
-  ! local variables
+  ! ... local variables
   !
   REAL(DP) :: rhoneg, rhoima, rhoscale, gx
-  REAL(DP), ALLOCATABLE :: rhocgnt (:), aux (:)
+  REAL(DP), ALLOCATABLE :: rhocgnt(:), aux(:)
   REAL(DP) :: angular(nspina)
   INTEGER :: ir, is, ig, igl, nt, ndm
   !
@@ -141,32 +139,37 @@ SUBROUTINE atomic_rho_g (rhocg, nspina)
 END SUBROUTINE atomic_rho_g
 !
 !-----------------------------------------------------------------------
-SUBROUTINE atomic_rho (rhoa, nspina)
+SUBROUTINE atomic_rho( rhoa, nspina )
   !-----------------------------------------------------------------------
-  ! As atomic_rho_g, with real-space output charge rhoa(:,nspina)
+  !! Same as \(\texttt{atomic_rho_g}\), with real-space output charge
+  !! \(\text{rhoa}(:,\text{nspina})\).
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
   USE cell_base,            ONLY : tpiba, omega
   USE control_flags,        ONLY : gamma_only
   USE lsda_mod,             ONLY : lsda
-  USE wavefunctions,        ONLY : psic
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   USE fft_base,             ONLY : dfftp
-  USE fft_interfaces,       ONLY : invfft
+  USE fft_rho,              ONLY : rho_g2r
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: nspina
-  REAL(DP), INTENT(OUT) :: rhoa (dfftp%nnr, nspina)
-  ! local variables
+  !! number of spin components to be calculated. It may differ from
+  !! nspin because in some cases the total charge only is needed, 
+  !! even in a LSDA calculation.
+  REAL(DP), INTENT(OUT) :: rhoa(dfftp%nnr,nspina)
+  !! contains R-space components of the superposition of atomic charges.
   !
-  REAL(DP) :: rhoneg, rhoima
+  ! ... local variables
+  !
+  REAL(DP) :: rhoneg
   COMPLEX(DP), allocatable :: rhocg (:,:)
-  INTEGER :: ir, is, ig, igl, nt, ndm
+  INTEGER :: ir, is
   !
-  ! allocate work space (psic must already be allocated)
+  ! allocate work space 
   !
   ALLOCATE (rhocg(dfftp%ngm, nspina))
   !
@@ -175,32 +178,21 @@ SUBROUTINE atomic_rho (rhoa, nspina)
   ! bring to real space
   !
   rhoa(:,:) = 0.d0
+  CALL rho_g2r ( dfftp, rhocg, rhoa )
+  DEALLOCATE (rhocg)
   !
   DO is = 1, nspina
      !
-     psic(:) = (0.0_dp,0.0_dp)
-     psic (dfftp%nl (:) ) = rhocg (:, is)
-     IF (gamma_only)  psic ( dfftp%nlm(:) ) = CONJG( rhocg (:, is) )
-     CALL invfft ('Rho', psic, dfftp)
-     !
-     ! we check that everything is correct
+     ! check on negative charge
      !
      rhoneg = 0.0_dp
-     rhoima = 0.0_dp
      DO ir = 1, dfftp%nnr
-        rhoneg = rhoneg + MIN (0.0_dp,  DBLE (psic (ir)) )
-        rhoima = rhoima + abs (AIMAG (psic (ir) ) )
+        rhoneg = rhoneg + MIN (0.0_dp,  DBLE (rhoa (ir,is)) )
      ENDDO
      rhoneg = omega * rhoneg / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
-     rhoima = omega * rhoima / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
      !
      CALL mp_sum(  rhoneg, intra_bgrp_comm )
-     CALL mp_sum(  rhoima, intra_bgrp_comm )
      !
-     IF ( rhoima > 1.0d-4 ) THEN
-        WRITE( stdout,'(5x,"Check: imaginary charge or magnetization=",&
-          & f12.6," (component ",i1,") set to zero")') rhoima, is
-     END IF
      IF ( (is == 1) .OR. lsda ) THEN
         !
         IF ( (rhoneg < -1.0d-4) ) THEN
@@ -214,17 +206,10 @@ SUBROUTINE atomic_rho (rhoa, nspina)
         END IF
      END IF
      !
-     ! set imaginary terms to zero - negative terms are not set to zero
-     ! because it is basically useless to do it in real space: negative
-     ! charge will re-appear when Fourier-transformed back and forth
-     !
-     DO ir = 1, dfftp%nnr
-        rhoa (ir, is) =  DBLE (psic (ir))
-     END DO
+     ! it is useless to set negative terms to zero in real space: 
+     ! negative charge will re-appear when Fourier-transformed back and forth
      !
   ENDDO
-
-  DEALLOCATE (rhocg)
 
 END SUBROUTINE atomic_rho
 

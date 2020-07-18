@@ -1,36 +1,36 @@
-  !                                                                            
-  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino 
-  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino  
-  !                                                                            
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
-  !                                                                            
+  !
+  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
+  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
+  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
+  !
   !----------------------------------------------------------------------
   MODULE wannierization
   !----------------------------------------------------------------------
-  !! 
+  !!
   !! This module contains routines related to the control of the Wannier90 run
-  !! 
+  !!
   IMPLICIT NONE
-  ! 
+  !
   CONTAINS
     !
     !---------------------------------------------------------------------
     SUBROUTINE wann_run()
     !---------------------------------------------------------------------
     !!
-    !!  This is the routine which controls the w90 run.  Primarily,        
-    !!  we get the phases to remove degeneracies in the wfs, and 
-    !!  call pw2wan90epw 
-    !!  
+    !!  This is the routine which controls the w90 run.  Primarily,
+    !!  we get the phases to remove degeneracies in the wfs, and
+    !!  call pw2wan90epw
+    !!
     !
     USE kinds,          ONLY : DP
     USE io_global,      ONLY : stdout, ionode_id
     USE wvfct,          ONLY : nbnd
     USE epwcom,         ONLY : nkc1, nkc2, nkc3
-    USE pwcom,          ONLY : nkstot 
-    USE klist_epw,      ONLY : xk_cryst           
+    USE pwcom,          ONLY : nkstot
+    USE klist_epw,      ONLY : xk_cryst
     USE wannierEPW,     ONLY : mp_grid, n_wannier, kpt_latt
     USE mp,             ONLY : mp_bcast
     USE mp_world,       ONLY : world_comm
@@ -40,19 +40,19 @@
     !
     ! Local variables
     INTEGER :: num_kpts
-    !! number of k-points in wannierization 
+    !! number of k-points in wannierization
     INTEGER :: ierr
     !! Error status
     !
     CALL start_clock('WANNIER')
-    ! 
+    !
     mp_grid(1) = nkc1
     mp_grid(2) = nkc2
     mp_grid(3) = nkc3
     num_kpts = mp_grid(1) * mp_grid(2) * mp_grid(3)
     !
-    IF (num_kpts /= nkstot) CALL errore('wannierize', 'inconsistent nscf and elph k-grids', 1) 
-    IF (nbnd < n_wannier)  CALL errore('wannierize', 'Must have as many or more bands than Wannier functions', 1) 
+    IF (num_kpts /= nkstot) CALL errore('wannierize', 'inconsistent nscf and elph k-grids', 1)
+    IF (nbnd < n_wannier)  CALL errore('wannierize', 'Must have as many or more bands than Wannier functions', 1)
     !
     ALLOCATE(kpt_latt(3, num_kpts), STAT = ierr)
     IF (ierr /= 0) CALL errore('wann_run', 'Error allocating kpt_latt', 1)
@@ -90,9 +90,9 @@
     !------------------------------------------------------------
     !!
     !!  This routine writes the prefix.win file which wannier90.x
-    !!  needs to run.  Primarily it contains information about the 
+    !!  needs to run.  Primarily it contains information about the
     !!  windows used for the disentanglement, and the initial projections.
-    !!  JN - 10/2008  projections now in elph.in file  
+    !!  JN - 10/2008  projections now in elph.in file
     !
     USE kinds,       ONLY : DP
     USE io_files,    ONLY : prefix
@@ -109,7 +109,7 @@
     !
     ! Local variables
     LOGICAL :: random
-    !! Random 
+    !! Random
     INTEGER :: i
     !! Band index
     REAL(KIND = DP) :: et_tmp(nbnd, nkstot)
@@ -123,7 +123,7 @@
       IF (nbndsub > nwanxx) CALL errore('write_winfil', 'Too many wannier bands', nbndsub)
       !
       OPEN(UNIT = iuwinfil, FILE = TRIM(prefix) // ".win", FORM = 'formatted')
-      !    
+      !
       !  more input and options for interfacing with w90 can/will be added later
       IF (auto_projections) THEN
         WRITE(iuwinfil, '(a)') "auto_projections = .true."
@@ -138,7 +138,7 @@
           ENDIF
         ENDDO
         !
-        IF (random) WRITE(iuwinfil, '(a)') "random" 
+        IF (random) WRITE(iuwinfil, '(a)') "random"
         !
         WRITE(iuwinfil, '(a)') "end projections"
       ENDIF
@@ -147,13 +147,6 @@
       !
       WRITE(iuwinfil, '("num_wann = ", i3)') nbndsub
       WRITE(iuwinfil, '("iprint = ", i3)') iprint
-      !
-      ! SP: You can have more bands in nscf.in than in 
-      !     nbndskip+nbndsub. In which case the dis_win_max can be larger than 
-      !     nbndskip+nbndsub. This is crucial for disantanglement. 
-      IF (dis_froz_min < MINVAL(et_tmp)) dis_froz_min = MINVAL(et_tmp)
-      IF (dis_froz_max > MAXVAL(et_tmp)) dis_froz_max = MAXVAL(et_tmp)
-      !
       WRITE(iuwinfil, '("dis_win_min = ", f18.12)')  dis_win_min
       WRITE(iuwinfil, '("dis_win_max = ", f18.12)')  dis_win_max
       WRITE(iuwinfil, '("dis_froz_min = ", f18.12)') dis_froz_min
@@ -173,17 +166,20 @@
     !------------------------------------------------------------
     END SUBROUTINE write_winfil
     !------------------------------------------------------------
-    ! 
+    !
     !------------------------------------------------------------
     SUBROUTINE proj_w90()
     !------------------------------------------------------------
     !!
     !! This routine computes the energy projections of
     !! the computed Wannier functions
-    !! 07/2010  Needs work.  Right now this sub is nearly worthless  
+    !! 07/2010  Needs work.  Right now this sub is nearly worthless
+    !! 02/2020  This subroutine is not called in any part of the code.
+    !!          If this would be called in the future, modification
+    !!          is needed in accordance with the changes for exclusion of semicore states.
     !
     USE kinds,       ONLY : DP
-    USE io_files,    ONLY : prefix 
+    USE io_files,    ONLY : prefix
     USE io_var,      ONLY : iuprojfil
     USE mp_global,   ONLY : inter_pool_comm
     USE io_global,   ONLY : stdout, meta_ionode
@@ -206,8 +202,8 @@
     INTEGER :: ik
     !! K-point index
     INTEGER :: ibnd
-    !! 
-    INTEGER :: ne 
+    !!
+    INTEGER :: ne
     !!
     INTEGER :: ie
     !!
@@ -216,13 +212,13 @@
     INTEGER :: ierr
     !! Error status
     REAL(KIND = DP) :: dE
-    !! 
+    !!
     REAL(KIND = DP) :: sigma
-    !! 
+    !!
     REAL(KIND = DP) :: argv
-    !! 
+    !!
     REAL(KIND = DP) :: en
-    !! 
+    !!
     REAL(KIND = DP) :: xxq(3)
     !! Current q-point
     REAL(KIND = DP), ALLOCATABLE :: proj_wf(:, :)
@@ -255,7 +251,7 @@
     IF (ierr /= 0) CALL errore('proj_w90', 'Error allocating cuq', 1)
     ALLOCATE(xkq(3, nks), STAT = ierr)
     IF (ierr /= 0) CALL errore('proj_w90', 'Error allocating xkq', 1)
-    CALL loadumat(nbnd, n_wannier, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband) 
+    CALL loadumat(nbnd, n_wannier, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband)
     DEALLOCATE(xkq, STAT = ierr)
     IF (ierr /= 0) CALL errore('proj_w90', 'Error deallocating xkq', 1)
     !
@@ -302,13 +298,17 @@
     SUBROUTINE setphases_wrap()
     !---------------------------------------------------------------------------
     !!
-    !! This is the wrapper which is used to set the phases of the wavefunctions  
+    !! This is the wrapper which is used to set the phases of the wavefunctions
     !! at k and k+q on the coarse mesh.  It should only be called once.
     !! Note that the phases at k+q are for the input 'q' vector, not
     !! the one in the dynamical coarse list.
-    !! 
+    !!
     !! The phases for all wavefunctions are now stored in umat_all
-    !!  
+    !!
+    !! 02/2020  This subroutine is not called in any part of the code.
+    !!          If this would be called in the future, modification
+    !!          is needed in accordance with the changes for exclusion of semicore states.
+    !!
     !---------------------------------------------------------------------
     USE kinds,           ONLY : DP
     USE klist,           ONLY : nkstot
@@ -321,7 +321,7 @@
     IMPLICIT NONE
     !
     INTEGER :: ik
-    !! K-point 
+    !! K-point
     INTEGER :: ibnd
     !! Band-index
     INTEGER :: jbnd
@@ -340,7 +340,7 @@
     umat_all = (0.d0, 0.d0)
     zero_vect = 0.d0
     !
-    WRITE(stdout, '(5x,a)') 'No wavefunction gauge setting applied' 
+    WRITE(stdout, '(5x,a)') 'No wavefunction gauge setting applied'
     !
     IF (ionode) THEN
       DO ik = 1, nkstot

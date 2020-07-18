@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: bands.x / PWscf / Quantum Espresso (version: svn)
+Program: bands.x / PWscf / Quantum Espresso (version: 6.6)
 ------------------------------------------------------------------------
 
 
@@ -152,4 +152,4 @@ NAMELIST: &BANDS
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Jun 22 17:11:35 CEST 2018
+This file has been created by helpdoc utility on Fri Jul 17 10:28:28 CEST 2020

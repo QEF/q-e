@@ -12,6 +12,7 @@
 *.dvi
 *.toc
 *.aux
+*.x.dSYM
 
 bin/*
 FoX
@@ -36,3 +37,4 @@ wannier90-*
 tempdir
 EPW/src/tags
 EPW/src/tmp
+LAXlib/*.fh

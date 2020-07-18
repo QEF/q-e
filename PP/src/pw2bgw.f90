@@ -1350,7 +1350,7 @@ SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type, &
   IF ( rhog_nvmin .NE. 0 .AND. rhog_nvmax .NE. 0 ) &
     CALL calc_rhog ( rhog_nvmin, rhog_nvmax )
     !
-    IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'r_and_g', 'updw_rhoz')
+    IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'only_g', '->updw')
     !
   ALLOCATE ( g_g ( nd, ng_g ) )
   ALLOCATE ( rhog_g ( ng_g, ns ) )

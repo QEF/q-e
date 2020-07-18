@@ -127,7 +127,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
   !
-  ! ... Here we add the kinetic energy (k+G)^2 psi and clean up garbage
+  ! ... Here we set the kinetic energy (k+G)^2 psi and clean up garbage
   !
   !$omp parallel do
   DO ibnd = 1, m
@@ -139,6 +139,8 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      ENDIF
   ENDDO
   !$omp end parallel do
+
+  CALL start_clock( 'h_psi:pot' ); !write (*,*) 'start h_psi:pot';FLUSH(6)
   !
   ! ... Here the product with the local potential V_loc psi
   !
@@ -163,8 +165,8 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
            CALL v_loc_psir_inplace( ibnd, m ) 
            ! ... psic (hpsi) -> psic + vusp
            CALL  add_vuspsir_gamma( ibnd, m )
-           ! ... transform psic back in reciprocal space and assign it to hpsi
-           CALL fwfft_orbital_gamma( hpsi, ibnd, m )
+           ! ... transform psic back in reciprocal space and add it to hpsi
+           CALL fwfft_orbital_gamma( hpsi, ibnd, m, add_to_orbital=.TRUE. )
         ENDDO
         !
      ELSE
@@ -198,8 +200,8 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
            CALL v_loc_psir_inplace( ibnd, m )
            ! ... psic (hpsi) -> psic + vusp
            CALL  add_vuspsir_k( ibnd, m )
-           ! ... transform psic back in reciprocal space and assign it to hpsi
-           CALL fwfft_orbital_k( hpsi, ibnd, m )
+           ! ... transform psic back in reciprocal space and add it to hpsi
+           CALL fwfft_orbital_k( hpsi, ibnd, m, add_to_orbital=.TRUE. )
            !
         ENDDO
         !
@@ -222,6 +224,8 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      CALL add_vuspsi( lda, n, m, hpsi )
      !
   ENDIF
+  !
+  CALL stop_clock( 'h_psi:pot' ); !write (*,*) 'stop h_psi:pot';FLUSH(6)
   !  
   IF (dft_is_meta()) CALL h_psi_meta( lda, n, m, psi, hpsi )
   !

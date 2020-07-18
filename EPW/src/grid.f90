@@ -1,21 +1,21 @@
   !
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
-  ! 
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
   !
   !----------------------------------------------------------------------
   MODULE grid
   !----------------------------------------------------------------------
-  !! 
-  !! This module contains the routines related to k-point or q-point grid 
-  !! generation as well as selection of k/q points. 
-  !! 
+  !!
+  !! This module contains the routines related to k-point or q-point grid
+  !! generation as well as selection of k/q points.
+  !!
   IMPLICIT NONE
-  ! 
+  !
   CONTAINS
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE loadkmesh_para()
     !-----------------------------------------------------------------------
@@ -26,15 +26,16 @@
     USE io_global, ONLY : ionode_id, stdout
     USE mp_global, ONLY : inter_pool_comm, my_pool_id, npool
     USE mp,        ONLY : mp_bcast, mp_sum
-    USE mp_world,  ONLY : mpime 
+    USE mp_world,  ONLY : mpime
     USE kinds,     ONLY : DP
     USE epwcom,    ONLY : filkf, nkf1, nkf2, nkf3, iterative_bte, &
-                          rand_k, rand_nk, mp_mesh_k, system_2d, eig_read, vme
+                          rand_k, rand_nk, mp_mesh_k, system_2d, eig_read, vme, &
+                          fixsym
     USE elph2,     ONLY : nkqtotf, nkqf, xkf, wkf, nkf, xkfd, deltaq
     USE cell_base, ONLY : at, bg
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_var,    ONLY : iunkf
-    USE low_lvl,   ONLY : init_random_seed
+    USE low_lvl,   ONLY : init_random_seed, fix_sym
     USE constants_epw, ONLY : eps4
     USE noncollin_module, ONLY : noncolin
     !
@@ -42,7 +43,7 @@
     !
     CHARACTER(LEN = 10) :: coordinate_type
     !! filkf coordinate type (crystal or cartesian)
-    LOGICAL, EXTERNAL :: imatches 
+    LOGICAL, EXTERNAL :: imatches
     !! Regex matching text.
     INTEGER :: ios
     !! INTEGER variable for I/O control
@@ -81,8 +82,8 @@
         WRITE(stdout, *) '    Using k-mesh file: ', TRIM(filkf)
         OPEN(UNIT = iunkf, FILE = filkf, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
         IF (ios /= 0) CALL errore('loadkmesh_para', 'opening file ' // filkf, ABS(ios))
-        READ(iunkf, *) nkqtotf, coordinate_type 
-        ! Default 
+        READ(iunkf, *) nkqtotf, coordinate_type
+        ! Default
         IF (TRIM(coordinate_type) .EQ. ' ') coordinate_type = 'crystal'
         IF (.NOT. imatches("crystal", coordinate_type) .AND. .NOT. imatches("cartesian", coordinate_type)) &
            CALL errore('loadkmesh_para', 'ERROR: Specify either crystal or cartesian coordinates in the filkf file', 1)
@@ -99,10 +100,10 @@
           !
           READ(iunkf, *) xkf_(:, ikk ), wkf_(ikk)
           !
-          ! SP: This is so we can input a weight of 1 to random file 
-          !     This way you can feed the same file for the k and q grid  
-          wkf_(ikk) = wkf_(ikk) * 2.d0  
-          xkf_(:, ikq) = xkf_(:, ikk) 
+          ! SP: This is so we can input a weight of 1 to random file
+          !     This way you can feed the same file for the k and q grid
+          wkf_(ikk) = wkf_(ikk) * 2.d0
+          xkf_(:, ikq) = xkf_(:, ikk)
           wkf_(ikq) = 0.d0
           !
         ENDDO
@@ -117,9 +118,10 @@
         !
       ELSEIF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0)) THEN ! generate grid
         IF (mp_mesh_k) THEN
-          ! get size of the mp_mesh in the irr wedge 
+          ! get size of the mp_mesh in the irr wedge
           WRITE(stdout,'(a,3i4)') '     Using uniform MP k-mesh: ', nkf1, nkf2, nkf3
           call set_sym_bl()
+          IF (fixsym) CALL fix_sym(.TRUE.)
           !
           ALLOCATE(xkf_(3, 2 * nkf1 * nkf2 * nkf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating xkf_', 1)
@@ -146,10 +148,10 @@
           xkfval(:, :) = 0.0d0
           CALL kpoint_grid(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1 * nkf2 * nkf3, &
                0, 0, 0, nkf1, nkf2, nkf3, nkqtotf, xkf_tmp, wkf_tmp)
-          !  
-          ! assign to k and k+q for xkf and wkf 
-          ! 
-          ! SP: The variable xkfval is a duplication. However, it allows to avoid some strange 
+          !
+          ! assign to k and k+q for xkf and wkf
+          !
+          ! SP: The variable xkfval is a duplication. However, it allows to avoid some strange
           !     memory allocation issue. FIXME
           DO ik = 1, nkqtotf
             ikk = 2 * ik - 1
@@ -165,26 +167,26 @@
           IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error deallocating xkf_tmp', 1)
           DEALLOCATE(wkf_tmp, STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error deallocating wkf_tmp', 1)
-          !       
-          ! bring the k point to crystal coordinates       
+          !
+          ! bring the k point to crystal coordinates
           CALL cryst_to_cart(2 * nkqtotf, xkfval, at, -1)
           xkf_(:, :) = xkfval(:, :)
-          ! 
+          !
           IF (iterative_bte) THEN
-            ! Fold the points in the region [0-1] from the region -0.5,0.5             
+            ! Fold the points in the region [0-1] from the region -0.5,0.5
             DO ik = 1, 2 * nkqtotf
               DO idir= 1, 3
                 IF (xkf_(idir, ik) < 0.0d0) THEN
                   xkf_(idir, ik) = xkf_(idir, ik) + 1.0d0
-                ENDIF 
+                ENDIF
               ENDDO
-            ENDDO 
+            ENDDO
           ENDIF
           !
           ! redefine nkqtotf to include the k+q points
           !
-          nkqtotf = 2 * nkqtotf 
-          ! 
+          nkqtotf = 2 * nkqtotf
+          !
           DEALLOCATE(xkfval, STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error deallocating xkfval', 1)
           !
@@ -212,7 +214,7 @@
                 xkf_(3, ikk) = DBLE(k - 1) / DBLE(nkf3)
                 xkf_(1, ikq) = xkf_(1, ikk)
                 xkf_(2, ikq) = xkf_(2, ikk)
-                xkf_(3, ikq) = xkf_(3, ikk) 
+                xkf_(3, ikq) = xkf_(3, ikk)
               ENDDO
             ENDDO
           ENDDO
@@ -272,7 +274,7 @@
       upper_bnd = lower_bnd + nkqf - 1
     ENDIF
     !
-    nkf = nkqf / 2 
+    nkf = nkqf / 2
     IF (mpime /= ionode_id) THEN
       ALLOCATE(xkf_(3, nkqtotf), STAT = ierr)
       IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating xkf_', 1)
@@ -283,10 +285,10 @@
     CALL mp_bcast(wkf_, ionode_id, inter_pool_comm)
     !
 #else
-    ! In serial the definitions are much easier 
+    ! In serial the definitions are much easier
     !
     nkqf = nkqtotf
-    nkf = nkqf / 2 
+    nkf = nkqf / 2
     lower_bnd = 1
     upper_bnd = nkqf
     !
@@ -299,39 +301,39 @@
     ALLOCATE(wkf(nkqf), STAT = ierr)
     IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating wkf', 1)
     xkf(:, :) = xkf_(:, lower_bnd:upper_bnd)
-    ! 
+    !
     ! KMB: set coordinates of displaced vectors for indabs
     IF (vme .AND. eig_read) THEN
       ALLOCATE(xkfd(3, nkqf, 6), STAT = ierr)
       IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating xkfd', 1)
       deltaq = 0.001d0
       DO ik = 1, nkqf
-        !--bring the k point to cartesian coordinates                                                                                                                           
-        CALL cryst_to_cart(1, xkf(:, ik), bg, 1)                                                                                                              
+        !--bring the k point to cartesian coordinates
+        CALL cryst_to_cart(1, xkf(:, ik), bg, 1)
         xkfd(:, ik, 1) = xkf(:, ik) + (/deltaq, 0.d0, 0.d0/)
         xkfd(:, ik, 2) = xkf(:, ik) - (/deltaq, 0.d0, 0.d0/)
         xkfd(:, ik, 3) = xkf(:, ik) + (/0.d0, deltaq, 0.d0/)
         xkfd(:, ik, 4) = xkf(:, ik) - (/0.d0, deltaq, 0.d0/)
         xkfd(:, ik, 5) = xkf(:, ik) + (/0.d0, 0.d0, deltaq/)
         xkfd(:, ik, 6) = xkf(:, ik) - (/0.d0, 0.d0, deltaq/)
-        !  bring the k point to crystal coordinates                                                                                                                             
-        CALL cryst_to_cart(1, xkf(:, ik), at, -1)  
+        !  bring the k point to crystal coordinates
+        CALL cryst_to_cart(1, xkf(:, ik), at, -1)
         DO i = 1, 6
-          CALL cryst_to_cart(1, xkfd(:, ik, i), at, -1)  
+          CALL cryst_to_cart(1, xkfd(:, ik, i), at, -1)
         ENDDO
       ENDDO
     ENDIF
-    IF (noncolin) THEN 
+    IF (noncolin) THEN
       wkf(:) = wkf_(lower_bnd:upper_bnd) / 2.d0
     ELSE
       wkf(:) = wkf_(lower_bnd:upper_bnd)
-    ENDIF  
+    ENDIF
     !
     IF (ABS(SUM(wkf_ (:)) - 2.d0) > eps4) &
       WRITE(stdout, '(5x,"WARNING: k-point weigths do not add up to 1 [loadkmesh_para]")')
     !
-    WRITE(stdout, '(5x,"Size of k point mesh for interpolation: ",i10)') nkqtotf 
-    WRITE(stdout, '(5x,"Max number of k points per pool:",7x,i10)') nkqf 
+    WRITE(stdout, '(5x,"Size of k point mesh for interpolation: ",i10)') nkqtotf
+    WRITE(stdout, '(5x,"Max number of k points per pool:",7x,i10)') nkqf
     !
     DEALLOCATE(xkf_, STAT = ierr)
     IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error deallocating xkf_', 1)
@@ -355,12 +357,13 @@
     USE mp_world,  ONLY : mpime
     USE kinds,     ONLY : DP
     USE epwcom,    ONLY : filkf, nkf1, nkf2, nkf3, &
-                          rand_k, rand_nk, mp_mesh_k, system_2d, eig_read, vme
+                          rand_k, rand_nk, mp_mesh_k, system_2d, eig_read, vme, &
+                          fixsym
     USE elph2,     ONLY : xkf, wkf, nkqtotf, nkf, nkqf, xkfd, deltaq
     USE cell_base, ONLY : at, bg
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_var,    ONLY : iunkf
-    USE low_lvl,   ONLY : init_random_seed
+    USE low_lvl,   ONLY : init_random_seed, fix_sym
     USE constants_epw, ONLY : eps4
     !
     IMPLICIT NONE
@@ -411,8 +414,8 @@
           !
           READ(iunkf, *) xkf(:, ikk ), wkf(ikk)
           !
-          ! SP: This is so we can input a weight of 1 to random file 
-          !     This way you can feed the same file for the k and q grid  
+          ! SP: This is so we can input a weight of 1 to random file
+          !     This way you can feed the same file for the k and q grid
           wkf(ikk) = wkf(ikk) * 2.d0
           xkf(:, ikq) = xkf(:, ikk)
           wkf(ikq) = 0.d0
@@ -432,16 +435,17 @@
         !
       ELSEIF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0)) THEN ! generate grid
         IF (mp_mesh_k) THEN
-          ! get size of the mp_mesh in the irr wedge 
+          ! get size of the mp_mesh in the irr wedge
           WRITE(stdout, '(a,3i4)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
           CALL set_sym_bl()
-          !                                         
+          IF (fixsym) CALL fix_sym(.TRUE.)
+          !
           ALLOCATE(xkf(3, 2 * nkf1 * nkf2 * nkf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating xkf', 1)
           ALLOCATE(wkf(2 * nkf1 * nkf2 * nkf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating wkf', 1)
           ! the result of this call is just nkqtotf
-          CALL kpoint_grid(nrot, time_reversal, s, t_rev, bg, nkf1 * nkf2 * nkf3, &
+          CALL kpoint_grid(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1 * nkf2 * nkf3, &
                0, 0, 0, nkf1, nkf2, nkf3, nkqtotf, xkf, wkf)
           DEALLOCATE(xkf, STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error deallocating xkf', 1)
@@ -455,11 +459,11 @@
           IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating xkf_tmp', 1)
           ALLOCATE(wkf_tmp(nkqtotf), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating wkf_tmp', 1)
-          CALL kpoint_grid(nrot, time_reversal, s, t_rev, bg, nkf1 * nkf2 * nkf3, &
+          CALL kpoint_grid(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1 * nkf2 * nkf3, &
                0, 0, 0, nkf1, nkf2, nkf3, nkqtotf, xkf_tmp, wkf_tmp)
-          !  
-          ! assign to k and k+q for xkf and wkf 
-          ! 
+          !
+          ! assign to k and k+q for xkf and wkf
+          !
           DO ik = 1, nkqtotf
             ikk = 2 * ik - 1
             ikq = ikk + 1
@@ -472,8 +476,8 @@
           IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error deallocating xkf_tmp', 1)
           DEALLOCATE(wkf_tmp, STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error deallocating wkf_tmp', 1)
-          !       
-          ! bring the k point to crystal coordinates       
+          !
+          ! bring the k point to crystal coordinates
           CALL cryst_to_cart(2 * nkqtotf, xkf, at, -1)
           !
           ! redefine nkqtotf to include the k+q points
@@ -539,7 +543,7 @@
         ! redefine nkqtotf to include the k+q points
         !
         nkqtotf = 2 * nkqtotf
-        ! 
+        !
       ELSE ! don't know how to get grid
         CALL errore('loadkmesh_serial', "Cannot load fine k points", 1)
       ENDIF
@@ -568,30 +572,30 @@
       IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating xkfd', 1)
       deltaq = 0.001d0
       DO ik = 1, nkqf
-        ! Bring the k point to cartesian coordinates                                                                                                                           
-        CALL cryst_to_cart(1, xkf(:, ik), bg, 1)                                                                                                                           
+        ! Bring the k point to cartesian coordinates
+        CALL cryst_to_cart(1, xkf(:, ik), bg, 1)
         xkfd(:, ik, 1) = xkf(:, ik) + (/deltaq, 0.d0, 0.d0/)
         xkfd(:, ik, 2) = xkf(:, ik) - (/deltaq, 0.d0, 0.d0/)
         xkfd(:, ik, 3) = xkf(:, ik) + (/0.d0, deltaq, 0.d0/)
         xkfd(:, ik, 4) = xkf(:, ik) - (/0.d0, deltaq, 0.d0/)
         xkfd(:, ik, 5) = xkf(:, ik) + (/0.d0, 0.d0, deltaq/)
         xkfd(:, ik, 6) = xkf(:, ik) - (/0.d0, 0.d0, deltaq/)
-        ! Bring the k point to crystal coordinates                                                                                                                             
-        CALL cryst_to_cart(1, xkf(:, ik), at, -1)  
+        ! Bring the k point to crystal coordinates
+        CALL cryst_to_cart(1, xkf(:, ik), at, -1)
         DO i = 1, 6
-          CALL cryst_to_cart(1, xkfd(:, ik, i), at, -1)  
+          CALL cryst_to_cart(1, xkfd(:, ik, i), at, -1)
         ENDDO
       ENDDO
     ENDIF
     IF (ABS(SUM(wkf) - 2.d0) > eps4) &
-      WRITE(stdout,'(5x,"WARNING: k-point weigths do not add up to 1 [loadkmesh_serial]")') 
+      WRITE(stdout,'(5x,"WARNING: k-point weigths do not add up to 1 [loadkmesh_serial]")')
     !
     WRITE(stdout, '(5x,"Size of k point mesh for interpolation: ",i10)') nkqtotf
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE loadkmesh_serial
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE loadkmesh_fullBZ(xkf_bz, nktotbz)
     !-----------------------------------------------------------------------
@@ -601,11 +605,11 @@
     !-----------------------------------------------------------------------
     USE kinds,     ONLY : DP, sgl
     USE epwcom,    ONLY : nkf1, nkf2, nkf3
-    ! 
+    !
     IMPLICIT NONE
-    ! 
+    !
     INTEGER, INTENT(in) :: nktotbz
-    !! Total number of k-points 
+    !! Total number of k-points
     REAL(KIND = DP), INTENT(inout) :: xkf_bz(3, nktotbz)
     !! Return the grid on full BZ
     !
@@ -613,7 +617,7 @@
     !! K-point index
     INTEGER :: i, j, k
     !! K-point grid dim
-    ! 
+    !
     IF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0)) THEN
       DO i = 1, nkf1
         DO j = 1, nkf2
@@ -624,7 +628,7 @@
             xkf_bz(3, ik) = DBLE(k - 1) / DBLE(nkf3)
           ENDDO
         ENDDO
-      ENDDO    
+      ENDDO
     ENDIF
     !-----------------------------------------------------------------------
     END SUBROUTINE loadkmesh_fullBZ
@@ -635,10 +639,10 @@
                                nkc1, nkc2, nkc3, bztoibz, s_bztoibz)
     !-----------------------------------------------------------------------
     !!
-    !!  Automatic generation of a uniform grid of k-points with symmetry. 
+    !!  Automatic generation of a uniform grid of k-points with symmetry.
     !!  Routine copied from PW/src/kpoint_grid.f90.
     !!  We had to duplicate because the bztoibz array was deallocated and is needed in
-    !!  EPW 
+    !!  EPW
     !!
     USE kinds,            ONLY : DP
     USE division,         ONLY : fkbounds
@@ -649,17 +653,17 @@
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_INTEGER
 #endif
-    ! 
+    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nrot
     !! Number of Bravais symmetry
     INTEGER, INTENT(in) :: nkc1, nkc2, nkc3
-    !! k-grid 
+    !! k-grid
     INTEGER, INTENT(in) :: t_rev(48)
     !! Time-reversal sym
     INTEGER, INTENT(in) :: s(3, 3, 48)
-    !! Symmetry matrice. 
+    !! Symmetry matrice.
     INTEGER(SIK2), INTENT(inout) :: s_bztoibz(nkc1 * nkc2 * nkc3)
     !! Symeetry matrix that links an point to its IBZ friend.
     INTEGER, INTENT(inout) :: bztoibz(nkc1 * nkc2 * nkc3)
@@ -687,11 +691,11 @@
     INTEGER :: equiv(nkc1 * nkc2 * nkc3)
     !! Equivalent k-points
     INTEGER :: ik
-    !! K-point index 
+    !! K-point index
     INTEGER :: lower_bnd
     !! K-point paralelization (lower-bound index)
     INTEGER :: upper_bnd
-    !! K-point paralelization (upper-bound index) 
+    !! K-point paralelization (upper-bound index)
     INTEGER :: cumul_nks
     !! Sum of points
     INTEGER :: bztoibz_tmp(nkc1 * nkc2 * nkc3)
@@ -725,9 +729,9 @@
           ! this is nothing but consecutive ordering
           n = (k - 1) + ( j- 1 ) * nkc3 + (i - 1) * nkc2 * nkc3 + 1
           ! xkg are the components of the complete grid in crystal axis
-          xkg(1, n) = DBLE(i - 1) / nkc1 
-          xkg(2, n) = DBLE(j - 1) / nkc2 
-          xkg(3, n) = DBLE(k - 1) / nkc3 
+          xkg(1, n) = DBLE(i - 1) / nkc1
+          xkg(2, n) = DBLE(j - 1) / nkc2
+          xkg(3, n) = DBLE(k - 1) / nkc3
         ENDDO
       ENDDO
     ENDDO
@@ -756,9 +760,9 @@
               xkr(i) = xkr(i) - NINT(xkr(i))
             ENDDO
             IF(t_rev(ns) == 1) xkr = -xkr
-            xx = xkr(1) * nkc1 
-            yy = xkr(2) * nkc2 
-            zz = xkr(3) * nkc3 
+            xx = xkr(1) * nkc1
+            yy = xkr(2) * nkc2
+            zz = xkr(3) * nkc3
             in_the_list = ABS(xx - NINT(xx)) <= eps6 .AND. &
                           ABS(yy - NINT(yy)) <= eps6 .AND. &
                           ABS(zz - NINT(zz)) <= eps6
@@ -777,9 +781,9 @@
               ENDIF
             ENDIF
     !        IF (time_reversal) THEN
-    !           xx =-xkr(1)*nkc1 
-    !           yy =-xkr(2)*nkc2 
-    !           zz =-xkr(3)*nkc3 
+    !           xx =-xkr(1)*nkc1
+    !           yy =-xkr(2)*nkc2
+    !           zz =-xkr(3)*nkc3
     !           in_the_list=ABS(xx-NINT(xx))<=eps.AND.ABS(yy-NINT(yy))<=eps &
     !                                              .AND. ABS(zz-NINT(zz))<=eps
     !           IF (in_the_list) THEN
@@ -801,7 +805,7 @@
         ENDIF
       ENDDO
     ENDIF
-    ! 
+    !
     !  count irreducible points and order them
     nkspar(:) = 0
     DO nk = 1, nkr
@@ -822,7 +826,7 @@
         ENDDO
       ENDIF
     ENDDO
-    !Now recompose the vector with the right order 
+    !Now recompose the vector with the right order
     CALL mp_sum(nkspar, world_comm)
     cumul_nks = 0
     IF (my_pool_id > 0) THEN
@@ -851,29 +855,29 @@
     !
     bztoibz = bztoibz_tmp
     !
-    ! Now do the symmetry mapping. 
+    ! Now do the symmetry mapping.
     DO nk = 1, nkr
-      ! If its an irreducible point 
+      ! If its an irreducible point
       IF (equiv(nk) == nk) THEN
         ! Then you have the identity matrix
         s_bztoibz(nk) = 1
       ELSE
-        s_bztoibz(nk) = s_save(nk)  
+        s_bztoibz(nk) = s_save(nk)
       ENDIF
     ENDDO
-    ! 
+    !
     DEALLOCATE(xkg, STAT = ierr)
     IF (ierr /= 0) CALL errore('kpoint_grid_epw', 'Error deallocating xkg', 1)
     DEALLOCATE(wkk, STAT = ierr)
     IF (ierr /= 0) CALL errore('kpoint_grid_epw', 'Error deallocating wkk', 1)
     DEALLOCATE(nkspar, STAT = ierr)
     IF (ierr /= 0) CALL errore('kpoint_grid_epw', 'Error deallocating nkspar', 1)
-    ! 
+    !
     RETURN
     !-----------------------------------------------------------------------
     END SUBROUTINE kpoint_grid_epw
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE loadqmesh_para()
     !-----------------------------------------------------------------------
@@ -884,18 +888,19 @@
     USE io_global, ONLY : ionode_id
     USE mp_global, ONLY : inter_pool_comm, my_pool_id, npool
     USE mp,        ONLY : mp_bcast, mp_sum
-    USE mp_world,  ONLY : mpime 
+    USE mp_world,  ONLY : mpime
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
     USE epwcom,    ONLY : filqf, nqf1, nqf2, nqf3, plselfen, specfun_pl, &
-                          rand_q, rand_nq, mp_mesh_q, system_2d, lscreen
+                          rand_q, rand_nq, mp_mesh_q, system_2d, lscreen, &
+                          fixsym
     USE elph2,     ONLY : xqf, wqf, nqf, nqtotf
     USE cell_base, ONLY : at, bg
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_var,    ONLY : iunqf
     USE noncollin_module, ONLY : noncolin
     USE constants_epw, ONLY : eps4
-    USE low_lvl,   ONLY : init_random_seed
+    USE low_lvl,   ONLY : init_random_seed, fix_sym
     !
     IMPLICIT NONE
     !
@@ -903,7 +908,7 @@
     !! filkf coordinate type (crystal or cartesian)
     LOGICAL, EXTERNAL  :: imatches
     !! Regex matching text.
-    INTEGER :: iq 
+    INTEGER :: iq
     !! Q-point index
     INTEGER :: lower_bnd
     !! Lower-bound of the core
@@ -923,10 +928,10 @@
     !! Temporary weight of q-point
     !
     IF (mpime == ionode_id) THEN
-      IF (filqf /= '') THEN ! load from file 
+      IF (filqf /= '') THEN ! load from file
         !
         WRITE(stdout, *) '    Using q-mesh file: ', TRIM(filqf)
-        IF (lscreen) WRITE(stdout, *) '     WARNING: if lscreen=.TRUE., q-mesh needs to be [-0.5:0.5] (crystal)' 
+        IF (lscreen) WRITE(stdout, *) '     WARNING: if lscreen=.TRUE., q-mesh needs to be [-0.5:0.5] (crystal)'
         OPEN(UNIT = iunqf, FILE = filqf, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
         IF (ios /= 0) CALL errore('loadkmesh_para', 'Opening file ' // filqf, ABS(ios))
         READ(iunqf, *) nqtotf, coordinate_type
@@ -952,9 +957,10 @@
       ELSEIF ((nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0)) THEN ! generate grid
         IF (mp_mesh_q) THEN
           IF (lscreen) CALL errore('loadqmesh', 'If lscreen = .TRUE. do not use mp_mesh_q', 1)
-          ! get size of the mp_mesh in the irr wedge 
+          ! get size of the mp_mesh in the irr wedge
           WRITE(stdout, '(a,3i4)') '     Using uniform MP q-mesh: ', nqf1, nqf2, nqf3
           call set_sym_bl()
+          IF (fixsym) CALL fix_sym(.TRUE.)
           !
           ALLOCATE(xqf_(3, nqf1 * nqf2 * nqf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating xqf_ ', 1)
@@ -969,8 +975,8 @@
           IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating xqf_ (3, nqtotf), wqf_', 1)
           CALL kpoint_grid( nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
                0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf_, wqf_)
-          !  
-          ! bring the k point to crystal coordinates       
+          !
+          ! bring the k point to crystal coordinates
           CALL cryst_to_cart(nqtotf, xqf_, at, -1)
           !
         ELSE
@@ -1058,9 +1064,9 @@
     !
 #else
     !
-    ! In serial the definitions are much easier 
+    ! In serial the definitions are much easier
     !
-    nqf = nqtotf  
+    nqf = nqtotf
     lower_bnd = 1
     upper_bnd = nqf
     !
@@ -1073,17 +1079,17 @@
     ALLOCATE(wqf(nqf), STAT = ierr)
     IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating wqf', 1)
     xqf(:, :) = xqf_ (:, lower_bnd:upper_bnd)
-    IF (noncolin) THEN 
+    IF (noncolin) THEN
       wqf(:) = wqf_(lower_bnd:upper_bnd) / 2.d0
     ELSE
       wqf(:) = wqf_(lower_bnd:upper_bnd)
-    ENDIF  
+    ENDIF
     !
     IF (ABS(SUM(wqf_(:)) - 1.d0) > eps4) &
        WRITE(stdout,'(5x,"WARNING: q-point weigths do not add up to 1 [loadqmesh_para]")')
     !
-    WRITE(stdout, '(5x,"Size of q point mesh for interpolation: ",i10)') nqtotf 
-    WRITE(stdout, '(5x,"Max number of q points per pool:",7x,i10)') nqf 
+    WRITE(stdout, '(5x,"Size of q point mesh for interpolation: ",i10)') nqtotf
+    WRITE(stdout, '(5x,"Max number of q points per pool:",7x,i10)') nqf
     !
     DEALLOCATE(xqf_, STAT = ierr)
     IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error deallocating xqf_', 1)
@@ -1107,14 +1113,14 @@
     USE io_global, ONLY : stdout
     USE epwcom,    ONLY : filqf, nqf1, nqf2, nqf3, &
                           rand_q, rand_nq, mp_mesh_q, system_2d, lscreen, &
-                          plselfen, specfun_pl
+                          plselfen, specfun_pl, fixsym
     USE elph2,     ONLY : xqf, wqf, nqtotf, nqf
     USE cell_base, ONLY : at, bg
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_var,    ONLY : iunqf
-    USE low_lvl,   ONLY : init_random_seed
+    USE low_lvl,   ONLY : init_random_seed, fix_sym
     USE constants_epw, ONLY : eps4
-    ! 
+    !
     IMPLICIT NONE
     !
     CHARACTER(LEN = 10) :: coordinate_type
@@ -1122,7 +1128,7 @@
     LOGICAL, EXTERNAL  :: imatches
     !! Regex matching text.
     INTEGER :: iq
-    !! Q-index 
+    !! Q-index
     INTEGER :: i, j, k
     !! Directions
     INTEGER :: ios
@@ -1162,16 +1168,17 @@
       ELSEIF ((nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0)) THEN ! generate grid
         IF (mp_mesh_q) THEN
           IF (lscreen) CALL errore ('loadqmesh', 'If lscreen=.TRUE. do not use mp_mesh_q',1)
-          ! get size of the mp_mesh in the irr wedge 
+          ! get size of the mp_mesh in the irr wedge
           WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
           call set_sym_bl()
-          !                                         
+          IF (fixsym) CALL fix_sym(.TRUE.)
+          !
           ALLOCATE(xqf(3, nqf1 * nqf2 * nqf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating xqf', 1)
           ALLOCATE(wqf(nqf1 * nqf2 * nqf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating wqf', 1)
           ! the result of this call is just nkqtotf
-          CALL kpoint_grid(nrot, time_reversal, s, t_rev, bg, nqf1 * nqf2 * nqf3, &
+          CALL kpoint_grid(nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1 * nqf2 * nqf3, &
                0, 0, 0, nqf1, nqf2, nqf3, nqtotf, xqf, wqf)
           DEALLOCATE(xqf, STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error deallocating xqf', 1)
@@ -1181,14 +1188,14 @@
           IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating xqf', 1)
           ALLOCATE(wqf(nqtotf), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating wqf', 1)
-          CALL kpoint_grid(nrot, time_reversal, s, t_rev, bg, nqf1 * nqf2 * nqf3, &
+          CALL kpoint_grid(nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1 * nqf2 * nqf3, &
                0,0,0, nqf1, nqf2, nqf3, nqtotf, xqf, wqf)
           !
-          ! bring xqf in crystal coordinates       
+          ! bring xqf in crystal coordinates
           CALL cryst_to_cart(nqtotf, xqf, at, -1)
           !
         ELSE
-          ! currently no offset.  
+          ! currently no offset.
           ! q's are in crystal coordinates in xqf
           WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
           !
@@ -1245,8 +1252,8 @@
         CALL errore('loadqmesh_serial', "Cannot load fine q points", 1)
       ENDIF
       !
-      ! Since serial 
-      nqf = nqtotf 
+      ! Since serial
+      nqf = nqtotf
     ENDIF
     !
     CALL mp_bcast(nqf, ionode_id, inter_pool_comm)
@@ -1261,22 +1268,22 @@
     CALL mp_bcast(wqf, ionode_id, inter_pool_comm)
     !
     IF (ABS(SUM(wqf) - 1.d0) > eps4) &
-      WRITE(stdout,'(5x,"WARNING: q-point weigths do not add up to 1 [loadqmesh_serial]")') 
+      WRITE(stdout,'(5x,"WARNING: q-point weigths do not add up to 1 [loadqmesh_serial]")')
     !
     WRITE(stdout, '(5x,"Size of q point mesh for interpolation: ",i10)' ) nqtotf
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE loadqmesh_serial
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
-    SUBROUTINE qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, & 
+    SUBROUTINE qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, &
                        cufkk, cufkq, homogeneous)
     !-----------------------------------------------------------------------
     !!
     !! This routine pre-computes the q-points that falls within the fstichk.
-    !! If at least 1 k-point is such that at least one k+q eigenenergy falls 
-    !! within the user-defined fstichk, then the q-point is taken.  
+    !! If at least 1 k-point is such that at least one k+q eigenenergy falls
+    !! within the user-defined fstichk, then the q-point is taken.
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
@@ -1289,15 +1296,16 @@
     USE mp,            ONLY : mp_sum, mp_bcast
     USE constants_epw, ONLY : twopi, ci, zero, eps6, ryd2ev, czero
     USE epwcom,        ONLY : nbndsub, fsthick, use_ws, mp_mesh_k, nkf1, nkf2, &
-                              nkf3, iterative_bte, restart_step, scissor
+                              nkf3, iterative_bte, restart_step, scissor, ephwrite, &
+                              fixsym
     USE noncollin_module, ONLY : noncolin
-    USE pwcom,         ONLY : ef, nelec 
+    USE pwcom,         ONLY : ef, nelec
     USE cell_base,     ONLY : bg
     USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE wan2bloch,     ONLY : hamwan2bloch
-    USE io_eliashberg, ONLY : kpmq_map
     USE kinds_epw,     ONLY : SIK2
     USE poolgathering, ONLY : poolgather
+    USE low_lvl,       ONLY : fix_sym
     !
     IMPLICIT NONE
     !
@@ -1306,7 +1314,7 @@
     LOGICAL, INTENT(in) :: homogeneous
     !! Check if the grids are homogeneous and commensurate
     INTEGER, INTENT(in) :: nrr_k
-    !! Number of WS points for electrons    
+    !! Number of WS points for electrons
     INTEGER, INTENT(in) :: dims
     !! Dims is either nat if use_ws or 1 if not
     INTEGER, INTENT(inout) :: totq
@@ -1321,12 +1329,12 @@
     !! Rotation matrix, fine mesh, points k
     COMPLEX(KIND = DP), INTENT(out) :: cufkq(nbndsub, nbndsub)
     !! the same, for points k+q
-    ! 
+    !
     ! Local variable
     INTEGER :: ios
     !! INTEGER variable for I/O control
     INTEGER :: iq
-    !! Counter on coarse q-point grid    
+    !! Counter on coarse q-point grid
     INTEGER :: ik, ikk, ikl
     !! Counter on coarse k-point grid
     INTEGER :: icbm
@@ -1341,12 +1349,12 @@
     !! Counter on bands when use_ws == .TRUE.
     INTEGER :: ir
     !! Counter for WS loop
-    INTEGER :: nqtot 
+    INTEGER :: nqtot
     !! Total number of q-point for verifications
     INTEGER :: ind1
     !! Index of the k point from the full grid.
     INTEGER :: ind2
-    !! Index of the k+q point from the full grid. 
+    !! Index of the k+q point from the full grid.
     INTEGER :: ikbz
     !! k-point index that run on the full BZ
     INTEGER :: ierr
@@ -1356,9 +1364,9 @@
     INTEGER :: bztoibz(nkf1 * nkf2 * nkf3)
     !! BZ to IBZ mapping
     INTEGER(SIK2) :: s_bztoibz(nkf1 * nkf2 * nkf3)
-    !! symmetry 
+    !! symmetry
     INTEGER :: nkloc
-    !! number of k-point selected on that cpu 
+    !! number of k-point selected on that cpu
     INTEGER :: kmap(nkf)
     !! k-point that are selected for that cpu
     REAL(KIND = DP) :: xxq(3)
@@ -1371,24 +1379,24 @@
     !! $r\cdot k$
     REAL(KIND = DP) :: rdotk2(nrr_k)
     !! $r\cdot k$
-    REAL(KIND = DP) :: etf_loc(nbndsub, nkf) 
+    REAL(KIND = DP) :: etf_loc(nbndsub, nkf)
     !! Eigen-energies all full k-grid.
-    REAL(KIND = DP) :: etf_locq(nbndsub, nkf) 
+    REAL(KIND = DP) :: etf_locq(nbndsub, nkf)
     !! Eigen-energies all full k-grid.
-    REAL(KIND = DP) :: etf_all(nbndsub, nktotf) 
+    REAL(KIND = DP) :: etf_all(nbndsub, nktotf)
     !! Eigen-energies all full k-grid.
     REAL(KIND = DP) :: etf_tmp(nbndsub)
     !! Temporary Eigen-energies at a give k-point
     COMPLEX(KIND = DP) :: cfac(nrr_k, dims, dims)
-    !! Used to store $e^{2\pi r \cdot k}$ exponential 
+    !! Used to store $e^{2\pi r \cdot k}$ exponential
     COMPLEX(KIND = DP) :: cfacq(nrr_k, dims, dims)
     !! Used to store $e^{2\pi r \cdot k+q}$ exponential
-    ! 
+    !
     rdotk(:)  = 0
     rdotk2(:) = 0
     cfac(:, :, :)  = czero
     cfacq(:, :, :) = czero
-    ! 
+    !
     IF (exst) THEN
       IF (mpime == ionode_id) THEN
         OPEN(UNIT = iunselecq, FILE = 'selecq.fmt', STATUS = 'old', IOSTAT = ios)
@@ -1408,17 +1416,17 @@
         CALL errore('qwindow', 'Cannot read from selecq.fmt, the q-point grid or &
           & fsthick window are different from read one. Remove the selecq.fmt file and restart.', 1 )
       ENDIF
-      !  
+      !
     ELSE
       ALLOCATE(selecq(nqf), STAT = ierr)
       IF (ierr /= 0) CALL errore('qwindow', 'Error allocating selecq', 1)
-      selecq(:) = 0 
+      selecq(:) = 0
       etf_loc(:, :)  = zero
       etf_locq(:, :) = zero
       etf_all(:, :)  = zero
-      ! 
+      !
       IF (homogeneous) THEN
-        ! First store eigen energies on full grid.  
+        ! First store eigen energies on full grid.
         DO ik = 1, nkf
           ikk = 2 * ik - 1
           xkk = xkf(:, ikk)
@@ -1435,32 +1443,32 @@
             ENDDO
           ELSE
             cfac(:, 1, 1) = EXP(ci * rdotk(:)) / ndegen_k(:, 1, 1)
-          ENDIF        
+          ENDIF
           CALL hamwan2bloch(nbndsub, nrr_k, cufkk, etf_loc(:, ik), chw, cfac, dims)
         ENDDO
         CALL poolgather(nbndsub, nktotf, nkf, etf_loc, etf_all)
-        ! 
+        !
         ! In case of k-point symmetry
         IF (mp_mesh_k) THEN
           bztoibz(:) = 0
           s_bztoibz(:) = 0
-          ! 
+          !
           CALL set_sym_bl()
+          IF (fixsym) CALL fix_sym(.TRUE.)
           !
           ! What we get from this call is bztoibz
           CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, bztoibz, s_bztoibz)
-          ! 
-          IF (iterative_bte) THEN
+          !
+          IF (iterative_bte .OR. ephwrite) THEN
             bztoibz_tmp(:) = 0
             DO ikbz = 1, nkf1 * nkf2 * nkf3
               bztoibz_tmp(ikbz) = map_rebal(bztoibz(ikbz))
             ENDDO
             bztoibz(:) = bztoibz_tmp(:)
           ENDIF
-          ! 
-          ! 
+          !
         ENDIF ! mp_mesh_k
-        ! 
+        !
         ! Apply a scissor shift to CBM if required by user
         ! The shift is apply to k and k+q
         IF (ABS(scissor) > eps6) THEN
@@ -1476,49 +1484,49 @@
             ENDDO
           ENDDO
         ENDIF
-        !  
+        !
         DO iq = 1, nqf
           xxq = xqf(:, iq)
-          ! 
+          !
           found(:) = 0
-          DO ik = 1, nkf 
+          DO ik = 1, nkf
             ikk = 2 * ik - 1
             xkk = xkf(:, ikk)
             xkq = xkk + xxq
-            !  
-            CALL kpmq_map(xkk, (/0d0,0d0,0d0/), 1, ind1) 
-            CALL kpmq_map(xkk, xxq, 1, ind2) 
-            ! 
+            !
+            CALL kpmq_map(xkk, (/0d0,0d0,0d0/), 1, ind1)
+            CALL kpmq_map(xkk, xxq, 1, ind2)
+            !
             ! Use k-point symmetry
             IF (mp_mesh_k) THEN
               IF ((MINVAL(ABS(etf_all(:, bztoibz(ind1)) - ef)) < fsthick) .AND. &
                   (MINVAL(ABS(etf_all(:, bztoibz(ind2)) - ef)) < fsthick)) THEN
                 found(my_pool_id + 1) = 1
-                EXIT ! exit the loop 
+                EXIT ! exit the loop
               ENDIF
             ELSE
               IF ((MINVAL(ABS(etf_all(:, ind1) - ef)) < fsthick) .AND. &
                   (MINVAL(ABS(etf_all(:, ind2) - ef)) < fsthick)) THEN
                 found(my_pool_id + 1) = 1
-                EXIT ! exit the loop 
+                EXIT ! exit the loop
               ENDIF
             ENDIF
-            !  
+            !
           ENDDO ! k-loop
           ! If found on any k-point from the pools
           CALL mp_sum(found, world_comm)
-          ! 
+          !
           IF (SUM(found) > 0) THEN
             totq = totq + 1
             selecq(totq) = iq
-            ! 
+            !
             IF (MOD(totq, restart_step) == 0) THEN
               WRITE(stdout, '(5x,a,i15,i15)')'Number selected, total', totq, iq
             ENDIF
           ENDIF
         ENDDO ! iq
       ELSE ! homogeneous
-        ! 
+        !
         ! Apply a scissor shift to CBM if required by user
         ! The shift is apply to k and k+q
         IF (ABS(scissor) > eps6) THEN
@@ -1528,7 +1536,7 @@
             icbm = FLOOR(nelec / 2.0d0) + 1
           ENDIF
         ENDIF
-        !  
+        !
         ! First compute the k-points eigenenergies for efficiency reasons
         nkloc = 0
         kmap(:) = 0
@@ -1550,11 +1558,11 @@
             cfac(:, 1, 1)  = EXP(ci * rdotk(:)) / ndegen_k(:, 1, 1)
           ENDIF
           CALL hamwan2bloch(nbndsub, nrr_k, cufkk, etf_tmp(:), chw, cfac, dims)
-          ! 
+          !
           IF (ABS(scissor) > eps6) THEN
             DO ibnd = icbm, nbndsub
               etf_tmp(ibnd) = etf_tmp(ibnd) + scissor
-            ENDDO              
+            ENDDO
           ENDIF
           ! Check for the k-points in this pool
           IF (MINVAL(ABS(etf_tmp(:) - ef)) < fsthick) THEN
@@ -1562,7 +1570,7 @@
             kmap(nkloc) = ik
           ENDIF
         ENDDO ! k-points
-        ! 
+        !
         ! Now compute the q-loop doing WS separately for efficiency
         IF (use_ws) THEN
           DO iq = 1, nqf
@@ -1585,16 +1593,16 @@
                 ENDDO
               ENDDO
               CALL hamwan2bloch(nbndsub, nrr_k, cufkq, etf_tmp(:), chw, cfacq, dims)
-              ! 
+              !
               IF (ABS(scissor) > eps6) THEN
                 DO ibnd = icbm, nbndsub
                   etf_tmp(ibnd) = etf_tmp(ibnd) + scissor
                 ENDDO
               ENDIF
-              ! 
+              !
               IF (MINVAL(ABS(etf_tmp(:) - ef)) < fsthick) THEN
                 found(my_pool_id + 1) = 1
-                EXIT ! exit the loop 
+                EXIT ! exit the loop
               ENDIF
             ENDDO ! ik
             ! If found on any k-point from the pools
@@ -1620,16 +1628,16 @@
               CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1)
               cfacq(:, 1, 1) = EXP(ci * rdotk(:)) / ndegen_k(:, 1, 1)
               CALL hamwan2bloch(nbndsub, nrr_k, cufkq, etf_tmp(:), chw, cfacq, dims)
-              ! 
+              !
               IF (ABS(scissor) > eps6) THEN
                 DO ibnd = icbm, nbndsub
                   etf_tmp(ibnd) = etf_tmp(ibnd) + scissor
                 ENDDO
               ENDIF
-              ! 
+              !
               IF (MINVAL(ABS(etf_tmp(:) - ef) ) < fsthick) THEN
                 found(my_pool_id + 1) = 1
-                EXIT ! exit the loop 
+                EXIT ! exit the loop
               ENDIF
             ENDDO ! ik
             ! If found on any k-point from the pools
@@ -1641,32 +1649,32 @@
                 WRITE(stdout, '(5x,a,i12,i12)')'Number selected, total', totq, iq
               ENDIF
             ENDIF
-          ENDDO ! iq            
+          ENDDO ! iq
         ENDIF ! use_ws
       ENDIF ! homogeneous
-      !  
+      !
       IF (mpime == ionode_id) THEN
         OPEN(UNIT = iunselecq, FILE = 'selecq.fmt', ACTION = 'write')
         WRITE(iunselecq, *) totq    ! Selected number of q-points
-        WRITE(iunselecq, *) nqtotf  ! Total number of q-points 
+        WRITE(iunselecq, *) nqtotf  ! Total number of q-points
         WRITE(iunselecq, *) selecq(1:totq)
         CLOSE(iunselecq)
       ENDIF
-      ! 
+      !
     ENDIF ! exst
-    !----------------------------------------------------------------------- 
+    !-----------------------------------------------------------------------
     END SUBROUTINE qwindow
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE load_rebal()
     !-----------------------------------------------------------------------
     !!
-    !! Routine used to rebalance the load on k-points.  
+    !! Routine used to rebalance the load on k-points.
     !! At the moment this routines is only called in the case of IBTE
-    !! using k-point symmetry and an homogeneous grid. 
-    !! The k-point that are within the fshick are equally splitted among cores. 
-    !! 
+    !! using k-point symmetry and an homogeneous grid.
+    !! The k-point that are within the fshick are equally splitted among cores.
+    !!
     !-----------------------------------------------------------------------
     !
     USE kinds,         ONLY : DP
@@ -1681,7 +1689,7 @@
     USE poolgathering, ONLY : poolgather2
     !
     IMPLICIT NONE
-    !  
+    !
     INTEGER :: ipool
     !! Pool loop
     INTEGER :: ik
@@ -1697,7 +1705,9 @@
     INTEGER :: rest
     !! Rest of the points
     INTEGER :: tot
-    !! Total number of k-point
+    !! Total number of k-point (quotient)
+    INTEGER :: counter
+    !! temp variable
     INTEGER :: ierr
     !! Error status
     INTEGER :: kpt_in(nkqtotf)
@@ -1718,7 +1728,7 @@
     xkf_all(:, :) = zero
     wkf_all(:) = zero
     etf_all(:, :) = zero
-    ! 
+    !
 #if defined(__MPI)
     CALL poolgather2(1, nkqtotf, 2 * nkf, wkf, wkf_all )
     CALL poolgather2(3, nkqtotf, 2 * nkf, xkf, xkf_all )
@@ -1727,33 +1737,33 @@
     xkf_all = xkf
     wkf_all = wkf
     etf_all = etf
-#endif 
-    ! 
+#endif
+    !
     ALLOCATE(map_rebal(nktotf), STAT = ierr)
     IF (ierr /= 0) CALL errore('load_rebal', 'Error allocating map_rebal', 1)
     ALLOCATE(map_rebal_inv(nktotf), STAT = ierr)
     IF (ierr /= 0) CALL errore('load_rebal', 'Error allocating map_rebal_inv', 1)
-    ! 
-    kpt_in(:) = 0 
-    kpt_out(:) = 0 
-    ! 
+    !
+    kpt_in(:) = 0
+    kpt_out(:) = 0
+    !
     !The sorting is done by master only
     IF (my_pool_id == 0) THEN
-      ! 
+      !
       ikpt = 0
       ikpt2 = 0
-      ! 
+      !
       DO ik = 1, nktotf
         ikk = 2 * ik - 1
         ikq = ikk + 1
         IF (MINVAL(ABS(etf_all(:, ikk) - ef)) < fsthick) THEN
-          ikpt = ikpt + 1  
+          ikpt = ikpt + 1
           kpt_in(ikpt) = ikk
-        ELSE 
+        ELSE
           ikpt2 = ikpt2 + 1
           kpt_out(ikpt2) = ikk
         ENDIF ! fsthick
-        ! 
+        !
       ENDDO ! ik
       ! In case of IBZ create a map of old to new points
       IF (mp_mesh_k) THEN
@@ -1761,46 +1771,48 @@
         map_rebal_inv(:) = 0
         DO ik = 1, ikpt
           map_rebal((kpt_in(ik) + 1) / 2) = ik
-          map_rebal_inv(ik) = (kpt_in(ik) + 1) / 2 
+          map_rebal_inv(ik) = (kpt_in(ik) + 1) / 2
         ENDDO
         DO ik = 1, ikpt2
           map_rebal((kpt_out(ik) + 1) /2) =  ikpt + ik
-          map_rebal_inv(ikpt + ik) = (kpt_out(ik) + 1) /2  
+          map_rebal_inv(ikpt + ik) = (kpt_out(ik) + 1) /2
         ENDDO
       ENDIF
     ENDIF ! my_pool_id
-    ! 
+    !
     CALL mp_bcast(kpt_in, ionode_id, inter_pool_comm)
     CALL mp_bcast(kpt_out, ionode_id, inter_pool_comm)
     CALL mp_bcast(ikpt, ionode_id, inter_pool_comm)
     CALL mp_bcast(ikpt2, ionode_id, inter_pool_comm)
     CALL mp_bcast(map_rebal, ionode_id, inter_pool_comm)
     CALL mp_bcast(map_rebal_inv, ionode_id, inter_pool_comm)
-    ! 
+    !
     ! map_rebal contains an array with all the k-point in the window and then
-    ! all the k-points out of the window. 
-    ! We then split those k-points such that the first core has the first k-point, 
-    ! the second core has the second k-point etc 
-    ! 
-    tot = (nkqtotf / (2 * npool))
-    rest = (nktotf - tot * npool)
-    ! 
+    ! all the k-points out of the window.
+    ! We then split those k-points such that the first core has the first k-point,
+    ! the second core has the second k-point etc
+    !
+    tot = (nkqtotf / (2 * npool))         ! quotient
+    rest = (nktotf - tot * npool)         ! reminder
+    counter = 0
     DO ipool = 1, npool
       DO ik = 1,  tot
-        map_rebal_inv_tmp(ik + (ipool - 1) * tot) = map_rebal_inv(npool * ik - (npool - ipool))
+        counter = counter + 1
+        map_rebal_inv_tmp(counter) = map_rebal_inv(npool * ik - (npool - ipool))
       ENDDO
+      !Do the rest
+      IF (ipool <= rest) THEN
+        counter = counter + 1
+        map_rebal_inv_tmp(counter) = map_rebal_inv(npool * (tot + 1) - (npool - ipool))
+      ENDIF
     ENDDO
-    ! Do the rest
-    DO ik = 1, rest
-      map_rebal_inv_tmp(ik + npool * tot) = map_rebal_inv(npool * tot + ik)
-    ENDDO
-    map_rebal_inv(:) = map_rebal_inv_tmp(:) 
-    ! 
+    map_rebal_inv(:) = map_rebal_inv_tmp(:)
+    !
     ! Now recontruct map_rebal so that it is the inverse mapping as map_rebal_inv
     DO ik = 1, nktotf
       map_rebal(map_rebal_inv(ik)) = ik
     ENDDO
-    ! 
+    !
     ! We then assign this new order to the local k-points and weights on each cpu
     DO ik = 1, nkf
       ikk = 2 * ik - 1
@@ -1813,17 +1825,17 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE load_rebal
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE special_points(nb_sp, xkf_all, xkf_sp)
     !-----------------------------------------------------------------------
-    !! 
-    !! This routine determines  the special k-points that are sent to 
-    !! themselves as a result of symmetry. 
+    !!
+    !! This routine determines  the special k-points that are sent to
+    !! themselves as a result of symmetry.
     !! e.g. the point [1 1 1] is sent to itself by the symmetry that exchanges
-    !!      the x and y coordinates. 
-    !! 
-    !-----------------------------------------------------------------------  
+    !!      the x and y coordinates.
+    !!
+    !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
     USE symm_base,     ONLY : s, nrot
@@ -1838,11 +1850,11 @@
     !
     INTEGER, INTENT(out) :: nb_sp
     !! Number of special points
-    INTEGER, INTENT(out), ALLOCATABLE :: xkf_sp(:, :) 
-    !! List of special k-points. The first index is the kpt index and the other 
+    INTEGER, INTENT(out), ALLOCATABLE :: xkf_sp(:, :)
+    !! List of special k-points. The first index is the kpt index and the other
     REAL(KIND = DP), INTENT(in) :: xkf_all(3, nktotf)
     !! All the k-points (just k-points, not k and k+q)
-    ! 
+    !
     ! Local variables
     LOGICAL :: sym_found
     !! Logical for IF statement
@@ -1877,29 +1889,29 @@
     REAL(KIND = DP) :: sb(3, 3)
     !! Symmetry matrix (intermediate step)
     REAL(KIND = DP) :: sr(3, 3)
-    !! Symmetry matrix in cartesian coordinate 
+    !! Symmetry matrix in cartesian coordinate
     REAL(KIND = DP) :: xk(3)
     !! Current k-point coordinate
     REAL(KIND = DP) :: s_xk(3)
     !! Rotated k-point
     REAL(KIND = DP) :: ws(3)
     !! Wigner-Seitz vector
-    REAL(KIND = DP) :: rws(4, nrwsx) 
-    !! Real WS vectors 
+    REAL(KIND = DP) :: rws(4, nrwsx)
+    !! Real WS vectors
     REAL(KIND = DP) :: s_xk_border(3, 27)
     !! Look for special points on the border
-    ! 
+    !
     ! Split the k-point across cores
     CALL fkbounds(nktotf, lower_bnd, upper_bnd)
-    ! 
-    rws(:, :) = zero 
+    !
+    rws(:, :) = zero
     CALL wsinit(rws, nrwsx, nrws, bg)
     xkt_sp(:, :) = 0
-    ! 
+    !
     nb_sp = 0
     DO ik = 1, nkf
       counter = 0
-      ! We could skip nb==1 to avoid identity symmetry 
+      ! We could skip nb==1 to avoid identity symmetry
       DO nb = 1, nrot
         sa(:, :) = DBLE(s(:, :, nb))
         sb       = MATMUL(bg, sa)
@@ -1909,8 +1921,8 @@
         CALL cryst_to_cart(1, xk, bg, 1)
         CALL backtows(xk, ws, rws, nrwsx, nrws)
         xk = ws
-        CALL DGEMV('n', 3, 3, 1.d0, sr, 3, xk, 1 ,0.d0 , S_xk, 1)     
-        ! 
+        CALL DGEMV('n', 3, 3, 1.d0, sr, 3, xk, 1 ,0.d0 , S_xk, 1)
+        !
         ! Needed for border_points
         counter_n = 0
         DO n = -1, 1
@@ -1925,7 +1937,7 @@
         sym_found = .FALSE.
         !
         IF (DOT_PRODUCT(xk - S_xk, xk - S_xk) < eps6) THEN
-          counter = counter + 1 
+          counter = counter + 1
           xkt_sp(counter, ik + lower_bnd - 1) = nb
           sym_found = .TRUE.
         ENDIF
@@ -1943,40 +1955,99 @@
       IF (counter > 1) THEN
         nb_sp = nb_sp + 1
       ENDIF
-      !    
+      !
     ENDDO ! ik
-    ! 
+    !
     ! Gather from all cores
     CALL mp_sum(xkt_sp, world_comm)
     CALL mp_sum(nb_sp, world_comm)
-    ! 
+    !
     !! 48 symmetries + 1 index for the index of kpt
     ALLOCATE(xkf_sp(49, nb_sp), STAT = ierr)
     IF (ierr /= 0) CALL errore('special_points', 'Error allocating xkf_sp', 1)
     xkf_sp(:, :) = 0
-    ! 
+    !
     counter = 0
     DO ik = 1, nktotf
       IF (xkt_sp(2, ik) > 0) THEN
         counter = counter + 1
         xkf_sp(1, counter) = ik
-        xkf_sp(2:49, counter) = xkt_sp(:, ik) 
+        xkf_sp(2:49, counter) = xkt_sp(:, ik)
       ENDIF
     ENDDO ! ik
-    ! 
+    !
     !-----------------------------------------------------------------------
     END SUBROUTINE special_points
     !-----------------------------------------------------------------------
-    ! 
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE kpmq_map(xk, xq, sign1, nkq)
+    !-----------------------------------------------------------------------
+    !!
+    !! this routine finds the index of k+q or k-q point on the fine k-mesh
+    !!
+    USE kinds,     ONLY : DP
+    USE epwcom,    ONLY : nkf1, nkf2, nkf3
+    USE constants_epw, ONLY : eps5
+    USE mp,        ONLY : mp_bcast, mp_barrier
+    USE kfold,     ONLY : backtoBZ
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: sign1
+    !! +1 for searching k+q, -1 for k-q
+    INTEGER, INTENT(out) :: nkq
+    !! the index of k+sign*q
+    !
+    REAL(KIND = DP), INTENT(in) :: xk(3)
+    !! coordinates of k points
+    REAL(KIND = DP), INTENT(in) :: xq(3)
+    !! coordinates of q points
+    !
+    ! Local variables
+    LOGICAL :: in_the_list
+    !! Check if k point is in the list
+    !
+    REAL(KIND = DP) :: xx, yy, zz
+    !! Temporary variables
+    REAL(KIND = DP) :: xxk(3)
+    !! k + (sign1) * q
+    !
+    xxk(:) = xk(:) + DBLE(sign1) * xq(:)
+    xx = xxk(1) * nkf1
+    yy = xxk(2) * nkf2
+    zz = xxk(3) * nkf3
+    in_the_list = ABS(xx - NINT(xx)) <= eps5 .AND. &
+                  ABS(yy - NINT(yy)) <= eps5 .AND. &
+                  ABS(zz - NINT(zz)) <= eps5
+    IF (.NOT. in_the_list) CALL errore('kpmq_map', 'k+q does not fall on k-grid', 1)
+    !
+    !  find the index of this k+q or k-q in the k-grid
+    !  make sure xx, yy, zz are in the 1st BZ
+    !
+    CALL backtoBZ(xx, yy, zz, nkf1, nkf2, nkf3)
+    !
+    ! since k- and q- meshes are commensurate, nkq can be easily found
+    !
+    nkq = NINT(xx) * nkf2 * nkf3 + NINT(yy) * nkf3 + NINT(zz) + 1
+    !
+    !  Now nkq represents the index of k+sign*q on the fine k-grid.
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE kpmq_map
+    !-----------------------------------------------------------------------
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE k_avg(F_out, vkk_all, nb_sp, xkf_sp)
     !-----------------------------------------------------------------------
-    !! 
+    !!
     !! This routines enforces symmetry.
     !! Averages points which leaves the k-point unchanged by symmetry
-    !!   e.g. k=[1,1,1] and q=[1,0,0] with the symmetry that change x and y gives 
+    !!   e.g. k=[1,1,1] and q=[1,0,0] with the symmetry that change x and y gives
     !!        k=[1,1,1] and q=[0,1,0].
-    !! 
+    !!
     !! Samuel Ponce & Francesco Macheda
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
@@ -1988,9 +2059,9 @@
     USE division,      ONLY : fkbounds
     USE mp,            ONLY : mp_sum
     USE mp_global,     ONLY : world_comm
-    ! 
+    !
     IMPLICIT NONE
-    ! 
+    !
     INTEGER, INTENT(in) :: nb_sp
     !! Lenght of xkf_sp
     INTEGER, INTENT(in) :: xkf_sp(49, nb_sp)
@@ -1999,7 +2070,7 @@
     !! In solution for iteration i
     REAL(KIND = DP), INTENT(inout) :: vkk_all(3, nbndfst, nktotf)
     !! Velocity of k
-    ! 
+    !
     ! Local variables
     LOGICAL :: special_map(nkf)
     !! Special mapping
@@ -2039,23 +2110,23 @@
     !! Local F_out where the k-points have been spread
     REAL(KIND = DP) :: vkk_all_loc(3, nbndfst, nktotf)
     !! Local velocity where the k-points have been spread
-    ! 
+    !
     ! Split the k-point across cores
     CALL fkbounds(nktotf, lower_bnd, upper_bnd)
-    ! 
+    !
     f_out_loc(:, :, :, :) = zero
     vkk_all_loc(:, :, :) = zero
-    special_map(:) = .FALSE. 
+    special_map(:) = .FALSE.
     index_sp(:) = 0
     DO ik = 1, nkf
       DO sp = 1,nb_sp
         IF (ik + lower_bnd - 1 == xkf_sp(1, sp)) THEN
-          special_map(ik) = .TRUE. 
+          special_map(ik) = .TRUE.
           index_sp(ik) = sp
         ENDIF
       ENDDO
     ENDDO ! ik
-    !  
+    !
     DO itemp = 1, nstemp
       DO ik = 1, nkf
         IF (special_map(ik)) THEN
@@ -2063,7 +2134,7 @@
           tmp_vkk = zero
           tmp_F_out = zero
           DO nb = 1,nrot
-            IF (index_sp(ik) > 0) THEN 
+            IF (index_sp(ik) > 0) THEN
               IF (xkf_sp(nb + 1, index_sp(ik)) > 0) THEN
                 counter_average = counter_average + 1
                 sa(:, :) = DBLE(s(:, :, xkf_sp(nb + 1, index_sp(ik))))
@@ -2083,27 +2154,27 @@
             vkk_all_loc(:, ibnd, ik + lower_bnd - 1) = tmp_vkk(:, ibnd) / DBLE(counter_average)
             f_out_loc(:, ibnd, ik + lower_bnd - 1, itemp) = tmp_f_out(:, ibnd) / DBLE(counter_average)
           ENDDO
-          ! 
-        ELSE ! not a special point 
+          !
+        ELSE ! not a special point
           DO ibnd = 1, nbndfst
             vkk_all_loc(:, ibnd, ik + lower_bnd - 1) = vkk_all(:, ibnd, ik + lower_bnd - 1)
-            f_out_loc(:, ibnd, ik + lower_bnd - 1, itemp) = f_out(:, ibnd, ik + lower_bnd - 1, itemp) 
-          ENDDO 
+            f_out_loc(:, ibnd, ik + lower_bnd - 1, itemp) = f_out(:, ibnd, ik + lower_bnd - 1, itemp)
+          ENDDO
         ENDIF ! special
       ENDDO! ik
     ENDDO! itemp
-    ! 
+    !
     ! Gather from all cores
     CALL mp_sum(vkk_all_loc, world_comm)
     CALL mp_sum(F_out_loc, world_comm)
-    ! 
+    !
     F_out = F_out_loc
     vkk_all = vkk_all_loc
-    !  
+    !
     !-----------------------------------------------------------------------
     END SUBROUTINE k_avg
     !-----------------------------------------------------------------------
-    ! 
+    !
   !-----------------------------------------------------------------------
   END MODULE grid
   !-----------------------------------------------------------------------

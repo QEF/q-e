@@ -57,7 +57,6 @@ MODULE cp_restart_new
                                            nproc_image
       USE mp_bands,                 ONLY : my_bgrp_id, intra_bgrp_comm, &
                                            root_bgrp, root_bgrp_id
-      USE mp_diag,                  ONLY : nproc_ortho
       USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm, ngm_g, ecutrho
       USE gvecs,                    ONLY : ngms_g, ecuts
@@ -66,8 +65,8 @@ MODULE cp_restart_new
       USE electrons_base,           ONLY : nspin, nelt, nel, nudx
       USE cell_base,                ONLY : ibrav, alat, tpiba, s_to_r
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
-                                           amass, iforce, ind_bck, ityp_ib => ityp 
-      USE funct,                    ONLY : get_dft_name, get_inlc, &
+                                           amass, iforce, ityp 
+      USE funct,                    ONLY : get_dft_name, &
            dft_is_hybrid, get_exx_fraction, get_screening_parameter, &
            dft_is_nonlocc, get_nonlocc_name
       USE ldaU_cp,                  ONLY : lda_plus_U, ns, Hubbard_l, &
@@ -150,7 +149,6 @@ MODULE cp_restart_new
       INTEGER               :: nk1, nk2, nk3
       INTEGER               :: j, i, iss, ig, nspin_wfc, iss_wfc
       INTEGER               :: is, ia, isa, ik, ierr
-      INTEGER,  ALLOCATABLE :: ityp(:)
       REAL(DP), ALLOCATABLE :: ftmp(:,:)
       REAL(DP), ALLOCATABLE :: tau(:,:)
       COMPLEX(DP), ALLOCATABLE :: rhog(:,:)
@@ -218,27 +216,13 @@ MODULE cp_restart_new
       !
       CALL recips( a1, a2, a3, b1, b2, b3 )
       !
-      ! ... Compute array ityp, and tau
+      ! ... Compute array tau
       !
-      ALLOCATE( ityp( nat ) )
       ALLOCATE( tau( 3, nat ) )
-      !
-      isa = 0
-      !
-      DO is = 1, nsp
-         !
-         DO ia = 1, na(is)
-            !
-            isa = isa + 1
-            ityp(isa) = is
-            !
-         END DO
-         !
-      END DO
       !
       natomwfc =  n_atom_wfc ( nat, ityp ) 
       !
-      CALL s_to_r( stau0, tau, na, nsp, h )
+      CALL s_to_r( stau0, tau, nat, h )
       !
       nbnd_    = nupdwn(1) 
       ALLOCATE( ftmp( nbnd_ , nspin ) )
@@ -292,8 +276,8 @@ MODULE cp_restart_new
 ! ... ATOMIC_STRUCTURE
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_init_atomic_structure(output_obj%atomic_structure, nsp, atm, ityp_ib, &
-              nat, tau(:,ind_bck(:)), alat, alat*a1(:), alat*a2(:), alat*a3(:), ibrav)
+         CALL qexsd_init_atomic_structure(output_obj%atomic_structure, nsp, atm, ityp, &
+              nat, tau(:,:), alat, alat*a1(:), alat*a2(:), alat*a3(:), ibrav)
          !
 !-------------------------------------------------------------------------------
 ! ... BASIS SET
@@ -545,7 +529,6 @@ MODULE cp_restart_new
       !
       DEALLOCATE( ftmp )
       DEALLOCATE( tau  )
-      DEALLOCATE( ityp )
       !
       CALL stop_clock('restart')
       CALL print_clock('restart')
@@ -573,7 +556,7 @@ MODULE cp_restart_new
       USE electrons_base,           ONLY : nspin, nbnd, nupdwn, iupdwn, nudx
       USE cell_base,                ONLY : ibrav, alat, s_to_r, r_to_s
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
-                                           sort_tau, ityp, ions_cofmass
+                                           ityp, ions_cofmass
       USE gvect,       ONLY : ig_l2g, mill
       USE cp_main_variables,        ONLY : nprint_nfi
       USE ldaU_cp,                  ONLY : lda_plus_U, ns, Hubbard_l, &
@@ -685,8 +668,12 @@ MODULE cp_restart_new
       LOGICAL :: x_gamma_extrapolation
       REAL(dp):: hubbard_dum(3,nsp)
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
+      INTEGER, POINTER            :: hub_l_back_dum(:), hub_l1_back_dum(:), hub_lmax_back_dum  
+      LOGICAL, POINTER            :: backall_dum(:)
+      REAL(dp),    POINTER        :: hubba_dum(:)
       !
       !
+      NULLIFY (hub_l_back_dum, hub_l1_back_dum, hub_lmax_back_dum, backall_dum, hubba_dum) 
       dirname = restart_dir(ndr)
       filename= xmlfile(ndr)
       INQUIRE ( file=filename, exist=found )
@@ -741,7 +728,7 @@ MODULE cp_restart_new
       !   
       CALL destroy (root) 
       !
-      ! objects filled, not get variables from objects
+      ! objects filled, now get variables from objects
       !
       CALL qexsd_copy_geninfo (geninfo_obj, qexsd_fmt, qexsd_version) 
       !
@@ -768,11 +755,9 @@ MODULE cp_restart_new
          CALL invmat( 3, ht, htm1, omega )
          hinv = TRANSPOSE( htm1 )
          ! atomic positions not read from CP section: use those from xml file
-         ! reorder atomic positions according to CP (il-)logic (output in taui)
-         CALL sort_tau( taui, isrt_ , tau_ , ityp_ , nat_ , nsp_ )
          ! stau0 contains "scaled" atomic positions (that is, in crystal axis)
-         CALL r_to_s( taui, stau0, na, nsp, hinv )
-         CALL ions_cofmass( taui, amass_ , na, nsp, cdmi )
+         CALL r_to_s( taui, stau0, nat_, hinv )
+         CALL ions_cofmass( taui, amass_ , nat_, ityp_, cdmi )
       END IF
       !
       DEALLOCATE ( tau_, ityp_, isrt_ )
@@ -785,7 +770,8 @@ MODULE cp_restart_new
            nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
            exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
            lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax,&
-           Hubbard_U, Hubbard_dum(1,:), Hubbard_dum(2,:), Hubbard_dum(3,:), &
+           hub_l_back_dum, hub_l1_back_dum, backall_dum, hub_lmax_back_dum, hubba_dum, & 
+           Hubbard_U, hubba_dum, Hubbard_dum(1,:), Hubbard_dum(2,:), Hubbard_dum(3,:), &
            Hubbard_dum, &
            vdw_corr, scal6, lon_rcut, vdw_isolated)
       CALL set_vdw_corr (vdw_corr, llondon, ldftd3, ts_vdw, lxdm )
@@ -1587,14 +1573,15 @@ MODULE cp_restart_new
     USE mp, ONLY : mp_bcast
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
-    USE cp_main_variables, ONLY : descla
-    USE cp_interfaces, ONLY : collect_lambda
+    USE cp_main_variables, ONLY : idesc
     !
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(in) :: filename
     INTEGER, INTENT(in) :: iunpun, iss, nspin, nudx
     REAL(dp), INTENT(in) :: lambda(:,:)
     INTEGER, INTENT(out) :: ierr
+    !
+    include 'laxlib.fh'
     !
     REAL(dp), ALLOCATABLE :: mrepl(:,:)
     !
@@ -1604,7 +1591,7 @@ MODULE cp_restart_new
     IF ( ierr /= 0 ) RETURN
     !
     ALLOCATE( mrepl( nudx, nudx ) )
-    CALL collect_lambda( mrepl, lambda, descla(iss) )
+    CALL collect_lambda( mrepl, lambda, idesc(:,iss) )
     !
     IF ( ionode ) THEN
        WRITE (iunpun, iostat=ierr) mrepl
@@ -1626,10 +1613,12 @@ MODULE cp_restart_new
     USE mp, ONLY : mp_bcast
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
-    USE cp_main_variables, ONLY : descla
-    USE cp_interfaces, ONLY : distribute_lambda
+    USE cp_main_variables, ONLY : idesc
     !
     IMPLICIT NONE
+
+    include 'laxlib.fh'
+
     CHARACTER(LEN=*), INTENT(in) :: filename
     INTEGER, INTENT(in) :: iunpun, iss, nspin, nudx
     REAL(dp), INTENT(out) :: lambda(:,:)
@@ -1654,7 +1643,7 @@ MODULE cp_restart_new
        CLOSE( unit=iunpun, status='keep')
     END IF
     CALL mp_bcast( mrepl, ionode_id, intra_image_comm )
-    CALL distribute_lambda( mrepl, lambda, descla(iss) )
+    CALL distribute_lambda( mrepl, lambda, idesc(:,iss) )
     DEALLOCATE( mrepl )
     !
   END SUBROUTINE cp_read_lambda
@@ -1669,11 +1658,13 @@ MODULE cp_restart_new
     USE mp, ONLY : mp_bcast
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
-    USE cp_main_variables, ONLY : descla
-    USE cp_interfaces, ONLY : collect_zmat
+    USE cp_main_variables, ONLY : idesc
     USE electrons_base,ONLY: nspin, nudx
     !
     IMPLICIT NONE
+
+    include 'laxlib.fh'
+
     REAL(dp), INTENT(in) :: mat_z(:,:,:)
     INTEGER, INTENT(in)  :: ndw
     INTEGER, INTENT(out) :: ierr
@@ -1690,7 +1681,7 @@ MODULE cp_restart_new
     !
     DO iss = 1, nspin
        !
-       CALL collect_zmat( mrepl, mat_z(:,:,iss), descla(iss) )
+       CALL collect_zmat( mrepl, mat_z(:,:,iss), idesc(:,iss) )
        !
        filename = TRIM(dirname) // 'mat_z' // TRIM(int_to_char(iss))
        !
@@ -1718,11 +1709,13 @@ MODULE cp_restart_new
     USE mp, ONLY : mp_bcast
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
-    USE cp_main_variables, ONLY : descla
-    USE cp_interfaces, ONLY : distribute_zmat
+    USE cp_main_variables, ONLY : idesc
     USE electrons_base,ONLY: nspin, nudx
     !
     IMPLICIT NONE
+
+    include 'laxlib.fh'
+
     REAL(dp), INTENT(out) :: mat_z(:,:,:)
     INTEGER, INTENT(in)  :: ndr
     INTEGER, INTENT(out) :: ierr
@@ -1748,7 +1741,7 @@ MODULE cp_restart_new
        END IF
        CALL mp_bcast (ierr, ionode_id, intra_image_comm )
        !
-       CALL distribute_zmat( mrepl, mat_z(:,:,iss), descla(iss) )
+       CALL distribute_zmat( mrepl, mat_z(:,:,iss), idesc(:,iss) )
        !
     END DO
     !

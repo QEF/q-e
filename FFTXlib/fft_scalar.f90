@@ -32,8 +32,10 @@
      USE fft_scalar_sx6
 #elif defined(__ARM_LIB)
      USE fft_scalar_arm
-#else
+#elif defined(__FFTW)
      USE fft_scalar_fftw
+#else
+#error No fft_scalar backend selected!
 #endif
        
      IMPLICIT NONE

@@ -41,6 +41,11 @@ SUBROUTINE do_phonon(auxdyn)
   !
   USE elph_tetra_mod, ONLY : elph_tetra, elph_tetra_lambda, elph_tetra_gamma
   USE elph_scdft_mod, ONLY : elph_scdft
+  USE io_global,      ONLY : stdout
+  ! FIXME: see below setup_pw
+  USE noncollin_module, ONLY : noncolin
+  USE spin_orb,         ONLY : domag
+  USE ahc,            ONLY : elph_ahc, elph_do_ahc
 
   IMPLICIT NONE
   !
@@ -58,6 +63,12 @@ SUBROUTINE do_phonon(auxdyn)
      !
      !  If necessary the bands are recalculated
      !
+     ! Note (A. Urru): This has still to be cleaned (setup_pw 
+     ! should be correctly set by prepare_q: here we force it 
+     ! to be .true. in order for the code to work properly in 
+     ! the case SO-MAG).
+     !
+     setup_pw=setup_pw .OR. (noncolin .AND. domag)
      IF (setup_pw) CALL run_nscf(do_band, iq)
      !
      !  If only_wfc=.TRUE. the code computes only the wavefunctions 
@@ -126,6 +137,8 @@ SUBROUTINE do_phonon(auxdyn)
            CALL elph_tetra_gamma()
         ELSEIF(elph_tetra == 3) THEN
            CALL elph_scdft()
+        ELSEIF( elph_ahc ) THEN
+           CALL elph_do_ahc()
         ELSE 
            CALL elphsum()
         END IF

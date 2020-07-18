@@ -3,7 +3,7 @@ author: Samuel Poncé
 date: 10-01-2017
 
 
-<div style="text-align:center"><img src ="http://www.quantum-espresso.org/wp-content/uploads/2011/07/logo_header.jpg" width="600"></div>
+<div style="text-align:center"><img src ="https://www.quantum-espresso.org/project/logos/Quantum_espresso_logo.jpg" width="600"></div>
 
 
 [[Quantum Espresso]](http://www.quantum-espresso.org/) is an integrated suite of Open-Source computer codes for electronic-structure calculations and materials modeling at the nanoscale. It is based on density-functional theory, plane waves, and pseudopotentials.

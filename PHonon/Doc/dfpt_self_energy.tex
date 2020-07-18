@@ -1,0 +1,408 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{array}
+
+\textwidth = 17cm
+\textheight = 24cm
+\topmargin =-1 cm
+\oddsidemargin = 0 cm
+
+% \setlength\extrarowheight{5pt}
+
+\def\pwx{\texttt{pw.x}}
+\def\phx{\texttt{ph.x}}
+\def\matdynx{\texttt{matdyn.x}}
+\def\postahcx{\texttt{postahc.x}}
+\def\dvscfqtrx{\texttt{dvscf\_q2r.x}}
+\def\qtrx{\texttt{q2r.x}}
+\def\PWscf{\texttt{PWscf}}
+\def\PHonon{\texttt{PHonon}}
+
+\newcommand{\mb}[1]{\mathbf{#1}}
+\newcommand{\nk}[0]{{n\mathbf{k}}}
+\newcommand{\mk}[0]{{m\mathbf{k}}}
+\newcommand{\npk}[0]{{n'\mathbf{k}}}
+\newcommand{\mkq}[0]{{m\mathbf{k}+\mathbf{q}}}
+\newcommand{\qnu}[0]{{\mathbf{q}\nu}}
+\newcommand{\qka}[0]{{\mb{q}\kappa\alpha}}
+\newcommand{\qkpap}[0]{{\mb{q}\kappa'\alpha'}}
+\newcommand{\veps}[0]{\varepsilon}
+\newcommand{\duGka}[0]{{\partial_{\mb{\Gamma}\kappa\alpha}}}
+\newcommand{\vks}[0]{{\hat{v}_{\rm KS}}}
+\newcommand{\dtilde}[0]{{\widetilde{\mathcal{D}}}}
+\newcommand{\bra}[1]{\left\langle {#1} \right|}
+\newcommand{\ket}[1]{\left| {#1} \right\rangle}
+\newcommand{\mel}[3]{\left\langle{#1}\middle|{#2}\middle|{#3}\right\rangle}
+
+\begin{document}
+%
+\title{Note for the calculation of phonon-induced electron self-energy using
+\PHonon}
+\author{Jae-Mo Lihm, Seoul National University}
+\date{\today}
+\maketitle
+
+\section{Introduction}
+The Allen-Heine-Cardona (AHC) theory~\cite{1976Allen,1981Allen,1983Allen} is
+one of the current state-of-the-art methods to study the effect
+of electron-phonon coupling (EPC) on electronic structures
+from first-principles density functional theory (DFT) and
+density functional perturbation theory (DFPT).
+In this note, we describe how to use the \PHonon\ package to calculate
+electron self-energy within the AHC theory.
+
+\section{Formalism for the Allen-Heine-Cardona theory}
+In this section, we list the formulae needed to calculate the electron
+self-energy. For the derivation, consult the cited references.
+
+\subsection{Definitions} \label{sec:def}
+
+\begin{itemize}
+\item $M$ : number of bands in the ``lower'' subspace. Set by the number of
+bands in the NSCF calculation (can be different from \texttt{ahc\_nbnd})
+\item $\mb{k}$ : electron crystal momentum
+\item $\mb{q}$ : phonon crystal momentum
+\item $n,\ n',\ m$ : index for electron bands
+\item $\kappa,\ \kappa'$ : index for atoms
+\item $\alpha,\ \alpha'$ : index for Cartesian directions (x, y, z)
+\item $\mu,\ \nu$ : index for phonon eigenmodes
+\item $\veps_{\nk}$ : Kohn-Sham eigenvalue
+\item $\veps_{\rm F}$ : Fermi energy
+\item $\omega_{\qnu}$ : Phonon frequency
+\item $U_{\kappa\alpha,\nu}(\mb{q})$ : mass-scaled phonon eigenmodes
+\end{itemize}
+
+The mass-scaled phonon eigenmodes $U_{\kappa\alpha,\nu}(\mb{q})$ are normalized
+to satisfy
+\begin{equation} \label{eq:u_normalize}
+    \sum_{\kappa,\alpha} [U_{\kappa\alpha,\mu}(\mb{q})]^*
+    U_{\kappa\alpha,\nu}(\mb{q}) M_\kappa = \delta_{\mu,\nu}.
+\end{equation}
+
+\subsection{Key equations}
+
+First, we define relevant matrix elements:
+\begin{equation} \label{eq:g_def}
+    g_{mn}^{\kappa\alpha}(\mb{k},\mb{q})
+    = \mel{u_{\mkq}}{\partial_\qka \vks}{u_{\nk}},
+\end{equation}
+\begin{equation} \label{eq:dtilde_def}
+    \dtilde_{nn'}^{\kappa\alpha\alpha'}(\mb{k})
+    = i \mel{u_{\nk}}{[\duGka \vks, \hat{p}_{\alpha'}]}{u_{\npk}},
+\end{equation}
+and
+\begin{equation} \label{eq:ftilde_def}
+    \mathcal{F}_{nn'}^{\kappa\alpha\kappa'\alpha'}(\mb{k},\mb{q})
+    = \mel{\hat{Q}_{M, \mb{k+q}} (\partial_\qka u_{\nk})}
+    {\partial_\qkpap \vks}{u_{\npk}}.
+\end{equation}
+In Eq.~\eqref{eq:ftilde_def}, $\hat{Q}_{M, \mb{k+q}}$ is a projection to the
+subspace of $M+1$-th or higher eigenstates:
+\begin{equation} \label{eq:QM_def}
+    \hat{Q}_{M, \mb{k+q}}
+    = \hat{I} - \sum_{n=1}^{M} \ket{u_{n\mb{k+q}}}\bra{u_{n\mb{k+q}}}.
+\end{equation}
+
+\begin{table}[]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+Quantity & Description & Definition & Output filename \\ \hline
+$\veps_{\nk}$ & Electron energy at $\mb{k}$ &- & ahc\_etk\_iq\#.bin \\ \hline
+$\veps_{\mkq}$ & Electron energy at $\mb{k+q}$ & - & ahc\_etq\_iq\#.bin \\ \hline
+$g_{mn}^{\kappa\alpha}(\mb{k},\mb{q})$ & First order e-ph matrix element
+& Eq.~\eqref{eq:g_def} & ahc\_gkk\_iq\#.bin \\ \hline
+$\dtilde_{nn'}^{\kappa\alpha\alpha'}(\mb{k})$ & Debye-Waller matrix element
+& Eq.~\eqref{eq:dtilde_def} & ahc\_dw.bin \\ \hline
+$\mathcal{F}_{nn'}^{\kappa\alpha\kappa'\alpha'}(\mb{k},\mb{q})$
+& Matrix element for upper Fan self-energy
+& Eq.~\eqref{eq:ftilde_def} & ahc\_upfan\_iq\#.bin \\ \hline
+\end{tabular}
+\caption{Quantities calculated in a \phx\ run with
+\texttt{electron\_phonon=`ahc'}.}
+\end{table}
+
+\begin{table}[]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+Quantity & Description & Definition \\ \hline
+$\Sigma_{nn'\mb{k}}^{\rm OSA}$
+& \shortstack{Total self-energy in the\\ on-shell approximation (OSA)}
+& $\Sigma^{\rm DW,\,RIA} + \Sigma^{\rm Fan,\,OSA}$ \\ \hline
+$\Sigma^{\rm DW,\,RIA}_{nn'\mb{k}}$ & Debye-Waller self-energy in the RIA
+& Eq.~\eqref{eq:dw_def} \\ \hline
+$\Sigma^{\rm Fan,\,OSA}_{nn'\mb{k}}$ & Total Fan self-energy in the OSA
+& $\Sigma^{\rm Fan,\,upper} + \Sigma^{\rm Fan,\,lower,\,OSA}$ \\ \hline
+$\Sigma^{\rm Fan,\,upper}_{nn'\mb{k}}$ & Upper Fan self-energy
+& Eq.~\eqref{eq:upfan_def} \\ \hline
+$\Sigma^{\rm Fan,\,lower,\,OSA}_{nn'\mb{k}}$ & Lower Fan self-energy in the OSA
+& Eq.~\eqref{eq:lofan_def}, Eq.~\eqref{eq:lofan_osa} \\ \hline
+\end{tabular}
+\caption{Self-energies calculated and printed by \texttt{postahc.x}.}
+\end{table}
+
+In the dynamical AHC theory, the phonon-induced electron
+self-energy $\Sigma(\omega)$ which is a function of the frequency $\omega$, is
+written as a sum of the Fan and the DW self-energies~\cite{2017GiustinoRMP}:
+
+\begin{equation} \label{eq:sigma_def}
+    \Sigma_{nn'\mb{k}}(\omega)
+    = \Sigma^{\rm Fan}_{nn'\mb{k}} (\omega) + \Sigma^{\rm DW}_{nn'\mb{k}},
+\end{equation}
+\begin{align} \label{eq:fan_def}
+    \Sigma^{\rm Fan}_{nn'\mb{k}} (\omega)
+    = \frac{1}{N_q}\sum_{\substack{\qnu,m \\ \kappa\alpha\kappa'\alpha'}}
+    &\frac{1}{2\omega_{\qnu}}
+    [g_{mn}^{\kappa\alpha}(\mb{k},\mb{q})]^*
+    g_{mn'}^{\kappa'\alpha'}(\mb{k},\mb{q})
+    U^*_{\kappa\alpha,\nu}(\mb{q}) U_{\kappa'\alpha',\nu}(\mb{q}) \nonumber \\
+    &\times \left[
+    \frac{n_\qnu + f_\mkq}{\omega - \veps_\mkq + \omega_\qnu + i\eta}
+    + \frac{n_\qnu + 1 - f_\mkq}{\omega - \veps_\mkq - \omega_\qnu + i\eta}
+    \right],
+\end{align}
+\begin{equation} \label{eq:dw_def}
+    \Sigma^{\rm DW,\,RIA}_{nn'\mb{k}}
+    = \frac{1}{N_q}\sum_{\substack{\qnu \\ \kappa\alpha\alpha'}}
+    \frac{1}{2\omega_{\qnu}} \left(n_\qnu + \frac{1}{2} \right)
+    \dtilde_{nn'}^{\kappa\alpha\alpha'}(\mb{k},\mb{q})
+    U_{\kappa\alpha,\nu}^*(\mb{q}) U_{\kappa\alpha',\nu}(\mb{q}).
+\end{equation}
+To calculate the Debye-Waller self-energy, we use the
+rigid-ion approximation(RIA).
+
+To avoid a sum over a large number of high-energy empty bands,
+theFan self-energy is approximated as a sum of ``lower'' and ``upper''
+Fan self-energy.
+The upper Fan self-energy is computed within the adiabatic approximation,
+ignoring the phonon frequency in the denominator.
+This approximation enables one to avoid the sum over infinite number of states
+using the solution of the Sternheimer equation~\cite{2011Gonze}.
+\begin{equation} \label{eq:fantot_def}
+    \Sigma^{\rm Fan}_{nn'\mb{k}}(\omega)
+    \approx \Sigma^{\rm Fan,\,lower}_{nn'\mb{k}}(\omega)
+    + \Sigma^{\rm Fan,\,upper}_{nn'\mb{k}}
+\end{equation}
+\begin{align} \label{eq:lofan_def}
+    \Sigma^{\rm Fan,\,lower}_{nn'\mb{k}} (\omega)
+    = \frac{1}{N_q}\sum_{\substack{\qnu \\ \kappa\alpha\kappa'\alpha'}}
+    \sum_{m=1}^{M}
+    &\frac{1}{2\omega_{\qnu}}
+    [g_{mn}^{\kappa\alpha}(\mb{k},\mb{q})]^*
+    g_{mn'}^{\kappa'\alpha'}(\mb{k},\mb{q})
+    U^*_{\kappa\alpha,\nu}(\mb{q}) U_{\kappa'\alpha',\nu}(\mb{q}) \nonumber \\
+    &\times \left[
+    \frac{n_\qnu + f_\mkq}{\omega - \veps_\mkq + \omega_\qnu + i\eta}
+    + \frac{n_\qnu + 1 - f_\mkq}{\omega - \veps_\mkq - \omega_\qnu + i\eta}
+    \right],
+\end{align}
+\begin{align} \label{eq:upfan_def}
+    \Sigma^{\rm Fan,\,upper}_{nn'\mb{k}}
+    = \frac{1}{N_q}\sum_{\qnu}
+    &\frac{1}{2\omega_{\qnu}} (n_\qnu + \frac{1}{2})
+    \left[ \sum_{\kappa\alpha\kappa'\alpha'}
+    \mathcal{F}_{nn'}^{\kappa\alpha\kappa'\alpha'}(\mb{k},\mb{q})
+    U^*_{\kappa\alpha,\nu}(\mb{q}) U_{\kappa'\alpha',\nu}(\mb{q})
+    + (n\leftrightarrow n')^*\right].
+\end{align}
+In Eq.~\eqref{eq:upfan_def}, $(n\leftrightarrow n')^*$ means switching $n$
+and $n'$ and taking complex conjugate.
+
+In \texttt{postahc.x}, we calculate the static self-energy using the
+on-the-mass-shell approximation (OSA) where $\omega$ is set to
+the bare Kohn-Sham electron eigenvalue~\cite{2018Nery}.
+For off-diagonal self-energy, the value of $\omega$ becomes ambiguous.
+In this case, we take the average of the two possible cases:
+\begin{equation} \label{eq:sigma_osa}
+    \Sigma_{nn'\mb{k}}^{\rm OSA}
+    = \frac{1}{2} \left[\Sigma_{nn'\mb{k}}(\omega=\veps_\nk)
+    + \Sigma_{nn'\mb{k}}(\omega=\veps_\npk) \right].
+\end{equation}
+This approximation affects only the lower Fan self-energy because the
+Debye-Waller and upper Fan self-energy are static by definition.
+\begin{equation} \label{eq:lofan_osa}
+    \Sigma_{nn'\mb{k}}^{\rm Fan,\,lower,\,OSA}
+    = \frac{1}{2} \left[ \Sigma_{nn'\mb{k}}^{\rm Fan,\,lower}(\omega=\veps_\nk)
+    + \Sigma_{nn'\mb{k}}^{\rm Fan,\,lower}(\omega=\veps_\npk) \right]
+\end{equation}
+
+\section{Example: Electron-phonon renormalization of the indirect
+band gap of diamond}
+
+In this section, we describe how to calculate the phonon-induced renormalization
+of the indirect band gap of diamond using \PHonon.
+The script and reference output files for this example can be found in
+\verb|PHonon/example/example19|.
+
+\begin{enumerate}
+\item Run \pwx\ for the SCF calculation.
+\item Run \phx\ for a coarse q point grid.
+\item Run \qtrx\ to calculate the force constants.
+\item Run \dvscfqtrx\ for inverse Fourier transformation of the phonon
+potential.
+\item Run \pwx\ SCF calculation again for the next NSCF calculation.
+\item Run \pwx\ for the NSCF calculation at k points to calculate the
+self-energy.
+
+To calculate both the indirect band gap, we need to calculate the self-energy
+for the VBM and the CBM state. So, we do the NSCF calculation for two
+k points: (0.0, 0.0, 0.0) and (0.365, 0.365, 0.0), in crystal coordinates.
+
+Also, we set \texttt{nosym=.true.} and \texttt{noinv=.true.} to sample
+the whole Brillouin zone, not the irreducible wedge, in the subsequent
+\phx\ runs (See Sec.~\ref{sec:sampling}).
+
+The number of bands in this NSCF calculation ($M$ defined in Sec.~\ref{sec:def})
+is the number of bands in the ``lower'' subspace.
+High-energy bands that are not explicitly calculated
+consist of the ``upper'' subspace.
+The contribution of the high-energy bands
+to the Fan self-energy (``upper Fan'' self-energy) is approximated using
+the solution of the Sternheimer equation~\cite{2011Gonze}.
+
+\item Run \phx\ with \texttt{electron\_phonon=`ahc'}
+and \texttt{ldvscf\_interpolate=.true.}.
+\item Run \matdynx.
+
+The q points in the input of \matdynx\ must be identical to the q points
+of the previous \phx\ run. One can copy the q points from the \texttt{dyn0}
+output.
+
+\item Run \postahcx\ to calculate the self-energies.
+\item Run \phx\ with \texttt{electron\_phonon=`ahc'}
+and \texttt{ldvscf\_interpolate=.true.} at a finer q-point grid.
+
+Here, we set \texttt{skip\_upperfan=.true.} to use the
+``double-grid technique'' (See Sec.~\ref{sec:doublegrid}).
+
+\item Run \matdynx\ for a finer q-grid.
+
+The list of q points in the input of \matdynx\ must be identical to the q points
+of the previous \phx\ run. One can copy the q points from the
+\texttt{dyn0} output.
+
+\item Run \postahcx\ with \texttt{skip\_upperfan=.true.} and
+\texttt{skip\_dw=.true.}.
+
+\end{enumerate}
+
+\begin{table}[] \label{table:selfen}
+\centering
+\begin{tabular}{|c|r|r|r|r|}
+\hline
+ & \multicolumn{4}{c|}{Self-energy (Ry)} \\ \hline
+ & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Debye-Waller\\
+  ($N_q=3$)\end{tabular}}
+ & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Upper Fan\\
+  ($N_q=3$)\end{tabular}}
+ & \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}Lower Fan\\
+  ($N_q=4$)\end{tabular}}
+ & \multicolumn{1}{c|}{Total} \\ \hline
+CBM & 0.0215548 & -0.0229979 & -0.0116025 & -0.0130456 \\ \hline
+VBM & 0.0827887 & -0.0691964 & -0.0053126 & 0.0082797 \\ \hline
+\multicolumn{1}{|l|}{Indirect gap}
+& -0.0612339 & 0.0461985 & -0.0062899 & -0.0213253 \\ \hline
+\end{tabular}
+\caption{Self-energy and indirect band gap renormalization
+of silicon at 300\,K.}
+\end{table}
+
+The calculated self-energy and indirect band gap renormalization at $T$=300\,K
+is summarized in Table~\ref{table:selfen}.
+The Debye-Waller and the upper Fan self-energy is taken from the output of the
+first \postahcx\ run with a coarse q-grid, while the lower Fan self-energy is
+taken from the second \postahcx\ run with a finer q-grid.
+The calculated indirect band gap renormalization at $T$=300\,K is
+$\Delta E_{\rm gap} = -0.0213\,{\rm Ry} = -290\,{\rm meV}$.
+
+Band gap renormalization at other temperatures can be obtained by setting
+\texttt{temp\_kelvin} to different values and running \postahcx.
+
+The parameters used in this example is far from convergence.
+To obtain a converged self-energy, one must converge the size of the
+q-point grid in all three runs of \phx\ and the smearing \texttt{eta}
+used in \postahcx, as well as other usual convergence parameters
+in SCF calculations.
+
+\section{Technicalities related to the q-point sampling}
+
+\subsection{Sampling only the irreducible wedge} \label{sec:sampling}
+One can calculate the diagonal self-energy at the $\Gamma$ point
+using only the irreducible q points by assigning appropriate weights.
+To do so, one needs to edit the source code of \texttt{postahc.f90}
+where \texttt{wtq} (the weight of each q point) is hardcoded to $1/N_q$.
+
+For k points other than the $\Gamma$ point, the symmetry operation rotates
+not only the q but also the k vector. Hence, when sampling the q points only
+inside the irreducible wedge, one must calculate the diagonal self-energy
+for all symmetry-equivalent k points and take an average.
+
+To calculate the off-diagonal part of the self-energy, one must sample
+q points in the full Brillouin zone.
+The reason is that the symmetry operation can change the phase of the
+wavefunctions.
+
+Often, the most time-consuming step in calculating the electron self-energy
+is the self-consistent calculation of the phonon potential.
+For computational efficiency, one should avoid calculation of the phonon
+potential on the full q-grid by
+1) performing DFPT calculations for q points in the irreducible wedge
+of a given q-grid,
+2) Fourier interpolating the phonon potentials from q-grid to real space
+using \dvscfqtrx,
+and 3) calculating matrix elements on the full q-grid (of the same size)
+using Fourier interpolation of phonon potential.
+This way, the potential at the full q-grid is accurately unfolded from the
+phonon potentials at the irreducible wedge.
+Note that \dvscfqtrx\ internally uses symmetry operations to unfold the
+phonon potential from the irreducible wedge to the full grid.
+
+\subsection{Double-grid technique} \label{sec:doublegrid}
+The convergence of the self-energy with respect to the q-point sampling
+is known to be slow and is dominated by the convergence of the lower Fan
+self-energy~\cite{2015PonceJCP}.
+
+The computational bottleneck in the calculation of the AHC matrix elements
+is the calculation of the upper Fan term, which involves solving the
+the Sternheimer equation.
+In contrast, calculation of $g_{mn}^{\kappa\alpha}(\mb{k},\mb{q})$ for
+the lower Fan self-energy only involves simple matrix element calculations.
+
+Therefore, one can save considerable computational cost by calculating the
+rapidly-convergent upper Fan self-energy at a coarse q-point grid
+and the slowly-convergent lower Fan self-energy at a finer q-point grid.
+This method is called the ``double-grid technique'' for converging the electron
+self-energy.
+
+Note that although the calculation of the Debye-Waller self-energy is also
+cheap, one should calculate it at the coarse grid, not the fine grid
+when using the double-grid technique.
+The reason is that the convergence of the sum of the DW and the upper Fan
+self-energies is much faster than the convergence of each term.
+
+\begin{thebibliography}{99}
+\bibitem{1976Allen}
+  P. B. Allen and V. Heine, J. Phys. C {\bf 9}, 2305 (1976).
+\bibitem{1981Allen}
+  P. B. Allen and M. Cardona, Phys. Rev. B {\bf 23}, 1495 (1981).
+\bibitem{1983Allen}
+  P. B. Allen and M. Cardona, Phys. Rev. B {\bf 27}, 4760 (1983).
+\bibitem{2011Gonze}
+  X. Gonze, P. Boulanger, and M. C\^ot\'e, Annalen der Physik {\bf 523},
+  168 (2011).
+\bibitem{2015PonceJCP}
+  S. Ponc\'e, Y. Gillet, J. Laflamme Janssen, A. Marini, M. Verstraete,
+  and X. Gonze, J. Chem. Phys. {\bf 143}, 102813 (2015).
+\bibitem{2017GiustinoRMP}
+  F. Giustino, Rev. Mod. Phys. {\bf 89}, 015003 (2017).
+\bibitem{2018Nery}
+  J. P. Nery, P. B. Allen, G. Antonius, L. Reining, A. Miglio, and X. Gonze,
+Phys. Rev. B {\bf 97}, 115145 (2018).
+\bibitem{2020Lihm}
+  J.-M. Lihm and C.-H. Park, Phys. Rev. B {\bf 101}, 121102 (2020).
+\end{thebibliography}
+
+
+\end{document}

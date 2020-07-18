@@ -34,7 +34,7 @@ PROGRAM do_ppacf
   USE mp_global,            ONLY : mp_startup
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE exx,                  ONLY : exxinit, exxenergy2, fock2, ecutfock, & 
-                                   use_ace, aceinit, local_thr
+                                   use_ace, aceinit, local_thr, nbndproj
   USE exx_base,             ONLY : exx_grid_init, exx_mp_init, exx_div_check, &
                                    exxdiv_treatment
   USE exx_base,             ONLY : nq1, nq2, nq3
@@ -224,7 +224,11 @@ PROGRAM do_ppacf
   IF (code_num == 1) THEN
      !
      tmp_dir = TRIM(outdir) 
-     CALL read_file_new ( needwf )
+     IF ( lfock .OR. (lplot.AND.ltks) ) THEN
+        CALL read_file ( )
+     ELSE
+        CALL read_file_new ( needwf )
+     ENDIF
      !
      ! Check exchange correlation functional
      iexch = get_iexch()
@@ -759,6 +763,7 @@ PROGRAM do_ppacf
     nq1 = 0
     nq2 = 0
     nq3 = 0
+    nbndproj = 0
     exxdiv_treatment = "gygi-baldereschi"
     ecutfock = ecutwfc
     CALL set_exx_fraction( 1._DP )

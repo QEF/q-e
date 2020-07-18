@@ -133,6 +133,7 @@ MODULE exx
     USE control_flags,  ONLY : tqr
     USE realus,         ONLY : qpointlist, tabxx, tabp
     USE exx_band,       ONLY : smap_exx
+    USE command_line_options, ONLY : nmany_
     !
     IMPLICIT NONE
     !
@@ -182,7 +183,7 @@ MODULE exx
        lpara = ( nproc_bgrp > 1 )
        CALL fft_type_init( dfftt, smap, "rho", gamma_only, lpara,         &
                            intra_bgrp_comm, at, bg, gcutmt, gcutmt/gkcut, &
-                           fft_fact=fft_fact, nyfft=nyfft )
+                           fft_fact=fft_fact, nyfft=nyfft, nmany=nmany_ )
        CALL ggens( dfftt, gamma_only, at, g, gg, mill, gcutmt, ngmt, gt, ggt )
        gstart_t = gstart
        npwt = n_plane_waves(ecutwfc/tpiba2, nks, xk, gt, ngmt)
@@ -196,7 +197,7 @@ MODULE exx
        lpara = ( nproc_egrp > 1 )
        CALL fft_type_init( dfftt, smap_exx, "rho", gamma_only, lpara,     &
                            intra_egrp_comm, at, bg, gcutmt, gcutmt/gkcut, &
-                           fft_fact=fft_fact, nyfft=nyfft )
+                           fft_fact=fft_fact, nyfft=nyfft, nmany=nmany_ )
        ngmt = dfftt%ngm
        ngmt_g = ngmt
        CALL mp_sum( ngmt_g, intra_egrp_comm )
@@ -501,7 +502,7 @@ MODULE exx
       IF (.NOT. ALLOCATED(exxbuff)) THEN
          IF (gamma_only) THEN
             ALLOCATE( exxbuff(nrxxs*npol,ibnd_buff_start:ibnd_buff_start + &
-                                          max_buff_bands_per_egrp-1,nks) )
+                                          max_buff_bands_per_egrp-1,nkqs) ) ! THIS WORKS as for k
          ELSE
             ALLOCATE( exxbuff(nrxxs*npol,ibnd_buff_start:ibnd_buff_start + &
                                           max_buff_bands_per_egrp-1,nkqs) )
@@ -591,7 +592,7 @@ MODULE exx
                IF (ibnd-ibnd_loop_start+evc_offset+2 <= nbnd) &
                   locbuff(1:nrxxs,ibnd-ibnd_loop_start+evc_offset+2,ik) = AIMAG( psic_exx(1:nrxxs) )
              ELSE
-               exxbuff(1:nrxxs,(ibnd+1)/2,ik)=psic_exx(1:nrxxs)
+               exxbuff(1:nrxxs,(ibnd+1)/2,current_ik)=psic_exx(1:nrxxs) 
              ENDIF
              !
           ENDDO
@@ -1717,7 +1718,6 @@ MODULE exx
     REAL(DP) :: exxenergy,  energy
     INTEGER :: npw, ibnd, ik
     COMPLEX(DP) :: vxpsi(npwx*npol,nbnd), psi(npwx*npol,nbnd)
-    COMPLEX(DP), EXTERNAL :: zdotc
     !
     exxenergy = 0._DP
     !
@@ -1749,9 +1749,9 @@ MODULE exx
        CALL vexx( npwx, npw, nbnd, psi, vxpsi, becpsi )
        !
        DO ibnd = 1, nbnd
-          energy = energy + DBLE(wg(ibnd,ik) * zdotc(npw,psi(1,ibnd),1,vxpsi(1,ibnd),1))
+          energy = energy + DBLE(wg(ibnd,ik) * dot_product(psi(1:npw,ibnd),vxpsi(1:npw,ibnd)))
           IF (noncolin) energy = energy + &
-                            DBLE(wg(ibnd,ik) * zdotc(npw,psi(npwx+1,ibnd),1,vxpsi(npwx+1,ibnd),1))
+                  DBLE(wg(ibnd,ik) * dot_product(psi(npwx+1:npwx+npw,ibnd),vxpsi(npwx+1:npwx+npw,ibnd)))
           !
        ENDDO
        IF (gamma_only .AND. gstart == 2) THEN
@@ -2783,10 +2783,11 @@ MODULE exx
   !----------------------------------------------------------------------
   !! Calculates beta functions (Kleinman-Bylander projectors), with
   !! structure factor, for all atoms, in reciprocal space.
+  !! FIXME: why so much replicated code?  
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau
-  USE cell_base,     ONLY : tpiba
+  USE cell_base,     ONLY : tpiba, omega
   USE constants,     ONLY : tpi
   USE gvect,         ONLY : eigts1, eigts2, eigts3, mill, g
   USE wvfct,         ONLY : npwx, nbnd
@@ -2870,7 +2871,7 @@ MODULE exx
      ! f_l(q)=\int _0 ^\infty dr r^2 f_l(r) j_l(q.r)
      DO nb = 1, upf(nt)%nbeta
         IF ( upf(nt)%is_gth ) THEN
-           CALL mk_ffnl_gth( nt, nb, npw_, qg, vq )
+           CALL mk_ffnl_gth( nt, nb, npw_, omega, qg, vq )
         ELSE
            DO ig = 1, npw_
               IF (spline_ps) THEN
@@ -3220,6 +3221,7 @@ MODULE exx
     !
     USE becmod,               ONLY : bec_type
     USE wvfct,                ONLY : current_k, npwx
+    USE klist,                ONLY : wk
     USE noncollin_module,     ONLY : npol
     !
     IMPLICIT NONE
@@ -3269,8 +3271,11 @@ MODULE exx
       WRITE( stdout,'(3(A,I3),A,I9,A,f12.6)') 'aceinit_k: nbnd=', nbnd, ' nbndproj=',nbndproj, &
                                               ' k=',current_k,' npw=',nnpw,' Ex(k)=',exxe
 #endif
-    ! |xi> = -One * Vx[phi]|phi> * rmexx^T
-    CALL aceupdate_k( nbndproj, nnpw, xitmp, mexx )
+    ! Skip k-points that have exactly zero weight
+    IF(wk(current_k)/=0._dp)THEN
+      ! |xi> = -One * Vx[phi]|phi> * rmexx^T
+      CALL aceupdate_k( nbndproj, nnpw, xitmp, mexx )
+    ENDIF
     !
     DEALLOCATE( mexx )
     !
@@ -3587,6 +3592,7 @@ MODULE exx
     USE cell_base,        ONLY : alat, omega
     USE mp,               ONLY : mp_sum
     USE mp_bands,         ONLY : intra_bgrp_comm
+    USE fft_types,        ONLY : fft_index_to_3d
     !
     IMPLICIT NONE
     !
@@ -3607,7 +3613,8 @@ MODULE exx
     ! ... local variables
     !
     REAL(DP) :: vol, rbuff, TotSpread
-    INTEGER :: ir, i, j, k, idx, j0, k0
+    INTEGER :: ir, i, j, k
+    LOGICAL :: offrange
     COMPLEX(DP) :: cbuff(3)
     REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0 
     !
@@ -3619,22 +3626,12 @@ MODULE exx
     cbuff = (Zero,Zero)
     rbuff = Zero
     !
-    j0 = dfftt%my_i0r2p ; k0 = dfftt%my_i0r3p
-    !
     DO ir = 1, dfftt%nr1x*dfftt%my_nr2p*dfftt%my_nr3p
        !
        ! ... three dimensional indexes
-       idx = ir -1
-       k = idx / (dfftt%nr1x*dfftt%my_nr2p)
-       idx = idx - (dfftt%nr1x*dfftt%my_nr2p)*k
-       k = k + k0
-       IF (k >= dfftt%nr3) CYCLE
-       j = idx / dfftt%nr1x
-       idx = idx - dfftt%nr1x * j
-       j = j + j0
-       IF (j >= dfftt%nr2) CYCLE
-       i = idx
-       IF (i >= dfftt%nr1) CYCLE
+       !
+       CALL fft_index_to_3d (ir, dfftt, i,j,k, offrange)
+       IF ( offrange ) CYCLE
        !
        rbuff = PsiI(ir) * PsiJ(ir) / omega
        Overlap = Overlap + ABS(rbuff)*vol
@@ -3693,6 +3690,7 @@ MODULE exx
     USE cell_base,        ONLY : alat, omega
     USE mp,               ONLY : mp_sum
     USE mp_bands,         ONLY : intra_bgrp_comm
+    USE fft_types,        ONLY : fft_index_to_3d
     !
     IMPLICIT NONE
     !
@@ -3714,7 +3712,8 @@ MODULE exx
     ! ... local variables
     !
     REAL(DP) :: vol, TotSpread, rbuff
-    INTEGER :: ir, i, j, k , idx, j0, k0
+    INTEGER :: ir, i, j, k
+    LOGICAL :: offrange
     COMPLEX(DP) :: cbuff(3)
     REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0 
     !
@@ -3726,22 +3725,12 @@ MODULE exx
     cbuff = (Zero, Zero) 
     rbuff = Zero
     !
-    j0 = dfftt%my_i0r2p ; k0 = dfftt%my_i0r3p
-    !
     DO ir = 1, dfftt%nr1x*dfftt%my_nr2p*dfftt%my_nr3p
        !
        ! ... three dimensional indexes
-       idx = ir -1
-       k = idx / (dfftt%nr1x*dfftt%my_nr2p)
-       idx = idx - (dfftt%nr1x*dfftt%my_nr2p)*k
-       k = k + k0
-       IF (k >= dfftt%nr3) CYCLE
-       j = idx / dfftt%nr1x
-       idx = idx - dfftt%nr1x * j
-       j = j + j0
-       IF (j >= dfftt%nr2) CYCLE
-       i = idx
-       IF (i >= dfftt%nr1) CYCLE
+       !
+       CALL fft_index_to_3d (ir, dfftt, i,j,k, offrange)
+       IF ( offrange ) CYCLE
        !
        rbuff = ABS(PsiI(ir) * CONJG(PsiJ(ir)) / omega )
        Overlap = Overlap + rbuff*vol

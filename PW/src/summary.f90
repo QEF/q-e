@@ -9,20 +9,18 @@
 !-----------------------------------------------------------------------
 SUBROUTINE summary()
   !-----------------------------------------------------------------------
-  !
-  !    This routine writes on output all the information obtained from
-  !    the input file and from the setup routine, before starting the
-  !    self-consistent calculation.
-  !
-  !    if iverbosity < 1 only a partial summary is done.
+  !! This routine writes on output all the information obtained from
+  !! the input file and from the setup routine, before starting the
+  !! self-consistent calculation.  
+  !! If iverbosity < 1 only a partial summary is done.
   !
   USE io_global,       ONLY : stdout
   USE kinds,           ONLY : DP
   USE run_info,        ONLY : title
   USE constants,       ONLY : amu_ry, rytoev
-  USE cell_base,       ONLY : alat, ibrav, omega, at, bg, celldm
+  USE cell_base,       ONLY : alat, ibrav, omega, at, bg, celldm, wmass
   USE ions_base,       ONLY : nat, atm, zv, tau, ntyp => nsp, ityp
-  USE cellmd,          ONLY : calc, cmass
+  USE cellmd,          ONLY : calc
   USE ions_base,       ONLY : amass
   USE gvect,           ONLY : ecutrho, ngm, ngm_g, gcutm
   USE gvecs,           ONLY : doublegrid, ngms, ngms_g, gcutms
@@ -206,10 +204,9 @@ SUBROUTINE summary()
   ENDDO
 
   IF (calc.EQ.'cd' .OR. calc.EQ.'cm' ) &
-     WRITE( stdout, '(/5x," cell mass =", f10.5, " AMU ")') cmass/amu_ry
+     WRITE( stdout, '(/5x," cell mass =", f10.5, " AMU ")') wmass
   IF (calc.EQ.'nd' .OR. calc.EQ.'nm' ) &
-     WRITE( stdout, '(/5x," cell mass =", f10.5, " AMU/(a.u.)^2 ")') cmass/amu_ry
-
+     WRITE( stdout, '(/5x," cell mass =", f10.5, " AMU/(a.u.)^2 ")') wmass
   IF (ANY(starting_charge(:) /= 0.D0)) THEN
      WRITE( stdout, '(/5x,"Starting charge structure ", &
           &      /5x,"atomic species   charge")')
@@ -473,26 +470,35 @@ END SUBROUTINE print_ps_info
 !-----------------------------------------------------------------------
 SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
   !-----------------------------------------------------------------------
+  !! Print symmetry operations.
   !
-  USE kinds,           ONLY : dp
-  USE constants,       ONLY : eps6
-  USE io_global,       ONLY : stdout 
-  USE symm_base,       ONLY : nsym, nsym_ns, nsym_na, invsym, s, sr, &
-                              t_rev, ft, sname
-  USE rap_point_group, ONLY : code_group, nclass, nelem, elem, &
-       which_irr, char_mat, name_rap, name_class, gname, ir_ram, elem_name
+  USE kinds,              ONLY : dp
+  USE constants,          ONLY : eps6
+  USE io_global,          ONLY : stdout 
+  USE symm_base,          ONLY : nsym, nsym_ns, nsym_na, invsym, s, sr, &
+                                 t_rev, ft, sname
+  USE rap_point_group,    ONLY : code_group, nclass, nelem, elem, &
+                                 which_irr, char_mat, name_rap,   &
+                                 name_class, gname, ir_ram, elem_name
   USE rap_point_group_so, ONLY : nrap, nelem_so, elem_so, has_e, &
-       which_irr_so, char_mat_so, name_rap_so, name_class_so, d_spin, &
-       name_class_so1, elem_name_so
+                                 which_irr_so, char_mat_so, name_rap_so, &
+                                 name_class_so, d_spin, name_class_so1,  &
+                                 elem_name_so
   USE rap_point_group_is, ONLY : nsym_is, sr_is, ft_is, d_spin_is, &
-       gname_is, sname_is, code_group_is
-  USE cell_base,       ONLY : at, ibrav
-  USE fft_base, ONLY : dfftp
+                                 gname_is, sname_is, code_group_is
+  USE cell_base,          ONLY : at, ibrav
+  USE fft_base,           ONLY : dfftp
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: iverbosity
-  LOGICAL, INTENT(IN) :: noncolin, domag
+  !! verbosity index
+  LOGICAL, INTENT(IN) :: noncolin
+  !! .TRUE. if non-collinear
+  LOGICAL, INTENT(IN) :: domag
+  !! If .TRUE. magnetization is computed
+  !
+  ! ... local variables
   !
   INTEGER :: nclass_ref   ! The number of classes of the point group
   INTEGER :: isym, ipol

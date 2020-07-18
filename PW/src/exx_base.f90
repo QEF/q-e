@@ -8,7 +8,7 @@
 !--------------------------------------
 MODULE exx_base
   !--------------------------------------
-  !! Basic variables and subroutines for calculation of exact exchange.
+  !! Basic variables and subroutines for calculation of exact exchange (EXX).
   !
   USE kinds,                ONLY : DP
   USE coulomb_vcut_module,  ONLY : vcut_init, vcut_type, vcut_info, &
@@ -95,19 +95,22 @@ MODULE exx_base
   !! the Coulomb factor is reused between iterations
   !
   LOGICAL, ALLOCATABLE :: coulomb_done(:,:)
-  !! list of which coulomb factors have been calculated already
+  !! list of which Coulomb factors have been calculated already
   !
  CONTAINS
   !
   !------------------------------------------------------------------------
   SUBROUTINE exx_mp_init()
     !------------------------------------------------------------------------
-    !! * setup the orthopool communicators, which include the (n-1)th CPU of
-    !!   each pool (i.e. orthopool 0, contains CPU 0 of each pool);
-    !! * setup global variable "working_pool" which contains the index of the
-    !!   pool which has the local copy prior to rotation of the ikq-th pool;
-    !! * working_pool(ikq) is also index of the CPU in each orthopool which has
-    !!   to broadcast the wavefunction at k-point ikq.
+    !! 1) Setup the orthopool communicators, which include the (n-1)-th CPU of
+    !!    each pool (i.e. orthopool 0, contains CPU 0 of each pool).
+    !
+    !! 2) Setup global variable \(\text{working_pool}\) which contains the index of the
+    !!    pool which has the local copy prior to rotation of the \(\text{ikq}\)-th
+    !!    pool.  
+    !
+    !! 3) \(\text{working_pool(ikq)}\) is also index of the CPU in each orthopool
+    !!    which has to broadcast the wavefunction at k-point \(\text{ikq}\).
     !
     USE mp_images,      ONLY : intra_image_comm
     USE mp_pools,       ONLY : my_pool_id
@@ -159,7 +162,7 @@ MODULE exx_base
     !!
     !
     USE symm_base,         ONLY : nsym, s
-    USE cell_base,         ONLY : bg, at
+    USE cell_base,         ONLY : bg, at, tpiba
     USE spin_orb,          ONLY : domag
     USE noncollin_module,  ONLY : nspin_lsda
     USE klist,             ONLY : xk, wk, nkstot, nks, qnorm
@@ -176,9 +179,10 @@ MODULE exx_base
     ! ... local variables
     !
     CHARACTER(13) :: sub_name='exx_grid_init'
-    INTEGER :: iq1, iq2, iq3, isym, ik, ikq, iq, max_nk, temp_nkqs
+    INTEGER :: iq1, iq2, iq3, isym, ik, ikq, iq, max_nk, temp_nkqs, idx, sign_
+    INTEGER :: nqx(3)
     INTEGER, ALLOCATABLE :: temp_index_xk(:), temp_index_sym(:)
-    INTEGER, ALLOCATABLE :: temp_index_ikq(:), new_ikq(:)
+    INTEGER, ALLOCATABLE :: temp_index_ikq(:)
     REAL(DP), ALLOCATABLE :: temp_xkq(:,:), xk_collect(:,:)
     LOGICAL :: xk_not_found
     REAL(DP) :: sxk(3), dxk(3), xk_cryst(3)
@@ -227,7 +231,7 @@ MODULE exx_base
     ! and allocate auxiliary arrays
     max_nk = nkstot * MIN(48, 2 * nsym)
     ALLOCATE( temp_index_xk(max_nk), temp_index_sym(max_nk) )
-    ALLOCATE( temp_index_ikq(max_nk), new_ikq(max_nk) )
+    ALLOCATE( temp_index_ikq(max_nk) )
     ALLOCATE( temp_xkq(3,max_nk) )
     !
     ! find all k-points equivalent by symmetry to the points in the k-list
@@ -284,58 +288,49 @@ MODULE exx_base
       ENDDO
     ENDDO
     !
-    ! define the q-mesh step-sizes
-    !
-    dq1 = 1._dp / DBLE(nq1)
-    dq2 = 1._dp / DBLE(nq2)
-    dq3 = 1._dp / DBLE(nq3)
-    !
-    ! allocate and fill the array index_xkq(nkstot,nqs)
-    !
-    IF (.NOT. ALLOCATED(index_xkq)) ALLOCATE( index_xkq(nkstot,nqs) )
-    nkqs = 0
-    new_ikq(:) = 0
-    !
-    DO ik = 1, nkstot
-      ! go to crystalline coordinates
-      xk_cryst(:) = xk_collect(:,ik)
-      CALL cryst_to_cart( 1, xk_cryst, at, -1 )
+    ! Find good q-point grid. Decrease the nqX until a good grid is found or
+    ! until it is 1 x 1 x 1 (always good)
+    idx = 1
+    sign_ = -1
+    nqx = (/nq1, nq2, nq3/)
+    DO WHILE (.TRUE.)
+      CALL exx_qgrid_init(temp_nkqs, xk_collect, temp_xkq, &
+                          nkqs, temp_index_ikq, dxk)
+
+      ! Good q-point mesh
+      IF (ALL(ABS(dxk) < eps ) ) THEN
+        !
+        IF (idx > 1) &
+          WRITE(stdout, '(5x,a)') "EXX: WARNING: q-point mesh has been updated!"
+        !
+        WRITE(stdout, '(5x,a,3i5)') "EXX: q-point mesh: ", nq1, nq2, nq3
+        EXIT ! DO WHILE
+      ENDIF
       !
-      iq = 0
+      ! Try q-points around the input mesh, prioritizing smaller mesh
       !
-      DO iq1 = 1, nq1
-        sxk(1) = xk_cryst(1) + (iq1-1) * dq1
-        DO iq2 = 1, nq2
-          sxk(2) = xk_cryst(2) + (iq2-1) * dq2
-          DO iq3 = 1, nq3
-              sxk(3) = xk_cryst(3) + (iq3-1) * dq3
-              iq = iq + 1
-              xk_not_found = .TRUE.
-              !
-              DO ikq = 1, temp_nkqs
-                IF ( xk_not_found ) THEN
-                    dxk(:) = sxk(:)-temp_xkq(:,ikq) - NINT(sxk(:)-temp_xkq(:,ikq))
-                    IF ( ALL(ABS(dxk) < eps ) ) THEN
-                        xk_not_found = .FALSE.
-                        IF ( new_ikq(ikq) == 0) THEN
-                            nkqs = nkqs + 1
-                            temp_index_ikq(nkqs) = ikq
-                            new_ikq(ikq) = nkqs
-                        ENDIF
-                        index_xkq(ik,iq) = new_ikq(ikq)
-                    ENDIF
-                ENDIF
-              ENDDO ! ikq
-              !
-              IF (xk_not_found) THEN
-                WRITE (*,*) ik, iq, temp_nkqs
-                WRITE (*,*) sxk(:)
-                CALL errore( sub_name, ' k + q is not an S*k ', (ik-1)*nqs+iq )
-              ENDIF
-              !
-          ENDDO
-        ENDDO
-      ENDDO
+      nq1 = nqx(1) + idx * sign_
+      nq2 = nqx(2) + idx * sign_
+      nq3 = nqx(3) + idx * sign_
+      !
+      ! Ensure no values smaller than 1
+      IF (nq1 < 1) nq1 = 1
+      IF (nq2 < 1) nq2 = 1
+      IF (nq3 < 1) nq3 = 1
+      !
+      ! Enforce nqX <= nkX. This is important for surfaces to keep the
+      ! Z q-point 1.
+      !
+      IF (nq1 > nk1) nq1 = nk1
+      IF (nq2 > nk2) nq2 = nk2
+      IF (nq3 > nk3) nq3 = nk3
+      !
+      nqs = nq1 * nq2 * nq3
+      !
+      sign_ = -1 * sign_
+      !
+      ! Increase idx every other time sign is changed
+      IF (sign_ < 0) idx = idx + 1
       !
     ENDDO
     !
@@ -387,7 +382,7 @@ MODULE exx_base
     ENDIF
     !
     ! clean up
-    DEALLOCATE( temp_index_xk, temp_index_sym, temp_index_ikq, new_ikq, temp_xkq )
+    DEALLOCATE( temp_index_xk, temp_index_sym, temp_index_ikq, temp_xkq )
     !
     ! check that everything is what it should be
     CALL exx_grid_check( xk_collect(:,:) )
@@ -402,6 +397,7 @@ MODULE exx_base
           qnorm = MAX(qnorm, SQRT( SUM((xk(:,ik)-xkq_collect(:,iq))**2) ))
        ENDDO
     ENDDO
+    qnorm = qnorm * tpiba
     !
     CALL stop_clock( 'exx_grid' )
     !
@@ -411,9 +407,91 @@ MODULE exx_base
   !
   !
   !------------------------------------------------------------------------
+  SUBROUTINE exx_qgrid_init(temp_nkqs, xk_collect, temp_xkq, nkqs, temp_index_ikq, dxk)
+    !------------------------------------------------------------------------
+    !! Generate q-point mesh compatible with the k-point mesh
+    !
+    USE klist,     ONLY : nkstot, xk
+    USE cell_base, ONLY : at
+    USE symm_base, ONLY : nsym
+    !
+    IMPLICIT NONE
+    INTEGER, INTENT (IN) :: temp_nkqs
+    REAL(DP), INTENT(IN) :: xk_collect(:,:), temp_xkq(:,:)
+    !
+    REAL(DP), INTENT (OUT) :: dxk(:)
+    INTEGER, INTENT (OUT) :: temp_index_ikq(:), nkqs
+    !
+    INTEGER :: ik, ikq, iq, iq1, iq2, iq3, j, max_nk
+    INTEGER, ALLOCATABLE :: new_ikq(:)
+    REAL(DP) :: sxk(3), xk_cryst(3), dq1, dq2, dq3
+    LOGICAL :: xk_not_found
+    !
+    max_nk = nkstot * MIN(48, 2 * nsym)
+    ALLOCATE( new_ikq(max_nk) )
+
+    IF ( ALLOCATED(index_xkq) ) DEALLOCATE( index_xkq )
+    ALLOCATE( index_xkq(nkstot, nqs) )
+    !
+    nkqs = 0
+    new_ikq(:) = 0
+    !
+    ! define the q-mesh step-sizes
+    !
+    dq1 = 1._dp / DBLE(nq1)
+    dq2 = 1._dp / DBLE(nq2)
+    dq3 = 1._dp / DBLE(nq3)
+    !
+    DO ik = 1, nkstot
+      ! go to crystalline coordinates
+      xk_cryst(:) = xk_collect(:,ik)
+      CALL cryst_to_cart( 1, xk_cryst, at, -1 )
+      !
+      iq = 0
+      !
+      DO iq1 = 1, nq1
+        sxk(1) = xk_cryst(1) + (iq1-1) * dq1
+        DO iq2 = 1, nq2
+          sxk(2) = xk_cryst(2) + (iq2-1) * dq2
+          DO iq3 = 1, nq3
+              sxk(3) = xk_cryst(3) + (iq3-1) * dq3
+              iq = iq + 1
+              xk_not_found = .TRUE.
+              !
+              DO ikq = 1, temp_nkqs
+                IF ( xk_not_found ) THEN
+                    dxk(:) = sxk(:)-temp_xkq(:,ikq) - NINT(sxk(:)-temp_xkq(:,ikq))
+                    IF ( ALL(ABS(dxk) < eps ) ) THEN
+                        xk_not_found = .FALSE.
+                        IF ( new_ikq(ikq) == 0) THEN
+                            nkqs = nkqs + 1
+                            temp_index_ikq(nkqs) = ikq
+                            new_ikq(ikq) = nkqs
+                        ENDIF
+                        index_xkq(ik,iq) = new_ikq(ikq)
+                    ENDIF
+                ENDIF
+              ENDDO ! ikq
+              !
+              IF (xk_not_found) THEN
+                DEALLOCATE( new_ikq )
+                RETURN
+              ENDIF
+              !
+          ENDDO
+        ENDDO
+      ENDDO
+      !
+    ENDDO
+    !
+    DEALLOCATE( new_ikq )
+  END SUBROUTINE exx_qgrid_init
+  !
+  !
+  !------------------------------------------------------------------------
   SUBROUTINE exx_div_check()
     !------------------------------------------------------------------------
-    !!
+    !! EXX singularity treatment.
     !
     USE cell_base,  ONLY : at, alat
     USE funct,      ONLY : get_screening_parameter
@@ -422,8 +500,6 @@ MODULE exx_base
     !
     REAL(DP) :: atws(3,3)
     CHARACTER(13) :: sub_name='exx_div_check'
-    !
-    ! EXX singularity treatment
     !
     SELECT CASE ( TRIM(exxdiv_treatment) )
     CASE ( "gygi-baldereschi", "gygi-bald", "g-b", "gb" )
@@ -480,7 +556,6 @@ MODULE exx_base
   !------------------------------------------------------------------------
   SUBROUTINE exx_grid_check( xk_collect )
     !------------------------------------------------------------------------
-    !!
     !
     USE symm_base,  ONLY : s
     USE cell_base,  ONLY : at
@@ -550,9 +625,10 @@ MODULE exx_base
   !-----------------------------------------------------------------------
   SUBROUTINE exx_set_symm( nr1, nr2, nr3, nr1x, nr2x, nr3x )
     !-----------------------------------------------------------------------
-    !! Uses nkqs and index_sym from module exx, computes rir.
+    !! Uses \(\text{nkqs}\) and \(\text{index_sym}\) from module \(\texttt{exx}\),
+    !! computes \(\text{rir}\).
     !
-    USE symm_base,  ONLY : nsym, s, sr, ft
+    USE symm_base,  ONLY : nsym, s, ft
     !
     IMPLICIT NONE
     !
@@ -560,9 +636,8 @@ MODULE exx_base
     !
     ! ... local variables
     !
-    INTEGER :: ftau(3), ikq, isym, i,j,k, ri,rj,rk, ir, nxxs
-    LOGICAL :: ispresent(nsym)
-    REAL(DP) :: ft_(3), eps2 = 1.0d-5
+    INTEGER :: ikq, isym, i,j,k, ri,rj,rk, ir, nxxs
+    INTEGER, allocatable :: ftau(:,:), s_scaled(:,:,:)
     !
     nxxs = nr1x*nr2x*nr3x
     !
@@ -574,51 +649,22 @@ MODULE exx_base
     ENDIF
     !
     rir = 0
-    ispresent(1:nsym) = .FALSE.
-    !
-    DO ikq = 1, nkqs
-       !
-       isym = ABS(index_sym(ikq))
-       IF ( .NOT. ispresent(isym) ) THEN
-          ispresent(isym) = .TRUE.
-          IF ( MOD(s(2,1,isym) * nr1, nr2) /= 0 .OR. &
-               MOD(s(3,1,isym) * nr1, nr3) /= 0 .OR. &
-               MOD(s(1,2,isym) * nr2, nr1) /= 0 .OR. &
-               MOD(s(3,2,isym) * nr2, nr3) /= 0 .OR. &
-               MOD(s(1,3,isym) * nr3, nr1) /= 0 .OR. &
-               MOD(s(2,3,isym) * nr3, nr2) /= 0 ) THEN
-             CALL errore( 'exx_set_symm', ' EXX smooth grid is not compatible &
-                          & with symmetry: change ecutfock', isym )
-          ENDIF
-          DO ir = 1, nxxs
-             rir(ir,isym) = ir
-          ENDDO
-          ! fractional translation in FFT grid coordinates
-          ft_(1) = ft(1,isym)*nr1
-          ft_(2) = ft(2,isym)*nr2
-          ft_(3) = ft(3,isym)*nr3
-          ftau(:) = NINT(ft_(:))
-          !
-          IF ( ABS( ft_(1) - ftau(1) ) / nr1 > eps2 .OR. &
-               ABS( ft_(2) - ftau(2) ) / nr2 > eps2 .OR. &
-               ABS( ft_(3) - ftau(3) ) / nr3 > eps2 ) THEN
-             CALL infomsg( 'exx_set_symm', ' EXX smooth grid is not compatible &
-                  & with fractional translation: change ecutfock' )
-          ENDIF
-          !
-          DO k = 1, nr3
-             DO j = 1, nr2
-                DO i = 1, nr1
-                   CALL ruotaijk( s(1,1,isym), ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
-                   ir = i + (j-1)*nr1x + (k-1)*nr1x*nr2x
-                   rir(ir,isym) = ri + (rj-1)*nr1x + (rk-1)*nr1x*nr2x
-                ENDDO
+    ALLOCATE ( ftau(3,nsym), s_scaled(3,3,nsym) )
+    CALL scale_sym_ops (nsym, s, ft, nr1, nr2, nr3, s_scaled, ftau)
+    DO isym = 1, nsym
+       DO k = 1, nr3
+          DO j = 1, nr2
+             DO i = 1, nr1
+                CALL rotate_grid_point( s_scaled(1,1,isym), ftau(1,isym), &
+                     i, j, k, nr1, nr2, nr3, ri, rj, rk )
+                ir = i + (j-1)*nr1x + (k-1)*nr1x*nr2x
+                rir(ir,isym) = ri + (rj-1)*nr1x + (rk-1)*nr1x*nr2x
              ENDDO
           ENDDO
-          !
-       ENDIF
-       !
+       ENDDO
     ENDDO
+    !
+    DEALLOCATE ( s_scaled, ftau )
     !
   END SUBROUTINE exx_set_symm
   !
@@ -789,7 +835,6 @@ MODULE exx_base
   !-----------------------------------------------------------------------
   FUNCTION exx_divergence()
      !-----------------------------------------------------------------------
-     !! 
      !
      USE constants,      ONLY : fpi, e2, pi
      USE cell_base,      ONLY : bg, at, alat, omega

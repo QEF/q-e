@@ -9,159 +9,168 @@
 ! initialization and stopping, broadcast, parallel sum, etc.
 !
 !------------------------------------------------------------------------------!
-    MODULE mp
+MODULE mp
 !------------------------------------------------------------------------------!
-      USE util_param,     ONLY : DP, stdout
-      USE parallel_include
+  USE util_param,     ONLY : DP, stdout, i8b
+  USE parallel_include
 #if defined(__CUDA)
-      USE cudafor,        ONLY: cudamemcpy, cudamemcpy2d, &
-                                & cudaMemcpyDeviceToDevice, &
-                                & cudaDeviceSynchronize
+  USE cudafor,        ONLY : cudamemcpy, cudamemcpy2d, &
+                            & cudaMemcpyDeviceToDevice, &
+                            & cudaDeviceSynchronize
 #endif
-      !
-      IMPLICIT NONE
-      PRIVATE
-
-      PUBLIC :: mp_start, mp_abort, mp_stop, mp_end, &
-        mp_bcast, mp_sum, mp_max, mp_min, mp_rank, mp_size, &
-        mp_gather, mp_alltoall, mp_get, mp_put, &
-        mp_barrier, mp_report, mp_group_free, &
-        mp_root_sum, mp_comm_free, mp_comm_create, mp_comm_group, &
-        mp_group_create, mp_comm_split, mp_set_displs, &
-        mp_circular_shift_left, mp_circular_shift_left_start, &
-        mp_get_comm_null, mp_get_comm_self, mp_count_nodes, &
-        mp_type_create_column_section, mp_type_free, &
-        mp_allgather, mp_waitall, mp_testall
-
-!
-      INTERFACE mp_bcast
-        MODULE PROCEDURE mp_bcast_i1, mp_bcast_r1, mp_bcast_c1, &
-          mp_bcast_z, mp_bcast_zv, &
-          mp_bcast_iv, mp_bcast_rv, mp_bcast_cv, mp_bcast_l, mp_bcast_rm, &
-          mp_bcast_cm, mp_bcast_im, mp_bcast_it, mp_bcast_i4d, mp_bcast_rt, mp_bcast_lv, &
-          mp_bcast_lm, mp_bcast_r4d, mp_bcast_r5d, mp_bcast_ct,  mp_bcast_c4d,&
-          mp_bcast_c5d, mp_bcast_c6d
+  !
+  IMPLICIT NONE
+  PRIVATE
+  ! 
+  PUBLIC :: mp_start, mp_abort, mp_stop, mp_end, &
+    mp_bcast, mp_sum, mp_max, mp_min, mp_rank, mp_size, &
+    mp_gather, mp_alltoall, mp_get, mp_put, &
+    mp_barrier, mp_report, mp_group_free, &
+    mp_root_sum, mp_comm_free, mp_comm_create, mp_comm_group, &
+    mp_group_create, mp_comm_split, mp_set_displs, &
+    mp_circular_shift_left, mp_circular_shift_left_start, &
+    mp_get_comm_null, mp_get_comm_self, mp_count_nodes, &
+    mp_type_create_column_section, mp_type_create_row_section, mp_type_free, &
+    mp_allgather, mp_waitall, mp_testall
+  !
+  INTERFACE mp_bcast
+    MODULE PROCEDURE mp_bcast_i1, mp_bcast_r1, mp_bcast_c1, &
+      mp_bcast_z, mp_bcast_zv, &
+      mp_bcast_iv, mp_bcast_i8v, mp_bcast_rv, mp_bcast_cv, mp_bcast_l, mp_bcast_rm, &
+      mp_bcast_cm, mp_bcast_im, mp_bcast_it, mp_bcast_i4d, mp_bcast_rt, mp_bcast_lv, &
+      mp_bcast_lm, mp_bcast_r4d, mp_bcast_r5d, mp_bcast_ct,  mp_bcast_c4d,&
+      mp_bcast_c5d, mp_bcast_c6d
 #if defined(__CUDA)
-        MODULE PROCEDURE mp_bcast_i1_gpu, mp_bcast_r1_gpu, mp_bcast_c1_gpu, &
-          !mp_bcast_z_gpu, mp_bcast_zv_gpu, &
-          mp_bcast_iv_gpu, mp_bcast_rv_gpu, mp_bcast_cv_gpu, mp_bcast_l_gpu, mp_bcast_rm_gpu, &
-          mp_bcast_cm_gpu, mp_bcast_im_gpu, mp_bcast_it_gpu, mp_bcast_i4d_gpu, mp_bcast_rt_gpu, mp_bcast_lv_gpu, &
-          mp_bcast_lm_gpu, mp_bcast_r4d_gpu, mp_bcast_r5d_gpu, mp_bcast_ct_gpu,  mp_bcast_c4d_gpu,&
-          mp_bcast_c5d_gpu, mp_bcast_c6d_gpu
+    MODULE PROCEDURE mp_bcast_i1_gpu, mp_bcast_r1_gpu, mp_bcast_c1_gpu, &
+      !mp_bcast_z_gpu, mp_bcast_zv_gpu, &
+      mp_bcast_iv_gpu, mp_bcast_rv_gpu, mp_bcast_cv_gpu, mp_bcast_l_gpu, mp_bcast_rm_gpu, &
+      mp_bcast_cm_gpu, mp_bcast_im_gpu, mp_bcast_it_gpu, mp_bcast_i4d_gpu, mp_bcast_rt_gpu, mp_bcast_lv_gpu, &
+      mp_bcast_lm_gpu, mp_bcast_r4d_gpu, mp_bcast_r5d_gpu, mp_bcast_ct_gpu,  mp_bcast_c4d_gpu,&
+      mp_bcast_c5d_gpu, mp_bcast_c6d_gpu
 #endif
-      END INTERFACE
-
-      INTERFACE mp_sum
-        MODULE PROCEDURE mp_sum_i1, mp_sum_iv, mp_sum_im, mp_sum_it, mp_sum_i4, mp_sum_i5, &
-          mp_sum_r1, mp_sum_rv, mp_sum_rm, mp_sum_rt, mp_sum_r4d, &
-          mp_sum_c1, mp_sum_cv, mp_sum_cm, mp_sum_ct, mp_sum_c4d, &
-          mp_sum_c5d, mp_sum_c6d, mp_sum_rmm, mp_sum_cmm, mp_sum_r5d, &
-          mp_sum_r6d
+  END INTERFACE
+  ! 
+  INTERFACE mp_sum
+    MODULE PROCEDURE mp_sum_i1, mp_sum_iv, mp_sum_i8v, mp_sum_im, mp_sum_it, mp_sum_i4, mp_sum_i5, &
+      mp_sum_r1, mp_sum_rv, mp_sum_rm, mp_sum_rt, mp_sum_r4d, &
+      mp_sum_c1, mp_sum_cv, mp_sum_cm, mp_sum_ct, mp_sum_c4d, &
+      mp_sum_c5d, mp_sum_c6d, mp_sum_rmm, mp_sum_cmm, mp_sum_r5d, &
+      mp_sum_r6d
 #if defined(__CUDA)
-        MODULE PROCEDURE  mp_sum_i1_gpu, mp_sum_iv_gpu, mp_sum_im_gpu, mp_sum_it_gpu, &
-          mp_sum_r1_gpu, mp_sum_rv_gpu, mp_sum_rm_gpu, mp_sum_rt_gpu, mp_sum_r4d_gpu, &
-          mp_sum_c1_gpu, mp_sum_cv_gpu, mp_sum_cm_gpu, mp_sum_ct_gpu, mp_sum_c4d_gpu, &
-          mp_sum_c5d_gpu, mp_sum_c6d_gpu, mp_sum_rmm_gpu, mp_sum_cmm_gpu, mp_sum_r5d_gpu, &
-          mp_sum_r6d_gpu
+    MODULE PROCEDURE  mp_sum_i1_gpu, mp_sum_iv_gpu, mp_sum_im_gpu, mp_sum_it_gpu, &
+      mp_sum_r1_gpu, mp_sum_rv_gpu, mp_sum_rm_gpu, mp_sum_rt_gpu, mp_sum_r4d_gpu, &
+      mp_sum_c1_gpu, mp_sum_cv_gpu, mp_sum_cm_gpu, mp_sum_ct_gpu, mp_sum_c4d_gpu, &
+      mp_sum_c5d_gpu, mp_sum_c6d_gpu, mp_sum_rmm_gpu, mp_sum_cmm_gpu, mp_sum_r5d_gpu, &
+      mp_sum_r6d_gpu
 #endif
-      END INTERFACE
-
-      INTERFACE mp_root_sum
-        MODULE PROCEDURE mp_root_sum_rm, mp_root_sum_cm
+  END INTERFACE
+  ! 
+  INTERFACE mp_root_sum
+    MODULE PROCEDURE mp_root_sum_rm, mp_root_sum_cm
 #if defined(__CUDA)
-        MODULE PROCEDURE mp_root_sum_rm_gpu, mp_root_sum_cm_gpu
+    MODULE PROCEDURE mp_root_sum_rm_gpu, mp_root_sum_cm_gpu
 #endif
-      END INTERFACE
-
-      INTERFACE mp_get
-        MODULE PROCEDURE mp_get_r1, mp_get_rv, mp_get_cv, mp_get_i1, mp_get_iv, &
-          mp_get_rm, mp_get_cm
+  END INTERFACE
+  ! 
+  INTERFACE mp_get
+    MODULE PROCEDURE mp_get_r1, mp_get_rv, mp_get_cv, mp_get_i1, mp_get_iv, mp_get_rm, mp_get_cm
 #if defined(__CUDA)
-        MODULE PROCEDURE mp_get_r1_gpu, mp_get_rv_gpu, mp_get_cv_gpu, mp_get_i1_gpu, mp_get_iv_gpu, &
-          mp_get_rm_gpu, mp_get_cm_gpu
+    MODULE PROCEDURE mp_get_r1_gpu, mp_get_rv_gpu, mp_get_cv_gpu, mp_get_i1_gpu, mp_get_iv_gpu, &
+      mp_get_rm_gpu, mp_get_cm_gpu
 #endif
-      END INTERFACE
-
-      INTERFACE mp_put
-        MODULE PROCEDURE mp_put_rv, mp_put_cv, mp_put_i1, mp_put_iv, &
-          mp_put_rm
+   END INTERFACE
+   ! 
+   INTERFACE mp_put
+     MODULE PROCEDURE mp_put_rv, mp_put_cv, mp_put_i1, mp_put_iv, &
+       mp_put_rm
 #if defined(__CUDA)
-        MODULE PROCEDURE mp_put_rv_gpu, mp_put_cv_gpu, mp_put_i1_gpu, mp_put_iv_gpu, &
-          mp_put_rm_gpu
+   MODULE PROCEDURE mp_put_rv_gpu, mp_put_cv_gpu, mp_put_i1_gpu, mp_put_iv_gpu, &
+     mp_put_rm_gpu
 #endif
-      END INTERFACE
-
-      INTERFACE mp_max
-        MODULE PROCEDURE mp_max_i, mp_max_r, mp_max_rv, mp_max_iv
+   END INTERFACE
+   ! 
+   INTERFACE mp_max
+     MODULE PROCEDURE mp_max_i, mp_max_r, mp_max_rv, mp_max_iv
 #if defined(__CUDA)
-        MODULE PROCEDURE mp_max_i_gpu, mp_max_r_gpu, mp_max_rv_gpu, mp_max_iv_gpu
+     MODULE PROCEDURE mp_max_i_gpu, mp_max_r_gpu, mp_max_rv_gpu, mp_max_iv_gpu
 #endif
-      END INTERFACE
-
-      INTERFACE mp_min
-        MODULE PROCEDURE mp_min_i, mp_min_r, mp_min_rv, mp_min_iv
+   END INTERFACE
+   ! 
+   INTERFACE mp_min
+     MODULE PROCEDURE mp_min_i, mp_min_r, mp_min_rv, mp_min_iv
 #if defined(__CUDA)
-        MODULE PROCEDURE mp_min_i_gpu, mp_min_r_gpu, mp_min_rv_gpu, mp_min_iv_gpu
+     MODULE PROCEDURE mp_min_i_gpu, mp_min_r_gpu, mp_min_rv_gpu, mp_min_iv_gpu
 #endif
-      END INTERFACE
-
-      INTERFACE mp_gather
-        MODULE PROCEDURE mp_gather_i1, mp_gather_iv, mp_gatherv_rv, mp_gatherv_iv, &
-                         mp_gatherv_rm, mp_gatherv_im, mp_gatherv_cv, &
-                         mp_gatherv_inplace_cplx_array
+   END INTERFACE
+   ! 
+   INTERFACE mp_gather
+     MODULE PROCEDURE mp_gather_i1, mp_gather_iv, mp_gatherv_rv, mp_gatherv_iv, &
+                      mp_gatherv_rm, mp_gatherv_im, mp_gatherv_cv, &
+                      mp_gatherv_inplace_cplx_array
 #if defined(__CUDA)
-        MODULE PROCEDURE mp_gather_i1_gpu, mp_gather_iv_gpu, mp_gatherv_rv_gpu, mp_gatherv_iv_gpu, &
-          mp_gatherv_rm_gpu, mp_gatherv_im_gpu, mp_gatherv_cv_gpu, mp_gatherv_inplace_cplx_array_gpu
+     MODULE PROCEDURE mp_gather_i1_gpu, mp_gather_iv_gpu, mp_gatherv_rv_gpu, mp_gatherv_iv_gpu, &
+       mp_gatherv_rm_gpu, mp_gatherv_im_gpu, mp_gatherv_cv_gpu, mp_gatherv_inplace_cplx_array_gpu
 #endif
-      END INTERFACE
-
-      INTERFACE mp_allgather
-        MODULE PROCEDURE mp_allgatherv_inplace_cplx_array
+   END INTERFACE
+   ! 
+   INTERFACE mp_allgather
+     MODULE PROCEDURE mp_allgatherv_inplace_cplx_array
+     MODULE PROCEDURE mp_allgatherv_inplace_real_array
 #if defined(__CUDA)
-        MODULE PROCEDURE mp_allgatherv_inplace_cplx_array_gpu
+     MODULE PROCEDURE mp_allgatherv_inplace_cplx_array_gpu
 #endif
-      END INTERFACE
-
-      INTERFACE mp_alltoall
-        MODULE PROCEDURE mp_alltoall_c3d, mp_alltoall_i3d
+   END INTERFACE
+   ! 
+   INTERFACE mp_alltoall
+     MODULE PROCEDURE mp_alltoall_c3d, mp_alltoall_i3d
 #if defined(__CUDA)
-        MODULE PROCEDURE mp_alltoall_c3d_gpu, mp_alltoall_i3d_gpu
+     MODULE PROCEDURE mp_alltoall_c3d_gpu, mp_alltoall_i3d_gpu
 #endif
-      END INTERFACE
-
-      INTERFACE mp_circular_shift_left
-        MODULE PROCEDURE mp_circular_shift_left_i0, &
-          mp_circular_shift_left_i1, &
-          mp_circular_shift_left_i2, &
-          mp_circular_shift_left_r2d, &
-          mp_circular_shift_left_c2d
+   END INTERFACE
+   ! 
+   INTERFACE mp_circular_shift_left
+     MODULE PROCEDURE mp_circular_shift_left_i0, &
+       mp_circular_shift_left_i1, &
+       mp_circular_shift_left_i2, &
+       mp_circular_shift_left_r2d, &
+       mp_circular_shift_left_c2d
 #if defined(__CUDA)
-        MODULE PROCEDURE mp_circular_shift_left_i0_gpu, &
-          mp_circular_shift_left_i1_gpu, &
-          mp_circular_shift_left_i2_gpu, &
-          mp_circular_shift_left_r2d_gpu, &
-          mp_circular_shift_left_c2d_gpu
+     MODULE PROCEDURE mp_circular_shift_left_i0_gpu, &
+       mp_circular_shift_left_i1_gpu, &
+       mp_circular_shift_left_i2_gpu, &
+       mp_circular_shift_left_r2d_gpu, &
+       mp_circular_shift_left_c2d_gpu
 #endif
-      END INTERFACE
-
-      INTERFACE mp_circular_shift_left_start
-        MODULE PROCEDURE mp_circular_shift_left_start_i0, &
-          mp_circular_shift_left_start_i1, &
-          mp_circular_shift_left_start_i2, &
-          mp_circular_shift_left_start_r2d, &
-          mp_circular_shift_left_start_c2d
-      END INTERFACE
-
-      INTERFACE mp_type_create_column_section
-        MODULE PROCEDURE mp_type_create_cplx_column_section
+   END INTERFACE
+   ! 
+   INTERFACE mp_circular_shift_left_start
+     MODULE PROCEDURE mp_circular_shift_left_start_i0, &
+       mp_circular_shift_left_start_i1, &
+       mp_circular_shift_left_start_i2, &
+       mp_circular_shift_left_start_r2d, &
+       mp_circular_shift_left_start_c2d
+   END INTERFACE
+   ! 
+   INTERFACE mp_type_create_column_section
+     MODULE PROCEDURE mp_type_create_cplx_column_section
+     MODULE PROCEDURE mp_type_create_real_column_section
 #if defined(__CUDA)
-        MODULE PROCEDURE mp_type_create_cplx_column_section_gpu
+     MODULE PROCEDURE mp_type_create_cplx_column_section_gpu
+     MODULE PROCEDURE mp_type_create_real_column_section_gpu
 #endif
-      END INTERFACE
+   END INTERFACE
 
+   INTERFACE mp_type_create_row_section
+     MODULE PROCEDURE mp_type_create_cplx_row_section
+     MODULE PROCEDURE mp_type_create_real_row_section
+#if defined(__CUDA)
+     MODULE PROCEDURE mp_type_create_cplx_row_section_gpu
+     MODULE PROCEDURE mp_type_create_real_row_section_gpu
+#endif
+   END INTERFACE
 !------------------------------------------------------------------------------!
 !
-    CONTAINS
+   CONTAINS
 !
 !------------------------------------------------------------------------------!
 !
@@ -433,22 +442,50 @@
         CALL bcast_integer( msg, msglen, source, group )
 #endif
       END SUBROUTINE mp_bcast_i1
-!
-!------------------------------------------------------------------------------!
-      SUBROUTINE mp_bcast_iv(msg,source,gid)
-        IMPLICIT NONE
-        INTEGER :: msg(:)
-        INTEGER, INTENT(IN) :: source
-        INTEGER, INTENT(IN) :: gid
+      !
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_bcast_iv(msg, source, gid)
+      !------------------------------------------------------------------------------!
+      !! 
+      !! Bcast an integer vector
+      !!  
+      IMPLICIT NONE
+      ! 
+      INTEGER :: msg(:)
+      INTEGER, INTENT(in) :: source
+      INTEGER, INTENT(in) :: gid
 #if defined(__MPI)
-        INTEGER :: msglen
-        msglen = size(msg)
-        CALL bcast_integer( msg, msglen, source, gid )
+      INTEGER :: msglen
+      msglen = SIZE(msg)
+      CALL bcast_integer(msg, msglen, source, gid)
 #endif
+      !------------------------------------------------------------------------------!
       END SUBROUTINE mp_bcast_iv
-!
-!------------------------------------------------------------------------------!
-      SUBROUTINE mp_bcast_im( msg, source, gid )
+      !------------------------------------------------------------------------------!
+      ! 
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_bcast_i8v(msg, source, gid)
+      !------------------------------------------------------------------------------!
+      !! 
+      !! Bcast an integer vector of kind i8b. 
+      !!  
+      IMPLICIT NONE
+      ! 
+      INTEGER(KIND = i8b) :: msg(:)
+      INTEGER, INTENT(in) :: source
+      INTEGER, INTENT(in) :: gid
+#if defined(__MPI)
+      INTEGER :: msglen
+      msglen = SIZE(msg)
+      CALL bcast_integer8(msg, msglen, source, gid)
+#endif
+      !------------------------------------------------------------------------------!
+      END SUBROUTINE mp_bcast_i8v
+      !------------------------------------------------------------------------------!
+      !
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_bcast_im(msg, source, gid)
+      !------------------------------------------------------------------------------!
         IMPLICIT NONE
         INTEGER :: msg(:,:)
         INTEGER, INTENT(IN) :: source
@@ -456,7 +493,7 @@
 #if defined(__MPI)
         INTEGER :: msglen
         msglen = size(msg)
-        CALL bcast_integer( msg, msglen, source, gid )
+        CALL bcast_integer(msg, msglen, source, gid)
 #endif
       END SUBROUTINE mp_bcast_im
 !
@@ -1400,22 +1437,48 @@
         CALL reduce_base_integer( msglen, msg, gid, -1 )
 #endif
       END SUBROUTINE mp_sum_i1
-!
-!------------------------------------------------------------------------------!
-      SUBROUTINE mp_sum_iv(msg,gid)
-        IMPLICIT NONE
-        INTEGER, INTENT (INOUT) :: msg(:)
-        INTEGER, INTENT(IN) :: gid
+      !
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_sum_iv(msg, gid)
+      !------------------------------------------------------------------------------!
+      !! 
+      !! MPI sum an integer vector from all cores and bcast the result to all.  
+      !! 
+      IMPLICIT NONE
+      ! 
+      INTEGER, INTENT(inout) :: msg(:)
+      INTEGER, INTENT(in) :: gid
 #if defined(__MPI)
-        INTEGER :: msglen
-        msglen = size(msg)
-        CALL reduce_base_integer( msglen, msg, gid, -1 )
+      INTEGER :: msglen
+      msglen = SIZE(msg)
+      CALL reduce_base_integer(msglen, msg, gid, -1)
 #endif
+      !------------------------------------------------------------------------------!
       END SUBROUTINE mp_sum_iv
-!
-!------------------------------------------------------------------------------!
-
+      !------------------------------------------------------------------------------!
+      ! 
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_sum_i8v(msg, gid)
+      !------------------------------------------------------------------------------!
+      !! 
+      !! MPI sum an integer vector from all cores and bcast the result to all.  
+      !! 
+      IMPLICIT NONE
+      ! 
+      INTEGER(KIND = i8b), INTENT(inout) :: msg(:)
+      INTEGER, INTENT(in) :: gid
+#if defined(__MPI)
+      INTEGER :: msglen
+      msglen = SIZE(msg)
+      CALL reduce_base_integer8(msglen, msg, gid, -1)
+#endif
+      !------------------------------------------------------------------------------!
+      END SUBROUTINE mp_sum_i8v
+      !------------------------------------------------------------------------------!
+      !
+      !------------------------------------------------------------------------------!
       SUBROUTINE mp_sum_im(msg,gid)
+      !------------------------------------------------------------------------------!
         IMPLICIT NONE
         INTEGER, INTENT (INOUT) :: msg(:,:)
         INTEGER, INTENT(IN) :: gid
@@ -2223,6 +2286,30 @@
         RETURN
       END SUBROUTINE mp_allgatherv_inplace_cplx_array
 
+!.. SdG added 16/08/19
+      SUBROUTINE mp_allgatherv_inplace_real_array(alldata, my_element_type, recvcount, displs, gid)
+        IMPLICIT NONE
+        REAL(DP) :: alldata(:,:)
+        INTEGER, INTENT(IN) :: my_element_type
+        INTEGER, INTENT(IN) :: recvcount(:), displs(:)
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: ierr, npe, myid
+
+#if defined (__MPI)
+        CALL mpi_comm_size( gid, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 8069 )
+        CALL mpi_comm_rank( gid, myid, ierr )
+        IF (ierr/=0) CALL mp_stop( 8070 )
+        !
+        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 8071 )
+        !
+        CALL MPI_ALLGATHERV( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &
+                             alldata, recvcount, displs, my_element_type, gid, ierr )
+        IF (ierr/=0) CALL mp_stop( 8074 )
+#endif
+        RETURN
+      END SUBROUTINE mp_allgatherv_inplace_real_array
+
 !------------------------------------------------------------------------------!
 
       SUBROUTINE mp_set_displs( recvcount, displs, ntot, nproc )
@@ -2865,13 +2952,101 @@ SUBROUTINE mp_type_create_cplx_column_section(dummy, start, length, stride, myty
   RETURN
 END SUBROUTINE mp_type_create_cplx_column_section
 
+SUBROUTINE mp_type_create_real_column_section(dummy, start, length, stride, mytype)
+  IMPLICIT NONE
+  !
+  REAL (DP), INTENT(IN) :: dummy
+  INTEGER, INTENT(IN) :: start, length, stride
+  INTEGER, INTENT(OUT) :: mytype
+  !
+#if defined(__MPI)
+  INTEGER :: ierr
+  !
+  CALL MPI_TYPE_CREATE_SUBARRAY(1, stride, length, start, MPI_ORDER_FORTRAN,&
+                                MPI_DOUBLE_PRECISION, mytype, ierr)
+  IF (ierr/=0) CALL mp_stop( 8083 )
+  CALL MPI_Type_commit(mytype, ierr)
+  IF (ierr/=0) CALL mp_stop( 8084 )
+#else
+  mytype = 0;
+#endif
+  !
+  RETURN
+END SUBROUTINE mp_type_create_real_column_section
+
+SUBROUTINE mp_type_create_cplx_row_section(dummy, column_start, column_stride, row_length, mytype)
+  IMPLICIT NONE
+  !
+  COMPLEX (DP), INTENT(IN) :: dummy
+  INTEGER, INTENT(IN) :: column_start, column_stride, row_length
+  INTEGER, INTENT(OUT) :: mytype
+  !
+#if defined(__MPI)
+  INTEGER :: ierr, temporary
+  INTEGER :: strides(2), lengths(2), starts(2)
+  INTEGER(KIND=MPI_ADDRESS_KIND) :: lb, extent
+  !
+  strides(1) = column_stride ; strides(2) = row_length
+  lengths(1) = 1             ; lengths(2) = row_length
+  starts(1)  = column_start  ; starts(2)  = 0
+  CALL MPI_TYPE_CREATE_SUBARRAY(2, strides, lengths, starts, MPI_ORDER_FORTRAN,&
+                                MPI_DOUBLE_COMPLEX, temporary, ierr)
+  IF (ierr/=0) CALL mp_stop( 8085 )
+  CALL MPI_TYPE_GET_EXTENT(MPI_DOUBLE_COMPLEX, lb, extent, ierr)
+  IF (ierr/=0) CALL mp_stop( 8085 )
+  CALL MPI_TYPE_COMMIT(temporary, ierr)
+  IF (ierr/=0) CALL mp_stop( 8085 )
+  CALL MPI_TYPE_CREATE_RESIZED(temporary, lb, extent, mytype, ierr)
+  IF (ierr/=0) CALL mp_stop( 8086 )
+  CALL MPI_Type_commit(mytype, ierr)
+  IF (ierr/=0) CALL mp_stop( 8086 )
+#else
+  mytype = 0;
+#endif
+  !
+  RETURN
+END SUBROUTINE mp_type_create_cplx_row_section
+
+SUBROUTINE mp_type_create_real_row_section(dummy, column_start, column_stride, row_length, mytype)
+  IMPLICIT NONE
+  !
+  REAL (DP), INTENT(IN) :: dummy
+  INTEGER, INTENT(IN) :: column_start, column_stride, row_length
+  INTEGER, INTENT(OUT) :: mytype
+  !
+#if defined(__MPI)
+  INTEGER :: ierr, temporary
+  INTEGER :: strides(2), lengths(2), starts(2)
+  INTEGER(KIND=MPI_ADDRESS_KIND) :: lb, extent
+  !
+  strides(1) = column_stride ; strides(2) = row_length
+  lengths(1) = 1             ; lengths(2) = row_length
+  starts(1)  = column_start  ; starts(2)  = 0
+  CALL MPI_TYPE_CREATE_SUBARRAY(2, strides, lengths, starts, MPI_ORDER_FORTRAN,&
+                                MPI_DOUBLE_PRECISION, temporary, ierr)
+  IF (ierr/=0) CALL mp_stop( 8087 )
+  CALL MPI_TYPE_GET_EXTENT(MPI_DOUBLE_PRECISION, lb, extent, ierr)
+  IF (ierr/=0) CALL mp_stop( 8087 )
+  CALL MPI_TYPE_COMMIT(temporary, ierr)
+  IF (ierr/=0) CALL mp_stop( 8087 )
+  CALL MPI_TYPE_CREATE_RESIZED(temporary, lb, extent, mytype, ierr)
+  IF (ierr/=0) CALL mp_stop( 8088 )
+  CALL MPI_Type_commit(mytype, ierr)
+  IF (ierr/=0) CALL mp_stop( 8088 )
+#else
+  mytype = 0;
+#endif
+  !
+  RETURN
+END SUBROUTINE mp_type_create_real_row_section
+
 SUBROUTINE mp_type_free(mytype)
   IMPLICIT NONE
   INTEGER :: mytype, ierr
   !
 #if defined(__MPI)
   CALL MPI_TYPE_FREE(mytype, ierr)
-  IF (ierr/=0) CALL mp_stop( 8083 )
+  IF (ierr/=0) CALL mp_stop( 8089 )
 #endif
   !
   RETURN
@@ -4398,9 +4573,11 @@ END SUBROUTINE mp_type_free
         RETURN ! Sync not needed in this case
 #else
         ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case
-        ALLOCATE( res_h(lbound(msg_h,1):ubound(msg_h,1), lbound(msg_h,2):ubound(msg_h,2)));
+        IF( taskid == root ) ALLOCATE( res_h(lbound(res_d,1):ubound(res_d,1), lbound(res_d,2):ubound(res_d,2)));
         CALL reduce_base_real_to( msglen, msg_h, res_h, gid, root )
-        res_d = res_h; DEALLOCATE(msg_h, res_h)
+        IF( taskid == root ) res_d = res_h;
+        IF( taskid == root ) DEALLOCATE(res_h)
+        DEALLOCATE(msg_h)
 #endif
 
 #else
@@ -4435,9 +4612,11 @@ END SUBROUTINE mp_type_free
         RETURN ! Sync not needed in this case
 #else
         ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case
-        ALLOCATE( res_h(lbound(msg_h,1):ubound(msg_h,1), lbound(msg_h,2):ubound(msg_h,2)));
+        IF( taskid == root ) ALLOCATE( res_h(lbound(res_d,1):ubound(res_d,1), lbound(res_d,2):ubound(res_d,2)));
         CALL reduce_base_real_to( 2 * msglen, msg_h, res_h, gid, root )
-        res_d = res_h; DEALLOCATE(msg_h, res_h)
+        IF( taskid == root ) res_d = res_h;
+        IF( taskid == root ) DEALLOCATE(res_h)
+        DEALLOCATE(msg_h)
 #endif
 #else
         res_d = msg_d
@@ -4479,9 +4658,11 @@ END SUBROUTINE mp_type_free
         RETURN ! Sync not needed in this case
 #else
         ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case
-        ALLOCATE( res_h(lbound(msg_h,1):ubound(msg_h,1), lbound(msg_h,2):ubound(msg_h,2)));
+        IF( taskid == root ) ALLOCATE( res_h(lbound(res_d,1):ubound(res_d,1), lbound(res_d,2):ubound(res_d,2)));
         CALL reduce_base_real_to( msglen, msg_h, res_h, gid, root )
-        res_d = res_h; DEALLOCATE(msg_h, res_h)
+        IF( taskid == root ) res_d = res_h;
+        IF( taskid == root ) DEALLOCATE(res_h)
+        DEALLOCATE(msg_h)
 #endif
         !
 #else
@@ -5902,11 +6083,99 @@ END SUBROUTINE mp_type_free
          RETURN
       END SUBROUTINE mp_type_create_cplx_column_section_gpu
 
+      SUBROUTINE mp_type_create_real_column_section_gpu(dummy, start, length, stride, mytype)
+         IMPLICIT NONE
+         !
+         REAL (DP), DEVICE, INTENT(IN) :: dummy
+         INTEGER, INTENT(IN) :: start, length, stride
+         INTEGER, INTENT(OUT) :: mytype
+         !
+#if defined(__MPI)
+         INTEGER :: ierr
+         !
+         CALL MPI_TYPE_CREATE_SUBARRAY(1, stride, length, start, MPI_ORDER_FORTRAN,&
+                                       MPI_DOUBLE_PRECISION, mytype, ierr)
+         IF (ierr/=0) CALL mp_stop( 8083 )
+         CALL MPI_Type_commit(mytype, ierr)
+         IF (ierr/=0) CALL mp_stop( 8084 )
+#else
+         mytype = 0;
+#endif
+         !
+         RETURN
+      END SUBROUTINE mp_type_create_real_column_section_gpu
+
+      SUBROUTINE mp_type_create_cplx_row_section_gpu(dummy, column_start, column_stride, row_length, mytype)
+         IMPLICIT NONE
+         !
+         COMPLEX (DP), DEVICE, INTENT(IN) :: dummy
+         INTEGER, INTENT(IN) :: column_start, column_stride, row_length
+         INTEGER, INTENT(OUT) :: mytype
+         !
+#if defined(__MPI)
+         INTEGER :: ierr, temporary
+         INTEGER :: strides(2), lengths(2), starts(2)
+         INTEGER(KIND=MPI_ADDRESS_KIND) :: lb, extent
+         !
+         strides(1) = column_stride ; strides(2) = row_length
+         lengths(1) = 1             ; lengths(2) = row_length
+         starts(1)  = column_start  ; starts(2)  = 0
+         CALL MPI_TYPE_CREATE_SUBARRAY(2, strides, lengths, starts, MPI_ORDER_FORTRAN,&
+                                       MPI_DOUBLE_COMPLEX, temporary, ierr)
+         IF (ierr/=0) CALL mp_stop( 8085 )
+         CALL MPI_TYPE_GET_EXTENT(MPI_DOUBLE_COMPLEX, lb, extent, ierr)
+         IF (ierr/=0) CALL mp_stop( 8085 )
+         CALL MPI_TYPE_COMMIT(temporary, ierr)
+         IF (ierr/=0) CALL mp_stop( 8085 )
+         CALL MPI_TYPE_CREATE_RESIZED(temporary, lb, extent, mytype, ierr)
+         IF (ierr/=0) CALL mp_stop( 8086 )
+         CALL MPI_Type_commit(mytype, ierr)
+         IF (ierr/=0) CALL mp_stop( 8086 )
+#else
+         mytype = 0;
+#endif
+         !
+         RETURN
+      END SUBROUTINE mp_type_create_cplx_row_section_gpu
+
+      SUBROUTINE mp_type_create_real_row_section_gpu(dummy, column_start, column_stride, row_length, mytype)
+         IMPLICIT NONE
+         !
+         REAL (DP), DEVICE, INTENT(IN) :: dummy
+         INTEGER, INTENT(IN) :: column_start, column_stride, row_length
+         INTEGER, INTENT(OUT) :: mytype
+         !
+#if defined(__MPI)
+         INTEGER :: ierr, temporary
+         INTEGER :: strides(2), lengths(2), starts(2)
+         INTEGER(KIND=MPI_ADDRESS_KIND) :: lb, extent
+         !
+         strides(1) = column_stride ; strides(2) = row_length
+         lengths(1) = 1             ; lengths(2) = row_length
+         starts(1)  = column_start  ; starts(2)  = 0
+         CALL MPI_TYPE_CREATE_SUBARRAY(2, strides, lengths, starts, MPI_ORDER_FORTRAN,&
+                                       MPI_DOUBLE_PRECISION, temporary, ierr)
+         IF (ierr/=0) CALL mp_stop( 8087 )
+         CALL MPI_TYPE_GET_EXTENT(MPI_DOUBLE_PRECISION, lb, extent, ierr)
+         IF (ierr/=0) CALL mp_stop( 8087 )
+         CALL MPI_TYPE_COMMIT(temporary, ierr)
+         IF (ierr/=0) CALL mp_stop( 8087 )
+         CALL MPI_TYPE_CREATE_RESIZED(temporary, lb, extent, mytype, ierr)
+         IF (ierr/=0) CALL mp_stop( 8088 )
+         CALL MPI_Type_commit(mytype, ierr)
+         IF (ierr/=0) CALL mp_stop( 8088 )
+#else
+         mytype = 0;
+#endif
+         !
+         RETURN
+      END SUBROUTINE mp_type_create_real_row_section_gpu
+
 !------------------------------------------------------------------------------!
 
 #endif
 !------------------------------------------------------------------------------!
-    END MODULE mp
+END MODULE mp
 !------------------------------------------------------------------------------!
 !
 ! Script to generate stop messages:

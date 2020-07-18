@@ -41,7 +41,7 @@ MODULE qexsd_module
   ! definitions for the fmt
   !
   CHARACTER(5), PARAMETER :: fmt_name = "QEXSD"
-  CHARACTER(8), PARAMETER :: fmt_version = "19.03.04"
+  CHARACTER(8), PARAMETER :: fmt_version = "20.04.20"
   !
   ! internal data to be set
   !
@@ -114,7 +114,7 @@ CONTAINS
       CALL xml_NewElement (XF=qexsd_xf, NAME = "qes:espresso")
       CALL xml_addAttribute(XF=qexsd_xf, NAME = "xsi:schemaLocation", &
                             VALUE = "http://www.quantum-espresso.org/ns/qes/qes-1.0 "//&
-                                    "http://www.quantum-espresso.org/ns/qes/qes_191206.xsd" )
+                                    "http://www.quantum-espresso.org/ns/qes/qes_200420.xsd" )
       CALL xml_addAttribute(XF=qexsd_xf, NAME="Units", VALUE="Hartree atomic units")
       CALL xml_addComment(XF = qexsd_xf, &
               COMMENT = "All quantities are in Hartree atomic units unless otherwise specified" ) 

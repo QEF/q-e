@@ -13,8 +13,8 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   USE funct,            ONLY: get_igcx, get_igcc, is_libxc
   USE xc_gga,           ONLY: gcxc, gcx_spin
 #if defined(__LIBXC)
-  USE xc_f90_types_m
-  USE xc_f90_lib_m
+#include "xc_version.h"
+  USE xc_f03_lib_m
 #endif
   !
   IMPLICIT NONE
@@ -36,12 +36,17 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   REAL(DP), ALLOCATABLE :: vrrc(:,:), vsrc(:,:), vssc(:), vrzc(:,:) 
   !
 #if defined(__LIBXC)
-  TYPE(xc_f90_pointer_t) :: xc_func
-  TYPE(xc_f90_pointer_t) :: xc_info1, xc_info2
+  TYPE(xc_f03_func_t) :: xc_func
+  TYPE(xc_f03_func_info_t) :: xc_info1, xc_info2
   INTEGER :: fkind
   REAL(DP), ALLOCATABLE :: rho_lbxc(:)
   REAL(DP), ALLOCATABLE :: v2rho2_x(:), v2rhosigma_x(:), v2sigma2_x(:) 
   REAL(DP), ALLOCATABLE :: v2rho2_c(:), v2rhosigma_c(:), v2sigma2_c(:) 
+#if (XC_MAJOR_VERSION > 4)
+  INTEGER(8) :: lengthxc
+#else
+  INTEGER :: lengthxc
+#endif
 #endif
   !
   INTEGER :: igcx, igcc
@@ -55,6 +60,9 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   igcc = get_igcc()
   !
 #if defined(__LIBXC)
+  !
+  fkind = -1
+  lengthxc = length
   !
   IF ( (is_libxc(3) .OR. igcx==0) .AND. (is_libxc(4) .OR. igcc==0)) THEN
     !
@@ -102,18 +110,20 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     ! ... DERIVATIVE FOR EXCHANGE
     v2rho2_x = 0.d0 ;  v2rhosigma_x = 0.d0 ;  v2sigma2_x = 0.d0
     IF (igcx /= 0) THEN 
-      CALL xc_f90_func_init( xc_func, xc_info1, igcx, sp )
-       fkind  = xc_f90_info_kind( xc_info1 )
-       CALL xc_f90_gga_fxc( xc_func, length, rho_lbxc(1), sigma(1), v2rho2_x(1), v2rhosigma_x(1), v2sigma2_x(1) )
-      CALL xc_f90_func_end( xc_func )
+      CALL xc_f03_func_init( xc_func, igcx, sp )
+       xc_info1 = xc_f03_func_get_info( xc_func )
+       fkind  = xc_f03_func_info_get_kind( xc_info1 )
+       CALL xc_f03_gga_fxc( xc_func, lengthxc, rho_lbxc(1), sigma(1), v2rho2_x(1), v2rhosigma_x(1), v2sigma2_x(1) )
+      CALL xc_f03_func_end( xc_func )
     ENDIF
     !
     ! ... DERIVATIVE FOR CORRELATION
     v2rho2_c = 0.d0 ;  v2rhosigma_c = 0.d0 ;  v2sigma2_c = 0.d0
     IF (igcc /= 0) THEN 
-      CALL xc_f90_func_init( xc_func, xc_info2, igcc, sp )
-       CALL xc_f90_gga_fxc( xc_func, length, rho_lbxc(1), sigma(1), v2rho2_c(1), v2rhosigma_c(1), v2sigma2_c(1) )
-      CALL xc_f90_func_end( xc_func )
+      CALL xc_f03_func_init( xc_func, igcc, sp )
+       xc_info2 = xc_f03_func_get_info( xc_func )
+       CALL xc_f03_gga_fxc( xc_func, lengthxc, rho_lbxc(1), sigma(1), v2rho2_c(1), v2rhosigma_c(1), v2sigma2_c(1) )
+      CALL xc_f03_func_end( xc_func )
     ENDIF
     !
     dvxc_rr = 0.d0
@@ -309,6 +319,7 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   REAL(DP), DIMENSION(4*length) :: raux, s2aux
   REAL(DP), ALLOCATABLE :: v1x(:), v2x(:), v1c(:), v2c(:)
   REAL(DP), ALLOCATABLE :: sx(:), sc(:)
+  REAL(DP), PARAMETER :: small = 1.E-30_DP
   !
   ALLOCATE( v1x(4*length), v2x(4*length), sx(4*length) )
   ALLOCATE( v1c(4*length), v2c(4*length), sc(4*length) )
@@ -328,6 +339,11 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   raux(i4:f4) = r_in     ;   s2aux(i4:f4) = (s-ds)**2
   !
   CALL gcxc( length*4, raux, s2aux, sx, sc, v1x, v2x, v1c, v2c )
+  !
+  ! ... to avoid NaN in the next operations
+  WHERE( r_in<=small .OR. s2_in<=small )
+    dr = 1._DP ; ds = 1._DP ; s = 1._DP
+  END WHERE
   !
   vrrx = 0.5_DP * (v1x(i1:f1) - v1x(i2:f2)) / dr
   vrrc = 0.5_DP * (v1c(i1:f1) - v1c(i2:f2)) / dr

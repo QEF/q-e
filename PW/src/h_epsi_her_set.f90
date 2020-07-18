@@ -18,14 +18,13 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
   USE noncollin_module,   ONLY: noncolin, npol
   USE spin_orb,           ONLY: lspinorb
   USE kinds,              ONLY: DP
-  USE us
   USE wvfct,              ONLY: npwx, nbnd
   USE ldaU,               ONLY: lda_plus_u
   USE lsda_mod,           ONLY: current_spin, nspin
   USE scf,                ONLY: vrs  
   USE gvect
   USE fft_base,           ONLY: dfftp
-  USE uspp
+  USE uspp,               ONLY: okvan, nkb, vkb
   USE uspp_param,         ONLY: upf, nh, nhm, nbetam, lmaxq
   USE bp,                 ONLY: nppstr_3d, fact_hepsi, evcel, evcp=>evcelp, &
                                 evcm=>evcelm, mapgp_global, mapgm_global, nx_el
@@ -110,7 +109,6 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
    COMPLEX(DP) :: q_dk(nhm,nhm,ntyp)
    COMPLEX(DP) :: q_dkp(nhm,nhm,ntyp)!to store the terms T^dagger e^(iGx) T
    COMPLEX(DP) :: struc(nat)
-   COMPLEX(DP) :: zdotc
    !
    COMPLEX(DP) :: sca,sca1
    COMPLEX(DP) :: ps(nkb,nbnd*npol)
@@ -395,8 +393,8 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
                         IF (noncolin) aux_2(igk0(ig)) = evct(ig+npwx,mb)
                      ENDDO
                      !
-                     mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
-                     IF (noncolin) mat(nb,mb) = mat(nb,mb) + zdotc(ngm,aux0_2,1,aux_2,1)
+                     mat(nb,mb) = dot_product(aux0(1:ngm),aux(1:ngm))
+                     IF (noncolin) mat(nb,mb) = mat(nb,mb) + dot_product(aux0_2(1:ngm),aux_2(1:ngm))
                      ! --- Calculate the augmented part: ij=KB projectors, ---
                      ! --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---
                      ! --- <beta_jR|u_mk'> e^i(k-k')*R =                   ---
@@ -682,8 +680,8 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
                            IF (noncolin) aux_2(map_g(ig)) = evct(ig+npwx,mb)
                         ENDDO
                         !
-                        mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
-                        IF (noncolin) mat(nb,mb) = mat(nb,mb)+zdotc(ngm,aux0_2,1,aux_2,1)
+                        mat(nb,mb) = dot_product(aux0(1:ngm),aux(1:ngm))
+                        IF (noncolin) mat(nb,mb) = mat(nb,mb)+dot_product(aux0_2(1:ngm),aux_2(1:ngm))
                      ELSE
                         sca = (0.d0,0.d0)
                         ! do scalar product
@@ -1263,8 +1261,8 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
                            aux(map_g(ig)) = evct(ig,mb)
                            IF(noncolin) aux_2(map_g(ig)) = evct(ig+npwx,mb)
                         ENDDO
-                        mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
-                        IF (noncolin) mat(nb,mb) = mat(nb,mb) + zdotc(ngm,aux0_2,1,aux_2,1)
+                        mat(nb,mb) = dot_product(aux0(1:ngm),aux(1:ngm))
+                        IF (noncolin) mat(nb,mb) = mat(nb,mb) + dot_product(aux0_2(1:ngm),aux_2(1:ngm))
                      ELSE
                         sca = (0.d0,0.d0)
                         ! do scalar product

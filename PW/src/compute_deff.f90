@@ -61,7 +61,7 @@ SUBROUTINE compute_deff_nc( deff, et )
   USE kinds,            ONLY: DP
   USE ions_base,        ONLY: nsp, nat, ityp
   USE spin_orb,         ONLY: lspinorb
-  USE noncollin_module, ONLY: noncolin, npol
+  USE noncollin_module, ONLY: npol
   USE uspp,             ONLY: deeq_nc, qq_at, qq_so, okvan
   USE uspp_param,       ONLY: nhm
   USE lsda_mod,         ONLY: nspin

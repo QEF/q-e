@@ -1,41 +1,48 @@
-# Copyright (C) 2001-2016 Quantum ESPRESSO Foundation
+# Copyright (C) 2001-2020 Quantum ESPRESSO Foundation
 
 AC_DEFUN([X_AC_QE_FFT], [
 
 have_fft=0
 have_fft_include=0
 
-  AC_MSG_CHECKING([FFT])
- 
-# check for FFT libraries (no check for explicit openmp)
-# supported vendor replacements:
-#   essl on IBM linux machines
-#   ASL/Mathkeisan on Nec
-#   acml on amd
-if test "$fft_libs" = "" && test "$use_openmp" -eq 0
-then
+AC_MSG_CHECKING([FFT])
+
+if test "$fft_libs" = ""; then
+   # if FFT_LIBS is defined, use it without further checking
+
+   if test "$have_mkl" -eq 1; then
+      # no check needed if MKL libraries have been detected
+      try_dflags="$try_dflags -D__DFTI"
+         # If not set on input, MKLROOT was set when checking blas
+   	 try_iflags="$try_iflags -I$MKLROOT/include"
+  	  have_fft=1
+
+   elif test "$have_armpl" -eq 1; then 
+      # no check needed if ARM libraries have been detected
+      try_dflags="$try_dflags -D__ARM_LIB"
+      have_fft=1 
+
+   elif test "$have_essl" -eq 1; then 
+      # no check needed for ESSL on PPC64 machine: TO BE VERIFIED
+     case "$arch" in
+        ppc64* )
+           try_dflags="$try_dflags -D__LINUX_ESSL"
+        ;;
+   	esac
+
+   elif test "$use_openmp" -eq 0; then
+
+   # check for OBSOLETE? FFT libraries (not for explicit openmp)
+   #   ASL/Mathkeisan on Nec (OBSOLETE)
+   #   acml on amd 
+
         # check directories in LD_LIBRARY_PATH too
         # (maybe they are already searched by default, but I'm not sure)
         ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
 
         case "$arch" in
-        ppc64 | ppc64-mn )
-                # check for essl
-                unset ac_cv_search_dcft # clear cached value
-                FFLAGS="$test_fflags"
-                LDFLAGS="$test_ldflags"
-                LIBS="$fft_libs"
-                AC_SEARCH_LIBS(dcft, essl, have_fft=1 fft_libs="$LIBS")
-            ;;
-        ppc64-bg | ppc64-bgq )
-                # check for esslbg
-                unset ac_cv_search_dcft # clear cached value
-                FFLAGS="$test_fflags"
-                LDFLAGS="$test_ldflags"
-                LIBS="$fft_libs $blas_libs"
-                AC_SEARCH_LIBS(dcft, esslbg, have_fft=1 fft_libs="$LIBS")
-            ;;
         necsx )
+                # NEC-SX: OBSOLETE?
                 if test "$use_fft_mathkeisan" -ne 0
                 then
                    #sx5-nec or sx6-nec or sx8-nec: check in (/SX)/usr/lib
@@ -97,24 +104,13 @@ then
                 fi
                 ;;
         esac
-
-fi
-
-if test "$have_fft" -eq 0 
-then
-   # if MKL have been found, select dfti (no need to recheck)
-   if test "$have_mkl" -eq 1
-   then
-      try_dflags="$try_dflags -D__DFTI"
-      # If not set on input, MKLROOT was set when checking blas
-      try_iflags="$try_iflags -I$MKLROOT/include"
-      have_fft=1
    fi
 
-   # Check fftw v3 (both native and MKL interfaces)
-
-   if test "$have_fft" -eq 0
+   if test "$have_fft" -eq 0 
    then
+
+   # Nothing found: look for fftw v3
+
 	  try_libdirs="/usr/local/lib"
           try_libdirs="$libdirs $try_libdirs $ld_library_path "
           for dir in none $try_libdirs
@@ -153,38 +149,47 @@ then
                   then
                         try_dflags="$try_dflags -D__FFTW3"
                         try_incdir="$FFTW_INCLUDE $FFTW_INC $INCLUDE_PATH $CPATH $FPATH"
+                        orig_fflags="$FFLAGS"
                         for inc in $try_incdir
                         do
-                           AC_COMPILE_IFELSE([include "fftw3.f03"],have_fft_include=1,)
+                           FFLAGS="$orig_fflags -I$inc -ffree-form"
+                           AC_COMPILE_IFELSE([use iso_c_binding
+include "fftw3.f03"
+end],have_fft_include=1,)
                            if test "$have_fft_include" -eq 1
                            then
                              try_iflags="$try_iflags -I$inc"
                              break
                            fi
                         done
+                        FFLAGS="$orig_fflags"
                         break
                   fi
 
           done
    fi
+
+   # if no valid FFT library was found, use the local copy
+   if test "$have_fft" -eq 0
+   then
+      echo "using internal copy of FFTW"
+      try_dflags="$try_dflags -D__FFTW"
+   fi
+
+else
+
+   echo "using FFT_LIBS with no testing ... "
+   if test -n "$FFT_INCLUDE" ; then :
+      try_iflags="$try_iflags -I$FFT_INCLUDE"
+   fi
+   if test -n "$FFTW_INCLUDE" ; then :
+      try_iflags="$try_iflags -I$FFTW_INCLUDE"
+   fi
+
 fi
 
-  AC_MSG_RESULT(${fft_libs})
-
+AC_MSG_RESULT(${fft_libs})
 fft_line="FFT_LIBS=$fft_libs"
-
-# if no valid FFT library was found, use the local copy
-if test "$have_fft" -eq 0
-then
-        case "$arch" in
-        ppc64-bg | ppc64-bgq )
-            try_dflags="$try_dflags -D__LINUX_ESSL"
-            ;;
-        * )
-	    try_dflags="$try_dflags -D__FFTW"
-            ;;
-        esac
-fi
 
 AC_SUBST(fft_libs)
 AC_SUBST(fft_line)

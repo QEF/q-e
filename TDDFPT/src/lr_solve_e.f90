@@ -27,7 +27,7 @@ SUBROUTINE lr_solve_e
   USE klist,                ONLY : nks, xk, ngk, igk_k, degauss
   USE lr_variables,         ONLY : nwordd0psi, iund0psi,LR_polarization, test_case_no, &
                                    & n_ipol, evc0, d0psi, d0psi2, evc1, lr_verbosity, &
-                                   & d0psi_rs, eels, lr_exx, intq, intq_nc
+                                   & d0psi_rs, eels, lr_exx!, intq, intq_nc
   USE lsda_mod,             ONLY : lsda, isk, current_spin,nspin
   USE uspp,                 ONLY : vkb, okvan
   USE wvfct,                ONLY : nbnd, npwx, et, current_k
@@ -40,6 +40,7 @@ SUBROUTINE lr_solve_e
   USE noncollin_module,     ONLY : npol,noncolin
   USE uspp_param,           ONLY : nhm
   USE ions_base,            ONLY : nat
+  USE lrus,                 ONLY : intq, intq_nc
 
   !
   IMPLICIT NONE
@@ -191,6 +192,7 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : at, bg, alat, omega
   USE fft_base,             ONLY : dfftp,dffts
+  USE fft_types,            ONLY : fft_index_to_3d
   USE mp_global,            ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_barrier
   USE io_global,            ONLY : stdout
@@ -208,8 +210,9 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
   !
   REAL(DP),    ALLOCATABLE :: r(:,:)
   COMPLEX(DP), ALLOCATABLE :: psic_temp(:), evc_temp(:,:)
-  INTEGER  :: i, j, k, ip, ir, ir_end, ibnb, n_ipol, idx, j0, k0
+  INTEGER  :: i, j, k, ip, ir, ir_end, ibnb, n_ipol
   REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
+  LOGICAL  :: offrange
   !
   WRITE(stdout,'(/,5X,"Calculation of the dipole in real space")')
   !
@@ -238,10 +241,8 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
   inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
   !
 #if defined (__MPI)
-  j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
   ir_end = MIN(dfftp%nnr,dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p)
 #else
-  j0 = 0 ; k0 = 0
   ir_end = dfftp%nnr
 #endif
   !
@@ -249,17 +250,8 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
      !
      ! ... three dimensional indexes
      !
-     idx = ir -1
-     k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-     idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-     k   = k + k0
-     IF ( k .GE. dfftp%nr3 ) CYCLE
-     j   = idx / dfftp%nr1x
-     idx = idx - dfftp%nr1x * j
-     j   = j + j0
-     IF ( j .GE. dfftp%nr2 ) CYCLE
-     i   = idx
-     IF ( i .GE. dfftp%nr1 ) CYCLE
+     CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+     IF ( offrange ) CYCLE
      !
      DO ip = 1, n_ipol
         r(ir,ip) = DBLE( i )*inv_nr1*at(ip,1) + &

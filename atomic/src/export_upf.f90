@@ -11,8 +11,6 @@ SUBROUTINE export_upf(filename, unit_loc)
   !
   use constants, only : fpi
   use kinds, only : dp
-  use radial_grids, only : radial_grid_COPY, nullify_radial_grid, &
-                           deallocate_radial_grid
   use ld1inc, only : author, nlcc, zval, lpaw, write_coulomb, &
                      etots, rel, ecutwfc, ecutrho, iswitch, &
                      nwfts, nbeta, lmax, which_augfun, elts, octs, llts, &
@@ -28,7 +26,8 @@ SUBROUTINE export_upf(filename, unit_loc)
   use funct, only: get_dft_name
   use global_version, only: version_number
   !
-  use pseudo_types
+  use pseudo_types, only : pseudo_upf, pseudo_config, &
+       deallocate_pseudo_upf, deallocate_pseudo_config
   use write_upf_module, only: write_upf
   !
   implicit none
@@ -43,14 +42,10 @@ SUBROUTINE export_upf(filename, unit_loc)
   integer :: nb, mesh
   TYPE (pseudo_upf)              :: upf
   TYPE (pseudo_config)           :: at_conf
-  TYPE (radial_grid_type),TARGET :: internal_grid
   CHARACTER(len=2), external     :: atom_name
   CHARACTER(len=9) :: day, hour
 
   call date_and_tim(day,hour)
-  !
-  CALL nullify_pseudo_upf( upf )
-  CALL nullify_radial_grid( internal_grid )
   !
   IF (iswitch < 4 ) THEN
      upf%generated='Generated using "atomic" code by A. Dal Corso &
@@ -111,17 +106,14 @@ SUBROUTINE export_upf(filename, unit_loc)
   upf%lmax_rho = 2*upf%lmax
   upf%nqlc = 2* upf%lmax+1
 
-  call radial_grid_COPY(grid, internal_grid)
+  upf%mesh  = grid%mesh
+  upf%dx    = grid%dx
+  upf%xmin  = grid%xmin
+  upf%zmesh = grid%zmesh
+  upf%rmax  = grid%rmax
   !
-  upf%grid => internal_grid
-  upf%mesh  = upf%grid%mesh
-  upf%dx    = upf%grid%dx
-  upf%xmin  = upf%grid%xmin
-  upf%zmesh = upf%grid%zmesh
-  upf%rmax  = upf%grid%rmax
-  !
-  upf%r   => upf%grid%r
-  upf%rab => upf%grid%rab
+  upf%r     = grid%r
+  upf%rab   = grid%rab
   !
   ! when possible, write semilocal PP's in the UPF file - may be
   ! useful if one wants to use PPs in the UPF format in other codes
@@ -271,7 +263,6 @@ SUBROUTINE export_upf(filename, unit_loc)
   endif
   !
   CALL deallocate_pseudo_upf( upf )
-  CALL deallocate_radial_grid( internal_grid )
   CALL deallocate_pseudo_config( at_conf )
 
    RETURN

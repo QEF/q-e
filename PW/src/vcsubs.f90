@@ -7,85 +7,151 @@
 !
 !*
 !*
-subroutine vcinit (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
-     vcell, force, if_pos, frr, calc, temp, vx2, vy2, vz2, rms, vmean, ekin, &
-     avmod, theta, atmass, cmass, press, p, dt, aveci, avecd, avec2d, &
-     avec2di, sigma, sig0, avec0, v0, rati, ratd, rat2d, rat2di, enew, &
-     uta, eka, eta, ekla, utl, etl, ut, ekint, etot, iforceh)
+!-----------------------------------------------------------------------------------
+SUBROUTINE vcinit( mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, vcell, force,       &
+                   if_pos, frr, calc, temp, vx2, vy2, vz2, rms, vmean, ekin, avmod,   &
+                   theta, atmass, cmass, press, p, dt, aveci, avecd, avec2d, avec2di, &
+                   sigma, sig0, avec0, v0, rati, ratd, rat2d, rat2di, enew, uta, eka, &
+                   eta, ekla, utl, etl, ut, ekint, etot, iforceh )
+  !-------------------------------------------------------------------------------
+  !! Initialize variable-cell shape molecular dynamics.
   !
-  ! rmw (18/8/99)
-  ! Cesar RS Silva (04/12/2005)
+  !! rmw (18/8/99)  
+  !! Cesar RS Silva (04/12/2005)
   !
   ! input:
-  ! mxdtyp = array dimension for type of atoms
-  ! mxdatm = array dimension for atoms (irrespective of type)
-  ! ntype = number of types of atoms
-  ! atmass(nt) = atomic masses for atoms of type nt (in proton masses)
-  ! natot = total number of atoms
-  ! rat(j,na) = atomic positions in lattice coordinates
-  ! ityp(na) = atomic type of na-th atom
-  ! avec(3,3) = lattice vectors
-  ! enew = DFT total energy
-  ! calc = calculation type
-  ! temp = temperature in Kelvin
+  ! mxdtyp,mxdatm,ntype,atmass(nt),natot,rat(j,na),ityp(na)
+  ! avec(3,3),enew,calc,temp
   !
   ! output:
-  ! rat(j,na) = atomic positions in lattice coordinates
-  ! rati(j,na) = atomic positions for previous step
-  ! ratd(j,na) = atomic velocities     "        "
-  ! rat2d(i,na) =   "   acceleration    "        "
-  ! rat2di(i,na) =   "   acceleration    "        " (previous step)
-  ! avec(3,3) = lattice vectors
-  ! aveci(3,3) = lattice vectors for "previous" step
-  ! avecd(3,3) = 1st lattice vectors derivatives
-  ! avec2d(3,3) = 2nd lattice vectors derivatives
-  ! avec2di(3,3) = 2nd lattice vectors derivatives (previous step)
-  ! p = internal (virial) pressure
-  ! ut = new total potential energy
-  ! ekin = new total kinetic energy
-  ! etot = total energy
+  ! rat(j,na),rati(j,na),ratd(j,na),rat2d(i,na),rat2di(i,na)
+  ! avec(3,3),aveci(3,3),avecd(3,3),avec2d(3,3),avec2di(3,3)
+  ! p,ut,ekin,etot
   ! we also obtain the same quantities for atomic and lattice components
   ! uta,eka,eta,utl,ekla,etl
-  ! theta(3,3) = angle between lattice vectors
-  ! avmod(3) = lattice vectors moduli
+  ! theta(3,3)
+  ! avmod(3) 
   !
   USE kinds
-  implicit none
   !
-  real(DP) :: zero, um, dois, tres, quatro, seis
-  parameter (zero = 0.0d0, um = 1.0d0, dois = 2.0d0, tres = 3.0d0, &
-       quatro = 4.0d0, seis = 6.0d0)
+  IMPLICIT NONE
   !
-  character (len=2) :: calc
+  CHARACTER(LEN=2) :: calc
+  !! calculation type
+  INTEGER :: mxdatm
+  !! array dimension for atoms (irrespective of type)
+  INTEGER :: mxdtyp
+  !! array dimension for type of atoms
+  INTEGER :: natot
+  !! total number of atoms
+  INTEGER :: ntype
+  !! number of types of atoms
+  REAL(DP) :: atmass(mxdtyp)
+  !! atomic masses for atoms of type nt (in proton masses)
+  REAL(DP) :: rat(3,mxdatm)  
+  !! atomic positions in lattice coordinates 
+  INTEGER :: ityp(mxdatm)
+  !! atomic type of na-th atom
+  REAL(DP) :: avec(3,3)
+  !! lattice vectors
+  REAL(DP) :: enew
+  !! DFT total energy
+  REAL(DP) :: temp
+  !! temperature in Kelvin
   !
-  integer :: mxdatm, mxdtyp
-  real(DP) :: avec (3, 3), avecd (3, 3), avec2d (3, 3), avec2di (3, &
-       3), aveci (3, 3), g (3, 3), gm1 (3, 3), gd (3, 3), sigma (3, 3), &
-       sigav (3, 3), gmgd (3, 3), avec0 (3, 3), sig0 (3, 3), avmod (3), &
-       theta (3, 3), pim (3, 3), piml (3, 3), frr (3, 3)
+  REAL(DP) :: sigma(3,3)
+  !! sigma = avec^-1 * vcell
+  REAL(DP) :: avec0(3,3)
+  !! initial lattice vectors
+  REAL(DP) :: sig0(3,3)
+  !! initial reciprocal lattice vectors *  vcell / 2 pi
+  REAL(DP) :: frr(3,3)
+  !! the stress acting on the system
+  REAL(DP) :: theta(3,3)
+  !! angle between lattice vectors
+  REAL(DP) :: avmod(3)
+  !! lattice vectors moduli
+  REAL(DP) :: aveci(3,3)
+  !! lattice vectors for "previous" step
+  REAL(DP) :: avecd(3,3)
+  !! 1st lattice vectors derivatives
+  REAL(DP) :: avec2d(3,3)
+  !! 2nd lattice vectors derivatives
+  REAL(DP) :: avec2di(3,3)
+  !! 2nd lattice vectors derivatives (previous step)
+  INTEGER :: if_pos(3,mxdatm)
+  !! if_pos(i,n)=0: the i-th coordinate of n-th atom will be kept fixed
+  REAL(DP) :: rat2d(3,mxdatm)
+  !! atomic acceleration in lattice coordinates
+  REAL(DP) :: rat2di(3,mxdatm)
+  !! atomic acceleration in lattice coordinates (previous step)
+  REAL(DP) :: ratd(3,mxdatm)
+  !! atomic velocities in lattice coordinates
+  REAL(DP) :: rati(3,mxdatm)
+  !! atomic positions for previous step
+  REAL(DP) :: force(3,mxdatm)
+  !! forces on atoms
+  INTEGER :: iforceh(3,3)
+  !! if iforceh(i,j) = 0 then simulation cell h(i,j) is not 
+  !! allowed to move
+  REAL(DP) :: vx2(mxdtyp)
+  !! Root of the total sum of squared x-component of velocity per
+  !! atomic type
+  REAL(DP) :: vy2(mxdtyp)
+  !! Root of the total sum of squared y-component of velocity per
+  !! atomic type
+  REAL(DP) :: vz2(mxdtyp)
+  !! Root of the total sum of squared z-component of velocity per
+  !! atomic type
+  REAL(DP) :: cmass
+  !! cell mass in ryd units
+  REAL(DP) :: vcell
+  !! cell volume
+  REAL(DP) :: dt
+  !! time step
+  REAL(DP) :: v0
+  !! initial volume
+  REAL(DP) :: vmean(mxdtyp)
+  !! Average velocity (modulus) per atomic type
+  REAL(DP) :: rms(mxdtyp)
+  !! rms=Sqrt((vx2+vy2+vz2) / natom) - per atomic type
+  REAL(DP) :: press
+  !! external pressure
+  REAL(DP) :: etot
+  !! total energy
+  REAL(DP) :: ekin(mxdtyp)
+  !! new total kinetic energy per atomic type
+  REAL(DP) :: ut
+  !! new total potential energy
+  REAL(DP) :: p
+  !! internal (virial) pressure
+  REAL(DP) :: ekint
+  !! new total kinetic energy
+  REAL(DP) :: etl, eka, ekla, eta
+  REAL(DP) :: uta, utl
   !
-  integer :: ityp (mxdatm), natot, if_pos(3,mxdatm), iforceh(3,3)
-  real(DP) :: atmass (mxdtyp), rat (3, mxdatm), ratd (3, mxdatm), &
-       rati (3, mxdatm), rat2d (3, mxdatm), rat2di (3, mxdatm)
+  ! ... local variables
   !
-  real(DP) :: force (3, mxdatm), d2 (3, 3)
+  REAL(DP) :: tr, ekk, ww, pv
   !
-  real(DP) :: vx2 (mxdtyp), vy2 (mxdtyp), vz2 (mxdtyp)
-  real(DP) :: rms (mxdtyp), vmean (mxdtyp), ekin (mxdtyp)
-
-  real(DP) :: ekint, ut, etot, tr, ekk, etl, &
-       cmass, uta, enew, v0, eka, utl, ekla, eta, dt, vcell, p, press, &
-       temp, ww, pv
-
-  integer :: na, nt, i, j, l, k, m, ntype
+  REAL(DP) :: g(3,3), gm1(3,3), gd(3,3), &
+              sigav(3,3), gmgd(3,3),     &
+              pim(3,3), piml(3,3)
   !
-  real(DP) :: scaloff=1.0d0
+  REAL(DP) :: d2(3,3)
+  
+  INTEGER :: na, nt, i, j, l, k, m
+  !
+  REAL(DP) :: scaloff=1.0d0
+  !
+  REAL(DP), PARAMETER :: zero=0.0d0, um=1.0d0, dois=2.0d0, tres=3.0d0, &
+                         quatro=4.0d0, seis=6.0d0
   !
   IF ( COUNT( iforceh == 2 ) > 0 ) scaloff=0.5d0
   !
   ! calculate the metric for the current step
   !
-  call setg (avec, g)
+  call setg( avec, g )
   !
   ! initialize cell related quantities
   !
@@ -374,92 +440,153 @@ subroutine vcinit (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
 
   return
 
-end subroutine vcinit
+END SUBROUTINE vcinit
 !*
 !*
-subroutine vcmove (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
-     force, if_pos, frr, calc, avmod, theta, atmass, cmass, press, p, dt, &
-     avecd, avec2d, aveci, avec2di, sigma, sig0, avec0, v0, ratd, &
-     rat2d, rati, rat2di, enew, uta, eka, eta, ekla, utl, etl, ut, &
-     ekint, etot, temp, tolp, ntcheck, ntimes, nst, tnew, nzero, natot, &
-     acu, ack, acp, acpv, avu, avk, avp, avpv, iforceh)
+!-------------------------------------------------------------------------------------------
+SUBROUTINE vcmove( mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, force, if_pos,        &
+                   frr, calc, avmod, theta, atmass, cmass, press, p, dt, avecd, avec2d, &
+                   aveci, avec2di, sigma, sig0, avec0, v0, ratd, rat2d, rati, rat2di,   &
+                   enew, uta, eka, eta, ekla, utl, etl, ut, ekint, etot, temp, tolp,    &
+                   ntcheck, ntimes, nst, tnew, nzero, natot, acu, ack, acp, acpv, avu,  &
+                   avk, avp, avpv, iforceh )
+  !------------------------------------------------------------------------------------------
+  !! Perform one step of variable-cell shape molecular dynamics.
   !
-  !      rmw (18/8/99)
+  !! rmw (18/8/99)
   !
-  !     input:
-  !     mxdtyp = array dimension for type of atoms
-  !     mxdatm = array dimension for atoms (irrespective of type)
-  !     ntype = number of types of atoms
-  !     atmass(nt) = atomic masses for atoms of type nt (in proton masses)
-  !     ityp(na) = atomic type of na-th atom
-  !     rat(j,na) = atomic positions in lattice coordinates
-  !     rati(j,na) = atomic positions in lattice coordinates (previous ste
-  !     ratd(j,na) = atomic velocities     "        "
-  !     rat2di(i,na) =   "   acceleration    "        " (previous step)
-  !     avec(3,3) = lattice vectors
-  !     aveci(3,3) = lattice vectors (previous step)
-  !     avecd(3,3) = 1st lattice vectors derivatives
-  !     avec2d(3,3) = 2nd lattice vectors derivatives
-  !     avec2di(3,3) = 2nd lattice vectors derivatives (previous step)
-  !     avec0(3,3) = initial lattice vectors
-  !     sig0(3,3) = initial reciprocal lattice vectors *  vcell / 2 pi
-  !     v0 = initial volume
-  !     enew = DFT total energy
+  ! input:
+  ! mxdtyp,mxdatm,ntype,atmass(nt),ityp(na),rat(j,na),rati(j,na),
+  ! ratd(j,na),rat2di(i,na),avec(3,3),aveci(3,3),avecd(3,3),
+  ! avec2d(3,3),avec2di(3,3),avec0(3,3),sig0(3,3),v0,enew
   !
-  !     output:
-  !     rat(j,na) = atomic positions in lattice coordinates (updated)
-  !     ratd(j,na) = atomic velocities     "        " (updated)
-  !     rat2d(i,na) =   "   acceleration    "        " (updated)
-  !     rati(j,na) and rat2di(i,na) (updated)
-  !     avec(3,3) = lattice vectors
-  !     avecd(3,3) = 1st lattice vectors derivatives
-  !     avec2d(3,3) = 2nd lattice vectors derivatives
-  !     aveci(3,3) and avec2di(3,3) (updated)
-  !     p = internal (virial) pressure
-  !     ut = new total potential energy
-  !     ekin = new total kinetic energy
-  !     etot = total energy
-  !     we also obtain the same quantities for atomic and lattice componen
-  !     uta,eka,eta,utl,ekl,etl
-  !     theta(3,3) = angle between lattice vectors
-  !     avmod(3) = lattice vectors moduli
+  ! output:
+  ! rat(j,na),ratd(j,na),rat2d(i,na),rati(j,na),rat2di(i,na),
+  ! avec(3,3),avecd(3,3),avec2d(3,3),aveci(3,3),avec2di(3,3),
+  ! p,ut,ekin,etot
+  ! we also obtain the same quantities for atomic and lattice components
+  ! uta,eka,eta,utl,ekl,etl
+  ! theta(3,3),avmod(3)
   !
   !
-  USE kinds,         only : DP
+  USE kinds,         ONLY : DP
   USE constants,     ONLY : pi, eps16, k_boltzmann_ry
   USE io_global,     ONLY : stdout
-  
-  implicit none
   !
-  real(DP) :: zero, um, dois, tres, quatro, seis
-  parameter (zero = 0.0d0, um = 1.0d0, dois = 2.0d0, tres = 3.0d0, &
-       quatro = 4.0d0, seis = 6.0d0)
+  IMPLICIT NONE
   !
-  character (len=2) :: calc
+  CHARACTER(LEN=2) :: calc
+  !! calculation type
+  INTEGER :: mxdatm
+  !! array dimension for atoms (irrespective of type)
+  INTEGER :: mxdtyp
+  !! array dimension for type of atoms
   !
-  integer :: mxdatm, mxdtyp
-
-  integer :: ityp (mxdatm), if_pos(3,mxdatm), iforceh(3,3)
-  real(DP) :: avec (3, 3), rat (3, mxdatm)
+  INTEGER :: ityp(mxdatm)
+  !! atomic type of na-th atom
+  INTEGER :: if_pos(3,mxdatm)
+  !! if_pos(i,n)=0: the i-th coordinate of n-th atom will be kept fixed
+  INTEGER :: iforceh(3,3)
+  !! if iforceh(i,j) = 0 then simulation cell h(i,j) is not 
+  !! allowed to move
+  REAL(DP) :: avec(3,3)
+  !! lattice vectors
+  REAL(DP) :: rat(3,mxdatm)
+  !! atomic positions in lattice coordinates (updated)
   !
-  real(DP) :: atmass (mxdtyp), ratd (3, mxdatm), rat2d (3, mxdatm), &
-       avecd (3, 3), avec2d (3, 3), g (3, 3), gm1 (3, 3), gd (3, 3), &
-       sigma (3, 3), avec0 (3, 3), sig0 (3, 3), avmod (3), theta (3, 3), &
-       pim (3, 3), piml (3, 3), frr (3, 3), rati (3, mxdatm), rat2di (3, &
-       mxdatm), sigav (3, 3), gmgd (3, 3), aveci (3, 3), avec2di (3, 3)
-
-  integer :: i, j, k, l, m, na, nt, nst, natot, nzero, ntimes, &
-       ntcheck, ntype, i_update, n_update
-
-  real(DP) :: avpv,  pv, ww, ts, xx, alpha, x, &
-       tr, tnew, tolp, temp, avk, avu, ekk, avp, ack, acu, acpv, acp, dt, &
-       p, enew, v0, vcell, press, ut, etl, etot, ekint, utl, uta, cmass, &
-       eka, ekla, eta
-  logical :: symmetrize_stress
+  REAL(DP) :: vcell
+  !! cell volume
+  REAL(DP) :: cmass
+  !! cell mass in ryd units
   !
-  real(DP) :: force (3, mxdatm), d2 (3, 3)
+  REAL(DP) :: atmass(mxdtyp)
+  !! atomic masses for atoms of type nt (in proton masses)
+  REAL(DP) :: ratd(3,mxdatm)
+  !! atomic velocities in lattice coordinates
+  REAL(DP) :: rat2d(3,mxdatm)
+  !! atomic acceleration in lattice coordinates (updated)
+  REAL(DP) :: avecd(3,3)
+  !! 1st lattice vectors derivatives
+  REAL(DP) :: avec2d(3,3)
+  !! 2nd lattice vectors derivatives
   !
-  real(DP) :: scaloff=1.0d0
+  REAL(DP) :: sigma(3,3)
+  !! sigma = avec^-1 * vcell
+  REAL(DP) :: avec0(3,3)
+  !! initial lattice vectors
+  !
+  REAL(DP) :: sig0(3,3)
+  !! initial reciprocal lattice vectors *  vcell / 2 pi
+  REAL(DP) :: avmod(3)
+  !! lattice vectors moduli
+  REAL(DP) :: theta(3,3)
+  !! angle between lattice vectors
+  !
+  REAL(DP) :: frr(3,3)
+  !! the stress acting on the system
+  REAL(DP) :: rati(3,mxdatm)
+  !! atomic positions for previous step
+  REAL(DP) :: rat2di(3,mxdatm)
+  !! atomic acceleration in lattice coordinates (previous step)
+  !
+  REAL(DP) :: aveci(3,3)
+  !! lattice vectors (previous step)
+  REAL(DP) :: avec2di(3,3)
+  !! 2nd lattice vectors derivatives (previous step)
+  !
+  REAL(DP) :: v0
+  !! initial volume
+  REAL(DP) :: enew
+  !! DFT total energy
+  REAL(DP) :: p
+  !! internal (virial) pressure
+  REAL(DP) :: ut
+  !! new total potential energy
+  REAL(DP) :: ekint
+  !! new total kinetic energy
+  REAL(DP) :: etot
+  !! total energy
+  REAL(DP) :: temp
+  !! temperature in Kelvin
+  REAL(DP) :: press
+  !! external pressure
+  REAL(DP) :: force(3,mxdatm)
+  !! forces on atoms
+  REAL(DP) :: dt
+  !! time step
+  INTEGER :: ntimes
+  !! # of thermalization steps to be performed (-i=inf)
+  INTEGER :: nzero
+  !! iteration # of last thermalization
+  !
+  INTEGER :: natot
+  !! total number of atoms
+  INTEGER :: ntype
+  !! number of types of atoms
+  INTEGER :: nst
+  !
+  REAL(DP) :: etl, utl, uta, eka, ekla, eta
+  REAL(DP) :: avpv, tnew, tolp, avk, avu, avp, &
+              ack, acu, acpv, acp
+  !
+  ! ... local variables
+  !
+  INTEGER :: i, j, k, l, m, na, nt, &
+             ntcheck, i_update, n_update
+  !
+  REAL(DP) :: pv, ww, ts, xx, alpha, x,  &
+              tr, ekk
+  !
+  REAL(DP) :: sigav(3,3), gmgd(3,3)
+  REAL(DP) :: pim(3,3), piml(3,3)
+  REAL(DP) :: g(3,3), gm1(3,3), gd(3,3)
+  !
+  LOGICAL :: symmetrize_stress
+  REAL(DP) :: d2(3,3)
+  REAL(DP) :: scaloff=1.0d0
+  !
+  REAL(DP), PARAMETER :: zero=0.0d0,   um=1.0d0,  dois=2.0d0, tres=3.0d0, &
+                         quatro=4.0d0, seis=6.0d0
   !
   IF ( COUNT( iforceh == 2 ) > 0 ) scaloff=0.5d0
   !
@@ -889,53 +1016,78 @@ subroutine vcmove (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   call updg (avec, avecd, g, gd, gm1, gmgd, sigma, vcell)
 
   return
-end subroutine vcmove
+END SUBROUTINE vcmove
 !*
 !*
-subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
-     ekint, v, vmean, rms, vx2, vy2, vz2, ekin)
+!----------------------------------------------------------------------------
+SUBROUTINE ranv( ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
+                 ekint, v, vmean, rms, vx2, vy2, vz2, ekin )
+  !---------------------------------------------------------------------------
+  !! Sets up random velocities with maxwellian distribution
+  !! at temperature t.  
+  !! Total linear momentum components are zero.
   !
-  !     sets up random velocities with maxwellian distribution
-  !     at temperature t. total linear momentum components are zero
-  !     rewritten on 1/31/90 by rmw
-  !     extracted from car & parrinello 's program
+  !! Rewritten on 1/31/90 by rmw.  
+  !! Extracted from Car & Parrinello 's program
   !
-  !     input:
-  !     mxdtyp = array dimension for type of atoms
-  !     mxdatm = array dimension for atoms (irrespective of type)
-  !     ntype = number of types of atoms
-  !     natot = total number of atoms
-  !     ityp(na) = atomic type of na-th atom
-  !     atmass(i) = atomic masses for atoms of type i (in proton masses)
-  !     temp = temperature in k
+  ! input:
+  ! mxdtyp,mxdatm,ntype,natot,ityp(na),
+  ! atmass(i),temp
   !
-  !     output:
-  !     v(i,na) = initial velocity of atom na of type nt
-  !     vmean(nt), rms(nt),vx2(nt),vy2(nt),vz2(nt)
+  ! output:
+  ! v(i,na),
+  ! vmean(nt), rms(nt),vx2(nt),vy2(nt),vz2(nt)
   !
   USE io_global,   ONLY : stdout
   USE constants,   ONLY : k_boltzmann_ry
-  USE kinds , only : DP
-  implicit none
+  USE kinds,       ONLY : DP
   !
-
-  integer :: mxdtyp, mxdatm
-  real(DP) :: atmass (mxdtyp)
-  real(DP) :: v (3, mxdatm), p (3)
-  real(DP) :: vx2 (mxdtyp), vy2 (mxdtyp), vz2 (mxdtyp)
-  real(DP) :: rms (mxdtyp), vmean (mxdtyp), ekin (mxdtyp)
+  IMPLICIT NONE
   !
-
-  integer :: ityp (mxdatm), natot
-
-  integer :: na, nt, j, k, ntype, iseed, natom
-
-
-  real(DP) :: ran3, vfac, sig, tfac, vr, atemp, eps, temp, ekint, t
-  real(DP) :: b0, b1, c0, c1
-  real(DP) :: zero, um, dois, tres
-  data b0, b1, c0, c1 / 2.30753d0, 0.27061d0, 0.99229d0, 0.04481d0 /
-  data zero, um, dois, tres / 0.d0, 1.d0, 2.d0, 3.0d0 /
+  INTEGER :: mxdtyp
+  !! array dimension for type of atoms
+  INTEGER :: mxdatm
+  !! array dimension for atoms (irrespective of type)
+  REAL(DP) :: atmass (mxdtyp)
+  !! atomic masses for atoms of type i (in proton masses)
+  REAL(DP) :: temp
+  !! temperature in K
+  REAL(DP) :: ekint
+  !! new total kinetic energy
+  REAL(DP) :: v(3,mxdatm)
+  !! initial velocity of atom na of type nt
+  REAL(DP) :: vmean(mxdtyp)
+  !! Average velocity (modulus) per atomic type
+  REAL(DP) :: rms(mxdtyp)
+  !! rms=Sqrt((vx2+vy2+vz2) / natom) - per atomic type
+  REAL(DP) :: vx2(mxdtyp)
+  !! Root of the total sum of squared x-component of velocity per
+  !! atomic type
+  REAL(DP) :: vy2(mxdtyp)
+  !! Root of the total sum of squared y-component of velocity per
+  !! atomic type
+  REAL(DP) :: vz2(mxdtyp)
+  !! Root of the total sum of squared z-component of velocity per
+  !! atomic type
+  REAL(DP) :: ekin(mxdtyp)
+  !! new total kinetic energy per atomic type
+  INTEGER :: ityp(mxdatm)
+  !! atomic type of na-th atom
+  INTEGER :: natot
+  !! total number of atoms
+  INTEGER :: ntype
+  !! number of types of atoms
+  !
+  ! ... local variables
+  !
+  INTEGER :: na, nt, j, k, iseed, natom
+  !
+  REAL(DP) :: p(3)
+  REAL(DP) :: ran3, vfac, sig, tfac, vr, atemp, eps, t
+  REAL(DP) :: b0, b1, c0, c1
+  REAL(DP) :: zero, um, dois, tres
+  DATA b0, b1, c0, c1 / 2.30753d0, 0.27061d0, 0.99229d0, 0.04481d0 /
+  DATA zero, um, dois, tres / 0.d0, 1.d0, 2.d0, 3.0d0 /
   !
   !     example run
   !
@@ -1087,36 +1239,46 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
 
   return
 
-end subroutine ranv
+END SUBROUTINE ranv
+!
 !*
 !*
-subroutine sigp (avec, avecd, avec2d, sigma, vcell)
+!--------------------------------------------------------------------------
+SUBROUTINE sigp( avec, avecd, avec2d, sigma, vcell )
+  !-------------------------------------------------------------------------
+  !! Calculates sigmap matrices and avec2d for new dynamics.
   !
-  !     calculates sigmap matrices and avec2d for
-  !     new dynamics(rmw 5/30/90)
+  !! rmw 5/30/90
   !
-  !      input:
-  !            avec = lattice vectors
-  !            avecd = time derivative of lattice vectors
-  !            avec2d = 2nd time derivative of lattice vectors
-  !            sigma = volume * rec. latt. vectors / 2 pi
-  !            vcell = cell volume
+  ! input:
+  ! avec,avecd,avec2d,sigma,vcell
   !
-  !      output:
-  !            avec2d = new 2nd time derivative of lattice vectors
+  ! output:
+  ! avec2d
   !
-  USE kinds, only : DP
-  implicit none
+  USE kinds,   ONLY : DP
   !
-  real(DP) :: avec (3, 3), avecd (3, 3), avec2d (3, 3), sigmap (3, &
-       3, 3, 3), sigmad (3, 3), sigma (3, 3), e (3, 3), fp (3, 3, 3, 3), &
-       fd (3, 3), fm1 (3, 3), fm (3, 3), sm (3, 3), avint (3, 3), &
-       vcell
+  IMPLICIT NONE
   !
-
-  integer :: i, j, k, l, m, n
-  real(DP) :: zero, dois
-  parameter (zero = 0.d0, dois = 2.d0)
+  REAL(DP) :: avec(3,3)
+  !! lattice vectors
+  REAL(DP) :: avecd(3,3)
+  !! time derivative of lattice vectors (in:old, out:new)
+  REAL(DP) :: avec2d(3,3)
+  !! 2nd time derivative of lattice vectors
+  REAL(DP) :: sigma(3,3)
+  !! volume * rec. latt. vectors / 2 pi
+  REAL(DP) :: vcell
+  !! cell volume
+  !
+  ! ... local variables
+  !
+  REAL(DP) :: sigmap(3,3,3,3), sigmad(3,3)
+  REAL(DP) :: e(3,3), fp(3,3,3,3), fd(3,3), &
+              fm1(3,3), fm(3,3), sm(3,3),   &
+              avint(3,3)
+  INTEGER :: i, j, k, l, m, n
+  REAL(DP), PARAMETER :: zero=0.d0, dois=2.d0
   !
   ! sigmap_ijkl = d sigma_ij / d h_kl
   !             =( sigma_ij * sigma_kl - sigma_kj * sigma_il ) / vcell
@@ -1242,38 +1404,44 @@ subroutine sigp (avec, avecd, avec2d, sigma, vcell)
 end subroutine sigp
 !*
 !*
-subroutine updg (avec, avecd, g, gd, gm1, gmgd, sigma, vcell)
+!----------------------------------------------------------------------
+SUBROUTINE updg( avec, avecd, g, gd, gm1, gmgd, sigma, vcell )
+  !-----------------------------------------------------------------------
+  !! Update metric related quantities.
   !
+  !! rmw 18/8/99.
   !
-  !     update metric related quantities
-  !     (rmw 18/8/99)
+  ! input:
+  ! avec(3,3),avecd(3,3)
   !
-  !      input:
-  !      avec(3,3) = lattice vectors
-  !      avecd(3,3) = derivative of lattice vectors
+  ! output:
+  ! g(3,3),gd(3,3),gm1(3,3),gmgd(3,3),sigma(3,3),vcell
   !
-  !      output:      t
-  !      g(3,3) = avec * avec
-  !                     t                     t
-  !      gd(3,3) = avecd * avec + avecd * avec
-  !                  _1
-  !      gm1(3,3) = g
-  !                   _1
-  !      gmgd(3,3) = g * gd
-  !      sigma(3,3) = reciprocal lattice vectors / twopi
-  !      vcell = cell volume
+  USE kinds, ONLY : DP
   !
-  USE kinds, only : DP
-  implicit none
+  IMPLICIT NONE
   !
-  real(DP) :: zero, um, dois, tres
-  parameter (zero = 0.0d0, um = 1.0d0, dois = 2.0d0, tres = 3.0d0)
+  REAL(DP) :: avec(3,3)
+  !! lattice vectors
+  REAL(DP) :: avecd(3,3)
+  !! derivative of lattice vectors
+  REAL(DP) :: g(3,3)
+  !! avec * avec^t
+  REAL(DP) :: gd(3,3)
+  !! avecd * avec^t + avecd * avec^t
+  REAL(DP) :: gm1(3,3)
+  !! g^-1
+  REAL(DP) :: gmgd(3,3)
+  !! g^-1 * gd
+  REAL(DP) :: sigma(3,3)
+  !! reciprocal lattice vectors / twopi
   !
-  real(DP) :: avec (3, 3), avecd (3, 3), sigma (3, 3)
-  real(DP) :: g (3, 3), gd (3, 3), gmgd (3, 3), gm1 (3, 3)
-
-  real(DP) :: vcell
-  integer :: i, j, m
+  ! ... local variables
+  !
+  REAL(DP) :: vcell
+  INTEGER :: i, j, m
+  REAL(DP), PARAMETER :: zero=0.0d0, um=1.0d0, dois=2.0d0, &
+                         tres=3.0d0
   !
   !     compute the lattice wave-vectors/twopi and the cell volume
   !
@@ -1337,29 +1505,33 @@ subroutine updg (avec, avecd, g, gd, gm1, gmgd, sigma, vcell)
   enddo
 
   return
-end subroutine updg
+
+END SUBROUTINE updg
 !*
 !*
-subroutine setg (avec, g)
+!---------------------------------------------------------------------
+SUBROUTINE setg( avec, g )
+  !---------------------------------------------------------------------
+  !! Update metric related quantities.
   !
+  !! rmw 18/8/99
   !
-  !     update metric related quantities
-  !     (rmw 18/8/99)
+  ! input: avec(3,3)
+  ! output: g(3,3)
   !
-  !      input:
-  !      avec(3,3) = lattice vectors
+  USE kinds,   ONLY : DP
   !
-  !      output:      t
-  !      g(3,3) = avec * avec
+  IMPLICIT NONE
   !
-  USE kinds, only : DP
-  implicit none
+  REAL(DP) :: avec(3,3)
+  !! lattice vectors
+  REAL(DP) :: g(3,3)
+  !! avec^t * avec
   !
-  real(DP) :: zero
-  parameter (zero = 0.0d0)
+  ! ... local vairables
   !
-  real(DP) :: avec (3, 3), g (3, 3)
-  integer :: i, j, m
+  INTEGER :: i, j, m
+  REAL(DP), PARAMETER :: zero=0.0d0
   !
   !     calculate g
   !
@@ -1377,14 +1549,19 @@ subroutine setg (avec, g)
 
   enddo
   return
-end subroutine setg
+END SUBROUTINE setg
 !*
 !*
-real(8) function ran3 (idum)
-  USE kinds, only : DP
-  implicit none
-
-  save
+!---------------------------------------------------------------------------
+REAL(8) FUNCTION ran3( idum )
+  !-------------------------------------------------------------------------
+  !! Random number generator.
+  !
+  USE kinds, ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  SAVE
   !         implicit real*4(m)
   !         parameter (mbig=4000000.,mseed=1618033.,mz=0.,fac=2.5e-7)
   integer :: mbig, mseed, mz
@@ -1426,5 +1603,5 @@ real(8) function ran3 (idum)
   ma (inext) = mj
   ran3 = mj * fac
   return
-end function ran3
+END FUNCTION ran3
 

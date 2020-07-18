@@ -53,6 +53,8 @@ PROGRAM molecularpdos
   USE mp_global,   ONLY : mp_startup
   USE environment, ONLY : environment_start, environment_end
   !
+  USE read_proj,   ONLY: read_xml_proj
+  !
   IMPLICIT NONE
   !
   ! inputmopdos namelist
@@ -68,8 +70,9 @@ PROGRAM molecularpdos
        xmlfile_part, i_atmwfc_beg_part, i_atmwfc_end_part, i_bnd_beg_part, i_bnd_end_part, &
        fileout, Emin, Emax, DeltaE, ngauss, degauss, kresolveddos
   !
-  INTEGER  :: nbnd_full, nkstot_full, num_k_points_full, nspin_full, natomwfc_full
-  INTEGER  :: nbnd_part, nkstot_part, num_k_points_part, nspin_part, natomwfc_part
+  INTEGER  :: nbnd_full, nkstot_full, nspin_full, natomwfc_full
+  INTEGER  :: nbnd_part, nkstot_part, nspin_part, natomwfc_part
+  REAL(DP) :: nelec_full, ef_full, nelec_part, ef_part
   REAL(DP), ALLOCATABLE :: xk_full(:,:), wk_full(:), et_full(:,:), &
        &                   xk_part(:,:), wk_part(:), et_part(:,:)
   !
@@ -131,10 +134,14 @@ PROGRAM molecularpdos
      !
      !
      ! Read projection files
-     CALL readprojfile(xmlfile_full, nbnd_full, nkstot_full, num_k_points_full,&
-              nspin_full, natomwfc_full, xk_full, wk_full, et_full, projs_full)
-     CALL readprojfile(xmlfile_part, nbnd_part, nkstot_part, num_k_points_part,&
-              nspin_part, natomwfc_part, xk_part, wk_part, et_part, projs_part)
+     CALL read_xml_proj ( xmlfile_full, ios, natomwfc_full, nbnd_full, &
+          nkstot_full, nspin_full, nelec_full, ef_full, xk_full, wk_full, &
+          et_full,  projs_full)
+     IF (ios /= 0) CALL errore ('molecularpdos', 'reading xml file (full)', abs (ios) )
+     CALL read_xml_proj ( xmlfile_part, ios, natomwfc_part, nbnd_part, &
+          nkstot_part, nspin_part, nelec_part, ef_part, xk_part, wk_part, &
+          et_part,  projs_part)
+     IF (ios /= 0) CALL errore ('molecularpdos', 'reading xml file (part)', abs (ios) )
      !
      ! Defaults ranges are maximum ones
      IF (i_atmwfc_end_full<1) i_atmwfc_end_full=natomwfc_full
@@ -151,15 +158,14 @@ PROGRAM molecularpdos
           CALL errore ('molecularpdos','nspin does not match',abs(nspin_full-nspin_part))
      IF ( nkstot_full /= nkstot_part ) &
           CALL errore ('molecularpdos','nkstot does not match',abs(nkstot_full-nkstot_part))
-     IF ( num_k_points_full /= num_k_points_part ) &
-          CALL errore ('molecularpdos','num_k_points does not match',abs(num_k_points_full-num_k_points_part))
      IF ( i_atmwfc_end_part - i_atmwfc_beg_part /= i_atmwfc_end_full - i_atmwfc_beg_full ) &
           CALL errore ('molecularpdos','number of atomic wavefunctions does not match', &
           &            abs((i_atmwfc_end_part-i_atmwfc_beg_part)-(i_atmwfc_end_full-i_atmwfc_beg_full)) )
      !
      nkstot = nkstot_full
-     num_k_points = num_k_points_full
-     nspin = nspin_full 
+     num_k_points = nkstot
+     nspin = nspin_full
+     IF ( nspin == 2 ) num_k_points = num_k_points / 2
      natmwfc=i_atmwfc_end_part-i_atmwfc_beg_part+1
      nbnd_part=i_bnd_end_part-i_bnd_beg_part+1
      ALLOCATE (projs_mo(i_bnd_beg_part:i_bnd_end_part, i_bnd_beg_full:i_bnd_end_full, nkstot))
@@ -406,112 +412,5 @@ PROGRAM molecularpdos
   !
   CALL stop_pp
   !
-CONTAINS
-  !-----------------------------------------------------------------------  
-  SUBROUTINE readprojfile(filexml,nbnd,nkstot,num_k_points,nspin,natomwfc,xk,wk,et,projs)
-    !-----------------------------------------------------------------------
-    USE iotk_module
-    IMPLICIT NONE
-    !
-    CHARACTER(LEN=256) :: filexml
-    INTEGER  :: nbnd, nkstot, num_k_points, nspin, natomwfc
-    REAL(DP),    ALLOCATABLE :: xk(:,:), wk(:), et(:,:)
-    COMPLEX(DP), ALLOCATABLE :: projs(:,:,:)
-    !
-    REAL(DP)  :: ef, nelec
-    INTEGER :: ik, ik_eff, ia, ierr, iun
-    LOGICAL :: noncolin
-    !
-    CALL iotk_open_read(iun, FILE=TRIM(filexml), &
-         BINARY=.FALSE., IERR=ierr )
-    IF ( ierr /= 0 ) STOP 'error reading file'
-    CALL iotk_scan_begin(iun, "HEADER")
-    CALL iotk_scan_dat(iun, "NUMBER_OF_BANDS", nbnd)
-    CALL iotk_scan_dat(iun, "NUMBER_OF_K-POINTS", num_k_points )
-    CALL iotk_scan_dat(iun, "NUMBER_OF_SPIN_COMPONENTS", nspin )
-    CALL iotk_scan_dat(iun, "NON-COLINEAR_CALCULATION", noncolin )
-    IF (noncolin) STOP 'noncolin not implemented in molecularpdos'
-    CALL iotk_scan_dat(iun, "NUMBER_OF_ATOMIC_WFC", natomwfc)
-    CALL iotk_scan_dat(iun, "NUMBER_OF_ELECTRONS", nelec )
-    CALL iotk_scan_dat(iun, "FERMI_ENERGY", ef )
-    CALL iotk_scan_end(iun, "HEADER")
-    !
-    nkstot = num_k_points
-    IF ( nspin == 2 ) nkstot = nkstot * 2
-    !
-    ALLOCATE (xk(3,num_k_points))
-    ALLOCATE (wk(num_k_points))
-    ALLOCATE (et(nbnd,nspin*nkstot))
-    ALLOCATE (projs(natomwfc,nbnd,nkstot))
-    !
-    CALL iotk_scan_dat(iun, "K-POINTS", xk(:,1:num_k_points) )
-    CALL iotk_scan_dat(iun, "WEIGHT_OF_K-POINTS", wk(1:num_k_points) )
-    !
-    CALL iotk_scan_begin(iun, "EIGENVALUES")
-    !
-    DO ik=1, num_k_points
-       CALL iotk_scan_begin( iun, "K-POINT"//trim(iotk_index(ik)) )
-       IF ( nspin == 2 ) THEN
-          !
-          ik_eff = ik + num_k_points
-          !
-          CALL iotk_scan_dat( iun, "EIG.1", et(:,ik) )
-          CALL iotk_scan_dat( iun, "EIG.2", et(:,ik_eff) )
-          !
-       ELSE
-          !
-          CALL iotk_scan_dat( iun, "EIG", et(:,ik) )
-          !
-       ENDIF
-       !
-       CALL iotk_scan_end( iun, "K-POINT"//trim(iotk_index(ik)) )
-       !
-    ENDDO
-    !
-    CALL iotk_scan_end(iun, "EIGENVALUES")
-    !
-    CALL iotk_scan_begin(iun, "PROJECTIONS")
-    !
-    DO ik=1,num_k_points
-       !
-       CALL iotk_scan_begin( iun, "K-POINT"//trim(iotk_index(ik)) )
-       !
-       IF ( nspin == 2 ) THEN
-          !
-          CALL iotk_scan_begin ( iun, "SPIN.1" )
-          !
-          DO ia = 1, natomwfc
-             CALL iotk_scan_dat(iun, "ATMWFC"//trim(iotk_index(ia)), projs(ia,:,ik)  )
-          ENDDO
-          !
-          CALL iotk_scan_end ( iun, "SPIN.1" )
-          !
-          ik_eff = ik + num_k_points
-          !
-          CALL iotk_scan_begin ( iun, "SPIN.2" )
-          !
-          DO ia = 1, natomwfc
-             CALL iotk_scan_dat(iun, "ATMWFC"//trim(iotk_index(ia)), projs(ia,:,ik_eff)  )
-          ENDDO
-          !
-          CALL iotk_scan_end ( iun, "SPIN.2" )
-          !
-       ELSE
-          !
-          DO ia = 1,natomwfc
-             CALL iotk_scan_dat(iun, "ATMWFC"//trim(iotk_index(ia)), projs(ia,:,ik)  )
-          ENDDO
-          !
-       ENDIF
-       !
-       CALL iotk_scan_end( iun, "K-POINT"//trim(iotk_index(ik)) )
-       !
-    ENDDO
-    !
-    CALL iotk_scan_end(iun, "PROJECTIONS")
-    !
-    CALL iotk_close_read(iun)
-    !
-  END SUBROUTINE readprojfile
 
 END PROGRAM molecularpdos

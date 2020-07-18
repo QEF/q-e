@@ -6,30 +6,28 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-!-----------------------------------------------------------------------------
+!--------------------------------------------------------------------------------
 SUBROUTINE divide_class( code_group, nrot, smat, nclass, nelem, elem, which_irr )
-!-----------------------------------------------------------------------------
-!! This subroutine receives as input a set of nrot 3x3 matrices smat, which
-!! are assumed to be the operations of the point group given by code_group.
-!! smat are in cartesian coordinates. This routine divides the group in 
-!! classes and find:
-
-!! * nclass:         the number of classes of the group
-!! * nelem(iclass):  for each class, the number of elements of the class
-!! * elem(i,iclass): 1 < i < nelem(iclass) for each class tells which matrices 
-!!                   smat belong to that class
-!! * which_irr(iclass): for each class gives the position of that class in the
-!!                      character table associated with the group and provided
-!!                      by the routine set_irr_rap.
-
-!! NB: changing the order of 
-!! the elements in the character table must be reflected in 
-!! a change to which_irr. Presently the character tables 
-!! are those given by P.W. Atkins, M.S. Child, and 
-!! C.S.G. Phillips, "Tables for group theory". 
-!! Several equivalent names for the irreducible representation
-!! are given. D, G, L, S are used for Delta, Gamma, Lambda 
-!! and Sigma.
+!----------------------------------------------------------------------------------
+!! This subroutine receives as input a set of \(\text{nrot}\) 3x3 matrices 
+!! \(\text{smat}\), which are assumed to be the operations of the point group given
+!! by \(\texttt{code_group}\). The matrices \(\text{smat}\) are in cartesian 
+!! coordinates.  
+!! This routine divides the group in classes and finds:
+!
+!! * \(\text{nclass}\): the number of classes of the group;
+!! * \(\text{nelem(iclass)}\): for each class, the number of elements of the class
+!! * \(\text{elem(i,iclass)}\): \(1<i<\text{nelem}(\text{iclass})\) for each class tells
+!!                              which matrices \(\text{smat}\) belong to that class;
+!! * \(\text{which_irr(iclass)}\): for each class gives the position of that class in the
+!!                                 character table associated with the group and provided
+!!                                 by the routine \(\texttt{set_irr_rap}\).
+!
+!! NB: changing the order of the elements in the character table must be reflected in 
+!! a change to \(\text{which_irr}\). Presently the character tables are those given 
+!! by P.W. Atkins, M.S. Child, and C.S.G. Phillips, "Tables for group theory".  
+!! Several equivalent names for the irreducible representation are given. D, G, L, S 
+!! are used for Delta, Gamma, Lambda and Sigma.
 !
 USE kinds, ONLY : DP
 !
@@ -890,41 +888,43 @@ RETURN
 END SUBROUTINE divide_class
 
 !-----------------------------------------------------------------------------
-SUBROUTINE coniug_mat( a, b, c )
+SUBROUTINE coniug_mat( A, B, C )
 !-----------------------------------------------------------------------------
+!! It gives  \(C = A \cdot (B \cdot A^T)\).
+!
 USE kinds, ONLY : DP
 !
 IMPLICIT NONE
 !
-REAL(DP) :: a(3,3), b(3,3), c(3,3)
+REAL(DP) :: A(3,3), B(3,3), C(3,3)
 !
- c=MATMUL(a,MATMUL(b,TRANSPOSE(a)))
+ C = MATMUL(A,MATMUL(B,TRANSPOSE(A)))
 !
 RETURN
 !
 END SUBROUTINE coniug_mat
 
 !-----------------------------------------------------------------------------
-FUNCTION compare_mat( a, b )
+FUNCTION compare_mat( A, B )
 !-----------------------------------------------------------------------------
-!!  This function compares two 3x3 matrix (a and b) and returns .true. if 
-!!  they coincide.
+!! This function compares two 3x3 matrix (\(A\) and \(B\)) and returns .TRUE. if 
+!! they coincide.
 !
 USE kinds, ONLY : DP
 !
 IMPLICIT NONE
 !
-REAL(DP) :: a(3,3), b(3,3)
+REAL(DP) :: A(3,3), B(3,3)
 REAL(DP), PARAMETER :: eps=1.d-7
 LOGICAL :: compare_mat
 
- compare_mat=(ABS(MAXVAL(a-b))<eps).AND.(ABS(MINVAL(a-b))<eps)
+ compare_mat=(ABS(MAXVAL(A-B))<eps).AND.(ABS(MINVAL(A-B))<eps)
 
 END FUNCTION compare_mat
 
 FUNCTION is_axis( ax, iflag )
-!! This is a logical function which returns .true. if ax is the versor
-!! of the axis x (iflag=1) or y (iflag=2) or z (iflag=3).
+!! This is a logical function that returns .TRUE. if \(\text{ax}\) is the versor
+!! of the axis x (\(\text{iflag}=1\)) or y (\(\text{iflag}=2\)) or z (\(\text{iflag}=3\)).
 !
 USE kinds, ONLY : DP
 !
@@ -954,10 +954,10 @@ END FUNCTION is_axis
 !-----------------------------------------------------------------------------
 SUBROUTINE versor( smat, ax )
 !-----------------------------------------------------------------------------
-!!  This subroutine receives a rotation matrix and determines the rotation
-!!  axis. The orientation of the axis is with the tip in the hemisphere
-!!  z>=0. In the xy plane the axis is in the x>0 region and the positive
-!!  y axis is taken for z=0 and x=0.
+!! This subroutine receives a rotation matrix and determines the rotation
+!! axis. The orientation of the axis is with the tip in the hemisphere
+!! z>=0. In the xy plane the axis is in the x>0 region and the positive
+!! y axis is taken for z=0 and x=0.
 !
 USE kinds, ONLY : DP
 !
@@ -1054,7 +1054,7 @@ END SUBROUTINE mirror_axis
 !-----------------------------------------------------------------------------
 FUNCTION angle_rot( smat )
 !-----------------------------------------------------------------------------
-!! This subroutine receives a rotation matrix and determine the 
+!! This subroutine receives a rotation matrix and determines the 
 !! rotation angle. 
 !
 USE kinds, ONLY : DP
@@ -2697,29 +2697,26 @@ END SUBROUTINE set_irr_rap
 !--------------------------------------------------------------------------
 FUNCTION is_complex( code )
 !--------------------------------------------------------------------------
-!! This function receives a code of the group and provide .true. or 
-!! .false. if the group HAS or HAS NOT complex irreducible 
+!! This function receives a code of the group and provides .TRUE. or 
+!! .FALSE. if the group, respectively, HAS or HAS NOT complex irreducible
 !! representations. The order is the following:
-
-!!  1  "C_1 " F    11 "D_6 " F    21 "D_3h" F    31 "O   " F
-
-!!  2  "C_i " F    12 "C_2v" F    22 "D_4h" F    32 "O_h " F 
-
-!!  3  "C_s " F    13 "C_3v" F    23 "D_6h" F 
-
-!!  4  "C_2 " F    14 "C_4v" F    24 "D_2d" F
-
-!!  5  "C_3 " T    15 "C_6v" F    25 "D_3d" F
-
-!!  6  "C_4 " T    16 "C_2h" F    26 "S_4 " T
-
-!!  7  "C_6 " T    17 "C_3h" T    27 "S_6 " T
-
-!!  8  "D_2 " F    18 "C_4h" T    28 "T   " T
-
-!!  9  "D_3 " F    19 "C_6h" T    29 "T_h " T
-
-!!  10 "D_4 " F    20 "D_2h" F    30 "T_d " F
+!
+!! \begin{equation}\notag
+!! \begin{split}
+!! & 1 \quad &C_1 &\ F &\qquad 11 \quad &D_6  &\ F &\qquad 21 \quad &D_3h &\ F
+!!                                                  &\qquad 31 \quad &O   &\ F \\
+!! & 2 \quad &C_i &\ F &\qquad 12 \quad &C_2v &\ F &\qquad 22 \quad &D_4h &\ F 
+!!                                                  &\qquad 32 \quad &O_h &\ F \\
+!! & 3 \quad &C_s &\ F &\qquad 13 \quad &C_3v &\ F &\qquad 23 \quad &D_6h &\ F  & & \\
+!! & 4 \quad &C_2 &\ F &\qquad 14 \quad &C_4v &\ F &\qquad 24 \quad &D_2d &\ F  & & \\
+!! & 5 \quad &C_3 &\ T &\qquad 15 \quad &C_6v &\ F &\qquad 25 \quad &D_3d &\ F  & & \\
+!! & 6 \quad &C_4 &\ T &\qquad 16 \quad &C_2h &\ F &\qquad 26 \quad &S_4  &\ T  & & \\
+!! & 7 \quad &C_6 &\ T &\qquad 17 \quad &C_3h &\ T &\qquad 27 \quad &S_6  &\ T  & & \\
+!! & 8 \quad &D_2 &\ F &\qquad 18 \quad &C_4h &\ T &\qquad 28 \quad &T    &\ T  & & \\
+!! & 9 \quad &D_3 &\ F &\qquad 19 \quad &C_6h &\ T &\qquad 29 \quad &T_h  &\ T  & & \\
+!! & 10\quad &D_4 &\ F &\qquad 20 \quad &D_2h &\ F &\qquad 30 \quad &T_d  &\ F  & &
+!! \end{split}
+!! \end{equation}
 !
 IMPLICIT NONE
 !
@@ -2747,7 +2744,7 @@ END FUNCTION is_complex
 
 
 FUNCTION is_parallel(a,b)
-!!  This function returns true if a(3) and b(3) are parallel vectors
+!! This function returns .TRUE. if \(a(3)\) and \(b(3)\) are parallel vectors
 !
 USE kinds, ONLY : DP
 !
@@ -2767,7 +2764,7 @@ END FUNCTION is_parallel
 
 
 FUNCTION angle_vectors( ax, bx )
-!! This function returns the angle, in degrees between two vectors
+!! This function returns the angle, in degrees, between two vectors.
 !
 USE kinds, ONLY : DP
 USE constants, ONLY : pi
@@ -2791,15 +2788,27 @@ RETURN
 !
 END FUNCTION angle_vectors
 
-
+!----------------------------------------------------------------------------
 SUBROUTINE set_class_el_name( nsym, sname, nclass, nelem, elem, elem_name )
+!---------------------------------------------------------------------------
+!! It sets the names of the elements of each symmetry class.
 !
 IMPLICIT NONE
 !
 INTEGER :: nsym
+!! The number of symmetries
 CHARACTER(LEN=45) :: sname(nsym)
+!! the names of the symmetries
 CHARACTER(LEN=55) :: elem_name(8,12)
-INTEGER :: nclass, nelem(12), elem(8,12)
+!! the name of each symmetry in each class
+INTEGER :: nclass
+!! The number of classes of the point group
+INTEGER :: nelem(12)
+!! The number of elements for each class
+INTEGER :: elem(8,12)
+!! Elements in the Smat list for each class
+!
+! ... local variables
 !
 INTEGER :: iclass, ielem
 !
@@ -2813,17 +2822,23 @@ RETURN
 !
 END SUBROUTINE set_class_el_name
 
-
+!-------------------------------------------------------------------------
 SUBROUTINE which_c2( a, ia )
-!!   This routine gives a code to identify the direction of a C_2 axis
-
-!!   x    1   y=z,  x=0  4   x=-z,  y=0  7   y= m x,  z=0  10   y=-x/m, z=0 13
-
-!!   y    2   y=-z, x=0  5   y=x,   z=0  8   y= -m x, z=0  11
-
-!!   z    3   x=z,  y=0  6   y=-x,  z=0  9   y= x/m,  z=0  12
-
-!!   m=sqrt(3.)
+!---------------------------------------------------------------------------
+!! This routine gives a code to identify the direction of a \(C_2\) axis:
+!
+!! \begin{equation}\notag
+!! \begin{split}
+!!   &1\quad x;\qquad &4\quad y=z,\  &x=0;\qquad 7\quad x=-z,\ &y=0;\qquad 
+!!                     10\quad y=m x,\  &z=0;\qquad 13\quad y=-x/m,\ z=0; \\
+!!   &2\quad y;\qquad &5\quad y=-z,\ &x=0;\qquad 8\quad y=x,\  &z=0;\qquad
+!!                                           11\quad y=-m x,\ &z=0;\qquad \\
+!!   &3\quad z;\qquad &6\quad x=z,\  &y=0;\qquad 9\quad y=-x,\ &z=0;\qquad
+!!                                           12\quad y=x/m,\  &z=0;\qquad  
+!! \end{split}
+!! \end{equation}
+!
+!! where \(m=\sqrt{3}\).
 !
 USE kinds, ONLY : DP
 !
@@ -2881,20 +2896,20 @@ RETURN
 !
 END SUBROUTINE which_c2
 
-
+!-------------------------------------------------------------------------------
 SUBROUTINE is_c2v( iax, ibx, icx, isok )
 !------------------------------------------------------------------------------
-!!  This subroutine receives the indeces of a C_2 axis iax, with the convention
-!!  of the routine which_c2, and of the perpendicular of two mirrors, ibx and
-!!  icx with the same convention. It returns .true. in isok if the combination
-!!  corresponds to a known possibility for C_2v. Usually isok .FALSE. means
-!!  that the two mirrors are not in the correct order.
-
-!!   Note: the order of the two mirrors in C_2v is defined by the   
-!!         condition to have the same double group multiplication table of the 
-!!         isomorphous group D_2. Only the order of one D_2 is arbitrary,
-!!         all the C_2v and D_2 are ordered for isomorphism of the double
-!!         groups
+!! This subroutine receives the indeces of a \(C_2\) axis \(\text{iax}\), with the
+!! convention of the routine \(\texttt{which_c2}\), and of the perpendicular of
+!! two mirrors, \(\text{ibx}\) and \(\text{icx}\) with the same convention.
+!! It returns .TRUE. in \(\text{isok}\) if the combination corresponds to a known 
+!! possibility for \(C_2v\). Usually \(\text{isok}\) .FALSE. means that the two 
+!! mirrors are not in the correct order.
+!
+!! NOTE: the order of the two mirrors in \(C_2v\) is defined by the condition to
+!! have the same double group multiplication table of the isomorphous group \(D_2\).
+!! Only the order of one \(D_2\) is arbitrary, all the \(C_2v\) and \(D_2\) are ordered
+!! for isomorphism of the double groups.
 !
 IMPLICIT NONE
 !
@@ -2925,19 +2940,21 @@ RETURN
 !
 END SUBROUTINE is_c2v
 
-
+!------------------------------------------------------------------------------
 SUBROUTINE is_d2( iax, ibx, icx, ind2 )
 !------------------------------------------------------------------------------
-!!   This routine receives as input the indices of three c2 axes, with the
-!!   same codes as in which_c2, and gives as output the array ind2(3) of intergers,
-!!   that gives the positions of iax, ibx, icx in the list C_2, C_2', C_2''
-!!   ind2(1) says which is the position of iax, ecc.
-!!   For instance ind2 = 3, 2, 1  says that iax is C_2'', ibx is C_2' and icx is 
-!!   C_2. If on output ind2 = 0, 0, 0 means that iax, ibx, and icx does not belong
-!!   to a possible D_2
-
-!!   Note: this order is arbitrary for one D_2, all the others should be
-!!         isomorphous with the same double group multiplication table.
+!! This routine receives as input the indices of three \(C_2\) axes, with the
+!! same codes as in \(\texttt{which_c2}\), and gives as output the array 
+!! \(\text{ind2(3)}\) of intergers, that gives the positions of \(\text{iax, ibx,
+!! icx}\) in the list \(C_2\), \(C_2'\), \(C_2''\). The \(\text{ind2}(1)\) says
+!! which is the position of \(\text{iax}\), etc.  
+!! For instance \(\text{ind2} = (3, 2, 1)\) says that \(\text{iax}\) is \(C_2''\),
+!! \(\text{ibx}\) is \(C_2'\) and \(\text{icx}\) is \(C_2\). If on output \(\text{ind2}=
+!! (0,0,0)\) means that \(\text{iax, ibx}\), and \(\text{icx}\) do not belong
+!! to a possible \(D_2\).
+!
+!! NOTE: this order is arbitrary for one \(D_2\), all the others should be
+!! isomorphous with the same double group multiplication table.
 !
 IMPLICIT NONE
 !

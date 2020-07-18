@@ -43,6 +43,10 @@ subroutine bcast_ph_input ( )
   ! YAMBO <
   USE elph_tetra_mod, ONLY : lshift_q
   USE ldaU_ph,        ONLY : read_dns_bare, d2ns_type
+  USE dvscf_interpolate, ONLY : ldvscf_interpolate, do_long_range, &
+      do_charge_neutral, wpot_dir
+  USE ahc,           ONLY : elph_ahc, ahc_dir, ahc_nbnd, ahc_nbndskip, &
+      skip_upperfan
 
   implicit none
   !
@@ -74,6 +78,11 @@ subroutine bcast_ph_input ( )
   call mp_bcast (dvscf_yambo, meta_ionode_id, world_comm)
   ! YAMBO <
   call mp_bcast (lshift_q, meta_ionode_id, world_comm)
+  call mp_bcast (ldvscf_interpolate, meta_ionode_id, world_comm)
+  call mp_bcast (do_charge_neutral, meta_ionode_id, world_comm)
+  call mp_bcast (do_long_range, meta_ionode_id, world_comm)
+  call mp_bcast (elph_ahc, meta_ionode_id, world_comm)
+  call mp_bcast (skip_upperfan, meta_ionode_id, world_comm)
   !
   ! integers
   !
@@ -101,6 +110,8 @@ subroutine bcast_ph_input ( )
   CALL mp_bcast( elph_nbnd_max, meta_ionode_id, world_comm )
   CALL mp_bcast( el_ph_ngauss, meta_ionode_id, world_comm )
   CALL mp_bcast( el_ph_nsigma, meta_ionode_id, world_comm )
+  CALL mp_bcast( ahc_nbnd, meta_ionode_id, world_comm )
+  CALL mp_bcast( ahc_nbndskip, meta_ionode_id, world_comm )
   !
   ! real*8
   !
@@ -123,6 +134,8 @@ subroutine bcast_ph_input ( )
   call mp_bcast (prefix, meta_ionode_id, world_comm )
   call mp_bcast (electron_phonon, meta_ionode_id, world_comm )
   call mp_bcast (d2ns_type, meta_ionode_id, world_comm )
+  call mp_bcast (wpot_dir, meta_ionode_id, world_comm )
+  call mp_bcast (ahc_dir, meta_ionode_id, world_comm )
   !
   ! derived type (one bit at a time)
   !

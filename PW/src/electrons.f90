@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,8 +13,8 @@
 !----------------------------------------------------------------------------
 SUBROUTINE electrons()
   !----------------------------------------------------------------------------
-  !! General self-consistency loop, also for hybrid functionals
-  !! For non-hybrid functionals it just calls "electron_scf"
+  !! General self-consistency loop, also for hybrid functionals.  
+  !! For non-hybrid functionals it just calls \(\texttt{electron_scf}\).
   !
   USE kinds,                ONLY : DP
   USE check_stop,           ONLY : check_stop_now, stopped_by_user
@@ -22,7 +22,7 @@ SUBROUTINE electrons()
   USE fft_base,             ONLY : dfftp
   USE gvecs,                ONLY : doublegrid
   USE gvect,                ONLY : ecutrho
-  USE lsda_mod,             ONLY : nspin, magtot, absmag
+  USE lsda_mod,             ONLY : nspin, absmag
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet, epaw, &
                                    elondon, edftd3, ef_up, ef_dw
@@ -36,10 +36,8 @@ SUBROUTINE electrons()
   USE extfield,             ONLY : tefield, etotefield
   USE wvfct,                ONLY : nbnd, wg, et
   USE klist,                ONLY : nks
-  USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
-                                   lambda, report
   USE uspp,                 ONLY : okvan
-  USE exx,                  ONLY : aceinit,exxinit, exxenergy2, exxenergy, exxbuff, &
+  USE exx,                  ONLY : aceinit,exxinit, exxenergy2, exxbuff, &
                                    fock0, fock1, fock2, fock3, dexx, use_ace, local_thr 
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
   USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi, gamma_only
@@ -344,17 +342,18 @@ END SUBROUTINE electrons
 !----------------------------------------------------------------------------
 SUBROUTINE electrons_scf ( printout, exxen )
   !----------------------------------------------------------------------------
-  !! This routine is a driver of the self-consistent cycle.
-  !! It uses the routine c_bands for computing the bands at fixed
-  !! Hamiltonian, the routine sum_band to compute the charge density,
-  !! the routine v_of_rho to compute the new potential and the routine
-  !! mix_rho to mix input and output charge densities.
+  !! This routine is a driver of the self-consistent cycle.  
+  !! It uses the routine \(\texttt{c_bands}\) for computing the bands at fixed
+  !! Hamiltonian, the routine \(\texttt{sum_band}\) to compute the charge density,
+  !! the routine \(\texttt{v_of_rho}\) to compute the new potential and the routine
+  !! \(\text{mix_rho}\) to mix input and output charge densities.
   !
   USE kinds,                ONLY : DP
   USE check_stop,           ONLY : check_stop_now, stopped_by_user
   USE io_global,            ONLY : stdout, ionode
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
-  USE ions_base,            ONLY : zv, nat, nsp, ityp, tau, compute_eextfor, atm
+  USE ions_base,            ONLY : zv, nat, nsp, ityp, tau, compute_eextfor, atm, &
+                                   ntyp => nsp
   USE basis,                ONLY : starting_pot
   USE bp,                   ONLY : lelfield
   USE fft_base,             ONLY : dfftp
@@ -362,6 +361,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE gvecs,                ONLY : doublegrid, ngms
   USE klist,                ONLY : xk, wk, nelec, ngk, nks, nkstot, lgauss, &
                                    two_fermi_energies, tot_charge
+  USE fixed_occ,            ONLY : one_atom_occupations
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
   USE vlocal,               ONLY : strf
   USE wvfct,                ONLY : nbnd, et
@@ -382,8 +382,10 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE control_flags,        ONLY : n_scf_steps, scf_error
 
   USE io_files,             ONLY : iunmix, output_drho
-  USE ldaU,                 ONLY : eth, Hubbard_U, Hubbard_lmax, &
-                                   niter_with_fixed_ns, lda_plus_u
+  USE ldaU,                 ONLY : eth, lda_plus_u, lda_plus_u_kind, &
+                                   niter_with_fixed_ns, hub_pot_fix, &
+                                   nsg, nsgnew, v_nsg, at_sc, neighood, &
+                                   ldim_u, is_hubbard_back
   USE extfield,             ONLY : tefield, etotefield, gate, etotgatefield !TB
   USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
                                    lambda, report
@@ -411,6 +413,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE esm,                  ONLY : do_comp_esm, esm_printpot, esm_ewald
   USE fcp_variables,        ONLY : lfcpopt, lfcpdyn
   USE wrappers,             ONLY : memstat
+  USE iso_c_binding,        ONLY : c_int
   !
   USE plugin_variables,     ONLY : plugin_etot
   !
@@ -438,6 +441,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
   !! dummy counter on iterations
   INTEGER :: iter
   !! counter on iterations
+  INTEGER :: nt
+  !! counter on atomic types
   INTEGER :: ios, kilobytes
   !
   REAL(DP) :: tr2_min
@@ -464,6 +469,15 @@ SUBROUTINE electrons_scf ( printout, exxen )
   !! auxiliary variables for grimme-d3
   INTEGER:: atnum(1:nat), na
   !! auxiliary variables for grimme-d3
+  LOGICAL :: lhb
+  !! if .TRUE. then background states are present (DFT+U)
+  !
+  lhb = .FALSE.
+  IF ( lda_plus_u )  THEN
+     DO nt = 1, ntyp
+        IF (is_hubbard_back(nt)) lhb = .TRUE.
+     ENDDO
+  ENDIF
   !
   iter = 0
   dr2  = 0.0_dp
@@ -581,6 +595,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
            GO TO 10
         ENDIF
         !
+        IF (one_atom_occupations) CALL new_evc()
+        !
         ! ... xk, wk, isk, et, wg are distributed across pools;
         ! ... the first node has a complete copy of xk, wk, isk,
         ! ... while eigenvalues et and weights wg must be
@@ -604,28 +620,68 @@ SUBROUTINE electrons_scf ( printout, exxen )
         !
         IF ( lda_plus_u )  THEN
            !
+           ! Write the occupation matrices
+           !
            IF ( iverbosity > 0 .OR. first ) THEN
-              IF (noncolin) THEN
-                 CALL write_ns_nc()
-              ELSE
+              IF (lda_plus_u_kind.EQ.0) THEN
                  CALL write_ns()
+              ELSEIF (lda_plus_u_kind.EQ.1) THEN
+                 IF (noncolin) THEN
+                    CALL write_ns_nc()
+                 ELSE
+                    CALL write_ns()
+                 ENDIF
+              ELSEIF (lda_plus_u_kind.EQ.2) THEN
+                 CALL write_nsg()
               ENDIF
            ENDIF
            !
+           ! Keep the Hubbard potential fixed, i.e. keep the 
+           ! occupation matrix equal to the ground-state one.
+           ! This is needed for the calculation of Hubbard parameters
+           ! in a self-consistent way.
+           !
+           IF (hub_pot_fix) THEN
+             IF (lda_plus_u_kind.EQ.0) THEN
+                rho%ns = rhoin%ns ! back to input values
+                IF (lhb) rho%nsb = rhoin%nsb
+             ELSEIF (lda_plus_u_kind.EQ.1) THEN
+                CALL errore('electrons_scf', &
+                  & 'hub_pot_fix is not implemented for lda_plus_u_kind=1',1)
+             ELSEIF (lda_plus_u_kind.EQ.2) THEN
+                nsgnew = nsg
+             ENDIF
+           ENDIF
+           !
            IF ( first .AND. starting_pot == 'atomic' ) THEN
-              CALL ns_adj()
-              IF (noncolin) THEN
-                 rhoin%ns_nc = rho%ns_nc
-              ELSE
+              IF (lda_plus_u_kind.EQ.0) THEN
+                 CALL ns_adj()
                  rhoin%ns = rho%ns
+                 IF (lhb) rhoin%nsb = rho%nsb
+              ELSEIF (lda_plus_u_kind.EQ.1) THEN
+                 CALL ns_adj()
+                 IF (noncolin) THEN
+                    rhoin%ns_nc = rho%ns_nc
+                 ELSE
+                    rhoin%ns = rho%ns
+                 ENDIF
+              ELSEIF (lda_plus_u_kind.EQ.2) THEN
+                 CALL nsg_adj()
               ENDIF
            ENDIF
            IF ( iter <= niter_with_fixed_ns ) THEN
               WRITE( stdout, '(/,5X,"RESET ns to initial values (iter <= mixing_fixed_ns)",/)')
-              IF (noncolin) THEN
-                 rho%ns_nc = rhoin%ns_nc
-              ELSE
+              IF (lda_plus_u_kind.EQ.0) THEN
                  rho%ns = rhoin%ns
+                 IF (lhb) rhoin%nsb = rho%nsb
+              ELSEIF (lda_plus_u_kind.EQ.1) THEN
+                 IF (noncolin) THEN
+                    rho%ns_nc = rhoin%ns_nc
+                 ELSE
+                    rho%ns = rhoin%ns
+                 ENDIF
+              ELSEIF (lda_plus_u_kind.EQ.2) THEN
+                 nsgnew = nsg
               ENDIF
            ENDIF
            !
@@ -656,7 +712,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
         ! ... calculations on the same data, performed on different procs
         !
         IF ( lda_plus_u )  THEN
-           ! ... For LDA+U, ns and ns_nc are also broadcast inside each pool
+           ! ... For DFT+U, ns and ns_nc are also broadcast inside each pool
            ! ... to ensure consistency on all processors of all pools
            IF (noncolin) THEN
               CALL mp_bcast( rhoin%ns_nc, root_pool, intra_pool_comm )
@@ -726,6 +782,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
            !
            CALL scf_type_COPY( rhoin, rho )
            !
+           IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) nsgnew = nsg
+           !
         ELSE 
            !
            ! ... convergence reached:
@@ -733,6 +791,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
            ! ... 2) vnew contains V(out)-V(in) ( used to correct the forces ).
            !
            vnew%of_r(:,:) = v%of_r(:,:)
+           IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) nsg = nsgnew
            CALL v_of_rho( rho,rho_core,rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v )
            vnew%of_r(:,:) = v%of_r(:,:) - vnew%of_r(:,:)
@@ -777,11 +836,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      IF ( lelfield ) en_el =  calc_pol ( )
      !
-     IF ( ( MOD(iter,report) == 0 ) .OR. ( report /= 0 .AND. conv_elec ) ) THEN
-        !
-        IF ( (noncolin .AND. domag) .OR. i_cons==1 .OR. nspin==2) CALL report_mag()
-        !
-     ENDIF
+     IF ( report > 0 ) THEN
+        IF ( conv_elec .OR.  MOD(iter,report) == 0 ) CALL report_mag()
+     ELSE IF ( report < 0 ) THEN
+        IF ( conv_elec ) CALL report_mag()
+     END IF
      !
      WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
      !
@@ -795,12 +854,35 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      IF ( conv_elec .OR. MOD( iter, iprint ) == 0 ) THEN
         !
-        IF ( lda_plus_U .AND. iverbosity == 0 ) THEN
-           IF (noncolin) THEN
-              CALL write_ns_nc()
-           ELSE
-              CALL write_ns()
+        ! iverbosity == 0 for the PW code
+        ! iverbosity >  2 for the HP code
+        !
+        IF ( lda_plus_u .AND. (iverbosity == 0 .OR. iverbosity > 2) ) THEN
+           !
+           ! Recompute the occupation matrix:
+           ! needed when computing U (and V) in a SCF way
+           IF (hub_pot_fix) THEN
+              IF (lda_plus_u_kind.EQ.0) THEN
+                 CALL new_ns(rho%ns)
+                 IF (lhb) CALL new_nsb(rho%nsb)
+              ELSEIF (lda_plus_u_kind.EQ.2) THEN
+                 CALL new_nsg()
+              ENDIF
            ENDIF
+           !
+           ! Write the occupation matrices
+           IF (lda_plus_u_kind == 0) THEN
+              CALL write_ns()
+           ELSEIF (lda_plus_u_kind == 1) THEN
+              IF (noncolin) THEN
+                 CALL write_ns_nc()
+              ELSE
+                 CALL write_ns()
+              ENDIF
+           ELSEIF (lda_plus_u_kind == 2) THEN
+              CALL write_nsg()
+           ENDIF
+           !
         ENDIF
         CALL print_ks_energies()
         !
@@ -1020,16 +1102,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !-----------------------------------------------------------------------
      FUNCTION delta_e()
        !-----------------------------------------------------------------------
-       !! This function computes \(\textrm{delta_e}\), where:
-       !
-       !! $$\begin{alignat*}{2} \text{delta}\_\text{e} &= - \int\text{rho}\%\text{of}\_\text{r(r)}\cdot 
-       !!                                                           \text{v}\%\text{of}\_\text{r(r)} && \\
-       !!                          &= - \int \text{rho}\%\text{kin}\_\text{r(r)}\cdot \text{v}\%\text{kin}\_
-       !!                                                           \text{r(r)} && \text{[for Meta-GGA]} \\
-       !!                          &= - \sum \text{rho}\%\text{ns}\cdot \text{v}\%\text{ns} && 
-       !!                                                                               \text{[for LDA+U]}\\
-       !!                          &= - \sum \text{becsum}\cdot \text{D1}\_\text{Hxc} && \text{[for PAW]}
-       !!                                                                                  \end{alignat*} $$
+       ! This function computes delta_e, where:
        !
        ! ... delta_e =  - \int rho%of_r(r)  v%of_r(r)
        !                - \int rho%kin_r(r) v%kin_r(r) [for Meta-GGA]
@@ -1042,7 +1115,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !
        REAL(DP) :: delta_e
        REAL(DP) :: delta_e_hub
-       INTEGER  :: ir
+       INTEGER  :: ir, na1, nt1, na2, nt2, m1, m2, equiv_na2, viz, is
        !
        delta_e = 0._DP
        IF ( nspin==2 ) THEN
@@ -1064,14 +1137,43 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !
        CALL mp_sum( delta_e, intra_bgrp_comm )
        !
-       IF (lda_plus_u) THEN
-         IF (noncolin) THEN
-           delta_e_hub = - SUM( rho%ns_nc(:,:,:,:)*v%ns_nc(:,:,:,:) )
-           delta_e = delta_e + delta_e_hub
-         ELSE
-           delta_e_hub = - SUM( rho%ns(:,:,:,:)*v%ns(:,:,:,:) )
-           IF (nspin==1) delta_e_hub = 2.d0 * delta_e_hub
-           delta_e = delta_e + delta_e_hub
+       IF (lda_plus_u .AND. (.NOT.hub_pot_fix)) THEN
+         IF (lda_plus_u_kind.EQ.0) THEN
+            delta_e_hub = - SUM( rho%ns(:,:,:,:)*v%ns(:,:,:,:) )
+            IF (lhb) delta_e_hub = delta_e_hub - SUM(rho%nsb(:,:,:,:)*v%nsb(:,:,:,:))
+            IF (nspin==1) delta_e_hub = 2.d0 * delta_e_hub
+            delta_e = delta_e + delta_e_hub
+         ELSEIF (lda_plus_u_kind.EQ.1) THEN
+            IF (noncolin) THEN
+              delta_e_hub = - SUM( rho%ns_nc(:,:,:,:)*v%ns_nc(:,:,:,:) )
+              delta_e = delta_e + delta_e_hub
+            ELSE
+              delta_e_hub = - SUM( rho%ns(:,:,:,:)*v%ns(:,:,:,:) )
+              IF (nspin==1) delta_e_hub = 2.d0 * delta_e_hub
+              delta_e = delta_e + delta_e_hub
+            ENDIF
+         ELSEIF (lda_plus_u_kind.EQ.2) THEN
+            delta_e_hub = 0.0_dp
+            DO is = 1, nspin
+               DO na1 = 1, nat
+                  nt1 = ityp(na1)
+                  DO viz = 1, neighood(na1)%num_neigh
+                     na2 = neighood(na1)%neigh(viz)
+                     equiv_na2 = at_sc(na2)%at
+                     nt2 = ityp(equiv_na2)
+                     IF ( ANY(v_nsg(:,:,viz,na1,is).NE.0.0d0) ) THEN
+                        DO m1 = 1, ldim_u(nt1)
+                           DO m2 = 1, ldim_u(nt2)
+                              delta_e_hub = delta_e_hub - &
+                                  nsgnew(m2,m1,viz,na1,is)*v_nsg(m2,m1,viz,na1,is)
+                           ENDDO
+                        ENDDO
+                     ENDIF
+                  ENDDO
+               ENDDO
+            ENDDO
+            IF (nspin==1) delta_e_hub = 2.d0 * delta_e_hub
+            delta_e = delta_e + delta_e_hub
          ENDIF
        ENDIF
        !
@@ -1084,16 +1186,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !-----------------------------------------------------------------------
      FUNCTION delta_escf()
        !-----------------------------------------------------------------------
-       !! This function calculates the difference between the Hartree and XC energy
-       !! at first order in the charge density difference \(\textrm{delta_rho(r)}\):
-       !
-       !! $$\begin{alignat*}{2} \text{delta}\_\text{escf} &= - \int\text{rho}\%\text{of}\_\text{r(r)}\cdot
-       !!                                                              \text{v}\%\text{of}\_\text{r(r)} && \\
-       !!                          &= - \int \text{rho}\%\text{kin}\_\text{r(r)}\cdot \text{v}\%\text{kin}\_
-       !!                                                              \text{r(r)} && \text{[for Meta-GGA]} \\
-       !!                          &= - \sum \text{rho}\%\text{ns}\cdot \text{v}\%\text{ns} && 
-       !!                                                                                \text{[for LDA+U]} \\
-       !!                          &= - \sum \text{becsum}\cdot \text{D1} && \text{[for PAW]} \end{alignat*} $$
+       ! This function calculates the difference between the Hartree and XC energy
+       ! at first order in the charge density difference delta_rho(r).
        !
        ! ... delta_escf = - \int \delta rho%of_r(r)  v%of_r(r)
        !                  - \int \delta rho%kin_r(r) v%kin_r(r) [for Meta-GGA]
@@ -1103,7 +1197,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
        USE funct,  ONLY : dft_is_meta
        IMPLICIT NONE
        REAL(DP) :: delta_escf, delta_escf_hub, rho_dif(2)
-       INTEGER  :: ir
+       INTEGER  :: ir, na1, nt1, na2, nt2, m1, m2, equiv_na2, viz, is
        !
        delta_escf=0._dp
        IF ( nspin==2 ) THEN
@@ -1129,15 +1223,46 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !
        CALL mp_sum( delta_escf, intra_bgrp_comm )
        !
-       IF ( lda_plus_u ) THEN
-         IF ( noncolin ) THEN
-           delta_escf_hub = -SUM((rhoin%ns_nc(:,:,:,:)-rho%ns_nc(:,:,:,:))*v%ns_nc(:,:,:,:))
-           delta_escf = delta_escf + delta_escf_hub
-         ELSE
-           delta_escf_hub = -SUM((rhoin%ns(:,:,:,:)-rho%ns(:,:,:,:))*v%ns(:,:,:,:))
-           IF ( nspin==1 ) delta_escf_hub = 2.d0 * delta_escf_hub
-           delta_escf = delta_escf + delta_escf_hub
-         ENDIF
+       IF (lda_plus_u .AND. (.NOT.hub_pot_fix)) THEN
+          IF (lda_plus_u_kind.EQ.0) THEN
+             delta_escf_hub = -SUM((rhoin%ns(:,:,:,:)-rho%ns(:,:,:,:))*v%ns(:,:,:,:))
+             IF (lhb) delta_escf_hub = delta_escf_hub - &
+                         SUM((rhoin%nsb(:,:,:,:)-rho%nsb(:,:,:,:))*v%nsb(:,:,:,:))
+             IF ( nspin==1 ) delta_escf_hub = 2.d0 * delta_escf_hub
+             delta_escf = delta_escf + delta_escf_hub
+          ELSEIF (lda_plus_u_kind.EQ.1) THEN
+             IF (noncolin) THEN
+                delta_escf_hub = -SUM((rhoin%ns_nc(:,:,:,:)-rho%ns_nc(:,:,:,:))*v%ns_nc(:,:,:,:))
+                delta_escf = delta_escf + delta_escf_hub
+             ELSE
+                delta_escf_hub = -SUM((rhoin%ns(:,:,:,:)-rho%ns(:,:,:,:))*v%ns(:,:,:,:))
+                IF ( nspin==1 ) delta_escf_hub = 2.d0 * delta_escf_hub
+                delta_escf = delta_escf + delta_escf_hub
+             ENDIF
+          ELSEIF (lda_plus_u_kind.EQ.2) THEN
+             delta_escf_hub = 0.0_dp
+             DO is = 1, nspin
+                DO na1 = 1, nat
+                   nt1 = ityp(na1)
+                   DO viz = 1, neighood(na1)%num_neigh
+                      na2 = neighood(na1)%neigh(viz)
+                      equiv_na2 = at_sc(na2)%at
+                      nt2 = ityp(equiv_na2)
+                      IF ( ANY(v_nsg(:,:,viz,na1,is).NE.0.0d0) ) THEN
+                         DO m1 = 1, ldim_u(nt1)
+                            DO m2 = 1, ldim_u(nt2)
+                               delta_escf_hub = delta_escf_hub - &
+                                    (nsg(m2,m1,viz,na1,is)-nsgnew(m2,m1,viz,na1,is)) * &
+                                     v_nsg(m2,m1,viz,na1,is)
+                            ENDDO
+                         ENDDO
+                      ENDIF
+                   ENDDO
+                ENDDO
+             ENDDO
+             IF ( nspin==1 ) delta_escf_hub = 2.d0 * delta_escf_hub
+             delta_escf = delta_escf + delta_escf_hub
+          ENDIF
        ENDIF
 
        IF ( okpaw ) delta_escf = delta_escf - &
@@ -1252,24 +1377,31 @@ SUBROUTINE electrons_scf ( printout, exxen )
        IF ( printout == 0 ) RETURN
        IF ( ( conv_elec .OR. MOD(iter,iprint) == 0 ) .AND. printout > 1 ) THEN
           !
-          IF ( dr2 > eps8 ) THEN
-             WRITE( stdout, 9081 ) etot, hwf_energy, dr2
-          ELSE
-             WRITE( stdout, 9083 ) etot, hwf_energy, dr2
-          ENDIF
+          WRITE( stdout, 9081 ) etot
           IF ( only_paw ) WRITE( stdout, 9085 ) etot+total_core_energy
-          !
-          WRITE( stdout, 9060 ) &
-               ( eband + deband ), ehart, ( etxc - etxcc ), ewld
+          IF ( iverbosity > 1 ) WRITE( stdout, 9082 ) hwf_energy
+          IF ( dr2 > eps8 ) THEN
+             WRITE( stdout, 9083 ) dr2
+          ELSE
+             WRITE( stdout, 9084 ) dr2
+          END IF
+          IF ( lgauss ) then
+             WRITE( stdout, 9070 ) demet
+             WRITE( stdout, 9170 ) etot-demet
+             WRITE( stdout, 9061 )
+          ELSE
+             WRITE( stdout, 9060 )
+          END IF
+          WRITE( stdout, 9062 ) (eband + deband), ehart, ( etxc - etxcc ), ewld
           !
           IF ( llondon ) WRITE ( stdout , 9074 ) elondon
           IF ( ldftd3 )  WRITE ( stdout , 9078 ) edftd3
           IF ( lxdm )    WRITE ( stdout , 9075 ) exdm
           IF ( ts_vdw )  WRITE ( stdout , 9076 ) 2.0d0*EtsvdW
           IF ( textfor)  WRITE ( stdout , 9077 ) eext
-          IF ( tefield )            WRITE( stdout, 9061 ) etotefield
-          IF ( gate )               WRITE( stdout, 9062 ) etotgatefield ! TB
-          IF ( lda_plus_u )         WRITE( stdout, 9065 ) eth
+          IF ( tefield )            WRITE( stdout, 9064 ) etotefield
+          IF ( gate )               WRITE( stdout, 9065 ) etotgatefield
+          IF ( lda_plus_u )         WRITE( stdout, 9066 ) eth
           IF ( ABS (descf) > eps8 ) WRITE( stdout, 9069 ) descf
           IF ( okpaw ) THEN
             WRITE( stdout, 9067 ) epaw
@@ -1287,7 +1419,6 @@ SUBROUTINE electrons_scf ( printout, exxen )
           ! ... With Fermi-Dirac population factor, etot is the electronic
           ! ... free energy F = E - TS , demet is the -TS contribution
           !
-          IF ( lgauss ) WRITE( stdout, 9070 ) demet
           !
           ! ... With Fictitious charge particle (FCP), etot is the grand
           ! ... potential energy Omega = E - muN, -muN is the potentiostat
@@ -1297,19 +1428,27 @@ SUBROUTINE electrons_scf ( printout, exxen )
           !
        ELSE IF ( conv_elec ) THEN
           !
+          WRITE( stdout, 9081 ) etot
+          IF ( iverbosity > 1 ) WRITE( stdout, 9082 ) hwf_energy
           IF ( dr2 > eps8 ) THEN
-             WRITE( stdout, 9081 ) etot, hwf_energy, dr2
+             WRITE( stdout, 9083 ) dr2
           ELSE
-             WRITE( stdout, 9083 ) etot, hwf_energy, dr2
+             WRITE( stdout, 9084 ) dr2
+          END IF
+          IF ( lgauss ) then
+             WRITE( stdout, 9070 ) demet
+             WRITE( stdout, 9170 ) etot-demet
           ENDIF
           !
        ELSE
           !
+          WRITE( stdout, 9080 ) etot
+          IF ( iverbosity > 1 ) WRITE( stdout, 9082 ) hwf_energy
           IF ( dr2 > eps8 ) THEN
-             WRITE( stdout, 9080 ) etot, hwf_energy, dr2
+             WRITE( stdout, 9083 ) dr2
           ELSE
-             WRITE( stdout, 9082 ) etot, hwf_energy, dr2
-          ENDIF
+             WRITE( stdout, 9084 ) dr2
+          END IF
        ENDIF
        !
        CALL plugin_print_energies()
@@ -1332,20 +1471,21 @@ SUBROUTINE electrons_scf ( printout, exxen )
             /'     absolute magnetization    =', F9.2,' Bohr mag/cell' )
 9018 FORMAT(/'     total magnetization       =',3F9.2,' Bohr mag/cell' &
        &   ,/'     absolute magnetization    =', F9.2,' Bohr mag/cell' )
-9060 FORMAT(/'     The total energy is the sum of the following terms:',/,&
-            /'     one-electron contribution =',F17.8,' Ry' &
+9060 FORMAT(/'     The total energy is the sum of the following terms:' )
+9061 FORMAT(/'     The total energy is F=E-TS. E is the sum of the following terms:' )
+9062 FORMAT( '     one-electron contribution =',F17.8,' Ry' &
             /'     hartree contribution      =',F17.8,' Ry' &
             /'     xc contribution           =',F17.8,' Ry' &
             /'     ewald contribution        =',F17.8,' Ry' )
-9061 FORMAT( '     electric field correction =',F17.8,' Ry' )
-9062 FORMAT( '     gate field correction     =',F17.8,' Ry' ) ! TB
-9065 FORMAT( '     Hubbard energy            =',F17.8,' Ry' )
+9064 FORMAT( '     electric field correction =',F17.8,' Ry' )
+9065 FORMAT( '     gate field correction     =',F17.8,' Ry' ) ! TB
+9066 FORMAT( '     Hubbard energy            =',F17.8,' Ry' )
 9067 FORMAT( '     one-center paw contrib.   =',F17.8,' Ry' )
 9068 FORMAT( '      -> PAW hartree energy AE =',F17.8,' Ry' &
             /'      -> PAW hartree energy PS =',F17.8,' Ry' &
             /'      -> PAW xc energy AE      =',F17.8,' Ry' &
             /'      -> PAW xc energy PS      =',F17.8,' Ry' &
-            /'      -> total E_H with PAW    =',F17.8,' Ry'& 
+            /'      -> total E_H with PAW    =',F17.8,' Ry' &
             /'      -> total E_XC with PAW   =',F17.8,' Ry' )
 9069 FORMAT( '     scf correction            =',F17.8,' Ry' )
 9070 FORMAT( '     smearing contrib. (-TS)   =',F17.8,' Ry' )
@@ -1357,20 +1497,13 @@ SUBROUTINE electrons_scf ( printout, exxen )
 9076 FORMAT( '     Dispersion T-S Correction =',F17.8,' Ry' )
 9077 FORMAT( '     External forces energy    =',F17.8,' Ry' )
 9078 FORMAT( '     DFT-D3 Dispersion         =',F17.8,' Ry' )
-9080 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
-            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
-            /'     estimated scf accuracy    <',0PF17.8,' Ry' )
-9081 FORMAT(/'!    total energy              =',0PF17.8,' Ry' &
-            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
-            /'     estimated scf accuracy    <',0PF17.8,' Ry' )
-9082 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
-            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
-            /'     estimated scf accuracy    <',1PE17.1,' Ry' )
-9083 FORMAT(/'!    total energy              =',0PF17.8,' Ry' &
-            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
-            /'     estimated scf accuracy    <',1PE17.1,' Ry' )
+9080 FORMAT(/'     total energy              =',0PF17.8,' Ry' )
+9081 FORMAT(/'!    total energy              =',0PF17.8,' Ry' )
+9082 FORMAT( '     Harris-Foulkes estimate   =',0PF17.8,' Ry' )
+9083 FORMAT( '     estimated scf accuracy    <',0PF17.8,' Ry' )
+9084 FORMAT( '     estimated scf accuracy    <',1PE17.1,' Ry' )
 9085 FORMAT(/'     total all-electron energy =',0PF17.6,' Ry' )
-
+9170 FORMAT( '     internal energy E=F+TS    =',0PF17.8,' Ry' )
   END SUBROUTINE print_energies
   !
 END SUBROUTINE electrons_scf

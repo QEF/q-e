@@ -40,7 +40,6 @@ SUBROUTINE new_evc()
   !    "    "  groups of bands
   !
   REAL(DP), EXTERNAL :: ddot
-  COMPLEX(DP), EXTERNAL :: zdotc
   COMPLEX(DP), ALLOCATABLE :: proj(:,:), aux(:,:), aux_proj(:,:), a(:,:), v(:,:)
   !
   REAL(DP) :: max_value, save_value, aux_et, maxproj
@@ -82,10 +81,10 @@ SUBROUTINE new_evc()
               IF (gstart == 2) proj (iatwfc, ibnd) = proj (iatwfc, ibnd) - &
                     swfcatom (1, iatwfc) * evc (1, ibnd)
            ELSE 
-              proj(iatwfc,ibnd) = zdotc(npw,swfcatom(1,iatwfc),1,evc(1,ibnd),1)
+                   proj(iatwfc,ibnd) = dot_product(swfcatom(1:npw,iatwfc),evc(1:npw,ibnd))
               IF (noncolin) &
                  proj(iatwfc,ibnd) = proj(iatwfc,ibnd) + &
-                     zdotc(npw,swfcatom(npwx+1,iatwfc),1,evc(npwx+1,ibnd),1)
+                      dot_product(swfcatom(npwx+1:npwx+npw,iatwfc),evc(npwx+1:npwx+npw,ibnd))
            ENDIF
            !
         ENDDO
@@ -302,7 +301,6 @@ SUBROUTINE orthogonalize_vects( n, v )
   COMPLEX(DP) :: sca
   REAL(DP) :: norm
   INTEGER :: i, k
-  COMPLEX(DP), EXTERNAL :: zdotc
   REAL(DP), EXTERNAL :: ddot
   !
   norm = ddot(2*n,v(:,1),1,v(:,1),1)
@@ -310,7 +308,7 @@ SUBROUTINE orthogonalize_vects( n, v )
   !
   DO i = 2, n
      DO k = i-1, 1, -1
-        sca = zdotc(n,v(:,k),1,v(:,i),1 )
+        sca = dot_product(v(1:n,k),v(1:n,i))
         v(:,i) = v(:,i) - sca*v(:,k)
      ENDDO
      norm = ddot(2*n,v(:,i),1,v(:,i),1)

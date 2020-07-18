@@ -142,7 +142,7 @@ SUBROUTINE lr_setup_nscf ()
   ! ...notice: qnorm is used by allocate_nlpot to determine
   ! the correct size of the interpolation table "qrad"
   !
-  qnorm = sqrt(xq(1)**2 + xq(2)**2 + xq(3)**2)
+  qnorm = sqrt(xq(1)**2 + xq(2)**2 + xq(3)**2) * tpiba
   !
   ! ... set the granularity for k-point distribution
   !

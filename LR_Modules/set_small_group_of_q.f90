@@ -83,6 +83,7 @@ SUBROUTINE smallg_q (xq, modenum, at, bg, nrot, s, sym, minus_q)
   !  input-output variables
   !
   USE kinds, ONLY : DP
+  USE symm_base, ONLY : t_rev
   
   implicit none
 
@@ -146,6 +147,7 @@ SUBROUTINE smallg_q (xq, modenum, at, bg, nrot, s, sym, minus_q)
            raq(ipol) = raq(ipol) + DBLE( s(ipol,jpol,irot) ) * aq( jpol)
         enddo
      enddo
+     IF (t_rev(irot)==1) raq=-raq
      sym (irot) = eqvect (raq, aq, zero, accep)
      !
      !  if "iswitch.le.-3" (modenum.ne.0) S must be such that Sq=q exactly !

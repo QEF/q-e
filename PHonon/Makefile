@@ -3,7 +3,7 @@ sinclude ../make.inc
 
 default: all
 
-all: phonon phgamma_only finite_diffs
+all: phonon phgamma_only # finite_diffs
 
 phonon:
 	( cd PH ; $(MAKE) all || exit 1 )
