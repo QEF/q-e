@@ -1110,7 +1110,8 @@ NAMELIST: &SYSTEM
    Type:           LOGICAL
    Default:        true
    Description:    Use Adaptively Compressed Exchange operator as in
-                   Lin Lin, J. Chem. Theory Comput. 2016, 12, 5, 2242–2249
+                   Lin Lin, J. Chem. Theory Comput. 2016, 12, 2242--2249, doi:10.1021/acs.jctc.6b00092
+                   
                    Set to false to use standard Exchange (much slower)
    +--------------------------------------------------------------------
    
@@ -1379,14 +1380,19 @@ NAMELIST: &SYSTEM
    
    Type:           CHARACTER
    Default:        'input'
-   Description:    'input': read the "Hubbard_U" (or "Hubbard_V") parameters from
-                            the PW input file
-                   
-                   'file' : read the "Hubbard_V" parameters from the file "parameters.in"
-                            which can be generated after the linear-response calculation
-                            (using the HP code). This option has a higher priority over
-                            the Hubbard_V if they are specified in the input. This option
-                            can be used only when "lda_plus_u_kind" = 2.
+   Description:   
+                   Available choices:
+    
+                   'input' :
+                        read the "Hubbard_U" (or "Hubbard_V") parameters from
+                        the PW input file
+    
+                   'file' :
+                        read the "Hubbard_V" parameters from the file "parameters.in"
+                        which can be generated after the linear-response calculation
+                        (using the HP code). This option has a higher priority over
+                        the "Hubbard_V" if they are specified in the input. This option
+                        can be used only when "lda_plus_u_kind" = 2.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2363,14 +2369,19 @@ NAMELIST: &IONS
    
    Type:           CHARACTER
    Default:        'default'
-   Description:    initial ionic velocities
-                   'default'     : start a new simulation from random thermalized
-                                   distribution of velocities if "tempw" is set,
-                                   with zero velocities otherwise; restart from
-                                   atomic velocities read from the restart file
-                   'from_input'  : start or continue the simulation with atomic
-                                   velocities read from standard input - see card
-                                   "ATOMIC_VELOCITIES"
+   Description:   
+                   Initial ionic velocities. Available options are:
+    
+                   'default' :
+                        start a new simulation from random thermalized
+                        distribution of velocities if "tempw" is set,
+                        with zero velocities otherwise; restart from
+                        atomic velocities read from the restart file
+    
+                   'from_input' :
+                        start or continue the simulation with atomic
+                        velocities read from standard input - see card
+                        "ATOMIC_VELOCITIES"
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -3495,4 +3506,4 @@ CARD: ATOMIC_FORCES
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Fri Jul 17 10:28:32 CEST 2020
+This file has been created by helpdoc utility on Sun Jul 19 17:15:18 CEST 2020
