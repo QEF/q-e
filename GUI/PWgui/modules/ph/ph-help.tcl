@@ -588,8 +588,30 @@ from the electron-phonon interactions
 using the optimized tetrahedron method.
             </pre></dd>
 </dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'epa'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Electron-phonon coupling matrix elements are written
+to file prefix.epa.k for further processing by program
+epa.x which implements electron-phonon averaged (EPA)
+approximation as described in G. Samsonidze &amp; B. Kozinsky,
+Adv. Energy Mater. 2018, 1800246 "doi:10.1002/aenm.201800246"
+"arXiv:1511.08115"
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'ahc'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Quantities required for the calculation of phonon-induced
+electron self-energy are computed and written to the directory
+"ahc_dir". The output files can be read by postahc.x for
+the calculation of electron self-energy.
+Available for both metals and insulators.
+"trans"=.false. is required.
+            </pre></dd>
+</dl>
 <pre>
-For metals only, requires gaussian smearing.
+For metals only, requires gaussian smearing (except for 'ahc').
 
 If "trans"=.true., the lambdas are calculated in the same
 run, using the same k-point grid for phonons and lambdas.
@@ -599,6 +621,120 @@ dynamical matrix, and the present punch file. This allows
 the use of a different (larger) k-point grid.
             </pre>
 </blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help el_ph_nsigma -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>el_ph_nsigma</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 10
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+The number of double-delta smearing values used in an
+electron-phonon coupling calculation.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help el_ph_sigma -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>el_ph_sigma</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.02
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+The spacing between double-delta smearing values used in
+an electron-phonon coupling calculation.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help ahc_dir -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>ahc_dir</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> outdir // 'ahc_dir/'
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Directory where the output binary files are written.
+            </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help ahc_nbnd -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>ahc_nbnd</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Status: </em> REQUIRED
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Number of bands for which the electron self-energy is to be computed.
+            </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help ahc_nbndskip -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>ahc_nbndskip</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 0
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Number of bands to exclude when computing the self-energy. Self-energy
+is computed for bands with indices from "ahc_nbndskip"+1 to
+"ahc_nbndskip"+"ahc_nbnd". "ahc_nbndskip"+"ahc_nbnd" cannot
+exceed nbnd of the preceding SCF or NSCF calculation.
+            </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help skip_upperfan -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>skip_upperfan</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true., skip calculation of the upper Fan self-energy, which
+involves solving the Sternheimer equation.
+            </pre></blockquote>
 </ul>      
       
 }
@@ -876,6 +1012,41 @@ with offset determined by k1,k2,k3.
 
 
 # ------------------------------------------------------------------------
+help diagonalization -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>diagonalization</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> 'david'
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote>
+<pre>
+Diagonalization method for the non-SCF calculations.
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'david'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Davidson iterative diagonalization with overlap matrix
+(default). Fast, may in some rare cases fail.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'cg'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Conjugate-gradient-like band-by-band diagonalization.
+Slower than 'david' but uses less memory and is
+(a little bit) more robust.
+            </pre></dd>
+</dl>
+</blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help read_dns_bare -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>read_dns_bare</b></big>
@@ -896,6 +1067,91 @@ their calculation (especially of d2ns_bare) is computationally
 expensive, this is why they are written to file and then can be
 read (e.g. for restart) in order to save time.
          </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help ldvscf_interpolate -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>ldvscf_interpolate</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true., use Fourier interpolation of phonon potential
+to compute the induced part of phonon potential at each
+q point. Results of a dvscf_q2r.x run is needed.
+Requires "trans" = .false..
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help wpot_dir -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>wpot_dir</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> outdir // 'w_pot/'
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Directory where the w_pot binary files are written.
+Must be the same with wpot_dir used in dvscf_q2r.x.
+The real space potential files are stored in wpot_dir
+with names ${prefix}.wpot.irc${irc}//"1".
+            </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help do_long_range -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>do_long_range</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true., add the long-range part of the potential
+to the Fourier interpolated potential as in:
+S. Ponce et al, J. Chem. Phys. 143, 102813 (2015).
+Reads dielectric matrix and Born effective charges from
+the ${wpot_dir}/tensors.dat file, written in dvscf_q2r.x.
+Currently, only the dipole (Frohlich) part is implemented.
+The quadrupole part is not implemented.
+            </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help do_charge_neutral -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>do_charge_neutral</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true., impose charge neutrality on the Born effective
+charges. Used only if "do_long_range" = .true..
+            </pre></blockquote>
 </ul>      
       
 }
