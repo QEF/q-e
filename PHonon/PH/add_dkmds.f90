@@ -59,9 +59,9 @@ subroutine add_dkmds(ik, uact, jpol, dvkb)
 #ifdef TIMING_ADD_DKMDS
   call start_clock('add_dkmds')
   call start_clock('add_dkmds2')
+#endif
   ikk=ikks(ik)
   nbnd_eff=nbnd_occ(ikk)
-#endif
   allocate(aux(npwx))
   allocate(aux1(npwx*npol,nbnd_eff))
   if (nkb.gt.0) then
