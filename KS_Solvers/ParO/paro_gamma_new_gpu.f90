@@ -134,7 +134,7 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   nhpsi = 0 ; IF (my_bgrp_id==0) nhpsi = nbnd
   CALL stop_clock( 'paro:init' ); 
 !civn 2fix
-  psi  = psi_d
+! psi  = psi_d
   hpsi = hpsi_d
   spsi = spsi_d
 
