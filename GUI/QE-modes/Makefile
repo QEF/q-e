@@ -45,7 +45,7 @@ compile  = cd qe-modes; emacs --batch --eval "(add-to-list 'load-path \".\")"
 
 all: modes doc
 modes: make-modes make-master
-make-modes: qe pw neb ph pp ld1 cp
+make-modes: qe pw neb ph pp ld1 cp pwtk
 
 
 # generate specific modes ...
@@ -82,6 +82,9 @@ qe:
 	$(compile) --eval "(byte-compile-file \"qe-funcs.el\")"	
 	$(compile) --eval "(byte-compile-file \"qe-mode.el\")"	
 
+pwtk: 
+	$(compile) --eval "(byte-compile-file \"pwtk-mode.el\")"	
+
 # generate other required elisp files ...
 
 qe-funcs:
@@ -101,7 +104,6 @@ clean:
 
 veryclean: clean
 	- rm *~ */*~ */*.bak
-	- rm -rf qe-modes
 	- rm -rf QE-modes-$(VERSION)
 	- rm *.tar
 	- rm *tar.gz

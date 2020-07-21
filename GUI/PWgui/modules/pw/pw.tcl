@@ -595,7 +595,14 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                         -label    "Kinetic energy cutoff for exact exchange operator \[in Ry\] (ecutfock):"
                         -validate fortranposreal
                     }
-                    
+
+                    var ace {
+                        -label "Use Adaptively Compressed Exchange (ace):"
+                        -widget    radiobox
+                        -textvalue { Yes No }	      
+                        -value     { .true. .false. }
+                    }
+
                     var exx_fraction {
                         -label "Fraction of EXX for hybrid functional calculations (exx_fraction):"
                         -validate fortranreal
@@ -693,7 +700,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                             -start 1 -end 1
                         }
                         
-                        # can't input Hubbard_J and starting_ns_eigenvalue
+                        # can't input Hubbard_V, Hubbard_J, and starting_ns_eigenvalue
                         
                         var U_projection_type {
                             -label  "Type of projector on localized orbital (U_projector_type):"
@@ -712,7 +719,25 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                                 'file'
                                 'pseudo'
                             }
-                        }               
+                        }
+
+                        var Hubbard_parameters {
+                            -label "How to read Hubbard parameters (Hubbard_parameters):"
+                            -validate string
+                            -widget radiobox
+                            -value { 'input' 'file' }
+                            -textvalue {
+                                "from input"
+                                "from the file \"parameters.in\""
+                            }
+                        }
+
+                        var ensemble_energies {
+                            -label "Calculate ensemble of xc energies (ensemble_energies):"
+                            -widget    radiobox
+                            -textvalue { Yes No }	      
+                            -value     { .true. .false. }
+                        }
                     }
                 }
 
@@ -1181,15 +1206,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     -widget    radiobox
                     -textvalue { Yes No }              
                     -value     { .true. .false. }
-                }
-               
-                separator -label "--- Obsolete variables ---"
-
-                var ortho_para {
-                    -text     "OBSOLETE: use command-line option \" -ndiag XX\" instead"
-                    -label    "(ortho_para):"
-                    -validate integer
-                }
+                }               
             }    
         }
     }
@@ -1236,7 +1253,18 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     }
                     -value { 'default' 'from_input' }
                 }
-                
+
+                var ion_velocities {
+                    -label "Initial ionic velocities (ion_velocities):"
+                    -validate string
+                    -widget radiobox
+                    -textvalue { 
+                        "random thermalized"
+                        "from standard input"                   
+                    }
+                    -value { 'default' 'from_input' }
+                }
+
                 var pot_extrapolation {
                     -text "Extrapolation for the potential"
                     -label "Type of extrapolation (pot_extrapolation):"
@@ -1423,22 +1451,42 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
             var cell_dofree {
                 -label "Which of the cell parameters should be moved (cell_dofree):"
-                -textvalue {
-                    "all    = all axis and angles are propagated"
-                    "x      = only the x axis is moved"
-                    "y      = only the y axis is moved"
-                    "z      = only the z axis is moved"
-                    "xy     = only the x and y axis are moved, angles are unchanged"
-                    "xz     = only the x and z axis are moved, angles are unchanged"
-                    "yz     = only the y and z axis are moved, angles are unchanged"
-                    "xyz    = x, y and z axis are moved, angles are unchanged"
-                    "shape  = all axis and angles, keeping the volume fixed"
-                    "volume = the volume changes, keeping all angles fixed"
-                    "2Dxy   = only x and y components are allowed to change"
-                    "2Dshape = as above, keeping the area in xy plane fixed"
-                }           
                 -value {
-                    'all' 'x' 'y' 'z' 'xy' 'xz' 'yz' 'xyz' 'shape'  'volume' '2Dxy' '2Dshape'
+                    'all'
+                    'ibrav'
+                    'x'
+                    'y'
+                    'z' 
+                    'xy' 
+                    'xz' 
+                    'yz' 
+                    'xyz' 
+                    'shape' 
+                    'volume' 
+                    '2Dxy' 
+                    '2Dshape' 
+                    'epitaxial_ab' 
+                    'epitaxial_ac' 
+                    'epitaxial_bc'
+                }
+                
+                -textvalue {
+                    {'all' =    all axis and angles are moved}
+                    {'ibrav' =  all axis and angles are moved, but ibrav is kept}
+                    {'x' =      only the x component of axis 1 (v1_x) is moved}
+                    {'y' =      only the y component of axis 2 (v2_y) is moved}
+                    {'z' =      only the z component of axis 3 (v3_z) is moved}
+                    {'xy' =     only v1_x and v2_y are moved}
+                    {'xz' =     only v1_x and v3_z are moved}
+                    {'yz' =     only v2_y and v3_z are moved}
+                    {'xyz' =    only v1_x, v2_y, v3_z are moved}
+                    {'shape' =  all axis and angles, keeping the volume fixed}
+                    {'volume' = the volume changes, keeping all angles fixed}
+                    {'2Dxy'   = only x and y components are allowed to change}
+                    {'2Dshape' = as above, keeping the area in xy plane fixed}
+                    {'epitaxial_ab' = fix axis 1 and 2 while allowing axis 3 to move}
+                    {'epitaxial_ac' = fix axis 1 and 3 while allowing axis 2 to move}
+                    {'epitaxial_bc' = fix axis 2 and 3 while allowing axis 1 to move}
                 }
                 -widget optionmenu
             }
@@ -1605,7 +1653,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
     ########################################################################
     ##                                                                    ##
-    ##         PAGE: CONSTRAINTS, OCCUPATIONS & ATOMIC_FORCES             ##
+    ##         PAGE: CONSTRAINTS, OCCUPATIONS, ATOMIC_VELOCITIES/FORCES   ##
     ##                                                                    ##
     ########################################################################
     page otherPage -name "Other Cards" {
@@ -1662,6 +1710,28 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                 -label   "Specify occupation of each state (from 1 to nbnd) such that 10 occupations are written per line:" \
                 -readvar ::pwscf::pwscf($this,OCCUPATIONS)
         }
+
+        #
+        # ATOMIC_VELOCITIES
+        #
+
+        group atomic_velocities_group -name "Card: ATOMIC_VELOCITIES" -decor normal {
+
+            keyword atomic_velocities_key ATOMIC_VELOCITIES\n
+            
+            table atomic_velocities {
+                -caption   "Atomic velocities:"
+                -head      {Atomic-label Vx-component Vy-component Vz-component}
+                -validate  {string fortranreal fortranreal fortranreal}
+                -cols      4
+                -rows      1
+                -outfmt    {"  %3s" "  %14.9f" %14.9f %14.9f}
+                -widgets   {entry entry entry entry}
+            }
+            
+            loaddata atomic_velocities ::pwscf::pwLoadAtomicVelocities \
+                "Load atomic velocities from file ..."    
+        }        
 
         #
         # ATOMIC_FORCES
