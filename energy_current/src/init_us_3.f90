@@ -87,9 +87,9 @@ subroutine init_us_3(npw_, xvkb_)
    complex(DP) :: vkbr(1:dffts%nnr), vkbr_2(1:dffts%nnr), vkbr_3(1:dffts%nnr, 3)
    real(DP)    :: stampa(nkb, 1:dffts%nnr, 3, 3), stampa_b(nkb, 1:dffts%nnr, 3, 3) !, ris(4, 4)
    integer, external :: find_free_unit
-   integer :: iun
+   integer :: iun,iun2,iun3
    integer :: ii, nr3s_end, nr3s_start, vkb_pol
-   character(len=20) :: string
+   character(len=20) :: string, dimension_string
 
 !
    if (lmaxkb .lt. 0) return
@@ -354,7 +354,26 @@ subroutine init_us_3(npw_, xvkb_)
 !
 ! Each file contains 6 records. Three for each xvbk polarizazion (xvkb, yvkb and zvkb) calculated in way (1) and other three for method (2).
 !
-      do vkb_pol = 1, 3
+
+    write (dimension_string, '(I0," ",I0, " ", I0)') dffts%nr3p(mpime + 1),  dffts%nr2,  dffts%nr1
+    iun3=find_free_unit()
+    open(unit=iun3, file='full_unformatted.xmf')
+    write(iun3,'(a)')&
+'<?xml version="1.0" ?><!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>&
+&<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2"><Domain>&
+&    <Grid GridType="Uniform">&
+&      <Topology TopologyType="3DCORECTMesh" Dimensions="'&
+//trim(dimension_string)// '"/>&
+&      <Geometry GeometryType="ORIGIN_DXDYDZ">&
+&        <DataItem Name="Origin" Dimensions="3" NumberType="Float" Precision="8" Format="XML">&
+&          0 0 0&
+&        </DataItem>&
+&        <DataItem Name="Spacing" Dimensions="3" NumberType="Float" Precision="8" Format="XML">&
+&          1 1 1&
+&        </DataItem>&
+&      </Geometry>'
+
+    do vkb_pol = 1, 3
          do ikb = 1, nkb
 
             cont_1 = 0
@@ -386,6 +405,20 @@ subroutine init_us_3(npw_, xvkb_)
                nr3s_start = nr3s_end + 1
                nr3s_end = nr3s_end + dffts%nr3p(ii)
             end do
+            iun = find_free_unit()
+            write (string, '(I0,"_",I0)') ikb,vkb_pol
+            write (iun3,*)  '<Attribute Name="A_'//trim(string)//'" Active="1" AttributeType="Scalar" Center="Cell">&
+&              <DataItem Dimensions="',dimension_string,'" NumberType="Float" Precision="8"&
+&              Format="Binary">full_unformatted_A_',string,'</DataItem>&
+&      </Attribute>'
+            write (iun3,*)  '<Attribute Name="B_'//trim(string)//'" Active="1" AttributeType="Scalar" Center="Cell">&
+&              <DataItem Dimensions="',dimension_string,'" NumberType="Float" Precision="8"&
+&              Format="Binary">full_unformatted_B_'//trim(string)//'</DataItem>&
+&      </Attribute>'
+
+            open(unit=iun, file='full_unformatted_A_'//trim(string), FORM="unformatted", access='stream')
+            iun2 = find_free_unit()
+            open(unit=iun2, file='full_unformatted_B_'//trim(string), FORM="unformatted", access='stream')
             do iz = 1, dffts%nr3p(mpime + 1)     !primo ciclo   sui punti x
                do iy = 1, dffts%nr2           !secondo ciclo sui punti x
                   do ix = 1, dffts%nr1        !terzo ciclo   sui punti x
@@ -395,6 +428,8 @@ subroutine init_us_3(npw_, xvkb_)
                      u_z(1:3) = real(iz + nr3s_start - 1 - 1)/real(dffts%nr3)*at(1:3, 3)*alat
                      u(1:3) = u_x(1:3) + u_y(1:3) + u_z(1:3)
                      modulus = sqrt(u(1)**2 + u(2)**2 + u(3)**2)
+                     write(iun) dble(vkbr(iqq))
+                     write(iun2) u(vkb_pol)*dble(vkbr_2(iqq))
 
                      !init "stampa" variable
                      if ((iz == 1) .and. (iy == 1)) then
@@ -448,9 +483,13 @@ subroutine init_us_3(npw_, xvkb_)
                   end do
                end do
             end do
-
+            close(iun)
+            close(iun2)
          end do
       end do
+      write(iun3,*) '</Grid></Domain></Xdmf>'
+      close(iun3)
+
 
       if (ionode) then
          do ikb = 1, nkb
