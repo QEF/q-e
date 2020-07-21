@@ -26,7 +26,7 @@
             iospectral_cum, iuwanep, iuwane, iunukk, iudvscf, iuqpeig, iures, &
             iuint3paw
   PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb,&
-            iufilfreq, iufilegnv, iufileph, iufilkqmap, iunpattern, &
+            iufilfreq, iufilegnv, iufileph, iufilkqmap, iunpattern, iufilmu_q, &
             iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, &
             iufileig, iukmap, crystal, iunifc, iunimem, iunepmatwp2
   PUBLIC :: iuwinfil, iun_plot, iuprojfil, iudecayH, iudecayP, &
@@ -36,8 +36,8 @@
             iufilesigma_all
   PUBLIC :: iunsparseq, iunsparsek, iunsparsei, iunsparsej, iunsparset, iunselecq, &
             iunsparseqcb, iunsparsekcb, iunsparseicb, iunsparsejcb, iunsparsetcb, &
-            iunrestart, iufilibtev_sup, iunepmat, iunepmatcb, iufilF, iunepmat_merge,&
-            iunsparseq_merge, iunsparsek_merge, iunsparsei_merge, iunsparsej_merge, &
+            iunrestart, iufilibtev_sup, iunepmat, iunepmatcb, iufilF, iufilmu_nk, iunepmat_merge,&
+            iunsparseq_merge, iunsparsek_merge, iunsparsei_merge,iunsparsej_merge, &
             iunsparset_merge, iunepmatcb_merge, iunsparseqcb_merge, iunsparsekcb_merge,&
             iunsparseicb_merge, iunsparsejcb_merge, iunsparsetcb_merge
 
@@ -157,6 +157,8 @@
   INTEGER :: iufiltau_all    = 258 ! inv_tau_all file to retart an interpolation
   INTEGER :: iufilF          = 259 ! $\partial_E f_{nk}$ in .fmt mode
   INTEGER :: iufilesigma_all = 260 ! Sigmar_all and Sigmai_all file to retart spectral calculation
+  INTEGER :: iufilmu_nk      = 261 ! $\mu_{nk}^{\alpha\beta}$ in mobility_nk.fmt file
+  INTEGER :: iufilmu_q       = 262 ! $\mu_{\nu q}^{\alpha\beta}$ in mobility_nuq.fmt mode
   !
   ! Output quantities related to Indirect absorption (301-325)
   INTEGER :: iuindabs        = 301 ! Indirect absorption data

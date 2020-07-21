@@ -572,27 +572,26 @@
     USE epwcom,           ONLY : nbndsub, fsthick, system_2d, nstemp,              &
                                  int_mob, ncarrier, scatread, iterative_bte, vme, assume_metal
     USE pwcom,            ONLY : ef
-    USE elph2,            ONLY : ibndmin, etf, nkf, wkf, dmef, vmef,      &
+    USE elph2,            ONLY : ibndmin, etf, nkf, wkf, dmef, vmef, bztoibz,      &
                                  inv_tau_all, nkqtotf, inv_tau_allcb, gtemp, &
-                                 zi_allvb, zi_allcb, map_rebal, nbndfst, nktotf
-    USE constants_epw,    ONLY : zero, one, bohr2ang, ryd2ev,                   &
-                                 kelvin2eV, hbar, Ang2m, hbarJ, ang2cm, czero
+                                 zi_allvb, zi_allcb, map_rebal, nbndfst, nktotf,   &
+                                 s_bztoibz
+    USE constants_epw,    ONLY : zero, one, bohr2ang, ryd2ev, ang2cm, czero,       &
+                                 kelvin2eV, hbar, Ang2m, hbarJ
     USE constants,        ONLY : electron_si
     USE mp,               ONLY : mp_sum, mp_bcast
     USE mp_global,        ONLY : world_comm
     USE mp_world,         ONLY : mpime
-    USE symm_base,        ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
+    USE symm_base,        ONLY : s
     USE cell_base,        ONLY : bg
     USE mp,               ONLY : mp_bcast
-    USE epwcom,           ONLY : mp_mesh_k, nkf1, nkf2, nkf3, fixsym
+    USE epwcom,           ONLY : mp_mesh_k, nkf1, nkf2, nkf3
     USE constants_epw,    ONLY : eps6, eps4
     USE io_transport,     ONLY : scattering_read
     USE division,         ONLY : fkbounds
     USE grid,             ONLY : kpoint_grid_epw
-    USE kinds_epw,        ONLY : SIK2
     USE poolgathering,    ONLY : poolgatherc4, poolgather2
     USE noncollin_module, ONLY : noncolin
-    USE low_lvl,          ONLY : fix_sym
     !
     IMPLICIT NONE
     !
@@ -627,10 +626,6 @@
     INTEGER :: ierr
     !! Error status
     INTEGER :: bztoibz_tmp(nkf1 * nkf2 * nkf3)
-    !! Temporary mapping
-    INTEGER :: bztoibz(nkf1 * nkf2 * nkf3)
-    !! BZ to IBZ mapping
-    INTEGER(SIK2) :: s_bztoibz(nkf1 * nkf2 * nkf3)
     !! symmetry
     REAL(KIND = DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
@@ -929,13 +924,6 @@
       !
       !  SP - Uncomment to use symmetries on velocities
       IF (mp_mesh_k) THEN
-        bztoibz(:) = 0
-        s_bztoibz(:) = 0
-        !
-        CALL set_sym_bl()
-        IF (fixsym) CALL fix_sym(.TRUE.)
-        ! What we get from this call is bztoibz
-        CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, bztoibz, s_bztoibz)
         !
         IF (iterative_bte) THEN
           ! Now we have to remap the points because the IBZ k-points have been
@@ -1351,14 +1339,14 @@
                         tdf_sigma(ij) = vkk(i, ibnd) * vkk(j, ibnd) * tau
                       ENDDO
                     ENDDO
-                    sigmaZ(:, itemp) = sigmaZ(:, itemp) + wkf(ikk) * dfnk * tdf_sigma(:)
+                   sigmaz(:, itemp) = sigmaz(:, itemp) + wkf(ikk) * dfnk * tdf_sigma(:)
                   ENDIF
                 ENDDO ! ibnd
               ENDIF ! etcb
             ENDIF ! endif  fsthick
           ENDDO ! end loop on k
           CALL mp_sum(sigma(:, itemp), world_comm)
-          CALL mp_sum(sigmaZ(:, itemp), world_comm)
+          CALL mp_sum(sigmaz(:, itemp), world_comm)
           !
         ENDDO ! nstemp
         IF (mpime == meta_ionode_id) THEN

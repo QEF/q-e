@@ -20,7 +20,6 @@ MODFLAGS= $(BASEMOD_FLAGS) \
 ##### io_scattering.o \
 
 EPWOBJS = \
-kinds_epw.o \
 epwcom.o \
 constants_epw.o \
 elph2.o \
