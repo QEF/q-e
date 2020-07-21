@@ -74,7 +74,7 @@ dist.o : kind.o
 dmxc_drivers.o : constants.o
 dmxc_drivers.o : funct.o
 dmxc_drivers.o : kind.o
-dmxc_drivers.o : ../XClib/ldaxc_interfaces.o
+dmxc_drivers.o : ../XClib/xc_interfaces.o
 dmxc_drivers.o : xc_lda_lsda_drivers.o
 dylmr2.o : kind.o
 electrons_base.o : constants.o
@@ -115,7 +115,7 @@ fox_init_module.o : mp_images.o
 funct.o : beef_interface.o
 funct.o : io_global.o
 funct.o : kind.o
-funct.o : ../XClib/ldaxc_interfaces.o
+funct.o : ../XClib/xc_interfaces.o
 funct.o : xc_rVV10.o
 funct.o : xc_vdW_DF.o
 generate_function.o : ../FFTXlib/fft_types.o
