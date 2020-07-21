@@ -1241,7 +1241,8 @@
     USE mp,            ONLY : mp_sum, mp_bcast
     USE constants_epw, ONLY : twopi, ci, zero, eps6, ryd2ev, czero
     USE epwcom,        ONLY : nbndsub, fsthick, use_ws, mp_mesh_k, nkf1, nkf2, &
-                              nkf3, iterative_bte, restart_step, scissor, ephwrite
+                              nkf3, iterative_bte, restart_step, scissor,      &
+                              ephwrite, etf_mem
     USE noncollin_module, ONLY : noncolin
     USE pwcom,         ONLY : ef, nelec
     USE wan2bloch,     ONLY : hamwan2bloch
@@ -1357,6 +1358,23 @@
         CALL errore('qwindow', 'Cannot read from selecq.fmt, the q-point grid or &
           & fsthick window are different from read one. Remove the selecq.fmt file and restart.', 1 )
       ENDIF
+      ! 
+      IF (homogeneous) THEN
+        ! In case of k-point symmetry
+        IF (mp_mesh_k .AND. etf_mem < 3) THEN
+          IF (iterative_bte .OR. ephwrite) THEN
+            ALLOCATE(bztoibz_tmp(nkf1 * nkf2 * nkf3), STAT = ierr)
+            IF (ierr /= 0) CALL errore('qwindow', 'Error allocating bztoibz_tmp', 1)
+            bztoibz_tmp(:) = 0
+            DO ikbz = 1, nkf1 * nkf2 * nkf3
+              bztoibz_tmp(ikbz) = map_rebal(bztoibz(ikbz))
+            ENDDO
+            bztoibz(:) = bztoibz_tmp(:)
+            DEALLOCATE(bztoibz_tmp, STAT = ierr)
+            IF (ierr /= 0) CALL errore('qwindow', 'Error deallocating bztoibz_tmp', 1)
+          ENDIF
+        ENDIF ! mp_mesh_k
+      ENDIF ! homogeneous
       !
     ELSE
       ALLOCATE(selecq_tmp(nqf), STAT = ierr)
@@ -1390,7 +1408,7 @@
         CALL poolgather(nbndsub, nktotf, nkf, etf_loc, etf_all)
         !
         ! In case of k-point symmetry
-        IF (mp_mesh_k) THEN
+        IF (mp_mesh_k .AND. etf_mem < 3) THEN
           IF (iterative_bte .OR. ephwrite) THEN         
             ALLOCATE(bztoibz_tmp(nkf1 * nkf2 * nkf3), STAT = ierr)
             IF (ierr /= 0) CALL errore('qwindow', 'Error allocating bztoibz_tmp', 1)
@@ -1781,8 +1799,8 @@
     USE io_global,     ONLY : stdout
     USE symm_base,     ONLY : nrot
     USE elph2,         ONLY : bztoibz, nktotf, ixkqf_tr, s_bztoibz_full, xqf, &
-                              s_bztoibz
-    USE epwcom,        ONLY : etf_mem, nkf1, nkf2, nkf3
+                              s_bztoibz, map_rebal
+    USE epwcom,        ONLY : etf_mem, nkf1, nkf2, nkf3, epmatkqread
     !
     IMPLICIT NONE
     !
@@ -1814,6 +1832,8 @@
     !! Error index
     INTEGER :: nsym(nktotf)
     !! Temporary matrix used to count how many symmetry for that k-point
+    INTEGER :: bztoibz_tmp(nkf1 * nkf2 * nkf3)
+    !! Temporary mapping    
     INTEGER, ALLOCATABLE :: val_intval(:)
     !! Value of the first element of each intervals
     INTEGER, ALLOCATABLE :: pos_intval(:)
@@ -1824,6 +1844,16 @@
     nsym(:) = 0
     !
     IF (etf_mem < 3) THEN
+      ! This call is required because for a epmatkqread restart because then 
+      ! qwindow is not called and therefore the map_rebal is not applied      
+      IF (epmatkqread) THEN      
+        bztoibz_tmp(:) = 0
+        DO ikbz = 1, nkf1 * nkf2 * nkf3
+          bztoibz_tmp(ikbz) = map_rebal(bztoibz(ikbz))
+        ENDDO
+        bztoibz(:) = bztoibz_tmp(:)
+      ENDIF ! epmatkqread
+      !         
       ! Now create the mapping matrix
       DO ikbz = 1, nkf1 * nkf2 * nkf3
         ik = bztoibz(ikbz)

@@ -33,7 +33,7 @@
                                  mp_mesh_k, nkf1, nkf2, nkf3
     USE elph2,            ONLY : nkqf, wkf, xkf, nkqtotf, nbndfst,             &
                                  nktotf, map_rebal, xqf, gtemp,          &
-                                 ixkqf_tr, s_bztoibz_full
+                                 ixkqf_tr, s_bztoibz_full, s_bztoibz
     USE constants_epw,    ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, eps10,     &
                                  bohr2ang, ang2cm, hbarJ, eps6, eps8, &
                                  eps2, eps4, eps20, eps80, eps160, hbar, cm2m, byte2Mb
