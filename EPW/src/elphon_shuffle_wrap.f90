@@ -426,9 +426,6 @@
     ! SP: Symmetries needs to be consistent with QE so that the order of the q in the star is the
     !     same as in the .dyn files produced by QE.
     !
-    ! Initialize symmetries and create the s matrix
-    CALL set_sym_bl()
-    !
     ! Setup Bravais lattice symmetry
     WRITE(stdout,'(5x,a,i3)') "Symmetries of Bravais lattice: ", nrot
     !
