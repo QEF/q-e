@@ -134,7 +134,7 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   nhpsi = 0 ; IF (my_bgrp_id==0) nhpsi = nbnd
   CALL stop_clock( 'paro:init' ); 
 !civn 2fix
-! psi  = psi_d
+  psi  = psi_d
   hpsi = hpsi_d
   spsi = spsi_d
 
@@ -233,16 +233,35 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
 
      CALL bpcg_gamma(hs_psi, g_1psi, psi, spsi, npw, npwx, nbnd, how_many, &
                 psi(:,nbase+1), hpsi(:,nbase+1), spsi(:,nbase+1), ethr, ew(1), nhpsi)
+!civn 2fix
+     psi_d    =  psi  
+     hpsi_d   =  hpsi 
+     spsi_d   =  spsi 
+     
 
      CALL start_clock( 'paro:mp_bar' ); 
      CALL mp_barrier(inter_bgrp_comm)
      CALL stop_clock( 'paro:mp_bar' ); 
      CALL start_clock( 'paro:mp_sum' ); 
-     psi (:,nbase+ibnd_start:nbase+ibnd_end) = psi (:,nbase+1:nbase+how_many) 
+!     psi (:,nbase+ibnd_start:nbase+ibnd_end) = psi (:,nbase+1:nbase+how_many) 
+!     hpsi(:,nbase+ibnd_start:nbase+ibnd_end) = hpsi(:,nbase+1:nbase+how_many) 
+!     spsi(:,nbase+ibnd_start:nbase+ibnd_end) = spsi(:,nbase+1:nbase+how_many) 
+!$cuf kernel do(2)
+     DO ii = 1, npwx 
+       DO jj = nbase+1, nbase+how_many 
+         kk = jj + ibnd_start - 1 
+         psi_d(ii, kk)  = psi_d(ii, jj)        
+         hpsi_d(ii, kk) = hpsi_d(ii, jj)        
+         spsi_d(ii, kk) = spsi_d(ii, jj)        
+       END DO 
+     END DO 
+!civn 2fix
+      psi  =  psi_d   
+      hpsi =  hpsi_d  
+      spsi =  spsi_d  
+
      CALL mp_allgather(psi (:,nbase+1:ndiag), column_type, recv_counts, displs, inter_bgrp_comm)
-     hpsi(:,nbase+ibnd_start:nbase+ibnd_end) = hpsi(:,nbase+1:nbase+how_many) 
      CALL mp_allgather(hpsi(:,nbase+1:ndiag), column_type, recv_counts, displs, inter_bgrp_comm)
-     spsi(:,nbase+ibnd_start:nbase+ibnd_end) = spsi(:,nbase+1:nbase+how_many) 
      CALL mp_allgather(spsi(:,nbase+1:ndiag), column_type, recv_counts, displs, inter_bgrp_comm)
      CALL stop_clock( 'paro:mp_sum' ); 
 
@@ -255,6 +274,11 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
         CALL protate_HSpsi_gamma(  npwx, npw, ndiag, ndiag, psi, hpsi, overlap, spsi, ew )
      ENDIF
 #endif
+
+!civn 2fix
+       psi_d   =   psi  
+       hpsi_d  =   hpsi 
+       spsi_d  =   spsi 
 
      !write (6,*) ' ew : ', ew(1:nbnd)
      ! only the first nbnd eigenvalues are relevant for convergence
