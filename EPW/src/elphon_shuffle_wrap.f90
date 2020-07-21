@@ -334,6 +334,7 @@
     IF (mpime == ionode_id) THEN
       !
       OPEN(UNIT = crystal, FILE = 'crystal.fmt', STATUS = 'old', IOSTAT = ios)
+      READ(crystal, *) nsym
       READ(crystal, *) nat
       READ(crystal, *) nmodes
       READ(crystal, *) nelec
@@ -352,6 +353,7 @@
       READ(crystal, *) w_centers
       !
     ENDIF ! mpime == ionode_id
+    CALL mp_bcast(nsym     , ionode_id, world_comm)
     CALL mp_bcast(nat      , ionode_id, world_comm)
     IF (mpime /= ionode_id) ALLOCATE(ityp(nat))
     CALL mp_bcast(nmodes   , ionode_id, world_comm)
@@ -420,16 +422,17 @@
     IF (lifc) THEN
       CALL read_ifc_epw
     ENDIF
+    ! 
+    ! SP: Symmetries needs to be consistent with QE so that the order of the q in the star is the
+    !     same as in the .dyn files produced by QE.
     !
-    ! SP: The symmetries are now consistent with QE 5. This means that the order of the q in the star
-    !     should be the same as in the .dyn files produced by QE 5.
+    ! Initialize symmetries and create the s matrix
+    CALL set_sym_bl()
     !
-    !     First we start by setting up the lattice & crystal symm. as done in PHonon/PH/q2qstar.f90
-    !
-    ! ~~~~~~~~ setup Bravais lattice symmetry ~~~~~~~~
+    ! Setup Bravais lattice symmetry
     WRITE(stdout,'(5x,a,i3)') "Symmetries of Bravais lattice: ", nrot
     !
-    ! ~~~~~~~~ setup crystal symmetry ~~~~~~~~
+    ! Setup crystal symmetry
     CALL find_sym(nat, tau, ityp, .FALSE., m_loc)
     IF (fixsym) CALL fix_sym(.FALSE.)
     IF (.NOT. allfrac) CALL remove_sym(dfftp%nr1, dfftp%nr2, dfftp%nr3)

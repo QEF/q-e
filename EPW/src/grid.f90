@@ -29,14 +29,13 @@
     USE mp_world,  ONLY : mpime
     USE kinds,     ONLY : DP
     USE epwcom,    ONLY : filkf, nkf1, nkf2, nkf3, iterative_bte, &
-                          rand_k, rand_nk, mp_mesh_k, system_2d, eig_read, vme, &
-                          fixsym
+                          rand_k, rand_nk, mp_mesh_k, system_2d, eig_read, vme
     USE elph2,     ONLY : nkqtotf, nkqf, xkf, wkf, nkf, xkfd, deltaq, &
                           xkf_irr, wkf_irr, bztoibz, s_bztoibz
     USE cell_base, ONLY : at, bg
-    USE symm_base, ONLY : s, t_rev, time_reversal, nrot
+    USE symm_base, ONLY : s, t_rev, time_reversal, nrot, nsym
     USE io_var,    ONLY : iunkf
-    USE low_lvl,   ONLY : init_random_seed, fix_sym
+    USE low_lvl,   ONLY : init_random_seed
     USE constants_epw, ONLY : eps4
     USE noncollin_module, ONLY : noncolin
 # if defined(__MPI)
@@ -123,7 +122,8 @@
           ! returns the number of irr points nkqtotf
           ! xkf_irr and wkf_irr are allocated inside with dimension nkqtotf
           ! xkf_irr is in crystal coordinate
-          CALL kpoint_grid_epw(nrot, time_reversal, s, t_rev, nkf1, nkf2, nkf3, nkqtotf)
+          !CALL kpoint_grid_epw(nrot, time_reversal, s, t_rev, nkf1, nkf2, nkf3, nkqtotf)
+          CALL kpoint_grid_epw(nsym, time_reversal, s, t_rev, nkf1, nkf2, nkf3, nkqtotf)
           !
           ALLOCATE(xkf_(3, 2 * nkqtotf), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating xkf_', 1)
@@ -346,7 +346,7 @@
                           rand_k, rand_nk, mp_mesh_k, system_2d, eig_read, vme
     USE elph2,     ONLY : xkf, wkf, nkqtotf, nkf, nkqf, xkfd, deltaq
     USE cell_base, ONLY : at, bg
-    USE symm_base, ONLY : s, t_rev, time_reversal, nrot
+    USE symm_base, ONLY : s, t_rev, time_reversal, nsym
     USE io_var,    ONLY : iunkf
     USE low_lvl,   ONLY : init_random_seed
     USE constants_epw, ONLY : eps4
@@ -428,7 +428,7 @@
           ALLOCATE(wkf(2 * nkf1 * nkf2 * nkf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating wkf', 1)
           ! the result of this call is just nkqtotf
-          CALL kpoint_grid(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1 * nkf2 * nkf3, &
+          CALL kpoint_grid(nsym, time_reversal, .FALSE., s, t_rev, bg, nkf1 * nkf2 * nkf3, &
                0, 0, 0, nkf1, nkf2, nkf3, nkqtotf, xkf, wkf)
           DEALLOCATE(xkf, STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error deallocating xkf', 1)
@@ -442,7 +442,7 @@
           IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating xkf_tmp', 1)
           ALLOCATE(wkf_tmp(nkqtotf), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating wkf_tmp', 1)
-          CALL kpoint_grid(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1 * nkf2 * nkf3, &
+          CALL kpoint_grid(nsym, time_reversal, .FALSE., s, t_rev, bg, nkf1 * nkf2 * nkf3, &
                0, 0, 0, nkf1, nkf2, nkf3, nkqtotf, xkf_tmp, wkf_tmp)
           !
           ! assign to k and k+q for xkf and wkf
@@ -622,7 +622,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE kpoint_grid_epw(nrot, time_reversal, s, t_rev, nkc1, nkc2, nkc3, n_irr)    
+    SUBROUTINE kpoint_grid_epw(n_sym, time_reversal, s, t_rev, nkc1, nkc2, nkc3, n_irr)    
     !-----------------------------------------------------------------------
     !!
     !!  Automatic generation of a uniform grid of k-points with symmetry.
@@ -643,8 +643,8 @@
     !
     LOGICAL, INTENT(in) :: time_reversal
     !! True if time reversal
-    INTEGER, INTENT(in) :: nrot
-    !! Number of Bravais symmetry
+    INTEGER, INTENT(in) :: n_sym
+    !! Number of symmetry
     INTEGER, INTENT(in) :: nkc1, nkc2, nkc3
     !! k-grid
     INTEGER, INTENT(in) :: t_rev(48)
@@ -721,7 +721,7 @@
         !  check if there are equivalent k-point to this in the list
         !  (excepted those previously found to be equivalent to another)
         !  check both k and -k
-        DO ns = 1, nrot
+        DO ns = 1, n_sym
           DO i = 1, 3
             xkr(i) = s(i, 1, ns) * xkg(1, nk) &
                    + s(i, 2, ns) * xkg(2, nk) &
@@ -749,7 +749,7 @@
                  'something wrong in the checking algorithm', 1)
             ENDIF
           ENDIF
-           ! We comment this out because nrot == 48 and not 24.
+           ! We comment this out because n_sym == 48 and not 24.
            !IF (time_reversal) THEN
            !   xx =-xkr(1) * nkc1
            !   yy =-xkr(2) * nkc2
@@ -845,7 +845,7 @@
                           rand_q, rand_nq, mp_mesh_q, system_2d, lscreen
     USE elph2,     ONLY : xqf, wqf, nqf, nqtotf
     USE cell_base, ONLY : at, bg
-    USE symm_base, ONLY : s, t_rev, time_reversal, nrot
+    USE symm_base, ONLY : s, t_rev, time_reversal, nsym
     USE io_var,    ONLY : iunqf
     USE noncollin_module, ONLY : noncolin
     USE constants_epw, ONLY : eps4
@@ -914,13 +914,13 @@
           ALLOCATE(wqf_(nqf1 * nqf2 * nqf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating wqf_', 1)
           ! the result of this call is just nkqtotf
-          CALL kpoint_grid( nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
+          CALL kpoint_grid(nsym, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
                0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf_, wqf_)
           DEALLOCATE(xqf_, wqf_, STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error deallocating xqf_, wqf_', 1)
           ALLOCATE(xqf_ (3, nqtotf), wqf_(nqtotf), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating xqf_ (3, nqtotf), wqf_', 1)
-          CALL kpoint_grid( nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
+          CALL kpoint_grid(nsym, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
                0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf_, wqf_)
           !
           ! bring the k point to crystal coordinates
@@ -1063,7 +1063,7 @@
                           plselfen, specfun_pl
     USE elph2,     ONLY : xqf, wqf, nqtotf, nqf
     USE cell_base, ONLY : at, bg
-    USE symm_base, ONLY : s, t_rev, time_reversal, nrot
+    USE symm_base, ONLY : s, t_rev, time_reversal, nsym
     USE io_var,    ONLY : iunqf
     USE low_lvl,   ONLY : init_random_seed
     USE constants_epw, ONLY : eps4
@@ -1123,7 +1123,7 @@
           ALLOCATE(wqf(nqf1 * nqf2 * nqf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating wqf', 1)
           ! the result of this call is just nkqtotf
-          CALL kpoint_grid(nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1 * nqf2 * nqf3, &
+          CALL kpoint_grid(nsym, time_reversal, .FALSE., s, t_rev, bg, nqf1 * nqf2 * nqf3, &
                0, 0, 0, nqf1, nqf2, nqf3, nqtotf, xqf, wqf)
           DEALLOCATE(xqf, STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error deallocating xqf', 1)
@@ -1133,7 +1133,7 @@
           IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating xqf', 1)
           ALLOCATE(wqf(nqtotf), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating wqf', 1)
-          CALL kpoint_grid(nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1 * nqf2 * nqf3, &
+          CALL kpoint_grid(nsym, time_reversal, .FALSE., s, t_rev, bg, nqf1 * nqf2 * nqf3, &
                0,0,0, nqf1, nqf2, nqf3, nqtotf, xqf, wqf)
           !
           ! bring xqf in crystal coordinates
