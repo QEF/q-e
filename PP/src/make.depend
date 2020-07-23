@@ -912,10 +912,9 @@ xctest.o : ../../Modules/funct.o
 xctest.o : ../../Modules/io_global.o
 xctest.o : ../../Modules/kind.o
 xctest.o : ../../Modules/mp_global.o
-xctest_qe_libxc.o : ../../Modules/correlation_lda_lsda.o
 xctest_qe_libxc.o : ../../Modules/funct.o
-xctest_qe_libxc.o : ../../Modules/kind.o
 xctest_qe_libxc.o : ../../Modules/xc_gga_drivers.o
 xctest_qe_libxc.o : ../../Modules/xc_lda_lsda_drivers.o
 xctest_qe_libxc.o : ../../Modules/xc_mgga_drivers.o
+xctest_qe_libxc.o : ../../Modules/kind.o
 

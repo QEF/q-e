@@ -183,7 +183,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
        !
        ALLOCATE( sigma(length) )
        sigma(:) = g_in(:,1,1)**2 + g_in(:,2,1)**2 + g_in(:,3,1)**2
-       CALL dgcxc_unpol( length, r_in, sigma, vrrx, vsrx, vssx, vrrc, vsrc, vssc )
+       CALL dgcxc_unpol( length, r_in(:,1), sigma, vrrx(:,1), vsrx(:,1), vssx(:,1), vrrc(:,1), vsrc(:,1), vssc )
        DEALLOCATE( sigma )
        !
        dvxc_rr(:,1,1) = e2 * (vrrx(:,1) + vrrc(:,1))

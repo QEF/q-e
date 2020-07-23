@@ -823,6 +823,9 @@ CONTAINS
     dft_defined = .TRUE.
     !
 #if defined(__LIBXC)
+    iexch_qe = iexch ; icorr_qe = icorr
+    igcx_qe  = igcx  ; igcc_qe  = igcc
+    imeta_qe = imeta
     IF ( is_libxc(1) ) iexch_qe = 0
     IF ( is_libxc(2) ) icorr_qe = 0
     IF ( is_libxc(3) ) igcx_qe  = 0
