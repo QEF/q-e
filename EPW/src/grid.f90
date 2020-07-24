@@ -818,7 +818,7 @@
       ENDIF
     ENDDO
     !
-    ! normalize weights to one
+    ! Normalize weights to one
     DO nk = 1, n_irr
       wkf_irr(nk) = wkf_irr(nk) / fact
     ENDDO
@@ -1362,7 +1362,7 @@
       IF (homogeneous) THEN
         ! In case of k-point symmetry
         IF (mp_mesh_k .AND. etf_mem < 3) THEN
-          IF (iterative_bte .OR. ephwrite) THEN
+          IF (iterative_bte) THEN
             ALLOCATE(bztoibz_tmp(nkf1 * nkf2 * nkf3), STAT = ierr)
             IF (ierr /= 0) CALL errore('qwindow', 'Error allocating bztoibz_tmp', 1)
             bztoibz_tmp(:) = 0
@@ -1409,7 +1409,7 @@
         !
         ! In case of k-point symmetry
         IF (mp_mesh_k .AND. etf_mem < 3) THEN
-          IF (iterative_bte .OR. ephwrite) THEN         
+          IF (iterative_bte) THEN         
             ALLOCATE(bztoibz_tmp(nkf1 * nkf2 * nkf3), STAT = ierr)
             IF (ierr /= 0) CALL errore('qwindow', 'Error allocating bztoibz_tmp', 1)
             bztoibz_tmp(:) = 0

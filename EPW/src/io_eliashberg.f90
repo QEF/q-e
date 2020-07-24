@@ -1880,6 +1880,7 @@
     USE grid,      ONLY : kpmq_map, kpoint_grid_epw
     USE io_files,  ONLY : prefix, tmp_dir, create_directory
     USE io_var,    ONLY : iufilikmap
+    USE mp_world,         ONLY : mpime
     !
     IMPLICIT NONE
     !
