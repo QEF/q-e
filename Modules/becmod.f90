@@ -34,7 +34,6 @@ MODULE becmod
   END TYPE bec_type
   !
   TYPE (bec_type) :: becp  ! <beta|psi>
-  TYPE (bec_type) :: becp2  ! <beta|psi>
 
   PRIVATE
   !
