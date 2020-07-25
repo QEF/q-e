@@ -49,6 +49,7 @@ subroutine read_wfc_uno()
 
 !
 ! computation of the charge starting from wave functions
+   npw = npwx ! only gamma
    charge = 0.d0
    do iv = 1, nbnd, 2
       psic = 0.d0

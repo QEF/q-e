@@ -96,6 +96,7 @@ program all_currents
       end if
 
       !calculate energy current
+      !call routine_zero()
       call routine_hartree()
       call routine_zero()
       call write_results(traj)
