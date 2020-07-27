@@ -3,11 +3,13 @@ program all_currents
    USE environment, ONLY: environment_start, environment_end
    use io_global, ONLY: ionode
    use wavefunctions, only: evc
+   use wvfct, only: nbnd, npwx, npw
    use kinds, only: dp
    !trajectory reading stuff
    use ions_base, only: nat
    use cpv_traj, only: cpv_trajectory, &
                        cpv_trajectory_initialize, cpv_trajectory_deallocate
+   use dynamics_module, only: vel
 
 !from ../PW/src/pwscf.f90
    USE mp_global, ONLY: mp_startup
@@ -21,11 +23,13 @@ program all_currents
 !from ../Modules/read_input.f90
    USE read_namelists_module, ONLY: read_namelists
    USE read_cards_module, ONLY: read_cards
+   use zero_mod, only: vel_input_units
+   
 
    implicit none
    integer :: exit_status, ios
    type(cpv_trajectory) :: traj
-
+   real(kind=dp) :: vel_factor
 !from ../PW/src/pwscf.f90
    include 'laxlib.fh'
 
@@ -50,14 +54,28 @@ program all_currents
 
    call mp_barrier(intra_pool_comm)
    call bcast_all_current_namelist()
+   if (vel_input_units == 'CP') then ! atomic units of cp are different
+       vel_factor = 2.0_dp
+       if (ionode)  &
+           write (*, *) 'Using CP units for velocities'
+   else if (vel_input_units == 'PW') then
+       if (ionode)  &
+           write (*, *) 'Using PW units for velocities'
+       vel_factor = 1.0_dp
+   else
+      call errore('all_currents', 'error: unknown vel_input_units', 1)
+   endif
+
+
    call set_first_step_restart()
    call iosys()    ! ../PW/src/input.f90    save in internal variables
    call check_stop_init() ! ../PW/src/input.f90
 
+
    !eventually read new positions and velocities from trajectory
    if (ionode) then
       !initialize trajectory reading
-      call cpv_trajectory_initialize(traj, trajdir, nat, 1.0_dp, 1.0_dp, 1.0_dp, ios=ios, circular=.true.)
+      call cpv_trajectory_initialize(traj, trajdir, nat, 1.0_dp, vel_factor, 1.0_dp, ios=ios, circular=.true.)
       if (ios == 0) then
          write (*, *) 'After first step from input file, I will read from the CPV trajectory ', trim(trajdir)
       else
@@ -81,24 +99,28 @@ program all_currents
    call init_zero() ! only once per all trajectory
    call setup_nbnd_occ() ! only once per all trajectory
 
+   if (first_step == 0) & !set velocities factor also in the input file step
+      vel = vel*vel_factor
+
+   ! allocate evc_due and evc_uno
+   allocate (evc_due(npwx,nbnd))
+   allocate (evc_uno(npwx,nbnd))
+
    do
       call run_pwscf(exit_status)
+      evc_due = evc
       if (exit_status /= 0) exit
 
-      call prepare_next_step() ! this stores value of evc and setup tau and ion_vel
+      call prepare_next_step(1) ! this stores value of evc and setup tau and ion_vel
 
       call run_pwscf(exit_status)
       if (exit_status /= 0) goto 100 !shutdown everything and exit
-      if (allocated(evc_uno)) then
-         evc_uno = evc
-      else
-         allocate (evc_uno, source=evc)
-      end if
+      evc_uno = evc
+      call routine_zero()
 
       !calculate energy current
       !call routine_zero()
       call routine_hartree()
-      call routine_zero()
       call write_results(traj)
       !read new velocities and positions and continue, or exit the loop
       if (.not. read_next_step(traj)) exit
@@ -347,7 +369,7 @@ contains
       deallocate (counter)
    end subroutine
 
-   subroutine prepare_next_step()
+   subroutine prepare_next_step(ipm)
       USE extrapolation, ONLY: update_pot
       USE control_flags, ONLY: ethr
       use ions_base, ONLY: tau, tau_format, nat
@@ -361,21 +383,12 @@ contains
       use zero_mod, only: vel_input_units, ion_vel
       use wavefunctions, only: evc
       implicit none
+      integer, intent(in) :: ipm
+      if (ipm /= 0 .and. ipm /= -1 .and. ipm /= 1) &
+           call errore('prepare_next_step', 'error: unknown timestep type')
       !save old evc
-      if (allocated(evc_due)) then
-         evc_due = evc
-      else
-         allocate (evc_due, source=evc)
-      end if
       !set new positions
       if (ionode) then
-         if (vel_input_units == 'CP') then ! atomic units of cp are different
-            vel = 2.d0*vel
-         else if (vel_input_units == 'PW') then
-            !do nothing
-         else
-            call errore('read_vel', 'error: unknown vel_input_units', 1)
-         endif
          if (subtract_cm_vel) then
             !calculate center of mass velocity for each atomic species and subtract it
             call cm_vel(vel)
@@ -392,7 +405,7 @@ contains
          ion_vel = vel
       endif
       call convert_tau(tau_format, nat, vel)
-      tau = tau + delta_t*vel
+      tau = tau + delta_t*vel*real(ipm,kind=dp)
       call mp_barrier(world_comm)
       call update_pot()
       call hinit1()
