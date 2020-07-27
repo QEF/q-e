@@ -1,5 +1,6 @@
 program all_currents
-   use hartree_mod, only: evc_uno, evc_due, trajdir, first_step, dvpsi_save
+   use hartree_mod, only: evc_uno, evc_due, trajdir, first_step,&
+           dvpsi_save, subtract_cm_vel
    USE environment, ONLY: environment_start, environment_end
    use io_global, ONLY: ionode
    use wavefunctions, only: evc
@@ -10,9 +11,10 @@ program all_currents
    use cpv_traj, only: cpv_trajectory, &
                        cpv_trajectory_initialize, cpv_trajectory_deallocate
    use dynamics_module, only: vel
+   use ions_base, ONLY: tau, tau_format, nat
 
 !from ../PW/src/pwscf.f90
-   USE mp_global, ONLY: mp_startup
+   USE mp_global, ONLY: mp_startup, ionode_id
    USE mp_world, ONLY: world_comm
    use mp, ONLY: mp_bcast, mp_barrier
    USE mp_pools, ONLY: intra_pool_comm
@@ -99,28 +101,38 @@ program all_currents
    call init_zero() ! only once per all trajectory
    call setup_nbnd_occ() ! only once per all trajectory
 
-   if (first_step == 0) & !set velocities factor also in the input file step
+   if (ionode .and. first_step == 0) then !set velocities factor also in the input file step
       vel = vel*vel_factor
-
+      call convert_tau(tau_format, nat, vel)
+      CALL mp_bcast(vel, ionode_id, world_comm)
+   end if
    ! allocate evc_due and evc_uno
    allocate (evc_due(npwx,nbnd))
    allocate (evc_uno(npwx,nbnd))
 
    do
+      if (ionode) then
+         if (subtract_cm_vel) then
+            !calculate center of mass velocity for each atomic species and subtract it
+            call cm_vel(vel)
+         else
+            call cm_vel()
+         end if
+      endif
       call run_pwscf(exit_status)
       evc_due = evc
       if (exit_status /= 0) exit
 
-      call prepare_next_step(1) ! this stores value of evc and setup tau and ion_vel
+      call prepare_next_step(1) ! this stores value of evc and setup tau
 
       call run_pwscf(exit_status)
       if (exit_status /= 0) goto 100 !shutdown everything and exit
       evc_uno = evc
-      call routine_zero()
 
       !calculate energy current
-      !call routine_zero()
+      call routine_zero()
       call routine_hartree()
+      !call routine_zero()
       call write_results(traj)
       !read new velocities and positions and continue, or exit the loop
       if (.not. read_next_step(traj)) exit
@@ -142,6 +154,7 @@ contains
    subroutine write_results(traj)
       use kinds, only: dp
       use ions_base, ONLY: nsp
+      use cell_base, only: alat
       use hartree_mod
       use zero_mod
       use io_global, ONLY: ionode
@@ -187,8 +200,8 @@ contains
          write (iun, '(1I7,1E14.6,3E20.12,3E20.12)', advance='no') step, time, &
             J_xc + J_hartree + J_kohn + i_current + z_current, J_electron(1:3)
          do itype = 1, nsp
-            write (iun, '(3E20.12)', advance='no') v_cm(:, itype)
-            write (*, '(A,1I3,A,3E20.12)') 'center of mass velocity of type ', itype, ': ', v_cm(:, itype)
+            write (iun, '(3E20.12)', advance='no') alat*v_cm(:, itype)
+            write (*, '(A,1I3,A,3E20.12)') 'center of mass velocity of type ', itype, ': ', alat*v_cm(:, itype)
          end do
          write (iun, '(A)') ''
          close (iun)
@@ -378,9 +391,8 @@ contains
       use io_global, ONLY: ionode, ionode_id
       USE mp_world, ONLY: world_comm
       use mp, ONLY: mp_bcast, mp_barrier
-      use hartree_mod, only: evc_due, delta_t, ethr_small_step, &
-                             subtract_cm_vel
-      use zero_mod, only: vel_input_units, ion_vel
+      use hartree_mod, only: evc_due, delta_t, ethr_small_step
+      use zero_mod, only: vel_input_units
       use wavefunctions, only: evc
       implicit none
       integer, intent(in) :: ipm
@@ -388,24 +400,10 @@ contains
            call errore('prepare_next_step', 'error: unknown timestep type')
       !save old evc
       !set new positions
-      if (ionode) then
-         if (subtract_cm_vel) then
-            !calculate center of mass velocity for each atomic species and subtract it
-            call cm_vel(vel)
-         else
-            call cm_vel()
-         end if
-      endif
       !broadcast
       CALL mp_bcast(tau, ionode_id, world_comm)
       CALL mp_bcast(vel, ionode_id, world_comm)
-      if (.not. allocated(ion_vel)) then
-         allocate (ion_vel, source=vel)
-      else
-         ion_vel = vel
-      endif
-      call convert_tau(tau_format, nat, vel)
-      tau = tau + delta_t*vel*real(ipm,kind=dp)
+      tau = tau + delta_t*vel*real(ipm,dp)
       call mp_barrier(world_comm)
       call update_pot()
       call hinit1()
@@ -425,7 +423,7 @@ contains
       use io_global, ONLY: ionode, ionode_id
       USE mp_world, ONLY: world_comm
       use mp, ONLY: mp_bcast, mp_barrier
-      use zero_mod, only: vel_input_units, ion_vel
+      use zero_mod, only: vel_input_units
       use hartree_mod, only: first_step, last_step, ethr_big_step, &
                              step_mul, step_rem
       implicit none
@@ -454,6 +452,7 @@ contains
             vel = ts%vel
             tau = ts%tau
             CALL convert_tau(tau_format, nat, tau)
+            call convert_tau(tau_format, nat, vel)
             res = .true.
             goto 200 ! exit the loop skipping 'finish': we will do an other calculation
          enddo

@@ -89,6 +89,7 @@ subroutine routine_zero()
    use mp_pools, only: intra_pool_comm
    use io_global, only: stdout, ionode_id, ionode
    use ions_base, only: nsp, zv, nat, ityp, amass, tau
+   use dynamics_module, only: vel
    use cell_base, only: tpiba, tpiba2
    use uspp_param, only: upf
    use atom, only: rgrid
@@ -155,7 +156,7 @@ subroutine routine_zero()
       do b = 1, 3
          do igm = 1, ngm
             do iatom = 1, nat
-               u_g(igm, a) = u_g(igm, a) - ion_vel(b, iatom)*H_g(igm, a, b, ityp(iatom))*&
+               u_g(igm, a) = u_g(igm, a) - vel(b, iatom)*H_g(igm, a, b, ityp(iatom))*&
 &exp(-(0.d0, 1.d0)*DOT_PRODUCT(tpiba*g(1:3, igm), alat*tau(1:3, iatom)))
             end do
          end do
@@ -176,6 +177,7 @@ subroutine routine_zero()
    if (l_non_loc) then
       call add_nc_curr(z_current)
    end if
+   z_current = z_current*alat
    call stop_clock('zero_current')
    call print_clock('zero_current')
    if (ionode) print *, 'CORRENTE ZERO CALCOLATA'
@@ -192,16 +194,9 @@ subroutine routine_zero()
 
    call start_clock('calcolo_i')
    do iatom = 1, nat
-!
-      i_current(:) = i_current(:) + ion_vel(:, iatom)*(1./2.*amconv*amass(ityp(iatom))*(ion_vel(1, iatom)**2 +&
-   &ion_vel(2, iatom)**2 + ion_vel(3, iatom)**2))
-      i_current_a(:) = i_current_a(:) + ion_vel(:, iatom)*(1./2.*amconv*amass(ityp(iatom))*(ion_vel(1, iatom)**2 +&
-   &ion_vel(2, iatom)**2 + ion_vel(3, iatom)**2))
-!
-      if (add_i_current_b) then
-         i_current(:) = i_current(:) + 2./3.*e2*zv(ityp(iatom))**2*ion_vel(:, iatom)*I_primo
-      end if
-      i_current_b(:) = i_current_b(:) + 2./3.*e2*zv(ityp(iatom))**2*ion_vel(:, iatom)*I_primo
+      i_current_a(:) = i_current_a(:) + vel(:, iatom)*(1./2.*amconv*amass(ityp(iatom))*(vel(1, iatom)**2 +&
+                       vel(2, iatom)**2 + vel(3, iatom)**2))
+      i_current_b(:) = i_current_b(:) + 2./3.*e2*zv(ityp(iatom))**2*vel(:, iatom)*I_primo
    end do
 
    do iatom = 1, nat
@@ -210,36 +205,39 @@ subroutine routine_zero()
             u(1:3) = (tau(:, iatom) - tau(:, jatom))*alat
             call pbc_ortho(u(1:3), u_pbc(1:3))
             call I_due_value(value, u_pbc, 1)
-            i_current(:) = i_current(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom)) &
-                           *(ion_vel(:, iatom) + ion_vel(:, jatom))*value
             i_current_c(:) = i_current_c(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))* &
-                             (ion_vel(:, iatom) + ion_vel(:, jatom))*value
+                             (vel(:, iatom) + vel(:, jatom))*value
 
             do a = 1, 3
                do b = 1, 3
                   if (a > b) then
                      call I_uno_value(value, u_pbc, a, b, 1)
                      i_current_e(a) = i_current_e(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-                                      &(ion_vel(b, jatom) + ion_vel(b, iatom))*value
+                                      &(vel(b, jatom) + vel(b, iatom))*value
                      i_current_e(b) = i_current_e(b) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-                                      &(ion_vel(a, jatom) + ion_vel(a, iatom))*value
-                     i_current(a) = i_current(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-                                    &(ion_vel(b, jatom) + ion_vel(b, iatom))*value
-                     i_current(b) = i_current(b) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-                                    &(ion_vel(a, jatom) + ion_vel(a, iatom))*value
+                                      &(vel(a, jatom) + vel(a, iatom))*value
                   end if
                   if (a == b) then
                      call I_uno_value(value, u_pbc, a, b, 1)
                      i_current_d(a) = i_current_d(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-                                      &(ion_vel(b, jatom) + ion_vel(b, iatom))*value
-                     i_current(a) = i_current(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-                                    &(ion_vel(b, jatom) + ion_vel(b, iatom))*value
+                                      &(vel(b, jatom) + vel(b, iatom))*value
                   end if
                end do
             end do
          end if
       end do
    end do
+   i_current_a = i_current_a * alat**3
+   i_current_b = i_current_b * alat 
+   i_current_c = i_current_c * alat 
+   i_current_d = i_current_d * alat 
+   i_current_e = i_current_e * alat 
+   i_current   = i_current_a + i_current_c + i_current_d + &
+                 i_current_e
+   if (add_i_current_b) &
+      i_current = i_current + i_current_b
+   
+
    call stop_clock('calcolo_i')
    call print_clock('calcolo_i')
    if (ionode) print *, 'CORRENTE IONIC CALCOLATA'

@@ -7,7 +7,8 @@ subroutine add_nc_curr(current)
    use uspp, ONLY: nkb, vkb, deeq
    USE uspp_param, ONLY: upf, nh
    use hartree_mod, only: evc_uno
-   use zero_mod, only: becpr, becpd, becprd, xvkb, xdvkb, dvkb, ion_vel
+   use zero_mod, only: becpr, becpd, becprd, xvkb, xdvkb, dvkb
+   use dynamics_module, only: vel
    use wvfct, ONLY: nbnd, npw, npwx
    use gvect, ONLY: g
    use cell_base, ONLY: tpiba
@@ -122,21 +123,21 @@ subroutine add_nc_curr(current)
                do ipol = 1, 3
                   do jpol = 1, 3
                      do ibnd = 1, nbnd
-                        J_nl(ipol) = J_nl(ipol) + ion_vel(jpol, na)*&
+                        J_nl(ipol) = J_nl(ipol) + vel(jpol, na)*&
 &becprd(ipol, jpol)%r(ikb, ibnd)*becp%r(ikb, ibnd)*deeq(ih, ih, na, 1)
 
-                        J_1(ipol) = J_1(ipol) + ion_vel(jpol, na)*&
+                        J_1(ipol) = J_1(ipol) + vel(jpol, na)*&
 &becprd(ipol, jpol)%r(ikb, ibnd)*becp%r(ikb, ibnd)*deeq(ih, ih, na, 1)
 
 !                         print*,'corrente non locale: ', J_nl(:)
 !                          if (ionode) then
 !                              print*,'becpr-ikb-ipol-ibnd-ityp',becpr(ipol)%r(ikb,ibnd),ikb,ipol,ibnd,ityp(na)
 !                          end if
-!                         print*,'VEL',ion_vel(:,na)
-                        J_nl(ipol) = J_nl(ipol) + ion_vel(jpol, na)*&
+!                         print*,'VEL',vel(:,na)
+                        J_nl(ipol) = J_nl(ipol) + vel(jpol, na)*&
 &becpr(ipol)%r(ikb, ibnd)*becpd(jpol)%r(ikb, ibnd)*deeq(ih, ih, na, 1)
 
-                        J_2(ipol) = J_2(ipol) + ion_vel(jpol, na)*&
+                        J_2(ipol) = J_2(ipol) + vel(jpol, na)*&
 &becpr(ipol)%r(ikb, ibnd)*becpd(jpol)%r(ikb, ibnd)*deeq(ih, ih, na, 1)
 !                       print*,'corrente',J_nl(ipol)
                      end do
