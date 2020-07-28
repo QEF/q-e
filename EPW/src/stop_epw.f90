@@ -144,7 +144,6 @@
       WRITE(epwbib, '(a)') "   Doi     = {10.1103/PhysRevB.97.121201}                                                "
       WRITE(epwbib, '(a)') " }                                                                                       "
       WRITE(epwbib, '(a)') "                                                                                         "
-      WRITE(epwbib, '(a)') " % Since you used the [adapt_smearing] input, please consider also citing                "
       WRITE(epwbib, '(a)') " @Article{Macheda2018,                                                                   "
       WRITE(epwbib, '(a)') "   Title   = {Magnetotransport phenomena in $p$-doped diamond from first principles},    "
       WRITE(epwbib, '(a)') "   Author  = {F. Macheda and N. Bonini},                                                 "
