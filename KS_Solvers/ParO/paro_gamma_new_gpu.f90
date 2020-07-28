@@ -141,7 +141,7 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
 #if defined(__MPI)
   IF ( nproc_ortho == 1 ) THEN
 #endif
-     CALL rotate_HSpsi_gamma (  npwx, npw, nbnd, nbnd, psi, hpsi, overlap, spsi, eig )
+     CALL rotate_HSpsi_gamma_gpu (  npwx, npw, nbnd, nbnd, psi, hpsi, overlap, spsi, eig )
 #if defined(__MPI)
   ELSE
      CALL protate_HSpsi_gamma(  npwx, npw, nbnd, nbnd, psi, hpsi, overlap, spsi, eig )

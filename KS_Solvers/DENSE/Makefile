@@ -7,6 +7,7 @@ MODFLAGS= $(MOD_FLAG) ../../ELPA/src $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../../
 
 DENSE = \
 rotate_HSpsi_gamma.o \
+rotate_HSpsi_gamma_gpu.o \
 rotate_HSpsi_k.o \
 rotate_wfc_gamma.o \
 rotate_wfc_k.o 
