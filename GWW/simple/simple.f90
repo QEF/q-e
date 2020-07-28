@@ -47,7 +47,7 @@ program simple
   !
   NAMELIST /inputsimple/ prefix,outdir,num_nbndv,num_val,num_cond,s_bands, &
        & s_product,l_truncated_coulomb,truncation_radius,nkpoints,numpw,&
-       & l_debug,n_debug,w_type,epsm,lambdam,prefix_small, nonlocal_commutator,&
+       & l_debug,n_debug,w_type,epsm,lambdam, nonlocal_commutator,&
        & calc_mode, n_shrink
   !
   CALL mp_startup ( )
@@ -83,7 +83,6 @@ program simple
   CALL mp_bcast(w_type,  ionode_id, world_comm)
   CALL mp_bcast(epsm,  ionode_id, world_comm)
   CALL mp_bcast(lambdam,  ionode_id, world_comm)
-  CALL mp_bcast(prefix_small,  ionode_id, world_comm)
   CALL mp_bcast(nonlocal_commutator,  ionode_id, world_comm)
   CALL mp_bcast(calc_mode,  ionode_id, world_comm)
   CALL mp_bcast(n_shrink, ionode_id, world_comm)
