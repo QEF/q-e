@@ -39,7 +39,7 @@
   REAL(kind=DP) :: epsm  !parameter eps_m for diagonal model of epsilon (dielectric constant, eps_{\infty})
   REAL(kind=DP) :: lambdam  !parameter lambda for diagonal model of epsilon
 
-  CHARACTER(LEN=256) :: prefix_small  !name of calculation on small cell
+  INTEGER :: n_shrink!for using only a fraction of the k_points mesh 
 
 CONTAINS
 
