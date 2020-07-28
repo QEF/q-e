@@ -115,7 +115,7 @@
     ENDIF
     ! 
     ! Transport module
-    IF (scattering) THEN
+    IF (scattering .AND. .NOT. iterative_bte) THEN
       WRITE(epwbib, '(a)') "                                                                                         "
       WRITE(epwbib, '(a)') " % Since you used the [scattering] input, please consider also citing                    "
       WRITE(epwbib, '(a)') " @Article{Ponce2018,                                                                     "
