@@ -15,10 +15,10 @@ MODULE hartree_mod
    complex(kind=DP), allocatable :: dvpsi_save(:,:,:) ! to save the solution of the system between iterations
    logical :: save_dvpsi = .true. ! if true dvpsi_save is allocated and used
 
-   integer :: first_step, last_step, step_mul, step_rem
+   integer :: first_step, last_step, step_mul, step_rem, n_repeat_every_step
    logical :: restart ! if true try to read last calculated step from output and set first_step
    logical :: subtract_cm_vel ! if true do velocity renormalization
    logical :: ec_test ! activates tests for debugging purposes
-
+   logical :: re_init_wfc_1=.false., re_init_wfc_2=.false. ! initialize again evc before scf step number 1 or 2
 END MODULE hartree_mod
 

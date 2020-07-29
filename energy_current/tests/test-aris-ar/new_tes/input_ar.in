@@ -4,7 +4,9 @@
     eta=   0.100,
     n_max=     5,
     ! ec_test= .true.,
-    add_i_current_b = .true.
+    add_i_current_b = .true.,
+    re_init_wfc_1 = .true.,
+    n_repeat_every_step = 10
  /
  &CONTROL
     calculation='md',
@@ -23,6 +25,7 @@
  &ELECTRONS
     conv_thr = 1.D-15,
     mixing_beta = 0.7,
+    startingwfc = 'random'
 /
  &IONS
     ion_velocities = 'from_input',

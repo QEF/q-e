@@ -1,6 +1,7 @@
 program all_currents
    use hartree_mod, only: evc_uno, evc_due, trajdir, first_step,&
-           dvpsi_save, subtract_cm_vel
+           dvpsi_save, subtract_cm_vel, re_init_wfc_1, re_init_wfc_2,&
+           n_repeat_every_step
    USE environment, ONLY: environment_start, environment_end
    use io_global, ONLY: ionode
    use wavefunctions, only: evc
@@ -29,7 +30,7 @@ program all_currents
    
 
    implicit none
-   integer :: exit_status, ios
+   integer :: exit_status, ios, irepeat
    type(cpv_trajectory) :: traj
    real(kind=dp) :: vel_factor
 !from ../PW/src/pwscf.f90
@@ -104,8 +105,8 @@ program all_currents
    if (ionode .and. first_step == 0) then !set velocities factor also in the input file step
       vel = vel*vel_factor
       call convert_tau(tau_format, nat, vel)
-      CALL mp_bcast(vel, ionode_id, world_comm)
    end if
+   CALL mp_bcast(vel, ionode_id, world_comm)
    ! allocate evc_due and evc_uno
    allocate (evc_due(npwx,nbnd))
    allocate (evc_uno(npwx,nbnd))
@@ -119,20 +120,26 @@ program all_currents
             call cm_vel()
          end if
       endif
-      call run_pwscf(exit_status)
-      evc_due = evc
-      if (exit_status /= 0) exit
-      call routine_zero()
+      do irepeat = 1, n_repeat_every_step
+          if (re_init_wfc_1) &
+                  call init_wfc(1)
+          call run_pwscf(exit_status)
+          evc_due = evc
+          if (exit_status /= 0) exit
 
-      call prepare_next_step(1) ! this stores value of evc and setup tau
+          call prepare_next_step(1) ! this stores value of evc and setup tau
 
-      call run_pwscf(exit_status)
-      if (exit_status /= 0) goto 100 !shutdown everything and exit
-      evc_uno = evc
+          if (re_init_wfc_2) &
+                  call init_wfc(1)
+          call run_pwscf(exit_status)
+          if (exit_status /= 0) goto 100 !shutdown everything and exit
+          evc_uno = evc
 
-      !calculate energy current
-      call routine_hartree()
-      call write_results(traj)
+          !calculate energy current
+          call routine_zero()
+          call routine_hartree()
+          call write_results(traj)
+      end do
       !read new velocities and positions and continue, or exit the loop
       if (.not. read_next_step(traj)) exit
    end do
@@ -223,7 +230,8 @@ contains
          ethr_small_step, ethr_big_step, &
          restart, subtract_cm_vel, step_mul, &
          step_rem, ec_test, add_i_current_b, &
-         save_dvpsi
+         save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
+         n_repeat_every_step
       !
       !   set default values for variables in namelist
       !
@@ -243,6 +251,9 @@ contains
       ec_test = .false.
       add_i_current_b = .false.
       save_dvpsi = .true.
+      re_init_wfc_1 = .false.
+      re_init_wfc_2 = .false.
+      n_repeat_every_step = 1
       READ (iunit, energy_current, IOSTAT=ios)
       IF (ios /= 0) CALL errore('main', 'reading energy_current namelist', ABS(ios))
 
@@ -271,6 +282,10 @@ contains
       CALL mp_bcast(step_rem, ionode_id, world_comm)
       CALL mp_bcast(ec_test, ionode_id, world_comm)
       CALL mp_bcast(add_i_current_b, ionode_id, world_comm)
+      CALL mp_bcast(re_init_wfc_1, ionode_id, world_comm)
+      CALL mp_bcast(re_init_wfc_2, ionode_id, world_comm)
+      CALL mp_bcast(n_repeat_every_step, ionode_id, world_comm)
+
    end subroutine
 
    subroutine set_first_step_restart()
