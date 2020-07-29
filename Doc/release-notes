@@ -26,7 +26,8 @@ New in v. 6.6:
     a new post-processing program PHonon/postahc.x added.
     (Jae-Mo Lihm, Seoul Natl. Univ.)
   * Implementation of the Sternheimer algorithm in the turboEELS code
-    (O. Baseggio, O. Motornyi, N. Vast, A. Dal Corso, I. Timrov, and S. Baroni)
+    (O. Motornyi, N. Vast, I. Timrov, O. Baseggio, S. Baroni, and A. Dal Corso,
+    Phys. Rev. B  102, 035156 (2020).)
   * EPW:
     (1) Use of the band manifold determined by Wannierization step
         when evaluating electron-phonon vertex on coarse grids
