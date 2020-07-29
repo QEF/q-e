@@ -29,7 +29,7 @@
   USE qpoint,        ONLY : xq
   USE output,        ONLY : fildvscf, fildrho
   USE start_k,       ONLY : nk1, nk2, nk3
-  USe disp,          ONLY : nq1, nq2, nq3
+  USE disp,          ONLY : nq1, nq2, nq3
   USE epwcom,        ONLY : delta_smear, nsmear, dis_win_min, dis_win_max, wannierize, &
                             ngaussw, dvscf_dir, bands_skipped, wdata, kmaps, ntempxx,  &
                             num_iter, dis_froz_max, fsthick, dis_froz_min, eig_read,   &
@@ -71,7 +71,7 @@
   USE partial,       ONLY : atomo, nat_todo
   USE constants,     ONLY : AMU_RY, eps16
   USE mp_global,     ONLY : my_pool_id, me_pool
-  USE io_global,     ONLY : meta_ionode, meta_ionode_id, stdout, ionode
+  USE io_global,     ONLY : meta_ionode, meta_ionode_id, stdout
   USE io_var,        ONLY : iunkf, iunqf
   USE noncollin_module, ONLY : npol, noncolin
   USE wvfct,         ONLY : npwx
