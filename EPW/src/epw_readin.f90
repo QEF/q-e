@@ -77,7 +77,6 @@
   USE wvfct,         ONLY : npwx
   USE paw_variables, ONLY : okpaw
   USE io_epw,        ONLY : param_get_range_vector
-  USE read_namelists_module, ONLY : check_namelist_read
 #if defined(__NAG)
   USE F90_UNIX_ENV,  ONLY : iargc, getarg
 #endif
@@ -102,10 +101,14 @@
   !! Does the title match
   CHARACTER(LEN = 256) :: outdir
   !! Output directory
+  CHARACTER(LEN = 75) :: line
+  !! Line in input file
 #if ! defined(__NAG)
   INTEGER :: iargc
 #endif
   INTEGER :: ios
+  !! INTEGER variable for I/O control
+  INTEGER :: ios2
   !! INTEGER variable for I/O control
   INTEGER :: na
   !! counter on polarizations
@@ -607,14 +610,20 @@
   ethr_Plrn = 1E-3
   ! ---------------------------------------------------------------------------------
   !
-  ! Reading the namelist inputepw
-  ! 
+  ! Reading the namelist inputepw and check
   IF (meta_ionode) THEN
     READ(unit_loc, inputepw, IOSTAT = ios)
+    ios2 = 0
+    IF (ios /= 0) THEN
+      BACKSPACE(5)
+      READ(unit_loc, '(A512)', IOSTAT = ios2) line      
+    ENDIF
+    IF (ios2 /= 0) CALL errore('epw_readin', 'Could not find namelist &inputepw', 2)
+    IF (ios /= 0) THEN         
+      CALL errore('epw_readin', 'Bad line in namelist &inputepw'&
+                 ': "'//TRIM(line)//'" (error could be in the previous line)', 1)
+    ENDIF          
   ENDIF ! meta_ionode         
-  !
-  ! If an input does not belong to the input namelist, return which one to the user. 
-  CALL check_namelist_read(ios, unit_loc, "inputepw")
   ! 
   IF (meta_ionode) THEN
     IF (wannier_plot) THEN
