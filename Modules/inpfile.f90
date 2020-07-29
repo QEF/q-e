@@ -13,11 +13,16 @@ SUBROUTINE input_from_file( )
   !
   IMPLICIT NONE
   !
-  INTEGER             :: stdin = 5, stderr = 6, ierr = 0
-  CHARACTER (LEN=256) :: input_file
-  LOGICAL             :: found
+  INTEGER              :: stdin = 5, stderr = 6, ierr = 0
+  CHARACTER(LEN = 256) :: input_file
+  LOGICAL              :: found
   !
-  INTEGER :: iiarg, nargs
+  CHARACTER(LEN = 512) :: dummy 
+  !! Read dummy line
+  INTEGER :: iiarg, nargs, stdtmp
+  ! 
+  INTEGER, EXTERNAL :: find_free_unit
+  !! Find unit number that is free
   !
   nargs = command_argument_count()
   found = .FALSE.
@@ -41,20 +46,33 @@ SUBROUTINE input_from_file( )
   END DO
   !
   IF ( found ) THEN
-     !
-     OPEN ( UNIT = stdin, FILE = input_file, FORM = 'FORMATTED', &
-            STATUS = 'OLD', IOSTAT = ierr )
-     !
-     ! TODO: return error code ierr (-1 no file, 0 file opened, > 1 error)
-     ! do not call "errore" here: it may hang in parallel execution
-     ! if this routine is called by a single processor
-     !
-     IF ( ierr > 0 ) WRITE (stderr, &
-            '(" *** input file ",A," not found ***")' ) TRIM( input_file )
-     !
+    !
+    OPEN ( UNIT = stdin, FILE = input_file, FORM = 'FORMATTED', &
+           STATUS = 'OLD', IOSTAT = ierr )
+    !
+    ! TODO: return error code ierr (-1 no file, 0 file opened, > 1 error)
+    ! do not call "errore" here: it may hang in parallel execution
+    ! if this routine is called by a single processor
+    !
+    IF ( ierr > 0 ) WRITE (stderr, &
+           '(" *** input file ",A," not found ***")' ) TRIM( input_file )
+    !
   ELSE
-     ierr = -1
-  END IF
+    input_file="input_tmp.in"
+    stdtmp = find_free_unit()
+    OPEN(UNIT = stdtmp, FILE = TRIM(input_file), FORM = "formatted", &
+         STATUS = "unknown", IOSTAT = ierr) 
+    IF (ierr > 0) CALL errore("input_file","unable to open file input_tmp.in", ierr)
+    ierr = -1
+    DO 
+      READ(stdin, fmt = '(A512)',END = 30) dummy 
+      WRITE(stdtmp, '(A)') TRIM(dummy) 
+      CYCLE
+30    EXIT
+    ENDDO 
+    CLOSE(UNIT = stdtmp, STATUS = 'keep') 
+    OPEN(UNIT = stdin, FILE = input_file, FORM = 'FORMATTED', STATUS = 'OLD', IOSTAT = ierr)
+  ENDIF
   !
   RETURN 
   !
