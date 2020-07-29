@@ -1,6 +1,6 @@
 &energy_current
-    delta_t=   0.500,
-    file_output= 'current_hz',
+    delta_t=   0.100,
+    file_output= 'current_hz_ar',
     eta=   0.100,
     n_max=     5,
     ! ec_test= .true.,

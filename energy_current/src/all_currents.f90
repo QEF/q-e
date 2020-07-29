@@ -1,18 +1,19 @@
 program all_currents
    use hartree_mod, only: evc_uno, evc_due, trajdir, first_step,&
            dvpsi_save, subtract_cm_vel, re_init_wfc_1, re_init_wfc_2,&
-           n_repeat_every_step
+           n_repeat_every_step, ethr_big_step
    USE environment, ONLY: environment_start, environment_end
    use io_global, ONLY: ionode
    use wavefunctions, only: evc
    use wvfct, only: nbnd, npwx, npw
    use kinds, only: dp
    !trajectory reading stuff
-   use ions_base, only: nat
    use cpv_traj, only: cpv_trajectory, &
                        cpv_trajectory_initialize, cpv_trajectory_deallocate
    use dynamics_module, only: vel
    use ions_base, ONLY: tau, tau_format, nat
+   USE control_flags, ONLY: ethr
+   USE extrapolation, ONLY: update_pot
 
 !from ../PW/src/pwscf.f90
    USE mp_global, ONLY: mp_startup, ionode_id
@@ -33,6 +34,7 @@ program all_currents
    integer :: exit_status, ios, irepeat
    type(cpv_trajectory) :: traj
    real(kind=dp) :: vel_factor
+   real(kind=dp),allocatable :: tau_save(:,:)
 !from ../PW/src/pwscf.f90
    include 'laxlib.fh'
 
@@ -110,7 +112,8 @@ program all_currents
    ! allocate evc_due and evc_uno
    allocate (evc_due(npwx,nbnd))
    allocate (evc_uno(npwx,nbnd))
-
+   if (n_repeat_every_step > 1) &
+       allocate (tau_save(3,nat))
    do
       if (ionode) then
          if (subtract_cm_vel) then
@@ -120,7 +123,17 @@ program all_currents
             call cm_vel()
          end if
       endif
+      if (n_repeat_every_step > 1) &
+          tau_save = tau
       do irepeat = 1, n_repeat_every_step
+          if (irepeat > 1) then
+              if (ionode) &
+                  write (*,*) 'REPETITION ', irepeat - 1 
+              tau = tau_save
+              call update_pot()
+              call hinit1()
+              ethr = ethr_big_step
+          end if
           if (re_init_wfc_1) &
                   call init_wfc(1)
           call run_pwscf(exit_status)
@@ -150,6 +163,7 @@ program all_currents
    call deallocate_zero()
    if (allocated(evc_uno)) deallocate (evc_uno)
    if (allocated(evc_due)) deallocate (evc_due)
+   if (allocated(tau_save)) deallocate(tau_save)
    if (allocated(dvpsi_save)) deallocate(dvpsi_save)
    call stop_run(exit_status)
    call do_stop(exit_status)
@@ -412,11 +426,10 @@ contains
       integer, intent(in) :: ipm
       if (ipm /= 0 .and. ipm /= -1 .and. ipm /= 1) &
            call errore('prepare_next_step', 'error: unknown timestep type')
-      !save old evc
-      !set new positions
       !broadcast
       CALL mp_bcast(tau, ionode_id, world_comm)
       CALL mp_bcast(vel, ionode_id, world_comm)
+      !set new positions
       tau = tau + delta_t*vel*real(ipm,dp)
       call mp_barrier(world_comm)
       call update_pot()

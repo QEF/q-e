@@ -88,9 +88,9 @@ subroutine routine_hartree()
 ! Calculation of Hartree, exchange and Kohn-Sham currents require that there is access in memory
 ! simultaneously to the wavefunctions evaluated at two different time steps t and t'=t-Dt
 ! , where Dt is the time step used for the numerical derivative.
-! In the following, quantities with index "uno" or without indexes refer to quantities evaluated at time t 
+! In the following, quantities with index "uno" or without indexes refer to quantities evaluated at time t+Dt 
 ! ( e.g. prefix, charge_g, evc_uno).
-! Variables with index "due" refer to quantities evaluated at t'=t-Dt (e.g. prefix_due, charge_due, evc_due) 
+! Variables with index "due" refer to quantities evaluated at t (e.g. prefix_due, charge_due, evc_due) 
 
 !-------STEP1: reading and allocation (npwx = number of plane waves (npwx>npw), nbnd = number of bands (n_electrons/2 for insulators))
    allocate (tmp(npwx, nbnd))
