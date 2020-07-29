@@ -809,6 +809,7 @@
   temps(:) = temps(:) * kelvin2eV / ryd2ev
   !
   CALL mp_bcast(nstemp, meta_ionode_id, world_comm)
+  CALL mp_bcast(temps, meta_ionode_id, world_comm)
   ALLOCATE(gtemp(nstemp), STAT = ierr)
   IF (ierr /= 0) CALL errore('epw_readin', 'Error allocating gtemp', 1)
   gtemp(:) = temps(1:nstemp)
