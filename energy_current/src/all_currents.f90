@@ -122,6 +122,7 @@ program all_currents
       call run_pwscf(exit_status)
       evc_due = evc
       if (exit_status /= 0) exit
+      call routine_zero()
 
       call prepare_next_step(1) ! this stores value of evc and setup tau
 
@@ -130,9 +131,7 @@ program all_currents
       evc_uno = evc
 
       !calculate energy current
-      call routine_zero()
       call routine_hartree()
-      !call routine_zero()
       call write_results(traj)
       !read new velocities and positions and continue, or exit the loop
       if (.not. read_next_step(traj)) exit

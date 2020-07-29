@@ -31,11 +31,11 @@ end subroutine
 subroutine read_wfc_uno()
    use kinds, only: dp
    use io_global, only: ionode, stdout, ionode_id
-   use hartree_mod, only: evc_uno !,file_dativel
+   !use hartree_mod, only: evc_uno !,file_dativel
    use zero_mod, only: charge, charge_g
    use ions_base, only: nsp, zv, nat, ityp, amass, tau
    use mp, only: mp_sum, mp_bcast, mp_get
-   use wavefunctions, only: psic
+   use wavefunctions, only: psic, evc
    use io_files, only: nwordwfc, diropn, iunwfc, prefix, tmp_dir
    use wvfct, only: nbnd, npwx, npw
    use fft_base, only: dffts
@@ -54,11 +54,11 @@ subroutine read_wfc_uno()
    do iv = 1, nbnd, 2
       psic = 0.d0
       if (iv == nbnd) then
-         psic(dffts%nl(1:npw)) = evc_uno(1:npw, iv)
-         psic(dffts%nlm(1:npw)) = CONJG(evc_uno(1:npw, iv))
+         psic(dffts%nl(1:npw)) = evc(1:npw, iv)
+         psic(dffts%nlm(1:npw)) = CONJG(evc(1:npw, iv))
       else
-         psic(dffts%nl(1:npw)) = evc_uno(1:npw, iv) + (0.D0, 1.D0)*evc_uno(1:npw, iv + 1)
-         psic(dffts%nlm(1:npw)) = CONJG(evc_uno(1:npw, iv) - (0.D0, 1.D0)*evc_uno(1:npw, iv + 1))
+         psic(dffts%nl(1:npw)) = evc(1:npw, iv) + (0.D0, 1.D0)*evc(1:npw, iv + 1)
+         psic(dffts%nlm(1:npw)) = CONJG(evc(1:npw, iv) - (0.D0, 1.D0)*evc(1:npw, iv + 1))
       end if
       call invfft('Wave', psic, dffts)
       charge(1:dffts%nnr) = charge(1:dffts%nnr) + dble(psic(1:dffts%nnr))**2.0

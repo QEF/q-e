@@ -6,10 +6,11 @@ subroutine add_nc_curr(current)
    use us, only: spline_ps
    use uspp, ONLY: nkb, vkb, deeq
    USE uspp_param, ONLY: upf, nh
-   use hartree_mod, only: evc_uno
+   !use hartree_mod, only: evc
    use zero_mod, only: becpr, becpd, becprd, xvkb, xdvkb, dvkb
    use dynamics_module, only: vel
    use wvfct, ONLY: nbnd, npw, npwx
+   use wavefunctions, only: evc
    use gvect, ONLY: g
    use cell_base, ONLY: tpiba
    use ions_base, ONLY: nat, ityp, nsp
@@ -97,7 +98,7 @@ subroutine add_nc_curr(current)
 !prodotti scalari (si possono evitare di fare tutti?), qui si esegue comunicazione MPI.
    call calbec(npw, vkb, evc, becp)
    do ipol = 1, 3
-      CALL calbec(npw, xvkb(1:npwx, 1:nkb, ipol), evc_uno, becpr(ipol))
+      CALL calbec(npw, xvkb(1:npwx, 1:nkb, ipol), evc, becpr(ipol))
       do ipw = 1, npw
          do ikb = 1, nkb
             vkb1(ipw, ikb) = dvkb(ipw, ikb, ipol)
@@ -105,7 +106,7 @@ subroutine add_nc_curr(current)
       end do
       CALL calbec(npw, vkb1, evc, becpd(ipol))
       do jpol = 1, 3
-         call calbec(npw, xdvkb(1:npwx, 1:nkb, ipol, jpol), evc_uno, becprd(ipol, jpol))
+         call calbec(npw, xdvkb(1:npwx, 1:nkb, ipol, jpol), evc, becprd(ipol, jpol))
       end do
    end do
 
