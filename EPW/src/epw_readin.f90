@@ -101,7 +101,7 @@
   !! Does the title match
   CHARACTER(LEN = 256) :: outdir
   !! Output directory
-  CHARACTER(LEN = 75) :: line
+  CHARACTER(LEN = 512) :: line
   !! Line in input file
 #if ! defined(__NAG)
   INTEGER :: iargc
