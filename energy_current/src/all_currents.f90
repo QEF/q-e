@@ -136,11 +136,24 @@ program all_currents
           end if
           if (re_init_wfc_1) &
                   call init_wfc(1)
+          !NOTE (RB): I wrote in the comments the modifications that are necessary
+          !           in order to implement the 3-timestep calculation
+          !           evc_tre and re_init_wft_3 at the moment do not exist
+          !
+          !call prepare_next_step(-1) !-1 goes back by dt, so we are in t-dt
+          !call run_pwscf(exit_status)
+          !if (exit_status /= 0) exit
+          !evc_tre = evc
+
+          !call prepare_next_step(1) !1 advance by dt (so we are in the original positions)
+          !if (re_init_wfc_3) & ! eventually, to set a random initial evc to do statistical tests
+          !        call init_wfc(1)
           call run_pwscf(exit_status)
           evc_due = evc
           if (exit_status /= 0) exit
+          !call routine_zero() ! routine zero should be called in t
 
-          call prepare_next_step(1) ! this stores value of evc and setup tau
+          call prepare_next_step(1) !1 advances by dt, so we are in t+dt
 
           if (re_init_wfc_2) &
                   call init_wfc(1)
@@ -149,7 +162,7 @@ program all_currents
           evc_uno = evc
 
           !calculate energy current
-          call routine_zero()
+          call routine_zero()!this should be moved
           call routine_hartree()
           call write_results(traj)
       end do
