@@ -615,7 +615,7 @@ MODULE pw_restart_new
 ! ... FORCES
 !----------------------------------------------------------------------------------------------
          !
-         IF ( lforce ) THEN 
+         IF ( lforce .and. conv_elec ) THEN 
             output_obj%forces_ispresent = .TRUE.
             CALL qexsd_init_forces(output_obj%forces,nat,force,lforce)
          ELSE 
@@ -626,7 +626,7 @@ MODULE pw_restart_new
 !------------------------------------------------------------------------------------------------
 ! ... STRESS 
 !------------------------------------------------------------------------------------------------
-         IF ( lstres) THEN
+         IF ( lstres .and. conv_elec ) THEN
             output_obj%stress_ispresent=.TRUE.
             CALL qexsd_init_stress(output_obj%stress, sigma, lstres ) 
          ELSE 

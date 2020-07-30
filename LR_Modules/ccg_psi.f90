@@ -38,27 +38,23 @@ subroutine ccg_psi (lda, n, m, psi, h_diag, flag)
         do i = 1, n
            psi (i, k) = psi (i, k) * h_diag (i, k)
         enddo
-     enddo
-     IF (noncolin) THEN
-        do k = 1, m
+        IF (noncolin) THEN
            do i = 1, n
               psi (i+lda, k) = psi (i+lda, k) * h_diag (i+lda, k)
            enddo
-        enddo
-     END IF
+        END IF
+     enddo
   ELSEIF (flag == -1) THEN
      do k = 1, m
         do i = 1, n
            psi (i, k) = psi (i, k) * CONJG(h_diag (i, k))
         enddo
-     enddo
-     IF (noncolin) THEN
-        do k = 1, m
+        IF (noncolin) THEN
            do i = 1, n
               psi (i+lda, k) = psi (i+lda, k) * CONJG(h_diag (i+lda, k))
            enddo
-        enddo
-     END IF
+        END IF
+     enddo
   END IF
   !
   return

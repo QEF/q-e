@@ -727,12 +727,12 @@ settings, and (iii) an initialization string. QE then changes its status
 to "READY". (3) The server sends a "POSDATA" message and QE then expects 
 a sequence of variables depending on the calculation settings; the default 
 being: a 3-by-3 matrix with cell and 3-by-3 marix with its inverse (if 
-\verb#lmovecell# is \verb#.TRUE.#) and a (# of atoms)-by-3 position matrix. QE 
+\verb#lmovecell# is \verb#.TRUE.#) and a (\# of atoms)-by-3 position matrix. QE 
 proceeds and computes all active properties (e.g. SCF, forces, stresses, 
 etc.) and change its status to "HAVEDATA" and expects a (4) "GETFORCE"
 message from the socket. Once it is received, (5) QE sends back (i) a
 float with the potential energy, (ii) an integer with the total number of
-atoms, (iii) a (# of atoms)-by-3 matrix with forces (if \verb#lforce# is
+atoms, (iii) a (\# of atoms)-by-3 matrix with forces (if \verb#lforce# is
 \verb#.TRUE.#), (iv) a 9-element-virial tensor (if \verb#lstres# is
 \verb#.TRUE.#). QE goes back to "NEEDINIT" status. The other side of socket
 should be able to compute new positions and cell coordinates (if \verb#lmovecell#

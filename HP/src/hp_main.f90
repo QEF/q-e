@@ -16,7 +16,7 @@ PROGRAM hp_main
   USE check_stop,        ONLY : check_stop_init
   USE mp_global,         ONLY : mp_startup, mp_global_end
   USE mp_world,          ONLY : world_comm
-  USE mp_pools,          ONLY : intra_pool_comm
+  USE mp_pools,          ONLY : intra_pool_comm, kunit
   USE mp_bands,          ONLY : intra_bgrp_comm, inter_bgrp_comm
   USE command_line_options,  ONLY : input_file_, ndiag_
   USE environment,       ONLY : environment_start, environment_end
@@ -90,6 +90,7 @@ PROGRAM hp_main
         CALL clean_pw(.true.)
         CALL close_files(.true.)
         tmp_dir=tmp_dir_save
+        kunit=1 ! reinitialize kunit
         CALL read_file()
      ENDIF
      !

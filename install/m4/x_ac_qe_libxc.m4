@@ -40,6 +40,20 @@ AC_ARG_WITH(libxc-include, [AS_HELP_STRING([--with-libxc-include=DIR], [Director
 dnl continue only if --with-libxc=yes
 if test "$with_libxc" -ne 0; then
 
+lxcf="f03"
+lxcf2="f03"
+if test ! -z "$with_libxc_prefix"; then
+lxc_version=`grep "XC_MAJOR_VERSION" "$with_libxc_prefix/xc_version.h" | tr -dc '1-9'`
+if test "$lxc_version" = 5; then
+  lxcf="f90"
+  lxcf2="f90"
+fi
+if test "$lxc_version" -gt 5; then
+  lxcf="f90"
+  lxcf2="f03"
+fi
+fi
+
 dnl Set FCFLAGS_LIBXC only if not set from environment
 if test x"$FCFLAGS_LIBXC" = x; then
   case $with_libxc_prefix in
@@ -63,32 +77,39 @@ AC_LANG_PUSH(Fortran)
 FCFLAGS="$FCFLAGS_LIBXC $acx_libxc_save_FCFLAGS"
 
 testprog="AC_LANG_PROGRAM([],[
-  use xc_f90_lib_m
+  use xc_${lxcf2}_lib_m
   implicit none
   integer :: major
   integer :: minor
   integer :: micro
-  call xc_f90_version(major, minor, micro)])"
+  call xc_${lxcf2}_version(major, minor, micro)])"
 
 dnl set from environment variable, if not blank
+LDFLAGS_KEEP="$LDFLAGS"
+LDFLAGS=""
+
 if test ! -z "$LIBS_LIBXC"; then
-  LIBS="$LIBS_LIBXC $acx_libxc_save_LIBS"
+  LIBS="$LIBS_LIBXC"
   AC_LINK_IFELSE($testprog, [acx_libxc_ok=yes], [])
+  LIBS="$LIBS_LIBXC $acx_libxc_save_LIBS"
 fi
 
 if test ! -z "$with_libxc_prefix"; then
   if test x"$acx_libxc_ok" = xno; then
-    LIBS_LIBXC="-L$with_libxc_prefix/lib -lxcf90 -lxc"
-    LIBS="$LIBS_LIBXC $acx_libxc_save_LIBS"
+    LIBS_LIBXC="-L$with_libxc_prefix/lib -lxc$lxcf -lxc"
+    LIBS="$LIBS_LIBXC"
     AC_LINK_IFELSE($testprog, [acx_libxc_ok=yes], [])
+    LIBS="$LIBS_LIBXC $acx_libxc_save_LIBS"
   fi
 else
-  LIBS_LIBXC="-lxcf90 -lxc"
-  LIBS="$LIBS_LIBXC $acx_libxc_save_LIBS"
+  LIBS_LIBXC="-lxc$lxcf -lxc"
+  LIBS="$LIBS_LIBXC"
   AC_LINK_IFELSE($testprog, [acx_libxc_ok=yes], [])
+  LIBS="$LIBS_LIBXC $acx_libxc_save_LIBS"
 fi
 
 AC_MSG_RESULT([$acx_libxc_ok ($FCFLAGS_LIBXC $LIBS_LIBXC)])
+LDFLAGS="$LDFLAGS_KEEP"
 
 dnl Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
 libxc_line="@delete@"

@@ -78,6 +78,7 @@ SUBROUTINE phq_readin()
       do_charge_neutral, wpot_dir
   USE ahc,           ONLY : elph_ahc, ahc_dir, ahc_nbnd, ahc_nbndskip, &
       skip_upperfan
+  USE read_namelists_module, ONLY : check_namelist_read
   !
   IMPLICIT NONE
   !
@@ -340,7 +341,8 @@ SUBROUTINE phq_readin()
   ! ...  reading the namelist inputph
   !
   IF (meta_ionode) THEN
-     READ( 5, INPUTPH, ERR=30, IOSTAT = ios )
+     !READ( 5, INPUTPH, ERR=30, IOSTAT = ios )
+     READ( 5, INPUTPH, IOSTAT = ios )
      !
      ! ...  iverbosity/verbosity hack
      !
@@ -357,6 +359,7 @@ SUBROUTINE phq_readin()
         ios = 1234567
      END IF
   END IF
+  CALL check_namelist_read(ios, 5, "inputph")
 30 CONTINUE
   CALL mp_bcast(ios, meta_ionode_id, world_comm )
   IF ( ios == 1234567 ) THEN

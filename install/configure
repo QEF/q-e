@@ -6485,6 +6485,20 @@ fi
 
 if test "$with_libxc" -ne 0; then
 
+lxcf="f03"
+lxcf2="f03"
+if test ! -z "$with_libxc_prefix"; then
+lxc_version=`grep "XC_MAJOR_VERSION" "$with_libxc_prefix/xc_version.h" | tr -dc '1-9'`
+if test "$lxc_version" = 5; then
+  lxcf="f90"
+  lxcf2="f90"
+fi
+if test "$lxc_version" -gt 5; then
+  lxcf="f90"
+  lxcf2="f03"
+fi
+fi
+
 if test x"$FCFLAGS_LIBXC" = x; then
   case $with_libxc_prefix in
     "") FCFLAGS_LIBXC="$imod/usr/include" ;;
@@ -6511,16 +6525,19 @@ FCFLAGS="$FCFLAGS_LIBXC $acx_libxc_save_FCFLAGS"
 
 testprog="      program main
 
-  use xc_f90_lib_m
+  use xc_${lxcf2}_lib_m
   implicit none
   integer :: major
   integer :: minor
   integer :: micro
-  call xc_f90_version(major, minor, micro)
+  call xc_${lxcf2}_version(major, minor, micro)
       end"
 
+LDFLAGS_KEEP="$LDFLAGS"
+LDFLAGS=""
+
 if test ! -z "$LIBS_LIBXC"; then
-  LIBS="$LIBS_LIBXC $acx_libxc_save_LIBS"
+  LIBS="$LIBS_LIBXC"
   cat > conftest.$ac_ext <<_ACEOF
 $testprog
 _ACEOF
@@ -6529,12 +6546,13 @@ if ac_fn_fc_try_link "$LINENO"; then :
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
+  LIBS="$LIBS_LIBXC $acx_libxc_save_LIBS"
 fi
 
 if test ! -z "$with_libxc_prefix"; then
   if test x"$acx_libxc_ok" = xno; then
-    LIBS_LIBXC="-L$with_libxc_prefix/lib -lxcf90 -lxc"
-    LIBS="$LIBS_LIBXC $acx_libxc_save_LIBS"
+    LIBS_LIBXC="-L$with_libxc_prefix/lib -lxc$lxcf -lxc"
+    LIBS="$LIBS_LIBXC"
     cat > conftest.$ac_ext <<_ACEOF
 $testprog
 _ACEOF
@@ -6543,10 +6561,11 @@ if ac_fn_fc_try_link "$LINENO"; then :
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
+    LIBS="$LIBS_LIBXC $acx_libxc_save_LIBS"
   fi
 else
-  LIBS_LIBXC="-lxcf90 -lxc"
-  LIBS="$LIBS_LIBXC $acx_libxc_save_LIBS"
+  LIBS_LIBXC="-lxc$lxcf -lxc"
+  LIBS="$LIBS_LIBXC"
   cat > conftest.$ac_ext <<_ACEOF
 $testprog
 _ACEOF
@@ -6555,10 +6574,12 @@ if ac_fn_fc_try_link "$LINENO"; then :
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
+  LIBS="$LIBS_LIBXC $acx_libxc_save_LIBS"
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $acx_libxc_ok ($FCFLAGS_LIBXC $LIBS_LIBXC)" >&5
 $as_echo "$acx_libxc_ok ($FCFLAGS_LIBXC $LIBS_LIBXC)" >&6; }
+LDFLAGS="$LDFLAGS_KEEP"
 
 libxc_line="@delete@"
 if test x"$acx_libxc_ok" = xyes; then
