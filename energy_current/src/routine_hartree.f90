@@ -63,7 +63,9 @@ subroutine routine_hartree()
 !
    logical  :: l_test
    real(DP) :: M(nbnd, nbnd), emme(nbnd, nbnd), kcurrent(3), s(nbnd, nbnd), ss(nbnd, nbnd), &
-               kcurrent_a(3), kcurrent_b(3), ecurrent(3)
+               kcurrent_a(3), kcurrent_b(3), ecurrent(3), &
+               sa(nbnd, nbnd), ssa(nbnd, nbnd), sb(nbnd, nbnd), ssb(nbnd,nbnd)
+
    integer  :: inbd, jbnd, ig, ipol
    integer, external :: find_free_unit
 
@@ -317,7 +319,8 @@ subroutine routine_hartree()
    call calbec(npw, vkb, evc, becp)
 
    l_test = .true.
-   if (l_test) then
+   if (.not. l_test) then
+
       s = 0.d0
 ! computed s = < evc_due, evc_uno >, remove contribution at G=0
       call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, evc_due, 2*npwx, evc_uno, 2*npwx, 0.d0, s, nbnd)
@@ -341,6 +344,49 @@ subroutine routine_hartree()
          end do
       end do
       evp(:, :) = evp(:, :)/delta_t
+
+   else
+
+      sa = 0.d0
+      sb = 0.d0 
+
+! computed sb = < evc_due, evc_uno >, sa = <evc_uno, evc_uno> remove contribution at G=0
+! sb is the old s
+! For the moment sa is a multiple of the identity. It should be changed later to sa = <evc_tre,evc_uno> or something similar.
+
+      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, evc_uno, 2*npwx, evc_uno, 2*npwx, 0.d0, sa, nbnd)
+      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, evc_due, 2*npwx, evc_uno, 2*npwx, 0.d0, sb, nbnd)
+      if (gstart == 2) then
+         do ibnd = 1, nbnd
+            do jbnd = 1, nbnd
+               sa(ibnd, jbnd) = sa(ibnd, jbnd) - dble(conjg(evc_uno(1, ibnd))*evc_uno(1, jbnd))
+               sb(ibnd, jbnd) = sb(ibnd, jbnd) - dble(conjg(evc_due(1, ibnd))*evc_uno(1, jbnd))
+            end do
+         end do
+      end if
+      call mp_sum(sa, intra_pool_comm)
+      call mp_sum(sb, intra_pool_comm)
+! computes phi_v^c_punto using <s,s>
+
+      call dgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, sa, nbnd, sa, nbnd, 0.d0, ssa, nbnd)
+      call dgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, sb, nbnd, sb, nbnd, 0.d0, ssb, nbnd)
+
+      evp = 0.d0
+      do ibnd = 1, nbnd
+         do jbnd = 1, nbnd
+            do ig = 1, npw
+
+               evp(ig, ibnd) = evp(ig, ibnd) + evc_uno(ig, jbnd)*sa(jbnd, ibnd)
+               evp(ig, ibnd) = evp(ig, ibnd) - evc_uno(ig, jbnd)*ssa(ibnd, jbnd)
+
+               evp(ig, ibnd) = evp(ig, ibnd) - evc_due(ig, jbnd)*sb(jbnd, ibnd)
+               evp(ig, ibnd) = evp(ig, ibnd) + evc_uno(ig, jbnd)*ssb(ibnd, jbnd)
+
+            end do
+         end do
+      end do
+      evp(:, :) = evp(:, :)/delta_t 
+
    end if
 
    tmp(:, :) = (0.d0, 0.d0)
