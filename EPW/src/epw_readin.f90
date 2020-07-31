@@ -29,7 +29,7 @@
   USE qpoint,        ONLY : xq
   USE output,        ONLY : fildvscf, fildrho
   USE start_k,       ONLY : nk1, nk2, nk3
-  USe disp,          ONLY : nq1, nq2, nq3
+  USE disp,          ONLY : nq1, nq2, nq3
   USE epwcom,        ONLY : delta_smear, nsmear, dis_win_min, dis_win_max, wannierize, &
                             ngaussw, dvscf_dir, bands_skipped, wdata, kmaps, ntempxx,  &
                             num_iter, dis_froz_max, fsthick, dis_froz_min, eig_read,   &
@@ -101,10 +101,14 @@
   !! Does the title match
   CHARACTER(LEN = 256) :: outdir
   !! Output directory
+  CHARACTER(LEN = 512) :: line
+  !! Line in input file
 #if ! defined(__NAG)
   INTEGER :: iargc
 #endif
   INTEGER :: ios
+  !! INTEGER variable for I/O control
+  INTEGER :: ios2
   !! INTEGER variable for I/O control
   INTEGER :: na
   !! counter on polarizations
@@ -128,6 +132,8 @@
   !! temp vars for saving kgrid info
   INTEGER :: ierr
   !! Error status
+  INTEGER :: unit_loc = 5
+  !! Unit for input file
   !
   NAMELIST / inputepw / &
        amass, outdir, prefix, iverbosity, fildvscf,                            &
@@ -366,11 +372,11 @@
   IF (meta_ionode) THEN
     !
     ! ... Input from file ?
-    CALL input_from_file( )
+    CALL input_from_file()
     !
     ! ... Read the first line of the input file
     !
-    READ(5, '(A)', IOSTAT = ios) title
+    READ(unit_loc, '(A)', IOSTAT = ios) title
     !
   ENDIF
   !
@@ -383,12 +389,10 @@
   IF (imatches("&inputepw", title)) THEN
     WRITE(*, '(6x,a)') "Title line not specified: using 'default'."
     title = 'default'
-    IF (meta_ionode) REWIND(5, IOSTAT = ios)
+    IF (meta_ionode) REWIND(unit_loc, IOSTAT = ios)
     CALL mp_bcast(ios, meta_ionode_id, world_comm  )
     CALL errore('epw_readin', 'Title line missing from input.', ABS(ios))
   ENDIF
-  !
-  IF (.NOT. meta_ionode) GOTO 400
   !
   ! Set default values for variables in namelist
   amass(:)     = 0.d0
@@ -606,44 +610,56 @@
   ethr_Plrn = 1E-3
   ! ---------------------------------------------------------------------------------
   !
-  ! Reading the namelist inputepw
-  !
-#if defined(__CRAYY)
-  !   The Cray does not accept "err" and "iostat" together with a namelist
-  READ(5, inputepw)
-  ios = 0
-#else
-  !
-  IF (meta_ionode) READ(5, inputepw, ERR = 200, IOSTAT = ios)
-#endif
-200 CALL errore('epw_readin', 'reading input_epw namelist', ABS(ios))
-  !
-  IF (wannier_plot) THEN
-    IF (wannier_plot_radius < 0.0d0) &
-      CALL errore('epw_readin', 'Error: wannier_plot_radius must be positive', 1)
-    IF (wannier_plot_scale < 0.0d0) &
-      CALL errore('epw_readin', 'Error: wannier_plot_scale must be positive', 1)
-    IF (ANY(wannier_plot_supercell <= 0)) &
-      CALL errore('epw_readin', &
-        'Error: Three positive integers must be explicitly provided &
-                for wannier_plot_supercell', 1)
-    CALL param_get_range_vector(wannier_plot_list, num_wannier_plot, .TRUE.)
-    IF (num_wannier_plot == 0) THEN
-      num_wannier_plot = nbndsub
-      ALLOCATE(wanplotlist(num_wannier_plot), STAT = ierr)
-      IF (ierr /= 0) CALL errore('epw_readin', 'Error allocating wanplotlist', 1)
-      DO i = 1, num_wannier_plot
-        wanplotlist(i) = i
-      ENDDO
-    ELSE
-      ALLOCATE(wanplotlist(num_wannier_plot), STAT = ierr)
-      IF (ierr /= 0) CALL errore('epw_readin', 'Error allocating wanplotlist', 1)
-      CALL param_get_range_vector(wannier_plot_list, num_wannier_plot, .FALSE., wanplotlist)
-      IF (ANY(wanplotlist < 1) .OR. ANY(wanplotlist > nbndsub)) &
-        CALL errore('epw_readin', &
-          'Error: wannier_plot_list asks for a non-valid wannier function to be plotted', 1)
+  ! Reading the namelist inputepw and check
+  IF (meta_ionode) THEN
+    READ(unit_loc, inputepw, IOSTAT = ios)
+    ios2 = 0
+    IF (ios /= 0) THEN
+      BACKSPACE(5)
+      READ(unit_loc, '(A512)', IOSTAT = ios2) line      
     ENDIF
+    IF (ios2 /= 0) CALL errore('epw_readin', 'Could not find namelist &inputepw', 2)
+    IF (ios /= 0) THEN         
+      CALL errore('epw_readin', 'Bad line in namelist &inputepw'&
+                 ': "'//TRIM(line)//'" (error could be in the previous line)', 1)
+    ENDIF          
+  ENDIF ! meta_ionode         
+  ! 
+  IF (meta_ionode) THEN
+    IF (wannier_plot) THEN
+      IF (wannier_plot_radius < 0.0d0) &
+        CALL errore('epw_readin', 'Error: wannier_plot_radius must be positive', 1)
+      IF (wannier_plot_scale < 0.0d0) &
+        CALL errore('epw_readin', 'Error: wannier_plot_scale must be positive', 1)
+      IF (ANY(wannier_plot_supercell <= 0)) &
+        CALL errore('epw_readin', &
+          'Error: Three positive integers must be explicitly provided &
+                  for wannier_plot_supercell', 1)
+      CALL param_get_range_vector(wannier_plot_list, num_wannier_plot, .TRUE.)
+      IF (num_wannier_plot == 0) THEN
+        num_wannier_plot = nbndsub
+        ALLOCATE(wanplotlist(num_wannier_plot), STAT = ierr)
+        IF (ierr /= 0) CALL errore('epw_readin', 'Error allocating wanplotlist', 1)
+        DO i = 1, num_wannier_plot
+          wanplotlist(i) = i
+        ENDDO
+      ELSE
+        ALLOCATE(wanplotlist(num_wannier_plot), STAT = ierr)
+        IF (ierr /= 0) CALL errore('epw_readin', 'Error allocating wanplotlist', 1)
+        CALL param_get_range_vector(wannier_plot_list, num_wannier_plot, .FALSE., wanplotlist)
+        IF (ANY(wanplotlist < 1) .OR. ANY(wanplotlist > nbndsub)) &
+          CALL errore('epw_readin', &
+            'Error: wannier_plot_list asks for a non-valid wannier function to be plotted', 1)
+      ENDIF
+    ENDIF
+  ENDIF ! meta_ionode
+  CALL mp_bcast(wannier_plot, meta_ionode_id, world_comm)
+  IF (wannier_plot) CALL mp_bcast(num_wannier_plot, meta_ionode_id, world_comm)
+  IF ((wannier_plot) .AND. (.NOT. meta_ionode)) THEN
+    ALLOCATE(wanplotlist(num_wannier_plot), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_readin', 'Error allocating wanplotlist', 1)
   ENDIF
+  IF (wannier_plot) CALL mp_bcast(wanplotlist, meta_ionode_id, world_comm)
   !
   nk1tmp = nk1
   nk2tmp = nk2
@@ -701,8 +717,7 @@
   IF (ephwrite) THEN
     IF (.NOT. ep_coupling .AND. .NOT. elph) CALL errore('epw_readin', &
       'ephwrite requires ep_coupling=.TRUE., elph=.TRUE.', 1)
-    IF (rand_k .OR. rand_q) &
-      CALL errore('epw_readin', 'ephwrite requires a uniform grid', 1)
+    IF (rand_k .OR. rand_q) CALL errore('epw_readin', 'ephwrite requires a uniform grid', 1)
     IF (MOD(nkf1,nqf1) /= 0 .OR. MOD(nkf2,nqf2) /= 0 .OR. MOD(nkf3,nqf3) /= 0) &
     CALL errore('epw_readin', 'ephwrite requires nkf1,nkf2,nkf3 to be multiple of nqf1,nqf2,nqf3', 1)
   ENDIF
@@ -733,17 +748,21 @@
   IF (lscreen .AND. etf_mem == 2) CALL errore('epw_readin', 'Error: lscreen not implemented with etf_mem=2', 1)
   IF (ABS(degaussw) < eps16 .AND. etf_mem == 2) CALL errore('epw_readin', &
       'Error: adapt_smearing not implemented with etf_mem=2', 1)
+  ! 
   ! Make sure the files exists
-  IF (filkf /= ' ') THEN
-    OPEN(UNIT = iunkf, FILE = filkf, STATUS = 'old', FORM = 'formatted', ERR = 100, IOSTAT = ios)
-100 CALL errore('epw_readin', 'opening file ' // filkf, ABS(ios))
-    CLOSE(iunkf)
-  ENDIF
-  IF (filqf /= ' ') THEN
-    OPEN(UNIT = iunqf, FILE = filqf, STATUS = 'old', FORM = 'formatted', ERR = 101, IOSTAT = ios)
-101 CALL errore('epw_readin', 'opening file ' // filqf, ABS(ios))
-    CLOSE(iunqf)
-  ENDIF
+  ! 
+  IF (meta_ionode) THEN
+    IF (filkf /= ' ') THEN
+      OPEN(UNIT = iunkf, FILE = filkf, STATUS = 'old', FORM = 'formatted', ERR = 100, IOSTAT = ios)
+100   CALL errore('epw_readin', 'opening file ' // filkf, ABS(ios))
+      CLOSE(iunkf)
+    ENDIF
+    IF (filqf /= ' ') THEN
+      OPEN(UNIT = iunqf, FILE = filqf, STATUS = 'old', FORM = 'formatted', ERR = 101, IOSTAT = ios)
+101   CALL errore('epw_readin', 'opening file ' // filqf, ABS(ios))
+      CLOSE(iunqf)
+    ENDIF
+  ENDIF ! meta_ionode
   IF (iterative_bte) THEN
     ! The fine grids have to be homogeneous and the same. Otherwise the populations can oscillate.
     IF (nkf1 /= nqf1 .OR. nkf2 /= nqf2 .OR. nkf3 /= nqf3) THEN
@@ -761,14 +780,14 @@
     WRITE(stdout, '(5x,a)') "         to control the lower bound of band manifold."
   ENDIF
   !
-  ! setup temperature array
+  ! Setup temperature array
   DO itemp = 1, ntempxx
     IF (temps(itemp) > 0.d0) THEN
       nstemp_hold = itemp
     ENDIF
   ENDDO
   !
-  !case of nstemp > 0 but temps(:) = 0 is caught above
+  ! Case of nstemp > 0 but temps(:) = 0 is caught above
   IF (nstemp_hold == 0 .AND. nstemp == 0) THEN !default mode (nstemp_hold == 0 if temps(:) = 0)
     nstemp = 1
     temps(1) = 300    
@@ -784,23 +803,22 @@
     ELSE
       DO itemp = 1, nstemp
         temps(itemp) = tempsmin + DBLE(itemp - 1) * (tempsmax - tempsmin) / DBLE(nstemp - 1)
-      END DO
-    END IF
+      ENDDO
+    ENDIF
     WRITE(stdout, '(/,5x,a)') 'Generating evenly spaced temperature list.'
   ELSE IF (nstemp_hold .NE. nstemp) THEN !temps and nstemp not match
     ! Ignore nstemp setting, print warning
     WRITE(stdout, '(/,5x,a)') 'WARNING: Mismatch between temps(:) and nstemp'
     WRITE(stdout, '(/,5x,a)') 'WARNING: Using supplied temperature list and ignoring nstemp'
     nstemp = nstemp_hold
-!      CALL errore('epw_readin', 'Error: too many temperatures for given nstemp', 1)
-!  ELSE IF (nstemp > nstemp_hold) THEN !need more temps
-!      CALL errore('epw_readin', 'Error: not enough temperatures given in temps(:)', 1)
   ELSE
     CALL errore('epw_readin', 'Error generating temperatures: unknown error', 1)
   END IF
   ! go from K to Ry
   temps(:) = temps(:) * kelvin2eV / ryd2ev
   !
+  CALL mp_bcast(nstemp, meta_ionode_id, world_comm)
+  CALL mp_bcast(temps, meta_ionode_id, world_comm)
   ALLOCATE(gtemp(nstemp), STAT = ierr)
   IF (ierr /= 0) CALL errore('epw_readin', 'Error allocating gtemp', 1)
   gtemp(:) = temps(1:nstemp)
@@ -828,13 +846,10 @@
   ENDIF
   ! eptemp : temperature for the electronic Fermi occupations in the e-p calculation (units of Kelvin)
   ! 1 K in eV = 8.6173423e-5
-  ! from K to Ryd
   ! Out-of bound issue with GCC compiler. Multiple Fermi temp is not used anyway.
   !
   ! from cm-1 to Ryd
   eps_acustic = eps_acustic / ev2cmm1 / ryd2ev
-  !
-  ! reads the q point (just if ldisp = .FALSE.)
   !
   ! wmin and wmax from eV to Ryd
   wmin = wmin / ryd2ev
@@ -844,7 +859,7 @@
   wmin_specfun = wmin_specfun / ryd2ev
   wmax_specfun = wmax_specfun / ryd2ev
   !
-  ! scissor going from eV to Ryd
+  ! Scissor going from eV to Ryd
   scissor = scissor / ryd2ev
   !
   ! Photon energies for indirect absorption from eV to Ryd
@@ -857,24 +872,7 @@
   tmp_dir = TRIM(outdir)
   dvscf_dir = TRIM(dvscf_dir) // '/'
   !
-400 CONTINUE
-  !
-  CALL mp_bcast(wannier_plot, meta_ionode_id, world_comm)
-  CALL mp_bcast(num_wannier_plot, meta_ionode_id, world_comm)
-  IF ((wannier_plot) .AND. (.NOT. meta_ionode)) THEN
-    ALLOCATE(wanplotlist(num_wannier_plot), STAT = ierr)
-    IF (ierr /= 0) CALL errore('epw_readin', 'Error allocating wanplotlist', 1)
-  ENDIF
-  IF (wannier_plot) CALL mp_bcast(wanplotlist, meta_ionode_id, world_comm)
-  !
   CALL bcast_epw_input()
-  IF (.NOT. meta_ionode) THEN
-    ! need to allocate gtemp after the initial bcast_epw_input so all nodes have nstemp
-    ALLOCATE(gtemp(nstemp), STAT = ierr)
-    IF (ierr /= 0) CALL errore('epw_readin', 'Error allocating gtemp', 1)
-  ENDIF
-  !bcast gtemp following allocation 
-  CALL mp_bcast(gtemp, meta_ionode_id, world_comm)
   !
   !   Here we finished the reading of the input file.
   !   Now allocate space for pwscf variables, read and check them.
