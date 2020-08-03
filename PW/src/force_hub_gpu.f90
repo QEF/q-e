@@ -1176,28 +1176,20 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
               ldim_std, offpm, i, j, m_start, m_end
    REAL (DP) :: gvec, xk_d
    INTEGER :: nh_nt, ierr
-   COMPLEX(DP), ALLOCATABLE :: &
-   doverlap(:,:),       & ! the derivative of the (ortho-atomic) wavefunction
-   doverlap_us(:,:)       ! USPP contribution to doverlap
    COMPLEX(DP), POINTER :: &
    dproj0_d(:,:),       & ! derivative of the projector
    dproj_us_d(:,:),     & ! USPP contribution to dproj0
    dwfc_d(:,:),         & ! USPP contribution to dproj0
-   doverlap_d(:,:),     & ! the derivative of the (ortho-atomic) wavefunction
-   doverlap_us_d(:,:),  & ! USPP contribution to doverlap
    doverlap_inv_d(:,:)    ! derivative of (O^{-1/2})_JI (note the transposition)
    !
 #if defined(__CUDA)
-   attributes(DEVICE) :: dproj0_d, dproj_us_d, dwfc_d, doverlap_d, &
-                                doverlap_us_d, doverlap_inv_d
+   attributes(DEVICE) :: dproj0_d, dproj_us_d, dwfc_d, doverlap_inv_d
 #endif
    COMPLEX(DP), POINTER :: wfcU_d(:,:)
    COMPLEX(DP), POINTER :: becpk_d(:,:)
    COMPLEX(DP), POINTER :: wfcatom_d(:,:)
    !! (starting) atomic wavefunctions
    COMPLEX(DP), POINTER :: overlap_inv_d(:,:)
-
-
 #if defined(__CUDA)
    attributes(DEVICE) :: wfcU_d, becpk_d, wfcatom_d, overlap_inv_d
 #endif
@@ -1431,6 +1423,7 @@ SUBROUTINE calc_doverlap_inv_gpu (alpha, ipol, ik, ijkb0)
    CALL start_clock( 'calc_doverlap_inv' )
    !
    IF (U_projection.NE."ortho-atomic") RETURN
+   !
    xk_d = xk(ipol,ik)
    !
    ALLOCATE (doverlap(natomwfc,natomwfc))
