@@ -242,9 +242,9 @@ MODULE derived_objects
          do jk=1,pm%nk_loc!on k' local
 
 !find out q=k_i-k_j
-            ii=pt%ijk(1,ik,jk+pm%ik_first-1)+1
-            jj=pt%ijk(2,ik,jk+pm%ik_first-1)+1
-            kk=pt%ijk(3,ik,jk+pm%ik_first-1)+1
+            ii=pt%ijk(1,ik,jk+pm%ik_first-1)
+            jj=pt%ijk(2,ik,jk+pm%ik_first-1)
+            kk=pt%ijk(3,ik,jk+pm%ik_first-1)
             tmp_pot(1:pm%nprod_e,1:pm%nprod_e)= pt%vpotq(1:pm%nprod_e,1:pm%nprod_e,ii,jj,kk)
          
            

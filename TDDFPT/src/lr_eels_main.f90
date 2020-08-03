@@ -142,9 +142,6 @@ PROGRAM lr_eels_main
      !
      ! Sternheimer algorithm
      !
-     IF (noncolin) CALL errore('lr_eels_main', 'sternheimer with noncolin is not &
-                              & yet implemented',1)
-
      WRITE(stdout,'(/,5X,"STERNHEIMER LINEAR-RESPONSE SPECTRUM CALCULATION")')
      !
      WRITE(stdout,'(/5x,"Number of frequencies = ",i6)') nfs
@@ -152,9 +149,8 @@ PROGRAM lr_eels_main
      IF (okvan) THEN
         ALLOCATE (intq (nhm, nhm, nat) )
         IF (noncolin) ALLOCATE(intq_nc( nhm, nhm, nat, nspin))
+        call lr_compute_intq()
      ENDIF
-     !
-     CALL lr_compute_intq
      !
      ! Set flmixdpot
      !
@@ -339,7 +335,7 @@ SUBROUTINE lr_print_preamble_eels()
     WRITE( stdout, '(/5x,"O. Motornyi, N. Vast, I. Timrov, O. Baseggio, S. Baroni, and A. Dal Corso", &
                    & /5x,"Electron energy loss spectroscopy of bulk gold with ultrasoft",             &
                    & /5x,"pseudopotentials and the Liouville-Lanczos method",                         &
-                   & /5x,"accepted to Phys. Rev. B (2020). ")' )
+                   & /5x,"Phys. Rev. B  102, 035156 (2020). ")' )
     WRITE( stdout, '(/5x,74("-"))')
     !
     WRITE( stdout, '(/5x,"Using the ' // trim(approximation) // ' approximation")' )
