@@ -268,6 +268,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
      !
 #if defined(__NORMALIZE_BETAMIX)
      ! NORMALIZE
+     ! TODO: need to check compatibility gcscf and lda_plus_u
      IF ( lgcscf ) THEN
         norm2 = rho_ddot( df(ipos), df(ipos), ngm0, gcscf_gh )
      ELSE
