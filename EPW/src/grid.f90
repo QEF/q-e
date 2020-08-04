@@ -1564,7 +1564,7 @@
             CALL mp_sum(found, world_comm)
             IF (SUM(found(:)) > 0) THEN
               totq = totq + 1
-              selecq(totq) = iq
+              selecq_tmp(totq) = iq
               IF (MOD(totq, restart_step) == 0) THEN
                 WRITE(stdout, '(5x,a,i12,i12)') 'Number selected, total', totq, iq
               ENDIF
