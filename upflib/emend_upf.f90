@@ -65,7 +65,7 @@ END FUNCTION make_emended_upf_copy
 FUNCTION check(in) RESULT (out) 
       CHARACTER (LEN = *)     :: in
 #if defined(__PGI)
-      INTEGER, PARAMETER      :: length = 255 
+      INTEGER, PARAMETER      :: length = 1024 
       CHARACTER(LEN=length )  :: out 
 #else
       CHARACTER(LEN = LEN(in) )  :: out 
@@ -83,5 +83,7 @@ FUNCTION check(in) RESULT (out)
            out(o:o) = in (i:i) 
          END IF
       END DO
+      IF (o > len(in)) CALL upf_error('emend_upf/check', &
+                            'BEWARE !!! Possible out of bounds while fixing pseudo', -1 )
 END FUNCTION check
 END MODULE emend_upf_module 

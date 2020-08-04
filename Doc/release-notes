@@ -39,7 +39,7 @@ New in v. 6.6:
 Fixed in v.6.6:
   * PW: Restart from interrupted calculations  simplified. As a side effect,
     NEB restart now works again
-  * A few LIBXC glitches
+  * Various LIBXC glitches, missing check on metaGGA+USPP/PAW not implemented
   * Fermi energy incorrectly written to xml file in 'bands' calculation
     (did not affect results, just Fermi energy position in band plotting)
     Also: Fermi energy always written to xml file, also for insulators
