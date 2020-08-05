@@ -100,11 +100,6 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   !
   ! ... init local variables
   !
-!civn 
-#if defined (__CUDA)
-  write(*,*) 'civn __CUDA' 
-#endif
-
   CALL laxlib_getval( nproc_ortho = nproc_ortho )
   paro_ntr = 20
 
@@ -122,7 +117,7 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   conv(:) =  .FALSE. ; nconv = COUNT ( conv(:) )
 !civn 
 !  psi(:,1:nbnd) = evc(:,1:nbnd) ! copy input evc into work vector
-!!!$cuf kernel do(2) 
+!!!cuf kernel do(2) 
   DO ii = 1, npwx
     DO jj = 1, nbnd
       psi_d(ii,jj) = evc(ii,jj) 
@@ -133,10 +128,6 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   call s_psi_gpu  (npwx,npw,nbnd,psi_d,spsi_d) ! computes S*psi
   nhpsi = 0 ; IF (my_bgrp_id==0) nhpsi = nbnd
   CALL stop_clock( 'paro:init' ); 
-!civn 2fix
-  psi  = psi_d
-  hpsi = hpsi_d
-  spsi = spsi_d
 
 #if defined(__MPI)
   IF ( nproc_ortho == 1 ) THEN
@@ -144,14 +135,17 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
      CALL rotate_HSpsi_gamma_gpu (  npwx, npw, nbnd, nbnd, psi_d, hpsi_d, overlap, spsi_d, eig )
 #if defined(__MPI)
   ELSE
+!civn 2fix
+     psi  = psi_d
+     hpsi = hpsi_d
+     spsi = spsi_d
      CALL protate_HSpsi_gamma(  npwx, npw, nbnd, nbnd, psi, hpsi, overlap, spsi, eig )
+!civn 2fix
+     psi_d   =  psi  
+     hpsi_d  =  hpsi 
+     spsi_d  =  spsi 
   ENDIF
 #endif
-
-!civn 2fix
-  psi  = psi_d
-  hpsi = hpsi_d
-  spsi = spsi_d
 
   !write (6,'(10f10.4)') psi(1:5,1:3)
 
@@ -159,11 +153,6 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
 
   ParO_loop : &
   DO itry = 1,paro_ntr
-
-!civn 2fix
-     psi_d = psi
-     hpsi_d = hpsi
-     spsi_d = spsi
 
      !write (6,*) ' paro_itry =', itry, ethr
 
@@ -225,17 +214,15 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
        END DO 
      END DO 
      ew(1:how_many) = ew(ibnd_start:ibnd_end)
-!civn 2fix
-     psi   =  psi_d  
-     hpsi  =  hpsi_d 
-     spsi  =  spsi_d 
-
      CALL stop_clock( 'paro:pack' ); 
    
 !     write (6,*) ' check nactive = ', lbnd, nactive
      if (lbnd .ne. nactive+1 ) stop ' nactive check FAILED '
 
-
+!civn 2fix
+     psi   =  psi_d  
+     hpsi  =  hpsi_d 
+     spsi  =  spsi_d 
      CALL bpcg_gamma(hs_psi, g_1psi, psi, spsi, npw, npwx, nbnd, how_many, &
                 psi(:,nbase+1), hpsi(:,nbase+1), spsi(:,nbase+1), ethr, ew(1), nhpsi)
 !civn 2fix
@@ -243,14 +230,10 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
      hpsi_d   =  hpsi 
      spsi_d   =  spsi 
      
-
      CALL start_clock( 'paro:mp_bar' ); 
      CALL mp_barrier(inter_bgrp_comm)
      CALL stop_clock( 'paro:mp_bar' ); 
      CALL start_clock( 'paro:mp_sum' ); 
-!     psi (:,nbase+ibnd_start:nbase+ibnd_end) = psi (:,nbase+1:nbase+how_many) 
-!     hpsi(:,nbase+ibnd_start:nbase+ibnd_end) = hpsi(:,nbase+1:nbase+how_many) 
-!     spsi(:,nbase+ibnd_start:nbase+ibnd_end) = spsi(:,nbase+1:nbase+how_many) 
 !$cuf kernel do(2)
      DO ii = 1, npwx 
        DO jj = nbase+1, nbase+how_many 
@@ -260,30 +243,28 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
          spsi_d(ii, kk) = spsi_d(ii, jj)        
        END DO 
      END DO 
-!civn 2fix
-      psi  =  psi_d   
-      hpsi =  hpsi_d  
-      spsi =  spsi_d  
-
-     CALL mp_allgather(psi (:,nbase+1:ndiag), column_type, recv_counts, displs, inter_bgrp_comm)
-     CALL mp_allgather(hpsi(:,nbase+1:ndiag), column_type, recv_counts, displs, inter_bgrp_comm)
-     CALL mp_allgather(spsi(:,nbase+1:ndiag), column_type, recv_counts, displs, inter_bgrp_comm)
+     CALL mp_allgather(psi_d (:,nbase+1:ndiag), column_type, recv_counts, displs, inter_bgrp_comm)
+     CALL mp_allgather(hpsi_d(:,nbase+1:ndiag), column_type, recv_counts, displs, inter_bgrp_comm)
+     CALL mp_allgather(spsi_d(:,nbase+1:ndiag), column_type, recv_counts, displs, inter_bgrp_comm)
      CALL stop_clock( 'paro:mp_sum' ); 
 
 #if defined(__MPI)
      IF ( nproc_ortho == 1 ) THEN
 #endif
-        CALL rotate_HSpsi_gamma (  npwx, npw, ndiag, ndiag, psi, hpsi, overlap, spsi, ew )
+        CALL rotate_HSpsi_gamma_gpu (  npwx, npw, ndiag, ndiag, psi_d, hpsi_d, overlap, spsi_d, ew )
 #if defined(__MPI)
      ELSE
+!civn 2fix
+        psi  =  psi_d   
+        hpsi =  hpsi_d  
+        spsi =  spsi_d  
         CALL protate_HSpsi_gamma(  npwx, npw, ndiag, ndiag, psi, hpsi, overlap, spsi, ew )
+!civn 2fix
+        psi_d   =  psi  
+        hpsi_d  =  hpsi 
+        spsi_d  =  spsi 
      ENDIF
 #endif
-
-!civn 2fix
-       psi_d   =   psi  
-       hpsi_d  =   hpsi 
-       spsi_d  =   spsi 
 
      !write (6,*) ' ew : ', ew(1:nbnd)
      ! only the first nbnd eigenvalues are relevant for convergence
@@ -295,7 +276,7 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
 
   END DO ParO_loop
 
-  evc(:,1:nbnd) = psi(:,1:nbnd)
+  evc(:,1:nbnd) = psi_d(:,1:nbnd)
 
   CALL mp_sum(nhpsi,inter_bgrp_comm)
 
