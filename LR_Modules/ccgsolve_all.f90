@@ -86,7 +86,7 @@ subroutine ccgsolve_all (ch_psi, ccg_psi, e, d0psi, dpsi, h_diag, &
   !
   !  here the local variables
   !
-  integer, parameter :: maxter = 4000
+  integer, parameter :: maxter = 1000
   ! the maximum number of iterations
   integer :: iter, ibnd, ibnd_, lbnd
   ! counters on iteration, bands
@@ -122,8 +122,9 @@ subroutine ccgsolve_all (ch_psi, ccg_psi, e, d0psi, dpsi, h_diag, &
   call start_clock ('ccgsolve')
 
   call divide (inter_bgrp_comm,nbnd,n_start,n_end)
-!  my_nbnd = n_end - n_start + 1
-  my_nbnd =nbnd
+  my_nbnd = n_end - n_start + 1
+
+!  my_nbnd =nbnd
 
   ! allocate workspace (bgrp distributed)
   allocate ( conv(nbnd) )
@@ -159,22 +160,17 @@ subroutine ccgsolve_all (ch_psi, ccg_psi, e, d0psi, dpsi, h_diag, &
      !
      if (iter == 1) then
         do ibnd = n_start, n_end
-!        do ibnd =1, nbnd
            euc(ibnd) = CMPLX(e(indb(ibnd))+DREAL(freq_c), DIMAG(freq_c), KIND=DP)
         ENDDO
 
         call ch_psi (ndim, dpsi, g, euc, ik, my_nbnd)
 
         do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
-!        do ibnd =1, nbnd
            call zaxpy (ndim, (-1.d0,0.d0), d0psi(1,ibnd), 1, g(1,ibnd_), 1)
-!           call zaxpy (ndmx, (-1.d0,0.d0), d0psi(1,ibnd), 1, g(1,ibnd), 1)
         enddo
         IF (npol==2) THEN
            do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
-!           do ibnd = 1, nbnd
               call zaxpy (ndim, (-1.d0,0.d0), d0psi(ndmx+1,ibnd), 1, g(ndmx+1,ibnd_), 1)
-!              call zaxpy (ndim, (-1.d0,0.d0), d0psi(ndmx+1,ibnd), 1, g(ndmx+1,ibnd), 1)
            enddo
         END IF
         gs(:,:) = CONJG(g(:,:))
@@ -184,30 +180,21 @@ subroutine ccgsolve_all (ch_psi, ccg_psi, e, d0psi, dpsi, h_diag, &
      !
      lbnd = 0
      do ibnd = n_start, n_end ;  ibnd_ = ibnd - n_start + 1
-!     do ibnd = 1, nbnd
         if (conv (ibnd) .eq.0) then
            lbnd = lbnd+1
            call zcopy (ndmx*npol, g (1, ibnd_), 1, h (1, ibnd_), 1)
            call zcopy (ndmx*npol, gs (1, ibnd_), 1, hs (1, ibnd_), 1)
-!           call zcopy (ndmx, g (1, ibnd), 1, h (1, ibnd), 1)
-!           call zcopy (ndmx, gs (1, ibnd), 1, hs (1, ibnd), 1)
 
            call ccg_psi(ndmx, ndim, 1, h(1,ibnd_), h_diag(1,ibnd), 1 )
            call ccg_psi(ndmx, ndim, 1, hs(1,ibnd_), h_diag(1,ibnd), -1 )
 
-!           call ccg_psi(ndmx, ndim, 1, h(1,ibnd), h_diag(1,ibnd), 1 )
-!           call ccg_psi(ndmx, ndim, 1, hs(1,ibnd), h_diag(1,ibnd), -1 )
-           
            IF (gamma_only) THEN
               rho(lbnd)=2.0d0*ddot(2*ndmx*npol,h(1,ibnd_),1,g(1,ibnd_),1)
-!              rho(lbnd)=2.0d0*ddot(2*ndmx*npol,h(1,ibnd),1,g(1,ibnd),1)
               IF(gstart==2) THEN
                  rho(lbnd)=rho(lbnd)-DBLE(h(1,ibnd_))*DBLE(g(1,ibnd_))
-!                 rho(lbnd)=rho(lbnd)-DBLE(h(1,ibnd))*DBLE(g(1,ibnd))
               ENDIF
            ELSE
-              rho(lbnd) = zdotc (ndim, hs(1,ibnd_), 1, g(1,ibnd_), 1)
-!              rho(lbnd) = zdotc (ndmx, hs(1,ibnd), 1, g(1,ibnd), 1)
+              rho(lbnd) = zdotc (ndmx*npol, hs(1,ibnd_), 1, g(1,ibnd_), 1)
            ENDIF
 
         endif
@@ -215,20 +202,16 @@ subroutine ccgsolve_all (ch_psi, ccg_psi, e, d0psi, dpsi, h_diag, &
      kter_eff = kter_eff + DBLE (lbnd) / DBLE (nbnd)
      call mp_sum( rho(1:lbnd), intra_bgrp_comm )
      do ibnd = n_end, n_start, -1 ; ibnd_ = ibnd - n_start + 1
-!     do ibnd = nbnd, 1, -1
         if (conv(ibnd).eq.0) then
            rho(ibnd_)=rho(lbnd)
-!           rho(ibnd)=rho(lbnd)
            lbnd = lbnd -1
            anorm = sqrt ( abs (rho (ibnd_)) )
-!           anorm = sqrt ( abs (rho (ibnd)) )
            if (anorm.lt.ethr) conv (ibnd) = 1
         endif
      enddo
-!
+     !
      conv_root = .true.
      do ibnd = n_start, n_end
-!     do ibnd = 1, nbnd
         conv_root = conv_root.and. (conv (ibnd) .eq.1)
      enddo
      if (conv_root) goto 100
@@ -237,39 +220,30 @@ subroutine ccgsolve_all (ch_psi, ccg_psi, e, d0psi, dpsi, h_diag, &
      !
      lbnd = 0
      do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
-!     do ibnd = 1, nbnd
         if (conv (ibnd) .eq.0) then
-!
-!          change sign to h and hs
-!
+           !
+           ! change sign to h and hs
+           !
            call dscal (2 * ndmx * npol, - 1.d0, h (1, ibnd_), 1)
            call dscal (2 * ndmx * npol, - 1.d0, hs (1, ibnd_), 1)
-!           call dscal (2 * ndmx , - 1.d0, h (1, ibnd), 1)
-!           call dscal (2 * ndmx , - 1.d0, hs (1, ibnd), 1)
 
            if (iter.ne.1) then
               dcgamma = rho (ibnd_) / rhoold (ibnd_)
-!              dcgamma = rho (ibnd) / rhoold (ibnd)
               dcgamma1 = CONJG(dcgamma)
 
               call zaxpy (ndmx*npol, dcgamma, hold (1, ibnd_), 1, h (1, ibnd_), 1)
               CALL zaxpy (ndmx*npol, dcgamma1, hsold (1, ibnd_), 1, hs (1, ibnd_), 1)
 
-!              call zaxpy (ndmx, dcgamma, hold (1, ibnd), 1, h (1, ibnd),1)
-!              CALL zaxpy (ndmx, dcgamma1, hsold (1, ibnd), 1, hs (1, ibnd), 1)
            endif
 
-!
-! here hold is used as auxiliary vector in order to efficiently compute t = A*h
-! it is later set to the current (becoming old) value of h
-!
+           !
+           ! here hold is used as auxiliary vector in order to efficiently compute t = A*h
+           ! it is later set to the current (becoming old) value of h
+           !
            lbnd = lbnd+1
            call zcopy (ndmx*npol, h (1, ibnd_), 1, hold (1, lbnd), 1)
            CALL zcopy (ndmx*npol, hs (1, ibnd_), 1, hsold (1, lbnd), 1)
-!           call zcopy (ndmx, h (1, ibnd), 1, hold (1, lbnd), 1)
-!           CALL zcopy (ndmx, hs (1, ibnd), 1, hsold (1, lbnd), 1)
 
-!           eu (lbnd) = e (ibnd)
            indb (lbnd) = ibnd
         endif
      enddo
@@ -284,10 +258,6 @@ subroutine ccgsolve_all (ch_psi, ccg_psi, e, d0psi, dpsi, h_diag, &
 
      call ch_psi (ndim, hold, t, euc, ik, lbnd)
 
-!     DO ibnd=1,lbnd
-!        euc(ibnd) = CMPLX(eu(ibnd)+DREAL(freq_c),-DIMAG(freq_c), KIND=DP)
-!     ENDDO
-
      call ch_psi (ndim, hsold, ts, conjg(euc), ik, lbnd)
 
      !
@@ -297,27 +267,20 @@ subroutine ccgsolve_all (ch_psi, ccg_psi, e, d0psi, dpsi, h_diag, &
 
      lbnd=0
      do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
-!     do ibnd = 1, nbnd
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
 
            IF (gamma_only) THEN
               a(lbnd) = 2.0d0*ddot(2*ndmx*npol,hs(1,ibnd_),1,g(1,ibnd_),1)
               c(lbnd) = 2.0d0*ddot(2*ndmx*npol,hs(1,ibnd_),1,t(1,lbnd),1)
-!              a(lbnd) = 2.0d0*ddot(2*ndmx*npol,hs(1,ibnd),1,g(1,ibnd),1)
-!              c(lbnd) = 2.0d0*ddot(2*ndmx*npol,hs(1,ibnd),1,t(1,lbnd),1)
               IF (gstart == 2) THEN
                  a(lbnd)=a(lbnd)-DBLE(hs(1,ibnd_))*DBLE(g(1,ibnd_))
                  c(lbnd)=c(lbnd)-DBLE(hs(1,ibnd_))*DBLE(t(1,lbnd))
-!                 a(lbnd)=a(lbnd)-DBLE(hs(1,ibnd))*DBLE(g(1,ibnd))
-!                 c(lbnd)=c(lbnd)-DBLE(hs(1,ibnd))*DBLE(t(1,lbnd))
 
               ENDIF
            ELSE
               a(lbnd) = zdotc (ndmx*npol, hs(1,ibnd_), 1, g(1,ibnd_), 1)
               c(lbnd) = zdotc (ndmx*npol, hs(1,ibnd_), 1, t(1,lbnd), 1)
-!              a(lbnd) = zdotc (ndmx, hs(1,ibnd), 1, g(1,ibnd), 1)
-!              c(lbnd) = zdotc (ndmx, hs(1,ibnd), 1, t(1,lbnd), 1)
 
            ENDIF
 
@@ -330,7 +293,6 @@ subroutine ccgsolve_all (ch_psi, ccg_psi, e, d0psi, dpsi, h_diag, &
      call mp_sum(  c(1:lbnd), intra_bgrp_comm )
      lbnd=0
      do ibnd = n_start, n_end ; ibnd_ = ibnd - n_start + 1
-!     do ibnd = 1, nbnd
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
            dclambda = - a(lbnd) / c(lbnd)
@@ -340,7 +302,6 @@ subroutine ccgsolve_all (ch_psi, ccg_psi, e, d0psi, dpsi, h_diag, &
            !
 
            call zaxpy (ndmx*npol, dclambda, h(1,ibnd_), 1, dpsi(1,ibnd), 1)
-!           call zaxpy (ndmx, dclambda, h(1,ibnd), 1, dpsi(1,ibnd), 1)
 
            !
            !    update to get the gradient
@@ -349,21 +310,13 @@ subroutine ccgsolve_all (ch_psi, ccg_psi, e, d0psi, dpsi, h_diag, &
            call zaxpy (ndmx*npol, dclambda, t(1,lbnd), 1, g(1,ibnd_), 1)
            CALL zaxpy (ndmx*npol, dclambda1, ts(1,lbnd), 1, gs(1,ibnd_), 1)
 
-!           call zaxpy (ndmx, dclambda, t(1,lbnd), 1, g(1,ibnd), 1)
-!           CALL zaxpy (ndmx, dclambda1, ts(1,lbnd), 1, gs(1,ibnd), 1)
-
            !
            !    save current (now old) h and rho for later use
            !
            call zcopy (ndmx*npol, h(1,ibnd_), 1, hold(1,ibnd_), 1)
            CALL zcopy (ndmx*npol, hs(1,ibnd_), 1, hsold(1,ibnd_), 1)
 
-!           call zcopy (ndmx, h(1,ibnd), 1, hold(1,ibnd), 1)
-!           CALL zcopy (ndmx, hs(1,ibnd), 1, hsold(1,ibnd), 1)
-
            rhoold (ibnd_) = rho (ibnd_)
-!           rhoold (ibnd) = rho (ibnd)
-
 
         endif
      enddo

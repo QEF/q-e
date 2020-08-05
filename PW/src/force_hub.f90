@@ -301,10 +301,14 @@ SUBROUTINE dndtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, offsetU, &
                                     is_hubbard_back, offsetU_back, ldim_u, &
                                     offsetU_back1, ldim_back, Hubbard_l_back, &
-                                    backall
+                                    backall, U_projection, wfcU
    USE wvfct,                ONLY : nbnd, npwx, wg
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
+   USE wavefunctions,        ONLY : evc
+   USE uspp,                 ONLY : okvan
+   USE force_mod,            ONLY : doverlap_inv
+   USE basis,                ONLY : natomwfc
    !
    IMPLICIT NONE
    !
@@ -340,7 +344,7 @@ SUBROUTINE dndtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    ! ... local variables
    !
    INTEGER ::  ibnd, is, na, nt, m1, m2, off1, off2, m11, m22, ldim1
-   COMPLEX(DP), ALLOCATABLE :: dproj(:,:)
+   COMPLEX(DP), ALLOCATABLE :: dproj(:,:), dproj_us(:,:)
    !
    CALL start_clock( 'dndtau' )
    !
@@ -356,13 +360,31 @@ SUBROUTINE dndtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    IF ( mykey /= 0 ) GO TO 10
    !
+   ! Compute the USPP contribution to dproj:
+   ! <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
+   !
+   IF (okvan) THEN
+      ALLOCATE ( dproj_us(nwfcU,nb_s:nb_e) )
+      CALL matrix_element_of_dSdtau (alpha, ipol, ik, jkb0, &
+                        nwfcU, wfcU, nbnd, evc, dproj_us, nb_s, nb_e, mykey)
+   ENDIF
+   !
+   ! In the 'ortho-atomic' case calculate d[(O^{-1/2})^T]
+   !
+   IF (U_projection.EQ."ortho-atomic") THEN
+      ALLOCATE ( doverlap_inv(natomwfc,natomwfc) )
+      CALL calc_doverlap_inv (alpha, ipol, ik, jkb0)
+   ENDIF
+   !
 ! !omp parallel do default(shared) private(na,nt,m1,m2,ibnd)
    DO na = 1, nat
       nt = ityp(na)
       IF (is_hubbard(nt) .AND. lpuk.EQ.1) THEN
          !
-         ! Compute the derivative of proj
+         ! Compute the second contribution to dproj due to the derivative of 
+         ! (ortho-)atomic orbitals
          CALL dprojdtau_k ( spsi, alpha, na, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
+         IF (okvan) dproj = dproj + dproj_us
          !
          DO m1 = 1, 2*Hubbard_l(nt)+1
             DO m2 = m1, 2*Hubbard_l(nt)+1
@@ -378,8 +400,10 @@ SUBROUTINE dndtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
          ENDDO
       ELSEIF (is_hubbard_back(nt) .AND. lpuk.EQ.2) THEN
          !
-         ! Compute the derivative of proj
+         ! Compute the second contribution to dproj due to the derivative of 
+         ! (ortho-)atomic orbitals
          CALL dprojdtau_k ( spsi, alpha, na, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
+         IF (okvan) dproj = dproj + dproj_us
          !
          DO m1 = 1, ldim_back(nt) 
             off1 = offsetU_back(na)
@@ -410,6 +434,8 @@ SUBROUTINE dndtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
 ! !omp end parallel do
    !
 10 DEALLOCATE( dproj ) 
+   IF (ALLOCATED(doverlap_inv)) DEALLOCATE( doverlap_inv )
+   IF (okvan) DEALLOCATE (dproj_us)
    !
    CALL mp_sum( dns, intra_pool_comm )
    !
@@ -598,10 +624,14 @@ SUBROUTINE dngdtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, offsetU, at_sc,  &
                                     offsetU_back, offsetU_back1, Hubbard_l_back,   &
                                     backall, max_num_neighbors, phase_fac, ldim_u, &
-                                    neighood
+                                    neighood, U_projection, wfcU
    USE wvfct,                ONLY : nbnd, npwx, npw, wg
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
+   USE wavefunctions,        ONLY : evc
+   USE uspp,                 ONLY : okvan
+   USE force_mod,            ONLY : doverlap_inv
+   USE basis,                ONLY : natomwfc
    ! 
    IMPLICIT NONE
    !
@@ -635,7 +665,7 @@ SUBROUTINE dngdtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    INTEGER :: ibnd, is, na, nt, m1, m2, off1, off2, m11, m22, &
               ldim1, ldim2, eq_na2, na1, na2, nt1, nt2, viz
-   COMPLEX (DP), ALLOCATABLE :: dproj1(:,:), dproj2(:,:)
+   COMPLEX (DP), ALLOCATABLE :: dproj1(:,:), dproj2(:,:), dproj_us(:,:)
    INTEGER, EXTERNAL :: find_viz
    !
    CALL start_clock('dngdtau')
@@ -658,20 +688,48 @@ SUBROUTINE dngdtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    CALL phase_factor(ik)
    !
+   ! Compute the USPP contribution to dproj1:
+   ! <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
+   !
+   IF (okvan) THEN
+      ALLOCATE ( dproj_us(nwfcU,nb_s:nb_e) )
+      CALL matrix_element_of_dSdtau (alpha, ipol, ik, jkb0, &
+                        nwfcU, wfcU, nbnd, evc, dproj_us, nb_s, nb_e, mykey)
+   ENDIF
+   !
+   IF (U_projection.EQ."atomic") THEN
+      ! In the 'atomic' case the calculation must be performed only once (when na=alpha)
+      CALL dprojdtau_k ( spsi, alpha, alpha, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj1 )
+      IF (okvan) dproj1 = dproj1 + dproj_us
+      dproj2 = dproj1
+   ELSEIF (U_projection.EQ."ortho-atomic") THEN
+      ! In the 'ortho-atomic' case calculate d[(O^{-1/2})^T]
+      ALLOCATE ( doverlap_inv(natomwfc,natomwfc) )
+      CALL calc_doverlap_inv (alpha, ipol, ik, jkb0)
+   ENDIF
+   !
 ! !omp parallel do default(shared) private(na1,viz,m1,m2,ibnd)
    DO na1 = 1, nat
       nt1 = ityp(na1)
       IF ( is_hubbard(nt1) ) THEN
-         ! Compute the derivative of proj1
-         CALL dprojdtau_k ( spsi, alpha, na1, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj1 )
+         ! Compute the second contribution to dproj1 due to the derivative of 
+         ! ortho-atomic orbitals
+         IF (U_projection.EQ."ortho-atomic") THEN
+            CALL dprojdtau_k ( spsi, alpha, na1, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj1 )
+            IF (okvan) dproj1 = dproj1 + dproj_us
+         ENDIF
          ldim1 = ldim_u(nt1)
          DO viz = 1, neighood(na1)%num_neigh
             na2 = neighood(na1)%neigh(viz)
             eq_na2 = at_sc(na2)%at
             nt2 = ityp(eq_na2)
             ldim2 = ldim_u(nt2)
-            ! Compute the derivative of proj2
-            CALL dprojdtau_k ( spsi, alpha, eq_na2, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj2 )
+            ! Compute the second contribution to dproj2 due to the derivative of 
+            ! ortho-atomic orbitals
+            IF (U_projection.EQ."ortho-atomic") THEN
+               CALL dprojdtau_k ( spsi, alpha, eq_na2, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj2 )
+               IF (okvan) dproj2 = dproj2 + dproj_us
+            ENDIF
             IF (na1.GT.na2) THEN 
                DO m1 = 1, ldim1
                   DO m2 = 1, ldim2
@@ -714,6 +772,8 @@ SUBROUTINE dngdtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
 10 CONTINUE
    DEALLOCATE ( dproj1 ) 
    DEALLOCATE ( dproj2 ) 
+   IF (ALLOCATED(doverlap_inv)) DEALLOCATE( doverlap_inv )
+   IF (okvan) DEALLOCATE (dproj_us)
    !
    CALL mp_sum(dnsg, intra_pool_comm)
    !
@@ -939,7 +999,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE cell_base,            ONLY : tpiba
    USE gvect,                ONLY : g
-   USE klist,                ONLY : nks, xk, ngk, igk_k
+   USE klist,                ONLY : xk, ngk, igk_k
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l, nwfcU, wfcU, offsetU, &
                                     is_hubbard_back, Hubbard_l_back, offsetU_back, &
                                     offsetU_back1, ldim_u, backall, lda_plus_u_kind, &
@@ -953,7 +1013,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
    USE basis,                ONLY : natomwfc, wfcatom, swfcatom
-   USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv
+   USE force_mod,            ONLY : eigenval, eigenvect, overlap_inv, doverlap_inv
    !
    IMPLICIT NONE
    !
@@ -964,7 +1024,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    INTEGER, INTENT(IN) :: alpha
    !! the displaced atom
    INTEGER, INTENT(IN) :: na
-   !! the Hubbard atom
+   !! the atom for which the force is computed
    INTEGER, INTENT(IN) :: ijkb0
    !! position of beta functions for atom alpha
    INTEGER, INTENT(IN) :: ipol
@@ -984,17 +1044,12 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    !
    ! ... local variables
    !
-   INTEGER :: npw, nt, ig, m1, m2, m3, ibnd, iwf, nt_, ih, jh, ldim, &
-              ldim_std, offpm, i, j, m_start, m_end
+   INTEGER :: npw, nt, ig, m1, m2, ibnd, ldim, &
+              ldim_std, offpm, m_start, m_end
    REAL(DP) :: gvec
-   COMPLEX(DP) :: temp
    COMPLEX(DP), ALLOCATABLE :: &
    dproj0(:,:),       & ! derivative of the projector
-   dproj_us(:,:),     & ! USPP contribution to dproj0
-   dwfc(:,:),         & ! the derivative of the (ortho-atomic) wavefunction
-   doverlap(:,:),     & ! derivative of the overlap matrix  
-   doverlap_us(:,:),  & ! USPP contribution to doverlap
-   doverlap_inv(:,:)    ! derivative of (O^{-1/2})_JI (note the transposition)
+   dwfc(:,:)            ! the derivative of the (ortho-atomic) wavefunction
    !
    CALL start_clock( 'dprojdtau' )
    !
@@ -1003,17 +1058,18 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    ldim = ldim_u(nt)
    ldim_std = 2*Hubbard_l(nt)+1
    !
-   dproj(:,:) = (0.d0, 0.d0)
+   dproj(:,:) = (0.0d0, 0.0d0)
    !
-   !!!!!!!!!!!!!!!!!!!! ATOMIC CASE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   !
-   ! Compute the derivative of the atomic wfc 'na' when displacing atom 'alpha'. 
-   ! Note, this derivative is different from zero only when na=alpha, i.e. when 
-   ! the displaced atom is the Hubbard atom itself (this is so due to the 
-   ! localized nature of atomic wfc).
-   ! Note: parallelization here is over plane waves, not over bands!
-   !
-   IF ((U_projection.EQ."atomic") .AND. (na==alpha)) THEN
+   IF ((U_projection.EQ."atomic") .AND. (na==alpha) .AND. &
+       (is_hubbard(nt).OR.is_hubbard_back(nt))) THEN
+      !
+      !!!!!!!!!!!!!!!!!!!! ATOMIC CASE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !
+      ! Compute the derivative of the atomic wfc 'na' when displacing atom 'alpha'. 
+      ! Note, this derivative is different from zero only when na=alpha, i.e. when 
+      ! the displaced atom is the Hubbard atom itself (this is so due to the 
+      ! localized nature of atomic wfc).
+      ! Note: parallelization here is over plane waves, not over bands!
       !
       ALLOCATE ( dwfc(npwx,ldim) )
       dwfc(:,:) = (0.d0, 0.d0)
@@ -1070,19 +1126,17 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       ENDDO
       DEALLOCATE ( dproj0 )
       !
-   ENDIF
-   !
-   !!!!!!!!!!!!!!!!! ORTHO-ATOMIC CASE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   !
-   ! Compute the derivative of the ortho-atomic wfc 'na' when displacing atom 'alpha'. 
-   ! Note, this derivative is different from zero not only when na=alpha but also 
-   ! when na/=alpha, i.e. when we displace a non-Hubbard atom this will give a non-zero
-   ! contribution to the derivative of the ortho-atomic wfc na. This is so due
-   ! to the definition of the ortho-atomic wfc:
-   ! \phi_ortho_I = \sum_J O^{-1/2}_JI \phi_J
-   ! Note: parallelization here is over plane waves, not over bands!
-   !
-   IF (U_projection.EQ."ortho-atomic") THEN
+   ELSEIF (U_projection.EQ."ortho-atomic") THEN
+      !
+      !!!!!!!!!!!!!!!!! ORTHO-ATOMIC CASE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !
+      ! Compute the derivative of the ortho-atomic wfc 'na' when displacing atom 'alpha'. 
+      ! Note, this derivative is different from zero not only when na=alpha but also 
+      ! when na/=alpha, i.e. when we displace a non-Hubbard atom this will give a non-zero
+      ! contribution to the derivative of the ortho-atomic wfc na. This is so due
+      ! to the definition of the ortho-atomic wfc:
+      ! \phi_ortho_I = \sum_J O^{-1/2}_JI \phi_J
+      ! Note: parallelization here is over plane waves, not over bands!
       !
       IF (is_hubbard_back(nt)) CALL errore("dprojdtau_k", &
                  " Forces with background and  ortho-atomic are not supported",1)
@@ -1119,56 +1173,6 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       ! 2. Contribution due to the derivative of (O^{-1/2})_JI which
       !    is multiplied by atomic wavefunctions
       !
-      ! Compute the derivative dO_IJ/d\tau(alpha,ipol) 
-      !
-      ALLOCATE (doverlap(natomwfc,natomwfc))
-      ALLOCATE (doverlap_inv(natomwfc,natomwfc))
-      doverlap(:,:) = (0.0d0, 0.0d0)
-      doverlap_inv(:,:) = (0.0d0, 0.0d0)
-      !
-      DO ig = 1, npw
-         ! (k+G) * 2pi/a
-         gvec = (g(ipol,igk_k(ig,ik)) + xk(ipol,ik)) * tpiba
-         ! Calculate < dphi_I/d\tau(alpha,ipol) | S | phi_J >
-         DO m1 = m_start, m_end
-            DO m2 = 1, natomwfc
-               doverlap(m1,m2) = doverlap(m1,m2) + (0.d0,1.d0) * gvec &
-                                 * CONJG(wfcatom(ig,m1))  * swfcatom(ig,m2)
-            ENDDO
-         ENDDO
-         ! Calculate < phi_I | S | dphi_J/d\tau(alpha,ipol) >
-         DO m1 = 1, natomwfc
-            DO m2 = m_start, m_end
-               doverlap(m1,m2) = doverlap(m1,m2) + (0.d0,-1.d0) * gvec &
-                                 * CONJG(swfcatom(ig,m1))  * wfcatom(ig,m2)
-            ENDDO
-         ENDDO
-      ENDDO
-      ! Sum over G vectors
-      CALL mp_sum( doverlap, intra_bgrp_comm )
-      !
-      ! USPP term in dO_IJ/d\tau(alpha,ipol)
-      !
-      IF (okvan) THEN
-         ! Calculate doverlap_us = < phi_I | dS/d\tau(alpha,ipol) | phi_J >
-         ALLOCATE (doverlap_us(natomwfc,natomwfc))
-         CALL matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, &
-                        natomwfc, wfcatom, natomwfc, wfcatom, doverlap_us)
-         ! Sum up the "normal" and "ultrasoft" terms
-         DO m1 = 1, natomwfc
-            DO m2 = 1, natomwfc
-               doverlap(m1,m2) = doverlap(m1,m2) + doverlap_us(m1,m2)
-            ENDDO
-         ENDDO
-         DEALLOCATE (doverlap_us)
-      ENDIF
-      !
-      ! Now compute dO^{-1/2}_JI/d\tau(alpha,ipol) using dO_IJ/d\tau(alpha,ipol)
-      ! Note the transposition!
-      !
-      CALL calculate_doverlap_inv (natomwfc, eigenval, eigenvect, &
-                                     doverlap, doverlap_inv)
-      !
       ! Now compute \sum_J dO^{-1/2}_JI/d\tau(alpha,ipol) \phi_J
       ! and add it to another term (see above)
       !
@@ -1196,38 +1200,10 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       ENDDO
       !
       DEALLOCATE (dproj0)
-      DEALLOCATE (doverlap)
-      DEALLOCATE (doverlap_inv)
       DEALLOCATE (dwfc)
       !
    ENDIF
    ! 
-   ! Finally, the derivative of the US operator: 
-   ! <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
-   ! Note, this contribution is different from zero when
-   ! na=alpha and when na/=alpha, both in atomic and 
-   ! ortho-atomic cases. So, this term always must be 
-   ! included in the USPP case.
-   !
-   IF (okvan) THEN
-      ALLOCATE(dproj0(nwfcU,nbnd))
-      CALL matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, &
-                               nwfcU, wfcU, nbnd, evc, dproj0)
-      ALLOCATE(dproj_us(nwfcU,nb_s:nb_e))
-      dproj_us(:,:) = (0.0d0, 0.0d0)
-      DO m1 = 1, nwfcU
-         dproj_us(m1,:) = dproj0(m1,nb_s:nb_e)
-      ENDDO
-      ! dproj + dproj_us
-      IF ( mykey == 0 ) THEN
-         DO m1 = 1, nwfcU
-            dproj(m1,:) = dproj(m1,:) + dproj_us(m1,:)
-         ENDDO
-      ENDIF
-      DEALLOCATE(dproj0)
-      DEALLOCATE(dproj_us)
-   ENDIF
-   !
    CALL stop_clock('dprojdtau')
    !
    RETURN
@@ -1284,7 +1260,100 @@ SUBROUTINE natomwfc_per_atom(alpha, m_start, m_end)
    !
 END SUBROUTINE natomwfc_per_atom
 !
-SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_B)
+SUBROUTINE calc_doverlap_inv (alpha, ipol, ik, ijkb0)
+   !
+   ! This routine computes the derivative of O^{-1/2} transposed 
+   !
+   USE kinds,          ONLY : DP
+   USE cell_base,      ONLY : tpiba
+   USE gvect,          ONLY : g
+   USE uspp,           ONLY : okvan
+   USE klist,          ONLY : xk, ngk, igk_k
+   USE basis,          ONLY : natomwfc, wfcatom, swfcatom
+   USE force_mod,      ONLY : eigenval, eigenvect, overlap_inv, doverlap_inv
+   USE mp_bands,       ONLY : intra_bgrp_comm
+   USE mp,             ONLY : mp_sum
+   USE ldaU,           ONLY : U_projection
+   !
+   IMPLICIT NONE
+   !
+   INTEGER, INTENT(IN) :: alpha
+   !! the displaced atom
+   INTEGER, INTENT(IN) :: ipol
+   !! the component of displacement
+   INTEGER, INTENT(IN) :: ik
+   !! k-point index
+   INTEGER, INTENT(IN) :: ijkb0
+   !! position of beta functions for atom alpha
+   !
+   INTEGER :: ig, m1, m2, npw, m_start, m_end
+   REAL(DP) :: gvec
+   COMPLEX(DP), ALLOCATABLE :: doverlap(:,:), doverlap_us(:,:)
+   !! derivative of the overlap matrix  
+   !
+   CALL start_clock( 'calc_doverlap_inv' )
+   !
+   IF (U_projection.NE."ortho-atomic") RETURN
+   !
+   ALLOCATE (doverlap(natomwfc,natomwfc))
+   doverlap(:,:) = (0.0d0, 0.0d0)
+   !
+   npw = ngk(ik)
+   !
+   ! Determine how many atomic wafefunctions there are for atom 'alpha'
+   ! and determine their position in the list of all atomic 
+   ! wavefunctions of all atoms
+   CALL natomwfc_per_atom(alpha, m_start, m_end)
+   !
+   ! Compute the derivative dO_IJ/d\tau(alpha,ipol)
+   !
+   DO ig = 1, npw
+      ! (k+G) * 2pi/a
+      gvec = (g(ipol,igk_k(ig,ik)) + xk(ipol,ik)) * tpiba
+      ! Calculate < dphi_I/d\tau(alpha,ipol) | S | phi_J >
+      DO m1 = m_start, m_end
+         DO m2 = 1, natomwfc
+            doverlap(m1,m2) = doverlap(m1,m2) + (0.d0,1.d0) * gvec &
+                              * CONJG(wfcatom(ig,m1))  * swfcatom(ig,m2)
+         ENDDO
+      ENDDO
+      ! Calculate < phi_I | S | dphi_J/d\tau(alpha,ipol) >
+      DO m1 = 1, natomwfc
+         DO m2 = m_start, m_end
+            doverlap(m1,m2) = doverlap(m1,m2) + (0.d0,-1.d0) * gvec &
+                              * CONJG(swfcatom(ig,m1))  * wfcatom(ig,m2)
+         ENDDO
+      ENDDO
+   ENDDO
+   ! Sum over G vectors
+   CALL mp_sum( doverlap, intra_bgrp_comm )
+   !
+   ! Add the USPP term in dO_IJ/d\tau(alpha,ipol):
+   ! < phi_I | dS/d\tau(alpha,ipol) | phi_J >
+   !
+   IF (okvan) THEN
+      ALLOCATE(doverlap_us(natomwfc,natomwfc))
+      CALL matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, &
+               natomwfc, wfcatom, natomwfc, wfcatom, doverlap_us, 1, natomwfc, 0)
+      doverlap = doverlap + doverlap_us
+      DEALLOCATE(doverlap_us)
+   ENDIF
+   !
+   ! Now compute dO^{-1/2}_JI/d\tau(alpha,ipol) using dO_IJ/d\tau(alpha,ipol)
+   ! Note the transposition!
+   !
+   CALL calculate_doverlap_inv (natomwfc, eigenval, eigenvect, &
+                                   doverlap, doverlap_inv)
+   !
+   DEALLOCATE (doverlap)
+   !
+   CALL stop_clock('calc_doverlap_inv')
+   !
+   RETURN
+   !
+END SUBROUTINE calc_doverlap_inv
+!
+SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_B, lB_s, lB_e, mykey)
    !
    ! This routine computes the matrix element < A | dS/d\tau(alpha,ipol) | B >
    ! Written by I. Timrov (2020)
@@ -1308,10 +1377,13 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
    INTEGER, INTENT(IN)      :: ipol  ! the component of displacement
    INTEGER, INTENT(IN)      :: ik    ! the k point
    INTEGER, INTENT(IN)      :: ijkb0 ! position of beta functions for atom alpha 
-   INTEGER, INTENT(IN)      :: lA, lB
+   INTEGER, INTENT(IN)      :: lA, lB, lB_s, lB_e
+   ! There is a possibility to parallelize over lB,
+   ! where lB_s (start) and lB_e (end)
    COMPLEX(DP), INTENT(IN)  :: A(npwx,lA)
    COMPLEX(DP), INTENT(IN)  :: B(npwx,lB)
-   COMPLEX(DP), INTENT(OUT) :: A_dS_B(lA,lB)
+   COMPLEX(DP), INTENT(OUT) :: A_dS_B(lA,lB_s:lB_e)
+   INTEGER,     INTENT(IN)  :: mykey
    !
    ! Local variables
    !
@@ -1321,9 +1393,9 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
                                 dbetaB(:,:), betaB(:,:), &
                                 aux(:,:), qq(:,:)
    !
-   A_dS_B(:,:) = (0.0d0, 0.0d0)
+   A_dS_B(:,:) = (0.0d0, 0.0d0) 
    !
-   IF (.NOT.okvan) RETURN
+   IF (.NOT.okvan .OR. mykey /= 0) RETURN
    !
    nt = ityp(alpha)
    npw = ngk(ik)
@@ -1373,16 +1445,20 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
    !
    DEALLOCATE ( aux )
    !
+   ! Here starts a parallelization over lB_s and lB_e
+   !
    ALLOCATE ( aux(nh(nt),lB) )
    !
    ! Calculate \sum_jh qq_at(ih,jh) * dbetaB(jh)
-   CALL ZGEMM('N', 'N', nh(nt), lB, nh(nt), (1.0d0,0.0d0), &
-               qq, nh(nt), dbetaB, nh(nt),(0.0d0,0.0d0), aux, nh(nt))
+   CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+              qq, nh(nt), dbetaB(1,lB_s),   nh(nt), (0.0d0,0.0d0), &
+              aux(1,lB_s), nh(nt))
    dbetaB(:,:) = aux(:,:)
    !
    ! Calculate \sum_jh qq_at(ih,jh) * betaB(jh)
-   CALL ZGEMM('N', 'N', nh(nt), lB, nh(nt), (1.0d0,0.0d0), &
-               qq, nh(nt), betaB, nh(nt),(0.0d0,0.0d0), aux, nh(nt))
+   CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+              qq, nh(nt), betaB(1,lB_s),    nh(nt), (0.0d0,0.0d0), &
+              aux(1,lB_s), nh(nt))
    betaB(:,:) = aux(:,:)
    !
    DEALLOCATE ( aux )
@@ -1390,10 +1466,12 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
    ! dproj(iA,iB) = \sum_ih [Adbeta(iA,ih) * betaB(ih,iB) +
    !                         Abeta(iA,ih)  * dbetaB(ih,iB)] 
    !
-   CALL ZGEMM('N', 'N', lA, lB, nh(nt), (1.0d0,0.0d0), &
-              Adbeta, lA, betaB,  nh(nt), (0.0d0,0.0d0), A_dS_B, lA)
-   CALL ZGEMM('N', 'N', lA, lB, nh(nt), (1.0d0,0.0d0), &
-              Abeta,  lA, dbetaB, nh(nt), (1.0d0,0.0d0), A_dS_B, lA)
+   CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+              Adbeta, lA, betaB(1,lB_s), nh(nt), (0.0d0,0.0d0), &
+              A_dS_B(1,lB_s), lA)
+   CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+              Abeta, lA, dbetaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
+              A_dS_B(1,lB_s), lA)
    !
    DEALLOCATE ( Abeta )
    DEALLOCATE ( Adbeta )
