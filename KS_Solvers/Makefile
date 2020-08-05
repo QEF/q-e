@@ -24,6 +24,7 @@ PPCG/ppcg_gamma_gpu.o \
 PPCG/ppcg_k.o \
 PPCG/ppcg_k_gpu.o \
 ParO/bpcg_gamma.o \
+ParO/bpcg_gamma_gpu.o \
 ParO/bpcg_k.o \
 ParO/paro_gamma.o \
 ParO/pcg_gamma.o \

@@ -44,7 +44,7 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
                  npwx, npw, nbnd, evc, eig, btype, ethr, notconv, nhpsi )
   !-------------------------------------------------------------------------------
   !paro_flag = 1: modified parallel orbital-updating method
-!civn 
+  !
 #if defined (__CUDA) 
   USE cudafor
 #endif  
@@ -223,7 +223,7 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
      psi   =  psi_d  
      hpsi  =  hpsi_d 
      spsi  =  spsi_d 
-     CALL bpcg_gamma(hs_psi, g_1psi, psi, spsi, npw, npwx, nbnd, how_many, &
+     CALL bpcg_gamma_gpu(hs_psi, g_1psi, psi, spsi, npw, npwx, nbnd, how_many, &
                 psi(:,nbase+1), hpsi(:,nbase+1), spsi(:,nbase+1), ethr, ew(1), nhpsi)
 !civn 2fix
      psi_d    =  psi  

@@ -79,3 +79,32 @@ subroutine g_psi_gpu (lda, n, m, npol, psi_d, e_d)
   call stop_clock_gpu ('g_psi')
   return
 end subroutine g_psi_gpu
+!-----------------------------------------------------------------------
+subroutine g_1psi_gpu (lda, n, psi_d, e_d)
+  !-----------------------------------------------------------------------
+  !
+  !    This routine computes an estimate of the inverse Hamiltonian
+  !    and applies it to one wavefunction
+  !
+  USE kinds
+  USE noncollin_module,     ONLY : npol
+
+  implicit none
+
+  integer :: lda, & ! input: the leading dimension of psi
+             n      ! input: the real dimension of psi
+  complex(DP) :: psi_d (lda, npol) ! inp/out: the psi vector
+  real(DP) :: e_d     ! input: the eigenvectors
+#if defined(__CUDA)
+  attributes(device) :: psi_d, e_d
+#endif
+  !
+  call start_clock ('g_1psi')
+
+  CALL g_psi_gpu (lda, n, 1, npol, psi_d, e_d)
+
+  call stop_clock ('g_1psi')
+
+  return
+
+end subroutine g_1psi_gpu
