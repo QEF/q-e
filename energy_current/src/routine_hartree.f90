@@ -111,7 +111,7 @@ subroutine routine_hartree()
 
 !-------STEP2.1: calculation of charge_g, the charge in reciprocal space at time t.
 
-call compute_charge(psic, evc_uno, npw, nbnd, ngm, dffts, charge, charge_g)
+call compute_charge(psic, scf_all%t_minus%evc, npw, nbnd, ngm, dffts, charge, charge_g)
 
 !!!!!!!!!!!!------------ Saving some quantities for the evaluation of the Exchange-correlation current 1/2  -------------!!!!!!!!!!!!!!!!!!
 
@@ -138,7 +138,7 @@ call compute_charge(psic, evc_uno, npw, nbnd, ngm, dffts, charge, charge_g)
 
 
 !-------STEP2.2-------inizializing chargeg_due, charge at tempo t-Dt.
-call compute_charge(psic, evc_due, npw, nbnd, ngm, dffts, charge, charge_g_due)
+call compute_charge(psic, scf_all%t_plus%evc, npw, nbnd, ngm, dffts, charge, charge_g_due)
 
 !!!!!!!!!!!!------------Saving quantities for XC current 2/2 -------------!!!!!!!!!!!!!!!!!!
 !
@@ -202,6 +202,7 @@ call compute_hartree_vpoint_vmean(v_mean, v_point, g, gstart, omega, ngm, e2, fp
 
 !---------------------------------KOHN------------------------------------------------
    call start_clock('kohn_current')
+   call scf_result_set_global_variables(scf_all%t_zero) ! this set evc, tau and vel from saved values
    allocate (dpsi(npwx, nbnd))
    allocate (dvpsi(npwx, nbnd))
 ! For preconditioning:
@@ -222,11 +223,11 @@ call compute_hartree_vpoint_vmean(v_mean, v_point, g, gstart, omega, ngm, e2, fp
 
       s = 0.d0
 ! computed s = < evc_due, evc_uno >, remove contribution at G=0
-      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, evc_due, 2*npwx, evc_uno, 2*npwx, 0.d0, s, nbnd)
+      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, scf_all%t_plus%evc, 2*npwx, scf_all%t_minus%evc, 2*npwx, 0.d0, s, nbnd)
       if (gstart == 2) then
          do ibnd = 1, nbnd
             do jbnd = 1, nbnd
-               s(ibnd, jbnd) = s(ibnd, jbnd) - dble(conjg(evc_due(1, ibnd))*evc_uno(1, jbnd))
+               s(ibnd, jbnd) = s(ibnd, jbnd) - dble(conjg(scf_all%t_plus%evc(1, ibnd))*scf_all%t_minus%evc(1, jbnd))
             end do
          end do
       end if
@@ -237,8 +238,8 @@ call compute_hartree_vpoint_vmean(v_mean, v_point, g, gstart, omega, ngm, e2, fp
       do ibnd = 1, nbnd
          do jbnd = 1, nbnd
             do ig = 1, npw
-               evp(ig, ibnd) = evp(ig, ibnd) - evc_due(ig, jbnd)*s(jbnd, ibnd)
-               evp(ig, ibnd) = evp(ig, ibnd) + evc_uno(ig, jbnd)*ss(ibnd, jbnd)
+               evp(ig, ibnd) = evp(ig, ibnd) - scf_all%t_plus%evc(ig, jbnd)*s(jbnd, ibnd)
+               evp(ig, ibnd) = evp(ig, ibnd) + scf_all%t_minus%evc(ig, jbnd)*ss(ibnd, jbnd)
             end do
          end do
       end do
@@ -253,13 +254,13 @@ call compute_hartree_vpoint_vmean(v_mean, v_point, g, gstart, omega, ngm, e2, fp
 ! sb is the old s
 ! For the moment sa is a multiple of the identity. It should be changed later to sa = <evc_tre,evc_uno> or something similar.
 
-      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, evc_uno, 2*npwx, evc_uno, 2*npwx, 0.d0, sa, nbnd)
-      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, evc_due, 2*npwx, evc_uno, 2*npwx, 0.d0, sb, nbnd)
+      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, scf_all%t_minus%evc, 2*npwx, scf_all%t_zero%evc, 2*npwx, 0.d0, sa, nbnd)
+      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, scf_all%t_plus%evc, 2*npwx, scf_all%t_zero%evc, 2*npwx, 0.d0, sb, nbnd)
       if (gstart == 2) then
          do ibnd = 1, nbnd
             do jbnd = 1, nbnd
-               sa(ibnd, jbnd) = sa(ibnd, jbnd) - dble(conjg(evc_uno(1, ibnd))*evc_uno(1, jbnd))
-               sb(ibnd, jbnd) = sb(ibnd, jbnd) - dble(conjg(evc_due(1, ibnd))*evc_uno(1, jbnd))
+               sa(ibnd, jbnd) = sa(ibnd, jbnd) - dble(conjg(scf_all%t_minus%evc(1, ibnd))*scf_all%t_zero%evc(1, jbnd))
+               sb(ibnd, jbnd) = sb(ibnd, jbnd) - dble(conjg(scf_all%t_plus%evc(1, ibnd))*scf_all%t_zero%evc(1, jbnd))
             end do
          end do
       end if
@@ -275,11 +276,11 @@ call compute_hartree_vpoint_vmean(v_mean, v_point, g, gstart, omega, ngm, e2, fp
          do jbnd = 1, nbnd
             do ig = 1, npw
 
-               evp(ig, ibnd) = evp(ig, ibnd) + evc_uno(ig, jbnd)*sa(jbnd, ibnd)
-               evp(ig, ibnd) = evp(ig, ibnd) - evc_uno(ig, jbnd)*ssa(ibnd, jbnd)
+               evp(ig, ibnd) = evp(ig, ibnd) + scf_all%t_minus%evc(ig, jbnd)*sa(jbnd, ibnd)
+               evp(ig, ibnd) = evp(ig, ibnd) - scf_all%t_zero%evc(ig, jbnd)*ssa(ibnd, jbnd)
 
-               evp(ig, ibnd) = evp(ig, ibnd) - evc_due(ig, jbnd)*sb(jbnd, ibnd)
-               evp(ig, ibnd) = evp(ig, ibnd) + evc_uno(ig, jbnd)*ssb(ibnd, jbnd)
+               evp(ig, ibnd) = evp(ig, ibnd) - scf_all%t_plus%evc(ig, jbnd)*sb(jbnd, ibnd)
+               evp(ig, ibnd) = evp(ig, ibnd) + scf_all%t_zero%evc(ig, jbnd)*ssb(ibnd, jbnd)
 
             end do
          end do

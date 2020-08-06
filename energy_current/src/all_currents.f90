@@ -1,7 +1,8 @@
 program all_currents
-   use hartree_mod, only: evc_uno, evc_due, trajdir, first_step,&
+   use hartree_mod, only: trajdir, first_step,&
            dvpsi_save, subtract_cm_vel, re_init_wfc_1, re_init_wfc_2,&
-           n_repeat_every_step, ethr_big_step
+           n_repeat_every_step, ethr_big_step, scf_all, multiple_scf_result_allocate,&
+           scf_result_set_from_global_variables, multiple_scf_result_deallocate
    USE environment, ONLY: environment_start, environment_end
    use io_global, ONLY: ionode
    use wavefunctions, only: evc
@@ -110,8 +111,9 @@ program all_currents
    end if
    CALL mp_bcast(vel, ionode_id, world_comm)
    ! allocate evc_due and evc_uno
-   allocate (evc_due(npwx,nbnd))
-   allocate (evc_uno(npwx,nbnd))
+   !allocate (evc_due(npwx,nbnd))
+   !allocate (evc_uno(npwx,nbnd))
+   call multiple_scf_result_allocate(scf_all,.true.)
    if (n_repeat_every_step > 1) &
        allocate (tau_save(3,nat))
    do
@@ -149,9 +151,11 @@ program all_currents
           !if (re_init_wfc_3) & ! eventually, to set a random initial evc to do statistical tests
           !        call init_wfc(1)
           call run_pwscf(exit_status)
-          evc_due = evc
+          !evc_due = evc
           if (exit_status /= 0) exit
-          !call routine_zero() ! routine zero should be called in t
+          call scf_result_set_from_global_variables(scf_all%t_minus)
+          call scf_result_set_from_global_variables(scf_all%t_zero)
+          call routine_zero() ! routine zero should be called in t
 
           call prepare_next_step(1) !1 advances by dt, so we are in t+dt
 
@@ -159,10 +163,10 @@ program all_currents
                   call init_wfc(1)
           call run_pwscf(exit_status)
           if (exit_status /= 0) goto 100 !shutdown everything and exit
-          evc_uno = evc
+          call scf_result_set_from_global_variables(scf_all%t_plus)
+          !evc_uno = evc
 
           !calculate energy current
-          call routine_zero()!this should be moved
           call routine_hartree()
           call write_results(traj)
       end do
@@ -174,8 +178,9 @@ program all_currents
 100 call laxlib_end()
    call cpv_trajectory_deallocate(traj)
    call deallocate_zero()
-   if (allocated(evc_uno)) deallocate (evc_uno)
-   if (allocated(evc_due)) deallocate (evc_due)
+   !if (allocated(evc_uno)) deallocate (evc_uno)
+   !if (allocated(evc_due)) deallocate (evc_due)
+   call multiple_scf_result_deallocate(scf_all)
    if (allocated(tau_save)) deallocate(tau_save)
    if (allocated(dvpsi_save)) deallocate(dvpsi_save)
    call stop_run(exit_status)
@@ -432,7 +437,7 @@ contains
       use io_global, ONLY: ionode, ionode_id
       USE mp_world, ONLY: world_comm
       use mp, ONLY: mp_bcast, mp_barrier
-      use hartree_mod, only: evc_due, delta_t, ethr_small_step
+      use hartree_mod, only: delta_t, ethr_small_step
       use zero_mod, only: vel_input_units
       use wavefunctions, only: evc
       implicit none
