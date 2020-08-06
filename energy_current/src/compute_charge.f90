@@ -20,6 +20,9 @@ subroutine compute_charge(psic, evc, npw, nbnd, ngm, dffts, charge, charge_g)
    real(kind=dp) :: q_tot
    integer :: iv, i
 
+! charge_g is obtained from a  FFT of |evc(r)|^2, where evc(r)=IFFT(evc)
+! Optimization: 2 bands done with a single IFFT
+
 
    charge = 0.d0
    do iv = 1, nbnd, 2
@@ -60,6 +63,7 @@ subroutine compute_charge(psic, evc, npw, nbnd, ngm, dffts, charge, charge_g)
 
 
 end subroutine
+
 
 
 end module

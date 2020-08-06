@@ -52,17 +52,16 @@ subroutine routine_hartree()
    complex(kind=DP), allocatable ::  evp(:, :), tmp(:, :)
    integer :: iun, iv, igm, ibnd, i
    logical :: exst, do_xc_curr
-   real(kind=DP), allocatable ::charge(:), fac(:)
+   real(kind=DP), allocatable ::charge(:)
    real(kind=DP), allocatable ::excharge_r(:), exgradcharge_r(:, :), exdotcharge_r(:)
-   real(kind=DP) :: qq_fact
    real(kind=DP) :: update(1:3), update_a(1:3), update_b(1:3)
    real(kind=DP) :: amodulus
 !
-   complex(kind=DP), allocatable ::charge_g(:), v_uno(:), v_due(:), v_point(:), v_mean(:), charge_g_due(:)
+   complex(kind=DP), allocatable ::charge_g(:),  v_point(:), v_mean(:), charge_g_due(:)
 !
    complex(kind=DP), allocatable ::exgradcharge_g(:, :)
 !
-   integer ::icoord, enne, ir !, npwold
+   integer ::icoord, enne, ir
 !
    logical  :: l_test
    real(DP) :: M(nbnd, nbnd), emme(nbnd, nbnd), kcurrent(3), s(nbnd, nbnd), ss(nbnd, nbnd), &
@@ -73,7 +72,6 @@ subroutine routine_hartree()
    integer, external :: find_free_unit
 
    write (stdout, *) 'BEGIN: HARTREE & KOHN'
-   !npwold=npw
 
    if ( (get_igcx() /= 3) .or. (get_igcc() /=4 ) ) then
            do_xc_curr=.false.
@@ -103,9 +101,6 @@ subroutine routine_hartree()
    allocate (charge_g(ngm))
    allocate (charge_g_due(ngm))
    allocate (charge(dffts%nnr))
-   allocate (fac(ngm))
-   allocate (v_uno(ngm))
-   allocate (v_due(ngm))
    allocate (v_point(ngm))
    allocate (v_mean(ngm))
 !
@@ -115,11 +110,7 @@ subroutine routine_hartree()
    allocate (exdotcharge_r(dffts%nnr))
 
 !-------STEP2.1: calculation of charge_g, the charge in reciprocal space at time t.
-! charge_g is obtained from a  FFT of |evc(r)|^2, where evc(r)=IFFT(evc)
-! Optimization: 2 bands done with a single IFFT
 
-!TODO: call QE routine
-!TODO: use qe computed charge
 call compute_charge(psic, evc_uno, npw, nbnd, ngm, dffts, charge, charge_g)
 
 !!!!!!!!!!!!------------ Saving some quantities for the evaluation of the Exchange-correlation current 1/2  -------------!!!!!!!!!!!!!!!!!!
@@ -145,7 +136,6 @@ call compute_charge(psic, evc_uno, npw, nbnd, ngm, dffts, charge, charge_g)
 !
 !!!!!!!!!!!!------------- end saving quantities for XC current----------------- !!!!!!!!!!!!!!!!!!!!
 
-!TODO: use sum_bands?
 
 !-------STEP2.2-------inizializing chargeg_due, charge at tempo t-Dt.
 call compute_charge(psic, evc_due, npw, nbnd, ngm, dffts, charge, charge_g_due)
@@ -160,36 +150,9 @@ call compute_charge(psic, evc_due, npw, nbnd, ngm, dffts, charge, charge_g_due)
 
 
 !-------STEP3----- computation of Hartree potentials from the charges just computed.
-!TODO: use qe routine!!
-! calculation of v_uno and fac
-! fac(G) = e2*fpi/(tpiba2*G^2*omega)
-! v(G) = charge(G)*fac
+!-------STEP4-----  and numerical derivatives of Hartree potentials
+call compute_hartree_vpoint_vmean(v_mean, v_point, g, gstart, omega, ngm, e2, fpi, tpiba2, delta_t, charge_g, charge_g_due) ! charge_g_tre)
 
-   if (gstart == 2) fac(1) = 0.d0
-   do igm = gstart, ngm
-      qq_fact = g(1, igm)**2.d0 + g(2, igm)**2.d0 + g(3, igm)**2.d0
-      fac(igm) = (e2*fpi/(tpiba2*qq_fact))
-   end do
-   fac(:) = fac(:)/omega
-
-   do igm = 1, ngm
-      v_uno(igm) = charge_g(igm)*fac(igm)
-   end do
-
-!same code to compute v_due
-   do igm = 1, ngm
-      v_due(igm) = charge_g_due(igm)*fac(igm)
-   end do
-
-!-------STEP4----- numerical derivatives of Hartree potentials
-
-!We compute v_point and v_mean
-   do igm = 1, ngm
-      v_point(igm) = (v_uno(igm) - v_due(igm))/delta_t ! v(t+dt)-v(t-dt)
-   end do
-   do igm = 1, ngm
-      v_mean(igm) = (v_uno(igm) + v_due(igm))/2.d0 ! take v(t)
-   end do
 
 !-------STEP 5----- Application of final formula.
 
@@ -249,7 +212,6 @@ call compute_charge(psic, evc_due, npw, nbnd, ngm, dffts, charge, charge_g_due)
                    (xk(3, 1) + g(3, igk_k(ig, 1)))**2)*tpiba2
    end do
 ! init potentials needed to evaluate  H|psi>
-! TODO: sono già inizializzati
    call init_us_1()
    call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
    call allocate_bec_type(nkb, nbnd, becp)
@@ -407,9 +369,6 @@ call compute_charge(psic, evc_due, npw, nbnd, ngm, dffts, charge, charge_g_due)
 !---------------------------------------------------------------------------
    deallocate (charge)
    deallocate (charge_g)
-   deallocate (fac)
-   deallocate (v_uno)
-   deallocate (v_due)
    deallocate (v_point)
    deallocate (v_mean)
    call deallocate_bec_type(becp)
