@@ -55,10 +55,6 @@ SUBROUTINE rotate_HSpsi_gamma_gpu( npwx, npw, nstart, nbnd, psi_d, hpsi_d, overl
   attributes (device) :: psi_d, hpsi_d, spsi_d
   attributes (device) :: aux_d, hh_d, ss_d, vv_d, en_d
 #endif   
-!civn 
-#if defined (__CUDA)
-  write(*,*) 'civn __CUDA rotate' 
-#endif
   !
   IF ( gstart == -1 ) CALL errore( 'rotHSw', 'gstart variable not initialized', 1 )
   IF ( overlap .AND..NOT.present(spsi_d) ) call errore( 'rotHSw','spsi array needed with overlap=.TRUE.',1)

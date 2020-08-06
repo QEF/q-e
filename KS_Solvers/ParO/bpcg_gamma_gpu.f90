@@ -68,8 +68,12 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, p
   !
   ! Following varibales are temporary
 
-  COMPLEX(DP),INTENT(IN) :: psi0(npwx,nbnd)  ! psi0  needed to compute the Pv projection
-  COMPLEX(DP),INTENT(IN) :: spsi0(npwx,nbnd) ! Spsi0  needed to compute the Pv projection
+!civn 2fix restore intent(in) on psi0_d and spsi0_d
+  !COMPLEX(DP),INTENT(IN) :: psi0(npwx,nbnd)  ! psi0  needed to compute the Pv projection
+  !COMPLEX(DP),INTENT(IN) :: spsi0(npwx,nbnd) ! Spsi0  needed to compute the Pv projection
+  COMPLEX(DP) :: psi0(npwx,nbnd)  ! psi0  needed to compute the Pv projection
+  COMPLEX(DP) :: spsi0(npwx,nbnd) ! Spsi0  needed to compute the Pv projection
+!
   INTEGER,  INTENT(IN)   :: npw, npwx, nbnd, nvec ! input dimensions 
   REAL(DP), INTENT(IN)   :: ethr                  ! threshold for convergence.
   REAL(DP), INTENT(INOUT)   :: e(nvec)            ! current estimate of the target eigenvalues
@@ -101,19 +105,20 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, p
 !civn 
   ! device arrays   
   EXTERNAL  g_1psi_gpu
+  REAL(DP), EXTERNAL :: gpu_DDOT
   INTEGER :: ii, jj
   COMPLEX(DP) :: psi_d(npwx,nvec),hpsi_d(npwx,nvec),spsi_d(npwx,nvec) 
+  COMPLEX(DP) :: psi0_d(npwx,nbnd)  ! psi0  needed to compute the Pv projection
+  COMPLEX(DP) :: spsi0_d(npwx,nbnd) ! Spsi0  needed to compute the Pv projection
+  REAL(DP), ALLOCATABLE    ::  spsi0vec_d (:,:) ! the product of spsi0 and a group of vectors
   REAL(DP) :: e_d(nvec)            ! current estimate of the target eigenvalues
   COMPLEX(DP), ALLOCATABLE ::  b_d(:,:),                        & ! RHS for testing
-                               z_d(:,:) ! additional working vetors
+                               p_d(:,:), z_d(:,:) ! additional working vetors
 #if defined (__CUDA) 
   attributes(device) :: psi_d, spsi_d, hpsi_d 
-  attributes(device) :: e_d, b_d, z_d
+  attributes(device) :: e_d, b_d, z_d, p_d
+  attributes(device) :: spsi0_d, psi0_d, spsi0vec_d
 #endif  
-!civn 2fix 
-#if defined (__CUDA) 
-  write(*,*) 'civn __CUDA bpcg_gamma_gpu'
-#endif
 !
   !
   CALL start_clock( 'pcg' ); !write (6,*) ' enter pcg' , e(1:2) ; FLUSH(6)
@@ -129,31 +134,36 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, p
   ALLOCATE( spsi0vec(nbnd, block_size) )
 !civn 
   ALLOCATE( z_d( npwx, block_size ), b_d( npwx, block_size ) )
+  ALLOCATE( p_d(npwx,block_size))
+  ALLOCATE( spsi0vec_d(nbnd, block_size) )
 !  
   !
   done    = 0  ! the number of correction vectors already solved
   nactive = 0  ! the number of correction vectors currently being updated
   cg_iter = 0  ! how many iteration each active vector has completed (<= maxter)
 
-!civn 2fix 
-  e_d = e
-  psi_d = psi
-  hpsi_d = hpsi
-  spsi_d = spsi
-
   MAIN_LOOP: & ! This is a continuous loop. It terminates only when nactive vanishes
   DO
      nnew = min(done+block_size,nvec)-(done+nactive) ! number of new corrections to be added to the seach
 
+!civn 2fix 
+     e_d = e
+     p_d = p
+     b_d = b
+     z_d = z
+     psi_d = psi
+     hpsi_d = hpsi
+     spsi_d = spsi
+     psi0_d = psi0 
+     spsi0_d = spsi0
+     spsi0vec_d = spsi0vec
+!
      if ( nnew > 0 ) then    ! add nnew vectors to the active list
         !write(6,*) ' nnew =', nnew
         do l=nactive+1,nactive+nnew
            i=l+done
            !write(6,*) ' l =',l,' i =',i
            !write (6,*) ' enter pcg' , e(i) ; FLUSH(6)
-!civn 
-!          b(:,l) = e(i) * spsi(:,i) - hpsi(:,i)               ! initial gradient and saved RHS for later
-!          z(:,l) = b(:,l); call g_1psi(npwx,npw,z(:,l),e(i)) ! initial preconditioned gradient
 !$cuf kernel do(1)
            DO ii = 1, npwx 
              b_d(ii,l) = e_d(i) * spsi_d(ii,i) - hpsi_d(ii,i)               ! initial gradient and saved RHS for later
@@ -164,20 +174,17 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, p
            END DO 
            call g_1psi_gpu(npwx,npw,z_d(:,l),e_d(i)) ! initial preconditioned gradient
         end do
-!civn 2fix 
-        z = z_d
-        b = b_d
-!
      !- project on conduction bands
         CALL start_clock( 'pcg:ortho' )
-        CALL DGEMM( 'T','N', nbnd,nnew,npw2, 2.D0, spsi0, npwx2, z(:,nactive+1), npwx2, 0.D0, spsi0vec, nbnd )
-        IF ( gstart == 2 ) CALL DGER( nbnd, nnew, -1.D0, spsi0, npwx2, z(:,nactive+1), npwx2, spsi0vec, nbnd )
-        CALL mp_sum( spsi0vec, intra_bgrp_comm )
-        CALL DGEMM( 'N','N', npw2,nnew,nbnd,-1.D0, psi0, npwx2, spsi0vec, nbnd, 1.D0, z(:,nactive+1), npwx2 )
+        CALL gpu_DGEMM( 'T','N', nbnd,nnew,npw2, 2.D0, spsi0_d, npwx2, z_d(:,nactive+1), npwx2, 0.D0, spsi0vec_d, nbnd )
+        IF ( gstart == 2 ) CALL gpu_DGER( nbnd, nnew, -1.D0, spsi0_d, npwx2, z_d(:,nactive+1), npwx2, spsi0vec_d, nbnd )
+        CALL mp_sum( spsi0vec_d, intra_bgrp_comm )
+        CALL gpu_DGEMM( 'N','N', npw2,nnew,nbnd,-1.D0, psi0_d, npwx2, spsi0vec_d, nbnd, 1.D0, z_d(:,nactive+1), npwx2 )
         CALL stop_clock( 'pcg:ortho' )
      !-
         do l=nactive+1,nactive+nnew; i=l+done
-           g0(l) = 2.D0*DDOT(npw2,z(:,l),1,b(:,l),1); IF (gstart==2) g0(l)=g0(l)-CONJG(z(1,l))*b(1,l)
+           g0(l) = 2.D0*gpu_DDOT(npw2,z_d(:,l),1,b_d(:,l),1) 
+           IF (gstart==2) g0(l)=g0(l) - gpu_DDOT(2,z_d(1,l),1,b_d(1,l),1)  
         end do
         CALL mp_sum( g0(nactive+1:nactive+nnew), intra_bgrp_comm ) ! g0 = < initial z | initial gradient b >
      
@@ -193,15 +200,35 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, p
            !write(6,*) 'ethr_cg :', ethr_cg(l)
 
            ! zero the trial solution
-           psi(:,i) = ZERO ; hpsi(:,i) = ZERO ; spsi(:,i) = ZERO
+!$cuf kernel do(1)
+           DO ii = 1, npwx
+             psi_d(ii,i) = ZERO
+             hpsi_d(ii,i) = ZERO 
+             spsi_d(ii,i) = ZERO
+           END DO 
            ! initial search direction
-           p(:,l) = z(:,l)
-
+!$cuf kernel do(1)
+           DO ii = 1, npwx
+             p_d(ii,l) = z_d(ii,l)
+           END DO 
            cg_iter(l) = 0 ! this is a new correction vector, reset its interation count
         end do
         nactive = nactive + nnew
      end if
      !write(6,*) ' done  =',done, ' nactive  =',nactive
+
+!civn 2fix 
+     e = e_d 
+     p = p_d
+     b = b_d
+     z = z_d
+     psi = psi_d
+     hpsi = hpsi_d
+     spsi = spsi_d
+     psi0 = psi0_d
+     spsi0 = spsi0_d
+     spsi0vec = spsi0vec_d
+!
 
 !  iterate: !  DO cg_iter = 1, maxter  ! THIS IS THE ENTRY POINT OF THE PCG LOOP
 
@@ -346,7 +373,8 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, p
   DEALLOCATE( ethr_cg, ff, ff0, cg_iter )
   DEALLOCATE( g0, g1, g2, alpha, gamma )
 !civn 
-  DEALLOCATE( b_d, z_d )
+  DEALLOCATE( b_d, z_d, p_d )
+  DEALLOCATE( spsi0vec_d )
 ! 
   !
   CALL stop_clock( 'pcg' )
