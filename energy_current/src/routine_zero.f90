@@ -28,58 +28,6 @@ subroutine init_zero()
 end subroutine
 
 
-subroutine read_wfc_uno()
-   use kinds, only: dp
-   use io_global, only: ionode, stdout, ionode_id
-   !use hartree_mod, only: evc_uno !,file_dativel
-   use zero_mod, only: charge, charge_g
-   use ions_base, only: nsp, zv, nat, ityp, amass, tau
-   use mp, only: mp_sum, mp_bcast, mp_get
-   use wavefunctions, only: psic, evc
-   use io_files, only: nwordwfc, diropn, iunwfc, prefix, tmp_dir
-   use wvfct, only: nbnd, npwx, npw
-   use fft_base, only: dffts
-   use gvect, only: ngm, gg, g, gstart
-   use mp_pools, only: intra_pool_comm
-   use fft_interfaces, only: invfft, fwfft
-   implicit none
-   integer, external :: find_free_unit
-   logical ::  exst
-   integer :: iun, iatom, iv
-
-!
-! computation of the charge starting from wave functions
-   npw = npwx ! only gamma
-   charge = 0.d0
-   do iv = 1, nbnd, 2
-      psic = 0.d0
-      if (iv == nbnd) then
-         psic(dffts%nl(1:npw)) = evc(1:npw, iv)
-         psic(dffts%nlm(1:npw)) = CONJG(evc(1:npw, iv))
-      else
-         psic(dffts%nl(1:npw)) = evc(1:npw, iv) + (0.D0, 1.D0)*evc(1:npw, iv + 1)
-         psic(dffts%nlm(1:npw)) = CONJG(evc(1:npw, iv) - (0.D0, 1.D0)*evc(1:npw, iv + 1))
-      end if
-      call invfft('Wave', psic, dffts)
-      charge(1:dffts%nnr) = charge(1:dffts%nnr) + dble(psic(1:dffts%nnr))**2.0
-      if (iv /= nbnd) then
-         charge(1:dffts%nnr) = charge(1:dffts%nnr) + dimag(psic(1:dffts%nnr))**2.0
-      end if
-   end do
-!
-!multiply by two due to spin degeneracy
-   charge(1:dffts%nnr) = charge(1:dffts%nnr)*2.d0
-!chatge in reciprocal space
-   psic = 0.d0
-   psic(1:dffts%nnr) = dcmplx(charge(1:dffts%nnr), 0.d0)
-   call fwfft('Rho', psic, dffts)
-   charge_g(1:ngm) = psic(dffts%nl(1:ngm))
-!call stop_clock( 'lett_car' )
-!call print_clock( 'lett_car' )
-!
-
-end subroutine
-
 subroutine routine_zero()
    use kinds, only: DP
    use wvfct, only: nbnd, npwx, npw
@@ -95,7 +43,7 @@ subroutine routine_zero()
    use atom, only: rgrid
    use mp_world, only: mpime
    use cell_base, only: at, alat, omega
-   use wavefunctions, only: psic
+   use wavefunctions, only: psic, evc
    use fft_interfaces, only: invfft, fwfft
    use gvect, only: ngm, gg, g, gstart
    use constants, only: e2, AMU_RY
@@ -103,6 +51,7 @@ subroutine routine_zero()
    use splines
    use zero_mod
    use hartree_mod
+   use compute_charge_mod, only : compute_charge
 
    implicit none
 
@@ -147,8 +96,8 @@ subroutine routine_zero()
    else
       l_non_loc = .false.
    end if
-
-   call read_wfc_uno()
+   npw=npwx
+   call compute_charge(psic, evc, npw, nbnd, ngm, dffts, charge, charge_g)
 !
 !initialization of  u_g
    u_g = 0.d0

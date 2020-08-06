@@ -17,6 +17,8 @@ subroutine init_hartree()
 
 end subroutine
 
+
+
 subroutine routine_hartree()
    use kinds, only: DP
    use hartree_mod
@@ -42,6 +44,7 @@ subroutine routine_hartree()
    USE eqv, ONLY: dpsi, dvpsi
    USE mp_pools, ONLY: intra_pool_comm
    USE funct, ONLY : get_igcx, get_igcc
+   use compute_charge_mod, only : compute_charge
     
    implicit none
 
@@ -51,7 +54,7 @@ subroutine routine_hartree()
    logical :: exst, do_xc_curr
    real(kind=DP), allocatable ::charge(:), fac(:)
    real(kind=DP), allocatable ::excharge_r(:), exgradcharge_r(:, :), exdotcharge_r(:)
-   real(kind=DP) :: qq_fact, q_tot
+   real(kind=DP) :: qq_fact
    real(kind=DP) :: update(1:3), update_a(1:3), update_b(1:3)
    real(kind=DP) :: amodulus
 !
@@ -117,42 +120,7 @@ subroutine routine_hartree()
 
 !TODO: call QE routine
 !TODO: use qe computed charge
-   charge = 0.d0
-   do iv = 1, nbnd, 2
-      psic = 0.d0
-      if (iv == nbnd) then
-         psic(dffts%nl(1:npw)) = evc_uno(1:npw, iv)
-         psic(dffts%nlm(1:npw)) = CONJG(evc_uno(1:npw, iv))
-      else
-         psic(dffts%nl(1:npw)) = evc_uno(1:npw, iv) + (0.D0, 1.D0)*evc_uno(1:npw, iv + 1)
-         psic(dffts%nlm(1:npw)) = CONJG(evc_uno(1:npw, iv) - (0.D0, 1.D0)*evc_uno(1:npw, iv + 1))
-      end if
-      call invfft('Wave', psic, dffts)
-      charge(1:dffts%nnr) = charge(1:dffts%nnr) + dble(psic(1:dffts%nnr))**2.0
-      if (iv /= nbnd) then
-         charge(1:dffts%nnr) = charge(1:dffts%nnr) + dimag(psic(1:dffts%nnr))**2.0 !is dimag standard fortran?
-      end if
-   end do
-   q_tot = 0.
-   do i = 1, dffts%nnr
-      q_tot = q_tot + charge(i)
-   end do
-   q_tot = q_tot/(dffts%nr1*dffts%nr2*dffts%nr3)
-   call mp_sum(q_tot, intra_pool_comm)
-   IF (ionode) THEN
-      print *, 'check_charge', q_tot
-   ENDIF
-
-!We need to multiply by 2 for spin degeneracy
-   charge(1:dffts%nnr) = charge(1:dffts%nnr)*2.d0
-!
-
-!computation of charge in reciprocal space (FFT of psic)
-   psic = 0.d0
-   psic(1:dffts%nnr) = dcmplx(charge(1:dffts%nnr), 0.d0)
-   call fwfft('Rho', psic, dffts)
-   charge_g(1:ngm) = psic(dffts%nl(1:ngm))
-
+call compute_charge(psic, evc_uno, npw, nbnd, ngm, dffts, charge, charge_g)
 
 !!!!!!!!!!!!------------ Saving some quantities for the evaluation of the Exchange-correlation current 1/2  -------------!!!!!!!!!!!!!!!!!!
 
@@ -180,32 +148,7 @@ subroutine routine_hartree()
 !TODO: use sum_bands?
 
 !-------STEP2.2-------inizializing chargeg_due, charge at tempo t-Dt.
-   charge = 0.d0
-   do iv = 1, nbnd, 2
-      psic = 0.d0
-      if (iv == nbnd) then
-         psic(dffts%nl(1:npw)) = evc_due(1:npw, iv)
-         psic(dffts%nlm(1:npw)) = CONJG(evc_due(1:npw, iv))
-      else
-         psic(dffts%nl(1:npw)) = evc_due(1:npw, iv) + (0.D0, 1.D0)*evc_due(1:npw, iv + 1)
-         psic(dffts%nlm(1:npw)) = CONJG(evc_due(1:npw, iv) - (0.D0, 1.D0)*evc_due(1:npw, iv + 1))
-      end if
-      call invfft('Wave', psic, dffts)
-      charge(1:dffts%nnr) = charge(1:dffts%nnr) + dble(psic(1:dffts%nnr))**2.0
-      if (iv /= nbnd) then
-         charge(1:dffts%nnr) = charge(1:dffts%nnr) + dimag(psic(1:dffts%nnr))**2.0
-      end if
-   end do
-   q_tot = 0.
-   do i = 1, dffts%nnr
-      q_tot = q_tot + charge(i)
-   end do
-   q_tot = q_tot/(dffts%nr1*dffts%nr2*dffts%nr3)
-   call mp_sum(q_tot, intra_pool_comm)
-   if (ionode) print *, 'check_charge', q_tot
-
-   ! spin degeneracy
-   charge(1:dffts%nnr) = charge(1:dffts%nnr)*2.d0
+call compute_charge(psic, evc_due, npw, nbnd, ngm, dffts, charge, charge_g_due)
 
 !!!!!!!!!!!!------------Saving quantities for XC current 2/2 -------------!!!!!!!!!!!!!!!!!!
 !
@@ -215,12 +158,6 @@ subroutine routine_hartree()
        !
 !!!!!!!!!!!!------------- End saving quantities for XC current----------------- !!!!!!!!!!!!!!!!!!!!
 
-!
-!computation of charge in reciprocal space (FFT of psic)
-   psic = 0.d0
-   psic(1:dffts%nnr) = dcmplx(charge(1:dffts%nnr), 0.d0)
-   call fwfft('Rho', psic, dffts)
-   charge_g_due(1:ngm) = psic(dffts%nl(1:ngm))
 
 !-------STEP3----- computation of Hartree potentials from the charges just computed.
 !TODO: use qe routine!!
@@ -248,10 +185,10 @@ subroutine routine_hartree()
 
 !We compute v_point and v_mean
    do igm = 1, ngm
-      v_point(igm) = (v_uno(igm) - v_due(igm))/delta_t
+      v_point(igm) = (v_uno(igm) - v_due(igm))/delta_t ! v(t+dt)-v(t-dt)
    end do
    do igm = 1, ngm
-      v_mean(igm) = (v_uno(igm) + v_due(igm))/2.d0
+      v_mean(igm) = (v_uno(igm) + v_due(igm))/2.d0 ! take v(t)
    end do
 
 !-------STEP 5----- Application of final formula.

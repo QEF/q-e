@@ -35,6 +35,8 @@ all_currents.o : ../../UtilXlib/mp.o
 all_currents.o : ../../iotk/src/iotk_module.o
 all_currents.o : hartree_mod.o
 all_currents.o : zero_mod.o
+routine_hartree.o : compute_charge.o
+routine_zero.o : compute_charge.o
 allocate_zero.o : ../../upflib/atom.o
 allocate_zero.o : ../../Modules/fft_base.o
 allocate_zero.o : ../../Modules/ions_base.o
