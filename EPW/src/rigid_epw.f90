@@ -56,16 +56,21 @@
     !! have negligible r-space contribution
     !!
     !! This implements Eq. 98 of Rev. Mod. Phys., 73, 515 (2001)
-    !! SP: April 2019 - Using nrx1 is overkill.
-    !!
-    !! SP - 11/2019 - Addition of system_2d (we assume z is the vacuum direction).
+    !! SP: 04/2019 - Using nrx1 is overkill.
+    !! SP: 11/2019 - Addition of system_2d (we assume z is the vacuum direction).
+    !! SP: 08/2020 - Restoration of nrx and parallelization. 
     !!
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : fpi, e2
     USE constants,     ONLY : pi
     USE cell_base,     ONLY : bg, omega
-    USE constants_epw, ONLY : eps6
+    USE constants_epw, ONLY : eps6, czero
     USE epwcom,        ONLY : system_2d
+    USE io_global,     ONLY : ionode_id
+    USE mp_world,      ONLY : mpime
+    USE mp_global,     ONLY : world_comm
+    USE division,      ONLY : para_bounds
+    USE mp,            ONLY : mp_bcast, mp_sum
     !
     IMPLICIT NONE
     !
@@ -77,17 +82,17 @@
     !! Coarse q-point grid
     INTEGER, INTENT(in) :: nat
     !! Number of atoms
-    REAL (KIND = DP), INTENT(in) :: q(3)
+    REAL(KIND = DP), INTENT(in) :: q(3)
     !! q-vector from the full coarse or fine grid.
-    REAL (KIND = DP), INTENT(in) :: epsil(3, 3)
+    REAL(KIND = DP), INTENT(in) :: epsil(3, 3)
     !! dielectric constant tensor
-    REAL (KIND = DP), INTENT(in) :: zeu(3, 3, nat)
+    REAL(KIND = DP), INTENT(in) :: zeu(3, 3, nat)
     !! effective charges tensor
-    REAL (KIND = DP), INTENT(in) :: signe
+    REAL(KIND = DP), INTENT(in) :: signe
     !! signe=+/-1.0 ==> add/subtract rigid-ion term
-    REAL (KIND = DP), INTENT(in) :: tau(3, nat)
+    REAL(KIND = DP), INTENT(in) :: tau(3, nat)
     !! Atomic positions
-    COMPLEX (KIND = DP), INTENT(inout) :: dyn(3 * nat, 3 * nat)
+    COMPLEX(KIND = DP), INTENT(inout) :: dyn(3 * nat, 3 * nat)
     !! Dynamical matrix
     !
     ! Local variables
@@ -99,8 +104,20 @@
     !! Cartesian direction 1
     INTEGER :: j
     !! Cartesian direction 1
-    INTEGER :: m1, m2, m3
+    INTEGER :: mm, m1, m2, m3
     !! Loop over q-points
+    INTEGER :: mmax
+    !! Max = nr1x * nr2x * nr3x
+    INTEGER :: nr1x, nr2x, nr3x
+    !! Minimum supercell size to include all vector such that G^2 < geg
+    INTEGER :: mm_start
+    !! Starting ir for this cores
+    INTEGER :: mm_stop
+    !! Ending ir for this pool    
+    INTEGER :: diff
+    !! Difference between starting and ending on master core
+    INTEGER :: add
+    !! Additional element    
     REAL(KIND = DP):: geg
     !! <q+G| epsil | q+G>
     REAL(KIND = DP) :: alph
@@ -125,6 +142,8 @@
     !! Missing definition
     COMPLEX(KIND = DP) :: facg
     !! Missing definition
+    COMPLEX(KIND = DP) :: dyn_tmp(3 * nat, 3 * nat)
+    !! Temporary dyn. matrice
     !
     ! alph is the Ewald parameter, geg is an estimate of G^2
     ! such that the G-space sum is convergent for that alph
@@ -132,7 +151,7 @@
     ! (exp (-14) = 10^-6)
     !
     IF (ABS(ABS(signe) - 1.0) > eps6) CALL errore('rgd_blk', ' wrong value for signe ', 1)
-    !
+    ! 
     IF (system_2d) THEN
       !fac = (signe * e2 * fpi) / omega*0.5d0*alat/bg(3,3)
       !reff=0.0d0
@@ -153,77 +172,118 @@
     alph = 1.0d0
     geg = gmax * alph * 4.0d0
     !
-    !  DO m1 = -nrx1, nrx1
-    !    DO m2 = -nrx2, nrx2
-    !      DO m3 = -nrx3, nrx3
-    DO m1 = -nqc1, nqc1
-      DO m2 = -nqc2, nqc2
-        DO m3 = -nqc3, nqc3
-          !
-          g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1,3)
-          g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2,3)
-          g3 = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3,3)
-          !
-          geg = (g1 * (epsil(1, 1) * g1 + epsil(1, 2) * g2 + epsil(1, 3) * g3) + &
-                 g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3) + &
-                 g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3))
-          !
-          IF (geg > 0.0d0 .AND. geg / (alph * 4.0d0) < gmax) THEN
+    ! Estimate of nr1x,nr2x,nr3x generating all vectors up to G^2 < geg
+    ! Only for dimensions where periodicity is present, e.g. if nr1=1
+    ! and nr2=1, then the G-vectors run along nr3 only.
+    ! (useful if system is in vacuum, e.g. 1D or 2D)
+    IF (nqc1 == 1) THEN
+      nr1x = 0
+    ELSE
+      nr1x = INT(SQRT(geg) / SQRT(bg(1, 1)**2 + bg(2, 1)**2 + bg(3, 1)**2)) + 1
+    ENDIF
+    IF (nqc2 == 1) THEN
+      nr2x = 0
+    ELSE
+      nr2x = INT(SQRT(geg) / SQRT(bg(1, 2)**2 + bg(2, 2)**2 + bg(3, 2)**2)) + 1
+    ENDIF
+    IF (nqc3 == 1) THEN
+      nr3x = 0
+    ELSE
+      nr3x = INT(SQRT(geg) / SQRT(bg(1, 3)**2 + bg(2, 3)**2 + bg(3, 3)**2)) + 1
+    ENDIF
+    !
+    mmax = (2 * nr1x + 1) * (2 * nr2x + 1) * (2 * nr3x + 1)
+    ! 
+    ! Distribute the cpu
+    CALL para_bounds(mm_start, mm_stop, mmax)
+    !
+    IF (mpime == ionode_id) THEN
+      diff = mm_stop - mm_start
+    ENDIF
+    CALL mp_bcast(diff, ionode_id, world_comm)
+    !
+    ! If you are the last cpu with less element
+    IF (mm_stop - mm_start /= diff) THEN
+      add = 1
+    ELSE
+      add = 0
+    ENDIF
+    ! 
+    dyn_tmp(:, :) = czero
+    !
+    ! DO mm = 1, mmax 
+    DO mm = mm_start, mm_stop + add
+      IF (add == 1 .AND. mm == mm_stop + add) CYCLE
+      ! 
+      m1 = -nr1x + FLOOR(1.0d0 * (mm - 1) / ((2 * nr3x + 1) * (2 * nr2x + 1)))
+      m2 = -nr2x + MOD(FLOOR(1.0d0 * (mm - 1) / (2 * nr3x + 1)), (2 * nr2x + 1))
+      m3 = -nr3x + MOD(1.0d0 * (mm - 1), 1.0d0 * (2 * nr3x + 1)) 
+      !
+      g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1,3)
+      g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2,3)
+      g3 = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3,3)
+      !
+      geg = (g1 * (epsil(1, 1) * g1 + epsil(1, 2) * g2 + epsil(1, 3) * g3) + &
+             g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3) + &
+             g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3))
+      !
+      IF (geg > 0.0d0 .AND. geg / (alph * 4.0d0) < gmax) THEN
+        !
+        facgd = fac * EXP(-geg / (alph * 4.0d0)) / geg
+        !
+        DO na = 1, nat
+          zag(:) = g1 * zeu(1, :, na) + g2 * zeu(2, :, na) + g3 * zeu(3, :, na)
+          fnat(:) = 0.d0
+          DO nb = 1, nat
+            arg = 2.d0 * pi * (g1 * (tau(1, na) - tau(1, nb)) + &
+                               g2 * (tau(2, na) - tau(2, nb)) + &
+                               g3 * (tau(3, na) - tau(3, nb)))
+            zcg(:)  = g1 * zeu(1, :, nb) + g2 * zeu(2, :, nb) + g3 * zeu(3, :, nb)
+            fnat(:) = fnat(:) + zcg(:) * COS(arg)
+          ENDDO
+          DO j = 1, 3
+            DO i = 1, 3
+              dyn_tmp((na - 1) * 3 + i, (na - 1) * 3 + j) = dyn_tmp((na - 1) * 3 + i, (na - 1) * 3 + j) &
+                                           - facgd * zag(i) * fnat(j)
+            ENDDO ! i
+          ENDDO ! j
+        ENDDO ! nat
+      ENDIF ! geg
+      !
+      g1 = g1 + q(1)
+      g2 = g2 + q(2)
+      g3 = g3 + q(3)
+      !
+      geg = (g1 * (epsil(1, 1) * g1 + epsil(1, 2) * g2 + epsil(1, 3) * g3) + &
+             g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3) + &
+             g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3))
+      !
+      IF (geg > 0.0d0 .AND. geg / (alph * 4.0d0) < gmax) THEN
+        !
+        facgd = fac * EXP(-geg / (alph * 4.0d0)) / geg
+        !
+        DO nb = 1, nat
+          zbg(:) = g1 * zeu(1, :, nb) + g2 * zeu(2, :, nb) + g3 * zeu(3, :, nb)
+          DO na = 1, nat
+            zag(:) = g1 * zeu(1, :, na) + g2 * zeu(2, :, na) + g3 * zeu(3, :, na)
+            arg = 2.d0 * pi * (g1 * (tau(1, na) - tau(1 ,nb)) + &
+                            g2 * (tau(2, na) - tau(2, nb)) + &
+                            g3 * (tau(3, na) - tau(3, nb)) )
             !
-            facgd = fac * EXP(-geg / (alph * 4.0d0)) / geg
-            !
-            DO na = 1, nat
-              zag(:) = g1 * zeu(1, :, na) + g2 * zeu(2, :, na) + g3 * zeu(3, :, na)
-              fnat(:) = 0.d0
-              DO nb = 1, nat
-                arg = 2.d0 * pi * (g1 * (tau(1, na) - tau(1, nb)) + &
-                                   g2 * (tau(2, na) - tau(2, nb)) + &
-                                   g3 * (tau(3, na) - tau(3, nb)))
-                zcg(:)  = g1 * zeu(1, :, nb) + g2 * zeu(2, :, nb) + g3 * zeu(3, :, nb)
-                fnat(:) = fnat(:) + zcg(:) * COS(arg)
-              ENDDO
-              DO j = 1, 3
-                DO i = 1, 3
-                  dyn((na - 1) * 3 + i, (na - 1) * 3 + j) = dyn((na - 1) * 3 + i,(na - 1) * 3 + j) &
-                                               - facgd * zag(i) * fnat(j)
-                ENDDO ! i
-              ENDDO ! j
-            ENDDO ! nat
-          ENDIF ! geg
-          !
-          g1 = g1 + q(1)
-          g2 = g2 + q(2)
-          g3 = g3 + q(3)
-          !
-          geg = (g1 * (epsil(1, 1) * g1 + epsil(1, 2) * g2 + epsil(1, 3) * g3) + &
-                 g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3) + &
-                 g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3))
-          !
-          IF (geg > 0.0d0 .AND. geg / (alph * 4.0d0) < gmax) THEN
-            !
-            facgd = fac * EXP(-geg / (alph * 4.0d0)) / geg
-            !
-            DO nb = 1, nat
-              zbg(:) = g1 * zeu(1, :, nb) + g2 * zeu(2, :, nb) + g3 * zeu(3, :, nb)
-              DO na = 1, nat
-                zag(:) = g1 * zeu(1, :, na) + g2 * zeu(2, :, na) + g3 * zeu(3, :, na)
-                arg = 2.d0 * pi * (g1 * (tau(1, na) - tau(1 ,nb)) + &
-                                g2 * (tau(2, na) - tau(2, nb)) + &
-                                g3 * (tau(3, na) - tau(3, nb)) )
-                !
-                facg = facgd * CMPLX(COS(arg), SIN(arg), DP)
-                DO j = 1, 3
-                  DO i = 1, 3
-                    dyn((na - 1) * 3 + i, (nb - 1) * 3 + j) = dyn((na - 1) * 3 + i, (nb - 1) * 3 + j) &
-                                                 + facg * zag(i) * zbg(j)
-                  ENDDO ! i
-                ENDDO ! j
-              ENDDO ! na
-            ENDDO ! nb
-          ENDIF
-        ENDDO ! m3
-      ENDDO ! m2
-    ENDDO ! m1
+            facg = facgd * CMPLX(COS(arg), SIN(arg), DP)
+            DO j = 1, 3
+              DO i = 1, 3
+                dyn_tmp((na - 1) * 3 + i, (nb - 1) * 3 + j) = dyn_tmp((na - 1) * 3 + i, (nb - 1) * 3 + j) &
+                                             + facg * zag(i) * zbg(j)
+              ENDDO ! i
+            ENDDO ! j
+          ENDDO ! na
+        ENDDO ! nb
+      ENDIF
+    ENDDO ! mm
+    !
+    CALL mp_sum(dyn_tmp, world_comm)
+    dyn(:, :) = dyn_tmp(:, :) + dyn(:, :)
     !
     !-------------------------------------------------------------------------------
     END SUBROUTINE rgd_blk
