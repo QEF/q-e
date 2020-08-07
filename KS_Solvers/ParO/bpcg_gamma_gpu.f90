@@ -39,11 +39,13 @@
 !
 ! The following file is for solving step 2 of the parallel orbital updating algorithm.
 !
+!  Ivan Carnimeo: GPU version
+!
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE bpcg_gamma_gpu( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, hpsi, spsi, ethr, e, nhpsi )
+SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, hpsi, spsi, ethr, e, nhpsi )
   !----------------------------------------------------------------------------
   !
   ! Block Preconditioned Conjugate Gradient solution of the linear system
@@ -104,20 +106,23 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, p
   ! hs_psi( npwx, npw, nvec, psi, hpsi, spsi )
 !civn 
   ! device arrays   
-  EXTERNAL  g_1psi_gpu
+  EXTERNAL  g_1psi_gpu, hs_psi_gpu
   REAL(DP), EXTERNAL :: gpu_DDOT
+  COMPLEX(DP) :: tmp, tmp_d
   INTEGER :: ii, jj
   COMPLEX(DP) :: psi_d(npwx,nvec),hpsi_d(npwx,nvec),spsi_d(npwx,nvec) 
   COMPLEX(DP) :: psi0_d(npwx,nbnd)  ! psi0  needed to compute the Pv projection
   COMPLEX(DP) :: spsi0_d(npwx,nbnd) ! Spsi0  needed to compute the Pv projection
   REAL(DP), ALLOCATABLE    ::  spsi0vec_d (:,:) ! the product of spsi0 and a group of vectors
+  REAL(DP), ALLOCATABLE    ::  alpha_d(:) 
   REAL(DP) :: e_d(nvec)            ! current estimate of the target eigenvalues
   COMPLEX(DP), ALLOCATABLE ::  b_d(:,:),                        & ! RHS for testing
-                               p_d(:,:), z_d(:,:) ! additional working vetors
+                               p_d(:,:), hp_d(:,:), sp_d(:,:), z_d(:,:) ! additional working vetors
 #if defined (__CUDA) 
   attributes(device) :: psi_d, spsi_d, hpsi_d 
-  attributes(device) :: e_d, b_d, z_d, p_d
+  attributes(device) :: e_d, b_d, z_d, p_d, hp_d, sp_d
   attributes(device) :: spsi0_d, psi0_d, spsi0vec_d
+  attributes(device) :: alpha_d, tmp_d
 #endif  
 !
   !
@@ -133,8 +138,9 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, p
   ALLOCATE( p(npwx,block_size), hp(npwx,block_size), sp(npwx,block_size) )
   ALLOCATE( spsi0vec(nbnd, block_size) )
 !civn 
+  ALLOCATE( alpha_d( block_size ) )
   ALLOCATE( z_d( npwx, block_size ), b_d( npwx, block_size ) )
-  ALLOCATE( p_d(npwx,block_size))
+  ALLOCATE( p_d(npwx,block_size), hp_d(npwx,block_size), sp_d(npwx,block_size) )
   ALLOCATE( spsi0vec_d(nbnd, block_size) )
 !  
   !
@@ -149,6 +155,8 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, p
 !civn 2fix 
      e_d = e
      p_d = p
+     hp_d = hp
+     sp_d = sp
      b_d = b
      z_d = z
      psi_d = psi
@@ -217,19 +225,6 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, p
      end if
      !write(6,*) ' done  =',done, ' nactive  =',nactive
 
-!civn 2fix 
-     e = e_d 
-     p = p_d
-     b = b_d
-     z = z_d
-     psi = psi_d
-     hpsi = hpsi_d
-     spsi = spsi_d
-     psi0 = psi0_d
-     spsi0 = spsi0_d
-     spsi0vec = spsi0vec_d
-!
-
 !  iterate: !  DO cg_iter = 1, maxter  ! THIS IS THE ENTRY POINT OF THE PCG LOOP
 
      if ( nactive == 0 ) EXIT MAIN_LOOP               ! this is the only MAIN_LOOP EXIT condition
@@ -240,45 +235,83 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, p
 !     do l = 1, nactive  ! THIS COULD/SHOULD BE A GLOBAL CALL (ONLY WITHIN ONE BGRP THOUGH)
 !        CALL hs_1psi( npwx, npw, p(:,l), hp(:,l), sp(:,l) ) ! apply H to a single wavefunction (no bgrp parallelization here!)
 !     end do
-     CALL hs_psi( npwx, npw, nactive, p, hp, sp ) ! apply H to a single wavefunction (no bgrp parallelization here!)
+     CALL hs_psi_gpu( npwx, npw, nactive, p_d, hp_d, sp_d ) ! apply H to a single wavefunction (no bgrp parallelization here!)
      CALL stop_clock( 'pcg:hs_1psi' )
 
      do l = 1, nactive; i=l+done
-        gamma(l) = 2.D0*DDOT(npw2,p(:,l),1,hp(:,l),1) - e(i) * 2.D0*DDOT(npw2,p(:,l),1,sp(:,l),1) 
-        IF (gstart==2) gamma(l) = gamma(l) - CONJG(p(1,l))*hp(1,l) + e(i) * CONJG(p(1,l))*sp(1,l)
+        gamma(l) = 2.D0*gpu_DDOT(npw2,p_d(:,l),1,hp_d(:,l),1) - e_d(i) * 2.D0*gpu_DDOT(npw2,p_d(:,l),1,sp_d(:,l),1) 
+        IF (gstart==2) gamma(l) = gamma(l) - gpu_DDOT(2,p_d(1,l),1,hp_d(1,l),1) + e_d(i) * gpu_DDOT(2,p_d(1,l),1,sp_d(1,l),1)
      end do
      CALL mp_sum( gamma(1:nactive), intra_bgrp_comm ) ! gamma = < p | hp - e sp >
 
      do l = 1, nactive; i=l+done
         !write(6,*) ' l =',l,' i =',i
 
+!civn 2fix
         alpha(l) = g0(l)/gamma(l)
+        alpha_d(l) = g0(l)/gamma(l)
         !write(6,*) 'g0, gamma, alpha :', g0(l), gamma(l), alpha(l)
 
-        psi(:,i)  = psi(:,i)  + alpha(l) * p(:,l)     ! updated solution
-        hpsi(:,i) = hpsi(:,i) + alpha(l) * hp(:,l)    ! updated solution
-        spsi(:,i) = spsi(:,i) + alpha(l) * sp(:,l)    ! updated solution
+!$cuf kernel do(1)
+        DO ii = 1, npwx
+          psi_d(ii,i)  = psi_d(ii,i)  + alpha_d(l) * p_d(ii,l)     ! updated solution
+          hpsi_d(ii,i) = hpsi_d(ii,i) + alpha_d(l) * hp_d(ii,l)    ! updated solution
+          spsi_d(ii,i) = spsi_d(ii,i) + alpha_d(l) * sp_d(ii,l)    ! updated solution
+        END DO 
 
-        g2(l) = 2.D0 * ( DDOT(npw2,z(:,l),1,b(:,l),1) + e(i) * DDOT(npw2,z(:,l),1,spsi(:,i),1) - DDOT(npw2,z(:,l),1,hpsi(:,i),1) )
-        IF (gstart==2) g2(l) = g2(l) - CONJG(z(1,l))*b(1,l) - e(i)*CONJG(z(1,l))*spsi(1,i) + CONJG(z(1,l))*hpsi(1,i)
+        g2(l) = 2.D0 * ( gpu_DDOT(npw2,z_d(:,l),1,b_d(:,l),1) + &
+                         e_d(i) * gpu_DDOT(npw2,z_d(:,l),1,spsi_d(:,i),1) - &
+                         gpu_DDOT(npw2,z_d(:,l),1,hpsi_d(:,i),1) )
+        IF (gstart==2) g2(l) = g2(l) - gpu_DDOT(2,z_d(1,l),1,b_d(1,l),1) - &
+                                       e_d(i)*gpu_DDOT(2,z_d(1,l),1,spsi_d(1,i),1) + &
+                                       gpu_DDOT(2,z_d(1,l),1,hpsi_d(1,i),1)
      end do
      CALL mp_sum( g2(1:nactive), intra_bgrp_comm )    ! g2 = < old z | new gradient b + e spsi - hpsi >
+
      do l = 1, nactive; i=l+done                      ! update the preconditioned gradient
-        z(:,l) = b(:,l) + e(i) * spsi(:,i) - hpsi(:,i); call g_1psi(npwx,npw,z(:,l),e(i))
+!$cuf kernel do(1)
+        DO ii = 1, npwx 
+          z_d(ii,l) = b_d(ii,l) + e_d(i) * spsi_d(ii,i) - hpsi_d(ii,i)    
+        END DO 
+        call g_1psi_gpu(npwx,npw,z_d(:,l),e_d(i))
      end do
   !- project on conduction bands
      CALL start_clock( 'pcg:ortho' )
-     CALL DGEMM( 'T','N', nbnd,nactive,npw2, 2.D0, spsi0, npwx2, z, npwx2, 0.D0, spsi0vec, nbnd )
-     IF ( gstart == 2 ) CALL DGER( nbnd, nactive, -1.D0, spsi0, npwx2, z, npwx2, spsi0vec, nbnd )
-     CALL mp_sum( spsi0vec, intra_bgrp_comm )
-     CALL DGEMM( 'N','N', npw2,nactive,nbnd,-1.D0, psi0, npwx2, spsi0vec, nbnd, 1.D0, z, npwx2 )
+     CALL gpu_DGEMM( 'T','N', nbnd,nactive,npw2, 2.D0, spsi0_d, npwx2, z_d, npwx2, 0.D0, spsi0vec_d, nbnd )
+     IF ( gstart == 2 ) CALL gpu_DGER( nbnd, nactive, -1.D0, spsi0_d, npwx2, z_d, npwx2, spsi0vec_d, nbnd )
+     CALL mp_sum( spsi0vec_d, intra_bgrp_comm )
+     CALL gpu_DGEMM( 'N','N', npw2,nactive,nbnd,-1.D0, psi0_d, npwx2, spsi0vec_d, nbnd, 1.D0, z_d, npwx2 )
      CALL stop_clock( 'pcg:ortho' )
   !-
      do l = 1, nactive; i=l+done
-        g1(l) = 2.D0 * ( DDOT(npw2,z(:,l),1,b(:,l),1) + e(i) * DDOT(npw2,z(:,l),1,spsi(:,i),1) - DDOT(npw2,z(:,l),1,hpsi(:,i),1) )
-        IF (gstart==2) g1(l) = g1(l) - CONJG(z(1,l)) * ( b(1,l) + e(i) * spsi(1,i) - hpsi(1,i) )
+        g1(l) = 2.D0 * ( gpu_DDOT(npw2,z_d(:,l),1,b_d(:,l),1) + &
+                         e_d(i) * gpu_DDOT(npw2,z_d(:,l),1,spsi_d(:,i),1) - &
+                         gpu_DDOT(npw2,z_d(:,l),1,hpsi_d(:,i),1) )
+        !IF (gstart==2) g1(l) = g1(l) - CONJG(z(1,l)) * ( b(1,l) + e(i) * spsi(1,i) - hpsi(1,i) )
+        IF (gstart==2) THEN
+          tmp = b_d(1,l) 
+          tmp = tmp + gpu_DDOT(2,e_d(i),1,spsi_d(1,i),1) 
+          tmp = tmp - hpsi_d(1,i)
+          tmp_d = tmp
+          g1(l) = g1(l) - gpu_DDOT(2,z_d(1,l),1,tmp_d,1)
+        END IF
      end do
      CALL mp_sum( g1(1:nactive), intra_bgrp_comm )   ! g1 = < new z | new gradient b + e spsi - hpsi >
+
+!civn 2fix 
+     e = e_d 
+     p = p_d
+     hp = hp_d
+     sp = sp_d
+     b = b_d
+     z = z_d
+     psi = psi_d
+     hpsi = hpsi_d
+     spsi = spsi_d
+     psi0 = psi0_d
+     spsi0 = spsi0_d
+     spsi0vec = spsi0vec_d
+!
 
      do l = 1, nactive; i = l + done                 ! evaluate the function ff
         ff(l) = - ( e(i)*DDOT(npw2,psi(:,i),1,spsi(:,i),1) - DDOT(npw2,psi(:,i),1,hpsi(:,i),1) ) &
@@ -373,8 +406,9 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, p
   DEALLOCATE( ethr_cg, ff, ff0, cg_iter )
   DEALLOCATE( g0, g1, g2, alpha, gamma )
 !civn 
-  DEALLOCATE( b_d, z_d, p_d )
+  DEALLOCATE( b_d, z_d, p_d, hp_d, sp_d )
   DEALLOCATE( spsi0vec_d )
+  DEALLOCATE( alpha_d )
 ! 
   !
   CALL stop_clock( 'pcg' )

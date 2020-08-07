@@ -37,10 +37,11 @@
 !  A Parallel Orbital-updating Based Plane Wave Basis Method. J. Comp. Phys. 348, 482-492 (2017).
 !
 ! The file is written mainly by Stefano de Gironcoli and Yan Pan.
+!
 ! GPU version by Ivan Carnimeo
 !
 !-------------------------------------------------------------------------------
-SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
+SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi, overlap, &
                  npwx, npw, nbnd, evc, eig, btype, ethr, notconv, nhpsi )
   !-------------------------------------------------------------------------------
   !paro_flag = 1: modified parallel orbital-updating method
@@ -223,7 +224,7 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
      psi   =  psi_d  
      hpsi  =  hpsi_d 
      spsi  =  spsi_d 
-     CALL bpcg_gamma_gpu(hs_psi, g_1psi, psi, spsi, npw, npwx, nbnd, how_many, &
+     CALL bpcg_gamma_gpu(hs_psi_gpu, g_1psi, psi, spsi, npw, npwx, nbnd, how_many, &
                 psi(:,nbase+1), hpsi(:,nbase+1), spsi(:,nbase+1), ethr, ew(1), nhpsi)
 !civn 2fix
      psi_d    =  psi  

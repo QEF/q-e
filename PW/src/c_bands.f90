@@ -242,6 +242,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !------------------------------------------------------------------------
   ! CG diagonalization uses these external routines on a single band
   EXTERNAL hs_1psi, s_1psi, hs_psi
+  EXTERNAL hs_psi_gpu
   EXTERNAL hs_1psi_gpu, s_1psi_gpu
   ! subroutine hs_1psi(npwx,npw,psi,hpsi,spsi)  computes H*psi and S*psi
   ! subroutine s_1psi(npwx,npw,psi,spsi)        computes S*psi (if needed)
@@ -410,7 +411,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              ELSE
 !civn fix this
                CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) ! precontidtion has intent(in)
-               CALL paro_gamma_new_gpu( h_psi, s_psi, hs_psi, g_1psi, okvan, &
+               CALL paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi, okvan, &
                           npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                !
                avg_iter = avg_iter + nhpsi/float(nbnd) 

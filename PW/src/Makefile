@@ -97,6 +97,7 @@ gradcorr.o \
 gweights.o \
 g2_kin.o \
 hs_psi.o \
+hs_psi_gpu.o \
 hs_1psi.o \
 h_epsi_her_apply.o \
 h_epsi_her_set.o \
