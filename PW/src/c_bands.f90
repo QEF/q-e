@@ -257,6 +257,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   ! subroutine g_1psi(npwx,npw,psi,eig)         computes G*psi -> psi
   ! In addition to the above the initial wfc rotation uses h_psi, and s_psi
   external g_1psi
+  external g_1psi_gpu
 
   ALLOCATE( h_diag( npwx, npol ), STAT=ierr )
   IF( ierr /= 0 ) &
@@ -411,7 +412,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              ELSE
 !civn fix this
                CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) ! precontidtion has intent(in)
-               CALL paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi, okvan, &
+               CALL paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi_gpu, okvan, &
                           npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
                !
                avg_iter = avg_iter + nhpsi/float(nbnd) 

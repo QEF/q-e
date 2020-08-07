@@ -45,7 +45,7 @@
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi, psi0, spsi0, npw, npwx, nbnd, nvec, psi, hpsi, spsi, ethr, e, nhpsi )
+SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, nbnd, nvec, psi_d, hpsi_d, spsi_d, ethr, e, nhpsi )
   !----------------------------------------------------------------------------
   !
   ! Block Preconditioned Conjugate Gradient solution of the linear system
@@ -59,6 +59,8 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi, psi0, spsi0, npw, npwx, nbnd, nve
   ! in order to avoid un-necessary HSpsi evaluations this version assumes psi,hpsi and spsi are all
   ! provided in input and return their estimate for further use
   !
+  !  Ivan Carnimeo: GPU version
+  !
 #if defined (__CUDA) 
   USE cudafor
 #endif  
@@ -69,17 +71,13 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi, psi0, spsi0, npw, npwx, nbnd, nve
   IMPLICIT NONE
   !
   ! Following varibales are temporary
-
-!civn 2fix restore intent(in) on psi0_d and spsi0_d
-  !COMPLEX(DP),INTENT(IN) :: psi0(npwx,nbnd)  ! psi0  needed to compute the Pv projection
-  !COMPLEX(DP),INTENT(IN) :: spsi0(npwx,nbnd) ! Spsi0  needed to compute the Pv projection
-  COMPLEX(DP) :: psi0(npwx,nbnd)  ! psi0  needed to compute the Pv projection
-  COMPLEX(DP) :: spsi0(npwx,nbnd) ! Spsi0  needed to compute the Pv projection
+  COMPLEX(DP), INTENT(IN) :: psi0_d(npwx,nbnd)  ! psi0  needed to compute the Pv projection
+  COMPLEX(DP), INTENT(IN) :: spsi0_d(npwx,nbnd) ! Spsi0  needed to compute the Pv projection
 !
   INTEGER,  INTENT(IN)   :: npw, npwx, nbnd, nvec ! input dimensions 
   REAL(DP), INTENT(IN)   :: ethr                  ! threshold for convergence.
   REAL(DP), INTENT(INOUT)   :: e(nvec)            ! current estimate of the target eigenvalues
-  COMPLEX(DP),INTENT(INOUT) :: psi(npwx,nvec),hpsi(npwx,nvec),spsi(npwx,nvec) ! 
+  COMPLEX(DP),INTENT(INOUT) :: psi_d(npwx,nvec),hpsi_d(npwx,nvec),spsi_d(npwx,nvec) ! 
                                                   ! input: the current estimate of the wfcs
                                                   ! output: the estimated correction vectors
   INTEGER, INTENT(INOUT) :: nhpsi                 ! (updated) number of Hpsi evaluations
@@ -88,40 +86,27 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi, psi0, spsi0, npw, npwx, nbnd, nve
   !
   INTEGER, PARAMETER :: maxter = 5 ! maximum number of CG iterations 
   !
-  COMPLEX(DP), ALLOCATABLE ::  b(:,:),                        & ! RHS for testing
-                               p(:,:), hp(:,:), sp(:,:), z(:,:) ! additional working vetors
 
-  REAL(DP), ALLOCATABLE    ::  spsi0vec (:,:) ! the product of spsi0 and a group of vectors
-
-  REAL(DP), ALLOCATABLE :: g0(:), g1(:), g2(:), alpha(:), gamma(:), ethr_cg(:), ff(:), ff0(:)
+  REAL(DP), ALLOCATABLE :: g0(:), g1(:), g2(:), gamma(:), ethr_cg(:), ff(:), ff0(:)
   INTEGER, ALLOCATABLE :: cg_iter(:)
   REAL(DP) :: beta, ee
   INTEGER  :: npw2, npwx2, i, l, block_size, done, nactive, nnew, newdone
   !
-  REAL(DP), EXTERNAL :: DDOT
-  COMPLEX(DP), EXTERNAL :: ZDOTC
-
-  EXTERNAL  hs_psi, g_1psi
-  ! hs_1psi( npwx, npw, psi, hpsi, spsi )
-  ! hs_psi( npwx, npw, nvec, psi, hpsi, spsi )
-!civn 
-  ! device arrays   
+  ! ... DEVICE variables   
+  !
   EXTERNAL  g_1psi_gpu, hs_psi_gpu
   REAL(DP), EXTERNAL :: gpu_DDOT
-  COMPLEX(DP) :: tmp, tmp_d
-  INTEGER :: ii, jj
-  COMPLEX(DP) :: psi_d(npwx,nvec),hpsi_d(npwx,nvec),spsi_d(npwx,nvec) 
-  COMPLEX(DP) :: psi0_d(npwx,nbnd)  ! psi0  needed to compute the Pv projection
-  COMPLEX(DP) :: spsi0_d(npwx,nbnd) ! Spsi0  needed to compute the Pv projection
-  REAL(DP), ALLOCATABLE    ::  spsi0vec_d (:,:) ! the product of spsi0 and a group of vectors
-  REAL(DP), ALLOCATABLE    ::  alpha_d(:) 
-  REAL(DP) :: e_d(nvec)            ! current estimate of the target eigenvalues
   COMPLEX(DP), ALLOCATABLE ::  b_d(:,:),                        & ! RHS for testing
                                p_d(:,:), hp_d(:,:), sp_d(:,:), z_d(:,:) ! additional working vetors
+  REAL(DP), ALLOCATABLE    ::  spsi0vec_d (:,:) ! the product of spsi0 and a group of vectors
+  COMPLEX(DP) :: tmp, tmp_d
+  INTEGER :: ii, jj
+  REAL(DP) :: e_d(nvec)            ! current estimate of the target eigenvalues
+  REAL(DP), ALLOCATABLE ::  alpha_d(:) 
 #if defined (__CUDA) 
   attributes(device) :: psi_d, spsi_d, hpsi_d 
+  attributes(device) :: psi0_d, spsi0_d, spsi0vec_d 
   attributes(device) :: e_d, b_d, z_d, p_d, hp_d, sp_d
-  attributes(device) :: spsi0_d, psi0_d, spsi0vec_d
   attributes(device) :: alpha_d, tmp_d
 #endif  
 !
@@ -132,41 +117,23 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi, psi0, spsi0, npw, npwx, nbnd, nve
   npwx2 = 2*npwx
   block_size = min(nvec,64) 
   !
-  ALLOCATE( g0( block_size ), g1( block_size ), g2( block_size ), alpha( block_size ), gamma( block_size ) )
+  ALLOCATE( g0( block_size ), g1( block_size ), g2( block_size ), gamma( block_size ) )
   ALLOCATE( ethr_cg( block_size ), ff( block_size ), ff0( block_size ), cg_iter( block_size ) )
-  ALLOCATE( z( npwx, block_size ), b( npwx, block_size ) )
-  ALLOCATE( p(npwx,block_size), hp(npwx,block_size), sp(npwx,block_size) )
-  ALLOCATE( spsi0vec(nbnd, block_size) )
-!civn 
-  ALLOCATE( alpha_d( block_size ) )
   ALLOCATE( z_d( npwx, block_size ), b_d( npwx, block_size ) )
   ALLOCATE( p_d(npwx,block_size), hp_d(npwx,block_size), sp_d(npwx,block_size) )
   ALLOCATE( spsi0vec_d(nbnd, block_size) )
+  ALLOCATE( alpha_d( block_size ) )
 !  
   !
   done    = 0  ! the number of correction vectors already solved
   nactive = 0  ! the number of correction vectors currently being updated
   cg_iter = 0  ! how many iteration each active vector has completed (<= maxter)
 
-!civn 2fix 
-     e_d = e
-     p_d = p
-     hp_d = hp
-     sp_d = sp
-     b_d = b
-     z_d = z
-     psi_d = psi
-     hpsi_d = hpsi
-     spsi_d = spsi
-     psi0_d = psi0 
-     spsi0_d = spsi0
-     spsi0vec_d = spsi0vec
-!
+  e_d = e
 
   MAIN_LOOP: & ! This is a continuous loop. It terminates only when nactive vanishes
   DO
      nnew = min(done+block_size,nvec)-(done+nactive) ! number of new corrections to be added to the seach
-
      if ( nnew > 0 ) then    ! add nnew vectors to the active list
         !write(6,*) ' nnew =', nnew
         do l=nactive+1,nactive+nnew
@@ -209,12 +176,10 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi, psi0, spsi0, npw, npwx, nbnd, nve
            !write(6,*) 'ethr_cg :', ethr_cg(l)
 
            ! zero the trial solution
-!$cuf kernel do(1)
-           DO ii = 1, npwx
-             psi_d(ii,i) = ZERO
-             hpsi_d(ii,i) = ZERO 
-             spsi_d(ii,i) = ZERO
-           END DO 
+           psi_d(:,i) = ZERO
+           hpsi_d(:,i) = ZERO
+           spsi_d(:,i) = ZERO
+
            ! initial search direction
 !$cuf kernel do(1)
            DO ii = 1, npwx
@@ -248,10 +213,8 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi, psi0, spsi0, npw, npwx, nbnd, nve
      do l = 1, nactive; i=l+done
         !write(6,*) ' l =',l,' i =',i
 
-!civn 2fix
-        alpha(l) = g0(l)/gamma(l)
-        alpha_d(l) = g0(l)/gamma(l)
-        !write(6,*) 'g0, gamma, alpha :', g0(l), gamma(l), alpha(l)
+        alpha_d(l) = g0(l)/gamma(l)  
+        !write(6,*) 'g0, gamma, alpha :', g0(l), gamma(l), alpha_d(l)
 
 !$cuf kernel do(1)
         DO ii = 1, npwx
@@ -374,8 +337,8 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi, psi0, spsi0, npw, npwx, nbnd, nve
            END DO
 
            ff0(l) = ff0(newdone) ; ff(l) = ff(newdone)
-           tmp = alpha(newdone) 
-           alpha(l) = tmp 
+           tmp = alpha_d(newdone) 
+           alpha_d(l) = tmp 
            g0(l) = g0(newdone) ; g1(l) = g1(newdone) ; g2(l) = g2(newdone)
            cg_iter(l) = cg_iter(newdone) ; ethr_cg(l) = ethr_cg(newdone)
            CALL stop_clock( 'pcg:move' )
@@ -431,30 +394,13 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi, psi0, spsi0, npw, npwx, nbnd, nve
   END DO  MAIN_LOOP
   !write (6,*) ' exit  pcg loop'
 
-!civn 2fix 
-     e = e_d 
-     p = p_d
-     hp = hp_d
-     sp = sp_d
-     b = b_d
-     z = z_d
-     psi = psi_d
-     hpsi = hpsi_d
-     spsi = spsi_d
-     psi0 = psi0_d
-     spsi0 = spsi0_d
-     spsi0vec = spsi0vec_d
-!
+  e = e_d 
 
-  DEALLOCATE( spsi0vec )
-  DEALLOCATE( b, p, hp, sp, z )
-  DEALLOCATE( ethr_cg, ff, ff0, cg_iter )
-  DEALLOCATE( g0, g1, g2, alpha, gamma )
-!civn 
   DEALLOCATE( b_d, z_d, p_d, hp_d, sp_d )
+  DEALLOCATE( ethr_cg, ff, ff0, cg_iter )
+  DEALLOCATE( g0, g1, g2, gamma )
   DEALLOCATE( spsi0vec_d )
   DEALLOCATE( alpha_d )
-! 
   !
   CALL stop_clock( 'pcg' )
   !

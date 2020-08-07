@@ -41,7 +41,7 @@
 ! GPU version by Ivan Carnimeo
 !
 !-------------------------------------------------------------------------------
-SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi, overlap, &
+SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi_gpu, overlap, &
                  npwx, npw, nbnd, evc, eig, btype, ethr, notconv, nhpsi )
   !-------------------------------------------------------------------------------
   !paro_flag = 1: modified parallel orbital-updating method
@@ -82,7 +82,9 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi, overlap, &
   !
   INTEGER :: itry, paro_ntr, nconv, nextra, nactive, nbase, ntrust, ndiag, nvecx, nproc_ortho
   REAL(DP), ALLOCATABLE    :: ew(:)
-  COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
+!civn 2fix 
+  COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:) ! needed only for __MPI = true
+!
   LOGICAL, ALLOCATABLE     :: conv(:)
 
   REAL(DP), PARAMETER      :: extra_factor = 0.5 ! workspace is at most this factor larger than nbnd
@@ -90,8 +92,9 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi, overlap, &
 
   INTEGER :: ibnd, ibnd_start, ibnd_end, how_many, lbnd, kbnd, last_unconverged, &
              recv_counts(nbgrp), displs(nbgrp), column_type
-!civn 
-  !device variables
+  !
+  ! ... device variables
+  !
   EXTERNAL h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu
   INTEGER :: ii, jj, kk 
   COMPLEX(DP), ALLOCATABLE :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
@@ -110,20 +113,13 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi, overlap, &
 
   CALL mp_type_create_column_section(evc(1,1), 0, npwx, npwx, column_type)
 
-  ALLOCATE ( psi(npwx,nvecx), hpsi(npwx,nvecx), spsi(npwx,nvecx), ew(nvecx), conv(nbnd) )
-!civn 
+  ALLOCATE ( ew(nvecx), conv(nbnd) )
   ALLOCATE ( psi_d(npwx,nvecx), hpsi_d(npwx,nvecx), spsi_d(npwx,nvecx) )
 
   CALL start_clock( 'paro:init' ); 
   conv(:) =  .FALSE. ; nconv = COUNT ( conv(:) )
-!civn 
-!  psi(:,1:nbnd) = evc(:,1:nbnd) ! copy input evc into work vector
-!!!cuf kernel do(2) 
-  DO ii = 1, npwx
-    DO jj = 1, nbnd
-      psi_d(ii,jj) = evc(ii,jj) 
-    END DO 
-  END DO 
+
+  psi_d(:,1:nbnd) = evc(:,1:nbnd) ! copy input evc into work vector
 
   call h_psi_gpu  (npwx,npw,nbnd,psi_d,hpsi_d) ! computes H*psi
   call s_psi_gpu  (npwx,npw,nbnd,psi_d,spsi_d) ! computes S*psi
@@ -137,14 +133,15 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi, overlap, &
 #if defined(__MPI)
   ELSE
 !civn 2fix
+     ALLOCATE ( psi(npwx,nvecx), hpsi(npwx,nvecx), spsi(npwx,nvecx) )
      psi  = psi_d
      hpsi = hpsi_d
      spsi = spsi_d
      CALL protate_HSpsi_gamma(  npwx, npw, nbnd, nbnd, psi, hpsi, overlap, spsi, eig )
-!civn 2fix
      psi_d   =  psi  
      hpsi_d  =  hpsi 
      spsi_d  =  spsi 
+     DEALLOCATE ( psi, hpsi, spsi )
   ENDIF
 #endif
 
@@ -219,18 +216,8 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi, overlap, &
    
 !     write (6,*) ' check nactive = ', lbnd, nactive
      if (lbnd .ne. nactive+1 ) stop ' nactive check FAILED '
-
-!civn 2fix
-     psi   =  psi_d  
-     hpsi  =  hpsi_d 
-     spsi  =  spsi_d 
-     CALL bpcg_gamma_gpu(hs_psi_gpu, g_1psi, psi, spsi, npw, npwx, nbnd, how_many, &
-                psi(:,nbase+1), hpsi(:,nbase+1), spsi(:,nbase+1), ethr, ew(1), nhpsi)
-!civn 2fix
-     psi_d    =  psi  
-     hpsi_d   =  hpsi 
-     spsi_d   =  spsi 
-     
+     CALL bpcg_gamma_gpu(hs_psi_gpu, g_1psi_gpu, psi_d, spsi_d, npw, npwx, nbnd, how_many, &
+                psi_d(:,nbase+1), hpsi_d(:,nbase+1), spsi_d(:,nbase+1), ethr, ew(1), nhpsi)
      CALL start_clock( 'paro:mp_bar' ); 
      CALL mp_barrier(inter_bgrp_comm)
      CALL stop_clock( 'paro:mp_bar' ); 
@@ -256,14 +243,15 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi, overlap, &
 #if defined(__MPI)
      ELSE
 !civn 2fix
+        ALLOCATE ( psi(npwx,nvecx), hpsi(npwx,nvecx), spsi(npwx,nvecx) )
         psi  =  psi_d   
         hpsi =  hpsi_d  
         spsi =  spsi_d  
         CALL protate_HSpsi_gamma(  npwx, npw, ndiag, ndiag, psi, hpsi, overlap, spsi, ew )
-!civn 2fix
         psi_d   =  psi  
         hpsi_d  =  hpsi 
         spsi_d  =  spsi 
+        DEALLOCATE ( psi, hpsi, spsi )
      ENDIF
 #endif
 
@@ -281,8 +269,7 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi, overlap, &
 
   CALL mp_sum(nhpsi,inter_bgrp_comm)
 
-  DEALLOCATE ( ew, conv, psi, hpsi, spsi )
-!civn 
+  DEALLOCATE ( ew, conv )
   DEALLOCATE ( psi_d, hpsi_d, spsi_d )
 
   CALL mp_type_free( column_type )
