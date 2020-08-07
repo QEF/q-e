@@ -148,10 +148,6 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi, psi0, spsi0, npw, npwx, nbnd, nve
   nactive = 0  ! the number of correction vectors currently being updated
   cg_iter = 0  ! how many iteration each active vector has completed (<= maxter)
 
-  MAIN_LOOP: & ! This is a continuous loop. It terminates only when nactive vanishes
-  DO
-     nnew = min(done+block_size,nvec)-(done+nactive) ! number of new corrections to be added to the seach
-
 !civn 2fix 
      e_d = e
      p_d = p
@@ -166,6 +162,11 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi, psi0, spsi0, npw, npwx, nbnd, nve
      spsi0_d = spsi0
      spsi0vec_d = spsi0vec
 !
+
+  MAIN_LOOP: & ! This is a continuous loop. It terminates only when nactive vanishes
+  DO
+     nnew = min(done+block_size,nvec)-(done+nactive) ! number of new corrections to be added to the seach
+
      if ( nnew > 0 ) then    ! add nnew vectors to the active list
         !write(6,*) ' nnew =', nnew
         do l=nactive+1,nactive+nnew
@@ -298,25 +299,17 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi, psi0, spsi0, npw, npwx, nbnd, nve
      end do
      CALL mp_sum( g1(1:nactive), intra_bgrp_comm )   ! g1 = < new z | new gradient b + e spsi - hpsi >
 
-!civn 2fix 
-     e = e_d 
-     p = p_d
-     hp = hp_d
-     sp = sp_d
-     b = b_d
-     z = z_d
-     psi = psi_d
-     hpsi = hpsi_d
-     spsi = spsi_d
-     psi0 = psi0_d
-     spsi0 = spsi0_d
-     spsi0vec = spsi0vec_d
-!
-
      do l = 1, nactive; i = l + done                 ! evaluate the function ff
-        ff(l) = - ( e(i)*DDOT(npw2,psi(:,i),1,spsi(:,i),1) - DDOT(npw2,psi(:,i),1,hpsi(:,i),1) ) &
-                - 2.D0 * DDOT(npw2,psi(:,i),1,b(:,l),1)
-        if (gstart==2) ff(l) = ff(l) + 0.5D0 * CONJG(psi(1,i))*( e(i)*spsi(1,i) - hpsi(1,i) + 2.D0 * b(1,l) )
+        ff(l) = - ( e_d(i)*gpu_DDOT(npw2,psi_d(:,i),1,spsi_d(:,i),1) - gpu_DDOT(npw2,psi_d(:,i),1,hpsi_d(:,i),1) ) &
+                - 2.D0 * gpu_DDOT(npw2,psi_d(:,i),1,b_d(:,l),1)
+        !if (gstart==2) ff(l) = ff(l) + 0.5D0 * CONJG(psi(1,i))*( e(i)*spsi(1,i) - hpsi(1,i) + 2.D0 * b(1,l) )
+        if (gstart==2) THEN
+          tmp = gpu_DDOT(2,e_d(i),1,spsi_d(1,i),1)  
+          tmp = tmp  - hpsi_d(1,i) 
+          tmp = tmp + 2.D0 * b_d(1,l)  
+          tmp_d = tmp
+          ff(l) = ff(l) + 0.5D0 * gpu_DDOT(2,psi_d(1,i),1,tmp_d,1)
+        END IF
      end do
      CALL mp_sum( ff(1:nactive), intra_bgrp_comm )   ! function minimum -0.5 < psi | e spsi - hpsi > - < psi | b >
 
@@ -325,9 +318,12 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi, psi0, spsi0, npw, npwx, nbnd, nve
         !write (6,*) cg_iter(l), g1(l), ff(l),  gamma(l)
 
         IF ( ff(l) > ff0(l) .AND. ff0(l) < 0.d0 ) THEN
-           psi(:,i)  = psi(:,i)  - alpha(l) * p(:,l) ! fallback solution: if last iter failed to improve ff0
-           hpsi(:,i) = hpsi(:,i) - alpha(l) * hp(:,l)! exit whitout updating and ...
-           spsi(:,i) = spsi(:,i) - alpha(l) * sp(:,l)! hope next time it'll be better
+!$cuf kernel do(1)
+           DO ii = 1, npwx    
+             psi_d(ii,i)  = psi_d(ii,i)  - alpha_d(l) * p_d(ii,l) ! fallback solution: if last iter failed to improve ff0
+             hpsi_d(ii,i) = hpsi_d(ii,i) - alpha_d(l) * hp_d(ii,l)! exit whitout updating and ...
+             spsi_d(ii,i) = spsi_d(ii,i) - alpha_d(l) * sp_d(ii,l)! hope next time it'll be better
+           END DO 
         END IF
 
         !write(6,*) 'g0, g1, g2 :', g0(l), g1(l), g2(l)
@@ -348,16 +344,39 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi, psi0, spsi0, npw, npwx, nbnd, nve
            CALL start_clock( 'pcg:move' )
            !write(6,*) ' swapping converged psi/hpsi/spsi i = ',i, " with i' = ",done+newdone
            ! swap the terminated vector with the first in the list of the active ones
-           p (:,l) = psi (:,done+newdone) ; psi (:,done+newdone) = psi (:,i) ; psi (:,i) = p (:,l)
-           hp(:,l) = hpsi(:,done+newdone) ; hpsi(:,done+newdone) = hpsi(:,i) ; hpsi(:,i) = hp(:,l)
-           sp(:,l) = spsi(:,done+newdone) ; spsi(:,done+newdone) = spsi(:,i) ; spsi(:,i) = sp(:,l)
-           ee      = e(done+newdone)      ; e(done+newdone)      = e(i)      ; e(i)      = ee
+!$cuf kernel do(1)
+           DO ii = 1, npwx 
+             p_d (ii,l) = psi_d (ii,done+newdone) 
+             psi_d (ii,done+newdone) = psi_d (ii,i) 
+             psi_d (ii,i) = p_d (ii,l)
+             hp_d(ii,l) = hpsi_d(ii,done+newdone) 
+             hpsi_d(ii,done+newdone) = hpsi_d(ii,i) 
+             hpsi_d(ii,i) = hp_d(ii,l)
+             sp_d(ii,l) = spsi_d(ii,done+newdone) 
+             spsi_d(ii,done+newdone) = spsi_d(ii,i) 
+             spsi_d(ii,i) = sp_d(ii,l)
+           END DO
+
+           ee      = e_d(done+newdone)      
+           tmp = e_d(i)
+           e_d(done+newdone)      = tmp
+           e_d(i)      = ee
 
            !write(6,*) ' overwrite converged p/hp/etc l = ',l, ' with newdone = ',newdone
            ! move information of the swapped active vector in the right place to keep going
-           p(:,l) = p(:,newdone)          ; hp(:,l) = p(:,newdone)           ; sp(:,l) = sp(:,newdone)
-           b(:,l) = b(:,newdone) ; z(:,l) = z(:,newdone) ; ff0(l) = ff0(newdone) ; ff(l) = ff(newdone)
-           alpha(l) = alpha(newdone) ; g0(l) = g0(newdone) ; g1(l) = g1(newdone) ; g2(l) = g2(newdone)
+!$cuf kernel do(1)
+           DO ii = 1, npwx
+             p_d(ii,l) = p_d(ii,newdone)          
+             hp_d(ii,l) = p_d(ii,newdone)       
+             sp_d(ii,l) = sp_d(ii,newdone)
+             b_d(ii,l) = b_d(ii,newdone) 
+             z_d(ii,l) = z_d(ii,newdone) 
+           END DO
+
+           ff0(l) = ff0(newdone) ; ff(l) = ff(newdone)
+           tmp = alpha(newdone) 
+           alpha(l) = tmp 
+           g0(l) = g0(newdone) ; g1(l) = g1(newdone) ; g2(l) = g2(newdone)
            cg_iter(l) = cg_iter(newdone) ; ethr_cg(l) = ethr_cg(newdone)
            CALL stop_clock( 'pcg:move' )
 
@@ -366,7 +385,10 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi, psi0, spsi0, npw, npwx, nbnd, nve
            !write(6,*) ' l =',l,' i =',i
            beta   = (g1(l)-g2(l))/g0(l)         ! Polak - Ribiere style update
            g0(l)  = g1(l)                       ! < new z | new gradient >  ->  < old z | old gradient >
-           p(:,l) = z(:,l) + beta * p(:,l)      ! updated search direction
+!$cuf kernel do(1)
+           DO ii = 1, npwx
+             p_d(ii,l) = z_d(ii,l) + beta * p_d(ii,l)      ! updated search direction
+           END DO
            !write(6,*) 'beta :', beta
 
            ff0(l) = ff(l)                       ! updated minimum value reached by the function
@@ -386,8 +408,16 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi, psi0, spsi0, npw, npwx, nbnd, nve
         do l=1, nactive
 
            !write(6,*) ' l+newdone =',l+newdone,'  ->   l =',l
-           p (:,l) = p (:,l+newdone) ; hp(:,l) = hp(:,l+newdone) ; sp(:,l) = sp(:,l+newdone)
-           b(:,l) = b(:,l+newdone) ; z(:,l) = z(:,l+newdone) ; ff0(l) = ff0(l+newdone) ; ff(l) = ff(l+newdone)
+!$cuf kernel do(1)
+           DO ii = 1, npwx
+             p_d (ii,l) = p_d (ii,l+newdone) 
+             hp_d(ii,l) = hp_d(ii,l+newdone) 
+             sp_d(ii,l) = sp_d(ii,l+newdone)
+             b_d(ii,l) = b_d(ii,l+newdone) 
+             z_d(ii,l) = z_d(ii,l+newdone) 
+           END DO
+
+           ff0(l) = ff0(l+newdone) ; ff(l) = ff(l+newdone)
            g0(l) = g0(l+newdone) ; g1(l) = g1(l+newdone) ; g2(l) = g2(l+newdone)
            cg_iter(l) = cg_iter(l+newdone) ; ethr_cg(l) = ethr_cg(l+newdone)
 
@@ -400,6 +430,21 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi, psi0, spsi0, npw, npwx, nbnd, nve
 
   END DO  MAIN_LOOP
   !write (6,*) ' exit  pcg loop'
+
+!civn 2fix 
+     e = e_d 
+     p = p_d
+     hp = hp_d
+     sp = sp_d
+     b = b_d
+     z = z_d
+     psi = psi_d
+     hpsi = hpsi_d
+     spsi = spsi_d
+     psi0 = psi0_d
+     spsi0 = spsi0_d
+     spsi0vec = spsi0vec_d
+!
 
   DEALLOCATE( spsi0vec )
   DEALLOCATE( b, p, hp, sp, z )
