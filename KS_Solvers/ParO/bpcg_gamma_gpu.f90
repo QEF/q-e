@@ -251,7 +251,6 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, n
         g1(l) = 2.D0 * ( gpu_DDOT(npw2,z_d(:,l),1,b_d(:,l),1) + &
                          e_d(i) * gpu_DDOT(npw2,z_d(:,l),1,spsi_d(:,i),1) - &
                          gpu_DDOT(npw2,z_d(:,l),1,hpsi_d(:,i),1) )
-        !IF (gstart==2) g1(l) = g1(l) - CONJG(z(1,l)) * ( b(1,l) + e(i) * spsi(1,i) - hpsi(1,i) )
         IF (gstart==2) THEN
           tmp = b_d(1,l) 
           tmp = tmp + gpu_DDOT(2,e_d(i),1,spsi_d(1,i),1) 
@@ -265,7 +264,6 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, n
      do l = 1, nactive; i = l + done                 ! evaluate the function ff
         ff(l) = - ( e_d(i)*gpu_DDOT(npw2,psi_d(:,i),1,spsi_d(:,i),1) - gpu_DDOT(npw2,psi_d(:,i),1,hpsi_d(:,i),1) ) &
                 - 2.D0 * gpu_DDOT(npw2,psi_d(:,i),1,b_d(:,l),1)
-        !if (gstart==2) ff(l) = ff(l) + 0.5D0 * CONJG(psi(1,i))*( e(i)*spsi(1,i) - hpsi(1,i) + 2.D0 * b(1,l) )
         if (gstart==2) THEN
           tmp = gpu_DDOT(2,e_d(i),1,spsi_d(1,i),1)  
           tmp = tmp  - hpsi_d(1,i) 

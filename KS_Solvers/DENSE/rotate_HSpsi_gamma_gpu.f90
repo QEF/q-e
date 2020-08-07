@@ -15,6 +15,8 @@ SUBROUTINE rotate_HSpsi_gamma_gpu( npwx, npw, nstart, nbnd, psi_d, hpsi_d, overl
   ! ... This version assumes real wavefunctions (k=0) with only
   ! ... half plane waves stored: psi(-G)=psi*(G), except G=0
   !
+  ! GPU version by Ivan Carnimeo
+  !
 #if defined (__CUDA)
   USE cudafor
 #endif 
@@ -267,11 +269,6 @@ SUBROUTINE protate_HSpsi_gamma_gpu( npwx, npw, nstart, nbnd, psi, hpsi, overlap,
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
   INTEGER :: npw_s, npw_e, my_kdim, ib_s, ib_e, my_nbnd, recv_counts(nbgrp), displs(nbgrp), column_type
   !
-!civn 
-#if defined (__CUDA)
-  write(*,*) 'civn __CUDA protate' 
-#endif
-
   IF ( gstart == -1 ) CALL errore( 'regter', 'gstart variable not initialized', 1 )
   IF ( overlap .AND..NOT.present(spsi) ) call errore( 'rotHSw','spsi array needed with overlap=.TRUE.',1)
   !

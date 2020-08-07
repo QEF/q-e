@@ -41,8 +41,8 @@
 ! GPU version by Ivan Carnimeo
 !
 !-------------------------------------------------------------------------------
-SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi_gpu, overlap, &
-                 npwx, npw, nbnd, evc, eig, btype, ethr, notconv, nhpsi )
+SUBROUTINE paro_gamma_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, overlap, &
+                 npwx, npw, nbnd, evc_d, eig_d, btype, ethr, notconv, nhpsi )
   !-------------------------------------------------------------------------------
   !paro_flag = 1: modified parallel orbital-updating method
   !
@@ -62,16 +62,16 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi_gpu, overlap, &
   ! I/O variables
   LOGICAL, INTENT(IN)        :: overlap
   INTEGER, INTENT(IN)        :: npw, npwx, nbnd
-  COMPLEX(DP), INTENT(INOUT) :: evc(npwx,nbnd)
+  COMPLEX(DP), INTENT(INOUT) :: evc_d(npwx,nbnd)
   REAL(DP), INTENT(IN)       :: ethr
-  REAL(DP), INTENT(INOUT)    :: eig(nbnd)
+  REAL(DP), INTENT(INOUT)    :: eig_d(nbnd)
   INTEGER, INTENT(IN)        :: btype(nbnd)
   INTEGER, INTENT(OUT)       :: notconv, nhpsi
 !  INTEGER, INTENT(IN)        :: paro_flag
   
   ! local variables (used in the call to cegterg )
   !------------------------------------------------------------------------
-  EXTERNAL h_psi, s_psi, hs_psi, g_1psi
+  EXTERNAL h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu
   ! subroutine h_psi  (npwx,npw,nvec,evc,hpsi)  computes H*evc  using band parallelization
   ! subroutine s_psi  (npwx,npw,nvec,evc,spsi)  computes S*evc  using band parallelization
   ! subroutine hs_1psi(npwx,npw,evc,hpsi,spsi)  computes H*evc and S*evc for a single band
@@ -82,9 +82,12 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi_gpu, overlap, &
   !
   INTEGER :: itry, paro_ntr, nconv, nextra, nactive, nbase, ntrust, ndiag, nvecx, nproc_ortho
   REAL(DP), ALLOCATABLE    :: ew(:)
-!civn 2fix 
-  COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:) ! needed only for __MPI = true
+  REAL(DP) :: eig(nbnd)
+
+!civn 2fix: these are needed only for __MPI = true 
+  COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:) 
 !
+
   LOGICAL, ALLOCATABLE     :: conv(:)
 
   REAL(DP), PARAMETER      :: extra_factor = 0.5 ! workspace is at most this factor larger than nbnd
@@ -95,11 +98,11 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi_gpu, overlap, &
   !
   ! ... device variables
   !
-  EXTERNAL h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu
   INTEGER :: ii, jj, kk 
   COMPLEX(DP), ALLOCATABLE :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
 #if defined (__CUDA)
   attributes(device) :: psi_d, hpsi_d, spsi_d
+  attributes(device) :: evc_d, eig_d 
 #endif 
   !
   ! ... init local variables
@@ -111,7 +114,7 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi_gpu, overlap, &
   !
   CALL start_clock( 'paro_gamma' ); !write (6,*) ' enter paro diag'
 
-  CALL mp_type_create_column_section(evc(1,1), 0, npwx, npwx, column_type)
+  CALL mp_type_create_column_section(evc_d(1,1), 0, npwx, npwx, column_type)
 
   ALLOCATE ( ew(nvecx), conv(nbnd) )
   ALLOCATE ( psi_d(npwx,nvecx), hpsi_d(npwx,nvecx), spsi_d(npwx,nvecx) )
@@ -119,7 +122,11 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi_gpu, overlap, &
   CALL start_clock( 'paro:init' ); 
   conv(:) =  .FALSE. ; nconv = COUNT ( conv(:) )
 
-  psi_d(:,1:nbnd) = evc(:,1:nbnd) ! copy input evc into work vector
+!$cuf kernel do(1)
+  DO ii = 1, npwx
+    psi_d(ii,1:nbnd) = evc_d(ii,1:nbnd) ! copy input evc into work vector
+  END DO
+  eig = eig_d
 
   call h_psi_gpu  (npwx,npw,nbnd,psi_d,hpsi_d) ! computes H*psi
   call s_psi_gpu  (npwx,npw,nbnd,psi_d,spsi_d) ! computes S*psi
@@ -265,7 +272,11 @@ SUBROUTINE paro_gamma_new_gpu( h_psi, s_psi, hs_psi_gpu, g_1psi_gpu, overlap, &
 
   END DO ParO_loop
 
-  evc(:,1:nbnd) = psi_d(:,1:nbnd)
+!$cuf kernel do(1)
+  DO ii = 1, npwx
+    evc_d(ii,1:nbnd) = psi_d(ii,1:nbnd)
+  END DO
+  eig_d = eig
 
   CALL mp_sum(nhpsi,inter_bgrp_comm)
 
