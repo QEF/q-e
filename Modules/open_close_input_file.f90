@@ -7,7 +7,7 @@
 !
 ! Aug 2020 (PG): streamlined and simplified
 !                open_input_file() may read the file name either from
-!                passed argumet or dirctly from the command line
+!                passed argumet or directly from the command line
 ! Aug 2018 (PG): reading of old xml input file using iotk deleted
 
 MODULE open_close_input_file
@@ -16,7 +16,7 @@ MODULE open_close_input_file
   !
   CHARACTER(LEN=256), SAVE :: input_file = ' '
   PRIVATE
-  PUBLIC :: open_input_file, close_input_file
+  PUBLIC :: get_file_name, open_input_file, close_input_file
   !
 CONTAINS
   !----------------------------------------------------------------------------
