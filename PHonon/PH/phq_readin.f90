@@ -929,7 +929,7 @@ SUBROUTINE phq_readin()
   !
   ! end of reading, close unit qestdin, remove tenporary input file if existing
   !
-  IF ( ionode ) ios = close_input_file () 
+  IF (meta_ionode) ios = close_input_file () 
 
   IF (epsil.AND.(lgauss .OR. ltetra)) &
         CALL errore ('phq_readin', 'no elec. field with metals', 1)
