@@ -12,8 +12,7 @@
   !-----------------------------------------------------------------------
   !!
   !! This routine reads the control variables for the program epw.
-  !! from standard input (unit 5).
-  !! A second routine readfile reads the variables saved on a file
+  !! A second routine, read_file, reads the variables saved on a file
   !! by the self-consistent program.
   !!
   !! @Note:
@@ -71,15 +70,14 @@
   USE partial,       ONLY : atomo, nat_todo
   USE constants,     ONLY : AMU_RY, eps16
   USE mp_global,     ONLY : my_pool_id, me_pool
-  USE io_global,     ONLY : meta_ionode, meta_ionode_id, stdout
+  USE io_global,     ONLY : meta_ionode, meta_ionode_id, qestdin, stdout
   USE io_var,        ONLY : iunkf, iunqf
   USE noncollin_module, ONLY : npol, noncolin
   USE wvfct,         ONLY : npwx
   USE paw_variables, ONLY : okpaw
   USE io_epw,        ONLY : param_get_range_vector
-#if defined(__NAG)
-  USE F90_UNIX_ENV,  ONLY : iargc, getarg
-#endif
+  USE open_close_input_file, ONLY : open_input_file, close_input_file
+  USE read_namelists_module, ONLY : check_namelist_read
   !
   ! ---------------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
@@ -103,12 +101,7 @@
   !! Output directory
   CHARACTER(LEN = 512) :: line
   !! Line in input file
-#if ! defined(__NAG)
-  INTEGER :: iargc
-#endif
   INTEGER :: ios
-  !! INTEGER variable for I/O control
-  INTEGER :: ios2
   !! INTEGER variable for I/O control
   INTEGER :: na
   !! counter on polarizations
@@ -132,8 +125,6 @@
   !! temp vars for saving kgrid info
   INTEGER :: ierr
   !! Error status
-  INTEGER :: unit_loc = 5
-  !! Unit for input file
   !
   NAMELIST / inputepw / &
        amass, outdir, prefix, iverbosity, fildvscf,                            &
@@ -371,25 +362,26 @@
   !
   IF (meta_ionode) THEN
     !
-    ! ... Input from file ?
-    CALL input_from_file()
+    ! ... Input from either file or standard input from unit "qestdin"
+    !
+    ios = open_input_file (  )
     !
     ! ... Read the first line of the input file
     !
-    READ(unit_loc, '(A)', IOSTAT = ios) title
+    IF ( ios == 0 ) READ(qestdin, '(A)', IOSTAT = ios) title
     !
   ENDIF
   !
   CALL mp_bcast(ios, meta_ionode_id, world_comm)
-  CALL errore('epw_readin', 'reading title ', ABS(ios))
+  CALL errore('epw_readin', 'reading input file ', ABS(ios))
   CALL mp_bcast(title, meta_ionode_id, world_comm)
   !
   ! Rewind the input if the title is actually the beginning of inputph namelist
   !
   IF (imatches("&inputepw", title)) THEN
-    WRITE(*, '(6x,a)') "Title line not specified: using 'default'."
+    WRITE(stdout, '(6x,a)') "Title line not specified: using 'default'."
     title = 'default'
-    IF (meta_ionode) REWIND(unit_loc, IOSTAT = ios)
+    IF (meta_ionode) REWIND(qestdin, IOSTAT = ios)
     CALL mp_bcast(ios, meta_ionode_id, world_comm  )
     CALL errore('epw_readin', 'Title line missing from input.', ABS(ios))
   ENDIF
@@ -612,17 +604,9 @@
   !
   ! Reading the namelist inputepw and check
   IF (meta_ionode) THEN
-    READ(unit_loc, inputepw, IOSTAT = ios)
-    ios2 = 0
-    IF (ios /= 0) THEN
-      BACKSPACE(5)
-      READ(unit_loc, '(A512)', IOSTAT = ios2) line      
-    ENDIF
-    IF (ios2 /= 0) CALL errore('epw_readin', 'Could not find namelist &inputepw', 2)
-    IF (ios /= 0) THEN         
-      CALL errore('epw_readin', 'Bad line in namelist &inputepw'&
-                 ': "'//TRIM(line)//'" (error could be in the previous line)', 1)
-    ENDIF          
+    READ(qestdin, inputepw, IOSTAT = ios)
+    CALL check_namelist_read(ios, qestdin, "&inputepw")
+    ios = close_input_file ( )
   ENDIF ! meta_ionode         
   ! 
   IF (meta_ionode) THEN

@@ -17,13 +17,8 @@ SUBROUTINE input_from_file( )
   CHARACTER(LEN = 256) :: input_file
   LOGICAL              :: found
   !
-  CHARACTER(LEN = 512) :: dummy 
-  !! Read dummy line
-  INTEGER :: iiarg, nargs, stdtmp
+  INTEGER :: iiarg, nargs
   ! 
-  INTEGER, EXTERNAL :: find_free_unit
-  !! Find unit number that is free
-  !
   nargs = command_argument_count()
   found = .FALSE.
   input_file = ' '
@@ -50,7 +45,6 @@ SUBROUTINE input_from_file( )
     OPEN ( UNIT = stdin, FILE = input_file, FORM = 'FORMATTED', &
            STATUS = 'OLD', IOSTAT = ierr )
     !
-    ! TODO: return error code ierr (-1 no file, 0 file opened, > 1 error)
     ! do not call "errore" here: it may hang in parallel execution
     ! if this routine is called by a single processor
     !
@@ -58,20 +52,7 @@ SUBROUTINE input_from_file( )
            '(" *** input file ",A," not found ***")' ) TRIM( input_file )
     !
   ELSE
-    input_file="input_tmp.in"
-    stdtmp = find_free_unit()
-    OPEN(UNIT = stdtmp, FILE = TRIM(input_file), FORM = "formatted", &
-         STATUS = "unknown", IOSTAT = ierr) 
-    IF (ierr > 0) CALL errore("input_file","unable to open file input_tmp.in", ierr)
     ierr = -1
-    DO 
-      READ(stdin, fmt = '(A512)',END = 30) dummy 
-      WRITE(stdtmp, '(A)') TRIM(dummy) 
-      CYCLE
-30    EXIT
-    ENDDO 
-    CLOSE(UNIT = stdtmp, STATUS = 'keep') 
-    OPEN(UNIT = stdin, FILE = input_file, FORM = 'FORMATTED', STATUS = 'OLD', IOSTAT = ierr)
   ENDIF
   !
   RETURN 
@@ -83,8 +64,8 @@ END SUBROUTINE input_from_file
 SUBROUTINE get_file( input_file )
   !
   !! This subroutine reads, either from command line or from terminal,
-  !!the name of a file to be opened. To be used for serial codes only.
-  !!Expected syntax: "code [filename]"  (one command-line option, or none)
+  !! the name of a file to be opened. To be used for serial codes only.
+  !! Expected syntax: "code [filename]"  (one command-line option, or none)
   !
   IMPLICIT NONE
   !
