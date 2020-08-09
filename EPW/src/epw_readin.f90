@@ -362,13 +362,13 @@
   !
   IF (meta_ionode) THEN
     !
-    ! ... Input from either file or standard input from unit "qestdin"
+    ! ... Input from file (ios=0) or standard input (ios=-1) on unit "qestdin"
     !
     ios = open_input_file (  )
     !
     ! ... Read the first line of the input file
     !
-    IF ( ios == 0 ) READ(qestdin, '(A)', IOSTAT = ios) title
+    IF ( ios <= 0 ) READ(qestdin, '(A)', IOSTAT = ios) title
     !
   ENDIF
   !
