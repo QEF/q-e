@@ -598,9 +598,9 @@ SUBROUTINE phq_readin()
   IF (elph_ahc) THEN
     !
     IF (ahc_nbnd <= 0) CALL errore('phq_readin', &
-      'ahc_nbnd must be specified as a positive integer')
+      'ahc_nbnd must be specified as a positive integer', 1)
     IF (ahc_nbndskip < 0) CALL errore('phq_readin', &
-      'ahc_nbndskip cannot be negative')
+      'ahc_nbndskip cannot be negative', 1)
     !
     IF (ahc_dir == ' ') ahc_dir = TRIM(tmp_dir) // "ahc_dir/"
     ahc_dir = trimcheck(ahc_dir)
