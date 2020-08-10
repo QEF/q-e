@@ -57,7 +57,8 @@ subroutine routine_hartree()
    real(kind=DP) :: update(1:3), update_a(1:3), update_b(1:3)
    real(kind=DP) :: amodulus
 !
-   complex(kind=DP), allocatable ::charge_g(:),  v_point(:), v_mean(:), charge_g_due(:)
+   complex(kind=DP), allocatable ::charge_g(:),  v_point(:), v_mean(:), charge_g_due(:), &
+           charge_g_tre(:)
 !
    complex(kind=DP), allocatable ::exgradcharge_g(:, :)
 !
@@ -100,6 +101,8 @@ subroutine routine_hartree()
    allocate (evp(npwx, nbnd))
    allocate (charge_g(ngm))
    allocate (charge_g_due(ngm))
+   if (three_point_derivative) &
+       allocate (charge_g_tre(ngm))
    allocate (charge(dffts%nnr))
    allocate (v_point(ngm))
    allocate (v_mean(ngm))
@@ -151,8 +154,13 @@ call compute_charge(psic, scf_all%t_minus%evc, npw, nbnd, ngm, dffts, charge, ch
 
 !-------STEP3----- computation of Hartree potentials from the charges just computed.
 !-------STEP4-----  and numerical derivatives of Hartree potentials
-call compute_hartree_vpoint_vmean(v_mean, v_point, g, gstart, omega, ngm, e2, fpi, tpiba2, delta_t, charge_g, charge_g_due) ! charge_g_tre)
-
+if (three_point_derivative) then
+    call compute_charge(psic, scf_all%t_zero%evc, npw, nbnd, ngm, dffts, charge, charge_g_tre)
+    call compute_hartree_vpoint_vmean(v_mean, v_point, g, gstart, omega, ngm, e2, fpi, tpiba2, delta_t,&
+            charge_g, charge_g_due, charge_g_tre)
+else
+    call compute_hartree_vpoint_vmean(v_mean, v_point, g, gstart, omega, ngm, e2, fpi, tpiba2, delta_t, charge_g, charge_g_due)
+endif
 
 !-------STEP 5----- Application of final formula.
 
@@ -370,6 +378,8 @@ call compute_hartree_vpoint_vmean(v_mean, v_point, g, gstart, omega, ngm, e2, fp
 !---------------------------------------------------------------------------
    deallocate (charge)
    deallocate (charge_g)
+   deallocate (charge_g_due)
+   if (allocated(charge_g_tre)) deallocate (charge_g_tre)
    deallocate (v_point)
    deallocate (v_mean)
    call deallocate_bec_type(becp)
