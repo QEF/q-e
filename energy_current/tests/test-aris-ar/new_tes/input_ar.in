@@ -6,7 +6,7 @@
     ! ec_test= .true.,
     add_i_current_b = .true.,
     re_init_wfc_1 = .true.,
-    n_repeat_every_step = 10
+    n_repeat_every_step = 4
  /
  &CONTROL
     calculation='md',

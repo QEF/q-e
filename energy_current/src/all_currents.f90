@@ -155,7 +155,6 @@ program all_currents
           if (exit_status /= 0) exit
           call scf_result_set_from_global_variables(scf_all%t_minus)
           call scf_result_set_from_global_variables(scf_all%t_zero)
-          call routine_zero() ! routine zero should be called in t
 
           call prepare_next_step(1) !1 advances by dt, so we are in t+dt
 
@@ -167,6 +166,7 @@ program all_currents
           !evc_uno = evc
 
           !calculate energy current
+          call routine_zero() ! routine zero should be called in t
           call routine_hartree()
           call write_results(traj)
       end do
