@@ -1,7 +1,7 @@
 MODULE hartree_mod
 
    USE kinds, ONLY: DP
-
+   use averages, only : online_average
    SAVE
 
    type scf_result
@@ -14,6 +14,7 @@ MODULE hartree_mod
 
    CHARACTER(len=256) :: file_output, trajdir = '' !, init_linear
    real(kind=DP) ::J_kohn(3), J_kohn_a(3), J_kohn_b(3), J_hartree(3), J_xc(3), J_electron(3)
+   type(online_average) :: ave_cur
    real(kind=DP), allocatable :: v_cm(:, :)
 
    real(kind=DP) ::delta_t, ethr_small_step, ethr_big_step

@@ -35,6 +35,7 @@ all_currents.o : ../../UtilXlib/mp.o
 all_currents.o : ../../iotk/src/iotk_module.o
 all_currents.o : hartree_mod.o
 all_currents.o : zero_mod.o
+all_currents.o : averages.o
 routine_hartree.o : compute_charge.o
 routine_zero.o : compute_charge.o
 allocate_zero.o : ../../upflib/atom.o
@@ -48,6 +49,7 @@ deallocate_zero.o : zero_mod.o
 ec_functionals.o : ../../Modules/exchange_gga.o
 ec_functionals.o : ../../Modules/correlation_gga.o
 hartree_mod.o : ../../Modules/kind.o
+hartree_mod.o : averages.o
 init_reciprocal_parts_tab.o : ../../FFTXlib/fft_interfaces.o
 init_reciprocal_parts_tab.o : ../../upflib/atom.o
 init_reciprocal_parts_tab.o : ../../Modules/cell_base.o

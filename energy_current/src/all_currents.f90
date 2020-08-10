@@ -3,7 +3,7 @@ program all_currents
            dvpsi_save, subtract_cm_vel, re_init_wfc_1, re_init_wfc_2,re_init_wfc_3,&
            n_repeat_every_step, ethr_big_step, scf_all, multiple_scf_result_allocate,&
            scf_result_set_from_global_variables, multiple_scf_result_deallocate, &
-           three_point_derivative
+           three_point_derivative, ave_cur
    USE environment, ONLY: environment_start, environment_end
    use io_global, ONLY: ionode
    use wavefunctions, only: evc
@@ -30,14 +30,15 @@ program all_currents
    USE read_namelists_module, ONLY: read_namelists
    USE read_cards_module, ONLY: read_cards
    use zero_mod, only: vel_input_units
-   
+   use averages, only: online_average_init
 
    implicit none
    integer :: exit_status, ios, irepeat
+   logical :: print_stat
    type(cpv_trajectory) :: traj
    real(kind=dp) :: vel_factor
    real(kind=dp),allocatable :: tau_save(:,:)
-!from ../PW/src/pwscf.f90
+   !from ../PW/src/pwscf.f90
    include 'laxlib.fh'
 
 !from ../PW/src/pwscf.f90
@@ -112,8 +113,9 @@ program all_currents
    end if
    CALL mp_bcast(vel, ionode_id, world_comm)
    call multiple_scf_result_allocate(scf_all,.true.)
-   if (n_repeat_every_step > 1) &
+   if (n_repeat_every_step > 1) then
        allocate (tau_save(3,nat))
+   end if
    do
       if (ionode) then
          if (subtract_cm_vel) then
@@ -123,8 +125,10 @@ program all_currents
             call cm_vel()
          end if
       endif
-      if (n_repeat_every_step > 1) &
+      if (n_repeat_every_step > 1) then
           tau_save = tau
+          call online_average_init(ave_cur,.true.)
+      end if
       do irepeat = 1, n_repeat_every_step
           if (irepeat > 1) then
               if (ionode) &
@@ -133,6 +137,11 @@ program all_currents
               call update_pot()
               call hinit1()
               ethr = ethr_big_step
+          end if
+          if (n_repeat_every_step > 1 .and. irepeat .eq. n_repeat_every_step) then
+              print_stat=.true.
+          else 
+              print_stat=.false.
           end if
 
           call prepare_next_step(-1) !-1 goes back by dt, so we are in t-dt
@@ -168,7 +177,7 @@ program all_currents
 
           !calculate energy current
           call routine_hartree()
-          call write_results(traj)
+          call write_results(traj,print_stat)
       end do
       !read new velocities and positions and continue, or exit the loop
       if (.not. read_next_step(traj)) exit
@@ -187,7 +196,7 @@ program all_currents
 
 contains
 
-   subroutine write_results(traj)
+   subroutine write_results(traj,write_ave)
       use kinds, only: dp
       use ions_base, ONLY: nsp
       use cell_base, only: alat
@@ -196,12 +205,14 @@ contains
       use io_global, ONLY: ionode
       use cpv_traj, only: cpv_trajectory, cpv_trajectory_get_last_step
       use traj_object, only: timestep
+      use averages
       implicit none
       type(cpv_trajectory), intent(in)  :: traj
+      logical,intent(in) :: write_ave
       type(timestep) :: ts
       integer :: iun, step, itype
       integer, external :: find_free_unit
-      real(dp) :: time
+      real(dp) :: time, J_tot(3)
 
       if (traj%traj%nsteps > 0) then
          call cpv_trajectory_get_last_step(traj, ts)
@@ -226,21 +237,31 @@ contains
          write (iun, '(A,3E20.12)') 'ionic_d:', i_current_d(:)
          write (iun, '(A,3E20.12)') 'ionic_e:', i_current_e(:)
          write (iun, '(A,3E20.12)') 'zero:', z_current(:)
-         write (iun, '(A,3E20.12)') 'total: ', J_xc + J_hartree + J_kohn + i_current + z_current
-         write (*, '(A,3E20.12)') 'total energy current: ', J_xc + J_hartree + J_kohn + i_current + z_current
+         J_tot =  J_xc + J_hartree + J_kohn + i_current + z_current
+         write (iun, '(A,3E20.12)') 'total: ', J_tot
+         write (*, '(A,3E20.12)') 'total energy current: ', J_tot
          close (iun)
          !WARNING: if you modify the following lines
          !remember to modify the set_first_step_restart() subroutine,
          !so we can read the file that here we are writing in the correct way
          open (iun, file=trim(file_output)//'.dat', position='append')
          write (iun, '(1I7,1E14.6,3E20.12,3E20.12)', advance='no') step, time, &
-            J_xc + J_hartree + J_kohn + i_current + z_current, J_electron(1:3)
+            J_tot, J_electron(1:3)
          do itype = 1, nsp
             write (iun, '(3E20.12)', advance='no') alat*v_cm(:, itype)
             write (*, '(A,1I3,A,3E20.12)') 'center of mass velocity of type ', itype, ': ', alat*v_cm(:, itype)
          end do
          write (iun, '(A)') ''
          close (iun)
+         call online_average_do(ave_cur,J_tot)
+         if (write_ave) then
+             open(iun, file=trim(file_output)//'.stat', position='append')
+             write (iun, '(1I7,1E14.6)', advance='no') step, time
+             call online_average_print(ave_cur,iun)
+             write (iun, '(A)') ''
+             close (iun)
+         end if
+
       end if
 
    end subroutine

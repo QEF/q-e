@@ -28,7 +28,8 @@ init_reciprocal_parts_tab.o\
 allocate_zero.o \
 deallocate_zero.o \
 ec_functionals.o \
-compute_charge.o
+compute_charge.o \
+averages.o
 
 TEST_CPV_TRAJ_OBJ= \
 traj_object.o \
