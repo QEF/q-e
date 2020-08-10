@@ -1,8 +1,9 @@
 program all_currents
    use hartree_mod, only: trajdir, first_step,&
-           dvpsi_save, subtract_cm_vel, re_init_wfc_1, re_init_wfc_2,&
+           dvpsi_save, subtract_cm_vel, re_init_wfc_1, re_init_wfc_2,re_init_wfc_3,&
            n_repeat_every_step, ethr_big_step, scf_all, multiple_scf_result_allocate,&
-           scf_result_set_from_global_variables, multiple_scf_result_deallocate
+           scf_result_set_from_global_variables, multiple_scf_result_deallocate, &
+           three_point_derivative
    USE environment, ONLY: environment_start, environment_end
    use io_global, ONLY: ionode
    use wavefunctions, only: evc
@@ -110,9 +111,6 @@ program all_currents
       call convert_tau(tau_format, nat, vel)
    end if
    CALL mp_bcast(vel, ionode_id, world_comm)
-   ! allocate evc_due and evc_uno
-   !allocate (evc_due(npwx,nbnd))
-   !allocate (evc_uno(npwx,nbnd))
    call multiple_scf_result_allocate(scf_all,.true.)
    if (n_repeat_every_step > 1) &
        allocate (tau_save(3,nat))
@@ -136,37 +134,39 @@ program all_currents
               call hinit1()
               ethr = ethr_big_step
           end if
+
+          call prepare_next_step(-1) !-1 goes back by dt, so we are in t-dt
           if (re_init_wfc_1) &
                   call init_wfc(1)
-          !NOTE (RB): I wrote in the comments the modifications that are necessary
-          !           in order to implement the 3-timestep calculation
-          !           evc_tre and re_init_wft_3 at the moment do not exist
-          !
-          !call prepare_next_step(-1) !-1 goes back by dt, so we are in t-dt
-          !call run_pwscf(exit_status)
-          !if (exit_status /= 0) exit
-          !evc_tre = evc
-
-          !call prepare_next_step(1) !1 advance by dt (so we are in the original positions)
-          !if (re_init_wfc_3) & ! eventually, to set a random initial evc to do statistical tests
-          !        call init_wfc(1)
           call run_pwscf(exit_status)
-          !evc_due = evc
           if (exit_status /= 0) exit
           call scf_result_set_from_global_variables(scf_all%t_minus)
-          call scf_result_set_from_global_variables(scf_all%t_zero)
+          if (three_point_derivative) then
+              call prepare_next_step(1) !1 advance by dt (so we are in the original positions)
+              if (re_init_wfc_2) & ! eventually, to set a random initial evc to do statistical tests
+                      call init_wfc(1)
+              call run_pwscf(exit_status)
+              !evc_due = evc
+              if (exit_status /= 0) exit
+              call scf_result_set_from_global_variables(scf_all%t_zero)
+              call routine_zero() ! routine zero should be called in t
+          else
+              call scf_result_set_from_global_variables(scf_all%t_zero) !if we don't have 3pt derivative, zero and minus are equal
+          end if
 
           call prepare_next_step(1) !1 advances by dt, so we are in t+dt
+          !if we don't do 3pt we are in t now
 
-          if (re_init_wfc_2) &
+          if (re_init_wfc_3) &
                   call init_wfc(1)
           call run_pwscf(exit_status)
           if (exit_status /= 0) goto 100 !shutdown everything and exit
           call scf_result_set_from_global_variables(scf_all%t_plus)
-          !evc_uno = evc
+
+          if (.not. three_point_derivative) &
+              call routine_zero() ! we are in t in this case
 
           !calculate energy current
-          call routine_zero() ! routine zero should be called in t
           call routine_hartree()
           call write_results(traj)
       end do
@@ -178,8 +178,6 @@ program all_currents
 100 call laxlib_end()
    call cpv_trajectory_deallocate(traj)
    call deallocate_zero()
-   !if (allocated(evc_uno)) deallocate (evc_uno)
-   !if (allocated(evc_due)) deallocate (evc_due)
    call multiple_scf_result_deallocate(scf_all)
    if (allocated(tau_save)) deallocate(tau_save)
    if (allocated(dvpsi_save)) deallocate(dvpsi_save)
@@ -263,6 +261,7 @@ contains
          restart, subtract_cm_vel, step_mul, &
          step_rem, ec_test, add_i_current_b, &
          save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
+         re_init_wfc_3, three_point_derivative, &
          n_repeat_every_step
       !
       !   set default values for variables in namelist
@@ -285,6 +284,8 @@ contains
       save_dvpsi = .true.
       re_init_wfc_1 = .false.
       re_init_wfc_2 = .false.
+      re_init_wfc_3 = .false.
+      three_point_derivative = .true.
       n_repeat_every_step = 1
       READ (iunit, energy_current, IOSTAT=ios)
       IF (ios /= 0) CALL errore('main', 'reading energy_current namelist', ABS(ios))
@@ -316,6 +317,8 @@ contains
       CALL mp_bcast(add_i_current_b, ionode_id, world_comm)
       CALL mp_bcast(re_init_wfc_1, ionode_id, world_comm)
       CALL mp_bcast(re_init_wfc_2, ionode_id, world_comm)
+      CALL mp_bcast(re_init_wfc_3, ionode_id, world_comm)
+      CALL mp_bcast(three_point_derivative, ionode_id, world_comm)
       CALL mp_bcast(n_repeat_every_step, ionode_id, world_comm)
 
    end subroutine
@@ -437,7 +440,7 @@ contains
       use io_global, ONLY: ionode, ionode_id
       USE mp_world, ONLY: world_comm
       use mp, ONLY: mp_bcast, mp_barrier
-      use hartree_mod, only: delta_t, ethr_small_step
+      use hartree_mod, only: delta_t, ethr_small_step, three_point_derivative
       use zero_mod, only: vel_input_units
       use wavefunctions, only: evc
       implicit none
@@ -448,7 +451,11 @@ contains
       CALL mp_bcast(tau, ionode_id, world_comm)
       CALL mp_bcast(vel, ionode_id, world_comm)
       !set new positions
-      tau = tau + delta_t*vel*real(ipm,dp)
+      if (three_point_derivative) then
+          tau = tau + delta_t*vel*real(ipm,dp)/2.0_dp
+      else
+          tau = tau + delta_t*vel*real(ipm,dp)
+      end if
       call mp_barrier(world_comm)
       call update_pot()
       call hinit1()

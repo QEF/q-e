@@ -17,7 +17,6 @@ MODULE hartree_mod
    real(kind=DP), allocatable :: v_cm(:, :)
 
    real(kind=DP) ::delta_t, ethr_small_step, ethr_big_step
-   !complex(kind=DP), allocatable :: evc_uno(:, :), evc_due(:, :) ! TODO: maybe save one allocation of npwx*nb
    type(multiple_scf_result) :: scf_all
 
    complex(kind=DP), allocatable :: dvpsi_save(:,:,:) ! to save the solution of the system between iterations
@@ -28,7 +27,8 @@ MODULE hartree_mod
    logical :: subtract_cm_vel ! if true do velocity renormalization
    logical :: ec_test ! activates tests for debugging purposes
    logical :: re_init_wfc_1=.false., re_init_wfc_2=.false. ! initialize again evc before scf step number 1 or 2
-
+   logical :: re_init_wfc_3=.false. ! initialize again evc before scf step number 1 or 2
+   logical :: three_point_derivative=.true. ! compute hartree derivative with 3 points
 
 
  contains
