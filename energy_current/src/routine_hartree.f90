@@ -64,7 +64,7 @@ subroutine routine_hartree()
 !
    integer ::icoord, enne, ir
 !
-   logical  :: l_test
+!   logical  :: l_test
    real(DP) :: M(nbnd, nbnd), emme(nbnd, nbnd), kcurrent(3), s(nbnd, nbnd), ss(nbnd, nbnd), &
                kcurrent_a(3), kcurrent_b(3), ecurrent(3), &
                sa(nbnd, nbnd), ssa(nbnd, nbnd), sb(nbnd, nbnd), ssb(nbnd,nbnd)
@@ -90,11 +90,11 @@ subroutine routine_hartree()
 
 !-------------------------------HARTREE---------------------------------------------------------
 ! Calculation of Hartree, exchange and Kohn-Sham currents require that there is access in memory
-! simultaneously to the wavefunctions evaluated at two different time steps t and t'=t-Dt
-! , where Dt is the time step used for the numerical derivative.
-! In the following, quantities with index "uno" or without indexes refer to quantities evaluated at time t+Dt 
-! ( e.g. prefix, charge_g, evc_uno).
-! Variables with index "due" refer to quantities evaluated at t (e.g. prefix_due, charge_due, evc_due) 
+! simultaneously to the wavefunctions evaluated at two (or three) different time steps (t-Dt), t and t+Dt
+! , where Dt is the time step used for the numerical derivative (if 3 points are used with a factor 1/2).
+! wavefunctions are stored in the scf_all type. scf_all%t_minus,t_zero,t_plus have are types that store 
+! wfc and position and velocities of atoms that were used to compute the wfcs.
+! if only 2 points are used, t_minus == t_zero
 
 !-------STEP1: reading and allocation (npwx = number of plane waves (npwx>npw), nbnd = number of bands (n_electrons/2 for insulators))
    allocate (tmp(npwx, nbnd))
@@ -154,6 +154,8 @@ call compute_charge(psic, scf_all%t_minus%evc, npw, nbnd, ngm, dffts, charge, ch
 
 !-------STEP3----- computation of Hartree potentials from the charges just computed.
 !-------STEP4-----  and numerical derivatives of Hartree potentials
+!the difference with three_point_derivative is that I use the potential at t_zero as v_mean
+!in place of the average between t_plus and t_minus
 if (three_point_derivative) then
     call compute_charge(psic, scf_all%t_zero%evc, npw, nbnd, ngm, dffts, charge, charge_g_tre)
     call compute_hartree_vpoint_vmean(v_mean, v_point, g, gstart, omega, ngm, e2, fpi, tpiba2, delta_t,&
@@ -226,41 +228,41 @@ endif
    call allocate_bec_type(nkb, nbnd, becp)
    call calbec(npw, vkb, evc, becp)
 
-   l_test = .true.
-   if (.not. l_test) then
-
-      s = 0.d0
-! computed s = < evc_due, evc_uno >, remove contribution at G=0
-      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, scf_all%t_plus%evc, 2*npwx, scf_all%t_minus%evc, 2*npwx, 0.d0, s, nbnd)
-      if (gstart == 2) then
-         do ibnd = 1, nbnd
-            do jbnd = 1, nbnd
-               s(ibnd, jbnd) = s(ibnd, jbnd) - dble(conjg(scf_all%t_plus%evc(1, ibnd))*scf_all%t_minus%evc(1, jbnd))
-            end do
-         end do
-      end if
-      call mp_sum(s, intra_pool_comm)
-! computes phi_v^c_punto using <s,s>
-      call dgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, s, nbnd, s, nbnd, 0.d0, ss, nbnd)
-      evp = 0.d0
-      do ibnd = 1, nbnd
-         do jbnd = 1, nbnd
-            do ig = 1, npw
-               evp(ig, ibnd) = evp(ig, ibnd) - scf_all%t_plus%evc(ig, jbnd)*s(jbnd, ibnd)
-               evp(ig, ibnd) = evp(ig, ibnd) + scf_all%t_minus%evc(ig, jbnd)*ss(ibnd, jbnd)
-            end do
-         end do
-      end do
-      evp(:, :) = evp(:, :)/delta_t
-
-   else
+!   l_test = .true.
+!   if (.not. l_test) then
+!
+!      s = 0.d0
+!! computed s = < evc_due, evc_uno >, remove contribution at G=0
+!      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, scf_all%t_plus%evc, 2*npwx, scf_all%t_minus%evc, 2*npwx, 0.d0, s, nbnd)
+!      if (gstart == 2) then
+!         do ibnd = 1, nbnd
+!            do jbnd = 1, nbnd
+!               s(ibnd, jbnd) = s(ibnd, jbnd) - dble(conjg(scf_all%t_plus%evc(1, ibnd))*scf_all%t_minus%evc(1, jbnd))
+!            end do
+!         end do
+!      end if
+!      call mp_sum(s, intra_pool_comm)
+!! computes phi_v^c_punto using <s,s>
+!      call dgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, s, nbnd, s, nbnd, 0.d0, ss, nbnd)
+!      evp = 0.d0
+!      do ibnd = 1, nbnd
+!         do jbnd = 1, nbnd
+!            do ig = 1, npw
+!               evp(ig, ibnd) = evp(ig, ibnd) - scf_all%t_plus%evc(ig, jbnd)*s(jbnd, ibnd)
+!               evp(ig, ibnd) = evp(ig, ibnd) + scf_all%t_minus%evc(ig, jbnd)*ss(ibnd, jbnd)
+!            end do
+!         end do
+!      end do
+!      evp(:, :) = evp(:, :)/delta_t
+!
+!   else
 
       sa = 0.d0
       sb = 0.d0 
 
 ! computed sb = < evc_due, evc_uno >, sa = <evc_uno, evc_uno> remove contribution at G=0
 ! sb is the old s
-! For the moment sa is a multiple of the identity. It should be changed later to sa = <evc_tre,evc_uno> or something similar.
+! sb is a multiple of the identity if 2 points are used (t_minus==t_zero)
 
       call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, scf_all%t_plus%evc, 2*npwx, scf_all%t_zero%evc, 2*npwx, 0.d0, sa, nbnd)
       call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, scf_all%t_minus%evc, 2*npwx, scf_all%t_zero%evc, 2*npwx, 0.d0, sb, nbnd)
@@ -295,7 +297,7 @@ endif
       end do
       evp(:, :) = evp(:, :)/delta_t 
 
-   end if
+!   end if
 
    tmp(:, :) = (0.d0, 0.d0)
    !does H|evp>  i.e. H|phi_v^c_punto> and saves it into tmp:
