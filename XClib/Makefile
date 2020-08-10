@@ -7,6 +7,7 @@ MODFLAGS= $(BASEMOD_FLAGS)
 LDAL = \
 kind_l.o \
 constants_l.o \
+xc_beef_interface.o \
 correlation_lda_lsda.o \
 correlation_gga.o \
 dft_par_mod.o \

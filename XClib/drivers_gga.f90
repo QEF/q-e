@@ -21,6 +21,10 @@ SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   USE exch_gga_l
   USE corr_gga_l
   !
+#if defined(use_beef)
+  USE beef_interface, ONLY: beefx, beeflocalcorr
+#endif  
+  !
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN) :: length
@@ -369,6 +373,9 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   USE kind_l, ONLY: DP
   USE dft_par_mod
   USE exch_gga_l
+#if defined(use_beef)
+  USE beef_interface, ONLY: beefx
+#endif  
   !
   IMPLICIT NONE
   !
