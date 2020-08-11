@@ -1046,7 +1046,7 @@ MODULE pw_restart_new
       !
       pseudo_dir_cur = restart_dir ( )
       CALL qexsd_copy_atomic_species ( output_obj%atomic_species, &
-           nsp, atm, amass, angle1, angle2, starting_magnetization, &
+           nsp, atm, amass, starting_magnetization, angle1, angle2, &
            psfile, pseudo_dir ) 
       IF ( pseudo_dir == ' ' ) pseudo_dir=pseudo_dir_cur
       !! Atomic structure section
