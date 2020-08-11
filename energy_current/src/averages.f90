@@ -33,7 +33,7 @@ contains
        implicit none
        type(online_average), intent(inout) :: t
        real(kind=dp), intent(in) :: v
-       real(kind=dp) :: delta
+       real(kind=dp) :: delta,Nc
 
        if (.not. t%initialized) &
            call online_average_init(t,.false.)
@@ -41,8 +41,10 @@ contains
        if (.not.t%is_vector) &
            t%counter = t%counter + 1
        delta = v - t%average_s
-       t%average_s = t%average_s + delta/real(t%counter, kind=dp)
-       t%var_s = t%var_s + delta*(v - t%average_s)
+       Nc= real(t%counter, kind=dp)
+       t%average_s = t%average_s + delta/Nc
+       !t%var_s = t%var_s + delta*(v - t%average_s)
+       t%var_s = t%var_s * (Nc-1)/Nc + ((Nc-1)*delta**2)/Nc**2
    end subroutine
 
    subroutine online_average_do_vector(t,v)
@@ -50,6 +52,7 @@ contains
        type(online_average), intent(inout) :: t
        real(kind=dp), intent(in) :: v(3)
        real(kind=dp) :: delta(3)
+       real(kind=dp) :: Nc
 
        if (.not. t%initialized) &
            call online_average_init(t,.true.)
@@ -57,8 +60,10 @@ contains
        if (t%is_vector) &
            t%counter = t%counter + 1
        delta = v - t%average_v
-       t%average_v = t%average_v + delta/real(t%counter, kind=dp)
-       t%var_v = t%var_v + delta*(v - t%average_v)
+       Nc= real(t%counter, kind=dp)
+       t%average_v = t%average_v + delta/Nc
+       !t%var_v = t%var_v + delta*(v - t%average_v)
+       t%var_v = t%var_v * (Nc-1)/Nc + ((Nc-1)*delta**2)/Nc**2
    end subroutine
 
    subroutine online_average_print(t, iun)
@@ -66,9 +71,9 @@ contains
        type(online_average), intent(in) :: t
        integer,intent(in) :: iun
        if (t%is_vector) then
-           write (iun, '(6E20.12)', advance='no') t%average_v(:), t%var_v(:)
+           write (iun, '(6E20.12)', advance='no') t%average_v(:), sqrt(t%var_v(:))
        else
-           write (iun, '(2E20.12)', advance='no') t%average_s, t%var_s
+           write (iun, '(2E20.12)', advance='no') t%average_s, sqrt(t%var_s)
        end if
 
 

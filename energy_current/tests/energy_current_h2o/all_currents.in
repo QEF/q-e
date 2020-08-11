@@ -6,6 +6,11 @@
     trajdir='traj/cp',
     first_step=140,
     last_step=150,
+    re_init_wfc_1 = .true. ,
+    re_init_wfc_2 = .true. ,
+    re_init_wfc_3 = .true. ,
+    three_point_derivative = .false. ,
+    n_repeat_every_step = 20 ,
  /
  &CONTROL
     calculation='md',
