@@ -439,4 +439,4 @@ xsf.o : kind.o
 ylmr2.o : constants.o
 ylmr2.o : kind.o
 environment.o : ../include/configure.h
-version.o : ../include/version.h
+version.o : ../include/qe_version.h
