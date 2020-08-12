@@ -23,9 +23,9 @@ external.o \
 get_xc.o \
 xc_interfaces.o
 
-all: libqeldaxc.a
+all: xc_lib.a
 
-libqeldaxc.a: 	$(LDAL)
+xc_lib.a: 	$(LDAL)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
