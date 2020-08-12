@@ -171,7 +171,7 @@ CONTAINS
     ! optional: unit pointing to input file containing generation data
     INTEGER, OPTIONAL, INTENT(IN):: u_input
     !
-#include "version.h"
+#include "qe_version.h"
     INTEGER :: nw, nb
     !
     CALL xmlw_opentag ( 'pp_info' )

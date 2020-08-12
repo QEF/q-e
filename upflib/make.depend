@@ -97,5 +97,5 @@ write_upf_schema.o : upf_kinds.o
 write_upf_v2.o : pseudo_types.o
 write_upf_v2.o : upf_kinds.o
 xmltools.o : upf_kinds.o
-write_upf_new.o : ../include/version.h
-write_upf_schema.o : ../include/version.h
+write_upf_new.o : ../include/qe_version.h
+write_upf_schema.o : ../include/qe_version.h
