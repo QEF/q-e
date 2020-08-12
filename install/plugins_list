@@ -15,16 +15,14 @@ RELEASE_VERSION := $(shell awk -F\' '/version_number/{print $$2}' ../Modules/ver
 #
 #
 # Package maintainer: Andrea Ferretti
-WANT=want
-WANT_URL=http://www.wannier-transport.org/files/want-latest.tar.gz
+WANT=want-want-2.6.1
+WANT_URL=https://github.com/QEF/want/archive/want-2.6.1.tar.gz
+
 #
 # Package maintainer: Andrea Ferretti
-YAMBO_DEVEL=yambo-devel
-YAMBO_DEVEL_URL=http://www.yambo-code.org/files/yambo-devel-latest.tar.gz
-#
-# Package maintainer: Andrea Ferretti
-YAMBO=yambo-stable
-YAMBO_URL=http://www.yambo-code.org/files/yambo-stable-latest.tar.gz
+YAMBO=yambo-4.5.2
+YAMBO_URL=https://github.com/yambo-code/yambo/archive/4.5.2.tar.gz
+
 #
 # Package maintainer: 
 W90=wannier90-3.1.0

@@ -42,7 +42,6 @@ default :
 	@echo '  w90          Maximally localised Wannier Functions'
 	@echo '  want         Quantum Transport with Wannier functions'
 	@echo '  yambo        electronic excitations with plane waves'
-	@echo '  yambo-devel  yambo devel version'
 #	@echo '  SternheimerGW calculate GW using Sternheimer equations'
 #	@echo '  plumed       Metadynamics plugin for pw or cp'
 	@echo '  d3q          general third-order code and thermal transport codes'
@@ -253,10 +252,7 @@ want :
 yambo: 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-yambo-devel: 
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
-#plumed: 
+#plumed: pw cp 
 #	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #SternheimerGW: lrmods 
