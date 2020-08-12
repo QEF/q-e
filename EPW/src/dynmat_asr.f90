@@ -24,7 +24,7 @@
   USE wan2bloch,        ONLY : dynifc2blochc
   USE low_lvl,          ONLY : set_ndnmbr, eqvect_strict
   USE io_dyn_mat,       ONLY : read_dyn_mat_param, read_dyn_mat_header, &
-                               read_dyn_mat
+                               read_dyn_mat, read_dyn_mat_tail
   USE mp_world,         ONLY : mpime                     
   USE mp_global,        ONLY : world_comm
   USE mp,               ONLY : mp_bcast
@@ -322,6 +322,9 @@
       ENDDO
       !
     ENDDO !  iq = 1, mq
+    ! 
+    ! Close the dyn file
+    CALL read_dyn_mat_tail(nat)
     !
   ELSE ! not a xml file
     IF (mpime == ionode_id) THEN      
