@@ -12,8 +12,8 @@ Program to compute energy current given the atomic configuration and the velocit
 Note that a very small conv_thr must be given in the ELECTRONS namelist, in the order of 1.D-11.
 The numerical derivative is very sensitive to this parameter and to "delta_t". Careful convergence
 tests are needed. Note that if too relaxed values are chosen, the result can depend on the algorithm
-used to diagonalize the hamiltonian a lot (the 4th/3rd digit can be wrong). Options that allows for
-estimation of the variance are provided, to reinitialize the wavefunctions and repeat each step many
+used to diagonalize the hamiltonian a lot (the 4th/3rd digit can be wrong). Options that allows
+estimating the variance are provided, to reinitialize the wavefunctions and repeat each step many
 times ( "n_repeat_every_step" "re_init_wfc_1" "re_init_wfc_2" "re_init_wfc_3" ).
 Performance of the calculation can be tuned a little bit with the parameters "ethr_small_step"
 and "ethr_big_step", that can avoid the waste of some iterations in the diagonalization of the
@@ -52,7 +52,7 @@ Structure of the input data:
 /
 
 &ELECTRONS
-  you may want startingwfc = 'random' (for variance estimation)
+  you may want startingwfc = 'random' (for better standard deviation estimation)
   ...
 /
 
@@ -122,10 +122,10 @@ NAMELIST: &ENERGY_CURRENT
                    If "n_repeat_every_step" > 1, an additional file "file_output" + '.stat' is
                    written with the following format:
                    
-                      NSTEP t_ps mean(J_x) mean(J_y) mean(J_z) var(J_x) var(J_y) var(J_z)
+                      NSTEP t_ps mean(J_x) mean(J_y) mean(J_z) std(J_x) std(J_y) std(J_z)
                    
                    only one line per step is printed in this case (in the other output files you will
-                   find every calculation, also repeated ones).
+                   find every calculation, also repeated ones). std is the standard deviation.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -328,9 +328,10 @@ NAMELIST: &ENERGY_CURRENT
    Default:        1
    Description:    Number of repetition of the full current calculation for each step. If > 1, the file "file_output" + '.stat'
                    is written with some statistics. Note that if you don't specify at least "re_init_wfc_1" ,this may be useless.
+                   You may want to specify startingwfc = 'random' in the ELECTRONS namelist.
    +--------------------------------------------------------------------
    
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Thu Aug 13 12:40:24 CEST 2020
+This file has been created by helpdoc utility on Thu Aug 13 19:18:47 CEST 2020

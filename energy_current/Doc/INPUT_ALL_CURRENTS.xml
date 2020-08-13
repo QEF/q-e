@@ -11,8 +11,8 @@ Program to compute energy current given the atomic configuration and the velocit
 Note that a very small conv_thr must be given in the ELECTRONS namelist, in the order of 1.D-11.
 The numerical derivative is very sensitive to this parameter and to <ref>delta_t</ref>. Careful convergence
 tests are needed. Note that if too relaxed values are chosen, the result can depend on the algorithm
-used to diagonalize the hamiltonian a lot (the 4th/3rd digit can be wrong). Options that allows for
-estimation of the variance are provided, to reinitialize the wavefunctions and repeat each step many
+used to diagonalize the hamiltonian a lot (the 4th/3rd digit can be wrong). Options that allows
+estimating the variance are provided, to reinitialize the wavefunctions and repeat each step many
 times ( <ref>n_repeat_every_step</ref> <ref>re_init_wfc_1</ref> <ref>re_init_wfc_2</ref> <ref>re_init_wfc_3</ref> ).
 Performance of the calculation can be tuned a little bit with the parameters <ref>ethr_small_step</ref>
 and <ref>ethr_big_step</ref>, that can avoid the waste of some iterations in the diagonalization of the
@@ -51,7 +51,7 @@ All the namilist but <ref>ENERGY_CURRENT</ref> are the same as the program pw.x
 <b>/</b>
 
 <b>&amp;ELECTRONS</b>
-  you may want startingwfc = &apos;random&apos; (for variance estimation)
+  you may want startingwfc = &apos;random&apos; (for better standard deviation estimation)
   ...
 <b>/</b>
 
@@ -115,10 +115,10 @@ v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomic species.
 If <ref>n_repeat_every_step</ref> &gt; 1, an additional file <ref>file_output</ref> + &apos;.stat&apos; is
 written with the following format:
 
-   NSTEP t_ps mean(J_x) mean(J_y) mean(J_z) var(J_x) var(J_y) var(J_z)
+   NSTEP t_ps mean(J_x) mean(J_y) mean(J_z) std(J_x) std(J_y) std(J_z)
 
 only one line per step is printed in this case (in the other output files you will
-find every calculation, also repeated ones).
+find every calculation, also repeated ones). std is the standard deviation.
          </info>
       </var>
       <var name="trajdir" type="CHARACTER" >
@@ -301,6 +301,7 @@ Obviously it needs more computer time, but the derivative should be better.
          <info>
 Number of repetition of the full current calculation for each step. If &gt; 1, the file <ref>file_output</ref> + &apos;.stat&apos;
 is written with some statistics. Note that if you don&apos;t specify at least <ref>re_init_wfc_1</ref> ,this may be useless.
+You may want to specify startingwfc = &apos;random&apos; in the ELECTRONS namelist.
          </info>
       </var>
    </namelist>
