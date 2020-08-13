@@ -1174,16 +1174,18 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       !    is multiplied by atomic wavefunctions
       !
       ! Now compute \sum_J dO^{-1/2}_JI/d\tau(alpha,ipol) \phi_J
-      ! and add it to another term (see above)
+      ! and add it to another term (see above).
+      ! Note, doverlap_inv is d(O^{-1/2}) not transposed. The transposition 
+      ! of d(O^{-1/2}) is taken into account via a proper usage of the order
+      ! of indices in doverlap_inv: 
+      ! dwfc(ig,m1) = dwfc(ig,m1) + wfcatom(ig,m2) * doverlap_inv(m2,offpm+m1)
+      ! where m1=1,ldim; m2=1,natomwfc; ig=1,npw
       !
-      DO ig = 1, npw
-         DO m1 = 1, ldim
-            DO m2 = 1, natomwfc
-               dwfc(ig,m1) = dwfc(ig,m1) + &
-                   doverlap_inv(offpm+m1,m2) * wfcatom(ig,m2)
-            ENDDO
-         ENDDO
-      ENDDO
+      CALL ZGEMM('N','N', npw, ldim, natomwfc, (1.d0,0.d0), &
+                  wfcatom, npwx, doverlap_inv(:,offpm+1:offpm+ldim), &
+                  natomwfc, (1.d0,0.d0), dwfc, npwx)
+      !
+      ! 3. Final step: compute dproj0 = <dwfc|spsi>
       !
       ALLOCATE ( dproj0(ldim,nbnd) )
       dproj0(:,:) = (0.0d0, 0.0d0)

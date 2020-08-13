@@ -1131,21 +1131,21 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
                                      doverlap, doverlap_inv)
       !
       ! Now compute \sum_J dO^{-1/2}_JI/d\epsilon(ipol,jpol) \phi_J
-      ! and add it to another term (see above)
+      ! and add it to another term (see above).
+      ! Note, doverlap_inv is d(O^{-1/2}) not transposed. The transposition 
+      ! of d(O^{-1/2}) is taken into account via a proper usage of the order
+      ! of indices in doverlap_inv: 
+      ! dwfc(ig,offpmU+m1) = dwfc(ig,offpmU+m1) + wfcatom(ig,m2) * doverlap_inv(m2,offpm+m1)
+      ! where m1=1,ldim_u(nt); m2=1,natomwfc; ig=1,npw
       !
       DO na = 1, nat
          nt = ityp(na)
          IF (is_hubbard(nt) .OR. is_hubbard_back(nt)) THEN
             offpmU = offsetU(na)
             offpm  = oatwfc(na)
-            DO m1 = 1, ldim_u(nt)
-               DO m2 = 1, natomwfc
-                  DO ig = 1, npw
-                     dwfc(ig,offpmU+m1) = dwfc(ig,offpmU+m1) + &
-                                   doverlap_inv(offpm+m1,m2) * wfcatom(ig,m2)
-                  ENDDO
-               ENDDO
-            ENDDO
+            CALL ZGEMM('N','N', npw, ldim_u(nt), natomwfc, (1.d0,0.d0), &
+                  wfcatom, npwx, doverlap_inv(:,offpm+1:offpm+ldim_u(nt)), &
+                  natomwfc, (1.d0,0.d0), dwfc(:,offpmU+1:offpmU+ldim_u(nt)), npwx)
          ENDIF
       ENDDO
       !
