@@ -57,6 +57,7 @@ subroutine star_q1(xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, verbosity,&
   !
   !
   zero(:) = 0.d0
+  saq(:, :) = 0.0d0 
   !
   ! go to  crystal coordinates
   !
@@ -176,6 +177,7 @@ subroutine star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, verbosity)
   !
   !
   zero(:) = 0.d0
+  saq(:, :) = 0.0d0 
   !
   ! go to  crystal coordinates
   !
