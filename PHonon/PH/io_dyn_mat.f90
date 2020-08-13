@@ -234,13 +234,15 @@ MODULE io_dyn_mat
           ENDDO
        ENDDO
     ENDDO
-    CALL xmlw_closetag( )
+    CALL xmlw_closetag()
     !
-    CALL xmlw_closetag( ) ! Root
-    CALL xml_closefile( )
+    CALL xmlw_closetag() ! Root
+    CALL xml_closefile()
     !
+    !----------------------------------------------------------------------------
     END SUBROUTINE write_ifc
-
+    !----------------------------------------------------------------------------
+    ! 
     !----------------------------------------------------------------------------
     SUBROUTINE read_dyn_mat_param(fildyn, ntyp, nat)
     !----------------------------------------------------------------------------
@@ -260,19 +262,18 @@ MODULE io_dyn_mat
     !
     ! Open XML descriptor
     !
-    IF (ionode)  iunout = xml_openfile( TRIM(fildyn) // '.xml')
+    IF (ionode) iunout = xml_openfile( TRIM(fildyn) // '.xml')
     !
     CALL mp_bcast(iunout, ionode_id, intra_image_comm)
     IF ( iunout == -1 ) &
          CALL errore('read_dyn_mat_param', 'error opening the dyn mat file ',1)
     !
     IF (ionode) THEN
-      CALL xmlr_opentag ( 'Root' )
       CALL xmlr_opentag( "GEOMETRY_INFO")
       CALL xmlr_readtag( "NUMBER_OF_TYPES", ntyp)
       CALL xmlr_readtag( "NUMBER_OF_ATOMS", nat)
-      CALL xmlr_closetag( )
-      REWIND (iunout)
+      CALL xmlr_closetag() ! GEOMETRY_INFO
+      REWIND(iunout)
     ENDIF
     ! 
     CALL mp_bcast(ntyp, ionode_id, intra_image_comm)
@@ -293,6 +294,7 @@ MODULE io_dyn_mat
     !!
     USE kinds,       ONLY : DP
     USE io_global,   ONLY : ionode
+    USE xmltools
     !
     IMPLICIT NONE
     !
@@ -334,13 +336,14 @@ MODULE io_dyn_mat
     !!
     REAL(KIND = DP), INTENT(out), OPTIONAL :: ramtns(3, 3, 3, nat)
     !!
-    CHARACTER(LEN=80) :: dummy
+    CHARACTER(LEN = 80) :: dummy
+    !! 
     LOGICAL :: found_z
     !!
     LOGICAL :: lrigid_
     !!
     LOGICAL :: raman_
-    !!
+    !! Is Raman present
     INTEGER :: nt
     !! Type of atoms
     INTEGER :: na
@@ -352,79 +355,79 @@ MODULE io_dyn_mat
     !! Auxiliary
     !
     IF (ionode) THEN
-      CALL xmlr_opentag( "GEOMETRY_INFO")
-      CALL xmlr_readtag( "BRAVAIS_LATTICE_INDEX", ibrav)
-      CALL xmlr_readtag( "SPIN_COMPONENTS", nspin_mag)
-      CALL xmlr_readtag( "CELL_DIMENSIONS", celldm)
-      CALL xmlr_readtag( "AT", at)
-      CALL xmlr_readtag( "BG", bg)
-      CALL xmlr_readtag( "UNIT_CELL_VOLUME_AU", omega)
+      CALL xmlr_opentag("GEOMETRY_INFO")
+      CALL xmlr_readtag("BRAVAIS_LATTICE_INDEX", ibrav)
+      CALL xmlr_readtag("SPIN_COMPONENTS", nspin_mag)
+      CALL xmlr_readtag("CELL_DIMENSIONS", celldm)
+      CALL xmlr_readtag("AT", at)
+      CALL xmlr_readtag("BG", bg)
+      CALL xmlr_readtag("UNIT_CELL_VOLUME_AU", omega)
       DO nt = 1, ntyp
-        CALL xmlr_readtag( "TYPE_NAME."//i2c(nt), atm(nt))
-        CALL xmlr_readtag( "MASS." // i2c(nt), amass(nt))
+        CALL xmlr_readtag("TYPE_NAME."//i2c(nt), atm(nt))
+        CALL xmlr_readtag("MASS." // i2c(nt), amass(nt))
       ENDDO
       DO na = 1, nat
-        CALL xmlr_readtag( "ATOM." // i2c(na), dummy)
-        CALL get_attr( "INDEX",  ityp(na))
-        CALL get_attr( "TAU", dummy )
+        CALL xmlr_readtag("ATOM." // i2c(na), dummy)
+        CALL get_attr("INDEX",  ityp(na))
+        CALL get_attr("TAU", dummy )
         READ(dummy,*) tau(1, na), tau(2, na), tau(3, na)
         IF (nspin_mag == 4) THEN
-          CALL xmlr_readtag( "STARTING_MAG_."//i2c(na), m_loc(:, na))
+          CALL xmlr_readtag("STARTING_MAG_."//i2c(na), m_loc(:, na))
         ENDIF
       ENDDO
-      CALL xmlr_readtag( "NUMBER_OF_Q", nqs)
-      CALL xmlr_closetag( )
+      CALL xmlr_readtag("NUMBER_OF_Q", nqs)
+      CALL xmlr_closetag() ! GEOMETRY_INFO
       !
       IF (PRESENT(epsil)) THEN
-         CALL xmlr_opentag( "DIELECTRIC_PROPERTIES", ierr )
-         IF ( ierr == -1 ) THEN
-            IF (PRESENT(lrigid))  lrigid = .false.
-            IF (PRESENT(lraman))  lraman = .false.
-            epsil = 0.0_dp
+        CALL xmlr_opentag("DIELECTRIC_PROPERTIES", ierr)
+        IF (ierr == -1) THEN
+          IF (PRESENT(lrigid))  lrigid = .false.
+          IF (PRESENT(lraman))  lraman = .false.
+          epsil = 0.0_dp
+          IF (PRESENT(zstareu)) zstareu = 0.0_DP
+          IF (PRESENT(ramtns))  ramtns = 0.0_DP
+          GOTO 10
+        ENDIF
+        CALL get_attr("epsil", lrigid_)
+        IF (PRESENT(lrigid)) lrigid = lrigid_
+        CALL get_attr("zstar", found_z)
+        CALL get_attr("raman", raman_)
+        IF (PRESENT(lraman)) lraman = raman_
+        IF (lrigid_) THEN
+          CALL xmlr_readtag( "EPSILON", epsil)
+          IF (found_z) THEN
+            CALL xmlr_opentag( "ZSTAR" )
+            DO na = 1, nat
+              CALL xmlr_readtag( "Z_AT_."//i2c(na), aux(:, :))
+              IF (PRESENT(zstareu)) zstareu(:, :, na) = aux
+            ENDDO
+            CALL xmlr_closetag() ! ZSTAR
+          ELSE
             IF (PRESENT(zstareu)) zstareu = 0.0_DP
-            IF (PRESENT(ramtns))  ramtns = 0.0_DP
-            GO TO 10
-         END IF
-         CALL get_attr ( "epsil", lrigid_)
-         IF (PRESENT(lrigid)) lrigid = lrigid_
-         CALL get_attr ( "zstar", found_z)
-         CALL get_attr ( "raman", raman_)
-         IF (PRESENT(lraman)) lraman=raman_
-         IF (lrigid_) THEN
-            CALL xmlr_readtag( "EPSILON", epsil)
-            IF (found_z) THEN
-               CALL xmlr_opentag( "ZSTAR" )
-               DO na = 1, nat
-                 CALL xmlr_readtag( "Z_AT_."//i2c(na), aux(:, :))
-                 IF (PRESENT(zstareu)) zstareu(:, :, na) = aux
-               ENDDO
-               CALL xmlr_closetag( )
+          ENDIF
+          IF (raman_) THEN
+            CALL xmlr_opentag("RAMAN_TENSOR_A2" )
+            IF (PRESENT(ramtns)) THEN
+              DO na = 1, nat
+                DO kc = 1, 3
+                  CALL xmlr_readtag("RAMAN_S_ALPHA."//i2c(na)//'.'//i2c(kc), aux)
+                  IF (PRESENT(ramtns)) ramtns(:, :, kc, na) = aux(:, :)
+                ENDDO
+              ENDDO
             ELSE
-               IF (PRESENT(zstareu)) zstareu = 0.0_DP
+              IF (PRESENT(ramtns)) ramtns = 0.0_DP
             ENDIF
-            IF ( raman_ ) THEN
-               CALL xmlr_opentag( "RAMAN_TENSOR_A2" )
-               IF ( PRESENT(ramtns) ) THEN
-                 DO na = 1, nat
-                   DO kc = 1, 3
-                     CALL xmlr_readtag( "RAMAN_S_ALPHA."//i2c(na)//'.'//i2c(kc), aux)
-                     IF (PRESENT(ramtns)) ramtns(:, :, kc, na) = aux(:, :)
-                   ENDDO
-                 ENDDO
-                 CALL xmlr_closetag( )
-               ELSE
-                 IF (PRESENT(ramtns)) ramtns = 0.0_DP
-               ENDIF
-            ENDIF
-         ELSE
-            IF (PRESENT(epsil)) epsil = 0.0_DP
-            IF (PRESENT(zstareu)) zstareu = 0.0_DP
-            IF (PRESENT(ramtns)) ramtns = 0.0_DP
-         ENDIF
-         CALL xmlr_closetag( )
-      ENDIF
+            CALL xmlr_closetag() ! RAMAN_TENSOR_A2
+          ENDIF
+        ELSE
+           IF (PRESENT(epsil)) epsil = 0.0_DP
+           IF (PRESENT(zstareu)) zstareu = 0.0_DP
+           IF (PRESENT(ramtns)) ramtns = 0.0_DP
+        ENDIF ! lrigid
+        CALL xmlr_closetag() ! DIELECTRIC_PROPERTIES
+      ENDIF ! epsil 
       10 CONTINUE
-    ENDIF
+    ENDIF ! ionode
     CALL mp_bcast(ibrav, ionode_id, intra_image_comm)
     CALL mp_bcast(nspin_mag, ionode_id, intra_image_comm)
     CALL mp_bcast(celldm, ionode_id, intra_image_comm)
@@ -473,14 +476,14 @@ MODULE io_dyn_mat
     !! Number of atoms
     !  
     IF (ionode) THEN
-      CALL xmlr_opentag( "DYNAMICAL_MAT_."//i2c(iq))
-      CALL xmlr_readtag( "Q_POINT", xq)
+      CALL xmlr_opentag("DYNAMICAL_MAT_."//i2c(iq))
+      CALL xmlr_readtag("Q_POINT", xq)
       DO na = 1, nat
         DO nb = 1,nat
           CALL xmlr_readtag( "PHI."//i2c(na)//'.'//i2c(nb), dyn(:, :, na, nb))
         ENDDO
       ENDDO
-      CALL xmlr_closetag( )
+      CALL xmlr_closetag() ! DYNAMICAL_MAT_.
     ENDIF
     CALL mp_bcast(xq, ionode_id, intra_image_comm)
     CALL mp_bcast(dyn, ionode_id, intra_image_comm)
@@ -488,42 +491,51 @@ MODULE io_dyn_mat
     !----------------------------------------------------------------------------
     END SUBROUTINE read_dyn_mat
     !----------------------------------------------------------------------------    
-
-    SUBROUTINE read_dyn_mat_tail(nat,omega,u)
-!
-!   The output of the routine in a.u.
-!
+    ! 
+    !----------------------------------------------------------------------------    
+    SUBROUTINE read_dyn_mat_tail(nat, omega, u)
+    !----------------------------------------------------------------------------    
+    !!
+    !! The output of the routine in a.u.
+    !!
+    USE kinds,     ONLY : DP
     USE constants, ONLY : RY_TO_THZ
-
-    INTEGER, INTENT(IN) :: nat
-    REAL(DP), INTENT(OUT), OPTIONAL :: omega(3*nat)
-    COMPLEX(DP), INTENT(OUT), OPTIONAL :: u(3*nat,3*nat)
-
-    REAL(DP) :: omega_(2)
+    ! 
+    INTEGER, INTENT(in) :: nat
+    !! Number of atoms
+    REAL(KIND = DP), INTENT(out), OPTIONAL :: omega(3 * nat)
+    !! Phonon freq.
+    COMPLEX(KIND = DP), INTENT(out), OPTIONAL :: u(3 * nat, 3 * nat)
+    !! Eigen displacement vectors
+    ! 
+    ! Local variables
+    REAL(KIND = DP) :: omega_(2)
+    !! Phonon freq
     INTEGER :: mu
-
-    IF (PRESENT(u).AND..NOT.PRESENT(omega)) &
+    !! 
+    ! 
+    IF (PRESENT(u) .AND. .NOT. PRESENT(omega)) &
        CALL errore('read_dyn_mat_tail','omega must be present to read u',1)
 
     IF (ionode) THEN
-       IF (PRESENT(omega)) THEN
-          CALL xmlr_opentag( "FREQUENCIES_THZ_CMM1" )
-          DO mu=1,3*nat
-             CALL xmlr_readtag( "OMEGA."//i2c(mu), omega_)
-             omega(mu)=omega_(1) / RY_TO_THZ
-             IF (PRESENT(u)) CALL xmlr_readtag("DISPLACEMENT."//i2c(mu),u(:,mu))
-          END DO
-          CALL xmlr_closetag( )
-       ENDIF
-       CALL xmlr_closetag( ) ! Root
-       CALL xml_closefile( )
-    END IF
+      IF (PRESENT(omega)) THEN
+        CALL xmlr_opentag("FREQUENCIES_THZ_CMM1")
+        DO mu = 1, 3 * nat
+          CALL xmlr_readtag("OMEGA."//i2c(mu), omega_)
+          omega(mu) = omega_(1) / RY_TO_THZ
+          IF (PRESENT(u)) CALL xmlr_readtag("DISPLACEMENT."//i2c(mu),u(:,mu))
+        END DO
+        CALL xmlr_closetag() ! FREQUENCIES_THZ_CMM1
+      ENDIF
+      CALL xml_closefile()
+    ENDIF
     IF (PRESENT(omega)) CALL mp_bcast(omega, ionode_id, intra_image_comm)
     IF (PRESENT(u)) CALL mp_bcast(u, ionode_id, intra_image_comm)
-
+    ! 
     RETURN
+    !----------------------------------------------------------------------------
     END SUBROUTINE read_dyn_mat_tail
-
+    !----------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------------
     SUBROUTINE read_ifc_param(nr1, nr2, nr3)
