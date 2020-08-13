@@ -9,12 +9,15 @@ input_description -distribution {Quantum Espresso} -package energy_current -prog
         Note that a very small conv_thr must be given in the ELECTRONS namelist, in the order of 1.D-11.
         The numerical derivative is very sensitive to this parameter and to @ref delta_t. Careful convergence
         tests are needed. Note that if too relaxed values are chosen, the result can depend on the algorithm
-        used to diagonalize the hamiltonian a lot (the 4th/3rd digit can be wrong).
+        used to diagonalize the hamiltonian a lot (the 4th/3rd digit can be wrong). Options that allows for
+        estimation of the variance are provided, to reinitialize the wavefunctions and repeat each step many
+        times ( @ref n_repeat_every_step @ref re_init_wfc_1 @ref re_init_wfc_2 @ref re_init_wfc_3 ). 
         Performance of the calculation can be tuned a little bit with the parameters @ref ethr_small_step
         and @ref ethr_big_step, that can avoid the waste of some iterations in the diagonalization of the
         hamiltonian in the first scf step of every scf calculation (the program does 2 scf for each step).
         Note that in order to read atomic velocities, in the namelist CONTROL you must set calculation='md',
-        and in the namelist IONS you must set ion_velocities='from_input'
+        and in the namelist IONS you must set ion_velocities='from_input'. Algorithm for computing finite
+        difference derivatives can be set with the option @ref three_point_derivative .
        
         This program implements
 
@@ -25,7 +28,7 @@ input_description -distribution {Quantum Espresso} -package energy_current -prog
         and was originally written by Aris Marcolongo in 2014 at SISSA for his PhD thesis
         ( https://iris.sissa.it/handle/20.500.11767/3897 )
         The @b all_current driver program was rewritten from scratch by Riccardo Bertossa at SISSA in 2020.
-        Other contributions are from Loris Ercole (SISSA - EPFL ) , Davide Tisi (SISSA) and Federico Grasselli (SISSA).
+        Other contributions are from Davide Tisi (SISSA), Loris Ercole (SISSA - EPFL ) and Federico Grasselli (SISSA).
 
         All the namilist but @ref ENERGY_CURRENT are the same as the program pw.x
         
@@ -46,6 +49,7 @@ input_description -distribution {Quantum Espresso} -package energy_current -prog
         @b /
 
         @b &ELECTRONS
+          you may want startingwfc = 'random' (for variance estimation)
           ...
         @b /
 
@@ -112,6 +116,14 @@ input_description -distribution {Quantum Espresso} -package energy_current -prog
                 Jele_* are the components of a part of the energy current that you may use
                 for decorrelation and better data analysis.
                 v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomic species.
+
+                If @ref n_repeat_every_step > 1, an additional file @ref file_output + '.stat' is
+                written with the following format:
+
+                   NSTEP t_ps mean(J_x) mean(J_y) mean(J_z) var(J_x) var(J_y) var(J_z)
+
+                only one line per step is printed in this case (in the other output files you will
+                find every calculation, also repeated ones).
             }
         }
         
@@ -234,6 +246,51 @@ input_description -distribution {Quantum Espresso} -package energy_current -prog
                    or solid case this is a non-diffusive contribution.
                  }
         }
+
+       var save_dvpsi -type LOGICAL {
+           default { .false. }
+           info {
+                  If true allocate the space needed for saving the solution of the linear system betweew every calculation.
+                  The iterative algorithm will always start from there. By default it starts always from scratch.
+                }
+       }
+       var re_init_wfc_1 -type LOGICAL {
+          default { .false. }
+          info {
+                 If true initializes, as specified in the ELECTRON namelist of the PW section, the wavefunctions
+                 before the first ground state calculation. Otherwise use the last calculated wavefunctions.
+               }
+       }
+       var re_init_wfc_2 -type LOGICAL {
+          default { .false. }
+          info {
+                 If true initializes, as specified in the ELECTRON namelist of the PW section, the wavefunctions
+                 before the second ground state calculation. Otherwise use the last calculated wavefunctions.
+                 Note that if @ref three_point_derivative is false, this has no effect.
+               }
+       }
+       var re_init_wfc_3 -type LOGICAL {
+          default { .false. }
+          info {
+                 If true initializes, as specified in the ELECTRON namelist of the PW section, the wavefunctions
+                 before the third ground state calculation. Otherwise use the last calculated wavefunctions.
+               }
+       }
+       var three_point_derivative -type LOGICAL {
+          default { .true. }
+          info {
+                 If true calculates three ground stated: one at t - @ref delta_t /2, one at t and one at t + @ref delta_t/2.
+                 Obviously it needs more computer time, but the derivative should be better.
+               }
+       }
+       var n_repeat_every_step -type INTEGER {
+          default { 1 }
+          info {
+                 Number of repetition of the full current calculation for each step. If > 1, the file @ref file_output + '.stat'
+                 is written with some statistics. Note that if you don't specify at least @ref re_init_wfc_1 ,this may be useless.
+               }
+       }
+
     }
 
 
