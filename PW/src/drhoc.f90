@@ -7,78 +7,84 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine drhoc (ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, rhocg)
+SUBROUTINE drhoc( ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, rhocg )
   !-----------------------------------------------------------------------
+  !! Calculates the Fourier transform of the core charge.
   !
   USE kinds
-  USE constants, ONLY : pi, fpi
-  implicit none
+  USE constants,   ONLY: pi, fpi
   !
-  !    first the dummy variables
+  IMPLICIT NONE
   !
-  integer :: ngl, mesh
-  ! input: the number of g shell
-  ! input: the number of radial mesh points
-
-  real(DP) :: gl (ngl), r (mesh), rab (mesh), rhoc (mesh), omega, &
-       tpiba2, rhocg (ngl)
-  ! input: the number of G shells
-  ! input: the radial mesh
-  ! input: the derivative of the radial mesh
-  ! input: the radial core charge
-  ! input: the volume of the unit cell
-  ! input: 2 times pi / alat
-  ! output: the fourier transform of the core charge
+  INTEGER :: ngl
+  !! input: the number of g shell
+  INTEGER :: mesh
+  !! input: the number of radial mesh points
+  REAL(DP) :: gl(ngl)
+  !! input: the number of G shells
+  REAL(DP) :: r(mesh)
+  !! input: the radial mesh
+  REAL(DP) :: rab(mesh)
+  !! input: the derivative of the radial mesh
+  REAL(DP) :: rhoc(mesh)
+  !! input: the radial core charge
+  REAL(DP) :: omega
+  !! input: the volume of the unit cell
+  REAL(DP) :: tpiba2
+  !! input: 2 times pi / alat
+  REAL(DP) :: rhocg(ngl)
+  !! output: the Fourier transform of the core charge
   !
-  !     here the local variables
+  ! ... local variables
   !
-  real(DP) :: gx, rhocg1
+  REAL(DP) :: gx, rhocg1
   ! the modulus of g for a given shell
-  ! the fourier transform
-  real(DP), allocatable ::  aux (:)
+  ! the Fourier transform
+  REAL(DP), ALLOCATABLE ::  aux(:)
   ! auxiliary memory for integration
-
-  integer :: ir, igl, igl0
+  INTEGER :: ir, igl, igl0
   ! counter on radial mesh points
   ! counter on g shells
   ! lower limit for loop on ngl
-
+  !
+  !
 !$omp parallel private(aux, gx, rhocg1)
   !
-  allocate (aux( mesh))     
+  ALLOCATE( aux(mesh) )
   !
   ! G=0 term
   !
 !$omp single
-  if (gl (1) < 1.0d-8) then
-     do ir = 1, mesh
-        aux (ir) = r (ir) **2 * rhoc (ir)
-     enddo
-     call simpson (mesh, aux, rab, rhocg1)
-     rhocg (1) = fpi * rhocg1 / omega
+  IF ( gl(1) < 1.0d-8 ) THEN
+     DO ir = 1, mesh
+        aux(ir) = r(ir)**2 * rhoc(ir)
+     ENDDO
+     CALL simpson( mesh, aux, rab, rhocg1 )
+     rhocg(1) = fpi * rhocg1 / omega
      igl0 = 2
-  else
+  ELSE
      igl0 = 1
-  endif
+  ENDIF
 !$omp end single
   !
   ! G <> 0 term
   !
 !$omp do
-  do igl = igl0, ngl
-     gx = sqrt (gl (igl) * tpiba2)
-     call sph_bes (mesh, r, gx, 0, aux)
-     do ir = 1, mesh
-        aux (ir) = r (ir) **2 * rhoc (ir) * aux (ir)
-     enddo
-     call simpson (mesh, aux, rab, rhocg1)
-     rhocg (igl) = fpi * rhocg1 / omega
-  enddo
-!$omp end do
-  deallocate(aux)
+  DO igl = igl0, ngl
+     gx = SQRT(gl(igl) * tpiba2)
+     CALL sph_bes( mesh, r, gx, 0, aux )
+     DO ir = 1, mesh
+        aux(ir) = r(ir)**2 * rhoc(ir) * aux(ir)
+     ENDDO
+     CALL simpson( mesh, aux, rab, rhocg1 )
+     rhocg(igl) = fpi * rhocg1 / omega
+  ENDDO
+!$omp end do nowait
+  DEALLOCATE( aux )
   !
 !$omp end parallel
   !
-  return
-end subroutine drhoc
+  RETURN
+  !
+END SUBROUTINE drhoc
 

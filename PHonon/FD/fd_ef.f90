@@ -12,15 +12,8 @@ program fd_raman
   USE kinds,      ONLY : dp 
   USE gvecw,      ONLY : ecutwfc
   USE symm_base,       ONLY : nsym, nsym_ns, nsym_na, invsym, s, sr, &
-                              t_rev, ftau, sname
+                              t_rev, ft, sname
   USE symme
-  USE rap_point_group, ONLY : code_group, nclass, nelem, elem, &
-       which_irr, char_mat, name_rap, name_class, gname, ir_ram
-  USE rap_point_group_so, ONLY : nrap, nelem_so, elem_so, has_e, &
-       which_irr_so, char_mat_so, name_rap_so, name_class_so, d_spin, &
-       name_class_so1
-  USE rap_point_group_is, ONLY : nsym_is, sr_is, ftau_is, d_spin_is, &
-       gname_is, sname_is, code_group_is
   USE fft_base, ONLY : dfftp
 
   USE parser,    ONLY : field_count, read_line, get_field, parse_unit
@@ -31,7 +24,7 @@ program fd_raman
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   character(len=200) :: pp_file
   logical :: uspp_spsi, ascii, single_file, raw, disp_only
-
+  logical :: needwf=.false.
   INTEGER :: apol, na, nt
   integer           :: nrx1,nrx2,nrx3,nr1,nr2,nr3,nb,nax,natx,inn
   real(kind=dp)     :: r1(3),r2(3),r3(3),rr(3,3)
@@ -87,8 +80,8 @@ program fd_raman
   endif
   if (filemodes .eq. ' ') lalpha=.false.
 
-  !reading the xml file
-  call read_file
+  !reading the xml file 
+  call read_file_new ( needwf )
 
   if (ionode) then
     write(6,*) '**************************************************'
@@ -132,24 +125,19 @@ program fd_raman
     write(6,*) 
      
      WRITE( stdout, '(36x,"s",24x,"frac. trans.")')
-     nsym_is=0
      DO isym = 1, nsym
         WRITE( stdout, '(/6x,"isym = ",i2,5x,a45/)') isym, sname(isym)
-        IF ( ftau(1,isym).NE.0 .OR. ftau(2,isym).NE.0 .OR. &
-             ftau(3,isym).NE.0) THEN
-           ft1 = at(1,1)*ftau(1,isym)/dfftp%nr1 + at(1,2)*ftau(2,isym)/dfftp%nr2 + &
-                at(1,3)*ftau(3,isym)/dfftp%nr3
-           ft2 = at(2,1)*ftau(1,isym)/dfftp%nr1 + at(2,2)*ftau(2,isym)/dfftp%nr2 + &
-                at(2,3)*ftau(3,isym)/dfftp%nr3
-           ft3 = at(3,1)*ftau(1,isym)/dfftp%nr1 + at(3,2)*ftau(2,isym)/dfftp%nr2 + &
-                at(3,3)*ftau(3,isym)/dfftp%nr3
+        IF ( ft(1,isym)**2 + ft(2,isym)**2 + ft(3,isym)**2 > 1.0d-8 ) THEN
+           ft1 = at(1,1)*ft(1,isym) + at(1,2)*ft(2,isym) + at(1,3)*ft(3,isym)
+           ft2 = at(2,1)*ft(1,isym) + at(2,2)*ft(2,isym) + at(2,3)*ft(3,isym)
+           ft3 = at(3,1)*ft(1,isym) + at(3,2)*ft(2,isym) + at(3,3)*ft(3,isym)
            WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), &
                 &        " )    f =( ",f10.7," )")') &
-                isym, (s(1,ipol,isym),ipol=1,3), DBLE(ftau(1,isym))/DBLE(dfftp%nr1)
+                isym, (s(1,ipol,isym),ipol=1,3), ft(1,isym)
            WRITE( stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )")') &
-                (s(2,ipol,isym),ipol=1,3), DBLE(ftau(2,isym))/DBLE(dfftp%nr2)
+                (s(2,ipol,isym),ipol=1,3), ft(2,isym)
            WRITE( stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )"/)') &
-                (s(3,ipol,isym),ipol=1,3), DBLE(ftau(3,isym))/DBLE(dfftp%nr3)
+                (s(3,ipol,isym),ipol=1,3), ft(3,isym)
            WRITE( stdout, '(1x,"cart. ",3x,"s(",i2,") = (",3f11.7, &
                 &        " )    f =( ",f10.7," )")') &
                 isym, (sr(1,ipol,isym),ipol=1,3), ft1
@@ -237,10 +225,10 @@ program fd_raman
    do ii=1,3
      do k=1,3
      if (lpuma)  then
-       dechi(ii,ii,k,i)=(-1.0*Fd(1,ii,k,i)+16.0*Fd(2,ii,k,i)-30.0*F0(i,k)+16.0*Fd(3,ii,k,i)   &
+       dechi(ii,ii,k,i)=(-1.0*Fd(1,ii,k,i)+16.0*Fd(2,ii,k,i)-30.0*F0(k,i)+16.0*Fd(3,ii,k,i)   &
                          -1.0*Fd(4,ii,k,i))/(12.*de**2)
      else
-       dechi(ii,ii,k,i)=(Fd(1,ii,k,i)-2*F0(i,k)+Fd(2,ii,k,i))/(de**2)
+       dechi(ii,ii,k,i)=(Fd(1,ii,k,i)-2*F0(k,i)+Fd(2,ii,k,i))/(de**2)
      end if
      end do
    end do
@@ -256,17 +244,17 @@ program fd_raman
   do i=1,nat
     do k=1,3
      if (lpuma)  then
-      dechi(1,2,k,i) = (-1.0*Fij(1,1,k,i)+16.0*Fij(2,1,k,i)-30.0*F0(i,k)+16.0*Fij(3,1,k,i)    &
+      dechi(1,2,k,i) = (-1.0*Fij(1,1,k,i)+16.0*Fij(2,1,k,i)-30.0*F0(k,i)+16.0*Fij(3,1,k,i)    &
                         -1.0*Fij(4,1,k,i))/(12.0*de**2)
       dechi(1,2,k,i) = 0.5*dechi(1,2,k,i)-0.5*dechi(1,1,k,i)-0.5*dechi(2,2,k,i)
       dechi(2,1,k,i) = dechi(1,2,k,i)
   
-      dechi(1,3,k,i) = (-1.0*Fij(1,2,k,i)+16.0*Fij(2,2,k,i)-30.0*F0(i,k)+16.0*Fij(3,2,k,i)    &
+      dechi(1,3,k,i) = (-1.0*Fij(1,2,k,i)+16.0*Fij(2,2,k,i)-30.0*F0(k,i)+16.0*Fij(3,2,k,i)    &
                         -1.0*Fij(4,2,k,i))/(12.0*de**2)
       dechi(1,3,k,i) = 0.5*dechi(1,3,k,i)-0.5*dechi(1,1,k,i)-0.5*dechi(3,3,k,i)
       dechi(3,1,k,i) = dechi(1,3,k,i)
   
-      dechi(2,3,k,i) = (-1.0*Fij(1,3,k,i)+16.0*Fij(2,3,k,i)-30.0*F0(i,k)+ 16.0*Fij(3,3,k,i)   &
+      dechi(2,3,k,i) = (-1.0*Fij(1,3,k,i)+16.0*Fij(2,3,k,i)-30.0*F0(k,i)+ 16.0*Fij(3,3,k,i)   &
                         -1.0*Fij(4,3,k,i))/(12.0*de**2)
       dechi(2,3,k,i) = 0.5*dechi(2,3,k,i)-0.5*dechi(2,2,k,i)-0.5*dechi(3,3,k,i)
       dechi(3,2,k,i) = dechi(2,3,k,i)
@@ -364,7 +352,7 @@ if (lalpha)  then
     do i=1,nat
       read(2,'(1x,1x,3 (f10.6,1x,f10.6,3x),1x)') (u(n,k,i),ui(n,k,i),k=1,3)
       do k=1,3
-        u(n,i,k)=u(n,k,i)/Sqrt(amass(ityp(i)))
+        u(n,k,i)=u(n,k,i)/Sqrt(amass(ityp(i)))
       end do
     end do
   end do
@@ -460,7 +448,7 @@ deallocate(F0,dechi,Fd,Fij)
   npol=npol_zeu
   de=de_zeu*sqrt(2.0d0)
 
-  allocate (F0(nat,3))
+  allocate (F0(3,nat))
   allocate (Fij(npol,nat,3,3))
   allocate (zeta(3,3,nat))
 
@@ -469,7 +457,7 @@ deallocate(F0,dechi,Fd,Fij)
   zeta=0.0d0
 
   do k=1,nat
-    read(5,*) (F0(k,j),j=1,3)
+    read(5,*) (F0(j,k),j=1,3)
   end do
   
   do p=1,npol
@@ -483,10 +471,10 @@ deallocate(F0,dechi,Fd,Fij)
     do i=1,3
       do j=1,3
         if (npol==2) then
-          zeta(i,j,k)=(Fij(1,k,i,j)-F0(k,j))-(Fij(2,k,i,j)-F0(k,j))
+          zeta(i,j,k)=(Fij(1,k,i,j)-F0(j,k))-(Fij(2,k,i,j)-F0(j,k))
           zeta(i,j,k)=0.5*zeta(i,j,k)/de
         else
-          zeta(i,j,k)=(Fij(1,k,i,j)-F0(k,j))
+          zeta(i,j,k)=(Fij(1,k,i,j)-F0(j,k))
           zeta(i,j,k)=zeta(i,j,k)/de
         end if
       end do

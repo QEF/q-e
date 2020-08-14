@@ -1,0 +1,1834 @@
+
+     Program PWSCF v.6.5 starts on 22Apr2020 at 18:40:23 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     Fft bands division:     nmany     =       1
+     Waiting for input...
+     Reading input from standard input
+     Message from routine read_cards :
+     DEPRECATED: no units specified in CELL_PARAMETERS card
+
+     Current dimensions of program PWSCF are:
+     Max number of different atomic species (ntypx) = 10
+     Max number of k-points (npk) =  40000
+     Max angular momentum in pseudopotentials (lmaxx) =  3
+               file Ni.pbesol-n-rrkjus_psl.0.1.UPF: wavefunction(s)  3D renormalized
+               file Ni.pbesol-n-rrkjus_psl.0.1.UPF: wavefunction(s)  3D renormalized
+
+     Subspace diagonalization in iterative solution of the eigenvalue problem:
+     a serial algorithm will be used
+
+     Message from routine setup:
+     using ibrav=0 with symmetry is DISCOURAGED, use correct ibrav instead
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         813     409    133                11627     4145     731
+ 
+
+
+     bravais-lattice index     =            0
+     lattice parameter (alat)  =       7.8800  a.u.
+     unit-cell volume          =     244.6519 (a.u.)^3
+     number of atoms/cell      =            4
+     number of atomic types    =            3
+     number of electrons       =        32.00
+     number of Kohn-Sham states=           20
+     kinetic-energy cutoff     =      25.0000  Ry
+     charge density cutoff     =     200.0000  Ry
+     convergence threshold     =      1.0E-10
+     mixing beta               =       0.7000
+     number of iterations used =            8  plain     mixing
+     Exchange-correlation= PBESOL
+                           (   1   4  10   8   0   0   0)
+
+     celldm(1)=   7.880000  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (   1.000000   0.500000   0.500000 )  
+               a(2) = (   0.500000   1.000000   0.500000 )  
+               a(3) = (   0.500000   0.500000   1.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = (  1.500000 -0.500000 -0.500000 )  
+               b(2) = ( -0.500000  1.500000 -0.500000 )  
+               b(3) = ( -0.500000 -0.500000  1.500000 )  
+
+
+     PseudoPot. # 1 for Ni read from file:
+     ../../pseudo/Ni.pbesol-n-rrkjus_psl.0.1.UPF
+     MD5 check sum: 8a65ecc087b22b902f7e15bb4f925df7
+     Pseudo is Ultrasoft + core correction, Zval = 10.0
+     Generated using "atomic" code by A. Dal Corso v.5.0.2 svn rev. 9415
+     Using radial grid of 1195 points,  6 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+                l(5) =   2
+                l(6) =   2
+     Q(r) pseudized with 0 coefficients 
+
+
+     PseudoPot. # 2 for Ni read from file:
+     ../../pseudo/Ni.pbesol-n-rrkjus_psl.0.1.UPF
+     MD5 check sum: 8a65ecc087b22b902f7e15bb4f925df7
+     Pseudo is Ultrasoft + core correction, Zval = 10.0
+     Generated using "atomic" code by A. Dal Corso v.5.0.2 svn rev. 9415
+     Using radial grid of 1195 points,  6 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+                l(5) =   2
+                l(6) =   2
+     Q(r) pseudized with 0 coefficients 
+
+
+     PseudoPot. # 3 for O  read from file:
+     ../../pseudo/O.pbesol-n-rrkjus_psl.0.1.UPF
+     MD5 check sum: f27e8aef0904343e863161fc6edd5707
+     Pseudo is Ultrasoft + core correction, Zval =  6.0
+     Generated using "atomic" code by A. Dal Corso v.6.3MaX
+     Using radial grid of 1095 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     atomic species   valence    mass     pseudopotential
+        Ni1           10.00    58.69300     Ni( 1.00)
+        Ni2           10.00    58.69300     Ni( 1.00)
+        O              6.00    16.00000     O ( 1.00)
+
+     Starting magnetic structure 
+     atomic species   magnetization
+        Ni1          0.500
+        Ni2         -0.500
+        O            0.000
+
+
+     Simplified LDA+U calculation (l_max = 2) with parameters (eV):
+     atomic species    L          U    alpha       J0     beta
+        Ni1            2     3.0000   0.0000   0.0000   0.0000
+        Ni2            2     3.0000   0.0000   0.0000   0.0000
+
+
+
+     12 Sym. Ops., with inversion, found
+
+
+                                    s                        frac. trans.
+
+      isym =  1     identity                                     
+
+ cryst.   s( 1) = (     1          0          0      )
+                  (     0          1          0      )
+                  (     0          0          1      )
+
+ cart.    s( 1) = (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+      isym =  2     180 deg rotation - cart. axis [1,-1,0]       
+
+ cryst.   s( 2) = (     0         -1          0      )
+                  (    -1          0          0      )
+                  (     0          0         -1      )
+
+ cart.    s( 2) = (  0.0000000 -1.0000000  0.0000000 )
+                  ( -1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym =  3     180 deg rotation - cart. axis [-1,0,1]       
+
+ cryst.   s( 3) = (     0          0         -1      )
+                  (     0         -1          0      )
+                  (    -1          0          0      )
+
+ cart.    s( 3) = (  0.0000000  0.0000000 -1.0000000 )
+                  (  0.0000000 -1.0000000  0.0000000 )
+                  ( -1.0000000  0.0000000  0.0000000 )
+
+
+      isym =  4     180 deg rotation - cart. axis [0,1,-1]       
+
+ cryst.   s( 4) = (    -1          0          0      )
+                  (     0          0         -1      )
+                  (     0         -1          0      )
+
+ cart.    s( 4) = ( -1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+                  (  0.0000000 -1.0000000  0.0000000 )
+
+
+      isym =  5     120 deg rotation - cart. axis [-1,-1,-1]     
+
+ cryst.   s( 5) = (     0          0          1      )
+                  (     1          0          0      )
+                  (     0          1          0      )
+
+ cart.    s( 5) = (  0.0000000  1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+                  (  1.0000000  0.0000000  0.0000000 )
+
+
+      isym =  6     120 deg rotation - cart. axis [1,1,1]        
+
+ cryst.   s( 6) = (     0          1          0      )
+                  (     0          0          1      )
+                  (     1          0          0      )
+
+ cart.    s( 6) = (  0.0000000  0.0000000  1.0000000 )
+                  (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  1.0000000  0.0000000 )
+
+
+      isym =  7     inversion                                    
+
+ cryst.   s( 7) = (    -1          0          0      )
+                  (     0         -1          0      )
+                  (     0          0         -1      )
+
+ cart.    s( 7) = ( -1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000 -1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym =  8     inv. 180 deg rotation - cart. axis [1,-1,0]  
+
+ cryst.   s( 8) = (     0          1          0      )
+                  (     1          0          0      )
+                  (     0          0          1      )
+
+ cart.    s( 8) = (  0.0000000  1.0000000  0.0000000 )
+                  (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+      isym =  9     inv. 180 deg rotation - cart. axis [-1,0,1]  
+
+ cryst.   s( 9) = (     0          0          1      )
+                  (     0          1          0      )
+                  (     1          0          0      )
+
+ cart.    s( 9) = (  0.0000000  0.0000000  1.0000000 )
+                  (  0.0000000  1.0000000  0.0000000 )
+                  (  1.0000000  0.0000000  0.0000000 )
+
+
+      isym = 10     inv. 180 deg rotation - cart. axis [0,1,-1]  
+
+ cryst.   s(10) = (     1          0          0      )
+                  (     0          0          1      )
+                  (     0          1          0      )
+
+ cart.    s(10) = (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+                  (  0.0000000  1.0000000  0.0000000 )
+
+
+      isym = 11     inv. 120 deg rotation - cart. axis [-1,-1,-1]
+
+ cryst.   s(11) = (     0          0         -1      )
+                  (    -1          0          0      )
+                  (     0         -1          0      )
+
+ cart.    s(11) = (  0.0000000 -1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+                  ( -1.0000000  0.0000000  0.0000000 )
+
+
+      isym = 12     inv. 120 deg rotation - cart. axis [1,1,1]   
+
+ cryst.   s(12) = (     0         -1          0      )
+                  (     0          0         -1      )
+                  (    -1          0          0      )
+
+ cart.    s(12) = (  0.0000000  0.0000000 -1.0000000 )
+                  ( -1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000 -1.0000000  0.0000000 )
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1           Ni1 tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+         2           Ni2 tau(   2) = (   0.5000000   0.5000000   0.0000000  )
+         3           O   tau(   3) = (   0.5000000   0.0000000   0.0000000  )
+         4           O   tau(   4) = (   1.0000000   0.5000000   0.0000000  )
+
+   Crystallographic axes
+
+     site n.     atom                  positions (cryst. coord.)
+         1           Ni1 tau(   1) = (  0.0000000  0.0000000  0.0000000  )
+         2           Ni2 tau(   2) = (  0.5000000  0.5000000 -0.5000000  )
+         3           O   tau(   3) = (  0.7500000 -0.2500000 -0.2500000  )
+         4           O   tau(   4) = (  1.2500000  0.2500000 -0.7500000  )
+
+     number of k points=     4  Gaussian smearing, width (Ry)=  0.0010
+                       cart. coord. in units 2pi/alat
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.1250000
+        k(    2) = (   0.2500000   0.2500000  -0.7500000), wk =   0.3750000
+        k(    3) = (   0.5000000  -0.5000000  -0.5000000), wk =   0.3750000
+        k(    4) = (  -0.2500000  -0.2500000  -0.2500000), wk =   0.1250000
+
+                       cryst. coord.
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.1250000
+        k(    2) = (   0.0000000   0.0000000  -0.5000000), wk =   0.3750000
+        k(    3) = (   0.0000000  -0.5000000  -0.5000000), wk =   0.3750000
+        k(    4) = (  -0.5000000  -0.5000000  -0.5000000), wk =   0.1250000
+
+     Dense  grid:    11627 G-vectors     FFT dimensions: (  45,  45,  45)
+
+     Smooth grid:     4145 G-vectors     FFT dimensions: (  32,  32,  32)
+
+     Dynamical RAM for                 wfc:       0.16 MB
+
+     Dynamical RAM for     wfc (w. buffer):       1.42 MB
+
+     Dynamical RAM for             U proj.:       0.08 MB
+
+     Dynamical RAM for  U proj. (w. buff.):       0.71 MB
+
+     Dynamical RAM for           str. fact:       0.53 MB
+
+     Dynamical RAM for           local pot:       0.00 MB
+
+     Dynamical RAM for          nlocal pot:       0.41 MB
+
+     Dynamical RAM for                qrad:       3.41 MB
+
+     Dynamical RAM for          rho,v,vnew:       5.24 MB
+
+     Dynamical RAM for               rhoin:       1.75 MB
+
+     Dynamical RAM for            rho*nmix:       5.68 MB
+
+     Dynamical RAM for           G-vectors:       0.70 MB
+
+     Dynamical RAM for          h,s,v(r/c):       0.29 MB
+
+     Dynamical RAM for          <psi|beta>:       0.02 MB
+
+     Dynamical RAM for                 psi:       0.63 MB
+
+     Dynamical RAM for                hpsi:       0.63 MB
+
+     Dynamical RAM for                spsi:       0.63 MB
+
+     Dynamical RAM for      wfcinit/wfcrot:       0.43 MB
+
+     Dynamical RAM for           addusdens:      33.53 MB
+
+     Dynamical RAM for          addusforce:      34.98 MB
+
+     Dynamical RAM for         addusstress:      35.93 MB
+
+     Estimated static dynamical RAM per process >      24.71 MB
+
+     Estimated max dynamical RAM per process >      60.64 MB
+
+     Check: negative core charge=   -0.000983
+     Generating pointlists ...
+     new r_m :   0.2063 (alat units)  1.6253 (a.u.) for type    1
+     new r_m :   0.2063 (alat units)  1.6253 (a.u.) for type    2
+     new r_m :   0.2063 (alat units)  1.6253 (a.u.) for type    3
+
+     Initial potential from superposition of free atoms
+
+     starting charge   31.99953, renormalised to   32.00000
+ --- in v_hubbard ---
+Hubbard energy    0.2646
+ -------
+     Number of +U iterations with fixed ns =  0
+     Starting occupations:
+ --- enter write_ns ---
+ LDA+U parameters:
+U( 1)     =  3.00000000
+U( 2)     =  3.00000000
+atom    1   Tr[ns(na)] (up, down, total) =   5.00000  3.00000  8.00000
+   spin  1
+    eigenvalues: 
+  1.000  1.000  1.000  1.000  1.000
+    eigenvectors:
+  1.000  0.000  0.000  0.000  0.000
+  0.000  1.000  0.000  0.000  0.000
+  0.000  0.000  1.000  0.000  0.000
+  0.000  0.000  0.000  1.000  0.000
+  0.000  0.000  0.000  0.000  1.000
+    occupations:
+  1.000  0.000  0.000  0.000  0.000
+  0.000  1.000  0.000  0.000  0.000
+  0.000  0.000  1.000  0.000  0.000
+  0.000  0.000  0.000  1.000  0.000
+  0.000  0.000  0.000  0.000  1.000
+   spin  2
+    eigenvalues: 
+  0.600  0.600  0.600  0.600  0.600
+    eigenvectors:
+  1.000  0.000  0.000  0.000  0.000
+  0.000  1.000  0.000  0.000  0.000
+  0.000  0.000  1.000  0.000  0.000
+  0.000  0.000  0.000  1.000  0.000
+  0.000  0.000  0.000  0.000  1.000
+    occupations:
+  0.600  0.000  0.000  0.000  0.000
+  0.000  0.600  0.000  0.000  0.000
+  0.000  0.000  0.600  0.000  0.000
+  0.000  0.000  0.000  0.600  0.000
+  0.000  0.000  0.000  0.000  0.600
+atomic mag. moment =   2.00000
+atom    2   Tr[ns(na)] (up, down, total) =   3.00000  5.00000  8.00000
+   spin  1
+    eigenvalues: 
+  0.600  0.600  0.600  0.600  0.600
+    eigenvectors:
+  1.000  0.000  0.000  0.000  0.000
+  0.000  1.000  0.000  0.000  0.000
+  0.000  0.000  1.000  0.000  0.000
+  0.000  0.000  0.000  1.000  0.000
+  0.000  0.000  0.000  0.000  1.000
+    occupations:
+  0.600  0.000  0.000  0.000  0.000
+  0.000  0.600  0.000  0.000  0.000
+  0.000  0.000  0.600  0.000  0.000
+  0.000  0.000  0.000  0.600  0.000
+  0.000  0.000  0.000  0.000  0.600
+   spin  2
+    eigenvalues: 
+  1.000  1.000  1.000  1.000  1.000
+    eigenvectors:
+  1.000  0.000  0.000  0.000  0.000
+  0.000  1.000  0.000  0.000  0.000
+  0.000  0.000  1.000  0.000  0.000
+  0.000  0.000  0.000  1.000  0.000
+  0.000  0.000  0.000  0.000  1.000
+    occupations:
+  1.000  0.000  0.000  0.000  0.000
+  0.000  1.000  0.000  0.000  0.000
+  0.000  0.000  1.000  0.000  0.000
+  0.000  0.000  0.000  1.000  0.000
+  0.000  0.000  0.000  0.000  1.000
+atomic mag. moment =  -2.00000
+N of occupied +U levels =   16.000000
+ --- exit write_ns ---
+ Atomic wfc used for LDA+U Projector are NOT orthogonalized
+     Starting wfcs are   26 randomized atomic wfcs
+
+     total cpu time spent up to now is        2.0 secs
+
+     Self-consistent Calculation
+
+     iteration #  1     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  2.4
+ --- enter write_ns ---
+ LDA+U parameters:
+U( 1)     =  3.00000000
+U( 2)     =  3.00000000
+atom    1   Tr[ns(na)] (up, down, total) =   4.81625  3.48058  8.29683
+   spin  1
+    eigenvalues: 
+  0.957  0.957  0.967  0.968  0.968
+    eigenvectors:
+  0.126  0.871  0.000  0.003  0.000
+  0.001  0.001  0.333  0.066  0.598
+  0.002  0.000  0.333  0.293  0.372
+  0.871  0.126  0.000  0.000  0.003
+  0.000  0.002  0.333  0.638  0.027
+    occupations:
+  0.957 -0.000 -0.000  0.000 -0.000
+ -0.000  0.967 -0.000 -0.000  0.000
+ -0.000 -0.000  0.967  0.000  0.000
+  0.000 -0.000  0.000  0.957 -0.000
+ -0.000  0.000  0.000 -0.000  0.967
+   spin  2
+    eigenvalues: 
+  0.317  0.317  0.945  0.951  0.951
+    eigenvectors:
+  0.077  0.922  0.000  0.000  0.000
+  0.000  0.000  0.333  0.291  0.375
+  0.000  0.000  0.333  0.068  0.598
+  0.922  0.077  0.000  0.000  0.000
+  0.000  0.000  0.333  0.640  0.026
+    occupations:
+  0.318  0.005  0.005  0.000  0.010
+  0.005  0.948 -0.002  0.009  0.002
+  0.005 -0.002  0.948 -0.009  0.002
+  0.000  0.009 -0.009  0.318 -0.000
+  0.010  0.002  0.002 -0.000  0.948
+atomic mag. moment =   1.33567
+atom    2   Tr[ns(na)] (up, down, total) =   3.48066  4.81616  8.29682
+   spin  1
+    eigenvalues: 
+  0.317  0.317  0.945  0.951  0.951
+    eigenvectors:
+  0.064  0.936  0.000  0.000  0.000
+  0.000  0.000  0.333  0.189  0.477
+  0.000  0.000  0.333  0.145  0.522
+  0.936  0.064  0.000  0.000  0.000
+  0.000  0.000  0.333  0.665  0.001
+    occupations:
+  0.318  0.005  0.005  0.000  0.010
+  0.005  0.949 -0.002  0.009  0.002
+  0.005 -0.002  0.949 -0.009  0.002
+  0.000  0.009 -0.009  0.318 -0.000
+  0.010  0.002  0.002 -0.000  0.949
+   spin  2
+    eigenvalues: 
+  0.957  0.957  0.967  0.968  0.968
+    eigenvectors:
+  0.014  0.983  0.000  0.003  0.000
+  0.001  0.001  0.333  0.076  0.589
+  0.002  0.000  0.333  0.277  0.387
+  0.983  0.014  0.000  0.000  0.003
+  0.000  0.002  0.333  0.644  0.021
+    occupations:
+  0.957 -0.000 -0.000  0.000 -0.000
+ -0.000  0.967 -0.000 -0.000  0.000
+ -0.000 -0.000  0.967  0.000  0.000
+  0.000 -0.000  0.000  0.957 -0.000
+ -0.000  0.000  0.000 -0.000  0.967
+atomic mag. moment =  -1.33550
+N of occupied +U levels =   16.593651
+ --- exit write_ns ---
+ --- in v_hubbard ---
+Hubbard energy    0.1668
+ -------
+
+     total cpu time spent up to now is        2.5 secs
+
+     total energy              =    -266.63202471 Ry
+     estimated scf accuracy    <       0.60486240 Ry
+
+     total magnetization       =    -0.00 Bohr mag/cell
+     absolute magnetization    =     3.32 Bohr mag/cell
+
+     iteration #  2     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  1.89E-03,  avg # of iterations =  2.0
+ --- enter write_ns ---
+ LDA+U parameters:
+U( 1)     =  3.00000000
+U( 2)     =  3.00000000
+atom    1   Tr[ns(na)] (up, down, total) =   4.80340  3.75449  8.55789
+   spin  1
+    eigenvalues: 
+  0.952  0.952  0.966  0.967  0.967
+    eigenvectors:
+  0.057  0.942  0.000  0.001  0.000
+  0.000  0.000  0.333  0.113  0.552
+  0.001  0.000  0.333  0.226  0.440
+  0.942  0.057  0.000  0.000  0.001
+  0.000  0.001  0.333  0.659  0.006
+    occupations:
+  0.952 -0.000 -0.000  0.000 -0.000
+ -0.000  0.967 -0.000 -0.000  0.000
+ -0.000 -0.000  0.967  0.000  0.000
+  0.000 -0.000  0.000  0.952 -0.000
+ -0.000  0.000  0.000 -0.000  0.967
+   spin  2
+    eigenvalues: 
+  0.435  0.435  0.961  0.961  0.961
+    eigenvectors:
+  0.125  0.875  0.000  0.000  0.000
+  0.000  0.000  0.333  0.141  0.526
+  0.000  0.000  0.333  0.194  0.473
+  0.875  0.125  0.000  0.000  0.000
+  0.000  0.000  0.333  0.665  0.001
+    occupations:
+  0.436  0.000  0.000  0.000  0.001
+  0.000  0.961 -0.000  0.001  0.000
+  0.000 -0.000  0.961 -0.001  0.000
+  0.000  0.001 -0.001  0.436 -0.000
+  0.001  0.000  0.000 -0.000  0.961
+atomic mag. moment =   1.04891
+atom    2   Tr[ns(na)] (up, down, total) =   3.75610  4.80353  8.55963
+   spin  1
+    eigenvalues: 
+  0.436  0.436  0.961  0.961  0.961
+    eigenvectors:
+  0.119  0.881  0.000  0.000  0.000
+  0.000  0.000  0.333  0.098  0.568
+  0.000  0.000  0.333  0.246  0.421
+  0.881  0.119  0.000  0.000  0.000
+  0.000  0.000  0.333  0.656  0.011
+    occupations:
+  0.436  0.000  0.000  0.000  0.000
+  0.000  0.961 -0.000  0.000  0.000
+  0.000 -0.000  0.961 -0.000  0.000
+  0.000  0.000 -0.000  0.436 -0.000
+  0.000  0.000  0.000 -0.000  0.961
+   spin  2
+    eigenvalues: 
+  0.952  0.952  0.966  0.967  0.967
+    eigenvectors:
+  0.060  0.938  0.000  0.001  0.000
+  0.000  0.000  0.333  0.116  0.550
+  0.001  0.000  0.333  0.223  0.443
+  0.938  0.060  0.000  0.000  0.001
+  0.000  0.001  0.333  0.660  0.006
+    occupations:
+  0.952 -0.000 -0.000  0.000 -0.000
+ -0.000  0.967 -0.000 -0.000  0.000
+ -0.000 -0.000  0.967  0.000  0.000
+  0.000 -0.000  0.000  0.952 -0.000
+ -0.000  0.000  0.000 -0.000  0.967
+atomic mag. moment =  -1.04743
+N of occupied +U levels =   17.117527
+ --- exit write_ns ---
+ --- in v_hubbard ---
+Hubbard energy    0.1723
+ -------
+
+     total cpu time spent up to now is        3.2 secs
+
+     total energy              =    -266.62221511 Ry
+     estimated scf accuracy    <       0.30778437 Ry
+
+     total magnetization       =    -0.00 Bohr mag/cell
+     absolute magnetization    =     2.75 Bohr mag/cell
+
+     iteration #  3     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  9.62E-04,  avg # of iterations =  2.4
+ --- enter write_ns ---
+ LDA+U parameters:
+U( 1)     =  3.00000000
+U( 2)     =  3.00000000
+atom    1   Tr[ns(na)] (up, down, total) =   4.79422  3.38507  8.17929
+   spin  1
+    eigenvalues: 
+  0.951  0.951  0.964  0.965  0.965
+    eigenvectors:
+  0.111  0.889  0.000  0.001  0.000
+  0.000  0.000  0.333  0.122  0.544
+  0.000  0.000  0.333  0.215  0.451
+  0.889  0.111  0.000  0.000  0.001
+  0.000  0.000  0.333  0.662  0.004
+    occupations:
+  0.951 -0.000 -0.000  0.000 -0.000
+ -0.000  0.964 -0.000 -0.000  0.000
+ -0.000 -0.000  0.964  0.000  0.000
+  0.000 -0.000  0.000  0.951 -0.000
+ -0.000  0.000  0.000 -0.000  0.964
+   spin  2
+    eigenvalues: 
+  0.254  0.254  0.958  0.960  0.960
+    eigenvectors:
+  0.349  0.651  0.000  0.000  0.000
+  0.000  0.000  0.333  0.150  0.517
+  0.000  0.000  0.333  0.184  0.482
+  0.651  0.349  0.000  0.000  0.000
+  0.000  0.000  0.333  0.666  0.001
+    occupations:
+  0.254 -0.000 -0.000  0.000 -0.001
+ -0.000  0.959 -0.001 -0.000  0.001
+ -0.000 -0.001  0.959  0.000  0.001
+  0.000 -0.000  0.000  0.254 -0.000
+ -0.001  0.001  0.001 -0.000  0.959
+atomic mag. moment =   1.40916
+atom    2   Tr[ns(na)] (up, down, total) =   3.38407  4.79388  8.17795
+   spin  1
+    eigenvalues: 
+  0.253  0.253  0.958  0.960  0.960
+    eigenvectors:
+  0.094  0.906  0.000  0.000  0.000
+  0.000  0.000  0.333  0.182  0.485
+  0.000  0.000  0.333  0.152  0.514
+  0.906  0.094  0.000  0.000  0.000
+  0.000  0.000  0.333  0.666  0.000
+    occupations:
+  0.253 -0.000 -0.000  0.000 -0.001
+ -0.000  0.959 -0.001 -0.001  0.001
+ -0.000 -0.001  0.959  0.001  0.001
+  0.000 -0.001  0.001  0.253 -0.000
+ -0.001  0.001  0.001 -0.000  0.959
+   spin  2
+    eigenvalues: 
+  0.951  0.951  0.964  0.965  0.965
+    eigenvectors:
+  0.059  0.941  0.000  0.001  0.000
+  0.000  0.000  0.333  0.111  0.555
+  0.000  0.000  0.333  0.229  0.438
+  0.941  0.059  0.000  0.000  0.001
+  0.000  0.000  0.333  0.659  0.007
+    occupations:
+  0.951 -0.000 -0.000  0.000 -0.000
+ -0.000  0.964 -0.000 -0.000  0.000
+ -0.000 -0.000  0.964  0.000  0.000
+  0.000 -0.000  0.000  0.951 -0.000
+ -0.000  0.000  0.000 -0.000  0.964
+atomic mag. moment =  -1.40980
+N of occupied +U levels =   16.357239
+ --- exit write_ns ---
+ --- in v_hubbard ---
+Hubbard energy    0.1684
+ -------
+
+     total cpu time spent up to now is        3.8 secs
+
+     total energy              =    -266.66596956 Ry
+     estimated scf accuracy    <       0.33225074 Ry
+
+     total magnetization       =    -0.00 Bohr mag/cell
+     absolute magnetization    =     3.33 Bohr mag/cell
+
+     iteration #  4     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  9.62E-04,  avg # of iterations =  2.0
+ --- enter write_ns ---
+ LDA+U parameters:
+U( 1)     =  3.00000000
+U( 2)     =  3.00000000
+atom    1   Tr[ns(na)] (up, down, total) =   4.79289  3.65099  8.44388
+   spin  1
+    eigenvalues: 
+  0.947  0.947  0.966  0.966  0.966
+    eigenvectors:
+  0.038  0.962  0.000  0.000  0.000
+  0.000  0.000  0.333  0.137  0.530
+  0.000  0.000  0.333  0.198  0.468
+  0.962  0.038  0.000  0.000  0.000
+  0.000  0.000  0.333  0.664  0.002
+    occupations:
+  0.947 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.947 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+   spin  2
+    eigenvalues: 
+  0.382  0.382  0.962  0.963  0.963
+    eigenvectors:
+  0.080  0.920  0.000  0.000  0.000
+  0.000  0.000  0.333  0.155  0.512
+  0.000  0.000  0.333  0.179  0.488
+  0.920  0.080  0.000  0.000  0.000
+  0.000  0.000  0.333  0.666  0.000
+    occupations:
+  0.382 -0.001 -0.001  0.000 -0.003
+ -0.001  0.962 -0.000 -0.002  0.000
+ -0.001 -0.000  0.962  0.002  0.000
+  0.000 -0.002  0.002  0.382 -0.000
+ -0.003  0.000  0.000 -0.000  0.962
+atomic mag. moment =   1.14191
+atom    2   Tr[ns(na)] (up, down, total) =   3.65222  4.79311  8.44533
+   spin  1
+    eigenvalues: 
+  0.383  0.383  0.962  0.963  0.963
+    eigenvectors:
+  0.122  0.878  0.000  0.000  0.000
+  0.000  0.000  0.333  0.143  0.524
+  0.000  0.000  0.333  0.191  0.475
+  0.878  0.122  0.000  0.000  0.000
+  0.000  0.000  0.333  0.665  0.001
+    occupations:
+  0.383 -0.001 -0.001  0.000 -0.003
+ -0.001  0.962 -0.000 -0.002  0.000
+ -0.001 -0.000  0.962  0.002  0.000
+  0.000 -0.002  0.002  0.383 -0.000
+ -0.003  0.000  0.000 -0.000  0.962
+   spin  2
+    eigenvalues: 
+  0.947  0.947  0.966  0.966  0.966
+    eigenvectors:
+  0.082  0.917  0.000  0.000  0.000
+  0.000  0.000  0.333  0.149  0.518
+  0.000  0.000  0.333  0.185  0.481
+  0.917  0.082  0.000  0.000  0.000
+  0.000  0.000  0.333  0.666  0.001
+    occupations:
+  0.947 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.947 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+atomic mag. moment =  -1.14090
+N of occupied +U levels =   16.889209
+ --- exit write_ns ---
+ --- in v_hubbard ---
+Hubbard energy    0.1695
+ -------
+
+     total cpu time spent up to now is        4.3 secs
+
+     total energy              =    -266.72555296 Ry
+     estimated scf accuracy    <       0.01394542 Ry
+
+     total magnetization       =     0.00 Bohr mag/cell
+     absolute magnetization    =     2.89 Bohr mag/cell
+
+     iteration #  5     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  4.36E-05,  avg # of iterations =  3.5
+ --- enter write_ns ---
+ LDA+U parameters:
+U( 1)     =  3.00000000
+U( 2)     =  3.00000000
+atom    1   Tr[ns(na)] (up, down, total) =   4.78958  3.62614  8.41572
+   spin  1
+    eigenvalues: 
+  0.946  0.946  0.965  0.966  0.966
+    eigenvectors:
+  0.058  0.942  0.000  0.000  0.000
+  0.000  0.000  0.333  0.132  0.535
+  0.000  0.000  0.333  0.204  0.462
+  0.942  0.058  0.000  0.000  0.000
+  0.000  0.000  0.333  0.664  0.003
+    occupations:
+  0.946 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.946 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+   spin  2
+    eigenvalues: 
+  0.371  0.371  0.961  0.962  0.962
+    eigenvectors:
+  0.181  0.819  0.000  0.000  0.000
+  0.000  0.000  0.333  0.133  0.534
+  0.000  0.000  0.333  0.203  0.464
+  0.819  0.181  0.000  0.000  0.000
+  0.000  0.000  0.333  0.664  0.002
+    occupations:
+  0.371 -0.002 -0.002  0.000 -0.004
+ -0.002  0.962 -0.000 -0.003  0.000
+ -0.002 -0.000  0.962  0.003  0.000
+  0.000 -0.003  0.003  0.371 -0.000
+ -0.004  0.000  0.000 -0.000  0.962
+atomic mag. moment =   1.16344
+atom    2   Tr[ns(na)] (up, down, total) =   3.62356  4.78895  8.41251
+   spin  1
+    eigenvalues: 
+  0.369  0.369  0.961  0.962  0.962
+    eigenvectors:
+  0.110  0.890  0.000  0.000  0.000
+  0.000  0.000  0.333  0.156  0.511
+  0.000  0.000  0.333  0.178  0.489
+  0.890  0.110  0.000  0.000  0.000
+  0.000  0.000  0.333  0.666  0.000
+    occupations:
+  0.369 -0.002 -0.002  0.000 -0.004
+ -0.002  0.962 -0.000 -0.003  0.000
+ -0.002 -0.000  0.962  0.003  0.000
+  0.000 -0.003  0.003  0.369 -0.000
+ -0.004  0.000  0.000 -0.000  0.962
+   spin  2
+    eigenvalues: 
+  0.946  0.946  0.965  0.966  0.966
+    eigenvectors:
+  0.033  0.966  0.000  0.000  0.000
+  0.000  0.000  0.333  0.117  0.550
+  0.000  0.000  0.333  0.222  0.444
+  0.966  0.033  0.000  0.000  0.000
+  0.000  0.000  0.333  0.661  0.006
+    occupations:
+  0.946 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.946 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+atomic mag. moment =  -1.16538
+N of occupied +U levels =   16.828228
+ --- exit write_ns ---
+ --- in v_hubbard ---
+Hubbard energy    0.1712
+ -------
+
+     total cpu time spent up to now is        4.9 secs
+
+     total energy              =    -266.72811083 Ry
+     estimated scf accuracy    <       0.00028638 Ry
+
+     total magnetization       =     0.00 Bohr mag/cell
+     absolute magnetization    =     2.94 Bohr mag/cell
+
+     iteration #  6     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  8.95E-07,  avg # of iterations =  2.8
+ --- enter write_ns ---
+ LDA+U parameters:
+U( 1)     =  3.00000000
+U( 2)     =  3.00000000
+atom    1   Tr[ns(na)] (up, down, total) =   4.78652  3.61588  8.40239
+   spin  1
+    eigenvalues: 
+  0.945  0.945  0.965  0.966  0.966
+    eigenvectors:
+  0.022  0.978  0.000  0.000  0.000
+  0.000  0.000  0.333  0.124  0.542
+  0.000  0.000  0.333  0.213  0.453
+  0.978  0.022  0.000  0.000  0.000
+  0.000  0.000  0.333  0.663  0.004
+    occupations:
+  0.945 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.945 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+   spin  2
+    eigenvalues: 
+  0.366  0.366  0.961  0.962  0.962
+    eigenvectors:
+  0.037  0.963  0.000  0.000  0.000
+  0.000  0.000  0.333  0.104  0.563
+  0.000  0.000  0.333  0.239  0.428
+  0.963  0.037  0.000  0.000  0.000
+  0.000  0.000  0.333  0.657  0.009
+    occupations:
+  0.366 -0.002 -0.002  0.000 -0.004
+ -0.002  0.962 -0.000 -0.004  0.000
+ -0.002 -0.000  0.962  0.004  0.000
+  0.000 -0.004  0.004  0.366 -0.000
+ -0.004  0.000  0.000 -0.000  0.962
+atomic mag. moment =   1.17064
+atom    2   Tr[ns(na)] (up, down, total) =   3.63153  4.79025  8.42179
+   spin  1
+    eigenvalues: 
+  0.373  0.373  0.961  0.962  0.962
+    eigenvectors:
+  0.192  0.808  0.000  0.000  0.000
+  0.000  0.000  0.333  0.169  0.498
+  0.000  0.000  0.333  0.164  0.502
+  0.808  0.192  0.000  0.000  0.000
+  0.000  0.000  0.333  0.667  0.000
+    occupations:
+  0.373 -0.002 -0.002  0.000 -0.004
+ -0.002  0.962 -0.000 -0.004  0.000
+ -0.002 -0.000  0.962  0.004  0.000
+  0.000 -0.004  0.004  0.373 -0.000
+ -0.004  0.000  0.000 -0.000  0.962
+   spin  2
+    eigenvalues: 
+  0.947  0.947  0.965  0.966  0.966
+    eigenvectors:
+  0.080  0.920  0.000  0.000  0.000
+  0.000  0.000  0.333  0.057  0.609
+  0.000  0.000  0.333  0.310  0.357
+  0.920  0.080  0.000  0.000  0.000
+  0.000  0.000  0.333  0.633  0.034
+    occupations:
+  0.947 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.947 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+atomic mag. moment =  -1.15872
+N of occupied +U levels =   16.824180
+ --- exit write_ns ---
+ --- in v_hubbard ---
+Hubbard energy    0.1715
+ -------
+
+     total cpu time spent up to now is        5.5 secs
+
+     total energy              =    -266.72809893 Ry
+     estimated scf accuracy    <       0.00041528 Ry
+
+     total magnetization       =     0.00 Bohr mag/cell
+     absolute magnetization    =     2.94 Bohr mag/cell
+
+     iteration #  7     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  8.95E-07,  avg # of iterations =  2.0
+ --- enter write_ns ---
+ LDA+U parameters:
+U( 1)     =  3.00000000
+U( 2)     =  3.00000000
+atom    1   Tr[ns(na)] (up, down, total) =   4.78870  3.62523  8.41394
+   spin  1
+    eigenvalues: 
+  0.946  0.946  0.965  0.966  0.966
+    eigenvectors:
+  0.035  0.965  0.000  0.000  0.000
+  0.000  0.000  0.333  0.114  0.553
+  0.000  0.000  0.333  0.226  0.440
+  0.965  0.035  0.000  0.000  0.000
+  0.000  0.000  0.333  0.660  0.006
+    occupations:
+  0.946 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.946 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+   spin  2
+    eigenvalues: 
+  0.370  0.370  0.961  0.962  0.962
+    eigenvectors:
+  0.340  0.660  0.000  0.000  0.000
+  0.000  0.000  0.333  0.143  0.524
+  0.000  0.000  0.333  0.191  0.475
+  0.660  0.340  0.000  0.000  0.000
+  0.000  0.000  0.333  0.665  0.001
+    occupations:
+  0.370 -0.002 -0.002  0.000 -0.004
+ -0.002  0.962 -0.000 -0.004  0.000
+ -0.002 -0.000  0.962  0.004  0.000
+  0.000 -0.004  0.004  0.370 -0.000
+ -0.004  0.000  0.000 -0.000  0.962
+atomic mag. moment =   1.16347
+atom    2   Tr[ns(na)] (up, down, total) =   3.62172  4.78786  8.40958
+   spin  1
+    eigenvalues: 
+  0.368  0.368  0.961  0.962  0.962
+    eigenvectors:
+  0.017  0.983  0.000  0.000  0.000
+  0.000  0.000  0.333  0.126  0.541
+  0.000  0.000  0.333  0.211  0.456
+  0.983  0.017  0.000  0.000  0.000
+  0.000  0.000  0.333  0.663  0.004
+    occupations:
+  0.368 -0.002 -0.002  0.000 -0.004
+ -0.002  0.962 -0.000 -0.004  0.000
+ -0.002 -0.000  0.962  0.004  0.000
+  0.000 -0.004  0.004  0.368 -0.000
+ -0.004  0.000  0.000 -0.000  0.962
+   spin  2
+    eigenvalues: 
+  0.945  0.945  0.965  0.966  0.966
+    eigenvectors:
+  0.101  0.899  0.000  0.000  0.000
+  0.000  0.000  0.333  0.121  0.545
+  0.000  0.000  0.333  0.216  0.450
+  0.899  0.101  0.000  0.000  0.000
+  0.000  0.000  0.333  0.662  0.005
+    occupations:
+  0.946 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.946 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+atomic mag. moment =  -1.16615
+N of occupied +U levels =   16.823521
+ --- exit write_ns ---
+ --- in v_hubbard ---
+Hubbard energy    0.1717
+ -------
+
+     total cpu time spent up to now is        6.0 secs
+
+     total energy              =    -266.72815753 Ry
+     estimated scf accuracy    <       0.00002355 Ry
+
+     total magnetization       =     0.00 Bohr mag/cell
+     absolute magnetization    =     2.94 Bohr mag/cell
+
+     iteration #  8     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  7.36E-08,  avg # of iterations =  1.9
+ --- enter write_ns ---
+ LDA+U parameters:
+U( 1)     =  3.00000000
+U( 2)     =  3.00000000
+atom    1   Tr[ns(na)] (up, down, total) =   4.78818  3.62352  8.41170
+   spin  1
+    eigenvalues: 
+  0.946  0.946  0.965  0.966  0.966
+    eigenvectors:
+  0.107  0.893  0.000  0.000  0.000
+  0.000  0.000  0.333  0.147  0.519
+  0.000  0.000  0.333  0.187  0.480
+  0.893  0.107  0.000  0.000  0.000
+  0.000  0.000  0.333  0.666  0.001
+    occupations:
+  0.946 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.946 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+   spin  2
+    eigenvalues: 
+  0.369  0.369  0.961  0.962  0.962
+    eigenvectors:
+  0.102  0.898  0.000  0.000  0.000
+  0.000  0.000  0.333  0.123  0.543
+  0.000  0.000  0.333  0.214  0.452
+  0.898  0.102  0.000  0.000  0.000
+  0.000  0.000  0.333  0.662  0.004
+    occupations:
+  0.369 -0.002 -0.002  0.000 -0.005
+ -0.002  0.962 -0.000 -0.004  0.000
+ -0.002 -0.000  0.962  0.004  0.000
+  0.000 -0.004  0.004  0.369 -0.000
+ -0.005  0.000  0.000 -0.000  0.962
+atomic mag. moment =   1.16465
+atom    2   Tr[ns(na)] (up, down, total) =   3.62332  4.78812  8.41144
+   spin  1
+    eigenvalues: 
+  0.369  0.369  0.961  0.962  0.962
+    eigenvectors:
+  0.015  0.985  0.000  0.000  0.000
+  0.000  0.000  0.333  0.189  0.477
+  0.000  0.000  0.333  0.145  0.522
+  0.985  0.015  0.000  0.000  0.000
+  0.000  0.000  0.333  0.666  0.001
+    occupations:
+  0.369 -0.002 -0.002  0.000 -0.005
+ -0.002  0.962 -0.000 -0.004  0.000
+ -0.002 -0.000  0.962  0.004  0.000
+  0.000 -0.004  0.004  0.369 -0.000
+ -0.005  0.000  0.000 -0.000  0.962
+   spin  2
+    eigenvalues: 
+  0.946  0.946  0.965  0.966  0.966
+    eigenvectors:
+  0.116  0.884  0.000  0.000  0.000
+  0.000  0.000  0.333  0.147  0.520
+  0.000  0.000  0.333  0.187  0.479
+  0.884  0.116  0.000  0.000  0.000
+  0.000  0.000  0.333  0.666  0.001
+    occupations:
+  0.946 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.946 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+atomic mag. moment =  -1.16480
+N of occupied +U levels =   16.823139
+ --- exit write_ns ---
+ --- in v_hubbard ---
+Hubbard energy    0.1718
+ -------
+
+     total cpu time spent up to now is        6.4 secs
+
+     total energy              =    -266.72816060 Ry
+     estimated scf accuracy    <       0.00000043 Ry
+
+     total magnetization       =     0.00 Bohr mag/cell
+     absolute magnetization    =     2.94 Bohr mag/cell
+
+     iteration #  9     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  1.34E-09,  avg # of iterations =  3.1
+ --- enter write_ns ---
+ LDA+U parameters:
+U( 1)     =  3.00000000
+U( 2)     =  3.00000000
+atom    1   Tr[ns(na)] (up, down, total) =   4.78808  3.62329  8.41137
+   spin  1
+    eigenvalues: 
+  0.946  0.946  0.965  0.966  0.966
+    eigenvectors:
+  0.071  0.929  0.000  0.000  0.000
+  0.000  0.000  0.333  0.151  0.515
+  0.000  0.000  0.333  0.182  0.484
+  0.929  0.071  0.000  0.000  0.000
+  0.000  0.000  0.333  0.666  0.000
+    occupations:
+  0.946 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.946 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+   spin  2
+    eigenvalues: 
+  0.369  0.369  0.961  0.962  0.962
+    eigenvectors:
+  0.254  0.746  0.000  0.000  0.000
+  0.000  0.000  0.333  0.118  0.549
+  0.000  0.000  0.333  0.221  0.446
+  0.746  0.254  0.000  0.000  0.000
+  0.000  0.000  0.333  0.661  0.005
+    occupations:
+  0.369 -0.002 -0.002  0.000 -0.005
+ -0.002  0.962 -0.000 -0.004  0.000
+ -0.002 -0.000  0.962  0.004  0.000
+  0.000 -0.004  0.004  0.369 -0.000
+ -0.005  0.000  0.000 -0.000  0.962
+atomic mag. moment =   1.16479
+atom    2   Tr[ns(na)] (up, down, total) =   3.62357  4.78812  8.41169
+   spin  1
+    eigenvalues: 
+  0.369  0.369  0.961  0.962  0.962
+    eigenvectors:
+  0.090  0.910  0.000  0.000  0.000
+  0.000  0.000  0.333  0.169  0.498
+  0.000  0.000  0.333  0.165  0.502
+  0.910  0.090  0.000  0.000  0.000
+  0.000  0.000  0.333  0.667  0.000
+    occupations:
+  0.369 -0.002 -0.002  0.000 -0.005
+ -0.002  0.962 -0.000 -0.004  0.000
+ -0.002 -0.000  0.962  0.004  0.000
+  0.000 -0.004  0.004  0.369 -0.000
+ -0.005  0.000  0.000 -0.000  0.962
+   spin  2
+    eigenvalues: 
+  0.946  0.946  0.965  0.966  0.966
+    eigenvectors:
+  0.107  0.893  0.000  0.000  0.000
+  0.000  0.000  0.333  0.129  0.538
+  0.000  0.000  0.333  0.207  0.459
+  0.893  0.107  0.000  0.000  0.000
+  0.000  0.000  0.333  0.663  0.003
+    occupations:
+  0.946 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.946 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+atomic mag. moment =  -1.16455
+N of occupied +U levels =   16.823065
+ --- exit write_ns ---
+ --- in v_hubbard ---
+Hubbard energy    0.1718
+ -------
+
+     total cpu time spent up to now is        7.0 secs
+
+     total energy              =    -266.72816090 Ry
+     estimated scf accuracy    <       0.00000023 Ry
+
+     total magnetization       =     0.00 Bohr mag/cell
+     absolute magnetization    =     2.94 Bohr mag/cell
+
+     iteration # 10     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  7.30E-10,  avg # of iterations =  1.0
+ --- enter write_ns ---
+ LDA+U parameters:
+U( 1)     =  3.00000000
+U( 2)     =  3.00000000
+atom    1   Tr[ns(na)] (up, down, total) =   4.78809  3.62348  8.41157
+   spin  1
+    eigenvalues: 
+  0.946  0.946  0.965  0.966  0.966
+    eigenvectors:
+  0.084  0.915  0.000  0.000  0.000
+  0.000  0.000  0.333  0.193  0.474
+  0.000  0.000  0.333  0.142  0.525
+  0.915  0.084  0.000  0.000  0.000
+  0.000  0.000  0.333  0.665  0.001
+    occupations:
+  0.946 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.946 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+   spin  2
+    eigenvalues: 
+  0.369  0.369  0.961  0.962  0.962
+    eigenvectors:
+  0.206  0.794  0.000  0.000  0.000
+  0.000  0.000  0.333  0.134  0.532
+  0.000  0.000  0.333  0.201  0.465
+  0.794  0.206  0.000  0.000  0.000
+  0.000  0.000  0.333  0.664  0.002
+    occupations:
+  0.369 -0.002 -0.002  0.000 -0.005
+ -0.002  0.962 -0.000 -0.004  0.000
+ -0.002 -0.000  0.962  0.004  0.000
+  0.000 -0.004  0.004  0.369 -0.000
+ -0.005  0.000  0.000 -0.000  0.962
+atomic mag. moment =   1.16461
+atom    2   Tr[ns(na)] (up, down, total) =   3.62362  4.78810  8.41172
+   spin  1
+    eigenvalues: 
+  0.369  0.369  0.961  0.962  0.962
+    eigenvectors:
+  0.084  0.916  0.000  0.000  0.000
+  0.000  0.000  0.333  0.108  0.559
+  0.000  0.000  0.333  0.234  0.433
+  0.916  0.084  0.000  0.000  0.000
+  0.000  0.000  0.333  0.659  0.008
+    occupations:
+  0.369 -0.002 -0.002  0.000 -0.005
+ -0.002  0.962 -0.000 -0.004  0.000
+ -0.002 -0.000  0.962  0.004  0.000
+  0.000 -0.004  0.004  0.369 -0.000
+ -0.005  0.000  0.000 -0.000  0.962
+   spin  2
+    eigenvalues: 
+  0.946  0.946  0.965  0.966  0.966
+    eigenvectors:
+  0.211  0.789  0.000  0.000  0.000
+  0.000  0.000  0.333  0.091  0.575
+  0.000  0.000  0.333  0.256  0.411
+  0.789  0.211  0.000  0.000  0.000
+  0.000  0.000  0.333  0.653  0.014
+    occupations:
+  0.946 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.946 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+atomic mag. moment =  -1.16448
+N of occupied +U levels =   16.823290
+ --- exit write_ns ---
+ --- in v_hubbard ---
+Hubbard energy    0.1718
+ -------
+
+     total cpu time spent up to now is        7.5 secs
+
+     total energy              =    -266.72816091 Ry
+     estimated scf accuracy    <       0.00000002 Ry
+
+     total magnetization       =    -0.00 Bohr mag/cell
+     absolute magnetization    =     2.94 Bohr mag/cell
+
+     iteration # 11     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  7.31E-11,  avg # of iterations =  2.5
+ --- enter write_ns ---
+ LDA+U parameters:
+U( 1)     =  3.00000000
+U( 2)     =  3.00000000
+atom    1   Tr[ns(na)] (up, down, total) =   4.78811  3.62357  8.41168
+   spin  1
+    eigenvalues: 
+  0.946  0.946  0.965  0.966  0.966
+    eigenvectors:
+  0.106  0.894  0.000  0.000  0.000
+  0.000  0.000  0.333  0.138  0.529
+  0.000  0.000  0.333  0.197  0.469
+  0.894  0.106  0.000  0.000  0.000
+  0.000  0.000  0.333  0.665  0.002
+    occupations:
+  0.946 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.946 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+   spin  2
+    eigenvalues: 
+  0.369  0.369  0.961  0.962  0.962
+    eigenvectors:
+  0.006  0.994  0.000  0.000  0.000
+  0.000  0.000  0.333  0.136  0.530
+  0.000  0.000  0.333  0.199  0.467
+  0.994  0.006  0.000  0.000  0.000
+  0.000  0.000  0.333  0.665  0.002
+    occupations:
+  0.369 -0.002 -0.002  0.000 -0.005
+ -0.002  0.962 -0.000 -0.004  0.000
+ -0.002 -0.000  0.962  0.004  0.000
+  0.000 -0.004  0.004  0.369 -0.000
+ -0.005  0.000  0.000 -0.000  0.962
+atomic mag. moment =   1.16454
+atom    2   Tr[ns(na)] (up, down, total) =   3.62360  4.78809  8.41169
+   spin  1
+    eigenvalues: 
+  0.369  0.369  0.961  0.962  0.962
+    eigenvectors:
+  0.183  0.817  0.000  0.000  0.000
+  0.000  0.000  0.333  0.163  0.503
+  0.000  0.000  0.333  0.170  0.497
+  0.817  0.183  0.000  0.000  0.000
+  0.000  0.000  0.333  0.667  0.000
+    occupations:
+  0.369 -0.002 -0.002  0.000 -0.005
+ -0.002  0.962 -0.000 -0.004  0.000
+ -0.002 -0.000  0.962  0.004  0.000
+  0.000 -0.004  0.004  0.369 -0.000
+ -0.005  0.000  0.000 -0.000  0.962
+   spin  2
+    eigenvalues: 
+  0.946  0.946  0.965  0.966  0.966
+    eigenvectors:
+  0.065  0.935  0.000  0.000  0.000
+  0.000  0.000  0.333  0.150  0.516
+  0.000  0.000  0.333  0.184  0.483
+  0.935  0.065  0.000  0.000  0.000
+  0.000  0.000  0.333  0.666  0.001
+    occupations:
+  0.946 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.946 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+atomic mag. moment =  -1.16449
+N of occupied +U levels =   16.823367
+ --- exit write_ns ---
+ --- in v_hubbard ---
+Hubbard energy    0.1718
+ -------
+
+     total cpu time spent up to now is        8.1 secs
+
+     total energy              =    -266.72816092 Ry
+     estimated scf accuracy    <          1.8E-09 Ry
+
+     total magnetization       =     0.00 Bohr mag/cell
+     absolute magnetization    =     2.94 Bohr mag/cell
+
+     iteration # 12     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  5.59E-12,  avg # of iterations =  2.1
+ --- enter write_ns ---
+ LDA+U parameters:
+U( 1)     =  3.00000000
+U( 2)     =  3.00000000
+atom    1   Tr[ns(na)] (up, down, total) =   4.78811  3.62353  8.41163
+   spin  1
+    eigenvalues: 
+  0.946  0.946  0.965  0.966  0.966
+    eigenvectors:
+  0.156  0.844  0.000  0.000  0.000
+  0.000  0.000  0.333  0.096  0.570
+  0.000  0.000  0.333  0.249  0.418
+  0.844  0.156  0.000  0.000  0.000
+  0.000  0.000  0.333  0.655  0.012
+    occupations:
+  0.946 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.946 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+   spin  2
+    eigenvalues: 
+  0.369  0.369  0.961  0.962  0.962
+    eigenvectors:
+  0.161  0.839  0.000  0.000  0.000
+  0.000  0.000  0.333  0.106  0.561
+  0.000  0.000  0.333  0.236  0.430
+  0.839  0.161  0.000  0.000  0.000
+  0.000  0.000  0.333  0.658  0.009
+    occupations:
+  0.369 -0.002 -0.002  0.000 -0.005
+ -0.002  0.962 -0.000 -0.004  0.000
+ -0.002 -0.000  0.962  0.004  0.000
+  0.000 -0.004  0.004  0.369 -0.000
+ -0.005  0.000  0.000 -0.000  0.962
+atomic mag. moment =   1.16458
+atom    2   Tr[ns(na)] (up, down, total) =   3.62358  4.78810  8.41168
+   spin  1
+    eigenvalues: 
+  0.369  0.369  0.961  0.962  0.962
+    eigenvectors:
+  0.195  0.805  0.000  0.000  0.000
+  0.000  0.000  0.333  0.121  0.545
+  0.000  0.000  0.333  0.217  0.450
+  0.805  0.195  0.000  0.000  0.000
+  0.000  0.000  0.333  0.662  0.005
+    occupations:
+  0.369 -0.002 -0.002  0.000 -0.005
+ -0.002  0.962 -0.000 -0.004  0.000
+ -0.002 -0.000  0.962  0.004  0.000
+  0.000 -0.004  0.004  0.369 -0.000
+ -0.005  0.000  0.000 -0.000  0.962
+   spin  2
+    eigenvalues: 
+  0.946  0.946  0.965  0.966  0.966
+    eigenvectors:
+  0.041  0.959  0.000  0.000  0.000
+  0.000  0.000  0.333  0.139  0.528
+  0.000  0.000  0.333  0.196  0.471
+  0.959  0.041  0.000  0.000  0.000
+  0.000  0.000  0.333  0.665  0.002
+    occupations:
+  0.946 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.946 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+atomic mag. moment =  -1.16451
+N of occupied +U levels =   16.823310
+ --- exit write_ns ---
+ --- in v_hubbard ---
+Hubbard energy    0.1718
+ -------
+
+     total cpu time spent up to now is        8.6 secs
+
+     total energy              =    -266.72816092 Ry
+     estimated scf accuracy    <          7.7E-10 Ry
+
+     total magnetization       =    -0.00 Bohr mag/cell
+     absolute magnetization    =     2.94 Bohr mag/cell
+
+     iteration # 13     ecut=    25.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  2.42E-12,  avg # of iterations =  1.8
+ --- enter write_ns ---
+ LDA+U parameters:
+U( 1)     =  3.00000000
+U( 2)     =  3.00000000
+atom    1   Tr[ns(na)] (up, down, total) =   4.78811  3.62354  8.41165
+   spin  1
+    eigenvalues: 
+  0.946  0.946  0.965  0.966  0.966
+    eigenvectors:
+  0.054  0.945  0.000  0.000  0.000
+  0.000  0.000  0.333  0.131  0.536
+  0.000  0.000  0.333  0.205  0.461
+  0.945  0.054  0.000  0.000  0.000
+  0.000  0.000  0.333  0.664  0.003
+    occupations:
+  0.946 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.946 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+   spin  2
+    eigenvalues: 
+  0.369  0.369  0.961  0.962  0.962
+    eigenvectors:
+  0.000  0.999  0.000  0.000  0.000
+  0.000  0.000  0.333  0.185  0.482
+  0.000  0.000  0.333  0.149  0.517
+  0.999  0.000  0.000  0.000  0.000
+  0.000  0.000  0.333  0.666  0.001
+    occupations:
+  0.369 -0.002 -0.002  0.000 -0.005
+ -0.002  0.962 -0.000 -0.004  0.000
+ -0.002 -0.000  0.962  0.004  0.000
+  0.000 -0.004  0.004  0.369 -0.000
+ -0.005  0.000  0.000 -0.000  0.962
+atomic mag. moment =   1.16457
+atom    2   Tr[ns(na)] (up, down, total) =   3.62359  4.78810  8.41168
+   spin  1
+    eigenvalues: 
+  0.369  0.369  0.961  0.962  0.962
+    eigenvectors:
+  0.000  1.000  0.000  0.000  0.000
+  0.000  0.000  0.333  0.123  0.543
+  0.000  0.000  0.333  0.214  0.452
+  1.000  0.000  0.000  0.000  0.000
+  0.000  0.000  0.333  0.662  0.004
+    occupations:
+  0.369 -0.002 -0.002  0.000 -0.005
+ -0.002  0.962 -0.000 -0.004  0.000
+ -0.002 -0.000  0.962  0.004  0.000
+  0.000 -0.004  0.004  0.369 -0.000
+ -0.005  0.000  0.000 -0.000  0.962
+   spin  2
+    eigenvalues: 
+  0.946  0.946  0.965  0.966  0.966
+    eigenvectors:
+  0.105  0.895  0.000  0.000  0.000
+  0.000  0.000  0.333  0.153  0.513
+  0.000  0.000  0.333  0.180  0.486
+  0.895  0.105  0.000  0.000  0.000
+  0.000  0.000  0.333  0.666  0.000
+    occupations:
+  0.946 -0.000 -0.000  0.000 -0.000
+ -0.000  0.966 -0.000 -0.000  0.000
+ -0.000 -0.000  0.966  0.000  0.000
+  0.000 -0.000  0.000  0.946 -0.000
+ -0.000  0.000  0.000 -0.000  0.966
+atomic mag. moment =  -1.16451
+N of occupied +U levels =   16.823327
+ --- exit write_ns ---
+ --- in v_hubbard ---
+Hubbard energy    0.1718
+ -------
+ 
+     Magnetic moment per site:
+     atom:    1    charge:    7.7972    magn:    1.3319    constr:    0.0000
+     atom:    2    charge:    7.7963    magn:   -1.3319    constr:    0.0000
+     atom:    3    charge:    5.6253    magn:   -0.0000    constr:    0.0000
+     atom:    4    charge:    5.6253    magn:   -0.0000    constr:    0.0000
+
+     total cpu time spent up to now is        9.1 secs
+
+     End of self-consistent calculation
+
+ ------ SPIN UP ------------
+
+
+          k = 0.0000 0.0000 0.0000 (   525 PWs)   bands (ev):
+
+    -8.8686  -7.5170   3.1909   5.6023   5.6023   8.0280   8.0280   8.1322
+     8.9984   9.0079   9.0079   9.0629   9.0629   9.8587   9.8587  10.0152
+    13.2877  13.3778  13.3778  17.3781
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     0.0000   0.0000   0.0000   0.0000
+
+          k = 0.2500 0.2500-0.7500 (   508 PWs)   bands (ev):
+
+    -7.6226  -7.4472   4.3104   4.4858   5.3644   5.9225   6.1300   7.0905
+     8.0772   8.7954   9.1736   9.2832  10.0124  10.2406  10.3889  10.6791
+    12.8924  12.8953  19.4377  19.5882
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     0.0000   0.0000   0.0000   0.0000
+
+          k = 0.5000-0.5000-0.5000 (   520 PWs)   bands (ev):
+
+    -7.5432  -7.5173   3.1947   4.9299   5.6270   5.6712   7.1285   7.6524
+     7.6579   8.7135   8.9259   9.4525   9.6570  10.1589  10.1750  10.3487
+    13.4294  13.5012  17.3767  18.0055
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     0.0000   0.0000   0.0000   0.0000
+
+          k =-0.2500-0.2500-0.2500 (   536 PWs)   bands (ev):
+
+    -8.2569  -8.2509   5.2055   5.3805   5.9936   5.9936   7.3773   7.3773
+     8.1749   8.1749   8.9617   9.4021   9.4021   9.7360  10.9060  10.9060
+    12.8433  12.8433  16.0820  16.2092
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     0.0000   0.0000   0.0000   0.0000
+
+ ------ SPIN DOWN ----------
+
+
+          k = 0.0000 0.0000 0.0000 (   525 PWs)   bands (ev):
+
+    -8.8686  -7.5170   3.1910   5.6023   5.6023   8.0280   8.0280   8.1324
+     8.9984   9.0078   9.0078   9.0630   9.0630   9.8588   9.8588  10.0151
+    13.2878  13.3778  13.3778  17.3779
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     0.0000   0.0000   0.0000   0.0000
+
+          k = 0.2500 0.2500-0.7500 (   508 PWs)   bands (ev):
+
+    -7.6226  -7.4471   4.3105   4.4856   5.3642   5.9225   6.1302   7.0905
+     8.0771   8.7954   9.1736   9.2831  10.0125  10.2406  10.3898  10.6792
+    12.8924  12.8948  19.4359  19.5902
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     0.0000   0.0000   0.0000   0.0000
+
+          k = 0.5000-0.5000-0.5000 (   520 PWs)   bands (ev):
+
+    -7.5432  -7.5173   3.1947   4.9299   5.6270   5.6709   7.1286   7.6524
+     7.6578   8.7135   8.9260   9.4525   9.6571  10.1591  10.1751  10.3494
+    13.4293  13.5007  17.3766  18.0057
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     0.0000   0.0000   0.0000   0.0000
+
+          k =-0.2500-0.2500-0.2500 (   536 PWs)   bands (ev):
+
+    -8.2566  -8.2511   5.2051   5.3811   5.9936   5.9936   7.3773   7.3773
+     8.1750   8.1750   8.9614   9.4022   9.4022   9.7362  10.9060  10.9060
+    12.8433  12.8433  16.0848  16.2062
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000   1.0000
+     0.0000   0.0000   0.0000   0.0000
+
+     the Fermi energy is    12.4891 ev
+
+!    total energy              =    -266.72816092 Ry
+     estimated scf accuracy    <          1.5E-11 Ry
+     smearing contrib. (-TS)   =      -0.00000000 Ry
+     internal energy E=F+TS    =    -266.72816092 Ry
+
+     The total energy is F=E-TS. E is the sum of the following terms:
+     one-electron contribution =     -29.27195713 Ry
+     hartree contribution      =      53.64292060 Ry
+     xc contribution           =     -99.82187080 Ry
+     ewald contribution        =    -191.44903257 Ry
+     Hubbard energy            =       0.17177898 Ry
+
+     total magnetization       =     0.00 Bohr mag/cell
+     absolute magnetization    =     2.94 Bohr mag/cell
+
+     convergence has been achieved in  13 iterations
+
+     Forces acting on atoms (cartesian axes, Ry/au):
+
+     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom    2 type  2   force =     0.00000000   -0.00000000    0.00000000
+     atom    3 type  3   force =     0.00221913    0.00221913    0.00221913
+     atom    4 type  3   force =    -0.00221913   -0.00221913   -0.00221913
+     The non-local contrib.  to forces
+     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom    2 type  2   force =     0.00000000    0.00000000    0.00000000
+     atom    3 type  3   force =     0.00032877    0.00032877    0.00032877
+     atom    4 type  3   force =    -0.00032877   -0.00032877   -0.00032877
+     The ionic contribution  to forces
+     atom    1 type  1   force =    -0.00000000   -0.00000000   -0.00000000
+     atom    2 type  2   force =     0.00000000    0.00000000    0.00000000
+     atom    3 type  3   force =     0.00000000   -0.00000000    0.00000000
+     atom    4 type  3   force =     0.00000000    0.00000000    0.00000000
+     The local contribution  to forces
+     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom    2 type  2   force =     0.00000000    0.00000000    0.00000000
+     atom    3 type  3   force =    -0.00096312   -0.00096312   -0.00096312
+     atom    4 type  3   force =     0.00096312    0.00096312    0.00096312
+     The core correction contribution to forces
+     atom    1 type  1   force =     0.00000000    0.00000000   -0.00000000
+     atom    2 type  2   force =     0.00000000    0.00000000   -0.00000000
+     atom    3 type  3   force =     0.00285023    0.00285023    0.00285023
+     atom    4 type  3   force =    -0.00285023   -0.00285023   -0.00285023
+     The Hubbard contrib.    to forces
+     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom    2 type  2   force =     0.00000000    0.00000000    0.00000000
+     atom    3 type  3   force =    -0.00000006   -0.00000006   -0.00000006
+     atom    4 type  3   force =     0.00000006    0.00000006    0.00000006
+     The SCF correction term to forces
+     atom    1 type  1   force =    -0.00000000   -0.00000000   -0.00000000
+     atom    2 type  2   force =    -0.00000000    0.00000000   -0.00000000
+     atom    3 type  3   force =     0.00000330    0.00000330    0.00000330
+     atom    4 type  3   force =    -0.00000330   -0.00000330   -0.00000330
+
+     Total force =     0.005436     Total SCF correction =     0.000008
+
+
+     Computing stress (Cartesian axis) and pressure
+
+          total   stress  (Ry/bohr**3)                   (kbar)     P=    -1580.06
+  -0.01074102  -0.00025855  -0.00025855        -1580.06      -38.03      -38.03
+  -0.00025855  -0.01074102  -0.00025855          -38.03    -1580.06      -38.03
+  -0.00025855  -0.00025855  -0.01074102          -38.03      -38.03    -1580.06
+
+     kinetic stress (kbar)  29002.16    -61.97    -61.97
+                              -61.97  29002.16    -61.97
+                              -61.97    -61.97  29002.16
+
+     local   stress (kbar)  11922.32     22.91     22.91
+                               22.91  11922.32     22.91
+                               22.91     22.91  11922.32
+
+     nonloc. stress (kbar)  -3595.72      2.93      2.93
+                                2.93  -3595.72      2.93
+                                2.93      2.93  -3595.72
+
+     hartree stress (kbar)  10751.53     -1.96     -1.96
+                               -1.96  10751.53     -1.96
+                               -1.96     -1.96  10751.53
+
+     exc-cor stress (kbar)  22049.06      0.12      0.12
+                                0.12  22049.06      0.12
+                                0.12      0.12  22049.06
+
+     corecor stress (kbar) -32391.46     -0.32     -0.32
+                               -0.32 -32391.46     -0.32
+                               -0.32     -0.32 -32391.46
+
+     ewald   stress (kbar) -38371.69     -0.00     -0.00
+                               -0.00 -38371.69     -0.00
+                               -0.00     -0.00 -38371.69
+
+     hubbard stress (kbar)   -946.24      0.26      0.26
+                                0.26   -946.24      0.26
+                                0.26      0.26   -946.24
+
+     DFT-D   stress (kbar)      0.00      0.00      0.00
+                                0.00      0.00      0.00
+                                0.00      0.00      0.00
+
+     XDM     stress (kbar)      0.00      0.00      0.00
+                                0.00      0.00      0.00
+                                0.00      0.00      0.00
+
+     dft-nl  stress (kbar)      0.00      0.00      0.00
+                                0.00      0.00      0.00
+                                0.00      0.00      0.00
+
+     TS-vdW  stress (kbar)      0.00      0.00      0.00
+                                0.00      0.00      0.00
+                                0.00      0.00      0.00
+
+
+
+     Writing output data file ./NiO.save/
+ 
+     init_run     :      0.99s CPU      1.01s WALL (       1 calls)
+     electrons    :      7.03s CPU      7.07s WALL (       1 calls)
+     forces       :      0.20s CPU      0.19s WALL (       1 calls)
+     stress       :      0.62s CPU      0.62s WALL (       1 calls)
+
+     Called by init_run:
+     wfcinit      :      0.14s CPU      0.15s WALL (       1 calls)
+     wfcinit:atom :      0.00s CPU      0.00s WALL (       8 calls)
+     wfcinit:wfcr :      0.13s CPU      0.13s WALL (       8 calls)
+     potinit      :      0.10s CPU      0.10s WALL (       1 calls)
+     hinit0       :      0.70s CPU      0.70s WALL (       1 calls)
+
+     Called by electrons:
+     c_bands      :      3.61s CPU      3.61s WALL (      13 calls)
+     sum_band     :      1.80s CPU      1.82s WALL (      13 calls)
+     v_of_rho     :      1.16s CPU      1.16s WALL (      14 calls)
+     v_h          :      0.01s CPU      0.02s WALL (      14 calls)
+     v_xc         :      1.30s CPU      1.30s WALL (      16 calls)
+     newd         :      0.48s CPU      0.51s WALL (      14 calls)
+     mix_rho      :      0.06s CPU      0.06s WALL (      13 calls)
+
+     Called by c_bands:
+     init_us_2    :      0.07s CPU      0.07s WALL (     256 calls)
+     cegterg      :      3.42s CPU      3.42s WALL (     104 calls)
+
+     Called by sum_band:
+     sum_band:wei :      0.00s CPU      0.00s WALL (      13 calls)
+     sum_band:loo :      0.68s CPU      0.69s WALL (      13 calls)
+     sum_band:buf :      0.00s CPU      0.00s WALL (     104 calls)
+     sum_band:ini :      0.03s CPU      0.03s WALL (     104 calls)
+     sum_band:cal :      0.01s CPU      0.01s WALL (     104 calls)
+     sum_band:bec :      0.00s CPU      0.00s WALL (     104 calls)
+     addusdens    :      1.08s CPU      1.07s WALL (      13 calls)
+     addusd:skk   :      0.00s CPU      0.00s WALL (      39 calls)
+     addusd:dgemm :      0.37s CPU      0.38s WALL (      78 calls)
+     addusd:qvan2 :      0.67s CPU      0.66s WALL (      78 calls)
+
+     Called by *egterg:
+     cdiaghg      :      0.15s CPU      0.17s WALL (     339 calls)
+     cegterg:over :      0.03s CPU      0.04s WALL (     235 calls)
+     cegterg:upda :      0.02s CPU      0.03s WALL (     235 calls)
+     cegterg:last :      0.04s CPU      0.01s WALL (     104 calls)
+     h_psi        :      3.23s CPU      3.23s WALL (     347 calls)
+     s_psi        :      0.05s CPU      0.04s WALL (     371 calls)
+     g_psi        :      0.00s CPU      0.01s WALL (     235 calls)
+
+     Called by h_psi:
+     h_psi:calbec :      0.04s CPU      0.04s WALL (     347 calls)
+     vloc_psi     :      3.13s CPU      3.14s WALL (     347 calls)
+     add_vuspsi   :      0.04s CPU      0.04s WALL (     347 calls)
+     vhpsi        :      0.02s CPU      0.02s WALL (     347 calls)
+
+     General routines
+     calbec       :      0.10s CPU      0.10s WALL (    2206 calls)
+     fft          :      0.26s CPU      0.29s WALL (     388 calls)
+     ffts         :      0.02s CPU      0.01s WALL (      54 calls)
+     fftw         :      3.32s CPU      3.35s WALL (   12186 calls)
+     interpolate  :      0.04s CPU      0.03s WALL (      28 calls)
+     davcio       :      0.00s CPU      0.00s WALL (      16 calls)
+ 
+     Parallel routines
+
+     Hubbard U routines
+     new_ns       :      0.01s CPU      0.01s WALL (      13 calls)
+     new_ns       :      0.01s CPU      0.01s WALL (      13 calls)
+     vhpsi        :      0.02s CPU      0.02s WALL (     347 calls)
+     force_hub    :      0.02s CPU      0.02s WALL (       1 calls)
+     stres_hub    :      0.15s CPU      0.15s WALL (       1 calls)
+ 
+     PWSCF        :      9.84s CPU      9.91s WALL
+
+ 
+   This run was terminated on:  18:40:33  22Apr2020            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

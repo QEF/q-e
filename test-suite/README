@@ -5,7 +5,7 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-TEST-SUITE  v6.1
+TEST-SUITE  v6.4
 ------------------
 
 Type 'make' for the list of possible options. Currently only PW, CP, PH, EPW
@@ -140,6 +140,7 @@ The following features of the code are tested:
 The following features of the code are tested:
 - LDA+U with standard and user-defined occupancies
 - forces and stresses, gamma-only case
+- lda_plus_u_kind=1, collinear and noncollinear
 
 ####################
 # pw_lsda : Ni fcc #
@@ -247,7 +248,7 @@ The following features of the code are tested:
 - davidson and cg diagonalizations
 - simple, TF, local-TF mixing, ndim=4,8
 - Gamma, automatic, list of k-points (tpiba, crystal, tpiba_b)
-- wf_collect, disk_io, force_symmorphic, use_all_frac options
+- disk_io, force_symmorphic, use_all_frac options
 - stress with k-points and at Gamma
 - non-scf calculation
 - old "ncpp" format for pseudopotentials
@@ -300,6 +301,99 @@ The following features of the code are tested:
 
 
 #################################################################################################
+# PH tests
+#################################################################################################
+#######################
+# ph_base : Si, C, Ni #
+#######################
+The following features of the code are tested:
+- Calculation of phonon frequencies for insulators and metals, using USPP and PAW
+
+#################
+# ph_metal : Al #
+#################
+The following features of the code are tested:
+- Calculation of phonon frequencies, phonon DOS, el-ph for a nonmagnetic metals, using NCPP
+
+######################
+# ph_U_metal_us : Fe #
+######################
+The following features of the code are tested:
+- Calculation of phonon frequencies for a ferromagnetic metal, with Hubbard U, using USPP
+
+##########################
+# ph_U_insulator_us : BN #
+##########################
+The following features of the code are tested:
+- Calculation of phonon frequencies for a nonmagnetic insulator, with frac. translations, 
+  with Hubbard U, using USPP
+
+#######################
+# ph_U_metal_paw : Ni #
+#######################
+The following features of the code are tested:
+- Calculation of phonon frequencies for a ferromagnetic metal, with Hubbard U, using PAW
+
+###########################
+# ph_U_insulator_paw : BN #
+###########################
+The following features of the code are tested:
+- Calculation of phonon frequencies for a nonmagnetic insulator, with frac. translations, 
+  with Hubbard U, using PAW
+
+#################################################################################################
+# HP tests
+#################################################################################################
+############################
+# hp_insulator_us : LiCoO2 #
+############################
+The following features of the code are tested:
+- Calculation of U for a nonmagnetic insulator, with USPP
+
+#######################################
+# hp_insulator_us_intersiteV : LiCoO2 #
+#######################################
+The following features of the code are tested:
+- Calculation of U and V for a nonmagnetic insulator, with USPP
+
+##############################
+# hp_insulator_us_magn : NiO #
+##############################
+The following features of the code are tested:
+- Calculation of U for an antiferromagnetic insulator, with USPP
+
+##########################
+# hp_insulator_paw : BN #
+##########################
+The following features of the code are tested:
+- Calculation of U for a 2D nonmagnetic insulator, with PAW, with fractional translations
+
+################################
+# hp_insulator_paw_magn : CrI3 #
+###############################
+The following features of the code are tested:
+- Calculation of U for a 2D ferromagnetic insulator, with PAW
+
+#########################
+# hp_metal_us_magn : Ni #
+#########################
+The following features of the code are tested:
+- Calculation of U for a ferromagnetic metal, with USPP
+
+##########################
+# hp_metal_paw_magn : Fe #
+##########################
+The following features of the code are tested:
+- Calculation of U for a ferromagnetic metal, with PAW
+
+#########################################
+# hp_metal_paw_magn_intersiteV : LiNiO2 #
+#########################################
+The following features of the code are tested:
+- Calculation of U and V for a ferromagnetic metal (it is a metal even
+at the DFT+U+V level for the rhombohedral structure), with PAW
+
+#################################################################################################
 # EPW tests
 #################################################################################################
 #############################
@@ -322,6 +416,7 @@ The following features of the code are tested:
 - Test band parallelism, etf_mem 2 (epw6.in)
 - Test restart feature (epw7.in)
 - Test cumulant (epw8.in)
+- Test Wannier function plot (epw11.in)
 
 #################
 # epw_metal: Pb #
@@ -380,8 +475,10 @@ The following features of the code are tested:
 # epw_super: MgB2 #
 ###################
 The following features of the code are tested:
-- Test isotropic Eliashberg superconductivity (epw_iso.in)
-- Test anisotropic Eliashberg superconductivity (epw_aniso.in)
+- Test isotropic Eliashberg superconductivity (epw1.in)
+- Test anisotropic Eliashberg superconductivity (epw2.in)
+- Test anisotropic Eliashberg superconductivity restart from interrupted q-point while writing ephmat using 'restart.fmt' (epw3.in)
+- Test anisotropic Eliashberg superconductivity restart by reading ephmat files (after writing ephmat files) (epw4.in)
 
 #################
 # epw_trev: SiC #
@@ -389,10 +486,23 @@ The following features of the code are tested:
 The following features of the code are tested:
 - Time-reversal symmetry when inversion sym. is not part of the small group of q. (epw.in)
 
+######################
+# epw_trev_uspp: SiC #
+######################
+The following features of the code are tested:
+- Time-reversal symmetry when inversion sym. is not part of the small group of q 
+  in calculation using ultrasoft pseudopotentials. (epw.in)
 
-################
+#####################
+# epw_trev_paw: SiC #
+#####################
+The following features of the code are tested:
+- Time-reversal symmetry when inversion sym. is not part of the small group of q
+  in calculation using PAW datasets. (epw.in)
+
+####################
 # not_epw_comp: Si #
-################
+####################
 This test is to compare electron-phonon matrix element produced directly by the phonon code 
 and by EPW. It requires modification to the phonon code. 
 Note that this folder is NOT tested in the test-suite but is here as it can be useful. 

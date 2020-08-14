@@ -9,9 +9,8 @@
 !----------------------------------------------------------------------------
 SUBROUTINE rdiagh( n, h, ldh, e, v )
   !----------------------------------------------------------------------------
-  !
-  ! ... calculates all the eigenvalues and eigenvectors of a real
-  ! ... simmetric matrix H . On output, the matrix is unchanged
+  !! Calculates all the eigenvalues and eigenvectors of a real
+  !! simmetric matrix H. On output, the matrix is unchanged.
   !
   USE kinds,            ONLY : DP
   USE mp_bands,         ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
@@ -19,25 +18,23 @@ SUBROUTINE rdiagh( n, h, ldh, e, v )
   !
   IMPLICIT NONE
   !
-  ! ... on INPUT
-  !
-  INTEGER :: n, ldh
-    ! dimension of the matrix to be diagonalized
-    ! leading dimension of h, as declared in the calling pgm unit
+  INTEGER :: n
+  !! input: dimension of the matrix to be diagonalized
+  INTEGER :: ldh
+  !! input: leading dimension of h, as declared in the calling pgm unit
   REAL(DP) :: h(ldh,n)
-    ! matrix to be diagonalized
-  !
-  ! ... on OUTPUT
-  !
-  REAL(DP) :: e(n)       ! eigenvalues
-  REAL(DP) :: v(ldh,n)   ! eigenvectors (column-wise)
+  !! input: matrix to be diagonalized
+  REAL(DP) :: e(n)
+  !! output: eigenvalues
+  REAL(DP) :: v(ldh,n)
+  !! output: eigenvectors (column-wise)
   !
   ! ... local variables (LAPACK version)
   !
   INTEGER :: lwork, nb, info
   INTEGER, EXTERNAL :: ILAENV
   ! ILAENV returns optimal block size "nb"
-  REAL (KIND=DP), ALLOCATABLE :: work(:)
+  REAL(KIND=DP), ALLOCATABLE :: work(:)
   !
   CALL start_clock( 'diagh' )  
   !
@@ -48,7 +45,7 @@ SUBROUTINE rdiagh( n, h, ldh, e, v )
      lwork = 3*n
   ELSE
      lwork = ( nb + 2 ) * n
-  END IF
+  ENDIF
   !
   ! ... only the first processor diagonalize the matrix
   !
@@ -58,7 +55,7 @@ SUBROUTINE rdiagh( n, h, ldh, e, v )
      !
      v = h
      !
-     ALLOCATE( work( lwork ) )    
+     ALLOCATE( work(lwork) )    
      !
      CALL DSYEV( 'V', 'U', n, v, ldh, e, work, lwork, info )
      !
@@ -68,7 +65,7 @@ SUBROUTINE rdiagh( n, h, ldh, e, v )
      !
      DEALLOCATE( work )
      !
-  END IF
+  ENDIF
   !
   CALL mp_bcast( e, root_bgrp, intra_bgrp_comm )
   CALL mp_bcast( v, root_bgrp, intra_bgrp_comm )      

@@ -9,9 +9,10 @@
 !
 MODULE acfdt_ener
   !
-  USE kinds, ONLY : DP
+  USE kinds,  ONLY: DP
   !
-  LOGICAL  :: acfdt_in_pw = .FALSE.  ! the default value is .false.
+  LOGICAL :: acfdt_in_pw = .FALSE.
+  !! the default value is .false.
   REAL(DP) :: acfdt_eband                    
   !
 END MODULE acfdt_ener

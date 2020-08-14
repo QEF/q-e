@@ -12,9 +12,13 @@ instead of size_t because this is what fortran implicitely does.
 SdG,  September 3rd 2017
 */
 
-#include <unistd.h>
 #include <stdio.h>
 #include <stdint.h>
+#if defined(_WIN32)
+#include <direct.h>
+#else
+#include <unistd.h>
+#endif     
 
 uint32_t fletcher32( uint16_t const *data, uint32_t *ndata )
 {

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2013 Quantum ESPRESSO group
+! Copyright (C) 2002-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -30,12 +30,11 @@ MODULE read_namelists_module
   REAL(DP), PARAMETER :: sm_not_set = -20.0_DP
   !
   PUBLIC :: read_namelists, sm_not_set
-  !
-  ! ... modules needed by read_xml.f90
-  !
+  PUBLIC :: check_namelist_read ! made public upon request of A.Jay
+  ! FIXME: should the following ones be public?
   PUBLIC :: control_defaults, system_defaults, &
        electrons_defaults, wannier_ac_defaults, ions_defaults, &
-       cell_defaults, press_ai_defaults, wannier_defaults, control_bcast, &
+       cell_defaults, press_ai_defaults, wannier_defaults, control_bcast,&
        system_bcast, electrons_bcast, ions_bcast, cell_bcast, &
        press_ai_bcast, wannier_bcast, wannier_ac_bcast, control_checkin, &
        system_checkin, electrons_checkin, ions_checkin, cell_checkin, &
@@ -60,6 +59,7 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=20) ::    temp_string 
        !
        !
        IF ( prog == 'PW' ) THEN
@@ -105,6 +105,10 @@ MODULE read_namelists_module
           pseudo_dir = TRIM( pseudo_dir ) // '/espresso/pseudo/'
        END IF
        !
+       ! ... max number of md steps added to the xml file. Needs to be limited for very long 
+       !     md simulations 
+       CALL get_environment_variable('MAX_XML_STEPS', temp_string) 
+            IF ( TRIM(temp_string) .NE.  ' ')  READ(temp_string, *) max_xml_steps 
        refg          = 0.05_DP
        max_seconds   = 1.E+7_DP
        ekin_conv_thr = 1.E-6_DP
@@ -202,15 +206,25 @@ MODULE read_namelists_module
           U_projection_type = 'atomic'
        END IF
        !
-       ! .. DFT + U
+       ! .. DFT + U and its extensions
        !
        lda_plus_U = .FALSE.
        lda_plus_u_kind = 0
        Hubbard_U = 0.0_DP
+       Hubbard_U_back = 0.0_DP
+       Hubbard_V = 0.0_DP
        Hubbard_J0 = 0.0_DP
        Hubbard_J = 0.0_DP
        Hubbard_alpha = 0.0_DP
+       Hubbard_alpha_back = 0.0_DP
        Hubbard_beta = 0.0_DP
+       Hubbard_parameters = 'input'
+       reserv = .false.
+       reserv_back = .false.
+       backall = .false.
+       lback = -1
+       l1back = -1
+       hub_pot_fix = .false.
        step_pen=.false.
        A_pen=0.0_DP
        sigma_pen=0.01_DP
@@ -224,6 +238,7 @@ MODULE read_namelists_module
        scdm=.FALSE.
        scdmden=1.0d0
        scdmgrd=1.0d0
+       nscdm=1
        !
        ! ... electric fields
        !
@@ -255,7 +270,7 @@ MODULE read_namelists_module
        B_field = 0.0_DP
        angle1 = 0.0_DP
        angle2 = 0.0_DP
-       report = 100
+       report =-1
        !
        no_t_rev = .FALSE.
        !
@@ -382,7 +397,7 @@ MODULE read_namelists_module
        diago_thr_init = 0.0_DP
        diago_cg_maxiter = 20
        diago_ppcg_maxiter = 20
-       diago_david_ndim = 4
+       diago_david_ndim = 2
        diago_full_acc = .FALSE.
        !
        sic = 'none'
@@ -808,6 +823,7 @@ MODULE read_namelists_module
        CALL mp_bcast( scdm,                ionode_id, intra_image_comm )
        CALL mp_bcast( scdmden,             ionode_id, intra_image_comm )
        CALL mp_bcast( scdmgrd,             ionode_id, intra_image_comm )
+       CALL mp_bcast( nscdm,               ionode_id, intra_image_comm )
        CALL mp_bcast( n_proj,              ionode_id, intra_image_comm )
        CALL mp_bcast( nqx1,                   ionode_id, intra_image_comm )
        CALL mp_bcast( nqx2,                   ionode_id, intra_image_comm )
@@ -828,10 +844,20 @@ MODULE read_namelists_module
        CALL mp_bcast( lda_plus_U,             ionode_id, intra_image_comm )
        CALL mp_bcast( lda_plus_u_kind,        ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_U,              ionode_id, intra_image_comm )
+       CALL mp_bcast( Hubbard_U_back,         ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_J0,             ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_J,              ionode_id, intra_image_comm )
+       CALL mp_bcast( Hubbard_V,              ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_alpha,          ionode_id, intra_image_comm )
+       CALL mp_bcast( Hubbard_alpha_back,     ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_beta,           ionode_id, intra_image_comm )
+       CALL mp_bcast( hub_pot_fix,            ionode_id,intra_image_comm )
+       CALL mp_bcast( Hubbard_parameters,     ionode_id,intra_image_comm )
+       CALL mp_bcast( reserv,                 ionode_id,intra_image_comm )
+       CALL mp_bcast( reserv_back,            ionode_id,intra_image_comm )
+       CALL mp_bcast( backall,                ionode_id,intra_image_comm )
+       CALL mp_bcast( lback,                  ionode_id,intra_image_comm )
+       CALL mp_bcast( l1back,                 ionode_id,intra_image_comm )
        CALL mp_bcast( step_pen,               ionode_id, intra_image_comm )
        CALL mp_bcast( A_pen,                  ionode_id, intra_image_comm )
        CALL mp_bcast( sigma_pen,              ionode_id, intra_image_comm )
@@ -1690,7 +1716,7 @@ MODULE read_namelists_module
        !
        !
        SELECT CASE( TRIM( calculation ) )
-          CASE ('scf')
+          CASE ('scf', 'ensemble')
              IF( prog == 'CP' ) THEN
                  electron_dynamics = 'damp'
                  ion_dynamics      = 'none'
@@ -1906,13 +1932,23 @@ MODULE read_namelists_module
        !
        ios = 0
        IF ( ionode ) THEN
-          IF ( ( TRIM( calculation ) /= 'scf'   .AND. &
-                 TRIM( calculation ) /= 'nscf'  .AND. &
+          IF ( ( TRIM( calculation ) /= 'nscf'  .AND. &
                  TRIM( calculation ) /= 'bands' ) .OR. &
                ( TRIM( prog_ ) == 'PW+iPi' ) ) THEN
              READ( unit_loc, ions, iostat = ios )
           END IF
+          !
+          ! SCF might (optionally) have &ions :: ion_positions = 'from_file'
+          !
+          IF ( (ios /= 0) .AND. TRIM( calculation ) == 'scf' ) THEN
+             ! presumably, not found: rewind the file pointer to the location
+             ! of the previous present section, in this case electrons
+             REWIND( unit_loc )
+             READ( unit_loc, electrons, iostat = ios )
+          END IF
+          !
        END IF
+       !
        CALL check_namelist_read(ios, unit_loc, "ions")
        !
        CALL ions_bcast( )

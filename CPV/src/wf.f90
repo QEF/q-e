@@ -23,12 +23,13 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
   USE kinds,                    ONLY : DP
   USE constants,                ONLY : pi, tpi
-  USE ions_base,                ONLY : nsp, na, nax, nat
-  USE uspp_param,               ONLY : nvb, ish
+  USE ions_base,                ONLY : nsp, na, nax, nat, ityp
+  USE uspp,                     ONLY : indv_ijkb0, nkbus
+  USE uspp_param,               ONLY : upf
   USE cell_base,                ONLY : omega, at, alat, h, ainv
   USE electrons_base,           ONLY : nbspx, nbsp, nupdwn, iupdwn, nspin
   USE smallbox_gvec,            ONLY : ngb
-  USE smallbox_subs,            ONLY : fft_oned2box
+  USE smallbox_subs,            ONLY : fft_oned2box, boxdotgrid
   USE gvecw,                    ONLY : ngw
   USE gvect,       ONLY : gstart
   USE control_flags,            ONLY : iverbosity,conv_elec
@@ -76,7 +77,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   INTEGER,     ALLOCATABLE :: f3(:), f4(:)
   COMPLEX(DP), ALLOCATABLE :: U2(:,:)
   !
-  INTEGER           :: inl, jnl, iss, isa, is, ia, ijv, i, j, k, l, ig, &
+  INTEGER           :: inl, jnl, iss, is, ia, ijv, i, j, k, l, ig, &
                        ierr, ti, tj, tk, iv, jv, inw, iqv, ibig1, ibig2, &
                        ibig3, ir1, ir2, ir3, ir, m,  &
                        ib, jb, total, nstat, jj, ngpww, irb3
@@ -90,8 +91,6 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   REAL(DP)    :: te(6)
   INTEGER     :: iunit
   
-  COMPLEX(DP), EXTERNAL :: boxdotgridcplx
-  !
 #if defined (__MPI)
   !
   INTEGER :: proc, ntot, ncol, mc, ngpwpp(nproc_bgrp)
@@ -127,7 +126,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
   ALLOCATE( O( nw, nbsp, nbsp ), X( nbsp, nbsp ), Oa( nw, nbsp, nbsp ) )
   !
-  IF ( nspin == 2 .AND. nvb > 0 ) THEN
+  IF ( nspin == 2 .AND. nkbus > 0 ) THEN
      !
      ALLOCATE( X2( nupdwn(1), nupdwn(1) ) )
      ALLOCATE( X3( nupdwn(2), nupdwn(2) ) )
@@ -316,22 +315,22 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      !
      X = ZERO
      !
-     isa = 1
-     DO is = 1, nvb
-        DO ia =1, na(is)
+     DO ia =1, nat
+        is = ityp(ia)
+        IF( upf(is)%tvanp ) THEN
            DO iv = 1, nh(is)
-              inl = ish(is) + (iv-1)*na(is) + ia
+              inl = indv_ijkb0(ia) + iv
               jv = iv 
               ijv=(jv-1)*jv/2 + iv
-              fg1 = eigrb(1:ngb,isa)*qgb(1:ngb,ijv,is)
+              fg1 = eigrb(1:ngb,ia)*qgb(1:ngb,ijv,is)
               CALL fft_oned2box( qv, fg1 )
 #if defined(__MPI)
-              irb3=irb(3,isa)
+              irb3=irb(3,ia)
 #endif
-              CALL invfft(qv,dfftb,isa)
+              CALL invfft(qv,dfftb,ia)
               iqv=1
               qvt=(0.D0,0.D0)
-              qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
+              qvt=boxdotgrid(irb(:,ia),qv,expo(:,inw))
 
 #if defined(__MPI)
               CALL mp_sum( qvt, intra_bgrp_comm )
@@ -362,14 +361,14 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                  END DO
               END IF
               DO jv = iv+1, nh(is)
-                 jnl = ish(is) + (jv-1)*na(is) + ia
+                 jnl = indv_ijkb0(ia) + jv
                  ijv = (jv-1)*jv/2 + iv
-                 fg1 = eigrb(1:ngb,isa)*qgb(1:ngb,ijv,is)
+                 fg1 = eigrb(1:ngb,ia)*qgb(1:ngb,ijv,is)
                  CALL fft_oned2box( qv, fg1 )
-                 CALL invfft(qv,dfftb,isa)
+                 CALL invfft(qv,dfftb,ia)
                  iqv=1
                  qvt=0.D0
-                 qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
+                 qvt=boxdotgrid(irb(:,ia),qv,expo(:,inw))
 #if defined(__MPI)
                  CALL mp_sum( qvt, intra_bgrp_comm )
 #endif
@@ -406,8 +405,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                  END IF
               END DO
            END DO
-           isa = isa + 1
-        END DO
+        END IF
      END DO
      t1=omega/DBLE(dfftp%nr1*dfftp%nr2*dfftp%nr3)
      X=X*t1
@@ -552,7 +550,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         END DO
         CLOSE(38)
      END IF
-     CALL stop_run( .TRUE. )
+     CALL stop_cp_run( )
   END IF
 
   IF(clwf.EQ.3.OR.clwf.EQ.4) THEN
@@ -1009,7 +1007,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   USE wannier_base,       ONLY : gnx, gnn, indexplus, indexminus, &
                                  indexplusz, indexminusz, tag, tagp, &
                                  wfg, weight, nw
-  USE uspp_param,         ONLY : nvb
+  USE uspp,               ONLY : nkbus
   USE mp,                 ONLY : mp_barrier, mp_bcast, mp_gather, mp_set_displs, mp_sum
   USE mp_global,          ONLY : nproc_bgrp, me_bgrp, intra_bgrp_comm, root_bgrp
   USE fft_base,           ONLY : dfftp
@@ -1110,7 +1108,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
 
   WRITE( stdout, * ) "ibrav selected:", ibrav
   !
-  IF(nvb.GT.0) CALL small_box_wf(i_1, j_1, k_1, nw1)
+  IF(nkbus > 0) CALL small_box_wf(i_1, j_1, k_1, nw1)
 
 #if defined(__MPI)
   !
@@ -1957,66 +1955,6 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
   RETURN
 END SUBROUTINE small_box_wf
 !
-!-----------------------------------------------------------------------
-FUNCTION boxdotgridcplx(irb,qv,vr)
-  !-----------------------------------------------------------------------
-  !
-  ! Calculate \sum_i qv(r_i)*vr(r_i)  with r_i on box grid
-  ! array qv(r) is defined on box grid, array vr(r)on dense grid
-  ! irb   : position of the box in the dense grid
-  ! Parallel execution: remember to sum the contributions from other nodes
-  !
-  !      use ion_parameters
-  !
-  USE kinds,           ONLY : DP
-  USE fft_base,        ONLY : dfftp, dfftb
-  USE mp_global,       ONLY : me_bgrp
-  !
-  IMPLICIT NONE
-  !
-  INTEGER,           INTENT(IN):: irb(3)
-  COMPLEX(DP), INTENT(IN):: qv(dfftb%nnr), vr(dfftp%nnr)
-  COMPLEX(DP)            :: boxdotgridcplx
-  !
-  INTEGER :: ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig, me
-  !
-  me = me_bgrp + 1
-  !
-  boxdotgridcplx = ZERO
-
-  DO ir3=1,dfftb%nr3
-     ibig3=irb(3)+ir3-1
-     ibig3=1+MOD(ibig3-1,dfftp%nr3)
-#if defined(__MPI)
-     ibig3 = ibig3 - dfftp%my_i0r3p
-     IF (ibig3.GT.0.AND.ibig3.LE.dfftp%my_nr3p) THEN
-#endif
-        DO ir2=1,dfftb%nr2
-           ibig2=irb(2)+ir2-1
-           ibig2=1+MOD(ibig2-1,dfftp%nr2)
-#if defined(__MPI)
-           ibig2 = ibig2 - dfftp%my_i0r2p
-           IF (ibig2.GT.0.AND.ibig2.LE.dfftp%my_nr2p) THEN
-#endif
-              DO ir1=1,dfftb%nr1
-                 ibig1=irb(1)+ir1-1
-                 ibig1=1+MOD(ibig1-1,dfftp%nr1)
-                 ibig=ibig1 + (ibig2-1)*dfftp%nr1x + (ibig3-1)*dfftp%nr1x*dfftp%my_nr2p
-                 ir  =ir1 + (ir2-1)*dfftb%nr1x + (ir3-1)*dfftb%nr1x*dfftb%nr2x
-                 boxdotgridcplx = boxdotgridcplx + qv(ir)*vr(ibig)
-              END DO
-#if defined(__MPI)
-           ENDIF
-#endif
-        END DO
-#if defined(__MPI)
-     ENDIF
-#endif
-  END DO
-  !
-  RETURN
-  !
-END FUNCTION boxdotgridcplx
 !
 !----------------------------------------------------------------------------
 SUBROUTINE write_rho_g( rhog )
@@ -2155,7 +2093,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   USE tune,               ONLY : npts, xdir, ydir, zdir, B, &
                                  shift, start, av0, av1
   USE cell_base,          ONLY : at, alat, tpiba, omega
-  USE ions_base,          ONLY : nsp, na, zv, nax
+  USE ions_base,          ONLY : nsp, na, zv, nax, nat, ityp
   USE constants,          ONLY : pi, tpi
   USE mp,                 ONLY : mp_barrier, mp_bcast,  mp_gather, mp_set_displs
   USE fft_base,           ONLY : dfftp
@@ -2168,12 +2106,12 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   COMPLEX(DP) ,INTENT(in) :: rhog(dfftp%ngm,nspin)
   COMPLEX(DP),ALLOCATABLE :: bigrho(:)
   COMPLEX(DP), ALLOCATABLE :: rhotmp_g(:)
-  INTEGER ntot, i, j, ngz, l, isa
+  INTEGER ntot, i, j, ngz, l
   INTEGER ,ALLOCATABLE :: g_red(:,:)
 #if defined(__MPI)
   INTEGER proc, ierr, ngdens(nproc_bgrp), displs( nproc_bgrp )
 #endif
-  REAL(DP) zlen,vtot, pos(3,nax,nsp), a_direct(3,3),a_trans(3,3), e_slp, e_int
+  REAL(DP) zlen,vtot, pos(3,nat), a_direct(3,3),a_trans(3,3), e_slp, e_int
   REAL(DP), INTENT(out) :: e_tuned(3)
   REAL(DP), INTENT(in) :: tau0(3,nax)
   REAL(DP),ALLOCATABLE :: v_mr(:), dz(:), gz(:), g_1(:,:), vbar(:), cd(:), v_final(:)
@@ -2307,12 +2245,8 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
      END IF
   END DO
 
-  isa = 0
-  DO i=1,nsp
-     DO j=1,na(i)
-        isa = isa + 1
-        pos(:,j,i)=tau0(:,isa)
-     END DO
+  DO i=1,nat
+     pos(:,i)=tau0(:,i)
   END DO
 
   !--- Construct the ionic Charge density in G-space
@@ -2320,10 +2254,9 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   rho_ion = ZERO
   !
   DO j=1,ngz
-     DO i=1,nsp
-        DO l=1,na(i)
-           rho_ion(j)=rho_ion(j)+zv(i)*EXP(-CI*gz(j)*pos(zdir,l,i))*EXP(-gz(j)**2/(4.D0*ONE))
-        END DO
+     DO l=1,nat
+        i = ityp(l)
+        rho_ion(j)=rho_ion(j)+zv(i)*EXP(-CI*gz(j)*pos(zdir,l))*EXP(-gz(j)**2/(4.D0*ONE))
      END DO
   END DO
 
@@ -2857,7 +2790,7 @@ SUBROUTINE write_psi( c, jw )
 
   IF( ionode ) WRITE( stdout, * ) "State Written", jw
   !
-  CALL stop_run( .TRUE. )
+  CALL stop_cp_run( )
   !
   RETURN
   !
@@ -3086,8 +3019,7 @@ END SUBROUTINE jacobi_rotation
        USE cell_base,        ONLY : alat
        USE constants,        ONLY : tpi, autoaf => BOHR_RADIUS_ANGS
        USE mp_global,        ONLY : nproc_image, me_image, intra_image_comm
-       USE cp_main_variables, ONLY: descla
-       USE cp_interfaces,     ONLY: distribute_lambda, collect_lambda
+       USE cp_main_variables, ONLY: idesc
        USE printout_base,     ONLY : printout_base_open, printout_base_unit, printout_base_close
        USE cp_main_variables, ONLY : nfi, iprint_stdout
        USE time_step,         ONLY : tps
@@ -3097,6 +3029,8 @@ END SUBROUTINE jacobi_rotation
        USE io_global,         ONLY : ionode, stdout
 
        IMPLICIT NONE
+
+       include 'laxlib.fh'
    
        INTEGER ,      INTENT(in)    :: nbsp
        REAL(DP),      INTENT(out)   :: U(nbsp,nbsp)
@@ -3118,8 +3052,8 @@ END SUBROUTINE jacobi_rotation
        !   IF( ( descla(1)%active_node > 0 ) .OR. ( descla(2)%active_node > 0 ) ) &
        !      nlam = MAX( descla(1)%nrcx, descla(2)%nrcx )
        !END IF
-       IF ( descla(iss)%active_node > 0) &
-           nlam = descla(iss)%nrcx
+       IF ( idesc(LAX_DESC_ACTIVE_NODE,iss) > 0) &
+           nlam = idesc(LAX_DESC_NRCX,iss)
    
        ALLOCATE(Oc(nbsp,nbsp, nw), Ocold(nbsp,nbsp,nw), Ol(nlam,nlam,nw))
        ALLOCATE(Up(nlam,nlam), U0(nlam,nlam), Um(nlam,nlam), Ul(nlam,nlam),  X2(nbsp,nbsp), X3(nbsp,nbsp))
@@ -3131,17 +3065,17 @@ END SUBROUTINE jacobi_rotation
        fric=wf_friction
        oldt0=0.D0
       
-       nr = descla(iss)%nr
-       nc = descla(iss)%nc
-       ir = descla(iss)%ir
-       ic = descla(iss)%ic
+       nr = idesc(LAX_DESC_NR,iss)
+       nc = idesc(LAX_DESC_NC,iss)
+       ir = idesc(LAX_DESC_IR,iss)
+       ic = idesc(LAX_DESC_IC,iss)
 
        do inw = 1, nw
           X2(:,:) =  REAL(O(inw, :, :))
           X3(:,:) = AIMAG(O(inw, :, :))
      
-          call distribute_lambda(X2, tmpr, descla(iss))
-          call distribute_lambda(X3, tmpi, descla(iss))
+          call distribute_lambda(X2, tmpr, idesc(:,iss))
+          call distribute_lambda(X3, tmpi, idesc(:,iss))
       
           Oc(:,:,inw) = CMPLX(X2,X3, KIND=dp)
           Ol(:,:,inw) = CMPLX(tmpr,tmpi, KIND=dp)
@@ -3153,7 +3087,7 @@ END SUBROUTINE jacobi_rotation
        DO i=1,nbsp
           X2(i,i)=1.D0
        END DO
-       call distribute_lambda(X2, identy, descla(iss))
+       call distribute_lambda(X2, identy, idesc(:,iss))
     
        Ul = identy
     
@@ -3188,7 +3122,7 @@ END SUBROUTINE jacobi_rotation
           END DO
     
           CALL ortho_u(Up,U0,nlam,identy,eps,nmax,nbsp, iss)
-          CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, Ul, nlam, Up, nlam, 0.0d0, tmpr, nlam, descla(iss))  
+          CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, Ul, nlam, Up, nlam, 0.0d0, tmpr, nlam, idesc(:,iss))  
           Ul = tmpr
 
           Ocold = Oc
@@ -3196,13 +3130,13 @@ END SUBROUTINE jacobi_rotation
              tmpr(:,:)=REAL(Ol(:,:,inw))
              tmpi(:,:)=AIMAG(Ol(:,:,inw))
    
-             CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, Ul, nlam, tmpr, nlam, 0.0d0, tmpr2, nlam, descla(iss)) 
-             CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, Ul, nlam, tmpi, nlam, 0.0d0, tmpi2, nlam, descla(iss)) 
-             CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, tmpr2, nlam, Ul, nlam, 0.0d0, tmpr, nlam, descla(iss)) 
-             CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, tmpi2, nlam, Ul, nlam, 0.0d0, tmpi, nlam, descla(iss)) 
+             CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, Ul, nlam, tmpr, nlam, 0.0d0, tmpr2, nlam, idesc(:,iss)) 
+             CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, Ul, nlam, tmpi, nlam, 0.0d0, tmpi2, nlam, idesc(:,iss)) 
+             CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, tmpr2, nlam, Ul, nlam, 0.0d0, tmpr, nlam, idesc(:,iss)) 
+             CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, tmpi2, nlam, Ul, nlam, 0.0d0, tmpi, nlam, idesc(:,iss)) 
    
-             call collect_lambda(X2, tmpr, descla(iss) )
-             call collect_lambda(X3, tmpi, descla(iss))
+             call collect_lambda(X2, tmpr, idesc(:,iss))
+             call collect_lambda(X3, tmpi, idesc(:,iss))
    
              Oc(:,:,inw)=CMPLX(X2,X3,KIND=dp)
           ENDDO
@@ -3280,7 +3214,7 @@ END SUBROUTINE jacobi_rotation
      spread=spread/nbsp
     !IF(me_image.EQ.0) write(*,'(3X,"Average spread =",ES10.3)') spread ! BS
 
-     call collect_lambda(U,Ul,descla(iss))
+     call collect_lambda(U,Ul,idesc(:,iss))
 
      do inw = 1, nw
         O(inw,:,:) = Oc(:,:,inw)
@@ -3304,9 +3238,11 @@ END SUBROUTINE jacobi_rotation
       USE kinds,            ONLY : DP
       USE mp_global,        ONLY : me_image, intra_image_comm
       USE mp,               ONLY : mp_max
-      USE cp_main_variables,       ONLY  : descla
+      USE cp_main_variables,       ONLY  : idesc
  
       IMPLICIT NONE
+
+      include 'laxlib.fh'
 
       INTEGER, INTENT(IN)    :: nlam, nmax, nbsp, iss
       REAL(DP),INTENT(INOUT) :: up(nlam,nlam)
@@ -3319,11 +3255,11 @@ END SUBROUTINE jacobi_rotation
       ALLOCATE( tmp(nlam,nlam),tmp2(nlam,nlam),tmp2t(nlam,nlam) )
       ALLOCATE( amat(nlam,nlam),bmat(nlam,nlam))
 
-      nr = descla(iss)%nr
-      nc = descla(iss)%nc
+      nr = idesc(LAX_DESC_NR,iss)
+      nc = idesc(LAX_DESC_NC,iss)
 
-      CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, up, nlam, up, nlam, 0.0d0, amat, nlam, descla(iss))
-      CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, up, nlam, u0, nlam, 0.0d0, bmat, nlam, descla(iss))
+      CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, up, nlam, up, nlam, 0.0d0, amat, nlam, idesc(:,iss))
+      CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, up, nlam, u0, nlam, 0.0d0, bmat, nlam, idesc(:,iss))
 
       amat = identy-amat
       bmat = identy-bmat
@@ -3332,10 +3268,10 @@ END SUBROUTINE jacobi_rotation
       delta = 1.0E10_DP
       DO iter = 1,nmax
 
-         CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, bmat, nlam, xloc, nlam, 0.0d0, tmp2, nlam, descla(iss))
-         CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, xloc, nlam, xloc, nlam, 0.0d0, tmp, nlam, descla(iss))
+         CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, bmat, nlam, xloc, nlam, 0.0d0, tmp2, nlam, idesc(:,iss))
+         CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, xloc, nlam, xloc, nlam, 0.0d0, tmp, nlam, idesc(:,iss))
 
-         CALL sqr_tr_cannon( nbsp, tmp2, nlam, tmp2t, nlam, descla(iss) )
+         CALL sqr_tr_cannon( nbsp, tmp2, nlam, tmp2t, nlam, idesc(:,iss) )
 
          do j=1,nc
             do i=1,nr
@@ -3346,10 +3282,10 @@ END SUBROUTINE jacobi_rotation
          IF(iter .GE. 3) THEN
 
             tmp = up         ! upnew = up + u0*xloc
-            CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, u0, nlam, xloc, nlam, 1.0d0, tmp, nlam, descla(iss))
+            CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, u0, nlam, xloc, nlam, 1.0d0, tmp, nlam, idesc(:,iss))
 
             tmp2 = identy
-            CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, tmp, nlam, tmp, nlam, -1.0d0, tmp2, nlam, descla(iss))
+            CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, tmp, nlam, tmp, nlam, -1.0d0, tmp2, nlam, idesc(:,iss))
             delta = 0.d0
             do j=1,nc
             do i=1,nr

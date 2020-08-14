@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -46,7 +46,7 @@ MODULE ldaU_hp
                                             !   calculation of U will fail.
              search_sym                     ! If .TRUE. search for the symmetry of q
   !
-  LOGICAL, ALLOCATABLE :: todo_atom(:),              &      ! Which atoms must be perturbed
+  LOGICAL, ALLOCATABLE :: todo_atom(:),              & ! Which atoms must be perturbed
                           perturbed_atom(:),         & ! Controls which atom is perturbed in the HP
                                                        ! calculation
                           this_pert_is_on_file(:),   & ! The perturbation is written on file or not

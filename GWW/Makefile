@@ -11,7 +11,7 @@ pw4gwwa:
 heada: libminpack
 	( cd head ; $(MAKE) all || exit 1 )
 
-gwwa:
+gwwa: libminpack
 	( cd gww ; $(MAKE) all || exit 1 )
 
 bsea: gwwa pw4gwwa

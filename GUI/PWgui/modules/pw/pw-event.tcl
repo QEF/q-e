@@ -209,6 +209,7 @@ tracevar nat w {
     set nat [varvalue nat]
     widgetconfigure atomic_coordinates  -rows $nat
     widgetconfigure atomic_forces       -rows $nat
+    widgetconfigure atomic_velocities   -rows $nat    
     varset specify_atomic_forces -value [varvalue specify_atomic_forces]
 }
 
@@ -357,21 +358,18 @@ tracevar xdm w {
 }
 
 tracevar vdw_corr w {
-    groupwidget dftdG disable
-    groupwidget xdmG  disable 
-    groupwidget tsG   disable
+    groupwidget dftdG  disable
+    groupwidget dftd3G disable
+    groupwidget xdmG   disable 
+    groupwidget tsG    disable
     
     if { [varvalue vdw_corr] == "'grimme-d2'" } {
 	groupwidget dftdG enable 
-	groupwidget xdmG  disable 
-	groupwidget tsG   disable 
+    } elseif { [varvalue vdw_corr] == "'grimme-d3'" } {
+	groupwidget dftd3G enable 
     } elseif { [varvalue vdw_corr] == "'xdm'" } {
-	groupwidget dftdG disable 
 	groupwidget xdmG  enable
-	groupwidget tsG   disable 
     } elseif { [varvalue vdw_corr] == "'ts-vdw'" } {
-	groupwidget dftdG disable 
-	groupwidget xdmG  disable
 	groupwidget tsG   enable
     }
 }
@@ -547,6 +545,13 @@ tracevar specify_atomic_forces w {
 	groupwidget atomic_forces_specs enable
     } else {
 	groupwidget atomic_forces_specs disable
+    }
+}
+tracevar ion_velocities w {
+    if { [varvalue ion_velocities] == "'from_input'" } {
+	groupwidget atomic_velocities_group enable
+    } else {
+	groupwidget atomic_velocities_group disable
     }
 }
 

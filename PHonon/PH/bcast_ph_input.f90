@@ -22,17 +22,17 @@ subroutine bcast_ph_input ( )
                          niter_ph, lnoloc, alpha_mix, tr2_ph, recover, &
                          ldisp, reduce_io, zue, zeu, epsil, trans, &
                          ldiag, lqdir, search_sym,  electron_phonon, &
-                         qplot, only_init, only_wfc, low_directory_check
+                         qplot, only_init, only_wfc, low_directory_check,&
+                         nk1, nk2, nk3, k1, k2, k3
   USE gamma_gamma, ONLY : asr
   USE disp, ONLY : nq1, nq2, nq3
   USE partial, ONLY : nat_todo
   USE freq_ph, ONLY : fpol
   USE output, ONLY : fildvscf, fildyn, fildrho
   use io_files, ONLY : tmp_dir, prefix
-  USE control_flags, only: iverbosity, modenum
+  USE control_flags, only: iverbosity, modenum, isolve
   USE ramanm, ONLY: lraman, elop, dek, eth_rps, eth_ns
   USE check_stop, ONLY: max_seconds
-  USE input_parameters, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE ions_base,     ONLY : amass
   USE io_global,   ONLY : meta_ionode_id
   USE run_info,   ONLY : title
@@ -42,6 +42,11 @@ subroutine bcast_ph_input ( )
   USE YAMBO,      ONLY : elph_yambo,dvscf_yambo
   ! YAMBO <
   USE elph_tetra_mod, ONLY : lshift_q
+  USE ldaU_ph,        ONLY : read_dns_bare, d2ns_type
+  USE dvscf_interpolate, ONLY : ldvscf_interpolate, do_long_range, &
+      do_charge_neutral, wpot_dir
+  USE ahc,           ONLY : elph_ahc, ahc_dir, ahc_nbnd, ahc_nbndskip, &
+      skip_upperfan
 
   implicit none
   !
@@ -67,11 +72,17 @@ subroutine bcast_ph_input ( )
   call mp_bcast (only_wfc, meta_ionode_id, world_comm )
   call mp_bcast (only_init, meta_ionode_id, world_comm )
   call mp_bcast (search_sym, meta_ionode_id, world_comm)
+  call mp_bcast (read_dns_bare, meta_ionode_id, world_comm)
   ! YAMBO >
   call mp_bcast (elph_yambo, meta_ionode_id, world_comm)
   call mp_bcast (dvscf_yambo, meta_ionode_id, world_comm)
   ! YAMBO <
   call mp_bcast (lshift_q, meta_ionode_id, world_comm)
+  call mp_bcast (ldvscf_interpolate, meta_ionode_id, world_comm)
+  call mp_bcast (do_charge_neutral, meta_ionode_id, world_comm)
+  call mp_bcast (do_long_range, meta_ionode_id, world_comm)
+  call mp_bcast (elph_ahc, meta_ionode_id, world_comm)
+  call mp_bcast (skip_upperfan, meta_ionode_id, world_comm)
   !
   ! integers
   !
@@ -94,10 +105,13 @@ subroutine bcast_ph_input ( )
   CALL mp_bcast( k2, meta_ionode_id, world_comm )
   CALL mp_bcast( k3, meta_ionode_id, world_comm )
   CALL mp_bcast( low_directory_check, meta_ionode_id, world_comm )
+  CALL mp_bcast( isolve, meta_ionode_id, world_comm )
   CALL mp_bcast( elph_nbnd_min, meta_ionode_id, world_comm )
   CALL mp_bcast( elph_nbnd_max, meta_ionode_id, world_comm )
   CALL mp_bcast( el_ph_ngauss, meta_ionode_id, world_comm )
   CALL mp_bcast( el_ph_nsigma, meta_ionode_id, world_comm )
+  CALL mp_bcast( ahc_nbnd, meta_ionode_id, world_comm )
+  CALL mp_bcast( ahc_nbndskip, meta_ionode_id, world_comm )
   !
   ! real*8
   !
@@ -119,6 +133,9 @@ subroutine bcast_ph_input ( )
   call mp_bcast (tmp_dir, meta_ionode_id, world_comm )
   call mp_bcast (prefix, meta_ionode_id, world_comm )
   call mp_bcast (electron_phonon, meta_ionode_id, world_comm )
+  call mp_bcast (d2ns_type, meta_ionode_id, world_comm )
+  call mp_bcast (wpot_dir, meta_ionode_id, world_comm )
+  call mp_bcast (ahc_dir, meta_ionode_id, world_comm )
   !
   ! derived type (one bit at a time)
   !

@@ -21,7 +21,7 @@ subroutine dynmatrix_new(iq_)
   USE io_global,     ONLY : stdout
   USE control_flags, ONLY : modenum
   USE cell_base,     ONLY : at, bg, celldm, ibrav, omega
-  USE symm_base,     ONLY : s, sr, irt, nsym, invs
+  USE symm_base,     ONLY : s, sr, irt, nsym, invs, t_rev
   USE dynmat,        ONLY : dyn, w2
   USE noncollin_module, ONLY : nspin_mag
   USE modes,         ONLY : u, nmodes, npert, nirr, num_rap_mode
@@ -145,7 +145,7 @@ subroutine dynmatrix_new(iq_)
   !
   !   Generates the star of q
   !
-  call star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, .TRUE. )
+  call star_q1(xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, .TRUE., t_rev )
   !
   ! write on file information on the system
   !

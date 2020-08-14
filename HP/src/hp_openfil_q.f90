@@ -12,7 +12,7 @@ SUBROUTINE hp_openfil_q()
   !
   ! This subroutine opens all necessary files necessary. 
   !
-  USE io_files,         ONLY : tmp_dir, seqopn, nwordwfcU
+  USE io_files,         ONLY : tmp_dir, nwordwfcU
   USE control_flags,    ONLY : io_level
   USE wvfct,            ONLY : nbnd, npwx
   USE io_files,         ONLY : prefix

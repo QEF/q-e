@@ -37,7 +37,6 @@ exx_module.o \
 exx_pair.o \
 exx_psi.o \
 exx_vofr.o \
-fft.o \
 forces.o \
 fromscra.o \
 gram.o \
@@ -114,41 +113,33 @@ makov_payne.o
 LOBJS = \
 entropy.o 
 
-QEMODS=../../Modules/libqemod.a
-QEFFT=../../FFTXlib/libqefft.a
-QELA=../../LAXlib/libqela.a
-UTIL=../../UtilXlib/libutil.a
+QEMODS=../../Modules/libqemod.a ../../upflib/libupf.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 
-TLDEPS= bindir mods libs
+TLDEPS= bindir libs mods
 
-all : tldeps libcp.a manycp.x cp.x wfdd.x #cppp.x
+all : tldeps libcp.a manycp.x cp.x wfdd.x cppp.x
 
-manycp.x : manycp.o libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
+manycp.x : manycp.o libcp.a $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o manycp.x manycp.o \
-		libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(QELIBS)
+		libcp.a $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/manycp.x . )
 
-cp.x : cprstart.o libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
+cp.x : cprstart.o libcp.a $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o cp.x cprstart.o \
-		libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(QELIBS)
+		libcp.a $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/cp.x . )
 
 libcp.a : $(FOBJS) $(LOBJS) 
 	 $(AR) $(ARFLAGS) $@ $?
 	 $(RANLIB) $@
 
-cp_version.o : cpver.h
-
-cpver.h :
-	echo "CHARACTER(LEN=70), PARAMETER :: version_date = '"`date`"'" \
-		> cpver.h
-
-#cppp.x : fpmdpp.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
-#	$(LD) $(LDFLAGS) -o cppp.x fpmdpp.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(QELIBS)
-#	- (cd ../../bin ; ln -fs ../CPV/src/cppp.x . )
+cppp.x : cppp.o $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o cppp.x cppp.o  \
+		$(QEMODS) $(LIBOBJS) $(QELIBS)
+	- (cd ../../bin ; ln -fs ../CPV/src/cppp.x . )
 
 wfdd.x : wfdd.o
-	$(LD) $(LDFLAGS) -o $@ wfdd.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(QELIBS)
+	$(LD) $(LDFLAGS) -o $@ wfdd.o $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/$@ . )
 
 tldeps :
@@ -156,7 +147,7 @@ tldeps :
 	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean :
-	- /bin/rm -f cppp.x *.o *.mod cpver.h *.i core* *_tmp.f90 fort* \
+	- /bin/rm -f cppp.x *.o *.mod *.i core* *_tmp.f90 fort* \
 		*.cpp *.d *.L *.a *.s cp.x manycp.x wfdd.x
 	-/bin/rm -rf ../../bin/manycp.x ../../bin/cppp.x ../../bin/cp.x ../../bin/wfdd.x
 

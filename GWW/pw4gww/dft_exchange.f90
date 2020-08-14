@@ -301,7 +301,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
    deallocate(fac)
    deallocate(prod_c,prod_g,prod_g2)
    deallocate(prod_r)
-   if(okvan) deallocate(becpr)
+   ! if(okvan) deallocate(becpr)
    if(l_whole_s) then
 !NOT_TO_BE_INCLUDED_START
       deallocate(e_x_off)
@@ -321,6 +321,7 @@ subroutine addus_charge(r_ij,becp_iw,becp_jw)
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
+  USE cell_base,            ONLY : tpiba
   USE gvect,                ONLY : ngm, gg, g, eigts1, eigts2, &
                                    eigts3, mill
   USE lsda_mod,             ONLY : nspin
@@ -370,7 +371,7 @@ subroutine addus_charge(r_ij,becp_iw,becp_jw)
   aux (:,:) = (0.d0, 0.d0)
   call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
   do ig = 1, ngm
-     qmod (ig) = sqrt (gg (ig) )
+     qmod (ig) = sqrt (gg (ig) ) * tpiba
   enddo
   
 !found index correspondence

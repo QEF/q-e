@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,7 +21,8 @@ SUBROUTINE hp_summary
   USE gvecw,         ONLY : ecutwfc
   USE funct,         ONLY : write_dft_name
   USE control_lr,    ONLY : ethr_nscf
-  USE ldaU,          ONLY : is_hubbard, Hubbard_U, lda_plus_u_kind ! Hubbard_V 
+  USE ldaU,          ONLY : is_hubbard, Hubbard_U, lda_plus_u_kind, &
+                            Hubbard_V, num_uc 
   USE ldaU_hp,       ONLY : conv_thr_chi, skip_atom, skip_type,  &
                             todo_atom, find_atpert, nath_pert
 
@@ -51,10 +52,7 @@ SUBROUTINE hp_summary
                & 'conv. thresh. for NSCF    =  ',3x,1pe9.1,/,5x, &
                & 'conv. thresh. for chi     =  ',3x,1pe9.1)
   ! 
-  ! Description of the exchange-correlation functional 
-  ! CALL write_dft_name()
-  !
-  ! Info about the Hubbard U parameters
+  ! Info about Hubbard parameters
   !
   WRITE (stdout,'(5x,a)') 'Input Hubbard parameters (in eV):'
   IF (lda_plus_u_kind.EQ.0) THEN
@@ -64,16 +62,17 @@ SUBROUTINE hp_summary
                   & 'U (',nt,')','= ', Hubbard_U(nt)*rytoev
         ENDIF
      ENDDO
-  !ELSEIF (lda_plus_u_kind.EQ.2) THEN
-  !   dimn = nat * (3**3.0d0)
-  !   DO na = 1, nat
-  !      DO nb = 1, dimn
-  !         IF ( ABS(Hubbard_V(na,nb,1)).GE.1.d-15 .OR. nb==na) THEN
-  !             WRITE (stdout,'(7x,a,i3,a,i4,a,2x,a,1x,f7.4)') &
-  !                & 'V (',na,',',nb,')','= ', Hubbard_V(na,nb,1)*rytoev
-  !         ENDIF
-  !      ENDDO
-  !   ENDDO
+  ELSEIF (lda_plus_u_kind.EQ.2) THEN
+     ! Number of atoms in the 3x3x3 supercell
+     dimn = num_uc * nat
+     DO na = 1, nat
+        DO nb = 1, dimn
+           IF ( ABS(Hubbard_V(na,nb,1)).GE.1.d-15 .OR. nb==na) THEN
+               WRITE (stdout,'(7x,a,i3,a,i4,a,2x,a,1x,f7.4)') &
+                  & 'V (',na,',',nb,')','= ', Hubbard_V(na,nb,1)*rytoev
+           ENDIF
+        ENDDO
+     ENDDO
   ENDIF
   !
   ! Description of the unit cell

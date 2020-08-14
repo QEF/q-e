@@ -18,7 +18,6 @@
   epwread     = .false.
 
   nbndsub     =  8
-  nbndskip    =  0
 
   wannierize  = .true.
   num_iter    = 800

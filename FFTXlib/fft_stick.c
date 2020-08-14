@@ -10,35 +10,45 @@
 /* Always compile FFTW beside external driver to be used as fallback
  * hook for higher level FFT drivers in the FFTX library */
 
-#ifndef __FFTW
-#define __FFTW
-#endif
-
-#if defined(__FFTW)
-
-#include "fftw.c"
+#include "fftw_dp.h"
+#include "fftw_sp.h"
 
 int create_plan_1d (fftw_plan *p, int *n, int *idir)
 {
    fftw_direction dir = ( (*idir < 0) ? FFTW_FORWARD : FFTW_BACKWARD ); 
-   *p = fftw_create_plan(*n, dir, FFTW_ESTIMATE | FFTW_IN_PLACE);
+   *p = qe_fftw_create_plan(*n, dir, FFTW_ESTIMATE | FFTW_IN_PLACE);
    if( *p == NULL ) fprintf(stderr," *** CREATE_PLAN: warning empty plan ***\n");
 /*   printf(" pointer size = %d, value = %d\n", sizeof ( *p ), *p ); */
    return 0;
 }
 
+int float_create_plan_1d(float_fftw_plan* p, int* n, int* idir)
+{
+	fftw_direction dir = ((*idir < 0) ? FFTW_FORWARD : FFTW_BACKWARD);
+	*p = qe_float_fftw_create_plan(*n, dir, FFTW_ESTIMATE | FFTW_IN_PLACE);
+	if (*p == NULL) fprintf(stderr, " *** CREATE_PLAN: warning empty plan ***\n");
+	/*   printf(" pointer size = %d, value = %d\n", sizeof ( *p ), *p ); */
+	return 0;
+}
 
 int destroy_plan_1d (fftw_plan *p)
 {
-   if ( *p != NULL ) fftw_destroy_plan(*p);
+   if ( *p != NULL ) qe_fftw_destroy_plan(*p);
    else fprintf(stderr," *** DESTROY_PLAN: warning empty plan ***\n");
    return 0;
+}
+
+int float_destroy_plan_1d(float_fftw_plan* p)
+{
+	if (*p != NULL) qe_float_fftw_destroy_plan(*p);
+	else fprintf(stderr, " *** DESTROY_PLAN: warning empty plan ***\n");
+	return 0;
 }
 
 int create_plan_2d (fftwnd_plan *p, int *n, int *m, int *idir)
 {
    fftw_direction dir = ( (*idir < 0) ? FFTW_FORWARD : FFTW_BACKWARD );
-   *p = fftw2d_create_plan(*m, *n, dir, FFTW_ESTIMATE | FFTW_IN_PLACE);
+   *p = qe_fftw2d_create_plan(*m, *n, dir, FFTW_ESTIMATE | FFTW_IN_PLACE);
    if( *p == NULL ) fprintf(stderr," *** CREATE_PLAN_2D: warning empty plan ***\n");
 /*   printf(" pointer size = %d, value = %d\n", sizeof ( *p ), *p ); */
    return 0;
@@ -46,7 +56,7 @@ int create_plan_2d (fftwnd_plan *p, int *n, int *m, int *idir)
 
 int destroy_plan_2d (fftwnd_plan *p)
 {
-   if ( *p != NULL ) fftwnd_destroy_plan(*p);
+   if ( *p != NULL ) qe_fftwnd_destroy_plan(*p);
    else fprintf(stderr," *** DESTROY_PLAN_2D: warning empty plan ***\n");
    return 0;
 }
@@ -54,7 +64,7 @@ int destroy_plan_2d (fftwnd_plan *p)
 int create_plan_3d (fftwnd_plan *p, int *n, int *m, int *l, int *idir)
 {
    fftw_direction dir = ( (*idir < 0) ? FFTW_FORWARD : FFTW_BACKWARD );
-   *p = fftw3d_create_plan(*l, *m, *n, dir, FFTW_ESTIMATE | FFTW_IN_PLACE);
+   *p = qe_fftw3d_create_plan(*l, *m, *n, dir, FFTW_ESTIMATE | FFTW_IN_PLACE);
    if( *p == NULL ) {
 	fprintf(stderr," *** CREATE_PLAN_3D: warning empty plan ***\n");
 	fprintf(stderr," *** input was (n,m,l,dir): %d %d %d %d ***\n", *l, *m, *n, *idir);
@@ -66,7 +76,7 @@ int create_plan_3d (fftwnd_plan *p, int *n, int *m, int *l, int *idir)
 int destroy_plan_3d (fftwnd_plan *p)
 
 {
-   if ( *p != NULL ) fftwnd_destroy_plan(*p);
+   if ( *p != NULL ) qe_fftwnd_destroy_plan(*p);
    else fprintf(stderr," *** DESTROY_PLAN_3D: warning empty plan ***\n");
    return 0;
 }
@@ -76,10 +86,9 @@ int fft_x_stick
 (fftw_plan *p, FFTW_COMPLEX *a, int *nx, int *ny, int *nz, int *ldx, int *ldy )
 {
 
-   int i, j, ind;
+   int i;
    int xstride, bigstride;
    int xhowmany, xidist;
-   double * ptr;
 
 /* trasform  along x and y */
    bigstride = (*ldx) * (*ldy);
@@ -140,10 +149,8 @@ int fft_x_stick_single
 (fftw_plan *p, FFTW_COMPLEX *a, int *nx, int *ny, int *nz, int *ldx, int *ldy )
 {
 
-   int i, j, ind;
    int xstride, bigstride;
    int xhowmany, xidist;
-   double * ptr;
 
 /* trasform  along x and y */
    bigstride = (*ldx) * (*ldy);
@@ -163,6 +170,13 @@ int fft_z_stick_single (fftw_plan *p, FFTW_COMPLEX *a, int *ldz)
   fftw(*p, 1,a, 1, 0, 0, 0, 0);
 
   return 0;
+}
+
+int float_fft_z_stick_single(float_fftw_plan* p, FFTW_FLOAT_COMPLEX* a, int* ldz)
+{
+	float_fftw(*p, 1, a, 1, 0, 0, 0, 0);
+
+	return 0;
 }
 
 /* Computing the N-Dimensional FFT 
@@ -206,13 +220,3 @@ as scratch space and its contents destroyed. In this case, out must be an
 ordinary array whose elements are contiguous in memory (no striding). 
 
 */
-
-#else
-
-/* This dummy subroutine is there for compilers that dislike empty files */
-
-int dumfftwdrv() {
-  return 0;
-}
-
-#endif

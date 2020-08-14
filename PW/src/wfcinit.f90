@@ -1,5 +1,5 @@
 ! 
-! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,36 +14,39 @@ SUBROUTINE wfcinit()
   ! ... from superposition of atomic wavefunctions and/or random wavefunctions.
   ! ... It also open needed files or memory buffers
   !
-  USE io_global,            ONLY : stdout
+  USE io_global,            ONLY : stdout, ionode, ionode_id
   USE basis,                ONLY : natomwfc, starting_wfc
   USE bp,                   ONLY : lelfield
   USE klist,                ONLY : xk, nks, ngk, igk_k
   USE control_flags,        ONLY : io_level, lscf
   USE fixed_occ,            ONLY : one_atom_occupations
-  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
+  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU, lda_plus_u_kind
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
-                                   diropn, tmp_dir, prefix, postfix
-  USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
+                                   diropn, xmlfile, restart_dir
+  USE buffers,              ONLY : open_buffer, close_buffer, get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb
-  USE wavefunctions, ONLY : evc
-  USE wvfct,                ONLY : nbnd, npwx, current_k
+  USE wavefunctions,        ONLY : evc
+  USE wvfct,                ONLY : nbnd, current_k
   USE wannier_new,          ONLY : use_wannier
-  USE pw_restart_new,       ONLY : pw_readschema_file, read_collected_to_evc 
+  USE pw_restart_new,       ONLY : read_collected_wfc
+  USE mp,                   ONLY : mp_bcast, mp_sum
+  USE mp_images,            ONLY : intra_image_comm
+  USE qexsd_module,         ONLY : qexsd_readschema
   USE qes_types_module,     ONLY : output_type
   USE qes_libs_module,      ONLY : qes_reset
   !
   IMPLICIT NONE
   !
-  INTEGER :: ik, ierr
-  LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file = .FALSE.
-  CHARACTER (LEN=256)                     :: dirname
-  TYPE ( output_type )                    :: output_obj
+  INTEGER :: ik, ierr, exst_sum 
+  LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file
+  CHARACTER (LEN=256)  :: dirname
+  TYPE ( output_type ) :: output_obj
   !
   !
   CALL start_clock( 'wfcinit' )
   !
-  ! ... Orthogonalized atomic functions needed for LDA+U and other cases
+  ! ... Orthogonalized atomic functions needed for DFT+U and other cases
   !
   IF ( use_wannier .OR. one_atom_occupations ) CALL orthoatwfc ( use_wannier )
   IF ( lda_plus_u ) CALL orthoUwfc()
@@ -54,31 +57,58 @@ SUBROUTINE wfcinit()
   CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst_file )
   !
   IF ( TRIM(starting_wfc) == 'file') THEN
-     CALL pw_readschema_file(IERR = ierr, RESTART_OUTPUT = output_obj )
-     IF ( ierr == 0 ) THEN 
-        twfcollect_file = output_obj%band_structure%wf_collected   
-        dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
-        IF ( twfcollect_file ) THEN
-           CALL read_collected_to_evc(dirname )
-        ELSE IF ( .NOT. exst_file) THEN
-           WRITE( stdout, '(5X,"Cannot read wfcs: file not found")' )
-           starting_wfc = 'atomic+random'
-        ELSE
+     ! Check whether all processors have found a file when opening a buffer
+     IF (exst_file) THEN
+        exst_sum = 0
+     ELSE
+        exst_sum = 1
+     END IF
+     CALL mp_sum (exst_sum, intra_image_comm)
+     !
+     ! Check whether wavefunctions are collected (info in xml file)
+     dirname = restart_dir ( ) 
+     IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
+     CALL mp_bcast(ierr, ionode_id, intra_image_comm)
+     IF ( ierr <= 0 ) THEN
+        ! xml file is valid
+        IF (ionode) twfcollect_file = output_obj%band_structure%wf_collected   
+        CALL mp_bcast(twfcollect_file, ionode_id, intra_image_comm)
+        CALL qes_reset  ( output_obj )
+     ELSE
+        ! xml file not found or not valid
+        twfcollect_file = .FALSE.
+     END IF
+     !
+     IF ( twfcollect_file ) THEN
+        !
+        DO ik = 1, nks
+           CALL read_collected_wfc ( dirname, ik, evc )
+           CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
+        END DO
+        !
+     ELSE IF ( exst_sum /= 0 ) THEN
+        !
+        WRITE( stdout, '(5X,"Cannot read wfcs: file not found")' )
+        IF (exst_file) THEN
+           CALL close_buffer(iunwfc, 'delete') 
+           CALL open_buffer(iunwfc,'wfc', nwordwfc, io_level, exst_mem, exst_file)
+        END IF
+        starting_wfc = 'atomic+random'
+        !
+     ELSE
         !
         ! ... wavefunctions are read from file (or buffer) not here but
         !  ...in routine c_bands. If however there is a single k-point,
         ! ... c_bands doesn't read wavefunctions, so we read them here
         ! ... (directly from file to avoid a useless buffer allocation)
         !
-           IF ( nks == 1 ) THEN
-              inquire (unit = iunwfc, opened = opnd_file)
-              if (.not.opnd_file) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
-              CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, -1 )
-             if(.not.opnd_file) CLOSE ( UNIT=iunwfc, STATUS='keep' )
-           END IF
+        IF ( nks == 1 ) THEN
+           INQUIRE (unit = iunwfc, opened = opnd_file)
+           IF ( .NOT.opnd_file ) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
+           CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, -1 )
+           IF ( .NOT.opnd_file ) CLOSE ( UNIT=iunwfc, STATUS='keep' )
         END IF
-     END IF 
-     CALL qes_reset  ( output_obj )
+     END IF
   END IF
   !
   ! ... state what will happen
@@ -137,10 +167,14 @@ SUBROUTINE wfcinit()
      !
      IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !
-     ! ... Needed for LDA+U
+     ! ... Needed for DFT+U
      !
      IF ( nks > 1 .AND. lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
         CALL get_buffer( wfcU, nwordwfcU, iunhub, ik )
+     !
+     ! DFT+U+V: calculate the phase factor at a given k point
+     !
+     IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) CALL phase_factor(ik)
      !
      ! ... calculate starting wavefunctions (calls Hpsi)
      !
@@ -169,7 +203,6 @@ SUBROUTINE init_wfc ( ik )
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp
   USE constants,            ONLY : tpi
-  USE cell_base,            ONLY : tpiba2
   USE basis,                ONLY : natomwfc, starting_wfc
   USE gvect,                ONLY : g, gstart
   USE klist,                ONLY : xk, ngk, igk_k

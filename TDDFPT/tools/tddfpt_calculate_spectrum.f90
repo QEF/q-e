@@ -18,8 +18,7 @@ PROGRAM lr_calculate_spectrum
   !
   USE kinds,               ONLY : dp
   USE constants,           ONLY : pi,rytoev,evtonm,rytonm
-  USE io_files,            ONLY : tmp_dir, prefix,nd_nmbr
-  USE global_version,      ONLY : version_number
+  USE io_files,            ONLY : tmp_dir, prefix
   USE io_global,           ONLY : stdout,ionode, ionode_id
   USE environment,         ONLY : environment_start,environment_end
   USE mp_global,           ONLY : mp_startup,mp_global_end, my_image_id
@@ -79,7 +78,6 @@ PROGRAM lr_calculate_spectrum
   !
   ! Subroutines etc.
   !
-  COMPLEX(kind=dp), EXTERNAL :: zdotc
   CHARACTER(len=6), EXTERNAL :: int_to_char
   !
   ! User controlled variable initialisation
@@ -1290,7 +1288,7 @@ SUBROUTINE calc_chi(freq,broad,chi)
      ! 
      DO ip2 = 1,n_ipol
          !
-         chi(ip,ip2) = ZDOTC(itermax,zeta_store(ip,ip2,:),1,r(ip,:),1)
+         chi(ip,ip2) = dot_product(zeta_store(ip,ip2,:),r(ip,:))
          !
          ! Multiplication with a norm
          !

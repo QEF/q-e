@@ -103,7 +103,7 @@ Iron
  /
 ATOMIC_SPECIES
  Fe 55.847 Fe.pz-nd-rrkjus.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  Fe 0.0 0.0 0.0
 K_POINTS
  11
@@ -149,7 +149,7 @@ Iron
  /
 ATOMIC_SPECIES
  Fe 55.847 Fe.pz-nd-rrkjus.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  Fe 0.0 0.0 0.0
 K_POINTS
  28
@@ -219,7 +219,7 @@ cat > fe.pen.in << EOF
  /
 ATOMIC_SPECIES
  Fe 55.847 Fe.pz-nd-rrkjus.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  Fe 0.0 0.0 0.0
 K_POINTS
  11
@@ -267,7 +267,7 @@ cat > fe.angl.in << EOF
  /
 ATOMIC_SPECIES
  Fe 55.847 Fe.pz-nd-rrkjus.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  Fe 0.0 0.0 0.0
 K_POINTS
  11
@@ -323,7 +323,7 @@ cat > fe.total.in << EOF
  /
 ATOMIC_SPECIES
  Fe 55.847 Fe.pz-nd-rrkjus.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  Fe 0.0 0.0 0.0
 K_POINTS AUTOMATIC
 4 4 4 1 1 1
@@ -362,7 +362,7 @@ cat > cu.scf.in << EOF
  /
 ATOMIC_SPECIES
  Cu 63.55 Cu.pz-d-rrkjus.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  Cu 0.0 0.0 0.0
 K_POINTS (automatic)
  8 8 8 0 0 0
@@ -392,7 +392,7 @@ cat > cu.band.in << EOF
  /
 ATOMIC_SPECIES
  Cu  63.55 Cu.pz-d-rrkjus.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  Cu 0.0 0.0 0.0
 K_POINTS
  28
@@ -460,7 +460,7 @@ cat > cu.cg.in << EOF
  /
 ATOMIC_SPECIES
  Cu 63.55 Cu.pz-d-rrkjus.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  Cu 0.0 0.0 0.0
 K_POINTS (automatic)
  8 8 8 0 0 0
@@ -500,7 +500,7 @@ $ECHO " done"
 # /
 #ATOMIC_SPECIES
 # Cu 63.55 Cu.pz-d-rrkjus.UPF
-#ATOMIC_POSITIONS
+#ATOMIC_POSITIONS alat
 # Cu 0.0 0.0 0.0
 #K_POINTS (automatic)
 # 8 8 8 0 0 0
@@ -539,7 +539,7 @@ cat > ni.scf.in << EOF
  /
 ATOMIC_SPECIES
  Ni 58.69 Ni.pbe-nd-rrkjus.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  Ni 0.0 0.0 0.0
 K_POINTS
  60
@@ -631,7 +631,7 @@ cat > ni.band.in << EOF
  /
 ATOMIC_SPECIES
  Ni 58.69 Ni.pbe-nd-rrkjus.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  Ni 0.0 0.0 0.0
 K_POINTS
  28
@@ -704,7 +704,7 @@ cat > o2.relax.in << EOF
 ATOMIC_SPECIES
  O1 16.0 O.pbe-rrkjus.UPF
  O2 16.0 O.pbe-rrkjus.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  O1 0.0 0.0 0.0
  O2 0.20 0.20 0.20
 K_POINTS

@@ -37,7 +37,7 @@ MODULE command_line_options
   ! ... Number of arguments in command line
   INTEGER :: nargs = 0
   ! ... QE arguments read from command line
-  INTEGER :: nimage_= 1, npool_= 1, ndiag_ = 0, nband_= 1, ntg_= 1, nyfft_ = 1
+  INTEGER :: nimage_= 1, npool_= 1, ndiag_ = 0, nband_= 1, ntg_= 1, nyfft_ = 1, nmany_ = 1
   ! ... Indicate if using library init
   LOGICAL :: library_init = .FALSE.
   ! ... input file name read from command line
@@ -83,11 +83,11 @@ CONTAINS
         narg = narg + 1
         SELECT CASE ( TRIM(arg) )
            CASE ( '-i', '-in', '-inp', '-input' ) 
-           IF (read_string) THEN
-              CALL my_getarg ( input_command_line, narg, input_file_ )
-           ELSE
-              CALL get_command_argument ( narg, input_file_ )
-           ENDIF
+              IF (read_string) THEN
+                 CALL my_getarg ( input_command_line, narg, input_file_ )
+              ELSE
+                 CALL get_command_argument ( narg, input_file_ )
+              ENDIF
               IF ( TRIM (input_file_) == ' ' ) GO TO 15
               narg = narg + 1
            CASE ( '-ni', '-nimage', '-nimages', '-npot' ) 
@@ -106,7 +106,7 @@ CONTAINS
               ENDIF
               READ ( arg, *, ERR = 15, END = 15) npool_
               narg = narg + 1
-!
+! FIXME: following comment should be moved to a more visible place
 ! special case : task group paralleization and nyfft parallelization, both 
 !                introduced to improve scaling coexist and are in part interchangeable
 !                if TG is available it's faster that NYFFT becouse it communicates larger
@@ -123,16 +123,8 @@ CONTAINS
                  CALL get_command_argument ( narg, arg )
               ENDIF
               READ ( arg, *, ERR = 15, END = 15) ntg_         ! read the argument as ntg_
-                                               nyfft_ = ntg_  ! set nyfft_ equal to ntg_
+              nyfft_ = ntg_  ! set nyfft_ equal to ntg_
               narg = narg + 1
-!           CASE ( '-nyfft' ) 
-!              IF (read_string) THEN
-!                 CALL my_getarg ( input_command_line, narg, arg )
-!              ELSE
-!                 CALL get_command_argument ( narg, arg )
-!              ENDIF
-!              READ ( arg, *, ERR = 15, END = 15) nyfft_
-!              narg = narg + 1
            CASE ( '-nb', '-nband', '-nbgrp', '-nband_group') 
               IF (read_string) THEN
                  CALL my_getarg ( input_command_line, narg, arg )
@@ -148,6 +140,14 @@ CONTAINS
                  CALL get_command_argument ( narg, arg )
               ENDIF
               READ ( arg, *, ERR = 15, END = 15) ndiag_
+              narg = narg + 1
+           CASE ( '-nh', '-nhw', '-n_howmany', '-howmany')
+              IF (read_string) THEN
+                 CALL my_getarg ( input_command_line, narg, arg )
+              ELSE
+                 CALL get_command_argument ( narg, arg )
+              ENDIF
+              READ ( arg, *, ERR = 15, END = 15) nmany_
               narg = narg + 1
            CASE DEFAULT
               command_line = TRIM(command_line) // ' ' // TRIM(arg)
@@ -166,6 +166,7 @@ CONTAINS
      CALL mp_bcast( nimage_, root, world_comm ) 
      CALL mp_bcast( npool_ , root, world_comm ) 
      CALL mp_bcast( ntg_   , root, world_comm ) 
+     CALL mp_bcast( nmany_ , root, world_comm )
      CALL mp_bcast( nyfft_ , root, world_comm ) 
      CALL mp_bcast( nband_ , root, world_comm ) 
      CALL mp_bcast( ndiag_ , root, world_comm ) 
@@ -215,18 +216,24 @@ CONTAINS
 
   END SUBROUTINE my_getarg 
 
-  SUBROUTINE set_command_line ( nimage, npool, ntg, nyfft, nband, ndiag)
+  SUBROUTINE set_command_line ( nimage, npool, ntg, nmany, nyfft, nband, ndiag)
      ! directly set command line options without going through the command line
      IMPLICIT NONE
 
-     INTEGER, INTENT(IN), OPTIONAL :: nimage, npool, ntg, nyfft, nband, ndiag
+     INTEGER, INTENT(IN), OPTIONAL :: nimage, npool, ntg, nmany, nyfft, nband, ndiag
      !
      IF ( PRESENT(nimage) ) nimage_ = nimage
      IF ( PRESENT(npool)  ) npool_  = npool
-     IF ( PRESENT(ntg)    ) ntg_    = ntg
      IF ( PRESENT(nyfft)  ) nyfft_  = nyfft
      IF ( PRESENT(nband)  ) nband_  = nband
      IF ( PRESENT(ndiag)  ) ndiag_  = ndiag
+     IF ( PRESENT(ntg) .and. PRESENT(nmany) ) THEN
+        ! ERROR!!!!
+     ELSEIF ( PRESENT(ntg) ) THEN
+        ntg_ = ntg
+     ELSEIF ( PRESENT(nmany) ) THEN
+        nmany_ = nmany
+     ENDIF
      !
      library_init = .TRUE.
      !

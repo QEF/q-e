@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,6 +21,7 @@ MODULE lr_variables
   !
   INTEGER, PARAMETER:: nbrx = 14   ! max number of beta functions
   INTEGER :: iund0psi   = 20       ! unit for writing/reding of d0psi
+  INTEGER :: iundvpsi   = 200
   INTEGER :: iunrestart = 22
   INTEGER :: nwordd0psi, nwordrestart, n_ipol
   CHARACTER (len=10), PARAMETER :: code1 = 'turboTDDFT', code2 = 'turboEELS'
@@ -39,6 +40,30 @@ MODULE lr_variables
                                ! in Cartesian coordinates
   CHARACTER(len=30) :: approximation ! Level of approximation in TDDFPT  
   CHARACTER(LEN=256) :: tmp_dir_lr   ! Name of a temporary directory 
+  CHARACTER(LEN=256) :: calculator   ! 'lanczos' or 'sternheimer'
+  !
+  ! sternheimer-eels
+  !
+  INTEGER :: nfs, & !number of frequencies for Sternheimer
+             start_freq, &
+             last_freq
+  REAL(kind=dp), ALLOCATABLE :: fiu(:), fru(:) ! frequencies for Sternheimer
+  COMPLEX(kind=dp) :: current_w ! current frequency
+  COMPLEX(DP), ALLOCATABLE :: chirr(:), &  ! charge-charge \chi
+                              chirz(:), &  ! charge-mag_z \chi
+                              chizr(:), &  ! mag_z-charge \chi
+                              chizz(:), &  ! mag_z-mag_z \chi
+                              epsm1(:)     ! epsm1
+  INTEGER :: lr1dwf
+  LOGICAL, ALLOCATABLE :: comp_f(:)
+  REAL(kind=dp) :: deltaf
+  INTEGER :: iudwf = 24
+  INTEGER :: iudrho = 23
+  INTEGER :: iu1dwf = 25
+  INTEGER :: lrdrho
+  REAL(kind=dp) :: increment
+  INTEGER :: units
+  REAL(kind=dp) :: end
   !
   !------------------------------------------------------------------------!
   !
@@ -75,7 +100,12 @@ MODULE lr_variables
   COMPLEX(kind=dp), ALLOCATABLE :: R(:,:,:) ! The oscillator strength from valence state (first index)
                                             ! to conduction  state (second index), for each polarization
                                             ! direction (third index).
-  !
+
+
+
+!  COMPLEX (DP), ALLOCATABLE ::      &
+!                  intq(:,:,:),      &! nhm, nhm, nat),        integral of e^iqr Q 
+!                  intq_nc(:,:,:,:)   ! nhm, nhm, nat, nspin), integral of e^iqr Q in the noncollinear case
   ! Lanczos Matrix
   !
   !

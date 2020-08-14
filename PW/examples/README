@@ -124,6 +124,13 @@ example11:
     This example tests pw.x with PAW in the noncollinear, spin-orbit case.
     It calculates the band structure of ferromagnetic bcc-Fe.
 
+example12:
+    This example tests pw.x for the noncollinear/spin-orbit case with 
+    DFT+U and Ultrasoft pseudopotentials.
+
+example13:
+   This example shows how to use pw.x to calculate the total energy
+   of LiCoO2 using DFT+U+V with ultrasoft pseudopotentials.
 
 Additional feature-specific examples:
 

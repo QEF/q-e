@@ -31,7 +31,6 @@ SUBROUTINE stop_ph( flag )
   !
   CALL environment_end('PHONON')
   !
-  CALL unset_mpi_comm_4_solvers()
   CALL mp_global_end()
   !
   IF ( flag ) THEN

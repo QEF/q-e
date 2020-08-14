@@ -124,6 +124,8 @@ Selects what to save in filplot:
 
    21 = all-electron charge density (valence+core).
         For PAW calculations only; requires a very dense real-space grid.
+
+   22 = kinetic energy density (for meta-GGA and XDM only)
          </pre></blockquote>
 </ul>      
       
@@ -241,6 +243,22 @@ for LSDA case only: plot the contribution to ILDOS of
                </pre></blockquote>
 </ul>      
       
+
+      <ul>
+<li> <em>Variable: </em><big><b>spin_component</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 0
+               </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+0 = total density (default value),
+1 = spin up density,
+2 = spin down density.
+               </pre></blockquote>
+</ul>      
+      
 }
 
 
@@ -289,7 +307,7 @@ help emax -helpfmt helpdoc -helptext {
 <blockquote><pre>
 upper boundary of energy grid (in eV).
 
-If not specified, LDOS is computed just for energy "emin"
+Defaults to Fermi energy.
                </pre></blockquote>
 </ul>      
       
@@ -519,14 +537,13 @@ help output_format -helpfmt helpdoc -helptext {
 
 0  = format suitable for gnuplot   (1D)
 
-1  = format suitable for contour.x (2D)
+1  = obsolete format no longer supported
 
 2  = format suitable for plotrho   (2D)
 
 3  = format suitable for XCRYSDEN  (2D or user-supplied 3D region)
 
-4  = format suitable for gOpenMol  (3D)
-     (formatted: convert to unformatted *.plt)
+4  = obsolete format no longer supported
 
 5  = format suitable for XCRYSDEN  (3D, using entire FFT grid)
 
@@ -765,12 +782,12 @@ rho(i,j,k) = rho( x0 + e1 * (i-1)/nx
   are ignored, the entire FFT grid is written in the
   XCRYSDEN format - works for any crystal axis (VERY FAST)
 
-- If "e1", "e2", "e3", "x0" are present, and "e1", "e2", "e3" are parallel
-  to xyz and parallel to crystal axis, a subset of the
-  FFT grid that approximately covers the parallelepiped
-  defined by "e1", "e2", "e3", "x0", is written (presently only
-  if "output_format" = 4, i.e. gopenmol format) - works only
-  if the crystal axis are parallel to xyz
+- If "e1", "e2", "e3", "x0" are present,
+  and "e1", "e2", "e3" are parallel to xyz
+  and parallel to crystal axis, a subset of the FFT
+  grid that approximately covers the parallelepiped
+  defined by "e1", "e2", "e3", "x0", is
+  written - untested, might be obsolete
 
 - Otherwise, the required 3D grid is generated from the
   Fourier components (may be VERY slow)

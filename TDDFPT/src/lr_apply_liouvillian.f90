@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -53,7 +53,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
                                    & calbec_rs_gamma, newq_r, &
                                    & add_vuspsir_gamma, v_loc_psir,   &
                                    & s_psir_gamma, &
-                                   & betasave, box_beta, maxbox_beta
+                                   & betasave, box_beta, box0, maxbox_beta
   USE dfunct,               ONLY : newq
   USE control_flags,        ONLY : tqr
   USE mp,                   ONLY : mp_sum, mp_barrier
@@ -295,10 +295,8 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   ! interaction=.true.:  S^{-1} P_c^+(k) { (H(k)-E(k)*S) * evc1(k) + dV_HXC * revc0(k) } 
   !
   DO ik = 1, nks
-     !
-     CALL lr_sm1_psi (.FALSE., ik, npwx, ngk(ik), nbnd, &
+     CALL lr_sm1_psi(ik, npwx, ngk(ik), nbnd, &
                        & sevc1_new(1,1,ik), evc1_new(1,1,ik))
-     ! 
   ENDDO
   !
   IF (allocated(dvrs)) DEALLOCATE(dvrs)
@@ -482,9 +480,9 @@ CONTAINS
                           DO ir = 1, mbia
                           !
                            iqs = jqs + ir
-                           psic( box_beta(ir,ia) ) = &
-                                &psic(  box_beta(ir,ia) ) + &
-                                &betasave(ir,ih,ia)*&
+                           psic( box_beta(box0(ia)+ir) ) = &
+                                &psic( box_beta(box0(ia)+ir) ) + &
+                                &betasave(box0(ia)+ir,ih)*&
                                 &CMPLX( w1(ih), w2(ih), KIND=dp )
                           !
                           ENDDO

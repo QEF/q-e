@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2018 Quantum ESPRESSO group
+! Copyright (C) 2003-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,7 +12,6 @@ MODULE global_version
   !
   SAVE
   !
-  CHARACTER (LEN=6) :: version_number = '6.3'
-  CHARACTER (LEN=12) :: svn_revision = 'unknown'
+#include "qe_version.h"
   !
 END MODULE global_version

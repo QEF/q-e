@@ -27,13 +27,11 @@ subroutine ld1_writeout
   use funct, only : get_dft_name
   use paw_type, only : deallocate_pseudo_paw
   use open_close_input_file, only: close_input_file
-  use FoX_wxml, only: xml_Openfile, xml_Close, xmlf_t
   implicit none
 
   integer :: &
        ios,   &  ! I/O control
        iunps     ! the unit with the pseudopotential
-  type(xmlf_t)  :: xml_desc
   logical, external :: matches
   logical :: oldformat
   character (len=20) :: dft_name
@@ -122,7 +120,7 @@ subroutine write_rrkj (iunps)
   integer :: nb, mb, & ! counters on beta functions
              ios,    & ! I/O control
              ir        ! counter on mesh points
-  integer :: iexch, icorr, igcx, igcc, inlc
+  integer :: iexch, icorr, igcx, igcc
   logical :: nonlocc
   !
   !
@@ -142,7 +140,7 @@ subroutine write_rrkj (iunps)
   icorr = get_icorr()
   igcx  = get_igcx()
   igcc  = get_igcc()
-  inlc  = 0
+
   write( iunps, '(4i5)',err=100, iostat=ios ) iexch, icorr, igcx, igcc
 
   write( iunps, '(2e17.11,i5)') zval, etots, lmax

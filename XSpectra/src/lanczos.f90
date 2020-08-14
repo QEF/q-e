@@ -40,9 +40,7 @@ SUBROUTINE lanczos (a,b,npw,psi,ncalcv,terminator)
   REAL(dp), ALLOCATABLE :: comp(:)
   COMPLEX (dp), ALLOCATABLE :: hpsi(:), u(:)
 
-  REAL (dp) :: ddot
-  COMPLEX (DP) :: zdotc
-  EXTERNAL :: zdotc,ddot
+  REAL (DP), EXTERNAL :: ddot
   EXTERNAL :: h_psi
 
 
@@ -70,7 +68,7 @@ SUBROUTINE lanczos (a,b,npw,psi,ncalcv,terminator)
 
   ! -- computes a_(1)=<Psi|HPsi>
 
-  a(1)=dble(zdotc(npw,psi,1,hpsi,1))
+  a(1)=ddot(2*npw,psi,1,hpsi,1)
 
   CALL mp_sum(a(1), intra_pool_comm)
 
@@ -83,7 +81,7 @@ SUBROUTINE lanczos (a,b,npw,psi,ncalcv,terminator)
   !
   ! -- computes the norm of t3
 
-  b(1) = dble(zdotc(npw,hpsi,1,hpsi,1))
+  b(1) = ddot(2*npw,hpsi,1,hpsi,1)
   CALL mp_sum( b(1), intra_pool_comm )
   b(1) = SQRT( b(1) )
   !
@@ -131,7 +129,7 @@ SUBROUTINE lanczos (a,b,npw,psi,ncalcv,terminator)
      ! computes a(i)=<t2|t3>=<t2|H|t2>
 
 
-     a(i)=REAL(zdotc(npw,hpsi,1,u,1),dp)
+     a(i)= ddot(2*npw,hpsi,1,u,1)
      CALL mp_sum( a(i), intra_pool_comm )
      !
      ! computes t3=t3-a(i)*t2
@@ -145,7 +143,7 @@ SUBROUTINE lanczos (a,b,npw,psi,ncalcv,terminator)
      ! computes b(i) the norm of t3
      !
 
-     b(i)=REAL(zdotc(npw,hpsi,1,hpsi,1),dp)
+     b(i)=ddot(2*npw,hpsi,1,hpsi,1)
      CALL mp_sum( b(i), intra_pool_comm )
      b(i) = SQRT( b(i) )
 
@@ -241,9 +239,7 @@ SUBROUTINE lanczos_uspp (a,b,npw,psi,ncalcv,terminator)
   COMPLEX(dp), ALLOCATABLE :: u(:), v1(:), v2(:), v3(:)
   COMPLEX(dp) :: vecteuraux1(npwx,1), vecteuraux2(npwx,1)
 
-  REAL (dp) :: ddot
-  COMPLEX(dp) :: zdotc
-  EXTERNAL :: zdotc,ddot
+  REAL(dp), EXTERNAL :: ddot
   EXTERNAL :: h_psi
 
   ALLOCATE(v1(npwx))
@@ -272,7 +268,7 @@ SUBROUTINE lanczos_uspp (a,b,npw,psi,ncalcv,terminator)
 
   ! -- computes a_(1)=<v1|u>
 
-  a(1)=dble(zdotc(npw,v1,1,u,1))
+  a(1)=ddot(2*npw,v1,1,u,1)
   CALL mp_sum(a(1), intra_pool_comm)
   ac=-a(1)*(1.d0,0.d0)
   !
@@ -284,7 +280,7 @@ SUBROUTINE lanczos_uspp (a,b,npw,psi,ncalcv,terminator)
   !
   ! -- computes the norm
 
-  b(1) = zdotc(npw,u,1,v1,1)                 ! -- computes b_1 =sqrt(<u|v1>)
+  b(1) = ddot(2*npw,u,1,v1,1)                 ! -- computes b_1 =sqrt(<u|v1>)
   CALL mp_sum( b(1), intra_pool_comm )
   b(1) = SQRT( b(1) )
   !
@@ -302,7 +298,7 @@ SUBROUTINE lanczos_uspp (a,b,npw,psi,ncalcv,terminator)
 
      CALL h_psi( npwx, npw,1, v1,v2)         ! -- computes v2= H v1
 
-     a(i)=REAL(zdotc(npw,v1,1,v2,1),dp)      ! -- computes a_i=<v1|v2>
+     a(i)=ddot(2*npw,v1,1,v2,1)              ! -- computes a_i=<v1|v2>
      CALL mp_sum( a(i), intra_pool_comm )
      !
      ! I compute hpsi=hpsi-b_{j-1}*psi_{j-1} (j is actually i-1)
@@ -317,7 +313,7 @@ SUBROUTINE lanczos_uspp (a,b,npw,psi,ncalcv,terminator)
      recalc=.false.
      CALL sm1_psi(recalc,npwx, npw, 1,v2 ,v1 ) ! computes v1= S^-1 v2
 
-     b(i)=REAL(zdotc(npw,v2,1,v1,1),dp)      ! -- computes b_i=sqrt(<v2|v1>)
+     b(i)=ddot(2*npw,v2,1,v1,1)                ! -- computes b_i=sqrt(<v2|v1>)
      CALL mp_sum( b(i), intra_pool_comm )
      b(i) = SQRT( b(i) )
 

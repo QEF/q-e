@@ -50,6 +50,8 @@ MODULE qes_init_module
     MODULE PROCEDURE qes_init_HubbardJ
     MODULE PROCEDURE qes_init_starting_ns
     MODULE PROCEDURE qes_init_Hubbard_ns
+    MODULE PROCEDURE qes_init_HubbardBack
+    MODULE PROCEDURE qes_init_backL
     MODULE PROCEDURE qes_init_vdW
     MODULE PROCEDURE qes_init_spin
     MODULE PROCEDURE qes_init_bands
@@ -687,8 +689,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_atomic_species 
   !
   !
-  SUBROUTINE qes_init_species(obj, tagname, name, pseudo_file, mass, starting_magnetization, spin_teta,&
-                             spin_phi)
+  SUBROUTINE qes_init_species(obj, tagname, name, pseudo_file, mass, starting_magnetization, spin_teta, spin_phi)
     !
     IMPLICIT NONE
     !
@@ -735,8 +736,8 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_species 
   !
   !
-  SUBROUTINE qes_init_atomic_structure(obj, tagname, nat, cell, alat, bravais_index, atomic_positions,&
-                                      wyckoff_positions, crystal_positions)
+  SUBROUTINE qes_init_atomic_structure(obj, tagname, nat, cell, alat, bravais_index, alternative_axes,&
+                                      atomic_positions, wyckoff_positions, crystal_positions)
     !
     IMPLICIT NONE
     !
@@ -745,6 +746,7 @@ MODULE qes_init_module
     INTEGER, INTENT(IN) :: nat
     REAL(DP), OPTIONAL, INTENT(IN) :: alat
     INTEGER, OPTIONAL, INTENT(IN) :: bravais_index
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: alternative_axes
     TYPE(atomic_positions_type),OPTIONAL,INTENT(IN) :: atomic_positions
     TYPE(wyckoff_positions_type),OPTIONAL,INTENT(IN) :: wyckoff_positions
     TYPE(atomic_positions_type),OPTIONAL,INTENT(IN) :: crystal_positions
@@ -765,6 +767,12 @@ MODULE qes_init_module
       obj%bravais_index = bravais_index
     ELSE 
       obj%bravais_index_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(alternative_axes)) THEN
+      obj%alternative_axes_ispresent = .TRUE.
+      obj%alternative_axes = alternative_axes
+    ELSE 
+      obj%alternative_axes_ispresent = .FALSE.
     END IF
     !
     IF ( PRESENT(atomic_positions)) THEN 
@@ -930,7 +938,8 @@ MODULE qes_init_module
   !
   !
   SUBROUTINE qes_init_hybrid(obj, tagname, qpoint_grid, ecutfock, exx_fraction, screening_parameter,&
-                            exxdiv_treatment, x_gamma_extrapolation, ecutvcut)
+                            exxdiv_treatment, x_gamma_extrapolation, ecutvcut, localization_threshold &
+                            )
     !
     IMPLICIT NONE
     !
@@ -943,6 +952,7 @@ MODULE qes_init_module
     CHARACTER(LEN=*),OPTIONAL,INTENT(IN) :: exxdiv_treatment
     LOGICAL,OPTIONAL,INTENT(IN) :: x_gamma_extrapolation
     REAL(DP),OPTIONAL,INTENT(IN) :: ecutvcut
+    REAL(DP),OPTIONAL,INTENT(IN) :: localization_threshold
     !
     obj%tagname = TRIM(tagname) 
     obj%lwrite = .TRUE.
@@ -990,6 +1000,12 @@ MODULE qes_init_module
     ELSE 
       obj%ecutvcut_ispresent = .FALSE.
     END IF
+    IF ( PRESENT(localization_threshold)) THEN 
+      obj%localization_threshold_ispresent = .TRUE. 
+      obj%localization_threshold = localization_threshold
+    ELSE 
+      obj%localization_threshold_ispresent = .FALSE.
+    END IF
     !
   END SUBROUTINE qes_init_hybrid 
   !
@@ -1018,7 +1034,8 @@ MODULE qes_init_module
   !
   !
   SUBROUTINE qes_init_dftU(obj, tagname, lda_plus_u_kind, Hubbard_U, Hubbard_J0, Hubbard_alpha,&
-                          Hubbard_beta, Hubbard_J, starting_ns, Hubbard_ns, U_projection_type)
+                          Hubbard_beta, Hubbard_J, starting_ns, Hubbard_ns, U_projection_type,&
+                          Hubbard_back, Hubbard_U_back, Hubbard_alpha_back, Hubbard_ns_nc)
     !
     IMPLICIT NONE
     !
@@ -1033,6 +1050,10 @@ MODULE qes_init_module
     TYPE(starting_ns_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: starting_ns
     TYPE(Hubbard_ns_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_ns
     CHARACTER(LEN=*),OPTIONAL,INTENT(IN) :: U_projection_type
+    TYPE(HubbardBack_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_back
+    TYPE(HubbardCommon_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_U_back
+    TYPE(HubbardCommon_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_alpha_back
+    TYPE(Hubbard_ns_type),OPTIONAL,DIMENSION(:),INTENT(IN) :: Hubbard_ns_nc
     !
     obj%tagname = TRIM(tagname) 
     obj%lwrite = .TRUE.
@@ -1105,6 +1126,38 @@ MODULE qes_init_module
       obj%U_projection_type = U_projection_type
     ELSE 
       obj%U_projection_type_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(Hubbard_back)) THEN 
+      obj%Hubbard_back_ispresent = .TRUE.
+      ALLOCATE(obj%Hubbard_back(SIZE(Hubbard_back)))
+      obj%ndim_Hubbard_back = SIZE(Hubbard_back) 
+      obj%Hubbard_back = Hubbard_back
+    ELSE 
+      obj%Hubbard_back_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(Hubbard_U_back)) THEN 
+      obj%Hubbard_U_back_ispresent = .TRUE.
+      ALLOCATE(obj%Hubbard_U_back(SIZE(Hubbard_U_back)))
+      obj%ndim_Hubbard_U_back = SIZE(Hubbard_U_back) 
+      obj%Hubbard_U_back = Hubbard_U_back
+    ELSE 
+      obj%Hubbard_U_back_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(Hubbard_alpha_back)) THEN 
+      obj%Hubbard_alpha_back_ispresent = .TRUE.
+      ALLOCATE(obj%Hubbard_alpha_back(SIZE(Hubbard_alpha_back)))
+      obj%ndim_Hubbard_alpha_back = SIZE(Hubbard_alpha_back) 
+      obj%Hubbard_alpha_back = Hubbard_alpha_back
+    ELSE 
+      obj%Hubbard_alpha_back_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(Hubbard_ns_nc)) THEN 
+      obj%Hubbard_ns_nc_ispresent = .TRUE.
+      ALLOCATE(obj%Hubbard_ns_nc(SIZE(Hubbard_ns_nc)))
+      obj%ndim_Hubbard_ns_nc = SIZE(Hubbard_ns_nc) 
+      obj%Hubbard_ns_nc = Hubbard_ns_nc
+    ELSE 
+      obj%Hubbard_ns_nc_ispresent = .FALSE.
     END IF
     !
   END SUBROUTINE qes_init_dftU 
@@ -1182,8 +1235,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_starting_ns 
   !
   !
-  SUBROUTINE qes_init_Hubbard_ns(obj, tagname, specie, label, spin, index, order,&
-                                Hubbard_ns)
+  SUBROUTINE qes_init_Hubbard_ns(obj, tagname, specie, label, spin, index, order, Hubbard_ns)
     !
     IMPLICIT NONE
     !
@@ -1211,8 +1263,9 @@ MODULE qes_init_module
     obj%order = order 
     
     length = 1
+    obj%rank = SIZE(shape(Hubbard_ns))
+    ALLOCATE ( obj%dims(obj%rank))
     obj%dims = shape(Hubbard_ns)
-    obj%rank = SIZE(obj%dims)
     DO i = 1, obj%rank
       length = length * obj%dims(i)
     END DO
@@ -1220,6 +1273,48 @@ MODULE qes_init_module
     obj%Hubbard_ns(1:length) = reshape(Hubbard_ns, [length])
     !
   END SUBROUTINE qes_init_Hubbard_ns
+  !
+  !
+  SUBROUTINE qes_init_HubbardBack(obj, tagname, species, background, l_number)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(HubbardBack_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    CHARACTER(LEN=*), INTENT(IN) :: species
+    CHARACTER(LEN=*),INTENT(IN) :: background
+    TYPE(backL_type),DIMENSION(:),INTENT(IN) :: l_number
+    !
+    obj%tagname = TRIM(tagname) 
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    obj%species = species
+    !
+    obj%background = background
+    ALLOCATE( obj%l_number(SIZE(l_number))) 
+    obj%ndim_l_number = SIZE(l_number)
+    obj%l_number = l_number
+    !
+  END SUBROUTINE qes_init_HubbardBack 
+  !
+  !
+  SUBROUTINE qes_init_backL(obj, tagname, l_index, backL)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(backL_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    INTEGER, INTENT(IN) :: l_index
+    INTEGER, INTENT(IN) :: backL
+    !
+    obj%tagname = TRIM(tagname) 
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    obj%l_index = l_index
+    !
+    obj%backL = backL
+    !
+  END SUBROUTINE qes_init_backL 
   !
   !
   SUBROUTINE qes_init_vdW(obj, tagname, vdw_corr, dftd3_version, dftd3_threebody, non_local_term,&
@@ -1353,8 +1448,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_spin 
   !
   !
-  SUBROUTINE qes_init_bands(obj, tagname, occupations, nbnd, smearing, tot_charge, tot_magnetization,&
-                           inputOccupations)
+  SUBROUTINE qes_init_bands(obj, tagname, occupations, nbnd, smearing, tot_charge, tot_magnetization, inputOccupations)
     !
     IMPLICIT NONE
     !
@@ -1451,8 +1545,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_occupations 
   !
   !
-  SUBROUTINE qes_init_basis(obj, tagname, ecutwfc, gamma_only, ecutrho, fft_grid, fft_smooth,&
-                           fft_box)
+  SUBROUTINE qes_init_basis(obj, tagname, ecutwfc, gamma_only, ecutrho, fft_grid, fft_smooth, fft_box)
     !
     IMPLICIT NONE
     !
@@ -1955,8 +2048,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_cell_control 
   !
   !
-  SUBROUTINE qes_init_symmetry_flags(obj, tagname, nosym, nosym_evc, noinv, no_t_rev, force_symmorphic,&
-                                    use_all_frac)
+  SUBROUTINE qes_init_symmetry_flags(obj, tagname, nosym, nosym_evc, noinv, no_t_rev, force_symmorphic, use_all_frac)
     !
     IMPLICIT NONE
     !
@@ -2093,8 +2185,8 @@ MODULE qes_init_module
   !
   SUBROUTINE qes_init_electric_field(obj, tagname, electric_potential, dipole_correction, gate_settings,&
                                     electric_field_direction, potential_max_position, potential_decrease_width,&
-                                    electric_field_amplitude, electric_field_vector, nk_per_string,&
-                                    n_berry_cycles)
+                                    electric_field_amplitude, electric_field_vector, nk_per_string, n_berry_cycles &
+                                    )
     !
     IMPLICIT NONE
     !
@@ -2174,8 +2266,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_electric_field 
   !
   !
-  SUBROUTINE qes_init_gate_settings(obj, tagname, use_gate, zgate, relaxz, block, block_1, block_2,&
-                                   block_height)
+  SUBROUTINE qes_init_gate_settings(obj, tagname, use_gate, zgate, relaxz, block, block_1, block_2, block_height)
     !
     IMPLICIT NONE
     !
@@ -2301,8 +2392,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_inputOccupations 
   !
   !
-  SUBROUTINE qes_init_outputElectricField(obj, tagname, BerryPhase, finiteElectricFieldInfo, dipoleInfo,&
-                                         gateInfo)
+  SUBROUTINE qes_init_outputElectricField(obj, tagname, BerryPhase, finiteElectricFieldInfo, dipoleInfo, gateInfo)
     !
     IMPLICIT NONE
     !
@@ -2345,8 +2435,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_outputElectricField 
   !
   !
-  SUBROUTINE qes_init_BerryPhaseOutput(obj, tagname, totalPolarization, totalPhase, ionicPolarization,&
-                                      electronicPolarization)
+  SUBROUTINE qes_init_BerryPhaseOutput(obj, tagname, totalPolarization, totalPhase, ionicPolarization, electronicPolarization)
     !
     IMPLICIT NONE
     !
@@ -2779,8 +2868,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_outputPBC 
   !
   !
-  SUBROUTINE qes_init_magnetization(obj, tagname, lsda, noncolin, spinorbit, total, absolute,&
-                                   do_magnetization)
+  SUBROUTINE qes_init_magnetization(obj, tagname, lsda, noncolin, spinorbit, total, absolute, do_magnetization)
     !
     IMPLICIT NONE
     !
@@ -2898,7 +2986,7 @@ MODULE qes_init_module
   SUBROUTINE qes_init_band_structure(obj, tagname, lsda, noncolin, spinorbit, nelec, wf_collected,&
                                     starting_k_points, nks, occupations_kind, ks_energies, nbnd,&
                                     nbnd_up, nbnd_dw, num_of_atomic_wfc, fermi_energy, highestOccupiedLevel,&
-                                    two_fermi_energies, smearing)
+                                    lowestUnoccupiedLevel, two_fermi_energies, smearing)
     !
     IMPLICIT NONE
     !
@@ -2915,6 +3003,7 @@ MODULE qes_init_module
     LOGICAL,INTENT(IN) :: wf_collected
     REAL(DP),OPTIONAL,INTENT(IN) :: fermi_energy
     REAL(DP),OPTIONAL,INTENT(IN) :: highestOccupiedLevel
+    REAL(DP),OPTIONAL,INTENT(IN) :: lowestUnoccupiedLevel
     REAL(DP), DIMENSION(2),OPTIONAL,INTENT(IN) :: two_fermi_energies
     TYPE(k_points_IBZ_type),INTENT(IN) :: starting_k_points
     INTEGER,INTENT(IN) :: nks
@@ -2966,6 +3055,12 @@ MODULE qes_init_module
       obj%highestOccupiedLevel = highestOccupiedLevel
     ELSE 
       obj%highestOccupiedLevel_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(lowestUnoccupiedLevel)) THEN 
+      obj%lowestUnoccupiedLevel_ispresent = .TRUE. 
+      obj%lowestUnoccupiedLevel = lowestUnoccupiedLevel
+    ELSE 
+      obj%lowestUnoccupiedLevel_ispresent = .FALSE.
     END IF
     IF ( PRESENT(two_fermi_energies)) THEN 
       obj%two_fermi_energies_ispresent = .TRUE. 

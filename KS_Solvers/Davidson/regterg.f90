@@ -12,7 +12,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
                     npw, npwx, nvec, nvecx, evc, ethr, &
-                    e, btype, notcnv, lrot, dav_iter )
+                    e, btype, notcnv, lrot, dav_iter, nhpsi )
   !----------------------------------------------------------------------------
   !
   ! ... iterative solution of the eigenvalue problem:
@@ -23,13 +23,15 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   ! ... S is an uspp matrix, evc is a complex vector
   ! ... (real wavefunctions with only half plane waves stored)
   
-  USE david_param,   ONLY : DP, stdout
+  USE util_param,    ONLY : DP, stdout
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, &
-          nbgrp, my_bgrp_id
+          nbgrp, my_bgrp_id, me_bgrp, root_bgrp
   USE mp_bands_util, ONLY : gstart
   USE mp,            ONLY : mp_sum, mp_bcast
   !
   IMPLICIT NONE
+  !
+  include 'laxlib.fh'
   !
   INTEGER, INTENT(IN) :: npw, npwx, nvec, nvecx
     ! dimension of the matrix to be diagonalized
@@ -53,6 +55,8 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   INTEGER, INTENT(OUT) :: dav_iter, notcnv
     ! integer  number of iterations performed
     ! number of unconverged roots
+  INTEGER, INTENT(OUT) :: nhpsi
+    ! number of individual Hpsi made
   !
   ! ... LOCAL variables
   !
@@ -93,7 +97,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
     !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
     !    the first nvec columns contain the trial eigenvectors
   !
-  CALL start_clock( 'regterg' )
+  CALL start_clock( 'regterg' ) !; write(6,*) 'enter regterg' ; FLUSH(6)
   !
   IF ( nvec > nvecx / 2 ) CALL errore( 'regter', 'nvecx is too small', 1 )
   !
@@ -149,7 +153,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   !
   ! ... hpsi contains h times the basis vectors
   !
-  CALL h_psi( npwx, npw, nvec, psi, hpsi )
+  CALL h_psi( npwx, npw, nvec, psi, hpsi )  ; nhpsi = nvec
   !
   ! ... spsi contains s times the basis vectors
   !
@@ -205,7 +209,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !
      CALL start_clock( 'regterg:diag' )
      IF( my_bgrp_id == root_bgrp_id ) THEN
-        CALL rdiaghg( nbase, nvec, hr, sr, nvecx, ew, vr )
+        CALL diaghg( nbase, nvec, hr, sr, nvecx, ew, vr, me_bgrp, root_bgrp, intra_bgrp_comm )
      END IF
      IF( nbgrp > 1 ) THEN
         CALL mp_bcast( vr, root_bgrp_id, inter_bgrp_comm )
@@ -221,7 +225,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   !
   iterate: DO kter = 1, maxter
      !
-     dav_iter = kter
+     dav_iter = kter ; !write(*,*) kter, notcnv, conv
      !
      CALL start_clock( 'regterg:update' )
      !
@@ -312,7 +316,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) )
+     CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
      !
      IF ( uspp ) CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
      !
@@ -366,7 +370,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !
      CALL start_clock( 'regterg:diag' )
      IF( my_bgrp_id == root_bgrp_id ) THEN
-        CALL rdiaghg( nbase, nvec, hr, sr, nvecx, ew, vr )
+        CALL diaghg( nbase, nvec, hr, sr, nvecx, ew, vr, me_bgrp, root_bgrp, intra_bgrp_comm )
      END IF
      IF( nbgrp > 1 ) THEN
         CALL mp_bcast( vr, root_bgrp_id, inter_bgrp_comm )
@@ -502,7 +506,7 @@ END SUBROUTINE regterg
 !----------------------------------------------------------------------------
 SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
                     npw, npwx, nvec, nvecx, evc, ethr, &
-                    e, btype, notcnv, lrot, dav_iter )
+                    e, btype, notcnv, lrot, dav_iter, nhpsi )
   !----------------------------------------------------------------------------
   !
   ! ... iterative solution of the eigenvalue problem:
@@ -513,16 +517,14 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
   ! ... S is an uspp matrix, evc is a complex vector
   ! ... (real wavefunctions with only half plane waves stored)
   !
-  USE david_param,       ONLY : DP, stdout
+  USE util_param,        ONLY : DP, stdout
   USE mp_bands_util,     ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
   USE mp_bands_util,     ONLY : gstart
-  USE mp_diag,           ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho, &
-                                ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp
-  USE descriptors,       ONLY : la_descriptor, descla_init, descla_local_dims
-  USE parallel_toolkit,  ONLY : dsqmdst, dsqmcll, dsqmred, dsqmsym
   USE mp,                ONLY : mp_bcast, mp_root_sum, mp_sum
   !
   IMPLICIT NONE
+  !
+  include 'laxlib.fh'
   !
   INTEGER, INTENT(IN) :: npw, npwx, nvec, nvecx
     ! dimension of the matrix to be diagonalized
@@ -546,6 +548,8 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
   INTEGER, INTENT(OUT) :: dav_iter, notcnv
     ! integer  number of iterations performed
     ! number of unconverged roots
+  INTEGER, INTENT(OUT) :: nhpsi
+    ! number of individual Hpsi made
   !
   ! ... LOCAL variables
   !
@@ -573,7 +577,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
   REAL(DP) :: empty_ethr 
     ! threshold for empty bands
   INTEGER :: npw2, npwx2
-  TYPE(la_descriptor) :: desc, desc_old
+  INTEGER :: idesc(LAX_DESC_SIZE), idesc_old(LAX_DESC_SIZE)
   INTEGER, ALLOCATABLE :: irc_ip( : )
   INTEGER, ALLOCATABLE :: nrc_ip( : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
@@ -584,6 +588,9 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
     ! flag to distinguish procs involved in linear algebra
   INTEGER, ALLOCATABLE :: notcnv_ip( : )
   INTEGER, ALLOCATABLE :: ic_notcnv( : )
+  !
+  INTEGER :: np_ortho(2), ortho_parent_comm
+  LOGICAL :: do_distr_diag_inside_bgrp
   !
   REAL(DP), EXTERNAL :: ddot
   !
@@ -598,8 +605,11 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
     !    the first nvec columns contain the trial eigenvectors
   !
   !
-  CALL start_clock( 'regterg' )
-  !
+  CALL start_clock( 'regterg' ) !; write(6,*) 'enter pregterg' ; FLUSH(6)
+  ! 
+  CALL laxlib_getval( np_ortho = np_ortho, ortho_parent_comm = ortho_parent_comm, &
+    do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
+  ! 
   IF ( nvec > nvecx / 2 ) CALL errore( 'pregter', 'nvecx is too small', 1 )
   !
   IF ( gstart == -1 ) CALL errore( 'pregter', 'gstart variable not initialized', 1 )
@@ -632,19 +642,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
   IF( ierr /= 0 ) &
      CALL errore( 'pregterg ',' cannot allocate notcnv_ip ', ABS(ierr) )
   !
-  ALLOCATE( irc_ip( np_ortho(1) ), STAT=ierr )
-  IF( ierr /= 0 ) &
-     CALL errore( 'pregterg ',' cannot allocate irc_ip ', ABS(ierr) )
-  !
-  ALLOCATE( nrc_ip( np_ortho(1) ), STAT=ierr )
-  IF( ierr /= 0 ) &
-     CALL errore( 'pregterg ',' cannot allocate nrc_ip ', ABS(ierr) )
-  !
-  ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ), STAT=ierr )
-  IF( ierr /= 0 ) &
-     CALL errore( 'pregterg ',' cannot allocate rank_ip ', ABS(ierr) )
-  !
-  CALL desc_init( nvec, desc, irc_ip, nrc_ip  )
+  CALL desc_init( nvec, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip  )
   !
   IF( la_proc ) THEN
      !
@@ -703,7 +701,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
   !
   ! ... hpsi contains h times the basis vectors
   !
-  CALL h_psi( npwx, npw, nvec, psi, hpsi )
+  CALL h_psi( npwx, npw, nvec, psi, hpsi )  ; nhpsi = nvec
   !
   IF ( uspp ) CALL s_psi( npwx, npw, nvec, psi, spsi )
   !
@@ -731,7 +729,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
      !
      CALL set_e_from_h()
      !
-     CALL set_to_identity( vl, desc )
+     CALL set_to_identity( vl, idesc )
      !
   ELSE
      !
@@ -739,15 +737,15 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
      !     Calling block parallel algorithm
      !
      CALL start_clock( 'regterg:diag' )
-     IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of prdiaghg ew and vl are the same across ortho_parent_comm
+     IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pdiaghg ew and vl are the same across ortho_parent_comm
         ! only the first bgrp performs the diagonalization
-        IF( my_bgrp_id == root_bgrp_id ) CALL prdiaghg( nbase, hl, sl, nx, ew, vl, desc )
+        IF( my_bgrp_id == root_bgrp_id ) CALL pdiaghg( nbase, hl, sl, nx, ew, vl, idesc )
         IF( nbgrp > 1 ) THEN ! results must be brodcast to the other band groups
            CALL mp_bcast( vl, root_bgrp_id, inter_bgrp_comm )
            CALL mp_bcast( ew, root_bgrp_id, inter_bgrp_comm )
         ENDIF
      ELSE
-        CALL prdiaghg( nbase, hl, sl, nx, ew, vl, desc )
+        CALL pdiaghg( nbase, hl, sl, nx, ew, vl, idesc )
      END IF
      CALL stop_clock( 'regterg:diag' )
      !
@@ -759,7 +757,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
   !
   iterate: DO kter = 1, maxter
      !
-     dav_iter = kter
+     dav_iter = kter ; !write(*,*) kter, notcnv, conv
      !
      CALL start_clock( 'regterg:update' )
      !
@@ -779,7 +777,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in 
      ! ... order to improve numerical stability of subspace diagonalization 
-     ! ... (cdiaghg) ew is used as work array :
+     ! ... (rdiaghg) ew is used as work array :
      !
      ! ...         ew = <psi_i|psi_i>,  i = nbase + 1, nbase + notcnv
      !
@@ -803,7 +801,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) )
+     CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
      !
      IF ( uspp ) CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
      !
@@ -813,11 +811,11 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
      !
      ! we need to save the old descriptor in order to redistribute matrices 
      !
-     desc_old = desc
+     idesc_old = idesc
      !
      ! ... RE-Initialize the matrix descriptor
      !
-     CALL desc_init( nbase+notcnv, desc, irc_ip, nrc_ip  )
+     CALL desc_init( nbase+notcnv, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip  )
      !
      IF( la_proc ) THEN
 
@@ -829,7 +827,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
         IF( ierr /= 0 ) &
            CALL errore( 'pregterg ',' cannot allocate hl ', ABS(ierr) )
 
-        CALL dsqmred( nbase, vl, desc_old%nrcx, desc_old, nbase+notcnv, hl, nx, desc )
+        CALL laxlib_dsqmred( nbase, vl, idesc_old(LAX_DESC_NRCX), idesc_old, nbase+notcnv, hl, nx, idesc )
 
         vl = sl
         DEALLOCATE( sl )
@@ -837,7 +835,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
         IF( ierr /= 0 ) &
            CALL errore( 'pregterg ',' cannot allocate sl ', ABS(ierr) )
 
-        CALL dsqmred( nbase, vl, desc_old%nrcx, desc_old, nbase+notcnv, sl, nx, desc )
+        CALL laxlib_dsqmred( nbase, vl, idesc_old(LAX_DESC_NRCX), idesc_old, nbase+notcnv, sl, nx, idesc )
 
         DEALLOCATE( vl )
         ALLOCATE( vl( nx , nx ), STAT=ierr )
@@ -867,15 +865,15 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
      !     Call block parallel algorithm
      !
      CALL start_clock( 'regterg:diag' )
-     IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of prdiaghg ew and vl are the same across ortho_parent_comm
+     IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pdiaghg ew and vl are the same across ortho_parent_comm
         ! only the first bgrp performs the diagonalization
-        IF( my_bgrp_id == root_bgrp_id ) CALL prdiaghg( nbase, hl, sl, nx, ew, vl, desc )
+        IF( my_bgrp_id == root_bgrp_id ) CALL pdiaghg( nbase, hl, sl, nx, ew, vl, idesc )
         IF( nbgrp > 1 ) THEN ! results must be brodcast to the other bnd groups
            CALL mp_bcast( vl, root_bgrp_id, inter_bgrp_comm )
            CALL mp_bcast( ew, root_bgrp_id, inter_bgrp_comm )
         ENDIF
      ELSE
-        CALL prdiaghg( nbase, hl, sl, nx, ew, vl, desc )
+        CALL pdiaghg( nbase, hl, sl, nx, ew, vl, idesc )
      END IF
      CALL stop_clock( 'regterg:diag' )
      !
@@ -946,7 +944,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
         !
         nbase = nvec
         !
-        CALL desc_init( nvec, desc, irc_ip, nrc_ip  )
+        CALL desc_init( nvec, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip  )
         !
         IF( la_proc ) THEN
            !
@@ -968,8 +966,8 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
         !
         CALL set_h_from_e( )
         !
-        CALL set_to_identity( vl, desc )
-        CALL set_to_identity( sl, desc )
+        CALL set_to_identity( vl, idesc )
+        CALL set_to_identity( sl, idesc )
         !
         CALL stop_clock( 'regterg:last' )
         !
@@ -980,9 +978,9 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
   DEALLOCATE( vl, hl, sl )
   !
   DEALLOCATE( rank_ip )
-  DEALLOCATE( ic_notcnv )
   DEALLOCATE( irc_ip )
   DEALLOCATE( nrc_ip )
+  DEALLOCATE( ic_notcnv )
   DEALLOCATE( notcnv_ip )
   DEALLOCATE( conv )
   DEALLOCATE( ew )
@@ -1007,41 +1005,13 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
 CONTAINS
   !
   !
-  SUBROUTINE desc_init( nsiz, desc, irc_ip, nrc_ip )
-     !
-     INTEGER, INTENT(IN)  :: nsiz
-     TYPE(la_descriptor), INTENT(OUT) :: desc
-     INTEGER, INTENT(OUT) :: irc_ip(:)
-     INTEGER, INTENT(OUT) :: nrc_ip(:)
-
-     INTEGER :: i, j, rank
-     !
-     CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
-     !
-     nx = desc%nrcx
-     !
-     DO j = 0, desc%npc - 1
-        CALL descla_local_dims( irc_ip( j + 1 ), nrc_ip( j + 1 ), desc%n, desc%nx, np_ortho(1), j )
-        DO i = 0, desc%npr - 1
-           CALL GRID2D_RANK( 'R', desc%npr, desc%npc, i, j, rank )
-           rank_ip( i+1, j+1 ) = rank * leg_ortho
-        END DO
-     END DO
-     !
-     la_proc = .FALSE.
-     IF( desc%active_node > 0 ) la_proc = .TRUE.
-     !
-     RETURN
-  END SUBROUTINE desc_init
-  !
-  !
-  SUBROUTINE set_to_identity( distmat, desc )
-     TYPE(la_descriptor), INTENT(IN)  :: desc
+  SUBROUTINE set_to_identity( distmat, idesc )
+     INTEGER, INTENT(IN)  :: idesc(LAX_DESC_SIZE)
      REAL(DP), INTENT(OUT) :: distmat(:,:)
      INTEGER :: i
      distmat = 0_DP
-     IF( desc%myc == desc%myr .AND. desc%active_node > 0 ) THEN
-        DO i = 1, desc%nc
+     IF( idesc(LAX_DESC_MYC) == idesc(LAX_DESC_MYR) .AND. idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
+        DO i = 1, idesc(LAX_DESC_NC)
            distmat( i, i ) = 1_DP
         END DO
      END IF 
@@ -1061,7 +1031,7 @@ CONTAINS
      !
      n = 0
      !
-     DO ipc = 1, desc%npc
+     DO ipc = 1, idesc(LAX_DESC_NPC)
         !
         nc = nrc_ip( ipc )
         ic = irc_ip( ipc )
@@ -1089,7 +1059,7 @@ CONTAINS
                  notcnv_ip( ipc ) = notcnv_ip( ipc ) + 1
                  !
                  IF ( npl /= nl ) THEN
-                    IF( la_proc .AND. desc%myc == ipc-1 ) THEN
+                    IF( la_proc .AND. idesc(LAX_DESC_MYC) == ipc-1 ) THEN
                        vl( :, npl) = vl( :, nl )
                     END IF
                  END IF
@@ -1120,7 +1090,7 @@ CONTAINS
      ALLOCATE( vtmp( nx, nx ) )
      ALLOCATE( ptmp( npwx, nx ) )
 
-     DO ipc = 1, desc%npc
+     DO ipc = 1, idesc(LAX_DESC_NPC)
         !
         IF( notcnv_ip( ipc ) > 0 ) THEN
 
@@ -1129,14 +1099,14 @@ CONTAINS
 
            beta = 0.0d0
 
-           DO ipr = 1, desc%npr
+           DO ipr = 1, idesc(LAX_DESC_NPR)
               !
               nr = nrc_ip( ipr )
               ir = irc_ip( ipr )
               !
               root = rank_ip( ipr, ipc )
 
-              IF( ipr-1 == desc%myr .AND. ipc-1 == desc%myc .AND. la_proc ) THEN
+              IF( ipr-1 == idesc(LAX_DESC_MYR) .AND. ipc-1 == idesc(LAX_DESC_MYC) .AND. la_proc ) THEN
                  vtmp(:,1:notcl) = vl(:,1:notcl)
               END IF
 
@@ -1188,7 +1158,7 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
-     DO ipc = 1, desc%npc
+     DO ipc = 1, idesc(LAX_DESC_NPC)
         !
         nc = nrc_ip( ipc )
         ic = irc_ip( ipc )
@@ -1199,14 +1169,14 @@ CONTAINS
            !
            beta = 0.0d0
 
-           DO ipr = 1, desc%npr
+           DO ipr = 1, idesc(LAX_DESC_NPR)
               !
               nr = nrc_ip( ipr )
               ir = irc_ip( ipr )
               !
               root = rank_ip( ipr, ipc )
 
-              IF( ipr-1 == desc%myr .AND. ipc-1 == desc%myc .AND. la_proc ) THEN
+              IF( ipr-1 == idesc(LAX_DESC_MYR) .AND. ipc-1 == idesc(LAX_DESC_MYC) .AND. la_proc ) THEN
                  !
                  !  this proc sends his block
                  ! 
@@ -1246,7 +1216,7 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
-     DO ipc = 1, desc%npc
+     DO ipc = 1, idesc(LAX_DESC_NPC)
         !
         nc = nrc_ip( ipc )
         ic = irc_ip( ipc )
@@ -1257,14 +1227,14 @@ CONTAINS
            !
            beta = 0_DP
            !
-           DO ipr = 1, desc%npr
+           DO ipr = 1, idesc(LAX_DESC_NPR)
               !
               nr = nrc_ip( ipr )
               ir = irc_ip( ipr )
               !
               root = rank_ip( ipr, ipc )
 
-              IF( ipr-1 == desc%myr .AND. ipc-1 == desc%myc .AND. la_proc ) THEN
+              IF( ipr-1 == idesc(LAX_DESC_MYR) .AND. ipc-1 == idesc(LAX_DESC_MYC) .AND. la_proc ) THEN
                  !
                  !  this proc sends his block
                  ! 
@@ -1306,7 +1276,7 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
-     DO ipc = 1, desc%npc
+     DO ipc = 1, idesc(LAX_DESC_NPC)
         !
         nc = nrc_ip( ipc )
         ic = irc_ip( ipc )
@@ -1317,14 +1287,14 @@ CONTAINS
            !
            beta = 0.0d0
            !
-           DO ipr = 1, desc%npr
+           DO ipr = 1, idesc(LAX_DESC_NPR)
               !
               nr = nrc_ip( ipr )
               ir = irc_ip( ipr )
               !
               root = rank_ip( ipr, ipc )
 
-              IF( ipr-1 == desc%myr .AND. ipc-1 == desc%myc .AND. la_proc ) THEN
+              IF( ipr-1 == idesc(LAX_DESC_MYR) .AND. ipc-1 == idesc(LAX_DESC_MYC) .AND. la_proc ) THEN
                  !
                  !  this proc sends his block
                  ! 
@@ -1372,7 +1342,7 @@ CONTAINS
      !
      work = 0.0d0
      !
-     DO ipc = 1, desc%npc !  loop on column procs 
+     DO ipc = 1, idesc(LAX_DESC_NPC) !  loop on column procs 
         !
         nc = nrc_ip( ipc )
         ic = irc_ip( ipc )
@@ -1403,7 +1373,7 @@ CONTAINS
      END DO
      IF (ortho_parent_comm.ne.intra_bgrp_comm .and. nbgrp > 1) dm = dm/nbgrp
      !
-     CALL dsqmsym( nbase, dm, nx, desc )
+     CALL laxlib_dsqmsym( nbase, dm, nx, idesc )
      !
      DEALLOCATE( work )
      !
@@ -1423,7 +1393,7 @@ CONTAINS
      !
      vtmp = 0.0d0
      !
-     DO ipc = 1, desc%npc
+     DO ipc = 1, idesc(LAX_DESC_NPC)
         !
         nc = nrc_ip( ipc )
         ic = irc_ip( ipc )
@@ -1453,7 +1423,8 @@ CONTAINS
                  CALL DGER( nr, nc, -1.D0, v( 1, ir ), npwx2, w(1,ii), npwx2, vtmp, nx )
               IF (ortho_parent_comm.ne.intra_bgrp_comm .and. nbgrp > 1) vtmp = vtmp/nbgrp
 
-              IF(  (desc%active_node > 0) .AND. (ipr-1 == desc%myr) .AND. (ipc-1 == desc%myc) ) THEN
+              IF(  (idesc(LAX_DESC_ACTIVE_NODE) > 0) .AND. &
+                   (ipr-1 == idesc(LAX_DESC_MYR)) .AND. (ipc-1 == idesc(LAX_DESC_MYC)) ) THEN
                  CALL mp_root_sum( vtmp(:,1:nc), dm(:,icc:icc+nc-1), root, ortho_parent_comm )
               ELSE
                  CALL mp_root_sum( vtmp(:,1:nc), dm, root, ortho_parent_comm )
@@ -1466,7 +1437,7 @@ CONTAINS
         !
      END DO
      !
-     CALL dsqmsym( nbase+notcnv, dm, nx, desc )
+     CALL laxlib_dsqmsym( nbase+notcnv, dm, nx, idesc )
      !
      DEALLOCATE( vtmp )
      RETURN
@@ -1477,9 +1448,9 @@ CONTAINS
   SUBROUTINE set_e_from_h()
      INTEGER :: nc, ic, i
      e(1:nbase) = 0.0d0
-     IF( desc%myc == desc%myr .AND. la_proc ) THEN
-        nc = desc%nc
-        ic = desc%ic
+     IF( idesc(LAX_DESC_MYC) == idesc(LAX_DESC_MYR) .AND. la_proc ) THEN
+        nc = idesc(LAX_DESC_NC)
+        ic = idesc(LAX_DESC_IC)
         DO i = 1, nc
            e( i + ic - 1 ) = hl( i, i )
         END DO
@@ -1492,9 +1463,9 @@ CONTAINS
      INTEGER :: nc, ic, i
      IF( la_proc ) THEN
         hl = 0.0d0
-        IF( desc%myc == desc%myr ) THEN
-           nc = desc%nc
-           ic = desc%ic
+        IF( idesc(LAX_DESC_MYC) == idesc(LAX_DESC_MYR) ) THEN
+           nc = idesc(LAX_DESC_NC)
+           ic = idesc(LAX_DESC_IC)
            DO i = 1, nc
               hl(i,i) = e( i + ic - 1 )
            END DO

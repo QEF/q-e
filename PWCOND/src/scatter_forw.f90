@@ -21,8 +21,8 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
 ! It computes also the integrals (intw1, intw2) of  Phi_n and
 ! Phi_alpha over beta-functions inside the unit cell.
 !
-  USE constants, ONLY : tpi
-  USE parameters, ONLY : npsx
+  USE constants,  ONLY : tpi
+  USE upf_params, ONLY : npsx
   use radial_grids, ONLY : ndmx
   USE cell_base, ONLY : tpiba
   USE noncollin_module, ONLY : npol
@@ -46,7 +46,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
   COMPLEX(DP), PARAMETER :: cim=(0.d0,1.d0), one=(1.d0, 0.d0), &
                                  zero=(0.d0,0.d0)
   COMPLEX(DP) :: int1d, int2d, c, d, e, f, arg,&
-                      zdotc, fact, factm, psiper(n2d,n2d,nrzp), &
+                      fact, factm, psiper(n2d,n2d,nrzp), &
                       zk(n2d,nrzp)
   COMPLEX(DP), ALLOCATABLE ::   &
      psigper(:,:), & ! psigper(g,lam)=newbg(g,lam1) psiper(lam1,lam)

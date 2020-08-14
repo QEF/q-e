@@ -18,7 +18,7 @@ SUBROUTINE set_small_group_of_q(nsymq, invsymq, minus_q)
   USE kinds,         ONLY : DP
   USE cell_base,     ONLY : at, bg
   USE ions_base,     ONLY : nat, tau
-  USE symm_base,     ONLY : s, nsym, ftau, irt, time_reversal
+  USE symm_base,     ONLY : s, nsym, irt, time_reversal
   USE control_flags, ONLY : modenum
   USE qpoint,        ONLY : xq
   USE symm_base,     ONLY : copy_sym, d1, d2, d3, inverse_s, s_axis_to_cart
@@ -30,12 +30,12 @@ SUBROUTINE set_small_group_of_q(nsymq, invsymq, minus_q)
   LOGICAL, INTENT(INOUT) :: minus_q, invsymq
   !
   REAL(DP), ALLOCATABLE :: rtau(:,:,:)
-
+  INTEGER :: isym
   LOGICAL :: sym(48)
   !
   sym(1:nsym)=.true.
   !
-  CALL smallg_q (xq, modenum, at, bg, nsym, s, ftau, sym, minus_q)
+  CALL smallg_q (xq, modenum, at, bg, nsym, s, sym, minus_q)
   !
   IF ( .not. time_reversal ) minus_q = .false.
   !
@@ -55,11 +55,16 @@ SUBROUTINE set_small_group_of_q(nsymq, invsymq, minus_q)
   !
   CALL inverse_s ( )
   !
-  ! check if inversion (I) is a symmetry. If so, there should be nsymq/2
-  ! symmetries without inversion, followed by nsymq/2 with inversion
-  ! Since identity is always s(:,:,1), inversion should be s(:,:,1+nsymq/2)
+  ! Check if inversion (I) is a symmetry
+  ! Note that the first symmetry operation is always the identity (E)
   !
-  invsymq = ALL ( s(:,:,nsymq/2+1) == -s(:,:,1) )
+  invsymq =.FALSE.
+  DO isym = 1, nsymq
+     IF ( ALL ( s(:,:,isym) == -s(:,:,1) ) ) THEN
+        invsymq = .TRUE.
+        EXIT
+     END IF
+  END DO
   !
   !  Since the order of the s matrices is changed we need to recalculate:
   !
@@ -72,7 +77,7 @@ SUBROUTINE set_small_group_of_q(nsymq, invsymq, minus_q)
 END SUBROUTINE set_small_group_of_q
 !
 !-----------------------------------------------------------------------
-SUBROUTINE smallg_q (xq, modenum, at, bg, nrot, s, ftau, sym, minus_q)
+SUBROUTINE smallg_q (xq, modenum, at, bg, nrot, s, sym, minus_q)
   !-----------------------------------------------------------------------
   !
   ! This routine selects, among the symmetry matrices of the point group
@@ -83,6 +88,7 @@ SUBROUTINE smallg_q (xq, modenum, at, bg, nrot, s, ftau, sym, minus_q)
   !  input-output variables
   !
   USE kinds, ONLY : DP
+  USE symm_base, ONLY : t_rev
   
   implicit none
 
@@ -93,11 +99,9 @@ SUBROUTINE smallg_q (xq, modenum, at, bg, nrot, s, ftau, sym, minus_q)
   ! input: the direct lattice vectors
   ! input: the q point of the crystal
 
-  integer, intent(in) :: s (3, 3, 48), nrot, ftau (3, 48), modenum
+  integer, intent(in) :: s (3, 3, 48), nrot, modenum
   ! input: the symmetry matrices
   ! input: number of symmetry operations
-  ! input: fft grid dimension (units for ftau)
-  ! input: fractionary translation of each symmetr
   ! input: main switch of the program, used for
   !        q<>0 to restrict the small group of q
   !        to operation such that Sq=q (exactly,
@@ -148,6 +152,7 @@ SUBROUTINE smallg_q (xq, modenum, at, bg, nrot, s, ftau, sym, minus_q)
            raq(ipol) = raq(ipol) + DBLE( s(ipol,jpol,irot) ) * aq( jpol)
         enddo
      enddo
+     IF (t_rev(irot)==1) raq=-raq
      sym (irot) = eqvect (raq, aq, zero, accep)
      !
      !  if "iswitch.le.-3" (modenum.ne.0) S must be such that Sq=q exactly !

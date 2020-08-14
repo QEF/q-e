@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,18 +9,18 @@
 SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
                      ehart, etxc, vtxc, eth, etotefield, charge, v )
   !----------------------------------------------------------------------------
-  !
-  ! ... This routine computes the Hartree and Exchange and Correlation
-  ! ... potential and energies which corresponds to a given charge density
-  ! ... The XC potential is computed in real space, while the
-  ! ... Hartree potential is computed in reciprocal space.
+  !! This routine computes the Hartree and Exchange and Correlation
+  !! potential and energies which corresponds to a given charge density
+  !! The XC potential is computed in real space, while the
+  !! Hartree potential is computed in reciprocal space.
   !
   USE kinds,            ONLY : DP
   USE fft_base,         ONLY : dfftp
   USE gvect,            ONLY : ngm
   USE noncollin_module, ONLY : noncolin, nspin_lsda
   USE ions_base,        ONLY : nat, tau
-  USE ldaU,             ONLY : lda_plus_U 
+  USE ldaU,             ONLY : lda_plus_u, lda_plus_u_kind, ldmx_b, &
+                               nsg, v_nsg 
   USE funct,            ONLY : dft_is_meta, get_meta
   USE scf,              ONLY : scf_type
   USE cell_base,        ONLY : alat
@@ -29,31 +29,39 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !
   IMPLICIT NONE
   !
-  TYPE(scf_type), INTENT(INOUT) :: rho  ! the valence charge
-  TYPE(scf_type), INTENT(INOUT) :: v ! the scf (Hxc) potential 
-  !!!!!!!!!!!!!!!!! NB: NOTE that in F90 derived data type must be INOUT and 
-  !!!!!!!!!!!!!!!!! not just OUT because otherwise their allocatable or pointer
-  !!!!!!!!!!!!!!!!! components are NOT defined !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  TYPE(scf_type), INTENT(INOUT) :: rho
+  !! the valence charge
+  TYPE(scf_type), INTENT(INOUT) :: v
+  !! the scf (Hxc) potential 
+  !=================> NB: NOTE that in F90 derived data type must be INOUT and 
+  !=================> not just OUT because otherwise their allocatable or pointer
+  !=================> components are NOT defined 
   REAL(DP), INTENT(IN) :: rho_core(dfftp%nnr)
-    ! the core charge
+  !! the core charge
   COMPLEX(DP), INTENT(IN) :: rhog_core(ngm)
-    ! the core charge in reciprocal space
-  REAL(DP), INTENT(OUT) :: vtxc, etxc, ehart, eth, charge
-    ! the integral V_xc * rho
-    ! the E_xc energy
-    ! the hartree energy
-    ! the hubbard energy
-    ! the integral of the charge
+  !! the core charge in reciprocal space
+  REAL(DP), INTENT(OUT) :: vtxc
+  !! the integral V_xc * rho
+  REAL(DP), INTENT(OUT) :: etxc
+  !! the E_xc energy
+  REAL(DP), INTENT(OUT) :: ehart
+  !! the hartree energy
+  REAL(DP), INTENT(OUT) :: eth
+  !! the hubbard energy
+  REAL(DP), INTENT(OUT) :: charge
+  !! the integral of the charge
+  REAL(DP) :: eth1
+  !! the hubbard energy coming from the background states
   REAL(DP), INTENT(INOUT) :: etotefield
-    ! electric field energy - inout due to the screwed logic of add_efield
-  ! ! 
+  !! electric field energy - inout due to the screwed logic of add_efield
+  !
   INTEGER :: is, ir
   !
   CALL start_clock( 'v_of_rho' )
   !
   ! ... calculate exchange-correlation potential
   !
-  IF (dft_is_meta() .and. (get_meta() /= 4)) then
+  IF (dft_is_meta()) then
      CALL v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
   ELSE
      CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, v%of_r )
@@ -67,14 +75,44 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !
   CALL v_h( rho%of_g(:,1), ehart, charge, v%of_r )
   !
-  ! ... LDA+U: build up Hubbard potential 
+  ! ... DFT+U(+V): build up (extended) Hubbard potential 
   !
-  IF (lda_plus_u) then
-     IF (noncolin) then
-        CALL v_hubbard_nc(rho%ns_nc,v%ns_nc,eth)
+  IF (lda_plus_u) THEN
+     !
+     IF (lda_plus_u_kind == 0) THEN
+        !
+        ! DFT+U (simplified)
+        !
+        CALL v_hubbard (rho%ns, v%ns, eth)
+        !
+        ! Background
+        IF (ldmx_b.GT.0) THEN
+           CALL v_hubbard_b (rho%nsb, v%nsb, eth1)
+           eth = eth + eth1
+        ENDIF
+        !
+     ELSEIF (lda_plus_u_kind == 1) THEN
+        !
+        ! DFT+U (full)
+        !
+        IF (noncolin) THEN
+           CALL v_hubbard_full_nc (rho%ns_nc, v%ns_nc, eth)
+        ELSE
+           CALL v_hubbard_full (rho%ns, v%ns, eth)
+        ENDIF
+        !
+     ELSEIF (lda_plus_u_kind == 2) THEN
+        !
+        ! DFT+U+V (simplified)
+        !
+        CALL v_hubbard_extended (nsg, v_nsg, eth)
+        !
      ELSE
-        CALL v_hubbard(rho%ns,v%ns,eth)
+        !
+        CALL errore('v_of_rho', 'Not allowed value of lda_plus_u_kind',1)
+        !
      ENDIF
+     !
   ENDIF
   !
   ! ... add an electric field
@@ -99,11 +137,12 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   RETURN
   !
 END SUBROUTINE v_of_rho
+!
+!
 !----------------------------------------------------------------------------
 SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !----------------------------------------------------------------------------
-  !
-  ! ... Exchange-Correlation potential Vxc(r) from n(r)
+  !! Exchange-Correlation potential (meta) Vxc(r) from n(r)
   !
   USE kinds,            ONLY : DP
   USE constants,        ONLY : e2, eps8
@@ -112,175 +151,139 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE gvect,            ONLY : g, ngm
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
-  USE spin_orb,         ONLY : domag
-  USE funct,            ONLY : xc, xc_spin, tau_xc, tau_xc_spin, get_meta, dft_is_nonlocc, nlc
-  USE scf,              ONLY : scf_type
+  USE funct,            ONLY : get_meta, dft_is_nonlocc, nlc, is_libxc
+  USE xc_mgga,          ONLY : xc_metagcx
+  USE scf,              ONLY : scf_type, rhoz_or_updw
   USE mp,               ONLY : mp_sum
   USE mp_bands,         ONLY : intra_bgrp_comm
   !
   IMPLICIT NONE
   !
-  TYPE (scf_type), INTENT(IN) :: rho
+  TYPE (scf_type), INTENT(INOUT) :: rho
+  !! the valence charge
   REAL(DP), INTENT(IN) :: rho_core(dfftp%nnr)
-    ! the core charge in real space
+  !! the core charge in real space
   COMPLEX(DP), INTENT(IN) :: rhog_core(ngm)
-    ! the core charge in reciprocal space
-  REAL(DP), INTENT(INOUT) :: v(dfftp%nnr,nspin), kedtaur(dfftp%nnr,nspin), &
-                           vtxc, etxc
-    ! v:      V_xc potential
-    ! kedtau: local K energy density 
-    ! vtxc:   integral V_xc * rho
-    ! etxc:   E_xc energy
-    !
-    ! ... local variables
-    !
+  !! the core charge in reciprocal space
+  REAL(DP), INTENT(INOUT) :: v(dfftp%nnr,nspin)
+  !! V_xc potential
+  REAL(DP), INTENT(INOUT) :: kedtaur(dfftp%nnr,nspin)
+  !! local K energy density                     
+  REAL(DP), INTENT(INOUT) :: vtxc
+  !! integral V_xc * rho
+  REAL(DP), INTENT(INOUT) :: etxc
+  !! E_xc energy
+  !
+  ! ... local variables
+  !
   REAL(DP) :: zeta, rh, sgn(2)
-  INTEGER  :: k, ipol, is
-  REAL(DP) :: ex, ec, v1x, v2x, v3x,v1c, v2c, v3c,                     &
-  &           v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw,                &
-  &           v3xup, v3xdw,v3cup, v3cdw,                               &
-  &           arho, atau, fac, rhoup, rhodw, ggrho2, tauup,taudw          
+  INTEGER  :: k, ipol, is, np
+  !
+  REAL(DP), ALLOCATABLE :: ex(:), ec(:)
+  REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:), v3x(:,:)
+  REAL(DP), ALLOCATABLE :: v1c(:,:), v2c(:,:,:), v3c(:,:)
+  !
+  REAL(DP) :: fac
        
-  REAL(DP), DIMENSION(2)   ::    grho2, rhoneg
-  REAL(DP), DIMENSION(3)   ::    grhoup, grhodw, v2cup, v2cdw
-  
+  REAL(DP), DIMENSION(2) :: grho2, rhoneg
+  REAL(DP), DIMENSION(3) :: grhoup, grhodw
   !
-  REAL(DP),    ALLOCATABLE :: grho(:,:,:), h(:,:,:), dh(:)
-  REAL(DP),    ALLOCATABLE :: rhoout(:,:)
-  COMPLEX(DP), ALLOCATABLE :: rhogsum(:,:)
-  REAL(DP), PARAMETER      :: eps12 = 1.0d-12, zero=0._dp
-  !
-  !----------------------------------------------------------------------------
-  !
+  REAL(DP), ALLOCATABLE :: grho(:,:,:), h(:,:,:), dh(:)
+  REAL(DP), ALLOCATABLE :: rhoout(:)
+  COMPLEX(DP), ALLOCATABLE :: rhogsum(:)
+  REAL(DP), PARAMETER :: eps12 = 1.0d-12, zero=0._dp
   !
   CALL start_clock( 'v_xc_meta' )
   !
-  !
-  etxc      = zero
-  vtxc      = zero
-  v(:,:)    = zero
+  etxc = zero
+  vtxc = zero
+  v(:,:) = zero
   rhoneg(:) = zero
   sgn(1) = 1._dp  ;   sgn(2) = -1._dp
-  fac = 1.D0 / DBLE( nspin ) 
+  fac = 1.D0 / DBLE( nspin )
+  np = 1
+  IF (nspin==2) np=3
   !
-  ALLOCATE (grho(3,dfftp%nnr,nspin))
-  ALLOCATE (h(3,dfftp%nnr,nspin))
-  ALLOCATE (rhoout(dfftp%nnr,nspin))
-  ALLOCATE (rhogsum(ngm,nspin))
+  ALLOCATE( grho(3,dfftp%nnr,nspin) )
+  ALLOCATE( h(3,dfftp%nnr,nspin) )
+  ALLOCATE( rhogsum(ngm) )
+  !
+  ALLOCATE( ex(dfftp%nnr), ec(dfftp%nnr) )
+  ALLOCATE( v1x(dfftp%nnr,nspin), v2x(dfftp%nnr,nspin)   , v3x(dfftp%nnr,nspin) )
+  ALLOCATE( v1c(dfftp%nnr,nspin), v2c(np,dfftp%nnr,nspin), v3c(dfftp%nnr,nspin) )
   !
   ! ... calculate the gradient of rho + rho_core in real space
-  ! ... in LSDA case rhoout and rhogsum are defined in (up,down) format
+  ! ... in LSDA case rhogsum is in (up,down) format
   !
   DO is = 1, nspin
      !
-     rhoout(:,is) =fac*rho_core(:)  + ( rho%of_r(:,1) + sgn(is)*rho%of_r(:,nspin) )*0.5D0
-     rhogsum(:,is)=fac*rhog_core(:) + ( rho%of_g(:,1) + sgn(is)*rho%of_g(:,nspin) )*0.5D0
+     rhogsum(:) = fac*rhog_core(:) + ( rho%of_g(:,1) + sgn(is)*rho%of_g(:,nspin) )*0.5D0
      !
-     CALL fft_gradient_g2r( dfftp, rhogsum(1,is), g, grho(1,1,is) )
+     CALL fft_gradient_g2r( dfftp, rhogsum, g, grho(1,1,is) )
      !
-  END DO
+  ENDDO
+  DEALLOCATE(rhogsum)
   !
-  do k = 1, dfftp%nnr
-  
-     do is = 1, nspin
-        grho2 (is) = grho(1,k, is)**2 + grho(2,k,is)**2 + grho(3,k, is)**2
-     end do
-     
-     if (nspin == 1) then
-        !
-        !    This is the spin-unpolarised case
-        !
-        arho = ABS (rho%of_r (k, 1) )
-
-        atau = rho%kin_r(k,1) / e2  ! kinetic energy density in Hartree
-        
-        if ( (arho > eps8) .and. (grho2 (1) > eps12) .and. &
-                                 (abs(atau) > eps8)) then
-           
-           call tau_xc (arho, grho2(1),atau, ex, ec, v1x, v2x,v3x,v1c, v2c,v3c)
-           
-           v(k, 1) =  (v1x + v1c )*e2 
-           
-           ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
-           h(:,k,1) =  (v2x + v2c)*grho (:,k,1) *e2
-           
-           kedtaur(k,1)=  (v3x + v3c) * 0.5d0 * e2
-           
-           etxc = etxc +  (ex + ec) *e2 !* segno
-           vtxc = vtxc + (v1x+v1c)*e2*arho
-           
-        else  
-           h (:, k, 1) = zero  
-           kedtaur(k,1)= zero
-        end if
-        
-        if (rho%of_r (k, 1) < zero ) rhoneg(1) = rhoneg(1) - rho%of_r (k, 1)
-        
-     else
-        !
-        !    spin-polarised case
-        !
-        rhoup = ( rho%of_r(k, 1) + rho%of_r(k, 2) )*0.5d0
-        rhodw = ( rho%of_r(k, 2) - rho%of_r(k, 2) )*0.5d0
-        
-        rh   = rhoup + rhodw 
-        
-        do ipol=1,3
-            grhoup(ipol)=grho(ipol,k,1)
-            grhodw(ipol)=grho(ipol,k,2)
-        end do
-        
-        ggrho2  = ( grho2 (1) + grho2 (2) ) * 4._dp
-        
-        tauup = rho%kin_r(k,1) / e2
-        taudw = rho%kin_r(k,2) / e2
-        atau  = tauup + taudw
-
-        if ((rh > eps8) .and. (ggrho2 > eps12) .and. (abs(atau) > eps8) ) then
-                
-        call tau_xc_spin (rhoup, rhodw, grhoup, grhodw, tauup, taudw, ex, ec, &
-                      v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw, v1cup, v1cdw, &
-                      v2cup, v2cdw, v3cup, v3cdw ) 
-          !
-          ! first term of the gradient correction : D(rho*Exc)/D(rho)
-          !
-          v(k, 1) =  (v1xup + v1cup)*e2
-          v(k, 2) =  (v1xdw + v1cdw)*e2
-          !
-          ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
-          !
-          if (get_meta()==1 .OR. get_meta()==5 ) then  ! tpss, scan
-            !
-            h(:,k,1) = (v2xup * grhoup(:) + v2cup(:)) * e2
-            h(:,k,2) = (v2xdw * grhodw(:) + v2cdw(:)) * e2
-            !
-          else
-            !
-            h(:,k,1) = (v2xup + v2cup(1)) * grhoup(:) * e2
-            h(:,k,2) = (v2xdw + v2cdw(1)) * grhodw(:) * e2
-            !
-          end if
-          !
-          kedtaur(k,1)=  (v3xup + v3cup) * 0.5d0 * e2
-          kedtaur(k,2)=  (v3xdw + v3cdw) * 0.5d0 * e2
-          !
-          etxc = etxc + (ex + ec) * e2
-          vtxc = vtxc + (v1xup+v1cup+v1xdw+v1cdw) * e2 * rh
-          !
-        else
-          h(:,k,1) = zero
-          h(:,k,2) = zero
-          !
-          kedtaur(k,1)=  zero
-          kedtaur(k,2)=  zero
-
-        end if
-        
-        if (rhoup < zero ) rhoneg(1) = rhoneg(1) - rhoup
-        if (rhodw < zero ) rhoneg(2) = rhoneg(2) - rhodw
-        
-     end if
-  end do
+  !
+  IF (nspin == 1) THEN
+    !
+    CALL xc_metagcx( dfftp%nnr, 1, np, rho%of_r, grho, rho%kin_r/e2, ex, ec, &
+                      v1x, v2x, v3x, v1c, v2c, v3c )
+    !
+    DO k = 1, dfftp%nnr
+       !
+       v(k,1) = (v1x(k,1)+v1c(k,1)) * e2
+       !
+       ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
+       h(:,k,1) = (v2x(k,1)+v2c(1,k,1)) * grho(:,k,1) * e2 
+       !
+       kedtaur(k,1) = (v3x(k,1)+v3c(k,1)) * 0.5d0 * e2
+       !
+       etxc = etxc + (ex(k)+ec(k)) * e2
+       vtxc = vtxc + (v1x(k,1)+v1c(k,1)) * e2 * ABS(rho%of_r(k,1))
+       !
+       IF (rho%of_r(k,1) < zero) rhoneg(1) = rhoneg(1)-rho%of_r(k,1)
+       !
+    ENDDO
+    !
+  ELSE
+    !
+    CALL rhoz_or_updw( rho, 'only_r', '->updw' )
+    !
+    CALL xc_metagcx( dfftp%nnr, 2, np, rho%of_r, grho, rho%kin_r/e2, ex, ec, &
+                     v1x, v2x, v3x, v1c, v2c, v3c )
+    !
+    ! first term of the gradient correction : D(rho*Exc)/D(rho)
+    !
+    DO k = 1, dfftp%nnr
+       !
+       v(k,1) = (v1x(k,1) + v1c(k,1)) * e2
+       v(k,2) = (v1x(k,2) + v1c(k,2)) * e2
+       !
+       ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
+       !
+       h(:,k,1) = (v2x(k,1) * grho(:,k,1) + v2c(:,k,1)) * e2
+       h(:,k,2) = (v2x(k,2) * grho(:,k,2) + v2c(:,k,2)) * e2
+       !
+       kedtaur(k,1) = (v3x(k,1) + v3c(k,1)) * 0.5d0 * e2
+       kedtaur(k,2) = (v3x(k,2) + v3c(k,2)) * 0.5d0 * e2
+       !
+       etxc = etxc + (ex(k)+ec(k)) * e2
+       vtxc = vtxc + (v1x(k,1)+v1c(k,1)) * ABS(rho%of_r(k,1)) * e2
+       vtxc = vtxc + (v1x(k,2)+v1c(k,2)) * ABS(rho%of_r(k,2)) * e2
+       !
+       IF ( rho%of_r(k,1) < 0.d0 ) rhoneg(1) = rhoneg(1) - rho%of_r(k,1)
+       IF ( rho%of_r(k,2) < 0.d0 ) rhoneg(2) = rhoneg(2) - rho%of_r(k,2)
+       !
+    ENDDO
+    !
+    CALL rhoz_or_updw( rho, 'only_r', '->rhoz' )
+    !
+  ENDIF
+  !
+  DEALLOCATE( ex, ec )
+  DEALLOCATE( v1x, v2x, v3x )
+  DEALLOCATE( v1c, v2c, v3c )
   !
   !
   ALLOCATE( dh( dfftp%nnr ) )    
@@ -288,25 +291,29 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   ! ... second term of the gradient correction :
   ! ... \sum_alpha (D / D r_alpha) ( D(rho*Exc)/D(grad_alpha rho) )
   !
+  ALLOCATE (rhoout(dfftp%nnr))
   DO is = 1, nspin
      !
      CALL fft_graddot( dfftp, h(1,1,is), g, dh )
      !
      v(:,is) = v(:,is) - dh(:)
      !
-     rhoout(:,is)=rhoout(:,is)-fac*rho_core(:)
-     vtxc = vtxc - SUM( dh(:) * rhoout(:,is) )
+     ! ... rhoout is in (up,down) format 
+     !
+     rhoout(:) = ( rho%of_r(:,1) + sgn(is)*rho%of_r(:,nspin) )*0.5D0
+     vtxc = vtxc - SUM( dh(:) * rhoout(:) )
      !
   END DO
+  DEALLOCATE(rhoout)
   DEALLOCATE(dh)
   !
-  call mp_sum ( rhoneg, intra_bgrp_comm )
+  CALL mp_sum( rhoneg, intra_bgrp_comm )
   !
   rhoneg(:) = rhoneg(:) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   !
-  if ((rhoneg(1) > eps8) .or. (rhoneg(2) > eps8)) then
+  IF ((rhoneg(1) > eps8) .OR. (rhoneg(2) > eps8)) THEN
     write (stdout, '(/,5x, "negative rho (up,down): ", 2es10.3)') rhoneg(:)
-  end if
+  ENDIF
   !
   vtxc = omega * vtxc / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 ) 
   etxc = omega * etxc / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
@@ -318,8 +325,6 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
   DEALLOCATE(grho)
   DEALLOCATE(h)
-  DEALLOCATE(rhoout)
-  DEALLOCATE(rhogsum)
   !
   CALL stop_clock( 'v_xc_meta' )
   !
@@ -327,10 +332,10 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
 END SUBROUTINE v_xc_meta
 !
+!
 SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !----------------------------------------------------------------------------
-  !
-  ! ... Exchange-Correlation potential Vxc(r) from n(r)
+  !! Exchange-Correlation potential Vxc(r) from n(r)
   !
   USE kinds,            ONLY : DP
   USE constants,        ONLY : e2, eps8
@@ -340,30 +345,40 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
   USE spin_orb,         ONLY : domag
-  USE funct,            ONLY : xc, xc_spin, nlc, dft_is_nonlocc
+  USE funct,            ONLY : nlc, dft_is_nonlocc
+  USE xc_lda_lsda,      ONLY : xc
   USE scf,              ONLY : scf_type
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
-
   !
   IMPLICIT NONE
   !
   TYPE (scf_type), INTENT(INOUT) :: rho
+  !! the valence charge
   REAL(DP), INTENT(IN) :: rho_core(dfftp%nnr)
-    ! the core charge
+  !! the core charge
   COMPLEX(DP), INTENT(IN) :: rhog_core(ngm)
-    ! input: the core charge in reciprocal space
-  REAL(DP), INTENT(OUT) :: v(dfftp%nnr,nspin), vtxc, etxc
-    ! V_xc potential
-    ! integral V_xc * rho
-    ! E_xc energy
+  !! the core charge in reciprocal space
+  REAL(DP), INTENT(OUT) :: v(dfftp%nnr,nspin)
+  !! V_xc potential
+  REAL(DP), INTENT(OUT) :: vtxc
+  !! integral V_xc * rho
+  REAL(DP), INTENT(OUT) :: etxc
+  !! E_xc energy
   !
   ! ... local variables
   !
-  REAL(DP) :: rhox, arhox, zeta, amag, vs, ex, ec, vx(2), vc(2), rhoneg(2)
-    ! the total charge in each point
-    ! the absolute value of the charge
-    ! the absolute value of the charge
+  REAL(DP) :: rhoneg(2), vs
+  !
+  !REAL(DP), ALLOCATABLE :: arhox(:), amag(:), zeta(:)
+  REAL(DP) :: arho, amag
+  REAL(DP) :: rhoup2, rhodw2
+  REAL(DP), ALLOCATABLE :: ex(:), ec(:)
+  REAL(DP), ALLOCATABLE :: vx(:,:), vc(:,:)
+  ! In order:
+    ! the absolute value of the total charge
+    ! the absolute value of the magnetization
+    ! zeta = amag / arhox
     ! local exchange energy
     ! local correlation energy
     ! local exchange potential
@@ -378,134 +393,84 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !
   CALL start_clock( 'v_xc' )
   !
+  ALLOCATE( ex(dfftp%nnr) )
+  ALLOCATE( ec(dfftp%nnr) )
+  ALLOCATE( vx(dfftp%nnr,nspin) )
+  ALLOCATE( vc(dfftp%nnr,nspin) )
+  !
   etxc   = 0.D0
   vtxc   = 0.D0
   v(:,:) = 0.D0
   rhoneg = 0.D0
   !
+  !
+  rho%of_r(:,1) = rho%of_r(:,1) + rho_core(:)
+  !
   IF ( nspin == 1 .OR. ( nspin == 4 .AND. .NOT. domag ) ) THEN
-     !
      ! ... spin-unpolarized case
      !
-!$omp parallel do private( rhox, arhox, ex, ec, vx, vc ), &
-!$omp             reduction(+:etxc,vtxc), reduction(-:rhoneg)
+     CALL xc( dfftp%nnr, 1, 1, rho%of_r, ex, ec, vx, vc )
+     !
      DO ir = 1, dfftp%nnr
-        !
-        rhox = rho%of_r(ir,1) + rho_core(ir)
-        !
-        arhox = ABS( rhox )
-        !
-        IF ( arhox > vanishing_charge ) THEN
-           !
-           CALL xc( arhox, ex, ec, vx(1), vc(1) )
-           !
-           v(ir,1) = e2*( vx(1) + vc(1) )
-           !
-           etxc = etxc + e2*( ex + ec ) * rhox
-           !
-           vtxc = vtxc + v(ir,1) * rho%of_r(ir,1)
-           !
-        ENDIF
-        !
-        IF ( rho%of_r(ir,1) < 0.D0 ) rhoneg(1) = rhoneg(1) - rho%of_r(ir,1)
-        !
-     END DO
-!$omp end parallel do
+        v(ir,1) = e2*( vx(ir,1) + vc(ir,1) )
+        etxc = etxc + e2*( ex(ir) + ec(ir) )*rho%of_r(ir,1)
+        rho%of_r(ir,1) = rho%of_r(ir,1) - rho_core(ir)
+        vtxc = vtxc + v(ir,1)*rho%of_r(ir,1)
+        IF (rho%of_r(ir,1) < 0.D0) rhoneg(1) = rhoneg(1)-rho%of_r(ir,1)
+     ENDDO
      !
-  ELSE IF ( nspin == 2 ) THEN
      !
+  ELSEIF ( nspin == 2 ) THEN
      ! ... spin-polarized case
      !
-!$omp parallel do private( rhox, arhox, zeta, ex, ec, vx, vc ), &
-!$omp             reduction(+:etxc,vtxc), reduction(-:rhoneg)
-     DO ir = 1, dfftp%nnr
-        !
-        rhox = rho%of_r(ir,1) + rho_core(ir)
-        !
-        IF ( rho%of_r(ir,1) < 0.D0 )  rhoneg(1) = rhoneg(1) - rho%of_r(ir,1)
-        !
-        arhox = ABS( rhox )
-        !
-        IF ( arhox > vanishing_charge ) THEN
-           !
-           zeta = rho%of_r(ir,2) / arhox
-           !
-           IF ( ABS( zeta ) > 1.D0 ) THEN
-              !
-              rhoneg(2) = rhoneg(2) + 1.D0 / omega
-              !
-              zeta = SIGN( 1.D0, zeta )
-              !
-           END IF
-           !
-           CALL xc_spin( arhox, zeta, ex, ec, vx(1), vx(2), vc(1), vc(2) )
-           !
-           v(ir,:) = e2*( vx(:) + vc(:) )
-           !
-           etxc = etxc + e2*( ex + ec ) * rhox
-           !
-           vtxc = vtxc + ( ( v(ir,1) + v(ir,2) )*rho%of_r(ir,1) + &
-                           ( v(ir,1) - v(ir,2) )*rho%of_r(ir,2)  )
-           !
-        END IF
-        !
-     END DO
-!$omp end parallel do
+     CALL xc( dfftp%nnr, 2, 2, rho%of_r, ex, ec, vx, vc )
      !
-     vtxc = 0.5d0 * vtxc
+     DO ir = 1, dfftp%nnr   !OMP ?
+        v(ir,:) = e2*( vx(ir,:) + vc(ir,:) )
+        etxc = etxc + e2*( (ex(ir) + ec(ir))*rho%of_r(ir,1) )
+        rho%of_r(ir,1) = rho%of_r(ir,1) - rho_core(ir)
+        vtxc = vtxc + ( ( v(ir,1) + v(ir,2) )*rho%of_r(ir,1) + &
+                        ( v(ir,1) - v(ir,2) )*rho%of_r(ir,2) )
+        !
+        rhoup2 = rho%of_r(ir,1)+rho%of_r(ir,2)
+        rhodw2 = rho%of_r(ir,1)-rho%of_r(ir,2)
+        IF (rhoup2 < 0.d0) rhoneg(1) = rhoneg(1) + rhoup2
+        IF (rhodw2 < 0.d0) rhoneg(2) = rhoneg(2) + rhodw2
+     ENDDO
+     !
+     vtxc   = 0.5d0 * vtxc
+     rhoneg = 0.5d0 * rhoneg
+     !
      !
   ELSE IF ( nspin == 4 ) THEN
-     !
      ! ... noncolinear case
      !
-     DO ir = 1,dfftp%nnr
-        !
-        amag = SQRT( rho%of_r(ir,2)**2 + rho%of_r(ir,3)**2 + rho%of_r(ir,4)**2 )
-        !
-        rhox = rho%of_r(ir,1) + rho_core(ir)
-        !
-        IF ( rho%of_r(ir,1) < 0.D0 )  rhoneg(1) = rhoneg(1) - rho%of_r(ir,1)
-        !
-        arhox = ABS( rhox )
-        !
-        IF ( arhox > vanishing_charge ) THEN
-           !
-           zeta = amag / arhox
-           !
-           IF ( ABS( zeta ) > 1.D0 ) THEN
-              !
-              rhoneg(2) = rhoneg(2) + 1.D0 / omega
-              !
-              zeta = SIGN( 1.D0, zeta )
-              !
-           END IF
-           !
-           CALL xc_spin( arhox, zeta, ex, ec, vx(1), vx(2), vc(1), vc(2) )
-           !
-           vs = 0.5D0*( vx(1) + vc(1) - vx(2) - vc(2) )
-           !
-           v(ir,1) = e2*( 0.5D0*( vx(1) + vc(1) + vx(2) + vc(2 ) ) )
-           !
-           IF ( amag > vanishing_mag ) THEN
-              !
-              DO ipol = 2, 4
-                 !
-                 v(ir,ipol) = e2 * vs * rho%of_r(ir,ipol) / amag
-                 !
-                 vtxc = vtxc + v(ir,ipol) * rho%of_r(ir,ipol)
-                 !
-              END DO
-              !
-           END IF
-           !
-           etxc = etxc + e2*( ex + ec ) * rhox
-           vtxc = vtxc + v(ir,1) * rho%of_r(ir,1)
-           !
-        END IF
-        !
-     END DO
+     CALL xc( dfftp%nnr, 4, 2, rho%of_r, ex, ec, vx, vc )
      !
-  END IF
+     DO ir = 1, dfftp%nnr  !OMP ?
+        arho = ABS( rho%of_r(ir,1) )
+        IF ( arho < vanishing_charge ) CYCLE
+        vs = 0.5D0*( vx(ir,1) + vc(ir,1) - vx(ir,2) - vc(ir,2) )
+        v(ir,1) = e2*( 0.5D0*( vx(ir,1) + vc(ir,1) + vx(ir,2) + vc(ir,2) ) )
+        !
+        amag = SQRT( SUM( rho%of_r(ir,2:4)**2 ) )
+        IF ( amag > vanishing_mag ) THEN
+           v(ir,2:4) = e2 * vs * rho%of_r(ir,2:4) / amag
+           vtxc = vtxc + SUM( v(ir,2:4) * rho%of_r(ir,2:4) )
+        ENDIF
+        etxc = etxc + e2*( ex(ir) + ec(ir) ) * arho
+        !
+        rho%of_r(ir,1) = rho%of_r(ir,1) - rho_core(ir)
+        IF ( rho%of_r(ir,1) < 0.D0 )  rhoneg(1) = rhoneg(1) - rho%of_r(ir,1)
+        IF ( amag / arho > 1.D0 )  rhoneg(2) = rhoneg(2) + 1.D0/omega
+        vtxc = vtxc + v(ir,1) * rho%of_r(ir,1)
+     ENDDO
+     !
+     !
+  ENDIF
+  !
+  DEALLOCATE( ex, ec )
+  DEALLOCATE( vx, vc )
   !
   CALL mp_sum(  rhoneg , intra_bgrp_comm )
   !
@@ -539,28 +504,33 @@ END SUBROUTINE v_xc
 !----------------------------------------------------------------------------
 SUBROUTINE v_h( rhog, ehart, charge, v )
   !----------------------------------------------------------------------------
+  !! Hartree potential VH(r) from n(G)
   !
-  ! ... Hartree potential VH(r) from n(G)
-  !
-  USE constants, ONLY : fpi, e2
-  USE kinds,     ONLY : DP
-  USE fft_base,  ONLY : dfftp
-  USE fft_interfaces,ONLY : invfft
-  USE gvect,     ONLY : ngm, gg, gstart
-  USE lsda_mod,  ONLY : nspin
-  USE cell_base, ONLY : omega, tpiba2
-  USE control_flags, ONLY : gamma_only
-  USE mp_bands,  ONLY: intra_bgrp_comm
-  USE mp,        ONLY: mp_sum
+  USE constants,         ONLY : fpi, e2
+  USE kinds,             ONLY : DP
+  USE fft_base,          ONLY : dfftp
+  USE fft_interfaces,    ONLY : invfft
+  USE gvect,             ONLY : ngm, gg, gstart
+  USE lsda_mod,          ONLY : nspin
+  USE cell_base,         ONLY : omega, tpiba2
+  USE control_flags,     ONLY : gamma_only
+  USE mp_bands,          ONLY : intra_bgrp_comm
+  USE mp,                ONLY : mp_sum
   USE martyna_tuckerman, ONLY : wg_corr_h, do_comp_mt
-  USE esm,       ONLY: do_comp_esm, esm_hartree, esm_bc
-  USE Coul_cut_2D, ONLY : do_cutoff_2D, cutoff_2D, cutoff_hartree  
+  USE esm,               ONLY : do_comp_esm, esm_hartree, esm_bc
+  USE Coul_cut_2D,       ONLY : do_cutoff_2D, cutoff_2D, cutoff_hartree  
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP), INTENT(IN)  :: rhog(ngm)
-  REAL(DP),  INTENT(INOUT) :: v(dfftp%nnr,nspin)
-  REAL(DP),    INTENT(OUT) :: ehart, charge
+  COMPLEX(DP), INTENT(IN) :: rhog(ngm)
+  !! the charge density in reciprocal space
+  REAL(DP), INTENT(INOUT) :: v(dfftp%nnr,nspin)
+  !! Hartree potential
+  REAL(DP), INTENT(OUT) :: ehart
+  !! Hartree energy
+  REAL(DP), INTENT(OUT) :: charge
+  !
+  !  ... local variables
   !
   REAL(DP)              :: fac
   REAL(DP), ALLOCATABLE :: aux1(:,:)
@@ -645,30 +615,30 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
      ! 
      aux(:) = 0.D0
      !
-     aux(dfftp%nl(1:ngm)) = CMPLX ( aux1(1,1:ngm), aux1(2,1:ngm), KIND=dp )
+     aux(dfftp%nl(1:ngm)) = CMPLX( aux1(1,1:ngm), aux1(2,1:ngm), KIND=dp )
      !
      IF ( gamma_only ) THEN
         !
-        aux(dfftp%nlm(1:ngm)) = CMPLX ( aux1(1,1:ngm), -aux1(2,1:ngm), KIND=dp )
+        aux(dfftp%nlm(1:ngm)) = CMPLX( aux1(1,1:ngm), -aux1(2,1:ngm), KIND=dp )
         !
      END IF
   END IF
   !
   ! ... transform hartree potential to real space
   !
-  CALL invfft ('Rho', aux, dfftp)
+  CALL invfft('Rho', aux, dfftp)
   !
   ! ... add hartree potential to the xc potential
   !
   IF ( nspin == 4 ) THEN
      !
-     v(:,1) = v(:,1) + DBLE (aux(:))
+     v(:,1) = v(:,1) + DBLE(aux(:))
      !
   ELSE
      !
      DO is = 1, nspin
         !
-        v(:,is) = v(:,is) + DBLE (aux(:))
+        v(:,is) = v(:,is) + DBLE(aux(:))
         !
      END DO
      !
@@ -683,367 +653,698 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
 END SUBROUTINE v_h
 !
 !-----------------------------------------------------------------------
-SUBROUTINE v_hubbard(ns, v_hub, eth)
+SUBROUTINE v_hubbard( ns, v_hub, eth )
+  !---------------------------------------------------------------------
   !
-  ! Computes Hubbard potential and Hubbard energy
+  !! Computes Hubbard potential and Hubbard energy.
+  !! DFT+U: Simplified rotationally-invariant formulation by
+  !! Dudarev et al., Phys. Rev. B 57, 1505 (1998).
+  !! DFT+U+J0: B. Himmetoglu et al., Phys. Rev. B 84, 115108 (2011).
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp
   USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, Hubbard_U, &
-                                   Hubbard_J, Hubbard_alpha, lda_plus_u_kind,&
-                                   Hubbard_J0, Hubbard_beta
+                                   Hubbard_alpha, Hubbard_J0, Hubbard_beta
   USE lsda_mod,             ONLY : nspin
-  USE control_flags,        ONLY : iverbosity
+  USE control_flags,        ONLY : iverbosity, dfpt_hub
+  USE io_global,            ONLY : stdout
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN)  :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
+  !! Occupation matrix
+  REAL(DP), INTENT(OUT) :: v_hub(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
+  !! Hubbard potential
+  REAL(DP), INTENT(OUT) :: eth
+  !! Hubbard energy
+  !
+  !  ... local variables
+  !
+  REAL(DP) :: effU, sgn(2) 
+  INTEGER  :: is, isop, na, nt, m1, m2
+  !
+  eth    = 0.d0
+  sgn(1) =  1.d0  
+  sgn(2) = -1.d0
+  !
+  v_hub(:,:,:,:) = 0.d0
+  !
+  DO na = 1, nat
+     !
+     nt = ityp (na)
+     !
+     IF (Hubbard_U(nt) /= 0.d0 .OR. Hubbard_alpha(nt) /= 0.d0) THEN
+        !
+        IF (Hubbard_J0(nt) /= 0.d0) THEN
+           effU = Hubbard_U(nt) - Hubbard_J0(nt)
+        ELSE
+           effU = Hubbard_U(nt)
+        ENDIF 
+        ! 
+        DO is = 1, nspin
+           DO m1 = 1, 2 * Hubbard_l(nt) + 1
+              eth = eth + ( Hubbard_alpha(nt) + 0.5D0*effU )*ns(m1,m1,is,na)
+              v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + &
+                                   Hubbard_alpha(nt)  + 0.5D0*effU
+              DO m2 = 1, 2 * Hubbard_l(nt) + 1
+                 eth = eth - 0.5D0 * effU * ns(m2,m1,is,na)* ns(m1,m2,is,na)
+                 v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) - &
+                                        effU * ns(m2,m1,is,na)
+              ENDDO
+           ENDDO
+        ENDDO
+        !
+     ENDIF
+     !
+     IF (Hubbard_J0(nt) /= 0.d0 .OR. Hubbard_beta(nt) /= 0.d0) THEN
+        !
+        DO is = 1, nspin
+           isop = 1
+           IF ( nspin == 2 .AND. is == 1) isop = 2
+           DO m1 = 1, 2 * Hubbard_l(nt) + 1
+              eth = eth + sgn(is)*Hubbard_beta(nt) * ns(m1,m1,is,na)
+              v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + sgn(is)*Hubbard_beta(nt)
+              DO m2 = 1, 2*Hubbard_l(nt)+1
+                 eth = eth + 0.5D0*Hubbard_J0(nt)*ns(m2,m1,is,na)*ns(m1,m2,isop,na)
+                 v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) + Hubbard_J0(nt) * &
+                                                            ns(m2,m1,isop,na)
+              ENDDO
+           ENDDO
+        ENDDO
+        !
+     END IF
+     !   
+  ENDDO
+  !
+  IF (nspin==1) eth = 2.d0 * eth
+  !
+  ! Hubbard energy
+  !
+  IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
+     WRITE(stdout,*) '--- in v_hubbard ---'
+     WRITE(stdout,'("Hubbard energy ",f9.4)') eth
+     WRITE(stdout,*) '-------'
+  ENDIF
+  !
+  RETURN
+  !
+END SUBROUTINE v_hubbard
+!-----------------------------------------------------------------------
+
+!---------------------------------------------------------------------------
+SUBROUTINE v_hubbard_b (ns, v_hub, eth)
+  !-------------------------------------------------------------------------
+  !
+  !! Computes Hubbard potential and Hubbard energy for background states.
+  !! DFT+U: Simplified rotationally-invariant formulation by
+  !! Dudarev et al., Phys. Rev. B 57, 1505 (1998).
+  !
+  USE kinds,                ONLY : DP
+  USE ions_base,            ONLY : nat, ityp
+  USE ldaU,                 ONLY : Hubbard_J0, Hubbard_beta, Hubbard_U_back, &
+                                   ldim_back, ldmx_b, Hubbard_alpha_back, &
+                                   is_hubbard_back
+  USE lsda_mod,             ONLY : nspin
+  USE control_flags,        ONLY : iverbosity, dfpt_hub
   USE io_global,            ONLY : stdout
 
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN)  :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat) 
-  REAL(DP), INTENT(OUT) :: v_hub(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat) 
+  REAL(DP), INTENT(IN)  :: ns(ldmx_b,ldmx_b,nspin,nat)
+  REAL(DP), INTENT(OUT) :: v_hub(ldmx_b,ldmx_b,nspin,nat)
   REAL(DP), INTENT(OUT) :: eth
-  REAL(DP) :: n_tot, n_spin, eth_dc, eth_u, mag2, effU, sgn(2) 
-  INTEGER :: is, isop, is1, na, nt, m1, m2, m3, m4
-  REAL(DP),    ALLOCATABLE :: u_matrix(:,:,:,:)
-
-  ALLOCATE( u_matrix(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, 2*Hubbard_lmax+1, 2*Hubbard_lmax+1) )
-
-  eth    = 0.d0
-  eth_dc = 0.d0
-  eth_u  = 0.d0
-  
-  sgn(1)=1.d0  ;   sgn(2)=-1.d0
-
-  v_hub(:,:,:,:) = 0.d0
-
-  if (lda_plus_u_kind.eq.0) then
-
-    DO na = 1, nat
-       nt = ityp (na)
-       IF (Hubbard_U(nt).NE.0.d0 .OR. Hubbard_alpha(nt).NE.0.d0) THEN
-          IF (Hubbard_J0(nt).NE.0.d0) THEN
-             effU = Hubbard_U(nt) - Hubbard_J0(nt)
-          ELSE
-             effU = Hubbard_U(nt)
-          END IF  
-          DO is = 1, nspin
-             DO m1 = 1, 2 * Hubbard_l(nt) + 1
-                eth = eth + ( Hubbard_alpha(nt) + 0.5D0*effU )*ns(m1,m1,is,na)
-                v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + &
-                                     Hubbard_alpha(nt)  + 0.5D0*effU
-                DO m2 = 1, 2 * Hubbard_l(nt) + 1
-                   eth = eth - 0.5D0 * effU * ns(m2,m1,is,na)* ns(m1,m2,is,na)
-                   v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) - &
-                                        effU * ns(m2,m1,is,na)
-                ENDDO
-             ENDDO
-          ENDDO
-       ENDIF
-
-       IF (Hubbard_J0(nt) /= 0.d0 .OR. Hubbard_beta(nt) /= 0.d0) THEN
-          DO is=1, nspin
-             isop = 1
-             IF ( nspin == 2 .AND. is == 1) isop = 2
-             DO m1 = 1, 2 * Hubbard_l(nt) + 1
-                eth = eth + sgn(is)*Hubbard_beta(nt) * ns(m1,m1,is,na)
-                v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + sgn(is)*Hubbard_beta(nt)
-                DO m2 = 1, 2*Hubbard_l(nt)+1
-                   eth = eth + 0.5D0*Hubbard_J0(nt)*ns(m2,m1,is,na)*ns(m1,m2,isop,na)
-                   v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) + Hubbard_J0(nt) * &
-                                                             ns(m2,m1,isop,na)
-                END DO
-             END DO
-          END DO
-       END IF
-        
-    END DO
-
-    IF (nspin.EQ.1) eth = 2.d0 * eth
-
-!-- output of hubbard energies:
-    IF ( iverbosity > 0 ) THEN
-      write(stdout,*) '--- in v_hubbard ---'
-      write(stdout,'("Hubbard energy ",f9.4)') eth
-      write(stdout,*) '-------'
-    ENDIF
-!--
-
-  else
-
-    DO na = 1, nat
-       nt = ityp (na)
-       IF (Hubbard_U(nt).NE.0.d0) THEN
-
-!       initialize U(m1,m2,m3,m4) matrix 
-          call hubbard_matrix (Hubbard_lmax, Hubbard_l(nt), Hubbard_U(nt), &
-                               Hubbard_J(1,nt), u_matrix)
-
-!---      total N and M^2 for DC (double counting) term
-          n_tot = 0.d0
-          do is = 1, nspin
-            do m1 = 1, 2 * Hubbard_l(nt) + 1
-              n_tot = n_tot + ns(m1,m1,is,na)
-            enddo
-          enddo
-          if (nspin.eq.1) n_tot = 2.d0 * n_tot
-
-          mag2  = 0.d0
-          if (nspin.eq.2) then
-            do m1 = 1, 2 * Hubbard_l(nt) + 1
-              mag2 = mag2 + ns(m1,m1,1,na) - ns(m1,m1,2,na)
-            enddo
-          endif
-          mag2  = mag2**2
-!---
-
-!---      hubbard energy: DC term
-
-          eth_dc = eth_dc + 0.5d0*( Hubbard_U(nt)*n_tot*(n_tot-1.d0) - &
-                                    Hubbard_J(1,nt)*n_tot*(0.5d0*n_tot-1.d0) - &
-                                    0.5d0*Hubbard_J(1,nt)*mag2 )
-!--
-          DO is = 1, nspin
-
-!---        n_spin = up/down N
-
-            n_spin = 0.d0
-            do m1 = 1, 2 * Hubbard_l(nt) + 1
-              n_spin = n_spin + ns(m1,m1,is,na)
-            enddo
-!---
-
-            DO m1 = 1, 2 * Hubbard_l(nt) + 1
-
-!             hubbard potential: DC contribution  
-
-              v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + Hubbard_J(1,nt)*n_spin + &
-                      0.5d0*(Hubbard_U(nt)-Hubbard_J(1,nt)) - Hubbard_U(nt)*n_tot
-
-!             +U contributions 
-
-              DO m2 = 1, 2 * Hubbard_l(nt) + 1
-                do m3 = 1, 2 * Hubbard_l(nt) + 1
-                  do m4 = 1, 2 * Hubbard_l(nt) + 1
-
-                    do is1 = 1, nspin
-                       v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) + (MOD(nspin,2)+1) * &
-                                         u_matrix(m1,m3,m2,m4) * ns(m3,m4,is1,na)
-                    enddo
-
-                    v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) - &
-                                      u_matrix(m1,m3,m4,m2) * ns(m3,m4,is,na)
-
-                    eth_u = eth_u + 0.5d0*( ( u_matrix(m1,m2,m3,m4)-u_matrix(m1,m2,m4,m3) ) * &
-                                    ns(m1,m3,is,na)*ns(m2,m4,is,na)+u_matrix(m1,m2,m3,m4)   * &
-                                    ns(m1,m3,is,na)*ns(m2,m4,nspin+1-is,na) )
-
-                  enddo
-                enddo
-              ENDDO
-            ENDDO
-
-          ENDDO
-
-       endif
-    enddo
-
-    if (nspin.eq.1) eth_u = 2.d0 * eth_u
-    eth = eth_u - eth_dc
-
-!-- output of hubbard energies:
-    IF ( iverbosity > 0 ) THEN
-      write(stdout,*) '--- in v_hubbard ---'
-      write(stdout,'("Hubbard energies (dc, U, total) ",3f9.4)') eth_dc, eth_u, eth
-      write(stdout,*) '-------'
-    ENDIF
-!--
-
-  endif
-
-  DEALLOCATE (u_matrix)
-  RETURN
-
-END SUBROUTINE v_hubbard
-!-------------------------------------
-
-SUBROUTINE v_hubbard_nc(ns, v_hub, eth)
-  !-------------------------------------
+  REAL(DP) :: effU
+  INTEGER :: is, is1, na, nt, m1, m2, m3, m4
   !
-  ! Noncollinear version of v_hubbard.
+  eth = 0.d0
+  !
+  v_hub(:,:,:,:) = 0.d0
+  !
+  DO na = 1, nat
+     !
+     nt = ityp (na)
+     !
+     IF (Hubbard_J0(nt).NE.0.d0 .OR. Hubbard_beta(nt).NE.0.d0) &
+     CALL errore('v_hubbard_b', 'Hubbard_J0 and Hubbard_beta are not supported',1) 
+     !
+     IF (is_hubbard_back(nt)) THEN
+        !
+        effU = Hubbard_U_back(nt)
+        !
+        DO is = 1, nspin
+           !
+           DO m1 = 1, ldim_back(nt) 
+              !
+              eth = eth + ( Hubbard_alpha_back(nt) + 0.5D0 * effU ) * &
+                              ns(m1,m1,is,na)
+              v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + &
+                            ( Hubbard_alpha_back(nt) + 0.5D0 * effU )
+              !
+              DO m2 = 1, ldim_back(nt)
+                 !
+                 eth = eth - 0.5D0 * effU * &
+                            ns(m2,m1,is,na)* ns(m1,m2,is,na)
+                 v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) - &
+                                       effU * ns(m2,m1,is,na)
+                 !
+              ENDDO
+              !
+           ENDDO
+           !
+        ENDDO
+        !
+     ENDIF
+     !
+  ENDDO
+  !
+  IF (nspin.EQ.1) eth = 2.d0 * eth
+  !
+  ! Hubbard energy
+  !
+  IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
+     WRITE(stdout,*) '--- in v_hubbard_b ---'
+     WRITE(stdout,'(''Hubbard_back energy '',f9.4)') eth
+     WRITE(stdout,*) '-------'
+  ENDIF
+  !
+  RETURN
+  !
+END SUBROUTINE v_hubbard_b
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+SUBROUTINE v_hubbard_full( ns, v_hub, eth )
+  !---------------------------------------------------------------------
+  !
+  !! Computes Hubbard potential and Hubbard energy.
+  !! DFT+U(+J) : Formulation by Liechtenstein et al., Phys. Rev. B 52, R5467 (1995).
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp
+  USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, Hubbard_U, &
+                                   Hubbard_J, Hubbard_alpha
+  USE lsda_mod,             ONLY : nspin
+  USE control_flags,        ONLY : iverbosity
+  USE io_global,            ONLY : stdout
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN)  :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
+  !! Occupation matrix
+  REAL(DP), INTENT(OUT) :: v_hub(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
+  !! Hubbard potential
+  REAL(DP), INTENT(OUT) :: eth
+  !! Hubbard energy
+  !
+  !  ... local variables
+  !
+  REAL(DP) :: n_tot, n_spin, eth_dc, eth_u, mag2
+  INTEGER  :: is, isop, is1, na, nt, m1, m2, m3, m4
+  REAL(DP), ALLOCATABLE :: u_matrix(:,:,:,:)
+  !
+  ALLOCATE( u_matrix(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, 2*Hubbard_lmax+1, 2*Hubbard_lmax+1) )
+  !
+  eth    = 0.d0
+  eth_dc = 0.d0
+  eth_u  = 0.d0
+  !
+  v_hub(:,:,:,:) = 0.d0
+  !
+  DO na = 1, nat
+     !
+     nt = ityp (na)
+     !
+     IF (Hubbard_U(nt)/=0.d0) THEN
+        !
+        ! Initialize U(m1,m2,m3,m4) matrix 
+        !
+        CALL hubbard_matrix( Hubbard_lmax, Hubbard_l(nt), Hubbard_U(nt), &
+                               Hubbard_J(1,nt), u_matrix )
+        !
+        ! Total N and M^2 for DC (double counting) term
+        !
+        n_tot = 0.d0
+        !
+        DO is = 1, nspin
+           DO m1 = 1, 2 * Hubbard_l(nt) + 1
+              n_tot = n_tot + ns(m1,m1,is,na)
+           ENDDO
+        ENDDO
+        !
+        IF (nspin==1) n_tot = 2.d0 * n_tot
+        !
+        mag2  = 0.d0
+        ! 
+        IF (nspin==2) THEN
+           DO m1 = 1, 2 * Hubbard_l(nt) + 1
+              mag2 = mag2 + ns(m1,m1,1,na) - ns(m1,m1,2,na)
+           ENDDO
+        ENDIF
+        mag2  = mag2**2
+        !
+        ! Hubbard energy: DC term
+        !
+        eth_dc = eth_dc + 0.5d0*( Hubbard_U(nt)*n_tot*(n_tot-1.d0) - &
+                                  Hubbard_J(1,nt)*n_tot*(0.5d0*n_tot-1.d0) - &
+                                  0.5d0*Hubbard_J(1,nt)*mag2 )
+        !
+        DO is = 1, nspin
+           !
+           ! n_spin = up/down N
+           !
+           n_spin = 0.d0
+           DO m1 = 1, 2 * Hubbard_l(nt) + 1
+              n_spin = n_spin + ns(m1,m1,is,na)
+           ENDDO
+           !
+           DO m1 = 1, 2 * Hubbard_l(nt) + 1
+              !
+              ! Hubbard potential: DC contribution  
+              !
+              v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + Hubbard_J(1,nt)*n_spin + &
+                         0.5d0*(Hubbard_U(nt)-Hubbard_J(1,nt)) - Hubbard_U(nt)*n_tot
+              !
+              ! +U contributions 
+              !
+              DO m2 = 1, 2 * Hubbard_l(nt) + 1
+                 DO m3 = 1, 2 * Hubbard_l(nt) + 1
+                    DO m4 = 1, 2 * Hubbard_l(nt) + 1
+                       !
+                       DO is1 = 1, nspin
+                          v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) + (MOD(nspin,2)+1) * &
+                                               u_matrix(m1,m3,m2,m4) * ns(m3,m4,is1,na)
+                       ENDDO
+                       !
+                       v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) - &
+                                            u_matrix(m1,m3,m4,m2) * ns(m3,m4,is,na)
+                       !
+                       eth_u = eth_u + 0.5d0*( ( u_matrix(m1,m2,m3,m4)-u_matrix(m1,m2,m4,m3) ) * &
+                                       ns(m1,m3,is,na)*ns(m2,m4,is,na)+u_matrix(m1,m2,m3,m4)   * &
+                                       ns(m1,m3,is,na)*ns(m2,m4,nspin+1-is,na) )
+                    ENDDO ! m4
+                 ENDDO ! m3
+              ENDDO ! m2
+              !
+           ENDDO ! m1
+           !
+        ENDDO ! is
+        !
+     ENDIF
+     !
+  ENDDO ! na
+  ! 
+  IF (nspin==1) eth_u = 2.d0 * eth_u
+  eth = eth_u - eth_dc
+  !
+  ! Hubbard energy
+  !
+  IF ( iverbosity > 0 ) THEN
+     WRITE(stdout,*) '--- in v_hubbard ---'
+     WRITE(stdout,'("Hubbard energies (dc, U, total) ",3f9.4)') eth_dc, eth_u, eth
+     WRITE(stdout,*) '-------'
+  ENDIF
+  !
+  DEALLOCATE (u_matrix)
+  !
+  RETURN
+  !
+END SUBROUTINE v_hubbard_full
+!---------------------------------------------------------------
+
+!---------------------------------------------------------------
+SUBROUTINE v_hubbard_full_nc( ns, v_hub, eth )
+  !-------------------------------------------------------------
+  !
+  !! Computes Hubbard potential and Hubbard energy (noncollinear case).
+  !! DFT+U(+J) : Formulation by Liechtenstein et al., Phys. Rev. B 52, R5467 (1995).
+  !
+  USE kinds,                ONLY : DP
+  USE ions_base,            ONLY : nat, ityp
+  USE noncollin_module,     ONLY : noncolin
   USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, &
                                    Hubbard_U, Hubbard_J, Hubbard_alpha
   USE lsda_mod,             ONLY : nspin
   USE control_flags,        ONLY : iverbosity
   USE io_global,            ONLY : stdout
-
+  !
   IMPLICIT NONE
   !
-  COMPLEX(DP) :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat) 
-  COMPLEX(DP) :: v_hub(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat) 
-  REAL(DP) :: eth, eth_dc, eth_noflip, eth_flip, psum, mx, my, mz, mag2
-  
+  COMPLEX(DP) :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
+  !! Occupation matrix
+  COMPLEX(DP) :: v_hub(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
+  !! Hubbard potential
+  REAL(DP) :: eth
+  !! Hubbard matrix
+  !
+  !  ... local variables
+  !
+  REAL(DP) :: eth_dc, eth_noflip, eth_flip, mx, my, mz, mag2
   INTEGER :: is, is1, js, i, j, na, nt, m1, m2, m3, m4
   COMPLEX(DP) :: n_tot, n_aux
-  REAL(DP),    ALLOCATABLE :: u_matrix(:,:,:,:)
-
+  REAL(DP), ALLOCATABLE :: u_matrix(:,:,:,:)
+  !
   ALLOCATE( u_matrix(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, 2*Hubbard_lmax+1, 2*Hubbard_lmax+1) )
-
+  !
   eth        = 0.d0
   eth_dc     = 0.d0  
   eth_noflip = 0.d0  
   eth_flip   = 0.d0  
-
+  !
   v_hub(:,:,:,:) = 0.d0
-
+  !
   DO na = 1, nat  
+     !
      nt = ityp (na)  
-     IF (Hubbard_U(nt).NE.0.d0) THEN  
-
-!       initialize U(m1,m2,m3,m4) matrix 
-        call hubbard_matrix (Hubbard_lmax, Hubbard_l(nt), Hubbard_U(nt), &
-                             Hubbard_J(1,nt), u_matrix)
-
-!---    total N and M^2 for DC (double counting) term
+     !
+     IF (Hubbard_U(nt) /= 0.d0) THEN  
+        !
+        ! Initialize U(m1,m2,m3,m4) matrix 
+        !
+        CALL hubbard_matrix( Hubbard_lmax, Hubbard_l(nt), Hubbard_U(nt), &
+                             Hubbard_J(1,nt), u_matrix )
+        !
+        ! Total N and M^2 for DC (double counting) term
+        !
         n_tot = 0.d0
         mx    = 0.d0
         my    = 0.d0
         mz    = 0.d0
-        do m1 = 1, 2 * Hubbard_l(nt) + 1
+        DO m1 = 1, 2*Hubbard_l(nt)+1
           n_tot = n_tot + ns(m1,m1,1,na) + ns(m1,m1,4,na)
           mx = mx + DBLE( ns(m1, m1, 2, na) + ns(m1, m1, 3, na) )
           my = my + 2.d0 * AIMAG( ns(m1, m1, 2, na) )
           mz = mz + DBLE( ns(m1, m1, 1, na) - ns(m1, m1, 4, na) )
-        enddo  
+        ENDDO  
         mag2 = mx**2 + my**2 + mz**2  
-!---
-
-!---    hubbard energy: DC term
+        !
+        ! Hubbard energy: DC term
+        !
         mx = REAL(n_tot)
-        eth_dc = eth_dc + 0.5d0*( Hubbard_U(nt)*mx*(mx-1.d0) -       &
+        eth_dc = eth_dc + 0.5d0*( Hubbard_U(nt)*mx*(mx-1.d0) - &
                                   Hubbard_J(1,nt)*mx*(0.5d0*mx-1.d0) - &
                                   0.5d0*Hubbard_J(1,nt)*mag2 )   
-!--
+        !
         DO is = 1, nspin  
-           if (is.eq.2) then
+           !
+           IF (is == 2) THEN
             is1 = 3
-           elseif (is.eq.3) then
+           ELSEIF (is == 3) THEN
             is1 = 2
-           else
+           ELSE
             is1 = is
-           endif   
-
-!---       hubbard energy:
-           if (is1.eq.is) then
-
-!           non spin-flip contribution
-            DO m1 = 1, 2 * Hubbard_l(nt) + 1
-             DO m2 = 1, 2 * Hubbard_l(nt) + 1
-               do m3 = 1, 2 * Hubbard_l(nt) + 1
-                do m4 = 1, 2 * Hubbard_l(nt) + 1
-
-                  eth_noflip = eth_noflip + 0.5d0*(                            &
-                             ( u_matrix(m1,m2,m3,m4)-u_matrix(m1,m2,m4,m3) )*  & 
-                             ns(m1,m3,is,na)*ns(m2,m4,is,na)                +  &
-                     u_matrix(m1,m2,m3,m4)*ns(m1,m3,is,na)*ns(m2,m4,nspin+1-is,na) )
-
-                enddo
-               enddo
+           ENDIF
+           !
+           ! Hubbard energy:
+           !
+           IF (is1 == is) THEN
+             !
+             ! Non spin-flip contribution
+             !
+             DO m1 = 1, 2*Hubbard_l(nt)+1
+              DO m2 = 1, 2*Hubbard_l(nt)+1
+                DO m3 = 1, 2*Hubbard_l(nt)+1
+                 DO m4 = 1, 2*Hubbard_l(nt)+1
+                   eth_noflip = eth_noflip + 0.5d0*(                            &
+                              ( u_matrix(m1,m2,m3,m4)-u_matrix(m1,m2,m4,m3) )*  & 
+                              ns(m1,m3,is,na)*ns(m2,m4,is,na) +                 &
+                      u_matrix(m1,m2,m3,m4)*ns(m1,m3,is,na)*ns(m2,m4,nspin+1-is,na) )
+                 ENDDO
+                ENDDO
               ENDDO
              ENDDO
-
-           else
-!           spin-flip contribution
-            DO m1 = 1, 2 * Hubbard_l(nt) + 1
-             DO m2 = 1, 2 * Hubbard_l(nt) + 1
-               do m3 = 1, 2 * Hubbard_l(nt) + 1
-                do m4 = 1, 2 * Hubbard_l(nt) + 1
-
-                  eth_flip = eth_flip - 0.5d0*u_matrix(m1,m2,m4,m3)*       &
-                                    ns(m1,m3,is,na)*ns(m2,m4,is1,na) 
-
-                enddo
-               enddo
+             !
+           ELSE
+             ! 
+             ! Spin-flip contribution
+             !
+             DO m1 = 1, 2*Hubbard_l(nt)+1
+              DO m2 = 1, 2*Hubbard_l(nt)+1
+               DO m3 = 1, 2*Hubbard_l(nt)+1
+                DO m4 = 1, 2*Hubbard_l(nt)+1
+                   eth_flip = eth_flip - 0.5d0*u_matrix(m1,m2,m4,m3)* &
+                                     ns(m1,m3,is,na)*ns(m2,m4,is1,na) 
+                ENDDO
+               ENDDO
               ENDDO
              ENDDO
-
-           endif
-!---
-
-!---       hubbard potential: non spin-flip contribution 
-           if (is1.eq.is) then
-            DO m1 = 1, 2 * Hubbard_l(nt) + 1
-             DO m2 = 1, 2 * Hubbard_l(nt) + 1  
-
-               do m3 = 1, 2 * Hubbard_l(nt) + 1
-                do m4 = 1, 2 * Hubbard_l(nt) + 1
+             !
+           ENDIF
+           !
+           ! Hubbard potential: non spin-flip contribution 
+           !
+           IF (is1 == is) THEN
+             !
+             DO m1 = 1, 2*Hubbard_l(nt)+1
+              DO m2 = 1, 2*Hubbard_l(nt)+1
+               DO m3 = 1, 2*Hubbard_l(nt)+1
+                DO m4 = 1, 2*Hubbard_l(nt)+1
                   v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) + &
                     u_matrix(m1,m3,m2,m4)*( ns(m3,m4,1,na)+ns(m3,m4,4,na) ) 
-                enddo 
-               enddo
-
+                ENDDO 
+               ENDDO
               ENDDO
              ENDDO
-           endif
-!---
-            
-!---       n_aux = /sum_{i} n_{i,i}^{sigma2, sigma1} for DC term
+             !
+           ENDIF
+           !
+           ! n_aux = /sum_{i} n_{i,i}^{sigma2, sigma1} for DC term
+           !
            n_aux = 0.d0
-           do m1 = 1, 2 * Hubbard_l(nt) + 1
-             n_aux = n_aux + ns(m1,m1,is1,na)  
-           enddo
-!---
-
-           DO m1 = 1, 2 * Hubbard_l(nt) + 1  
-
-!---          hubbard potential: DC contribution  
-              v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + Hubbard_J(1,nt)*n_aux
-              if (is1.eq.is) then
-                v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + &
-                 0.5d0*(Hubbard_U(nt)-Hubbard_J(1,nt)) - Hubbard_U(nt)*n_tot  
-              endif
-!---
-              
-!---          hubbard potential: spin-flip contribution
-              DO m2 = 1, 2 * Hubbard_l(nt) + 1  
-
-               do m3 = 1, 2 * Hubbard_l(nt) + 1
-                do m4 = 1, 2 * Hubbard_l(nt) + 1
-                 v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) - &
-                                      u_matrix(m1,m3,m4,m2) * ns(m3,m4,is1,na) 
-                enddo 
-               enddo
-
-              ENDDO
-!---
+           DO m1 = 1, 2*Hubbard_l(nt)+1
+              n_aux = n_aux + ns(m1,m1,is1,na)  
            ENDDO
-        ENDDO
-
+           !
+           DO m1 = 1, 2*Hubbard_l(nt)+1
+             ! 
+             ! Hubbard potential: DC contribution  
+             !
+             v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + Hubbard_J(1,nt)*n_aux
+             !
+             IF (is1 == is) THEN
+                v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + &
+                     0.5d0*(Hubbard_U(nt)-Hubbard_J(1,nt)) - Hubbard_U(nt)*n_tot  
+             ENDIF
+             !
+             ! Hubbard potential: spin-flip contribution
+             !
+             DO m2 = 1, 2*Hubbard_l(nt)+1  
+              DO m3 = 1, 2*Hubbard_l(nt)+1
+               DO m4 = 1, 2*Hubbard_l(nt)+1
+                  v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) - &
+                             u_matrix(m1,m3,m4,m2) * ns(m3,m4,is1,na) 
+               ENDDO 
+              ENDDO
+             ENDDO
+             !
+           ENDDO
+           !
+        ENDDO ! is
+        !
      ENDIF
-  ENDDO
-
+     !
+  ENDDO ! na
+  !
   eth = eth_noflip + eth_flip - eth_dc
-
-!-- output of hubbard energies:
+  !
+  ! Hubbard energies
+  !
   IF ( iverbosity > 0 ) THEN
-    write(stdout,*) '--- in v_hubbard ---'
-    write(stdout,'("Hub. E (dc, noflip, flip, total) ",4f9.4)') &
+    WRITE(stdout,*) '--- in v_hubbard ---'
+    WRITE(stdout,'("Hub. E (dc, noflip, flip, total) ",4f9.4)') &
                                  eth_dc, eth_noflip, eth_flip, eth 
-    write(stdout,*) '-------'
+    WRITE(stdout,*) '-------'
   ENDIF
-!--
-
+  !
   DEALLOCATE (u_matrix)
+  !
   RETURN
-END SUBROUTINE v_hubbard_nc
-!-------------------------------------------
+  !
+END SUBROUTINE v_hubbard_full_nc
+!----------------------------------------------------------------------------
+
+!------------------------------------------------------------------------------------
+SUBROUTINE v_hubbard_extended (nsg, v_hub, eth)
+  !-----------------------------------------------------------------------------------
+  !
+  !! Computes extended Hubbard potential and Hubbard energy.
+  !! DFT+U+V: Simplified rotationally-invariant formulation by
+  !! V.L. Campo Jr and M. Cococcioni, J. Phys.: Condens. Matter 22, 055602 (2010).
+  !
+  USE kinds,             ONLY : DP
+  USE ions_base,         ONLY : nat, ityp
+  USE ldaU,              ONLY : Hubbard_l, Hubbard_alpha, Hubbard_J0, Hubbard_beta,   &
+                                ldim_u, ldmx_tot, max_num_neighbors, at_sc, neighood, &
+                                Hubbard_V, Hubbard_alpha_back, is_hubbard, is_hubbard_back
+  USE lsda_mod,          ONLY : nspin
+  USE control_flags,     ONLY : iverbosity, dfpt_hub
+  USE io_global,         ONLY : stdout
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(IN)  :: nsg  (ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin)
+  COMPLEX(DP), INTENT(OUT) :: v_hub(ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin)
+  REAL(DP),    INTENT(OUT) :: eth
+  ! 
+  ! Local variables 
+  !
+  INTEGER :: is, isop, na, na1, na2, nt, nt1, nt2, m1, m2, viz, equiv_na2, i_type
+  INTEGER, EXTERNAL :: type_interaction, find_viz
+  !
+  eth  = 0.d0
+  v_hub(:,:,:,:,:) = (0.d0, 0.d0)
+  !
+  DO na1 = 1, nat
+     !
+     nt1 = ityp(na1)
+     !
+     IF ( is_hubbard(nt1) .OR. is_hubbard_back(nt1) ) THEN
+        !
+        DO is = 1, nspin
+           !
+           DO viz = 1, neighood(na1)%num_neigh
+              !
+              na2 = neighood(na1)%neigh(viz)
+              equiv_na2 = at_sc(na2)%at
+              nt2 = ityp(equiv_na2)
+              !
+              IF ((is_hubbard(nt2).OR.is_hubbard_back(nt2)) .AND. &
+                  (Hubbard_V(na1,na2,1).NE.0.d0 .OR. &
+                   Hubbard_V(na1,na2,2).NE.0.d0 .OR. &
+                   Hubbard_V(na1,na2,3).NE.0.d0 .OR. &
+                   Hubbard_V(na1,na2,4).NE.0.d0) ) THEN
+                  !
+                  ! For both standard and background states of a center atom
+                  DO m1 = 1, ldim_u(nt1)
+                     ! For both standard and background states of the neighbor atom
+                     DO m2 = 1, ldim_u(nt2)
+                        !
+                        i_type = type_interaction(na1,m1,equiv_na2,m2)
+                        !
+                        v_hub(m2,m1,viz,na1,is) = &
+                           - CONJG(nsg(m2,m1,viz,na1,is)) * Hubbard_V(na1,na2,i_type)
+                        !
+                        eth = eth - nsg(m2,m1,viz,na1,is) * CONJG(nsg(m2,m1,viz,na1,is)) &
+                                    * Hubbard_V(na1,na2,i_type) * 0.5d0
+                        !
+                     ENDDO
+                  ENDDO
+                  !
+                  IF ( na1.EQ.na2 ) THEN
+                     !
+                     na = find_viz(na1,na1)
+                     !
+                     ! This is the diagonal term (like in the DFT+U only case)
+                     ! 
+                     DO m1 = 1, ldim_u(nt1)
+                        !
+                        i_type = type_interaction(na1,m1,equiv_na2,m1)
+                        !
+                        v_hub(m1,m1,na,na1,is) = v_hub(m1,m1,na,na1,is) &
+                                       + Hubbard_V(na1,na1,i_type) * 0.5d0
+                        ! 
+                        eth = eth + nsg(m1,m1,na,na1,is) &
+                                       * Hubbard_V(na1,na1,i_type) * 0.5d0
+                        !
+                     ENDDO
+                     !
+                     ! Hubbard_J0 (only on-site)
+                     !
+                     IF ( nspin.EQ.2 .AND. &
+                          (Hubbard_J0(nt1).NE.0.d0 .OR. Hubbard_beta(nt1).NE.0.d0) ) THEN
+                          !
+                          IF (is.EQ.1) THEN
+                             isop = 2
+                          ELSE
+                             isop = 1
+                          ENDIF
+                          !
+                          DO m1 = 1, 2*Hubbard_l(nt1)+1
+                             !
+                             v_hub(m1,m1,na,na1,is) = v_hub(m1,m1,na,na1,is) - &
+                                                      Hubbard_J0(nt1) * 0.5d0
+                             eth = eth - 0.5d0 * Hubbard_J0(nt1) * nsg(m1,m1,na,na1,is)
+                             !
+                             IF (is.EQ.1) THEN
+                                v_hub(m1,m1,na,na1,is) = v_hub(m1,m1,na,na1,is) + &
+                                                         Hubbard_beta(nt1)
+                                eth = eth + Hubbard_beta(nt1) * nsg(m1,m1,na,na1,is)
+                             ELSE
+                                v_hub(m1,m1,na,na1,is) = v_hub(m1,m1,na,na1,is) - &
+                                                         Hubbard_beta(nt1)
+                                eth = eth - Hubbard_beta(nt1) * nsg(m1,m1,na,na1,is)
+                             ENDIF
+                             !
+                             DO m2 = 1, 2*Hubbard_l(nt1)+1
+                                v_hub(m2,m1,na,na1,is) = v_hub(m2,m1,na,na1,is) + &
+                                   CONJG(nsg(m2,m1,na,na1,is) + nsg(m2,m1,na,na1,isop)) * &
+                                   Hubbard_J0(nt1)
+                                eth = eth + nsg(m2,m1,na,na1,is) *    &
+                                   CONJG(nsg(m2,m1,na,na1,is) + nsg(m2,m1,na,na1,isop)) * &
+                                   Hubbard_J0(nt1) * 0.5d0
+                             ENDDO
+                             !
+                          ENDDO ! m1
+                          !
+                     ENDIF
+                     !
+                  ENDIF
+                  !
+              ENDIF
+              !
+           ENDDO ! viz
+           !
+        ENDDO ! is
+        !  
+     ENDIF
+     !
+     ! Hubbard_alpha or Hubbard_alpha_back
+     !
+     IF ( ldim_u(nt1).GT.0 .AND. &
+          (Hubbard_alpha(nt1).NE.0.0d0 .OR. Hubbard_alpha_back(nt1).NE.0.0d0) ) THEN
+          !
+          na = find_viz(na1,na1)
+          !
+          DO is = 1, nspin
+             !
+             DO m1 = 1, 2*Hubbard_l(nt1)+1
+                v_hub(m1,m1,na,na1,is) = v_hub(m1,m1,na,na1,is) + Hubbard_alpha(nt1)
+                eth = eth + nsg(m1,m1,na,na1,is)* Hubbard_alpha(nt1)
+             ENDDO
+             !
+             IF ( ldim_u(nt1).GT.2*Hubbard_l(nt1)+1 .AND. &
+                  Hubbard_alpha_back(nt1).NE.0.0d0 ) THEN
+                ! Background states
+                DO m1 = 2*Hubbard_l(nt1)+2, ldim_u(nt1)
+                   v_hub(m1,m1,na,na1,is) = v_hub(m1,m1,na,na1,is) + Hubbard_alpha_back(nt1)
+                   eth = eth + nsg(m1,m1,na,na1,is)* Hubbard_alpha_back(nt1)
+                ENDDO
+             ENDIF
+             !
+          ENDDO
+          !
+     ENDIF
+     !
+  ENDDO ! na1
+  !
+  IF (nspin.EQ.1) eth = eth * 2.d0
+  !
+  ! Hubbard energy
+  !
+  IF ( iverbosity > 0 .AND. .NOT.dfpt_hub ) THEN
+     WRITE(stdout,*) '--- in v_hubbard_extended ---'
+     WRITE(stdout,'("Hubbard energy ",f9.4)') eth
+     WRITE(stdout,*) '-----------------------------'
+  ENDIF
+  !
+  RETURN
+  !
+END SUBROUTINE v_hubbard_extended
+!---------------------------------------------------------------------
 
 !----------------------------------------------------------------------------
 SUBROUTINE v_h_of_rho_r( rhor, ehart, charge, v )
   !----------------------------------------------------------------------------
-  !
-  ! ... Hartree potential VH(r) from a density in R space n(r) 
+  !! Hartree potential VH(r) from a density in R space n(r) 
   !
   USE kinds,           ONLY : DP
   USE fft_base,        ONLY : dfftp
@@ -1054,46 +1355,35 @@ SUBROUTINE v_h_of_rho_r( rhor, ehart, charge, v )
   !
   ! ... Declares variables
   !
-  REAL( DP ), INTENT(IN)     :: rhor( dfftp%nnr, nspin )
-  REAL( DP ), INTENT(INOUT)  :: v( dfftp%nnr, nspin )
+  REAL( DP ), INTENT(IN)     :: rhor( dfftp%nnr )
+  REAL( DP ), INTENT(INOUT)  :: v( dfftp%nnr )
   REAL( DP ), INTENT(OUT)    :: ehart, charge
   !
   ! ... Local variables
   !
-  COMPLEX( DP ), ALLOCATABLE :: rhog( : , : )
+  COMPLEX( DP ), ALLOCATABLE :: rhog( : )
   COMPLEX( DP ), ALLOCATABLE :: aux( : )
+  REAL( DP ), ALLOCATABLE :: vaux(:,:)
   INTEGER :: is
   !
   ! ... bring the (unsymmetrized) rho(r) to G-space (use aux as work array)
   !
-  ALLOCATE( rhog( dfftp%ngm, nspin ) )
+  ALLOCATE( rhog( dfftp%ngm ) )
   ALLOCATE( aux( dfftp%nnr ) )
-  DO is = 1, nspin
-     aux(:) = CMPLX(rhor( : , is ),0.D0,kind=dp) 
-     CALL fwfft ('Rho', aux, dfftp)
-     rhog(:,is) = aux(dfftp%nl(:))
-  END DO
+  aux = CMPLX(rhor,0.D0,kind=dp)
+  CALL fwfft ('Rho', aux, dfftp)
+  rhog(:) = aux(dfftp%nl(:))
   DEALLOCATE( aux )
   !
-  ! ... compute VH(r) from n(G) 
+  ! ... compute VH(r) from n(G)
   !
-  !^^ ... TEMPORARY FIX (newlsda-CPV) ...
-  IF ( nspin==2 ) THEN
-     rhog(:,1) = rhog(:,1) + rhog(:,2) 
-     rhog(:,2) = rhog(:,1) - rhog(:,2)*2._dp
-  ENDIF
-  !^^.......................
-  !     
-  CALL v_h( rhog(:,1), ehart, charge, v )
+  ALLOCATE( vaux( dfftp%nnr, nspin ) )
+  vaux = 0.D0
+  CALL v_h( rhog, ehart, charge, vaux )
+  v(:) = v(:) + vaux(:,1)
   !
-  !^^ ... TEMPORARY FIX (newlsda) ...
-  IF ( nspin==2 ) THEN
-     rhog(:,1) = ( rhog(:,1) + rhog(:,2) )*0.5_dp
-     rhog(:,2) = rhog(:,1) - rhog(:,2)
-  ENDIF
-  !^^.......................
-  !  
   DEALLOCATE( rhog )
+  DEALLOCATE( vaux )
   !
   RETURN
   !
@@ -1101,9 +1391,8 @@ END SUBROUTINE v_h_of_rho_r
 !----------------------------------------------------------------------------
 SUBROUTINE gradv_h_of_rho_r( rho, gradv )
   !----------------------------------------------------------------------------
-  !
-  ! ... Gradient of Hartree potential in R space from a total 
-  !     (spinless) density in R space n(r)
+  !! Gradient of Hartree potential in R space from a total 
+  !! (spinless) density in R space n(r)
   !
   USE kinds,           ONLY : DP
   USE fft_base,        ONLY : dfftp
@@ -1118,13 +1407,13 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
   !
   ! ... Declares variables
   !
-  REAL( DP ), INTENT(IN)     :: rho( dfftp%nnr )
-  REAL( DP ), INTENT(OUT)    :: gradv( 3, dfftp%nnr )
+  REAL( DP ), INTENT(IN)     :: rho(dfftp%nnr)
+  REAL( DP ), INTENT(OUT)    :: gradv(3, dfftp%nnr)
   !
   ! ... Local variables
   !
-  COMPLEX( DP ), ALLOCATABLE :: rhoaux( : )
-  COMPLEX( DP ), ALLOCATABLE :: gaux( : )
+  COMPLEX( DP ), ALLOCATABLE :: rhoaux(:)
+  COMPLEX( DP ), ALLOCATABLE :: gaux(:)
   COMPLEX( DP ), ALLOCATABLE :: rgtot(:), vaux(:)
   REAL( DP )                 :: fac, eh_corr
   INTEGER                    :: ig, ipol
@@ -1134,7 +1423,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
   ALLOCATE( rhoaux( dfftp%nnr ) )
   rhoaux( : ) = CMPLX( rho( : ), 0.D0, KIND=dp ) 
   !
-  CALL fwfft('Rho', rhoaux, dfftp)
+  CALL fwfft( 'Rho', rhoaux, dfftp )
   !
   ! ... Compute total potential in G space
   !
@@ -1147,9 +1436,9 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
     DO ig = gstart, ngm
       !
       fac = g(ipol,ig) / gg(ig)
-      gaux(dfftp%nl(ig)) = CMPLX(-AIMAG(rhoaux(dfftp%nl(ig))),REAL(rhoaux(dfftp%nl(ig))),kind=dp) * fac 
+      gaux(dfftp%nl(ig)) = CMPLX(-AIMAG(rhoaux(dfftp%nl(ig))),REAL(rhoaux(dfftp%nl(ig))),KIND=dp)*fac 
       !
-    END DO
+    ENDDO
     !
     ! ...and add the factor e2*fpi/2\pi/a coming from the missing prefactor of 
     !  V = e2 * fpi divided by the 2\pi/a factor missing in G  
@@ -1159,16 +1448,16 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
     !
     ! ...add martyna-tuckerman correction, if needed
     ! 
-    if (do_comp_mt) then
+    IF (do_comp_mt) THEN
        ALLOCATE( vaux( ngm ), rgtot(ngm) )
        rgtot(1:ngm) = rhoaux(dfftp%nl(1:ngm))
-       CALL wg_corr_h (omega, ngm, rgtot, vaux, eh_corr)
+       CALL wg_corr_h( omega, ngm, rgtot, vaux, eh_corr )
        DO ig = gstart, ngm
          fac = g(ipol,ig) * tpiba
          gaux(dfftp%nl(ig)) = gaux(dfftp%nl(ig)) + CMPLX(-AIMAG(vaux(ig)),REAL(vaux(ig)),kind=dp)*fac 
        END DO
        DEALLOCATE( rgtot, vaux )
-    end if
+    ENDIF
     !
     IF ( gamma_only ) THEN
       !
@@ -1179,7 +1468,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
     !
     ! ... bring back to R-space, (\grad_ipol a)(r) ...
     !
-    CALL invfft ('Rho', gaux, dfftp)
+    CALL invfft( 'Rho', gaux, dfftp )
     !
     gradv(ipol,:) = REAL( gaux(:) )
     !

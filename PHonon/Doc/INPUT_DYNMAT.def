@@ -154,5 +154,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dynma
             }   
             default { '.false.' }
         }
+        var el_ph_nsig -type INTEGER {
+            info {
+                The number of double-delta smearing values used in an electron-phonon
+                coupling calculation.
+            }
+        }
+        var el_ph_sigma -type REAL {
+            info {
+                The spacing of double-delta smearing values used in an electron-phonon
+                coupling calculation.
+            }
+        }
     }
 }

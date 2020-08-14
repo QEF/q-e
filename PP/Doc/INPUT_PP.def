@@ -36,6 +36,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 
         All output quantities are in ATOMIC (RYDBERG) UNITS unless
         otherwise explicitly specified.
+        All charge densities integrate to the NUMBER of electrons
+        not to the total charge.
+        All potentials have the dimension of an energy (e*V, not V).
     }
 
     namelist INPUTPP {
@@ -122,6 +125,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                    21 = all-electron charge density (valence+core).
                         For PAW calculations only; requires a very dense real-space grid. 
 
+                   22 = kinetic energy density (for meta-GGA and XDM only)
             }
         }
 
@@ -176,7 +180,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                     info {
                         upper boundary of energy grid (in eV).
 
-                        If not specified, LDOS is computed just for energy @ref emin
+                        Defaults to Fermi energy.
                     }
                 }
 
@@ -323,6 +327,22 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                         0 = total charge (default value),
                         1 = spin up charge,
                         2 = spin down charge.
+                    }
+                }
+            }
+
+            elsewhen -test "plot_num=22" {
+                label {
+                    Options for kinetic energy density (plot_num=22),
+                    LSDA case only:
+                }
+
+                var spin_component -type INTEGER {
+                    default 0
+                    info {
+                        0 = total density (default value),
+                        1 = spin up density,
+                        2 = spin down density.
                     }
                 }
             }

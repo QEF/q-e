@@ -20,7 +20,7 @@ SUBROUTINE lr_sym_eels (dvtosym)
   USE constants,        ONLY : tpi
   USE fft_base,         ONLY : dfftp
   USE cell_base,        ONLY : at
-  USE symm_base,        ONLY : s, ftau
+  USE symm_base,        ONLY : s, ft
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag
 
   USE lr_symm_base, ONLY : minus_q, nsymq, irotmq, gi, gimq
@@ -29,6 +29,7 @@ SUBROUTINE lr_sym_eels (dvtosym)
   !
   COMPLEX(DP) :: dvtosym(dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin_mag)
   ! the charge density response to be symmetrized
+  INTEGER, ALLOCATABLE :: ftau(:,:), s_scaled(:,:,:)
   INTEGER :: is, ri, rj, rk, i, j, k, ipol, isym, irot
   ! counters
   REAL(DP) :: gf(3), n(3)
@@ -50,6 +51,10 @@ SUBROUTINE lr_sym_eels (dvtosym)
   n(1) = tpi / DBLE (dfftp%nr1)
   n(2) = tpi / DBLE (dfftp%nr2)
   n(3) = tpi / DBLE (dfftp%nr3)
+  !
+  ALLOCATE ( ftau(3, nsymq), s_scaled(3,3, nsymq) )
+  CALL scale_sym_ops (nsymq, s, ft, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+       s_scaled, ftau )
   !
   !------------------------------------------------------------------------!
   !  If necessary, symmetrize with respect to the sym.op.  S*q = -q + G    !
@@ -73,8 +78,8 @@ SUBROUTINE lr_sym_eels (dvtosym)
   !               !
   !               ! Rotation and fractional translation: S^-1 * r - ftau
   !               !
-  !               call ruotaijk (s(1,1,irotmq), ftau(1,irotmq), i, j, k, &
-  !               dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
+  !               CALL rotate_grid_point ( s_scaled(1,1,irotmq),ftau(1,irotmq),&
+  !                    i, j, k, dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk )
   !               !
   !               ! drho(S^-1 * r - ftau) * exp(i G*a) 
   !               !
@@ -134,8 +139,8 @@ SUBROUTINE lr_sym_eels (dvtosym)
                  !
                  ! Rotation and fractional translation: S^-1 * r - ftau
                  !
-                 CALL ruotaijk (s(1,1,isym), ftau(1,isym), i, j, k, &
-                 dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
+                 CALL rotate_grid_point ( s_scaled(1,1,isym), ftau(1,isym), &
+                      i, j, k, dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk )
                  !
                  ! Calculate drho(S^-1 * r - ftau) * exp(i G*r)
                  !
@@ -168,6 +173,7 @@ SUBROUTINE lr_sym_eels (dvtosym)
      !
   ENDDO
   !
+  DEALLOCATE ( s_scaled, ftau )
   DEALLOCATE(dvsym)
   !
   CALL stop_clock ('lr_sym_eels')

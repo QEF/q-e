@@ -1,10 +1,10 @@
-VERSION = svn
+VERSION = 6.6
 HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
 
 LATEX   = pdflatex
 LATEX2HTML = latex2html
 
-PDFS = user_guide.pdf developer_man.pdf dfpt_tetra.pdf
+PDFS = user_guide.pdf developer_man.pdf dfpt_tetra.pdf dfpt_self_energy.pdf
 AUXS = $(PDFS:.pdf=.aux)
 LOGS = $(PDFS:.pdf=.log)
 OUTS = $(PDFS:.pdf=.out)
@@ -12,7 +12,7 @@ TOCS = $(PDFS:.pdf=.toc)
 
 
 doc:  all
-all:  pdf html defs
+all:  defs pdf html
 pdf: $(PDFS)
 html: user_guide developer_man
 
@@ -28,7 +28,7 @@ clean:
 	- rm -rf ../../Doc/INPUT_PH.*
 
 user_guide: user_guide.pdf
-	rm -rf user_guide/
+	- rm -rf user_guide/
 	latex2html \
                 -t "User's Guide for the PHonon package" \
                 -html_version 3.2,math \
@@ -69,7 +69,8 @@ developer_man: developer_man.pdf
 	@echo ""
 
 
-defs: input_xx.xsl INPUT_PH.txt INPUT_PH.html INPUT_DYNMAT.txt INPUT_DYNMAT.html link_on_main_doc
+defs: input_xx.xsl INPUT_PH.txt INPUT_PH.html INPUT_DYNMAT.txt INPUT_DYNMAT.html \
+      INPUT_POSTAHC.txt INPUT_POSTAHC.html link_on_main_doc
 
 input_xx.xsl:
 	@(if test ! -f input_xx.xsl; then \
@@ -89,6 +90,11 @@ INPUT_PH.txt: %.txt: %.def input_xx.xsl
 INPUT_DYNMAT.html: %.html: %.def input_xx.xsl
 	$(HELPDOC) $<
 INPUT_DYNMAT.txt: %.txt: %.def input_xx.xsl
+	$(HELPDOC) $<
+
+INPUT_POSTAHC.html: %.html: %.def input_xx.xsl
+	$(HELPDOC) $<
+INPUT_POSTAHC.txt: %.txt: %.def input_xx.xsl
 	$(HELPDOC) $<
 
 link_on_main_doc:

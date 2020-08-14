@@ -30,7 +30,7 @@ MODULE exx_module
   USE control_flags,      ONLY: lwfpbe0nscf        !non selfconsitent pbe0 calculation for empty bands .. 
   USE control_flags,      ONLY: nbeg               !nbeg<0 in from_scratch calculations ...
   USE control_flags,      ONLY: thdyn              !if .TRUE. then variable cell calculation is turned on ..   
-  USE cp_main_variables,  ONLY: descla             !descriptor type
+  USE cp_main_variables,  ONLY: idesc              !descriptor type
   USE electrons_base,     ONLY: nbsp               !number of electronic bands/states ...
   USE electrons_base,     ONLY: nspin              !spin unpolarized (npsin=1) vs. spin polarized (nspin=2) specification
   USE electrons_base,     ONLY: nupdwn             !number of states with up and down spin 
@@ -148,6 +148,8 @@ CONTAINS
       !
       IMPLICIT NONE
       !
+      include 'laxlib.fh'
+      !
       INTEGER ::  i, iobtl, gindex_of_iobtl, irank, proc, tmp_iobtl, ndiag_n, ndiag_nx, ndiag_i
       CHARACTER (len=300) :: print_str
       ndiag_i = ndiag_
@@ -238,9 +240,9 @@ CONTAINS
       !
       IF(nspin.EQ.1) THEN 
         !
-        ndiag_n=(INT(DSQRT(DBLE(descla(1)%n))))**2
+        ndiag_n=(INT(DSQRT(DBLE(idesc(LAX_DESC_N,1)))))**2
         !
-        IF(nproc_image.GT.descla(1)%n.AND.ndiag_i.EQ.0) THEN
+        IF(nproc_image.GT.idesc(LAX_DESC_N,1).AND.ndiag_i.EQ.0) THEN
           !
           WRITE(print_str,'(3X,"EXX calculation error : use -ndiag N option in the execution of cp.x. &
               & Set N to any perfect square number which is equal to or less than the number of electronic states &
@@ -254,7 +256,7 @@ CONTAINS
         !
         ! ndiag_n: suggested optimal ndiag value
         !
-        ndiag_nx=MIN(descla(1)%n,descla(2)%n)
+        ndiag_nx=MIN(idesc(LAX_DESC_N,1),idesc(LAX_DESC_N,2))
         ndiag_n=(INT(DSQRT(DBLE(ndiag_nx))))**2
         !
         IF(nproc_image.GT.ndiag_nx.AND.ndiag_i.EQ.0) THEN
@@ -269,6 +271,7 @@ CONTAINS
         !
       END IF      
       !
+      IF(fftx_ntgrp(dffts).GT.1) CALL errore('exx_module','EXX calculation error : taskgroup no longer supported for exx.',1)
       IF((nproc_image.LE.nbsp).AND.(fftx_ntgrp(dffts).GT.1)) CALL errore('exx_module','EXX calculation error :  &
           & use taskgroup (-ntg) = 1 when number of MPI tasks is less or equal to the number of electronic states',1)
       !

@@ -8,63 +8,87 @@
 !----------------------------------------------------------------------------
 MODULE realus
   !----------------------------------------------------------------------------
+  !! Module Real Ultra-Soft.
+  !
+  !! Originally written by Antonio Suriano and Stefano de Gironcoli;  
+  !! modified by Carlo Sbraccia;  
+  !! modified by O. Baris Malcioglu (2008);  
+  !! modified by P. Umari and G. Stenuit (2009);  
+  !! cleanup, GWW-specific stuff moved out by P. Giannozzi (2015);  
+  !! computation of dQ/dtau_i needed for forces added by P. Giannozzi (2015);  
+  !! some comments about the way some routines act added by S. de Gironcoli (2015);  
+  !! extended to generic k by S. de Gironcoli (2016);  
+  !! addusstress_r added by S. de Gironcoli (2016);  
+  !! task group reorganization by S. de Gironcoli (2016);
+  !! additional parallelization work (OpenMP and MPI) by S. de Gironcoli (2020).
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   !
-  ! ... module originally written by Antonio Suriano and Stefano de Gironcoli
-  ! ... modified by Carlo Sbraccia
-  ! ... modified by O. Baris Malcioglu (2008)
-  ! ... modified by P. Umari and G. Stenuit (2009)
-  ! ... Cleanup, GWW-specific stuff moved out by P. Giannozzi (2015)
-  ! ... Computation of dQ/dtau_i needed for forces added by P. Giannozzi (2015)
-  ! ... Some comments about the way some routines act added by S. de Gironcoli  (2015)
-  ! ... extended to generic k by S. de Gironcoli (2016)
-  ! ... addusstress_r added by S. de Gironcoli (2016)
-  ! ... task group reorganization by S. de Gironcoli (2016)
-  !
   IMPLICIT NONE
-  REAL(DP), ALLOCATABLE :: boxrad(:) ! radius of boxes, does not depend on the grid
+  !
+  REAL(DP), ALLOCATABLE :: boxrad(:)
+  !! radius of Q boxes, does not depend on the grid
+  !
   ! Beta function in real space
-  INTEGER,  ALLOCATABLE :: box_beta(:,:), maxbox_beta(:)
-  REAL(DP), ALLOCATABLE :: betasave(:,:,:)
-  REAL(DP), ALLOCATABLE :: boxrad_beta(:)
-  REAL(DP), ALLOCATABLE :: boxdist_beta(:,:), xyz_beta(:,:,:)
-  REAL(DP), ALLOCATABLE :: spher_beta(:,:,:)
-  COMPLEX(DP), ALLOCATABLE :: xkphase(:,:)  ! kpoint-related phase factor around each atom
-  INTEGER               :: current_phase_kpoint=-1 ! the kpoint index for which the xkphase is currently set
-                                                    ! negative initial value  means not set
-  !General
-  LOGICAL               :: real_space = .false.
-  ! if true perform calculations in real space
-  INTEGER               :: initialisation_level
-  ! init_realspace_vars sets this to 3; qpointlist adds 5; betapointlist adds 7
-  ! so the value should be 15 if the real space routine is initialised properly
-
+  INTEGER              :: boxtot             ! total dimension of the boxes
+  INTEGER, ALLOCATABLE :: box_beta(:)        ! (combined) list of points in the atomic boxes
+  INTEGER, ALLOCATABLE :: maxbox_beta(:)     ! number of points in a given atom section
+  INTEGER, ALLOCATABLE :: box0(:), box_s(:), box_e(:) ! offset, start, and end index of a given atom section
+  REAL(DP), ALLOCATABLE :: xyz_beta(:,:)     ! coordinates of the points in box_beta
+  REAL(DP), ALLOCATABLE :: betasave(:,:)     ! beta funtions on the (combined) list of points
+  REAL(DP), ALLOCATABLE :: boxrad_beta(:)    ! (ntypx) radius of the boxes
+  COMPLEX(DP), ALLOCATABLE :: box_psic(:)    ! a box-friendly version of psic
+  !! beta function
+  !!
+  COMPLEX(DP), ALLOCATABLE :: xkphase(:)   ! (combined) phases for all atomic boxes
+  !! kpoint-related phase factor around each atom
+  INTEGER :: current_phase_kpoint=-1
+  !! the kpoint index for which the xkphase is currently set. 
+  !! Negative initial value  means not set
+  INTEGER :: intra_bbox_comm
+  !! MPI communicator used to break boxes of the beta functions
+  !
+  ! ... General
+  !
+  LOGICAL :: real_space = .FALSE.
+  !! if true perform calculations in real space
+  INTEGER :: initialisation_level
+  !! init_realspace_vars sets this to 3; qpointlist adds 5; betapointlist adds 7
+  !! so the value should be 15 if the real space routine is initialised properly
+  !
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
-  COMPLEX(DP), ALLOCATABLE :: psic_temp(:),tg_psic_temp(:) !Copies of psic and tg_psic
-  COMPLEX(DP), ALLOCATABLE :: tg_vrs(:) !task groups linear V memory
+  COMPLEX(DP), ALLOCATABLE :: psic_temp(:)
+  !! Copy of psic
+  COMPLEX(DP), ALLOCATABLE :: tg_psic_temp(:)
+  !! Copy of tg_psic
+  COMPLEX(DP), ALLOCATABLE :: tg_vrs(:)
+  !! task groups linear V memory
   COMPLEX(DP), ALLOCATABLE :: psic_box_temp(:),tg_psic_box_temp(:)
   !
-  ! Contains the augmentation functions and related quantities, in realspace for a single atom
   TYPE realsp_augmentation
+  !! Contains the augmentation functions and related quantities, in real space for
+  !! a single atom.
      INTEGER :: maxbox = 0
-        !  number of R points in the augmentation sphere of this atom
+     !!  number of R points in the augmentation sphere of this atom
      INTEGER,ALLOCATABLE  :: box(:) 
-        ! (maxbox) Index of point R in the global order of the R-space grid
+     !! (maxbox) Index of point R in the global order of the R-space grid
      REAL(DP),ALLOCATABLE :: dist(:) 
-        ! (maxbox) distances |R-tau_i| (box is centered on atom tau_i)
+     !! (maxbox) distances |R-tau_i| (box is centered on atom tau_i)
      REAL(DP),ALLOCATABLE :: xyz(:,:) 
-        ! (3,maxbox) coordinates of R-tau_i
+     !! (3,maxbox) coordinates of R-tau_i
      REAL(DP),ALLOCATABLE :: qr(:,:) 
-        ! (maxbox,number_of_q_funcs) the Q functions sampled over R points
+     !! (maxbox,number_of_q_funcs) the Q functions sampled over R points
   END TYPE realsp_augmentation
-  ! Augmentation functions on the RHO (HARD) grid for all atoms
+  ! 
   TYPE(realsp_augmentation),POINTER :: tabp(:) => null()
-  ! Augmentation functions on the SMOOTH grid for all atoms
+  !! Augmentation functions on the RHO (HARD) grid for all atoms
+  ! 
   !TYPE(realsp_augmentation),POINTER :: tabs(:) => null()
-  ! Augmentation functions on the EXX grid for all atoms
+  ! !Augmentation functions on the SMOOTH grid for all atoms
+  !
   TYPE(realsp_augmentation),POINTER :: tabxx(:) => null()
+  !! Augmentation functions on the EXX grid for all atoms
   !
   PRIVATE
   ! variables for real-space Q, followed by routines
@@ -75,6 +99,7 @@ MODULE realus
   PUBLIC :: real_space, initialisation_level, &
        tg_psic, betasave, maxbox_beta, box_beta
   PUBLIC :: betapointlist, init_realspace_vars, v_loc_psir, v_loc_psir_inplace
+  PUBLIC :: box0, box_s, box_e, box_psic
   PUBLIC :: invfft_orbital_gamma, fwfft_orbital_gamma, s_psir_gamma, &
             calbec_rs_gamma, add_vuspsir_gamma, invfft_orbital_k,    &
             fwfft_orbital_k, s_psir_k, calbec_rs_k, add_vuspsir_k
@@ -84,9 +109,9 @@ MODULE realus
     !------------------------------------------------------------------------
     SUBROUTINE generate_qpointlist
       !------------------------------------------------------------------------
-      USE fft_base,     ONLY : dfftp, dffts
+      USE fft_base,     ONLY : dfftp  !, dffts
       USE funct,        ONLY : dft_is_hybrid
-      USE gvecs,        ONLY : doublegrid
+      !USE gvecs,        ONLY : doublegrid
       !USE exx,  ONLY : exx_fft
       IMPLICIT NONE
       !
@@ -113,17 +138,16 @@ MODULE realus
       !------------------------------------------------------------------------
     END SUBROUTINE generate_qpointlist
     !------------------------------------------------------------------------
+    !
     !----------------------------------------------------------------------------
     SUBROUTINE init_realspace_vars()
-    !---------------------------------------------------------------------------
-    !This subroutine should be called to allocate/reset real space related variables.
-    !---------------------------------------------------------------------------
-     USE control_flags,        ONLY : tqr
+     !---------------------------------------------------------------------------
+     !! This subroutine should be called to allocate/reset real space related 
+     !! variables.
+     !
      USE fft_base,             ONLY : dffts
 
      IMPLICIT NONE
-
-     INTEGER :: ik
 
      !print *, "<<<<<init_realspace_vars>>>>>>>"
 
@@ -141,11 +165,14 @@ MODULE realus
      initialisation_level = initialisation_level + 7
 
     END SUBROUTINE init_realspace_vars
+    !
     !------------------------------------------------------------------------
     SUBROUTINE deallocate_realsp()
       !------------------------------------------------------------------------
+      !! Deallocate real space related variables.
       !
-      USE gvecs,      ONLY : doublegrid
+!      USE gvecs,      ONLY : doublegrid
+      !
       IMPLICIT NONE
       !
       IF ( allocated( boxrad ) )  DEALLOCATE( boxrad )
@@ -158,10 +185,12 @@ MODULE realus
 !       END IF
       !
     END SUBROUTINE deallocate_realsp
-
+    !
     !------------------------------------------------------------------------
-    SUBROUTINE deallocate_realsp_aug ( tab )
+    SUBROUTINE deallocate_realsp_aug( tab )
       !------------------------------------------------------------------------
+      !! Deallocate \(\text{realsp_augmentation}\) type variable.
+      !
       TYPE(realsp_augmentation), POINTER :: tab(:)
       INTEGER :: ia
       !
@@ -179,31 +208,30 @@ MODULE realus
     END SUBROUTINE deallocate_realsp_aug
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qpointlist(dfft, tabp)
+    SUBROUTINE qpointlist( dfft, tabp )
       !------------------------------------------------------------------------
+      !! This subroutine computes and stores into \(\text{tabp}\) the values of \(Q(r)\)
+      !! on atom-centered boxes in the real-space grid of descriptor "dfft".  
+      !! Must be called at startup and every time atoms (tau_i) move.  
+      !! A set of spherical boxes are computed for each atom. The Q functions
+      !! \(Q(r-\tau_i)\) are then interpolated on the real-space grid points.  
+      !! On output:
       !
-      ! ... This subroutine computes and stores into "tabp" the values of Q(r)
-      ! ... on atom-centered boxes in the real-space grid of descriptor "dfft".
-      ! ... Must be called at startup and every time atoms (tau_i) move.
-      ! ... A set of spherical boxes are computed for each atom. The Q functions
-      ! ... Q(r-tau_i) are then interpolated on the real-space grid points.
-      ! ... On output:
-      ! ... - boxrad    contains the radii of the boxes for each atom type
-      ! ... - tabp(nat) contains pointers to structure tabp, each contaning
-      ! ...   % maxbox = number of real-space grid points in the atom-centered box
-      ! ...   % qr(maxbox) = interpolated values of Q(r) on the points of the box
-      ! ...   % box(maxbox)= index of grid points in the real-space grid "dfft"
+      !! * \(\text{boxrad}\) contains the radii of the boxes for each atom type;
+      !! * \(\text{tabp(nat)}\) contains pointers to structure tabp, each contaning:
+      !!    * \(\text{maxbox}\) = number of real-space grid points in the atom-centered box;
+      !!    * \(\text{qr(maxbox)}\) = interpolated values of Q(r) on the points of the box;
+      !!    * \(\text{box(maxbox)}\) = index of grid points in the real-space grid "dfft".
       !
       ! ... Most of time is spent here; the calling routines are faster.
       !
       USE constants,  ONLY : pi, fpi, eps16, eps6
       USE ions_base,  ONLY : nat, nsp, ityp, tau
-      USE cell_base,  ONLY : at, bg, omega, alat
+      USE cell_base,  ONLY : at, bg, alat
       USE uspp,       ONLY : okvan, qq_at, qq_nt, nhtol
       USE uspp_param, ONLY : upf, nh
       USE atom,       ONLY : rgrid
       USE fft_types,  ONLY : fft_type_descriptor
-      USE mp_bands,   ONLY : me_bgrp
       USE mp_bands,   ONLY : intra_bgrp_comm
       USE mp,         ONLY : mp_sum
       !
@@ -214,9 +242,9 @@ MODULE realus
       !
       INTEGER               :: ia, mbia
       INTEGER               :: indm, ih, jh, ijh, il, jl
-      INTEGER               :: roughestimate, nt, l
+      INTEGER               :: roughestimate, nt
       INTEGER,  ALLOCATABLE :: buffpoints(:)
-      INTEGER               :: ir, i, j, k, ipol, ijv
+      INTEGER               :: ir, i, j, k, ijv
       INTEGER               :: imin, imax, ii, jmin, jmax, jj, kmin, kmax, kk
       REAL(DP)              :: distsq, posi(3)
       REAL(DP), ALLOCATABLE :: boxdist(:), xyz(:,:), diff(:)
@@ -409,14 +437,14 @@ MODULE realus
     !------------------------------------------------------------------------
     SUBROUTINE real_space_q( nt, ia, mbia, tab )
       !------------------------------------------------------------------------
-      !
-      ! ... Compute Q_lm(r-tau_ia) centered around  atom ia of type nt. 
-      ! ... First we compute the radial Q(r) (qtot) for each l; then we
-      ! ... we interpolate it in our mesh (contained in tabp); finally
-      ! ... we multiply by the spherical harmonics and store it into tabp
+      !! Compute \(Q_{lm}(r-\tau_{ia})\) centered around  atom \(\text{ia}\) of
+      !! type \(\text{nt}\).  
+      !! First we compute the radial \(Q(r)\) (\(\text{qtot}\)) for each \(l\),
+      !! then we interpolate it in our mesh (contained in \(\text{tabp}\)), finally
+      !! we multiply by the spherical harmonics and store it into \(\text{tab}\).
       !
       USE constants,  ONLY : eps16, eps6
-      USE uspp,       ONLY : indv, nhtol, nhtolm, ap, nhtoj, qq_at
+      USE uspp,       ONLY : indv, nhtolm, ap, qq_at
       USE uspp_param, ONLY : upf, lmaxq, nh
       USE atom,       ONLY : rgrid
       USE splinelib,  ONLY : spline, splint
@@ -428,11 +456,9 @@ MODULE realus
       INTEGER, INTENT(IN) :: ia, nt, mbia
       TYPE(realsp_augmentation), INTENT(INOUT), POINTER :: tab(:)
       !
-      INTEGER  :: l, nb, mb, ijv, lllnbnt, lllmbnt, ir, nfuncs, lm, &
-           i0, ijh, ih, jh, ipol
+      INTEGER  :: l, nb, mb, ijv, lllnbnt, lllmbnt, ir, nfuncs, lm, i0, ijh, ih, jh
       REAL(dp) :: first, second, qtot_int
-      REAL(dp), ALLOCATABLE :: qtot(:), dqtot(:), xsp(:), wsp(:), &
-           rl2(:), spher(:,:)
+      REAL(dp), ALLOCATABLE :: qtot(:), dqtot(:), xsp(:), wsp(:), rl2(:), spher(:,:)
 
       CALL start_clock( 'realus:tabp' )
 
@@ -572,29 +598,29 @@ MODULE realus
     !------------------------------------------------------------------------
     SUBROUTINE real_space_dq( nt, ia, mbia, nfuncs, dqr )
       !------------------------------------------------------------------------
-      !
-      ! ... compute dQ(r-tau_i)/dtau_{i,a} using the formula
-      !     dQ(r-tau_i)/dtau_{i,a}= - dq/dr(|r-tau_i|)(r_a-tau_{i,a})/|r-tau_i| 
-      !                               * Y_lm(r-tau_i)
-      !                             - q(|r-tau_i|) * (dY_lm(r-tau_i)/dtau_{i,a})
-      ! ... This routine follows the same logic of real_space_q 
+      !! Compute \(dQ(r-\tau_i)/d\tau_{ia}\) using the formula:
+      !! \begin{equation}\notag
+      !!   \frac{dQ(r-\tau_i)}{d\tau_{ia}} = - \frac{dq}{dr}(|r-\tau_i|)\frac{
+      !!                                       (r_a-\tau_{ia})}{|r-\tau_i|}
+      !!                                       Y_{lm}(r-\tau_i)
+      !!                                     - q(|r-\tau_i|)\cdot
+      !!                                       \frac{dY_{lm}(r-\tau_i)}{d\tau_{ia}}
+      !! \end{equation}
+      !! This routine follows the same logic of \(\texttt{real_space_q}\).
       !
       USE constants,  ONLY : eps8, eps16
-      USE uspp,       ONLY : indv, nhtol, nhtolm, ap, nhtoj
+      USE uspp,       ONLY : indv, nhtolm, ap
       USE uspp_param, ONLY : upf, lmaxq, nh
       USE atom,       ONLY : rgrid
       USE splinelib,  ONLY : spline, splint
-      USE cell_base,  ONLY : omega
-      USE fft_base,   ONLY : dfftp
       !
       IMPLICIT NONE
       !
       INTEGER, INTENT(IN) :: ia, nt, mbia, nfuncs
       REAL(dp),INTENT(OUT):: dqr(mbia,nfuncs,3)
       !
-      INTEGER  :: l, nb, mb, ijv, lllnbnt, lllmbnt, ir, lm, &
-           i, ijh, ih, jh, ipol
-      REAL(dp) :: first, second, qtot_int, dqtot_int, dqxyz(3), df(3)
+      INTEGER  :: l, nb, mb, ijv, lllnbnt, lllmbnt, ir, lm, ijh, ih, jh, ipol
+      REAL(dp) :: first, second, qtot_int, dqtot_int, dqxyz(3)
       REAL(dp), ALLOCATABLE :: qtot(:), dqtot(:), xsp(:), wsp(:,:), &
            rl2(:), spher(:,:), dspher(:,:,:)
       !
@@ -743,22 +769,20 @@ MODULE realus
     !------------------------------------------------------------------------
     SUBROUTINE betapointlist()
       !------------------------------------------------------------------------
+      !! This subroutine is the driver routine of the box system in this
+      !! implementation of US in real space.
       !
-      ! ... This subroutine is the driver routine of the box system in this
-      ! ... implementation of US in real space.
-      ! ... All the variables common in the module are computed and stored for
-      ! ... reusing.
-      ! ... This routine has to be called every time the atoms are moved and of
-      ! ... course at the beginning.
-      ! ... A set of spherical boxes are computed for each atom.
-      ! ... In boxradius there are the radii of the boxes.
-      ! ... In maxbox the upper limit of leading index, namely the number of
-      ! ... points of the fine mesh contained in each box.
-      ! ... In xyz there are the coordinates of the points with origin in the
-      ! ... centre of atom.
-      ! ... In boxdist the distance from the centre.
-      ! ... In spher the spherical harmonics computed for each box
-      ! ... In tabp the q value interpolated in these boxes.
+      !! * all the variables common in the module are computed and stored for
+      !!   reusing;
+      !! * this routine has to be called every time the atoms are moved and of
+      !!   course at the beginning;
+      !! * a set of spherical boxes are computed for each atom;  
+      !! * in \(\text{boxrad_beta}\) there are the radii of the boxes;
+      !! * in \(\text{maxbox_beta}\) the upper limit of leading index, namely the
+      !!   number of points of the fine mesh contained in each box;
+      !! * in \(\text{xyz_beta}\) there are the coordinates of the points with
+      !!   origin in the centre of atom;
+      !! * in the last part ('tabp') the q value is interpolated in these boxes.
       !
       ! ... Most of time is spent here; the calling routines are faster.
       !
@@ -767,25 +791,26 @@ MODULE realus
       USE constants,  ONLY : pi
       USE control_flags, ONLY : gamma_only
       USE ions_base,  ONLY : nat, nsp, ityp, tau
-      USE cell_base,  ONLY : at, bg, omega, alat
-      USE uspp,       ONLY : okvan, indv, nhtol, nhtolm, ap
+      USE cell_base,  ONLY : at, bg, alat
+      USE uspp,       ONLY : okvan, indv,nhtolm
       USE uspp_param, ONLY : upf, lmaxq, nh, nhm
       USE atom,       ONLY : rgrid
       USE fft_base,   ONLY : dffts
-      USE mp_bands,   ONLY : me_bgrp
       USE splinelib,  ONLY : spline, splint
       !
       IMPLICIT NONE
+      !
       LOGICAL, PARAMETER    :: tprint = .false.  ! whether to print info on betapointlist
       !
       INTEGER               :: ia, it, mbia
       INTEGER               :: indm, inbrx, idimension, ih
-      INTEGER               :: roughestimate, goodestimate, lamx2, nt
-      INTEGER,  ALLOCATABLE :: buffpoints(:,:)
-      REAL(DP), ALLOCATABLE :: buffdist(:,:)
-      REAL(DP), ALLOCATABLE :: buff_xyz_beta(:,:,:)
+      INTEGER               :: roughestimate, lamx2, nt
+      INTEGER,  ALLOCATABLE :: tmp_box_beta(:,:)
+      REAL(DP), ALLOCATABLE :: tmp_boxdist_beta(:,:)
+      REAL(DP), ALLOCATABLE :: tmp_xyz_beta(:,:,:)
+      REAL(DP), ALLOCATABLE :: spher_beta(:,:), boxdist_beta(:)
       REAL(DP)              :: distsq, qtot_int, first, second
-      INTEGER               :: ir, i, j, k, ipol, lm, nb
+      INTEGER               :: ir, i, j, k, lm, nb, box_ir
       INTEGER               :: imin, imax, ii, jmin, jmax, jj, kmin, kmax, kk
       REAL(DP)              :: posi(3)
       REAL(DP), ALLOCATABLE :: rl(:,:), rl2(:)
@@ -847,14 +872,14 @@ MODULE realus
       CALL start_clock( 'realus:boxes' )
 
       !
-      ALLOCATE( buffpoints( roughestimate, nat ) )
-      ALLOCATE( buffdist(   roughestimate, nat ) )
+      ALLOCATE( tmp_box_beta( roughestimate, nat ) )
+      ALLOCATE( tmp_boxdist_beta( roughestimate, nat ) )
       !
       IF ( allocated( xyz_beta ) ) DEALLOCATE( xyz_beta )
-      ALLOCATE( buff_xyz_beta( 3, roughestimate, nat ) )
+      ALLOCATE( tmp_xyz_beta( 3, roughestimate, nat ) )
       !
-      buffpoints(:,:) = 0
-      buffdist(:,:) = 0.D0
+      tmp_box_beta(:,:) = 0
+      tmp_boxdist_beta(:,:) = 0.D0
       !
       IF ( .not.allocated( maxbox_beta ) ) ALLOCATE( maxbox_beta( nat ) )
       !
@@ -910,9 +935,9 @@ MODULE realus
                      mbia = maxbox_beta(ia) + 1
                      !
                      maxbox_beta(ia)     = mbia
-                     buffpoints(mbia,ia) = ir
-                     buffdist(mbia,ia)   = sqrt( distsq )*alat
-                     buff_xyz_beta(:,mbia,ia) = posi(:)*alat
+                     tmp_box_beta(mbia,ia) = ir
+                     tmp_boxdist_beta(mbia,ia)   = sqrt( distsq )*alat
+                     tmp_xyz_beta(:,mbia,ia) = posi(:)*alat
                      !
                   ENDIF
                END DO
@@ -921,31 +946,43 @@ MODULE realus
          if (tprint) WRITE (*,*) 'BETAPOINTLIST: ATOM ',ia, ' MAXBOX_BETA =', maxbox_beta(ia)
       ENDDO
       !
-      goodestimate = maxval( maxbox_beta )
+      CALL beta_box_breaking (nat, maxbox_beta)
       !
-      IF ( goodestimate > roughestimate ) &
-         CALL errore( 'betapointlist', 'rough-estimate is too rough', 2 )
+      boxtot = sum(maxbox_beta(1:nat))
+      WRITE( stdout,* )  'BOXTOT', boxtot
+
+      IF (.not. ALLOCATED( box0  ) ) ALLOCATE ( box0  ( nat ) )
+      IF (.not. ALLOCATED( box_s ) ) ALLOCATE ( box_s ( nat ) )
+      IF (.not. ALLOCATED( box_e ) ) ALLOCATE ( box_e ( nat ) )
+      box0(1) = 0 ; box_s(1) = 1 ; box_e(1) = maxbox_beta(1) 
+      do ia =2,nat
+         box0 (ia) = box_e(ia-1) ; box_s(ia) = box0(ia) + 1 ;  box_e(ia) = box0(ia) + maxbox_beta(ia)
+      end do
       !
       ! ... now store them in a more convenient place
       !
+      IF ( allocated( box_psic ) )     DEALLOCATE( box_psic )
       IF ( allocated( xyz_beta ) )     DEALLOCATE( xyz_beta )
       IF ( allocated( box_beta ) )     DEALLOCATE( box_beta )
-      IF ( allocated( boxdist_beta ) ) DEALLOCATE( boxdist_beta )
       IF ( allocated( xkphase ) )      DEALLOCATE( xkphase )
       !
-      ALLOCATE( xyz_beta ( 3, goodestimate, nat ) )
-      ALLOCATE( box_beta    ( goodestimate, nat ) )
-      ALLOCATE( boxdist_beta( goodestimate, nat ) )
-      ALLOCATE( xkphase     ( goodestimate, nat ) )
+      ALLOCATE( box_psic    ( boxtot ) )
+      ALLOCATE( box_beta    ( boxtot ) )
+      ALLOCATE( xyz_beta ( 3, boxtot ) )
+      ALLOCATE( boxdist_beta( boxtot ) )
+      ALLOCATE( xkphase     ( boxtot ) )
       !
-      xyz_beta(:,:,:)   = buff_xyz_beta(:,1:goodestimate,:)
-      box_beta(:,:)     = buffpoints(1:goodestimate,:)
-      boxdist_beta(:,:) = buffdist(1:goodestimate,:)
+      do ia =1,nat
+         xyz_beta ( :, box_s(ia):box_e(ia) ) =  tmp_xyz_beta(:,1:maxbox_beta(ia),ia)
+         box_beta (    box_s(ia):box_e(ia) ) =  tmp_box_beta(  1:maxbox_beta(ia),ia)
+         boxdist_beta( box_s(ia):box_e(ia) ) =  tmp_boxdist_beta(       1:maxbox_beta(ia),ia)
+      end do
+      !
       call set_xkphase(1)
       !
-      DEALLOCATE( buff_xyz_beta )
-      DEALLOCATE( buffpoints )
-      DEALLOCATE( buffdist )
+      DEALLOCATE( tmp_xyz_beta )
+      DEALLOCATE( tmp_box_beta )
+      DEALLOCATE( tmp_boxdist_beta )
       !
       CALL stop_clock( 'realus:boxes' )
       CALL start_clock( 'realus:spher' )
@@ -954,11 +991,9 @@ MODULE realus
       !
       lamx2 = lmaxq*lmaxq
       !
-      IF ( allocated( spher_beta ) ) DEALLOCATE( spher_beta )
+      ALLOCATE( spher_beta( boxtot, lamx2 ) ) ! ( boxtot,lmax2 )
       !
-      ALLOCATE( spher_beta( goodestimate, lamx2, nat ) )
-      !
-      spher_beta(:,:,:) = 0.D0
+      spher_beta(:,:) = 0.D0
       !
       DO ia = 1, nat
          !
@@ -968,13 +1003,13 @@ MODULE realus
          ALLOCATE( rl( 3, idimension ), rl2( idimension ) )
          !
          DO ir = 1, idimension
-            rl(:,ir) = xyz_beta(:,ir,ia)
+            rl(:,ir) = xyz_beta(:,box0(ia)+ir)
             rl2(ir) = rl(1,ir)**2 + rl(2,ir)**2 + rl(3,ir)**2
          ENDDO
          !
          ALLOCATE( tempspher( idimension, lamx2 ) )
          CALL ylmr2( lamx2, idimension, rl, rl2, tempspher )
-         spher_beta(1:idimension,:,ia) = tempspher(:,:)
+         spher_beta(box_s(ia):box_e(ia),:) = tempspher(:,:)
          DEALLOCATE( rl, rl2, tempspher )
          !
       ENDDO
@@ -986,7 +1021,7 @@ MODULE realus
       !
       ! ... let's do the main work
       !
-      ALLOCATE( betasave( goodestimate, nhm, nat )  )
+      ALLOCATE( betasave( boxtot, nhm )  )
       !
       betasave = 0.D0
       ! Box is set, Y_lm is known in the box, now the calculation can commence
@@ -1041,17 +1076,15 @@ MODULE realus
             second =d2y(1) ! second derivative in first point
             DEALLOCATE( d1y, d2y )
 
-
             CALL spline( xsp, ysp, first, second, wsp )
 
-
-            DO ir = 1, mbia
+            DO box_ir = box_s(ia), box_e(ia)
                !
                ! ... spline interpolation
                !
-               qtot_int = splint( xsp, ysp, wsp, boxdist_beta(ir,ia) ) !the value of f_l(r) in point ir in atom ia
+               qtot_int = splint( xsp, ysp, wsp, boxdist_beta(box_ir) ) !the value of f_l(r) in point ir in atom ia
                !
-               betasave(ir,ih,ia) = qtot_int*spher_beta(ir,lm,ia) !spher_beta is the Y_lm in point ir for atom ia
+               betasave(box_ir,ih) = qtot_int*spher_beta(box_ir,lm) !spher_beta is the Y_lm in point ir for atom ia
                !
             ENDDO
          ENDDO
@@ -1070,12 +1103,103 @@ MODULE realus
       CALL stop_clock( 'betapointlist' )
       !
     END SUBROUTINE betapointlist
+    !
+    SUBROUTINE beta_box_breaking (nat, maxbox_beta)
+      !! This routine determines whether it is needed to re-shuffle the
+      !! beta point grids in real space.
+      USE mp_bands,   ONLY : me_bgrp, intra_bgrp_comm, nproc_bgrp
+      USE mp,         ONLY : mp_sum, mp_comm_split
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN)  :: nat
+      INTEGER, INTENT(IN)  :: maxbox_beta(nat)
+      REAL(DP)             :: boxtot_avg, boxtot_unbalance, opt_boxtot_unbalance
+      INTEGER              :: in, nn, ip, np, ncheck, dd, boxtot_max, opt_nn, my_color
+      INTEGER, ALLOCATABLE :: ind(:), color(:), data(:), boxtot_beta(:)
+      !
+      REAL(DP), PARAMETER  :: tollerable_unbalance = 1.25D0
+      INTEGER, PARAMETER   :: maximum_nn = 6
+      !
+!      WRITE (*,*) ' me_bgrp ', me_bgrp ; FLUSH(6)
+!      WRITE (*,*)  ' BETAPOINT LIST', maxbox_beta(:) ; FLUSH(6)
+      ALLOCATE ( boxtot_beta ( nproc_bgrp ) )
+      boxtot_beta (:) = 0 ; boxtot_beta ( me_bgrp+1 ) = SUM(maxbox_beta(1:nat))
+      CALL mp_sum(  boxtot_beta, intra_bgrp_comm )
+
+      boxtot_avg = SUM ( boxtot_beta ( 1:nproc_bgrp ) ) / dble ( nproc_bgrp )
+      boxtot_max = MAXVAL( boxtot_beta ( 1:nproc_bgrp ) )
+      boxtot_unbalance =  boxtot_max / boxtot_avg
+      WRITE ( stdout, * ) 'BETAPOINTLIST SUMMARY: ', boxtot_max , boxtot_avg, boxtot_unbalance ; FLUSH(6)
+      WRITE ( stdout, * ) ' BETATOT LIST', boxtot_beta(:) ; FLUSH(6)
+
+      nn = 1; opt_nn = 1 ; opt_boxtot_unbalance = boxtot_unbalance
+
+      ALLOCATE ( ind(nproc_bgrp), color(nproc_bgrp),  data(nproc_bgrp) )
+      data(:) = - boxtot_beta(:) ; ind(1) = 0
+      call ihpsort ( nproc_bgrp, data, ind )
+
+      DO WHILE ( boxtot_unbalance > tollerable_unbalance .and. nn < maximum_nn )
+
+         nn = nn + 1
+
+         np = nproc_bgrp / nn ; IF ( nproc_bgrp .ne. np * nn  ) CYCLE
+
+!         WRITE ( stdout, * ) 'CHECKING nn =', nn, np
+!         WRITE ( stdout, * ) ind(:) ; FLUSH(6)
+!         WRITE ( stdout, * ) data(:) ; FLUSH(6)
+         color(ind(1:np)) = ind(1:np)
+         DO in = nn, 2, -1
+            DO ip = 1, np
+               data(ip) = data(ip) + data (in*np+1-ip)
+               color(ind(in*np+1-ip)) = ind(ip)
+            END DO
+            call ihpsort ( np, data, ind )
+!            WRITE ( stdout, * ) ind(:) ; FLUSH(6)
+!            WRITE ( stdout, * ) data(:) ; FLUSH(6)
+!            WRITE ( stdout, * ) color(:) ; FLUSH(6)
+         END DO
+         boxtot_unbalance =  -data(1)/(boxtot_avg*nn)
+         WRITE ( stdout, * ) nn, ' is a factor ',-data(1), -data(1)/boxtot_avg, boxtot_unbalance ; FLUSH(6)
+         IF  ( boxtot_unbalance < opt_boxtot_unbalance ) THEN
+            opt_boxtot_unbalance = boxtot_unbalance ; opt_nn = nn ; my_color = color(me_bgrp+1)
+         END IF
+         DO ip = 1, np
+            data(ip) = -boxtot_beta(ind(ip))
+         END DO
+         DO ip = 1, np
+            WRITE ( stdout, '(A,i4,A,$)' ) ' color ', color(ind(ip)), ':'  ; FLUSH(6)
+            dd = 0 ; ncheck = 0
+            DO in = 1, nproc_bgrp
+               IF ( color(in) == color(ind(ip)) ) THEN
+                  WRITE (stdout, '(i4,$)' ) in ; FLUSH(6)
+                  dd = dd + boxtot_beta(in)
+                  ncheck = ncheck + 1
+               END IF
+            END DO
+            WRITE ( stdout, * ) ' ', dd ; FLUSH(6)
+            if (ncheck .ne. nn) WRITE(*,*) '!!!! something wrong ', ncheck, nn ; FLUSH(6)
+         END DO
+
+      END DO
+      DEALLOCATE ( data, color, ind, boxtot_beta )
+
+      IF (nn > 1 ) THEN
+         CALL mp_comm_split( intra_bgrp_comm, my_color, me_bgrp, intra_bbox_comm )
+      ELSE
+         intra_bbox_comm = 0
+      END IF
+
+      RETURN
+      !
+    END SUBROUTINE beta_box_breaking
+    !
     !------------------------------------------------------------------------
-    SUBROUTINE newq_r(vr,deeq,skip_vltot)
-    !
-    !   This routine computes the integral of the perturbed potential with
-    !   the Q function in real space
-    !
+    SUBROUTINE newq_r( vr,deeq, skip_vltot )
+      !-----------------------------------------------------------------------
+      !! This routine computes the integral of the perturbed potential with
+      !! the \(Q\) function in real space.
+      !
       USE cell_base,        ONLY : omega
       USE fft_base,         ONLY : dfftp
       USE lsda_mod,         ONLY : nspin
@@ -1087,18 +1211,22 @@ MODULE realus
       USE scf,              ONLY : vltot
       USE mp_bands,         ONLY : intra_bgrp_comm
       USE mp,               ONLY : mp_sum
-
-          IMPLICIT NONE
       !
-      ! Input: potential , output: contribution to integral
-      REAL(kind=dp), INTENT(in)  :: vr(dfftp%nnr,nspin)
-      REAL(kind=dp), INTENT(out) :: deeq( nhm, nhm, nat, nspin )
-      LOGICAL, INTENT(in) :: skip_vltot !If .false. vltot is added to vr when necessary
-      !Internal
+      IMPLICIT NONE
+      !
+      REAL(DP), INTENT(IN) :: vr(dfftp%nnr,nspin)
+      !! The input potential
+      REAL(DP), INTENT(OUT) :: deeq(nhm,nhm,nat,nspin)
+      !! Contribution to the integral
+      LOGICAL, INTENT(in) :: skip_vltot
+      !! If .FALSE. \(\text{vltot}\) is added to \(\text{vr}\) when necessary
+      !
+      ! ... local variables
+      !
       REAL(DP), ALLOCATABLE :: aux(:)
       !
-      INTEGER               :: ia, ih, jh, is, ir, nt
-      INTEGER               :: mbia
+      INTEGER :: ia, ih, jh, is, ir, nt
+      INTEGER :: mbia
       !
       IF (tqr .and. .not. associated(tabp)) THEN
          CALL generate_qpointlist()
@@ -1145,19 +1273,18 @@ MODULE realus
     !------------------------------------------------------------------------
     SUBROUTINE addusdens_r( rho )
       !------------------------------------------------------------------------
-      !
-      ! ... This routine adds to the charge density the part which is due to
-      ! ... the US augmentation, in real space
+      !! This routine adds to the charge density the part which is due to
+      !! the US augmentation, in real space.
       !
       USE ions_base,        ONLY : nat, ityp
-      USE lsda_mod,         ONLY : nspin
       USE uspp,             ONLY : okvan, becsum
       USE uspp_param,       ONLY : upf, nh
-      USE noncollin_module, ONLY : nspin_mag, nspin_lsda
+      USE noncollin_module, ONLY : nspin_mag
       USE fft_interfaces,   ONLY : fwfft
       USE fft_base,         ONLY : dfftp
-      USE wavefunctions,  ONLY : psic
+      USE wavefunctions,    ONLY : psic
 #if defined (__DEBUG)
+      USE noncollin_module, ONLY : nspin_lsda
       USE constants,        ONLY : eps6
       USE klist,            ONLY : nelec
       USE cell_base,        ONLY : omega
@@ -1171,9 +1298,11 @@ MODULE realus
       COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag)
       !
       INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, mbia
-      CHARACTER(len=80) :: msg
       REAL(kind=dp), ALLOCATABLE :: rhor(:,:) 
+#if defined (__DEBUG)
+      CHARACTER(len=80) :: msg
       REAL(kind=dp) :: charge
+#endif
       !
       !
       IF ( .not. okvan ) RETURN
@@ -1240,17 +1369,30 @@ MODULE realus
       RETURN
       !
     END SUBROUTINE addusdens_r
+    !
     !----------------------------------------------------------------------
-    SUBROUTINE addusforce_r (forcenl)
+    SUBROUTINE addusforce_r( forcenl )
       !----------------------------------------------------------------------
-      !
-      !   This routine computes the contribution to atomic forces due
-      !   to the dependence of the Q function on the atomic position.
-      !   F_j,at=-\int sum_lm dQ_lm(r)/dtau_at becsum((lm,at) V(r) dr
-      !          +\int sum_lm dQ_lm(r)/dtau_at ebecsum(lm,at)      dr 
-      !   where becsum(lm,at) = sum_i <psi_i|beta_l>w_i<beta_m|psi_i>,
-      !   ebecsum(lm,at) = sum_i <psi_i|beta_l>w_i<beta_m|psi_i> et_i
-      !   On output: the contribution is added to forcenl
+      !! This routine computes the contribution to atomic forces due
+      !! to the dependence of the \(Q\) function on the atomic position.
+      !! \begin{equation}\notag
+      !! \begin{split}
+      !!    F_{j,at} = &-\int \sum_{lm} \frac{dQ_{lm}(r)}{d\tau_{at}}
+      !!                 \text{becsum}(lm,at)\ V(r)\ dr \\
+      !!               &+\int \sum_{lm} \frac{dQ_{lm}(r)}{d\tau_{at}}
+      !!                 \text{ebecsum}(lm,at)\ dr 
+      !! \end{split}
+      !! \end{equation}
+      !! where:
+      !! \begin{equation}\notag
+      !! \begin{split}
+      !!    &\text{becsum}(lm,at) = \sum_i \langle\psi_i|\beta_l\rangle w_i
+      !!                                   \langle\beta_m|\psi_i\rangle, \\
+      !!    &\text{ebecsum}(lm,at) = \sum_i\langle\psi_i|\beta_l\rangle w_i
+      !!                                   \langle\beta_m|\psi_i\rangle et_i
+      !! \end{split}
+      !! \end{equation}
+      !! On output the contribution is added to \(\text{forcenl}\).
       !
       USE kinds,      ONLY : DP
       USE cell_base,  ONLY : omega
@@ -1267,7 +1409,7 @@ MODULE realus
       !
       REAL(DP), INTENT(INOUT) :: forcenl (3, nat)
       !
-      INTEGER :: na, nt, ih, jh, ijh, nfuncs, mbia, ir, is, irb
+      INTEGER :: na, nt, ijh, nfuncs, mbia, ir, is, irb
       REAL(dp), ALLOCATABLE:: dqr(:,:,:), forceq(:,:)
       REAL(dp) :: dqrforce(3), dqb(3), dqeb(3), v_eff
       !
@@ -1317,19 +1459,31 @@ MODULE realus
     END SUBROUTINE addusforce_r
     !
     !----------------------------------------------------------------------
-    SUBROUTINE addusstress_r (sigmanl)
-      !----------------------------------------------------------------------
+    SUBROUTINE addusstress_r( sigmanl )
+      !---------------------------------------------------------------------
+      !! This routine computes the contribution to atomic stress due
+      !! to the dependence of the Q function on the atomic position.
+      !! \begin{equation}\notag
+      !! \begin{split}
+      !!    S_{i,j} = &+\int \sum_{lm} \left[r_i \frac{dQ_{lm}(r)}{d\tau_{at_j}} +
+      !!                 Q_{lm}(r)\right] \text{becsum}(lm,at)\ V(ir)\ dr \\
+      !!              &-\int \sum_{lm} \left[r_i \frac{dQ_{lm}(r)}{d\tau_{at_j}} +
+      !!                 Q_{lm}(r)\right] \text{ebecsum}(lm,at)\ dr
+      !! \end{split}
+      !! \end{equation}
+      !! where:
+      !! \begin{equation}\notag
+      !! \begin{split}
+      !!    &\text{becsum}(lm,at) = \sum_i \langle\psi_i|\beta_l\rangle w_i
+      !!                                   \langle\beta_m|\psi_i\rangle, \\
+      !!    &\text{ebecsum}(lm,at) = \sum_i\langle\psi_i|\beta_l\rangle w_i
+      !!                                   \langle\beta_m|\psi_i\rangle et_i
+      !! \end{split}
+      !! \end{equation}
+      !! On output the contribution is added to \(\text{stressnl}\).  
+      !! NB: a factor -1.0/omega is later applied to \(\text{stressnl}\) as a whole.
       !
-      !   This routine computes the contribution to atomic forces due
-      !   to the dependence of the Q function on the atomic position.
-      !   S_i,j=+\int sum_lm [r_i dQ_lm(r)/dtau_at_j +Q_lm(r)] becsum(lm,at) V(ir) dr
-      !         -\int sum_lm [r_i dQ_lm(r)/dtau_at_j +Q_lm(r)] ebecsum(lm,at)      dr
-      !   where becsum(lm,at) = sum_i <psi_i|beta_l>w_i<beta_m|psi_i>, 
-      !   ebecsum(lm,at) = sum_i <psi_i|beta_l>w_i<beta_m|psi_i> et_i
-      !   On output: the contribution is added to stressnl
-      !   NB: a factor -1.0/omega is later applied to stressnl as a whole.
-      !
-      ! FOR REASONS I DONT UNDERSTAND THE SECOND TERM APPEARS TO NEED THE + SIGN TOO
+      ! FOR REASONS I DON'T UNDERSTAND THE SECOND TERM APPEARS TO NEED THE + SIGN TOO
       !
       USE kinds,      ONLY : DP
       USE cell_base,  ONLY : omega
@@ -1337,16 +1491,16 @@ MODULE realus
       USE fft_base,   ONLY : dfftp
       USE noncollin_module,  ONLY : nspin_mag
       USE scf,        ONLY : v, vltot
-      USE uspp,       ONLY : becsum, ebecsum, okvan, qq_at
+      USE uspp,       ONLY : becsum, ebecsum, okvan
       USE uspp_param, ONLY : upf,  nh
-      USE mp_bands,   ONLY : intra_bgrp_comm
-      USE mp,         ONLY : mp_sum
+!      USE mp_bands,   ONLY : intra_bgrp_comm
+!      USE mp,         ONLY : mp_sum
       !
       IMPLICIT NONE
       !
       REAL(DP), INTENT(INOUT) :: sigmanl (3,3)
       !
-      INTEGER :: ipol, jpol, na, nt, nfuncs, mbia, ir, is, irb , ih,jh,ijh
+      INTEGER :: ipol, na, nt, nfuncs, mbia, ir, is, irb , ijh
       REAL(dp), ALLOCATABLE:: dqr(:,:,:)
       REAL(dp) :: sus(3,3), sus_at(3,3), qb, qeb, dqb(3), dqeb(3), v_eff
       !
@@ -1397,70 +1551,76 @@ MODULE realus
     END SUBROUTINE addusstress_r
     !
     !------------------------------------------------------------------------
-    SUBROUTINE set_xkphase(ik)
+    SUBROUTINE set_xkphase( ik )
     !--------------------------------------------------------------------------
-    ! in the calculation of becp or when performing add_vuspsir the wavefunction
-    ! psi_k and  not its periodic part (which is what we get from the FFT) should be
-    ! used. A k-dependent phase exp(-xk(current_k*(r-tau(ia))) ) must be added
+    !! In the calculation of \(\text{becp}\) or when performing \(\texttt{add_vuspsir}\)
+    !! the wavefunction \(\text{psi_k}\) and not its periodic part (which is what
+    !! we get from the FFT) should be used.  
+    !! A k-dependent phase \(\text{exp}[-xk(\text{current_k}\cdot(r-\tau_\text{ia}))]\) must
+    !! be added.
     !
     USE kinds,      ONLY : DP
     USE klist,      ONLY : xk
     USE cell_base,  ONLY : tpiba
-    USE ions_base,  ONLY : nat
 
     IMPLICIT NONE
   
     INTEGER, INTENT (IN) :: ik
 
-    INTEGER :: ia, mbia, ir
+    INTEGER :: box_ir
     REAL(DP) :: arg
 
     if (.not.allocated ( xkphase ) ) call errore ('set_xkphase',' array not allocated yes',1)
     if (ik .eq. current_phase_kpoint ) return
     !
-    DO ia = 1, nat
-       mbia = maxbox_beta(ia)
-       do ir =1, mbia
-          arg = ( xk(1,ik) * xyz_beta(1,ir,ia) + &
-                  xk(2,ik) * xyz_beta(2,ir,ia) + &
-                  xk(3,ik) * xyz_beta(3,ir,ia) ) * tpiba
-          xkphase( ir, ia ) = CMPLX(COS(arg),-SIN(arg),KIND=dp)
-       end do
+    !$omp parallel do
+    do box_ir =1, boxtot
+       arg = ( xk(1,ik) * xyz_beta(1,box_ir) + &
+               xk(2,ik) * xyz_beta(2,box_ir) + &
+               xk(3,ik) * xyz_beta(3,box_ir) ) * tpiba
+       xkphase( box_ir ) = CMPLX(COS(arg),-SIN(arg),KIND=dp)
     end do
+    !$omp end parallel do
     !
     current_phase_kpoint = ik
     !
     return
     END SUBROUTINE set_xkphase
-
+    
     !--------------------------------------------------------------------------
-    SUBROUTINE calbec_rs_gamma ( ibnd, last, becp_r )
-
-  !--------------------------------------------------------------------------
-  !
-  ! Subroutine written by Dario Rocca, Stefano de Gironcoli, modified by O. Baris Malcioglu
-  !
-  ! Calculates becp_r in real space
-  ! Requires BETASAVE (the beta functions at real space) calculated by betapointlist()
-  ! (added to realus)
-  ! ibnd is an index that runs over the number of bands, which is given by m
-  ! So you have to call this subroutine inside a cycle with index ibnd
-  ! In this cycle you have to perform a Fourier transform of the orbital
-  ! corresponding to ibnd, namely you have to transform the orbital to
-  ! real space and store it in the global variable psic.
-  ! Remember that in the gamma_only case you
-  ! perform two fast Fourier transform at the same time, and so you have
-  ! that the real part correspond to ibnd, and the imaginary part to ibnd+1
-  !
-  ! WARNING: For the sake of speed, there are no checks performed in this routine, check beforehand!
+    SUBROUTINE calbec_rs_gamma( ibnd, last, becp_r )
+      !--------------------------------------------------------------------------
+      !! Calculates \(\text{becp_r}\) in real space.  
+      !
+      !! * Requires \(\text{betasave}\), the beta functions at real space calculated 
+      !!   by \(\texttt{betapointlist()}\);
+      !! * \(\text{ibnd}\) is an index that runs over the number of bands, which
+      !!   is given by m, so you have to call this subroutine inside a cycle with 
+      !!   index \(\text{ibnd}\);
+      !! * In this cycle you have to perform a Fourier transform of the orbital
+      !!   corresponding to \(\text{ibnd}\), namely you have to transform the orbital
+      !!   to real space and store it in the global variable \(\text{psic}\);
+      !! * Remember that in the gamma_only case you perform two FFT at the same time,
+      !!   so you have that the real part corresponds to \(\text{ibnd}\), and the 
+      !!   imaginary part to \(\text{ibnd}+1\).
+      !
+      !! WARNING: For the sake of speed, there are no checks performed in this 
+      !!          routine, check beforehand!
+      !
+      !! Subroutine written by Dario Rocca, Stefano de Gironcoli, modified by O. 
+      !! Baris Malcioglu.
+      !! Some speedup and restrucuring by SdG April 2020.
+      !!
+      !
     USE kinds,                 ONLY : DP
     USE cell_base,             ONLY : omega
-    USE wavefunctions,  ONLY : psic
+    USE wavefunctions,         ONLY : psic
     USE ions_base,             ONLY : nat, nsp, ityp
-    USE uspp_param,            ONLY : nh, nhm
+    USE uspp_param,            ONLY : nh
     USE fft_base,              ONLY : dffts
     USE mp_bands,              ONLY : intra_bgrp_comm
-    USE mp,        ONLY : mp_sum
+    USE mp,                    ONLY : mp_sum
+    USE uspp,                  ONLY : indv_ijkb0
     !
     IMPLICIT NONE
     !
@@ -1470,79 +1630,86 @@ MODULE realus
     REAL(DP), ALLOCATABLE, DIMENSION(:) :: wr, wi
     REAL(DP) :: bcr, bci
     REAL(DP), DIMENSION(:,:), INTENT(out) :: becp_r
+    integer :: ir, box_ir, maxbox, ijkb0, nh_nt
     !
     REAL(DP), EXTERNAL :: ddot
     !
     !
     CALL start_clock( 'calbec_rs' )
     !
-    IF( dffts%has_task_groups ) THEN
-
-     CALL errore( 'calbec_rs_gamma', 'task_groups not implemented', 1 )
-
-    ELSE !non task groups part starts here
+    IF( dffts%has_task_groups ) CALL errore( 'calbec_rs_gamma', 'task_groups not implemented', 1 )
 
     fac = sqrt(omega) / (dffts%nr1*dffts%nr2*dffts%nr3)
+    !
+    maxbox = MAXVAL(maxbox_beta(1:nat))
     !
     becp_r(:,ibnd)=0.d0
     IF ( ibnd+1 <= last ) becp_r(:,ibnd+1)=0.d0
     ! Clearly for an odd number of bands for ibnd=nbnd=last you don't have
     ! anymore bands, and so the imaginary part equal zero
     !
-       !
-       ikb = 0
-       !
-       DO nt = 1, nsp
-          !
-           DO ia = 1, nat
-             !
-             IF ( ityp(ia) == nt ) THEN
-                !
-                mbia = maxbox_beta(ia)
+!
+! copy psic into a box-friendly array (and scatter it across intra_bbox_comm if needed)
+!
+    !$omp parallel do
+    DO box_ir =1, boxtot
+       box_psic ( box_ir ) = psic( box_beta( box_ir ) )
+    END DO
+    !$omp end parallel do
 
-                ! maxbox_beta contains the maximum number of real space points necessary
-                ! to describe the beta function corresponding to the atom ia
-                ! Namely this is the number of grid points for which beta is
-                ! different from zero
+    ALLOCATE( wr(maxbox), wi(maxbox) )
+    ! working arrays to order the points in the clever way
+    DO nt = 1, nsp
+       !
+       nh_nt = nh(nt)
+       !
+       DO ia = 1, nat
+          !
+          IF ( ityp(ia) == nt ) THEN
+             !
+             mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
+             !
+             ijkb0 = indv_ijkb0(ia)
+             !$omp parallel default(shared) private(ih,ikb,ir,bcr,bci)
+             !$omp do 
+             DO ir =1, mbia
+                wr(ir) = dble ( box_psic( box0(ia)+ir) )
+             END DO
+             !$omp end do
+             !$omp do
+             DO ih = 1, nh_nt
                 !
-                ALLOCATE( wr(mbia), wi(mbia) )
-                ! just working arrays to order the points in the clever way
-                wr(:) = dble ( psic( box_beta(1:mbia,ia) ) )
-                wi(:) = aimag( psic( box_beta(1:mbia,ia) ) )
+                ikb = ijkb0 + ih
+                bcr = ddot( mbia, betasave(box_s(ia):box_e(ia),ih), 1, wr(:) , 1 )
+                becp_r(ikb,ibnd)   = fac * bcr
                 !
-                !
-                DO ih = 1, nh(nt)
-                   ! nh is the number of beta functions, or something similar
+             ENDDO
+             !$omp end do nowait
+             IF ( ibnd+1 <= last ) THEN
+                !$omp do
+                DO ir =1, mbia
+                   wi(ir) = aimag( psic( box_beta(box0(ia)+ir) ) )
+                END DO
+                !$omp end do
+                !$omp do
+                DO ih = 1, nh_nt
                    !
-                   ikb = ikb + 1
-                   !print *, "betasave check", betasave(ia,ih,:)
-                   ! box_beta contains explictly the points of the real space grid in
-                   ! which the beta functions are differet from zero. Remember
-                   ! that dble(psic) corresponds to ibnd, and aimag(psic) to ibnd+1:
-                   ! this is the standard way to perform fourier transform in pwscf
-                   ! in the gamma_only case
-                   bcr  = ddot( mbia, betasave(:,ih,ia), 1, wr(:) , 1 )
-                   bci  = ddot( mbia, betasave(:,ih,ia), 1, wi(:) , 1 )
-                   ! in the previous two lines the real space integral is performed, using
-                   ! few points of the real space mesh only
-                   becp_r(ikb,ibnd)   = fac * bcr
-                   IF ( ibnd+1 <= last ) becp_r(ikb,ibnd+1) = fac * bci
-                   ! It is necessary to multiply by fac which to obtain the integral
-                   ! in real space
-                   !print *, becp_r(ikb,ibnd)
+                   ikb = ijkb0 + ih
+                   bci = ddot( mbia, betasave(box_s(ia):box_e(ia),ih), 1, wi(:) , 1 )
+                   becp_r(ikb,ibnd+1) = fac * bci
                    !
                 ENDDO
-                !
-                DEALLOCATE( wr, wi )
-                !
-             ENDIF
+                !$omp end do
+             END IF
+             !$omp end parallel
              !
-          ENDDO
+          ENDIF
           !
        ENDDO
        !
-       !
-    ENDIF
+    ENDDO
+    DEALLOCATE( wr, wi )
+    !
     CALL mp_sum( becp_r( :, ibnd ), intra_bgrp_comm )
     IF ( ibnd+1 <= last ) CALL mp_sum( becp_r( :, ibnd+1 ), intra_bgrp_comm )
     CALL stop_clock( 'calbec_rs' )
@@ -1551,23 +1718,27 @@ MODULE realus
 
   END SUBROUTINE calbec_rs_gamma
     !
-    SUBROUTINE calbec_rs_k ( ibnd, last )
-    !--------------------------------------------------------------------------
-    ! The k_point generalised version of calbec_rs_gamma. Basically same as above,
-    ! but becp is used instead of becp_r, skipping the gamma point reduction
-    ! derived from above by OBM 051108
-    ! k-point phase factor fixed by SdG 030816
+    !-------------------------------------------------------------------------------
+    SUBROUTINE calbec_rs_k( ibnd, last )
+    !------------------------------------------------------------------------------
+    !! The k-point generalised version of \(\texttt{calbec_rs_gamma}\). Basically 
+    !! same as above, but \(\text{becp}\) is used instead of \(\text{becp_r}\), 
+    !! skipping the gamma point reduction derived from above by OBM 051108.
+    !
+    !! k-point phase factor fixed by SdG 030816.
+    !! Some speedup and restrucuring by SdG April 2020.
     !
     USE kinds,                 ONLY : DP
     USE wvfct,                 ONLY : current_k
     USE cell_base,             ONLY : omega
-    USE wavefunctions,  ONLY : psic
+    USE wavefunctions,         ONLY : psic
     USE ions_base,             ONLY : nat, nsp, ityp
-    USE uspp_param,            ONLY : nh, nhm
+    USE uspp_param,            ONLY : nh
     USE becmod,                ONLY : bec_type, becp
     USE fft_base,              ONLY : dffts
     USE mp_bands,              ONLY : intra_bgrp_comm
     USE mp,                    ONLY : mp_sum
+    USE uspp,                  ONLY : indv_ijkb0
     !
     IMPLICIT NONE
     !
@@ -1576,11 +1747,9 @@ MODULE realus
     REAL(DP) :: fac
     REAL(DP), ALLOCATABLE, DIMENSION(:) :: wr, wi
     REAL(DP) :: bcr, bci
-    !COMPLEX(DP), allocatable, dimension(:) :: bt
-    integer :: ir
+    integer :: ir, box_ir, maxbox, ijkb0, nh_nt
     !
     REAL(DP), EXTERNAL :: ddot
-    !
     !
     CALL start_clock( 'calbec_rs' )
     !
@@ -1590,62 +1759,82 @@ MODULE realus
 
     fac = sqrt(omega) / (dffts%nr1*dffts%nr2*dffts%nr3)
     !
+    maxbox = MAXVAL(maxbox_beta(1:nat))
+    !
     becp%k(:,ibnd)=0.d0
-       ikb = 0
-       !
-       DO nt = 1, nsp
-          !
-           DO ia = 1, nat
-             !
-             IF ( ityp(ia) == nt ) THEN
-                !
-                mbia = maxbox_beta(ia)
+!
+! copy psic into a box-friendly array (and scatter it across intra_bbox_comm if needed)
+!
+    !$omp parallel do
+    DO box_ir =1, boxtot
+       box_psic ( box_ir ) = psic( box_beta( box_ir ) )
+    END DO
+    !$omp end parallel do
 
-                ALLOCATE( wr(mbia), wi(mbia) )
-                DO ih = 1, nh(nt)
-                   ! nh is the number of beta functions, or something similar
-                   !
-                   ikb = ikb + 1
-                   wr(:) = dble ( psic( box_beta(1:mbia,ia) ) * CONJG(xkphase(1:mbia,ia)))
-                   wi(:) = aimag( psic( box_beta(1:mbia,ia) ) * CONJG(xkphase(1:mbia,ia)))
-                   bcr  = ddot( mbia, betasave(:,ih,ia), 1, wr(:) , 1 )
-                   bci  = ddot( mbia, betasave(:,ih,ia), 1, wi(:) , 1 )
-                   becp%k(ikb,ibnd)   = fac * cmplx( bcr, bci,kind=DP)
-                   !
-                ENDDO
-                DEALLOCATE( wr, wi )
-                !
-             ENDIF
+    ALLOCATE( wr(maxbox), wi(maxbox) )
+    ! working arrays to order the points in the clever way
+    DO nt = 1, nsp
+       !
+       nh_nt = nh(nt)
+       !
+       DO ia = 1, nat
+          !
+          IF ( ityp(ia) == nt ) THEN
              !
-          ENDDO
+             mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
+             !
+             ijkb0 = indv_ijkb0(ia)
+             !
+             !$omp parallel default(shared) private(ih,ikb,ir,bcr,bci)
+             !$omp do
+             DO ir =1, mbia
+                wr(ir) = dble ( box_psic( box0(ia)+ir ) * CONJG(xkphase(box0(ia)+ir)))
+                wi(ir) = aimag( box_psic( box0(ia)+ir ) * CONJG(xkphase(box0(ia)+ir)))
+             END DO
+             !$omp end do
+             !$omp do
+             DO ih = 1, nh_nt
+                ikb = ijkb0 + ih
+                bcr = ddot( mbia, betasave(box_s(ia):box_e(ia),ih), 1, wr(:) , 1 )
+                bci = ddot( mbia, betasave(box_s(ia):box_e(ia),ih), 1, wi(:) , 1 )
+                becp%k(ikb,ibnd)   = fac * cmplx( bcr, bci, kind=DP)
+             ENDDO
+             !$omp end do
+             !$omp end parallel
+             !
+          ENDIF
           !
        ENDDO
        !
+    ENDDO
+    DEALLOCATE( wr, wi )
+    !
     CALL mp_sum( becp%k( :, ibnd ), intra_bgrp_comm )
     CALL stop_clock( 'calbec_rs' )
     !
     RETURN
 
   END SUBROUTINE calbec_rs_k
-    !--------------------------------------------------------------------------
-    SUBROUTINE s_psir_gamma ( ibnd, last )
-    !--------------------------------------------------------------------------
     !
-    ! ... This routine applies the S matrix to wfc ibnd (and wfc ibnd+1 if <= last)
-    ! ... stored in real space in psic, and puts the results again in psic for 
-    ! ... backtransforming.
-    ! ... Requires becp%r (calbecr in REAL SPACE) and betasave (from betapointlist
-    ! ... in realus)
-    ! Subroutine written by Dario Rocca, modified by O. Baris Malcioglu
-    ! WARNING ! for the sake of speed, no checks performed in this subroutine
-
+    !--------------------------------------------------------------------------
+    SUBROUTINE s_psir_gamma( ibnd, last )
+    !--------------------------------------------------------------------------
+    !! This routine applies the \(S\) matrix to wfc ibnd (and wfc ibnd+1 if 
+    !! \(\le\text{last}\) ) stored in real space in psic, and puts the results 
+    !! again in psic for backtransforming.  
+    !! Requires \(\text{becp%r}\) (\(\texttt{calbecr}\) in REAL SPACE) and 
+    !! \(\text{betasave}\) (from \(\texttt{betapointlist}\) in \(\texttt{realus}\)).
+    !
+    !! WARNING: for the sake of speed, no checks performed in this subroutine.
+    !
+    !! Subroutine written by Dario Rocca, modified by O. Baris Malcioglu,
+    !! and S. de Gironcoli(2020).
+    !
       USE kinds,                  ONLY : DP
       USE cell_base,              ONLY : omega
-      USE wavefunctions,   ONLY : psic
       USE ions_base,              ONLY : nat, nsp, ityp
-      USE uspp_param,             ONLY : nh
-      USE lsda_mod,               ONLY : current_spin
-      USE uspp,                   ONLY : qq_at
+      USE uspp_param,             ONLY : nh, nhm
+      USE uspp,                   ONLY : qq_at, indv_ijkb0
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : dffts
       !
@@ -1653,20 +1842,17 @@ MODULE realus
       !
       INTEGER, INTENT(in) :: ibnd, last
       !
-      INTEGER :: ih, jh, ikb, jkb, nt, ia, ir, mbia
+      INTEGER :: ih, nt, ia, mbia, ijkb0, box_ir
       REAL(DP) :: fac
       REAL(DP), ALLOCATABLE, DIMENSION(:) :: w1, w2
-      !
-      REAL(DP), EXTERNAL :: ddot
       !
       CALL start_clock( 's_psir' )
 
       IF( dffts%has_task_groups ) CALL errore( 's_psir_gamma', 'task_groups not implemented', 1 )
 
+      ALLOCATE( w1(nhm), w2(nhm) ) ; if ( ibnd+1 > last) w2 = 0.D0
       !
       fac = sqrt(omega)
-      !
-      ikb = 0
       !
       DO nt = 1, nsp
          !
@@ -1674,61 +1860,56 @@ MODULE realus
             !
             IF ( ityp(ia) == nt ) THEN
                !
-               mbia = maxbox_beta(ia)
+               mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
                !print *, "mbia=",mbia
-               ALLOCATE( w1(nh(nt)),  w2(nh(nt)) )
-               w1 = 0.D0
-               w2 = 0.D0
                !
+               ijkb0 = indv_ijkb0(ia)
+               !
+               !$omp parallel
+               !$omp do
                DO ih = 1, nh(nt)
-                  DO jh = 1, nh(nt)
-                     jkb = ikb + jh
-                     w1(ih) = w1(ih) + qq_at(ih,jh,ia) * becp%r(jkb, ibnd)
-                     IF ( ibnd+1 <= last ) w2(ih) = w2(ih) + qq_at(ih,jh,ia) * becp%r(jkb, ibnd+1)
-                  ENDDO
+                  w1(ih) = fac * SUM(qq_at(ih,1:nh(nt),ia) * becp%r(ijkb0+1:ijkb0+nh(nt), ibnd))
+                  IF ( ibnd+1 <= last ) &
+                     w2(ih) = fac * SUM(qq_at(ih,1:nh(nt),ia) * becp%r(ijkb0+1:ijkb0+nh(nt), ibnd+1))
                ENDDO
-               !
-               w1 = w1 * fac
-               w2 = w2 * fac
-               ikb = ikb + nh(nt)
-               !
-               DO ih = 1, nh(nt)
-                  !
-                  DO ir = 1, mbia
-                     psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + betasave(ir,ih,ia)*cmplx( w1(ih), w2(ih) ,kind=DP)
-                  ENDDO
-                  !
+               !$omp end do
+               !$omp do
+               DO box_ir = box_s(ia), box_e(ia) 
+                  box_psic( box_ir ) = SUM(betasave(box_ir,1:nh(nt))*cmplx(w1(1:nh(nt)),w2(1:nh(nt)),kind=DP))
                ENDDO
-               !
-               DEALLOCATE( w1, w2 )
+               !$omp end do
+               !$omp end parallel
                !
             ENDIF
             !
          ENDDO
          !
       ENDDO
-      !
+      DEALLOCATE( w1, w2 )
+
+      call add_box_to_psic ( )
+
       CALL stop_clock( 's_psir' )
-      !
       RETURN
       !
   END SUBROUTINE s_psir_gamma
   !
-  SUBROUTINE s_psir_k ( ibnd, last )
-  !--------------------------------------------------------------------------
-  ! Same as s_psir_gamma but for generalised k point scheme i.e.:
-  ! 1) Only one band is considered at a time
-  ! 2) Becp is a complex entity now
-  ! Derived from s_psir_gamma by OBM 061108
-  ! k-point phase factor fixed by SdG 030816
+  !---------------------------------------------------------------------------
+  SUBROUTINE s_psir_k( ibnd, last )
+      !--------------------------------------------------------------------------
+      !! Same as \(\texttt{s_psir_gamma}\) but for generalised k-point scheme i.e.:  
+      !! 1) Only one band is considered at a time;  
+      !! 2) \(\text{becp}\) is a complex entity now.
+      !
+      !! Derived from \(\texttt{s_psir_gamma}\) by OBM 061108.  
+      !! k-point phase factor fixed by SdG 030816.
+      !
       USE kinds,                  ONLY : DP
       USE wvfct,                  ONLY : current_k
       USE cell_base,              ONLY : omega
-      USE wavefunctions,   ONLY : psic
       USE ions_base,              ONLY : nat, nsp, ityp
-      USE uspp_param,             ONLY : nh
-      USE lsda_mod,               ONLY : current_spin
-      USE uspp,                   ONLY : qq_at
+      USE uspp_param,             ONLY : nh, nhm
+      USE uspp,                   ONLY : qq_at, indv_ijkb0
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : dffts
       !
@@ -1736,7 +1917,7 @@ MODULE realus
       !
       INTEGER, INTENT(in) :: ibnd, last
       !
-      INTEGER :: ih, jh, ikb, jkb, nt, ia, ir, mbia
+      INTEGER :: ih, nt, ia, mbia, ijkb0, box_ir
       REAL(DP) :: fac
       COMPLEX(DP) , ALLOCATABLE :: w1(:)
       !
@@ -1748,75 +1929,69 @@ MODULE realus
       IF( dffts%has_task_groups ) CALL errore( 's_psir_k', 'task_groups not implemented', 1 )
 
       call set_xkphase(current_k)
-
       !
       fac = sqrt(omega)
       !
-      ikb = 0
-      !
+      ALLOCATE( w1(nhm) )
       DO nt = 1, nsp
          !
          DO ia = 1, nat
             !
             IF ( ityp(ia) == nt ) THEN
                !
-               mbia = maxbox_beta(ia)
-
-               ALLOCATE( w1(nh(nt)) )
-               w1 = 0.D0
+               mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
+               !print *, "mbia=",mbia
                !
+               ijkb0 = indv_ijkb0(ia)
+               !
+               !$omp parallel
+               !$omp do
                DO ih = 1, nh(nt)
-                  DO jh = 1, nh(nt)
-                     jkb = ikb + jh
-                     w1(ih) = w1(ih) + qq_at(ih,jh,ia) * becp%k(jkb, ibnd)
-                  ENDDO
+                  w1(ih) = fac * SUM(qq_at(ih,1:nh(nt),ia) * becp%k(ijkb0+1:ijkb0+nh(nt),ibnd))
                ENDDO
-               !
-               w1 = w1 * fac
-               ikb = ikb + nh(nt)
-               !
-               DO ih = 1, nh(nt)
-                  !
-                  DO ir = 1, mbia
-                     !
-                     psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + xkphase(ir,ia)*betasave(ir,ih,ia)*w1(ih)
-                     !
-                  ENDDO
-                  !
+               !$omp end do
+               !$omp do
+               DO box_ir = box_s(ia), box_e(ia)
+                  box_psic( box_ir ) = SUM(xkphase(box_ir)*betasave(box_ir,1:nh(nt))*w1(1:nh(nt)))
                ENDDO
+               !$omp end do
+               !$omp end parallel
                !
-               DEALLOCATE( w1 )
                !
             ENDIF
             !
          ENDDO
          !
       ENDDO
-      !
+      DEALLOCATE( w1 )
+
+      call add_box_to_psic ( )
+
       CALL stop_clock( 's_psir' )
-      !
       RETURN
       !
   END SUBROUTINE s_psir_k
   !
-  SUBROUTINE add_vuspsir_gamma ( ibnd, last )
+  !---------------------------------------------------------------------------
+  SUBROUTINE add_vuspsir_gamma( ibnd, last )
   !--------------------------------------------------------------------------
+  !! This routine applies the Ultra-Soft Hamiltonian to a vector transformed
+  !! in real space contained in \(\text{psic}\).  
+  !! The index \(\text{ibnd}\) runs up to band \(\text{last}\).  
+  !! Requires the products of psi with all beta functions in array
+  !! \(\text{becp%r(nkb,last)}\) (calculated by \(\texttt{calbecr}\) in 
+  !! real space).
   !
-  !    This routine applies the Ultra-Soft Hamiltonian to a
-  !    vector transformed in real space contained in psic.
-  !    ibnd is an index that runs up to band last. 
-  !    Requires the products of psi with all beta functions
-  !    in array becp%r(nkb,last) (calculated by calbecr in REAL SPACE)
-  ! Subroutine written by Dario Rocca, modified by O. Baris Malcioglu
-  ! WARNING ! for the sake of speed, no checks performed in this subroutine
-
+  !! WARNING: for the sake of speed, no checks performed in this subroutine.
+  !
+  !! Subroutine written by Dario Rocca, modified by O. Baris Malcioglu.
+  !
   USE kinds,                  ONLY : DP
   USE cell_base,              ONLY : omega
-  USE wavefunctions,   ONLY : psic
   USE ions_base,              ONLY : nat, nsp, ityp
-  USE uspp_param,             ONLY : nh
+  USE uspp_param,             ONLY : nh, nhm
   USE lsda_mod,               ONLY : current_spin
-  USE uspp,                   ONLY : deeq
+  USE uspp,                   ONLY : deeq, indv_ijkb0
   USE becmod,                 ONLY : bec_type, becp
   USE fft_base,               ONLY : dffts
   !
@@ -1824,101 +1999,77 @@ MODULE realus
   !
   INTEGER, INTENT(in) :: ibnd, last
   !
-  INTEGER :: ih, jh, ikb, jkb, nt, ia, ir, mbia
+  INTEGER :: ih, nt, ia, mbia, ijkb0, box_ir
   REAL(DP) :: fac
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: w1, w2
   !
-  REAL(DP), EXTERNAL :: ddot
-  !
   CALL start_clock( 'add_vuspsir' )
 
-  IF( dffts%has_task_groups ) THEN
-
-    CALL errore( 'add_vuspsir_gamma', 'task_groups not implemented', 1 )
-
-  ELSE !non task groups part starts here
-
-   !
-   fac = sqrt(omega)
-   !
-   ikb = 0
-   !
-   DO nt = 1, nsp
-      !
-      DO ia = 1, nat
-         !
-         IF ( ityp(ia) == nt ) THEN
-            !
-            mbia = maxbox_beta(ia)
-            ALLOCATE( w1(nh(nt)),  w2(nh(nt)) )
-            w1 = 0.D0
-            w2 = 0.D0
-            !
-            DO ih = 1, nh(nt)
-               !
-               DO jh = 1, nh(nt)
-                  !
-                  jkb = ikb + jh
-                  !
-                  w1(ih) = w1(ih) + deeq(ih,jh,ia,current_spin) * becp%r(jkb,ibnd)
-                  IF ( ibnd+1 <= last )  w2(ih) = w2(ih) + deeq(ih,jh,ia,current_spin)* &
-                       becp%r(jkb,ibnd+1)
-                  !
-               ENDDO
-               !
-            ENDDO
-            !
-            w1 = w1 * fac
-            w2 = w2 * fac
-            ikb = ikb + nh(nt)
-            !
-            DO ih = 1, nh(nt)
-               !
-               DO ir = 1, mbia
-                  !
-                  psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + &
-                       betasave(ir,ih,ia)*cmplx( w1(ih), w2(ih) ,kind=DP)
-                  !
-               ENDDO
-                  !
-            ENDDO
-            !
-            DEALLOCATE( w1, w2 )
-            !
-         ENDIF
-         !
-      ENDDO
-      !
-   ENDDO
-   !
-  ENDIF
-  CALL stop_clock( 'add_vuspsir' )
+  IF( dffts%has_task_groups ) CALL errore( 'add_vuspsir_gamma', 'task_groups not implemented', 1 )
   !
+  fac = sqrt(omega)
+  !
+  ALLOCATE( w1(nhm), w2(nhm) ) ; IF ( ibnd+1 > last) w2 = 0.D0
+  DO nt = 1, nsp
+     !
+     DO ia = 1, nat
+        !
+        IF ( ityp(ia) == nt ) THEN
+           !
+           mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
+           !
+           ijkb0 = indv_ijkb0(ia)
+           !
+           !$omp parallel
+           !$omp do
+           DO ih = 1, nh(nt)
+              w1(ih) = fac * SUM(deeq(ih,1:nh(nt),ia,current_spin) * becp%r(ijkb0+1:ijkb0+nh(nt),ibnd))
+              IF ( ibnd+1 <= last ) &
+                 w2(ih) = fac * SUM(deeq(ih,1:nh(nt),ia,current_spin) * becp%r(ijkb0+1:ijkb0+nh(nt),ibnd+1))
+           ENDDO
+           !$omp end do
+           !$omp do
+           DO box_ir = box_s(ia), box_e(ia)
+              box_psic( box_ir ) = SUM(betasave(box_ir,1:nh(nt))*cmplx( w1(1:nh(nt)), w2(1:nh(nt)) ,kind=DP))
+           ENDDO
+           !$omp end do
+           !$omp end parallel
+           !
+        ENDIF
+        !
+     ENDDO
+     !
+  ENDDO
+  DEALLOCATE( w1, w2 )
+
+  call add_box_to_psic ( )
+
+  CALL stop_clock( 'add_vuspsir' )
   RETURN
   !
   END SUBROUTINE add_vuspsir_gamma
   !
-  SUBROUTINE add_vuspsir_k ( ibnd, last )
+  !----------------------------------------------------------------------------
+  SUBROUTINE add_vuspsir_k( ibnd, last )
   !--------------------------------------------------------------------------
+  !! This routine applies the Ultra-Soft Hamiltonian to a vector transformed 
+  !! in real space contained in \(\text{psic}\).  
+  !! \(\text{ibnd}\) is an index that runs up to band \(\text{last}\).  
+  !! Requires the products of psi with all beta functions in array
+  !! \(\text{becp(nkb,last)}\) (calculated by \(\texttt{calbecr}\) in real space).
   !
-  !    This routine applies the Ultra-Soft Hamiltonian to a
-  !    vector transformed in real space contained in psic.
-  !    ibnd is an index that runs up to band las.
-  !    Requires the products of psi with all beta functions
-  !    in array becp(nkb,last) (calculated by calbecr in REAL SPACE)
-  ! Subroutine written by Stefano de Gironcoli, modified by O. Baris Malcioglu
-  ! WARNING ! for the sake of speed, no checks performed in this subroutine
+  !! WARNING: for the sake of speed, no checks performed in this subroutine.
   !
-  ! k-point phase factor fixed by SdG 030816
+  !! Subroutine written by Stefano de Gironcoli, modified by O. Baris Malcioglu.  
+  !! k-point phase factor fixed by SdG 030816.
   !
   USE kinds,                  ONLY : DP
   USE wvfct,                  ONLY : current_k
   USE cell_base,              ONLY : omega
-  USE wavefunctions,   ONLY : psic
   USE ions_base,              ONLY : nat, nsp, ityp
-  USE uspp_param,             ONLY : nh
+  USE uspp_param,             ONLY : nh, nhm
   USE lsda_mod,               ONLY : current_spin
-  USE uspp,                   ONLY : deeq
+  USE uspp,                   ONLY : deeq, indv_ijkb0
   USE becmod,                 ONLY : bec_type, becp
   USE fft_base,               ONLY : dffts
   !
@@ -1926,104 +2077,115 @@ MODULE realus
   !
   INTEGER, INTENT(in) :: ibnd, last
   !
-  INTEGER :: ih, jh, ikb, jkb, nt, ia, ir, mbia
+  INTEGER :: ih, nt, ia, mbia, ijkb0, box_ir
   REAL(DP) :: fac
   !
   COMPLEX(DP), ALLOCATABLE :: w1(:)
   !
-  REAL(DP), EXTERNAL :: ddot
-  !
   CALL start_clock( 'add_vuspsir' )
 
   IF( dffts%has_task_groups ) CALL errore( 'add_vuspsir_k', 'task_groups not implemented', 1 )
-
+  !
   call set_xkphase(current_k)
-   !
-   fac = sqrt(omega)
-   !
-   ikb = 0
-   !
-   DO nt = 1, nsp
-      !
-      DO ia = 1, nat
-         !
-         IF ( ityp(ia) == nt ) THEN
-            !
-            mbia = maxbox_beta(ia)
+  !
+  fac = sqrt(omega)
+  !
+  ALLOCATE( w1(nhm))
+  DO nt = 1, nsp
+     !
+     DO ia = 1, nat
+        !
+        IF ( ityp(ia) == nt ) THEN
+           !
+           mbia = maxbox_beta(ia) ; IF ( mbia == 0 ) CYCLE
 
-            ALLOCATE( w1(nh(nt)))
-            w1 = (0.d0, 0d0)
-            !
-            DO ih = 1, nh(nt)
-               !
-               DO jh = 1, nh(nt)
-                  !
-                  jkb = ikb + jh
-                  !
-                  w1(ih) = w1(ih) + deeq(ih,jh,ia,current_spin) * becp%k(jkb,ibnd)
-                  !
-               ENDDO
-               !
-            ENDDO
-            !
-            w1 = w1 * fac
-            ikb = ikb + nh(nt)
-            !
-            DO ih = 1, nh(nt)
-               !
-               DO ir = 1, mbia
-                  !
-                  psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + xkphase(ir,ia)*betasave(ir,ih,ia)*w1(ih)
-                  !
-               ENDDO
-               !
-            ENDDO
-            !
-            DEALLOCATE( w1 )
-            !
-         ENDIF
-         !
-      ENDDO
-      !
-   ENDDO
-   CALL stop_clock( 'add_vuspsir' )
-   RETURN
+           ijkb0 = indv_ijkb0(ia)
+
+           !$omp parallel
+           !$omp do
+           DO ih = 1, nh(nt)
+              w1(ih) = fac * SUM( deeq(ih,1:nh(nt),ia,current_spin) * becp%k(ijkb0+1:ijkb0+nh(nt),ibnd))
+           ENDDO
+           !$omp end do
+           !$omp do
+           DO box_ir = box_s(ia), box_e(ia)
+              box_psic( box_ir ) = xkphase(box_ir)*SUM(betasave(box_ir,1:nh(nt))*w1(1:nh(nt)))
+           ENDDO
+           !$omp end do
+           !$omp end parallel
+           !
+        ENDIF
+        !
+     ENDDO
+     !
+  ENDDO
+  DEALLOCATE( w1 )
+
+  call add_box_to_psic ( )
+
+  CALL stop_clock( 'add_vuspsir' )
+  RETURN
   !
   END SUBROUTINE add_vuspsir_k
 
   !--------------------------------------------------------------------------
-  SUBROUTINE invfft_orbital_gamma (orbital, ibnd, last, conserved)
+  SUBROUTINE add_box_to_psic ( )
+    !--------------------------------------------------------------------------
+    !! the box-friendly array box_psic is (collected from across intra_bbox_comm
+    !! and) used to update psic.
+    !
+    USE wavefunctions, ONLY : psic
+    USE ions_base,     ONLY : nat
+    !
+    IMPLICIT NONE
+    !
+    INTEGER :: ia, box_ir
+
+    !$omp parallel
+    DO ia = 1, nat
+       !$omp do
+       DO box_ir = box_s(ia), box_e(ia)
+          psic( box_beta( box_ir ) ) = psic( box_beta( box_ir ) ) + box_psic ( box_ir )
+       END DO
+       !$omp end do
+    END DO
+    !$omp end parallel
+
+    RETURN
+
+  END SUBROUTINE add_box_to_psic
+  !
+  !
   !--------------------------------------------------------------------------
-  !
-  ! OBM 241008
-  ! This driver subroutine transforms the given orbital using fft and puts the
-  ! result in psic
-  ! Warning! In order to be fast, no checks on the supplied data are performed!
-  !
-  ! orbital: the array of orbitals to be transformed
-  ! ibnd: band index of the band currently being transformed
-  ! last: index of the last band you want to transform (usually the total number 
-  !       of bands but can be different in band parallelization)
-  !
-    USE wavefunctions, &
-                       ONLY : psic
-    USE gvecs,         ONLY : doublegrid
+  SUBROUTINE invfft_orbital_gamma( orbital, ibnd, last, conserved )
+    !--------------------------------------------------------------------------
+    !! This driver subroutine transforms the given orbital using FFT and puts the
+    !! result in \(\text{psic}\).
+    !
+    !! WARNING: in order to be fast, no checks on the supplied data are performed!
+    !
+    !! OBM 241008.
+    !
+    USE wavefunctions, ONLY : psic
     USE klist,         ONLY : ngk, igk_k
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : invfft
-    USE fft_helper_subroutines
-
+    USE fft_helper_subroutines,   ONLY : fftx_ntgrp, tg_get_recip_inc
+    !
     IMPLICIT NONE
-
-    INTEGER, INTENT(in) :: ibnd,& ! index of the band currently being transformed
-                           last   ! index of the last band that you want to transform
-
+    !
+    INTEGER, INTENT(in) :: ibnd
+    !! index of the band currently being transformed
+    INTEGER, INTENT(in) :: last
+    !! index of the last band that you want to transform (usually the
+    !! total number of bands but can be different in band parallelization)
     COMPLEX(DP),INTENT(in) :: orbital(:,:)
+    !! the array of orbitals to be transformed
     LOGICAL, OPTIONAL :: conserved
-    ! if this flag is true, the orbital is stored in temporary memory
-
-    !Internal temporary variables
+    !! if this flag is true, the orbital is stored in temporary memory
+    !
+    ! Internal temporary variables
     INTEGER :: j, idx, ioff, right_inc, ntgrp
 
     !Task groups
@@ -2073,20 +2235,26 @@ MODULE realus
 
     ELSE !Task groups not used
         !
-        psic(:) = (0.d0, 0.d0)
+        !$omp parallel default(shared) private(j)
+        CALL threaded_barrier_memset(psic, 0.D0, dffts%nnr*2)
 
         IF (ibnd < last) THEN
            ! two ffts at the same time
+           !$omp do
            DO j = 1, ngk(1)
               psic (dffts%nl (igk_k(j,1))) =       orbital(j, ibnd) + (0.0d0,1.d0)*orbital(j, ibnd+1)
               psic (dffts%nlm(igk_k(j,1))) = conjg(orbital(j, ibnd) - (0.0d0,1.d0)*orbital(j, ibnd+1))
            ENDDO
+           !$omp end do
         ELSE
+           !$omp do
            DO j = 1, ngk(1)
               psic (dffts%nl (igk_k(j,1))) =       orbital(j, ibnd)
               psic (dffts%nlm(igk_k(j,1))) = conjg(orbital(j, ibnd))
            ENDDO
+           !$omp end do
         ENDIF
+        !$omp end parallel
         !
        CALL invfft ('Wave', psic, dffts)
         !
@@ -2105,48 +2273,51 @@ MODULE realus
   !
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE fwfft_orbital_gamma (orbital, ibnd, last,conserved)
-  !--------------------------------------------------------------------------
-  !
-  ! OBM 241008
-  ! This driver subroutine -back- transforms the given orbital using fft using
-  ! the already existent data in psic. 
-  ! Warning! This subroutine does not reset the orbital, use carefully!
-  ! Warning 2! In order to be fast, no checks on the supplied data are performed!
-  ! Variables:
-  !
-  ! orbital: the array of orbitals to be transformed
-  ! ibnd: band index of the band currently being transformed
-  ! last: index of the last band you want to transform (usually the total number 
-  !       of bands but can be different in band parallelization)
-  !
+  SUBROUTINE fwfft_orbital_gamma( orbital, ibnd, last, conserved, add_to_orbital )
+    !--------------------------------------------------------------------------
+    !! This driver subroutine -back- transforms the given contribution using FFT from
+    !! the already existent data in \(\text{psic}\) and return it in (or optionally
+    !! add it to) orbital.
+    !
+    !! WARNING 1: this subroutine does not reset the orbital, use carefully!
+    !! WARNING 2: in order to be fast, no checks on the supplied data are performed!
+    !
+    !! OBM 241008,
+    !! SdG 130420.
+    !
     USE wavefunctions, &
                        ONLY : psic
     USE klist,         ONLY : ngk, igk_k
-    USE gvecs,         ONLY : doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : fwfft
-    USE mp_bands,      ONLY : me_bgrp
-    USE fft_helper_subroutines
-
+    USE fft_helper_subroutines,   ONLY : fftx_ntgrp, tg_get_recip_inc
+    !
     IMPLICIT NONE
-
-    INTEGER, INTENT(in) :: ibnd,& ! index of the band currently being transformed
-                           last   ! index of the last band that you want to transform
-
-    COMPLEX(DP),INTENT(out) :: orbital(:,:)
-
+    !
+    INTEGER, INTENT(in) :: ibnd
+    !! index of the band currently being transformed
+    INTEGER, INTENT(IN) :: last
+    !! index of the last band that you want to transform (usually the
+    !! total number of bands but can be different in band parallelization)
+    COMPLEX(DP),INTENT(inout) :: orbital(:,:)
+    !! the array of orbitals to be returned (or updated)
     LOGICAL, OPTIONAL :: conserved
-    !if this flag is true, the orbital is stored in temporary memory
-
-    !Internal temporary variables
+    !! if this flag is true, the orbital is stored in temporary memory
+    LOGICAL, OPTIONAL :: add_to_orbital
+    !! if this flag is true, the result is added to (rather than stored into) orbital
+    !
+    ! Internal temporary variables
     COMPLEX(DP) :: fp, fm
     INTEGER :: j, idx, ioff, right_inc, ntgrp
+    LOGICAL :: add_to_orbital_
 
     !Task groups
     !print *, "->fourier space"
     CALL start_clock( 'fwfft_orbital' )
+    !
+    add_to_orbital_=.FALSE. ; IF( present(add_to_orbital)) add_to_orbital_ = add_to_orbital
+    !
     !New task_groups versions
     IF( dffts%has_task_groups ) THEN
        !
@@ -2164,12 +2335,21 @@ MODULE realus
                       tg_psic( dffts%nlm(igk_k(j,1)) + ioff ) ) * 0.5d0
                  fm= ( tg_psic( dffts%nl(igk_k(j,1)) + ioff ) -  &
                       tg_psic( dffts%nlm(igk_k(j,1)) + ioff ) ) * 0.5d0
-                 orbital (j, ibnd+idx-1) =  cmplx( dble(fp), aimag(fm),kind=DP)
-                 orbital (j, ibnd+idx  ) =  cmplx(aimag(fp),- dble(fm),kind=DP)
+                 IF( add_to_orbital_ ) THEN
+                    orbital (j, ibnd+idx-1) = orbital (j, ibnd+idx-1) + cmplx( dble(fp), aimag(fm),kind=DP)
+                    orbital (j, ibnd+idx  ) = orbital (j, ibnd+idx  ) + cmplx(aimag(fp),- dble(fm),kind=DP)
+                 ELSE
+                    orbital (j, ibnd+idx-1) = cmplx( dble(fp), aimag(fm),kind=DP)
+                    orbital (j, ibnd+idx  ) = cmplx(aimag(fp),- dble(fm),kind=DP)
+                 END IF
               ENDDO
            ELSEIF( idx + ibnd - 1 == last ) THEN
               DO j = 1, ngk(1)
-                 orbital (j, ibnd+idx-1) =  tg_psic( dffts%nl(igk_k(j,1)) + ioff )
+                 IF( add_to_orbital_ ) THEN
+                    orbital (j, ibnd+idx-1) = orbital (j, ibnd+idx-1) + tg_psic( dffts%nl(igk_k(j,1)) + ioff )
+                 ELSE
+                    orbital (j, ibnd+idx-1) = tg_psic( dffts%nl(igk_k(j,1)) + ioff )
+                 END IF
               ENDDO
            ENDIF
            !
@@ -2187,20 +2367,42 @@ MODULE realus
          !larger memory slightly faster
         CALL fwfft ('Wave', psic, dffts)
 
-
         IF (ibnd < last) THEN
-
            ! two ffts at the same time
-           DO j = 1, ngk(1)
-              fp = (psic (dffts%nl(igk_k(j,1))) + psic (dffts%nlm(igk_k(j,1))))*0.5d0
-              fm = (psic (dffts%nl(igk_k(j,1))) - psic (dffts%nlm(igk_k(j,1))))*0.5d0
-              orbital( j, ibnd)   = cmplx( dble(fp), aimag(fm),kind=DP)
-              orbital( j, ibnd+1) = cmplx(aimag(fp),- dble(fm),kind=DP)
-           ENDDO
+
+           IF( add_to_orbital_ ) THEN
+              !$omp parallel do 
+              DO j = 1, ngk(1)
+                 fp = (psic (dffts%nl(igk_k(j,1))) + psic (dffts%nlm(igk_k(j,1))))*0.5d0
+                 fm = (psic (dffts%nl(igk_k(j,1))) - psic (dffts%nlm(igk_k(j,1))))*0.5d0
+                 orbital( j, ibnd)   = orbital( j, ibnd)   + cmplx( dble(fp), aimag(fm),kind=DP)
+                 orbital( j, ibnd+1) = orbital( j, ibnd+1) + cmplx(aimag(fp),- dble(fm),kind=DP)
+              ENDDO
+              !$omp end parallel do
+           ELSE
+              !$omp parallel do
+              DO j = 1, ngk(1)
+                 fp = (psic (dffts%nl(igk_k(j,1))) + psic (dffts%nlm(igk_k(j,1))))*0.5d0
+                 fm = (psic (dffts%nl(igk_k(j,1))) - psic (dffts%nlm(igk_k(j,1))))*0.5d0
+                 orbital( j, ibnd)   = cmplx( dble(fp), aimag(fm),kind=DP)
+                 orbital( j, ibnd+1) = cmplx(aimag(fp),- dble(fm),kind=DP)
+              ENDDO
+              !$omp end parallel do
+           ENDIF
         ELSE
-           DO j = 1, ngk(1)
-              orbital(j, ibnd)   =  psic (dffts%nl(igk_k(j,1)))
-           ENDDO
+           IF( add_to_orbital_ ) THEN
+              !$omp parallel do
+              DO j = 1, ngk(1)
+                 orbital(j, ibnd)   =  orbital(j, ibnd) +  psic (dffts%nl(igk_k(j,1)))
+              ENDDO
+              !$omp end parallel do
+           ELSE
+              !$omp parallel do
+              DO j = 1, ngk(1)
+                 orbital(j, ibnd)   =  psic (dffts%nl(igk_k(j,1)))
+              ENDDO
+              !$omp end parallel do
+           ENDIF
         ENDIF
         IF (present(conserved)) THEN
          IF (conserved .eqv. .true.) THEN
@@ -2214,45 +2416,43 @@ MODULE realus
   END SUBROUTINE fwfft_orbital_gamma
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE invfft_orbital_k (orbital, ibnd, last, ik, conserved)
+  SUBROUTINE invfft_orbital_k( orbital, ibnd, last, ik, conserved )
     !--------------------------------------------------------------------------
+    !! This subroutine transforms the given orbital using FFT and puts the result
+    !! in \(\text{psic}\).  
     !
-    ! OBM 110908
-    ! This subroutine transforms the given orbital using fft and puts the result
-    ! in psic
-    ! Warning! In order to be fast, no checks on the supplied data are performed!
+    !! WARNING: in order to be fast, no checks on the supplied data are performed!
     !
-    ! orbital: the array of orbitals to be transformed
-    ! ibnd: band index of the band currently being transformed
-    ! last: index of the last band you want to transform (usually the total number 
-    !       of bands but can be different in band parallelization)
-    !
-    !  current_k  variable  must contain the index of the desired kpoint
+    !! OBM 110908
     !
     USE kinds,                    ONLY : DP
     USE wavefunctions,     ONLY : psic
     USE klist,                    ONLY : ngk, igk_k
     USE wvfct,                    ONLY : current_k
-    USE gvecs,                    ONLY : doublegrid
     USE fft_base,                 ONLY : dffts
     USE fft_interfaces,           ONLY : invfft
-    USE fft_helper_subroutines
+    USE fft_helper_subroutines,   ONLY : fftx_ntgrp, tg_get_recip_inc
 
     IMPLICIT NONE
 
-    INTEGER, INTENT(in) :: ibnd,& ! index of the band currently being transformed
-                           last   ! index of the last band that you want to transform
-
+    INTEGER, INTENT(in) :: ibnd
+    !! index of the band currently being transformed
+    INTEGER, INTENT(in) :: last
+    !! index of the last band that you want to transform (usually the total
+    !! number of bands but can be different in band parallelization)
     COMPLEX(DP),INTENT(in) :: orbital(:,:)
+    !! the array of orbitals to be transformed
     INTEGER, OPTIONAL :: ik
+    !! index of the desired k-point
     LOGICAL, OPTIONAL :: conserved
-    !if this flag is true, the orbital is stored in temporary memory
-
+    !! if this flag is true, the orbital is stored in temporary memory
+    !
     ! Internal variables
-    INTEGER :: ioff, idx, ik_ , right_inc, ntgrp
+    INTEGER :: ioff, idx, ik_ , right_inc, ntgrp, ig
 
     CALL start_clock( 'invfft_orbital' )
-
+    
+    ! current_k  variable  must contain the index of the desired kpoint
     ik_ = current_k ; if (present(ik)) ik_ = ik
 
     IF( dffts%has_task_groups ) THEN
@@ -2285,9 +2485,14 @@ MODULE realus
        !
     ELSE  !non task_groups version
        !
-       psic(1:dffts%nnr) = ( 0.D0, 0.D0 )
-       !
-       psic(dffts%nl(igk_k(1:ngk(ik_), ik_))) = orbital(1:ngk(ik_),ibnd)
+       !$omp parallel default(shared) private(ig)
+       CALL threaded_barrier_memset(psic, 0.D0, dffts%nnr*2)
+       !$omp do
+       do ig = 1, ngk(ik_)
+          psic(dffts%nl(igk_k(ig, ik_))) = orbital(ig,ibnd)
+       end do
+       !$omp end do
+       !$omp end parallel
        !
        CALL invfft ('Wave', psic, dffts)
        IF (present(conserved)) THEN
@@ -2300,47 +2505,53 @@ MODULE realus
     ENDIF
     CALL stop_clock( 'invfft_orbital' )
   END SUBROUTINE invfft_orbital_k
+  !
   !--------------------------------------------------------------------------
-  SUBROUTINE fwfft_orbital_k (orbital, ibnd, last, ik, conserved)
-    !--------------------------------------------------------------------------
+  SUBROUTINE fwfft_orbital_k( orbital, ibnd, last, ik, conserved, add_to_orbital )
+    !-------------------------------------------------------------------------
+    !! This driver subroutine -back- transforms the given contribution using FFT from
+    !! the already existent data in \(\text{psic}\) and return it in (or optionally
+    !! add it to) orbital.
     !
-    ! OBM 110908
-    ! This subroutine transforms the given orbital using fft and puts the result
-    ! in psic
-    ! Warning! In order to be fast, no checks on the supplied data are performed!
+    !! WARNING 1: this subroutine does not reset the orbital, use carefully!
+    !! WARNING 2: in order to be fast, no checks on the supplied data are performed!
     !
-    ! orbital: the array of orbitals to be transformed
-    ! ibnd: band index of the band currently being transformed
-    ! last: index of the last band you want to transform (usually the total number 
-    !       of bands but can be different in band parallelization)
+    !! OBM 241008,
+    !! SdG 130420.
     !
-    !  current_k  variable  must contain the index of the desired kpoint
-    !
-    USE wavefunctions,     ONLY : psic
+    USE wavefunctions,            ONLY : psic
     USE klist,                    ONLY : ngk, igk_k
     USE wvfct,                    ONLY : current_k
-    USE gvecs,                    ONLY : doublegrid
     USE kinds,                    ONLY : DP
     USE fft_base,                 ONLY : dffts
     USE fft_interfaces,           ONLY : fwfft
-    USE mp_bands,                 ONLY : me_bgrp
-    USE fft_helper_subroutines
-
+    USE fft_helper_subroutines,   ONLY : fftx_ntgrp, tg_get_recip_inc
+    !
     IMPLICIT NONE
-
-    INTEGER, INTENT(in) :: ibnd,& ! index of the band currently being transformed
-                           last   ! index of the last band that you want to transform
-
-    COMPLEX(DP),INTENT(out) :: orbital(:,:)
+    !
+    INTEGER, INTENT(in) :: ibnd
+    !! index of the band currently being transformed
+    INTEGER, INTENT(in) :: last
+    !! index of the last band that you want to transform (usually the
+    !! total number of bands but can be different in band parallelization)
+    COMPLEX(DP),INTENT(inout) :: orbital(:,:)
+    !! the array of orbitals to be returned (or updated)
     INTEGER, OPTIONAL :: ik
+    !! the index of the desired kpoint
     LOGICAL, OPTIONAL :: conserved
-    !if this flag is true, the orbital is stored in temporary memory
-
+    !! if this flag is true, the orbital is stored in temporary memory
+    LOGICAL, OPTIONAL :: add_to_orbital
+    !! if this flag is true, the result is added to (rather than stored into) orbital
+    !
     ! Internal variables
-    INTEGER :: ioff, idx, ik_ , right_inc, ntgrp
-
+    INTEGER :: ioff, idx, ik_ , right_inc, ntgrp, ig
+    LOGICAL :: add_to_orbital_
+    !
     CALL start_clock( 'fwfft_orbital' )
-
+    !
+    add_to_orbital_=.FALSE. ; IF( present(add_to_orbital)) add_to_orbital_ = add_to_orbital
+    !
+    ! current_k  variable  must contain the index of the desired kpoint
     ik_ = current_k ; if (present(ik)) ik_ = ik
 
     IF( dffts%has_task_groups ) THEN
@@ -2354,7 +2565,11 @@ MODULE realus
        DO idx = 1, ntgrp
           !
           IF( idx + ibnd - 1 <= last ) THEN
-             orbital (:, ibnd+idx-1) = tg_psic( dffts%nl(igk_k(:,ik_)) + ioff )
+             IF( add_to_orbital_ ) THEN
+                orbital (:, ibnd+idx-1) = orbital (:, ibnd+idx-1) + tg_psic( dffts%nl(igk_k(:,ik_)) + ioff )
+             ELSE
+                orbital (:, ibnd+idx-1) = tg_psic( dffts%nl(igk_k(:,ik_)) + ioff )
+             END IF
 
           ENDIF
           !
@@ -2371,7 +2586,19 @@ MODULE realus
        !
        CALL fwfft ('Wave', psic, dffts)
        !
-       orbital(1:ngk(ik_),ibnd) = psic(dffts%nl(igk_k(1:ngk(ik_),ik_)))
+       IF( add_to_orbital_ ) THEN
+          !$omp parallel do default(shared) private(ig)
+          do ig=1,ngk(ik_)
+             orbital(ig,ibnd) = orbital(ig,ibnd) + psic(dffts%nl(igk_k(ig,ik_)))
+          end do
+          !$omp end parallel do
+       ELSE
+          !$omp parallel do default(shared) private(ig)
+          do ig=1,ngk(ik_)
+             orbital(ig,ibnd) = psic(dffts%nl(igk_k(ig,ik_)))
+          end do
+          !$omp end parallel do
+       END IF
        !
        IF (present(conserved)) THEN
           IF (conserved .eqv. .true.) THEN
@@ -2384,29 +2611,32 @@ MODULE realus
   END SUBROUTINE fwfft_orbital_k
 
   !--------------------------------------------------------------------------
-  SUBROUTINE v_loc_psir (ibnd, last)
+  SUBROUTINE v_loc_psir( ibnd, last )
     !--------------------------------------------------------------------------
-    ! Basically the same thing as v_loc but without implicit fft
-    ! modified for real space implementation
-    ! OBM 241008
+    !! Basically the same thing as \(\texttt{v_loc}\) but without implicit FFT
+    !! modified for real space implementation.
+    !
+    !! OBM 241008
     !
     USE wavefunctions, &
                        ONLY : psic
-    USE gvecs,         ONLY : doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
-    USE mp_bands,      ONLY : me_bgrp
     USE scf,           ONLY : vrs
     USE lsda_mod,      ONLY : current_spin
-
+    !
     IMPLICIT NONE
-
-    INTEGER, INTENT(in) :: ibnd,& ! index of the band currently being operated on
-                           last   ! index of the last band that you want to operate on
-    !Internal temporary variables
+    !
+    INTEGER, INTENT(in) :: ibnd
+    !! index of the band currently being operated on
+    INTEGER, INTENT(in) :: last
+    !! index of the last band that you want to operate on
+    !
+    ! Internal temporary variables
     INTEGER :: j
     !Task groups
-    REAL(DP),    ALLOCATABLE :: tg_v(:)
+    REAL(DP), ALLOCATABLE :: tg_v(:)
+    !
     CALL start_clock( 'v_loc_psir' )
 
     IF( dffts%has_task_groups ) THEN
@@ -2415,46 +2645,54 @@ MODULE realus
           !if ibnd==1 this is a new calculation, and tg_v should be distributed.
         ENDIF
         !
+        !$omp parallel do
         DO j = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
            tg_psic (j) = tg_psic (j) + tg_psic_temp (j) * tg_v(j)
         ENDDO
+        !$omp end parallel do
         !
         DEALLOCATE( tg_v )
      ELSE
         !   product with the potential v on the smooth grid
         !
+        !$omp parallel do
         DO j = 1, dffts%nnr
            psic (j) = psic (j) + psic_temp (j) * vrs(j,current_spin)
         ENDDO
+        !$omp end parallel do
      ENDIF
   CALL stop_clock( 'v_loc_psir' )
   END SUBROUTINE v_loc_psir
+  !
   !--------------------------------------------------------------------------
-  SUBROUTINE v_loc_psir_inplace (ibnd, last)
+  SUBROUTINE v_loc_psir_inplace( ibnd, last )
     !--------------------------------------------------------------------------
-    ! The same thing as v_loc_psir but 
-    ! - on input  psic contains the wavefunction
-    ! - on output psic overwritten to contain v_loc_psir 
-    ! Therefore must be the first term to be considered whn building hpsi
-    ! SdG 290716
+    !! The same thing as \(\texttt{v_loc_psir}\), but:  
+    !! - on input \(\text{psic}\) contains the wavefunction;  
+    !! - on output \(\text{psic}\) is overwritten to contain \(\texttt{v_loc_psir}\).  
+    !! Therefore must be the first term to be considered when building \(\text{hpsi}\).
+    !
+    !! SdG 290716
     !
     USE wavefunctions, &
                        ONLY : psic
-    USE gvecs,         ONLY : doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
-    USE mp_bands,      ONLY : me_bgrp
     USE scf,           ONLY : vrs
     USE lsda_mod,      ONLY : current_spin
-
+    !
     IMPLICIT NONE
-
-    INTEGER, INTENT(in) :: ibnd,& ! index of the band currently being operated on
-                           last   ! index of the last band that you want to operate on
-    !Internal temporary variables
-    INTEGER :: j
-    !Task groups
-    REAL(DP),    ALLOCATABLE :: tg_v(:)
+    !
+    INTEGER, INTENT(in) :: ibnd
+    !! index of the band currently being operated on
+    INTEGER, INTENT(in) :: last
+    !! index of the last band that you want to operate on
+    !
+    ! ... local variables
+    !
+    INTEGER :: j  !Task groups
+    REAL(DP), ALLOCATABLE :: tg_v(:)
+    !
     CALL start_clock( 'v_loc_psir' )
 
     IF( dffts%has_task_groups ) THEN
@@ -2463,18 +2701,22 @@ MODULE realus
           !if ibnd==1 this is a new calculation, and tg_v should be distributed.
         ENDIF
         !
+        !$omp parallel do
         DO j = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
            tg_psic (j) = tg_v(j) * tg_psic(j)
         ENDDO
+        !$omp end parallel do
         !
         DEALLOCATE( tg_v )
-     ELSE
-        !   product with the potential v on the smooth grid
-        !
-        DO j = 1, dffts%nnr
-           psic (j) = vrs(j,current_spin) * psic(j)
-        ENDDO
-     ENDIF
+    ELSE
+       !   product with the potential v on the smooth grid
+       !
+       !$omp parallel do
+       DO j = 1, dffts%nnr
+          psic (j) = vrs(j,current_spin) * psic(j)
+       ENDDO
+       !$omp end parallel do
+    ENDIF
   CALL stop_clock( 'v_loc_psir' )
   END SUBROUTINE v_loc_psir_inplace
     !--------------------------------------------------------------------------

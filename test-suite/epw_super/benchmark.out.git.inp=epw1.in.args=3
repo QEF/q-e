@@ -1,0 +1,570 @@
+                                                                                      
+                                       ``:oss/                                        
+                           `.+s+.     .+ys--yh+     `./ss+.                           
+                          -sh//yy+`   +yy   +yy    -+h+-oyy                           
+                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           
+                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  
+               `/+ssys+-` `sh+      `                   oys`   .:osyo`                
+               -yh- ./syyooyo`                          .sys+/oyo--yh/                
+               `yy+    .-:-.                             `-/+/:`  -sh-                
+                /yh.                                              oys                 
+          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             
+       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        
+       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       
+       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        
+        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        
+         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          
+          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           
+    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      
+   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   
+   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   
+   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   
+   -yh-        ````````````````    `````````              ``        ``          oys   
+   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
+   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
+                                                                                      
+  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 
+                                                Comput. Phys. Commun. 209, 116 (2016) 
+                                                                                      
+
+     Program EPW v.5.2.0 starts on 15Jul2020 at 10:37:19 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     K-points division:     npool     =       4
+     Fft bands division:     nmany     =       1
+
+     Reading supplied temperature list.
+
+     Reading xml data from directory:
+
+     ./MgB2.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         379     379    151                 6657     6657    1631
+ 
+     Reading collected, re-writing distributed wavefunctions
+
+     --                                                                         
+
+     bravais-lattice index     =            4
+     lattice parameter (a_0)   =       5.8260  a.u.
+     unit-cell volume          =     195.5871 (a.u.)^3
+     number of atoms/cell      =            3
+     number of atomic types    =            2
+     kinetic-energy cut-off    =      40.0000  Ry
+     charge density cut-off    =     160.0000  Ry
+     Exchange-correlation= PZ
+                           (   1   1   0   0   0   0   0)
+
+
+     celldm(1)=    5.82603  celldm(2)=    0.00000  celldm(3)=    1.14207
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  1.0000  0.0000  0.0000 )  
+               a(2) = ( -0.5000  0.8660  0.0000 )  
+               a(3) = (  0.0000  0.0000  1.1421 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  1.0000  0.5774  0.0000 )  
+               b(2) = (  0.0000  1.1547  0.0000 )  
+               b(3) = (  0.0000  0.0000  0.8756 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+        1        Mg  24.3050   tau( 1) = (    0.00000    0.00000    0.00000  )
+        2        B   10.8110   tau( 2) = (   -0.00000    0.57735    0.57103  )
+        3        B   10.8110   tau( 3) = (    0.50000    0.28868    0.57103  )
+ 
+     25 Sym.Ops. (with q -> -q+G )
+
+
+     G cutoff =  137.5641  (   6657 G-vectors)     FFT grid: ( 24, 24, 27)
+     number of k points=   27  gaussian broad. (Ry)=  0.0200     ngauss =   1
+                       cart. coord. in units 2pi/a_0
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0740741
+        k(    2) = (   0.0000000   0.0000000   0.2918678), wk =   0.0740741
+        k(    3) = (   0.0000000   0.0000000   0.5837357), wk =   0.0740741
+        k(    4) = (   0.0000000   0.3849002   0.0000000), wk =   0.0740741
+        k(    5) = (   0.0000000   0.3849002   0.2918678), wk =   0.0740741
+        k(    6) = (   0.0000000   0.3849002   0.5837357), wk =   0.0740741
+        k(    7) = (   0.0000000   0.7698004   0.0000000), wk =   0.0740741
+        k(    8) = (   0.0000000   0.7698004   0.2918678), wk =   0.0740741
+        k(    9) = (   0.0000000   0.7698004   0.5837357), wk =   0.0740741
+        k(   10) = (   0.3333333   0.1924501   0.0000000), wk =   0.0740741
+        k(   11) = (   0.3333333   0.1924501   0.2918678), wk =   0.0740741
+        k(   12) = (   0.3333333   0.1924501   0.5837357), wk =   0.0740741
+        k(   13) = (   0.3333333   0.5773503   0.0000000), wk =   0.0740741
+        k(   14) = (   0.3333333   0.5773503   0.2918678), wk =   0.0740741
+        k(   15) = (   0.3333333   0.5773503   0.5837357), wk =   0.0740741
+        k(   16) = (   0.3333333   0.9622504   0.0000000), wk =   0.0740741
+        k(   17) = (   0.3333333   0.9622504   0.2918678), wk =   0.0740741
+        k(   18) = (   0.3333333   0.9622504   0.5837357), wk =   0.0740741
+        k(   19) = (   0.6666667   0.3849002   0.0000000), wk =   0.0740741
+        k(   20) = (   0.6666667   0.3849002   0.2918678), wk =   0.0740741
+        k(   21) = (   0.6666667   0.3849002   0.5837357), wk =   0.0740741
+        k(   22) = (   0.6666667   0.7698004   0.0000000), wk =   0.0740741
+        k(   23) = (   0.6666667   0.7698004   0.2918678), wk =   0.0740741
+        k(   24) = (   0.6666667   0.7698004   0.5837357), wk =   0.0740741
+        k(   25) = (   0.6666667   1.1547005   0.0000000), wk =   0.0740741
+        k(   26) = (   0.6666667   1.1547005   0.2918678), wk =   0.0740741
+        k(   27) = (   0.6666667   1.1547005   0.5837357), wk =   0.0740741
+
+     PseudoPot. # 1 for Mg read from file:
+     ../../pseudo/Mg.pz-n-vbc.UPF
+     MD5 check sum: adf9ca49345680d0fd32b5bc0752f25b
+     Pseudo is Norm-conserving + core correction, Zval =  2.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  171 points,  2 beta functions with: 
+                l(1) =   0
+                l(2) =   1
+
+     PseudoPot. # 2 for B  read from file:
+     ../../pseudo/B.pz-vbc.UPF
+     MD5 check sum: 57e6d61f6735028425feb5bdf19679fb
+     Pseudo is Norm-conserving, Zval =  3.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of  157 points,  1 beta functions with: 
+                l(1) =   0
+     EPW          :      0.10s CPU      0.12s WALL
+
+     EPW          :      0.13s CPU      0.15s WALL
+
+     -------------------------------------------------------------------
+     Wannierization on  3 x  3 x  3 electronic grid
+     -------------------------------------------------------------------
+ 
+     Spin CASE ( default = unpolarized )
+ 
+     Initializing Wannier90
+ 
+ 
+     Initial Wannier projections
+ 
+     (   0.33333   0.66667   0.50000) :  l =   1 mr =   1
+     (   0.66667   0.33333   0.50000) :  l =   1 mr =   1
+     (   0.50000   1.00000   0.50000) :  l =   0 mr =   1
+     (   0.00000   0.50000   0.50000) :  l =   0 mr =   1
+     (   0.50000   0.50000   0.50000) :  l =   0 mr =   1
+
+      - Number of bands is (  8)
+      - Number of total bands is (  8)
+      - Number of excluded bands is (  0)
+      - Number of wannier functions is (  5)
+      - All guiding functions are given 
+ 
+  Reading data about k-point neighbours 
+ 
+      - All neighbours are found 
+ 
+     AMN
+      k points =    27 in    4 pools
+            1 of    7 on ionode
+            2 of    7 on ionode
+            3 of    7 on ionode
+            4 of    7 on ionode
+            5 of    7 on ionode
+            6 of    7 on ionode
+            7 of    7 on ionode
+ 
+     AMN calculated
+ 
+     MMN
+      k points =    27 in    4 pools
+            1 of    7 on ionode
+            2 of    7 on ionode
+            3 of    7 on ionode
+            4 of    7 on ionode
+            5 of    7 on ionode
+            6 of    7 on ionode
+            7 of    7 on ionode
+     MMN calculated
+ 
+     Running Wannier90
+ 
+     Wannier Function centers (cartesian, alat) and spreads (ang):
+ 
+     (  -0.00000   0.57735   0.38316) :   1.77659
+     (   0.50000   0.28868   0.38315) :   1.77660
+     (   0.00000   0.86603   0.66488) :   1.07400
+     (  -0.25000   0.43301   0.66488) :   1.07401
+     (   0.25000   0.43301   0.66488) :   1.07400
+ 
+     -------------------------------------------------------------------
+     WANNIER      :      1.54s CPU      1.62s WALL (       1 calls)
+     -------------------------------------------------------------------
+
+     Dipole matrix elements calculated
+ 
+
+     Calculating kgmap
+
+     Progress kgmap: ########################################
+     kmaps        :      0.02s CPU      0.05s WALL (       1 calls)
+     Symmetries of Bravais lattice:  24
+     Symmetries of crystal:          24
+
+
+     ===================================================================
+     irreducible q point #    1
+     ===================================================================
+
+     Symmetries of small group of q: 24
+          in addition sym. q -> -q+G:
+ 
+     Number of q in the star =    1
+     List of q in the star:
+          1   0.000000000   0.000000000   0.000000000
+     Imposing acoustic sum rule on the dynamical matrix
+ 
+        q(    1 ) = (   0.0000000   0.0000000   0.0000000 )
+
+
+     ===================================================================
+     irreducible q point #    2
+     ===================================================================
+
+     Symmetries of small group of q: 12
+ 
+     Number of q in the star =    2
+     List of q in the star:
+          1   0.000000000   0.000000000   0.291867841
+          2   0.000000000   0.000000000  -0.291867841
+ 
+        q(    2 ) = (   0.0000000   0.0000000   0.2918678 )
+        q(    3 ) = (   0.0000000   0.0000000  -0.2918678 )
+
+
+     ===================================================================
+     irreducible q point #    3
+     ===================================================================
+
+     Symmetries of small group of q:  4
+ 
+     Number of q in the star =    6
+     List of q in the star:
+          1   0.000000000   0.384900179   0.000000000
+          2   0.333333333   0.192450090   0.000000000
+          3  -0.333333333   0.192450090   0.000000000
+          4   0.000000000  -0.384900179   0.000000000
+          5  -0.333333333  -0.192450090   0.000000000
+          6   0.333333333  -0.192450090   0.000000000
+ 
+        q(    4 ) = (   0.0000000   0.3849002   0.0000000 )
+        q(    5 ) = (   0.3333333   0.1924501   0.0000000 )
+        q(    6 ) = (  -0.3333333   0.1924501   0.0000000 )
+        q(    7 ) = (   0.0000000  -0.3849002   0.0000000 )
+        q(    8 ) = (  -0.3333333  -0.1924501   0.0000000 )
+        q(    9 ) = (   0.3333333  -0.1924501   0.0000000 )
+
+
+     ===================================================================
+     irreducible q point #    4
+     ===================================================================
+
+     Symmetries of small group of q:  2
+ 
+     Number of q in the star =   12
+     List of q in the star:
+          1   0.000000000   0.384900179   0.291867841
+          2   0.000000000   0.384900179  -0.291867841
+          3   0.333333333   0.192450090   0.291867841
+          4  -0.333333333   0.192450090   0.291867841
+          5   0.000000000  -0.384900179   0.291867841
+          6  -0.333333333  -0.192450090   0.291867841
+          7   0.333333333  -0.192450090   0.291867841
+          8   0.000000000  -0.384900179  -0.291867841
+          9   0.333333333  -0.192450090  -0.291867841
+         10  -0.333333333  -0.192450090  -0.291867841
+         11   0.333333333   0.192450090  -0.291867841
+         12  -0.333333333   0.192450090  -0.291867841
+ 
+        q(   10 ) = (   0.0000000   0.3849002   0.2918678 )
+        q(   11 ) = (   0.0000000   0.3849002  -0.2918678 )
+        q(   12 ) = (   0.3333333   0.1924501   0.2918678 )
+        q(   13 ) = (  -0.3333333   0.1924501   0.2918678 )
+        q(   14 ) = (   0.0000000  -0.3849002   0.2918678 )
+        q(   15 ) = (  -0.3333333  -0.1924501   0.2918678 )
+        q(   16 ) = (   0.3333333  -0.1924501   0.2918678 )
+        q(   17 ) = (   0.0000000  -0.3849002  -0.2918678 )
+        q(   18 ) = (   0.3333333  -0.1924501  -0.2918678 )
+        q(   19 ) = (  -0.3333333  -0.1924501  -0.2918678 )
+        q(   20 ) = (   0.3333333   0.1924501  -0.2918678 )
+        q(   21 ) = (  -0.3333333   0.1924501  -0.2918678 )
+
+
+     ===================================================================
+     irreducible q point #    5
+     ===================================================================
+
+     Symmetries of small group of q: 12
+ 
+     Number of q in the star =    2
+     List of q in the star:
+          1   0.333333333   0.577350269   0.000000000
+          2  -0.333333333  -0.577350269   0.000000000
+ 
+        q(   22 ) = (   0.3333333   0.5773503   0.0000000 )
+        q(   23 ) = (  -0.3333333  -0.5773503   0.0000000 )
+
+
+     ===================================================================
+     irreducible q point #    6
+     ===================================================================
+
+     Symmetries of small group of q:  6
+ 
+     Number of q in the star =    4
+     List of q in the star:
+          1   0.333333333   0.577350269   0.291867841
+          2   0.333333333  -0.577350269  -0.291867841
+          3  -0.333333333  -0.577350269  -0.291867841
+          4  -0.333333333   0.577350269   0.291867841
+ 
+        q(   24 ) = (   0.3333333   0.5773503   0.2918678 )
+        q(   25 ) = (   0.3333333  -0.5773503  -0.2918678 )
+        q(   26 ) = (  -0.3333333  -0.5773503  -0.2918678 )
+        q(   27 ) = (  -0.3333333   0.5773503   0.2918678 )
+
+     Writing epmatq on .epb files
+
+
+     The .epb files have been correctly written
+
+
+     Band disentanglement is used: nbndsub =    5
+     Use zone-centred Wigner-Seitz cells 
+     Number of WS vectors for electrons       39
+     Number of WS vectors for phonons       39
+     Number of WS vectors for electron-phonon       39
+     Maximum number of cores for efficient parallelization      351
+     Results may improve by using use_ws == .TRUE. 
+ 
+     Bloch2wane:          1 /         27
+     Bloch2wane:          2 /         27
+     Bloch2wane:          3 /         27
+     Bloch2wane:          4 /         27
+     Bloch2wane:          5 /         27
+     Bloch2wane:          6 /         27
+     Bloch2wane:          7 /         27
+     Bloch2wane:          8 /         27
+     Bloch2wane:          9 /         27
+     Bloch2wane:         10 /         27
+     Bloch2wane:         11 /         27
+     Bloch2wane:         12 /         27
+     Bloch2wane:         13 /         27
+     Bloch2wane:         14 /         27
+     Bloch2wane:         15 /         27
+     Bloch2wane:         16 /         27
+     Bloch2wane:         17 /         27
+     Bloch2wane:         18 /         27
+     Bloch2wane:         19 /         27
+     Bloch2wane:         20 /         27
+     Bloch2wane:         21 /         27
+     Bloch2wane:         22 /         27
+     Bloch2wane:         23 /         27
+     Bloch2wane:         24 /         27
+     Bloch2wane:         25 /         27
+     Bloch2wane:         26 /         27
+     Bloch2wane:         27 /         27
+ 
+
+     Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file
+
+     ===================================================================
+     Memory usage:  VmHWM =        44Mb
+                   VmPeak =       618Mb
+     ===================================================================
+     
+     Using uniform q-mesh:    6   6   6
+     Size of q point mesh for interpolation:        216
+     Using uniform MP k-mesh:    6   6   6
+     Size of k point mesh for interpolation:         56
+     Max number of k points per pool:               14
+
+     Fermi energy coarse grid =   8.175337 eV
+
+     Fermi energy is calculated from the fine k-mesh: Ef =   7.664475 eV
+
+     Warning: check if difference with Fermi level fine grid makes sense
+
+     ===================================================================
+
+              ibndmin =     1  ebndmin =    -0.357
+              ibndmax =     5  ebndmax =     1.152
+
+
+     Number of ep-matrix elements per pool :         1575 ~=   12.30 Kb (@ 8 bytes/ DP)
+     Number selected, total            100            100
+     Number selected, total            200            200
+     We only need to compute      216 q-points
+      
+
+     Nr. of irreducible k-points on the uniform grid:        28
+
+
+     Finish mapping k+sign*q onto the fine irreducibe k-mesh and writing .ikmap file
+
+
+     Nr irreducible k-points within the Fermi shell =        28 out of        28
+
+     Progression iq (fine) =        100/       216
+     Progression iq (fine) =        200/       216
+                  Fermi level (eV) =    0.766447471508788D+01
+     DOS(states/spin/eV/Unit Cell) =    0.913085693176451D+00
+            Electron smearing (eV) =    0.100000000000000D+00
+                 Fermi window (eV) =    0.200000000000000D+02
+      
+     Finish writing .ephmat files
+
+     ===================================================================
+     Memory usage:  VmHWM =        44Mb
+                   VmPeak =       618Mb
+     ===================================================================
+
+
+     ===================================================================
+     Solve isotropic Eliashberg equations
+     ===================================================================
+
+
+     Finish reading freq file
+
+                  Fermi level (eV) =     7.6644747151E+00
+     DOS(states/spin/eV/Unit Cell) =     9.1308569318E-01
+            Electron smearing (eV) =     1.0000000000E-01
+                 Fermi window (eV) =     2.0000000000E+01
+     Nr irreducible k-points within the Fermi shell =        28 out of        28
+
+           5 bands within the Fermi window
+
+
+     Finish reading egnv file 
+
+
+     Max nr of q-points =       216
+
+
+     Finish reading ikmap files
+
+
+     Start reading .ephmat files
+
+
+     Finish reading .ephmat files
+
+     lambda_max =           126.3963398   lambda_k_max =             3.2058367
+ 
+
+     Finish reading a2f file
+
+     Electron-phonon coupling strength =    0.8715331
+ 
+     Estimated Allen-Dynes Tc =    26.410306 K for muc =    0.16000
+  
+     Estimated BCS superconducting gap =     0.004006 eV
+  
+    
+     temp(  1) =     15.00000 K
+    
+     Solve isotropic Eliashberg equations on imaginary-axis
+    
+     Total number of frequency points nsiw(     1) =     62
+     Cutoff frequency wscut =     0.5076
+    
+        iter      ethr        znormi [eV]    deltai [eV]
+          1   2.532354E+00   1.842516E+00   4.449679E-03
+          2   7.635767E-02   1.841969E+00   4.682791E-03
+          3   4.520722E-02   1.840749E+00   4.928650E-03
+          4   3.432847E-02   1.839600E+00   5.113774E-03
+          5   7.511483E-02   1.837146E+00   5.503710E-03
+          6   1.990152E-03   1.837113E+00   5.510304E-03
+     Convergence was reached in nsiter =      6
+ 
+     iaxis_imag   :      0.00s CPU      0.01s WALL (       1 calls)
+ 
+    
+     Pade approximant of isotropic Eliashberg equations from imaginary-axis to real-axis
+     Cutoff frequency wscut =     0.5000
+    
+        pade Re[znorm] [eV] Re[delta] [eV]
+         56   1.838340E+00   5.526959E-03
+     Convergence was reached for N =     56 Pade approximants
+ 
+     raxis_pade   :      0.01s CPU      0.04s WALL (       1 calls)
+ 
+    
+     Analytic continuation of isotropic Eliashberg equations from imaginary-axis to real-axis
+    
+     Total number of frequency points nsw =   2000
+     Cutoff frequency wscut =     0.5000
+    
+        iter      ethr      Re[znorm] [eV] Re[delta] [eV]
+          1   1.657058E-01   1.838880E+00   5.530899E-03
+          2   2.794971E-02   1.838880E+00   5.530899E-03
+          3   1.383756E-02   1.838880E+00   5.530899E-03
+          4   3.575528E-03   1.838880E+00   5.530899E-03
+     Convergence was reached in nsiter =      4
+ 
+     raxis_acon   :      1.29s CPU      1.32s WALL (       1 calls)
+ 
+     itemp =   1   total cpu time :     1.4 secs
+
+     Unfolding on the coarse grid
+     elphon_wrap  :     13.53s CPU     15.05s WALL (       1 calls)
+
+     INITIALIZATION: 
+
+     set_drhoc    :      0.36s CPU      0.36s WALL (      28 calls)
+     init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
+     init_us_1    :      0.01s CPU      0.01s WALL (       2 calls)
+
+
+
+     Electron-Phonon interpolation
+     ephwann      :      1.59s CPU      3.57s WALL (       1 calls)
+     ep-interp    :      1.46s CPU      3.39s WALL (     216 calls)
+
+     Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
+     Ham: step 2  :      0.00s CPU      0.00s WALL (       1 calls)
+     ep: step 1   :      0.00s CPU      0.00s WALL (     243 calls)
+     ep: step 2   :     64.23s CPU     66.42s WALL (       1 calls)
+     DynW2B       :      0.01s CPU      0.01s WALL (     216 calls)
+     HamW2B       :      0.05s CPU      0.05s WALL (    3045 calls)
+     ephW2Bp      :      1.01s CPU      1.02s WALL (     216 calls)
+     ephW2B       :      0.04s CPU      0.04s WALL (    1512 calls)
+
+     ELIASHBERG   :     62.69s CPU     62.90s WALL (       1 calls)
+
+     Total program execution
+     EPW          :   1m19.48s CPU   1m23.31s WALL
+
+                                                                                          
+ Please consider citing:                                                                  
+ S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+                                                                                          
+ In addition, since you have used the following functionalities, please cite:             
+   eliashberg :: E. R. Margine and F. Giustino, Phys. Rev. B 87, 024505 (2013)              

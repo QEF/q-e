@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -35,6 +35,22 @@ MODULE qpoint
   !
 END MODULE qpoint
 !
+!
+!
+MODULE qpoint_aux
+  USE kinds,      ONLY : DP
+  USE becmod,     ONLY : bec_type
+  SAVE
+  
+  INTEGER, ALLOCATABLE :: ikmks(:)    ! index of -k for magnetic calculations
+
+  INTEGER, ALLOCATABLE :: ikmkmqs(:)  ! index of -k-q for magnetic calculations
+
+  TYPE(bec_type), ALLOCATABLE :: becpt(:), alphapt(:,:)
+
+END MODULE qpoint_aux
+!
+!
 MODULE control_lr
   !
   USE kinds,      ONLY : DP
@@ -50,6 +66,19 @@ MODULE control_lr
   LOGICAL  :: lrpa           ! if .TRUE. uses the Random Phace Approximation
   REAL(DP) :: ethr_nscf      ! convergence threshol for KS eigenvalues in the
                              ! NSCF calculation
+  ! Sternheimer case 
+  LOGICAL :: lgamma_gamma,&! if .TRUE. this is a q=0 computation with k=0 only
+             convt,       &! if .TRUE. the phonon has converged
+             ext_recover, &! if .TRUE. there is a recover file
+             lnoloc        ! if .TRUE. calculates the dielectric constant
+                           ! neglecting local field effects
+  INTEGER :: rec_code=-1000,    & ! code for recover
+             rec_code_read=-1000  ! code for recover. Not changed during the run
+  CHARACTER(LEN=256) :: flmixdpot
+  REAL(DP) :: tr2_ph  ! threshold for phonon calculation
+  REAL(DP) :: alpha_mix(100)  ! the mixing parameter
+  INTEGER :: niter_ph         ! maximum number of iterations (read from input)
+
   !
 END MODULE control_lr
 !
@@ -82,23 +111,19 @@ MODULE gc_lr
   SAVE
   !
   REAL (DP), ALLOCATABLE :: &
-       grho(:,:,:),              &! 3, nrxx, nspin)
-       gmag(:,:,:),              &! 3, nrxx, nspin)
-       vsgga(:),                 &! nrxx)
-       segni(:),                 &! nrxx)
-       dvxc_rr(:,:,:),           &! nrxx, nspin, nspin)
-       dvxc_sr(:,:,:),           &! nrxx, nspin, nspin)
-       dvxc_ss(:,:,:),           &! nrxx, nspin, nspin)
-       dvxc_s(:,:,:)              ! nrxx, nspin, nspin)
+       grho(:,:,:),    &! gradient of the unperturbed density  (3,nrxx,nspin)
+       gmag(:,:,:),    &! 3, nrxx, nspin)
+       vsgga(:),       &! nrxx)
+       segni(:),       &! nrxx)
+       dvxc_rr(:,:,:), &! derivatives of the E_xc functional w.r.t. r and s  
+       dvxc_sr(:,:,:), &! r=rho and s=|grad(rho)|
+       dvxc_ss(:,:,:), &! dimensions: (nrxx, nspin, nspin)
+       dvxc_s(:,:,:)
   !
   ! in the noncollinear case gmag contains the gradient of the magnetization
   ! grho the gradient of rho+ and of rho-, the eigenvalues of the spin density
   ! vsgga= 0.5* (V_up-V_down) to be used in the calculation of the change
   ! of the exchange and correlation magnetic field.
-  ! gradient of the unpert. density
-  !
-  ! derivatives of the E_xc functiona
-  ! r=rho and s=|grad(rho)|
   !
 END MODULE gc_lr
 !
@@ -137,10 +162,14 @@ MODULE lrus
   COMPLEX (DP), ALLOCATABLE :: &
        int3(:,:,:,:,:),     &! nhm, nhm, nat, nspin, npert)
        int3_paw(:,:,:,:,:), &! nhm, nhm, nat, nspin, npert)
-       int3_nc(:,:,:,:,:)    ! nhm, nhm, nat, nspin, npert)
+       int3_nc(:,:,:,:,:),  &! nhm, nhm, nat, nspin, npert)
+       intq(:,:,:),         &! nhm, nhm, nat)
+       intq_nc(:,:,:,:)      ! nhm, nhm, nat, nspin)
   ! int3 -> \int (Delta V_Hxc) Q d^3r
   ! similarly for int_nc while
   ! int3_paw contains Delta (D^1-\tilde D^1)
+  ! intq integral of e^iqr Q
+  ! intq_nc integral of e^iqr Q in the noncollinear case
   !
   REAL (DP), ALLOCATABLE ::    dpqq(:,:,:,:)       ! nhm, nhm, 3, ntyp)
   COMPLEX (DP), ALLOCATABLE :: dpqq_so(:,:,:,:,:)  ! nhm, nhm, nspin, 3, ntyp)
@@ -153,7 +182,7 @@ MODULE lrus
   ! for gamma_only     
   COMPLEX (DP), ALLOCATABLE :: bbk(:,:,:)    ! nkb, nkb, nks)
   ! for k points
-  COMPLEX (DP), ALLOCATABLE :: bbnc(:,:,:,:) ! nkb, nkb, nspin_mag, nks)
+  COMPLEX (DP), ALLOCATABLE :: bbnc(:,:,:) ! nkb*npol, nkb*npol, nks)
   ! for the noncollinear case
   ! bbg = < beta^N_i | beta^P_j > 
   ! bbg/bbk/bbnc are the scalar products of beta functions 

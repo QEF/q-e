@@ -2,10 +2,11 @@
 
 include ../make.inc
 
-MODFLAGS= $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../ELPA/src  $(MOD_FLAG)../EIGENSOLVER_GPU/lib_eigsolve $(MOD_FLAG) .
+MODFLAGS= $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../ELPA/src  $(MOD_FLAG)../EIGENSOLVER_GPU/lib_eigsolve $(MOD_FLAG). 
 
 LAX = la_types.o \
 la_error.o \
+la_helper.o \
 cdiaghg.o \
 rdiaghg.o \
 dspev_drv.o \
@@ -14,8 +15,6 @@ transto.o \
 distools.o \
 zhpev_drv.o \
 mp_diag.o \
-set_mpi_comm_4_solvers.o \
-export_gstart_2_solvers.o \
 la_param.o
 
 
@@ -32,14 +31,8 @@ la_test.x : test.o libqela.a
 TEST : la_test.x
 
 clean :
-	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x
+	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x *.fh
 
-# .PHONY forces execution of a rule irrespective of the presence of an
-# updated file with the same name of the rule. In this way, the script 
-# that generates version.f90 always runs, updating the version if you 
-# execute "svn update". The update_version script takes care of not
-# changing the file if the svn version did not change
-
-.PHONY: all clean
+$(LAX) : laxlib.fh  laxlib_hi.fh  laxlib_kinds.fh  laxlib_low.fh  laxlib_mid.fh  laxlib_param.fh
 
 include make.depend

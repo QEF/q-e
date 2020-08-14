@@ -21,7 +21,7 @@ tobesaved="HUSPBE.RRKJ3          \
 
 mkdir .save
 mv $tobesaved .save
-/bin/rm *.UPF *.upf *_kernel_table >& /dev/null
+/bin/rm *.UPF *.upf >& /dev/null
 mv .save/* .
 rmdir .save
 

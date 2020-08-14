@@ -6,7 +6,7 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-AC_INIT(ESPRESSO, 6.3, , espresso)
+AC_INIT(ESPRESSO, 6.6, , espresso)
 
 AC_PREREQ(2.64)
 AC_CONFIG_MACRO_DIR([m4/])
@@ -35,9 +35,6 @@ X_AC_QE_AR()
 # Checking OpenMP...
 X_AC_QE_OPENMP()
 
-# Checking OpenMP...
-X_AC_QE_CUDA()
-
 # Checking MPIF90...
 X_AC_QE_MPIF90()
 
@@ -58,6 +55,9 @@ X_AC_QE_CPP()
 
 # Checking linker...
 X_AC_QE_LD()
+
+# Checking CUDA...
+X_AC_QE_CUDA()
 
 # Checking F90 rule...
 X_AC_QE_F90RULE()
@@ -91,6 +91,9 @@ X_AC_QE_SCALAPACK()
 # Setting ELPA...
 X_AC_QE_ELPA()
 
+# Setting BEEF...
+X_AC_QE_BEEF()
+
 # Setting HDF5...
 X_AC_QE_HDF5()
 
@@ -121,7 +124,7 @@ AC_SUBST(ld_libs)
 AC_SUBST(topdir)
 AC_SUBST(extlib_flags)
 
-AC_CONFIG_HEADERS([include/c_defs.h:include/c_defs.h.in])
+AC_CONFIG_HEADERS([include/qe_cdefs.h:include/qe_cdefs.h.in])
 AC_CONFIG_FILES([include/configure.h:include/configure.h.in])
 
 #AC_CONFIG_FILES(Makefile.cpu)

@@ -18,7 +18,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
       USE constants,      ONLY: pi
       USE cell_base,      ONLY: alat, at, h, omega, tpiba, tpiba2
       USE electrons_base, ONLY: nspin
-      USE ions_base,      ONLY: na, nsp, amass
+      USE ions_base,      ONLY: nsp, amass, nat, ityp
       USE ions_positions, ONLY: tau0
       USE gvect,          ONLY: g, gg
       USE cp_main_variables, only: drhor
@@ -53,14 +53,14 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
       real(kind=8) gxl, xyr, xzr, yzr
       real(kind=8), allocatable:: vec(:,:,:), aiuto(:,:,:)
       real(kind=8), allocatable:: drho(:,:), d2rho(:,:)
-      real(kind=8), allocatable:: tauv(:,:,:)
+      real(kind=8), allocatable:: tauv(:,:)
 
       complex(kind=8) ci
       complex(kind=8) sum_sf, aux, auxx, fact, rho_g(dfftp%ngm,nspin) 
       complex(kind=8), allocatable :: rhofill(:), rhotmp(:,:)
 
       integer ir, ir1, ir2, ir3, is, iss, ia, flag, ierr
-      integer i, j, k, l, ig, cnt, nmin, nmax, n_at
+      integer i, j, k, l, ig, cnt, nmin, nmax
 
 #if defined(__MPI)
       real(kind=8) maxr_p(nproc), minr_p(nproc), maxr_pp, minr_pp
@@ -131,16 +131,12 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
          end if
       end if
 
-      n_at = MAXVAL ( na(1:nsp) )
-      allocate ( tauv(3,n_at,nsp) )
-      n_at = 0
-      do is = 1,nsp
+      allocate ( tauv(3,nat) )
+      do ia = 1,nat
+         is=ityp(ia)    
          ! alfa(is) = step_rad(is)/2.d0 (not used)
-         do ia = 1,na(is)
-            n_at = n_at + 1
-            do k = 1,3
-               tauv(k,ia,is) = tau0(k,n_at)
-            end do
+         do k = 1,3
+            tauv(k,ia) = tau0(k,ia)
          end do
       end do
 
@@ -179,11 +175,9 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
          do k = 1,3
             cm(k) = 0.d0
             mtot = 0.d0
-            do is = 1,nsp
-               do ia = 1,na(is)
-                  cm(k) = cm(k) + tauv(k,ia,is)*amass(is)
-               end do
-               mtot = mtot + amass(is)
+            do ia = 1,nat
+               cm(k) = cm(k) + tauv(k,ia)*amass(ityp(ia))
+               mtot = mtot + amass(ityp(ia))
             end do
             cm(k) = cm(k)/mtot
          end do
@@ -191,17 +185,17 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
 
       if (fill_vac) then
          do i = 1,n_cntr
-            do is = 1,nsp
+            do ia = 1,nat
+               is = ityp(ia)
                if (cntr(is)) then
                   rad0 = step_rad(is) + DBLE(i)*delta_sigma
                   alfa0 = rad0/2.d0
-                  do ia = 1,na(is)
                      do k = 1,3
                         if (k.ne.axis) then
-                           tau00(k) = (tauv(k,ia,is)-cm(k))*              &
+                           tau00(k) = (tauv(k,ia)-cm(k))*              &
      &                                  (1.d0-delta_eps*DBLE(i))+cm(k)
                         else
-                           tau00(k) = tauv(k,ia,is)
+                           tau00(k) = tauv(k,ia)
                         end if
                      end do
                      do ig = 1,dfftp%ngm
@@ -214,7 +208,6 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
                         aux = alfa0*hgt*EXP(-(0.50d0*alfa0**2*gg(ig)*tpiba2))
                         rhofill(ig) = rhofill(ig) + aux*fact
                      end do 
-                  end do
                end if
             end do
          end do   

@@ -18,16 +18,17 @@ subroutine import_upf ( )
   use constants, only : fpi
   use kinds, only : dp
   use radial_grids, only : ndmx, radial_grid_type, allocate_radial_grid, &
-                           nullify_radial_grid, deallocate_radial_grid
+                           nullify_radial_grid, deallocate_radial_grid, &
+                           radial_grid_copy
   use ld1inc, only : file_pseudo, zval, nlcc, pseudotype, etots, lmax, lsave_wfc,&
                      zed, nbeta, betas, lls, jjs, ikk, els, rcut, rcutus, &
                      lloc, vpsloc, grid, nwfs, bmat, qq, qvan, qvanl, rhoc, &
                      rhos, phis, which_augfun, lpaw, rmatch_augfun, pawsetup, psipaw
   use funct, only: set_dft_from_name
   !
-  use pseudo_types
+  use pseudo_types, only : pseudo_upf, pseudo_config, deallocate_pseudo_upf
   use paw_type
-  use upf_module
+  use upf_module, only : read_upf_new
   !
   implicit none
   !
@@ -37,15 +38,9 @@ subroutine import_upf ( )
   !
   integer :: nb, ios
   TYPE (pseudo_upf) :: upf
-  TYPE (radial_grid_type), TARGET :: rgrid
-  !
-  CALL nullify_pseudo_upf( upf )
-  CALL nullify_radial_grid( rgrid )
-  !
-  ! upf%grid => rgrid  is be associated in read_upf
   !
   ierr = 1
-  call read_upf(upf, rgrid, ierr, filename = file_pseudo)
+  call read_upf_new ( file_pseudo, upf, ierr)
   !
   if (ierr>0) &
      call errore('import_upf','reading pseudo upf',abs(ierr))
@@ -173,10 +168,10 @@ subroutine import_upf ( )
     CALL nullify_radial_grid( pawsetup%grid )
     call allocate_radial_grid(pawsetup%grid,grid%mesh)
     call set_pawsetup( pawsetup, upf )
+    CALL radial_grid_copy(grid, pawsetup%grid)
   endif
 
   CALL deallocate_pseudo_upf( upf )
-  CALL deallocate_radial_grid( rgrid )
 
 
 end subroutine import_upf
@@ -187,7 +182,6 @@ USE constants, ONLY : fpi
 USE paw_type, ONLY : paw_t
 USE pseudo_types, ONLY: pseudo_upf
 USE ld1_parameters,   ONLY: nwfsx
-USE radial_grids, ONLY : radial_grid_copy
 USE atomic_paw,    ONLY : compute_nonlocal_coeff_ion
 IMPLICIT NONE
 TYPE(paw_t), INTENT(INOUT) :: pawset_
@@ -229,8 +223,8 @@ INTEGER :: mesh, nbeta,ih,jh,ijh
 
    pawset_%augmom(1:nbeta,1:nbeta,0:upf_%paw%lmax_aug) = & 
                   upf_%paw%augmom(1:nbeta,1:nbeta,0:upf_%paw%lmax_aug)
-   pawset_%aeccharge(1:mesh) = upf_%paw%ae_rho_atc(1:mesh)*fpi*upf_%grid%r2(1:mesh)
-   pawset_%psccharge(1:mesh) = upf_%rho_atc(1:mesh)*fpi*upf_%grid%r2(1:mesh)
+   pawset_%aeccharge(1:mesh) = upf_%paw%ae_rho_atc(1:mesh)*fpi*upf_%r(1:mesh)**2
+   pawset_%psccharge(1:mesh) = upf_%rho_atc(1:mesh)*fpi*upf_%r(1:mesh)**2
    pawset_%pscharge(1:mesh) = upf_%rho_at(1:mesh)
    pawset_%aeloc(1:mesh) = upf_%paw%ae_vloc(1:mesh)
    pawset_%psloc(1:mesh) = upf_%vloc(1:mesh)
@@ -244,7 +238,6 @@ INTEGER :: mesh, nbeta,ih,jh,ijh
    pawset_%irc=upf_%kkbeta
    pawset_%lmax=upf_%lmax
    pawset_%rmatch_augfun=upf_%paw%raug
-   CALL radial_grid_copy(upf_%grid, pawset_%grid)
 !
 !  The kinetic energy must be recalculated
 !

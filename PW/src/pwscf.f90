@@ -7,18 +7,21 @@
 !
 !----------------------------------------------------------------------------
 PROGRAM pwscf
-  !! author: Paolo Giannozzi
-  !! version: v6.1
-  !! license: GNU 
-  !! summary: Main program calling one or more instances of Plane Wave Self-Consistent Field code
-  !!
-  !! This is the main program for executable "pw.x".
-  !! If called as "pw.x -ipi server-address" or "pw.x --ipi server-address",
+  !! Author: Paolo Giannozzi
+  !
+  !! Version: v6.1
+  !
+  !! License: GNU
+  !
+  !! Summary: Main program calling one or more instances of Plane Wave Self-Consistent Field code
+  !
+  !! This is the main program for executable "pw.x".  |
+  !! * If called as "pw.x -ipi server-address" or "pw.x --ipi server-address",
   !! works in "server" mode, calls [[run_driver]].
-  !! If called as "manypw.x" via a link, works in "manypw" mode, runs many
+  !! * If called as "manypw.x" via a link, works in "manypw" mode, runs many
   !! instances (images) of pw.x (see [[run_manypw]])
-  !! If called as "dist.x" via a link, works in "dry run" mode, computes
-  !! distances, angles, neighbors, writes to file "dist.out" and stops
+  !! * If called as "dist.x" via a link, works in "dry run" mode, computes
+  !! distances, angles, neighbors, writes to file "dist.out" and stops. 
   !! Otherwise: see [[run_pwscf]]
   !!
   !! @Note
@@ -34,79 +37,85 @@ PROGRAM pwscf
   !! @bug
   !! No bug.
   !!
-  USE environment,       ONLY : environment_start
-  USE mp_global,         ONLY : mp_startup
-  USE mp_world,          ONLY : world_comm
-  USE mp_pools,          ONLY : intra_pool_comm
-  USE mp_bands,          ONLY : intra_bgrp_comm, inter_bgrp_comm
-  USE mp_diag,           ONLY : mp_start_diag
-  USE mp_exx,            ONLY : negrp
-  USE read_input,        ONLY : read_input_file
-  USE command_line_options, ONLY: input_file_, command_line, ndiag_
+  USE environment,          ONLY : environment_start
+  USE mp_global,            ONLY : mp_startup
+  USE mp_world,             ONLY : world_comm
+  USE mp_pools,             ONLY : intra_pool_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm
+  USE mp_exx,               ONLY : negrp
+  USE read_input,           ONLY : read_input_file
+  USE command_line_options, ONLY : input_file_, command_line, ndiag_, nimage_
   !
   IMPLICIT NONE
+  !
+  include 'laxlib.fh'
+  !
   CHARACTER(len=256) :: srvaddress
   !! Get the address of the server 
   CHARACTER(len=256) :: get_server_address
   !! Get the address of the server 
   INTEGER :: exit_status
   !! Status at exit
-  LOGICAL :: use_images, do_diag_in_band_group = .true.
+  LOGICAL :: use_images, do_diag_in_band_group = .TRUE. ! .FALSE. ! .TRUE.
   !! true if running "manypw.x"
-  LOGICAL, external :: matches
+  LOGICAL, EXTERNAL :: matches
   !! checks if first string is contained in the second
   !
-  CALL mp_startup ( start_images=.true.)
+  CALL mp_startup( start_images=.TRUE. )
   !
   IF( negrp > 1 .OR. do_diag_in_band_group ) THEN
+  !IF( do_diag_in_band_group ) THEN
      ! used to be the default : one diag group per bgrp
      ! with strict hierarchy: POOL > BAND > DIAG
      ! if using exx groups from mp_exx still use this diag method
-     CALL mp_start_diag ( ndiag_, world_comm, intra_bgrp_comm, &
-          do_distr_diag_inside_bgrp_ = .true. )
+     CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
+                         do_distr_diag_inside_bgrp_ = .TRUE. )
   ELSE
      ! new default: one diag group per pool ( individual k-point level )
      ! with band group and diag group both being children of POOL comm
-     CALL mp_start_diag ( ndiag_, world_comm, intra_pool_comm, &
-          do_distr_diag_inside_bgrp_ = .false. )
+     CALL laxlib_start ( ndiag_, world_comm, intra_pool_comm, &
+                         do_distr_diag_inside_bgrp_ = .FALSE. )
   END IF
   CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
-       inter_bgrp_comm )
+                               inter_bgrp_comm )
   !
-  CALL environment_start ( 'PWSCF' )
+  CALL environment_start( 'PWSCF' )
   !
   ! ... Check if running standalone or in "driver" mode
   !
-  srvaddress = get_server_address ( command_line ) 
+  srvaddress = get_server_address( command_line ) 
   !
   ! ... Check if running standalone or in "manypw" mode
   !
-  use_images = matches('manypw.x',command_line)
+  use_images = matches( 'manypw.x', command_line )
   !
   ! ... Perform actual calculation
   !
-  IF ( trim(srvaddress) == ' ' ) THEN
-  ! When running standalone:
+  IF ( TRIM(srvaddress) == ' ' ) THEN
+    ! When running standalone:
     IF ( use_images ) THEN
        ! as manypw.x
-       CALL run_manypw ( )
-       CALL run_pwscf ( exit_status )
+       CALL run_manypw( )
+       CALL run_pwscf( exit_status )
        !
      ELSE
        ! as pw.x
-       CALL read_input_file ('PW', input_file_ )
-       CALL run_pwscf ( exit_status )
-       !
+       IF ( nimage_ > 1 ) CALL errore('run_pwscf', &
+                          'image parallelization not allowed',1)
+       CALL read_input_file( 'PW', input_file_ )
+       CALL run_pwscf( exit_status )
        !
     ENDIF
+    !
   ELSE
-  ! When running as library
+     ! When running as library
      !
-     CALL read_input_file ('PW+iPi', input_file_ )
-     CALL run_driver ( srvaddress, exit_status )
+     CALL read_input_file('PW+iPi', input_file_ )
+     CALL run_driver( srvaddress, exit_status )
      !
-  END IF
+  ENDIF
   !
+  CALL laxlib_end()
   CALL stop_run( exit_status )
   CALL do_stop( exit_status )
   !

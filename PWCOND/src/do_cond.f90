@@ -27,7 +27,7 @@ SUBROUTINE do_cond(done)
   USE cond
   USE io_files,   ONLY: tmp_dir, prefix
   !!! RECOVER
-  USE cond_restart
+  USE cond_restart, ONLY : cond_readfile, cond_writefile
   USE check_stop, ONLY: max_seconds, check_stop_init, check_stop_now
   !!!
   USE noncollin_module, ONLY : noncolin, i_cons

@@ -14,7 +14,7 @@ SUBROUTINE init_run()
   USE wvfct,              ONLY : nbnd, et, wg, btype
   USE control_flags,      ONLY : lmd, gamma_only, smallmem, ts_vdw
   USE gvect,              ONLY : g, gg, mill, gcutm, ig_l2g, ngm, ngm_g, &
-       gstart ! to be comunicated to the Solvers if gamma_only
+                                 gshells, gstart ! to be comunicated to the Solvers if gamma_only
   USE gvecs,              ONLY : gcutms, ngms
   USE cell_base,          ONLY : at, bg, set_h_ainv
   USE cellmd,             ONLY : lmovecell
@@ -90,7 +90,6 @@ SUBROUTINE init_run()
      CALL paw_init_onecenter()
   ENDIF
   CALL allocate_locpot()
-  CALL allocate_wfc()
   CALL allocate_bp_efield()
   CALL bp_global_map()
   !
@@ -108,6 +107,7 @@ SUBROUTINE init_run()
      CALL set_h_ainv()
   END IF
   !
+  CALL allocate_wfc_k()
   CALL openfil()
   !
   CALL hinit0()

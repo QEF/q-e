@@ -26,7 +26,6 @@ SUBROUTINE chdens (plot_files,plot_num)
   !
   USE kinds,      ONLY : dp
   USE io_global,  ONLY : stdout, ionode, ionode_id
-  USE io_files,   ONLY : nd_nmbr
   USE mp_pools,   ONLY : nproc_pool
   USE mp_world,   ONLY : world_comm
   USE mp_bands,   ONLY : intra_bgrp_comm, nyfft
@@ -472,7 +471,7 @@ SUBROUTINE chdens (plot_files,plot_num)
                WRITE(stdout,'(/"BEWARE: plot requiring G-space interpolation",&
                               &" not implemented for Gamma only!",/, &
                               &"SOLUTION: restart this calculation with", &
-                              &" emtpy namelist &inputpp")')
+                              &" empty namelist &inputpp")')
                CALL errore ('chdens','Not implemented, please read above',1)
           ENDIF
           !

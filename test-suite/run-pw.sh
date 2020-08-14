@@ -10,33 +10,38 @@
 
 if [ $QE_USE_MPI == 1 ]; then
   export PARA_PREFIX="mpirun -np ${TESTCODE_NPROCS}"
-  export PARA_POSTFIX=" "
+  export PARA_SUFFIX=" "
 else
   unset PARA_PREFIX
-  unset PARA_POSTFIX
+  unset PARA_SUFFIX
 fi
 
-#echo $0" "$@
-# Additional stuff before run special test-cases
-if test "$1" = "vdw1.in" || test "$1" = "vdw2.in" ; then
-   if ! test -f ${ESPRESSO_PSEUDO}/vdW_kernel_table ; then
-      echo -n "Generating kernel table - May take several minutes..."
-      ${PARA_PREFIX} ${ESPRESSO_ROOT}/PW/src/generate_vdW_kernel_table.x 
-      mv vdW_kernel_table ${ESPRESSO_PSEUDO}/
-      echo "kernel table generated in ${ESPRESSO_PSEUDO}/vdW_kernel_table"
-   fi
+if [[ "$1" == "1" ]]
+then
+  echo "Running PW ..."
+# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
+elif [[ "$1" == "2" ]]
+then
+  echo "Running PW ..."
+# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4"
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
+elif [[ "$1" = "plugin-pw2casino_1.in" ]] || [[ "$1" = "plugin-pw2casino_2.in" ]]
+then
+  export PARA_SUFFIX="$PARA_SUFFIX --pw2casino"
+  # echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} -input $1 > $2 2> $3"
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} -input $1 > $2 2> $3
+else
+  # echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} -input $1 > $2 2> $3"
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_SUFFIX} -input $1 > $2 2> $3
 fi
-
-if test "$1" = "vdw6.in" ; then
-   if ! test -f ${ESPRESSO_PSEUDO}/rVV10_kernel_table ; then
-      echo -n "Generating kernel table - May take several minutes..."
-      ${PARA_PREFIX} ${ESPRESSO_ROOT}/PW/src/generate_rVV10_kernel_table.x
-      mv rVV10_kernel_table ${ESPRESSO_PSEUDO}/
-      echo "kernel table generated in ${ESPRESSO_PSEUDO}/rVV10_kernel_table"
-   fi
-fi
-
-# echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_POSTFIX} -input $1 > $2 2> $3"
-${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_POSTFIX} -input $1 > $2 2> $3
 
 rm -f input_tmp.in

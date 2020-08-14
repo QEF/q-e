@@ -14,6 +14,7 @@ add_for_charges.o \
 add_zstar_ue.o \
 add_zstar_ue_us.o \
 addcore.o \
+adddvscf_ph_mag.o \
 addnlcc.o \
 addnlcc_zstar_eu_us.o \
 addusddens.o \
@@ -23,8 +24,12 @@ adddvhubscf.o \
 allocate_part.o \
 allocate_pert.o \
 allocate_phq.o \
+apply_trev.o \
 yambo.o \
+ahc.o \
+dvscf_interpolate.o \
 bcast_ph_input.o \
+c_bands_ph.o \
 cch_psi_all.o \
 ccg_psi.o \
 check_if_partial_dyn.o \
@@ -44,7 +49,7 @@ compute_weight.o \
 deallocate_part.o \
 deallocate_phq.o \
 d2ionq.o \
-d2ionq_mm.o \
+d2ionq_disp.o \
 d2nsq_bare.o \
 dnsq_bare.o \
 dnsq_orth.o \
@@ -97,6 +102,7 @@ init_representations.o \
 io_dyn_mat.o \
 io_dyn_mat_old.o \
 io_pattern.o \
+non_scf_ph.o \
 obsolete.o \
 openfilq.o \
 phcom.o \
@@ -194,48 +200,37 @@ write_eigenvectors.o
 
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a
-QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
+QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a \
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
-
 TLDEPS= phlibs
 
-all : tldeps libs-ph ph.x dynmat.x matdyn.x q2r.x q2trans.x q2trans_fd.x lambda.x fqha.x q2qstar.x \
-	alpha2f.x epa.x
+all : tldeps libs-ph ph.x dynmat.x matdyn.x q2r.x lambda.x fqha.x q2qstar.x \
+	alpha2f.x epa.x dvscf_q2r.x postahc.x
 
 libs-ph : libph.a libphaux.a
 
-ph.x : phonon.o libph.a $(PWOBJS) $(LRMODS) $(LIBOBJS)
+ph.x : phonon.o libph.a $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ phonon.o libph.a \
 		 $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/ph.x . )
 
-dynmat.x : dynmat.o libphaux.a  libph.a $(PWOBJS) $(LRMODS) $(MODULES) $(LIBOBJS)
+dynmat.x : dynmat.o libphaux.a  libph.a $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ dynmat.o libphaux.a libph.a \
 		 $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
-matdyn.x : matdyn.o libphaux.a libph.a $(PWOBJS) $(LRMODS) $(MODULES) $(LIBOBJS)
+matdyn.x : matdyn.o libphaux.a libph.a $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ matdyn.o libphaux.a libph.a \
 		 $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
-q2r.x : q2r.o libphaux.a libph.a $(PWOBJS) $(LRMODS) $(MODULES) $(LIBOBJS)
+q2r.x : q2r.o libphaux.a libph.a $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ q2r.o libphaux.a libph.a \
 		 $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
 
-q2trans.x : q2trans.o libphaux.a libph.a $(PWOBJS) $(LRMODS) $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ q2trans.o libphaux.a libph.a \
-		 $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
-	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
-
-q2trans_fd.x : q2trans_fd.o libphaux.a libph.a $(PWOBJS) $(LRMODS) $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ q2trans_fd.o libphaux.a libph.a \
-		 $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
-	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
-
-q2qstar.x : q2qstar.o libph.a $(PWOBJS) $(LRMODS) $(MODULES) $(LIBOBJS)
+q2qstar.x : q2qstar.o libph.a $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ q2qstar.o libph.a \
 		 $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
@@ -255,11 +250,21 @@ epa.x : epa.o libph.a $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
                  $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
+dvscf_q2r.x : dvscf_q2r.o libphaux.a libph.a $(PWOBJS) $(LRMODS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ dvscf_q2r.o libphaux.a libph.a \
+         $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
+
 #fqha.o :
 #	$(MPIF90) $(FFLAGS_NOOPT) -c fqha.f90
 
 fqha.x : fqha.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ fqha.o \
+                 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
+
+postahc.x : postahc.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ postahc.o \
                  $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 

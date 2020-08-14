@@ -13,12 +13,12 @@
   epbread     = .false.
 
   etf_mem     = 1
+  vme         = .false.
 
   epwwrite    = .false.
   epwread     = .true.
 
   nbndsub     =  4
-  nbndskip    =  0
 
   wannierize  = .false.
   num_iter    = 300
@@ -38,13 +38,11 @@
   cumulant     = .true.
   bnd_cum      = 4
 
-
   fsthick     = 15 ! eV 
-  eptemp      = 300 ! K (same as PRB 76, 165108)
+  temps       = 300 ! K (same as PRB 76, 165108)
   degaussw    = 1.0 ! eV
 
   dvscf_dir   = './save/'
-  filukk      = './diam.ukk'
 
   nkf1        = 6
   nkf2        = 6
@@ -62,9 +60,3 @@
   nq2         = 3
   nq3         = 3
  /
-      4 cartesian
-  0.000000000000   0.000000000000   0.000000000000  
- -0.333333333333   0.333333333333  -0.333333333333  
-  0.000000000000   0.666666666667   0.000000000000  
-  0.666666666667   0.000000000000   0.666666666667  
-

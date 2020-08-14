@@ -8,6 +8,7 @@
 ! April 2012, A. Dal Corso: parallelization for gdir /= 3 imported
 !                           from c_phase_field.f90
 ! May 2012, A. Dal Corso: Noncollinear/spin-orbit case allowed (experimental).
+! January 2019 Ronald E Cohen, fixed mods and averages on same branch
 !
 !##############################################################################!
 !#                                                                            #!
@@ -140,18 +141,20 @@
 !#                                                                            #!
 !#                                                                            #!
 !##############################################################################!
+!#     Updated by Ronald Cohen, Carnegie Institution, 2019
+!#     To make sure average over strings is done so that each straing is 
+!#     on the same branch cut. Also computations are kept as phases as long 
+!#     as possible before converting to polarization lattice
 
 
 !======================================================================!
 
+!---------------------------------------------------------------------
 SUBROUTINE c_phase
-
-!----------------------------------------------------------------------!
-
-!   Geometric phase calculation along a strip of nppstr k-points
-!   averaged over a 2D grid of nkort k-points orthogonal to nppstr 
-
-!  --- Make use of the module with common information ---
+   !----------------------------------------------------------------------
+   !! Geometric phase calculation along a strip of \(\text{nppstr}\) k-points
+   !! averaged over a 2D grid of \(\text{nkort}\) orthogonal k-points.
+   !
    USE kinds,                ONLY : DP
    USE io_global,            ONLY : stdout
    USE io_files,             ONLY : iunwfc, nwordwfc
@@ -166,7 +169,7 @@ SUBROUTINE c_phase
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk, igk_k, ngk
    USE wvfct,                ONLY : npwx, nbnd, wg
-   USE wavefunctions, ONLY : evc
+   USE wavefunctions,        ONLY : evc
    USE bp,                   ONLY : gdir, nppstr, mapgm_global, pdl_tot
    USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
                                     deallocate_bec_type
@@ -175,7 +178,7 @@ SUBROUTINE c_phase
    USE mp_bands,             ONLY : intra_bgrp_comm, nproc_bgrp
    USE mp,                   ONLY : mp_sum
    USE qes_libs_module,      ONLY : qes_reset
-   USE qexsd_module,         ONLY : qexsd_init_berryPhaseOutput,  qexsd_bp_obj
+   USE qexsd_init,           ONLY : qexsd_init_berryPhaseOutput,  qexsd_bp_obj
 !  --- Avoid implicit definitions ---
    IMPLICIT NONE
 
@@ -234,6 +237,7 @@ SUBROUTINE c_phase
    LOGICAL :: lodd
    LOGICAL :: l_para
    LOGICAL, ALLOCATABLE :: l_cal(:) ! flag for occupied/empty states
+   REAL(DP) :: t1,t !!REC
    REAL(DP) :: dk(3)
    REAL(DP) :: dkmod
    REAL(DP) :: el_loc
@@ -242,7 +246,6 @@ SUBROUTINE c_phase
    REAL(DP) :: gpar(3)
    REAL(DP) :: gtr(3)
    REAL(DP) :: gvec
-   REAL(DP), ALLOCATABLE :: loc_k(:)
    REAL(DP), ALLOCATABLE :: pdl_elec(:)
    REAL(DP), ALLOCATABLE :: phik(:)
    REAL(DP) :: phik_ave
@@ -276,7 +279,6 @@ SUBROUTINE c_phase
    COMPLEX(DP) :: q_dk(nhm,nhm,ntyp)
    COMPLEX(DP) :: struc(nat)
    COMPLEX(DP) :: theta0
-   COMPLEX(DP) :: zdotc
    COMPLEX(DP) :: zeta
 
 !  -------------------------------------------------------------------------   !
@@ -341,7 +343,6 @@ SUBROUTINE c_phase
 
 !  --- Allocate memory for arrays ---
    ALLOCATE(phik(nstring))
-   ALLOCATE(loc_k(nstring))
    ALLOCATE(cphik(nstring))
    ALLOCATE(wstring(nstring))
    ALLOCATE(pdl_elec(nstring))
@@ -408,14 +409,12 @@ SUBROUTINE c_phase
       fac=(dk(1)*tau(1,na)+dk(2)*tau(2,na)+dk(3)*tau(3,na))*tpi 
       struc(na)=CMPLX(cos(fac),-sin(fac),kind=DP)
    END DO
-
 !  -------------------------------------------------------------------------   !
 !                     electronic polarization: form factor                     !
 !  -------------------------------------------------------------------------   !
    if(okvan) then
 !  --- Calculate Bessel transform of Q_ij(|r|) at dk [Q_ij^L(|r|)] ---
       CALL calc_btq(dkmod,qrad_dk,0)
-
 !  --- Calculate the q-space real spherical harmonics at dk [Y_LM] --- 
       dkmod=dk(1)**2+dk(2)**2+dk(3)**2
       CALL ylmr2(lmaxq*lmaxq, 1, dk, dkmod, ylm_dk)
@@ -503,6 +502,10 @@ SUBROUTINE c_phase
 
                IF (kpar == nppstr .AND. .NOT. l_para) THEN
                   map_g(:) = 0
+!$omp parallel &
+!$omp   shared ( npw1, gpar, ln, gcutm, g, eps, map_g, at  ) &
+!$omp   private ( ig, gtr, n1, n2, n3, ng  )
+!$omp do
                   DO ig=1,npw1
 !                          --- If k'=k+G_o, the relation psi_k+G_o (G-G_o) ---
 !                          --- = psi_k(G) is used, gpar=G_o, gtr = G-G_o ---
@@ -547,6 +550,8 @@ SUBROUTINE c_phase
                      END IF
                      map_g(ig)=ng
                   END DO
+!$omp end do
+!$omp end parallel   
                END IF
 
 !              --- Matrix elements calculation ---
@@ -612,7 +617,7 @@ SUBROUTINE c_phase
                                 aux0(igk0(ig)+ngm)=psi(ig+npwx,nb)
                               END DO
                            ENDIF
-                           mat(nb,mb) = zdotc (ngm*npol,aux0,1,aux,1)
+                           mat(nb,mb) = dot_product(aux0,aux)    
                         END IF
                      END DO
                   END IF
@@ -620,7 +625,13 @@ SUBROUTINE c_phase
                !
                call mp_sum( mat, intra_bgrp_comm )
                !
+
                DO nb=1,nbnd
+!$omp parallel &
+!$omp   shared ( nbnd, l_cal, nb, okvan, nkb,  nkbtonh, ityp, nh, nkbtona  ) &
+!$omp   shared ( noncolin, lspinorb, becp0, q_dk_so, struc, mat  ) &
+!$omp   private ( mb, pref, jkb, nhjkb, na, np, nhjkbm, jkb1, j )
+!$omp do
                   DO mb=1,nbnd
 !                    --- Calculate the augmented part: ij=KB projectors, ---
 !                    --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---
@@ -668,6 +679,8 @@ SUBROUTINE c_phase
                         endif
                      endif
                   ENDDO
+!$omp end do
+!$omp end parallel   
                ENDDO
 
 !              --- Calculate matrix determinant ---
@@ -694,11 +707,14 @@ SUBROUTINE c_phase
 
 !        --- Calculate the localization for current kort ---
          zeta_mod= DBLE(CONJG(zeta)*zeta)
-
-         loc_k(istring)= - (nppstr-1) / gvec**2 / nbnd_occ *log(zeta_mod)
+!REC if zeta_mod=0 then angle is zero!
+         if(zeta_mod.le.eps)then
+            phik(istring)=0d0
+            cphik(istring)=cmplx(1d0,0d0)
+         endif
 
 !     --- End loop over orthogonal k-points ---
-      END DO
+      END DO !kort
 
 !  --- End loop over spin ---
    END DO
@@ -735,13 +751,29 @@ SUBROUTINE c_phase
         cphik(istring)=cphik(istring)/cave
         dtheta=atan2(AIMAG(cphik(istring)), DBLE(cphik(istring)))
         phik(istring)=theta0+dtheta
+     end do
+!REC First you need to multiply phase by two if only summed over 1 set of bands for non-spin-polarized case NO--summed below
+!     if(nspin_lsda.eq.1)phik(1:istring)=2d0*phik(1:istring)        
+!REC Second you need to take mod so phase is -Pi to Pi
+      DO kort=1,nkort
+        istring=kort+(is-1)*nkort
+        phik(istring)=phik(istring)-tpi*nint(phik(istring)/tpi)
+     enddo
+!REC Third you need to fix jumps before you take average
+     t1=phik(1)/tpi
+      DO kort=1,nkort
+        istring=kort+(is-1)*nkort
+        t=phik(istring)/tpi
+        if(abs(t+1d0-t1).lt.abs(t-t1))phik(istring)=phik(istring)+tpi
+        if(abs(t-1d0-t1).lt.abs(t-t1))phik(istring)=phik(istring)-tpi
+        pdl_elec(istring) = phik(istring)/tpi 
         phik_ave=phik_ave+wstring(istring)*phik(istring)
-      END DO
-
+     enddo
 !     --- Assign this angle to the corresponding spin phase average ---
-      IF (nspin == 1) THEN
+     IF (nspin == 1) THEN
          phiup=phik_ave !theta0+dtheta
          phidw=phik_ave !theta0+dtheta
+         pdl_elec = pdl_elec*2._DP 
       ELSE IF (nspin == 2) THEN
          IF (is == 1) THEN
             phiup=phik_ave !theta0+dtheta
@@ -752,34 +784,19 @@ SUBROUTINE c_phase
          phiup=phik_ave
          phidw=0.0_DP
       END IF
-
 !  --- End loop over spins
    END DO
 
 !  -------------------------------------------------------------------------   !
-!                     electronic polarization: remap phases                    !
 !  -------------------------------------------------------------------------   !
-
-!  --- Remap string phases to interval [-0.5,0.5) ---
-   pdl_elec=phik/(2.0_dp*pi)
-   mod_elec=1
-
-!  --- Remap spin average phases to interval [-0.5,0.5) ---
-   pdl_elec_up=phiup/(2.0_dp*pi)
-   mod_elec_up=1
-   pdl_elec_dw=phidw/(2.0_dp*pi)
-   mod_elec_dw=1
-
-!  --- Depending on nspin, remap total phase to [-1,1) or [-0.5,0.5) ---
+   pdl_elec_up=phiup/tpi
+   pdl_elec_dw=phidw/tpi
    pdl_elec_tot=pdl_elec_up+pdl_elec_dw
-   IF (nspin == 1) THEN
-      pdl_elec_tot=pdl_elec_tot-2.0_dp*NINT(pdl_elec_tot/2.0_dp)
-      mod_elec_tot=2
-   ELSE IF (nspin == 2 .OR. nspin == 4) THEN
-      pdl_elec_tot=pdl_elec_tot-1.0_dp*NINT(pdl_elec_tot/1.0_dp)
-      mod_elec_tot=1
-   END IF
-
+!  you need to do mod again!
+   pdl_elec_tot=pdl_elec_tot-nint(pdl_elec_tot)
+   pdl_elec_up=pdl_elec_up-nint(pdl_elec_up)
+   pdl_elec_dw=pdl_elec_dw-nint(pdl_elec_dw)
+  
 !  -------------------------------------------------------------------------   !
 !                              ionic polarization                              !
 !  -------------------------------------------------------------------------   !
@@ -806,17 +823,19 @@ SUBROUTINE c_phase
          pdl_ion(na)=pdl_ion(na)-2.0_dp*nint(pdl_ion(na)/2.0_dp)
       END IF
    ENDDO
-
 !  --- Add up the phases modulo 2 iff the ionic charges are even numbers ---
+
+   !REC You don't need a correction for jumps for the ionic part
+   ! This doesn't do anything since there is not an average but a sum
    pdl_ion_tot=SUM(pdl_ion(1:nat))
    IF (lodd) THEN
-      pdl_ion_tot=pdl_ion_tot-1.d0*nint(pdl_ion_tot/1.d0)
+      pdl_ion_tot=pdl_ion_tot-1.0d0*nint(pdl_ion_tot/1.0d0)
       mod_ion_tot=1
-   ELSE
+   else
       pdl_ion_tot=pdl_ion_tot-2.d0*nint(pdl_ion_tot/2.d0)
       mod_ion_tot=2
-   END IF
-
+   endif
+   
 !  -------------------------------------------------------------------------   !
 !                              total polarization                              !
 !  -------------------------------------------------------------------------   !
@@ -828,14 +847,13 @@ SUBROUTINE c_phase
    ELSE
       mod_tot=1
    END IF
-
 !  -------------------------------------------------------------------------   !
 !                           write output information                           !
 !  -------------------------------------------------------------------------   !
 
 !  --- Information about the k-points string used ---
    WRITE( stdout,"(/,21X,'K-POINTS STRINGS USED IN CALCULATIONS')")
-   WRITE( stdout,"(21X,37('~'),/)")
+   WRITE( Stdout,"(21X,37('~'),/)")
    WRITE( stdout,"(7X,'G-vector along string (2 pi/a):',3F9.5)") &
            gpar(1),gpar(2),gpar(3)
    WRITE( stdout,"(7X,'Modulus of the vector (1/bohr):',F9.5)") &
@@ -846,10 +864,10 @@ SUBROUTINE c_phase
 !  --- Information about ionic polarization phases ---
    WRITE( stdout,"(2/,31X,'IONIC POLARIZATION')")
    WRITE( stdout,"(31X,18('~'),/)")
-   WRITE( stdout,"(8X,'Note: (mod 1) means that the phases (angles ranging from' &
-           & /,8X,'-pi to pi) have been mapped to the interval [-1/2,+1/2) by',&
-           & /,8X,'dividing by 2*pi; (mod 2) refers to the interval [-1,+1)',&
-           & /)")
+!   WRITE( stdout,"(8X,'Note: (mod 1) means that the phases (angles ranging from' &
+!           & /,8X,'-pi to pi) have been mapped to the interval [-1/2,+1/2) by'&
+!           & /,8X,'dividing by 2*pi; (mod 2) refers to the interval [-1,+1)',&
+!           & /)")
    WRITE( stdout,"(2X,76('='))")
    WRITE( stdout,"(4X,'Ion',4X,'Species',4X,'Charge',14X, &
            & 'Position',16X,'Phase')")
@@ -866,61 +884,64 @@ SUBROUTINE c_phase
 !  --- Information about electronic polarization phases ---
    WRITE( stdout,"(2/,28X,'ELECTRONIC POLARIZATION')")
    WRITE( stdout,"(28X,23('~'),/)")
-   WRITE( stdout,"(8X,'Note: (mod 1) means that the phases (angles ranging from' &
-           & /,8X,'-pi to pi) have been mapped to the interval [-1/2,+1/2) by',&
-           & /,8X,'dividing by 2*pi; (mod 2) refers to the interval [-1,+1)',&
-           & /)")
+!   WRITE( stdout,"(8X,'Note: (mod 1) means that the phases (angles ranging from' &
+!           & /,8X,'-pi to pi) have been mapped to the interval [-1/2,+1/2) by',&
+!           & /,8X,'dividing by 2*pi; (mod 2) refers to the interval [-1,+1)',&
+!           & /)")
    WRITE( stdout,"(2X,76('='))")
-   WRITE( stdout,"(3X,'Spin',4X,'String',5X,'Weight',6X, &
-            &  'First k-point in string',9X,'Phase')")
-   WRITE( stdout,"(2X,76('-'))")
-   DO istring=1,nstring/nspin_lsda
-      ind1=1+(istring-1)*nppstr
-      WRITE( stdout,"(3X,' up ',3X,I5,F14.6,4X,3(F8.4),F12.5,' (mod ',I1,')')") &
-          &  istring,wstring(istring), &
-          &  xk(1,ind1),xk(2,ind1),xk(3,ind1),pdl_elec(istring),mod_elec(istring)
-   END DO
-   WRITE( stdout,"(2X,76('-'))")
-!  --- Treat unpolarized/polarized spin cases ---
-   IF (nspin_lsda == 1) THEN
-!     --- In unpolarized spin, just copy again the same data ---
-      DO istring=1,nstring
+   IF(nspin_lsda.gt.1)THEN
+      WRITE( stdout,"(3X,'Spin',4X,'String',5X,'Weight',6X, &
+           &  'First k-point in string',9X,'Phase')")
+      WRITE( stdout,"(2X,76('-'))")
+      DO istring=1,nstring/nspin_lsda
          ind1=1+(istring-1)*nppstr
-         WRITE( stdout,"(3X,'down',3X,I5,F14.6,4X,3(F8.4),F12.5,' (mod ',I1,')')") &
-              istring,wstring(istring), xk(1,ind1),xk(2,ind1),xk(3,ind1), &
-              pdl_elec(istring),mod_elec(istring)
+         WRITE( stdout,"(3X,' up ',3X,I5,F14.6,4X,3(F8.4),F12.5)") &
+              &  istring,wstring(istring), &
+              &  xk(1,ind1),xk(2,ind1),xk(3,ind1),pdl_elec(istring)
       END DO
-   ELSE IF (nspin_lsda == 2) THEN
-!     --- If there is spin polarization, write information for new strings ---
+      WRITE( stdout,"(2X,76('-'))")
       DO istring=nstring/2+1,nstring
          ind1=1+(istring-1)*nppstr
-         WRITE( stdout,"(3X,'down',3X,I4,F15.6,4X,3(F8.4),F12.5,' (mod ',I1,')')") &
-           &    istring,wstring(istring), xk(1,ind1),xk(2,ind1),xk(3,ind1), &
-           &    pdl_elec(istring),mod_elec(istring)
+         WRITE( stdout,"(3X,'down',3X,I4,F15.6,4X,3(F8.4),F12.5)") &
+              &    istring,wstring(istring), xk(1,ind1),xk(2,ind1),xk(3,ind1), &
+              &    pdl_elec(istring)
       END DO
+      WRITE( stdout,"(2X,76('-'))")
+      WRITE( stdout,"(40X,'Average phase (up): ',F9.5)") & 
+        pdl_elec_up
+      WRITE( stdout,"(38X,'Average phase (down): ',F9.5)")& 
+        pdl_elec_dw
+   ENDIF
+!  --- Treat unpolarized/polarized spin cases ---
+   IF (nspin_lsda == 1) THEN
+      WRITE( stdout,"(4X,'String',5X,'Weight',6X, &
+           &  'First k-point in string',9X,'Phase')")
+      WRITE( stdout,"(2X,76('-'))")
+      DO istring=1,nstring/nspin_lsda
+         ind1=1+(istring-1)*nppstr
+         WRITE( stdout,"(3X,I5,F14.6,4X,3(F8.4),F12.5)") &
+              &  istring,wstring(istring), &
+              &  xk(1,ind1),xk(2,ind1),xk(3,ind1),pdl_elec(istring)
+      END DO
+      WRITE( stdout,"(2X,76('-'))")
    END IF
-   WRITE( stdout,"(2X,76('-'))")
    IF (noncolin) THEN
-      WRITE( stdout,"(42X,'Average phase   : ',F9.5,' (mod ',I1,')')") & 
-        pdl_elec_up,mod_elec_up
+      WRITE( stdout,"(42X,'Average phase   : ',F9.5)") & 
+        pdl_elec_up
    ELSE
-      WRITE( stdout,"(40X,'Average phase (up): ',F9.5,' (mod ',I1,')')") & 
-        pdl_elec_up,mod_elec_up
-      WRITE( stdout,"(38X,'Average phase (down): ',F9.5,' (mod ',I1,')')")& 
-        pdl_elec_dw,mod_elec_dw
-      WRITE( stdout,"(42X,'ELECTRONIC PHASE: ',F9.5,' (mod ',I1,')')") & 
-        pdl_elec_tot,mod_elec_tot
+      WRITE( stdout,"(42X,'ELECTRONIC PHASE: ',F9.5)") & 
+        pdl_elec_tot
    ENDIF
    WRITE( stdout,"(2X,76('='))")
 
 !  --- Information about total phase ---
    WRITE( stdout,"(2/,31X,'SUMMARY OF PHASES')")
    WRITE( stdout,"(31X,17('~'),/)")
-   WRITE( stdout,"(26X,'Ionic Phase:',F9.5,' (mod ',I1,')')") &
-        pdl_ion_tot,mod_ion_tot
-   WRITE( stdout,"(21X,'Electronic Phase:',F9.5,' (mod ',I1,')')") &
-        pdl_elec_tot,mod_elec_tot
-   WRITE( stdout,"(26X,'TOTAL PHASE:',F9.5,' (mod ',I1,')')") &
+   WRITE( stdout,"(26X,'Ionic Phase:',F9.5)") &
+        pdl_ion_tot
+   WRITE( stdout,"(21X,'Electronic Phase:',F9.5)") &
+        pdl_elec_tot
+   WRITE( stdout,"(26X,'TOTAL PHASE:',F9.5, ' MOD_TOT:',i2)") &
         pdl_tot,mod_tot
 
 !  --- Information about the value of polarization ---
@@ -955,12 +976,13 @@ SUBROUTINE c_phase
 
 !  --- End of information relative to polarization calculation ---
    WRITE( stdout,"(/,/,15X,50('=')/,/)")
-!------------------------------------------------------------------------------
+
+   !------------------------------------------------------------------------------
 !                            INITIALIZE  QEXSD OUTPUT ELEMENT
 ! Here we write all output information in a berry_phase_type variable to print
 ! them in the XML output  P.D. april 2016
 !------------------------------------------------------------------------------
-  CALL qes_reset (qexsd_bp_obj )   
+  CALL qes_reset( qexsd_bp_obj )   
   CALL qexsd_init_berryPhaseOutput(qexsd_bp_obj, gpar, gvec, nppstr, nkort, xk, pdl_ion, mod_ion,  &
                                   pdl_ion_tot, mod_ion_tot, nstring, pdl_elec , mod_elec, wstring, &
                                   pdl_elec_up, mod_elec_up, pdl_elec_dw, mod_elec_dw, pdl_elec_tot,&
@@ -974,7 +996,6 @@ SUBROUTINE c_phase
    DEALLOCATE(pdl_elec)
    DEALLOCATE(wstring)
    DEALLOCATE(cphik)
-   DEALLOCATE(loc_k)
    DEALLOCATE(phik)
    DEALLOCATE(ln)
    DEALLOCATE(aux)

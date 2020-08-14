@@ -36,7 +36,7 @@ MODULE atomic_paw
   !
   USE kinds,            ONLY: dp
   USE ld1_parameters,   ONLY: nwfsx
-  USE parameters,       ONLY: lmaxx
+  USE upf_params,       ONLY: lmaxx
   USE constants,        ONLY: pi, fpi, e2, eps8
   USE radial_grids,     ONLY: ndmx, radial_grid_type
   USE paw_type,         ONLY: paw_t, nullify_pseudo_paw, allocate_pseudo_paw
@@ -489,7 +489,7 @@ CONTAINS
 !   Outside the PAW spheres augfun should be exactly 0. On some machine
 !   it is equal to zero to machine precision and sometimes it is negative, 
 !   so as to confuse the check for negative charge. So we set it to zero
-!   explicitely.
+!   explicitly.
 !
     DO ns = 1, nbeta
        l1 = pawset_%l(ns)

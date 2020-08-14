@@ -25,12 +25,6 @@
 !                               routine error and show by the second string the
 !                               name of the field where read-error occurred.
 !
-! ... SUBROUTINE version_parse: Determine the major, minor and patch numbers 
-!                               from a version string with the fmt "i.j.k"
-!
-! ... FUNCTION version_compare: Compare two version strings; the result can be
-!                               "newer", "equal", "older", ""
-! 
 !
 !----------------------------------------------------------------------------
 MODULE parser
@@ -228,118 +222,6 @@ MODULE parser
     END DO
     RETURN
   END SUBROUTINE con_cam
-  !
-  !--------------------------------------------------------------------------
-  SUBROUTINE version_parse(str, major, minor, patch, ierr)
-    !--------------------------------------------------------------------------
-    !   
-    ! Determine the major, minor and patch numbers from 
-    ! a version string with the fmt "i.j.k"
-    ! 
-    ! The ierr variable assumes the following values
-    !
-    ! ierr < 0     emtpy string
-    ! ierr = 0     no problem
-    ! ierr > 0     fatal error
-    !   
-    IMPLICIT NONE
-    CHARACTER(*),     INTENT(in)    :: str 
-    INTEGER,          INTENT(out)   :: major, minor, patch, ierr
-    !
-    INTEGER       :: i1, i2, length
-    INTEGER       :: ierrtot
-    CHARACTER(10) :: num(3)
-
-    !
-    major = 0
-    minor = 0
-    patch = 0
-
-    length = LEN_TRIM( str )
-    !
-    IF ( length == 0 ) THEN
-       !
-       ierr = -1
-       RETURN
-       !
-    ENDIF
-
-    i1 = SCAN( str, ".")
-    i2 = SCAN( str, ".", BACK=.TRUE.)
-    !
-    IF ( i1 == 0 .OR. i2 == 0 .OR. i1 == i2 ) THEN
-       !
-       ierr = 1
-       RETURN
-       !
-    ENDIF
-    !
-    num(1) = str(    1 : i1-1 )
-    num(2) = str( i1+1 : i2-1 )
-    num(3) = str( i2+1 : )
-    !
-    ierrtot = 0
-    !
-    READ( num(1), *, IOSTAT=ierr ) major
-    IF (ierr/=0) RETURN
-    !
-    READ( num(2), *, IOSTAT=ierr ) minor
-    IF (ierr/=0) RETURN
-    !
-    READ( num(3), *, IOSTAT=ierr ) patch
-    IF (ierr/=0) RETURN
-    !
-  END SUBROUTINE version_parse
-  !
-  !--------------------------------------------------------------------------
-  FUNCTION version_compare(str1, str2)
-    !--------------------------------------------------------------------------
-    !   
-    ! Compare two version strings; the result is
-    ! 
-    ! "newer":   str1 is newer that str2    
-    ! "equal":   str1 is equal   to str2    
-    ! "older":   str1 is older than str2    
-    ! " ":       str1 or str2 has a wrong format
-    !   
-    IMPLICIT NONE
-    CHARACTER(*)  :: str1, str2
-    CHARACTER(10) :: version_compare
-    !
-    INTEGER   :: version1(3), version2(3)
-    INTEGER   :: basis, icheck1, icheck2
-    INTEGER   :: ierr
-    !
-
-    version_compare = " "
-    !
-    CALL version_parse( str1, version1(1), version1(2), version1(3), ierr) 
-    IF ( ierr/=0 ) RETURN
-    !
-    CALL version_parse( str2, version2(1), version2(2), version2(3), ierr) 
-    IF ( ierr/=0 ) RETURN
-    !
-    ! 
-    basis = 1000
-    !
-    icheck1 = version1(1) * basis**2 + version1(2)* basis + version1(3) 
-    icheck2 = version2(1) * basis**2 + version2(2)* basis + version2(3) 
-    !
-    IF ( icheck1 > icheck2 ) THEN
-       !
-       version_compare = 'newer'
-       !
-    ELSEIF( icheck1 == icheck2 ) THEN
-       !
-       version_compare = 'equal'
-       !
-    ELSE
-       !
-       version_compare = 'older'
-       !
-    ENDIF
-    !
-  END FUNCTION version_compare
   !
   !--------------------------------------------------------------------------
   SUBROUTINE get_field(n, field, str, sep)

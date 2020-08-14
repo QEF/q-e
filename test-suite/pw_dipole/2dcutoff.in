@@ -1,0 +1,34 @@
+
+&CONTROL
+  calculation='scf'
+  tprnfor=.true.
+  tstress=.true.
+/
+
+&SYSTEM
+  ibrav = 4
+  A = 2.46729, C=32.77289
+  nat = 6
+  ntyp = 1
+  ecutwfc=35
+  ecutrho=300
+  occupations='smearing'
+  degauss=0.01
+  assume_isolated='2D'
+/
+
+&electrons
+  diago_david_ndim=4
+/
+ATOMIC_SPECIES
+   C   12.01060   C.pbe-rrkjus.UPF
+ATOMIC_POSITIONS {crystal}
+C	0                   0                   0.056818181818182
+C	0                   0                   0.284090909090909
+C	0                   0                   0.170454545454545
+C	0.333333333333333   0.666666666666667   0.056818181818182
+C	0.333333333333333   0.666666666666667   0.284090909090909
+C	0.666666666666667   0.333333333333333   0.170454545454545
+
+K_POINTS automatic
+3 3 1 0 0 0

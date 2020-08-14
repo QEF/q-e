@@ -37,16 +37,14 @@ PROGRAM pmw
   INTEGER :: ios
   INTEGER :: first_band, last_band
   REAL(DP) :: min_energy, max_energy, sigma
-  LOGICAL :: writepp
+  LOGICAL :: writepp, needwf = .TRUE.
   NAMELIST / inputpp / outdir, prefix, first_band, last_band, writepp, &
                       min_energy, max_energy, sigma
   !
 
   ! initialise environment
   !
-#if defined(__MPI)
   CALL mp_startup ( )
-#endif
   CALL environment_start ( 'PMW' )
   IF ( ionode )  CALL input_from_file ( )
   !
@@ -88,7 +86,7 @@ PROGRAM pmw
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
-  CALL read_file ( )
+  CALL read_file_new ( needwf )
   !
   ! Check on correctness and consistency of the input
   !
@@ -104,8 +102,6 @@ PROGRAM pmw
   IF ( noncolin ) CALL errore('pmw','non-colinear not implemented / not tested', 1)
   ! Currently, WF projectors are built for Hubbard species only
   IF ( .NOT.lda_plus_U ) CALL errore('pmw','Hubbard U calculation required', 1)
-  !
-  CALL openfil_pp ( )
   !
   CALL projection( first_band, last_band, min_energy, max_energy, sigma, writepp)
   !
@@ -130,14 +126,15 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   USE wvfct,      ONLY : nbnd, npwx, et
   USE ldaU,       ONLY : is_Hubbard, Hubbard_lmax, Hubbard_l, &
                          oatwfc, offsetU, nwfcU, wfcU, copy_U_wfc
-  USE symm_base,  ONLY : nrot, nsym, nsym_ns, nsym_na, ftau, irt, s, sname, d1, d2, d3, ft, sr  
+  USE symm_base,  ONLY : nrot, nsym, nsym_ns, nsym_na, irt, s, sname, sr, ft
   USE mp_pools,   ONLY : me_pool, root_pool, my_pool_id, kunit, npool
   USE control_flags, ONLY: gamma_only
   USE uspp,       ONLY: nkb, vkb
   USE becmod,     ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
-  USE io_files,   ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, &
+  USE io_files,   ONLY: prefix, restart_dir, &
                         iunhub, nwordwfcU, nwordatwfc, diropn
   USE wavefunctions, ONLY: evc
+  USE pw_restart_new,ONLY: read_collected_wfc
 
   IMPLICIT NONE
   !
@@ -222,21 +219,13 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   IF ( ( my_pool_id + 1 ) > rest ) nbase = nbase + rest * kunit
   !
   ! Delete .hub files (if present) to prevent size mismatch or other problems
+  nwordwfcU=npwx*nwfcU !*npol
   INQUIRE( UNIT=iunhub, OPENED=exst )
   IF ( .NOT. exst ) CALL diropn( iunhub, 'hub', 2*nwordwfcU, exst )
   IF ( ionode .AND. exst ) WRITE( stdout, '(5x,A)' ) '.hub files will be overwritten'
   CLOSE( UNIT=iunhub, STATUS='delete' )
   ! Create and open output files to store the projectors
   CALL diropn( iunhub, 'hub', 2*nwordwfcU, exst )
-  !
-  ! initialize D_Sl for l=1, l=2 and l=3, for l=0 D_S0 is 1
-  !
-  CALL d_matrix (d1, d2, d3)
-  !
-  !    loop on k points
-  !
-  CALL init_us_1
-  CALL init_at_1
   !
   ! Allocate temporary arrays and workspace
   !
@@ -256,7 +245,7 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
      !
      npw = ngk(ik)
 
-     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+     CALL read_collected_wfc ( restart_dir(), ik, evc )
 
      CALL atomic_wfc (ik, wfcatom)
 
@@ -403,7 +392,7 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
      WRITE(iun_pp,'("# nrot,nsym,nsym_ns,nsym_na",4I4)') nrot, nsym, nsym_ns, nsym_na
      DO i = 1,nsym
         WRITE(iun_pp,'("#symm",I3," : ",A)') i, trim(sname(i))
-        WRITE(iun_pp,'(3I3,I7,5x,3F7.2,F9.2)') ( s(j,:,i), ftau(j,i), sr(j,:,i), ft(j,i), j=1,3 )
+        WRITE(iun_pp,'(3I3,5x,3F7.2,F9.2)') ( s(j,:,i), sr(j,:,i), ft(j,i), j=1,3 )
         WRITE(iun_pp,'(99I3)') irt(i,1:nat)
      ENDDO
      CLOSE(iun_pp)

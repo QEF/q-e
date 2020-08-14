@@ -1,0 +1,118 @@
+input_description -distribution {Quantum Espresso} -package PWscf -program postahc.x {
+
+    toc {}
+
+    intro {
+    @b {Purpose of postahc.x:}
+
+    - Read the electron-phonon quantities calculated by ph.x with the
+    electron_phonon='ahc' option.
+
+    - Calculate the phonon-induced electron self-energy in the full matrix form
+    at a given temperature.
+
+        @b {Structure of the input data:}
+    ========================================================================
+
+    @b &INPUT
+       ...specs of namelist variables...
+    @b /
+    }
+
+    namelist INPUT {
+
+    var ahc_dir  -type CHARACTER {
+        status { REQUIRED }
+        info {
+            Directory where the binary files are located.
+        }
+    }
+    var nk  -type INTEGER {
+        status { REQUIRED }
+        info {
+            Number of k points. Must be identical to that of the preceding SCF or NSCF run.
+        }
+    }
+    var nbnd  -type INTEGER {
+        status { REQUIRED }
+        info {
+            Number of bands. Must be identical to nbnd of the preceding SCF or NSCF run.
+        }
+    }
+    var nat  -type INTEGER {
+        status { REQUIRED }
+        info {
+            Number of atoms. Must be identical to nat of the preceding pw.x and ph.x
+            runs.
+        }
+    }
+    var nq  -type INTEGER {
+        status { REQUIRED }
+        info {
+            Number of q points. Must be identical to that of the preceding ph.x run
+            with electron_phonon='ahc'.
+        }
+    }
+    var ahc_nbnd  -type INTEGER {
+        status { REQUIRED }
+        info {
+            Number of bands for which the electron self-energy is to be computed. Must be
+            identical to ahc_nbnd of the ph.x run with electron_phonon='ahc'.
+        }
+    }
+    var ahc_nbndskip  -type INTEGER {
+        default { 0 }
+        info {
+            Number of bands to exclude when computing the self-energy. Must be identical to
+            ahc_nbndskip of the ph.x run with electron_phonon='ahc'.
+        }
+    }
+    var flvec  -type CHARACTER {
+        status { REQUIRED }
+        info {
+            File containing the normalized phonon displacements written by matdyn.x.
+        }
+    }
+    var eta  -type REAL {
+        status { REQUIRED }
+        info {
+            Magnitude of the small imaginary component included to smooth the energy
+            denominators, in Ry.
+        }
+    }
+    var temp_kelvin  -type REAL {
+        status { REQUIRED }
+        info {
+            Temperature in Kelvins at which the electron self-energy is calculated.
+        }
+    }
+    var efermi  -type REAL {
+        status { REQUIRED }
+        info {
+            Fermi energy of the electrons in Ry.
+        }
+    }
+    dimension amass_amu -start 1 -end nat -type REAL {
+        status { REQUIRED }
+        info {
+            Mass for each atom in atomic mass unit. In postahc.x, @ref amass_amu must be
+            set for each atom, not for each atom type as in other programs.
+        }
+    }
+    var skip_upperfan -type LOGICAL {
+        default { .false. }
+        info {
+            If .true., skip calculation of the upper Fan self-energy.
+            If .false., ahc_upfan_iq#.bin files must be present in @ref ahc_dir.
+        }
+    }
+    var skip_dw -type LOGICAL {
+        default { .false. }
+        info {
+            If .true., skip calculation of the Debye-Waller self-energy.
+            If .false., ahc_dw.bin file must be present in @ref ahc_dir.
+        }
+    }
+
+    }
+}

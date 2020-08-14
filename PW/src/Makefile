@@ -30,6 +30,7 @@ atomic_wfc_mod.o \
 average_pp.o \
 acfdt_in_pw.o \
 newd.o \
+beef.o \
 bp_mod.o \
 bp_c_phase.o \
 bp_calc_btq.o \
@@ -95,6 +96,7 @@ gk_sort.o \
 gradcorr.o \
 gweights.o \
 g2_kin.o \
+hs_psi.o \
 hs_1psi.o \
 h_epsi_her_apply.o \
 h_epsi_her_set.o \
@@ -115,6 +117,9 @@ input.o \
 io_rho_xml.o \
 irrek.o \
 iweights.o \
+intersite_V.o \
+init_nsg.o \
+nsg_adj.o \
 start_k.o \
 kpoint_grid.o \
 lchk_tauxk.o \
@@ -129,6 +134,8 @@ move_ions.o \
 multable.o \
 n_plane_waves.o \
 new_ns.o \
+new_nsb.o \
+new_nsg.o \
 new_occ.o \
 ns_adj.o \
 non_scf.o \
@@ -185,10 +192,13 @@ save_in_cbands.o \
 save_in_electrons.o \
 scale_h.o \
 loc_scdm.o \
+loc_scdm_k.o \
 scf_mod.o \
 set_kplusq.o \
 set_kup_and_kdw.o \
+set_occupations.o \
 set_rhoc.o \
+set_spin_vars.o \
 set_vrs.o \
 setlocal.o \
 setup.o \
@@ -236,20 +246,17 @@ write_ns.o \
 wsweight.o \
 weights.o \
 ortho_wfc.o \
-wannier_proj.o \
 wannier_init.o \
 wannier_check.o \
 wannier_clean.o \
-wannier_occ.o \
-wannier_enrg.o
+wannier_occ.o
 
-QEMODS=../../Modules/libqemod.a \
-       ../../KS_Solvers/libks_solvers.a \
+QEMODS=../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a \
        ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 
-TLDEPS=bindir mods libs liblapack libblas dftd3
+TLDEPS= bindir libs mods libks_solvers dftd3
 
-all : tldeps pw.x generate_vdW_kernel_table.x generate_rVV10_kernel_table.x
+all : tldeps pw.x
 
 pw.x : $(PWOBJS) libpw.a $(LIBOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
@@ -268,17 +275,6 @@ tldeps :
 
 clean :
 	- /bin/rm -f *.x *.o *.a *~ *_tmp.f90 *.d *.mod *.i *.L
-
-generate_vdW_kernel_table.x : libpw.a generate_vdW_kernel_table.o
-	$(LD) $(LDFLAGS) -o $@ \
-		generate_vdW_kernel_table.o $(QEMODS) libpw.a $(LIBOBJS) $(QELIBS)
-	- ( cd ../../bin; ln -fs ../PW/src/$@ . )
-
-generate_rVV10_kernel_table.x : libpw.a generate_rVV10_kernel_table.o
-	$(LD) $(LDFLAGS) -o $@ \
-		generate_rVV10_kernel_table.o $(QEMODS) libpw.a $(LIBOBJS) $(QELIBS)
-	- ( cd ../../bin; ln -fs ../PW/src/$@ . )
-
 
 include make.depend
 

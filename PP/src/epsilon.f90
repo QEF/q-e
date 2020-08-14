@@ -48,14 +48,17 @@ CONTAINS
   INTEGER         :: iw,ik,i,ierr
 
   !
-  ! check on the number of bands: we need to include empty bands in order to allow
-  ! to write the transitions
+  ! check on the number of bands: we need to include empty bands in order
+  ! to compute the transitions
   !
   IF ( nspin == 1) full_occ = 2.0d0
   IF ( nspin == 2 .OR. nspin == 4) full_occ = 1.0d0
   !
-  IF ( REAL(nbnd,DP)*full_occ <= nelec ) CALL errore('epsilon', 'bad band number', 1)
-
+  IF ( nspin == 2 ) THEN
+     IF ( nbnd*full_occ <= nelec/2.d0 ) CALL errore('epsilon', 'bad band number', 2)
+  ELSE
+     IF ( nbnd*full_occ <= nelec ) CALL errore('epsilon', 'bad band number', 1)
+  ENDIF
   !
   ! USPP are not implemented (dipole matrix elements are not trivial at all)
   !
@@ -83,7 +86,7 @@ CONTAINS
   DO ik = 2, nks
      !
      IF ( abs( wk(1) - wk(ik) ) > 1.0d-8 ) &
-        CALL errore('grid_build','non unifrom kpt grid', ik )
+        CALL errore('grid_build','non uniform kpt grid', ik )
      !
   ENDDO
   !
@@ -100,7 +103,7 @@ CONTAINS
   ! set the energy grid
   !
   IF ( metalcalc .AND. ABS(wmin) <= 0.001d0 ) wmin=0.001d0
-  IF ( ionode ) WRITE(stdout,"(5x,a,f12.6)") "metalling system: redefining wmin = ", wmin  
+  IF ( ionode ) WRITE(stdout,"(5x,a,f12.6)") "metallic system: redefining wmin = ", wmin  
   !
   alpha = (wmax - wmin) / REAL(nw-1, KIND=DP)
   !
@@ -177,6 +180,7 @@ PROGRAM epsilon
   ! local variables
   !
   INTEGER :: ios
+  LOGICAL :: needwf = .TRUE.
 
 !---------------------------------------------
 ! program body
@@ -255,9 +259,7 @@ PROGRAM epsilon
   !
   IF (ionode) WRITE( stdout, "( 5x, 'Reading PW restart file...' ) " )
 
-  CALL read_file
-  CALL openfil_pp
-
+  CALL read_file_new( needwf )
   !
   ! few conversions
   !
@@ -1064,10 +1066,11 @@ SUBROUTINE dipole_calc( ik, dipole_aux, metalcalc, nbndmin, nbndmax )
   !
   USE kinds,                ONLY : DP
   USE wvfct,                ONLY : nbnd, npwx
-  USE wavefunctions, ONLY : evc
+  USE wavefunctions,        ONLY : evc
   USE klist,                ONLY : xk, ngk, igk_k
   USE gvect,                ONLY : ngm, g
-  USE io_files,             ONLY : nwordwfc, iunwfc
+  USE io_files,             ONLY : restart_dir
+  USE pw_restart_new,       ONLY : read_collected_wfc
   USE grid_module,          ONLY : focc, full_occ
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
@@ -1091,7 +1094,7 @@ SUBROUTINE dipole_calc( ik, dipole_aux, metalcalc, nbndmin, nbndmax )
   !
   ! read wfc for the given kpt
   !
-  CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+  CALL read_collected_wfc ( restart_dir(), ik, evc )
   !
   ! compute matrix elements
   !

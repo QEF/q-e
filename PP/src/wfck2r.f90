@@ -9,7 +9,7 @@
 ! This program reads wavefunctions in G-space written by QE,
 ! re-writes then in real space
 ! Warning: The wfc is written out in real space on the smooth
-! grid, as such it occupies much more disk space then that in G-space.
+! grid, as such it occupies much more disk space than in G-space.
 !
 ! input: a namelist like 
 ! &inputpp
@@ -37,7 +37,7 @@ PROGRAM wfck2r
   !-----------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
-  USE io_files,  ONLY : prefix, tmp_dir, diropn
+  USE io_files,  ONLY : prefix, tmp_dir, diropn, restart_dir
   USE wvfct,     ONLY : nbnd, npwx, et, wg
   USE klist,     ONLY : xk, nks, ngk, igk_k, wk
   USE io_global, ONLY : ionode, ionode_id, stdout
@@ -54,13 +54,14 @@ PROGRAM wfck2r
   USE scatter_mod,  only : gather_grid
   USE fft_interfaces, ONLY : invfft
   USE ener, ONLY: efermi => ef
+  USE pw_restart_new,ONLY : read_collected_wfc
   !
   IMPLICIT NONE
   CHARACTER (len=256) :: outdir
   CHARACTER(LEN=256), external :: trimcheck
   character(len=256) :: filename
   INTEGER            :: npw, iunitout,ios,ik,i,iuwfcr,lrwfcr,ibnd, ig, is
-  LOGICAL            :: exst
+  LOGICAL            :: needwf= .TRUE., exst
   COMPLEX(DP), ALLOCATABLE :: evc_r(:,:), dist_evc_r(:,:)
   INTEGER :: first_k, last_k, first_band, last_band
   LOGICAL :: loctave
@@ -113,10 +114,7 @@ PROGRAM wfck2r
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
-  CALL read_file
-  call openfil_pp
-
-  exst=.false.
+  CALL read_file_new ( needwf )
 
   filename='wfc_r'
   write(6,*) 'filename              = ', trim(filename)
@@ -135,11 +133,11 @@ PROGRAM wfck2r
 
   write(6,*) 'length of wfc in real space/per band', (last_k-first_k+1)*lrwfcr*8
   write(6,*) 'length of wfc in k space', 2*(last_band-first_band+1)*npwx*nks*8
-  CALL init_us_1
 
 !
 !define lrwfcr
 !
+  exst=.false.
   IF (ionode) CALL diropn (iuwfcr, filename, lrwfcr, exst)
   IF (loctave .and. ionode) then
      open(unit=iuwfcr+1, file='wfck2r.mat', status='unknown', form='formatted')
@@ -194,7 +192,7 @@ PROGRAM wfck2r
   DO ik = first_k, last_k
      
      npw = ngk(ik)
-     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+     CALL read_collected_wfc ( restart_dir(), ik, evc )
 
      do ibnd = first_band, last_band
         !

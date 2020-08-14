@@ -20,7 +20,7 @@ subroutine dynmat0_new
   USE cell_base,     ONLY : alat, omega, at, bg
   USE gvect,         ONLY : g, gg, ngm, gcutm
   USE symm_base,     ONLY : irt, s, invs
-  USE control_flags, ONLY : modenum, llondon
+  USE control_flags, ONLY : modenum, llondon, lxdm
   USE ph_restart,    ONLY : ph_writefile
   USE control_ph,    ONLY : rec_code_read, current_iq
   USE qpoint,        ONLY : xq
@@ -53,15 +53,12 @@ subroutine dynmat0_new
   !
   call d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, xq, at, bg, g, &
        gg, ngm, gcutm, nmodes, u, dyn)
-  !
-  !   Here the Grimme D2 dispersion contribution (if present)
-  !
-  IF ( llondon ) THEN
-     CALL init_london ()
-     CALL d2ionq_mm (alat, nat, ityp, at, bg, tau, xq, dynwrk )
-     CALL rotate_pattern_add ( nat, u, dyn, dynwrk )
-     CALL dealloca_london ()
-  END IF
+
+  ! Contribution from the dispersion correction
+  IF (llondon .OR. lxdm) THEN
+     CALL d2ionq_disp(alat,nat,ityp,at,bg,tau,xq,dynwrk)
+     CALL rotate_pattern_add (nat,u,dyn,dynwrk)
+  ENDIF
   !
   !   Add non-linear core-correction (NLCC) contribution (if any)
   !

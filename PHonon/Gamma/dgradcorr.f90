@@ -22,7 +22,7 @@ SUBROUTINE dgradcor1 (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
 
   REAL(DP), INTENT(IN) :: rho (dfft%nnr, nspin), grho (3, dfft%nnr, nspin), &
        g (3, dfft%ngm)
-  REAL(DP), INTENT(OUT):: drho (dfft%nnr,nspin),&
+  REAL(DP), INTENT(IN) :: drho (dfft%nnr,nspin),&
        dvxc_rr(dfft%nnr, nspin, nspin), dvxc_sr (dfft%nnr, nspin, nspin), &
        dvxc_ss (dfft%nnr,nspin, nspin), dvxc_s (dfft%nnr, nspin, nspin)
   REAL(DP), INTENT(INOUT) ::  dvxc (dfft%nnr, nspin)

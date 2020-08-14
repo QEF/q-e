@@ -1,0 +1,25 @@
+--
+&inputph
+  prefix   = 'diam'
+  outdir   = '.'
+  fildyn   = 'diam.ahc3.dyn'
+  tr2_ph   =  1.0d-15
+  ldisp    = .true.
+
+  ldvscf_interpolate = .true.
+  wpot_dir = 'wpot_neutral/'
+
+  trans = .false.
+  electron_phonon = 'ahc'
+  ahc_nbnd = 4
+  ahc_nbndskip = 4
+  ahc_dir = 'ahc_dir.3/'
+
+  qplot    = .true.
+ /
+   4
+   0.000000000000000   0.000000000000000   0.000000000000000   0
+   0.000000000000000  -0.666666666666667   0.000000000000000   0
+  -0.333333333333333   0.333333333333333  -0.333333333333333   0
+  -0.666666666666667   0.000000000000000  -0.666666666666667   0
+

@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: dynmat.x / PWscf / Quantum Espresso (version: svn)
+Program: dynmat.x / PWscf / Quantum Espresso (version: 6.6)
 ------------------------------------------------------------------------
 
 
@@ -173,7 +173,23 @@ NAMELIST: &INPUT
    Default:        '.false.'
    +--------------------------------------------------------------------
    
+   +--------------------------------------------------------------------
+   Variable:       el_ph_nsig
+   
+   Type:           INTEGER
+   Description:    The number of double-delta smearing values used in an electron-phonon
+                   coupling calculation.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       el_ph_sigma
+   
+   Type:           REAL
+   Description:    The spacing of double-delta smearing values used in an electron-phonon
+                   coupling calculation.
+   +--------------------------------------------------------------------
+   
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Jun 22 17:11:33 CEST 2018
+This file has been created by helpdoc utility on Fri Jul 17 10:28:27 CEST 2020

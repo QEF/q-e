@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE stop_run()
+SUBROUTINE stop_cp_run()
   !----------------------------------------------------------------------------
   !
   ! ... Close all files and synchronize processes before stopping.
@@ -19,7 +19,6 @@ SUBROUTINE stop_run()
   !
   IMPLICIT NONE
   !
-  !
   CALL environment_end( 'CP' )
   !
   CALL deallocate_modules_var()
@@ -28,20 +27,8 @@ SUBROUTINE stop_run()
   !
   CALL plugin_clean()
   !
-  CALL unset_mpi_comm_4_solvers ()
   CALL mp_global_end()
   !
-END SUBROUTINE stop_run
-
-SUBROUTINE do_stop( flag )
-  IMPLICIT NONE
+  STOP 0
   !
-  LOGICAL, INTENT(IN) :: flag
-  !
-  IF ( flag ) THEN
-     STOP
-  ELSE
-     STOP 1
-  END IF
-  !
-END SUBROUTINE do_stop
+END SUBROUTINE stop_cp_run

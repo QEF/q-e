@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-! A small utility that read the first q from a dynamical matrix file (either xml or plain text),
+! A small utility that reads the first q from a dynamical matrix file (either xml or plain text),
 ! recomputes the system symmetry (starting from the lattice) and generates the star of q.
 !
 ! Useful for debugging and for producing the star of the wannier-phonon code output.
@@ -14,7 +14,7 @@
 ! Syntax:
 !   q2qstar.x filein [fileout]
 !
-! fileout default: filein.rot (old format) or filein.rot.xml (new format)
+! fileout default: rot_filein (old format) or rot_filein.xml (new format)
 !
 !----------------------------------------------------------------------------
 PROGRAM Q2QSTAR
@@ -29,7 +29,7 @@ PROGRAM Q2QSTAR
   USE io_global,          ONLY : ionode_id, ionode, stdout
   USE environment,        ONLY : environment_start, environment_end
   ! symmetry
-  USE symm_base,          ONLY : s, invs, nsym, find_sym, set_sym_bl, irt, ftau, copy_sym, nrot, inverse_s
+  USE symm_base,          ONLY : s, invs, nsym, find_sym, set_sym_bl, irt, copy_sym, nrot, inverse_s
   ! for reading the dyn.mat.
   USE cell_base,          ONLY : at, bg, celldm, ibrav, omega
   USE ions_base,          ONLY : nat, ityp, ntyp => nsp, atm, tau, amass
@@ -63,7 +63,7 @@ PROGRAM Q2QSTAR
   COMPLEX(DP),ALLOCATABLE :: phi(:,:,:,:), d2(:,:)
   INTEGER :: i,j, icar,jcar, na,nb
   !
-  NAMELIST / input / fildyn
+  !NAMELIST / input / fildyn
   !
   CALL mp_startup()
   CALL environment_start(CODE)
@@ -82,7 +82,7 @@ PROGRAM Q2QSTAR
   IF (nargs > 1) THEN
     CALL get_command_argument(2, filout)
   ELSE
-      filout = TRIM(fildyn)//".rot"
+      filout = "rot_"//TRIM(fildyn)
   ENDIF
   CALL mp_bcast(filout, ionode_id,world_comm)
   !
@@ -144,6 +144,11 @@ PROGRAM Q2QSTAR
   WRITE(stdout, '(5x,a,i3)') "Symmetries of bravais lattice: ", nrot
   !
   ! ~~~~~~~~ setup crystal symmetry ~~~~~~~~ 
+  IF(.not.allocated(m_loc))  THEN
+    ALLOCATE(m_loc(3,nat))
+    m_loc = 0._dp
+  ENDIF
+  
   CALL find_sym ( nat, tau, ityp, .false., m_loc )
   WRITE(stdout, '(5x,a,i3)') "Symmetries of crystal:         ", nsym
   !
@@ -152,7 +157,7 @@ PROGRAM Q2QSTAR
   minus_q = .true.
   sym = .false.
   sym(1:nsym) = .true.
-  CALL smallg_q(xq, 0, at, bg, nsym, s, ftau, sym, minus_q)
+  CALL smallg_q(xq, 0, at, bg, nsym, s, sym, minus_q)
   nsymq = copy_sym(nsym, sym)
   ! recompute the inverses as the order of sym.ops. has changed
   CALL inverse_s ( ) 

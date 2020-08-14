@@ -5,51 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
-
-!     ==================================================================
-      SUBROUTINE LSD_LYP(RHO,ETA,ELYP,VALYP,VBLYP)
-!     ==--------------------------------------------------------------==
-!     ==  C. LEE, W. YANG, AND R.G. PARR, PRB 37, 785 (1988)          ==
-!     ==  THIS IS ONLY THE LDA PART                                   ==
-!     ==--------------------------------------------------------------==
-      USE kinds, ONLY: DP
 !
-      IMPLICIT NONE
-!     arguments
-      REAL(DP) :: RHO,ETA,ELYP,VALYP,VBLYP
-!     locals
-      REAL(DP) :: RA,RB,RM3,DR,E1,OR,DOR,E2,DE1A,DE1B,DE2A,DE2B
-      REAL(DP), PARAMETER :: SMALL=1.D-24, A=0.04918D0, B=0.132D0, &
-                         C=0.2533D0, D=0.349D0, CF=2.87123400018819108D0
-!     ==--------------------------------------------------------------==
-      RA=RHO*0.5D0*(1.D0+ETA)
-      RA=MAX(RA,SMALL)
-      RB=RHO*0.5D0*(1.D0-ETA)
-      RB=MAX(RB,SMALL)
-      RM3=RHO**(-1.D0/3.D0)
-      DR=(1.D0+D*RM3)
-      E1=4.D0*A*RA*RB/RHO/DR
-      OR=EXP(-C*RM3)/DR*RM3**11.D0
-      DOR=-1.D0/3.D0*RM3**4*OR*(11.D0/RM3-C-D/DR)
-      E2=2.D0**(11.D0/3.D0)*CF*A*B*OR*RA*RB*(RA**(8.d0/3.d0)+ RB**(8.d0/3.d0))
-      ELYP=(-E1-E2)/RHO
-      DE1A=-E1*(1.D0/3.D0*D*RM3**4/DR+1./RA-1./RHO)
-      DE1B=-E1*(1.D0/3.D0*D*RM3**4/DR+1./RB-1./RHO)
-      DE2A=-2.D0**(11.D0/3.D0)*CF*A*B*(DOR*RA*RB*(RA**(8.d0/3.d0)+ &
-            RB**(8.d0/3.d0))+OR*RB*(11.d0/3.d0*RA**(8.d0/3.d0)+ &
-            RB**(8.d0/3.d0)))
-      DE2B=-2.D0**(11.D0/3.D0)*CF*A*B*(DOR*RA*RB*(RA**(8.d0/3.d0)+ &
-      RB**(8.d0/3.d0))+OR*RA*(11.d0/3.d0*RB**(8.d0/3.d0)+ &
-      RA**(8.d0/3.d0)))
-      VALYP=DE1A+DE2A
-      VBLYP=DE1B+DE2B
-!     ==--------------------------------------------------------------==
-      RETURN
-      END SUBROUTINE LSD_LYP
-
-
-
 !     ==================================================================
       SUBROUTINE LSD_PADE(RHO,ETA,EC,VCA,VCB)
 !     ==--------------------------------------------------------------==
@@ -99,55 +55,6 @@
 !     ==--------------------------------------------------------------==
       RETURN
       END SUBROUTINE LSD_PADE
-
-
-
-!     ==================================================================
-      SUBROUTINE LSD_GLYP(RA,RB,GRHOAA,GRHOAB,GRHOBB,SC,  &
-                                            V1CA,V2CA,V1CB,V2CB,V2CAB)
-!     ==--------------------------------------------------------------==
-      USE kinds, ONLY: DP
-! LEE, YANG PARR: GRADIENT CORRECTION PART
-      IMPLICIT NONE ! REAL(DP) (A-H,O-Z), INTEGER (I-N)
-!     arguments
-      REAL(DP) :: RA,RB,GRHOAA,GRHOAB,GRHOBB,SC, &
-                  V1CA,V2CA,V1CB,V2CB,V2CAB
-!     locals
-      REAL(DP) :: RHO,RM3,DR,OR,DOR,DER,DDER
-      REAL(DP) :: DLAA,DLAB,DLBB,DLAAA,DLAAB,DLABA,DLABB,DLBBA,DLBBB
-      REAL(DP), PARAMETER :: A=0.04918D0,B=0.132D0,C=0.2533D0,D=0.349D0
-!     ==--------------------------------------------------------------==
-      RHO=RA+RB
-      RM3=RHO**(-1.D0/3.D0)
-      DR=(1.D0+D*RM3)
-      OR=EXP(-C*RM3)/DR*RM3**11.D0
-      DOR=-1.D0/3.D0*RM3**4*OR*(11.D0/RM3-C-D/DR)
-      DER=C*RM3+D*RM3/DR
-      DDER=1.d0/3.d0*(D*D*RM3**5/DR/DR-DER/RHO)
-      DLAA=-A*B*OR*(RA*RB/9.d0*(1.d0-3*DER-(DER-11.d0)*RA/RHO)-RB*RB)
-      DLAB=-A*B*OR*(RA*RB/9.d0*(47.d0-7.d0*DER)-4.d0/3.d0*RHO*RHO)
-      DLBB=-A*B*OR*(RA*RB/9.d0*(1.d0-3*DER-(DER-11.d0)*RB/RHO)-RA*RA)
-      DLAAA=DOR/OR*DLAA-A*B*OR*(RB/9.d0*(1.d0-3*DER-(DER-11.d0)*RA/RHO)- &
-            RA*RB/9.d0*((3.d0+RA/RHO)*DDER+(DER-11.d0)*RB/RHO/RHO))
-      DLAAB=DOR/OR*DLAA-A*B*OR*(RA/9.d0*(1.d0-3.d0*DER-(DER-11.d0)*RA/RHO)- &
-            RA*RB/9.d0*((3.d0+RA/RHO)*DDER-(DER-11.d0)*RA/RHO/RHO)-2.d0*RB)
-      DLABA=DOR/OR*DLAB-A*B*OR*(RB/9.d0*(47.d0-7.d0*DER)-7.d0/9.d0*RA*RB*DDER- &
-            8.d0/3.d0*RHO)
-      DLABB=DOR/OR*DLAB-A*B*OR*(RA/9.d0*(47.d0-7.d0*DER)-7.d0/9.d0*RA*RB*DDER- &
-            8.d0/3.d0*RHO)
-      DLBBA=DOR/OR*DLBB-A*B*OR*(RB/9.d0*(1.d0-3.d0*DER-(DER-11.d0)*RB/RHO)- &
-            RA*RB/9.d0*((3.d0+RB/RHO)*DDER-(DER-11.d0)*RB/RHO/RHO)-2.d0*RA)
-      DLBBB=DOR/OR*DLBB-A*B*OR*(RA/9.d0*(1.d0-3*DER-(DER-11.d0)*RB/RHO)- &
-            RA*RB/9.d0*((3.d0+RB/RHO)*DDER+(DER-11.d0)*RA/RHO/RHO))
-      SC=DLAA*GRHOAA+DLAB*GRHOAB+DLBB*GRHOBB
-      V1CA=DLAAA*GRHOAA+DLABA*GRHOAB+DLBBA*GRHOBB
-      V1CB=DLAAB*GRHOAA+DLABB*GRHOAB+DLBBB*GRHOBB
-      V2CA=2.d0*DLAA
-      V2CB=2.d0*DLBB
-      V2CAB=DLAB
-!     ==--------------------------------------------------------------==
-      RETURN
-      END SUBROUTINE LSD_GLYP
 
 
 !______________________________________________________________________
@@ -1547,42 +1454,6 @@
       return
       end subroutine ggapwold
 
-!-----------------------------------------------------------------------
-      subroutine dftname_cp (exfact, dft)
-!-----------------------------------------------------------------------
-!
-      implicit none
-      integer :: exfact
-      character(len=25) dft
-!
-      if (exfact == 0) then
-         dft = 'PZ'
-      elseif (exfact == 1) then
-         dft = 'BLYP'
-      elseif (exfact == 2) then
-         dft = 'B88'
-      elseif (exfact ==  - 5 .or. exfact == 3) then
-         dft = 'BP'
-      elseif (exfact ==  - 6 .or. exfact == 4) then
-         dft = 'PW91'
-      elseif (exfact == 5) then
-         dft = 'PBE'
-      elseif (exfact ==-1) then
-         dft = 'WIG'
-      elseif (exfact ==-2) then
-         dft = 'HL'
-      elseif (exfact ==-3) then
-         dft = 'GL'
-      elseif (exfact == 6) then
-         dft = 'TPSS'
-      else
-         call errore ('dftname','unknown exch-corr functional',exfact)
-      end if
-
-      return
-      end subroutine dftname_cp
-
-
 !-------------------------------------------------------------------------
       subroutine expxc(nnr,nspin,rhor,exc)
 !----------------------------------------------------------------------
@@ -1719,6 +1590,7 @@
 
       SUBROUTINE wrap_glyp( rho, grho, sc, v1c, v2c )
         USE kinds, ONLY: DP
+        USE corr_gga, ONLY: lsd_glyp
         IMPLICIT NONE
         REAL(DP) :: rho, grho, sc, v1c, v2c
         REAL(DP) :: RA,RB,GRHOAA,GRHOAB,GRHOBB

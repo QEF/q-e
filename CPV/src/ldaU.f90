@@ -13,46 +13,46 @@
 !     output: swfc=S|wfc>
 !
       USE kinds, ONLY: DP
-      USE ions_base, ONLY: na
-      USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus, qq_nt
-      USE uspp_param, ONLY: nh, nvb, ish
+      USE ions_base, ONLY: nat, ityp
+      USE uspp, ONLY: nkb, nkbus, qq_nt, indv_ijkb0
+      USE uspp_param, ONLY: nh, upf
       USE gvecw, ONLY: ngw
       IMPLICIT NONE
 ! input
       INTEGER, INTENT(in)     :: nwfc
-      COMPLEX(DP), INTENT(in) :: betae(ngw,nhsa),                   &
+      COMPLEX(DP), INTENT(in) :: betae(ngw,nkb),                   &
      &                             wfc(ngw,nwfc)
-      REAL(DP), INTENT(in)    :: becwfc(nhsa,nwfc)
+      REAL(DP), INTENT(in)    :: becwfc(nkb,nwfc)
 ! output
       COMPLEX(DP), INTENT(out):: swfc(ngw,nwfc)
 ! local
       INTEGER :: is, iv, jv, ia, inl, jnl, i
-      REAL(DP) :: qtemp(nhsavb,nwfc)
+      REAL(DP) :: qtemp(nkb,nwfc)
 !
       swfc = wfc
 !
-      IF (nvb > 0) THEN
+      IF (nkbus > 0) THEN
          qtemp=0.d0
-         DO is=1,nvb
-            DO iv=1,nh(is)
-               DO jv=1,nh(is)
-                  IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN
-                     DO ia=1,na(is)
-                        inl=ish(is)+(iv-1)*na(is)+ia
-                        jnl=ish(is)+(jv-1)*na(is)+ia
+         DO ia=1,nat
+            is=ityp(ia)
+            IF( upf(is)%tvanp ) THEN
+               DO iv=1,nh(is)
+                  DO jv=1,nh(is)
+                     IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN
+                        inl = indv_ijkb0(ia) + iv
+                        jnl = indv_ijkb0(ia) + jv
                         DO i=1,nwfc
-                           qtemp(inl,i) = qtemp(inl,i) +                &
-     &                                    qq_nt(iv,jv,is)*becwfc(jnl,i)
+                           qtemp(inl,i) = qtemp(inl,i) + qq_nt(iv,jv,is)*becwfc(jnl,i)
                         END DO
-                     END DO
-                  ENDIF
+                     ENDIF
+                  END DO
                END DO
-            END DO
+            END IF
          END DO
 !
          CALL dgemm &
-              ('N','N',2*ngw,nwfc,nhsavb,1.0d0,betae,2*ngw,&
-               qtemp,nhsavb,1.0d0,swfc,2*ngw)
+              ('N','N',2*ngw,nwfc,nkb,1.0d0,betae,2*ngw,&
+               qtemp,nkb,1.0d0,swfc,2*ngw)
 !
       END IF
 !
@@ -64,7 +64,7 @@
 !
       use ldaU_cp,          ONLY: nwfcU, lda_plus_u, Hubbard_U
       use ldaU_cp,          ONLY: Hubbard_lmax, Hubbard_l, ldmx, ns, vupsi
-      use ions_base,        only: na, nsp, nat, atm
+      use ions_base,        only: nsp, atm, nat
       use gvecw,            only: ngw
       use electrons_base,   only: nspin, nx => nbspx
       USE uspp_param,       ONLY: upf
@@ -108,10 +108,10 @@
 !
       use kinds,              ONLY: DP        
       use control_flags,      ONLY: tfor, tprnfor
-      use ions_base,          only: na, nat, nsp
+      use ions_base,          only: nat, nsp, ityp
       use gvecw,              only: ngw
       use gvect,              only: gstart
-      USE uspp,               ONLY: nhsa=>nkb
+      USE uspp,               ONLY: nkb
       USE uspp_param,         ONLY: upf
       use electrons_base,     only: nspin, n => nbsp, nx => nbspx, ispin, f
       USE ldaU_cp,            ONLY: Hubbard_U, Hubbard_l, ldmx
@@ -122,38 +122,39 @@
       USE cp_interfaces,      only: nlsm1, nlsm2_bgrp
 !
       implicit none
-      complex(DP), intent(in) :: c(ngw,nx), eigr(ngw,nat), betae(ngw,nhsa)
+      complex(DP), intent(in) :: c(ngw,nx), eigr(ngw,nat), betae(ngw,nkb)
       complex(DP), intent(out) :: hpsi(ngw,nx)
       real(DP), INTENT(OUT) :: forceh(3,nat)
 !
       complex(DP), allocatable:: wfcU(:,:), swfc(:,:), spsi(:,:)
       real(DP), allocatable   :: becwfc(:,:), bp(:,:), dbp(:,:,:), wdb(:,:,:)
       real(DP), allocatable   :: dns(:,:,:,:), proj(:,:), tempsi(:,:)
-      integer is, ia, iat, nb, isp, l, m, m1, m2, k, i, ldim, ig
-      integer iv, jv, inl, jnl,alpha,alpha_a,alpha_s,ipol
-      integer, allocatable ::  offset (:,:)
+      integer is, ia, nb, isp, l, m, m1, m2, k, i, ldim, ig
+      integer iv, jv, inl, jnl,alpha_a,alpha_s,ipol
+      integer, allocatable ::  offset (:)
       INTEGER :: nb_s, nb_e, mykey
 !
       if( nbgrp > 1 ) call errore(' new_ns ', &
          ' parallelization over bands not yet implemented ', 1 )
       call start_clock('new_ns')
 !
-      allocate(offset(nsp,nat))
-      offset(:,:) = -1
+      allocate(offset(nat))
+      offset(:) = -1
       ! offset = -1 means "not a Hubbard wfc"
       nwfcU = 0
-      do is = 1, nsp
-         do ia = 1, na(is)
-            do i = 1, upf(is)%nwfc
-               l = upf(is)%lchi(i)
-               if (l == Hubbard_l(is)) offset (is,ia) = nwfcU
+      do ia = 1, nat
+         is = ityp(ia)
+         do i = 1, upf(is)%nwfc
+            l = upf(is)%lchi(i)
+            if (l == Hubbard_l(is)) then 
+               offset (ia) = nwfcU
                nwfcU = nwfcU + 2 * l + 1
-            end do
-         end do
+            end if
+         end do   
       end do
       !
       allocate(wfcU(ngw,nwfcU))
-      allocate(becwfc(nhsa,nwfcU))
+      allocate(becwfc(nkb,nwfcU))
       allocate(swfc(ngw,nwfcU))
       allocate(proj(nwfcU,n))
       !
@@ -163,77 +164,68 @@
      &                  offset, Hubbard_l, wfcU, becwfc, swfc, proj )
       !
       ns(:,:,:,:) = 0.d0
-      iat = 0
-      do is = 1,nsp
-         do ia = 1,na(is)
-            iat = iat + 1
-            if (Hubbard_U(is).ne.0.d0) then 
-               k = offset(is,ia)
-               do m1 = 1, 2*Hubbard_l(is) + 1
-                  do m2 = m1, 2*Hubbard_l(is) + 1
-                     do i = 1,n
-                      ns(m1,m2,ispin(i),iat) = ns(m1,m2,ispin(i),iat) + &
-     &                               f(i) * proj(k+m2,i) * proj(k+m1,i)
-                     end do
-                  end do
-                  do m2 = m1+1, 2*Hubbard_l(is) + 1
-                     ns(m2,m1,:,iat) = ns(m1,m2,:,iat)
+      do ia = 1,nat
+         is = ityp(ia)
+         if (Hubbard_U(is).ne.0.d0) then 
+            k = offset(ia)
+            do m1 = 1, 2*Hubbard_l(is) + 1
+               do m2 = m1, 2*Hubbard_l(is) + 1
+                  do i = 1,n
+                   ns(m1,m2,ispin(i),ia) = ns(m1,m2,ispin(i),ia) + &
+     &                            f(i) * proj(k+m2,i) * proj(k+m1,i)
                   end do
                end do
-            end if
-         end do
+               do m2 = m1+1, 2*Hubbard_l(is) + 1
+                  ns(m2,m1,:,ia) = ns(m1,m2,:,ia)
+               end do
+            end do
+         end if
       end do
       if (nspin.eq.1) ns = 0.5d0 * ns
 ! Contributions to total energy
       e_hubbard = 0.d0
-      iat = 0
-      do is = 1,nsp
-         do ia = 1,na(is)
-            iat=iat + 1
-            if (Hubbard_U(is).ne.0.d0) then
-                do isp = 1,nspin
-                   do m1 = 1, 2*Hubbard_l(is) + 1
-                     e_hubbard = e_hubbard + 0.5d0 * Hubbard_U(is) *    &
-     &                           ns(m1,m1,isp,iat)
-                     do m2 = 1, 2*Hubbard_l(is) + 1
-                        e_hubbard = e_hubbard - 0.5d0 * Hubbard_U(is) * &
-     &                              ns(m1,m2,isp,iat) * ns(m2,m1,isp,iat)
-                     end do
-                   end do
-                end do
-             end if
-         end do
-       end do
-       if (nspin.eq.1) e_hubbard = 2.d0*e_hubbard
+      do ia = 1,nat
+         is = ityp(ia)
+         if (Hubbard_U(is).ne.0.d0) then
+             do isp = 1,nspin
+                do m1 = 1, 2*Hubbard_l(is) + 1
+                  e_hubbard = e_hubbard + 0.5d0 * Hubbard_U(is) *    &
+     &                        ns(m1,m1,isp,ia)
+                  do m2 = 1, 2*Hubbard_l(is) + 1
+                     e_hubbard = e_hubbard - 0.5d0 * Hubbard_U(is) * &
+     &                           ns(m1,m2,isp,ia) * ns(m2,m1,isp,ia)
+                  end do
+               end do
+            end do
+         end if
+      end do
+      if (nspin.eq.1) e_hubbard = 2.d0*e_hubbard
 !
 !      Calculate the potential and forces on wavefunctions due to U
 !
       hpsi(:,:)=(0.d0,0.d0)
       ALLOCATE ( tempsi(ldmx,n) )
       tempsi(:,:)=(0.d0,0.d0)
-      iat=0
-      do is = 1, nsp
-         do ia=1, na(is)
-            iat = iat + 1
-            if (Hubbard_U(is).ne.0.d0) then
-               ldim = 2*Hubbard_l(is) + 1
-               do i=1, n
-                  do m1 = 1, ldim
-                     tempsi(m1,i) = proj (offset(is,ia)+m1,i)
-                     do m2 = 1, ldim
-                        tempsi(m1,i) = tempsi(m1,i) - &
-                                       2.0_dp*ns(m1,m2,ispin(i),iat) * &
-                                               proj (offset(is,ia)+m2,i)
-                     enddo
-                     tempsi(m1,i) = tempsi(m1,i) * Hubbard_U(is)/2.d0*f(i)
+      do ia = 1,nat
+         is = ityp(ia)
+         if (Hubbard_U(is).ne.0.d0) then
+            ldim = 2*Hubbard_l(is) + 1
+            do i=1, n
+               do m1 = 1, ldim
+                  tempsi(m1,i) = proj (offset(ia)+m1,i)
+                  do m2 = 1, ldim
+                     tempsi(m1,i) = tempsi(m1,i) - &
+                                    2.0_dp*ns(m1,m2,ispin(i),ia) * &
+                                            proj (offset(ia)+m2,i)
                   enddo
+                  tempsi(m1,i) = tempsi(m1,i) * Hubbard_U(is)/2.d0*f(i)
                enddo
-               !
-               CALL dgemm ( 'N','N', 2*ngw, n, ldim, 1.0_dp, &
-                             swfc(1,offset(is,ia)+1), 2*ngw, tempsi, &
-                             ldmx, 1.0_dp, hpsi, 2*ngw )
-            endif
-         enddo
+            enddo
+            !
+            CALL dgemm ( 'N','N', 2*ngw, n, ldim, 1.0_dp, &
+                          swfc(1,offset(ia)+1), 2*ngw, tempsi, &
+                          ldmx, 1.0_dp, hpsi, 2*ngw )
+         endif
       enddo
       DEALLOCATE ( tempsi )
 !
@@ -247,54 +239,48 @@
 
       if ( tfor .or. tprnfor ) then
         call start_clock('new_ns:forc')
-        allocate (bp(nhsa,n), dbp(nhsa,nx,3), wdb(nhsa,nwfcU,3))
+        allocate (bp(nkb,n), dbp(nkb,nx,3), wdb(nkb,nwfcU,3))
         allocate(dns(ldmx,ldmx,nspin,nat))
         allocate (spsi(ngw,n))
 !
         call nlsm1 ( n, 1, nsp, eigr, c, bp )
         call s_wfc ( n, bp, betae, c, spsi )
-        call nlsm2_bgrp( ngw, nhsa, eigr, c, dbp, nx, n )
-        call nlsm2_bgrp( ngw, nhsa, eigr, wfcU, wdb, nwfcU, nwfcU )
+        call nlsm2_bgrp( ngw, nkb, eigr, c, dbp, nx, n )
+        call nlsm2_bgrp( ngw, nkb, eigr, wfcU, wdb, nwfcU, nwfcU )
         !
         ! poor-man parallelization over bands
         ! - if nproc_pool=1   : nb_s=1, nb_e=n, mykey=0
         ! - if nproc_pool<=nbnd:each processor calculates band nb_s to nb_e; mykey=0
-        ! - if nproc_pool>nbnd :each processor takes care of band na_s=nb_e;
+        ! - if nproc_pool>nbnd :each processor takes care of band nb_s=nb_e;
         !   mykey labels how many times each band appears (mykey=0 first time etc.)
         !
         CALL block_distribute( n, me_pool, nproc_pool, nb_s, nb_e, mykey )
         ! 
-        alpha=0
-        do alpha_s = 1, nsp
-         do alpha_a = 1, na(alpha_s)
-            alpha=alpha+1
+        do alpha_a = 1, nat
+            alpha_s = ityp(alpha_a)
             do ipol = 1,3
                call dndtau(alpha_a,alpha_s,becwfc,spsi,bp,dbp,wdb,          &
                            offset,wfcU,eigr,proj,ipol,nb_s,nb_e,mykey,&
                            dns)
-               iat=0
-               do is = 1, nsp
-                  do ia=1, na(is)
-                     iat = iat + 1
-                     if (Hubbard_U(is).ne.0.d0) then
-                        do isp = 1,nspin
-                           do m2 = 1,2*Hubbard_l(is) + 1
-                              forceh(ipol,alpha) = forceh(ipol,alpha) -   &
-     &                        Hubbard_U(is) * 0.5d0 * dns(m2,m2,isp,iat)
-                              do m1 = 1,2*Hubbard_l(is) + 1
-                                 forceh(ipol,alpha) = forceh(ipol,alpha) + &
-     &                           Hubbard_U(is)*ns(m2,m1,isp,iat)*       &
-     &                           dns(m1,m2,isp,iat)
-                              end do
+               do ia=1, nat
+                  is = ityp(ia)
+                  if (Hubbard_U(is).ne.0.d0) then
+                     do isp = 1,nspin
+                        do m2 = 1,2*Hubbard_l(is) + 1
+                           forceh(ipol,alpha_a) = forceh(ipol,alpha_a) -   &
+     &                     Hubbard_U(is) * 0.5d0 * dns(m2,m2,isp,ia)
+                           do m1 = 1,2*Hubbard_l(is) + 1
+                              forceh(ipol,alpha_a) = forceh(ipol,alpha_a) + &
+     &                        Hubbard_U(is)*ns(m2,m1,isp,ia)*       &
+     &                        dns(m1,m2,isp,ia)
                            end do
                         end do
-                     end if
+                     end do
+                  end if
 ! Occupation constraint added here to forceh(ipol,alpha)
-                     CALL penalty_f ( is, iat, dns, forceh(ipol,alpha) )
-                  end do
+                  CALL penalty_f ( is, ia, dns, forceh(ipol,alpha_a) )
                end do
             end do
-         end do
         end do
         !
         ! I am not sure why the following instruction (present in PW)
@@ -325,16 +311,17 @@
       USE constants,        ONLY: autoev
       use electrons_base,   only: nspin
       use electrons_base,   only: n => nbsp 
-      use ions_base,        only: na, nat, nsp
+      use ions_base,        only: nat, nsp, ityp
       use gvecw,            only: ngw
       USE ldaU_cp,          ONLY: Hubbard_U, Hubbard_l, ldmx
       USE ldaU_cp,          ONLY: nwfcU, ns, e_hubbard
-      use dspev_module,     only : dspev_drv
       USE step_penalty,     ONLY: write_pen
 
       implicit none
 
-  integer :: is, isp, ia, m1, m2, iat, err, k
+      include 'laxlib.fh'
+
+  integer :: is, isp, ia, m1, m2, err, k
   real(DP), allocatable   :: ftemp1(:), ftemp2(:), f1 (:), vet (:,:)
 
   real(DP) :: lambda (ldmx), nsum, nsuma
@@ -345,54 +332,49 @@
         ('U(',is,') =', Hubbard_U(is) * autoev, is=1,nsp)
       nsum = 0.d0
       allocate( ftemp1(ldmx), ftemp2(ldmx), f1(ldmx*ldmx), vet(ldmx,ldmx) )
-      iat = 0
       write(6,*) 'nsp',nsp
-      do is = 1,nsp
-         do ia = 1, na(is)
-            nsuma = 0.d0
-            iat = iat + 1
-!        if (iat.eq.1) then
-            if (Hubbard_U(is).ne.0.d0) then
-               do isp = 1, nspin
-                   do m1 = 1, 2 * Hubbard_l(is) + 1
-                      nsuma = nsuma + ns (m1,m1,isp,iat)
-                   end do
-               end do
-               if (nspin.eq.1) nsuma = 2.d0 * nsuma
-               write(6,'(a,1x,i2,2x,a,f11.7)') 'atom', iat,              &
+      do ia = 1, nat
+         is=ityp(ia)
+         nsuma = 0.d0
+         if (Hubbard_U(is).ne.0.d0) then
+            do isp = 1, nspin
+                do m1 = 1, 2 * Hubbard_l(is) + 1
+                   nsuma = nsuma + ns (m1,m1,isp,ia)
+                end do
+            end do
+            if (nspin.eq.1) nsuma = 2.d0 * nsuma
+            write(6,'(a,1x,i2,2x,a,f11.7)') 'atom', ia,              &
      &                                      ' Tr[ns(na)]= ',nsuma
-               nsum = nsum + nsuma
+            nsum = nsum + nsuma
 !
-               do isp = 1, nspin
+            do isp = 1, nspin
 
-                  k = 0
-                  do m1 = 1, 2 * Hubbard_l(is) + 1
-                     do m2 = m1, 2 * Hubbard_l(is) + 1
-                        k = k + 1
-                        f1 ( k ) = ns (m2,m1,isp,iat)
-                     enddo
+               k = 0
+               do m1 = 1, 2 * Hubbard_l(is) + 1
+                  do m2 = m1, 2 * Hubbard_l(is) + 1
+                     k = k + 1
+                     f1 ( k ) = ns (m2,m1,isp,ia)
                   enddo
+               enddo
 
-                  CALL dspev_drv( 'V', 'L', 2 * Hubbard_l(is) + 1, &
-                                  f1, lambda, vet, ldmx  )
+               CALL dspev_drv( 'V', 'L', 2 * Hubbard_l(is) + 1, &
+                               f1, lambda, vet, ldmx  )
 
-                  write(6,'(a,1x,i2,2x,a,1x,i2)') 'atom', iat, 'spin', isp
-                  write(6,'(a,7f10.7)') 'eigenvalues: ',(lambda(m1),m1=1,&
+               write(6,'(a,1x,i2,2x,a,1x,i2)') 'atom', ia, 'spin', isp
+               write(6,'(a,7f10.7)') 'eigenvalues: ',(lambda(m1),m1=1,&
      &                                2 * Hubbard_l(is) + 1)
-                  write(6,*) 'eigenvectors'
-                  do m2 = 1, 2*Hubbard_l(is)+1
-                     write(6,'(i2,2x,7(f10.7,1x))') m2,(real(vet(m1,m2)),&
+               write(6,*) 'eigenvectors'
+               do m2 = 1, 2*Hubbard_l(is)+1
+                  write(6,'(i2,2x,7(f10.7,1x))') m2,(real(vet(m1,m2)),&
      &                            m1=1,2 * Hubbard_l(is) + 1)
-                  end do
-                  write(6,*) 'occupations'
-                  do m1 = 1, 2*Hubbard_l(is)+1
-                     write (6,'(7(f6.3,1x))') (ns(m1,m2,isp,iat),m2=1,    &
-     &                     2*Hubbard_l(is)+1)
-                  end do
                end do
-            end if
-!        end if
-         end do
+               write(6,*) 'occupations'
+               do m1 = 1, 2*Hubbard_l(is)+1
+                  write (6,'(7(f6.3,1x))') (ns(m1,m2,isp,ia),m2=1,    &
+     &                     2*Hubbard_l(is)+1)
+               end do
+            end do
+         end if
       end do
       deallocate ( ftemp1, ftemp2,f1, vet )
       return
@@ -407,10 +389,10 @@
 ! displacement tau(alpha,ipol) used to obtain the Hubbard contribution to the
 ! atomic forces.
 !
-      use ions_base, only: na, nat, nsp
+      use ions_base, only: nat, nsp, ityp
       use gvecw, only: ngw
       use electrons_base, only: nspin, n => nbsp, nx => nbspx, ispin, f
-      USE uspp,           ONLY: nhsa=>nkb
+      USE uspp,           ONLY: nkb
       USE ldaU_cp,        ONLY: Hubbard_U, Hubbard_l, ldmx
       USE ldaU_cp,        ONLY: nwfcU, ns
       USE kinds,          ONLY: DP
@@ -419,19 +401,19 @@
 !
       implicit none
 ! input
-      integer,      intent(in) :: offset(nsp,nat)
+      integer,      intent(in) :: offset(nat)
       integer,      intent(in) :: alpha_a,alpha_s,ipol
       INTEGER,      INTENT(in) :: nb_s, nb_e, mykey
       COMPLEX(dp),  INTENT(in) :: wfcU(ngw,nwfcU), eigr(ngw,nat)
-      REAL(dp),     INTENT(IN) :: becwfc(nhsa,nwfcU), bp(nhsa,n), &
-                                  dbp(nhsa,nx,3), wdb(nhsa,nwfcU,3)
+      REAL(dp),     INTENT(IN) :: becwfc(nkb,nwfcU), bp(nkb,n), &
+                                  dbp(nkb,nx,3), wdb(nkb,nwfcU,3)
       real(DP),     intent(in) :: proj(nwfcU,n)
       complex (DP), intent(in) :: spsi(ngw,n)
 ! output
       real (DP),   intent(out) :: dns(ldmx,ldmx,nspin,nat)
 !     dns   derivative of ns(:,:,:,:) w.r.t. tau
 !
-      integer ibnd,is,i,ia, m1,m2, l, iat, alpha, ldim
+      integer ibnd,is,i,ia, m1,m2, l, ldim
       real (DP),   allocatable :: dproj(:,:)
 !     dproj(nwfcU,n)   derivative of proj(:,:) w.r.t. tau 
 !
@@ -439,7 +421,7 @@
       !
       allocate (dproj(nwfcU,nb_s:nb_e) )
       call dprojdtau(wfcU,becwfc,spsi,bp,dbp,wdb,eigr,alpha_a,     &
-                     alpha_s,ipol,offset(alpha_s,alpha_a),nb_s,nb_e,mykey, &
+                     alpha_s,ipol,offset(alpha_a),nb_s,nb_e,mykey, &
                      dproj)
       !
       ! compute the derivative of occupation numbers (the quantities dn(m1,m2))
@@ -451,27 +433,24 @@
       ! compute its contribution only once (i.e. when mykey=0)
       !
       IF ( mykey /= 0 ) GO TO 10
-      iat=0
-      do is=1,nsp
-         do ia = 1,na(is)
-            iat=iat+1
-            if (Hubbard_U(is).ne.0.d0) then
-               ldim = 2*Hubbard_l(is) + 1
-               do m1 = 1, ldim
-                  do m2 = m1, ldim
-                     do ibnd = nb_s,nb_e
-                        dns(m1,m2,ispin(ibnd),iat) =                    &
-     &                  dns(m1,m2,ispin(ibnd),iat) +                    &
-     &                   f(ibnd)*REAL(  proj(offset(is,ia)+m1,ibnd) *   &
-     &                                (dproj(offset(is,ia)+m2,ibnd))+   &
-     &                                 dproj(offset(is,ia)+m1,ibnd) *   &
-     &                                 (proj(offset(is,ia)+m2,ibnd)) )
-                     end do
-                     dns(m2,m1,:,iat) = dns(m1,m2,:,iat)
+      do ia = 1,nat
+         is = ityp(ia) 
+         if (Hubbard_U(is).ne.0.d0) then
+            ldim = 2*Hubbard_l(is) + 1
+            do m1 = 1, ldim
+               do m2 = m1, ldim
+                  do ibnd = nb_s,nb_e
+                     dns(m1,m2,ispin(ibnd),ia) =                    &
+     &               dns(m1,m2,ispin(ibnd),ia) +                    &
+     &                f(ibnd)*REAL(  proj(offset(ia)+m1,ibnd) *   &
+     &                             (dproj(offset(ia)+m2,ibnd))+   &
+     &                              dproj(offset(ia)+m1,ibnd) *   &
+     &                              (proj(offset(ia)+m2,ibnd)) )
                   end do
+                  dns(m2,m1,:,ia) = dns(m1,m2,:,ia)
                end do
-            end if
-         end do
+            end do
+         end if
       end do
 !
  10   deallocate (dproj)
@@ -490,15 +469,15 @@
 ! u(alpha,ipol) (we remember that ns_{m1,m2,s,I} = \sum_{k,v}
 ! f_{kv} <\fi^{at}_{I,m1}|S|\psi_{k,v,s}><\psi_{k,v,s}|S|\fi^{at}_{I,m2}>)
 !
-      use ions_base, only: na, nat
+      use ions_base, only: nat
       use gvecw, only: ngw
       use gvect, only: g, gstart
       use electrons_base, only: n => nbsp, nx => nbspx
-      USE uspp,           ONLY: nhsa=>nkb, qq_nt
+      USE uspp,           ONLY: nkb, qq_nt, indv_ijkb0
       USE ldaU_cp,        ONLY: Hubbard_U, Hubbard_l
       USE ldaU_cp,        ONLY: nwfcU
       use cell_base,      ONLY: tpiba
-      USE uspp_param,     only: nh, ish
+      USE uspp_param,     only: nh
       use mp_global,      only: intra_bgrp_comm
       use mp,             only: mp_sum
       USE kinds,          ONLY: DP
@@ -512,8 +491,8 @@
        complex (DP), intent(in) :: spsi(ngw,n),                     &
      &                   eigr(ngw,nat)
 ! input: S|evc>, structure factors
-       real(DP), intent(in) ::becwfc(nhsa,nwfcU), &
-     &            bp(nhsa,n), dbp(nhsa,nx,3), wdb(nhsa,nwfcU,3)
+       real(DP), intent(in) ::becwfc(nkb,nwfcU), &
+     &            bp(nkb,n), dbp(nkb,nx,3), wdb(nkb,nwfcU,3)
        COMPLEX(dp), INTENT(IN) :: wfcU(ngw,nwfcU)
        real(DP), intent(out) :: dproj(nwfcU,nb_s:nb_e)
 ! output: the derivative of the projection
@@ -561,62 +540,67 @@
          !
       end if
       !
-      allocate (  wfcbeta(nwfcU,nh(alpha_s)) )
-      allocate ( wfcdbeta(nwfcU,nh(alpha_s)) )
-      allocate (   auxwfc(nwfcU,nh(alpha_s)) )
-      !
-      do iv=1,nh(alpha_s)
-         inl=ish(alpha_s)+(iv-1)*na(alpha_s)+alpha_a
-         do m=1,nwfcU
-            auxwfc(m,iv) = becwfc(inl,m)
-         end do
-      end do
-      ! following dgemm performs (note that qq is symmetric)
-      ! wfcbeta(m,iv) = sum_jv qq(iv,jv,alpha_s)*auxwfc(m,jv)
-      CALL dgemm( 'N', 'N', nwfcU, nh(alpha_s), nh(alpha_s), 1.0_DP, &
-                  auxwfc, nwfcU, qq_nt(1,1,alpha_s), nh(alpha_s), &
-                  0.0_DP, wfcbeta, nwfcU )
-      do iv=1,nh(alpha_s)
-         inl=ish(alpha_s)+(iv-1)*na(alpha_s)+alpha_a
-         do m=1,nwfcU
-            auxwfc(m,iv) = wdb(inl,m,ipol)
-         end do
-      end do
-      ! as above with wfcbeta(m,iv) => wfcdbeta
-      CALL dgemm( 'N', 'N', nwfcU, nh(alpha_s), nh(alpha_s), 1.0_DP, &
-                  auxwfc, nwfcU, qq_nt(1,1,alpha_s), nh(alpha_s), &
-                  0.0_DP, wfcdbeta, nwfcU )
-      deallocate(auxwfc)
-      !
-      IF ( mykey == 0 ) THEN
-         allocate (  betapsi(nh(alpha_s),nb_s:nb_e) )
-         allocate ( dbetapsi(nh(alpha_s),nb_s:nb_e) )
+      IF( nh(alpha_s) > 0 ) THEN
+         !
+         allocate (  wfcbeta(nwfcU,nh(alpha_s)) )
+         allocate ( wfcdbeta(nwfcU,nh(alpha_s)) )
+         allocate (   auxwfc(nwfcU,nh(alpha_s)) )
+         !
          do iv=1,nh(alpha_s)
-            inl=ish(alpha_s)+(iv-1)*na(alpha_s)+alpha_a
-            do i=nb_s,nb_e
-               betapsi (iv,i)=bp(inl,i)
-               dbetapsi(iv,i)=dbp(inl,i,ipol)
+            inl=indv_ijkb0(alpha_a) + iv
+            do m=1,nwfcU
+               auxwfc(m,iv) = becwfc(inl,m)
             end do
          end do
+         ! following dgemm performs (note that qq is symmetric)
+         ! wfcbeta(m,iv) = sum_jv qq(iv,jv,alpha_s)*auxwfc(m,jv)
+         CALL dgemm( 'N', 'N', nwfcU, nh(alpha_s), nh(alpha_s), 1.0_DP, &
+                  auxwfc, nwfcU, qq_nt(1,1,alpha_s), nh(alpha_s), &
+                  0.0_DP, wfcbeta, nwfcU )
+         do iv=1,nh(alpha_s)
+            inl=indv_ijkb0(alpha_a) + iv
+            do m=1,nwfcU
+               auxwfc(m,iv) = wdb(inl,m,ipol)
+            end do
+         end do
+         ! as above with wfcbeta(m,iv) => wfcdbeta
+         CALL dgemm( 'N', 'N', nwfcU, nh(alpha_s), nh(alpha_s), 1.0_DP, &
+                  auxwfc, nwfcU, qq_nt(1,1,alpha_s), nh(alpha_s), &
+                  0.0_DP, wfcdbeta, nwfcU )
+         deallocate(auxwfc)
          !
-         ! dproj(m,i) = \sum_iv wfcdbeta(m,iv)*betapsi (iv,i) +
-         !                      wfcbeta (m,iv)*dbetapsi(iv,i) 
-         !
-         CALL dgemm( 'N', 'N', nwfcU, nb_e-nb_s+1, nh(alpha_s), 1.0_DP, &
+         IF ( mykey == 0 ) THEN
+            allocate (  betapsi(nh(alpha_s),nb_s:nb_e) )
+            allocate ( dbetapsi(nh(alpha_s),nb_s:nb_e) )
+            do iv=1,nh(alpha_s)
+               inl=indv_ijkb0(alpha_a) + iv
+               do i=nb_s,nb_e
+                  betapsi (iv,i)=bp(inl,i)
+                  dbetapsi(iv,i)=dbp(inl,i,ipol)
+               end do
+            end do
+            !
+            ! dproj(m,i) = \sum_iv wfcdbeta(m,iv)*betapsi (iv,i) +
+            !                      wfcbeta (m,iv)*dbetapsi(iv,i) 
+            !
+            CALL dgemm( 'N', 'N', nwfcU, nb_e-nb_s+1, nh(alpha_s), 1.0_DP, &
                   wfcdbeta, nwfcU, betapsi(1,nb_s), nh(alpha_s), &
                   1.0_DP, dproj(1,nb_s), nwfcU )
-         CALL dgemm( 'N', 'N', nwfcU, nb_e-nb_s+1, nh(alpha_s), 1.0_DP, &
+            CALL dgemm( 'N', 'N', nwfcU, nb_e-nb_s+1, nh(alpha_s), 1.0_DP, &
                   wfcbeta, nwfcU, dbetapsi(1,nb_s), nh(alpha_s), &
                   1.0_DP, dproj(1,nb_s), nwfcU )
+            !
+            deallocate (dbetapsi)
+            deallocate (betapsi)
+            !
+         end if
+         ! end band parallelization - only dproj(1,nb_s:nb_e) are calculated
          !
-         deallocate (dbetapsi)
-         deallocate (betapsi)
-         !
-      end if
-      ! end band parallelization - only dproj(1,nb_s:nb_e) are calculated
-      !
-      deallocate (wfcbeta)
-      deallocate (wfcdbeta)
+         deallocate (wfcbeta)
+         deallocate (wfcdbeta)
+
+      END IF
+
       return
       end subroutine dprojdtau
 !
@@ -634,19 +618,18 @@
       USE mp,                 ONLY: mp_sum
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
-      USE ions_base,          ONLY: nsp, na, nat
-      USE uspp,               ONLY: nhsa => nkb
+      USE ions_base,          ONLY: nsp, nat
+      USE uspp,               ONLY: nkb
       USE cp_interfaces,      only: nlsm1
 !
       IMPLICIT NONE
-      INTEGER,     INTENT(IN) :: nx, n, nwfcU, offset(nsp,nat), &
+      INTEGER,     INTENT(IN) :: nx, n, nwfcU, offset(nat), &
                                  Hubbard_l(nsp)
-      COMPLEX(DP), INTENT(IN) :: c( ngw, nx ), eigr(ngw,nat), betae(ngw,nhsa)
+      COMPLEX(DP), INTENT(IN) :: c( ngw, nx ), eigr(ngw,nat), betae(ngw,nkb)
 !
       COMPLEX(DP), INTENT(OUT):: wfcU(ngw, nwfcU),    &
      &                           swfc(ngw, nwfcU)
-      real(DP), intent(out):: becwfc(nhsa,nwfcU), proj(nwfcU,n)
-      INTEGER :: is, ia, nb, l, m, k, i
+      real(DP), intent(out):: becwfc(nkb,nwfcU), proj(nwfcU,n)
       !
       IF ( nwfcU .EQ. 0 ) RETURN
       !
@@ -686,19 +669,19 @@
       USE kinds,              ONLY: DP
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart, gg, g
-      USE ions_base,          ONLY: nsp, na, nat
+      USE ions_base,          ONLY: nsp, nat, ityp
       USE cell_base,          ONLY: tpiba, omega
       USE atom,               ONLY: rgrid
       USE uspp_param,         ONLY: upf
       USE constants,          ONLY: fpi
 !
       IMPLICIT NONE
-      INTEGER,     INTENT(in) :: nwfcU, offset(nsp,nat), &
+      INTEGER,     INTENT(in) :: nwfcU, offset(nat), &
                                  Hubbard_l(nsp)
       COMPLEX(DP), INTENT(in) :: eigr( ngw, nat )
       COMPLEX(DP), INTENT(out):: wfcU( ngw, nwfcU )
 !
-      INTEGER :: natwfc, ndm, is, ia, ir, nb, l, m, lm, i, lmax_wfc, isa
+      INTEGER :: natwfc, ndm, is, ia, ir, nb, l, m, lm, i, lmax_wfc
       REAL(DP), ALLOCATABLE ::  ylm(:,:), q(:), jl(:), vchi(:), chiq(:)
 
       IF( .NOT. ALLOCATED( rgrid ) ) &
@@ -723,7 +706,6 @@
          q(i) = SQRT(gg(i))*tpiba
       END DO
       !
-      isa = 0
       DO is=1,nsp
          !
          !   radial fourier transform of the chi functions. NOTA BENE:
@@ -747,18 +729,17 @@
             DO m = 1,2*l+1
                lm = l**2 + m
                natwfc = natwfc + 1
-               DO ia = 1, na(is)
-                  wfcU(:,natwfc+offset(is,ia)) = (0.d0,1.d0)**l * &
-                         eigr(:,ia+isa) * ylm(:,lm)*chiq(:)
+               DO ia = 1, nat
+                  IF( ityp(ia) == is ) THEN
+                     wfcU(:,natwfc+offset(ia)) = (0.d0,1.d0)**l * eigr(:,ia) * ylm(:,lm)*chiq(:)
+                  END IF
                ENDDO
             ENDDO
   10        CONTINUE
          ENDDO
-         isa = isa + na(is)
       ENDDO
 !
-      IF ( natwfc+offset(nsp,na(nsp)) .NE. nwfcU) &
-         CALL errore('atomic_wfc','unexpected error',natwfc)
+      IF (natwfc+offset(nat) .NE. nwfcU )  CALL errore('atomic_wfc','unexpected error',natwfc)
 !
       do i = 1,nwfcU
         call dscal(2*ngw,fpi/sqrt(omega),wfcU(1,i),1)

@@ -26,13 +26,6 @@ program fd_ifc
 
   USE symm_base
   USE symme
-  USE rap_point_group, ONLY : code_group, nclass, nelem, elem, &
-       which_irr, char_mat, name_rap, name_class, gname, ir_ram
-  USE rap_point_group_so, ONLY : nrap, nelem_so, elem_so, has_e, &
-       which_irr_so, char_mat_so, name_rap_so, name_class_so, d_spin, &
-       name_class_so1
-  USE rap_point_group_is, ONLY : nsym_is, sr_is, ftau_is, d_spin_is, &
-       gname_is, sname_is, code_group_is
   USE fft_base, ONLY : dfftp
 
 implicit none
@@ -67,7 +60,7 @@ LOGICAL :: atom_in_list
 real(kind=dp)     :: r1(3),r2(3),r3(3),rr(3,3),bg_0(3,3),at_0(3,3)
 REAL(KIND=DP),    ALLOCATABLE     :: taut(:,:)
 INTEGER :: ipol, apol, natdp, ios
-
+logical :: needwf=.false.
 
 INTEGER :: nclass_ref   ! The number of classes of the point group
 INTEGER :: isym
@@ -127,7 +120,7 @@ IF (ios /= 0) CALL errore ('FD_IFC', 'reading input namelist', ABS(ios) )
 tmp_dir = trimcheck( outdir )
 
 !reading the xml file
-call read_xml_file
+call read_file_new (needwf)
 
     if (verbose) then
     write(6,*) '**************************************************'

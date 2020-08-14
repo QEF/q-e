@@ -21,8 +21,9 @@ MODULE environment
       nproc_image
   USE mp_pools,  ONLY: npool
   USE mp_bands,  ONLY: ntask_groups, nproc_bgrp, nbgrp, nyfft
-  USE global_version, ONLY: version_number, svn_revision
+  USE global_version, ONLY: version_number
   USE fox_init_module, ONLY: fox_init
+  USE command_line_options, ONLY : nmany_
 #if defined(__HDF5)
   USE qeh5_base_module,   ONLY: initialize_hdf5, finalize_hdf5
 #endif
@@ -71,11 +72,8 @@ CONTAINS
     CALL start_clock( TRIM(code) )
 
     code_version = TRIM (code) // " v." // TRIM (version_number)
-    IF ( TRIM (svn_revision) /= "unknown" ) code_version = &
-         TRIM (code_version) // " (svn rev. " // TRIM (svn_revision) // ")"
 
     ! ... for compatibility with PWSCF
-
 #if defined(__MPI)
     nd_nmbr = TRIM ( int_to_char( me_image+1 ))
 #else
@@ -221,7 +219,7 @@ CONTAINS
          omp_get_max_threads()
 #else
     WRITE( stdout, '(/5X,"Parallel version (MPI), running on ",&
-         &I5," processors")' ) nproc 
+         &I5," processors")' ) nproc
 #endif
     !
 #if !defined(__GFORTRAN__) ||  ((__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8)))
@@ -242,6 +240,7 @@ CONTAINS
     IF ( ntask_groups > 1 ) WRITE( stdout, &
          '(5X,"wavefunctions fft division:  task group distribution",/,34X,"#TG    x Z-proc = ",2I7)' ) &
          ntask_groups, nproc_bgrp / ntask_groups
+    IF ( nmany_ > 1) WRITE( stdout, '(5X,"FFT bands division:     nmany     = ",I7)' ) nmany_
     !
   END SUBROUTINE parallel_info
 
@@ -273,7 +272,7 @@ CONTAINS
 !
      !WRITE( stdout, "(2x,'        BUILT :',4x,a)" ) TRIM( ADJUSTL( &
      !__CONF_BUILD_DATE  ))
-     WRITE( stdout, * ) 
+     WRITE( stdout, * )
      ! note: if any preprocessed variables __CONF_* exceeds 128 characters,
      ! the compilation may give error because the line exceeds 132 characters
      WRITE( stdout, "(2x,'         ARCH :',4x,a)" ) TRIM( ADJUSTL( &

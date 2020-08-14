@@ -52,8 +52,9 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    "reduced density gradient"
 		    "product of density and 2nd-eigenvalue of density Hessian matrix"
 		    "all-electron charge density (valence+core, for PAW)"
+                    "kinetic energy density (for meta-GGA and XDM only)"
 		}
-		-value { 0 1 2 3 4 5 6 7 7 8 9 10 11 12 13 17 18 19 20 21 }
+		-value { 0 1 2 3 4 5 6 7 7 8 9 10 11 12 13 17 18 19 20 21 22 }
 		-fmt %d
 	    }
 	    dimension spin_component {
@@ -189,13 +190,11 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    "XCRYSDEN's XSF format (2D or 3D)" 
 		    "XCRYSDEN's XSF format (whole unit cell) (3D)"
 		    "format suitable for gnuplot (1D)"
-		    "format suitable for contour.x (2D)"
 		    "format suitable for plotrho (2D)"
-		    "format suitable for gOpenMol (3D)"
 		    "Gaussian cube-file format (3D)"
 		    "format suitable for gnuplot (2D)"
 		}
-		-value     { 3 5 0 1 2 4 6 7 }
+		-value     { 3 5 0 2 6 7 }
 		-widget    optionmenu
 	    }
 	    var interpolation { 

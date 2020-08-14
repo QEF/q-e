@@ -1,4 +1,4 @@
-#!/usr/bin/gnuplot
+#!/usr/bin/env gnuplot
 #
 set term post color solid enh
 set out 'project_chainH2_onto_H2.ps'
