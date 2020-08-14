@@ -64,7 +64,7 @@ subroutine drho
   ! the weight of each point
 
 
-  complex(DP) :: zdotc, wdyn (3 * nat, 3 * nat)
+  complex(DP) :: wdyn (3 * nat, 3 * nat)
   type (bec_type), pointer :: becq(:), alpq(:,:)
   complex(DP), allocatable :: dvlocin (:), drhous (:,:,:),&
        drhoust (:,:,:), dbecsum(:,:,:,:), dbecsum_nc(:,:,:,:,:)
@@ -154,8 +154,9 @@ subroutine drho
      call compute_dvloc (nu_i, dvlocin)
      do nu_j = 1, 3 * nat
         do is = 1, nspin_lsda
+        ! FIXME: use zgemm instead of dot_product
            wdyn (nu_j, nu_i) = wdyn (nu_j, nu_i) + &
-                zdotc (dffts%nnr, drhous(1,is,nu_j), 1, dvlocin, 1) * &
+                dot_product (drhous(1:dffts%nnr,is,nu_j), dvlocin) * &
                 omega / DBLE (nrstot)
         enddo
      enddo

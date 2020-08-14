@@ -50,7 +50,6 @@ io_files.o \
 io_global.o  \
 ions_base.o \
 kind.o \
-libxc.o \
 mdiis.o \
 mm_dispersion.o \
 mp_bands.o \

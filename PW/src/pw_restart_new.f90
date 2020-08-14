@@ -608,7 +608,7 @@ MODULE pw_restart_new
 ! ... FORCES
 !----------------------------------------------------------------------------------------------
          !
-         IF ( lforce ) THEN 
+         IF ( lforce .and. conv_elec ) THEN 
             output_obj%forces_ispresent = .TRUE.
             CALL qexsd_init_forces(output_obj%forces,nat,force,lforce)
          ELSE 
@@ -619,7 +619,7 @@ MODULE pw_restart_new
 !------------------------------------------------------------------------------------------------
 ! ... STRESS 
 !------------------------------------------------------------------------------------------------
-         IF ( lstres) THEN
+         IF ( lstres .and. conv_elec ) THEN
             output_obj%stress_ispresent=.TRUE.
             CALL qexsd_init_stress(output_obj%stress, sigma, lstres ) 
          ELSE 
@@ -1046,7 +1046,7 @@ MODULE pw_restart_new
       !
       pseudo_dir_cur = restart_dir ( )
       CALL qexsd_copy_atomic_species ( output_obj%atomic_species, &
-           nsp, atm, amass, angle1, angle2, starting_magnetization, &
+           nsp, atm, amass, starting_magnetization, angle1, angle2, &
            psfile, pseudo_dir ) 
       IF ( pseudo_dir == ' ' ) pseudo_dir=pseudo_dir_cur
       !! Atomic structure section

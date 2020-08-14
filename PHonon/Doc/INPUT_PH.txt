@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: ph.x / PWscf / Quantum Espresso (version: 6.4)
+Program: ph.x / PWscf / Quantum Espresso (version: 6.6)
 ------------------------------------------------------------------------
 
 
@@ -338,7 +338,23 @@ NAMELIST: &INPUTPH
                         from the electron-phonon interactions
                         using the optimized tetrahedron method.
     
-                   For metals only, requires gaussian smearing.
+                   'epa' :
+                        Electron-phonon coupling matrix elements are written
+                        to file prefix.epa.k for further processing by program
+                        epa.x which implements electron-phonon averaged (EPA)
+                        approximation as described in G. Samsonidze & B. Kozinsky,
+                        Adv. Energy Mater. 2018, 1800246 doi:10.1002/aenm.201800246
+                        arXiv:1511.08115
+    
+                   'ahc' :
+                        Quantities required for the calculation of phonon-induced
+                        electron self-energy are computed and written to the directory
+                        "ahc_dir". The output files can be read by postahc.x for
+                        the calculation of electron self-energy.
+                        Available for both metals and insulators.
+                        "trans"=.false. is required.
+    
+                   For metals only, requires gaussian smearing (except for 'ahc').
                    
                    If "trans"=.true., the lambdas are calculated in the same
                    run, using the same k-point grid for phonons and lambdas.
@@ -365,6 +381,47 @@ NAMELIST: &INPUTPH
    Description:    The spacing between double-delta smearing values used in
                    an electron-phonon coupling calculation.
    +--------------------------------------------------------------------
+   
+   ///---
+      VARIABLES FOR "ELECTRON_PHONON" = 'AHC':
+      
+      +--------------------------------------------------------------------
+      Variable:       ahc_dir
+      
+      Type:           CHARACTER
+      Default:        outdir // 'ahc_dir/'
+      Description:    Directory where the output binary files are written.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       ahc_nbnd
+      
+      Type:           INTEGER
+      Status:         REQUIRED
+      Description:    Number of bands for which the electron self-energy is to be computed.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       ahc_nbndskip
+      
+      Type:           INTEGER
+      Default:        0
+      Description:    Number of bands to exclude when computing the self-energy. Self-energy
+                      is computed for bands with indices from "ahc_nbndskip"+1 to
+                      "ahc_nbndskip"+"ahc_nbnd". "ahc_nbndskip"+"ahc_nbnd" cannot
+                      exceed nbnd of the preceding SCF or NSCF calculation.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       skip_upperfan
+      
+      Type:           LOGICAL
+      Default:        .false.
+      Description:    If .true., skip calculation of the upper Fan self-energy, which
+                      involves solving the Sternheimer equation.
+      +--------------------------------------------------------------------
+      
+   \\\---
    
    +--------------------------------------------------------------------
    Variable:       lshift_q
@@ -540,6 +597,56 @@ NAMELIST: &INPUTPH
                    expensive, this is why they are written to file and then can be
                    read (e.g. for restart) in order to save time.
    +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ldvscf_interpolate
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true., use Fourier interpolation of phonon potential
+                   to compute the induced part of phonon potential at each
+                   q point. Results of a dvscf_q2r.x run is needed.
+                   Requires "trans" = .false..
+   +--------------------------------------------------------------------
+   
+   ///---
+      OPTIONAL VARIABLES FOR DVSCF INTERPOLATION:
+      
+      +--------------------------------------------------------------------
+      Variable:       wpot_dir
+      
+      Type:           CHARACTER
+      Default:        outdir // 'w_pot/'
+      Description:    Directory where the w_pot binary files are written.
+                      Must be the same with wpot_dir used in dvscf_q2r.x.
+                      The real space potential files are stored in wpot_dir
+                      with names ${prefix}.wpot.irc${irc}//"1".
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       do_long_range
+      
+      Type:           LOGICAL
+      Default:        .false.
+      Description:    If .true., add the long-range part of the potential
+                      to the Fourier interpolated potential as in:
+                      S. Ponce et al, J. Chem. Phys. 143, 102813 (2015).
+                      Reads dielectric matrix and Born effective charges from
+                      the ${wpot_dir}/tensors.dat file, written in dvscf_q2r.x.
+                      Currently, only the dipole (Frohlich) part is implemented.
+                      The quadrupole part is not implemented.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       do_charge_neutral
+      
+      Type:           LOGICAL
+      Default:        .false.
+      Description:    If .true., impose charge neutrality on the Born effective
+                      charges. Used only if "do_long_range" = .true..
+      +--------------------------------------------------------------------
+      
+   \\\---
    
    ///---
       SPECIFICATION OF IRREDUCIBLE REPRESENTATION
@@ -868,4 +975,4 @@ ________________________________________________________________________
    information.
    
 
-This file has been created by helpdoc utility on Thu Nov 28 10:41:56 CET 2019
+This file has been created by helpdoc utility on Fri Jul 17 10:28:27 CEST 2020

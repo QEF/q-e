@@ -178,7 +178,6 @@ SUBROUTINE ahc_do_upperfan(ik)
   !! Solution of the Sternheimer equation
   EXTERNAL h_psi
   !
-  COMPLEX(DP), EXTERNAL :: ZDOTC
   EXTERNAL ch_psi_all, cg_psi
   !
   WRITE(stdout, '(5x,a,I8)') 'Computing ahc_upperfan for ik = ', ik

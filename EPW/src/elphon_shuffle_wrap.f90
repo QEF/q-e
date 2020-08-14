@@ -415,6 +415,7 @@
     bmat(:, :, :, :)      = czero
     cu(:, :, :)           = czero
     cuq(:, :, :)          = czero
+    sxq(:, :)             = zero
     !
     ! read interatomic force constat matrix from q2r
     IF (lifc) THEN
@@ -431,7 +432,7 @@
     !
     ! ~~~~~~~~ setup crystal symmetry ~~~~~~~~
     CALL find_sym(nat, tau, ityp, .FALSE., m_loc)
-    IF (fixsym) CALL fix_sym()
+    IF (fixsym) CALL fix_sym(.FALSE.)
     IF (.NOT. allfrac) CALL remove_sym(dfftp%nr1, dfftp%nr2, dfftp%nr3)
     WRITE(stdout, '(5x, a, i3)') "Symmetries of crystal:         ", nsym
     !
@@ -496,7 +497,7 @@
          INQUIRE(FILE = TRIM(filename), EXIST = exst)
          IF (.NOT. exst) CALL errore('elphon_shuffle_wrap', &
                    'cannot open file for reading or writing', ierr)
-         CALL read_disp_pattern_only (iunpattern, filename, iq_irr, ierr)
+         CALL read_disp_pattern_only(iunpattern, filename, iq_irr, ierr)
          IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', ' Problem with modes file', 1)
       ENDIF
       !
@@ -533,7 +534,7 @@
       ! ######################### star of q #########################
       !
       sym_smallq(:) = 0
-      CALL star_q2(xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, .TRUE., sym_smallq)
+      CALL star_q2(xq, at, bg, nsym, s, invs, t_rev, nq, sxq, isq, imq, .TRUE., sym_smallq)
       IF (fixsym) THEN
         IF (epw_noinv) imq = 1 ! Any non-zero integer is ok.
       ENDIF
@@ -719,7 +720,7 @@
         ! are equal to 5+ digits).
         ! For any volunteers, please write to giustino@civet.berkeley.edu
         !
-        CALL elphon_shuffle(iq_irr, nqc_irr, nqc, gmapsym(:,isym1), eigv(:,isym1), isym, xq0, .FALSE.)
+        CALL elphon_shuffle(iq_irr, nqc_irr, nqc, gmapsym(:, isym1), eigv(:, isym1), isym, xq0, .FALSE.)
         !
         !  bring epmatq in the mode representation of iq_first,
         !  and then in the cartesian representation of iq
@@ -763,7 +764,7 @@
           !
           xq0 = -xq0
           !
-          CALL elphon_shuffle(iq_irr, nqc_irr, nqc, gmapsym(:,isym1), eigv(:,isym1), isym, xq0, .TRUE.)
+          CALL elphon_shuffle(iq_irr, nqc_irr, nqc, gmapsym(:, isym1), eigv(:, isym1), isym, xq0, .TRUE.)
           !  bring epmatq in the mode representation of iq_first,
           !  and then in the cartesian representation of iq
           !

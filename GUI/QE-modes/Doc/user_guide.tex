@@ -1,6 +1,6 @@
 \documentclass[12pt,a4paper]{article}
 
-\def\version{6.4}
+\input{version}
 
 \def\qe{{\sc Quantum ESPRESSO}}
 \sloppy
@@ -137,11 +137,17 @@ which will install the package in the \qemodes\ subdirectory of
 
 \subsection{Editing the \texttt{user-init-file} file}
 
-An example snippet of \texttt{user-init-file} for \QEmodes\ is
-provided by the \texttt{qe-modes.emacs} file in the package root
-directory and the text below explains it. In particular, to use the
-installed \QEmodes\ in Emacs, add the following to your
-\verb+user-init-file+ (e.g.\ \verb+$HOME/.emacs+):
+A default \texttt{user-init-file} for \QEmodes\ is provided by the
+\texttt{qe-modes.emacs} file in the \QEmodes\ source package root
+directory. If \QEmodes\ were installed in default
+\verb+$HOME/.emacs.d/qe-modes/+ location, then the
+\texttt{qe-modes.emacs} can be used verbatim; just append its content
+to your \verb+~/.emacs+ file.
+
+Here is a the explanation of the simplified \texttt{qe-modes.emacs}
+file.  Emacs is informed about the installed \QEmodes\ by the
+following lines in the \verb+user-init-file+ (e.g.\
+\verb+$HOME/.emacs+):
 \begin{flushleft}
 {\color{red}
 \verb+   ;; make sure package is visible to emacs (if needed)+}\\
@@ -354,3 +360,8 @@ to use the \texttt{Evil} package -- an \textbf{e}xtensible \textbf{vi}
 editor, but with the \QEmodes\ support.
 
 \end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

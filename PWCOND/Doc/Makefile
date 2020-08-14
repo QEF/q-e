@@ -1,4 +1,4 @@
-VERSION = git
+VERSION = 6.6
 HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
 
 doc:  all

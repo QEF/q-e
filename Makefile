@@ -41,12 +41,9 @@ default :
 	@echo '  gipaw        NMR and EPR spectra'
 	@echo '  w90          Maximally localised Wannier Functions'
 	@echo '  want         Quantum Transport with Wannier functions'
-	@echo '  west         Many-body perturbation corrections Without Empty STates'
-#	@echo '  SaX          Standard GW-BSE with plane waves'
 	@echo '  yambo        electronic excitations with plane waves'
-	@echo '  yambo-devel  yambo devel version'
-	@echo '  SternheimerGW calculate GW using Sternheimer equations'
-	@echo '  plumed       Metadynamics plugin for pw or cp'
+#	@echo '  SternheimerGW calculate GW using Sternheimer equations'
+#	@echo '  plumed       Metadynamics plugin for pw or cp'
 	@echo '  d3q          general third-order code and thermal transport codes'
 	@echo ' '
 	@echo 'where target is one of the following suite operation:'
@@ -252,23 +249,14 @@ w90: bindir liblapack
 want : 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-SaX : 
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
 yambo: 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-yambo-devel: 
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+#plumed: pw cp 
+#	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-plumed: 
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
-west: pw
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
-SternheimerGW: lrmods 
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+#SternheimerGW: lrmods 
+#	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #########################################################
 # "make links" produces links to all executables in bin/
@@ -391,10 +379,10 @@ tar-qe-modes :
 # "latex2html" and "convert" (from Image-Magick) are needed.
 doc : 
 	if test -d Doc ; then \
-	( cd Doc ; $(MAKE) VERSION=6.5 TLDEPS= all ) ; fi
+	( cd Doc ; $(MAKE) VERSION=6.6 TLDEPS= all ) ; fi
 	for dir in */Doc; do \
 	( if test -f $$dir/Makefile ; then \
-	( cd $$dir; $(MAKE) VERSION=6.5 TLDEPS= all ) ; fi ) ;  done
+	( cd $$dir; $(MAKE) VERSION=6.6 TLDEPS= all ) ; fi ) ;  done
 
 doc_clean :
 	if test -d Doc ; then \

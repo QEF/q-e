@@ -1079,7 +1079,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             default {true } 
             info {
                 Use Adaptively Compressed Exchange operator as in 
-                Lin Lin, J. Chem. Theory Comput. 2016, 12, 5, 2242–2249
+                Lin Lin, J. Chem. Theory Comput. 2016, 12, 2242--2249, doi:10.1021/acs.jctc.6b00092
+                
                 Set to false to use standard Exchange (much slower)
             }
         }
@@ -1328,17 +1329,23 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
         var Hubbard_parameters -type CHARACTER {
             default { 'input' }
-            info {
-               'input': read the @ref Hubbard_U (or @ref Hubbard_V) parameters from
-                        the PW input file
-
-               'file' : read the @ref Hubbard_V parameters from the file "parameters.in"
-                        which can be generated after the linear-response calculation
-                        (using the HP code). This option has a higher priority over 
-                        the Hubbard_V if they are specified in the input. This option 
-                        can be used only when @ref lda_plus_u_kind = 2.
+            options {
+                info {
+                    Available choices:
+                }
+                opt -val 'input' {
+                    read the @ref Hubbard_U (or @ref Hubbard_V) parameters from
+                    the PW input file
+                }
+                opt -val 'file' {
+                    read the @ref Hubbard_V parameters from the file "parameters.in"
+                    which can be generated after the linear-response calculation
+                    (using the HP code). This option has a higher priority over 
+                    the @ref Hubbard_V if they are specified in the input. This option 
+                    can be used only when @ref lda_plus_u_kind = 2.
+                }
             }
-        }
+        }        
 
         var ensemble_energies -type LOGICAL {
             default { .false. }
@@ -1858,7 +1865,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                   Used only for monoclinic lattices. If .TRUE. the b
                   unique ibrav (-12 or -13) are used, and symmetry 
                   equivalent positions are chosen assuming that the
-                  two fold axis or the mirror normal is parallel to the
+                  twofold axis or the mirror normal is parallel to the
                   b axis. If .FALSE. it is parallel to the c axis.
              }
          }
@@ -2264,15 +2271,22 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
         var ion_velocities -type CHARACTER {
             default { 'default' }
-            info {
-               initial ionic velocities
-               'default'     : start a new simulation from random thermalized
-	                       distribution of velocities if @ref tempw is set,
-			       with zero velocities otherwise; restart from
-			       atomic velocities read from the restart file
-               'from_input'  : start or continue the simulation with atomic
-	                       velocities read from standard input - see card
-			       @ref ATOMIC_VELOCITIES
+            options {
+                info {
+                    Initial ionic velocities. Available options are:                
+                }
+
+                opt -val 'default' {
+                    start a new simulation from random thermalized
+                    distribution of velocities if @ref tempw is set,
+                    with zero velocities otherwise; restart from
+                    atomic velocities read from the restart file
+                }
+                opt -val 'from_input' {
+                    start or continue the simulation with atomic
+                    velocities read from standard input - see card
+                    @ref ATOMIC_VELOCITIES
+                }
             }
         }
 

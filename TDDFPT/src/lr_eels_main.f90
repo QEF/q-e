@@ -143,14 +143,14 @@ PROGRAM lr_eels_main
      ! Sternheimer algorithm
      !
      WRITE(stdout,'(/,5X,"STERNHEIMER LINEAR-RESPONSE SPECTRUM CALCULATION")')
-     WRITE(stdout,'(5X," ")')
+     !
+     WRITE(stdout,'(/5x,"Number of frequencies = ",i6)') nfs
      !
      IF (okvan) THEN
         ALLOCATE (intq (nhm, nhm, nat) )
         IF (noncolin) ALLOCATE(intq_nc( nhm, nhm, nat, nspin))
+        call lr_compute_intq()
      ENDIF
-     !
-     CALL lr_compute_intq
      !
      ! Set flmixdpot
      !
@@ -166,8 +166,6 @@ PROGRAM lr_eels_main
      chirz=(0.0_DP,0.0_DP)
      chizz=(0.0_DP,0.0_DP)
      epsm1=(0.0_DP,0.0_DP)
-     !
-     WRITE( stdout, '(10x,"q = (",3f10.5,")")') xq(1:3)
      !
      ! frequencies loop
      !
@@ -202,14 +200,14 @@ PROGRAM lr_eels_main
      ! Lanczos algorithm
      !
      WRITE(stdout,'(/,5X,"LANCZOS LINEAR-RESPONSE SPECTRUM CALCULATION")')
-     WRITE(stdout,'(5X," ")')
-     WRITE(stdout,'(5x,"Number of Lanczos iterations = ",i6)') itermax
-     !
+
      IF (pseudo_hermitian) THEN
-        WRITE( stdout, '(/5x,"Using the pseudo-Hermitian Lanczos algorithm.")' )
+        WRITE( stdout, '(/5x,"Using the pseudo-Hermitian Lanczos algorithm")' )
      ELSE
-        WRITE( stdout, '(/5x,"Using the non-Hermitian Lanczos algorithm.")' )
+        WRITE( stdout, '(/5x,"Using the non-Hermitian Lanczos algorithm")' )
      ENDIF
+
+     WRITE(stdout,'(/5x,"Number of Lanczos iterations = ",i6)') itermax
      !
      ! Lanczos loop where the real work happens
      !
@@ -322,8 +320,8 @@ SUBROUTINE lr_print_preamble_eels()
     USE uspp,           ONLY : okvan
 
     IMPLICIT NONE
-
-    WRITE( stdout, '(/5x,"----------------------------------------")' )
+    
+    WRITE( stdout, '(/5x,74("-"))')
     WRITE( stdout, '(/5x,"Please cite this project as:")' )
     WRITE( stdout, '(/5x,"I. Timrov, N. Vast, R. Gebauer, and S. Baroni,",                       &
                    & /5x,"Electron energy loss and inelastic x-ray scattering cross sections",   &
@@ -337,14 +335,14 @@ SUBROUTINE lr_print_preamble_eels()
     WRITE( stdout, '(/5x,"O. Motornyi, N. Vast, I. Timrov, O. Baseggio, S. Baroni, and A. Dal Corso", &
                    & /5x,"Electron energy loss spectroscopy of bulk gold with ultrasoft",             &
                    & /5x,"pseudopotentials and the Liouville-Lanczos method",                         &
-                   & /5x,"accepted to Phys. Rev. B (2020). ")' )
-
-
-    WRITE( stdout, '(/5x,"----------------------------------------")' )
+                   & /5x,"Phys. Rev. B  102, 035156 (2020). ")' )
+    WRITE( stdout, '(/5x,74("-"))')
     !
-    WRITE( stdout, '(/5x,"Using the ' // trim(approximation) // ' approximation.")' )
+    WRITE( stdout, '(/5x,"Using the ' // trim(approximation) // ' approximation")' )
     !
     IF (okvan) WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")')
+    !
+    WRITE( stdout, '(/5x,"Transferred momentum: q = (",3f10.5,"  ) in units 2*pi/a")') xq(1:3)
     !
     RETURN
     !

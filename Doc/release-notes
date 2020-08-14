@@ -1,4 +1,7 @@
-New in dev branch:
+Fixed in dev version:
+  * angle1, angle2, starting_magnetization incorrectly written to xml file
+
+New in v.6.6:
   * vdW-DF3-opt1, vdW-DF3-opt2, and vdW-DF-C6 van der Waals functionals
     implemented (T. Thonhauser, supported by NSF Grant No. 1712425)
   * More FORD documentation
@@ -26,12 +29,20 @@ New in dev branch:
     a new post-processing program PHonon/postahc.x added.
     (Jae-Mo Lihm, Seoul Natl. Univ.)
   * Implementation of the Sternheimer algorithm in the turboEELS code
-    (O. Baseggio, O. Motornyi, N. Vast, A. Dal Corso, I. Timrov, and S. Baroni)
+    (O. Motornyi, N. Vast, I. Timrov, O. Baseggio, S. Baroni, and A. Dal Corso,
+    Phys. Rev. B  102, 035156 (2020).)
+  * EPW:
+    (1) Use of the band manifold determined by Wannierization step
+        when evaluating electron-phonon vertex on coarse grids
+    (2) Support for PAW
+    For the full list of new features and changes leading to backward incompatibility issues,
+    please visit the Releases page of the EPW documentation site 
+    [https://docs.epw-code.org/doc/Releases.html].
   
-Fixed in dev branch:
+Fixed in v.6.6:
   * PW: Restart from interrupted calculations  simplified. As a side effect,
     NEB restart now works again
-  * A few LIBXC glitches
+  * Various LIBXC glitches, missing check on metaGGA+USPP/PAW not implemented
   * Fermi energy incorrectly written to xml file in 'bands' calculation
     (did not affect results, just Fermi energy position in band plotting)
     Also: Fermi energy always written to xml file, also for insulators
@@ -50,7 +61,7 @@ Fixed in dev branch:
   * Bug in PHonon+U for the symmetrization in the spin-polarized case when 
     the Hubbard channel is "s" (noticed by Jin-Jian Zhou)
  
-Incompatible changes in dev branch:
+Incompatible changes in v.6.6:
   * Default value of parameter "diago_david_ndim" changed to 2:
     uses less RAM, execution time sometimes shorter, sometimes longer.
   * Grouping of inlc values into ranges for different developments.
