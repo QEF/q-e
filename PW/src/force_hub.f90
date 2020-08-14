@@ -435,7 +435,7 @@ SUBROUTINE dndtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
 10 DEALLOCATE( dproj ) 
    IF (ALLOCATED(doverlap_inv)) DEALLOCATE( doverlap_inv )
-   IF (okvan) DEALLOCATE (dproj_us)
+   IF (ALLOCATED(dproj_us))     DEALLOCATE( dproj_us )
    !
    CALL mp_sum( dns, intra_pool_comm )
    !
@@ -773,7 +773,7 @@ SUBROUTINE dngdtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    DEALLOCATE ( dproj1 ) 
    DEALLOCATE ( dproj2 ) 
    IF (ALLOCATED(doverlap_inv)) DEALLOCATE( doverlap_inv )
-   IF (okvan) DEALLOCATE (dproj_us)
+   IF (ALLOCATED(dproj_us))     DEALLOCATE( dproj_us )
    !
    CALL mp_sum(dnsg, intra_pool_comm)
    !
