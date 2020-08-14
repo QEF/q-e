@@ -3,6 +3,16 @@ New in development version:
     (U. Manchester), N. Colonna, M. Marsili, N. Marzari, P. Umari
   * Many-Body Dispersion (MBD) correction: Szabolcs Goger (U. Luxembourg),
     Hsin-Yu Ko (Cornell), et al.
+  * Grand-Canonical SCF (J. Chem. Phys. 146, 114101 (2017)) for constant-mu
+    method is implemented by S. Nishihara and S. Hagiwara.
+
+Fixed in development version:
+  * Fictitious charge particle (FCP) works again.
+  * For ESM calcualtion: Shift a half mesh along z-direction when nr3 is even.
+
+Incompatible changes in dev version:
+  * lfcpopt & lfcpdyn are replaced by lfcp. Only static optimization of
+    the Fermi energy works. Currently, molecular dynamics with FCP does not work.
 
 New in 6.7 version:
   * Support for CMake (F. Ficarelli and D. Cesarini, CINECA, with help from
@@ -85,7 +95,7 @@ Fixed in v.6.6:
     now works properly - courtesy Andrea Urru and Andrea Dal Corso.
   * Incorrect forces, and slightly inconsistent atomic positions, were
     written to xml file for structural optimization and molecular dynamics
-  * Some Bravais lattices with special axis orientations were not correctly
+    now works properly - courtesy Andrea Urru and Andrea Dal Corso.
     written to xml file, leading to errors in some codes (e.g., thermo_pw)
     using that piece of information (fixed by Alberto Otero de la Roza)
   * PPACF wasn't working with the "lfock" option: wavefunctions were no longer
