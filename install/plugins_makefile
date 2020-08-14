@@ -12,9 +12,15 @@ sinclude ../make.inc
 include plugins_list
 include install_utils
 
-# MAIN target
+###########################################################
+# extlibs - what is the purpose of these targets? shouldn't
+#           these be dealt with in "extlibs_makefile" ?
+###########################################################
+
 EXTLIBS=liblapack libiotk
 
+extlibs:
+	test -n "$(EXTLIBS)" && ( cd .. ; $(MAKE) $(EXTLIBS) || exit 1) || :
 
 ###########################################################
 # D3Q
@@ -37,7 +43,6 @@ d3q_clean:
 	rm -f ../bin/diffd3.x
 	rm -f ../bin/xml2giorgia.x
 
-#d3q_veryclean: d3q_clean
 d3q_veryclean: d3q_clean
 	# delete unpacked directory and its links, keep the archive
 	test -e ../D3Q/protect || \
@@ -51,18 +56,6 @@ d3q_distclean: d3q_veryclean
 	# also delete the tgz archive
 	rm -f ../archive/$(D3Q); \
 	rm -f make-d3q uncompress-d3q
-
-###########################################################
-# test-suite
-###########################################################
-
-test-suite: uncompress-test-suite
-	if test -d ../test-suite ; then \
-	( cd ../test-suite ; $(MAKE) TLDEPS= run-tests || exit 1) ; fi
-
-uncompress-test-suite:
-	$(call download_and_unpack,$(TESTSUITE),$(TESTSUITE_URL),test-suite,test-suite)
-	touch uncompress-test-suite
 
 ##########################################################
 # GIPAW
@@ -81,6 +74,21 @@ configure-gipaw:
 	cd ../GIPAW ; \
 	./configure --with-qe-source=${TOPDIR}
 	touch ./configure-gipaw
+
+gipaw_clean:
+	if test -d ../GIPAW; then (cd ../GIPAW; $(MAKE) clean); fi
+	rm -f ../bin/gipaw.x
+	rm -rf ./make-gipaw 
+
+gipaw_veryclean: gipaw_clean
+	if test -d ../GIPAW; then (cd ../GIPAW; \
+	rm -f config.log config.status ); fi
+	rm -rf ./configure-gipaw
+
+gipaw_distclean:
+	#if test -d ../GIPAW; then (rm -R -f ../GIPAW ); fi
+	#if test -d ../$(GIPAW); then (rm -R -f ../$(GIPAW) ); fi
+	rm -f ../archive/$(GIPAW).tar.gz
 
 ###########################################################
 # wannier90
@@ -101,6 +109,21 @@ configure-w90:
 	if (test -e ../install/make_wannier90.inc) || (test -d ../W90); then \
 	(cp ../install/make_wannier90.inc ../W90/make.inc); fi 
 	touch ./configure-w90
+
+w90_clean:
+	if test -d ../W90; then (cd ../W90; \
+	$(MAKE) veryclean); fi
+	rm -f ../bin/wannier90.x
+	rm -rf ./make-w90 ./configure-w90
+
+w90_veryclean: w90_clean
+	if test -d ../W90; then (rm -R -f ../W90); fi
+	if test -d ../$(W90); then (rm -R -f ../$(W90)); fi
+	rm -f ../bin/wannier90.x
+	rm -rf ./uncompress-w90
+
+w90_distclean:
+	rm -f ../archive/$(W90).tar.gz
 
 ###########################################################
 # WANT
@@ -140,6 +163,20 @@ configure-want:
 	FFT_LIBS="$(FFT_LIBS)" 
 	touch ./configure-want
 
+want_clean:
+	if test -d ../WANT; then (cd ../WANT; \
+	$(MAKE) clean); fi
+	- rm -rf ./make-want ./configure-want
+
+want_veryclean: want_clean
+	if test -d ../WANT; then (rm -R -f ../WANT); fi
+	if test -d ../$(WANT); then (rm -R -f ../$(WANT)); fi
+	if test -e ../archive/$(WANT).tar.gz ; then (rm -f ../archive/$(WANT).tar.gz); fi
+	- rm -rf ./uncompress-want ./configure.h
+
+want_distclean: 
+	rm -f ../archive/$(WANT).tar.gz
+
 ###########################################################
 # YAMBO
 ###########################################################
@@ -169,6 +206,21 @@ configure-yambo:
 	 F77="$(F77)"
 	touch ./configure-yambo
 
+yambo_clean:
+	if test -d ../YAMBO; then (cd ../YAMBO; \
+	$(MAKE) clean); fi
+	- rm -rf ./make-yambo ./configure-yambo
+
+yambo_veryclean: yambo_clean
+	if test -d ../YAMBO; then (rm -R -f ../YAMBO); fi
+	if test -d ../$(YAMBO); then (rm -R -f ../$(YAMBO)); fi
+	- rm -rf ./uncompress-yambo
+
+yambo_distclean: 
+	if test -e ../archive/$(YAMBO).tar.gz ; then \
+		rm -f ../archive/$(YAMBO).tar.gz; fi
+
+# Next targets, except "cleaning" targets, are obsolete or unused
 
 ###########################################################
 # plumed
@@ -194,6 +246,21 @@ patch-plumed:
 	cp  patches/plumedpatch_qespresso_5.2.sh ../ ; \
 	cd ../ ; ./plumedpatch_qespresso_5.2.sh -patch) ; fi	
 	touch ./patch-plumed
+
+plumed_clean: 
+	if test -d ../PLUMED; then (cd ../PLUMED; \
+	export plumedir="`pwd`" ; \
+	cd ../ ; ./plumedpatch_qespresso_5.2.sh -revert); fi
+	cd ../PW ; $(MAKE) clean; cd ../CPV ; $(MAKE) clean
+	rm -rf ./make-plumed ./patch-plumed
+
+plumed_veryclean: plumed_clean
+	if test -d ../PLUMED; then (rm -R -f ../PLUMED); fi
+	if test -d ../$(PLUMED); then (rm -R -f ../$(PLUMED)); fi
+	rm -rf ./uncompress-plumed ../plumedpatch_qespresso_5.2.sh
+
+plumed_distclean: 
+# Nothing to do here
 
 ###########################################################
 # SaX
@@ -231,6 +298,20 @@ configure-sax:
 	LIB_BLAS="$(BLAS_LIBS)" 
 	touch ./configure-sax
 
+
+sax_clean:
+	if test -d ../SaX; then (cd ../SaX; \
+	$(MAKE) clean); fi
+	- rm -rf ./make-sax ./configure-sax
+
+sax_veryclean: sax_clean
+	if test -d ../SaX; then (rm -R -f ../SaX); fi
+	if test -d ../$(SAX); then (rm -R -f ../$(SAX)); fi
+	- rm -rf ./uncompress-sax
+
+sax_distclean: 
+	rm -f ../archive/$(SAX).tar.gz
+
 ###########################################################
 # WEST
 ###########################################################
@@ -243,6 +324,17 @@ west: extlibs uncompress-west
 uncompress-west: 
 	$(call download_and_unpack,$(WEST),$(WEST_URL),West,WEST)
 	touch uncompress-west
+
+west_clean:
+	if test -d ../West; then (cd ../West; \
+	$(MAKE) clean); fi
+	- rm -rf ./make-west ./configure-west
+
+west_veryclean: west_clean
+# dir is not deleted for compatibility with the repository
+
+west_distclean: 
+	   rm -f ../archive/$(WEST).tar.gz
 
 ###########################################################
 # SternheimerGW
@@ -258,129 +350,6 @@ uncompress-SternheimerGW:
 	$(call download_and_unpack,$(SternheimerGW),$(SternheimerGW_URL),SternheimerGW,SternheimerGW)
 	touch uncompress-SternheimerGW
 
-
-###########################################################
-# extlibs
-###########################################################
-
-extlibs:
-	test -n "$(EXTLIBS)" && ( cd .. ; $(MAKE) $(EXTLIBS) || exit 1) || :
-
-###########################################################
-# cleaning
-###########################################################
-
-gipaw_clean:
-	if test -d ../GIPAW; then (cd ../GIPAW; $(MAKE) clean); fi
-	rm -f ../bin/gipaw.x
-	rm -rf ./make-gipaw 
-
-gipaw_veryclean: gipaw_clean
-	if test -d ../GIPAW; then (cd ../GIPAW; \
-	rm -f config.log config.status ); fi
-	rm -rf ./configure-gipaw
-
-gipaw_distclean:
-	#if test -d ../GIPAW; then (rm -R -f ../GIPAW ); fi
-	#if test -d ../$(GIPAW); then (rm -R -f ../$(GIPAW) ); fi
-	rm -f ../archive/$(GIPAW).tar.gz
-
-w90_clean:
-	if test -d ../W90; then (cd ../W90; \
-	$(MAKE) veryclean); fi
-	rm -f ../bin/wannier90.x
-	rm -rf ./make-w90 ./configure-w90
-
-w90_veryclean: w90_clean
-	if test -d ../W90; then (rm -R -f ../W90); fi
-	if test -d ../$(W90); then (rm -R -f ../$(W90)); fi
-	rm -f ../bin/wannier90.x
-	rm -rf ./uncompress-w90
-
-w90_distclean:
-	rm -f ../archive/$(W90).tar.gz
-
-want_clean:
-	if test -d ../WANT; then (cd ../WANT; \
-	$(MAKE) clean); fi
-	- rm -rf ./make-want ./configure-want
-
-want_veryclean: want_clean
-	if test -d ../WANT; then (rm -R -f ../WANT); fi
-	if test -d ../$(WANT); then (rm -R -f ../$(WANT)); fi
-	if test -e ../archive/$(WANT).tar.gz ; then (rm -f ../archive/$(WANT).tar.gz); fi
-	- rm -rf ./uncompress-want ./configure.h
-
-want_distclean: 
-	rm -f ../archive/$(WANT).tar.gz
-
-yambo_clean:
-	if test -d ../YAMBO; then (cd ../YAMBO; \
-	$(MAKE) clean); fi
-	- rm -rf ./make-yambo ./configure-yambo
-
-yambo_veryclean: yambo_clean
-	if test -d ../YAMBO; then (rm -R -f ../YAMBO); fi
-	if test -d ../$(YAMBO); then (rm -R -f ../$(YAMBO)); fi
-	- rm -rf ./uncompress-yambo
-
-yambo_distclean: 
-	if test -e ../archive/$(YAMBO).tar.gz ; then \
-		rm -f ../archive/$(YAMBO).tar.gz; fi
-
-yambo-devel_clean:
-	if test -d ../YAMBO_DEVEL; then (cd ../YAMBO_DEVEL; \
-	$(MAKE) clean); fi
-	- rm -rf ./make-yambo-devel ./configure-yambo-devel
-
-yambo-devel_veryclean: yambo-devel_clean
-	if test -d ../YAMBO_DEVEL; then (rm -R -f ../YAMBO_DEVEL); fi
-	if test -d ../$(YAMBO_DEVEL); then (rm -R -f ../$(YAMBO_DEVEL)); fi
-	- rm -rf ./uncompress-yambo-devel
-
-yambo-devel_distclean: 
-	if test -e ../archive/$(YAMBO_DEVEL).tar.gz ; then \
-		rm -f ../archive/$(YAMBO_DEVEL).tar.gz; fi
-
-plumed_clean: 
-	if test -d ../PLUMED; then (cd ../PLUMED; \
-	export plumedir="`pwd`" ; \
-	cd ../ ; ./plumedpatch_qespresso_5.2.sh -revert); fi
-	cd ../PW ; $(MAKE) clean; cd ../CPV ; $(MAKE) clean
-	rm -rf ./make-plumed ./patch-plumed
-
-plumed_veryclean: plumed_clean
-	if test -d ../PLUMED; then (rm -R -f ../PLUMED); fi
-	if test -d ../$(PLUMED); then (rm -R -f ../$(PLUMED)); fi
-	rm -rf ./uncompress-plumed ../plumedpatch_qespresso_5.2.sh
-
-plumed_distclean: 
-# Nothing to do here
-
-sax_clean:
-	if test -d ../SaX; then (cd ../SaX; \
-	$(MAKE) clean); fi
-	- rm -rf ./make-sax ./configure-sax
-
-sax_veryclean: sax_clean
-	if test -d ../SaX; then (rm -R -f ../SaX); fi
-	if test -d ../$(SAX); then (rm -R -f ../$(SAX)); fi
-	- rm -rf ./uncompress-sax
-
-sax_distclean: 
-	rm -f ../archive/$(SAX).tar.gz
-
-west_clean:
-	if test -d ../West; then (cd ../West; \
-	$(MAKE) clean); fi
-	- rm -rf ./make-west ./configure-west
-
-west_veryclean: west_clean
-# dir is not deleted for compatibility with the repository
-
-west_distclean: 
-	   rm -f ../archive/$(WEST).tar.gz
-
 SternheimerGW_clean:
 	if test -d ../SternheimerGW; then \
 	  cd ../SternheimerGW ; $(MAKE) clean ; \
@@ -395,6 +364,18 @@ SternheimerGW_veryclean: SternheimerGW_clean
 SternheimerGW_distclean:
 	rm -f ../archive/$(SternheimerGW_archive)
 
+###########################################################
+# test-suite
+###########################################################
+
+test-suite: uncompress-test-suite
+	if test -d ../test-suite ; then \
+	( cd ../test-suite ; $(MAKE) TLDEPS= run-tests || exit 1) ; fi
+
+uncompress-test-suite:
+	$(call download_and_unpack,$(TESTSUITE),$(TESTSUITE_URL),test-suite,test-suite)
+	touch uncompress-test-suite
+
 test-suite_clean:
 	if test -d ../test-suite; then (cd ../test-suite; \
 	$(MAKE) clean); fi
@@ -404,24 +385,19 @@ test-suite_veryclean: test-suite_clean
 test-suite_distclean:
 	rm -f ../archive/$(TESTSUITE).tar.gz
 
-#examples_clean:
+###########################################################
+# cleaning
+###########################################################
 
-#examples_veryclean: examples_clean
-
-##########################################################
-# general cleaning
-##########################################################
-
-clean: w90_clean want_clean yambo_clean yambo-devel_clean plumed_clean \
+clean: w90_clean want_clean yambo_clean plumed_clean \
 	gipaw_clean west_clean SternheimerGW_clean test-suite_clean \
-	sax_clean d3q_clean #examples_clean
+	sax_clean d3q_clean
 
-veryclean: w90_veryclean want_veryclean yambo_veryclean yambo-devel_veryclean \
+veryclean: w90_veryclean want_veryclean yambo_veryclean \
 	plumed_veryclean gipaw_veryclean west_veryclean SternheimerGW_veryclean \
-	test-suite_veryclean sax_veryclean d3q_veryclean #examples_veryclean
+	test-suite_veryclean sax_veryclean d3q_veryclean
 
-#distclean : veryclean
-distclean: w90_distclean want_distclean yambo_distclean yambo-devel_distclean \
+distclean: w90_distclean want_distclean yambo_distclean \
   test-suite_distclean gipaw_distclean west_distclean SternheimerGW_distclean \
 	sax_distclean d3q_distclean
 

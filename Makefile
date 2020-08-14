@@ -325,14 +325,11 @@ clean :
 veryclean : clean
 	- @(cd install ; $(MAKE) -f plugins_makefile veryclean)
 	- @(cd install ; $(MAKE) -f extlibs_makefile veryclean)
-	- rm -rf install/patch-plumed
-	- cd install ; rm -f config.log configure.msg config.status
-	- rm -rf include/configure.h install/make_wannier90.inc
-	- cd install ; rm -fr autom4te.cache
-	- cd install; ./clean.sh ; cd -
-	- cd include; ./clean.sh ; cd -
-	- rm -f espresso.tar.gz -
-	- rm -rf make.inc -
+	- (cd install ; rm -rf config.log configure.msg config.status \
+		configure.h make_wannier90.inc autom4te.cache )
+	- (cd include; rm -rf configure.in qe_cdefs.h )
+	- rm -f espresso.tar.gz
+	- rm -rf make.inc
 	- rm -rf FoX
 # remove everything not in the original distribution
 distclean : veryclean
