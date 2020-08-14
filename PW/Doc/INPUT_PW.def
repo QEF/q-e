@@ -1865,7 +1865,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                   Used only for monoclinic lattices. If .TRUE. the b
                   unique ibrav (-12 or -13) are used, and symmetry 
                   equivalent positions are chosen assuming that the
-                  two fold axis or the mirror normal is parallel to the
+                  twofold axis or the mirror normal is parallel to the
                   b axis. If .FALSE. it is parallel to the c axis.
              }
          }

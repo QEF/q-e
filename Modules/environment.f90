@@ -258,7 +258,6 @@ CONTAINS
 #else
     WRITE( stdout, '(/5X,"Serial version")' )
 #endif
-    WRITE( stdout, '(5X,"Fft bands division:     nmany     = ",I7)' ) nmany_
     !
   END SUBROUTINE serial_info
 

@@ -109,7 +109,7 @@ CONTAINS
     SUBROUTINE write_info(u, upf, conf, u_input)
       ! Write human-readable header
       IMPLICIT NONE
-#include "version.h"
+#include "qe_version.h"
       TYPE(xmlf_t),INTENT(INOUT)  :: u    ! write to xml file u
       TYPE(pseudo_upf),INTENT(IN) :: upf  ! the pseudo data
       ! optional: configuration used to generate the pseudopotential
