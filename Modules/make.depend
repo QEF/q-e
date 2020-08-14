@@ -75,7 +75,6 @@ dmxc_drivers.o : constants.o
 dmxc_drivers.o : funct.o
 dmxc_drivers.o : kind.o
 dmxc_drivers.o : ../XClib/xc_interfaces.o
-dmxc_drivers.o : xc_lda_lsda_drivers.o
 dylmr2.o : kind.o
 electrons_base.o : constants.o
 electrons_base.o : io_global.o
@@ -399,8 +398,6 @@ wyckoff.o : space_group.o
 wypos.o : kind.o
 xc_gga_drivers.o : funct.o
 xc_gga_drivers.o : kind.o
-xc_lda_lsda_drivers.o : funct.o
-xc_lda_lsda_drivers.o : kind.o
 xc_mgga_drivers.o : funct.o
 xc_mgga_drivers.o : kind.o
 xc_rVV10.o : ../FFTXlib/fft_interfaces.o

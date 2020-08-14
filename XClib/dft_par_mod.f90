@@ -6,6 +6,8 @@ MODULE dft_par_mod
     !
     IMPLICIT NONE
     !
+    LOGICAL  :: is_libxc_l(6) = .FALSE.
+    !
     LOGICAL  :: exx_started
     REAL(DP) :: exx_fraction = 0.0_DP
     !

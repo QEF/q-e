@@ -352,7 +352,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   USE cell_base,        ONLY : omega
   USE spin_orb,         ONLY : domag
   USE funct,            ONLY : nlc, dft_is_nonlocc
-  USE xc_lda_lsda,      ONLY : xc
+  USE xc_interfaces,      ONLY : xc
   USE scf,              ONLY : scf_type
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum

@@ -32,7 +32,8 @@ PROGRAM xctest_qe_libxc
   USE funct,          ONLY: set_dft_from_name, set_exx_fraction
   USE funct,          ONLY: get_iexch, get_icorr, get_igcx, get_igcc, &
                             get_meta, get_metac, reset_dft
-  USE xc_lda_lsda,    ONLY: xc
+  !USE xc_lda_lsda,    ONLY: xc
+  USE xc_interfaces,  ONLY: xc
   USE xc_gga,         ONLY: xc_gcx
   USE xc_mgga,        ONLY: xc_metagcx
   !

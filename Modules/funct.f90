@@ -719,6 +719,8 @@ CONTAINS
           IF (imeta /= 0) is_libxc(5) = .TRUE.
           IF (imetac/= 0) is_libxc(6) = .TRUE.
           !
+          CALL 
+          !
           dft_defined = .TRUE.
 #else
           CALL errore( 'set_dft_from_name', 'libxc functionals needed, but &
@@ -831,7 +833,7 @@ CONTAINS
     IF ( is_libxc(3) ) igcx_qe  = 0
     IF ( is_libxc(4) ) igcc_qe  = 0
     IF ( is_libxc(5) .OR. is_libxc(6) ) imeta_qe = 0
-    CALL get_xc_indexes( iexch_qe, icorr_qe, igcx_qe, igcc_qe, imeta_qe )
+    CALL get_xc_indexes( iexch_qe, icorr_qe, igcx_qe, igcc_qe, imeta_qe, is_libxc )          !-------correggi
 #else
     CALL get_xc_indexes( iexch, icorr, igcx, igcc, imeta )
 #endif

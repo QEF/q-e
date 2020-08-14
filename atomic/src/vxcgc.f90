@@ -14,7 +14,7 @@ subroutine vxc_t(lsd,rho,rhoc,exc,vxc)
   !  LSDA approximation
   !
   use kinds, only : DP
-  use xc_lda_lsda, only: xc
+  use xc_interfaces, only: xc
   implicit none
   integer, intent(in)  :: lsd ! 1 in the LSDA case, 0 otherwise
   real(DP), intent(in) :: rho(2), rhoc ! the system density
@@ -36,7 +36,7 @@ subroutine vxc_t(lsd,rho,rhoc,exc,vxc)
      rhoaux(1,1) = abs(rho(1) + rhoc)
      if (rhoaux(1,1) > eps) then
         !
-        CALL xc( length, 1, 1, rhoaux, ex, ec, vx(:,1), vc(:,1) )
+        CALL xc( length, 1, 1, rhoaux, ex, ec, vx(:,1:1), vc(:,1:1) )
         !
         vxc(1) = e2 * ( vx(1,1) + vc(1,1) )
         exc    = e2 * ( ex(1)   + ec(1)   )

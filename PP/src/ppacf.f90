@@ -56,9 +56,9 @@ PROGRAM do_ppacf
   USE funct,                ONLY : get_iexch, get_icorr, get_igcx, get_igcc
   USE funct,                ONLY : set_exx_fraction, set_auxiliary_flags, &
                                    enforce_input_dft, is_libxc
-  USE xc_interfaces,        ONLY : gcxc, gcx_spin, gcc_spin, slater, &
+  USE xc_interfaces,        ONLY : xc, gcxc, gcx_spin, gcc_spin, slater, &
                                    slater_spin, get_gga_threshold
-  USE xc_lda_lsda,          ONLY : xc
+  !USE xc_lda_lsda,          ONLY : xc
   USE wvfct,                ONLY : npw, npwx
   USE environment,          ONLY : environment_start, environment_end
   USE vdW_DF,               ONLY : Nqs, vdW_DF_potential, vdW_DF_energy, vdW_DF_analysis

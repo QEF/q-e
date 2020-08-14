@@ -429,7 +429,7 @@ MODULE paw_onecenter
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
     USE funct,                  ONLY : dft_is_gradient
-    USE xc_lda_lsda,            ONLY : xc
+    USE xc_interfaces,           ONLY : xc
     USE constants,              ONLY : fpi ! REMOVE
     !
     TYPE(paw_info), INTENT(IN) :: i
@@ -568,7 +568,7 @@ MODULE paw_onecenter
              !
              arho(:,1) = rho_loc(:,1) + rho_core
              !
-             CALL xc( i%m, 1, 1, arho(:,1), ex, ec, vx(:,1), vc(:,1) )
+             CALL xc( i%m, 1, 1, arho(:,1:1), ex, ec, vx(:,1:1), vc(:,1:1) )
              !
              v_rad(:,ix,1) = e2*( vx(:,1) + vc(:,1) )
              IF (PRESENT(energy)) e_rad = e2*( ex(:) + ec(:) )

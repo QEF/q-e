@@ -1,3 +1,23 @@
+
+! MODULE xc_lda_lsda_l
+! !
+! USE kinds_l,        ONLY: DP
+! USE dft_par_mod
+! !
+! IMPLICIT NONE
+! !
+! PRIVATE
+! SAVE
+! !
+! !  LDA and LSDA exchange-correlation drivers
+! PUBLIC :: xc_lda_l, xc_lsda_l                                   --------rimetti modulo
+! !
+! ! !  density threshold (set to default value)
+! ! REAL(DP) :: rho_threshold = 1.E-10_DP
+! !
+!  CONTAINS
+
+
 !----------------------------------------------------------------------------
 SUBROUTINE xc_lda_l( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   !--------------------------------------------------------------------------
@@ -405,7 +425,8 @@ SUBROUTINE xc_lsda_l( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE DEFAULT
         !
-        CALL errore( 'xc_lda_lsda_drivers (xc_lsda)', 'not implemented', icorr )
+        ec = 0.0_DP                           !rrr
+        vc = 0.0_DP
         !
      END SELECT
      !
@@ -420,3 +441,5 @@ SUBROUTINE xc_lsda_l( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
   RETURN
   !
 END SUBROUTINE xc_lsda_l
+
+! MODULE xc_lda_lsda_l

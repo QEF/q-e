@@ -21,6 +21,7 @@ exchange_gga.o \
 metagga.o \
 external.o \
 get_xc.o \
+xc_lda_lsda_wrapper.o \
 xc_interfaces.o
 
 all: xc_lib.a

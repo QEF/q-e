@@ -369,7 +369,7 @@
 subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
   use kinds,       only: DP
   use funct,       only: dft_is_gradient, get_igcc
-  use xc_lda_lsda, only: xc
+  use xc_interfaces, only: xc
   use xc_gga,      only: xc_gcx, change_threshold_gga
   implicit none
   integer, intent(in) :: nnr

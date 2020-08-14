@@ -88,7 +88,6 @@ wrappers.o\
 ws_base.o \
 xc_vdW_DF.o \
 xc_rVV10.o \
-xc_lda_lsda_drivers.o \
 xc_gga_drivers.o \
 xc_mgga_drivers.o \
 io_base.o \
