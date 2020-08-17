@@ -1,8 +1,6 @@
 Fixed in dev version:
   * angle1, angle2, starting_magnetization incorrectly written to xml file
-  * Bug in Hubbard forces in the US/PAW case: the code was trying to deallocate 
-    an array which was not allocated. This problem appears only when nproc_pool>nbnd 
-    (parallelization over bands).
+  * Bug in Hubbard forces and stress for bands parallelization (when nproc_pool>nbnd) 
 
 New in v.6.6:
   * vdW-DF3-opt1, vdW-DF3-opt2, and vdW-DF-C6 van der Waals functionals

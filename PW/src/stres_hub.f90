@@ -1167,11 +1167,9 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
       CALL matrix_element_of_dSdepsilon (ik, ipol, jpol, &
                          nwfcU, wfcU, nbnd, evc, dproj_us, nb_s, nb_e, mykey)
       ! dproj + dproj_us
-      IF (mykey == 0) THEN
-         DO m1 = 1, nwfcU
-            dproj(m1,nb_s:nb_e) = dproj(m1,nb_s:nb_e) + dproj_us(m1,:)
-         ENDDO
-      ENDIF
+      DO m1 = 1, nwfcU
+         dproj(m1,nb_s:nb_e) = dproj(m1,nb_s:nb_e) + dproj_us(m1,:)
+      ENDDO
       DEALLOCATE(dproj_us)
    ENDIF
    !
@@ -1227,7 +1225,7 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
    !
    A_dS_B(:,:) = (0.0d0, 0.0d0)
    !
-   IF (.NOT.okvan .OR. mykey /= 0) RETURN
+   IF (.NOT.okvan) RETURN
    !
    npw = ngk(ik)
    !
@@ -1321,16 +1319,19 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
             !
             ijkb0 = ijkb0 + nh(nt)
             !
-            ! dproj(iA,iB) = \sum_ih [Adbeta(iA,ih) * betapsi(ih,iB) +
-            !                         Abeta(iA,ih)  * dbetaB(ih,iB)] 
+            ! A_dS_B(iA,iB) = \sum_ih [Adbeta(iA,ih) * betapsi(ih,iB) +
+            !                          Abeta(iA,ih)  * dbetaB(ih,iB)] 
+            ! Only A_dS_B(:,lB_s:lB_e) are calculated
             !
-            CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
-                       Adbeta, lA, betaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
-                       A_dS_B(1,lB_s), lA)
-            CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
-                       Abeta, lA, dbetaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
-                       A_dS_B(1,lB_s), lA)
-            !
+            IF ( mykey == 0 ) THEN
+              CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                         Adbeta, lA, betaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
+                         A_dS_B(1,lB_s), lA)
+              CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                         Abeta, lA, dbetaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
+                         A_dS_B(1,lB_s), lA)
+              !
+            ENDIF
          ENDIF
          !
       ENDDO
