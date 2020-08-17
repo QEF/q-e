@@ -436,7 +436,7 @@
     !---------------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE star_q2(xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, verbosity, sym_smallq)
+    SUBROUTINE star_q2(xq, at, bg, nsym, s, invs, t_rev, nq, sxq, isq, imq, verbosity, sym_smallq)
     !-----------------------------------------------------------------------
     !!
     !! Generate the star of q vectors that are equivalent to the input one
@@ -457,6 +457,8 @@
     !! Symmetry operations
     INTEGER, INTENT(in) :: invs(48)
     !! list of inverse operation indices
+    INTEGER, INTENT(in) :: t_rev(48)
+    !! Time-reveral sym
     INTEGER, INTENT(out) :: nq
     !! degeneracy of the star of q
     INTEGER, INTENT(out) :: isq(48)
@@ -469,7 +471,7 @@
     !! direct lattice vectors
     REAL(KIND = DP), INTENT(in) :: bg(3, 3)
     !! reciprocal lattice vectors
-    REAL(KIND = DP), INTENT(out) :: sxq(3, 48)
+    REAL(KIND = DP), INTENT(inout) :: sxq(3, 48)
     !! list of vectors in the star of q
     !
     ! Local variables
@@ -499,6 +501,7 @@
     !! Tolerence
     !
     zero(:) = 0.d0
+    saq(:, :) = 0.0d0
     !
     ! go to  crystal coordinates
     !
@@ -525,6 +528,8 @@
                    + bg(i, 2) * raq(2) &
                    + bg(i, 3) * raq(3)
       ENDDO
+      IF (t_rev(isym) == 1) raq = -raq
+      !  
       DO iq = 1, nq
         IF (eqvect(raq, saq(1, iq), zero, accep)) THEN
           isq(isym) = iq

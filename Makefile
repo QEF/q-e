@@ -41,12 +41,9 @@ default :
 	@echo '  gipaw        NMR and EPR spectra'
 	@echo '  w90          Maximally localised Wannier Functions'
 	@echo '  want         Quantum Transport with Wannier functions'
-	@echo '  west         Many-body perturbation corrections Without Empty STates'
-#	@echo '  SaX          Standard GW-BSE with plane waves'
 	@echo '  yambo        electronic excitations with plane waves'
-	@echo '  yambo-devel  yambo devel version'
-	@echo '  SternheimerGW calculate GW using Sternheimer equations'
-	@echo '  plumed       Metadynamics plugin for pw or cp'
+#	@echo '  SternheimerGW calculate GW using Sternheimer equations'
+#	@echo '  plumed       Metadynamics plugin for pw or cp'
 	@echo '  d3q          general third-order code and thermal transport codes'
 	@echo ' '
 	@echo 'where target is one of the following suite operation:'
@@ -252,23 +249,14 @@ w90: bindir liblapack
 want : 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-SaX : 
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
 yambo: 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-yambo-devel: 
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+#plumed: pw cp 
+#	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-plumed: 
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
-west: pw
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
-SternheimerGW: lrmods 
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+#SternheimerGW: lrmods 
+#	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #########################################################
 # "make links" produces links to all executables in bin/
@@ -337,14 +325,11 @@ clean :
 veryclean : clean
 	- @(cd install ; $(MAKE) -f plugins_makefile veryclean)
 	- @(cd install ; $(MAKE) -f extlibs_makefile veryclean)
-	- rm -rf install/patch-plumed
-	- cd install ; rm -f config.log configure.msg config.status
-	- rm -rf include/configure.h install/make_wannier90.inc
-	- cd install ; rm -fr autom4te.cache
-	- cd install; ./clean.sh ; cd -
-	- cd include; ./clean.sh ; cd -
-	- rm -f espresso.tar.gz -
-	- rm -rf make.inc -
+	- (cd install ; rm -rf config.log configure.msg config.status \
+		configure.h make_wannier90.inc autom4te.cache )
+	- (cd include; rm -rf configure.in qe_cdefs.h )
+	- rm -f espresso.tar.gz
+	- rm -rf make.inc
 	- rm -rf FoX
 # remove everything not in the original distribution
 distclean : veryclean
@@ -403,6 +388,5 @@ doc_clean :
 	( if test -f $$dir/Makefile ; then \
 	( cd $$dir; $(MAKE) TLDEPS= clean ) ; fi ) ;  done
 
-depend: libiotk
-	@echo 'Checking dependencies...'
+depend: @echo 'Checking dependencies...'
 	- ( if test -x install/makedeps.sh ; then install/makedeps.sh ; fi)

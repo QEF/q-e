@@ -12,7 +12,9 @@ MODULE xmltools
   ! Poor-man set of tools for reading and writing xml files
   ! Similar to iotk but much simpler - Paolo Giannozzi, June 2020 
   ! Limitations: too many to be listed in detail. Main ones:
-  ! * works on a single opened file at the time
+  ! * works on a single opened file at the time. Exception:
+  !   while a file is opened, one can open, R/W, close another file,
+  !   but it is not possible to operate on both files at the same time
   ! * lines no more than 1024 characters long (see maxline parameter)
   ! * no more than 9 levels of tags (see maxlevel parameter)
   ! * length of tags no more than 80 characters (see maxlength parameter)
@@ -42,6 +44,7 @@ MODULE xmltools
   INTEGER :: xmlunit
   INTEGER, PARAMETER :: maxline=1024
   CHARACTER(LEN=maxline) :: line
+  INTEGER :: xmlsave = -1, nopen = 0
   INTEGER :: eot
   ! eot points to the end of tag in line just scanned
   INTEGER :: nattr
@@ -236,9 +239,17 @@ CONTAINS
     CHARACTER(LEN=*), INTENT(in) :: filexml
     INTEGER :: iun, ios
     !
+    IF ( nopen > 1 ) THEN
+       print "('cannot open file ',a,': two xml files already opened')",&
+               trim(filexml)
+       iun = -1
+       RETURN
+    END IF
     OPEN ( NEWUNIT=iun, FILE=filexml, FORM='formatted', STATUS='unknown', &
          IOSTAT=ios)
     IF ( ios /= 0 ) iun = -1
+    nopen = nopen + 1
+    IF ( nopen > 1 ) xmlsave = xmlunit
     xmlunit = iun
     nlevel = 0
     open_tags(nlevel) = 'root'
@@ -255,7 +266,9 @@ CONTAINS
 #if defined ( __debug )
     print "('unit ',i5,': file closed')", xmlunit
 #endif
-    xmlunit = -1
+    xmlunit = xmlsave
+    nopen = nopen - 1
+    xmlsave = -1
     IF (nlevel > 0) print '("warning: file closed at level ",i1,&
             & " with tag ",A," open")', nlevel, trim(open_tags(nlevel))
     nlevel = 0

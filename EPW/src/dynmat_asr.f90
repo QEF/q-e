@@ -24,7 +24,7 @@
   USE wan2bloch,        ONLY : dynifc2blochc
   USE low_lvl,          ONLY : set_ndnmbr, eqvect_strict
   USE io_dyn_mat,       ONLY : read_dyn_mat_param, read_dyn_mat_header, &
-                               read_dyn_mat
+                               read_dyn_mat, read_dyn_mat_tail
   USE mp_world,         ONLY : mpime                     
   USE mp_global,        ONLY : world_comm
   USE mp,               ONLY : mp_bcast
@@ -50,7 +50,7 @@
   !! Set of symmetry operations
   INTEGER, INTENT(in) :: irt(48, nat)
   !! For each atoms give the rotated atoms
-  REAL(KIND = DP), INTENT(inout) :: sxq(3, 48)
+  REAL(KIND = DP), INTENT(in) :: sxq(3, 48)
   !! Symmetry matrix
   REAL(KIND = DP), INTENT(inout) :: rtau(3, 48, nat)
   !! the relative position of the rotated atom to the original one
@@ -132,8 +132,6 @@
   !!
   INTEGER :: nqs
   !!
-  INTEGER :: axis
-  !!
   INTEGER :: nrws
   !!
   INTEGER :: ierr
@@ -205,8 +203,8 @@
   COMPLEX(KIND = DP), ALLOCATABLE :: dyn(:, :, :, :) ! 3,3,nat,nat
   !! Dynamical matrix
   !
-  axis = 3
-  !
+  q(:, :) = zero
+  ! 
   ! the call to set_ndnmbr is just a trick to get quickly
   ! a file label by exploiting an existing subroutine
   ! (if you look at the sub you will find that the original
@@ -322,6 +320,9 @@
       ENDDO
       !
     ENDDO !  iq = 1, mq
+    ! 
+    ! Close the dyn file
+    CALL read_dyn_mat_tail(nat)
     !
   ELSE ! not a xml file
     IF (mpime == ionode_id) THEN      
@@ -472,6 +473,7 @@
     CALL mp_bcast(epsi , meta_ionode_id, world_comm)
     CALL mp_bcast(dynq , meta_ionode_id, world_comm)
     CALL mp_bcast(q    , meta_ionode_id, world_comm)
+    CALL mp_bcast(mq   , meta_ionode_id, world_comm)
   ENDIF ! not xml
   !
   !

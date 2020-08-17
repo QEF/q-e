@@ -1,4 +1,7 @@
-New in v. 6.6:
+Fixed in dev version:
+  * angle1, angle2, starting_magnetization incorrectly written to xml file
+
+New in v.6.6:
   * vdW-DF3-opt1, vdW-DF3-opt2, and vdW-DF-C6 van der Waals functionals
     implemented (T. Thonhauser, supported by NSF Grant No. 1712425)
   * More FORD documentation
