@@ -258,9 +258,11 @@ lr_dvpsi_eels.o : ../../Modules/wavefunctions.o
 lr_dvpsi_eels.o : ../../PW/src/buffers.o
 lr_dvpsi_eels.o : ../../PW/src/pwcom.o
 lr_dvpsi_eels.o : ../../upflib/uspp.o
+lr_dvpsi_eels.o : lr_variables.o
 lr_eels_main.o : ../../LR_Modules/lrcom.o
 lr_eels_main.o : ../../Modules/check_stop.o
 lr_eels_main.o : ../../Modules/command_line_options.o
+lr_eels_main.o : ../../Modules/constants.o
 lr_eels_main.o : ../../Modules/environment.o
 lr_eels_main.o : ../../Modules/fft_base.o
 lr_eels_main.o : ../../Modules/io_files.o
