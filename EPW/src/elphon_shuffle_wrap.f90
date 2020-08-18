@@ -334,7 +334,6 @@
     IF (mpime == ionode_id) THEN
       !
       OPEN(UNIT = crystal, FILE = 'crystal.fmt', STATUS = 'old', IOSTAT = ios)
-      READ(crystal, *) nsym
       READ(crystal, *) nat
       READ(crystal, *) nmodes
       READ(crystal, *) nelec
@@ -351,10 +350,11 @@
       READ(crystal, *) ityp
       READ(crystal, *) noncolin
       READ(crystal, *) w_centers
+      READ(crystal, *) nrot
+      READ(crystal, *) nsym
       READ(crystal, *) s  ! Dim (3,3,48)
       !
     ENDIF ! mpime == ionode_id
-    CALL mp_bcast(nsym     , ionode_id, world_comm)
     CALL mp_bcast(nat      , ionode_id, world_comm)
     IF (mpime /= ionode_id) ALLOCATE(ityp(nat))
     CALL mp_bcast(nmodes   , ionode_id, world_comm)
@@ -369,6 +369,8 @@
     CALL mp_bcast(ityp     , ionode_id, world_comm)
     CALL mp_bcast(noncolin , ionode_id, world_comm)
     CALL mp_bcast(w_centers, ionode_id, world_comm)
+    CALL mp_bcast(nrot     , ionode_id, world_comm)
+    CALL mp_bcast(nsym     , ionode_id, world_comm)
     CALL mp_bcast(s, ionode_id, world_comm)
     IF (mpime == ionode_id) THEN
       CLOSE(crystal)
@@ -555,12 +557,7 @@
       !
       CALL sgam_lr(at, bg, nsym, s, irt, tau, rtau, nat)
       !
-      !IF (meta_ionode) THEN
-        CALL dynmat_asr(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, invs, s, irt, rtau, sumr)
-      !ENDIF
-      !CALL mp_bcast(zstar, meta_ionode_id, world_comm)
-      !CALL mp_bcast(epsi , meta_ionode_id, world_comm)
-      !CALL mp_bcast(dynq , meta_ionode_id, world_comm)
+      CALL dynmat_asr(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, invs, s, irt, rtau, sumr)
       !
       ! now dynq is the cartesian dyn mat (not divided by the masses)
       !
