@@ -1,5 +1,5 @@
  &energy_current
-    delta_t=   0.500,
+    delta_t=   0.650,
     file_output= 'current_hz',
     eta=   0.100,
     n_max=     5,
@@ -28,7 +28,7 @@
     ecutwfc=  80.0,
 /
  &ELECTRONS
-    conv_thr = 1.D-16,
+    conv_thr = 1.D-17,
     mixing_beta = 0.7,
     startingwfc = 'random',
 /
