@@ -351,6 +351,7 @@
       READ(crystal, *) ityp
       READ(crystal, *) noncolin
       READ(crystal, *) w_centers
+      READ(crystal, *) s  ! Dim (3,3,48)
       !
     ENDIF ! mpime == ionode_id
     CALL mp_bcast(nsym     , ionode_id, world_comm)
@@ -368,6 +369,7 @@
     CALL mp_bcast(ityp     , ionode_id, world_comm)
     CALL mp_bcast(noncolin , ionode_id, world_comm)
     CALL mp_bcast(w_centers, ionode_id, world_comm)
+    CALL mp_bcast(s, ionode_id, world_comm)
     IF (mpime == ionode_id) THEN
       CLOSE(crystal)
     ENDIF
@@ -380,10 +382,7 @@
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating ifc', 1)
     ifc(:, :, :, :, :, :, :) = zero
   ENDIF
-  !
-  ! Initialize symmetries and create the s matrix
-  CALL set_sym_bl()
-  !
+  ! 
   IF (epwread .AND. .NOT. epbread) THEN
     CONTINUE
   ELSE
@@ -426,6 +425,10 @@
     ! 
     ! SP: Symmetries needs to be consistent with QE so that the order of the q in the star is the
     !     same as in the .dyn files produced by QE.
+    ! 
+    ! Initialize symmetries and create the s matrix
+    s(:, :, :) = 0 ! Symmetry in crystal axis with dim: 3,3,48
+    CALL set_sym_bl()    
     !
     ! Setup Bravais lattice symmetry
     WRITE(stdout,'(5x,a,i3)') "Symmetries of Bravais lattice: ", nrot
