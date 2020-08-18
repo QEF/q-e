@@ -5,12 +5,13 @@
     n_max=     5,
     trajdir='traj/cp',
     first_step=140,
-    last_step=142,
+    last_step=146,
     re_init_wfc_1 = .true. ,
     re_init_wfc_2 = .true. ,
     re_init_wfc_3 = .true. ,
     three_point_derivative = .true. ,
-    n_repeat_every_step = 20 ,
+    n_repeat_every_step = 3 ,
+    ethr_small_step = 1.d-3
  /
  &CONTROL
     calculation='md',
@@ -27,9 +28,8 @@
     ecutwfc=  80.0,
 /
  &ELECTRONS
-    conv_thr = 1.D-13,
+    conv_thr = 1.D-16,
     mixing_beta = 0.7,
-    diago_david_ndim = 4,
     startingwfc = 'random',
 /
  &IONS
