@@ -27,7 +27,7 @@
     ecutwfc=  80.0,
 /
  &ELECTRONS
-    conv_thr = 1.D-11,
+    conv_thr = 1.D-13,
     mixing_beta = 0.7,
     diago_david_ndim = 4,
     startingwfc = 'random',
