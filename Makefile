@@ -186,7 +186,7 @@ pw4gwwlib : phlibs
 	if test -d GWW ; then \
 	( cd GWW ; $(MAKE) pw4gwwa || exit 1 ) ; fi
 
-mods : libiotk libfox libutil libla libfft libupf libbeef
+mods : libfox libutil libla libfft libupf libbeef
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 libks_solvers : libs libutil libla
@@ -201,7 +201,7 @@ libfft :
 libutil : 
 	( cd UtilXlib ; $(MAKE) TLDEPS= all || exit 1 )
 
-libupf : libiotk libfox libutil
+libupf : libfox libutil
 	( cd upflib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libs :
@@ -226,8 +226,6 @@ libblas :
 liblapack: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
-libiotk: 
-	cd install ; $(MAKE) -f extlibs_makefile $@
 libfox: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
@@ -236,9 +234,11 @@ libcuda:
 
 libbeef:
 	cd install ; $(MAKE) -f extlibs_makefile $@
+
 # In case of trouble with iotk and compilers, add
 # FFLAGS="$(FFLAGS_NOOPT)" after $(MFLAGS)
-
+libiotk: 
+	cd install ; $(MAKE) -f extlibs_makefile $@
 #########################################################
 # plugins
 #########################################################
@@ -246,10 +246,10 @@ libbeef:
 w90: bindir liblapack
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-want : 
+want : libiotk
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-yambo: 
+yambo: libiotk
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #plumed: pw cp 
@@ -388,5 +388,6 @@ doc_clean :
 	( if test -f $$dir/Makefile ; then \
 	( cd $$dir; $(MAKE) TLDEPS= clean ) ; fi ) ;  done
 
-depend: @echo 'Checking dependencies...'
+depend:
+	@echo 'Checking dependencies...'
 	- ( if test -x install/makedeps.sh ; then install/makedeps.sh ; fi)

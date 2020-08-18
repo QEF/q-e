@@ -322,6 +322,7 @@ epw_readin.o : ../../Modules/ions_base.o
 epw_readin.o : ../../Modules/mp_global.o
 epw_readin.o : ../../Modules/mp_world.o
 epw_readin.o : ../../Modules/noncol.o
+epw_readin.o : ../../Modules/open_close_input_file.o
 epw_readin.o : ../../Modules/paw_variables.o
 epw_readin.o : ../../PHonon/PH/phcom.o
 epw_readin.o : ../../PW/src/pwcom.o
@@ -572,7 +573,11 @@ rigid_epw.o : ../../Modules/constants.o
 rigid_epw.o : ../../Modules/io_global.o
 rigid_epw.o : ../../Modules/ions_base.o
 rigid_epw.o : ../../Modules/kind.o
+rigid_epw.o : ../../Modules/mp_global.o
+rigid_epw.o : ../../Modules/mp_world.o
+rigid_epw.o : ../../UtilXlib/mp.o
 rigid_epw.o : constants_epw.o
+rigid_epw.o : division.o
 rigid_epw.o : epwcom.o
 rotate.o : ../../Modules/cell_base.o
 rotate.o : ../../Modules/control_flags.o
@@ -622,9 +627,11 @@ spectral_func.o : poolgathering.o
 spectral_func.o : selfen.o
 stop_epw.o : ../../Modules/io_global.o
 stop_epw.o : ../../Modules/mp_global.o
+stop_epw.o : ../../Modules/mp_world.o
 stop_epw.o : ../../UtilXlib/mp.o
 stop_epw.o : elph2.o
 stop_epw.o : epwcom.o
+stop_epw.o : io_var.o
 stop_epw.o : printing.o
 supercond.o : ../../Modules/cell_base.o
 supercond.o : ../../Modules/constants.o
