@@ -112,30 +112,35 @@ program all_currents
       call convert_tau(tau_format, nat, vel)
    end if
    CALL mp_bcast(vel, ionode_id, world_comm)
+
+   !initialize scf results object. Later it will saves evc, tau and vel arrays for t-dt, t and t+dt
    call multiple_scf_result_allocate(scf_all,.true.)
    if (n_repeat_every_step > 1) then
        allocate (tau_save(3,nat))
    end if
+
+   !loop over md steps starts here
    do
       if (ionode) then
          if (subtract_cm_vel) then
-            !calculate center of mass velocity for each atomic species and subtract it
+            !calculates center of mass velocity for each atomic species and subtract it
             call cm_vel(vel)
          else
+            !calculates center of mass velocity only, without modifying velocities
             call cm_vel()
          end if
       endif
       if (n_repeat_every_step > 1) then
           tau_save = tau
+          !initialize average object. Average is computed in write_results sub
           call online_average_init(ave_cur,.true.)
       end if
+      !the same steps can be calculated more than one time, to estimate stability or variance of the result
       do irepeat = 1, n_repeat_every_step
           if (irepeat > 1) then
               if (ionode) &
                   write (*,*) 'REPETITION ', irepeat - 1 
               tau = tau_save
-              call update_pot()
-              call hinit1()
               ethr = ethr_big_step
           end if
           if (n_repeat_every_step > 1 .and. irepeat .eq. n_repeat_every_step) then
@@ -144,11 +149,12 @@ program all_currents
               print_stat=.false.
           end if
 
-          call prepare_next_step(-1) !-1 goes back by dt, so we are in t-dt
+          call prepare_next_step(-1) !-1 goes back by dt, so we are in t-dt. Inside, after setting tau, we call hinit1 and update_pot
           if (re_init_wfc_1) &
                   call init_wfc(1)
           call run_pwscf(exit_status)
-          if (exit_status /= 0) exit
+          if (exit_status /= 0) goto 100 !shutdown everything and exit
+          !save evc, tau and vel for t-dt
           call scf_result_set_from_global_variables(scf_all%t_minus)
           if (three_point_derivative) then
               call prepare_next_step(1) !1 advance by dt (so we are in the original positions)
@@ -156,7 +162,8 @@ program all_currents
                       call init_wfc(1)
               call run_pwscf(exit_status)
               !evc_due = evc
-              if (exit_status /= 0) exit
+              if (exit_status /= 0) goto 100 !shutdown everything and exit
+              !save evc, tau and vel for t
               call scf_result_set_from_global_variables(scf_all%t_zero)
               call routine_zero() ! routine zero should be called in t
           else
@@ -170,12 +177,13 @@ program all_currents
                   call init_wfc(1)
           call run_pwscf(exit_status)
           if (exit_status /= 0) goto 100 !shutdown everything and exit
+          !save evc, tau and vel for t+dt
           call scf_result_set_from_global_variables(scf_all%t_plus)
 
           if (.not. three_point_derivative) &
-              call routine_zero() ! we are in t in this case
+              call routine_zero() ! we are in t in this case, and we call here routine zero
 
-          !calculate energy current
+          !calculate second part of energy current
           call routine_hartree()
           call write_results(traj,print_stat)
       end do
