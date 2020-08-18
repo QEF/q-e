@@ -188,7 +188,6 @@ kli.o : ../../Modules/kind.o
 kli.o : ../../upflib/radial_grids.o
 kli.o : ld1inc.o
 kli.o : parameters.o
-ld1.o : ../../Modules/command_line_options.o
 ld1.o : ../../Modules/environment.o
 ld1.o : ../../Modules/mp_global.o
 ld1.o : ../../upflib/radial_grids.o
