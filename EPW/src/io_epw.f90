@@ -123,7 +123,6 @@
                           zstar, epsi, epmatwp
     USE ions_base, ONLY : amass, ityp, nat, tau
     USE cell_base, ONLY : at, bg, omega, alat
-    USE symm_base, ONLY : nsym, s, nrot
     USE modes,     ONLY : nmodes
     USE io_var,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, iunepmatwp, &
                           crystal
