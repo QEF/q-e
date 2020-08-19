@@ -366,9 +366,6 @@
     CALL mp_bcast(ityp     , ionode_id, world_comm)
     CALL mp_bcast(noncolin , ionode_id, world_comm)
     CALL mp_bcast(w_centers, ionode_id, world_comm)
-    CALL mp_bcast(nrot     , ionode_id, world_comm)
-    CALL mp_bcast(nsym     , ionode_id, world_comm)
-    CALL mp_bcast(s, ionode_id, world_comm)
     IF (mpime == ionode_id) THEN
       CLOSE(crystal)
     ENDIF
