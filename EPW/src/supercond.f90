@@ -473,9 +473,9 @@
       lambda_pairs(:) = zero
     ENDIF
     !
-    WRITE(stdout, '(5x, a13, f21.7, a18, f21.7)') 'lambda_max = ', MAXVAL(lambda_max(:)), &
-                                             '   lambda_k_max = ', MAXVAL(lambda_k(:, :))
-    WRITE(stdout, '(a)') ' '
+    !WRITE(stdout, '(5x, a13, f21.7, a18, f21.7)') 'lambda_max = ', MAXVAL(lambda_max(:)), &
+    !                                         '   lambda_k_max = ', MAXVAL(lambda_k(:, :))
+    !WRITE(stdout, '(a)') ' '
     !
     lambda_k(:, :) = zero
     DO ik = lower_bnd, upper_bnd
