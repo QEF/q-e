@@ -384,7 +384,6 @@ grid.o : elph2.o
 grid.o : epwcom.o
 grid.o : io_var.o
 grid.o : kfold.o
-grid.o : kinds_epw.o
 grid.o : low_lvl.o
 grid.o : poolgathering.o
 grid.o : wan2bloch.o
@@ -419,7 +418,6 @@ io_eliashberg.o : epwcom.o
 io_eliashberg.o : grid.o
 io_eliashberg.o : io_var.o
 io_eliashberg.o : kfold.o
-io_eliashberg.o : kinds_epw.o
 io_eliashberg.o : low_lvl.o
 io_eliashberg.o : supercond.o
 io_epw.o : ../../LR_Modules/lrcom.o
@@ -435,6 +433,7 @@ io_epw.o : ../../Modules/noncol.o
 io_epw.o : ../../PHonon/PH/io_dyn_mat.o
 io_epw.o : ../../PHonon/PH/phcom.o
 io_epw.o : ../../PW/src/pwcom.o
+io_epw.o : ../../PW/src/symm_base.o
 io_epw.o : ../../UtilXlib/mp.o
 io_epw.o : ../../upflib/uspp.o
 io_epw.o : constants_epw.o
@@ -535,7 +534,6 @@ printing.o : eliashbergcom.o
 printing.o : elph2.o
 printing.o : epwcom.o
 printing.o : io_var.o
-printing.o : kinds_epw.o
 printing.o : poolgathering.o
 pw2wan2epw.o : ../../FFTXlib/fft_interfaces.o
 pw2wan2epw.o : ../../FFTXlib/scatter_mod.o
@@ -706,8 +704,6 @@ transport.o : epwcom.o
 transport.o : grid.o
 transport.o : io_transport.o
 transport.o : io_var.o
-transport.o : kinds_epw.o
-transport.o : low_lvl.o
 transport.o : poolgathering.o
 transport_iter.o : ../../Modules/cell_base.o
 transport_iter.o : ../../Modules/control_flags.o
@@ -726,8 +722,6 @@ transport_iter.o : epwcom.o
 transport_iter.o : grid.o
 transport_iter.o : io_transport.o
 transport_iter.o : io_var.o
-transport_iter.o : kinds_epw.o
-transport_iter.o : low_lvl.o
 transport_iter.o : poolgathering.o
 transport_iter.o : printing.o
 transport_iter.o : wigner.o

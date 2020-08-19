@@ -953,7 +953,6 @@
     USE io_global, ONLY : stdout, ionode_id
     USE io_var,    ONLY : iufilikmap, iunselecq
     USE io_files,  ONLY : prefix, tmp_dir
-    USE symm_base, ONLY : t_rev, time_reversal, s, set_sym_bl
     USE modes,     ONLY : nmodes
     USE epwcom,    ONLY : nkf1, nkf2, nkf3, nqstep
     USE elph2,     ONLY : nqtotf, xqf
@@ -1868,8 +1867,8 @@
     !!
     USE kinds,     ONLY : DP
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl
-    USE epwcom,    ONLY : nkf1, nkf2, nkf3, mp_mesh_k, fixsym
-    USE elph2,     ONLY : nqtotf, nktotf, xqf, map_rebal
+    USE epwcom,    ONLY : nkf1, nkf2, nkf3, mp_mesh_k
+    USE elph2,     ONLY : nqtotf, nktotf, xqf, map_rebal, bztoibz
     USE eliashbergcom, ONLY : ixkff, ixkf, xkfs, nkfs, ixkqf, ixqfs, nqfs
     USE constants_epw, ONLY : eps5, zero
     USE symm_base, ONLY : nrot
@@ -1878,11 +1877,10 @@
     USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
     USE mp_world,  ONLY : mpime
     USE division,  ONLY : fkbounds
-    USE kinds_epw, ONLY : SIK2
     USE grid,      ONLY : kpmq_map, kpoint_grid_epw
     USE io_files,  ONLY : prefix, tmp_dir, create_directory
     USE io_var,    ONLY : iufilikmap
-    USE low_lvl,   ONLY : fix_sym
+    USE mp_world,  ONLY : mpime
     !
     IMPLICIT NONE
     !
@@ -1915,13 +1913,6 @@
     REAL(KIND = DP) :: xq(3)
     !! coordinates of q points
     !
-    INTEGER :: bztoibz(nkf1 * nkf2 * nkf3)
-    !! BZ to IBZ mapping
-    INTEGER :: bztoibz_tmp(nkf1 * nkf2 * nkf3)
-    !! Temporary mapping
-    INTEGER(SIK2) :: s_bztoibz(nkf1 * nkf2 * nkf3)
-    !! symmetry matrix for each k-point from the full BZ
-    !
     CHARACTER(LEN = 256) :: dirname
     !! Name of the directory to save ikmap/egnv/freq/ephmat files
     !
@@ -1935,19 +1926,11 @@
     ! using index of the k-point within the Fermi shell (ixkf)
     !
     IF (mp_mesh_k) THEN
-      bztoibz(:)   = 0
-      s_bztoibz(:) = 0
-      !
-      CALL set_sym_bl()
-      IF (fixsym) CALL fix_sym(.TRUE.)
-      CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, bztoibz, s_bztoibz)
-      ! 
-      bztoibz_tmp(:) = 0
+      ! SP - July 2020      
+      ! We should not recompute bztoibz
       DO ikbz = 1, nkftot
-        bztoibz_tmp(ikbz) = map_rebal(bztoibz(ikbz))
         ixkff(ikbz) = ixkf(map_rebal(bztoibz(ikbz)))
       ENDDO
-      bztoibz(:) = bztoibz_tmp(:)
       !
     ELSE
       ! full k-point grid

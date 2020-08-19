@@ -64,7 +64,9 @@
     ixkqf_tr(:),             &!  Mapping matrix from k+q (where q is full BZ) to IBZ
     s_bztoibz_full(:),       &!  Rotation that brink that k-point from BZ to IBZ
     mapg(:,:,:),             &!  Map between FFT grid and G-vector index
-    wanplotlist(:)            !  List of Wannier functions to plot
+    wanplotlist(:),          &!  List of Wannier functions to plot
+    bztoibz(:),              &!  BZ to IBZ map
+    s_bztoibz(:)              !  Symmetry operation map for BZ to IBZ. This could be a INTEGER(KIND = 2) but does not work on all compilers
   REAL(KIND = DP) ::         &!
     efnew,                   &!  Fermi level on the fine grid. Added globaly for efficiency reason
     deltaq,                  &!  Displacement of fine-mesh k-points for velocity corrections
@@ -79,8 +81,10 @@
     xkq(:, :),               &!  local k+q grid, coarse (3, nks)
     etq(:, :),               &!  eigenvalues of k+q wavefunctions
     xkf(:, :),               &!  fine k point grid (3, nkqf)
-    xkfd(:, :, :),           &!  fine k point grid, displaced along each cartesian direction +/delta_q (3, nkqf, 6)
+    xkf_irr(:, :),           &!  fine k point grid on the IBZ
+    xkfd(:, :, :),           &!  fine k point grid , displaced along each cartesian direction +/delta_q (3, nkqf, 6)
     wkf(:),                  &!  weights on the fine grid (nkqf)
+    wkf_irr(:),              &!  weights on the fine grid on the IBZ
     xqf(:, :),               &!  fine q point grid
     wqf(:),                  &!  weights on the fine q grid
     etf(:, :),               &!  interpolated eigenvalues (nbnd, nkqf)
@@ -114,7 +118,8 @@
     epsilon2_abs_lorenz(:, :, :, :), &! Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
     gtemp(:),                &!  Temperature used globally (units of Ry)
     mobilityh_save(:),       &!  Error in the hole mobility
-    mobilityel_save(:)        !  Error in the electron mobility
+    mobilityel_save(:),      &!  Error in the electron mobility
+    xkf_bz(:, :)              !  Homogeneous k-point list on the full 
   COMPLEX(KIND = DP), ALLOCATABLE :: &
     el_ph_mat(:, :, :, :),    &!  e-p matrix  (nbnd, nbnd, nks, 3*nat)
     cu(:, :, :),              &!  rot matrix for wannier interpolation of k point, coarse mesh (nbnd*nbnd*nkstot)
