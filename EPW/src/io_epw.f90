@@ -192,9 +192,6 @@
       WRITE(crystal,*) ityp
       WRITE(crystal,*) noncolin
       WRITE(crystal,*) w_centers
-      WRITE(crystal,*) nrot
-      WRITE(crystal,*) nsym
-      WRITE(crystal,*) s ! Symmetry matrix with dim (3,3,48)
       !
       WRITE(epwdata,*) ef
       WRITE(epwdata,*) nbndsub, nrr_k, nmodes, nrr_q, nrr_g

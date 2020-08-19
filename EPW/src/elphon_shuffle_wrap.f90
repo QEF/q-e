@@ -40,7 +40,7 @@
   USE cell_base,     ONLY : at, bg, alat, omega, tpiba
   USE symm_base,     ONLY : irt, s, nsym, ft, sname, invs, s_axis_to_cart,      &
                             sr, nrot, set_sym_bl, find_sym, inverse_s, t_rev,   &
-                            remove_sym, allfrac, time_reversal
+                            allfrac, time_reversal
   USE phcom,         ONLY : evq
   USE qpoint,        ONLY : igkq, xq, eigqts
   USE modes,         ONLY : nmodes, u, npert
@@ -350,9 +350,6 @@
       READ(crystal, *) ityp
       READ(crystal, *) noncolin
       READ(crystal, *) w_centers
-      READ(crystal, *) nrot
-      READ(crystal, *) nsym
-      READ(crystal, *) s  ! Dim (3,3,48)
       !
     ENDIF ! mpime == ionode_id
     CALL mp_bcast(nat      , ionode_id, world_comm)
@@ -384,6 +381,21 @@
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating ifc', 1)
     ifc(:, :, :, :, :, :, :) = zero
   ENDIF
+  ! 
+  ! SP: Symmetries needs to be consistent with QE so that the order of the q in the star is the
+  !     same as in the .dyn files produced by QE.
+  ! 
+  ! Initialize symmetries and create the s matrix
+  s(:, :, :) = 0 ! Symmetry in crystal axis with dim: 3,3,48
+  CALL set_sym_bl()
+  !
+  ! Setup Bravais lattice symmetry
+  WRITE(stdout,'(5x,a,i3)') "Symmetries of Bravais lattice: ", nrot
+  !
+  ! Setup crystal symmetry
+  CALL find_sym(nat, tau, ityp, .FALSE., m_loc)
+  IF (fixsym) CALL fix_sym(.FALSE.)
+  WRITE(stdout, '(5x, a, i3)') "Symmetries of crystal:         ", nsym
   ! 
   IF (epwread .AND. .NOT. epbread) THEN
     CONTINUE
@@ -425,22 +437,6 @@
       CALL read_ifc_epw
     ENDIF
     ! 
-    ! SP: Symmetries needs to be consistent with QE so that the order of the q in the star is the
-    !     same as in the .dyn files produced by QE.
-    ! 
-    ! Initialize symmetries and create the s matrix
-    s(:, :, :) = 0 ! Symmetry in crystal axis with dim: 3,3,48
-    CALL set_sym_bl()    
-    !
-    ! Setup Bravais lattice symmetry
-    WRITE(stdout,'(5x,a,i3)') "Symmetries of Bravais lattice: ", nrot
-    !
-    ! Setup crystal symmetry
-    CALL find_sym(nat, tau, ityp, .FALSE., m_loc)
-    IF (fixsym) CALL fix_sym(.FALSE.)
-    IF (.NOT. allfrac) CALL remove_sym(dfftp%nr1, dfftp%nr2, dfftp%nr3)
-    WRITE(stdout, '(5x, a, i3)') "Symmetries of crystal:         ", nsym
-    !
     ! The following loop is required to propertly set up the symmetry matrix s.
     ! We here copy the calls made in PHonon/PH/init_representations.f90 to have the same s as in QE 5.
     DO iq_irr = 1, nqc_irr
