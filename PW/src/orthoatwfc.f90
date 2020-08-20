@@ -421,9 +421,9 @@ END SUBROUTINE ortho_swfc
 !-----------------------------------------------------------------------
 SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
   !---------------------------------------------------------------------
-  !! This routine computes the derivative of transposed O^{-1/2}, i.e.
-  !! [d((O^{-1/2})^T)]_IJ, where O_IJ is the overlap matrix. 
-  !! Note, on the input this routine requires dO not transposed.
+  !! This routine computes the derivative of O^{-1/2}, i.e.
+  !! [d((O^{-1/2}))]_IJ, where O_IJ is the overlap matrix. 
+  !! Note, on the input this routine requires dO (not transposed).
   !! The solution is written in a closed form by solving the Lyapunov
   !! equation (a particular case of the Sylvester equation).
   !! Written by I. Timrov (June 2020)
@@ -453,14 +453,14 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
   !
   ALLOCATE (aux(m,m))
   !
-  ! Compute (work^T) * (doverlap^T) * ((work^H)^T) 
+  ! Compute (work^H) * doverlap * work 
   ! and put the result back in doverlap
   !
-  ! Compute aux = (work^H)*doverlap
+  ! Compute aux = doverlap * work
+  CALL ZGEMM('N','N', m, m, m, (1.d0,0.d0), doverlap, &
+              m, work, m, (0.d0,0.d0), aux, m)
+  ! Compute (work^H) * aux
   CALL ZGEMM('C','N', m, m, m, (1.d0,0.d0), work, &
-              m, doverlap, m, (0.d0,0.d0), aux, m)
-  ! Compute (work^T) * (aux^T)
-  CALL ZGEMM('T','T', m, m, m, (1.d0,0.d0), work, &
               m, aux, m, (0.d0,0.d0), doverlap, m)
   !
   DO m1 = 1, m
@@ -470,14 +470,14 @@ SUBROUTINE calculate_doverlap_inv (m, e, work, doverlap, doverlap_inv)
      ENDDO
   ENDDO
   !
-  ! Compute ((work^H)^T) * aux * (work^T)
+  ! Compute work * aux * (work^H)
   !
-  ! Compute doverlap = (aux^T)*(work^H)
-  CALL ZGEMM('T','C', m, m, m, (1.d0,0.d0), aux, &
+  ! Compute doverlap = aux * (work^H)
+  CALL ZGEMM('N','C', m, m, m, (1.d0,0.d0), aux, &
               m, work, m, (0.d0,0.d0), doverlap, m)
-  ! Compute doverlap_inv = (doverlap^T)*(work^T)
-  CALL ZGEMM('T','T', m, m, m, (-1.d0,0.d0), doverlap, &
-              m, work, m, (0.d0,0.d0), doverlap_inv, m)
+  ! Compute doverlap_inv = work * doverlap
+  CALL ZGEMM('N','N', m, m, m, (-1.d0,0.d0), work, &
+              m, doverlap, m, (0.d0,0.d0), doverlap_inv, m)
   !
   DEALLOCATE (aux)
   !
