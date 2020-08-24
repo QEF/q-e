@@ -71,6 +71,8 @@ PROGRAM ZG
   !               are given. See below. (default: .FALSE.).
   !     q_in_cryst_coord IF .TRUE. input q points are in crystalline 
   !              coordinates (default: .FALSE.)
+  !     loto_2d    set to .true. to activate two-dimensional treatment of LO-TO
+  !     splitting.
   !
   !  IF (q_in_band_form) THEN
   !     nq     ! number of q points
@@ -138,7 +140,7 @@ PROGRAM ZG
 
   INTEGER :: nspin_mag, nqs, ios
   !
-  LOGICAL :: xmlifc, lo_to_split
+  LOGICAL :: xmlifc, lo_to_split, loto_2d
   !
   REAL(DP) :: qhat(3), qh, E 
   REAL(DP) :: delta
@@ -165,17 +167,19 @@ PROGRAM ZG
   COMPLEX(DP), ALLOCATABLE :: z_nq_zg(:,:,:) ! nomdes, nmodes, nq
   REAL(DP),    ALLOCATABLE :: q_nq_zg(:,:) ! 3, nq
   LOGICAL                  :: ZG_conf, synch, incl_qA
+  LOGICAL                  :: compute_error, single_phonon_displ
   INTEGER                  :: dimx, dimy, dimz, nloops 
   REAL(DP)                 :: error_thresh, T
   CHARACTER(LEN=3)         :: atm_zg(ntypx)
   ! mz_e
   !
   NAMELIST /input/ flfrc, amass, asr, at,  &
-       &            ntyp, &
+       &            ntyp, loto_2d, &
        &            q_in_band_form, q_in_cryst_coord, &
        &            point_label_type,  &
 ! mz_b we add the inputs for generating the ZG-configuration
-       &           ZG_conf, dimx, dimy, dimz, nloops, error_thresh, synch, atm_zg, T, incl_qA 
+       &           ZG_conf, dimx, dimy, dimz, nloops, error_thresh, & 
+       &           compute_error, synch, atm_zg, T, incl_qA, single_phonon_displ 
 ! ZG_conf --> IF TRUE compute the ZG_configuration 
 ! mz_e 
   !
@@ -200,8 +204,11 @@ PROGRAM ZG
      q_in_band_form=.FALSE.
      q_in_cryst_coord = .FALSE.
      point_label_type='SC'
+     loto_2d=.FALSE.
      ! mz_b
      ZG_conf = .FALSE.
+     compute_error = .TRUE.
+     single_phonon_displ = .FALSE.
      nloops = 15000 
      error_thresh = 5.0E-02
      T = 0
@@ -226,8 +233,11 @@ PROGRAM ZG
      CALL mp_bcast(q_in_band_form, ionode_id, world_comm)
      CALL mp_bcast(q_in_cryst_coord, ionode_id, world_comm)
      CALL mp_bcast(point_label_type, ionode_id, world_comm)
+     CALL mp_bcast(loto_2d,ionode_id, world_comm) 
      ! mz_b
      CALL mp_bcast(ZG_conf, ionode_id, world_comm)
+     CALL mp_bcast(compute_error, ionode_id, world_comm)
+     CALL mp_bcast(single_phonon_displ, ionode_id, world_comm)
      CALL mp_bcast(atm_zg, ionode_id, world_comm)
      CALL mp_bcast(nloops, ionode_id, world_comm)
      CALL mp_bcast(error_thresh, ionode_id, world_comm)
@@ -456,12 +466,13 @@ PROGRAM ZG
 
         lo_to_split=.FALSE.
         f_of_q(:,:,:,:) = (0.d0,0.d0)
-
-
-        CALL setupmat (q(1, n), dyn, nat, at, bg, tau, itau_blk, nsc, alat, &
+        
+        CALL setupmat (q(1,n), dyn, nat, at, bg, tau, itau_blk, nsc, alat, &
              dyn_blk, nat_blk, at_blk, bg_blk, tau_blk, omega_blk,  &
-             epsil, zeu, frc, nr1, nr2, nr3, has_zstar, rws, nrws,f_of_q)
+                   loto_2d, &
+             epsil, zeu, frc, nr1,nr2,nr3, has_zstar, rws, nrws,f_of_q)
 
+        IF (.not.loto_2d) THEN
         qhat(1) = q(1, n) *at(1, 1) +q(2, n) *at(2, 1) +q(3, n) *at(3, 1)
         qhat(2) = q(1, n) *at(1, 2) +q(2, n) *at(2, 2) +q(3, n) *at(3, 2)
         qhat(3) = q(1, n) *at(1, 3) +q(2, n) *at(2, 3) +q(3, n) *at(3,3)
@@ -507,6 +518,7 @@ PROGRAM ZG
            !
         ENDIF
         !
+        END IF
         
        ! mz comments out !!!!!!!! if(iout_dyn.ne.0) call WRITE_dyn_on_file(q(1, n), dyn, nat, iout_dyn)
         
@@ -556,7 +568,8 @@ PROGRAM ZG
      IF ( ionode .AND. ZG_conf ) call ZG_configuration(nq, nat, ntyp, amass, &
                                 ityp, q_nq_zg, w2, z_nq_zg, ios, & 
                                 dimx, dimy, dimz, nloops, error_thresh, synch,tau, alat, atm_zg, & 
-                                ntypx, at, q_in_cryst_coord, q_in_band_form, T, incl_qA)
+                                ntypx, at, q_in_cryst_coord, q_in_band_form, T, incl_qA, & 
+                                compute_error, single_phonon_displ)
      !mz_e
      ! 
      !
@@ -818,9 +831,10 @@ SUBROUTINE frc_blk(dyn,q,tau, nat, nr1, nr2, nr3,frc, at, bg, rws, nrws,f_of_q)
 END SUBROUTINE frc_blk
 !
 !-----------------------------------------------------------------------
-SUBROUTINE setupmat (q, dyn, nat, at, bg,tau, itau_blk, nsc, alat, &
-     &         dyn_blk, nat_blk, at_blk, bg_blk,tau_blk, omega_blk, &
-     &                 epsil, zeu,frc, nr1, nr2, nr3,has_zstar, rws, nrws,f_of_q)
+SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
+     &         dyn_blk,nat_blk,at_blk,bg_blk,tau_blk,omega_blk, &
+     &         loto_2d, &
+     &         epsil,zeu,frc,nr1,nr2,nr3,has_zstar,rws,nrws,f_of_q)
   !-----------------------------------------------------------------------
   ! compute the dynamical matrix (the analytic part only)
   !
@@ -2060,7 +2074,8 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
 !mz adds this routine
 SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, & 
                       dimx, dimy, dimz, nloops, error_thresh, synch,tau, alat, atm, &
-                      ntypx, at, q_in_cryst_coord, q_in_band_form, T, incl_qA) 
+                      ntypx, at, q_in_cryst_coord, q_in_band_form, T, incl_qA, & 
+                      compute_error, single_phonon_displ) 
   use kinds, only: dp
   use constants, only: amu_ry, ry_to_thz, ry_to_cmm1, H_PLANCK_SI, &  
                        K_BOLTZMANN_SI, AMU_SI, pi 
@@ -2069,9 +2084,11 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   implicit none
   ! input
   CHARACTER(LEN=3), intent(in) :: atm(ntypx)
-  LOGICAL, intent(in)          :: synch, q_in_cryst_coord, q_in_band_form, incl_qA
+  LOGICAL, intent(in)          :: synch, q_in_cryst_coord, q_in_band_form
+  LOGICAL, intent(in)          :: incl_qA, compute_error, single_phonon_displ
   INTEGER, intent(in)          :: dimx, dimy, dimz, nloops
   INTEGER, intent(in)          :: nq, nat, ntyp, ios, ntypx
+  INTEGER, intent(in)          :: ityp(nat)
   ! nq is the number of qpoints in sets A and B
   REAL(DP), intent(in)         :: error_thresh, alat, T
   REAL(DP), intent(in)         :: at(3, 3)
@@ -2082,7 +2099,6 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   CHARACTER(len=256)       :: filename
   CHARACTER(len=256)       :: pointer_etta, pointer_T
   !
-  INTEGER ityp(nat)
   INTEGER                  :: nat3, na, nta, ipol, i, j, k, qp, ii, p, kk
   INTEGER                  :: nq_tot, pn, combs, combs_all, sum_zg
   INTEGER, ALLOCATABLE     :: Mx_mat(:,:), Mx_mat_or(:,:), M_mat(:,:), V_mat(:)
@@ -2102,7 +2118,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   REAL(DP), PARAMETER      :: eps = 1.0d-6
   REAL(DP)                 :: hbar, ang, JOULE_TO_RY, u_rand, dotp, PE_nq, KE_nq
   ! ALLOCATE TABLES
-  REAL(DP), ALLOCATABLE    :: equil_p(:,:,:),  T_fact(:,:), DW_fact(:,:), qA(:,:), qB(:,:), DWp_fact(:,:), Tp_fact(:,:) 
+  REAL(DP), ALLOCATABLE    :: equil_p(:,:,:), T_fact(:,:), DW_fact(:,:), qA(:,:), qB(:,:), DWp_fact(:,:), Tp_fact(:,:) 
   ! for displacements
   REAL(DP), ALLOCATABLE    :: Cx_matA(:,:), Cx_matB(:,:), Cx_matAB(:,:), Bx_vect(:)
   ! for momenta/velocities 
@@ -2186,8 +2202,8 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
     DO i = 1, nat3 
    !   IF (w2(i, qp) .lt. 1.0E-8) THEN
       IF (w2(i, qp) .lt. 0.0d0) THEN
-          freq(i, qp) = 1.0E-15
-          WRITE(*,*) "Some frequencies are negative:", w2(i, qp), i, qp 
+          WRITE(*,*) "WARNING: Negative ph. freqs:", w2(i, qp), i, qp 
+          freq(i, qp) = SQRT(ABS(w2(i, qp)))
       ELSE
           freq(i, qp) = SQRT(ABS(w2(i, qp)))
       ENDIF
@@ -2493,12 +2509,16 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   !WRITE(*,*) combs, combs_all
   ! combs_all refere also to  all possible pais ({\k,\a}, {\k' \a'})
   ! 
-  ALLOCATE(sum_error_D(combs_all, INT(ctrAB / pn) + 1), sum_error_B(combs_all)) 
-  ALLOCATE(ratio_zg(combs_all), sum_error_B2(combs_all * NINT(nq_tot / 2.0d0)), sum_diag_B2(combs_all * NINT(nq_tot / 2.0d0)))
-  ! I add one because of the reminder when ctrAB is not divided by pn
-  ALLOCATE(sum_diag_D(combs_all, INT(ctrAB / pn) + 1), sum_diag_B(combs_all))
-  ALLOCATE(R_mat(combs_all, combs_all), D_vect(combs_all, ctrAB), F_vect(combs_all, ctrAB))
-  ALLOCATE(Bx_vect(combs_all), E_vect(combs_all, ctrAB))
+  ALLOCATE(ratio_zg(combs_all))
+  ratio_zg = 0.d0
+  IF (compute_error) THEN
+    ALLOCATE(sum_error_D(combs_all, INT(ctrAB / pn) + 1), sum_error_B(combs_all)) 
+    ALLOCATE(sum_error_B2(combs_all * NINT(nq_tot / 2.0d0)), sum_diag_B2(combs_all * NINT(nq_tot / 2.0d0)))
+    ! I add one because of the reminder when ctrAB is not divided by pn
+    ALLOCATE(sum_diag_D(combs_all, INT(ctrAB / pn) + 1), sum_diag_B(combs_all))
+    ALLOCATE(R_mat(combs_all, combs_all), D_vect(combs_all, ctrAB), F_vect(combs_all, ctrAB))
+    ALLOCATE(Bx_vect(combs_all), E_vect(combs_all, ctrAB))
+  ENDIF
   !
   ! Instead of taking all possible permutations which are pn=2** (nmodes- 1)! 
   ! we just select possible permutations until the error is lower than a
@@ -2572,152 +2592,146 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
         ENDDO
       ENDIF
       ! create R matrix that contains Re[e_ka^nu(q) * e_k'a'^nu'* (q)]
-      R_mat = 0.0d0
-      D_vect = 0.0d0
-      ctr = 1
-      DO p = 1, nat3
-        DO qp = 1, nat3 !those are for \k \a, \k' \a'
-          ctr2 = 1
-        !------------------------------
-          DO i = 1, nat3
-            DO j = 1, nat3
-              D_vect(ctr, ii) = D_vect(ctr, ii) + DBLE(z_zg(p, i, ii) * CONJG(z_zg(qp, j, ii))) * & 
-                                                       Cx_matAB(i, ii) * Cx_matAB(j, ii)
-              R_mat(ctr, ctr2) = DBLE(z_zg(p, i, ii) *CONJG(z_zg(qp, j, ii)))
-              ctr2 = ctr2 + 1
+      IF (compute_error) THEN
+        R_mat = 0.0d0
+        D_vect = 0.0d0
+        ctr = 1
+        DO p = 1, nat3
+          DO qp = 1, nat3 !those are for \k \a, \k' \a'
+            ctr2 = 1
+          !------------------------------
+            DO i = 1, nat3
+              DO j = 1, nat3
+                D_vect(ctr, ii) = D_vect(ctr, ii) + DBLE(z_zg(p, i, ii) * CONJG(z_zg(qp, j, ii))) * & 
+                                                         Cx_matAB(i, ii) * Cx_matAB(j, ii)
+                R_mat(ctr, ctr2) = DBLE(z_zg(p, i, ii) *CONJG(z_zg(qp, j, ii)))
+                ctr2 = ctr2 + 1
+              ENDDO
             ENDDO
+          !----------------------------
+            ctr = ctr + 1
           ENDDO
- !----------------------------
-          ctr = ctr + 1
-        ENDDO
-      ENDDO ! end p loop ! R_mat is filled 
-      !
-      Bx_vect = 0.d0
-      ! Bx_vect will contain all the cross terms v .neq. v' and diagonal for each q
-      ctr = 1
-      DO i = 1, nat3
-        DO j = 1, nat3
-          Bx_vect(ctr) = Cx_matAB(i, ii) *Cx_matAB(j, ii)
-          ctr = ctr + 1
-        ENDDO
-      ENDDO
-  !
-      E_vect(:, ii) = 0.d0
-    ! E_vect contains only the diagonal terms (i.e. v = v')
-      ctr = 1
-      DO p = 1, nat3 ! those are for \k \a, \k' \a'
-        DO qp = 1, nat3
-          DO i = 1, nat3
-            DO j = 1, nat3
-              IF (j == i) THEN
-                E_vect(ctr, ii) = E_vect(ctr, ii) + DBLE(z_zg(p, i, ii) * CONJG(z_zg(qp, j, ii))) * Cx_matAB(i, ii)**2
-              ENDIF
-            ENDDO
+        ENDDO ! end p loop ! R_mat is filled 
+        !
+        Bx_vect = 0.d0
+        ! Bx_vect will contain all the cross terms v .neq. v' and diagonal for each q
+        ctr = 1
+        DO i = 1, nat3
+          DO j = 1, nat3
+            Bx_vect(ctr) = Cx_matAB(i, ii) *Cx_matAB(j, ii)
+            ctr = ctr + 1
           ENDDO
-          ctr = ctr + 1
         ENDDO
-      ENDDO ! p loop
-    ! D_vect(:, ii) =MATMUL(R_mat, Bx_vect)
-    ! D_vect contains the diagonal and the non-diagonal terms (i.e. v = v' and v .neq. v')
-    ! E_vect contains only the diagonal terms (i.e. v = v')
-    ! F_vect contains the error (i.e.each entry is the contribution from v \neq v') at each q point to minimize
-    ! checks
-      F_vect(:, ii) = D_vect(:, ii) - E_vect(:, ii)
     !
+        E_vect(:, ii) = 0.d0
+    !   E_vect contains only the diagonal terms (i.e. v = v')
+        ctr = 1
+        DO p = 1, nat3 ! those are for \k \a, \k' \a'
+          DO qp = 1, nat3
+            DO i = 1, nat3
+              DO j = 1, nat3
+                IF (j == i) THEN
+                  E_vect(ctr, ii) = E_vect(ctr, ii) + DBLE(z_zg(p, i, ii) * CONJG(z_zg(qp, j, ii))) * Cx_matAB(i, ii)**2
+                ENDIF
+              ENDDO
+            ENDDO
+            ctr = ctr + 1
+          ENDDO
+        ENDDO ! p loop
+    !   D_vect(:, ii) =MATMUL(R_mat, Bx_vect)
+    !   D_vect contains the diagonal and the non-diagonal terms (i.e. v = v' and v .neq. v')
+    !   E_vect contains only the diagonal terms (i.e. v = v')
+    !   F_vect contains the error (i.e.each entry is the contribution from v \neq v') at each q point to minimize
+    !   checks
+        F_vect(:, ii) = D_vect(:, ii) - E_vect(:, ii)
+    !
+    ENDIF ! compute_error
     ENDDO ! ii loop over qpoints
     !
     !
     !Compute error 
     !WRITE(80,*) "Sum of diagonal terms per q-point:", SUM(sum_diag_D)/ctrAB
     !
-    sum_error_D = 0.0d0
-    sum_error_B = 0.0d0
-    ! sum_error_D : contains the error from \nu and \nu' every pn
-    !!!!!!!
-    WRITE(*,*) 
-    WRITE(*,*) "Minimize error based on threshold"
-    DO p = 1, combs_all
-      ctr = 1
-      DO i = 0, INT(ctrAB / pn) - 1 
-        sum_error_D(p, ctr) =SUM(F_vect(p, pn * i + 1:pn * (i + 1))) ! pn) is the length of Mx
-        ctr = ctr + 1
-      ENDDO 
-      ! Here we add the reminder IF ctrAB is not divided exactly by pn
-      IF (mod(ctrAB, pn) > 0) THEN
-        sum_error_D(p, ctr) = SUM(F_vect(p, ctrAB - mod(ctrAB, pn) + 1:ctrAB)) ! add the remaining terms
-      ENDIF
-      ! evaluate also error from all q-points in B
-      DO i = 1, ctrAB
-        sum_error_B(p) = sum_error_B(p) + F_vect(p, i) ! 
-      ENDDO 
-      !
-    ENDDO ! end p-loop
-    ! 
-    sum_error_B2 = 0.0d0
-    ctr2 = 1
-    DO j = 1, NINT(nq_tot / 2.0d0)
-      DO p = 1, combs_all ! for ever \k,\a,\k',\a'
-        DO i = 1, ctrAB ! over qpoints
-          dotp = 0.0d0
-          DO ii = 1, 3
-            dotp = dotp + q(i, ii) * Rlist(j, ii)!
-          ENDDO ! ii
-          sum_error_B2(ctr2) = sum_error_B2(ctr2) + cos(2.0d0 * pi * dotp) * F_vect(p, i)
-          !WRITE(*,*) "cosss", cos(2.0d0*pi*dotp)
-        ENDDO ! i
-        ctr2 = ctr2 + 1
-      ENDDO ! p     
-    ENDDO ! j
-    !
-    sum_diag_D = 0.0d0
-    sum_diag_B = 0.0d0
-    ! sum_diag_D : contains the diagonal terms 
-    DO p = 1, combs_all
-    ctr = 1
-      DO i = 0, INT(ctrAB / pn) - 1 
-        sum_diag_D(p, ctr) =SUM(E_vect(p, pn * i + 1:pn * (i + 1))) ! pn) is the length of Mx
-        ctr = ctr + 1
-      ENDDO
-      ! Here we add the reminder IF ctrAB is not divided exactly by pn
-      IF (mod(ctrAB, pn) > 0) THEN
-        sum_diag_D(p, ctr) = SUM(E_vect(p, ctrAB - mod(ctrAB, pn) + 1:ctrAB)) ! add the remaining terms
-      ENDIF
-      DO i = 1, ctrAB
-        sum_diag_B(p) = sum_diag_B(p) + E_vect(p, i) ! pn) is the length of Mx
-      ENDDO
-    ENDDO ! end p-loop
-    sum_diag_B2 = 0.0d0
-    ctr = 1
-    sum_zg = 0
-    ratio_zg = 0.0
-    !
-    DO p = 1, nat3 ! those are for \k \a, \k' \a'
-      DO qp = 1, nat3
-        IF (p == qp) THEN
-          ratio_zg(ctr) = sum_error_B(ctr) / sum_diag_B(ctr)
-          !!! WRITE(*,*) "Error from each branch", sum_diag_B(ctr), sum_error_B(ctr), p , qp, ratio_zg(ctr)
-          IF (ABS(ratio_zg(ctr)) < error_thresh) THEN
-            sum_zg = sum_zg + 1
-          ENDIF   
+    IF (compute_error) THEN
+      sum_error_D = 0.0d0
+      sum_error_B = 0.0d0
+      ! sum_error_D : contains the error from \nu and \nu' every pn
+      !!!!!!!
+      WRITE(*,*) 
+      WRITE(*,*) "Minimize error based on threshold"
+      DO p = 1, combs_all
+        ctr = 1
+        DO i = 0, INT(ctrAB / pn) - 1 
+          sum_error_D(p, ctr) =SUM(F_vect(p, pn * i + 1:pn * (i + 1))) ! pn) is the length of Mx
+          ctr = ctr + 1
+        ENDDO 
+        ! Here we add the reminder IF ctrAB is not divided exactly by pn
+        IF (mod(ctrAB, pn) > 0) THEN
+          sum_error_D(p, ctr) = SUM(F_vect(p, ctrAB - mod(ctrAB, pn) + 1:ctrAB)) ! add the remaining terms
         ENDIF
-        ctr = ctr + 1
+        ! evaluate also error from all q-points in B
+        DO i = 1, ctrAB
+          sum_error_B(p) = sum_error_B(p) + F_vect(p, i) ! 
+        ENDDO 
+        !
+      ENDDO ! end p-loop
+      ! 
+      sum_error_B2 = 0.0d0
+      ctr2 = 1
+      DO j = 1, NINT(nq_tot / 2.0d0)
+        DO p = 1, combs_all ! for ever \k,\a,\k',\a'
+          DO i = 1, ctrAB ! over qpoints
+            dotp = 0.0d0
+            DO ii = 1, 3
+              dotp = dotp + q(i, ii) * Rlist(j, ii)!
+            ENDDO ! ii
+            sum_error_B2(ctr2) = sum_error_B2(ctr2) + cos(2.0d0 * pi * dotp) * F_vect(p, i)
+            !WRITE(*,*) "cosss", cos(2.0d0*pi*dotp)
+          ENDDO ! i
+          ctr2 = ctr2 + 1
+        ENDDO ! p     
+      ENDDO ! j
+      !
+      sum_diag_D = 0.0d0
+      sum_diag_B = 0.0d0
+      ! sum_diag_D : contains the diagonal terms 
+      DO p = 1, combs_all
+      ctr = 1
+        DO i = 0, INT(ctrAB / pn) - 1 
+          sum_diag_D(p, ctr) =SUM(E_vect(p, pn * i + 1:pn * (i + 1))) ! pn) is the length of Mx
+          ctr = ctr + 1
+        ENDDO
+        ! Here we add the reminder IF ctrAB is not divided exactly by pn
+        IF (mod(ctrAB, pn) > 0) THEN
+          sum_diag_D(p, ctr) = SUM(E_vect(p, ctrAB - mod(ctrAB, pn) + 1:ctrAB)) ! add the remaining terms
+        ENDIF
+        DO i = 1, ctrAB
+          sum_diag_B(p) = sum_diag_B(p) + E_vect(p, i) ! pn) is the length of Mx
+        ENDDO
+      ENDDO ! end p-loop
+      sum_diag_B2 = 0.0d0
+      ctr = 1
+      sum_zg = 0
+      ratio_zg = 0.0
+      !
+      DO p = 1, nat3 ! those are for \k \a, \k' \a'
+        DO qp = 1, nat3
+          IF (p == qp) THEN
+            ratio_zg(ctr) = sum_error_B(ctr) / sum_diag_B(ctr)
+            !!! WRITE(*,*) "Error from each branch", sum_diag_B(ctr), sum_error_B(ctr), p , qp, ratio_zg(ctr)
+            IF (ABS(ratio_zg(ctr)) < error_thresh) THEN
+              sum_zg = sum_zg + 1
+            ENDIF   
+          ENDIF
+          ctr = ctr + 1
+        ENDDO
       ENDDO
-    ENDDO
-    !
-    WRITE(*,*) "Total error:", SUM(ABS(ratio_zg)) / nat3
+      !
+      WRITE(*,*) "Total error:", SUM(ABS(ratio_zg)) / nat3
+    ENDIF ! compute_error
     !
     !IF (sum_zg == nat3) THEN
     IF (SUM(ABS(ratio_zg)) / nat3 < error_thresh ) THEN
-      WRITE(*,*) 
-      WRITE(*,*) "Print ZG configuration"
-      WRITE(80,*) "Sum of diagonal terms per q-point:", DBLE(SUM(sum_diag_B) / ctrAB)
-      WRITE(80,*) "Error and loop index:", SUM(ABS(ratio_zg)) / nat3, kk !
-      !WRITE(80,*) "Sum of error per q-point and loop index:", SUM(sum_error_B)/ctrAB, kk !
-      WRITE(80,'(A20, 1F6.2,A2)') 'Temperature is: ' , T ,' K'
-      WRITE(80,*) "Atomic positions", nat * nq_tot
-      WRITE(81,*) "ZG-Velocities (Ang/ps)"
-      ! Generate displacements and velocities
-      ! remember nq_tot is also equal to the number of cells
       ctrA = 0
       ctrB = 0
       ! here we distinguish between q-points in A and B to perform the appropriate summations for the atomic displacements
@@ -2729,7 +2743,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
               ctrA = ctrA + 1
               Cx_matA(:, ctrA)  = Cx_matAB(:, qp)
               Cpx_matA(:, ctrA) = Cpx_matAB(:, qp)
-              z_nq_A(:,:, ctrA) =  z_zg(:,:, qp)
+              z_nq_A(:, :, ctrA) =  z_zg(:, :, qp)
               qA(ctrA,:) =  q(:, qp)
               IF (ABS(qA(ctrA, 1)) < eps) qA(ctrA, 1) = 0.0
               IF (ABS(qA(ctrA, 2)) < eps) qA(ctrA, 2) = 0.0
@@ -2738,7 +2752,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
               ctrB = ctrB + 1
               Cx_matB(:, ctrB)  = Cx_matAB(:, qp)
               Cpx_matB(:, ctrB) = Cpx_matAB(:, qp)
-              z_nq_B(:,:, ctrB) =  z_zg(:,:, qp)
+              z_nq_B(:, :, ctrB) =  z_zg(:, :, qp)
               qB(ctrB,:) = q(:, qp)
               IF (ABS(qB(ctrB, 1)) < eps) qB(ctrB, 1) = 0.0
               IF (ABS(qB(ctrB, 2)) < eps) qB(ctrB, 2) = 0.0
@@ -2746,12 +2760,35 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
             !WRITE(*,*) "ohohoB", qB(ctrB,:)
         ENDIF
       ENDDO
+      !
+      IF (single_phonon_displ) THEN
+          WRITE(*,*) "Print single phonon displacements" 
+          CALL single_phonon(nq_tot, nat, ctrB, ctrA, nat3, ityp, ntyp, & 
+                             ntypx, qA, qB, amass, atm, equil_p, & 
+                             Rlist, z_nq_B, z_nq_A, Cx_matB, & 
+                             Cx_matA, Cpx_matB, Cpx_matA)
+      ENDIF
+      !     
+      WRITE(*,*) 
+      WRITE(*,*) "Print ZG configuration"
+      IF (compute_error) THEN
+        WRITE(80,*) "Sum of diagonal terms per q-point:", DBLE(SUM(sum_diag_B) / ctrAB)
+        WRITE(80,*) "Error and loop index:", SUM(ABS(ratio_zg)) / nat3, kk !
+      ENDIF
+      !WRITE(80,*) "Sum of error per q-point and loop index:", SUM(sum_error_B)/ctrAB, kk !
+      WRITE(80,'(A20, 1F6.2,A2)') 'Temperature is: ' , T ,' K'
+      WRITE(80,*) "Atomic positions", nat * nq_tot
+      WRITE(81,*) "ZG-Velocities (Ang/ps)"
+      ! Generate displacements and velocities
+      ! remember nq_tot is also equal to the number of cells
       ! Here now I ll generate the displacements according to 
       ! Np^(- 1/2)(Mo/Mk)^(1/2)[\sum_{q \in B} e^{1qR_p}e^v_{ka}(q)(x_{qv}+y_{q\nu})
       ! z_zg(nat3, nat3, nq)) 
       !
       D_tau = 0.0d0
       P_tau = 0.0d0
+      ! 
+      ! Main loop to construct ZG configuration
       DO p = 1, nq_tot
         ctr = 1
         DO k = 1, nat ! k represents the atom
@@ -2790,6 +2827,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
             ENDIF ! IF incl_qA
             !
             ctr = ctr + 1 ! for k and i
+            IF (abs(D_tau(p, k, i)) .GT. 5) CALL errore('ZG', 'Displacement very large', D_tau(p, k, i) )
             D_tau(p, k, i) = equil_p(p, k, i) + D_tau(p, k, i) ! add equil structure
           ENDDO ! end i for cart directions
         ENDDO ! end k loop over nat
@@ -2894,9 +2932,11 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   DEALLOCATE(equil_p, Rlist, D_tau,qA,qB, z_nq_A, z_nq_B)
   DEALLOCATE(Cx_matA, Cx_matB, Cx_matAB)
   DEALLOCATE(Cpx_matA, Cpx_matB, Cpx_matAB)
-  DEALLOCATE(sum_error_D, sum_diag_D, sum_error_B, sum_diag_B, sum_error_B2, sum_diag_B2, ratio_zg)
-  DEALLOCATE(Mx_mat_or, Mx_mat, M_mat, V_mat)
-  DEALLOCATE(R_mat, D_vect, F_vect, Bx_vect, E_vect)
+  DEALLOCATE(Mx_mat_or, Mx_mat, M_mat, V_mat, ratio_zg)
+  IF (compute_error) THEN
+    DEALLOCATE(R_mat, D_vect, F_vect, Bx_vect, E_vect)
+    DEALLOCATE(sum_error_D, sum_diag_D, sum_error_B, sum_diag_B, sum_error_B2, sum_diag_B2)
+  ENDIF
   !
   !
 END SUBROUTINE ZG_configuration
@@ -2958,3 +2998,148 @@ SUBROUTINE create_supercell(at,tau, alat, dimx, dimy, dimz, nat, equil_p)
  !
  END SUBROUTINE create_supercell
 
+
+SUBROUTINE single_phonon(nq_tot, nat, ctrB, ctrA, nat3, ityp, ntyp, &
+                         ntypx, qA, qB, amass, atm, equil_p, &
+                         Rlist, z_nq_B, z_nq_A, Cx_matB, &
+                         Cx_matA, Cpx_matB, Cpx_matA) 
+!
+ USE kinds,      ONLY : DP
+ USE constants,  ONLY : AMU_SI, pi
+ IMPLICIT NONE
+!
+!
+ CHARACTER(LEN=3), intent(in) :: atm(ntypx)
+ INTEGER,  intent(in)         :: nq_tot, nat, ctrB, ctrA, nat3, ntyp, ntypx
+ INTEGER,  intent(in)         :: Rlist(nq_tot, 3) 
+ INTEGER,  intent(in)         :: ityp(nat)
+ REAL(DP), intent(in)         :: qA(ctrA, 3), qB(ctrB, 3), amass(ntyp), equil_p(nq_tot, nat, 3)
+ REAL(DP), intent(in)         :: Cx_matB(nat3, ctrB), Cx_matA(nat3, ctrA), Cpx_matA(nat3, ctrA), Cpx_matB(nat3, ctrB) 
+ COMPLEX(DP), intent(in)      :: z_nq_A(nat3, nat3, ctrA), z_nq_B(nat3, nat3, ctrB)
+ CHARACTER(len=256)           :: filename
+!
+ INTEGER                      :: i, j, k, p, ii, ctr, nta, qp
+ REAL(DP)                     :: dotp
+ REAL(DP), ALLOCATABLE        :: D_tau(:, :, :), P_tau(:, :, :)
+ COMPLEX(DP)                  :: imagi
+ !
+ !
+ imagi = (0.0d0, 1.0d0) !imaginary unit
+ !
+ ALLOCATE(D_tau(nq_tot, nat, 3), P_tau(nq_tot, nat, 3))
+ !
+ ! 
+ filename = 'single_phonon-displacements.dat' !'.fp'
+ OPEN (unit = 85, file = filename, status = 'unknown', form = 'formatted')
+ !
+ filename = 'single_phonon-velocities.dat' !'.fp'
+ OPEN (unit = 86, file = filename, status = 'unknown', form = 'formatted')
+ ! Main loop to give single phonon displacements / velocities
+ WRITE(85,'(A50)') "Displaced positions along phonon modes in set B"
+  DO qp = 1, ctrB
+    DO j = 1, nat3        
+      WRITE(85,'(A25, 3F8.4, A15, i)') "Phonon mode at q-point", qB(qp, :), " and branch:", j
+      WRITE(86,'(A25, 3F8.4, A15, i)') "Phonon mode at q-point", qB(qp, :), " and branch:", j
+      D_tau = 0.0d0
+      P_tau = 0.0d0
+      DO p = 1, nq_tot
+        dotp = 0.0d0
+        DO ii = 1, 3
+           dotp = dotp + qB(qp, ii) * Rlist(p, ii)! dot product between q and R 
+        ENDDO
+        ctr = 1
+        DO k = 1, nat ! k represents the atom
+          nta = ityp(k)
+          DO i = 1, 3  ! i is for cart directions
+           D_tau(p, k, i) = D_tau(p, k, i) + SQRT(2.0d0 / nq_tot / amass(nta)) * DBLE(EXP(imagi * 2.0d0 * pi * dotp) &
+                                 * z_nq_B(ctr, j, qp) * (1.d0 + imagi) * abs(Cx_matB(j, qp))) 
+           P_tau(p, k, i) = P_tau(p, k, i) + SQRT(2.0d0 / nq_tot * amass(nta)) * DBLE(EXP(imagi * 2.0d0 * pi * dotp) &
+                                 * z_nq_B(ctr, j, qp) * (1.d0 + imagi) * abs(Cpx_matB(j, qp))) / (amass(nta) * AMU_SI)
+           ! Here we calculate the momenta of the nuclei and finally 
+           !we divide by (amass(nta) *AMU_SI) to get the velocities.
+           ctr = ctr + 1 ! for k and i
+           IF (abs(D_tau(p, k, i)) .GT. 5) CALL errore('ZG', 'Displacement very large', D_tau(p, k, i) )
+           D_tau(p, k, i) = equil_p(p, k, i) + D_tau(p, k, i) ! add equil structure
+          ENDDO ! i loop
+        ! write output data
+        WRITE(85,'(A6, 3F13.8)') atm(ityp(k)), D_tau(p, k, :) 
+        WRITE(86,'(A6, 3F15.8)') atm(ityp(k)), P_tau(p, k,:) * 1.0E-12 ! multiply to obtain picoseconds 
+        !
+        ENDDO ! k loop
+      ENDDO ! p loop
+    ENDDO ! j loop
+  ENDDO ! qp loop
+  !
+  WRITE(85,'(A50)') "Displaced positions along phonon modes in set A"
+  DO qp = 1, ctrA
+    DO j = 1, nat3        
+      WRITE(85,'(A25, 3F8.4, A15, i)') "Phonon mode at q-point", qA(qp, :), " and branch:", j
+      WRITE(86,'(A25, 3F8.4, A15, i)') "Phonon mode at q-point", qA(qp, :), " and branch:", j
+      D_tau = 0.0d0
+      P_tau = 0.0d0
+      DO p = 1, nq_tot
+        dotp = 0.0d0
+        DO ii = 1, 3
+           dotp = dotp + qA(qp, ii) * Rlist(p, ii)! dot product between q and R 
+        ENDDO
+        ctr = 1
+        DO k = 1, nat ! k represents the atom
+          nta = ityp(k)
+          DO i = 1, 3  ! i is for cart directions
+           D_tau(p, k, i) = D_tau(p, k, i) + SQRT(2.0d0 / nq_tot / amass(nta)) * DBLE(EXP(imagi * 2.0d0 * pi * dotp) &
+                                 * z_nq_A(ctr, j, qp) * (1.d0 + imagi) * abs(Cx_matA(j, qp))) 
+           P_tau(p, k, i) = P_tau(p, k, i) + SQRT(2.0d0 / nq_tot * amass(nta)) * DBLE(EXP(imagi * 2.0d0 * pi * dotp) &
+                                 * z_nq_A(ctr, j, qp) * (1.d0 + imagi) * abs(Cpx_matA(j, qp))) / (amass(nta) * AMU_SI)
+           ! Here we calculate the momenta of the nuclei and finally 
+           !we divide by (amass(nta) *AMU_SI) to get the velocities.
+           ctr = ctr + 1 ! for k and i
+           IF (abs(D_tau(p, k, i)) .GT. 5) CALL errore('ZG', 'Displacement very large', D_tau(p, k, i) )
+           D_tau(p, k, i) = equil_p(p, k, i) + D_tau(p, k, i) ! add equil structure
+          ENDDO ! i loop
+        ! write output data
+        WRITE(85,'(A6, 3F13.8)') atm(ityp(k)), D_tau(p, k, :) 
+        WRITE(86,'(A6, 3F15.8)') atm(ityp(k)), P_tau(p, k,:) * 1.0E-12 ! multiply to obtain picoseconds 
+        !
+        ENDDO ! k loop
+      ENDDO ! p loop
+    ENDDO ! j loop
+  ENDDO ! qp loop
+      !
+!      !Repeat for minus q now: 
+!      !
+!      WRITE(85,'(A30, 3F8.4, A15, i)') "Phonon mode at q-point", -qB(qp, :), " and branch:", j
+!      WRITE(86,'(A30, 3F8.4, A15, i)') "Phonon mode at q-point", -qB(qp, :), " and branch:", j
+!      D_tau = 0.0d0
+!      P_tau = 0.0d0
+!      DO p = 1, nq_tot
+!        dotp = 0.0d0
+!        DO ii = 1, 3
+!           dotp = dotp + -qB(qp, ii) * Rlist(p, ii)! dot product between q and R 
+!        ENDDO
+!        ctr = 1
+!        DO k = 1, nat ! k represents the atom
+!          nta = ityp(k)
+!          DO i = 1, 3  ! i is for cart directions
+!           D_tau(p, k, i) = D_tau(p, k, i) + SQRT(2.0d0 / nq_tot / amass(nta)) * DBLE(EXP(imagi * 2.0d0 * pi * dotp) &
+!                                 * CONJG(z_nq_B(ctr, j, qp)) * (1.d0 - imagi) * abs(Cx_matB(j, qp))) 
+!           P_tau(p, k, i) = P_tau(p, k, i) + SQRT(2.0d0 / nq_tot * amass(nta)) * DBLE(EXP(imagi * 2.0d0 * pi * dotp) &
+!                                 * CONJG(z_nq_B(ctr, j, qp)) * (1.d0 - imagi) * abs(Cpx_matB(j, qp))) / (amass(nta) * AMU_SI)
+!           ! Here we calculate the momenta of the nuclei and finally 
+!           !we divide by (amass(nta) *AMU_SI) to get the velocities.
+!           ctr = ctr + 1 ! for k and i
+!           D_tau(p, k, i) = equil_p(p, k, i) + D_tau(p, k, i) ! add equil structure
+!          ENDDO ! i loop
+!        ! write output data
+!        WRITE(85,'(A6, 3F13.8)') atm(ityp(k)), D_tau(p, k, :) 
+!        WRITE(86,'(A6, 3F15.8)') atm(ityp(k)), P_tau(p, k,:) * 1.0E-12 ! multiply to obtain picoseconds 
+!        !
+!        ENDDO ! k loop
+!      ENDDO ! p loop
+!      
+!
+ DEALLOCATE(D_tau, P_tau)
+ CLOSE(85)
+ CLOSE(86)
+!
+!
+END SUBROUTINE single_phonon
