@@ -9,6 +9,7 @@ DENSE = \
 rotate_HSpsi_gamma.o \
 rotate_HSpsi_gamma_gpu.o \
 rotate_HSpsi_k.o \
+rotate_HSpsi_k_gpu.o \
 rotate_wfc_gamma.o \
 rotate_wfc_k.o 
 

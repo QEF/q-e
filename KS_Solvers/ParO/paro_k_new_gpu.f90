@@ -96,6 +96,8 @@ SUBROUTINE paro_k_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
 #if defined (__CUDA)
   attributes(device) :: evc_d, psi_d, hpsi_d, spsi_d
 #endif  
+!civn 2fix
+  write(*,*) 'civn paro_k_new_gpu'
   !
   ! ... init local variables
   !
@@ -135,7 +137,7 @@ SUBROUTINE paro_k_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
 #if defined(__MPI)
   IF ( nproc_ortho == 1 ) THEN
 #endif
-     CALL rotate_HSpsi_k (  npwx, npw, nbnd, nbnd, npol, psi, hpsi, overlap, spsi, eig )
+     CALL rotate_HSpsi_k_gpu (  npwx, npw, nbnd, nbnd, npol, psi, hpsi, overlap, spsi, eig )
 #if defined(__MPI)
   ELSE
      CALL protate_HSpsi_k(  npwx, npw, nbnd, nbnd, npol, psi, hpsi, overlap, spsi, eig )
@@ -258,7 +260,7 @@ SUBROUTINE paro_k_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
 #if defined(__MPI)
      IF ( nproc_ortho == 1 ) THEN
 #endif
-        CALL rotate_HSpsi_k ( npwx, npw, ndiag, ndiag, npol, psi, hpsi, overlap, spsi, ew )
+        CALL rotate_HSpsi_k_gpu ( npwx, npw, ndiag, ndiag, npol, psi, hpsi, overlap, spsi, ew )
 #if defined(__MPI)
      ELSE
         CALL protate_HSpsi_k( npwx, npw, ndiag, ndiag, npol, psi, hpsi, overlap, spsi, ew )

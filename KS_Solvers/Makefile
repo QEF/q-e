@@ -37,6 +37,7 @@ ParO/paro_k_new_gpu.o \
 DENSE/rotate_HSpsi_gamma.o \
 DENSE/rotate_HSpsi_gamma_gpu.o \
 DENSE/rotate_HSpsi_k.o \
+DENSE/rotate_HSpsi_k_gpu.o \
 DENSE/rotate_wfc_gamma.o \
 DENSE/rotate_wfc_k.o 
 
