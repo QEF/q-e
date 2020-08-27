@@ -1,6 +1,3 @@
-#
-# Aug 2020 - Samuel Ponc\'e
-#
 from buildbot.plugins import steps
 from buildbot.steps.shell import ShellCommand
 from buildbot.locks import WorkerLock
@@ -23,10 +20,10 @@ class Steps:
             'repository': 'https://gitlab.com/QEF/q-e.git',
             'branch': 'develop',
         },
-#        'sternheimer_gw': {
-#            'repository': 'https://github.com/mmdg-oxford/SternheimerGW.git',
-#            'branch': 'develop',
-#        },
+        'quantum_espresso_GPU': {
+            'repository': 'https://gitlab.com/QEF/q-e-gpu.git',
+            'branch': 'gpu-develop',
+        },        
         'wannier90': {
             'repository': 'https://github.com/wannier-developers/wannier90.git',
 #            'repository': 'https://github.com/sponce24/wannier90.git',
@@ -46,6 +43,16 @@ class Steps:
                  haltOnFailure = True,
                  alwaysUseLatest = True,
              )]
+
+    self.checkout_qe_GPU = [steps.Git(
+                 name="checkout_qe",
+                 method="copy",
+                 repourl=all_repos["quantum_espresso_GPU"]["repository"],
+                 branch=all_repos["quantum_espresso_GPU"]["branch"],
+                 haltOnFailure = True,
+                 alwaysUseLatest = True,
+             )]    
+
   
     self.configure_qe = [ShellCommand(
                    name="configure_qe",
@@ -62,7 +69,7 @@ class Steps:
                    env=Environ,
                    workdir="build",
                    locks=[build_lock.access('counting')],
-                   haltOnFailure = True,descriptionDone=["configure_qe"]
+                   haltOnFailure = True,descriptionDone=["configure_qe_hdf5"]
                )]    
 
     self.configure_qe_serial = [ShellCommand(
@@ -71,7 +78,7 @@ class Steps:
                    env=Environ,
                    workdir="build",
                    locks=[build_lock.access('counting')],
-                   haltOnFailure = True,descriptionDone=["configure_qe"]
+                   haltOnFailure = True,descriptionDone=["configure_qe_serial"]
                )]
 
     self.configure_qe_mp = [ShellCommand(
@@ -82,7 +89,16 @@ class Steps:
                    locks=[build_lock.access('counting')],
                    haltOnFailure = True,descriptionDone=["configure_qe_mp"]
                )]
-    
+
+    self.configure_qe_GPU = [ShellCommand(
+                   name="configure_qe_GPU",
+                   command=["./configure","--with-cuda=/opt/pgi/linux86-64/2019/cuda/10.1/","--with-cuda-runtime=10.1","--with-cuda-cc=60","--with-scalapack=no","--enable-openmp"],
+                   env=Environ,
+                   workdir="build",
+                   locks=[build_lock.access('counting')],
+                   haltOnFailure = True,descriptionDone=["configure_qe_GPU"]
+               )]
+
     self.debug_flags  = [ShellCommand(
                    name="debug_flags",
                    command=Interpolate('sed -i "s/FFLAGS         = -O3 -g/FFLAGS         = -g -Wall -fbounds-check -frange-check -finit-integer=987654321 -finit-real=nan -finit-logical=true -finit-character=64/g" make.inc'), 
@@ -121,6 +137,15 @@ class Steps:
                    haltOnFailure=True, descriptionDone=["make_pw"],
                    locks=[build_lock.access('counting')]
                 )]
+
+    self.make_pw_GPU = [ShellCommand(
+                   name="make_pw_GPU",
+                   command=["make","-j","4","pw"],
+                   env=Environ,
+                   workdir="build",
+                   haltOnFailure=True, descriptionDone=["make_pw"],
+                   locks=[build_lock.access('counting')]
+                )]    
     
     self.make_ph    = [ShellCommand(
                    name="make_ph",
