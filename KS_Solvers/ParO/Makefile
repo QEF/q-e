@@ -8,6 +8,7 @@ MODFLAGS= $(MOD_FLAG) ../../ELPA/src $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../../
 PARO = \
 paro_gamma.o paro_gamma_new.o paro_gamma_new_gpu.o  \
 paro_k.o paro_k_new.o \
+paro_k_new_gpu.o \
 pcg_gamma.o \
 pcg_k.o \
 bpcg_gamma.o \
