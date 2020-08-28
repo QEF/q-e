@@ -373,7 +373,7 @@
             !
             CALL c2psi_gamma_tg(dffts, psis, c_bgrp, i, nbsp_bgrp )
 
-            CALL invfft ('tgWave', psis, dffts )
+            CALL invfft ('Wave', psis, dffts )
 #else
             CALL c2psi_gamma( dffts, psis, c_bgrp(:,i), c_bgrp(:,i+1) )
 

@@ -86,7 +86,7 @@
 
       CALL c2psi_gamma_tg( dffts, psi, c, i, n )
 
-      CALL invfft('tgWave', psi, dffts)
+      CALL invfft('Wave', psi, dffts)
 
 #else
 
@@ -214,7 +214,7 @@
       END IF
       !
 #if defined(__MPI)
-      CALL fwfft( 'tgWave', psi, dffts )
+      CALL fwfft( 'Wave', psi, dffts )
 #else
       CALL fwfft( 'Wave', psi, dffts )
 #endif
