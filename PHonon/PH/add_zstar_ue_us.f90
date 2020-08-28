@@ -23,7 +23,7 @@ subroutine add_zstar_ue_us(imode0,npe)
   USE noncollin_module,   ONLY : npol
   USE wavefunctions,    ONLY : evc
   USE buffers, ONLY: get_buffer
-  USE qpoint,     ONLY : nksq
+  USE qpoint,     ONLY : nksq, ikks
   USE efield_mod, ONLY: zstarue0_rec
   USE eqv,        ONLY : dpsi, dvpsi
   USE modes,      ONLY : u
@@ -37,7 +37,7 @@ subroutine add_zstar_ue_us(imode0,npe)
 
   integer, intent(in) :: imode0, npe
 
-  integer :: ik, jpol, nrec, mode, ipert, ibnd, jbnd, i,j
+  integer :: ik, ikk, jpol, nrec, mode, ipert, ibnd, jbnd, i,j
   INTEGER :: npw, npwq
   real(DP) :: weight
 
@@ -51,11 +51,12 @@ subroutine add_zstar_ue_us(imode0,npe)
   allocate (pdsp(nbnd,nbnd))
   allocate (dvkb(npwx,nkb,3))
   do ik = 1, nksq
-     npw = ngk(ik)
+     ikk = ikks(ik)
+     npw = ngk(ikk)    
      npwq = npw
-     weight = wk (ik)
-     if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ik)
-     call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
+     weight = wk (ikk)
+     if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ikk)
+     call init_us_2 (npw, igk_k(1,ikk), xk (1, ikk), vkb)
      call dvkb3(ik,dvkb)
      do ipert = 1, npe
         mode = imode0 + ipert
@@ -76,8 +77,8 @@ subroutine add_zstar_ue_us(imode0,npe)
            !
            ! add the term of the double summation
            !
-           do ibnd = 1, nbnd_occ(ik)
-              do jbnd = 1, nbnd_occ(ik)
+           do ibnd = 1, nbnd_occ(ikk)
+              do jbnd = 1, nbnd_occ(ikk)
                  zstarue0_rec(mode,jpol)=zstarue0_rec(mode,jpol) +           &
                       weight *                                          &
                       dot_product(evc(1:npwx*npol,ibnd), &

@@ -10,7 +10,12 @@
 subroutine sym_dmag (nper, irr, dmagtosym)
   !---------------------------------------------------------------------
   ! symmetrize the change of the magnetization density
-  ! belonging to an irreducible representation
+  ! belonging to an irreducible representation.
+  ! The routine is generalized to include also the 
+  ! symmetry operations that require the time-reversal 
+  ! operator (meaning that TS is a symmetry of the crystal).
+  ! For a more complete explanation, please see: 
+  ! Phys. Rev. B 100, 045115 (2019).
   !
   USE kinds, only : DP
   USE constants, ONLY: tpi
@@ -31,7 +36,7 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   complex(DP) :: dmagtosym (dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin_mag, nper)
   ! the magnetization to symmetrize (only 2:4 components)
 
-  integer :: ftau(3,48)
+  integer :: ftau(3,nsymq), s_scaled(3,3,nsymq)
   integer :: is, ri, rj, rk, i, j, k, ipert, jpert, ipol, isym, &
        irot, kpol
   !  counter on spin polarizations
@@ -70,9 +75,9 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   in2 = tpi / DBLE (dfftp%nr2)
   in3 = tpi / DBLE (dfftp%nr3)
 
-  ftau(1,1:nsymq) = NINT ( ft(1,1:nsymq)*dfftp%nr1 ) 
-  ftau(2,1:nsymq) = NINT ( ft(2,1:nsymq)*dfftp%nr2 ) 
-  ftau(3,1:nsymq) = NINT ( ft(3,1:nsymq)*dfftp%nr3 ) 
+  CALL scale_sym_ops( nsymq, s, ft, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+       s_scaled, ftau )
+  
   if (minus_q) then
      g1 (1) = 0.d0
      g2 (1) = 0.d0
@@ -89,9 +94,8 @@ subroutine sym_dmag (nper, irr, dmagtosym)
      do k = 1, dfftp%nr3
         do j = 1, dfftp%nr2
            do i = 1, dfftp%nr1
-              CALL ruotaijk (s(1,1,irotmq), ftau(1,irotmq), i, j, k, &
-                 dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
-
+              CALL rotate_grid_point(s_scaled(1,1,irotmq), ftau(1,irotmq), &
+                   i, j, k, dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
               do ipert = 1, nper
                  aux2 = (0.d0, 0.d0)
                  do jpert = 1, nper
@@ -141,10 +145,13 @@ subroutine sym_dmag (nper, irr, dmagtosym)
      g2 (isym) = 0.d0
      g3 (isym) = 0.d0
      do ipol = 1, 3
-        g1 (isym) = g1 (isym) + gi (ipol, isym) * in1 * at (ipol, 1)
-        g2 (isym) = g2 (isym) + gi (ipol, isym) * in2 * at (ipol, 2)
-        g3 (isym) = g3 (isym) + gi (ipol, isym) * in3 * at (ipol, 3)
+        g1 (isym) = g1 (isym) + gi (ipol, isym) * at (ipol, 1)
+        g2 (isym) = g2 (isym) + gi (ipol, isym) * at (ipol, 2)
+        g3 (isym) = g3 (isym) + gi (ipol, isym) * at (ipol, 3)
      enddo
+     g1 (isym) = NINT(g1(isym))*in1
+     g2 (isym) = NINT(g2(isym))*in2
+     g3 (isym) = NINT(g3(isym))*in3
      term (1, isym) = CMPLX(cos (g1 (isym) ), sin (g1 (isym) ) ,kind=DP)
      term (2, isym) = CMPLX(cos (g2 (isym) ), sin (g2 (isym) ) ,kind=DP)
      term (3, isym) = CMPLX(cos (g3 (isym) ), sin (g3 (isym) ) ,kind=DP)
@@ -159,8 +166,8 @@ subroutine sym_dmag (nper, irr, dmagtosym)
         do i = 1, dfftp%nr1
            do isym = 1, nsymq
               irot = isym
-              CALL ruotaijk (s(1,1,irot), ftau(1,irot), i, j, k, &
-                 dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
+              CALL rotate_grid_point(s_scaled(1,1,irot), ftau(1,irot), &
+                   i, j, k, dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
               dmags=(0.d0,0.d0)
               do ipert = 1, nper
                  do jpert = 1, nper
@@ -189,6 +196,9 @@ subroutine sym_dmag (nper, irr, dmagtosym)
                               at(kpol,2)*magrot(2) + &
                               at(kpol,3)*magrot(3)
                  enddo
+                 if (t_rev(isym) == 1) then 
+                    mag(:) = conjg(mag(:))
+                 end if
                  dmagsym(i,j,k,1,ipert)=dmagsym(i,j,k,1,ipert)+mag(1)
                  dmagsym(i,j,k,2,ipert)=dmagsym(i,j,k,2,ipert)+mag(2)
                  dmagsym(i,j,k,3,ipert)=dmagsym(i,j,k,3,ipert)+mag(3)

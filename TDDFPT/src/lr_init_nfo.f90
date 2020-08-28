@@ -20,10 +20,12 @@ SUBROUTINE lr_init_nfo()
   USE ions_base,            ONLY : nat, tau
   USE klist,                ONLY : nks,xk,ngk,igk_k
   USE wvfct,                ONLY : nbnd
-  USE lr_variables,         ONLY : lr_verbosity, eels, size_evc
+  USE lr_variables,         ONLY : lr_verbosity, eels, size_evc, calculator, &
+                                 & lrdrho, nwordd0psi, iund0psi, iudwf, iu1dwf,&
+                                 & iundvpsi
   USE io_global,            ONLY : stdout
   USE constants,            ONLY : tpi, eps8
-  USE noncollin_module,     ONLY : npol
+  USE noncollin_module,     ONLY : npol, nspin_mag
   USE gvect,                ONLY : ngm, g
   USE cell_base,            ONLY : at, bg, omega, tpiba2
   USE lsda_mod,             ONLY : current_spin, nspin
@@ -36,7 +38,7 @@ SUBROUTINE lr_init_nfo()
   USE wavefunctions, ONLY : evc
   USE becmod,               ONLY : calbec, allocate_bec_type
   USE lrus,                 ONLY : becp1
-  USE control_lr,           ONLY : alpha_pv
+  USE control_lr,           ONLY : alpha_pv, alpha_mix, tr2_ph
   USE qpoint,               ONLY : xq, ikks, ikqs, nksq, eigqts
   USE eqv,                  ONLY : evq
   USE buffers,              ONLY : open_buffer, get_buffer
@@ -50,7 +52,8 @@ SUBROUTINE lr_init_nfo()
   INTEGER :: na,  & ! dummy index which runs over atoms 
              ik,  & ! dummy index which runs over k points
              ikk, & ! index of the point k
-             npw    ! number of the plane-waves at point k
+             npw, & ! number of the plane-waves at point k
+             it
   LOGICAL :: exst, exst_mem 
   ! logical variable to check file exists
   ! logical variable to check file exists in memory
@@ -95,6 +98,14 @@ SUBROUTINE lr_init_nfo()
      !
      size_evc = nbnd * npwx * npol * nksq
      nwordwfc = nbnd * npwx * npol
+     IF (trim(calculator)=='sternheimer') THEN
+        lrdrho = 2 * dfftp%nr1x * dfftp%nr2x * dfftp%nr3x * nspin_mag
+        nwordd0psi = nbnd * npwx * npol * nksq
+        CALL open_buffer ( iundvpsi, 'dvpsi.', nwordd0psi, io_level, exst_mem, exst)
+        CALL open_buffer ( iudwf, 'dwf', nwordd0psi, io_level, exst_mem, exst)
+        CALL open_buffer ( iu1dwf, 'mwf', nwordd0psi, io_level, exst_mem, exst)
+        !
+     ENDIF
      !
      CALL open_buffer (iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst)
      ! 
@@ -152,6 +163,22 @@ SUBROUTINE lr_init_nfo()
   IF (eels) THEN
      !
      alpha_pv = 0.0d0
+     !
+     IF (trim(calculator)=='sternheimer') THEN
+        !
+        ! Setup all gradient correction stuff
+        !
+        call setup_dgc()
+        !
+        ! 4) Computes the inverse of each matrix of the crystal symmetry group
+        !
+        CALL setup_alpha_pv()
+        ! 
+        DO it = 2, 100
+           IF (alpha_mix (it) .eq. 0.0d0) alpha_mix(it) = alpha_mix (it - 1)
+        ENDDO
+        tr2_ph = 1.D-12
+     ENDIF
      !
   ELSE
      !

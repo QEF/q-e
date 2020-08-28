@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -35,7 +35,7 @@ SUBROUTINE setup()
   !! 3) generates k-points corresponding to the actual crystal symmetry;
   !
   !! 4) calculates various quantities used in magnetic, spin-orbit, PAW
-  !!    electric-field, LDA+U calculations, and for parallelism.
+  !!    electric-field, DFT+U(+V) calculations, and for parallelism.
   !
   USE kinds,              ONLY : DP
   USE constants,          ONLY : eps8, e2, fpi, pi, degspin
@@ -80,14 +80,14 @@ SUBROUTINE setup()
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
                                  starting_magnetization
   USE spin_orb,           ONLY : lspinorb, domag
-  USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, &
+  USE noncollin_module,   ONLY : noncolin, npol, i_cons, m_loc, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
   USE qexsd_module,       ONLY : qexsd_readschema
   USE qexsd_copy,         ONLY : qexsd_copy_efermi
   USE qes_libs_module,    ONLY : qes_reset
   USE qes_types_module,   ONLY : output_type
-  USE exx,                ONLY : ecutfock, nbndproj
+  USE exx,                ONLY : ecutfock
   USE exx_base,           ONLY : exx_grid_init, exx_mp_init, exx_div_check
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
   USE paw_variables,      ONLY : okpaw
@@ -154,6 +154,9 @@ SUBROUTINE setup()
      IF ( noncolin ) no_t_rev=.true.
   END IF
   !
+  IF ( dft_is_meta() .AND. noncolin )  CALL errore( 'setup', &
+                               'Non-collinear Meta-GGA not implemented', 1 )
+  !
   ! ... Compute the ionic charge for each atom type and the total ionic charge
   !
   zv(1:ntyp) = upf(1:ntyp)%zp
@@ -205,7 +208,7 @@ SUBROUTINE setup()
   IF ( noncolin  ) THEN
      domag = ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6 )
   ELSE
-     domag = .TRUE.
+     domag = .false.
   END IF
   !
   !  Set the different spin indices
@@ -628,9 +631,9 @@ SUBROUTINE setup()
      ENDDO
   ENDIF
   !
-  ! ... Set up Hubbard parameters for LDA+U calculation
+  ! ... Set up Hubbard parameters for DFT+U(+V) calculation
   !
-  CALL init_lda_plus_u ( upf(1:ntyp)%psd, noncolin )
+  CALL init_lda_plus_u ( upf(1:ntyp)%psd, nspin, noncolin )
   !
   ! ... initialize d1 and d2 to rotate the spherical harmonics
   !
@@ -687,7 +690,7 @@ LOGICAL FUNCTION check_para_diag( nbnd )
         ELSE
            CALL errore( 'setup','Unexpected sub-group communicator ', 1 )
         END IF
-#if defined(__ELPA) || defined(__ELPA_2015) || defined(__ELPA_2016)
+#if defined(__ELPA)  || defined(__ELPA_2015) || defined(__ELPA_2016) || defined(__ELPA_2017) || defined(__ELPA_2018) || defined(__ELPA_2019)
         WRITE( stdout, '(5X,"ELPA distributed-memory algorithm ", &
               & "(size of sub-group: ", I2, "*", I3, " procs)",/)') &
                np_ortho(1), np_ortho(2)

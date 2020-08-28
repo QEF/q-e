@@ -18,14 +18,13 @@ SUBROUTINE h_epsi_her_set( pdir, e_field )
   USE noncollin_module,   ONLY: noncolin, npol
   USE spin_orb,           ONLY: lspinorb
   USE kinds,              ONLY: DP
-  USE us
   USE wvfct,              ONLY: npwx, nbnd
   USE ldaU,               ONLY: lda_plus_u
   USE lsda_mod,           ONLY: current_spin, nspin
   USE scf,                ONLY: vrs  
   USE gvect
   USE fft_base,           ONLY: dfftp
-  USE uspp
+  USE uspp,               ONLY: okvan, nkb, vkb
   USE uspp_param,         ONLY: upf, nh, nhm, nbetam, lmaxq
   USE bp,                 ONLY: nppstr_3d, fact_hepsi, evcel, evcp=>evcelp, &
                                 evcm=>evcelm, mapgp_global, mapgm_global, nx_el

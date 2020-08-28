@@ -1,32 +1,32 @@
-  !                                                                            
-  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino 
-  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino  
-  !                                                                            
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
-  !                                                                            
+  !
+  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
+  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
+  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
+  !
   !-----------------------------------------------------------------------
   PROGRAM epw
   !-----------------------------------------------------------------------
   !! author: Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
-  !! version: v5.2
+  !! version: v5.3
   !! license: GNU
-  !! summary: EPW main driver 
-  !!  
+  !! summary: EPW main driver
+  !!
   !! This is the main EPW driver which sets the phases on the wavefunctions,
   !! calls [[wann_run]] and [[elphon_shuffle_wrap]]
   !!
   USE io_global,       ONLY : stdout, ionode
   USE mp,              ONLY : mp_bcast, mp_barrier
-  USE mp_world,        ONLY : mpime  
+  USE mp_world,        ONLY : mpime
   USE mp_global,       ONLY : mp_startup, ionode_id, mp_global_end
   USE control_flags,   ONLY : gamma_only
   USE control_epw,     ONLY : wannierize
   USE global_version,  ONLY : version_number
   USE epwcom,          ONLY : filukk, eliashberg, ep_coupling, epwread, epbread, cumulant
   USE environment,     ONLY : environment_start
-  USE elph2,           ONLY : elph 
+  USE elph2,           ONLY : elph
   USE close_epw,       ONLY : close_final, deallocate_epw
   USE cum_mod,         ONLY : spectral_cumulant
 !  USE wannierization,  ONLY : setphases_wrap, wann_run
@@ -38,7 +38,7 @@
   CHARACTER(LEN = 12) :: code = 'EPW'
   !! Name of the program
   !
-  version_number = '5.2.0'
+  version_number = '5.3.0'
   !
   CALL init_clocks(.TRUE.)
   !
@@ -94,7 +94,6 @@
     WRITE(stdout,'(a)') "     Be aware that some consistency checks are therefore not done.                  "
     WRITE(stdout,'(a)') "     ------------------------------------------------------------------------ "
     WRITE(stdout,'(a)') "                      "
-    CALL epw_setup_restart()
   ELSE
     CALL epw_setup()
   ENDIF
@@ -103,26 +102,26 @@
   !
   CALL epw_summary()
   !
-  IF (ep_coupling) THEN 
+  IF (ep_coupling) THEN
     !
     ! In case of restart with arbitrary number of cores.
     IF (epwread .AND. .NOT. epbread) THEN
       CONTINUE
-    ELSE 
+    ELSE
       CALL openfilepw()
     ENDIF
     !
     CALL print_clock('EPW' )
     !
     IF (epwread .AND. .NOT. epbread) THEN
-      CONTINUE      
+      CONTINUE
     ELSE
       CALL epw_init(.TRUE.)
     ENDIF
     !
     CALL print_clock('EPW')
     !
-    ! Generates the perturbation matrix which fixes the gauge of 
+    ! Generates the perturbation matrix which fixes the gauge of
     ! the calculated wavefunctions
     ! Currently, matices from setphases_wrap are identity matrices.
     ! Thus, for the moment, calling of setphases_wrap is removed.
@@ -130,13 +129,13 @@
     !
     IF (wannierize) THEN
       !
-      ! Create U(k, k') localization matrix 
+      ! Create U(k, k') localization matrix
       CALL wann_run()
     ELSE
       !
       ! Read Wannier matrix from a previous run
       WRITE(stdout, '(/,5x,a,/,3a,/,5x,a,/)') REPEAT('-',67), '     Using ', &
-           TRIM(filukk) , ' from disk', REPEAT('-',67) 
+           TRIM(filukk) , ' from disk', REPEAT('-',67)
       ! When wannierize=.false. loadbm should be called in order to load the information on band manifold determined in Wannierization step.
       CALL loadbm()
     ENDIF
@@ -155,7 +154,7 @@
     CALL close_final()
     !
   ENDIF
-  ! 
+  !
   IF (cumulant .AND. ionode) THEN
     CALL spectral_cumulant()
   ENDIF
@@ -164,7 +163,7 @@
     CALL eliashberg_eqs()
   ENDIF
   !
-  ! Print statistics and exit gracefully    
+  ! Print statistics and exit gracefully
   CALL stop_epw()
   !
   STOP

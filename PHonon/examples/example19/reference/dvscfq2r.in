@@ -1,0 +1,10 @@
+&input
+  prefix = 'diam'
+  outdir = '/group2/jmlim/program/qe-dev-dvscf/tempdir/'
+  fildyn = 'diam.dyn'
+  fildvscf = 'dvscf'
+  wpot_dir = 'wpot/'
+
+  do_long_range = .false.
+  do_charge_neutral = .false.
+ /

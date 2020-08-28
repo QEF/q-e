@@ -46,6 +46,8 @@ MODULE qes_write_module
     MODULE PROCEDURE qes_write_HubbardJ
     MODULE PROCEDURE qes_write_starting_ns
     MODULE PROCEDURE qes_write_Hubbard_ns
+    MODULE PROCEDURE qes_write_HubbardBack
+    MODULE PROCEDURE qes_write_backL
     MODULE PROCEDURE qes_write_vdW
     MODULE PROCEDURE qes_write_spin
     MODULE PROCEDURE qes_write_bands
@@ -812,6 +814,26 @@ MODULE qes_write_module
            CALL xml_addCharacters(xp, TRIM(obj%U_projection_type))
         CALL xml_EndElement(xp, "U_projection_type")
      END IF
+     IF (obj%Hubbard_back_ispresent) THEN
+        DO i = 1, obj%ndim_Hubbard_back
+           CALL qes_write_HubbardBack(xp, obj%Hubbard_back(i) )
+        END DO
+     END IF
+     IF (obj%Hubbard_U_back_ispresent) THEN
+        DO i = 1, obj%ndim_Hubbard_U_back
+           CALL qes_write_HubbardCommon(xp, obj%Hubbard_U_back(i) )
+        END DO
+     END IF
+     IF (obj%Hubbard_alpha_back_ispresent) THEN
+        DO i = 1, obj%ndim_Hubbard_alpha_back
+           CALL qes_write_HubbardCommon(xp, obj%Hubbard_alpha_back(i) )
+        END DO
+     END IF
+     IF (obj%Hubbard_ns_nc_ispresent) THEN
+        DO i = 1, obj%ndim_Hubbard_ns_nc
+           CALL qes_write_Hubbard_ns(xp, obj%Hubbard_ns_nc(i) )
+        END DO
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_dftU
 
@@ -897,6 +919,43 @@ MODULE qes_write_module
         END DO
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_Hubbard_ns
+
+   SUBROUTINE qes_write_HubbardBack(xp, obj) 
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(HubbardBack_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     CALL xml_addAttribute(xp, 'species', TRIM(obj%species) )
+     CALL xml_NewElement(xp, 'background')
+        CALL xml_addCharacters(xp, TRIM(obj%background))
+     CALL xml_EndElement(xp, 'background')
+     DO i = 1, obj%ndim_l_number
+        CALL qes_write_backL(xp, obj%l_number(i) )
+     END DO
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_HubbardBack
+
+   SUBROUTINE qes_write_backL(xp, obj) 
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(backL_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     CALL xml_addAttribute(xp, 'l_index', obj%l_index )
+        CALL xml_AddCharacters(xp, obj%backL)
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_backL
 
    SUBROUTINE qes_write_vdW(xp, obj) 
      !-----------------------------------------------------------------

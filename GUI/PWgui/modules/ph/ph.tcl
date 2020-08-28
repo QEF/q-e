@@ -138,11 +138,49 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 			"electron-phonon by interpolation <interpolated>"
 			"el.-phon. lambda coeff. via opt.tetrahedron <lambda_tetra>"
 			"phonon linewidth via opt.tetrahedron <gamma_tetra>"
+                        "write electron-phonon coupling matrix elements for epa.x <epa>"
+                        "write quantities required for postahc.x calculation <ahc>"
 		    }
-		    -value     {'simple' 'interpolated' 'lambda_tetra' 'gamma_tetra'}
+		    -value     {'simple' 'interpolated' 'lambda_tetra' 'gamma_tetra' 'epa' 'ahc'}
 		    -widget    optionmenu
 		}
-		
+
+                group el_ph_group -name "Electron-phonon variables:" -decor normal {
+                    var el_ph_nsigma {
+                        -label "The number of double-delta smearing values (el_ph_nsigma):"
+                        -validate int
+                    }
+
+                    var el_ph_sigma {
+                        -label "The spacing between double-delta smearing values (el_ph_sigma):"
+                        -validate fortranposreal
+                    }
+
+                    group ahc_group -name "Variables for electron_phonon = 'ahc': " {
+                        var ahc_dir {
+                            -label "Directory for the output ahc files (ahc_dir):"
+                            -widget   entrydirselectquote
+                            -fmt      %S -validate string
+                        }
+
+                        var ahc_nbnd {
+                            -label "Number of bands for the electron self-energy (ahc_nbnd):"
+                            -validate int
+                        }
+                        
+                        var ahc_nbndskip {
+                            -label "Number of bands to exclude from self-energy (ahc_nbndskip):"
+                            -validate int
+                        }
+                        
+                        var skip_upperfan {
+                            -label "Skip calculation of the upper Fan self-energy (skip_upperfan):"
+                            -widget    radiobox
+                            -textvalue { Yes No }	      
+                            -value     { .true. .false. }
+                        }
+                    }
+                }
 		var lrpa {
 		    -label     "Compute dielectric constant with RPA and dV_xc=0 (lrpa):"
 		    -textvalue {Yes No}
@@ -481,11 +519,53 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 
                 separator -label "--- Miscellaneous ---"
 
+                var diagonalization {
+                    -label "Diagonalization method for the non-SCF (diagonalization):"
+                    -validate string
+                    -textvalue {
+                        "Davidson with overlap matrix  <david>"
+                        "Conjugate-gradient band-by-band <cg>"
+                    }
+                    -value {
+                        'david'
+                        'cg'
+                    }
+                    -widget radiobox
+                }
+
                 var read_dns_bare {
                     -label "For DFPT+U: read the dns_* files (read_dns_bare):"
                     -widget    radiobox
                     -textvalue { Yes No }	      
                     -value     { .true. .false. }
+                }
+
+                var ldvscf_interpolate {
+                    -label "Use Fourier interpolation of phonon potential (ldvscf_interpolate):"
+                    -widget    radiobox
+                    -textvalue { Yes No }	      
+                    -value     { .true. .false. }
+                }
+                group dvscf_group -name "Variables for dvscf interpolation:" {
+                    var wpot_dir {
+                        -label "Directory for the w_pot binary files (wpot_dir):"
+                        -widget    entrydirselectquote
+                        -validate  string
+                    }
+                    
+                    var do_long_range {
+                        -label "Add the long-range part of the potential (do_long_range):"
+                        -widget    radiobox
+                        -textvalue { Yes No }	      
+                        -value     { .true. .false. }
+                    }
+                    
+                    var do_charge_neutral {
+                        -label "Impose charge neutrality on the Born effective charges (do_charge_neutral):"
+                        -widget    radiobox
+                        -textvalue { Yes No }	      
+                        -value     { .true. .false. }
+                    }
                 }
 	    }	
 

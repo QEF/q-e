@@ -49,6 +49,32 @@ def hasSOC(prefix):
     return lSOC
 
 
+# Check if the calculation includes PAW
+def hasPAW(prefix):
+    fname = prefix+'.save/data-file-schema.xml'
+
+    xmldoc = minidom.parse(fname)
+    item = xmldoc.getElementsByTagName('paw')[0]
+    lPAW = (item.childNodes[0].data == 'true')
+
+    return lPAW
+
+
+# Check if the calculation used .fc or .fc.xml files
+def hasfc(prefix):
+    fname = str(prefix)+'.fc.xml'
+    if (os.path.isfile(fname)):
+        lfc = True
+    else:
+        fname_no_xml = fname.strip(".xml")
+        if (os.path.isfile(fname_no_xml)):
+            lfc = True
+        else:
+            lfc = False
+
+    return lfc
+
+
 # check if calculation used xml files (irrelevant of presence of SOC)
 def hasXML(prefix):
     # check for a file named prefix.dyn1.xml
@@ -89,6 +115,12 @@ prefix = str(user_input)
 # Test if '.xml' files are used
 XML = hasXML(prefix)
 
+# Test if PAW
+PAW = hasPAW(prefix)
+
+# Test if fc
+fc = hasfc(prefix)
+
 # Test if seq. or parallel run
 SEQ = isSEQ(prefix)
 
@@ -121,11 +153,18 @@ for iqpt in range(1, nqpt+1):
                 os.system('cp _ph0/'+prefix+'.dvscf* save/'+prefix+'.dvscf_q'
                           + label)
                 os.system('cp -r _ph0/'+prefix+'.phsave save/')
-                os.system('cp '+prefix+'.fc.xml save/ifc.q2r.xml')
+                if fc:
+                    os.system('cp '+prefix+'.fc.xml save/ifc.q2r.xml')
+                if PAW:
+                    os.system('cp _ph0/'+prefix+'.dvscf_paw* save/'+prefix +
+                              '.dvscf_paw_q'+label)
             else:
                 os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix +
                           '.dvscf* save/'+prefix+'.dvscf_q'+label)
                 os.system('rm _ph0/'+prefix+'.q_'+str(iqpt)+'/*wfc*')
+                if PAW:
+                    os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix +
+                              '.dvscf_paw* save/'+prefix+'.dvscf_paw_q'+label)
         # Case without XML files
         else:
             os.system('cp '+prefix+'.dyn'+str(iqpt)+' save/'+prefix+'.dyn_q' +
@@ -134,11 +173,18 @@ for iqpt in range(1, nqpt+1):
                 os.system('cp _ph0/'+prefix+'.dvscf save/'+prefix+'.dvscf_q' +
                           label)
                 os.system('cp -r _ph0/'+prefix+'.phsave save/')
-                os.system('cp '+prefix+'.fc save/ifc.q2r')
+                if fc:
+                    os.system('cp '+prefix+'.fc save/ifc.q2r')
+                if PAW:
+                    os.system('cp _ph0/'+prefix+'.dvscf_paw save/'+prefix +
+                              '.dvscf_paw_q'+label)
             else:
                 os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix +
                           '.dvscf save/'+prefix+'.dvscf_q'+label)
                 os.system('rm _ph0/'+prefix+'.q_'+str(iqpt)+'/*wfc*')
+                if PAW:
+                    os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix +
+                              '.dvscf_paw save/'+prefix+'.dvscf_paw_q'+label)
     else:
         # Case with XML format
         if XML:
@@ -149,11 +195,18 @@ for iqpt in range(1, nqpt+1):
                 os.system('cp _ph0/'+prefix+'.dvscf1 save/'+prefix+'.dvscf_q' +
                           label)
                 os.system('cp -r _ph0/'+prefix+'.phsave save/')
-                os.system('cp '+prefix+'.fc.xml save/ifc.q2r.xml')
+                if fc:
+                    os.system('cp '+prefix+'.fc.xml save/ifc.q2r.xml')
+                if PAW:
+                    os.system('cp _ph0/'+prefix+'.dvscf_paw1 save/'+prefix +
+                              '.dvscf_paw_q'+label)
             else:
                 os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix +
                           '.dvscf1 save/'+prefix+'.dvscf_q'+label)
                 os.system('rm _ph0/'+prefix+'.q_'+str(iqpt)+'/*wfc*')
+                if PAW:
+                    os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix +
+                              '.dvscf_paw1 save/'+prefix+'.dvscf_paw_q'+label)
         # Case without XML format
         else:
             os.system('cp '+prefix+'.dyn'+str(iqpt)+' save/'+prefix+'.dyn_q' +
@@ -162,8 +215,15 @@ for iqpt in range(1, nqpt+1):
                 os.system('cp _ph0/'+prefix+'.dvscf1 save/'+prefix+'.dvscf_q' +
                           label)
                 os.system('cp -r _ph0/'+prefix+'.phsave save/')
-                os.system('cp '+prefix+'.fc save/ifc.q2r')
+                if fc:
+                    os.system('cp '+prefix+'.fc save/ifc.q2r')
+                if PAW:
+                    os.system('cp _ph0/'+prefix+'.dvscf_paw1 save/'+prefix +
+                              '.dvscf_paw_q'+label)
             else:
                 os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix +
                           '.dvscf1 save/'+prefix+'.dvscf_q'+label)
                 os.system('rm _ph0/'+prefix+'.q_'+str(iqpt)+'/*wfc*')
+                if PAW:
+                    os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix +
+                              '.dvscf_paw1 save/'+prefix+'.dvscf_paw_q'+label)

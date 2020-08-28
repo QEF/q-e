@@ -45,7 +45,7 @@
   band_plot   = .true.
 
   fsthick     = 3.0
-  eptemp      = 20.0
+  temps       = 20.0
   degaussw    = 0.01
  
   specfun_pl  = .true.
@@ -67,6 +67,3 @@
   nq2         = 1
   nq3         = 1
  /
-  1 cartesian
-  0.000000000   0.000000000   0.000000000 
-

@@ -9,10 +9,10 @@ MODFLAGS=$(BASEMOD_FLAGS) \
 # list of modules
 
 MODULES = \
-atom.o \
 autopilot.o \
 basic_algebra_routines.o \
 becmod.o \
+beef_interface.o \
 bfgs_module.o \
 bspline.o \
 bz_form.o \
@@ -41,7 +41,6 @@ fft_rho.o \
 fsockets.o \
 funct.o \
 generate_function.o \
-gth.o \
 gradutils.o \
 gvecw.o \
 input_parameters.o \
@@ -50,7 +49,6 @@ io_files.o \
 io_global.o  \
 ions_base.o \
 kind.o \
-libxc.o \
 mdiis.o \
 mm_dispersion.o \
 mp_bands.o \
@@ -68,20 +66,14 @@ paw_variables.o \
 plugin_flags.o \
 plugin_arguments.o \
 plugin_variables.o \
-pseudo_types.o \
+powell.o \
 pw_dot.o \
 qmmm.o \
-radial_grids.o \
 random_numbers.o \
 read_cards.o \
 read_input.o \
 read_namelists.o \
-read_ncpp.o \
 read_pseudo.o \
-read_upf_v1.o \
-read_upf_v2.o \
-read_upf_schema.o \
-read_uspp.o \
 recvec.o \
 recvec_subs.o \
 run_info.o \
@@ -89,22 +81,14 @@ space_group.o \
 set_signal.o \
 set_vdw_corr.o \
 setqf.o \
-splinelib.o \
 timestep.o\
 tsvdw.o\
-emend_upf.o \
-upf.o \
-upf_to_internal.o \
-uspp.o \
 version.o \
 wannier_gw.o\
 wannier_new.o \
 wave_base.o \
 wavefunctions.o \
 wrappers.o\
-write_upf.o \
-write_upf_v2.o \
-write_upf_schema.o \
 ws_base.o \
 xc_vdW_DF.o \
 xc_rVV10.o \
@@ -135,7 +119,7 @@ zvscal.o
 # list of subroutines and functions (not modules) previously found in flib/
 
 OBJS = \
-atomic_number.o \
+atom_weight.o \
 capital.o \
 correlation_gga.o \
 cryst_to_car.o \
@@ -158,7 +142,6 @@ recips.o \
 remove_tot_torque.o \
 set_hubbard_l.o \
 set_hubbard_n.o \
-simpsn.o \
 sort.o \
 sph_bes.o \
 sph_dbes.o \

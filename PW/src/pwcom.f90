@@ -101,9 +101,9 @@ CONTAINS
     DEALLOCATE( gk )
 #if defined (__CUDA)
     IF(ALLOCATED(igk_k_d)) DEALLOCATE(igk_k_d)
-    ALLOCATE ( igk_k_d, source=igk_k)
+    IF (nks > 0) ALLOCATE ( igk_k_d, source=igk_k)
     IF(ALLOCATED(ngk_d)) DEALLOCATE(ngk_d)
-    ALLOCATE ( ngk_d, source=ngk)
+    IF (nks > 0) ALLOCATE ( ngk_d, source=ngk)
 #endif
     !
   END SUBROUTINE init_igk
@@ -366,6 +366,18 @@ MODULE force_mod
   !! if .TRUE. compute the forces
   LOGICAL :: lstres
   !! if .TRUE. compute the stress
+  REAL(DP), ALLOCATABLE :: eigenval(:)
+  !! eigenvalues of the overlap matrix
+  COMPLEX(DP), ALLOCATABLE :: eigenvect(:,:)
+  !! eigenvectors of the overlap matrix
+  COMPLEX(DP), ALLOCATABLE :: overlap_inv(:,:)
+  !! overlap matrix (transposed): (O^{-1/2})^T
+  COMPLEX(DP), ALLOCATABLE :: doverlap_inv(:,:)
+  !! derivative of the overlap matrix (transposed): d[(O^{-1/2})^T]
+  COMPLEX (DP), ALLOCATABLE :: at_dy(:,:), at_dj(:,:)
+  !! derivatives of spherical harmonics and spherical Bessel functions (for atomic functions)
+  COMPLEX (DP), ALLOCATABLE :: us_dy(:,:), us_dj(:,:)
+  !! derivatives of spherical harmonics and spherical Bessel functions (for beta functions)
   !
 END MODULE force_mod
 !
@@ -478,7 +490,8 @@ MODULE spin_orb
   !! Variables needed for calculations with spin-orbit
   !
   USE kinds,       ONLY : DP
-  USE parameters,  ONLY : lmaxx
+  USE upf_params,  ONLY : lmaxx, lqmax
+  !! FIXME: rot_ylm could be dynamically allocated
   !
   SAVE
   !
@@ -490,7 +503,7 @@ MODULE spin_orb
   !! if .TRUE. the initial wavefunctions are spin-angle functions. 
   LOGICAL :: domag
   !! if .TRUE. magnetization is computed
-  COMPLEX (DP) :: rot_ylm(2*lmaxx+1,2*lmaxx+1)
+  COMPLEX (DP) :: rot_ylm(lqmax,lqmax)
   !! transform real spherical harmonics into complex ones
   COMPLEX (DP), ALLOCATABLE :: fcoef(:,:,:,:,:)
   !! function needed to account for spinors.
@@ -509,7 +522,6 @@ MODULE pwcom
   USE force_mod
   USE relax
   USE cellmd
-  USE us
   USE fixed_occ
   USE spin_orb
   !

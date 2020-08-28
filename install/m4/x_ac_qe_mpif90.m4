@@ -21,6 +21,7 @@ try_f90="gfortran f90"
 case $arch in
 ia32 | ia64 | x86_64 )
         try_f90="ifort pgf90 nagfor $try_f90"
+        try_mpif90="mpiifort $try_mpif90"
         ;;
 arm )
         try_f90="pgf90 armflang $try_f90"
@@ -57,14 +58,13 @@ necsx )
 ppc64 )
         try_mpif90="mpxlf90_r mpf90_r mpif90"
         try_f90="xlf90_r $try_f90"
-        try_dflags="-D__XLF"
         ;;
-# PowerPC MareNostrum
-ppc64-mn )
+# PowerPC little endian
+ppc64le )
+        try_mpif90="$try_mpif90 mpixlf"
         try_f90="xlf90_r"
-        try_dflags="-D__XLF"
         ;;
-# IBM BlueGene
+# IBM BlueGene - obsolete
 ppc64-bg | ppc64-bgq )
 	if test "$use_openmp" -eq 0 ; then
           try_mpif90="mpixlf90"
@@ -77,7 +77,6 @@ ppc64-bg | ppc64-bgq )
           try_f90="bgxlf90_r"
 	fi
         try_arflags="ruv"
-        try_dflags="-D__XLF"
         ;;
 * )
         AC_MSG_WARN($arch : unsupported architecture?)
@@ -138,8 +137,6 @@ case "$arch" in
                 version=`echo $pgf_version | cut -d ' ' -f2`
                 echo "${ECHO_T}pgf90 $version"
                 f90_in_mpif90="pgf90"
-                # flag to test MKL with PGI
-                MKL_FLAGS="-pgf90libs"
         elif test "$gfortran_version" != ""
         then
                 version=`echo $gfortran_version | cut -d ' ' -f3`
@@ -156,7 +153,7 @@ case "$arch" in
         elif test "$xlf_version" != ""
         then
                 echo "${ECHO_T}xlf (version unknonw)"
-                f90_in_mpif90="xlf"
+                f90_in_mpif90="xlf90_r"
                 try_dflags="-D__XLF"
         elif test "$armflang_version" != "" 
         then 

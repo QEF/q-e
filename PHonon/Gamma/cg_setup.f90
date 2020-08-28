@@ -65,26 +65,10 @@ SUBROUTINE cg_setup
      ALLOCATE  ( grho   (3, dfftp%nnr, nspin))
   ENDIF
   !
-  !
-  !  initialize structure factor array
-  !
-  CALL struc_fact ( nat, tau, ntyp, ityp, ngm, g, bg,               &
-       &                  dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
-  !
   !  compute drhocore/dtau for each atom type (if needed)
   !
   nlcc_any = any  ( upf(1:ntyp)%nlcc )
   !!! if (nlcc_any) call set_drhoc(xq, drc)
-  !
-  !  local potential
-  !
-  CALL init_vloc
-  !
-  CALL init_us_1
-  !
-  CALL newd
-  !
-  !  derivative of the xc potential - NOT IMPLEMENTED FOR LSDA
   !
   rhotot(:) = rho%of_r(:,1) + rho_core(:)
   !

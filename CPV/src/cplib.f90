@@ -1092,6 +1092,7 @@ subroutine nlinit
       use uspp,            ONLY : aainit, beta, qq_nt, dvan, nhtol, nhtolm, indv,&
                                   dbeta
       use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh, ish
+      use uspp_gpum,       ONLY : using_qq_nt, using_qq_nt_d, qq_nt_d
       use atom,            ONLY : rgrid
       use qgb_mod,         ONLY : qgb, dqgb
       use smallbox_gvec,   ONLY : ngb
@@ -1503,7 +1504,7 @@ end subroutine dylmr2_
 
 
 !-----------------------------------------------------------------------
-      SUBROUTINE dotcsc_x( eigr, cp, ngw, n )
+      SUBROUTINE dotcsc_x( betae, cp, ngw, n )
 !-----------------------------------------------------------------------
 !
       USE kinds,              ONLY: DP
@@ -1514,13 +1515,14 @@ end subroutine dylmr2_
       USE uspp_param,         ONLY: nh, ish, upf
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm, nbgrp, inter_bgrp_comm
-      USE cp_interfaces,      ONLY: nlsm1
+      USE cp_interfaces,      ONLY: calbec
       USE electrons_base,     ONLY: ispin, ispin_bgrp, nbspx_bgrp, ibgrp_g2l, iupdwn, nupdwn, nbspx
 !
       IMPLICIT NONE
 !
       INTEGER,     INTENT(IN) :: ngw, n
-      COMPLEX(DP), INTENT(IN) :: eigr(:,:), cp(:,:)
+      COMPLEX(DP), INTENT(IN) :: cp(:,:)
+      COMPLEX(DP), INTENT(INOUT) :: betae(:,:)
 ! local variables
       REAL(DP) rsum, csc(n) ! automatic array
       COMPLEX(DP) temp(ngw) ! automatic array
@@ -1536,7 +1538,7 @@ end subroutine dylmr2_
 !     < beta | phi > is real. only the i lowest:
 !
 
-      CALL nlsm1( nbspx_bgrp, 1, nsp, eigr, cp, becp, 2 )
+      CALL calbec( nbspx_bgrp, betae, cp, becp, 2 )
 
       nnn = MIN( 12, n )
 
@@ -1640,29 +1642,72 @@ end subroutine dylmr2_
       ! local
 
       INTEGER  :: ig, i
-      REAL(DP) :: sk(n)  ! automatic array
+      REAL(DP) :: sk, rsum
       !
+      sk = 0.0d0
+!$omp parallel do reduction(+:sk) default(none) &
+!$omp shared(c,g2kin,gstart,ngw,n,f) private(i,ig,rsum)
       DO i=1,n
-         sk(i)=0.0d0
+         rsum = 0.0d0
          DO ig=gstart,ngw
-            sk(i)=sk(i)+DBLE(CONJG(c(ig,i))*c(ig,i))*g2kin(ig)
+            rsum = rsum + DBLE(CONJG(c(ig,i))*c(ig,i)) * g2kin(ig)
          END DO
+         sk = sk + f(i) * rsum
       END DO
+!$omp end parallel do
 
-      CALL mp_sum( sk(1:n), intra_bgrp_comm )
-
-      enkin_x=0.0d0
-      DO i=1,n
-         enkin_x=enkin_x+f(i)*sk(i)
-      END DO
+      CALL mp_sum( sk, intra_bgrp_comm )
 
       ! ... reciprocal-space vectors are in units of alat/(2 pi) so a
       ! ... multiplicative factor (2 pi/alat)**2 is required
-
-      enkin_x = enkin_x * tpiba2
+      enkin_x = tpiba2 * sk
 !
       RETURN
    END FUNCTION enkin_x
+
+#if defined (__CUDA)
+!-----------------------------------------------------------------------
+   FUNCTION enkin_gpu_x( c, f, n )
+!-----------------------------------------------------------------------
+      !
+      USE kinds,              ONLY: DP
+      USE constants,          ONLY: pi, fpi
+      USE gvecw,              ONLY: ngw
+      USE gvect,              ONLY: gstart
+      USE gvecw,              ONLY: g2kin_d
+      USE mp,                 ONLY: mp_sum
+      USE mp_global,          ONLY: intra_bgrp_comm
+      USE cell_base,          ONLY: tpiba2
+      USE cudafor
+
+      IMPLICIT NONE
+
+      REAL(DP)                :: enkin_gpu_x
+
+      INTEGER,     INTENT(IN) :: n
+      COMPLEX(DP), DEVICE, INTENT(IN) :: c( :, : )
+      REAL(DP),    DEVICE, INTENT(IN) :: f( : )
+      !
+      ! local
+
+      INTEGER  :: ig, i
+      REAL(DP) :: sk
+      !
+      sk=0.0d0
+!$cuf kernel do(2) <<<*,*>>>
+      DO i=1,n
+         DO ig=gstart,ngw
+            sk = sk + f(i) * DBLE(CONJG(c(ig,i))*c(ig,i)) * g2kin_d(ig)
+         END DO
+      END DO
+
+      CALL mp_sum( sk, intra_bgrp_comm )
+
+      enkin_gpu_x = tpiba2 * sk
+!
+      RETURN
+   END FUNCTION enkin_gpu_x
+#endif
 
 !-------------------------------------------------------------------------
       SUBROUTINE nlfl_bgrp_x( bec_bgrp, becdr_bgrp, lambda, idesc, fion )
@@ -1932,25 +1977,34 @@ end subroutine dylmr2_
       USE gvecw,      ONLY : ngw
       USE uspp,       ONLY : beta, nhtol, indv_ijkb0
       USE uspp_param, ONLY : nh, upf
+      USE gvect,      ONLY : gstart
 !
       IMPLICIT NONE
       COMPLEX(DP), INTENT(IN) :: eigr( :, : )
       COMPLEX(DP), INTENT(OUT) :: betae( :, : )
 !
       INTEGER     :: is, iv, ia, inl, ig, isa
+      COMPLEX(DP), PARAMETER, DIMENSION(4) :: cfact = &  ! (l == 0), (l == 1), (l == 2), (l == 3)
+      [( 1.0_dp , 0.0_dp ), ( 0.0_dp , -1.0_dp ), ( -1.0_dp , 0.0_dp ), ( 0.0_dp , 1.0_dp )]
       COMPLEX(DP) :: ci
 !
       CALL start_clock( 'prefor' )
+!$omp parallel do default(shared) private(ia,is,iv,ci,inl,ig)
       DO ia=1,nat
          is=ityp(ia)
          DO iv=1,nh(is)
-            ci=(0.0d0,-1.0d0)**nhtol(iv,is)
+            ci=cfact( nhtol(iv,is) + 1 )
             inl = indv_ijkb0(ia) + iv
             DO ig=1,ngw
                betae(ig,inl)=ci*beta(ig,iv,is)*eigr(ig,ia)
             END DO
+            !beigr(1,inl)=betae(1,inl)
+            !DO ig=gstart,ngw
+            !   beigr(ig,inl)=2.0d0 * betae(ig,inl)
+            !END DO
          END DO
       END DO
+!$omp end parallel do
       CALL stop_clock( 'prefor' )
 !
       RETURN

@@ -12,12 +12,12 @@ SUBROUTINE punch( what )
   !! the information needed for further processing (phonon etc.).
   !
   !! * what = 'all' : write xml data file, charge density, wavefunctions
-  !!                  (for final data);
+  !!                  (for final data)
   !! * what = 'config' : write xml data file and charge density; also,
   !!                     for nks=1, wavefunctions in plain binary format
   !!                     (see why in comments below). For intermediate 
-  !!                     or incomplete results;
-  !! * what = 'config-nowf' : write xml data file iand charge density only
+  !!                     or incomplete results
+  !! * what = 'config-only' : write xml data file only
   !! * what = 'config-init' : write xml data file only excluding final results
   !!                          (for dry run, can be called at early stages).
   !
@@ -33,7 +33,6 @@ SUBROUTINE punch( what )
   USE scf,                  ONLY : rho
   USE lsda_mod,             ONLY : nspin
   USE ions_base,            ONLY : nsp
-  USE funct,                ONLY : get_inlc
   USE pw_restart_new,       ONLY : pw_write_schema, pw_write_binaries
   USE qexsd_module,         ONLY : qexsd_reset_steps
   USE io_rho_xml,           ONLY : write_scf
@@ -52,7 +51,7 @@ SUBROUTINE punch( what )
   !
   LOGICAL :: exst, only_init, wf_collect
   CHARACTER(LEN=320) :: cp_source, cp_dest
-  INTEGER            :: cp_status, nt, inlc
+  INTEGER            :: cp_status, nt
   !
   !
   IF (io_level < -1 ) RETURN

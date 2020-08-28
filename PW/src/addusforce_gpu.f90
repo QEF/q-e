@@ -17,7 +17,7 @@ SUBROUTINE addusforce_gpu( forcenl )
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(INOUT) :: forcenl(3, nat)
+  REAL(DP), INTENT(INOUT) :: forcenl(3,nat)
   !! the non-local contribution to the force
   !
   IF ( tqr ) THEN
@@ -104,7 +104,11 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
   ! fourier transform of the total effective potential
   !
   CALL dev_buf%lock_buffer( vg_d, [ngm, nspin_mag] , ierr )
-  CALL dev_buf%lock_buffer( aux_d, dfftp%nnr, ierr ) 
+  IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', -1 )
+  !
+  CALL dev_buf%lock_buffer( aux_d, dfftp%nnr, ierr )
+  IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', -1 )
+  !
   DO is = 1, nspin_mag
      IF (nspin_mag==4.AND.is/=1) THEN
         aux_d(:) = v%of_r(:,is)
@@ -131,13 +135,17 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
   ! for the extraordinary unlikely case of more processors than G-vectors
   IF ( ngm_l <= 0 ) GO TO 10
   !
-  CALL dev_buf%lock_buffer( ylmk0_d, [ngm_l,lmaxq*lmaxq], ierr  )
+  CALL dev_buf%lock_buffer( ylmk0_d, [ngm_l,lmaxq*lmaxq], ierr )
+  IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', -1 )
+  !
   CALL ylmr2_gpu( lmaxq * lmaxq, ngm_l, g_d(1,ngm_s), gg_d(ngm_s), ylmk0_d )
   !
   CALL dev_buf%lock_buffer( qmod_d, ngm_l, ierr  )
+  IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', -1 )
+  !
   !$cuf kernel do 
   DO ig = 1, ngm_l
-     qmod_d(ig) = SQRT( gg_d(ngm_s+ig-1) )
+     qmod_d(ig) = SQRT( gg_d(ngm_s+ig-1) )*tpiba
   ENDDO
   !
   ! Sync if needed
@@ -151,6 +159,8 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
         !
         nij = nh(nt)*(nh(nt)+1)/2
         CALL dev_buf%lock_buffer(qgm_d, [ngm_l, nij],ierr) 
+        IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', -1 )
+        !
         ijh = 0
         DO ih = 1, nh (nt)
            DO jh = ih, nh (nt)
@@ -158,8 +168,6 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
               CALL qvan2_gpu( ngm_l, ih, jh, nt, qmod_d, qgm_d(1,ijh), ylmk0_d )
            ENDDO
         ENDDO
-
-
         !
         ! nab = number of atoms of type nt
         !
@@ -167,8 +175,12 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
         DO na = 1, nat
            IF ( ityp(na) == nt ) nab = nab + 1
         ENDDO
-        CALL dev_buf%lock_buffer(aux1_d, [ngm_l, na, 3], ierr )
+        !
+        CALL dev_buf%lock_buffer(aux1_d, [ngm_l, nab, 3], ierr )
+        IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', -1 )
+        !
         CALL dev_buf%lock_buffer( ddeeq_d, [nij, nab, 3, nspin_mag],ierr )
+        IF (ierr /= 0) CALL errore( 'addusforce_gpu', 'cannot allocate buffers', -1 )
         !
         DO is = 1, nspin_mag
            nb = 0
@@ -225,7 +237,8 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
                 forceq(3,na) = forceq(3,na)+forceqz
               ENDIF
            ENDDO
-        ENDDO 
+        ENDDO
+        CALL dev_buf%release_buffer( ddeeq_d , ierr)
      ENDIF
   ENDDO
   !
@@ -235,7 +248,6 @@ ATTRIBUTES (DEVICE) aux_d, aux1_d, vg_d, qgm_d, ddeeq_d, qmod_d, ylmk0_d,nl_d
   !
   forcenl(:,:) = forcenl(:,:) + forceq(:,:)
   !
-  CALL dev_buf%release_buffer( ddeeq_d , ierr)
   CALL dev_buf%release_buffer(qmod_d, ierr)
   CALL dev_buf%release_buffer(ylmk0_d, ierr)
   CALL dev_buf%release_buffer (vg_d, ierr )

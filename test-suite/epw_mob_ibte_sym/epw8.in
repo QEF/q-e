@@ -26,8 +26,7 @@
   broyden_beta= 0.7
 
   nstemp      =   1
-  tempsmin    = 100
-  tempsmax    = 200
+  temps       = 100
 
   restart      = .true.
   restart_step = 5
@@ -64,7 +63,6 @@
   a2f         = .false.
 
   fsthick     = 0.4
-  eptemp      = 1 ! K 
   degaussw    = 0.0 ! eV
 
   dvscf_dir   = './save/'
@@ -88,7 +86,3 @@
   nq2         = 2
   nq3         = 2
  /
-      3 cartesian
- 0.000000000   0.000000000   0.000000000
- 0.500000000  -0.500000000   0.500000000
- 0.000000000  -1.000000000   0.000000000

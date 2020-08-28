@@ -140,6 +140,7 @@ The following features of the code are tested:
 The following features of the code are tested:
 - LDA+U with standard and user-defined occupancies
 - forces and stresses, gamma-only case
+- lda_plus_u_kind=1, collinear and noncollinear
 
 ####################
 # pw_lsda : Ni fcc #
@@ -349,6 +350,12 @@ The following features of the code are tested:
 The following features of the code are tested:
 - Calculation of U for a nonmagnetic insulator, with USPP
 
+#######################################
+# hp_insulator_us_intersiteV : LiCoO2 #
+#######################################
+The following features of the code are tested:
+- Calculation of U and V for a nonmagnetic insulator, with USPP
+
 ##############################
 # hp_insulator_us_magn : NiO #
 ##############################
@@ -379,6 +386,13 @@ The following features of the code are tested:
 The following features of the code are tested:
 - Calculation of U for a ferromagnetic metal, with PAW
 
+#########################################
+# hp_metal_paw_magn_intersiteV : LiNiO2 #
+#########################################
+The following features of the code are tested:
+- Calculation of U and V for a ferromagnetic metal (it is a metal even
+at the DFT+U+V level for the rhombohedral structure), with PAW
+
 #################################################################################################
 # EPW tests
 #################################################################################################
@@ -402,6 +416,7 @@ The following features of the code are tested:
 - Test band parallelism, etf_mem 2 (epw6.in)
 - Test restart feature (epw7.in)
 - Test cumulant (epw8.in)
+- Test Wannier function plot (epw11.in)
 
 #################
 # epw_metal: Pb #
@@ -460,8 +475,10 @@ The following features of the code are tested:
 # epw_super: MgB2 #
 ###################
 The following features of the code are tested:
-- Test isotropic Eliashberg superconductivity (epw_iso.in)
-- Test anisotropic Eliashberg superconductivity (epw_aniso.in)
+- Test isotropic Eliashberg superconductivity (epw1.in)
+- Test anisotropic Eliashberg superconductivity (epw2.in)
+- Test anisotropic Eliashberg superconductivity restart from interrupted q-point while writing ephmat using 'restart.fmt' (epw3.in)
+- Test anisotropic Eliashberg superconductivity restart by reading ephmat files (after writing ephmat files) (epw4.in)
 
 #################
 # epw_trev: SiC #
@@ -469,10 +486,23 @@ The following features of the code are tested:
 The following features of the code are tested:
 - Time-reversal symmetry when inversion sym. is not part of the small group of q. (epw.in)
 
+######################
+# epw_trev_uspp: SiC #
+######################
+The following features of the code are tested:
+- Time-reversal symmetry when inversion sym. is not part of the small group of q 
+  in calculation using ultrasoft pseudopotentials. (epw.in)
 
-################
+#####################
+# epw_trev_paw: SiC #
+#####################
+The following features of the code are tested:
+- Time-reversal symmetry when inversion sym. is not part of the small group of q
+  in calculation using PAW datasets. (epw.in)
+
+####################
 # not_epw_comp: Si #
-################
+####################
 This test is to compare electron-phonon matrix element produced directly by the phonon code 
 and by EPW. It requires modification to the phonon code. 
 Note that this folder is NOT tested in the test-suite but is here as it can be useful. 

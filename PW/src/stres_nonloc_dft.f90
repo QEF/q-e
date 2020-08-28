@@ -7,37 +7,34 @@
 !
 !
 !----------------------------------------------------------------------------
-subroutine stres_nonloc_dft( rho, rho_core, nspin, sigma_nonloc_dft )
+SUBROUTINE stres_nonloc_dft( rho, rho_core, nspin, sigma_nonloc_dft )
 
   !----------------------------------------------------------------------------
   !
   USE kinds,            ONLY : DP
-  use funct,            ONLY : get_igcc, get_inlc 
+  USE funct,            ONLY : get_igcc, get_inlc 
   USE mp,               ONLY : mp_sum
   USE fft_base,         ONLY : dfftp
   USE vdW_DF,           ONLY : vdW_DF_stress
-  USE rVV10,            ONLY : stress_rVV10
+  USE rVV10,            ONLY : rVV10_stress
   USE io_global,        ONLY : stdout
   !
   IMPLICIT NONE
   !
-  integer, intent(in) ::nspin
+  integer,  intent(in)     :: nspin
   real(DP), intent(in)     :: rho (dfftp%nnr), rho_core (dfftp%nnr)
   real(DP), intent(inout)  :: sigma_nonloc_dft (3, 3)
 
   integer :: l, m, inlc
 
 
-  sigma_nonloc_dft(:,:) = 0.d0
+  sigma_nonloc_dft(:,:) = 0.D0
   inlc = get_inlc()
 
-  if ( inlc==1 .or. inlc==2 ) then
-     CALL vdW_DF_stress(rho, rho_core, nspin, sigma_nonloc_dft)
-  elseif ( inlc == 3 ) then
-     CALL stress_rVV10(rho, rho_core, nspin, sigma_nonloc_dft)
-  end if
+  IF ( inlc > 0 .AND. inlc < 26 ) THEN
+     CALL vdW_DF_stress (rho, rho_core, nspin, sigma_nonloc_dft)
+  ELSEIF ( inlc == 26 ) THEN
+     CALL rVV10_stress  (rho, rho_core, nspin, sigma_nonloc_dft)
+  END IF
 
-  return
-
-end subroutine stres_nonloc_dft
-
+END SUBROUTINE stres_nonloc_dft

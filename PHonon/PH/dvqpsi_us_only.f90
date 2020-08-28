@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine dvqpsi_us_only (ik, uact)
+subroutine dvqpsi_us_only (ik, uact, becp1, alphap)
   !----------------------------------------------------------------------
   !
   ! This routine calculates dV_bare/dtau * psi for one perturbation
@@ -29,10 +29,10 @@ subroutine dvqpsi_us_only (ik, uact)
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp, ONLY: okvan, nkb, vkb
   USE uspp_param, ONLY: nh, nhm
-  USE phus,      ONLY : int1, int1_nc, int2, int2_so, alphap
+  USE phus,      ONLY : int1, int1_nc, int2, int2_so
 
-  USE lrus,       ONLY : becp1
-  USE qpoint,     ONLY : ikks, ikqs
+  USE qpoint,     ONLY : nksq, ikks, ikqs
+  USE becmod,     ONLY : bec_type
   USE eqv,        ONLY : dvpsi
   USE control_lr, ONLY : lgamma
 
@@ -45,6 +45,7 @@ subroutine dvqpsi_us_only (ik, uact)
   ! input: the k point
   complex(DP) :: uact (3 * nat)
   ! input: the pattern of displacements
+  TYPE(bec_type) :: becp1(nksq), alphap(3,nksq)
   !
   !   And the local variables
   !

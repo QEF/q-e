@@ -60,7 +60,7 @@ LOGICAL :: atom_in_list
 real(kind=dp)     :: r1(3),r2(3),r3(3),rr(3,3),bg_0(3,3),at_0(3,3)
 REAL(KIND=DP),    ALLOCATABLE     :: taut(:,:)
 INTEGER :: ipol, apol, natdp, ios
-
+logical :: needwf=.false.
 
 INTEGER :: nclass_ref   ! The number of classes of the point group
 INTEGER :: isym
@@ -119,8 +119,8 @@ READ(5,input,IOSTAT=ios)
 IF (ios /= 0) CALL errore ('FD_IFC', 'reading input namelist', ABS(ios) )
 tmp_dir = trimcheck( outdir )
 
-!reading the xml file - WILL CRASH; input variable needed
-call read_file_new ( )
+!reading the xml file
+call read_file_new (needwf)
 
     if (verbose) then
     write(6,*) '**************************************************'

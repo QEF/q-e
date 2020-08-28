@@ -971,6 +971,8 @@ MODULE exx_band
     USE fft_types,      ONLY : fft_type_init
     USE recvec_subs,    ONLY : ggen, ggens
     !
+    USE command_line_options, ONLY : nmany_
+    !
     USE gvect_gpum,     ONLY : using_g, using_gg, using_g_d, using_gg_d, &
                                  using_mill, using_mill_d
     !
@@ -1025,9 +1027,9 @@ MODULE exx_band
 
           CALL fft_type_init( dffts_exx, smap_exx, "wave", gamma_only, &
                lpara, intra_egrp_comm, at, bg, gkcut, gcutms/gkcut, &
-               nyfft=ntask_groups )
+               nyfft=ntask_groups, nmany=nmany_ )
           CALL fft_type_init( dfftp_exx, smap_exx, "rho", gamma_only, &
-               lpara, intra_egrp_comm, at, bg,  gcutm, nyfft=nyfft )
+               lpara, intra_egrp_comm, at, bg,  gcutm, nyfft=nyfft, nmany=nmany_ )
           CALL fft_base_info( ionode, stdout )
           ngs_ = dffts_exx%ngl( dffts_exx%mype + 1 )
           ngm_ = dfftp_exx%ngl( dfftp_exx%mype + 1 )

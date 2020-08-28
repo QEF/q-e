@@ -23,6 +23,7 @@ MODULE environment
   USE mp_bands,  ONLY: ntask_groups, nproc_bgrp, nbgrp, nyfft
   USE global_version, ONLY: version_number
   USE fox_init_module, ONLY: fox_init
+  USE command_line_options, ONLY : nmany_
 #if defined(__HDF5)
   USE qeh5_base_module,   ONLY: initialize_hdf5, finalize_hdf5
 #endif
@@ -173,6 +174,8 @@ CONTAINS
          &    "395502 (2009);", &
          &/9X,"""P. Giannozzi et al., J. Phys.:Condens. Matter 29 ",&
          &    "465901 (2017);", &
+         &/9X,"""P. Giannozzi et al., J. Chem. Phys. 152 ",&
+         &    "154105 (2020);", &
          &/9X," URL http://www.quantum-espresso.org"", ", &
          &/5X,"in publications or presentations arising from this work. More details at",&
          &/5x,"http://www.quantum-espresso.org/quote")' )
@@ -239,6 +242,7 @@ CONTAINS
     IF ( ntask_groups > 1 ) WRITE( stdout, &
          '(5X,"wavefunctions fft division:  task group distribution",/,34X,"#TG    x Z-proc = ",2I7)' ) &
          ntask_groups, nproc_bgrp / ntask_groups
+    WRITE( stdout, '(5X,"Fft bands division:     nmany     = ",I7)' ) nmany_
     !
   END SUBROUTINE parallel_info
 
@@ -256,6 +260,7 @@ CONTAINS
 #else
     WRITE( stdout, '(/5X,"Serial version")' )
 #endif
+    WRITE( stdout, '(5X,"Fft bands division:     nmany     = ",I7)' ) nmany_
     !
   END SUBROUTINE serial_info
 

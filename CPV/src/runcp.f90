@@ -10,9 +10,15 @@
 
 !=----------------------------------------------------------------------------------=!
 
+#if defined(__CUDA)
+#define DEVICEATTR ,DEVICE
+#else
+#define DEVICEATTR
+#endif
+
 
    SUBROUTINE runcp_uspp_x &
-      ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, cm_bgrp, fromscra, restart )
+      ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, c0_d, cm_bgrp, cm_d, fromscra, restart )
       !
       !  This subroutine performs a Car-Parrinello or Steepest-Descent step
       !  on the electronic variables, computing forces on electrons
@@ -31,7 +37,7 @@
       USE mp,                  ONLY : mp_sum
       USE fft_base,            ONLY : dffts
       use wave_base,           only : wave_steepest, wave_verlet
-      use control_flags,       only : lwf, tsde
+      use control_flags,       only : lwf, tsde, many_fft
       use uspp,                only : deeq, vkb
       use gvect,  only : gstart
       use electrons_base,      only : nbsp_bgrp, ispin_bgrp, f_bgrp, nspin, nupdwn_bgrp, iupdwn_bgrp
@@ -41,6 +47,10 @@
       USE cp_interfaces,       ONLY : dforce
       USE ldaU_cp,             ONLY : lda_plus_u, vupsi
       USE fft_helper_subroutines
+#if defined (__CUDA)
+      USE uspp_gpum,           ONLY : vkb_d
+      USE cudafor
+#endif
       !
       IMPLICIT NONE
       !
@@ -50,6 +60,7 @@
       REAL(DP) :: rhos(:,:)
       REAL(DP) :: bec_bgrp(:,:)
       COMPLEX(DP) :: c0_bgrp(:,:), cm_bgrp(:,:)
+      COMPLEX(DP) DEVICEATTR :: c0_d(:,:), cm_d(:,:)
       LOGICAL, OPTIONAL, INTENT(IN) :: fromscra
       LOGICAL, OPTIONAL, INTENT(IN) :: restart
       !
@@ -64,11 +75,22 @@
      real(DP),    allocatable :: emaver(:)
      complex(DP), allocatable :: c2(:), c3(:), c2tmp(:), c3tmp(:)
      REAL(DP),    ALLOCATABLE :: tg_rhos(:,:), ftmp(:)
+#if defined (__CUDA)
+     REAL(DP),    ALLOCATABLE, DEVICE :: rhos_d(:,:)
+#endif
      INTEGER,     ALLOCATABLE :: itmp(:)
      integer :: i, nsiz, incr, idx, idx_in, ierr
      integer :: iwfc, nwfc, is, ii, tg_rhos_siz, c2_siz
      integer :: iflag
      logical :: ttsde
+     INTEGER :: omp_get_num_threads
+
+#if defined (__CUDA)
+     IF( dffts%has_task_groups ) THEN
+        CALL errore(' runcp_uspp ', ' task groups not implemented on GPU ',1)
+     END IF
+     ALLOCATE( rhos_d, SOURCE = rhos )
+#endif
 
      iflag = 0
      !
@@ -85,6 +107,9 @@
      ELSE
         tg_rhos_siz = 1
         c2_siz      = ngw 
+#if defined (__CUDA)
+        c2_siz      = c2_siz * many_fft 
+#endif
      END IF
 
      !
@@ -117,12 +142,13 @@
                              emadt2, emaver, verl1, verl2 )
      ELSE
         allocate( c2( c2_siz ), c3( c2_siz ) )
-        allocate( tg_rhos( tg_rhos_siz, nspin ) )
 
         c2      = 0D0
         c3      = 0D0
 
         IF( dffts%has_task_groups ) THEN
+
+           ALLOCATE( tg_rhos( tg_rhos_siz, nspin ) )
            !
            !  The potential in rhos is distributed across all processors
            !  We need to redistribute it so that it is completely contained in the
@@ -136,7 +162,11 @@
 
         ELSE
 
+#if defined (__CUDA)
+           incr = 2 * many_fft
+#else
            incr = 2
+#endif
 
         END IF
 
@@ -230,8 +260,14 @@
 
            ELSE
 
+#if defined (__CUDA)
+              CALL dforce( i, bec_bgrp, vkb_d, c0_d, c2, c3, rhos_d, &
+                           SIZE(rhos_d,1), ispin_bgrp, f_bgrp, nbsp_bgrp, nspin )
+#else
               CALL dforce( i, bec_bgrp, vkb, c0_bgrp, c2, c3, rhos, &
                            SIZE(rhos,1), ispin_bgrp, f_bgrp, nbsp_bgrp, nspin )
+#endif
+
               IF ( lda_plus_u ) THEN
                  c2(:) = c2(:) - vupsi(:,i)
                  c3(:) = c3(:) - vupsi(:,i+1)
@@ -256,8 +292,10 @@
               ENDDO
            END IF
 
-           idx_in = 1
+!$omp parallel num_threads(min(incr,omp_get_num_threads())) default(shared) private(idx_in, idx)
+!$omp do
            DO idx = 1, incr, 2
+              idx_in = idx/2+1
               IF( i + idx - 1 <= nbsp_bgrp ) THEN
                  IF (tsde) THEN
                     CALL wave_steepest( cm_bgrp(:, i+idx-1 ), c0_bgrp(:, i+idx-1 ), emaver, c2(:), ngw, idx_in )
@@ -271,21 +309,26 @@
                     cm_bgrp(1,i+idx  ) = CMPLX(real(cm_bgrp(1,i+idx  )),0.0d0,kind=dp)
                  END IF
               END IF
-              !
-              idx_in = idx_in + 1
-              !
            END DO
+!$omp end do
+!$omp end parallel
 
-        end do
+        END DO
 
         DEALLOCATE( c2 )
         DEALLOCATE( c3 )
-        DEALLOCATE( tg_rhos )
+
+        IF( dffts%has_task_groups ) THEN
+           DEALLOCATE( tg_rhos )
+        END IF
 
      END IF
 
      DEALLOCATE( emadt2 )
      DEALLOCATE( emaver )
+#if defined (__CUDA)
+     DEALLOCATE( rhos_d )
+#endif
 !
    END SUBROUTINE runcp_uspp_x
 

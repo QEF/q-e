@@ -19,8 +19,9 @@ SUBROUTINE hinit1()
   USE gvecs,               ONLY : doublegrid
   USE ldaU,                ONLY : lda_plus_u
   USE lsda_mod,            ONLY : nspin
+  USE noncollin_module,    ONLY : report
   USE scf,                 ONLY : vrs, vltot, v, kedtau
-  USE control_flags,       ONLY : tqr
+  USE control_flags,       ONLY : tqr, use_gpu
   USE realus,              ONLY : generate_qpointlist, betapointlist, &
                                   init_realspace_vars, real_space
   USE wannier_new,         ONLY : use_wannier
@@ -32,6 +33,7 @@ SUBROUTINE hinit1()
   USE dfunct,              ONLY : newd
   !
   USE scf_gpum,      ONLY : using_vrs
+  
   !
   IMPLICIT NONE
   !
@@ -45,12 +47,16 @@ SUBROUTINE hinit1()
   !
   CALL setlocal()
   !
+  ! ... more position-dependent initializations
+  !
   IF ( tqr ) CALL generate_qpointlist()
   !
   IF ( real_space ) THEN
      CALL betapointlist()
      CALL init_realspace_vars()
   ENDIF
+  !
+  IF ( report /= 0 ) CALL make_pointlists( )
   !
   CALL tag_wg_corr_as_obsolete
   !
@@ -77,8 +83,13 @@ SUBROUTINE hinit1()
   ! ... and recalculate the products of the S with the atomic wfcs used 
   ! ... in LDA+U calculations
   !
-  IF ( lda_plus_u  ) CALL orthoUwfc() 
-  IF ( use_wannier ) CALL orthoatwfc( .TRUE. )
+  IF (.NOT. use_gpu) THEN
+    IF ( lda_plus_u  ) CALL orthoUwfc() 
+    IF ( use_wannier ) CALL orthoatwfc( .TRUE. )
+  ELSE
+    IF ( lda_plus_u  ) CALL orthoUwfc_gpu() 
+    IF ( use_wannier ) CALL orthoatwfc_gpu( .TRUE. )
+  ENDIF
   !
   !
   RETURN

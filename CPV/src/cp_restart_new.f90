@@ -66,7 +66,7 @@ MODULE cp_restart_new
       USE cell_base,                ONLY : ibrav, alat, tpiba, s_to_r
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
                                            amass, iforce, ityp 
-      USE funct,                    ONLY : get_dft_name, get_inlc, &
+      USE funct,                    ONLY : get_dft_name, &
            dft_is_hybrid, get_exx_fraction, get_screening_parameter, &
            dft_is_nonlocc, get_nonlocc_name
       USE ldaU_cp,                  ONLY : lda_plus_U, ns, Hubbard_l, &
@@ -668,8 +668,12 @@ MODULE cp_restart_new
       LOGICAL :: x_gamma_extrapolation
       REAL(dp):: hubbard_dum(3,nsp)
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
+      INTEGER, POINTER            :: hub_l_back_dum(:), hub_l1_back_dum(:), hub_lmax_back_dum  
+      LOGICAL, POINTER            :: backall_dum(:)
+      REAL(dp),    POINTER        :: hubba_dum(:)
       !
       !
+      NULLIFY (hub_l_back_dum, hub_l1_back_dum, hub_lmax_back_dum, backall_dum, hubba_dum) 
       dirname = restart_dir(ndr)
       filename= xmlfile(ndr)
       INQUIRE ( file=filename, exist=found )
@@ -766,7 +770,8 @@ MODULE cp_restart_new
            nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
            exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
            lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax,&
-           Hubbard_U, Hubbard_dum(1,:), Hubbard_dum(2,:), Hubbard_dum(3,:), &
+           hub_l_back_dum, hub_l1_back_dum, backall_dum, hub_lmax_back_dum, hubba_dum, & 
+           Hubbard_U, hubba_dum, Hubbard_dum(1,:), Hubbard_dum(2,:), Hubbard_dum(3,:), &
            Hubbard_dum, &
            vdw_corr, scal6, lon_rcut, vdw_isolated)
       CALL set_vdw_corr (vdw_corr, llondon, ldftd3, ts_vdw, lxdm )

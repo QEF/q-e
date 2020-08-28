@@ -1,14 +1,12 @@
 MODULES += \
   wavefunctions_gpu.o \
   recvec_gpu.o \
-  uspp_gpu.o \
   becmod_gpu.o \
   becmod_subs_gpu.o \
   cuda_subroutines.o \
   ylmr2_gpu.o \
-  splinelib_gpu.o \
+  dylmr2_gpu.o \
   random_numbers_gpu.o \
-  simpsn_gpu.o \
   sph_bes_gpu.o \
   correlation_lda_lsda_gpu.o \
   correlation_gga_gpu.o \
@@ -63,4 +61,3 @@ xc_lda_lsda_drivers.o : correlation_lda_lsda_gpu.o
 xc_lda_lsda_drivers.o : exchange_lda_lsda_gpu.o
 xc_lda_lsda_drivers.o : control_flags.o
 xc_lda_lsda_drivers.o : kind.o
-xc_lda_lsda_drivers.o : libxc.o

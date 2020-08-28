@@ -14,7 +14,7 @@ SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
   !
   USE kinds,        ONLY : DP
   USE ions_base,    ONLY : nat, ntyp => nsp, ityp, tau
-  USE cell_base,    ONLY : tpiba
+  USE cell_base,    ONLY : tpiba, omega
   USE constants,    ONLY : tpi
   USE gvect_gpum,   ONLY : eigts1_d, eigts2_d, eigts3_d, mill_d, g_d
   USE wvfct,        ONLY : npwx
@@ -45,7 +45,7 @@ SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
   !     Local variables
   !
   integer :: i0,i1,i2,i3, ig, lm, na, nt, nb, ih, jkb
-  integer :: istat
+  integer :: istat(6)
   integer :: iv_d
   real(DP) :: px, ux, vx, wx, arg, q1, q2, q3
   real(DP), pointer :: gk_d (:,:), qg_d (:), vq_d(:), ylm_d(:,:), vkb1_d(:,:)
@@ -77,12 +77,13 @@ SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
   !allocate (  vq_d( npw_))
   !allocate ( ylm_d( npw_, (lmaxkb + 1) **2))
   !allocate (  gk_d( 3, npw_))
-  CALL dev_buf%lock_buffer(vkb1_d, (/ npw_, nhm /), istat )
-  CALL dev_buf%lock_buffer(  sk_d, npw_, istat )
-  CALL dev_buf%lock_buffer(  qg_d, npw_, istat )
-  CALL dev_buf%lock_buffer(  vq_d, npw_, istat )
-  CALL dev_buf%lock_buffer( ylm_d, (/ npw_, (lmaxkb + 1) **2 /), istat )
-  CALL dev_buf%lock_buffer(  gk_d, (/ 3, npw_ /), istat )
+  CALL dev_buf%lock_buffer(vkb1_d, (/ npw_, nhm /), istat(1) )
+  CALL dev_buf%lock_buffer(  sk_d, npw_, istat(2) )
+  CALL dev_buf%lock_buffer(  qg_d, npw_, istat(3) )
+  CALL dev_buf%lock_buffer(  vq_d, npw_, istat(4) )
+  CALL dev_buf%lock_buffer( ylm_d, (/ npw_, (lmaxkb + 1) **2 /), istat(5) )
+  CALL dev_buf%lock_buffer(  gk_d, (/ 3, npw_ /), istat(6) )
+  IF (ANY(istat /= 0)) CALL errore( 'init_us_2_gpu', 'cannot allocate buffers', -1 )
 
   is_gth = .false.
   do nt = 1, ntyp
@@ -133,7 +134,7 @@ SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
      do nb = 1, upf(nt)%nbeta
         if ( upf(nt)%is_gth ) then
            qg_h = qg_d
-           call mk_ffnl_gth( nt, nb, npw_, qg_h, vq_h )
+           CALL mk_ffnl_gth( nt, nb, npw_, omega, qg_h, vq_h )
            vq_d = vq_h
         else if (spline_ps) then
            call splint_eq_gpu(dq, tab_d(:,nb,nt), tab_d2y_d(:,nb,nt), qg_d, vq_d)
@@ -215,12 +216,12 @@ SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
   !deallocate(qg_d)
   !deallocate(sk_d)
   !deallocate(vkb1_d)
-  CALL dev_buf%release_buffer(vkb1_d, istat )
-  CALL dev_buf%release_buffer(  sk_d, istat )
-  CALL dev_buf%release_buffer(  qg_d, istat )
-  CALL dev_buf%release_buffer(  vq_d, istat )
-  CALL dev_buf%release_buffer( ylm_d, istat )
-  CALL dev_buf%release_buffer(  gk_d, istat )
+  CALL dev_buf%release_buffer(vkb1_d, istat(1) )
+  CALL dev_buf%release_buffer(  sk_d, istat(2) )
+  CALL dev_buf%release_buffer(  qg_d, istat(3) )
+  CALL dev_buf%release_buffer(  vq_d, istat(4) )
+  CALL dev_buf%release_buffer( ylm_d, istat(5) )
+  CALL dev_buf%release_buffer(  gk_d, istat(6) )
   IF (is_gth) THEN
      deallocate ( qg_h, vq_h )
   END IF

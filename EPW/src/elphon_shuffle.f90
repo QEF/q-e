@@ -1,11 +1,11 @@
-  !                                                                            
-  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino  
-  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino  
-  !                                                                        
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
-  !                                                                            
+  !
+  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
+  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
+  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
+  !
   !-----------------------------------------------------------------------
   SUBROUTINE elphon_shuffle(iq_irr, nqc_irr, iq, gmapsym, eigv, isym, xq0, timerev)
   !-----------------------------------------------------------------------
@@ -18,27 +18,29 @@
   !!
   !! Roxana Margine - Jan 2019: Updated based on QE 6.3 for US
   !!
+  !! HL - Mar 2020: PAW added based on QE v6.5
+  !!
   !-----------------------------------------------------------------------
   !
   USE kinds,            ONLY : DP
-  USE mp,               ONLY : mp_barrier, mp_sum
-  USE mp_pools,         ONLY : my_pool_id, inter_pool_comm
+  USE mp,               ONLY : mp_barrier, mp_bcast
+  USE mp_pools,         ONLY : my_pool_id, inter_pool_comm, root_pool
   USE ions_base,        ONLY : nat
   USE pwcom,            ONLY : nbnd, nks
-  USE gvect,            ONLY : ngm
   USE gvecs,            ONLY : doublegrid
   USE modes,            ONLY : nmodes, nirr, npert, u
-  USE elph2,            ONLY : epmatq, el_ph_mat, ibndstart, nbndep
-  USE lrus,             ONLY : int3, int3_nc
+  USE elph2,            ONLY : epmatq, el_ph_mat, ibndstart, nbndep, ngxxf
+  USE lrus,             ONLY : int3, int3_nc, int3_paw
   USE uspp,             ONLY : okvan
+  USE paw_variables,    ONLY : okpaw
   USE lsda_mod,         ONLY : nspin
   USE fft_base,         ONLY : dfftp, dffts
-  USE io_epw,           ONLY : readdvscf
+  USE io_epw,           ONLY : readdvscf, readint3paw
   USE uspp_param,       ONLY : nhm
   USE constants_epw,    ONLY : czero, cone
   USE fft_interfaces,   ONLY : fft_interpolate
   USE noncollin_module, ONLY : nspin_mag, noncolin
-  USE dvqpsi,           ONLY : newdq2 
+  USE dvqpsi,           ONLY : newdq2
   !
   IMPLICIT NONE
   !
@@ -48,19 +50,19 @@
   !! Total number of irreducible q-points in the list
   INTEGER, INTENT(in) :: iq
   !! Current q-point in the star of iq_irr q-point
-  INTEGER, INTENT(in) :: gmapsym(ngm, 48)
+  INTEGER, INTENT(in) :: gmapsym(ngxxf)
   !! Correspondence G-->S(G)
   INTEGER, INTENT(in) :: isym
   !! The symmetry which generates the current q in the star
   REAL(KIND = DP), INTENT(in) :: xq0(3)
   !! The first q-point in the star (cartesian coords.)
-  COMPLEX(KIND = DP), INTENT(in) :: eigv(ngm, 48)
+  COMPLEX(KIND = DP), INTENT(in) :: eigv(ngxxf)
   !! e^{iGv} for 1...nsym (v the fractional translation)
   LOGICAL, INTENT(in) :: timerev
   !!  true if we are using time reversal
   !
   ! Local variables
-  INTEGER :: irr 
+  INTEGER :: irr
   !! Counter on representations
   INTEGER :: imode0
   !! Counter on modes
@@ -79,7 +81,7 @@
   INTEGER :: ierr
   !! Error status
   COMPLEX(KIND = DP), POINTER :: dvscfin(:, :, :)
-  !! Change of the scf potential 
+  !! Change of the scf potential
   COMPLEX(KIND = DP), POINTER :: dvscfins(:, :, :)
   !! Change of the scf potential (smooth)
   !
@@ -89,7 +91,7 @@
   !
   ALLOCATE(el_ph_mat(nbndep, nbndep, nks, 3 * nat), STAT = ierr)
   IF (ierr /= 0) CALL errore('elphon_shuffle', 'Error allocating el_ph_mat', 1)
-  ! 
+  !
   imode0 = 0
   DO irr = 1, nirr
     npe = npert(irr)
@@ -98,6 +100,10 @@
     IF (okvan) THEN
       ALLOCATE(int3(nhm, nhm, nat, nspin_mag, npe), STAT = ierr)
       IF (ierr /= 0) CALL errore('elphon_shuffle', 'Error allocating int3', 1)
+      IF (okpaw) THEN
+        ALLOCATE(int3_paw(nhm, nhm, nat, nspin_mag, npe), STAT = ierr)
+        IF (ierr /= 0) CALL errore('elphon_shuffle', 'Error allocating int3_paw', 1)
+      ENDIF
       IF (noncolin) THEN
         ALLOCATE(int3_nc(nhm, nhm, nat, nspin, npe), STAT = ierr)
         IF (ierr /= 0) CALL errore('elphon_shuffle', 'Error allocating int3_nc', 1)
@@ -107,12 +113,25 @@
     ! read the <prefix>.dvscf_q[iq] files
     !
     dvscfin = czero
+    IF (okpaw) int3_paw = czero
+    !
+    !! 2020.03 HL
+    !! The part below should be changed accordingly when parallelization over
+    !! G vectors is implemented.
+    !
     IF (my_pool_id == 0) THEN
-       DO ipert = 1, npe
-          CALL readdvscf(dvscfin(:, :, ipert), imode0 + ipert, iq_irr, nqc_irr)
-       ENDDO
+      DO ipert = 1, npe
+        CALL readdvscf(dvscfin(:, :, ipert), imode0 + ipert, iq_irr, nqc_irr)
+        IF (okpaw) CALL readint3paw(int3_paw(:, :, :, :, ipert), imode0 + ipert, iq_irr, nqc_irr)
+      ENDDO
     ENDIF
-    CALL mp_sum(dvscfin,inter_pool_comm)
+    !
+    !! 2020.03 HL
+    !! Below root_pool should be interpreted as the index of root pool group.
+    !! Currently, there is no root_pool_id like root_bgrp_id in bands groups.
+    !
+    CALL mp_bcast(dvscfin, root_pool, inter_pool_comm)
+    IF (okpaw) CALL mp_bcast(int3_paw, root_pool, inter_pool_comm)
     !
     IF (doublegrid) THEN
       ALLOCATE(dvscfins(dffts%nnr, nspin_mag, npe) , STAT = ierr)
@@ -120,7 +139,7 @@
       DO is = 1, nspin_mag
         DO ipert = 1, npe
           CALL fft_interpolate(dfftp, dvscfin(:, is, ipert), dffts, dvscfins(:, is, ipert))
-        ENDDO 
+        ENDDO
       ENDDO
     ELSE
       dvscfins => dvscfin
@@ -139,6 +158,10 @@
     IF (okvan) THEN
       DEALLOCATE(int3, STAT = ierr)
       IF (ierr /= 0) CALL errore('elphon_shuffle', 'Error deallocating int3', 1)
+      IF (okpaw) THEN
+        DEALLOCATE(int3_paw, STAT = ierr)
+        IF (ierr /= 0) CALL errore('elphon_shuffle', 'Error deallocating int3_paw', 1)
+      ENDIF
       IF (noncolin) THEN
         DEALLOCATE(int3_nc, STAT = ierr)
         IF (ierr /= 0) CALL errore('elphon_shuffle', 'Error deallocating int3_nc', 1)
@@ -152,22 +175,22 @@
   ! must be transformed in the cartesian basis
   ! epmat_{CART} = conjg ( U ) * epmat_{PATTERN}
   !
-  ! note it is not U^\dagger but u_pattern! 
+  ! note it is not U^\dagger but u_pattern!
   ! Have a look to symdyn_munu.f90 for comparison
   !
   DO ibnd = 1, nbndep
     DO jbnd = 1, nbndep
       DO ik = 1, nks
-        ! 
+        !
         ! Here is where we calculate epmatq, it appears to be
-        ! epmatq = cone * conjug(u) * el_ph_mat + czero  
+        ! epmatq = cone * conjug(u) * el_ph_mat + czero
         IF (timerev) THEN
           CALL ZGEMV('n', nmodes, nmodes, cone, u, nmodes, &
             el_ph_mat(ibnd, jbnd, ik, :), 1, czero, epmatq(ibnd, jbnd, ik, :, iq), 1)
         ELSE
           CALL ZGEMV('n', nmodes, nmodes, cone, CONJG(u), nmodes, &
             el_ph_mat(ibnd, jbnd, ik, :), 1, czero, epmatq(ibnd, jbnd, ik, :, iq), 1)
-        ENDIF 
+        ENDIF
         !
       ENDDO
     ENDDO

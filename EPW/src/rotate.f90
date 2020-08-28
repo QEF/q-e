@@ -1,58 +1,58 @@
   !
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
-  ! 
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
   !
   !----------------------------------------------------------------------
   MODULE rotate
   !----------------------------------------------------------------------
-  !! 
+  !!
   !! This module contains the routines to perform symmetry rotations.
-  !! 
+  !!
   IMPLICIT NONE
-  ! 
+  !
   CONTAINS
-    ! 
+    !
     !--------------------------------------------------------------------------
-    SUBROUTINE rotate_eigenm(iq_first, nqc, isym, s, invs, irt, rtau, xq, cz1, cz2) 
+    SUBROUTINE rotate_eigenm(iq_first, nqc, isym, s, invs, irt, rtau, xq, cz1, cz2)
     !--------------------------------------------------------------------------
     !!
     !!  Here:
-    !! 
+    !!
     !!  1). determine the unitary matrix which gives the transformed eigenmodes
     !!     from the first q in the star to the present q
-    !! 
-    !!  2). rotate eigenmodes from the first q in the star (cz1) to the current 
+    !!
+    !!  2). rotate eigenmodes from the first q in the star (cz1) to the current
     !!      q (cz2)
-    !!  
+    !!
     !!  In rotate_epmat.f90:
-    !! 
+    !!
     !!  3). rotate the electron-phonon matrix from the cartesian representation
-    !!     of the first qpoint of the star to the eigenmode representation 
+    !!     of the first qpoint of the star to the eigenmode representation
     !!     (using cz1).
-    !!  
+    !!
     !!  4). rotate the electron-phonon matrix from the eigenmode representation
     !!     to the cartesian representation of the qpoint iq in the star (with cz2).
-    !! 
-    !!     Step 3 requires using the rotated eigenmodes to set the phases 
+    !!
+    !!     Step 3 requires using the rotated eigenmodes to set the phases
     !!     (the diagonalizers of the rotated dyn mat will not
     !!     work because of the gages in deg. subspaces and the phases).
-    !! 
+    !!
     !!  W.r.t. the standard method of q2qstar_ph.f90, here I construct the
     !!  unitary matrix Gamma defined in Maradudin & Vosko, RMP 1968.
-    !!  In this way all rotations are just zgemm operations and we throw away  
+    !!  In this way all rotations are just zgemm operations and we throw away
     !!  all nasty indices.
     !!
-    !!  SP - Sept 2019: Cleaning of the routine.  
+    !!  SP - Sept 2019: Cleaning of the routine.
     !
     !--------------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
     USE elph2,         ONLY : dynq
-    USE phcom,         ONLY : nmodes
-    USE constants_epw, ONLY : cone, czero, twopi, rydcm1, eps10, cmm12meV 
+    USE modes,         ONLY : nmodes
+    USE constants_epw, ONLY : cone, czero, twopi, rydcm1, eps10, cmm12meV
     USE control_flags, ONLY : iverbosity
     USE cell_base,     ONLY : at, bg
     USE ions_base,     ONLY : nat, amass, nat, ityp
@@ -61,7 +61,7 @@
     !
     INTEGER, INTENT(in) :: iq_first
     !! Originating q point of the star
-    INTEGER, INTENT(in) :: nqc 
+    INTEGER, INTENT(in) :: nqc
     !! Total number of qpoints
     INTEGER, INTENT(in) :: isym
     !! The symmetry under consideration
@@ -79,16 +79,16 @@
     !! The eigenvectors for the first q in the star
     COMPLEX(KIND = DP), INTENT(inout) :: cz2(nmodes, nmodes)
     !! The rotated eigenvectors, for the current q in the star
-    ! 
+    !
     ! Local variables
     INTEGER :: neig
-    !! Lapack nb of eig. 
+    !! Lapack nb of eig.
     INTEGER :: info
-    !! 
+    !!
     INTEGER :: ifail(nmodes)
-    !! 
+    !!
     INTEGER :: iwork(5 * nmodes)
-    !! 
+    !!
     INTEGER :: imode
     !! Mode index
     INTEGER :: jmode
@@ -98,45 +98,45 @@
     INTEGER :: mu
     !! Mode index
     INTEGER :: sna
-    !! 
+    !!
     INTEGER :: ism1
-    !! 
+    !!
     INTEGER :: na
     !! Atom index
     INTEGER :: nb
     !! Atom index
     REAL(KIND = DP) :: arg
-    !! 
+    !!
     REAL(KIND = DP) :: massfac
-    !! 
+    !!
     REAL(KIND = DP) :: w1(nmodes)
     !! Phonon freq
     REAL(KIND = DP) :: w2(nmodes)
     !! Phonon freq
     REAL(KIND = DP) :: rwork(7 * nmodes)
-    !! 
+    !!
     REAL(KIND = DP) :: wtmp(nmodes)
-    !! 
+    !!
     REAL(KIND = DP) :: scart(3, 3)
-    !! 
-    COMPLEX(KIND = DP) :: gamma(nmodes, nmodes) 
-    !! The Gamma matrix for the symmetry operation on the dyn mat 
-    COMPLEX(KIND = DP) :: cwork(2 * nmodes) 
-    !! 
-    COMPLEX(KIND = DP) :: dynp(nmodes * (nmodes + 1) / 2) 
+    !!
+    COMPLEX(KIND = DP) :: gamma(nmodes, nmodes)
+    !! The Gamma matrix for the symmetry operation on the dyn mat
+    COMPLEX(KIND = DP) :: cwork(2 * nmodes)
+    !!
+    COMPLEX(KIND = DP) :: dynp(nmodes * (nmodes + 1) / 2)
     !! Complex dynmat packed (upper triangular part for zhpevx)
-    COMPLEX(KIND = DP) :: cfac 
-    !! 
-    COMPLEX(KIND = DP) :: dyn1(nmodes, nmodes) 
+    COMPLEX(KIND = DP) :: cfac
+    !!
+    COMPLEX(KIND = DP) :: dyn1(nmodes, nmodes)
     !! Dynamical matrix
-    COMPLEX(KIND = DP) :: dyn2(nmodes, nmodes) 
+    COMPLEX(KIND = DP) :: dyn2(nmodes, nmodes)
     !! Dynamical matrix
     !
     ! ------------------------------------------------------------------
     ! diagonalize dynq(iq_first) --> w1, cz1
     ! ------------------------------------------------------------------
     !
-    ! first divide by the square root of masses 
+    ! first divide by the square root of masses
     !
     DO na = 1, nat
       DO nb = 1, nat
@@ -165,7 +165,7 @@
           wtmp(nu) = -DSQRT(ABS(w1(nu)))
         ENDIF
       ENDDO
-      WRITE(stdout, '(5x,"Frequencies of the matrix for the first q in the star (cm^{-1})")') 
+      WRITE(stdout, '(5x,"Frequencies of the matrix for the first q in the star (cm^{-1})")')
       WRITE(stdout, '(6(2x,f10.5))') (wtmp(nu) * rydcm1, nu = 1, nmodes)
       !
     ENDIF
@@ -174,7 +174,7 @@
     ! (the true dyn matrix D_q)
     !
     ! -----------------------------------------------------------------------
-    ! the matrix gamma (Maradudin & Vosko, RMP, eq. 2.37)   
+    ! the matrix gamma (Maradudin & Vosko, RMP, eq. 2.37)
     ! -----------------------------------------------------------------------
     !
     ! I have built the matrix by following step-by-step q2star_ph.f90 and
@@ -182,13 +182,13 @@
     !
     ism1 = invs(isym)
     !
-    ! the symmetry matrix in cartesian coordinates 
-    ! (so that we avoid going back and forth with the dynmat)  
+    ! the symmetry matrix in cartesian coordinates
+    ! (so that we avoid going back and forth with the dynmat)
     ! note the presence of both at and bg in the transform!
     !
     scart = DBLE(s(:, :, ism1))
     scart = MATMUL(MATMUL(bg, scart), TRANSPOSE(at))
-    ! 
+    !
     gamma = czero
     DO na = 1, nat
       !
@@ -199,12 +199,12 @@
       ! [v can be ignored since it cancels out, see endnotes. xq is really Sq]
       ! rtau(:,isym,na) = s(:,:,invs(isym)) * tau(:, na) - tau(:,irt(isym,na))) (cartesian)
       !
-      arg = twopi * DOT_PRODUCT(xq, rtau (:, isym, na)) 
+      arg = twopi * DOT_PRODUCT(xq, rtau (:, isym, na))
       cfac = dcmplx(COS(arg), -SIN(arg))
       !
-      ! the submatrix (sna,na) contains the rotation scart 
+      ! the submatrix (sna,na) contains the rotation scart
       !
-      gamma(3 * (sna - 1) + 1:3 * sna, 3 * (na - 1) + 1:3 * na) = cfac * scart 
+      gamma(3 * (sna - 1) + 1:3 * sna, 3 * (na - 1) + 1:3 * na) = cfac * scart
       !
     ENDDO
     !
@@ -212,8 +212,8 @@
     !
     IF (iverbosity == 1) THEN
       !
-      !  D_{Sq} = gamma * D_q * gamma^\dagger (Maradudin & Vosko, RMP, eq. 3.5) 
-      ! 
+      !  D_{Sq} = gamma * D_q * gamma^\dagger (Maradudin & Vosko, RMP, eq. 3.5)
+      !
       CALL ZGEMM('n', 'n', nmodes, nmodes, nmodes, cone, gamma, &
              nmodes, dyn1 , nmodes, czero , dyn2, nmodes)
       CALL ZGEMM('n', 'c', nmodes, nmodes, nmodes, cone, dyn2, &
@@ -237,7 +237,7 @@
           wtmp(nu) = -DSQRT(ABS(w2(nu)))
         ENDIF
       ENDDO
-      WRITE(stdout, '(5x,"Frequencies of the matrix for the first q in the star (meV)")') 
+      WRITE(stdout, '(5x,"Frequencies of the matrix for the first q in the star (meV)")')
       WRITE(stdout, '(6(2x,f10.5))') (wtmp(nu) * rydcm1 * cmm12meV, nu = 1, nmodes)
       !
     ENDIF
@@ -261,9 +261,9 @@
     ENDDO
     !
     ! the rotated matrix and the one read from file
-    IF (iverbosity == 1) WRITE(stdout, '(2f15.10)') dyn2 - dyn1 
+    IF (iverbosity == 1) WRITE(stdout, '(2f15.10)') dyn2 - dyn1
     !
-    ! here I have checked that the matrix rotated with gamma 
+    ! here I have checked that the matrix rotated with gamma
     ! is perfectly equal to the one read from file for this q in the star
     !
     CALL ZGEMM('c', 'n', nmodes, nmodes, nmodes, cone, cz2, nmodes, dyn2, nmodes, czero, dyn1, nmodes)
@@ -287,7 +287,7 @@
           wtmp(nu) = -DSQRT(ABS(w2(nu)))
         ENDIF
       ENDDO
-      WRITE(stdout, '(5x,"Frequencies of the matrix for the current q in the star (cm^{-1})")') 
+      WRITE(stdout, '(5x,"Frequencies of the matrix for the current q in the star (cm^{-1})")')
       WRITE(stdout, '(6(2x,f10.5))') (wtmp(nu) * rydcm1, nu = 1, nmodes)
       !
     ENDIF
@@ -295,19 +295,19 @@
     !--------------------------------------------------------------------------
     END SUBROUTINE rotate_eigenm
     !--------------------------------------------------------------------------
-    !                                                                            
+    !
     !---------------------------------------------------------------------------
     SUBROUTINE rotate_epmat(cz1, cz2, xq, iq, lwin, lwinq, exband)
     !---------------------------------------------------------------------------
     !!
     !! 1). rotate the electron-phonon matrix from the cartesian representation
-    !!    of the first qpoint of the star to the eigenmode representation 
+    !!    of the first qpoint of the star to the eigenmode representation
     !!    (using cz1).
-    !! 
+    !!
     !! 2). rotate the electron-phonon matrix from the eigenmode representation
     !!     to the cartesian representation of the qpoint iq (with cz2).
     !!
-    !! SP - Sep. 2019: Cleaning. 
+    !! SP - Sep. 2019: Cleaning.
     !--------------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE elph2,         ONLY : epmatq, zstar, epsi, bmat, &
@@ -318,7 +318,7 @@
     USE pwcom,         ONLY : nbnd, nks
     USE ions_base,     ONLY : amass, ityp
     USE rigid_epw,     ONLY : rgd_blk_epw
-    ! 
+    !
     IMPLICIT NONE
     !
     LOGICAL, INTENT(in) :: lwin(nbndep, nks)
@@ -336,7 +336,7 @@
     COMPLEX(KIND = DP), INTENT(inout) :: cz2(nmodes, nmodes)
     !!  Rotated eigenvectors for the current q in the star
     !
-    ! Local variables 
+    ! Local variables
     INTEGER :: mu
     !! Counter on phonon branches
     INTEGER :: na
@@ -352,7 +352,7 @@
     INTEGER :: j
     !! Counter on band index
     REAL(KIND = DP) :: massfac
-    !! square root of mass 
+    !! square root of mass
     COMPLEX(KIND = DP) :: eptmp(nmodes)
     !! temporary e-p matrix elements
     COMPLEX(KIND = DP) :: epmatq_opt(nbndep, nbndep, nks, nmodes)
@@ -362,9 +362,9 @@
     COMPLEX(KIND = DP) :: cz2t(nmodes, nmodes)
     !! temporary variables
     !
-    ! the mass factors: 
+    ! the mass factors:
     !  1/sqrt(M) for the  direct transform
-    !  DSQRT(M)   for the inverse transform 
+    !  DSQRT(M)   for the inverse transform
     !
     ! if we set cz1 = cz2 here and we calculate below
     ! cz1 * cz2 we find the identity
@@ -402,7 +402,7 @@
         ENDIF
       ENDDO
     ENDDO
-    ! 
+    !
     ! ep_mode(j) = cfac * sum_i ep_cart(i) * u(i,j)
     !
     epmatq(:, :, :, :, iq) = czero
@@ -434,7 +434,7 @@
     !---------------------------------------------------------------------------
     END SUBROUTINE rotate_epmat
     !---------------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE star_q2(xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, verbosity, sym_smallq)
     !-----------------------------------------------------------------------
@@ -442,11 +442,11 @@
     !! Generate the star of q vectors that are equivalent to the input one
     !! NB: input s(:,:,1:nsym) must contain all crystal symmetries,
     !! i.e. not those of the small-qroup of q only
-    !! 
-    !! SP - Sept. 2019 - Cleaning 
+    !!
+    !! SP - Sept. 2019 - Cleaning
     USE io_global,  ONLY : stdout
     USE kinds,      ONLY : DP
-    !  
+    !
     IMPLICIT NONE
     !
     LOGICAL, INTENT(in) :: verbosity
@@ -471,12 +471,12 @@
     !! reciprocal lattice vectors
     REAL(KIND = DP), INTENT(out) :: sxq(3, 48)
     !! list of vectors in the star of q
-    ! 
+    !
     ! Local variables
     LOGICAL, EXTERNAL :: eqvect
     !! function used to compare two vectors
     INTEGER :: sym_smallq(48)
-    !! 
+    !!
     INTEGER :: nsq(48)
     !! number of symmetry ops. of bravais lattice
     INTEGER :: isym
@@ -497,7 +497,7 @@
     !! a zero vector: used in eqvect
     REAL(KIND = DP), PARAMETER :: accep = 1.e-5_dp
     !! Tolerence
-    !  
+    !
     zero(:) = 0.d0
     !
     ! go to  crystal coordinates
@@ -545,8 +545,8 @@
       ENDIF
     ENDDO
     !
-    ! SP: Now determine which q in the star is obtained 
-    ! 
+    ! SP: Now determine which q in the star is obtained
+    !
     ! Set imq index if needed and check star degeneracy
     !
     raq(:) = -aq(:)
@@ -572,17 +572,17 @@
     !---------------------------------------------------------------------------
     END SUBROUTINE star_q2
     !---------------------------------------------------------------------------
-    !                                                                            
+    !
     !-----------------------------------------------------------------------
-    SUBROUTINE gmap_sym(nsym, s, ft, gmapsym, eigv, invs)
+    SUBROUTINE gmap_sym(nsym, s, ft, gmapsym, eigv)
     !-----------------------------------------------------------------------
     !!
     !! For every G vector, find S(G) for all the symmetry operations
     !! of the crystal. Construct the matrix
-    !! eigv(ig,isym) = $e^{i G v(S)}$ where v(S) is the (possible) 
+    !! eigv(ig,isym) = $e^{i G v(S)}$ where v(S) is the (possible)
     !! fractional translation associated with the symmetry operation
     !!
-    !! No parallelization on G-vecs at the moment  
+    !! No parallelization on G-vecs at the moment
     !! (actually this is done on the global array, but in elphel2.f90
     !! every processor has just a chunk of the array, I may need some
     !! communication)
@@ -590,29 +590,27 @@
     !----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : twopi, ci, cone
-    USE gvect,         ONLY : mill, ngm
-    ! 
+    USE gvect,         ONLY : mill
+    USE elph2,         ONLY : mapg, ngxxf
+    USE fft_base,      ONLY : dffts
+    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nsym
     !! the number of symmetries of the crystal
     INTEGER, INTENT(in) :: s(3, 3, 48)
     !! the symmetry matrices
-    INTEGER, INTENT(in) :: invs(48)
-    !! inverse symmetry matrix 
-    INTEGER, INTENT(out) :: gmapsym(ngm, 48)
+    INTEGER, INTENT(out) :: gmapsym(ngxxf, nsym)
     !! the map S(G) = gmapsym (G,S) 1...nsym
     REAL(KIND = DP), INTENT(in) :: ft(3, 48)
     !! the fractional traslations in crystal axis
-    COMPLEX(KIND = DP), INTENT(out) :: eigv(ngm, 48)
+    COMPLEX(KIND = DP), INTENT(out) :: eigv(ngxxf, nsym)
     !! e^{ iGv} for 1...nsym
     !
     ! Local variables
     LOGICAL :: tfound
     !! Found
     INTEGER :: ig
-    !! Counter on the G-vector
-    INTEGER :: jg
     !! Counter on the G-vector
     INTEGER :: i
     !! Index of the rotated G-vector
@@ -623,42 +621,36 @@
     INTEGER :: notfound
     !! Index to check wether the mapping is complete
     INTEGER :: isym
-    !! Counter on the symmetry 
-    INTEGER :: ism1
-    !! Index for the inverse symmetry
+    !! Counter on the symmetry
+    INTEGER :: ierr
+    !! Error status
     REAL(KIND = DP) :: rdotk
     !! $$\mathbf{r}\cdot\mathbf{k}
+    !
+    i = (dffts%nr1 - 1) / 2
+    j = (dffts%nr2 - 1) / 2
+    k = (dffts%nr3 - 1) / 2
+    ALLOCATE(mapg(-i:i, -j:j, -k:k), STAT = ierr)
+    IF (ierr /= 0) CALL errore('gmap_sym', 'Error allocating mapg', 1)
+    mapg = 0
+    DO ig = 1, ngxxf
+      mapg(mill(1, ig), mill(2, ig), mill(3, ig)) = ig
+    ENDDO
     !
     ! Loop on the symmetries of the crystal
     !
     DO isym = 1, nsym
       !
-      ism1 = invs(isym)
+      ! Loop on the G vectors
       !
-      ! Loop on the G vectors 
-      !
-      notfound = 0
-      !
-      DO ig = 1, ngm
+      DO ig = 1, ngxxf
         !
         ! The rotated G-vector
         !
         i = s(1, 1, isym) * mill(1, ig) + s(1, 2, isym) * mill(2, ig) + s(1, 3, isym) * mill(3, ig)
         j = s(2, 1, isym) * mill(1, ig) + s(2, 2, isym) * mill(2, ig) + s(2, 3, isym) * mill(3, ig)
         k = s(3, 1, isym) * mill(1, ig) + s(3, 2, isym) * mill(2, ig) + s(3, 3, isym) * mill(3, ig)
-        jg = 0
-        tfound = .FALSE.
-        DO WHILE((.NOT. tfound) .AND. (jg < ngm))
-          jg = jg + 1
-          tfound = (i == mill(1, jg)) .AND. (j == mill(2, jg)) .AND. (k == mill(3, jg))
-        ENDDO
-        !
-        IF (tfound) THEN
-          gmapsym(ig, isym) = jg
-        ELSE
-          gmapsym(ig, isym) = 0
-          notfound = notfound + 1
-        ENDIF
+        gmapsym(ig, isym) = mapg(i, j, k)
         !
         ! now the phase factors e^{iGv}
         !
@@ -669,19 +661,18 @@
                 + DBLE(mill(3, ig)) * ft(3, isym)
           !
           ! the actual translation is -v (have a look at ruota_ijk.f90)
-          ! 
-          eigv(ig, isym) = EXP(-ci * twopi * rdotk) 
+          !
+          eigv(ig, isym) = EXP(-ci * twopi * rdotk)
           !
         ELSE
           eigv(ig, isym) = cone
         ENDIF
       ENDDO ! ig
       !
-      IF (notfound > 0) THEN
-        CALL errore('gmap_sym', 'incomplete mapping of G vectors: notfound = ', notfound)
-      ENDIF
-      !
     ENDDO
+    !
+    DEALLOCATE(mapg, STAT = ierr)
+    IF (ierr /= 0) CALL errore('gmap_sym', 'Error deallocating mapg', 1)
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE gmap_sym
@@ -689,4 +680,3 @@
   !-----------------------------------------------------------------------------
   END MODULE rotate
   !-----------------------------------------------------------------------------
-

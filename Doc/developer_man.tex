@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.5MaX}
+\def\version{6.6}
 \def\QE{{\sc Quantum ESPRESSO}}
 \def\qe{QE}
 \textwidth = 17cm
@@ -1497,7 +1497,7 @@ cp test.out.030117.inp=CH4.pw-in.args=1 benchmark.out.git.inp=CH4.pw-in.args=1
 \end{verbatim}
 We now have a reference file for the first step of the calculation. We can do the same for the two other steps. 
 
-Once this is done. We can clean all the unwanted files and we should be left with a clean folder that can be committed to the svn repo. In our case the test folder contains the following files:
+Once this is done. We can clean all the unwanted files and we should be left with a clean folder that can be committed to the git repo. In our case the test folder contains the following files:
 \begin{verbatim}
 benchmark.out.git.inp=CH4.pw-in.args=1      
 benchmark.out.git.inp=CH4.tddfpt_pp-in.args=3 

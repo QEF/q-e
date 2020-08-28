@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: pw.x / PWscf / Quantum Espresso (version: svn)
+Program: pw.x / PWscf / Quantum Espresso (version: 6.6)
 ------------------------------------------------------------------------
 
 
@@ -66,6 +66,7 @@ if (automatic)
 if (not automatic)
    nks
    xk_x, xk_y, xk_z,  wk
+if (tpipa_b or crystal_b in a 'bands' calculation) see Doc/brillouin_zones.pdf
 
 [ CELL_PARAMETERS { alat | bohr | angstrom }
    v1(1) v1(2) v1(3)
@@ -145,8 +146,9 @@ NAMELIST: &CONTROL
     
                    'restart' :
                         From previous interrupted run. Use this switch only if you want to
-                        continue an interrupted calculation, not to start a new one, or to
-                        perform non-scf calculations.  Works only if the calculation was
+                        continue, using the same number of processors and parallelization,
+                        an interrupted calculation. Do not use to start a new one, or to
+                        perform a non-scf calculations.  Works only if the calculation was
                         cleanly stopped using variable "max_seconds", or by user request
                         with an "exit file" (i.e.: create a file "prefix".EXIT, in directory
                         "outdir"; see variables "prefix", "outdir").  Overrides "startingwfc"
@@ -179,7 +181,9 @@ NAMELIST: &CONTROL
    
    Type:           INTEGER
    Description:    number of molecular-dynamics or structural optimization steps
-                   performed in this run
+                   performed in this run. If set to 0, the code performs a quick
+                   "dry run", stopping just after initialization. This is useful
+                   to check for input correctness and to have the summary printed.
    Default:        1  if "calculation" == 'scf', 'nscf', 'bands';
                    50 for the other cases
    +--------------------------------------------------------------------
@@ -306,28 +310,40 @@ NAMELIST: &CONTROL
    Default:        see below
    Description:   
                    Specifies the amount of disk I/O activity:
+                   (only for binary files and xml data file in data directory;
+                   other files printed at each molecular dynamics / structural
+                   optimization step are not controlled by this option )
     
                    'high' :
-                        save all data to disk at each SCF step
+                        save charge to disk at each SCF step,
+                        keep wavefunctions on disk (in "distributed" format),
+                        save mixing data as well.
+                        Do not use this option unless you have a good reason to
     
                    'medium' :
-                        save wavefunctions at each SCF step unless
-                        there is a single k-point per process (in which
-                        case the behavior is the same as 'low')
+                        save charge to disk at each SCF step,
+                        keep wavefunctions on disk only if more than one k-point,
+                        per process is present, otherwise keep them in memory;
+                        save them to disk only at the end (in "portable" format)
     
                    'low' :
-                        store wfc in memory, save only at the end
+                        save charge to disk at each SCF step,
+                        keep wavefunctions in memory (for all k-points),
+                        save them to disk only at the end (in "portable" format).
+                        Reduces I/O but increases memory wrt the previous cases
+    
+                   'nowf' :
+                        save to disk only the xml data file,
+                        never save wavefunctions and charge density
     
                    'none' :
-                        do not save anything, not even at the end
-                        ('scf', 'nscf', 'bands' calculations; some data
-                        may be written anyway for other calculations)
+                        do not save anything to disk
     
                    Default is 'low' for the scf case, 'medium' otherwise.
                    Note that the needed RAM increases as disk I/O decreases!
                    It is no longer needed to specify 'high' in order to be able
                    to restart from an interrupted calculation (see "restart_mode")
-                   but you cannot restart in "disk_io"=='none'
+                   but you cannot restart in "disk_io"=='nowf' or 'none'
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -486,7 +502,16 @@ NAMELIST: &SYSTEM
                      see below for the other parameters.
                      For ibrav=0 specify the lattice vectors in "CELL_PARAMETERS",
                      optionally the lattice parameter alat = celldm(1) (in a.u.)
-                     or = A (in Angstrom), or else it is taken from "CELL_PARAMETERS"
+                     or = A (in Angstrom). If not specified, the lattice parameter is
+                     taken from "CELL_PARAMETERS"
+                     IMPORTANT NOTICE 1:
+                     with ibrav=0 lattice vectors must be given with a sufficiently large
+                     number of digits and with the correct symmetry, or else symmetry
+                     detection may fail and strange problems may arise in symmetrization.
+                     IMPORTANT NOTICE 2:
+                     do not use celldm(1) or A as a.u. to Ang conversion factor,
+                     use the true lattice parameters or nothing,
+                     specify units in "CELL_PARAMETERS" and "ATOMIC_POSITIONS"
                    
                    ibrav      structure                   celldm(2)-celldm(6)
                                                         or: b,c,cosbc,cosac,cosab
@@ -575,10 +600,12 @@ NAMELIST: &SYSTEM
                    -13          Monoclinic base-centered        celldm(2)=b/a
                                 (unique axis b)                 celldm(3)=c/a,
                                                                 celldm(5)=cos(beta)
-                         v1 = (  a/2,      -b/2,             0),
-                         v2 = (  a/2,       b/2,             0),
+                         v1 = (  a/2,       b/2,             0),
+                         v2 = ( -a/2,       b/2,             0),
                          v3 = (c*cos(beta),   0,   c*sin(beta)),
                          where beta=angle between axis a and c projected on xz plane
+                    IMPORTANT NOTICE: until QE v.6.4.1, axis for ibrav=-13 had a
+                    different definition: v1(old) =-v2(now), v2(old) = v1(now)
                    
                     14          Triclinic                       celldm(2)= b/a,
                                                                 celldm(3)= c/a,
@@ -1003,7 +1030,7 @@ NAMELIST: &SYSTEM
                         (see PRB 40, 3616 (1989)).
     
                    'marzari-vanderbilt', 'cold', 'm-v', 'mv' :
-                        Marzari-Vanderbilt cold smearing
+                        Marzari-Vanderbilt-DeVita-Payne cold smearing
                         (see PRL 82, 3296 (1999))
     
                    'fermi-dirac', 'f-d', 'fd' :
@@ -1075,6 +1102,17 @@ NAMELIST: &SYSTEM
                    See Modules/funct.f90 for allowed values.
                    Overrides the value read from pseudopotential files.
                    Use with care and if you know what you are doing!
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ace
+   
+   Type:           LOGICAL
+   Default:        true
+   Description:    Use Adaptively Compressed Exchange operator as in
+                   Lin Lin, J. Chem. Theory Comput. 2016, 12, 2242--2249, doi:10.1021/acs.jctc.6b00092
+                   
+                   Set to false to use standard Exchange (much slower)
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1187,13 +1225,16 @@ NAMELIST: &SYSTEM
    
    Type:           INTEGER
    Default:        0
-   Description:    Specifies the type of DFT+U calculation:
+   Description:    Specifies the type of calculation:
                    
-                      0   simplified version of Cococcioni and de Gironcoli,
+                      0   DFT+U simplified version of Cococcioni and de Gironcoli,
                           PRB 71, 035105 (2005), using "Hubbard_U"
                    
-                      1   rotationally invariant scheme of Liechtenstein et al.,
+                      1   DFT+U rotationally invariant scheme of Liechtenstein et al.,
                           using "Hubbard_U" and "Hubbard_J"
+                   
+                      2   DFT+U+V simplified version of Campo Jr and Cococcioni,
+                          J. Phys.: Condens. Matter 22, 055602 (2010), using "Hubbard_V"
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1211,6 +1252,30 @@ NAMELIST: &SYSTEM
    Default:        0.D0 for all species
    Description:    Hubbard_J0(i): J0 parameter (eV) for species i, DFT+U+J calculation,
                    see PRB 84, 115108 (2011) for details.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       Hubbard_V(na,nb,k), (na,nb,k)=(1,1,1) ... (natx,27*natx,4)
+   
+   Type:           REAL
+   Default:        0.D0 for all elements
+   Description:    Hubbard_V(na,nb,k): V parameters (eV) between atoms na and nb,
+                   used in DFT+U+V calculations (only for "lda_plus_u_kind"=2).
+                   The atomic indices na and nb correspond to the atomic positions
+                   in the "ATOMIC_POSITIONS" card (this is not the same as Hubbard_U
+                   which is specified for "ATOMIC_SPECIES").
+                   Wnen na=nb, then Hubbard_V(na,na,k) is the on-site Hubbard_U
+                   for the atom na.
+                   natx=50 (if needed it can be changed in /Modules/parameters.f90)
+                   The index k controls the "interaction type" (k=1 is used for the
+                   simplest DFT+U+V calculation):
+                   k=1 - interaction between standard orbitals (both on na and nb);
+                   k=2 - interaction between standard (on na) and background (on nb) orbitals;
+                   k=3 - interaction between background orbitlas (both on na and nb);
+                   k=4 - interaction between background (on na) and standard (on nb) orbitals.
+                   Standard orbitals correspond to the main Hubbard channel (e.g. d electrons
+                   in transition metals) and background orbitals correspond to the secondary
+                   Hubbard channel (e.g. p electrons in transition metals).
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1308,6 +1373,45 @@ NAMELIST: &SYSTEM
     
                    NB: forces and stress currently implemented only for the
                    'atomic' and 'pseudo' choice.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       Hubbard_parameters
+   
+   Type:           CHARACTER
+   Default:        'input'
+   Description:   
+                   Available choices:
+    
+                   'input' :
+                        read the "Hubbard_U" (or "Hubbard_V") parameters from
+                        the PW input file
+    
+                   'file' :
+                        read the "Hubbard_V" parameters from the file "parameters.in"
+                        which can be generated after the linear-response calculation
+                        (using the HP code). This option has a higher priority over
+                        the "Hubbard_V" if they are specified in the input. This option
+                        can be used only when "lda_plus_u_kind" = 2.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ensemble_energies
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If ensemble_energies = .true., an ensemble of xc energies
+                   is calculated non-selfconsistently for perturbed
+                   exchange-enhancement factors and LDA vs. PBE correlation
+                   ratios after each converged electronic ground state
+                   calculation.
+                   
+                   Ensemble energies can be analyzed with the 'bee' utility
+                   included with libbeef.
+                   
+                   Requires linking against libbeef.
+                   input_dft must be set to a BEEF-type functional
+                   (e.g. input_dft = 'BEEF-vdW')
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1463,9 +1567,11 @@ NAMELIST: &SYSTEM
    Variable:       report
    
    Type:           INTEGER
-   Default:        100
-   Description:    Number of iterations after which the program
-                   writes all the atomic magnetic moments.
+   Default:        -1
+   Description:    determines when atomic magnetic moments are printed on output:
+                   report = 0  never
+                   report =-1  at the beginning of the scf and at convergence
+                   report = N: as -1, plus every N scf iterations
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2061,27 +2167,14 @@ NAMELIST: &ELECTRONS
     
                    'cg' :
                         Conjugate-gradient-like band-by-band diagonalization.
-                        Slower than 'david' but uses less memory and is
+                        MUCH slower than 'david' but uses less memory and is
                         (a little bit) more robust.
     
-                   'cg-serial', 'david-serial' :
-                        OBSOLETE, use -ndiag 1 instead.
-                        The subspace diagonalization in Davidson is performed
-                        by a fully distributed-memory parallel algorithm on
-                        4 or more processors, by default. The allocated memory
-                        scales down with the number of procs. Procs involved
-                        in diagonalization can be changed with command-line
-                        option -ndiag N. On multicore CPUs it is often
-                        convenient to let just one core per CPU to work
-                        on linear algebra.
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       ortho_para
-   
-   Type:           INTEGER
-   Default:        0
-   Status:         OBSOLETE: use command-line option "-ndiag XX" instead
+                   'ppcg' :
+                        PPCG iterative diagonalization
+    
+                   'paro', 'ParO' :
+                        ParO iterative diagonalization
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2111,15 +2204,15 @@ NAMELIST: &ELECTRONS
    Variable:       diago_david_ndim
    
    Type:           INTEGER
-   Default:        4
+   Default:        2
    Description:    For Davidson diagonalization: dimension of workspace
                    (number of wavefunction packets, at least 2 needed).
                    A larger value may yield a smaller number of iterations in
                    the algorithm but uses more memory and more CPU time in
-                   subspace diagonalization.
-                   Try "diago_david_ndim"=2 if you are tight on memory or if
-                   the time spent in subspace diagonalization (cdiaghg/rdiaghg)
-                   is significant compared to the time spent in h_psi
+                   subspace diagonalization (cdiaghg/rdiaghg). You may try
+                   "diago_david_ndim"=4 if you are not tight on memory
+                   and if the time spent in subspace diagonalization is small
+                   compared to the time spent in h_psi
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2251,7 +2344,45 @@ NAMELIST: &ELECTRONS
 ========================================================================
 NAMELIST: &IONS
 
-   INPUT THIS NAMELIST ONLY IF "CALCULATION" == 'RELAX', 'MD', 'VC-RELAX', OR 'VC-MD'
+   REQUIRED IF "CALCULATION" == 'RELAX', 'MD', 'VC-RELAX', OR 'VC-MD'
+   OPTIONAL FOR "CALCULATION" == 'SCF' (ONLY "ION_POSITIONS" IS USED)
+   
+   +--------------------------------------------------------------------
+   Variable:       ion_positions
+   
+   Type:           CHARACTER
+   Default:        'default'
+   Description:   
+                   Available options are:
+    
+                   'default' :
+                        if restarting, use atomic positions read from the
+                        restart file; in all other cases, use atomic
+                        positions from standard input.
+    
+                   'from_input' :
+                        read atomic positions from standard input, even if restarting.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ion_velocities
+   
+   Type:           CHARACTER
+   Default:        'default'
+   Description:   
+                   Initial ionic velocities. Available options are:
+    
+                   'default' :
+                        start a new simulation from random thermalized
+                        distribution of velocities if "tempw" is set,
+                        with zero velocities otherwise; restart from
+                        atomic velocities read from the restart file
+    
+                   'from_input' :
+                        start or continue the simulation with atomic
+                        velocities read from standard input - see card
+                        "ATOMIC_VELOCITIES"
+   +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
    Variable:       ion_dynamics
@@ -2305,24 +2436,6 @@ NAMELIST: &IONS
                    'beeman' :
                         (default)  use Beeman algorithm to integrate
                         Newton's equation
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       ion_positions
-   
-   Type:           CHARACTER
-   Default:        'default'
-   Description:   
-                   Available options are:
-    
-                   'default' :
-                        if restarting, use atomic positions read from the
-                        restart file; in all other cases, use atomic
-                        positions from standard input.
-    
-                   'from_input' :
-                        restart the simulation with atomic positions read
-                        from standard input, even if restarting.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2414,12 +2527,15 @@ NAMELIST: &IONS
                            (second method) see parameters "tempw" and "nraise"
        
                       'rescale-T' :
-                           control ionic temperature via velocity rescaling
-                           (third method) see parameter "delta_t"
+                           scale temperature of the thermostat every "nraise" steps
+                           by "delta_t", starting from "tempw".
+                           The temperature is controlled via velocitiy rescaling.
        
                       'reduce-T' :
-                           reduce ionic temperature every "nraise" steps
-                           by the (negative) value "delta_t"
+                           reduce temperature of the thermostat every "nraise" steps
+                           by the (negative) value "delta_t", starting from "tempw".
+                           If  "delta_t" is positive, the target temperature is augmented.
+                           The temperature is controlled via velocitiy rescaling.
        
                       'berendsen' :
                            control ionic temperature using "soft" velocity
@@ -2428,6 +2544,11 @@ NAMELIST: &IONS
                       'andersen' :
                            control ionic temperature using Andersen thermostat
                            see parameters "tempw" and "nraise"
+       
+                      'svr' :
+                           control ionic temperature using stochastic-velocity rescaling
+                           (Donadio, Bussi, Parrinello, J. Chem. Phys. 126, 014101, 2007),
+                           with parameters "tempw" and "nraise".
        
                       'initial' :
                            initialize ion velocities to temperature "tempw"
@@ -2502,6 +2623,10 @@ NAMELIST: &IONS
                       if "ion_temperature" == 'andersen' :
                              the "collision frequency" parameter is given as nu=1/tau
                              defined above, so nu*dt = 1/nraise
+                      
+                      if "ion_temperature" == 'svr' :
+                             the "characteristic time" of the thermostat is set to
+                             tau = nraise*dt
       +--------------------------------------------------------------------
       
       +--------------------------------------------------------------------
@@ -2687,7 +2812,7 @@ NAMELIST: &CELL
                         all axis and angles are moved
     
                    'ibrav' :
-                        all axis and angles are moved, but the lattice but be representable with the initial ibrav choice
+                        all axis and angles are moved, but the lattice remains consistent with the initial ibrav choice
     
                    'x' :
                         only the x component of axis 1 (v1_x) is moved
@@ -3018,7 +3143,8 @@ CARD: K_POINTS { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b | tpi
        
                       tpiba_b :
                            Used for band-structure plots.
-                           k-points are in units of  2 pi/a.
+                           See Doc/brillouin_zones.pdf for usage of BZ labels;
+                           otherwise, k-points are in units of  2 pi/a.
                            nks points specify nks-1 lines in reciprocal space.
                            Every couple of points identifies the initial and
                            final point of a line. pw.x generates N intermediate
@@ -3026,6 +3152,7 @@ CARD: K_POINTS { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b | tpi
        
                       crystal_b :
                            As tpiba_b, but k-points are in crystal coordinates.
+                           See Doc/brillouin_zones.pdf for usage of BZ labels.
        
                       tpiba_c :
                            Used for band-structure contour plots.
@@ -3299,6 +3426,48 @@ CARD: OCCUPATIONS
 
 
 ========================================================================
+CARD: ATOMIC_VELOCITIES { a.u }
+
+   OPTIONAL CARD, READS VELOCITIES FROM STANDARD INPUT
+   
+   /////////////////////////////////////////
+   // Syntax:                             //
+   /////////////////////////////////////////
+   
+      ATOMIC_VELOCITIES { a.u }
+         V(1)    vx(1)    vy(1)    vz(1)    
+         V(2)    vx(2)    vy(2)    vz(2)    
+         . . . 
+         V(nat)  vx(nat)  vy(nat)  vz(nat)  
+   
+   /////////////////////////////////////////
+   
+   DESCRIPTION OF ITEMS:
+   
+      +--------------------------------------------------------------------
+      Card's flags:   { a.u }
+      
+      +--------------------------------------------------------------------
+
+
+      +--------------------------------------------------------------------
+      Variable:       V
+      
+      Type:           CHARACTER
+      Description:    label of the atom as specified in ATOMIC_SPECIES
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      vx, vy, vz
+      
+      Type:           REAL
+      Description:    atomic velocities along x y and z direction
+      +--------------------------------------------------------------------
+      
+===END OF CARD==========================================================
+
+
+========================================================================
 CARD: ATOMIC_FORCES 
 
    OPTIONAL CARD USED TO SPECIFY EXTERNAL FORCES ACTING ON ATOMS.
@@ -3337,4 +3506,4 @@ CARD: ATOMIC_FORCES
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Fri Mar 01 18:05:30 CET 2019
+This file has been created by helpdoc utility on Sun Jul 19 17:15:18 CEST 2020

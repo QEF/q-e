@@ -28,8 +28,8 @@
 
   scissor     =  0.7
   nstemp      =   2
-  tempsmin    = 400
-  tempsmax    = 500
+  temps       = 400 500
+
 
   restart      = .true.
   restart_step = 50
@@ -68,7 +68,6 @@
   a2f         = .false.
 
   fsthick     = 4.0
-  eptemp      = 1 ! K 
   degaussw    = 0.1 ! eV
 
   dvscf_dir   = './save/'
@@ -89,7 +88,3 @@
   nq2         = 2
   nq3         = 2
  /
-      3 cartesian
- 0.000000000   0.000000000   0.000000000
- 0.500000000  -0.500000000   0.500000000
- 0.000000000  -1.000000000   0.000000000

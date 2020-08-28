@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,11 +12,12 @@ MODULE parameters
   SAVE
 
   INTEGER, PARAMETER :: &
-       ntypx  = 10,     &! max number of different types of atom
-       npsx   = ntypx,  &! max number of different PPs (obsolete)
-       nsx    = ntypx,  &! max number of atomic species (CP)
        npk    = 40000,  &! max number of k-points               
-       lmaxx  = 3,      &! max non local angular momentum (l=0 to lmaxx)      
-       lqmax= 2*lmaxx+1  ! max number of angular momenta of Q
+       ntypx  = 10,     &! max number of different types of atom
+       nsx    = ntypx,  &! max number of atomic species (CP)
+       natx   = 50,     &! max number of atoms for DFT+U+V calculations
+       sc_size = 1       ! Defines the supercell in DFT+U+V as composed by the unit cells located
+                         ! by (n1,n2,n3) in primitive vectors base with -sc_size <= ni <= sc_size,
+                         ! (2*sc_size+1)**3 is the number of cells
 
 END MODULE parameters

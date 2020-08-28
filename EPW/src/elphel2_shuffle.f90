@@ -72,9 +72,9 @@
   USE cell_base,        ONLY : at, bg
   USE klist_epw,        ONLY : xk_loc, xk_all, isk_loc, et_all
   USE cell_base,        ONLY : tpiba
-  USE gvect,            ONLY : ngm, g
+  USE gvect,            ONLY : g
   USE uspp,             ONLY : vkb
-  USE symm_base,        ONLY : s
+  USE symm_base,        ONLY : s, ft
   USE modes,            ONLY : u
   USE qpoint,           ONLY : xq, npwq
   USE eqv,              ONLY : dvpsi
@@ -83,18 +83,17 @@
   USE phus,             ONLY : alphap
   USE lrus,             ONLY : becp1
   USE becmod,           ONLY : calbec
-  USE elph2,            ONLY : shift, gmap, el_ph_mat, igk_k_all, &
-                               xkq, etq, &
-                               ngk_all, lower_band, upper_band, &
-                               ibndstart, ibndend, nbndep
+  USE elph2,            ONLY : el_ph_mat, igk_k_all, xkq, etq, ngk_all, lower_band, &
+                               upper_band, ibndstart, ibndend, nbndep, ngxx, ngxxf, &
+                               ng0vec, shift, gmap, g0vec_all_r
   USE fft_base,         ONLY : dffts
-  USE constants_epw,    ONLY : czero, cone, ci, zero
+  USE constants_epw,    ONLY : czero, cone, ci, zero, eps8
   USE control_flags,    ONLY : iverbosity
   USE klist,            ONLY : nkstot
   USE division,         ONLY : kpointdivision, fkbounds, fkbounds_bnd
   USE kfold,            ONLY : ktokpmq
   USE low_lvl,          ONLY : fractrasl, rotate_cart, s_crystocart
-  USE io_epw,           ONLY : readwfc, readgmap
+  USE io_epw,           ONLY : readwfc, readkmap
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE dvqpsi,           ONLY : dvqpsi_us3, adddvscf2
   !
@@ -104,7 +103,7 @@
   !! Number of perturbations for this irr representation
   INTEGER, INTENT(in) :: imode0
   !! Current mode number
-  INTEGER, INTENT(in) :: gmapsym(ngm, 48)
+  INTEGER, INTENT(in) :: gmapsym(ngxxf)
   !! Correspondence  G->S(G)
   INTEGER, INTENT(in) :: isym
   !! The symmetry which generates the current q in the star
@@ -112,7 +111,7 @@
   !! The first q-point in the star (cartesian coords.)
   COMPLEX(KIND = DP), INTENT(in) :: dvscfins(dffts%nnr, nspin_mag, npe)
   !! Delta scf potential
-  COMPLEX(KIND = DP), INTENT(in) :: eigv (ngm, 48)
+  COMPLEX(KIND = DP), INTENT(in) :: eigv (ngxxf)
   !! $e^{iGv}$ for 1...nsym (v the fractional translation)
   LOGICAL, INTENT(in) :: timerev
   !!  true if we are using time reversal
@@ -146,10 +145,6 @@
   !! Counter on polarizations
   INTEGER :: npw
   !! Number of k+G-vectors inside 'ecut sphere'
-  INTEGER :: ng0vec
-  !! Number of G_0 vectors
-  INTEGER :: ngxx
-  !! Maximum number of G-vectors over all pools
   INTEGER :: lower_bnd
   !! Lower bounds index after k paral
   INTEGER :: upper_bnd
@@ -173,8 +168,6 @@
   !! Temporary k+q vector for KB projectors
   REAL(KIND = DP) :: sxk(3)
   !! Rotated k-point xk
-  REAL(KIND = DP) :: g0vec_all_r(3, 125)
-  !! G_0 vectors needed to fold the k+q grid into the k grid, cartesian coord.
   REAL(KIND = DP) :: zero_vect(3)
   !! Temporary zero vector
   REAL(KIND = DP) :: s_cart(3, 3)
@@ -231,14 +224,7 @@
   !
   CALL kpointdivision(ik0)
   !
-  ALLOCATE(shift(nkstot), STAT = ierr)
-  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating shift', 1)
-  shift(:) = 0
-  ! gmap gets allocated inside readgmap
-  CALL readgmap(nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd)
-  !
-  IF (imode0 == 0 .AND. iverbosity == 1) WRITE(stdout, 5) ngxx
-5 FORMAT(5x,'Estimated size of gmap: ngxx =', i5)
+  CALL readkmap(nkstot)
   !
   ! close all sequential files in order to re-open them as direct access
   ! close all .wfc files in order to prepare shuffled read
@@ -321,7 +307,7 @@
     ! Rotate evc --> axu5 and evq --> aux4 by SU2^{dagger}
     !------------------------------------------------------------
     IF (noncolin) THEN
-      DO ibnd = 1, nbnd
+      DO ibnd = ibndstart, ibndend
         DO ig = 1, npw
           aux5(ig, ibnd) = su2(1, 1) * evc(ig, ibnd) + su2(1, 2) * evc(ig + npwx, ibnd)
           aux5(ig + npwx, ibnd) = su2(2, 1) * evc(ig, ibnd) + su2(2, 2) * evc(ig + npwx, ibnd)
@@ -359,13 +345,15 @@
     !  Translate by G_0 the G-sphere where evq is defined,
     !  none of the G-points are lost.
     !
-    DO ig = 1, npwq
-      imap = ng0vec * (igkq(ig) - 1) + shift(ik + ik0)
-      igkq_tmp(ig) = gmap(imap)
-      !  the old matrix version...
-      !  igkq_tmp(ig) = gmap( igkq(ig), shift(ik+ik0) )
-    ENDDO
-    igkq = igkq_tmp
+    IF (ANY( ABS(g0vec_all_r(:, shift(ik + ik0))) > eps8 )) THEN
+      DO ig = 1, npwq
+        imap = ng0vec * (igkq(ig) - 1) + shift(ik + ik0)
+        igkq_tmp(ig) = gmap(imap)
+        !  the old matrix version...
+        !  igkq_tmp(ig) = gmap( igkq(ig), shift(ik+ik0) )
+      ENDDO
+      igkq = igkq_tmp
+    ENDIF
     !
     !  find k+q from k+q+G_0
     !  (this is needed in the calculation of the KB terms
@@ -379,8 +367,10 @@
     !
     !  u_{k+q+G_0} carries an additional factor e^{i G_0 v}
     !
-    CALL fractrasl(npw,  igk,  aux5, eigv(:, isym), cone)
-    CALL fractrasl(npwq, igkq, aux4, eigv(:, isym), cone)
+    IF (ANY( ABS(ft(:, isym)) > eps8 )) THEN
+      CALL fractrasl(npw,  igk,  aux5, eigv, cone)
+      CALL fractrasl(npwq, igkq, aux4, eigv, cone)
+    ENDIF
     !
     ! ---------------------------------------------------------------------
     ! wave function rotation to generate matrix elements for the star of q
@@ -389,8 +379,10 @@
     ! ps. don't use npwx instead of npw, npwq since the unused elements
     ! may be large and blow up gmapsym (personal experience)
     !
-    igk(1:npw) = gmapsym(igk(1:npw), isym)
-    igkq(1:npwq) = gmapsym(igkq(1:npwq), isym)
+    IF (isym /= 1) THEN
+       igk(1:npw) = gmapsym(igk(1:npw))
+       igkq(1:npwq) = gmapsym(igkq(1:npwq))
+    ENDIF
     !
     ! In dvqpsi_us_only3 we need becp1 and alphap for the rotated wfs.
     ! The other quantities (deeq and qq) do not depend on the wfs, in
@@ -558,10 +550,6 @@
   IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating aux3', 1)
   DEALLOCATE(dvpsi, STAT = ierr)
   IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating dvpsi', 1)
-  DEALLOCATE(gmap, STAT = ierr)
-  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating gmap', 1)
-  DEALLOCATE(shift, STAT = ierr)
-  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating shift', 1)
   DEALLOCATE(etq, STAT = ierr)
   IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating etq', 1)
   !

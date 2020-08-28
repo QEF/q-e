@@ -10,29 +10,18 @@
 #if ! defined (__CUDA)
 #define cublasDGEMM DGEMM
 #endif
-!@njs: s_psi, psi, spsi, s_psi_, s_psi_k, s_psi_gamma, s_psi_nc
+!----------------------------------------------------------------------------
 SUBROUTINE s_psi_gpu( lda, n, m, psi_d, spsi_d )
-  !----------------------------------------------------------------------------
+  !--------------------------------------------------------------------
+  !! This routine applies the S matrix to m wavefunctions psi and puts 
+  !! the results in spsi.
+  !! Requires the products of psi with all beta functions in array 
+  !! becp(nkb,m) (calculated in h_psi or by calbec).
   !
-  ! ... This routine applies the S matrix to m wavefunctions psi
-  ! ... and puts the results in spsi.
-  ! ... Requires the products of psi with all beta functions
-  ! ... in array becp(nkb,m) (calculated in h_psi or by calbec)
-  !
-  ! ... input:
-  !
-  ! ...    lda   leading dimension of arrays psi, spsi
-  ! ...    n     true dimension of psi, spsi
-  ! ...    m     number of states psi
-  ! ...    psi
-  !
-  ! ... output:
-  !
-  ! ...    spsi  S*psi
-  !
-  ! --- Wrapper routine: performs bgrp parallelization on non-distributed bands
-  ! --- if suitable and required, calls old S\psi routine s_psi_
-  ! --- See comments in h_psi.f90 about band parallelization
+  !! \(\textit{Wrapper routine}\): performs bgrp parallelization on 
+  !! non-distributed bands if suitable and required, calls old S\psi
+  !! routine s_psi_ . See comments in h_psi.f90 about band 
+  !! parallelization.
   !
 #if defined(__CUDA)
   USE cudafor
@@ -41,62 +30,69 @@ SUBROUTINE s_psi_gpu( lda, n, m, psi_d, spsi_d )
   USE noncollin_module, ONLY : npol
   USE funct,            ONLY : exx_is_active
   USE mp_bands,         ONLY : use_bgrp_in_hpsi, inter_bgrp_comm
-  USE mp,               ONLY : mp_sum
+  USE mp,               ONLY : mp_allgather, mp_size, &
+                               mp_type_create_column_section, mp_type_free
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: lda, n, m
+  INTEGER, INTENT(IN) :: lda
+  !! leading dimension of arrays psi, spsi
+  INTEGER, INTENT(IN) :: n
+  !! true dimension of psi, spsi
+  INTEGER, INTENT(IN) :: m
+  !! number of states psi
   COMPLEX(DP), INTENT(IN) :: psi_d(lda*npol,m)
+  !! the m wavefunctions
   COMPLEX(DP), INTENT(OUT)::spsi_d(lda*npol,m)
+  !! S matrix dot wavefunctions psi
 #if defined(__CUDA)
   attributes(DEVICE) :: psi_d, spsi_d
 #endif
   !
-  INTEGER     :: m_start, m_end, i
+  ! ... local variables
+  !
+  INTEGER :: m_start, m_end
+  INTEGER :: column_type
+  INTEGER, ALLOCATABLE :: recv_counts(:), displs(:)
   !
   CALL start_clock_gpu( 's_psi_bgrp' )
-
+  !
   IF (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) THEN
      ! use band parallelization here
-     spsi_d(:,:) = (0.d0,0.d0)
-     CALL divide(inter_bgrp_comm,m,m_start,m_end)
-     !write(6,*) m, m_start,m_end
+     ALLOCATE( recv_counts(mp_size(inter_bgrp_comm)), displs(mp_size(inter_bgrp_comm)) )
+     CALL divide_all( inter_bgrp_comm,m,m_start,m_end, recv_counts,displs )
+     CALL mp_type_create_column_section( spsi_d(1,1), 0, lda*npol, lda*npol, column_type )
+     !
      ! Check if there at least one band in this band group
      IF (m_end >= m_start) &
         CALL s_psi__gpu( lda, n, m_end-m_start+1, psi_d(1,m_start), spsi_d(1,m_start) )
-     CALL mp_sum(spsi_d,inter_bgrp_comm)
+     CALL mp_allgather(spsi_d, column_type, recv_counts, displs, inter_bgrp_comm )
+     !
+     CALL mp_type_free( column_type )
+     DEALLOCATE( recv_counts )
+     DEALLOCATE( displs )
   ELSE
      ! don't use band parallelization here
      CALL s_psi__gpu( lda, n, m, psi_d, spsi_d )
-  END IF
-
+  ENDIF
+  !
   CALL stop_clock_gpu( 's_psi_bgrp' )
+  !
+  !
   RETURN
-
+  !
 END SUBROUTINE s_psi_gpu
+!
 !
 !----------------------------------------------------------------------------
 SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
   !----------------------------------------------------------------------------
-  !
-  ! ... This routine applies the S matrix to m wavefunctions psi
-  ! ... and puts the results in spsi.
-  ! ... Requires the products of psi with all beta functions
-  ! ... in array becp(nkb,m) (calculated in h_psi or by calbec)
-  !
-  ! ... input:
-  !
-  ! ...    lda   leading dimension of arrays psi, spsi
-  ! ...    n     true dimension of psi, spsi
-  ! ...    m     number of states psi
-  ! ...    psi
-  !
-  ! ... output:
-  !
-  ! ...    spsi  S*psi
+  !! This routine applies the S matrix to m wavefunctions psi and puts 
+  !! the results in spsi.
+  !! Requires the products of psi with all beta functions in array 
+  !! becp(nkb,m) (calculated in h_psi or by calbec).
   !
 #if defined (__CUDA)
-  USE cudafor
   USE cublas
 #endif
   USE kinds,      ONLY : DP
@@ -107,18 +103,29 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
   USE ions_base,  ONLY : nat, nsp, ityp
   USE control_flags,    ONLY: gamma_only 
   USE noncollin_module, ONLY: npol, noncolin
-  USE realus,     ONLY :  real_space, &
-                  invfft_orbital_gamma, fwfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma, &
-                  invfft_orbital_k, fwfft_orbital_k, calbec_rs_k, s_psir_k
+  USE realus,           ONLY: real_space, invfft_orbital_gamma,     &
+                              fwfft_orbital_gamma, calbec_rs_gamma, &
+                              s_psir_gamma, invfft_orbital_k,       &
+                              fwfft_orbital_k, calbec_rs_k, s_psir_k
+  USE wavefunctions,    ONLY: psic
+  USE fft_base,         ONLY: dffts
   !
   USE uspp_gpum,  ONLY : vkb_d, using_vkb_d, using_indv_ijkb0
   USE becmod_gpum, ONLY : using_becp_r_d, using_becp_k_d, using_becp_nc_d
+  USE device_util_m,    ONLY : dev_memcpy
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: lda, n, m
+  INTEGER, INTENT(IN) :: lda
+  !! leading dimension of arrays psi, spsi
+  INTEGER, INTENT(IN) :: n
+  !! true dimension of psi, spsi
+  INTEGER, INTENT(IN) :: m
+  !! number of states psi
   COMPLEX(DP), INTENT(IN) :: psi_d(lda*npol,m)
+  !! the m wavefunctions
   COMPLEX(DP), INTENT(OUT)::spsi_d(lda*npol,m)
+  !! S matrix dot wavefunctions psi
 #if defined(__CUDA)
   attributes(DEVICE) :: psi_d, spsi_d
   !
@@ -135,7 +142,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
   !
   ! ... initialize  spsi
   !
-  spsi_d = psi_d
+  CALL dev_memcpy( spsi_d , psi_d )
   !
   IF ( nkb == 0 .OR. .NOT. okvan ) RETURN
   !
@@ -152,45 +159,53 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
   !
   IF ( gamma_only ) THEN
      !
-     IF (real_space ) THEN
+     IF ( real_space ) THEN
         !
         DO ibnd = 1, m, 2
-           !   transform the orbital to real space
-           CALL invfft_orbital_gamma(psi_host,ibnd,m) 
-           CALL s_psir_gamma(ibnd,m)
-           CALL fwfft_orbital_gamma(spsi_host,ibnd,m)
-        END DO
+!SdG: the becp are already computed ! no need to invfft psi to real space.
+!           CALL invfft_orbital_gamma( psi_host, ibnd, m ) 
+!SdG: we just need to clean psic in real space ...
+           CALL threaded_barrier_memset(psic, 0.D0, dffts%nnr*2)
+!SdG: ... before computing the us-only contribution ...
+           CALL s_psir_gamma( ibnd, m )
+!SdG: ... and add it to spsi (already containing psi).
+           CALL fwfft_orbital_gamma( spsi_host, ibnd, m, add_to_orbital=.TRUE. )
+        ENDDO
         spsi_d = spsi_host
         !
      ELSE
         !
         CALL s_psi_gamma_gpu()
         !
-     END IF
+     ENDIF
      !
-  ELSE IF ( noncolin ) THEN
+  ELSEIF ( noncolin ) THEN
      !
      CALL s_psi_nc_gpu()
      !
   ELSE 
      !
-     IF (real_space ) THEN
+     IF ( real_space ) THEN
         !
         DO ibnd = 1, m
-           !   transform the orbital to real space
-           CALL invfft_orbital_k(psi_host,ibnd,m) 
-           CALL s_psir_k(ibnd,m)
-           CALL fwfft_orbital_k(spsi_host,ibnd,m)
-           spsi_d = spsi_host
-        END DO
+!SdG: the becp are already computed ! no need to invfft psi to real space.
+!           CALL invfft_orbital_k( psi, ibnd, m )
+!SdG: we just need to clean psic in real space ...
+           CALL threaded_barrier_memset(psic, 0.D0, dffts%nnr*2)
+!SdG: ... before computing the us-only contribution ...
+           CALL s_psir_k( ibnd, m )
+!SdG: ... and add it to spsi (already containing psi).
+           CALL fwfft_orbital_k( spsi_host, ibnd, m, add_to_orbital=.TRUE. )
+        ENDDO
+        spsi_d = spsi_host
         !
      ELSE
         !
         CALL s_psi_k_gpu()
         !
-     END IF    
+     ENDIF    
      !
-  END IF    
+  ENDIF    
   !
   CALL stop_clock_gpu( 's_psi' )
   !
@@ -200,13 +215,12 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
      !
      !-----------------------------------------------------------------------
      SUBROUTINE s_psi_gamma_gpu()
-       !-----------------------------------------------------------------------
-       ! 
-       ! ... gamma version
+       !---------------------------------------------------------------------
+       !! Gamma version of \(\textrm{s_psi}\) routine.
        !
-       USE mp, ONLY: mp_get_comm_null, mp_circular_shift_left
-       USE gbuffers,   ONLY : dev_buf
-       USE uspp_gpum,  ONLY : qq_at_d, using_qq_at_d
+       USE mp,            ONLY: mp_get_comm_null, mp_circular_shift_left
+       USE gbuffers,      ONLY : dev_buf
+       USE uspp_gpum,     ONLY : qq_at_d, using_qq_at_d
        !
        IMPLICIT NONE  
        !
@@ -250,7 +264,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        CALL dev_buf%lock_buffer(ps_d, (/ nkb, m_max /), ierr)
        
-       IF( ierr /= 0 .and. ierr /= -1 ) &
+       IF( ierr /= 0 ) &
           CALL errore( ' s_psi_gamma_gpu ', ' cannot allocate buffer (ps_d) ', ABS(ierr) )
        !
        ps_d(1:nkb,1:m_max) = 0.D0
@@ -301,19 +315,20 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
                 CALL cublasDGEMM( 'N', 'N', 2 * n, m_loc, nkb, 1.D0, vkb_d, &
                             2 * lda, ps_d, nkb, 1.D0, spsi_d( 1, m_begin ), 2 * lda )
              END IF
-
+             !
              ! block rotation
              !
              CALL mp_circular_shift_left( ps_d, icyc, becp_d%comm )
-
+             !
              icur_blk = icur_blk + 1
              IF( icur_blk == nproc ) icur_blk = 0
-
-          END DO
+             !
+          ENDDO
           !
-       END IF
+       ENDIF
        !
        CALL dev_buf%release_buffer(ps_d, ierr)
+       !
        !
        RETURN
        !
@@ -322,8 +337,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
      !-----------------------------------------------------------------------
      SUBROUTINE s_psi_k_gpu()
        !-----------------------------------------------------------------------
-       !
-       ! ... k-points version
+       !! k-points version of \(\textrm{s_psi}\) routine.
        !
        USE gbuffers,   ONLY : dev_buf
        USE uspp_gpum,  ONLY : qq_at_d, using_qq_at_d
@@ -343,7 +357,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        CALL dev_buf%lock_buffer(ps_d, (/ nkb, m /), ierr)
        !
-       IF( ierr /= 0 .and. ierr /= -1 ) &
+       IF( ierr /= 0 ) &
           CALL errore( ' s_psi_k_gpu ', ' cannot allocate buffer (ps_d) ', ABS(ierr) )
 
        ! sync vkb if needed
@@ -359,7 +373,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        ! here we need to use qq_at_d instead of qq_nt_d otherwise real space augmentation brakes!
        !  qq_nt_d would be much faster and works for calculations without real space augmentation
        CALL dev_buf%lock_buffer( qqc_d, (/ nhm, nhm, nat/), ierr )
-       IF( ierr /= 0 .and. ierr /= -1 ) &
+       IF( ierr /= 0 ) &
           CALL errore( ' s_psi_k_gpu ', ' cannot allocate buffer (qqc_d) ', ABS(ierr) )
 
 !$cuf kernel do(3) <<<*,*>>>
@@ -408,7 +422,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
       SUBROUTINE s_psi_nc_gpu ( )
      !-----------------------------------------------------------------------
        !
-       ! ... k-points noncolinear/spinorbit version
+       !! k-points noncolinear/spinorbit version of \(\textrm{s_psi}\) routine.
        !
        USE gbuffers,   ONLY : dev_buf
        USE uspp_gpum,  ONLY : qq_at_d, using_qq_at_d, qq_so_d, using_qq_so_d
@@ -434,7 +448,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        IF ( lspinorb ) CALL using_qq_so_d(0)
 
        CALL dev_buf%lock_buffer(ps_d, (/ nkb, npol, m /), ierr)
-       IF( ierr /= 0 .and. ierr /= -1 ) &
+       IF( ierr /= 0 ) &
           CALL errore( ' s_psi_nc_gpu ', ' cannot allocate buffer (ps_d) ', ABS(ierr) )
 
        ps_d(1:nkb,1:npol,1:m) = (0.D0,0.D0)

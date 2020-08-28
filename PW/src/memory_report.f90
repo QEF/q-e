@@ -34,7 +34,7 @@ SUBROUTINE memory_report()
   USE exx,       ONLY : ecutfock, use_ace
   USE exx_base,  ONLY : nkqs
   USE fft_base,  ONLY : dffts, dfftp
-  USE gvect,     ONLY : ngm, ngl, ngm_g, g, gcutm
+  USE gvect,     ONLY : ngm, ngl, ngm_g, g, ecutrho
   USE gvecs,     ONLY : ngms, doublegrid
   USE gvecw,     ONLY : ecutwfc, gcutw
   USE klist,     ONLY : nks, nkstot, xk, qnorm
@@ -167,7 +167,7 @@ SUBROUTINE memory_report()
   lmaxq = 2*lmaxkb+1
   IF (lmaxq > 0) THEN
      ! not accurate if spline_ps .and. cell_factor <= 1.1d0
-     nqxq = int( ( (sqrt(gcutm) + qnorm) / dq + 4) * cell_factor )
+     nqxq = int( ( (sqrt(ecutrho) + qnorm) / dq + 4) * cell_factor )
      ! allocate_nlpot.f90:87 qrad
      add = real_size * nqxq * nbetam*(nbetam+1)/2 * lmaxq * ntyp
      IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'qrad', add/MB
@@ -363,9 +363,9 @@ SUBROUTINE memory_report()
            !                      vg                       ylmk0     qmod
            ram1 = real_size * (ngm*nspin_mag + ngm_l*( lmaxq*lmaxq + 1 ) )
            !                                    qgm      aux1
-           ram1 = ram1 + complex_size * ngm_l * ( maxnij + nat*3 )
+           ram1 = ram1 + complex_size * ngm_l * ( maxnij + 3*maxnab )
            !                           ddeeq
-           ram1 = ram1 + real_size * ( maxnij * nat * 3 * nspin_mag )
+           ram1 = ram1 + real_size * ( maxnij * maxnab * 3 * nspin_mag )
            IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'addusforce', ram1/MB
            !
            ram_ = MAX ( ram_, ram1 )

@@ -88,11 +88,14 @@ SUBROUTINE force_lc_gpu( nat, tau, ityp, alat, omega, ngm, ngl, &
   !
   ALLOCATE( aux(dfftp%nnr) )
   CALL dev_buf%lock_buffer(aux_d, dfftp%nnr, ierr)
+  IF (ierr /= 0) CALL errore( 'force_lc_gpu', 'cannot allocate buffers', -1 )
   !
   aux(:) = CMPLX( rho(:), 0.0_DP, KIND=DP )
   CALL dev_memcpy( aux_d, aux )
   !
   CALL fwfft( 'Rho', aux_d, dfftp )
+  IF ( ( do_comp_esm .AND. (esm_bc .NE. 'pbc') ) .or. do_cutoff_2D ) &
+     CALL dev_memcpy( aux, aux_d )
   !
   ! aux contains now  n(G)
   !
@@ -126,10 +129,8 @@ SUBROUTINE force_lc_gpu( nat, tau, ityp, alat, omega, ngm, ngl, &
         forcelc_z = forcelc_z + g_d (3, ig) * arg
         !
      ENDDO
-     forcelc (1, na) = forcelc_x; forcelc (2, na) = forcelc_y; forcelc (3, na) = forcelc_z; 
-     DO ipol = 1, 3
-        forcelc (ipol, na) = fact * forcelc (ipol, na) * omega * tpi / alat
-     ENDDO
+     forcelc(1, na) = forcelc_x; forcelc(2, na) = forcelc_y; forcelc(3, na) = forcelc_z;
+     forcelc(1:3,na) = fact * forcelc(1:3,na) * omega * tpi / alat
   ENDDO
   IF ( do_comp_esm .AND. (esm_bc .NE. 'pbc') ) THEN
      !

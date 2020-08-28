@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: turbo_lanczos.x / turboTDDFPT / Quantum Espresso (version: 6.4)
+Program: turbo_lanczos.x / turboTDDFPT / Quantum Espresso (version: 6.6)
 ------------------------------------------------------------------------
 
 
@@ -82,7 +82,7 @@ NAMELIST: &lr_input
    Type:           LOGICAL
    Default:        .false.
    Description:    When set to .true., turbo_lanczos.x will attempt to restart
-                   from a previous interrupted calculation. (see restart_step
+                   from a previous interrupted calculation. (see "restart_step"
                    variable).
                    
                    Beware, if set to .false. turbo_lanczos.x will OVERWRITE any
@@ -185,6 +185,14 @@ NAMELIST: &lr_control
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
+   Variable:       scissor
+   
+   Type:           REAL
+   Default:        0.0
+   Description:    Scissor shift (in Rydberg units).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
    Variable:       charge_response
    
    Type:           INTEGER
@@ -226,7 +234,7 @@ NAMELIST: &lr_control
    
    Type:           LOGICAL
    Default:        .true.
-   Description:    This variable is used only when d0psi_rs=.true.
+   Description:    This variable is used only when "d0psi_rs" = .true.
                    a) If a molecule is placed in the corner of the
                    supercell, there is a discontinuity problem for the
                    position operator r, which is not periodic. By setting
@@ -260,7 +268,7 @@ NAMELIST: &lr_post
    Variable:       epsil
    
    Type:           REAL
-   Default:        0.0
+   Default:        0.02
    Description:    The broadening/damping term (in Rydberg units).
    +--------------------------------------------------------------------
    
@@ -301,4 +309,4 @@ NAMELIST: &lr_post
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Mar 01 17:57:32 CET 2019
+This file has been created by helpdoc utility on Fri Jul 17 10:28:33 CEST 2020

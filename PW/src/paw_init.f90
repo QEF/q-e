@@ -125,11 +125,11 @@ MODULE paw_init
         !
         ! If I can't find any atom within first_nat and last_nat
         ! which is of type nt, then I can deallocate:
-        IF (ASSOCIATED(upf(nt)%paw%ae_rho_atc) ) DEALLOCATE( upf(nt)%paw%ae_rho_atc )
-        IF (ASSOCIATED(upf(nt)%paw%pfunc)      ) DEALLOCATE( upf(nt)%paw%pfunc      )
-        IF (ASSOCIATED(upf(nt)%paw%ptfunc)     ) DEALLOCATE( upf(nt)%paw%ptfunc     )
-        IF (ASSOCIATED(upf(nt)%paw%pfunc_rel)  ) DEALLOCATE( upf(nt)%paw%pfunc_rel  )
-        IF (ASSOCIATED(upf(nt)%paw%ae_vloc)    ) DEALLOCATE( upf(nt)%paw%ae_vloc    )
+        IF ( ALLOCATED(upf(nt)%paw%ae_rho_atc) ) DEALLOCATE( upf(nt)%paw%ae_rho_atc )
+        IF ( ALLOCATED(upf(nt)%paw%pfunc)      ) DEALLOCATE( upf(nt)%paw%pfunc      )
+        IF ( ALLOCATED(upf(nt)%paw%ptfunc)     ) DEALLOCATE( upf(nt)%paw%ptfunc     )
+        IF ( ALLOCATED(upf(nt)%paw%pfunc_rel)  ) DEALLOCATE( upf(nt)%paw%pfunc_rel  )
+        IF ( ALLOCATED(upf(nt)%paw%ae_vloc)    ) DEALLOCATE( upf(nt)%paw%ae_vloc    )
         info(me_image,nt) = 1
         !
     ENDDO types

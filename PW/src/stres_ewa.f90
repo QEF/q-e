@@ -128,6 +128,9 @@ SUBROUTINE stres_ewa( alat, nat, ntyp, ityp, zv, at, bg, tau, &
   IF (do_cutoff_2D) THEN 
      CALL cutoff_stres_sigmaewa( alpha, sdewald, sigmaewa )
   ELSE
+!$omp parallel do default(none) shared(gstart, ngm, g, gg, tpiba2, alpha, tau, zv, ityp, nat, omega, fact)&
+!$omp                          &private(g2, g2a, rhostar, na, arg, l, m, sewald)&
+!$omp                          &reduction(+:sigmaewa,sdewald)
      DO ng = gstart, ngm
         g2 = gg (ng) * tpiba2
         g2a = g2 / 4.d0 / alpha
@@ -148,6 +151,7 @@ SUBROUTINE stres_ewa( alat, nat, ntyp, ityp, zv, at, bg, tau, &
         ENDDO
         !
      ENDDO
+!$omp end parallel do
   ENDIF
   !
   DO l = 1, 3
@@ -163,6 +167,9 @@ SUBROUTINE stres_ewa( alat, nat, ntyp, ityp, zv, at, bg, tau, &
      !
      ! with this choice terms up to ZiZj*erfc(5) are counted (erfc(5)=2x10^-1
      !
+!$omp parallel do default(none) shared(na_s, na_e, nat, tau, rmax, at, bg, alat, ityp, alpha, omega, zv)&
+!$omp                          &private(nb, dtau, r, r2, nrm, nr, rr, fac, l, m)&
+!$omp                          &reduction(+:sigmaewa)
      DO na = na_s, na_e
         DO nb = 1, nat
            dtau(:) = tau(:,na) - tau(:,nb)
@@ -185,6 +192,7 @@ SUBROUTINE stres_ewa( alat, nat, ntyp, ityp, zv, at, bg, tau, &
            !
         ENDDO
      ENDDO
+!$omp end parallel do
   ENDIF
   !
   DO l = 1, 3

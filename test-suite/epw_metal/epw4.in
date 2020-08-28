@@ -43,7 +43,6 @@
   asr_typ     = 'crystal'
 
   fsthick      = 1 ! eV
-  eptemp       = 1 ! K
   degaussw     = 0.0  ! eV (adaptative smearing)
   degaussq     = 0.05 ! meV
   assume_metal = .true.
@@ -61,8 +60,7 @@
   restart_step  = 50
   selecqread    = .true.
   nstemp        = 2
-  tempsmin      = 100
-  tempsmax      = 300
+  temps         = 100 300
 
   dvscf_dir   = './save'
 
@@ -82,8 +80,3 @@
   nq2         = 3
   nq3         = 3
  /
-      4 cartesian
-  0.000000000000   0.000000000000   0.000000000000 
- -0.333333333333   0.333333333333  -0.333333333333 
-  0.000000000000   0.666666666667   0.000000000000 
-  0.666666666667   0.000000000000   0.666666666667 

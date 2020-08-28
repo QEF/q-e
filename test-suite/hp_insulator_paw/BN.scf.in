@@ -4,7 +4,6 @@
     prefix      ='bn'
     pseudo_dir  = '../../pseudo/'
     outdir      ='./'
-    verbosity   ='high'
  /
  &system
     ibrav     = 4,
@@ -22,6 +21,7 @@
  &electrons
     conv_thr    = 1.d-10
     mixing_beta = 0.7
+    diago_david_ndim = 4
  /
 ATOMIC_SPECIES
 N 14.00674  N.pbe-n-kjpaw_psl.0.1.UPF

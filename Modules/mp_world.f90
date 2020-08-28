@@ -12,7 +12,7 @@ MODULE mp_world
   USE mp, ONLY : mp_barrier, mp_start, mp_end, mp_stop, mp_count_nodes 
   USE io_global, ONLY : meta_ionode_id, meta_ionode
 #if defined(__CUDA)
-  use cudafor, ONLY : cudaSetDevice, cudaGetDeviceCount
+  use cudafor, ONLY : cudaSetDevice, cudaGetDeviceCount, cudaDeviceSynchronize
 #endif
   !
   USE parallel_include
@@ -65,7 +65,7 @@ CONTAINS
     IF (ierr/=0) CALL mp_stop( 8000 )
     IF (.NOT. library_mode ) THEN
 #if defined(_OPENMP)
-       CALL MPI_Init_thread(MPI_THREAD_FUNNELED, PROVIDED, ierr)
+       CALL MPI_Init_thread(MPI_THREAD_MULTIPLE, PROVIDED, ierr)
 #else
        CALL MPI_Init(ierr)
 #endif
@@ -77,7 +77,17 @@ CONTAINS
     !
 #if defined(__CUDA)
     ierr = cudaGetDeviceCount( ndev )
+    IF (ierr/=0) CALL mp_stop( 9000 + ierr )
+    !
+    ! WARNING: the OpenMP standard does not guarantee that the thread
+    !          pool remains the same in different parallel regions.
+    !          However, this is apparently what all major implementations do.
+!$omp parallel firstprivate(key, ndev) reduction(max:ierr)
     ierr = cudaSetDevice(mod(key, ndev))
+!$omp end parallel
+    IF (ierr/=0) CALL mp_stop( 9100 + ierr )
+    ierr = cudaDeviceSynchronize()
+    IF (ierr/=0) CALL mp_stop( 9200 + ierr )
 #if defined(__DEBUG)
     write(*,*) "MPI ", key, " on node ", color, " is using GPU: ", mod(key, ndev)
 #endif

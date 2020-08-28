@@ -16,6 +16,10 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !    contribution of the local potential in drhodvloc.
   !    Note that drhoscf contain only the smooth part of the
   !    induced charge density, calculated in solve linter.
+  !    February 2020: the routine has been generalized to 
+  !    address also the case noncolin.and.domag. For the 
+  !    theoretical background please refer to: 
+  !    Phys. Rev. B 100, 045115 (2019)
   !
   !
   USE kinds,     ONLY : DP
@@ -25,7 +29,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE cell_base, ONLY : tpiba
   USE lsda_mod,  ONLY : current_spin, lsda, isk, nspin
   USE wvfct,     ONLY : npwx, nbnd
-  USE uspp,      ONLY : nkb, vkb
+  USE uspp,      ONLY : nkb, vkb, deeq_nc, okvan
   USE becmod,    ONLY : calbec, bec_type, becscal, allocate_bec_type, &
                         deallocate_bec_type
   USE fft_base,  ONLY : dfftp
@@ -40,6 +44,11 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE eqv,      ONLY : dpsi
   USE qpoint,   ONLY : nksq, ikks, ikqs
   USE control_lr, ONLY : lgamma
+  USE spin_orb, ONLY : domag
+  USE lrus,     ONLY : becp1
+  USE phus,     ONLY : alphap, int1_nc
+  USE qpoint_aux, ONLY : becpt, alphapt
+  USE nc_mag_aux, ONLY : int1_nc_save, deeq_nc_save
 
   USE mp_pools,         ONLY : inter_pool_comm
   USE mp,               ONLY : mp_sum
@@ -54,12 +63,12 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   ! the change of density due to perturbations
 
   integer :: mu, ik, ikq, ig, nu_i, nu_j, na_jcart, ibnd, nrec, &
-       ipol, ikk, ipert, npw, npwq
+       ipol, ikk, ipert, npw, npwq, isolv, nsolv
   ! counters
   ! ikk: record position for wfc at k
 
   complex(DP) :: fact, ps, dynwrk (3 * nat, 3 * nat), &
-       wdyn (3 * nat, 3 * nat), zdotc
+       wdyn (3 * nat, 3 * nat)
   complex(DP), allocatable ::  aux (:,:)
   ! work space
 
@@ -83,6 +92,8 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !
   !   We need a sum over all k points ...
   !
+  nsolv=1
+  IF (noncolin.AND.domag) nsolv=2
   do ik = 1, nksq
      ikk = ikks(ik)
      ikq = ikqs(ik)
@@ -90,34 +101,51 @@ subroutine drhodv (nu_i0, nper, drhoscf)
      npwq= ngk(ikq)
      if (lsda) current_spin = isk (ikk)
      call init_us_2 (npwq, igk_k(1,ikq), xk (1, ikq), vkb)
-     do mu = 1, nper
-        nrec = (mu - 1) * nksq + ik
-        if (nksq > 1 .or. nper > 1) call get_buffer(dpsi, lrdwf, iudwf, nrec)
-        call calbec (npwq, vkb, dpsi, dbecq(mu) )
-        do ipol = 1, 3
-           aux=(0.d0,0.d0)
-           do ibnd = 1, nbnd
-              do ig = 1, npwq
-                 aux (ig, ibnd) = dpsi (ig, ibnd) * &
-                      (xk (ipol, ikq) + g (ipol, igk_k(ig,ikq) ) )
-              enddo
-              if (noncolin) then
+     DO isolv=1, nsolv
+        do mu = 1, nper
+           nrec = (mu - 1) * nksq + ik + (isolv-1) * nksq * nper
+           if (nksq > 1 .or. nper > 1 .OR. nsolv==2) &
+                             call get_buffer(dpsi, lrdwf, iudwf, nrec)
+           call calbec (npwq, vkb, dpsi, dbecq(mu) )
+           do ipol = 1, 3
+              aux=(0.d0,0.d0)
+              do ibnd = 1, nbnd
                  do ig = 1, npwq
-                    aux (ig+npwx, ibnd) = dpsi (ig+npwx, ibnd) * &
-                      (xk (ipol, ikq) + g (ipol, igk_k(ig,ikq) ) )
+                    aux (ig, ibnd) = dpsi (ig, ibnd) * &
+                         (xk (ipol, ikq) + g (ipol, igk_k(ig,ikq) ) )
                  enddo
-              endif
+                 if (noncolin) then
+                    do ig = 1, npwq
+                       aux (ig+npwx, ibnd) = dpsi (ig+npwx, ibnd) * &
+                            (xk (ipol, ikq) + g (ipol, igk_k(ig,ikq) ) )
+                    enddo
+                 endif
+              enddo
+              call calbec (npwq, vkb, aux, dalpq(ipol,mu) )
            enddo
-           call calbec (npwq, vkb, aux, dalpq(ipol,mu) )
         enddo
-     enddo
-     fact = CMPLX(0.d0, tpiba,kind=DP)
-     DO ipert=1,nper
-        DO ipol=1,3
-            CALL becscal(fact,dalpq(ipol,ipert),nkb,nbnd)
+        fact = CMPLX(0.d0, tpiba,kind=DP)
+        DO ipert=1,nper
+           DO ipol=1,3
+              CALL becscal(fact,dalpq(ipol,ipert),nkb,nbnd)
+           ENDDO
         ENDDO
+        IF (isolv==1) THEN
+           call drhodvnl (ik, ikk, nper, nu_i0, dynwrk, becp1, alphap, &
+                                                              dbecq, dalpq)
+        ELSE
+           IF (okvan) THEN
+              deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,2)
+              int1_nc(:,:,:,:,:)=int1_nc_save(:,:,:,:,:,2)
+           ENDIF
+           call drhodvnl (ik, ikk, nper, nu_i0, dynwrk, becpt, alphapt, &
+                                                         dbecq, dalpq)
+           IF (okvan) THEN
+              deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,1)
+              int1_nc(:,:,:,:,:)=int1_nc_save(:,:,:,:,:,1)
+           ENDIF
+        ENDIF
      ENDDO
-     call drhodvnl (ik, ikk, nper, nu_i0, dynwrk, dbecq, dalpq)
   enddo
   !
   !   put in the basis of the modes
@@ -136,6 +164,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   ! collect contributions from all pools (sum over k-points)
   !
   call mp_sum ( wdyn, inter_pool_comm )
+  IF (nsolv==2) wdyn=wdyn/2.0_DP
   !
   ! add the contribution of the local part of the perturbation
   !

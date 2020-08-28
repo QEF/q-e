@@ -242,6 +242,8 @@ SUBROUTINE drhoc_gpu( ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, rhocg_
   ! lower limit for loop on ngl
   !
   CALL dev_buf%lock_buffer(aux_d, (/ mesh, ngl /), ierr) ! allocate (aux_d( mesh, ngl))
+  IF( ierr /= 0 ) &
+     CALL errore( ' drhoc_gpu ',' cannot allocate aux_d ', ABS(ierr) )
   !
   ! G=0 and G <> 0 term done together (in the end is just an avoided bessel call and multiply by 1.0)
   !

@@ -26,7 +26,7 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
 #endif
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE cell_base,            ONLY : omega
+  USE cell_base,            ONLY : omega, tpiba
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE gvect,                ONLY : g, gg, ngm, gstart, mill, &
@@ -108,7 +108,7 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
      CALL ylmr2_gpu (lmaxq * lmaxq, ngm_l, g_d(1,ngm_s), gg_d(ngm_s), ylmk0_d)
 !$cuf kernel do
      DO ig = 1, ngm_l
-        qmod_d (ig) = sqrt (gg_d (ngm_s+ig-1) )
+        qmod_d (ig) = SQRT(gg_d(ngm_s+ig-1))*tpiba
      ENDDO
   END IF
   !
@@ -141,6 +141,21 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
      !
      IF ( upf(nt)%tvanp ) THEN
         !
+        ! count max number of atoms of type nt, create mapping table
+        !
+        nab = 0
+        DO na = 1, nat
+           IF ( ityp(na) == nt ) nab = nab + 1
+           IF ( ityp(na) == nt ) THEN
+              na_to_nab_h(na)           = nab
+           ELSE
+              na_to_nab_h(na)           = -1
+           END IF
+        END DO
+        IF ( nab == 0 ) CYCLE ! No atoms for this type (?!?)
+        !
+        na_to_nab_d(1:nat) = na_to_nab_h(1:nat)
+        !
         ! nij = max number of (ih,jh) pairs per atom type nt
         !
         nhnt = nh(nt)
@@ -158,19 +173,6 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
            END DO
         END DO
         !
-        ! count max number of atoms of type nt
-        !
-        nab = 0
-        DO na = 1, nat
-           IF ( ityp(na) == nt ) nab = nab + 1
-           IF ( ityp(na) == nt ) THEN
-              na_to_nab_h(na)           = nab
-           ELSE
-              na_to_nab_h(na)           = -1
-           END IF
-        END DO
-        na_to_nab_d(1:nat) = na_to_nab_h(1:nat)
-        
         ALLOCATE ( aux_d (ngm_l, nab ), deeaux_d(nij, nab) )
         !
         ! ... Compute and store V(G) times the structure factor e^(-iG*tau)

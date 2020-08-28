@@ -42,10 +42,12 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
 
   USE qpoint,          ONLY : xq
   USE control_lr,      ONLY : lgamma
-
+  USE spin_orb,        ONLY : domag
+  USE noncollin_module, ONLY : noncolin
   ! YAMBO >
   USE YAMBO,           ONLY : elph_yambo,yambo_elph_file_name,dvscf_yambo
   ! YAMBO <
+  USE ahc,             ONLY : elph_ahc
   !
   IMPLICIT NONE
   !
@@ -173,7 +175,15 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
         !
         !
      END IF
-     ! 
+     !
+  ENDIF
+  !
+  ! If elph_ahc, disable epsil calculation
+  !
+  IF (elph_ahc) THEN
+     epsil = .FALSE.
+     zeu = .FALSE.
+     zue = .FALSE.
   ENDIF
   !
   !  Save the current status of the run: all the flags, the list of q,
@@ -199,6 +209,14 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   ! of the list.
   !
   IF ((qplot.AND.iq /= 1).OR.always_run) setup_pw=.true.
+  !
+  ! Note (A. Urru): in the noncollinear magnetic case we need setup_pw = 
+  ! .true. because we have to recompute the bands. Moreover we need to avoid 
+  ! to call dfpt_tetra, because that routine has not been generalized properly 
+  ! to the SO-MAG case yet. This is only a temporary workaround, but please 
+  ! don't change it until the dfpt_tetra_mod has been properly updated. 
+  !
+  IF (noncolin.AND.domag) setup_pw=.true.
   !
   do_band=.FALSE.
   DO irr=start_irr, MIN(ABS(last_irr),irr_iq(iq))

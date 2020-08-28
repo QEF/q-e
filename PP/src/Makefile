@@ -13,7 +13,7 @@ add_shift_cc.o \
 add_shift_lc.o \
 add_shift_us.o \
 atomic_wfc_nc_proj.o \
-benchmark_libxc.o \
+xctest_qe_libxc.o \
 chdens_module.o \
 chdens_bspline.o \
 compute_ppsi.o \
@@ -54,12 +54,12 @@ write_hamiltonians.o \
 xc_vdW_scale_mod.o   # added by Yang Jiao
 
 PWOBJS = ../../PW/src/libpw.a
-QEOBJS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
-         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a \
-         ../../dft-d3/libdftd3qe.a
+QEMODS = ../../Modules/libqemod.a ../../upflib/libupf.a ../../KS_Solvers/libks_solvers.a \
+         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
+         ../../dft-d3/libdftd3qe.a ../../GScratch/libgscratch.a 
 
 
-MODULES = $(PWOBJS) $(QEOBJS)
+MODULES = $(PWOBJS) $(QEMODS)
 
 TLDEPS= pwlibs
 
@@ -67,15 +67,15 @@ all : tldeps open_grid.x average.x bands.x dos.x epsilon.x initial_state.x fs.x 
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x pw2wannier90.x pw2critic.x pw2gw.x \
       wannier_ham.x wannier_plot.x molecularpdos.x \
-      pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x benchmark_libxc.x
+      pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x xctest_qe_libxc.x
 
 
-libpp.a : $(PPOBJS)
+libpp.a : $(PPOBJS) 
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
 qexml.x: qexml.o qexml_example.o
-	$(LD) $(LDFLAGS) -o $@ qexml_example.o qexml.o $(QEOBJS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ qexml_example.o qexml.o $(QEMODS) $(LIBOBJS)
 
 open_grid.x : open_grid.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
@@ -229,9 +229,9 @@ ppacf.x : ppacf.o libpp.a $(MODULES) $(LIBOBJS)
 		ppacf.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-benchmark_libxc.x : benchmark_libxc.o libpp.a $(MODULES) $(LIBOBJS)
+xctest_qe_libxc.x : xctest_qe_libxc.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LD_LIBS) $(LDFLAGS) $(DFLAGS) -o $@ \
-		benchmark_libxc.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+		xctest_qe_libxc.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 clean :

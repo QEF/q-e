@@ -33,11 +33,15 @@ MODULE funct
   !                      dft_has_finite_size_correction
   !
   !
-  USE io_global,   ONLY: stdout
+  USE io_global,   ONLY: stdout, ionode
   USE kinds,       ONLY: DP
 #if defined(__LIBXC)
-  USE xc_f90_types_m
-  USE xc_f90_lib_m
+#include "xc_version.h"
+  USE xc_f03_lib_m
+#endif
+  !
+#if defined(use_beef)
+  USE beef_interface, ONLY: beef_set_type
 #endif
   !
   IMPLICIT NONE
@@ -51,6 +55,7 @@ MODULE funct
   PUBLIC  :: get_dft_name, get_dft_short, get_dft_long,&
              get_nonlocc_name
   PUBLIC  :: get_iexch, get_icorr, get_igcx, get_igcc, get_meta, get_metac, get_inlc
+  PUBLIC  :: reset_dft
   PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid, dft_is_nonlocc, igcc_is_lyp
   PUBLIC  :: set_auxiliary_flags
   !
@@ -117,22 +122,22 @@ MODULE funct
   !              "x3lyp"                        = X3LYP
   !              "vwn-rpa" = VWN LDA using vwn1-rpa parametrization
   !              "gaupbe"= "sla+pw+gaup+pbc"   = Gau-PBE (also "gaup")
-  !              "vdw-df"       ="sla+pw+rpb +vdw1"   = vdW-DF1
-  !              "vdw-df2"      ="sla+pw+rw86+vdw2"   = vdW-DF2
-  !              "vdw-df-c09"   ="sla+pw+c09x+vdw1"   = vdW-DF-C09
-  !              "vdw-df2-c09"  ="sla+pw+c09x+vdw2"   = vdW-DF2-C09
-  !              "vdw-df-obk8"  ="sla+pw+obk8+vdw1"   = vdW-DF-obk8 (optB88-vdW)
-  !              "vdw-df-ob86"  ="sla+pw+ob86+vdw1"   = vdW-DF-ob86 (optB86b-vdW)
-  !              "vdw-df2-b86r" ="sla+pw+b86r+vdw2"   = vdW-DF2-B86R (rev-vdw-df2)
-  !              "vdw-df-cx"    ="sla+pw+cx13+vdW1"   = vdW-DF-cx
-  !              "vdw-df-cx0"    ="sla+pw+cx13+vdW1+HF/4"   = vdW-DF-cx-0
-  !              "vdw-df2-0"     ="sla+pw+rw86+vdw2+HF/4"   = vdW-DF2-0
-  !              "vdw-df2-br0"  ="sla+pw+b86r+vdW2+HF/4"   = vdW-DF2-b86r-0
-  !              "vdw-df-c090"   ="sla+pw+c09x+vdw1+HF/4"   = vdW-DF-C09-0
-  !              "vdw-df-x"     ="sla+pw+????+vdwx"   = vdW-DF-x, reserved Thonhauser, not implemented
-  !              "vdw-df-y"     ="sla+pw+????+vdwy"   = vdW-DF-y, reserved Thonhauser, not implemented
-  !              "vdw-df-z"     ="sla+pw+????+vdwz"   = vdW-DF-z, reserved Thonhauser, not implemented
-  !              "rvv10" = "sla+pw+rw86+pbc+vv10"     = rVV10
+  !              "vdw-df"       ="sla+pw+rpb +vdw1"      = vdW-DF1
+  !              "vdw-df2"      ="sla+pw+rw86+vdw2"      = vdW-DF2
+  !              "vdw-df-c09"   ="sla+pw+c09x+vdw1"      = vdW-DF-C09
+  !              "vdw-df2-c09"  ="sla+pw+c09x+vdw2"      = vdW-DF2-C09
+  !              "vdw-df-obk8"  ="sla+pw+obk8+vdw1"      = vdW-DF-obk8 (optB88-vdW)
+  !              "vdw-df-ob86"  ="sla+pw+ob86+vdw1"      = vdW-DF-ob86 (optB86b-vdW)
+  !              "vdw-df2-b86r" ="sla+pw+b86r+vdw2"      = vdW-DF2-B86R (rev-vdw-df2)
+  !              "vdw-df-cx"    ="sla+pw+cx13+vdW1"      = vdW-DF-cx
+  !              "vdw-df-cx0"   ="sla+pw+cx13+vdW1+HF/4" = vdW-DF-cx-0
+  !              "vdw-df2-0"    ="sla+pw+rw86+vdw2+HF/4" = vdW-DF2-0
+  !              "vdw-df2-br0"  ="sla+pw+b86r+vdW2+HF/4" = vdW-DF2-b86r-0
+  !              "vdw-df-c090"  ="sla+pw+c09x+vdw1+HF/4" = vdW-DF-C09-0
+  !              "vdw-df3-opt1" ="sla+pw+w31x+w31c"      = vdW-DF3-opt1
+  !              "vdw-df3-opt2" ="sla+pw+w32x+w32c"      = vdW-DF3-opt2
+  !              "vdw-df-C6"    ="sla+pw+b86r+wc6"       = vdW-DF-C6
+  !              "rvv10" = "sla+pw+rw86+pbc+vv10"        = rVV10
   !
   ! Any nonconflicting combination of the following keywords is acceptable:
   !
@@ -207,6 +212,10 @@ MODULE funct
   !              "c090"   vdW-DF-c09+HF/4 (c09-0)        igcx =40 
   !              "b86x"   B86b exchange * 0.75           igcx =41
   !              "b88x"   B88 exchange * 0.50            igcx =42
+  !              "beex"   BEE exchange                   igcx =43 
+  !              "rpbe"   Hammer-Hansen-Norskov          igcx =44
+  !              "w31x"   vdW-DF3-opt1 exchange          igcx =45
+  !              "w32x"   vdW-DF3-opt2 exchange          igcx =46
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -220,6 +229,7 @@ MODULE funct
   !              "pbe"    same as PBX, back-comp.        igcc =9
   !              "q2dc"   Q2D correlation grad corr      igcc =12
   !              "x3lp"   X3LYP (Lee-Yang-Parr*0.871)    igcc =13
+  !              "beec"   BEE correlation                igcc =14
   !
   ! Meta-GGA functionals
   !              "tpss"   TPSS Meta-GGA                  imeta=1
@@ -229,17 +239,19 @@ MODULE funct
   !              "scan"   SCAN Meta-GGA                  imeta=5
   !              "sca0"   SCAN0  Meta-GGA                imeta=6
   !
-  ! Van der Waals functionals (nonlocal term only)
+  ! van der Waals functionals (nonlocal term only)
   !              "nonlc"  none                           inlc =0 (default)
+  !--------------inlc = 1 to inlc = 25 reserved for vdW-DF--------------
   !              "vdw1"   vdW-DF1                        inlc =1
   !              "vdw2"   vdW-DF2                        inlc =2
-  !              "vv10"   rVV10                          inlc =3
-  !              "vdwx"   vdW-DF-x                       inlc =4, reserved Thonhauser, not implemented
-  !              "vdwy"   vdW-DF-y                       inlc =5, reserved Thonhauser, not implemented
-  !              "vdwz"   vdW-DF-z                       inlc =6, reserved Thonhauser, not implemented
+  !              "w31c"   vdW-DF3-opt1                   inlc =3
+  !              "w32c"   vdW-DF3-opt2                   inlc =4
+  !              "wc6"    vdW-DF-C6                      inlc =5
+  !---------------------------------------------------------------------
+  !              "vv10"   rVV10                          inlc =26
   !
-  ! Meta-GGA with Van der Waals
-  !              "rvv10-scan" rVV10 (with b=15.7) and scan inlc=3 (PRX 6, 041005 (2016))
+  ! Meta-GGA with van der Waals
+  !              "rvv10-scan" rVV10 (with b=15.7) and scan inlc=26 (PRX 6, 041005 (2016))
   !
   ! Note: as a rule, all keywords should be unique, and should be different
   ! from the short name, but there are a few exceptions.
@@ -260,6 +272,8 @@ MODULE funct
   !              b86b    A.D.Becke, J.Chem.Phys. 85, 7184 (1986)
   !              ob86    Klimes, Bowler, Michaelides, PRB 83, 195131 (2011)
   !              b86r    I. Hamada, Phys. Rev. B 89, 121103(R) (2014)
+  !              w31x    D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
+  !              w32x    D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
   !              pbe     J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)
   !              pw91    J.P.Perdew and Y. Wang, PRB 46, 6671 (1992)
   !              blyp    C.Lee, W.Yang, R.G.Parr, PRB 37, 785 (1988)
@@ -288,6 +302,9 @@ MODULE funct
   !                           J. Chem. Phys. 148, 194115 (2018)
   !              vdW-DF-obk8  Klimes et al, J. Phys. Cond. Matter, 22, 022201 (2010)
   !              vdW-DF-ob86  Klimes et al, Phys. Rev. B, 83, 195131 (2011)
+  !              vdW-DF3-opt1 D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
+  !              vdW-DF3-opt2 D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
+  !              vdW-DF-C6    K. Berland, D. Chakraborty, and T. Thonhauser, PRB 99, 195418 (2019)
   !              c09x    V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)
   !              tpss    J.Tao, J.P.Perdew, V.N.Staroverov, G.E. Scuseria,
   !                      PRL 91, 146401 (2003)
@@ -354,7 +371,12 @@ MODULE funct
   REAL(DP):: finite_size_cell_volume = notset
   LOGICAL :: discard_input_dft = .FALSE.
   !
-  INTEGER, PARAMETER :: nxc=8, ncc=10, ngcx=42, ngcc=12, nmeta=6, ncnl=6
+#ifdef use_beef
+  INTEGER  :: beeftype    = -1
+  INTEGER  :: beefvdw = 0
+#endif
+  !
+  INTEGER, PARAMETER :: nxc=8, ncc=10, ngcx=46, ngcc=13, nmeta=6, ncnl=26
   CHARACTER(LEN=4) :: exc, corr, gradx, gradc, meta, nonlocc
   DIMENSION :: exc(0:nxc), corr(0:ncc), gradx(0:ngcx), gradc(0:ngcc), &
                meta(0:nmeta), nonlocc(0:ncnl)
@@ -363,25 +385,27 @@ MODULE funct
   DATA corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
               'OBW', 'GL' , 'KZK' /
   !
-  DATA gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
-               'xxxx', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE', 'RW86', 'PBE', &
-               'xxxx', 'C09X', 'SOX', 'xxxx', 'Q2DX', 'GAUP', 'PW86', 'B86B', &
-               'OBK8', 'OB86', 'EVX', 'B86R', 'CX13', 'X3LP', &
-               'CX0', 'R860', 'CX0P', 'AHCX', 'AHF2', &
-               'AHPB', 'AHPS', 'CX14', 'CX15', 'BR0', 'CX16', 'C090', &
-               'B86X', 'B88X'/
+  DATA gradx / 'NOGX', 'B88',  'GGX',  'PBX',  'RPB',  'HCTH', 'OPTX', &
+               'xxxx', 'PB0X', 'B3LP', 'PSX',  'WCX',  'HSE',  'RW86', 'PBE', &
+               'xxxx', 'C09X', 'SOX',  'xxxx', 'Q2DX', 'GAUP', 'PW86', 'B86B', &
+               'OBK8', 'OB86', 'EVX',  'B86R', 'CX13', 'X3LP', &
+               'CX0',  'R860', 'CX0P', 'AHCX', 'AHF2', &
+               'AHPB', 'AHPS', 'CX14', 'CX15', 'BR0',  'CX16', 'C090', &
+               'B86X', 'B88X', 'BEEX', 'RPBX', 'W31X', 'W32X' /
   !
-  DATA gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'NONE',&
-               'B3LP', 'PSC', 'PBE', 'xxxx', 'xxxx', 'Q2DC' /
+  DATA gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC',  'HCTH', 'NONE',&
+               'B3LP', 'PSC', 'PBE', 'xxxx', 'xxxx', 'Q2DC', 'BEEC' /
   !
   DATA meta  / 'NONE', 'TPSS', 'M06L', 'TB09', 'META', 'SCAN', 'SCA0' /
   !
-  DATA nonlocc/'NONE', 'VDW1', 'VDW2', 'VV10', 'VDWX', 'VDWY', 'VDWZ' /
+  DATA nonlocc/ 'NONE', 'VDW1', 'VDW2', 'W31C', 'W32C', 'WC6', 20*'NONE', 'VV10' /
   !
 #if defined(__LIBXC)
   INTEGER :: libxc_major=0, libxc_minor=0, libxc_micro=0
   PUBLIC :: libxc_major, libxc_minor, libxc_micro, get_libxc_version
   PUBLIC :: get_libxc_flags_exc
+  LOGICAL :: lxc_hyb = .FALSE.
+  PRIVATE :: lxc_hyb
 #endif
   !
 CONTAINS
@@ -392,16 +416,12 @@ CONTAINS
     !! Translates a string containing the exchange-correlation name
     !! into internal indices iexch, icorr, igcx, igcc, inlc, imeta.
     !
-#if defined(__LIBXC)
-    USE xc_f03_lib_m
-#endif
-    !
     IMPLICIT NONE
     !
     CHARACTER(LEN=*), INTENT(IN) :: dft_
     INTEGER :: len, l, i
     CHARACTER(len=150):: dftout
-    LOGICAL :: dft_defined = .FALSE.
+    LOGICAL :: dft_defined
     LOGICAL :: check_libxc
 #if defined(__LIBXC)
     INTEGER :: ii, id_vec(6), n_ext_params
@@ -416,7 +436,11 @@ CONTAINS
     !
     IF ( discard_input_dft ) RETURN
     !
+    is_libxc(:) = .FALSE.
+    !
     ! save current status of XC indices
+    !
+    dft_defined = .FALSE.
     !
     save_iexch = iexch
     save_icorr = icorr
@@ -517,8 +541,7 @@ CONTAINS
        dft_defined = set_dft_values(1,4,25,0,0,0)
     ! special case : RPBE
     CASE( 'RPBE' )
-       CALL errore( 'set_dft_from_name', &
-                    'RPBE (Hammer-Hansen-Norskov) not implemented (revPBE is)', 1 )
+       dft_defined = set_dft_values(1,4,44,4,0,0)
     ! special case : PBE0
     CASE( 'PBE0' )
        dft_defined = set_dft_values(6,4,8,4,0,0)
@@ -534,12 +557,48 @@ CONTAINS
     ! special case : GAUPBE
     CASE( 'GAUP', 'GAUPBE' )
        dft_defined = set_dft_values(1,4,20,4,0,0)
+    ! special case : case BEEF (default: BEEF-vdW-DF2)
+    CASE('BEEF', 'BEEF-VDW')
+#ifdef use_beef
+       IF (LEN_TRIM(dftout) .EQ. 4) then
+          beeftype = 0
+       ELSE
+          SELECT CASE(TRIM(dftout(5:)))
+             CASE('-VDW')
+                beeftype = 0
+             CASE default
+                READ(dftout(5:), '(i1)', IOSTAT=i) beeftype
+                if (i.ne.0) call errore('set_dft_from_name', &
+                & 'unknown BEEF type', 1)
+          END SELECT
+       ENDIF
+       IF (.NOT. beef_set_type(beeftype, ionode)) &
+       & call errore('set_dft_from_name', 'unknown BEEF type number', 1)
+       SELECT CASE(beeftype)
+          CASE(0)
+             ! turn on vdW-DF2 type interactions for BEEF-vdW
+             beefvdw = 2
+       END SELECT
+       dft_defined = set_dft_values(1,4,43,14,beefvdw,0)
+#else
+       CALL errore('set_dft_from_name', &
+    &    'BEEF xc functional support not compiled in', 1)
+#endif
     ! Special case vdW-DF
     CASE( 'VDW-DF' )
        dft_defined = set_dft_values(1,4,4,0,1,0)
     ! Special case vdW-DF2
     CASE( 'VDW-DF2' )
        dft_defined = set_dft_values(1,4,13,0,2,0)
+    ! Special case vdW-DF3-opt1
+    CASE( 'VDW-DF3-OPT1' )
+       dft_defined = set_dft_values(1,4,45,0,3,0)
+    ! Special case vdW-DF3-opt2
+    CASE( 'VDW-DF3-OPT2' )
+       dft_defined = set_dft_values(1,4,46,0,4,0)
+    ! Special case vdW-DF-C6
+    CASE( 'VDW-DF-C6' )
+       dft_defined = set_dft_values(1,4,26,0,5,0)
     ! Special case vdW-DF with C09 exchange
     CASE( 'VDW-DF-C09' )
        dft_defined = set_dft_values(1,4,16,0,1,0)
@@ -575,10 +634,10 @@ CONTAINS
        dft_defined = set_dft_values(6,4,40,0,1,0)
     ! Special case rVV10
     CASE( 'RVV10' )
-       dft_defined = set_dft_values(1,4,13,4,3,0)
+       dft_defined = set_dft_values(1,4,13,4,26,0)
     ! Special case rVV10+scan
     CASE( 'RVV10-SCAN' )
-       dft_defined = set_dft_values(0,0,0,0,3,5)
+       dft_defined = set_dft_values(0,0,0,0,26,5)
     ! special case : B3LYP hybrid
     CASE( 'B3LYP' )
        dft_defined = set_dft_values(7,12,9,7,0,0)
@@ -591,6 +650,9 @@ CONTAINS
     ! special case : TPSS meta-GGA Exc
     CASE( 'TPSS' )
        dft_defined = set_dft_values(1,4,7,6,0,1)
+    ! special case : TPSS meta-GGA - mgga term only
+    CASE( 'TPSS-only' )
+       dft_defined = set_dft_values(0,0,0,0,0,1)
     ! special case : M06L Meta GGA
     CASE( 'M06L' )
        dft_defined = set_dft_values(0,0,0,0,0,2)
@@ -760,6 +822,8 @@ CONTAINS
     !
     dft = dftout
     !
+    dft_defined = .TRUE.
+    !
     !dft_longname = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
     !     &//gradc (igcc) //'-'// nonlocc(inlc)
     !
@@ -819,6 +883,9 @@ CONTAINS
     DO i = n, 0, -1
        IF ( matches(name(i), TRIM(dft)) ) THEN
           !
+#if defined(__LIBXC)
+          IF ( matching == notset ) matching = i
+#else
           IF ( matching == notset ) THEN
            !WRITE(*, '("matches",i2,2X,A,2X,A)') i, name(i), TRIM(dft)
            matching = i
@@ -827,6 +894,7 @@ CONTAINS
                                   matching, TRIM(name(matching))
              CALL errore( 'set_dft', 'two conflicting matching values', 1 )
           ENDIF
+#endif
        ENDIF
     ENDDO
     !
@@ -850,31 +918,42 @@ CONTAINS
     CHARACTER(LEN=256) :: name
     INTEGER :: i, l, prev_len(6), fkind, fkind_v(3), family
     INTEGER, PARAMETER :: ID_MAX_LIBXC=600
-    TYPE(xc_f90_pointer_t) :: xc_func, xc_info
+    TYPE(xc_f03_func_t) :: xc_func
+    TYPE(xc_f03_func_info_t) :: xc_info
     LOGICAL, EXTERNAL :: matches
     CHARACTER(LEN=1), EXTERNAL :: capital
+#if (XC_MAJOR_VERSION > 5)
+    !workaround to keep compatibility with libxc develop version
+    INTEGER, PARAMETER :: XC_FAMILY_HYB_GGA  = -10 
+    INTEGER, PARAMETER :: XC_FAMILY_HYB_MGGA = -11 
+#endif
     !
     prev_len(:) = 1
     !
     DO i = 1, ID_MAX_LIBXC
        !
-       CALL xc_f90_functional_get_name( i, name )
+       name = xc_f03_functional_get_name( i )
        !
        DO l = 1, LEN_TRIM(name)
           name(l:l) = capital( name(l:l) )
        ENDDO
        !
-       IF ( TRIM(name) .EQ. 'UNKNOWN' ) CYCLE
+       IF ( TRIM(name) == '' ) CYCLE
        !
        IF ( matches(TRIM(name), TRIM(dft)) ) THEN
           !
           !WRITE(*, '("matches libxc",i2,2X,A,2X,A)') i, TRIM(name), TRIM(dft)
           !
           fkind=-100 ; family=-100
-          CALL xc_f90_func_init( xc_func, xc_info, i, 1 )
-          fkind = xc_f90_info_kind( xc_info )
-          family = xc_f90_info_family( xc_info )
-          CALL xc_f90_func_end( xc_func )
+          CALL xc_f03_func_init( xc_func, i, 1 )
+          xc_info = xc_f03_func_get_info( xc_func )
+          fkind = xc_f03_func_info_get_kind( xc_info )
+          family = xc_f03_func_info_get_family( xc_info )
+          IF ( matches('HYB_', TRIM(name)) ) THEN
+            lxc_hyb = .TRUE.
+            exx_fraction = xc_f03_hyb_exx_coef( xc_func )
+          ENDIF
+          CALL xc_f03_func_end( xc_func )
           !   
           SELECT CASE( family )
           CASE( XC_FAMILY_LDA )
@@ -935,7 +1014,7 @@ CONTAINS
                     &been found together with a correlation one (GGA)' )
     !
     IF ( (is_libxc(3).AND.iexch/=0) .OR. (is_libxc(4).AND. icorr/=0) )    &
-       CALL infomsg( 'matching_libxc', 'WARNING: an LDA functional has been found, but  &
+       CALL infomsg( 'matching_libxc', 'WARNING: an LDA functional has been found, but &
                     &libxc GGA functionals already include the LDA part' )
     ! mGGA:
     ! (imeta defines both exchange and correlation term for q-e mGGA functionals)
@@ -990,16 +1069,22 @@ CONTAINS
           i = 0
           DO WHILE ( i < LEN_TRIM(dft) )
             i = i + 1
-            IF ( matches( TRIM(qe_name), TRIM(dft(i:i+3)) ) ) THEN
+            IF ( matches( TRIM(qe_name), TRIM(dft(i:i+1)) ) ) THEN
                qedft = qedft + 1
-               i = i + LEN_TRIM(qe_name)-1
+               i = i + 1
+            ELSEIF (matches( TRIM(qe_name), TRIM(dft(i:i+2)) ) ) THEN
+               qedft = qedft + 1
+               i = i + 2
+            ELSEIF (matches( TRIM(qe_name), TRIM(dft(i:i+3)) ) ) THEN
+               qedft = qedft + 1
+               i = i + 3
             ENDIF
           ENDDO
           !
           nlxc = 0
           DO i = 1, 6
             IF (is_libxc(i)) THEN
-              CALL xc_f90_functional_get_name( id_vec(i), lxc_name )
+              lxc_name = xc_f03_functional_get_name( id_vec(i) )
               DO l = 1, LEN_TRIM(lxc_name)
                  lxc_name(l:l) = capital( lxc_name(l:l) )
               ENDDO
@@ -1007,23 +1092,14 @@ CONTAINS
             ENDIF
           ENDDO
           !
-          IF (qedft == nlxc) THEN
-             SELECT CASE( ch )
-             CASE( 1 )
-                iexch = 0
-             CASE( 2 )
-                icorr = 0
-             CASE( 3 )
-                igcx  = 0
-             CASE( 4 )
-                igcc  = 0
-             CASE( 5 )
-                imeta = 0
-             END SELECT
-          ENDIF  
+          IF (qedft == nlxc) id_vec(ch) = 0  
           !
        ENDIF
     ENDDO
+    !
+    iexch = id_vec(1) ;  icorr  = id_vec(2)
+    igcx  = id_vec(3) ;  igcc   = id_vec(4)
+    imeta = id_vec(5) ;  imetac = id_vec(6)
     !
   END SUBROUTINE
 #endif
@@ -1267,6 +1343,12 @@ CONTAINS
     RETURN
   END FUNCTION get_metac
   !-----------------------------------------------------------------------
+  SUBROUTINE reset_dft()
+    iexch  = notset ; icorr  = notset
+    igcx   = notset ; igcc   = notset
+    imeta  = notset ; imetac = notset
+  END SUBROUTINE
+  !-----------------------------------------------------------------------
   FUNCTION get_inlc()
      INTEGER get_inlc
      get_inlc = inlc
@@ -1287,17 +1369,6 @@ CONTAINS
   !-----------------------------------------------------------------------
   FUNCTION get_exx_fraction()
      REAL(DP) :: get_exx_fraction
-#if defined(__LIBXC)
-     INTEGER :: family
-     TYPE(xc_f90_pointer_t) :: xc_func, xc_info
-     !
-     IF ( is_libxc(3) ) THEN
-        CALL xc_f90_func_init( xc_func, xc_info, igcx, 1 )  
-        family = xc_f90_info_family( xc_info )
-        IF (family == XC_FAMILY_HYB_GGA) CALL xc_f90_hyb_exx_coef( xc_func, exx_fraction )
-        CALL xc_f90_func_end( xc_func )
-     ENDIF
-#endif
      get_exx_fraction = exx_fraction
      RETURN
   END FUNCTION get_exx_fraction
@@ -1364,10 +1435,10 @@ CONTAINS
   SUBROUTINE get_libxc_flags_exc( xc_info, eflag )
      ! Checks whether Exc is present or not in the output of a libxc 
      ! functional (e.g. TB09)
-     TYPE(xc_f90_pointer_t) :: xc_info
+     TYPE(xc_f03_func_info_t) :: xc_info
      INTEGER :: ii, flags_tot
-     INTEGER, INTENT(OUT) :: eflag
-     flags_tot = xc_f90_info_flags(xc_info)
+     INTEGER, INTENT(OUT) :: eflag 
+     flags_tot = xc_f03_func_info_get_flags(xc_info)
      eflag = 0
      DO ii = 15, 0, -1
        IF ( flags_tot-2**ii<0 ) CYCLE
@@ -1483,8 +1554,12 @@ CONTAINS
        shortname = 'OPTB86B'
     ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==25.AND. igcc== 0) THEN
        shortname = 'EV93'
+    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==43 .AND. igcc==14 .AND. inlc==2) THEN
+       shortname = 'BEEF'
     ELSEIF (iexch==5 .AND. icorr==0  .AND. igcx==0 .AND. igcc== 0) THEN
        shortname = 'HF'
+    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==44 .AND. igcc== 4) THEN
+       shortname = 'RPBE'
     ENDIF
     !
     IF (imeta==1) THEN
@@ -1530,6 +1605,12 @@ CONTAINS
           shortname = 'VDW-DF2-BR0'
        ENDIF
     ELSEIF (inlc==3) THEN
+       shortname = 'VDW-DF3-OPT1'
+    ELSEIF (inlc==4) THEN
+       shortname = 'VDW-DF3-OPT2'
+    ELSEIF (inlc==5) THEN
+       shortname = 'VDW-DF-C6'
+    ELSEIF (inlc==26) THEN
        shortname = 'RVV10'
     ENDIF
     !
@@ -1614,7 +1695,7 @@ SUBROUTINE nlc (rho_valence, rho_core, nspin, enl, vnl, v)
   REAL(DP), INTENT(INOUT) :: v(:,:)
   REAL(DP), INTENT(INOUT) :: enl, vnl
   !
-  IF ( inlc == 1 .OR. inlc == 2) THEN
+  IF ( inlc > 0 .AND. inlc < 26 ) THEN
      !
      inlc_ = inlc
      IF ( nspin == 1 ) THEN
@@ -1625,7 +1706,7 @@ SUBROUTINE nlc (rho_valence, rho_core, nspin, enl, vnl, v)
         CALL errore ('nlc', 'vdW-DF not available for noncollinear spin case',1)
      END If
      !
-  ELSE IF ( inlc == 3 ) THEN
+  ELSE IF ( inlc == 26 ) THEN
      !
      IF ( imeta == 0 ) THEN
        CALL xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v)

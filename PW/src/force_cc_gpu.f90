@@ -94,6 +94,7 @@ SUBROUTINE force_cc_gpu( forcecc )
   DEALLOCATE( vxc )
   !
   CALL dev_buf%lock_buffer(psic_d, dfftp%nnr, ierrs(1))
+  IF (ierrs(1) /= 0) CALL errore( 'force_cc_gpu', 'cannot allocate buffers', -1 )
   CALL dev_memcpy( psic_d, psic, (/ 1, dfftp%nnr /) )
   CALL fwfft ('Rho', psic_d, dfftp)
   !

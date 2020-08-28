@@ -114,7 +114,7 @@ SUBROUTINE addusforce_g( forcenl )
   !
   ALLOCATE( qmod(ngm_l) )
   DO ig = 1, ngm_l
-     qmod(ig) = SQRT( gg(ngm_s+ig-1) )
+     qmod(ig) = SQRT( gg(ngm_s+ig-1) )*tpiba
   ENDDO
   !
   ! Sync if needed
@@ -142,7 +142,7 @@ SUBROUTINE addusforce_g( forcenl )
         DO na = 1, nat
            IF ( ityp(na) == nt ) nab = nab + 1
         ENDDO
-        ALLOCATE ( aux1( ngm_l, na, 3) )
+        ALLOCATE ( aux1( ngm_l, nab, 3) )
         ALLOCATE ( ddeeq(nij, nab, 3, nspin_mag) )
         !
         DO is = 1, nspin_mag

@@ -111,6 +111,8 @@ PROGRAM matdyn
   !                Phys. Rev. B 85, 224303 (2012)) [to be used in conjunction with fd.x]
   !     nosym      if .true., no symmetry and no time reversal are imposed
   !     loto_2d    set to .true. to activate two-dimensional treatment of LO-TO splitting.
+  !     loto_disable (logical) if .true. do not apply LO-TO splitting for q=0
+  !                  (default: .false.)
   !
   !  if (readtau) atom types and positions in the supercell follow:
   !     (tau(i,na),i=1,3), ityp(na)
@@ -163,7 +165,7 @@ PROGRAM matdyn
   CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos, filename, fldyn, &
                         fleig, fildyn, fildyn_prefix
   CHARACTER(LEN=10)  :: asr
-  LOGICAL :: dos, has_zstar, q_in_cryst_coord, eigen_similarity
+  LOGICAL :: dos, has_zstar, q_in_cryst_coord, eigen_similarity, loto_disable
   COMPLEX(DP), ALLOCATABLE :: dyn(:,:,:,:), dyn_blk(:,:,:,:), frc_ifc(:,:,:,:)
   COMPLEX(DP), ALLOCATABLE :: z(:,:)
   REAL(DP), ALLOCATABLE:: tau(:,:), q(:,:), w2(:,:), freq(:,:), wq(:), &
@@ -217,7 +219,8 @@ PROGRAM matdyn
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, &
        &           la2F, ndos, DeltaE, q_in_band_form, q_in_cryst_coord, &
        &           eigen_similarity, fldyn, na_ifc, fd, point_label_type, &
-       &           nosym, loto_2d, fildyn, fildyn_prefix, el_ph_nsigma
+       &           nosym, loto_2d, fildyn, fildyn_prefix, el_ph_nsigma, &
+       &           loto_disable
   !
   CALL mp_startup()
   CALL environment_start('MATDYN')
@@ -262,6 +265,7 @@ PROGRAM matdyn
      nosym = .false.
      loto_2d=.false.
      el_ph_nsigma=10
+     loto_disable = .false.
      !
      !
      IF (ionode) READ (5,input,IOSTAT=ios)
@@ -298,8 +302,12 @@ PROGRAM matdyn
      CALL mp_bcast(eigen_similarity,ionode_id, world_comm)
      CALL mp_bcast(q_in_cryst_coord,ionode_id, world_comm)
      CALL mp_bcast(point_label_type,ionode_id, world_comm)
-     CALL mp_bcast(loto_2d,ionode_id, world_comm) 
+     CALL mp_bcast(loto_2d,ionode_id, world_comm)
+     CALL mp_bcast(loto_disable,ionode_id, world_comm)
      CALL mp_bcast(el_ph_nsigma,ionode_id, world_comm)
+     !
+     IF (loto_2d .AND. loto_disable) CALL errore('matdyn', &
+         'loto_2d and loto_disable cannot be both true', 1)
      !
      ! read force constants
      !
@@ -607,11 +615,14 @@ PROGRAM matdyn
                 CALL infomsg  &
                 ('matdyn','Z* not found in file '//TRIM(flfrc)// &
                           ', TO-LO splitting at q=0 will be absent!')
+           ELSEIF (loto_disable) THEN
+              CALL infomsg('matdyn', &
+                  'loto_disable is true. Disable LO-TO splitting at q=0.')
            ELSE
               lo_to_split=.TRUE.
            ENDIF
            !
-           CALL nonanal (nat, nat_blk, itau_blk, epsil, qhat, zeu, omega, dyn)
+           IF (lo_to_split) CALL nonanal (nat, nat_blk, itau_blk, epsil, qhat, zeu, omega, dyn)
            !
         END IF
         !

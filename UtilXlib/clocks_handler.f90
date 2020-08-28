@@ -92,9 +92,10 @@ SUBROUTINE init_clocks( go )
   ! ... go = .FALSE. : only clock #1 will run
   !
   USE util_param,  ONLY : DP, stdout
-  USE mytime, ONLY : called, gpu_called, t0cpu, cputime, no, notrunning, maxclock, &
-       clock_label, walltime, t0wall, gputime, nclock, mpi_per_thread
-  USE mytime, ONLY : gpu_starts, gpu_stops
+  USE mytime, ONLY : called, t0cpu, cputime, no, notrunning, maxclock, &
+       clock_label, walltime, t0wall, nclock, mpi_per_thread
+  ! ... GPU related timers
+  USE mytime, ONLY : gpu_starts, gpu_stops, gpu_called, gputime
 #if defined (__TRACE)
   USE mytime, ONLY : mpime, max_print_depth, MPI_COMM_WORLD
 #endif
@@ -269,7 +270,7 @@ SUBROUTINE start_clock_gpu( label )
         ! ... found previously defined clock: check if not already started,
         ! ... store in t0cpu the starting time
         !
-        IF (.false. ) THEN ! PUT EVENT QUERY HERE
+        IF ( t0cpu(n) /= notrunning ) THEN
 !            WRITE( stdout, '("start_clock: clock # ",I2," for ",A12, &
 !                           & " already started")' ) n, label_
         ELSE
@@ -373,7 +374,7 @@ SUBROUTINE stop_clock( label )
   RETURN
   !
 END SUBROUTINE stop_clock
-
+!
 SUBROUTINE stop_clock_gpu( label )
   !----------------------------------------------------------------------------
   !
@@ -405,6 +406,10 @@ SUBROUTINE stop_clock_gpu( label )
   !
   IF ( no ) RETURN
   !
+  ! ... initialize time used in CUDA APIs if __CUDA is present.
+  !
+  time = 0.0
+  !
   ! ... prevent trouble if label is longer than 12 characters
   !
   label_ = trim ( label )
@@ -416,7 +421,7 @@ SUBROUTINE stop_clock_gpu( label )
         ! ... found previously defined clock : check if properly initialised,
         ! ... add elapsed time, increase the counter of calls
         !
-        IF ( .false. ) THEN ! cudaEventQuery(gpu_starts(n)) == 0 
+        IF ( t0cpu(n) == notrunning ) THEN
            !
            WRITE( stdout, '("stop_clock: clock # ",I2," for ",A12, " not running")' ) n, label
            !
@@ -457,7 +462,7 @@ SUBROUTINE print_clock( label )
   !----------------------------------------------------------------------------
   !
   USE util_param, ONLY : stdout
-  USE mytime,     ONLY : nclock, clock_label
+  USE mytime,     ONLY : nclock, clock_label, gpu_called
   !
   IMPLICIT NONE
   !
@@ -465,6 +470,9 @@ SUBROUTINE print_clock( label )
   !
   CHARACTER(len=12) :: label_
   INTEGER          :: n
+  LOGICAL          :: print_gpu
+  !
+  print_gpu = ANY(gpu_called > 0)
   !
   IF ( label == ' ' ) THEN
      !
@@ -473,7 +481,7 @@ SUBROUTINE print_clock( label )
      DO n = 1, nclock
         !
         CALL print_this_clock( n )
-        CALL print_this_clock_gpu( n )
+        IF(print_gpu) CALL print_this_clock_gpu( n )
         !
      ENDDO
      !
@@ -488,7 +496,7 @@ SUBROUTINE print_clock( label )
         IF ( clock_label(n) == label_ ) THEN
            !
            CALL print_this_clock( n )
-           CALL print_this_clock_gpu( n )
+           IF(print_gpu) CALL print_this_clock_gpu( n )
            !
            exit
            !

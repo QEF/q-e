@@ -1,14 +1,14 @@
-  !                                                                            
-  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino 
-  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino  
-  !                                                                            
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
-  !                                                                            
+  !
+  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
+  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
+  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
+  !
   !----------------------------------------------------------------------------
   SUBROUTINE loadumat(nbndep, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, &
-                       exband, w_centers)
+                      exband, w_centers)
   !----------------------------------------------------------------------------
   !!
   !! Wannier interpolation of e-p vertex:
@@ -18,23 +18,23 @@
   !! a pool scatter call that didn't work on hbar was performed
   !! and some crazy packing scheme was needed to use poolscatter
   !! subsequently it is just a bcast followed by an appropriate assignment
-  !! 
+  !!
   !-----------------------------------------------------------------------
   USE kinds,         ONLY : DP
-  USE klist_epw,     ONLY : kmap   
+  USE klist_epw,     ONLY : kmap
   USE epwcom,        ONLY : filukk
   USE constants_epw, ONLY : czero, zero
   USE io_var,        ONLY : iunukk
-  USE io_global,     ONLY : ionode_id, meta_ionode
-  USE mp_global,     ONLY : inter_pool_comm
+  USE io_global,     ONLY : meta_ionode_id, meta_ionode
   USE mp,            ONLY : mp_sum, mp_barrier, mp_bcast
   USE division,      ONLY : fkbounds
   USE elph2,         ONLY : xkq
   USE kfold,         ONLY : createkmap2
   USE pwcom,         ONLY : nbnd
+  USE mp_world,      ONLY : world_comm
   !
   IMPLICIT NONE
-  ! 
+  !
   LOGICAL, INTENT(out) :: lwin(nbndep, nks)
   !! Band windows at k
   LOGICAL, INTENT(out) :: lwinq(nbndep, nks)
@@ -46,7 +46,7 @@
   INTEGER, INTENT(in) :: nbndsub
   !! number of bands in the optimal subspace
   INTEGER, INTENT(in) :: nks
-  !! number of kpoints 
+  !! number of kpoints
   INTEGER, INTENT(in) :: nkstot
   !! total number of kpoints across pools
   REAL(KIND = DP), INTENT(in) :: xxq(3)
@@ -57,8 +57,8 @@
   !! U(k) matrix for k-points in the pool
   COMPLEX(KIND = DP), INTENT(out) :: cuq(nbndep, nbndsub, nks)
   !! U(k+q) matrix for k+q-points in the pool
-  ! 
-  ! Local variables 
+  !
+  ! Local variables
   LOGICAL :: lwin_big(nbndep, nkstot)
   !! .TRUE. if the band ibnd lies within the outer window at k-point ik
   LOGICAL :: lwinq_big(nbndep, nkstot)
@@ -74,7 +74,7 @@
   INTEGER :: ios
   !! INTEGER variable for I/O control
   INTEGER :: ik_start
-  !! Index of first k-point in the pool  
+  !! Index of first k-point in the pool
   INTEGER :: ik_stop
   !! Index of last k-point in the pool
   COMPLEX(KIND = DP) :: cu_big(nbndep, nbndsub, nkstot)
@@ -91,14 +91,14 @@
     OPEN(iunukk, FILE = filukk, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
     IF (ios /=0) CALL errore('loadumat', 'error opening ukk file', iunukk)
     !
-    ! dummy operation for skipping unnecessary data (ibndstart and ibndend) here 
+    ! dummy operation for skipping unnecessary data (ibndstart and ibndend) here
     !
     READ(iunukk, *) ibnd, jbnd
     !
     DO ik = 1, nkstot
       DO ibnd = 1, nbndep
         DO jbnd = 1, nbndsub
-           READ(iunukk, *) cu_big(ibnd, jbnd, ik)
+          READ(iunukk, *) cu_big(ibnd, jbnd, ik)
         ENDDO
       ENDDO
     ENDDO
@@ -117,7 +117,7 @@
     !
     CLOSE(iunukk)
     !
-    ! Generate U(k+q) through the map 
+    ! Generate U(k+q) through the map
     ! here we create the map k+q --> k
     ! (first proc has a copy of all kpoints)
     ! Generates kmap(ik) for this xxq
@@ -133,12 +133,12 @@
     ENDDO
   ENDIF ! meta_ionode
   !
-  CALL mp_bcast(cu_big, ionode_id, inter_pool_comm)
-  CALL mp_bcast(cuq_big, ionode_id, inter_pool_comm)   
-  CALL mp_bcast(lwin_big, ionode_id, inter_pool_comm)
-  CALL mp_bcast(lwinq_big, ionode_id, inter_pool_comm)
-  CALL mp_bcast(exband, ionode_id, inter_pool_comm)
-  CALL mp_bcast(w_centers, ionode_id, inter_pool_comm)
+  CALL mp_bcast(cu_big, meta_ionode_id, world_comm)
+  CALL mp_bcast(cuq_big, meta_ionode_id, world_comm)
+  CALL mp_bcast(lwin_big, meta_ionode_id, world_comm)
+  CALL mp_bcast(lwinq_big, meta_ionode_id, world_comm)
+  CALL mp_bcast(exband, meta_ionode_id, world_comm)
+  CALL mp_bcast(w_centers, meta_ionode_id, world_comm)
   !
   CALL fkbounds(nkstot, ik_start, ik_stop)
   !
@@ -147,7 +147,7 @@
   cu = cu_big(:, :, ik_start:ik_stop)
   cuq = cuq_big(:, :, ik_start:ik_stop)
   lwin = lwin_big(:, ik_start:ik_stop)
-  lwinq = lwin_big(:, ik_start:ik_stop)
+  lwinq = lwinq_big(:, ik_start:ik_stop)
   !
   RETURN
   !-----------------------------------------------------------------------

@@ -631,6 +631,8 @@ SUBROUTINE reorder_evals_revecs(nbase, nvec, nvecx, conv, e_d, ew_d, v_d)
 
   CALL buffer%lock_buffer(conv_idx_d, nvec, info)
   CALL buffer%lock_buffer(vtmp_d, (/nvecx, nvecx/), info)
+  IF( info /= 0 ) &
+     CALL errore( ' reorder_evals_revecs ',' cannot allocate vtmp_d ', ABS(info) )
 
   conv_idx_d(1:nvec) = conv_idx(1:nvec)
 

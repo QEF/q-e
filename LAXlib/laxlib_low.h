@@ -251,6 +251,18 @@ SUBROUTINE laxlib_dsqmsym_x( n, a, lda, idesc )
    REAL(DP)            :: a(lda,*)
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
 END SUBROUTINE
+#if defined (__CUDA)
+SUBROUTINE laxlib_dsqmsym_gpu_x( n, a, lda, idesc )
+   IMPLICIT NONE
+   include 'laxlib_param.fh'
+   include 'laxlib_kinds.fh'
+   INTEGER, INTENT(IN) :: n
+   INTEGER, INTENT(IN) :: lda
+   REAL(DP), INTENT(INOUT), DEVICE    :: a(:,:)
+   ATTRIBUTES(DEVICE)  :: a
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+END SUBROUTINE
+#endif
 END INTERFACE
 
 INTERFACE laxlib_zsqmher
@@ -303,6 +315,19 @@ SUBROUTINE sqr_dmm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, 
    REAL(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
 END SUBROUTINE
+#if defined (__CUDA)
+SUBROUTINE sqr_dmm_cannon_gpu_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, idesc )
+   IMPLICIT NONE
+   include 'laxlib_kinds.fh'
+   include 'laxlib_param.fh'
+   CHARACTER(LEN=1), INTENT(IN) :: transa, transb
+   INTEGER, INTENT(IN) :: n
+   REAL(DP), INTENT(IN) :: alpha, beta
+   INTEGER, INTENT(IN) :: lda, ldb, ldc
+   REAL(DP), DEVICE :: a(:,:), b(:,:), c(:,:)
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+END SUBROUTINE
+#endif
 SUBROUTINE sqr_smm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, idesc )
    IMPLICIT NONE
    include 'laxlib_kinds.fh'
@@ -346,6 +371,18 @@ SUBROUTINE sqr_tr_cannon_sp_x( n, a, lda, b, ldb, idesc )
    REAL(SP)            :: a(lda,*), b(ldb,*)
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
 END SUBROUTINE
+#if defined (__CUDA)
+SUBROUTINE sqr_tr_cannon_gpu_x( n, a, lda, b, ldb, idesc )
+   IMPLICIT NONE
+   include 'laxlib_kinds.fh'
+   include 'laxlib_param.fh'
+   INTEGER, INTENT(IN) :: n
+   INTEGER, INTENT(IN) :: lda, ldb
+   REAL(DP), INTENT(IN),  DEVICE :: a(:,:)
+   REAL(DP), INTENT(OUT), DEVICE :: b(:,:)
+   INTEGER, INTENT(IN) :: idesc(:)
+END SUBROUTINE
+#endif
 END INTERFACE
 
 INTERFACE redist_row2col
@@ -358,4 +395,16 @@ SUBROUTINE redist_row2col_x( n, a, b, ldx, nx, idesc )
    REAL(DP)            :: a(ldx,nx), b(ldx,nx)
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
 END SUBROUTINE
+#if defined (__CUDA)
+SUBROUTINE redist_row2col_gpu_x( n, a, b, ldx, nx, idesc )
+   IMPLICIT NONE
+   include 'laxlib_kinds.fh'
+   include 'laxlib_param.fh'
+   INTEGER, INTENT(IN) :: n
+   INTEGER, INTENT(IN) :: ldx, nx
+   REAL(DP), DEVICE    :: a(:,:)
+   REAL(DP), DEVICE    :: b(:,:)
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+END SUBROUTINE
+#endif
 END INTERFACE

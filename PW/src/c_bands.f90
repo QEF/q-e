@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,7 +23,7 @@ SUBROUTINE c_bands( iter )
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_flags,        ONLY : ethr, isolve, restart, use_gpu
-  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
+  USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, wfcU
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions,        ONLY : evc
   USE bp,                   ONLY : lelfield
@@ -87,7 +87,11 @@ SUBROUTINE c_bands( iter )
      ! ... Set k-point, spin, kinetic energy, needed by Hpsi
      !
      current_k = ik
+     !
+     IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) CALL phase_factor(ik)
+     !
      IF ( lsda ) current_spin = isk(ik)
+     !
      IF ( use_gpu ) THEN
         CALL g2_kin_gpu( ik )
      ELSE
@@ -375,13 +379,23 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              avg_iter = avg_iter + cg_iter
              !
           ELSE IF ( isolve == 2 ) THEN
-             CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) ! precontidtion has intent(in)
-             CALL ppcg_gamma( h_psi, s_psi, okvan, h_diag, &
-                         npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
-                         0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
-             !
-             avg_iter = avg_iter + ppcg_iter
-             !
+             IF (.not. use_gpu) THEN
+               CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) ! precontidtion has intent(in)
+               CALL ppcg_gamma( h_psi, s_psi, okvan, h_diag, &
+                           npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
+                           0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
+               !
+               avg_iter = avg_iter + ppcg_iter
+               !
+             ELSE
+               CALL using_evc_d(1);  CALL using_et_d(1); CALL using_h_diag_d(0) ! precontidtion has intent(in)
+               CALL ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, okvan, h_diag_d, &
+                           npwx, npw, nbnd, evc_d, et_d(1,ik), btype(1,ik), &
+                           0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
+               !
+               avg_iter = avg_iter + ppcg_iter
+               !
+             END IF 
           ELSE
              !
              CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) ! precontidtion has intent(in)
@@ -389,7 +403,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                         npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
              !
              avg_iter = avg_iter + nhpsi/float(nbnd) 
-             write (6,*) ntry, avg_iter, nhpsi
+             ! write (6,*) ntry, avg_iter, nhpsi
              !
           ENDIF
           !
@@ -590,14 +604,25 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              avg_iter = avg_iter + cg_iter
              !
           ELSE IF ( isolve == 2) then
-             CALL using_evc(1); CALL using_et(1); CALL using_h_diag(0)
-             ! BEWARE npol should be added to the arguments
-             CALL ppcg_k( h_psi, s_psi, okvan, h_diag, &
-                         npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
-                         0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
-             !
-             avg_iter = avg_iter + ppcg_iter
-             !
+             IF ( .not. use_gpu ) THEN
+               CALL using_evc(1); CALL using_et(1); CALL using_h_diag(0)
+               ! BEWARE npol should be added to the arguments
+               CALL ppcg_k( h_psi, s_psi, okvan, h_diag, &
+                           npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
+                           0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
+               !
+               avg_iter = avg_iter + ppcg_iter
+               !
+             ELSE
+               CALL using_evc_d(1); CALL using_et_d(1); CALL using_h_diag_d(0)
+               ! BEWARE npol should be added to the arguments
+               CALL ppcg_k_gpu( h_psi_gpu, s_psi_gpu, okvan, h_diag_d, &
+                           npwx, npw, nbnd, npol, evc_d, et_d(1,ik), btype(1,ik), &
+                           0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
+               !
+               avg_iter = avg_iter + ppcg_iter
+               !
+             END IF
           ELSE 
              !
              CALL using_evc(1); CALL using_et(1); CALL using_h_diag(0)
@@ -605,8 +630,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                         npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
              !
              avg_iter = avg_iter + nhpsi/float(nbnd) 
-             write (6,*) ntry, avg_iter, nhpsi
-
+             ! write (6,*) ntry, avg_iter, nhpsi
+             !
           ENDIF
           ntry = ntry + 1
           !
@@ -811,7 +836,7 @@ SUBROUTINE c_bands_nscf( )
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
   USE control_flags,        ONLY : ethr, restart, isolve, io_level, iverbosity
-  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
+  USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, wfcU
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions,        ONLY : evc
   USE mp_pools,             ONLY : npool, kunit, inter_pool_comm
@@ -870,7 +895,11 @@ SUBROUTINE c_bands_nscf( )
      ! ... Set k-point, spin, kinetic energy, needed by Hpsi
      !
      current_k = ik
+     !
+     IF (lda_plus_u .AND. lda_plus_u_kind.EQ.2) CALL phase_factor(ik)
+     !
      IF ( lsda ) current_spin = isk(ik)
+     !
      CALL g2_kin( ik )
      ! 
      ! ... More stuff needed by the hamiltonian: nonlocal projectors

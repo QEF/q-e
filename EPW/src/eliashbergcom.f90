@@ -1,18 +1,18 @@
-  !                                                                            
+  !
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Roxana Margine
-  !                                                                            
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
-  !                                                                            
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
+  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
+  !
   !--------------------------------------------------------------------------
   MODULE eliashberg_common
-  !-------------------------------------------------------------------------- 
-  !! 
+  !--------------------------------------------------------------------------
+  !!
   !! Global variables for real- and imag-axis Eliashberg equations
-  !! SP: Sept. 2019 - Cleaning.  
-  !! 
+  !! SP: Sept. 2019 - Cleaning.
+  !!
   USE kinds, ONLY : DP
   !
   SAVE
@@ -36,9 +36,7 @@
   !! frequency on real-axis, wsph(nqstep)
   REAL(KIND = DP), ALLOCATABLE :: wsi(:)
   !! frequency on imag-axis at iw, wi(nsiw(nstemp))
-  REAL(KIND = DP), ALLOCATABLE :: estemp(:)
-  !! temperature in eV entering in the Eliashberg equtions estemp(nstemp)
-  ! 
+  !
   !--------------------------------------------------------------------------
   END MODULE eliashberg_common
   !--------------------------------------------------------------------------
@@ -46,9 +44,9 @@
   !--------------------------------------------------------------------------
   MODULE eliashberg_common_iso
   !--------------------------------------------------------------------------
-  !! 
+  !!
   !! Global variables for real and imag-axis isotropic equations Eliashberg equations
-  !! 
+  !!
   USE kinds, ONLY : DP
   !
   SAVE
@@ -76,13 +74,13 @@
   REAL(KIND = DP), ALLOCATABLE :: zsumi(:)
   !! contribution to znorm eqn from the imaginary-axis in the analytic continuation zsumi(nsw)
   REAL(KIND = DP), ALLOCATABLE :: gp(:, :)
-  !! -bose(omegap)-fermi( omega+omegap) (eqn for delta and znorm analytic continuation) 
-  REAL(KIND = DP), ALLOCATABLE :: gm(:, :) 
-  !! bose(omegap)+fermi(-omega+omegap) (eqn for delta and znorm analytic continuation) 
-  ! 
+  !! -bose(omegap)-fermi( omega+omegap) (eqn for delta and znorm analytic continuation)
+  REAL(KIND = DP), ALLOCATABLE :: gm(:, :)
+  !! bose(omegap)+fermi(-omega+omegap) (eqn for delta and znorm analytic continuation)
+  !
   COMPLEX(KIND = DP), ALLOCATABLE :: delta(:)
   !! gap function on real-axis at iw
-  COMPLEX(KIND = DP), ALLOCATABLE :: deltap(:) 
+  COMPLEX(KIND = DP), ALLOCATABLE :: deltap(:)
   !! gap function on real-axis at iw
   COMPLEX(KIND = DP), ALLOCATABLE :: znorm(:)
   !! renormalization function on real-axis at iw
@@ -101,11 +99,11 @@
   MODULE eliashberg_common_aniso
   !--------------------------------------------------------------------------
   USE kinds, ONLY : DP
-  !! 
+  !!
   !! Global variables for real and imag-axis anisotropic equations Eliashberg equations
-  !! nkf = nr of irreducible k-points on the fine grid, if mp_mesh_k = .TRUE. 
-  !! nkf = total nr of k-points on the fine grid, otherwise 
-  !! 
+  !! nkf = nr of irreducible k-points on the fine grid, if mp_mesh_k = .TRUE.
+  !! nkf = total nr of k-points on the fine grid, otherwise
+  !!
   SAVE
   !
   LOGICAL :: limag_fly
@@ -133,7 +131,7 @@
   REAL(KIND = DP) :: dosef
   !! density of states at the Fermi energy
   REAL(KIND = DP), ALLOCATABLE :: g2(:, :, :, :, :)
-  !! e-ph matrix element squared |g_ji^nu(k,q)|^2, g2(nkfs_pool,nqftot,nbndfs,nbndfs,nmodes) 
+  !! e-ph matrix element squared |g_ji^nu(k,q)|^2, g2(nkfs_pool,nqftot,nbndfs,nbndfs,nmodes)
   REAL(KIND = DP), ALLOCATABLE :: ekfs(:, :)
   !! eigenvalues at E_i(k), etf(nbndfs,nkfs)
   REAL(KIND = DP), ALLOCATABLE :: xkff(:, :)
@@ -180,7 +178,7 @@
   !
   !--------------------------------------------------------------------------
   MODULE eliashbergcom
-  !-------------------------------------------------------------------------- 
+  !--------------------------------------------------------------------------
   !
   USE eliashberg_common
   USE eliashberg_common_iso

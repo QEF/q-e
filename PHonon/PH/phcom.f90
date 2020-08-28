@@ -232,6 +232,7 @@ MODULE control_ph
                                         ! to decide what each image does.
              always_run=.FALSE., & ! if .TRUE. the code do not stop after
                                    ! doing partial representations
+             !always_run=.TRUE., & ! only for testing purposes
              recover,     &! if .TRUE. the run restarts
              low_directory_check=.FALSE., & ! if .TRUE. search on the phsave 
                            ! directory only the representations requested 
@@ -317,8 +318,11 @@ MODULE units_ph
        iudvkb3, lrdvkb3, &
        iuint3paw, & ! the unit of the int3_paw coefficients
        lint3paw,  & ! the length of the int3_paw coefficients
-       iundnsscf    ! the unit of dnsscf, for DFPT+U  
-  
+       iundnsscf, & ! the unit of dnsscf, for DFPT+U
+       iudvpsi,   & ! unit of DV_{SCF} * psi
+       lrdvpsi,   & ! length of DV_{SCF} * psi
+       iugauge      ! Unit for reading and writing gauge information in ahc.f90
+
   logical, ALLOCATABLE :: this_dvkb3_is_on_file(:), &
                           this_pcxpsi_is_on_file(:,:)
   !
@@ -426,8 +430,30 @@ MODULE ldaU_ph
   !
 END MODULE ldaU_ph
 
+MODULE nc_mag_aux
+  USE kinds,      ONLY : DP
+  SAVE
+  
+  COMPLEX (DP), ALLOCATABLE ::  &
+                               deeq_nc_save(:,:,:,:,:), &
+                               int1_nc_save(:,:,:,:,:,:), &
+                               int3_save(:, :, :, :, :, :)
+END MODULE nc_mag_aux
+
+!MODULE qpoint_aux
+!  USE kinds,      ONLY : DP
+!  USE becmod,     ONLY : bec_type
+!  SAVE
+  
+!  INTEGER, ALLOCATABLE :: ikmks(:)    ! index of -k for magnetic calculations
+
+!  INTEGER, ALLOCATABLE :: ikmkmqs(:)  ! index of -k-q for magnetic calculations
+
+!  TYPE(bec_type), ALLOCATABLE :: becpt(:), alphapt(:,:)
+
+!END MODULE qpoint_aux
+
 MODULE phcom
-  USE modes
   USE dynmat
   USE eqv
   USE efield_mod
@@ -442,4 +468,6 @@ MODULE phcom
   USE disp
   USE grid_irr_iq
   USE ldaU_ph
+  USE nc_mag_aux
+!  USE qpoint_aux
 END MODULE phcom

@@ -1,40 +1,40 @@
   !
-  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino  
-  ! 
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
+  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
   !
   !----------------------------------------------------------------------
   MODULE wan2bloch
   !----------------------------------------------------------------------
-  !! 
-  !! Modules that contains all the routines that transforms quantities from Wannier 
-  !! space to Bloch space. 
-  !! 
+  !!
+  !! Modules that contains all the routines that transforms quantities from Wannier
+  !! space to Bloch space.
+  !!
   IMPLICIT NONE
-  ! 
+  !
   CONTAINS
-    ! 
+    !
     !--------------------------------------------------------------------------
     SUBROUTINE hamwan2bloch(nbnd, nrr, cuf, eig, chw, cfac, dims)
     !--------------------------------------------------------------------------
     !!
     !!  From the Hamiltonian in Wannier representation, find the corresponding
     !!  Hamiltonian in Bloch representation for a given k point
-    !!  
+    !!
     !!  input  : number of bands nbnd
-    !!           number of WS vectors, coordinates and degeneracy 
+    !!           number of WS vectors, coordinates and degeneracy
     !!           Hamiltonian in Wannier representation chw(nbnd, nbnd, nrr)
     !!           kpoint coordinate xk(3)
     !!
     !!  output : rotation matrix cuf(nbnd, nbnd)
     !!           interpolated hamiltonian eigenvalues eig(nbnd)
     !!
-    !!  2019: Weng Hong Sio and SP: Lifting of degeneracies.  
+    !!  2019: Weng Hong Sio and SP: Lifting of degeneracies.
     !!        P_prime = U^dag P U where P is a random perturbation matrix
     !!        cuf = (eigvector of P_prime) * U
-    !!        P_prime spans the degenenrate subspace. 
+    !!        P_prime spans the degenenrate subspace.
     !!  2016: SP: optimization
     !!
     !--------------------------------------------------------------------------
@@ -55,7 +55,7 @@
     INTEGER, INTENT(in) :: dims
     !! dims = nbndsub if use_ws or 1 otherwise
     REAL(KIND = DP), INTENT(out) :: eig (nbnd)
-    !! interpolated hamiltonian eigenvalues for this kpoint 
+    !! interpolated hamiltonian eigenvalues for this kpoint
     COMPLEX(KIND = DP), INTENT(in) :: cfac(nrr, dims, dims)
     !! Exponential factor
     COMPLEX(KIND = DP), INTENT(in) :: chw(nbnd, nbnd, nrr)
@@ -63,21 +63,21 @@
     COMPLEX(KIND = DP), INTENT(out) :: cuf(nbnd, nbnd)
     !! Rotation matrix U^\dagger, fine mesh
     !
-    ! Local variables 
+    ! Local variables
     LOGICAL :: duplicates
-    !! Returns if the bands contains degeneracices for that k-point. 
+    !! Returns if the bands contains degeneracices for that k-point.
     INTEGER :: iw
     !! Band index
     INTEGER :: iw2
     !! Band index
     INTEGER :: ir
-    !! WS vectors for electrons. 
+    !! WS vectors for electrons.
     INTEGER :: ibnd
     !! Counter on band index
     INTEGER :: jbnd
     !! Counter on band index
     INTEGER :: info
-    !! Infor for lapack ZHPEVX 
+    !! Infor for lapack ZHPEVX
     INTEGER :: list_dup(nbnd)
     !! List of degenerate eigenvalues
     INTEGER :: ndeg
@@ -93,7 +93,7 @@
     INTEGER :: ierr
     !! Error status
     INTEGER, ALLOCATABLE :: iwork(:)
-    !! IWORK(1) returns the optimal LIWORK. 
+    !! IWORK(1) returns the optimal LIWORK.
     INTEGER, ALLOCATABLE :: degen_group(:, :)
     !! Index of degenerate subspace
     REAL(KIND = DP) :: rand1
@@ -101,7 +101,7 @@
     REAL(KIND = DP) :: rand2
     !! Random number
     REAL(KIND = DP) :: w(nbnd)
-    !! Eigenvalues 
+    !! Eigenvalues
     REAL(KIND = DP), ALLOCATABLE :: wp(:)
     !! Perturbed eigenvalues on the degenerate subspace
     REAL(KIND = DP), ALLOCATABLE :: rwork(:)
@@ -152,37 +152,37 @@
     !
     ! Hermitization
     chf = 0.5d0 * (chf + TRANSPOSE(CONJG(chf)))
-    ! 
-    ALLOCATE(rwork(nbnd**2 + 2 * nbnd), STAT = ierr)
+    !
+    ALLOCATE(rwork(1 + 5 * nbnd + 2 * (nbnd**2)), STAT = ierr)
     IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating rwork', 1)
     ALLOCATE(iwork(3 + 5 * nbnd), STAT = ierr)
     IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating iwork', 1)
     ALLOCATE(cwork(nbnd**2 + 2 * nbnd), STAT = ierr)
     IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating cwork', 1)
-    ! 
+    !
     ! Diagonalization routine
     cz(:, :) = chf(:, :)
     CALL ZHEEVD('V', 'L', nbnd, cz, nbnd, w, cwork, 2 * nbnd + nbnd**2, &
             rwork, 1 + 5 * nbnd + 2 * (nbnd**2), iwork, 3 + 5 * nbnd, info)
-    ! 
+    !
     DEALLOCATE(rwork, STAT = ierr)
     IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating rwork', 1)
     DEALLOCATE(iwork, STAT = ierr)
     IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating iwork', 1)
     DEALLOCATE(cwork, STAT = ierr)
     IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating cwork', 1)
-    ! 
+    !
     ! Find the degenerate eigenvalues w
-    CALL degen_sort(w, SIZE(w), duplicates, list_dup) 
-    ! 
+    CALL degen_sort(w, SIZE(w), duplicates, list_dup)
+    !
     ndeg = MAXVAL(list_dup)
     ALLOCATE(degen_group(2, ndeg), STAT = ierr)
     IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating degen_group', 1)
     degen_group(:, :) = 0
-    ! 
+    !
     ! degen_group contains the starting and ending position of each group
-    ! degen_group(1,1) = starting position of group 1 
-    ! degen_group(2,1) = ending position of group 1 
+    ! degen_group(1,1) = starting position of group 1
+    ! degen_group(2,1) = ending position of group 1
     ! degen_group(1,2) = starting position of group 2 ...
     DO ig = 1, ndeg
       degen_group(2, ig) = 0
@@ -198,11 +198,11 @@
       ENDDO
       degen_group(2, ig) = degen_group(1, ig) + degen_group(2, ig) -1
     ENDDO
-    ! 
+    !
     ! Generate a pertubation matrix of size (nbnd x nbnd) made of random number
     !CALL init_random_seed()
-    ! SP: Using random_number does not work because the perturbation needs to be the 
-    !     same when calling hamwan2bloch at k and k+q (see ephwann_shuffle). 
+    ! SP: Using random_number does not work because the perturbation needs to be the
+    !     same when calling hamwan2bloch at k and k+q (see ephwann_shuffle).
     !     Therefore I fix a "random" number 0.25644832 + 0.01 * ibnd and 0.11584272 + 0.025 * jbnd
     P(:, :) = czero
     DO ibnd = 1, nbnd
@@ -211,20 +211,20 @@
         !CALL random_number(rand2)
         rand1 = 0.25644832 + 0.01 * ibnd
         rand2 = 0.11584272 + 0.025 * jbnd
-        P(jbnd, ibnd) = CMPLX(rand1, rand2, KIND = DP) 
+        P(jbnd, ibnd) = CMPLX(rand1, rand2, KIND = DP)
       ENDDO
     ENDDO
-    ! 
+    !
     ! Hermitize the Perturbation matrix and make it small
     P = 0.5d0 * (P + TRANSPOSE(CONJG(P))) * ABS(MINVAL(w)) * 0.1d0
-    ! 
+    !
     DO ig = 1, ndeg
       starting = degen_group(1, ig)
       ending   = degen_group(2, ig)
-      ! Size of the degenerate subspace 
+      ! Size of the degenerate subspace
       length   = ending - starting + 1
-      ! 
-      ALLOCATE(rwork(length**2 + 2 * length), STAT = ierr)
+      !
+      ALLOCATE(rwork(1 + 5 * length + 2 * length**2), STAT = ierr)
       IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating rwork', 1)
       ALLOCATE(iwork(3 + 5 * length), STAT = ierr)
       IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating iwork', 1)
@@ -236,17 +236,17 @@
       IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating P_prime', 1)
       ALLOCATE(wp(length), STAT = ierr)
       IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating wp', 1)
-      ! 
+      !
       Uk(:, :) = cz(:, starting:ending)
       P_prime = MATMUL(TRANSPOSE(CONJG(Uk)), MATMUL(P, Uk))
       ! Diagonalization of P_prime
       CALL ZHEEVD('V', 'L', length, P_prime, length, wp, cwork, &
                 2 * length + length**2, rwork, 1 + 5 * length + 2 * length**2, &
                 iwork, 3 + 5 * length, info)
-      ! On exiting P_prime is the eigenvector of the P_prime matrix and wp the eigenvector. 
-      ! 
+      ! On exiting P_prime is the eigenvector of the P_prime matrix and wp the eigenvector.
+      !
       cz(:, starting:ending) = MATMUL(Uk, P_prime)
-      ! 
+      !
       DEALLOCATE(rwork, STAT = ierr)
       IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating rwork', 1)
       DEALLOCATE(iwork, STAT = ierr)
@@ -260,7 +260,7 @@
       DEALLOCATE(wp, STAT = ierr)
       IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating wp', 1)
     ENDDO ! ig
-    ! 
+    !
     DO jbnd = 1, nbnd
       INNER : DO ibnd = 1, nbnd
         IF (ABS(cz(ibnd, jbnd)) > eps12) THEN
@@ -271,26 +271,26 @@
         ENDIF
       END DO INNER
     ENDDO
-    ! 
+    !
     ! Rotation matrix and Ham eigenvalues in Ryd [mind when comparing with wannier code (eV units)]
     ! U^\dagger is cuf(nbnd, nbnd)
     !
     cuf = CONJG(TRANSPOSE(cz))
-    eig = w 
+    eig = w
     !
     CALL stop_clock('HamW2B')
     !
     !--------------------------------------------------------------------------
     END SUBROUTINE hamwan2bloch
     !--------------------------------------------------------------------------
-    ! 
+    !
     !--------------------------------------------------------------------------
     SUBROUTINE dynwan2bloch(nmodes, nrr_q, irvec_q, ndegen_q, xxq, cuf, eig)
     !--------------------------------------------------------------------------
     !!
     !! From the Hamiltonian in Wannier representation, find the corresponding
     !! Hamiltonian in Bloch representation for a given k point
-    !! 
+    !!
     !! This SUBROUTINE is identical to hamwan2bloch.f90, except
     !! that here rdw is a real array, not a complex one. This is
     !! required to obtain proper phonon dispersion interpolation
@@ -322,7 +322,7 @@
     REAL(KIND = DP), INTENT(out) :: eig(nmodes)
     !! interpolated dynamical matrix eigenvalues for this kpoint
     COMPLEX(KIND = DP), INTENT(out) :: cuf(nmodes, nmodes)
-    !! Rotation matrix, fine mesh 
+    !! Rotation matrix, fine mesh
     !
     ! Local variables
     INTEGER :: imode
@@ -340,7 +340,7 @@
     REAL(KIND = DP) :: xq(3)
     !! Coordinates q-point
     REAL(KIND = DP) :: rdotk
-    !! $$\mathbf{r}\cdot\mathbf{k}   
+    !! $$\mathbf{r}\cdot\mathbf{k}
     REAL(KIND = DP) :: massfac
     !! inverse square root of masses
     COMPLEX(KIND = DP) :: champ(nmodes * (nmodes + 1) / 2)
@@ -350,7 +350,7 @@
     COMPLEX(KIND = DP) :: chf(nmodes, nmodes)
     ! Dynamical matrix in Bloch basis, fine mesh
     COMPLEX(KIND = DP) :: cfac
-    !! Complex prefactor for Fourier transform. 
+    !! Complex prefactor for Fourier transform.
     !
     CALL start_clock ('DynW2B')
     !----------------------------------------------------------
@@ -374,7 +374,7 @@
           DO nb = 1, nat
             IF (ndegen_q(ir, na, nb) > 0) THEN
               cfac = EXP(ci * rdotk) / DBLE(ndegen_q(ir, na, nb))
-              ! To map atom coordinate to mode basis. 
+              ! To map atom coordinate to mode basis.
               chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) = &
               chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) &
               + cfac * rdw(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb, ir)
@@ -386,7 +386,7 @@
       DO ir = 1, nrr_q
         rdotk = twopi * DOT_PRODUCT(xq, DBLE(irvec_q(:, ir)))
         cfac = EXP(ci * rdotk) / DBLE(ndegen_q(ir, 1, 1))
-        chf = chf + cfac * rdw(:, :, ir) 
+        chf = chf + cfac * rdw(:, :, ir)
       ENDDO
     ENDIF
     !
@@ -395,12 +395,12 @@
     !
     !  add the long-range term to D(q)
     IF (lpolar) THEN
-      ! xq has to be in 2pi/a     
+      ! xq has to be in 2pi/a
       CALL rgd_blk(nqc1, nqc2, nqc3, nat, chf, xq, tau, epsi, zstar, +1.d0)
       !
     ENDIF
     !
-    !  divide by the square root of masses 
+    !  divide by the square root of masses
     !
     DO na = 1, nat
       DO nb = 1, nat
@@ -408,7 +408,7 @@
         !
         chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) = &
         chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) * massfac
-        ! 
+        !
       ENDDO
     ENDDO
     !
@@ -433,15 +433,15 @@
     !             0, 0, -one, neig, w, cz, nmodes, cwork, &
     !             rwork, iwork, ifail, info)
     CALL cdiagh2(nmodes, chf, nmodes, w, cz)
-    ! 
+    !
     ! clean noise
     DO jmode = 1,nmodes
       DO imode = 1,nmodes
         IF (ABS(cz(imode, jmode)) < eps12) cz(imode, jmode) = czero
       ENDDO
     ENDDO
-    ! 
-    ! DS - Impose phase 
+    !
+    ! DS - Impose phase
     IF (lphase) THEN
       DO jmode = 1,nmodes
         INNER : DO imode = 1,nmodes
@@ -460,12 +460,12 @@
     eig = w
     !
     CALL stop_clock('DynW2B')
-    !   
+    !
     !--------------------------------------------------------------------------
     END SUBROUTINE dynwan2bloch
     !--------------------------------------------------------------------------
     !
-    !-------------------------------------------------------------------------- 
+    !--------------------------------------------------------------------------
     SUBROUTINE dynifc2blochf(nmodes, rws, nrws, xxq, cuf, eig)
     !--------------------------------------------------------------------------
     !!
@@ -485,7 +485,7 @@
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nmodes
-    !! number of modes 
+    !! number of modes
     INTEGER, INTENT(in) :: nrws
     !! Number of Wigner-Size real space vectors
     REAL(KIND = DP), INTENT(in) :: rws(0:3, nrws)
@@ -495,7 +495,7 @@
     REAL(KIND = DP), INTENT(out) :: eig(nmodes)
     !! interpolated phonon eigenvalues for this qpoint
     COMPLEX(KIND = DP), INTENT(out) :: cuf(nmodes, nmodes)
-    !! Rotation matrix, fine mesh 
+    !! Rotation matrix, fine mesh
     !
     ! Local variables
     LOGICAL, SAVE :: first = .TRUE.
@@ -532,19 +532,19 @@
     !! inverse square root of masses
     REAL(KIND = DP) :: rwork(7 * nmodes)
     !! Real work array
-    REAL(KIND = DP) :: w(nmodes) 
+    REAL(KIND = DP) :: w(nmodes)
     !! Eigenvalues
     REAL(KIND = DP) :: total_weight
     !! Sum of the weigths
     REAL(KIND = DP) :: weight
     !! WS weights
     REAL(KIND = DP) :: arg
-    !! 2 * pi * r  
+    !! 2 * pi * r
     REAL(KIND = DP) :: r(3)
     !! Real-space vector
     REAL(KIND = DP) :: r_ws(3)
     !! Real space vector including fractional translation
-    REAL(KIND = DP), EXTERNAL :: wsweight 
+    REAL(KIND = DP), EXTERNAL :: wsweight
     !! Wigner-Seitz weights
     COMPLEX(KIND = DP) :: champ(nmodes * (nmodes + 1) / 2)
     !! Complex Hamiltonian packed in upper triangle
@@ -558,7 +558,7 @@
     !! Dynamical matrix
     !
     CALL start_clock('DynW2B')
-    ! 
+    !
     xq = xxq
     ! bring xq in cart. coordinates
     CALL cryst_to_cart(1, xq, bg, 1)
@@ -580,7 +580,7 @@
           ENDDO
         ENDDO
       ENDDO
-    ENDIF 
+    ENDIF
     !
     !----------------------------------------------------------
     !  STEP 3: inverse Fourier transform to fine k and k+q meshes
@@ -651,12 +651,12 @@
     ENDDO
     !
     IF (lpolar) THEN
-      ! xq has to be in 2pi/a     
+      ! xq has to be in 2pi/a
       CALL rgd_blk(nqc1, nqc2, nqc3, nat, chf, xq, tau, epsi, zstar, +1.d0)
       !
     ENDIF
     !
-    !  divide by the square root of masses 
+    !  divide by the square root of masses
     !
     DO na = 1, nat
       DO nb = 1, nat
@@ -664,7 +664,7 @@
         !
         chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) = &
            chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) * massfac
-        ! 
+        !
       ENDDO
     ENDDO
     !
@@ -691,7 +691,7 @@
     eig = w
     !
     CALL stop_clock('DynW2B')
-    !   
+    !
     !--------------------------------------------------------------------------
     END SUBROUTINE dynifc2blochf
     !--------------------------------------------------------------------------
@@ -705,7 +705,7 @@
     !!
     !
     USE kinds,     ONLY : DP
-    USE cell_base, ONLY : at, bg 
+    USE cell_base, ONLY : at, bg
     USE ions_base, ONLY : tau, nat
     USE elph2,     ONLY : ifc, epsi, zstar, wscache
     USE epwcom,    ONLY : lpolar, nqc1, nqc2, nqc3
@@ -716,11 +716,11 @@
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nmodes
-    !! number of modes 
+    !! number of modes
     INTEGER, INTENT(in) :: nrws
     !! Number of Wigner-Size real space vectors
     REAL(KIND = DP), INTENT(in) :: rws(0:3, nrws)
-    !! Wigner-Seitz radius 
+    !! Wigner-Seitz radius
     REAL(KIND = DP), INTENT(in) :: xxq(3)
     !! Crystal q-point coordinates for the interpolation
     COMPLEX(KIND = DP), INTENT(out) :: chf(nmodes, nmodes)
@@ -748,11 +748,11 @@
     REAL(KIND = DP) :: weight
     !! WS weights
     REAL(KIND = DP) :: arg
-    !! 2 * pi * r  
+    !! 2 * pi * r
     REAL(KIND = DP) :: r(3)
     !! Real-space vector
     REAL(KIND = DP) :: xq(3)
-    !! Q-point coordinate in Cartesian coordinate. 
+    !! Q-point coordinate in Cartesian coordinate.
     REAL(KIND = DP) :: r_ws(3)
     !! Real space vector including fractional translation
     REAL(KIND = DP), EXTERNAL :: wsweight
@@ -763,7 +763,7 @@
     xq = xxq
     ! bring xq in cart. coordinates
     CALL cryst_to_cart(1, xq, bg, 1)
-    ! 
+    !
     IF (first) THEN
       first = .FALSE.
       DO na = 1, nat
@@ -841,7 +841,7 @@
     ENDDO
     !
     IF (lpolar) THEN
-      ! xq has to be in 2pi/a     
+      ! xq has to be in 2pi/a
       CALL rgd_blk(nqc1, nqc2, nqc3, nat, chf, xq, tau, epsi, zstar, +1.d0)
       !
     ENDIF
@@ -856,9 +856,9 @@
     !!
     !!  From the Dipole in Wannier representation, find the corresponding
     !!  Dipole in Bloch representation for a given k point
-    !!  
+    !!
     !!  input  : number of bands nbnd
-    !!           number of WS vectors, coordinates and degeneracy 
+    !!           number of WS vectors, coordinates and degeneracy
     !!           Dipole in Wannier representation  cdmew(3,nbnd,nbnd,nrr)
     !!
     !!  output : interpolated dipole matrix elements (dmef)
@@ -875,24 +875,24 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in) :: nbnd 
+    INTEGER, INTENT(in) :: nbnd
     !! number of bands (possibly of the optimal subspace)
-    INTEGER, INTENT(in) :: nrr 
+    INTEGER, INTENT(in) :: nrr
     !! kpoint number for the interpolation
     INTEGER, INTENT(in) :: dims
     !! Is equal to the number of Wannier function if use_ws == .TRUE.
     !! Is equal to 1 otherwise.
     REAL(KIND = DP), INTENT(in) :: etf(nbnd)
     !! Eigenenergies on the fine grid
-    REAL(KIND = DP), INTENT(in) :: etf_ks(nbnd) 
+    REAL(KIND = DP), INTENT(in) :: etf_ks(nbnd)
     !! Kohn-Sham eigenvalues
     COMPLEX(KIND = DP), INTENT(in) :: cuf(nbnd, nbnd)
-    !! Rotation matrix U^\dagger, fine mesh 
+    !! Rotation matrix U^\dagger, fine mesh
     COMPLEX(KIND = DP), INTENT(out) :: dmef(3, nbnd, nbnd)
     !! interpolated dipole matrix elements in Bloch basis, fine mesh
     COMPLEX(KIND = DP), INTENT(in) :: cfac(nrr, dims, dims)
     !! Exponential factor
-    ! 
+    !
     ! Local variables
     INTEGER :: ir
     !! Counter on real-space index
@@ -980,7 +980,7 @@
     !!
     !!  From the Velocity matrix elements in Wannier representation, find the corresponding
     !!  MEs in Bloch representation for a given k point
-    !!  
+    !!
     !!  input  : nbnd, nrr, irvec, ndegen, xk, cuf, et
     !!
     !!  output : vmef; velocity matrix elements on the fine mesh
@@ -989,12 +989,12 @@
     !!  RM 04/2018: optimized
     !!
     USE kinds,         ONLY : DP
-    USE elph2,         ONLY : cvmew 
+    USE elph2,         ONLY : cvmew
     USE cell_base,     ONLY : at, alat
     USE epwcom,        ONLY : eig_read, use_ws
     USE constants_epw, ONLY : twopi, ci, czero, cone, zero, eps4, bohr2ang, one
     USE low_lvl,       ONLY : degen_sort
-    !   
+    !
     IMPLICIT NONE
     !
     !  input variables
@@ -1025,7 +1025,7 @@
     !
     ! local variables
     LOGICAL :: duplicates
-    !! Returns if the bands contains degeneracices for that k-point. 
+    !! Returns if the bands contains degeneracices for that k-point.
     INTEGER :: ir
     !! Counter on real-space index
     INTEGER :: iw
@@ -1110,7 +1110,7 @@
       ENDDO
     ELSE
       CALL ZGEMV('n', 3 * (nbnd**2), nrr, cone, cvmew(:, :, :, :), 3 * (nbnd**2), cfac(:, 1, 1), 1, cone, cvmef(:, :, :), 1)
-    ENDIF 
+    ENDIF
     !
     ! k-derivative of the Hamiltonian in the Wannier gauge
     ! [Eqn. 38 of PRB 74, 195118 (2006)] or [Eq. 29 of PRB 75, 195121 (2007)]
@@ -1215,7 +1215,7 @@
           ENDIF
         ENDDO
       ENDDO
-      ! Now allocate matrixes for each degenerate subspace 
+      ! Now allocate matrixes for each degenerate subspace
       DO ideg = 1, SIZE(deg_dim)
         ALLOCATE(vmef_deg(3, deg_dim(ideg), deg_dim(ideg)), STAT = ierr)
         IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error allocating vmef_deg(3, deg_dim(ideg), deg_dim', 1)
@@ -1236,11 +1236,11 @@
         ijbndc = 0
         DO ibnd = 1, nbnd
           DO jbnd = 1, nbnd
-            IF ((list_dup(ibnd) == ideg) .AND. (list_dup(jbnd) == ideg)) THEN 
+            IF ((list_dup(ibnd) == ideg) .AND. (list_dup(jbnd) == ideg)) THEN
               ijbndc = ijbndc + 1
               jbndc = deg_dim(ideg) - MOD(ijbndc, deg_dim(ideg))
               ibndc = INT((ijbndc - 1) / deg_dim(ideg)) + 1
-              vmef_deg(:, ibndc, jbndc) = vmef(:, ibnd, jbnd) 
+              vmef_deg(:, ibndc, jbndc) = vmef(:, ibnd, jbnd)
             ENDIF
           ENDDO
         ENDDO
@@ -1264,7 +1264,7 @@
         !
         ! Now store the values back in vmef
         !
-        ijbndc = 0 
+        ijbndc = 0
         DO ibnd = 1, nbnd
           DO jbnd = 1, nbnd
             IF ((list_dup(ibnd) == ideg) .AND. (list_dup(jbnd) == ideg)) THEN
@@ -1296,7 +1296,7 @@
         !
       ENDDO !ideg
       !
-    ENDIF 
+    ENDIF
     !
     CALL stop_clock('vmewan2bloch')
     !--------------------------------------------------------------------------
@@ -1306,12 +1306,12 @@
     !--------------------------------------------------------------------------
     SUBROUTINE vmewan2blochp(xxq, nmodes, nrr_q, irvec_q, ndegen_q, cuf, vmefp, wf, rws, nrws)
     !--------------------------------------------------------------------------
-    !! 
-    !! This routine computes the phonon velocity by computing the q derivative of 
-    !! the dynamical matrix. 
+    !!
+    !! This routine computes the phonon velocity by computing the q derivative of
+    !! the dynamical matrix.
     !! This routines is required for adaptative broadening.
     !! Samuel Ponce & Francesco Macheda
-    !! 
+    !!
     USE kinds,         ONLY : DP
     USE elph2,         ONLY : rdw, epsi, zstar, wscache, ifc
     USE cell_base,     ONLY : at, alat, bg
@@ -1321,7 +1321,7 @@
     USE io_global,     ONLY : stdout
     USE low_lvl,       ONLY : degen_sort
     USE rigid_epw,     ONLY : rgd_blk_der
-    !   
+    !
     IMPLICIT NONE
     !
     !  input variables
@@ -1337,7 +1337,7 @@
     INTEGER, INTENT(in) :: nrws
     !! Number of Wigner-Size real space vectors when lifc == .TRUE.
     REAL(KIND = DP), INTENT(in) :: xxq(3)
-    !! q-point coordinates for the interpolation    
+    !! q-point coordinates for the interpolation
     COMPLEX(KIND = DP), INTENT(in) :: cuf(nmodes, nmodes)
     !! Rotation matrix e^\dagger, fine mesh
     REAL(KIND = DP), INTENT(in) :: wf(nmodes)
@@ -1377,10 +1377,10 @@
     INTEGER :: jmodec
     !! Index to count degenerate jmode
     INTEGER :: ijmodec
-    !! Index to deduce imodec and jmodec 
+    !! Index to deduce imodec and jmodec
     INTEGER :: neig
     !! lapack ZHPEVX number of eigenvalues
-    INTEGER :: info 
+    INTEGER :: info
     !! lapack ZHPEVX
     INTEGER :: n1, n2, n3
     !! WS dimensions [used when lifc == .TRUE.]
@@ -1394,7 +1394,7 @@
     !! Index that keeps track of degeneracies and their dimensionality
     INTEGER, ALLOCATABLE :: ifail(:)
     !! lapack ZHPEVX
-    INTEGER, ALLOCATABLE :: iwork(:) 
+    INTEGER, ALLOCATABLE :: iwork(:)
     !! lapack ZHPEVX
     REAL(KIND = DP) :: irvec_tmp(3)
     !! coordinates of WS points for the interpolation, cartesian coordinates
@@ -1402,16 +1402,16 @@
     !! Coordinates q-point
     REAL(KIND = DP) :: rdotq
     !! $$\mathbf{r}\cdot\mathbf{q}
-    REAL(KIND = DP) :: total_weight 
+    REAL(KIND = DP) :: total_weight
     !! Total WS weight [used when lifc == .TRUE.]
     REAL(KIND = DP) :: weight
     !! WS weight [used when lifc == .TRUE.]
-    REAL(KIND = DP) :: arg 
+    REAL(KIND = DP) :: arg
     !! Argument of the exp. [used when lifc == .TRUE.]
     REAL(KIND = DP) :: r(3)
     !! Real space vector [used when lifc == .TRUE.]
     REAL(KIND = DP) :: r_ws(3)
-    !! Real WS point [used when lifc == .TRUE.]  
+    !! Real WS point [used when lifc == .TRUE.]
     REAL(KIND = DP), EXTERNAL :: wsweight
     !! WS weight [used when lifc == .TRUE.]
     REAL(KIND = DP), ALLOCATABLE :: w(:)
@@ -1425,7 +1425,7 @@
     COMPLEX(KIND = DP) :: chf_a_tmp(nmodes, nmodes)
     !! derivative of interpolated hamiltonian eigenvalues, fine mesh
     COMPLEX(KIND = DP) :: dyn_a(3, 3, 3, nat, nat)
-    !! Temp dyn mat. [used when lifc == .TRUE.] 
+    !! Temp dyn mat. [used when lifc == .TRUE.]
     COMPLEX(KIND = DP), ALLOCATABLE :: champ(:)
     !! lapack ZHPEVX
     COMPLEX(KIND = DP), ALLOCATABLE :: cwork(:)
@@ -1442,17 +1442,17 @@
     chf_a(:, :, :)  = czero
     irvec_tmp(:)    = zero
     xq = xxq
-    ! 
+    !
     !----------------------------------------------------------
     !  STEP 3: inverse Fourier transform to fine q meshes
-    !----------------------------------------------------------    
+    !----------------------------------------------------------
     ! Adapted for D Eqn. 38 of PRB 74, 195118 (2006)
-    ! d_{\alpha} D_{\mu\nu}(q) = 1/ndegen(R) sum_R i*R_{\alpha} e^{iqR} D(R) 
-    ! 
+    ! d_{\alpha} D_{\mu\nu}(q) = 1/ndegen(R) sum_R i*R_{\alpha} e^{iqR} D(R)
+    !
     IF (lifc) THEN
       ! bring xq in cart. coordinates
       CALL cryst_to_cart(1, xq, bg, 1)
-      ! 
+      !
       IF (first) THEN
         first = .FALSE.
         DO na = 1, nat
@@ -1481,7 +1481,7 @@
             DO n2 = -2 * nqc2, 2 * nqc2
               DO n3 = -2 * nqc3, 2 * nqc3
                 !
-                ! Sum over R vectors in the supercell - safe range 
+                ! Sum over R vectors in the supercell - safe range
                 DO i = 1, 3
                   r(i) = n1 * at(i, 1) + n2 * at(i, 2) + n3 * at(i, 3)
                 ENDDO
@@ -1514,7 +1514,7 @@
             CALL errore ('vmewan2blochp', 'wrong total_weight', 1)
           END IF
         ENDDO ! nb
-      ENDDO ! na  
+      ENDDO ! na
       !
       DO na = 1, nat
         DO nb = 1, nat
@@ -1525,7 +1525,7 @@
           ENDDO
         ENDDO ! nb
       ENDDO ! na
-      ! 
+      !
     ELSE ! lifc
       IF (use_ws) THEN
         DO ir = 1, nrr_q
@@ -1535,7 +1535,7 @@
             DO nb = 1, nat
               IF (ndegen_q(ir, na, nb) > 0) THEN
                 cfac = EXP(ci * rdotq) / DBLE(ndegen_q(ir, na, nb))
-                ! To map atom coordinate to mode basis. 
+                ! To map atom coordinate to mode basis.
                 DO ipol = 1, 3
                   chf_a(ipol, 3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) = &
                   chf_a(ipol, 3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) &
@@ -1553,26 +1553,26 @@
           DO ipol = 1, 3
             chf_a(ipol, :, :) = chf_a(ipol, :, :) + &
                 ci * irvec_tmp(ipol) * cfac * rdw(:, :, ir)
-          ENDDO 
+          ENDDO
         ENDDO
-      ENDIF    
+      ENDIF
       ! bring xq in cart. coordinates (needed for rgd_blk call)
       CALL cryst_to_cart(1, xq, bg, 1)
-    ENDIF ! lifc 
-    ! 
+    ENDIF ! lifc
+    !
     ! add the long-range term to D(q)
     IF (lpolar) THEN
-      ! xq has to be in 2pi/a     
+      ! xq has to be in 2pi/a
       CALL rgd_blk_der(nqc1, nqc2, nqc3, nat, chf_a, xq, tau, epsi, zstar, +1.d0)
     ENDIF
-    ! 
+    !
     !----------------------------------------------------------
     !  STEP 4: un-rotate to Bloch space, fine grid
     !----------------------------------------------------------
     ! [Eqn. 21 of PRB 74, 195118 (2006)]
     ! d_{\alpha}D_{\mu\nu}^{(H)}(q) = e_{\mu\nu}(q)^\dagger d_{\alpha}D_{\mu\nu}(q) e_{\mu\nu}(q)
     ! Note that the e_{\mu\nu}(q) = cuf are already mass scaled with 1.0/sqrt(amass(ityp(na)))
-    ! 
+    !
     DO ipol = 1, 3
       CALL ZGEMM('n', 'n', nmodes, nmodes, nmodes, cone, chf_a(ipol, :, :), &
                  nmodes, cuf(:, :), nmodes, czero, chf_a_tmp(:, :), nmodes)
@@ -1602,7 +1602,7 @@
           IF (list_dup(imode) == ideg) deg_dim(ideg) = deg_dim(ideg) + 1
         ENDDO
       ENDDO
-      ! Now allocate matrixes for each degenerate subspace 
+      ! Now allocate matrixes for each degenerate subspace
       DO ideg = 1, SIZE(deg_dim)
         ALLOCATE(vmef_deg(3, deg_dim(ideg), deg_dim(ideg)), STAT = ierr)
         IF (ierr /= 0) CALL errore('vmewan2blochp', 'Error allocating vmef_deg(3, deg_dim(ideg), deg_dim', 1)
@@ -1688,7 +1688,7 @@
     !--------------------------------------------------------------------------
     END SUBROUTINE vmewan2blochp
     !--------------------------------------------------------------------------
-    ! 
+    !
     !---------------------------------------------------------------------------
     SUBROUTINE ephwan2blochp(nmodes, xxq, irvec_g, ndegen_g, nrr_g, cuf, epmatf, nbnd, nrr_k, dims, nat)
     !---------------------------------------------------------------------------
@@ -1710,7 +1710,7 @@
     USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_SEEK_SET, &
                                  MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE
 #endif
-    ! 
+    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nmodes
@@ -1735,8 +1735,8 @@
     !! e-p matrix in Wanner representation
     COMPLEX(KIND = DP), INTENT(out) :: epmatf(nbnd, nbnd, nrr_k, nmodes)
     !! e-p matrix in Bloch representation, fine grid
-    ! 
-    ! Local variables 
+    !
+    ! Local variables
     INTEGER :: ir
     !! Real space WS index
     INTEGER :: iw
@@ -1744,7 +1744,7 @@
     INTEGER :: iw2
     !! Wannier function index
     INTEGER :: irn
-    !! Combined WS and atom index  
+    !! Combined WS and atom index
     INTEGER :: ir_start
     !! Starting ir for this cores
     INTEGER :: ir_stop
@@ -1780,7 +1780,7 @@
     !! El-ph matrix elements
     !
     CALL start_clock('ephW2Bp')
-    ! 
+    !
     !----------------------------------------------------------
     !  STEP 3: inverse Fourier transform of g to fine k mesh
     !----------------------------------------------------------
@@ -1791,13 +1791,14 @@
     !  g~(R_e,q') is epmatf(nmodes, nmodes, ik )
     !  every pool works with its own subset of k points on the fine grid
     !
-    ! SP: Because nrr_g can be quite small, we do a combined parallelization on WS vector and atoms  
+    ! SP: Because nrr_g can be quite small, we do a combined parallelization on WS vector and atoms
+    !
     IF (use_ws) THEN
       CALL para_bounds(ir_start, ir_stop, nrr_g * nat)
     ELSE
       CALL para_bounds(ir_start, ir_stop, nrr_g * nmodes)
     ENDIF
-    ! 
+    !
     IF (mpime == ionode_id) THEN
       diff = ir_stop - ir_start
     ENDIF
@@ -1807,62 +1808,62 @@
     IF (ir_stop - ir_start /= diff) THEN
       add = 1
     ELSE
-      add = 0    
+      add = 0
     ENDIF
     !
     eptmp(:, :, :, :) = czero
     cfac(:, :, :, :) = czero
-    ! 
+    !
     IF (use_ws) THEN
       DO irn = ir_start, ir_stop
         ir = (irn - 1) / nat + 1
-        na = MOD(irn - 1, nat) +1   
-        !   
+        na = MOD(irn - 1, nat) +1
+        !
         ! note xxq is assumed to be already in cryst coord
         !
         rdotk = twopi * DOT_PRODUCT(xxq, DBLE(irvec_g(:, ir)))
         DO iw2 = 1, dims
-          DO iw = 1, dims 
+          DO iw = 1, dims
             IF (ndegen_g(ir, na, iw, iw2) > 0) &
               cfac(na, ir, iw, iw2) = EXP(ci * rdotk) / DBLE(ndegen_g(ir, na, iw, iw2))
           ENDDO
-        ENDDO 
+        ENDDO
       ENDDO
-      ! 
+      !
     ELSE
       DO irn = ir_start, ir_stop
         ir = (irn - 1) / nmodes + 1
-        !   
+        !
         ! note xxq is assumed to be already in cryst coord
         !
         rdotk = twopi * DOT_PRODUCT(xxq, DBLE(irvec_g(:, ir)))
         ! Note that ndegen is always > 0 if use_ws == false
         cfac(1, ir, 1, 1) = EXP(ci * rdotk) / DBLE(ndegen_g(ir, 1, 1, 1))
       ENDDO
-      ! 
+      !
     ENDIF
-    ! 
+    !
     IF (etf_mem == 0) then
-      !      
+      !
       IF (use_ws) THEN
         DO irn = ir_start, ir_stop
           ir = (irn - 1) / nat + 1
           na = MOD(irn - 1, nat) + 1
-          ! 
+          !
           DO iw2 = 1, dims
             DO iw = 1, dims
               CALL ZAXPY(nrr_k * 3, cfac(na, ir, iw, iw2), epmatwp(iw, iw2, :, 3 * (na - 1) + 1:3 * na, ir), 1, &
-                   eptmp(iw, iw2, :, 3 * (na - 1) + 1:3 * na), 1) 
+                   eptmp(iw, iw2, :, 3 * (na - 1) + 1:3 * na), 1)
             ENDDO
           ENDDO
-        ENDDO 
+        ENDDO
       ELSE ! use_ws
         DO irn = ir_start, ir_stop
           ir = (irn - 1) / nmodes + 1
           imode = MOD(irn-1, nmodes) + 1
-          !  
+          !
           CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(1, ir, 1, 1), epmatwp(:, :, :, imode, ir), 1, eptmp(:, :, :, imode), 1)
-        ENDDO   
+        ENDDO
       ENDIF
         !CALL zgemv( 'n',  nbnd * nbnd * nrr_k * 3, ir_stop - ir_start + 1, cone, &
         !     epmatwp(:,:,:,3*(na-1)+1:3*na,ir_start:ir_stop), nbnd * nbnd * nrr_k * 3, &
@@ -1884,17 +1885,17 @@
         IF (ierr /= 0) CALL errore('ephwan2blochp', 'Error allocating epmatw', 1)
         lrepmatw2 = INT( 2 * nbnd * nbnd * nrr_k * 3, KIND = 8)
 #endif
-        ! 
+        !
         DO irn = ir_start, ir_stop + add
           ir = (irn - 1) / nat + 1
-          na = MOD(irn - 1, nat) + 1     
-          !  
+          na = MOD(irn - 1, nat) + 1
+          !
 #if defined(__MPI)
           IF (add == 1 .AND. irn == ir_stop + add) lrepmatw2 = 0_MPI_OFFSET_KIND
           !
           !  Direct read of epmatwp for this ir
-          ! 
-          ! SP: The following needs a small explaination: although lrepmatw is correctly defined as kind 8 bits or 
+          !
+          ! SP: The following needs a small explaination: although lrepmatw is correctly defined as kind 8 bits or
           !     kind=MPI_OFFSET_KIND, the number "2" and "8" are default kind 4. The other as well. Therefore
           !     if the product is too large, this will crash. The solution (kind help recieved from Ian Bush) is below:
           lrepmatw = 2_MPI_OFFSET_KIND * 8_MPI_OFFSET_KIND * &
@@ -1903,12 +1904,12 @@
                                        INT(nrr_k, KIND = MPI_OFFSET_KIND) * &
                                       (INT(3_MPI_OFFSET_KIND * (na - 1_MPI_OFFSET_KIND), KIND = MPI_OFFSET_KIND) + &
           INT(3_MPI_OFFSET_KIND * nat, KIND = MPI_OFFSET_KIND) * (INT(ir, KIND = MPI_OFFSET_KIND) - 1_MPI_OFFSET_KIND))
-          !  
+          !
           ! SP: mpi seek is used to set the position at which we should start
-          ! reading the file. It is given in bits. 
+          ! reading the file. It is given in bits.
           ! Note : The process can be collective (=blocking) if using MPI_FILE_SET_VIEW & MPI_FILE_READ_ALL
-          !        or noncollective (=non blocking) if using MPI_FILE_SEEK & MPI_FILE_READ. 
-          !        Here we want non blocking because not all the process have the same nb of ir. 
+          !        or noncollective (=non blocking) if using MPI_FILE_SEEK & MPI_FILE_READ.
+          !        Here we want non blocking because not all the process have the same nb of ir.
           !
           !CALL MPI_FILE_SEEK(iunepmatwp2,lrepmatw,MPI_SEEK_SET,ierr)
           !IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SEEK',1 )
@@ -1917,14 +1918,14 @@
           CALL MPI_FILE_READ_AT(iunepmatwp2, lrepmatw, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
           IF (ierr /= 0) CALL errore('ephwan2blochp', 'error in MPI_FILE_READ_AT', 1)
           IF (add == 1 .AND. irn == ir_stop + add) CYCLE
-          !   
+          !
           DO iw2 = 1, dims
             DO iw = 1, dims
               CALL ZAXPY(nrr_k * 3, cfac(na, ir, iw, iw2), epmatw(iw, iw2, :, :), 1, &
                    eptmp(iw, iw2, :, 3 * (na - 1) + 1:3 * na), 1)
             ENDDO
           ENDDO
-#else      
+#else
           CALL rwepmatw(epmatw, nbnd, nrr_k, nmodes, ir, iunepmatwp, -1)
           !
           DO iw2 = 1, dims
@@ -1936,26 +1937,26 @@
 #endif
         ENDDO ! irn
         ! --------------------------------
-      ELSE ! use_ws 
+      ELSE ! use_ws
 #if defined(__MPI)
         ALLOCATE(epmatw(nbnd, nbnd, nrr_k, 1), STAT = ierr)
         IF (ierr /= 0) CALL errore('ephwan2blochp', 'Error allocating epmatw', 1)
         ! Although this should almost never be problematic (see explaination below)
         lrepmatw2 = 2_MPI_OFFSET_KIND * INT(nbnd , KIND = MPI_OFFSET_KIND) * &
                                         INT(nbnd , KIND = MPI_OFFSET_KIND) * &
-                                        INT(nrr_k, KIND = MPI_OFFSET_KIND) 
+                                        INT(nrr_k, KIND = MPI_OFFSET_KIND)
 #else
         ALLOCATE(epmatw(nbnd, nbnd, nrr_k, nmodes), STAT = ierr)
         IF (ierr /= 0) CALL errore('ephwan2blochp', 'Error allocating epmatw', 1)
         lrepmatw2 = INT(2 * nbnd * nbnd * nrr_k, KIND = 8)
 #endif
-        ! 
+        !
         DO irn = ir_start, ir_stop + add
           ir = (irn - 1) / nmodes + 1
           imode = MOD(irn - 1, nmodes) + 1
-          ! 
+          !
 #if defined(__MPI)
-          IF (add == 1 .AND. irn == ir_stop + add) lrepmatw2 = 0_MPI_OFFSET_KIND 
+          IF (add == 1 .AND. irn == ir_stop + add) lrepmatw2 = 0_MPI_OFFSET_KIND
           !
           !  Direct read of epmatwp for this ir
           lrepmatw = 2_MPI_OFFSET_KIND * 8_MPI_OFFSET_KIND * &
@@ -1964,28 +1965,28 @@
                                        INT(nrr_k, KIND = MPI_OFFSET_KIND) * &
                                       (INT(imode - 1_MPI_OFFSET_KIND, KIND = MPI_OFFSET_KIND) + &
           INT(nmodes, KIND = MPI_OFFSET_KIND) * (INT(ir, KIND = MPI_OFFSET_KIND) - 1_MPI_OFFSET_KIND))
-          !  
+          !
           ! SP: mpi seek is used to set the position at which we should start
-          ! reading the file. It is given in bits. 
+          ! reading the file. It is given in bits.
           ! Note : The process can be collective (=blocking) if using MPI_FILE_SET_VIEW & MPI_FILE_READ_ALL
-          !        or noncollective (=non blocking) if using MPI_FILE_SEEK & MPI_FILE_READ. 
-          !        Here we want non blocking because not all the process have the same nb of ir. 
+          !        or noncollective (=non blocking) if using MPI_FILE_SEEK & MPI_FILE_READ.
+          !        Here we want non blocking because not all the process have the same nb of ir.
           !
           CALL MPI_FILE_READ_AT(iunepmatwp2, lrepmatw, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
           IF (ierr /= 0) CALL errore('ephwan2blochp', 'error in MPI_FILE_READ_AT', 1)
           IF (add == 1 .AND. irn == ir_stop + add) CYCLE
-          !   
+          !
           CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(1, ir, 1, 1), epmatw(:, :, :, 1), 1, &
                      eptmp(:, :, :, imode), 1)
-          ! 
-#else      
+          !
+#else
           CALL rwepmatw(epmatw, nbnd, nrr_k, nmodes, ir, iunepmatwp, -1)
           !
           CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(1, ir, 1, 1), &
               epmatw(:, :, :, imode), 1, eptmp(:, :, :, imode), 1)
 #endif
-        ENDDO ! irn 
-      ENDIF ! use_ws 
+        ENDDO ! irn
+      ENDIF ! use_ws
       DEALLOCATE(epmatw, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwan2blochp', 'Error deallocating epmatw', 1)
     ENDIF ! etf_mem
@@ -1999,7 +2000,7 @@
     ! [Eqn. 22 of PRB 76, 165108 (2007)]
     ! epmatf(j) = sum_i eptmp(i) * uf(i,j)
     !
-    Call ZGEMM('n', 'n', nbnd * nbnd * nrr_k, nmodes, nmodes, cone, eptmp, & 
+    Call ZGEMM('n', 'n', nbnd * nbnd * nrr_k, nmodes, nmodes, cone, eptmp, &
                 nbnd * nbnd * nrr_k, cuf, nmodes, czero, epmatf, nbnd * nbnd * nrr_k)
     !
     CALL stop_clock('ephW2Bp')
@@ -2012,13 +2013,13 @@
     SUBROUTINE ephwan2bloch(nbnd, nrr, epmatw, cufkk, cufkq, epmatf, nmodes, cfac, dims)
     !---------------------------------------------------------------------------
     !!
-    !! Interpolation from Wannier to the fine Bloch grid of the electron-phonon 
+    !! Interpolation from Wannier to the fine Bloch grid of the electron-phonon
     !! matrix elements
     !!
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : twopi, ci, czero, cone
     USE epwcom,        ONLY : use_ws
-    ! 
+    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nbnd
@@ -2040,7 +2041,7 @@
     COMPLEX(KIND = DP), INTENT(out) :: epmatf(nbnd, nbnd, nmodes)
     !! e-p matrix in Bloch representation, fine grid
     !
-    ! Local variables 
+    ! Local variables
     INTEGER :: ir
     !! Counter on real-space index
     INTEGER :: iw
@@ -2074,7 +2075,7 @@
             ENDDO
           ENDDO
         ENDDO
-      ELSE 
+      ELSE
         CALL zgemv('n', nbnd**2, nrr, cone, epmatw(:, :, :, imode), nbnd**2, cfac(:, 1, 1), 1, cone, epmatf(:, :, imode), 1)
       ENDIF
     ENDDO
@@ -2105,18 +2106,18 @@
     !---------------------------------------------------------------------------
     END SUBROUTINE ephwan2bloch
     !---------------------------------------------------------------------------
-    ! 
+    !
     !---------------------------------------------------------------------------
     SUBROUTINE ephwan2bloch_mem(nbnd, nrr, epmatw, cufkk, cufkq, epmatf, cfac, dims)
     !---------------------------------------------------------------------------
     !!
-    !! Interpolation from Wannier to the fine Bloch grid of the electron-phonon 
+    !! Interpolation from Wannier to the fine Bloch grid of the electron-phonon
     !! matrix elements
     !!
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : twopi, ci, czero, cone
     USE epwcom,        ONLY : use_ws
-    ! 
+    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nbnd
@@ -2136,7 +2137,7 @@
     COMPLEX(KIND = DP), INTENT(out) :: epmatf(nbnd, nbnd)
     !! e-p matrix in Bloch representation, fine grid
     !
-    ! Local variables 
+    ! Local variables
     INTEGER :: ir
     !! Counter on real-space index
     INTEGER :: iw
@@ -2192,7 +2193,7 @@
     !---------------------------------------------------------------------------
     END SUBROUTINE ephwan2bloch_mem
     !---------------------------------------------------------------------------
-    ! 
+    !
     !---------------------------------------------------------------------------
     SUBROUTINE ephwan2blochp_mem(imode, nmodes, xxq, irvec_g, ndegen_g, nrr_g, epmatf, nbnd, nrr_k, dims, nat)
     !---------------------------------------------------------------------------
@@ -2213,13 +2214,13 @@
                                  MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, &
                                  MPI_MODE_RDONLY,MPI_INFO_NULL
 #endif
-    ! 
+    !
     IMPLICIT NONE
     !
     !  input variables
     !
     INTEGER, INTENT(in) :: imode
-    !! Current mode  
+    !! Current mode
     INTEGER, INTENT(in) :: nmodes
     !! Total number of modes
     INTEGER, INTENT(in) :: nrr_g
@@ -2228,7 +2229,7 @@
     !! Is equal to the number of Wannier function if use_ws == .TRUE.
     !! Is equal to 1 otherwise.
     INTEGER, INTENT(in) :: nat
-    !! Is equal to the number of atoms if use_ws == .TRUE. or 1 otherwise. 
+    !! Is equal to the number of atoms if use_ws == .TRUE. or 1 otherwise.
     INTEGER, INTENT(in) :: irvec_g(3, nrr_g)
     !! Coordinates of WS points
     INTEGER, INTENT(in) :: ndegen_g(nrr_g, nat, dims, dims)
@@ -2241,8 +2242,8 @@
     !! Kpoint for the interpolation (WARNING: this must be in crystal coord!)
     COMPLEX(KIND = DP), INTENT(out) :: epmatf(nbnd, nbnd, nrr_k)
     !! e-p matrix in Bloch representation, fine grid
-    ! 
-    ! Local variables 
+    !
+    ! Local variables
     CHARACTER(LEN = 256) :: filint
     !! File name
     INTEGER :: ir
@@ -2261,7 +2262,7 @@
     !! Index on atom
     INTEGER :: ierr
     !! Error status
-#if defined(__MPI)  
+#if defined(__MPI)
     INTEGER(KIND = MPI_OFFSET_KIND) :: lrepmatw
     !! Offset to tell where to start reading the file
     INTEGER(KIND = MPI_OFFSET_KIND) :: lrepmatw2
@@ -2293,52 +2294,52 @@
     !
     CALL para_bounds(ir_start, ir_stop, nrr_g)
     !
-#if defined(__MPI)  
-    filint = TRIM(tmp_dir) // TRIM(prefix) // '.epmatwp1'
+#if defined(__MPI)
+    filint = TRIM(tmp_dir) // TRIM(prefix) // '.epmatwp'
     CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmatwp2, ierr)
     IF (ierr /= 0) CALL errore('ephwan2blochp_mem', 'error in MPI_FILE_OPEN', 1)
-#endif  
+#endif
     !
     cfac(:, :, :) = czero
     !
     IF (use_ws) THEN
       DO ir = ir_start, ir_stop
-        !   
+        !
         ! note xxq is assumed to be already in cryst coord
         rdotk = twopi * DOT_PRODUCT(xxq, DBLE(irvec_g(:, ir)))
         na = (imode - 1) / 3 + 1
         DO iw2 = 1, dims
-          DO iw = 1, dims 
+          DO iw = 1, dims
             IF (ndegen_g(ir, na, iw, iw2) > 0) &
               cfac(ir, iw, iw2) = EXP(ci * rdotk) / DBLE(ndegen_g(ir, na, iw, iw2))
           ENDDO
         ENDDO
       ENDDO
-    ELSE 
+    ELSE
       DO ir = ir_start, ir_stop
-        !   
+        !
         ! note xxq is assumed to be already in cryst coord
         rdotk = twopi * DOT_PRODUCT(xxq, DBLE(irvec_g(:, ir)))
         cfac(ir, 1, 1) = EXP(ci * rdotk) / DBLE(ndegen_g(ir, 1, 1, 1))
       ENDDO
     ENDIF
-    ! 
+    !
     ALLOCATE(epmatw(nbnd, nbnd, nrr_k), STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwan2blochp_mem', 'Error allocating epmatw', 1)
     epmatw(:, :, :) = czero
     !
-#if defined(__MPI)  
+#if defined(__MPI)
     lrepmatw2 = 2_MPI_OFFSET_KIND * INT(nbnd , KIND = MPI_OFFSET_KIND) * &
                                     INT(nbnd , KIND = MPI_OFFSET_KIND) * &
                                     INT(nrr_k, KIND = MPI_OFFSET_KIND)
-#endif                          
-    ! 
+#endif
+    !
     DO ir = ir_start, ir_stop
       !
-      ! SP: The following needs a small explaination: although lrepmatw is correctly defined as kind 8 bits or 
+      ! SP: The following needs a small explaination: although lrepmatw is correctly defined as kind 8 bits or
       !     kind=MPI_OFFSET_KIND, the number "2" and "8" are default kind 4. The other as well. Therefore
       !     if the product is too large, this will crash. The solution (kind help recieved from Ian Bush) is below:
-#if defined(__MPI)    
+#if defined(__MPI)
       lrepmatw = 2_MPI_OFFSET_KIND * INT(nbnd  ,KIND = MPI_OFFSET_KIND) * &
                                      INT(nbnd  ,KIND = MPI_OFFSET_KIND) * &
                                      INT(nrr_k ,KIND = MPI_OFFSET_KIND) * &
@@ -2350,10 +2351,10 @@
                8_MPI_OFFSET_KIND *  (INT(imode ,KIND = MPI_OFFSET_KIND) - 1_MPI_OFFSET_KIND)
       !
       ! SP: mpi seek is used to set the position at which we should start
-      ! reading the file. It is given in bits. 
+      ! reading the file. It is given in bits.
       ! Note : The process can be collective (=blocking) if using MPI_FILE_SET_VIEW & MPI_FILE_READ_ALL
-      !        or noncollective (=non blocking) if using MPI_FILE_SEEK & MPI_FILE_READ. 
-      !        Here we want non blocking because not all the process have the same nb of ir. 
+      !        or noncollective (=non blocking) if using MPI_FILE_SEEK & MPI_FILE_READ.
+      !        Here we want non blocking because not all the process have the same nb of ir.
       !
       !CALL MPI_FILE_SEEK(iunepmatwp2,lrepmatw,MPI_SEEK_SET,ierr)
       !IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SEEK',1 )
@@ -2361,35 +2362,35 @@
       !IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
       CALL MPI_FILE_READ_AT(iunepmatwp2, lrepmatw, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
       IF (ierr /= 0) CALL errore('ephwan2blochp_mem', 'error in MPI_FILE_READ_AT', 1)
-#endif    
-      ! 
+#endif
+      !
       IF (use_ws) THEN
         DO iw2 = 1, dims
           DO iw = 1, dims
             CALL ZAXPY(nrr_k, cfac(ir, iw, iw2), epmatw(iw, iw2, :), 1, epmatf(iw, iw2, :), 1)
           ENDDO
         ENDDO
-      ELSE 
+      ELSE
         CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(ir, 1, 1), epmatw, 1, epmatf, 1)
       ENDIF
-      ! 
+      !
     ENDDO
     DEALLOCATE(epmatw, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwan2blochp_mem', 'Error deallocating epmatw', 1)
     !
     CALL mp_sum(epmatf, world_comm)
-    ! 
-#if defined(__MPI)  
+    !
+#if defined(__MPI)
     CALL MPI_FILE_CLOSE(iunepmatwp2, ierr)
     IF (ierr /= 0) CALL errore('ephwan2blochp_mem', 'error in MPI_FILE_CLOSE', 1)
-#endif  
+#endif
     !
     CALL stop_clock('ephW2Bp')
     !
     !--------------------------------------------------------------------------
     END SUBROUTINE ephwan2blochp_mem
     !--------------------------------------------------------------------------
-    ! 
+    !
   !--------------------------------------------------------------------------
   END MODULE wan2bloch
   !--------------------------------------------------------------------------

@@ -103,6 +103,7 @@ SUBROUTINE forces()
   !
   ! Cleanup scratch space used in previous SCF iterations. This will reduce memory footprint.
   CALL dev_buf%reinit(ierr)
+  IF (ierr .ne. 0) CALL errore('forces', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr))
   !
   ALLOCATE( forcenl(3,nat), forcelc(3,nat), forcecc(3,nat), &
             forceh(3,nat), forceion(3,nat), forcescc(3,nat) )
@@ -128,6 +129,7 @@ SUBROUTINE forces()
   IF (      use_gpu) THEN ! On the GPU
      ! move these data to the GPU
      CALL dev_buf%lock_buffer(vloc_d, (/ ngl, ntyp /) , ierr)
+     IF (ierr /= 0) CALL errore( 'forces', 'cannot allocate buffers', -1 )
      CALL dev_memcpy(vloc_d, vloc)
      CALL force_lc_gpu( nat, tau, ityp, alat, omega, ngm, ngl, igtongl_d, &
                    g_d, rho%of_r(:,1), dfftp%nl_d, gstart, gamma_only, vloc_d, &
@@ -147,7 +149,11 @@ SUBROUTINE forces()
   ! ... The Hubbard contribution
   !     (included by force_us if using beta as local projectors)
   !
-  IF ( lda_plus_u .AND. U_projection.NE.'pseudo' ) CALL force_hub( forceh )
+  IF (.not. use_gpu) THEN
+     IF ( lda_plus_u .AND. U_projection.NE.'pseudo' ) CALL force_hub( forceh )
+  ELSE
+     IF ( lda_plus_u .AND. U_projection.NE.'pseudo' ) CALL force_hub_gpu( forceh )
+  ENDIF
   !
   ! ... The ionic contribution is computed here
   !
@@ -196,6 +202,7 @@ SUBROUTINE forces()
   ! Cleanup scratch space again, next subroutines uses a lot of memory.
   ! In an ideal world this should be done only if really needed (TODO).
   CALL dev_buf%reinit(ierr)
+  IF (ierr .ne. 0) CALL errore('forces', 'Cannot reset GPU buffers! Buffers still locked: ', abs(ierr))
   !
   IF ( .not. use_gpu ) CALL force_corr( forcescc )
   IF (       use_gpu ) CALL force_corr_gpu( forcescc )

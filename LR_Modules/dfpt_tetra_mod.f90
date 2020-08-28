@@ -256,7 +256,7 @@ SUBROUTINE dfpt_tetra_calc_delta(tfst,tlst,et_col,delta)
   REAL(dp),INTENT(IN) :: et_col(nbnd,nkstot)
   REAL(dp),INTENT(OUT) :: delta(nbnd,nkstot)
   !
-  INTEGER :: nspin_lsda, ns, nt, nk, ii, ibnd, jbnd, kbnd, itetra(4), ik
+  INTEGER :: nspin_lsda, ns, nt, nk, i, ii, ibnd, jbnd, kbnd, itetra(4), ik
   REAL(dp) :: ei(4,nbnd), e(4), wdos1(4), a(4,4), V, wdos0(4,nbnd), wdos2
   !
   delta(1:nbnd,1:nkstot) = 0.0_dp
@@ -299,7 +299,13 @@ SUBROUTINE dfpt_tetra_calc_delta(tfst,tlst,et_col,delta)
            call hpsort (4, e, itetra)
            !
            DO ii = 1, 4
-              a(ii,1:4) = ( 0.0_dp - e(1:4) ) / (e(ii) - e(1:4))
+              DO i  = 1, 4
+                 IF ( ABS(e(ii)-e(i)) < 1.d-12 ) THEN
+                    a(ii,i) = 0.0_dp
+                 ELSE
+                    a(ii,i) = ( 0.0_dp - e(i) ) / (e(ii) - e(i))
+                 END IF
+              END DO
            END DO
            !
            IF(e(1) <= 0.0_dp .AND. 0.0_dp < e(2)) THEN
@@ -396,7 +402,7 @@ SUBROUTINE dfpt_tetra_calc_beta1(iq,tfst,tlst,et_col,beta)
   REAL(dp),INTENT(IN) :: et_col(nbnd, nkstot)
   REAL(dp),INTENT(INOUT) :: beta(nbnd,nbnd,nkstot)
   !
-  INTEGER :: nspin_lsda, ns, nt, nk, ii, jj, ibnd, itetra(4), ik
+  INTEGER :: nspin_lsda, ns, nt, nk, i, ii, jj, ibnd, itetra(4), ik
   REAL(dp) :: thr = 1e-8_dp, V, tsmall(4,4), ei0(4,nbnd), ej0(4,nbnd), e(4), &
   &           ei1(4), ej1(4,nbnd), a(4,4), w0(nbnd,nbnd,4), w1(nbnd,4)
   !
@@ -439,7 +445,13 @@ SUBROUTINE dfpt_tetra_calc_beta1(iq,tfst,tlst,et_col,beta)
            call hpsort (4, e, itetra)
            !
            DO ii = 1, 4
-              a(ii,1:4) = ( 0.0_dp - e(1:4)) / (e(ii) - e(1:4))
+              DO i  = 1, 4
+                 IF ( ABS(e(ii)-e(i)) < 1.d-12 ) THEN
+                    a(ii,i) = 0.0_dp
+                 ELSE
+                    a(ii,i) = ( 0.0_dp - e(i) ) / (e(ii) - e(i))
+                 END IF
+              END DO
            END DO
            !
            IF(e(1) <= 0.0_dp .AND. 0.0_dp < e(2)) THEN
@@ -707,7 +719,7 @@ SUBROUTINE dfpt_tetra_calc_beta2(iq,tfst,tlst,et_col,beta)
   REAL(dp),INTENT(IN) :: et_col(nbnd,nkstot)
   REAL(dp),INTENT(INOUT) :: beta(nbnd,nbnd,nkstot)
   !
-  INTEGER :: nspin_lsda, ns, nt, nk, ii, jj, ibnd, itetra(4), ik
+  INTEGER :: nspin_lsda, ns, nt, nk, i, ii, jj, ibnd, itetra(4), ik
   REAL(dp) :: thr = 1e-8_dp, V, tsmall(4,4), ei0(4,nbnd), ej0(4,nbnd), e(4), &
   &           ei1(4), ej1(4,nbnd), a(4,4), w0(nbnd,nbnd,4), w1(nbnd,4)
   !
@@ -752,7 +764,13 @@ SUBROUTINE dfpt_tetra_calc_beta2(iq,tfst,tlst,et_col,beta)
            call hpsort (4, e, itetra)
            !
            DO ii = 1, 4
-              a(ii,1:4) = ( 0.0_dp - e(1:4)) / (e(ii) - e(1:4))
+              DO i  = 1, 4
+                 IF ( ABS(e(ii)-e(i)) < 1.d-12 ) THEN
+                    a(ii,i) = 0.0_dp
+                 ELSE
+                    a(ii,i) = ( 0.0_dp - e(i) ) / (e(ii) - e(i))
+                 END IF
+              END DO
            END DO
            !
            IF(e(1) <= 0.0_dp .AND. 0.0_dp < e(2)) THEN
@@ -959,7 +977,7 @@ SUBROUTINE dfpt_tetra_calc_beta3(iq,tfst,tlst,et_col,beta)
   REAL(dp),INTENT(IN) :: et_col(nbnd,nkstot)
   REAL(dp),INTENT(INOUT) :: beta(nbnd,nbnd,nkstot)
   !
-  INTEGER :: nspin_lsda, ns, nt, nk, ii, jj, ibnd, itetra(4), ik
+  INTEGER :: nspin_lsda, ns, nt, nk, i, ii, jj, ibnd, itetra(4), ik
   REAL(dp) :: thr = 1e-8_dp, V, tsmall(4,4), ei0(4,nbnd), ej0(4,nbnd), e(4), &
   &           ei1(4), ej1(4,nbnd), a(4,4), w0(nbnd,nbnd,4), w1(nbnd,4)
   !
@@ -1002,7 +1020,13 @@ SUBROUTINE dfpt_tetra_calc_beta3(iq,tfst,tlst,et_col,beta)
            call hpsort (4, e, itetra)
            !
            DO ii = 1, 4
-              a(ii,1:4) = ( 0.0_dp - e(1:4)) / (e(ii) - e(1:4))
+              DO i  = 1, 4
+                 IF ( ABS(e(ii)-e(i)) < 1.d-12 ) THEN
+                    a(ii,i) = 0.0_dp
+                 ELSE
+                    a(ii,i) = ( 0.0_dp - e(i) ) / (e(ii) - e(i))
+                 END IF
+              END DO
            END DO
            !
            IF(e(1) <= 0.0_dp .AND. 0.0_dp < e(2)) THEN
@@ -1203,7 +1227,7 @@ SUBROUTINE dfpt_tetra2_theta(ei0,ej0,w0)
   REAL(dp),INTENT(IN) :: ei0(4), ej0(4,nbnd)
   REAL(dp),INTENT(OUT) :: w0(nbnd,4)
   !
-  INTEGER :: ii, ibnd, itetra(4)
+  INTEGER :: i, ii, ibnd, itetra(4)
   REAL(dp) :: C(3), e(4), a(4,4), thr = 1.0e-8_dp
   !
   w0(1:nbnd,1:4) = 0.0_dp
@@ -1215,7 +1239,13 @@ SUBROUTINE dfpt_tetra2_theta(ei0,ej0,w0)
      call hpsort (4, e, itetra)
      !
      DO ii = 1, 4
-        a(ii,1:4) = (0_dp - e(1:4)) / (e(ii) - e(1:4))
+        DO i  = 1, 4
+           IF ( ABS(e(ii)-e(i)) < 1.d-12 ) THEN
+              a(ii,i) = 0.0_dp
+           ELSE
+              a(ii,i) = ( 0.0_dp - e(i) ) / (e(ii) - e(i))
+           END IF
+        END DO
      END DO
      !
      IF(ABS(e(1)) < thr .AND. ABS(e(4)) < thr) THEN
@@ -1280,7 +1310,7 @@ SUBROUTINE dfpt_tetra2_lindhard(ei0,ej0,w0)
   REAL(dp),INTENT(IN) :: ei0(4), ej0(4,nbnd)
   REAL(dp),INTENT(OUT) :: w0(nbnd,4)
   !
-  INTEGER :: ii, ibnd, itetra(4)
+  INTEGER :: i, ii, ibnd, itetra(4)
   REAL(dp) :: V, ei1(4), ej1(4), w1(4), thr = 1e-8_dp
   REAL(dp) :: e(4), a(4,4), tsmall(4,4)
   !
@@ -1293,7 +1323,13 @@ SUBROUTINE dfpt_tetra2_lindhard(ei0,ej0,w0)
      call hpsort (4, e, itetra)
      !
      DO ii = 1, 4
-        a(ii,1:4) = ( 0.0_dp - e(1:4) ) / (e(ii) - e(1:4))
+        DO i  = 1, 4
+           IF ( ABS(e(ii)-e(i)) < 1.d-12 ) THEN
+              a(ii,i) = 0.0_dp
+           ELSE
+              a(ii,i) = ( 0.0_dp - e(i) ) / (e(ii) - e(i))
+           END IF
+        END DO
      END DO
      !
      IF(0_dp <= e(1)) THEN

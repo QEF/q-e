@@ -57,13 +57,14 @@ subroutine phq_setup
   USE klist,         ONLY : xk, nks, nkstot
   USE lsda_mod,      ONLY : nspin, starting_magnetization
   USE scf,           ONLY : v, vrs, vltot, kedtau, rho
+  USE dfunct,        ONLY : newd
   USE fft_base,      ONLY : dfftp
   USE gvect,         ONLY : ngm
   USE gvecs,         ONLY : doublegrid
   USE symm_base,     ONLY : nrot, nsym, s, irt, t_rev, time_reversal, &
-                            sr, invs, inverse_s, d1, d2, d3
+                            sr, invs, inverse_s, d1, d2, d3, check_grid_sym
   USE uspp_param,    ONLY : upf
-  USE uspp,          ONLY : nlcc_any
+  USE uspp,          ONLY : nlcc_any, deeq_nc, okvan
   USE spin_orb,      ONLY : domag
   USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2, ux
   USE nlcc_ph,       ONLY : drc
@@ -95,10 +96,13 @@ subroutine phq_setup
   USE mp,            ONLY : mp_max, mp_min
   USE lr_symm_base,  ONLY : gi, gimq, irotmq, minus_q, invsymq, nsymq, rtau
   USE qpoint,        ONLY : xq, xk_col
+  USE nc_mag_aux,    ONLY : deeq_nc_save
   USE control_lr,    ONLY : lgamma
   USE ldaU,          ONLY : lda_plus_u, Hubbard_U, Hubbard_J0
   USE ldaU_ph,       ONLY : effU
   USE constants,     ONLY : rytoev
+  USE dvscf_interpolate, ONLY : ldvscf_interpolate, dvscf_interpol_setup
+  USE ahc,           ONLY : elph_ahc, elph_ahc_setup
 
   implicit none
 
@@ -167,6 +171,18 @@ subroutine phq_setup
      END DO
      ux=0.0_DP
      if (dft_is_gradient()) call compute_ux(m_loc,ux,nat)
+     IF (okvan) THEN
+!
+!  Change the sign of the magnetic field in the screened US coefficients
+!  and save also the coefficients computed with -B_xc.
+!
+        deeq_nc_save(:,:,:,:,1)=deeq_nc(:,:,:,:)
+        v%of_r(:,2:4)=-v%of_r(:,2:4)
+        CALL newd()
+        v%of_r(:,2:4)=-v%of_r(:,2:4)
+        deeq_nc_save(:,:,:,:,2)=deeq_nc(:,:,:,:)
+        deeq_nc(:,:,:,:)=deeq_nc_save(:,:,:,:,1)
+     ENDIF
   ENDIF
   !
   ! 3) Computes the derivative of the XC potential
@@ -177,19 +193,19 @@ subroutine phq_setup
   !
   call setup_dgc()
   !
-  ! 4) Computes the inverse of each matrix of the crystal symmetry group
-  !
-  call inverse_s()
-  !
-  ! 5) Computes the number of occupied bands for each k point
+  ! 4) Computes the number of occupied bands for each k point
   !
   call setup_nbnd_occ()
   !
-  ! 6) Computes alpha_pv
+  ! 5) Computes alpha_pv
   !
   call setup_alpha_pv()
   !
-  ! 7) set all the variables needed to use the pattern representation
+  ! 6) Set all symmetries and variables needed to use the pattern representation
+  !
+  call inverse_s()
+  IF ( .NOT. check_grid_sym (dfftp%nr1,dfftp%nr2,dfftp%nr3) ) &
+          CALL errore('phq_setup','FFT grid incompatible with symmetry',1)
   !
   magnetic_sym = noncolin .AND. domag
   time_reversal = .NOT. noinv .AND. .NOT. magnetic_sym
@@ -435,6 +451,16 @@ subroutine phq_setup
      CALL setup_offset_beta()
      !
   ENDIF
+  !
+  ! dVscf Fourier interpolation
+  !
+  IF (ldvscf_interpolate) THEN
+    CALL dvscf_interpol_setup()
+  ENDIF
+  !
+  ! AHC e-ph coupling
+  !
+  IF (elph_ahc) CALL elph_ahc_setup()
   !
   CALL stop_clock ('phq_setup')
   !

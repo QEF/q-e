@@ -13,7 +13,7 @@
   epwwrite    = .true.
   epwread     = .false.
 
-  etf_mem     = 0
+  etf_mem     = 1
   vme         = .false.
 
   nbndsub     =  5,
@@ -28,11 +28,9 @@
 
   iverbosity  = 0
 
-  eps_acustic = 5.0    ! Lowest boundary for the 
-  ephwrite    = .true. ! Writes .ephmat files used when wliasberg = .true.
+  ephwrite    = .true. ! Writes .ephmat files used when Eliasberg = .true.
 
   fsthick     = 20.0  ! eV
-  eptemp      = 300  ! K
   degaussw    = 0.10 ! eV
   degaussq    = 0.5 ! meV
   nqstep      = 500
@@ -47,13 +45,11 @@
 
   wscut = 0.5   ! eV   Upper limit over frequency integration/summation in the Elisashberg eq
 
-  nstemp   = 1
-  tempsmin = 15.00
-  tempsmax = 20.00
+  nstemp   = 1     ! Nr. of temps 
+  temps    = 15.00 ! K  provide list of temperetures OR (nstemp and temps = tempsmin  tempsmax for even space mode)
 
   nsiter   = 500
-  assume_metal = .TRUE.
-  muc     = 0.16
+  muc      = 0.16
 
   dvscf_dir   = './save'
  
@@ -74,11 +70,3 @@
   nqf2        = 6
   nqf3        = 6
  /
-  6 cartesian
-          0.000000000   0.000000000   0.000000000 
-          0.000000000   0.000000000   0.291867841 
-          0.000000000   0.384900179   0.000000000 
-          0.000000000   0.384900179   0.291867841 
-          0.333333333   0.577350269   0.000000000 
-          0.333333333   0.577350269   0.291867841 
-
