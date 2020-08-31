@@ -5,6 +5,8 @@ Fixed in dev version:
   * Bug in Hubbard forces and stress for bands parallelization (when nproc_pool>nbnd) 
 
 Incompatible changes in dev version:
+  * FoX  no longer used to read and write pseudopotential files
+  * iotk no longer used to read and write any file
 
 New in v.6.6:
   * vdW-DF3-opt1, vdW-DF3-opt2, and vdW-DF-C6 van der Waals functionals

@@ -11,6 +11,7 @@ MODULE write_upf_v2_module
   !  this module handles the writing of pseudopotential data
 
   ! ...   declare modules
+#if defined (__use_fox)
   USE upf_kinds,    ONLY: DP
   USE pseudo_types, ONLY: pseudo_upf, pseudo_config, deallocate_pseudo_config
   USE FoX_wxml
@@ -743,5 +744,6 @@ SUBROUTINE write_columns_4(xf, data, tag, columns)
    DEALLOCATE(aux)
 END SUBROUTINE write_columns_4
 
+#endif
 
 END MODULE write_upf_v2_module

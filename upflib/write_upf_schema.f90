@@ -10,6 +10,7 @@ MODULE write_upf_schema_module
   !---------------------------------------------------------------------------=!
   !  this module handles the writing of pseudopotential data
   ! ...   declare modules
+#if defined (__use_fox)
   USE upf_kinds,      ONLY: DP
   USE pseudo_types,   ONLY: pseudo_upf, pseudo_config, deallocate_pseudo_config
   USE Fox_wxml
@@ -809,5 +810,7 @@ CONTAINS
  END SUBROUTINE write_gipaw
  !
 END SUBROUTINE write_upf_schema
+#endif
 
 END MODULE write_upf_schema_module
+
