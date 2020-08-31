@@ -33,7 +33,7 @@ MODULE beef
 SUBROUTINE beef_energies( )
 !-------------------------------------------------------------------------
 
-#if defined(__nobeef)
+#if defined(__NOBEEF)
   CALL errore('beef_energies', &
     &    'BEEF xc functional support not compiled in', 1)
 #else

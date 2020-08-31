@@ -64,7 +64,7 @@ then
         AC_SUBST(beef_libs)
     else
         echo no
-        try_dflags="$try_dflags -D__nobeef"
+        try_dflags="$try_dflags -D__NOBEEF"
     fi
     LDFLAGS="$BEEF_LDFLAGS_SAVE"
 fi

@@ -40,7 +40,7 @@ MODULE funct
   USE xc_f03_lib_m
 #endif
   !
-#if !defined(__nobeef)
+#if !defined(__NOBEEF)
   USE beef_interface, ONLY: beef_set_type
 #endif
   !
@@ -569,7 +569,7 @@ CONTAINS
                 & 'unknown BEEF type', 1)
           END SELECT
        ENDIF
-#if defined (__nobeef)
+#if defined (__NOBEEF)
        CALL errore('set_dft_from_name', &
     &    'BEEF xc functional support not compiled in', 1)
 #else
