@@ -42,7 +42,6 @@ CONTAINS
     !
     iun = xml_openfile ( filename )
     IF ( iun == -1 ) CALL upf_error('read_upf', 'cannot open file',1)
-    print *, ' READ_UPF_NEW'
     call xmlr_opentag ( 'qe_pp:pseudo', IERR = ierr )
     if ( ierr == 0 ) then
        v2 =.false.
