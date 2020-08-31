@@ -8,7 +8,7 @@
 !
 #define ZERO ( 0.D0, 0.D0 )
 !----------------------------------------------------------------------------
-SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi, hpsi, overlap, spsi, e )
+SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi_d, hpsi_d, overlap, spsi_d, e )
   !----------------------------------------------------------------------------
   !
   ! ... Serial version of rotate_wfc for colinear, k-point calculations
@@ -33,37 +33,28 @@ SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi, hpsi, overlap
     nstart,              &         ! input number of states 
     nbnd,                &         ! output number of states
     npol                           ! number of spin polarizations
-  COMPLEX(DP), INTENT(INOUT) :: psi(npwx*npol,nstart), hpsi(npwx*npol,nstart) ! input and output psi, Hpsi,
-  COMPLEX(DP), INTENT(INOUT), OPTIONAL :: spsi(npwx*npol,nstart)              ! ...   and optionnally Spsi
+  COMPLEX(DP), INTENT(INOUT) :: psi_d(npwx*npol,nstart), hpsi_d(npwx*npol,nstart) ! input and output psi, Hpsi,
+  COMPLEX(DP), INTENT(INOUT), OPTIONAL :: spsi_d(npwx*npol,nstart)              ! ...   and optionnally Spsi
   LOGICAL, INTENT(IN) :: overlap   ! if .FALSE. : spsi is not needed (and not used)
   REAL(DP), INTENT(OUT) :: e(nbnd) ! eigenvalues of the reduced H matrix
   !
   ! ... local variables
   !
   INTEGER                  :: kdim, kdmx
-  COMPLEX(DP), ALLOCATABLE :: aux(:,:)
+  COMPLEX(DP), ALLOCATABLE :: aux_d(:,:)
   INTEGER :: n_start, n_end, my_n, recv_counts(nbgrp), displs(nbgrp), column_type
   !
-  ! ... device variables
+  ! ... other device variables
   !
-  INTEGER :: ii, jj
-  COMPLEX(DP), ALLOCATABLE :: aux_d(:,:)
-  COMPLEX(DP) :: psi_d(npwx*npol,nstart), hpsi_d(npwx*npol,nstart) ! input and output psi, Hpsi,
-  COMPLEX(DP) :: spsi_d(npwx*npol,nstart)                          ! ...   and optionally Spsi
+  INTEGER :: ii, jj  ! these are for cuf kernel loops
   COMPLEX(DP), ALLOCATABLE :: hh_d(:,:), ss_d(:,:), vv_d(:,:)
   REAL(DP),    ALLOCATABLE :: en_d(:)
 #if defined (__CUDA)
   attributes(device) :: aux_d, psi_d, hpsi_d, spsi_d 
   attributes(device) :: hh_d, ss_d, vv_d, en_d
 #endif
-  
-!civn 2fix
-  psi_d = psi
-  hpsi_d = hpsi
-  spsi_d = spsi
-!  
   !
-  IF ( overlap .AND..NOT.present(spsi) ) call errore( 'rotHSw','spsi array needed with overlap=.TRUE.',1)
+  IF ( overlap .AND..NOT.present(spsi_d) ) call errore( 'rotHSw','spsi_d array needed with overlap=.TRUE.',1)
   !
   call start_clock('rotHSw'); !write(*,*) 'start rotHSw' ; FLUSH(6)
   !
@@ -217,10 +208,10 @@ SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi, hpsi, overlap
      END DO 
 !     call start_clock('rotHSw:ev:b5'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:ev:b5')
      call start_clock('rotHSw:ev:s7')
-     CALL mp_allgather(spsi(:,1:nbnd), column_type, recv_counts, displs, inter_bgrp_comm)
+     CALL mp_allgather(spsi_d(:,1:nbnd), column_type, recv_counts, displs, inter_bgrp_comm)
      call stop_clock('rotHSw:ev:s7')
 
-  ELSE IF (present(spsi)) THEN
+  ELSE IF (present(spsi_d)) THEN
 
 !$cuf kernel do(2)
      DO ii = 1, npwx*npol
@@ -307,11 +298,7 @@ SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi, hpsi, overlap
     DEALLOCATE( aux_d )
     call stop_clock('rotHSw:move'); !write(*,*) 'stop rotHSw:move' ; FLUSH(6)
   end if
-!civn 2fix
-    psi = psi_d
-    hpsi = hpsi_d
-    spsi = spsi_d
-!
+  !
   RETURN
   !
 END SUBROUTINE rotate_HSpsi_k_gpu

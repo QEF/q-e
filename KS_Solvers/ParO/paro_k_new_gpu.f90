@@ -129,25 +129,25 @@ SUBROUTINE paro_k_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   nhpsi = 0 ; IF (my_bgrp_id==0) nhpsi = nbnd
   CALL stop_clock( 'paro:init' ); 
 
-!civn 2fix
-  psi = psi_d
-  hpsi = hpsi_d
-  spsi = spsi_d
-!
 #if defined(__MPI)
   IF ( nproc_ortho == 1 ) THEN
 #endif
-     CALL rotate_HSpsi_k_gpu (  npwx, npw, nbnd, nbnd, npol, psi, hpsi, overlap, spsi, eig )
+     CALL rotate_HSpsi_k_gpu (  npwx, npw, nbnd, nbnd, npol, psi_d, hpsi_d, overlap, spsi_d, eig )
 #if defined(__MPI)
   ELSE
+!civn 2fix
+     psi = psi_d
+     hpsi = hpsi_d
+     spsi = spsi_d
+!
      CALL protate_HSpsi_k(  npwx, npw, nbnd, nbnd, npol, psi, hpsi, overlap, spsi, eig )
-  ENDIF
-#endif
 !civn 2fix
      psi_d = psi
      hpsi_d = hpsi
      spsi_d = spsi
 !
+  ENDIF
+#endif
   !write (6,'(10f10.4)') psi(1:5,1:3)
 
   !write (6,*) eig(1:nbnd)
@@ -252,27 +252,25 @@ SUBROUTINE paro_k_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
      CALL mp_allgather(spsi_d(:,nbase+1:ndiag), column_type, recv_counts, displs, inter_bgrp_comm)
      CALL stop_clock( 'paro:mp_sum' ); 
 
-!civn 2fix
-     psi = psi_d
-     hpsi = hpsi_d
-     spsi = spsi_d
-!
 #if defined(__MPI)
      IF ( nproc_ortho == 1 ) THEN
 #endif
-        CALL rotate_HSpsi_k_gpu ( npwx, npw, ndiag, ndiag, npol, psi, hpsi, overlap, spsi, ew )
+        CALL rotate_HSpsi_k_gpu ( npwx, npw, ndiag, ndiag, npol, psi_d, hpsi_d, overlap, spsi_d, ew )
 #if defined(__MPI)
      ELSE
+!civn 2fix
+        psi = psi_d
+        hpsi = hpsi_d
+        spsi = spsi_d
+!
         CALL protate_HSpsi_k( npwx, npw, ndiag, ndiag, npol, psi, hpsi, overlap, spsi, ew )
+!civn 2fix
+        psi_d = psi
+        hpsi_d = hpsi
+        spsi_d = spsi
+!
      ENDIF
 #endif
-
-!civn 2fix
-     psi_d = psi
-     hpsi_d = hpsi
-     spsi_d = spsi
-!
-
      !write (6,*) ' ew : ', ew(1:nbnd)
      ! only the first nbnd eigenvalues are relevant for convergence
      ! but only those that have actually been corrected should be trusted
@@ -295,7 +293,7 @@ SUBROUTINE paro_k_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
 !civn 2fix 
   evc = evc_d
 
-  DEALLOCATE ( ew, conv, psi, hpsi, spsi )
+  DEALLOCATE ( ew, conv )
 !civn 
   DEALLOCATE ( psi_d, hpsi_d, spsi_d )
 
