@@ -14,7 +14,7 @@ MODULE beef_interface
     !
     PRIVATE
     !
-#if defined(use_beef)
+#if !defined(__nobeef)
     !
     PUBLIC :: beefx, beeflocalcorr, beeflocalcorrspin, beefsetmode, &
         beefrandinit, beefrandinitdef, beefensemble, beef_set_type

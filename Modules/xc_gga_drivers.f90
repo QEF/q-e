@@ -1,3 +1,10 @@
+!
+! Copyright (C) 2019-2020 Quantum ESPRESSO Foundation
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 MODULE xc_gga
 !
 USE kinds,     ONLY: DP
@@ -417,7 +424,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   USE exch_gga
   USE corr_gga
   !
-#if defined(use_beef)
+#if !defined(__nobeef)
   USE beef_interface, ONLY: beefx, beeflocalcorr
 #endif
   !
@@ -659,7 +666,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v1x = (1.0_DP - exx_fraction) * v1x
            v2x = (1.0_DP - exx_fraction) * v2x
         ENDIF
-#ifdef use_beef
+#if !defined(__nobeef)
      CASE( 43 ) ! 'beefx'
         ! last parameter = 0 means do not add LDA (=Slater) exchange
         ! (espresso) will add it itself
@@ -736,7 +743,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v1c = 0.871_DP * v1c
            v2c = 0.871_DP * v2c
         ENDIF
-#ifdef use_beef
+#if !defined (__nobeef)
      CASE( 14 ) ! 'BEEF'
         ! last parameter 0 means: do not add lda contributions
         ! espresso will do that itself
@@ -773,7 +780,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !! Gradient corrections for exchange - Hartree a.u.
   !
   USE exch_gga
-#if defined(use_beef)
+#if !defined (__nobeef)
   USE beef_interface, ONLY: beefx
 #endif
   !
@@ -1142,7 +1149,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
            v2x = (1.0_DP - exx_fraction) * v2x
         ENDIF
         !
-#ifdef use_beef
+#if !defined (__nobeef)
      CASE( 43 ) ! 'beefx'
         IF (rho(1) > small .AND. SQRT (ABS (grho2(1)) ) > small) THEN
            call beefx(2.0_DP * rho(1), 4.0_DP * grho2(1), sx(1), v1x(1), v2x(1), 0)
@@ -1196,7 +1203,7 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
   !
   USE corr_gga
   !
-#if defined(use_beef)
+#if !defined(__nobeef)
   USE beef_interface, ONLY: beeflocalcorrspin
 #endif
   !
@@ -1272,7 +1279,7 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
        !
        CALL pbec_spin( rho, zeta, grho, 2, sc, v1c(1), v1c(2), v2c )
        !
-#ifdef use_beef
+#if !defined(__nobeef)
     CASE( 14 )
        !
        call beeflocalcorrspin(rho, zeta, grho, sc, v1c(1), v1c(2), v2c, 0)

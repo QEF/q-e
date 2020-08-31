@@ -40,7 +40,7 @@ MODULE funct
   USE xc_f03_lib_m
 #endif
   !
-#if defined(use_beef)
+#if !defined(__nobeef)
   USE beef_interface, ONLY: beef_set_type
 #endif
   !
@@ -371,10 +371,8 @@ MODULE funct
   REAL(DP):: finite_size_cell_volume = notset
   LOGICAL :: discard_input_dft = .FALSE.
   !
-#ifdef use_beef
   INTEGER  :: beeftype    = -1
   INTEGER  :: beefvdw = 0
-#endif
   !
   INTEGER, PARAMETER :: nxc=8, ncc=10, ngcx=46, ngcc=13, nmeta=6, ncnl=26
   CHARACTER(LEN=4) :: exc, corr, gradx, gradc, meta, nonlocc
@@ -559,7 +557,6 @@ CONTAINS
        dft_defined = set_dft_values(1,4,20,4,0,0)
     ! special case : case BEEF (default: BEEF-vdW-DF2)
     CASE('BEEF', 'BEEF-VDW')
-#ifdef use_beef
        IF (LEN_TRIM(dftout) .EQ. 4) then
           beeftype = 0
        ELSE
@@ -572,18 +569,19 @@ CONTAINS
                 & 'unknown BEEF type', 1)
           END SELECT
        ENDIF
+#if defined (__nobeef)
+       CALL errore('set_dft_from_name', &
+    &    'BEEF xc functional support not compiled in', 1)
+#else
        IF (.NOT. beef_set_type(beeftype, ionode)) &
        & call errore('set_dft_from_name', 'unknown BEEF type number', 1)
+#endif
        SELECT CASE(beeftype)
           CASE(0)
              ! turn on vdW-DF2 type interactions for BEEF-vdW
              beefvdw = 2
        END SELECT
        dft_defined = set_dft_values(1,4,43,14,beefvdw,0)
-#else
-       CALL errore('set_dft_from_name', &
-    &    'BEEF xc functional support not compiled in', 1)
-#endif
     ! Special case vdW-DF
     CASE( 'VDW-DF' )
        dft_defined = set_dft_values(1,4,4,0,1,0)

@@ -7468,7 +7468,7 @@ then
 
 _ACEOF
 if ac_fn_f77_try_link "$LINENO"; then :
-  try_dflags="$try_dflags -Duse_beef" ; usebeef=1
+  usebeef=1
 else
   usebeef=0
 fi
@@ -7488,13 +7488,13 @@ rm -f core conftest.err conftest.$ac_objext \
         else
             beef_libs="\$(TOPDIR)/LIBBEEF/libbeef.a"
             beef_libs_switch="internal"
-            try_dflags="$try_dflags -Duse_beef"
         fi
         echo "-lbeef"
         echo setting BEEF_LIBS... $beef_libs
 
     else
         echo no
+        try_dflags="$try_dflags -D__nobeef"
     fi
     LDFLAGS="$BEEF_LDFLAGS_SAVE"
 fi

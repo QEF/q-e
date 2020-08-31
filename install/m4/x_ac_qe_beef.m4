@@ -43,7 +43,7 @@ then
           PROGRAM main
           CALL beefx
           END
-                       ], [try_dflags="$try_dflags -Duse_beef" ; usebeef=1], usebeef=0)
+                       ], [usebeef=1], usebeef=0)
     else
         beefprefix=0
         usebeef=1
@@ -58,13 +58,13 @@ then
         else
             beef_libs="\$(TOPDIR)/LIBBEEF/libbeef.a"
             beef_libs_switch="internal"
-            try_dflags="$try_dflags -Duse_beef"
         fi
         echo "-lbeef"
         echo setting BEEF_LIBS... $beef_libs
         AC_SUBST(beef_libs)
     else
         echo no
+        try_dflags="$try_dflags -D__nobeef"
     fi
     LDFLAGS="$BEEF_LDFLAGS_SAVE"
 fi
