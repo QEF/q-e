@@ -5,10 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
 !--------------------------------------------------------
 MODULE  write_upf_module
    !-----------------------------------------------------
+#if defined (__use_fox)
    !! this module collects the interfaces for the subroutines 
    !! writing pseudopotential using XML. 
    !! write_upf_v2 (xf, upf, conf, u_input) writes using UPF v2.1 format 
@@ -58,5 +58,6 @@ CONTAINS
       END SELECT
    END SUBROUTINE write_upf
 
+#endif
 END MODULE write_upf_module
 
