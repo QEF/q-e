@@ -39,8 +39,8 @@
 ! The file is written mainly by Stefano de Gironcoli and Yan Pan.
 !
 !-------------------------------------------------------------------------------
-SUBROUTINE paro_k_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
-                   npwx, npw, nbnd, npol, evc, eig, btype, ethr, notconv, nhpsi )
+SUBROUTINE paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, overlap, &
+                   npwx, npw, nbnd, npol, evc_d, eig_d, btype, ethr, notconv, nhpsi )
   !-------------------------------------------------------------------------------
   !paro_flag = 1: modified parallel orbital-updating method
 
@@ -60,16 +60,17 @@ SUBROUTINE paro_k_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   ! I/O variables
   LOGICAL, INTENT(IN)        :: overlap
   INTEGER, INTENT(IN)        :: npw, npwx, nbnd, npol
-  COMPLEX(DP), INTENT(INOUT) :: evc(npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(INOUT) :: evc_d(npwx*npol,nbnd)
   REAL(DP), INTENT(IN)       :: ethr
-  REAL(DP), INTENT(INOUT)    :: eig(nbnd)
+  REAL(DP), INTENT(INOUT)    :: eig_d(nbnd)
+  REAL(DP)    :: eig(nbnd)
   INTEGER, INTENT(IN)        :: btype(nbnd)
   INTEGER, INTENT(OUT)       :: notconv, nhpsi
 !  INTEGER, INTENT(IN)        :: paro_flag
   
   ! local variables (used in the call to cegterg )
   !------------------------------------------------------------------------
-  EXTERNAL h_psi, s_psi, hs_psi, g_1psi
+  EXTERNAL h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu
   ! subroutine h_psi  (npwx,npw,nvec,evc,hpsi)  computes H*evc  using band parallelization
   ! subroutine s_psi  (npwx,npw,nvec,evc,spsi)  computes S*evc  using band parallelization
   ! subroutine hs_1psi(npwx,npw,evc,hpsi,spsi)  computes H*evc and S*evc for a single band
@@ -81,6 +82,7 @@ SUBROUTINE paro_k_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   INTEGER :: itry, paro_ntr, nconv, nextra, nactive, nbase, ntrust, ndiag, nvecx, nproc_ortho
   REAL(DP), ALLOCATABLE    :: ew(:)
   COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
+  COMPLEX(DP), ALLOCATABLE :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
   LOGICAL, ALLOCATABLE     :: conv(:)
 
   REAL(DP), PARAMETER      :: extra_factor = 0.5 ! workspace is at most this factor larger than nbnd
@@ -88,16 +90,13 @@ SUBROUTINE paro_k_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
 
   INTEGER :: ibnd, ibnd_start, ibnd_end, how_many, lbnd, kbnd, last_unconverged, &
              recv_counts(nbgrp), displs(nbgrp), column_type
-!civn 
-  ! device variables
+  !
+  ! .. device variables
+  !
   INTEGER :: ii, jj, kk
-  COMPLEX(DP) :: evc_d(npwx*npol,nbnd)
-  COMPLEX(DP), ALLOCATABLE :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
 #if defined (__CUDA)
-  attributes(device) :: evc_d, psi_d, hpsi_d, spsi_d
+  attributes(device) :: evc_d, psi_d, hpsi_d, spsi_d, eig_d 
 #endif  
-!civn 2fix
-  write(*,*) 'civn paro_k_new_gpu'
   !
   ! ... init local variables
   !
@@ -108,22 +107,21 @@ SUBROUTINE paro_k_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
   !
   CALL start_clock( 'paro_k' ); !write (6,*) ' enter paro diag'
 
-  CALL mp_type_create_column_section(evc(1,1), 0, npwx*npol, npwx*npol, column_type)
+  CALL mp_type_create_column_section(evc_d(1,1), 0, npwx*npol, npwx*npol, column_type)
 
-  ALLOCATE ( psi(npwx*npol,nvecx), hpsi(npwx*npol,nvecx), spsi(npwx*npol,nvecx), ew(nvecx), conv(nbnd) )
-!civn 
+  ALLOCATE ( ew(nvecx), conv(nbnd) )
   ALLOCATE ( psi_d(npwx*npol,nvecx), hpsi_d(npwx*npol,nvecx), spsi_d(npwx*npol,nvecx) )
 
   CALL start_clock( 'paro:init' ); 
   conv(:) =  .FALSE. ; nconv = COUNT ( conv(:) )
-!civn 2fix
-  evc_d = evc
 !$cuf kernel do(2) 
   DO ii = 1, npwx*npol
     DO jj = 1, nbnd
       psi_d(ii,jj) = evc_d(ii,jj)
     END DO 
   END DO
+  eig = eig_d 
+
   call h_psi_gpu  (npwx,npw,nbnd,psi_d,hpsi_d) ! computes H*psi
   call s_psi_gpu  (npwx,npw,nbnd,psi_d,spsi_d) ! computes S*psi
   nhpsi = 0 ; IF (my_bgrp_id==0) nhpsi = nbnd
@@ -136,6 +134,7 @@ SUBROUTINE paro_k_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
 #if defined(__MPI)
   ELSE
 !civn 2fix
+     ALLOCATE ( psi(npwx*npol,nvecx), hpsi(npwx*npol,nvecx), spsi(npwx*npol,nvecx) )
      psi = psi_d
      hpsi = hpsi_d
      spsi = spsi_d
@@ -145,6 +144,7 @@ SUBROUTINE paro_k_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
      psi_d = psi
      hpsi_d = hpsi
      spsi_d = spsi
+     DEALLOCATE ( psi, hpsi, spsi )
 !
   ENDIF
 #endif
@@ -220,18 +220,8 @@ SUBROUTINE paro_k_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
 !     write (6,*) ' check nactive = ', lbnd, nactive
      if (lbnd .ne. nactive+1 ) stop ' nactive check FAILED '
 
-!civn 2fix
-     psi = psi_d
-     hpsi = hpsi_d
-     spsi = spsi_d
-!
-     CALL bpcg_k_gpu(hs_psi, g_1psi, psi, spsi, npw, npwx, nbnd, npol, how_many, &
-                psi(:,nbase+1), hpsi(:,nbase+1), spsi(:,nbase+1), ethr, ew(1), nhpsi)
-
-!civn 2fix
-     psi_d = psi
-     hpsi_d = hpsi
-     spsi_d = spsi
+     CALL bpcg_k_gpu(hs_psi_gpu, g_1psi_gpu, psi_d, spsi_d, npw, npwx, nbnd, npol, how_many, &
+                psi_d(:,nbase+1), hpsi_d(:,nbase+1), spsi_d(:,nbase+1), ethr, ew(1), nhpsi)
 !
      CALL start_clock( 'paro:mp_bar' ); 
      CALL mp_barrier(inter_bgrp_comm)
@@ -259,6 +249,7 @@ SUBROUTINE paro_k_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
 #if defined(__MPI)
      ELSE
 !civn 2fix
+        ALLOCATE ( psi(npwx*npol,nvecx), hpsi(npwx*npol,nvecx), spsi(npwx*npol,nvecx) )
         psi = psi_d
         hpsi = hpsi_d
         spsi = spsi_d
@@ -268,6 +259,7 @@ SUBROUTINE paro_k_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
         psi_d = psi
         hpsi_d = hpsi
         spsi_d = spsi
+        DEALLOCATE ( psi, hpsi, spsi )
 !
      ENDIF
 #endif
@@ -290,11 +282,9 @@ SUBROUTINE paro_k_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
 
   CALL mp_sum(nhpsi,inter_bgrp_comm)
 
-!civn 2fix 
-  evc = evc_d
+  eig_d = eig 
 
   DEALLOCATE ( ew, conv )
-!civn 
   DEALLOCATE ( psi_d, hpsi_d, spsi_d )
 
   CALL mp_type_free( column_type )
