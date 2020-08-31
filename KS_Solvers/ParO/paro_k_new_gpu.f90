@@ -225,7 +225,7 @@ SUBROUTINE paro_k_new_gpu( h_psi, s_psi, hs_psi, g_1psi, overlap, &
      hpsi = hpsi_d
      spsi = spsi_d
 !
-     CALL bpcg_k(hs_psi, g_1psi, psi, spsi, npw, npwx, nbnd, npol, how_many, &
+     CALL bpcg_k_gpu(hs_psi, g_1psi, psi, spsi, npw, npwx, nbnd, npol, how_many, &
                 psi(:,nbase+1), hpsi(:,nbase+1), spsi(:,nbase+1), ethr, ew(1), nhpsi)
 
 !civn 2fix

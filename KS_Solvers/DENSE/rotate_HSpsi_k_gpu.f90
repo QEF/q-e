@@ -46,7 +46,7 @@ SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi_d, hpsi_d, ove
   !
   ! ... other device variables
   !
-  INTEGER :: ii, jj  ! these are for cuf kernel loops
+  INTEGER :: ii, jj  ! cuf kernel indeces 
   COMPLEX(DP), ALLOCATABLE :: hh_d(:,:), ss_d(:,:), vv_d(:,:)
   REAL(DP),    ALLOCATABLE :: en_d(:)
 #if defined (__CUDA)

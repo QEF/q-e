@@ -13,7 +13,8 @@ pcg_gamma.o \
 pcg_k.o \
 bpcg_gamma.o \
 bpcg_gamma_gpu.o \
-bpcg_k.o
+bpcg_k.o \
+bpcg_k_gpu.o
 
 all : libparo.a
 
