@@ -416,6 +416,10 @@ CONTAINS
        IF( upf%q_with_l ) THEN
           ALLOCATE( upf%qfuncl(upf%mesh,upf%nbeta*(upf%nbeta+1)/2,0:2*upf%lmax) )
           upf%qfuncl(:,:,:) = 0.0_dp
+          ! NOTE: it would be wiser to dimension qfuncl as (:,:,0:upf%lmax)
+          ! and store the q_l(r) with index l=L/2 (see loop_on_l below)
+          ! This would save some storage and avoid "holes" in the array
+          ! that may be a source of trouble if not initialized to zero 
        ELSE
           ALLOCATE ( upf%qfunc(upf%mesh,upf%nbeta*(upf%nbeta+1)/2) )
           upf%qfunc (:,:) = 0.0_dp
