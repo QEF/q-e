@@ -415,8 +415,10 @@ CONTAINS
        !
        IF( upf%q_with_l ) THEN
           ALLOCATE( upf%qfuncl(upf%mesh,upf%nbeta*(upf%nbeta+1)/2,0:2*upf%lmax) )
+          upf%qfuncl(:,:,:) = 0.0_dp
        ELSE
           ALLOCATE ( upf%qfunc(upf%mesh,upf%nbeta*(upf%nbeta+1)/2) )
+          upf%qfunc (:,:) = 0.0_dp
        END IF
        ALLOCATE ( aux(upf%mesh) )
        loop_on_nb: DO nb = 1,upf%nbeta
