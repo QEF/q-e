@@ -55,6 +55,7 @@ CONTAINS
        end if
     end if
     if ( ierr /= 0 .and. ierr /= -2 ) then
+       call xml_closefile( )
        ierr = -81
        return
     end if
