@@ -189,7 +189,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
         !
      ELSE
         !
-        OPEN ( UNIT = iunps, FILE = TRIM(file_pseudo), STATUS = 'old', FORM = 'formatted' ) 
+        OPEN ( UNIT = iunps, FILE = file_pseudo, STATUS = 'old', FORM = 'formatted' )
         !
         !     The type of the pseudopotential is determined by the file name:
         !    *.xml or *.XML  UPF format with schema              pp_format=0
