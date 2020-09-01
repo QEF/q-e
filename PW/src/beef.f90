@@ -33,11 +33,6 @@ MODULE beef
 SUBROUTINE beef_energies( )
 !-------------------------------------------------------------------------
 
-#if defined(__NOBEEF)
-  CALL errore('beef_energies', &
-    &    'BEEF xc functional support not compiled in', 1)
-#else
-
   USE io_global,         ONLY  : stdout, ionode
   USE funct,             ONLY  : dft_is_meta
   USE control_flags,     ONLY  : io_level
@@ -103,7 +98,6 @@ SUBROUTINE beef_energies( )
   if (.NOT. ionode) RETURN
 
   if ( ionode ) call beef_print( )
-#endif
 
 END SUBROUTINE beef_energies
 

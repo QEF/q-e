@@ -781,7 +781,7 @@ with_scalapack
 with_elpa_include
 with_elpa_lib
 with_elpa_version
-enable_libbeef
+with_libbeef
 with_libbeef_prefix
 with_hdf5
 with_hdf5_libs
@@ -1433,8 +1433,6 @@ Optional Features:
   --enable-debug          compile Fortran with debug flags (default: no)
   --enable-pedantic       compile Fortran with pedantic flags (default: no)
   --enable-shared         use shared libraries if available (default: yes)
-  --enable-libbeef        link against library for BEEF xc support (default:
-                          yes - if found)
   --enable-signals        enable signal trapping (default: no)
 
 Optional Packages:
@@ -1459,6 +1457,8 @@ Optional Packages:
                           (default: no)
   --with-elpa-version     Specify ELPA version, only year (2015 - 2019,
                           default: 2016)
+  --with-libbeef          (yes|no) link against library for BEEF xc support
+                          (default: yes)
   --with-libbeef-prefix   path to directory containing libbeef.a (default:
                           none)
   --with-hdf5             (no|yes|<path>) Use HDF5, if yes configure assumes
@@ -7424,15 +7424,16 @@ $as_echo_n "checking BEEF... " >&6; }
 
 beef_libs=$BEEF_LIBS
 
-# Check whether --enable-libbeef was given.
-if test "${enable_libbeef+set}" = set; then :
-  enableval=$enable_libbeef; if   test "$withval" = "yes" ; then
-      beef_enabled=1
+
+# Check whether --with-libbeef was given.
+if test "${with_libbeef+set}" = set; then :
+  withval=$with_libbeef; if   test "$withval" = "no" ; then
+      with_beef=0
    else
-      beef_enabled=0
+      with_beef=1
    fi
 else
-  beef_enabled=1
+  with_beef=1
 fi
 
 
@@ -7446,7 +7447,7 @@ else
 fi
 
 
-if test "$beef_enabled" -ne 0
+if test "$with_beef" -ne 0
 then
     BEEF_LDFLAGS_SAVE="$LDFLAGS"
     LDFLAGS="$beef_libs $LDFLAGS"
@@ -7497,6 +7498,9 @@ rm -f core conftest.err conftest.$ac_objext \
         try_dflags="$try_dflags -D__NOBEEF"
     fi
     LDFLAGS="$BEEF_LDFLAGS_SAVE"
+else
+    echo no
+    try_dflags="$try_dflags -D__NOBEEF"
 fi
 
 

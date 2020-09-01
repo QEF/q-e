@@ -424,9 +424,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   USE exch_gga
   USE corr_gga
   !
-#if !defined(__NOBEEF)
   USE beef_interface, ONLY: beefx, beeflocalcorr
-#endif
   !
   IMPLICIT NONE
   !
@@ -666,12 +664,10 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v1x = (1.0_DP - exx_fraction) * v1x
            v2x = (1.0_DP - exx_fraction) * v2x
         ENDIF
-#if !defined(__NOBEEF)
      CASE( 43 ) ! 'beefx'
         ! last parameter = 0 means do not add LDA (=Slater) exchange
         ! (espresso) will add it itself
         CALL beefx(rho, grho, sx, v1x, v2x, 0)
-#endif
         !
      CASE( 44 ) ! 'RPBE'
         !
@@ -743,12 +739,10 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v1c = 0.871_DP * v1c
            v2c = 0.871_DP * v2c
         ENDIF
-#if !defined (__NOBEEF)
      CASE( 14 ) ! 'BEEF'
         ! last parameter 0 means: do not add lda contributions
         ! espresso will do that itself
         call beeflocalcorr(rho, grho, sc, v1c, v2c, 0)
-#endif
         !
      CASE DEFAULT
         !
@@ -780,9 +774,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !! Gradient corrections for exchange - Hartree a.u.
   !
   USE exch_gga
-#if !defined (__NOBEEF)
   USE beef_interface, ONLY: beefx
-#endif
   !
   IMPLICIT NONE
   !
@@ -1149,7 +1141,6 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
            v2x = (1.0_DP - exx_fraction) * v2x
         ENDIF
         !
-#if !defined (__NOBEEF)
      CASE( 43 ) ! 'beefx'
         IF (rho(1) > small .AND. SQRT (ABS (grho2(1)) ) > small) THEN
            call beefx(2.0_DP * rho(1), 4.0_DP * grho2(1), sx(1), v1x(1), v2x(1), 0)
@@ -1168,7 +1159,6 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         ENDIF
         sx_tot(ir) = 0.5_DP * (sx(1) + sx(2))
         v2x  = 2.0_DP * v2x
-#endif
      !
      ! case igcx == 5 (HCTH) and 6 (OPTX) not implemented
      ! case igcx == 7 (meta-GGA) must be treated in a separate call to another
@@ -1203,9 +1193,7 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
   !
   USE corr_gga
   !
-#if !defined(__NOBEEF)
   USE beef_interface, ONLY: beeflocalcorrspin
-#endif
   !
   IMPLICIT NONE
   !
@@ -1279,11 +1267,9 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
        !
        CALL pbec_spin( rho, zeta, grho, 2, sc, v1c(1), v1c(2), v2c )
        !
-#if !defined(__NOBEEF)
     CASE( 14 )
        !
        call beeflocalcorrspin(rho, zeta, grho, sc, v1c(1), v1c(2), v2c, 0)
-#endif
     CASE DEFAULT
        !
        sc = 0.0_DP

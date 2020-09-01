@@ -8,15 +8,15 @@ AC_MSG_CHECKING([BEEF])
 
 beef_libs=$BEEF_LIBS
 
-AC_ARG_ENABLE(libbeef,
-   [AS_HELP_STRING([--enable-libbeef],
-       [link against library for BEEF xc support (default: yes - if found)])],
-   [if   test "$withval" = "yes" ; then
-      beef_enabled=1
+AC_ARG_WITH(libbeef,
+   [AS_HELP_STRING([--with-libbeef],
+       [(yes|no) link against library for BEEF xc support (default: yes)])],
+   [if   test "$withval" = "no" ; then
+      with_beef=0
    else
-      beef_enabled=0
+      with_beef=1
    fi],
-   [beef_enabled=1])
+   [with_beef=1])
 
 AC_ARG_WITH(libbeef-prefix,
    [AS_HELP_STRING([--with-libbeef-prefix],
@@ -25,7 +25,7 @@ AC_ARG_WITH(libbeef-prefix,
    ],
    [libbeef_prefix=""])
 
-if test "$beef_enabled" -ne 0
+if test "$with_beef" -ne 0
 then
     BEEF_LDFLAGS_SAVE="$LDFLAGS"
     LDFLAGS="$beef_libs $LDFLAGS"
@@ -67,6 +67,9 @@ then
         try_dflags="$try_dflags -D__NOBEEF"
     fi
     LDFLAGS="$BEEF_LDFLAGS_SAVE"
+else
+    echo no
+    try_dflags="$try_dflags -D__NOBEEF"
 fi
 
 AC_SUBST(beef_libs_switch)

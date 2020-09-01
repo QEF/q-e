@@ -40,9 +40,7 @@ MODULE funct
   USE xc_f03_lib_m
 #endif
   !
-#if !defined(__NOBEEF)
   USE beef_interface, ONLY: beef_set_type
-#endif
   !
   IMPLICIT NONE
   !
@@ -569,13 +567,8 @@ CONTAINS
                 & 'unknown BEEF type', 1)
           END SELECT
        ENDIF
-#if defined (__NOBEEF)
-       CALL errore('set_dft_from_name', &
-    &    'BEEF xc functional support not compiled in', 1)
-#else
        IF (.NOT. beef_set_type(beeftype, ionode)) &
        & call errore('set_dft_from_name', 'unknown BEEF type number', 1)
-#endif
        SELECT CASE(beeftype)
           CASE(0)
              ! turn on vdW-DF2 type interactions for BEEF-vdW
