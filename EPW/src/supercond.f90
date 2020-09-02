@@ -25,23 +25,26 @@
     ! equations
     !
     USE kinds,           ONLY : DP
-    USE io_global,       ONLY : stdout
+    USE mp_global,       ONLY : world_comm
+    USE io_global,       ONLY : stdout, ionode_id
+    USE mp_world,        ONLY : mpime
+    USE mp,              ONLY : mp_barrier, mp_bcast
     USE epwcom,          ONLY : eliashberg, nkf1, nkf2, nkf3, nsiter, &
                                 nqf1, nqf2, nqf3, nswi, muc, lreal, lpade, &
                                 liso, limag, laniso, lacon, kerwrite, kerread, &
-                                imag_read, fila2f, wsfc, wscut, rand_q, rand_k
+                                imag_read, fila2f, wsfc, wscut, rand_q, rand_k, &
+                                ep_coupling
+    USE cell_base,       ONLY : at, bg
     USE constants_epw,   ONLY : ryd2ev
-    USE elph2,           ONLY : gtemp
+    USE elph2,           ONLY : gtemp, elph
+    USE io_var,          ONLY : crystal
     !
     IMPLICIT NONE
     !
-    INTEGER :: itemp
-    !! Counter on temperature values
     INTEGER :: ierr
     !! Error status
-    !
-    REAL(KIND = DP) :: dtemp
-    !! Step in temperature
+    INTEGER :: ios
+    !! Contains the state of the opened file
     !
     IF (eliashberg .AND. liso .AND. laniso) &
       CALL errore('eliashberg_init', 'liso or laniso needs to be true', 1)
@@ -92,6 +95,24 @@
     ! Ryd to eV
     gtemp(:) = gtemp * ryd2ev
     !
+    IF (.NOT. elph .AND. .NOT. ep_coupling) THEN
+      !
+      ! We need BZ info to write FS files
+      IF (mpime == ionode_id) THEN
+        !
+        OPEN(UNIT = crystal, FILE = 'crystal.fmt', STATUS = 'old', IOSTAT = ios)
+        IF (ios /= 0) CALL errore('eliashberg_init', 'error opening crystal.fmt', crystal)
+        READ(crystal, *) !nat
+        READ(crystal, *) !nmodes
+        READ(crystal, *) !nelec
+        READ(crystal, *) at 
+        READ(crystal, *) bg
+        ! no need further
+        CLOSE(crystal)
+      ENDIF ! mpime == ionode_id
+      CALL mp_bcast(at, ionode_id, world_comm)
+      CALL mp_bcast(bg, ionode_id, world_comm)
+    ENDIF ! .not. elph .and. .not. ep_coupling
     RETURN
     !
     !-----------------------------------------------------------------------
