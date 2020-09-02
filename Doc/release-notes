@@ -3,8 +3,12 @@ New in dev version:
 Fixed in dev version:
   * angle1, angle2, starting_magnetization incorrectly written to xml file
   * Bug in Hubbard forces and stress for bands parallelization (when nproc_pool>nbnd) 
+  * Crash in the calculation of Z* with ultrasoft PP when the number of bands
+    is larger than the number of occupied bands (thanks to Sasha Fonari)
 
 Incompatible changes in dev version:
+  * FoX  no longer used to read and write pseudopotential files
+  * iotk no longer used to read and write any file
 
 New in v.6.6:
   * vdW-DF3-opt1, vdW-DF3-opt2, and vdW-DF-C6 van der Waals functionals

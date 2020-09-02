@@ -10,15 +10,16 @@
 ! This module contains fortran wrapper to BEEF library functions.
 !
 MODULE beef_interface
+    !
     IMPLICIT NONE
     !
     PRIVATE
     !
-#if defined(use_beef)
     !
     PUBLIC :: beefx, beeflocalcorr, beeflocalcorrspin, beefsetmode, &
         beefrandinit, beefrandinitdef, beefensemble, beef_set_type
     !
+#if !defined(__NOBEEF)
     INTERFACE
     !
     SUBROUTINE beefx( r, g, e, dr, dg, addlda ) BIND(C, NAME="beefx_")
@@ -91,6 +92,48 @@ MODULE beef_interface
         !
     END FUNCTION beef_set_type
     !
+#else
+    CONTAINS
+    ! empty routines to prevent compilation errors
+    SUBROUTINE beefx( r, g, e, dr, dg, addlda )
+      USE kinds, ONLY : dp
+      REAL (dp) :: r, g, e, dr, dg
+      INTEGER :: addlda
+    END SUBROUTINE beefx
+    !
+    SUBROUTINE beeflocalcorr( r, g, e, dr, dg, addlda)
+      USE kinds, ONLY : dp
+      REAL (dp), INTENT(INOUT) :: r, g, e, dr, dg
+      INTEGER :: addlda
+    END SUBROUTINE beeflocalcorr
+    !
+    SUBROUTINE beeflocalcorrspin(r, z, g, e, drup, drdown, dg, addlda)
+      USE kinds, ONLY : dp
+      REAL (dp), INTENT(INOUT) :: r, z, g, e, drup, drdown, dg
+      INTEGER :: addlda
+    END SUBROUTINE beeflocalcorrspin
+    !
+    SUBROUTINE beefsetmode(mode)
+      INTEGER :: mode
+    END SUBROUTINE beefsetmode
+    !
+    SUBROUTINE beefrandinit(seed)
+      INTEGER :: seed
+    END SUBROUTINE beefrandinit
+    !
+    SUBROUTINE beefrandinitdef()
+    END SUBROUTINE beefrandinitdef
+    !
+    SUBROUTINE beefensemble(beefxc, ensemble)
+      USE kinds, ONLY : dp
+      REAL (dp) :: beefxc(:), ensemble(:)
+    END SUBROUTINE beefensemble
+    !
+    LOGICAL FUNCTION beef_set_type(tbeef, ionode)
+      INTEGER :: tbeef
+      LOGICAL :: ionode
+      CALL errore('beef_set_type','no beef! support for BEEF not compiled',1)
+    END FUNCTION beef_set_type
 #endif
     !
 END MODULE beef_interface

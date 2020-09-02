@@ -18,7 +18,10 @@
       !
       IMPLICIT NONE
       PRIVATE
-      PUBLIC :: read_ps, read_upf_new
+      PUBLIC :: read_ps
+#if defined (__use_fox)
+      PUBLIC :: read_upf_new
+#endif
       !
     CONTAINS
       !
@@ -27,9 +30,12 @@ SUBROUTINE read_ps ( filein, upf_in )
   ! stripped-down version of readpp in Modules/read_pseudo.f90:
   ! for serial execution only
   !
-  !USE read_upf_new_module,ONLY: read_upf_new
   USE read_upf_v1_module, ONLY: read_upf_v1
+#if defined (__use_fox)
   USE emend_upf_module, ONLY: make_emended_upf_copy
+#else
+  USE read_upf_new_module,ONLY: read_upf_new
+#endif
   USE pseudo_types,     ONLY: pseudo_upf
   USE upf_auxtools,     ONLY: upf_get_pp_format 
   USE upf_to_internal,  ONLY: set_upf_q
@@ -49,6 +55,7 @@ SUBROUTINE read_ps ( filein, upf_in )
   isupf = 0
   CALL read_upf_new( filein, upf_in, isupf )
   IF (isupf ==-81 ) THEN
+#if defined (__use_fox)
      is_xml = make_emended_upf_copy( filein, 'tmp.upf' )
      IF (is_xml) THEN
         CALL  read_upf_new( 'tmp.upf', upf_in, isupf )
@@ -60,6 +67,11 @@ SUBROUTINE read_ps ( filein, upf_in )
         !! try to read UPF v.1 file
         IF ( isupf == 0 ) isupf = -1
      END IF
+#else
+     CALL  read_upf_v1 ( filein, upf_in, isupf )
+     !! try to read UPF v.1 file
+     IF ( isupf == 0 ) isupf = -1
+#endif
      !
   END IF
   !
@@ -137,7 +149,7 @@ SUBROUTINE read_ps ( filein, upf_in )
   !
   RETURN
 END SUBROUTINE read_ps
-
+#if defined (__use_fox)
 !------------------------------------------------+
 SUBROUTINE read_upf_new(filename, upf, ierr)         !
    !---------------------------------------------+
@@ -196,7 +208,7 @@ SUBROUTINE read_upf_new(filename, upf, ierr)         !
    IF ( ierr > 0 ) CALL upf_error( 'read_upf_new', 'File is incomplete or wrong: '//TRIM(filename), ierr)
    !
  END SUBROUTINE read_upf_new
- 
+#endif
 !=----------------------------------------------------------------------------=!
       END MODULE upf_module
 !=----------------------------------------------------------------------------=!
