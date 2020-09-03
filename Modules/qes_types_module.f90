@@ -968,6 +968,7 @@ MODULE qes_types_module
     LOGICAL :: spinorbit
     REAL(DP) :: total
     REAL(DP) :: absolute
+    LOGICAL  :: do_magnetization_ispresent = .FALSE.
     LOGICAL :: do_magnetization
     !
   END TYPE magnetization_type
