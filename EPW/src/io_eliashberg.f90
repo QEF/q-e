@@ -435,147 +435,6 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE eliashberg_write_cont_raxis(itemp, cname)
-    !-----------------------------------------------------------------------
-    !
-    !
-    ! This routine writes to files results from the solutions of the Eliashberg
-    ! equations on the real-axis
-    !
-    USE kinds,         ONLY : DP
-    USE io_var,        ONLY : iufilgap
-    USE io_files,      ONLY : prefix
-    USE control_flags, ONLY : iverbosity
-    USE epwcom,        ONLY : nqstep, fsthick, laniso, liso
-    USE elph2,         ONLY : gtemp
-    USE eliashbergcom, ONLY : nsw, ws, gap, agap, delta, znorm, adelta, aznorm, &
-                              nkfs, nbndfs, ef0, ekfs
-    USE constants_epw, ONLY : kelvin2eV
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(in) :: itemp
-    !! Counter for temperature
-    CHARACTER(len=256), INTENT(in) :: cname
-    !! character in output file name
-    !
-    ! Local variables
-    CHARACTER(LEN = 256) :: name1
-    !! output file name
-    !
-    LOGICAL :: lgap
-    !! True if gap found
-    !
-    INTEGER :: iw
-    !! Counter on frequency real-axis
-    INTEGER :: ik
-    !! Counter on k-points
-    INTEGER :: ibnd
-    !! Counter on bands
-    INTEGER :: ios
-    !! IO error message
-    !
-    REAL(KIND = DP) :: temp
-    !! Temperature in K
-    REAL(KIND = DP) :: var1, var2, var3, var4
-    !! Temporary working variables
-    !
-    temp = gtemp(itemp) / kelvin2eV
-    !
-    IF (laniso) THEN
-      IF (iverbosity == 2) THEN
-        IF (temp < 10.d0) THEN
-          WRITE(name1, 101) TRIM(prefix), '.', cname, '_aniso_00', temp
-        ELSEIF (temp >= 10.d0 .AND. temp < 100.d0) THEN
-          WRITE(name1, 102) TRIM(prefix), '.', cname, '_aniso_0', temp
-        ELSEIF (temp >= 100.d0) THEN
-          WRITE(name1, 103) TRIM(prefix), '.', cname, '_aniso_', temp
-        ENDIF
-      OPEN(UNIT = iufilgap, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
-      IF (ios /= 0) CALL errore('eliashberg_write_cont_raxis', 'error opening file ' // name1, iufilgap)
-        WRITE(iufilgap, '(6a20)') '#        w [eV]', 'Enk-Ef [eV]', 'Re[znorm(w)]', 'Im[znorm(w)]',&
-                                 'Re[delta(w)] [eV]', 'Im[delta(w)] [eV]'
-      ENDIF
-      !
-      DO ik = 1, nkfs
-        DO ibnd = 1, nbndfs
-          IF (ABS(ekfs(ibnd,ik) - ef0) < fsthick) THEN
-            lgap = .TRUE.
-            ! DO iw = 1, nsw
-            DO iw = 1, nsw - 1   ! FG: this change is to prevent segfault in ws(iw+1) and adelta(*,*,iw+1)
-              var1 = REAL(adelta(ibnd, ik, iw))
-              var2 = REAL(adelta(ibnd, ik, iw + 1))
-              var3 = var1 - ws(iw)
-              var4 = var2 - ws(iw + 1)
-              IF (lgap .AND. iw < nqstep .AND. var1 > 0.d0 .AND. var2 > 0.d0 .AND. var3 * var4 < 0.d0) THEN
-                agap(ibnd, ik, itemp) = (var3 * ws(iw + 1) - var4 * ws(iw)) / (var3 - var4)
-                lgap = .FALSE.
-              ENDIF
-              IF (iverbosity == 2) THEN
-                WRITE(iufilgap, '(6ES20.10)') ws(iw), ekfs(ibnd, ik) - ef0, &
-                      REAL(aznorm(ibnd, ik, iw)), AIMAG(aznorm(ibnd, ik, iw)), &
-                      REAL(adelta(ibnd, ik, iw)), AIMAG(adelta(ibnd, ik, iw))
-              ENDIF
-            ENDDO ! iw
-            IF (lgap) &
-              agap(ibnd,ik,itemp) = REAL(adelta(ibnd,ik,1))
-          ENDIF
-        ENDDO ! ibnd
-      ENDDO ! ik
-      IF (iverbosity == 2) &
-        CLOSE(iufilgap)
-      !
-      CALL gap_distribution_FS(itemp, cname)
-      !
-    ENDIF
-    !
-    ! isotropic case
-    ! SP: Only write isotropic for laniso if user really wants that
-    IF ((laniso .AND. iverbosity == 2) .OR. liso) THEN
-      IF (temp < 10.d0) THEN
-        WRITE(name1, 104) TRIM(prefix), '.', cname, '_iso_00', temp
-      ELSEIF (temp >= 10.d0 .AND. temp < 100.d0) THEN
-        WRITE(name1, 105) TRIM(prefix), '.', cname, '_iso_0', temp
-      ELSEIF (temp >= 100.d0) THEN
-        WRITE(name1, 106) TRIM(prefix), '.', cname, '_iso_', temp
-      ENDIF
-      OPEN(UNIT = iufilgap, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
-      IF (ios /= 0) CALL errore('eliashberg_write_cont_raxis', 'error opening file ' // name1, iufilgap)
-      !
-      WRITE(iufilgap,'(5a20)') 'w [eV]', 'Re[znorm(w)]', 'Im[znorm(w)]', 'Re[delta(w)] [eV]', 'Im[delta(w)] [eV]'
-      lgap = .TRUE.
-      ! DO iw = 1, nsw
-      DO iw = 1, nsw-1   ! this change is to prevent segfault in delta(iw+1) and ws(iw+1)
-        var1 = REAL(delta(iw))
-        var2 = REAL(delta(iw + 1))
-        var3 = var1 - ws(iw)
-        var4 = var2 - ws(iw + 1)
-        IF (lgap .AND. iw < nqstep .AND. var1 > 0.d0 .AND. var2 > 0.d0 .AND. var3 * var4 < 0.d0) THEN
-            gap(itemp) = (var3 * ws(iw + 1) - var4 * ws(iw)) / (var3 - var4)
-          lgap = .FALSE.
-        ENDIF
-        WRITE(iufilgap, '(5ES20.10)') ws(iw), REAL(znorm(iw)), AIMAG(znorm(iw)), &
-                                      REAL(delta(iw)), AIMAG(delta(iw))
-      ENDDO ! iw
-      CLOSE(iufilgap)
-      IF (lgap ) &
-        gap(itemp) = REAL(delta(1))
-    ENDIF
-    !
-    101 FORMAT(a, a1, a4, a9, f4.2)
-    102 FORMAT(a, a1, a4, a8, f5.2)
-    103 FORMAT(a, a1, a4, a7, f6.2)
-    104 FORMAT(a, a1, a4, a7, f4.2)
-    105 FORMAT(a, a1, a4, a6, f5.2)
-    106 FORMAT(a, a1, a4, a5, f6.2)
-    !
-    RETURN
-    !
-    !-----------------------------------------------------------------------
-    END SUBROUTINE eliashberg_write_cont_raxis
-    !-----------------------------------------------------------------------
-    !
-    !-----------------------------------------------------------------------
     SUBROUTINE read_a2f()
     !-----------------------------------------------------------------------
     !!
@@ -987,12 +846,20 @@
     !! Number of non-equivalent k points
     INTEGER :: ns
     !! Counter on rotation operations
+    INTEGER :: iqq
+    !! Q-point index from selecq.fmt window
+    INTEGER :: totq
+    !! Total number of q-points inside fsthick
+    INTEGER :: nqtot
+    !! Total number of q-points for verification
     INTEGER :: ios
     !! IO error message
     INTEGER :: ierr
     !! Error status
     INTEGER :: imelt
     !! Memory allocated
+    INTEGER, ALLOCATABLE :: selecq(:)
+    !! List of selected q-points
     INTEGER, ALLOCATABLE :: index_(:, :)
     !! Index of q-point on the full q-mesh for which k+sign*q is within the Fermi shell
     !
@@ -1000,15 +867,6 @@
     !! coordinates of k points
     REAL(KIND = DP) :: xq(3)
     !! coordinates of q points
-    !
-    INTEGER :: iqq
-    !! Q-point index from selecq.fmt window
-    INTEGER :: totq
-    !! Total number of q-points inside fsthick
-    INTEGER :: nqtot
-    !! Total number of q-point for verifications
-    INTEGER, ALLOCATABLE :: selecq(:)
-    !! List of selected q-points
     !
     ALLOCATE(memlt_pool(npool), STAT = ierr)
     IF (ierr /= 0) CALL errore('read_kqmap', 'Error allocating memlt_pool', 1)
@@ -1070,7 +928,6 @@
     nqfs(:) = 0
     index_(:, :) = 0
     !
-    ! find the index of k+sign*q on the fine k-mesh
     ! nkfs - total nr. of k-points within the Fermi shell (fine mesh)
     !      - these are irreducible k-points if mp_mesh_k=.TRUE.
     ! nqtotf - total nr of q-points on the fine mesh
@@ -1117,7 +974,7 @@
         !
         ! ixqfs - index q-point on the full q-mesh for which k+sign*q is within the Fermi shell
         !
-        ixqfs(ik,iq) = index_(ik,iq)
+        ixqfs(ik, iq) = index_(ik, iq)
       ENDDO
     ENDDO
     !
@@ -1519,7 +1376,6 @@
 #else
     filephmat = TRIM(dirname) // '/' // 'ephmat'
 #endif
-    !
     IF (iq == 1) THEN
       !OPEN(UNIT = iufileph, FILE = filephmat, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
       OPEN(UNIT = iufileph, FILE = filephmat, STATUS = 'unknown', FORM = 'unformatted', IOSTAT = ios)
@@ -2201,8 +2057,10 @@
     !
     OPEN(UNIT = iufilgap, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
     IF (ios /= 0) CALL errore('gap_distribution_FS', 'error opening file ' // name1, iufilgap)
+    WRITE(iufilgap, '(2a20)') '#     T [K]    ', '\rho(delta_nk) [meV]'    
     DO ibin = 1, nbin
-      WRITE(iufilgap,'(2ES20.10)') temp + delta_k_bin(ibin) / MAXVAL(delta_k_bin(:)), dbin * DBLE(ibin)
+      WRITE(iufilgap,'(2ES20.10)') temp + delta_k_bin(ibin) / MAXVAL(delta_k_bin(:)), & 
+                                   dbin * DBLE(ibin) * 1000.d0
     ENDDO
     CLOSE(iufilgap)
     !
@@ -2321,7 +2179,8 @@
         WRITE(iufilgapFS, '(i5, 3f12.6)') nkf2, (bg(i, 2) / DBLE(nkf2), i = 1, 3)
         WRITE(iufilgapFS, '(i5, 3f12.6)') nkf3, (bg(i, 3) / DBLE(nkf3), i = 1, 3)
         WRITE(iufilgapFS, '(i5, 4f12.6)') 1, 1.0d0, 0.0d0, 0.0d0, 0.0d0
-        WRITE(iufilgapFS, '(6f12.6)') (agap_tmp(ibnd, ixkff(ik)), ik = 1, nkf1 * nkf2 * nkf3)
+        ! agap_tmp is written to file in meV
+        WRITE(iufilgapFS, '(6f12.6)') (agap_tmp(ibnd, ixkff(ik)) * 1000.d0, ik = 1, nkf1 * nkf2 * nkf3)
         CLOSE(iufilgapFS)
       ENDDO
       !
@@ -2341,7 +2200,7 @@
     ENDIF
     OPEN(UNIT = iufilgapFS, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
     IF (ios /= 0) CALL errore('gap_FS', 'error opening file ' // name1, iufilgapFS)
-    WRITE(iufilgapFS, '(a78)') '#               k-point                  Band Enk-Ef [eV]        delta(0) [eV]'
+    WRITE(iufilgapFS, '(a78)') '#               k-point                  Band Enk-Ef [eV]        delta(0) [meV]'
     DO i = 1, nkf1
       DO j = 1, nkf2
         DO k = 1, nkf3
@@ -2356,7 +2215,7 @@
                  x2 = bg(2, 1) * (i - 1) /nkf1 + bg(2, 2) * (j - 1) / nkf2 + bg(2, 3) *(k - 1) / nkf3
                  x3 = bg(3, 1) * (i - 1) /nkf1 + bg(3, 2) * (j - 1) / nkf2 + bg(3, 3) *(k - 1) / nkf3
                  WRITE(iufilgapFS,'(3f12.6, i8, f12.6, f24.15)') x1, x2, x3, ibnd, &
-                       ekfs(ibnd, ixkff(ik)) - ef0, agap_tmp(ibnd, ixkff(ik))
+                       ekfs(ibnd, ixkff(ik)) - ef0, agap_tmp(ibnd, ixkff(ik)) * 1000.d0
               ENDIF
             ENDDO ! ibnd
           !ENDIF

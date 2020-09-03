@@ -32,7 +32,7 @@
                             eps_acustic, ephwrite, epbread, nsiter, nqstep,   &
                             nqsmear, nqf3, nqf2, nqf1, nkf3, nkf2, nkf1,      &
                             muc, mp_mesh_q, mp_mesh_k, max_memlt, lunif,      &
-                            lreal, lpolar, lpade, liso, limag, laniso,        &
+                            lreal, lpolar, lpade, liso, limag, laniso, npade, &
                             specfun_el, specfun_ph, lifc, asr_typ,            &
                             lscreen, scr_typ, fermi_diff, smear_rpa,          &
                             rand_q, rand_nq, rand_nk, rand_k, pwc, phonselfen,&
@@ -189,6 +189,7 @@
   CALL mp_bcast(broyden_ndim, meta_ionode_id, world_comm)
   CALL mp_bcast(nstemp      , meta_ionode_id, world_comm)
   CALL mp_bcast(nsiter      , meta_ionode_id, world_comm)
+  CALL mp_bcast(npade       , meta_ionode_id, world_comm)
   CALL mp_bcast(nw_specfun  , meta_ionode_id, world_comm)
   CALL mp_bcast(restart_step, meta_ionode_id, world_comm)
   CALL mp_bcast(scr_typ     , meta_ionode_id, world_comm)
