@@ -33,8 +33,10 @@ MODULE funct
   !                      dft_has_finite_size_correction
   !
   !
-  USE io_global,   ONLY: stdout, ionode
-  USE kinds,       ONLY: DP
+  USE io_global,     ONLY: stdout, ionode
+  USE kinds,         ONLY: DP
+  USE xc_interfaces, ONLY: xclib_get_IDs, xclib_get_exx, &
+                           xclib_get_gau_scr_param, xclib_get_finite_size_cell_vol
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
@@ -397,7 +399,7 @@ MODULE funct
   DATA nonlocc/ 'NONE', 'VDW1', 'VDW2', 'W31C', 'W32C', 'WC6', 20*'NONE', 'VV10' /
   !
 #if defined(__LIBXC)
-  INTEGER :: iexch_qe, icorr_qe, igcx_qe, igcc_qe, imeta_qe
+  !INTEGER :: iexch_qe, icorr_qe, igcx_qe, igcc_qe, imeta_qe
   INTEGER :: libxc_major=0, libxc_minor=0, libxc_micro=0
   PUBLIC :: libxc_major, libxc_minor, libxc_micro, get_libxc_version
   PUBLIC :: get_libxc_flags_exc
@@ -413,7 +415,8 @@ CONTAINS
     !! Translates a string containing the exchange-correlation name
     !! into internal indices iexch, icorr, igcx, igcc, inlc, imeta.
     !
-    USE xc_interfaces,  ONLY: get_xc_indexes, get_ldaxc_param
+    !USE xc_interfaces,  ONLY: xclib_get_IDs, xclib_get_exx, &
+    !                          xclib_get_gau_scr_param
 #if defined(__LIBXC)
     USE xc_f03_lib_m
 #endif
@@ -825,17 +828,17 @@ CONTAINS
     dft_defined = .TRUE.
     !
 #if defined(__LIBXC)
-    iexch_qe = iexch ; icorr_qe = icorr
-    igcx_qe  = igcx  ; igcc_qe  = igcc
-    imeta_qe = imeta
-    IF ( is_libxc(1) ) iexch_qe = 0
-    IF ( is_libxc(2) ) icorr_qe = 0
-    IF ( is_libxc(3) ) igcx_qe  = 0
-    IF ( is_libxc(4) ) igcc_qe  = 0
-    IF ( is_libxc(5) .OR. is_libxc(6) ) imeta_qe = 0
-    CALL get_xc_indexes( iexch_qe, icorr_qe, igcx_qe, igcc_qe, imeta_qe, is_libxc )          !-------correggi
+    !iexch_qe = iexch ; icorr_qe = icorr
+    !igcx_qe  = igcx  ; igcc_qe  = igcc
+    !imeta_qe = imeta
+    !IF ( is_libxc(1) ) iexch_qe = 0
+    !IF ( is_libxc(2) ) icorr_qe = 0
+    !IF ( is_libxc(3) ) igcx_qe  = 0
+    !IF ( is_libxc(4) ) igcc_qe  = 0
+    !IF ( is_libxc(5) .OR. is_libxc(6) ) imeta_qe = 0
+    CALL xclib_get_IDs( iexch, icorr, igcx, igcc, imeta, imetac, is_libxc )
 #else
-    CALL get_xc_indexes( iexch, icorr, igcx, igcc, imeta )
+    CALL xclib_get_IDs( iexch, icorr, igcx, igcc, imeta, 0 )
 #endif
     !
     !dft_longname = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
@@ -1141,11 +1144,13 @@ CONTAINS
     IF ( igcx ==12 ) THEN
        exx_fraction = 0.25_DP
        screening_parameter = 0.106_DP
+       CALL xclib_get_gau_scr_param( screening_parameter )
     ENDIF
     ! gau-pbe
     IF ( igcx ==20 ) THEN
        exx_fraction = 0.24_DP
        gau_parameter = 0.150_DP
+       CALL xclib_get_gau_scr_param( gau_parameter )
     ENDIF
     ! HF or OEP
     IF ( iexch==4 .OR. iexch==5 ) exx_fraction = 1.0_DP
@@ -1157,6 +1162,8 @@ CONTAINS
     ishybrid = ( exx_fraction /= 0.0_DP )
     !
     has_finite_size_correction = ( iexch==8 .OR. icorr==10)
+    !
+    CALL xclib_get_exx( exx_fraction )
     !
     RETURN
     !
@@ -1261,12 +1268,14 @@ CONTAINS
      IF (.NOT. ishybrid) &
         CALL errore( 'start_exx', 'dft is not hybrid, wrong call', 1 )
      exx_started = .TRUE.
+     CALL xclib_get_exx( exx_started )
   END SUBROUTINE start_exx
   !-----------------------------------------------------------------------
   SUBROUTINE stop_exx
      IF (.NOT. ishybrid) &
         CALL errore( 'stop_exx', 'dft is not hybrid, wrong call', 1 )
      exx_started = .FALSE.
+     CALL xclib_get_exx( exx_started )
   END SUBROUTINE stop_exx
   !-----------------------------------------------------------------------
   SUBROUTINE dft_force_hybrid( request )
@@ -1290,6 +1299,7 @@ CONTAINS
      IMPLICIT NONE
      REAL(DP) :: exxf_
      exx_fraction = exxf_
+     CALL xclib_get_exx( exx_fraction )
      WRITE( stdout,'(5x,a,f6.2)') 'EXX fraction changed: ', exx_fraction
   END SUBROUTINE set_exx_fraction
   !---------------------------------------------------------------------
@@ -1297,6 +1307,7 @@ CONTAINS
      IMPLICIT NONE
      REAL(DP):: scrparm_
      screening_parameter = scrparm_
+     CALL xclib_get_gau_scr_param( screening_parameter )
      WRITE( stdout,'(5x,a,f12.7)') 'EXX Screening parameter changed: ', &
           & screening_parameter
   END SUBROUTINE set_screening_parameter
@@ -1311,6 +1322,7 @@ CONTAINS
      IMPLICIT NONE
      REAL(DP):: gauparm_
      gau_parameter = gauparm_
+     CALL xclib_get_gau_scr_param( gau_parameter )
      WRITE( stdout,'(5x,a,f12.7)') 'EXX Gau parameter changed: ', &
           & gau_parameter
   END SUBROUTINE set_gau_parameter
@@ -1421,7 +1433,7 @@ CONTAINS
      LOGICAL :: dft_has_finite_size_correction
      dft_has_finite_size_correction = has_finite_size_correction
      RETURN
-  END FUNCTION  dft_has_finite_size_correction
+  END FUNCTION dft_has_finite_size_correction
   !-----------------------------------------------------------------------
   SUBROUTINE set_finite_size_volume( volume )
      REAL, INTENT(IN) :: volume
@@ -1432,6 +1444,7 @@ CONTAINS
          CALL errore( 'set_finite_size_volume', &
                       'volume is not positive, check omega and/or nk1,nk2,nk3', 1 )
      finite_size_cell_volume = volume
+     CALL xclib_get_finite_size_cell_vol( finite_size_cell_volume )
      finite_size_cell_volume_set = .TRUE.
   END SUBROUTINE set_finite_size_volume
   !-----------------------------------------------------------------------

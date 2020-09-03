@@ -8,12 +8,12 @@ MODULE dft_par_mod
     !
     LOGICAL  :: is_libxc_l(6) = .FALSE.
     !
-    LOGICAL  :: exx_started
+    LOGICAL  :: exx_started = .FALSE.
     REAL(DP) :: exx_fraction = 0.0_DP
     !
     ! LDA
     INTEGER  :: iexch, icorr
-    REAL(DP) :: finite_size_cell_volume
+    REAL(DP) :: finite_size_cell_volume = -1._DP
     REAL(DP) :: rho_threshold_lda = 1.E-10_DP
     !
     ! GGA

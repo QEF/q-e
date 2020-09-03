@@ -13,8 +13,9 @@ USE funct,     ONLY: get_igcx, get_igcc, is_libxc,    &
                      get_screening_parameter, get_gau_parameter
 !
 USE xc_interfaces,     ONLY: gcxc, gcx_spin, gcc_spin,       &
-                             gcc_spin_more, get_ggaxc_param, &
-                             get_gga_threshold
+                             gcc_spin_more, &
+                             get_gga_threshold, xclib_get_exx, &
+                             xclib_get_gau_scr_param
 !
 IMPLICIT NONE
 !
@@ -136,13 +137,15 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
      CALL get_gga_threshold( rho_threshold, grho_threshold )
      exx_started  = exx_is_active()
      exx_fraction = get_exx_fraction()
-     CALL get_ggaxc_param( 0.d0, exx_started, exx_fraction )
+     CALL xclib_get_exx( exx_started )
+     CALL xclib_get_exx( exx_fraction )
+     !CALL get_ggaxc_param( 0.d0, exx_started, exx_fraction )
      IF ( igcx==12 ) THEN
        screening_parameter = get_screening_parameter()
-       CALL get_ggaxc_param( screening_parameter )
+       CALL xclib_get_gau_scr_param( screening_parameter )
      ELSEIF (igcx==20 ) THEN
        gau_parameter = get_gau_parameter()
-       CALL get_ggaxc_param( gau_parameter )
+       CALL xclib_get_gau_scr_param( gau_parameter )
      ENDIF
   ENDIF
   !----

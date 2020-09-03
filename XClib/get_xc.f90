@@ -1,6 +1,6 @@
 !
 !
-SUBROUTINE get_xclib_IDs( iexch_, icorr_, igcx_, igcc_, imeta_, is_libxc_ )
+SUBROUTINE get_IDs( iexch_, icorr_, igcx_, igcc_, imeta_, imetac_, is_libxc_ )
    !
    USE dft_par_mod
    !
@@ -8,7 +8,7 @@ SUBROUTINE get_xclib_IDs( iexch_, icorr_, igcx_, igcc_, imeta_, is_libxc_ )
    !
    INTEGER, INTENT(IN) :: iexch_, icorr_
    INTEGER, INTENT(IN) :: igcx_, igcc_
-   INTEGER, INTENT(IN) :: imeta_
+   INTEGER, INTENT(IN) :: imeta_, imetac_
    LOGICAL, OPTIONAL   :: is_libxc_(6)
    !
    iexch = iexch_
@@ -23,64 +23,74 @@ SUBROUTINE get_xclib_IDs( iexch_, icorr_, igcx_, igcc_, imeta_, is_libxc_ )
    !
 END SUBROUTINE
 !
+!
+SUBROUTINE get_exx_started_l( exx_started_ )
+   !
+   USE kind_l,  ONLY: DP
+   USE dft_par_mod
+   !
+   IMPLICIT NONE
+   !
+   LOGICAL, INTENT(IN) :: exx_started_
+   !
+   exx_started = exx_started_
+   !
+   RETURN
+   !
+END SUBROUTINE
+!
+SUBROUTINE get_exx_fraction_l( exx_fraction_ )
+   !
+   USE kind_l,  ONLY: DP
+   USE dft_par_mod
+   !
+   IMPLICIT NONE
+   !
+   REAL(DP), INTENT(IN) :: exx_fraction_
+   !
+   exx_fraction = exx_fraction_
+   !
+   RETURN
+   !
+END SUBROUTINE
+!
 !  LDA 
 !
-SUBROUTINE get_ldaxcparlib( finite_size_cell_volume_, exx_started_, exx_fraction_ )
+SUBROUTINE get_finite_size_cell_l( finite_size_cell_volume_ )
    !
    USE kind_l, ONLY: DP
    USE dft_par_mod
    !
    IMPLICIT NONE
    !
-   REAL(DP), OPTIONAL, INTENT(IN) :: finite_size_cell_volume_
-   LOGICAL,  OPTIONAL, INTENT(IN) :: exx_started_
-   REAL(DP), OPTIONAL, INTENT(IN) :: exx_fraction_
+   REAL(DP), INTENT(IN) :: finite_size_cell_volume_
    !
-   finite_size_cell_volume = -1.d0
-   IF ( present(finite_size_cell_volume_) ) &
-      finite_size_cell_volume = finite_size_cell_volume_
-   exx_started = .FALSE.
-   IF ( present(exx_started_) ) &
-      exx_started = exx_started_
-   exx_fraction = 0.d0
-   IF ( present(exx_fraction_) ) &
-      exx_fraction = exx_fraction_
+   finite_size_cell_volume = finite_size_cell_volume_
    !
    RETURN
    !
 END SUBROUTINE
-
-
-SUBROUTINE get_ggaxcparlib( gau_scr_par_, exx_started_, exx_fraction_ )
+!
+!
+SUBROUTINE get_gau_scr_par_l( gau_scr_par_ )
    !
-   USE kind_l, ONLY: DP
+   USE kind_l,  ONLY: DP
    USE dft_par_mod
    !
    IMPLICIT NONE
    !
    REAL(DP), INTENT(IN) :: gau_scr_par_
-   LOGICAL, OPTIONAL, INTENT(IN) :: exx_started_
-   REAL(DP), OPTIONAL, INTENT(IN) :: exx_fraction_
    !
    IF ( igcx == 12 ) &
       screening_parameter = gau_scr_par_
    IF ( igcx == 20 ) &
       gau_parameter = gau_scr_par_
    !
-   !exx_started = .FALSE.
-   IF ( present(exx_started_) ) &
-      exx_started = exx_started_
-   !exx_fraction = 0.d0
-   IF ( present(exx_fraction_) ) THEN
-      exx_fraction = 0.d0
-      IF ( exx_started ) exx_fraction = exx_fraction_ 
-   ENDIF
-   !
    RETURN
    !
 END SUBROUTINE
-
-
+!
+!
 SUBROUTINE set_threshold( fkind, rho_threshold_, grho_threshold_, tau_threshold_ )
    !
    USE kind_l, ONLY: DP

@@ -7,10 +7,6 @@
 !
 !
 
-
-!-- da agiiungere routine chiamata in funct.f90 che prende in input is_libxc()
-!(-- per ora il set-dft-from-name lascialo in funct. Vedrò alla fine se portarlo dentro)
-
 !>>>> quando chiama xc setta la threshold quando non è il valore standard <<<<<<
 
 
@@ -69,19 +65,10 @@ SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
   REAL(DP), ALLOCATABLE :: arho(:), zeta(:)
   !
-  INTEGER  :: ir !, iexch, icorr
-  !REAL(DP) :: exx_fraction
-  !REAL(DP) :: finite_size_cell_volume
-  !LOGICAL  :: exx_started, is_there_finite_size_corr
-  !
-!   iexch = get_iexch()
-!   icorr = get_icorr()
+  INTEGER  :: ir
   !
   ex_out = 0.0_DP ; vx_out = 0.0_DP
   ec_out = 0.0_DP ; vc_out = 0.0_DP
-  !
-!   !set LDA threshold
-!   IF ( ANY(.NOT.is_libxc(1:2)) ) CALL get_lda_threshold( rho_threshold_lda )
   !
 #if defined(__LIBXC)
   !
@@ -116,7 +103,7 @@ SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
        !
     CASE DEFAULT
        !
-       !CALL errore( 'xc_LDA', 'Wrong number of spin dimensions', 1 )            !---------rimetti
+       !CALL errore( 'xc_LDA', 'Wrong number of spin dimensions', 1 )   !---------rimetti
        !
     END SELECT
     !
@@ -148,14 +135,8 @@ SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
      SELECT CASE( sr_d )
      CASE( 1 )
         !
-        !exx_started  = exx_is_active()                                        !-------------sistema
-        !exx_fraction = get_exx_fraction()
-        CALL get_ldaxcparlib( 0.d0, exx_started, exx_fraction )
+        !CALL get_ldaxcparlib( 0.d0, exx_started, exx_fraction )
         IF (iexch==8 .OR. icorr==10) THEN
-          !CALL get_finite_size_cell_volume( is_there_finite_size_corr, &           !--------------sistema
-          !                                  finite_size_cell_volume )
-          !CALL get_ldaxcparlib( finite_size_cell_volume )
-          !
           !IF (.NOT. is_there_finite_size_corr) !CALL errore( 'XC',&              !-----------RIMETTI messaggio errore
               !'finite size corrected exchange used w/o initialization', 1 )
         ENDIF
@@ -180,7 +161,7 @@ SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE DEFAULT
         !
-        ! CALL errore( 'xc_LDA', 'Wrong ns input', 2 )                           !--------------------rimetti
+        ! CALL errore( 'xc_LDA', 'Wrong ns input', 2 )       !--------------------rimetti
         !
      END SELECT
      !
@@ -216,13 +197,9 @@ SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   SELECT CASE( sr_d )
   CASE( 1 )
      !
-     !exx_started  = exx_is_active()                                                !------------sistema
-     !exx_fraction = get_exx_fraction()
-     CALL get_ldaxcparlib( 0.d0, exx_started, exx_fraction )
+     !CALL get_ldaxcparlib( 0.d0, exx_started, exx_fraction )
      IF (iexch==8 .OR. icorr==10) THEN
-       !CALL get_finite_size_cell_volume( is_there_finite_size_corr, &              !------------sistema
-       !                                  finite_size_cell_volume )
-       CALL get_ldaxcparlib( finite_size_cell_volume )
+       !CALL get_ldaxcparlib( finite_size_cell_volume )
        !
        !IF (.NOT. is_there_finite_size_corr) !CALL errore( 'XC',&
            !'finite size corrected exchange used w/o initialization', 1 )              !----------rimetti

@@ -19,55 +19,76 @@ MODULE xc_interfaces
   PUBLIC :: TAU_XC, TAU_XC_SPIN
   PUBLIC :: TPSSCXC
   ! 
-  PUBLIC :: GET_XC_INDEXES, GET_LDAXC_PARAM, GET_LDA_THRESHOLD, &
-            GET_GGAXC_PARAM, GET_GGA_THRESHOLD, GET_MGGA_THRESHOLD
+  PUBLIC :: XCLIB_GET_IDs, XCLIB_GET_EXX, XCLIB_GET_FINITE_SIZE_CELL_VOL, &
+            GET_LDA_THRESHOLD, XCLIB_GET_GAU_SCR_PARAM, GET_GGA_THRESHOLD, &
+            GET_MGGA_THRESHOLD
   !
   !
-  INTERFACE GET_XC_INDEXES
+  INTERFACE XCLIB_GET_IDs
      !
-     SUBROUTINE get_xclib_IDs( iexch_, icorr_, igcx_, igcc_, imeta_ )
+     SUBROUTINE get_IDs( iexch_, icorr_, igcx_, igcc_, imeta_, imetac_, is_libxc_ )
        !
        USE dft_par_mod
        IMPLICIT NONE
        INTEGER, INTENT(IN) :: iexch_, icorr_
        INTEGER, INTENT(IN) :: igcx_, igcc_
-       INTEGER, INTENT(IN) :: imeta_
+       INTEGER, INTENT(IN) :: imeta_, imetac_
+       LOGICAL, OPTIONAL, INTENT(IN) :: is_libxc_(6)
        !
      END SUBROUTINE
      !
   END INTERFACE
   !
-  INTERFACE GET_LDAXC_PARAM
+  !
+  INTERFACE XCLIB_GET_EXX
      !
-     SUBROUTINE get_ldaxcparlib( finite_size_cell_volume_, exx_started_, exx_fraction_ )
+     SUBROUTINE get_exx_started_l( exx_started_ )
        !
        USE kind_l,  ONLY: DP
        USE dft_par_mod
        IMPLICIT NONE
-       REAL(DP), OPTIONAL, INTENT(IN) :: finite_size_cell_volume_
-       LOGICAL , OPTIONAL, INTENT(IN) :: exx_started_
-       REAL(DP), OPTIONAL, INTENT(IN) :: exx_fraction_
+       LOGICAL, INTENT(IN) :: exx_started_
+       !
+     END SUBROUTINE
+     !
+     SUBROUTINE get_exx_fraction_l( exx_fraction_ )
+       !
+       USE kind_l,  ONLY: DP
+       USE dft_par_mod
+       IMPLICIT NONE
+       REAL(DP), INTENT(IN) :: exx_fraction_
+       !
+     END SUBROUTINE
+     !
+  END INTERFACE  
+  !
+  INTERFACE XCLIB_GET_FINITE_SIZE_CELL_VOL
+     !
+     SUBROUTINE get_finite_size_cell_l( finite_size_cell_volume_ )
+       !
+       USE kind_l,  ONLY: DP
+       USE dft_par_mod
+       IMPLICIT NONE
+       REAL(DP), INTENT(IN) :: finite_size_cell_volume_
        !
      END SUBROUTINE
      !
   END INTERFACE
   !
-  INTERFACE GET_GGAXC_PARAM
+  INTERFACE XCLIB_GET_GAU_SCR_PARAM
      !
-     SUBROUTINE get_ggaxcparlib( gau_scr_par_, exx_started_, exx_fraction_ )
+     SUBROUTINE get_gau_scr_par_l( gau_scr_par_ )
        !
        USE kind_l,  ONLY: DP
        USE dft_par_mod
        IMPLICIT NONE
        REAL(DP), INTENT(IN) :: gau_scr_par_
-       LOGICAL , OPTIONAL, INTENT(IN) :: exx_started_
-       REAL(DP), OPTIONAL, INTENT(IN) :: exx_fraction_
        !
      END SUBROUTINE
      !
   END INTERFACE
   !
-  INTERFACE GET_LDA_THRESHOLD
+  INTERFACE XCLIB_GET_LDA_THRESHOLD
      !
      SUBROUTINE get_lda_threshold( rho_threshold_ )
        !
@@ -80,7 +101,7 @@ MODULE xc_interfaces
      !
   END INTERFACE
   !
-  INTERFACE GET_GGA_THRESHOLD
+  INTERFACE XCLIB_GET_GGA_THRESHOLD
      !
      SUBROUTINE get_gga_threshold( rho_threshold_, grho_threshold_ )
        !
@@ -94,7 +115,7 @@ MODULE xc_interfaces
      !
   END INTERFACE
   !
-  INTERFACE GET_MGGA_THRESHOLD
+  INTERFACE XCLIB_GET_MGGA_THRESHOLD
      !
      SUBROUTINE get_mgga_threshold( rho_threshold_, grho2_threshold_, tau_threshold_ )
        !
