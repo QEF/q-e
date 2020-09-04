@@ -91,14 +91,14 @@ SUBROUTINE get_gau_scr_par_l( gau_scr_par_ )
 END SUBROUTINE
 !
 !
-SUBROUTINE set_threshold( fkind, rho_threshold_, grho_threshold_, tau_threshold_ )
+SUBROUTINE set_threshold_l( fkind, rho_threshold_, grho_threshold_, tau_threshold_ )
    !
    USE kind_l, ONLY: DP
    USE dft_par_mod
    !
    IMPLICIT NONE
    !
-   CHARACTER(len=4), INTENT(IN) :: fkind
+   CHARACTER(len=*), INTENT(IN) :: fkind
    REAL(DP), INTENT(IN) :: rho_threshold_
    REAL(DP), INTENT(IN), OPTIONAL :: grho_threshold_
    REAL(DP), INTENT(IN), OPTIONAL :: tau_threshold_
@@ -117,58 +117,5 @@ SUBROUTINE set_threshold( fkind, rho_threshold_, grho_threshold_, tau_threshold_
    !
   RETURN
    !
-END SUBROUTINE set_threshold
-
-
- SUBROUTINE get_lda_threshold( rho_threshold_ )                           !---------cancella
-    !
-    USE kind_l, ONLY: DP
-    USE dft_par_mod
-    !
-    IMPLICIT NONE
-    !
-    REAL(DP), INTENT(IN) :: rho_threshold_
-    !
-    rho_threshold_lda = rho_threshold_
-    !
-    RETURN
-    !
- END SUBROUTINE
-
-
-SUBROUTINE get_gga_threshold( rho_threshold_, grho_threshold_ )
-   !
-   USE kind_l, ONLY: DP
-   USE dft_par_mod
-   !
-   IMPLICIT NONE
-   !
-   REAL(DP), INTENT(IN) :: rho_threshold_
-   REAL(DP), INTENT(IN) :: grho_threshold_
-   !
-   rho_threshold_gga = rho_threshold_
-   rho_threshold_gga = grho_threshold_
-   !
-   RETURN
-   !
 END SUBROUTINE
 
-
-SUBROUTINE get_mgga_threshold( rho_threshold_, grho2_threshold_, tau_threshold_ )
-   !
-   USE kind_l, ONLY: DP
-   USE dft_par_mod
-   !
-   IMPLICIT NONE
-   !
-   REAL(DP), INTENT(IN) :: rho_threshold_
-   REAL(DP), INTENT(IN) :: grho2_threshold_
-   REAL(DP), INTENT(IN) :: tau_threshold_
-   !
-   rho_threshold_mgga = rho_threshold_
-   grho2_threshold_mgga = grho2_threshold_
-   tau_threshold_mgga  = tau_threshold_
-   !
-   RETURN
-   !
-END SUBROUTINE

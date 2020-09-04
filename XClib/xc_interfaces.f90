@@ -20,8 +20,7 @@ MODULE xc_interfaces
   PUBLIC :: TPSSCXC
   ! 
   PUBLIC :: XCLIB_GET_IDs, XCLIB_GET_EXX, XCLIB_GET_FINITE_SIZE_CELL_VOL, &
-            GET_LDA_THRESHOLD, XCLIB_GET_GAU_SCR_PARAM, GET_GGA_THRESHOLD, &
-            GET_MGGA_THRESHOLD
+            XCLIB_SET_THRESHOLD, XCLIB_GET_GAU_SCR_PARAM
   !
   !
   INTERFACE XCLIB_GET_IDs
@@ -80,7 +79,6 @@ MODULE xc_interfaces
      SUBROUTINE get_gau_scr_par_l( gau_scr_par_ )
        !
        USE kind_l,  ONLY: DP
-       USE dft_par_mod
        IMPLICIT NONE
        REAL(DP), INTENT(IN) :: gau_scr_par_
        !
@@ -88,43 +86,16 @@ MODULE xc_interfaces
      !
   END INTERFACE
   !
-  INTERFACE XCLIB_GET_LDA_THRESHOLD
+  INTERFACE XCLIB_SET_THRESHOLD
      !
-     SUBROUTINE get_lda_threshold( rho_threshold_ )
+     SUBROUTINE set_threshold_l( fkind, rho_threshold_, grho_threshold_, tau_threshold_ )
        !
        USE kind_l,  ONLY: DP
-       USE dft_par_mod
        IMPLICIT NONE
+       CHARACTER(len=*), INTENT(IN) :: fkind
        REAL(DP), INTENT(IN) :: rho_threshold_
-       !
-     END SUBROUTINE
-     !
-  END INTERFACE
-  !
-  INTERFACE XCLIB_GET_GGA_THRESHOLD
-     !
-     SUBROUTINE get_gga_threshold( rho_threshold_, grho_threshold_ )
-       !
-       USE kind_l,  ONLY: DP
-       USE dft_par_mod
-       IMPLICIT NONE
-       REAL(DP), INTENT(IN) :: rho_threshold_
-       REAL(DP), INTENT(IN) :: grho_threshold_
-       !
-     END SUBROUTINE
-     !
-  END INTERFACE
-  !
-  INTERFACE XCLIB_GET_MGGA_THRESHOLD
-     !
-     SUBROUTINE get_mgga_threshold( rho_threshold_, grho2_threshold_, tau_threshold_ )
-       !
-       USE kind_l,  ONLY: DP
-       USE dft_par_mod
-       IMPLICIT NONE
-       REAL(DP), INTENT(IN) :: rho_threshold_
-       REAL(DP), INTENT(IN) :: grho2_threshold_
-       REAL(DP), INTENT(IN) :: tau_threshold_
+       REAL(DP), INTENT(IN), OPTIONAL :: grho_threshold_
+       REAL(DP), INTENT(IN), OPTIONAL :: tau_threshold_
        !
      END SUBROUTINE
      !

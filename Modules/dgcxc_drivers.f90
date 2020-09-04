@@ -11,7 +11,8 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   USE constants,        ONLY: e2
   USE kinds,            ONLY: DP
   USE funct,            ONLY: get_igcx, get_igcc, is_libxc
-  USE xc_interfaces,    ONLY: gcxc, gcx_spin, dgcxc_unpol, dgcxc_spin
+  USE xc_interfaces,    ONLY: gcxc, gcx_spin, dgcxc_unpol, dgcxc_spin, &
+                              xclib_set_threshold
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
@@ -58,9 +59,8 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   !
   igcx = get_igcx()
   igcc = get_igcc()
-  
-  IF ( ANY(.NOT.is_libxc(3:4)) ) CALL get_gga_threshold( 1.E-10_DP, 1.E-10_DP )
-  
+  !
+  IF ( ANY(.NOT.is_libxc(3:4)) ) CALL xclib_set_threshold( 'gga', 1.E-10_DP, 1.E-10_DP )
   !
 #if defined(__LIBXC)
   !

@@ -57,7 +57,7 @@ PROGRAM do_ppacf
   USE funct,                ONLY : set_exx_fraction, set_auxiliary_flags, &
                                    enforce_input_dft, is_libxc
   USE xc_interfaces,        ONLY : xc, gcxc, gcx_spin, gcc_spin, slater, &
-                                   slater_spin, get_gga_threshold
+                                   slater_spin, xclib_set_threshold
   !USE xc_lda_lsda,          ONLY : xc
   USE wvfct,                ONLY : npw, npwx
   USE environment,          ONLY : environment_start, environment_end
@@ -190,7 +190,7 @@ PROGRAM do_ppacf
   !--------------- READ IN PREFIX --------------------------------!
   CALL environment_start( 'ppacf' )
   !
-  IF ( ANY(.NOT.is_libxc(3:4)) ) CALL get_gga_threshold( 1.E-10_DP, 1.E-10_DP )
+  IF ( ANY(.NOT.is_libxc(3:4)) ) CALL xclib_set_threshold( 'gga', 1.E-10_DP, 1.E-10_DP )
   !
   ! ... set default values for variables in namelist
   !

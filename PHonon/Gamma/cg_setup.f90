@@ -30,7 +30,7 @@ SUBROUTINE cg_setup
   USE gvecw,      ONLY: gcutw
   USE gc_lr, ONLY:  grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
   USE cgcom, ONLY: dmuxc, dvpsi, dpsi, auxr, aux2, aux3, lrwfc
-  USE xc_interfaces, ONLY: dmxc_lda, get_lda_threshold
+  USE xc_interfaces, ONLY: dmxc_lda, xclib_set_threshold
   !
   IMPLICIT NONE
   !
@@ -73,7 +73,7 @@ SUBROUTINE cg_setup
   !
   rhotot(:) = rho%of_r(:,1) + rho_core(:)
   !
-  CALL get_lda_threshold( 1.E-10_DP )
+  CALL xclib_set_threshold( 'lda', 1.E-10_DP )
   CALL dmxc_lda( dfftp%nnr, rhotot, dmuxc )
   !
   !  initialize data needed for gradient corrections
