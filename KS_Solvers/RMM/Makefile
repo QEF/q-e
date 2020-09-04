@@ -7,11 +7,14 @@ MODFLAGS= $(MOD_FLAG) ../../ELPA/src $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../../
 
 RMM = \
 crmmdiagg.o \
+crmmdiagg_gpu.o \
 rrmmdiagg.o \
 rotate_xpsi_k.o \
 rotate_xpsi_gamma.o \
 gram_schmidt_k.o \
 gram_schmidt_gamma.o
+
+-include make.gpu
 
 all : librmm.a
 

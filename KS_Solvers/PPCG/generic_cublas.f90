@@ -82,6 +82,81 @@ implicit none
   return
 end subroutine gpu_DTRSM
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+DOUBLE COMPLEX function ZDOTC_gpu(n, zx, incx, zy, incy) 
+#if defined(__CUDA)
+USE cublas
+#endif
+implicit none
+  integer :: n, incx, incy 
+  DOUBLE COMPLEX, dimension(*) :: zx, zy
+#if defined(__CUDA)
+  attributes(device) :: zx, zy 
+  ZDOTC_gpu = cublasZDOTC(n, zx, incx, zy, incy)  
+#endif
+  return
+end function ZDOTC_gpu
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE ZCOPY_gpu(n, zx, incx, zy, incy)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE 
+  INTEGER :: n, incx, incy
+  DOUBLE COMPLEX, dimension(*) :: zx, zy
+#if defined(__CUDA)
+  attributes(device) :: zx, zy 
+  CALL cublasZCOPY(n, zx, incx, zy, incy)  
+#endif
+  RETURN
+END SUBROUTINE ZCOPY_gpu 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE ZAXPY_gpu(n, za, zx, incx, zy, incy)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE 
+  INTEGER :: n, incx, incy
+  DOUBLE COMPLEX :: za  
+  DOUBLE COMPLEX, dimension(*) :: zx, zy
+#if defined(__CUDA)
+  attributes(device) :: zx, zy 
+  CALL cublasZAXPY(n, za, zx, incx, zy, incy)  
+#endif
+  RETURN
+END SUBROUTINE ZAXPY_gpu 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE ZGEMV_gpu(trans, m, n, alpha, a, lda, x, incx, beta, y, incy)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE 
+  CHARACTER :: trans
+  INTEGER :: lda, m, n, incx, incy
+  DOUBLE COMPLEX :: alpha, beta
+  DOUBLE COMPLEX, dimension(lda, *) :: a
+  DOUBLE COMPLEX, dimension(*) :: x, y
+#if defined(__CUDA)
+  attributes(device) :: a, x, y 
+  CALL cublasZGEMV(trans, m, n, alpha, a, lda, x, incx, beta, y, incy)
+#endif
+  RETURN
+END SUBROUTINE ZGEMV_gpu  
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE ZDSCAL_gpu(n, da, zx, incx)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE 
+  INTEGER :: n, incx
+  DOUBLE PRECISION :: da
+  DOUBLE COMPLEX, dimension(*) :: zx
+#if defined(__CUDA)
+  attributes(device) :: zx
+  CALL cublasZDSCAL(n, da, zx, incx)
+#endif
+  RETURN
+END SUBROUTINE ZDSCAL_gpu  
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE gpu_threaded_memset(array, val, length)
   !
 #if defined(__CUDA)

@@ -33,11 +33,12 @@ DENSE/rotate_HSpsi_k.o \
 DENSE/rotate_wfc_gamma.o \
 DENSE/rotate_wfc_k.o \
 RMM/crmmdiagg.o \
+RMM/crmmdiagg_gpu.o \
 RMM/rrmmdiagg.o \
 RMM/gram_schmidt_gamma.o \
 RMM/gram_schmidt_k.o \
 RMM/rotate_xpsi_gamma.o \
-RMM/rotate_xpsi_k.o 
+RMM/rotate_xpsi_k.o
 
 # GPU-related objects
 ALLOBJS += \

@@ -40,7 +40,7 @@ SUBROUTINE c_bands( iter )
   INTEGER, INTENT(IN) :: iter
   !! iteration index
   !
-  ! ... local variables
+  ! ... local variablems
   !
   REAL(DP) :: avg_iter
   ! average number of H*psi products
@@ -224,9 +224,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   ! ... local variables
   !
-  REAL(KIND=DP) :: cg_iter, ppcg_iter
+  REAL(KIND=DP) :: cg_iter, ppcg_iter, rmm_iter
   ! (weighted) number of iterations in Conjugate-Gradient
-  REAL (KIND=DP) :: rmm_iter
   ! (weighted) number of iterations in RMM-DIIS
   INTEGER :: npw, ig, dav_iter, ntry, notconv, nhpsi
   ! number of iterations in Davidson
@@ -240,13 +239,15 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   INTEGER, PARAMETER :: sbsize = 5, rrstep = 7
   ! block dimensions used in PPCG 
   !
-  ! Davidson diagonalization uses these external routines on groups of nvec bands
-  COMPLEX (KIND=DP), POINTER :: hevc(:,:), sevc(:,:)
+  COMPLEX (DP), POINTER :: hevc_d(:,:), sevc_d(:,:)
   ! hamiltonian x wavefunctions, only for RMM-DIIS
   ! overlap x wavefunctions, only for RMM-DIIS
+#if defined(__CUDA)
+  attributes(DEVICE) :: hevc_d, sevc_d
+#endif
+  COMPLEX (DP), POINTER :: hevc(:,:), sevc(:,:)
   !
   ! Davidson and RMM-DIIS diagonalization uses these external routines on groups of nvec bands
-  ! ********elena: add gpu_variables of these two matrices
   EXTERNAL h_psi, s_psi, g_psi
   EXTERNAL h_psi_gpu, s_psi_gpu, g_psi_gpu
   ! subroutine h_psi(npwx,npw,nvec,psi,hpsi)  computes H*psi
@@ -445,21 +446,23 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        ! ... RMM-DIIS diagonalization
        !
-       ALLOCATE( hevc( npwx, nbnd ) )
+       ALLOCATE( hevc_d( npwx*npol, nbnd ) )
+       ALLOCATE( hevc  ( npwx*npol, nbnd ) )
        !
        IF ( okvan ) THEN
-          ALLOCATE( sevc( npwx, nbnd ) )
+          ALLOCATE( sevc_d( npwx*npol, nbnd ) )
+          ALLOCATE( sevc  ( npwx*npol, nbnd ) )
        ELSE
+          IF (.not. use_gpu) THEN
+             sevc_d => evc
+          ELSE
+             sevc_d => evc_d !evc_d allocated in wfcinit_gpu
+          END IF
           sevc => evc
        END IF
        !
        ntry = 0
        !
-       IF (.not. use_gpu) THEN
-          CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) !precontidtion has intent(in) 
-       ELSE
-          CALL using_evc_d(1);  CALL using_et_d(1); CALL using_h_diag_d(0) !precontidtion has intent(in)
-       END IF
        !
        RMM_loop : DO
           !
@@ -468,26 +471,42 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           IF ( .NOT. lrot ) THEN
              !
              IF (.not. use_gpu) THEN
+                CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
                 CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
                                evc, hevc, sevc, et(1,ik) )
              ELSE
-                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
-                               evc, hevc, sevc, et(1,ik) )
+!                CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
+!                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
+!                               evc, hevc, sevc, et(1,ik) )
+                CALL using_evc_d(1);  CALL using_et_d(1); !precontidtion has intent(in)
+                CALL rotate_xpsi_gpu( npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
+                               evc_d, hevc_d, sevc_d, et_d(1,ik) )
              END IF
              !
              avg_iter = avg_iter + 1.D0
              !
           END IF
           !
+!*** PART TO REMOVE*****************************************************
+          IF(use_gpu) THEN
+             hevc(1:npwx*npol,1:nbnd) = hevc_d(1:npwx*npol,1:nbnd)
+             IF ( okvan ) &
+                 sevc(1:npwx*npol,1:nbnd) = sevc_d(1:npwx*npol,1:nbnd)
+          END IF 
+!***********************************************************************
+          !
           IF (.not. use_gpu) THEN
+             CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0); CALL using_g2kin(0) !precontidtion has intent(in)
              CALL rrmmdiagg( h_psi, s_psi, npwx, npw, nbnd, evc, hevc, sevc, &
                           et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
                           okvan, lrot, exx_is_active(), notconv, rmm_iter )
           ELSE
-             CALL rrmmdiagg( h_psi, s_psi, npwx, npw, nbnd, evc, hevc, sevc, &
-                          et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
+             CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(1); CALL using_g2kin(0) !precontidtion has intent(in)
+             CALL rrmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, evc, hevc, sevc, &
+                          et(1,ik), g2kin , btype(1,ik), ethr, rmm_ndim, &
                           okvan, lrot, exx_is_active(), notconv, rmm_iter )
           END IF
+          !
           !
           IF ( lscf .AND. ( .NOT. rmm_conv ) ) notconv = 0
           !
@@ -504,20 +523,25 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        ! ... Gram-Schmidt orthogonalization
        !
        IF (.not. use_gpu) THEN
+          CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
           CALL gram_schmidt( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
                           okvan, .TRUE., .TRUE., gs_nblock )
        ELSE
+          CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
           CALL gram_schmidt( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
                           okvan, .TRUE., .TRUE., gs_nblock )
        END IF
        !
        avg_iter = avg_iter + 0.5D0
        !
+       DEALLOCATE( hevc_d )
        DEALLOCATE( hevc )
        !
        IF ( okvan ) THEN
+          DEALLOCATE( sevc_d )
           DEALLOCATE( sevc )
        ELSE
+          NULLIFY( sevc_d )
           NULLIFY( sevc )
        END IF
        !
@@ -759,13 +783,21 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        ! ... RMM-DIIS diagonalization
        !
+       ALLOCATE( hevc_d( npwx*npol, nbnd ) )
        ALLOCATE( hevc( npwx*npol, nbnd ) )
        !
        IF ( okvan ) THEN
+          ALLOCATE( sevc_d( npwx*npol, nbnd ) )
           ALLOCATE( sevc( npwx*npol, nbnd ) )
        ELSE
           sevc => evc
+          IF (.not. use_gpu) THEN
+             sevc_d => evc
+          ELSE
+             sevc_d => evc_d !evc_d allocated in wfcinit_gpu
+          END IF
        END IF
+       !
        !
        ntry = 0
        !
@@ -776,23 +808,38 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
           IF ( .NOT. lrot ) THEN
              !
              IF ( .not. use_gpu ) THEN
+                CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
                 CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
                                   evc, hevc, sevc, et(1,ik) )
              ELSE
-                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
-                                  evc, hevc, sevc, et(1,ik) )
+!                CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) !precontidtion has intent(in)
+!                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
+!                                  evc, hevc, sevc, et(1,ik) )
+                CALL using_evc_d(1);  CALL using_et_d(1); !precontidtion has intent(in)
+                CALL rotate_xpsi_gpu( npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
+                                  evc_d, hevc_d, sevc_d, et_d(1,ik) )
              END IF
              !
              avg_iter = avg_iter + 1.D0
              !
           END IF
           !
+!*** PART TO REMOVE*********************************************************
+          IF(use_gpu) THEN
+             hevc(1:npwx*npol,1:nbnd) = hevc_d(1:npwx*npol,1:nbnd)
+             IF ( okvan ) &
+                 sevc(1:npwx*npol,1:nbnd) = sevc_d(1:npwx*npol,1:nbnd)
+          END IF
+!****************************************************************************
+          !
           IF ( .not. use_gpu ) THEN
+             CALL using_evc(1); CALL using_et(1); CALL using_h_diag(0)
              CALL crmmdiagg( h_psi, s_psi, npwx, npw, nbnd, npol, evc, hevc, sevc, &
                              et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
                              okvan, lrot, exx_is_active(), notconv, rmm_iter )
           ELSE
-             CALL crmmdiagg( h_psi, s_psi, npwx, npw, nbnd, npol, evc, hevc, sevc, &
+             CALL using_evc(1); CALL using_et(1); CALL using_g2kin(0)
+             CALL crmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, npol, evc, hevc, sevc, &
                              et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
                              okvan, lrot, exx_is_active(), notconv, rmm_iter )
           END IF
@@ -812,9 +859,11 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        ! ... Gram-Schmidt orthogonalization
        !
        IF ( .not. use_gpu ) THEN
+          CALL using_evc(1); CALL using_et(1);
           CALL gram_schmidt( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
                              okvan, .TRUE., .TRUE., gs_nblock )
        ELSE
+          CALL using_evc(1); CALL using_et(1); 
           CALL gram_schmidt( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
                              okvan, .TRUE., .TRUE., gs_nblock )
 
@@ -823,11 +872,14 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        avg_iter = avg_iter + 0.5D0
        !
        DEALLOCATE( hevc )
+       DEALLOCATE( hevc_d )
        !
        IF ( okvan ) THEN
           DEALLOCATE( sevc )
+          DEALLOCATE( sevc_d )
        ELSE
           NULLIFY( sevc )
+          NULLIFY( sevc_d )
        END IF
        !
     ELSE
