@@ -9770,25 +9770,29 @@ MODULE qes_read_module
     tmp_node_list => getElementsByTagname(xml_node, "do_magnetization")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size /= 1) THEN
+    IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:magnetizationType","do_magnetization: wrong number of occurrences")
+           CALL infomsg("qes_read:magnetizationType","do_magnetization: too many occurrences")
            ierr = ierr + 1 
         ELSE 
-           CALL errore("qes_read:magnetizationType","do_magnetization: wrong number of occurrences",10)
+           CALL errore("qes_read:magnetizationType","do_magnetization: too many occurrences",10)
         END IF
     END IF
     !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL extractDataContent(tmp_node, obj%do_magnetization, IOSTAT = iostat_ )
-    IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
-          CALL infomsg("qes_read:magnetizationType","error reading do_magnetization")
-          ierr = ierr + 1
-       ELSE 
-          CALL errore ("qes_read:magnetizationType","error reading do_magnetization",10)
-       END IF
+    IF (tmp_node_list_size>0) THEN
+      obj%do_magnetization_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%do_magnetization , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:magnetizationType","error reading do_magnetization")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:magnetizationType","error reading do_magnetization",10)
+         END IF
+      END IF
+    ELSE
+       obj%do_magnetization_ispresent = .FALSE.
     END IF
     !
     !
