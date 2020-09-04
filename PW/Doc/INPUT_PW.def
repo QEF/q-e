@@ -1177,13 +1177,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 is not configured there.
             }
             info { 
-                Specify @ref lda_plus_u = .TRUE. to enable DFT+U calculations
+                Specify @ref lda_plus_u = .TRUE. to enable DFT+U, DFT+U+V, or 
+                DFT+U+J calculations.
                 See: Anisimov, Zaanen, and Andersen, PRB 44, 943 (1991); 
                      Anisimov et al., PRB 48, 16929 (1993); 
                      Liechtenstein, Anisimov, and Zaanen, PRB 52, R5467 (1994).
-                You must specify, for each species with a U term, the value of
-                U and (optionally) alpha, J of the Hubbard model (all in eV):
-                see @ref lda_plus_u_kind, @ref Hubbard_U, @ref Hubbard_alpha, @ref Hubbard_J
+                You must specify, for each Hubbard atom, the value of
+                U and (optionally) V, J, alpha of the Hubbard model (all in eV):
+                see @ref lda_plus_u_kind, @ref Hubbard_U, @ref Hubbard_V, 
+                @ref Hubbard_J, @ref Hubbard_alpha
             }
         }
         var lda_plus_u_kind -type INTEGER { 
@@ -1240,9 +1242,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             default { 0.D0 for all species }
             info {
                 Hubbard_alpha(i) is the perturbation (on atom i, in eV)
-                used to compute U with the linear-response method of
+                used to compute U (and V) with the linear-response method of
                 Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
-                (only for @ref lda_plus_u_kind=0)
+                (only for @ref lda_plus_u_kind=0 and 2).
+                Note: Hubbard U and V can be computed using the HP code
+                which is based on density-functional pertubation theory,
+                and it gives exactly the same result as the method of 
+                Cococcioni and de Gironcoli.
             }
         }
         dimension Hubbard_beta -start 1 -end ntyp -type REAL { 
@@ -1251,7 +1257,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 Hubbard_beta(i) is the perturbation (on atom i, in eV)
                 used to compute J0 with the linear-response method of
                 Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
-                (only for @ref lda_plus_u_kind=0). See also 
+                (only for @ref lda_plus_u_kind=0 and 2). See also 
                 PRB 84, 115108 (2011).
             }
         }
