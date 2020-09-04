@@ -474,7 +474,6 @@ SUBROUTINE upf_bcast(upf, ionode, ionode_id, comm)
              IF ( upf%q_with_l ) &
                 ALLOCATE( upf%qfuncl ( upf%mesh, 1, 1 ) )
         ELSE
-           ALLOCATE( upf%rinner( upf%nqlc ) )
            ALLOCATE( upf%qqq   ( upf%nbeta, upf%nbeta ) )
            IF ( upf%q_with_l ) THEN
               ALLOCATE( upf%qfuncl ( upf%mesh, upf%nbeta*(upf%nbeta+1)/2, 0:2*upf%lmax ) )
@@ -482,8 +481,10 @@ SUBROUTINE upf_bcast(upf, ionode, ionode_id, comm)
               ALLOCATE( upf%qfunc (upf%mesh, upf%nbeta*(upf%nbeta+1)/2) )
            ENDIF
            IF(upf%nqf <= 0) THEN
+              ALLOCATE( upf%rinner(1) )
               ALLOCATE( upf%qfcoef(1,1,1,1) )
            ELSE
+              ALLOCATE( upf%rinner( upf%nqlc ) )
               ALLOCATE( upf%qfcoef( upf%nqf, upf%nqlc, &
                    upf%nbeta, upf%nbeta ) )
            END IF
