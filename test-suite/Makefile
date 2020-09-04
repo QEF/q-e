@@ -1,5 +1,3 @@
-#!/bin/bash
-#
 # Copyright (C) 2001 Quantum ESPRESSO
 #
 # This program is free software; you can redistribute it and/or
@@ -18,9 +16,9 @@ default :
 	@echo 'where <target> identifies an action'
 	@echo ' run-tests                   : run-tests-serial (default)'
 	@echo ' run-tests-serial            : run all tests in SERIAL' 
-	@echo ' run-tests-XX-serial         : run tests for XX={pw,cp} only, as above' 
+	@echo ' run-tests-XX-serial         : run tests for XX={pw,cp,ph,epw,hp} only, as above' 
 	@echo ' run-tests-parallel          : run all tests in PARALLEL (4 MPI)'
-	@echo ' run-tests-XX-parallel       : run tests for XX={pw,cp} only, as above' 
+	@echo ' run-tests-XX-parallel       : run tests for XX={pw,cp,ph,epw,hp} only, as above' 
 	@echo ' run-custom-test testdir=DIR : run test in DIR only (serial)'
 	@echo ' run-custom-test-parallel testdir=DIR : run test in DIR only (parallel 4 MPI)'
 	@echo ' compare                     : compare last output with reference'
@@ -43,7 +41,7 @@ pseudo :
 
 run-tests : run-tests-serial
 
-run-tests-serial : run-tests-pw-serial run-tests-cp-serial 
+run-tests-serial : run-tests-pw-serial run-tests-cp-serial run-tests-ph-serial run-tests-epw-serial run-tests-hp-serial  
 
 run-tests-parallel : run-tests-pw-parallel run-tests-cp-parallel run-tests-ph-parallel run-tests-epw-parallel run-tests-hp-parallel
 
@@ -164,31 +162,27 @@ clean:
 		hp_*/*HubbardV* hp_*/*mix* hp_*/*parameters.out
 # Cleaning EPW final files
 	@rm -rf epw_*/_ph0 epw_*/*.save epw_*/*.wfc* epw_*/*.dyn* \
-		epw_*/*.qdos_25.00 epw_*/*.P epw_*/*.freq epw_*/*.wout \
-		epw_*/*.fmt epw_*/*.epmat_wanep epw_*/*.kgmap epw_*/*.egnv epw_*/*.ikmap \
-		epw_*/*.nnkp epw_*/*.imag_iso_25.00 epw_*/*.pade_iso_25.00 epw_*/*.epmatwp* \
-		epw_*/*.acon_iso_25.00 epw_*/*.crystal.fmt epw_*/*.a2f_iso epw_*/*.ephmat* \
-		epw_*/*.kmap epw_*/*.lambda_k_pairs epw_*/*.ukk epw_*/*.imag_aniso_25.00 \
-		epw_*/*.pade_aniso_gap0_25.00 epw_*/*.win epw_*/*.imag_aniso_gap0_25.00 \
-		epw_*/*.chk epw_*/*.phdos_proj epw_*/*..a2f epw_*/*.imag_aniso_gap_FS_25.00 \
-		epw_*/*.epmatwp epw_*/*.phdos epw_*/*.epwane epw_*/*.ephmat \
-		epw_*/*.fmt epw_*/*.H epw_*/*.epb* epw_*/*self epw_*/*.a2f epw_*/*.01 \
+		epw_*/*.qdos_* epw_*/*.P epw_*/*.wout epw_*/*.fmt epw_*/*.pade* \
+		epw_*/*.epmat_wanep epw_*/*.kgmap epw_*/*.nnkp epw_*/*.epmatwp* \
+		epw_*/*.acon_iso_* epw_*/*.a2f* epw_*/*.phdos* \
+		epw_*/*.kmap epw_*/*.lambda_k_pairs epw_*/*.ukk epw_*/*.imag_aniso* \
+		epw_*/*.win epw_*/*.imag_iso* epw_*/*.chk epw_*/*.freq  \
+		epw_*/*.epmatwp epw_*/*.epwane epw_*/*.ephmat epw_*/epsilon2* \
+		epw_*/*.H epw_*/*.epb* epw_*/*self epw_*/*.res* epw_*/*.01 \
 		epw_*/*.kpt epw_*/*.gnu epw_*/*.eig epw_*/*.lambda_FS epw_*/*.sigma_restart* \
-		epw_*/specfun.phon epw_*/specfun_sup.phon epw_*/*.tau_restart* \
-                epw_*/*_elcond_* epw_*/fort.* epw_*/decay.* epw_*/scattering_rate* \
-                epw_*/*.fc.* epw_*/*_band.dat epw_*/*F_restart* epw_*/*F_restart_CB* \
-                epw_*/*.mmn epw_*/*.epmatkq* epw_*/*.epmatkqcb* epw_*/sparse* \
-                epw_*/*.Fin_restart* epw_*/*.Fin_restartcb* epw_*/*.acon_iso_* \
-                epw_*/*.imag_aniso* epw_*/*.imag_iso* epw_*/*.pade_* epw_*/*qdos_* \
-                epw_*/epsilon2_indabs.dat epw_*/epsilon2_indabs_lorenz.dat \
-                epw_mob_ibte_sym/save epw_*/*.bvec epw_*/*.fc epw_*/*.xml epw_*/*.labelinfo.dat \
-                epw_mob_ibte/save epw_mob/save epw_*/Fepmatkq1 epw_*/Fepmatkqcb1 epw_*/Fsparse \
-                epw_*/Fsparsecb epw_*/inv_taucb_tmp epw_*/inv_tau_tmp epw_mob_polar/save \
-                epw_base/*.cube
-                
+		epw_*/specfun* epw_*/linewidth.*  epw_*/*.tau_restart* epw_*/lambda.phself* \
+		epw_*/*_elcond_* epw_*/fort.* epw_*/decay.* epw_*/scattering_rate* \
+		epw_*/*.fc.* epw_*/*_band.dat epw_*/*F_restart* epw_*/*F_restart_CB* \
+		epw_*/*.mmn epw_*/*.epmatkq* epw_*/*.epmatkqcb* epw_*/sparse* \
+		epw_*/*.Fin_restart* epw_*/*.Fin_restartcb* epw_*/*.acon_iso_* \
+		epw_*/*.bvec epw_*/*.fc epw_*/*.xml epw_*/*.labelinfo.dat \
+		epw_*/Fepmatkq1 epw_*/Fepmatkqcb1 epw_*/Fsparse epw_*/Fsparsecb \
+		epw_*/inv_taucb_tmp epw_*/inv_tau_tmp epw_*/*.cube epw_*/EPW.bib
+ 
 # Special cases for EPW
 	@rm -rf epw_base/save epw_super/save epw_pl/save/ epw_polar/save/ \
-                epw_trev/save epw_trev_uspp/save epw_trev_paw/save
+                epw_trev/save epw_trev_uspp/save epw_trev_paw/save \
+		epw_mob/save epw_mob_ibte/save epw_mob_ibte_sym/save epw_mob_polar/save
 
 	@rm -f userconfig
 

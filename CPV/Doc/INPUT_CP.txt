@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: cp.x / CP / Quantum Espresso (version: 6.4)
+Program: cp.x / CP / Quantum Espresso (version: 6.6)
 ------------------------------------------------------------------------
 
 
@@ -2493,4 +2493,4 @@ CARD: AUTOPILOT
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Thu Nov 28 10:41:55 CET 2019
+This file has been created by helpdoc utility on Fri Jul 17 10:28:25 CEST 2020

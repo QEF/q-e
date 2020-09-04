@@ -25,8 +25,7 @@
   broyden_beta= 1.0
 
   nstemp      = 2
-  tempsmin    = 100
-  tempsmax    = 300
+  temps       = 100 300
 
   restart      = .true.
   restart_step = 50

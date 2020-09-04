@@ -336,7 +336,7 @@
           Hubbard_l_back_(1:ntyp) = lback(1:ntyp) 
         ELSE 
           DO nt = 1, ntyp 
-             Hubbard_l_back_(nt) = set_hubbard_l_back(TRIM(upf(nt)%psd))
+             Hubbard_l_back_(nt) = set_hubbard_l_back(upf(nt)%psd)
           END DO 
         END IF
         IF (ANY(ip_backall) ) THEN 

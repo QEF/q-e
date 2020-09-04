@@ -42,7 +42,6 @@ CONTAINS
     !
     iun = xml_openfile ( filename )
     IF ( iun == -1 ) CALL upf_error('read_upf', 'cannot open file',1)
-    print *, ' READ_UPF_NEW'
     call xmlr_opentag ( 'qe_pp:pseudo', IERR = ierr )
     if ( ierr == 0 ) then
        v2 =.false.
@@ -56,6 +55,7 @@ CONTAINS
        end if
     end if
     if ( ierr /= 0 .and. ierr /= -2 ) then
+       call xml_closefile( )
        ierr = -81
        return
     end if
@@ -87,7 +87,15 @@ CONTAINS
     IF( .NOT. upf%tcoulombp) then
        allocate ( upf%vloc(upf%mesh) )
        CALL xmlr_readtag( capitalize_if_v2('pp_local'), &
-            upf%vloc(:) )
+            upf%vloc(:), ierr )
+       !
+       ! existing PP files may have pp_nlcc first, pp_local later,
+       ! but also the other way round - check that everything was right
+       !
+       if ( ierr /= 0 ) then
+          ierr = -81
+          return
+       end if
     end if
     !
     CALL read_pp_semilocal ( upf )
@@ -258,51 +266,32 @@ CONTAINS
        allocate ( vnl(1:upf%mesh) )
        CALL xmlr_opentag( capitalize_if_v2('pp_semilocal') )       
        !
-       IF ( v2 ) THEN
-          tag = 'PP_VNL.1'
-       ELSE
-          tag = 'vnl'
-       END IF
+       tag = 'vnl'
        DO nb = 1,upf%nbeta
+          IF ( v2 ) THEN
+             ! NOTA BENE: v2 format follows available PP files, written 
+             ! using original write_upf_v2; not FoX-based write_upf_v2
+             IF ( nb - 1 == upf%lloc ) CYCLE
+             tag = 'PP_VNL.'//i2c(nb-1)
+          END IF
           CALL xmlr_readtag( tag, vnl, ierr )
-          if ( ierr /= 0 ) then
-             if ( v2 ) then
-                go to 10
-             else
-                call upf_error('read_pp_semilocal','error reading SL PPs',1)
-             end if
-          end if
+          if ( ierr /= 0 ) &
+               call upf_error('read_pp_semilocal','error reading SL PPs',1)
           CALL get_attr ( 'l', l)
           ind = 1
           IF ( upf%has_so ) then
              CALL get_attr ( 'j', j)
              IF ( l > 0 .AND. ABS(j-l-0.5_dp) < 0.001_dp ) ind = 2
-             if ( v2 .and. ind == 2 ) &
-                  call upf_error('read_pp_semilocal','inconsistency in SL',1)
+             ! FIXME: what about spin-orbit case for v.2 upf?
+             if ( v2 ) &
+                  call upf_error('read_pp_semilocal','check spin-orbit',1)
           END IF
           upf%vnl(:,l,ind) = vnl(:)
        END DO
+       deallocate ( vnl )
        !
        CALL xmlr_closetag( ) ! end pp_semilocal
        !
-10     IF ( v2 .and. upf%has_so ) then
-          rewind ( iun )
-          CALL xmlr_opentag( capitalize_if_v2('pp_semilocal') )
-          ind = 2
-          tag = 'PP_VNL.2'
-          DO nb = 1,upf%nbeta
-             CALL xmlr_readtag( tag, vnl, ierr )
-             if ( ierr /= 0 ) exit
-             CALL get_attr ( 'l', l)
-             CALL get_attr ( 'j', j)
-             IF ( .not. (l > 0 .AND. ABS(j-l-0.5_dp) < 0.001_dp) ) ind = 1
-             if ( v2 .and. ind == 1 ) &
-                  call upf_error('read_pp_semilocal','inconsistency in SL',2)
-             upf%vnl(:,l,ind) = vnl(:)
-          END DO
-          CALL xmlr_closetag( ) ! end pp_semilocal
-       END IF
-       deallocate ( vnl )
     END IF
     !
   END SUBROUTINE read_pp_semilocal
@@ -359,7 +348,7 @@ CONTAINS
        CALL get_attr('cutoff_radius_index', upf%kbeta(nb))
        CALL get_attr('cutoff_radius', upf%rcut(nb))
        CALL get_attr('ultrasoft_cutoff_radius', upf%rcutus(nb))
-       
+       !
     END DO
     !
     ! pp_dij (D_lm matrix)
@@ -426,8 +415,14 @@ CONTAINS
        !
        IF( upf%q_with_l ) THEN
           ALLOCATE( upf%qfuncl(upf%mesh,upf%nbeta*(upf%nbeta+1)/2,0:2*upf%lmax) )
+          upf%qfuncl(:,:,:) = 0.0_dp
+          ! NOTE: it would be wiser to dimension qfuncl as (:,:,0:upf%lmax)
+          ! and store the q_l(r) with index l=L/2 (see loop_on_l below)
+          ! This would save some storage and avoid "holes" in the array
+          ! that may be a source of trouble if not initialized to zero 
        ELSE
           ALLOCATE ( upf%qfunc(upf%mesh,upf%nbeta*(upf%nbeta+1)/2) )
+          upf%qfunc (:,:) = 0.0_dp
        END IF
        ALLOCATE ( aux(upf%mesh) )
        loop_on_nb: DO nb = 1,upf%nbeta
@@ -599,7 +594,7 @@ CONTAINS
     !
     IMPLICIT NONE
     TYPE(pseudo_upf),INTENT(INOUT) :: upf ! the pseudo data
-    INTEGER :: nw, nb
+    INTEGER :: nw, nb, ierr
     CHARACTER(LEN=1) :: dummy
     !
     IF ( .NOT. v2 .OR. .NOT. upf%has_so ) RETURN
@@ -617,7 +612,15 @@ CONTAINS
     ENDDO
     !
     DO nb = 1,upf%nbeta
-       CALL xmlr_readtag( 'PP_RELBETA.'//i2c(nb), dummy )
+       CALL xmlr_readtag( 'PP_RELBETA.'//i2c(nb), dummy, ierr )
+       !
+       ! existing PP files may have pp_relbeta first, pp_relwfc later,
+       ! but also the other way round - check that everything was right
+       !
+       if ( ierr /= 0 ) then
+          ierr = -81
+          return
+       end if
        CALL get_attr( 'index' , nw )
        IF ( nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',2)
        CALL get_attr( 'lll',  upf%lll(nb) )

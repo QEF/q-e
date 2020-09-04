@@ -25,14 +25,14 @@
     !
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub, fsthick, eps_acustic, degaussw, restart,      &
                               nstemp, scattering_serta, scattering_0rta, shortrange, &
                               restart_step, restart_filq, vme, assume_metal
     USE pwcom,         ONLY : ef
     USE elph2,         ONLY : ibndmin, etf, nkqf, nkf, dmef, vmef, wf, wqf, &
                               epf17, nkqtotf, inv_tau_all, inv_tau_allcb,    &
-                              xqf, zi_allvb, zi_allcb, nbndfst, nktotf, transp_temp, &
+                              xqf, zi_allvb, zi_allcb, nbndfst, nktotf, gtemp, &
                               lower_bnd
     USE constants_epw, ONLY : zero, one, two, ryd2mev, kelvin2eV, ryd2ev,        &
                               eps6, eps8, eps4
@@ -165,7 +165,7 @@
       ! loop over temperatures
       DO itemp = 1, nstemp
         !
-        etemp = transp_temp(itemp)
+        etemp = gtemp(itemp)
         !
         ! SP: Define the inverse so that we can efficiently multiply instead of dividing
         !
@@ -427,7 +427,7 @@
       !
       DO itemp = 1, nstemp
         !
-        etemp = transp_temp(itemp)
+        etemp = gtemp(itemp)
         WRITE(stdout, '(a,f8.3,a)' ) '     Temperature ', etemp * ryd2ev / kelvin2eV, ' K'
         !
         ! In case we read another q-file, merge the scattering here
@@ -572,16 +572,17 @@
     USE epwcom,           ONLY : nbndsub, fsthick, system_2d, nstemp,              &
                                  int_mob, ncarrier, scatread, iterative_bte, vme, assume_metal
     USE pwcom,            ONLY : ef
-    USE elph2,            ONLY : ibndmin, etf, nkf, wkf, dmef, vmef,      &
-                                 inv_tau_all, nkqtotf, inv_tau_allcb, transp_temp, &
-                                 zi_allvb, zi_allcb, map_rebal, nbndfst, nktotf
-    USE constants_epw,    ONLY : zero, one, bohr2ang, ryd2ev,                   &
-                                 kelvin2eV, hbar, Ang2m, hbarJ, ang2cm, czero
+    USE elph2,            ONLY : ibndmin, etf, nkf, wkf, dmef, vmef, bztoibz,      &
+                                 inv_tau_all, nkqtotf, inv_tau_allcb, gtemp, &
+                                 zi_allvb, zi_allcb, map_rebal, nbndfst, nktotf,   &
+                                 s_bztoibz
+    USE constants_epw,    ONLY : zero, one, bohr2ang, ryd2ev, ang2cm, czero,       &
+                                 kelvin2eV, hbar, Ang2m, hbarJ
     USE constants,        ONLY : electron_si
     USE mp,               ONLY : mp_sum, mp_bcast
     USE mp_global,        ONLY : world_comm
     USE mp_world,         ONLY : mpime
-    USE symm_base,        ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
+    USE symm_base,        ONLY : s
     USE cell_base,        ONLY : bg
     USE mp,               ONLY : mp_bcast
     USE epwcom,           ONLY : mp_mesh_k, nkf1, nkf2, nkf3
@@ -589,7 +590,6 @@
     USE io_transport,     ONLY : scattering_read
     USE division,         ONLY : fkbounds
     USE grid,             ONLY : kpoint_grid_epw
-    USE kinds_epw,        ONLY : SIK2
     USE poolgathering,    ONLY : poolgatherc4, poolgather2
     USE noncollin_module, ONLY : noncolin
     !
@@ -626,10 +626,6 @@
     INTEGER :: ierr
     !! Error status
     INTEGER :: bztoibz_tmp(nkf1 * nkf2 * nkf3)
-    !! Temporary mapping
-    INTEGER :: bztoibz(nkf1 * nkf2 * nkf3)
-    !! BZ to IBZ mapping
-    INTEGER(SIK2) :: s_bztoibz(nkf1 * nkf2 * nkf3)
     !! symmetry
     REAL(KIND = DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
@@ -722,7 +718,7 @@
       ! Compute the Fermi level
       DO itemp = 1, nstemp
         !
-        etemp = transp_temp(itemp)
+        etemp = gtemp(itemp)
         !
         ! Lets gather the velocities from all pools
 #if defined(__MPI)
@@ -928,12 +924,6 @@
       !
       !  SP - Uncomment to use symmetries on velocities
       IF (mp_mesh_k) THEN
-        bztoibz(:) = 0
-        s_bztoibz(:) = 0
-        !
-        CALL set_sym_bl()
-        ! What we get from this call is bztoibz
-        CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, bztoibz, s_bztoibz)
         !
         IF (iterative_bte) THEN
           ! Now we have to remap the points because the IBZ k-points have been
@@ -958,7 +948,7 @@
         !
         DO itemp = 1, nstemp
           !
-          etemp = transp_temp(itemp)
+          etemp = gtemp(itemp)
           !
           IF (itemp == 1) THEN
             !
@@ -1093,7 +1083,7 @@
         WRITE(stdout, '(5x,a/)') REPEAT('=',67)
         !
         DO itemp = 1, nstemp
-          etemp = transp_temp(itemp)
+          etemp = gtemp(itemp)
           ! sigma in units of 1/(a.u.) is converted to 1/(Ohm * m)
           IF (mpime ==  meta_ionode_id) THEN
             WRITE(iufilsigma, '(11E16.8)') ef0(itemp) * ryd2ev, etemp * ryd2ev / kelvin2eV, &
@@ -1183,7 +1173,7 @@
       !
       IF (int_mob .OR. (ncarrier > 1E5)) THEN
         DO itemp = 1, nstemp
-          etemp = transp_temp(itemp)
+          etemp = gtemp(itemp)
           IF (itemp == 1) THEN
             tdf_sigma(:) = zero
             sigma(:, :)  = zero
@@ -1349,14 +1339,14 @@
                         tdf_sigma(ij) = vkk(i, ibnd) * vkk(j, ibnd) * tau
                       ENDDO
                     ENDDO
-                    sigmaZ(:, itemp) = sigmaZ(:, itemp) + wkf(ikk) * dfnk * tdf_sigma(:)
+                   sigmaz(:, itemp) = sigmaz(:, itemp) + wkf(ikk) * dfnk * tdf_sigma(:)
                   ENDIF
                 ENDDO ! ibnd
               ENDIF ! etcb
             ENDIF ! endif  fsthick
           ENDDO ! end loop on k
           CALL mp_sum(sigma(:, itemp), world_comm)
-          CALL mp_sum(sigmaZ(:, itemp), world_comm)
+          CALL mp_sum(sigmaz(:, itemp), world_comm)
           !
         ENDDO ! nstemp
         IF (mpime == meta_ionode_id) THEN
@@ -1373,7 +1363,7 @@
         WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]")')
         WRITE(stdout, '(5x,a/)') REPEAT('=',67)
         DO itemp = 1, nstemp
-          etemp = transp_temp(itemp)
+          etemp = gtemp(itemp)
           IF (mpime == meta_ionode_id) THEN
             ! sigma in units of 1/(a.u.) is converted to 1/(Ohm * m)
             IF (ABS(efcb(itemp)) < eps4) THEN

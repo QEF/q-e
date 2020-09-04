@@ -40,13 +40,13 @@ subroutine zstar_eu_us
   USE control_lr,       ONLY : nbnd_occ
   USE lrus,             ONLY : int3, int3_paw
   USE eqv,              ONLY : dvpsi, dpsi
-  USE qpoint,           ONLY : nksq
+  USE qpoint,           ONLY : nksq, ikks
   USE ldaU,             ONLY : lda_plus_u
   USE dv_of_drho_lr
   !
   implicit none
   integer :: npw, ibnd, jbnd, ipol, jpol, imode0, irr, imode, nrec, mode
-  integer :: ik, ig, ir, is, i, j, mu, ipert
+  integer :: ik, ikk, ig, ir, is, i, j, mu, ipert
   integer :: ih, jh, ijh
   integer :: iuhxc, lrhxc
   !
@@ -88,17 +88,18 @@ subroutine zstar_eu_us
   ! for the calculation of the Hartree and xc part
   !
   do ik = 1, nksq
-     npw = ngk(ik)
-     if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ik)
-     if (lsda) current_spin = isk (ik)
-     call init_us_2 (npw, igk_k(1,ik), xk(1,ik), vkb)
-     weight = wk (ik)
+     ikk = ikks(ik)
+     npw = ngk(ikk)
+     if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ikk)
+     if (lsda) current_spin = isk (ikk)
+     call init_us_2 (npw, igk_k(1,ikk), xk(1,ikk), vkb)
+     weight = wk (ikk)
      do jpol = 1, 3
         nrec = (jpol - 1) * nksq + ik
         call get_buffer(dpsi, lrdwf, iudwf, nrec)
         if (noncolin) then
            call incdrhoscf_nc (dvscf(1,1,jpol),weight,ik, &
-                              dbecsum_nc(1,1,1,1,jpol), dpsi, 1)
+                              dbecsum_nc(1,1,1,1,jpol), dpsi, 1.0d0)
         else
            call incdrhoscf (dvscf(1,current_spin,jpol),weight,ik, &
                             dbecsum(1,1,current_spin,jpol), dpsi)
@@ -184,10 +185,11 @@ subroutine zstar_eu_us
   !
   allocate (dvkb(npwx,nkb,3))
   do ik = 1, nksq
-     npw = ngk(ik)
-     weight = wk (ik)
-     if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ik)
-     call init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
+     ikk = ikks(ik)
+     npw = ngk(ikk)
+     weight = wk (ikk)
+     if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ikk)
+     call init_us_2 (npw, igk_k(1,ikk), xk (1, ikk), vkb)
      call dvkb3(ik, dvkb)
      imode0 = 0
      do irr = 1, nirr
@@ -215,8 +217,8 @@ subroutine zstar_eu_us
               !
               ! add the term of the double summation
               !
-              do ibnd = 1, nbnd_occ(ik)
-                 do jbnd = 1, nbnd_occ(ik)
+              do ibnd = 1, nbnd_occ(ikk)
+                 do jbnd = 1, nbnd_occ(ikk)
                     zstareu0(jpol,mode)=zstareu0(jpol, mode) +           &
                          weight *                                        &
                          dot_product(evc(1:npwx*npol,ibnd),              &
@@ -245,7 +247,7 @@ subroutine zstar_eu_us
               !
               ! And calculate finally the scalar product
               !
-              do ibnd = 1, nbnd_occ(ik)
+              do ibnd = 1, nbnd_occ(ikk)
                  zstareu0(jpol,mode)=zstareu0(jpol, mode) - weight *  &
                       dot_product(evc(1:npwx*npol,ibnd),dvpsi(1:npwx*npol,ibnd))
               enddo

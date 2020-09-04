@@ -8,7 +8,7 @@
   !
   !----------------------------------------------------------------------------
   SUBROUTINE loadumat(nbndep, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, &
-                       exband, w_centers)
+                      exband, w_centers)
   !----------------------------------------------------------------------------
   !!
   !! Wannier interpolation of e-p vertex:
@@ -25,13 +25,13 @@
   USE epwcom,        ONLY : filukk
   USE constants_epw, ONLY : czero, zero
   USE io_var,        ONLY : iunukk
-  USE io_global,     ONLY : ionode_id, meta_ionode
-  USE mp_global,     ONLY : inter_pool_comm
+  USE io_global,     ONLY : meta_ionode_id, meta_ionode
   USE mp,            ONLY : mp_sum, mp_barrier, mp_bcast
   USE division,      ONLY : fkbounds
   USE elph2,         ONLY : xkq
   USE kfold,         ONLY : createkmap2
   USE pwcom,         ONLY : nbnd
+  USE mp_world,      ONLY : world_comm
   !
   IMPLICIT NONE
   !
@@ -98,7 +98,7 @@
     DO ik = 1, nkstot
       DO ibnd = 1, nbndep
         DO jbnd = 1, nbndsub
-           READ(iunukk, *) cu_big(ibnd, jbnd, ik)
+          READ(iunukk, *) cu_big(ibnd, jbnd, ik)
         ENDDO
       ENDDO
     ENDDO
@@ -133,12 +133,12 @@
     ENDDO
   ENDIF ! meta_ionode
   !
-  CALL mp_bcast(cu_big, ionode_id, inter_pool_comm)
-  CALL mp_bcast(cuq_big, ionode_id, inter_pool_comm)
-  CALL mp_bcast(lwin_big, ionode_id, inter_pool_comm)
-  CALL mp_bcast(lwinq_big, ionode_id, inter_pool_comm)
-  CALL mp_bcast(exband, ionode_id, inter_pool_comm)
-  CALL mp_bcast(w_centers, ionode_id, inter_pool_comm)
+  CALL mp_bcast(cu_big, meta_ionode_id, world_comm)
+  CALL mp_bcast(cuq_big, meta_ionode_id, world_comm)
+  CALL mp_bcast(lwin_big, meta_ionode_id, world_comm)
+  CALL mp_bcast(lwinq_big, meta_ionode_id, world_comm)
+  CALL mp_bcast(exband, meta_ionode_id, world_comm)
+  CALL mp_bcast(w_centers, meta_ionode_id, world_comm)
   !
   CALL fkbounds(nkstot, ik_start, ik_stop)
   !
@@ -147,7 +147,7 @@
   cu = cu_big(:, :, ik_start:ik_stop)
   cuq = cuq_big(:, :, ik_start:ik_stop)
   lwin = lwin_big(:, ik_start:ik_stop)
-  lwinq = lwin_big(:, ik_start:ik_stop)
+  lwinq = lwinq_big(:, ik_start:ik_stop)
   !
   RETURN
   !-----------------------------------------------------------------------

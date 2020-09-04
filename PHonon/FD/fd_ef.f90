@@ -352,7 +352,7 @@ if (lalpha)  then
     do i=1,nat
       read(2,'(1x,1x,3 (f10.6,1x,f10.6,3x),1x)') (u(n,k,i),ui(n,k,i),k=1,3)
       do k=1,3
-        u(n,i,k)=u(n,k,i)/Sqrt(amass(ityp(i)))
+        u(n,k,i)=u(n,k,i)/Sqrt(amass(ityp(i)))
       end do
     end do
   end do

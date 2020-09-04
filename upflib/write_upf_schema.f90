@@ -10,6 +10,7 @@ MODULE write_upf_schema_module
   !---------------------------------------------------------------------------=!
   !  this module handles the writing of pseudopotential data
   ! ...   declare modules
+#if defined (__use_fox)
   USE upf_kinds,      ONLY: DP
   USE pseudo_types,   ONLY: pseudo_upf, pseudo_config, deallocate_pseudo_config
   USE Fox_wxml
@@ -109,7 +110,7 @@ CONTAINS
     SUBROUTINE write_info(u, upf, conf, u_input)
       ! Write human-readable header
       IMPLICIT NONE
-#include "version.h"
+#include "qe_version.h"
       TYPE(xmlf_t),INTENT(INOUT)  :: u    ! write to xml file u
       TYPE(pseudo_upf),INTENT(IN) :: upf  ! the pseudo data
       ! optional: configuration used to generate the pseudopotential
@@ -809,5 +810,7 @@ CONTAINS
  END SUBROUTINE write_gipaw
  !
 END SUBROUTINE write_upf_schema
+#endif
 
 END MODULE write_upf_schema_module
+

@@ -9,24 +9,45 @@
 MODULE xmltools
   !--------------------------------------------------------
   !
-  ! Poor-man tools for reading and writing xml files
+  ! Poor-man set of tools for reading and writing xml files
+  ! Similar to iotk but much simpler - Paolo Giannozzi, June 2020 
   ! Limitations: too many to be listed in detail. Main ones:
+  ! * works on a single opened file at the time. Exception:
+  !   while a file is opened, one can open, R/W, close another file,
+  !   but it is not possible to operate on both files at the same time
   ! * lines no more than 1024 characters long (see maxline parameter)
   ! * no more than 9 levels of tags (see maxlevel parameter)
   ! * length of tags no more than 80 characters (see maxlength parameter)
-  ! * can read tags only in the correct order
-  ! * no commas in attribute values
+  ! * can read tags only in the correct order. If a tag is not found, the
+  !   file is rewound. If "ierr" is present, a second attempt to find the
+  !   tag is done starting from the top of the file - may work if the searched
+  !   tag is found only above the current position, and nowhere else
+  ! * only single values (e.g. no vectors) in attributes
+  ! * attributes should not contain commas or strange characters
   !
   USE upf_kinds, ONLY : dp
   IMPLICIT NONE
+  !
+#undef __debug
+  !! define __debug to print information on opened and closed tags
+  LOGICAL, PARAMETER :: one_line_tags=.true.
+  !! if true, write tags with one value in a single line: 
+  !! <tag attr1="val1" ... >value</tag>
+  !! otherwise, as in iotk:
+  !! <tag attr1="val1" ... >
+  !! value
+  !! </tag>
+  !! Only for single values; arrays are always written as in iotk
   !
   ! internal variables for reading and writing
   !
   INTEGER :: xmlunit
   INTEGER, PARAMETER :: maxline=1024
-  character(len=maxline) :: line
-  integer :: eot
-  integer :: nattr
+  CHARACTER(LEN=maxline) :: line
+  INTEGER :: xmlsave = -1, nopen = 0
+  INTEGER :: eot
+  ! eot points to the end of tag in line just scanned
+  INTEGER :: nattr
   CHARACTER(LEN=:), ALLOCATABLE :: attrlist
   !
   ! variables used keep track of open tags
@@ -36,19 +57,31 @@ MODULE xmltools
   CHARACTER(LEN=maxlength), DIMENSION(0:maxlevel) :: open_tags
   !
   PRIVATE
+  ! general subroutines
   PUBLIC :: xml_openfile, xml_closefile
+  ! subroutines for writing
   PUBLIC :: add_attr
   PUBLIC :: xmlw_writetag, xmlw_opentag, xmlw_closetag
+  ! subroutines for reading
   PUBLIC :: xmlr_readtag, xmlr_opentag, xmlr_closetag
   PUBLIC :: get_attr
+  ! utility functions
   PUBLIC :: xml_protect, i2c, l2c, r2c
   !
   INTERFACE xmlr_readtag
-     MODULE PROCEDURE readtag_c, readtag_r, readtag_l, readtag_i, readtag_rv
+     MODULE PROCEDURE readtag_c, readtag_r, readtag_l, readtag_i, &
+          readtag_iv, readtag_rv, readtag_rm, readtag_rt, &
+          readtag_zv, readtag_zm
   END INTERFACE xmlr_readtag
   !
+  ! IMPORTANT NOTICE: complex numbers, z=a+ib, are written as two reals:
+  ! "a b", not in fortran free format as "(a,b)". Reason:
+  ! make the file readable by non-fortran tools, e.g. python
+  !
   INTERFACE xmlw_writetag
-     MODULE PROCEDURE writetag_c, writetag_r, writetag_l, writetag_i, writetag_rv
+     MODULE PROCEDURE writetag_c, writetag_r, writetag_l, writetag_i, &
+          writetag_iv, writetag_rv, writetag_rm, writetag_rt, &
+          writetag_zv, writetag_zm
   END INTERFACE xmlw_writetag
   !
   INTERFACE get_attr
@@ -206,24 +239,38 @@ CONTAINS
     CHARACTER(LEN=*), INTENT(in) :: filexml
     INTEGER :: iun, ios
     !
+    IF ( nopen > 1 ) THEN
+       print "('cannot open file ',a,': two xml files already opened')",&
+               trim(filexml)
+       iun = -1
+       RETURN
+    END IF
     OPEN ( NEWUNIT=iun, FILE=filexml, FORM='formatted', STATUS='unknown', &
          IOSTAT=ios)
     IF ( ios /= 0 ) iun = -1
+    nopen = nopen + 1
+    IF ( nopen > 1 ) xmlsave = xmlunit
     xmlunit = iun
     nlevel = 0
     open_tags(nlevel) = 'root'
-    if ( allocated(attrlist) ) DEALLOCATE ( attrlist) 
+    if ( allocated(attrlist) ) DEALLOCATE ( attrlist)
+#if defined ( __debug )
+    print "('file ',a,' opened with unit ',i5)",trim(filexml),iun
+#endif
     !
   END FUNCTION xml_openfile
   !
   SUBROUTINE xml_closefile ( )
     !
     CLOSE ( UNIT=xmlunit, STATUS='keep' )
-    xmlunit = -1
-    IF ( nlevel > 0 ) THEN
-       print '("severe error: file closed at level ",i1," with tag ",A," open")', &
-            nlevel, trim(open_tags(nlevel))
-    END IF
+#if defined ( __debug )
+    print "('unit ',i5,': file closed')", xmlunit
+#endif
+    xmlunit = xmlsave
+    nopen = nopen - 1
+    xmlsave = -1
+    IF (nlevel > 0) print '("warning: file closed at level ",i1,&
+            & " with tag ",A," open")', nlevel, trim(open_tags(nlevel))
     nlevel = 0
     !
   END SUBROUTINE xml_closefile
@@ -266,7 +313,7 @@ CONTAINS
     ! If cval=' ' write <name  attr1="val1" attr2="val2" ... /> 
     ! If cval='?' write <?name attr1="val1" attr2="val2" ...?> 
     ! otherwise,  write <name  attr1="val1" attr2="val2" ...>cval</name> 
-    !             (su di una stessa riga)
+    !             (on a same line if one_line_tags=.true.)
     ! On output, same as xmlw_opentag
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
@@ -295,7 +342,11 @@ CONTAINS
        CALL xmlw_closetag ( '?' )
     ELSE
        ! write value (character)
-       WRITE (xmlunit, "('>',A)", ADVANCE='no') trim(cval)
+       IF (one_line_tags) THEN
+          WRITE (xmlunit, "('>',A)", ADVANCE='no') trim(cval)
+       ELSE
+          WRITE (xmlunit, "('>',/,A)") trim(cval)
+       ENDIF
        ! close here the tag
        CALL xmlw_closetag ( name )
     END IF
@@ -305,7 +356,6 @@ CONTAINS
        ierr = ier_
     ELSE IF ( ier_ > 0 ) THEN
        print '("Fatal error ",i2," in xmlw_writetag!")', ier_
-       stop
     END IF
     !
   END SUBROUTINE writetag_c
@@ -321,6 +371,20 @@ CONTAINS
     CALL writetag_c (name, i2c(ival), ierr )
     !
   END SUBROUTINE writetag_i
+  !
+  SUBROUTINE writetag_iv (name, ivec, ierr )
+    !
+    ! As writetag_c, for integer value
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    INTEGER, INTENT(IN)          :: ivec(:)
+    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    !
+    CALL xmlw_opentag (name, ierr )
+    WRITE( xmlunit, *) ivec
+    CALL xmlw_closetag ( )
+    !
+  END SUBROUTINE writetag_iv
   !
   SUBROUTINE writetag_l (name, lval, ierr )
     !
@@ -346,20 +410,100 @@ CONTAINS
     !
   END SUBROUTINE writetag_r
   !
-  SUBROUTINE writetag_rv (name, rval, ierr )
+  SUBROUTINE writetag_rv (name, rvec, ierr )
     !
-    ! As writetag_c, for an array of real values
+    ! As writetag_c, for a vector of real values
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
-    REAL(dp), INTENT(IN)         :: rval(:)
+    REAL(dp), INTENT(IN)         :: rvec(:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, *) rval
+    WRITE( xmlunit, *) rvec
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_rv
-  
+  !
+  SUBROUTINE writetag_rm (name, rmat, ierr )
+    !
+    ! As writetag_c, for a matrix of real values
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    REAL(dp), INTENT(IN)         :: rmat(:,:)
+    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    !
+    CALL xmlw_opentag (name, ierr )
+    WRITE( xmlunit, *) rmat
+    CALL xmlw_closetag ( )
+    !
+  END SUBROUTINE writetag_rm
+  !
+  SUBROUTINE writetag_rt (name, rtens, ierr )
+    !
+    ! As writetag_c, for a 3-dim tensor of real values
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    REAL(dp), INTENT(IN)         :: rtens(:,:,:)
+    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    !
+    CALL xmlw_opentag (name, ierr )
+    WRITE( xmlunit, *) rtens
+    CALL xmlw_closetag ( )
+    !
+  END SUBROUTINE writetag_rt
+  !
+  SUBROUTINE writetag_zv (name, zvec, ierr )
+    !
+    ! As writetag_c, for a vector of complex values
+    !
+    USE iso_c_binding
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    COMPLEX(dp), INTENT(IN), TARGET:: zvec(:)
+    INTEGER, INTENT(OUT), OPTIONAL :: ierr
+    !
+    ! Casts a real pointer (rvec) to a complex array (zvec) via C pointer (!)
+    ! in order to write complexes as two reals. Some compilers require that
+    ! the argument of c_loc (zvec) is a pointer or has the "target" attribute
+    !
+    TYPE (c_ptr) :: cp
+    REAL(dp), POINTER  :: rvec(:)
+    INTEGER :: n, ndim
+    !
+    NULLIFY (rvec)
+    cp = c_loc(zvec)
+    CALL c_f_pointer (cp, rvec, shape(zvec)*[2])
+    CALL xmlw_opentag (name, ierr )
+    ndim = SIZE (zvec)
+    DO n=1,2*ndim,2
+       WRITE( xmlunit, *) rvec(n), rvec(n+1)
+    END DO
+    CALL xmlw_closetag ( )
+    !
+  END SUBROUTINE writetag_zv
+  !
+  SUBROUTINE writetag_zm (name, zmat, ierr )
+    !
+    ! As writetag_c for a matrix of complex values - see comments in writetag_zv
+    !
+    USE iso_c_binding
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    COMPLEX(dp), INTENT(IN), TARGET:: zmat(:,:)
+    INTEGER, INTENT(OUT), OPTIONAL :: ierr
+    !
+    TYPE (c_ptr) :: cp
+    REAL(dp), POINTER  :: rmat(:,:)
+    INTEGER :: n, nvec
+    !
+    NULLIFY (rmat)
+    cp = c_loc(zmat)
+    CALL c_f_pointer (cp, rmat, shape(zmat)*[2,1])
+    !
+    CALL xmlw_opentag (name, ierr )
+    WRITE( xmlunit, *) rmat
+    CALL xmlw_closetag ( )
+    !
+  END SUBROUTINE writetag_zm
+  !
   FUNCTION write_tag_and_attr (name) RESULT (ierr)
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
@@ -387,7 +531,9 @@ CONTAINS
        WRITE (xmlunit, "('  ')", ADVANCE="no", ERR=10)
     END DO
     WRITE (xmlunit, "('<',A)", ADVANCE="no", ERR=10) trim(name)
-    ! print '("opened at level ",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
+#if defined ( __debug )
+    print '("opened (write) level-",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
+#endif
     !
     ! attributes (if present)
     !
@@ -410,24 +556,38 @@ CONTAINS
     CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: tag
     INTEGER :: i
     !
-    IF ( nlevel < 0 ) &
-         print '("severe error: closing tag that was never opened")'
+    IF ( nlevel < 0 ) THEN
+      print "('xmlw_closetag: severe error, closing tag that was never opened')"
+      RETURN
+    END IF
     IF ( .NOT.PRESENT(tag) ) THEN
        DO i=2,nlevel
           WRITE (xmlunit, '("  ")', ADVANCE='NO')
        END DO
        WRITE (xmlunit, '("</",A,">")') trim(open_tags(nlevel))
+#if defined ( __debug )
+    print '("closed (write) level-",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
+#endif
     ELSE
        i = len_trim(tag)
        IF ( i == 0 ) THEN
           WRITE (xmlunit, '("/>")')
+#if defined ( __debug )
+          print '("closed (write) level-",i1," tag ",A)', &
+               nlevel, trim(open_tags(nlevel))
+#endif
        ELSE IF ( i == 1 .AND. tag(1:1) == '?' ) THEN
           WRITE (xmlunit, '("?>")')
+#if defined ( __debug )
+          print '("closed (write) level-",i1," tag ",A)', nlevel, tag
+#endif
        ELSE
           WRITE (xmlunit, '("</",A,">")') trim(tag)
+#if defined ( __debug )
+          print '("closed (write) level-",i1," tag ",A)', nlevel, tag
+#endif
        END IF
     END IF
-    !print '("closed at level ",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
     nlevel = nlevel-1
     !
   END SUBROUTINE xmlw_closetag
@@ -518,6 +678,26 @@ CONTAINS
     !
   END SUBROUTINE readtag_i
   !
+  SUBROUTINE readtag_iv (name, ivec, ierr)
+    !
+    ! As readtag_c, for a vector of integer values
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    INTEGER, INTENT(OUT)         :: ivec(:)
+    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    INTEGER :: ier_
+    !
+    CALL xmlr_opentag (name, ier_)
+    if ( ier_ == 0  ) then
+       READ(xmlunit, *) ivec
+       CALL xmlr_closetag ( )
+    else
+       ivec = 0.0_dp
+    end if
+    IF ( present (ierr) ) ierr = ier_
+    !
+  END SUBROUTINE readtag_iv
+  !
   SUBROUTINE readtag_l (name, lval, ierr )
     !
     ! As readtag_c, for logical value
@@ -554,27 +734,119 @@ CONTAINS
     !
   END SUBROUTINE readtag_r
   !
-  SUBROUTINE readtag_rv (name, rval, ierr)
+  SUBROUTINE readtag_rv (name, rvec, ierr)
     !
-    ! As readtag_c, for an array of real values
+    ! As readtag_c, for a vector of real values
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
-    REAL(dp), INTENT(OUT)         :: rval(:)
+    REAL(dp), INTENT(OUT)         :: rvec(:)
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     INTEGER :: ier_
-    CHARACTER(LEN=80) :: cval    
     !
     CALL xmlr_opentag (name, ier_)
     if ( ier_ == 0  ) then
-       READ(xmlunit, *) rval
+       READ(xmlunit, *) rvec
        CALL xmlr_closetag ( )
     else
-       rval = 0.0_dp
+       rvec = 0.0_dp
     end if
     IF ( present (ierr) ) ierr = ier_
     !
   END SUBROUTINE readtag_rv
   !
+  SUBROUTINE readtag_rm (name, rmat, ierr)
+    !
+    ! As readtag_c, for a matrix of real values
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    REAL(dp), INTENT(OUT)         :: rmat(:,:)
+    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    INTEGER :: ier_
+    !
+    CALL xmlr_opentag (name, ier_)
+    if ( ier_ == 0  ) then
+       READ(xmlunit, *) rmat
+       CALL xmlr_closetag ( )
+    else
+       rmat = 0.0_dp
+    end if
+    IF ( present (ierr) ) ierr = ier_
+    !
+  END SUBROUTINE readtag_rm
+  !
+  SUBROUTINE readtag_rt (name, rtens, ierr)
+    !
+    ! As readtag_c, for a 3-dim tensor of real values
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    REAL(dp), INTENT(OUT)         :: rtens(:,:,:)
+    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    INTEGER :: ier_
+    !
+    CALL xmlr_opentag (name, ier_)
+    if ( ier_ == 0  ) then
+       READ(xmlunit, *) rtens
+       CALL xmlr_closetag ( )
+    else
+       rtens = 0.0_dp
+    end if
+    IF ( present (ierr) ) ierr = ier_
+    !
+  END SUBROUTINE readtag_rt
+  !
+  SUBROUTINE readtag_zv (name, zvec, ierr)
+    !
+    ! As readtag_c, for a vector of complex values - see comments in writetag_zv
+    !
+    USE iso_c_binding
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    COMPLEX(dp), INTENT(OUT), target     :: zvec(:)
+    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    !
+    TYPE (c_ptr) :: cp
+    REAL(dp), POINTER  :: rvec(:)
+    INTEGER :: ier_
+    !
+    CALL xmlr_opentag (name, ier_)
+    if ( ier_ == 0  ) then
+       NULLIFY (rvec)
+       cp = c_loc(zvec)
+       CALL c_f_pointer ( cp, rvec, shape(zvec)*[2])
+       READ( xmlunit, *) rvec
+       CALL xmlr_closetag ( )
+    else
+       zvec = 0.0_dp
+    end if
+    IF ( present (ierr) ) ierr = ier_
+    !
+  END SUBROUTINE readtag_zv
+  !
+  SUBROUTINE readtag_zm (name, zmat, ierr)
+    !
+    ! As readtag_c, for a matrix of complex values - see comments in writetag_zv
+    !
+    USE iso_c_binding
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    COMPLEX(dp), INTENT(OUT), target     :: zmat(:,:)
+    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    TYPE (c_ptr) :: cp
+    REAL(dp), POINTER  :: rmat(:,:)
+    INTEGER :: ier_
+    !
+    CALL xmlr_opentag (name, ier_)
+    if ( ier_ == 0  ) then
+       NULLIFY (rmat)
+       cp = c_loc(zmat)
+       CALL c_f_pointer (cp, rmat, shape(zmat)*[2,1])
+       READ(xmlunit, *) rmat
+       CALL xmlr_closetag ( )
+    else
+       zmat = 0.0_dp
+    end if
+    IF ( present (ierr) ) ierr = ier_
+    !
+  END SUBROUTINE readtag_zm
+    !
   subroutine readtag_c ( tag, cval, ierr)
     !
     implicit none
@@ -587,44 +859,64 @@ CONTAINS
     ! 1: error parsing file
     ! 2: error in arguments
     !
-    integer ::  i, j, lt
+    integer ::  i, j, lt, ll
     character(len=1) :: endtag
     !
     call xmlr_opentag ( tag, ierr )
     !
-    if ( eot > 0 ) then
-       j = eot
-       lt = len_trim(tag)
-       ! beginning of val at line(j:j): search for end tag
-       i = index ( line(j:), '</'//trim(tag) )
-       if ( i < 1 ) then
-          ! </tag> not found on this line
-          ! print *, 'tag </',trim(tag),'> not found'
-          ierr = 1
-          return
-       else
-          ! maybe found end tag?
-          endtag = adjustl( line(j+i+1+lt:) )
-          if ( endtag /= '>' ) then
-             ! print *, 'tag ',trim(tag),' not correctly closed'
-             if (present(ierr)) ierr = 1
-          else
-             ! <tag ....>val</tag> found, exit
-             cval = adjustl(trim(line(j:j+i-2)))
-             ! print *, 'value=',cval
-          end if
-          ! print '("closed at level ",i1," tag ",A)', nlevel, trim(open_tags(nlevel))
-          nlevel = nlevel -1
-          !
-          return
-          !
-       endif
-    else if ( eot == 0 ) then
+    cval = ''
+    if ( eot < 0 ) then
        ! print *, 'end of file reached, tag not found'
        if ( present(ierr) ) ierr =-1
-    else if ( eot < 0 ) then
+       return
+    else if ( eot == 0 ) then
        ! print *, 'tag found, no value to read on line'
-       cval = ''
+       return
+    else
+       ! scan current line if there is something after the end of tag 
+       ! (variable "eot"); read a new line otherwise
+       do while(.true.)
+          if ( eot > len_trim(line) ) then
+             read(xmlunit,'(a)', end=10) line
+             j = 1
+          else
+             j = eot
+          end if
+          ! beginning of val at line(j:j): search for end tag
+          i = index ( line(j:), '</'//trim(tag) )
+          if ( i < 1 ) then
+             ! </tag> not found on this line: read value and continue
+             cval = trim(cval) // adjustl(trim(line(j:)))
+          else
+             ! possible end tag found
+             lt = len_trim(tag)
+             endtag = adjustl( line(j+i+1+lt:) )
+             if ( endtag /= '>' ) then
+                ! print *, 'tag ',trim(tag),' not correctly closed'
+                if (present(ierr)) ierr = 1
+             else
+                ! end of tag found, read value (if any) and exit
+                if ( i > 1 ) cval = trim(cval) // adjustl(trim(line(j:j+i-2)))
+                ! print *, 'value=',cval
+             end if
+#if defined ( __debug )
+             print '("closed (read) level-",i1," tag ",A)', &
+                     nlevel, trim(open_tags(nlevel))
+#endif
+             nlevel = nlevel -1
+             !
+             return
+             !
+          endif
+          !
+       end do
+       !
+    end if
+    ! print *, 'tag </',trim(tag),'> not found'
+10  if ( present(ierr) ) then
+       ierr = 1
+    else
+       print *, 'end of file reached, tag </'//trim(tag)//'> not found'
     end if
     !
   end subroutine readtag_c
@@ -641,7 +933,7 @@ CONTAINS
     ! 2: line too long
     ! 3: too many levels of tags
     !
-    integer :: stat, ll, lt, i, j, j0
+    integer :: stat, ntry, ll, lt, i, j, j0
     ! stat= 0: begin
     ! stat=-1: in comment
     ! stat=1 : tag found
@@ -649,16 +941,18 @@ CONTAINS
     character(len=1) :: quote
     !
     nattr=0
+    ntry =0
     if ( allocated(attrlist) ) deallocate (attrlist)
-    !
     lt = len_trim(tag)
+    !
+ 1  ntry = ntry+1
     stat=0
-    eot =0
+    eot =-1
     do while (.true.)
        read(xmlunit,'(a)', end=10) line
        ll = len_trim(line)
        if ( ll == maxline ) then
-          print *, 'line too long'
+          print *, 'xmlr_opentag: severe error, line too long'
           if (present(ierr)) ierr = 2
           return
        end if
@@ -693,10 +987,12 @@ CONTAINS
                 ! tag found? check what follows our would-be tag
                 j = j+i+lt
                 if ( j > ll ) then
-                   print *, 'oops... opened tag not closed on same line'
+                   stat = 1
+                   ! <tag continues in next line
                    exit parse
-                else if ( line(j:j) == ' ' .or. line(j:j) == '>') then
-                   ! print *, '<tag found'
+                else if ( line(j:j) == ' ' .or. line(j:j) == '>' &
+                                           .or. line(j:j+1)=='/>') then
+                   ! <tag or <tag> or <tag/> found
                    stat = 1
                 end if
              end if
@@ -711,29 +1007,26 @@ CONTAINS
              else if ( line(j:j+1) == '/>' ) then
                 ! <tag ... /> found : return
                 if (present(ierr)) ierr = 0
-                ! eot = -2: tag with no value found
-                eot = -2
+                ! eot = 0: tag with no value found
+                eot = 0
                 !
                 return
                 !
              else if ( line(j:j) == '>' ) then
                 ! <tag ... > found
-                if ( j+1 > ll ) then
-                   ! eot = -1: tag found, line ends
-                   eot = -1
-                else
-                   ! eot points to the rest of the line
-                   eot = j+1
-                end if
+                ! eot points to the rest of the line
+                eot = j+1
                 if (present(ierr)) ierr = 0
                 nlevel = nlevel+1
                 IF ( nlevel > maxlevel ) THEN
-                   print *, ' too many levels'
+                   print *, 'xmlr_opentag: severe error, too many levels'
                    if (present(ierr)) ierr = 3
                 else
                    open_tags(nlevel) = trim(tag)
-                   !print '("opened at level ",i1," tag ",A)', &
-                   !   nlevel, trim(open_tags(nlevel))
+#if defined ( __debug )
+                   print '("opened (read) level-",i1," tag ",A)',&
+                       nlevel, trim(open_tags(nlevel))
+#endif
                 end if
                 !
                 return
@@ -775,11 +1068,16 @@ CONTAINS
 10  if ( stat == 0 ) then
        if ( present(ierr) ) then
           ierr =-1
+          ! quick-and-dirty pseudo-fix to deal with tags not found:
+          ! rewind and try again - will work if the desired tag is
+          ! found above the current position (and nowhere else)
+          rewind(xmlunit)
+          if ( ntry == 1 ) go to 1
        else
           print *, 'end of file reached, tag '//trim(tag)//' not found'
        end if
     else
-       print *, 'parsing error'
+       print *, 'xmlr_opentag: severe parsing error'
        if ( present(ierr) ) ierr = 1
     end if
     !
@@ -800,16 +1098,22 @@ CONTAINS
     ! stat= 0: begin
     ! stat= 1: end
     !
-    IF ( nlevel < 0 ) &
-         print '("severe error: closing tag that was never opened")'
+    if ( nlevel < 0 ) &
+         print '("xmlr_closetag: severe error, closing tag that was never opened")'
     stat=0
-    !write(6,'("closing at level ",i1," tag ",A,"...")',advance='no') &
-    !     nlevel,trim(open_tags(nlevel))
+#if defined ( __debug )
+    if ( .not. present(tag) ) then
+       print '("closed (read) level-",i1," tag ",A)', &
+            nlevel, trim(open_tags(nlevel))
+    else
+       print '("closed (read) level-",i1," tag ",A)', nlevel, tag
+    end if
+#endif
     do while (.true.)
        read(xmlunit,'(a)', end=10) line
        ll = len_trim(line)
        if ( ll == maxline ) then
-          print *, 'line too long'
+          print *, 'Fatal error: line too long'
           if (present(ierr)) ierr = 1
           return
        end if
@@ -848,10 +1152,11 @@ CONTAINS
                 ! tag found? check what follows our would-be tag
                 j = j+i+1+lt
                 if ( j > ll ) then
-                   print *, 'oops... opened tag not closed on same line'
+                   stat = 1
+                   ! </tag continues in next line
                    exit parse
                 else if ( line(j:j) == ' ' .or. line(j:j) == '>') then
-                   ! print *, '</tag found'
+                   ! </tag or </tag> found
                    stat = 1
                 end if
              end if

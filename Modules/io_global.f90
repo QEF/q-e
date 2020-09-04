@@ -32,7 +32,5 @@ MODULE io_global
   !
   INTEGER :: meta_ionode_id = 0    ! index of the global i/o node
   LOGICAL :: meta_ionode = .TRUE.  ! true if this processor is global i/o node
-  !
-  INTEGER :: xmloutputunit = 51    ! unit connected to the xml output
   !    
 END MODULE io_global

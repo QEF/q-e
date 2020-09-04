@@ -37,7 +37,7 @@ then
     cat $3
   fi
   echo "Gather results in save" 
-  python ../../EPW/bin/pp.py < pp.in
+  python3 ../../EPW/bin/pp.py < pp.in
 elif [[ "$1" == "3" ]]
 then
   echo "Running EPW ..."
@@ -57,7 +57,7 @@ then
     cat $3
   fi
   echo "Gather results in save" 
-  python ../../EPW/bin/pp.py < pp.in
+  python3 ../../EPW/bin/pp.py < pp.in
 elif [[ "$1" == "5" ]]
 then
   echo "Removing restart files ..."

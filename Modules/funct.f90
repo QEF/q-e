@@ -36,9 +36,11 @@ MODULE funct
   USE io_global,   ONLY: stdout, ionode
   USE kinds,       ONLY: DP
 #if defined(__LIBXC)
-  USE xc_f90_types_m
-  USE xc_f90_lib_m
+#include "xc_version.h"
+  USE xc_f03_lib_m
 #endif
+  !
+  USE beef_interface, ONLY: beef_set_type
   !
   IMPLICIT NONE
   !
@@ -51,6 +53,7 @@ MODULE funct
   PUBLIC  :: get_dft_name, get_dft_short, get_dft_long,&
              get_nonlocc_name
   PUBLIC  :: get_iexch, get_icorr, get_igcx, get_igcc, get_meta, get_metac, get_inlc
+  PUBLIC  :: reset_dft
   PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid, dft_is_nonlocc, igcc_is_lyp
   PUBLIC  :: set_auxiliary_flags
   !
@@ -366,11 +369,8 @@ MODULE funct
   REAL(DP):: finite_size_cell_volume = notset
   LOGICAL :: discard_input_dft = .FALSE.
   !
-#ifdef use_beef
   INTEGER  :: beeftype    = -1
-  LOGICAL, EXTERNAL :: beef_set_type
   INTEGER  :: beefvdw = 0
-#endif
   !
   INTEGER, PARAMETER :: nxc=8, ncc=10, ngcx=46, ngcc=13, nmeta=6, ncnl=26
   CHARACTER(LEN=4) :: exc, corr, gradx, gradc, meta, nonlocc
@@ -400,6 +400,8 @@ MODULE funct
   INTEGER :: libxc_major=0, libxc_minor=0, libxc_micro=0
   PUBLIC :: libxc_major, libxc_minor, libxc_micro, get_libxc_version
   PUBLIC :: get_libxc_flags_exc
+  LOGICAL :: lxc_hyb = .FALSE.
+  PRIVATE :: lxc_hyb
 #endif
   !
 CONTAINS
@@ -410,16 +412,12 @@ CONTAINS
     !! Translates a string containing the exchange-correlation name
     !! into internal indices iexch, icorr, igcx, igcc, inlc, imeta.
     !
-#if defined(__LIBXC)
-    USE xc_f03_lib_m
-#endif
-    !
     IMPLICIT NONE
     !
     CHARACTER(LEN=*), INTENT(IN) :: dft_
     INTEGER :: len, l, i
     CHARACTER(len=150):: dftout
-    LOGICAL :: dft_defined = .FALSE.
+    LOGICAL :: dft_defined
     LOGICAL :: check_libxc
 #if defined(__LIBXC)
     INTEGER :: ii, id_vec(6), n_ext_params
@@ -434,7 +432,11 @@ CONTAINS
     !
     IF ( discard_input_dft ) RETURN
     !
+    is_libxc(:) = .FALSE.
+    !
     ! save current status of XC indices
+    !
+    dft_defined = .FALSE.
     !
     save_iexch = iexch
     save_icorr = icorr
@@ -553,7 +555,6 @@ CONTAINS
        dft_defined = set_dft_values(1,4,20,4,0,0)
     ! special case : case BEEF (default: BEEF-vdW-DF2)
     CASE('BEEF', 'BEEF-VDW')
-#ifdef use_beef
        IF (LEN_TRIM(dftout) .EQ. 4) then
           beeftype = 0
        ELSE
@@ -574,10 +575,6 @@ CONTAINS
              beefvdw = 2
        END SELECT
        dft_defined = set_dft_values(1,4,43,14,beefvdw,0)
-#else
-       CALL errore('set_dft_from_name', &
-    &    'BEEF xc functional support not compiled in', 1)
-#endif
     ! Special case vdW-DF
     CASE( 'VDW-DF' )
        dft_defined = set_dft_values(1,4,4,0,1,0)
@@ -644,6 +641,9 @@ CONTAINS
     ! special case : TPSS meta-GGA Exc
     CASE( 'TPSS' )
        dft_defined = set_dft_values(1,4,7,6,0,1)
+    ! special case : TPSS meta-GGA - mgga term only
+    CASE( 'TPSS-only' )
+       dft_defined = set_dft_values(0,0,0,0,0,1)
     ! special case : M06L Meta GGA
     CASE( 'M06L' )
        dft_defined = set_dft_values(0,0,0,0,0,2)
@@ -813,6 +813,8 @@ CONTAINS
     !
     dft = dftout
     !
+    dft_defined = .TRUE.
+    !
     !dft_longname = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
     !     &//gradc (igcc) //'-'// nonlocc(inlc)
     !
@@ -872,6 +874,9 @@ CONTAINS
     DO i = n, 0, -1
        IF ( matches(name(i), TRIM(dft)) ) THEN
           !
+#if defined(__LIBXC)
+          IF ( matching == notset ) matching = i
+#else
           IF ( matching == notset ) THEN
            !WRITE(*, '("matches",i2,2X,A,2X,A)') i, name(i), TRIM(dft)
            matching = i
@@ -880,6 +885,7 @@ CONTAINS
                                   matching, TRIM(name(matching))
              CALL errore( 'set_dft', 'two conflicting matching values', 1 )
           ENDIF
+#endif
        ENDIF
     ENDDO
     !
@@ -903,31 +909,42 @@ CONTAINS
     CHARACTER(LEN=256) :: name
     INTEGER :: i, l, prev_len(6), fkind, fkind_v(3), family
     INTEGER, PARAMETER :: ID_MAX_LIBXC=600
-    TYPE(xc_f90_pointer_t) :: xc_func, xc_info
+    TYPE(xc_f03_func_t) :: xc_func
+    TYPE(xc_f03_func_info_t) :: xc_info
     LOGICAL, EXTERNAL :: matches
     CHARACTER(LEN=1), EXTERNAL :: capital
+#if (XC_MAJOR_VERSION > 5)
+    !workaround to keep compatibility with libxc develop version
+    INTEGER, PARAMETER :: XC_FAMILY_HYB_GGA  = -10 
+    INTEGER, PARAMETER :: XC_FAMILY_HYB_MGGA = -11 
+#endif
     !
     prev_len(:) = 1
     !
     DO i = 1, ID_MAX_LIBXC
        !
-       CALL xc_f90_functional_get_name( i, name )
+       name = xc_f03_functional_get_name( i )
        !
        DO l = 1, LEN_TRIM(name)
           name(l:l) = capital( name(l:l) )
        ENDDO
        !
-       IF ( TRIM(name) .EQ. 'UNKNOWN' ) CYCLE
+       IF ( TRIM(name) == '' ) CYCLE
        !
        IF ( matches(TRIM(name), TRIM(dft)) ) THEN
           !
           !WRITE(*, '("matches libxc",i2,2X,A,2X,A)') i, TRIM(name), TRIM(dft)
           !
           fkind=-100 ; family=-100
-          CALL xc_f90_func_init( xc_func, xc_info, i, 1 )
-          fkind = xc_f90_info_kind( xc_info )
-          family = xc_f90_info_family( xc_info )
-          CALL xc_f90_func_end( xc_func )
+          CALL xc_f03_func_init( xc_func, i, 1 )
+          xc_info = xc_f03_func_get_info( xc_func )
+          fkind = xc_f03_func_info_get_kind( xc_info )
+          family = xc_f03_func_info_get_family( xc_info )
+          IF ( matches('HYB_', TRIM(name)) ) THEN
+            lxc_hyb = .TRUE.
+            exx_fraction = xc_f03_hyb_exx_coef( xc_func )
+          ENDIF
+          CALL xc_f03_func_end( xc_func )
           !   
           SELECT CASE( family )
           CASE( XC_FAMILY_LDA )
@@ -988,7 +1005,7 @@ CONTAINS
                     &been found together with a correlation one (GGA)' )
     !
     IF ( (is_libxc(3).AND.iexch/=0) .OR. (is_libxc(4).AND. icorr/=0) )    &
-       CALL infomsg( 'matching_libxc', 'WARNING: an LDA functional has been found, but  &
+       CALL infomsg( 'matching_libxc', 'WARNING: an LDA functional has been found, but &
                     &libxc GGA functionals already include the LDA part' )
     ! mGGA:
     ! (imeta defines both exchange and correlation term for q-e mGGA functionals)
@@ -1058,7 +1075,7 @@ CONTAINS
           nlxc = 0
           DO i = 1, 6
             IF (is_libxc(i)) THEN
-              CALL xc_f90_functional_get_name( id_vec(i), lxc_name )
+              lxc_name = xc_f03_functional_get_name( id_vec(i) )
               DO l = 1, LEN_TRIM(lxc_name)
                  lxc_name(l:l) = capital( lxc_name(l:l) )
               ENDDO
@@ -1066,23 +1083,14 @@ CONTAINS
             ENDIF
           ENDDO
           !
-          IF (qedft == nlxc) THEN
-             SELECT CASE( ch )
-             CASE( 1 )
-                iexch = 0
-             CASE( 2 )
-                icorr = 0
-             CASE( 3 )
-                igcx  = 0
-             CASE( 4 )
-                igcc  = 0
-             CASE( 5 )
-                imeta = 0
-             END SELECT
-          ENDIF  
+          IF (qedft == nlxc) id_vec(ch) = 0  
           !
        ENDIF
     ENDDO
+    !
+    iexch = id_vec(1) ;  icorr  = id_vec(2)
+    igcx  = id_vec(3) ;  igcc   = id_vec(4)
+    imeta = id_vec(5) ;  imetac = id_vec(6)
     !
   END SUBROUTINE
 #endif
@@ -1326,6 +1334,12 @@ CONTAINS
     RETURN
   END FUNCTION get_metac
   !-----------------------------------------------------------------------
+  SUBROUTINE reset_dft()
+    iexch  = notset ; icorr  = notset
+    igcx   = notset ; igcc   = notset
+    imeta  = notset ; imetac = notset
+  END SUBROUTINE
+  !-----------------------------------------------------------------------
   FUNCTION get_inlc()
      INTEGER get_inlc
      get_inlc = inlc
@@ -1346,17 +1360,6 @@ CONTAINS
   !-----------------------------------------------------------------------
   FUNCTION get_exx_fraction()
      REAL(DP) :: get_exx_fraction
-#if defined(__LIBXC)
-     INTEGER :: family
-     TYPE(xc_f90_pointer_t) :: xc_func, xc_info
-     !
-     IF ( is_libxc(3) ) THEN
-        CALL xc_f90_func_init( xc_func, xc_info, igcx, 1 )  
-        family = xc_f90_info_family( xc_info )
-        IF (family == XC_FAMILY_HYB_GGA) CALL xc_f90_hyb_exx_coef( xc_func, exx_fraction )
-        CALL xc_f90_func_end( xc_func )
-     ENDIF
-#endif
      get_exx_fraction = exx_fraction
      RETURN
   END FUNCTION get_exx_fraction
@@ -1423,10 +1426,10 @@ CONTAINS
   SUBROUTINE get_libxc_flags_exc( xc_info, eflag )
      ! Checks whether Exc is present or not in the output of a libxc 
      ! functional (e.g. TB09)
-     TYPE(xc_f90_pointer_t) :: xc_info
+     TYPE(xc_f03_func_info_t) :: xc_info
      INTEGER :: ii, flags_tot
-     INTEGER, INTENT(OUT) :: eflag
-     flags_tot = xc_f90_info_flags(xc_info)
+     INTEGER, INTENT(OUT) :: eflag 
+     flags_tot = xc_f03_func_info_get_flags(xc_info)
      eflag = 0
      DO ii = 15, 0, -1
        IF ( flags_tot-2**ii<0 ) CYCLE

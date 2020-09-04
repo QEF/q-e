@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: pw.x / PWscf / Quantum Espresso (version: 6.5)
+Program: pw.x / PWscf / Quantum Espresso (version: 6.6)
 ------------------------------------------------------------------------
 
 
@@ -605,7 +605,7 @@ NAMELIST: &SYSTEM
                          v3 = (c*cos(beta),   0,   c*sin(beta)),
                          where beta=angle between axis a and c projected on xz plane
                     IMPORTANT NOTICE: until QE v.6.4.1, axis for ibrav=-13 had a
-                    different definition: v1(old) = v2(now), v2(old) = -v1(now)
+                    different definition: v1(old) =-v2(now), v2(old) = v1(now)
                    
                     14          Triclinic                       celldm(2)= b/a,
                                                                 celldm(3)= c/a,
@@ -1105,6 +1105,17 @@ NAMELIST: &SYSTEM
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
+   Variable:       ace
+   
+   Type:           LOGICAL
+   Default:        true
+   Description:    Use Adaptively Compressed Exchange operator as in
+                   Lin Lin, J. Chem. Theory Comput. 2016, 12, 2242--2249, doi:10.1021/acs.jctc.6b00092
+                   
+                   Set to false to use standard Exchange (much slower)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
    Variable:       exx_fraction
    
    Type:           REAL
@@ -1369,14 +1380,19 @@ NAMELIST: &SYSTEM
    
    Type:           CHARACTER
    Default:        'input'
-   Description:    'input': read the "Hubbard_U" (or "Hubbard_V") parameters from
-                            the PW input file
-                   
-                   'file' : read the "Hubbard_V" parameters from the file "parameters.in"
-                            which can be generated after the linear-response calculation
-                            (using the HP code). This option has a higher priority over
-                            the Hubbard_V if they are specified in the input. This option
-                            can be used only when "lda_plus_u_kind" = 2.
+   Description:   
+                   Available choices:
+    
+                   'input' :
+                        read the "Hubbard_U" (or "Hubbard_V") parameters from
+                        the PW input file
+    
+                   'file' :
+                        read the "Hubbard_V" parameters from the file "parameters.in"
+                        which can be generated after the linear-response calculation
+                        (using the HP code). This option has a higher priority over
+                        the "Hubbard_V" if they are specified in the input. This option
+                        can be used only when "lda_plus_u_kind" = 2.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2151,7 +2167,7 @@ NAMELIST: &ELECTRONS
     
                    'cg' :
                         Conjugate-gradient-like band-by-band diagonalization.
-                        Slower than 'david' but uses less memory and is
+                        MUCH slower than 'david' but uses less memory and is
                         (a little bit) more robust.
     
                    'ppcg' :
@@ -2188,15 +2204,15 @@ NAMELIST: &ELECTRONS
    Variable:       diago_david_ndim
    
    Type:           INTEGER
-   Default:        4
+   Default:        2
    Description:    For Davidson diagonalization: dimension of workspace
                    (number of wavefunction packets, at least 2 needed).
                    A larger value may yield a smaller number of iterations in
                    the algorithm but uses more memory and more CPU time in
-                   subspace diagonalization.
-                   Try "diago_david_ndim"=2 if you are tight on memory or if
-                   the time spent in subspace diagonalization (cdiaghg/rdiaghg)
-                   is significant compared to the time spent in h_psi
+                   subspace diagonalization (cdiaghg/rdiaghg). You may try
+                   "diago_david_ndim"=4 if you are not tight on memory
+                   and if the time spent in subspace diagonalization is small
+                   compared to the time spent in h_psi
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2328,7 +2344,45 @@ NAMELIST: &ELECTRONS
 ========================================================================
 NAMELIST: &IONS
 
-   INPUT THIS NAMELIST ONLY IF "CALCULATION" == 'RELAX', 'MD', 'VC-RELAX', OR 'VC-MD'
+   REQUIRED IF "CALCULATION" == 'RELAX', 'MD', 'VC-RELAX', OR 'VC-MD'
+   OPTIONAL FOR "CALCULATION" == 'SCF' (ONLY "ION_POSITIONS" IS USED)
+   
+   +--------------------------------------------------------------------
+   Variable:       ion_positions
+   
+   Type:           CHARACTER
+   Default:        'default'
+   Description:   
+                   Available options are:
+    
+                   'default' :
+                        if restarting, use atomic positions read from the
+                        restart file; in all other cases, use atomic
+                        positions from standard input.
+    
+                   'from_input' :
+                        read atomic positions from standard input, even if restarting.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ion_velocities
+   
+   Type:           CHARACTER
+   Default:        'default'
+   Description:   
+                   Initial ionic velocities. Available options are:
+    
+                   'default' :
+                        start a new simulation from random thermalized
+                        distribution of velocities if "tempw" is set,
+                        with zero velocities otherwise; restart from
+                        atomic velocities read from the restart file
+    
+                   'from_input' :
+                        start or continue the simulation with atomic
+                        velocities read from standard input - see card
+                        "ATOMIC_VELOCITIES"
+   +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
    Variable:       ion_dynamics
@@ -2382,24 +2436,6 @@ NAMELIST: &IONS
                    'beeman' :
                         (default)  use Beeman algorithm to integrate
                         Newton's equation
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       ion_positions
-   
-   Type:           CHARACTER
-   Default:        'default'
-   Description:   
-                   Available options are:
-    
-                   'default' :
-                        if restarting, use atomic positions read from the
-                        restart file; in all other cases, use atomic
-                        positions from standard input.
-    
-                   'from_input' :
-                        restart the simulation with atomic positions read
-                        from standard input, even if restarting.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -3390,6 +3426,48 @@ CARD: OCCUPATIONS
 
 
 ========================================================================
+CARD: ATOMIC_VELOCITIES { a.u }
+
+   OPTIONAL CARD, READS VELOCITIES FROM STANDARD INPUT
+   
+   /////////////////////////////////////////
+   // Syntax:                             //
+   /////////////////////////////////////////
+   
+      ATOMIC_VELOCITIES { a.u }
+         V(1)    vx(1)    vy(1)    vz(1)    
+         V(2)    vx(2)    vy(2)    vz(2)    
+         . . . 
+         V(nat)  vx(nat)  vy(nat)  vz(nat)  
+   
+   /////////////////////////////////////////
+   
+   DESCRIPTION OF ITEMS:
+   
+      +--------------------------------------------------------------------
+      Card's flags:   { a.u }
+      
+      +--------------------------------------------------------------------
+
+
+      +--------------------------------------------------------------------
+      Variable:       V
+      
+      Type:           CHARACTER
+      Description:    label of the atom as specified in ATOMIC_SPECIES
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      vx, vy, vz
+      
+      Type:           REAL
+      Description:    atomic velocities along x y and z direction
+      +--------------------------------------------------------------------
+      
+===END OF CARD==========================================================
+
+
+========================================================================
 CARD: ATOMIC_FORCES 
 
    OPTIONAL CARD USED TO SPECIFY EXTERNAL FORCES ACTING ON ATOMS.
@@ -3428,4 +3506,4 @@ CARD: ATOMIC_FORCES
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Fri Apr 24 16:12:23 CEST 2020
+This file has been created by helpdoc utility on Sun Jul 19 17:15:18 CEST 2020
