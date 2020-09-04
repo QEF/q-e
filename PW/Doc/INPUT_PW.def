@@ -1246,7 +1246,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
                 (only for @ref lda_plus_u_kind=0 and 2).
                 Note: Hubbard U and V can be computed using the HP code
-                which is based on density-functional pertubation theory,
+                which is based on density-functional perturbation theory,
                 and it gives exactly the same result as the method of 
                 Cococcioni and de Gironcoli.
             }
