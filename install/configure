@@ -742,7 +742,6 @@ infodir
 docdir
 oldincludedir
 includedir
-runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -840,7 +839,6 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
-runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1093,15 +1091,6 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
-  -runstatedir | --runstatedir | --runstatedi | --runstated \
-  | --runstate | --runstat | --runsta | --runst | --runs \
-  | --run | --ru | --r)
-    ac_prev=runstatedir ;;
-  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
-  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
-  | --run=* | --ru=* | --r=*)
-    runstatedir=$ac_optarg ;;
-
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1239,7 +1228,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir runstatedir
+		libdir localedir mandir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1392,7 +1381,6 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
-  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -2882,11 +2870,11 @@ try_f90="gfortran f90"
 # candidate compilers and flags based on architecture
 case $arch in
 ia32 | ia64 | x86_64 )
-        try_f90="ifort pgf90 nagfor $try_f90"
+        try_f90="ifort nvfortran pgf90 nagfor $try_f90"
         try_mpif90="mpiifort $try_mpif90"
         ;;
 arm )
-        try_f90="pgf90 armflang $try_f90"
+        try_f90="nvfortran pgf90 armflang $try_f90"
         ;;
 crayxt* )
         try_f90="ftn"
@@ -3196,6 +3184,7 @@ case "$arch" in
         echo $ECHO_N "checking version of $mpif90... $ECHO_C"
         ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
         pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
+        nvfortran_version=`$mpif90 -V 2>&1 | grep "^nvfortran"`
         gfortran_version=`$mpif90 -v 2>&1 | grep "gcc version"`
         nagfor_version=`$mpif90 -v 2>&1 | grep "NAG Fortran"`
         xlf_version=`$mpif90 -v 2>&1 | grep "xlf"`
@@ -3207,6 +3196,11 @@ case "$arch" in
                 f90_major_version=`echo $version | cut -d. -f1`
                 echo "${ECHO_T}ifort $f90_major_version"
                 f90_in_mpif90="ifort"
+        elif test "$nvfortran_version" != ""
+        then
+                version=`echo $nvfortran_version | cut -d ' ' -f2`
+                echo "${ECHO_T}nvfortran $version"
+                f90_in_mpif90="nvfortran"
         elif test "$pgf_version" != ""
         then
                 version=`echo $pgf_version | cut -d ' ' -f2`
@@ -4635,9 +4629,12 @@ fi
 
    if test "x$NVCC" = "xno"
    then
-      as_fn_error $? "Cannot find nvcc compiler. To enable CUDA, please add path to
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Cannot find nvcc compiler. To enable CUDA, please add path to
                     nvcc in the PATH environment variable and/or specify the path
-                    where CUDA is installed using: --with-cuda=PATH" "$LINENO" 5
+                    where CUDA is installed using: --with-cuda=PATH" >&5
+$as_echo "$as_me: WARNING: Cannot find nvcc compiler. To enable CUDA, please add path to
+                    nvcc in the PATH environment variable and/or specify the path
+                    where CUDA is installed using: --with-cuda=PATH" >&2;}
    fi
 
 
@@ -4667,9 +4664,12 @@ $as_echo_n "checking whether nvcc works... " >&6; }
    }
 EOF
 
-   if $NVCC -c $NVCCFLAGS conftest.cu &> /dev/null
+   if test "x$NVCC" != "xno"
    then
-      ac_compile_nvcc=yes
+      if $NVCC -c $NVCCFLAGS conftest.cu &> /dev/null
+      then
+         ac_compile_nvcc=yes
+      fi
    fi
    rm -f conftest.cu conftest.o
    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_compile_nvcc" >&5
@@ -4677,7 +4677,8 @@ $as_echo "$ac_compile_nvcc" >&6; }
 
    if test "x$ac_compile_nvcc" = "xno"
    then
-      as_fn_error $? "CUDA compiler has problems." "$LINENO" 5
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: CUDA compiler has problems." >&5
+$as_echo "$as_me: WARNING: CUDA compiler has problems." >&2;}
    fi
 
 
@@ -5032,8 +5033,14 @@ else
       		    mkl_lib="mkl_gf_lp64"
       		    mkl_omp="mkl_gnu_thread"
 		    ;;
+	       nvfortran* )
+      		    mkl_lib="mkl_intel_lp64"
+      		    mkl_omp="mkl_intel_thread"
+                    # FIXME: is the following correct?
+      		    add_mkl_flag="-pgf90libs"
+		    ;;
 	       pgf* )
-                    # Detect (again) PGI version
+                    # Detect PGI version - FIXME: WHY? pgf_version is known
                     pgf_version=`$mpif90 -V 2>&1 | sed '/^$/d' | grep "^pgf" | cut -d ' ' -f2`
                     # From version 19.1, the new llvm backend requires linking to mkl_intel_thread
                     ompimp=""
