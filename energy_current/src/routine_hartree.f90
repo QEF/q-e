@@ -208,7 +208,7 @@ endif
 
    call stop_clock('xc_current')
    call print_clock('xc_current')
-   if (ionode) print *, 'CORRENTE X-C CALCULATED'
+   if (ionode) print *, 'X-C CURRENT CALCULATED'
 
 !---------------------------------KOHN------------------------------------------------
    call start_clock('kohn_current')

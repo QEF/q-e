@@ -86,7 +86,7 @@ subroutine routine_zero()
    character(256) ::filename, pref_box
    real(DP), allocatable :: values(:)
 
-   write (stdout, *) 'INIZIO ROUTINE ZERO'
+   write (stdout, *) 'ROUTINE_ZERO BEGINNING'
    call start_clock('routine_zero')
    if (ionode) print *, 'eta', eta
 
@@ -129,7 +129,7 @@ subroutine routine_zero()
    z_current = z_current*alat
    call stop_clock('zero_current')
    call print_clock('zero_current')
-   if (ionode) print *, 'CORRENTE ZERO CALCOLATA'
+   if (ionode) print *, 'ZERO CURRENT CALCULATED'
 
 !!
 !!------ IONIC CURRENT ----------------
@@ -189,7 +189,7 @@ subroutine routine_zero()
 
    call stop_clock('calcolo_i')
    call print_clock('calcolo_i')
-   if (ionode) print *, 'CORRENTE IONIC CALCOLATA'
+   if (ionode) print *, 'IONIC CURRENT CALCULATED'
 
 300 call stop_clock('routine_zero')
    call print_clock('routine_zero')
