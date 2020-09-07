@@ -15,7 +15,7 @@ SUBROUTINE compute_vsgga( rhoout, grho, vsgga )
   USE gvect,                ONLY : ngm, g
   USE noncollin_module,     ONLY : noncolin, nspin_gga
   USE funct,                ONLY : dft_is_gradient, get_igcc
-  USE xc_gga,               ONLY : xc_gcx
+  USE xc_interfaces,        ONLY : xc_gcx
   USE spin_orb,             ONLY : domag
   USE fft_base,             ONLY : dfftp
   !

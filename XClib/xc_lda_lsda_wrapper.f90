@@ -7,6 +7,8 @@
 !
 !
 
+!
+!
 !>>>> quando chiama xc setta la threshold quando non è il valore standard <<<<<<
 
 

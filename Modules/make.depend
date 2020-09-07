@@ -65,7 +65,6 @@ deviatoric.o : kind.o
 dgcxc_drivers.o : constants.o
 dgcxc_drivers.o : funct.o
 dgcxc_drivers.o : kind.o
-dgcxc_drivers.o : xc_gga_drivers.o
 dist.o : cell_base.o
 dist.o : constants.o
 dist.o : io_global.o
@@ -396,8 +395,6 @@ ws_base.o : kind.o
 wyckoff.o : kind.o
 wyckoff.o : space_group.o
 wypos.o : kind.o
-xc_gga_drivers.o : funct.o
-xc_gga_drivers.o : kind.o
 xc_mgga_drivers.o : funct.o
 xc_mgga_drivers.o : kind.o
 xc_rVV10.o : ../FFTXlib/fft_interfaces.o

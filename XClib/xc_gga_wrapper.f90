@@ -1,57 +1,6 @@
 !
-! Copyright (C) 2019-2020 Quantum ESPRESSO Foundation
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
-!
-MODULE xc_gga
-!
-USE kinds,     ONLY: DP
-USE funct,     ONLY: get_igcx, get_igcc, is_libxc,    &
-                     exx_is_active, get_exx_fraction, &
-                     get_screening_parameter, get_gau_parameter
-!
-USE xc_interfaces,     ONLY: gcxc, gcx_spin, gcc_spin,       &
-                             gcc_spin_more, xclib_set_threshold, &
-                             xclib_get_exx, xclib_get_gau_scr_param
-!
-IMPLICIT NONE
-!
-PRIVATE
-SAVE
-!
-!  GGA exchange-correlation drivers
-PUBLIC :: xc_gcx, change_threshold_gga
-!
-!  input thresholds (default values)
-REAL(DP) :: rho_threshold = 1.D-6
-REAL(DP) :: grho_threshold = 1.D-10
-!
-!
- CONTAINS
-!
-!
-!-----------------------------------------------------------------------
-SUBROUTINE change_threshold_gga( rho_thr_in, grho_thr_in )
-  !--------------------------------------------------------------------
-  !! Change rho and grho thresholds.
-  !
-  IMPLICIT NONE
-  !
-  REAL(DP), INTENT(IN) :: rho_thr_in
-  REAL(DP), INTENT(IN), OPTIONAL :: grho_thr_in
-  !
-  rho_threshold = rho_thr_in
-  IF (PRESENT(grho_thr_in)) grho_threshold = grho_thr_in
-  !
-  RETURN
-  !
-END SUBROUTINE
-!
-!
 !---------------------------------------------------------------------------
-SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
+SUBROUTINE xc_gcx_l( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !-------------------------------------------------------------------------
   !! Wrapper routine. Calls xc_gga-driver routines from internal libraries
   !! of q-e or from the external libxc, depending on the input choice.
@@ -66,6 +15,9 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
 #include "xc_version.h"
   USE xc_f03_lib_m
 #endif
+  !
+  USE kind_l,        ONLY: DP
+  USE dft_par_mod  
   !
   IMPLICIT NONE
   !
@@ -118,35 +70,29 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   REAL(DP), ALLOCATABLE :: rh(:), zeta(:)
   REAL(DP), ALLOCATABLE :: grho2(:,:), grho_ud(:)
   !
-  INTEGER :: igcx, igcc
   INTEGER :: k, is
-  REAL(DP) :: sgn(2), exx_fraction, gau_parameter, screening_parameter
+  REAL(DP) :: sgn(2)
   REAL(DP), PARAMETER :: small = 1.E-10_DP
-  LOGICAL :: exx_started
   !
   !
   IF (ns==2 .AND. .NOT. PRESENT(v2c_ud)) CALL errore( 'xc_gga', 'cross &
                                              &term v2c_ud not found', 1 )
   !
-  igcx = get_igcx()
-  igcc = get_igcc() 
-  !
   !----PROVISIONAL ---
-  IF ( ANY(.NOT.is_libxc(3:4)) ) THEN
-     CALL xclib_set_threshold( 'gga', rho_threshold, grho_threshold )
-     exx_started  = exx_is_active()
-     exx_fraction = get_exx_fraction()
-     CALL xclib_get_exx( exx_started )
-     CALL xclib_get_exx( exx_fraction )
-     !CALL get_ggaxc_param( 0.d0, exx_started, exx_fraction )
-     IF ( igcx==12 ) THEN
-       screening_parameter = get_screening_parameter()
-       CALL xclib_get_gau_scr_param( screening_parameter )
-     ELSEIF (igcx==20 ) THEN
-       gau_parameter = get_gau_parameter()
-       CALL xclib_get_gau_scr_param( gau_parameter )
-     ENDIF
-  ENDIF
+  !IF ( ANY(.NOT.is_libxc(3:4)) ) THEN
+  !   CALL xclib_set_threshold( 'gga', rho_threshold, grho_threshold )
+  !   exx_started  = exx_is_active()
+  !   exx_fraction = get_exx_fraction()
+  !   CALL xclib_get_exx( exx_started )
+  !   CALL xclib_get_exx( exx_fraction )
+  !   IF ( igcx==12 ) THEN
+  !     screening_parameter = get_screening_parameter()
+  !     CALL xclib_get_gau_scr_param( screening_parameter )    !---controlla
+  !   ELSEIF (igcx==20 ) THEN
+  !     gau_parameter = get_gau_parameter()
+  !     CALL xclib_get_gau_scr_param( gau_parameter )
+  !   ENDIF
+  !ENDIF
   !----
   !
   ex = 0.0_DP ;  v1x = 0.0_DP ;  v2x = 0.0_DP
@@ -183,7 +129,7 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
     !
     DO k = 1, length
       rho_lxc(k) = ABS( rho(k,1) )
-      IF ( rho_lxc(k) > rho_threshold ) &
+      IF ( rho_lxc(k) > rho_threshold_gga ) &
          sigma(k) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
     ENDDO
     !
@@ -203,7 +149,7 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   IF ( ns==1 .AND. ANY(.NOT.is_libxc(3:4)) ) THEN
      !
-     CALL gcxc( length, ABS(rho(:,1)), sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )  
+     CALL gcxc_l( length, ABS(rho(:,1)), sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )  
      !
      DO k = 1, length
         sgn(1) = SIGN(1._DP, rho(k,1))
@@ -219,7 +165,7 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
     !
     CALL xc_f03_func_init( xc_func, igcx, pol_unpol )
      xc_info1 = xc_f03_func_get_info( xc_func )
-     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold )
+     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold_gga )
      fkind_x  = xc_f03_func_info_get_kind( xc_info1 )
      CALL xc_f03_gga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
     CALL xc_f03_func_end( xc_func )
@@ -250,7 +196,7 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
           grho2(:,is) = grho(1,:,is)**2 + grho(2,:,is)**2 + grho(3,:,is)**2
        ENDDO
        !
-       CALL gcx_spin( length, rho, grho2, ex, v1x, v2x )
+       CALL gcx_spin_l( length, rho, grho2, ex, v1x, v2x )
        !
     ENDIF
     !
@@ -264,7 +210,7 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
     !
     CALL xc_f03_func_init( xc_func, igcc, pol_unpol )
      xc_info2 = xc_f03_func_get_info( xc_func )
-     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold )
+     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold_gga )
      CALL xc_f03_gga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), ec_lxc(1), vc_rho(1), vc_sigma(1) )
     CALL xc_f03_func_end( xc_func )
     !
@@ -277,8 +223,8 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
     ELSE
       DO k = 1, length
         sgn(:) = 1.d0
-        IF (rho_lxc(2*k-1)<rho_threshold .OR. SQRT(ABS(sigma(3*k-2)))<grho_threshold) sgn(1)=0.d0
-        IF (rho_lxc(2*k)  <rho_threshold .OR. SQRT(ABS(sigma(3*k)))  <grho_threshold) sgn(2)=0.d0
+        IF (rho_lxc(2*k-1)<rho_threshold_gga .OR. SQRT(ABS(sigma(3*k-2)))<grho_threshold_gga) sgn(1)=0.d0
+        IF (rho_lxc(2*k)  <rho_threshold_gga .OR. SQRT(ABS(sigma(3*k)))  <grho_threshold_gga) sgn(2)=0.d0
         ec(k) = ec_lxc(k) * (rho_lxc(2*k-1)*sgn(1)+rho_lxc(2*k)*sgn(2))
         v1c(k,1) = vc_rho(2*k-1) * sgn(1)
         v1c(k,2) = vc_rho(2*k) * sgn(2)
@@ -307,12 +253,12 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
           !
           arho = rho
           !
-          WHERE ( rho(:,1)+rho(:,2) < rho_threshold )
+          WHERE ( rho(:,1)+rho(:,2) < rho_threshold_gga )
              arho(:,1) = 0.0_DP
              arho(:,2) = 0.0_DP
           ENDWHERE
           !
-          CALL gcc_spin_more( length, arho, grho2, grho_ud, ec, v1c, v2c, v2c_ud )
+          CALL gcc_spin_more_l( length, arho, grho2, grho_ud, ec, v1c, v2c, v2c_ud )
           !
           DEALLOCATE( grho_ud )
           !
@@ -323,13 +269,13 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
           rh = rho(:,1) + rho(:,2)
           !
           zeta = 2.0_DP ! trash value, gcc-routines get rid of it when present
-          WHERE ( rh > rho_threshold ) zeta = ( rho(:,1) - rho(:,2) ) / rh(:)
+          WHERE ( rh > rho_threshold_gga ) zeta = ( rho(:,1) - rho(:,2) ) / rh(:)
           !
           grho2(:,1) = ( grho(1,:,1) + grho(1,:,2) )**2 + &
                        ( grho(2,:,1) + grho(2,:,2) )**2 + &
                        ( grho(3,:,1) + grho(3,:,2) )**2
           !
-          CALL gcc_spin( length, rh, zeta, grho2(:,1), ec, v1c, v2c(:,1) )
+          CALL gcc_spin_l( length, rh, zeta, grho2(:,1), ec, v1c, v2c(:,1) )
           !
           v2c(:,2)  = v2c(:,1)
           v2c_ud(:) = v2c(:,1)
@@ -359,12 +305,12 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
      !
      ! ... This is the spin-unpolarised case
      DO k = 1, length
-        IF ( ABS(rho(k,1)) > rho_threshold ) &
+        IF ( ABS(rho(k,1)) > rho_threshold_gga ) &
           grho2(k,1) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
      ENDDO
      !
      !
-     CALL gcxc( length, ABS(rho(:,1)), grho2(:,1), ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
+     CALL gcxc_l( length, ABS(rho(:,1)), grho2(:,1), ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
      !
      DO k = 1, length
         sgn(1) = SIGN(1._DP, rho(k,1))
@@ -378,7 +324,7 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
         grho2(:,is) = grho(1,:,is)**2 + grho(2,:,is)**2 + grho(3,:,is)**2
      ENDDO
      !
-     CALL gcx_spin( length, rho, grho2, ex, v1x, v2x )
+     CALL gcx_spin_l( length, rho, grho2, ex, v1x, v2x )
      !
      IF (igcc==3 .OR. igcc==7 .OR. igcc==13 ) THEN
         !
@@ -389,7 +335,7 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
         !
         arho = rho
         !
-        CALL gcc_spin_more( length, arho, grho2, grho_ud, ec, v1c, v2c, v2c_ud )
+        CALL gcc_spin_more_l( length, arho, grho2, grho_ud, ec, v1c, v2c, v2c_ud )
         !
         DEALLOCATE( grho_ud )
         !
@@ -400,13 +346,13 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
         rh = rho(:,1) + rho(:,2)
         !
         zeta = 2.0_DP ! trash value, gcc-routines get rid of it when present
-        WHERE ( rh > rho_threshold ) zeta = ( rho(:,1) - rho(:,2) ) / rh(:)
+        WHERE ( rh > rho_threshold_gga ) zeta = ( rho(:,1) - rho(:,2) ) / rh(:)
         !
         grho2(:,1) = ( grho(1,:,1) + grho(1,:,2) )**2 + &
                      ( grho(2,:,1) + grho(2,:,2) )**2 + &
                      ( grho(3,:,1) + grho(3,:,2) )**2
         !
-        CALL gcc_spin( length, rh, zeta, grho2(:,1), ec, v1c, v2c(:,1) )
+        CALL gcc_spin_l( length, rh, zeta, grho2(:,1), ec, v1c, v2c(:,1) )
         !
         v2c(:,2)  = v2c(:,1)
         v2c_ud(:) = v2c(:,1)
@@ -424,7 +370,4 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   RETURN
   !
-END SUBROUTINE xc_gcx
-!
-!
-END MODULE xc_gga
+END SUBROUTINE xc_gcx_l

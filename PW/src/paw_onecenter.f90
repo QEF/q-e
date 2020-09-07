@@ -658,7 +658,7 @@ MODULE paw_onecenter
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : sqrtpi, fpi,pi,e2
     USE funct,                  ONLY : igcc_is_lyp
-    USE xc_gga,                 ONLY : xc_gcx
+    USE xc_interfaces,          ONLY : xc_gcx
     USE mp,                     ONLY : mp_sum
     !
     TYPE(paw_info), INTENT(IN) :: i
@@ -1804,7 +1804,7 @@ MODULE paw_onecenter
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : pi,e2, eps => eps12, eps2 => eps24
     USE funct,                  ONLY : is_libxc
-    USE xc_gga,                 ONLY : xc_gcx, change_threshold_gga
+    USE xc_interfaces,          ONLY : xc_gcx, xclib_set_threshold
     !
     TYPE(paw_info), INTENT(IN) :: i
     !! atom's minimal info
@@ -1904,7 +1904,7 @@ MODULE paw_onecenter
              gradsw(1:3,k,1) = grad(k,1:3,1)
           ENDDO
           !
-          CALL change_threshold_gga( 1.E-10_DP )
+          CALL xclib_set_threshold( 'gga', 1.E-10_DP )
           !
           CALL dgcxc( i%m, nspin_mag, r, grad, dsvxc_rr, dsvxc_sr, dsvxc_ss )
           !
@@ -1914,7 +1914,7 @@ MODULE paw_onecenter
           !
           CALL xc_gcx( i%m, nspin_mag, r, gradsw, sx, sc, v1x, v2x, v1c, v2c )
           !
-          CALL change_threshold_gga( 1.D-6 )
+          CALL xclib_set_threshold( 'gga', 1.D-6 )
           !
           DO k = 1, i%m
              s1 = grad(k,1,1) * dgrad(k,1,1) + &

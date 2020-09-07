@@ -478,7 +478,6 @@ ppacf.o : ../../Modules/mp_bands.o
 ppacf.o : ../../Modules/mp_global.o
 ppacf.o : ../../Modules/mp_world.o
 ppacf.o : ../../Modules/recvec.o
-ppacf.o : ../../Modules/xc_gga_drivers.o
 ppacf.o : ../../Modules/xc_vdW_DF.o
 ppacf.o : ../../PW/src/atomic_wfc_mod.o
 ppacf.o : ../../PW/src/exx.o
@@ -913,7 +912,6 @@ xctest.o : ../../Modules/io_global.o
 xctest.o : ../../Modules/kind.o
 xctest.o : ../../Modules/mp_global.o
 xctest_qe_libxc.o : ../../Modules/funct.o
-xctest_qe_libxc.o : ../../Modules/xc_gga_drivers.o
 xctest_qe_libxc.o : ../../Modules/xc_mgga_drivers.o
 xctest_qe_libxc.o : ../../Modules/kind.o
 

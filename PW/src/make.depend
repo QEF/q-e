@@ -877,7 +877,6 @@ gradcorr.o : ../../Modules/fft_rho.o
 gradcorr.o : ../../Modules/funct.o
 gradcorr.o : ../../Modules/kind.o
 gradcorr.o : ../../Modules/recvec.o
-gradcorr.o : ../../Modules/xc_gga_drivers.o
 gradcorr.o : pwcom.o
 gweights.o : ../../Modules/kind.o
 h_epsi_her_apply.o : ../../Modules/becmod.o
@@ -1494,7 +1493,6 @@ paw_onecenter.o : ../../Modules/kind.o
 paw_onecenter.o : ../../Modules/mp_images.o
 paw_onecenter.o : ../../Modules/noncol.o
 paw_onecenter.o : ../../Modules/paw_variables.o
-paw_onecenter.o : ../../Modules/xc_gga_drivers.o
 paw_onecenter.o : ../../UtilXlib/mp.o
 paw_onecenter.o : ../../upflib/atom.o
 paw_onecenter.o : ../../upflib/radial_grids.o
@@ -2066,7 +2064,6 @@ stres_gradcorr.o : ../../Modules/fft_rho.o
 stres_gradcorr.o : ../../Modules/funct.o
 stres_gradcorr.o : ../../Modules/kind.o
 stres_gradcorr.o : ../../Modules/mp_bands.o
-stres_gradcorr.o : ../../Modules/xc_gga_drivers.o
 stres_gradcorr.o : ../../Modules/xc_mgga_drivers.o
 stres_gradcorr.o : ../../UtilXlib/mp.o
 stres_gradcorr.o : pwcom.o

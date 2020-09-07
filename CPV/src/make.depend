@@ -342,7 +342,6 @@ exch_corr.o : ../../Modules/ions_base.o
 exch_corr.o : ../../Modules/kind.o
 exch_corr.o : ../../Modules/mp_global.o
 exch_corr.o : ../../Modules/recvec.o
-exch_corr.o : ../../Modules/xc_gga_drivers.o
 exch_corr.o : ../../UtilXlib/mp.o
 exch_corr.o : ../../upflib/uspp.o
 exch_corr.o : cp_interfaces.o

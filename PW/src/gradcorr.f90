@@ -17,7 +17,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   USE lsda_mod,             ONLY : nspin
   USE cell_base,            ONLY : omega
   USE funct,                ONLY : igcc_is_lyp, dft_is_gradient, get_igcc
-  USE xc_gga,               ONLY : xc_gcx
+  USE xc_interfaces,        ONLY : xc_gcx
   USE spin_orb,             ONLY : domag
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft

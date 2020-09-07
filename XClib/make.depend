@@ -9,6 +9,9 @@ drivers_d_lda_lsda.o : exchange_lda_lsda.o
 xc_lda_lsda_wrapper.o : kind_l.o
 xc_lda_lsda_wrapper.o : dft_par_mod.o
 xc_lda_lsda_wrapper.o : drivers_lda_lsda.o
+xc_gga_wrapper.o : kind_l.o
+xc_gga_wrapper.o : dft_par_mod.o
+xc_gga_wrapper.o : drivers_gga.o
 drivers_gga.o : kind_l.o
 drivers_gga.o : xc_beef_interface.o
 drivers_gga.o : dft_par_mod.o

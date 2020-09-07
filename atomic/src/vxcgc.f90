@@ -79,8 +79,7 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
   use kinds,     only : DP
   use constants, only : fpi, e2
   use funct,     only : dft_is_meta
-  use xc_gga,    only : xc_gcx, change_threshold_gga
-  use xc_interfaces,   only : tpsscxc
+  use xc_interfaces,   only : xc_gcx, xclib_set_threshold, tpsscxc
   implicit none
   integer,  intent(in) :: ndm,mesh,nspin,iflag
   real(DP), intent(in) :: r(mesh), r2(mesh), rho(ndm,2), rhoc(ndm)
@@ -173,7 +172,7 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
         !
         !     GGA case
         !
-        CALL change_threshold_gga( small, eps**2 )
+        CALL xclib_set_threshold( 'gga', small, eps**2 )
         !
         CALL xc_gcx( mesh, nspin, rhoaux, grho_v, sx_v, sc_v, v1x_v, v2x_v, v1c_v, v2c_v )
         !
@@ -187,7 +186,7 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
      !
      !   this is the \sigma-GGA case
      !
-     CALL change_threshold_gga( small, small )
+     CALL xclib_set_threshold( 'gga', small, small )
      !
      CALL xc_gcx( mesh, 2, rhoaux, grho_v, sx_v, sc_v, v1x_v, v2x_v, v1c_v, v2c_v, v2c_ud )
      !

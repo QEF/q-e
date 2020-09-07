@@ -369,8 +369,7 @@
 subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
   use kinds,       only: DP
   use funct,       only: dft_is_gradient, get_igcc
-  use xc_interfaces, only: xc
-  use xc_gga,      only: xc_gcx, change_threshold_gga
+  use xc_interfaces, only: xc, xc_gcx, xclib_set_threshold
   implicit none
   integer, intent(in) :: nnr
   integer, intent(in) :: nspin
@@ -462,7 +461,7 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
   !
   if ( dft_is_gradient() ) then
     !
-    call change_threshold_gga( epsr )
+    call xclib_set_threshold( 'gga', epsr )
     !
     allocate ( sx(nnr), sc(nnr), v1x(nnr,nspin), v1c(nnr,nspin), &
                v2x(nnr,nspin), v2c(nnr,nspin) )

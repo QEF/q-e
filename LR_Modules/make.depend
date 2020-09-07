@@ -159,7 +159,6 @@ compute_vsgga.o : ../Modules/funct.o
 compute_vsgga.o : ../Modules/kind.o
 compute_vsgga.o : ../Modules/noncol.o
 compute_vsgga.o : ../Modules/recvec.o
-compute_vsgga.o : ../Modules/xc_gga_drivers.o
 compute_vsgga.o : ../PW/src/pwcom.o
 dfpt_tetra_mod.o : ../Modules/cell_base.o
 dfpt_tetra_mod.o : ../Modules/io_global.o
@@ -411,7 +410,6 @@ setup_dgc.o : ../Modules/kind.o
 setup_dgc.o : ../Modules/noncol.o
 setup_dgc.o : ../Modules/recvec.o
 setup_dgc.o : ../Modules/wavefunctions.o
-setup_dgc.o : ../Modules/xc_gga_drivers.o
 setup_dgc.o : ../PW/src/pwcom.o
 setup_dgc.o : ../PW/src/scf_mod.o
 setup_dgc.o : ../upflib/uspp.o
