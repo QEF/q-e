@@ -71,7 +71,7 @@ pgi cuda mpi 185:
 
 
 pgi cuda mpi v100:
-  tags: [v100]
+  tags: [galileo,v100]
   script:
     - module purge
     - module load profile/global pgi/18.5 mkl/2018--binary cuda/9.0 openmpi/3.1.3--pgi--18.5 python
@@ -128,7 +128,7 @@ pgi cuda serial 185:
     expire_in: 1 week
 
 pgi cuda9 v100 :
-  tags: [v100]
+  tags: [galileo,v100]
   script:
     - module purge
     - module load profile/global pgi/18.5 mkl/2018--binary cuda/9.0 python
@@ -143,7 +143,7 @@ pgi cuda9 v100 :
     - make run-tests-pw-serial
 
 pgi cuda9 v100 CP:
-  tags: [v100]
+  tags: [galileo,v100]
   script:
     - module purge
     - module load profile/global pgi/19.10--binary mkl/2019--binary cuda/10.0 python
@@ -154,6 +154,41 @@ pgi cuda9 v100 CP:
     - cd test-suite
     - make clean
     - make run-tests-cp-serial
+
+
+pgi191 cuda10 v100 power:
+  tags: [marconi100]
+  script:
+    - module purge
+    - module load pgi/19.10--binary cuda/10.1 spectrum_mpi/10.3.1--binary  python/3.8.2
+    - pwd
+    - cd ..
+    - ./configure CC=pgcc F77=pgf90 FC=pgf90 F90=pgf90 MPIF90=mpipgifort --enable-openmp --with-cuda=$CUDA_ROOT --with-cuda-runtime=10.1 --with-cuda-cc=70
+    - make -j pw cp
+    - salloc --nodes=1 --ntasks-per-node=4 --ntasks-per-socket=2 --cpus-per-task=32 --gres=gpu:4 --mem=230000MB --time 01:00:00 -A $CINECA_QE_ACCOUNT -p m100_usr_prod
+    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=8; fi
+    - echo "Using $OMP_NUM_THREADS threads"
+    - cd test-suite
+    - make clean
+    - make run-tests-pw-parallel
+    - exit
+
+pgi207 cuda10 v100 power:
+  tags: [marconi100]
+  script:
+    - module purge
+    - module load profile/global hpc-sdk/2020--binary cuda/10.1 spectrum_mpi/10.3.1--binary python/3.8.2
+    - pwd
+    - cd ..
+    - ./configure CC=pgcc F77=pgf90 FC=pgf90 F90=pgf90 MPIF90=mpipgifort --enable-openmp --with-cuda=$CUDA_ROOT --with-cuda-runtime=10.1 --with-cuda-cc=70
+    - make -j pw cp
+    - salloc --nodes=1 --ntasks-per-node=4 --ntasks-per-socket=2 --cpus-per-task=32 --gres=gpu:4 --mem=230000MB --time 01:00:00 -A $CINECA_QE_ACCOUNT -p m100_usr_prod
+    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=8; fi
+    - echo "Using $OMP_NUM_THREADS threads"
+    - cd test-suite
+    - make clean
+    - make run-tests-pw-parallel
+    - exit
 
 #pgi cuda9.2 p100 nollvm:
 #  tags: [p100]
