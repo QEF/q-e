@@ -158,7 +158,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
   USE funct,            ONLY : get_meta, dft_is_nonlocc, nlc, is_libxc
-  USE xc_mgga,          ONLY : xc_metagcx
+  USE xc_interfaces,    ONLY : xc_metagcx
   USE scf,              ONLY : scf_type, rhoz_or_updw
   USE mp,               ONLY : mp_sum
   USE mp_bands,         ONLY : intra_bgrp_comm

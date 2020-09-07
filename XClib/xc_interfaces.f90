@@ -8,7 +8,7 @@ MODULE xc_interfaces
   PRIVATE
   !
   ! LDA
-  PUBLIC :: XC, XC_GCX, XC_LDA, XC_LSDA, DMXC_LDA, DMXC_LSDA, DMXC_NC
+  PUBLIC :: XC, XC_GCX, XC_METAGCX, XC_LDA, XC_LSDA, DMXC_LDA, DMXC_LSDA, DMXC_NC
   PUBLIC :: SLATER, SLATER_SPIN, PW, PW_SPIN, LYP, &
             LSD_LYP
   ! GGA
@@ -117,8 +117,7 @@ MODULE xc_interfaces
      END SUBROUTINE xc_l
      !
   END INTERFACE
-  
-  
+  !
   INTERFACE XC_GCX
      !
      SUBROUTINE xc_gcx_l( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
@@ -135,9 +134,24 @@ MODULE xc_interfaces
      END SUBROUTINE
      !
   END INTERFACE
-  
-  
-  
+  !
+  INTERFACE XC_METAGCX
+     !
+     SUBROUTINE xc_metagcx_l( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
+       !
+       USE kind_l,        ONLY: DP
+       IMPLICIT NONE
+       INTEGER, INTENT(IN) :: length, ns, np
+       REAL(DP), INTENT(IN) :: rho(length,ns), grho(3,length,ns), tau(length,ns)
+       REAL(DP), INTENT(OUT) :: ex(length), ec(length)
+       REAL(DP), INTENT(OUT) :: v1x(length,ns), v2x(length,ns), v3x(length,ns)
+       REAL(DP), INTENT(OUT) :: v1c(length,ns), v2c(np,length,ns), v3c(length,ns)
+       !
+     END SUBROUTINE
+     !
+  END INTERFACE
+  !
+  !
   INTERFACE XC_LDA
      !
      SUBROUTINE xc_lda_l( length, rho_in, ex_out, ec_out, vx_out, vc_out )

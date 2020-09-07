@@ -23,6 +23,7 @@ external.o \
 get_xc.o \
 xc_lda_lsda_wrapper.o \
 xc_gga_wrapper.o \
+xc_mgga_wrapper.o \
 xc_interfaces.o
 
 all: xc_lib.a

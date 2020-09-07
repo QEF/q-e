@@ -1,59 +1,18 @@
-MODULE xc_mgga
-!
-USE kinds,     ONLY: DP
-USE funct,     ONLY: get_meta, get_metac, is_libxc, &
-                     exx_is_active, scan_exx, get_exx_fraction
-USE xc_interfaces,  ONLY: tau_xc, tau_xc_spin, xclib_set_threshold
-!
-IMPLICIT NONE
-!
-PRIVATE
-SAVE
-!
-!  GGA exchange-correlation drivers
-PUBLIC :: xc_metagcx
-PUBLIC :: tau_xc, tau_xc_spin
-PUBLIC :: change_threshold_mgga
-!
-!
-!  input thresholds (default values)
-REAL(DP) :: rho_threshold   = 1.0E-12_DP
-REAL(DP) :: grho2_threshold = 1.0E-24_DP
-REAL(DP) :: tau_threshold   = 1.0E-12_DP
-!
-!
- CONTAINS
-!
-!
-!-------------------------------------------------------------------------------------
-SUBROUTINE change_threshold_mgga( rho_thr_in, grho2_thr_in, tau_thr_in )
-  !------------------------------------------------------------------------------------
-  !! Change rho, grho and tau thresholds.
-  ! 
-  REAL(DP), INTENT(IN) :: rho_thr_in
-  REAL(DP), INTENT(IN), OPTIONAL :: grho2_thr_in
-  REAL(DP), INTENT(IN), OPTIONAL :: tau_thr_in
-  !
-  rho_threshold = rho_thr_in
-  IF ( PRESENT(grho2_thr_in) ) grho2_threshold = grho2_thr_in
-  IF ( PRESENT(tau_thr_in)  ) tau_threshold  = tau_thr_in
-  !
-  RETURN
-  !
-END SUBROUTINE change_threshold_mgga
-!
 !
 !----------------------------------------------------------------------------------------
-SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
+SUBROUTINE xc_metagcx_l( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   !-------------------------------------------------------------------------------------
   !! Wrapper routine. Calls metaGGA drivers from internal libraries
   !! of q-e or from the external libxc, depending on the input choice.
   !
 #if defined(__LIBXC)
 #include "xc_version.h"
-  USE funct,            ONLY : get_libxc_flags_exc
+  !USE funct,            ONLY : get_libxc_flags_exc                           !-----sistema
   USE xc_f03_lib_m
 #endif 
+  !
+  USE kind_l,        ONLY: DP
+  USE dft_par_mod  
   !
   IMPLICIT NONE
   !
@@ -88,7 +47,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   !
   ! ... local variables
   !
-  INTEGER :: is, imeta, imetac
+  INTEGER :: is
   REAL(DP), ALLOCATABLE :: grho2(:,:)
   !
 #if defined(__LIBXC)
@@ -101,7 +60,6 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   REAL(DP), ALLOCATABLE :: vc_rho(:), vc_sigma(:), vc_tau(:)
   REAL(DP), ALLOCATABLE :: lapl_rho(:), vlapl_rho(:) ! not used in TPSS
   !
-  REAL(DP) :: exx_fraction
   INTEGER :: k, ipol, pol_unpol, eflag
   LOGICAL :: POLARIZED
 #if (XC_MAJOR_VERSION > 4)
@@ -111,9 +69,6 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
 #endif
   !
   lengthxc = length
-  !
-  imeta  = get_meta()
-  imetac = get_metac()
   !
   ex = 0.0_DP ;  v1x = 0.0_DP ;  v2x = 0.0_DP ;  v3x = 0.0_DP
   ec = 0.0_DP ;  v1c = 0.0_DP ;  v2c = 0.0_DP ;  v3c = 0.0_DP
@@ -173,10 +128,10 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
     ENDDO
     !
     IF (ns == 1) THEN
-       CALL tau_xc( length, rho(:,1), grho2(:,1), tau(:,1), ex, ec, v1x(:,1), &
+       CALL tau_xc_l( length, rho(:,1), grho2(:,1), tau(:,1), ex, ec, v1x(:,1), &
                     v2x(:,1), v3x(:,1), v1c(:,1), v2c(1,:,1), v3c(:,1) )
     ELSEIF (ns == 2) THEN
-       CALL tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, &
+       CALL tau_xc_spin_l( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, &
                          v2c, v3c )
     ENDIF
     !
@@ -190,14 +145,14 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
      CALL xc_f03_func_init( xc_func, imeta, pol_unpol )
      xc_info1 = xc_f03_func_get_info( xc_func )
      CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold )
-     CALL get_libxc_flags_exc( xc_info1, eflag )
-     IF (eflag==1) THEN
+!     CALL get_libxc_flags_exc( xc_info1, eflag )                                   !----sistema
+!     IF (eflag==1) THEN
        CALL xc_f03_mgga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
                                  ex_lxc(1), vx_rho(1), vx_sigma(1), vlapl_rho(1), vx_tau(1) )
-     ELSE
-       CALL xc_f03_mgga_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
-                             vx_rho(1), vx_sigma(1), vlapl_rho(1), vx_tau(1) )
-     ENDIF
+!     ELSE
+!       CALL xc_f03_mgga_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &    !---sistema
+!                             vx_rho(1), vx_sigma(1), vlapl_rho(1), vx_tau(1) )
+!     ENDIF
     CALL xc_f03_func_end( xc_func )
     !
     IF (.NOT. POLARIZED) THEN
@@ -221,7 +176,6 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
     !
     ! ... only for HK/MCA: SCAN0 (used in CPV)
     IF ( scan_exx ) THEN
-       exx_fraction = get_exx_fraction()
        IF (exx_is_active()) THEN
          ex  = (1.0_DP - exx_fraction) * ex
          v1x = (1.0_DP - exx_fraction) * v1x
@@ -281,12 +235,12 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   !
   IF (ns == 1) THEN
      !
-     CALL tau_xc( length, rho(:,1), grho2(:,1), tau(:,1), ex, ec, v1x(:,1), &
+     CALL tau_xc_l( length, rho(:,1), grho2(:,1), tau(:,1), ex, ec, v1x(:,1), &
                   v2x(:,1), v3x(:,1), v1c(:,1), v2c(1,:,1), v3c(:,1) )
      !
   ELSEIF (ns == 2) THEN
      !
-     CALL tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, &
+     CALL tau_xc_spin_l( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, &
                        v2c, v3c )
      !
   ENDIF
@@ -297,7 +251,4 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   !
   RETURN
   !
-END SUBROUTINE xc_metagcx
-!
-!
-END MODULE xc_mgga
+END SUBROUTINE xc_metagcx_l
