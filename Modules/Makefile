@@ -27,7 +27,6 @@ control_flags.o \
 coulomb_vcut.o \
 dgcxc_drivers.o \
 dist.o \
-dmxc_drivers.o \
 dgcxc_drivers.o \
 electrons_base.o \
 environment.o \

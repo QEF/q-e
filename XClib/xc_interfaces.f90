@@ -8,7 +8,7 @@ MODULE xc_interfaces
   PRIVATE
   !
   ! LDA
-  PUBLIC :: XC, XC_GCX, XC_METAGCX, XC_LDA, XC_LSDA, DMXC_LDA, DMXC_LSDA, DMXC_NC
+  PUBLIC :: XC, XC_GCX, XC_METAGCX, XC_LDA, XC_LSDA, DMXC, DMXC_LDA, DMXC_LSDA, DMXC_NC
   PUBLIC :: SLATER, SLATER_SPIN, PW, PW_SPIN, LYP, &
             LSD_LYP
   ! GGA
@@ -186,12 +186,24 @@ MODULE xc_interfaces
   END INTERFACE
   !
   !
+  INTERFACE DMXC
+     !
+     SUBROUTINE dmxc_l( length, sr_d, rho_in, dmuxc )
+       !
+       USE kind_l,            ONLY: DP
+       IMPLICIT NONE
+       INTEGER,  INTENT(IN) :: length, sr_d
+       REAL(DP), INTENT(IN) :: rho_in(length,sr_d)
+       REAL(DP), INTENT(OUT) :: dmuxc(length,sr_d,sr_d)
+       !
+     END SUBROUTINE
+     !
+  END INTERFACE
+  !
   INTERFACE DMXC_LDA
      !
      SUBROUTINE dmxc_lda_l( length, rho_in, dmuxc )
        !
-       USE dft_par_mod
-       USE exch_lda_l,   ONLY: slater_l
        USE kind_l,       ONLY: DP
        IMPLICIT NONE
        INTEGER,  INTENT(IN) :: length
@@ -206,9 +218,6 @@ MODULE xc_interfaces
      !
      SUBROUTINE dmxc_lsda_l( length, rho_in, dmuxc )
        !
-       USE dft_par_mod
-       USE exch_lda_l,   ONLY: slater_l
-       USE corr_lda_l,   ONLY: pz_l, pz_polarized_l
        USE kind_l,       ONLY: DP
        IMPLICIT NONE
        INTEGER,  INTENT(IN) :: length
@@ -223,7 +232,6 @@ MODULE xc_interfaces
      !
      SUBROUTINE dmxc_nc_l( length, rho_in, m, dmuxc )
        !
-       USE dft_par_mod
        USE kind_l,       ONLY: DP
        IMPLICIT NONE
        INTEGER,  INTENT(IN) :: length

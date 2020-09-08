@@ -1688,6 +1688,7 @@ MODULE paw_onecenter
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
     USE funct,                  ONLY : dft_is_gradient
+    USE xc_interfaces,          ONLY : dmxc
     !
     TYPE(paw_info), INTENT(IN) :: i
     !! atom's minimal info
@@ -1747,7 +1748,7 @@ MODULE paw_onecenter
           !
           rho_rad(:,1) = rho_rad(:,1) + rho_core(:)
           !
-          CALL dmxc( i%m, 1, rho_rad(:,1), dmuxc )
+          CALL dmxc( i%m, 1, rho_rad(:,1:1), dmuxc )
           !
           v_rad(:,ix,1) = dmuxc(:,1,1)
           !

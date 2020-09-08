@@ -7,7 +7,7 @@
 !
 !
 !---------------------------------------------------------------------
-SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
+SUBROUTINE dmxc_l( length, sr_d, rho_in, dmuxc )
   !---------------------------------------------------------------------
   !! Wrapper routine. Calls dmxc-driver routines from internal libraries
   !! or from the external one 'libxc', depending on the input choice.
@@ -16,10 +16,9 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   ! 1) iexch libxc + icorr libxc
   ! 2) iexch qe    + icorr qe
   !
-  USE kinds,            ONLY: DP
-  USE funct,            ONLY: get_iexch, get_icorr, is_libxc
-  USE xc_interfaces,    ONLY: xc_lda, xc_lsda, dmxc_lda, &
-                              dmxc_lsda, dmxc_nc, xclib_set_threshold
+  USE kind_l,            ONLY: DP
+  USE dft_par_mod
+  !
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
@@ -52,12 +51,8 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
 #endif
 #endif
   !
-  INTEGER :: iexch, icorr
   INTEGER :: ir, length_lxc, length_dlxc
   REAL(DP), PARAMETER :: small = 1.E-10_DP, rho_trash = 0.5_DP
-  !
-  iexch = get_iexch()
-  icorr = get_icorr()
   !
 #if defined(__LIBXC)
   !
@@ -138,7 +133,8 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
     !
   ELSEIF ((.NOT.is_libxc(1)) .AND. (.NOT.is_libxc(2)) ) THEN
     !
-    CALL xclib_set_threshold( 'lda', 1.E-10_DP )
+    !CALL set_threshold_l( 'lda', small )
+    rho_threshold_lda = small
     !
     IF ( sr_d == 1 ) CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )
     IF ( sr_d == 2 ) CALL dmxc_lsda( length, rho_in, dmuxc )
@@ -152,20 +148,21 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   !
 #else
   !
-  CALL xclib_set_threshold( 'lda', 1.E-10_DP )
+  !CALL set_threshold_l( 'lda', small )
+  rho_threshold_lda = small
   !
   SELECT CASE( sr_d )
   CASE( 1 )
      !
-     CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )
+     CALL dmxc_lda_l( length, rho_in(:,1), dmuxc(:,1,1) )
      !
   CASE( 2 )
      !
-     CALL dmxc_lsda( length, rho_in, dmuxc )
+     CALL dmxc_lsda_l( length, rho_in, dmuxc )
      ! 
   CASE( 4 )
      !
-     CALL dmxc_nc( length, rho_in(:,1), rho_in(:,2:4), dmuxc )
+     CALL dmxc_nc_l( length, rho_in(:,1), rho_in(:,2:4), dmuxc )
      !
   CASE DEFAULT
      !
