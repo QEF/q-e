@@ -8,7 +8,7 @@
 !
 #define ZERO ( 0.D0, 0.D0 )
 !----------------------------------------------------------------------------
-SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi_d, hpsi_d, overlap, spsi_d, e )
+SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi_d, hpsi_d, overlap, spsi_d, e_d )
   !----------------------------------------------------------------------------
   !
   ! ... Serial version of rotate_wfc for colinear, k-point calculations
@@ -36,7 +36,7 @@ SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi_d, hpsi_d, ove
   COMPLEX(DP), INTENT(INOUT) :: psi_d(npwx*npol,nstart), hpsi_d(npwx*npol,nstart) ! input and output psi, Hpsi,
   COMPLEX(DP), INTENT(INOUT), OPTIONAL :: spsi_d(npwx*npol,nstart)              ! ...   and optionnally Spsi
   LOGICAL, INTENT(IN) :: overlap   ! if .FALSE. : spsi is not needed (and not used)
-  REAL(DP), INTENT(OUT) :: e(nbnd) ! eigenvalues of the reduced H matrix
+  REAL(DP), INTENT(OUT) :: e_d(nbnd) ! eigenvalues of the reduced H matrix
   !
   ! ... local variables
   !
@@ -51,7 +51,7 @@ SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi_d, hpsi_d, ove
   REAL(DP),    ALLOCATABLE :: en_d(:)
 #if defined (__CUDA)
   attributes(device) :: aux_d, psi_d, hpsi_d, spsi_d 
-  attributes(device) :: hh_d, ss_d, vv_d, en_d
+  attributes(device) :: hh_d, ss_d, vv_d, en_d, e_d
 #endif
   !
   IF ( overlap .AND..NOT.present(spsi_d) ) call errore( 'rotHSw','spsi_d array needed with overlap=.TRUE.',1)
@@ -156,8 +156,11 @@ SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi_d, hpsi_d, ove
   !
   call start_clock('rotHSw:diag'); !write(*,*) 'start rotHSw:diag' ; FLUSH(6)
   CALL diaghg( nstart, nbnd, hh_d, ss_d, nstart, en_d, vv_d, me_bgrp, root_bgrp, intra_bgrp_comm )
-
-  e(:) = en_d(1:nbnd)
+  
+!$cuf kernel do(1)
+  DO ii = 1, nbnd 
+    e_d(ii) = en_d(ii)
+  END DO 
   call stop_clock('rotHSw:diag'); !write(*,*) 'stop rotHSw:diag' ; FLUSH(6)
   !
   ! ... update the basis set

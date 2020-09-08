@@ -44,7 +44,7 @@
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE bpcg_k_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, nbnd, npol, nvec, psi_d, hpsi_d, spsi_d, ethr, e, nhpsi )
+SUBROUTINE bpcg_k_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, nbnd, npol, nvec, psi_d, hpsi_d, spsi_d, ethr, e_d, nhpsi )
   !----------------------------------------------------------------------------
   !
   ! Block Preconditioned Conjugate Gradient solution of the linear system
@@ -73,8 +73,7 @@ SUBROUTINE bpcg_k_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, nbnd,
   COMPLEX(DP),INTENT(IN) :: spsi0_d(npwx*npol,nbnd) ! Spsi0  needed to compute the Pv projection
   INTEGER,  INTENT(IN)   :: npw, npwx, nbnd, npol, nvec ! input dimensions 
   REAL(DP), INTENT(IN)   :: ethr                  ! threshold for convergence.
-  REAL(DP), INTENT(INOUT)   :: e(nvec)            ! current estimate of the target eigenvalues
-  REAL(DP)   :: e_d(nvec)                         
+  REAL(DP), INTENT(INOUT)   :: e_d(nvec)            ! current estimate of the target eigenvalues
   COMPLEX(DP),INTENT(INOUT) :: psi_d(npwx*npol,nvec),hpsi_d(npwx*npol,nvec),spsi_d(npwx*npol,nvec) ! 
                                                   ! input: the current estimate of the wfcs
                                                   ! output: the estimated correction vectors
@@ -127,8 +126,6 @@ SUBROUTINE bpcg_k_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, nbnd,
   done    = 0  ! the number of correction vectors already solved
   nactive = 0  ! the number of correction vectors currently being updated
   cg_iter = 0  ! how many iteration each active vector has completed (<= maxter)
-
-  e_d = e
 
   MAIN_LOOP: & ! This is a continuous loop. It terminates only when nactive vanishes
   DO
@@ -295,8 +292,8 @@ SUBROUTINE bpcg_k_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, nbnd,
            END DO 
 
            ee = e_d(done+newdone)       
-           tmp = e(i)      
-           e(done+newdone) = tmp 
+           tmp = e_d(i)      
+           e_d(done+newdone) = tmp 
            e_d(i)      = ee
 
            !write(6,*) ' overwrite converged p/hp/etc l = ',l, ' with newdone = ',newdone
@@ -372,8 +369,6 @@ SUBROUTINE bpcg_k_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, nbnd,
     
   END DO  MAIN_LOOP
   !write (6,*) ' exit  pcg loop'
-
-  e = e_d 
 
   DEALLOCATE( spsi0vec_d )
   DEALLOCATE( b_d, p_d, hp_d, sp_d, z_d )
