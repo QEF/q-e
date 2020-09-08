@@ -416,7 +416,7 @@ SUBROUTINE ppcg_k_gpu( h_psi_gpu, s_psi_gpu, overlap, precondition_d, &
         CALL gpu_ZGEMM('C','N', l, l, kdim, C_ONE, buffer_d, kdimx, buffer1_d, kdimx, C_ZERO, K_d, sbsize3)
         !
         if (overlap) then
-           call gpu_threaded_assign( buffer1_d, spsi_d, kdimx, l, col_idx_d ) 
+           call gpu_threaded_assign( buffer1_d, spsi_d, kdimx, l, .true., col_idx_d, .false. ) 
            if (clean) then 
 !$cuf kernel do(2)
              DO ii = npw+1, npwx    
