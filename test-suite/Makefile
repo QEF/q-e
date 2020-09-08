@@ -164,7 +164,7 @@ clean:
 	@rm -rf epw_*/_ph0 epw_*/*.save epw_*/*.wfc* epw_*/*.dyn* \
 		epw_*/*.qdos_* epw_*/*.P epw_*/*.wout epw_*/*.fmt epw_*/*.pade* \
 		epw_*/*.epmat_wanep epw_*/*.kgmap epw_*/*.nnkp epw_*/*.epmatwp* \
-		epw_*/*.acon_iso_* epw_*/*.a2f* epw_*/*.phdos* \
+		epw_*/*.acon_iso_* epw_*/*.a2f* epw_*/*.phdos* epw_*/*.lambda \
 		epw_*/*.kmap epw_*/*.lambda_k_pairs epw_*/*.ukk epw_*/*.imag_aniso* \
 		epw_*/*.win epw_*/*.imag_iso* epw_*/*.chk epw_*/*.freq  \
 		epw_*/*.epmatwp epw_*/*.epwane epw_*/*.ephmat epw_*/epsilon2* \

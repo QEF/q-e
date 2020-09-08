@@ -334,6 +334,7 @@
     IF (mpime == ionode_id) THEN
       !
       OPEN(UNIT = crystal, FILE = 'crystal.fmt', STATUS = 'old', IOSTAT = ios)
+      IF (ios /= 0) CALL errore('elphon_shuffle_wrap', 'error opening crystal.fmt', crystal)
       READ(crystal, *) nat
       READ(crystal, *) nmodes
       READ(crystal, *) nelec

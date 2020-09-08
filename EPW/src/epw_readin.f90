@@ -47,7 +47,7 @@
                             laniso, lpolar, lifc, asr_typ, lscreen, scr_typ, nbndsub,  &
                             fermi_diff, smear_rpa, cumulant, bnd_cum, proj, write_wfn, &
                             iswitch, liso, lacon, lpade, etf_mem, epbwrite,            &
-                            nsiter, conv_thr_racon, specfun_el, specfun_ph,            &
+                            nsiter, conv_thr_racon, npade, specfun_el, specfun_ph,     &
                             system_2d, delta_approx, title, int_mob, scissor,          &
                             iterative_bte, scattering, selecqread, epmatkqread,        &
                             ncarrier, carrier, scattering_serta, restart, restart_step,&
@@ -146,7 +146,7 @@
        broyden_beta, broyden_ndim, nstemp, temps,                              &
        conv_thr_raxis, conv_thr_iaxis, conv_thr_racon,                         &
        gap_edge, nsiter, muc, lreal, limag, lpade, lacon, liso, laniso, lpolar,&
-       lscreen, scr_typ, fermi_diff, smear_rpa, cumulant, bnd_cum,             &
+       npade, lscreen, scr_typ, fermi_diff, smear_rpa, cumulant, bnd_cum,      &
        lifc, asr_typ, lunif, kerwrite, kerread, imag_read, eliashberg,         &
        ep_coupling, fila2f, max_memlt, efermi_read, fermi_energy,              &
        specfun_el, specfun_ph, wmin_specfun, wmax_specfun, nw_specfun,         &
@@ -260,6 +260,7 @@
   !                  Eliashberg equations from imag- to real-axis
   ! gap_edge : initial guess of the superconducting gap (in eV)
   ! nsiter   : nr of iterations for self-consitency cycle
+  ! npade    : percentange of Matsubara points used in Pade continuation
   ! muc     : effective Coulomb potential
   ! lreal   : if .TRUE. solve the real-axis Eliashberg eqautions
   ! limag   : if .TRUE. solve the imag-axis Eliashberg eqautions
@@ -517,6 +518,7 @@
   nstemp   = 0
   temps(:) = 0.d0
   nsiter   = 40
+  npade    = 90
   muc     = 0.d0
   fila2f  = ' '
   max_memlt = 2.85d0
