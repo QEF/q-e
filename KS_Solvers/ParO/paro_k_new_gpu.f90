@@ -99,11 +99,11 @@ SUBROUTINE paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, overlap
   !
   ! .. device variables
   !
-
   REAL(DP), ALLOCATABLE    :: ew_d(:)
   COMPLEX(DP), ALLOCATABLE :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
 #if defined (__CUDA)
-  attributes(device) :: evc_d, psi_d, hpsi_d, spsi_d, eig_d, ew_d
+  attributes(device) :: evc_d, eig_d
+  attributes(device) :: psi_d, hpsi_d, spsi_d, ew_d
 #endif  
   !
   ! ... init local variables
@@ -146,15 +146,12 @@ SUBROUTINE paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, overlap
      hpsi = hpsi_d
      spsi = spsi_d
      eig = eig_d
-!
      CALL protate_HSpsi_k(  npwx, npw, nbnd, nbnd, npol, psi, hpsi, overlap, spsi, eig )
-!civn 2fix
      psi_d = psi
      hpsi_d = hpsi
      spsi_d = spsi
      eig_d = eig
      DEALLOCATE ( psi, hpsi, spsi, eig )
-!
   ENDIF
 #endif
   !write (6,'(10f10.4)') psi(1:5,1:3)
@@ -200,8 +197,10 @@ SUBROUTINE paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, overlap
              hpsi_d(ii,nbase+kbnd) = hpsi_d(ii,ibnd)
              spsi_d(ii,nbase+kbnd) = spsi_d(ii,ibnd)
            END DO 
-           tmp = eig_d(ibnd) 
-           ew_d(kbnd) = tmp
+!$cuf kernel do(1)
+           DO ii = 1, 1
+             ew_d(kbnd) = eig_d(ibnd) 
+           END DO 
            last_unconverged = ibnd
            lbnd=lbnd+1 ; kbnd=kbnd+recv_counts(mod(lbnd-2,nbgrp)+1); if (kbnd>nactive) kbnd=kbnd+1-nactive
         END IF
@@ -213,8 +212,10 @@ SUBROUTINE paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, overlap
           hpsi_d(ii,nbase+kbnd) = hpsi_d(ii,ibnd)
           spsi_d(ii,nbase+kbnd) = spsi_d(ii,ibnd)
         END DO
-        tmp = eig_d(last_unconverged)
-        ew_d(kbnd) = tmp 
+!$cuf kernel do(1)
+        DO ii = 1, 1
+          ew_d(kbnd) = eig_d(last_unconverged)
+        END DO 
         lbnd=lbnd+1 ; kbnd=kbnd+recv_counts(mod(lbnd-2,nbgrp)+1); if (kbnd>nactive) kbnd=kbnd+1-nactive
      END DO
 !$cuf kernel do(2)
@@ -269,15 +270,12 @@ SUBROUTINE paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, overlap
         hpsi = hpsi_d
         spsi = spsi_d
         ew = ew_d
-!
         CALL protate_HSpsi_k( npwx, npw, ndiag, ndiag, npol, psi, hpsi, overlap, spsi, ew )
-!civn 2fix
         psi_d = psi
         hpsi_d = hpsi
         spsi_d = spsi
         ew_d = ew
         DEALLOCATE ( psi, hpsi, spsi, ew )
-!
      ENDIF
 #endif
      !write (6,*) ' ew : ', ew(1:nbnd)

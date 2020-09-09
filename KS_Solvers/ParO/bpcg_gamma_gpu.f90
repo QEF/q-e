@@ -73,7 +73,7 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, n
   ! Following varibales are temporary
   COMPLEX(DP), INTENT(IN) :: psi0_d(npwx,nbnd)  ! psi0  needed to compute the Pv projection
   COMPLEX(DP), INTENT(IN) :: spsi0_d(npwx,nbnd) ! Spsi0  needed to compute the Pv projection
-!
+  !
   INTEGER,  INTENT(IN)   :: npw, npwx, nbnd, nvec ! input dimensions 
   REAL(DP), INTENT(IN)   :: ethr                  ! threshold for convergence.
   REAL(DP), INTENT(INOUT)   :: e_d(nvec)            ! current estimate of the target eigenvalues
@@ -86,7 +86,6 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, n
   !
   INTEGER, PARAMETER :: maxter = 5 ! maximum number of CG iterations 
   !
-
   REAL(DP), ALLOCATABLE :: g0(:), g1(:), g2(:), gamma(:), ethr_cg(:), ff(:), ff0(:)
   INTEGER, ALLOCATABLE :: cg_iter(:)
   REAL(DP) :: beta, ee
@@ -317,10 +316,12 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, n
              spsi_d(ii,i) = sp_d(ii,l)
            END DO
 
-           ee      = e_d(done+newdone)      
-           tmp = e_d(i)
-           e_d(done+newdone)      = tmp
-           e_d(i)      = ee
+           ee = e_d(done+newdone)      
+!$cuf kernel do(1)
+           DO ii = 1, 1
+             e_d(done+newdone) = e_d(i)
+           END DO 
+           e_d(i) = ee
 
            !write(6,*) ' overwrite converged p/hp/etc l = ',l, ' with newdone = ',newdone
            ! move information of the swapped active vector in the right place to keep going

@@ -293,9 +293,11 @@ SUBROUTINE bpcg_k_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, nbnd,
            END DO 
 
            ee = e_d(done+newdone)       
-           tmp = e_d(i)      
-           e_d(done+newdone) = tmp 
-           e_d(i)      = ee
+!$cuf kernel do(1)
+           DO ii = 1, 1
+             e_d(done+newdone) = e_d(i)      
+           END DO 
+           e_d(i) = ee
 
            !write(6,*) ' overwrite converged p/hp/etc l = ',l, ' with newdone = ',newdone
            ! move information of the swapped active vector in the right place to keep going

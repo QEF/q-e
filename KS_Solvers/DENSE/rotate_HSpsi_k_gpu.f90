@@ -40,13 +40,13 @@ SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi_d, hpsi_d, ove
   !
   ! ... local variables
   !
-  INTEGER                  :: kdim, kdmx
-  COMPLEX(DP), ALLOCATABLE :: aux_d(:,:)
+  INTEGER :: kdim, kdmx
   INTEGER :: n_start, n_end, my_n, recv_counts(nbgrp), displs(nbgrp), column_type
+  INTEGER :: ii, jj  ! indexes for cuf kernel loops 
   !
-  ! ... other device variables
+  ! ... device variables
   !
-  INTEGER :: ii, jj  ! cuf kernel indeces 
+  COMPLEX(DP), ALLOCATABLE :: aux_d(:,:)
   COMPLEX(DP), ALLOCATABLE :: hh_d(:,:), ss_d(:,:), vv_d(:,:)
   REAL(DP),    ALLOCATABLE :: en_d(:)
 #if defined (__CUDA)

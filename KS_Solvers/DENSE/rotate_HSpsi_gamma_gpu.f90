@@ -39,17 +39,17 @@ SUBROUTINE rotate_HSpsi_gamma_gpu( npwx, npw, nstart, nbnd, psi_d, hpsi_d, overl
     nbnd                           ! output number of states
   LOGICAL, INTENT(IN) :: overlap   ! if .FALSE. : spsi is not needed (and not used)
   REAL(DP), INTENT(OUT) :: e_d(nbnd) ! eigenvalues of the reduced H matrix
+  COMPLEX(DP), INTENT(INOUT) :: psi_d(npwx,nstart), hpsi_d(npwx,nstart) ! input and output psi, Hpsi,
+  COMPLEX(DP), INTENT(INOUT), OPTIONAL :: spsi_d(npwx,nstart)         ! ...   and optionnally Spsi
   !
   ! ... local variables
   !
-  INTEGER                  :: kdim, kdmx
+  INTEGER :: kdim, kdmx
   INTEGER :: n_start, n_end, my_n, recv_counts(nbgrp), displs(nbgrp), column_type
+  INTEGER :: ii, jj ! indexes for cuf kernel loops 
   !
   ! ... device variables
   !
-  INTEGER :: ii, jj
-  COMPLEX(DP), INTENT(INOUT) :: psi_d(npwx,nstart), hpsi_d(npwx,nstart) ! input and output psi, Hpsi,
-  COMPLEX(DP), INTENT(INOUT), OPTIONAL :: spsi_d(npwx,nstart)         ! ...   and optionnally Spsi
   COMPLEX(DP), ALLOCATABLE :: aux_d(:,:)
   REAL(DP),    ALLOCATABLE :: hh_d(:,:), ss_d(:,:), vv_d(:,:)
   REAL(DP),    ALLOCATABLE :: en_d(:)
