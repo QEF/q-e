@@ -258,14 +258,16 @@ input_description -distribution {Quantum Espresso} -package energy_current -prog
           default { .false. }
           info {
                  If true initializes, as specified in the ELECTRON namelist of the PW section, the wavefunctions
-                 before the first ground state calculation. Otherwise use the last calculated wavefunctions.
+                 before the first ground state calculation, then compute the charge density.
+                  Otherwise use the last calculated wavefunctions.
                }
        }
        var re_init_wfc_2 -type LOGICAL {
           default { .false. }
           info {
                  If true initializes, as specified in the ELECTRON namelist of the PW section, the wavefunctions
-                 before the second ground state calculation. Otherwise use the last calculated wavefunctions.
+                 before the second ground state calculation, then compute the charge density.
+                 Otherwise use the last calculated wavefunctions.
                  Note that if @ref three_point_derivative is false, this has no effect.
                }
        }
@@ -273,7 +275,8 @@ input_description -distribution {Quantum Espresso} -package energy_current -prog
           default { .false. }
           info {
                  If true initializes, as specified in the ELECTRON namelist of the PW section, the wavefunctions
-                 before the third ground state calculation. Otherwise use the last calculated wavefunctions.
+                 before the third ground state calculation, then compute the charge density.
+                 Otherwise use the last calculated wavefunctions.
                }
        }
        var three_point_derivative -type LOGICAL {

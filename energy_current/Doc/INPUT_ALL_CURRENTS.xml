@@ -267,7 +267,8 @@ The iterative algorithm will always start from there. By default it starts alway
          </default>
          <info>
 If true initializes, as specified in the ELECTRON namelist of the PW section, the wavefunctions
-before the first ground state calculation. Otherwise use the last calculated wavefunctions.
+before the first ground state calculation, then compute the charge density.
+ Otherwise use the last calculated wavefunctions.
          </info>
       </var>
       <var name="re_init_wfc_2" type="LOGICAL" >
@@ -275,7 +276,8 @@ before the first ground state calculation. Otherwise use the last calculated wav
          </default>
          <info>
 If true initializes, as specified in the ELECTRON namelist of the PW section, the wavefunctions
-before the second ground state calculation. Otherwise use the last calculated wavefunctions.
+before the second ground state calculation, then compute the charge density.
+Otherwise use the last calculated wavefunctions.
 Note that if <ref>three_point_derivative</ref> is false, this has no effect.
          </info>
       </var>
@@ -284,7 +286,8 @@ Note that if <ref>three_point_derivative</ref> is false, this has no effect.
          </default>
          <info>
 If true initializes, as specified in the ELECTRON namelist of the PW section, the wavefunctions
-before the third ground state calculation. Otherwise use the last calculated wavefunctions.
+before the third ground state calculation, then compute the charge density.
+Otherwise use the last calculated wavefunctions.
          </info>
       </var>
       <var name="three_point_derivative" type="LOGICAL" >

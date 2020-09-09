@@ -149,8 +149,10 @@ program all_currents
           end if
 
           call prepare_next_step(-1) !-1 goes back by dt, so we are in t-dt. Inside, after setting tau, we call hinit1 and update_pot
-          if (re_init_wfc_1) &
-                  call init_wfc(1)
+          if (re_init_wfc_1) then
+              call init_wfc(1)
+              call sum_band()
+          end if
           ethr = ethr_big_step
           call run_pwscf(exit_status)
           if (exit_status /= 0) goto 100 !shutdown everything and exit
@@ -158,8 +160,10 @@ program all_currents
           call scf_result_set_from_global_variables(scf_all%t_minus)
           if (three_point_derivative) then
               call prepare_next_step(1) !1 advance by dt (so we are in the original positions)
-              if (re_init_wfc_2) & ! eventually, to set a random initial evc to do statistical tests
-                      call init_wfc(1)
+              if (re_init_wfc_2) then ! eventually, to set a random initial evc to do statistical tests
+                  call init_wfc(1)
+                  call sum_band()
+              end if
               ethr = ethr_small_step
               call run_pwscf(exit_status)
               !evc_due = evc
@@ -174,8 +178,10 @@ program all_currents
           call prepare_next_step(1) !1 advances by dt, so we are in t+dt
           !if we don't do 3pt we are in t now
 
-          if (re_init_wfc_3) &
-                  call init_wfc(1)
+          if (re_init_wfc_3) then
+              call init_wfc(1)
+              call sum_band()
+          end if
           ethr = ethr_small_step
           call run_pwscf(exit_status)
           if (exit_status /= 0) goto 100 !shutdown everything and exit
