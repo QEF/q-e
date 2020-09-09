@@ -163,7 +163,7 @@ SUBROUTINE laxlib_start_drv( ndiag_, my_world_comm, parent_comm, do_distr_diag_i
     ELSE 
        ! no command-line argument -ndiag N or -northo N is present
        ! insert here custom architecture specific default definitions
-#if defined __SCALAPACK
+#if defined(__SCALAPACK) && !defined(__CUDA)
        nproc_ortho_try = MAX( parent_nproc, 1 )
 #else
        nproc_ortho_try = 1
