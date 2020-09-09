@@ -81,13 +81,6 @@ SUBROUTINE paro_gamma_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, ove
   ! ... local variables
   !
   INTEGER :: itry, paro_ntr, nconv, nextra, nactive, nbase, ntrust, ndiag, nvecx, nproc_ortho
-  REAL(DP), ALLOCATABLE    :: ew(:)
-  REAL(DP), ALLOCATABLE    :: ew_d(:)
-  REAL(DP), ALLOCATABLE    :: eig(:)
-
-!civn 2fix: these are needed only for __MPI = true 
-  COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:) 
-!
 
   LOGICAL, ALLOCATABLE     :: conv(:)
 
@@ -96,12 +89,19 @@ SUBROUTINE paro_gamma_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, ove
 
   INTEGER :: ibnd, ibnd_start, ibnd_end, how_many, lbnd, kbnd, last_unconverged, &
              recv_counts(nbgrp), displs(nbgrp), column_type
+
+  INTEGER :: ii, jj, kk ! indexes for cuf kernel loops
+  REAL(DP) :: tmp       ! host auxiliary variable for some host <-> device array copy 
+
+!civn 2fix: these are needed only for __MPI = true (protate)
+  COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:) 
+  REAL(DP), ALLOCATABLE    :: eig(:), ew(:)
+!
   !
   ! ... device variables
   !
-  INTEGER :: ii, jj, kk 
-  REAL(DP) :: tmp
   COMPLEX(DP), ALLOCATABLE :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
+  REAL(DP), ALLOCATABLE    :: ew_d(:)
 #if defined (__CUDA)
   attributes(device) :: psi_d, hpsi_d, spsi_d
   attributes(device) :: evc_d, eig_d, ew_d
@@ -202,7 +202,6 @@ SUBROUTINE paro_gamma_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, ove
            DO ii = 1, 1
              ew_d(kbnd) = eig_d(ibnd) 
            END DO 
-
            last_unconverged = ibnd
            lbnd=lbnd+1 ; kbnd=kbnd+recv_counts(mod(lbnd-2,nbgrp)+1); if (kbnd>nactive) kbnd=kbnd+1-nactive
         END IF
@@ -218,7 +217,6 @@ SUBROUTINE paro_gamma_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, ove
         DO ii = 1, 1
           ew_d(kbnd) = eig_d(last_unconverged)
         END DO 
-
         lbnd=lbnd+1 ; kbnd=kbnd+recv_counts(mod(lbnd-2,nbgrp)+1); if (kbnd>nactive) kbnd=kbnd+1-nactive
      END DO
 !$cuf kernel do(2)
@@ -301,7 +299,9 @@ SUBROUTINE paro_gamma_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, ove
 
 !$cuf kernel do(1)
   DO ii = 1, npwx
-    evc_d(ii,1:nbnd) = psi_d(ii,1:nbnd)
+    DO jj = 1, nbnd
+      evc_d(ii,jj) = psi_d(ii,jj)
+    END DO 
   END DO
 
   CALL mp_sum(nhpsi,inter_bgrp_comm)

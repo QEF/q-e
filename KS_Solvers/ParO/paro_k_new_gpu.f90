@@ -80,10 +80,7 @@ SUBROUTINE paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, overlap
   ! ... local variables
   !
   INTEGER :: itry, paro_ntr, nconv, nextra, nactive, nbase, ntrust, ndiag, nvecx, nproc_ortho
-  REAL(DP), ALLOCATABLE    :: ew_d(:)
-  REAL(DP), ALLOCATABLE    :: ew(:)
-  COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
-  COMPLEX(DP), ALLOCATABLE :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
+
   LOGICAL, ALLOCATABLE     :: conv(:)
 
   REAL(DP), PARAMETER      :: extra_factor = 0.5 ! workspace is at most this factor larger than nbnd
@@ -91,11 +88,20 @@ SUBROUTINE paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, overlap
 
   INTEGER :: ibnd, ibnd_start, ibnd_end, how_many, lbnd, kbnd, last_unconverged, &
              recv_counts(nbgrp), displs(nbgrp), column_type
+
+  INTEGER :: ii, jj, kk   ! indexes for cuf kernel loops
+  REAL(DP) :: tmp         ! host auxiliary variable for some host <-> device array copy  
+
+!civn 2fix: these are needed only for __MPI = true (protate)
+  REAL(DP), ALLOCATABLE    :: ew(:)
+  COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
+!
   !
   ! .. device variables
   !
-  INTEGER :: ii, jj, kk   ! used in device loops
-  REAL(DP) :: tmp   
+
+  REAL(DP), ALLOCATABLE    :: ew_d(:)
+  COMPLEX(DP), ALLOCATABLE :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
 #if defined (__CUDA)
   attributes(device) :: evc_d, psi_d, hpsi_d, spsi_d, eig_d, ew_d
 #endif  
