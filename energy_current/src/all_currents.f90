@@ -3,7 +3,7 @@ program all_currents
            dvpsi_save, subtract_cm_vel, re_init_wfc_1, re_init_wfc_2,re_init_wfc_3,&
            n_repeat_every_step, ethr_big_step, scf_all, multiple_scf_result_allocate,&
            scf_result_set_from_global_variables, multiple_scf_result_deallocate, &
-           three_point_derivative, ave_cur
+           three_point_derivative, ave_cur, ethr_small_step
    USE environment, ONLY: environment_start, environment_end
    use io_global, ONLY: ionode
    use wavefunctions, only: evc
@@ -141,7 +141,6 @@ program all_currents
               if (ionode) &
                   write (*,*) 'REPETITION ', irepeat - 1 
               tau = tau_save
-              ethr = ethr_big_step
           end if
           if (n_repeat_every_step > 1 .and. irepeat .eq. n_repeat_every_step) then
               print_stat=.true.
@@ -152,6 +151,7 @@ program all_currents
           call prepare_next_step(-1) !-1 goes back by dt, so we are in t-dt. Inside, after setting tau, we call hinit1 and update_pot
           if (re_init_wfc_1) &
                   call init_wfc(1)
+          ethr = ethr_big_step
           call run_pwscf(exit_status)
           if (exit_status /= 0) goto 100 !shutdown everything and exit
           !save evc, tau and vel for t-dt
@@ -160,6 +160,7 @@ program all_currents
               call prepare_next_step(1) !1 advance by dt (so we are in the original positions)
               if (re_init_wfc_2) & ! eventually, to set a random initial evc to do statistical tests
                       call init_wfc(1)
+              ethr = ethr_small_step
               call run_pwscf(exit_status)
               !evc_due = evc
               if (exit_status /= 0) goto 100 !shutdown everything and exit
@@ -175,6 +176,7 @@ program all_currents
 
           if (re_init_wfc_3) &
                   call init_wfc(1)
+          ethr = ethr_small_step
           call run_pwscf(exit_status)
           if (exit_status /= 0) goto 100 !shutdown everything and exit
           !save evc, tau and vel for t+dt
@@ -488,12 +490,11 @@ contains
       call mp_barrier(world_comm)
       call update_pot()
       call hinit1()
-      ethr = ethr_small_step
+
    end subroutine
 
    function read_next_step(t) result(res)
       USE extrapolation, ONLY: update_pot
-      USE control_flags, ONLY: ethr
       use cpv_traj, only: cpv_trajectory, cpv_trajectory_initialize, cpv_trajectory_deallocate, &
                           cpv_trajectory_read_step, cpv_trajectory_get_step
       use traj_object, only: timestep ! type for timestep data
@@ -551,9 +552,6 @@ contains
             return
          end if
          first = .false.
-         call update_pot()
-         call hinit1()
-         ethr = ethr_big_step
 
       end if
 
