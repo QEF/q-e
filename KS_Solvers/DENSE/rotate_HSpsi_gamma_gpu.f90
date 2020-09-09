@@ -8,7 +8,7 @@
 !
 #define ZERO ( 0.D0, 0.D0 )
 !----------------------------------------------------------------------------
-SUBROUTINE rotate_HSpsi_gamma_gpu( npwx, npw, nstart, nbnd, psi_d, hpsi_d, overlap, spsi_d, e )
+SUBROUTINE rotate_HSpsi_gamma_gpu( npwx, npw, nstart, nbnd, psi_d, hpsi_d, overlap, spsi_d, e_d )
   !----------------------------------------------------------------------------
   !
   ! ... Serial version of rotate_wfc for Gamma-only calculations
@@ -38,7 +38,7 @@ SUBROUTINE rotate_HSpsi_gamma_gpu( npwx, npw, nstart, nbnd, psi_d, hpsi_d, overl
     nstart,              &         ! input number of states 
     nbnd                           ! output number of states
   LOGICAL, INTENT(IN) :: overlap   ! if .FALSE. : spsi is not needed (and not used)
-  REAL(DP), INTENT(OUT) :: e(nbnd) ! eigenvalues of the reduced H matrix
+  REAL(DP), INTENT(OUT) :: e_d(nbnd) ! eigenvalues of the reduced H matrix
   !
   ! ... local variables
   !
@@ -54,7 +54,7 @@ SUBROUTINE rotate_HSpsi_gamma_gpu( npwx, npw, nstart, nbnd, psi_d, hpsi_d, overl
   REAL(DP),    ALLOCATABLE :: hh_d(:,:), ss_d(:,:), vv_d(:,:)
   REAL(DP),    ALLOCATABLE :: en_d(:)
 #if defined (__CUDA)
-  attributes (device) :: psi_d, hpsi_d, spsi_d
+  attributes (device) :: psi_d, hpsi_d, spsi_d, e_d
   attributes (device) :: aux_d, hh_d, ss_d, vv_d, en_d
 #endif   
   !
@@ -135,7 +135,10 @@ SUBROUTINE rotate_HSpsi_gamma_gpu( npwx, npw, nstart, nbnd, psi_d, hpsi_d, overl
   !
   call start_clock('rotHSw:diag'); !write(*,*) 'start rotHSw:diag' ; FLUSH(6)
   CALL diaghg( nstart, nbnd, hh_d, ss_d, nstart, en_d, vv_d, me_bgrp, root_bgrp, intra_bgrp_comm )
-  e(:) = en_d(1:nbnd)
+!$cuf kernel do(1)
+  DO ii = 1, nbnd
+    e_d(ii) = en_d(ii)
+  END DO 
   call stop_clock('rotHSw:diag'); !write(*,*) 'stop rotHSw:diag' ; FLUSH(6)
   !
   ! ... update the basis set

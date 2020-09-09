@@ -45,7 +45,7 @@
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, nbnd, nvec, psi_d, hpsi_d, spsi_d, ethr, e, nhpsi )
+SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, nbnd, nvec, psi_d, hpsi_d, spsi_d, ethr, e_d, nhpsi )
   !----------------------------------------------------------------------------
   !
   ! Block Preconditioned Conjugate Gradient solution of the linear system
@@ -76,7 +76,7 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, n
 !
   INTEGER,  INTENT(IN)   :: npw, npwx, nbnd, nvec ! input dimensions 
   REAL(DP), INTENT(IN)   :: ethr                  ! threshold for convergence.
-  REAL(DP), INTENT(INOUT)   :: e(nvec)            ! current estimate of the target eigenvalues
+  REAL(DP), INTENT(INOUT)   :: e_d(nvec)            ! current estimate of the target eigenvalues
   COMPLEX(DP),INTENT(INOUT) :: psi_d(npwx,nvec),hpsi_d(npwx,nvec),spsi_d(npwx,nvec) ! 
                                                   ! input: the current estimate of the wfcs
                                                   ! output: the estimated correction vectors
@@ -101,13 +101,12 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, n
   REAL(DP), ALLOCATABLE    ::  spsi0vec_d (:,:) ! the product of spsi0 and a group of vectors
   COMPLEX(DP) :: tmp, tmp_d
   INTEGER :: ii, jj
-  REAL(DP) :: e_d(nvec)            ! current estimate of the target eigenvalues
-  REAL(DP), ALLOCATABLE ::  alpha_d(:) 
+  REAL(DP), ALLOCATABLE ::  alpha(:) 
 #if defined (__CUDA) 
   attributes(device) :: psi_d, spsi_d, hpsi_d 
   attributes(device) :: psi0_d, spsi0_d, spsi0vec_d 
   attributes(device) :: e_d, b_d, z_d, p_d, hp_d, sp_d
-  attributes(device) :: alpha_d, tmp_d
+  attributes(device) :: tmp_d
 #endif  
 !
   !
@@ -122,14 +121,12 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, n
   ALLOCATE( z_d( npwx, block_size ), b_d( npwx, block_size ) )
   ALLOCATE( p_d(npwx,block_size), hp_d(npwx,block_size), sp_d(npwx,block_size) )
   ALLOCATE( spsi0vec_d(nbnd, block_size) )
-  ALLOCATE( alpha_d( block_size ) )
+  ALLOCATE( alpha( block_size ) )
 !  
   !
   done    = 0  ! the number of correction vectors already solved
   nactive = 0  ! the number of correction vectors currently being updated
   cg_iter = 0  ! how many iteration each active vector has completed (<= maxter)
-
-  e_d = e
 
   MAIN_LOOP: & ! This is a continuous loop. It terminates only when nactive vanishes
   DO
@@ -213,14 +210,15 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, n
      do l = 1, nactive; i=l+done
         !write(6,*) ' l =',l,' i =',i
 
-        alpha_d(l) = g0(l)/gamma(l)  
+        alpha(l) = g0(l)/gamma(l)  
         !write(6,*) 'g0, gamma, alpha :', g0(l), gamma(l), alpha_d(l)
+        tmp = alpha(l)
 
 !$cuf kernel do(1)
         DO ii = 1, npwx
-          psi_d(ii,i)  = psi_d(ii,i)  + alpha_d(l) * p_d(ii,l)     ! updated solution
-          hpsi_d(ii,i) = hpsi_d(ii,i) + alpha_d(l) * hp_d(ii,l)    ! updated solution
-          spsi_d(ii,i) = spsi_d(ii,i) + alpha_d(l) * sp_d(ii,l)    ! updated solution
+          psi_d(ii,i)  = psi_d(ii,i)  + tmp * p_d(ii,l)     ! updated solution
+          hpsi_d(ii,i) = hpsi_d(ii,i) + tmp * hp_d(ii,l)    ! updated solution
+          spsi_d(ii,i) = spsi_d(ii,i) + tmp * sp_d(ii,l)    ! updated solution
         END DO 
 
         g2(l) = 2.D0 * ( gpu_DDOT(npw2,z_d(:,l),1,b_d(:,l),1) + &
@@ -279,11 +277,12 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, n
         !write (6,*) cg_iter(l), g1(l), ff(l),  gamma(l)
 
         IF ( ff(l) > ff0(l) .AND. ff0(l) < 0.d0 ) THEN
+           tmp = alpha(l)
 !$cuf kernel do(1)
            DO ii = 1, npwx    
-             psi_d(ii,i)  = psi_d(ii,i)  - alpha_d(l) * p_d(ii,l) ! fallback solution: if last iter failed to improve ff0
-             hpsi_d(ii,i) = hpsi_d(ii,i) - alpha_d(l) * hp_d(ii,l)! exit whitout updating and ...
-             spsi_d(ii,i) = spsi_d(ii,i) - alpha_d(l) * sp_d(ii,l)! hope next time it'll be better
+             psi_d(ii,i)  = psi_d(ii,i)  - tmp * p_d(ii,l) ! fallback solution: if last iter failed to improve ff0
+             hpsi_d(ii,i) = hpsi_d(ii,i) - tmp * hp_d(ii,l)! exit whitout updating and ...
+             spsi_d(ii,i) = spsi_d(ii,i) - tmp * sp_d(ii,l)! hope next time it'll be better
            END DO 
         END IF
 
@@ -335,8 +334,7 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, n
            END DO
 
            ff0(l) = ff0(newdone) ; ff(l) = ff(newdone)
-           tmp = alpha_d(newdone) 
-           alpha_d(l) = tmp 
+           alpha(l) = alpha(newdone) 
            g0(l) = g0(newdone) ; g1(l) = g1(newdone) ; g2(l) = g2(newdone)
            cg_iter(l) = cg_iter(newdone) ; ethr_cg(l) = ethr_cg(newdone)
            CALL stop_clock( 'pcg:move' )
@@ -392,13 +390,11 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, n
   END DO  MAIN_LOOP
   !write (6,*) ' exit  pcg loop'
 
-  e = e_d 
-
   DEALLOCATE( b_d, z_d, p_d, hp_d, sp_d )
   DEALLOCATE( ethr_cg, ff, ff0, cg_iter )
   DEALLOCATE( g0, g1, g2, gamma )
   DEALLOCATE( spsi0vec_d )
-  DEALLOCATE( alpha_d )
+  DEALLOCATE( alpha )
   !
   CALL stop_clock( 'pcg' )
   !
