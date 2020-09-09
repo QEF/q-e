@@ -8,7 +8,7 @@ MODULE xc_interfaces
   PRIVATE
   !
   ! LDA
-  PUBLIC :: XC, XC_GCX, XC_METAGCX, XC_LDA, XC_LSDA, DMXC, DMXC_LDA, DMXC_LSDA, DMXC_NC
+  PUBLIC :: XC, XC_GCX, XC_METAGCX, XC_LDA, XC_LSDA, DMXC
   PUBLIC :: SLATER, SLATER_SPIN, PW, PW_SPIN, LYP, &
             LSD_LYP
   ! GGA
@@ -195,49 +195,6 @@ MODULE xc_interfaces
        INTEGER,  INTENT(IN) :: length, sr_d
        REAL(DP), INTENT(IN) :: rho_in(length,sr_d)
        REAL(DP), INTENT(OUT) :: dmuxc(length,sr_d,sr_d)
-       !
-     END SUBROUTINE
-     !
-  END INTERFACE
-  !
-  INTERFACE DMXC_LDA
-     !
-     SUBROUTINE dmxc_lda_l( length, rho_in, dmuxc )
-       !
-       USE kind_l,       ONLY: DP
-       IMPLICIT NONE
-       INTEGER,  INTENT(IN) :: length
-       REAL(DP), INTENT(IN),  DIMENSION(length) :: rho_in
-       REAL(DP), INTENT(OUT), DIMENSION(length) :: dmuxc
-       !
-     END SUBROUTINE dmxc_lda_l
-     !
-  END INTERFACE
-  !
-  INTERFACE DMXC_LSDA
-     !
-     SUBROUTINE dmxc_lsda_l( length, rho_in, dmuxc )
-       !
-       USE kind_l,       ONLY: DP
-       IMPLICIT NONE
-       INTEGER,  INTENT(IN) :: length
-       REAL(DP), INTENT(IN), DIMENSION(length,2) :: rho_in
-       REAL(DP), INTENT(OUT), DIMENSION(length,2,2) :: dmuxc
-       !
-     END SUBROUTINE dmxc_lsda_l
-     !
-  END INTERFACE
-  !
-  INTERFACE DMXC_NC
-     !
-     SUBROUTINE dmxc_nc_l( length, rho_in, m, dmuxc )
-       !
-       USE kind_l,       ONLY: DP
-       IMPLICIT NONE
-       INTEGER,  INTENT(IN) :: length
-       REAL(DP), INTENT(IN), DIMENSION(length) :: rho_in
-       REAL(DP), INTENT(IN), DIMENSION(length,3) :: m
-       REAL(DP), INTENT(OUT), DIMENSION(length,4,4) :: dmuxc
        !
      END SUBROUTINE
      !

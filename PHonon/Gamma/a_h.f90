@@ -115,7 +115,7 @@ SUBROUTINE A_h(npw,e,h,ah)
   !
   ALLOCATE (dv(dfftp%nnr))
   DO j = 1,dfftp%nnr
-     dv(j) = drho(j)*dmuxc(j)
+     dv(j) = drho(j)*dmuxc(j,1,1)
   ENDDO
   !
   !  add gradient correction contribution (if any)

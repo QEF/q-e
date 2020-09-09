@@ -30,7 +30,7 @@ SUBROUTINE cg_setup
   USE gvecw,      ONLY: gcutw
   USE gc_lr, ONLY:  grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
   USE cgcom, ONLY: dmuxc, dvpsi, dpsi, auxr, aux2, aux3, lrwfc
-  USE xc_interfaces, ONLY: dmxc_lda, xclib_set_threshold
+  USE xc_interfaces, ONLY: dmxc, xclib_set_threshold
   !
   IMPLICIT NONE
   !
@@ -39,7 +39,7 @@ SUBROUTINE cg_setup
   CHARACTER (len=256) :: filint
   INTEGER  :: ndr, ierr
   REAL(DP) :: edum(1,1), wdum(1,1)
-  REAL(DP), DIMENSION(dfftp%nnr) :: rhotot
+  REAL(DP), DIMENSION(dfftp%nnr,1) :: rhotot
   !
   CALL start_clock('cg_setup')
   !
@@ -49,7 +49,7 @@ SUBROUTINE cg_setup
   !
   !  allocate memory for various arrays
   !
-  ALLOCATE  (dmuxc( dfftp%nnr))
+  ALLOCATE  (dmuxc( dfftp%nnr,1,1))
   ALLOCATE  (dvpsi( npwx, nbnd))
   ALLOCATE  ( dpsi( npwx, nbnd))
   ALLOCATE  ( auxr( dfftp%nnr))
@@ -69,12 +69,12 @@ SUBROUTINE cg_setup
   !  compute drhocore/dtau for each atom type (if needed)
   !
   nlcc_any = any  ( upf(1:ntyp)%nlcc )
-  !!! if (nlcc_any) call set_drhoc(xq, drc)
+  ! ! ! if (nlcc_any) call set_drhoc(xq, drc)
   !
-  rhotot(:) = rho%of_r(:,1) + rho_core(:)
+  rhotot(:,1) = rho%of_r(:,1) + rho_core(:)
   !
   CALL xclib_set_threshold( 'lda', 1.E-10_DP )
-  CALL dmxc_lda( dfftp%nnr, rhotot, dmuxc )
+  CALL dmxc( dfftp%nnr, 1, rhotot, dmuxc )
   !
   !  initialize data needed for gradient corrections
   !

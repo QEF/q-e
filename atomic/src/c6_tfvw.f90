@@ -421,7 +421,7 @@ subroutine dvxc_dn(mesh, rho, dvxc)
    ! some routine in PH and flibs will be called
    !
    use funct,  only : dft_is_gradient
-   use xc_interfaces, only : dmxc_lda, xclib_set_threshold
+   use xc_interfaces, only : dmxc, xclib_set_threshold
    !
    implicit none
    !
@@ -432,6 +432,7 @@ subroutine dvxc_dn(mesh, rho, dvxc)
    !
    ! local variables
    !
+   real(kind=8), allocatable :: rho_d(:,:), dvxc_d(:,:,:)
    integer :: i
    !
    !
@@ -441,8 +442,11 @@ subroutine dvxc_dn(mesh, rho, dvxc)
    !
    ! LDA only
    !
+   allocate( rho_d(mesh,1), dvxc_d(mesh,1,1) )    !-PROVISIONAL
+   rho_d(:,1) = rho
    CALL xclib_set_threshold( 'lda', 1.d-10 )
-   CALL dmxc_lda( mesh, rho, dvxc )   
+   CALL dmxc( mesh, 1, rho_d, dvxc_d )   
+   deallocate( rho_d, dvxc_d )
    !
    return
    !
