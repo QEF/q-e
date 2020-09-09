@@ -1805,7 +1805,7 @@ MODULE paw_onecenter
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : pi,e2, eps => eps12, eps2 => eps24
     USE funct,                  ONLY : is_libxc
-    USE xc_interfaces,          ONLY : xc_gcx, xclib_set_threshold
+    USE xc_interfaces,          ONLY : xc_gcx, dgcxc, xclib_set_threshold
     !
     TYPE(paw_info), INTENT(IN) :: i
     !! atom's minimal info

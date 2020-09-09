@@ -8,15 +8,14 @@ MODULE xc_interfaces
   PRIVATE
   !
   ! LDA
-  PUBLIC :: XC, XC_GCX, XC_METAGCX, XC_LDA, XC_LSDA, DMXC
+  PUBLIC :: XC, DMXC
   PUBLIC :: SLATER, SLATER_SPIN, PW, PW_SPIN, LYP, &
             LSD_LYP
   ! GGA
-  PUBLIC :: GCXC, GCX_SPIN, GCC_SPIN, GCC_SPIN_MORE, DGCXC_UNPOL, &
-            DGCXC_SPIN
+  PUBLIC :: XC_GCX, GCXC, GCX_SPIN, GCC_SPIN, DGCXC
   PUBLIC :: LSD_GLYP
   ! MGGA
-  PUBLIC :: TAU_XC, TAU_XC_SPIN
+  PUBLIC :: XC_METAGCX, TAU_XC, TAU_XC_SPIN
   PUBLIC :: TPSSCXC
   ! 
   PUBLIC :: XCLIB_GET_IDs, XCLIB_GET_EXX, XCLIB_GET_FINITE_SIZE_CELL_VOL, &
@@ -152,40 +151,6 @@ MODULE xc_interfaces
   END INTERFACE
   !
   !
-  INTERFACE XC_LDA
-     !
-     SUBROUTINE xc_lda_l( length, rho_in, ex_out, ec_out, vx_out, vc_out )
-       !
-       USE dft_par_mod
-       USE kind_l,  ONLY: DP
-       IMPLICIT NONE
-       INTEGER,  INTENT(IN)  :: length
-       REAL(DP), INTENT(IN)  :: rho_in(length)
-       REAL(DP), INTENT(OUT) :: ec_out(length), vc_out(length), &
-                                ex_out(length), vx_out(length)
-       !
-     END SUBROUTINE xc_lda_l
-     !
-  END INTERFACE
-  !
-  !
-  INTERFACE XC_LSDA
-     !
-     SUBROUTINE xc_lsda_l( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
-       !
-       USE dft_par_mod
-       USE kind_l,  ONLY: DP
-       IMPLICIT NONE
-       INTEGER,  INTENT(IN)  :: length
-       REAL(DP), INTENT(IN)  :: rho_in(length), zeta_in(length)
-       REAL(DP), INTENT(OUT) :: ex_out(length), ec_out(length), &
-                                vx_out(length,2), vc_out(length,2)
-       !
-     END SUBROUTINE xc_lsda_l
-     !
-  END INTERFACE
-  !
-  !
   INTERFACE DMXC
      !
      SUBROUTINE dmxc_l( length, sr_d, rho_in, dmuxc )
@@ -257,55 +222,18 @@ MODULE xc_interfaces
      !
   END INTERFACE
   !
-  INTERFACE GCC_SPIN_MORE
-     !
-     SUBROUTINE gcc_spin_more_l( length, rho_in, grho_in, grho_ud_in, &
-                                                 sc, v1c, v2c, v2c_ud )
-       !
-       USE kind_l, ONLY: DP
-       USE dft_par_mod
-       USE corr_gga_l
-       IMPLICIT NONE 
-       INTEGER, INTENT(IN) :: length
-       REAL(DP), INTENT(IN), DIMENSION(length,2) :: rho_in, grho_in
-       REAL(DP), INTENT(IN), DIMENSION(length) :: grho_ud_in
-       REAL(DP), INTENT(OUT), DIMENSION(length) :: sc
-       REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v1c, v2c
-       REAL(DP), INTENT(OUT), DIMENSION(length) :: v2c_ud
-       !
-     END SUBROUTINE
-     !
-  END INTERFACE
   !
-  !
-  INTERFACE DGCXC_UNPOL
+  INTERFACE DGCXC
      !
-     SUBROUTINE dgcxc_unpol_l( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc )
-       USE kind_l,         ONLY: DP
+     SUBROUTINE dgcxc_l( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
+       !
+       USE kind_l,           ONLY: DP
        IMPLICIT NONE
-       INTEGER,  INTENT(IN) :: length
-       REAL(DP), INTENT(IN),  DIMENSION(length) :: r_in, s2_in
-       REAL(DP), INTENT(OUT), DIMENSION(length) :: vrrx, vsrx, vssx
-       REAL(DP), INTENT(OUT), DIMENSION(length) :: vrrc, vsrc, vssc
-       !
-     END SUBROUTINE
-     !
-  END INTERFACE
-  !
-  INTERFACE DGCXC_SPIN
-     !
-     SUBROUTINE dgcxc_spin_l( length, r_in, g_in, vrrx, vrsx, vssx, vrrc,&
-                              vrsc, vssc, vrzc )
-       !
-       USE kind_l,         ONLY: DP
-       IMPLICIT NONE
-       INTEGER, INTENT(IN) :: length
-       REAL(DP), INTENT(IN), DIMENSION(length,2) :: r_in
-       REAL(DP), INTENT(IN), DIMENSION(length,3,2) :: g_in
-       REAL(DP), INTENT(OUT), DIMENSION(length,2) :: vrrx, vrsx, vssx
-       REAL(DP), INTENT(OUT), DIMENSION(length,2) :: vrrc, vrsc, vrzc
-       REAL(DP), INTENT(OUT), DIMENSION(length) :: vssc
-       !
+       INTEGER,  INTENT(IN) :: length, sp
+       REAL(DP), INTENT(IN) :: r_in(length,sp), g_in(length,3,sp)
+       REAL(DP), INTENT(OUT) :: dvxc_rr(length,sp,sp), dvxc_sr(length,sp,sp), &
+                                dvxc_ss(length,sp,sp)
+       !                    
      END SUBROUTINE
      !
   END INTERFACE

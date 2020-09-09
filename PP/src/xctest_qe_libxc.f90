@@ -32,7 +32,7 @@ PROGRAM xctest_qe_libxc
   USE funct,          ONLY: set_dft_from_name, set_exx_fraction
   USE funct,          ONLY: get_iexch, get_icorr, get_igcx, get_igcc, &
                             get_meta, get_metac, reset_dft
-  USE xc_interfaces,  ONLY: xc, xc_gcx, xc_metagcx, dmxc
+  USE xc_interfaces,  ONLY: xc, xc_gcx, xc_metagcx, dmxc, dgcxc
   !
   IMPLICIT NONE
   !

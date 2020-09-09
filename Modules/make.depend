@@ -62,9 +62,6 @@ control_flags.o : parameters.o
 cryst_to_car.o : kind.o
 deviatoric.o : io_global.o
 deviatoric.o : kind.o
-dgcxc_drivers.o : constants.o
-dgcxc_drivers.o : funct.o
-dgcxc_drivers.o : kind.o
 dist.o : cell_base.o
 dist.o : constants.o
 dist.o : io_global.o

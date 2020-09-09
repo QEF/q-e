@@ -25,9 +25,7 @@ constants.o \
 constraints_module.o \
 control_flags.o \
 coulomb_vcut.o \
-dgcxc_drivers.o \
 dist.o \
-dgcxc_drivers.o \
 electrons_base.o \
 environment.o \
 fd_gradient.o \

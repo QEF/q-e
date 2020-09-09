@@ -24,8 +24,7 @@ SUBROUTINE setup_dgc
   USE wavefunctions,        ONLY : psic
   USE kinds,                ONLY : DP
   USE funct,                ONLY : dft_is_gradient, is_libxc
-  !USE xc_gga,               ONLY : xc_gcx !gcxc, gcx_spin, gcc_spin
-  USE xc_interfaces,        ONLY : xc_gcx
+  USE xc_interfaces,        ONLY : xc_gcx, dgcxc
   USE uspp,                 ONLY : nlcc_any
   USE gc_lr,                ONLY : grho, gmag, dvxc_rr, dvxc_sr, &
                                    dvxc_ss, dvxc_s, vsgga, segni

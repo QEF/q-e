@@ -13,6 +13,7 @@ xc_d_lda_lsda_wrapper.o : kind_l.o
 xc_gga_wrapper.o : kind_l.o
 xc_gga_wrapper.o : dft_par_mod.o
 xc_gga_wrapper.o : drivers_gga.o
+xc_d_gga_wrapper.o : kind_l.o
 xc_mgga_wrapper.o : kind_l.o
 xc_mgga_wrapper.o : dft_par_mod.o
 xc_mgga_wrapper.o : drivers_mgga.o
@@ -22,6 +23,8 @@ drivers_gga.o : dft_par_mod.o
 drivers_gga.o : correlation_gga.o
 drivers_gga.o : exchange_gga.o
 drivers_d_gga.o : kind_l.o
+drivers_d_gga.o : constants_l.o
+drivers_d_gga.o : dft_par_mod.o
 drivers_mgga.o : kind_l.o
 drivers_mgga.o : metagga.o
 drivers_gga.o : correlation_gga.o
