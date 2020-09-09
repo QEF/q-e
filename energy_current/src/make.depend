@@ -32,7 +32,6 @@ all_currents.o : ../../PW/src/realus.o
 all_currents.o : ../../PW/src/scf_mod.o
 all_currents.o : ../../PW/src/symm_base.o
 all_currents.o : ../../UtilXlib/mp.o
-all_currents.o : ../../iotk/src/iotk_module.o
 all_currents.o : hartree_mod.o
 all_currents.o : zero_mod.o
 all_currents.o : averages.o
