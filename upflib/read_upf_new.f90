@@ -399,16 +399,17 @@ CONTAINS
        !
        ! read polinomial coefficients for Q_ij expansion at small radius
        !
+       IF ( upf%nqlc == 0 ) upf%nqlc = 2*upf%lmax+1
+       ALLOCATE( upf%rinner( upf%nqlc ) )
        IF ( v2 .AND. upf%nqf > 0) THEN
           ALLOCATE ( upf%qfcoef(upf%nqf, upf%nqlc, upf%nbeta, upf%nbeta) )
           CALL xmlr_opentag('PP_QFCOEF')
           READ(iun,*) upf%qfcoef
-          CALL xmlr_closetag ()
-          ALLOCATE( upf%rinner( upf%nqlc ) )
           CALL xmlr_readtag('PP_RINNER',upf%rinner)
+          CALL xmlr_closetag ()
        ELSE IF ( upf%nqf == 0 ) THEN
-          ALLOCATE( upf%rinner(1), upf%qfcoef(1,1,1,1) )
-          upf%rinner = 0.0_dp; upf%qfcoef =0.0_dp
+          ALLOCATE( upf%qfcoef(1,1,1,1) )
+          upf%qfcoef =0.0_dp
        ENDIF
        !
        ! Read augmentation charge Q_ij
