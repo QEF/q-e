@@ -405,8 +405,8 @@ CONTAINS
           ALLOCATE ( upf%qfcoef(upf%nqf, upf%nqlc, upf%nbeta, upf%nbeta) )
           CALL xmlr_opentag('PP_QFCOEF')
           READ(iun,*) upf%qfcoef
-          CALL xmlr_readtag('PP_RINNER',upf%rinner)
           CALL xmlr_closetag ()
+          CALL xmlr_readtag('PP_RINNER',upf%rinner)
        ELSE IF ( upf%nqf == 0 ) THEN
           ALLOCATE( upf%qfcoef(1,1,1,1) )
           upf%qfcoef =0.0_dp
