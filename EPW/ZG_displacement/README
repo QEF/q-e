@@ -6,13 +6,19 @@
 [3] Oden Institute for Computational Engineering and Sciences, The University of Texas at Austin,
 Austin, Texas 78712, USA 
 [4] Department of Physics, The University of Texas at Austin, Austin, Texas 78712, USA
------------------------------------------------------------------------------------------
-If you are using ZG.x, please cite both references:
+---------------------------------------------------------------------------------------------------
+
+If you use ZG.x please do cite the following work:
 
 [1] Marios Zacharias and Feliciano Giustino, Phys. Rev. Research 2, 013357, (2020).
 [2] Marios Zacharias and Feliciano Giustino, Phys. Rev. B 94, 075125, (2016).
 
------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+
+Acknowledgement: We thank Hyungjun Lee, Oden Institute for Computational Engineering and Sciences, 
+                 for help packaging this release.
+
+---------------------------------------------------------------------------------------------------
 Instructions for the construction of the "ZG-displacement" (Zacharias-Giustino) following 
 Eq. (2) of Phys. Rev. Research 2, 013357, 2020. The approach for generating the ZG-displacement 
 is based on the generalized theory of the special displacement method as in 
@@ -87,7 +93,7 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
        "incl_qA"            : Logical flag, to decide whether to include phonon modes in set A or not. 
                               (default .true.)
        "single_phonon_displ": Logical flag that allows to displace the nuclei along single phonon modes. 
-                              Use configurations to compute electron-phonon matrix elements with a direct 
+                              Use output configurations to compute electron-phonon matrix elements with a direct 
                               supercell calculation. Set the displacement to the zero point by "T = 0". 
                               This generates the output files: "single_phonon-displacements.dat" and 
                               "single_phonon-velocities.dat".
@@ -98,7 +104,7 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
                               The calculations, for the moment, assume systems with time-reversal symmetry. 
                               For the generation of the "qlist_AB.txt" set the q-gird in file 
                               "example/silicon/input/qlist.in" and run "../../../src/create_qlist.x < qlist.in > qlist.out ". 
-                              Copy and paste the output in "qlist_AB.txt" to "ZG.in". 
+                              Paste the output of "qlist_AB.txt" to "ZG.in" after namelist &input.
                                           
     ii)  To generate the ZG-displacement run "/path_to_your_espresso/bin/ZG.x <ZG_444.in> ZG_444.out".
          This generates three output files: the "equil_pos.txt", "ZG-configuration.dat" and "ZG-velocities.dat". 
@@ -108,15 +114,14 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
          The outputs for a supercell size of 4x4x4 are in the folder "example/silicon/output/".
     iii) The calculation of the ZG-displacement should usually takes a few seconds to few minutes with one processor. 
 
-
-7. VERY IMPORTANT NOTE: It is perfectly reasonable to find different ZG-displacements / ZG-configurations,
+6. VERY IMPORTANT NOTE: It is perfectly reasonable to find different ZG-displacements / ZG-configurations,
    since the modes obtained  by diagonalizing the dynamical matrix can differ by a phase factor 
    (or a unitary matrix in case of degeneracy) if the processor, or compiler, or libraries have changed. 
    The eigenvalues ofcourse should remain the same in all cases. The synchronization routine should align the sign
    of the modes with respect to a reference mode, but the sign of this reference depends on the machine,
    and degeneracy is not taken into account. The best way to check the validity of your configuration is 
    by comparing the anisotropic displacement tensor with the exact values, both obtained at the end of the 
-   "ZG-configuration.dat". Reducing the value of "threshold" brings the anisotropic displacement tensor
+   "ZG-configuration.dat". Reducing the value of "threshold" should bring the anisotropic displacement tensor
    closer to the exact values. 
 
 7. The ZG-displacement can be employed for the calculation of any temperature-dependent 
@@ -125,7 +130,7 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
    but now, instead, using the ZG-displacement (supercell) that incorporates automatically 
    the electron-phonon interaction and quantum zero-point motion. 
 
-9. The ZG-displacement can also be employed for the calculation of full temperature-dependent
+8. The ZG-displacement can also be employed for the calculation of full temperature-dependent
    band structures using the unfolding technique for supercell calculations. 
 
 ----------------------------------------------------------------------------------------------------------
@@ -167,7 +172,7 @@ Steps:
    to keep "synch = .true." and "incl_qA = .false.", unless there is a particular reason to change them.  
 
 7. Examples for the 3x3x3 and 5x5x5 Si ZG-configurations are provided. In the "outputs" directory the calculated 
-   zero-point renormalization(ZPR) for each case is given in the gnuplot files. For a 5x5x5 Si ZG-configuration the 
+   zero-point renormalization (ZPR) for each case is given in the gnuplot files. For a 5x5x5 Si ZG-configuration the 
    calculated ZPR is 55 meV, very close to the converged value of 57 meV obtained using an 8x8x8 Si ZG-configuration
    in Ref. [Phys. Rev. B 94, 075125, (2016)].
    

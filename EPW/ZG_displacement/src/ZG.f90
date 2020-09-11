@@ -22,21 +22,28 @@ Module ifconstants
   CHARACTER(LEN=3), ALLOCATABLE :: atm(:)
 end Module ifconstants
 !
-!---------------------------------------------------------------------
+!-------------------------------------------------------------------------
 PROGRAM ZG
   !-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  !! authors: Marios Zacharias, Feliciano Giustino 
+  !! acknowledgement: Hyungjun Lee for help packaging this release
+  !! version: v0.1
+  !! license: GNU
+  !
   !  This program generates the ZG_displacement for a list of
   !  q vectors that are comensurate to the supercell size to be employed for 
-  !  the special displacement method. The program starts from the interatomic 
-  !  force constants generated from the DFPT phonon code through
-  !  the companion program q2r
+  !  the special displacement method. The first part of the code is obtained by 
+  !  modifying the matdyn.f90 subroutine of QE. The program starts from the 
+  !  interatomic force constants generated from the DFPT phonon code through
+  !  the companion program q2r.
   !
   !  ZG_displacement generates a supercell of the original cell with the atoms 
   !  displaced via Eq. (2) of https://arxiv.org/ABS/1912.10929. 
   !  Data required for the ZG_displacement are read from the force constant 
   !  file "*.fc" and.
   !
-  !  Input cards for ZG.in: namelist &input
+  !  Input cards for ZG.in: namelist &input (first six as for matdyn.f90)
   !     flfrc     file produced by q2r containing force constants (needed)
   !               It is the same as in the input of q2r.x (+ the .xml extension
   !               IF the dynamical matrices produced by ph.x were in xml
@@ -89,6 +96,57 @@ PROGRAM ZG
   !  depending on which one is available and nonzero.
   !  For low-symmetry crystals, specify twice q = 0 in the list
   !  IF you want to have q = 0 results for two different directions
+  !  ----------------------------------------------------------------------------------
+  ! 
+  !  Input cards to control "ZG_configuration" subroutine:
+  !
+  !     "ZG_conf"            : Logical flag that enables the creation of the ZG-displacement. 
+  !                            (default .false.) 
+  !     "T"                  : Real number indicating the temperature at which the calculations will be performed. 
+  !                            "T" essentially defines the amplitude of the normal coordinates. 
+  !                            (default 0.00)
+  !     "dimx","dimy","dimz" : Integers corresponding to the dimensionality of the supercell.
+  !                            (default 0,0,0)
+  !     "atm_zg(1), etc.."   : String describing the element of each atomic species
+  !                            (default "Element")
+  !     "synch"              : Logical flag that enables the synchronization of the modes. 
+  !                            (default .false.)
+  !     "nloops"             : Integer for the number of loops the algorithm needs to 
+  !                            go through for finding the optimum configuration. The algorithm 
+  !                            generates a set of "+,-,+,-" signs and its possible permutations, 
+  !                            trying to minimize the error coming from the coupling of modes with 
+  !                            the same q-wavevector but at different branch. For a finite supercell
+  !                            size the order of using the "+,-,+,-" set and its permutations is  
+  !                            important giving different results. Therefore the algorithm checks 
+  !                            the combination that brings the error lower than a threshold.
+  !                            (default 15000)
+  !     "compute_error"      : Logical flag: if set to .true. allows the code to find the optimal ZG configuration 
+  !                            by minimizing the error based on the "threshold" flag (see below). Set it
+  !                            to .false. if speed up is required. Setting it to .false. is useful when 
+  !                            (i) large supercell sizes are considered for which the error is minimized by 
+  !                            the first set of signs, and (ii) only single phonon displacements are of interest (see below) 
+  !                            (default .true.)
+  !     "threshold"          : Real number indicating the error at which the algorithm stops while it's 
+  !                            looking for possible combinations of signs. Once this limit is reached 
+  !                            the ZG-displacement is constructed. The threshold is usually chosen 
+  !                            to be less than 5% of the diagonal terms, i.e. those terms that contribute 
+  !                            to the calculation of temperature-dependent properties. 
+  !                            (default 0.05)
+  !     "incl_qA"            : Logical flag, to decide whether to include phonon modes in set A or not. 
+  !                            (default .true.)
+  !     "single_phonon_displ": Logical flag that allows to displace the nuclei along single phonon modes. 
+  !                            Use output configurations to compute electron-phonon matrix elements with a direct 
+  !                            supercell calculation. Set the displacement to the zero point by "T = 0". 
+  !                            This generates the output files: "single_phonon-displacements.dat" and 
+  !                            "single_phonon-velocities.dat".
+  !                            (default .false.)
+  !     "qlist_AB.txt"       : This file containes the q-list in crystal coordinates that appears in the "ZG_444.in" example after 
+  !                            the input flags. It corresponds to the q-points commensurate to the supercell size. Only one
+  !                            of the q-point time-reversal partners is kept for the construction of the ZG-displacement. 
+  !                            The calculations, for the moment, assume systems with time-reversal symmetry. 
+  !                            For the generation of the "qlist_AB.txt" set the q-gird in file 
+  !                            "example/silicon/input/qlist.in" and run "../../../src/create_qlist.x < qlist.in > qlist.out ". 
+  !                            Paste the output of "qlist_AB.txt" to "ZG.in" after namelist &input.
   !
   USE kinds,      ONLY : DP
   USE mp,         ONLY : mp_bcast
@@ -575,7 +633,7 @@ PROGRAM ZG
      !
      DEALLOCATE (z, w2, dyn, dyn_blk)
      ! mz_b
-     IF (ionode .AND. ZG_conf) DEALLOCATE (z_nq_zg,q_nq_zg) 
+     IF (ionode .AND. ZG_conf) DEALLOCATE (z_nq_zg, q_nq_zg) 
      ! mz_e
      !
      !    for a2F
@@ -2228,15 +2286,14 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   !     
 !  WRITE(*,*) "total vibrational energy per cell", 2*dotp/dimx/dimy/dimz, "Ry"
   IF (q_in_cryst_coord .EQV. .FALSE.) THEN
-  ! in both cases convert them to crystal because the matdyn converts them to cartesian
+  ! in both cases convert them to crystal 
       CALL cryst_to_cart(nq, q, at, -1)
   ELSE
       CALL cryst_to_cart(nq, q, at, -1)
   ENDIF
   ! To distinguish between different sets of qpoints, A, B, C
-  ! to find how many points belong to set A and THEN ALLOCATE matrix accordingly
+  ! to find how many points belong to set A and then allocate matrix accordingly
   ! NOTE that we want the qpoints always in crystal coordinates
-  ! so ifthey are in cartesian put them in crystal
   !
   ctrA = 0
   ctrAB = 0
@@ -2341,14 +2398,14 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
     z_nq_synch = (0.0d0 , 0.0d0)
     ! query workspace
     !
-    LWORK = 5*nat3 !MAX(1, 2*K_dim+L_dim)
+    LWORK = 5 * nat3 !MAX(1, 2*K_dim+L_dim)
     !
     ALLOCATE( RWORK( LWORK ) )
     ALLOCATE( WORK( LWORK ) )
     LWORK = - 1
 
-    call ZGESVD('A','A', nat3, nat3, M_over(:,:, 1), nat3,S_svd,L_svd, &
-                       nat3, R_svd, nat3,WORK,LWORK, RWORK,INFO)
+    call ZGESVD('A','A', nat3, nat3, M_over(:,:, 1), nat3, S_svd, L_svd, &
+                       nat3, R_svd, nat3, WORK, LWORK, RWORK, INFO)
      !
     LWORK = INT(WORK(1)) + 1
      !
@@ -2369,13 +2426,13 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
         DO p = 1, nat3
           DO j = 1, nat3
             DO k = 1, nat3 ! sum over \k,\a
-               M_over(j, p, ii) = M_over(j, p, ii) + (z_zg(k, j, ii + i + 1) *CONJG(z_nq_synch(k,p, ii + i)))
+               M_over(j, p, ii) = M_over(j, p, ii) + (z_zg(k, j, ii + i + 1) * CONJG(z_nq_synch(k, p, ii + i)))
             ENDDO ! k-loop
           ENDDO ! j-loop
         ENDDO ! p-loop 
         ! perform singular value decomposition
-        call ZGESVD('A','A', nat3, nat3, M_over(:,:, ii), nat3,S_svd,L_svd, &
-                    nat3, R_svd, nat3,WORK,LWORK, RWORK,INFO)
+        call ZGESVD('A', 'A', nat3, nat3, M_over(:,:, ii), nat3, S_svd, L_svd, &
+                    nat3, R_svd, nat3, WORK, LWORK, RWORK,INFO)
         U_svd(:,:, ii) = MATMUL(TRANSPOSE(CONJG(R_svd)),TRANSPOSE(CONJG(L_svd)))
         call ZGEEV( 'N', 'N', nat3, U_svd(:,:, ii), nat3, U_svd_d(:, ii), dum, 1, dum, 1, &
                     WORK, LWORK, RWORK, INFO )
@@ -2383,13 +2440,13 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
         DO p = 1, nat3
           DO j = 1, nat3
             DO k = 1, nat3 ! sum over \k,\a
-               M_over(j, p, ii) = M_over(j, p, ii) + (z_zg(k, j, ii + i + 1) *CONJG(z_nq_synch(k,p, ii + i)))
+               M_over(j, p, ii) = M_over(j, p, ii) + (z_zg(k, j, ii + i + 1) * CONJG(z_nq_synch(k, p, ii + i)))
             ENDDO ! k-loop
           ENDDO ! j-loop
         ENDDO ! p-loop 
         DO qp = 1, nat3
          DO k = 1, nat3
-            dotp_mat(qp, k) =  CONJG(M_over(qp, qp, ii)) *CONJG(U_svd_d(k, ii))
+            dotp_mat(qp, k) =  CONJG(M_over(qp, qp, ii)) * CONJG(U_svd_d(k, ii))
           !  WRITE(*,*) REAL(dotp_mat(qp, k)), aimag(dotp_mat(qp, k))
          ENDDO
         ENDDO
@@ -2405,13 +2462,13 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
            ENDDO
         ENDDO
         ! overWRITE z_zg
-        z_zg(:,:, ii + i + 1) = z_nq_synch(:,:, ii + i + 1)
+        z_zg(:, :, ii + i + 1) = z_nq_synch(:, :, ii + i + 1)
       ENDDO ! ii-loop
     ENDDO ! i-loop
      ! Here we synchronize the remaining eigenvectors IF ctrAB is not divided by pn
     IF (mod(ctrAB, pn) > 0) THEN
       ctr = ctrAB - mod(ctrAB, pn)
-      z_nq_synch(:,:, ctr + 1) = z_zg(:,:, ctr + 1)
+      z_nq_synch(:, :, ctr + 1) = z_zg(:, :, ctr + 1)
       DO ii = 1, mod(ctrAB, pn) - 1
       M_over = 0.0d0
       ! Construct the overlap matrix M_{\nu,\nu'}
@@ -2428,7 +2485,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
              nat3, R_svd, nat3, WORK, LWORK, RWORK,INFO)
       ! ZGESVD returns R_svd**H (the hermitian TRANSPOSE of R_svd)
       U_svd(:,:, ii) = MATMUL(TRANSPOSE(CONJG(R_svd)),TRANSPOSE(CONJG(L_svd)))
-      call ZGEEV( 'N', 'N', nat3, U_svd(:,:, ii), nat3, U_svd_d(:, ii), dum, 1, dum, 1, &
+      call ZGEEV( 'N', 'N', nat3, U_svd(:, :, ii), nat3, U_svd_d(:, ii), dum, 1, dum, 1, &
                      WORK, LWORK, RWORK, INFO )
       M_over = 0.0d0
       DO p = 1, nat3
@@ -2445,7 +2502,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
       ENDDO
       dotp_mat = ABS(DBLE(dotp_mat))
       DO qp = 1, nat3
-        p = MAXLOC(DBLE(dotp_mat(qp,:)), 1)
+        p = MAXLOC(DBLE(dotp_mat(qp, :)), 1)
        !!  WRITE(*,*) p, "p_values"
         U_svd_d_new(qp, ii) = U_svd_d(p, ii)
       ENDDO   
@@ -2457,7 +2514,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
         ENDDO
       ENDDO
       ! overWRITE z_zg
-      z_zg(:,:, ii + ctr + 1) = z_nq_synch(:,:, ii + ctr + 1)
+      z_zg(:, :, ii + ctr + 1) = z_nq_synch(:, :, ii + ctr + 1)
       ENDDO ! ii-loop
     ENDIF ! mod(ctrAB, pn)
     DEALLOCATE(WORK, RWORK)
@@ -2567,8 +2624,8 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
     ! change the signs of Mx in every 2^(nmodes-2) entries 
     ! I use Mx_mat_or to apply concatenate matrices and obtain set E
       IF (mod(ii, pn) .EQ. 1) THEN
-        Mx_mat_or(1:pn - 1,:) = Mx_mat(2:pn,:) ! second element goes to the top
-        Mx_mat_or(pn,:) = Mx_mat(1,:) ! first element goes to the bottom
+        Mx_mat_or(1 : pn - 1, :) = Mx_mat(2 : pn, :) ! second element goes to the top
+        Mx_mat_or(pn, :) = Mx_mat(1, :) ! first element goes to the bottom
       ENDIF
       Mx_mat = Mx_mat_or
       ! to take antithetics every pn
@@ -2604,7 +2661,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
               DO j = 1, nat3
                 D_vect(ctr, ii) = D_vect(ctr, ii) + DBLE(z_zg(p, i, ii) * CONJG(z_zg(qp, j, ii))) * & 
                                                          Cx_matAB(i, ii) * Cx_matAB(j, ii)
-                R_mat(ctr, ctr2) = DBLE(z_zg(p, i, ii) *CONJG(z_zg(qp, j, ii)))
+                R_mat(ctr, ctr2) = DBLE(z_zg(p, i, ii) * CONJG(z_zg(qp, j, ii)))
                 ctr2 = ctr2 + 1
               ENDDO
             ENDDO
@@ -2618,7 +2675,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
         ctr = 1
         DO i = 1, nat3
           DO j = 1, nat3
-            Bx_vect(ctr) = Cx_matAB(i, ii) *Cx_matAB(j, ii)
+            Bx_vect(ctr) = Cx_matAB(i, ii) * Cx_matAB(j, ii)
             ctr = ctr + 1
           ENDDO
         ENDDO
@@ -2662,12 +2719,12 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
       DO p = 1, combs_all
         ctr = 1
         DO i = 0, INT(ctrAB / pn) - 1 
-          sum_error_D(p, ctr) =SUM(F_vect(p, pn * i + 1:pn * (i + 1))) ! pn) is the length of Mx
+          sum_error_D(p, ctr) =SUM(F_vect(p, pn * i + 1 : pn * (i + 1))) ! pn) is the length of Mx
           ctr = ctr + 1
         ENDDO 
         ! Here we add the reminder IF ctrAB is not divided exactly by pn
         IF (mod(ctrAB, pn) > 0) THEN
-          sum_error_D(p, ctr) = SUM(F_vect(p, ctrAB - mod(ctrAB, pn) + 1:ctrAB)) ! add the remaining terms
+          sum_error_D(p, ctr) = SUM(F_vect(p, ctrAB - mod(ctrAB, pn) + 1 : ctrAB)) ! add the remaining terms
         ENDIF
         ! evaluate also error from all q-points in B
         DO i = 1, ctrAB
@@ -2698,12 +2755,12 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
       DO p = 1, combs_all
       ctr = 1
         DO i = 0, INT(ctrAB / pn) - 1 
-          sum_diag_D(p, ctr) =SUM(E_vect(p, pn * i + 1:pn * (i + 1))) ! pn) is the length of Mx
+          sum_diag_D(p, ctr) =SUM(E_vect(p, pn * i + 1 : pn * (i + 1))) ! pn) is the length of Mx
           ctr = ctr + 1
         ENDDO
         ! Here we add the reminder IF ctrAB is not divided exactly by pn
         IF (mod(ctrAB, pn) > 0) THEN
-          sum_diag_D(p, ctr) = SUM(E_vect(p, ctrAB - mod(ctrAB, pn) + 1:ctrAB)) ! add the remaining terms
+          sum_diag_D(p, ctr) = SUM(E_vect(p, ctrAB - mod(ctrAB, pn) + 1 : ctrAB)) ! add the remaining terms
         ENDIF
         DO i = 1, ctrAB
           sum_diag_B(p) = sum_diag_B(p) + E_vect(p, i) ! pn) is the length of Mx
@@ -2744,7 +2801,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
               Cx_matA(:, ctrA)  = Cx_matAB(:, qp)
               Cpx_matA(:, ctrA) = Cpx_matAB(:, qp)
               z_nq_A(:, :, ctrA) =  z_zg(:, :, qp)
-              qA(ctrA,:) =  q(:, qp)
+              qA(ctrA, :) =  q(:, qp)
               IF (ABS(qA(ctrA, 1)) < eps) qA(ctrA, 1) = 0.0
               IF (ABS(qA(ctrA, 2)) < eps) qA(ctrA, 2) = 0.0
               IF (ABS(qA(ctrA, 3)) < eps) qA(ctrA, 3) = 0.0
@@ -2836,9 +2893,9 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
       IF (ionode) THEN
         DO p = 1, nq_tot 
            DO k = 1, nat ! k represents the atom
-             WRITE(80,'(A6, 3F13.8)') atm(ityp(k)), D_tau(p, k,:) 
-             WRITE(*,'(A10, A6, 3F13.8)') "ZG_conf:", atm(ityp(k)), D_tau(p, k,:) 
-             WRITE(81,'(A6, 3F15.8)') atm(ityp(k)), P_tau(p, k,:) * 1.0E-12 ! multiply to obtain picoseconds 
+             WRITE(80,'(A6, 3F13.8)') atm(ityp(k)), D_tau(p, k, :) 
+             WRITE(*,'(A10, A6, 3F13.8)') "ZG_conf:", atm(ityp(k)), D_tau(p, k, :) 
+             WRITE(81,'(A6, 3F15.8)') atm(ityp(k)), P_tau(p, k, :) * 1.0E-12 ! multiply to obtain picoseconds 
            ENDDO
         ENDDO 
         !WRITE(80,*) "sign matrices" 
