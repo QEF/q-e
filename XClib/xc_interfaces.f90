@@ -9,13 +9,13 @@ MODULE xc_interfaces
   !
   ! LDA
   PUBLIC :: XC, DMXC
-  PUBLIC :: SLATER, SLATER_SPIN, PW, PW_SPIN, LYP, &
-            LSD_LYP
+  PUBLIC :: SLATER, SLATER_SPIN, PW, PW_SPIN
   ! GGA
-  PUBLIC :: XC_GCX, GCXC, GCX_SPIN, GCC_SPIN, DGCXC
+  PUBLIC :: XC_GCX, DGCXC
+  PUBLIC :: GCXC, GCX_SPIN, GCC_SPIN
   PUBLIC :: LSD_GLYP
   ! MGGA
-  PUBLIC :: XC_METAGCX, TAU_XC, TAU_XC_SPIN
+  PUBLIC :: XC_METAGCX
   PUBLIC :: TPSSCXC
   ! 
   PUBLIC :: XCLIB_GET_IDs, XCLIB_GET_EXX, XCLIB_GET_FINITE_SIZE_CELL_VOL, &
@@ -239,41 +239,6 @@ MODULE xc_interfaces
   END INTERFACE
   !
   !
-  INTERFACE TAU_XC
-     !
-     SUBROUTINE tau_xc_l( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
-       !
-       USE kind_l
-       USE dft_par_mod
-       USE metagga_l
-       IMPLICIT NONE
-       INTEGER, INTENT(IN) :: length
-       REAL(DP), DIMENSION(length) :: rho, grho2, tau, &
-                                      ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
-       !
-     END SUBROUTINE tau_xc_l
-     !
-  END INTERFACE
-  !
-  INTERFACE TAU_XC_SPIN
-     !
-     SUBROUTINE tau_xc_spin_l( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
-       !
-       USE kind_l
-       USE dft_par_mod
-       USE metagga_l
-       IMPLICIT NONE
-       INTEGER,  INTENT(IN) :: length
-       REAL(DP), INTENT(IN) :: rho(length,2), tau(length,2)
-       REAL(DP), INTENT(IN) :: grho(3,length,2)
-       REAL(DP), INTENT(OUT) :: ex(length), ec(length), v1x(length,2), v2x(length,2), &
-                                v3x(length,2), v1c(length,2), v3c(length,2)
-       REAL(DP), INTENT(OUT) :: v2c(3,length,2)
-       !
-     END SUBROUTINE tau_xc_spin_l
-     !
-  END INTERFACE
-  !
   !
   !---PROVISIONAL .. for cases when functional routines are called outside xc-drivers---
   !
@@ -333,36 +298,10 @@ MODULE xc_interfaces
   END INTERFACE
   !
   !
-  INTERFACE LYP
-     !
-     SUBROUTINE lyp_ext( rs, ec, vc )
-       !
-       USE kind_l,      ONLY: DP
-       IMPLICIT NONE
-       REAL(DP), INTENT(IN) :: rs
-       REAL(DP), INTENT(OUT) :: ec, vc
-       !
-     END SUBROUTINE
-     !
-  END INTERFACE
-  !
-  INTERFACE LSD_LYP
-     !
-     SUBROUTINE lsd_lyp_ext( rho, zeta, elyp, vlyp_up, vlyp_dw )
-       !
-       USE kind_l,       ONLY: DP
-       IMPLICIT NONE
-       REAL(DP), INTENT(IN) :: rho, zeta
-       REAL(DP), INTENT(OUT) :: elyp, vlyp_up, vlyp_dw
-       !
-     END SUBROUTINE
-     !
-  END INTERFACE
-  !
   !
   INTERFACE LSD_GLYP
      !
-     SUBROUTINE lsd_glyp_ext( rho_in_up, rho_in_dw, grho_up, grho_dw, grho_ud, sc, v1c_up, v1c_dw, v2c_up, v2c_dw, v2c_ud )                     !<GPU:DEVICE>
+     SUBROUTINE lsd_glyp_ext( rho_in_up, rho_in_dw, grho_up, grho_dw, grho_ud, sc, v1c_up, v1c_dw, v2c_up, v2c_dw, v2c_ud )
        !
        USE kind_l, ONLY: DP
        IMPLICIT NONE
