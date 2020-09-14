@@ -20,7 +20,7 @@
 
 #if defined(_OPENMP) && defined(__FFT_SCALAR_THREAD_SAFE)
 ! thread safety guard
-#error FFTW3 is not compatiable with __FFT_SCALAR_THREAD_SAFE
+#error FFTW3 is not compatible with __FFT_SCALAR_THREAD_SAFE
 #endif
 
 !=----------------------------------------------------------------------=!
@@ -451,6 +451,11 @@
      END SUBROUTINE lookup
 
      SUBROUTINE init_plan()
+#if defined(_OPENMP)
+       CALL dfftw_cleanup_threads()
+       void = fftw_init_threads()
+       CALL dfftw_plan_with_nthreads(omp_get_max_threads())
+#endif
        IF ( nx /= ldx .or. ny /= ldy .or. nz /= ldz ) &
             call fftx_error__('cfft3','not implemented',3)
        IF( C_ASSOCIATED(fw_plan(icurrent)) ) CALL dfftw_destroy_plan( fw_plan(icurrent) )
@@ -628,6 +633,11 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
      END SUBROUTINE lookup
 
      SUBROUTINE init_plan()
+#if defined(_OPENMP)
+       CALL dfftw_cleanup_threads()
+       void = fftw_init_threads()
+       CALL dfftw_plan_with_nthreads(omp_get_max_threads())
+#endif
        IF( C_ASSOCIATED(fw_plan( 1, icurrent)) ) &
             CALL dfftw_destroy_plan( fw_plan( 1, icurrent) )
        IF( C_ASSOCIATED(bw_plan( 1, icurrent)) ) &
