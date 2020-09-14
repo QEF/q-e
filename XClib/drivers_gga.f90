@@ -18,8 +18,8 @@ SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   !
   USE kind_l, ONLY: DP
   USE dft_par_mod
-  USE exch_gga_l
-  USE corr_gga_l
+  USE exch_gga
+  USE corr_gga
   USE beef_interface, ONLY: beefx, beeflocalcorr
   !
   IMPLICIT NONE
@@ -70,33 +70,33 @@ SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
      SELECT CASE( igcx )
      CASE( 1 )
         !
-        CALL becke88_l( rho, grho, sx, v1x, v2x )
+        CALL becke88( rho, grho, sx, v1x, v2x )
         !
      CASE( 2 )
         !
-        CALL ggax_l( rho, grho, sx, v1x, v2x )
+        CALL ggax( rho, grho, sx, v1x, v2x )
         !
      CASE( 3 )
         !
-        CALL pbex_l( rho, grho, 1, sx, v1x, v2x )
+        CALL pbex( rho, grho, 1, sx, v1x, v2x )
         !
      CASE( 4 )
         !
-        CALL pbex_l( rho, grho, 2, sx, v1x, v2x )
+        CALL pbex( rho, grho, 2, sx, v1x, v2x )
         !
      CASE( 5 )
         !
-        IF (igcc == 5) CALL hcth_l( rho, grho, sx, v1x, v2x )
+        IF (igcc == 5) CALL hcth( rho, grho, sx, v1x, v2x )
         !
      CASE( 6 )
         !
-        CALL optx_l( rho, grho, sx, v1x, v2x )
+        CALL optx( rho, grho, sx, v1x, v2x )
         !
      ! case igcx == 7 (meta-GGA) must be treated in a separate call to another
      ! routine: needs kinetic energy density in addition to rho and grad rho
      CASE( 8 ) ! 'PBE0'
         !
-        CALL pbex_l( rho, grho, 1, sx, v1x, v2x )
+        CALL pbex( rho, grho, 1, sx, v1x, v2x )
         IF (exx_started) THEN
            sx  = (1.0_DP - exx_fraction) * sx
            v1x = (1.0_DP - exx_fraction) * v1x
@@ -105,7 +105,7 @@ SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      CASE( 9 ) ! 'B3LYP'
         !
-        CALL becke88_l( rho, grho, sx, v1x, v2x )
+        CALL becke88( rho, grho, sx, v1x, v2x )
         IF (exx_started) THEN
            sx  = 0.72_DP * sx
            v1x = 0.72_DP * v1x
@@ -114,18 +114,18 @@ SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      CASE( 10 ) ! 'pbesol'
         !
-        CALL pbex_l( rho, grho, 3, sx, v1x, v2x )
+        CALL pbex( rho, grho, 3, sx, v1x, v2x )
         !
      CASE( 11 ) ! 'wc'
         !
-        CALL wcx_l( rho, grho, sx, v1x, v2x )
+        CALL wcx( rho, grho, sx, v1x, v2x )
         !
      CASE( 12 ) ! 'pbexsr'
         !
-        CALL pbex_l( rho, grho, 1, sx, v1x, v2x )
+        CALL pbex( rho, grho, 1, sx, v1x, v2x )
         !
         IF (exx_started) THEN
-          CALL pbexsr_l( rho, grho, sxsr, v1xsr, v2xsr, screening_parameter )
+          CALL pbexsr( rho, grho, sxsr, v1xsr, v2xsr, screening_parameter )
           sx  = sx  - exx_fraction * sxsr
           v1x = v1x - exx_fraction * v1xsr
           v2x = v2x - exx_fraction * v2xsr
@@ -133,25 +133,25 @@ SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      CASE( 13 ) ! 'rPW86'
         !
-        CALL rPW86_l( rho, grho, sx, v1x, v2x )
+        CALL rPW86( rho, grho, sx, v1x, v2x )
         !
      CASE( 16 ) ! 'C09x'
         !
-        CALL c09x_l( rho, grho, sx, v1x, v2x )
+        CALL c09x( rho, grho, sx, v1x, v2x )
         !
      CASE( 17 ) ! 'sogga'
         !
-        CALL sogga_l( rho, grho, sx, v1x, v2x )
+        CALL sogga( rho, grho, sx, v1x, v2x )
         !
      CASE( 19 ) ! 'pbeq2d'
         !
-        CALL pbex_l( rho, grho, 4, sx, v1x, v2x )
+        CALL pbex( rho, grho, 4, sx, v1x, v2x )
         !
      CASE( 20 ) ! 'gau-pbe'
         !
-        CALL pbex_l( rho, grho, 1, sx, v1x, v2x )
+        CALL pbex( rho, grho, 1, sx, v1x, v2x )
         IF (exx_started) THEN
-          CALL pbexgau_l( rho, grho, sxsr, v1xsr, v2xsr, gau_parameter )
+          CALL pbexgau( rho, grho, sxsr, v1xsr, v2xsr, gau_parameter )
           sx  = sx  - exx_fraction * sxsr
           v1x = v1x - exx_fraction * v1xsr
           v2x = v2x - exx_fraction * v2xsr
@@ -159,38 +159,38 @@ SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      CASE( 21 ) ! 'pw86'
         !
-        CALL pw86_l( rho, grho, sx, v1x, v2x )
+        CALL pw86( rho, grho, sx, v1x, v2x )
         !
      CASE( 22 ) ! 'b86b'
         !
-        CALL becke86b_l( rho, grho, sx, v1x, v2x )
+        CALL becke86b( rho, grho, sx, v1x, v2x )
         ! CALL b86b( rho, grho, 1, sx, v1x, v2x )
         !
      CASE( 23 ) ! 'optB88'
         !
-        CALL pbex_l( rho, grho, 5, sx, v1x, v2x )
+        CALL pbex( rho, grho, 5, sx, v1x, v2x )
         !
      CASE( 24 ) ! 'optB86b'
         !
-        CALL pbex_l( rho, grho, 6, sx, v1x, v2x )
+        CALL pbex( rho, grho, 6, sx, v1x, v2x )
         ! CALL b86b (rho, grho, 2, sx, v1x, v2x)
         !
      CASE( 25 ) ! 'ev93'
         !
-        CALL pbex_l( rho, grho, 7, sx, v1x, v2x )
+        CALL pbex( rho, grho, 7, sx, v1x, v2x )
         !
      CASE( 26 ) ! 'b86r'
         !
-        CALL b86b_l( rho, grho, 3, sx, v1x, v2x )
+        CALL b86b( rho, grho, 3, sx, v1x, v2x )
         !
      CASE( 27 ) ! 'cx13'
         !
-        CALL cx13_l( rho, grho, sx, v1x, v2x )
+        CALL cx13( rho, grho, sx, v1x, v2x )
         !
      CASE( 28 ) ! 'X3LYP'
         !
-        CALL becke88_l( rho, grho, sx, v1x, v2x )
-        CALL pbex_l( rho, grho, 1, sx_, v1x_, v2x_ )
+        CALL becke88( rho, grho, sx, v1x, v2x )
+        CALL pbex( rho, grho, 1, sx_, v1x_, v2x_ )
         IF (exx_started) THEN
            sx  = REAL(0.765*0.709,DP) * sx
            v1x = REAL(0.765*0.709,DP) * v1x
@@ -202,7 +202,7 @@ SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      CASE( 29, 31 ) ! 'cx0'or `cx0p'
         !
-        CALL cx13_l( rho, grho, sx, v1x, v2x )
+        CALL cx13( rho, grho, sx, v1x, v2x )
         IF (exx_started) THEN
            sx  = (1.0_DP - exx_fraction) * sx
            v1x = (1.0_DP - exx_fraction) * v1x
@@ -211,7 +211,7 @@ SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      CASE( 30 ) ! 'r860'
         !
-        CALL rPW86_l( rho, grho, sx, v1x, v2x )
+        CALL rPW86( rho, grho, sx, v1x, v2x )
         !
         IF (exx_started) then
            sx  = (1.0_DP - exx_fraction) * sx
@@ -221,7 +221,7 @@ SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      CASE( 38 ) ! 'BR0'
         !
-        CALL b86b_l( rho, grho, 3, sx, v1x, v2x )
+        CALL b86b( rho, grho, 3, sx, v1x, v2x )
         IF (exx_started) THEN
            sx  = (1.0_DP - exx_fraction) * sx
            v1x = (1.0_DP - exx_fraction) * v1x
@@ -230,7 +230,7 @@ SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      CASE( 40 ) ! 'c090'
         !
-        CALL c09x_l( rho, grho, sx, v1x, v2x )
+        CALL c09x( rho, grho, sx, v1x, v2x )
         IF (exx_started) THEN
            sx  = (1.0_DP - exx_fraction) * sx
            v1x = (1.0_DP - exx_fraction) * v1x
@@ -239,7 +239,7 @@ SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      CASE( 41 ) ! 'B86BPBEX'
         !
-        CALL becke86b_l( rho, grho, sx, v1x, v2x )
+        CALL becke86b( rho, grho, sx, v1x, v2x )
         IF (exx_started) THEN
            sx  = (1.0_DP - exx_fraction) * sx
            v1x = (1.0_DP - exx_fraction) * v1x
@@ -248,7 +248,7 @@ SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      CASE( 42 ) ! 'BHANDHLYP'
         !
-        CALL becke88_l( rho, grho, sx, v1x, v2x )
+        CALL becke88( rho, grho, sx, v1x, v2x )
         IF (exx_started) THEN
            sx  = (1.0_DP - exx_fraction) * sx
            v1x = (1.0_DP - exx_fraction) * v1x
@@ -262,15 +262,15 @@ SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      CASE( 44 ) ! 'RPBE'
         !
-        CALL pbex_l( rho, grho, 8, sx, v1x, v2x )
+        CALL pbex( rho, grho, 8, sx, v1x, v2x )
         !
      CASE( 45 ) ! 'W31X'
         !
-        CALL pbex_l( rho, grho, 9, sx, v1x, v2x )
+        CALL pbex( rho, grho, 9, sx, v1x, v2x )
         !
      CASE( 46 ) ! 'W32X'
         !
-        CALL b86b_l( rho, grho, 4, sx, v1x, v2x )
+        CALL b86b( rho, grho, 4, sx, v1x, v2x )
         !
      CASE DEFAULT
         !
@@ -286,25 +286,25 @@ SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
      SELECT CASE( igcc )
      CASE( 1 )
         !
-        CALL perdew86_l( rho, grho, sc, v1c, v2c )
+        CALL perdew86( rho, grho, sc, v1c, v2c )
         !
      CASE( 2 )
         !
-        CALL ggac_l( rho, grho, sc, v1c, v2c )
+        CALL ggac( rho, grho, sc, v1c, v2c )
         !
      CASE( 3 )
         !
-        CALL glyp_l( rho, grho, sc, v1c, v2c )
+        CALL glyp( rho, grho, sc, v1c, v2c )
         !
      CASE( 4 )
         !
-        CALL pbec_l( rho, grho, 1, sc, v1c, v2c )
+        CALL pbec( rho, grho, 1, sc, v1c, v2c )
         !
      ! igcc == 5 (HCTH) is calculated together with case igcx=5
      ! igcc == 6 (meta-GGA) is treated in a different routine
      CASE( 7 ) !'B3LYP'
         !
-        CALL glyp_l( rho, grho, sc, v1c, v2c )
+        CALL glyp( rho, grho, sc, v1c, v2c )
         IF (exx_started) THEN
            sc  = 0.81_DP * sc
            v1c = 0.81_DP * v1c
@@ -313,18 +313,18 @@ SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      CASE( 8 ) ! 'PBEsol'
         !
-        CALL pbec_l( rho, grho, 2, sc, v1c, v2c )
+        CALL pbec( rho, grho, 2, sc, v1c, v2c )
         !
      ! igcc ==  9 set to 5, back-compatibility
      ! igcc == 10 set to 6, back-compatibility
      ! igcc == 11 M06L calculated in another routine
      CASE( 12 ) ! 'Q2D'
         !
-        CALL pbec_l( rho, grho, 3, sc, v1c, v2c )
+        CALL pbec( rho, grho, 3, sc, v1c, v2c )
         !
      CASE( 13 ) !'X3LYP'
         !
-        CALL glyp_l( rho, grho, sc, v1c, v2c )
+        CALL glyp( rho, grho, sc, v1c, v2c )
         IF (exx_started) THEN
            sc  = 0.871_DP * sc
            v1c = 0.871_DP * v1c
@@ -367,7 +367,7 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !
   USE kind_l, ONLY: DP
   USE dft_par_mod
-  USE exch_gga_l
+  USE exch_gga
   USE beef_interface, ONLY: beefx
   !
   IMPLICIT NONE
@@ -443,7 +443,7 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE( 1 )
         !
-        CALL becke88_spin_l( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), v1x(2), v2x(1), v2x(2) )
+        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), v1x(2), v2x(1), v2x(2) )
         !
         sx_tot(ir) = sx(1)*rnull(1) + sx(2)*rnull(2)
         !
@@ -452,8 +452,8 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
         !
-        CALL ggax_l( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
-        CALL ggax_l( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
+        CALL ggax( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
+        CALL ggax( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
         !
         sx_tot(ir) = 0.5_DP * ( sx(1)*rnull(1) + sx(2)*rnull(2) )
         v2x = 2.0_DP * v2x
@@ -475,8 +475,8 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
         !
-        CALL pbex_l( rho(1), grho2(1), iflag, sx(1), v1x(1), v2x(1) )
-        CALL pbex_l( rho(2), grho2(2), iflag, sx(2), v1x(2), v2x(2) )
+        CALL pbex( rho(1), grho2(1), iflag, sx(1), v1x(1), v2x(1) )
+        CALL pbex( rho(2), grho2(2), iflag, sx(2), v1x(2), v2x(2) )
         !
         sx_tot(ir) = 0.5_DP * ( sx(1)*rnull(1) + sx(2)*rnull(2) )
         v2x = 2.0_DP * v2x
@@ -489,9 +489,9 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
            !
         ELSEIF ( igcx == 12 .AND. exx_started ) THEN
            !
-           CALL pbexsr_l( rho(1), grho2(1), sxsr(1), v1xsr(1), &
+           CALL pbexsr( rho(1), grho2(1), sxsr(1), v1xsr(1), &
                                           v2xsr(1), screening_parameter )
-           CALL pbexsr_l( rho(2), grho2(2), sxsr(2), v1xsr(2), &
+           CALL pbexsr( rho(2), grho2(2), sxsr(2), v1xsr(2), &
                                           v2xsr(2), screening_parameter )
            !
            sx_tot(ir) = sx_tot(ir) - exx_fraction*0.5_DP * ( sxsr(1)*rnull(1) + &
@@ -501,9 +501,9 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
            !
         ELSEIF ( igcx == 20 .AND. exx_started ) THEN
            ! gau-pbe
-           !CALL pbexgau_lsd( rho, grho2, sxsr, v1xsr, v2xsr, gau_parameter_l )
-           CALL pbexgau_l( rho(1), grho2(1), sxsr(1), v1xsr(1), v2xsr(1), gau_parameter )
-           CALL pbexgau_l( rho(2), grho2(2), sxsr(2), v1xsr(2), v2xsr(2), gau_parameter )
+           !CALL pbexgau_lsd( rho, grho2, sxsr, v1xsr, v2xsr, gau_parameter )
+           CALL pbexgau( rho(1), grho2(1), sxsr(1), v1xsr(1), v2xsr(1), gau_parameter )
+           CALL pbexgau( rho(2), grho2(2), sxsr(2), v1xsr(2), v2xsr(2), gau_parameter )
            !
            sx_tot(ir) = sx_tot(ir) - exx_fraction*0.5_DP * ( sxsr(1)*rnull(1) + &
                                                                sxsr(2)*rnull(2) )
@@ -514,7 +514,7 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE( 9 )                    ! B3LYP
         !
-        CALL becke88_spin_l( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), v1x(2), v2x(1), v2x(2) )
+        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), v1x(2), v2x(1), v2x(2) )
         !
         sx_tot(ir) = sx(1)*rnull(1) + sx(2)*rnull(2)
         !
@@ -529,8 +529,8 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
         !
-        CALL wcx_l( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
-        CALL wcx_l( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
+        CALL wcx( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
+        CALL wcx( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
         !
         sx_tot(ir) = 0.5_DP * ( sx(1)*rnull(1) + sx(2)*rnull(2) )
         v2x = 2.0_DP * v2x
@@ -540,8 +540,8 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
         !
-        CALL rPW86_l( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
-        CALL rPW86_l( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
+        CALL rPW86( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
+        CALL rPW86( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
         !
         sx_tot(ir) = 0.5_DP * ( sx(1)*rnull(1) + sx(2)*rnull(2) )
         v2x = 2.0_DP * v2x
@@ -551,8 +551,8 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
         !
-        CALL c09x_l( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
-        CALL c09x_l( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
+        CALL c09x( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
+        CALL c09x( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
         !
         sx_tot(ir) = 0.5_DP * ( sx(1)*rnull(1) + sx(2)*rnull(2) )
         v2x = 2.0_DP * v2x
@@ -562,8 +562,8 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
         !
-        CALL pw86_l( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
-        CALL pw86_l( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
+        CALL pw86( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
+        CALL pw86( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
         !
         sx_tot(ir) = 0.5_DP * ( sx(1)*rnull(1) + sx(2)*rnull(2) )
         v2x = 2.0_DP * v2x
@@ -573,8 +573,8 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
         !
-        CALL becke86b_l( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
-        CALL becke86b_l( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
+        CALL becke86b( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
+        CALL becke86b( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
         !
         sx_tot(ir) = 0.5_DP * ( sx(1)*rnull(1) + sx(2)*rnull(2) )
         v2x = 2.0_DP * v2x
@@ -586,8 +586,8 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
         IF ( igcx==26 ) iflag = 3 ! B86R for rev-vdW-DF2
         IF ( igcx==46 ) iflag = 4 ! W32X for vdW-DF3-opt2
-        CALL b86b_l( rho(1), grho2(1), iflag, sx(1), v1x(1), v2x(1) )
-        CALL b86b_l( rho(2), grho2(2), iflag, sx(2), v1x(2), v2x(2) )
+        CALL b86b( rho(1), grho2(1), iflag, sx(1), v1x(1), v2x(1) )
+        CALL b86b( rho(2), grho2(2), iflag, sx(2), v1x(2), v2x(2) )
         !
         sx_tot(ir) = 0.5_DP * ( sx(1)*rnull(1) + sx(2)*rnull(2) )
         v2x = 2.0_DP * v2x
@@ -597,21 +597,21 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
         !
-        CALL cx13_l( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
-        CALL cx13_l( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
+        CALL cx13( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
+        CALL cx13( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
         !
         sx_tot(ir) = 0.5_DP * ( sx(1)*rnull(1) + sx(2)*rnull(2) )
         v2x = 2.0_DP * v2x
         !
      CASE( 28 )                   ! X3LYP
         !
-        CALL becke88_spin_l( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), v1x(2), v2x(1), v2x(2) )
+        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), v1x(2), v2x(1), v2x(2) )
         !
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
         !
-        CALL pbex_l( rho(1), grho2(1), 1, sxsr(1), v1xsr(1), v2xsr(1) )
-        CALL pbex_l( rho(2), grho2(2), 1, sxsr(2), v1xsr(2), v2xsr(2) )
+        CALL pbex( rho(1), grho2(1), 1, sxsr(1), v1xsr(1), v2xsr(1) )
+        CALL pbex( rho(2), grho2(2), 1, sxsr(2), v1xsr(2), v2xsr(2) )
         !
         sx_tot(ir) = 0.5_DP * ( sxsr(1)*rnull(1) + sxsr(2)*rnull(2) ) * 0.235_DP + &
                               (   sx(1)*rnull(1) +   sx(2)*rnull(2) ) * 0.765_DP
@@ -629,8 +629,8 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
         !
-        CALL cx13_l( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
-        CALL cx13_l( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
+        CALL cx13( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
+        CALL cx13( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
         !
         sx_tot(ir) = 0.5_DP * ( sx(1)*rnull(1) + sx(2)*rnull(2) )
         v2x = 2.0_DP * v2x
@@ -646,8 +646,8 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
         !
-        CALL rPW86_l( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
-        CALL rPW86_l( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
+        CALL rPW86( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
+        CALL rPW86( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
         !
         sx_tot(ir) = 0.5_DP * ( sx(1)*rnull(1) + sx(2)*rnull(2) )
         v2x = 2.0_DP * v2x
@@ -663,8 +663,8 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
         !
-        CALL b86b_l( rho(1), grho2(1), 3, sx(1), v1x(1), v2x(1) )
-        CALL b86b_l( rho(2), grho2(2), 3, sx(2), v1x(2), v2x(2) )     
+        CALL b86b( rho(1), grho2(1), 3, sx(1), v1x(1), v2x(1) )
+        CALL b86b( rho(2), grho2(2), 3, sx(2), v1x(2), v2x(2) )     
         !
         sx_tot(ir) = 0.5_DP * ( sx(1)*rnull(1) + sx(2)*rnull(2) )
         v2x = 2.0_DP * v2x
@@ -680,8 +680,8 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
         !
-        CALL c09x_l( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
-        CALL c09x_l( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )  
+        CALL c09x( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
+        CALL c09x( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )  
         !
         sx_tot(ir) = 0.5_DP * ( sx(1)*rnull(1) + sx(2)*rnull(2) )
         v2x = 2.0_DP * v2x
@@ -697,8 +697,8 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
         !
-        CALL becke86b_l( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
-        CALL becke86b_l( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
+        CALL becke86b( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
+        CALL becke86b( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
         !
         sx_tot = 0.5_DP * ( sx(1)*rnull(1) + sx(2)*rnull(2) )
         v2x = 2.0_DP * v2x
@@ -714,8 +714,8 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
         !
-        CALL becke88_l( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
-        CALL becke88_l( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
+        CALL becke88( rho(1), grho2(1), sx(1), v1x(1), v2x(1) )
+        CALL becke88( rho(2), grho2(2), sx(2), v1x(2), v2x(2) )
         !
         sx_tot = 0.5_DP * ( sx(1)*rnull(1) + sx(2)*rnull(2) )
         v2x = 2.0_DP * v2x
@@ -778,7 +778,7 @@ SUBROUTINE gcc_spin_l( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_ou
   !
   USE kind_l, ONLY: DP
   USE dft_par_mod
-  USE corr_gga_l
+  USE corr_gga
   !
   IMPLICIT NONE
   !
@@ -836,19 +836,19 @@ SUBROUTINE gcc_spin_l( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_ou
        !
     CASE( 1 )
        !
-       CALL perdew86_spin_l( rho, zeta, grho, sc, v1c(1), v1c(2), v2c )
+       CALL perdew86_spin( rho, zeta, grho, sc, v1c(1), v1c(2), v2c )
        !
     CASE( 2 )
        !
-       CALL ggac_spin_l( rho, zeta, grho, sc, v1c(1), v1c(2), v2c )
+       CALL ggac_spin( rho, zeta, grho, sc, v1c(1), v1c(2), v2c )
        !
     CASE( 4 )
        !
-       CALL pbec_spin_l( rho, zeta, grho, 1, sc, v1c(1), v1c(2), v2c )
+       CALL pbec_spin( rho, zeta, grho, 1, sc, v1c(1), v1c(2), v2c )
        !
     CASE( 8 )
        !
-       CALL pbec_spin_l( rho, zeta, grho, 2, sc, v1c(1), v1c(2), v2c )
+       CALL pbec_spin( rho, zeta, grho, 2, sc, v1c(1), v1c(2), v2c )
        !
     CASE( 14 )
        !
@@ -891,7 +891,7 @@ SUBROUTINE gcc_spin_more_l( length, rho_in, grho_in, grho_ud_in, &
   !
   USE kind_l, ONLY: DP
   USE dft_par_mod
-  USE corr_gga_l
+  USE corr_gga
   !
   IMPLICIT NONE
   !
@@ -946,7 +946,7 @@ SUBROUTINE gcc_spin_more_l( length, rho_in, grho_in, grho_ud_in, &
        CYCLE
     ENDIF
     !
-    CALL lsd_glyp_l( rho(1), rho(2), grho(1), grho(2), grho_ud, &
+    CALL lsd_glyp( rho(1), rho(2), grho(1), grho(2), grho_ud, &
                    sc(ir), v1c(ir,1), v1c(ir,2), v2c(ir,1),   &
                    v2c(ir,2), v2c_ud(ir) )
     !

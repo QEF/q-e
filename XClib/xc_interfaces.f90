@@ -1,6 +1,4 @@
-!
-! ... LDAlib
-!
+
 !=---------------------------------------------------------------------------=!
 MODULE xc_interfaces
   !
@@ -171,9 +169,6 @@ MODULE xc_interfaces
      SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
                                           v2x_out, v1c_out, v2c_out )
        USE kind_l, ONLY: DP
-       USE dft_par_mod
-       USE exch_gga_l
-       USE corr_gga_l
        IMPLICIT NONE
        INTEGER,  INTENT(IN) :: length 
        REAL(DP), INTENT(IN),  DIMENSION(length) :: rho_in, grho_in
@@ -189,8 +184,6 @@ MODULE xc_interfaces
      SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
        !
        USE kind_l, ONLY: DP
-       USE dft_par_mod
-       USE exch_gga_l
        IMPLICIT NONE
        INTEGER, INTENT(IN) :: length
        REAL(DP), INTENT(IN),  DIMENSION(length,2) :: rho_in, grho2_in
@@ -207,8 +200,6 @@ MODULE xc_interfaces
      SUBROUTINE gcc_spin_l( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out )
        !
        USE kind_l, ONLY: DP
-       USE dft_par_mod
-       USE corr_gga_l
        IMPLICIT NONE
        INTEGER, INTENT(IN) :: length
        REAL(DP), INTENT(IN), DIMENSION(length) :: rho_in
@@ -240,7 +231,7 @@ MODULE xc_interfaces
   !
   !
   !
-  !---PROVISIONAL .. for cases when functional routines are called outside xc-drivers---
+  !---PROVISIONAL .. for cases when functional routines are called outside xc-wrappers---
   !
   INTERFACE SLATER
      !
@@ -301,7 +292,8 @@ MODULE xc_interfaces
   !
   INTERFACE LSD_GLYP
      !
-     SUBROUTINE lsd_glyp_ext( rho_in_up, rho_in_dw, grho_up, grho_dw, grho_ud, sc, v1c_up, v1c_dw, v2c_up, v2c_dw, v2c_ud )
+     SUBROUTINE lsd_glyp_ext( rho_in_up, rho_in_dw, grho_up, grho_dw, grho_ud, sc, &
+                              v1c_up, v1c_dw, v2c_up, v2c_dw, v2c_ud )
        !
        USE kind_l, ONLY: DP
        IMPLICIT NONE
@@ -323,7 +315,6 @@ MODULE xc_interfaces
      SUBROUTINE tpsscxc_ext( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
        !
        USE kind_l,      ONLY : DP
-       USE metagga_l  , ONLY : metax, metac
        IMPLICIT NONE
        REAL(DP), INTENT(IN) :: rho, grho, tau
        REAL(DP), INTENT(OUT) :: sx, sc

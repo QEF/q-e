@@ -44,8 +44,8 @@ SUBROUTINE xc_lda_l( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
   USE kind_l, ONLY: DP
   USE dft_par_mod
-  USE exch_lda_l
-  USE corr_lda_l
+  USE exch_lda
+  USE corr_lda
   !
   IMPLICIT NONE
   !
@@ -100,15 +100,15 @@ SUBROUTINE xc_lda_l( length, rho_in, ex_out, ec_out, vx_out, vc_out )
      SELECT CASE( iexch )
      CASE( 1 )                      ! 'sla'
         !
-        CALL slater_l( rs, ex, vx )
+        CALL slater( rs, ex, vx )
         !
      CASE( 2 )                      ! 'sl1'
         !
-        CALL slater1_l( rs, ex, vx )
+        CALL slater1( rs, ex, vx )
         !
      CASE( 3 )                      ! 'rxc'
         !
-        CALL slater_rxc_l( rs, ex, vx )
+        CALL slater_rxc( rs, ex, vx )
         !
      CASE( 4, 5 )                   ! 'oep','hf'
         !
@@ -116,12 +116,12 @@ SUBROUTINE xc_lda_l( length, rho_in, ex_out, ec_out, vx_out, vc_out )
            ex = 0.0_DP
            vx = 0.0_DP
         ELSE
-           CALL slater_l( rs, ex, vx )
+           CALL slater( rs, ex, vx )
         ENDIF
         !
      CASE( 6, 7 )                   ! 'pb0x' or 'DF-cx-0', or 'DF2-0',
         !                           ! 'B3LYP'
-        CALL slater_l( rs, ex, vx )
+        CALL slater( rs, ex, vx )
         IF ( exx_started ) THEN
            ex = (1.0_DP - exx_fraction) * ex
            vx = (1.0_DP - exx_fraction) * vx
@@ -129,11 +129,11 @@ SUBROUTINE xc_lda_l( length, rho_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE( 8 )                      ! 'sla+kzk'
         !
-        CALL slaterKZK_l( rs, ex, vx, finite_size_cell_volume )
+        CALL slaterKZK( rs, ex, vx, finite_size_cell_volume )
         !
      CASE( 9 )                      ! 'X3LYP'
         !
-        CALL slater_l( rs, ex, vx )
+        CALL slater( rs, ex, vx )
         IF ( exx_started ) THEN
            ex = (1.0_DP - exx_fraction) * ex
            vx = (1.0_DP - exx_fraction) * vx
@@ -152,75 +152,75 @@ SUBROUTINE xc_lda_l( length, rho_in, ex_out, ec_out, vx_out, vc_out )
      SELECT CASE( icorr )
      CASE( 1 )
         !
-        CALL pz_l( rs, 1, ec, vc )
+        CALL pz( rs, 1, ec, vc )
         !
      CASE( 2 )
         !
-        CALL vwn_l( rs, ec, vc )
+        CALL vwn( rs, ec, vc )
         !
      CASE( 3 )
         !
-        CALL lyp_l( rs, ec, vc )
+        CALL lyp( rs, ec, vc )
         !
      CASE( 4 )
         !
-        CALL pw_l( rs, 1, ec, vc )
+        CALL pw( rs, 1, ec, vc )
         !
      CASE( 5 )
         !
-        CALL wignerc_l( rs, ec, vc )
+        CALL wignerc( rs, ec, vc )
         !
      CASE( 6 )
         !
-        CALL hl_l( rs, ec, vc )
+        CALL hl( rs, ec, vc )
         !
      CASE( 7 )
         !
-        CALL pz_l( rs, 2, ec, vc )
+        CALL pz( rs, 2, ec, vc )
         ! 
      CASE( 8 )
         !
-        CALL pw_l( rs, 2, ec, vc )
+        CALL pw( rs, 2, ec, vc )
         !
      CASE( 9 )
         !
-        CALL gl_l( rs, ec, vc )
+        CALL gl( rs, ec, vc )
         !
      CASE( 10 )
         !
-        CALL pzKZK_l( rs, ec, vc, finite_size_cell_volume )
+        CALL pzKZK( rs, ec, vc, finite_size_cell_volume )
         !
      CASE( 11 )
         !
-        CALL vwn1_rpa_l( rs, ec, vc )
+        CALL vwn1_rpa( rs, ec, vc )
         !
      CASE( 12 )                ! 'B3LYP'
         !
-        CALL vwn_l( rs, ec, vc )
+        CALL vwn( rs, ec, vc )
         ec = 0.19_DP * ec
         vc = 0.19_DP * vc
         !
-        CALL lyp_l( rs, ec_, vc_ )
+        CALL lyp( rs, ec_, vc_ )
         ec = ec + 0.81_DP * ec_
         vc = vc + 0.81_DP * vc_
         !
      CASE( 13 )                ! 'B3LYP-V1R'
         !
-        CALL vwn1_rpa_l( rs, ec, vc )
+        CALL vwn1_rpa( rs, ec, vc )
         ec = 0.19_DP * ec
         vc = 0.19_DP * vc
         !
-        CALL lyp_l( rs, ec_, vc_ )
+        CALL lyp( rs, ec_, vc_ )
         ec = ec + 0.81_DP * ec_
         vc = vc + 0.81_DP * vc_
         !
      CASE( 14 )                ! 'X3LYP'
         !
-        CALL vwn1_rpa_l( rs, ec, vc )
+        CALL vwn1_rpa( rs, ec, vc )
         ec = 0.129_DP * ec
         vc = 0.129_DP * vc
         !
-        CALL lyp_l( rs, ec_, vc_ )
+        CALL lyp( rs, ec_, vc_ )
         ec = ec + 0.871_DP * ec_
         vc = vc + 0.871_DP * vc_
         !
@@ -257,8 +257,8 @@ SUBROUTINE xc_lsda_l( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
   !
   USE kind_l, ONLY: DP
   USE dft_par_mod
-  USE exch_lda_l
-  USE corr_lda_l
+  USE exch_lda
+  USE corr_lda
   !
   IMPLICIT NONE
   !
@@ -318,15 +318,15 @@ SUBROUTINE xc_lsda_l( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
      SELECT CASE( iexch )
      CASE( 1 )                                      ! 'sla'
         !
-        CALL slater_spin_l( rho, zeta, ex, vx(1), vx(2) )
+        CALL slater_spin( rho, zeta, ex, vx(1), vx(2) )
         !
      CASE( 2 )                                      ! 'sl1'
         !
-        CALL slater1_spin_l( rho, zeta, ex, vx(1), vx(2) )
+        CALL slater1_spin( rho, zeta, ex, vx(1), vx(2) )
         !
      CASE( 3 )                                      ! 'rxc'
         !
-        CALL slater_rxc_spin_l( rho, zeta, ex, vx(1), vx(2) )
+        CALL slater_rxc_spin( rho, zeta, ex, vx(1), vx(2) )
         !
      CASE( 4, 5 )                                   ! 'oep','hf'
         !
@@ -334,12 +334,12 @@ SUBROUTINE xc_lsda_l( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
            ex = 0.0_DP
            vx = 0.0_DP
         ELSE
-           CALL slater_spin_l( rho, zeta, ex, vx(1), vx(2) )
+           CALL slater_spin( rho, zeta, ex, vx(1), vx(2) )
         ENDIF
         !
      CASE( 6 )                                      ! 'pb0x'
         !
-        CALL slater_spin_l( rho, zeta, ex, vx(1), vx(2) )
+        CALL slater_spin( rho, zeta, ex, vx(1), vx(2) )
         IF ( exx_started ) THEN
            ex = (1.0_DP - exx_fraction) * ex
            vx = (1.0_DP - exx_fraction) * vx
@@ -347,7 +347,7 @@ SUBROUTINE xc_lsda_l( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE( 7 )                                      ! 'B3LYP'
         !
-        CALL slater_spin_l( rho, zeta, ex, vx(1), vx(2) )
+        CALL slater_spin( rho, zeta, ex, vx(1), vx(2) )
         IF ( exx_started ) THEN
            ex = (1.0_DP - exx_fraction) * ex
            vx = (1.0_DP - exx_fraction) * vx
@@ -355,7 +355,7 @@ SUBROUTINE xc_lsda_l( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE( 9 )                                      ! 'X3LYP'
         !
-        CALL slater_spin_l( rho, zeta, ex, vx(1), vx(2) )
+        CALL slater_spin( rho, zeta, ex, vx(1), vx(2) )
         IF ( exx_started ) THEN
            ex = (1.0_DP - exx_fraction) * ex
            vx = (1.0_DP - exx_fraction) * vx
@@ -379,47 +379,47 @@ SUBROUTINE xc_lsda_l( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE( 1 )
         !
-        CALL pz_spin_l( rs, zeta, ec, vc(1), vc(2) )
+        CALL pz_spin( rs, zeta, ec, vc(1), vc(2) )
         !
      CASE( 2 )
         !
-        CALL vwn_spin_l( rs, zeta, ec, vc(1), vc(2) )
+        CALL vwn_spin( rs, zeta, ec, vc(1), vc(2) )
         !
      CASE( 3 )
         !
-        CALL lsd_lyp_l( rho, zeta, ec, vc(1), vc(2) )       ! from CP/FPMD (more_functionals)
+        CALL lsd_lyp( rho, zeta, ec, vc(1), vc(2) )       ! from CP/FPMD (more_functionals)
         !
      CASE( 4 )
         !
-        CALL pw_spin_l( rs, zeta, ec, vc(1), vc(2) )
+        CALL pw_spin( rs, zeta, ec, vc(1), vc(2) )
         !
      CASE( 12 )                                           ! 'B3LYP'
         !
-        CALL vwn_spin_l( rs, zeta, ec, vc(1), vc(2) )
+        CALL vwn_spin( rs, zeta, ec, vc(1), vc(2) )
         ec = 0.19_DP * ec
         vc = 0.19_DP * vc
         !
-        CALL lsd_lyp_l( rho, zeta, ec_, vc_(1), vc_(2) )    ! from CP/FPMD (more_functionals)
+        CALL lsd_lyp( rho, zeta, ec_, vc_(1), vc_(2) )    ! from CP/FPMD (more_functionals)
         ec = ec + 0.81_DP * ec_
         vc = vc + 0.81_DP * vc_
         !     
      CASE( 13 )                                           ! 'B3LYP-V1R'
         !
-        CALL vwn1_rpa_spin_l( rs, zeta, ec, vc(1), vc(2) )
+        CALL vwn1_rpa_spin( rs, zeta, ec, vc(1), vc(2) )
         ec = 0.19_DP * ec
         vc = 0.19_DP * vc
         !
-        CALL lsd_lyp_l( rho, zeta, ec_, vc_(1), vc_(2) )    ! from CP/FPMD (more_functionals)
+        CALL lsd_lyp( rho, zeta, ec_, vc_(1), vc_(2) )    ! from CP/FPMD (more_functionals)
         ec = ec + 0.81_DP * ec_
         vc = vc + 0.81_DP * vc_
         !
      CASE( 14 )                                           ! 'X3LYP
         !
-        CALL vwn1_rpa_spin_l( rs, zeta, ec, vc(1), vc(2) )
+        CALL vwn1_rpa_spin( rs, zeta, ec, vc(1), vc(2) )
         ec = 0.129_DP * ec
         vc = 0.129_DP * vc
         !
-        CALL lsd_lyp_l( rho, zeta, ec_, vc_(1), vc_(2) )    ! from CP/FPMD (more_functionals)
+        CALL lsd_lyp( rho, zeta, ec_, vc_(1), vc_(2) )    ! from CP/FPMD (more_functionals)
         ec = ec + 0.871_DP * ec_
         vc = vc + 0.871_DP * vc_
         !

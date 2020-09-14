@@ -1,10 +1,10 @@
 !
-MODULE exch_gga_l !<GPU:exch_gga_l=>exch_gga_l_gpu>
+MODULE exch_gga !<GPU:exch_gga=>exch_gga_gpu>
 !
 CONTAINS
 !
 !-----------------------------------------------------------------------
-SUBROUTINE becke88_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE becke88( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Becke exchange: A.D. Becke, PRA 38, 3098 (1988)
   !! only gradient-corrected part, no Slater term included
@@ -43,11 +43,11 @@ SUBROUTINE becke88_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE becke88_l
+END SUBROUTINE becke88
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE ggax_l( rho, grho, sx, v1x, v2x ) !<GPU:DEVICE>
+SUBROUTINE ggax( rho, grho, sx, v1x, v2x ) !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Perdew-Wang GGA (PW91), exchange part:
   !! J.P. Perdew et al.,PRB 46, 6671 (1992)
@@ -91,11 +91,11 @@ SUBROUTINE ggax_l( rho, grho, sx, v1x, v2x ) !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE ggax_l
+END SUBROUTINE ggax
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE pbex_l( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVICE>
   !---------------------------------------------------------------
   !! PBE exchange (without Slater exchange):
   !! iflag=1  J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)
@@ -313,11 +313,11 @@ SUBROUTINE pbex_l( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEV
   !
   RETURN
   !
-END SUBROUTINE pbex_l
+END SUBROUTINE pbex
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE hcth_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE hcth( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !--------------------------------------------------------------------------
   !! HCTH/120, JCP 109, p. 6264 (1998)
   !! Parameters set-up after N.L. Doltsisnis & M. Sprik (1999)
@@ -392,10 +392,10 @@ SUBROUTINE hcth_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   rab = r3q2*ra
   dra_drho = -0.260530881d0/rho_o34
   drab_drho = r3q2*dra_drho
-  CALL pwcorr_l( ra, cg1, g, dg )                           !<GPU:pwcorr_l=>pwcorr_l_d>
+  CALL pwcorr( ra, cg1, g, dg )                           !<GPU:pwcorr=>pwcorr_d>
   era1 = g
   dera1_dra = dg
-  CALL pwcorr_l( rab, cg0, g, dg )                          !<GPU:pwcorr_l=>pwcorr_l_d>
+  CALL pwcorr( rab, cg0, g, dg )                          !<GPU:pwcorr=>pwcorr_d>
   erab0 = g
   derab0_drab = dg
   ex = -0.75d0*r3pi*rho_o34
@@ -440,10 +440,10 @@ SUBROUTINE hcth_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE hcth_l
+END SUBROUTINE hcth
     !
     !-------------------------------------------------------
-    SUBROUTINE pwcorr_l( r, c, g, dg )                    !<GPU:DEVICE>
+    SUBROUTINE pwcorr( r, c, g, dg )                    !<GPU:DEVICE>
       !-----------------------------------------------------
       !
       USE kind_l,   ONLY: DP
@@ -468,11 +468,11 @@ END SUBROUTINE hcth_l
       !
       RETURN
       !
-    END SUBROUTINE pwcorr_l
+    END SUBROUTINE pwcorr
 !
 !
 !-----------------------------------------------------------------------------
-SUBROUTINE optx_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE optx( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !---------------------------------------------------------------------------
   !! OPTX, Handy et al. JCP 116, p. 5411 (2002) and refs. therein
   !! Present release: Mauro Boero, Tsukuba, 10/9/2002
@@ -514,11 +514,11 @@ SUBROUTINE optx_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE optx_l
+END SUBROUTINE optx
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE wcx_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE wcx( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !---------------------------------------------------------------
   !!  Wu-Cohen exchange (without Slater exchange):
   !!  Z. Wu and R. E. Cohen, PRB 73, 235116 (2006)
@@ -586,11 +586,11 @@ SUBROUTINE wcx_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE wcx_l
+END SUBROUTINE wcx
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pbexsr_l( rho, grho, sxsr, v1xsr, v2xsr, omega )                    !<GPU:DEVICE>
+SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega )                    !<GPU:DEVICE>
   !---------------------------------------------------------------------
   ! INCLUDE 'cnst.inc'
   USE kind_l,      ONLY: DP
@@ -640,11 +640,11 @@ SUBROUTINE pbexsr_l( rho, grho, sxsr, v1xsr, v2xsr, omega )                    !
   !
   RETURN
   !
-END SUBROUTINE pbexsr_l
+END SUBROUTINE pbexsr
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE rPW86_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE rPW86( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !---------------------------------------------------------------------
   !! PRB 33, 8800 (1986) and J. Chem. Theory comp. 5, 2754 (2009).
   !
@@ -684,11 +684,11 @@ SUBROUTINE rPW86_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !
   v2x = Ax * df_ds/(s_prefactor*grad_rho)
   !
-END SUBROUTINE rPW86_l
+END SUBROUTINE rPW86
 !
 !
 !-----------------------------------------------------------------
-SUBROUTINE c09x_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE c09x( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !---------------------------------------------------------------
   !! Cooper '09 exchange for vdW-DF (without Slater exchange):
   !! V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)
@@ -755,11 +755,11 @@ SUBROUTINE c09x_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE c09x_l
+END SUBROUTINE c09x
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE sogga_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE sogga( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-------------------------------------------------------------
   !! SOGGA exchange
   !
@@ -814,11 +814,11 @@ SUBROUTINE sogga_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   v1x = dex_drho * Fx  +  ex * dFx_dxs2 * dxs2_drho
   v2x = two * ex * dFx_dxs2 * dxs2_dgrho2
   !
-END SUBROUTINE sogga_l
+END SUBROUTINE sogga
 !
 !
 !-------------------------------------------------------------------------
-SUBROUTINE pbexgau_l( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )                    !<GPU:DEVICE>
+SUBROUTINE pbexgau( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !
   USE kind_l,  ONLY: DP
@@ -849,7 +849,7 @@ SUBROUTINE pbexgau_l( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )                
   IF (s > 10.D0) THEN
      s = 10.D0
   ENDIF
-  CALL pbe_gauscheme_l( rho, s, alpha_gau, fx, d1x, d2x )   !<GPU:pbe_gauscheme=>pbe_gauscheme_d>
+  CALL pbe_gauscheme( rho, s, alpha_gau, fx, d1x, d2x )   !<GPU:pbe_gauscheme=>pbe_gauscheme_d>
   sxsr = ex*fx                        ! - EX
   dsdn = -4.D0/3.D0*s/rho
   v1xsr = vx*fx + (dsdn*d2x+d1x)*ex   ! - VX
@@ -862,10 +862,10 @@ SUBROUTINE pbexgau_l( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )                
   !
   RETURN
   !
-END SUBROUTINE pbexgau_l
+END SUBROUTINE pbexgau
     !
     !-----------------------------------------------------------------------
-SUBROUTINE pbe_gauscheme_l( rho, s, alpha_gau, Fx, dFxdr, dFxds )                    !<GPU:DEVICE>
+SUBROUTINE pbe_gauscheme( rho, s, alpha_gau, Fx, dFxdr, dFxds )                    !<GPU:DEVICE>
        !--------------------------------------------------------------------
        !
        IMPLICIT NONE
@@ -950,7 +950,7 @@ SUBROUTINE pbe_gauscheme_l( rho, s, alpha_gau, Fx, dFxdr, dFxds )               
        !
        RETURN
        !
-END SUBROUTINE pbe_gauscheme_l
+END SUBROUTINE pbe_gauscheme
 !
 !
 !-------------------------------------------------
@@ -981,7 +981,7 @@ END FUNCTION TayExp
 !
 !
 !-------------------------------------------------------------------------
-SUBROUTINE PW86_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE PW86( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Perdew-Wang 1986 exchange gradient correction: PRB 33, 8800 (1986)
   !
@@ -1021,11 +1021,11 @@ SUBROUTINE PW86_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !
   v2x = Ax * df_ds/(s_prefactor*grad_rho)
   !
-END SUBROUTINE PW86_l
+END SUBROUTINE PW86
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE becke86b_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE becke86b( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Becke 1986 gradient correction to exchange
   !! A.D. Becke, J. Chem. Phys. 85 (1986) 7184
@@ -1061,11 +1061,11 @@ SUBROUTINE becke86b_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE
   v1x = -beta * (-4d0/3d0*rdg2_73*sgp1_45 + 32d0/15d0*gamma*rdg4_5*sgp1_95)
   v2x = -beta * (sgp1_45*rdg2_43/agrho - 4d0/5d0 *gamma*rdg2_4*sgp1_95)
   !
-END SUBROUTINE becke86b_l
+END SUBROUTINE becke86b
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE b86b_l( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-------------------------------------------------------------
   !! Becke exchange (without Slater exchange):
   !! iflag=1: A. D. Becke, J. Chem. Phys. 85, 7184 (1986) (B86b)
@@ -1131,11 +1131,11 @@ SUBROUTINE b86b_l( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEV
   !
   RETURN
   !
-END SUBROUTINE b86b_l
+END SUBROUTINE b86b
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE cx13_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
+SUBROUTINE cx13( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! The new exchange partner for a vdW-DF1-cx suggested
   !! by K. Berland and P. Hyldgaard, see PRB 89, 035412 (2014),
@@ -1185,14 +1185,14 @@ SUBROUTINE cx13_l( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
         -grad_rho/(s_prefactor * rho)*df_ds)
   v2x = Ax * df_ds/(s_prefactor*grad_rho)
   !
-END SUBROUTINE cx13_l
+END SUBROUTINE cx13
 !
 !
 !
 ! ===========> SPIN <===========
 !
 !-----------------------------------------------------------------------
-SUBROUTINE becke88_spin_l( rho_up, rho_dw, grho_up, grho_dw, sx_up, sx_dw, v1x_up, v1x_dw, v2x_up, v2x_dw )                     !<GPU:DEVICE>
+SUBROUTINE becke88_spin( rho_up, rho_dw, grho_up, grho_dw, sx_up, sx_dw, v1x_up, v1x_dw, v2x_up, v2x_dw )                     !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Becke exchange: A.D. Becke, PRA 38, 3098 (1988) - Spin polarized case
   !
@@ -1248,7 +1248,7 @@ SUBROUTINE becke88_spin_l( rho_up, rho_dw, grho_up, grho_dw, sx_up, sx_dw, v1x_u
   !
   RETURN
   !
-END SUBROUTINE becke88_spin_l
+END SUBROUTINE becke88_spin
 !
 !
 !-----------------------------------------------------------------------------

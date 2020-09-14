@@ -329,7 +329,7 @@ SUBROUTINE tpsscxc_ext( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )  
   !! Definition:  E_x = \int E_x(rho,grho) dr
   !
   USE kind_l,      ONLY : DP
-  USE metagga_l  , ONLY : metax, metac
+  USE metagga,     ONLY : metax, metac
   !
   IMPLICIT NONE
   !

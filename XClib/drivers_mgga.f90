@@ -17,7 +17,7 @@ SUBROUTINE tau_xc_l( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v
   !
   USE kind_l
   USE dft_par_mod
-  USE metagga_l
+  USE metagga
   !
   IMPLICIT NONE
   !
@@ -39,9 +39,9 @@ SUBROUTINE tau_xc_l( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v
     !
     SELECT CASE( imeta )
     CASE( 1 )
-       CALL tpsscxc_l( arho, grho2(k), tau(k), ex(k), ec(k), v1x(k), v2x(k), v3x(k), v1c(k), v2c(k), v3c(k) )
+       CALL tpsscxc( arho, grho2(k), tau(k), ex(k), ec(k), v1x(k), v2x(k), v3x(k), v1c(k), v2c(k), v3c(k) )
     CASE( 2 )
-       CALL m06lxc_l(  arho, grho2(k), tau(k), ex(k), ec(k), v1x(k), v2x(k), v3x(k), v1c(k), v2c(k), v3c(k) )
+       CALL m06lxc(  arho, grho2(k), tau(k), ex(k), ec(k), v1x(k), v2x(k), v3x(k), v1c(k), v2c(k), v3c(k) )
     CASE DEFAULT
        CALL errore( 'tau_xc', 'This case is not implemented', imeta )
     END SELECT
@@ -59,7 +59,7 @@ SUBROUTINE tau_xc_spin_l( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2
   !
   USE kind_l
   USE dft_par_mod
-  USE metagga_l
+  USE metagga
   !
   IMPLICIT NONE
   !
@@ -95,18 +95,18 @@ SUBROUTINE tau_xc_spin_l( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2
      SELECT CASE( imeta )
      CASE( 1 )
         !
-        CALL tpsscx_spin_l( rho(k,1), rho(k,2), grho2(1), grho2(2), tau(k,1), &
+        CALL tpsscx_spin( rho(k,1), rho(k,2), grho2(1), grho2(2), tau(k,1), &
                           tau(k,2), ex(k), v1x(k,1), v1x(k,2), v2x(k,1), v2x(k,2), v3x(k,1), v3x(k,2) )
         !
         zeta = (rho(k,1) - rho(k,2)) / rh
         zeta = MAX( MIN( 0.99999999_DP, zeta ), -0.99999999_DP )
         !
-        CALL tpsscc_spin_l( rh, zeta, grho(:,k,1), grho(:,k,2), atau, ec(k), &
+        CALL tpsscc_spin( rh, zeta, grho(:,k,1), grho(:,k,2), atau, ec(k), &
                           v1c(k,1), v1c(k,2), v2c(:,k,1), v2c(:,k,2), v3c(k,1), v3c(k,2) )
         !
      CASE( 2 )
         !
-        CALL m06lxc_spin_l( rho(k,1), rho(k,2), grho2(1), grho2(2), tau(k,1), tau(k,2), ex(k), ec(k), &
+        CALL m06lxc_spin( rho(k,1), rho(k,2), grho2(1), grho2(2), tau(k,1), tau(k,2), ex(k), ec(k), &
                           v1x(k,1), v1x(k,2), v2x(k,1), v2x(k,2), v3x(k,1), v3x(k,2), &
                           v1c(k,1), v1c(k,2), v2cup   , v2cdw   , v3c(k,1), v3c(k,2)  )
         !

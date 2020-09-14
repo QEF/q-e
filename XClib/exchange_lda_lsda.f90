@@ -6,13 +6,13 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-MODULE exch_lda_l  !<GPU:exch_lda=>exch_lda_gpu>
+MODULE exch_lda  !<GPU:exch_lda=>exch_lda_gpu>
 !
 !! Module containing LDA functionals.
 !
 CONTAINS
 !-----------------------------------------------------------------------
-SUBROUTINE slater_l( rs, ex, vx )                  !<GPU:DEVICE>
+SUBROUTINE slater( rs, ex, vx )                  !<GPU:DEVICE>
   !---------------------------------------------------------------------
   !! Slater exchange with alpha=2/3
   !
@@ -36,11 +36,11 @@ SUBROUTINE slater_l( rs, ex, vx )                  !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE slater_l
+END SUBROUTINE slater
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE slater1_l( rs, ex, vx )                 !<GPU:DEVICE>
+SUBROUTINE slater1( rs, ex, vx )                 !<GPU:DEVICE>
   !---------------------------------------------------------------------
   !! Slater exchange with alpha=1, corresponding to -1.374/r_s Ry.
   !! Used to recover old results.
@@ -65,11 +65,11 @@ SUBROUTINE slater1_l( rs, ex, vx )                 !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE slater1_l
+END SUBROUTINE slater1
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE slater_rxc_l( rs, ex, vx )                 !<GPU:DEVICE>
+SUBROUTINE slater_rxc( rs, ex, vx )                 !<GPU:DEVICE>
   !---------------------------------------------------------------------
   !! Slater exchange with alpha=2/3 and Relativistic exchange.
   !
@@ -118,11 +118,11 @@ SUBROUTINE slater_rxc_l( rs, ex, vx )                 !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE slater_rxc_l
+END SUBROUTINE slater_rxc
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE slaterKZK_l( rs, ex, vx, vol )                 !<GPU:DEVICE>
+SUBROUTINE slaterKZK( rs, ex, vx, vol )                 !<GPU:DEVICE>
   !---------------------------------------------------------------------
   !! Slater exchange with alpha=2/3, Kwee, Zhang and Krakauer KE
   !! correction.
@@ -170,13 +170,13 @@ SUBROUTINE slaterKZK_l( rs, ex, vx, vol )                 !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE slaterKZK_l
+END SUBROUTINE slaterKZK
 !
 !
 !  ... LSDA
 !
 !-----------------------------------------------------------------------
-SUBROUTINE slater_spin_l( rho, zeta, ex, vx_up, vx_dw )                 !<GPU:DEVICE>
+SUBROUTINE slater_spin( rho, zeta, ex, vx_up, vx_dw )                 !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Slater exchange with alpha=2/3, spin-polarized case.
   !
@@ -213,11 +213,11 @@ SUBROUTINE slater_spin_l( rho, zeta, ex, vx_up, vx_dw )                 !<GPU:DE
   !
   RETURN
   !
-END SUBROUTINE slater_spin_l
+END SUBROUTINE slater_spin
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE slater_rxc_spin_l( rho, z, ex, vx_up, vx_dw )                 !<GPU:DEVICE>
+SUBROUTINE slater_rxc_spin( rho, z, ex, vx_up, vx_dw )                 !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Slater exchange with alpha=2/3, relativistic exchange case.
   !! Spin-polarized case.
@@ -279,13 +279,13 @@ SUBROUTINE slater_rxc_spin_l( rho, z, ex, vx_up, vx_dw )                 !<GPU:D
   !
   RETURN
   !
-END SUBROUTINE slater_rxc_spin_l
+END SUBROUTINE slater_rxc_spin
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE slater1_spin_l( rho, zeta, ex, vx_up, vx_dw )                 !<GPU:DEVICE>
+SUBROUTINE slater1_spin( rho, zeta, ex, vx_up, vx_dw )                 !<GPU:DEVICE>
   !-----------------------------------------------------------------------
-  !     Slater exchange with alpha=2/3, spin-polarized case
+  !! Slater exchange with alpha=2/3, spin-polarized case
   !
   USE kind_l, ONLY: DP
   !
@@ -321,6 +321,7 @@ SUBROUTINE slater1_spin_l( rho, zeta, ex, vx_up, vx_dw )                 !<GPU:D
   !
   RETURN
   !
-END SUBROUTINE slater1_spin_l
-
-END MODULE
+END SUBROUTINE slater1_spin
+!
+!
+END MODULE exch_lda

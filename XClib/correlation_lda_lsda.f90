@@ -6,12 +6,12 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-MODULE corr_lda_l !<GPU:corr_lda=>corr_lda_gpu>
+MODULE corr_lda !<GPU:corr_lda=>corr_lda_gpu>
 
 CONTAINS
 
 !-------------------------------------------------------------------------
-SUBROUTINE pz_l( rs, iflag, ec, vc )                    !<GPU:DEVICE>
+SUBROUTINE pz( rs, iflag, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! LDA parametrization from Monte Carlo DATA:
   !
@@ -66,11 +66,11 @@ SUBROUTINE pz_l( rs, iflag, ec, vc )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE pz_l
+END SUBROUTINE pz
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pzKZK_l( rs, ec, vc, vol )                    !<GPU:DEVICE>
+SUBROUTINE pzKZK( rs, ec, vc, vol )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! LDA parametrization from Monte Carlo DATA:
   !
@@ -181,11 +181,11 @@ SUBROUTINE pzKZK_l( rs, ec, vc, vol )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE pzKZK_l
+END SUBROUTINE pzKZK
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE vwn_l( rs, ec, vc )                    !<GPU:DEVICE>
+SUBROUTINE vwn( rs, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980).
   !
@@ -227,11 +227,11 @@ SUBROUTINE vwn_l( rs, ec, vc )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE vwn_l
+END SUBROUTINE vwn
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE vwn1_rpa_l( rs, ec, vc )                    !<GPU:DEVICE>
+SUBROUTINE vwn1_rpa( rs, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980).
   !
@@ -272,11 +272,11 @@ SUBROUTINE vwn1_rpa_l( rs, ec, vc )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE vwn1_rpa_l
+END SUBROUTINE vwn1_rpa
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE lyp_l( rs, ec, vc )                    !<GPU:DEVICE>
+SUBROUTINE lyp( rs, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! C. Lee, W. Yang, and R.G. Parr, PRB 37, 785 (1988).
   !! LDA part only.
@@ -309,11 +309,11 @@ SUBROUTINE lyp_l( rs, ec, vc )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE lyp_l
+END SUBROUTINE lyp
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pw_l( rs, iflag, ec, vc )                    !<GPU:DEVICE>
+SUBROUTINE pw( rs, iflag, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! * iflag=1: J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
   !! * iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
@@ -379,11 +379,11 @@ SUBROUTINE pw_l( rs, iflag, ec, vc )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE pw_l
+END SUBROUTINE pw
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE wignerc_l( rs, ec, vc )                    !<GPU:DEVICE>
+SUBROUTINE wignerc( rs, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Wigner correlation.
   !
@@ -412,11 +412,11 @@ SUBROUTINE wignerc_l( rs, ec, vc )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE wignerc_l
+END SUBROUTINE wignerc
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE hl_l( rs, ec, vc )                    !<GPU:DEVICE>
+SUBROUTINE hl( rs, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! L. Hedin and  B.I. Lundqvist,  J. Phys. C 4, 2064 (1971).
   !
@@ -444,11 +444,11 @@ SUBROUTINE hl_l( rs, ec, vc )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE hl_l
+END SUBROUTINE hl
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE gl_l( rs, ec, vc )                    !<GPU:DEVICE>
+SUBROUTINE gl( rs, ec, vc )                    !<GPU:DEVICE>
   !---------------------------------------------------------------------
   !! O. Gunnarsson and B. I. Lundqvist, PRB 13, 4274 (1976).
   !
@@ -476,13 +476,13 @@ SUBROUTINE gl_l( rs, ec, vc )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE gl_l
+END SUBROUTINE gl
 !
 !
 ! ... LSDA
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pz_polarized_l( rs, ec, vc )                    !<GPU:DEVICE>
+SUBROUTINE pz_polarized( rs, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! J.P. Perdew and A. Zunger, PRB 23, 5048 (1981).
   !! spin-polarized energy and potential.
@@ -533,11 +533,11 @@ SUBROUTINE pz_polarized_l( rs, ec, vc )                    !<GPU:DEVICE>
   !
   RETURN
   !
-END SUBROUTINE pz_polarized_l
+END SUBROUTINE pz_polarized
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pz_spin_l( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE>
+SUBROUTINE pz_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Perdew and Zunger, PRB 23, 5048 (1981). Spin polarized case.
   !
@@ -561,10 +561,10 @@ SUBROUTINE pz_spin_l( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVI
   REAL(DP), PARAMETER :: p43=4.0d0/3.d0, third=1.d0/3.d0
   !
   ! unpolarized part (Perdew-Zunger formula)
-  CALL pz_l( rs, 1, ecu, vcu )                                        !<GPU:pz_l=>pz_l_d>
+  CALL pz( rs, 1, ecu, vcu )                                        !<GPU:pz=>pz_d>
   !
   ! polarization contribution
-  CALL pz_polarized_l( rs, ecp, vcp )                                 !<GPU:pz_polarized_l=>pz_polarized_l_d>
+  CALL pz_polarized( rs, ecp, vcp )                                 !<GPU:pz_polarized=>pz_polarized_d>
   !
   fz = ( (1.0d0 + zeta)**p43 + (1.d0 - zeta)**p43 - 2.d0) / &
          (2.d0**p43 - 2.d0)
@@ -577,10 +577,10 @@ SUBROUTINE pz_spin_l( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVI
   !
   RETURN
   !
-END SUBROUTINE pz_spin_l
+END SUBROUTINE pz_spin
 !
 !-------------------------------------------------------------------------------
-SUBROUTINE vwn_spin_l( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE>
+SUBROUTINE vwn_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE>
    !------------------------------------------------------------------------------
    !! S.H. Vosko, L. Wilk, and M. Nusair.  Spin polarized case.
    !
@@ -653,7 +653,7 @@ SUBROUTINE vwn_spin_l( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEV
    vc_up = dec1 + (1.0_DP - zeta)*dec2              ! v_c[s] = e_c - (r_s/3)*(de_c/dr_s)
    vc_dw = dec1 - (1.0_DP + zeta)*dec2              !          + [sign(s)-zeta]*(de_c/dzeta)
    !
-END SUBROUTINE vwn_spin_l
+END SUBROUTINE vwn_spin
 !
 !
 !----
@@ -760,7 +760,7 @@ END SUBROUTINE
 !
 !
 !-----------------------------------------------------------------------------------------
-SUBROUTINE vwn1_rpa_spin_l( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE>
+SUBROUTINE vwn1_rpa_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE>
    !---------------------------------------------------------------------------------------
    !
    USE kind_l, ONLY: DP
@@ -835,7 +835,7 @@ END SUBROUTINE
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pw_spin_l( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE>
+SUBROUTINE pw_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! J.P. Perdew and Y. Wang, PRB 45, 13244 (1992).
   !
@@ -940,11 +940,11 @@ SUBROUTINE pw_spin_l( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVI
   !
   RETURN
   !
-END SUBROUTINE pw_spin_l
+END SUBROUTINE pw_spin
 !
 !
 !-----------------------------------------------------------------------------
-SUBROUTINE lsd_lyp_l( rho, zeta, elyp, vlyp_up, vlyp_dw )                    !<GPU:DEVICE>
+SUBROUTINE lsd_lyp( rho, zeta, elyp, vlyp_up, vlyp_dw )                    !<GPU:DEVICE>
   !==--------------------------------------------------------------==
   !==  C. LEE, W. YANG, AND R.G. PARR, PRB 37, 785 (1988)          ==
   !==  THIS IS ONLY THE LDA PART                                   ==
@@ -999,6 +999,7 @@ SUBROUTINE lsd_lyp_l( rho, zeta, elyp, vlyp_up, vlyp_dw )                    !<G
   !
   RETURN
   !
-END SUBROUTINE lsd_lyp_l
-
+END SUBROUTINE lsd_lyp
+!
+!
 END MODULE

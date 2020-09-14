@@ -13,8 +13,8 @@ SUBROUTINE dmxc_lda_l( length, rho_in, dmuxc )
   !! local density.
   !
   USE dft_par_mod
-  USE exch_lda_l,   ONLY: slater_l
-  USE kind_l,       ONLY: DP
+  USE exch_lda,   ONLY: slater
+  USE kind_l,     ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -66,7 +66,7 @@ SUBROUTINE dmxc_lda_l( length, rho_in, dmuxc )
            CYCLE
         ENDIF
         !
-        CALL slater_l( rs, ex_s, vx_s )
+        CALL slater( rs, ex_s, vx_s )
         dmuxc(ir) = vx_s / (3.0_DP * rho)
         !
         iflg = 2
@@ -131,9 +131,9 @@ SUBROUTINE dmxc_lsda_l( length, rho_in, dmuxc )
   !! local density in the spin-polarized case.
   !
   USE dft_par_mod
-  USE exch_lda_l,   ONLY: slater_l
-  USE corr_lda_l,   ONLY: pz_l, pz_polarized_l
-  USE kind_l,       ONLY: DP
+  USE exch_lda,   ONLY: slater
+  USE corr_lda,   ONLY: pz, pz_polarized
+  USE kind_l,     ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -186,12 +186,12 @@ SUBROUTINE dmxc_lsda_l( length, rho_in, dmuxc )
         ! ... exchange
         !
         rs = ( pi34 / (2.0_DP * rho_in(ir,1)) )**third
-        CALL slater_l( rs, ex_s, vx_s )
+        CALL slater( rs, ex_s, vx_s )
         !
         dmuxc(ir,1,1) = vx_s / (3.0_DP * rho_in(ir,1))
         !
         rs = ( pi34 / (2.0_DP * rho_in(ir,2)) )**third
-        CALL slater_l( rs, ex_s, vx_s )
+        CALL slater( rs, ex_s, vx_s )
         !
         dmuxc(ir,2,2) = vx_s / (3.0_DP * rho_in(ir,2))
         !
@@ -199,8 +199,8 @@ SUBROUTINE dmxc_lsda_l( length, rho_in, dmuxc )
         !
         rs = (pi34 / rhotot(ir))**third
         !
-        CALL pz_l( rs, 1, ecu, vcu )
-        CALL pz_polarized_l( rs, ecp, vcp )
+        CALL pz( rs, 1, ecu, vcu )
+        CALL pz_polarized( rs, ecp, vcp )
         !
         fz  = ( (1.0_DP + zeta_s)**p43 + (1.0_DP - zeta_s)**p43 - 2.0_DP ) &
                   / (2.0_DP**p43 - 2.0_DP)
