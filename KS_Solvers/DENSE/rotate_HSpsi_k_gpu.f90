@@ -176,7 +176,7 @@ SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi_d, hpsi_d, ove
   if (n_start .le. n_end) &
   CALL gpu_ZGEMM( 'N','N', kdim, my_n, nstart, (1.D0,0.D0), psi_d, kdmx, vv_d(1,n_start), nstart, (0.D0,0.D0), aux_d(1,n_start), kdmx )
 !$cuf kernel do(2)
-  DO ii = 1, npwx*npol
+  DO ii = 1, kdmx  
     DO jj = n_start, n_end
       psi_d(ii,jj) = aux_d(ii, jj)
     END DO 
@@ -189,7 +189,7 @@ SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi_d, hpsi_d, ove
   if (n_start .le. n_end) &
   CALL gpu_ZGEMM( 'N','N', kdim, my_n, nstart, (1.D0,0.D0), hpsi_d, kdmx, vv_d(1,n_start), nstart, (0.D0,0.D0), aux_d(1,n_start), kdmx )
 !$cuf kernel do(2)
-  DO ii = 1, npwx*npol
+  DO ii = 1, kdmx 
     DO jj = n_start, n_end
       hpsi_d(ii,jj) = aux_d(ii,jj)
     END DO 
@@ -204,7 +204,7 @@ SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi_d, hpsi_d, ove
      if (n_start .le. n_end) &
      CALL gpu_ZGEMM( 'N','N', kdim, my_n, nstart, (1.D0,0.D0), spsi_d, kdmx, vv_d(1,n_start), nstart, (0.D0,0.D0), aux_d(1,n_start), kdmx )
 !$cuf kernel do(2)
-     DO ii = 1, npwx*npol
+     DO ii = 1, kdmx 
        DO jj = n_start, n_end
          spsi_d(ii,jj) = aux_d(ii,jj)
        END DO 
@@ -217,7 +217,7 @@ SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi_d, hpsi_d, ove
   ELSE IF (present(spsi_d)) THEN
 
 !$cuf kernel do(2)
-     DO ii = 1, npwx*npol
+     DO ii = 1, kdmx 
        DO jj = 1, nbnd 
          spsi_d(ii,jj) = psi_d(ii,jj)
        END DO 
@@ -234,7 +234,6 @@ SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi_d, hpsi_d, ove
   DEALLOCATE( ss_d )
   DEALLOCATE( hh_d )
   DEALLOCATE( en_d )
-!
   call stop_clock('rotHSw'); !write(*,*) 'stop rotHSw' ; FLUSH(6)
   !call print_clock('rotHSw')
   !call print_clock('rotHSw:hc')
