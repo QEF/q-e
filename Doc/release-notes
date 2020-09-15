@@ -1,6 +1,8 @@
 New in dev version:
 
 Fixed in dev version:
+  * Some linkers yield "missing references to ddot_" in libbeef
+  * FFT test in FFTXlib was not always compiling 
   * angle1, angle2, starting_magnetization incorrectly written to xml file
   * Bug in Hubbard forces and stress for bands parallelization (when nproc_pool>nbnd) 
   * Crash in the calculation of Z* with ultrasoft PP when the number of bands
