@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: dos.x / PWscf / Quantum Espresso (version: 6.4)
+Program: dos.x / PWscf / Quantum Espresso (version: 6.6)
 ------------------------------------------------------------------------
 
 
@@ -161,4 +161,4 @@ NAMELIST: &DOS
       
 
 
-This file has been created by helpdoc utility on Thu Nov 28 10:42:25 CET 2019
+This file has been created by helpdoc utility on Fri Jul 17 10:28:28 CEST 2020

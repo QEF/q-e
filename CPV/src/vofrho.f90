@@ -82,7 +82,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       COMPLEX(DP)  fp, fm, ci, drhop, zpseu, zh
       COMPLEX(DP), ALLOCATABLE :: rhotmp(:), vtemp(:)
       COMPLEX(DP), ALLOCATABLE :: drhot(:,:)
-      REAL(DP), ALLOCATABLE    :: gagb(:,:), rhosave(:,:), rhocsave(:)
+      REAL(DP), ALLOCATABLE    :: gagb(:,:), rhosave(:,:), newrhosave(:,:), rhocsave(:) 
       !
       REAL(DP), ALLOCATABLE :: fion1( :, : )
       REAL(DP), ALLOCATABLE :: stmp( :, : )
@@ -354,6 +354,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       IF ( dft_is_nonlocc() ) THEN
          ALLOCATE ( rhosave(dfftp%nnr,nspin),  rhocsave(dfftp%nnr) )
+         ALLOCATE ( newrhosave(dfftp%nnr,nspin) )
          rhosave(:,:) = rhor(:,:)
          IF ( SIZE(rhoc) == dfftp%nnr ) THEN
             rhocsave(:)= rhoc(:)
@@ -393,22 +394,24 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
              denlc(:,:) = 0.0_dp
              !
              !^^ ... TEMPORARY FIX (newlsda) ...
-             IF ( nspin==2 ) THEN
+             IF ( nspin==2 ) THEN ! PH adjusted 05/2020
                rhosave(:,1) = rhosave(:,1) + rhosave(:,2) 
-               CALL errore('stres_vdW', 'LSDA+stress+vdW-DF not implemented',1)
+               newrhosave(:,1) = rhosave(:,1) + rhosave(:,2)
+               newrhosave(:,2) = rhosave(:,1) - rhosave(:,2)
+               ! CALL errore('stres_vdW', 'LSDA+stress+vdW-DF not implemented',1)
              END IF
              !^^.......................
              !   
              inlc = get_inlc()
              IF ( inlc > 0 .AND. inlc < 26 ) THEN
-               CALL vdW_DF_stress ( rhosave(:,1), rhocsave, nspin, denlc )
+               CALL vdW_DF_stress ( newrhosave, rhocsave, nspin, denlc )
              ELSEIF ( inlc == 26 ) then
                CALL rVV10_stress  ( rhosave(:,1), rhocsave, nspin, denlc )
              END IF
              !
              dxc(:,:) = dxc(:,:) - omega/e2 * MATMUL(denlc,TRANSPOSE(ainv))
          END IF
-         DEALLOCATE ( rhocsave, rhosave )
+         DEALLOCATE ( rhocsave, rhosave, newrhosave )
       ELSE
          denlc(:,:) = 0.0_dp
       END IF

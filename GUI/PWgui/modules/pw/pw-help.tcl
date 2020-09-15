@@ -139,8 +139,9 @@ From scratch. This is the normal way to perform a PWscf calculation
 <dt><tt><b>'restart'</b> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
 From previous interrupted run. Use this switch only if you want to
-continue an interrupted calculation, not to start a new one, or to
-perform non-scf calculations.  Works only if the calculation was
+continue, using the same number of processors and parallelization,
+an interrupted calculation. Do not use to start a new one, or to
+perform a non-scf calculations.  Works only if the calculation was
 cleanly stopped using variable "max_seconds", or by user request
 with an "exit file" (i.e.: create a file "prefix".EXIT, in directory
 "outdir"; see variables "prefix", "outdir").  Overrides "startingwfc"
@@ -198,7 +199,9 @@ help nstep -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 number of molecular-dynamics or structural optimization steps
-performed in this run
+performed in this run. If set to 0, the code performs a quick
+"dry run", stopping just after initialization. This is useful
+to check for input correctness and to have the summary printed.
          </pre></blockquote>
 </ul>      
       
@@ -443,33 +446,48 @@ help disk_io -helpfmt helpdoc -helptext {
 <blockquote>
 <pre>
 Specifies the amount of disk I/O activity:
+(only for binary files and xml data file in data directory;
+other files printed at each molecular dynamics / structural
+optimization step are not controlled by this option )
             </pre>
 <dl style="margin-left: 1.5em;">
 <dt><tt><b>'high'</b> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-save all data to disk at each SCF step
+save charge to disk at each SCF step,
+keep wavefunctions on disk (in "distributed" format),
+save mixing data as well.
+Do not use this option unless you have a good reason to
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
 <dt><tt><b>'medium'</b> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-save wavefunctions at each SCF step unless
-there is a single k-point per process (in which
-case the behavior is the same as 'low')
+save charge to disk at each SCF step,
+keep wavefunctions on disk only if more than one k-point,
+per process is present, otherwise keep them in memory;
+save them to disk only at the end (in "portable" format)
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
 <dt><tt><b>'low'</b> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-store wfc in memory, save only at the end
+save charge to disk at each SCF step,
+keep wavefunctions in memory (for all k-points),
+save them to disk only at the end (in "portable" format).
+Reduces I/O but increases memory wrt the previous cases
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'nowf'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+save to disk only the xml data file,
+never save wavefunctions and charge density
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
 <dt><tt><b>'none'</b> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-do not save anything, not even at the end
-('scf', 'nscf', 'bands' calculations; some data
-may be written anyway for other calculations)
+do not save anything to disk
             </pre></dd>
 </dl>
 <pre>
@@ -477,7 +495,7 @@ may be written anyway for other calculations)
 Note that the needed RAM increases as disk I/O decreases!
 It is no longer needed to specify 'high' in order to be able
 to restart from an interrupted calculation (see "restart_mode")
-but you cannot restart in "disk_io"=='none'
+but you cannot restart in "disk_io"=='nowf' or 'none'
             </pre>
 </blockquote>
 </ul>      
@@ -752,7 +770,16 @@ help ibrav -helpfmt helpdoc -helptext {
   see below for the other parameters.
   For ibrav=0 specify the lattice vectors in "CELL_PARAMETERS",
   optionally the lattice parameter alat = celldm(1) (in a.u.)
-  or = A (in Angstrom), or else it is taken from "CELL_PARAMETERS"
+  or = A (in Angstrom). If not specified, the lattice parameter is
+  taken from "CELL_PARAMETERS"
+  IMPORTANT NOTICE 1:
+  with ibrav=0 lattice vectors must be given with a sufficiently large
+  number of digits and with the correct symmetry, or else symmetry
+  detection may fail and strange problems may arise in symmetrization.
+  IMPORTANT NOTICE 2:
+  do not use celldm(1) or A as a.u. to Ang conversion factor,
+  use the true lattice parameters or nothing,
+  specify units in "CELL_PARAMETERS" and "ATOMIC_POSITIONS"
 
 ibrav      structure                   celldm(2)-celldm(6)
                                      or: b,c,cosbc,cosac,cosab
@@ -841,10 +868,12 @@ ibrav      structure                   celldm(2)-celldm(6)
 -13          Monoclinic base-centered        celldm(2)=b/a
              (unique axis b)                 celldm(3)=c/a,
                                              celldm(5)=cos(beta)
-      v1 = (  a/2,      -b/2,             0),
-      v2 = (  a/2,       b/2,             0),
+      v1 = (  a/2,       b/2,             0),
+      v2 = ( -a/2,       b/2,             0),
       v3 = (c*cos(beta),   0,   c*sin(beta)),
       where beta=angle between axis a and c projected on xz plane
+ IMPORTANT NOTICE: until QE v.6.4.1, axis for ibrav=-13 had a
+ different definition: v1(old) =-v2(now), v2(old) = v1(now)
 
  14          Triclinic                       celldm(2)= b/a,
                                              celldm(3)= c/a,
@@ -1142,9 +1171,10 @@ help ecutfock -helpfmt helpdoc -helptext {
 <blockquote><pre>
 Kinetic energy cutoff (Ry) for the exact exchange operator in
 EXX type calculations. By default this is the same as "ecutrho"
-but in some EXX calculations significant speed-up can be found
+but in some EXX calculations, a significant speed-up can be obtained
 by reducing ecutfock, at the expense of some loss in accuracy.
-Must be .gt. "ecutwfc". Not implemented for stress calculation.
+Must be .gt. "ecutwfc". Not implemented for stress calculation
+and for US-PP and PAW pseudopotentials.
 Use with care, especially in metals where it may give raise
 to instabilities.
          </pre></blockquote>
@@ -1534,7 +1564,7 @@ Methfessel-Paxton first-order spreading
 <dl style="margin-left: 1.5em;">
 <dt><tt><b>'marzari-vanderbilt'</b>, <b>'cold'</b>, <b>'m-v'</b>, <b>'mv'</b> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-Marzari-Vanderbilt cold smearing
+Marzari-Vanderbilt-DeVita-Payne cold smearing
 (see "PRL 82, 3296 (1999)")
             </pre></dd>
 </dl>
@@ -1667,6 +1697,27 @@ Exchange-correlation functional: eg 'PBE', 'BLYP' etc
 See Modules/funct.f90 for allowed values.
 Overrides the value read from pseudopotential files.
 Use with care and if you know what you are doing!
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help ace -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>ace</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> true
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Use Adaptively Compressed Exchange operator as in
+Lin Lin, J. Chem. Theory Comput. 2016, 12, 2242--2249, "doi:10.1021/acs.jctc.6b00092"
+
+Set to false to use standard Exchange (much slower)
          </pre></blockquote>
 </ul>      
       
@@ -1880,13 +1931,16 @@ help lda_plus_u_kind -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Specifies the type of DFT+U calculation:
+Specifies the type of calculation:
 
-   0   simplified version of Cococcioni and de Gironcoli,
+   0   DFT+U simplified version of Cococcioni and de Gironcoli,
        "PRB 71, 035105 (2005)", using "Hubbard_U"
 
-   1   rotationally invariant scheme of Liechtenstein et al.,
+   1   DFT+U rotationally invariant scheme of Liechtenstein et al.,
        using "Hubbard_U" and "Hubbard_J"
+
+   2   DFT+U+V simplified version of Campo Jr and Cococcioni,
+       J. Phys.: Condens. Matter 22, 055602 (2010), using "Hubbard_V"
          </pre></blockquote>
 </ul>      
       
@@ -2036,6 +2090,72 @@ NB: forces and stress currently implemented only for the
 'atomic' and 'pseudo' choice.
             </pre>
 </blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help Hubbard_parameters -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>Hubbard_parameters</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> 'input'
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote>
+<pre>
+Available choices:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'input'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+read the "Hubbard_U" (or "Hubbard_V") parameters from
+the PW input file
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'file'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+read the "Hubbard_V" parameters from the file "parameters.in"
+which can be generated after the linear-response calculation
+(using the HP code). This option has a higher priority over
+the "Hubbard_V" if they are specified in the input. This option
+can be used only when "lda_plus_u_kind" = 2.
+            </pre></dd>
+</dl>
+</blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help ensemble_energies -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>ensemble_energies</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If ensemble_energies = .true., an ensemble of xc energies
+is calculated non-selfconsistently for perturbed
+exchange-enhancement factors and LDA vs. PBE correlation
+ratios after each converged electronic ground state
+calculation.
+
+Ensemble energies can be analyzed with the 'bee' utility
+included with libbeef.
+
+Requires linking against libbeef.
+input_dft must be set to a BEEF-type functional
+(e.g. input_dft = 'BEEF-vdW')
+         </pre></blockquote>
 </ul>      
       
 }
@@ -2312,13 +2432,15 @@ help report -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>report</b></big>
 </li>
 <br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 100
+<br><li> <em>Default: </em> -1
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Number of iterations after which the program
-writes all the atomic magnetic moments.
+determines when atomic magnetic moments are printed on output:
+report = 0  never
+report =-1  at the beginning of the scf and at convergence
+report = N: as -1, plus every N scf iterations
          </pre></blockquote>
 </ul>      
       
@@ -2433,28 +2555,29 @@ See "esm_bc", "esm_efield", "esm_w", "esm_nfit".
 <dl style="margin-left: 1.5em;">
 <dt><tt><b>'2D'</b> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-        Truncation of the Coulomb interaction in the z direction
-        for structures periodic in the x-y plane. Total energy,
-        forces and stresses are computed in a two-dimensional framework.
-        Linear-response calculations () done on top of a self-consistent
-        calculation with this flag will automatically be performed in
-        the 2D framework as well. Please refer to:
-        Sohier, T., Calandra, M., &amp; Mauri, F. (2017), Density functional
-        perturbation theory for gated two-dimensional heterostructures:
-        Theoretical developments and application to flexural phonons in graphene.
-        Physical Review B, 96(7), 75448. "https://doi.org/10.1103/PhysRevB.96.075448"
-NB:
-           - The length of the unit-cell along the z direction should
-             be larger than twice the thickness of the 2D material
-             (including electrons). A reasonable estimate for a
-             layer's thickness could be the interlayer distance in the
-             corresponding layered bulk material. Otherwise,
-             the atomic thickness + 10 bohr should be a safe estimate.
-             There is also a lower limit of 20 bohr imposed by the cutoff
-             radius used to read pseudopotentials (see read_pseudo.f90 in Modules).
+Truncation of the Coulomb interaction in the z direction
+for structures periodic in the x-y plane. Total energy,
+forces and stresses are computed in a two-dimensional framework.
+Linear-response calculations () done on top of a self-consistent
+calculation with this flag will automatically be performed in
+the 2D framework as well. Please refer to:
+Sohier, T., Calandra, M., &amp; Mauri, F. (2017), Density functional
+perturbation theory for gated two-dimensional heterostructures:
+Theoretical developments and application to flexural phonons in graphene.
+Physical Review B, 96(7), 75448. "https://doi.org/10.1103/PhysRevB.96.075448"
 
-           - As for ESM above, only in-plane stresses make sense and one
-             should use cell_dofree='2Dxy' in a vc-relax calculation.
+NB:
+   - The length of the unit-cell along the z direction should
+     be larger than twice the thickness of the 2D material
+     (including electrons). A reasonable estimate for a
+     layer's thickness could be the interlayer distance in the
+     corresponding layered bulk material. Otherwise,
+     the atomic thickness + 10 bohr should be a safe estimate.
+     There is also a lower limit of 20 bohr imposed by the cutoff
+     radius used to read pseudopotentials (see read_pseudo.f90 in Modules).
+
+   - As for ESM above, only in-plane stresses make sense and one
+     should use cell_dofree='2Dxy' in a vc-relax calculation.
             </pre></dd>
 </dl>
 </blockquote>
@@ -2763,15 +2886,44 @@ help dftd3_version -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
+<blockquote>
+<pre>
 Version of Grimme implementation of Grimme-D3:
-   Version=2 is the original Grimme-D2 parametrization
-   Version=3 is Grimme-D3 (zero damping)
-   Version=4 is Grimme-D3 (BJ damping)
-   Version=5 is Grimme-D3M (zero damping)
-   Version=6 is Grimme-D3M (BJ damping)
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>dftd3_version = 2</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Original Grimme-D2 parametrization
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>dftd3_version = 3</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Grimme-D3 (zero damping)
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>dftd3_version = 4</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Grimme-D3 (BJ damping)
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>dftd3_version = 5</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Grimme-D3M (zero damping)
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>dftd3_version = 6</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Grimme-D3M (BJ damping)
+            </pre></dd>
+</dl>
+<pre>
 NOTE: not all functionals are parametrized.
-         </pre></blockquote>
+            </pre>
+</blockquote>
 </ul>      
       
 }
@@ -3355,41 +3507,23 @@ Davidson iterative diagonalization with overlap matrix
 <dt><tt><b>'cg'</b> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
 Conjugate-gradient-like band-by-band diagonalization.
-Slower than 'david' but uses less memory and is
+MUCH slower than 'david' but uses less memory and is
 (a little bit) more robust.
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
-<dt><tt><b>'cg-serial'</b>, <b>'david-serial'</b> :</tt></dt>
+<dt><tt><b>'ppcg'</b> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-OBSOLETE, use <b>-ndiag 1</b> instead.
-The subspace diagonalization in Davidson is performed
-by a fully distributed-memory parallel algorithm on
-4 or more processors, by default. The allocated memory
-scales down with the number of procs. Procs involved
-in diagonalization can be changed with command-line
-option <b>-ndiag</b> <i>N.</i> On multicore CPUs it is often
-convenient to let just one core per CPU to work
-on linear algebra.
+PPCG iterative diagonalization
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'paro'</b>, <b>'ParO'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+ParO iterative diagonalization
             </pre></dd>
 </dl>
 </blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help ortho_para -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>ortho_para</b></big>
-</li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 0
-         </li>
-<br><li> <em>Status: </em> OBSOLETE: use command-line option <tt>"-ndiag XX"</tt> instead
-         </li>
-<br>
 </ul>      
       
 }
@@ -3442,7 +3576,7 @@ help diago_david_ndim -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>diago_david_ndim</b></big>
 </li>
 <br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 4
+<br><li> <em>Default: </em> 2
          </li>
 <br><li> <em>Description:</em>
 </li>
@@ -3451,10 +3585,10 @@ For Davidson diagonalization: dimension of workspace
 (number of wavefunction packets, at least 2 needed).
 A larger value may yield a smaller number of iterations in
 the algorithm but uses more memory and more CPU time in
-subspace diagonalization.
-Try "diago_david_ndim"=2 if you are tight on memory or if
-the time spent in subspace diagonalization (cdiaghg/rdiaghg)
-is significant compared to the time spent in h_psi
+subspace diagonalization (cdiaghg/rdiaghg). You may try
+"diago_david_ndim"=4 if you are not tight on memory
+and if the time spent in subspace diagonalization is small
+compared to the time spent in h_psi
          </pre></blockquote>
 </ul>      
       
@@ -3691,6 +3825,76 @@ translational invariance. Use with care and after testing!
 
 
 # ------------------------------------------------------------------------
+help ion_positions -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>ion_positions</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> 'default'
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote>
+<pre> Available options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'default'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+if restarting, use atomic positions read from the
+restart file; in all other cases, use atomic
+positions from standard input.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'from_input'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+read atomic positions from standard input, even if restarting.
+            </pre></dd>
+</dl>
+</blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help ion_velocities -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>ion_velocities</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> 'default'
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote>
+<pre>
+Initial ionic velocities. Available options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'default'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+start a new simulation from random thermalized
+distribution of velocities if "tempw" is set,
+with zero velocities otherwise; restart from
+atomic velocities read from the restart file
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'from_input'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+start or continue the simulation with atomic
+velocities read from standard input - see card
+"ATOMIC_VELOCITIES"
+            </pre></dd>
+</dl>
+</blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help ion_dynamics -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>ion_dynamics</b></big>
@@ -3773,40 +3977,6 @@ structural relaxation
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
 <b>(default)</b>  use Beeman algorithm to integrate
 Newton's equation
-            </pre></dd>
-</dl>
-</blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help ion_positions -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>ion_positions</b></big>
-</li>
-<br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>Default: </em> 'default'
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote>
-<pre> Available options are:
-            </pre>
-<dl style="margin-left: 1.5em;">
-<dt><tt><b>'default'</b> :</tt></dt>
-<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-if restarting, use atomic positions read from the
-restart file; in all other cases, use atomic
-positions from standard input.
-            </pre></dd>
-</dl>
-<dl style="margin-left: 1.5em;">
-<dt><tt><b>'from_input'</b> :</tt></dt>
-<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-restart the simulation with atomic positions read
-from standard input, even if restarting.
             </pre></dd>
 </dl>
 </blockquote>
@@ -3967,15 +4137,18 @@ control ionic temperature via velocity rescaling
 <dl style="margin-left: 1.5em;">
 <dt><tt><b>'rescale-T'</b> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-control ionic temperature via velocity rescaling
-(third method) see parameter "delta_t"
+scale temperature of the thermostat every "nraise" steps
+by "delta_t", starting from "tempw".
+The temperature is controlled via velocitiy rescaling.
                </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
 <dt><tt><b>'reduce-T'</b> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
-reduce ionic temperature every "nraise" steps
-by the (negative) value "delta_t"
+reduce temperature of the thermostat every "nraise" steps
+by the (negative) value "delta_t", starting from "tempw".
+If  "delta_t" is positive, the target temperature is augmented.
+The temperature is controlled via velocitiy rescaling.
                </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
@@ -3990,6 +4163,14 @@ rescaling - see parameters "tempw" and "nraise"
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
 control ionic temperature using Andersen thermostat
 see parameters "tempw" and "nraise"
+               </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>'svr'</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+control ionic temperature using stochastic-velocity rescaling
+(Donadio, Bussi, Parrinello, J. Chem. Phys. 126, 014101, 2007),
+with parameters "tempw" and "nraise".
                </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
@@ -4112,6 +4293,10 @@ if "ion_temperature" == 'berendsen' :
 if "ion_temperature" == 'andersen' :
        the "collision frequency" parameter is given as nu=1/tau
        defined above, so nu*dt = 1/nraise
+
+if "ion_temperature" == 'svr' :
+       the "characteristic time" of the thermostat is set to
+       tau = nraise*dt
             </pre></blockquote>
 </ul>      
       
@@ -4446,7 +4631,7 @@ Select which of the cell parameters should be moved:
 </dl>
 <dl style="margin-left: 1.5em;">
 <dt><tt><b>'ibrav'</b> :</tt></dt>
-<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> all axis and angles are moved, but the lattice but be representable with the initial ibrav choice
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> all axis and angles are moved, but the lattice remains consistent with the initial ibrav choice
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
@@ -4898,6 +5083,29 @@ For spin-polarized calculations, these are majority spin states.
 Occupations of minority spin states (MAX 10 PER ROW)
 To be specified only for spin-polarized calculations.
                      </pre></blockquote>
+</ul>   
+    
+}
+
+
+# ------------------------------------------------------------------------
+help atomic_velocities -helpfmt helpdoc -helptext {
+    <ul>
+<li> <em>Variable: </em><big><b>V</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre> label of the atom as specified in ATOMIC_SPECIES
+                  </pre></blockquote>
+</ul><ul>
+<li> <em>Variables: </em><big><b>vx, vy, vz</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre> atomic velocities along x y and z direction
+                  </pre></blockquote>
 </ul>   
     
 }

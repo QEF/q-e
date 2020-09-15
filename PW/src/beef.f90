@@ -18,10 +18,6 @@ MODULE beef
   PRIVATE
   PUBLIC :: beef_energies, beef_print, beefxc, energies
   !
-  !real(DP), allocatable, save :: beefxc(:), energies(:)
-  !real(DP), save              :: ldaxc
-  !
-  !
   real(DP), allocatable       :: beefxc(:), energies(:)
   real(DP)                    :: ldaxc
 
@@ -40,26 +36,18 @@ SUBROUTINE beef_energies( )
   USE io_global,         ONLY  : stdout, ionode
   USE funct,             ONLY  : dft_is_meta
   USE control_flags,     ONLY  : io_level
-  !USE exx_band,             ONLY : change_data_structure !MY ATTEMPTS
-  !TO
-  !FIX ERRORS
-
   USE ener,                 ONLY : vtxc, etxc
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   !
-#if defined(use_beef)
   USE beef_interface, ONLY: beefsetmode, beefrandinitdef, beefensemble
-#endif
   !
   implicit none
-  !real(DP), allocatable      :: beefxc(:), energies(:)
   real(DP)                    :: ldaxc
   integer                     :: i
 
   if (.not. allocated(beefxc)) allocate(beefxc(32))
   if (.not. allocated(energies)) allocate(energies(2000))
 
-#ifdef use_beef
   if (.not. dft_is_meta()) then
      do i=1,30
         !calculate exchange contributions in Legendre polynomial
@@ -107,15 +95,9 @@ SUBROUTINE beef_energies( )
   beefxc(32) = beefxc(32)+beefxc(31)
 
   call beefensemble(beefxc, energies)
-  !if (ionode .AND iprint) then
   if (.NOT. ionode) RETURN
 
   if ( ionode ) call beef_print( )
-  
-#else
-       CALL errore('set_dft_from_name', &
-    &    'BEEF xc functional support not compiled in', 1)
-#endif
 
 END SUBROUTINE beef_energies
 
@@ -129,7 +111,6 @@ SUBROUTINE beef_print( )
   implicit none
   integer                     :: i
 
-  !if (ionode .AND iprint) then
   if (.NOT. ionode) RETURN
 
   WRITE(*,*) "BEEFens 2000 ensemble energies"

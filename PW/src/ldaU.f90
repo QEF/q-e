@@ -295,6 +295,7 @@ CONTAINS
           !
        ENDDO !nt
        !
+       IF (ALLOCATED(ll)) DEALLOCATE (ll) 
        ALLOCATE(ll(ldmx_tot,ntyp))
        !
        ! ll is a label of all the Hubbard states telling the l of that states. 

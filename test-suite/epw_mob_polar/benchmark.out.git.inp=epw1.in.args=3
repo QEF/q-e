@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.2.0 starts on 22Apr2020 at 17:57:26 
+     Program EPW v.5.2.0 starts on  9Jul2020 at 18:56:49 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -42,6 +42,10 @@
      MPI processes distributed on     1 nodes
      K-points division:     npool     =       4
      Fft bands division:     nmany     =       1
+
+     WARNING: The specified dis_win_min is ignored.
+              You should instead use bands_skipped = 'exclude_bands = ...'
+              to control the lower bound of band manifold.
 
      Reading xml data from directory:
 
@@ -138,9 +142,9 @@
                 l(2) =   0
                 l(3) =   1
                 l(4) =   1
-     EPW          :      0.29s CPU      0.30s WALL
+     EPW          :      0.26s CPU      0.30s WALL
 
-     EPW          :      0.48s CPU      0.48s WALL
+     EPW          :      0.42s CPU      0.45s WALL
 
      -------------------------------------------------------------------
      Wannierization on  2 x  2 x  2 electronic grid
@@ -211,13 +215,13 @@
      (   0.00000   0.56614   1.43246) :   0.71640
  
      -------------------------------------------------------------------
-     WANNIER      :      0.86s CPU      1.02s WALL (       1 calls)
+     WANNIER      :      0.75s CPU      0.98s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Calculating kgmap
 
      Progress kgmap: ########################################
-     kmaps        :      0.01s CPU      0.13s WALL (       1 calls)
+     kmaps        :      0.02s CPU      0.20s WALL (       1 calls)
      Symmetries of Bravais lattice:  24
      Symmetries of crystal:          12
 
@@ -305,12 +309,30 @@
 
      Velocity matrix elements calculated
  
+ 
+     Bloch2wane:          1 /          8
+     Bloch2wane:          2 /          8
+     Bloch2wane:          3 /          8
+     Bloch2wane:          4 /          8
+     Bloch2wane:          5 /          8
+     Bloch2wane:          6 /          8
+     Bloch2wane:          7 /          8
+     Bloch2wane:          8 /          8
+ 
+     Bloch2wanp:          1 /          8
+     Bloch2wanp:          2 /          8
+     Bloch2wanp:          3 /          8
+     Bloch2wanp:          4 /          8
+     Bloch2wanp:          5 /          8
+     Bloch2wanp:          6 /          8
+     Bloch2wanp:          7 /          8
+     Bloch2wanp:          8 /          8
 
      Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file
 
      ===================================================================
-     Memory usage:  VmHWM =       194Mb
-                   VmPeak =      2743Mb
+     Memory usage:  VmHWM =       103Mb
+                   VmPeak =       449Mb
      ===================================================================
      
      Using q-mesh file: ./MGA.txt
@@ -341,40 +363,40 @@
       
      Progression iq (fine) =        100/       178
      ===================================================================
-     Memory usage:  VmHWM =       196Mb
-                   VmPeak =      2764Mb
+     Memory usage:  VmHWM =       105Mb
+                   VmPeak =       449Mb
      ===================================================================
 
 
      Unfolding on the coarse grid
-     elphon_wrap  :      6.33s CPU      6.65s WALL (       1 calls)
+     elphon_wrap  :      4.46s CPU      5.20s WALL (       1 calls)
 
      INITIALIZATION: 
 
-     set_drhoc    :      0.82s CPU      0.83s WALL (       9 calls)
+     set_drhoc    :      0.71s CPU      0.71s WALL (       9 calls)
      init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
-     init_us_1    :      0.02s CPU      0.02s WALL (       2 calls)
+     init_us_1    :      0.01s CPU      0.01s WALL (       2 calls)
 
 
 
      Electron-Phonon interpolation
-     ephwann      :     13.29s CPU     13.85s WALL (       1 calls)
-     ep-interp    :      9.59s CPU      9.85s WALL (     178 calls)
+     ephwann      :     10.65s CPU     11.44s WALL (       1 calls)
+     ep-interp    :      7.09s CPU      7.50s WALL (     178 calls)
 
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
      Ham: step 2  :      0.00s CPU      0.00s WALL (       1 calls)
      ep: step 1   :      0.00s CPU      0.00s WALL (      96 calls)
-     ep: step 2   :      0.02s CPU      0.07s WALL (      96 calls)
+     ep: step 2   :      7.21s CPU      7.98s WALL (       1 calls)
      DynW2B       :      0.01s CPU      0.01s WALL (     178 calls)
-     HamW2B       :      0.94s CPU      0.95s WALL (   16333 calls)
-     ephW2Bp      :      0.60s CPU      0.78s WALL (     178 calls)
-     ephW2B       :      1.72s CPU      1.74s WALL (    8010 calls)
-     vmewan2bloch :      1.91s CPU      1.93s WALL (   16020 calls)
-     vmewan2bloch :      1.91s CPU      1.93s WALL (   16020 calls)
+     HamW2B       :      0.69s CPU      0.71s WALL (   16333 calls)
+     ephW2Bp      :      0.48s CPU      0.81s WALL (     178 calls)
+     ephW2B       :      1.30s CPU      1.32s WALL (    8010 calls)
+     vmewan2bloch :      1.49s CPU      1.51s WALL (   16020 calls)
+     vmewan2bloch :      1.49s CPU      1.51s WALL (   16020 calls)
 
 
      Total program execution
-     EPW          :     20.96s CPU     22.00s WALL
+     EPW          :     16.27s CPU     18.08s WALL
 
                                                                                           
  Please consider citing:                                                                  

@@ -2074,7 +2074,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%spinorbit, ionode_id, comm)
     CALL mp_bcast(obj%total, ionode_id, comm)
     CALL mp_bcast(obj%absolute, ionode_id, comm)
-    CALL mp_bcast(obj%do_magnetization, ionode_id, comm)
+    CALL mp_bcast(obj%do_magnetization_ispresent, ionode_id, comm)
+    IF (obj%do_magnetization_ispresent) &
+      CALL mp_bcast(obj%do_magnetization, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_magnetization
   !

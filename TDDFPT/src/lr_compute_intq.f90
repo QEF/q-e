@@ -20,8 +20,9 @@ SUBROUTINE lr_compute_intq
   USE cell_base,            ONLY : omega, tpiba
   USE uspp,                 ONLY : okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
-  USE lr_variables,         ONLY : intq
+!  USE lr_variables,         ONLY : intq
   USE qpoint,               ONLY : xq, eigqts
+  USE lrus,                 ONLY : intq
 
   IMPLICIT NONE
 

@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.2.0 starts on 22Apr2020 at 17:51:26 
+     Program EPW v.5.2.0 starts on  9Jul2020 at 18:49:41 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -46,6 +46,7 @@
      Reading xml data from directory:
 
      ./diam.save/
+     file C_3.98148.UPF: wavefunction(s)  3d renormalized
 
      IMPORTANT: XC functional enforced from input :
      Exchange-correlation= PZ
@@ -53,7 +54,6 @@
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
-               file C_3.98148.UPF: wavefunction(s)  3d renormalized
  
      G-vector sticks info
      --------------------
@@ -153,9 +153,9 @@ Possibly too few bands at point    7   0.66667   0.66667   0.66667
      Using radial grid of  461 points,  2 beta functions with: 
                 l(1) =   0
                 l(2) =   1
-     EPW          :      0.06s CPU      0.07s WALL
+     EPW          :      0.06s CPU      0.10s WALL
 
-     EPW          :      0.07s CPU      0.08s WALL
+     EPW          :      0.07s CPU      0.11s WALL
 
      -------------------------------------------------------------------
      Wannierization on  3 x  3 x  3 electronic grid
@@ -219,14 +219,14 @@ Possibly too few bands at point    7   0.66667   0.66667   0.66667
 
 nr1s =   24, nr2s =   24, nr3s =   24
 write_plot: wannier_plot_supercell =    3    3    3
-      Wannier Function Num:    1       Maximum Im/Re Ratio =    0.000013
-      Wannier Function Num:    3       Maximum Im/Re Ratio =    0.000013
-      Wannier Function Num:    4       Maximum Im/Re Ratio =    0.000014
+      Wannier Function Num:    1       Maximum Im/Re Ratio =    0.000016
+      Wannier Function Num:    3       Maximum Im/Re Ratio =    0.000016
+      Wannier Function Num:    4       Maximum Im/Re Ratio =    0.000011
 
 
   cube files written
      -------------------------------------------------------------------
-     WANNIER      :      0.81s CPU      1.03s WALL (       1 calls)
+     WANNIER      :      0.52s CPU      0.90s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Unfolding on the coarse grid
@@ -243,7 +243,7 @@ write_plot: wannier_plot_supercell =    3    3    3
 
 
      Total program execution
-     EPW          :      0.88s CPU      1.10s WALL
+     EPW          :      0.59s CPU      1.01s WALL
 
                                                                                           
  Please consider citing:                                                                  

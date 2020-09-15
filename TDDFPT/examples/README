@@ -129,29 +129,34 @@ example12:
 
 example13:
     This example shows how to calculate the electron energy loss spectrum 
-    of bulk silicon using a norm-conserving pseudopotential, LDA functional, 
-    and using pw.x, turbo_eels.x, and turbo_spectrum.x.
+    of bulk silicon using the Lanczos algorithm with a norm-conserving pseudopotential, 
+    LDA functional, and using pw.x, turbo_eels.x, and turbo_spectrum.x.
 
 example14:
     This example shows how to calculate the electron energy loss spectrum
-    of bulk aluminum using a norm-conserving pseudopotential, LDA functional, 
-    and using pw.x, turbo_eels.x, and turbo_spectrum.x.
+    of bulk aluminum using the Lanczos algorithm with a norm-conserving pseudopotential, 
+    LDA functional, and using pw.x, turbo_eels.x, and turbo_spectrum.x.
 
 example15:
     This example shows how to calculate the electron energy loss spectrum
-    of bulk silver using an ultrasoft pseudopotential, PBE functional, 
-    and using pw.x, turbo_eels.x, and turbo_spectrum.x.
+    of bulk silver using the Lanczos algorithm with ultrasoft pseudopotential, 
+    PBE functional, and using pw.x, turbo_eels.x, and turbo_spectrum.x.
 
 example16:
     This example shows how to calculate the electron energy loss spectrum
-    of bulk bismuth using a norm-conserving pseudopotential,
+    of bulk bismuth using the Lanczos algorithm with a norm-conserving pseudopotential,
     LDA functional, and using pw.x, turbo_eels.x, and turbo_spectrum.x.
     The calculation is with a noncollinear spin polarization and including
     the spin-orbit coupling effect.
 
 example17:
     This example shows how to calculate the electron energy loss spectrum
-    of bulk bismuth using an ultrasoft pseudopotential,
+    of bulk bismuth using the Lanczos algorithm with a ultrasoft pseudopotential,
     LDA functional, and using pw.x, turbo_eels.x, and turbo_spectrum.x.
     The calculation is with a noncollinear spin polarization and including
     the spin-orbit coupling effect.
+
+example18:
+    This example shows how to calculate the electron energy loss spectrum
+    of bulk aluminium using the Sternheimer algorithm with a norm-conserving 
+    pseudopotential, LDA functional, and using pw.x and turbo_eels.x.

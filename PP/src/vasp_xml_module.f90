@@ -786,14 +786,21 @@ SUBROUTINE vasp_init_xc(vasp_parameters,vasp_atominfo,iexch,icorr,igcx,igcc,inlc
   !
   IF(vasp_parameters%gga=='CA') THEN
      iexch = 1; icorr = 1; igcx = 0; igcc = 0
-  ELSE IF(vasp_parameters%gga=='91') THEN
+  ELSE IF(vasp_parameters%gga=='91') THEN 
      iexch = 1; icorr = 4; igcx = 2; igcc = 2
   ELSE IF(vasp_parameters%gga=='PE') THEN
      iexch = 1; icorr = 4; igcx = 3; igcc = 4
-  ELSE IF(vasp_parameters%gga=='CX') THEN
-     iexch = 1; icorr = 4; igcx = 27
-  ELSE IF(vasp_parameters%gga=='RE') THEN
+  ELSE IF(vasp_parameters%gga=='CX') THEN ! For vasp using vdW-DF-cx (use cx13)
+     iexch = 1; icorr = 4; igcx = 27; igcc = 0
+  ELSE IF(vasp_parameters%gga=='RE') THEN ! For vasp using revPBE OR vdW-DF1
      iexch = 1; icorr = 4; igcx = 4; igcc = 4
+     IF(vasp_parameters%luse_vdw) igcc = 0
+  ELSE IF(vasp_parameters%gga=='ML'.AND.vasp_parameters%luse_vdw) THEN ! For vasp using vdW-DF2 
+     iexch = 1; icorr = 4; igcc = 0; igcx = 13 
+  ELSE IF(vasp_parameters%gga=='MK'.AND.vasp_parameters%luse_vdw) THEN ! For vasp using vdW-DF2-b86r or vdW-DF-ob86
+     iexch = 1; icorr = 4; igcc = 0 
+     IF((ABS(vasp_parameters%zab_vdw-(-1.8867))<eps4).AND.(ABS(vasp_parameters%param2-(0.711357))<eps4)) igcx = 26
+     IF((ABS(vasp_parameters%zab_vdw-(-0.8491))<eps4).AND.(ABS(vasp_parameters%param2-(1.0000))<eps4)) igcx = 24
   ELSE IF (vasp_parameters%gga/='--') THEN
      CALL errore ("vasp_init_xc", "GGA type not implemented", 1)
   ENDIF
@@ -830,7 +837,7 @@ SUBROUTINE vasp_init_xc(vasp_parameters,vasp_atominfo,iexch,icorr,igcx,igcc,inlc
      IF(ABS(vasp_parameters%zab_vdw-(-0.8491))<eps4) THEN
         inlc_ = 1
         inlc  = 1
-     ELSEIF(ABS(vasp_parameters%zab_vdw-(-1.887))<eps4) THEN
+     ELSEIF(ABS(vasp_parameters%zab_vdw-(-1.8867))<eps4) THEN
         inlc_ = 2
         inlc  = 2
      ELSE

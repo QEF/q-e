@@ -147,14 +147,16 @@
       !
       WRITE(iuwinfil, '("num_wann = ", i3)') nbndsub
       WRITE(iuwinfil, '("iprint = ", i3)') iprint
-      WRITE(iuwinfil, '("dis_win_min = ", f18.12)')  dis_win_min
-      WRITE(iuwinfil, '("dis_win_max = ", f18.12)')  dis_win_max
-      WRITE(iuwinfil, '("dis_froz_min = ", f18.12)') dis_froz_min
-      WRITE(iuwinfil, '("dis_froz_max = ", f18.12)') dis_froz_max
+      !  
+      ! The windows should not be printed in case of no disentanglement.  
+      IF (dis_win_min  > -9000) WRITE(iuwinfil, '("dis_win_min = ", f18.12)')  dis_win_min
+      IF (dis_win_max  <  9000) WRITE(iuwinfil, '("dis_win_max = ", f18.12)')  dis_win_max
+      IF (dis_froz_min > -9000) WRITE(iuwinfil, '("dis_froz_min = ", f18.12)') dis_froz_min
+      IF (dis_froz_max <  9000) WRITE(iuwinfil, '("dis_froz_max = ", f18.12)') dis_froz_max      
       WRITE(iuwinfil, '("num_iter = ", i7)')         num_iter
       IF (vme) WRITE(iuwinfil, '(a)') "write_bvec = .true."
       !
-      ! write any extra parameters to the prefix.win file
+      ! Write any extra parameters to the prefix.win file
       DO i = 1, nwanxx
         IF (wdata(i) /= ' ') WRITE(iuwinfil, *) wdata(i)
       ENDDO

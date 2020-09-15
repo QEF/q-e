@@ -63,8 +63,7 @@ MOD_FLAG      = @imod@
 # while BASEMODS points to the corresponding module libraries
 # Each Makefile can add directories to MODFLAGS and libraries to QEMODS
 
-BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/iotk/src \
-               $(MOD_FLAG)$(TOPDIR)/upflib \
+BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
                $(MOD_FLAG)$(TOPDIR)/Modules \
                $(MOD_FLAG)$(TOPDIR)/FFTXlib \
 	       $(MOD_FLAG)$(TOPDIR)/LAXlib \
@@ -121,7 +120,8 @@ FFLAGS_NOMAIN   = @fflags_nomain@
 
 # Linker, linker-specific flags (if any)
 # Typically LD coincides with F90 or MPIF90, LD_LIBS is empty
-# for libxc, set LD_LIBS=-L/path/to/libxc/lib/ -lxcf90 -lxcf03 -lxc
+# for libxc, set LD_LIBS=-L/path/to/libxc/lib/ -lxcf90 -lxc
+# If libxc is older than v5.0.0 replace -lxcf90 with -lxcf03
 
 LD             = @ld@
 LDFLAGS        = @ldflags@
@@ -189,9 +189,9 @@ RANLIB         = @ranlib@
 
 FLIB_TARGETS   = all
 
-LIBOBJS        = $(TOPDIR)/clib/clib.a  $(TOPDIR)/iotk/src/libiotk.a
+LIBOBJS        = $(TOPDIR)/clib/clib.a
 LIBXC_LIBS     = @LIBS_LIBXC@
-QELIBS         = $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(BEEF_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LIBXC_LIBS) $(LD_LIBS)
+QELIBS         = $(BEEF_LIBS) $(LIBXC_LIBS) $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LD_LIBS)
 
 # wget or curl - useful to download from network
 WGET = @wget@

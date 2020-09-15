@@ -45,7 +45,7 @@ CONTAINS
     SUBROUTINE interp_plrn_bq(nrr_q, ndegen_q, irvec_q)
         USE epwcom,        ONLY : nkf1, nkf2, nkf3, nbndsub
         USE elph2, only : xqf, wf, nqtotf
-        USE phcom,         ONLY : nmodes
+        USE modes,         ONLY : nmodes
         USE constants_epw, only : eps8, czero, one, two, twopi, ci
         USE ions_base,     ONLY : nat, amass, ityp, tau
         USE wan2bloch, only : dynwan2bloch
@@ -74,7 +74,7 @@ CONTAINS
         ! Self consistency calculation of polaron wavefunction.
         ! Rewritten by Chao Lian based on the implementation by Danny Sio.
         !
-        USE phcom,         ONLY : nmodes
+        USE modes,         ONLY : nmodes
         USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero
         USE constants_epw, ONLY : czero, cone, pi, ci, twopi, eps6, eps8, eps5
         USE epwcom,        ONLY : num_cbands, polaron_type, sigma_plrn, full_diagon_plrn

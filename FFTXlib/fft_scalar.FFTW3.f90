@@ -20,7 +20,7 @@
 
 #if defined(_OPENMP) && defined(__FFT_SCALAR_THREAD_SAFE)
 ! thread safety guard
-#error FFTW3 is not compatiable with __FFT_SCALAR_THREAD_SAFE
+#error FFTW3 is not compatible with __FFT_SCALAR_THREAD_SAFE
 #endif
 
 !=----------------------------------------------------------------------=!
@@ -75,18 +75,11 @@
      COMPLEX (DP) :: c(:), cout(:)
 
      REAL (DP)  :: tscale
-     INTEGER    :: i, err, idir, ip, void
+     INTEGER    :: i, err, idir, ip
      INTEGER, SAVE :: zdims( 3, ndims ) = -1
      INTEGER, SAVE :: icurrent = 1
      LOGICAL :: done
-     INTEGER :: tid
-
-#if defined(_OPENMP)
-     INTEGER :: offset, ldz_t
-     INTEGER :: omp_get_max_threads
-     EXTERNAL :: omp_get_max_threads
-#endif
-
+ 
      !   Pointers to the "C" structures containing FFT factors ( PLAN )
 
      TYPE(C_PTR), SAVE :: fw_planz( ndims ) = C_NULL_PTR
@@ -149,6 +142,9 @@
 
      SUBROUTINE init_plan()
 #if defined(_OPENMP)
+       INTEGER :: void
+       INTEGER, EXTERNAL :: omp_get_max_threads
+       !
        CALL dfftw_cleanup_threads()
        void = fftw_init_threads()
        CALL dfftw_plan_with_nthreads(omp_get_max_threads())
@@ -198,20 +194,11 @@
      INTEGER, INTENT(IN) :: isign, ldx, ldy, nx, ny, nzl
      INTEGER, OPTIONAL, INTENT(IN) :: pl2ix(:)
      COMPLEX (DP) :: r( : )
-     INTEGER :: i, k, j, err, idir, ip, kk, void
+     INTEGER :: i, k, j, err, idir, ip, kk
      REAL(DP) :: tscale
      INTEGER, SAVE :: icurrent = 1
      INTEGER, SAVE :: dims( 4, ndims) = -1
      LOGICAL :: dofft( nfftx ), done
-     INTEGER, PARAMETER  :: stdout = 6
-
-#if defined(_OPENMP)
-     INTEGER :: offset
-     INTEGER :: nx_t, ny_t, nzl_t, ldx_t, ldy_t
-     INTEGER  :: itid, mytid, ntids
-     INTEGER  :: omp_get_thread_num, omp_get_num_threads,omp_get_max_threads
-     EXTERNAL :: omp_get_thread_num, omp_get_num_threads, omp_get_max_threads
-#endif
 
      TYPE(C_PTR), SAVE :: fw_plan( 2, ndims ) = C_NULL_PTR
      TYPE(C_PTR), SAVE :: bw_plan( 2, ndims ) = C_NULL_PTR
@@ -307,8 +294,10 @@
      END SUBROUTINE lookup
 
      SUBROUTINE init_plan()
-
 #if defined(_OPENMP)
+       INTEGER :: void
+       INTEGER, EXTERNAL :: omp_get_max_threads
+       !
        CALL dfftw_cleanup_threads()
        void = fftw_init_threads()
        CALL dfftw_plan_with_nthreads(omp_get_max_threads())
@@ -386,7 +375,7 @@
 
      INTEGER, INTENT(IN) :: nx, ny, nz, ldx, ldy, ldz, howmany, isign
      COMPLEX (DP) :: f(:)
-     INTEGER :: i, k, j, err, idir, ip
+     INTEGER :: i, k, j, err, idir, ip, void
      REAL(DP) :: tscale
      INTEGER, SAVE :: icurrent = 1
      INTEGER, SAVE :: dims(3,ndims) = -1
@@ -451,6 +440,14 @@
      END SUBROUTINE lookup
 
      SUBROUTINE init_plan()
+#if defined(_OPENMP)
+       INTEGER :: void
+       INTEGER, EXTERNAL :: omp_get_max_threads
+       !
+       CALL dfftw_cleanup_threads()
+       void = fftw_init_threads()
+       CALL dfftw_plan_with_nthreads(omp_get_max_threads())
+#endif
        IF ( nx /= ldx .or. ny /= ldy .or. nz /= ldz ) &
             call fftx_error__('cfft3','not implemented',3)
        IF( C_ASSOCIATED(fw_plan(icurrent)) ) CALL dfftw_destroy_plan( fw_plan(icurrent) )
@@ -495,7 +492,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
   !----------------------------------------------------------------------
   !
   implicit none
-     INTEGER, PARAMETER  :: stdout = 6
 
   integer :: nx, ny, nz, ldx, ldy, ldz, howmany, isign
   !
@@ -628,6 +624,14 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
      END SUBROUTINE lookup
 
      SUBROUTINE init_plan()
+#if defined(_OPENMP)
+       INTEGER :: void
+       INTEGER, EXTERNAL :: omp_get_max_threads
+       !
+       CALL dfftw_cleanup_threads()
+       void = fftw_init_threads()
+       CALL dfftw_plan_with_nthreads(omp_get_max_threads())
+#endif
        IF( C_ASSOCIATED(fw_plan( 1, icurrent)) ) &
             CALL dfftw_destroy_plan( fw_plan( 1, icurrent) )
        IF( C_ASSOCIATED(bw_plan( 1, icurrent)) ) &

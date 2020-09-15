@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: dynmat.x / PWscf / Quantum Espresso (version: 6.4)
+Program: dynmat.x / PWscf / Quantum Espresso (version: 6.6)
 ------------------------------------------------------------------------
 
 
@@ -192,4 +192,4 @@ NAMELIST: &INPUT
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Thu Nov 28 10:41:57 CET 2019
+This file has been created by helpdoc utility on Fri Jul 17 10:28:27 CEST 2020

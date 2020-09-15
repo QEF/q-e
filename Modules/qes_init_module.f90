@@ -2879,7 +2879,7 @@ MODULE qes_init_module
     LOGICAL,INTENT(IN) :: spinorbit
     REAL(DP),INTENT(IN) :: total
     REAL(DP),INTENT(IN) :: absolute
-    LOGICAL,INTENT(IN) :: do_magnetization
+    LOGICAL,OPTIONAL,INTENT(IN) :: do_magnetization
     !
     obj%tagname = TRIM(tagname) 
     obj%lwrite = .TRUE.
@@ -2890,7 +2890,12 @@ MODULE qes_init_module
     obj%spinorbit = spinorbit
     obj%total = total
     obj%absolute = absolute
-    obj%do_magnetization = do_magnetization
+    IF ( PRESENT(do_magnetization)) THEN 
+      obj%do_magnetization_ispresent = .TRUE. 
+      obj%do_magnetization = do_magnetization
+    ELSE 
+      obj%do_magnetization_ispresent = .FALSE.
+    END IF
     !
   END SUBROUTINE qes_init_magnetization 
   !

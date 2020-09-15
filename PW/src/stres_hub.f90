@@ -1114,7 +1114,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
          ! Calculate doverlap_us = < phi_I | dS/d\epsilon(ipol,jpol) | phi_J >
          ALLOCATE (doverlap_us(natomwfc,natomwfc))
          CALL matrix_element_of_dSdepsilon (ik, ipol, jpol, &
-                        natomwfc, wfcatom, natomwfc, wfcatom, doverlap_us)
+              natomwfc, wfcatom, natomwfc, wfcatom, doverlap_us, 1, natomwfc, 0)
          ! Sum up the "normal" and ultrasoft terms
          DO m1 = 1, natomwfc
             DO m2 = 1, natomwfc
@@ -1131,21 +1131,21 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
                                      doverlap, doverlap_inv)
       !
       ! Now compute \sum_J dO^{-1/2}_JI/d\epsilon(ipol,jpol) \phi_J
-      ! and add it to another term (see above)
+      ! and add it to another term (see above).
+      ! Note, doverlap_inv is d(O^{-1/2}) not transposed. The transposition 
+      ! of d(O^{-1/2}) is taken into account via a proper usage of the order
+      ! of indices in doverlap_inv: 
+      ! dwfc(ig,offpmU+m1) = dwfc(ig,offpmU+m1) + wfcatom(ig,m2) * doverlap_inv(m2,offpm+m1)
+      ! where m1=1,ldim_u(nt); m2=1,natomwfc; ig=1,npw
       !
       DO na = 1, nat
          nt = ityp(na)
          IF (is_hubbard(nt) .OR. is_hubbard_back(nt)) THEN
             offpmU = offsetU(na)
             offpm  = oatwfc(na)
-            DO m1 = 1, ldim_u(nt)
-               DO m2 = 1, natomwfc
-                  DO ig = 1, npw
-                     dwfc(ig,offpmU+m1) = dwfc(ig,offpmU+m1) + &
-                                   doverlap_inv(offpm+m1,m2) * wfcatom(ig,m2)
-                  ENDDO
-               ENDDO
-            ENDDO
+            CALL ZGEMM('N','N', npw, ldim_u(nt), natomwfc, (1.d0,0.d0), &
+                  wfcatom, npwx, doverlap_inv(:,offpm+1:offpm+ldim_u(nt)), &
+                  natomwfc, (1.d0,0.d0), dwfc(:,offpmU+1:offpmU+ldim_u(nt)), npwx)
          ENDIF
       ENDDO
       !
@@ -1163,14 +1163,12 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    ! <\phi^{at}_{I,m1}|dS/d\epsilon(ipol,jpol)|\psi_{k,v,s}>
    !
    IF (okvan) THEN
-      ALLOCATE(dproj_us(nwfcU,nbnd))
+      ALLOCATE(dproj_us(nwfcU,nb_s:nb_e))
       CALL matrix_element_of_dSdepsilon (ik, ipol, jpol, &
-                         nwfcU, wfcU, nbnd, evc, dproj_us)
+                         nwfcU, wfcU, nbnd, evc, dproj_us, nb_s, nb_e, mykey)
       ! dproj + dproj_us
       DO m1 = 1, nwfcU
-         DO ibnd = 1, nbnd
-            dproj(m1,ibnd) = dproj(m1,ibnd) + dproj_us(m1,ibnd)
-         ENDDO
+         dproj(m1,nb_s:nb_e) = dproj(m1,nb_s:nb_e) + dproj_us(m1,:)
       ENDDO
       DEALLOCATE(dproj_us)
    ENDIF
@@ -1181,7 +1179,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    !
 END SUBROUTINE dprojdepsilon_k
 !
-SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B)
+SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, lB_s, lB_e, mykey)
    !
    ! This routine computes the matrix element < A | dS/d\epsilon(ipol,jpol) | B >
    ! Written by I. Timrov (2020)
@@ -1206,10 +1204,13 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B)
    !
    INTEGER, INTENT(IN)      :: ik          ! k point
    INTEGER, INTENT(IN)      :: ipol, jpol  ! Cartesian components
-   INTEGER, INTENT(IN)      :: lA, lB
+   INTEGER, INTENT(IN)      :: lA, lB, lB_s, lB_e
+   ! There is a possibility to parallelize over lB,
+   ! where lB_s (start) and lB_e (end)
    COMPLEX(DP), INTENT(IN)  :: A(npwx,lA)
    COMPLEX(DP), INTENT(IN)  :: B(npwx,lB)
-   COMPLEX(DP), INTENT(OUT) :: A_dS_B(lA,lB)
+   COMPLEX(DP), INTENT(OUT) :: A_dS_B(lA,lB_s:lB_e)
+   INTEGER,     INTENT(IN)  :: mykey
    !
    ! Local variables
    !
@@ -1303,27 +1304,34 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B)
             ALLOCATE ( aux(nh(nt), lB) )
             ! 
             ! Calculate \sum_jh qq(ih,jh) * dbetaB(jh)
-            CALL ZGEMM('N', 'N', nh(nt), lB, nh(nt), (1.0d0,0.0d0), &
-                       qq, nh(nt), dbetaB, nh(nt),(0.0d0,0.0d0), aux, nh(nt))
+            CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                       qq, nh(nt), dbetaB(1,lB_s),    nh(nt), (0.0d0,0.0d0), &
+                       aux(1,lB_s), nh(nt))
             dbetaB(:,:) = aux(:,:)
             !
             ! Calculate \sum_jh qq(ih,jh) * betaB(jh)
-            CALL ZGEMM('N', 'N', nh(nt), lB, nh(nt), (1.0d0,0.0d0), &
-                       qq, nh(nt), betaB, nh(nt),(0.0d0,0.0d0), aux, nh(nt))
+            CALL ZGEMM('N', 'N', nh(nt), lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                       qq, nh(nt), betaB(1,lB_s),     nh(nt), (0.0d0,0.0d0), &
+                       aux(1,lB_s), nh(nt))
             betaB(:,:) = aux(:,:)
             !
             DEALLOCATE ( aux )
             !
             ijkb0 = ijkb0 + nh(nt)
             !
-            ! dproj(iA,iB) = \sum_ih [Adbeta(iA,ih) * betapsi(ih,iB) +
-            !                         Abeta(iA,ih)  * dbetaB(ih,iB)] 
+            ! A_dS_B(iA,iB) = \sum_ih [Adbeta(iA,ih) * betapsi(ih,iB) +
+            !                          Abeta(iA,ih)  * dbetaB(ih,iB)] 
+            ! Only A_dS_B(:,lB_s:lB_e) are calculated
             !
-            CALL ZGEMM('N', 'N', lA, lB, nh(nt), (1.0d0,0.0d0), &
-                       Adbeta, lA, betaB, nh(nt),(1.0d0,0.0d0), A_dS_B, lA)
-            CALL ZGEMM('N', 'N', lA, lB, nh(nt), (1.0d0,0.0d0), &
-                       Abeta, lA, dbetaB, nh(nt), (1.0d0,0.0d0), A_dS_B, lA)
-            !
+            IF ( mykey == 0 ) THEN
+              CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                         Adbeta, lA, betaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
+                         A_dS_B(1,lB_s), lA)
+              CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                         Abeta, lA, dbetaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
+                         A_dS_B(1,lB_s), lA)
+              !
+            ENDIF
          ENDIF
          !
       ENDDO

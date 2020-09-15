@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------
-subroutine ld1_readin(input_file)
+subroutine ld1_readin( )
   !---------------------------------------------------------------
   !
   !     This routine reads the input parameters of the calculation
@@ -51,7 +51,6 @@ subroutine ld1_readin(input_file)
   use atomic_paw, only : paw2us
   implicit none
 
-  character(len=*), intent(in) :: input_file
   integer ::  &
        n,     &          ! counters on wavefunctions
        nc,    &          ! counter on configuration
@@ -223,8 +222,7 @@ subroutine ld1_readin(input_file)
   ! check if reading from file, dump stdin to file otherwise
   ! (when generating a pseudopotential, input data file is needed)
 
-  ios = 0
-  if (ionode) ios = open_input_file(input_file)
+  if (ionode) ios = open_input_file( )
   call mp_bcast(ios, ionode_id, world_comm)
   If ( ios > 0 ) call errore('ld1_readin','opening input file ',abs(ios))
 

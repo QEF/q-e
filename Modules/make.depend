@@ -61,7 +61,6 @@ deviatoric.o : kind.o
 dgcxc_drivers.o : constants.o
 dgcxc_drivers.o : funct.o
 dgcxc_drivers.o : kind.o
-dgcxc_drivers.o : libxc.o
 dgcxc_drivers.o : xc_gga_drivers.o
 dist.o : cell_base.o
 dist.o : constants.o
@@ -73,7 +72,6 @@ dmxc_drivers.o : correlation_lda_lsda.o
 dmxc_drivers.o : exchange_lda_lsda.o
 dmxc_drivers.o : funct.o
 dmxc_drivers.o : kind.o
-dmxc_drivers.o : libxc.o
 dmxc_drivers.o : xc_lda_lsda_drivers.o
 dylmr2.o : kind.o
 electrons_base.o : constants.o
@@ -118,7 +116,6 @@ fox_init_module.o : mp_images.o
 funct.o : beef_interface.o
 funct.o : io_global.o
 funct.o : kind.o
-funct.o : libxc.o
 funct.o : xc_rVV10.o
 funct.o : xc_vdW_DF.o
 generate_function.o : ../FFTXlib/fft_types.o
@@ -144,6 +141,7 @@ hdf5_qe.o : ../UtilXlib/parallel_include.o
 hdf5_qe.o : io_files.o
 hdf5_qe.o : kind.o
 hdf5_qe.o : mp_world.o
+inpfile.o : open_close_input_file.o
 input_parameters.o : kind.o
 input_parameters.o : parameters.o
 input_parameters.o : wannier_new.o
@@ -278,7 +276,6 @@ qexsd_init.o : mp_images.o
 qexsd_init.o : mp_pools.o
 qexsd_init.o : mp_world.o
 qexsd_init.o : noncol.o
-qexsd_init.o : parameters.o
 qexsd_init.o : qes_init_module.o
 qexsd_init.o : qes_libs_module.o
 qexsd_init.o : qes_reset_module.o
@@ -408,15 +405,12 @@ xc_gga_drivers.o : correlation_gga.o
 xc_gga_drivers.o : exchange_gga.o
 xc_gga_drivers.o : funct.o
 xc_gga_drivers.o : kind.o
-xc_gga_drivers.o : libxc.o
 xc_lda_lsda_drivers.o : correlation_lda_lsda.o
 xc_lda_lsda_drivers.o : exchange_lda_lsda.o
 xc_lda_lsda_drivers.o : funct.o
 xc_lda_lsda_drivers.o : kind.o
-xc_lda_lsda_drivers.o : libxc.o
 xc_mgga_drivers.o : funct.o
 xc_mgga_drivers.o : kind.o
-xc_mgga_drivers.o : libxc.o
 xc_mgga_drivers.o : metagga.o
 xc_rVV10.o : ../FFTXlib/fft_interfaces.o
 xc_rVV10.o : ../UtilXlib/mp.o
@@ -445,4 +439,4 @@ xsf.o : kind.o
 ylmr2.o : constants.o
 ylmr2.o : kind.o
 environment.o : ../include/configure.h
-version.o : ../include/version.h
+version.o : ../include/qe_version.h
