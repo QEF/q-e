@@ -20,7 +20,6 @@ MODFLAGS= $(BASEMOD_FLAGS) \
 ##### io_scattering.o \
 
 EPWOBJS = \
-kinds_epw.o \
 epwcom.o \
 constants_epw.o \
 elph2.o \
@@ -83,7 +82,7 @@ LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a 
 QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
          ../../upflib/libupf.a ../../FFTXlib/libqefft.a ../../dft-d3/libdftd3qe.a
-LIBOBJS =../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../clib/clib.a ../../iotk/src/libiotk.a 
+LIBOBJS =../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../clib/clib.a
 
 TLDEPS= pw ph
 

@@ -11,8 +11,7 @@ SUBROUTINE phq_readin()
   !----------------------------------------------------------------------------
   !
   !    This routine reads the control variables for the program phononq.
-  !    from standard input (unit 5).
-  !    A second routine readfile reads the variables saved on a file
+  !    A second routine, read_file, reads the variables saved to file
   !    by the self-consistent program.
   !
   !
@@ -52,7 +51,8 @@ SUBROUTINE phq_readin()
                             check_tempdir, xmlpun_schema
   USE noncollin_module, ONLY : i_cons, noncolin
   USE control_flags, ONLY : iverbosity, modenum
-  USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode, ionode_id, stdout
+  USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode, ionode_id, &
+                            qestdin, stdout
   USE mp_images,     ONLY : nimage, my_image_id, intra_image_comm,   &
                             me_image, nproc_image
   USE mp_pools,      ONLY : npool
@@ -78,6 +78,8 @@ SUBROUTINE phq_readin()
       do_charge_neutral, wpot_dir
   USE ahc,           ONLY : elph_ahc, ahc_dir, ahc_nbnd, ahc_nbndskip, &
       skip_upperfan
+  USE read_namelists_module, ONLY : check_namelist_read
+  USE open_close_input_file, ONLY : open_input_file, close_input_file
   !
   IMPLICIT NONE
   !
@@ -215,18 +217,18 @@ SUBROUTINE phq_readin()
   !
   IF (meta_ionode) THEN
   !
-  ! ... Input from file ?
+  ! ... Input from file (ios=0) or standard input (ios=-1) on unit "qestdin"
   !
-     CALL input_from_file ( )
+     ios = open_input_file (  )
   !
   ! ... Read the first line of the input file
   !
-     READ( 5, '(A)', IOSTAT = ios ) title
+     IF ( ios <= 0 ) READ( qestdin, '(A)', IOSTAT = ios ) title
   !
   ENDIF
   !
   CALL mp_bcast(ios, meta_ionode_id, world_comm )
-  CALL errore( 'phq_readin', 'reading title ', ABS( ios ) )
+  CALL errore( 'phq_readin', 'reading input file ', ABS( ios ) )
   CALL mp_bcast(title, meta_ionode_id, world_comm  )
   !
   ! Rewind the input if the title is actually the beginning of inputph namelist
@@ -234,7 +236,7 @@ SUBROUTINE phq_readin()
   IF( imatches("&inputph", title) ) THEN
     WRITE(stdout,'(6x,a)') "Title line not specified: using 'default'."
     title='default'
-    IF (meta_ionode) REWIND(5, iostat=ios)
+    IF (meta_ionode) REWIND(qestdin, iostat=ios)
     CALL mp_bcast(ios, meta_ionode_id, world_comm  )
     CALL errore('phq_readin', 'Title line missing from input.', abs(ios))
   ENDIF
@@ -340,7 +342,7 @@ SUBROUTINE phq_readin()
   ! ...  reading the namelist inputph
   !
   IF (meta_ionode) THEN
-     READ( 5, INPUTPH, ERR=30, IOSTAT = ios )
+     READ( qestdin, INPUTPH, IOSTAT = ios )
      !
      ! ...  iverbosity/verbosity hack
      !
@@ -357,6 +359,7 @@ SUBROUTINE phq_readin()
         ios = 1234567
      END IF
   END IF
+  CALL check_namelist_read(ios, qestdin, "inputph")
 30 CONTINUE
   CALL mp_bcast(ios, meta_ionode_id, world_comm )
   IF ( ios == 1234567 ) THEN
@@ -527,9 +530,9 @@ SUBROUTINE phq_readin()
   IF (meta_ionode) THEN
      ios = 0
      IF (qplot) THEN
-        READ (5, *, iostat = ios) nqaux
+        READ (qestdin, *, iostat = ios) nqaux
      ELSE
-        IF (.NOT. ldisp) READ (5, *, iostat = ios) (xq (ipol), ipol = 1, 3)
+        IF (.NOT. ldisp) READ (qestdin, *, iostat = ios) (xq (ipol), ipol=1,3)
      ENDIF
   END IF
   CALL mp_bcast(ios, meta_ionode_id, world_comm )
@@ -540,7 +543,7 @@ SUBROUTINE phq_readin()
      ALLOCATE(wqaux(nqaux))
      IF (meta_ionode) THEN
         DO iq=1, nqaux
-           READ (5, *, iostat = ios) (xqaux (ipol,iq), ipol = 1, 3), wqaux(iq)
+           READ (qestdin, *, iostat = ios) (xqaux (ipol,iq), ipol=1,3), wqaux(iq)
         ENDDO
      ENDIF
      CALL mp_bcast(ios, meta_ionode_id, world_comm )
@@ -595,9 +598,9 @@ SUBROUTINE phq_readin()
   IF (elph_ahc) THEN
     !
     IF (ahc_nbnd <= 0) CALL errore('phq_readin', &
-      'ahc_nbnd must be specified as a positive integer')
+      'ahc_nbnd must be specified as a positive integer', 1)
     IF (ahc_nbndskip < 0) CALL errore('phq_readin', &
-      'ahc_nbndskip cannot be negative')
+      'ahc_nbndskip cannot be negative', 1)
     !
     IF (ahc_dir == ' ') ahc_dir = TRIM(tmp_dir) // "ahc_dir/"
     ahc_dir = trimcheck(ahc_dir)
@@ -614,11 +617,11 @@ SUBROUTINE phq_readin()
                                     'fpol=.TRUE. needs epsil=.TRUE.', 1 )
      nfs=0
      IF (meta_ionode) THEN
-        READ (5, *, iostat = ios) card
+        READ (qestdin, *, iostat = ios) card
         IF ( TRIM(card)=='FREQUENCIES'.OR. &
              TRIM(card)=='frequencies'.OR. &
              TRIM(card)=='Frequencies') THEN
-           READ (5, *, iostat = ios) nfs
+           READ (qestdin, *, iostat = ios) nfs
         ENDIF
      ENDIF
      CALL mp_bcast(ios, meta_ionode_id, world_comm  )
@@ -631,7 +634,7 @@ SUBROUTINE phq_readin()
              TRIM(card) == 'frequencies' .OR. &
              TRIM(card) == 'Frequencies' ) THEN
            DO i = 1, nfs
-              READ (5, *, iostat = ios) fiu(i)
+              READ (qestdin, *, iostat = ios) fiu(i)
            END DO
         END IF
      END IF
@@ -805,10 +808,6 @@ SUBROUTINE phq_readin()
      WRITE(stdout,'(5x,a)')  "please cite A. Urru and A. Dal Corso, Phys. Rev. B 100," 
      WRITE(stdout,'(5x,a)')  "045115 (2019) for the theoretical background."
 
-     IF (epsil) CALL errore('phq_readin',&
-          'The calculation of Born effective charges in the non collinear &
-           magnetic case does not work yet and is temporarily disabled',1)
-
      IF (okpaw) CALL errore('phq_readin',&
           'The phonon code with paw and domag is not available yet',1)
   ENDIF
@@ -921,12 +920,16 @@ SUBROUTINE phq_readin()
   IF ( nat_todo < 0 .OR. nat_todo > nat ) &
      CALL errore ('phq_readin', 'nat_todo is wrong', 1)
   IF (nat_todo.NE.0) THEN
-     IF (meta_ionode) READ (5, *, iostat = ios) (atomo (na), na = 1, nat_todo)
+     IF (meta_ionode) READ (qestdin, *, iostat = ios) (atomo (na), na=1,nat_todo)
      CALL mp_bcast(ios, meta_ionode_id, world_comm  )
      CALL errore ('phq_readin', 'reading atoms', ABS (ios) )
      CALL mp_bcast(atomo, meta_ionode_id, world_comm  )
   ENDIF
   nat_todo_input=nat_todo
+  !
+  ! end of reading, close unit qestdin, remove tenporary input file if existing
+  !
+  IF (meta_ionode) ios = close_input_file () 
 
   IF (epsil.AND.(lgauss .OR. ltetra)) &
         CALL errore ('phq_readin', 'no elec. field with metals', 1)

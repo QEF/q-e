@@ -28,7 +28,11 @@ subroutine import_upf ( )
   !
   use pseudo_types, only : pseudo_upf, pseudo_config, deallocate_pseudo_upf
   use paw_type
+#if defined (__use_fox)
   use upf_module, only : read_upf_new
+#else
+  use read_upf_new_module, only : read_upf_new
+#endif
   !
   implicit none
   !

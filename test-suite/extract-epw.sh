@@ -19,7 +19,6 @@ args=$(echo $fname | awk -F= '{print $NF}')
 ##  then
 # SCF
 e1=`grep ! $fname | tail -1 | awk '{printf "%12.6f\n", $5}'`
-n1=`grep 'convergence has' $fname | tail -1 | awk '{print $6}'`
 f1=`grep "Total force" $fname | head -1 | awk '{printf "%8.4f\n", $4}'`
 p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
 ### fi
@@ -60,8 +59,6 @@ lam_tr=`grep " lambda_tr :" $fname | awk '{print $3}'`
 logavg=`grep " logavg =" $fname | awk '{print $3}'`
 l_a2f=`grep "l_a2f =" $fname | awk '{print $6}'`
 efm=`grep "at Ef=" $fname | awk '{print $8}'`
-lam_max=`grep "lambda_max =" $fname | awk '{print $3}'`
-lam_kmax=`grep "lambda_k_max =" $fname | awk '{print $6}'`
 elph=`grep "Electron-phonon coupling strength =" $fname | awk '{print $5}'`
 allDyn=`grep "Estimated Allen-Dynes Tc =" $fname | awk '{print $5}'`
 bcsgap=`grep "Estimated BCS superconducting gap =" $fname | awk '{print $6}'`
@@ -80,17 +77,6 @@ if test "$efm" != ""; then
         echo efm
         for x in $efm; do echo $x; done
 fi
-
-if test "$lam_max" != ""; then
-        echo lam_max
-        echo $lam_max
-fi
-
-if test "$lam_kmax" != ""; then
-        echo lam_kmax
-        echo $lam_kmax
-fi
-
 
 if test "$elph" != ""; then
         echo elph
@@ -241,11 +227,6 @@ fi
 if test "$e1" != ""; then
 	echo e1
 	echo $e1
-fi
-
-if test "$n1" != ""; then
-	echo n1
-	echo $n1
 fi
 
 if test "$f1" != ""; then

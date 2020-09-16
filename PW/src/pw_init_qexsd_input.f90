@@ -124,6 +124,8 @@
   CHARACTER(LEN=3),ALLOCATABLE             :: species_(:)
   INTEGER, POINTER                         :: nr_1,nr_2, nr_3, nrs_1, nrs_2, nrs_3, nrb_1, nrb_2, nrb_3 
   INTEGER,ALLOCATABLE                      :: nr_(:), nrs_(:), nrb_(:) 
+  CHARACTER,EXTERNAL                       :: capital
+  INTEGER                                  :: i 
   !
   ! 
   NULLIFY (gate_ptr, block_ptr, relaxz_ptr, block_1_ptr, block_2_ptr, block_height_ptr, zgate_ptr, dftU_, vdW_, hybrid_)
@@ -177,7 +179,10 @@
   !                                                   DFT ELEMENT
   !---------------------------------------------------------------------------------------------------------------------------
   IF ( TRIM(input_dft) .NE. "none" ) THEN 
-     dft_name=TRIM(input_dft) 
+     dft_name=TRIM(input_dft)
+     DO i=1, LEN(dft_name) 
+        dft_name(i:i) = capital(dft_name(i:i)) 
+     END DO  
   ELSE 
      dft_shortname = get_dft_short()        
      dft_name=TRIM(dft_shortname)

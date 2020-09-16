@@ -89,12 +89,6 @@ bands.o : ../../Modules/wavefunctions.o
 bands.o : ../../PW/src/pwcom.o
 bands.o : ../../UtilXlib/mp.o
 bands.o : ../../upflib/uspp.o
-benchmark_libxc.o : ../../Modules/correlation_lda_lsda.o
-benchmark_libxc.o : ../../Modules/funct.o
-benchmark_libxc.o : ../../Modules/libxc.o
-benchmark_libxc.o : ../../Modules/xc_gga_drivers.o
-benchmark_libxc.o : ../../Modules/xc_lda_lsda_drivers.o
-benchmark_libxc.o : ../../Modules/xc_mgga_drivers.o
 chdens_bspline.o : ../../Modules/bspline.o
 chdens_bspline.o : ../../Modules/cell_base.o
 chdens_bspline.o : ../../Modules/fft_base.o
@@ -667,6 +661,7 @@ pw2wannier90.o : ../../PW/src/symm_base.o
 pw2wannier90.o : ../../UtilXlib/mp.o
 pw2wannier90.o : ../../upflib/uspp.o
 read_proj.o : ../../Modules/kind.o
+read_proj.o : ../../upflib/xmltools.o
 smallgk.o : ../../Modules/kind.o
 stm.o : ../../FFTXlib/fft_interfaces.o
 stm.o : ../../FFTXlib/scatter_mod.o
@@ -897,6 +892,7 @@ write_proj.o : ../../Modules/recvec.o
 write_proj.o : ../../Modules/run_info.o
 write_proj.o : ../../PW/src/atomic_wfc_mod.o
 write_proj.o : ../../PW/src/pwcom.o
+write_proj.o : ../../upflib/xmltools.o
 write_proj.o : projections_mod.o
 xc_vdW_scale_mod.o : ../../FFTXlib/fft_interfaces.o
 xc_vdW_scale_mod.o : ../../Modules/cell_base.o
@@ -915,3 +911,9 @@ xctest.o : ../../Modules/funct.o
 xctest.o : ../../Modules/io_global.o
 xctest.o : ../../Modules/kind.o
 xctest.o : ../../Modules/mp_global.o
+xctest_qe_libxc.o : ../../Modules/correlation_lda_lsda.o
+xctest_qe_libxc.o : ../../Modules/funct.o
+xctest_qe_libxc.o : ../../Modules/kind.o
+xctest_qe_libxc.o : ../../Modules/xc_gga_drivers.o
+xctest_qe_libxc.o : ../../Modules/xc_lda_lsda_drivers.o
+xctest_qe_libxc.o : ../../Modules/xc_mgga_drivers.o

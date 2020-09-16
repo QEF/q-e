@@ -227,6 +227,7 @@ check_initial_status.o : ../../Modules/io_global.o
 check_initial_status.o : ../../Modules/ions_base.o
 check_initial_status.o : ../../Modules/mp_global.o
 check_initial_status.o : ../../Modules/mp_images.o
+check_initial_status.o : ../../Modules/noncol.o
 check_initial_status.o : ../../Modules/wrappers.o
 check_initial_status.o : ../../PW/src/io_rho_xml.o
 check_initial_status.o : ../../PW/src/pwcom.o
@@ -616,6 +617,7 @@ dvanqq.o : ../../PW/src/scf_mod.o
 dvanqq.o : ../../UtilXlib/mp.o
 dvanqq.o : ../../upflib/uspp.o
 dvanqq.o : phcom.o
+dvkb3.o : ../../LR_Modules/lrcom.o
 dvkb3.o : ../../Modules/cell_base.o
 dvkb3.o : ../../Modules/ions_base.o
 dvkb3.o : ../../Modules/kind.o
@@ -1087,7 +1089,7 @@ io_dyn_mat.o : ../../Modules/io_global.o
 io_dyn_mat.o : ../../Modules/kind.o
 io_dyn_mat.o : ../../Modules/mp_images.o
 io_dyn_mat.o : ../../UtilXlib/mp.o
-io_dyn_mat.o : ../../iotk/src/iotk_module.o
+io_dyn_mat.o : ../../upflib/xmltools.o
 io_dyn_mat_old.o : ../../Modules/cell_base.o
 io_dyn_mat_old.o : ../../Modules/constants.o
 io_dyn_mat_old.o : ../../Modules/io_global.o
@@ -1186,12 +1188,11 @@ ph_restart.o : ../../Modules/ions_base.o
 ph_restart.o : ../../Modules/kind.o
 ph_restart.o : ../../Modules/mp_images.o
 ph_restart.o : ../../Modules/mp_pools.o
-ph_restart.o : ../../Modules/parser.o
 ph_restart.o : ../../Modules/version.o
 ph_restart.o : ../../PW/src/pwcom.o
 ph_restart.o : ../../PW/src/start_k.o
 ph_restart.o : ../../UtilXlib/mp.o
-ph_restart.o : ../../iotk/src/iotk_module.o
+ph_restart.o : ../../upflib/xmltools.o
 ph_restart.o : elph.o
 ph_restart.o : phcom.o
 ph_restart.o : ramanm.o
@@ -1260,7 +1261,9 @@ phq_readin.o : ../../Modules/mp_images.o
 phq_readin.o : ../../Modules/mp_pools.o
 phq_readin.o : ../../Modules/mp_world.o
 phq_readin.o : ../../Modules/noncol.o
+phq_readin.o : ../../Modules/open_close_input_file.o
 phq_readin.o : ../../Modules/paw_variables.o
+phq_readin.o : ../../Modules/read_namelists.o
 phq_readin.o : ../../Modules/run_info.o
 phq_readin.o : ../../PW/src/ldaU.o
 phq_readin.o : ../../PW/src/pwcom.o
@@ -1374,6 +1377,7 @@ prepare_q.o : ../../LR_Modules/lrcom.o
 prepare_q.o : ../../Modules/control_flags.o
 prepare_q.o : ../../Modules/io_files.o
 prepare_q.o : ../../Modules/io_global.o
+prepare_q.o : ../../Modules/noncol.o
 prepare_q.o : ../../PW/src/pwcom.o
 prepare_q.o : ahc.o
 prepare_q.o : elph.o

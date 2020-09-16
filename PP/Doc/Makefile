@@ -1,4 +1,4 @@
-VERSION = git
+VERSION = 6.6
 HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
 LATEX   = pdflatex
 LATEX2HTML = latex2html
@@ -7,7 +7,6 @@ HTMLS = INPUT_PP.html \
 	INPUT_PROJWFC.html \
 	INPUT_DOS.html \
 	INPUT_BANDS.html \
-	INPUT_pw_export.html \
         INPUT_pw2bgw.html \
         INPUT_bgw2pw.html \
 	INPUT_molecularpdos.html \
@@ -62,9 +61,6 @@ link_on_main_doc:
 	ln -fs ../PP/Doc/INPUT_BANDS.html . ; \
 	ln -fs ../PP/Doc/INPUT_BANDS.xml . ; \
 	ln -fs ../PP/Doc/INPUT_BANDS.txt . ; \
-	ln -fs ../PP/Doc/INPUT_pw_export.html . ; \
-	ln -fs ../PP/Doc/INPUT_pw_export.xml . ; \
-	ln -fs ../PP/Doc/INPUT_pw_export.txt . ; \
 	ln -fs ../PP/Doc/INPUT_pw2gw.html . ;  \
 	ln -fs ../PP/Doc/INPUT_pw2bgw.html . ; \
 	ln -fs ../PP/Doc/INPUT_pw2bgw.xml . ; \

@@ -42,7 +42,6 @@ CONTAINS
     !
     iun = xml_openfile ( filename )
     IF ( iun == -1 ) CALL upf_error('read_upf', 'cannot open file',1)
-    print *, ' READ_UPF_NEW'
     call xmlr_opentag ( 'qe_pp:pseudo', IERR = ierr )
     if ( ierr == 0 ) then
        v2 =.false.
@@ -56,6 +55,7 @@ CONTAINS
        end if
     end if
     if ( ierr /= 0 .and. ierr /= -2 ) then
+       call xml_closefile( )
        ierr = -81
        return
     end if
@@ -399,24 +399,31 @@ CONTAINS
        !
        ! read polinomial coefficients for Q_ij expansion at small radius
        !
+       IF ( upf%nqlc == 0 ) upf%nqlc = 2*upf%lmax+1
+       ALLOCATE( upf%rinner( upf%nqlc ) )
        IF ( v2 .AND. upf%nqf > 0) THEN
           ALLOCATE ( upf%qfcoef(upf%nqf, upf%nqlc, upf%nbeta, upf%nbeta) )
           CALL xmlr_opentag('PP_QFCOEF')
           READ(iun,*) upf%qfcoef
           CALL xmlr_closetag ()
-          ALLOCATE( upf%rinner( upf%nqlc ) )
           CALL xmlr_readtag('PP_RINNER',upf%rinner)
        ELSE IF ( upf%nqf == 0 ) THEN
-          ALLOCATE( upf%rinner(1), upf%qfcoef(1,1,1,1) )
-          upf%rinner = 0.0_dp; upf%qfcoef =0.0_dp
+          ALLOCATE( upf%qfcoef(1,1,1,1) )
+          upf%qfcoef =0.0_dp
        ENDIF
        !
        ! Read augmentation charge Q_ij
        !
        IF( upf%q_with_l ) THEN
           ALLOCATE( upf%qfuncl(upf%mesh,upf%nbeta*(upf%nbeta+1)/2,0:2*upf%lmax) )
+          upf%qfuncl(:,:,:) = 0.0_dp
+          ! NOTE: it would be wiser to dimension qfuncl as (:,:,0:upf%lmax)
+          ! and store the q_l(r) with index l=L/2 (see loop_on_l below)
+          ! This would save some storage and avoid "holes" in the array
+          ! that may be a source of trouble if not initialized to zero 
        ELSE
           ALLOCATE ( upf%qfunc(upf%mesh,upf%nbeta*(upf%nbeta+1)/2) )
+          upf%qfunc (:,:) = 0.0_dp
        END IF
        ALLOCATE ( aux(upf%mesh) )
        loop_on_nb: DO nb = 1,upf%nbeta

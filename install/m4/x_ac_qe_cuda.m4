@@ -49,9 +49,9 @@ AC_ARG_WITH([cuda-cc],
    [with_cuda_cc=35])
    
 AC_ARG_WITH([cuda-runtime],
-   [AS_HELP_STRING([--with-cuda-runtime=VAL],[CUDA runtime (Pascal: 8.0, Volta: 9.0) @<:@default=8.0@:>@])],
+   [AS_HELP_STRING([--with-cuda-runtime=VAL],[CUDA runtime (Pascal: 8+, Volta: 9+) @<:@default=10.1@:>@])],
    [],
-   [with_cuda_runtime=8.0])
+   [with_cuda_runtime=10.1])
 
 
 
@@ -150,6 +150,9 @@ EOF
    AC_CHECK_LIB([cudart], [cudaMalloc], [], AC_MSG_FAILURE([Couldn't find libcudart]))
    AC_CHECK_LIB([cublas], [cublasInit], [], AC_MSG_FAILURE([Couldn't find libcublas]))
    AC_CHECK_LIB([cufft], [cufftPlanMany], [], AC_MSG_FAILURE([Couldn't find libcufft]))
+
+   new_cusolver="yes"
+   AC_CHECK_LIB([cusolver], [cusolverDnZhegvdx_bufferSize], [], new_cusolver="no")
    
    # Returning to the original flags
    CXXFLAGS=${ax_save_CXXFLAGS}
@@ -157,12 +160,19 @@ EOF
 
    AC_DEFINE(HAVE_CUDA,1,[Define if we have CUDA])
    try_dflags="$try_dflags -D__CUDA"
-   cuda_fflags="-Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime \$(MOD_FLAG)\$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve"
+   if test ${new_cusolver} != yes; then
+       cuda_fflags="-Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime \$(MOD_FLAG)\$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve"
+       cuda_extlibs="eigensolver"
+       cuda_libs="-Mcudalib=cufft,cublas,cusolver \$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a"
+       AC_MSG_WARN([Using legacy custom solver.])
+   else
+       cuda_fflags="-Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
+       cuda_libs="-Mcudalib=cufft,cublas,cusolver"
+       try_dflags="$try_dflags -D__USE_CUSOLVER"
+   fi
    ldflags="$ldflags -Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    gpu_arch="$with_cuda_cc"
    gpu_runtime="$with_cuda_runtime"
-   cuda_libs="-Mcudalib=cufft,cublas,cusolver \$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a"
-   cuda_extlibs="eigensolver"
 fi
 
 # Announcing the new variables

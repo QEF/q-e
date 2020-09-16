@@ -32,7 +32,7 @@
   parallel_q  = .false.
 
   fsthick     = 15 ! eV 
-  eptemp      = 300 ! K (same as PRB 76, 165108)
+  temps       = 300 ! K (same as PRB 76, 165108)
   degaussw    = 1.0 ! eV
 
   dvscf_dir   = './save/'

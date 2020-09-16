@@ -19,7 +19,6 @@
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp
   USE cell_base,     ONLY : at, bg
-  USE io_global,     ONLY : ionode_id
   USE klist,         ONLY : nkstot
   USE lsda_mod,      ONLY : nspin, starting_magnetization
   USE scf,           ONLY : v, vrs, vltot, kedtau
@@ -29,7 +28,7 @@
   USE eqv,           ONLY : dmuxc
   USE uspp_param,    ONLY : upf
   USE spin_orb,      ONLY : domag
-  USE constants_epw, ONLY : zero, eps5, czero
+  USE constants_epw, ONLY : zero, eps5, czero, ryd2ev, kelvin2ev
   USE nlcc_ph,       ONLY : drc
   USE uspp,          ONLY : nlcc_any
   USE control_ph,    ONLY : search_sym, u_from_file
@@ -40,12 +39,10 @@
   USE funct,         ONLY : dft_is_gradient
   USE mp_global,     ONLY : world_comm
   USE mp,            ONLY : mp_bcast
-  USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, temps, &
-                            nkc1, nkc2, nkc3
+  USE epwcom,        ONLY : scattering, nkc1, nkc2, nkc3
   USE klist_epw,     ONLY : xk_cryst
   USE fft_base,      ONLY : dfftp
   USE gvecs,         ONLY : doublegrid
-  USE elph2,         ONLY : transp_temp
   USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2, ux, nspin_mag
   ! ---------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
@@ -65,8 +62,6 @@
   !! counter on irrepr
   INTEGER :: na
   !! counter on atoms
-  INTEGER :: itemp
-  !! counter on temperatures
   INTEGER :: ierr
   !! Error status
   REAL(KIND = DP) :: xx_c, yy_c, zz_c
@@ -206,83 +201,9 @@
     npertx = MAX(npertx, npert(irr))
   ENDDO
   !
-  ALLOCATE(transp_temp(nstemp), STAT = ierr)
-  IF (ierr /= 0) CALL errore('epw_setup', 'Error allocating transp_temp', 1)
-  !
-  transp_temp(:) = zero
-  ! In case of scattering calculation
-  IF (scattering) THEN
-    !
-    IF (MAXVAL(temps(:)) > zero) THEN
-      transp_temp(:) = temps(:)
-    ELSE
-      IF (nstemp == 1) THEN
-        transp_temp(1) = tempsmin
-      ELSE
-        DO itemp = 1, nstemp
-          transp_temp(itemp) = tempsmin + DBLE(itemp - 1) * (tempsmax - tempsmin) / DBLE(nstemp - 1)
-        ENDDO
-      ENDIF
-    ENDIF
-  ENDIF
-  ! We have to bcast here because before it has not been allocated
-  CALL mp_bcast(transp_temp, ionode_id, world_comm)
-  !
   CALL stop_clock('epw_setup')
   RETURN
   !
   !-----------------------------------------------------------------------
   END SUBROUTINE epw_setup
-  !-----------------------------------------------------------------------
-  !
-  !-----------------------------------------------------------------------
-  SUBROUTINE epw_setup_restart()
-  !-----------------------------------------------------------------------
-  !!
-  !! Setup in the case of a restart
-  !!
-  ! ----------------------------------------------------------------------
-  USE constants_epw, ONLY : zero
-  USE io_global,     ONLY : ionode_id
-  USE mp_global,     ONLY : world_comm
-  USE mp,            ONLY : mp_bcast
-  USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, temps
-  USE elph2,         ONLY : transp_temp
-  !
-  IMPLICIT NONE
-  !
-  INTEGER :: itemp
-  !! Counter on temperature
-  INTEGER :: ierr
-  !! Error status
-  !
-  CALL start_clock('epw_setup')
-  !
-  ALLOCATE(transp_temp(nstemp), STAT = ierr)
-  IF (ierr /= 0) CALL errore('epw_setup_restart', 'Error allocating transp_temp', 1)
-  !
-  transp_temp(:) = zero
-  ! In case of scattering calculation
-  IF (scattering) THEN
-    IF (MAXVAL(temps(:)) > zero) THEN
-      transp_temp(:) = temps(:)
-    ELSE
-      IF (nstemp == 1) THEN
-        transp_temp(1) = tempsmin
-      ELSE
-        DO itemp = 1, nstemp
-          transp_temp(itemp) = tempsmin + DBLE(itemp - 1) * (tempsmax - tempsmin) / DBLE(nstemp - 1)
-        ENDDO
-      ENDIF
-    ENDIF
-  ENDIF
-  !
-  ! We have to bcast here because before it has not been allocated
-  CALL mp_bcast(transp_temp, ionode_id, world_comm)
-  !
-  CALL stop_clock('epw_setup')
-  !
-  RETURN
-  !-----------------------------------------------------------------------
-  END SUBROUTINE epw_setup_restart
   !-----------------------------------------------------------------------

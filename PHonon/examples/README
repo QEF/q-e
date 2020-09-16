@@ -132,7 +132,7 @@ example15:
     ph.x and dynmat.x
 
 example16:
-    Graphite with DFT-D2
+    Graphite with DFT-D2 and with nonlocal vdW-aware functionals
 
 example17:
     This example shows how to compute the phonon dispersions of two-dimensional

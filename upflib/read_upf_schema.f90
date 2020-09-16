@@ -10,6 +10,7 @@ MODULE read_upf_schema_module
    !=----------------------------------------------------------------------------=!
    !!  this module provides the function read_upf_schema to read pseudopotential data
    !!  from files in UPF format version 2. 
+#if defined (__use_fox)
    !
    USE upf_kinds,    ONLY: DP
    USE pseudo_types, ONLY: pseudo_upf
@@ -912,4 +913,5 @@ SUBROUTINE searchIntegerData(tagname_, out_int, node_point, error)
    IF ( io_err /= 0 ) CALL upf_error ( 'read_upf_schema', 'error reading '// tagname_, ierr )
 END SUBROUTINE searchIntegerData
    !
+#endif
 END MODULE read_upf_schema_module

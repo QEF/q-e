@@ -54,8 +54,8 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !!       between q-e and libxc.
   !
 #if defined(__LIBXC)
-  USE xc_f90_types_m
-  USE xc_f90_lib_m
+#include "xc_version.h"
+  USE xc_f03_lib_m
 #endif
   !
   IMPLICIT NONE
@@ -80,12 +80,17 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   ! ... local variables
   !
 #if defined(__LIBXC)
-  TYPE(xc_f90_pointer_t) :: xc_func
-  TYPE(xc_f90_pointer_t) :: xc_info1, xc_info2
+  TYPE(xc_f03_func_t) :: xc_func
+  TYPE(xc_f03_func_info_t) :: xc_info1, xc_info2
   INTEGER :: fkind_x
   REAL(DP) :: amag
   REAL(DP), ALLOCATABLE :: rho_lxc(:)
   REAL(DP), ALLOCATABLE :: vx_lxc(:), vc_lxc(:)
+#if (XC_MAJOR_VERSION > 4)
+  INTEGER(8) :: lengthxc
+#else
+  INTEGER :: lengthxc
+#endif
 #endif
   !
   REAL(DP), ALLOCATABLE :: arho(:), zeta(:)
@@ -99,6 +104,9 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   ec_out = 0.0_DP ; vc_out = 0.0_DP
   !
 #if defined(__LIBXC)
+  !
+  fkind_x = -1
+  lengthxc = length
   !
   IF ( ANY(is_libxc(1:2)) ) THEN
     !
@@ -137,19 +145,21 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
   ! ... EXCHANGE
   IF ( is_libxc(1) ) THEN
-     CALL xc_f90_func_init( xc_func, xc_info1, iexch, sv_d )
-       CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold )
-       fkind_x  = xc_f90_info_kind( xc_info1 )
-       CALL xc_f90_lda_exc_vxc( xc_func, length, rho_lxc(1), ex_out(1), vx_lxc(1) )
-     CALL xc_f90_func_end( xc_func )
+     CALL xc_f03_func_init( xc_func, iexch, sv_d )
+       xc_info1 = xc_f03_func_get_info( xc_func )
+       CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold )
+       fkind_x  = xc_f03_func_info_get_kind( xc_info1 )
+       CALL xc_f03_lda_exc_vxc( xc_func, lengthxc, rho_lxc(1), ex_out(1), vx_lxc(1) )
+     CALL xc_f03_func_end( xc_func )
   ENDIF
   !
   ! ... CORRELATION
   IF ( is_libxc(2) ) THEN
-     CALL xc_f90_func_init( xc_func, xc_info2, icorr, sv_d )
-      CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold )
-      CALL xc_f90_lda_exc_vxc( xc_func, length, rho_lxc(1), ec_out(1), vc_lxc(1) )
-     CALL xc_f90_func_end( xc_func )
+     CALL xc_f03_func_init( xc_func, icorr, sv_d )
+      xc_info2 = xc_f03_func_get_info( xc_func )
+      CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold )
+      CALL xc_f03_lda_exc_vxc( xc_func, lengthxc, rho_lxc(1), ec_out(1), vc_lxc(1) )
+     CALL xc_f03_func_end( xc_func )
   ENDIF
   !
   IF ( ((.NOT.is_libxc(1)) .OR. (.NOT.is_libxc(2))) &
@@ -682,7 +692,8 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE DEFAULT
         !
-        CALL errore( 'xc_lda_lsda_drivers (xc_lsda)', 'not implemented', icorr )
+        ec = 0.0_DP
+        vc = 0.0_DP
         !
      END SELECT
      !

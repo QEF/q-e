@@ -549,14 +549,27 @@ SUBROUTINE reconstruct_full_chi(chi_)
   !
   ! Check that all elements were found
   !
-  DO na = 1, nath_sc
-     DO nb = 1, nath_sc
-        IF (chi_(na,nb).EQ.0.0d0) WRITE( stdout, '(/5x,"Missing element: na=", &
-                2x,i4,2x,"nb=",2x,i4/)') na, nb
+  IF (ANY(chi_(:,:).EQ.0.0d0)) THEN
+     !
+     WRITE( stdout, '(/5x,"Existing distances between couples of atoms:"/)')
+     DO na = 1, nath_sc
+        DO nb = 1, nath_sc
+           WRITE( stdout, '(5x,"na=",2x,i4,2x,"nb=",2x,i4,2x,"dist= ",f10.6)') &
+              na, nb, dist_sc(na,nb)
+        ENDDO
      ENDDO
-  ENDDO
-  IF (ANY(chi_(:,:).EQ.0.0d0)) CALL errore ('reconstruct_full_chi', &
+     !
+     DO na = 1, nath_sc
+        DO nb = 1, nath_sc
+           IF (chi_(na,nb).EQ.0.0d0) WRITE( stdout, '(/5x,"Missing chi element for: na=", &
+                2x,i4,2x,"nb=",2x,i4,2x,"dist= ",f10.6/)') na, nb, dist_sc(na,nb)
+        ENDDO
+     ENDDO
+     !
+     CALL errore ('reconstruct_full_chi', &
             'Reconstruction problem: some chi were not found', 1)
+     !
+  ENDIF
   !
   ! Symmetrization
   !

@@ -285,6 +285,7 @@ USE mp,               ONLY : mp_sum
 USE mp_global,        ONLY : intra_bgrp_comm
 USE noncollin_module, ONLY : noncolin, npol
 USE matrix_inversion, ONLY : invmat
+USE spin_orb,         ONLY : lspinorb
 
 IMPLICIT NONE
 !
@@ -370,6 +371,7 @@ DO ik1 = 1, nksq
                            psr(ikb,ii) = psr(ikb,ii) + bbg(jkb,ii)   &
                                                      * qq_nt(ih,jh,nt) 
                         ELSEIF(noncolin) THEN
+                         IF (lspinorb) THEN
                            ijs=0
                            DO ipol=1, npol
                               ikbs = ikb + nkb * ( ipol - 1 )
@@ -380,6 +382,10 @@ DO ik1 = 1, nksq
                                        bbnc_aux(jkb,ii)*qq_so(ih,jh,ijs,nt)
                               ENDDO
                            ENDDO
+                         ELSE
+                           CALL errore( 'lr_sm1_initialize', &
+                                & 'noncolin=.true. and lspinorb=.false. is not implemented', 1 )
+                         ENDIF
                         ELSE
                            ps(ikb,ii) = ps(ikb,ii) + bbk(jkb,ii,ik1) &
                                                    * qq_nt(ih,jh,nt)
@@ -452,6 +458,7 @@ DO ik1 = 1, nksq
                                        - psr(ii,ikb) * qq_nt(ih,jh,nt)
  
                         ELSEIF (noncolin) THEN
+                         IF (lspinorb) THEN
                            kjs = 0
                            DO kpol=1,npol
                               ikbs = ikb + nkb * (kpol-1)
@@ -463,6 +470,10 @@ DO ik1 = 1, nksq
                                          ps(ii,ikbs)*qq_so(ih,jh,kjs,nt)
                               ENDDO
                            ENDDO
+                         ELSE
+                           CALL errore( 'lr_sm1_initialize', &
+                                & 'noncolin=.true. and lspinorb=.false. is not implemented', 1 )
+                         ENDIF
                         ELSE
                            bbk(ii,jkb,ik1) = bbk(ii,jkb,ik1) - &
                                         ps(ii,ikb) * qq_nt(ih,jh,nt)

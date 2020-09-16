@@ -1,3 +1,10 @@
+!
+! Copyright (C) 2019-2020 Quantum ESPRESSO Foundation
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 MODULE xc_gga
 !
 USE kinds,     ONLY: DP
@@ -53,8 +60,8 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !!       between q-e and libxc libraries.
   !
 #if defined(__LIBXC)
-  USE xc_f90_types_m
-  USE xc_f90_lib_m
+#include "xc_version.h"
+  USE xc_f03_lib_m
 #endif
   !
   IMPLICIT NONE
@@ -85,8 +92,8 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   ! ... local variables
   !
 #if defined(__LIBXC)
-  TYPE(xc_f90_pointer_t) :: xc_func
-  TYPE(xc_f90_pointer_t) :: xc_info1, xc_info2
+  TYPE(xc_f03_func_t) :: xc_func
+  TYPE(xc_f03_func_info_t) :: xc_info1, xc_info2
   REAL(DP), ALLOCATABLE :: rho_lxc(:), sigma(:)
   REAL(DP), ALLOCATABLE :: ex_lxc(:), ec_lxc(:)
   REAL(DP), ALLOCATABLE :: vx_rho(:), vx_sigma(:)
@@ -98,6 +105,11 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   LOGICAL :: POLARIZED
   INTEGER :: ildax, ildac, pol_unpol
+#if (XC_MAJOR_VERSION > 4)
+  INTEGER(8) :: lengthxc
+#else
+  INTEGER :: lengthxc
+#endif
 #endif
   REAL(DP), ALLOCATABLE :: arho(:,:)
   REAL(DP), ALLOCATABLE :: rh(:), zeta(:)
@@ -120,6 +132,9 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   IF ( PRESENT(v2c_ud) ) v2c_ud = 0.0_DP
   !
 #if defined(__LIBXC)
+  !
+  fkind_x = -1
+  lengthxc = length
   !
   POLARIZED = .FALSE.
   IF (ns == 2) THEN
@@ -179,11 +194,12 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   IF ( is_libxc(3) ) THEN
     !
-    CALL xc_f90_func_init( xc_func, xc_info1, igcx, pol_unpol )
-    CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold )
-    fkind_x  = xc_f90_info_kind( xc_info1 )
-     CALL xc_f90_gga_exc_vxc( xc_func, length, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
-    CALL xc_f90_func_end( xc_func )
+    CALL xc_f03_func_init( xc_func, igcx, pol_unpol )
+     xc_info1 = xc_f03_func_get_info( xc_func )
+     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold )
+     fkind_x  = xc_f03_func_info_get_kind( xc_info1 )
+     CALL xc_f03_gga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
+    CALL xc_f03_func_end( xc_func )
     !
     IF (.NOT. POLARIZED) THEN
       DO k = 1, length
@@ -223,10 +239,11 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   IF ( is_libxc(4) ) THEN  !lda part of LYP not present in libxc
     !
-    CALL xc_f90_func_init( xc_func, xc_info2, igcc, pol_unpol )
-    CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold )
-     CALL xc_f90_gga_exc_vxc( xc_func, length, rho_lxc(1), sigma(1), ec_lxc(1), vc_rho(1), vc_sigma(1) )
-    CALL xc_f90_func_end( xc_func )
+    CALL xc_f03_func_init( xc_func, igcc, pol_unpol )
+     xc_info2 = xc_f03_func_get_info( xc_func )
+     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold )
+     CALL xc_f03_gga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), ec_lxc(1), vc_rho(1), vc_sigma(1) )
+    CALL xc_f03_func_end( xc_func )
     !
     IF (.NOT. POLARIZED) THEN
       DO k = 1, length
@@ -407,9 +424,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   USE exch_gga
   USE corr_gga
   !
-#if defined(use_beef)
   USE beef_interface, ONLY: beefx, beeflocalcorr
-#endif
   !
   IMPLICIT NONE
   !
@@ -649,12 +664,10 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v1x = (1.0_DP - exx_fraction) * v1x
            v2x = (1.0_DP - exx_fraction) * v2x
         ENDIF
-#ifdef use_beef
      CASE( 43 ) ! 'beefx'
         ! last parameter = 0 means do not add LDA (=Slater) exchange
         ! (espresso) will add it itself
         CALL beefx(rho, grho, sx, v1x, v2x, 0)
-#endif
         !
      CASE( 44 ) ! 'RPBE'
         !
@@ -726,12 +739,10 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v1c = 0.871_DP * v1c
            v2c = 0.871_DP * v2c
         ENDIF
-#ifdef use_beef
      CASE( 14 ) ! 'BEEF'
         ! last parameter 0 means: do not add lda contributions
         ! espresso will do that itself
         call beeflocalcorr(rho, grho, sc, v1c, v2c, 0)
-#endif
         !
      CASE DEFAULT
         !
@@ -763,9 +774,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !! Gradient corrections for exchange - Hartree a.u.
   !
   USE exch_gga
-#if defined(use_beef)
   USE beef_interface, ONLY: beefx
-#endif
   !
   IMPLICIT NONE
   !
@@ -1132,7 +1141,6 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
            v2x = (1.0_DP - exx_fraction) * v2x
         ENDIF
         !
-#ifdef use_beef
      CASE( 43 ) ! 'beefx'
         IF (rho(1) > small .AND. SQRT (ABS (grho2(1)) ) > small) THEN
            call beefx(2.0_DP * rho(1), 4.0_DP * grho2(1), sx(1), v1x(1), v2x(1), 0)
@@ -1151,7 +1159,6 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         ENDIF
         sx_tot(ir) = 0.5_DP * (sx(1) + sx(2))
         v2x  = 2.0_DP * v2x
-#endif
      !
      ! case igcx == 5 (HCTH) and 6 (OPTX) not implemented
      ! case igcx == 7 (meta-GGA) must be treated in a separate call to another
@@ -1159,7 +1166,9 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
      !
      CASE DEFAULT
         !
-        CALL errore( 'gcx_spin', 'not implemented', igcx )
+        sx = 0.0_DP
+        v1x = 0.0_DP
+        v2x = 0.0_DP
         !
      END SELECT
      !
@@ -1184,9 +1193,7 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
   !
   USE corr_gga
   !
-#if defined(use_beef)
   USE beef_interface, ONLY: beeflocalcorrspin
-#endif
   !
   IMPLICIT NONE
   !
@@ -1260,14 +1267,14 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
        !
        CALL pbec_spin( rho, zeta, grho, 2, sc, v1c(1), v1c(2), v2c )
        !
-#ifdef use_beef
     CASE( 14 )
        !
        call beeflocalcorrspin(rho, zeta, grho, sc, v1c(1), v1c(2), v2c, 0)
-#endif
     CASE DEFAULT
        !
-       CALL errore( 'xc_gga_drivers (gcc_spin)', 'not implemented', igcc )
+       sc = 0.0_DP
+       v1c = 0.0_DP
+       v2c = 0.0_DP
        !
     END SELECT
     !

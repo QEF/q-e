@@ -45,7 +45,7 @@
   a2f         = .false.
 
   fsthick     = 2.0 ! eV 
-  eptemp      = 1 ! K 
+  temps       = 1 ! K 
   degaussw    = 0.1 ! eV
 
   dvscf_dir   = './save/'
