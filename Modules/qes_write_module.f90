@@ -2273,9 +2273,11 @@ MODULE qes_write_module
      CALL xml_NewElement(xp, 'absolute')
         CALL xml_addCharacters(xp, obj%absolute, fmt='s16')
      CALL xml_EndElement(xp, 'absolute')
-     CALL xml_NewElement(xp, 'do_magnetization')
-        CALL xml_addCharacters(xp, obj%do_magnetization)
-     CALL xml_EndElement(xp, 'do_magnetization')
+     IF (obj%do_magnetization_ispresent) THEN
+        CALL xml_NewElement(xp, "do_magnetization")
+           CALL xml_addCharacters(xp, obj%do_magnetization)
+        CALL xml_EndElement(xp, "do_magnetization")
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_magnetization
 

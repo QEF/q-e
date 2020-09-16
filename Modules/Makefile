@@ -158,7 +158,7 @@ deviatoric.o
 
 -include make.gpu
 
-TLDEPS=libiotk libfox libutil libla libfft
+TLDEPS=libfox libutil libla libfft
 
 all : libqemod.a
 

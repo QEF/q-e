@@ -46,7 +46,6 @@ CONTAINS
          XSI = "http://www.w3.org/2001/XMLSchema-instance", &
          XSD_VERSION = "QE_PP-1.0"
     !
-    WRITE(6,'("WRITE_UPF_NEW")')
     IF ( PRESENT(schema) ) schema_ = schema
     SELECT CASE (TRIM(schema_))
     CASE ('qe_pp', 'QE_PP')
@@ -171,7 +170,7 @@ CONTAINS
     ! optional: unit pointing to input file containing generation data
     INTEGER, OPTIONAL, INTENT(IN):: u_input
     !
-#include "version.h"
+#include "qe_version.h"
     INTEGER :: nw, nb
     !
     CALL xmlw_opentag ( 'pp_info' )

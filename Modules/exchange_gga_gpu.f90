@@ -110,13 +110,15 @@ SUBROUTINE pbex_d (rho,grho,iflag,sx,v1x,v2x)
 
   !---------------------------------------------------------------
   !! PBE exchange (without Slater exchange):
-  !! iflag=1  J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996);
-  !! iflag=2  "revised' PBE: Y. Zhang et al., PRL 80, 890 (1998);
-  !! iflag=3  PBEsol: J.P.Perdew et al., PRL 100, 136406 (2008);
-  !! iflag=4  PBEQ2D: L. Chiodo et al., PRL 108, 126402 (2012);
-  !! iflag=5  optB88: Klimes et al., J. Phys. Cond. Matter, 22, 022201 (2010);
-  !! iflag=6  optB86b: Klimes et al., Phys. Rev. B 83, 195131 (2011);
-  !! iflag=7  ev: Engel and Vosko, PRB 47, 13164 (1991).
+  !! iflag=1  J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)
+  !! iflag=2  "revised' PBE: Y. Zhang et al., PRL 80, 890 (1998)
+  !! iflag=3  PBEsol: J.P.Perdew et al., PRL 100, 136406 (2008)
+  !! iflag=4  PBEQ2D: L. Chiodo et al., PRL 108, 126402 (2012)
+  !! iflag=5  optB88: Klimes et al., J. Phys. Cond. Matter, 22, 022201 (2010)
+  !! iflag=6  optB86b: Klimes et al., Phys. Rev. B 83, 195131 (2011)
+  !! iflag=7  ev: Engel and Vosko, PRB 47, 13164 (1991)
+  !! iflag=8  RPBE: B. Hammer, et al., Phys. Rev. B 59, 7413 (1999)
+  !! iflag=9  W31X: D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)
   !
   USE kinds,      ONLY : DP
   !

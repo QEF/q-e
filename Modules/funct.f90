@@ -40,9 +40,7 @@ MODULE funct
   USE xc_f03_lib_m
 #endif
   !
-#if defined(use_beef)
   USE beef_interface, ONLY: beef_set_type
-#endif
   !
   IMPLICIT NONE
   !
@@ -272,8 +270,8 @@ MODULE funct
   !              b86b    A.D.Becke, J.Chem.Phys. 85, 7184 (1986)
   !              ob86    Klimes, Bowler, Michaelides, PRB 83, 195131 (2011)
   !              b86r    I. Hamada, Phys. Rev. B 89, 121103(R) (2014)
-  !              w31x    D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
-  !              w32x    D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
+  !              w31x    D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)
+  !              w32x    D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)
   !              pbe     J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)
   !              pw91    J.P.Perdew and Y. Wang, PRB 46, 6671 (1992)
   !              blyp    C.Lee, W.Yang, R.G.Parr, PRB 37, 785 (1988)
@@ -302,8 +300,8 @@ MODULE funct
   !                           J. Chem. Phys. 148, 194115 (2018)
   !              vdW-DF-obk8  Klimes et al, J. Phys. Cond. Matter, 22, 022201 (2010)
   !              vdW-DF-ob86  Klimes et al, Phys. Rev. B, 83, 195131 (2011)
-  !              vdW-DF3-opt1 D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
-  !              vdW-DF3-opt2 D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
+  !              vdW-DF3-opt1 D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)
+  !              vdW-DF3-opt2 D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)
   !              vdW-DF-C6    K. Berland, D. Chakraborty, and T. Thonhauser, PRB 99, 195418 (2019)
   !              c09x    V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)
   !              tpss    J.Tao, J.P.Perdew, V.N.Staroverov, G.E. Scuseria,
@@ -371,10 +369,8 @@ MODULE funct
   REAL(DP):: finite_size_cell_volume = notset
   LOGICAL :: discard_input_dft = .FALSE.
   !
-#ifdef use_beef
   INTEGER  :: beeftype    = -1
   INTEGER  :: beefvdw = 0
-#endif
   !
   INTEGER, PARAMETER :: nxc=8, ncc=10, ngcx=46, ngcc=13, nmeta=6, ncnl=26
   CHARACTER(LEN=4) :: exc, corr, gradx, gradc, meta, nonlocc
@@ -559,7 +555,6 @@ CONTAINS
        dft_defined = set_dft_values(1,4,20,4,0,0)
     ! special case : case BEEF (default: BEEF-vdW-DF2)
     CASE('BEEF', 'BEEF-VDW')
-#ifdef use_beef
        IF (LEN_TRIM(dftout) .EQ. 4) then
           beeftype = 0
        ELSE
@@ -580,10 +575,6 @@ CONTAINS
              beefvdw = 2
        END SELECT
        dft_defined = set_dft_values(1,4,43,14,beefvdw,0)
-#else
-       CALL errore('set_dft_from_name', &
-    &    'BEEF xc functional support not compiled in', 1)
-#endif
     ! Special case vdW-DF
     CASE( 'VDW-DF' )
        dft_defined = set_dft_values(1,4,4,0,1,0)

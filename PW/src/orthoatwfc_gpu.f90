@@ -71,7 +71,7 @@ SUBROUTINE orthoUwfc_gpu
      !
      WRITE( stdout,*) 'LDA+U Projector read from file '
      DO ik = 1, nks
-        CALL get_buffer(wfcU, nwordwfcU, iunhub, ik)
+        CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
      END DO
      RETURN
   ELSE IF (U_projection=="atomic") THEN
@@ -82,30 +82,29 @@ SUBROUTINE orthoUwfc_gpu
      orthogonalize_wfc = .TRUE.
      normalize_only = .FALSE.    
      WRITE( stdout,*) 'Atomic wfc used for LDA+U Projector are orthogonalized'
-     IF (gamma_only) CALL errore('orthoatwfc', &
+     IF (gamma_only) CALL errore('orthoUwfc', &
           'Gamma-only calculation for this case not implemented', 1 )
   ELSE IF (U_projection=="norm-atomic") THEN
      orthogonalize_wfc = .TRUE.
      normalize_only = .TRUE.
      WRITE( stdout,*) 'Atomic wfc used for LDA+U Projector are normalized but NOT orthogonalized'
-     IF (gamma_only) CALL errore('orthoatwfc', &
+     IF (gamma_only) CALL errore('orthoUwfc', &
           'Gamma-only calculation for this case not implemented', 1 )
   ELSE
      WRITE( stdout,*) "U_projection_type =", U_projection
-     CALL errore ("orthoatwfc"," this U_projection_type is not valid",1)
+     CALL errore ("orthoUwfc"," this U_projection_type is not valid",1)
   END IF
   !
   ALLOCATE( wfcatom(npwx*npol,natomwfc), swfcatom(npwx*npol,natomwfc) )
   ALLOCATE( wfcatom_d(npwx*npol,natomwfc), swfcatom_d(npwx*npol,natomwfc) )               !
   save_flag = use_bgrp_in_hpsi ; use_bgrp_in_hpsi=.false.
-  !
+
   ! Allocate the array becp = <beta|wfcatom>
-  CALL allocate_bec_type( nkb, natomwfc, becp ) 
+  CALL allocate_bec_type (nkb,natomwfc, becp) 
   CALL using_becp_auto(2)
-  !
-  !
+  
   DO ik = 1, nks
-     !
+     
      IF (noncolin) THEN
        CALL atomic_wfc_nc_updown( ik, wfcatom )
        wfcatom_d = wfcatom
@@ -325,21 +324,17 @@ SUBROUTINE ortho_swfc_gpu( npw, normalize_only, m, wfc_d, swfc_d, lflag )
         IF (i == j) s_d(j,i) = CMPLX(1.d0,0.d0, kind=dp)
      ENDDO
   ENDDO
-  !
+  ! THIS SHOULD BE A SIMPLE CDIAGH (NOT GENERALIZED!) DRIVER NEEDED IN LAXLIB
   CALL laxlib_cdiaghg_gpu( m, m, overlap_d, s_d, m, e_d, work_d, me_bgrp, &
                            root_bgrp, intra_bgrp_comm )
   !
-  !$cuf kernel do (1) <<<*,*>>>
-  DO i = 1, m
-     e_d(i) = 1.d0 / SQRT(e_d(i))
-  ENDDO
   !$cuf kernel do (2) <<<*,*>>>
   DO i = 1, m
      DO j = 1, m
         IF ( j < i ) CYCLE
         temp = (0.d0, 0.d0)
         DO k = 1, m
-           temp = temp + e_d(k) * work_d(j,k) * CONJG(work_d(i,k))
+           temp = temp + work_d(j,k) * 1.d0/SQRT(e_d(k)) * CONJG(work_d(i,k))
         ENDDO
         overlap_d(i,j) = temp
         IF (j /= i) overlap_d(j,i) = CONJG(temp)
@@ -410,9 +405,9 @@ END SUBROUTINE ortho_swfc_gpu
 !-----------------------------------------------------------------------
 SUBROUTINE calculate_doverlap_inv_gpu (m, e, work, doverlap, doverlap_inv)
   !---------------------------------------------------------------------
-  !! This routine computes the derivative of transposed O^{-1/2}, i.e.
-  !! [d((O^{-1/2})^T)]_IJ, where O_IJ is the overlap matrix. 
-  !! Note, on the input this routine requires dO not transposed.
+  !! This routine computes the derivative of O^{-1/2}, i.e.
+  !! [d((O^{-1/2}))]_IJ, where O_IJ is the overlap matrix. 
+  !! Note, on the input this routine requires dO (not transposed).
   !! The solution is written in a closed form by solving the Lyapunov
   !! equation (a particular case of the Sylvester equation).
   !! Written by I. Timrov (June 2020)
@@ -448,14 +443,14 @@ SUBROUTINE calculate_doverlap_inv_gpu (m, e, work, doverlap, doverlap_inv)
 #endif
   ALLOCATE (aux(m,m))
   !
-  ! Compute (work^T) * (doverlap^T) * ((work^H)^T) 
+  ! Compute (work^H) * doverlap * work 
   ! and put the result back in doverlap
   !
-  ! Compute aux = (work^H)*doverlap
+  ! Compute aux = doverlap * work
+  CALL ZGEMM('N','N', m, m, m, (1.d0,0.d0), doverlap, &
+              m, work, m, (0.d0,0.d0), aux, m)
+  ! Compute (work^H) * aux
   CALL ZGEMM('C','N', m, m, m, (1.d0,0.d0), work, &
-              m, doverlap, m, (0.d0,0.d0), aux, m)
-  ! Compute (work^T) * (aux^T)
-  CALL ZGEMM('T','T', m, m, m, (1.d0,0.d0), work, &
               m, aux, m, (0.d0,0.d0), doverlap, m)
   !
   !$cuf kernel do(2)
@@ -466,14 +461,14 @@ SUBROUTINE calculate_doverlap_inv_gpu (m, e, work, doverlap, doverlap_inv)
      ENDDO
   ENDDO
   !
-  ! Compute ((work^H)^T) * aux * (work^T)
+  ! Compute work * aux * (work^H)
   !
-  ! Compute doverlap = (aux^T)*(work^H)
-  CALL ZGEMM('T','C', m, m, m, (1.d0,0.d0), aux, &
+  ! Compute doverlap = aux * (work^H)
+  CALL ZGEMM('N','C', m, m, m, (1.d0,0.d0), aux, &
               m, work, m, (0.d0,0.d0), doverlap, m)
-  ! Compute doverlap_inv = (doverlap^T)*(work^T)
-  CALL ZGEMM('T','T', m, m, m, (-1.d0,0.d0), doverlap, &
-              m, work, m, (0.d0,0.d0), doverlap_inv, m)
+  ! Compute doverlap_inv = work * doverlap
+  CALL ZGEMM('N','N', m, m, m, (-1.d0,0.d0), work, &
+              m, doverlap, m, (0.d0,0.d0), doverlap_inv, m)
   !
   DEALLOCATE (aux)
   !

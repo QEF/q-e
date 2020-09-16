@@ -365,11 +365,6 @@ SUBROUTINE dndtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    dns(:,:,:,:) = 0.d0
    !
-   ! Band parallelization. If each band appears more than once
-   ! compute its contribution only once (i.e. when mykey=0)
-   !
-   IF ( mykey /= 0 ) GO TO 10
-   !
    ! Compute the USPP contribution to dproj:
    ! <\phi^{at}_{I,m1}|dS/du(alpha,ipol)|\psi_{k,v,s}>
    !
@@ -386,6 +381,9 @@ SUBROUTINE dndtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
       CALL calc_doverlap_inv (alpha, ipol, ik, jkb0)
    ENDIF
    !
+   ! Band parallelization. If each band appears more than once
+   ! compute its contribution only once (i.e. when mykey=0)
+   !
 ! !omp parallel do default(shared) private(na,nt,m1,m2,ibnd)
    DO na = 1, nat
       nt = ityp(na)
@@ -396,7 +394,8 @@ SUBROUTINE dndtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
          CALL dprojdtau_k ( spsi, alpha, na, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
          IF (okvan) dproj = dproj + dproj_us
          !
-         DO m1 = 1, 2*Hubbard_l(nt)+1
+         IF (mykey==0) THEN
+          DO m1 = 1, 2*Hubbard_l(nt)+1
             DO m2 = m1, 2*Hubbard_l(nt)+1
                DO ibnd = nb_s, nb_e
                   dns(m1,m2,current_spin,na) = dns(m1,m2,current_spin,na) +      &
@@ -407,7 +406,8 @@ SUBROUTINE dndtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
                                                CONJG( proj(offsetU(na)+m2,ibnd)) )
                ENDDO
             ENDDO
-         ENDDO
+          ENDDO
+         ENDIF
       ELSEIF (is_hubbard_back(nt) .AND. lpuk.EQ.2) THEN
          !
          ! Compute the second contribution to dproj due to the derivative of 
@@ -415,7 +415,8 @@ SUBROUTINE dndtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
          CALL dprojdtau_k ( spsi, alpha, na, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
          IF (okvan) dproj = dproj + dproj_us
          !
-         DO m1 = 1, ldim_back(nt) 
+         IF (mykey==0) THEN
+          DO m1 = 1, ldim_back(nt) 
             off1 = offsetU_back(na)
             m11 = m1
             IF (backall(nt) .AND. m1.GT.2*Hubbard_l_back(nt)+1) THEN
@@ -438,14 +439,15 @@ SUBROUTINE dndtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
                                                CONJG( proj(off2+m22,ibnd)) )
                ENDDO
             ENDDO
-         ENDDO
+          ENDDO
+         ENDIF
       ENDIF
    ENDDO
 ! !omp end parallel do
    !
-10 DEALLOCATE( dproj ) 
+   DEALLOCATE( dproj ) 
    IF (ALLOCATED(doverlap_inv)) DEALLOCATE( doverlap_inv )
-   IF (okvan) DEALLOCATE (dproj_us)
+   IF (ALLOCATED(dproj_us))     DEALLOCATE( dproj_us )
    !
    CALL mp_sum( dns, intra_pool_comm )
    !
@@ -689,11 +691,6 @@ SUBROUTINE dngdtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    !
    dnsg(:,:,:,:,:) = (0.d0, 0.d0)
    !
-   ! Band parallelization. If each band appears more than once
-   ! compute its contribution only once (i.e. when mykey=0)
-   !
-   IF ( mykey /= 0 ) GO TO 10
-   !
    ! Compute the phases for each atom at this ik
    !
    CALL phase_factor(ik)
@@ -718,6 +715,9 @@ SUBROUTINE dngdtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
       CALL calc_doverlap_inv (alpha, ipol, ik, jkb0)
    ENDIF
    !
+   ! Band parallelization. If each band appears more than once
+   ! compute its contribution only once (i.e. when mykey=0)
+   !
 ! !omp parallel do default(shared) private(na1,viz,m1,m2,ibnd)
    DO na1 = 1, nat
       nt1 = ityp(na1)
@@ -740,14 +740,15 @@ SUBROUTINE dngdtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
                CALL dprojdtau_k ( spsi, alpha, eq_na2, jkb0, ipol, ik, nb_s, nb_e, mykey, dproj2 )
                IF (okvan) dproj2 = dproj2 + dproj_us
             ENDIF
-            IF (na1.GT.na2) THEN 
+            IF (mykey==0) THEN
+             IF (na1.GT.na2) THEN 
                DO m1 = 1, ldim1
                   DO m2 = 1, ldim2
                      dnsg(m2,m1,viz,na1,current_spin) = &
                      CONJG(dnsg(m1,m2,find_viz(na2,na1),na2,current_spin))
                   ENDDO
                ENDDO
-            ELSE
+             ELSE
                DO m1 = 1, ldim1
                   off1 = offsetU(na1) + m1
                   IF (m1.GT.2*Hubbard_l(nt1)+1) &
@@ -773,17 +774,17 @@ SUBROUTINE dngdtau_k ( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
                       ENDDO ! ibnd
                   ENDDO ! m2
                ENDDO  ! m1
+             ENDIF
             ENDIF
          ENDDO ! viz          
       ENDIF
    ENDDO ! na1
 ! !omp end parallel do
    !
-10 CONTINUE
    DEALLOCATE ( dproj1 ) 
    DEALLOCATE ( dproj2 ) 
    IF (ALLOCATED(doverlap_inv)) DEALLOCATE( doverlap_inv )
-   IF (okvan) DEALLOCATE (dproj_us)
+   IF (ALLOCATED(dproj_us))     DEALLOCATE( dproj_us )
    !
    CALL mp_sum(dnsg, intra_pool_comm)
    !
@@ -1126,7 +1127,8 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       !
       ! Copy to dproj results for the bands treated by this processor
       !
-      DO m1 = 1, ldim
+      IF (mykey==0) THEN
+        DO m1 = 1, ldim
          IF (m1.le.ldim_std ) THEN
             offpm = offsetU(na)+m1
          ELSE
@@ -1136,7 +1138,8 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
                        - ldim_std - 2*Hubbard_l_back(nt) - 1
          ENDIF
          dproj(offpm, :) = dproj0(m1, nb_s:nb_e)
-      ENDDO
+        ENDDO
+      ENDIF
       DEALLOCATE ( dproj0 )
       !
    ELSEIF (U_projection.EQ."ortho-atomic") THEN
@@ -1187,16 +1190,18 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       !    is multiplied by atomic wavefunctions
       !
       ! Now compute \sum_J dO^{-1/2}_JI/d\tau(alpha,ipol) \phi_J
-      ! and add it to another term (see above)
+      ! and add it to another term (see above).
+      ! Note, doverlap_inv is d(O^{-1/2}) not transposed. The transposition 
+      ! of d(O^{-1/2}) is taken into account via a proper usage of the order
+      ! of indices in doverlap_inv: 
+      ! dwfc(ig,m1) = dwfc(ig,m1) + wfcatom(ig,m2) * doverlap_inv(m2,offpm+m1)
+      ! where m1=1,ldim; m2=1,natomwfc; ig=1,npw
       !
-      DO ig = 1, npw
-         DO m1 = 1, ldim
-            DO m2 = 1, natomwfc
-               dwfc(ig,m1) = dwfc(ig,m1) + &
-                   doverlap_inv(offpm+m1,m2) * wfcatom(ig,m2)
-            ENDDO
-         ENDDO
-      ENDDO
+      CALL ZGEMM('N','N', npw, ldim, natomwfc, (1.d0,0.d0), &
+                  wfcatom, npwx, doverlap_inv(:,offpm+1:offpm+ldim), &
+                  natomwfc, (1.d0,0.d0), dwfc, npwx)
+      !
+      ! 3. Final step: compute dproj0 = <dwfc|spsi>
       !
       ALLOCATE ( dproj0(ldim,nbnd) )
       dproj0(:,:) = (0.0d0, 0.0d0)
@@ -1208,9 +1213,11 @@ SUBROUTINE dprojdtau_k( spsi, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       ! Copy to dproj results for the bands treated by this processor
       !
       offpm = offsetU(na)
-      DO m1 = 1, ldim
-         dproj( offpm+m1, :) = dproj0(m1, nb_s:nb_e)
-      ENDDO
+      IF (mykey==0) THEN
+         DO m1 = 1, ldim
+            dproj( offpm+m1, :) = dproj0(m1, nb_s:nb_e)
+         ENDDO
+      ENDIF
       !
       DEALLOCATE (dproj0)
       DEALLOCATE (dwfc)
@@ -1411,7 +1418,7 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
    !
    A_dS_B(:,:) = (0.0d0, 0.0d0) 
    !
-   IF (.NOT.okvan .OR. mykey /= 0) RETURN
+   IF (.NOT.okvan) RETURN
    !
    nt = ityp(alpha)
    npw = ngk(ik)
@@ -1482,15 +1489,18 @@ SUBROUTINE matrix_element_of_dSdtau (alpha, ipol, ik, ijkb0, lA, A, lB, B, A_dS_
    !
    DEALLOCATE ( aux )
    !
-   ! dproj(iA,iB) = \sum_ih [Adbeta(iA,ih) * betaB(ih,iB) +
-   !                         Abeta(iA,ih)  * dbetaB(ih,iB)] 
+   ! A_dS_B(iA,iB) = \sum_ih [Adbeta(iA,ih) * betaB(ih,iB) +
+   !                          Abeta(iA,ih)  * dbetaB(ih,iB)] 
+   ! Only A_dS_B(:,lB_s:lB_e) are calculated
    !
-   CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
-              Adbeta, lA, betaB(1,lB_s), nh(nt), (0.0d0,0.0d0), &
-              A_dS_B(1,lB_s), lA)
-   CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
-              Abeta, lA, dbetaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
-              A_dS_B(1,lB_s), lA)
+   IF ( mykey == 0 ) THEN
+      CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                 Adbeta, lA, betaB(1,lB_s), nh(nt), (0.0d0,0.0d0), &
+                 A_dS_B(1,lB_s), lA)
+      CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                 Abeta, lA, dbetaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
+                 A_dS_B(1,lB_s), lA)
+   ENDIF
    !
    DEALLOCATE ( Abeta )
    DEALLOCATE ( Adbeta )

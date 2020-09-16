@@ -8,6 +8,7 @@ MODULE emend_upf_module
 !=----------------------------------------------------------------------------=!
   !! author: Pietro Delugas
   !! Contains utility to make the old UPF format readable by FoX
+#if defined (__use_fox)
 
 PRIVATE 
 PUBLIC make_emended_upf_copy
@@ -86,4 +87,5 @@ FUNCTION check(in) RESULT (out)
       IF (o > len(in)) CALL upf_error('emend_upf/check', &
                             'BEWARE !!! Possible out of bounds while fixing pseudo', -1 )
 END FUNCTION check
+#endif
 END MODULE emend_upf_module 

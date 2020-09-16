@@ -52,9 +52,7 @@ SUBROUTINE run_pwscf( exit_status )
                                    qmmm_update_positions, qmmm_update_forces
   USE qexsd_module,         ONLY : qexsd_set_status
   USE funct,                ONLY : dft_is_hybrid, stop_exx 
-#ifdef use_beef
   USE beef,                 ONLY : beef_energies
-#endif 
   !
   USE gbuffers,             ONLY : dev_buf
   !
@@ -281,9 +279,7 @@ SUBROUTINE run_pwscf( exit_status )
   ! ... save final data file
   !
   CALL qexsd_set_status( exit_status )
-#ifdef use_beef
   IF ( lensemb ) CALL beef_energies( )
-#endif 
   CALL punch( 'all' )
   !
   CALL qmmm_shutdown()

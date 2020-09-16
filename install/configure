@@ -780,7 +780,7 @@ with_scalapack
 with_elpa_include
 with_elpa_lib
 with_elpa_version
-enable_libbeef
+with_libbeef
 with_libbeef_prefix
 with_hdf5
 with_hdf5_libs
@@ -1421,8 +1421,6 @@ Optional Features:
   --enable-debug          compile Fortran with debug flags (default: no)
   --enable-pedantic       compile Fortran with pedantic flags (default: no)
   --enable-shared         use shared libraries if available (default: yes)
-  --enable-libbeef        link against library for BEEF xc support (default:
-                          yes - if found)
   --enable-signals        enable signal trapping (default: no)
 
 Optional Packages:
@@ -1431,7 +1429,7 @@ Optional Packages:
   --with-cuda=PATH        prefix where CUDA is installed [default=no]
   --with-cuda-cc=VAL      GPU architecture (Kepler: 35, Pascal: 60, Volta: 70)
                           [default=35]
-  --with-cuda-runtime=VAL CUDA runtime (Pascal: 8.0, Volta: 9.0) [default=8.0]
+  --with-cuda-runtime=VAL CUDA runtime (Pascal: 8+, Volta: 9+) [default=10.1]
   --with-libxc            (yes|no) Use libXC for some XC functionals (default:
                           no)
   --with-libxc-prefix=DIR Directory where libxc was installed.
@@ -1447,6 +1445,8 @@ Optional Packages:
                           (default: no)
   --with-elpa-version     Specify ELPA version, only year (2015 - 2019,
                           default: 2016)
+  --with-libbeef          (yes|no) link against library for BEEF xc support
+                          (default: yes)
   --with-libbeef-prefix   path to directory containing libbeef.a (default:
                           none)
   --with-hdf5             (no|yes|<path>) Use HDF5, if yes configure assumes
@@ -4247,7 +4247,7 @@ ppc64-bgq:*xlf* )
         ;;
 *:*gfortran )
 	try_fflags="-O3 -g"
-        if test "$f90_major_version" -ge 10; then
+        if test "$f90_major_version" -ge "10"; then
  	   try_fflags="$try_fflags -fallow-argument-mismatch"
         fi
         if test "$use_debug" -eq 1; then
@@ -4402,7 +4402,7 @@ fi
 if test "${with_cuda_runtime+set}" = set; then :
   withval=$with_cuda_runtime;
 else
-  with_cuda_runtime=8.0
+  with_cuda_runtime=10.1
 fi
 
 
@@ -4894,6 +4894,55 @@ See \`config.log' for more details" "$LINENO" 5; }
 fi
 
 
+   new_cusolver="yes"
+   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for cusolverDnZhegvdx_bufferSize in -lcusolver" >&5
+$as_echo_n "checking for cusolverDnZhegvdx_bufferSize in -lcusolver... " >&6; }
+if ${ac_cv_lib_cusolver_cusolverDnZhegvdx_bufferSize+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lcusolver  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char cusolverDnZhegvdx_bufferSize ();
+int
+main ()
+{
+return cusolverDnZhegvdx_bufferSize ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_cusolver_cusolverDnZhegvdx_bufferSize=yes
+else
+  ac_cv_lib_cusolver_cusolverDnZhegvdx_bufferSize=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_cusolver_cusolverDnZhegvdx_bufferSize" >&5
+$as_echo "$ac_cv_lib_cusolver_cusolverDnZhegvdx_bufferSize" >&6; }
+if test "x$ac_cv_lib_cusolver_cusolverDnZhegvdx_bufferSize" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBCUSOLVER 1
+_ACEOF
+
+  LIBS="-lcusolver $LIBS"
+
+else
+  new_cusolver="no"
+fi
+
+
    # Returning to the original flags
    CXXFLAGS=${ax_save_CXXFLAGS}
    LIBS=${ax_save_LIBS}
@@ -4902,12 +4951,20 @@ fi
 $as_echo "#define HAVE_CUDA 1" >>confdefs.h
 
    try_dflags="$try_dflags -D__CUDA"
-   cuda_fflags="-Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime \$(MOD_FLAG)\$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve"
+   if test ${new_cusolver} != yes; then
+       cuda_fflags="-Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime \$(MOD_FLAG)\$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve"
+       cuda_extlibs="eigensolver"
+       cuda_libs="-Mcudalib=cufft,cublas,cusolver \$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a"
+       { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Using legacy custom solver." >&5
+$as_echo "$as_me: WARNING: Using legacy custom solver." >&2;}
+   else
+       cuda_fflags="-Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
+       cuda_libs="-Mcudalib=cufft,cublas,cusolver"
+       try_dflags="$try_dflags -D__USE_CUSOLVER"
+   fi
    ldflags="$ldflags -Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    gpu_arch="$with_cuda_cc"
    gpu_runtime="$with_cuda_runtime"
-   cuda_libs="-Mcudalib=cufft,cublas,cusolver \$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a"
-   cuda_extlibs="eigensolver"
 fi
 
 # Announcing the new variables
@@ -7419,15 +7476,16 @@ $as_echo_n "checking BEEF... " >&6; }
 
 beef_libs=$BEEF_LIBS
 
-# Check whether --enable-libbeef was given.
-if test "${enable_libbeef+set}" = set; then :
-  enableval=$enable_libbeef; if   test "$withval" = "yes" ; then
-      beef_enabled=1
+
+# Check whether --with-libbeef was given.
+if test "${with_libbeef+set}" = set; then :
+  withval=$with_libbeef; if   test "$withval" = "no" ; then
+      with_beef=0
    else
-      beef_enabled=0
+      with_beef=1
    fi
 else
-  beef_enabled=1
+  with_beef=1
 fi
 
 
@@ -7441,7 +7499,7 @@ else
 fi
 
 
-if test "$beef_enabled" -ne 0
+if test "$with_beef" -ne 0
 then
     BEEF_LDFLAGS_SAVE="$LDFLAGS"
     LDFLAGS="$beef_libs $LDFLAGS"
@@ -7463,7 +7521,7 @@ then
 
 _ACEOF
 if ac_fn_f77_try_link "$LINENO"; then :
-  try_dflags="$try_dflags -Duse_beef" ; usebeef=1
+  usebeef=1
 else
   usebeef=0
 fi
@@ -7483,15 +7541,18 @@ rm -f core conftest.err conftest.$ac_objext \
         else
             beef_libs="\$(TOPDIR)/LIBBEEF/libbeef.a"
             beef_libs_switch="internal"
-            try_dflags="$try_dflags -Duse_beef"
         fi
         echo "-lbeef"
         echo setting BEEF_LIBS... $beef_libs
 
     else
         echo no
+        try_dflags="$try_dflags -D__NOBEEF"
     fi
     LDFLAGS="$BEEF_LDFLAGS_SAVE"
+else
+    echo no
+    try_dflags="$try_dflags -D__NOBEEF"
 fi
 
 

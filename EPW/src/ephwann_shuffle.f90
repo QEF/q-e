@@ -760,9 +760,8 @@
   ! Define it only once for the full run.
   CALL fkbounds(nktotf, lower_bnd, upper_bnd)
   !
-  ! Re-order the k-point according to weather they are in or out of the fshick
-  ! windows
-  IF ((iterative_bte .OR. ephwrite) .AND. mp_mesh_k) THEN
+  ! Re-order the k-point according to weather they are in or out of the fshick windows
+  IF ((iterative_bte .OR. ephwrite) .AND. mp_mesh_k .AND. etf_mem < 3) THEN
     CALL load_rebal
   ENDIF
   !
