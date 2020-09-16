@@ -381,7 +381,7 @@ CONTAINS
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, *) ivec
+    WRITE( xmlunit, '(4I18)') ivec
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_iv
@@ -419,7 +419,7 @@ CONTAINS
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, *) rvec
+    WRITE( xmlunit, '(3es24.15)') rvec
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_rv
@@ -433,7 +433,7 @@ CONTAINS
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, *) rmat
+    WRITE( xmlunit, '(3es24.15)') rmat
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_rm
@@ -447,7 +447,7 @@ CONTAINS
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, *) rtens
+    WRITE( xmlunit, '(3es24.15)') rtens
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_rt
@@ -492,14 +492,13 @@ CONTAINS
     !
     TYPE (c_ptr) :: cp
     REAL(dp), POINTER  :: rmat(:,:)
-    INTEGER :: n, nvec
     !
     NULLIFY (rmat)
     cp = c_loc(zmat)
     CALL c_f_pointer (cp, rmat, shape(zmat)*[2,1])
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, *) rmat
+    WRITE( xmlunit, '(2es24.15)') rmat
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_zm
@@ -556,7 +555,10 @@ CONTAINS
     CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: tag
     INTEGER :: i
     !
-    IF ( nlevel < 0 ) print "('severe error: closing tag that was never opened')"
+    IF ( nlevel < 0 ) THEN
+      print "('xmlw_closetag: severe error, closing tag that was never opened')"
+      RETURN
+    END IF
     IF ( .NOT.PRESENT(tag) ) THEN
        DO i=2,nlevel
           WRITE (xmlunit, '("  ")', ADVANCE='NO')
@@ -949,7 +951,7 @@ CONTAINS
        read(xmlunit,'(a)', end=10) line
        ll = len_trim(line)
        if ( ll == maxline ) then
-          print *, 'severe error: line too long'
+          print *, 'xmlr_opentag: severe error, line too long'
           if (present(ierr)) ierr = 2
           return
        end if
@@ -1016,7 +1018,7 @@ CONTAINS
                 if (present(ierr)) ierr = 0
                 nlevel = nlevel+1
                 IF ( nlevel > maxlevel ) THEN
-                   print *, ' severe error: too many levels'
+                   print *, 'xmlr_opentag: severe error, too many levels'
                    if (present(ierr)) ierr = 3
                 else
                    open_tags(nlevel) = trim(tag)
@@ -1074,7 +1076,7 @@ CONTAINS
           print *, 'end of file reached, tag '//trim(tag)//' not found'
        end if
     else
-       print *, 'severe parsing error'
+       print *, 'xmlr_opentag: severe parsing error'
        if ( present(ierr) ) ierr = 1
     end if
     !
@@ -1096,7 +1098,7 @@ CONTAINS
     ! stat= 1: end
     !
     if ( nlevel < 0 ) &
-         print '("severe error: closing tag that was never opened")'
+         print '("xmlr_closetag: severe error, closing tag that was never opened")'
     stat=0
 #if defined ( __debug )
     if ( .not. present(tag) ) then

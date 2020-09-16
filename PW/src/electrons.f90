@@ -715,9 +715,9 @@ SUBROUTINE electrons_scf ( printout, exxen )
            ! ... For DFT+U, ns and ns_nc are also broadcast inside each pool
            ! ... to ensure consistency on all processors of all pools
            IF (noncolin) THEN
-              CALL mp_bcast( rhoin%ns_nc, root_pool, intra_pool_comm )
+              IF (ALLOCATED(rhoin%ns_nc)) CALL mp_bcast( rhoin%ns_nc, root_pool, intra_pool_comm )
            ELSE
-              CALL mp_bcast( rhoin%ns, root_pool, intra_pool_comm )
+              IF (ALLOCATED(rhoin%ns)) CALL mp_bcast( rhoin%ns, root_pool, intra_pool_comm )
            ENDIF
         ENDIF
         !

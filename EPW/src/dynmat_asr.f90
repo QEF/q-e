@@ -473,6 +473,7 @@
     CALL mp_bcast(epsi , meta_ionode_id, world_comm)
     CALL mp_bcast(dynq , meta_ionode_id, world_comm)
     CALL mp_bcast(q    , meta_ionode_id, world_comm)
+    CALL mp_bcast(mq   , meta_ionode_id, world_comm)
   ENDIF ! not xml
   !
   !

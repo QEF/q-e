@@ -11,7 +11,7 @@
 ########################################
 #
 URL=http://files.qe-forge.org/index.php?file=
-RELEASE_VERSION := $(shell awk -F\' '/version_number/{print $$2}' ../include/version.h )
+RELEASE_VERSION := $(shell awk -F\' '/version_number/{print $$2}' ../include/qe_version.h )
 #
 #
 # Package maintainer: Andrea Ferretti

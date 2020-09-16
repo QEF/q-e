@@ -21,9 +21,10 @@ PROGRAM ibrav2cell
   !
   NAMELIST /system/ ibrav, celldm, angle
   WRITE(*,*) "This code reads a &system/ namelist from standard input"
-  WRITE(*,*) "containing ibrav and celldm(1..6) as in INPUT_PW."
-  WRITE(*,*) "If you specify three angles as angle(1..3) in degrees, the cell"
-  WRITE(*,*) "will be rotated accordingly around the three cartesian axis"
+  WRITE(*,*) "containing only ibrav and celldm(1..6) as in INPUT_PW,"
+  WRITE(*,*) "and optionally, three angles as angle(1..3) (in degrees)."
+  WRITE(*,*) "If you specify the three angles, the cell will be rotated "
+  WRITE(*,*) "accordingly around the three cartesian axis"
   READ(*,system)
   CALL latgen( ibrav, celldm, at(:,1), at(:,2), at(:,3), omega )
   !

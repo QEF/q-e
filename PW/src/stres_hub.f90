@@ -1131,21 +1131,21 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
                                      doverlap, doverlap_inv)
       !
       ! Now compute \sum_J dO^{-1/2}_JI/d\epsilon(ipol,jpol) \phi_J
-      ! and add it to another term (see above)
+      ! and add it to another term (see above).
+      ! Note, doverlap_inv is d(O^{-1/2}) not transposed. The transposition 
+      ! of d(O^{-1/2}) is taken into account via a proper usage of the order
+      ! of indices in doverlap_inv: 
+      ! dwfc(ig,offpmU+m1) = dwfc(ig,offpmU+m1) + wfcatom(ig,m2) * doverlap_inv(m2,offpm+m1)
+      ! where m1=1,ldim_u(nt); m2=1,natomwfc; ig=1,npw
       !
       DO na = 1, nat
          nt = ityp(na)
          IF (is_hubbard(nt) .OR. is_hubbard_back(nt)) THEN
             offpmU = offsetU(na)
             offpm  = oatwfc(na)
-            DO m1 = 1, ldim_u(nt)
-               DO m2 = 1, natomwfc
-                  DO ig = 1, npw
-                     dwfc(ig,offpmU+m1) = dwfc(ig,offpmU+m1) + &
-                                   doverlap_inv(offpm+m1,m2) * wfcatom(ig,m2)
-                  ENDDO
-               ENDDO
-            ENDDO
+            CALL ZGEMM('N','N', npw, ldim_u(nt), natomwfc, (1.d0,0.d0), &
+                  wfcatom, npwx, doverlap_inv(:,offpm+1:offpm+ldim_u(nt)), &
+                  natomwfc, (1.d0,0.d0), dwfc(:,offpmU+1:offpmU+ldim_u(nt)), npwx)
          ENDIF
       ENDDO
       !
@@ -1167,11 +1167,9 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
       CALL matrix_element_of_dSdepsilon (ik, ipol, jpol, &
                          nwfcU, wfcU, nbnd, evc, dproj_us, nb_s, nb_e, mykey)
       ! dproj + dproj_us
-      IF (mykey == 0) THEN
-         DO m1 = 1, nwfcU
-            dproj(m1,nb_s:nb_e) = dproj(m1,nb_s:nb_e) + dproj_us(m1,:)
-         ENDDO
-      ENDIF
+      DO m1 = 1, nwfcU
+         dproj(m1,nb_s:nb_e) = dproj(m1,nb_s:nb_e) + dproj_us(m1,:)
+      ENDDO
       DEALLOCATE(dproj_us)
    ENDIF
    !
@@ -1227,7 +1225,7 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
    !
    A_dS_B(:,:) = (0.0d0, 0.0d0)
    !
-   IF (.NOT.okvan .OR. mykey /= 0) RETURN
+   IF (.NOT.okvan) RETURN
    !
    npw = ngk(ik)
    !
@@ -1321,16 +1319,19 @@ SUBROUTINE matrix_element_of_dSdepsilon (ik, ipol, jpol, lA, A, lB, B, A_dS_B, l
             !
             ijkb0 = ijkb0 + nh(nt)
             !
-            ! dproj(iA,iB) = \sum_ih [Adbeta(iA,ih) * betapsi(ih,iB) +
-            !                         Abeta(iA,ih)  * dbetaB(ih,iB)] 
+            ! A_dS_B(iA,iB) = \sum_ih [Adbeta(iA,ih) * betapsi(ih,iB) +
+            !                          Abeta(iA,ih)  * dbetaB(ih,iB)] 
+            ! Only A_dS_B(:,lB_s:lB_e) are calculated
             !
-            CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
-                       Adbeta, lA, betaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
-                       A_dS_B(1,lB_s), lA)
-            CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
-                       Abeta, lA, dbetaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
-                       A_dS_B(1,lB_s), lA)
-            !
+            IF ( mykey == 0 ) THEN
+              CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                         Adbeta, lA, betaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
+                         A_dS_B(1,lB_s), lA)
+              CALL ZGEMM('N', 'N', lA, lB_e-lB_s+1, nh(nt), (1.0d0,0.0d0), &
+                         Abeta, lA, dbetaB(1,lB_s), nh(nt), (1.0d0,0.0d0), &
+                         A_dS_B(1,lB_s), lA)
+              !
+            ENDIF
          ENDIF
          !
       ENDDO

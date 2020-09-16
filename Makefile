@@ -186,7 +186,7 @@ pw4gwwlib : phlibs
 	if test -d GWW ; then \
 	( cd GWW ; $(MAKE) pw4gwwa || exit 1 ) ; fi
 
-mods : libiotk libfox libutil libla libfft libupf libbeef
+mods : libfox libutil libla libfft libupf libbeef
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 libks_solvers : libs libutil libla
@@ -201,7 +201,7 @@ libfft :
 libutil : 
 	( cd UtilXlib ; $(MAKE) TLDEPS= all || exit 1 )
 
-libupf : libiotk libfox libutil
+libupf : libfox libutil
 	( cd upflib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libs :
@@ -226,8 +226,6 @@ libblas :
 liblapack: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
-libiotk: 
-	cd install ; $(MAKE) -f extlibs_makefile $@
 libfox: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
@@ -236,9 +234,11 @@ libcuda:
 
 libbeef:
 	cd install ; $(MAKE) -f extlibs_makefile $@
+
 # In case of trouble with iotk and compilers, add
 # FFLAGS="$(FFLAGS_NOOPT)" after $(MFLAGS)
-
+libiotk: 
+	cd install ; $(MAKE) -f extlibs_makefile $@
 #########################################################
 # plugins
 #########################################################
@@ -246,10 +246,10 @@ libbeef:
 w90: bindir liblapack
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-want : 
+want : libiotk
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-yambo: 
+yambo: libiotk
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #plumed: pw cp 
@@ -325,14 +325,11 @@ clean :
 veryclean : clean
 	- @(cd install ; $(MAKE) -f plugins_makefile veryclean)
 	- @(cd install ; $(MAKE) -f extlibs_makefile veryclean)
-	- rm -rf install/patch-plumed
-	- cd install ; rm -f config.log configure.msg config.status
-	- rm -rf include/configure.h install/make_wannier90.inc
-	- cd install ; rm -fr autom4te.cache
-	- cd install; ./clean.sh ; cd -
-	- cd include; ./clean.sh ; cd -
-	- rm -f espresso.tar.gz -
-	- rm -rf make.inc -
+	- (cd install ; rm -rf config.log configure.msg config.status \
+		configure.h make_wannier90.inc autom4te.cache )
+	- (cd include; rm -rf configure.in qe_cdefs.h )
+	- rm -f espresso.tar.gz
+	- rm -rf make.inc
 	- rm -rf FoX
 # remove everything not in the original distribution
 distclean : veryclean
@@ -391,6 +388,6 @@ doc_clean :
 	( if test -f $$dir/Makefile ; then \
 	( cd $$dir; $(MAKE) TLDEPS= clean ) ; fi ) ;  done
 
-depend: libiotk
+depend:
 	@echo 'Checking dependencies...'
 	- ( if test -x install/makedeps.sh ; then install/makedeps.sh ; fi)

@@ -301,8 +301,7 @@ MODULE ph_restart
            !
            CALL xmlw_opentag ( "EL_PHON_HEADER")
            CALL xmlw_writetag( "DONE_ELPH", done_elph(irr))
-           CALL xmlw_closetag( )
-           CALL xmlw_closetag( ) ! partial_el_phon
+           CALL xmlw_closetag( ) ! el_phon_header
            CALL xmlw_writetag( "NUMBER_OF_K", nksqtot)
            CALL xmlw_writetag( "NUMBER_OF_BANDS", nbnd)
            DO ik=1,nksqtot
