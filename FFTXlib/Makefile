@@ -50,10 +50,10 @@ fftw_sp.o : fftw_sp.c fftw_sp.h fftw.h konst.h
 fftw_dp.o : fftw_dp.c fftw_dp.h fftw.h konst.h
 
 TEST : test.o libqefft.a
-	$(LD) $(LDFLAGS) -o fft_test.x test.o libqefft.a $(QELIBS)
+	$(LD) $(LDFLAGS) -o fft_test.x test.o libqefft.a $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(LD_LIBS)
 
 TEST0:  test0.o libqefft.a
-	$(LD) $(LDFLAGS) -o fft_test0.x test0.o libqefft.a $(QELIBS)
+	$(LD) $(LDFLAGS) -o fft_test0.x test0.o libqefft.a $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(LD_LIBS)
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L 
