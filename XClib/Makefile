@@ -5,28 +5,28 @@ include ../make.inc
 MODFLAGS= $(BASEMOD_FLAGS)
 
 LDAL = \
-kind_l.o \
-constants_l.o \
+qe_constants.o \
+qe_drivers_d_gga.o \
+qe_drivers_d_lda_lsda.o \
+qe_drivers_gga.o \
+qe_drivers_lda_lsda.o \
+qe_drivers_mgga.o \
+qe_external_calls.o \
+qe_funct_corr_gga.o \
+qe_funct_corr_lda_lsda.o \
+qe_funct_exch_gga.o \
+qe_funct_exch_lda_lsda.o \
+qe_funct_mgga.o \
+qe_kind.o \
 xc_beef_interface.o \
-correlation_lda_lsda.o \
-correlation_gga.o \
-dft_par_mod.o \
-drivers_lda_lsda.o \
-drivers_d_lda_lsda.o \
-drivers_gga.o \
-drivers_d_gga.o \
-drivers_mgga.o \
-exchange_lda_lsda.o \
-exchange_gga.o \
-metagga.o \
-external.o \
-get_xc.o \
-xc_lda_lsda_wrapper.o \
-xc_gga_wrapper.o \
-xc_mgga_wrapper.o \
-xc_d_lda_lsda_wrapper.o \
-xc_d_gga_wrapper.o \
-xc_interfaces.o
+xc_get_dft.o \
+xc_input_params_mod.o \
+xc_interfaces.o \
+xc_wrapper_d_gga.o \
+xc_wrapper_d_lda_lsda.o \
+xc_wrapper_gga.o \
+xc_wrapper_lda_lsda.o \
+xc_wrapper_mgga.o
 
 all: xc_lib.a
 
