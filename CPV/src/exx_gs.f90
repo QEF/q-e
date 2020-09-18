@@ -839,10 +839,10 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
             !
             !--------------------------------------------------------------------------------------
             call start_clock('exx_vofr')
-            !write(*,*) 'Before getvofr'
+            write(*,*) 'Before getvofr pair', pos, iobtl
             CALL getvofr( p_me_r, p_ps_r, n_p_me, n_p_ps, hcub, rhops, potme, pair_status(pos, iobtl), psgsn, &
                           pairrho(:,:,pos,iobtl), pairv(:,:,pos,iobtl), cgstep)
-            !write(*,*) 'After getvofr'
+            write(*,*) 'After getvofr pair', pos, iobtl
             call stop_clock('exx_vofr')
             !--------------------------------------------------------------------------------------
             !
@@ -1059,9 +1059,11 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
           !--------------------------------------------------------------------------------------
           CALL start_clock('getvofr')
           !
+            write(*,*) 'Before getvofr self', iobtl
           CALL getvofr( s_me_r, s_ps_r, n_s_me, n_s_ps, hcub, rhops, potme, n_exx-1, psgsn, &
                         selfrho(:,:,iobtl), selfv(:,:,iobtl), cgstep)
           !
+            write(*,*) 'After getvofr self', iobtl
           CALL stop_clock('getvofr')
           !--------------------------------------------------------------------------------------
           !
@@ -1372,7 +1374,7 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
 !       !
 !     END IF
 
-    ! write(*,*) "exiting exx_gs" ! debug
+     write(*,*) "exiting exx_gs" ! debug
     !
     !==============================================================================
     IF (ALLOCATED(potpsi))           DEALLOCATE(potpsi)

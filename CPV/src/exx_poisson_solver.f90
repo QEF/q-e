@@ -79,6 +79,8 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
 
 #ifdef __CUDA
     !$cuf kernel do (3)
+#else
+    !$omp parallel do
 #endif
     do k = 1, n(3)
         do j = 1, n(2)
@@ -88,12 +90,17 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
             end do
         end do
     end do
+#ifndef __CUDA
+    !$omp end parallel do
+#endif
     !
     CALL PADX(nd,nb,coeke,x,d1)
     !
     nro = 0.d0
 #ifdef __CUDA
     !$cuf kernel do (3)
+#else
+    !$omp parallel do reduction(+:nro)
 #endif
     do k = nb(3), nb(6)
       do j = nb(2), nb(5)
@@ -104,6 +111,9 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
         end do
       end do
     end do   
+#ifndef __CUDA
+    !$omp end parallel do
+#endif
     !
     DO itr=0,1000 ! loop over the dimension of the problem                         ! std CG_4 : for i = 1:length(b)
         !
@@ -112,6 +122,8 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
         alfa = 0.d0
 #ifdef __CUDA
         !$cuf kernel do (3)
+#else
+    !$omp parallel do reduction(+:alfa)
 #endif
         do k = nb(3), nb(6)
           do j = nb(2), nb(5)
@@ -120,11 +132,16 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
             end do
           end do
         end do   
+#ifndef __CUDA
+    !$omp end parallel do
+#endif
         !
         nr = 0.d0
         !alfa=nro/Ddot(npt,d0_d,1,d1_d,1)                                          ! std CG_6 : alfa = rsold / (p' * Ap);
 #ifdef __CUDA
         !$cuf kernel do (3)
+#else
+    !$omp parallel do reduction(+:nr)
 #endif
         do k = nb(3), nb(6)
           do j = nb(2), nb(5)
@@ -135,12 +152,17 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
             end do
           end do
         end do   
+#ifndef __CUDA
+    !$omp end parallel do
+#endif
         !                                 ! std CG_7 : x = x + alfa * p;
         !                                 ! std CG_8 : r = r - alfa * Ap;
         !                                                                                          ! std CG_9 : rsnew = r' * r;
         IF (nr < eps*eps*(1.d0+nro)) EXIT                                        ! std CG_10-12 : if (converge) : break
 #ifdef __CUDA
         !$cuf kernel do (3)
+#else
+    !$omp parallel do
 #endif
         do k = nb(3), nb(6)
           do j = nb(2), nb(5)
@@ -149,6 +171,9 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
             end do
           end do
         end do   
+#ifndef __CUDA
+    !$omp end parallel do
+#endif
         !                                  ! std CG_13 : p = r + (rsnew / rsold) * p;
         !                                    ! std CG_13 : p = r + (rsnew / rsold) * p;
         nro = nr
@@ -167,6 +192,8 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
 
 #ifdef __CUDA
     !$cuf kernel do (3)
+#else
+    !$omp parallel do
 #endif
     do k = 1, n(3)
         do j = 1, n(2)
@@ -175,6 +202,9 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
             end do
         end do
     end do
+#ifndef __CUDA
+    !$omp end parallel do
+#endif
     !
     iter = itr
 
@@ -221,16 +251,11 @@ SUBROUTINE PADX(nd,nb,coeke,d,Ad)
 
 #ifdef __CUDA
     !$cuf kernel do (3)
-    DO ktr=nd(3),nd(6)
-        DO jtr=nd(2),nd(5)
 #else
-!#ifdef __OPENMP
     !$omp parallel do default(shared) private(ktr,jtr,itr) schedule(guided)
+#endif
     DO ktr=nd(3),nd(6)
         DO jtr=nd(2),nd(5)
-            !DIR$ SIMD 
-!#endif
-#endif
             DO itr=nd(1),nd(4)
                 Ad(itr,jtr,ktr)=(coeke(0,1,1)+coeke(0,2,2)+coeke(0,3,3))*d(itr,jtr,ktr)+coeke(1,1,1)*(d(itr-1,jtr,ktr)+d(itr+1,jtr,ktr)) &
                                                   +coeke(2,1,1)*(d(itr-2,jtr,ktr)+d(itr+2,jtr,ktr)) &
@@ -262,4 +287,7 @@ SUBROUTINE PADX(nd,nb,coeke,d,Ad)
             END DO
         END DO
     END DO
+#ifndef __CUDA
+    !$omp end parallel do
+#endif
 END SUBROUTINE PADX

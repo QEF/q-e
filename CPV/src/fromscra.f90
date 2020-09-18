@@ -199,7 +199,7 @@ SUBROUTINE from_scratch( )
        !
        if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
        !
-       CALL rhoofr( nfi, cm_bgrp, cm_d, bec_bgrp, dbec, becsum, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
+       CALL rhoofr( nfi, cm_bgrp, irb, eigrb, bec_bgrp, dbec, becsum, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
        !
        edft%enl  = enl
        edft%ekin = ekin
@@ -247,7 +247,7 @@ SUBROUTINE from_scratch( )
          !
       ELSE
          !
-         CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, cm_bgrp, cm_d, c0_bgrp, c0_d, fromscra = .TRUE. )
+         CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, cm_bgrp, c0_bgrp, fromscra = .TRUE. )
          !
       ENDIF
       !

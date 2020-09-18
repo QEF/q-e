@@ -245,26 +245,6 @@
 
    INTERFACE rhoofr
       SUBROUTINE rhoofr_cp &
-         ( nfi, c_bgrp, c_d, bec, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
-         USE kinds,      ONLY: DP         
-         IMPLICIT NONE
-         INTEGER nfi
-         COMPLEX(DP) :: c_bgrp( :, : )
-         COMPLEX(DP) DEVICEATTR :: c_d( :, : )
-         REAL(DP) bec(:,:)
-         REAL(DP) dbec(:,:,:,:)
-         REAL(DP) rhovan(:, :, : )
-         REAL(DP) rhor(:,:)
-         REAL(DP) drhor(:,:,:,:)
-         COMPLEX(DP) rhog( :, : )
-         COMPLEX(DP) drhog( :, :, :, : )
-         REAL(DP) rhos(:,:)
-         REAL(DP) enl, ekin
-         REAL(DP) denl(3,3), dekin(6)
-         LOGICAL, OPTIONAL, INTENT(IN) :: tstress
-         INTEGER, OPTIONAL, INTENT(IN) :: ndwwf
-      END SUBROUTINE rhoofr_cp
-      SUBROUTINE rhoofr_host &
          ( nfi, c_bgrp, irb, eigrb, bec, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
          USE kinds,      ONLY: DP
          IMPLICIT NONE
@@ -284,7 +264,7 @@
          REAL(DP) denl(3,3), dekin(6)
          LOGICAL, OPTIONAL, INTENT(IN) :: tstress
          INTEGER, OPTIONAL, INTENT(IN) :: ndwwf
-      END SUBROUTINE rhoofr_host
+      END SUBROUTINE rhoofr_cp
    END INTERFACE
 
    INTERFACE checkrho
@@ -349,7 +329,7 @@
 
    INTERFACE runcp_uspp
       SUBROUTINE runcp_uspp_x &
-         ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, c0_d, cm_bgrp, cm_d, fromscra, restart )
+         ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, cm_bgrp, fromscra, restart )
          USE kinds,             ONLY: DP
          IMPLICIT NONE
          integer, intent(in) :: nfi
@@ -358,7 +338,6 @@
          real(DP) :: rhos(:,:)
          real(DP) :: bec_bgrp(:,:)
          complex(DP) :: c0_bgrp(:,:), cm_bgrp(:,:)
-         complex(DP) DEVICEATTR :: c0_d(:,:), cm_d(:,:)
          logical, optional, intent(in) :: fromscra
          logical, optional, intent(in) :: restart
       END SUBROUTINE

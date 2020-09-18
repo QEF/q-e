@@ -14,7 +14,7 @@
 
 !-----------------------------------------------------------------------
    SUBROUTINE rhoofr_cp &
-      ( nfi, c_bgrp, c_d, bec_bgrp, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, &
+      ( nfi, c_bgrp, irb, eigrb, bec_bgrp, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, &
         enl, denl, ekin, dekin, tstress, ndwwf )
 !-----------------------------------------------------------------------
 !
@@ -67,7 +67,8 @@
       USE fft_interfaces,     ONLY: fwfft, invfft
       USE fft_base,           ONLY: dffts, dfftp
       USE cp_interfaces,      ONLY: checkrho, ennl, calrhovan, dennl
-      USE cp_main_variables,  ONLY: iprint_stdout, idesc, irb, eigrb
+      USE cp_main_variables,  ONLY: iprint_stdout, idesc
+      USE wavefunctions,      ONLY: c0_d
       USE wannier_base,       ONLY: iwf
       USE exx_module,         ONLY: rhopr 
       USE input_parameters,   ONLY: tcpbo ! BS
@@ -88,10 +89,11 @@
       REAL(DP) rhos(:,:)
       REAL(DP) enl, ekin
       REAL(DP) denl(3,3), dekin(6)
+      COMPLEX(DP) eigrb( :, : )
       COMPLEX(DP) rhog( :, : )
       COMPLEX(DP) drhog( :, :, :, : )
       COMPLEX(DP) c_bgrp( :, : )
-      COMPLEX(DP) DEVICEATTR :: c_d( :, : )
+      INTEGER irb( :, : )
       LOGICAL, OPTIONAL, INTENT(IN) :: tstress
       INTEGER, OPTIONAL, INTENT(IN) :: ndwwf
 
@@ -128,7 +130,7 @@
       !  calculation of kinetic energy ekin
       !
 #if defined (__CUDA)
-      ekin = enkin( c_d, f_d, nbsp_bgrp )
+      ekin = enkin( c0_d, f_d, nbsp_bgrp )
 #else
       ekin = enkin( c_bgrp, f_bgrp, nbsp_bgrp )
 #endif
@@ -230,7 +232,7 @@
             !
             c_bgrp( :, nbsp_bgrp + 1 ) = ( 0.d0, 0.d0 )
 #if defined (__CUDA)
-            c_d( :, nbsp_bgrp + 1 ) = ( 0.d0, 0.d0 )
+            c0_d( :, nbsp_bgrp + 1 ) = ( 0.d0, 0.d0 )
 #endif
             !
          ENDIF
@@ -499,14 +501,14 @@
               IF( ii < nbsp_bgrp ) THEN
 !$cuf kernel do(1)
                  do ig = 1, dffts%ngw
-                    psis( nlm_d( ig ) + ioff) = CONJG( c_d( ig, ii ) ) + ci * conjg( c_d( ig, ii+1 ))
-                    psis( nl_d( ig )  + ioff) = c_d( ig, ii ) + ci * c_d( ig, ii+1 )
+                    psis( nlm_d( ig ) + ioff) = CONJG( c0_d( ig, ii ) ) + ci * conjg( c0_d( ig, ii+1 ))
+                    psis( nl_d( ig )  + ioff) = c0_d( ig, ii ) + ci * c0_d( ig, ii+1 )
                  end do
               ELSE IF( ii == nbsp_bgrp ) THEN
 !$cuf kernel do(1)
                  do ig = 1, dffts%ngw
-                    psis( nlm_d( ig ) + ioff) = CONJG( c_d( ig, ii ) )
-                    psis( nl_d( ig )  + ioff) = c_d( ig, ii )
+                    psis( nlm_d( ig ) + ioff) = CONJG( c0_d( ig, ii ) )
+                    psis( nl_d( ig )  + ioff) = c0_d( ig, ii )
                  end do
               END IF
               ! CALL c2psi_gamma( dffts, psis, c_bgrp(:,ii), c_bgrp(:,ii+1) )
@@ -1141,35 +1143,3 @@ CONTAINS
            ENDIF
       END SUBROUTINE
 END SUBROUTINE rhov
-
-SUBROUTINE rhoofr_host &
-      ( nfi, c_bgrp, irb, eigrb, bec_bgrp, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, &
-        enl, denl, ekin, dekin, tstress, ndwwf )
-         USE kinds,         ONLY: DP
-#if defined (__CUDA)
-         USE cudafor
-#endif
-         USE cp_interfaces
-         IMPLICIT NONE
-         INTEGER nfi
-         COMPLEX(DP) c_bgrp( :, : )
-         INTEGER irb( :, : )
-         COMPLEX(DP) eigrb( :, : )
-         REAL(DP) bec_bgrp(:,:)
-         REAL(DP) dbec(:,:,:,:)
-         REAL(DP) rhovan(:, :, : )
-         REAL(DP) rhor(:,:)
-         REAL(DP) drhor(:,:,:,:)
-         COMPLEX(DP) rhog( :, : )
-         COMPLEX(DP) drhog( :, :, :, : )
-         REAL(DP) rhos(:,:)
-         REAL(DP) enl, ekin
-         REAL(DP) denl(3,3), dekin(6)
-         LOGICAL, OPTIONAL, INTENT(IN) :: tstress
-         INTEGER, OPTIONAL, INTENT(IN) :: ndwwf
-         COMPLEX(DP), ALLOCATABLE DEVICEATTR :: c(:,:) 
-         ALLOCATE( c, SOURCE=c_bgrp )
-         CALL rhoofr(nfi, c_bgrp, c, bec_bgrp, dbec, rhovan, rhor, &
-              drhor, rhog, drhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
-         DEALLOCATE( c ) 
-END SUBROUTINE rhoofr_host

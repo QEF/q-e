@@ -293,21 +293,8 @@ SUBROUTINE getvofr(me_r, ps_r, n_me, n_ps, hcub, rhops, potme, guess_state, psgs
     ! --- local variable ---
     !-----------------------------------------------------------------------
     REAL(DP)                  :: eps
-!!    REAL(DP), ALLOCATABLE     :: rho_ps(:)
-!!    REAL(DP), ALLOCATABLE     :: pot_ps(:)
-    !REAL(DP), ALLOCATABLE     :: rho_me(:)
-    !REAL(DP), ALLOCATABLE     :: plr_me(:)
-    !REAL(DP), ALLOCATABLE     :: klr_me(:)
-    !COMPLEX(DP), ALLOCATABLE  :: rho_ce(:)
-    !COMPLEX(DP), ALLOCATABLE  :: plr_ce(:)
-    !COMPLEX(DP), ALLOCATABLE  :: klr_ce(:)
-    !REAL(DP), ALLOCATABLE     :: GS_rho(:,:)
-    !REAL(DP), ALLOCATABLE     :: GS_pot(:,:)
-    !REAL(DP), ALLOCATABLE     :: GS_coe(:)
-    !REAL(DP), ALLOCATABLE     :: GS_prj(:)
     REAL(DP)                  :: normfactor
     REAL(DP)                  :: rhosum
-    !COMPLEX(DP)               :: qlm(0:lmax, 0:lmax)
     COMPLEX(DP), ALLOCATABLE  :: qlm(:, :)
     COMPLEX(DP)               :: qlm_1d(lm_mx)
     INTEGER                   :: gsn, ngsn
@@ -320,10 +307,6 @@ SUBROUTINE getvofr(me_r, ps_r, n_me, n_ps, hcub, rhops, potme, guess_state, psgs
     REAL(DP)                  :: sigma = 0.0D0
     !-----------------------------------------------------------------------
 #ifdef __CUDA
-    !REAL(DP), ALLOCATABLE, DEVICE     :: rhops_d(:)
-    !REAL(DP), ALLOCATABLE, DEVICE     :: rho_ps_d(:)
-    !REAL(DP), ALLOCATABLE, DEVICE     :: pot_ps_d(:)
-    !REAL(DP), ALLOCATABLE, DEVICE     :: potme_d(:) ! don't do implicitly
     attributes(device) :: qlm
     attributes(device) :: potme, rhops
 #endif
@@ -334,7 +317,7 @@ SUBROUTINE getvofr(me_r, ps_r, n_me, n_ps, hcub, rhops, potme, guess_state, psgs
     !-----------------------------------------------------------------------
     REAL(DP), EXTERNAL     :: dnrm2
     !-----------------------------------------------------------------------
-    !write(*,*) 'MCA: Starting getvofr'
+    write(*,*) 'MCA: Starting getvofr'
     !-----------------------------------------------------------------------
     ! --- initialize ---
     !-----------------------------------------------------------------------
@@ -342,16 +325,6 @@ SUBROUTINE getvofr(me_r, ps_r, n_me, n_ps, hcub, rhops, potme, guess_state, psgs
     if (.not.allocated(pot_ps)) then
       allocate( pot_ps(n_ps)        ); pot_ps  = 0.0d0
     end if
-    !ALLOCATE( rho_me(n_me)        ); rho_me  = 0.0D0
-    !ALLOCATE( plr_me(n_me)        ); plr_me  = 0.0D0
-    !ALLOCATE( klr_me(n_me)        ); klr_me  = 0.0D0
-    !ALLOCATE( rho_ce(n_me)        ); rho_ce  = CMPLX(0.0D0, 0.0D0, kind=DP)
-    !ALLOCATE( plr_ce(n_me)        ); plr_ce  = CMPLX(0.0D0, 0.0D0, kind=DP)
-    !ALLOCATE( klr_ce(n_me)        ); klr_ce  = CMPLX(0.0D0, 0.0D0, kind=DP)
-    !ALLOCATE( GS_rho(n_ps, psgsn) ); GS_rho  = 0.0D0
-    !ALLOCATE( GS_pot(n_ps, psgsn) ); GS_pot  = 0.0D0
-    !ALLOCATE( GS_coe(psgsn)       ); GS_coe  = 0.0D0
-    !ALLOCATE( GS_prj(psgsn)       ); GS_prj  = 0.0D0
     !-----------------------------------------------------------------------
     ncb(1)  = ps_r(4)-ps_r(1)+1
     ncb(2)  = ps_r(5)-ps_r(2)+1
@@ -365,59 +338,24 @@ SUBROUTINE getvofr(me_r, ps_r, n_me, n_ps, hcub, rhops, potme, guess_state, psgs
     !-----------------------------------------------------------------------
     omega = get_screening_parameter()
     !-----------------------------------------------------------------------
-!#ifdef __CUDA
-!    if (.not.allocated(potme_d)) allocate(potme_d,   mold=potme)
-!    potme_d = potme
-!#endif
     ALLOCATE(qlm(0:lmax, 0:lmax))
-
-!   !========================================================================
-!   ! First, we solve the diffusion equation to get the diffused density
-!   !------------------------------------------------------------------------
-!   CALL start_clock('getvofr_derk')
-!   !------------------------------------------------------------------------
-!   rhosum = SUM(rho_ps)
-!   !------------------------------------------------------------------------
-!   CALL DERK(ncb, 1.0/(omega**2.0), rho_ps, coeke)
-!   !------------------------------------------------------------------------
-!   IF (me_image .EQ. 0) WRITE(*,"(I3, E15.7, E15.7)") ncb(1), rhosum, SUM(rho_ps)
-!   !------------------------------------------------------------------------
-!   CALL stop_clock('getvofr_derk')
-!   !------------------------------------------------------------------------
-
     !---------------------------------------------------------------------------
     ! Then, we calculate the potential outside the inner sphere, which will
     ! also give the boundary values for potential inside the sphere.
     !---------------------------------------------------------------------------
     CALL start_clock('getvofr_qlm')
-!#ifdef __CUDA
-!    !ALLOCATE(rhops_d,  source=rhops)
-!    CALL getqlm(ps_r, hcub, rho_ps, qlm)
-!#else
-!    CALL getqlm(ps_r, hcub, rhops, qlm)
-!#endif
-    !write(*,*) 'MCA: getqlm'
+    write(*,*) 'MCA: getqlm'
     CALL getqlm(ps_r, hcub, rho_ps, qlm)
     CALL stop_clock('getvofr_qlm')
     !-----------------------------------------------------------------------
     CALL start_clock('getvofr_bound')
-!#ifdef __CUDA
-!    CALL exx_boundaryv(me_r, ps_r, potme_d, qlm)
-!    potme = potme_d
-!#else
-    !write(*,*) 'MCA: exx_boundary'
+    write(*,*) 'MCA: exx_boundary'
     CALL exx_boundaryv(me_r, ps_r, potme, qlm)
-!#endif
-    !CALL exx_boundaryv_cuda(me_r, ps_r, potme, qlm_1d)
     CALL stop_clock('getvofr_bound')
     !-----------------------------------------------------------------------
     CALL start_clock('getvofr_geterho')
-!#ifdef __CUDA
-!    CALL geterho(me_r, ps_r, potme_d, rho_ps)
-!#else
-    !write(*,*) 'MCA: geterho'
+    write(*,*) 'MCA: geterho'
     CALL geterho(me_r, ps_r, potme, rho_ps)
-!#endif
     CALL stop_clock('getvofr_geterho')
     !========================================================================
     !TODO : copy out rho_ps before the next step
@@ -469,235 +407,34 @@ SUBROUTINE getvofr(me_r, ps_r, n_me, n_ps, hcub, rhops, potme, guess_state, psgs
     CALL start_clock('getvofr_solver')
     !---------------------------------------------------------------------------
 
-!#ifdef __CUDA
-!    allocate(pot_ps_d, source=pot_ps)
-!#endif
-    !write(*,*) 'MCA: cg_solver'
+    write(*,*) 'MCA: cg_solver'
     call cg_solver_stdcg
-!#ifdef __CUDA
-    !pot_ps = pot_ps_d
-!#endif
 
     !---------------------------------------------------------------------------
     CALL stop_clock('getvofr_solver')
     !---------------------------------------------------------------------------
 
-    ! CALL write_rho_pot(ps_r, rhops, rho_ps, pot_ps)
-
-    !!---------------------------------------------------------------------------
-    !ngsn = MIN(gsn+1,psgsn)
-    !!---------------------------------------------------------------------------
-    !DO itr = ngsn, 2, -1
-    !  rhops_old(:,itr) = rhops_old(:,itr-1)
-    !  potps_old(:,itr) = potps_old(:,itr-1)
-    !END DO
-    !!---------------------------------------------------------------------------
-    !rhops_old(:,1) = rho_ps(:)
-    !potps_old(:,1) = pot_ps(:)
-    !!---------------------------------------------------------------------------
-
     !---------------------------------------------------------------------------
-    !write(*,*) 'MCA: ps2me'
+    write(*,*) 'MCA: ps2me'
     CALL ps2me(me_r, ps_r, potme, pot_ps)
-    !write(*,*) 'MCA: after ps2me'
+    write(*,*) 'MCA: after ps2me'
     !---------------------------------------------------------------------------
-
-    ! TODO: potme = potme_d
-
-    !---------------------------------------------------------------------------
-    ! up to this point, the Exx potential is computed and stored in me_r next,
-    ! we are going to compute the long range potential with convolution
-    ! and subtract it from the total Exx potential
-    !---------------------------------------------------------------------------
-    !IF (omega .NE. 0.0_DP) THEN
-    !    !-----------------------------------------------------------------------
-    !    IF (anti_alising) sigma = 0.5*hcub**0.3333333333333333D0
-    !    !-----------------------------------------------------------------------
-    !    CALL ps2me(me_r, ps_r, rho_me, rhops)               ! put rho to ME cube
-    !    !-----------------------------------------------------------------------
-    !    ! write(*,*) "rho_me: "
-    !    ! write(*,'(100000000E20.10)')  rho_me
-    !    !-----------------------------------------------------------------------
-    !    CALL extend_and_subsample(me_r, rho_me, anti_alising, sigma)
-    !    !-----------------------------------------------------------------------
-    !    IF (anti_alising) THEN
-    !        CALL kernel_lr(me_r, klr_me, (1/omega**2.0D0 - 2.0D0*sigma**2.0D0)**(-0.5D0))
-    !    ELSE
-    !        CALL kernel_lr(me_r, klr_me, omega)
-    !    END IF
-    !    !-----------------------------------------------------------------------
-
-    !    !-----------------------------------------------------------------------
-    !    !$omp parallel do private(itr)
-    !    !-----------------------------------------------------------------------
-    !    !DIR$ SIMD
-    !    !-----------------------------------------------------------------------
-    !    DO itr=1,n_me
-    !        rho_ce(itr) = CMPLX(rho_me(itr),0.0D0, kind=DP)
-    !        klr_ce(itr) = CMPLX(klr_me(itr),0.0D0, kind=DP)
-    !    END DO
-    !    !-----------------------------------------------------------------------
-
-    !    CALL start_clock('getvofr_rs')
-    !    !-----------------------------------------------------------------------
-    !    CALL cfft3d(rho_ce, me_r(4)-me_r(1)+1, me_r(5)-me_r(2)+1, me_r(6)-me_r(3)+1, &
-    !                        me_r(4)-me_r(1)+1, me_r(5)-me_r(2)+1, me_r(6)-me_r(3)+1, -1)
-    !    CALL cfft3d(klr_ce, me_r(4)-me_r(1)+1, me_r(5)-me_r(2)+1, me_r(6)-me_r(3)+1, &
-    !                        me_r(4)-me_r(1)+1, me_r(5)-me_r(2)+1, me_r(6)-me_r(3)+1, -1)
-    !    !-----------------------------------------------------------------------
-    !    CALL stop_clock('getvofr_rs')
-
-    !    !-----------------------------------------------------------------------
-    !    !$omp parallel do private(itr)
-    !    !-----------------------------------------------------------------------
-    !    !DIR$ SIMD
-    !    !-----------------------------------------------------------------------
-    !    DO itr=1,n_me
-    !        plr_ce(itr) = rho_ce(itr) * klr_ce(itr) * hcub*8.0D0 * n_me
-    !    END DO
-    !    !-----------------------------------------------------------------------
-    !    
-    !    !-----------------------------------------------------------------------
-    !    CALL cfft3d(plr_ce, me_r(4)-me_r(1)+1, me_r(5)-me_r(2)+1, me_r(6)-me_r(3)+1, &
-    !                        me_r(4)-me_r(1)+1, me_r(5)-me_r(2)+1, me_r(6)-me_r(3)+1, 1)
-    !    !-----------------------------------------------------------------------
-
-    !    !-----------------------------------------------------------------------
-    !    !$omp parallel do private(itr)
-    !    !-----------------------------------------------------------------------
-    !    !DIR$ SIMD
-    !    !-----------------------------------------------------------------------
-    !    DO itr=1,n_me
-    !        plr_me(itr) = DBLE(plr_ce(itr))
-    !    END DO
-    !    !-----------------------------------------------------------------------
-    !    
-    !    !-----------------------------------------------------------------------
-    !    CALL shrink_and_interpolate(me_r, plr_me)
-    !    !-----------------------------------------------------------------------
-
-    !    !-----------------------------------------------------------------------
-    !    ! write(*,*) "plr_me: "
-    !    ! write(*,'(100000000E20.10)')  plr_me
-    !    !-----------------------------------------------------------------------
-
-    !    !-----------------------------------------------------------------------
-    !    !$omp parallel do private(itr)
-    !    !-----------------------------------------------------------------------
-    !    !DIR$ SIMD
-    !    !-----------------------------------------------------------------------
-    !    DO itr=1,n_me
-    !        potme(itr) = potme(itr) - plr_me(itr)
-    !    END DO
-    !    !-----------------------------------------------------------------------
-    !END IF
-    !---------------------------------------------------------------------------
-    !---------------------------------------------------------------------------
-
-    !---------------------------------------------------------------------------
-    !DEALLOCATE( rho_ps )
-    !DEALLOCATE( pot_ps )
-    !DEALLOCATE( rho_me )
-    !DEALLOCATE( plr_me )
-    !DEALLOCATE( klr_me )
-    !DEALLOCATE( rho_ce )
-    !DEALLOCATE( plr_ce )
-    !DEALLOCATE( klr_ce )
-    !DEALLOCATE( GS_rho )
-    !DEALLOCATE( GS_pot )
-    !DEALLOCATE( GS_coe )
-    !DEALLOCATE( GS_prj )
     DEALLOCATE( qlm    )
-!#ifdef __CUDA
-!    !deallocate(rhops_d)
-!    !deallocate(rho_ps_d)
-!    !deallocate(potme_d)
-!    !deallocate(pot_ps_d)
-!#endif
-    !---------------------------------------------------------------------------
-
     !---------------------------------------------------------------------------
     RETURN
     !---------------------------------------------------------------------------
   contains
 
-    !subroutine  cg_solver_cpu_pcg()
-    !  implicit none
-    !  CALL CGMIC(nstep, ncb, poisson_eps, fbsscale, coemicf, coeke, rho_ps, pot_ps)
-    !  return
-    !end subroutine cg_solver_cpu_pcg
-
     subroutine  cg_solver_stdcg()
       implicit none
 #ifdef __CUDA
-      !ALLOCATE(rho_ps_d,  source=rho_ps)
-      !ALLOCATE(pot_ps_d,  source=pot_ps)
       CALL CGMIC_STDCG(nstep, ncb, poisson_eps, fbsscale, coemicf_d, coeke_d, rho_ps, pot_ps)
-      !pot_ps = pot_ps_d
-      !DEALLOCATE(rho_ps_d)
-      !DEALLOCATE(pot_ps_d)
 #else
       CALL CGMIC_STDCG(nstep, ncb, poisson_eps, fbsscale, coemicf, coeke, rho_ps, pot_ps)
 #endif
       !
       return
     end subroutine cg_solver_stdcg
-
-    !subroutine  cg_solver_gpu_stdcg()
-    !  implicit none
-    !  CALL CGMIC_CUDA(nstep, ncb, poisson_eps, fbsscale, coemicf, coeke, rho_ps, pot_ps)
-    !  return
-    !end subroutine cg_solver_gpu_stdcg
-
-!    subroutine  cg_solver_gpu()
-!!			use laplacian_natan_kronik, only : eps10
-!!			use laplacian_natan_kronik, only : output_prefactor
-!!			use laplacian_natan_kronik, only : output_stencil_coefficients
-!!			use laplacian_natan_kronik, only : nord2
-!!			use laplacian_natan_kronik, only : eta
-!!			use laplacian_natan_kronik, only : drct_aa, drct_bb, drct_cc
-!!			use laplacian_natan_kronik, only : drct_ab, drct_ac, drct_bc
-!      implicit none
-!      integer, device :: ncb_d(3)
-!      real(8), device :: coeke_d(-nord2:nord2, 3,3)
-!      real(8), device :: coemicf_d(-nord2:nord2, 3,3)
-!      real(8), device, allocatable :: rho_ps_d(:,:,:)
-!      real(8), device, allocatable :: pot_ps_d(:,:,:)
-!			!real(8), device :: prefac_d(drct_aa:drct_bc)   
-!			!real(8), device :: stencil_coe_d(-nord2:nord2,drct_aa:drct_bc)
-!      !
-!      !real(8) :: prefac(drct_aa:drct_bc)
-!      !real(8) :: stencil_coe(-nord2:nord2,drct_aa:drct_bc)
-!      type(dim3) :: grid, tBlock
-!      integer :: istat
-!      !
-!      !call output_prefactor(prefac)
-!			!call output_stencil_coefficients(stencil_coe)
-!      !
-!      ! alloc GPU vars
-!      allocate(rho_ps_d(ncb(1),ncb(2),ncb(3)))
-!      allocate(pot_ps_d(ncb(1),ncb(2),ncb(3)))
-!      ! copy to GPU
-!      ncb_d = ncb
-!      !prefac_d = prefac
-!      !stencil_coe_d = stencil_coe
-!      coeke_d = coeke
-!      coemicf_d = coemicf
-!      istat = cudaMemcpy(rho_ps_d,rho_ps, product(ncb)) !more efficient memcp
-!      tBlock = dim3(8,8,8) ! TODO: arch specific settins...
-!      grid = dim3(ceiling(real(ncb(1))/tBlock%x), &
-!        &         ceiling(real(ncb(2))/tBlock%y), &
-!        &         ceiling(real(ncb(3))/tBlock%z)) 
-!      ! GPU kernel
-!      call cgmic_cuda<<<grid, tBlock>>>(nstep, ncb_d, poisson_eps, fbsscale, coemicf_d, coeke_d, rho_ps_d, pot_ps_d)
-!                                       ! out , in ,    in (value), in(value), 
-!      istat = cudaGetLastError() 
-!      istat = cudaMemcpy(pot_ps, pot_ps_d, product(ncb)) !more efficient memcp
-!      !
-!      deallocate(rho_ps_d)
-!      deallocate(pot_ps_d)
-!      return
-!    end subroutine cg_solver_gpu
 
 END SUBROUTINE getvofr
 !===============================================================================
@@ -779,21 +516,6 @@ SUBROUTINE getqlm(ps_r, hcub, rho, qlm)
         qlm(l,m) = qlm_tmp
       END DO ! m
     END DO ! l
-
-    !!------------------------------------------------------------------------------
-    !!cuf kernel do (1)
-    !DO l = 0, lpole
-    !  qlm(l,0) = qlm(l,0)*clm(l,0)*hcub
-    !END DO
-    !!------------------------------------------------------------------------------
-    !!
-    !!------------------------------------------------------------------------------
-    !DO l = 1, lpole
-    !  DO m = 1, l, 1
-    !    qlm(l,m) = qlm(l,m)*clm(l,m)*hcub*2.0_DP
-    !  END DO
-    !END DO
-    !!------------------------------------------------------------------------------
     !
     !---------------------------------------------------------------------------
     RETURN

@@ -18,7 +18,7 @@
 
 
    SUBROUTINE runcp_uspp_x &
-      ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, c0_d, cm_bgrp, cm_d, fromscra, restart )
+      ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, cm_bgrp, fromscra, restart )
       !
       !  This subroutine performs a Car-Parrinello or Steepest-Descent step
       !  on the electronic variables, computing forces on electrons
@@ -48,6 +48,7 @@
       USE ldaU_cp,             ONLY : lda_plus_u, vupsi
       USE fft_helper_subroutines
 #if defined (__CUDA)
+      USE wavefunctions,       ONLY : c0_d, cm_d
       USE uspp_gpum,           ONLY : vkb_d
       USE cudafor
 #endif
@@ -60,17 +61,16 @@
       REAL(DP) :: rhos(:,:)
       REAL(DP) :: bec_bgrp(:,:)
       COMPLEX(DP) :: c0_bgrp(:,:), cm_bgrp(:,:)
-      COMPLEX(DP) DEVICEATTR :: c0_d(:,:), cm_d(:,:)
       LOGICAL, OPTIONAL, INTENT(IN) :: fromscra
       LOGICAL, OPTIONAL, INTENT(IN) :: restart
       !
       !
      real(DP) ::  verl1, verl2, verl3
-#if defined(__INTEL_COMPILER)
-#if __INTEL_COMPILER  >= 1300
-!dir$ attributes align: 4096 :: emadt2, emaver, c2, c3, c2tmp, c3tmp, tg_rhos, ftmp, itmp
-#endif
-#endif
+!#if defined(__INTEL_COMPILER)
+!#if __INTEL_COMPILER  >= 1300
+!!dir$ attributes align: 4096 :: emadt2, emaver, c2, c3, c2tmp, c3tmp, tg_rhos, ftmp, itmp
+!#endif
+!#endif
      real(DP),    allocatable :: emadt2(:)
      real(DP),    allocatable :: emaver(:)
      complex(DP), allocatable :: c2(:), c3(:), c2tmp(:), c3tmp(:)
