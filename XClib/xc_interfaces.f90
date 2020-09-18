@@ -7,7 +7,7 @@ MODULE xc_interfaces
   !
   ! LDA
   PUBLIC :: XC, DMXC
-  PUBLIC :: SLATER, SLATER_SPIN, PW, PW_SPIN
+  PUBLIC :: PW, PW_SPIN
   ! GGA
   PUBLIC :: XC_GCX, DGCXC
   PUBLIC :: GCXC, GCX_SPIN, GCC_SPIN
@@ -232,33 +232,6 @@ MODULE xc_interfaces
   !
   !
   !---PROVISIONAL .. for cases when functional routines are called outside xc-wrappers---
-  !
-  INTERFACE SLATER
-     !
-     SUBROUTINE slater_ext( rs, ex, vx )
-       !
-       USE kind_l,  ONLY: DP
-       IMPLICIT NONE
-       REAL(DP), INTENT(IN)  :: rs
-       REAL(DP), INTENT(OUT) :: ex
-       REAL(DP), INTENT(OUT) :: vx
-       !
-     END SUBROUTINE slater_ext
-     !
-  END INTERFACE
-  !
-  INTERFACE SLATER_SPIN
-     !
-     SUBROUTINE slater_spin_ext( rho, zeta, ex, vx_up, vx_dw )
-       !
-       USE kind_l,  ONLY: DP
-       IMPLICIT NONE
-       REAL(DP), INTENT(IN)  :: rho, zeta
-       REAL(DP), INTENT(OUT) :: ex, vx_up, vx_dw
-       !
-     END SUBROUTINE slater_spin_ext
-     !
-  END INTERFACE
   !
   !
   INTERFACE PW

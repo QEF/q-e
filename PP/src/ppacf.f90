@@ -56,8 +56,8 @@ PROGRAM do_ppacf
   USE funct,                ONLY : get_iexch, get_icorr, get_igcx, get_igcc
   USE funct,                ONLY : set_exx_fraction, set_auxiliary_flags, &
                                    enforce_input_dft, is_libxc
-  USE xc_interfaces,        ONLY : xc, gcxc, gcx_spin, gcc_spin, slater, &
-                                   slater_spin, xclib_set_threshold
+  USE xc_interfaces,        ONLY : xc, xc_gcx, & ! gcxc, gcx_spin, gcc_spin, &
+                                   xclib_set_threshold
   !USE xc_lda_lsda,          ONLY : xc
   USE wvfct,                ONLY : npw, npwx
   USE environment,          ONLY : environment_start, environment_end
@@ -119,7 +119,8 @@ PROGRAM do_ppacf
   !
   REAL(DP) :: grho2(2), sx(1), sc(1), scp, scm, &
               etxcgc, vtxcgc, segno, rh, grh2(1)
-  REAL(DP) :: v1x(1), v2x(1), v1c(1), v2c(1), v1cs(1,2), v1xs(1,2), v2xs(1,2)
+  REAL(DP) :: v1x(1,2), v2x(1,2), v1c(1,2), v2c(1,2)
+  !
   REAL(DP) :: dq0_dq  ! The derivative of the saturated
   REAL(DP) :: grid_cell_volume
   !
@@ -392,11 +393,11 @@ PROGRAM do_ppacf
           arhox(1,1) = ABS(rhox)
           IF (arhox(1,1) > vanishing_charge) THEN
              rs = pi34 /arhox(1,1)**third
-             IF (iexch == 1) THEN
-                CALL slater( rs, ex(1), vx(1,1) ) ! \epsilon_x,\lambda[n]=\epsilon_x[n]
-             ELSE
-                CALL xc( 1, nspin, nspin, arhox(:,1:1), ex, ec, vx(:,1:1), vc(:,1:1) )
-             ENDIF
+             !IF (iexch == 1) THEN
+             !   CALL slater( rs, ex(1), vx(1,1) ) ! \epsilon_x,\lambda[n]=\epsilon_x[n]
+             !ELSE
+             CALL xc( 1, nspin, nspin, arhox(:,1:1), ex, ec, vx(:,1:1), vc(:,1:1) )
+             !ENDIF
              etx = etx + e2*ex(1)*rhox
              etxlda = etxlda + e2*ex(1)*rhox
              grho2(1) = grho(1,ir,1)**2 + grho(2,ir,1)**2 + grho(3,ir,1)**2
@@ -434,10 +435,17 @@ PROGRAM do_ppacf
                 IF (grho2(1)>epsg .AND. igcc/=0) THEN
                    segno = SIGN( 1.D0, rhoout(ir,1) )
                    !
-                   CALL gcxc( 1, arhox(:,1)/ccp3, grho2/ccp8, sx, sc, v1x, v2x, v1c, v2c )
+                   CALL xc_gcx( 1, 1, arhox(:,1:1)/ccp3, grho(:,ir:ir,1:1)/ccp4, sx, sc, v1x(:,1:1),&
+                   v2x(:,1:1), v1c(:,1:1), v2c(:,1:1) )
                    scp = sc(1)
-                   CALL gcxc( 1, arhox(:,1)/ccm3, grho2/ccm8, sx, sc, v1x, v2x, v1c, v2c )
+                   CALL xc_gcx( 1, 1, arhox(:,1:1)/ccm3, grho(:,ir:ir,1:1)/ccm4, sx, sc, v1x(:,1:1),&
+                   v2x(:,1:1), v1c(:,1:1), v2c(:,1:1) )
                    scm = sc(1)
+                   !
+                   !CALL gcxc( 1, arhox(:,1)/ccp3, grho2/ccp8, sx, sc, v1x, v2x, v1c, v2c )
+                   !scp = sc(1)
+                   !CALL gcxc( 1, arhox(:,1)/ccm3, grho2/ccm8, sx, sc, v1x, v2x, v1c, v2c )
+                   !scm = sc(1)
                    !
                    ecgc_l = (ccp2*scp*ccp3-ccm2*scm*ccm3)/dcc*0.5_DP
                    etcgclambda = etcgclambda + e2*ecgc_l*segno
@@ -457,7 +465,10 @@ PROGRAM do_ppacf
              IF ( grho2(1) > epsg ) THEN
                 segno = SIGN( 1.D0, rhoout(ir,1) )
                 !
-                CALL gcxc( 1, arhox(:,1), grho2, sx, sc, v1x, v2x, v1c, v2c )
+                CALL xc_gcx( 1, 1, arhox(:,1:1), grho(:,ir:ir,1:1), sx, sc, v1x(:,1:1),&
+                v2x(:,1:1), v1c(:,1:1), v2c(:,1:1) )
+                !
+                !CALL gcxc( 1, arhox(:,1), grho2, sx, sc, v1x, v2x, v1c, v2c )
                 !
                 etx = etx + e2*sx(1)*segno
                 etxgc = etxgc + e2*sx(1)*segno
@@ -490,16 +501,18 @@ PROGRAM do_ppacf
              rhoupdw(1,1) = (rho%of_r(ir,1) + rho%of_r(ir,2) + rho_core(ir))*0.5_DP
              rhoupdw(1,2) = (rho%of_r(ir,1) - rho%of_r(ir,2) + rho_core(ir))*0.5_DP
              IF (ABS(zeta(1)) > 1.D0) zeta(1) = SIGN(1.D0, zeta(1))
-             IF (iexch == 1) THEN
-                CALL slater_spin( arhox(1,1), zeta(1), ex(1), vx(1,1), vx(1,2) )
-             ELSE
-                CALL xc( 1, nspin, nspin, rhoupdw, ex, ec, vx, vc )
-             ENDIF
+             !IF (iexch == 1) THEN
+             !   CALL slater_spin( arhox(1,1), zeta(1), ex(1), vx(1,1), vx(1,2) )
+             !ELSE
+             CALL xc( 1, nspin, nspin, rhoupdw, ex, ec, vx, vc )
+             !ENDIF
              etx = etx + e2*ex(1)*rhox
              etxlda = etxlda+e2*ex(1)*rhox
-             grh2(1) = ( grho(1,ir,1) + grho(1,ir,2) )**2 + &
-                       ( grho(2,ir,1) + grho(2,ir,2) )**2 + &
-                       ( grho(3,ir,1) + grho(3,ir,2) )**2
+             !
+             !
+             !grh2(1) = ( grho(1,ir,1) + grho(1,ir,2) )**2 + &
+             !          ( grho(2,ir,1) + grho(2,ir,2) )**2 + &
+             !          ( grho(3,ir,1) + grho(3,ir,2) )**2
              IF (cc > 0._DP) THEN
                 ccp = cc+dcc
                 ccm = cc-dcc
@@ -528,10 +541,17 @@ PROGRAM do_ppacf
                 !
                 IF (igcc /= 0) THEN
                    arhox(1,1) = rhox
-                   CALL gcc_spin( 1, arhox(:,1)/ccp3, zeta, grh2/ccp8, sc, v1cs, v2c )
+                   !
+                   CALL xc_gcx( 1, 2, arhox/ccp3, grho(:,ir:ir,:)/ccp4, sx, sc, v1x, v2x, v1c, v2c )
                    scp = sc(1)
-                   CALL gcc_spin( 1, arhox(:,1)/ccm3, zeta, grh2/ccm8, sc, v1cs, v2c )
+                   CALL xc_gcx( 1, 2, arhox/ccm3, grho(:,ir:ir,:)/ccm4, sx, sc, v1x, v2x, v1c, v2c )
                    scm = sc(1)
+                   !
+                   !CALL gcc_spin( 1, arhox(:,1)/ccp3, zeta, grh2/ccp8, sc, v1cs, v2c )
+                   !scp = sc(1)
+                   !CALL gcc_spin( 1, arhox(:,1)/ccm3, zeta, grh2/ccm8, sc, v1cs, v2c )
+                   !scm = sc(1)
+                   !
                    ecgc_l = (ccp2*scp*ccp3-ccm2*scm*ccm3)/dcc*0.5_DP
                    etcgclambda = etcgclambda+e2*ecgc_l
                    arhox(1,1) = ABS(rhox)
@@ -552,12 +572,18 @@ PROGRAM do_ppacf
              !
              r_v(1,:) = rhoout(ir,:)
              s2_v(1,:) = grho2(:)
-             CALL gcx_spin( 1, r_v, s2_v, sx, v1xs, v2xs )
+             !
+             CALL xc_gcx( 1, 2, rhoout(ir:ir,:), grho(:,ir:ir,:), sx, sc, v1x, v2x, v1c, v2c )
+             !
+             !CALL gcx_spin( 1, r_v, s2_v, sx, v1xs, v2xs )
              !
              etx = etx + e2*sx(1)
              etxgc = etxgc + e2*sx(1)
              r_v(1,1) = rhox
-             CALL gcc_spin( 1, r_v(1:1,1), zeta, grh2, sc, v1cs, v2c )
+             !
+             
+             !
+             !CALL gcc_spin( 1, r_v(1:1,1), zeta, grh2, sc, v1cs, v2c )
              etcgc = etcgc + e2*sc(1)
              etc = etc + e2*sc(1)
              IF ( icc == ncc ) THEN
