@@ -26,7 +26,7 @@ Phys. Rev. Research 2, 013357, (2020).
 
 STEPS for generating the "ZG-displacement" for the calculation of temperature-dependent properties of solids: 
 
-0.  Compile the version of Quantum Espresso 6.5.0.
+0.  Compile the version of Quantum Espresso 6.6.0; pw.x and ph.x are required to run ZG.x.
     Go to "/path_to_your_espresso/EPW/ZG_displacement/src" and "make".
     This code exploits some main routines of matdyn.x. In particular, the code
     takes advantage of the phonon interpolation scheme implemented for matdyn.x. This is 
@@ -40,7 +40,7 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
 2.  Run a phonon calculation: for example "/path_to_your_espresso/bin/ph.x < si.ph.in > si.ph.out" 
     for a relatively "dense" q-grid to obtain a converged phonon dispersion. 
 
-3.  Run "/path_to_your_espresso/bin/q2r.x <q2r.in> <q2r.out>".
+3.  Run "/path_to_your_espresso/bin/q2r.x <q2r.in> q2r.out".
     The input "q2r.in" has the standard format of Quantum Espresso for 
     calculating the interatomic force constant matrix elements to be used to construct the 
     "ZG-configuration.dat" file. 
@@ -52,8 +52,9 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
     included.   
     
 5.  Now one needs to decide on the size of the supercell configuration to be used for calculating 
-    temperature dependent properties. In the example "example/silicon/ZG_displacement_generation/inputs/ZG_444.in" we  
-    use the example for constructing a 4x4x4 ZG-configuration. One could potentially generate any supercell size
+    temperature dependent properties. For help, please see the example folder by "tar -xvf example.tar.gz". 
+    In file "example/silicon/ZG_displacement_generation/inputs/ZG_444.in" we show the example for 
+    constructing a 4x4x4 ZG-configuration. One could potentially generate any supercell size
     by simply changing "dimx","dimy","dimz", and the list of q-points (see below). 
     "ZG.in" has the standard format as a "matdyn.in" file for Quantum Espresso. 
     Here we use the following input parameters:
@@ -117,7 +118,7 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
 6. VERY IMPORTANT NOTE: It is perfectly reasonable to find different ZG-displacements / ZG-configurations,
    since the modes obtained  by diagonalizing the dynamical matrix can differ by a phase factor 
    (or a unitary matrix in case of degeneracy) if the processor, or compiler, or libraries have changed. 
-   The eigenvalues ofcourse should remain the same in all cases. The synchronization routine should align the sign
+   The eigenvalues of course should remain the same in all cases. The synchronization routine should align the sign
    of the modes with respect to a reference mode, but the sign of this reference depends on the machine,
    and degeneracy is not taken into account. The best way to check the validity of your configuration is 
    by comparing the anisotropic displacement tensor with the exact values, both obtained at the end of the 
@@ -150,11 +151,11 @@ Steps:
 2. Run an scf calculation and then prepare an "nscf.in" to run a non-self-consistent (nscf) calculation on a denser grid. 
    For example, check the input files in the directory 'example/silicon/JDOS/inputs/333/ZG_0K'.
 
-3. Once you obtain the ".xml" file form the nscf calculation run "commands.sh" as in the directory
+3. Once you obtain the ".xml" file from the nscf calculation, run "commands.sh" as in the directory
    'example/silicon/JDOS/inputs/333/ZG_0K'. This will generate the file "data_one_column.dat" 
    with all eigenvalues calculated for each k-point using the ZG-configuration. Note that in 
    the file "commands.sh", only "NR+44" should be changed for a different run. 44 indicates how many 
-   lines containing the eigenvalues exist after the string match "eigenvalues size" in the ".xml" file.
+   lines containing the eigenvalues exist, after the string match "eigenvalues size" in the ".xml" file.
 
 4. Use the output file "data_one_column.dat" to calculate the joint-density of states (JDOS) via the executable 
    "JDOS_Gaus.x" located in the "src/JDOS" folder. Command:  "/path_to/JDOS_Gaus.x <JDOS_Gaus.in > JDOS_Gaus.out". 
