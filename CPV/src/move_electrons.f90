@@ -173,12 +173,13 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
         !
      ELSE
         !
-        !MCA: FIXME: remove c0_d and cm_d
         CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, cm_bgrp )
         !
      ENDIF
      !
+#if defined (__CUDA)
      CALL dev_memcpy( cm_d, cm_bgrp )  ! cm contains the updated wavefunctions
+#endif
      !
      !----------------------------------------------------------------------
      !                 contribution to fion due to lambda

@@ -879,7 +879,7 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
             !
             ! write (my_unit, *) "pair = ", gindex_of_iobtl, "+", my_var2, "pos = ", pos, &
             !                    "cgstep = ", cgstep, "guess = ", pair_status(pos, iobtl) ! debug
-            ! write (*, *) "pairenergy = ", paire(j) ! debug
+             write (*, *) "pairenergy = ", paire(j) ! debug
             !
             IF (.NOT. (isotropic .AND. (ibrav.EQ.1) )) THEN
               call start_clock('exx_stress')
