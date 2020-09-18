@@ -655,7 +655,7 @@ LOGICAL FUNCTION check_para_diag( nbnd )
 
   IMPLICIT NONE
 
-  include 'laxlib.fh'
+  INCLUDE 'laxlib.fh'
 
   INTEGER, INTENT(IN) :: nbnd
   !! number of bands
