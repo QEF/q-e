@@ -249,10 +249,10 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, n
                          e_d(i) * gpu_DDOT(npw2,z_d(:,l),1,spsi_d(:,i),1) - &
                          gpu_DDOT(npw2,z_d(:,l),1,hpsi_d(:,i),1) )
         IF (gstart==2) THEN
-          tmp = b_d(1,l) 
-          tmp = tmp + gpu_DDOT(2,e_d(i),1,spsi_d(1,i),1) 
-          tmp = tmp - hpsi_d(1,i)
-          tmp_d = tmp
+!$cuf kernel do(1)
+          do ii = 1, 1
+            tmp_d = b_d(1,l) + e_d(i)*spsi_d(1,i) - hpsi_d(1,i) 
+          end do 
           g1(l) = g1(l) - gpu_DDOT(2,z_d(1,l),1,tmp_d,1)
         END IF
      end do
@@ -262,10 +262,10 @@ SUBROUTINE bpcg_gamma_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, n
         ff(l) = - ( e_d(i)*gpu_DDOT(npw2,psi_d(:,i),1,spsi_d(:,i),1) - gpu_DDOT(npw2,psi_d(:,i),1,hpsi_d(:,i),1) ) &
                 - 2.D0 * gpu_DDOT(npw2,psi_d(:,i),1,b_d(:,l),1)
         if (gstart==2) THEN
-          tmp = gpu_DDOT(2,e_d(i),1,spsi_d(1,i),1)  
-          tmp = tmp  - hpsi_d(1,i) 
-          tmp = tmp + 2.D0 * b_d(1,l)  
-          tmp_d = tmp
+!$cuf kernel do(1)
+          do ii = 1, 1
+            tmp_d = e_d(i)*spsi_d(1,i) - hpsi_d(1,i) + 2.D0 * b_d(1,l)
+          end do 
           ff(l) = ff(l) + 0.5D0 * gpu_DDOT(2,psi_d(1,i),1,tmp_d,1)
         END IF
      end do

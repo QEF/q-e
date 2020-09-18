@@ -91,7 +91,6 @@ SUBROUTINE paro_gamma_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, ove
              recv_counts(nbgrp), displs(nbgrp), column_type
 
   INTEGER :: ii, jj, kk ! indexes for cuf kernel loops
-  REAL(DP) :: tmp       ! host auxiliary variable for some host <-> device array copy 
 
 !civn 2fix: these are needed only for __MPI = true (protate)
   COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:) 
@@ -102,9 +101,11 @@ SUBROUTINE paro_gamma_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, ove
   !
   COMPLEX(DP), ALLOCATABLE :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
   REAL(DP), ALLOCATABLE    :: ew_d(:)
+  LOGICAL, ALLOCATABLE     :: conv_d(:)
 #if defined (__CUDA)
   attributes(device) :: psi_d, hpsi_d, spsi_d
   attributes(device) :: evc_d, eig_d, ew_d
+  attributes(device) :: conv_d 
 #endif 
   !
   ! ... init local variables
@@ -119,10 +120,15 @@ SUBROUTINE paro_gamma_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, ove
   CALL mp_type_create_column_section(evc_d(1,1), 0, npwx, npwx, column_type)
 
   ALLOCATE ( conv(nbnd) )
+  ALLOCATE ( conv_d(nbnd) )
   ALLOCATE ( psi_d(npwx,nvecx), hpsi_d(npwx,nvecx), spsi_d(npwx,nvecx), ew_d(nvecx) )
 
   CALL start_clock( 'paro:init' ); 
   conv(:) =  .FALSE. ; nconv = COUNT ( conv(:) )
+!$cuf kernel do(1)
+  do ii = 1, nbnd
+    conv_d(ii) = .FALSE.
+  end do  
 
 !$cuf kernel do(1)
   DO ii = 1, npwx
@@ -283,11 +289,15 @@ SUBROUTINE paro_gamma_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, ove
      ! only the first nbnd eigenvalues are relevant for convergence
      ! but only those that have actually been corrected should be trusted
      conv(1:nbnd) = .FALSE.
-     DO ii = 1, ntrust 
-       tmp = ew_d(ii)   
-       tmp = tmp - eig_d(ii) 
-       conv(ii) = ABS(tmp).LT.ethr
+!$cuf kernel do(1)
+     do ii = 1, nbnd
+       conv_d(ii) = .FALSE.
+     end do 
+!$cuf kernel do(1)
+     DO ii = 1, ntrust
+       conv_d(ii) = ABS(ew_d(ii) - eig_d(ii)).LT.ethr 
      END DO 
+     conv = conv_d
      nconv = COUNT(conv(1:ntrust)) ; notconv = nbnd - nconv
 !$cuf kernel do(1)
      DO ii = 1, nbnd
@@ -307,6 +317,7 @@ SUBROUTINE paro_gamma_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, ove
   CALL mp_sum(nhpsi,inter_bgrp_comm)
 
   DEALLOCATE ( ew_d, conv )
+  DEALLOCATE ( conv_d )
   DEALLOCATE ( psi_d, hpsi_d, spsi_d )
 
   CALL mp_type_free( column_type )

@@ -15,6 +15,7 @@ SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi_d, hpsi_d, ove
   !
 #if defined (__CUDA)
   USE cudafor
+  USE cublas
 #endif
   USE util_param,    ONLY : DP
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
@@ -120,11 +121,11 @@ SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi_d, hpsi_d, ove
 
   my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
   if (n_start .le. n_end) &
-  CALL gpu_ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi_d, kdmx, hpsi_d(1,n_start), kdmx, (0.D0,0.D0), hh_d(1,n_start), nstart )
+    CALL gpu_ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi_d, kdmx, hpsi_d(1,n_start), kdmx, (0.D0,0.D0), hh_d(1,n_start), nstart )
   call start_clock('rotHSw:hc:s1')
   CALL mp_sum( hh_d(:,n_start:n_end), intra_bgrp_comm ) ! this section only needs to be collected inside bgrp
   call stop_clock('rotHSw:hc:s1')
-!  call start_clock('rotHSw:hc:b1'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:hc:b1')
+  !call start_clock('rotHSw:hc:b1'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:hc:b1')
   call start_clock('rotHSw:hc:s2')
   CALL mp_allgather(hh_d, column_type, recv_counts, displs, inter_bgrp_comm)
   call stop_clock('rotHSw:hc:s2')
@@ -132,18 +133,18 @@ SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi_d, hpsi_d, ove
   IF ( overlap ) THEN
      !
      if (n_start .le. n_end) &
-     CALL gpu_ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi_d, kdmx, spsi_d(1,n_start), kdmx, (0.D0,0.D0), ss_d(1,n_start), nstart )
+       CALL gpu_ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi_d, kdmx, spsi_d(1,n_start), kdmx, (0.D0,0.D0), ss_d(1,n_start), nstart )
      !
   ELSE
      !
      if (n_start .le. n_end) &
-     CALL gpu_ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi_d, kdmx, psi_d(1,n_start), kdmx, (0.D0,0.D0), ss_d(1,n_start), nstart )
+       CALL gpu_ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi_d, kdmx, psi_d(1,n_start), kdmx, (0.D0,0.D0), ss_d(1,n_start), nstart )
      !
   END IF
   call start_clock('rotHSw:hc:s3')
   CALL mp_sum( ss_d(:,n_start:n_end), intra_bgrp_comm ) ! this section only needs to be collected inside bgrp
   call stop_clock('rotHSw:hc:s3')
-!  call start_clock('rotHSw:hc:b2'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:hc:b2')
+  !call start_clock('rotHSw:hc:b2'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:hc:b2')
   call start_clock('rotHSw:hc:s4')
   CALL mp_allgather(ss_d, column_type, recv_counts, displs, inter_bgrp_comm)
   call stop_clock('rotHSw:hc:s4')
@@ -156,7 +157,6 @@ SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi_d, hpsi_d, ove
   !
   call start_clock('rotHSw:diag'); !write(*,*) 'start rotHSw:diag' ; FLUSH(6)
   CALL diaghg( nstart, nbnd, hh_d, ss_d, nstart, en_d, vv_d, me_bgrp, root_bgrp, intra_bgrp_comm )
-  
 !$cuf kernel do(1)
   DO ii = 1, nbnd 
     e_d(ii) = en_d(ii)
@@ -174,42 +174,41 @@ SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi_d, hpsi_d, ove
 
   my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
   if (n_start .le. n_end) &
-  CALL gpu_ZGEMM( 'N','N', kdim, my_n, nstart, (1.D0,0.D0), psi_d, kdmx, vv_d(1,n_start), nstart, (0.D0,0.D0), aux_d(1,n_start), kdmx )
+    CALL gpu_ZGEMM( 'N','N', kdim, my_n, nstart, (1.D0,0.D0), psi_d, kdmx, vv_d(1,n_start), nstart, (0.D0,0.D0), aux_d(1,n_start), kdmx )
 !$cuf kernel do(2)
   DO ii = 1, kdmx  
     DO jj = n_start, n_end
       psi_d(ii,jj) = aux_d(ii, jj)
     END DO 
   END DO 
-!  call start_clock('rotHSw:ev:b3'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:ev:b3')
+  !call start_clock('rotHSw:ev:b3'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:ev:b3')
   call start_clock('rotHSw:ev:s5')
   CALL mp_allgather(psi_d(:,1:nbnd), column_type, recv_counts, displs, inter_bgrp_comm)
   call stop_clock('rotHSw:ev:s5')
 
   if (n_start .le. n_end) &
-  CALL gpu_ZGEMM( 'N','N', kdim, my_n, nstart, (1.D0,0.D0), hpsi_d, kdmx, vv_d(1,n_start), nstart, (0.D0,0.D0), aux_d(1,n_start), kdmx )
+    CALL gpu_ZGEMM( 'N','N', kdim, my_n, nstart, (1.D0,0.D0), hpsi_d, kdmx, vv_d(1,n_start), nstart, (0.D0,0.D0), aux_d(1,n_start), kdmx )
 !$cuf kernel do(2)
   DO ii = 1, kdmx 
     DO jj = n_start, n_end
       hpsi_d(ii,jj) = aux_d(ii,jj)
     END DO 
   END DO 
-!  call start_clock('rotHSw:ev:b4'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:ev:b4')
+  !call start_clock('rotHSw:ev:b4'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:ev:b4')
   call start_clock('rotHSw:ev:s6')
   CALL mp_allgather(hpsi_d(:,1:nbnd), column_type, recv_counts, displs, inter_bgrp_comm)
   call stop_clock('rotHSw:ev:s6')
 
   IF (overlap) THEN
-
      if (n_start .le. n_end) &
-     CALL gpu_ZGEMM( 'N','N', kdim, my_n, nstart, (1.D0,0.D0), spsi_d, kdmx, vv_d(1,n_start), nstart, (0.D0,0.D0), aux_d(1,n_start), kdmx )
+       CALL gpu_ZGEMM( 'N','N', kdim, my_n, nstart, (1.D0,0.D0), spsi_d, kdmx, vv_d(1,n_start), nstart, (0.D0,0.D0), aux_d(1,n_start), kdmx )
 !$cuf kernel do(2)
      DO ii = 1, kdmx 
        DO jj = n_start, n_end
          spsi_d(ii,jj) = aux_d(ii,jj)
        END DO 
      END DO 
-!     call start_clock('rotHSw:ev:b5'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:ev:b5')
+     !call start_clock('rotHSw:ev:b5'); CALL mp_barrier( inter_bgrp_comm ); call stop_clock('rotHSw:ev:b5')
      call start_clock('rotHSw:ev:s7')
      CALL mp_allgather(spsi_d(:,1:nbnd), column_type, recv_counts, displs, inter_bgrp_comm)
      call stop_clock('rotHSw:ev:s7')
@@ -227,13 +226,13 @@ SUBROUTINE rotate_HSpsi_k_gpu( npwx, npw, nstart, nbnd, npol, psi_d, hpsi_d, ove
 
   DEALLOCATE( aux_d )
   CALL mp_type_free( column_type )
-
   call stop_clock('rotHSw:evc'); !write(*,*) 'stop rotHSw:evc' ; FLUSH(6)
   !
   DEALLOCATE( vv_d )
   DEALLOCATE( ss_d )
   DEALLOCATE( hh_d )
   DEALLOCATE( en_d )
+  !
   call stop_clock('rotHSw'); !write(*,*) 'stop rotHSw' ; FLUSH(6)
   !call print_clock('rotHSw')
   !call print_clock('rotHSw:hc')

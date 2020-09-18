@@ -123,7 +123,10 @@ SUBROUTINE paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, overlap
 
   CALL start_clock( 'paro:init' ); 
   conv(:) =  .FALSE. ; nconv = COUNT ( conv(:) )
-  conv_d = conv
+!$cuf kernel do(1)
+  do ii = 1, nbnd
+    conv_d(ii) = .FALSE.
+  end do  
 !$cuf kernel do(2) 
   DO ii = 1, npwx*npol
     DO jj = 1, nbnd
@@ -139,18 +142,7 @@ SUBROUTINE paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, overlap
 #if defined(__MPI)
   IF ( nproc_ortho == 1 ) THEN
 #endif
-!civn 2fix
-     ALLOCATE ( psi(npwx*npol,nvecx), hpsi(npwx*npol,nvecx), spsi(npwx*npol,nvecx), eig(nbnd) )
-     psi = psi_d
-     hpsi = hpsi_d
-     spsi = spsi_d
-     eig = eig_d
-     CALL rotate_HSpsi_k (  npwx, npw, nbnd, nbnd, npol, psi, hpsi, overlap, spsi, eig )
-     psi_d = psi
-     hpsi_d = hpsi
-     spsi_d = spsi
-     eig_d = eig
-     DEALLOCATE ( psi, hpsi, spsi, eig )
+     CALL rotate_HSpsi_k_gpu (  npwx, npw, nbnd, nbnd, npol, psi_d, hpsi_d, overlap, spsi_d, eig_d )
 #if defined(__MPI)
   ELSE
 !civn 2fix
@@ -246,7 +238,7 @@ SUBROUTINE paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, overlap
      END DO 
      CALL stop_clock( 'paro:pack' ); 
 
-     write (6,*) ' check nactive = ', lbnd, nactive, nconv
+     !write (6,*) ' check nactive = ', lbnd, nactive, nconv
      if (lbnd .ne. nactive+1 ) stop ' nactive check FAILED '
 
      CALL bpcg_k_gpu(hs_psi_gpu, g_1psi_gpu, psi_d, spsi_d, npw, npwx, nbnd, npol, how_many, &
@@ -274,19 +266,7 @@ SUBROUTINE paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, overlap
 #if defined(__MPI)
      IF ( nproc_ortho == 1 ) THEN
 #endif
-        !CALL rotate_HSpsi_k_gpu ( npwx, npw, ndiag, ndiag, npol, psi_d, hpsi_d, overlap, spsi_d, ew_d )
-!civn 2fix
-        ALLOCATE ( psi(npwx*npol,nvecx), hpsi(npwx*npol,nvecx), spsi(npwx*npol,nvecx), ew(nvecx) )
-        psi = psi_d
-        hpsi = hpsi_d
-        spsi = spsi_d
-        ew = ew_d
-        CALL rotate_HSpsi_k( npwx, npw, ndiag, ndiag, npol, psi, hpsi, overlap, spsi, ew )
-        psi_d = psi
-        hpsi_d = hpsi
-        spsi_d = spsi
-        ew_d = ew
-        DEALLOCATE ( psi, hpsi, spsi, ew )
+        CALL rotate_HSpsi_k_gpu ( npwx, npw, ndiag, ndiag, npol, psi_d, hpsi_d, overlap, spsi_d, ew_d )
 #if defined(__MPI)
      ELSE
 !civn 2fix
@@ -307,7 +287,10 @@ SUBROUTINE paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, overlap
      ! only the first nbnd eigenvalues are relevant for convergence
      ! but only those that have actually been corrected should be trusted
      conv(1:nbnd) = .FALSE.
-     conv_d = conv 
+!$cuf kernel do(1)
+     do ii = 1, nbnd
+       conv_d(ii) = .FALSE.
+     end do 
 !$cuf kernel do(1)
      DO ii = 1, ntrust
        conv_d(ii) = ABS(ew_d(ii) - eig_d(ii)).LT.ethr 
@@ -331,7 +314,8 @@ SUBROUTINE paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, overlap
 
   CALL mp_sum(nhpsi,inter_bgrp_comm)
 
-  DEALLOCATE ( ew_d, conv, conv_d )
+  DEALLOCATE ( ew_d, conv )
+  DEALLOCATE ( conv_d )
   DEALLOCATE ( psi_d, hpsi_d, spsi_d )
 
   CALL mp_type_free( column_type )
