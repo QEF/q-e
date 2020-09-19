@@ -351,15 +351,11 @@ SUBROUTINE getvofr(me_r, ps_r, n_me, n_ps, hcub, rhops, potme, guess_state, psgs
     CALL start_clock('getvofr_bound')
     write(*,*) 'MCA: exx_boundary'
     CALL exx_boundaryv(me_r, ps_r, potme, qlm)
-    rhosum = sum(potme)
-    write (*,*), 'sum potme: ', rhosum
     CALL stop_clock('getvofr_bound')
     !-----------------------------------------------------------------------
     CALL start_clock('getvofr_geterho')
     write(*,*) 'MCA: geterho'
     CALL geterho(me_r, ps_r, potme, rho_ps)
-    rhosum = sum(rho_ps)
-    write (*,*), 'sum rho_ps: ', rhosum
     CALL stop_clock('getvofr_geterho')
     !========================================================================
     !TODO : copy out rho_ps before the next step
