@@ -395,7 +395,6 @@
       !
       CALL start_clock( 'dforce' ) 
       !
-      !Commented out be MCA
       !IF(dft_is_hybrid().AND.exx_is_active()) THEN
       !   CALL errore(' dforce ', ' dft_is_hybrid and exx_is_active NOT implemented ', 1 )
       !END IF

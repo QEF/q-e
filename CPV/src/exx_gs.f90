@@ -724,12 +724,6 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     !
     ! Do some allocations
 #ifdef __CUDA
-    !IF(.not.ALLOCATED(psime_d ))  ALLOCATE(psime_d(max(n_p_me,n_s_me)) )
-    !IF(.not.ALLOCATED(rhome_d ))  ALLOCATE(rhome_d(max(n_p_me,n_s_me)) )
-    !IF(.not.ALLOCATED(rhops_d ))  ALLOCATE(rhops_d(max(n_p_ps,n_s_me)) )
-    !IF(.not.ALLOCATED(potme_d ))  ALLOCATE(potme_d(max(n_p_me,n_s_me)) )
-    !
-
     IF(.not.ALLOCATED(potpsi_d )) ALLOCATE(potpsi_d(nnrtot, my_nbsp(me)) )
     potpsi_d = 0._DP
 #endif
@@ -798,7 +792,7 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
             call start_clock('exx_grid_trans')
             CALL getmiddlewc(wannierc(1,gindex_of_iobtl),wannierc(1,my_var2), h, ainv, middle )
             ! get pair distance
-            CALL get_pair_dist(wannierc(1,gindex_of_iobtl),wannierc(1,my_var2),d_pair)
+            !CALL get_pair_dist(wannierc(1,gindex_of_iobtl),wannierc(1,my_var2),d_pair)
             !
             ! calculate translation vector from the center of the box
             CALL getsftv( nr1s, nr2s, nr3s, h, ainv, middle, tran)
@@ -912,12 +906,6 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
       END IF !gindex_of_iobtl <= nbsp
       !
     END DO
-    ! do some deallocations
-    !IF (ALLOCATED(psime))           DEALLOCATE(psime)
-    !IF (ALLOCATED(rhome))           DEALLOCATE(rhome)
-    !IF (ALLOCATED(rhops))           DEALLOCATE(rhops)
-    !IF (ALLOCATED(potme))           DEALLOCATE(potme)
-    !
     !
     !===============================================================================
     !
@@ -1173,7 +1161,7 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
           !
           CALL getmiddlewc( wannierc(1,gindex_of_iobtl), wannierc(1,obtl_tbadd), h, ainv, middle )
           ! get pair distance
-          CALL get_pair_dist( wannierc(1,gindex_of_iobtl), wannierc(1,obtl_tbadd), d_pair )
+          !CALL get_pair_dist( wannierc(1,gindex_of_iobtl), wannierc(1,obtl_tbadd), d_pair )
           !
           ! calculate translation vector from the center of the box
           CALL getsftv( nr1s, nr2s, nr3s, h, ainv, middle, tran )
@@ -1546,7 +1534,7 @@ SUBROUTINE vvprod(me_r, v1, v2, prod)
 #ifdef __CUDA
     !$cuf kernel do (3)
 #else
-    !$omp parallel do private(i,j,k,prod) reduction(+:prodp)
+    !$omp parallel do private(i,j,k) reduction(+:prodp)
 #endif    
     DO k=me_r(3),me_r(6)
       DO j=me_r(2),me_r(5)

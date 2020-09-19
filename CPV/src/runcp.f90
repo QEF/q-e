@@ -66,13 +66,15 @@
       !
       !
      real(DP) ::  verl1, verl2, verl3
-!#if defined(__INTEL_COMPILER)
-!#if __INTEL_COMPILER  >= 1300
-!!dir$ attributes align: 4096 :: emadt2, emaver, c2, c3, c2tmp, c3tmp, tg_rhos, ftmp, itmp
-!#endif
-!#endif
-     real(DP),    allocatable :: emadt2(:)
-     real(DP),    allocatable :: emaver(:)
+#if defined(__INTEL_COMPILER)
+#if __INTEL_COMPILER  >= 1300
+!dir$ attributes align: 4096 :: emadt2, emaver, c2, c3, c2tmp, c3tmp, tg_rhos, ftmp, itmp
+#endif
+#endif
+     !real(DP),    allocatable :: emadt2(:)
+     !real(DP),    allocatable :: emaver(:)
+     real(DP) :: emadt2(ngw)
+     real(DP) :: emaver(ngw)
      complex(DP), allocatable :: c2(:), c3(:), c2tmp(:), c3tmp(:)
      REAL(DP),    ALLOCATABLE :: tg_rhos(:,:), ftmp(:)
 #if defined (__CUDA)
@@ -81,7 +83,7 @@
      INTEGER,     ALLOCATABLE :: itmp(:)
      integer :: i, nsiz, incr, idx, idx_in, ierr
      integer :: iwfc, nwfc, is, ii, tg_rhos_siz, c2_siz
-     integer :: iflag
+     integer :: iflag, mca_alloc
      logical :: ttsde
      INTEGER :: omp_get_num_threads
 
@@ -119,8 +121,8 @@
      verl2 = 1.0d0 - verl1
      verl3 = 1.0d0 * fccc
 
-     ALLOCATE( emadt2( ngw ) )
-     ALLOCATE( emaver( ngw ) )
+     !ALLOCATE( emadt2( ngw ) )
+     !ALLOCATE( emaver( ngw ) )
 
      ccc    = fccc * dt2bye
      emadt2 = dt2bye * ema0bg
@@ -324,8 +326,8 @@
 
      END IF
 
-     DEALLOCATE( emadt2 )
-     DEALLOCATE( emaver )
+     !DEALLOCATE( emadt2 )
+     !DEALLOCATE( emaver )
 #if defined (__CUDA)
      DEALLOCATE( rhos_d )
 #endif
