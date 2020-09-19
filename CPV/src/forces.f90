@@ -395,9 +395,9 @@
       !
       CALL start_clock( 'dforce' ) 
       !
-      !IF(dft_is_hybrid().AND.exx_is_active()) THEN
-      !   CALL errore(' dforce ', ' dft_is_hybrid and exx_is_active NOT implemented ', 1 )
-      !END IF
+      IF(dft_is_hybrid().AND.exx_is_active()) THEN
+         CALL errore(' dforce ', ' dft_is_hybrid and exx_is_active NOT implemented ', 1 )
+      END IF
 
       ALLOCATE( psi( dffts%nnr * many_fft ) )
       ALLOCATE( df_d( SIZE( df ) ) )

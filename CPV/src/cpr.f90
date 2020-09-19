@@ -299,7 +299,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
       lambda(:,:, 2) = lambda(:,:, 1)
      ENDIF
      !
+#ifdef __CUDA
      CALL dev_memcpy( c0_d, c0_bgrp )
+#endif
      !
      ! Autopilot (Dynamic Rules) Implimentation    
      !
@@ -534,7 +536,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         ! ... prefor calculates vkb
         !
         CALL prefor( eigr, vkb )
+#ifdef __CUDA
         CALL dev_memcpy( vkb_d, vkb )
+#endif
         !
      END IF
      !

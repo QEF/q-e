@@ -137,7 +137,9 @@ SUBROUTINE from_scratch( )
     ! ... prefor calculates vkb (used by gram)
     !
     CALL prefor( eigr, vkb )
+#ifdef __CUDA
     CALL dev_memcpy( vkb_d, vkb )
+#endif
     !
     nspin_wfc = nspin
     IF( force_pairing ) nspin_wfc = 1
@@ -148,7 +150,9 @@ SUBROUTINE from_scratch( )
     !
     if( iverbosity > 1 ) CALL dotcsc( vkb, cm_bgrp, ngw, nbsp )
     !
+#ifdef __CUDA
     CALL dev_memcpy( cm_d, cm_bgrp )
+#endif
     !
     ! ... initialize bands
     !
@@ -251,7 +255,9 @@ SUBROUTINE from_scratch( )
          !
       ENDIF
       !
+#ifdef __CUDA
       CALL dev_memcpy( c0_d, c0_bgrp )  ! c0 contains the updated wave functions
+#endif
       !
       !     nlfq needs deeq bec
       !
