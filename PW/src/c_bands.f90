@@ -637,9 +637,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              END IF
           ELSE 
              !
-!civn 
-!            ethr = MAX( ethr, 1.D-13 )
-!
              IF ( .not. use_gpu ) THEN
                CALL using_evc(1); CALL using_et(1); CALL using_h_diag(0)
                CALL paro_k_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
