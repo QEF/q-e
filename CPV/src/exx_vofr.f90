@@ -317,7 +317,6 @@ SUBROUTINE getvofr(me_r, ps_r, n_me, n_ps, hcub, rhops, potme, guess_state, psgs
     !-----------------------------------------------------------------------
     REAL(DP), EXTERNAL     :: dnrm2
     !-----------------------------------------------------------------------
-    write(*,*) 'MCA: Starting getvofr'
     !-----------------------------------------------------------------------
     ! --- initialize ---
     !-----------------------------------------------------------------------
@@ -344,28 +343,23 @@ SUBROUTINE getvofr(me_r, ps_r, n_me, n_ps, hcub, rhops, potme, guess_state, psgs
     ! also give the boundary values for potential inside the sphere.
     !---------------------------------------------------------------------------
     CALL start_clock('getvofr_qlm')
-    write(*,*) 'MCA: getqlm'
     CALL getqlm(ps_r, hcub, rho_ps, qlm)
     CALL stop_clock('getvofr_qlm')
     !-----------------------------------------------------------------------
     CALL start_clock('getvofr_bound')
-    write(*,*) 'MCA: exx_boundary'
     CALL exx_boundaryv(me_r, ps_r, potme, qlm)
     CALL stop_clock('getvofr_bound')
     !-----------------------------------------------------------------------
     CALL start_clock('getvofr_geterho')
-    write(*,*) 'MCA: geterho'
     CALL geterho(me_r, ps_r, potme, rho_ps)
     CALL stop_clock('getvofr_geterho')
     !========================================================================
-    !TODO : copy out rho_ps before the next step
     !---------------------------------------------------------------------------
     ! --- Poisson solver ---
     !---------------------------------------------------------------------------
     CALL start_clock('getvofr_solver')
     !---------------------------------------------------------------------------
 
-    write(*,*) 'MCA: cg_solver'
     call cg_solver_stdcg
 
     !---------------------------------------------------------------------------
@@ -373,9 +367,7 @@ SUBROUTINE getvofr(me_r, ps_r, n_me, n_ps, hcub, rhops, potme, guess_state, psgs
     !---------------------------------------------------------------------------
 
     !---------------------------------------------------------------------------
-    write(*,*) 'MCA: ps2me'
     CALL ps2me(me_r, ps_r, potme, pot_ps)
-    write(*,*) 'MCA: after ps2me'
     !---------------------------------------------------------------------------
     DEALLOCATE( qlm    )
     !---------------------------------------------------------------------------
@@ -483,7 +475,6 @@ END SUBROUTINE getqlm
 
 !===============================================================================
 SUBROUTINE exx_boundaryv(me_r, ps_r, potme, qlm)
-  !HK: TODO-GPU: swap l loop outside and use grid loop for Cuda acceleration
     !
     USE kinds,            ONLY  :  DP
     USE exx_module,       ONLY  :  lpole=>lmax 

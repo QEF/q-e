@@ -405,7 +405,6 @@
          allocate( exx_potential_d, source=exx_potential )
       END IF
 
-      WRITE(*,*), 'MCA entering forces', i
       ALLOCATE( psi( dffts%nnr * many_fft ) )
       ALLOCATE( df_d( SIZE( df ) ) )
       ALLOCATE( da_d( SIZE( da ) ) )
@@ -434,10 +433,6 @@
       !
       CALL invfft( 'Wave', psi, dffts, many_fft )
       !
-      WRITE(*,*), 'MCA forces: after invfft'
-      WRITE(*,*), 'ManyFFT: ', many_fft
-      WRITE(*,*), 'Grid stuff ', dffts%nnr, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
-
 !=============================================================================
 !exx_wf related
       IF (dft_is_hybrid().AND.exx_is_active()) THEN
@@ -457,7 +452,6 @@
       ENDIF
 !===============================================================================
 
-      WRITE(*,*), 'MCA forces: after exx'
       ioff = 0
       DO ii = i, i + 2 * many_fft - 1, 2
          IF( ii < n ) THEN
@@ -485,9 +479,7 @@
          ioff = ioff + dffts%nnr
       END DO
 
-      WRITE(*,*), 'MCA forces: after exx'
       CALL fwfft( 'Wave', psi, dffts, many_fft )
-      WRITE(*,*), 'MCA forces: after fwfft'
 
       igno = 0
       ioff = 0
@@ -501,9 +493,7 @@
                fi = -0.5d0*f(i+idx-1)
                fip = -0.5d0*f(i+idx)
             endif
-            WRITE(*,*), 'MCA forces: before fftx'
             CALL fftx_psi2c_gamma_gpu( dffts, psi( 1+ioff : ioff+dffts%nnr ), df_d(1+igno:igno+ngw), da_d(1+igno:igno+ngw))
-            WRITE(*,*), 'MCA forces: after fftx'
 !$cuf kernel do(1)
             DO ig=1,ngw
                df_d(ig+igno)= fi*(tpiba2*g2kin_d(ig)* c(ig,idx+i-1)+df_d(ig+igno))
@@ -516,8 +506,6 @@
 
       ENDDO
 
-      WRITE(*,*), 'MCA forces: after idx'
-      WRITE(*,*), 'MCA forces. nhsa: ', nhsa
       !
 
       IF( nhsa > 0 ) THEN
@@ -588,19 +576,16 @@
          !
       ENDIF
 
-      WRITE(*,*), 'MCA forces, after nhsa'
       CALL dev_memcpy( df, df_d )
       CALL dev_memcpy( da, da_d )
-      WRITE(*,*), 'MCA forces, after memcpy'
 !
       DEALLOCATE( df_d )
       DEALLOCATE( da_d )
       DEALLOCATE( psi )
-      DEALLOCATE(exx_potential_d)
+      IF (dft_is_hybrid().AND.exx_is_active()) DEALLOCATE(exx_potential_d)
       NULLIFY(nl_d) 
       NULLIFY(nlm_d)
 !
-      WRITE(*,*), 'Finished dforce', i
       CALL stop_clock( 'dforce' ) 
 !
       RETURN

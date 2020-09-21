@@ -137,7 +137,6 @@ SUBROUTINE exx_gs(nfi, c)
     INTEGER                  :: ndim,nogrp 
     INTEGER,    ALLOCATABLE  :: obtl_recv(:,:), obtl_send(:,:), num_recv(:), num_send(:)
     REAl(DP),   ALLOCATABLE  :: wannierc(:,:),wannierc_tmp(:,:)
-    !REAl(DP),   ALLOCATABLE  :: psime(:),psime_pair_recv(:,:,:),psime_pair_send(:,:,:)
     REAl(DP),   ALLOCATABLE  :: psime(:)
     REAL(DP),   ALLOCATABLE  :: exx_tmp(:,:),exx_tmp3(:,:)
     INTEGER,    ALLOCATABLE  :: sdispls(:), sendcount(:)
@@ -550,7 +549,6 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     CALL exx_psi(c, psi, nnrtot, my_nbsp, my_nxyz, nbsp) 
 #ifdef __CUDA
     IF(.not.ALLOCATED(psi_d ))    ALLOCATE(psi_d(nnrtot, my_nbsp(me)) )
-    !allocate ( psi_d, source = psi)
     psi_d = psi
 #endif
     !
@@ -609,7 +607,7 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     !
     ! we should use my_nbspx (maxval(my_nbsp(me))) here
     !
-    !MCA: trying to communicate everything via GPU
+    !MCA: TODO try to communicate everything via GPU
     !
     DO iobtl = 1, my_nbspx
       ! 
@@ -619,7 +617,6 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
       !
       !========================================================================
       !
-      !write(*,*) 'MCA: Sending/recieving stuff'
       !prep receives
       DO itr = 1, neigh/2
         !
@@ -732,8 +729,6 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     IF(.not.ALLOCATED(rhops )) ALLOCATE( rhops(max(n_p_ps,n_s_me)) ); 
     IF(.not.ALLOCATED(potme )) ALLOCATE( potme(max(n_p_me,n_s_me)) ); 
     !
-    !write(*,*) 'MCA: Starting calculation'
-    !
     DO iobtl = 1, my_nbspx
       ! 
       middle(:)=0.0_DP
@@ -801,7 +796,6 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
             ! get the localized psi around the mid point of two wannier centers
             ! note: the psime is centered at the center of the box
             ! (using the translation vector "tran" from middle of wfc to the center of box)
-            !psime=0.0_DP
             call start_clock('exx_psicb')
 #ifdef __CUDA
             associate(psi=>psi_d)
@@ -816,8 +810,6 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
             ! to be continue
             !
             ! the localized density rhome 
-            !rhome=0.0_DP
-            !rhops=0.0_DP
             call start_clock('exx_getrhol')
 #ifdef __CUDA
             psime_pair_recv_d(:, j, iobtl)=psime_pair_recv(:, j, iobtl)
@@ -829,14 +821,10 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
             !
             ! calculate the exx potential from the pair density by solving Poisson
             !
-            !potme=0.0_DP ! compute potential (potme) in ME sphere 
-            !
             !--------------------------------------------------------------------------------------
             call start_clock('exx_vofr')
-            write(*,*) 'Before getvofr pair', pos, iobtl
             CALL getvofr( p_me_r, p_ps_r, n_p_me, n_p_ps, hcub, rhops, potme, pair_status(pos, iobtl), psgsn, &
                           pairrho(:,:,pos,iobtl), pairv(:,:,pos,iobtl), cgstep)
-            write(*,*) 'After getvofr pair', pos, iobtl
             call stop_clock('exx_vofr')
             !--------------------------------------------------------------------------------------
             !
@@ -864,7 +852,7 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
             !
             call start_clock('exx_penergy')
             !
-            CALL vvprod(p_me_r, rhome, potme, paire(j))    ! dot product of the rho and potme !HK (todo): do we need to do PS+ME 
+            CALL vvprod(p_me_r, rhome, potme, paire(j))    ! dot product of the rho and potme  
 
             call stop_clock('exx_penergy')
             paire(j) = paire(j) * 0.5_DP* hcub             ! volume element hcub and trapezoidal rule prefactor 0.5_DP are included
@@ -873,7 +861,6 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
             !
             ! write (my_unit, *) "pair = ", gindex_of_iobtl, "+", my_var2, "pos = ", pos, &
             !                    "cgstep = ", cgstep, "guess = ", pair_status(pos, iobtl) ! debug
-             write (*, *) "pairenergy = ", paire(j) ! debug
             !
             IF (.NOT. (isotropic .AND. (ibrav.EQ.1) )) THEN
               call start_clock('exx_stress')
@@ -1022,8 +1009,6 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
           ! get the localized psi around the wannier centers
           ! note: the psime is centered at the center of the box
           ! (using the translation vector "tran" from the wfc to the center of box)
-          !ALLOCATE ( psime(n_s_me) ); psime = 0.0_DP
-          !psime(1:n_s_me) = 0.0_DP
           !
 #ifdef __CUDA
           associate( psi=>psi_d )
@@ -1033,25 +1018,16 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
           end associate
 #endif
           ! get the localized density rhome  
-          !ALLOCATE ( rhome(n_s_me) ); rhome=0.0_DP
-          !ALLOCATE ( rhops(n_s_ps) ); rhops=0.0_DP
-          !rhome(1:n_s_me) = 0.0_DP
-          !rhops(1:n_p_ps) = 0.0_DP
           CALL getrhol(s_me_r, s_ps_r, psime(1), psime(1), rhome, rhops, inv_omega)
           ! 
           ! calculate the exx potential from the pair density by solving Poisson
           !
-          !ALLOCATE ( potme(n_s_me) ); potme=0.0_DP ! compute potential (potme) in ME sphere 
-          !potme(1:n_s_me) = 0.0_DP
-          !
           !--------------------------------------------------------------------------------------
           CALL start_clock('getvofr')
           !
-            write(*,*) 'Before getvofr self', iobtl
           CALL getvofr( s_me_r, s_ps_r, n_s_me, n_s_ps, hcub, rhops, potme, n_exx-1, psgsn, &
                         selfrho(:,:,iobtl), selfv(:,:,iobtl), cgstep)
           !
-            write(*,*) 'After getvofr self', iobtl
           CALL stop_clock('getvofr')
           !--------------------------------------------------------------------------------------
           !
@@ -1074,7 +1050,7 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
           associate( potpsi=>potpsi_d )
 #endif
           CALL updateforce_slf(nrg, s_me_r, potpsi(1,iobtl), potme, psime, tran)
-          CALL vvprod(s_me_r, rhome, potme, selfe)    ! dot product of the rho and potme !HK (todo): do we need to do PS+ME 
+          CALL vvprod(s_me_r, rhome, potme, selfe)    ! dot product of the rho and potme 
 #ifdef __CUDA
           end associate
 #endif
@@ -1109,11 +1085,6 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
             ! if isotropic => calculate the stress tensor in vofrho.f90
             !
           END IF
-          !
-          !IF (ALLOCATED(psime))           DEALLOCATE(psime)
-          !IF (ALLOCATED(rhome))           DEALLOCATE(rhome)
-          !IF (ALLOCATED(rhops))           DEALLOCATE(rhops)
-          !IF (ALLOCATED(potme))           DEALLOCATE(potme)
           !
         END IF ! me
         !
@@ -1160,8 +1131,6 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
         IF ( obtl_tbadd .NE. 0 ) THEN
           !
           CALL getmiddlewc( wannierc(1,gindex_of_iobtl), wannierc(1,obtl_tbadd), h, ainv, middle )
-          ! get pair distance
-          !CALL get_pair_dist( wannierc(1,gindex_of_iobtl), wannierc(1,obtl_tbadd), d_pair )
           !
           ! calculate translation vector from the center of the box
           CALL getsftv( nr1s, nr2s, nr3s, h, ainv, middle, tran )
@@ -1377,8 +1346,6 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     IF (ALLOCATED(obtl_send))       DEALLOCATE(obtl_send)
     IF (ALLOCATED(num_recv))        DEALLOCATE(num_recv)
     IF (ALLOCATED(num_send))        DEALLOCATE(num_send)
-    !IF (ALLOCATED(psime_pair_send))  DEALLOCATE(psime_pair_send)
-    !IF (ALLOCATED(psime_pair_recv))  DEALLOCATE(psime_pair_recv)
     IF (ALLOCATED(exx_tmp))         DEALLOCATE(exx_tmp)
     IF (ALLOCATED(exx_tmp3))        DEALLOCATE(exx_tmp3)
     IF (ALLOCATED(sdispls))         DEALLOCATE(sdispls)
@@ -1389,8 +1356,6 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     IF (ALLOCATED(recvcount))       DEALLOCATE(recvcount)
     IF (ALLOCATED(sendcount1))      DEALLOCATE(sendcount1)
     IF (ALLOCATED(recvcount1))      DEALLOCATE(recvcount1)
-    !
-    ! WRITE(*,'("leaving exx_gs")')
     !
     RETURN
 END SUBROUTINE exx_gs
@@ -1646,30 +1611,6 @@ SUBROUTINE getpsicb_cpu(nrg,nrl,psig,psil,tran)
     !
     RETURN
 END SUBROUTINE getpsicb_cpu
-
-!!==============================================================================
-!SUBROUTINE l2gcb(i,j,k,gid,tran)
-!    !
-!    USE fft_base,         ONLY  : dfftp
-!    !
-!    IMPLICIT NONE
-!    !
-!    INTEGER :: li,lj,lk
-!    INTEGER  gid(3),tran(3)
-!    INTEGER  nr1s, nr2s, nr3s
-!    !
-!    nr1s=dfftp%nr1 
-!    nr2s=dfftp%nr2 
-!    nr3s=dfftp%nr3 
-!    !
-!    gid(1) = MOD(lid(1)-tran(1)-1+nr1s, nr1s)+1
-!    gid(2) = MOD(lid(2)-tran(2)-1+nr2s, nr2s)+1
-!    gid(3) = MOD(lid(3)-tran(3)-1+nr3s, nr3s)+1
-!    !
-!    RETURN
-!END SUBROUTINE l2gcb
-!!==============================================================================
-
 
 !====================================================================================
 SUBROUTINE moments(wavefunc, ntot, control)
@@ -2173,67 +2114,6 @@ SUBROUTINE updateforce_rec(nrg, me_r, potpsi, force, tran)
     !----------------------------------------------------------------
 END SUBROUTINE updateforce_rec
 !==============================================================================
-
-
-!!==============================================================================
-!SUBROUTINE coeff_opt()
-!    USE kinds,              ONLY: DP                 !double-precision kind (selected_real_kind(14,200))
-!    USE exx_module,         ONLY: coeke, coemicf, fbsscale
-!    IMPLICIT NONE
-!    !--------------------------------------------------------------
-!    
-!    INTEGER               :: info, m, n
-!    REAL(DP)              :: tol, x(4), fvec(4)
-!    INTEGER               :: iwa(size(x))
-!    REAL(DP), ALLOCATABLE :: wa(:)
-!    EXTERNAL              :: fcn
-!    
-!    ! The following starting values provide a rough fit.
-!    x = [coeke(0,1,1)/2.0, coeke(1,1,1)/3.0D0, coeke(2,1,1)/3.0D0, coeke(3,1,1)/3.0D0]
-!    
-!    ! Set tol to the square root of the machine precision. Unless high precision
-!    ! solutions are required, this is the recommended setting.
-!    tol = SQRT(EPSILON(0.0D0))
-!    
-!    m = SIZE(fvec)
-!    n = SIZE(x)
-!    ALLOCATE(wa(m*n + 5*n + m))
-!    ! WRITE(*,'(A,F10.6,F10.6,F10.6,F10.6)') "x0:", x(1), x(2), x(3), x(4)
-!    CALL lmdif1(fcn, SIZE(fvec), SIZE(x), x, fvec, tol, info, iwa, wa, SIZE(wa))
-!    ! WRITE(*,'(A,F10.6,F10.6,F10.6,F10.6)') "xf:", x(1), x(2), x(3), x(4)
-!
-!    !---------------------------------------------------------------------------
-!    coemicf(-3, 1, 1) = x(4)/x(1)
-!    coemicf(-2, 1, 1) = x(3)/x(1)
-!    coemicf(-1, 1, 1) = x(2)/x(1)
-!    coemicf( 0, 1, 1) = x(1)/x(1)
-!    coemicf( 1, 1, 1) = x(2)/x(1)
-!    coemicf( 2, 1, 1) = x(3)/x(1)
-!    coemicf( 3, 1, 1) = x(4)/x(1)
-!    !---------------------------------------------------------------------------
-!    coemicf(-3, 2, 2) = x(4)/x(1)
-!    coemicf(-2, 2, 2) = x(3)/x(1)
-!    coemicf(-1, 2, 2) = x(2)/x(1)
-!    coemicf( 0, 2, 2) = x(1)/x(1)
-!    coemicf( 1, 2, 2) = x(2)/x(1)
-!    coemicf( 2, 2, 2) = x(3)/x(1)
-!    coemicf( 3, 2, 2) = x(4)/x(1)
-!    !---------------------------------------------------------------------------
-!    coemicf(-3, 3, 3) = x(4)/x(1)
-!    coemicf(-2, 3, 3) = x(3)/x(1)
-!    coemicf(-1, 3, 3) = x(2)/x(1)
-!    coemicf( 0, 3, 3) = x(1)/x(1)
-!    coemicf( 1, 3, 3) = x(2)/x(1)
-!    coemicf( 2, 3, 3) = x(3)/x(1)
-!    coemicf( 3, 3, 3) = x(4)/x(1)
-!    !---------------------------------------------------------------------------
-!
-!    fbsscale = 1/(x(1)**2.0D0)
-!
-!    !---------------------------------------------------------------------------
-!    DEALLOCATE(wa)
-!END SUBROUTINE coeff_opt
-!!==============================================================================
 
 !==============================================================================
 SUBROUTINE fcn(m, n, x, fvec, iflag)
