@@ -44,7 +44,8 @@
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE bpcg_k_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, nbnd, npol, nvec, psi_d, hpsi_d, spsi_d, ethr, e_d, nhpsi )
+SUBROUTINE bpcg_k_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, nbnd, npol, nvec, &
+                                              psi_d, hpsi_d, spsi_d, ethr, e_d, nhpsi )
   !----------------------------------------------------------------------------
   !
   ! Block Preconditioned Conjugate Gradient solution of the linear system
@@ -146,9 +147,11 @@ SUBROUTINE bpcg_k_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, nbnd,
         end do
      !- project on conduction bands
         CALL start_clock( 'pcg:ortho' )
-        CALL gpu_ZGEMM( 'C', 'N', nbnd, nnew, kdim, ONE, spsi0_d, kdmx, z_d(:,nactive+1), kdmx, ZERO, spsi0vec_d, nbnd )
+        CALL gpu_ZGEMM( 'C', 'N', nbnd, nnew, kdim, ONE, spsi0_d, kdmx, z_d(:,nactive+1), kdmx, ZERO, &
+                                                                                        spsi0vec_d, nbnd )
         CALL mp_sum( spsi0vec_d, intra_bgrp_comm )
-        CALL gpu_ZGEMM( 'N', 'N', kdim, nnew, nbnd, (-1.D0,0.D0), psi0_d, kdmx, spsi0vec_d, nbnd, ONE, z_d(:,nactive+1), kdmx )
+        CALL gpu_ZGEMM( 'N', 'N', kdim, nnew, nbnd, (-1.D0,0.D0), psi0_d, kdmx, spsi0vec_d, nbnd, ONE, &
+                                                                                      z_d(:,nactive+1), kdmx )
         CALL stop_clock( 'pcg:ortho' )
      !-
         do l=nactive+1,nactive+nnew; i=l+done
@@ -242,7 +245,8 @@ SUBROUTINE bpcg_k_gpu( hs_psi_gpu, g_1psi_gpu, psi0_d, spsi0_d, npw, npwx, nbnd,
      end do
      CALL mp_sum( g1(1:nactive), intra_bgrp_comm )   ! g1 = < new z | new gradient b + e spsi - hpsi >
      do l = 1, nactive; i = l + done                 ! evaluate the function ff
-        ff(l) = -0.5_DP * ( e_d(i)*gpu_DDOT(2*kdim,psi_d(:,i),1,spsi_d(:,i),1)-gpu_DDOT(2*kdim,psi_d(:,i),1,hpsi_d(:,i),1) ) 
+        ff(l) = -0.5_DP * ( e_d(i)*gpu_DDOT(2*kdim,psi_d(:,i),1,spsi_d(:,i),1)&
+                                                -gpu_DDOT(2*kdim,psi_d(:,i),1,hpsi_d(:,i),1) )
         ff(l) = ff(l) - gpu_DDOT(2*kdim,psi_d(:,i),1,b_d(:,l),1)
      end do
      CALL mp_sum( ff(1:nactive), intra_bgrp_comm )   ! function minimum -0.5 < psi | e spsi - hpsi > - < psi | b >
