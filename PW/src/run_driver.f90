@@ -369,6 +369,7 @@ CONTAINS
     ! ... clean everything (FIXME: clean only what has to be cleaned)
     !
     CALL clean_pw( .FALSE. )
+    CALL close_files( .TRUE. )
     !
     ! ... re-set FFT grids and re-compute needed stuff (FIXME: which?)
     !
