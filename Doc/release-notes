@@ -1,8 +1,23 @@
-New in v. 6.6:
+New in dev version:
+
+Fixed in dev version:
+  * Some linkers yield "missing references to ddot_" in libbeef
+  * FFT test in FFTXlib was not always compiling 
+  * angle1, angle2, starting_magnetization incorrectly written to xml file
+  * Bug in Hubbard forces and stress for bands parallelization (when nproc_pool>nbnd) 
+  * Crash in the calculation of Z* with ultrasoft PP when the number of bands
+    is larger than the number of occupied bands (thanks to Sasha Fonari)
+  * Crash in matdyn.x when ibrav=0 (thanks to Sasha Fonari)
+
+Incompatible changes in dev version:
+  * FoX  no longer used to read and write pseudopotential files
+  * iotk no longer used to read and write any file
+
+New in v.6.6:
   * vdW-DF3-opt1, vdW-DF3-opt2, and vdW-DF-C6 van der Waals functionals
     implemented (T. Thonhauser, supported by NSF Grant No. 1712425)
   * More FORD documentation
-  * Stress for noncolinear case
+  * Stress for non-collinear case
   * QE can be compiled on Windows 10 using PGI v.19.10 Community Edition
     configure works, except FoX: use script install/build_fox_with_pgi.sh
   * ParO and PPCG iterative diagonalization algorithms
@@ -43,7 +58,7 @@ Fixed in v.6.6:
   * Fermi energy incorrectly written to xml file in 'bands' calculation
     (did not affect results, just Fermi energy position in band plotting)
     Also: Fermi energy always written to xml file, also for insulators
-  * Phonon code in the noncolinear case with magnetization ("domag" case)
+  * Phonon code in the non-collinear case with magnetization ("domag" case)
     now works properly - courtesy Andrea Urru and Andrea Dal Corso.
   * Incorrect forces, and slightly inconsistent atomic positions, were
     written to xml file for structural optimization and molecular dynamics
@@ -59,6 +74,10 @@ Fixed in v.6.6:
     the Hubbard channel is "s" (noticed by Jin-Jian Zhou)
  
 Incompatible changes in v.6.6:
+  * If no starting magnetization is set in a non-collinear or spin-orbit
+    calculation, the magnetization is set to zero and remains zero.
+    Previously, the magnetization was zero in practise (although numerical
+    noise could lead to nonzero values) but was not forced to be zero.
   * Default value of parameter "diago_david_ndim" changed to 2:
     uses less RAM, execution time sometimes shorter, sometimes longer.
   * Grouping of inlc values into ranges for different developments.
@@ -93,7 +112,7 @@ New in 6.5 branch:
     implemented in dynamics_module (Leonid Kahle, Ngoc Linh Nguyen)
 
 Known problems in 6.5 branch:
-  * The phonon code in the noncolinear case with the "domag" option does 
+  * The phonon code in the non-collinear case with the "domag" option does 
     not work properly: there is a problem with time reversal symmmetry.
     Such calculation is currently disabled until a fix is found.
 
@@ -187,7 +206,7 @@ Problems fixed in version 6.4 (+ = in qe-6.3-backports as well) :
     This produced confusing output and had the potential to break some codes
   + index not correctly initialized in LSDA phonon with core corrections 
   + GTH pseudopotentials in analytical form wrongly computed in some cases
-  + projwfc.x not working with new xml format in noncolinear/spinorbit case 
+  + projwfc.x not working with new xml format in non-collinear/spinorbit case 
   + Starting with .EXIT file present ("dry run") crashed with new file format
   + Some space groups were missing
   + Random MPI crashes with DFT+U due to small discrepancies between values
@@ -465,7 +484,7 @@ Fixed in 6.2 version
   * reset_grid wasn't resetting grid properly if k1,k2,k3=0. Thanks to
     Giuliana Barbarino (r13462)
 
-  * EXX in noncolinear/spin-orbit case wasn't correct (r13453)
+  * EXX in non-collinear/spin-orbit case wasn't correct (r13453)
 
   * Fixed a small bug in two subroutines only called by Environ (r13451)
 
@@ -580,7 +599,7 @@ Fixed in 6.0 version:
 
   * TDDFPT, PWCOND, GWW: redirection to /dev/null broke Windows executable
     (commit 12357)
-  * PDOS in the noncolinear case was broken by recent changes in indexing 
+  * PDOS in the non-collinear case was broken by recent changes in indexing 
     (courtesy Mitsuaki Kawamura) (commit (12366)
   * Incorrect format (old version) of the dynamical matrix if ibrav=0 in PHCG
     (commit 12367,12369) and incorrect format if more than 99 atoms
@@ -785,7 +804,7 @@ New in 5.2.0 version:
 
 Fixed in 5.2.0 version:
 
-  * PP: projwfc.x wasn't working any longer for noncolinear case without
+  * PP: projwfc.x wasn't working any longer for non-collinear case without
     spin-orbit in 5.1.x versions
   * PW: ordering of beta functions incorrect in USPP + hybrid functionals.
   * PW: floating-point error could occur in rVV10 functional
@@ -826,7 +845,7 @@ Fixed in 5.1.2 version:
     to mysterious crashes due to usage of unitialized communicator
   * PH: option only_init + US or PAW was not working.
   * Minor printout bug: the printed number of symmetries with fractional
-    translations was sometimes incorrect in the noncollinear magnetic case.
+    translations was sometimes incorrect in the non-collinear magnetic case.
 
                                * * * * * 
 
@@ -925,7 +944,7 @@ Incompatible changes in 5.1 version:
 
 Fixed in 5.1 version:
 
-  * PWscf: bug in finite electric field in noncolinear case
+  * PWscf: bug in finite electric field in non-collinear case
   * PHonon: G=0 component of the deformation potential at q=0 was incorrect
     (the contribution from the average coulomb potential, i.e. the integral 
     of the Coulomb contribution on the unit cell, was missing). For more 
@@ -1015,7 +1034,7 @@ Fixed in 5.0.2 version:
 New in 5.0.1 version:
 
   * vdW-DF functional and DFT-D extended to CP (experimental)
-  * PWscf: Noncollinear/spin-orbit Berry Phases (experimental)
+  * PWscf: Non-Collinear/spin-orbit Berry Phases (experimental)
   * New functionals: SOGGA, M06L (courtesy of Yves Ferro), 
                       PBEQ2D (courtesy of Letizia Chiodo)
 
@@ -1063,10 +1082,10 @@ Fixed in 5.0 version:
   * A few glitches when the standard input is copied to file
   * PW: LDA+U crash in the final step of a vc-relax run, due to a
     premature deallocation of a variable
-  * PW: constraint 'atomic direction' on noncolinear magnetization
+  * PW: constraint 'atomic direction' on non-collinear magnetization
     wasn't working properly
   * PW: tetrahedra were not working with magnetic symmetries, 
-    and not yet working in the noncolinear case as well.
+    and not yet working in the non-collinear case as well.
   * Velocity rescaling in variable-cell MD wasn't really working
   * Workaround for frequent crashes in PAW with vc-relax
   * In some cases spin-polarized HSE was yielding NaN's
@@ -1076,7 +1095,7 @@ Fixed in 5.0 version:
     previous run was found
   * CP + OpenMP without MPI wasn't working with ultrasoft pseudopotentials
   * Bug in CASINO to UPF converter
-  * Bug in k-point generation in the noncollinear case
+  * Bug in k-point generation in the non-collinear case
   * ESM with spin polarization fixed
   * Weird problem with irreps in PHonon
   * Bug in turbo_lanczos.x . Restarts of polarizations other than ipol=1 
@@ -1206,8 +1225,8 @@ Fixed in 4.3 version:
   * PW: corrected an old bug for Berry's phase finite electric field 
         calculations with non-orthorhombic simulation cells. Also fixed 
         an old but minor bug on averaging of Berry phases between strings
-  * PW: problem with symmetrization in the noncollinear case
-  * PW: tetrahedra+noncolinear case fixed (courtesy of Yurii Timrov)
+  * PW: problem with symmetrization in the non-collinear case
+  * PW: tetrahedra+non-collinear case fixed (courtesy of Yurii Timrov)
   * option -D__USE_3D_FFT wasn't working any longer in v.4.2.x
   * PP: calculation of ILDOS with USPP wasn't working in v.4.2.x
   * PH: elph=.true. and trans=.false. was not working any longer. 
@@ -1221,7 +1240,7 @@ Fixed in 4.3 version:
 Fixed in version 4.2.1:
 
   * CP: problem in electronic forces with OpenMP parallelization
-  * real-space Q functions (tqr=.true.) not working in noncollinear case
+  * real-space Q functions (tqr=.true.) not working in non-collinear case
   * XC potential in CP was not initialized when condition (rho > 10^(-30)) 
     was not satisfied; this is usually harmless but potentially dangerous
   * CP could not read data written from PW in spin-polarized cases
@@ -1231,7 +1250,7 @@ Fixed in version 4.2.1:
   * linking error when compiling qexml
   * misc problems in plotband.f90
   * the new G-space symmetrization was not working properly 
-    for the magnetization in the noncollinear case
+    for the magnetization in the non-collinear case
   * CP: incorrect results in parallel execution if the card K_POINTS
     was present in input and contained a point different from Gamma
   * D3: Fermi energy shift was only symmetrized on the sub-set of the
@@ -1406,7 +1425,7 @@ Fixed in version 4.0.5:
   * more problems in symmetry analysis in special cases for C_4h and
     D_2h symmetry
   * various small memory leaks or double allocations in special cases
-  * problem with effective charges d Force / d E in the noncollinear+NLCC case
+  * problem with effective charges d Force / d E in the non-collinear+NLCC case
   * calculation of ionic dipole, used for calculations with sawtooth 
     potential, used wrong reference point assuming the field parallel
     to z axis (while it can be parallel to any reciprocal basis vector). 
@@ -1526,7 +1545,7 @@ Fixed in version 4.0:
     There were three different bugs, one introduced when the spherical
     harmonics were modified in the rest of the code, two that I think
     have been there from the beginning.
-  * various glitches with wf_collect option in the noncollinear case
+  * various glitches with wf_collect option in the non-collinear case
   * mix_rho was not working properly for lsda with data saved to file
     and double grid
 

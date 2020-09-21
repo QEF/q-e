@@ -3,7 +3,8 @@
 include ../make.inc
 
 # location of needed modules
-MODFLAGS=$(MOD_FLAG)$(TOPDIR)/FoX/finclude
+# only if using FoX
+#MODFLAGS=$(MOD_FLAG)$(TOPDIR)/FoX/finclude
 
 QEMODS = libupf.a
 

@@ -1057,8 +1057,13 @@ end program test
 
 subroutine start_clock(label)
   use timers
+#if defined(__MPI_MODULE)
   use mpi, ONLY:MPI_WTIME
   implicit none
+#else
+  implicit none
+  INCLUDE 'mpif.h'
+#endif
   character(len=*) :: label
   if (ignore_time) RETURN
   select case (label)
@@ -1111,8 +1116,13 @@ end subroutine
 
 subroutine stop_clock(label)
   use timers
+#if defined(__MPI_MODULE)
   use mpi, ONLY:MPI_WTIME
   implicit none
+#else
+  implicit none
+  INCLUDE 'mpif.h'
+#endif
   character(len=*) :: label
   if (ignore_time) RETURN
   select case (label)
@@ -1165,8 +1175,13 @@ end subroutine
 !
 subroutine print_clock(mype, npes, ncount)
   use timers
+#if defined(__MPI_MODULE)
   use mpi
   implicit none
+#else
+  implicit none
+  INCLUDE 'mpif.h'
+#endif
   integer, intent(in) :: mype, npes, ncount
   REAL*8  :: time_min(21)
   REAL*8  :: time_max(21)

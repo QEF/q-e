@@ -224,7 +224,7 @@ CONTAINS
        END DO
     END IF
  10 FORMAT(3X,A)
- 30 FORMAT(I7,1X,F11.8)
+ 30 FORMAT(I8,1X,F13.8)
  40 FORMAT(3X,'ATOMIC_POSITIONS')
  50 FORMAT(3X,'ATOMIC_VELOCITIES')
  60 FORMAT(3X,'Forces acting on atoms (au):')
@@ -256,7 +256,7 @@ CONTAINS
        WRITE( iunit, 100 ) (h(i,j),j=1,3)
     END DO
     !
- 30 FORMAT(I7,1X,F11.8)
+ 30 FORMAT(I8,1X,F13.8)
  40 FORMAT(3X,'CELL_PARAMETERS')
 100 FORMAT(3F14.8)
     RETURN
@@ -285,7 +285,7 @@ CONTAINS
        WRITE( iunit, 100 ) (str(i,j),j=1,3)
     END DO
     !
- 30 FORMAT(I7,1X,F11.8)
+ 30 FORMAT(I8,1X,F13.8)
  40 FORMAT(3X,'Total stress (GPa)')
 100 FORMAT(3(F18.8,1X))
     RETURN
@@ -312,7 +312,7 @@ CONTAINS
        WRITE( iunit, 100 ) veff(i) 
     END DO
     !
- 30 FORMAT(I7,1X,F11.8)
+ 30 FORMAT(I8,1X,F13.8)
  40 FORMAT(3X,'Veff tsvdw')
 100 FORMAT(F20.10)
     RETURN
@@ -340,7 +340,7 @@ CONTAINS
        WRITE( iunit, 100 ) (wfc_temp(j,i),j=1,3) 
     END DO
     !
- 30 FORMAT(I7,1X,F11.8)
+ 30 FORMAT(I8,1X,F13.8)
  40 FORMAT(I7,1X,F11.8,1X,"spin=",I5)
 100 FORMAT(3E25.14)
     RETURN

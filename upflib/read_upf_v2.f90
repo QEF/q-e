@@ -10,6 +10,7 @@ MODULE read_upf_v2_module
 !-----------------------------------------------------------------------------=!
    !!  this module provides the function read_upf_v2 to read pseudopotential data
    !!  from files in UPF format version 2. 
+#if defined (__use_fox)
 
    ! ...   declare modules
    USE upf_kinds,    ONLY: DP
@@ -955,4 +956,5 @@ SUBROUTINE read_upf_header(u, upf)
       RETURN
    END SUBROUTINE read_upf_gipaw
 !
+#endif
 END MODULE read_upf_v2_module

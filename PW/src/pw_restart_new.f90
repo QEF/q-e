@@ -192,8 +192,8 @@ MODULE pw_restart_new
                                     scr_par_, loc_thr_  
       REAL(DP),POINTER           :: vdw_term_pt, ts_thr_pt, london_s6_pt, london_rcut_pt, xdm_a1_pt, xdm_a2_pt, &
                                     ts_vdw_econv_thr_pt, ectuvcut_opt, scr_par_opt, loc_thr_p, h_energy_ptr
-      LOGICAL,TARGET             :: dftd3_threebody_, ts_vdw_isolated_
-      LOGICAL,POINTER            :: ts_isol_pt, dftd3_threebody_pt, ts_vdw_isolated_pt 
+      LOGICAL,TARGET             :: dftd3_threebody_, ts_vdw_isolated_, domag_
+      LOGICAL,POINTER            :: ts_isol_pt, dftd3_threebody_pt, ts_vdw_isolated_pt, domag_opt  
       INTEGER,POINTER            :: dftd3_version_pt
       TYPE(smearing_type),TARGET :: smear_obj 
       TYPE(smearing_type),POINTER:: smear_obj_ptr 
@@ -204,7 +204,7 @@ MODULE pw_restart_new
            vdw_corr_pt, vdw_term_pt, ts_thr_pt, london_s6_pt, london_rcut_pt, &
            xdm_a1_pt, xdm_a2_pt, ts_vdw_econv_thr_pt, ts_isol_pt, &
            dftd3_threebody_pt, ts_vdw_isolated_pt, dftd3_version_pt )
-      NULLIFY ( ectuvcut_opt, scr_par_opt, loc_thr_p, h_energy_ptr, smear_obj_ptr) 
+      NULLIFY ( ectuvcut_opt, scr_par_opt, loc_thr_p, h_energy_ptr, smear_obj_ptr, domag_opt) 
 
       !
       ! Global PW dimensions need to be properly computed, reducing across MPI tasks
@@ -496,8 +496,12 @@ MODULE pw_restart_new
 ! ... MAGNETIZATION
 !-------------------------------------------------------------------------------
          !
+         IF (noncolin) THEN 
+            domag_ = domag
+            domag_opt=> domag_
+         END IF
          CALL qexsd_init_magnetization(output_obj%magnetization, lsda, noncolin, lspinorb, &
-              magtot, magtot_nc, absmag, domag )
+              magtot, magtot_nc, absmag, domag_opt )
          !
 
 !--------------------------------------------------------------------------------------
@@ -1059,7 +1063,7 @@ MODULE pw_restart_new
       !
       pseudo_dir_cur = restart_dir ( )
       CALL qexsd_copy_atomic_species ( output_obj%atomic_species, &
-           nsp, atm, amass, angle1, angle2, starting_magnetization, &
+           nsp, atm, amass, starting_magnetization, angle1, angle2, &
            psfile, pseudo_dir ) 
       IF ( pseudo_dir == ' ' ) pseudo_dir=pseudo_dir_cur
       !! Atomic structure section

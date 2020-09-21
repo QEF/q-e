@@ -1,163 +1,194 @@
 !
-! Copyright (C) 2011-2013 Quantum ESPRESSO group
+! Copyright (C) 2011-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! NOTE Aug 2018 (PG): reading of old xml input file using iotk deleted
+! Aug 2020 (PG): streamlined and simplified
+!                open_input_file() may read the file name either from
+!                passed argumet or directly from the command line
+! Aug 2018 (PG): reading of old xml input file using iotk deleted
 
 MODULE open_close_input_file
   !
   USE io_global,     ONLY : stdin, stdout, qestdin
   !
-  LOGICAL, SAVE :: lxmlinput_loc = .false.
   CHARACTER(LEN=256), SAVE :: input_file = ' '
   PRIVATE
-  PUBLIC :: open_input_file, close_input_file
+  PUBLIC :: get_file_name, open_input_file, close_input_file
   !
 CONTAINS
   !----------------------------------------------------------------------------
-  INTEGER FUNCTION open_input_file ( input_file_, lxmlinput )
+  FUNCTION get_file_name ( )
+    !
+    !! Get the file name provided in command line
+    !
+    IMPLICIT NONE
+    !
+    CHARACTER (len=256) :: get_file_name
+    !
+    LOGICAL :: found
+    INTEGER :: iiarg, nargs
+    ! 
+    nargs = command_argument_count()
+    get_file_name = ' '
+    found = .false.
+    !
+    DO iiarg = 1, ( nargs - 1 )
+       !
+       CALL get_command_argument( iiarg, get_file_name )
+       !
+       IF ( TRIM( get_file_name ) == '-i'     .OR. &
+            TRIM( get_file_name ) == '-in'    .OR. &
+            TRIM( get_file_name ) == '-inp'   .OR. &
+            TRIM( get_file_name ) == '-input' ) THEN
+          !
+          CALL get_command_argument( ( iiarg + 1 ) , get_file_name )
+          found = .true.
+          EXIT
+          !
+       END IF
+       !
+    END DO
+    !
+    IF ( .NOT. found ) get_file_name = ' '
+    !
+  END FUNCTION get_file_name
+  !
+  !----------------------------------------------------------------------------
+  FUNCTION open_input_file ( input_file_, is_xml) RESULT ( ierr )
   !-----------------------------------------------------------------------------
   !
-  ! ...  Open file "input_file_" for input read, connecting it to unit qestdin.
-  ! ...  If "input_file_" is empty, the standard input is dumped to temporary 
-  ! ...  file "input_tmp.in"  and this is opened for read
-  ! ...  If optional variable lxmlinput is present, test if the file is a
+  ! ...  Open file for input read, connecting it to unit qestdin.
+  ! ...  If "input_file_" is not present, read it from command line
+  ! ...  If "input_file_" is empty, the standard input is dumped to
+  ! ...  temporary file "input_tmp.in" and this is opened for read
+  ! ...  If optional variable is_xml is present, test if the file is a
   ! ...  valid xml file.
-  ! ...  In parallel execution, should be called by a single processor
-  ! ...  if reading from standard input; may be called on all processors
-  ! ...  otherwise, but ensure first that all processors can read and write!
+  ! ...  In parallel execution, must be called by a single processor
   ! ...  On exit:
-  ! ...    Returns -1 if standard input is dumped to file
-  ! ...    Returns  0 if input file is successfully opened
-  ! ...    Returns  1 if called with wrong arguments
-  ! ...    Returns  2 if there was an error opening file
-  ! ...    lxmlinput=.true. if the file has extension '.xml' or '.XML'
+  ! ...    ierr = -1 if standard input is successfuly dumped to file
+  ! ...    ierr =  0 if input file is successfully opened
+  ! ...    ierr =  1 if there was an error opening file
+  ! ...    If optional variable is_xml is present:
+  ! ...    is_xml=.true. if the file has extension '.xml' or '.XML'
   ! ...       or if either <xml...> or <?xml...> is found as first token
-  ! ...    input_file is set to the file name actually read
+  ! ...    Module varliable input_file is set to the file name actually read
   ! ...  ---------------------------------------------------------------
   !
   IMPLICIT NONE
   !
-  CHARACTER (len=*), intent(in) :: input_file_
-  LOGICAL, intent(out), optional :: lxmlinput
+  CHARACTER (len=*), intent(in), OPTIONAL :: input_file_
+  LOGICAL, intent(out), OPTIONAL :: is_xml
+  INTEGER :: ierr
   !
-  LOGICAL :: lcheckxml
-  INTEGER :: ierr, len
-  INTEGER :: stdtmp
+  LOGICAL :: is_xml_, is_tmp
+  INTEGER :: length
   CHARACTER(LEN=512) :: dummy
   LOGICAL, EXTERNAL :: test_input_xml
-  INTEGER, EXTERNAL :: find_free_unit
   !
+  ! copy file to be opened into input_file
   !
-  lcheckxml = PRESENT(lxmlinput)
-  !
-  stdtmp = find_free_unit()
-  !
-  IF ( TRIM(input_file_) /= ' ' ) THEn
-     !
-     ! copy file to be opened into input_file
-     !
+  IF ( PRESENT(input_file_) ) THEN
      input_file = input_file_
-     !
   ELSE
-     !
-     ! if no file specified then copy from standard input
+     input_file = get_file_name ( )
+  END IF
+  !
+  ! is_tmp: no file name read or provided, dump to "input_tmp.in"
+  !
+  is_tmp = ( TRIM(input_file) == ' ' )
+  IF ( is_tmp ) THEN
      !
      input_file="input_tmp.in"
-     OPEN(UNIT = stdtmp, FILE=trim(input_file), FORM='formatted', &
+     OPEN(UNIT = qestdin, FILE=input_file, FORM='formatted', &
           STATUS='unknown', IOSTAT = ierr )
      IF ( ierr > 0 ) GO TO 30
      !
      dummy=' '
      WRITE(stdout, '(5x,a)') "Waiting for input..."
-     DO WHILE ( TRIM(dummy) .NE. "MAGICALME" )
-        READ (stdin,fmt='(A512)',END=20) dummy
-        WRITE (stdtmp,'(A)') trim(dummy)
+     DO
+        READ (stdin,fmt='(A512)',END=20, ERR=30) dummy
+        WRITE (qestdin,'(A)') trim(dummy)
      END DO
      !
-20   CLOSE ( UNIT=stdtmp, STATUS='keep' )
+20   CLOSE ( UNIT=qestdin, STATUS='keep' )
+     !
   ENDIF
   !
-  IF (lcheckxml) THEN
+  is_xml_ = PRESENT(is_xml)
+  IF (is_xml_) THEN
     !
-    len = LEN_TRIM(input_file)
-    IF ( len > 4) THEN
-       lxmlinput_loc = ( input_file(len-3:len) == '.xml' .OR. &
-                         input_file(len-3:len) == '.XML' )
+    length = LEN_TRIM(input_file)
+    IF ( length > 4 ) THEN
+       is_xml = ( input_file(length-3:length) == '.xml' .OR. &
+                  input_file(length-3:length) == '.XML' )
+    ELSE
+       is_xml = .false.
     END IF
-    IF ( .NOT. lxmlinput_loc ) THEN
-       OPEN ( UNIT = stdtmp, FILE = TRIM(input_file) , FORM = 'FORMATTED', &
+    IF ( .NOT. is_xml ) THEN
+       OPEN ( UNIT = qestdin, FILE = input_file , FORM = 'FORMATTED', &
               STATUS = 'OLD', IOSTAT = ierr )
        IF ( ierr > 0 ) GO TO 30
-       lxmlinput_loc = test_input_xml (stdtmp )
-       CLOSE ( UNIT=stdtmp, status='keep')
+       is_xml = test_input_xml (qestdin )
+       CLOSE ( UNIT=qestdin, status='keep')
     END IF
-    !
-    lxmlinput = lxmlinput_loc
+    is_xml_ = is_xml
     !
   ENDIF
   !
-  IF (lxmlinput_loc) then
-     IF ( input_file .NE. "input_tmp.in") THEN
-        WRITE(stdout, '(5x,a)') "Reading xml input from "//TRIM(input_file)
-     ELSE
+  IF ( is_xml_ ) then
+     IF ( is_tmp ) THEN
         WRITE(stdout, '(5x,a)') "Reading xml input from standard input"
-     END IF
-     OPEN ( UNIT = qestdin, FILE = TRIM(input_file), FORM = 'FORMATTED', &
-            STATUS = 'OLD', IOSTAT = ierr )
-  ELSE 
-     IF ( input_file .NE. "input_tmp.in") THEN
-         WRITE(stdout, '(5x,a)') "Reading input from "//TRIM(input_file)
      ELSE
-         WRITE(stdout, '(5x,a)') "Reading input from standard input"
+        WRITE(stdout, '(5x,a)') "Reading xml input from "//TRIM(input_file)
      END IF
-     OPEN ( UNIT = qestdin, FILE = TRIM(input_file), FORM = 'FORMATTED', &
-            STATUS = 'OLD', IOSTAT = ierr )
+  ELSE 
+     IF ( is_tmp ) THEN
+        WRITE(stdout, '(5x,a)') "Reading input from standard input"
+     ELSE
+        WRITE(stdout, '(5x,a)') "Reading input from "//TRIM(input_file)
+     END IF
   ENDIF
-  IF ( ierr > 0 ) GO TO 30
   !
-  open_input_file = 0
+  OPEN ( UNIT = qestdin, FILE = input_file, FORM = 'FORMATTED', &
+          STATUS = 'OLD', IOSTAT = ierr )
+  !
+  IF ( ierr > 0 ) GO TO 30
+  IF ( is_tmp ) ierr = -1
   RETURN
-30 open_input_file = 2
-   WRITE(stdout, "('Open_input_file: error opening ',A)") TRIM(input_file)
-  RETURN
+  !
+30 ierr = 1
+  !
+  ! Do not call "errore" here: may hang in parallel execution
+  !
+  WRITE(stdout, "('open_input_file: fatal error opening ',A)") TRIM(input_file)
   !
 END FUNCTION open_input_file
 
-INTEGER FUNCTION close_input_file ( )
+FUNCTION close_input_file ( ) RESULT ( ierr )
   !
   ! ...  this subroutine closes the input file opened by open_input_file
-  ! ...  removes temporary file if data was read from stdin (text file)
+  ! ...  also removes temporary file if data was dumped from stdin
   ! ...  returns -1 if unit is not opened, 0 if no problem, > 0 if problems
-  ! ...  ---------------------------------------------------------------
   !
   IMPLICIT NONE
   !
-  LOGICAL :: opnd
   INTEGER :: ierr
+  LOGICAL :: opnd
   !
   INQUIRE ( qestdin, opened = opnd )
   IF (opnd) THEN
-     !
-     IF (lxmlinput_loc) THEN
-        CLOSE (UNIT=qestdin, STATUS='keep', IOSTAT=ierr )
+     IF ( TRIM(input_file) == "input_tmp.in") THEN
+        CLOSE (UNIT=qestdin, STATUS='delete', IOSTAT=ierr )
      ELSE
-        IF ( TRIM(input_file) == "input_tmp.in") THEN
-           CLOSE (UNIT=qestdin, STATUS='delete', IOSTAT=ierr )
-        ELSE
-           CLOSE (UNIT=qestdin, STATUS='keep', IOSTAT=ierr )
-        ENDIF
+        CLOSE (UNIT=qestdin, STATUS='keep', IOSTAT=ierr )
      ENDIF
-     !
   ELSE
      ierr = -1
   ENDIF 
   !
-  close_input_file = ierr
-  !
   END FUNCTION close_input_file
 !
-ENDMODULE open_close_input_file
+END MODULE open_close_input_file

@@ -30,7 +30,7 @@
     USE io_global,        ONLY : stdout
     USE cell_base,        ONLY : at, bg
     USE epwcom,           ONLY : mob_maxiter, nstemp, broyden_beta,            &
-                                 mp_mesh_k, nkf1, nkf2, nkf3, fixsym
+                                 mp_mesh_k, nkf1, nkf2, nkf3
     USE elph2,            ONLY : nkqf, wkf, xkf, nkqtotf, nbndfst,             &
                                  nktotf, map_rebal, xqf, gtemp,          &
                                  ixkqf_tr, s_bztoibz_full
@@ -39,16 +39,15 @@
                                  eps2, eps4, eps20, eps80, eps160, hbar, cm2m, byte2Mb
     USE mp,               ONLY : mp_barrier, mp_sum, mp_bcast
     USE mp_global,        ONLY : world_comm
-    USE symm_base,        ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
+    USE symm_base,        ONLY : s, nrot
     USE printing,         ONLY : print_mob, print_mob_sym
     USE io_transport,     ONLY : fin_write, fin_read
     USE io_files,         ONLY : diropn
     USE control_flags,    ONLY : iverbosity
-    USE kinds_epw,        ONLY : SIK2
     USE wigner,           ONLY : backtoWS
-    USE grid,             ONLY : k_avg, special_points, kpoint_grid_epw, kpmq_map
+    USE grid,             ONLY : k_avg, special_points, kpoint_grid_epw, symm_mapping, &
+                                 kpmq_map 
     USE poolgathering,    ONLY : poolgather2
-    USE low_lvl,          ONLY : fix_sym
     !
     IMPLICIT NONE
     !
@@ -78,13 +77,15 @@
     !! inv_tau (either inv_tau_all or inv_tau_allcb)
     !
     ! Local variables
-    INTEGER :: ind
+    INTEGER(KIND = 8) :: ind
     !! Index for sparse matrix
     INTEGER :: iter
     !! Innter IBTE loop
     INTEGER :: iq
     !! q-point
     INTEGER :: ik
+    !! K-point index
+    INTEGER :: ikk
     !! K-point index
     INTEGER :: ibnd
     !! Local band index
@@ -96,18 +97,10 @@
     !! Index of the k+q point from the full grid.
     INTEGER :: ikbz
     !! k-point index that run on the full BZ
-    INTEGER :: bztoibz_tmp(nkf1 * nkf2 * nkf3)
-    !! Temporary mapping
-    INTEGER :: bztoibz(nkf1 * nkf2 * nkf3)
-    !! BZ to IBZ mapping
-    INTEGER(SIK2) :: s_bztoibz(nkf1 * nkf2 * nkf3)
-    !! symmetry matrix for each k-point from the full BZ
     INTEGER :: bztoibz_mat(nrot, nktotf)
     !! For a given k-point in the IBZ gives the k-point index of all the
     !! k-point in the full BZ that are connected to the current one by symmetry.
     !! nrot is the max number of symmetry
-    INTEGER :: nsym(nktotf)
-    !! Temporary matrix used to count how many symmetry for that k-point
     INTEGER :: nb_sp
     !! Number of special points
     INTEGER :: ierr
@@ -120,6 +113,8 @@
     !! Special k-points
     REAL(KIND = DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
+    REAL(KIND = DP) :: carrier_density
+    !! Carrier density [nb of carrier per unit cell]
     REAL(KIND = DP) :: xkf_all(3, nkqtotf)
     !! Collect k-point coordinate (and k+q) from all pools in parallel case
     REAL(KIND = DP) :: f_serta(3, nbndfst, nktotf, nstemp)
@@ -144,9 +139,14 @@
     !! K-point index for printing
     REAL(KIND = DP) :: rws(4, nrwsx)
     !! Real WS vectors
+    REAL(KIND = DP) :: sigma_serta(3, 3, nstemp)
+    !! SERTA conductivity tensor
+    REAL(KIND = DP) :: sigma_bte(3, 3, nstemp)
+    !!  BTE conductivity tensor
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function
     !
+    carrier_density = zero
     xkf_all(:, :) = zero
 #if defined(__MPI)
     CALL poolgather2(3, nkqtotf, nkqf, xkf, xkf_all)
@@ -159,10 +159,9 @@
       WRITE(stdout, '(5x,a)') 'Big array size reporting [Mb]'
       WRITE(stdout, '(5x,a)') '-- ibte --'
       WRITE(stdout, '(5x,a,f12.6)') 'bztoibz : ',  nkf1 * nkf2 * nkf3 * byte2Mb / 2 !INTEGER(4)
-      WRITE(stdout, '(5x,a,f12.6)') 's_bztoibz : ',  nkf1 * nkf2 * nkf3 * byte2Mb / 2 / 4 !INTEGER(SIK2)
-      WRITE(stdout, '(5x,a,f12.6)') 'F_SERTA : ',  (3 * (nbndfst) * (nktotf) * nstemp) * byte2Mb!REAL(8)
-      WRITE(stdout, '(5x,a,f12.6)') 'bztoibz_mat : ',  nrot * (nktotf) * byte2Mb / 2 !INTEGER(4)
-      WRITE(stdout, '(5x,a,f12.6)') 'xkf_bz : ', 3 * nkf1 * nkf2 * nkf3 * byte2Mb / 2 !REAL(4)
+      WRITE(stdout, '(5x,a,f12.6)') 's_bztoibz : ',  nkf1 * nkf2 * nkf3 * byte2Mb / 2
+      WRITE(stdout, '(5x,a,f12.6)') 'f_serta : ',  (3 * nbndfst * nktotf * nstemp) * byte2Mb!REAL(8)
+      WRITE(stdout, '(5x,a,f12.6)') 'bztoibz_mat : ',  nrot * nktotf * byte2Mb / 2 !INTEGER(4)
       rws(:, :) = zero
       CALL wsinit(rws, nrwsx, nrws, bg)
     ENDIF
@@ -173,47 +172,12 @@
       IF (ierr /= 0) CALL errore('ibte', 'Error allocating ixkqf_tr', 1)
       ALLOCATE(s_bztoibz_full(nind), STAT = ierr)
       IF (ierr /= 0) CALL errore('ibte', 'Error allocating s_bztoibz_full', 1)
-      ! For a given k-point in the IBZ gives the k-point index
-      ! of all the k-point in the full BZ that are connected to the current
-      ! one by symmetry. nrot is the max number of symmetry
-      bztoibz(:)   = 0
-      s_bztoibz(:) = 0
       ixkqf_tr(:)  = 0
       s_bztoibz_full(:) = 0
       bztoibz_mat(:, :) = 0
-      nsym(:) = 0
       !
-      CALL set_sym_bl()
-      IF (fixsym) CALL fix_sym(.TRUE.)
-      wkf(:) = 0d0
-      ! What we get from this call is bztoibz
-      CALL start_clock('kpoint_paral')
-      CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, bztoibz, s_bztoibz)
-      CALL stop_clock('kpoint_paral')
-      !
-      bztoibz_tmp(:) = 0
-      DO ikbz = 1, nkf1 * nkf2 * nkf3
-        bztoibz_tmp(ikbz) = map_rebal(bztoibz(ikbz))
-      ENDDO
-      bztoibz(:) = bztoibz_tmp(:)
-      !
-      ! Now create the mapping matrix
-      DO ikbz = 1, nkf1 * nkf2 * nkf3
-        ik = bztoibz(ikbz)
-        nsym(ik) = nsym(ik) + 1
-        bztoibz_mat(nsym(ik), ik) = ikbz
-      ENDDO
-      !
-      WRITE(stdout, '(5x,"Symmetry mapping finished")')
-      !
-      DO ind = 1, nind
-        iq = sparse_q(ind)
-        ik = sparse_k(ind)
-        !
-        CALL kpmq_map(xkf_all(:, 2 * ik - 1), xqf(:, iq), +1, nkq_abs)
-        s_bztoibz_full(ind) = s_bztoibz(nkq_abs)
-        ixkqf_tr(ind) = bztoibz(nkq_abs)
-      ENDDO
+      ! ixkqf_tr and s_bztoibz_full gets defined inside
+      CALL symm_mapping(nind, bztoibz_mat, xkf_all(:, 1:nkqtotf:2), sparse_q, sparse_k)
       !
       ! Determines the special k-points are k-points that are sent to themselves via a non-identity  symmetry operation.
       CALL special_points(nb_sp, xkf_all(:, 1:nkqtotf:2), xkf_sp)
@@ -223,7 +187,7 @@
     f_serta(:, :, :, :) = zero
     !
     IF (iverbosity == 4) THEN
-      WRITE(stdout, *) 'temp k-index  ibnd       k-point          eig[Ry]        F_SERTA   '
+      WRITE(stdout, *) 'temp k-index  ibnd       k-point          eig[Ry]        f_serta   '
     ENDIF
     DO itemp = 1, nstemp
       etemp = gtemp(itemp)
@@ -252,15 +216,17 @@
     WRITE(stdout, '(5x,a)') REPEAT('=',93)
     WRITE(stdout, '(5x,"BTE in the self-energy relaxation time approximation (SERTA)")')
     WRITE(stdout, '(5x,a)') REPEAT('=',93)
+    ! Store conductivity 
+    sigma_serta(:, :, :) = zero
     max_mob(:) = zero
     ! K-point symmetry.
     IF (mp_mesh_k) THEN
       ! Averages points which leaves the k-point unchanged by symmetry in F and v.
       ! e.g. k=[1,1,1] and q=[1,0,0] with the symmetry that change x and y gives k=[1,1,1] and q=[0,1,0].
-      CALL k_avg(F_SERTA, vkk_all, nb_sp, xkf_sp)
-      CALL print_mob_sym(F_SERTA, s_bztoibz, bztoibz_mat, vkk_all, etf_all, wkf_all, ef0)
+      CALL k_avg(f_serta, vkk_all, nb_sp, xkf_sp)
+      CALL print_mob_sym(f_serta, bztoibz_mat, vkk_all, etf_all, wkf_all, ef0, sigma_serta)
     ELSE
-      CALL print_mob(F_SERTA, vkk_all, etf_all, wkf_all, ef0)
+      CALL print_mob(f_serta, vkk_all, etf_all, wkf_all, ef0, sigma_serta)
     ENDIF
     !
     ! Possibily read from file
@@ -280,6 +246,7 @@
     ENDIF
     !
     f_out(:, :, :, :) = zero
+    sigma_bte(:, :, :) = zero
     error(:) = 1000
     ! Now compute the Iterative solution for electron or hole
     WRITE(stdout, '(5x,a)') ' '
@@ -297,7 +264,7 @@
         EXIT
       ENDIF
       !
-      ! SP: The reason for the "-" sign is because F_out and F_in are actually
+      ! SP: The reason for the "-" sign is because f_out and F_in are actually
       !     equal to $-\partial_E f_{nk}$ which is used for the mobility.
       !     However in the BTE, you need F_in to be $\partial_E f_{mk+q}$
       IF (mp_mesh_k) THEN
@@ -336,7 +303,7 @@
         ENDDO
       ENDIF
       !
-      CALL mp_sum(F_out, world_comm)
+      CALL mp_sum(f_out, world_comm)
       !
       DO itemp = 1, nstemp
         DO ik = 1, nktotf
@@ -350,10 +317,10 @@
       ENDDO
       !
       IF (mp_mesh_k) THEN
-        CALL k_avg(F_out, vkk_all, nb_sp, xkf_sp)
-        CALL print_mob_sym(F_out, s_bztoibz, bztoibz_mat, vkk_all, etf_all, wkf_all, ef0, max_mob)
+        CALL k_avg(f_out, vkk_all, nb_sp, xkf_sp)
+        CALL print_mob_sym(f_out, bztoibz_mat, vkk_all, etf_all, wkf_all, ef0, sigma_bte, max_mob)
       ELSE
-        CALL print_mob(F_out, vkk_all, etf_all, wkf_all, ef0, max_mob)
+        CALL print_mob(f_out, vkk_all, etf_all, wkf_all, ef0, sigma_bte, max_mob)
       ENDIF
       !
       ! Computes the error
@@ -366,8 +333,8 @@
       !
       ! Save F_in
       ! Linear mixing
-      F_in = (1.0 - broyden_beta) * F_in + broyden_beta * F_out
-      F_out = zero
+      f_in = (1.0 - broyden_beta) * f_in + broyden_beta * f_out
+      f_out = zero
       !
       iter = iter + 1
       !
@@ -382,6 +349,13 @@
       !
     ENDDO ! end of while loop
     !
+    ! Print nk-resolved mobility $\mu_{nk}^{\alpha\beta}$
+    IF (iverbosity == 3) THEN
+      IF (mp_mesh_k) THEN
+        CALL print_mob_sym(f_in, bztoibz_mat, vkk_all, etf_all, wkf_all, ef0, sigma_bte, max_mob, xkf_all(:, 1:nkqtotf:2))
+      ENDIF
+    ENDIF    
+    !
     ! Deallocate
     IF (mp_mesh_k) THEN
       DEALLOCATE(xkf_sp, STAT = ierr)
@@ -394,7 +368,7 @@
     !
     RETURN
     !
-    ! ---------------------------------------------------------------------------
+    !----------------------------------------------------------------------------
     END SUBROUTINE ibte
     !----------------------------------------------------------------------------
     !
@@ -526,8 +500,6 @@
     !! Transition probabilities
     REAL(KIND = DP), ALLOCATABLE :: trans_probcb(:)
     !! Transition probabilities for cb
-    LOGICAL :: tmp
-
     !
     etf_all(:, :)    = zero
     wkf_all(:)       = zero

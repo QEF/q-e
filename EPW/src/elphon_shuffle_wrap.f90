@@ -40,7 +40,7 @@
   USE cell_base,     ONLY : at, bg, alat, omega, tpiba
   USE symm_base,     ONLY : irt, s, nsym, ft, sname, invs, s_axis_to_cart,      &
                             sr, nrot, set_sym_bl, find_sym, inverse_s, t_rev,   &
-                            remove_sym, allfrac, time_reversal
+                            allfrac, time_reversal
   USE phcom,         ONLY : evq
   USE qpoint,        ONLY : igkq, xq, eigqts
   USE modes,         ONLY : nmodes, u, npert
@@ -334,6 +334,7 @@
     IF (mpime == ionode_id) THEN
       !
       OPEN(UNIT = crystal, FILE = 'crystal.fmt', STATUS = 'old', IOSTAT = ios)
+      IF (ios /= 0) CALL errore('elphon_shuffle_wrap', 'error opening crystal.fmt', crystal)
       READ(crystal, *) nat
       READ(crystal, *) nmodes
       READ(crystal, *) nelec
@@ -378,10 +379,22 @@
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating ifc', 1)
     ifc(:, :, :, :, :, :, :) = zero
   ENDIF
-  !
+  ! 
+  ! SP: Symmetries needs to be consistent with QE so that the order of the q in the star is the
+  !     same as in the .dyn files produced by QE.
+  ! 
   ! Initialize symmetries and create the s matrix
+  s(:, :, :) = 0 ! Symmetry in crystal axis with dim: 3,3,48
   CALL set_sym_bl()
   !
+  ! Setup Bravais lattice symmetry
+  WRITE(stdout,'(5x,a,i3)') "Symmetries of Bravais lattice: ", nrot
+  !
+  ! Setup crystal symmetry
+  CALL find_sym(nat, tau, ityp, .FALSE., m_loc)
+  IF (fixsym) CALL fix_sym(.FALSE.)
+  WRITE(stdout, '(5x, a, i3)') "Symmetries of crystal:         ", nsym
+  ! 
   IF (epwread .AND. .NOT. epbread) THEN
     CONTINUE
   ELSE
@@ -415,26 +428,13 @@
     bmat(:, :, :, :)      = czero
     cu(:, :, :)           = czero
     cuq(:, :, :)          = czero
+    sxq(:, :)             = zero
     !
     ! read interatomic force constat matrix from q2r
     IF (lifc) THEN
       CALL read_ifc_epw
     ENDIF
-    !
-    ! SP: The symmetries are now consistent with QE 5. This means that the order of the q in the star
-    !     should be the same as in the .dyn files produced by QE 5.
-    !
-    !     First we start by setting up the lattice & crystal symm. as done in PHonon/PH/q2qstar.f90
-    !
-    ! ~~~~~~~~ setup Bravais lattice symmetry ~~~~~~~~
-    WRITE(stdout,'(5x,a,i3)') "Symmetries of Bravais lattice: ", nrot
-    !
-    ! ~~~~~~~~ setup crystal symmetry ~~~~~~~~
-    CALL find_sym(nat, tau, ityp, .FALSE., m_loc)
-    IF (fixsym) CALL fix_sym(.FALSE.)
-    IF (.NOT. allfrac) CALL remove_sym(dfftp%nr1, dfftp%nr2, dfftp%nr3)
-    WRITE(stdout, '(5x, a, i3)') "Symmetries of crystal:         ", nsym
-    !
+    ! 
     ! The following loop is required to propertly set up the symmetry matrix s.
     ! We here copy the calls made in PHonon/PH/init_representations.f90 to have the same s as in QE 5.
     DO iq_irr = 1, nqc_irr
@@ -496,7 +496,7 @@
          INQUIRE(FILE = TRIM(filename), EXIST = exst)
          IF (.NOT. exst) CALL errore('elphon_shuffle_wrap', &
                    'cannot open file for reading or writing', ierr)
-         CALL read_disp_pattern_only (iunpattern, filename, iq_irr, ierr)
+         CALL read_disp_pattern_only(iunpattern, filename, iq_irr, ierr)
          IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', ' Problem with modes file', 1)
       ENDIF
       !
@@ -533,7 +533,7 @@
       ! ######################### star of q #########################
       !
       sym_smallq(:) = 0
-      CALL star_q2(xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, .TRUE., sym_smallq)
+      CALL star_q2(xq, at, bg, nsym, s, invs, t_rev, nq, sxq, isq, imq, .TRUE., sym_smallq)
       IF (fixsym) THEN
         IF (epw_noinv) imq = 1 ! Any non-zero integer is ok.
       ENDIF
@@ -551,12 +551,7 @@
       !
       CALL sgam_lr(at, bg, nsym, s, irt, tau, rtau, nat)
       !
-      !IF (meta_ionode) THEN
-        CALL dynmat_asr(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, invs, s, irt, rtau, sumr)
-      !ENDIF
-      !CALL mp_bcast(zstar, meta_ionode_id, world_comm)
-      !CALL mp_bcast(epsi , meta_ionode_id, world_comm)
-      !CALL mp_bcast(dynq , meta_ionode_id, world_comm)
+      CALL dynmat_asr(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, invs, s, irt, rtau, sumr)
       !
       ! now dynq is the cartesian dyn mat (not divided by the masses)
       !
@@ -719,7 +714,7 @@
         ! are equal to 5+ digits).
         ! For any volunteers, please write to giustino@civet.berkeley.edu
         !
-        CALL elphon_shuffle(iq_irr, nqc_irr, nqc, gmapsym(:,isym1), eigv(:,isym1), isym, xq0, .FALSE.)
+        CALL elphon_shuffle(iq_irr, nqc_irr, nqc, gmapsym(:, isym1), eigv(:, isym1), isym, xq0, .FALSE.)
         !
         !  bring epmatq in the mode representation of iq_first,
         !  and then in the cartesian representation of iq
@@ -763,7 +758,7 @@
           !
           xq0 = -xq0
           !
-          CALL elphon_shuffle(iq_irr, nqc_irr, nqc, gmapsym(:,isym1), eigv(:,isym1), isym, xq0, .TRUE.)
+          CALL elphon_shuffle(iq_irr, nqc_irr, nqc, gmapsym(:, isym1), eigv(:, isym1), isym, xq0, .TRUE.)
           !  bring epmatq in the mode representation of iq_first,
           !  and then in the cartesian representation of iq
           !
