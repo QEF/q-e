@@ -13,6 +13,20 @@ module timers
   save
   LOGICAL :: ignore_time = .true.  ! This is used to avoid collection of initialization times
   REAL*8  :: times(21) = 0.d0      ! Array hosting various timers
+CONTAINS
+  function mpi_wall_time ()
+    USE fft_param
+    real*8 :: mpi_wall_time
+#if defined(__MPI)
+    mpi_wall_time = MPI_WTIME()
+#else
+    ! standard way to get the wall time, sometimes with very low precision
+    integer :: cr, nc
+    call system_clock(count_rate=cr)
+    call system_clock(count=nc)
+    mpi_wall_time = dble(nc)/cr
+#endif
+  end function mpi_wall_time
 end module
 
 program test
@@ -257,6 +271,15 @@ program test
   ELSE
     iope = .false.
   ENDIF
+  !
+  !  Broadcast input parameter first
+  !
+  CALL MPI_BCAST(ecutrho, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+  CALL MPI_BCAST(ecutwfc, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+  CALL MPI_BCAST(alat_in, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+  CALL MPI_BCAST(ntgs, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+  CALL MPI_BCAST(nbnd, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+  !
 
 #else
 
@@ -268,15 +291,6 @@ program test
   iope = .true.
 
 #endif
-  !
-  !  Broadcast input parameter first
-  !
-  CALL MPI_BCAST(ecutrho, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
-  CALL MPI_BCAST(ecutwfc, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
-  CALL MPI_BCAST(alat_in, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
-  CALL MPI_BCAST(ntgs, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
-  CALL MPI_BCAST(nbnd, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
-  !
   !
   ! --------  INITIALIZE DIMENSIONS AND DESCRIPTORS
   !
@@ -378,12 +392,19 @@ program test
   END IF
   !
   ngms = ngs_
+  ngm = ngm_
+#if defined(__MPI)
   CALL MPI_ALLREDUCE(ngms, ngsx, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr)
   CALL MPI_ALLREDUCE(ngms, ngms_g, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr)
-  ngm = ngm_
   CALL MPI_ALLREDUCE(ngm, ngmx, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr)
   CALL MPI_ALLREDUCE(ngm, ngm_g, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr)
-  !
+#else
+  ngsx  = ngms
+  ngms_g= ngms
+  ngmx  = ngm
+  ngm_g = ngm
+#endif
+   !
   ! --------  ALLOCATE
   !
   IF (many_fft > 1) THEN
@@ -421,7 +442,9 @@ program test
   !
   ! Test FFT for wave functions - First calls may be biased by MPI and FFT initialization
   !
+#if defined(__MPI)
   CALL MPI_BARRIER(MPI_COMM_WORLD, ierr)
+#endif
   !
   IF (use_tg) THEN
     ALLOCATE (tg_psic(dffts%nnr_tg))
@@ -442,7 +465,7 @@ program test
   !
   ! --------  RECORD TIMES
   !
-  wall = MPI_WTIME()
+  wall = mpi_wall_time ()
   ignore_time = .false.
   !
   ! --------  INITIALIZE WAVE FUNCTIONS psi
@@ -474,13 +497,13 @@ program test
   IF (use_tg) THEN
     DO ib = 1, nbnd, incr
       !
-      time(1) = MPI_WTIME()
+      time(1) = mpi_wall_time()
       !
       call prepare_psi_tg(ib, nbnd, ngms, psi, tg_psic, dffts, gamma_only)
-      time(2) = MPI_WTIME()
+      time(2) = mpi_wall_time()
       !
       CALL invfft('tgWave', tg_psic, dffts);
-      time(3) = MPI_WTIME()
+      time(3) = mpi_wall_time()
       !
       CALL tg_get_group_nr3(dffts, right_nr3)
       !
@@ -488,13 +511,13 @@ program test
         tg_psic(j) = tg_psic(j)*tg_v(j)
       ENDDO
       !
-      time(4) = MPI_WTIME()
+      time(4) = mpi_wall_time()
       !
       CALL fwfft('tgWave', tg_psic, dffts);
-      time(5) = MPI_WTIME()
+      time(5) = mpi_wall_time()
       !
       CALL accumulate_hpsi_tg(ib, nbnd, ngms, hpsi, tg_psic, dffts, gamma_only)
-      time(6) = MPI_WTIME()
+      time(6) = mpi_wall_time()
       !
       DO i = 2, 6
         my_time(i) = my_time(i) + (time(i) - time(i - 1))
@@ -512,24 +535,24 @@ program test
         !call prepare_psi(ib, nbnd, ngms, psi, psic(1+(k-1)*dffts%nnr:), dffts, gamma_only)
         call prepare_psi(ib, nbnd, ngms, psi, psic, dffts, gamma_only)
       ENDDO
-      time(2) = MPI_WTIME()
+      time(2) = mpi_wall_time()
       !
       CALL invfft('Wave', psic, dffts, howmany=group_size)
-      time(3) = MPI_WTIME()
+      time(3) = mpi_wall_time()
       !
       DO j = 1, dffts%nnr
         psic(j) = psic(j)*v(j)
       ENDDO
-      time(4) = MPI_WTIME()
+      time(4) = mpi_wall_time()
       !
       CALL fwfft('Wave', psic, dffts, howmany=group_size)
-      time(5) = MPI_WTIME()
+      time(5) = mpi_wall_time()
       !
       DO k=0, group_size - 1
         !CALL accumulate_hpsi(ib, nbnd, ngms, hpsi, psic(1+(k-1)*dffts%nnr:), dffts, gamma_only)
         CALL accumulate_hpsi(ib, nbnd, ngms, hpsi, psic, dffts, gamma_only)
       ENDDO
-      time(6) = MPI_WTIME()
+      time(6) = mpi_wall_time()
       !
       DO i = 2, 6
         my_time(i) = my_time(i) + (time(i) - time(i - 1))
@@ -542,20 +565,20 @@ program test
     DO ib = 1, nbnd, incr
       !
       call prepare_psi(ib, nbnd, ngms, psi, psic, dffts, gamma_only)
-      time(2) = MPI_WTIME()
+      time(2) = mpi_wall_time()
       !
-      CALL invfft('Wave', psic, dffts); time(3) = MPI_WTIME()
+      CALL invfft('Wave', psic, dffts); time(3) = mpi_wall_time()
       !
       DO j = 1, dffts%nnr
         psic(j) = psic(j)*v(j)
       ENDDO
-      time(4) = MPI_WTIME()
+      time(4) = mpi_wall_time()
       !
       CALL fwfft('Wave', psic, dffts);
-      time(5) = MPI_WTIME()
+      time(5) = mpi_wall_time()
       !
       CALL accumulate_hpsi(ib, nbnd, ngms, hpsi, psic, dffts, gamma_only)
-      time(6) = MPI_WTIME()
+      time(6) = mpi_wall_time()
       !
       DO i = 2, 6
       my_time(i) = my_time(i) + (time(i) - time(i - 1))
@@ -566,7 +589,7 @@ program test
     ENDDO
   ENDIF
   !
-  wall = MPI_WTIME() - wall
+  wall = mpi_wall_time() - wall
 
   ! --------  DEALLOCATE
   !
@@ -904,6 +927,8 @@ end subroutine recips
        ! compute adeguate offsets in order to avoid overlap between
        ! g vectors once they are gathered on a single (global) array
        !
+       ngm_offset = 0
+#if defined (__MPI)
        !mype = mp_rank( dfftp%comm )
        !npe  = mp_size( dfftp%comm )
        CALL MPI_COMM_RANK(dfftp%comm, mype, ierr)
@@ -913,11 +938,11 @@ end subroutine recips
        ngmpe( mype + 1 ) = ngm
        !CALL mp_sum( ngmpe, dfftp%comm )
        CALL MPI_ALLREDUCE( MPI_IN_PLACE, ngmpe, 1, MPI_INTEGER, MPI_SUM, dfftp%comm, ierr )
-       ngm_offset = 0
        DO ng = 1, mype
           ngm_offset = ngm_offset + ngmpe( ng )
        END DO
        DEALLOCATE( ngmpe )
+#endif
        !
     END IF
 
@@ -1057,58 +1082,53 @@ end program test
 
 subroutine start_clock(label)
   use timers
-#if defined(__MPI_MODULE)
-  use mpi, ONLY:MPI_WTIME
+  use fft_param
   implicit none
-#else
-  implicit none
-  INCLUDE 'mpif.h'
-#endif
   character(len=*) :: label
   if (ignore_time) RETURN
   select case (label)
   case ("cft_1z")
-    times(1) = times(1) - MPI_WTIME()
+    times(1) = times(1) - mpi_wall_time()
   case ("cft_2xy")
-    times(2) = times(2) - MPI_WTIME()
+    times(2) = times(2) - mpi_wall_time()
   case ("cgather")
-    times(3) = times(3) - MPI_WTIME()
+    times(3) = times(3) - mpi_wall_time()
   case ("cgather_grid")
-    times(4) = times(4) - MPI_WTIME()
+    times(4) = times(4) - mpi_wall_time()
   case ("cscatter_grid")
-    times(5) = times(5) - MPI_WTIME()
+    times(5) = times(5) - mpi_wall_time()
   case ("cscatter_sym")
-    times(6) = times(6) - MPI_WTIME()
+    times(6) = times(6) - mpi_wall_time()
   case ("fft")
-    times(7) = times(7) - MPI_WTIME()
+    times(7) = times(7) - mpi_wall_time()
   case ("fft_scatt_tg")
-    times(8) = times(8) - MPI_WTIME()
+    times(8) = times(8) - mpi_wall_time()
   case ("fft_scatt_xy")
-    times(9) = times(9) - MPI_WTIME()
+    times(9) = times(9) - mpi_wall_time()
   case ("fft_scatt_yz")
-    times(10) = times(10) - MPI_WTIME()
+    times(10) = times(10) - mpi_wall_time()
   case ("fftb")
-    times(11) = times(11) - MPI_WTIME()
+    times(11) = times(11) - mpi_wall_time()
   case ("fftc")
-    times(12) = times(12) - MPI_WTIME()
+    times(12) = times(12) - mpi_wall_time()
   case ("fftcw")
-    times(13) = times(13) - MPI_WTIME()
+    times(13) = times(13) - mpi_wall_time()
   case ("ffts")
-    times(14) = times(14) - MPI_WTIME()
+    times(14) = times(14) - mpi_wall_time()
   case ("fftw")
-    times(15) = times(15) - MPI_WTIME()
+    times(15) = times(15) - mpi_wall_time()
   case ("rgather_grid")
-    times(16) = times(16) - MPI_WTIME()
+    times(16) = times(16) - mpi_wall_time()
   case ("rscatter_grid")
-    times(17) = times(17) - MPI_WTIME()
+    times(17) = times(17) - mpi_wall_time()
   case ("fft_scatter") !alt version compatibility
-    times(18) = times(18) - MPI_WTIME()
+    times(18) = times(18) - mpi_wall_time()
   case ("ALLTOALL") !alt version compatibility
-    times(19) = times(19) - MPI_WTIME()
+    times(19) = times(19) - mpi_wall_time()
   case ("fft_scatt_many_yz") !alt version compatibility
-    times(20) = times(20) - MPI_WTIME()
+    times(20) = times(20) - mpi_wall_time()
   case ("fft_scatt_many_xy") !alt version compatibility
-    times(21) = times(21) - MPI_WTIME()
+    times(21) = times(21) - mpi_wall_time()
   case default
     write (*, *) "Error, label not found", label
   end select
@@ -1116,58 +1136,53 @@ end subroutine
 
 subroutine stop_clock(label)
   use timers
-#if defined(__MPI_MODULE)
-  use mpi, ONLY:MPI_WTIME
+  use fft_param
   implicit none
-#else
-  implicit none
-  INCLUDE 'mpif.h'
-#endif
   character(len=*) :: label
   if (ignore_time) RETURN
   select case (label)
   case ("cft_1z")
-    times(1) = times(1) + MPI_WTIME()
+    times(1) = times(1) + mpi_wall_time()
   case ("cft_2xy")
-    times(2) = times(2) + MPI_WTIME()
+    times(2) = times(2) + mpi_wall_time()
   case ("cgather")
-    times(3) = times(3) + MPI_WTIME()
+    times(3) = times(3) + mpi_wall_time()
   case ("cgather_grid")
-    times(4) = times(4) + MPI_WTIME()
+    times(4) = times(4) + mpi_wall_time()
   case ("cscatter_grid")
-    times(5) = times(5) + MPI_WTIME()
+    times(5) = times(5) + mpi_wall_time()
   case ("cscatter_sym")
-    times(6) = times(6) + MPI_WTIME()
+    times(6) = times(6) + mpi_wall_time()
   case ("fft")
-    times(7) = times(7) + MPI_WTIME()
+    times(7) = times(7) + mpi_wall_time()
   case ("fft_scatt_tg")
-    times(8) = times(8) + MPI_WTIME()
+    times(8) = times(8) + mpi_wall_time()
   case ("fft_scatt_xy")
-    times(9) = times(9) + MPI_WTIME()
+    times(9) = times(9) + mpi_wall_time()
   case ("fft_scatt_yz")
-    times(10) = times(10) + MPI_WTIME()
+    times(10) = times(10) + mpi_wall_time()
   case ("fftb")
-    times(11) = times(11) + MPI_WTIME()
+    times(11) = times(11) + mpi_wall_time()
   case ("fftc")
-    times(12) = times(12) + MPI_WTIME()
+    times(12) = times(12) + mpi_wall_time()
   case ("fftcw")
-    times(13) = times(13) + MPI_WTIME()
+    times(13) = times(13) + mpi_wall_time()
   case ("ffts")
-    times(14) = times(14) + MPI_WTIME()
+    times(14) = times(14) + mpi_wall_time()
   case ("fftw")
-    times(15) = times(15) + MPI_WTIME()
+    times(15) = times(15) + mpi_wall_time()
   case ("rgather_grid")
-    times(16) = times(16) + MPI_WTIME()
+    times(16) = times(16) + mpi_wall_time()
   case ("rscatter_grid")
-    times(17) = times(17) + MPI_WTIME()
+    times(17) = times(17) + mpi_wall_time()
   case ("fft_scatter") !alt version compatibility
-    times(18) = times(18) + MPI_WTIME()
+    times(18) = times(18) + mpi_wall_time()
   case ("ALLTOALL") !alt version compatibility
-    times(19) = times(19) + MPI_WTIME()
+    times(19) = times(19) + mpi_wall_time()
   case ("fft_scatt_many_yz") !alt version compatibility
-    times(20) = times(20) + MPI_WTIME()
+    times(20) = times(20) + mpi_wall_time()
   case ("fft_scatt_many_xy") !alt version compatibility
-    times(21) = times(21) + MPI_WTIME()
+    times(21) = times(21) + mpi_wall_time()
   case default
     write (*, *) "Error, label not found", label
   end select
@@ -1175,13 +1190,8 @@ end subroutine
 !
 subroutine print_clock(mype, npes, ncount)
   use timers
-#if defined(__MPI_MODULE)
-  use mpi
+  use fft_param
   implicit none
-#else
-  implicit none
-  INCLUDE 'mpif.h'
-#endif
   integer, intent(in) :: mype, npes, ncount
   REAL*8  :: time_min(21)
   REAL*8  :: time_max(21)
