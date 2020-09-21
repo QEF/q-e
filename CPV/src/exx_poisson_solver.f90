@@ -257,32 +257,46 @@ SUBROUTINE PADX(nd,nb,coeke,d,Ad)
     DO ktr=nd(3),nd(6)
         DO jtr=nd(2),nd(5)
             DO itr=nd(1),nd(4)
-                Ad(itr,jtr,ktr)=(coeke(0,1,1)+coeke(0,2,2)+coeke(0,3,3))*d(itr,jtr,ktr)+coeke(1,1,1)*(d(itr-1,jtr,ktr)+d(itr+1,jtr,ktr)) &
-                                                  +coeke(2,1,1)*(d(itr-2,jtr,ktr)+d(itr+2,jtr,ktr)) &
-                                                  +coeke(3,1,1)*(d(itr-3,jtr,ktr)+d(itr+3,jtr,ktr)) &
-                                                  +coeke(1,2,2)*(d(itr,jtr-1,ktr)+d(itr,jtr+1,ktr)) &
-                                                  +coeke(2,2,2)*(d(itr,jtr-2,ktr)+d(itr,jtr+2,ktr)) &
-                                                  +coeke(3,2,2)*(d(itr,jtr-3,ktr)+d(itr,jtr+3,ktr)) &
-                                                  +coeke(1,3,3)*(d(itr,jtr,ktr-1)+d(itr,jtr,ktr+1)) &
-                                                  +coeke(2,3,3)*(d(itr,jtr,ktr-2)+d(itr,jtr,ktr+2)) &
-                                                  +coeke(3,3,3)*(d(itr,jtr,ktr-3)+d(itr,jtr,ktr+3))
+                Ad(itr,jtr,ktr)= & 
+                      (coeke(0,1,1)+coeke(0,2,2)+coeke(0,3,3))*d(itr,jtr,ktr) &
+                      +coeke(1,1,1)*(d(itr-1,jtr,ktr)+d(itr+1,jtr,ktr)) &
+                      +coeke(2,1,1)*(d(itr-2,jtr,ktr)+d(itr+2,jtr,ktr)) &
+                      +coeke(3,1,1)*(d(itr-3,jtr,ktr)+d(itr+3,jtr,ktr)) &
+                      +coeke(1,2,2)*(d(itr,jtr-1,ktr)+d(itr,jtr+1,ktr)) &
+                      +coeke(2,2,2)*(d(itr,jtr-2,ktr)+d(itr,jtr+2,ktr)) &
+                      +coeke(3,2,2)*(d(itr,jtr-3,ktr)+d(itr,jtr+3,ktr)) &
+                      +coeke(1,3,3)*(d(itr,jtr,ktr-1)+d(itr,jtr,ktr+1)) &
+                      +coeke(2,3,3)*(d(itr,jtr,ktr-2)+d(itr,jtr,ktr+2)) &
+                      +coeke(3,3,3)*(d(itr,jtr,ktr-3)+d(itr,jtr,ktr+3))
                 IF (ABS(coeke(1,1,2)) .GT. 1.0e-6) THEN
-                                Ad(itr,jtr,ktr)=Ad(itr,jtr,ktr)+coeke(1,1,2)*(d(itr+1,jtr+1,ktr)-d(itr+1,jtr-1,ktr)-d(itr-1,jtr+1,ktr)+d(itr-1,jtr-1,ktr)) &
-                                                               +coeke(2,1,2)*(d(itr+2,jtr+2,ktr)-d(itr+2,jtr-2,ktr)-d(itr-2,jtr+2,ktr)+d(itr-2,jtr-2,ktr)) &
-                                                               +coeke(3,1,2)*(d(itr+3,jtr+3,ktr)-d(itr+3,jtr-3,ktr)-d(itr-3,jtr+3,ktr)+d(itr-3,jtr-3,ktr))
+                   Ad(itr,jtr,ktr)= Ad(itr,jtr,ktr) &
+                      +coeke(1,1,2)*(d(itr+1,jtr+1,ktr) &
+                      -d(itr+1,jtr-1,ktr)-d(itr-1,jtr+1,ktr)+d(itr-1,jtr-1,ktr)) &
+                      +coeke(2,1,2)*(d(itr+2,jtr+2,ktr) &
+                      -d(itr+2,jtr-2,ktr)-d(itr-2,jtr+2,ktr)+d(itr-2,jtr-2,ktr)) &
+                      +coeke(3,1,2)*(d(itr+3,jtr+3,ktr)- &
+                      d(itr+3,jtr-3,ktr)-d(itr-3,jtr+3,ktr)+d(itr-3,jtr-3,ktr))
 
                 END IF
 
                 IF (ABS(coeke(1,1,3)) .GT. 1.0e-6) THEN
-                                Ad(itr,jtr,ktr)=Ad(itr,jtr,ktr)+coeke(1,1,3)*(d(itr+1,jtr,ktr+1)-d(itr+1,jtr,ktr-1)-d(itr-1,jtr,ktr+1)+d(itr-1,jtr,ktr-1)) &
-                                                               +coeke(2,1,3)*(d(itr+2,jtr,ktr+2)-d(itr+2,jtr,ktr-2)-d(itr-2,jtr,ktr+2)+d(itr-2,jtr,ktr-2)) &
-                                                               +coeke(3,1,3)*(d(itr+3,jtr,ktr+3)-d(itr+3,jtr,ktr-3)-d(itr-3,jtr,ktr+3)+d(itr-3,jtr,ktr-3))
+                   Ad(itr,jtr,ktr)=Ad(itr,jtr,ktr) &
+                     + coeke(1,1,3)*(d(itr+1,jtr,ktr+1) &
+                     -d(itr+1,jtr,ktr-1)-d(itr-1,jtr,ktr+1)+d(itr-1,jtr,ktr-1)) &
+                     +coeke(2,1,3)*(d(itr+2,jtr,ktr+2) &
+                     -d(itr+2,jtr,ktr-2)-d(itr-2,jtr,ktr+2)+d(itr-2,jtr,ktr-2)) &
+                     +coeke(3,1,3)*(d(itr+3,jtr,ktr+3) &
+                     -d(itr+3,jtr,ktr-3)-d(itr-3,jtr,ktr+3)+d(itr-3,jtr,ktr-3))
                 END IF
 
                 IF (ABS(coeke(1,2,3)) .GT. 1.0e-6) THEN
-                                Ad(itr,jtr,ktr)=Ad(itr,jtr,ktr)+coeke(1,2,3)*(d(itr,jtr+1,ktr+1)-d(itr,jtr+1,ktr-1)-d(itr,jtr-1,ktr+1)+d(itr,jtr-1,ktr-1)) &
-                                                               +coeke(2,2,3)*(d(itr,jtr+2,ktr+2)-d(itr,jtr+2,ktr-2)-d(itr,jtr-2,ktr+2)+d(itr,jtr-2,ktr-2)) &
-                                                               +coeke(3,2,3)*(d(itr,jtr+3,ktr+3)-d(itr,jtr+3,ktr-3)-d(itr,jtr-3,ktr+3)+d(itr,jtr-3,ktr-3))
+                   Ad(itr,jtr,ktr)=Ad(itr,jtr,ktr) &
+                     +coeke(1,2,3)*(d(itr,jtr+1,ktr+1) &
+                     -d(itr,jtr+1,ktr-1)-d(itr,jtr-1,ktr+1)+d(itr,jtr-1,ktr-1)) &
+                     +coeke(2,2,3)*(d(itr,jtr+2,ktr+2) &
+                     -d(itr,jtr+2,ktr-2)-d(itr,jtr-2,ktr+2)+d(itr,jtr-2,ktr-2)) &
+                     +coeke(3,2,3)*(d(itr,jtr+3,ktr+3) &
+                     -d(itr,jtr+3,ktr-3)-d(itr,jtr-3,ktr+3)+d(itr,jtr-3,ktr-3))
                 END IF
             END DO
         END DO
