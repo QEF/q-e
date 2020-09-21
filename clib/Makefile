@@ -15,7 +15,6 @@ md5_from_file.o \
 memstat.o \
 ptrace.o \
 sockets.o \
-load_balancing.o \
 qmmm_aux.o \
 qsort.o
 
