@@ -362,6 +362,7 @@
       USE control_flags,          ONLY: many_fft
       USE fft_helper_subroutines
       USE device_util_m,          ONLY : dev_memcpy
+      USE exx_module,             ONLY: exx_potential
       USE cudafor
 !
       IMPLICIT NONE
@@ -383,6 +384,7 @@
       INTEGER     :: igno, igrp, ierr, ii
       INTEGER     :: idx, ioff
       REAL(DP)    :: fi, fip, dd, dv
+      REAL(DP)    :: tmp1, tmp2                      
       COMPLEX(DP) :: fp, fm
       complex(DP), parameter :: ci=(0.0d0,1.0d0)
 
@@ -391,14 +393,19 @@
       COMPLEX(DP), ALLOCATABLE, DEVICE :: psi(:)
       COMPLEX(DP), ALLOCATABLE, DEVICE :: df_d(:)
       COMPLEX(DP), ALLOCATABLE, DEVICE :: da_d(:)
+      REAL(DP),    ALLOCATABLE, DEVICE :: exx_a(:), exx_b(:)       
+      REAL(DP),    ALLOCATABLE, DEVICE :: exx_potential_d(:,:)
       INTEGER,     DEVICE, POINTER     :: nl_d(:), nlm_d(:)
       !
       CALL start_clock( 'dforce' ) 
       !
       IF(dft_is_hybrid().AND.exx_is_active()) THEN
-         CALL errore(' dforce ', ' dft_is_hybrid and exx_is_active NOT implemented ', 1 )
+         allocate( exx_a( dffts%nnr ) ); exx_a=0.0_DP
+         allocate( exx_b( dffts%nnr ) ); exx_b=0.0_DP
+         allocate( exx_potential_d, source=exx_potential )
       END IF
 
+      WRITE(*,*), 'MCA entering forces', i
       ALLOCATE( psi( dffts%nnr * many_fft ) )
       ALLOCATE( df_d( SIZE( df ) ) )
       ALLOCATE( da_d( SIZE( da ) ) )
@@ -427,29 +434,60 @@
       !
       CALL invfft( 'Wave', psi, dffts, many_fft )
       !
+      WRITE(*,*), 'MCA forces: after invfft'
+      WRITE(*,*), 'ManyFFT: ', many_fft
+      WRITE(*,*), 'Grid stuff ', dffts%nnr, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
+
+!=============================================================================
+!exx_wf related
+      IF (dft_is_hybrid().AND.exx_is_active()) THEN
+         IF ( (mod(n,2).ne.0 ) .and. (i.eq.n) ) THEN
+           !$cuf kernel do(1) 
+           DO ir=1,dffts%nr1x*dffts%nr2x*dffts%my_nr3p
+             exx_a(ir) = exx_potential_d(ir, i)
+             exx_b(ir) = 0.0_DP
+           END DO
+         ELSE
+           !$cuf kernel do(1) 
+           DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
+             exx_a(ir) = exx_potential_d(ir, i)
+             exx_b(ir) = exx_potential_d(ir, i+1)
+           END DO
+         ENDIF
+      ENDIF
+!===============================================================================
+
+      WRITE(*,*), 'MCA forces: after exx'
       ioff = 0
       DO ii = i, i + 2 * many_fft - 1, 2
          IF( ii < n ) THEN
             iss1=ispin( ii )
             iss2=ispin( ii + 1 )
-!$cuf kernel do(1)
-            DO ir=1,dffts%nnr
-               psi(ir+ioff)=CMPLX( v(ir,iss1)* DBLE(psi(ir+ioff)), &
-                                   v(ir,iss2)*AIMAG(psi(ir+ioff)) ,kind=DP)
-            END DO
          ELSE IF( ii == n ) THEN
             iss1=ispin( ii )
             iss2=iss1
-!$cuf kernel do(1)
-            DO ir=1,dffts%nnr
-               psi(ir+ioff)=CMPLX( v(ir,iss1)* DBLE(psi(ir+ioff)), &
-                                   v(ir,iss2)*AIMAG(psi(ir+ioff)) ,kind=DP)
-            END DO
+         END IF
+
+         IF (dft_is_hybrid().AND.exx_is_active()) THEN
+           !$cuf kernel do(1) 
+           DO ir=1,dffts%nnr
+              tmp1 = v(ir,iss1)* DBLE(psi(ir+ioff))+exx_a(ir)
+              tmp2 = v(ir,iss2)*AIMAG(psi(ir+ioff))+exx_b(ir)
+              psi(ir+ioff)=CMPLX( tmp1, tmp2, kind=DP )
+           END DO
+         ELSE
+           !$cuf kernel do(1)
+           DO ir=1,dffts%nnr
+              psi(ir+ioff)=CMPLX( v(ir,iss1)* DBLE(psi(ir+ioff)), &
+                                  v(ir,iss2)*AIMAG(psi(ir+ioff)) ,kind=DP)
+           END DO
          END IF
          ioff = ioff + dffts%nnr
       END DO
 
+      WRITE(*,*), 'MCA forces: after exx'
       CALL fwfft( 'Wave', psi, dffts, many_fft )
+      WRITE(*,*), 'MCA forces: after fwfft'
 
       igno = 0
       ioff = 0
@@ -463,7 +501,9 @@
                fi = -0.5d0*f(i+idx-1)
                fip = -0.5d0*f(i+idx)
             endif
+            WRITE(*,*), 'MCA forces: before fftx'
             CALL fftx_psi2c_gamma_gpu( dffts, psi( 1+ioff : ioff+dffts%nnr ), df_d(1+igno:igno+ngw), da_d(1+igno:igno+ngw))
+            WRITE(*,*), 'MCA forces: after fftx'
 !$cuf kernel do(1)
             DO ig=1,ngw
                df_d(ig+igno)= fi*(tpiba2*g2kin_d(ig)* c(ig,idx+i-1)+df_d(ig+igno))
@@ -476,6 +516,8 @@
 
       ENDDO
 
+      WRITE(*,*), 'MCA forces: after idx'
+      WRITE(*,*), 'MCA forces. nhsa: ', nhsa
       !
 
       IF( nhsa > 0 ) THEN
@@ -546,15 +588,19 @@
          !
       ENDIF
 
+      WRITE(*,*), 'MCA forces, after nhsa'
       CALL dev_memcpy( df, df_d )
       CALL dev_memcpy( da, da_d )
+      WRITE(*,*), 'MCA forces, after memcpy'
 !
       DEALLOCATE( df_d )
       DEALLOCATE( da_d )
       DEALLOCATE( psi )
+      DEALLOCATE(exx_potential_d)
       NULLIFY(nl_d) 
       NULLIFY(nlm_d)
 !
+      WRITE(*,*), 'Finished dforce', i
       CALL stop_clock( 'dforce' ) 
 !
       RETURN

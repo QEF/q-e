@@ -1,4 +1,8 @@
+!TODO: use cuda blas/lapack routines...
 SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
+#ifdef __CUDA
+    USE cudafor
+#endif
     IMPLICIT NONE
     !------------------------------------------------------------------------
     ! --- pass in variables ---
@@ -11,6 +15,9 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
     real(8), intent(in)  :: coeke(-3:3,3,3)
     real(8), intent(in)  :: rho(n(1),n(2),n(3))
     real(8), intent(inout) :: pot(n(1),n(2),n(3))
+#ifdef __CUDA
+    attributes(device)   :: coemicf, coeke, rho, pot 
+#endif
     !------------------------------------------------------------------------
 
     !------------------------------------------------------------------------
@@ -36,6 +43,9 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
     real(8), allocatable :: r (:,:,:)
     real(8), allocatable :: d0(:,:,:)
     real(8), allocatable :: d1(:,:,:)
+#ifdef __CUDA
+    attributes(device)   :: x, r, d0, d1, alfa
+#endif
     !------------------------------------------------------------------------
 
 
@@ -67,6 +77,11 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
     !
     r = 0.d0; x = 0.d0
 
+#ifdef __CUDA
+    !$cuf kernel do (3)
+#else
+    !$omp parallel do
+#endif
     do k = 1, n(3)
         do j = 1, n(2)
             do i = 1, n(1)
@@ -75,10 +90,18 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
             end do
         end do
     end do
+#ifndef __CUDA
+    !$omp end parallel do
+#endif
     !
     CALL PADX(nd,nb,coeke,x,d1)
     !
     nro = 0.d0
+#ifdef __CUDA
+    !$cuf kernel do (3)
+#else
+    !$omp parallel do reduction(+:nro)
+#endif
     do k = nb(3), nb(6)
       do j = nb(2), nb(5)
         do i = nb(1), nb(4)
@@ -88,12 +111,20 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
         end do
       end do
     end do   
+#ifndef __CUDA
+    !$omp end parallel do
+#endif
     !
     DO itr=0,1000 ! loop over the dimension of the problem                         ! std CG_4 : for i = 1:length(b)
         !
         CALL PADX(nd,nb,coeke,d0,d1)                                               ! std CG_5 : Ap = A * p; % p = d0_d; Ap = d1_d
         !
         alfa = 0.d0
+#ifdef __CUDA
+        !$cuf kernel do (3)
+#else
+    !$omp parallel do reduction(+:alfa)
+#endif
         do k = nb(3), nb(6)
           do j = nb(2), nb(5)
             do i = nb(1), nb(4)
@@ -101,9 +132,17 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
             end do
           end do
         end do   
+#ifndef __CUDA
+    !$omp end parallel do
+#endif
         !
         nr = 0.d0
         !alfa=nro/Ddot(npt,d0_d,1,d1_d,1)                                          ! std CG_6 : alfa = rsold / (p' * Ap);
+#ifdef __CUDA
+        !$cuf kernel do (3)
+#else
+    !$omp parallel do reduction(+:nr)
+#endif
         do k = nb(3), nb(6)
           do j = nb(2), nb(5)
             do i = nb(1), nb(4)
@@ -113,10 +152,18 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
             end do
           end do
         end do   
+#ifndef __CUDA
+    !$omp end parallel do
+#endif
         !                                 ! std CG_7 : x = x + alfa * p;
         !                                 ! std CG_8 : r = r - alfa * Ap;
         !                                                                                          ! std CG_9 : rsnew = r' * r;
         IF (nr < eps*eps*(1.d0+nro)) EXIT                                        ! std CG_10-12 : if (converge) : break
+#ifdef __CUDA
+        !$cuf kernel do (3)
+#else
+    !$omp parallel do
+#endif
         do k = nb(3), nb(6)
           do j = nb(2), nb(5)
             do i = nb(1), nb(4)
@@ -124,6 +171,9 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
             end do
           end do
         end do   
+#ifndef __CUDA
+    !$omp end parallel do
+#endif
         !                                  ! std CG_13 : p = r + (rsnew / rsold) * p;
         !                                    ! std CG_13 : p = r + (rsnew / rsold) * p;
         nro = nr
@@ -139,6 +189,12 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
     !!------------------------------------------------------------------------
     !! WRITE(*,"(A, E15.7, A, I4, A)") "error: ", DSQRT(PDDOT(nd,nb,r,r)), "  in", iter, "  steps"
     !!------------------------------------------------------------------------
+
+#ifdef __CUDA
+    !$cuf kernel do (3)
+#else
+    !$omp parallel do
+#endif
     do k = 1, n(3)
         do j = 1, n(2)
             do i = 1, n(1)
@@ -146,6 +202,9 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
             end do
         end do
     end do
+#ifndef __CUDA
+    !$omp end parallel do
+#endif
     !
     iter = itr
 
@@ -185,58 +244,50 @@ SUBROUTINE PADX(nd,nb,coeke,d,Ad)
     REAL(8)    :: coeke(-3:3,3,3)
     REAL(8)    :: d(nb(1):nb(4), nb(2):nb(5), nb(3):nb(6))
     REAL(8)    :: Ad(nb(1):nb(4), nb(2):nb(5), nb(3):nb(6))
+#ifdef __CUDA
+    attributes(device) :: coeke, d, Ad
+#endif
     !------------------------------------------------------------------------
 
+#ifdef __CUDA
+    !$cuf kernel do (3)
+#else
+    !$omp parallel do default(shared) private(ktr,jtr,itr) schedule(guided)
+#endif
     DO ktr=nd(3),nd(6)
         DO jtr=nd(2),nd(5)
             DO itr=nd(1),nd(4)
-                Ad(itr,jtr,ktr)=(coeke(0,1,1) & 
-                    +coeke(0,2,2)+coeke(0,3,3))*d(itr,jtr,ktr) & 
-                    +coeke(1,1,1)*(d(itr-1,jtr,ktr)+d(itr+1,jtr,ktr)) &
-                    +coeke(2,1,1)*(d(itr-2,jtr,ktr)+d(itr+2,jtr,ktr)) &
-                    +coeke(3,1,1)*(d(itr-3,jtr,ktr)+d(itr+3,jtr,ktr)) &
-                    +coeke(1,2,2)*(d(itr,jtr-1,ktr)+d(itr,jtr+1,ktr)) &
-                    +coeke(2,2,2)*(d(itr,jtr-2,ktr)+d(itr,jtr+2,ktr)) &
-                    +coeke(3,2,2)*(d(itr,jtr-3,ktr)+d(itr,jtr+3,ktr)) &
-                    +coeke(1,3,3)*(d(itr,jtr,ktr-1)+d(itr,jtr,ktr+1)) &
-                    +coeke(2,3,3)*(d(itr,jtr,ktr-2)+d(itr,jtr,ktr+2)) &
-                    +coeke(3,3,3)*(d(itr,jtr,ktr-3)+d(itr,jtr,ktr+3))
+                Ad(itr,jtr,ktr)=(coeke(0,1,1)+coeke(0,2,2)+coeke(0,3,3))*d(itr,jtr,ktr)+coeke(1,1,1)*(d(itr-1,jtr,ktr)+d(itr+1,jtr,ktr)) &
+                                                  +coeke(2,1,1)*(d(itr-2,jtr,ktr)+d(itr+2,jtr,ktr)) &
+                                                  +coeke(3,1,1)*(d(itr-3,jtr,ktr)+d(itr+3,jtr,ktr)) &
+                                                  +coeke(1,2,2)*(d(itr,jtr-1,ktr)+d(itr,jtr+1,ktr)) &
+                                                  +coeke(2,2,2)*(d(itr,jtr-2,ktr)+d(itr,jtr+2,ktr)) &
+                                                  +coeke(3,2,2)*(d(itr,jtr-3,ktr)+d(itr,jtr+3,ktr)) &
+                                                  +coeke(1,3,3)*(d(itr,jtr,ktr-1)+d(itr,jtr,ktr+1)) &
+                                                  +coeke(2,3,3)*(d(itr,jtr,ktr-2)+d(itr,jtr,ktr+2)) &
+                                                  +coeke(3,3,3)*(d(itr,jtr,ktr-3)+d(itr,jtr,ktr+3))
                 IF (ABS(coeke(1,1,2)) .GT. 1.0e-6) THEN
-                 Ad(itr,jtr,ktr)=Ad(itr,jtr,ktr)+ &
-                     coeke(1,1,2)*(d(itr+1,jtr+1,ktr)-d(itr+1,jtr-1,ktr) & 
-                     -d(itr-1,jtr+1,ktr)+d(itr-1,jtr-1,ktr)) &
-                     +coeke(2,1,2)*(d(itr+2,jtr+2,ktr) &
-                     -d(itr+2,jtr-2,ktr)-d(itr-2,jtr+2,ktr) &
-                     +d(itr-2,jtr-2,ktr)) &
-                     +coeke(3,1,2)*(d(itr+3,jtr+3,ktr) &
-                     -d(itr+3,jtr-3,ktr)-d(itr-3,jtr+3,ktr)+d(itr-3,jtr-3,ktr))
+                                Ad(itr,jtr,ktr)=Ad(itr,jtr,ktr)+coeke(1,1,2)*(d(itr+1,jtr+1,ktr)-d(itr+1,jtr-1,ktr)-d(itr-1,jtr+1,ktr)+d(itr-1,jtr-1,ktr)) &
+                                                               +coeke(2,1,2)*(d(itr+2,jtr+2,ktr)-d(itr+2,jtr-2,ktr)-d(itr-2,jtr+2,ktr)+d(itr-2,jtr-2,ktr)) &
+                                                               +coeke(3,1,2)*(d(itr+3,jtr+3,ktr)-d(itr+3,jtr-3,ktr)-d(itr-3,jtr+3,ktr)+d(itr-3,jtr-3,ktr))
 
                 END IF
 
                 IF (ABS(coeke(1,1,3)) .GT. 1.0e-6) THEN
-                 Ad(itr,jtr,ktr)=Ad(itr,jtr,ktr)+ &
-                     coeke(1,1,3)*(d(itr+1,jtr,ktr+1)- &
-                     d(itr+1,jtr,ktr-1)-d(itr-1,jtr,ktr+1) &
-                     +d(itr-1,jtr,ktr-1)) &
-                     +coeke(2,1,3)*(d(itr+2,jtr,ktr+2) &
-                     -d(itr+2,jtr,ktr-2)-d(itr-2,jtr,ktr+2) &
-                     +d(itr-2,jtr,ktr-2)) &
-                     +coeke(3,1,3)*(d(itr+3,jtr,ktr+3) &
-                     -d(itr+3,jtr,ktr-3)-d(itr-3,jtr,ktr+3) &
-                     +d(itr-3,jtr,ktr-3))
+                                Ad(itr,jtr,ktr)=Ad(itr,jtr,ktr)+coeke(1,1,3)*(d(itr+1,jtr,ktr+1)-d(itr+1,jtr,ktr-1)-d(itr-1,jtr,ktr+1)+d(itr-1,jtr,ktr-1)) &
+                                                               +coeke(2,1,3)*(d(itr+2,jtr,ktr+2)-d(itr+2,jtr,ktr-2)-d(itr-2,jtr,ktr+2)+d(itr-2,jtr,ktr-2)) &
+                                                               +coeke(3,1,3)*(d(itr+3,jtr,ktr+3)-d(itr+3,jtr,ktr-3)-d(itr-3,jtr,ktr+3)+d(itr-3,jtr,ktr-3))
                 END IF
 
                 IF (ABS(coeke(1,2,3)) .GT. 1.0e-6) THEN
-                 Ad(itr,jtr,ktr)=Ad(itr,jtr,ktr) &
-                     +coeke(1,2,3)*(d(itr,jtr+1,ktr+1) &
-                     -d(itr,jtr+1,ktr-1)-d(itr,jtr-1,ktr+1) &
-                     +d(itr,jtr-1,ktr-1)) &
-                     +coeke(2,2,3)*(d(itr,jtr+2,ktr+2) &
-                     -d(itr,jtr+2,ktr-2)-d(itr,jtr-2,ktr+2)+d(itr,jtr-2,ktr-2)) &
-                     +coeke(3,2,3)*(d(itr,jtr+3,ktr+3) &
-                     -d(itr,jtr+3,ktr-3)-d(itr,jtr-3,ktr+3)+d(itr,jtr-3,ktr-3))
+                                Ad(itr,jtr,ktr)=Ad(itr,jtr,ktr)+coeke(1,2,3)*(d(itr,jtr+1,ktr+1)-d(itr,jtr+1,ktr-1)-d(itr,jtr-1,ktr+1)+d(itr,jtr-1,ktr-1)) &
+                                                               +coeke(2,2,3)*(d(itr,jtr+2,ktr+2)-d(itr,jtr+2,ktr-2)-d(itr,jtr-2,ktr+2)+d(itr,jtr-2,ktr-2)) &
+                                                               +coeke(3,2,3)*(d(itr,jtr+3,ktr+3)-d(itr,jtr+3,ktr-3)-d(itr,jtr-3,ktr+3)+d(itr,jtr-3,ktr-3))
                 END IF
             END DO
         END DO
     END DO
+#ifndef __CUDA
+    !$omp end parallel do
+#endif
 END SUBROUTINE PADX
