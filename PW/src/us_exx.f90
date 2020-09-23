@@ -824,6 +824,11 @@ MODULE us_exx
     IF (.NOT. okvan) RETURN
     IF (noncolin) CALL errore( "rotate_becxx", "Ultrasoft/PAW+EXX+noncolin &
                                &not yet implemented", 1 )
+
+    IF(.not.ALLOCATED(becxx0))THEN
+      CALL infomsg("rotate_becxx","skipping rotation of <beta|psi>, this will only work for open_grid")
+      RETURN
+    ENDIF
     !
     !
     CALL start_clock( 'becxx' )
