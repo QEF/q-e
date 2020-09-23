@@ -2,9 +2,9 @@ cell2ibrav.o : ../../Modules/kind.o
 ev.o : ../../Modules/constants.o
 ev.o : ../../Modules/io_global.o
 ev.o : ../../Modules/kind.o
+ev.o : ../../Modules/lmdif.o
 ev.o : ../../Modules/mp_global.o
 ev.o : ../../Modules/mp_world.o
-ev.o : ../../Modules/powell.o
 ev.o : ../../UtilXlib/mp.o
 ibrav2cell.o : ../../Modules/constants.o
 ibrav2cell.o : ../../Modules/kind.o
@@ -13,4 +13,4 @@ kpoints.o : ../../Modules/kind.o
 kpoints.o : ../../PW/src/symm_base.o
 scan_ibrav.o : ../../Modules/constants.o
 scan_ibrav.o : ../../Modules/kind.o
-scan_ibrav.o : ../../Modules/powell.o
+scan_ibrav.o : ../../Modules/lmdif.o
