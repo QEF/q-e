@@ -12,7 +12,7 @@ MODULE additional_kpoints
   USE parameters,   ONLY : npk
   IMPLICIT NONE
   REAL(DP),ALLOCATABLE :: xk_add(:,:) !, wk_add(:)
-  INTEGER :: nkstot_add
+  INTEGER :: nkstot_add=0
 
 
   CONTAINS
@@ -24,6 +24,7 @@ MODULE additional_kpoints
     !
     IMPLICIT NONE
     CALL mp_bcast(nkstot_add, ionode_id, world_comm)
+    IF(nkstot_add==0) RETURN
     CALL mp_bcast(xk_add,     ionode_id, world_comm)
 
   END SUBROUTINE
@@ -46,6 +47,7 @@ MODULE additional_kpoints
 !     IF(.not.allocated(xk) .or. .not.allocated(wk))&
 !       CALL errore("add_kpoints", "K-points not ready yet",1)
      CALL bcast_additional_kpoints()
+     IF(nkstot_add==0) RETURN
 
      ! Back-up existing points
      nkstot_old = nkstot
