@@ -1,0 +1,16 @@
+ZG.o : ../../../Modules/bz_form.o
+ZG.o : ../../../Modules/cell_base.o
+ZG.o : ../../../Modules/constants.o
+ZG.o : ../../../Modules/environment.o
+ZG.o : ../../../Modules/io_global.o
+ZG.o : ../../../Modules/kind.o
+ZG.o : ../../../Modules/mp_global.o
+ZG.o : ../../../Modules/mp_images.o
+ZG.o : ../../../Modules/mp_world.o
+ZG.o : ../../../Modules/parameters.o
+ZG.o : ../../../Modules/parser.o
+ZG.o : ../../../PW/src/pwcom.o
+ZG.o : ../../../PW/src/symm_base.o
+ZG.o : ../../../PW/src/tetra.o
+ZG.o : ../../../UtilXlib/mp.o
+ZG.o : ../../../PHonon/PH/io_dyn_mat.o

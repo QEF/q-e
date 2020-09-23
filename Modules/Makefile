@@ -48,7 +48,6 @@ io_files.o \
 io_global.o  \
 ions_base.o \
 kind.o \
-libxc.o \
 lmdif.o \
 mdiis.o \
 mm_dispersion.o \

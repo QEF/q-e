@@ -158,6 +158,10 @@ inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf.in', '1'), ('nscf.in', '1')
 ####program = EPW
 ####inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf.in', '1'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3')
 
+[zg_conf/]
+program = ZG
+inputs_args = ('zg.in', '')
+
 [tddfpt_CH4/]
 program = TDDFPT
 inputs_args = ('CH4.pw-in', '1'), ('CH4.tddfpt-in', '2'), ('CH4.tddfpt_pp-in', '3')
@@ -217,6 +221,9 @@ program = PP
 [epw_*/]
 program = EPW
 
+[zg_*/]
+program = ZG
+
 [hp_*/]
 program = HP
 
@@ -228,5 +235,6 @@ pp_all = pp_*??
 epw_all = epw_*??
 hp_all = hp_*??
 epw_partial = epw_base epw_trev epw_trev_uspp epw_metal epw_soc epw_super epw_polar epw_pl epw_mob 
+zg_all = zg_*??
 tddfpt_all = tddfpt_*??
 _default_ = pw_*?? cp_*?? ph_*?? epw_*?? tddfpt_*?? hp_*??

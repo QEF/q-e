@@ -13,4 +13,4 @@ kpoints.o : ../../Modules/kind.o
 kpoints.o : ../../PW/src/symm_base.o
 scan_ibrav.o : ../../Modules/constants.o
 scan_ibrav.o : ../../Modules/kind.o
-scan_ibrav.o : ../../Modules/powell.o
+scan_ibrav.o : ../../Modules/lmdif.o

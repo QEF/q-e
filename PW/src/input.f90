@@ -84,8 +84,7 @@ SUBROUTINE iosys()
                             forcefield, &
                             forcegate
   !
-  USE io_files,      ONLY : input_drho, output_drho, &
-                            psfile, tmp_dir, wfc_dir, &
+  USE io_files,      ONLY : psfile, tmp_dir, wfc_dir, &
                             prefix_     => prefix, &
                             pseudo_dir_ => pseudo_dir, &
                             pseudo_dir_cur, restart_dir, &

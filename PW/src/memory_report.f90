@@ -59,7 +59,7 @@ SUBROUTINE memory_report()
   !
   IMPLICIT NONE
   !
-  include 'laxlib.fh'
+  INCLUDE 'laxlib.fh'
   !
   INTEGER, PARAMETER :: MB=1024*1024
   INTEGER, PARAMETER :: GB=1024*MB
