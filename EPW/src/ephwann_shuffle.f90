@@ -462,7 +462,6 @@
     ! Open the prefix.epmatwe file
     IF ((etf_mem == 1) .AND. ionode) THEN
       lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-      filint   = TRIM(prefix)//'.epmatwe'
       CALL diropn(iunepmatwe, 'epmatwe', lrepmatw, exst)
     ENDIF
     !
@@ -794,7 +793,7 @@
   ENDIF
 #else
   lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-  filint   = TRIM(prefix)//'.epmatwp'
+  filint = TRIM(tmp_dir) // TRIM(prefix)//'.epmatwp'
   INQUIRE(IOLENGTH = direct_io_factor) dummy(1)
   unf_recl = direct_io_factor * INT(lrepmatw, KIND = KIND(unf_recl))
   IF (unf_recl <= 0) CALL errore('epw_write', 'wrong record length', 3)
