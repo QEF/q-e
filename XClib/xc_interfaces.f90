@@ -7,10 +7,8 @@ MODULE xc_interfaces
   !
   ! LDA
   PUBLIC :: XC, DMXC
-  PUBLIC :: PW, PW_SPIN
   ! GGA
   PUBLIC :: XC_GCX, DGCXC
-  PUBLIC :: GCXC, GCX_SPIN, GCC_SPIN
   PUBLIC :: LSD_GLYP
   ! MGGA
   PUBLIC :: XC_METAGCX
@@ -164,56 +162,6 @@ MODULE xc_interfaces
   END INTERFACE
   !
   !
-  INTERFACE GCXC
-     !
-     SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
-                                          v2x_out, v1c_out, v2c_out )
-       USE kind_l, ONLY: DP
-       IMPLICIT NONE
-       INTEGER,  INTENT(IN) :: length 
-       REAL(DP), INTENT(IN),  DIMENSION(length) :: rho_in, grho_in
-       REAL(DP), INTENT(OUT), DIMENSION(length) :: sx_out, sc_out, v1x_out, &
-                                                   v2x_out, v1c_out, v2c_out
-     END SUBROUTINE gcxc_l
-     !
-  END INTERFACE
-  !
-  !
-  INTERFACE GCX_SPIN
-     !
-     SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
-       !
-       USE kind_l, ONLY: DP
-       IMPLICIT NONE
-       INTEGER, INTENT(IN) :: length
-       REAL(DP), INTENT(IN),  DIMENSION(length,2) :: rho_in, grho2_in
-       REAL(DP), INTENT(OUT), DIMENSION(length) :: sx_tot
-       REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v1x_out, v2x_out
-       !
-     END SUBROUTINE
-     !
-  END INTERFACE
-  !
-  !
-  INTERFACE GCC_SPIN
-     !
-     SUBROUTINE gcc_spin_l( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out )
-       !
-       USE kind_l, ONLY: DP
-       IMPLICIT NONE
-       INTEGER, INTENT(IN) :: length
-       REAL(DP), INTENT(IN), DIMENSION(length) :: rho_in
-       REAL(DP), INTENT(INOUT), DIMENSION(length) :: zeta_io
-       REAL(DP), INTENT(IN), DIMENSION(length) :: grho_in
-       REAL(DP), INTENT(OUT), DIMENSION(length) :: sc_out
-       REAL(DP), INTENT(OUT), DIMENSION(length,2) :: v1c_out
-       REAL(DP), INTENT(OUT), DIMENSION(length) :: v2c_out
-       !
-     END SUBROUTINE
-     !
-  END INTERFACE
-  !
-  !
   INTERFACE DGCXC
      !
      SUBROUTINE dgcxc_l( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
@@ -232,35 +180,6 @@ MODULE xc_interfaces
   !
   !
   !---PROVISIONAL .. for cases when functional routines are called outside xc-wrappers---
-  !
-  !
-  INTERFACE PW
-     !
-     SUBROUTINE pw_ext( rs, iflag, ec, vc )
-       !
-       USE kind_l,  ONLY: DP
-       IMPLICIT NONE
-       REAL(DP), INTENT(IN)  :: rs
-       REAL(DP), INTENT(OUT) :: ec, vc
-       INTEGER,  INTENT(IN)  :: iflag
-       !
-     END SUBROUTINE pw_ext
-     !
-  END INTERFACE
-  !
-  INTERFACE PW_SPIN
-     !
-     SUBROUTINE pw_spin_ext( rs, zeta, ec, vc_up, vc_dw )
-       !
-       USE kind_l,  ONLY: DP
-       IMPLICIT NONE
-       REAL(DP), INTENT(IN)  :: rs, zeta
-       REAL(DP), INTENT(OUT) :: ec, vc_up, vc_dw
-       !
-     END SUBROUTINE pw_spin_ext
-     !
-  END INTERFACE
-  !
   !
   !
   INTERFACE LSD_GLYP
