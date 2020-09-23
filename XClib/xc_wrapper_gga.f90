@@ -75,8 +75,10 @@ SUBROUTINE xc_gcx_l( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   REAL(DP), PARAMETER :: small = 1.E-10_DP
   !
   !
-  IF (ns==2 .AND. .NOT. PRESENT(v2c_ud)) CALL errore( 'xc_gga', 'cross &
-                                             &term v2c_ud not found', 1 )
+  !IF (ns==2 .AND. .NOT. PRESENT(v2c_ud)) CALL errore( 'xc_gga', 'cross &
+  !                                             &term v2c_ud not found', 1 )
+  IF (ns==2 .AND. .NOT. PRESENT(v2c_ud)) CALL infomsg( 'xc_gcx', 'WARNING: cross &
+                &term v2c_ud not found xc_gcx (gga) call with polarized case' )
   !
   !----PROVISIONAL ---
   !IF ( ANY(.NOT.is_libxc(3:4)) ) THEN
@@ -278,7 +280,7 @@ SUBROUTINE xc_gcx_l( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
           CALL gcc_spin_l( length, rh, zeta, grho2(:,1), ec, v1c, v2c(:,1) )
           !
           v2c(:,2)  = v2c(:,1)
-          v2c_ud(:) = v2c(:,1)
+          IF ( PRESENT(v2c_ud) ) v2c_ud(:) = v2c(:,1)
           !
           DEALLOCATE( rh, zeta )
           !
@@ -355,7 +357,7 @@ SUBROUTINE xc_gcx_l( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
         CALL gcc_spin_l( length, rh, zeta, grho2(:,1), ec, v1c, v2c(:,1) )
         !
         v2c(:,2)  = v2c(:,1)
-        v2c_ud(:) = v2c(:,1)
+        IF ( PRESENT(v2c_ud) ) v2c_ud(:) = v2c(:,1)
         !
         DEALLOCATE( rh, zeta )
         !
