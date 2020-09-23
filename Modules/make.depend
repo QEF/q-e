@@ -228,7 +228,6 @@ plugin_flags.o : kind.o
 plugin_flags.o : parameters.o
 plugin_variables.o : kind.o
 plugin_variables.o : parameters.o
-powell.o : kind.o
 pw_dot.o : ../UtilXlib/mp.o
 pw_dot.o : kind.o
 pw_dot.o : mp_pools.o
