@@ -79,7 +79,7 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
   use kinds,     only : DP
   use constants, only : fpi, e2
   use funct,     only : dft_is_meta
-  use xc_interfaces,   only : xc_gcx, xclib_set_threshold, tpsscxc
+  use xc_interfaces,   only : xc_gcx, xc_metagcx, xclib_set_threshold
   implicit none
   integer,  intent(in) :: ndm,mesh,nspin,iflag
   real(DP), intent(in) :: r(mesh), r2(mesh), rho(ndm,2), rhoc(ndm)
@@ -87,12 +87,14 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
   real(DP), intent(in) :: tau(ndm,2)
   real(DP), intent(out):: vtau(mesh)
 
-  integer :: i, is, ierr
+  integer :: i, is, ierr, np
   real(DP) :: sx, sc, v2c, v1x, v2x, v1c
   !
   REAL(DP) :: grho_v(3,mesh,nspin)
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: sx_v, sc_v, v2c_ud
   REAL(DP), ALLOCATABLE, DIMENSION(:,:) :: v1x_v, v2x_v, v1c_v, v2c_v
+  REAL(DP), ALLOCATABLE, DIMENSION(:,:) :: v3x_v, v3c_v
+  REAL(DP), ALLOCATABLE, DIMENSION(:,:,:) :: v2cm_v
   !
   real(DP) :: v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw
   real(DP) :: v3x, v3c, de_cc, dv1_cc,dv2_cc
@@ -127,10 +129,16 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
      enddo
   enddo
   !
-  allocate( sx_v(mesh) , sc_v(mesh)  )
+  allocate( sx_v(mesh), sc_v(mesh)  )
   allocate( v1x_v(mesh,nspin), v2x_v(mesh,nspin) )
   allocate( v1c_v(mesh,nspin), v2c_v(mesh,nspin) )
-  IF (nspin==2) allocate( v2c_ud(mesh) )
+  if (nspin==2) allocate( v2c_ud(mesh) )
+  if ( dft_is_meta() ) then
+    np = 1
+    IF (nspin==2) np=3
+    allocate( v2cm_v(np,mesh,nspin) )
+    allocate( v3x_v(mesh,nspin), v3c_v(mesh,nspin) )
+  endif
   !
   if (nspin.eq.1) then
      !
@@ -145,7 +153,11 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
         !
         vtau(:) = 0.0_dp
         ! 
-       do i=1,mesh
+        !
+        CALL xc_metagcx( mesh, 1, 1, ABS(rhoaux), grho_v, tau, sx_v, sc_v, v1x_v, v2x_v, &
+                         v3x_v, v1c_v, v2cm_v, v3c_v )
+        !
+        do i=1,mesh
            arho=abs(rhoaux(i,1)) 
            segno=sign(1.0_dp,rhoaux(i,1))
            if (arho.gt.eps.and.abs(grho(i,1)).gt.eps) then
@@ -153,14 +165,14 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
 ! currently there is a single meta-GGA implemented (tpss)
 ! that calculates all needed terms (LDA, GGA, metaGGA)
 !
-             call tpsscxc ( arho, grho(i,1)**2, tau(i,1)+tau(i,2), &
-                   sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
+              ! call tpsscxc ( arho, grho(i,1)**2, tau(i,1)+tau(i,2), &
+              !      sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
               !
-              egc(i)=sx+sc+de_cc
+              egc(i)=sx_v(i)+sc_v(i)+de_cc
               vgc(i,1)= v1x+v1c + dv1_cc
               h(i,1)  =(v2x+v2c)*grho(i,1)*r2(i)
               vtau(i) = v3x+v3c
-          else
+           else
               vgc(i,1)=0.0_dp
               egc(i)=0.0_dp
               h(i,1)=0.0_dp
@@ -207,6 +219,9 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
   deallocate( v1x_v , v2x_v )
   deallocate( v1c_v , v2c_v )
   IF (nspin==2) deallocate( v2c_ud )
+  if ( dft_is_meta() ) then
+    deallocate( v2cm_v, v3x_v, v3c_v )
+  endif
   !     
   !     We need the gradient of h to calculate the last part of the exchange
   !     and correlation potential.

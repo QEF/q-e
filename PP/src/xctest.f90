@@ -84,7 +84,7 @@ SUBROUTINE test_gcxc( nnr, nspin, rhor, grhor )
              CALL becke88 (arho, grho2(1), sx, v1x, v2x)
              CALL wrap_b88 (arho, grho2(1), sx_w, v1x_w, v2x_w)  ! DEBUG
              CALL glyp (arho, grho2(1), sc, v1c, v2c)
-             CALL wrap_glyp (arho, grho2(1), sc_w, v1c_w, v2c_w)  ! DEBUG
+             !CALL wrap_glyp (arho, grho2(1), sc_w, v1c_w, v2c_w)  ! DEBUG
 
              sx_d = (sx_w - sx) / (abs(sx) + abs(sx_w))
              sc_d = (sc_w - sc) / (abs(sc) + abs(sc_w))

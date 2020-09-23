@@ -855,7 +855,6 @@ CONTAINS
     !! * iflag=1: J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
     !! * iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
     !
-    USE kind_l,      ONLY: DP
     IMPLICIT NONE
     REAL(DP), INTENT(IN) :: rs
     INTEGER, INTENT(IN)  :: iflag
@@ -1099,7 +1098,6 @@ CONTAINS
     !-----------------------------------------------------------------------
     !--A provisional copy of the pw routine in XC lib to avoid external calls--
     !! J.P. Perdew and Y. Wang, PRB 45, 13244 (1992).
-    USE kind_l, ONLY : DP
     IMPLICIT NONE
     REAL(DP), INTENT(IN) :: rs
     !! Wigner-Seitz radius

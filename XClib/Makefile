@@ -11,7 +11,6 @@ qe_drivers_d_lda_lsda.o \
 qe_drivers_gga.o \
 qe_drivers_lda_lsda.o \
 qe_drivers_mgga.o \
-qe_external_calls.o \
 qe_funct_corr_gga.o \
 qe_funct_corr_lda_lsda.o \
 qe_funct_exch_gga.o \
