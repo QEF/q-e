@@ -9,11 +9,9 @@ MODFLAGS=$(BASEMOD_FLAGS) \
 # list of modules
 
 MODULES = \
-additional_kpoints.o \
 autopilot.o \
 basic_algebra_routines.o \
 becmod.o \
-beef_interface.o \
 bfgs_module.o \
 bspline.o \
 bz_form.o \
@@ -50,6 +48,8 @@ io_files.o \
 io_global.o  \
 ions_base.o \
 kind.o \
+libxc.o \
+lmdif.o \
 mdiis.o \
 mm_dispersion.o \
 mp_bands.o \
@@ -67,7 +67,6 @@ paw_variables.o \
 plugin_flags.o \
 plugin_arguments.o \
 plugin_variables.o \
-powell.o \
 pw_dot.o \
 qmmm.o \
 random_numbers.o \
@@ -157,7 +156,7 @@ w0gauss.o \
 w1gauss.o \
 deviatoric.o
 
-TLDEPS=libfox libutil libla libfft
+TLDEPS=libiotk libfox libutil libla libfft
 
 all : libqemod.a
 
