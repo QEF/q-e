@@ -1282,7 +1282,7 @@
     USE mp_world,         ONLY : mpime
     USE io_epw,           ONLY : rwepmatw
     USE division,         ONLY : para_bounds
-    USE io_files,         ONLY : prefix, diropn
+    USE io_files,         ONLY : prefix, diropn, tmp_dir
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_SEEK_SET, MPI_MODE_RDONLY, &
                                  MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, &
