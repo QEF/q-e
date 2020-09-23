@@ -12,6 +12,7 @@ MODULES = \
 autopilot.o \
 basic_algebra_routines.o \
 becmod.o \
+beef_interface.o \
 bfgs_module.o \
 bspline.o \
 bz_form.o \
@@ -48,7 +49,6 @@ io_files.o \
 io_global.o  \
 ions_base.o \
 kind.o \
-libxc.o \
 lmdif.o \
 mdiis.o \
 mm_dispersion.o \
@@ -156,7 +156,7 @@ w0gauss.o \
 w1gauss.o \
 deviatoric.o
 
-TLDEPS=libiotk libfox libutil libla libfft
+TLDEPS=libfox libutil libla libfft
 
 all : libqemod.a
 
