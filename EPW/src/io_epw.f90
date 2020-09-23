@@ -127,7 +127,7 @@
     USE io_var,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, iunepmatwp, &
                           crystal
     USE noncollin_module, ONLY : noncolin
-    USE io_files,  ONLY : prefix, diropn
+    USE io_files,  ONLY : prefix, diropn, tmp_dir
     USE mp,        ONLY : mp_barrier
     USE mp_world,  ONLY : mpime
     USE io_global, ONLY : ionode_id, stdout
@@ -270,7 +270,7 @@
     USE ions_base, ONLY : nat
     USE modes,     ONLY : nmodes
     USE io_global, ONLY : stdout
-    USE io_files,  ONLY : prefix, diropn
+    USE io_files,  ONLY : prefix, diropn, tmp_dir
     USE io_var,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, iunepmatwp
     USE constants_epw, ONLY : czero, zero
 #if defined(__NAG)
