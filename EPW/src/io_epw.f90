@@ -227,7 +227,7 @@
         !     Note that in Fortran the record length has to be a integer
         !     of kind 4.
         lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-        filint   = TRIM(prefix)//'.epmatwp'
+        filint   = TRIM(tmp_dir) // TRIM(prefix)//'.epmatwp'
         INQUIRE(IOLENGTH = direct_io_factor) dummy
         unf_recl = direct_io_factor * INT(lrepmatw, KIND = KIND(unf_recl))
         IF (unf_recl <= 0) CALL errore('epw_write', 'wrong record length', 3)
@@ -424,7 +424,7 @@
         !     Note that in Fortran the record length has to be a integer
         !     of kind 4.
         lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-        filint   = TRIM(prefix)//'.epmatwp'
+        filint   = TRIM(tmp_dir) // TRIM(prefix)//'.epmatwp'
         !
         INQUIRE(IOLENGTH = direct_io_factor) dummy
         unf_recl = direct_io_factor * INT(lrepmatw, KIND = KIND(unf_recl))
