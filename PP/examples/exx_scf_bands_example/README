@@ -1,6 +1,6 @@
 
 This example shows how to use pw.x to calculate the total energy
-and the band structure of Silicon using hybrud HSE functiona.
+and the band structure of Silicon using hybrid HSE functional.
 
 Additional k-points along high-symmetry directions are included
 in the self-consistent calculation with zero weight, using the
