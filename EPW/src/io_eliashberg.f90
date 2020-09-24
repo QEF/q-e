@@ -262,7 +262,8 @@
     !
     ! isotropic case
     ! SP: Only write isotropic for laniso if user really wants that
-    IF ((laniso .AND. iverbosity == 2) .OR. liso) THEN
+    !IF ((laniso .AND. iverbosity == 2) .OR. liso) THEN
+    IF (liso) THEN
       IF (temp < 10.d0) THEN
         WRITE(name1, 104) TRIM(prefix), '.', cname, '_iso_00', temp
       ELSEIF (temp >= 10.d0 .AND. temp < 100.d0 ) THEN
@@ -390,7 +391,8 @@
     !
     ! isotropic case
     ! SP: Only write isotropic for laniso if user really wants that
-    IF ((laniso .AND. iverbosity == 2) .OR. liso) THEN
+    !IF ((laniso .AND. iverbosity == 2) .OR. liso) THEN
+    IF (liso) THEN
       IF (temp < 10.d0) THEN
         WRITE(name1, 104) TRIM(prefix), '.', cname, '_iso_00', temp
       ELSEIF (temp >= 10.d0 .AND. temp < 100.d0) THEN
