@@ -91,6 +91,8 @@
   !! if .TRUE. calculate velocity matrix elements
   LOGICAL :: band_plot
   !! if .TRUE. write files to plot band structure and phonon dispersion
+  LOGICAL :: fermi_plot
+  !! if .TRUE. write files to plot Fermi surface
   LOGICAL :: lpolar
   !! if .TRUE. enable the correct Wannier interpolation in the case of polar material.
   LOGICAL :: lscreen

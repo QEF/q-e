@@ -57,7 +57,7 @@
                             auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   &
                             scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, &
                             wannier_plot_supercell, wannier_plot_scale, reduce_unk,    &
-                            wannier_plot_radius,                                       &
+                            wannier_plot_radius, fermi_plot,                           &
                             fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv,        &
                             epw_crysym
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
@@ -141,7 +141,7 @@
        rand_q, rand_nq, rand_k, rand_nk, specfun_pl,                           &
        nqf1, nqf2, nqf3, nkf1, nkf2, nkf3,                                     &
        mp_mesh_k, mp_mesh_q, filqf, filkf, ephwrite,                           &
-       band_plot, degaussq, delta_qsmear, nqsmear, nqstep,                     &
+       band_plot, fermi_plot, degaussq, delta_qsmear, nqsmear, nqstep,         &
        nswfc, nswc, nswi, pwc, wsfc, wscut, system_2d,                         &
        broyden_beta, broyden_ndim, nstemp, temps,                              &
        conv_thr_raxis, conv_thr_iaxis, conv_thr_racon,                         &
@@ -240,6 +240,7 @@
   ! ephwrite    : if true write el-phonon matrix elements on the fine mesh to file
   ! eps_acustic : min phonon frequency for e-p and a2f calculations (units of cm-1)
   ! band_plot   : if true write files to plot band structure and phonon dispersion
+  ! fermi_plot  : if true write files to plot Fermi surface
   ! degaussq    : smearing for sum over q in e-ph coupling (units of meV)
   ! delta_qsmear: change in energy for each additional smearing in the a2f (units of meV)
   ! nqsmear     : number of smearings used to calculate a2f
@@ -260,7 +261,7 @@
   !                  Eliashberg equations from imag- to real-axis
   ! gap_edge : initial guess of the superconducting gap (in eV)
   ! nsiter   : nr of iterations for self-consitency cycle
-  ! npade    : percentange of Matsubara points used in Pade continuation
+  ! npade    : percentage of Matsubara points used in Pade continuation
   ! muc     : effective Coulomb potential
   ! lreal   : if .TRUE. solve the real-axis Eliashberg eqautions
   ! limag   : if .TRUE. solve the imag-axis Eliashberg eqautions
@@ -478,6 +479,7 @@
   vme = .TRUE. ! Was false by default until EPW 5.1
   ephwrite = .FALSE.
   band_plot = .FALSE.
+  fermi_plot = .FALSE.
   nqsmear = 10
   nqstep = 500
   delta_qsmear = 0.05d0 ! meV
@@ -723,6 +725,10 @@
       'You should define either filkf or nkf when band_plot = .true.', 1)
   IF (band_plot .AND. filqf /= ' ' .AND. (nqf1 > 0 .OR. nqf2 > 0 .OR. nqf3 > 0)) CALL errore('epw_readin', &
      'You should define either filqf or nqf when band_plot = .true.', 1)
+  IF (fermi_plot .AND. mp_mesh_k) CALL errore('epw_readin', &
+     'fermi_plot with mp_mesh_k = .true. is not implemented, use mp_mesh_k = .false.', 1)
+  IF (fermi_plot .AND. (nqf1 /= 1 .OR. nqf2 /= 1 .OR. nqf3 /= 1)) CALL errore('epw_readin', &
+     'fermi_plot with nqf /= 1 is not an efficient calculation, use nqf = 1', 1)
   IF (filkf /= ' ' .AND. .NOT. efermi_read) CALL errore('epw_readin', &
      'WARNING: if k-points are along a line, then efermi_read=.true. and fermi_energy must be given in the input file', -1)
   IF (MAXVAL(temps(:)) == 0.d0 .AND. nstemp > 0) &
