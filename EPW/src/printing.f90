@@ -1224,9 +1224,9 @@
     WRITE(stdout,'(5x, i7, a32/)') ibndmax - ibndmin + 1, ' bands within the Fermi window'
     !
     ALLOCATE(xkf_all(3, nkqtotf), STAT = ierr)
-    IF (ierr /= 0) CALL errore('plot_fermi', 'Error allocating xkf_all', 1)
+    IF (ierr /= 0) CALL errore('plot_fermisurface', 'Error allocating xkf_all', 1)
     ALLOCATE(etf_all(nbndsub, nkqtotf), STAT = ierr)
-    IF (ierr /= 0) CALL errore('plot_fermi', 'Error allocating etf_all', 1)
+    IF (ierr /= 0) CALL errore('plot_fermisurface', 'Error allocating etf_all', 1)
     !
 #if defined(__MPI)
     CALL poolgather2(3,       nkqtotf, nkqf, xkf, xkf_all)
@@ -1248,11 +1248,11 @@
         ELSEIF (ibnd - ibndmin + 1 < 100) THEN
           WRITE(name1, '(a, a4, i2, a5)') TRIM(prefix), '.fs_', ibnd - ibndmin + 1, '.cube'
         ELSE
-          CALL errore( 'plot_fermi', 'Too many bands ',1)
+          CALL errore( 'plot_fermisurface', 'Too many bands ',1)
         ENDIF
         !
         OPEN(iufilFS, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
-        IF (ios /= 0) CALL errore('plot_fermi', 'error opening file ' // name1, iufilFS)
+        IF (ios /= 0) CALL errore('plot_fermisurface', 'error opening file ' // name1, iufilFS)
         WRITE(iufilFS, *) 'Cubfile created from EPW calculation'
         WRITE(iufilFS, '(a20, f10.6)') 'Fermi level (eV) = ', ef * ryd2ev
         WRITE(iufilFS, '(i5, 3f12.6)') 1, 0.0d0, 0.0d0, 0.0d0
@@ -1268,9 +1268,9 @@
     CALL mp_barrier(inter_pool_comm)
     !
     DEALLOCATE(xkf_all, STAT = ierr)
-    IF (ierr /= 0) CALL errore('plot_fermi', 'Error deallocating xkf_all', 1)
+    IF (ierr /= 0) CALL errore('plot_fermisurface', 'Error deallocating xkf_all', 1)
     DEALLOCATE(etf_all, STAT = ierr)
-    IF (ierr /= 0) CALL errore('plot_fermi', 'Error deallocating etf_all', 1)
+    IF (ierr /= 0) CALL errore('plot_fermisurface', 'Error deallocating etf_all', 1)
     !
     RETURN
     !

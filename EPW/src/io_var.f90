@@ -127,7 +127,7 @@
   INTEGER :: iuntaucb        = 143  ! Opening the taucb file
   INTEGER :: iuqpeig         = 144  ! Reading quasi-particle eigenenergies from file
   INTEGER :: iunpattern      = 145  ! Unit for reading the pattern files.
-  INTEGER :: iufilFS         = 146  ! ! Unit for Fermi surface files
+  INTEGER :: iufilFS         = 146  ! Unit for Fermi surface files
   !
   ! Output quantites related to Wannier (201-250)
   !
