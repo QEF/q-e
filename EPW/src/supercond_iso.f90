@@ -214,9 +214,10 @@
       WRITE(stdout, '(5x, a, i3, a, f8.1, a)') 'itemp = ', itemp, '   total cpu time :', tcpu, ' secs'
       WRITE(stdout, '(a)') ' '
       !
+      IF (lpade .OR. lacon) CALL deallocate_iso_raxis()
+      !
     ENDDO ! itemp
     !
-    IF (lpade .OR. lacon) CALL deallocate_iso_raxis()
     CALL deallocate_iso()
     !
     CALL stop_clock('iso_iaxis')
@@ -428,7 +429,7 @@
     COMPLEX(KIND = DP), ALLOCATABLE, SAVE :: deltaold(:)
     !! supercond. gap from previous iteration
     !
-    IF (iter == 1 .AND. itemp == 1) THEN
+    IF (iter == 1) THEN
       IF (.NOT. lpade) THEN
         ALLOCATE(delta(nsw), STAT = ierr)
         IF (ierr /= 0) CALL errore('analytic_cont_iso', 'Error allocating delta', 1)
@@ -445,9 +446,6 @@
       IF (ierr /= 0) CALL errore('analytic_cont_iso', 'Error allocating gp', 1)
       ALLOCATE(gm(nsw, nqstep), STAT = ierr)
       IF (ierr /= 0) CALL errore('analytic_cont_iso', 'Error allocating gm', 1)
-    ENDIF ! iter & itemp
-    !
-    IF (iter == 1) THEN
       deltap(:) = czero
       znormp(:) = cone
       deltaold(:) = czero
@@ -469,6 +467,7 @@
       ENDDO
       CALL kernel_iso_analytic_cont(itemp)
     ENDIF ! iter
+    !
     delta(:) = czero
     znorm(:) = czero
     !
@@ -535,7 +534,7 @@
       WRITE(stdout,'(a)') ' '
     ENDIF
     !
-    IF ((conv .AND. itemp == nstemp) .OR. iter == nsiter) THEN
+    IF (conv .OR. iter == nsiter) THEN
       DEALLOCATE(deltaold, STAT = ierr)
       IF (ierr /= 0) CALL errore('analytic_cont_iso', 'Error deallocating deltaold', 1)
     ENDIF
@@ -592,12 +591,10 @@
     COMPLEX(KIND = DP) :: v(N)
     !! v - znormi
     !
-    IF (itemp == 1) THEN
-      ALLOCATE(delta(nsw), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_iso', 'Error allocating delta', 1)
-      ALLOCATE(znorm(nsw), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_iso', 'Error allocating znorm', 1)
-    ENDIF
+    ALLOCATE(delta(nsw), STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_iso', 'Error allocating delta', 1)
+    ALLOCATE(znorm(nsw), STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_iso', 'Error allocating znorm', 1)
     znorm(:) = czero
     delta(:) = czero
     a(:) = czero
@@ -766,12 +763,10 @@
     IF (ierr /= 0) CALL errore('kernel_iso_analytic_cont', 'Error allocating wesqrt', 1)
     ALLOCATE(desqrt(nsiw(itemp)), STAT = ierr)
     IF (ierr /= 0) CALL errore('kernel_iso_analytic_cont', 'Error allocating desqrt', 1)
-    IF (itemp == 1) THEN
-      ALLOCATE(dsumi(nsw), STAT = ierr)
-      IF (ierr /= 0) CALL errore('kernel_iso_analytic_cont', 'Error allocating dsumi', 1)
-      ALLOCATE(zsumi(nsw), STAT = ierr)
-      IF (ierr /= 0) CALL errore('kernel_iso_analytic_cont', 'Error allocating zsumi', 1)
-    ENDIF
+    ALLOCATE(dsumi(nsw), STAT = ierr)
+    IF (ierr /= 0) CALL errore('kernel_iso_analytic_cont', 'Error allocating dsumi', 1)
+    ALLOCATE(zsumi(nsw), STAT = ierr)
+    IF (ierr /= 0) CALL errore('kernel_iso_analytic_cont', 'Error allocating zsumi', 1)
     wesqrt(:) = zero
     desqrt(:) = zero
     dsumi(:) = zero
