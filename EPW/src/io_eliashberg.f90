@@ -1991,7 +1991,7 @@
     USE epwcom,        ONLY : fsthick
     USE elph2,         ONLY : gtemp
     USE eliashbergcom, ONLY : agap, nkfs, nbndfs, ef0, ekfs, w0g
-    USE constants_epw, ONLY : kelvin2eV, zero, eps5
+    USE constants_epw, ONLY : kelvin2eV, zero, eps4, eps5
     !
     IMPLICIT NONE
     !
@@ -2021,8 +2021,8 @@
     !! Temperature in K
     REAL(KIND = DP) :: dbin
     !! Step size in nbin
-    REAL(KIND = DP) :: delta_max
-    !! Max value of superconducting gap
+    REAL(KIND = DP) :: delta_min, delta_max
+    !! Min/Max value of superconducting gap
     REAL(KIND = DP) :: weight
     !! Variable for weight
     REAL(KIND = DP), ALLOCATABLE :: delta_k_bin(:)
@@ -2032,9 +2032,12 @@
     !! It is therefore an approximation for a delta function
     temp = gtemp(itemp) / kelvin2eV
     !
+    delta_min = 0.9d0 * MINVAL(agap(:,:,itemp))
     delta_max = 1.1d0 * MAXVAL(agap(:,:,itemp))
-    nbin = NINT(delta_max / eps5) + 1
-    dbin = delta_max / DBLE(nbin)
+    !nbin = NINT(delta_max / eps5) + 1
+    nbin = NINT((delta_max - delta_min) / eps4) + 1
+    !dbin = delta_max / DBLE(nbin)
+    dbin = (delta_max - delta_min) / DBLE(nbin)
     ALLOCATE(delta_k_bin(nbin), STAT = ierr)
     IF (ierr /= 0) CALL errore('gap_distribution_FS', 'Error allocating delta_k_bin', 1)
     delta_k_bin(:) = zero
