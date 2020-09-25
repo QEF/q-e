@@ -433,25 +433,6 @@
       !
       CALL invfft( 'Wave', psi, dffts, many_fft )
       !
-!=============================================================================
-!exx_wf related
-      IF (dft_is_hybrid().AND.exx_is_active()) THEN
-         IF ( (mod(n,2).ne.0 ) .and. (i.eq.n) ) THEN
-           !$cuf kernel do(1) 
-           DO ir=1,dffts%nr1x*dffts%nr2x*dffts%my_nr3p
-             exx_a(ir) = exx_potential_d(ir, i)
-             exx_b(ir) = 0.0_DP
-           END DO
-         ELSE
-           !$cuf kernel do(1) 
-           DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
-             exx_a(ir) = exx_potential_d(ir, i)
-             exx_b(ir) = exx_potential_d(ir, i+1)
-           END DO
-         ENDIF
-      ENDIF
-!===============================================================================
-
       ioff = 0
       DO ii = i, i + 2 * many_fft - 1, 2
          IF( ii < n ) THEN
@@ -463,12 +444,21 @@
          END IF
 
          IF (dft_is_hybrid().AND.exx_is_active()) THEN
-           !$cuf kernel do(1) 
-           DO ir=1,dffts%nnr
-              tmp1 = v(ir,iss1)* DBLE(psi(ir+ioff))+exx_a(ir)
-              tmp2 = v(ir,iss2)*AIMAG(psi(ir+ioff))+exx_b(ir)
-              psi(ir+ioff)=CMPLX( tmp1, tmp2, kind=DP )
-           END DO
+           IF ( (mod(n,2).ne.0 ) .and. (i.eq.n) ) THEN
+             !$cuf kernel do(1) 
+             DO ir=1,dffts%nnr
+                tmp1 = v(ir,iss1)* DBLE(psi(ir+ioff))+exx_potential_d(ir, ii)
+                tmp2 = v(ir,iss2)*AIMAG(psi(ir+ioff))
+                psi(ir+ioff)=CMPLX( tmp1, tmp2, kind=DP )
+             END DO
+           ELSE
+             !$cuf kernel do(1) 
+             DO ir=1,dffts%nnr
+                tmp1 = v(ir,iss1)* DBLE(psi(ir+ioff))+exx_potential_d(ir, ii)
+                tmp2 = v(ir,iss2)*AIMAG(psi(ir+ioff))+exx_potential_d(ir, ii+1)
+                psi(ir+ioff)=CMPLX( tmp1, tmp2, kind=DP )
+             END DO
+           END IF
          ELSE
            !$cuf kernel do(1)
            DO ir=1,dffts%nnr
