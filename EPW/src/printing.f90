@@ -29,7 +29,7 @@
     USE epwcom,        ONLY : nbndsub
     USE elph2,         ONLY : etf, ibndmin, nkqf, xqf, nbndfst,    &
                               nkf, epf17, xkf, nkqtotf, wf, nktotf
-    USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, eps10
+    USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm
     USE mp_world,      ONLY : mpime
@@ -135,7 +135,7 @@
             n  = 0
             DO mu = 1, nmodes
               w_2 = wf(mu, iq)
-              IF (ABS(w_2 - w_1) < eps10) THEN
+              IF (ABS(w_2 - w_1) < 0.01/ryd2mev) THEN
                 n = n + 1
                 g2 = g2 + epc(ibnd, jbnd, mu, ik + lower_bnd - 1) * epc(ibnd, jbnd, mu, ik + lower_bnd - 1)
               ENDIF
@@ -155,13 +155,13 @@
             n  = 0
             DO pbnd = 1, nbndfst
               w_2 = etf(ibndmin - 1 + pbnd, ikk)
-              IF (ABS(w_2 - w_1) < eps10) THEN
+              IF (ABS(w_2 - w_1) < 0.01/ryd2mev) THEN
                 n = n + 1
                 g2 = g2 + epc(pbnd, jbnd, nu, ik + lower_bnd - 1) * epc(pbnd, jbnd, nu, ik + lower_bnd - 1)
               ENDIF
             ENDDO
             g2 = g2 / FLOAT(n)
-            epc_sym(jbnd, ibnd, nu) = DSQRT(g2)
+            epc_sym(ibnd, jbnd, nu) = DSQRT(g2)
           ENDDO
         ENDDO
       ENDDO
@@ -176,7 +176,7 @@
             n  = 0
             DO pbnd = 1, nbndfst
               w_2 = etf(ibndmin - 1 + pbnd, ikq)
-              IF (ABS(w_2 - w_1) < eps10) then
+              IF (ABS(w_2 - w_1) < 0.01/ryd2mev) then
                 n = n + 1
                 g2 = g2 + epc(ibnd, pbnd, nu, ik + lower_bnd - 1) * epc(ibnd, pbnd, nu, ik + lower_bnd - 1)
               ENDIF

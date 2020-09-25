@@ -439,7 +439,6 @@
     ! Open the prefix.epmatwe file
     IF (ionode) THEN
       lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-      filint   = TRIM(prefix)//'.epmatwe'
       CALL diropn(iunepmatwe, 'epmatwe', lrepmatw, exst)
     ENDIF
     !
