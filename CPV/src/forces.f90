@@ -444,20 +444,22 @@
          END IF
 
          IF (dft_is_hybrid().AND.exx_is_active()) THEN
-           IF ( (mod(n,2).ne.0 ) .and. (i.eq.n) ) THEN
-             !$cuf kernel do(1) 
-             DO ir=1,dffts%nnr
-                tmp1 = v(ir,iss1)* DBLE(psi(ir+ioff))+exx_potential_d(ir, ii)
-                tmp2 = v(ir,iss2)*AIMAG(psi(ir+ioff))
-                psi(ir+ioff)=CMPLX( tmp1, tmp2, kind=DP )
-             END DO
-           ELSE
-             !$cuf kernel do(1) 
-             DO ir=1,dffts%nnr
-                tmp1 = v(ir,iss1)* DBLE(psi(ir+ioff))+exx_potential_d(ir, ii)
-                tmp2 = v(ir,iss2)*AIMAG(psi(ir+ioff))+exx_potential_d(ir, ii+1)
-                psi(ir+ioff)=CMPLX( tmp1, tmp2, kind=DP )
-             END DO
+           IF (ii.le.n) THEN
+             IF ( (mod(n,2).ne.0 ) .and. (ii.eq.n) ) THEN
+               !$cuf kernel do(1) 
+               DO ir=1,dffts%nnr
+                  tmp1 = v(ir,iss1)* DBLE(psi(ir+ioff))+exx_potential_d(ir, ii)
+                  tmp2 = v(ir,iss2)*AIMAG(psi(ir+ioff))
+                  psi(ir+ioff)=CMPLX( tmp1, tmp2, kind=DP )
+               END DO
+             ELSE
+               !$cuf kernel do(1) 
+               DO ir=1,dffts%nnr
+                  tmp1 = v(ir,iss1)* DBLE(psi(ir+ioff))+exx_potential_d(ir, ii)
+                  tmp2 = v(ir,iss2)*AIMAG(psi(ir+ioff))+exx_potential_d(ir, ii+1)
+                  psi(ir+ioff)=CMPLX( tmp1, tmp2, kind=DP )
+               END DO
+             END IF
            END IF
          ELSE
            !$cuf kernel do(1)
