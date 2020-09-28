@@ -42,7 +42,7 @@ function(qe_preprocess_source IN OUT)
     endif()
     add_custom_command(
         OUTPUT ${OUT}
-        COMMAND "${CMAKE_Fortran_COMPILER}" ${f_cpp_flag} ${global_flags} -E ${IN} -o ${OUT}
+        COMMAND "${CMAKE_Fortran_COMPILER}" ${f_cpp_flag} ${global_flags} -E ${IN} > ${OUT}
         MAIN_DEPENDENCY ${IN}
         COMMENT "Preprocessing ${IN}"
         VERBATIM)    
