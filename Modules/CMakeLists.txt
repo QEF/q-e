@@ -2,6 +2,7 @@ set(sources
     autopilot.f90 
     basic_algebra_routines.f90 
     becmod.f90 
+    beef_interface.f90 
     bfgs_module.f90 
     bspline.f90 
     bz_form.f90 
@@ -38,7 +39,6 @@ set(sources
     io_global.f90  
     ions_base.f90 
     kind.f90 
-    libxc.f90 
     mdiis.f90 
     mm_dispersion.f90 
     mp_bands.f90 
@@ -56,7 +56,7 @@ set(sources
     plugin_flags.f90 
     plugin_arguments.f90 
     plugin_variables.f90 
-    powell.f90 
+    lmdif.f90  
     pw_dot.f90 
     qmmm.f90 
     random_numbers.f90 

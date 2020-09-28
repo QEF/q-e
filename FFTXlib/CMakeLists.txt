@@ -62,7 +62,8 @@ if(NOT FFTW_FOUND)
 endif(NOT FFTW_FOUND)
 
 set(f_sources
-    scatter_mod.f90
+    fft_scatter.f90
+    scatter_mod.f90 
     fft_ggen.f90
     fft_fwinv.f90
     fft_scalar.f90
@@ -103,7 +104,7 @@ qe_install_targets(qe_fftx)
 ###########################################################
 if(QE_ENABLE_TEST AND QE_ENABLE_MPI) # TODO fix test without MPI
     # TODO test.f90 seems to work only with MPI
-    set(sources test.f90)
+    set(sources fft_test.f90)
     qe_add_executable(qe_fftx_test ${sources})
     target_link_libraries(qe_fftx_test
         PRIVATE

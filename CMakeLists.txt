@@ -10,7 +10,7 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
 project(qe
-    VERSION 6.5.0
+    VERSION 6.6.0
     DESCRIPTION "ESPRESSO: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization"
     LANGUAGES Fortran C)
 
@@ -111,9 +111,9 @@ endif()
 if(QE_ENABLE_SCALAPACK AND NOT QE_ENABLE_MPI)
     message(FATAL_ERROR "SCALAPACK requires MPI support, enable it with '-DQE_ENABLE_MPI=ON' or disable SCALAPACK with '-DQE_ENABLE_SCALAPACK=OFF'")
 endif()
-if(QE_ENABLE_HDF5 AND NOT QE_ENABLE_MPI)
-    message(FATAL_ERROR "HDF5 requires MPI support, enable it with '-DQE_ENABLE_MPI=ON' or disable HDF5 with '-DQE_ENABLE_HDF5=OFF'")
-endif()
+# if(QE_ENABLE_HDF5 AND NOT QE_ENABLE_MPI)
+#    message(FATAL_ERROR "HDF5 requires MPI support, enable it with '-DQE_ENABLE_MPI=ON' or disable HDF5 with '-DQE_ENABLE_HDF5=OFF'")
+# endif()
 
 ###########################################################
 # MPI
@@ -284,6 +284,9 @@ if(QE_ENABLE_HDF5)
     if(NOT HDF5_Fortran_LIBRARIES OR NOT HDF5_Fortran_INCLUDE_DIRS)
         message(FATAL_ERROR "HDF5 Fortran interface has not been found!")
     endif()
+    if (NOT HDF5_IS_PARALLEL OR NOT QE_ENABLE_MPI)
+	    qe_add_global_compile_definitions(__HDF5_SERIAL) 
+    endif()  
 
     target_link_libraries(qe_hdf5_fortran 
         INTERFACE 

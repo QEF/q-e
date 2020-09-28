@@ -1,5 +1,4 @@
 set(sources
-    src/kinds_epw.f90
     src/epwcom.f90
     src/constants_epw.f90
     src/elph2.f90

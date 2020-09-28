@@ -402,9 +402,9 @@ target_link_libraries(qe_pp_ppacf_exe
 ###########################################################
 # benchmark_libxc.x
 ###########################################################
-set(sources src/benchmark_libxc.f90)
+set(sources src/xctest_qe_libxc.f90)
 qe_add_executable(qe_pp_benchmarklibxc_exe ${sources})
-set_target_properties(qe_pp_benchmarklibxc_exe PROPERTIES OUTPUT_NAME benchmark_libxc.x)
+set_target_properties(qe_pp_benchmarklibxc_exe PROPERTIES OUTPUT_NAME xctest_qe_libxc.x)
 target_link_libraries(qe_pp_benchmarklibxc_exe
     PRIVATE
         QE::PP)
