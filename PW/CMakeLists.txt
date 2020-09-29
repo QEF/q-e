@@ -255,7 +255,6 @@ target_link_libraries(qe_pw
         QE::KS_Solvers::PPCG
         QE::KS_Solvers::ParO
         QE::UPF # TODO turn to vendorized library from MaX gitrepo ? 
-	QE::libbeef # FIXME will go together with libxc 
         QE::Modules
         QE::FFTX
         QE::DFTD3

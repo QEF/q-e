@@ -26,7 +26,11 @@ elseif(QE_ENABLE_VENDOR_DEPS)
 else()
     message(FATAL_ERROR "FoX not found! Please specify a FoX root (-DFOX_ROOT=/path/to/fox) or enable the FoX vendoring (-DQE_ENABLE_VENDOR_DEPS=ON)!")
 endif()
-add_subdirectory(libbeef) 
+###########################################################
+# QE::libbeef
+###########################################################
+add_subdirectory(libbeef)
+target_link_libraries(qe_libbeef PRIVATE QE::LAPACK)
 ###########################################################
 # QE::IOTK
 ###########################################################
