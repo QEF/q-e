@@ -896,7 +896,7 @@
     !
     ! frequency-grid for real-axis ( Pade approximants and analytic continuation)
     !
-    IF ((lpade .OR. lacon) .AND. itemp == 1) THEN
+    IF ((lpade .OR. lacon)) THEN
       ALLOCATE(ws(nsw), STAT = ierr)
       IF (ierr /= 0) CALL errore('gen_freqgrid_iaxis', 'Error allocating ws', 1)
       ws(:) = zero

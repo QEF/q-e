@@ -1176,6 +1176,107 @@
     !----------------------------------------------------------------------------
     END SUBROUTINE plot_band
     !----------------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE plot_fermisurface()
+    !-----------------------------------------------------------------------
+    !!
+    !! This routine writes output files (in .cube) to plot Fermi surfaces
+    !! HP : 9/23/2020
+    !!
+    USE kinds,         ONLY : DP
+    USE cell_base,     ONLY : bg
+    USE control_flags, ONLY : iverbosity
+    USE pwcom,         ONLY : ef
+    USE epwcom,        ONLY : nbndsub, nkf1, nkf2, nkf3
+    USE elph2,         ONLY : etf, xkf, nkqtotf, nktotf
+    USE constants_epw, ONLY : ryd2ev, zero
+    USE io_var,        ONLY : iufilFS
+    USE elph2,         ONLY : nkqf, ibndmin, ibndmax
+    USE io_global,     ONLY : ionode_id, stdout
+    USE mp,            ONLY : mp_barrier, mp_sum
+    USE mp_global,     ONLY : inter_pool_comm, my_pool_id
+    USE poolgathering, ONLY : poolgather2
+    USE io_files,      ONLY : prefix
+    !
+    IMPLICIT NONE
+    !
+    ! Local variables
+    CHARACTER(LEN = 256) :: name1
+    !! file name
+    INTEGER :: ios
+    !! IO error message
+    INTEGER :: ik
+    !! Global k-point index
+    INTEGER :: ibnd
+    !! Band index
+    INTEGER :: ierr
+    !! Error status
+    INTEGER :: i
+    !! Counter
+    REAL(KIND = DP), ALLOCATABLE :: xkf_all(:, :)
+    !! K-points on the full k grid (all pools)
+    REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
+    !! Eigenenergies on the full k grid (all pools)
+    !
+    WRITE(stdout,'(5x, a38)') 'Fermi surface calculation on fine mesh'
+    WRITE(stdout, '(5x, a32, f10.6)') 'Fermi level (eV) = ', ef * ryd2ev
+    WRITE(stdout,'(5x, i7, a32/)') ibndmax - ibndmin + 1, ' bands within the Fermi window'
+    !
+    ALLOCATE(xkf_all(3, nkqtotf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('plot_fermisurface', 'Error allocating xkf_all', 1)
+    ALLOCATE(etf_all(nbndsub, nkqtotf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('plot_fermisurface', 'Error allocating etf_all', 1)
+    !
+#if defined(__MPI)
+    CALL poolgather2(3,       nkqtotf, nkqf, xkf, xkf_all)
+    CALL poolgather2(nbndsub, nkqtotf, nkqf, etf, etf_all)
+    CALL mp_barrier(inter_pool_comm)
+#else
+    !
+    xkf_all = xkf
+    etf_all = etf
+#endif
+    !
+    IF (my_pool_id == ionode_id) THEN
+      !
+      ! .cube format
+      DO ibnd = ibndmin, ibndmax
+        !
+        IF (ibnd - ibndmin + 1 < 10) THEN
+          WRITE(name1, '(a, a4, i1, a5)') TRIM(prefix), '.fs_', ibnd - ibndmin + 1, '.cube'
+        ELSEIF (ibnd - ibndmin + 1 < 100) THEN
+          WRITE(name1, '(a, a4, i2, a5)') TRIM(prefix), '.fs_', ibnd - ibndmin + 1, '.cube'
+        ELSE
+          CALL errore( 'plot_fermisurface', 'Too many bands ',1)
+        ENDIF
+        !
+        OPEN(iufilFS, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
+        IF (ios /= 0) CALL errore('plot_fermisurface', 'error opening file ' // name1, iufilFS)
+        WRITE(iufilFS, *) 'Cube file created from EPW calculation'
+        WRITE(iufilFS, '(a20, f10.6)') 'Fermi level (eV) = ', ef * ryd2ev
+        WRITE(iufilFS, '(i5, 3f12.6)') 1, 0.0d0, 0.0d0, 0.0d0
+        WRITE(iufilFS, '(i5, 3f12.6)') nkf1, (bg(i, 1) / DBLE(nkf1), i = 1, 3)
+        WRITE(iufilFS, '(i5, 3f12.6)') nkf2, (bg(i, 2) / DBLE(nkf2), i = 1, 3)
+        WRITE(iufilFS, '(i5, 3f12.6)') nkf3, (bg(i, 3) / DBLE(nkf3), i = 1, 3)
+        WRITE(iufilFS, '(i5, 4f12.6)') 1, 1.0d0, 0.0d0, 0.0d0, 0.0d0
+        WRITE(iufilFS, '(6f12.6)') ((etf_all(ibnd, ik * 2 - 1) - ef) * ryd2ev, ik = 1, nktotf)
+        CLOSE(iufilFS)
+        !
+      ENDDO
+    ENDIF
+    CALL mp_barrier(inter_pool_comm)
+    !
+    DEALLOCATE(xkf_all, STAT = ierr)
+    IF (ierr /= 0) CALL errore('plot_fermisurface', 'Error deallocating xkf_all', 1)
+    DEALLOCATE(etf_all, STAT = ierr)
+    IF (ierr /= 0) CALL errore('plot_fermisurface', 'Error deallocating etf_all', 1)
+    !
+    RETURN
+    !
+    !----------------------------------------------------------------------------
+    END SUBROUTINE plot_fermisurface
+    !----------------------------------------------------------------------------
   !-------------------------------------------------------------------------
   END MODULE printing
   !-------------------------------------------------------------------------

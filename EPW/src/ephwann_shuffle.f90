@@ -32,7 +32,7 @@
                                scattering, nstemp, int_mob, scissor, carrier,      &
                                iterative_bte, longrange, scatread, nqf1, prtgkk,   &
                                nqf2, nqf3, mp_mesh_k, restart, plselfen,           &
-                               specfun_pl, lindabs, use_ws, epbread,               &
+                               specfun_pl, lindabs, use_ws, epbread, fermi_plot,   &
                                epmatkqread, selecqread, restart_step, nsmear,      &
                                nqc1, nqc2, nqc3, nkc1, nkc2, nkc3, assume_metal,   &
                                cumulant, eliashberg
@@ -67,7 +67,7 @@
                                check_restart_ephwrite
   USE transport,        ONLY : transport_coeffs, scattering_rate_q
   USE grid,             ONLY : qwindow
-  USE printing,         ONLY : print_gkk, plot_band
+  USE printing,         ONLY : print_gkk, plot_band, plot_fermisurface
   USE io_epw,           ONLY : rwepmatw, epw_read, epw_write
   USE io_transport,     ONLY : tau_read, iter_open, print_ibte, iter_merge
   USE io_selfen,        ONLY : selfen_el_read, spectral_read
@@ -1609,6 +1609,8 @@
       ENDIF
     ENDIF
     IF (band_plot) CALL plot_band()
+    !
+    IF (fermi_plot) CALL plot_fermisurface()
     !
     IF (a2f) CALL a2f_main()
     !
