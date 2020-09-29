@@ -817,6 +817,10 @@ CONTAINS
        IF ( v2 ) THEN
           call add_attr( 'number_of_core_orbitals', upf%gipaw_ncore_orbitals )
           CALL xmlw_opentag( 'PP_GIPAW_CORE_ORBITALS' )
+       ELSE 
+          CALL xmlw_writetag('number_of_core_orbitals', upf%gipaw_ncore_orbitals )
+          IF ( .NOT. upf%paw_as_gipaw ) &
+             CALL xmlw_writetag('number_of_valence_orbitals', upf%gipaw_wfs_nchannels) 
        END IF
        DO nb = 1,upf%gipaw_ncore_orbitals
           IF ( v2 ) THEN
