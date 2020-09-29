@@ -1253,7 +1253,7 @@
         !
         OPEN(iufilFS, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
         IF (ios /= 0) CALL errore('plot_fermisurface', 'error opening file ' // name1, iufilFS)
-        WRITE(iufilFS, *) 'Cubfile created from EPW calculation'
+        WRITE(iufilFS, *) 'Cube file created from EPW calculation'
         WRITE(iufilFS, '(a20, f10.6)') 'Fermi level (eV) = ', ef * ryd2ev
         WRITE(iufilFS, '(i5, 3f12.6)') 1, 0.0d0, 0.0d0, 0.0d0
         WRITE(iufilFS, '(i5, 3f12.6)') nkf1, (bg(i, 1) / DBLE(nkf1), i = 1, 3)
