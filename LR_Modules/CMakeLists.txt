@@ -50,7 +50,12 @@ set(sources
     lr_dot.f90
     lanczos_pseudohermitian.f90
     lanczos_nonhermitian.f90
-    set_kplusq_nc.f90)
+    set_kplusq_nc.f90
+    lr_sym_mod.f90
+    ccg_psi.f90
+    ccgsolve_all.f90
+    ch_psi_all_complex.f90
+    addusddenseq.f90)
 
 qe_add_library(qe_lr_modules ${sources})
 add_library(QE::LR_Modules ALIAS qe_lr_modules)

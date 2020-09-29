@@ -44,6 +44,13 @@ set(sources
     src/lr_test_restart.f90
     src/lr_dav_debug.f90
     src/plugin_tddfpt_potential.f90
+    src/lr_sternheimer.f90
+    src/linear_solvers.f90
+    src/paw_add_symmetry.f90
+    src/dveqpsi_us.f90
+    src/dveqpsi_us_only.f90
+    src/orthogonalize_omega.f90
+    src/mix_pot.f90
 )
 
 qe_add_library(qe_tddfpt ${sources})
@@ -89,7 +96,8 @@ target_link_libraries(qe_tddfpt_turboeels_exe
         QE::PW
         QE::LAX
         QE::Modules
-        QE::TDDFPT)
+        QE::TDDFPT
+        QE::LR_Modules)
 
 ###########################################################
 # tddfpt_calculate_spectrum.x
