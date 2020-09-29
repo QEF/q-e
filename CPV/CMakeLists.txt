@@ -114,6 +114,7 @@ target_link_libraries(qe_cpv
         QE::FOX
         QE::FFTX
         QE::UPF
+        QE::libbeef # FIXME will go together with libxc 
         QE::OpenMP_Fortran
         QE::MPI_Fortran)
 
