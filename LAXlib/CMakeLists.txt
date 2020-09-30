@@ -61,6 +61,7 @@ qe_install_targets(qe_lax)
 ###########################################################
 if(QE_ENABLE_TEST)
     qe_add_executable(qe_lax_test test.f90)
+    set_target_properties(qe_lax_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
     target_link_libraries(qe_lax_test
         PRIVATE
             QE::MPI_Fortran

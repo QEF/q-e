@@ -14,6 +14,18 @@ project(qe
     DESCRIPTION "ESPRESSO: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization"
     LANGUAGES Fortran C)
 
+if(${qe_BINARY_DIR} STREQUAL ${qe_SOURCE_DIR})
+  message(FATAL_ERROR "QE source folder cannot be safely used as a build folder!")
+endif()
+
+######################################################################
+# Define the paths for static libraries and executables
+######################################################################
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${qe_BINARY_DIR}/lib CACHE PATH "Single output directory for building all libraries.")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${qe_BINARY_DIR}/bin CACHE PATH "Single output directory for building all executables.")
+set(QE_TESTS_DIR ${qe_BINARY_DIR}/tests/bin)
+
+
 ###########################################################
 # Build helpers
 ###########################################################
