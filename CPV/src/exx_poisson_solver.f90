@@ -1,4 +1,3 @@
-!TODO: use cuda blas/lapack routines...
 SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
 #ifdef __CUDA
     USE cudafor
@@ -44,7 +43,7 @@ SUBROUTINE CGMIC_STDCG(iter, n, eps, fbsscale, coemicf, coeke, rho, pot)
     real(8), allocatable :: d0(:,:,:)
     real(8), allocatable :: d1(:,:,:)
 #ifdef __CUDA
-    attributes(device)   :: x, r, d0, d1, alfa
+    attributes(device)   :: x, r, d0, d1
 #endif
     !------------------------------------------------------------------------
 
