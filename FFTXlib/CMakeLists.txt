@@ -106,6 +106,7 @@ if(QE_ENABLE_TEST AND QE_ENABLE_MPI) # TODO fix test without MPI
     # TODO test.f90 seems to work only with MPI
     set(sources fft_test.f90)
     qe_add_executable(qe_fftx_test ${sources})
+    set_target_properties(qe_fftx_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
     target_link_libraries(qe_fftx_test
         PRIVATE
             QE::OpenMP_Fortran
