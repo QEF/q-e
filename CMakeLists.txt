@@ -14,6 +14,10 @@ project(qe
     DESCRIPTION "ESPRESSO: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization"
     LANGUAGES Fortran C)
 
+if(${qe_BINARY_DIR} STREQUAL ${qe_SOURCE_DIR})
+  message(FATAL_ERROR "QE source folder cannot be safely used as a build folder!")
+endif()
+
 ######################################################################
 # Define the paths for static libraries and executables
 ######################################################################
