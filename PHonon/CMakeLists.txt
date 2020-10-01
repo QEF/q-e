@@ -227,7 +227,6 @@ target_link_libraries(qe_phonon_ph
         QE::HDF5_Fortran
         QE::OpenMP_Fortran
         QE::PW
-        QE::IOTK
         QE::Modules
         QE::LR_Modules)
 
@@ -297,35 +296,6 @@ target_link_libraries(qe_phonon_q2r_exe
         QE::UTILX
         QE::PHonon::PH
 )
-
-###########################################################
-# q2trans.x
-###########################################################
-#set(sources PH/q2trans.f90)
-#qe_add_executable(qe_phonon_q2trans_exe ${sources})
-#set_target_properties(qe_phonon_q2trans_exe PROPERTIES OUTPUT_NAME q2trans.x)
-#target_link_libraries(qe_phonon_q2trans_exe
-#    PRIVATE
-#        QE::FFTX
-#        QE::Modules
-#        QE::IOTK
-#        QE::UTILX
-#        QE::PHonon::PH
-#)
-
-###########################################################
-# q2trans_fd.x
-###########################################################
-#set(sources PH/q2trans_fd.f90)
-#qe_add_executable(qe_phonon_q2transfd_exe ${sources})
-#set_target_properties(qe_phonon_q2transfd_exe PROPERTIES OUTPUT_NAME q2trans_fd.x)
-#target_link_libraries(qe_phonon_q2transfd_exe
-#    PRIVATE
-#        QE::Modules
-#        QE::IOTK
-#        QE::UTILX
-#        QE::PHonon::PH
-#)
 
 ###########################################################
 # q2qstar.x
@@ -451,8 +421,6 @@ qe_install_targets(
     qe_phonon_ph_exe
     qe_phonon_dynmat_exe
     qe_phonon_q2r_exe
-    # qe_phonon_q2trans_exe
-    # qe_phonon_q2transfd_exe
     qe_phonon_q2qstar_exe
     qe_phonon_lambda_exe
     qe_phonon_alpha2f_exe
