@@ -38,7 +38,7 @@ build:pgi:
   tags: [docker]
   image: nvcr.io/hpc/pgi-compilers:ce
   script:
-    - ./configure FC=pgf90 F90=pgf90 MPIF90=mpif90 --enable-openmp
+    - ./configure FC=pgf90 F90=pgf90 MPIF90=mpif90 --enable-openmp 
     - apt-get install --reinstall make
     - make pw cp ph
 
