@@ -34,6 +34,18 @@ build:ph:
 #    - make run-tests-ph-serial
 #    - rm -r /tmp/save
 
+build:cmake-gnu:
+  tags: [docker]
+  image: ubuntu:latest
+  script:
+    - apt-get update
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
+    - apt-get install --yes gfortran git cmake libopenblas0 libopenblas-dev libfftw3-3 libfftw3-dev libopenmpi3 libopenmpi-dev
+    - cmake --version
+    - mkdir build
+    - cd build
+    - cmake -DCMAKE_Fortran_COMPILER=mpif90 -DCMAKE_C_COMPILER=gcc .. && make
+
 build:pgi:
   tags: [docker]
   image: nvcr.io/hpc/pgi-compilers:ce
