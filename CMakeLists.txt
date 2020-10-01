@@ -215,6 +215,10 @@ if(NOT VENDOR_FOUND)
         # explicitly (hoping in some helpful message)
         find_package(LAPACK REQUIRED)
     endif()
+else()
+  target_link_libraries(qe_lapack
+    INTERFACE
+        ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()
 
 ###########################################################
