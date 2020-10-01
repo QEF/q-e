@@ -87,12 +87,6 @@ program test
   USE fft_helper_subroutines
   USE fft_interfaces, ONLY:fwfft, invfft
   USE timers
-  !! Header of mpi.h comes from fft
-#if defined(__MPI)
-#if defined(__MPI_MODULE)
-  USE mpi
-#endif
-#endif
   IMPLICIT NONE
   !
   TYPE(fft_type_descriptor) :: dfftp, dffts, dfft3d
