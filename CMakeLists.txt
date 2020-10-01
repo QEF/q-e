@@ -215,6 +215,10 @@ if(NOT VENDOR_FOUND)
         # explicitly (hoping in some helpful message)
         find_package(LAPACK REQUIRED)
     endif()
+else()
+  target_link_libraries(qe_lapack
+    INTERFACE
+        ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()
 
 ###########################################################
@@ -426,8 +430,6 @@ add_custom_target(ph
         qe_phonon_ph_exe
         qe_phonon_dynmat_exe
         qe_phonon_q2r_exe
-        qe_phonon_q2trans_exe
-        qe_phonon_q2transfd_exe
         qe_phonon_q2qstar_exe
         qe_phonon_lambda_exe
         qe_phonon_alpha2f_exe

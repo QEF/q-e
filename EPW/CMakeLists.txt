@@ -58,7 +58,6 @@ add_library(QE::EPW ALIAS qe_epw)
 target_link_libraries(qe_epw
     PRIVATE
         QE::WANNIER90
-        QE::IOTK
         QE::Modules
         QE::LR_Modules
         QE::PHonon::PH

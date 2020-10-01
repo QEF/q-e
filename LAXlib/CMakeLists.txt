@@ -61,11 +61,11 @@ qe_install_targets(qe_lax)
 ###########################################################
 if(QE_ENABLE_TEST)
     qe_add_executable(qe_lax_test test.f90)
-    set_target_properties(qe_lax_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
+    set_target_properties(qe_lax_test PROPERTIES OUTPUT_NAME qe_lax_test.x RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
     target_link_libraries(qe_lax_test
         PRIVATE
             QE::MPI_Fortran
             QE::LAPACK
             QE::LAX)
-    add_test(NAME test-lax COMMAND qe_lax_test)
+    add_test(NAME test_qe_lax COMMAND ${QE_TESTS_DIR}/qe_lax_test.x)
 endif(QE_ENABLE_TEST)

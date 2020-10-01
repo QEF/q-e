@@ -84,16 +84,16 @@ set(source_names
 # TODO rename all sources *.f90 -> *.F90
 FOREACH(NAME ${source_names})
     set(sources tests/${NAME}.f90)
-    string(REPLACE "_" "" TGT_NAME ${NAME})
-    qe_add_executable(qe_utilx_tests_${TGT_NAME}_exe ${sources})
-    set_target_properties(qe_utilx_tests_${TGT_NAME}_exe PROPERTIES
-                          OUTPUT_NAME ${NAME}.x RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
-    target_link_libraries(qe_utilx_tests_${TGT_NAME}_exe
+    string(REPLACE "test_" "test_qe_utilx_" TGT_NAME ${NAME})
+    qe_add_executable(${TGT_NAME} ${sources})
+    set_target_properties(${TGT_NAME} PROPERTIES
+                          OUTPUT_NAME ${TGT_NAME}.x RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
+    target_link_libraries(${TGT_NAME}
         PRIVATE
             QE::UTILX
             QE::UTILX::TESTS
             QE::MPI_Fortran
             QE::Modules)
 
-    add_test(NAME qe_utilx_tests_${TGT_NAME}_exe COMMAND ${NAME}.x)
+    add_test(NAME ${TGT_NAME} COMMAND ${QE_TESTS_DIR}/${TGT_NAME}.x)
 ENDFOREACH(NAME)

@@ -47,7 +47,6 @@ target_link_libraries(qe_pwcond_exe
     PRIVATE
         QE::LAPACK
         QE::PW
-        QE::IOTK
         QE::Modules)
 
 ###########################################################
