@@ -102,8 +102,7 @@ qe_install_targets(qe_fftx)
 # Tests
 # TODO move all tests to a proper location
 ###########################################################
-if(QE_ENABLE_TEST AND QE_ENABLE_MPI) # TODO fix test without MPI
-    # TODO test.f90 seems to work only with MPI
+if(QE_ENABLE_TEST)
     set(sources fft_test.f90)
     qe_add_executable(qe_fftx_test ${sources})
     set_target_properties(qe_fftx_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${QE_TESTS_DIR})
