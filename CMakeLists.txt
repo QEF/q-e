@@ -71,6 +71,8 @@ option(QE_ENABLE_ELPA
     "enable ELPA execution units" OFF)
 option(QE_ENABLE_HDF5
     "enable HDF5 data collection" OFF)
+option(QE_ENABLE_CUDA
+    "enable CUDA accelleration on NVIDIA GPUs" OFF)
 option(QE_ENABLE_VENDOR_DEPS 
     "enable fallback on vendored deps when none is found via find_package()" ON)
 option(QE_ENABLE_DOC 
@@ -326,6 +328,14 @@ if(QE_ENABLE_HDF5)
         INTERFACE
             ${HDF5_C_DEFINITIONS})
 endif(QE_ENABLE_HDF5)
+
+###########################################################
+# CUDA
+# FIXME just a place holder for the moment
+###########################################################
+if(QE_ENABLE_CUDA)
+    qe_add_global_compile_definitions(__CUDA)
+endif(QE_ENABLE_CUDA)
 
 ###########################################################
 # Tests

@@ -63,12 +63,14 @@ endif(NOT FFTW_FOUND)
 
 set(f_sources
     fft_scatter.f90
+    fft_scatter_2d.f90
     scatter_mod.f90 
     fft_ggen.f90
     fft_fwinv.f90
     fft_scalar.f90
     fftw_interfaces.f90
     fft_parallel.f90
+    fft_parallel_2d.f90
     fft_interfaces.f90
     fft_interpolate.f90
     stick_base.f90
@@ -81,6 +83,15 @@ set(f_sources
     fft_helper_subroutines.f90
     fft_param.f90
 )
+
+if(QE_ENABLE_CUDA)
+  set(f_sources ${f_sources}
+      fft_scatter_gpu.f90
+      fft_scatter_2d_gpu.f90
+      fft_buffers.f90
+      fft_scalar.cuFFT.f90
+  )
+endif()
 
 set(c_sources
     fft_stick.c
