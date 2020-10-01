@@ -8,6 +8,18 @@ MODULE fft_helper_subroutines
 &                    tg_reduce_rho_5
   END INTERFACE
 
+  PRIVATE
+  PUBLIC :: fftx_threed2oned, fftx_oned2threed
+  PUBLIC :: tg_reduce_rho
+  PUBLIC :: tg_get_nnr, tg_get_recip_inc, fftx_ntgrp, fftx_tgpe, &
+       tg_get_group_nr3
+  ! Used only in CP
+  PUBLIC :: fftx_add_threed2oned_gamma, fftx_psi2c_gamma, c2psi_gamma, &
+       fftx_add_field, c2psi_gamma_tg
+  PUBLIC :: fft_dist_info
+  ! Used only in CP+EXX
+  PUBLIC :: fftx_tgcomm
+
 CONTAINS
 
   SUBROUTINE tg_reduce_rho_1( rhos, tg_rho_nc, tg_rho, ispin, noncolin, domag, desc )
