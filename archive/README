@@ -1,5 +1,5 @@
 Archive contains the tarballs of external libraries and codes used by "make"
-to build QE. Note that "cMake" stores such packages in external/ instead.
+to build QE. Note that "CMake" stores such packages in external/ instead.
 In the future, these files should be removed or replaced as follows:
 
 - fox.tgz		fetch from git repository

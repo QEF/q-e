@@ -1,5 +1,5 @@
 New in dev version:
-  * Support for cMake (F. Ficarelli and D. Cesarini, CINECA, with help from
+  * Support for CMake (F. Ficarelli and D. Cesarini, CINECA, with help from
     Ye Luo, P. Delugas, S. Gsaenger)
 
 Fixed in dev version:
