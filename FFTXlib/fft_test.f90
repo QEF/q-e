@@ -22,9 +22,12 @@ CONTAINS
 #else
     ! standard way to get the wall time, sometimes with very low precision
     integer :: cr, nc
+    real*8, save :: t0 = -1.0
+    !
     call system_clock(count_rate=cr)
     call system_clock(count=nc)
-    mpi_wall_time = dble(nc)/cr
+    if ( t0 < 0.0 ) t0 = dble(nc)/cr
+    mpi_wall_time = dble(nc)/cr - t0
 #endif
   end function mpi_wall_time
 end module
