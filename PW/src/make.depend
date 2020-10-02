@@ -1743,7 +1743,9 @@ run_driver.o : ../../Modules/cell_base.o
 run_driver.o : ../../Modules/check_stop.o
 run_driver.o : ../../Modules/command_line_options.o
 run_driver.o : ../../Modules/control_flags.o
+run_driver.o : ../../Modules/fft_base.o
 run_driver.o : ../../Modules/fsockets.o
+run_driver.o : ../../Modules/funct.o
 run_driver.o : ../../Modules/io_files.o
 run_driver.o : ../../Modules/io_global.o
 run_driver.o : ../../Modules/ions_base.o

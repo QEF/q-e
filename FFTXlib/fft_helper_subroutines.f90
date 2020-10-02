@@ -1,3 +1,11 @@
+!
+! Copyright (C) Quantum ESPRESSO Foundation
+!
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 MODULE fft_helper_subroutines
 
   IMPLICIT NONE
@@ -16,6 +24,9 @@ MODULE fft_helper_subroutines
   ! Used only in CP
   PUBLIC :: fftx_add_threed2oned_gamma, fftx_psi2c_gamma, c2psi_gamma, &
        fftx_add_field, c2psi_gamma_tg
+#if defined (__CUDA)
+  PUBLIC :: fftx_psi2c_gamma_gpu
+#endif
   PUBLIC :: fft_dist_info
   ! Used only in CP+EXX
   PUBLIC :: fftx_tgcomm

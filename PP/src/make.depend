@@ -827,6 +827,8 @@ wannier_proj.o : ../../PW/src/pwcom.o
 wannier_proj.o : ../../upflib/uspp.o
 wfck2r.o : ../../FFTXlib/fft_interfaces.o
 wfck2r.o : ../../FFTXlib/scatter_mod.o
+wfck2r.o : ../../Modules/constants.o
+wfck2r.o : ../../Modules/control_flags.o
 wfck2r.o : ../../Modules/environment.o
 wfck2r.o : ../../Modules/fft_base.o
 wfck2r.o : ../../Modules/io_files.o
@@ -907,6 +909,8 @@ xc_vdW_scale_mod.o : ../../Modules/recvec.o
 xc_vdW_scale_mod.o : ../../Modules/xc_vdW_DF.o
 xc_vdW_scale_mod.o : ../../PW/src/scf_mod.o
 xc_vdW_scale_mod.o : ../../UtilXlib/mp.o
+xctest.o : ../../Modules/correlation_gga.o
+xctest.o : ../../Modules/exchange_gga.o
 xctest.o : ../../Modules/funct.o
 xctest.o : ../../Modules/io_global.o
 xctest.o : ../../Modules/kind.o
