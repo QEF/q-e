@@ -364,7 +364,9 @@ SUBROUTINE setup()
      !
   ELSE IF ( .NOT. lscf ) THEN
      !
-     IF ( ethr == 0.D0 ) ethr = 0.1D0 * MIN( 1.D-2, tr2 / nelec )
+     ! ... do not allow convergence threshold of scf and nscf to become too small 
+     ! 
+     IF ( ethr == 0.D0 ) ethr = MAX(1.D-13, 0.1D0 * MIN( 1.D-2, tr2 / nelec ))
      !
   ELSE
      !
@@ -654,7 +656,7 @@ LOGICAL FUNCTION check_para_diag( nbnd )
 
   IMPLICIT NONE
 
-  include 'laxlib.fh'
+  INCLUDE 'laxlib.fh'
 
   INTEGER, INTENT(IN) :: nbnd
   !! number of bands

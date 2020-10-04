@@ -50,9 +50,11 @@ MODULE io_files
   !
   CHARACTER(LEN=256) :: qexsd_fmt = ' ', qexsd_version = ' '
   LOGICAL            :: qexsd_init = .FALSE. 
-  ! ... next two variables obsolete?
-  CHARACTER(LEN=256) :: input_drho = ' '          ! name of the file with the input drho
-  CHARACTER(LEN=256) :: output_drho = ' '         ! name of the file with the output drho
+  ! ... next two variables are no longer read from input but can be set
+  ! ... by external codes using QE routines to perform an interpolation
+  ! ... of valence electrons only, without the atomic-like part
+  CHARACTER(LEN=256) :: input_drho = ' '
+  CHARACTER(LEN=256) :: output_drho= ' '
   !
   CHARACTER(LEN=5 ), PARAMETER :: crash_file  = 'CRASH'
   CHARACTER (LEN=261) :: exit_file = 'os.EXIT' ! file required for a soft exit  

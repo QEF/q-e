@@ -1,3 +1,11 @@
+!
+! Copyright (C) Quantum ESPRESSO Foundation
+!
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 MODULE fft_helper_subroutines
 
   IMPLICIT NONE
@@ -7,6 +15,21 @@ MODULE fft_helper_subroutines
     MODULE PROCEDURE tg_reduce_rho_1,tg_reduce_rho_2,tg_reduce_rho_3,tg_reduce_rho_4, &
 &                    tg_reduce_rho_5
   END INTERFACE
+
+  PRIVATE
+  PUBLIC :: fftx_threed2oned, fftx_oned2threed
+  PUBLIC :: tg_reduce_rho
+  PUBLIC :: tg_get_nnr, tg_get_recip_inc, fftx_ntgrp, fftx_tgpe, &
+       tg_get_group_nr3
+  ! Used only in CP
+  PUBLIC :: fftx_add_threed2oned_gamma, fftx_psi2c_gamma, c2psi_gamma, &
+       fftx_add_field, c2psi_gamma_tg
+#if defined (__CUDA)
+  PUBLIC :: fftx_psi2c_gamma_gpu
+#endif
+  PUBLIC :: fft_dist_info
+  ! Used only in CP+EXX
+  PUBLIC :: fftx_tgcomm
 
 CONTAINS
 

@@ -59,8 +59,8 @@ SUBROUTINE tg_cft3s( f, dfft, isgn )
   ! This driver is based on code written by Stefano de Gironcoli for PWSCF.
   !
   USE fft_scalar, ONLY : cft_1z
-  USE scatter_mod,ONLY : fft_scatter_xy, fft_scatter_yz, fft_scatter_tg
-  USE scatter_mod,ONLY : fft_scatter_tg_opt
+  USE fft_scatter,ONLY : fft_scatter_xy, fft_scatter_yz, &
+          fft_scatter_tg, fft_scatter_tg_opt
   USE fft_types,  ONLY : fft_type_descriptor
   !
   IMPLICIT NONE
@@ -193,8 +193,8 @@ SUBROUTINE many_cft3s( f, dfft, isgn, howmany )
   ! This driver is based on code written by Stefano de Gironcoli for PWSCF.
   !
   USE fft_scalar,  ONLY : cft_1z
-  USE scatter_mod, ONLY : fft_scatter_xy, fft_scatter_yz
-  USE scatter_mod, ONLY : fft_scatter_tg_opt, fft_scatter_many_xy, fft_scatter_many_yz
+  USE fft_scatter, ONLY : fft_scatter_xy, fft_scatter_yz, &
+         fft_scatter_tg_opt, fft_scatter_many_xy, fft_scatter_many_yz
   USE fft_types,   ONLY : fft_type_descriptor
   USE omp_lib
   !
@@ -502,8 +502,8 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
   !USE nvtx_fft
   USE fft_buffers,    ONLY : check_buffers_size, aux_d => dev_space_fftparallel
   USE fft_scalar,     ONLY : cft_1z_gpu
-  USE scatter_mod_gpu,ONLY : fft_scatter_xy_gpu, fft_scatter_yz_gpu, fft_scatter_tg_gpu
-  USE scatter_mod_gpu,ONLY : fft_scatter_tg_opt_gpu
+  USE fft_scatter_gpu,ONLY : fft_scatter_xy_gpu, fft_scatter_yz_gpu, fft_scatter_tg_gpu
+  USE fft_scatter_gpu,ONLY : fft_scatter_tg_opt_gpu
   USE fft_types,  ONLY : fft_type_descriptor
   !
   IMPLICIT NONE
@@ -646,7 +646,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
   !USE nvtx_fft
   USE fft_buffers,    ONLY : check_buffers_size, aux_d => dev_space_fftparallel
   USE fft_scalar,     ONLY : cft_1z_gpu
-  USE scatter_mod_gpu,ONLY : fft_scatter_xy_gpu, fft_scatter_yz_gpu, &
+  USE fft_scatter_gpu,ONLY : fft_scatter_xy_gpu, fft_scatter_yz_gpu, &
                               & fft_scatter_tg_gpu, fft_scatter_many_yz_gpu, &
                               & fft_scatter_tg_opt_gpu
   USE fft_types,  ONLY : fft_type_descriptor

@@ -113,10 +113,11 @@ for dir in $dirs; do
 
         if test "$DIR" = "FFTXlib"
         then
-            # more special cases: modules for FFTs, OpenMP
+            # more special cases: modules for FFTs, GPU, OpenMP
             sed '/@omp_lib@/d' make.depend > tmp; mv tmp make.depend
             sed '/@mkl_dfti/d' make.depend > tmp; mv tmp make.depend
             sed '/@fftw3.f/d;s/@fftw.c@/fftw.c/' make.depend > tmp; mv tmp make.depend
+            sed '/@cudafor@/d;/@cufft@/d;/@flops_tracker@/d' make.depend > tmp; mv tmp make.depend
         fi
 
         if test "$DIR" = "LAXlib"

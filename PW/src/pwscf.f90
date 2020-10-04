@@ -48,7 +48,7 @@ PROGRAM pwscf
   !
   IMPLICIT NONE
   !
-  include 'laxlib.fh'
+  INCLUDE 'laxlib.fh'
   !
   CHARACTER(len=256) :: srvaddress
   !! Get the address of the server 

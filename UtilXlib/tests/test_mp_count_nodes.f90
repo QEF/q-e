@@ -4,9 +4,7 @@ PROGRAM test_mp_count_nodes
 ! Only num_nodes and keys are tested
 !
 
-#if defined(__MPI)
-    USE MPI
-#endif
+    USE parallel_include
     USE mp, ONLY : mp_count_nodes
     USE tester
     IMPLICIT NONE

@@ -259,7 +259,7 @@ subroutine read_pseudo_header (upf, iunps)
        upf%nchi( upf%nwfc ) )
   do nw = 1, upf%nwfc  
      read (iunps, * ) upf%els (nw), upf%lchi (nw), upf%oc (nw)  
-     upf%nchi (nw) = upf%lchi(nw)-1
+     upf%nchi (nw) = upf%lchi(nw)+1
   enddo
   ! next lines for compatibility with upf v.2
   ALLOCATE( upf%rcut_chi( upf%nwfc ), upf%rcutus_chi( upf%nwfc ), &

@@ -364,29 +364,39 @@ PROGRAM ev
  99   RETURN
     END SUBROUTINE write_results
 !
-
-      ! This funtion is passed to POWELL to be minimized
-      REAL(DP) FUNCTION FCHISQ(par_)
+      
+      ! This subroutine is passed to LMDIF to be minimized
+      SUBROUTINE SCHISQ(m_, n_, par_, f_, i_)
            IMPLICIT NONE
-           REAL(DP),INTENT(in) :: par_(nmaxpar)
+           INTEGER,INTENT(in)  :: m_, n_
+           INTEGER,INTENT(inout)   :: i_
+           REAL(DP),INTENT(in)    :: par_(n_)
+           REAL(DP),INTENT(out)   :: f_(m_)
            REAL(DP) :: chisq_
-           CALL eqstate(npar,par_,chisq_)
-           FCHISQ = chisq_
-        END FUNCTION
-
+           IF(m_/=n_) THEN
+              i_ = -999
+              RETURN
+           ENDIF
+           !
+           CALL eqstate(n_,par_,chisq_)
+           f_=0._dp
+           f_(1) = chisq_
+        END SUBROUTINE
 
 !-----------------------------------------------------------------------
       SUBROUTINE find_minimum(npar,par,chisq)
 !-----------------------------------------------------------------------
 !
-      USE powell, ONLY : POWELL_MIN
+      USE lmdif_module, ONLY : lmdif1
       IMPLICIT NONE
       INTEGER ,INTENT(in)  :: npar
       REAL(DP),INTENT(out) :: par(nmaxpar)
       REAL(DP),INTENT(out) :: chisq
       !
-      REAL(DP) :: xi(npar,npar)
+      REAL(DP) :: xi(npar,npar), vchisq(npar)
       INTEGER :: i
+      INTEGER :: lwa, iwa(npar)
+      REAL(DP),ALLOCATABLE :: wa(:)
       !
       xi = 0._dp
       FORALL(i=1:npar) xi(i,i) = 1._dp
@@ -394,8 +404,22 @@ PROGRAM ev
       par(2) = 500.0d0
       par(3) = 5.0d0
       par(4) = -0.01d0 ! unused for some eos
+      
+      lwa = npar**2 + 6*npar
+      ALLOCATE(wa(lwa))
       !
-      CALL POWELL_MIN(FCHISQ,par,xi,npar,npar,1.d-12,i,chisq)
+      CALL lmdif1(SCHISQ, npar, npar, par, vchisq, 1.d-12, i, iwa, wa, lwa)
+      DEALLOCATE(wa)
+      !
+      IF(i>0 .and. i<5) THEN
+         PRINT*, "Minimization succeeded"
+      ELSEIF(i>=5) THEN
+         PRINT*, "Minimization stopped before convergence"
+      ELSEIF(i<=0) THEN 
+        PRINT*, "Minimization error"
+        STOP
+      ENDIF
+      !chisq = vchisq(1)
       !
       CALL eqstate(npar,par,chisq)
 

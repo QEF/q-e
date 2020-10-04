@@ -179,8 +179,7 @@ SUBROUTINE stress( sigma )
   !   DFT-non_local contribution
   !
   sigma_nonloc_dft(:,:) = 0.d0
-  ! CALL stres_nonloc_dft( rho%of_r(:,1), rho_core, nspin, sigma_nonloc_dft )
-  CALL stres_nonloc_dft( rho%of_r, rho_core, nspin, sigma_nonloc_dft ) ! PH adjust
+  CALL stres_nonloc_dft( rho%of_r, rho_core, nspin, sigma_nonloc_dft )
   !
   ! SUM
   !

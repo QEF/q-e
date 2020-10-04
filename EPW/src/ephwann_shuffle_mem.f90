@@ -38,7 +38,7 @@
                             nqf2, nqf3, mp_mesh_k, restart, plselfen, epbread,  &
                             epmatkqread, selecqread, restart_step, nsmear,      &
                             nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, assume_metal,   &
-                            cumulant, eliashberg
+                            cumulant, eliashberg, fermi_plot
   USE control_flags, ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero, cone,       &
@@ -71,7 +71,7 @@
                             check_restart_ephwrite
   USE transport,     ONLY : transport_coeffs, scattering_rate_q
   USE grid,          ONLY : qwindow
-  USE printing,      ONLY : print_gkk, plot_band
+  USE printing,      ONLY : print_gkk, plot_band, plot_fermisurface
   USE io_epw,        ONLY : rwepmatw, epw_read, epw_write
   USE io_transport,  ONLY : tau_read, iter_open, print_ibte, iter_merge
   USE io_selfen,     ONLY : selfen_el_read, spectral_read
@@ -439,7 +439,6 @@
     ! Open the prefix.epmatwe file
     IF (ionode) THEN
       lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-      filint   = TRIM(prefix)//'.epmatwe'
       CALL diropn(iunepmatwe, 'epmatwe', lrepmatw, exst)
     ENDIF
     !
@@ -1448,6 +1447,8 @@
       ENDIF
     ENDIF
     IF (band_plot) CALL plot_band()
+    !
+    IF (fermi_plot) CALL plot_fermisurface()
     !
     IF (a2f) CALL a2f_main()
     !

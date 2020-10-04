@@ -77,7 +77,7 @@ c	reading frequences
 	Emin=0.0
 	else
 	Emin=E_min
-	write(6,'("It seems you have imaginary frequences.\
+	write(6,'("It seems you have imaginary frequences./
      *        Hopefully you know what you are doing")')
         endif
 ! We take somewhat larger frequency range

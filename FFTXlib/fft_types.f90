@@ -146,7 +146,7 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: tg_rdsp(:)! receive displacement for task group A2A communicattion
     !
     LOGICAL :: has_task_groups = .FALSE.
-    LOGICAL :: use_pencil_decomposition = .FALSE.
+    LOGICAL :: use_pencil_decomposition = .TRUE.
     !
     CHARACTER(len=12):: rho_clock_label  = ' '
     CHARACTER(len=12):: wave_clock_label = ' '
