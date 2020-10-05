@@ -134,16 +134,12 @@ endif()
 # The following targets will be defined:
 add_library(qe_mpi_fortran INTERFACE)
 add_library(QE::MPI_Fortran ALIAS qe_mpi_fortran)
-add_library(qe_mpi_c INTERFACE)
-add_library(QE::MPI_C ALIAS qe_mpi_c)
-qe_install_targets(qe_mpi_fortran qe_mpi_c)
+qe_install_targets(qe_mpi_fortran)
 ###########################################################
 if(QE_ENABLE_MPI)
     find_package(MPI REQUIRED Fortran C)
     target_link_libraries(qe_mpi_fortran 
         INTERFACE MPI::MPI_Fortran)
-    target_link_libraries(qe_mpi_c 
-        INTERFACE MPI::MPI_C)
 endif(QE_ENABLE_MPI)
 
 ###########################################################
