@@ -137,7 +137,7 @@ add_library(QE::MPI_Fortran ALIAS qe_mpi_fortran)
 qe_install_targets(qe_mpi_fortran)
 ###########################################################
 if(QE_ENABLE_MPI)
-    find_package(MPI REQUIRED Fortran C)
+    find_package(MPI REQUIRED Fortran)
     target_link_libraries(qe_mpi_fortran 
         INTERFACE MPI::MPI_Fortran)
 endif(QE_ENABLE_MPI)
