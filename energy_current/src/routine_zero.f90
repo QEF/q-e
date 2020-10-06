@@ -154,7 +154,8 @@ subroutine routine_zero()
             u(1:3) = (tau(:, iatom) - tau(:, jatom))*alat
             call pbc_ortho(u(1:3), u_pbc(1:3))
             call I_due_value(value, u_pbc, 1)
-            i_current_c(:) = i_current_c(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))* &
+            !i_current_c(:) = i_current_c(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))* &
+            i_current_c(:) = i_current_c(:) + 1.d0*e2*zv(ityp(iatom))*zv(ityp(jatom))* &
                              (vel(:, iatom) + vel(:, jatom))*value
 
             do a = 1, 3

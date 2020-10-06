@@ -245,10 +245,10 @@ contains
 !  if (a==b) then
 !     y=y-comp_iso
 !  end if
-      if (a == b) then
-         call I_due_value(comp_iso, x, 1)
-         y = y - comp_iso
-      end if
+      !if (a == b) then
+      !   call I_due_value(comp_iso, x, 1)
+      !   y = y - comp_iso
+      !end if
 
    end subroutine I_uno_value
 
