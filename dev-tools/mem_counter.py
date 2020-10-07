@@ -24,6 +24,7 @@ for file in *.bkp; do cp $file ${file%.bkp}; done
 
 """
 
+from __future__ import print_function
 import os, sys, re
 from shutil import copyfile
 
