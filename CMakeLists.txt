@@ -29,6 +29,7 @@ set(QE_TESTS_DIR ${qe_BINARY_DIR}/tests/bin)
 ###########################################################
 # Build helpers
 ###########################################################
+set(PROJECT_CMAKE ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 include(cmake/qeHelpers.cmake)
@@ -159,6 +160,13 @@ if(QE_ENABLE_OPENMP)
         INTERFACE OpenMP::OpenMP_C)
     
 endif(QE_ENABLE_OPENMP)
+
+############################################################
+## Compiler specific options
+############################################################
+if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
+    include(${PROJECT_CMAKE}/GNUFortranCompiler.cmake)
+endif()
 
 ############################################################
 ## Vendor
