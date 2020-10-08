@@ -26,7 +26,7 @@ SUBROUTINE init_run()
 #endif
   USE bp,                 ONLY : allocate_bp_efield, bp_global_map
   USE fft_base,           ONLY : dfftp, dffts
-  USE funct,              ONLY : dft_is_hybrid
+  !USE funct,              ONLY : dft_is_hybrid
   USE recvec_subs,        ONLY : ggen, ggens
   USE wannier_new,        ONLY : use_wannier    
   USE dfunct,             ONLY : newd

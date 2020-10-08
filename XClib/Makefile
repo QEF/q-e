@@ -5,6 +5,7 @@ include ../make.inc
 MODFLAGS= $(BASEMOD_FLAGS)
 
 LDAL = \
+qe_ext_fun.o \
 qe_constants.o \
 qe_drivers_d_gga.o \
 qe_drivers_d_lda_lsda.o \

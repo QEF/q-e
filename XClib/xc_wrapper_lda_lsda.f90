@@ -77,7 +77,7 @@ SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   fkind_x = -1
   lengthxc = length
   !
-  IF ( ANY(is_libxc_l(1:2)) ) THEN
+  IF ( ANY(is_libxc(1:2)) ) THEN
     !
     ALLOCATE( rho_lxc(length*sv_d) )
     ALLOCATE( vx_lxc(length*sv_d), vc_lxc(length*sv_d) )
@@ -113,7 +113,7 @@ SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
   !
   ! ... EXCHANGE
-  IF ( is_libxc_l(1) ) THEN
+  IF ( is_libxc(1) ) THEN
      CALL xc_f03_func_init( xc_func, iexch, sv_d )
        xc_info1 = xc_f03_func_get_info( xc_func )
        CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold_lda )
@@ -123,7 +123,7 @@ SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   ENDIF
   !
   ! ... CORRELATION
-  IF ( is_libxc_l(2) ) THEN
+  IF ( is_libxc(2) ) THEN
      CALL xc_f03_func_init( xc_func, icorr, sv_d )
       xc_info2 = xc_f03_func_get_info( xc_func )
       CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold_lda )
@@ -131,7 +131,7 @@ SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
      CALL xc_f03_func_end( xc_func )
   ENDIF
   !
-  IF ( ((.NOT.is_libxc_l(1)) .OR. (.NOT.is_libxc_l(2))) &
+  IF ( ((.NOT.is_libxc(1)) .OR. (.NOT.is_libxc(2))) &
         .AND. fkind_x/=XC_EXCHANGE_CORRELATION ) THEN
      !
      SELECT CASE( sr_d )
@@ -172,16 +172,16 @@ SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !  ... fill output arrays
   !  
   IF (sv_d == 1) THEN
-     IF (is_libxc_l(1)) vx_out(:,1) = vx_lxc(:)
-     IF (is_libxc_l(2)) vc_out(:,1) = vc_lxc(:)
+     IF (is_libxc(1)) vx_out(:,1) = vx_lxc(:)
+     IF (is_libxc(2)) vc_out(:,1) = vc_lxc(:)
   ELSE
-     IF (is_libxc_l(1)) THEN
+     IF (is_libxc(1)) THEN
         DO ir = 1, length
            vx_out(ir,1) = vx_lxc(2*ir-1)
            vx_out(ir,2) = vx_lxc(2*ir)
         ENDDO
      ENDIF
-     IF (is_libxc_l(2)) THEN
+     IF (is_libxc(2)) THEN
         DO ir = 1, length
            vc_out(ir,1) = vc_lxc(2*ir-1)
            vc_out(ir,2) = vc_lxc(2*ir)
@@ -189,7 +189,7 @@ SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
      ENDIF
   ENDIF
   !
-  IF (ANY(is_libxc_l(1:2))) THEN
+  IF (ANY(is_libxc(1:2))) THEN
      DEALLOCATE( rho_lxc )
      DEALLOCATE( vx_lxc, vc_lxc )
   ENDIF

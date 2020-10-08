@@ -428,8 +428,8 @@ MODULE paw_onecenter
     USE constants,              ONLY : e2, eps12
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
-    USE funct,                  ONLY : dft_is_gradient
-    USE xc_interfaces,           ONLY : xc
+    !USE funct,                  ONLY : dft_is_gradient
+    USE xc_interfaces,           ONLY : xc, xclib_dft_is
     USE constants,              ONLY : fpi ! REMOVE
     !
     TYPE(paw_info), INTENT(IN) :: i
@@ -632,7 +632,7 @@ MODULE paw_onecenter
     ENDIF
     !
     ! Add gradient correction, if necessary
-    IF ( dft_is_gradient() ) &
+    IF ( xclib_dft_is('gradient') ) &
         CALL PAW_gcxc_potential( i, rho_lm, rho_core, v_lm, energy )
         !
     IF (TIMING) CALL stop_clock( 'PAW_xc_pot' )
@@ -657,8 +657,8 @@ MODULE paw_onecenter
     USE noncollin_module,       ONLY : noncolin, nspin_mag, nspin_gga
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : sqrtpi, fpi,pi,e2
-    USE funct,                  ONLY : igcc_is_lyp
-    USE xc_interfaces,          ONLY : xc_gcx
+    !USE funct,                  ONLY : igcc_is_lyp
+    USE xc_interfaces,          ONLY : xc_gcx, igcc_is_lyp
     USE mp,                     ONLY : mp_sum
     !
     TYPE(paw_info), INTENT(IN) :: i
@@ -1687,8 +1687,8 @@ MODULE paw_onecenter
     USE noncollin_module,       ONLY : nspin_mag
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
-    USE funct,                  ONLY : dft_is_gradient
-    USE xc_interfaces,          ONLY : dmxc
+    !USE funct,                  ONLY : dft_is_gradient
+    USE xc_interfaces,          ONLY : dmxc, xclib_dft_is
     !
     TYPE(paw_info), INTENT(IN) :: i
     !! atom's minimal info
@@ -1780,7 +1780,7 @@ MODULE paw_onecenter
     !
     ! Add gradient correction, if necessary
     !
-    IF( dft_is_gradient() ) &
+    IF( xclib_dft_is('gradient') ) &
         CALL PAW_dgcxc_potential( i, rho_lm, rho_core, drho_lm, v_lm )
     !
     DEALLOCATE( rho_rad )
@@ -1804,7 +1804,7 @@ MODULE paw_onecenter
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : pi,e2, eps => eps12, eps2 => eps24
-    USE funct,                  ONLY : is_libxc
+    !USE funct,                  ONLY : is_libxc
     USE xc_interfaces,          ONLY : xc_gcx, dgcxc, xclib_set_threshold
     !
     TYPE(paw_info), INTENT(IN) :: i

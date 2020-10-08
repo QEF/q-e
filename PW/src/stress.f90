@@ -23,7 +23,9 @@ SUBROUTINE stress( sigma )
   USE lsda_mod,         ONLY : nspin
   USE scf,              ONLY : rho, rho_core, rhog_core
   USE control_flags,    ONLY : iverbosity, gamma_only, llondon, ldftd3, lxdm, ts_vdw
-  USE funct,            ONLY : dft_is_meta, dft_is_gradient
+  !USE funct,            ONLY : dft_is_meta, dft_is_gradient
+  USE xc_interfaces,    ONLY : xclib_dft_is
+  
   USE symme,            ONLY : symmatrix
   USE bp,               ONLY : lelfield
   USE uspp,             ONLY : okvan
@@ -32,7 +34,8 @@ SUBROUTINE stress( sigma )
   USE dftd3_qe,         ONLY : dftd3_pbc_gdisp, dftd3
   USE xdm_module,       ONLY : stress_xdm
   USE exx,              ONLY : exx_stress
-  USE funct,            ONLY : dft_is_hybrid
+  !USE funct,            ONLY : dft_is_hybrid
+  
   USE tsvdw_module,     ONLY : HtsvdW
   USE esm,              ONLY : do_comp_esm, esm_bc ! for ESM stress
   USE esm,              ONLY : esm_stres_har, esm_stres_ewa, esm_stres_loclong ! for ESM stress
@@ -178,7 +181,7 @@ SUBROUTINE stress( sigma )
                sigmaion(:,:) + sigmad23(:,:) + sigmaxdm(:,:) + &
                sigma_nonloc_dft(:,:) + sigma_ts(:,:)
   !
-  IF (dft_is_hybrid()) THEN
+  IF (xclib_dft_is('hybrid')) THEN
      sigmaexx = exx_stress()
      CALL symmatrix( sigmaexx )
      sigma(:,:) = sigma(:,:) + sigmaexx(:,:)
@@ -218,7 +221,7 @@ SUBROUTINE stress( sigma )
      (sigma_nonloc_dft(l,1)*ry_kbar,sigma_nonloc_dft(l,2)*ry_kbar,sigma_nonloc_dft(l,3)*ry_kbar, l=1,3),&
      (sigma_ts(l,1)*ry_kbar,sigma_ts(l,2)*ry_kbar,sigma_ts(l,3)*ry_kbar, l=1,3)
 
-  IF ( dft_is_hybrid() .AND. (iverbosity > 0) ) WRITE( stdout, 9006) &
+  IF ( xclib_dft_is('hybrid') .AND. (iverbosity > 0) ) WRITE( stdout, 9006) &
      (sigmaexx(l,1)*ry_kbar,sigmaexx(l,2)*ry_kbar,sigmaexx(l,3)*ry_kbar, l=1,3)
 9006 format (5x,'EXX     stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
   !

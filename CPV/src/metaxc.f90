@@ -11,8 +11,9 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
   !     ===================
   !--------------------------------------------------------------------
   use kinds,   only: dp
-  use funct,   only: get_meta
-  use xc_interfaces, only: xc_metagcx, xclib_set_threshold
+  !use funct,   only: get_meta
+  use xc_interfaces, only: xc_metagcx, xclib_set_threshold, &
+                           xclib_get_id
   !
   IMPLICIT NONE
   !
@@ -29,7 +30,7 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
   !
   etxc = 0.d0
   ! calculate the gradient of rho+rho_core in real space
-  imeta = get_meta()
+  imeta = xclib_get_id('MGGA','EXCH')
   !
   call exch_corr_meta() !HK/MCA
   !

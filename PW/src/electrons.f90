@@ -39,7 +39,8 @@ SUBROUTINE electrons()
   USE uspp,                 ONLY : okvan
   USE exx,                  ONLY : aceinit,exxinit, exxenergy2, exxbuff, &
                                    fock0, fock1, fock2, fock3, dexx, use_ace, local_thr 
-  USE funct,                ONLY : dft_is_hybrid, exx_is_active
+  !USE funct,                ONLY : dft_is_hybrid, exx_is_active
+  USE xc_interfaces,        ONLY : xclib_dft_is, exx_is_active
   USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi, gamma_only
   !
   USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
@@ -80,7 +81,7 @@ SUBROUTINE electrons()
   iter = 0
   first = .true.
   tr2_final = tr2
-  IF ( dft_is_hybrid() ) THEN
+  IF ( xclib_dft_is('hybrid') ) THEN
      !printout = 0  ! do not print etot and energy components at each scf step
      printout = 1  ! print etot, not energy components at each scf step
   ELSE IF ( lmd ) THEN
@@ -88,7 +89,7 @@ SUBROUTINE electrons()
   ELSE
      printout = 2  ! print etot and energy components at each scf step
   ENDIF
-  IF (dft_is_hybrid() .AND. adapt_thr ) tr2= tr2_init
+  IF (xclib_dft_is('hybrid') .AND. adapt_thr ) tr2= tr2_init
   fock0 = 0.D0
   fock1 = 0.D0
   fock3 = 0.D0
@@ -150,7 +151,7 @@ SUBROUTINE electrons()
      !
      CALL electrons_scf ( printout, exxen )
      !
-     IF ( .NOT. dft_is_hybrid() ) RETURN
+     IF ( .NOT. xclib_dft_is('hybrid') ) RETURN
      !
      ! ... From now on: hybrid DFT only
      !
@@ -1135,7 +1136,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !                - \sum rho%ns       v%ns       [for LDA+U]
        !                - \sum becsum       D1_Hxc     [for PAW]
        !
-       USE funct,  ONLY : dft_is_meta
+       !USE funct,  ONLY : dft_is_meta
+       USE xc_interfaces, ONLY : xclib_dft_is
        !
        IMPLICIT NONE
        !
@@ -1156,7 +1158,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
           delta_e = - SUM( rho%of_r(:,:)*v%of_r(:,:) )
        ENDIF
        !
-       IF ( dft_is_meta() ) &
+       IF ( xclib_dft_is('meta') ) &
           delta_e = delta_e - SUM( rho%kin_r(:,:)*v%kin_r(:,:) )
        !
        delta_e = omega * delta_e / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
@@ -1220,7 +1222,9 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !                  - \sum \delta rho%ns       v%ns       [for LDA+U]
        !                  - \sum \delta becsum       D1         [for PAW] 
        !
-       USE funct,  ONLY : dft_is_meta
+       !USE funct,  ONLY : dft_is_meta
+       USE xc_interfaces, ONLY : xclib_dft_is
+       !
        IMPLICIT NONE
        REAL(DP) :: delta_escf, delta_escf_hub, rho_dif(2)
        INTEGER  :: ir, na1, nt1, na2, nt2, m1, m2, equiv_na2, viz, is
@@ -1241,7 +1245,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
          delta_escf = -SUM( ( rhoin%of_r(:,:)-rho%of_r(:,:) )*v%of_r(:,:) )
        ENDIF
        !
-       IF ( dft_is_meta() ) &
+       IF ( xclib_dft_is('meta') ) &
           delta_escf = delta_escf - &
                        SUM( (rhoin%kin_r(:,:)-rho%kin_r(:,:) )*v%kin_r(:,:))
        !

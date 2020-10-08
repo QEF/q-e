@@ -29,9 +29,12 @@ PROGRAM xctest_qe_libxc
   USE xc_f03_lib_m
   !
   USE kinds,          ONLY: DP
-  USE funct,          ONLY: set_dft_from_name, set_exx_fraction
-  USE funct,          ONLY: get_iexch, get_icorr, get_igcx, get_igcc, &
-                            get_meta, get_metac, reset_dft
+  !USE funct,          ONLY: set_dft_from_name, set_exx_fraction
+  !USE funct,          ONLY: get_iexch, get_icorr, get_igcx, get_igcc, &
+  !                          get_meta, get_metac, reset_dft
+  USE xc_interfaces,  ONLY: xclib_set_dtf_from_name, set_exx_fraction, &
+                            xclib_get_id, xclib_reset_dft
+  
   USE xc_interfaces,  ONLY: xc, xc_gcx, xc_metagcx, dmxc, dgcxc
   !
   IMPLICIT NONE
@@ -176,20 +179,20 @@ PROGRAM xctest_qe_libxc
      GO TO 10
   ENDIF
   !
-  CALL set_dft_from_name( qe_dft )
+  CALL xclib_set_dft_from_name( qe_dft )
   !
   LDA = .FALSE.
   GGA = .FALSE.
   MGGA= .FALSE.
   !
-  iexch_qe = get_iexch()
-  icorr_qe = get_icorr()
+  iexch_qe = xclib_get_ID('LDA','EXCH')
+  icorr_qe = xclib_get_ID('LDA','CORR')
   IF (iexch_qe+icorr_qe/=0)  LDA = .TRUE.
-  igcx_qe = get_igcx()
-  igcc_qe = get_igcc()
+  igcx_qe = xclib_get_ID('GGA','EXCH')
+  igcc_qe = xclib_get_ID('GGA','CORR')
   IF (igcx_qe+igcc_qe/=0)    GGA = .TRUE.
-  imeta_qe  = get_meta()
-  imetac_qe = get_metac()
+  imeta_qe  = xclib_get_ID('MGGA','EXCH')
+  imetac_qe = xclib_get_ID('MGGA','CORR')
   IF (imeta_qe+imetac_qe/=0) MGGA = .TRUE.
   !
   IF ( MGGA .AND. DF_OK ) THEN
@@ -465,21 +468,21 @@ PROGRAM xctest_qe_libxc
   !
   !-----------------------------------------------LXC
   !
-  CALL reset_dft()
+  CALL xclib_reset_dft()
   !
-  CALL set_dft_from_name( lxc_dft )
+  CALL xclib_set_dft_from_name( lxc_dft )
   !
   LDA = .FALSE.
   GGA = .FALSE.
   MGGA= .FALSE.
-  iexch_lxc = get_iexch()
-  icorr_lxc = get_icorr()
+  iexch_lxc = xclib_get_ID('LDA','EXCH')
+  icorr_lxc = xclib_get_ID('LDA','CORR')
   IF (iexch_lxc+icorr_lxc/=0)  LDA = .TRUE.
-  igcx_lxc = get_igcx()
-  igcc_lxc = get_igcc()
+  igcx_lxc = xclib_get_ID('GGA','EXCH')
+  igcc_lxc = xclib_get_ID('GGA','CORR')
   IF (igcx_lxc+igcc_lxc/=0)    GGA = .TRUE.
-  imeta_lxc  = get_meta()
-  imetac_lxc = get_metac()
+  imeta_lxc  = xclib_get_ID('MGGA','EXCH')
+  imetac_lxc = xclib_get_ID('MGGA','CORR')
   IF (imeta_lxc+imetac_lxc/=0) MGGA = .TRUE.
   !
   !

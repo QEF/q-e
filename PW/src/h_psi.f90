@@ -17,7 +17,8 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   !
   USE kinds,              ONLY: DP
   USE noncollin_module,   ONLY: npol
-  USE funct,              ONLY: exx_is_active
+  !USE funct,              ONLY: exx_is_active
+  USE xc_interfaces,      ONLY: exx_is_active
   USE mp_bands,           ONLY: use_bgrp_in_hpsi, inter_bgrp_comm
   USE mp,                 ONLY: mp_allgather, mp_size, &
                                 mp_type_create_column_section, mp_type_free
@@ -94,7 +95,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE uspp,                    ONLY: vkb, nkb
   USE ldaU,                    ONLY: lda_plus_u, U_projection
   USE gvect,                   ONLY: gstart
-  USE funct,                   ONLY: dft_is_meta
+  !USE funct,                   ONLY: dft_is_meta
   USE control_flags,           ONLY: gamma_only
   USE noncollin_module,        ONLY: npol, noncolin
   USE realus,                  ONLY: real_space, invfft_orbital_gamma, fwfft_orbital_gamma, &
@@ -103,7 +104,8 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
                                      v_loc_psir_inplace
   USE fft_base,                ONLY: dffts
   USE exx,                     ONLY: use_ace, vexx, vexxace_gamma, vexxace_k
-  USE funct,                   ONLY: exx_is_active
+  !USE funct,                   ONLY: exx_is_active
+  USE xc_interfaces,           ONLY: exx_is_active, xclib_dft_is
   USE fft_helper_subroutines
   !
   IMPLICIT NONE
@@ -227,7 +229,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   CALL stop_clock( 'h_psi:pot' ); !write (*,*) 'stop h_psi:pot';FLUSH(6)
   !  
-  IF (dft_is_meta()) CALL h_psi_meta( lda, n, m, psi, hpsi )
+  IF (xclib_dft_is('meta')) CALL h_psi_meta( lda, n, m, psi, hpsi )
   !
   ! ... Here we add the Hubbard potential times psi
   !

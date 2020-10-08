@@ -746,7 +746,9 @@ MODULE us_exx
     USE uspp,     ONLY : nkb
     USE becmod,   ONLY : bec_type, allocate_bec_type, beccopy
     USE wvfct,    ONLY : nbnd
-    USE funct,    ONLY : dft_is_hybrid
+    !USE funct,    ONLY : dft_is_hybrid
+    USE xc_interfaces, ONLY : xclib_dft_is
+    
     USE uspp,     ONLY : okvan
     USE mp_bands, ONLY : inter_bgrp_comm
 
@@ -758,7 +760,7 @@ MODULE us_exx
     INTEGER :: jk
     !
     IF (.NOT. okvan) RETURN
-    IF (.NOT. dft_is_hybrid()) RETURN
+    IF (.NOT. xclib_dft_is('hybrid')) RETURN
     !
     IF(.NOT. ALLOCATED(becxx0)) THEN
       ALLOCATE( becxx0(nks) )

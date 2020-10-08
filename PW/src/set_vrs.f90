@@ -13,7 +13,7 @@ SUBROUTINE set_vrs( vrs, vltot, vr, kedtau, kedtaur, nrxx, nspin, doublegrid )
   !! the sum of all the local pseudopotential contributions.
   !
   USE kinds
-  USE funct,    ONLY : dft_is_meta
+  !USE funct,    ONLY : dft_is_meta
   USE fft_base, ONLY : dffts 
   !
   IMPLICIT NONE
@@ -95,7 +95,8 @@ SUBROUTINE interpolate_vrs( nrxx, nspin, doublegrid, kedtau, kedtaur, vrs )
   !! Interpolates local potential on the smooth mesh if necessary.
   !
   USE kinds
-  USE funct,           ONLY : dft_is_meta
+  !USE funct,           ONLY : dft_is_meta
+  USE xc_interfaces,   ONLY : xclib_dft_is
   USE fft_base,        ONLY : dffts, dfftp
   USE fft_interfaces,  ONLY : fft_interpolate
   !
@@ -122,7 +123,7 @@ SUBROUTINE interpolate_vrs( nrxx, nspin, doublegrid, kedtau, kedtaur, vrs )
   !
   DO is = 1, nspin
      IF (doublegrid) CALL fft_interpolate( dfftp, vrs(:, is), dffts, vrs(:, is) )
-     IF (dft_is_meta()) CALL fft_interpolate( dfftp, kedtaur(:,is), dffts, kedtau(:,is) )
+     IF (xclib_dft_is('meta')) CALL fft_interpolate( dfftp, kedtaur(:,is), dffts, kedtau(:,is) )
   ENDDO
   !
   RETURN

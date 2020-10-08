@@ -128,7 +128,8 @@ END SUBROUTINE test_gcxc
 
 SUBROUTINE test_xc( nnr, nspin, rhor, grhor )
   USE kinds, ONLY: DP
-  USE funct, ONLY: get_iexch, get_icorr, get_igcx, get_igcc
+  !USE funct, ONLY: get_iexch, get_icorr, get_igcx, get_igcc
+  USE xc_interfaces,   ONLY: xclib_get_id
 
   IMPLICIT NONE
   INTEGER, INTENT(in) :: nnr, nspin
@@ -142,10 +143,10 @@ SUBROUTINE test_xc( nnr, nspin, rhor, grhor )
   INTEGER iexch,icorr,igcx,igcc
 
 
-  iexch = get_iexch()
-  icorr = get_icorr()
-  igcx  = get_igcx()
-  igcc  = get_igcc()
+  iexch = xclib_get_id('LDA','EXCH')
+  icorr = xclib_get_id('LDA','CORR')
+  igcx  = xclib_get_id('GGA','EXCH')
+  igcc  = xclib_get_id('GGA','CORR')
 
   rhon  = rhor
   grhon = grhor

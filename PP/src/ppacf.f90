@@ -52,10 +52,14 @@ PROGRAM do_ppacf
   USE scf,                  ONLY : scf_type, create_scf_type, destroy_scf_type
   USE scf,                  ONLY : scf_type_COPY
   USE scf,                  ONLY : rho, rho_core, rhog_core, vltot
-  USE funct,                ONLY : dft_is_nonlocc, nlc
-  USE funct,                ONLY : get_iexch, get_icorr, get_igcx, get_igcc
-  USE funct,                ONLY : set_exx_fraction, set_auxiliary_flags, &
-                                   enforce_input_dft, is_libxc
+  USE funct,                ONLY : dft_is_nonlocc, nlc, enforce_input_dft
+  
+  !USE funct,                ONLY : get_iexch, get_icorr, get_igcx, get_igcc
+  !USE funct,                ONLY : set_exx_fraction, set_auxiliary_flags, &
+  !                                 enforce_input_dft, is_libxc
+                                   
+  USE xc_interfaces,        ONLY : xclib_get_id, xclib_set_auxiliary_flags, &
+                                   xclib_set_exx_fraction, xclib_is_libxc
   USE xc_interfaces,        ONLY : xc, xc_gcx, & ! gcxc, gcx_spin, gcc_spin, &
                                    xclib_set_threshold
   !USE xc_lda_lsda,          ONLY : xc
@@ -78,6 +82,7 @@ PROGRAM do_ppacf
   ! 1 \(\rigtharrow\) Susceptibility-type vdW_DF kernel (postprocessing ONLY!)
   ! 2 \(\rigtharrow\) Pure-vdW (longitudinal) vdW_DF kernel (postprocessing ONLY!)
   ! Kernels defined/explained in IOP JCPM focused review.
+  LOGICAL :: is_libxc(2)
   LOGICAL :: lplot, ltks, lfock
   ! lplot: "2 track spatial variation or not 2 track spatial variation?"
   ! if (lplot) ltks: "2 track Kohn-sham kinetic energy?" (requires wavefunctions)
@@ -192,7 +197,10 @@ PROGRAM do_ppacf
   !--------------- READ IN PREFIX --------------------------------!
   CALL environment_start( 'ppacf' )
   !
-  IF ( ANY(.NOT.is_libxc(3:4)) ) CALL xclib_set_threshold( 'gga', 1.E-10_DP, 1.E-10_DP )
+  is_libxc(1) = xclib_is_libxc('gga','exch')
+  is_libxc(2) = xclib_is_libxc('gga','corr')
+  !
+  IF ( ANY(.NOT.is_libxc(1:2)) ) CALL xclib_set_threshold( 'gga', 1.E-10_DP, 1.E-10_DP )
   !
   ! ... set default values for variables in namelist
   !
@@ -274,11 +282,12 @@ PROGRAM do_ppacf
      ENDIF
      !
      ! Check exchange correlation functional
-     iexch = get_iexch()
-     icorr = get_icorr()
-     igcx  = get_igcx()
-     igcc  = get_igcc()
-  
+     !
+     iexch = xclib_get_id('LDA','EXCH')
+     icorr = xclib_get_id('LDA','CORR')
+     igcx  = xclib_get_id('GGA','EXCH')
+     igcc  = xclib_get_id('GGA','CORR')
+     !
   ELSEIF (code_num == 2) THEN
      !
      tmp_dir = TRIM(outdir)
@@ -821,9 +830,9 @@ PROGRAM do_ppacf
     nbndproj = 0
     exxdiv_treatment = "gygi-baldereschi"
     ecutfock = ecutwfc
-    CALL set_exx_fraction( 1._DP )
+    CALL xclib_set_exx_fraction( 1._DP )
     CALL enforce_input_dft( 'HF' )
-    CALL set_auxiliary_flags
+    CALL xclib_set_auxiliary_flags
     !
     ALLOCATE( igk_buf(npwx), gk(npwx) )
     igk_k(:,:) = 0

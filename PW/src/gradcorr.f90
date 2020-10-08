@@ -16,8 +16,10 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   USE gvect,                ONLY : ngm, g
   USE lsda_mod,             ONLY : nspin
   USE cell_base,            ONLY : omega
-  USE funct,                ONLY : igcc_is_lyp, dft_is_gradient, get_igcc
-  USE xc_interfaces,        ONLY : xc_gcx
+  !USE funct,                ONLY : igcc_is_lyp, dft_is_gradient, get_igcc
+  USE xc_interfaces,        ONLY : xc_gcx, igcc_is_lyp, xclib_dft_is, &
+                                   xclib_dft_is
+  
   USE spin_orb,             ONLY : domag
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
@@ -52,7 +54,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   REAL(DP), PARAMETER :: epsr = 1.D-6, epsg = 1.D-10
   !
   !
-  IF ( .NOT. dft_is_gradient() ) RETURN
+  IF ( .NOT. xclib_dft_is('gradient') ) RETURN
   !
   etxcgc = 0.0_DP
   vtxcgc = 0.0_DP

@@ -89,7 +89,9 @@ SUBROUTINE setup()
   USE qes_types_module,   ONLY : output_type
   USE exx,                ONLY : ecutfock
   USE exx_base,           ONLY : exx_grid_init, exx_mp_init, exx_div_check
-  USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
+  !USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
+  USE xc_interfaces,      ONLY : xclib_dft_is
+  
   USE paw_variables,      ONLY : okpaw
   USE esm,                ONLY : esm_z_inv
   USE fcp_module,         ONLY : lfcp
@@ -122,7 +124,7 @@ SUBROUTINE setup()
   ! ... check for features not implemented with US-PP or PAW
   !
   IF ( okvan .OR. okpaw ) THEN
-     IF ( dft_is_meta() ) CALL errore( 'setup', &
+     IF ( xclib_dft_is('meta') ) CALL errore( 'setup', &
                                'Meta-GGA not implemented with USPP/PAW', 1 )
      IF ( noncolin .AND. lberry)  CALL errore( 'setup', &
        'Noncolinear Berry Phase/electric not implemented with USPP/PAW', 1 )
@@ -132,7 +134,7 @@ SUBROUTINE setup()
                   'Orbital Magnetization not implemented with USPP/PAW', 1 )
   END IF
 
-  IF ( dft_is_hybrid() ) THEN
+  IF ( xclib_dft_is('hybrid') ) THEN
      IF ( lberry ) CALL errore( 'setup ', &
                          'hybrid XC not allowed in Berry-phase calculations',1 )
      IF ( lelfield ) CALL errore( 'setup ', &
@@ -157,7 +159,7 @@ SUBROUTINE setup()
      IF ( noncolin ) no_t_rev=.true.
   END IF
   !
-  IF ( dft_is_meta() .AND. noncolin )  CALL errore( 'setup', &
+  IF ( xclib_dft_is('meta') .AND. noncolin )  CALL errore( 'setup', &
                                'Non-collinear Meta-GGA not implemented', 1 )
   !
   ! ... Compute the ionic charge for each atom type and the total ionic charge
@@ -244,7 +246,7 @@ SUBROUTINE setup()
      !  initialize the quantization direction for gga
      !
      ux=0.0_DP
-     if (dft_is_gradient()) call compute_ux(m_loc,ux,nat)
+     if (xclib_dft_is('gradient')) call compute_ux(m_loc,ux,nat)
      !
   ELSE
      !
@@ -639,7 +641,7 @@ SUBROUTINE setup()
   kunit = 1
   CALL divide_et_impera ( nkstot, xk, wk, isk, nks )
   !
-  IF ( dft_is_hybrid() ) THEN
+  IF ( xclib_dft_is('hybrid') ) THEN
      IF ( nks == 0 ) CALL errore('setup','pools with no k-points not allowed for hybrid functionals',1)
      CALL exx_grid_init()
      CALL exx_mp_init()
@@ -661,7 +663,7 @@ SUBROUTINE setup()
   !
   ! ... initialize d1 and d2 to rotate the spherical harmonics
   !
-  IF (lda_plus_u .or. okpaw .or. (okvan.and.dft_is_hybrid()) ) CALL d_matrix( d1, d2, d3 )
+  IF (lda_plus_u .or. okpaw .or. (okvan.and.xclib_dft_is('hybrid')) ) CALL d_matrix( d1, d2, d3 )
   !
   RETURN
   !

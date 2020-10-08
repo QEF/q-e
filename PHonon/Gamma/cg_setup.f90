@@ -18,7 +18,7 @@ SUBROUTINE cg_setup
   USE uspp_param, ONLY: upf
   USE wavefunctions,  ONLY: evc
   USE io_files,   ONLY: prefix, iunpun, iunres, diropn
-  USE funct,      ONLY: dft_is_gradient
+  !USE funct,      ONLY: dft_is_gradient
   USE dfunct,     ONLY: newd
   USE fft_base,   ONLY: dfftp
   USE gvect,      ONLY: g, ngm, eigts1, eigts2, eigts3
@@ -30,7 +30,7 @@ SUBROUTINE cg_setup
   USE gvecw,      ONLY: gcutw
   USE gc_lr, ONLY:  grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
   USE cgcom, ONLY: dmuxc, dvpsi, dpsi, auxr, aux2, aux3, lrwfc
-  USE xc_interfaces, ONLY: dmxc, xclib_set_threshold
+  USE xc_interfaces, ONLY: dmxc, xclib_set_threshold, xclib_dft_is
   !
   IMPLICIT NONE
   !
@@ -58,7 +58,7 @@ SUBROUTINE cg_setup
   !
   !  allocate memory for gradient corrections (if needed)
   !
-  IF ( dft_is_gradient() ) THEN
+  IF ( xclib_dft_is('gradient') ) THEN
      ALLOCATE  ( dvxc_rr(dfftp%nnr,nspin,nspin))
      ALLOCATE  ( dvxc_sr(dfftp%nnr,nspin,nspin))
      ALLOCATE  ( dvxc_ss(dfftp%nnr,nspin,nspin))

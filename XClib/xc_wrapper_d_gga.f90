@@ -54,7 +54,7 @@ SUBROUTINE dgcxc_l( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   REAL(DP), PARAMETER :: small = 1.E-10_DP, rho_trash = 0.5_DP
   REAL(DP), PARAMETER :: epsr=1.0d-6, epsg=1.0d-10
   !
-  IF ( ANY(.NOT.is_libxc_l(3:4)) ) THEN
+  IF ( ANY(.NOT.is_libxc(3:4)) ) THEN
     rho_threshold_gga = small ;  grho_threshold_gga = small
   ENDIF
   !
@@ -63,7 +63,7 @@ SUBROUTINE dgcxc_l( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   fkind = -1
   lengthxc = length
   !
-  IF ( (is_libxc_l(3) .OR. igcx==0) .AND. (is_libxc_l(4) .OR. igcc==0)) THEN
+  IF ( (is_libxc(3) .OR. igcx==0) .AND. (is_libxc(4) .OR. igcc==0)) THEN
     !
     length_lxc = length*sp
     length_dlxc = length
@@ -170,7 +170,7 @@ SUBROUTINE dgcxc_l( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     DEALLOCATE( v2rho2_x, v2rhosigma_x, v2sigma2_x )
     DEALLOCATE( v2rho2_c, v2rhosigma_c, v2sigma2_c )
     !
-  ELSEIF ((.NOT.is_libxc_l(3)) .AND. (.NOT.is_libxc_l(4))) THEN
+  ELSEIF ((.NOT.is_libxc(3)) .AND. (.NOT.is_libxc(4))) THEN
     !
     ALLOCATE( vrrx(length,sp), vsrx(length,sp), vssx(length,sp) )
     ALLOCATE( vrrc(length,sp), vsrc(length,sp), vssc(length) )

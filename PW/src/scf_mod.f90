@@ -17,7 +17,8 @@ MODULE scf
                               ldmx_b, is_hubbard_back
   USE ions_base,       ONLY : nat
   USE buffers,         ONLY : open_buffer, close_buffer, get_buffer, save_buffer
-  USE funct,           ONLY : dft_is_meta
+  !USE funct,           ONLY : dft_is_meta
+  USE xc_interfaces,   ONLY : xclib_dft_is
   USE fft_base,        ONLY : dfftp
   USE fft_interfaces,  ONLY : invfft
   USE gvect,           ONLY : ngm
@@ -135,7 +136,7 @@ CONTAINS
    !
    ALLOCATE( rho%of_r(dfftp%nnr,nspin) )
    ALLOCATE( rho%of_g(ngm,nspin) )
-   IF (dft_is_meta() .OR. lxdm) THEN
+   IF (xclib_dft_is('meta') .OR. lxdm) THEN
       ALLOCATE( rho%kin_r(dfftp%nnr,nspin) )
       ALLOCATE( rho%kin_g(ngm,nspin) )
    ELSE
@@ -206,7 +207,7 @@ CONTAINS
    !
    rho%of_g = 0._dp
    !
-   IF (dft_is_meta() .OR. lxdm) THEN
+   IF (xclib_dft_is('meta') .OR. lxdm) THEN
       ALLOCATE( rho%kin_g(ngms,nspin) )
       rho%kin_g = 0._dp
    ENDIF
@@ -283,7 +284,7 @@ CONTAINS
    !
    rho_m%of_g(1:ngms,:) = rho_s%of_g(1:ngms,:)
    !
-   IF (dft_is_meta() .OR. lxdm) rho_m%kin_g(1:ngms,:) = rho_s%kin_g(1:ngms,:)
+   IF (xclib_dft_is('meta') .OR. lxdm) rho_m%kin_g(1:ngms,:) = rho_s%kin_g(1:ngms,:)
    IF (lda_plus_u_nc)  rho_m%ns_nc  = rho_s%ns_nc
    IF (lda_plus_u_co)  rho_m%ns     = rho_s%ns
    IF (lda_plus_u_cob) rho_m%nsb    = rho_s%nsb
@@ -326,7 +327,7 @@ CONTAINS
       rho_s%of_r(:,is) = psic(:)
    ENDDO
    !
-   IF (dft_is_meta() .OR. lxdm) THEN
+   IF (xclib_dft_is('meta') .OR. lxdm) THEN
       rho_s%kin_g(1:ngms,:) = rho_m%kin_g(:,:)
       ! define rho_s%kin_r 
       DO is = 1, nspin
@@ -363,7 +364,7 @@ CONTAINS
   Y%of_r = X%of_r
   Y%of_g = X%of_g
   !
-  IF (dft_is_meta() .OR. lxdm) THEN
+  IF (xclib_dft_is('meta') .OR. lxdm) THEN
      Y%kin_r = X%kin_r
      Y%kin_g = X%kin_g
   ENDIF
@@ -394,7 +395,7 @@ CONTAINS
   !
   Y%of_g = Y%of_g  + A * X%of_g
   !
-  IF (dft_is_meta() .OR. lxdm) Y%kin_g     = Y%kin_g     + A * X%kin_g
+  IF (xclib_dft_is('meta') .OR. lxdm) Y%kin_g     = Y%kin_g     + A * X%kin_g
   IF (lda_plus_u_nc)           Y%ns_nc     = Y%ns_nc     + A * X%ns_nc
   IF (lda_plus_u_co)           Y%ns        = Y%ns        + A * X%ns
   IF (lda_plus_u_cob)          Y%nsb       = Y%nsb       + A * X%nsb
@@ -420,7 +421,7 @@ CONTAINS
   !
   Y%of_g  = X%of_g
   !
-  IF (dft_is_meta() .OR. lxdm) Y%kin_g     = X%kin_g
+  IF (xclib_dft_is('meta') .OR. lxdm) Y%kin_g     = X%kin_g
   IF (lda_plus_u_nc)           Y%ns_nc     = X%ns_nc
   IF (lda_plus_u_co)           Y%ns        = X%ns
   IF (lda_plus_u_cob)          Y%nsb       = X%nsb
@@ -447,7 +448,7 @@ CONTAINS
   !
   X%of_g(:,:) = A * X%of_g(:,:)
   !
-  IF (dft_is_meta() .OR. lxdm) X%kin_g     = A * X%kin_g
+  IF (xclib_dft_is('meta') .OR. lxdm) X%kin_g     = A * X%kin_g
   IF (lda_plus_u_nc)           X%ns_nc     = A * X%ns_nc
   IF (lda_plus_u_co)           X%ns        = A * X%ns
   IF (lda_plus_u_cob)          X%nsb       = A * X%nsb
@@ -489,7 +490,7 @@ CONTAINS
          rhoin%of_r(:,is) = psic(:)
       ENDDO
       !
-      IF (dft_is_meta() .OR. lxdm) THEN
+      IF (xclib_dft_is('meta') .OR. lxdm) THEN
          rhoin%kin_g = rhoin%kin_g + alphamix * ( input_rhout%kin_g-rhoin%kin_g)
          rhoin%kin_g(1:ngms,1:nspin) = (0.d0,0.d0)
          ! define rho_s%of_r 
@@ -506,7 +507,7 @@ CONTAINS
       !
       rhoin%of_g(:,:)= (0.d0,0.d0)
       rhoin%of_r(:,:)= 0.d0
-      IF (dft_is_meta() .OR. lxdm) THEN
+      IF (xclib_dft_is('meta') .OR. lxdm) THEN
          rhoin%kin_g(:,:)= (0.d0,0.d0)
          rhoin%kin_r(:,:)= 0.d0
       ENDIF
@@ -536,7 +537,7 @@ CONTAINS
    !
    ! define lengths (in real numbers) of different record chunks
    rlen_rho = 2 * ngms * nspin
-   IF (dft_is_meta() .OR. lxdm) rlen_kin  = 2 * ngms * nspin
+   IF (xclib_dft_is('meta') .OR. lxdm) rlen_kin  = 2 * ngms * nspin
    IF (lda_plus_u_co)           rlen_ldaU = (2*Hubbard_lmax+1)**2 *nspin*nat
    IF (lda_plus_u_cob)          rlen_ldaUb = (ldmx_b)**2 *nspin*nat
    IF (lda_plus_u_nc)           rlen_ldaU = 2 * (2*Hubbard_lmax+1)**2 *nspin*nat
@@ -605,7 +606,7 @@ CONTAINS
       !
       CALL DCOPY(rlen_rho,rho%of_g,1,io_buffer(start_rho),1)
       !
-      IF (dft_is_meta() .OR. lxdm) CALL DCOPY(rlen_kin, rho%kin_g,1,io_buffer(start_kin), 1)
+      IF (xclib_dft_is('meta') .OR. lxdm) CALL DCOPY(rlen_kin, rho%kin_g,1,io_buffer(start_kin), 1)
       IF (lda_plus_u_nc)           CALL DCOPY(rlen_ldaU,rho%ns_nc,1,io_buffer(start_ldaU),1)
       IF (lda_plus_u_co)           CALL DCOPY(rlen_ldaU,rho%ns,   1,io_buffer(start_ldaU),1)
       IF (lda_plus_u_cob)          CALL DCOPY(rlen_ldaUb,rho%nsb, 1,io_buffer(start_ldaUb),1)
@@ -621,7 +622,7 @@ CONTAINS
       !
       CALL DCOPY(rlen_rho,io_buffer(start_rho),1,rho%of_g,1)
       !
-      IF (dft_is_meta() .OR. lxdm) CALL DCOPY(rlen_kin, io_buffer(start_kin), 1,rho%kin_g,1)
+      IF (xclib_dft_is('meta') .OR. lxdm) CALL DCOPY(rlen_kin, io_buffer(start_kin), 1,rho%kin_g,1)
       IF (lda_plus_u_co)           CALL DCOPY(rlen_ldaU,io_buffer(start_ldaU),1,rho%ns,   1)
       IF (lda_plus_u_cob)          CALL DCOPY(rlen_ldaUb,io_buffer(start_ldaUb),1,rho%nsb,1)
       IF (lda_plus_u_nc)           CALL DCOPY(rlen_ldaU,io_buffer(start_ldaU),1,rho%ns_nc,1)
@@ -737,7 +738,7 @@ FUNCTION rho_ddot( rho1, rho2, gf, g0, mu )
   !
   CALL mp_sum( rho_ddot, intra_bgrp_comm )
   !
-  IF (dft_is_meta()) rho_ddot = rho_ddot + tauk_ddot( rho1, rho2, gf )
+  IF (xclib_dft_is('meta')) rho_ddot = rho_ddot + tauk_ddot( rho1, rho2, gf )
   IF (lda_plus_u )   rho_ddot = rho_ddot + ns_ddot( rho1, rho2 )
   ! 
   ! Beware: paw_ddot has a hidden parallelization on all processors
@@ -1046,7 +1047,7 @@ SUBROUTINE bcast_scf_type( rho, root, comm )
   !
   CALL mp_bcast( rho%of_g, root, comm )
   CALL mp_bcast( rho%of_r, root, comm )
-  IF ( dft_is_meta() .OR. lxdm) THEN
+  IF ( xclib_dft_is('meta') .OR. lxdm) THEN
      CALL mp_bcast( rho%kin_g, root, comm )
      CALL mp_bcast( rho%kin_r, root, comm )
   END IF

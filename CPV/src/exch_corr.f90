@@ -14,7 +14,9 @@
 ! calculate exch-corr potential, energy, and derivatives dxc(i,j)
 ! of e(xc) with respect to to cell parameter h(i,j)
 !     
-      use funct,           only : dft_is_gradient, dft_is_meta
+      !use funct,           only : dft_is_gradient, dft_is_meta
+      use xc_interfaces,   only : xclib_dft_is
+      
       use fft_base,        only : dfftp, dffts
       use cell_base,       only : ainv, omega, h
       use ions_base,       only : nsp
@@ -66,7 +68,7 @@
       !
       !     filling of gradr with the gradient of rho using fft's
       !
-      if ( dft_is_gradient() ) then
+      if ( xclib_dft_is('gradient') ) then
          !
          allocate( gradr( 3, dfftp%nnr, nspin ) )
          do iss = 1, nspin
@@ -84,7 +86,7 @@
       !
       IF ( ttsic ) THEN
          !
-         IF ( dft_is_meta() ) CALL errore ('exch_corr_h', &
+         IF ( xclib_dft_is('meta') ) CALL errore ('exch_corr_h', &
                                'SIC and meta-GGA not together', 1)
          IF ( tpre ) CALL errore( 'exch_corr_h', 'SIC and stress not implemented', 1)
 
@@ -94,7 +96,7 @@
          ALLOCATE( self_rhog(dfftp%ngm, nspin ) )
 
          self_rho(:, :) = rhor( :, :)
-         IF( dft_is_gradient() ) THEN
+         IF( xclib_dft_is('gradient') ) THEN
             ALLOCATE( self_gradr( 3, dfftp%nnr, nspin ) )
             self_gradr(:, :, :) = gradr(:, :, :)
          ENDIF
@@ -104,7 +106,7 @@
 !
       self_exc = 0.d0
 !
-      if( dft_is_meta() ) then
+      if( xclib_dft_is('meta') ) then
          !
          call tpssmeta( dfftp%nnr, nspin, gradr, rhor, kedtaur, exc )
          !
@@ -174,7 +176,7 @@
          !
       end if
       !
-      if (dft_is_gradient()) then
+      if (xclib_dft_is('gradient')) then
          !
          !  Add second part of the xc-potential to rhor
          !  Compute contribution to the stress dexc
@@ -194,7 +196,7 @@
 
       IF( ttsic ) THEN
 !
-         IF (dft_is_gradient()) then
+         IF (xclib_dft_is('gradient')) then
       
             call gradh( nspin, self_gradr, self_rhog, self_rho, dexc)
           
@@ -368,7 +370,8 @@
 
 subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
   use kinds,       only: DP
-  use funct,       only: dft_is_gradient, get_igcc
+  !use funct,       only: dft_is_gradient, get_igcc
+  use xc_interfaces, only: xclib_dft_is, xclib_get_id
   use xc_interfaces, only: xc, xc_gcx, xclib_set_threshold
   implicit none
   integer, intent(in) :: nnr
@@ -395,13 +398,13 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
   logical :: igcc_is_lyp
   !
   allocate( v( nnr, nspin ) )
-  if( dft_is_gradient() ) then
+  if( xclib_dft_is('gradient') ) then
     allocate( h( nnr, nspin, nspin ) )
   else
     allocate( h( 1, 1, 1 ) )
   endif
   !
-  igcc_is_lyp = (get_igcc() == 3)
+  igcc_is_lyp = (xclib_get_id('GGA','CORR') == 3)
   !
   etxc = 0.0d0
   !
@@ -459,7 +462,7 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
   !
   ! gradient corrections
   !
-  if ( dft_is_gradient() ) then
+  if ( xclib_dft_is('gradient') ) then
     !
     call xclib_set_threshold( 'gga', epsr )
     !
@@ -505,7 +508,7 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
     deallocate ( v2c, v2x, v1c, v1x, sc, sx )
   end if
 
-  if( dft_is_gradient() ) then
+  if( xclib_dft_is('gradient') ) then
      !
      if( nspin == 1 ) then
         !

@@ -111,6 +111,7 @@ MODULE pw_restart_new
       USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, magtot_nc, &
                                        lambda
       USE funct,                ONLY : get_dft_short, get_nonlocc_name, dft_is_nonlocc
+      
       USE scf,                  ONLY : rho
       USE force_mod,            ONLY : lforce, sumfor, force, sigma, lstres
       USE extfield,             ONLY : tefield, dipfield, edir, etotefield, &
@@ -119,9 +120,12 @@ MODULE pw_restart_new
                                        block_2, block_height, etotgatefield ! TB
       USE mp,                   ONLY : mp_sum
       USE mp_bands,             ONLY : intra_bgrp_comm
-      USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
-                                       get_gau_parameter, &
-                                       get_screening_parameter, exx_is_active
+      !USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
+      !                                 get_gau_parameter, &
+      !                                 get_screening_parameter, exx_is_active
+      USE xc_interfaces,        ONLY : xclib_dft_is, get_gau_parameter, &
+                                       get_screening_parameter, xclib_get_exx_fraction, exx_is_active
+      
       USE exx_base,             ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                                        exxdiv_treatment, yukawa, ecutvcut
       USE exx,                  ONLY : ecutfock, local_thr 
@@ -354,7 +358,7 @@ MODULE pw_restart_new
 ! ... DFT
 !-------------------------------------------------------------------------------
          !
-         IF (dft_is_hybrid() ) THEN 
+         IF (xclib_dft_is('hybrid') ) THEN 
             ALLOCATE ( hybrid_obj)
             IF (get_screening_parameter() > 0.0_DP) THEN
                scr_par_ = get_screening_parameter() 
@@ -369,7 +373,7 @@ MODULE pw_restart_new
                loc_thr_p => loc_thr_ 
             END IF 
             CALL qexsd_init_hybrid(hybrid_obj, DFT_IS_HYBRID = .TRUE., NQ1 = nq1 , NQ2 = nq2, NQ3 =nq3, ECUTFOCK = ecutfock/e2, &
-                                   EXX_FRACTION = get_exx_fraction(), SCREENING_PARAMETER = scr_par_opt, &
+                                   EXX_FRACTION = xclib_get_exx_fraction(), SCREENING_PARAMETER = scr_par_opt, &
                                    EXXDIV_TREATMENT = exxdiv_treatment, X_GAMMA_EXTRAPOLATION = x_gamma_extrapolation,&
                                    ECUTVCUT = ectuvcut_opt, LOCAL_THR = loc_thr_p )
          END IF 
@@ -990,9 +994,13 @@ MODULE pw_restart_new
                                   Hubbard_l, Hubbard_l_back, Hubbard_l1_back, backall, &
                                   Hubbard_U, Hubbard_U_back, Hubbard_J, Hubbard_V, Hubbard_alpha, &
                                   Hubbard_alpha_back, Hubbard_J0, Hubbard_beta, U_projection
-      USE funct,           ONLY : set_exx_fraction, set_screening_parameter, &
-           set_gau_parameter, enforce_input_dft,  &
-           start_exx, dft_is_hybrid
+      USE funct,           ONLY : enforce_input_dft !,set_screening_parameter, &
+     !      set_gau_parameter, start_exx, dft_is_hybrid
+      USE xc_interfaces,      ONLY :start_exx, exx_is_active,xclib_dft_is, &
+                              set_screening_parameter, set_gau_parameter
+      USE xc_interfaces,      ONLY: xclib_set_exx_fraction, stop_exx, start_exx  
+                              
+     
       USE london_module,   ONLY : scal6, lon_rcut, in_C6
       USE tsvdw_module,    ONLY : vdw_isolated
       USE exx_base,        ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
@@ -1098,7 +1106,7 @@ MODULE pw_restart_new
       !! More DFT initializations
       CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, mbd_vdw, lxdm )
       CALL enforce_input_dft ( dft_name, .TRUE. )
-      IF ( dft_is_hybrid() ) THEN
+      IF ( xclib_dft_is('hybrid') ) THEN
          ecutvcut=ecutvcut*e2
          ecutfock=ecutfock*e2
          CALL set_exx_fraction( exx_fraction ) 

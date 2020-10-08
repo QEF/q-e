@@ -23,7 +23,8 @@ SUBROUTINE A_h(npw,e,h,ah)
   USE becmod, ONLY: bec_type, becp, calbec
   USE gc_lr, ONLY:  grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
   USE cgcom, ONLY: auxr, aux2, aux3, dmuxc
-  USE funct, ONLY: dft_is_gradient
+  !USE funct, ONLY: dft_is_gradient
+  USE xc_interfaces, ONLY: xclib_dft_is
   !
   IMPLICIT NONE
   INTEGER :: npw, j, jkb, ibnd, na,nt,ih
@@ -121,7 +122,7 @@ SUBROUTINE A_h(npw,e,h,ah)
   !  add gradient correction contribution (if any)
   !
   CALL start_clock('dgradcorr')
-  IF (dft_is_gradient() ) THEN
+  IF (xclib_dft_is('gradient') ) THEN
      !
      CALL dgradcor1  &
          (dfftp, rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s,  &

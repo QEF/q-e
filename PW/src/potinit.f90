@@ -36,7 +36,8 @@ SUBROUTINE potinit()
   USE control_flags,        ONLY : lscf, gamma_only
   USE scf,                  ONLY : rho, rho_core, rhog_core, &
                                    vltot, v, vrs, kedtau
-  USE funct,                ONLY : dft_is_meta
+  !USE funct,                ONLY : dft_is_meta
+  USE xc_interfaces,        ONLY : xclib_dft_is
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth, &
                                    niter_with_fixed_ns, lda_plus_u_kind, &
@@ -204,7 +205,7 @@ SUBROUTINE potinit()
   !
   CALL rho_g2r (dfftp, rho%of_g, rho%of_r)
   !
-  IF  ( dft_is_meta() ) THEN
+  IF  ( xclib_dft_is('meta') ) THEN
      IF (starting_pot /= 'file') THEN
         ! ... define a starting (TF) guess for rho%kin_r from rho%of_r
         ! ... to be verified for LSDA: rho is (tot,magn), rho_kin is (up,down)
