@@ -1017,29 +1017,29 @@
   
               
               
-  FUNCTION get_name( family, kindf )
+  SUBROUTINE get_name( family, kindf, name )
      !
      USE dft_par_mod
      IMPLICIT NONE
      !
-     CHARACTER(len=*) :: get_name
+     CHARACTER(len=4) :: name
      CHARACTER(len=*), INTENT(IN) :: family, kindf
      !
      SELECT CASE( family )
      CASE( 'LDA' )
-       IF (kindf=='EXCH') get_name = exc(iexch)
-       IF (kindf=='CORR') get_name = corr(icorr)
+       IF (kindf=='EXCH') name = exc(iexch)
+       IF (kindf=='CORR') name = corr(icorr)
      CASE( 'GGA' )
-       IF (kindf=='EXCH') get_name = gradx(igcx)
-       IF (kindf=='CORR') get_name = gradc(igcc)
+       IF (kindf=='EXCH') name = gradx(igcx)
+       IF (kindf=='CORR') name = gradc(igcc)
      CASE( 'MGGA' )
-       IF (kindf=='EXCH') get_name = meta(imeta) 
+       IF (kindf=='EXCH') name = meta(imeta) 
      CASE DEFAULT
        CALL errore( 'get_id', 'input not recognized', 1 )
      END SELECT
      RETURN
      !
-  END FUNCTION
+  END SUBROUTINE
      
   
   

@@ -186,6 +186,7 @@ CONTAINS
     LOGICAL :: check_libxc
     !
     CHARACTER(LEN=1), EXTERNAL :: capital
+    CHARACTER(LEN=4) :: lda_e_name, lda_c_name, gga_e_name, gga_c_name
     !INTEGER ::  save_iexch, save_icorr, save_igcx, save_igcc, save_meta, &
     !            save_metac
     INTEGER :: save_inlc
@@ -338,10 +339,15 @@ CONTAINS
        IF ('INDEX:' ==  dftout(1:6)) THEN
           READ( dftout(7:18), '(6i2)') iexch, icorr, igcx, igcc, inlc, imeta
               dft_defined = xclib_set_dft_IDs(iexch, icorr, igcx, igcc, imeta, 0)
-              dftout = xclib_get_name('LDA','EXCH') //'-'// &
-                       xclib_get_name('LDA','CORR') //'-'// &
-                       xclib_get_name('GGA','EXCH') //'-'// &
-                       xclib_get_name('GGA','CORR') //'-'// nonlocc(inlc)
+              CALL xclib_get_name('LDA','EXCH', lda_e_name)
+              CALL xclib_get_name('LDA','CORR', lda_c_name)
+              CALL xclib_get_name('GGA','EXCH', gga_e_name)
+              CALL xclib_get_name('GGA','CORR', gga_c_name)
+              !
+              dftout = TRIM(lda_e_name) //'-'// &
+                       TRIM(lda_c_name) //'-'// &
+                       TRIM(gga_e_name) //'-'// &
+                       TRIM(gga_c_name) //'-'// nonlocc(inlc)
        ELSE
           CALL xclib_set_dft_from_name( TRIM(dftout) )
           inlc = matching( dftout, ncnl, nonlocc )
@@ -546,6 +552,7 @@ CONTAINS
      !
      INTEGER :: iexch_, icorr_, igcx_, igcc_, imeta_, inlc_
      INTEGER :: iexch, icorr, igcx, igcc, imeta
+     CHARACTER(LEN=4) :: lda_e_name, lda_c_name, gga_e_name, gga_c_name
      !
      iexch  = xclib_get_id( 'LDA', 'EXCH' )
      icorr  = xclib_get_id( 'LDA', 'CORR' )
@@ -585,10 +592,15 @@ CONTAINS
         write (stdout,*) inlc, inlc_
         CALL errore( 'set_dft', ' conflicting values for inlc', 1 )
      ENDIF
-     dft = xclib_get_name('LDA','EXCH') //'-'// &
-           xclib_get_name('LDA','CORR') //'-'// &
-           xclib_get_name('GGA','EXCH') //'-'// &
-           xclib_get_name('GGA','CORR') //'-'// nonlocc(inlc)
+     CALL xclib_get_name('LDA','EXCH', lda_e_name)
+     CALL xclib_get_name('LDA','CORR', lda_c_name)
+     CALL xclib_get_name('GGA','EXCH', gga_e_name)
+     CALL xclib_get_name('GGA','CORR', gga_c_name)
+     !
+     dft = TRIM(lda_e_name) //'-'// &
+           TRIM(lda_c_name) //'-'// &
+           TRIM(gga_e_name) //'-'// &
+           TRIM(gga_c_name) //'-'// nonlocc(inlc)
      
      ! WRITE( stdout,'(a)') dft
      CALL xclib_set_auxiliary_flags

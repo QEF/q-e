@@ -70,13 +70,13 @@ MODULE xc_interfaces
   
   INTERFACE XCLIB_GET_NAME
     !
-    FUNCTION get_name( family, kindf )
+    SUBROUTINE get_name( family, kindf, name )
       !
       IMPLICIT NONE
-      CHARACTER(len=*) :: get_name
-      CHARACTER(len=*), INTENT(IN) :: family, kindf
+      CHARACTER(len=*), INTENT(OUT) :: name
+      CHARACTER(len=*), INTENT(IN)  :: family, kindf
       !
-    END FUNCTION
+    END SUBROUTINE
     !
   END INTERFACE
   
