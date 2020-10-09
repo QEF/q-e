@@ -1,6 +1,9 @@
 New in dev version:
   * Support for CMake (F. Ficarelli and D. Cesarini, CINECA, with help from
     Ye Luo, P. Delugas, S. Gsaenger)
+  * In vc-relax with Hubbard corrections, the final SCF calculation is done by 
+    reading atomic occupations from file produced during the vc-relax 
+    (rather then recomputing them from scratch).
 
 Fixed in dev version:
   * Some linkers yield "missing references to ddot_" in libbeef
