@@ -45,6 +45,32 @@ target_link_libraries(qe_upflib
     PUBLIC
         QE::FOX)
 
+##############################################################
+# virtual_v2.x 
+##############################################################
+set(sources virtual_v2.f90) 
+qe_add_executable(qe_upflib_virtual_v2_exe ${sources}) 
+set_target_properties(qe_upflib_virtual_v2_exe PROPERTIES OUTPUT_NAME virtual_v2.x) 
+target_link_libraries(qe_upflib_virtual_v2_exe 
+      PRIVATE 
+        QE::UPF
+)
 ###########################################################
+# upfconv.x
+###########################################################
+set(sources 
+    upfconv.f90 
+    casino_pp.f90 
+)
+qe_add_executable(qe_upflib_upfconv_exe ${sources}) 
+set_target_properties(qe_upflib_upfconv_exe PROPERTIES OUTPUT_NAME upfconv.x)
+target_link_libraries(qe_upflib_upfconv_exe
+                      PRIVATE
+                      QE::UPF
+)
 
-qe_install_targets(qe_upflib)
+############################################################################
+qe_install_targets(qe_upflib
+                   qe_upflib_virtual_v2_exe
+                   qe_upflib_upfconv_exe
+)
