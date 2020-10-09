@@ -78,8 +78,8 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
   !
   use kinds,     only : DP
   use constants, only : fpi, e2
-  use funct,     only : dft_is_meta
-  use xc_interfaces,   only : xc_gcx, xc_metagcx, xclib_set_threshold
+  use xc_interfaces,   only : xc_gcx, xc_metagcx, xclib_set_threshold, &
+                              xclib_dft_is
   implicit none
   integer,  intent(in) :: ndm,mesh,nspin,iflag
   real(DP), intent(in) :: r(mesh), r2(mesh), rho(ndm,2), rhoc(ndm)
@@ -133,7 +133,7 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
   allocate( v1x_v(mesh,nspin), v2x_v(mesh,nspin) )
   allocate( v1c_v(mesh,nspin), v2c_v(mesh,nspin) )
   if (nspin==2) allocate( v2c_ud(mesh) )
-  if ( dft_is_meta() ) then
+  if ( xclib_dft_is('meta') ) then
     np = 1
     IF (nspin==2) np=3
     allocate( v2cm_v(np,mesh,nspin) )
@@ -142,7 +142,7 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
   !
   if (nspin.eq.1) then
      !
-     IF ( dft_is_meta ()  ) THEN
+     IF ( xclib_dft_is('meta')  ) THEN
         !
         !  meta-GGA case
         !
@@ -219,7 +219,7 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
   deallocate( v1x_v , v2x_v )
   deallocate( v1c_v , v2c_v )
   IF (nspin==2) deallocate( v2c_ud )
-  if ( dft_is_meta() ) then
+  if ( xclib_dft_is('meta') ) then
     deallocate( v2cm_v, v3x_v, v3c_v )
   endif
   !     
@@ -241,7 +241,7 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
         !                                      vgc(i,1)
      enddo
   enddo
-  IF ( dft_is_meta() ) vtau(:) = e2*vtau(:)
+  IF ( xclib_dft_is('meta') ) vtau(:) = e2*vtau(:)
 
   deallocate(dh)
   deallocate(h)
