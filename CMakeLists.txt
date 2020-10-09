@@ -552,24 +552,11 @@ add_custom_target(ld1
 
 add_custom_target(upf 
     DEPENDS
-        qe_upftools_extractcore_exe
-        qe_upftools_casino2upf_exe
-        qe_upftools_upf2upf2_exe
-        qe_upftools_cpmd2upf_exe
-        qe_upftools_fhi2upf_exe
-        qe_upftools_fpmd2upf_exe
-        qe_upftools_ncpp2upf_exe
-        qe_upftools_oldcp2upf_exe
-        qe_upftools_readupf_exe
-        qe_upftools_readupftofile_exe
-        qe_upftools_fixupf_exe
-        qe_upftools_rrkj2upf_exe
-        qe_upftools_upf2casino_exe
-        qe_upftools_uspp2upf_exe
-        qe_upftools_vdb2upf_exe
-        qe_upftools_virtualv2_exe
-        qe_upftools_interpolate_exe
-        qe_upftools_hgh2qelininterpol_gh2qe_exe
+        #Library
+        qe_upflib
+        #Executables 
+        qe_upflib_virtual_v2_exe
+        qe_upflib_upfconv_exe
     COMMENT
         "utilities for pseudopotential conversion")
 
