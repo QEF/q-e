@@ -44,7 +44,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE gcscf_variables,  ONLY : lgcscf, gcscf_nelec, gcscf_ef
   USE klist,            ONLY : nelec, tot_charge
   USE extrapolation,    ONLY : update_neb
-  USE funct,            ONLY : stop_exx, dft_is_hybrid
+  USE xc_interfaces,    ONLY : stop_exx, xclib_dft_is
   !
   IMPLICIT NONE
   !
@@ -144,7 +144,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
         !
         IF ( my_image_id == root_image ) THEN
            !
-           IF (dft_is_hybrid()) call stop_exx() 
+           IF (xclib_dft_is('hybrid')) call stop_exx() 
            CALL do_scf( 1, istat )
            !
            IF ( istat /= 0 ) GOTO 1
@@ -158,7 +158,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
         !
         IF ( my_image_id == root_image + 1 ) THEN
            !
-           IF (dft_is_hybrid()) call stop_exx() 
+           IF (xclib_dft_is('hybrid')) call stop_exx() 
            CALL do_scf( num_of_images, istat )
            !
            IF ( istat /= 0 ) GOTO 1
@@ -186,7 +186,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
      !
      pending_image = image
      !
-     IF (dft_is_hybrid()) call stop_exx() 
+     IF (xclib_dft_is('hybrid')) call stop_exx() 
      CALL do_scf( image, istat )
      !
      IF ( istat /= 0 ) GOTO 1
