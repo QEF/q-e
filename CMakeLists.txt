@@ -252,27 +252,22 @@ qe_install_targets(qe_elpa)
 ###########################################################
 if(QE_ENABLE_ELPA)
     find_package(ELPA REQUIRED)
-    
-    string(REGEX MATCH "elpa-[0-9][0-9][0-9][0-9]" CMAKE_MATCH_ELPA_VER "${ELPA_INCLUDE_DIRS}")
-    string(REGEX MATCH "[0-9][0-9][0-9][0-9]" CMAKE_MATCH_ONLY_VER "${CMAKE_MATCH_ELPA_VER}")
-    
+
     # Check if ELPA version is compatible with QE
-    if(CMAKE_MATCH_ONLY_VER EQUAL "2018" OR
-       CMAKE_MATCH_ONLY_VER EQUAL "2017" OR
-       CMAKE_MATCH_ONLY_VER EQUAL "2016")
-        qe_add_global_compile_definitions(__ELPA_2016)
-    elseif(CMAKE_MATCH_ONLY_VER EQUAL "2015")
-        qe_add_global_compile_definitions(__ELPA_2015)
-    elseif(CMAKE_MATCH_ONLY_VER LESS "2015")
+    if(ELPA_VERSION_STRING VERSION_GREATER_EQUAL "2018.11")
         qe_add_global_compile_definitions(__ELPA)
+    elseif(ELPA_VERSION_STRING VERSION_GREATER_EQUAL "2016.11")
+        qe_add_global_compile_definitions(__ELPA_2016)
+    elseif(ELPA_VERSION_STRING VERSION_GREATER_EQUAL "2015")
+        qe_add_global_compile_definitions(__ELPA_2015)
     else()
-        message(FATAL_ERROR "ELPA ver. ${CMAKE_MATCH_ONLY_VER} is not supported.")
+        message(FATAL_ERROR "ELPA verion ${ELPA_VERSION_STRING} is not supported.")
     endif()
 
     # Looking for module directory
-    file(GLOB_RECURSE ELPA_MODS "${ELPA_INCLUDE_DIRS}/*.mod")
-    list(GET ELPA_MODS 0 ELPA_MOD)
-    if(EXISTS ${ELPA_MOD})
+    file(GLOB_RECURSE ELPA_MODS_FILES "${ELPA_INCLUDE_DIRS}/*.mod" "${ELPA_INCLUDE_DIRS}/../modules/*.mod")
+    if(ELPA_MODS_FILES)
+        list(GET ELPA_MODS_FILES 0 ELPA_MOD)
         get_filename_component(ELPA_MOD_DIR "${ELPA_MOD}" PATH)
         set(ELPA_INCLUDE_DIRS "${ELPA_MOD_DIR};${ELPA_INCLUDE_DIRS}")
     else()

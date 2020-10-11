@@ -198,6 +198,10 @@ if( (NOT PKG_CONFIG_EXECUTABLE) OR (PKG_CONFIG_EXECUTABLE AND NOT ELPA_FOUND) OR
 	NAMES elpa.h
 	HINTS ${ELPA_DIR}
 	PATH_SUFFIXES "include" "include/elpa")
+      if(NOT ELPA_elpa.h_DIRS)
+        file(GLOB ELPA_elpa.h_PATH "${ELPA_DIR}/include/elpa-20*/elpa/elpa.h")
+        get_filename_component(ELPA_elpa.h_DIRS "${ELPA_elpa.h_PATH}" PATH)
+      endif()
     else()
       set(ELPA_elpa.h_DIRS "ELPA_elpa.h_DIRS-NOTFOUND")
       find_path(ELPA_elpa.h_DIRS
@@ -210,6 +214,7 @@ if( (NOT PKG_CONFIG_EXECUTABLE) OR (PKG_CONFIG_EXECUTABLE AND NOT ELPA_FOUND) OR
   # If found, add path to cmake variable
   # ------------------------------------
   if (ELPA_elpa.h_DIRS)
+    message(STATUS "elpa.h found in ${ELPA_elpa.h_DIRS}")
     set(ELPA_INCLUDE_DIRS "${ELPA_elpa.h_DIRS}")
   else ()
     set(ELPA_INCLUDE_DIRS "ELPA_INCLUDE_DIRS-NOTFOUND")
@@ -218,6 +223,12 @@ if( (NOT PKG_CONFIG_EXECUTABLE) OR (PKG_CONFIG_EXECUTABLE AND NOT ELPA_FOUND) OR
     endif()
   endif()
 
+  # If not defined, guess the version string
+  if(NOT ELPA_VERSION_STRING)
+    string(REGEX MATCH "elpa-20[0-9][0-9]\.[0-9][0-9]\.[0-9][0-9][0-9]" CMAKE_MATCH_ELPA_VER "${ELPA_INCLUDE_DIRS}")
+    string(REGEX MATCH "20[0-9][0-9]\.[0-9][0-9]\.[0-9][0-9][0-9]" ELPA_VERSION_STRING "${CMAKE_MATCH_ELPA_VER}")
+    message(status "ELPA version ${ELPA_VERSION_STRING}")
+  endif()
 
   # Looking for lib
   # ---------------
@@ -354,7 +365,7 @@ if( (NOT PKG_CONFIG_EXECUTABLE) OR (PKG_CONFIG_EXECUTABLE AND NOT ELPA_FOUND) OR
     # test link
     unset(ELPA_WORKS CACHE)
     include(CheckFunctionExists)
-    check_function_exists(elpa_dgetrf ELPA_WORKS)
+    check_function_exists(elpa_init ELPA_WORKS)
     mark_as_advanced(ELPA_WORKS)
 
     if(ELPA_WORKS)
@@ -368,7 +379,7 @@ if( (NOT PKG_CONFIG_EXECUTABLE) OR (PKG_CONFIG_EXECUTABLE AND NOT ELPA_FOUND) OR
       list(REMOVE_DUPLICATES ELPA_LINKER_FLAGS)
     else()
       if(NOT ELPA_FIND_QUIETLY)
-	message(STATUS "Looking for elpa : test of elpa_dgetrf with
+	message(STATUS "Looking for elpa : test of elpa_init with
 		elpa, cblas, cuda and lapack libraries fails")
 	message(STATUS "CMAKE_REQUIRED_LIBRARIES: ${CMAKE_REQUIRED_LIBRARIES}")
 	message(STATUS "CMAKE_REQUIRED_INCLUDES: ${CMAKE_REQUIRED_INCLUDES}")
