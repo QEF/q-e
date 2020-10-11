@@ -365,7 +365,12 @@ if( (NOT PKG_CONFIG_EXECUTABLE) OR (PKG_CONFIG_EXECUTABLE AND NOT ELPA_FOUND) OR
     # test link
     unset(ELPA_WORKS CACHE)
     include(CheckFunctionExists)
-    check_function_exists(elpa_init ELPA_WORKS)
+    if(ELPA_VERSION_STRING AND ELPA_VERSION_STRING VERSION_LESS "2017")
+      set(ELPA_TEST_FUNCTION get_elpa_row_col_comms)
+    else()
+      set(ELPA_TEST_FUNCTION elpa_init)
+    endif()
+    check_function_exists(${ELPA_TEST_FUNCTION} ELPA_WORKS)
     mark_as_advanced(ELPA_WORKS)
 
     if(ELPA_WORKS)
@@ -379,7 +384,7 @@ if( (NOT PKG_CONFIG_EXECUTABLE) OR (PKG_CONFIG_EXECUTABLE AND NOT ELPA_FOUND) OR
       list(REMOVE_DUPLICATES ELPA_LINKER_FLAGS)
     else()
       if(NOT ELPA_FIND_QUIETLY)
-	message(STATUS "Looking for elpa : test of elpa_init with
+	message(STATUS "Looking for elpa : test of ${ELPA_TEST_FUNCTION} with
 		elpa, cblas, cuda and lapack libraries fails")
 	message(STATUS "CMAKE_REQUIRED_LIBRARIES: ${CMAKE_REQUIRED_LIBRARIES}")
 	message(STATUS "CMAKE_REQUIRED_INCLUDES: ${CMAKE_REQUIRED_INCLUDES}")
