@@ -302,8 +302,7 @@ if(QE_ENABLE_HDF5)
         option(HDF5_PREFER_PARALLEL "Prefer parallel HDF5" ON)
     endif()
     find_package(HDF5 REQUIRED Fortran C)
-
-    if(NOT HDF5_Fortran_LIBRARIES OR NOT HDF5_Fortran_INCLUDE_DIRS)
+    if(NOT HDF5_FOUND)
         message(FATAL_ERROR "HDF5 Fortran interface has not been found!")
     endif()
 
