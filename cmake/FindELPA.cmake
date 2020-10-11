@@ -227,7 +227,7 @@ if( (NOT PKG_CONFIG_EXECUTABLE) OR (PKG_CONFIG_EXECUTABLE AND NOT ELPA_FOUND) OR
   if(NOT ELPA_VERSION_STRING)
     string(REGEX MATCH "elpa-20[0-9][0-9]\.[0-9][0-9]\.[0-9][0-9][0-9]" CMAKE_MATCH_ELPA_VER "${ELPA_INCLUDE_DIRS}")
     string(REGEX MATCH "20[0-9][0-9]\.[0-9][0-9]\.[0-9][0-9][0-9]" ELPA_VERSION_STRING "${CMAKE_MATCH_ELPA_VER}")
-    message(status "ELPA version ${ELPA_VERSION_STRING}")
+    message(STATUS "ELPA version ${ELPA_VERSION_STRING}")
   endif()
 
   # Looking for lib

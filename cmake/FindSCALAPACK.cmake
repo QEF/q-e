@@ -400,6 +400,19 @@ if(BLAS_FOUND
       endif()
       # Then try the search libs
       foreach(IT ${SCALAPACK_SEARCH_LIBS})
+        # First try mkl_blacs_openmpi (OpenMPI derived)
+        if(NOT ${_LIBRARIES})
+          check_scalapack_libraries(
+            ${_LIBRARIES}
+            BLAS
+            ${SCALAPACK_mkl_SEARCH_SYMBOL}
+            ""
+            "${IT};mkl_blacs_openmpi_lp64"
+            "${_BLAS_LIBRARIES}"
+            ""
+            "${MPI_Fortran_LIBRARIES}")
+        endif()
+        # First try mkl_blacs_intelmpi (MPICH derived)
         if(NOT ${_LIBRARIES})
           check_scalapack_libraries(
             ${_LIBRARIES}
