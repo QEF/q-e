@@ -255,14 +255,16 @@ if(QE_ENABLE_ELPA)
 
     # Check if ELPA version is compatible with QE
     if(ELPA_VERSION_STRING VERSION_GREATER_EQUAL "2018.11")
-        qe_add_global_compile_definitions(__ELPA)
+        set(QE_ELPA_DEFINITIONS __ELPA)
     elseif(ELPA_VERSION_STRING VERSION_GREATER_EQUAL "2016.11")
-        qe_add_global_compile_definitions(__ELPA_2016)
+        set(QE_ELPA_DEFINITIONS __ELPA_2016)
     elseif(ELPA_VERSION_STRING VERSION_GREATER_EQUAL "2015")
-        qe_add_global_compile_definitions(__ELPA_2015)
+        set(QE_ELPA_DEFINITIONS __ELPA_2015)
     else()
         message(FATAL_ERROR "ELPA verion ${ELPA_VERSION_STRING} is not supported.")
     endif()
+    message(STATUS "Add ELPA flag : ${QE_ELPA_DEFINITIONS}")
+    qe_add_global_compile_definitions(${QE_ELPA_DEFINITIONS})
 
     # Looking for module directory
     file(GLOB_RECURSE ELPA_MODS_FILES "${ELPA_INCLUDE_DIRS}/*.mod" "${ELPA_INCLUDE_DIRS}/../modules/*.mod")
