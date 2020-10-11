@@ -168,8 +168,66 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
     include(${PROJECT_CMAKE}/GNUFortranCompiler.cmake)
 endif()
 
-###########################################################
+############################################################
+## Vendor
+## Try to found vendor specific libraries for:
+## BLAS, LAPACK and FFTW
+############################################################
+if(QE_ENABLE_OPENMP)
+    find_package(VENDOR COMPONENTS THREADS)
+else()
+    find_package(VENDOR)
+endif()
 
+if(VENDOR_FOUND)
+    message(STATUS "Found vendor: ${VENDOR}")
+    message(STATUS "Found vendor BLAS libraries: ${BLAS_LIBRARIES}")
+    message(STATUS "Found vendor LAPACK libraries: ${LAPACK_LIBRARIES}")
+    if(NOT FFTW_ROOT)
+        message(STATUS "Found vendor FFTW libraries: ${FFTW_LIBRARIES}")
+        message(STATUS "Found vendor FFTW include: ${FFTW_INCLUDE_DIRS}")
+    else()
+        set(FFTW_FOUND FALSE)
+        set(FFTW_LIBRARIES)
+        set(FFTW_INCLUDE_DIRS)
+    endif()
+endif()
+
+###########################################################
+# Lapack
+# The following targets will be defined:
+add_library(qe_lapack INTERFACE)
+add_library(QE::LAPACK ALIAS qe_lapack)
+qe_install_targets(qe_lapack)
+#######################################################################
+if(NOT VENDOR_FOUND)
+    find_package(LAPACK)
+    if(LAPACK_FOUND)
+        message(STATUS "Found LAPACK: ${LAPACK_LIBRARIES}")
+        target_link_libraries(qe_lapack
+            INTERFACE
+                ${LAPACK_LIBRARIES}
+                ${LAPACK_LINKER_FLAGS})
+    elseif(QE_ENABLE_VENDOR_DEPS)
+        message(STATUS "Installing QE::LAPACK via submodule")
+        qe_git_submodule_update(external/lapack)
+        add_subdirectory(external/lapack EXCLUDE_FROM_ALL)
+        target_link_libraries(qe_lapack INTERFACE lapack)
+        qe_fix_fortran_modules(lapack)
+        qe_install_targets(lapack)
+    else()
+        # No dep has been found via find_package,
+        # call it again with REQUIRED to make it fail
+        # explicitly (hoping in some helpful message)
+        find_package(LAPACK REQUIRED)
+    endif()
+else()
+  target_link_libraries(qe_lapack
+    INTERFACE
+        ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+endif()
+
+###########################################################
 # SCALAPACK
 # The following targets will be defined:
 add_library(qe_scalapack INTERFACE)
@@ -179,8 +237,8 @@ qe_install_targets(qe_scalapack)
 if(QE_ENABLE_SCALAPACK)
     find_package(SCALAPACK REQUIRED QUIET)
     message(STATUS "Found SCALAPACK: ${SCALAPACK_LIBRARIES};${SCALAPACK_LINKER_FLAGS}")
-    target_link_libraries(qe_scalapack 
-        INTERFACE 
+    target_link_libraries(qe_scalapack
+        INTERFACE
             ${SCALAPACK_LIBRARIES}
             ${SCALAPACK_LINKER_FLAGS})
 endif(QE_ENABLE_SCALAPACK)
@@ -233,68 +291,6 @@ if(QE_ENABLE_ELPA)
             ${ELPA_INCLUDE_DIRS_DEP})
 endif(QE_ENABLE_ELPA)
 
-############################################################
-############################################################
-## Vendor
-## Try to found vendor specific libraries for: 
-## BLAS, LAPACK and FFTW
-############################################################
-if(QE_ENABLE_OPENMP)
-    find_package(VENDOR COMPONENTS THREADS)
-else()
-    find_package(VENDOR)
-endif()
-
-if(VENDOR_FOUND)
-    message(STATUS "Found vendor: ${VENDOR}")
-    message(STATUS "Found vendor BLAS libraries: ${BLAS_LIBRARIES}")
-    message(STATUS "Found vendor LAPACK libraries: ${LAPACK_LIBRARIES}")
-    if(NOT FFTW_ROOT)
-        message(STATUS "Found vendor FFTW libraries: ${FFTW_LIBRARIES}")
-        message(STATUS "Found vendor FFTW include: ${FFTW_INCLUDE_DIRS}")
-    else()
-        set(FFTW_FOUND FALSE)
-        set(FFTW_LIBRARIES)
-        set(FFTW_INCLUDE_DIRS)
-    endif()
-endif()
-
-###########################################################
-# Lapack
-# The following targets will be defined:
-add_library(qe_lapack INTERFACE)
-add_library(QE::LAPACK ALIAS qe_lapack)
-qe_install_targets(qe_lapack)
-
-#######################################################################
-if(NOT VENDOR_FOUND)
-    find_package(LAPACK)
-    if(LAPACK_FOUND)
-        message(STATUS "Found LAPACK: ${LAPACK_LIBRARIES}")
-        target_link_libraries(qe_lapack 
-            INTERFACE 
-                ${LAPACK_LIBRARIES}
-                ${LAPACK_LINKER_FLAGS})
-    elseif(QE_ENABLE_VENDOR_DEPS)
-        message(STATUS "Installing QE::LAPACK via submodule")
-        qe_git_submodule_update(external/lapack)
-        add_subdirectory(external/lapack EXCLUDE_FROM_ALL)
-        target_link_libraries(qe_lapack INTERFACE lapack)
-        qe_fix_fortran_modules(lapack)
-        qe_install_targets(lapack)
-    else()
-        # No dep has been found via find_package,
-        # call it again with REQUIRED to make it fail
-        # explicitly (hoping in some helpful message)
-        find_package(LAPACK REQUIRED)
-    endif()
-else()
-  target_link_libraries(qe_lapack
-    INTERFACE
-        ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
-endif()
-
-###########################################################
 ###########################################################
 # HDF5
 # The following targets will be defined:
