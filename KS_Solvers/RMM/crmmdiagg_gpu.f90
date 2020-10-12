@@ -78,10 +78,12 @@ SUBROUTINE crmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, npol, psi, hpsi, spsi, 
   COMPLEX(DP) :: spsi_d(npwx*npol,nbnd)
   COMPLEX(DP), ALLOCATABLE :: phi_d(:,:,:), hphi_d(:,:,:), sphi_d(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: kpsi_d(:,:), hkpsi_d(:,:), skpsi_d(:,:)
+  REAL(DP) :: g2kin_d(npwx)
 #if defined(__CUDA)
   attributes(device) :: psi_d, hpsi_d, spsi_d
   attributes(device) :: phi_d, hphi_d, sphi_d 
   attributes(device) :: kpsi_d, hkpsi_d, skpsi_d    
+  attributes(device) :: g2kin_d 
 #endif 
 !civn 
 write(*,*) '@chk crmmdiagg_gpu'
@@ -187,6 +189,7 @@ write(*,*) '@chk crmmdiagg_gpu'
   psi_d = psi
   hpsi_d = hpsi
   IF ( uspp ) spsi_d = spsi
+  g2kin_d = g2kin
 !
   phi  = ZERO
   hphi = ZERO
@@ -1170,7 +1173,11 @@ CONTAINS
     COMPLEX(DP)           :: z1, z2
     REAL(DP), ALLOCATABLE :: coef(:,:)
     !
-    COMPLEX(DP), EXTERNAL :: ZDOTC
+    COMPLEX(DP), EXTERNAL :: ZDOTC_gpu
+    !
+!civn 
+    REAL(DP) :: ekinj
+    INTEGER :: idx
     !
     IF ( motconv > 0 ) THEN
        !
@@ -1191,20 +1198,17 @@ CONTAINS
        !
        jbnd = jbnd_index(ibnd)
        !
-       ekin(jbnd) = 0._DP
+       ekinj = 0._DP  
        !
+!$cuf kernel do(2)
        DO ipol = 1, npol
-          !
           DO ig = 1, npw
-             !
-             psir = DBLE ( psi(ig+(ipol-1)*npwx,ibnd) )
-             psii = AIMAG( psi(ig+(ipol-1)*npwx,ibnd) )
-             psi2 = psir * psir + psii * psii
-             ekin(jbnd) = ekin(jbnd) + g2kin(ig) * psi2
-             !
+             ekinj = ekinj + g2kin_d(ig) * ( DBLE ( psi_d(ig+(ipol-1)*npwx,ibnd) ) * DBLE ( psi_d(ig+(ipol-1)*npwx,ibnd) ) + &
+                                             AIMAG( psi_d(ig+(ipol-1)*npwx,ibnd) ) * AIMAG( psi_d(ig+(ipol-1)*npwx,ibnd) )     ) 
           END DO
-          !
        END DO
+       !
+       ekin(jbnd) = ekinj
        !
     END DO
     !
@@ -1223,25 +1227,23 @@ CONTAINS
        IF ( conv(ibnd) ) CYCLE
        !
        jbnd = jbnd_index(ibnd)
+       ekinj = ekin(jbnd) 
+       !
        kbnd = ibnd_index(ibnd)
        !
+!civn 2fix: not very sure this cuf kernel is efficient
+!$cuf kernel do(2)
        DO ipol = 1, npol
-          !
           DO ig = 1, npw
-             !
-             x  = g2kin(ig) / ( 1.5_DP * ekin(jbnd) )
+             x  = g2kin_d(ig) / ( 1.5_DP * ekinj )
              x2 = x * x
              x3 = x * x2
              x4 = x * x3
-             !
              k1 = 27._DP + 18._DP * x + 12._DP * x2 + 8._DP * x3
              k2 = k1 + 16._DP * x4
-             kdiag = ( -4._DP / 3._DP / ekin(jbnd) ) * k1 / k2
-             !
-             kpsi(ig+(ipol-1)*npwx,kbnd) = kdiag * kpsi(ig+(ipol-1)*npwx,kbnd)
-             !
+             kdiag = ( -4._DP / 3._DP / ekinj ) * k1 / k2
+             kpsi_d(ig+(ipol-1)*npwx,kbnd) = kdiag  * kpsi_d(ig+(ipol-1)*npwx,kbnd)
           END DO
-          !
        END DO
        !
     END DO
@@ -1262,29 +1264,39 @@ CONTAINS
        !
        DO ibnd = 1, ( ibnd_start - 1)
           !
-          IF ( .NOT. conv(ibnd) ) &
-          kpsi(:,ibnd_index(ibnd)) = ZERO
+          idx = ibnd_index(ibnd) 
+          !
+          IF ( .NOT. conv(ibnd) ) THEN 
+!$cuf kernel do(1)
+            DO ii = 1, kdmx
+              kpsi_d(ii,idx) = ZERO
+            END DO 
+          END IF 
           !
        END DO
        !
        DO ibnd = ( ibnd_end + 1 ), nbnd
           !
-          IF ( .NOT. conv(ibnd) ) &
-          kpsi(:,ibnd_index(ibnd)) = ZERO
+          IF ( .NOT. conv(ibnd) ) THEN 
+!$cuf kernel do(1)
+            DO ii = 1, kdmx
+              kpsi_d(ii,idx) = ZERO
+            END DO 
+          END IF 
           !
        END DO
        !
-       CALL mp_sum( kpsi(:,1:notconv), inter_bgrp_comm )
+       CALL mp_sum( kpsi_d(:,1:notconv), inter_bgrp_comm )
        !
     END IF
     !
     ! ... Operate the Hamiltonian : H K (H - eS) |psi>
     !
-    CALL h_psi( npwx, npw, notconv, kpsi, hkpsi )
+    CALL h_psi_gpu( npwx, npw, notconv, kpsi_d, hkpsi_d )
     !
     ! ... Operate the Overlap : S K (H - eS) |psi>
     !
-    IF ( uspp ) CALL s_psi( npwx, npw, notconv, kpsi, skpsi )
+    IF ( uspp ) CALL s_psi_gpu( npwx, npw, notconv, kpsi_d, skpsi_d )
     !
     ! ... Create 2 x 2 matrix
     !
@@ -1295,21 +1307,21 @@ CONTAINS
        jbnd = jbnd_index(ibnd)
        kbnd = ibnd_index(ibnd)
        !
-       php = DBLE( ZDOTC( kdim, psi (1,ibnd), 1, hpsi (1,ibnd), 1 ) )
-       khp = DBLE( ZDOTC( kdim, kpsi(1,kbnd), 1, hpsi (1,ibnd), 1 ) )
-       khk = DBLE( ZDOTC( kdim, kpsi(1,kbnd), 1, hkpsi(1,kbnd), 1 ) )
+       php = DBLE( ZDOTC_gpu( kdim, psi_d (1,ibnd), 1, hpsi_d (1,ibnd), 1 ) )
+       khp = DBLE( ZDOTC_gpu( kdim, kpsi_d(1,kbnd), 1, hpsi_d (1,ibnd), 1 ) )
+       khk = DBLE( ZDOTC_gpu( kdim, kpsi_d(1,kbnd), 1, hkpsi_d(1,kbnd), 1 ) )
        !
        IF ( uspp ) THEN
           !
-          psp = DBLE( ZDOTC( kdim, psi (1,ibnd), 1, spsi (1,ibnd), 1 ) )
-          ksp = DBLE( ZDOTC( kdim, kpsi(1,kbnd), 1, spsi (1,ibnd), 1 ) )
-          ksk = DBLE( ZDOTC( kdim, kpsi(1,kbnd), 1, skpsi(1,kbnd), 1 ) )
+          psp = DBLE( ZDOTC_gpu( kdim, psi_d (1,ibnd), 1, spsi_d (1,ibnd), 1 ) )
+          ksp = DBLE( ZDOTC_gpu( kdim, kpsi_d(1,kbnd), 1, spsi_d (1,ibnd), 1 ) )
+          ksk = DBLE( ZDOTC_gpu( kdim, kpsi_d(1,kbnd), 1, skpsi_d(1,kbnd), 1 ) )
           !
        ELSE
           !
-          psp = DBLE( ZDOTC( kdim, psi (1,ibnd), 1, psi (1,ibnd), 1 ) )
-          ksp = DBLE( ZDOTC( kdim, kpsi(1,kbnd), 1, psi (1,ibnd), 1 ) )
-          ksk = DBLE( ZDOTC( kdim, kpsi(1,kbnd), 1, kpsi(1,kbnd), 1 ) )
+          psp = DBLE( ZDOTC_gpu( kdim, psi_d (1,ibnd), 1, psi_d (1,ibnd), 1 ) )
+          ksp = DBLE( ZDOTC_gpu( kdim, kpsi_d(1,kbnd), 1, psi_d (1,ibnd), 1 ) )
+          ksk = DBLE( ZDOTC_gpu( kdim, kpsi_d(1,kbnd), 1, kpsi_d(1,kbnd), 1 ) )
           !
        END IF
        !
@@ -1411,6 +1423,11 @@ CONTAINS
     !
     ! ... Update current wave functions
     !
+!civn 2fix
+    kpsi = kpsi_d
+    hkpsi = hkpsi_d
+    IF(uspp) skpsi = skpsi_d
+!
     DO ibnd = ibnd_start, ibnd_end
        !
        IF ( conv(ibnd) ) CYCLE
