@@ -70,7 +70,7 @@ SUBROUTINE exx_gs(nfi, c)
         self_dexx_dhab(3,3), pair_dexx_dhab(3,3,neigh/2)
     !
     INTEGER,   ALLOCATABLE   :: isendreq(:)
-    INTEGER,   ALLOCATABLE   :: irecvreq(:)
+    INTEGER,   ALLOCATABLE   :: irecvreq(:,:)
     INTEGER                  :: tran(3)
     INTEGER                  :: proc
     INTEGER                  :: tmp_iobtl
