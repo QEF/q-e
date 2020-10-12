@@ -69,8 +69,12 @@ SUBROUTINE exx_gs(nfi, c)
     REAL(DP)  selfe, paire(neigh/2), &
         self_dexx_dhab(3,3), pair_dexx_dhab(3,3,neigh/2)
     !
-    INTEGER, allocatable  :: isendreq(:),irecvreq(:,:)
-    INTEGER   tran(3), proc, tmp_iobtl, me
+    INTEGER,   ALLOCATABLE   :: isendreq(:)
+    INTEGER,   ALLOCATABLE   :: irecvreq(:)
+    INTEGER                  :: tran(3)
+    INTEGER                  :: proc
+    INTEGER                  :: tmp_iobtl
+    INTEGER                  :: me
     !
     INTEGER                  :: k,jj,ii,ia,ib,ic,my_var,my_var2,my_var3,i_fac,va,cgstep
     INTEGER                  :: ndim,nogrp 
