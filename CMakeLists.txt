@@ -36,7 +36,7 @@ include(cmake/qeHelpers.cmake)
 
 ###########################################################
 # Build Type
-# Ensure that a specific, default build type is set when 
+# Ensure that a specific, default build type is set when
 # none has been explicitly set by the user
 ###########################################################
 qe_ensure_build_type("Release")
@@ -74,9 +74,9 @@ option(QE_ENABLE_HDF5
     "enable HDF5 data collection" OFF)
 option(QE_ENABLE_CUDA
     "enable CUDA acceleration on NVIDIA GPUs" OFF)
-option(QE_ENABLE_VENDOR_DEPS 
+option(QE_ENABLE_VENDOR_DEPS
     "enable fallback on vendored deps when none is found via find_package()" ON)
-option(QE_ENABLE_DOC 
+option(QE_ENABLE_DOC
     "enable documentation building" OFF)
 
 # TODO change all ifdefs throughout code base to match
@@ -139,7 +139,7 @@ qe_install_targets(qe_mpi_fortran)
 ###########################################################
 if(QE_ENABLE_MPI)
     find_package(MPI REQUIRED Fortran)
-    target_link_libraries(qe_mpi_fortran 
+    target_link_libraries(qe_mpi_fortran
         INTERFACE MPI::MPI_Fortran)
 endif(QE_ENABLE_MPI)
 
@@ -154,11 +154,11 @@ qe_install_targets(qe_openmp_fortran qe_openmp_c)
 ###########################################################
 if(QE_ENABLE_OPENMP)
     find_package(OpenMP REQUIRED Fortran C)
-    target_link_libraries(qe_openmp_fortran 
+    target_link_libraries(qe_openmp_fortran
         INTERFACE OpenMP::OpenMP_Fortran)
-    target_link_libraries(qe_openmp_c 
+    target_link_libraries(qe_openmp_c
         INTERFACE OpenMP::OpenMP_C)
-    
+
 endif(QE_ENABLE_OPENMP)
 
 ############################################################
@@ -277,7 +277,7 @@ if(QE_ENABLE_ELPA)
     endif()
 
     # Add link libraries and include directories
-    target_link_libraries(qe_elpa 
+    target_link_libraries(qe_elpa
         INTERFACE
             ${ELPA_LIBRARIES}
             ${ELPA_LIBRARIES_DEP}
@@ -298,17 +298,23 @@ add_library(QE::HDF5_C ALIAS qe_hdf5_c)
 qe_install_targets(qe_hdf5_fortran qe_hdf5_c)
 ###########################################################
 if(QE_ENABLE_HDF5)
+    if(QE_ENABLE_MPI)
+        option(HDF5_PREFER_PARALLEL "Prefer parallel HDF5" ON)
+    endif()
     find_package(HDF5 REQUIRED Fortran C)
-
-    if(NOT HDF5_Fortran_LIBRARIES OR NOT HDF5_Fortran_INCLUDE_DIRS)
+    if(NOT HDF5_FOUND)
         message(FATAL_ERROR "HDF5 Fortran interface has not been found!")
     endif()
-    if (NOT HDF5_IS_PARALLEL OR NOT QE_ENABLE_MPI)
-	    qe_add_global_compile_definitions(__HDF5_SERIAL) 
-    endif()  
 
-    target_link_libraries(qe_hdf5_fortran 
-        INTERFACE 
+    if (NOT HDF5_IS_PARALLEL OR NOT QE_ENABLE_MPI)
+        message(STATUS "Serial HDF5 enabled!")
+        qe_add_global_compile_definitions(__HDF5_SERIAL)
+    else()
+        message(STATUS "Parallel HDF5 enabled!")
+    endif()
+
+    target_link_libraries(qe_hdf5_fortran
+        INTERFACE
             ${HDF5_Fortran_LIBRARIES}
             ${HDF5_Fortran_HL_LIBRARIES})
     target_include_directories(qe_hdf5_fortran
@@ -318,8 +324,8 @@ if(QE_ENABLE_HDF5)
         INTERFACE
             ${HDF5_Fortran_DEFINITIONS})
 
-    target_link_libraries(qe_hdf5_c 
-        INTERFACE 
+    target_link_libraries(qe_hdf5_c
+        INTERFACE
             ${HDF5_C_LIBRARIES}
             ${HDF5_C_HL_LIBRARIES})
     target_include_directories(qe_hdf5_c
@@ -403,10 +409,10 @@ write_basic_package_version_file(
     VERSION ${PACKAGE_VERSION}
     COMPATIBILITY AnyNewerVersion)
 
-configure_file(cmake/qeConfig.cmake.in 
+configure_file(cmake/qeConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/qeConfig.cmake @ONLY)
 
-install(FILES 
+install(FILES
             ${CMAKE_CURRENT_BINARY_DIR}/qeConfigVersion.cmake
             ${CMAKE_CURRENT_BINARY_DIR}/qeConfig.cmake
         DESTINATION
@@ -425,8 +431,8 @@ add_custom_target(depgraph
 ###########################################################
 # Custom make targets
 ###########################################################
-add_custom_target(pw 
-    DEPENDS 
+add_custom_target(pw
+    DEPENDS
         qe_pw_exe
         qe_pw_tools_ibrav2cell_exe
         qe_pw_tools_cell2ibrav_exe
@@ -436,8 +442,8 @@ add_custom_target(pw
     COMMENT
         "basic code for scf, structure optimization, MD")
 
-add_custom_target(ph 
-    DEPENDS 
+add_custom_target(ph
+    DEPENDS
         qe_phonon_ph_exe
         qe_phonon_dynmat_exe
         qe_phonon_q2r_exe
@@ -452,27 +458,27 @@ add_custom_target(ph
     COMMENT
         "phonon code, Gamma-only and third-order derivatives")
 
-add_custom_target(hp 
-    DEPENDS 
+add_custom_target(hp
+    DEPENDS
         qe_hp_exe
     COMMENT
         "calculation of the Hubbard parameters from DFPT")
 
-add_custom_target(pwcond 
-    DEPENDS 
+add_custom_target(pwcond
+    DEPENDS
         qe_pwcond_exe
     COMMENT
         "ballistic conductance")
 
-add_custom_target(neb 
-    DEPENDS 
+add_custom_target(neb
+    DEPENDS
         qe_neb_exe
         qe_neb_pathinterpolation_exe
     COMMENT
         "code for Nudged Elastic Band method")
 
-add_custom_target(pp 
-    DEPENDS 
+add_custom_target(pp
+    DEPENDS
         qe_pp_exe
         qe_pp_opengrid_exe
         qe_pp_average_exe
@@ -505,17 +511,17 @@ add_custom_target(pp
     COMMENT
         "postprocessing programs")
 
-add_custom_target(pwall 
-    DEPENDS 
-        pw 
-        ph 
-        pp 
-        pwcond 
+add_custom_target(pwall
+    DEPENDS
+        pw
+        ph
+        pp
+        pwcond
         neb
     COMMENT
         "same as \"make pw ph pp pwcond neb\"")
 
-add_custom_target(cp 
+add_custom_target(cp
     DEPENDS
         qe_cpv_exe
         qe_cpv_manycp_exe
@@ -524,7 +530,7 @@ add_custom_target(cp
     COMMENT
         "CP code: Car-Parrinello molecular dynamics")
 
-add_custom_target(tddfpt 
+add_custom_target(tddfpt
     DEPENDS
         qe_tddfpt_turbolanczos_exe
         qe_tddfpt_turbodavidson_exe
@@ -533,7 +539,7 @@ add_custom_target(tddfpt
     COMMENT
         "time dependent dft code")
 
-add_custom_target(gwl 
+add_custom_target(gwl
     DEPENDS
         qe_gww_util_grap_exe
         qe_gww_util_abcoefftoeps_exe
@@ -541,23 +547,23 @@ add_custom_target(gwl
     COMMENT
         "GW with Lanczos chains")
 
-add_custom_target(ld1 
+add_custom_target(ld1
     DEPENDS
         qe_atomic_exe
     COMMENT
         "utilities for pseudopotential generation")
 
-add_custom_target(upf 
+add_custom_target(upf
     DEPENDS
         #Library
         qe_upflib
-        #Executables 
+        #Executables
         qe_upflib_virtual_v2_exe
         qe_upflib_upfconv_exe
     COMMENT
         "utilities for pseudopotential conversion")
 
-add_custom_target(xspectra 
+add_custom_target(xspectra
     DEPENDS
         qe_xspectra_exe
         qe_xspectra_spectracorrection_exe
@@ -565,13 +571,13 @@ add_custom_target(xspectra
     COMMENT
         "X-ray core-hole spectroscopy calculations")
 
-add_custom_target(couple 
+add_custom_target(couple
     DEPENDS
         qe_couple
     COMMENT
         "library interface for coupling to external codes")
 
-add_custom_target(epw 
+add_custom_target(epw
     DEPENDS
         qe_epw_exe
     COMMENT
