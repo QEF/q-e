@@ -302,24 +302,24 @@ write(*,*) '@chk crmmdiagg_gpu'
      IF ( uspp ) spsi_d   =   spsi 
      hpsi_d   =   hpsi 
      phi_d    =   phi    
-     sphi_d   =   sphi   
+     IF ( uspp ) sphi_d   =   sphi   
      hphi_d   =   hphi   
      kpsi_d   =   kpsi   
      IF ( uspp )  skpsi_d  =   skpsi  
      hkpsi_d  =   hkpsi  
 !
      CALL do_diis_gpu( idiis )
-!!civn 
-!     psi = psi_d
-!     IF ( uspp ) spsi = spsi_d
-!     hpsi = hpsi_d
-!     phi = phi_d
-!     sphi = sphi_d
-!     hphi = hphi_d
-!     kpsi = kpsi_d
-!     IF ( uspp )  skpsi = skpsi_d
-!     hkpsi = hkpsi_d
-!!
+!civn 
+     psi = psi_d
+     IF ( uspp ) spsi = spsi_d
+     hpsi = hpsi_d
+     phi = phi_d
+     sphi = sphi_d
+     hphi = hphi_d
+     kpsi = kpsi_d
+     IF ( uspp )  skpsi = skpsi_d
+     hkpsi = hkpsi_d
+!
      !
      ! ... Line searching
      !
@@ -780,11 +780,8 @@ CONTAINS
     INTEGER                  :: kdiis
     REAL(DP)                 :: norm
     COMPLEX(DP)              :: ec
-    COMPLEX(DP), ALLOCATABLE :: vec1(:)
-    COMPLEX(DP), ALLOCATABLE :: vec2(:,:)
+!civn 2fix: remove this  once diag_diis is done 
     COMPLEX(DP), ALLOCATABLE :: vc(:)
-    COMPLEX(DP), ALLOCATABLE :: tc(:,:)
-!civn 
     !
     ! device variables
     !
@@ -798,18 +795,12 @@ CONTAINS
     attributes(device) :: vc_d
     attributes(device) :: tc_d
 #endif
-!
     !
-    ALLOCATE( vec1( kdmx ) )
-    ALLOCATE( vec2( kdmx, idiis ) )
     IF ( idiis > 1 )   ALLOCATE( vc( idiis ) )
-    IF ( motconv > 0 ) ALLOCATE( tc( idiis, motconv ) )
-!civn 
     ALLOCATE( vec1_d( kdmx ) )
     ALLOCATE( vec2_d( kdmx, idiis ) )
     IF ( idiis > 1 )   ALLOCATE( vc_d( idiis ) )
     IF ( motconv > 0 ) ALLOCATE( tc_d( idiis, motconv ) )
-!
     !
     ! ... Save current wave functions and matrix elements
     !
@@ -956,23 +947,6 @@ CONTAINS
        END DO 
        !
     END DO
-!civn   
-    psi = psi_d
-    hpsi = hpsi_d
-    IF ( uspp )  spsi = spsi_d
-    kpsi = kpsi_d
-    hkpsi = hkpsi_d
-    IF ( uspp )  skpsi = skpsi_d
-    phi = phi_d
-    hphi = hphi_d
-    IF ( uspp ) sphi = sphi_d
-    tc = tc_d
-    vc = vc_d 
-    vec1 = vec1_d
-    vec2 = vec2_d
-    hc = hc_d
-    sc = sc_d
-!
     !
     ! ... Update current wave functions and residual vectors
     !
@@ -986,14 +960,10 @@ CONTAINS
           !
           ! ... solve Rv = eSv
           !
-          IF ( me_bgrp == root_bgrp ) CALL diag_diis( ibnd, idiis, vc(:) )
+          IF ( me_bgrp == root_bgrp ) CALL diag_diis_gpu( ibnd, idiis, vc(:) )
           CALL mp_bcast( vc, root_bgrp, intra_bgrp_comm )
 !civn 2fix
           vc_d = vc
-          psi_d = psi
-          hpsi_d = hpsi
-          IF ( uspp ) spsi_d = spsi
-          kpsi_d = kpsi
 !$cuf kernel do(1)
           DO ii = 1, npwx*npol
             psi_d(ii,ibnd) = ZERO 
@@ -1009,37 +979,51 @@ CONTAINS
           DO ii = 1, kdmx 
             kpsi_d(ii,kbnd) = ZERO 
           END DO 
-          psi = psi_d
-          hpsi = hpsi_d
-          IF ( uspp ) spsi = spsi_d
-          kpsi = kpsi_d
           !
           DO kdiis = 1, idiis
              !
              ! ... Wave functions
              !
-             CALL ZAXPY( kdim, vc(kdiis), phi (1,ibnd,kdiis), 1, psi (1,ibnd), 1 )
-             CALL ZAXPY( kdim, vc(kdiis), hphi(1,ibnd,kdiis), 1, hpsi(1,ibnd), 1 )
-             IF ( uspp ) &
-             CALL ZAXPY( kdim, vc(kdiis), sphi(1,ibnd,kdiis), 1, spsi(1,ibnd), 1 )
+!civn 2fix: why ZAXPY_gpu does not work? 
+             !CALL ZAXPY_gpu( kdim, vc_d(kdiis), phi_d (1,ibnd,kdiis), 1, psi_d (1,ibnd), 1 )
+!$cuf kernel do(1)
+             DO ii = 1, kdim
+               psi_d(ii,ibnd) = psi_d(ii,ibnd) + vc_d(kdiis) * phi_d (ii,ibnd,kdiis) 
+               hpsi_d(ii,ibnd) = hpsi_d(ii,ibnd) + vc_d(kdiis) * hphi_d (ii,ibnd,kdiis) 
+             END DO  
+             IF(uspp) THEN 
+!$cuf kernel do(1)
+               DO ii = 1, kdim
+                 spsi_d(ii,ibnd) = spsi_d(ii,ibnd) + vc_d(kdiis) * sphi_d (ii,ibnd,kdiis) 
+               END DO
+             END IF
              !
              ! ... Residual vectors
              !
              ec = CMPLX( php(ibnd,kdiis), 0._DP, kind=DP )
              !
-             CALL ZCOPY( kdim, hphi(1,ibnd,kdiis), 1, vec1(1), 1 )
+             CALL ZCOPY_gpu( kdim, hphi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
              !
              IF ( uspp ) THEN
                 !
-                CALL ZAXPY( kdim, -ec, sphi(1,ibnd,kdiis), 1, vec1(1), 1 )
+!$cuf kernel do(1)
+                DO ii = 1, kdim
+                  vec1_d(ii) = vec1_d(ii) -ec * sphi_d(ii,ibnd,kdiis)
+                END DO
                 !
              ELSE
                 !
-                CALL ZAXPY( kdim, -ec, phi(1,ibnd,kdiis), 1, vec1(1), 1 )
+!$cuf kernel do(1)
+                DO ii = 1, kdim
+                  vec1_d(ii) = vec1_d(ii) -ec * phi_d(ii,ibnd,kdiis)
+                END DO
                 !
              END IF
              !
-             CALL ZAXPY( kdim, vc(kdiis), vec1(1), 1, kpsi(1,kbnd), 1 )
+!$cuf kernel do(1)
+                DO ii = 1, kdim
+                  kpsi_d(ii,kbnd) = kpsi_d(ii,kbnd) + vc_d(kdiis) * vec1_d(ii)
+                END DO
              !
           END DO
           !
@@ -1048,24 +1032,24 @@ CONTAINS
           ! ... Wave functions
           !
           norm = SQRT( sw(ibnd) )
-          CALL ZDSCAL( kdim, 1._DP / norm, psi (1,ibnd), 1 )
-          CALL ZDSCAL( kdim, 1._DP / norm, hpsi(1,ibnd), 1 )
+          CALL ZDSCAL_gpu( kdim, 1._DP / norm, psi_d (1,ibnd), 1 )
+          CALL ZDSCAL_gpu( kdim, 1._DP / norm, hpsi_d(1,ibnd), 1 )
           IF ( uspp ) &
-          CALL ZDSCAL( kdim, 1._DP / norm, spsi(1,ibnd), 1 )
+          CALL ZDSCAL_gpu( kdim, 1._DP / norm, spsi_d(1,ibnd), 1 )
           !
           ! ... Residual vectors
           !
           ec = CMPLX( hw(ibnd), 0._DP, kind=DP )
           !
-          CALL ZCOPY( kdim, hpsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+          CALL ZCOPY_gpu( kdim, hpsi_d(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
           !
           IF ( uspp ) THEN
              !
-             CALL ZAXPY( kdim, -ec, spsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+             CALL ZAXPY_gpu( kdim, -ec, spsi_d(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
              !
           ELSE
              !
-             CALL ZAXPY( kdim, -ec, psi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+             CALL ZAXPY_gpu( kdim, -ec, psi_d(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
              !
           END IF
           !
@@ -1073,16 +1057,11 @@ CONTAINS
        !
     END DO
     !
-    DEALLOCATE( vec1 )
-    DEALLOCATE( vec2 )
     IF ( idiis > 1 )   DEALLOCATE( vc )
-    IF ( motconv > 0 ) DEALLOCATE( tc )
-!civn 
     DEALLOCATE( vec1_d )
     DEALLOCATE( vec2_d )
     IF ( idiis > 1 )   DEALLOCATE( vc_d )
     IF ( motconv > 0 ) DEALLOCATE( tc_d )
-!
     !
     RETURN
     !
@@ -1127,6 +1106,10 @@ CONTAINS
     ALLOCATE( work( nwork ) )
     ALLOCATE( rwork( 3 * ndim - 2 ) )
     !
+!civn 2fix 
+    hc = hc_d
+    sc = sc_d
+!
     h1(1:ndim,1:ndim) = hc(1:ndim,1:ndim,ibnd)
     s1(1:ndim,1:ndim) = sc(1:ndim,1:ndim,ibnd)
     !
@@ -1210,6 +1193,133 @@ CONTAINS
     RETURN
     !
   END SUBROUTINE diag_diis
+    !
+  SUBROUTINE diag_diis_gpu( ibnd, idiis, vc )
+    !
+    IMPLICIT NONE
+    !
+    INTEGER,     INTENT(IN)  :: ibnd
+    INTEGER,     INTENT(IN)  :: idiis
+    COMPLEX(DP), INTENT(OUT) :: vc(idiis)
+    !
+    INTEGER                  :: info
+    INTEGER                  :: ndim, kdim
+    INTEGER                  :: i, imin
+    REAL(DP)                 :: emin
+    REAL(DP)                 :: vnrm
+    COMPLEX(DP), ALLOCATABLE :: h1(:,:)
+    COMPLEX(DP), ALLOCATABLE :: h2(:,:)
+    COMPLEX(DP), ALLOCATABLE :: h3(:,:)
+    COMPLEX(DP), ALLOCATABLE :: s1(:,:)
+    COMPLEX(DP), ALLOCATABLE :: x1(:,:)
+    COMPLEX(DP), ALLOCATABLE :: u1(:)
+    REAL(DP),    ALLOCATABLE :: e1(:)
+    INTEGER                  :: nwork
+    COMPLEX(DP), ALLOCATABLE :: work(:)
+    REAL(DP),    ALLOCATABLE :: rwork(:)
+    !
+    COMPLEX(DP), EXTERNAL    :: ZDOTC
+    !
+    ndim  = idiis
+    nwork = 3 * ndim
+    !
+    ALLOCATE( h1( ndim, ndim ) )
+    ALLOCATE( h2( ndim, ndim ) )
+    ALLOCATE( h3( ndim, ndim ) )
+    ALLOCATE( s1( ndim, ndim ) )
+    ALLOCATE( x1( ndim, ndim ) )
+    ALLOCATE( u1( ndim ) )
+    ALLOCATE( e1( ndim ) )
+    ALLOCATE( work( nwork ) )
+    ALLOCATE( rwork( 3 * ndim - 2 ) )
+    !
+!civn 2fix 
+    hc = hc_d
+    sc = sc_d
+!
+    h1(1:ndim,1:ndim) = hc(1:ndim,1:ndim,ibnd)
+    s1(1:ndim,1:ndim) = sc(1:ndim,1:ndim,ibnd)
+    !
+    CALL ZHEEV( 'V', 'U', ndim, s1, ndim, e1, work, nwork, rwork, info )
+    !
+    IF( info /= 0 ) CALL errore( ' crmmdiagg ', ' cannot solve diis ', ABS(info) )
+    !
+    kdim = 0
+    !
+    x1 = ZERO
+    !
+    DO i = 1, ndim
+       !
+       IF ( e1(i) > eps14 ) THEN
+          !
+          kdim = kdim + 1
+          !
+          x1(:,kdim) = s1(:,i) / SQRT(e1(i))
+          !
+       END IF
+       !
+    END DO
+    !
+    IF ( kdim <= 1 ) THEN
+       !
+       vc        = ZERO
+       vc(idiis) = ONE
+       !
+       GOTO 10
+       !
+    END IF
+    !
+    h2 = ZERO
+    !
+    CALL ZGEMM( 'N', 'N', ndim, kdim, ndim, ONE, h1, ndim, x1, ndim, ZERO, h2, ndim )
+    !
+    h3 = ZERO
+    !
+    CALL ZGEMM( 'C', 'N', kdim, kdim, ndim, ONE, x1, ndim, h2, ndim, ZERO, h3, ndim )
+    !
+    e1 = 0._DP
+    !
+    CALL ZHEEV( 'V', 'U', kdim, h3, ndim, e1, work, nwork, rwork, info )
+    !
+    IF( info /= 0 ) CALL errore( ' crmmdiagg ', ' cannot solve diis ', ABS(info) )
+    !
+    imin = 1
+    emin = e1(1)
+    !
+    DO i = 2, kdim
+       !
+       IF ( ABS( e1(i) ) < ABS( emin ) ) THEN
+          !
+          imin = i
+          emin = e1(i)
+          !
+       END IF
+       !
+    END DO
+    !
+    CALL ZGEMV( 'N', ndim, kdim, ONE, x1, ndim, h3(:,imin), 1, ZERO, vc, 1 )
+    !
+    s1(1:ndim,1:ndim) = sc(1:ndim,1:ndim,ibnd)
+    !
+    CALL ZGEMV( 'N', ndim, ndim, ONE, s1, ndim, vc, 1, ZERO, u1, 1 )
+    !
+    vnrm = SQRT( DBLE( ZDOTC( ndim, vc, 1, u1, 1 ) ) )
+    !
+    vc = vc / vnrm
+    !
+10  DEALLOCATE( h1 )
+    DEALLOCATE( h2 )
+    DEALLOCATE( h3 )
+    DEALLOCATE( s1 )
+    DEALLOCATE( x1 )
+    DEALLOCATE( u1 )
+    DEALLOCATE( e1 )
+    DEALLOCATE( work )
+    DEALLOCATE( rwork )
+    !
+    RETURN
+    !
+  END SUBROUTINE diag_diis_gpu
   !
   !
   SUBROUTINE line_search( )
