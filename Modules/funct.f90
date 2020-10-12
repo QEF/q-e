@@ -253,7 +253,7 @@ CONTAINS
        inlc = 2
     ! Special case vdW-DF3-opt1
     CASE( 'VDW-DF3-OPT1' )
-       dft_defined = xclib_set_dft_IDs(1,4,45,0,3,0)
+       dft_defined = xclib_set_dft_IDs(1,4,45,0,0,0)
        inlc = 3
     ! Special case vdW-DF3-opt2
     CASE( 'VDW-DF3-OPT2' )
@@ -348,6 +348,7 @@ CONTAINS
                        TRIM(lda_c_name) //'-'// &
                        TRIM(gga_e_name) //'-'// &
                        TRIM(gga_c_name) //'-'// nonlocc(inlc)
+              !  
        ELSE
           CALL xclib_set_dft_from_name( TRIM(dftout) )
           inlc = matching( dftout, ncnl, nonlocc )
@@ -387,7 +388,7 @@ CONTAINS
     !
     isnonlocc = (inlc > 0)
 
-    ! CALL set_auxiliary_flags
+    CALL xclib_set_auxiliary_flags
     !
     ! check dft has not been previously set differently
     !
@@ -620,7 +621,7 @@ CONTAINS
     !
     shortname = 'no shortname'
     !
-    IF (inlc /= 0) THEN
+    IF (inlc == 0) THEN
       shortname = xclib_get_dft_short()
     ELSE
       !
@@ -628,8 +629,6 @@ CONTAINS
       icorr  = xclib_get_id( 'LDA', 'CORR' )
       igcx   = xclib_get_id( 'GGA', 'EXCH' )
       igcc   = xclib_get_id( 'GGA', 'CORR' )
-      imeta  = xclib_get_id( 'MGGA','EXCH' )
-      imetac = xclib_get_id( 'MGGA','CORR' )
       !
       IF (inlc==1) THEN
         !

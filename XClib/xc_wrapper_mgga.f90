@@ -73,7 +73,7 @@ SUBROUTINE xc_metagcx_l( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, 
   ex = 0.0_DP ;  v1x = 0.0_DP ;  v2x = 0.0_DP ;  v3x = 0.0_DP
   ec = 0.0_DP ;  v1c = 0.0_DP ;  v2c = 0.0_DP ;  v3c = 0.0_DP
   !
-  CALL xclib_set_threshold( 'mgga', rho_threshold, grho2_threshold, tau_threshold )
+  CALL set_threshold_l( 'mgga', rho_threshold, grho2_threshold, tau_threshold )
   !
   POLARIZED = .FALSE.
   IF (ns == 2) THEN

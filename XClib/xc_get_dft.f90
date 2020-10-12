@@ -193,28 +193,28 @@
        dft_defined = set_dft_IDs(9,14,28,13,0,0)
     ! special case : TPSS meta-GGA Exc
     CASE( 'TPSS' )
-       dft_defined = set_dft_IDs(1,4,7,6,0,1)
+       dft_defined = set_dft_IDs(1,4,7,6,1,0)
     ! special case : TPSS meta-GGA - mgga term only
     CASE( 'TPSS-only' )
-       dft_defined = set_dft_IDs(0,0,0,0,0,1)
+       dft_defined = set_dft_IDs(0,0,0,0,1,0)
     ! special case : M06L Meta GGA
     CASE( 'M06L' )
-       dft_defined = set_dft_IDs(0,0,0,0,0,2)
+       dft_defined = set_dft_IDs(0,0,0,0,2,0)
     ! special case : TB09 meta-GGA Exc
     CASE( 'TB09' )
-       dft_defined = set_dft_IDs(0,0,0,0,0,3)
+       dft_defined = set_dft_IDs(0,0,0,0,3,0)
     ! special case : SCAN Meta GGA
     CASE( 'SCAN' )
-       dft_defined = set_dft_IDs(0,0,0,0,0,5)
+       dft_defined = set_dft_IDs(0,0,0,0,5,0)
     ! special case : SCAN0
     CASE( 'SCAN0' )
-       dft_defined = set_dft_IDs(0,0,0,0,0,6)
+       dft_defined = set_dft_IDs(0,0,0,0,6,0)
     ! special case : PZ/LDA + null meta-GGA
     CASE( 'PZ+META', 'LDA+META' )
-       dft_defined = set_dft_IDs(1,1,0,0,0,4)
+       dft_defined = set_dft_IDs(1,1,0,0,4,0)
     ! special case : PBE + null meta-GGA
     CASE( 'PBE+META' )
-       dft_defined = set_dft_IDs(1,4,3,4,0,4)
+       dft_defined = set_dft_IDs(1,4,3,4,4,0)
     !
     CASE DEFAULT
 !        IF ('INDEX:' ==  dftout(1:6)) THEN
@@ -365,7 +365,7 @@
     !dft_longname = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
     !     &//gradc (igcc) //'-'// nonlocc(inlc)
     !
-    CALL set_auxiliary_flags
+    !CALL set_auxiliary_flags
     !
     ! check dft has not been previously set differently
     !
@@ -736,8 +736,6 @@
     !
     has_finite_size_correction = ( iexch==8 .OR. icorr==10)
     !
-    CALL set_exx_fraction( exx_fraction )
-    !
     RETURN
     !
   END SUBROUTINE set_auxiliary_flags
@@ -831,7 +829,7 @@
     LOGICAL, INTENT(IN) :: exx_started_
     !
     IF (.NOT. ishybrid) &
-        CALL errore( 'start_exx', 'dft is not hybrid, wrong call', 1 )
+        CALL errore( 'set_exx_started', 'dft is not hybrid, wrong call', 1 )
     exx_started = exx_started_
     !
     RETURN
@@ -848,7 +846,7 @@
     REAL(DP), INTENT(IN) :: exx_fraction_
     !
     IF (.NOT. ishybrid) &
-        CALL errore( 'stop_exx', 'dft is not hybrid, wrong call', 1 )
+        CALL errore( 'set_exx_fraction', 'dft is not hybrid, wrong call', 1 )
     exx_fraction = exx_fraction_
     !
     RETURN
