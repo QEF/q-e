@@ -291,6 +291,10 @@ write(*,*) '@chk crmmdiagg_gpu'
      hkpsi_d  =   hkpsi  
 !
      CALL do_diis_gpu( idiis )
+     !
+     ! ... Line searching
+     !
+     CALL line_search_gpu( )
 !civn 
      psi = psi_d
      IF ( uspp ) spsi = spsi_d
@@ -301,11 +305,8 @@ write(*,*) '@chk crmmdiagg_gpu'
      kpsi = kpsi_d
      IF ( uspp )  skpsi = skpsi_d
      hkpsi = hkpsi_d
+write(*,*) '@@chk 2here'
 !
-     !
-     ! ... Line searching
-     !
-     CALL line_search( )
      !
      ! ... Calculate eigenvalues and check convergence
      !
@@ -1151,7 +1152,7 @@ CONTAINS
   END SUBROUTINE diag_diis
   !
   !
-  SUBROUTINE line_search( )
+  SUBROUTINE line_search_gpu( )
     !
     IMPLICIT NONE
     !
@@ -1175,7 +1176,6 @@ CONTAINS
     !
     COMPLEX(DP), EXTERNAL :: ZDOTC_gpu
     !
-!civn 
     REAL(DP) :: ekinj
     INTEGER :: idx
     !
@@ -1423,11 +1423,6 @@ CONTAINS
     !
     ! ... Update current wave functions
     !
-!civn 2fix
-    kpsi = kpsi_d
-    hkpsi = hkpsi_d
-    IF(uspp) skpsi = skpsi_d
-!
     DO ibnd = ibnd_start, ibnd_end
        !
        IF ( conv(ibnd) ) CYCLE
@@ -1438,16 +1433,16 @@ CONTAINS
        z1 = CMPLX( coef(1,jbnd), 0._DP, kind=DP )
        z2 = CMPLX( coef(2,jbnd), 0._DP, kind=DP )
        !
-       CALL ZSCAL( kdim, z1, psi (1,ibnd), 1 )
-       CALL ZAXPY( kdim, z2, kpsi(1,kbnd), 1, psi(1,ibnd), 1 )
+       CALL ZSCAL_gpu( kdim, z1, psi_d (1,ibnd), 1 )
+       CALL ZAXPY_gpu( kdim, z2, kpsi_d(1,kbnd), 1, psi_d(1,ibnd), 1 )
        !
-       CALL ZSCAL( kdim, z1, hpsi (1,ibnd), 1 )
-       CALL ZAXPY( kdim, z2, hkpsi(1,kbnd), 1, hpsi(1,ibnd), 1 )
+       CALL ZSCAL_gpu( kdim, z1, hpsi_d (1,ibnd), 1 )
+       CALL ZAXPY_gpu( kdim, z2, hkpsi_d(1,kbnd), 1, hpsi_d(1,ibnd), 1 )
        !
        IF ( uspp ) THEN
           !
-          CALL ZSCAL( kdim, z1, spsi (1,ibnd), 1 )
-          CALL ZAXPY( kdim, z2, skpsi(1,kbnd), 1, spsi(1,ibnd), 1 )
+          CALL ZSCAL_gpu( kdim, z1, spsi_d (1,ibnd), 1 )
+          CALL ZAXPY_gpu( kdim, z2, skpsi_d(1,kbnd), 1, spsi_d(1,ibnd), 1 )
           !
        END IF
        !
@@ -1466,7 +1461,7 @@ CONTAINS
     !
     RETURN
     !
-  END SUBROUTINE line_search
+  END SUBROUTINE line_search_gpu
   !
   !
   SUBROUTINE eigenvalues( )
