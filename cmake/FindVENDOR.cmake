@@ -738,6 +738,7 @@ if(NOT FFTW_INCLUDE_DIRS)
       list(APPEND _libdirs "${_libdir}/include")
       get_filename_component(_libdir ${_libdir} PATH)
       list(APPEND _libdirs "${_libdir}/include")
+      unset(_libdir)
     endif()
   endforeach()
 

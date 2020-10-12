@@ -168,75 +168,9 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
     include(${PROJECT_CMAKE}/GNUFortranCompiler.cmake)
 endif()
 
-###########################################################
-
-# SCALAPACK
-# The following targets will be defined:
-add_library(qe_scalapack INTERFACE)
-add_library(QE::SCALAPACK ALIAS qe_scalapack)
-qe_install_targets(qe_scalapack)
-###########################################################
-if(QE_ENABLE_SCALAPACK)
-    find_package(SCALAPACK REQUIRED QUIET)
-    message(STATUS "Found SCALAPACK: ${SCALAPACK_LIBRARIES};${SCALAPACK_LINKER_FLAGS}")
-    target_link_libraries(qe_scalapack 
-        INTERFACE 
-            ${SCALAPACK_LIBRARIES}
-            ${SCALAPACK_LINKER_FLAGS})
-endif(QE_ENABLE_SCALAPACK)
-
-###########################################################
-# ELPA
-# The following targets will be defined:
-add_library(qe_elpa INTERFACE)
-add_library(QE::ELPA ALIAS qe_elpa)
-qe_install_targets(qe_elpa)
-###########################################################
-if(QE_ENABLE_ELPA)
-    find_package(ELPA REQUIRED)
-    
-    string(REGEX MATCH "elpa-[0-9][0-9][0-9][0-9]" CMAKE_MATCH_ELPA_VER "${ELPA_INCLUDE_DIRS}")
-    string(REGEX MATCH "[0-9][0-9][0-9][0-9]" CMAKE_MATCH_ONLY_VER "${CMAKE_MATCH_ELPA_VER}")
-    
-    # Check if ELPA version is compatible with QE
-    if(CMAKE_MATCH_ONLY_VER EQUAL "2018" OR
-       CMAKE_MATCH_ONLY_VER EQUAL "2017" OR
-       CMAKE_MATCH_ONLY_VER EQUAL "2016")
-        qe_add_global_compile_definitions(__ELPA_2016)
-    elseif(CMAKE_MATCH_ONLY_VER EQUAL "2015")
-        qe_add_global_compile_definitions(__ELPA_2015)
-    elseif(CMAKE_MATCH_ONLY_VER LESS "2015")
-        qe_add_global_compile_definitions(__ELPA)
-    else()
-        message(FATAL_ERROR "ELPA ver. ${CMAKE_MATCH_ONLY_VER} is not supported.")
-    endif()
-
-    # Looking for module directory
-    file(GLOB_RECURSE ELPA_MODS "${ELPA_INCLUDE_DIRS}/*.mod")
-    list(GET ELPA_MODS 0 ELPA_MOD)
-    if(EXISTS ${ELPA_MOD})
-        get_filename_component(ELPA_MOD_DIR "${ELPA_MOD}" PATH)
-        set(ELPA_INCLUDE_DIRS "${ELPA_MOD_DIR};${ELPA_INCLUDE_DIRS}")
-    else()
-        message(FATAL_ERROR "Fortran module directory of ELPA not found!")
-    endif()
-
-    # Add link libraries and include directories
-    target_link_libraries(qe_elpa 
-        INTERFACE
-            ${ELPA_LIBRARIES}
-            ${ELPA_LIBRARIES_DEP}
-            ${ELPA_LINKER_FLAGS})
-    target_include_directories(qe_elpa
-        INTERFACE
-            ${ELPA_INCLUDE_DIRS}
-            ${ELPA_INCLUDE_DIRS_DEP})
-endif(QE_ENABLE_ELPA)
-
-############################################################
 ############################################################
 ## Vendor
-## Try to found vendor specific libraries for: 
+## Try to found vendor specific libraries for:
 ## BLAS, LAPACK and FFTW
 ############################################################
 if(QE_ENABLE_OPENMP)
@@ -265,14 +199,13 @@ endif()
 add_library(qe_lapack INTERFACE)
 add_library(QE::LAPACK ALIAS qe_lapack)
 qe_install_targets(qe_lapack)
-
 #######################################################################
 if(NOT VENDOR_FOUND)
     find_package(LAPACK)
     if(LAPACK_FOUND)
         message(STATUS "Found LAPACK: ${LAPACK_LIBRARIES}")
-        target_link_libraries(qe_lapack 
-            INTERFACE 
+        target_link_libraries(qe_lapack
+            INTERFACE
                 ${LAPACK_LIBRARIES}
                 ${LAPACK_LINKER_FLAGS})
     elseif(QE_ENABLE_VENDOR_DEPS)
@@ -295,6 +228,66 @@ else()
 endif()
 
 ###########################################################
+# SCALAPACK
+# The following targets will be defined:
+add_library(qe_scalapack INTERFACE)
+add_library(QE::SCALAPACK ALIAS qe_scalapack)
+qe_install_targets(qe_scalapack)
+###########################################################
+if(QE_ENABLE_SCALAPACK)
+    find_package(SCALAPACK REQUIRED QUIET)
+    message(STATUS "Found SCALAPACK: ${SCALAPACK_LIBRARIES};${SCALAPACK_LINKER_FLAGS}")
+    target_link_libraries(qe_scalapack
+        INTERFACE
+            ${SCALAPACK_LIBRARIES}
+            ${SCALAPACK_LINKER_FLAGS})
+endif(QE_ENABLE_SCALAPACK)
+
+###########################################################
+# ELPA
+# The following targets will be defined:
+add_library(qe_elpa INTERFACE)
+add_library(QE::ELPA ALIAS qe_elpa)
+qe_install_targets(qe_elpa)
+###########################################################
+if(QE_ENABLE_ELPA)
+    find_package(ELPA REQUIRED)
+
+    # Check if ELPA version is compatible with QE
+    if(ELPA_VERSION_STRING VERSION_GREATER_EQUAL "2018.11")
+        set(QE_ELPA_DEFINITIONS __ELPA)
+    elseif(ELPA_VERSION_STRING VERSION_GREATER_EQUAL "2016.11")
+        set(QE_ELPA_DEFINITIONS __ELPA_2016)
+    elseif(ELPA_VERSION_STRING VERSION_GREATER_EQUAL "2015")
+        set(QE_ELPA_DEFINITIONS __ELPA_2015)
+    else()
+        message(FATAL_ERROR "ELPA verion ${ELPA_VERSION_STRING} is not supported.")
+    endif()
+    message(STATUS "Add ELPA flag : ${QE_ELPA_DEFINITIONS}")
+    qe_add_global_compile_definitions(${QE_ELPA_DEFINITIONS})
+
+    # Looking for module directory
+    file(GLOB_RECURSE ELPA_MODS_FILES "${ELPA_INCLUDE_DIRS}/*.mod" "${ELPA_INCLUDE_DIRS}/../modules/*.mod")
+    if(ELPA_MODS_FILES)
+        list(GET ELPA_MODS_FILES 0 ELPA_MOD)
+        get_filename_component(ELPA_MOD_DIR "${ELPA_MOD}" PATH)
+        set(ELPA_INCLUDE_DIRS "${ELPA_MOD_DIR};${ELPA_INCLUDE_DIRS}")
+    else()
+        message(FATAL_ERROR "Fortran module directory of ELPA not found!")
+    endif()
+
+    # Add link libraries and include directories
+    target_link_libraries(qe_elpa 
+        INTERFACE
+            ${ELPA_LIBRARIES}
+            ${ELPA_LIBRARIES_DEP}
+            ${ELPA_LINKER_FLAGS})
+    target_include_directories(qe_elpa
+        INTERFACE
+            ${ELPA_INCLUDE_DIRS}
+            ${ELPA_INCLUDE_DIRS_DEP})
+endif(QE_ENABLE_ELPA)
+
 ###########################################################
 # HDF5
 # The following targets will be defined:
