@@ -724,7 +724,6 @@ CONTAINS
        CALL xmlr_readtag ('number_of_core_orbitals', upf%gipaw_ncore_orbitals) 
        IF ( .NOT. upf%paw_as_gipaw) & 
           CALL xmlr_readtag( 'number_of_valence_orbitals', upf%gipaw_wfs_nchannels)  
-          !print *, 'FIXME! upf%gipaw_ncore_orbitals'
     END IF
     ALLOCATE ( upf%gipaw_core_orbital(upf%mesh,upf%gipaw_ncore_orbitals) )
     ALLOCATE ( upf%gipaw_core_orbital_n(upf%gipaw_ncore_orbitals) )
@@ -781,8 +780,6 @@ CONTAINS
           CALL xmlr_opentag( 'PP_GIPAW_ORBITALS' )
           CALL get_attr( 'number_of_valence_orbitals', &
                upf%gipaw_wfs_nchannels )
-       ELSE
-          !print *, 'FIXME! upf%gipaw_wfs_nchannel'
        END IF
        ALLOCATE ( upf%gipaw_wfs_el(upf%gipaw_wfs_nchannels) )
        ALLOCATE ( upf%gipaw_wfs_ll(upf%gipaw_wfs_nchannels) )
