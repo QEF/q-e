@@ -73,18 +73,15 @@ SUBROUTINE crmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, npol, psi, hpsi, spsi, 
   ! device variables
   ! 
   INTEGER :: ii, jj, kk
-  COMPLEX(DP) :: tmp
   COMPLEX(DP) :: psi_d (npwx*npol,nbnd)
   COMPLEX(DP) :: hpsi_d(npwx*npol,nbnd)
   COMPLEX(DP) :: spsi_d(npwx*npol,nbnd)
   COMPLEX(DP), ALLOCATABLE :: phi_d(:,:,:), hphi_d(:,:,:), sphi_d(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: kpsi_d(:,:), hkpsi_d(:,:), skpsi_d(:,:)
-  COMPLEX(DP), ALLOCATABLE :: hc_d(:,:,:), sc_d(:,:,:)
 #if defined(__CUDA)
   attributes(device) :: psi_d, hpsi_d, spsi_d
   attributes(device) :: phi_d, hphi_d, sphi_d 
   attributes(device) :: kpsi_d, hkpsi_d, skpsi_d    
-  attributes(device) :: hc_d, sc_d
 #endif 
 !civn 
 write(*,*) '@chk crmmdiagg_gpu'
@@ -171,14 +168,6 @@ write(*,*) '@chk crmmdiagg_gpu'
   !
   ALLOCATE( sc( ndiis, ndiis, ibnd_start:ibnd_end ), STAT=ierr )
   IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate sc ', ABS(ierr) )
-!civn 
-  !
-  ALLOCATE( hc_d( ndiis, ndiis, ibnd_start:ibnd_end ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate hc ', ABS(ierr) )
-  !
-  ALLOCATE( sc_d( ndiis, ndiis, ibnd_start:ibnd_end ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate sc ', ABS(ierr) )
-!
   !
   ALLOCATE( php( ibnd_start:ibnd_end, ndiis ), STAT=ierr )
   IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate php ', ABS(ierr) )
@@ -247,16 +236,6 @@ write(*,*) '@chk crmmdiagg_gpu'
   !
   hc = ZERO
   sc = ZERO
-!civn 
-!$cuf kernel do(3) 
-  DO ii = 1, ndiis
-    DO jj = 1, ndiis
-      DO kk = ibnd_start, ibnd_end   
-        hc_d(ii, jj, kk) = ZERO
-        sc_d(ii, jj, kk) = ZERO
-      END DO 
-    END DO 
-  END DO 
   !
   php = 0._DP
   psp = 0._DP
@@ -376,10 +355,6 @@ write(*,*) '@chk crmmdiagg_gpu'
 !
   DEALLOCATE( hc )
   DEALLOCATE( sc )
-!civn 
-  DEALLOCATE( hc_d )
-  DEALLOCATE( sc_d )
-!
   DEALLOCATE( php )
   DEALLOCATE( psp )
   DEALLOCATE( ew )
@@ -780,27 +755,26 @@ CONTAINS
     INTEGER                  :: kdiis
     REAL(DP)                 :: norm
     COMPLEX(DP)              :: ec
-!civn 2fix: remove this  once diag_diis is done 
     COMPLEX(DP), ALLOCATABLE :: vc(:)
+    COMPLEX(DP) :: kvc  ! vc(kdiis) for cuf kernel
+    COMPLEX(DP), ALLOCATABLE :: tc(:,:)
     !
     ! device variables
     !
     COMPLEX(DP), ALLOCATABLE :: vec1_d(:)
     COMPLEX(DP), ALLOCATABLE :: vec2_d(:,:)
-    COMPLEX(DP), ALLOCATABLE :: vc_d(:)
     COMPLEX(DP), ALLOCATABLE :: tc_d(:,:)
 #if defined (__CUDA)
     attributes(device) :: vec1_d
     attributes(device) :: vec2_d
-    attributes(device) :: vc_d
     attributes(device) :: tc_d
 #endif
     !
     IF ( idiis > 1 )   ALLOCATE( vc( idiis ) )
     ALLOCATE( vec1_d( kdmx ) )
     ALLOCATE( vec2_d( kdmx, idiis ) )
-    IF ( idiis > 1 )   ALLOCATE( vc_d( idiis ) )
     IF ( motconv > 0 ) ALLOCATE( tc_d( idiis, motconv ) )
+    IF ( motconv > 0 ) ALLOCATE( tc( idiis, motconv ) )
     !
     ! ... Save current wave functions and matrix elements
     !
@@ -871,24 +845,16 @@ CONTAINS
        !
     END IF
     !
+    tc = tc_d
     DO ibnd = ibnd_start, ibnd_end
        !
        IF ( conv(ibnd) ) CYCLE
        !
        jbnd = jbnd_index(ibnd)
        !
-!$cuf kernel do(1)
-       DO ii = 1, idiis
-         hc_d(ii,idiis,ibnd) = tc_d(ii,jbnd)
-       END DO 
-!$cuf kernel do(1)
-       DO ii = 1, idiis
-         hc_d(idiis,ii,ibnd) = CONJG( tc_d(ii,jbnd) )
-       END DO 
-!$cuf kernel do(1)
-       DO ii = 1, 1 
-         hc_d(idiis,idiis,ibnd)   = CMPLX( DBLE( tc_d(idiis,jbnd)  ), 0._DP, kind=DP )
-       END DO 
+       hc(1:idiis,idiis,ibnd) = tc(1:idiis,jbnd)
+       hc(idiis,1:idiis,ibnd) = CONJG( tc(1:idiis,jbnd) )
+       hc(idiis,idiis,ibnd)   = CMPLX( DBLE( tc(idiis,jbnd) ), 0._DP, kind=DP )
        !
     END DO
     !
@@ -927,24 +893,16 @@ CONTAINS
        !
     END IF
     !
+    tc = tc_d
     DO ibnd = ibnd_start, ibnd_end
        !
        IF ( conv(ibnd) ) CYCLE
        !
        jbnd = jbnd_index(ibnd)
        !
-!$cuf kernel do(1)
-       DO ii = 1, idiis
-         sc_d(ii,idiis,ibnd) = tc_d(ii,jbnd)
-       END DO 
-!$cuf kernel do(1)
-       DO ii = 1, idiis
-         sc_d(idiis,ii,ibnd) = CONJG( tc_d(ii,jbnd) )
-       END DO 
-!$cuf kernel do(1)
-       DO ii = 1, 1 
-         sc_d(idiis,idiis,ibnd)   = CMPLX( DBLE( tc_d(idiis,jbnd) ), 0._DP, kind=DP )
-       END DO 
+       sc(1:idiis,idiis,ibnd) = tc(1:idiis,jbnd)
+       sc(idiis,1:idiis,ibnd) = CONJG( tc(1:idiis,jbnd) )
+       sc(idiis,idiis,ibnd)   = CMPLX( DBLE( tc(idiis,jbnd) ), 0._DP, kind=DP )
        !
     END DO
     !
@@ -960,10 +918,9 @@ CONTAINS
           !
           ! ... solve Rv = eSv
           !
-          IF ( me_bgrp == root_bgrp ) CALL diag_diis_gpu( ibnd, idiis, vc(:) )
+          IF ( me_bgrp == root_bgrp ) CALL diag_diis( ibnd, idiis, vc(:) )
           CALL mp_bcast( vc, root_bgrp, intra_bgrp_comm )
-!civn 2fix
-          vc_d = vc
+          !
 !$cuf kernel do(1)
           DO ii = 1, npwx*npol
             psi_d(ii,ibnd) = ZERO 
@@ -984,17 +941,18 @@ CONTAINS
              !
              ! ... Wave functions
              !
+             kvc = vc(kdiis) 
 !civn 2fix: why ZAXPY_gpu does not work? 
-             !CALL ZAXPY_gpu( kdim, vc_d(kdiis), phi_d (1,ibnd,kdiis), 1, psi_d (1,ibnd), 1 )
+             !CALL ZAXPY_gpu( kdim, vc(kdiis), phi_d (1,ibnd,kdiis), 1, psi_d (1,ibnd), 1 )
 !$cuf kernel do(1)
              DO ii = 1, kdim
-               psi_d(ii,ibnd) = psi_d(ii,ibnd) + vc_d(kdiis) * phi_d (ii,ibnd,kdiis) 
-               hpsi_d(ii,ibnd) = hpsi_d(ii,ibnd) + vc_d(kdiis) * hphi_d (ii,ibnd,kdiis) 
+               psi_d(ii,ibnd) = psi_d(ii,ibnd) + kvc * phi_d (ii,ibnd,kdiis) 
+               hpsi_d(ii,ibnd) = hpsi_d(ii,ibnd) + kvc * hphi_d (ii,ibnd,kdiis) 
              END DO  
              IF(uspp) THEN 
 !$cuf kernel do(1)
                DO ii = 1, kdim
-                 spsi_d(ii,ibnd) = spsi_d(ii,ibnd) + vc_d(kdiis) * sphi_d (ii,ibnd,kdiis) 
+                 spsi_d(ii,ibnd) = spsi_d(ii,ibnd) + kvc * sphi_d (ii,ibnd,kdiis) 
                END DO
              END IF
              !
@@ -1022,7 +980,7 @@ CONTAINS
              !
 !$cuf kernel do(1)
                 DO ii = 1, kdim
-                  kpsi_d(ii,kbnd) = kpsi_d(ii,kbnd) + vc_d(kdiis) * vec1_d(ii)
+                  kpsi_d(ii,kbnd) = kpsi_d(ii,kbnd) + kvc * vec1_d(ii)
                 END DO
              !
           END DO
@@ -1060,7 +1018,6 @@ CONTAINS
     IF ( idiis > 1 )   DEALLOCATE( vc )
     DEALLOCATE( vec1_d )
     DEALLOCATE( vec2_d )
-    IF ( idiis > 1 )   DEALLOCATE( vc_d )
     IF ( motconv > 0 ) DEALLOCATE( tc_d )
     !
     RETURN
@@ -1106,10 +1063,6 @@ CONTAINS
     ALLOCATE( work( nwork ) )
     ALLOCATE( rwork( 3 * ndim - 2 ) )
     !
-!civn 2fix 
-    hc = hc_d
-    sc = sc_d
-!
     h1(1:ndim,1:ndim) = hc(1:ndim,1:ndim,ibnd)
     s1(1:ndim,1:ndim) = sc(1:ndim,1:ndim,ibnd)
     !
@@ -1193,133 +1146,6 @@ CONTAINS
     RETURN
     !
   END SUBROUTINE diag_diis
-    !
-  SUBROUTINE diag_diis_gpu( ibnd, idiis, vc )
-    !
-    IMPLICIT NONE
-    !
-    INTEGER,     INTENT(IN)  :: ibnd
-    INTEGER,     INTENT(IN)  :: idiis
-    COMPLEX(DP), INTENT(OUT) :: vc(idiis)
-    !
-    INTEGER                  :: info
-    INTEGER                  :: ndim, kdim
-    INTEGER                  :: i, imin
-    REAL(DP)                 :: emin
-    REAL(DP)                 :: vnrm
-    COMPLEX(DP), ALLOCATABLE :: h1(:,:)
-    COMPLEX(DP), ALLOCATABLE :: h2(:,:)
-    COMPLEX(DP), ALLOCATABLE :: h3(:,:)
-    COMPLEX(DP), ALLOCATABLE :: s1(:,:)
-    COMPLEX(DP), ALLOCATABLE :: x1(:,:)
-    COMPLEX(DP), ALLOCATABLE :: u1(:)
-    REAL(DP),    ALLOCATABLE :: e1(:)
-    INTEGER                  :: nwork
-    COMPLEX(DP), ALLOCATABLE :: work(:)
-    REAL(DP),    ALLOCATABLE :: rwork(:)
-    !
-    COMPLEX(DP), EXTERNAL    :: ZDOTC
-    !
-    ndim  = idiis
-    nwork = 3 * ndim
-    !
-    ALLOCATE( h1( ndim, ndim ) )
-    ALLOCATE( h2( ndim, ndim ) )
-    ALLOCATE( h3( ndim, ndim ) )
-    ALLOCATE( s1( ndim, ndim ) )
-    ALLOCATE( x1( ndim, ndim ) )
-    ALLOCATE( u1( ndim ) )
-    ALLOCATE( e1( ndim ) )
-    ALLOCATE( work( nwork ) )
-    ALLOCATE( rwork( 3 * ndim - 2 ) )
-    !
-!civn 2fix 
-    hc = hc_d
-    sc = sc_d
-!
-    h1(1:ndim,1:ndim) = hc(1:ndim,1:ndim,ibnd)
-    s1(1:ndim,1:ndim) = sc(1:ndim,1:ndim,ibnd)
-    !
-    CALL ZHEEV( 'V', 'U', ndim, s1, ndim, e1, work, nwork, rwork, info )
-    !
-    IF( info /= 0 ) CALL errore( ' crmmdiagg ', ' cannot solve diis ', ABS(info) )
-    !
-    kdim = 0
-    !
-    x1 = ZERO
-    !
-    DO i = 1, ndim
-       !
-       IF ( e1(i) > eps14 ) THEN
-          !
-          kdim = kdim + 1
-          !
-          x1(:,kdim) = s1(:,i) / SQRT(e1(i))
-          !
-       END IF
-       !
-    END DO
-    !
-    IF ( kdim <= 1 ) THEN
-       !
-       vc        = ZERO
-       vc(idiis) = ONE
-       !
-       GOTO 10
-       !
-    END IF
-    !
-    h2 = ZERO
-    !
-    CALL ZGEMM( 'N', 'N', ndim, kdim, ndim, ONE, h1, ndim, x1, ndim, ZERO, h2, ndim )
-    !
-    h3 = ZERO
-    !
-    CALL ZGEMM( 'C', 'N', kdim, kdim, ndim, ONE, x1, ndim, h2, ndim, ZERO, h3, ndim )
-    !
-    e1 = 0._DP
-    !
-    CALL ZHEEV( 'V', 'U', kdim, h3, ndim, e1, work, nwork, rwork, info )
-    !
-    IF( info /= 0 ) CALL errore( ' crmmdiagg ', ' cannot solve diis ', ABS(info) )
-    !
-    imin = 1
-    emin = e1(1)
-    !
-    DO i = 2, kdim
-       !
-       IF ( ABS( e1(i) ) < ABS( emin ) ) THEN
-          !
-          imin = i
-          emin = e1(i)
-          !
-       END IF
-       !
-    END DO
-    !
-    CALL ZGEMV( 'N', ndim, kdim, ONE, x1, ndim, h3(:,imin), 1, ZERO, vc, 1 )
-    !
-    s1(1:ndim,1:ndim) = sc(1:ndim,1:ndim,ibnd)
-    !
-    CALL ZGEMV( 'N', ndim, ndim, ONE, s1, ndim, vc, 1, ZERO, u1, 1 )
-    !
-    vnrm = SQRT( DBLE( ZDOTC( ndim, vc, 1, u1, 1 ) ) )
-    !
-    vc = vc / vnrm
-    !
-10  DEALLOCATE( h1 )
-    DEALLOCATE( h2 )
-    DEALLOCATE( h3 )
-    DEALLOCATE( s1 )
-    DEALLOCATE( x1 )
-    DEALLOCATE( u1 )
-    DEALLOCATE( e1 )
-    DEALLOCATE( work )
-    DEALLOCATE( rwork )
-    !
-    RETURN
-    !
-  END SUBROUTINE diag_diis_gpu
   !
   !
   SUBROUTINE line_search( )
