@@ -160,11 +160,6 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   !
   IF ( uspp ) &
   CALL ZCOPY_gpu( kdmx * nbnd, spsi_d(1,1), 1, sphi_d(1,1), 1 )
-!civn 
-phi = phi_d
-if(eigen_) hphi = hphi_d
-if(uspp)   sphi = sphi_d
-!
   !
   ! ... Blocking loop
   !
@@ -180,21 +175,13 @@ if(uspp)   sphi = sphi_d
      !
      ! ... Bcast diagonal block
      !
-!!civn 
-!phi_d = phi
-!if(eigen_) hphi_d = hphi
-!if(uspp)   sphi_d = sphi
-     CALL mp_bcast( phi(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
+     CALL mp_bcast( phi_d(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
      !
      IF ( eigen_ ) &
-     CALL mp_bcast( hphi(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
+     CALL mp_bcast( hphi_d(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
      !
      IF ( uspp ) &
-     CALL mp_bcast( sphi(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
-!phi = phi_d
-!if(eigen_) hphi = hphi_d
-!if(uspp)   sphi = sphi_d
-!
+     CALL mp_bcast( sphi_d(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
      !
      ! ... Project off-diagonal block outside of diagonal block
      !
@@ -211,13 +198,21 @@ if(uspp)   sphi = sphi_d
   !
   ! ... Copy psi <- phi
   !
-  CALL ZCOPY( kdmx * nbnd, phi(1,1), 1, psi(1,1), 1 )
+  CALL ZCOPY_gpu( kdmx * nbnd, phi_d(1,1), 1, psi_d(1,1), 1 )
   !
   IF ( eigen_ ) &
-  CALL ZCOPY( kdmx * nbnd, hphi(1,1), 1, hpsi(1,1), 1 )
+  CALL ZCOPY_gpu( kdmx * nbnd, hphi_d(1,1), 1, hpsi_d(1,1), 1 )
   !
   IF ( uspp ) &
-  CALL ZCOPY( kdmx * nbnd, sphi(1,1), 1, spsi(1,1), 1 )
+  CALL ZCOPY_gpu( kdmx * nbnd, sphi_d(1,1), 1, spsi_d(1,1), 1 )
+!civn 
+psi = psi_d
+if(eigen_) hpsi = hpsi_d
+if(uspp)   spsi = spsi_d
+phi = phi_d
+if(eigen_) hphi = hphi_d
+if(uspp)   sphi = sphi_d
+!
   !
   ! ... Calculate energy eigenvalues
   !
@@ -246,10 +241,19 @@ CONTAINS
     !
     INTEGER                  :: ibnd
     COMPLEX(DP), ALLOCATABLE :: sc(:)
+!civn 
+    COMPLEX(DP), ALLOCATABLE :: sc_d(:)
+!
     REAL(DP)                 :: norm
-    COMPLEX(DP), EXTERNAL    :: ZDOTC
+    COMPLEX(DP), EXTERNAL    :: ZDOTC_gpu
+#if defined (__CUDA)
+    attributes(device) :: sc_d
+#endif   
     !
     ALLOCATE( sc( ibnd_start:ibnd_end ) )
+!civn 
+    ALLOCATE( sc_d( ibnd_start:ibnd_end ) )
+!
     !
     DO ibnd = ibnd_start, ibnd_end
        !
@@ -259,30 +263,30 @@ CONTAINS
           !
           IF ( uspp ) THEN
              !
-             CALL ZGEMV( 'C', kdim, ibnd - ibnd_start, ONE, phi(1,ibnd_start), kdmx, &
-                         spsi(1,ibnd), 1, ZERO, sc(ibnd_start), 1 )
+             CALL ZGEMV_gpu( 'C', kdim, ibnd - ibnd_start, ONE, phi_d(1,ibnd_start), kdmx, &
+                         spsi_d(1,ibnd), 1, ZERO, sc_d(ibnd_start), 1 )
              !
           ELSE
              !
-             CALL ZGEMV( 'C', kdim, ibnd - ibnd_start, ONE, phi(1,ibnd_start), kdmx, &
-                         psi(1,ibnd), 1, ZERO, sc(ibnd_start), 1 )
+             CALL ZGEMV_gpu( 'C', kdim, ibnd - ibnd_start, ONE, phi_d(1,ibnd_start), kdmx, &
+                         psi_d(1,ibnd), 1, ZERO, sc_d(ibnd_start), 1 )
              !
           END IF
           !
-          CALL mp_sum( sc, intra_bgrp_comm )
+          CALL mp_sum( sc_d, intra_bgrp_comm )
           !
           ! ... phi_i = phi_i - phi_j * <phi_j| S |psi_i>
           !
-          CALL ZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, phi(1,ibnd_start), kdmx, &
-                      sc(ibnd_start), 1, ONE, phi(1,ibnd), 1 )
+          CALL ZGEMV_gpu( 'N', kdim, ibnd - ibnd_start, MONE, phi_d(1,ibnd_start), kdmx, &
+                      sc_d(ibnd_start), 1, ONE, phi_d(1,ibnd), 1 )
           !
           IF ( eigen_ ) &
-          CALL ZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, hphi(1,ibnd_start), kdmx, &
-                      sc(ibnd_start), 1, ONE, hphi(1,ibnd), 1 )
+          CALL ZGEMV_gpu( 'N', kdim, ibnd - ibnd_start, MONE, hphi_d(1,ibnd_start), kdmx, &
+                      sc_d(ibnd_start), 1, ONE, hphi_d(1,ibnd), 1 )
           !
           IF ( uspp ) &
-          CALL ZGEMV( 'N', kdim, ibnd - ibnd_start, MONE, sphi(1,ibnd_start), kdmx, &
-                      sc(ibnd_start), 1, ONE, sphi(1,ibnd), 1 )
+          CALL ZGEMV_gpu( 'N', kdim, ibnd - ibnd_start, MONE, sphi_d(1,ibnd_start), kdmx, &
+                      sc_d(ibnd_start), 1, ONE, sphi_d(1,ibnd), 1 )
           !
        END IF
        !
@@ -290,11 +294,11 @@ CONTAINS
        !
        IF ( uspp ) THEN
           !
-          norm = DBLE( ZDOTC( kdim, phi(1,ibnd), 1, sphi(1,ibnd), 1 ) )
+          norm = DBLE( ZDOTC_gpu( kdim, phi_d(1,ibnd), 1, sphi_d(1,ibnd), 1 ) )
           !
        ELSE
           !
-          norm = DBLE( ZDOTC( kdim, phi(1,ibnd), 1, phi(1,ibnd), 1 ) )
+          norm = DBLE( ZDOTC_gpu( kdim, phi_d(1,ibnd), 1, phi_d(1,ibnd), 1 ) )
           !
        END IF
        !
@@ -305,17 +309,20 @@ CONTAINS
        IF ( norm < eps16 ) &
        CALL errore( ' gram_schmidt_k ', ' vectors are linear dependent ', 1 )
        !
-       CALL ZDSCAL( kdim, 1._DP / norm, phi(1,ibnd), 1 )
+       CALL ZDSCAL_gpu( kdim, 1._DP / norm, phi_d(1,ibnd), 1 )
        !
        IF ( eigen_ ) &
-       CALL ZDSCAL( kdim, 1._DP / norm, hphi(1,ibnd), 1 )
+       CALL ZDSCAL_gpu( kdim, 1._DP / norm, hphi_d(1,ibnd), 1 )
        !
        IF ( uspp ) &
-       CALL ZDSCAL( kdim, 1._DP / norm, sphi(1,ibnd), 1 )
+       CALL ZDSCAL_gpu( kdim, 1._DP / norm, sphi_d(1,ibnd), 1 )
        !
     END DO
     !
     DEALLOCATE( sc )
+!civn 
+    DEALLOCATE( sc_d )
+!
     !
     RETURN
     !
