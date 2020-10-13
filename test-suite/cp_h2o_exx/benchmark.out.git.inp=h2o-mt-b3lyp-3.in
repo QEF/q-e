@@ -1,0 +1,1081 @@
+
+     Program CP v.6.4.1 starts on 12Oct2020 at 19:54: 4 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+     Waiting for input...
+     Reading input from standard input
+
+   Job Title:  Water Molecule
+
+
+   Atomic Pseudopotentials Parameters
+   ----------------------------------
+
+   Reading pseudopotential for specie #  1 from file :
+   /scratch/gpfs/mandrade/codes/devel/q-e-gpu/pseudo/O.blyp-mt.UPF
+   file type is UPF v.2
+
+   Reading pseudopotential for specie #  2 from file :
+   /scratch/gpfs/mandrade/codes/devel/q-e-gpu/pseudo/H.blyp-vbc.UPF
+   file type is UPF v.2
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= B3LYP
+                           (   7  12   9   7   0   0   0)
+     EXX-fraction              =        0.20
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+
+
+   Main Simulation Parameters (from input)
+   ---------------------------------------
+   Restart Mode       =       1   restart        
+   Number of MD Steps =     200
+   Print out every          100 MD Steps
+   Reads from unit    =      51
+   Writes to unit     =      51
+   MD Simulation time step            =       5.00
+   Electronic fictitious mass (emass) =     400.00
+   emass cut-off                      =       2.50
+
+   Simulation Cell Parameters (from input)
+   external pressure       =            0.00 [KBar]
+   wmass (calculated)      =         2493.41 [AU]
+   ibrav =   14
+   alat  =    12.00000000
+   a1    =    12.00000000    0.00000000    0.00000000
+   a2    =     0.00000000   12.00000000    0.00000000
+   a3    =     0.00000000    0.00000000   12.00000000
+ 
+   b1    =     0.08333333    0.00000000    0.00000000
+   b2    =     0.00000000    0.08333333    0.00000000
+   b3    =     0.00000000    0.00000000    0.08333333
+   omega =    1728.00000000
+
+   Energy Cut-offs
+   ---------------
+   Ecutwfc =   40.0 Ry,      Ecutrho =  160.0 Ry,      Ecuts =  160.0 Ry
+   Gcutwfc =   12.1     ,    Gcutrho =   24.2          Gcuts =   24.2
+   NOTA BENE: refg, mmx =   0.050000  3840
+   Eigenvalues calculated without the kinetic term contribution
+   Orthog. with lagrange multipliers : eps =   0.10E-08,  max = 300
+   Electron dynamics with newton equations
+   Electron dynamics : the temperature is not controlled
+
+   Electronic states
+   -----------------
+   Number of Electrons=     8, of States =     4
+   Occupation numbers :
+   2.00 2.00 2.00 2.00
+
+
+   Exchange and correlations functionals
+   -------------------------------------
+     Exchange-correlation= B3LYP
+                           (   7  12   9   7   0   0   0)
+     EXX-fraction              =        0.20
+
+
+   Ions Simulation Parameters
+   --------------------------
+   Ions are allowed to move
+   Ions dynamics with newton equations
+   the temperature is computed for     6 degrees of freedom
+   ion dynamics with fricp =  0.0000 and greasp =  1.0000
+   Zero initial momentum for ions
+   Ionic position (from input)
+   sorted by specie, and converted to real a.u. coordinates
+   Species   1 atoms =    1 mass =     29166.22 (a.u.),        16.00 (amu) rcmax =   0.80 (a.u.)
+        0.009900     0.009900     0.000000
+   Species   2 atoms =    2 mass =      1822.89 (a.u.),         1.00 (amu) rcmax =   0.80 (a.u.)
+        1.832500    -0.224300    -0.000100
+       -0.224300     1.832500     0.000200
+   Ionic position will be re-read from restart file
+
+   NOT all atoms are allowed to move 
+    indx  ..x.. ..y.. ..z..
+      1     F     F     F
+   Ionic temperature is not controlled
+
+
+   Cell Dynamics Parameters (from STDIN)
+   -------------------------------------
+   internal stress tensor calculated
+   Starting cell generated from CELLDM
+   Cell parameters will be re-read from restart file
+   Constant VOLUME Molecular dynamics
+   cell parameters are not allowed to move
+
+   Verbosity: iverbosity =  1
+
+
+
+   Simulation dimensions initialization
+   ------------------------------------
+
+   unit vectors of full simulation cell
+   in real space:                         in reciprocal space (units 2pi/alat):
+   1    12.0000    0.0000    0.0000              1.0000    0.0000    0.0000
+   2     0.0000   12.0000    0.0000              0.0000    1.0000    0.0000
+   3     0.0000    0.0000   12.0000              0.0000    0.0000    1.0000
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         455     455    112                14719    14719    1811
+     Max         458     458    116                14726    14726    1814
+     Sum        1829    1829    457                58893    58893    7249
+ 
+ 
+   Real Mesh
+   ---------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    50    50    50      50    50    13       1     1     4
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     50    50    50
+   Local number of cell to store the grid ( nrxx ) =      32500
+   Number of x-y planes for each processors: 
+  |  50,  13  |  50,  13  |  50,  12  |  50,  12  |
+ 
+   Smooth Real Mesh
+   ----------------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    50    50    50      50    50    13       1     1     4
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     50    50    50
+   Local number of cell to store the grid ( nrxx ) =      32500
+   Number of x-y planes for each processors: 
+  |  50,  13  |  50,  13  |  50,  12  |  50,  12  |
+ 
+   Reciprocal Space Mesh
+   ---------------------
+   Large Mesh
+     Global(ngm_g)    MinLocal       MaxLocal      Average
+          29447           7360           7363        7361.75
+   Smooth Mesh
+     Global(ngms_g)   MinLocal       MaxLocal      Average
+          29447           7360           7363        7361.75
+   Wave function Mesh
+     Global(ngw_g)    MinLocal       MaxLocal      Average
+           3625            906            907         906.25
+
+
+   System geometry initialization
+   ------------------------------
+   cell parameters read from restart file
+   ibrav =   14       cell parameters 
+
+
+   cell at current step : h(t)
+      12.00000       0.00000       0.00000
+       0.00000      12.00000       0.00000
+       0.00000       0.00000      12.00000
+
+   cell at previous step : h(t-dt)
+      12.00000       0.00000       0.00000
+       0.00000      12.00000       0.00000
+       0.00000       0.00000      12.00000
+ 
+
+   Matrix Multiplication Performances
+   ortho mmul, time for parallel driver      =   0.00000 with    1 procs
+
+   Constraints matrixes will be distributed block like on
+   ortho sub-group =    1*   1 procs
+
+
+
+   Pseudopotentials initialization
+   -------------------------------
+
+
+   Common initialization
+
+   Specie:     1
+   1  indv=  1   ang. mom=  0
+ 
+                        dion 
+   0.2253
+
+   Specie:     2
+ 
+                        dion 
+
+   ----------------------------------------------------
+   Exact Exchange Using Wannier Function Initialization
+   ----------------------------------------------------
+
+   Parallelization info :
+     electronic states            4
+     MPI tasks                    4
+     Taskgroups                   1
+
+   parameters used in exact exchange calculation
+     radius to compute pairs:   8.0 A.U.   maximum number of neighbors:   60
+
+   parameters used to solve Poisson equation
+     radius for self potential:   6.0 A.U.   radius for pair potential:   5.0 A.U.
+     Poisson solver discretized using   7   points in each dimension
+
+   parameters used for multipole expansion
+     radius for self potential:   9.3 A.U.   radius for pair potential:   7.0 A.U.
+     maximum angular momentum:   6
+
+   number of grid points in Poisson spehere 
+     self potential:   65204   pair potential:   37993
+
+   number of grid points in multipole expansion spehere: 
+     self potential:  124257   pair potential:   94800
+
+   ----------------------------------------------------
+ ------------------------DYNAMICS IN THE WANNIER BASIS--------------------------
+                              DYNAMICS PARAMETERS 
+ FICTITIOUS MASS PARAMETER USED FOR SPREAD OPTIMIZATION            =   500.0
+ TIME STEP USED FOR DAMPED DYNAMICS                                =  4.0000000
+ DAMPING COEFFICIENT USED FOR WANNIER FUNCTION SPREAD OPTIMIZATION =  0.3000000
+          20 STEPS OF DAMPED MOLECULAR DYNAMICS FOR OPTIMIZATION OF THE SPREAD
+ AVERAGE WANNIER FUNCTION SPREAD WRITTEN TO     FORT.24
+ INDIVIDUAL WANNIER FUNCTION SPREAD WRITTEN TO  ./h2o.spr
+ WANNIER CENTERS WRITTEN TO                     ./h2o.wfc
+ SOME PERTINENT RUN-TIME INFORMATION WRITTEN TO FORT.27
+ -------------------------------------------------------------------------------
+ 
+ wannier_startup IBRAV SELECTED:          14
+ WANNIER SETUP : check G vectors and weights
+inw = 1:   1   0   0   1.000000
+inw = 2:   0   1   0   1.000000
+inw = 3:   0   0   1   1.000000
+inw = 4:   1   1   0   0.000000
+inw = 5:   0   1   1   0.000000
+inw = 6:   1   0   1   0.000000
+ Translations to be done           6
+ ibrav selected:          14
+ Translation           1 for        3625 G vectors
+ Translation           2 for        3625 G vectors
+ Translation           3 for         907 G vectors
+ Translation           4 for        3625 G vectors
+ Translation           5 for        3625 G vectors
+ Translation           6 for        3625 G vectors
+ 
+
+   Cell parameters from input file are used in electron mass preconditioning
+   init_tpiba2=    0.27415568
+ 
+   Short Legend and Physical Units in the Output
+   ---------------------------------------------
+   NFI    [int]          - step index
+   EKINC  [HARTREE A.U.] - kinetic energy of the fictitious electronic dynamics
+   TEMPH  [K]            - Temperature of the fictitious cell dynamics
+   TEMP   [K]            - Ionic temperature
+   ETOT   [HARTREE A.U.] - Scf total energy (Kohn-Sham hamiltonian)
+   ENTHAL [HARTREE A.U.] - Enthalpy ( ETOT + P * V )
+   ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
+   ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
+ 
+ Ionic velocities set to zero
+
+   formf: eself=    18.94976
+   formf:     vps(g=0)=  -0.0061912     rhops(g=0)=  -0.0033232
+   formf:     vps(g=0)=  -0.0060616     rhops(g=0)=  -0.0031806
+   formf:     vps(g=0)=  -0.0060616     rhops(g=0)=  -0.0031806
+   formf:     vps(g=0)=  -0.0060616     rhops(g=0)=  -0.0031806
+   formf:     vps(g=0)=  -0.0059353     rhops(g=0)=  -0.0030441
+   formf: sum_g vps(g)=  -4.3236990 sum_g rhops(g)=  -1.0540044
+   formf:     vps(g=0)=  -0.0011639     rhops(g=0)=  -0.0005539
+   formf:     vps(g=0)=  -0.0011390     rhops(g=0)=  -0.0005301
+   formf:     vps(g=0)=  -0.0011390     rhops(g=0)=  -0.0005301
+   formf:     vps(g=0)=  -0.0011390     rhops(g=0)=  -0.0005301
+   formf:     vps(g=0)=  -0.0011148     rhops(g=0)=  -0.0005073
+   formf: sum_g vps(g)=  -2.3789481 sum_g rhops(g)=  -0.1756674
+   Delta V(G=0):   0.009308Ry,    0.253295eV
+ WARNING setting to ZERO ions, electrons and cell velocities without 
+ setting to ZERO all velocities could generate meaningles trajectories 
+   nj_max nj_min nj_avg :     2     1  1.50
+ 
+  nfi     ekinc              temph  tempp          exx               etot               enthal               econs                econt            vnhh    xnhh0   vnhp    xnhp0
+    150    0.000000870690532    0.0    0.51      -0.781733363749     -16.988313055984     -16.988313055984     -16.988307872632     -16.988307001941   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  5.702E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    151    0.000001380742996    0.0    4.55      -0.781668224324     -16.988292178665     -16.988292178665     -16.988246350744     -16.988244970001   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  6.165E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    152    0.000002249558996    0.0   12.21      -0.781656739154     -16.988370214113     -16.988370214113     -16.988247234673     -16.988244985114   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  6.018E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    153    0.000004599064454    0.0   22.76      -0.781621393803     -16.988478779861     -16.988478779861     -16.988249415420     -16.988244816355   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  4.755E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    154    0.000010994923144    0.0   35.33      -0.781567931929     -16.988636805819     -16.988636805819     -16.988280678018     -16.988269683095   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  1.859E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    155    0.000025270564115    0.0   49.05      -0.781425947982     -16.988788813352     -16.988788813352     -16.988294271331     -16.988269000767   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  3.119E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    156    0.000051304282595    0.0   63.19      -0.781204837486     -16.988957084996     -16.988957084996     -16.988319663844     -16.988268359561   0.0000   0.0000   0.0000   0.0000
+   MLWF step    4  Convergence =  9.953E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    157    0.000091929701684    0.0   77.29      -0.780895806959     -16.989139057153     -16.989139057153     -16.988359129566     -16.988267199864   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.204E-06  Not Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    158    0.000157192924627    0.0   91.09      -0.780499224782     -16.989331135123     -16.989331135123     -16.988411458814     -16.988254265890   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.081E-06  Not Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    159    0.000231279916965    0.0  104.56      -0.780024840390     -16.989527594213     -16.989527594213     -16.988471356828     -16.988240076911   0.0000   0.0000   0.0000   0.0000
+   MLWF step   13  Convergence =  9.913E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    160    0.000294374627774    0.0  117.76      -0.779490276239     -16.989720900958     -16.989720900958     -16.988530645198     -16.988236270571   0.0000   0.0000   0.0000   0.0000
+   MLWF step   12  Convergence =  9.792E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    161    0.000344262044455    0.0  130.76      -0.778918259383     -16.989903202248     -16.989903202248     -16.988580764565     -16.988236502521   0.0000   0.0000   0.0000   0.0000
+   MLWF step   13  Convergence =  9.942E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    162    0.000378137770220    0.0  143.53      -0.778332988996     -16.990068392770     -16.990068392770     -16.988615769898     -16.988237632128   0.0000   0.0000   0.0000   0.0000
+   MLWF step   14  Convergence =  9.798E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    163    0.000397229895159    0.0  155.92      -0.777755889955     -16.990212338104     -16.990212338104     -16.988633225251     -16.988235995356   0.0000   0.0000   0.0000   0.0000
+   MLWF step   11  Convergence =  9.897E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    164    0.000403680803198    0.0  167.56      -0.777202754256     -16.990333550098     -16.990333550098     -16.988635171501     -16.988231490697   0.0000   0.0000   0.0000   0.0000
+   MLWF step   11  Convergence =  9.849E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    165    0.000402880074720    0.0  177.93      -0.776681539052     -16.990431569595     -16.990431569595     -16.988626350229     -16.988223470154   0.0000   0.0000   0.0000   0.0000
+   MLWF step    9  Convergence =  9.868E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    166    0.000397612956951    0.0  186.43      -0.776191959789     -16.990506004645     -16.990506004645     -16.988612631338     -16.988215018381   0.0000   0.0000   0.0000   0.0000
+   MLWF step    8  Convergence =  9.871E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    167    0.000392490516922    0.0  192.42      -0.775701236103     -16.990530178144     -16.990530178144     -16.988573692762     -16.988181202245   0.0000   0.0000   0.0000   0.0000
+   MLWF step    7  Convergence =  9.798E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    168    0.000389921292709    0.0  195.38      -0.775247637855     -16.990552628133     -16.990552628133     -16.988563388598     -16.988173467306   0.0000   0.0000   0.0000   0.0000
+   MLWF step    5  Convergence =  9.836E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    169    0.000389633680140    0.0  195.00      -0.774792277785     -16.990546504429     -16.990546504429     -16.988558110024     -16.988168476344   0.0000   0.0000   0.0000   0.0000
+   MLWF step    4  Convergence =  9.871E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    170    0.000392766975974    0.0  191.24      -0.774323338187     -16.990511031670     -16.990511031670     -16.988557564798     -16.988164797822   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.992E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    171    0.000397200120206    0.0  184.36      -0.773833941397     -16.990447500793     -16.990447500793     -16.988560607650     -16.988163407529   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.803E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    172    0.000403191993767    0.0  174.86      -0.773323911350     -16.990359049222     -16.990359049222     -16.988565412589     -16.988162220595   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  8.904E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    173    0.000408117759993    0.0  163.41      -0.772800204022     -16.990249941040     -16.990249941040     -16.988569580649     -16.988161462889   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  6.950E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    174    0.000409036453735    0.0  150.73      -0.772276035646     -16.990124841543     -16.990124841543     -16.988570456006     -16.988161419553   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  3.679E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    175    0.000403060788175    0.0  137.53      -0.771768435869     -16.989988194598     -16.989988194598     -16.988565509345     -16.988162448557   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  1.053E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    176    0.000387866634441    0.0  124.39      -0.771295479179     -16.989843757671     -16.989843757671     -16.988552640408     -16.988164773774   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  7.246E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    177    0.000362251819779    0.0  111.72      -0.770873027907     -16.989695015754     -16.989695015754     -16.988531010294     -16.988168758474   0.0000   0.0000   0.0000   0.0000
+   MLWF step   17  Convergence =  9.971E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    178    0.000298405039255    0.0   99.81      -0.770511901626     -16.989544988739     -16.989544988739     -16.988500907210     -16.988202502171   0.0000   0.0000   0.0000   0.0000
+   MLWF step   15  Convergence =  9.945E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    179    0.000242087551120    0.0   88.79      -0.770216149128     -16.989397296677     -16.989397296677     -16.988464574198     -16.988222486647   0.0000   0.0000   0.0000   0.0000
+   MLWF step   10  Convergence =  9.893E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    180    0.000193254776437    0.0   78.71      -0.769982697913     -16.989255936066     -16.989255936066     -16.988425560067     -16.988232305291   0.0000   0.0000   0.0000   0.0000
+   MLWF step   11  Convergence =  9.899E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    181    0.000147496993771    0.0   69.57      -0.769802129588     -16.989125067180     -16.989125067180     -16.988388006179     -16.988240509186   0.0000   0.0000   0.0000   0.0000
+   MLWF step   12  Convergence =  9.868E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    182    0.000109104719690    0.0   61.39      -0.769660558220     -16.989008796188     -16.989008796188     -16.988355948494     -16.988246843775   0.0000   0.0000   0.0000   0.0000
+   MLWF step   12  Convergence =  9.799E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    183    0.000080497802247    0.0   54.24      -0.769542595581     -16.988910505647     -16.988910505647     -16.988332267942     -16.988251770140   0.0000   0.0000   0.0000   0.0000
+   MLWF step   11  Convergence =  9.838E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    184    0.000062202241921    0.0   48.22      -0.769434297121     -16.988832567464     -16.988832567464     -16.988318181194     -16.988255978952   0.0000   0.0000   0.0000   0.0000
+   MLWF step   11  Convergence =  9.826E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    185    0.000053180017058    0.0   43.53      -0.769325785175     -16.988776181629     -16.988776181629     -16.988313047726     -16.988259867709   0.0000   0.0000   0.0000   0.0000
+   MLWF step   10  Convergence =  9.862E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    186    0.000052075542228    0.0   40.42      -0.769213125745     -16.988741605299     -16.988741605299     -16.988314759768     -16.988262684225   0.0000   0.0000   0.0000   0.0000
+   MLWF step    9  Convergence =  9.996E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    187    0.000056339233839    0.0   39.13      -0.769098936010     -16.988728514018     -16.988728514018     -16.988320424145     -16.988264084911   0.0000   0.0000   0.0000   0.0000
+   MLWF step   10  Convergence =  9.805E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    188    0.000063662673685    0.0   39.90      -0.768992171938     -16.988737076556     -16.988737076556     -16.988327851994     -16.988264189321   0.0000   0.0000   0.0000   0.0000
+   MLWF step    7  Convergence =  9.848E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    189    0.000072211601374    0.0   42.88      -0.768906131438     -16.988767545148     -16.988767545148     -16.988335571280     -16.988263359679   0.0000   0.0000   0.0000   0.0000
+   MLWF step    7  Convergence =  9.923E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    190    0.000081513368380    0.0   48.14      -0.768856232474     -16.988820207057     -16.988820207057     -16.988343119644     -16.988261606275   0.0000   0.0000   0.0000   0.0000
+   MLWF step    7  Convergence =  9.838E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    191    0.000091851939062    0.0   55.63      -0.768857257170     -16.988895155617     -16.988895155617     -16.988351007728     -16.988259155789   0.0000   0.0000   0.0000   0.0000
+   MLWF step    5  Convergence =  9.847E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    192    0.000102600014032    0.0   65.16      -0.768920764375     -16.988991288192     -16.988991288192     -16.988359729052     -16.988257129038   0.0000   0.0000   0.0000   0.0000
+   MLWF step    5  Convergence =  9.853E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    193    0.000114672883770    0.0   76.46      -0.769053175032     -16.989106380845     -16.989106380845     -16.988369677258     -16.988255004374   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.988E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    194    0.000126449525381    0.0   89.19      -0.769254909678     -16.989237084663     -16.989237084663     -16.988380862504     -16.988254412979   0.0000   0.0000   0.0000   0.0000
+   MLWF step    8  Convergence =  9.810E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    195    0.000142210760455    0.0  102.96      -0.769520266984     -16.989379582341     -16.989379582341     -16.988393232749     -16.988251021989   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.207E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    196    0.000156592103983    0.0  117.38      -0.769838838440     -16.989530376083     -16.989530376083     -16.988407139501     -16.988250547397   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.267E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    197    0.000173037277210    0.0  132.06      -0.770197480684     -16.989686576907     -16.989686576907     -16.988423372714     -16.988250335437   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.595E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    198    0.000192322550518    0.0  146.67      -0.770582441029     -16.989845766829     -16.989845766829     -16.988442867327     -16.988250544776   0.0000   0.0000   0.0000   0.0000
+   MLWF step    4  Convergence =  9.967E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    199    0.000214303645529    0.0  160.92      -0.770981876548     -16.990005332809     -16.990005332809     -16.988465985536     -16.988251681890   0.0000   0.0000   0.0000   0.0000
+   MLWF step    3  Convergence =  9.971E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    200    0.000238869425646    0.0  174.52      -0.771387561417     -16.990162029549     -16.990162029549     -16.988492116955     -16.988253247529   0.0000   0.0000   0.0000   0.0000
+
+   writing restart file (with schema): ./h2o_51.save/
+     restart      :      0.00s CPU      0.01s WALL (       1 calls)
+   MLWF step    4  Convergence =  9.900E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    201    0.000263560043162    0.0  187.23      -0.771796036048     -16.990311630271     -16.990311630271     -16.988519427637     -16.988255867594   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.729E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    202    0.000287746209276    0.0  198.83      -0.772208387047     -16.990449076414     -16.990449076414     -16.988545135329     -16.988257389120   0.0000   0.0000   0.0000   0.0000
+   MLWF step    3  Convergence =  9.947E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    203    0.000307263920833    0.0  209.07      -0.772629560902     -16.990569465364     -16.990569465364     -16.988566616968     -16.988259353047   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.873E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    204    0.000321801568656    0.0  217.71      -0.773066669654     -16.990668589001     -16.990668589001     -16.988582032115     -16.988260230546   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.921E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    205    0.000330372797381    0.0  224.50      -0.773526852182     -16.990743530716     -16.990743530716     -16.988590946794     -16.988260573996   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.688E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    206    0.000333817868993    0.0  229.19      -0.774015316644     -16.990792424680     -16.990792424680     -16.988594045811     -16.988260227942   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  8.959E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    207    0.000333529729537    0.0  231.51      -0.774533588875     -16.990814204626     -16.990814204626     -16.988592754343     -16.988259224613   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  7.532E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    208    0.000330770889414    0.0  231.25      -0.775078692688     -16.990807761080     -16.990807761080     -16.988588193404     -16.988257422514   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  5.234E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    209    0.000326240669388    0.0  228.23      -0.775642922896     -16.990772243422     -16.990772243422     -16.988581225341     -16.988254984672   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  1.948E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    210    0.000320057232607    0.0  222.36      -0.776214586988     -16.990707025394     -16.990707025394     -16.988572141916     -16.988252084684   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  2.377E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    211    0.000312064273833    0.0  213.67      -0.776779544253     -16.990612224387     -16.990612224387     -16.988560929995     -16.988248865721   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  7.697E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    212    0.000302190204229    0.0  202.28      -0.777323167386     -16.990489632756     -16.990489632756     -16.988548021079     -16.988245830875   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  1.040E-06  Not Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    213    0.000314964956427    0.0  188.47      -0.777832241761     -16.990342384893     -16.990342384893     -16.988533889825     -16.988218924868   0.0000   0.0000   0.0000   0.0000
+   MLWF step   20  Convergence =  9.992E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    214    0.000310304359680    0.0  172.65      -0.778297090990     -16.990175259421     -16.990175259421     -16.988519424684     -16.988209120325   0.0000   0.0000   0.0000   0.0000
+   MLWF step    5  Convergence =  9.979E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    215    0.000292375783881    0.0  155.30      -0.778712093654     -16.989993205448     -16.989993205448     -16.988504663305     -16.988212287521   0.0000   0.0000   0.0000   0.0000
+   MLWF step    5  Convergence =  9.988E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    216    0.000268821180554    0.0  137.00      -0.779076300259     -16.989801582549     -16.989801582549     -16.988489356436     -16.988220535256   0.0000   0.0000   0.0000   0.0000
+   MLWF step    4  Convergence =  9.945E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    217    0.000243388779346    0.0  118.37      -0.779393090492     -16.989605419971     -16.989605419971     -16.988472616488     -16.988229227709   0.0000   0.0000   0.0000   0.0000
+   MLWF step    3  Convergence =  9.884E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    218    0.000217233199468    0.0   99.98      -0.779668676785     -16.989409507613     -16.989409507613     -16.988453406063     -16.988236172863   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.952E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    219    0.000190580904981    0.0   82.40      -0.779910710496     -16.989218749591     -16.989218749591     -16.988431238961     -16.988240658057   0.0000   0.0000   0.0000   0.0000
+   MLWF step    3  Convergence =  9.672E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    220    0.000159672144647    0.0   66.12      -0.780126167516     -16.989038056163     -16.989038056163     -16.988406324045     -16.988246651900   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.354E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    221    0.000130929620414    0.0   51.53      -0.780319844658     -16.988872905202     -16.988872905202     -16.988380258909     -16.988249329289   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.078E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    222    0.000104160547194    0.0   38.95      -0.780493140342     -16.988728517984     -16.988728517984     -16.988355218611     -16.988251058064   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  8.936E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    223    0.000081850302765    0.0   28.63      -0.780643513324     -16.988609364112     -16.988609364112     -16.988333377975     -16.988251527672   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.060E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    224    0.000065991358084    0.0   20.74      -0.780765001306     -16.988519080460     -16.988519080460     -16.988316693075     -16.988250701717   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.590E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    225    0.000057718787283    0.0   15.40      -0.780849159546     -16.988460006622     -16.988460006622     -16.988306292794     -16.988248574006   0.0000   0.0000   0.0000   0.0000
+   MLWF step    4  Convergence =  9.827E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    226    0.000062605067486    0.0   12.71      -0.780886592246     -16.988433093957     -16.988433093957     -16.988302284392     -16.988239679325   0.0000   0.0000   0.0000   0.0000
+   MLWF step    4  Convergence =  9.967E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    227    0.000078178100872    0.0   12.70      -0.780868988508     -16.988438760721     -16.988438760721     -16.988304581732     -16.988226403631   0.0000   0.0000   0.0000   0.0000
+   MLWF step    5  Convergence =  9.877E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    228    0.000105695399015    0.0   15.40      -0.780790367849     -16.988476282575     -16.988476282575     -16.988312363065     -16.988206667666   0.0000   0.0000   0.0000   0.0000
+   MLWF step    5  Convergence =  9.880E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    229    0.000137142721113    0.0   20.76      -0.780648558288     -16.988544183930     -16.988544183930     -16.988324617279     -16.988187474558   0.0000   0.0000   0.0000   0.0000
+   MLWF step    6  Convergence =  9.875E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    230    0.000171084343472    0.0   28.65      -0.780445561965     -16.988640446930     -16.988640446930     -16.988340562372     -16.988169478029   0.0000   0.0000   0.0000   0.0000
+   MLWF step    7  Convergence =  9.741E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    231    0.000201748287217    0.0   38.86      -0.780187416830     -16.988761884952     -16.988761884952     -16.988359226903     -16.988157478616   0.0000   0.0000   0.0000   0.0000
+   MLWF step    7  Convergence =  9.658E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    232    0.000224282848245    0.0   51.05      -0.779883218800     -16.988904328788     -16.988904328788     -16.988379773754     -16.988155490906   0.0000   0.0000   0.0000   0.0000
+   MLWF step    7  Convergence =  9.703E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    233    0.000239929079463    0.0   64.77      -0.779543645901     -16.989062713716     -16.989062713716     -16.988401589448     -16.988161660369   0.0000   0.0000   0.0000   0.0000
+   MLWF step    7  Convergence =  9.888E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    234    0.000252255614545    0.0   79.50      -0.779179427146     -16.989231223939     -16.989231223939     -16.988424254204     -16.988171998589   0.0000   0.0000   0.0000   0.0000
+   MLWF step    8  Convergence =  9.867E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    235    0.000265239867433    0.0   94.62      -0.778799678787     -16.989403916448     -16.989403916448     -16.988447813573     -16.988182573706   0.0000   0.0000   0.0000   0.0000
+   MLWF step    8  Convergence =  9.766E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    236    0.000285252926369    0.0  109.52      -0.778410739018     -16.989575140090     -16.989575140090     -16.988472712665     -16.988187459739   0.0000   0.0000   0.0000   0.0000
+   MLWF step    8  Convergence =  9.758E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    237    0.000314090782375    0.0  123.62      -0.778015370867     -16.989739347642     -16.989739347642     -16.988499074571     -16.988184983789   0.0000   0.0000   0.0000   0.0000
+   MLWF step    8  Convergence =  9.996E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    238    0.000350781433606    0.0  136.44      -0.777612918950     -16.989891845360     -16.989891845360     -16.988526969510     -16.988176188076   0.0000   0.0000   0.0000   0.0000
+   MLWF step   11  Convergence =  9.788E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    239    0.000398536062060    0.0  147.61      -0.777199919301     -16.990028353659     -16.990028353659     -16.988555641347     -16.988157105285   0.0000   0.0000   0.0000   0.0000
+   MLWF step    9  Convergence =  9.961E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    240    0.000441277676444    0.0  156.90      -0.776771339115     -16.990145325705     -16.990145325705     -16.988583697911     -16.988142420235   0.0000   0.0000   0.0000   0.0000
+   MLWF step   12  Convergence =  9.913E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    241    0.000478371584070    0.0  164.20      -0.776322054020     -16.990239771689     -16.990239771689     -16.988609022691     -16.988130651107   0.0000   0.0000   0.0000   0.0000
+   MLWF step   11  Convergence =  9.880E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    242    0.000497774974022    0.0  169.53      -0.775848157306     -16.990309056583     -16.990309056583     -16.988628838304     -16.988131063330   0.0000   0.0000   0.0000   0.0000
+   MLWF step    9  Convergence =  9.909E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    243    0.000499768399500    0.0  172.95      -0.775348521025     -16.990351706723     -16.990351706723     -16.988640885587     -16.988141117188   0.0000   0.0000   0.0000   0.0000
+   MLWF step    5  Convergence =  9.995E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    244    0.000491942405825    0.0  174.56      -0.774825270356     -16.990367073683     -16.990367073683     -16.988643479987     -16.988151537581   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.861E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    245    0.000478348593359    0.0  174.45      -0.774284064530     -16.990355545705     -16.990355545705     -16.988636055566     -16.988157706973   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.003E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    246    0.000453512176752    0.0  172.68      -0.773733695592     -16.990318612375     -16.990318612375     -16.988619441530     -16.988165929353   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  7.044E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    247    0.000419238377601    0.0  169.29      -0.773184822465     -16.990258122169     -16.990258122169     -16.988595177346     -16.988175938968   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  3.788E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    248    0.000378071519751    0.0  164.27      -0.772648801832     -16.990176578393     -16.990176578393     -16.988565709921     -16.988187638401   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  7.734E-08  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    249    0.000332912005960    0.0  157.63      -0.772136050885     -16.990076412333     -16.990076412333     -16.988533439328     -16.988200527322   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  6.483E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    250    0.000286691784694    0.0  149.40      -0.771654927919     -16.989960364485     -16.989960364485     -16.988500795798     -16.988214104013   0.0000   0.0000   0.0000   0.0000
+   MLWF step   12  Convergence =  9.778E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    251    0.000213642500645    0.0  139.67      -0.771210787875     -16.989831303036     -16.989831303036     -16.988469746003     -16.988256103502   0.0000   0.0000   0.0000   0.0000
+   MLWF step   13  Convergence =  9.988E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    252    0.000211843698775    0.0  128.59      -0.770805422043     -16.989692433363     -16.989692433363     -16.988441753558     -16.988229909859   0.0000   0.0000   0.0000   0.0000
+   MLWF step    6  Convergence =  9.994E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    253    0.000206166426160    0.0  116.44      -0.770437902300     -16.989547663802     -16.989547663802     -16.988418030033     -16.988211863607   0.0000   0.0000   0.0000   0.0000
+   MLWF step    6  Convergence =  9.952E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    254    0.000197586695859    0.0  103.58      -0.770104772399     -16.989400922879     -16.989400922879     -16.988398909184     -16.988201322488   0.0000   0.0000   0.0000   0.0000
+   MLWF step    7  Convergence =  9.839E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    255    0.000182827813984    0.0   90.42      -0.769801406140     -16.989256438023     -16.989256438023     -16.988384344232     -16.988201516418   0.0000   0.0000   0.0000   0.0000
+   MLWF step    7  Convergence =  9.968E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    256    0.000160523483601    0.0   77.43      -0.769523066749     -16.989118005584     -16.989118005584     -16.988373519669     -16.988212996186   0.0000   0.0000   0.0000   0.0000
+   MLWF step   11  Convergence =  9.946E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    257    0.000125867230819    0.0   65.07      -0.769266168376     -16.988988942522     -16.988988942522     -16.988365200929     -16.988239333698   0.0000   0.0000   0.0000   0.0000
+   MLWF step   12  Convergence =  9.922E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    258    0.000095392686238    0.0   53.75      -0.769029192502     -16.988872017413     -16.988872017413     -16.988358039412     -16.988262646726   0.0000   0.0000   0.0000   0.0000
+   MLWF step   12  Convergence =  9.957E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    259    0.000076842159653    0.0   43.83      -0.768813311481     -16.988769584502     -16.988769584502     -16.988350986201     -16.988274144041   0.0000   0.0000   0.0000   0.0000
+   MLWF step   12  Convergence =  9.896E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    260    0.000067954057046    0.0   35.56      -0.768622172053     -16.988683925513     -16.988683925513     -16.988343775145     -16.988275821088   0.0000   0.0000   0.0000   0.0000
+   MLWF step   10  Convergence =  9.903E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    261    0.000063276945230    0.0   29.12      -0.768461489209     -16.988617044481     -16.988617044481     -16.988336711628     -16.988273434683   0.0000   0.0000   0.0000   0.0000
+   MLWF step    9  Convergence =  9.971E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    262    0.000060010753942    0.0   24.63      -0.768338024250     -16.988571098939     -16.988571098939     -16.988330975798     -16.988270965044   0.0000   0.0000   0.0000   0.0000
+   MLWF step    9  Convergence =  9.937E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    263    0.000058809215005    0.0   22.12      -0.768258388304     -16.988547780072     -16.988547780072     -16.988327802634     -16.988268993419   0.0000   0.0000   0.0000   0.0000
+   MLWF step    8  Convergence =  9.888E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    264    0.000060855840754    0.0   21.62      -0.768227927940     -16.988548105246     -16.988548105246     -16.988328061619     -16.988267205779   0.0000   0.0000   0.0000   0.0000
+   MLWF step    7  Convergence =  9.887E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    265    0.000067064732173    0.0   23.12      -0.768249826451     -16.988572480133     -16.988572480133     -16.988332147898     -16.988265083166   0.0000   0.0000   0.0000   0.0000
+   MLWF step    6  Convergence =  9.959E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    266    0.000077230994722    0.0   26.64      -0.768324483841     -16.988620315736     -16.988620315736     -16.988339510021     -16.988262279026   0.0000   0.0000   0.0000   0.0000
+   MLWF step    6  Convergence =  9.896E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    267    0.000090885160926    0.0   32.15      -0.768449869845     -16.988690585408     -16.988690585408     -16.988349218607     -16.988258333446   0.0000   0.0000   0.0000   0.0000
+   MLWF step    4  Convergence =  9.906E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    268    0.000105124039393    0.0   39.63      -0.768621457425     -16.988781854926     -16.988781854926     -16.988360106180     -16.988254982141   0.0000   0.0000   0.0000   0.0000
+   MLWF step    4  Convergence =  9.934E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    269    0.000120164724611    0.0   49.02      -0.768833392067     -16.988892581425     -16.988892581425     -16.988371250101     -16.988251085377   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.995E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    270    0.000133282404851    0.0   60.20      -0.769079242514     -16.989021007801     -16.989021007801     -16.988382083746     -16.988248801341   0.0000   0.0000   0.0000   0.0000
+   MLWF step    6  Convergence =  9.816E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    271    0.000150683622928    0.0   72.99      -0.769353144993     -16.989165276820     -16.989165276820     -16.988392707583     -16.988242023960   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.185E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    272    0.000163663735354    0.0   87.11      -0.769650732467     -16.989322882178     -16.989322882178     -16.988403462725     -16.988239798989   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.218E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    273    0.000176962202116    0.0  102.18      -0.769969428480     -16.989490513474     -16.989490513474     -16.988414779755     -16.988237817553   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.593E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    274    0.000191081789921    0.0  117.78      -0.770308770825     -16.989664279710     -16.989664279710     -16.988427265058     -16.988236183269   0.0000   0.0000   0.0000   0.0000
+   MLWF step    4  Convergence =  9.992E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    275    0.000207719031742    0.0  133.41      -0.770670251496     -16.989839860233     -16.989839860233     -16.988441580719     -16.988233861687   0.0000   0.0000   0.0000   0.0000
+   MLWF step    4  Convergence =  9.855E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    276    0.000225846509634    0.0  148.57      -0.771056335534     -16.990012711421     -16.990012711421     -16.988458284973     -16.988232438463   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.896E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    277    0.000246096161392    0.0  162.78      -0.771469839257     -16.990178808986     -16.990178808986     -16.988478176082     -16.988232079920   0.0000   0.0000   0.0000   0.0000
+   MLWF step    5  Convergence =  9.862E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    278    0.000269207473066    0.0  175.64      -0.771912801706     -16.990334512715     -16.990334512715     -16.988501799140     -16.988232591667   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.521E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    279    0.000296473378773    0.0  186.81      -0.772385629013     -16.990476437846     -16.990476437846     -16.988529063582     -16.988232590203   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.762E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    280    0.000326716055139    0.0  196.06      -0.772886587068     -16.990601582213     -16.990601582213     -16.988559260747     -16.988232544692   0.0000   0.0000   0.0000   0.0000
+   MLWF step    3  Convergence =  9.878E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    281    0.000358993228848    0.0  203.27      -0.773411378512     -16.990706699238     -16.990706699238     -16.988590479201     -16.988231485972   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.556E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    282    0.000390962279681    0.0  208.37      -0.773953597794     -16.990788599835     -16.990788599835     -16.988620074898     -16.988229112618   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.282E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    283    0.000420422219914    0.0  211.35      -0.774505407536     -16.990844662144     -16.990844662144     -16.988645425284     -16.988225003064   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  8.795E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    284    0.000445420772698    0.0  212.25      -0.775058108829     -16.990872546160     -16.990872546160     -16.988663902499     -16.988218481726   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  8.099E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    285    0.000464682469833    0.0  211.09      -0.775603341878     -16.990870834866     -16.990870834866     -16.988673727211     -16.988209044742   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  7.249E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    286    0.000477774653213    0.0  207.92      -0.776134079421     -16.990839377940     -16.990839377940     -16.988674433384     -16.988196658730   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  6.316E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    287    0.000484988570237    0.0  202.75      -0.776645127220     -16.990778912538     -16.990778912538     -16.988666494422     -16.988181505852   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  5.355E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    288    0.000487001386593    0.0  195.63      -0.777133686751     -16.990690942769     -16.990690942769     -16.988651093397     -16.988164092010   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  4.358E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    289    0.000484472582726    0.0  186.61      -0.777599136893     -16.990577671403     -16.990577671403     -16.988629856459     -16.988145383876   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  3.230E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    290    0.000477736584673    0.0  175.80      -0.778042791849     -16.990441715383     -16.990441715383     -16.988604326329     -16.988126589744   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  1.774E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    291    0.000466695771191    0.0  163.39      -0.778466984265     -16.990286165280     -16.990286165280     -16.988575792663     -16.988109096892   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  3.122E-08  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    292    0.000450935967115    0.0  149.65      -0.778874559141     -16.990114988561     -16.990114988561     -16.988545535966     -16.988094599999   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  3.400E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    293    0.000429985762122    0.0  134.94      -0.779267422027     -16.989932791061     -16.989932791061     -16.988514544268     -16.988084558506   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  7.893E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    294    0.000403598074819    0.0  119.70      -0.779646064786     -16.989744971382     -16.989744971382     -16.988483759229     -16.988080161154   0.0000   0.0000   0.0000   0.0000
+   MLWF step   18  Convergence =  9.792E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    295    0.000353604050641    0.0  104.44      -0.780008958752     -16.989557410685     -16.989557410685     -16.988453987591     -16.988100383540   0.0000   0.0000   0.0000   0.0000
+   MLWF step   14  Convergence =  9.973E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    296    0.000285828795378    0.0   89.69      -0.780352446961     -16.989376359285     -16.989376359285     -16.988426106349     -16.988140277553   0.0000   0.0000   0.0000   0.0000
+   MLWF step    9  Convergence =  9.934E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    297    0.000231025677549    0.0   75.97      -0.780670832154     -16.989207703094     -16.989207703094     -16.988400692073     -16.988169666396   0.0000   0.0000   0.0000   0.0000
+   MLWF step    8  Convergence =  9.860E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    298    0.000185226409567    0.0   63.78      -0.780957100847     -16.989056553693     -16.989056553693     -16.988377957822     -16.988192731412   0.0000   0.0000   0.0000   0.0000
+   MLWF step    8  Convergence =  9.666E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    299    0.000151183654000    0.0   53.51      -0.781203835128     -16.988927198135     -16.988927198135     -16.988357985071     -16.988206801417   0.0000   0.0000   0.0000   0.0000
+   MLWF step    7  Convergence =  9.879E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    300    0.000131402893432    0.0   45.50      -0.781403941284     -16.988822990346     -16.988822990346     -16.988340803751     -16.988209400857   0.0000   0.0000   0.0000   0.0000
+
+   writing restart file (with schema): ./h2o_51.save/
+     restart      :      0.01s CPU      0.03s WALL (       2 calls)
+   MLWF step    9  Convergence =  9.826E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    301    0.000125552449331    0.0   39.98      -0.781551760498     -16.988746828508     -16.988746828508     -16.988326956787     -16.988201404338   0.0000   0.0000   0.0000   0.0000
+   MLWF step   10  Convergence =  9.679E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    302    0.000132752063552    0.0   37.07      -0.781643438107     -16.988701008893     -16.988701008893     -16.988317352597     -16.988184600534   0.0000   0.0000   0.0000   0.0000
+   MLWF step   11  Convergence =  9.787E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    303    0.000144720467516    0.0   36.83      -0.781677270506     -16.988686975931     -16.988686975931     -16.988312952395     -16.988168231928   0.0000   0.0000   0.0000   0.0000
+   MLWF step   14  Convergence =  9.791E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    304    0.000152789544438    0.0   39.20      -0.781653633092     -16.988705356141     -16.988705356141     -16.988314712138     -16.988161922594   0.0000   0.0000   0.0000   0.0000
+   MLWF step   15  Convergence =  9.918E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    305    0.000148666014909    0.0   44.09      -0.781574577502     -16.988755388249     -16.988755388249     -16.988322920019     -16.988174254004   0.0000   0.0000   0.0000   0.0000
+   MLWF step   16  Convergence =  9.996E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    306    0.000137843009220    0.0   51.32      -0.781443247936     -16.988834984889     -16.988834984889     -16.988337183951     -16.988199340942   0.0000   0.0000   0.0000   0.0000
+   MLWF step   16  Convergence =  9.928E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    307    0.000132806522142    0.0   60.65      -0.781263231443     -16.988940587730     -16.988940587730     -16.988356237850     -16.988223431328   0.0000   0.0000   0.0000   0.0000
+   MLWF step   15  Convergence =  9.810E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    308    0.000140590052298    0.0   71.78      -0.781038197697     -16.989067904734     -16.989067904734     -16.988378650753     -16.988238060701   0.0000   0.0000   0.0000   0.0000
+   MLWF step   13  Convergence =  9.888E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    309    0.000159456661445    0.0   84.37      -0.780771252802     -16.989211905642     -16.989211905642     -16.988402800884     -16.988243344222   0.0000   0.0000   0.0000   0.0000
+   MLWF step   13  Convergence =  9.883E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    310    0.000184447975526    0.0   98.02      -0.780464828961     -16.989367259610     -16.989367259610     -16.988427279018     -16.988242831042   0.0000   0.0000   0.0000   0.0000
+   MLWF step   11  Convergence =  9.948E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    311    0.000211671793720    0.0  112.28      -0.780120642043     -16.989528701122     -16.989528701122     -16.988451187743     -16.988239515949   0.0000   0.0000   0.0000   0.0000
+   MLWF step   10  Convergence =  9.953E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    312    0.000238602665246    0.0  126.67      -0.779739888937     -16.989690797298     -16.989690797298     -16.988473796137     -16.988235193472   0.0000   0.0000   0.0000   0.0000
+   MLWF step    8  Convergence =  9.982E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    313    0.000263055763936    0.0  140.70      -0.779323724316     -16.989847875373     -16.989847875373     -16.988494305198     -16.988231249434   0.0000   0.0000   0.0000   0.0000
+   MLWF step    7  Convergence =  9.909E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    314    0.000284541548361    0.0  153.87      -0.778899166144     -16.990019941047     -16.990019941047     -16.988537562826     -16.988253021277   0.0000   0.0000   0.0000   0.0000
+   MLWF step    5  Convergence =  9.865E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    315    0.000301762620510    0.0  165.73      -0.778418056457     -16.990151142498     -16.990151142498     -16.988552300256     -16.988250537635   0.0000   0.0000   0.0000   0.0000
+   MLWF step    4  Convergence =  9.801E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    316    0.000314952248819    0.0  175.85      -0.777909762355     -16.990262411966     -16.990262411966     -16.988563548762     -16.988248596513   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.925E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    317    0.000323547945563    0.0  183.91      -0.777379816400     -16.990350294435     -16.990350294435     -16.988571271492     -16.988247723547   0.0000   0.0000   0.0000   0.0000
+   MLWF step    3  Convergence =  9.858E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    318    0.000329320774004    0.0  189.64      -0.776835154251     -16.990412580713     -16.990412580713     -16.988575846928     -16.988246526154   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.672E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    319    0.000331594654643    0.0  192.88      -0.776283573431     -16.990447783467     -16.990447783467     -16.988577458193     -16.988245863538   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.298E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    320    0.000331073293592    0.0  193.57      -0.775733323500     -16.990455713970     -16.990455713970     -16.988576650803     -16.988245577509   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  8.662E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    321    0.000327860880167    0.0  191.72      -0.775192181313     -16.990436723133     -16.990436723133     -16.988573617730     -16.988245756850   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  7.718E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    322    0.000321893943376    0.0  187.45      -0.774666938204     -16.990391734853     -16.990391734853     -16.988568327656     -16.988246433712   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  6.421E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    323    0.000312981170071    0.0  180.91      -0.774162731436     -16.990322280663     -16.990322280663     -16.988560687894     -16.988247706724   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  4.729E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    324    0.000300909222184    0.0  172.35      -0.773682823311     -16.990230301551     -16.990230301551     -16.988550488578     -16.988249579355   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  2.591E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    325    0.000285597324739    0.0  162.01      -0.773228503329     -16.990118096630     -16.990118096630     -16.988537490096     -16.988251892772   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  4.405E-09  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    326    0.000267261389321    0.0  150.18      -0.772799333259     -16.989988352943     -16.989988352943     -16.988521574514     -16.988254313125   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  3.228E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    327    0.000246517854948    0.0  137.19      -0.772393674160     -16.989844453467     -16.989844453467     -16.988503149985     -16.988256632130   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  6.992E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    328    0.000224360499267    0.0  123.33      -0.772009422701     -16.989690079112     -16.989690079112     -16.988482821911     -16.988258461412   0.0000   0.0000   0.0000   0.0000
+   MLWF step   11  Convergence =  9.858E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    329    0.000212288985432    0.0  108.94      -0.771644612807     -16.989529432344     -16.989529432344     -16.988461661617     -16.988249372632   0.0000   0.0000   0.0000   0.0000
+   MLWF step   17  Convergence =  9.940E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    330    0.000239242405568    0.0   94.33      -0.771298128660     -16.989366448493     -16.989366448493     -16.988440445953     -16.988201203548   0.0000   0.0000   0.0000   0.0000
+   MLWF step    6  Convergence =  9.897E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    331    0.000228523367774    0.0   79.84      -0.770970063859     -16.989204880456     -16.989204880456     -16.988419762614     -16.988191239246   0.0000   0.0000   0.0000   0.0000
+   MLWF step    5  Convergence =  9.923E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    332    0.000207147463327    0.0   65.78      -0.770661954196     -16.989048294380     -16.989048294380     -16.988400026023     -16.988192878559   0.0000   0.0000   0.0000   0.0000
+   MLWF step    6  Convergence =  9.914E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    333    0.000176316492877    0.0   52.47      -0.770376250582     -16.988899710381     -16.988899710381     -16.988381147404     -16.988204830911   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.812E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    334    0.000151815955316    0.0   40.23      -0.770116430436     -16.988762167954     -16.988762167954     -16.988363146464     -16.988211330508   0.0000   0.0000   0.0000   0.0000
+   MLWF step    7  Convergence =  9.968E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    335    0.000108522509171    0.0   29.35      -0.769886395417     -16.988638927511     -16.988638927511     -16.988346417711     -16.988237895202   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  9.382E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    336    0.000086822230461    0.0   20.09      -0.769690024027     -16.988533297142     -16.988533297142     -16.988331637956     -16.988244815726   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  8.932E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    337    0.000067727721015    0.0   12.69      -0.769530765170     -16.988448514207     -16.988448514207     -16.988319738871     -16.988252011150   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  8.123E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    338    0.000052534872233    0.0    7.34      -0.769411090511     -16.988387290153     -16.988387290153     -16.988311543070     -16.988259008198   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  6.940E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    339    0.000042118290525    0.0    4.19      -0.769332296692     -16.988351194850     -16.988351194850     -16.988307227947     -16.988265109657   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  5.479E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    340    0.000036794556623    0.0    3.32      -0.769294606148     -16.988340857531     -16.988340857531     -16.988306583451     -16.988269788894   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  3.926E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    341    0.000036461116808    0.0    4.75      -0.769297261786     -16.988356035954     -16.988356035954     -16.988309106605     -16.988272645488   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  2.520E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    342    0.000040915133787    0.0    8.46      -0.769338811245     -16.988395674508     -16.988395674508     -16.988314049130     -16.988273133996   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  1.515E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    343    0.000050141293075    0.0   14.35      -0.769417583233     -16.988458936479     -16.988458936479     -16.988321405064     -16.988271263771   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  1.141E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    344    0.000064367457194    0.0   22.29      -0.769532016914     -16.988544856916     -16.988544856916     -16.988331492754     -16.988267125297   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  1.569E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    345    0.000083824083494    0.0   32.12      -0.769680867795     -16.988652467171     -16.988652467171     -16.988344995580     -16.988261171497   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  2.883E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    346    0.000108332734593    0.0   43.63      -0.769863286649     -16.988779961941     -16.988779961941     -16.988362048211     -16.988253715476   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  5.071E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    347    0.000136968100279    0.0   56.60      -0.770078737628     -16.988924949015     -16.988924949015     -16.988382423869     -16.988245455769   0.0000   0.0000   0.0000   0.0000
+   MLWF step    2  Convergence =  8.021E-07  Generated
+   nj_max nj_min nj_avg :     2     1  1.50
+    348    0.000168014026217    0.0   70.78      -0.770326843524     -16.989084037873     -16.989084037873     -16.988405089477     -16.988237075451   0.0000   0.0000   0.0000   0.0000
+   MLWF step    9  Convergence =  9.845E-07  Generated
+
+ * Physical Quantities at step:   349
+   nj_max nj_min nj_avg :     2     1  1.50
+     Pressure of Nuclei (GPa)             0.00936    349
+     Pressure Total (GPa)            -9.09991    349
+
+
+                total energy =      -16.98925298655 Hartree a.u.
+              kinetic energy =       11.74903 Hartree a.u.
+        electrostatic energy =      -18.10200 Hartree a.u.
+                         esr =        0.11408 Hartree a.u.
+                       eself =       18.94976 Hartree a.u.
+      pseudopotential energy =       -8.55647 Hartree a.u.
+  n-l pseudopotential energy =        2.06361 Hartree a.u.
+ exchange-correlation energy =       -3.37281 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
+
+
+
+
+                  exx energy =       -0.77061 Hartree a.u.
+       total energy with exx =      -16.98925 Hartree a.u.
+
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -27.93  -13.98  -10.36   -8.21
+ 
+ 
+   CELL_PARAMETERS
+   12.00000000    0.00000000    0.00000000
+    0.00000000   12.00000000    0.00000000
+    0.00000000    0.00000000   12.00000000
+
+   System Density [g/cm^3] :              0.1167302083
+
+
+   System Volume [A.U.^3] :           1728.0000000000
+
+
+   Center of mass square displacement (a.u.):   0.000061
+
+   Total stress (GPa)
+       -9.04632381         0.06857692        -0.04272906
+        0.06857692        -8.59831519        -0.11193369
+       -0.04272906        -0.11193369        -9.65508025
+   ATOMIC_POSITIONS
+   O       0.99000000000000E-02     0.99000000000000E-02     0.00000000000000E+00
+   H       0.18834873058819E+01    -0.34626933480525E+00     0.13691620168153E+00
+   H      -0.17755324538506E+00     0.18731394333412E+01    -0.86992134091686E-01
+ 
+   ATOMIC_VELOCITIES
+   O       0.00000000000000E+00     0.00000000000000E+00     0.00000000000000E+00
+   H      -0.72070127495902E-03     0.43066027622811E-03    -0.38646729926241E-05
+   H       0.34514134710962E-03    -0.28244465609849E-03    -0.31073360575325E-04
+ 
+   Forces acting on atoms (au):
+   O       0.18911172403072E-01    -0.12400681277633E-02     0.75024054190636E-03
+   H      -0.26088140696064E-01     0.11904695201496E-01    -0.19154180386656E-02
+   H       0.79728696611143E-02    -0.11435272821106E-01     0.72094368664133E-03
+ 
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   Mean Square Displacement (a.u.)
+        1   1.56E+00     6.1402E-05
+        2   8.51E+01     1.1466E-02
+    349    0.000235523472962    0.0   85.92      -0.770607148628     -16.989252986552     -16.989252986552     -16.988428351337     -16.988192827864   0.0000   0.0000   0.0000   0.0000
+   MLWF step    6  Convergence =  9.988E-07  Generated
+
+   writing restart file (with schema): ./h2o_51.save/
+     restart      :      0.01s CPU      0.04s WALL (       3 calls)
+
+
+   Averaged Physical Quantities
+                      accumulated      this run
+   ekinc         :        0.18109       0.00023 (AU)
+   ekin          :       11.43935      11.82046 (AU)
+   epot          :      -29.40274     -30.09729 (AU)
+   total energy  :      -16.30106     -16.98954 (AU)
+   temperature   :       62.21537     108.56583 (K )
+   enthalpy      :      -16.30106     -16.98954 (AU)
+   econs         :      -16.30044     -16.98845 (AU)
+   pressure      :       -5.63197      -8.72612 (Gpa)
+   volume        :     1728.00000    1728.00000 (AU)
+
+
+
+     Called by MAIN_LOOP:
+     initialize   :      0.08s CPU      0.09s WALL (       1 calls)
+     main_loop    :     42.00s CPU     44.67s WALL (     200 calls)
+     cpr_total    :     42.19s CPU     44.93s WALL (       1 calls)
+
+     Called by INIT_RUN:
+     init_readfil :      0.01s CPU      0.01s WALL (       1 calls)
+
+     Called by CPR:
+     cpr_md       :     42.19s CPU     44.93s WALL (     200 calls)
+     move_electro :     41.92s CPU     44.56s WALL (     200 calls)
+     wf_close_opt :      0.17s CPU      0.20s WALL (     200 calls)
+
+     Called by WANNIER_MODULES:
+     wf_init      :      0.03s CPU      0.03s WALL (       1 calls)
+     wf_close_opt :      0.17s CPU      0.20s WALL (     200 calls)
+     wf_1         :      0.06s CPU      0.07s WALL (     200 calls)
+     wf_2         :      0.10s CPU      0.12s WALL (     200 calls)
+
+     Called by EXACT_EXCHANGE:
+     exact_exchan :     39.02s CPU     41.35s WALL (     200 calls)
+     getpairv     :     34.86s CPU     36.78s WALL (     200 calls)
+     exx_gs_setup :      0.13s CPU      0.13s WALL (     200 calls)
+     exx_pairs    :      0.00s CPU      0.00s WALL (     200 calls)
+     r_orbital    :      0.27s CPU      0.36s WALL (     200 calls)
+     totalenergy  :      1.35s CPU      1.35s WALL (     200 calls)
+     vl2vg        :      0.14s CPU      0.20s WALL (     200 calls)
+     send_psi     :      0.14s CPU      0.17s WALL (     200 calls)
+     sendv        :      2.04s CPU      2.09s WALL (     200 calls)
+     send_psi_wai :      0.05s CPU      0.06s WALL (     200 calls)
+     getvofr      :     32.99s CPU     34.11s WALL (     600 calls)
+     getvofr_qlm  :      1.61s CPU      1.64s WALL (     600 calls)
+     getvofr_boun :      2.10s CPU      2.23s WALL (     600 calls)
+     getvofr_gete :      0.32s CPU      0.32s WALL (     600 calls)
+     getvofr_hpot :     28.61s CPU     29.45s WALL (     600 calls)
+     exx_cell_der :      0.47s CPU      0.47s WALL (     800 calls)
+
+     Called by move_electrons:
+     rhoofr       :      0.40s CPU      0.41s WALL (     200 calls)
+     vofrho       :      2.24s CPU      2.52s WALL (     200 calls)
+     dforce       :      0.24s CPU      0.24s WALL (     400 calls)
+     calphi       :      0.00s CPU      0.00s WALL (     200 calls)
+     nlfl         :      0.00s CPU      0.00s WALL (     200 calls)
+
+     Called by ortho:
+     ortho_iter   :      0.00s CPU      0.00s WALL (     200 calls)
+     rsg          :      0.01s CPU      0.01s WALL (     200 calls)
+     rhoset       :      0.01s CPU      0.01s WALL (     200 calls)
+     sigset       :      0.00s CPU      0.00s WALL (     200 calls)
+     tauset       :      0.00s CPU      0.00s WALL (     200 calls)
+     ortho        :      0.02s CPU      0.02s WALL (     200 calls)
+     updatc       :      0.00s CPU      0.00s WALL (     200 calls)
+
+     Small boxes:
+
+     Low-level routines:
+     prefor       :      0.00s CPU      0.00s WALL (     401 calls)
+     nlfq         :      0.01s CPU      0.01s WALL (     200 calls)
+     nlsm1        :      0.00s CPU      0.00s WALL (     201 calls)
+     nlsm2        :      0.00s CPU      0.00s WALL (     200 calls)
+     fft          :      0.68s CPU      0.73s WALL (    1603 calls)
+     ffts         :      0.16s CPU      0.16s WALL (     400 calls)
+     fftw         :      0.40s CPU      0.44s WALL (    1600 calls)
+     fft_scatt_xy :      0.18s CPU      0.19s WALL (    3603 calls)
+     fft_scatt_yz :      0.35s CPU      0.38s WALL (    3603 calls)
+     fft_scatt_tg :      0.02s CPU      0.02s WALL (    1200 calls)
+     betagx       :      0.01s CPU      0.02s WALL (       1 calls)
+     qradx        :      0.00s CPU      0.00s WALL (       1 calls)
+     nlinit       :      0.03s CPU      0.03s WALL (       1 calls)
+     init_dim     :      0.01s CPU      0.01s WALL (       1 calls)
+     newnlinit    :      0.00s CPU      0.00s WALL (       1 calls)
+     from_restart :      0.00s CPU      0.00s WALL (       1 calls)
+     strucf       :      0.02s CPU      0.03s WALL (     201 calls)
+     calbec       :      0.00s CPU      0.00s WALL (     201 calls)
+ 
+ 
+     CP           :     42.30s CPU     45.05s WALL
+
+ 
+   This run was terminated on:  19:54:49  12Oct2020            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
