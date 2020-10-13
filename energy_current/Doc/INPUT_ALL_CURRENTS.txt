@@ -115,8 +115,8 @@ NAMELIST: &ENERGY_CURRENT
                    
                    where J_x, J_y, J_z are the three components of the DFT energy current,
                    and can be easily post-processed by other external programs.
-                   Jele_* are the components of a part of the energy current that you may use
-                   for decorrelation and better data analysis.
+                   Jele_* are the components of the electronic density current that may be used
+                   for decorrelation and better data analysis or for calculating the electric current.
                    v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomic species.
                    
                    If "n_repeat_every_step" > 1, an additional file "file_output" + '.stat' is
@@ -337,4 +337,4 @@ NAMELIST: &ENERGY_CURRENT
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Wed Sep 09 11:36:35 CEST 2020
+This file has been created by helpdoc utility on Tue Oct 13 19:47:54 CEST 2020

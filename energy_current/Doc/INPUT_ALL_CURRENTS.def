@@ -113,8 +113,8 @@ input_description -distribution {Quantum Espresso} -package energy_current -prog
 
                 where J_x, J_y, J_z are the three components of the DFT energy current,
                 and can be easily post-processed by other external programs. 
-                Jele_* are the components of a part of the energy current that you may use
-                for decorrelation and better data analysis.
+                Jele_* are the components of the electronic density current that may be used
+                for decorrelation and better data analysis or for calculating the electric current.
                 v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomic species.
 
                 If @ref n_repeat_every_step > 1, an additional file @ref file_output + '.stat' is

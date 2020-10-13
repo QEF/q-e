@@ -370,7 +370,7 @@ endif
       J_kohn(:) = J_kohn(:) + 2.d0*at(:, ipol)*real(kcurrent(ipol))/amodulus
       J_kohn_a(:) = J_kohn_a(:) + 2.d0*at(:, ipol)*real(kcurrent_a(ipol))/amodulus
       J_kohn_b(:) = J_kohn_b(:) + 2.d0*at(:, ipol)*real(kcurrent_b(ipol))/amodulus
-      J_electron(:) = J_electron(:) + 2.d0*e2*at(:, ipol)*real(ecurrent(ipol))/amodulus
+      J_electron(:) = J_electron(:) + 2.d0*2.d0*at(:, ipol)*real(ecurrent(ipol))/amodulus
 !    J_kohn(ipol)=J_kohn(ipol)+2.d0*real(kcurrent(ipol))
    end do
    call stop_clock('kohn_current')
