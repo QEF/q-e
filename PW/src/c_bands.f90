@@ -812,9 +812,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
                                   evc, hevc, sevc, et(1,ik) )
              ELSE
-!                CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) !precontidtion has intent(in)
-!                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
-!                                  evc, hevc, sevc, et(1,ik) )
                 CALL using_evc_d(1);  CALL using_et_d(1); !precontidtion has intent(in)
                 CALL rotate_xpsi_gpu( npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
                                   evc_d, hevc_d, sevc_d, et_d(1,ik) )
@@ -824,23 +821,15 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              !
           END IF
           !
-!*** PART TO REMOVE*********************************************************
-          IF(use_gpu) THEN
-             hevc(1:npwx*npol,1:nbnd) = hevc_d(1:npwx*npol,1:nbnd)
-             IF ( okvan ) &
-                 sevc(1:npwx*npol,1:nbnd) = sevc_d(1:npwx*npol,1:nbnd)
-          END IF
-!****************************************************************************
-          !
           IF ( .not. use_gpu ) THEN
              CALL using_evc(1); CALL using_et(1); CALL using_h_diag(0)
              CALL crmmdiagg( h_psi, s_psi, npwx, npw, nbnd, npol, evc, hevc, sevc, &
                              et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
                              okvan, lrot, exx_is_active(), notconv, rmm_iter )
           ELSE
-             CALL using_evc(1); CALL using_et(1); CALL using_g2kin(0)
-             CALL crmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, npol, evc, hevc, sevc, &
-                             et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
+             CALL using_evc_d(1); CALL using_et(1); CALL using_g2kin_d(0)
+             CALL crmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, npol, evc_d, hevc_d, sevc_d, &
+                             et(1,ik), g2kin_d(1), btype(1,ik), ethr, rmm_ndim, &
                              okvan, lrot, exx_is_active(), notconv, rmm_iter )
           END IF
           !
@@ -858,6 +847,10 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        ! ... Gram-Schmidt orthogonalization
        !
+!civn 
+hevc = hevc_d
+sevc = sevc_d
+
        IF ( .not. use_gpu ) THEN
           CALL using_evc(1); CALL using_et(1);
           CALL gram_schmidt( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &

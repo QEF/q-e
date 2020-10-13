@@ -10,8 +10,8 @@
 #define ONE  ( 1._DP, 0._DP )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE crmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
-                      g2kin, btype, ethr, ndiis, uspp, do_hpsi, is_exx, notconv, rmm_iter )
+SUBROUTINE crmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, &
+                      g2kin_d, btype, ethr, ndiis, uspp, do_hpsi, is_exx, notconv, rmm_iter )
   !----------------------------------------------------------------------------
   !
   ! ... Iterative diagonalization of a complex hermitian matrix
@@ -27,11 +27,11 @@ SUBROUTINE crmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, npol, psi, hpsi, spsi, 
   ! ... I/O variables
   !
   INTEGER,     INTENT(IN)    :: npwx, npw, nbnd, npol
-  COMPLEX(DP), INTENT(INOUT) :: psi (npwx*npol,nbnd)
-  COMPLEX(DP), INTENT(INOUT) :: hpsi(npwx*npol,nbnd)
-  COMPLEX(DP), INTENT(INOUT) :: spsi(npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(INOUT) :: psi_d (npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(INOUT) :: hpsi_d(npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(INOUT) :: spsi_d(npwx*npol,nbnd)
   REAL(DP),    INTENT(INOUT) :: e(nbnd)
-  REAL(DP),    INTENT(IN)    :: g2kin(npwx)
+  REAL(DP),    INTENT(IN)    :: g2kin_d(npwx)
   INTEGER,     INTENT(IN)    :: btype(nbnd)
   REAL(DP),    INTENT(IN)    :: ethr
   INTEGER,     INTENT(IN)    :: ndiis
@@ -60,22 +60,18 @@ SUBROUTINE crmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, npol, psi, hpsi, spsi, 
   REAL(DP),    PARAMETER   :: SMIN = 0.05_DP
   REAL(DP),    PARAMETER   :: SMAX = 1.00_DP
   !
-  EXTERNAL :: h_psi, s_psi
-    ! h_psi(npwx,npw,nbnd,psi,hpsi)
+  EXTERNAL :: h_psi_gpu, s_psi_gpu
+    ! h_psi_gpu(npwx,npw,nbnd,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(npwx,npw,nbnd,psi,spsi)
+    ! s_psi_gpu(npwx,npw,nbnd,psi,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,nbnd)
   !
   ! device variables
   ! 
   INTEGER :: ii, jj, kk
-  COMPLEX(DP) :: psi_d (npwx*npol,nbnd)
-  COMPLEX(DP) :: hpsi_d(npwx*npol,nbnd)
-  COMPLEX(DP) :: spsi_d(npwx*npol,nbnd)
   COMPLEX(DP), ALLOCATABLE :: phi_d(:,:,:), hphi_d(:,:,:), sphi_d(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: kpsi_d(:,:), hkpsi_d(:,:), skpsi_d(:,:)
-  REAL(DP) :: g2kin_d(npwx)
 #if defined(__CUDA)
   attributes(device) :: psi_d, hpsi_d, spsi_d
   attributes(device) :: phi_d, hphi_d, sphi_d 
@@ -151,12 +147,6 @@ SUBROUTINE crmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, npol, psi, hpsi, spsi, 
   ALLOCATE( ibnd_index( nbnd ) )
   ALLOCATE( jbnd_index( ibnd_start:ibnd_end ) )
   !
-!civn 
-  psi_d = psi
-  hpsi_d = hpsi
-  IF ( uspp ) spsi_d = spsi
-  g2kin_d = g2kin
-!
 !$cuf kernel do(3)
   DO ii = 1, kdmx
     DO jj = ibnd_start, ibnd_end 
@@ -292,11 +282,6 @@ SUBROUTINE crmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, npol, psi, hpsi, spsi, 
   CALL mp_sum( hpsi_d, inter_bgrp_comm )
   IF ( uspp ) &
   CALL mp_sum( spsi_d, inter_bgrp_comm )
-!civn 
-  psi = psi_d
-  hpsi = hpsi_d
-  if(uspp) spsi = spsi_d
-!
   !
   DEALLOCATE( phi_d )
   DEALLOCATE( hphi_d )
@@ -858,7 +843,6 @@ CONTAINS
        !
        kbnd = ibnd_index(ibnd)
        !
-!civn 2fix: not very sure this cuf kernel is efficient
 !$cuf kernel do(2)
        DO ipol = 1, npol
           DO ig = 1, npw
@@ -869,7 +853,7 @@ CONTAINS
              k1 = 27._DP + 18._DP * x + 12._DP * x2 + 8._DP * x3
              k2 = k1 + 16._DP * x4
              kdiag = ( -4._DP / 3._DP / ekinj ) * k1 / k2
-             kpsi_d(ig+(ipol-1)*npwx,kbnd) = kdiag  * kpsi_d(ig+(ipol-1)*npwx,kbnd)
+             kpsi_d(ig+(ipol-1)*npwx,kbnd) = kdiag * kpsi_d(ig+(ipol-1)*npwx,kbnd)
           END DO
        END DO
        !
