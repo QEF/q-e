@@ -48,6 +48,23 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   COMPLEX(DP), ALLOCATABLE :: phi(:,:), hphi(:,:), sphi(:,:)
   INTEGER,     ALLOCATABLE :: owner_bgrp_id(:)
   !
+  ! ... device variables 
+  !
+  INTEGER :: ii, jj, kk 
+  COMPLEX(DP) :: psi_d (npwx*npol,nbnd)
+  COMPLEX(DP) :: hpsi_d(npwx*npol,nbnd)
+  COMPLEX(DP) :: spsi_d(npwx*npol,nbnd)
+  COMPLEX(DP), ALLOCATABLE :: phi_d(:,:), hphi_d(:,:), sphi_d(:,:)
+#if defined (__CUDA)
+  attributes(device) :: psi_d, hpsi_d, spsi_d
+  attributes(device) :: phi_d, hphi_d, sphi_d
+#endif 
+  !
+!civn 
+  psi_d = psi
+  hpsi_d = hpsi
+  spsi_d = spsi
+!
   IF ( npol == 1 ) THEN
      !
      kdim = npw
@@ -83,13 +100,43 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   ALLOCATE( phi ( kdmx, nbnd ) )
   IF ( eigen_ ) ALLOCATE( hphi( kdmx, nbnd ) )
   IF ( uspp )   ALLOCATE( sphi( kdmx, nbnd ) )
+!civn 
+  ALLOCATE( phi_d ( kdmx, nbnd ) )
+  IF ( eigen_ ) ALLOCATE( hphi_d( kdmx, nbnd ) )
+  IF ( uspp )   ALLOCATE( sphi_d( kdmx, nbnd ) )
+!
   ALLOCATE( owner_bgrp_id( nblock ) )
   !
+!civn 
   phi = ZERO
+!$cuf kernel do(2)
+  DO ii = 1, kdmx  
+    DO jj = 1, nbnd
+      phi_d(ii, jj) = ZERO 
+    END DO 
+  END DO   
   !
+!civn 
   IF ( eigen_ ) hphi = ZERO
+  IF ( eigen_ ) THEN 
+!$cuf kernel do(2)
+    DO ii = 1, kdmx  
+      DO jj = 1, nbnd
+        hphi_d(ii, jj) = ZERO 
+      END DO 
+    END DO   
+  END IF  
   !
+!civn 
   IF ( uspp )   sphi = ZERO
+  IF ( uspp )   THEN 
+!$cuf kernel do(2)
+    DO ii = 1, kdmx  
+      DO jj = 1, nbnd
+        sphi_d(ii, jj) = ZERO 
+      END DO 
+    END DO   
+  END IF  
   !
   ! ... Set owers of blocks
   !
@@ -106,13 +153,18 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   !
   ! ... Set initial : |phi_j> = |psi_j>
   !
-  CALL ZCOPY( kdmx * nbnd, psi(1,1), 1, phi(1,1), 1 )
+  CALL ZCOPY_gpu( kdmx * nbnd, psi_d(1,1), 1, phi_d(1,1), 1 )
   !
   IF ( eigen_ ) &
-  CALL ZCOPY( kdmx * nbnd, hpsi(1,1), 1, hphi(1,1), 1 )
+  CALL ZCOPY_gpu( kdmx * nbnd, hpsi_d(1,1), 1, hphi_d(1,1), 1 )
   !
   IF ( uspp ) &
-  CALL ZCOPY( kdmx * nbnd, spsi(1,1), 1, sphi(1,1), 1 )
+  CALL ZCOPY_gpu( kdmx * nbnd, spsi_d(1,1), 1, sphi_d(1,1), 1 )
+!civn 
+phi = phi_d
+if(eigen_) hphi = hphi_d
+if(uspp)   sphi = sphi_d
+!
   !
   ! ... Blocking loop
   !
@@ -128,6 +180,10 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
      !
      ! ... Bcast diagonal block
      !
+!!civn 
+!phi_d = phi
+!if(eigen_) hphi_d = hphi
+!if(uspp)   sphi_d = sphi
      CALL mp_bcast( phi(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
      !
      IF ( eigen_ ) &
@@ -135,6 +191,10 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
      !
      IF ( uspp ) &
      CALL mp_bcast( sphi(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
+!phi = phi_d
+!if(eigen_) hphi = hphi_d
+!if(uspp)   sphi = sphi_d
+!
      !
      ! ... Project off-diagonal block outside of diagonal block
      !
