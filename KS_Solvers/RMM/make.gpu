@@ -4,4 +4,3 @@ RMM += \
 rotate_xpsi_k_gpu.o \
 rotate_xpsi_gamma_gpu.o \
 rrmmdiagg_gpu.o \
-subroutines_gpu.o

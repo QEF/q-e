@@ -475,9 +475,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
                                evc, hevc, sevc, et(1,ik) )
              ELSE
-!                CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
-!                CALL rotate_xpsi( npwx, npw, nbnd, nbnd, evc, npol, okvan, &
-!                               evc, hevc, sevc, et(1,ik) )
                 CALL using_evc_d(1);  CALL using_et_d(1); !precontidtion has intent(in)
                 CALL rotate_xpsi_gpu( npwx, npw, nbnd, nbnd, evc_d, npol, okvan, &
                                evc_d, hevc_d, sevc_d, et_d(1,ik) )
@@ -496,13 +493,13 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
 !***********************************************************************
           !
           IF (.not. use_gpu) THEN
-             CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0); CALL using_g2kin(0) !precontidtion has intent(in)
-             CALL rrmmdiagg( h_psi, s_psi, npwx, npw, nbnd, evc, hevc, sevc, &
-                          et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
-                          okvan, lrot, exx_is_active(), notconv, rmm_iter )
+            CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0); CALL using_g2kin(0) !precontidtion has intent(in)
+            CALL rrmmdiagg( h_psi, s_psi, npwx, npw, nbnd, evc, hevc, sevc, &
+                         et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
+                         okvan, lrot, exx_is_active(), notconv, rmm_iter )
           ELSE
              CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(1); CALL using_g2kin(0) !precontidtion has intent(in)
-             CALL rrmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, evc, hevc, sevc, &
+             CALL rrmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, evc, hevc, sevc, &
                           et(1,ik), g2kin , btype(1,ik), ethr, rmm_ndim, &
                           okvan, lrot, exx_is_active(), notconv, rmm_iter )
           END IF
@@ -522,15 +519,15 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        ! ... Gram-Schmidt orthogonalization
        !
-       IF (.not. use_gpu) THEN
-          CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
-          CALL gram_schmidt( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
-                          okvan, .TRUE., .TRUE., gs_nblock )
-       ELSE
-          CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
-          CALL gram_schmidt( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
-                          okvan, .TRUE., .TRUE., gs_nblock )
-       END IF
+!       IF (.not. use_gpu) THEN
+         CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
+         CALL gram_schmidt( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
+                         okvan, .TRUE., .TRUE., gs_nblock )
+!       ELSE
+!          CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
+!          CALL gram_schmidt( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
+!                          okvan, .TRUE., .TRUE., gs_nblock )
+!       END IF
        !
        avg_iter = avg_iter + 0.5D0
        !

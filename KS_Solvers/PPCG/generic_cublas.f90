@@ -172,6 +172,68 @@ IMPLICIT NONE
   RETURN
 END SUBROUTINE ZSCAL_gpu  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE gpu_DGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
+#if defined(__CUDA)
+use cublas
+#endif
+IMPLICIT NONE
+  DOUBLE PRECISION :: ALPHA,BETA
+  INTEGER :: INCX,INCY,LDA,M,N
+  CHARACTER :: TRANS
+  DOUBLE PRECISION :: A(LDA,*),X(*),Y(*)
+#if defined(__CUDA)
+  attributes(device) :: A, X, Y
+  call cublasDGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
+#endif
+  RETURN
+END SUBROUTINE gpu_DGEMV
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE gpu_DCOPY(n, x, incx, y, incy)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE
+  INTEGER :: n, incx, incy
+  DOUBLE PRECISION, INTENT(IN)   :: x(*)
+  DOUBLE PRECISION, INTENT(OUT)  :: y(*)
+#if defined(__CUDA)
+  attributes(device) :: x, y
+  call cublasDCOPY(n, x, incx, y, incy)
+#endif
+  RETURN
+END SUBROUTINE gpu_DCOPY
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE gpu_DAXPY(n, a, x, incx, y, incy)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE
+  INTEGER :: n, incx, incy
+  DOUBLE PRECISION, INTENT(IN)  :: a
+  DOUBLE PRECISION, INTENT(IN)  :: x(*) 
+  DOUBLE PRECISION, INTENT(OUT) :: y(*) 
+#if defined(__CUDA)
+  attributes(device) :: x, y
+  call cublasDAXPY( n, a, x, incx, y, incy)
+#endif
+  RETURN
+END SUBROUTINE gpu_DAXPY
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE gpu_DSCAL(n, a, x, incx)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE
+  integer :: n, incx
+  DOUBLE PRECISION :: a
+  DOUBLE PRECISION, dimension(*)  :: x
+#if defined(__CUDA)
+  attributes(device) :: x
+  call cublasDSCAL(n, a, x, incx)
+#endif
+  RETURN
+END SUBROUTINE gpu_DSCAL
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE gpu_threaded_memset(array, val, length)
   !
 #if defined(__CUDA)
