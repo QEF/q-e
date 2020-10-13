@@ -857,7 +857,7 @@ sevc = sevc_d
                              okvan, .TRUE., .TRUE., gs_nblock )
        ELSE
           CALL using_evc(1); CALL using_et(1); 
-          CALL gram_schmidt( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
+          CALL gram_schmidt_k_gpu( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
                              okvan, .TRUE., .TRUE., gs_nblock )
 
        END IF

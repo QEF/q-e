@@ -18,6 +18,8 @@ Davidson/cegterg.o \
 Davidson/regterg.o \
 CG/ccgdiagg.o \
 CG/rcgdiagg.o \
+PPCG/generic_cublas.o \
+PPCG/utils_xpu.o  \
 PPCG/ppcg_gamma.o \
 PPCG/ppcg_k.o \
 ParO/bpcg_gamma.o \
@@ -37,6 +39,7 @@ RMM/crmmdiagg_gpu.o \
 RMM/rrmmdiagg.o \
 RMM/gram_schmidt_gamma.o \
 RMM/gram_schmidt_k.o \
+RMM/gram_schmidt_k_gpu.o \
 RMM/rotate_xpsi_gamma.o \
 RMM/rotate_xpsi_k.o
 
