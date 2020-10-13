@@ -157,6 +157,21 @@ IMPLICIT NONE
   RETURN
 END SUBROUTINE ZDSCAL_gpu  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE ZSCAL_gpu(n, za, zx, incx)
+#if defined(__CUDA)
+USE cublas
+#endif
+IMPLICIT NONE 
+  INTEGER :: n, incx
+  DOUBLE COMPLEX :: za
+  DOUBLE COMPLEX, dimension(*) :: zx
+#if defined(__CUDA)
+  attributes(device) :: zx
+  CALL cublasZSCAL(n, za, zx, incx)
+#endif
+  RETURN
+END SUBROUTINE ZSCAL_gpu  
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE gpu_threaded_memset(array, val, length)
   !
 #if defined(__CUDA)

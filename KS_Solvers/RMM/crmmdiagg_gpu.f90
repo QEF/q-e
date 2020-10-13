@@ -51,8 +51,6 @@ SUBROUTINE crmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, npol, psi, hpsi, spsi, 
   INTEGER,     ALLOCATABLE :: ibnd_index(:)
   INTEGER,     ALLOCATABLE :: jbnd_index(:)
   REAL(DP)                 :: empty_ethr
-  COMPLEX(DP), ALLOCATABLE :: phi(:,:,:), hphi(:,:,:), sphi(:,:,:)
-  COMPLEX(DP), ALLOCATABLE :: kpsi(:,:), hkpsi(:,:), skpsi(:,:)
   COMPLEX(DP), ALLOCATABLE :: hc(:,:,:), sc(:,:,:)
   REAL(DP),    ALLOCATABLE :: php(:,:), psp(:,:)
   REAL(DP),    ALLOCATABLE :: ew(:), hw(:), sw(:)
@@ -68,7 +66,6 @@ SUBROUTINE crmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, npol, psi, hpsi, spsi, 
     ! s_psi(npwx,npw,nbnd,psi,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,nbnd)
-!civn 
   !
   ! device variables
   ! 
@@ -85,9 +82,6 @@ SUBROUTINE crmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, npol, psi, hpsi, spsi, 
   attributes(device) :: kpsi_d, hkpsi_d, skpsi_d    
   attributes(device) :: g2kin_d 
 #endif 
-!civn 
-write(*,*) '@chk crmmdiagg_gpu'
-!
   !
   CALL start_clock( 'crmmdiagg' )
   !
@@ -111,59 +105,31 @@ write(*,*) '@chk crmmdiagg_gpu'
   !
   IF( ibnd_size == 0 ) CALL errore( ' crmmdiagg ', ' ibnd_size == 0 ', 1 )
   !
-  ALLOCATE( phi( kdmx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate phi ', ABS(ierr) )
-  !
-  ALLOCATE( hphi( kdmx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate hphi ', ABS(ierr) )
-  !
-  IF ( uspp ) THEN
-     !
-     ALLOCATE( sphi( kdmx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
-     IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate sphi ', ABS(ierr) )
-     !
-  END IF
-!civn 
   ALLOCATE( phi_d( kdmx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate phi ', ABS(ierr) )
+  IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate phi_d ', ABS(ierr) )
   !
   ALLOCATE( hphi_d( kdmx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate hphi ', ABS(ierr) )
+  IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate hphi_d ', ABS(ierr) )
   !
   IF ( uspp ) THEN
      !
      ALLOCATE( sphi_d( kdmx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
-     IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate sphi ', ABS(ierr) )
+     IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate sphi_d ', ABS(ierr) )
      !
   END IF
-!
   !
-  ALLOCATE( kpsi( kdmx, nbnd ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate kpsi ', ABS(ierr) )
-  !
-  ALLOCATE( hkpsi( kdmx, nbnd ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate hkpsi ', ABS(ierr) )
-  !
-  IF ( uspp ) THEN
-     !
-     ALLOCATE( skpsi( kdmx, nbnd ), STAT=ierr )
-     IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate skpsi ', ABS(ierr) )
-     !
-  END IF
-!civn 
   ALLOCATE( kpsi_d( kdmx, nbnd ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate kpsi ', ABS(ierr) )
+  IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate kpsi_d ', ABS(ierr) )
   !
   ALLOCATE( hkpsi_d( kdmx, nbnd ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate hkpsi ', ABS(ierr) )
+  IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate hkpsi_d ', ABS(ierr) )
   !
   IF ( uspp ) THEN
      !
      ALLOCATE( skpsi_d( kdmx, nbnd ), STAT=ierr )
-     IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate skpsi ', ABS(ierr) )
+     IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate skpsi_d ', ABS(ierr) )
      !
   END IF
-!
   !
   ALLOCATE( hc( ndiis, ndiis, ibnd_start:ibnd_end ), STAT=ierr )
   IF( ierr /= 0 ) CALL errore( ' crmmdiagg ', ' cannot allocate hc ', ABS(ierr) )
@@ -191,10 +157,6 @@ write(*,*) '@chk crmmdiagg_gpu'
   IF ( uspp ) spsi_d = spsi
   g2kin_d = g2kin
 !
-  phi  = ZERO
-  hphi = ZERO
-  IF ( uspp ) sphi = ZERO
-!civn 
 !$cuf kernel do(3)
   DO ii = 1, kdmx
     DO jj = ibnd_start, ibnd_end 
@@ -214,12 +176,7 @@ write(*,*) '@chk crmmdiagg_gpu'
       END DO 
     END DO 
   END IF 
-!
   !
-  kpsi  = ZERO
-  hkpsi = ZERO
-  IF ( uspp ) skpsi = ZERO
-!civn 
 !$cuf kernel do(2)
   DO ii = 1, kdmx
     DO jj = 1, nbnd 
@@ -235,7 +192,6 @@ write(*,*) '@chk crmmdiagg_gpu'
       END DO 
     END DO 
   END IF 
-!
   !
   hc = ZERO
   sc = ZERO
@@ -263,11 +219,6 @@ write(*,*) '@chk crmmdiagg_gpu'
   IF ( do_hpsi ) THEN
      !
      CALL calc_hpsi_gpu( )
-!civn 
-     psi = psi_d
-     hpsi = hpsi_d
-     IF ( uspp ) spsi = spsi_d
-!
      !
   END IF
   !
@@ -279,34 +230,11 @@ write(*,*) '@chk crmmdiagg_gpu'
      !
      ! ... Perform DIIS
      !
-!civn 
-     psi_d    =   psi     
-     IF ( uspp ) spsi_d   =   spsi 
-     hpsi_d   =   hpsi 
-     phi_d    =   phi    
-     IF ( uspp ) sphi_d   =   sphi   
-     hphi_d   =   hphi   
-     kpsi_d   =   kpsi   
-     IF ( uspp )  skpsi_d  =   skpsi  
-     hkpsi_d  =   hkpsi  
-!
      CALL do_diis_gpu( idiis )
      !
      ! ... Line searching
      !
      CALL line_search_gpu( )
-!civn 
-     psi = psi_d
-     IF ( uspp ) spsi = spsi_d
-     hpsi = hpsi_d
-     phi = phi_d
-     sphi = sphi_d
-     hphi = hphi_d
-     kpsi = kpsi_d
-     IF ( uspp )  skpsi = skpsi_d
-     hkpsi = hkpsi_d
-write(*,*) '@@chk 2here'
-!
      !
      ! ... Calculate eigenvalues and check convergence
      !
@@ -322,41 +250,60 @@ write(*,*) '@@chk 2here'
   !
   IF ( ibnd_start > 1 ) THEN
      !
-     psi (:,1:(ibnd_start-1)) = ZERO
-     hpsi(:,1:(ibnd_start-1)) = ZERO
-     IF ( uspp ) &
-     spsi(:,1:(ibnd_start-1)) = ZERO
+!$cuf kernel do(1)
+     DO ii = 1, npwx*npol
+       DO jj = 1, ibnd_start-1 
+         psi_d (ii,jj) = ZERO
+         hpsi_d(ii,jj) = ZERO
+       END DO     
+     END DO     
+     IF (uspp) THEN 
+!$cuf kernel do(2)    
+       DO ii = 1, npwx*npol
+         DO jj = 1, ibnd_start-1 
+           spsi_d(ii,jj) = ZERO
+         END DO     
+       END DO     
+     END IF 
      !
   END IF
   !
   IF ( ibnd_end < nbnd ) THEN
      !
-     psi (:,(ibnd_end+1):nbnd) = ZERO
-     hpsi(:,(ibnd_end+1):nbnd) = ZERO
-     IF ( uspp ) &
-     spsi(:,(ibnd_end+1):nbnd) = ZERO
+!$cuf kernel do(1)
+     DO ii = 1, npwx*npol
+       DO jj = ibnd_end+1, nbnd
+         psi_d (ii,jj) = ZERO
+         hpsi_d(ii,jj) = ZERO
+       END DO     
+     END DO     
+     IF (uspp) THEN 
+!$cuf kernel do(2)    
+       DO ii = 1, npwx*npol
+         DO jj = ibnd_end+1, nbnd
+           spsi_d(ii,jj) = ZERO
+         END DO     
+       END DO     
+     END IF 
      !
   END IF
   !
-  CALL mp_sum( psi,  inter_bgrp_comm )
-  CALL mp_sum( hpsi, inter_bgrp_comm )
+  CALL mp_sum( psi_d,  inter_bgrp_comm )
+  CALL mp_sum( hpsi_d, inter_bgrp_comm )
   IF ( uspp ) &
-  CALL mp_sum( spsi, inter_bgrp_comm )
-  !
-  DEALLOCATE( phi )
-  DEALLOCATE( hphi )
-  IF ( uspp ) DEALLOCATE( sphi )
-  DEALLOCATE( kpsi )
-  DEALLOCATE( hkpsi )
-  IF ( uspp ) DEALLOCATE( skpsi )
+  CALL mp_sum( spsi_d, inter_bgrp_comm )
 !civn 
+  psi = psi_d
+  hpsi = hpsi_d
+  if(uspp) spsi = spsi_d
+!
+  !
   DEALLOCATE( phi_d )
   DEALLOCATE( hphi_d )
   IF ( uspp ) DEALLOCATE( sphi_d )
   DEALLOCATE( kpsi_d )
   DEALLOCATE( hkpsi_d )
   IF ( uspp ) DEALLOCATE( skpsi_d )
-!
   DEALLOCATE( hc )
   DEALLOCATE( sc )
   DEALLOCATE( php )
@@ -375,74 +322,6 @@ write(*,*) '@@chk 2here'
   !
 CONTAINS
   !
-  !
-  SUBROUTINE calc_hpsi( )
-    !
-    IMPLICIT NONE
-    !
-    INTEGER :: ibnd
-    !
-    COMPLEX(DP), EXTERNAL :: ZDOTC
-    !
-    ! ... Operate the Hamiltonian : H |psi>
-    !
-    hpsi = ZERO
-    !
-    CALL h_psi( npwx, npw, nbnd, psi, hpsi )
-    !
-    ! ... Operate the Overlap : S |psi>
-    !
-    IF ( uspp ) THEN
-       !
-       spsi = ZERO
-       !
-       CALL s_psi( npwx, npw, nbnd, psi, spsi )
-       !
-    END IF
-    !
-    ! ... Matrix element : <psi| H |psi>
-    !
-    DO ibnd = ibnd_start, ibnd_end
-       !
-       hw(ibnd) = DBLE( ZDOTC( kdim, psi(1,ibnd), 1, hpsi(1,ibnd), 1 ) )
-       !
-    END DO
-    !
-    CALL mp_sum( hw(ibnd_start:ibnd_end), intra_bgrp_comm )
-    !
-    ! ... Matrix element : <psi| S |psi>
-    !
-    DO ibnd = ibnd_start, ibnd_end
-       !
-       IF ( uspp ) THEN
-          !
-          sw(ibnd) = DBLE( ZDOTC( kdim, psi(1,ibnd), 1, spsi(1,ibnd), 1 ) )
-          !
-       ELSE
-          !
-          sw(ibnd) = DBLE( ZDOTC( kdim, psi(1,ibnd), 1, psi(1,ibnd), 1 ) )
-          !
-       END IF
-       !
-    END DO
-    !
-    CALL mp_sum( sw(ibnd_start:ibnd_end), intra_bgrp_comm )
-    !
-    ! ... Energy eigenvalues
-    !
-    IF( ANY( sw(ibnd_start:ibnd_end) <= eps16 ) ) &
-    CALL errore( ' crmmdiagg ', ' sw <= 0 ', 1 )
-    !
-    ew(1:nbnd) = 0._DP
-    ew(ibnd_start:ibnd_end) = hw(ibnd_start:ibnd_end) / sw(ibnd_start:ibnd_end)
-    !
-    CALL mp_sum( ew, inter_bgrp_comm )
-    !
-    e(1:nbnd) = ew(1:nbnd)
-    !
-    RETURN
-    !
-  END SUBROUTINE calc_hpsi
   !
   SUBROUTINE calc_hpsi_gpu( )
     !
@@ -512,242 +391,6 @@ CONTAINS
     !
   END SUBROUTINE calc_hpsi_gpu
   !
-  !
-  SUBROUTINE do_diis( idiis )
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(IN) :: idiis
-    !
-    INTEGER                  :: ibnd, jbnd, kbnd
-    INTEGER                  :: kdiis
-    REAL(DP)                 :: norm
-    COMPLEX(DP)              :: ec
-    COMPLEX(DP), ALLOCATABLE :: vec1(:)
-    COMPLEX(DP), ALLOCATABLE :: vec2(:,:)
-    COMPLEX(DP), ALLOCATABLE :: vc(:)
-    COMPLEX(DP), ALLOCATABLE :: tc(:,:)
-    !
-    ALLOCATE( vec1( kdmx ) )
-    ALLOCATE( vec2( kdmx, idiis ) )
-    IF ( idiis > 1 )   ALLOCATE( vc( idiis ) )
-    IF ( motconv > 0 ) ALLOCATE( tc( idiis, motconv ) )
-    !
-    ! ... Save current wave functions and matrix elements
-    !
-    DO ibnd = ibnd_start, ibnd_end
-       !
-       IF ( conv(ibnd) ) CYCLE
-       !
-       CALL ZCOPY( kdim, psi (1,ibnd), 1, phi (1,ibnd,idiis), 1 )
-       CALL ZCOPY( kdim, hpsi(1,ibnd), 1, hphi(1,ibnd,idiis), 1 )
-       IF ( uspp ) &
-       CALL ZCOPY( kdim, spsi(1,ibnd), 1, sphi(1,ibnd,idiis), 1 )
-       !
-       php(ibnd,idiis) = hw(ibnd)
-       psp(ibnd,idiis) = sw(ibnd)
-       !
-    END DO
-    !
-    ! ... <R_i|R_j>
-    !
-    DO ibnd = ibnd_start, ibnd_end
-       !
-       IF ( conv(ibnd) ) CYCLE
-       !
-       jbnd = jbnd_index(ibnd)
-       !
-       ! ... Residual vectors : |R> = (H - e S) |psi>
-       !
-       DO kdiis = 1, idiis
-          !
-          ec = CMPLX( php(ibnd,kdiis), 0._DP, kind=DP )
-          !
-          CALL ZCOPY( kdim, hphi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
-          !
-          IF ( uspp ) THEN
-             !
-             CALL ZAXPY( kdim, -ec, sphi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
-             !
-          ELSE
-             !
-             CALL ZAXPY( kdim, -ec, phi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
-             !
-          END IF
-          !
-       END DO
-       !
-       ec = CMPLX( php(ibnd,idiis), 0._DP, kind=DP )
-       !
-       CALL ZCOPY( kdim, hphi(1,ibnd,idiis), 1, vec1(1), 1 )
-       !
-       IF ( uspp ) THEN
-          !
-          CALL ZAXPY( kdim, -ec, sphi(1,ibnd,idiis), 1, vec1(1), 1 )
-          !
-       ELSE
-          !
-          CALL ZAXPY( kdim, -ec, phi(1,ibnd,idiis), 1, vec1(1), 1 )
-          !
-       END IF
-       !
-       CALL ZGEMV( 'C', kdim, idiis, ONE, vec2(1,1), kdmx, &
-                   vec1(1), 1, ZERO, tc(1,jbnd), 1 )
-       !
-    END DO
-    !
-    IF ( motconv > 0 ) THEN
-       !
-       CALL mp_sum( tc, intra_bgrp_comm )
-       !
-    END IF
-    !
-    DO ibnd = ibnd_start, ibnd_end
-       !
-       IF ( conv(ibnd) ) CYCLE
-       !
-       jbnd = jbnd_index(ibnd)
-       !
-       hc(1:idiis,idiis,ibnd) = tc(1:idiis,jbnd)
-       hc(idiis,1:idiis,ibnd) = CONJG( tc(1:idiis,jbnd) )
-       hc(idiis,idiis,ibnd)   = CMPLX( DBLE( tc(idiis,jbnd) ), 0._DP, kind=DP )
-       !
-    END DO
-    !
-    ! ... <phi_i| S |phi_j>
-    !
-    DO ibnd = ibnd_start, ibnd_end
-       !
-       IF ( conv(ibnd) ) CYCLE
-       !
-       jbnd = jbnd_index(ibnd)
-       !
-       DO kdiis = 1, idiis
-          !
-          CALL ZCOPY( kdim, phi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
-          !
-       END DO
-       !
-       IF ( uspp ) THEN
-          !
-          CALL ZCOPY( kdim, sphi(1,ibnd,idiis), 1, vec1(1), 1 )
-          !
-       ELSE
-          !
-          CALL ZCOPY( kdim, phi(1,ibnd,idiis), 1, vec1(1), 1 )
-          !
-       END IF
-       !
-       CALL ZGEMV( 'C', kdim, idiis, ONE, vec2(1,1), kdmx, &
-                   vec1(1), 1, ZERO, tc(1,jbnd), 1 )
-       !
-    END DO
-    !
-    IF ( motconv > 0 ) THEN
-       !
-       CALL mp_sum( tc, intra_bgrp_comm )
-       !
-    END IF
-    !
-    DO ibnd = ibnd_start, ibnd_end
-       !
-       IF ( conv(ibnd) ) CYCLE
-       !
-       jbnd = jbnd_index(ibnd)
-       !
-       sc(1:idiis,idiis,ibnd) = tc(1:idiis,jbnd)
-       sc(idiis,1:idiis,ibnd) = CONJG( tc(1:idiis,jbnd) )
-       sc(idiis,idiis,ibnd)   = CMPLX( DBLE( tc(idiis,jbnd) ), 0._DP, kind=DP )
-       !
-    END DO
-    !
-    ! ... Update current wave functions and residual vectors
-    !
-    DO ibnd = ibnd_start, ibnd_end
-       !
-       IF ( conv(ibnd) ) CYCLE
-       !
-       kbnd = ibnd_index(ibnd)
-       !
-       IF ( idiis > 1 ) THEN
-          !
-          ! ... solve Rv = eSv
-          !
-          IF ( me_bgrp == root_bgrp ) CALL diag_diis( ibnd, idiis, vc(:) )
-          CALL mp_bcast( vc, root_bgrp, intra_bgrp_comm )
-          !
-          psi (:,ibnd) = ZERO
-          hpsi(:,ibnd) = ZERO
-          IF ( uspp ) spsi(:,ibnd) = ZERO
-          kpsi(:,kbnd) = ZERO
-          !
-          DO kdiis = 1, idiis
-             !
-             ! ... Wave functions
-             !
-             CALL ZAXPY( kdim, vc(kdiis), phi (1,ibnd,kdiis), 1, psi (1,ibnd), 1 )
-             CALL ZAXPY( kdim, vc(kdiis), hphi(1,ibnd,kdiis), 1, hpsi(1,ibnd), 1 )
-             IF ( uspp ) &
-             CALL ZAXPY( kdim, vc(kdiis), sphi(1,ibnd,kdiis), 1, spsi(1,ibnd), 1 )
-             !
-             ! ... Residual vectors
-             !
-             ec = CMPLX( php(ibnd,kdiis), 0._DP, kind=DP )
-             !
-             CALL ZCOPY( kdim, hphi(1,ibnd,kdiis), 1, vec1(1), 1 )
-             !
-             IF ( uspp ) THEN
-                !
-                CALL ZAXPY( kdim, -ec, sphi(1,ibnd,kdiis), 1, vec1(1), 1 )
-                !
-             ELSE
-                !
-                CALL ZAXPY( kdim, -ec, phi(1,ibnd,kdiis), 1, vec1(1), 1 )
-                !
-             END IF
-             !
-             CALL ZAXPY( kdim, vc(kdiis), vec1(1), 1, kpsi(1,kbnd), 1 )
-             !
-          END DO
-          !
-       ELSE
-          !
-          ! ... Wave functions
-          !
-          norm = SQRT( sw(ibnd) )
-          CALL ZDSCAL( kdim, 1._DP / norm, psi (1,ibnd), 1 )
-          CALL ZDSCAL( kdim, 1._DP / norm, hpsi(1,ibnd), 1 )
-          IF ( uspp ) &
-          CALL ZDSCAL( kdim, 1._DP / norm, spsi(1,ibnd), 1 )
-          !
-          ! ... Residual vectors
-          !
-          ec = CMPLX( hw(ibnd), 0._DP, kind=DP )
-          !
-          CALL ZCOPY( kdim, hpsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
-          !
-          IF ( uspp ) THEN
-             !
-             CALL ZAXPY( kdim, -ec, spsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
-             !
-          ELSE
-             !
-             CALL ZAXPY( kdim, -ec, psi(1,ibnd), 1, kpsi(1,kbnd), 1 )
-             !
-          END IF
-          !
-       END IF
-       !
-    END DO
-    !
-    DEALLOCATE( vec1 )
-    DEALLOCATE( vec2 )
-    IF ( idiis > 1 )   DEALLOCATE( vc )
-    IF ( motconv > 0 ) DEALLOCATE( tc )
-    !
-    RETURN
-    !
-  END SUBROUTINE do_diis
   !
   SUBROUTINE do_diis_gpu( idiis )
     !
@@ -850,6 +493,7 @@ CONTAINS
     END IF
     !
     tc = tc_d
+    !
     DO ibnd = ibnd_start, ibnd_end
        !
        IF ( conv(ibnd) ) CYCLE
@@ -898,6 +542,7 @@ CONTAINS
     END IF
     !
     tc = tc_d
+    !
     DO ibnd = ibnd_start, ibnd_end
        !
        IF ( conv(ibnd) ) CYCLE
@@ -946,19 +591,10 @@ CONTAINS
              ! ... Wave functions
              !
              kvc = vc(kdiis) 
-!civn 2fix: why ZAXPY_gpu does not work? 
-             !CALL ZAXPY_gpu( kdim, vc(kdiis), phi_d (1,ibnd,kdiis), 1, psi_d (1,ibnd), 1 )
-!$cuf kernel do(1)
-             DO ii = 1, kdim
-               psi_d(ii,ibnd) = psi_d(ii,ibnd) + kvc * phi_d (ii,ibnd,kdiis) 
-               hpsi_d(ii,ibnd) = hpsi_d(ii,ibnd) + kvc * hphi_d (ii,ibnd,kdiis) 
-             END DO  
-             IF(uspp) THEN 
-!$cuf kernel do(1)
-               DO ii = 1, kdim
-                 spsi_d(ii,ibnd) = spsi_d(ii,ibnd) + kvc * sphi_d (ii,ibnd,kdiis) 
-               END DO
-             END IF
+             !
+             CALL ZAXPY_gpu( kdim, kvc, phi_d (1,ibnd,kdiis), 1, psi_d (1,ibnd), 1 )
+             CALL ZAXPY_gpu( kdim, kvc, hphi_d (1,ibnd,kdiis), 1, hpsi_d (1,ibnd), 1 )
+             IF (uspp) CALL ZAXPY_gpu( kdim, kvc, sphi_d (1,ibnd,kdiis), 1, spsi_d (1,ibnd), 1 )
              !
              ! ... Residual vectors
              !
@@ -968,24 +604,15 @@ CONTAINS
              !
              IF ( uspp ) THEN
                 !
-!$cuf kernel do(1)
-                DO ii = 1, kdim
-                  vec1_d(ii) = vec1_d(ii) -ec * sphi_d(ii,ibnd,kdiis)
-                END DO
+                CALL ZAXPY_gpu( kdim, -ec, sphi_d (1,ibnd,kdiis), 1, vec1_d (1), 1 )
                 !
              ELSE
                 !
-!$cuf kernel do(1)
-                DO ii = 1, kdim
-                  vec1_d(ii) = vec1_d(ii) -ec * phi_d(ii,ibnd,kdiis)
-                END DO
+                CALL ZAXPY_gpu( kdim, -ec, phi_d (1,ibnd,kdiis), 1, vec1_d (1), 1 )
                 !
              END IF
              !
-!$cuf kernel do(1)
-                DO ii = 1, kdim
-                  kpsi_d(ii,kbnd) = kpsi_d(ii,kbnd) + kvc * vec1_d(ii)
-                END DO
+             CALL ZAXPY_gpu( kdim, kvc, vec1_d (1), 1, kpsi_d (1,kbnd), 1 )
              !
           END DO
           !
