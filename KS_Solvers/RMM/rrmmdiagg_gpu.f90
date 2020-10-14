@@ -249,11 +249,6 @@ SUBROUTINE rrmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
   IF ( do_hpsi ) THEN
      !
      CALL calc_hpsi_gpu( )
-!civn 
-psi = psi_d
-hpsi = hpsi_d
-if(uspp) spsi = spsi_d
-!
      !
   END IF
   !
@@ -261,12 +256,28 @@ if(uspp) spsi = spsi_d
   !
   IF ( gstart == 2 ) THEN
      !
-     psi (1,1:nbnd) = CMPLX( DBLE( psi (1,1:nbnd) ), 0._DP, kind=DP )
-     hpsi(1,1:nbnd) = CMPLX( DBLE( hpsi(1,1:nbnd) ), 0._DP, kind=DP )
-     IF ( uspp ) &
-     spsi(1,1:nbnd) = CMPLX( DBLE( spsi(1,1:nbnd) ), 0._DP, kind=DP )
+!$cuf kernel do(1)
+     DO jj  = 1, nbnd 
+       psi_d (1,jj) = CMPLX( DBLE( psi_d (1,jj) ), 0._DP, kind=DP )
+       hpsi_d(1,jj) = CMPLX( DBLE( hpsi_d(1,jj) ), 0._DP, kind=DP )
+     END DO 
+     IF ( uspp ) THEN 
+!$cuf kernel do(1)
+       DO jj  = 1, nbnd 
+         spsi_d(1,jj) = CMPLX( DBLE( spsi_d(1,jj) ), 0._DP, kind=DP )
+       END DO 
+     END IF 
      !
   END IF
+!civn 
+psi = psi_d
+hpsi = hpsi_d
+if(uspp) spsi = spsi_d
+kpsi = kpsi_d
+phi = phi_d
+hphi = hphi_d
+if(uspp) sphi = sphi_d
+!
   !
   ! ... RMM-DIIS's loop
   !
@@ -276,7 +287,25 @@ if(uspp) spsi = spsi_d
      !
      ! ... Perform DIIS
      !
-     CALL do_diis( idiis )
+!civn 
+psi_d = psi
+hpsi_d = hpsi
+if(uspp) spsi_d = spsi
+kpsi_d = kpsi
+phi_d = phi
+hphi_d = hphi
+if(uspp) sphi_d = sphi
+!
+     CALL do_diis_gpu( idiis )
+!civn 
+psi = psi_d
+hpsi = hpsi_d
+if(uspp) spsi = spsi_d
+kpsi = kpsi_d
+phi = phi_d
+hphi = hphi_d
+if(uspp) sphi = sphi_d
+!
      !
      ! ... Line searching
      !
@@ -523,7 +552,7 @@ CONTAINS
     !
   END SUBROUTINE calc_hpsi_gpu
   !
-  SUBROUTINE do_diis( idiis )
+  SUBROUTINE do_diis_gpu( idiis )
     !
     IMPLICIT NONE
     !
@@ -533,15 +562,25 @@ CONTAINS
     INTEGER                  :: kdiis
     REAL(DP)                 :: norm
     REAL(DP)                 :: er
-    COMPLEX(DP), ALLOCATABLE :: vec1(:)
-    COMPLEX(DP), ALLOCATABLE :: vec2(:,:)
     REAL(DP),    ALLOCATABLE :: vr(:)
     REAL(DP),    ALLOCATABLE :: tr(:,:)
     !
-    ALLOCATE( vec1( npwx ) )
-    ALLOCATE( vec2( npwx, idiis ) )
+    ! device variables
+    !
+    REAL(DP) :: kvr  ! vr(kdiis)
+    COMPLEX(DP) :: ctmp , cctmp
+    COMPLEX(DP), ALLOCATABLE :: vec1_d(:)
+    COMPLEX(DP), ALLOCATABLE :: vec2_d(:,:)
+    REAL(DP),    ALLOCATABLE :: tr_d(:,:)
+#if defined (__CUDA) 
+    attributes(device) :: vec1_d, vec2_d, tr_d
+#endif
+    !
+    ALLOCATE( vec1_d( npwx ) )
+    ALLOCATE( vec2_d( npwx, idiis ) )
     IF ( idiis > 1 )   ALLOCATE( vr( idiis ) )
     IF ( motconv > 0 ) ALLOCATE( tr( idiis, motconv ) )
+    IF ( motconv > 0 ) ALLOCATE( tr_d( idiis, motconv ) )
     !
     ! ... Save current wave functions and matrix elements
     !
@@ -549,10 +588,10 @@ CONTAINS
        !
        IF ( conv(ibnd) ) CYCLE
        !
-       CALL DCOPY( npw2, psi (1,ibnd), 1, phi (1,ibnd,idiis), 1 )
-       CALL DCOPY( npw2, hpsi(1,ibnd), 1, hphi(1,ibnd,idiis), 1 )
+       CALL DCOPY_gpu( npw2, psi_d (1,ibnd), 1, phi_d (1,ibnd,idiis), 1 )
+       CALL DCOPY_gpu( npw2, hpsi_d(1,ibnd), 1, hphi_d(1,ibnd,idiis), 1 )
        IF ( uspp ) &
-       CALL DCOPY( npw2, spsi(1,ibnd), 1, sphi(1,ibnd,idiis), 1 )
+       CALL DCOPY_gpu( npw2, spsi_d(1,ibnd), 1, sphi_d(1,ibnd,idiis), 1 )
        !
        php(ibnd,idiis) = hw(ibnd)
        psp(ibnd,idiis) = sw(ibnd)
@@ -573,15 +612,15 @@ CONTAINS
           !
           er = php(ibnd,kdiis)
           !
-          CALL DCOPY( npw2, hphi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
+          CALL DCOPY_gpu( npw2, hphi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
           !
           IF ( uspp ) THEN
              !
-             CALL DAXPY( npw2, -er, sphi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
+             CALL DAXPY_gpu( npw2, -er, sphi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
              !
           ELSE
              !
-             CALL DAXPY( npw2, -er, phi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
+             CALL DAXPY_gpu( npw2, -er, phi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
              !
           END IF
           !
@@ -589,31 +628,37 @@ CONTAINS
        !
        er = php(ibnd,idiis)
        !
-       CALL DCOPY( npw2, hphi(1,ibnd,idiis), 1, vec1(1), 1 )
+       CALL DCOPY_gpu( npw2, hphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
        !
        IF ( uspp ) THEN
           !
-          CALL DAXPY( npw2, -er, sphi(1,ibnd,idiis), 1, vec1(1), 1 )
+          CALL DAXPY_gpu( npw2, -er, sphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        ELSE
           !
-          CALL DAXPY( npw2, -er, phi(1,ibnd,idiis), 1, vec1(1), 1 )
+          CALL DAXPY_gpu( npw2, -er, phi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        END IF
        !
-       CALL DGEMV( 'T', npw2, idiis, 2._DP, vec2(1,1), npwx2, &
-                   vec1(1), 1, 0._DP, tr(1,jbnd), 1 )
+       CALL DGEMV_gpu( 'T', npw2, idiis, 2._DP, vec2_d(1,1), npwx2, &
+                   vec1_d(1), 1, 0._DP, tr_d(1,jbnd), 1 )
        !
-       IF ( gstart == 2 ) &
-       tr(1:idiis,jbnd) = tr(1:idiis,jbnd) - DBLE( vec2(1,1:idiis) ) * DBLE( vec1(1) )
+       IF ( gstart == 2 ) THEN  
+!$cuf kernel do(1)
+         DO ii = 1, idiis
+           tr_d(ii,jbnd) = tr_d(ii,jbnd) - DBLE( vec2_d(1,ii) ) * DBLE( vec1_d(1) )
+         END DO 
+       END IF 
        !
     END DO
     !
     IF ( motconv > 0 ) THEN
        !
-       CALL mp_sum( tr, intra_bgrp_comm )
+       CALL mp_sum( tr_d, intra_bgrp_comm )
        !
     END IF
+    !
+    tr = tr_d
     !
     DO ibnd = ibnd_start, ibnd_end
        !
@@ -636,33 +681,39 @@ CONTAINS
        !
        DO kdiis = 1, idiis
           !
-          CALL DCOPY( npw2, phi(1,ibnd,kdiis), 1, vec2(1,kdiis), 1 )
+          CALL DCOPY_gpu( npw2, phi_d(1,ibnd,kdiis), 1, vec2_d(1,kdiis), 1 )
           !
        END DO
        !
        IF ( uspp ) THEN
           !
-          CALL DCOPY( npw2, sphi(1,ibnd,idiis), 1, vec1(1), 1 )
+          CALL DCOPY_gpu( npw2, sphi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        ELSE
           !
-          CALL DCOPY( npw2, phi(1,ibnd,idiis), 1, vec1(1), 1 )
+          CALL DCOPY_gpu( npw2, phi_d(1,ibnd,idiis), 1, vec1_d(1), 1 )
           !
        END IF
        !
-       CALL DGEMV( 'T', npw2, idiis, 2._DP, vec2(1,1), npwx2, &
-                   vec1(1), 1, 0._DP, tr(1,jbnd), 1 )
+       CALL DGEMV_gpu( 'T', npw2, idiis, 2._DP, vec2_d(1,1), npwx2, &
+                   vec1_d(1), 1, 0._DP, tr_d(1,jbnd), 1 )
        !
-       IF ( gstart == 2 ) &
-       tr(1:idiis,jbnd) = tr(1:idiis,jbnd) - DBLE( vec2(1,1:idiis) ) * DBLE( vec1(1) )
+       IF ( gstart == 2 ) THEN 
+!$cuf kernel do(1)
+         DO ii = 1, idiis
+           tr_d(ii,jbnd) = tr_d(ii,jbnd) - DBLE( vec2_d(1,ii) ) * DBLE( vec1_d(1) )
+         END DO 
+       END IF 
        !
     END DO
     !
     IF ( motconv > 0 ) THEN
        !
-       CALL mp_sum( tr, intra_bgrp_comm )
+       CALL mp_sum( tr_d, intra_bgrp_comm )
        !
     END IF
+    !
+    tr = tr_d
     !
     DO ibnd = ibnd_start, ibnd_end
        !
@@ -690,37 +741,46 @@ CONTAINS
           IF ( me_bgrp == root_bgrp ) CALL diag_diis( ibnd, idiis, vr(:) )
           CALL mp_bcast( vr, root_bgrp, intra_bgrp_comm )
           !
-          psi (:,ibnd) = ZERO
-          hpsi(:,ibnd) = ZERO
-          IF ( uspp ) spsi(:,ibnd) = ZERO
-          kpsi(:,kbnd) = ZERO
+!$cuf kernel do(1)
+          DO ii = 1, npwx
+            psi_d (ii,ibnd) = ZERO
+            hpsi_d(ii,ibnd) = ZERO
+            kpsi_d(ii,kbnd) = ZERO
+          END DO 
+          IF ( uspp ) THEN
+!$cuf kernel do(1)
+            DO ii = 1, npwx
+              spsi_d(ii,ibnd) = ZERO
+            END DO 
+          END IF 
           !
           DO kdiis = 1, idiis
              !
              ! ... Wave functions
              !
-             CALL DAXPY( npw2, vr(kdiis), phi (1,ibnd,kdiis), 1, psi (1,ibnd), 1 )
-             CALL DAXPY( npw2, vr(kdiis), hphi(1,ibnd,kdiis), 1, hpsi(1,ibnd), 1 )
+             kvr = vr(kdiis) 
+             CALL DAXPY_gpu( npw2, kvr, phi_d (1,ibnd,kdiis), 1, psi_d (1,ibnd), 1 )
+             CALL DAXPY_gpu( npw2, kvr, hphi_d(1,ibnd,kdiis), 1, hpsi_d(1,ibnd), 1 )
              IF ( uspp ) &
-             CALL DAXPY( npw2, vr(kdiis), sphi(1,ibnd,kdiis), 1, spsi(1,ibnd), 1 )
+             CALL DAXPY_gpu( npw2, kvr, sphi_d(1,ibnd,kdiis), 1, spsi_d(1,ibnd), 1 )
              !
              ! ... Residual vectors
              !
              er = php(ibnd,kdiis)
              !
-             CALL DCOPY( npw2, hphi(1,ibnd,kdiis), 1, vec1(1), 1 )
+             CALL DCOPY_gpu( npw2, hphi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
              !
              IF ( uspp ) THEN
                 !
-                CALL DAXPY( npw2, -er, sphi(1,ibnd,kdiis), 1, vec1(1), 1 )
+                CALL DAXPY_gpu( npw2, -er, sphi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
                 !
              ELSE
                 !
-                CALL DAXPY( npw2, -er, phi(1,ibnd,kdiis), 1, vec1(1), 1 )
+                CALL DAXPY_gpu( npw2, -er, phi_d(1,ibnd,kdiis), 1, vec1_d(1), 1 )
                 !
              END IF
              !
-             CALL DAXPY( npw2, vr(kdiis), vec1(1), 1, kpsi(1,kbnd), 1 )
+             CALL DAXPY_gpu( npw2, kvr, vec1_d(1), 1, kpsi_d(1,kbnd), 1 )
              !
           END DO
           !
@@ -729,24 +789,26 @@ CONTAINS
           ! ... Wave functions
           !
           norm = SQRT( sw(ibnd) )
-          CALL DSCAL( npw2, 1._DP / norm, psi (1,ibnd), 1 )
-          CALL DSCAL( npw2, 1._DP / norm, hpsi(1,ibnd), 1 )
+          CALL DSCAL_gpu( npw2, 1._DP / norm, psi_d (1,ibnd), 1 )
+          CALL DSCAL_gpu( npw2, 1._DP / norm, hpsi_d(1,ibnd), 1 )
           IF ( uspp ) &
-          CALL DSCAL( npw2, 1._DP / norm, spsi(1,ibnd), 1 )
+          CALL DSCAL_gpu( npw2, 1._DP / norm, spsi_d(1,ibnd), 1 )
           !
           ! ... Residual vectors
           !
           er = hw(ibnd)
           !
-          CALL DCOPY( npw2, hpsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+          CALL DCOPY_gpu( npw2, hpsi_d(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
           !
           IF ( uspp ) THEN
              !
-             CALL DAXPY( npw2, -er, spsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+             CALL DAXPY_gpu( npw2, -er, spsi_d(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
              !
           ELSE
              !
-             CALL DAXPY( npw2, -er, spsi(1,ibnd), 1, kpsi(1,kbnd), 1 )
+!civn: here changed spsi --> psi due to a possible typo in the original version 
+             !CALL DAXPY_gpu( npw2, -er, spsi_d(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
+             CALL DAXPY_gpu( npw2, -er, psi_d(1,ibnd), 1, kpsi_d(1,kbnd), 1 )
              !
           END IF
           !
@@ -755,24 +817,32 @@ CONTAINS
        ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
        IF ( gstart == 2 ) THEN
           !
-          psi (1,ibnd) = CMPLX( DBLE( psi (1,ibnd) ), 0._DP, kind=DP )
-          hpsi(1,ibnd) = CMPLX( DBLE( hpsi(1,ibnd) ), 0._DP, kind=DP )
-          IF ( uspp ) &
-          spsi(1,ibnd) = CMPLX( DBLE( spsi(1,ibnd) ), 0._DP, kind=DP )
-          kpsi(1,kbnd) = CMPLX( DBLE( kpsi(1,kbnd) ), 0._DP, kind=DP )
+!$cuf kernel do(1)
+          DO ii = 1, 1
+            psi_d (1,ibnd) = CMPLX( DBLE( psi_d (1,ibnd) ), 0._DP, kind=DP )
+            hpsi_d(1,ibnd) = CMPLX( DBLE( hpsi_d(1,ibnd) ), 0._DP, kind=DP )
+            kpsi_d(1,kbnd) = CMPLX( DBLE( kpsi_d(1,kbnd) ), 0._DP, kind=DP )
+          END DO 
+          IF ( uspp ) THEN 
+!$cuf kernel do(1)
+            DO ii = 1, 1
+              spsi_d(1,ibnd) = CMPLX( DBLE( spsi_d(1,ibnd) ), 0._DP, kind=DP )
+            END DO 
+          END IF 
           !
        END IF
        !
     END DO
     !
-    DEALLOCATE( vec1 )
-    DEALLOCATE( vec2 )
+    DEALLOCATE( vec1_d )
+    DEALLOCATE( vec2_d )
     IF ( idiis > 1 )   DEALLOCATE( vr )
     IF ( motconv > 0 ) DEALLOCATE( tr )
+    IF ( motconv > 0 ) DEALLOCATE( tr_d )
     !
     RETURN
     !
-  END SUBROUTINE do_diis
+  END SUBROUTINE do_diis_gpu
   !
   !
   SUBROUTINE diag_diis( ibnd, idiis, vr )

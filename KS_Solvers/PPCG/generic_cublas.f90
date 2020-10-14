@@ -172,7 +172,7 @@ IMPLICIT NONE
   RETURN
 END SUBROUTINE ZSCAL_gpu  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE gpu_DGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
+SUBROUTINE DGEMV_gpu(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
 #if defined(__CUDA)
 use cublas
 #endif
@@ -186,9 +186,9 @@ IMPLICIT NONE
   call cublasDGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
 #endif
   RETURN
-END SUBROUTINE gpu_DGEMV
+END SUBROUTINE DGEMV_gpu
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE gpu_DCOPY(n, x, incx, y, incy)
+SUBROUTINE DCOPY_gpu(n, x, incx, y, incy)
 #if defined(__CUDA)
 USE cublas
 #endif
@@ -201,9 +201,9 @@ IMPLICIT NONE
   call cublasDCOPY(n, x, incx, y, incy)
 #endif
   RETURN
-END SUBROUTINE gpu_DCOPY
+END SUBROUTINE DCOPY_gpu
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE gpu_DAXPY(n, a, x, incx, y, incy)
+SUBROUTINE DAXPY_gpu(n, a, x, incx, y, incy)
 #if defined(__CUDA)
 USE cublas
 #endif
@@ -217,9 +217,9 @@ IMPLICIT NONE
   call cublasDAXPY( n, a, x, incx, y, incy)
 #endif
   RETURN
-END SUBROUTINE gpu_DAXPY
+END SUBROUTINE DAXPY_gpu
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE gpu_DSCAL(n, a, x, incx)
+SUBROUTINE DSCAL_gpu(n, a, x, incx)
 #if defined(__CUDA)
 USE cublas
 #endif
@@ -232,7 +232,7 @@ IMPLICIT NONE
   call cublasDSCAL(n, a, x, incx)
 #endif
   RETURN
-END SUBROUTINE gpu_DSCAL
+END SUBROUTINE DSCAL_gpu
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE gpu_threaded_memset(array, val, length)
   !
