@@ -197,8 +197,8 @@ PROGRAM do_ppacf
   !--------------- READ IN PREFIX --------------------------------!
   CALL environment_start( 'ppacf' )
   !
-  is_libxc(1) = xclib_is_libxc('gga','exch')
-  is_libxc(2) = xclib_is_libxc('gga','corr')
+  is_libxc(1) = xclib_is_libxc('GGA','EXCH')
+  is_libxc(2) = xclib_is_libxc('GGA','CORR')
   !
   IF ( ANY(.NOT.is_libxc(1:2)) ) CALL xclib_set_threshold( 'gga', 1.E-10_DP, 1.E-10_DP )
   !
@@ -830,6 +830,7 @@ PROGRAM do_ppacf
     nbndproj = 0
     exxdiv_treatment = "gygi-baldereschi"
     ecutfock = ecutwfc
+    !
     CALL xclib_set_exx_fraction( 1._DP )
     CALL enforce_input_dft( 'HF' )
     CALL xclib_set_auxiliary_flags

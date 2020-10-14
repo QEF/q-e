@@ -845,8 +845,6 @@
     !
     REAL(DP), INTENT(IN) :: exx_fraction_
     !
-    IF (.NOT. ishybrid) &
-        CALL errore( 'set_exx_fraction', 'dft is not hybrid, wrong call', 1 )
     exx_fraction = exx_fraction_
     !
     RETURN
@@ -1033,7 +1031,7 @@
      CASE( 'MGGA' )
        IF (kindf=='EXCH') name = meta(imeta) 
      CASE DEFAULT
-       CALL errore( 'get_id', 'input not recognized', 1 )
+       CALL errore( 'get_name', 'input not recognized', 1 )
      END SELECT
      RETURN
      !
@@ -1060,7 +1058,7 @@
        IF (kindf=='EXCH') is_lxc = is_libxc(5)
        IF (kindf=='CORR') is_lxc = is_libxc(6)
      CASE DEFAULT
-       CALL errore( 'get_id', 'input not recognized', 1 )
+       CALL errore( 'is_lxc', 'input not recognized', 1 )
      END SELECT
      RETURN
      !
