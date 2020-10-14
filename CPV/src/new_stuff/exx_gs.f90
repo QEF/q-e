@@ -49,7 +49,7 @@ SUBROUTINE exx_gs(nfi, c)
     USE exx_module,              ONLY  : nrg
     USE exx_module,              ONLY  : s_me_r, s_ps_r, p_me_r, p_ps_r
     USE exx_module,              ONLY  : n_s_me, n_s_ps, n_p_me, n_p_ps
-    USE exx_module,              ONLY  : prev_obtl_recv
+    !USE exx_module,              ONLY  : prev_obtl_recv
     USE exx_module,              ONLY  : lmax
     USE exx_module,              ONLY  : me_cs
     USE exx_module,              ONLY  : me_rs
@@ -155,11 +155,6 @@ SUBROUTINE exx_gs(nfi, c)
     REAL(DP) :: Jim(3,3)  ! jacobian [d/d x]        [d/d a]
     !                                |d/d y| = [J]  |d/d b|
     !                                [d/d z]        [d/d c]
-    CHARACTER(LEN=256)       :: chr_me
-    INTEGER                  :: ifile
-    !
-    ! CHARACTER (LEN=20) :: my_filename ! debug
-    ! INTEGER            :: my_unit ! debug
     !INTEGER            :: psgsn=3 !MCA: number of steps that arrays are stored. Memory overhead from here?
     INTEGER            :: psgsn=1 !MCA: we are not using extrapolation anyways 
 #ifdef __CUDA
@@ -511,11 +506,11 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
       ALLOCATE( pair_label( neigh, my_nbspx ), stat=ierr ); pair_label=0.0_DP
       ALLOCATE( pair_step( neigh, my_nbspx ), stat=ierr ); pair_step=0.0_DP
       ALLOCATE( pair_status( neigh, my_nbspx ), stat=ierr ); pair_status=0.0_DP
-      ALLOCATE( prev_obtl_recv( neigh/2, ndim ), stat=ierr ); prev_obtl_recv=0
+      !ALLOCATE( prev_obtl_recv( neigh/2, ndim ), stat=ierr ); prev_obtl_recv=0
       !
     END IF
     !
-    prev_obtl_recv = obtl_recv
+    !prev_obtl_recv = obtl_recv
     !---------------------------------------------------------------------------------------------
     !
     ! update exx step ...

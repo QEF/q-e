@@ -55,8 +55,10 @@ SUBROUTINE exx_gs(nfi, c)
     INTEGER     nj_max, iunit
     REAl(DP)    sa1,a(3),ha, hb, hc
     REAl(DP)    hcub, centerx, centery, centerz
-    REAL(DP)    middle(3,neigh/2)
-    REAL(DP)    d_pair(neigh/2) ! pair distance
+    !REAL(DP)    middle(3,neigh/2)
+    !REAL(DP)    d_pair(neigh/2) ! pair distance
+    REAL(DP)    middle(3)
+    REAL(DP)    d_pair            ! pair distance
     !
     REAL(DP),    ALLOCATABLE ::   vpsil(:,:)
     REAL(DP),    ALLOCATABLE ::   rhol(:),rho_in_sp(:),vl(:)
@@ -70,7 +72,12 @@ SUBROUTINE exx_gs(nfi, c)
         self_dexx_dhab(3,3), pair_dexx_dhab(3,3,neigh/2)
     !
     INTEGER,   ALLOCATABLE   :: isendreq(:)
-    INTEGER,   ALLOCATABLE   :: irecvreq(:,:)
+    !INTEGER,   ALLOCATABLE   :: irecvreq(:,:)
+    INTEGER,   ALLOCATABLE   :: irecvreq(:)
+    INTEGER                  :: irecv_count
+    INTEGER                  :: isend_count
+    INTEGER                  :: itr
+    INTEGER                  :: jtr
     INTEGER                  :: tran(3)
     INTEGER                  :: proc
     INTEGER                  :: tmp_iobtl
@@ -78,9 +85,10 @@ SUBROUTINE exx_gs(nfi, c)
     !
     INTEGER                  :: k,jj,ii,ia,ib,ic,my_var,my_var2,my_var3,i_fac,va,cgstep
     INTEGER                  :: ndim,nogrp 
-    INTEGER,    ALLOCATABLE  :: overlap(:,:),njj(:)
+    INTEGER,    ALLOCATABLE  :: obtl_recv(:,:), obtl_send(:,:), num_recv(:), num_send(:)
+    !INTEGER,    ALLOCATABLE  :: overlap(:,:),njj(:)
     REAl(DP),   ALLOCATABLE  :: wannierc(:,:),wannierc_tmp(:,:)
-    REAl(DP),   ALLOCATABLE  :: psil(:),psil_pair_recv(:,:),psil_pair_send(:,:,:)
+    REAl(DP),   ALLOCATABLE  :: psil(:) ! ,psil_pair_recv(:,:),psil_pair_send(:,:,:)
     REAL(DP),   ALLOCATABLE  :: exx_tmp(:,:),exx_tmp3(:,:)
     INTEGER,    ALLOCATABLE  :: sdispls(:), sendcount(:)
     INTEGER,    ALLOCATABLE  :: rdispls(:), recvcount(:)
@@ -90,6 +98,7 @@ SUBROUTINE exx_gs(nfi, c)
     REAL(DP) :: Jim(3,3)  ! jacobian [d/d x]        [d/d a]
     !                                |d/d y| = [J]  |d/d b|
     !                                [d/d z]        [d/d c]
+    INTEGER            :: psgsn=3 !MCA: number of steps that arrays are stored. Memory overhead from here?
     !
     !=============================================================================================
     !print *, 'entering exx_gs', 'n_exx', n_exx
@@ -272,16 +281,33 @@ SUBROUTINE exx_gs(nfi, c)
     END IF
     !
     ! overlap is the unique neighbor list that for each band or processor image (ndim)
-    ! njj is the number of unique neighbors for each band or processor image (ndim)
-    ! 
-    ALLOCATE (overlap(neigh/2,ndim)); overlap=0
-    ALLOCATE (njj(ndim)); njj=0
-    !
+    ! num_recv is the number of unique neighbors for each band or processor image (ndim)
+    !---------------------------------------------------------------------------------------------
+    ALLOCATE (obtl_recv(neigh/2, ndim)); obtl_recv=0
+    ALLOCATE (obtl_send(neigh, ndim));   obtl_send=0
+    ALLOCATE (num_recv(ndim)); num_recv=0
+    ALLOCATE (num_send(ndim)); num_send=0
     ! generate the unique neighbor list
     !
-    CALL exx_index_pair(wannierc_tmp, overlap, njj, nj_max, ndim )
+    CALL exx_index_pair(wannierc_tmp, obtl_recv, num_recv, nj_max, ndim)
     !
     IF (ALLOCATED(wannierc_tmp))            DEALLOCATE(wannierc_tmp)
+    !---------------------------------------------------------------------------------------------
+    DO itr = 1, ndim
+      !
+      DO jtr = 1, neigh/2
+        !
+        IF (obtl_recv(jtr, itr) .NE. 0) THEN
+          !
+          num_send( obtl_recv(jtr, itr) ) = num_send( obtl_recv(jtr, itr) ) + 1
+          obtl_send( num_send( obtl_recv(jtr, itr) ), obtl_recv(jtr, itr) ) = itr
+          !
+        END IF
+        !
+      END DO
+      !
+    END DO
+    !---------------------------------------------------------------------------------------------
     !
     CALL stop_clock('exx_pairs')
     !
@@ -292,9 +318,14 @@ SUBROUTINE exx_gs(nfi, c)
     IF (n_exx.EQ.0) THEN
       !
       ! the following variables are used in the extrapolation of exx potentials
-      ALLOCATE( pair_dist( 3, nj_max*2, my_nbspx), stat=ierr ); pair_dist=0.0_DP
-      ALLOCATE( selfv( np_in_sp_s, 3,   my_nbspx), stat=ierr ); selfv=0.0_DP
-      ALLOCATE( pairv( np_in_sp_p, 3, nj_max*2, my_nbspx), stat=ierr ); pairv=0.0_DP
+      ALLOCATE( pair_dist( psgsn, neigh, my_nbspx), stat=ierr ); pair_dist=0.0_DP
+      ALLOCATE( selfv  ( np_in_sp_s, psgsn, my_nbspx), stat=ierr ); selfv=0.0_DP
+      ALLOCATE( pairv  ( np_in_sp_p, psgsn, neigh, my_nbspx), stat=ierr ); pairv=0.0_DP
+      ALLOCATE( selfrho( np_in_sp_s, psgsn, my_nbspx), stat=ierr ); selfrho=0.0_DP
+      ALLOCATE( pairrho( np_in_sp_p, psgsn, neigh, my_nbspx), stat=ierr ); pairrho=0.0_DP
+      ALLOCATE( pair_label( neigh, my_nbspx ), stat=ierr ); pair_label=0.0_DP
+      ALLOCATE( pair_step( neigh, my_nbspx ), stat=ierr ); pair_step=0.0_DP
+      ALLOCATE( pair_status( neigh, my_nbspx ), stat=ierr ); pair_status=0.0_DP
       !
     END IF
     !
@@ -336,143 +367,94 @@ SUBROUTINE exx_gs(nfi, c)
     !
     ! flag identifying whether the pair communication is done or not
     !
-    ALLOCATE( irecvreq(nj_max,0:nproc_image-1) )
+    ALLOCATE( irecvreq( neigh * my_nbsp(me) ) )
+    ALLOCATE( isendreq( neigh * my_nbsp(me) ) )
     !
     ! obtain psi in sphere (psil) for neighbors
     !
-    ALLOCATE ( psil_pair_send(np_in_sp_me_p, nj_max, my_nbsp(me )) ); psil_pair_send=0.0_DP
-    ALLOCATE ( psil_pair_recv(np_in_sp_me_p, nj_max) ); psil_pair_recv=0.0_DP
+    if (.not.allocated(psime_pair_send)) then
+      ALLOCATE ( psime_pair_send(np_in_sp_me_p, neigh, my_nbsp(me)) ); psime_pair_send=0.0_DP
+    end if
+    if (.not.allocated(psime_pair_recv)) then
+      ALLOCATE ( psime_pair_recv(np_in_sp_me_p, neigh, my_nbsp(me)) ); psime_pair_recv=0.0_DP
+    end if
     !
     ! initialize totalenergy and derivatives
     !
     totalenergy = 0.0_DP
     total_exx_derv(:,:) =0.0_DP
+    irecv_count = 0
+    isend_count = 0
     !
     ! my_var is the maximum of nbsp or nproc_image
     my_var = MAX(nproc_image, nbsp)
     !
+    CALL start_clock('send_psi')
+    ! 
     ! we should use my_nbspx (maxval(my_nbsp(me))) here
     !
     DO iobtl = 1, my_nbspx
       ! 
-      CALL start_clock('send_psi')
-      ! 
-      psil_pair_recv(:,:)=0.0_DP
+      gindex_of_iobtl = index_my_nbsp(iobtl, me)
       !
       !========================================================================
       !
-      DO j = 1, nj_max ! the neighbor index in a certain mpi task
+      !prep receives
+      DO itr = 1, neigh/2
         !
-        DO irank = 1, nproc_image ! dummy loop over mpi tasks
-          !
-          ! the global index of the target orbital (iobtl)
-          gindex_of_iobtl =  index_my_nbsp(iobtl, irank)
-          !
-          IF ( gindex_of_iobtl .LE. my_var) THEN ! my_var is the maximum of nbsp or nproc_image
-            !
-            rk_of_obtl_trcv = irank - 1          ! mpi rank that should receive the target orbital
-            obtl_tbs=overlap(j, gindex_of_iobtl) ! global band (orbital) index that is paired iobtl (gindex_of_iobtl)
-            ! 
-            IF (obtl_tbs .NE. 0) THEN
-              !
-              rk_of_obtl_tbs  = rk_of_obtl(obtl_tbs)
-              lindex_obtl_tbs = lindex_of_obtl(obtl_tbs)
-              ! 
-              IF ((me_image .EQ. rk_of_obtl_trcv) .AND. (me_image .eq. rk_of_obtl_tbs )) THEN
-                !
-                !-- internal communication: inside the same mpi task (no mpi is needed) --
-                !
-                ! calculate mid point of two wannier centers
-                CALL getmiddlewc(wannierc(1,gindex_of_iobtl),wannierc(1,obtl_tbs), &
-                    &                h, ainv, middle(1,j) )
-                ! get pair distance
-                CALL get_pair_dist(wannierc(1,gindex_of_iobtl),wannierc(1,obtl_tbs),d_pair(j))
-                ! calculate translation vector from the center of the box
-                CALL getsftv( nr1s, nr2s, nr3s, h, ainv, middle(1, j), tran)
-                !
-                ! get the localized psi around the mid point of two wannier centers
-                ! note: the psil is centered at the center of the box
-                ! (using the translation vector "tran" from middle of wfc to the center of box)
-                CALL getpsil( nnrtot, np_in_sp_me_p, psi(1, lindex_obtl_tbs), psil_pair_recv(:,j), tran)
-                ! 
-              ELSEIF( me_image .EQ. rk_of_obtl_tbs )THEN
-                !
-                !-- when the mpi task cantains paired orbital with iobtl (this task has to send the obtl_tbs) --
-                !
-                ! calculate mid point of two wannier centers
-                CALL getmiddlewc(wannierc(1,gindex_of_iobtl),wannierc(1,obtl_tbs), &
-                    &                h, ainv, middle(1,j) )
-                ! get pair distance
-                CALL get_pair_dist(wannierc(1,gindex_of_iobtl),wannierc(1,obtl_tbs),d_pair(j))
-                ! calculate translation vector from the center of the box
-                CALL getsftv( nr1s, nr2s, nr3s, h, ainv, middle(1, j), tran)
-                !
-                ! get the localized psi around the mid point of two wannier centers
-                ! note: the psil is centered at the center of the box
-                ! (using the translation vector "tran" from middle of wfc to the center of box)
-                CALL getpsil( nnrtot, np_in_sp_me_p, psi(1, lindex_obtl_tbs), psil_pair_send(1,j,lindex_obtl_tbs), tran)
-                !
-#if defined(__MPI)
-                CALL MPI_SEND( psil_pair_send(1, j, lindex_obtl_tbs), np_in_sp_me_p, MPI_DOUBLE_PRECISION, &
-                    rk_of_obtl_trcv, j*irank, intra_image_comm,ierr )
-#endif
-                ! 
-              ELSEIF( me_image .EQ. rk_of_obtl_trcv )THEN
-                !
-                !-- when the mpi task matchs with a cetain obtl_tbs (this task has to receive the obtl_tbs) --
-                !
-#if defined(__MPI)
-                CALL MPI_IRECV( psil_pair_recv(1,j),                  np_in_sp_me_p, MPI_DOUBLE_PRECISION, &
-                    rk_of_obtl_tbs,  j*irank, intra_image_comm, irecvreq(j,me_image),ierr)
-#endif
-                ! note: this part will be waited later in the wait loop using irecvreq(j,me_image)
-                !
-              ENDIF
-              ! 
-            ENDIF
-            ! 
-          ENDIF
-          !
-        ENDDO  !irank
+        obtl_tbs = obtl_recv( itr, gindex_of_iobtl )
         !
-      ENDDO  ! j
-      !
-      !=======================================================================
-      CALL start_clock('send_psi_wait')
-      !
-      DO j = 1, nj_max
-        !
-        DO irank = 1, nproc_image
+        IF ( obtl_tbs .NE. 0 ) THEN
           !
-          gindex_of_iobtl =  index_my_nbsp(iobtl, irank)
-          ! 
-          IF ( gindex_of_iobtl .LE. my_var) THEN
-            !
-            rk_of_obtl_trcv = irank - 1
-            obtl_tbs=overlap(j, gindex_of_iobtl)
-            ! 
-            IF (obtl_tbs .NE. 0) THEN
-              !
-              rk_of_obtl_tbs  = rk_of_obtl(obtl_tbs)
-              !
-              IF ((me_image .EQ. rk_of_obtl_trcv) .AND. (me_image .NE. rk_of_obtl_tbs)) THEN
-#if defined(__MPI)
-                !
-                ! once the paired orbital (obtl_tbs) is received this task can move on to exx calculations
-                CALL MPI_WAIT(irecvreq(j,me_image), istatus, ierr)
-#endif
-              END IF
-              !
-            END IF
-            !
-          END IF
-          ! 
-        END DO
+          rk_of_obtl_tbs  = rk_of_obtl(obtl_tbs)
+          !
+          irecv_count = irecv_count + 1
+          CALL MPI_IRECV( psime_pair_recv(1, itr, iobtl), np_in_sp_me_p, MPI_DOUBLE_PRECISION, rk_of_obtl_tbs, &
+                          obtl_tbs*ndim+gindex_of_iobtl, intra_image_comm, irecvreq(irecv_count), ierr)
+          !
+        END IF
         !
       END DO
       !
-      CALL stop_clock('send_psi_wait')
-      CALL stop_clock('send_psi')
+      !prep sends
+      DO itr = 1, neigh
+        !
+        obtl_trcv = obtl_send( itr, gindex_of_iobtl )
+        !
+        IF ( obtl_trcv .NE. 0 ) THEN
+          !
+          rk_of_obtl_trcv = rk_of_obtl(obtl_trcv)
+          !
+          ! calculate mid point of two wannier centers
+          CALL getmiddlewc( wannierc(1, gindex_of_iobtl), wannierc(1, obtl_trcv), h, ainv, middle )
+          !
+          ! calculate translation vector from the center of the box
+          CALL getsftv( nr1s, nr2s, nr3s, h, ainv, middle, tran)
+          !
+          ! get the localized psi around the mid point of two wannier centers
+          ! note: the psime is centered at the center of the box
+          ! (using the translation vector "tran" from middle of wfc to the center of box)
+          CALL getpsil( nnrtot, np_in_sp_me_p, psi(1, iobtl), psime_pair_send(1, itr, iobtl), tran) ! HK: TEST
+          !
+          isend_count = isend_count + 1
+          CALL MPI_ISEND( psime_pair_send(1, itr, iobtl), n_p_me, MPI_DOUBLE_PRECISION, rk_of_obtl_trcv, &
+                          gindex_of_iobtl*ndim+obtl_trcv, intra_image_comm, isendreq(isend_count), ierr)
+          !
+        END IF
+        !
+      END DO
+      !========================================================================
+      !
+    END DO
+    !
+    !==========================================================================
+    !
+    CALL stop_clock('send_psi')
+    !
+    ! HK/MCA: we are here; note that there is an inconsistency in the communication
+    ! loop due to the introduction of simultaneous orbital send in the new version so we are now outside of the loop (and below is
+    ! now missing a level of DO loop construct....
+
       !
       ! printout header for the cgsteps
       !
