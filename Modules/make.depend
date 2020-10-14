@@ -3,7 +3,7 @@ additional_kpoints.o : cell_base.o
 additional_kpoints.o : input_parameters.o
 additional_kpoints.o : io_global.o
 additional_kpoints.o : kind.o
-additional_kpoints.o : mp_world.o
+additional_kpoints.o : mp_images.o
 additional_kpoints.o : parameters.o
 atom_weight.o : kind.o
 autopilot.o : ../UtilXlib/mp.o
@@ -18,6 +18,7 @@ becmod.o : kind.o
 becmod.o : mp_bands.o
 becmod.o : noncol.o
 becmod.o : recvec.o
+beef_interface.o : kind.o
 bfgs_module.o : basic_algebra_routines.o
 bfgs_module.o : cell_base.o
 bfgs_module.o : constants.o
@@ -334,6 +335,7 @@ read_pseudo.o : ../upflib/emend_upf.o
 read_pseudo.o : ../upflib/gth.o
 read_pseudo.o : ../upflib/pseudo_types.o
 read_pseudo.o : ../upflib/radial_grids.o
+read_pseudo.o : ../upflib/read_upf_new.o
 read_pseudo.o : ../upflib/read_upf_v1.o
 read_pseudo.o : ../upflib/read_uspp.o
 read_pseudo.o : ../upflib/upf.o

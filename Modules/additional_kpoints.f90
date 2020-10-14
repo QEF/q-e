@@ -20,7 +20,7 @@ MODULE additional_kpoints
   SUBROUTINE bcast_additional_kpoints
     USE mp,             ONLY : mp_bcast
     USE io_global,      ONLY : ionode_id
-    USE mp_images,      ONLY : intra_image_comm
+    USE mp_images,      ONLY: intra_image_comm
     !
     IMPLICIT NONE
     CALL mp_bcast(nkstot_add, ionode_id, intra_image_comm)
