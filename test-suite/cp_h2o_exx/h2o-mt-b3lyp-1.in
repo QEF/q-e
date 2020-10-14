@@ -10,7 +10,7 @@
     tstress = .TRUE.,
     tprnfor = .TRUE.,
     dt    = 5.0d0,
-    etot_conv_thr = 1.d-9,
+    etot_conv_thr = 1.d-6,
     ekin_conv_thr = 1.d-4,
     prefix = 'h2o'
     verbosity = 'medium'
