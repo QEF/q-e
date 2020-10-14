@@ -59,6 +59,7 @@ target_link_libraries(qe_epw
     PRIVATE
         QE::WANNIER90
         QE::Modules
+        QE::XClib
         QE::LR_Modules
         QE::PHonon::PH
         QE::PW

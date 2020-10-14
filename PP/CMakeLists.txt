@@ -51,6 +51,7 @@ target_link_libraries(qe_pp
     PRIVATE
         QE::OpenMP_Fortran
         QE::FOX
+        QE::XClib
         QE::PW
         QE::Modules
         QE::UTILX
@@ -68,6 +69,7 @@ target_link_libraries(qe_pp_exe
     PRIVATE
         QE::PW
         QE::Modules
+        QE::XClib
         QE::PP
         QE::UTILX)
 
@@ -82,6 +84,7 @@ target_link_libraries(qe_pp_opengrid_exe
         QE::PW
         QE::UTILX
         QE::Modules
+        QE::XClib
         QE::PP
         QE::FFTX)
 
@@ -213,6 +216,7 @@ target_link_libraries(qe_pp_xctest_exe
     PRIVATE
         QE::UTILX
         QE::Modules
+        QE::XClib
         QE::CPV
         QE::PP)
 
@@ -379,6 +383,7 @@ target_link_libraries(qe_pp_pw2bgw_exe
     PRIVATE
         QE::PW
         QE::Modules
+        QE::XClib
         QE::PP
         QE::UTILX
         QE::UPF
@@ -434,8 +439,8 @@ target_link_libraries(qe_pp_ppacf_exe
     PRIVATE
         QE::LAPACK
         QE::PW
+        QE::XClib
         QE::PP
-        QE::Modules
         QE::UTILX
         QE::FFTX)
 
@@ -447,6 +452,7 @@ qe_add_executable(qe_pp_benchmarklibxc_exe ${sources})
 set_target_properties(qe_pp_benchmarklibxc_exe PROPERTIES OUTPUT_NAME xctest_qe_libxc.x)
 target_link_libraries(qe_pp_benchmarklibxc_exe
     PRIVATE
+        QE::XClib
         QE::PP)
 
 ###########################################################

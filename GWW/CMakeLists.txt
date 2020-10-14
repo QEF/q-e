@@ -202,6 +202,7 @@ target_link_libraries(qe_gww_head
     PRIVATE
         QE::PW
         QE::LR_Modules
+        QE::XClib
         QE::Modules
         QE::PHonon::PH
         QE::UTILX

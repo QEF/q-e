@@ -58,6 +58,7 @@ target_link_libraries(qe_tddfpt
     PRIVATE
         QE::LR_Modules
         QE::PW
+        QE::XClib
         QE::Modules
         QE::UTILX
         QE::UPF
@@ -72,6 +73,7 @@ set_target_properties(qe_tddfpt_turbolanczos_exe PROPERTIES OUTPUT_NAME turbo_la
 target_link_libraries(qe_tddfpt_turbolanczos_exe
     PRIVATE
         QE::PW
+        QE::XClib
         QE::Modules
         QE::TDDFPT
         QE::UPF
@@ -86,6 +88,7 @@ set_target_properties(qe_tddfpt_turbodavidson_exe PROPERTIES OUTPUT_NAME turbo_d
 target_link_libraries(qe_tddfpt_turbodavidson_exe
     PRIVATE
         QE::PW
+        QE::XClib
         QE::Modules
         QE::TDDFPT
         QE::UPF
@@ -102,6 +105,7 @@ target_link_libraries(qe_tddfpt_turboeels_exe
         QE::PW
         QE::LAX
         QE::Modules
+        QE::XClib
         QE::TDDFPT
         QE::LR_Modules
         QE::UPF
@@ -117,6 +121,7 @@ target_link_libraries(qe_tddfpt_calculatespectrum_exe
     PRIVATE
         QE::LAPACK
         QE::UTILX
+        QE::XClib
         QE::Modules)
 
 ###########################################################

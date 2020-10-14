@@ -103,6 +103,7 @@ target_link_libraries(qe_atomic
     PRIVATE
         QE::UPF
         QE::UTILX
+        QE::XClib
         QE::Modules)
 
 ###########################################################
@@ -115,6 +116,7 @@ target_link_libraries(qe_atomic_exe
     PRIVATE
         QE::UPF
         QE::Modules
+        QE::XClib
         QE::ATOMIC
         QE::UTILX)
 
