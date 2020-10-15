@@ -9,8 +9,8 @@
 #define ZERO ( 0._DP, 0._DP )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rrmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
-                      g2kin, btype, ethr, ndiis, uspp, do_hpsi, is_exx, notconv, rmm_iter )
+SUBROUTINE rrmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
+                      g2kin_d, btype, ethr, ndiis, uspp, do_hpsi, is_exx, notconv, rmm_iter )
   !----------------------------------------------------------------------------
   !
   ! ... Iterative diagonalization of a complex hermitian matrix
@@ -26,11 +26,7 @@ SUBROUTINE rrmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
   ! ... I/O variables
   !
   INTEGER,     INTENT(IN)    :: npwx, npw, nbnd
-  COMPLEX(DP), INTENT(INOUT) :: psi (npwx,nbnd)
-  COMPLEX(DP), INTENT(INOUT) :: hpsi(npwx,nbnd)
-  COMPLEX(DP), INTENT(INOUT) :: spsi(npwx,nbnd)
   REAL(DP),    INTENT(INOUT) :: e(nbnd)
-  REAL(DP),    INTENT(IN)    :: g2kin(npwx)
   INTEGER,     INTENT(IN)    :: btype(nbnd)
   REAL(DP),    INTENT(IN)    :: ethr
   INTEGER,     INTENT(IN)    :: ndiis
@@ -50,8 +46,6 @@ SUBROUTINE rrmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
   INTEGER,     ALLOCATABLE :: ibnd_index(:)
   INTEGER,     ALLOCATABLE :: jbnd_index(:)
   REAL(DP)                 :: empty_ethr
-  COMPLEX(DP), ALLOCATABLE :: phi(:,:,:), hphi(:,:,:), sphi(:,:,:)
-  COMPLEX(DP), ALLOCATABLE :: kpsi(:,:), hkpsi(:,:), skpsi(:,:)
   REAL(DP),    ALLOCATABLE :: hr(:,:,:), sr(:,:,:)
   REAL(DP),    ALLOCATABLE :: php(:,:), psp(:,:)
   REAL(DP),    ALLOCATABLE :: ew(:), hw(:), sw(:)
@@ -65,20 +59,17 @@ SUBROUTINE rrmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
   ! ... device variables
   !
   INTEGER :: ii, jj, kk
-  COMPLEX(DP)  :: psi_d (npwx,nbnd)
-  COMPLEX(DP)  :: hpsi_d(npwx,nbnd)
-  COMPLEX(DP)  :: spsi_d(npwx,nbnd)
-  REAL(DP)     :: g2kin_d(npwx)
-  COMPLEX(DP), ALLOCATABLE :: phi_d(:,:,:), hphi_d(:,:,:), sphi_d(:,:,:)
+  COMPLEX(DP), INTENT(INOUT)  :: psi_d (npwx,nbnd)
+  COMPLEX(DP), INTENT(INOUT)  :: hpsi_d(npwx,nbnd)
+  COMPLEX(DP), INTENT(INOUT)  :: spsi_d(npwx,nbnd)
+  REAL(DP), INTENT(IN)        :: g2kin_d(npwx)
+  COMPLEX(DP), ALLOCATABLE    :: phi_d(:,:,:), hphi_d(:,:,:), sphi_d(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: kpsi_d(:,:), hkpsi_d(:,:), skpsi_d(:,:)
 #if defined(__CUDA)
   attributes(device) :: psi_d, hpsi_d, spsi_d, g2kin_d
   attributes(device) :: phi_d, hphi_d, sphi_d, kpsi_d, hkpsi_d, skpsi_d
 #endif
-!civn 
-  EXTERNAL :: h_psi, s_psi
   EXTERNAL :: h_psi_gpu, s_psi_gpu
-!
     ! h_psi(npwx,npw,nbnd,psi,hpsi)
     !     calculates H|psi>
     ! s_psi(npwx,npw,nbnd,psi,spsi)
@@ -86,12 +77,6 @@ SUBROUTINE rrmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,nbnd)
   !
   CALL start_clock( 'rrmmdiagg' )
-!civn 
-  psi_d = psi
-  hpsi_d = hpsi
-  if(uspp) spsi_d = spsi
-  g2kin_d =g2kin
-!
   !
   IF ( gstart == -1 ) CALL errore( ' rrmmdiagg ', 'gstart variable not initialized', 1 )
   !
@@ -106,33 +91,6 @@ SUBROUTINE rrmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
   !
   IF( ibnd_size == 0 ) CALL errore( ' rrmmdiagg ', ' ibnd_size == 0 ', 1 )
   !
-  ALLOCATE( phi( npwx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate phi ', ABS(ierr) )
-  !
-  ALLOCATE( hphi( npwx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate hphi ', ABS(ierr) )
-  !
-  IF ( uspp ) THEN
-     !
-     ALLOCATE( sphi( npwx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
-     IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate sphi ', ABS(ierr) )
-     !
-  END IF
-  !
-  ALLOCATE( kpsi( npwx, nbnd ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate kpsi ', ABS(ierr) )
-  !
-  ALLOCATE( hkpsi( npwx, nbnd ), STAT=ierr )
-  IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate hkpsi ', ABS(ierr) )
-  !
-  IF ( uspp ) THEN
-     !
-     ALLOCATE( skpsi( npwx, nbnd ), STAT=ierr )
-     IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate skpsi ', ABS(ierr) )
-     !
-  END IF
-  !
-!civn 
   ALLOCATE( phi_d( npwx, ibnd_start:ibnd_end, ndiis ), STAT=ierr )
   IF( ierr /= 0 ) CALL errore( ' rrmmdiagg ', ' cannot allocate phi_d ', ABS(ierr) )
   !
@@ -180,10 +138,6 @@ SUBROUTINE rrmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
   ALLOCATE( ibnd_index( nbnd ) )
   ALLOCATE( jbnd_index( ibnd_start:ibnd_end ) )
   !
-!civn 
-  phi  = ZERO
-  hphi = ZERO
-  IF ( uspp ) sphi = ZERO
 !$cuf kernel do(3)
   DO ii = 1, npwx 
     DO jj = ibnd_start, ibnd_end
@@ -204,10 +158,6 @@ SUBROUTINE rrmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
     END DO 
   END IF
   !
-!civn 
-  kpsi  = ZERO
-  hkpsi = ZERO
-  IF ( uspp ) skpsi = ZERO
 !$cuf kernel do(2)
   DO ii = 1, npwx 
     DO jj = 1, nbnd  
@@ -270,17 +220,6 @@ SUBROUTINE rrmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
      END IF 
      !
   END IF
-!civn 
-psi = psi_d
-hpsi = hpsi_d
-if(uspp) spsi = spsi_d
-phi = phi_d
-hphi = hphi_d
-if(uspp) sphi = sphi_d
-kpsi = kpsi_d
-hkpsi = hkpsi_d
-if(uspp) skpsi = skpsi_d
-!
   !
   ! ... RMM-DIIS's loop
   !
@@ -290,33 +229,11 @@ if(uspp) skpsi = skpsi_d
      !
      ! ... Perform DIIS
      !
-!civn 
-psi_d = psi
-hpsi_d = hpsi
-if(uspp) spsi_d = spsi
-phi_d = phi
-hphi_d = hphi
-if(uspp) sphi_d = sphi
-kpsi_d = kpsi
-hkpsi_d = hkpsi
-if(uspp) skpsi_d = skpsi
-!
      CALL do_diis_gpu( idiis )
      !
      ! ... Line searching
      !
      CALL line_search_gpu( )
-!civn 
-psi = psi_d
-hpsi = hpsi_d
-if(uspp) spsi = spsi_d
-phi = phi_d
-hphi = hphi_d
-if(uspp) sphi = sphi_d
-kpsi = kpsi_d
-hkpsi = hkpsi_d
-if(uspp) skpsi = skpsi_d
-!
      !
      ! ... Calculate eigenvalues and check convergence
      !
@@ -332,34 +249,54 @@ if(uspp) skpsi = skpsi_d
   !
   IF ( ibnd_start > 1 ) THEN
      !
-     psi (:,1:(ibnd_start-1)) = ZERO
-     hpsi(:,1:(ibnd_start-1)) = ZERO
-     IF ( uspp ) &
-     spsi(:,1:(ibnd_start-1)) = ZERO
+!$cuf kernel do(2)
+     DO ii = 1, npwx 
+       DO jj = 1,ibnd_start-1  
+           psi_d(ii,jj)  = ZERO
+           hpsi_d(ii,jj) = ZERO
+       END DO
+     END DO
+     !
+     IF ( uspp ) THEN
+     !
+!$cuf kernel do(2)
+        DO ii = 1, npwx 
+          DO jj = 1,ibnd_start-1  
+            spsi_d(ii,jj) = ZERO
+          END DO
+        END DO
+     !
+     END IF
      !
   END IF
   !
   IF ( ibnd_end < nbnd ) THEN
      !
-     psi (:,(ibnd_end+1):nbnd) = ZERO
-     hpsi(:,(ibnd_end+1):nbnd) = ZERO
-     IF ( uspp ) &
-     spsi(:,(ibnd_end+1):nbnd) = ZERO
+!$cuf kernel do(2)
+     DO ii = 1, npwx 
+       DO jj = ibnd_end+1,nbnd  
+           psi_d (ii,jj) = ZERO
+           hpsi_d(ii,jj) = ZERO
+       END DO
+     END DO
+     !
+     IF ( uspp ) THEN
+!$cuf kernel do(2)
+        DO ii = 1, npwx 
+          DO jj = ibnd_end+1,nbnd
+              spsi_d(ii,jj) = ZERO
+          END DO
+        END DO
+        !
+     END IF
      !
   END IF
   !
-  CALL mp_sum( psi,  inter_bgrp_comm )
-  CALL mp_sum( hpsi, inter_bgrp_comm )
+  CALL mp_sum( psi_d,  inter_bgrp_comm )
+  CALL mp_sum( hpsi_d, inter_bgrp_comm )
   IF ( uspp ) &
-  CALL mp_sum( spsi, inter_bgrp_comm )
+  CALL mp_sum( spsi_d, inter_bgrp_comm )
   !
-  DEALLOCATE( phi )
-  DEALLOCATE( hphi )
-  IF ( uspp ) DEALLOCATE( sphi )
-  DEALLOCATE( kpsi )
-  DEALLOCATE( hkpsi )
-  IF ( uspp ) DEALLOCATE( skpsi )
-!civn 
   DEALLOCATE( phi_d )
   DEALLOCATE( hphi_d )
   IF ( uspp ) DEALLOCATE( sphi_d )
@@ -385,92 +322,6 @@ if(uspp) skpsi = skpsi_d
   !
 CONTAINS
   !
-  !
-  SUBROUTINE calc_hpsi( )
-    !
-    IMPLICIT NONE
-    !
-    INTEGER :: ibnd
-    !
-    REAL(DP), EXTERNAL :: DDOT
-    !
-    ! ... Operate the Hamiltonian : H |psi>
-    !
-    hpsi = ZERO
-    !
-    CALL h_psi( npwx, npw, nbnd, psi, hpsi )
-    !
-    ! ... Operate the Overlap : S |psi>
-    !
-    IF ( uspp ) THEN
-       !
-       spsi = ZERO
-       !
-       CALL s_psi( npwx, npw, nbnd, psi, spsi )
-       !
-    END IF
-    !
-    ! ... Matrix element : <psi| H |psi>
-    !
-    DO ibnd = ibnd_start, ibnd_end
-       !
-       hw(ibnd) = 2._DP * DDOT( npw2, psi(1,ibnd), 1, hpsi(1,ibnd), 1 )
-       !
-       IF ( gstart == 2 ) THEN
-          !
-          hw(ibnd )= hw(ibnd) - DBLE( psi(1,ibnd) ) * DBLE ( hpsi(1,ibnd) )
-          !
-       END IF
-       !
-    END DO
-    !
-    CALL mp_sum( hw(ibnd_start:ibnd_end), intra_bgrp_comm )
-    !
-    ! ... Matrix element : <psi| S |psi>
-    !
-    DO ibnd = ibnd_start, ibnd_end
-       !
-       IF ( uspp ) THEN
-          !
-          sw(ibnd) = 2._DP * DDOT( npw2, psi(1,ibnd), 1, spsi(1,ibnd), 1 )
-          !
-          IF ( gstart == 2 ) THEN
-             !
-             sw(ibnd )= sw(ibnd) - DBLE( psi(1,ibnd) ) * DBLE ( spsi(1,ibnd) )
-             !
-          END IF
-          !
-       ELSE
-          !
-          sw(ibnd) = 2._DP * DDOT( npw2, psi(1,ibnd), 1, psi(1,ibnd), 1 )
-          !
-          IF ( gstart == 2 ) THEN
-             !
-             sw(ibnd )= sw(ibnd) - DBLE( psi(1,ibnd) ) * DBLE ( psi(1,ibnd) )
-             !
-          END IF
-          !
-       END IF
-       !
-    END DO
-    !
-    CALL mp_sum( sw(ibnd_start:ibnd_end), intra_bgrp_comm )
-    !
-    ! ... Energy eigenvalues
-    !
-    IF( ANY( sw(ibnd_start:ibnd_end) <= eps16 ) ) &
-    CALL errore( ' rrmmdiagg ', ' sw <= 0 ', 1 )
-    !
-    ew(1:nbnd) = 0._DP
-    ew(ibnd_start:ibnd_end) = hw(ibnd_start:ibnd_end) / sw(ibnd_start:ibnd_end)
-    !
-    CALL mp_sum( ew, inter_bgrp_comm )
-    !
-    e(1:nbnd) = ew(1:nbnd)
-    !
-    RETURN
-    !
-  END SUBROUTINE calc_hpsi
   !
   SUBROUTINE calc_hpsi_gpu( )
     !
