@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 # CMake < 3.13 cannot install external targets:
 # https://gitlab.kitware.com/cmake/cmake/merge_requests/2152
 
