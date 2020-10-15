@@ -6,7 +6,7 @@ if(FOX_ROOT)
     add_library(QE::FOX ALIAS qe_fox)
     qe_install_targets(qe_fox) 
     target_link_libraries(qe_fox INTERFACE "-L${FOX_ROOT}/lib;-lFoX_dom;-lFoX_sax;-lFoX_wxml;-lFoX_common;-lFoX_utils;-lFoX_fsys")
-    target_include_directories(qe_fox INTERFACE ${FOX_ROOT}finclude)
+    target_include_directories(qe_fox INTERFACE ${FOX_ROOT}/finclude)
 elseif(QE_ENABLE_VENDOR_DEPS)
     message(STATUS "Installing QE::FOX via submodule")
     set(fox_targets
