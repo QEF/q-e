@@ -484,13 +484,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              !
           END IF
           !
-!*** PART TO REMOVE*****************************************************
-          IF(use_gpu) THEN
-             hevc(1:npwx*npol,1:nbnd) = hevc_d(1:npwx*npol,1:nbnd)
-             IF ( okvan ) &
-                 sevc(1:npwx*npol,1:nbnd) = sevc_d(1:npwx*npol,1:nbnd)
-          END IF 
-!***********************************************************************
           !
           IF (.not. use_gpu) THEN
             CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0); CALL using_g2kin(0) !precontidtion has intent(in)
@@ -498,9 +491,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                          et(1,ik), g2kin(1), btype(1,ik), ethr, rmm_ndim, &
                          okvan, lrot, exx_is_active(), notconv, rmm_iter )
           ELSE
-             CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(1); CALL using_g2kin(0) !precontidtion has intent(in)
-             CALL rrmmdiagg_gpu( h_psi, s_psi, npwx, npw, nbnd, evc, hevc, sevc, &
-                          et(1,ik), g2kin , btype(1,ik), ethr, rmm_ndim, &
+             CALL using_evc_d(1);  CALL using_et(1); CALL using_g2kin_d(0) !precontidtion has intent(in)
+             CALL rrmmdiagg_gpu( h_psi_gpu, s_psi_gpu, npwx, npw, nbnd, evc_d, hevc_d, sevc_d, &
+                          et(1,ik), g2kin_d, btype(1,ik), ethr, rmm_ndim, &
                           okvan, lrot, exx_is_active(), notconv, rmm_iter )
           END IF
           !
@@ -519,6 +512,13 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        ! ... Gram-Schmidt orthogonalization
        !
+!*** PART TO REMOVE*****************************************************
+          IF(use_gpu) THEN
+             hevc = hevc_d
+             IF ( okvan ) &
+                 sevc = sevc_d
+          END IF 
+!***********************************************************************
 !       IF (.not. use_gpu) THEN
          CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
          CALL gram_schmidt( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
