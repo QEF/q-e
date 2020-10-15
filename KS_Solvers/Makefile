@@ -19,7 +19,6 @@ Davidson/regterg.o \
 CG/ccgdiagg.o \
 CG/rcgdiagg.o \
 PPCG/generic_cublas.o \
-PPCG/utils_xpu.o  \
 PPCG/ppcg_gamma.o \
 PPCG/ppcg_k.o \
 ParO/bpcg_gamma.o \
