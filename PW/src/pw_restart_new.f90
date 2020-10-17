@@ -1155,8 +1155,8 @@ MODULE pw_restart_new
       time_reversal = (.NOT.magnetic_sym) .AND. (.NOT.noinv) 
       CALL inverse_s()
       CALL s_axis_to_cart()
-      !! symmetry check - FIXME: is this needed?
-      IF (nat > 0) CALL checkallsym( nat, tau, ityp)
+      !! symmetry check - FIXME: must be done in a more consistent way 
+      !! IF (nat > 0) CALL checkallsym( nat, tau, ityp)
       !! Algorithmic info
       do_cutoff_2D = (output_obj%boundary_conditions%assume_isolated == "2D")
       CALL qexsd_copy_algorithmic_info ( output_obj%algorithmic_info, &
