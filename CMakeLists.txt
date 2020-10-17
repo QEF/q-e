@@ -162,10 +162,12 @@ if(QE_ENABLE_OPENMP)
 endif(QE_ENABLE_OPENMP)
 
 ############################################################
-## Compiler specific options
+## Compiler vendor specific options
 ############################################################
 if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
     include(${PROJECT_CMAKE}/GNUFortranCompiler.cmake)
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES "PGI")
+    include(${PROJECT_CMAKE}/NVFortranCompiler.cmake)
 endif()
 
 ############################################################
