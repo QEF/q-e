@@ -84,6 +84,9 @@ F90           = @f90@
 CC             = @cc@
 F77            = @f77@
 
+# CUDA Toolkit path
+CUDA_PATH=@cuda_path@
+
 # GPU architecture (Kepler: 35, Pascal: 60, Volta: 70 )
 GPU_ARCH=@gpu_arch@
 
