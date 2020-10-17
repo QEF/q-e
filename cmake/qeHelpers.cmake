@@ -22,8 +22,8 @@ function(qe_get_global_compile_definitions OUTVAR)
 endfunction(qe_get_global_compile_definitions)
 
 function(qe_get_fortran_cpp_flag OUTVAR)
-    if(DEFINED QE_Fortran_PREPROCESSOR_FLAGS)
-        set(${OUTVAR} "${QE_Fortran_PREPROCESSOR_FLAGS}" PARENT_SCOPE)
+    if(DEFINED Fortran_PREPROCESSOR_FLAGS)
+        set(${OUTVAR} "${Fortran_PREPROCESSOR_FLAGS}" PARENT_SCOPE)
     else()
         # TODO actual flag check
         set(${OUTVAR} "-cpp" PARENT_SCOPE)

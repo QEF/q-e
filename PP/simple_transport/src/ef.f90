@@ -203,7 +203,7 @@
          do i=1,nbnd
             do ik=1,nks
                x = (ee-et(i,ik))/degauss/dsqrt(2.d0)
-               fd = 0.5d0 * (1.d0 + derf( x ) )
+               fd = 0.5d0 * (1.d0 + erf(x) )
                sumk = sumk + wk(ik) * fd 
             end do
          end do
@@ -217,7 +217,7 @@
             do ik=1,nks
                ! 
                x = (ee-et(i,ik))/degauss/dsqrt(2.d0)
-               fd = 0.5d0 * (1.d0 + derf(x) )
+               fd = 0.5d0 * (1.d0 + erf(x) )
                hd = 0.d0
                arg = min (200.d0, x**2)
                hp = exp ( - arg)
