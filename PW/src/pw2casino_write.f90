@@ -323,9 +323,8 @@ CONTAINS
    SUBROUTINE calc_energies
       USE becmod, ONLY: becp, calbec, allocate_bec_type, deallocate_bec_type
       USE exx,    ONLY : exxenergy2, fock2
-      !USE funct,  ONLY : dft_is_hybrid
-      USE xc_interfaces, ONLY : xclib_dft_is
-
+      USE xc_lib, ONLY : xclib_dft_is
+      
       COMPLEX(DP), ALLOCATABLE :: aux(:)
       INTEGER :: npw, ibnd, j, ig, ik,ikk, ispin, na, nt, ijkb0, ikb,jkb, ih,jh
       REAL(dp), ALLOCATABLE :: g2kin(:)

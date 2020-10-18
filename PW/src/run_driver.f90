@@ -360,8 +360,7 @@ CONTAINS
     !
     USE fft_base,   ONLY : dfftp
     USE fft_base,   ONLY : dffts
-    !USE funct,      ONLY : dft_is_hybrid
-    USE xc_interfaces, ONLY : xclib_dft_is
+    USE xc_lib,     ONLY : xclib_dft_is
     !
     ! ... get magnetic moments from previous run before charge is deleted
     !

@@ -128,8 +128,7 @@ END SUBROUTINE test_gcxc
 
 SUBROUTINE test_xc( nnr, nspin, rhor, grhor )
   USE kinds, ONLY: DP
-  !USE funct, ONLY: get_iexch, get_icorr, get_igcx, get_igcc
-  USE xc_interfaces,   ONLY: xclib_get_id
+  USE xc_lib, ONLY: xclib_get_id
 
   IMPLICIT NONE
   INTEGER, INTENT(in) :: nnr, nspin

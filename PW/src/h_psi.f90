@@ -17,8 +17,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   !
   USE kinds,              ONLY: DP
   USE noncollin_module,   ONLY: npol
-  !USE funct,              ONLY: exx_is_active
-  USE xc_interfaces,      ONLY: exx_is_active
+  USE xc_lib,             ONLY: exx_is_active
   USE mp_bands,           ONLY: use_bgrp_in_hpsi, inter_bgrp_comm
   USE mp,                 ONLY: mp_allgather, mp_size, &
                                 mp_type_create_column_section, mp_type_free
@@ -104,8 +103,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
                                      v_loc_psir_inplace
   USE fft_base,                ONLY: dffts
   USE exx,                     ONLY: use_ace, vexx, vexxace_gamma, vexxace_k
-  !USE funct,                   ONLY: exx_is_active
-  USE xc_interfaces,           ONLY: exx_is_active, xclib_dft_is
+  USE xc_lib,                  ONLY: exx_is_active, xclib_dft_is
   USE fft_helper_subroutines
   !
   IMPLICIT NONE

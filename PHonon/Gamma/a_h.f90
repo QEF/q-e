@@ -23,8 +23,7 @@ SUBROUTINE A_h(npw,e,h,ah)
   USE becmod, ONLY: bec_type, becp, calbec
   USE gc_lr, ONLY:  grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
   USE cgcom, ONLY: auxr, aux2, aux3, dmuxc
-  !USE funct, ONLY: dft_is_gradient
-  USE xc_interfaces, ONLY: xclib_dft_is
+  USE xc_lib, ONLY: xclib_dft_is
   !
   IMPLICIT NONE
   INTEGER :: npw, j, jkb, ibnd, na,nt,ih

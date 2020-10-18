@@ -999,8 +999,7 @@ CONTAINS
     !! Set the default \(\text{a1}\) and \(\text{a2}\) values using the XC flags.
     !
     USE io_global,  ONLY : stdout, ionode
-    !USE funct,      ONLY : get_iexch, get_icorr, get_igcx, get_igcc
-    USE xc_interfaces, ONLY : xclib_get_id
+    USE xc_lib,     ONLY : xclib_get_id
     !
     REAL*8, INTENT(INOUT) :: a1i, a2i
     !

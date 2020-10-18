@@ -25,8 +25,7 @@ SUBROUTINE scale_h
   USE start_k,        ONLY : nks_start, xk_start, nk1,nk2,nk3
   USE exx_base,       ONLY : exx_grid_init, exx_mp_init
   USE exx,            ONLY : exx_gvec_reinit
-  !USE funct,          ONLY : dft_is_hybrid
-  USE xc_interfaces,  ONLY : xclib_dft_is
+  USE xc_lib,         ONLY : xclib_dft_is
   USE mp,             ONLY : mp_max
   USE mp_bands,       ONLY : intra_bgrp_comm
   !

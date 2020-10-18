@@ -26,9 +26,7 @@ MODULE io_rho_xml
       !
       USE paw_variables,    ONLY : okpaw
       USE ldaU,             ONLY : lda_plus_u, hub_back, lda_plus_u_kind, nsg
-      !USE funct,            ONLY : dft_is_meta
-      USE xc_interfaces,    ONLY : xclib_dft_is
-      
+      USE xc_lib,           ONLY : xclib_dft_is
       USE noncollin_module, ONLY : noncolin
       USE spin_orb,         ONLY : domag
       USE scf,              ONLY : scf_type
@@ -137,9 +135,7 @@ MODULE io_rho_xml
       USE noncollin_module, ONLY : noncolin
       USE spin_orb,         ONLY : domag
       USE gvect,            ONLY : ig_l2g
-      !USE funct,            ONLY : dft_is_meta
-      USE xc_interfaces,    ONLY : xclib_dft_is
-      
+      USE xc_lib,           ONLY : xclib_dft_is
       USE io_files,         ONLY : restart_dir
       USE io_global,        ONLY : ionode, ionode_id, stdout
       USE mp_bands,         ONLY : root_bgrp, intra_bgrp_comm

@@ -420,7 +420,7 @@ subroutine dvxc_dn(mesh, rho, dvxc)
    ! compute the derivative of xc-potential w.r.t local density.
    ! some routine in PH and flibs will be called
    !
-   use xc_interfaces, only : dmxc, xclib_set_threshold, xclib_dft_is
+   use xc_lib, only : xclib_set_threshold, xclib_dft_is
    !
    implicit none
    !

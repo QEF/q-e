@@ -746,9 +746,7 @@ MODULE us_exx
     USE uspp,     ONLY : nkb
     USE becmod,   ONLY : bec_type, allocate_bec_type, beccopy
     USE wvfct,    ONLY : nbnd
-    !USE funct,    ONLY : dft_is_hybrid
-    USE xc_interfaces, ONLY : xclib_dft_is
-    
+    USE xc_lib,   ONLY : xclib_dft_is
     USE uspp,     ONLY : okvan
     USE mp_bands, ONLY : inter_bgrp_comm
 

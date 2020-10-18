@@ -120,12 +120,8 @@ MODULE pw_restart_new
                                        block_2, block_height, etotgatefield ! TB
       USE mp,                   ONLY : mp_sum
       USE mp_bands,             ONLY : intra_bgrp_comm
-      !USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
-      !                                 get_gau_parameter, &
-      !                                 get_screening_parameter, exx_is_active
-      USE xc_interfaces,        ONLY : xclib_dft_is, get_gau_parameter, &
+      USE xc_lib,               ONLY : xclib_dft_is, get_gau_parameter, &
                                        get_screening_parameter, xclib_get_exx_fraction, exx_is_active
-      
       USE exx_base,             ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                                        exxdiv_treatment, yukawa, ecutvcut
       USE exx,                  ONLY : ecutfock, local_thr 
@@ -994,13 +990,10 @@ MODULE pw_restart_new
                                   Hubbard_l, Hubbard_l_back, Hubbard_l1_back, backall, &
                                   Hubbard_U, Hubbard_U_back, Hubbard_J, Hubbard_V, Hubbard_alpha, &
                                   Hubbard_alpha_back, Hubbard_J0, Hubbard_beta, U_projection
-      USE funct,           ONLY : enforce_input_dft !,set_screening_parameter, &
-     !      set_gau_parameter, start_exx, dft_is_hybrid
-      USE xc_interfaces,      ONLY :start_exx, exx_is_active,xclib_dft_is, &
-                              set_screening_parameter, set_gau_parameter
-      USE xc_interfaces,      ONLY: xclib_set_exx_fraction, stop_exx, start_exx  
-                              
-     
+      USE funct,           ONLY : enforce_input_dft
+      USE xc_lib,          ONLY : start_exx, exx_is_active,xclib_dft_is,      &
+                                  set_screening_parameter, set_gau_parameter, &
+                                  xclib_set_exx_fraction, stop_exx, start_exx  
       USE london_module,   ONLY : scal6, lon_rcut, in_C6
       USE tsvdw_module,    ONLY : vdw_isolated
       USE exx_base,        ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
@@ -1109,7 +1102,7 @@ MODULE pw_restart_new
       IF ( xclib_dft_is('hybrid') ) THEN
          ecutvcut=ecutvcut*e2
          ecutfock=ecutfock*e2
-         CALL set_exx_fraction( exx_fraction ) 
+         CALL xclib_set_exx_fraction( exx_fraction ) 
          CALL set_screening_parameter ( screening_parameter )
          CALL start_exx ()
       END IF

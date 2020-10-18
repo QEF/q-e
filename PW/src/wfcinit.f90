@@ -214,8 +214,7 @@ SUBROUTINE init_wfc ( ik )
   USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm, &
                                    nbgrp, root_bgrp_id
   USE mp,                   ONLY : mp_bcast
-  !USE funct,                ONLY : dft_is_hybrid, stop_exx
-  USE xc_interfaces,        ONLY : xclib_dft_is, stop_exx
+  USE xc_lib,               ONLY : xclib_dft_is, stop_exx
   !
   IMPLICIT NONE
   !

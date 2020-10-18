@@ -13,7 +13,7 @@ SUBROUTINE scf(ic)
   !   self-interaction-correction allowed
   !
   USE kinds, ONLY : dp
-  USE xc_interfaces, ONLY : xclib_dft_is
+  USE xc_lib, ONLY : xclib_dft_is
   USE radial_grids, ONLY : ndmx
   USE constants, ONLY: e2
   USE ld1inc, ONLY : grid, zed, psi, isic, vpot, vh, vxt, rho, iter, &

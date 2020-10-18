@@ -52,17 +52,10 @@ PROGRAM do_ppacf
   USE scf,                  ONLY : scf_type, create_scf_type, destroy_scf_type
   USE scf,                  ONLY : scf_type_COPY
   USE scf,                  ONLY : rho, rho_core, rhog_core, vltot
-  USE funct,                ONLY : dft_is_nonlocc, nlc, enforce_input_dft
-  
-  !USE funct,                ONLY : get_iexch, get_icorr, get_igcx, get_igcc
-  !USE funct,                ONLY : set_exx_fraction, set_auxiliary_flags, &
-  !                                 enforce_input_dft, is_libxc
-                                   
-  USE xc_interfaces,        ONLY : xclib_get_id, xclib_set_auxiliary_flags, &
-                                   xclib_set_exx_fraction, xclib_is_libxc
-  USE xc_interfaces,        ONLY : xc, xc_gcx, & ! gcxc, gcx_spin, gcc_spin, &
-                                   xclib_set_threshold
-  !USE xc_lda_lsda,          ONLY : xc
+  USE funct,                ONLY : dft_is_nonlocc, nlc, enforce_input_dft   
+  USE xc_lib,               ONLY : xclib_get_id, xclib_set_auxiliary_flags,    &
+                                   xclib_set_exx_fraction, xclib_dft_is_libxc, &
+                                   xclib_set_threshold, xc_gcx
   USE wvfct,                ONLY : npw, npwx
   USE environment,          ONLY : environment_start, environment_end
   USE vdW_DF,               ONLY : Nqs, vdW_DF_potential, vdW_DF_energy, vdW_DF_analysis
@@ -197,8 +190,8 @@ PROGRAM do_ppacf
   !--------------- READ IN PREFIX --------------------------------!
   CALL environment_start( 'ppacf' )
   !
-  is_libxc(1) = xclib_is_libxc('GGA','EXCH')
-  is_libxc(2) = xclib_is_libxc('GGA','CORR')
+  is_libxc(1) = xclib_dft_is_libxc('GGA','EXCH')
+  is_libxc(2) = xclib_dft_is_libxc('GGA','CORR')
   !
   IF ( ANY(.NOT.is_libxc(1:2)) ) CALL xclib_set_threshold( 'gga', 1.E-10_DP, 1.E-10_DP )
   !

@@ -18,7 +18,7 @@ subroutine elsd ( zed, grid, rho, vxt, vh, vxc, exc, excgga, nwf,&
   use kinds, only : DP
   use constants, only: fpi
   use radial_grids, only: ndmx, radial_grid_type
-  use xc_interfaces, only: xclib_get_id, xclib_dft_is
+  use xc_lib, only: xclib_get_id, xclib_dft_is
   use ld1inc, only: vx, noscf, tau, vtau
   implicit none
   integer, intent(in) :: nwf, nspin

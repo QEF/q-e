@@ -65,8 +65,7 @@ SUBROUTINE localize_orbitals()
   USE io_files,             ONLY : nwordwfc, iunwfc
   USE buffers,              ONLY : get_buffer
   USE control_flags,        ONLY : lmd
-  !USE funct,                ONLY : dft_is_hybrid
-  USE xc_interfaces,        ONLY : xclib_dft_is
+  USE xc_lib,               ONLY : xclib_dft_is
   !   
   implicit none
   integer :: NGrid, ikq, NBands, npw

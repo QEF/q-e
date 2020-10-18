@@ -23,9 +23,7 @@ SUBROUTINE stress( sigma )
   USE lsda_mod,         ONLY : nspin
   USE scf,              ONLY : rho, rho_core, rhog_core
   USE control_flags,    ONLY : iverbosity, gamma_only, llondon, ldftd3, lxdm, ts_vdw
-  !USE funct,            ONLY : dft_is_meta, dft_is_gradient
-  USE xc_interfaces,    ONLY : xclib_dft_is
-  
+  USE xc_lib,           ONLY : xclib_dft_is
   USE symme,            ONLY : symmatrix
   USE bp,               ONLY : lelfield
   USE uspp,             ONLY : okvan
@@ -34,8 +32,6 @@ SUBROUTINE stress( sigma )
   USE dftd3_qe,         ONLY : dftd3_pbc_gdisp, dftd3
   USE xdm_module,       ONLY : stress_xdm
   USE exx,              ONLY : exx_stress
-  !USE funct,            ONLY : dft_is_hybrid
-  
   USE tsvdw_module,     ONLY : HtsvdW
   USE esm,              ONLY : do_comp_esm, esm_bc ! for ESM stress
   USE esm,              ONLY : esm_stres_har, esm_stres_ewa, esm_stres_loclong ! for ESM stress

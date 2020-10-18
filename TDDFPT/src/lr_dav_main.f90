@@ -29,7 +29,7 @@ PROGRAM lr_dav_main
   USE wavefunctions,  ONLY : psic
   USE control_flags,         ONLY : do_makov_payne
   USE check_stop,            ONLY : check_stop_now, check_stop_init
-  USE xc_interfaces,         ONLY : xclib_dft_is
+  USE xc_lib,                ONLY : xclib_dft_is
   use lr_dav_routines
   use lr_dav_variables
   use lr_dav_debug
@@ -130,7 +130,7 @@ CONTAINS
 
     USE lr_variables,        ONLY : no_hxc, d0psi_rs
     USE uspp,                ONLY : okvan
-    USE xc_interfaces,       ONLY : xclib_dft_is
+    USE xc_lib,              ONLY : xclib_dft_is
     USE martyna_tuckerman,   ONLY : do_comp_mt
 
     IMPLICIT NONE

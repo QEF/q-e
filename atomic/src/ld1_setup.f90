@@ -25,7 +25,7 @@ SUBROUTINE ld1_setup
                 nwfts,  nnts,  llts,  jjts,  elts,  iswts,  octs, nstoaets, &
                 nwftsc, nntsc, lltsc, jjtsc, eltsc, iswtsc, octsc, nstoaec, lpaw
   USE funct, ONLY : dft_is_nonlocc
-  USE xc_interfaces, ONLY : xclib_get_id, xclib_dft_is, start_exx
+  USE xc_lib, ONLY : xclib_get_id, xclib_dft_is, start_exx
   !
   IMPLICIT NONE
 

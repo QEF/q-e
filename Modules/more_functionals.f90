@@ -1590,7 +1590,7 @@
 
 !       SUBROUTINE wrap_glyp( rho, grho, sc, v1c, v2c ) !--not used--
 !         USE kinds, ONLY: DP
-!         USE xc_interfaces, ONLY: lsd_glyp
+!         USE xc_lib, ONLY: lsd_glyp  !to add lsd_glyp in xc_lib module if needed
 !         IMPLICIT NONE
 !         REAL(DP) :: rho, grho, sc, v1c, v2c
 !         REAL(DP) :: RA,RB,GRHOAA,GRHOAB,GRHOBB

@@ -36,7 +36,7 @@
   USE lr_symm_base,  ONLY : gi, gimq, irotmq, minus_q, nsymq, invsymq, rtau
   USE qpoint,        ONLY : xq
   USE control_flags, ONLY : modenum, noinv
-  USE xc_interfaces, ONLY : xclib_dft_is
+  USE xc_lib,        ONLY : xclib_dft_is
   USE mp_global,     ONLY : world_comm
   USE mp,            ONLY : mp_bcast
   USE epwcom,        ONLY : scattering, nkc1, nkc2, nkc3

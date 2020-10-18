@@ -770,9 +770,9 @@ CONTAINS
   !
   SUBROUTINE compute_onecenter_energy ( totenergy_, veff_, &
        pawset_, vcharge_, nlcc_, ccharge_, nspin_, iint, vloc, energies_ , unit_)
-    USE xc_interfaces, ONLY: xclib_dft_is
+    USE xc_lib,       ONLY: xclib_dft_is
     USE radial_grids, ONLY: hartree
-    USE io_global, ONLY : stdout, ionode
+    USE io_global,    ONLY : stdout, ionode
     IMPLICIT NONE
     REAL(dp), INTENT(OUT) :: totenergy_            ! H+XC+DC
     REAL(dp), INTENT(OUT) :: veff_(ndmx,2)         ! effective potential

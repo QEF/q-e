@@ -25,9 +25,7 @@ SUBROUTINE phq_readin()
   USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, ltetra
   USE control_flags, ONLY : gamma_only, tqr, restart, io_level, &
                             ts_vdw, ldftd3, lxdm, isolve
-  !USE funct,         ONLY : dft_is_meta, dft_is_hybrid
-  USE xc_interfaces, ONLY : xclib_dft_is
-  
+  USE xc_lib,        ONLY : xclib_dft_is
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda, nspin

@@ -1,10 +1,28 @@
+!
+! --- GGA DERIVATIVE DRIVERS ---
+!
+MODULE qe_drivers_d_gga
+  !
+  USE kind_l,     ONLY: DP
+  !
+  IMPLICIT NONE
+  !
+  SAVE
+  !
+  PRIVATE
+  !
+  PUBLIC :: dgcxc_unpol, dgcxc_spin, d3gcxc
+  !
+  !
+CONTAINS
+!
 !---------------------------------------------------------------------------
-SUBROUTINE dgcxc_unpol_l( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc )
+SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc )
   !-------------------------------------------------------------------------
   !! This routine computes the derivative of the exchange and correlation
   !! potentials.
   !
-  USE kind_l,         ONLY: DP
+  USE qe_drivers_gga,   ONLY: gcxc
   !
   IMPLICIT NONE
   !
@@ -39,7 +57,7 @@ SUBROUTINE dgcxc_unpol_l( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vss
   raux(i3:f3) = r_in     ;   s2aux(i3:f3) = (s+ds)**2
   raux(i4:f4) = r_in     ;   s2aux(i4:f4) = (s-ds)**2
   !
-  CALL gcxc_l( length*4, raux, s2aux, sx, sc, v1x, v2x, v1c, v2c )
+  CALL gcxc( length*4, raux, s2aux, sx, sc, v1x, v2x, v1c, v2c )
   !
   ! ... to avoid NaN in the next operations
   WHERE( r_in<=small .OR. s2_in<=small )
@@ -62,17 +80,17 @@ SUBROUTINE dgcxc_unpol_l( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vss
   !
   RETURN
   !
-END SUBROUTINE dgcxc_unpol_l
+END SUBROUTINE dgcxc_unpol
 !
 !
 !--------------------------------------------------------------------------
-SUBROUTINE dgcxc_spin_l( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
+SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
                          vssc, vrzc )
   !------------------------------------------------------------------------
   !! This routine computes the derivative of the exchange and correlation
   !! potentials in the spin-polarized case.
   !
-  USE kind_l,          ONLY: DP
+  USE qe_drivers_gga,   ONLY: gcx_spin, gcc_spin
   !
   IMPLICIT NONE
   !
@@ -169,7 +187,7 @@ SUBROUTINE dgcxc_spin_l( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   raux(i8:f8,:) = r      ;  s2aux(i8:f8,:) = (s-dsdw)**2
   !
   !
-  CALL gcx_spin_l( length*8, raux, s2aux, sx, v1x, v2x )
+  CALL gcx_spin( length*8, raux, s2aux, sx, v1x, v2x )
   !
   ! ... up
   vrrx(:,1) = 0.5_DP  *  (v1x(i1:f1,1) - v1x(i2:f2,1)) / drup(:,1)
@@ -240,7 +258,7 @@ SUBROUTINE dgcxc_spin_l( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   rtaux(i5:f5) = rt    ;  s2taux(i5:f5) = s2t        ;  zetaux(i5:f5) = zeta+dz
   rtaux(i6:f6) = rt    ;  s2taux(i6:f6) = s2t        ;  zetaux(i6:f6) = zeta-dz
   !
-  CALL gcc_spin_l( length*6, rtaux, zetaux, s2taux, sc, v1c, v2c )
+  CALL gcc_spin( length*6, rtaux, zetaux, s2taux, sc, v1c, v2c )
   !
   vrrc(:,1) = 0.5_DP * (v1c(i1:f1,1) - v1c(i2:f2,1)) / dr    * null_v(:,1)
   vrrc(:,2) = 0.5_DP * (v1c(i1:f1,2) - v1c(i2:f2,2)) / dr    * null_v(:,1)
@@ -252,11 +270,11 @@ SUBROUTINE dgcxc_spin_l( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   !
   RETURN
   !
-END SUBROUTINE dgcxc_spin_l
+END SUBROUTINE dgcxc_spin
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE d3gcxc_l( r, s2, vrrrx, vsrrx, vssrx, vsssx, &
+SUBROUTINE d3gcxc( r, s2, vrrrx, vsrrx, vssrx, vsssx, &
                      vrrrc, vsrrc, vssrc, vsssc )
   !-----------------------------------------------------------------------
   !    wat20101006: Calculates all derivatives of the exchange (x) and
@@ -276,8 +294,6 @@ SUBROUTINE d3gcxc_l( r, s2, vrrrx, vsrrx, vssrx, vsssx, &
   !                                                    / |\nabla r| ] &
   !                                                        / |\nabla r|
   !                 same for (c)
-  !
-  USE kind_l,         ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -300,7 +316,7 @@ SUBROUTINE d3gcxc_l( r, s2, vrrrx, vsrrx, vssrx, vsssx, &
   raux(3) = r     ; s2aux(3) = (s+ds)**2    !           [ rho    , (grho+ds)^2 ]
   raux(4) = r     ; s2aux(4) = (s-ds)**2    !           [ rho    , (grho-ds)^2 ]
   !
-  CALL dgcxc_unpol_l( 4, raux, s2aux, vrrx_rs, vsrx_rs, vssx_rs, vrrc_rs, vsrc_rs, vssc_rs )
+  CALL dgcxc_unpol( 4, raux, s2aux, vrrx_rs, vsrx_rs, vssx_rs, vrrc_rs, vsrc_rs, vssc_rs )
   !
   vrrrx = 0.5d0  *  (vrrx_rs(1) - vrrx_rs(2)) / dr
   vsrrx = 0.25d0 * ((vsrx_rs(1) - vsrx_rs(2)) / dr &
@@ -318,7 +334,7 @@ SUBROUTINE d3gcxc_l( r, s2, vrrrx, vsrrx, vssrx, vsssx, &
   !
   RETURN
   !
-END SUBROUTINE d3gcxc_l
-
-
+END SUBROUTINE d3gcxc
+!
+END MODULE qe_drivers_d_gga
 

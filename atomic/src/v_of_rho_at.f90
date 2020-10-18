@@ -14,8 +14,8 @@ subroutine v_of_rho_at (rho,rhoc,vh,vxc,exc,excgga,vnew,nlcc,iflag)
   use kinds, only : DP
   use constants, only: fpi, e2
   use radial_grids, only: ndmx, hartree
-  use xc_interfaces, only: xclib_get_id, xclib_dft_is
-  use ld1inc, only : nwf, grid, vx, vxt, lsd, zed, enne, latt, nspin
+  use xc_lib, only: xclib_get_id, xclib_dft_is
+  use ld1inc, only: nwf, grid, vx, vxt, lsd, zed, enne, latt, nspin
   implicit none
   integer, intent(in) :: iflag
   real(DP), intent(in):: rho(ndmx,2), rhoc(ndmx) ! valence and core charges

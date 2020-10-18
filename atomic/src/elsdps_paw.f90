@@ -19,7 +19,7 @@ subroutine elsdps_paw( )
   use ld1inc, only : nlcc, grid, nspin, rhoc, lsd, &
        encl, ehrt, ecxc, evxt, ekin, ecc, epseu,  &
        nwfts, enlts, octs, paw_energy
-  use xc_interfaces, only : xclib_dft_is
+  use xc_lib, only : xclib_dft_is
   !
   implicit none
   real(DP) :: &

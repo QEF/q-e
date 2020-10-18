@@ -21,9 +21,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   USE ions_base,        ONLY : nat, tau
   USE ldaU,             ONLY : lda_plus_u, lda_plus_u_kind, ldmx_b, &
                                nsg, v_nsg 
-  !USE funct,            ONLY : dft_is_meta, get_meta
-  USE xc_interfaces,    ONLY : xclib_dft_is
-  
+  USE xc_lib,           ONLY : xclib_dft_is
   USE scf,              ONLY : scf_type
   USE cell_base,        ONLY : alat
   USE io_global,        ONLY : stdout
@@ -160,7 +158,6 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
   USE funct,            ONLY : dft_is_nonlocc, nlc
-  USE xc_interfaces,    ONLY : xc_metagcx
   USE scf,              ONLY : scf_type, rhoz_or_updw
   USE mp,               ONLY : mp_sum
   USE mp_bands,         ONLY : intra_bgrp_comm
@@ -354,7 +351,6 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   USE cell_base,        ONLY : omega
   USE spin_orb,         ONLY : domag
   USE funct,            ONLY : nlc, dft_is_nonlocc
-  USE xc_interfaces,      ONLY : xc
   USE scf,              ONLY : scf_type
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum

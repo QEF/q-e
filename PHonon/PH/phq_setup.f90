@@ -85,9 +85,7 @@ subroutine phq_setup
   USE ph_restart,    ONLY : ph_writefile, ph_readfile
   USE control_flags, ONLY : modenum, noinv
   USE grid_irr_iq,   ONLY : comp_irr_iq
-  !USE funct,         ONLY : dft_is_gradient
-  USE xc_interfaces, ONLY : xclib_dft_is
-  
+  USE xc_lib,        ONLY : xclib_dft_is
   USE ramanm,        ONLY : lraman, elop, ramtns, eloptns, done_lraman, &
                             done_elop
   USE mp_pools,      ONLY : inter_pool_comm, npool

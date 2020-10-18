@@ -1,4 +1,5 @@
 set(sources
+    dft_mod.f90
     qe_ext_fun.f90
     qe_constants.f90
     qe_drivers_d_gga.f90
@@ -12,10 +13,11 @@ set(sources
     qe_funct_exch_lda_lsda.f90
     qe_funct_mgga.f90
     qe_kind.f90
+    xclib_error.f90
+    xclib_para_m.f90
     xc_beef_interface.f90
-    xc_get_dft.f90
     xc_input_params_mod.f90
-    xc_interfaces.f90
+    xc_lib.f90
     xc_wrapper_d_gga.f90
     xc_wrapper_d_lda_lsda.f90
     xc_wrapper_gga.f90

@@ -55,9 +55,7 @@ SUBROUTINE run_pwscf( exit_status )
   USE qmmm,                 ONLY : qmmm_initialization, qmmm_shutdown, &
                                    qmmm_update_positions, qmmm_update_forces
   USE qexsd_module,         ONLY : qexsd_set_status
-  !USE funct,                ONLY : dft_is_hybrid, stop_exx 
-  USE xc_interfaces,        ONLY : xclib_dft_is, stop_exx
-  
+  USE xc_lib,               ONLY : xclib_dft_is, stop_exx
   USE beef,                 ONLY : beef_energies
   USE ldaU,                 ONLY : lda_plus_u
   !
@@ -317,8 +315,7 @@ SUBROUTINE reset_gvectors( )
   USE basis,      ONLY : starting_wfc, starting_pot
   USE fft_base,   ONLY : dfftp
   USE fft_base,   ONLY : dffts
-  !USE funct,      ONLY : dft_is_hybrid
-  USE xc_interfaces, ONLY : xclib_dft_is
+  USE xc_lib,     ONLY : xclib_dft_is
   ! 
   IMPLICIT NONE
   !

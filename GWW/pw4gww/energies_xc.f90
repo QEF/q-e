@@ -42,8 +42,8 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft, fft_interpolate
 
-  USE exx,      ONLY : vexx !Suriano
-  USE xc_interfaces, ONLY : exx_is_active, xclib_dft_is
+  USE exx,    ONLY : vexx !Suriano
+  USE xc_lib, ONLY : exx_is_active, xclib_dft_is
   USE klist, ONLY : igk_k
 
   !

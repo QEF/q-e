@@ -39,8 +39,7 @@ SUBROUTINE electrons()
   USE uspp,                 ONLY : okvan
   USE exx,                  ONLY : aceinit,exxinit, exxenergy2, exxbuff, &
                                    fock0, fock1, fock2, fock3, dexx, use_ace, local_thr 
-  !USE funct,                ONLY : dft_is_hybrid, exx_is_active
-  USE xc_interfaces,        ONLY : xclib_dft_is, exx_is_active
+  USE xc_lib,               ONLY : xclib_dft_is, exx_is_active
   USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi, gamma_only
   !
   USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
@@ -1136,8 +1135,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !                - \sum rho%ns       v%ns       [for LDA+U]
        !                - \sum becsum       D1_Hxc     [for PAW]
        !
-       !USE funct,  ONLY : dft_is_meta
-       USE xc_interfaces, ONLY : xclib_dft_is
+       USE xc_lib,  ONLY : xclib_dft_is
        !
        IMPLICIT NONE
        !
@@ -1222,8 +1220,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !                  - \sum \delta rho%ns       v%ns       [for LDA+U]
        !                  - \sum \delta becsum       D1         [for PAW] 
        !
-       !USE funct,  ONLY : dft_is_meta
-       USE xc_interfaces, ONLY : xclib_dft_is
+       USE xc_lib, ONLY : xclib_dft_is
        !
        IMPLICIT NONE
        REAL(DP) :: delta_escf, delta_escf_hub, rho_dif(2)

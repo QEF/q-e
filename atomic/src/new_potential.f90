@@ -16,8 +16,7 @@ subroutine new_potential &
   use constants, only: fpi, e2
   use radial_grids, only: radial_grid_type, hartree
   use kinds, only : DP
-  use xc_interfaces, only: xclib_get_id, xclib_dft_is
-  
+  use xc_lib, only: xclib_get_id, xclib_dft_is
   use ld1inc, only : nwf, vx, vxc, exc, excgga, tau, vtau
   use kli, only : compute_kli_potential
   implicit none

@@ -1971,7 +1971,7 @@ FUNCTION EXPINT(n, x)                     !<GPU:DEVICE>
       REAL(DP) :: a,b,c,d,del,fact,h,iarsum
 
       IF (.NOT. ((n >= 0).AND.(x >= 0.0).AND.((x > 0.0).OR.(n > 1)))) THEN
-         !CALL errore('expint','bad arguments', 1)
+         !CALL xclib_error('expint','bad arguments', 1)
          STOP
       END IF
 
@@ -1996,7 +1996,7 @@ FUNCTION EXPINT(n, x)                     !<GPU:DEVICE>
             h = h*del
             IF (ABS(del-1.0d0) <= EPS) EXIT
          END DO
-         IF (i > maxit) STOP !CALL errore('expint','continued fraction failed',1)
+         IF (i > maxit) STOP !CALL xclib_error('expint','continued fraction failed',1)
          expint = h*EXP(-x)                                             !<GPU:expint=>expint_d>
       ELSE
          IF (nm1 /= 0) THEN
@@ -2022,7 +2022,7 @@ FUNCTION EXPINT(n, x)                     !<GPU:DEVICE>
             expint = expint + del                                       !<GPU:expint=>expint_d>
             IF (ABS(del) < ABS(expint)*eps) EXIT                        !<GPU:expint=>expint_d>
          END DO
-         IF (i > maxit) STOP !CALL errore('expint','series failed',1)
+         IF (i > maxit) STOP !CALL xclib_error('expint','series failed',1)
       END IF
 END FUNCTION EXPINT
 !

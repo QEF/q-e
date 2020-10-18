@@ -102,8 +102,7 @@ MODULE paw_init
     USE mp,                 ONLY : mp_sum
     USE io_global,          ONLY : stdout, ionode
     USE control_flags,      ONLY : iverbosity
-    !USE funct,              ONLY : dft_is_hybrid
-    USE xc_interfaces,      ONLY : xclib_dft_is
+    USE xc_lib,             ONLY : xclib_dft_is
     !
     INTEGER :: nt, np, ia, ia_s, ia_e, mykey, nnodes
     INTEGER :: info(0:nproc_image-1,ntyp)
@@ -272,8 +271,7 @@ MODULE paw_init
     USE lsda_mod,           ONLY : nspin
     USE spin_orb,           ONLY : domag
     USE noncollin_module,   ONLY : noncolin
-    !USE funct,              ONLY : dft_is_gradient
-    USE xc_interfaces,      ONLY : xclib_dft_is
+    USE xc_lib,             ONLY : xclib_dft_is
     USE mp_images,          ONLY : me_image, nproc_image
     USE mp,                 ONLY : mp_sum
     !
@@ -444,8 +442,7 @@ MODULE paw_init
     !            remember to update it if you change this!
     !
     USE constants,              ONLY : pi, fpi, eps8
-    !USE funct,                  ONLY : dft_is_gradient
-    USE xc_interfaces,          ONLY : xclib_dft_is
+    USE xc_lib,                 ONLY : xclib_dft_is
     USE paw_variables,          ONLY : paw_radial_integrator
     !
     INTEGER, INTENT(IN) :: l

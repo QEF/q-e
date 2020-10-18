@@ -22,8 +22,8 @@ subroutine write_results
                         core_state, ekinc, ekinv, ae_fc_energy, cau_fact, &
                         relpert, evel, edar, eso, noscf, iswitch, rho, &
                         file_charge, max_out_wfc, vx
-  use funct,         only : get_dft_name, write_dft_name
-  use xc_interfaces, only : xclib_get_id
+  use funct,     only : get_dft_name, write_dft_name
+  use xc_lib,    only : xclib_get_id
   
   implicit none
 

@@ -11,9 +11,7 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
   !     ===================
   !--------------------------------------------------------------------
   use kinds,   only: dp
-  !use funct,   only: get_meta
-  use xc_interfaces, only: xc_metagcx, xclib_set_threshold, &
-                           xclib_get_id
+  use xc_lib,  only: xclib_set_threshold, xclib_get_id
   !
   IMPLICIT NONE
   !

@@ -421,7 +421,7 @@ SUBROUTINE cg_neweps
   USE ions_base, ONLY : nat, tau
   USE fft_base,  ONLY : dfftp
   USE scf,       ONLY : rho, rho_core
-  USE xc_interfaces, ONLY: dmxc, xclib_set_threshold
+  USE xc_lib,    ONLY : xclib_set_threshold
   USE cgcom
   !
   IMPLICIT NONE

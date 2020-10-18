@@ -20,9 +20,8 @@ subroutine dvqpsi_us (ik, uact, addnlcc, becp1, alphap)
   !
   !
   USE kinds, only : DP
-  USE funct,     ONLY :  dft_is_nonlocc !, dft_is_gradient
-  USE xc_interfaces, ONLY : xclib_dft_is
-  
+  USE funct,     ONLY : dft_is_nonlocc
+  USE xc_lib,    ONLY : xclib_dft_is
   USE ions_base, ONLY : nat, ityp
   USE cell_base, ONLY : tpiba
   USE fft_base,  ONLY : dfftp, dffts

@@ -428,8 +428,7 @@ MODULE paw_onecenter
     USE constants,              ONLY : e2, eps12
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
-    !USE funct,                  ONLY : dft_is_gradient
-    USE xc_interfaces,           ONLY : xc, xclib_dft_is
+    USE xc_lib,                 ONLY : xclib_dft_is
     USE constants,              ONLY : fpi ! REMOVE
     !
     TYPE(paw_info), INTENT(IN) :: i
@@ -657,8 +656,7 @@ MODULE paw_onecenter
     USE noncollin_module,       ONLY : noncolin, nspin_mag, nspin_gga
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : sqrtpi, fpi,pi,e2
-    !USE funct,                  ONLY : igcc_is_lyp
-    USE xc_interfaces,          ONLY : xc_gcx, igcc_is_lyp
+    USE xc_lib,                 ONLY : igcc_is_lyp, xc_gcx
     USE mp,                     ONLY : mp_sum
     !
     TYPE(paw_info), INTENT(IN) :: i
@@ -1687,8 +1685,7 @@ MODULE paw_onecenter
     USE noncollin_module,       ONLY : nspin_mag
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
-    !USE funct,                  ONLY : dft_is_gradient
-    USE xc_interfaces,          ONLY : dmxc, xclib_dft_is
+    USE xc_lib,                 ONLY : xclib_dft_is
     !
     TYPE(paw_info), INTENT(IN) :: i
     !! atom's minimal info
@@ -1804,8 +1801,7 @@ MODULE paw_onecenter
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : pi,e2, eps => eps12, eps2 => eps24
-    !USE funct,                  ONLY : is_libxc
-    USE xc_interfaces,          ONLY : xc_gcx, dgcxc, xclib_set_threshold
+    USE xc_lib,                 ONLY : xclib_set_threshold, xc_gcx
     !
     TYPE(paw_info), INTENT(IN) :: i
     !! atom's minimal info

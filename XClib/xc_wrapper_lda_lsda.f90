@@ -1,19 +1,10 @@
-!
-! Copyright (C) 2004-2016 Quantum ESPRESSO group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
-!
-!
 
 !
 !
 !>>>> quando chiama xc setta la threshold quando non è il valore standard <<<<<<
 
-
 !---------------------------------------------------------------------------
-SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
+SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !-------------------------------------------------------------------------
   !! Wrapper routine. Calls xc-driver routines from internal libraries
   !! of q-e or from the external libxc, depending on the input choice.
@@ -26,9 +17,9 @@ SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   USE xc_f03_lib_m
 #endif
   !
-  USE kind_l,        ONLY: DP
+  USE kind_l,            ONLY: DP
   USE dft_par_mod
-  !USE xc_lda_lsda_l,  ONLY: xc_lda_l, xc_lsda_l
+  USE qe_drivers_lda_lsda
   !
   IMPLICIT NONE
   !
@@ -105,7 +96,7 @@ SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
        !
     CASE DEFAULT
        !
-       !CALL errore( 'xc_LDA', 'Wrong number of spin dimensions', 1 )   !---------rimetti
+       CALL xclib_error( 'xc_LDA', 'Wrong number of spin dimensions', 1 )
        !
     END SELECT
     !
@@ -139,17 +130,17 @@ SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
         !
         !CALL get_ldaxcparlib( 0.d0, exx_started, exx_fraction )
         IF (iexch==8 .OR. icorr==10) THEN
-          !IF (.NOT. is_there_finite_size_corr) !CALL errore( 'XC',&              !-----------RIMETTI messaggio errore
-              !'finite size corrected exchange used w/o initialization', 1 )
+          !IF (.NOT. is_there_finite_size_corr) CALL xclib_error( 'XC',&                               !-----RIMETTI-.....
+          !    'finite size corrected exchange used w/o initialization', 1 )
         ENDIF
-        CALL xc_lda_l( length, ABS(rho_in(:,1)), ex_out, ec_out, vx_out(:,1), vc_out(:,1) )
+        CALL xc_lda( length, ABS(rho_in(:,1)), ex_out, ec_out, vx_out(:,1), vc_out(:,1) )
         !
      CASE( 2 )
         !
         ALLOCATE( arho(length), zeta(length) )
         arho = ABS(rho_in(:,1))
         WHERE (arho > rho_threshold_lda) zeta(:) = rho_in(:,2) / arho(:)
-        CALL xc_lsda_l( length, arho, zeta, ex_out, ec_out, vx_out, vc_out )
+        CALL xc_lsda( length, arho, zeta, ex_out, ec_out, vx_out, vc_out )
         DEALLOCATE( arho, zeta )
         !
      CASE( 4 )
@@ -158,12 +149,12 @@ SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
         arho = ABS( rho_in(:,1) )
         WHERE (arho > rho_threshold_lda) zeta(:) = SQRT( rho_in(:,2)**2 + rho_in(:,3)**2 + &
                                              rho_in(:,4)**2 ) / arho(:) ! amag/arho
-        CALL xc_lsda_l( length, arho, zeta, ex_out, ec_out, vx_out, vc_out )
+        CALL xc_lsda( length, arho, zeta, ex_out, ec_out, vx_out, vc_out )
         DEALLOCATE( arho, zeta )
         !
      CASE DEFAULT
         !
-        ! CALL errore( 'xc_LDA', 'Wrong ns input', 2 )       !--------------------rimetti
+        CALL xclib_error( 'xc_LDA', 'Wrong ns input', 2 )
         !
      END SELECT
      !
@@ -203,11 +194,11 @@ SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
      IF (iexch==8 .OR. icorr==10) THEN
        !CALL get_ldaxcparlib( finite_size_cell_volume )
        !
-       !IF (.NOT. is_there_finite_size_corr) !CALL errore( 'XC',&
-           !'finite size corrected exchange used w/o initialization', 1 )              !----------rimetti
+       !IF (.NOT. is_there_finite_size_corr) CALL xclib_error( 'XC',&
+       !    'finite size corrected exchange used w/o initialization', 1 )                             !-....RIMETTI......
      ENDIF
      !
-     CALL xc_lda_l( length, ABS(rho_in(:,1)), ex_out, ec_out, vx_out(:,1), vc_out(:,1) )
+     CALL xc_lda( length, ABS(rho_in(:,1)), ex_out, ec_out, vx_out(:,1), vc_out(:,1) )
      !
   CASE( 2 )
      !
@@ -216,7 +207,7 @@ SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
      arho = ABS(rho_in(:,1))
      WHERE (arho > rho_threshold_lda) zeta(:) = rho_in(:,2) / arho(:)
      !
-     CALL xc_lsda_l( length, arho, zeta, ex_out, ec_out, vx_out, vc_out )
+     CALL xc_lsda( length, arho, zeta, ex_out, ec_out, vx_out, vc_out )
      !
      DEALLOCATE( arho, zeta )
      ! 
@@ -228,13 +219,13 @@ SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
      WHERE (arho > rho_threshold_lda) zeta(:) = SQRT( rho_in(:,2)**2 + rho_in(:,3)**2 + &
                                           rho_in(:,4)**2 ) / arho(:) ! amag/arho
      !
-     CALL xc_lsda_l( length, arho, zeta, ex_out, ec_out, vx_out, vc_out )
+     CALL xc_lsda( length, arho, zeta, ex_out, ec_out, vx_out, vc_out )
      !
      DEALLOCATE( arho, zeta )
      !
   CASE DEFAULT
      !
-     ! CALL errore( 'xc_LDA', 'Wrong ns input', 2 )                                 !---------------------rimetti
+     CALL xclib_error( 'xc_LDA', 'Wrong ns input', 2 )
      !
   END SELECT
   !
@@ -243,4 +234,4 @@ SUBROUTINE xc_l( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
   RETURN
   !
-END SUBROUTINE xc_l
+END SUBROUTINE xc

@@ -30,9 +30,7 @@
       USE gvecw,                  ONLY: ngw, g2kin
       USE cell_base,              ONLY: tpiba2
       USE ensemble_dft,           ONLY: tens
-      !USE funct,                  ONLY: dft_is_meta, dft_is_hybrid, exx_is_active
-      USE xc_interfaces,          ONLY: xclib_dft_is, exx_is_active
-      
+      USE xc_lib,                 ONLY: xclib_dft_is, exx_is_active
       USE fft_base,               ONLY: dffts
       USE fft_interfaces,         ONLY: fwfft, invfft
       USE mp_global,              ONLY: me_bgrp

@@ -17,7 +17,6 @@ SUBROUTINE setup_dmuxc
   USE scf,              ONLY : rho, rho_core
   USE noncollin_module, ONLY : noncolin, nspin_mag
   USE spin_orb,         ONLY : domag
-  USE xc_interfaces,    ONLY : dmxc
   !
   IMPLICIT NONE
   !

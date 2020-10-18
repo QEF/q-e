@@ -25,9 +25,8 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   USE gvect,             ONLY : ngm, g, gstart
   USE cell_base,         ONLY : tpiba2, omega
   USE noncollin_module,  ONLY : nspin_lsda, nspin_mag, nspin_gga
-  USE funct,             ONLY : dft_is_nonlocc !, dft_is_gradient
-  USE xc_interfaces,     ONLY : xclib_dft_is
-  
+  USE funct,             ONLY : dft_is_nonlocc
+  USE xc_lib,            ONLY : xclib_dft_is
   USE scf,               ONLY : rho, rho_core
   USE uspp,              ONLY : nlcc_any
   USE control_flags,     ONLY : gamma_only

@@ -34,8 +34,7 @@ SUBROUTINE sum_band_kin(kin_r)
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm, nbgrp
   USE mp,                   ONLY : mp_sum
-  !USE funct,                ONLY : dft_is_meta
-  USE xc_interfaces,        ONLY : xclib_dft_is
+  USE xc_lib,               ONLY : xclib_dft_is
   USE paw_symmetry,         ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &

@@ -41,9 +41,7 @@ SUBROUTINE memory_report()
   USE cellmd,    ONLY : cell_factor
   USE uspp,      ONLY : nkb, okvan
   USE atom,      ONLY : rgrid
-  !USE funct,     ONLY : dft_is_meta, dft_is_hybrid
-  USE xc_interfaces, ONLY : xclib_dft_is
-  
+  USE xc_lib,    ONLY : xclib_dft_is
   USE ldaU,      ONLY : lda_plus_u, U_projection, nwfcU
   USE fixed_occ, ONLY : one_atom_occupations
   USE wannier_new,ONLY: use_wannier

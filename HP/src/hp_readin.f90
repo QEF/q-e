@@ -139,7 +139,7 @@ SUBROUTINE input_sanity()
   USE cellmd,           ONLY : lmovecell
   USE noncollin_module, ONLY : i_cons, noncolin
   USE mp_bands,         ONLY : nbgrp
-  USE xc_interfaces,    ONLY : xclib_dft_is
+  USE xc_lib,           ONLY : xclib_dft_is
   USE ldaU,             ONLY : lda_plus_u, U_projection, lda_plus_u_kind, Hubbard_J0, &
                                is_hubbard_back, Hubbard_V
   !

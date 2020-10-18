@@ -68,8 +68,8 @@ MODULE cp_restart_new
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
                                            amass, iforce, ityp 
       USE funct,                    ONLY : get_dft_name, dft_is_nonlocc, get_nonlocc_name
-      USE xc_interfaces,            ONLY: xclib_dft_is, xclib_get_exx_fraction, get_screening_parameter
-           
+      USE xc_lib,                   ONLY : xclib_dft_is, xclib_get_exx_fraction, &
+                                           get_screening_parameter
       USE ldaU_cp,                  ONLY : lda_plus_U, ns, Hubbard_l, &
                                            Hubbard_lmax, Hubbard_U
       USE energies,                 ONLY : enthal, ekin, eht, esr, eself, &

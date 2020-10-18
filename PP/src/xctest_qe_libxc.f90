@@ -28,14 +28,9 @@ PROGRAM xctest_qe_libxc
   !
   USE xc_f03_lib_m
   !
-  USE kinds,          ONLY: DP
-  !USE funct,          ONLY: set_dft_from_name, set_exx_fraction
-  !USE funct,          ONLY: get_iexch, get_icorr, get_igcx, get_igcc, &
-  !                          get_meta, get_metac, reset_dft
-  USE xc_interfaces,  ONLY: xclib_set_dtf_from_name, set_exx_fraction, &
-                            xclib_get_id, xclib_reset_dft
-  
-  USE xc_interfaces,  ONLY: xc, xc_gcx, xc_metagcx, dmxc, dgcxc
+  USE kinds,   ONLY: DP
+  USE xc_lib,  ONLY: xclib_set_dft_from_name, xclib_set_exx_fraction, &
+                     xclib_get_ID, xclib_reset_dft, xc_gcx
   !
   IMPLICIT NONE
   !

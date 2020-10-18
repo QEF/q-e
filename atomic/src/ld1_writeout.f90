@@ -112,8 +112,8 @@ subroutine write_rrkj (iunps)
                      els, nns, lls, rcut, rcutus, betas, phis, grid, &
                      nwfs, nbeta, bmat, qq, qvan, ikk, rhoc, rhos, &
                      vpsloc, ocs, rcloc
-  use funct, only: dft_is_nonlocc
-  use xc_interfaces, only: xclib_get_id
+  use funct,  only: dft_is_nonlocc
+  use xc_lib, only: xclib_get_id
   implicit none
   !
   integer, intent(in):: iunps ! I/O unit

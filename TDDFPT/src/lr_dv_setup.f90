@@ -23,7 +23,7 @@ SUBROUTINE lr_dv_setup
   USE noncollin_module,      ONLY : noncolin
   USE eqv,                   ONLY : dmuxc
   USE lr_variables,          ONLY : lr_exx
-  USE xC_interfaces,         ONLY : exx_is_active, xclib_dft_is
+  USE xc_lib,                ONLY : exx_is_active, xclib_dft_is
   USE wavefunctions,  ONLY : psic
   !
   IMPLICIT NONE

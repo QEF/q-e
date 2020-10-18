@@ -34,9 +34,7 @@ SUBROUTINE beef_energies( )
 !-------------------------------------------------------------------------
 
   USE io_global,         ONLY  : stdout, ionode
-  !USE funct,             ONLY  : dft_is_meta
-  USE xc_interfaces,     ONLY  : xclib_dft_is
-  
+  USE xc_lib,            ONLY  : xclib_dft_is
   USE control_flags,     ONLY  : io_level
   USE ener,                 ONLY : vtxc, etxc
   USE scf,                  ONLY : rho, rho_core, rhog_core, v

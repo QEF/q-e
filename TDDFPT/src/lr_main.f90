@@ -41,7 +41,7 @@ PROGRAM lr_main
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions,  ONLY : psic
   USE check_stop,            ONLY : check_stop_now, check_stop_init
-  USE xc_interfaces,         ONLY : xclib_dft_is
+  USE xc_lib,                ONLY : xclib_dft_is
   USE fft_base,              ONLY : dffts
   USE uspp,                  ONLY : okvan
   USE mp_bands,              ONLY : ntask_groups
@@ -290,7 +290,7 @@ SUBROUTINE lr_print_preamble()
     
     USE lr_variables,        ONLY : no_hxc, d0psi_rs
     USE uspp,                ONLY : okvan
-    USE xc_interfaces,       ONLY : xclib_dft_is
+    USE xc_lib,              ONLY : xclib_dft_is
     USE martyna_tuckerman,   ONLY : do_comp_mt
     USE control_flags,       ONLY : do_makov_payne
 

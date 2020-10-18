@@ -23,7 +23,7 @@ subroutine elsdps
        etots, pseudotype, phits, ikk, nbeta, betas, bmat, &
        nwfts, rel, jjts, llts, octs, enlts, jjs, lls, &
        vxc, exc, excgga
-  use xc_interfaces, only: xclib_dft_is
+  use xc_lib, only: xclib_dft_is
   implicit none
   real(DP) :: &
        excc, vxcc(2), &   ! exch-corr energy from core charge

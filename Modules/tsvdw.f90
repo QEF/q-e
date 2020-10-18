@@ -19,11 +19,7 @@ USE cell_base,          ONLY: ainv               !h^-1 matrix for converting bet
 USE cell_base,          ONLY: omega              !cell volume (in au^3)
 USE constants,          ONLY: pi                 !pi in double-precision
 USE fft_base,           ONLY: dfftp              !FFT derived data type 
-!USE funct,              ONLY: get_iexch          !retrieves type of exchange utilized in functional
-!USE funct,              ONLY: get_icorr          !retrieves type of correlation utilized in functional
-!USE funct,              ONLY: get_igcx           !retrieves type of gradient correction to exchange utilized in functional
-!USE funct,              ONLY: get_igcc           !retrieves type of gradient
-USE xc_interfaces,      ONLY: xclib_get_id
+USE xc_lib,             ONLY: xclib_get_id
 
 !correction to correlation utilized in functional
 USE io_global,          ONLY: stdout             !print/write argument for standard output (to output file)

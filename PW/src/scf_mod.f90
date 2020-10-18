@@ -17,8 +17,7 @@ MODULE scf
                               ldmx_b, is_hubbard_back
   USE ions_base,       ONLY : nat
   USE buffers,         ONLY : open_buffer, close_buffer, get_buffer, save_buffer
-  !USE funct,           ONLY : dft_is_meta
-  USE xc_interfaces,   ONLY : xclib_dft_is
+  USE xc_lib,          ONLY : xclib_dft_is
   USE fft_base,        ONLY : dfftp
   USE fft_interfaces,  ONLY : invfft
   USE gvect,           ONLY : ngm

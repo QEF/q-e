@@ -57,7 +57,7 @@
     USE klist_epw,             ONLY : isk_loc
     USE gc_lr,                 ONLY : grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
     USE funct,                 ONLY : dft_is_nonlocc
-    USE xc_interfaces,         ONLY : xclib_dft_is
+    USE xc_lib,                ONLY : xclib_dft_is
     USE elph2,                 ONLY : lower_band, upper_band, ibndstart
     USE constants_epw,         ONLY : czero, eps12
     !

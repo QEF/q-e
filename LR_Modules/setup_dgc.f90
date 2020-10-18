@@ -23,8 +23,7 @@ SUBROUTINE setup_dgc
   USE noncollin_module,     ONLY : noncolin, ux, nspin_gga, nspin_mag
   USE wavefunctions,        ONLY : psic
   USE kinds,                ONLY : DP
-  !USE funct,                ONLY : dft_is_gradient
-  USE xc_interfaces,        ONLY : xc_gcx, dgcxc, xclib_dft_is
+  USE xc_lib,               ONLY : xclib_dft_is, xc_gcx
   USE uspp,                 ONLY : nlcc_any
   USE gc_lr,                ONLY : grho, gmag, dvxc_rr, dvxc_sr, &
                                    dvxc_ss, dvxc_s, vsgga, segni

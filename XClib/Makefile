@@ -2,9 +2,10 @@
 
 include ../make.inc
 
-MODFLAGS= $(BASEMOD_FLAGS)
+MODFLAGS = $(MOD_FLAG)../UtilXlib
 
-LDAL = \
+XCL = \
+dft_mod.o \
 qe_ext_fun.o \
 qe_constants.o \
 qe_drivers_d_gga.o \
@@ -19,9 +20,10 @@ qe_funct_exch_lda_lsda.o \
 qe_funct_mgga.o \
 qe_kind.o \
 xc_beef_interface.o \
-xc_get_dft.o \
 xc_input_params_mod.o \
-xc_interfaces.o \
+xc_lib.o \
+xclib_error.o \
+xclib_para_m.o \
 xc_wrapper_d_gga.o \
 xc_wrapper_d_lda_lsda.o \
 xc_wrapper_gga.o \
@@ -30,7 +32,7 @@ xc_wrapper_mgga.o
 
 all: xc_lib.a
 
-xc_lib.a: 	$(LDAL)
+xc_lib.a: 	$(XCL)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 

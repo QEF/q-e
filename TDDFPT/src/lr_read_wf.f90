@@ -38,7 +38,7 @@ SUBROUTINE lr_read_wf()
                                    fwfft_orbital_gamma, calbec_rs_gamma,&
                                    add_vuspsir_gamma, v_loc_psir,&
                                    s_psir_gamma
-  USE xc_interfaces,        ONLY : xclib_dft_is
+  USE xc_lib,               ONLY : xclib_dft_is
   USE lr_exx_kernel,        ONLY : lr_exx_revc0_init, lr_exx_alloc, &
                                    lr_exx_restart
   USE wavefunctions,        ONLY : evc

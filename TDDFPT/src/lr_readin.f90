@@ -34,7 +34,7 @@ SUBROUTINE lr_readin
   USE check_stop,          ONLY : max_seconds
   USE realus,              ONLY : real_space, init_realspace_vars, generate_qpointlist, &
                                   betapointlist
-  USE xc_interfaces,       ONLY : xclib_dft_is
+  USE xc_lib,              ONLY : xclib_dft_is
   USE charg_resp,          ONLY : w_T_prefix, omeg, w_T_npol, epsil
   USE mp,                  ONLY : mp_bcast
   USE mp_global,           ONLY : my_pool_id, intra_image_comm, &
@@ -471,7 +471,7 @@ CONTAINS
     !
     USE paw_variables,    ONLY : okpaw
     USE uspp,             ONLY : okvan
-    USE xc_interfaces,    ONLY : xclib_dft_is
+    USE xc_lib,           ONLY : xclib_dft_is
     USE ldaU,             ONLY : lda_plus_u
 
     IMPLICIT NONE

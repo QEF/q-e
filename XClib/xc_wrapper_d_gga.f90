@@ -3,7 +3,7 @@
 !-----------------------------------------------------------------------
 !
 !---------------------------------------------------------------------
-SUBROUTINE dgcxc_l( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
+SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   !---------------------------------------------------------------------
   !! Wrapper routine. Calls dgcx-driver routines from internal libraries
   !! or from the external libxc, depending on the input choice.
@@ -11,6 +11,7 @@ SUBROUTINE dgcxc_l( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   USE constants_l,      ONLY: e2
   USE kind_l,           ONLY: DP
   USE dft_par_mod
+  USE qe_drivers_d_gga
 #if defined(__LIBXC)
 #include "xc_version.h"
   USE xc_f03_lib_m
@@ -94,12 +95,12 @@ SUBROUTINE dgcxc_l( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
       !
     CASE( 4 )
       !
-      CALL errore( 'dgcxc', 'The derivative of the xc potential with libxc &
+      CALL xclib_error( 'dgcxc', 'The derivative of the xc potential with libxc &
                             &is not available for noncollinear case', 1 )
       !
     CASE DEFAULT
       !
-      CALL errore( 'dgcxc', 'Wrong number of spin dimensions', 2 )
+      CALL xclib_error( 'dgcxc', 'Wrong number of spin dimensions', 2 )
       !
     END SELECT
     !
@@ -190,7 +191,7 @@ SUBROUTINE dgcxc_l( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
        !
        ALLOCATE( vrzc(length,sp) )
        !
-       CALL dgcxc_spin_l( length, r_in, g_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc, vrzc )
+       CALL dgcxc_spin( length, r_in, g_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc, vrzc )
        !
        DO k = 1, length
          !
@@ -225,7 +226,7 @@ SUBROUTINE dgcxc_l( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
     !
   ELSE
     !
-    CALL errore( 'dgcxc', 'Derivatives of exchange and correlation terms, &
+    CALL xclib_error( 'dgcxc', 'Derivatives of exchange and correlation terms, &
                          & at present, must be both qe or both libxc.', 3 )
     !
   ENDIF
@@ -240,7 +241,7 @@ SUBROUTINE dgcxc_l( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
      !
      ALLOCATE( sigma(length) )
      sigma(:) = g_in(:,1,1)**2 + g_in(:,2,1)**2 + g_in(:,3,1)**2
-     CALL dgcxc_unpol_l( length, r_in(:,1), sigma, vrrx(:,1), vsrx(:,1), vssx(:,1), vrrc(:,1), vsrc(:,1), vssc )
+     CALL dgcxc_unpol( length, r_in(:,1), sigma, vrrx(:,1), vsrx(:,1), vssx(:,1), vrrc(:,1), vsrc(:,1), vssc )
      DEALLOCATE( sigma )
      !
      dvxc_rr(:,1,1) = e2 * (vrrx(:,1) + vrrc(:,1))
@@ -251,7 +252,7 @@ SUBROUTINE dgcxc_l( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
      !
      ALLOCATE( vrzc(length,sp) )
      !
-     CALL dgcxc_spin_l( length, r_in, g_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc, vrzc )
+     CALL dgcxc_spin( length, r_in, g_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc, vrzc )
      !
      DO k = 1, length
         !
@@ -280,7 +281,7 @@ SUBROUTINE dgcxc_l( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
      !
   CASE DEFAULT
      !
-     CALL errore( 'dgcxc', 'Wrong ns input', 4 )
+     CALL xclib_error( 'dgcxc', 'Wrong ns input', 4 )
      !
   END SELECT
   !
@@ -292,7 +293,7 @@ SUBROUTINE dgcxc_l( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
   !
   RETURN
   !
-END SUBROUTINE
+END SUBROUTINE dgcxc
 !
 !
 

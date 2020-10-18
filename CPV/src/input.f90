@@ -213,8 +213,7 @@ MODULE input
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
         iesr, saverho, rd_for, assume_isolated, wf_collect,                    &
         memory, ref_cell, tcpbo, max_seconds
-     !USE funct,              ONLY : dft_is_hybrid
-     USE xc_interfaces,      ONLY : xclib_dft_is
+     USE xc_lib,             ONLY : xclib_dft_is
      !
      IMPLICIT NONE
      !

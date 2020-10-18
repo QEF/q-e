@@ -22,7 +22,7 @@
        USE wavefunctions, ONLY : evc
        USE exx,      ONLY : ecutfock,vexx, exxinit
        USE exx_base, ONLY : exx_div_check, exx_grid_init, exx_grid_check
-       USE xc_interfaces, ONLY : exx_is_active, xclib_dft_is, start_exx, stop_exx
+       USE xc_lib,   ONLY : exx_is_active, xclib_dft_is, start_exx, stop_exx
        USE wvfct,    ONLY : current_k, et
        USE gvecw,    ONLY : ecutwfc
        USE scf,                  ONLY : scf_type, scf_type_COPY, &

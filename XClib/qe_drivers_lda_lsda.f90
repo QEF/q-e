@@ -1,25 +1,27 @@
-
-! MODULE xc_lda_lsda_l
-! !
-! USE kinds_l,        ONLY: DP
-! USE dft_par_mod
-! !
-! IMPLICIT NONE
-! !
-! PRIVATE
-! SAVE
-! !
-! !  LDA and LSDA exchange-correlation drivers
-! PUBLIC :: xc_lda_l, xc_lsda_l                                   --------rimetti modulo
-! !
-! ! !  density threshold (set to default value)
-! ! REAL(DP) :: rho_threshold = 1.E-10_DP
-! !
-!  CONTAINS
-
-
+!
+! --- LDA-LSDA DRIVERS ---
+!
+MODULE qe_drivers_lda_lsda
+  !! Contains the LDA drivers of QE that calculate XC energy and potential.
+  !
+  USE kind_l,     ONLY: DP
+  USE dft_par_mod
+  USE exch_lda
+  USE corr_lda
+  !
+  IMPLICIT NONE
+  !
+  SAVE
+  !
+  PRIVATE
+  !
+  PUBLIC :: xc_lda, xc_lsda
+  !
+  !
+CONTAINS
+!
 !----------------------------------------------------------------------------
-SUBROUTINE xc_lda_l( length, rho_in, ex_out, ec_out, vx_out, vc_out )
+SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   !--------------------------------------------------------------------------
   !! LDA exchange and correlation functionals - Hartree a.u.
   !
@@ -41,11 +43,6 @@ SUBROUTINE xc_lda_l( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   !! $$ E_x = \int E_x(\text{rho}) dr, E_x(\text{rho}) = 
   !!               \text{rho}\epsilon_c(\text{rho})\ . $$
   !! Same for correlation.
-  !
-  USE kind_l, ONLY: DP
-  USE dft_par_mod
-  USE exch_lda
-  USE corr_lda
   !
   IMPLICIT NONE
   !
@@ -241,11 +238,11 @@ SUBROUTINE xc_lda_l( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
   RETURN
   !
-END SUBROUTINE xc_lda_l
+END SUBROUTINE xc_lda
 !
 !
 !-----------------------------------------------------------------------------
-SUBROUTINE xc_lsda_l( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
+SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
   !-----------------------------------------------------------------------------
   !! LSD exchange and correlation functionals - Hartree a.u.
   !
@@ -254,11 +251,6 @@ SUBROUTINE xc_lsda_l( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
   !! * Correlation:
   !!    * Ceperley & Alder (Perdew-Zunger parameters);
   !!    * Perdew & Wang.
-  !
-  USE kind_l, ONLY: DP
-  USE dft_par_mod
-  USE exch_lda
-  USE corr_lda
   !
   IMPLICIT NONE
   !
@@ -440,6 +432,6 @@ SUBROUTINE xc_lsda_l( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
   !
   RETURN
   !
-END SUBROUTINE xc_lsda_l
-
-! MODULE xc_lda_lsda_l
+END SUBROUTINE xc_lsda
+!
+END MODULE qe_drivers_lda_lsda

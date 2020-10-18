@@ -1,9 +1,27 @@
-!-----------------------------------------------------------------------
-!------- GRADIENT CORRECTION DRIVERS ----------------------------------
-!-----------------------------------------------------------------------
+!
+! --- GRADIENT CORRECTION DRIVERS ---
+!
+!--------------------------------------------------------------------------
+MODULE qe_drivers_gga
+  !------------------------------------------------------------------------
+  !! Contains the gga drivers of QE that calculate XC energy and potential.
+  !
+  USE kind_l, ONLY: DP
+  USE dft_par_mod
+  !
+  IMPLICIT NONE
+  !
+  SAVE
+  !
+  PRIVATE
+  !
+  PUBLIC :: gcxc, gcx_spin, gcc_spin, gcc_spin_more
+  !
+  !
+CONTAINS
 !
 !-----------------------------------------------------------------------
-SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
+SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
                                           v2x_out, v1c_out, v2c_out )
   !---------------------------------------------------------------------
   !! Gradient corrections for exchange and correlation - Hartree a.u. 
@@ -16,8 +34,6 @@ SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   !         v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
   !         sc, v1c, v2c as above for correlation
   !
-  USE kind_l, ONLY: DP
-  USE dft_par_mod
   USE exch_gga
   USE corr_gga
   USE beef_interface, ONLY: beefx, beeflocalcorr
@@ -355,18 +371,16 @@ SUBROUTINE gcxc_l( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   !
   RETURN
   !
-END SUBROUTINE gcxc_l
+END SUBROUTINE gcxc
 !
 !
 !===============> SPIN <===============!
 !
 !-------------------------------------------------------------------------
-SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
+SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !-----------------------------------------------------------------------
   !! Gradient corrections for exchange - Hartree a.u.
   !
-  USE kind_l, ONLY: DP
-  USE dft_par_mod
   USE exch_gga
   USE beef_interface, ONLY: beefx
   !
@@ -767,17 +781,15 @@ SUBROUTINE gcx_spin_l( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !
   RETURN
   !
-END SUBROUTINE gcx_spin_l
+END SUBROUTINE gcx_spin
 !
 !
 !--------------------------------------------------------------------------------
-SUBROUTINE gcc_spin_l( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out )
+SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out )
   !-------------------------------------------------------------------------------
   !! Gradient corrections for correlations - Hartree a.u.  
   !! Implemented: Perdew86, GGA (PW91), PBE
   !
-  USE kind_l, ONLY: DP
-  USE dft_par_mod
   USE corr_gga
   !
   IMPLICIT NONE
@@ -872,12 +884,12 @@ SUBROUTINE gcc_spin_l( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_ou
   !
   RETURN
   !
-END SUBROUTINE gcc_spin_l
+END SUBROUTINE gcc_spin
 !
 !
 !---------------------------------------------------------------------------
-SUBROUTINE gcc_spin_more_l( length, rho_in, grho_in, grho_ud_in, &
-                                               sc, v1c, v2c, v2c_ud )
+SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
+                                            sc, v1c, v2c, v2c_ud )
   !-------------------------------------------------------------------------
   !! Gradient corrections for exchange and correlation.
   !
@@ -889,8 +901,6 @@ SUBROUTINE gcc_spin_more_l( length, rho_in, grho_in, grho_ud_in, &
   !!    * Lee, Yang & Parr;
   !!    * GGAC.
   !
-  USE kind_l, ONLY: DP
-  USE dft_par_mod
   USE corr_gga
   !
   IMPLICIT NONE
@@ -975,7 +985,7 @@ SUBROUTINE gcc_spin_more_l( length, rho_in, grho_in, grho_ud_in, &
        !
     CASE DEFAULT
        !
-       CALL errore( " gcc_spin_more ", " gradient correction not implemented ", 1 )
+       CALL xclib_error( " gcc_spin_more ", " gradient correction not implemented ", 1 )
        !
     END SELECT
     !
@@ -985,11 +995,7 @@ SUBROUTINE gcc_spin_more_l( length, rho_in, grho_in, grho_ud_in, &
   !
   RETURN
   !
-END SUBROUTINE gcc_spin_more_l
-
-
-
-
-
-
-
+END SUBROUTINE gcc_spin_more
+!
+!
+END MODULE qe_drivers_gga

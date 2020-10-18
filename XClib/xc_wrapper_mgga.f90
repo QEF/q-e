@@ -1,6 +1,6 @@
 !
 !----------------------------------------------------------------------------------------
-SUBROUTINE xc_metagcx_l( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
+SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   !-------------------------------------------------------------------------------------
   !! Wrapper routine. Calls metaGGA drivers from internal libraries
   !! of q-e or from the external libxc, depending on the input choice.
@@ -12,7 +12,8 @@ SUBROUTINE xc_metagcx_l( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, 
 #endif 
   !
   USE kind_l,        ONLY: DP
-  USE dft_par_mod  
+  USE dft_par_mod
+  USE qe_drivers_mgga
   !
   IMPLICIT NONE
   !
@@ -128,10 +129,10 @@ SUBROUTINE xc_metagcx_l( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, 
     ENDDO
     !
     IF (ns == 1) THEN
-       CALL tau_xc_l( length, rho(:,1), grho2(:,1), tau(:,1), ex, ec, v1x(:,1), &
+       CALL tau_xc( length, rho(:,1), grho2(:,1), tau(:,1), ex, ec, v1x(:,1), &
                     v2x(:,1), v3x(:,1), v1c(:,1), v2c(1,:,1), v3c(:,1) )
     ELSEIF (ns == 2) THEN
-       CALL tau_xc_spin_l( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, &
+       CALL tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, &
                          v2c, v3c )
     ENDIF
     !
@@ -235,12 +236,12 @@ SUBROUTINE xc_metagcx_l( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, 
   !
   IF (ns == 1) THEN
      !
-     CALL tau_xc_l( length, rho(:,1), grho2(:,1), tau(:,1), ex, ec, v1x(:,1), &
+     CALL tau_xc( length, rho(:,1), grho2(:,1), tau(:,1), ex, ec, v1x(:,1), &
                   v2x(:,1), v3x(:,1), v1c(:,1), v2c(1,:,1), v3c(:,1) )
      !
   ELSEIF (ns == 2) THEN
      !
-     CALL tau_xc_spin_l( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, &
+     CALL tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, &
                        v2c, v3c )
      !
   ENDIF
@@ -251,4 +252,4 @@ SUBROUTINE xc_metagcx_l( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, 
   !
   RETURN
   !
-END SUBROUTINE xc_metagcx_l
+END SUBROUTINE xc_metagcx

@@ -11,8 +11,7 @@ MODULE cp_main_variables
   !----------------------------------------------------------------------------
   !
   USE kinds,             ONLY : DP
-  !USE funct,             ONLY : dft_is_meta
-  USE xc_interfaces,     ONLY : xclib_dft_is
+  USE xc_lib,            ONLY : xclib_dft_is
   USE metagga_cp,        ONLY : kedtaur, kedtaus, kedtaug
   USE cell_base,         ONLY : boxdimensions
   USE wave_types,        ONLY : wave_descriptor, wave_descriptor_init

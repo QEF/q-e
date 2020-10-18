@@ -14,11 +14,8 @@ SUBROUTINE iosys()
   !! those in input_parameters, are locally renamed by adding an underscore "_".
   !
   USE kinds,         ONLY : DP
-  !USE funct,         ONLY : dft_is_hybrid, dft_has_finite_size_correction, &
-  !                          set_finite_size_volume, get_dft_short
-  !USE funct,         ONLY : set_exx_fraction, set_screening_parameter
   USE funct,         ONLY : get_dft_short
-  USE xc_interfaces, ONLY : xclib_set_exx_fraction, set_screening_parameter, &
+  USE xc_lib,        ONLY : xclib_set_exx_fraction, set_screening_parameter, &
                             xclib_dft_is, xclib_set_finite_size_volume, &
                             dft_has_finite_size_correction
   

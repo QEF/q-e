@@ -12,8 +12,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
 
   USE kinds, ONLY : DP
   USE funct, only : dft_is_nonlocc !, dft_is_gradient
-  USE xc_interfaces, only : xclib_dft_is
-  
+  USE xc_lib, only : xclib_dft_is
   USE scf, only : rho, rho_core
   USE cell_base, ONLY : omega
   USE gvect, ONLY : ngm, g

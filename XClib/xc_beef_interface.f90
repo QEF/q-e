@@ -132,7 +132,7 @@ MODULE beef_interface
     LOGICAL FUNCTION beef_set_type(tbeef, ionode)
       INTEGER :: tbeef
       LOGICAL :: ionode
-      CALL errore('beef_set_type','no beef! support for BEEF not compiled',1)
+      CALL xclib_error('beef_set_type','no beef! support for BEEF not compiled',1)
     END FUNCTION beef_set_type
 #endif
     !

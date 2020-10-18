@@ -13,9 +13,8 @@ subroutine addnlcc (imode0, drhoscf, npe)
 
   USE kinds, only : DP
   USE ions_base, ONLY : nat
-  USE funct, only : dft_is_nonlocc !, dft_is_gradient
-  USE xc_interfaces, only : xclib_dft_is
-  
+  USE funct,  only : dft_is_nonlocc
+  USE xc_lib, only : xclib_dft_is
   USE cell_base, ONLY : omega
   use scf, only : rho, rho_core
   USE gvect, ONLY : g, ngm

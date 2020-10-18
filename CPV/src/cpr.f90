@@ -116,9 +116,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE fft_base,                 ONLY : dfftp, dffts
   USE london_module,            ONLY : energy_london, force_london, stres_london
   USE input_parameters,         ONLY : tcpbo
-  !USE funct,                    ONLY : dft_is_hybrid, start_exx, exx_is_active
-  !USE funct,                    ONLY : dft_is_meta
-  USE xc_interfaces,            ONLY : xclib_dft_is, start_exx, exx_is_active
+  USE xc_lib,                   ONLY : xclib_dft_is, start_exx, exx_is_active
   !
   IMPLICIT NONE
   !
@@ -986,8 +984,7 @@ SUBROUTINE terminate_run()
   USE control_flags,     ONLY : lwf, lwfpbe0nscf
   USE tsvdw_module,      ONLY : tsvdw_finalize
   USE exx_module,        ONLY : exx_finalize
-  !USE funct,             ONLY : dft_is_hybrid, exx_is_active
-  USE xc_interfaces,     ONLY : xclib_dft_is, exx_is_active
+  USE xc_lib,     ONLY : xclib_dft_is, exx_is_active
   !
   IMPLICIT NONE
   !

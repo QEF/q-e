@@ -110,7 +110,7 @@ MODULE realus
     SUBROUTINE generate_qpointlist
       !------------------------------------------------------------------------
       USE fft_base,     ONLY : dfftp  !, dffts
-      !USE xc_interfaces, ONLY : xclib_dft_is
+      !USE xc_lib,       ONLY : xclib_dft_is
       !USE gvecs,        ONLY : doublegrid
       !USE exx,  ONLY : exx_fft
       IMPLICIT NONE

@@ -7,7 +7,7 @@
 !
 !
 !---------------------------------------------------------------------
-SUBROUTINE dmxc_l( length, sr_d, rho_in, dmuxc )
+SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   !---------------------------------------------------------------------
   !! Wrapper routine. Calls dmxc-driver routines from internal libraries
   !! or from the external one 'libxc', depending on the input choice.
@@ -18,6 +18,7 @@ SUBROUTINE dmxc_l( length, sr_d, rho_in, dmuxc )
   !
   USE kind_l,            ONLY: DP
   USE dft_par_mod
+  USE qe_drivers_d_lda_lsda
   !
 #if defined(__LIBXC)
 #include "xc_version.h"
@@ -81,12 +82,12 @@ SUBROUTINE dmxc_l( length, sr_d, rho_in, dmuxc )
       !
     CASE( 4 )
       !
-      CALL errore( 'dmxc', 'The derivative of the xc potential with libxc &
+      CALL xclib_error( 'dmxc', 'The derivative of the xc potential with libxc &
                            &is not available for noncollinear case', 1 )
       !
     CASE DEFAULT
       !
-      CALL errore( 'dmxc', 'Wrong number of spin dimensions', 2 )
+      CALL xclib_error( 'dmxc', 'Wrong number of spin dimensions', 2 )
       !
     END SELECT
     !
@@ -141,7 +142,7 @@ SUBROUTINE dmxc_l( length, sr_d, rho_in, dmuxc )
     !
   ELSE
     !
-    CALL errore( 'dmxc', 'Derivatives of exchange and correlation terms, &
+    CALL xclib_error( 'dmxc', 'Derivatives of exchange and correlation terms, &
                         & at present, must be both qe or both libxc.', 3 )
     !
   ENDIF
@@ -154,19 +155,19 @@ SUBROUTINE dmxc_l( length, sr_d, rho_in, dmuxc )
   SELECT CASE( sr_d )
   CASE( 1 )
      !
-     CALL dmxc_lda_l( length, rho_in(:,1), dmuxc(:,1,1) )
+     CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )
      !
   CASE( 2 )
      !
-     CALL dmxc_lsda_l( length, rho_in, dmuxc )
+     CALL dmxc_lsda( length, rho_in, dmuxc )
      ! 
   CASE( 4 )
      !
-     CALL dmxc_nc_l( length, rho_in(:,1), rho_in(:,2:4), dmuxc )
+     CALL dmxc_nc( length, rho_in(:,1), rho_in(:,2:4), dmuxc )
      !
   CASE DEFAULT
      !
-     CALL errore( 'xc_LDA', 'Wrong ns input', 4 )
+     CALL xclib_error( 'xc_LDA', 'Wrong ns input', 4 )
      !
   END SELECT
   !
@@ -175,4 +176,4 @@ SUBROUTINE dmxc_l( length, sr_d, rho_in, dmuxc )
   !
   RETURN
   !
-END SUBROUTINE
+END SUBROUTINE dmxc

@@ -16,7 +16,7 @@ SUBROUTINE print_clock_lr()
    USE mp_world,         ONLY : mpime, root
    USE realus,           ONLY : real_space
    USE lr_variables,     ONLY : davidson, eels
-   USE xc_interfaces,    ONLY : xclib_dft_is
+   USE xc_lib,           ONLY : xclib_dft_is
    !
    IMPLICIT NONE
    !

@@ -5,16 +5,32 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!---------------------------------------------------------------------------
+MODULE qe_drivers_d_lda_lsda
+  !-------------------------------------------------------------------------
+  !
+  USE kind_l,     ONLY: DP
+  USE dft_par_mod
+  !
+  IMPLICIT NONE
+  !
+  SAVE
+  !
+  PRIVATE
+  !
+  PUBLIC :: dmxc_lda, dmxc_lsda, dmxc_nc
+  !
+  !
+CONTAINS
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dmxc_lda_l( length, rho_in, dmuxc )
+SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   !---------------------------------------------------------------------
   !! Computes the derivative of the xc potential with respect to the 
   !! local density.
   !
-  USE dft_par_mod
-  USE exch_lda,   ONLY: slater
-  USE kind_l,     ONLY: DP
+  USE exch_lda,            ONLY: slater
+  USE qe_drivers_lda_lsda, ONLY: xc_lda
   !
   IMPLICIT NONE
   !
@@ -32,7 +48,7 @@ SUBROUTINE dmxc_lda_l( length, rho_in, dmuxc )
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: ec, vc
   !
   REAL(DP) :: rho, rs, ex_s, vx_s
-  REAL(DP) :: dpz_l
+  !REAL(DP) :: dpz
   INTEGER  :: iflg, ir, i1, i2, f1, f2
   !
   REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP,        &
@@ -71,7 +87,7 @@ SUBROUTINE dmxc_lda_l( length, rho_in, dmuxc )
         !
         iflg = 2
         IF (rs < 1.0_DP) iflg = 1
-        dmuxc(ir) = dmuxc(ir) + dpz_l( rs, iflg )
+        dmuxc(ir) = dmuxc(ir) + dpz( rs, iflg )
         dmuxc(ir) = dmuxc(ir) * SIGN(1.0_DP,rho_in(ir))
         !
      ENDDO
@@ -96,7 +112,7 @@ SUBROUTINE dmxc_lda_l( length, rho_in, dmuxc )
      rhoaux(i1:f1) = arho+dr
      rhoaux(i2:f2) = arho-dr
      !
-     CALL xc_lda_l( length*2, rhoaux, ex, ec, vx, vc )
+     CALL xc_lda( length*2, rhoaux, ex, ec, vx, vc )
      !
      WHERE ( arho < small ) dr = 1.0_DP ! ... to avoid NaN in the next operation
      !
@@ -121,19 +137,18 @@ SUBROUTINE dmxc_lda_l( length, rho_in, dmuxc )
   !
   RETURN
   !
-END SUBROUTINE dmxc_lda_l
+END SUBROUTINE dmxc_lda
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dmxc_lsda_l( length, rho_in, dmuxc )
+SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
 !-----------------------------------------------------------------------
   !! Computes the derivative of the xc potential with respect to the 
   !! local density in the spin-polarized case.
   !
-  USE dft_par_mod
-  USE exch_lda,   ONLY: slater
-  USE corr_lda,   ONLY: pz, pz_polarized
-  USE kind_l,     ONLY: DP
+  USE exch_lda,            ONLY: slater
+  USE corr_lda,            ONLY: pz, pz_polarized
+  USE qe_drivers_lda_lsda, ONLY: xc_lsda
   !
   IMPLICIT NONE
   !
@@ -157,7 +172,7 @@ SUBROUTINE dmxc_lsda_l( length, rho_in, dmuxc )
   REAL(DP) :: fz, fz1, fz2, dmcu, dmcp, aa, bb, cc
   REAL(DP) :: rs, zeta_s
   !
-  REAL(DP) :: dpz_l, dpz_polarized_l
+  !REAL(DP) :: dpz, dpz_polarized
   !
   INTEGER :: ir, is, iflg
   INTEGER :: i1, i2, i3, i4
@@ -212,8 +227,8 @@ SUBROUTINE dmxc_lsda_l( length, rho_in, dmuxc )
         iflg = 2
         IF (rs < 1.0_DP) iflg = 1
         !
-        dmcu = dpz_l( rs, iflg )
-        dmcp = dpz_polarized_l( rs, iflg )
+        dmcu = dpz( rs, iflg )
+        dmcp = dpz_polarized( rs, iflg )
         !
         aa = dmcu + fz * (dmcp - dmcu)
         bb = 2.0_DP * fz1 * (vcp - vcu - (ecp - ecu) ) / rhotot(ir)
@@ -268,7 +283,7 @@ SUBROUTINE dmxc_lsda_l( length, rho_in, dmuxc )
      rhoaux(i3:f3) = rhotot         ;   zetaux(i3:f3) = zeta_eff + dz
      rhoaux(i4:f4) = rhotot         ;   zetaux(i4:f4) = zeta_eff - dz
      !
-     CALL xc_lsda_l( length*4, rhoaux, zetaux, aux1, aux2, vx, vc )
+     CALL xc_lsda( length*4, rhoaux, zetaux, aux1, aux2, vx, vc )
      !
      WHERE (rhotot <= small)  ! ... to avoid NaN in the next operations
         dr=1.0_DP ; rhotot=0.5d0
@@ -301,17 +316,16 @@ SUBROUTINE dmxc_lsda_l( length, rho_in, dmuxc )
   !
   RETURN
   !
-END SUBROUTINE dmxc_lsda_l
+END SUBROUTINE dmxc_lsda
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dmxc_nc_l( length, rho_in, m, dmuxc )
+SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
 !-----------------------------------------------------------------------
   !! Computes the derivative of the xc potential with respect to the 
   !! local density and magnetization in the non-collinear case.
   !
-  USE dft_par_mod
-  USE kind_l,       ONLY: DP
+  USE qe_drivers_lda_lsda,  ONLY: xc_lsda
   !
   IMPLICIT NONE
   !
@@ -388,7 +402,7 @@ SUBROUTINE dmxc_nc_l( length, rho_in, m, dmuxc )
   rhoaux(i5:f5) = rhotot         ;   zetaux(i5:f5) = zeta_eff - dz
   !
   !
-  CALL xc_lsda_l( length*5, rhoaux, zetaux, aux1, aux2, vx, vc )
+  CALL xc_lsda( length*5, rhoaux, zetaux, aux1, aux2, vx, vc )
   !
   !
   vs(:) = 0.5_DP*( vx(i1:f1,1)+vc(i1:f1,1)-vx(i1:f1,2)-vc(i1:f1,2) )
@@ -486,22 +500,21 @@ SUBROUTINE dmxc_nc_l( length, rho_in, m, dmuxc )
   !
   RETURN
   !
-END SUBROUTINE dmxc_nc_l
+END SUBROUTINE dmxc_nc
 !
 !-----------------------------------------------------------------------
-FUNCTION dpz_l( rs, iflg )
+FUNCTION dpz( rs, iflg )
   !-----------------------------------------------------------------------
   !!  Derivative of the correlation potential with respect to local density
   !!  Perdew and Zunger parameterization of the Ceperley-Alder functional.
   !
-  USE kind_l,      ONLY: DP
   USE constants_l, ONLY: pi, fpi
   !
   IMPLICIT NONE
   !
   REAL(DP), INTENT(IN) :: rs
   INTEGER,  INTENT(IN) :: iflg
-  REAL(DP) :: dpz_l
+  REAL(DP) :: dpz
   !
   !  ... local variables
   !  a,b,c,d,gc,b1,b2 are the parameters defining the functional
@@ -522,27 +535,26 @@ FUNCTION dpz_l( rs, iflg )
      dmrs = 0.5d0 * dmx / x
   ENDIF
   !
-  dpz_l = - fpi * rs**4.d0 / 9.d0 * dmrs
+  dpz = - fpi * rs**4.d0 / 9.d0 * dmrs
   !
   RETURN
   !
-END FUNCTION dpz_l
+END FUNCTION dpz
 !
 !-----------------------------------------------------------------------
-FUNCTION dpz_polarized_l( rs, iflg )
+FUNCTION dpz_polarized( rs, iflg )
   !-----------------------------------------------------------------------
   !!  Derivative of the correlation potential with respect to local density
   !!  Perdew and Zunger parameterization of the Ceperley-Alder functional.  |
   !!  Spin-polarized case.
   !
-  USE kind_l,      ONLY: DP
   USE constants_l, ONLY: pi, fpi
   !
   IMPLICIT NONE
   !
   REAL(DP), INTENT(IN) :: rs
   INTEGER,  INTENT(IN) :: iflg
-  REAL(DP) :: dpz_polarized_l
+  REAL(DP) :: dpz_polarized
   !
   ! ... local variables
   !
@@ -565,9 +577,11 @@ FUNCTION dpz_polarized_l( rs, iflg )
      dmrs = 0.5d0 * dmx/x
   ENDIF
   !
-  dpz_polarized_l = - fpi * rs**4._DP / 9._DP * dmrs
+  dpz_polarized = - fpi * rs**4._DP / 9._DP * dmrs
   !
   !
   RETURN
   !
-END FUNCTION dpz_polarized_l
+END FUNCTION dpz_polarized
+!
+END MODULE qe_drivers_d_lda_lsda

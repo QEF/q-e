@@ -19,9 +19,7 @@ SUBROUTINE stres_mgga( sigmaxc )
   USE gvect,                  ONLY : g
   USE scf,                    ONLY : rho, v
   USE wavefunctions,          ONLY : evc
-  !USE funct,                  ONLY : dft_is_meta
-  USE xc_interfaces,          ONLY : xclib_dft_is
-  
+  USE xc_lib,                 ONLY : xclib_dft_is
   USE klist,                  ONLY : nks, xk, ngk
   USE buffers,                ONLY : get_buffer
   USE io_files,               ONLY : iunwfc, nwordwfc

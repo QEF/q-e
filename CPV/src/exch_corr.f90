@@ -14,9 +14,7 @@
 ! calculate exch-corr potential, energy, and derivatives dxc(i,j)
 ! of e(xc) with respect to to cell parameter h(i,j)
 !     
-      !use funct,           only : dft_is_gradient, dft_is_meta
-      use xc_interfaces,   only : xclib_dft_is
-      
+      use xc_lib,          only : xclib_dft_is
       use fft_base,        only : dfftp, dffts
       use cell_base,       only : ainv, omega, h
       use ions_base,       only : nsp
@@ -369,10 +367,8 @@
 !=----------------------------------------------------------------------------=!
 
 subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
-  use kinds,       only: DP
-  !use funct,       only: dft_is_gradient, get_igcc
-  use xc_interfaces, only: xclib_dft_is, xclib_get_id
-  use xc_interfaces, only: xc, xc_gcx, xclib_set_threshold
+  use kinds,  only: DP
+  use xc_lib, only: xclib_dft_is, xclib_get_id, xclib_set_threshold, xc_gcx
   implicit none
   integer, intent(in) :: nnr
   integer, intent(in) :: nspin

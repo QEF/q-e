@@ -1,7 +1,30 @@
+!
+! --- MGGA CORRECTION DRIVERS ---
+!
+!--------------------------------------------------------------------------
+MODULE qe_drivers_mgga
+  !------------------------------------------------------------------------
+  !! Contains the mgga drivers of QE that calculate XC energy and potential.
+  !
+  USE kind_l, ONLY: DP
+  USE dft_par_mod
+  USE metagga
+  !
+  IMPLICIT NONE
+  !
+  SAVE
+  !
+  PRIVATE
+  !
+  PUBLIC :: tau_xc, tau_xc_spin
+  !
+  !
+CONTAINS
+!
 !---------------------------------------------------------------------------------
-SUBROUTINE tau_xc_l( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
+SUBROUTINE tau_xc( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   !-------------------------------------------------------------------------------
-  !  gradient corrections for exchange and correlation - Hartree a.u.
+  !! Meta gradient corrections for exchange and correlation - Hartree a.u.
   !  See comments at the beginning of module for implemented cases
   !
   !  input:  rho, grho=|\nabla rho|^2
@@ -14,10 +37,6 @@ SUBROUTINE tau_xc_l( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v
   !          v3x= D(E_x)/D(tau)
   !
   !          sc, v1c, v2c as above for correlation
-  !
-  USE kind_l
-  USE dft_par_mod
-  USE metagga
   !
   IMPLICIT NONE
   !
@@ -43,23 +62,19 @@ SUBROUTINE tau_xc_l( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v
     CASE( 2 )
        CALL m06lxc(  arho, grho2(k), tau(k), ex(k), ec(k), v1x(k), v2x(k), v3x(k), v1c(k), v2c(k), v3c(k) )
     CASE DEFAULT
-       CALL errore( 'tau_xc', 'This case is not implemented', imeta )
+       CALL xclib_error( 'tau_xc', 'This case is not implemented', imeta )
     END SELECT
     !
   ENDDO
   !
   RETURN
   !
-END SUBROUTINE tau_xc_l
+END SUBROUTINE tau_xc
 !
 !
 !----------------------------------------------------------------------------------------
-SUBROUTINE tau_xc_spin_l( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
+SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   !------------------------------------------------------------------------------------
-  !
-  USE kind_l
-  USE dft_par_mod
-  USE metagga
   !
   IMPLICIT NONE
   !
@@ -115,7 +130,7 @@ SUBROUTINE tau_xc_spin_l( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2
         !
      CASE DEFAULT
         !
-        CALL errore( 'tau_xc_spin', 'This case not implemented', imeta )
+        CALL xclib_error( 'tau_xc_spin', 'This case not implemented', imeta )
         !
      END SELECT
      !
@@ -123,4 +138,6 @@ SUBROUTINE tau_xc_spin_l( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2
   !
   RETURN
   !
-END SUBROUTINE tau_xc_spin_l
+END SUBROUTINE tau_xc_spin
+!
+END MODULE qe_drivers_mgga

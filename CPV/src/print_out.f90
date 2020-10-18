@@ -42,9 +42,7 @@
       USE tsvdw_module,      ONLY : EtsvdW, VefftsvdW
       USE input_parameters,  ONLY : tcpbo
       USE exx_module,        ONLY : exxalfa
-      !USE funct,             ONLY : dft_is_hybrid, exx_is_active
-      USE xc_interfaces,     ONLY : xclib_dft_is, exx_is_active
-      
+      USE xc_lib,            ONLY : xclib_dft_is, exx_is_active
       USE wannier_module,    ONLY : wfc
       USE electrons_base,    ONLY : nbsp, nspin, nupdwn, iupdwn
       USE wrappers,          ONLY : memstat

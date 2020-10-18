@@ -13,8 +13,8 @@ subroutine which_cpmd_dft &
      (dft,mfxcx, mfxcc, mgcx, mgcc)
   !-----------------------------------------------------------------------
   !
-  use funct, only : set_dft_from_name
-  use xc_interfaces, only: xclib_get_id
+  use funct,  only : set_dft_from_name
+  use xc_lib, only : xclib_get_id
   
   implicit none
   character(len=*), intent(IN) :: dft

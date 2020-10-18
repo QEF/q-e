@@ -14,7 +14,6 @@ subroutine vxc_t(lsd,rho,rhoc,exc,vxc)
   !  LSDA approximation
   !
   use kinds, only : DP
-  use xc_interfaces, only: xc
   implicit none
   integer, intent(in)  :: lsd ! 1 in the LSDA case, 0 otherwise
   real(DP), intent(in) :: rho(2), rhoc ! the system density
@@ -78,8 +77,7 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
   !
   use kinds,     only : DP
   use constants, only : fpi, e2
-  use xc_interfaces,   only : xc_gcx, xc_metagcx, xclib_set_threshold, &
-                              xclib_dft_is
+  use xc_lib,    only : xclib_set_threshold, xclib_dft_is, xc_gcx
   implicit none
   integer,  intent(in) :: ndm,mesh,nspin,iflag
   real(DP), intent(in) :: r(mesh), r2(mesh), rho(ndm,2), rhoc(ndm)

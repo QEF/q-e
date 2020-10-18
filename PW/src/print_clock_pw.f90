@@ -19,8 +19,7 @@ SUBROUTINE print_clock_pw()
    USE realus,             ONLY : real_space
    USE noncollin_module,   ONLY : noncolin
    USE ldaU,               ONLY : lda_plus_u, lda_plus_u_kind, is_hubbard_back
-   !USE funct,              ONLY : dft_is_hybrid
-   USE xc_interfaces,      ONLY : xclib_dft_is
+   USE xc_lib,             ONLY : xclib_dft_is
    USE bp,                 ONLY : lelfield
    !
    IMPLICIT NONE

@@ -89,9 +89,7 @@ SUBROUTINE setup()
   USE qes_types_module,   ONLY : output_type
   USE exx,                ONLY : ecutfock
   USE exx_base,           ONLY : exx_grid_init, exx_mp_init, exx_div_check
-  !USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
-  USE xc_interfaces,      ONLY : xclib_dft_is
-  
+  USE xc_lib,             ONLY : xclib_dft_is
   USE paw_variables,      ONLY : okpaw
   USE esm,                ONLY : esm_z_inv
   USE fcp_module,         ONLY : lfcp

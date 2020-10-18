@@ -44,7 +44,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE gcscf_variables,  ONLY : lgcscf, gcscf_nelec, gcscf_ef
   USE klist,            ONLY : nelec, tot_charge
   USE extrapolation,    ONLY : update_neb
-  USE xc_interfaces,    ONLY : stop_exx, xclib_dft_is
+  USE xc_lib,           ONLY : stop_exx, xclib_dft_is
   !
   IMPLICIT NONE
   !

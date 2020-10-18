@@ -41,10 +41,8 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
                                   detot6, dekin6, dps6, dh6, dsr6, dxc6, denl6
       USE mp,               ONLY: mp_sum
       USE mp_global,        ONLY: intra_bgrp_comm
-      USE funct,            ONLY: dft_is_nonlocc, nlc, get_inlc !,dft_is_meta, &
-      !                            dft_is_hybrid, exx_is_active
-      USE xc_interfaces,    ONLY: xclib_dft_is, exx_is_active
-                                  
+      USE funct,            ONLY: dft_is_nonlocc, nlc, get_inlc
+      USE xc_lib,           ONLY: xclib_dft_is, exx_is_active
       USE vdW_DF,           ONLY: vdW_DF_stress
       use rVV10,            ONLY: rVV10_stress
       USE pres_ai_mod,      ONLY: abivol, abisur, v_vol, P_ext, volclu,  &
