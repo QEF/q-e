@@ -168,6 +168,8 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
     include(${PROJECT_CMAKE}/GNUFortranCompiler.cmake)
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "PGI")
     include(${PROJECT_CMAKE}/NVFortranCompiler.cmake)
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES "XL")
+    include(${PROJECT_CMAKE}/IBMFortranCompiler.cmake)
 endif()
 
 ############################################################
