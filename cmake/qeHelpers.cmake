@@ -41,7 +41,7 @@ function(qe_preprocess_source IN OUT)
     endif()
     add_custom_command(
         OUTPUT ${OUT}
-        COMMAND cpp ${global_flags} -E ${IN} > ${OUT}
+        COMMAND cpp -P ${global_flags} -E ${IN} > ${OUT}
         MAIN_DEPENDENCY ${IN}
         COMMENT "Preprocessing ${IN}"
         VERBATIM)    
