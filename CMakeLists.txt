@@ -130,6 +130,14 @@ endif()
 #    message(FATAL_ERROR "HDF5 requires MPI support, enable it with '-DQE_ENABLE_MPI=ON' or disable HDF5 with '-DQE_ENABLE_HDF5=OFF'")
 # endif()
 
+
+###########################################################
+# language standard requirement
+###########################################################
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+
 ###########################################################
 # MPI
 # The following targets will be defined:
