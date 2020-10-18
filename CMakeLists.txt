@@ -132,24 +132,25 @@ endif()
 
 
 ###########################################################
-# language standard requirement
+# language standard requirements
 ###########################################################
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
+# TODO need to require all compilers using the same one
+if(CMAKE_C_COMPILER_ID MATCHES "PGI")
+  set(CMAKE_C_STANDARD 11)
+  set(CMAKE_C_STANDARD_REQUIRED ON)
+  set(CMAKE_C_EXTENSIONS OFF)
+endif()
 
-###########################################################
-# MPI
-# The following targets will be defined:
-add_library(qe_mpi_fortran INTERFACE)
-add_library(QE::MPI_Fortran ALIAS qe_mpi_fortran)
-qe_install_targets(qe_mpi_fortran)
-###########################################################
-if(QE_ENABLE_MPI)
-    find_package(MPI REQUIRED Fortran)
-    target_link_libraries(qe_mpi_fortran
-        INTERFACE MPI::MPI_Fortran)
-endif(QE_ENABLE_MPI)
+############################################################
+## Compiler vendor specific options
+############################################################
+if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
+    include(${PROJECT_CMAKE}/GNUFortranCompiler.cmake)
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES "PGI")
+    include(${PROJECT_CMAKE}/NVFortranCompiler.cmake)
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES "XL")
+    include(${PROJECT_CMAKE}/IBMFortranCompiler.cmake)
+endif()
 
 ###########################################################
 # OpenMP
@@ -166,19 +167,20 @@ if(QE_ENABLE_OPENMP)
         INTERFACE OpenMP::OpenMP_Fortran)
     target_link_libraries(qe_openmp_c
         INTERFACE OpenMP::OpenMP_C)
-
 endif(QE_ENABLE_OPENMP)
 
-############################################################
-## Compiler vendor specific options
-############################################################
-if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
-    include(${PROJECT_CMAKE}/GNUFortranCompiler.cmake)
-elseif(CMAKE_Fortran_COMPILER_ID MATCHES "PGI")
-    include(${PROJECT_CMAKE}/NVFortranCompiler.cmake)
-elseif(CMAKE_Fortran_COMPILER_ID MATCHES "XL")
-    include(${PROJECT_CMAKE}/IBMFortranCompiler.cmake)
-endif()
+###########################################################
+# MPI
+# The following targets will be defined:
+add_library(qe_mpi_fortran INTERFACE)
+add_library(QE::MPI_Fortran ALIAS qe_mpi_fortran)
+qe_install_targets(qe_mpi_fortran)
+###########################################################
+if(QE_ENABLE_MPI)
+    find_package(MPI REQUIRED Fortran)
+    target_link_libraries(qe_mpi_fortran
+        INTERFACE MPI::MPI_Fortran)
+endif(QE_ENABLE_MPI)
 
 ############################################################
 ## Vendor
