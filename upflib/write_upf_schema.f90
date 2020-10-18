@@ -733,6 +733,14 @@ CONTAINS
 
    CALL xml_newElement(u, 'pp_gipaw') 
    CALL xml_addAttribute(u, 'gipaw_data_format', upf%gipaw_data_format ) 
+   CALL xml_NewElement  (u, 'number_of_core_orbitals') 
+       CALL xml_AddCharacters(u, upf%gipaw_ncore_orbitals) 
+   CALL xml_endElement(u, 'number_of_core_orbitals') 
+   IF ( .NOT. upf%paw_as_gipaw ) THEN 
+      CALL xml_newElement (u, 'number_of_valence_orbitals')
+          CALL xml_AddCharacters(u, upf%gipaw_wfs_nchannels) 
+      CALL xml_endElement(u, 'number_of_valence_orbitals') 
+   END IF 
    DO nb = 1,upf%gipaw_ncore_orbitals
       CALL xml_NewElement(u, 'pp_gipaw_core_orbital') 
           CALL xml_addAttribute(u, 'size', upf%mesh)

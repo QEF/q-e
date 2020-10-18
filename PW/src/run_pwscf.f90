@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2013-2017 Quantum ESPRESSO group
+! Copyright (C) 2013-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -33,6 +33,8 @@ SUBROUTINE run_pwscf( exit_status )
   !! @endnote
   !!
   !
+  USE kinds,                ONLY : DP
+  USE mp,                   ONLY : mp_bcast, mp_sum
   USE io_global,            ONLY : stdout, ionode, ionode_id
   USE parameters,           ONLY : ntypx, npk
   USE upf_params,           ONLY : lmaxx
@@ -53,6 +55,7 @@ SUBROUTINE run_pwscf( exit_status )
   USE qexsd_module,         ONLY : qexsd_set_status
   USE funct,                ONLY : dft_is_hybrid, stop_exx 
   USE beef,                 ONLY : beef_energies
+  USE ldaU,                 ONLY : lda_plus_u
   !
   USE gbuffers,             ONLY : dev_buf
   !
@@ -233,7 +236,12 @@ SUBROUTINE run_pwscf( exit_status )
            !
            lbfgs=.FALSE.; lmd=.FALSE.
            WRITE( UNIT = stdout, FMT=9020 ) 
+           !
            CALL reset_gvectors( )
+           !
+           ! ... read atomic occupations for DFT+U(+V)
+           !
+           IF ( lda_plus_u ) CALL read_ns()
            !
         ELSE IF ( ions_status == 2 ) THEN
            !

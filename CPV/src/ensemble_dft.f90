@@ -185,6 +185,7 @@ CONTAINS
           !
       CASE ('ensemble','ensemble-dft','edft')
           !
+          CALL errore(' ensemble_initval ','ensemble-dft is broken, sorry!', 1 )
           tens    =.true.
           ninner  = n_inner_
           etemp   = degauss_

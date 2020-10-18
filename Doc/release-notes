@@ -1,12 +1,16 @@
 New in dev version:
   * Support for CMake (F. Ficarelli and D. Cesarini, CINECA, with help from
     Ye Luo, P. Delugas, S. Gsaenger)
+  * In vc-relax with Hubbard corrections, the final SCF calculation is done by 
+    reading atomic occupations from file produced during the vc-relax 
+    (rather then recomputing them from scratch).
 
 Fixed in dev version:
   * Some linkers yield "missing references to ddot_" in libbeef
   * FFT test in FFTXlib was not always compiling 
   * angle1, angle2, starting_magnetization incorrectly written to xml file
   * Bug in Hubbard forces and stress for bands parallelization (when nproc_pool>nbnd) 
+  * Bug in DFT+U+V when starting_ns_eigenvalue is used (courtesy of M. Cococcioni)
   * Crash in the calculation of Z* with ultrasoft PP when the number of bands
     is larger than the number of occupied bands (thanks to Sasha Fonari)
   * Crash in matdyn.x when ibrav=0 (thanks to Sasha Fonari)

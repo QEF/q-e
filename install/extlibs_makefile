@@ -21,6 +21,10 @@ EIGENSOLVER_GPU=v${EIGENSOLVER_VERSION}.tar.gz
 EIGENSOLVER_GPU_NAME=Eigensolver_gpu-${EIGENSOLVER_VERSION}
 EIGENSOLVER_GPU_URL=https://github.com/NVIDIA/Eigensolver_gpu/archive/${EIGENSOLVER_GPU}
 
+# For DevXlib
+DEVXLIB_VERSION=master
+DEVXLIB_URL="https://gitlab.com/max-centre/components/devicexlib/-/archive/master/devicexlib-${DEVXLIB_VERSION}.tar.gz"
+
 # MAIN target
 
 all: libcuda
@@ -179,6 +183,32 @@ libcuda_eigensolver_clean:
 libcuda_eigensolver_veryclean:
 	if test -d ../EIGENSOLVER_GPU; then (rm -R -f ../EIGENSOLVER_GPU ../${EIGENSOLVER_GPU_NAME}); fi
 
+libcuda_devxlib :
+	cd ../external/devxlib; \
+    if test ! -e configure; then \
+    wget $(DEVXLIB_URL) -O devxlib.tar.gz || curl $(DEVXLIB_URL) -o devxlib.tar.gz ; \
+    tar xzf devxlib.tar.gz --strip-components=1 -C . ; \
+    rm devxlib.tar.gz ; \
+    fi; \
+    if test ! -f make.inc; then \
+    touch make.inc; \
+    $(MAKE) clean; \
+    ./configure FC=$(F90) F77=$(F77) CC=$(CC) \
+                --with-cuda=$(CUDA_PATH) \
+                --with-cuda-cc=$(GPU_ARCH) \
+                --with-cuda-runtime=$(CUDA_RUNTIME) \
+                --disable-parallel \
+                --enable-cuda-env-check=no; \
+    fi; \
+    make all
+
+libcuda_devxlib_clean:
+	cd ../external/devxlib; \
+	if test -f make.inc; then ($(MAKE) clean); fi
+libcuda_devxlib_veryclean:
+	cd ../external/devxlib; \
+	if test -f make.inc; then ($(MAKE) distclean && rm make.inc); fi
+
 ###################################
 # BEEF
 ###################################
@@ -208,6 +238,6 @@ libbeef_veryclean:
 # cleaning
 ###################################
 
-clean: lapack_clean elpa_clean iotk_clean fox_clean libcuda_eigensolver_clean libbeef_clean
+clean: lapack_clean elpa_clean iotk_clean fox_clean libcuda_eigensolver_clean libcuda_devxlib_clean libbeef_clean
 
-veryclean: lapack_veryclean elpa_veryclean iotk_veryclean fox_clean libcuda_eigensolver_veryclean libbeef_veryclean
+veryclean: lapack_veryclean elpa_veryclean iotk_veryclean fox_clean libcuda_eigensolver_veryclean libcuda_devxlib_veryclean libbeef_veryclean
