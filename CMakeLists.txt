@@ -213,6 +213,11 @@ if(NOT VENDOR_FOUND)
                 ${LAPACK_LIBRARIES}
                 ${LAPACK_LINKER_FLAGS})
     elseif(QE_ENABLE_VENDOR_DEPS)
+        if(CMAKE_Fortran_COMPILER_ID MATCHES "XL")
+            message(FATAL_ERROR "IBM XL compilers cannot build internal LAPACK with QE "
+                                "due to the conflict in flags for free vs fixed format. "
+                                "Please use an optimized LAPACK or build LAPACK separately.")
+        endif()
         message(STATUS "Installing QE::LAPACK via submodule")
         qe_git_submodule_update(external/lapack)
         add_subdirectory(external/lapack EXCLUDE_FROM_ALL)
