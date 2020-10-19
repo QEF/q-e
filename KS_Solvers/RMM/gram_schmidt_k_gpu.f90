@@ -11,7 +11,7 @@
 #define MONE (-1._DP, 0._DP )
 !
 !--------------------------------------------------------------------------
-SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
+SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi_d, hpsi_d, spsi_d, e, &
                            uspp, eigen, reorder, nbsize )
   !--------------------------------------------------------------------------
   !
@@ -27,9 +27,9 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   ! ... I/O variables
   !
   INTEGER,     INTENT(IN)    :: npw, npwx, nbnd, npol
-  COMPLEX(DP), INTENT(INOUT) :: psi (npwx*npol,nbnd)
-  COMPLEX(DP), INTENT(INOUT) :: hpsi(npwx*npol,nbnd)
-  COMPLEX(DP), INTENT(INOUT) :: spsi(npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(INOUT) :: psi_d (npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(INOUT) :: hpsi_d(npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(INOUT) :: spsi_d(npwx*npol,nbnd)
   REAL(DP),    INTENT(INOUT) :: e(nbnd)
   LOGICAL,     INTENT(IN)    :: uspp
   LOGICAL,     INTENT(IN)    :: eigen
@@ -50,20 +50,12 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   ! ... device variables 
   !
   INTEGER :: ii, jj, kk 
-  COMPLEX(DP) :: psi_d (npwx*npol,nbnd)
-  COMPLEX(DP) :: hpsi_d(npwx*npol,nbnd)
-  COMPLEX(DP) :: spsi_d(npwx*npol,nbnd)
   COMPLEX(DP), ALLOCATABLE :: phi_d(:,:), hphi_d(:,:), sphi_d(:,:)
 #if defined (__CUDA)
   attributes(device) :: psi_d, hpsi_d, spsi_d
   attributes(device) :: phi_d, hphi_d, sphi_d
 #endif 
   !
-!civn 
-  psi_d = psi
-  hpsi_d = hpsi
-  spsi_d = spsi
-!
   IF ( npol == 1 ) THEN
      !
      kdim = npw
@@ -96,11 +88,10 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
      !
   END IF
   !
-!civn 
   ALLOCATE( phi_d ( kdmx, nbnd ) )
   IF ( eigen_ ) ALLOCATE( hphi_d( kdmx, nbnd ) )
   IF ( uspp )   ALLOCATE( sphi_d( kdmx, nbnd ) )
-!
+  !
   ALLOCATE( owner_bgrp_id( nblock ) )
   !
 !$cuf kernel do(2)
@@ -203,18 +194,11 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   ! ... Sort wave functions
   !
   IF ( reorder ) CALL sort_vectors_gpu( )
-!civn 
-psi = psi_d
-if(eigen_) hpsi = hpsi_d
-if(uspp)   spsi = spsi_d
-!
   !
-!civn 
   DEALLOCATE( phi_d )
   IF ( eigen_ ) DEALLOCATE( hphi_d )
   IF ( uspp )   DEALLOCATE( sphi_d )
-!civn 
-!
+  !
   DEALLOCATE( owner_bgrp_id )
   !
   RETURN

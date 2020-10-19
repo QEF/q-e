@@ -845,16 +845,16 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        ! ... Gram-Schmidt orthogonalization
        !
 !civn 
-hevc = hevc_d
-sevc = sevc_d
+!hevc = hevc_d
+!sevc = sevc_d
 
        IF ( .not. use_gpu ) THEN
           CALL using_evc(1); CALL using_et(1);
           CALL gram_schmidt( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
                              okvan, .TRUE., .TRUE., gs_nblock )
        ELSE
-          CALL using_evc(1); CALL using_et(1); 
-          CALL gram_schmidt_k_gpu( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
+          CALL using_evc_d(1); CALL using_et(1); 
+          CALL gram_schmidt_k_gpu( npwx, npw, nbnd, npol, evc_d, hevc_d, sevc_d, et(1,ik), &
                              okvan, .TRUE., .TRUE., gs_nblock )
 
        END IF
