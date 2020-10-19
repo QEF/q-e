@@ -69,9 +69,12 @@ MODULE beef_interface
     !
     END INTERFACE
     !
+#endif
+    !
     CONTAINS
     ! ====================================================================
     !
+#if defined(__NOBEEF)
     FUNCTION beef_set_type(tbeef, ionode) RESULT(r)
         INTEGER, INTENT(IN) :: tbeef
         LOGICAL, INTENT(IN) :: ionode
@@ -93,7 +96,7 @@ MODULE beef_interface
     END FUNCTION beef_set_type
     !
 #else
-    CONTAINS
+    !
     ! empty routines to prevent compilation errors
     SUBROUTINE beefx( r, g, e, dr, dg, addlda )
       USE kinds, ONLY : dp
