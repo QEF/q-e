@@ -6,7 +6,7 @@ includedir="${prefix}/include/qe"
 Name: Quantum Espresso
 Description: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization
 URL: https://gitlab.com/QEF/q-e.git
-Version: 6.5.0
+Version: 6.6.0
 
 Requires: @PKGCONF_REQ_PUB@
 Cflags: -I"${includedir}"/qe_fox -I"${includedir}"/qe_iotk -I"${includedir}"/qe_wannier90 -I"${includedir}"/qe_fftx -I"${includedir}"/qe_clib -I"${includedir}"/qe_utilx_tests -I"${includedir}"/qe_utilx -I"${includedir}"/qe_modules -I"${includedir}"/qe_lax -I"${includedir}"/qe_dftd3 -I"${includedir}"/qe_pw -I"${includedir}"/qe_cpv -I"${includedir}"/qe_atomic -I"${includedir}"/qe_couple -I"${includedir}"/qe_lr_modules -I"${includedir}"/qe_phonon_ph -I"${includedir}"/qe_pp -I"${includedir}"/qe_epw -I"${includedir}"/qe_hp -I"${includedir}"/qe_plotphon_kforbands_exe -I"${includedir}"/qe_neb -I"${includedir}"/qe_qha_atominfo_exe -I"${includedir}"/qe_pwcond_exe -I"${includedir}"/qe_tddfpt -I"${includedir}"/qe_kssolver_davidson -I"${includedir}"/qe_gww -I"${includedir}"/qe_upftools_extractcore_exe -I"${includedir}"/qe_xspectra_gipaw -I"${includedir}"/qe_upflib  
