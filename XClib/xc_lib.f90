@@ -34,7 +34,7 @@ MODULE xc_lib
             xclib_get_exx_fraction,            &
             xclib_get_finite_size_cell_volume, &
             get_screening_parameter,           &
-            get_gau_parameter
+            get_gau_parameter        
   !
   PUBLIC :: xclib_dft_is,                      &
             xclib_dft_is_libxc,                &

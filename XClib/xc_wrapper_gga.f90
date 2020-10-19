@@ -41,9 +41,9 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   REAL(DP), INTENT(OUT) :: v1c(:,:)
   !! correlation potential (density part)
   REAL(DP), INTENT(OUT) :: v2c(:,:)
-  !! correlation (gradient part)
+  !! correlation potential (gradient part)
   REAL(DP), INTENT(OUT), OPTIONAL :: v2c_ud(:)
-  !! correlation
+  !! correlation potential, cross term
   !
   ! ... local variables
   !
@@ -76,27 +76,8 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   REAL(DP), PARAMETER :: small = 1.E-10_DP
   !
   !
-  !IF (ns==2 .AND. .NOT. PRESENT(v2c_ud)) CALL xclib_error( 'xc_gga', 'cross &
-  !                                             &term v2c_ud not found', 1 )
   IF (ns==2 .AND. .NOT. PRESENT(v2c_ud)) CALL xclib_infomsg( 'xc_gcx', 'WARNING: cross &
                 &term v2c_ud not found xc_gcx (gga) call with polarized case' )
-  !
-  !----PROVISIONAL ---
-  !IF ( ANY(.NOT.is_libxc(3:4)) ) THEN
-  !   CALL xclib_set_threshold( 'gga', rho_threshold, grho_threshold )
-  !   exx_started  = exx_is_active()
-  !   exx_fraction = get_exx_fraction()
-  !   CALL xclib_get_exx( exx_started )
-  !   CALL xclib_get_exx( exx_fraction )
-  !   IF ( igcx==12 ) THEN
-  !     screening_parameter = get_screening_parameter()
-  !     CALL xclib_get_gau_scr_param( screening_parameter )    !---controlla
-  !   ELSEIF (igcx==20 ) THEN
-  !     gau_parameter = get_gau_parameter()
-  !     CALL xclib_get_gau_scr_param( gau_parameter )
-  !   ENDIF
-  !ENDIF
-  !----
   !
   ex = 0.0_DP ;  v1x = 0.0_DP ;  v2x = 0.0_DP
   ec = 0.0_DP ;  v1c = 0.0_DP ;  v2c = 0.0_DP

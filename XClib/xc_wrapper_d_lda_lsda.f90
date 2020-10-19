@@ -134,11 +134,11 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
     !
   ELSEIF ((.NOT.is_libxc(1)) .AND. (.NOT.is_libxc(2)) ) THEN
     !
-    !CALL set_threshold_l( 'lda', small )
     rho_threshold_lda = small
     !
     IF ( sr_d == 1 ) CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )
     IF ( sr_d == 2 ) CALL dmxc_lsda( length, rho_in, dmuxc )
+    IF ( sr_d == 4 ) CALL dmxc_nc( length, rho_in(:,1), rho_in(:,2:4), dmuxc )
     !
   ELSE
     !
@@ -149,7 +149,6 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   !
 #else
   !
-  !CALL set_threshold_l( 'lda', small )
   rho_threshold_lda = small
   !
   SELECT CASE( sr_d )
@@ -167,7 +166,7 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
      !
   CASE DEFAULT
      !
-     CALL xclib_error( 'xc_LDA', 'Wrong ns input', 4 )
+     CALL xclib_error( 'dmxc', 'Wrong ns input', 4 )
      !
   END SELECT
   !

@@ -1,6 +1,10 @@
 !
 MODULE dft_mod
   !
+#if defined(__LIBXC)
+    USE xc_f03_lib_m
+#endif  
+  !
   SAVE
   !
   PRIVATE
@@ -16,6 +20,9 @@ MODULE dft_mod
   PUBLIC :: xclib_dft_is, xclib_dft_is_libxc,  &
             start_exx, stop_exx, dft_has_finite_size_correction, &
             exx_is_active, igcc_is_lyp, xclib_reset_dft, dft_force_hybrid
+#if defined(__LIBXC)
+  PUBLIC :: get_libxc_flags_exc
+#endif
   !
 CONTAINS
   !-------------------------------------------------------------------
@@ -25,10 +32,6 @@ CONTAINS
     !! into internal indices iexch, icorr, igcx, igcc, inlc, imeta.
     !
     USE dft_par_mod
-    !
-#if defined(__LIBXC)
-    USE xc_f03_lib_m
-#endif
     !
     IMPLICIT NONE
     !
@@ -459,10 +462,6 @@ CONTAINS
     !! It also makes some compatibility checks.
     !
     USE dft_par_mod
-    !
-#if defined(__LIBXC)
-    USE xc_f03_lib_m
-#endif
     ! 
     IMPLICIT NONE
     !
@@ -501,7 +500,6 @@ CONTAINS
           fkind = xc_f03_func_info_get_kind( xc_info )
           family = xc_f03_func_info_get_family( xc_info )
           IF ( matches('HYB_', TRIM(name)) ) THEN
-            lxc_hyb = .TRUE.
             exx_fraction = xc_f03_hyb_exx_coef( xc_func )
           ENDIF
           CALL xc_f03_func_end( xc_func )
@@ -936,13 +934,7 @@ CONTAINS
 !    !
 !    END SUBROUTINE
   
-  
-  
-  
-  
-  
-  
-  
+
   FUNCTION xclib_get_id( family, kindf )
      !
      USE dft_par_mod
@@ -1179,16 +1171,13 @@ CONTAINS
      volume = -1.d0
      IF (is_present) volume = finite_size_cell_volume
   END SUBROUTINE xclib_get_finite_size_cell_volume
-
-  
-  
-  
-  
+  !
   !------------------------------------------------------------------------
 #if defined(__LIBXC)
   SUBROUTINE get_libxc_flags_exc( xc_info, eflag )
      ! Checks whether Exc is present or not in the output of a libxc 
      ! functional (e.g. TB09)
+     IMPLICIT NONE
      TYPE(xc_f03_func_info_t) :: xc_info
      INTEGER :: ii, flags_tot
      INTEGER, INTENT(OUT) :: eflag 
@@ -1430,23 +1419,6 @@ END FUNCTION matches
     RETURN 
     !
   END FUNCTION capital
-
-
-#if defined(__LIBXC)
-  SUBROUTINE get_libxc_version
-     !
-     IMPLICIT NONE
-     !
-     INTERFACE
-        SUBROUTINE xc_version( major, minor, micro ) bind(c)
-           USE iso_c_binding
-           INTEGER(c_int) :: major, minor, micro
-        END SUBROUTINE xc_version
-     END INTERFACE
-     !
-     CALL xc_version( libxc_major, libxc_minor, libxc_micro )
-     !
-  END SUBROUTINE get_libxc_version
-#endif
-!
+  !
+  !
 END MODULE dft_mod

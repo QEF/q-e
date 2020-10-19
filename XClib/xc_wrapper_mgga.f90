@@ -7,8 +7,8 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   !
 #if defined(__LIBXC)
 #include "xc_version.h"
-  !USE funct,            ONLY : get_libxc_flags_exc                           !-----sistema
   USE xc_f03_lib_m
+  USE dft_mod,       ONLY: get_libxc_flags_exc
 #endif 
   !
   USE kind_l,        ONLY: DP
@@ -74,8 +74,6 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   ex = 0.0_DP ;  v1x = 0.0_DP ;  v2x = 0.0_DP ;  v3x = 0.0_DP
   ec = 0.0_DP ;  v1c = 0.0_DP ;  v2c = 0.0_DP ;  v3c = 0.0_DP
   !
-  CALL set_threshold_l( 'mgga', rho_threshold, grho2_threshold, tau_threshold )
-  !
   POLARIZED = .FALSE.
   IF (ns == 2) THEN
      POLARIZED = .TRUE.
@@ -97,8 +95,8 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
     DO k = 1, length
       rho_lxc(k) = ABS( rho(k,1) )
       sigma(k) = MAX( grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2, &
-                      grho2_threshold )
-      tau_lxc(k) = MAX( tau(k,1), tau_threshold )
+                      grho2_threshold_mgga )
+      tau_lxc(k) = MAX( tau(k,1), tau_threshold_mgga )
     ENDDO
     !
   ELSE
@@ -108,14 +106,14 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
        rho_lxc(2*k)   = ABS( rho(k,2) )
        !
        sigma(3*k-2) = MAX( grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2, &
-                           grho2_threshold )
+                           grho2_threshold_mgga )
        sigma(3*k-1) = grho(1,k,1) * grho(1,k,2) + grho(2,k,1) * grho(2,k,2) + &
                       grho(3,k,1) * grho(3,k,2)
        sigma(3*k)   = MAX( grho(1,k,2)**2 + grho(2,k,2)**2 + grho(3,k,2)**2, &
-                           grho2_threshold )
+                           grho2_threshold_mgga )
        !
-       tau_lxc(2*k-1) = MAX( tau(k,1), tau_threshold )
-       tau_lxc(2*k)   = MAX( tau(k,2), tau_threshold )
+       tau_lxc(2*k-1) = MAX( tau(k,1), tau_threshold_mgga )
+       tau_lxc(2*k)   = MAX( tau(k,2), tau_threshold_mgga )
     ENDDO
     !
   ENDIF
@@ -145,15 +143,15 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   IF ( is_libxc(5) ) THEN
      CALL xc_f03_func_init( xc_func, imeta, pol_unpol )
      xc_info1 = xc_f03_func_get_info( xc_func )
-     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold )
-!     CALL get_libxc_flags_exc( xc_info1, eflag )                                   !----sistema
-!     IF (eflag==1) THEN
+     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold_mgga )
+     CALL get_libxc_flags_exc( xc_info1, eflag )
+     IF (eflag==1) THEN
        CALL xc_f03_mgga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
                                  ex_lxc(1), vx_rho(1), vx_sigma(1), vlapl_rho(1), vx_tau(1) )
-!     ELSE
-!       CALL xc_f03_mgga_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &    !---sistema
-!                             vx_rho(1), vx_sigma(1), vlapl_rho(1), vx_tau(1) )
-!     ENDIF
+     ELSE
+       CALL xc_f03_mgga_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
+                             vx_rho(1), vx_sigma(1), vlapl_rho(1), vx_tau(1) )
+     ENDIF
     CALL xc_f03_func_end( xc_func )
     !
     IF (.NOT. POLARIZED) THEN
@@ -177,7 +175,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
     !
     ! ... only for HK/MCA: SCAN0 (used in CPV)
     IF ( scan_exx ) THEN
-       IF (exx_is_active()) THEN
+       IF (exx_started) THEN
          ex  = (1.0_DP - exx_fraction) * ex
          v1x = (1.0_DP - exx_fraction) * v1x
          v2x = (1.0_DP - exx_fraction) * v2x
@@ -193,7 +191,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
     !
     CALL xc_f03_func_init( xc_func, imetac, pol_unpol )
     xc_info1 = xc_f03_func_get_info( xc_func )
-    CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold )
+    CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold_mgga )
     CALL xc_f03_mgga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
                                ec_lxc(1), vc_rho(1), vc_sigma(1), vlapl_rho(1), vc_tau(1) )
     CALL xc_f03_func_end( xc_func )

@@ -187,6 +187,7 @@ SUBROUTINE dgcxc( length, sp, r_in, g_in, dvxc_rr, dvxc_sr, dvxc_ss )
        dvxc_sr(:,1,1) = e2 * (vsrx(:,1) + vsrc(:,1))
        dvxc_ss(:,1,1) = e2 * (vssx(:,1) + vssc(:)  )
        !
+       !
     ELSEIF ( sp == 2 ) THEN
        !
        ALLOCATE( vrzc(length,sp) )

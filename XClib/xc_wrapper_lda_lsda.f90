@@ -128,10 +128,9 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
      SELECT CASE( sr_d )
      CASE( 1 )
         !
-        !CALL get_ldaxcparlib( 0.d0, exx_started, exx_fraction )
         IF (iexch==8 .OR. icorr==10) THEN
-          !IF (.NOT. is_there_finite_size_corr) CALL xclib_error( 'XC',&                               !-----RIMETTI-.....
-          !    'finite size corrected exchange used w/o initialization', 1 )
+          IF (.NOT. finite_size_cell_volume_set) CALL xclib_error( 'XC',&
+              'finite size corrected exchange used w/o initialization', 1 )
         ENDIF
         CALL xc_lda( length, ABS(rho_in(:,1)), ex_out, ec_out, vx_out(:,1), vc_out(:,1) )
         !
@@ -190,12 +189,9 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   SELECT CASE( sr_d )
   CASE( 1 )
      !
-     !CALL get_ldaxcparlib( 0.d0, exx_started, exx_fraction )
      IF (iexch==8 .OR. icorr==10) THEN
-       !CALL get_ldaxcparlib( finite_size_cell_volume )
-       !
-       !IF (.NOT. is_there_finite_size_corr) CALL xclib_error( 'XC',&
-       !    'finite size corrected exchange used w/o initialization', 1 )                             !-....RIMETTI......
+       IF (.NOT. finite_size_cell_volume_set) CALL xclib_error( 'XC',&
+           'finite size corrected exchange used w/o initialization', 1 )
      ENDIF
      !
      CALL xc_lda( length, ABS(rho_in(:,1)), ex_out, ec_out, vx_out(:,1), vc_out(:,1) )
