@@ -36,7 +36,7 @@ target_link_libraries(qe_xclib
 ###########################################################
 # xclib_test.x
 ###########################################################
-set(sources src/xclib_test.f90)
+set(sources xclib_test.f90)
 qe_add_executable(qe_xclib_xclibtest_exe ${sources})
 set_target_properties(qe_xclib_xclibtest_exe PROPERTIES OUTPUT_NAME xclib_test.x)
 target_link_libraries(qe_xclib_xclibtest_exe
