@@ -6,7 +6,10 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 # alias targets:
 # https://gitlab.kitware.com/cmake/cmake/merge_requests/2521
 
-# CMake < 3.18 cannot discover the ARMPL through FindLAPACK.cmake
+# CMake < v3.18 cannot discover the ARM Performance Library
+if(CMAKE_VERSION VERSION_LESS 3.18.0)
+    message("-- CMake versions less then 3.18 cannot automatically discover the ARM Performance Library!")
+endif()
 
 # Policy CMP0048: The project() command manages VERSION variables
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
@@ -80,6 +83,14 @@ option(QE_ENABLE_VENDOR_DEPS
     "enable fallback on vendored deps when none is found via find_package()" ON)
 option(QE_ENABLE_DOC
     "enable documentation building" OFF)
+option(QE_FFTW_SINGLE
+    "enable single precision FFTW library" OFF)
+option(QE_FFTW_DOUBLE
+    "enable double precision FFTW library" ON)
+option(QE_FFTW_QUAD
+    "enable quad precision FFTW library" OFF)
+option(QE_FFTW_CONF
+    "FFTW can be accelerated using OpenMP or MPI. It is possible to use thread-safe routines [OPENMP, MPI, THREADS]" OFF)
 
 # TODO change all ifdefs throughout code base to match
 # cmake options
@@ -114,6 +125,9 @@ endif()
 if(QE_ENABLE_HDF5)
     qe_add_global_compile_definitions(__HDF5)
 endif()
+if(QE_ENABLE_OPENMP)
+    set(QE_FFTW_CONF "OPENMP")
+endif()
 
 # Feature checks
 check_function_exists(mallinfo HAVE_MALLINFO)
@@ -127,6 +141,17 @@ if(QE_ENABLE_ELPA AND NOT QE_ENABLE_SCALAPACK)
 endif()
 if(QE_ENABLE_SCALAPACK AND NOT QE_ENABLE_MPI)
     message(FATAL_ERROR "SCALAPACK requires MPI support, enable it with '-DQE_ENABLE_MPI=ON' or disable SCALAPACK with '-DQE_ENABLE_SCALAPACK=OFF'")
+endif()
+if(QE_FFTW_QUAD AND (QE_FFTW_CONF STREQUAL "MPI"))
+    message(FATAL_ERROR "FFTW quad precision is not supported in MPI")
+endif()
+if(QE_FFTW_CONF)
+    string(TOUPPER ${QE_FFTW_CONF} QE_FFTW_CONF)
+    if((NOT QE_FFTW_CONF STREQUAL "OPENMP") AND
+       (NOT QE_FFTW_CONF STREQUAL "MPI") AND 
+       (NOT QE_FFTW_CONF STREQUAL "THREADS"))
+        message(FATAL_ERROR "QE_FFTW_CONF can have only the following values: OPENMP, MPI, and THREADS")
+    endif()
 endif()
 # if(QE_ENABLE_HDF5 AND NOT QE_ENABLE_MPI)
 #    message(FATAL_ERROR "HDF5 requires MPI support, enable it with '-DQE_ENABLE_MPI=ON' or disable HDF5 with '-DQE_ENABLE_HDF5=OFF'")
