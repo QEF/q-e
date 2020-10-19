@@ -96,6 +96,20 @@ implicit none
   return
 end function ZDOTC_gpu
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE ZSWAP_gpu(n, zx, incx, zy, incy) 
+#if defined(__CUDA)
+USE cublas
+#endif
+implicit none
+  integer :: n, incx, incy 
+  DOUBLE COMPLEX, dimension(*) :: zx, zy
+#if defined(__CUDA)
+  attributes(device) :: zx, zy 
+  CALL cublasZSWAP(n, zx, incx, zy, incy)  
+#endif
+  return
+END SUBROUTINE ZSWAP_gpu
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE ZCOPY_gpu(n, zx, incx, zy, incy)
 #if defined(__CUDA)
 USE cublas

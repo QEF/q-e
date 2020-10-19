@@ -205,6 +205,14 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   !
   IF ( uspp ) &
   CALL ZCOPY_gpu( kdmx * nbnd, sphi_d(1,1), 1, spsi_d(1,1), 1 )
+  !
+  ! ... Calculate energy eigenvalues
+  !
+  IF ( eigen_ ) CALL energyeigen_gpu( )
+  !
+  ! ... Sort wave functions
+  !
+  IF ( reorder ) CALL sort_vectors_gpu( )
 !civn 
 psi = psi_d
 if(eigen_) hpsi = hpsi_d
@@ -214,17 +222,15 @@ if(eigen_) hphi = hphi_d
 if(uspp)   sphi = sphi_d
 !
   !
-  ! ... Calculate energy eigenvalues
-  !
-  IF ( eigen_ ) CALL energyeigen( )
-  !
-  ! ... Sort wave functions
-  !
-  IF ( reorder ) CALL sort_vectors( )
-  !
   DEALLOCATE( phi )
   IF ( eigen_ ) DEALLOCATE( hphi )
   IF ( uspp )   DEALLOCATE( sphi )
+!civn 
+  DEALLOCATE( phi_d )
+  IF ( eigen_ ) DEALLOCATE( hphi_d )
+  IF ( uspp )   DEALLOCATE( sphi_d )
+!civn 
+!
   DEALLOCATE( owner_bgrp_id )
   !
   RETURN
@@ -381,13 +387,13 @@ CONTAINS
   END SUBROUTINE project_offdiag
   !
   !
-  SUBROUTINE energyeigen( )
+  SUBROUTINE energyeigen_gpu( )
     !
     IMPLICIT NONE
     !
     INTEGER :: ibnd, ibnd_start, ibnd_end
     !
-    COMPLEX(DP), EXTERNAL :: ZDOTC
+    COMPLEX(DP), EXTERNAL :: ZDOTC_gpu
     !
     ! ... <psi_i| H |psi_i>
     !
@@ -397,7 +403,7 @@ CONTAINS
     !
     DO ibnd = ibnd_start, ibnd_end
        !
-       e(ibnd) = DBLE( ZDOTC( kdim, psi(1,ibnd), 1, hpsi(1,ibnd), 1 ) )
+       e(ibnd) = DBLE( ZDOTC_gpu( kdim, psi_d(1,ibnd), 1, hpsi_d(1,ibnd), 1 ) )
        !
     END DO
     !
@@ -406,10 +412,10 @@ CONTAINS
     !
     RETURN
     !
-  END SUBROUTINE energyeigen
+  END SUBROUTINE energyeigen_gpu
   !
   !
-  SUBROUTINE sort_vectors( )
+  SUBROUTINE sort_vectors_gpu( )
     !
     IMPLICIT NONE
     !
@@ -429,13 +435,13 @@ CONTAINS
           e(ibnd)   = e(ibnd-1)
           e(ibnd-1) = e0
           !
-          CALL ZSWAP( kdim, psi(1,ibnd), 1, psi(1,ibnd-1), 1 )
+          CALL ZSWAP_gpu( kdim, psi_d(1,ibnd), 1, psi_d(1,ibnd-1), 1 )
           !
           IF ( eigen_ ) &
-          CALL ZSWAP( kdim, hpsi(1,ibnd), 1, hpsi(1,ibnd-1), 1 )
+          CALL ZSWAP_gpu( kdim, hpsi_d(1,ibnd), 1, hpsi_d(1,ibnd-1), 1 )
           !
           IF ( uspp ) &
-          CALL ZSWAP( kdim, spsi(1,ibnd), 1, spsi(1,ibnd-1), 1 )
+          CALL ZSWAP_gpu( kdim, spsi_d(1,ibnd), 1, spsi_d(1,ibnd-1), 1 )
           !
        END IF
        !
@@ -445,7 +451,7 @@ CONTAINS
     !
     RETURN
     !
-  END SUBROUTINE sort_vectors
+  END SUBROUTINE sort_vectors_gpu
   !
   !
 END SUBROUTINE gram_schmidt_k_gpu
