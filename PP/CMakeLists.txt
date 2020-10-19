@@ -445,17 +445,6 @@ target_link_libraries(qe_pp_ppacf_exe
         QE::FFTX)
 
 ###########################################################
-# benchmark_libxc.x
-###########################################################
-set(sources src/xctest_qe_libxc.f90)
-qe_add_executable(qe_pp_benchmarklibxc_exe ${sources})
-set_target_properties(qe_pp_benchmarklibxc_exe PROPERTIES OUTPUT_NAME xctest_qe_libxc.x)
-target_link_libraries(qe_pp_benchmarklibxc_exe
-    PRIVATE
-        QE::XClib
-        QE::PP)
-
-###########################################################
 # ef.x
 ###########################################################
 set(sources 
@@ -548,7 +537,6 @@ qe_install_targets(
     qe_pp_fermisurface_exe
     qe_pp_fermiproj_exe
     qe_pp_ppacf_exe
-    qe_pp_benchmarklibxc_exe
     # Simple Transport
     qe_pp_st_ef_exe
     qe_pp_st_dos_exe

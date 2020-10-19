@@ -911,6 +911,4 @@ xctest.o : ../../Modules/funct.o
 xctest.o : ../../Modules/io_global.o
 xctest.o : ../../Modules/kind.o
 xctest.o : ../../Modules/mp_global.o
-xctest_qe_libxc.o : ../../Modules/funct.o
-xctest_qe_libxc.o : ../../Modules/kind.o
 

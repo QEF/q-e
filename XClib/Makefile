@@ -28,13 +28,19 @@ xc_wrapper_d_gga.o \
 xc_wrapper_d_lda_lsda.o \
 xc_wrapper_gga.o \
 xc_wrapper_lda_lsda.o \
-xc_wrapper_mgga.o
+xc_wrapper_mgga.o \
+xclib_test.o
 
-all: xc_lib.a
+all: xc_lib.a xclib_test.x
 
 xc_lib.a: 	$(XCL)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
+
+xclib_test.x : xclib_test.o xc_lib.a 
+	$(LD) $(LD_LIBS) $(LDFLAGS) $(DFLAGS) -o $@ \
+		xclib_test.o xc_lib.a $(QELIBS)
+	- ( cd ../bin ; ln -fs ../XClib/$@ . )
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L 

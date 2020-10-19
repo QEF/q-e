@@ -48,4 +48,6 @@ xc_wrapper_mgga.o : qe_drivers_mgga.o
 xc_wrapper_lda_lsda.o : qe_kind.o
 xc_wrapper_lda_lsda.o : xc_input_params_mod.o
 xc_wrapper_lda_lsda.o : qe_drivers_lda_lsda.o
+xclib_test.o : qe_kind.o
+xclib_test.o : xc_lib.o
 

@@ -28,7 +28,7 @@ PROGRAM xctest_qe_libxc
   !
   USE xc_f03_lib_m
   !
-  USE kinds,   ONLY: DP
+  USE kind_l,  ONLY: DP
   USE xc_lib,  ONLY: xclib_set_dft_from_name, xclib_set_exx_fraction, &
                      xclib_get_ID, xclib_reset_dft, xc_gcx
   !
