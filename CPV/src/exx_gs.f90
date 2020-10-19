@@ -726,7 +726,7 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
 #endif
     IF(.not.ALLOCATED(psime )) ALLOCATE( psime(max(n_p_me,n_s_me)) ); 
     IF(.not.ALLOCATED(rhome )) ALLOCATE( rhome(max(n_p_me,n_s_me)) );
-    IF(.not.ALLOCATED(rhops )) ALLOCATE( rhops(max(n_p_ps,n_s_me)) ); 
+    IF(.not.ALLOCATED(rhops )) ALLOCATE( rhops(max(n_p_ps,n_s_ps)) ); 
     IF(.not.ALLOCATED(potme )) ALLOCATE( potme(max(n_p_me,n_s_me)) ); 
     !
     DO iobtl = 1, my_nbspx
@@ -825,6 +825,8 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
             call start_clock('exx_vofr')
             CALL getvofr( p_me_r, p_ps_r, n_p_me, n_p_ps, hcub, rhops, potme, pair_status(pos, iobtl), psgsn, &
                           pairrho(:,:,pos,iobtl), pairv(:,:,pos,iobtl), cgstep)
+!            CALL getvofr( p_me_r, p_ps_r, max(n_p_me,n_s_me), max(n_p_ps,n_s_ps), hcub, rhops, potme, pair_status(pos, iobtl), psgsn, &
+!                          pairrho(:,:,pos,iobtl), pairv(:,:,pos,iobtl), cgstep)
             call stop_clock('exx_vofr')
             !--------------------------------------------------------------------------------------
             !

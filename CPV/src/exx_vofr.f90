@@ -320,9 +320,9 @@ SUBROUTINE getvofr(me_r, ps_r, n_me, n_ps, hcub, rhops, potme, guess_state, psgs
     !-----------------------------------------------------------------------
     ! --- initialize ---
     !-----------------------------------------------------------------------
-    if (.not.allocated(rho_ps)) allocate( rho_ps(n_ps))
+    if (.not.allocated(rho_ps)) allocate( rho_ps(max(n_ps,n_me)))
     if (.not.allocated(pot_ps)) then
-      allocate( pot_ps(n_ps)        ); pot_ps  = 0.0d0
+      allocate( pot_ps(max(n_ps,n_me))        ); pot_ps  = 0.0d0
     end if
     !-----------------------------------------------------------------------
     ncb(1)  = ps_r(4)-ps_r(1)+1
