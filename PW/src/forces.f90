@@ -57,7 +57,7 @@ SUBROUTINE forces()
   USE qmmm,              ONLY : qmmm_mode
   !
   USE control_flags,     ONLY : use_gpu
-  USE gbuffers,          ONLY : dev_buf
+  USE device_fbuff_m,          ONLY : dev_buf
   USE gvect_gpum,        ONLY : g_d
   USE device_util_m,     ONLY : dev_memcpy
   !

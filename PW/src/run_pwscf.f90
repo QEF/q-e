@@ -57,7 +57,7 @@ SUBROUTINE run_pwscf( exit_status )
   USE beef,                 ONLY : beef_energies
   USE ldaU,                 ONLY : lda_plus_u
   !
-  USE gbuffers,             ONLY : dev_buf
+  USE device_fbuff_m,             ONLY : dev_buf
   !
   IMPLICIT NONE
   !

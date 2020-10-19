@@ -364,7 +364,7 @@ MODULE exx
     USE wavefunctions_gpum,   ONLY : using_evc
     USE uspp_gpum,            ONLY : using_vkb ! is this needed?
     USE device_util_m,        ONLY : dev_memset
-    USE gbuffers,             ONLY : dev_buf
+    USE device_fbuff_m,             ONLY : dev_buf
     !
     IMPLICIT NONE
     !

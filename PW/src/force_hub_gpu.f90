@@ -54,7 +54,7 @@ SUBROUTINE force_hub_gpu( forceh )
    USE becmod_subs_gpum,     ONLY : calbec_gpu, using_becp_auto, using_becp_d_auto, &
                                     allocate_bec_type_gpu, deallocate_bec_type_gpu
    USE device_util_m,        ONLY : dev_memcpy, dev_memset
-   USE gbuffers,             ONLY : dev_buf
+   USE device_fbuff_m,             ONLY : dev_buf
    !
    IMPLICIT NONE
    !
@@ -345,7 +345,7 @@ SUBROUTINE dndtau_k_gpu ( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
    USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
    !
    USE device_util_m,        ONLY : dev_memcpy, dev_memset, dev_mem_addscal
-   USE gbuffers,             ONLY : dev_buf
+   USE device_fbuff_m,             ONLY : dev_buf
    !
    IMPLICIT NONE
    !
@@ -541,7 +541,7 @@ SUBROUTINE dndtau_gamma_gpu ( ldim, rproj_d, spsi_d, alpha, jkb0, ipol, ik, &
    USE mp,                   ONLY : mp_sum
    !
    USE device_util_m,        ONLY : dev_memcpy, dev_memset
-   USE gbuffers,             ONLY : dev_buf
+   USE device_fbuff_m,             ONLY : dev_buf
    !
    IMPLICIT NONE
    !
@@ -709,7 +709,7 @@ SUBROUTINE dngdtau_k_gpu ( ldim, proj_d, spsi_d, alpha, jkb0, ipol, ik, nb_s, &
    USE wavefunctions_gpum,   ONLY : evc_d, using_evc, using_evc_d
    !
    USE device_util_m,        ONLY : dev_memcpy, dev_memset, dev_mem_addscal
-   USE gbuffers,             ONLY : dev_buf
+   USE device_fbuff_m,             ONLY : dev_buf
    !
    IMPLICIT NONE
    !
@@ -942,7 +942,7 @@ SUBROUTINE dngdtau_gamma_gpu ( ldim, rproj_d, spsi_d, alpha, jkb0, ipol, ik, nb_
    USE mp,                   ONLY : mp_sum
    !
    USE device_util_m,        ONLY : dev_memcpy, dev_memset
-   USE gbuffers,             ONLY : dev_buf
+   USE device_fbuff_m,             ONLY : dev_buf
    ! 
    IMPLICIT NONE
    !
@@ -1139,7 +1139,7 @@ SUBROUTINE dprojdtau_k_gpu( spsi_d, alpha, na, ijkb0, ipol, ik, nb_s, nb_e, myke
    USE wavefunctions_gpum,   ONLY : evc_d, using_evc_d
    USE uspp_gpum,            ONLY : using_vkb_d, using_qq_at_d
    USE device_util_m,        ONLY : dev_memcpy, dev_memset
-   USE gbuffers,             ONLY : dev_buf
+   USE device_fbuff_m,             ONLY : dev_buf
    !
    IMPLICIT NONE
    !
@@ -1402,7 +1402,7 @@ SUBROUTINE calc_doverlap_inv_gpu (alpha, ipol, ik, ijkb0)
    USE ldaU,           ONLY : U_projection
    !
    USE device_util_m,        ONLY : dev_memcpy, dev_memset, dev_mem_addscal
-   USE gbuffers,             ONLY : dev_buf
+   USE device_fbuff_m,             ONLY : dev_buf
    !
    IMPLICIT NONE
    !
@@ -1534,7 +1534,7 @@ SUBROUTINE matrix_element_of_dSdtau_gpu (alpha, ipol, ik, ijkb0, lA, A, lB, B, A
    USE gvect_gpum,           ONLY : g_d
    USE uspp_gpum,            ONLY : vkb_d, qq_at_d, using_vkb_d, using_qq_at_d
    USE device_util_m,        ONLY : dev_memcpy, dev_memset
-   USE gbuffers,             ONLY : dev_buf
+   USE device_fbuff_m,             ONLY : dev_buf
    !
    IMPLICIT NONE
    !
@@ -1714,7 +1714,7 @@ SUBROUTINE dprojdtau_gamma_gpu( spsi_d, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    USE wavefunctions_gpum,   ONLY : using_evc_d, evc_d
    USE uspp_gpum,            ONLY : using_vkb_d, using_qq_at_d
    USE device_util_m,        ONLY : dev_memcpy, dev_memset
-   USE gbuffers,             ONLY : dev_buf
+   USE device_fbuff_m,             ONLY : dev_buf
    !
    IMPLICIT NONE
    !

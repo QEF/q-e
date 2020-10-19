@@ -31,7 +31,7 @@ SUBROUTINE stres_mgga_gpu( sigmaxc )
   USE mp_bands,               ONLY : intra_bgrp_comm
   USE wavefunctions_gpum,     ONLY : using_evc
   !
-  USE gbuffers ,              ONLY : dev_buf
+  USE device_fbuff_m ,              ONLY : dev_buf
   USE device_util_m,          ONLY : dev_memcpy, dev_memset
   !
   IMPLICIT NONE
@@ -230,7 +230,7 @@ SUBROUTINE wfc_gradient_gpu( ibnd, ik, npw, gradpsi_d )
   USE gvect_gpum,             ONLY: g_d
   USE wavefunctions_gpum,     ONLY: using_evc, using_evc_d, evc_d, &
                                     using_psic, using_psic_d, psic_d
-  USE gbuffers,               ONLY: dev_buf
+  USE device_fbuff_m,               ONLY: dev_buf
   USE device_util_m,          ONLY: dev_memcpy
   !
   IMPLICIT NONE 

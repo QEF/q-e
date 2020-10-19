@@ -29,7 +29,7 @@ SUBROUTINE stres_cc_gpu( sigmaxcc )
   !
   USE gvect_gpum,           ONLY : g_d, gg_d
   USE wavefunctions_gpum,   ONLY : using_psic, using_psic_d, psic_d
-  USE gbuffers,             ONLY : dev_buf
+  USE device_fbuff_m,             ONLY : dev_buf
   USE device_util_m,        ONLY : dev_memcpy
   !
   !

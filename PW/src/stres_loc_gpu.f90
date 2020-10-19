@@ -30,7 +30,7 @@ SUBROUTINE stres_loc_gpu( sigmaloc )
   USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_stres_evloc_gpu, cutoff_stres_sigmaloc_gpu
   !
   USE wavefunctions_gpum,   ONLY : using_psic, using_psic_d, psic_d
-  USE gbuffers ,            ONLY : dev_buf
+  USE device_fbuff_m ,            ONLY : dev_buf
   USE device_util_m,        ONLY : dev_memcpy
   !
   implicit none

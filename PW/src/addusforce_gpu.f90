@@ -58,7 +58,7 @@ SUBROUTINE addusforce_g_gpu( forcenl )
   USE gvect_gpum,         ONLY : gg_d, g_d, eigts1_d, eigts2_d, eigts3_d, mill_d
   !
   USE uspp_gpum,     ONLY : using_becsum_d, becsum_d
-  USE gbuffers,      ONLY : dev_buf
+  USE device_fbuff_m,      ONLY : dev_buf
 #if defined(__CUDA) 
   USE cudafor 
   USE cublas

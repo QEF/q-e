@@ -38,7 +38,7 @@ SUBROUTINE stres_us_gpu( ik, gk_d, sigmanlc )
   USE becmod_gpum,          ONLY : becp_d, bec_type_d
   USE becmod_subs_gpum,     ONLY : using_becp_auto, using_becp_d_auto, &
                                    calbec_gpu
-  USE gbuffers,             ONLY : dev_buf
+  USE device_fbuff_m,             ONLY : dev_buf
   USE device_util_m,        ONLY : dev_memcpy
   !
   !
