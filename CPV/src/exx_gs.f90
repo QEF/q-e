@@ -23,6 +23,7 @@ SUBROUTINE exx_gs(nfi, c)
     USE wannier_module,          ONLY  : wfc
     USE exx_module,              ONLY  : my_nbspx, my_nbsp, my_nxyz, index_my_nbsp,rk_of_obtl, lindex_of_obtl
     USE exx_module,              ONLY  : selfv, pairv, pair_dist
+    USE exx_module,              ONLY  : pair_label, pair_status, pair_step
     USE exx_module,              ONLY  : exx_potential
     USE exx_module,              ONLY  : n_exx, sc_fac ! EXX step and the performance scaling factor
     USE exx_module,              ONLY  : coe_1st_derv, coeke, nord1, nord2, fornberg
@@ -44,6 +45,7 @@ SUBROUTINE exx_gs(nfi, c)
     USE exx_module,              ONLY  : exx_energy_cell_derivative
     USE exx_module,              ONLY  : exxalfa
     USE fft_helper_subroutines
+    use exx_module, only : psime_pair_recv, psime_pair_send
     !
     IMPLICIT NONE
     COMPLEX(DP)   c(ngw, nbspx)        ! wave functions at time t
@@ -55,8 +57,6 @@ SUBROUTINE exx_gs(nfi, c)
     INTEGER     nj_max, iunit
     REAl(DP)    sa1,a(3),ha, hb, hc
     REAl(DP)    hcub, centerx, centery, centerz
-    !REAL(DP)    middle(3,neigh/2)
-    !REAL(DP)    d_pair(neigh/2) ! pair distance
     REAL(DP)    middle(3)
     REAL(DP)    d_pair            ! pair distance
     !
@@ -72,7 +72,6 @@ SUBROUTINE exx_gs(nfi, c)
         self_dexx_dhab(3,3), pair_dexx_dhab(3,3,neigh/2)
     !
     INTEGER,   ALLOCATABLE   :: isendreq(:)
-    !INTEGER,   ALLOCATABLE   :: irecvreq(:,:)
     INTEGER,   ALLOCATABLE   :: irecvreq(:)
     INTEGER                  :: irecv_count
     INTEGER                  :: isend_count
@@ -87,7 +86,7 @@ SUBROUTINE exx_gs(nfi, c)
     INTEGER                  :: ndim,nogrp 
     INTEGER,    ALLOCATABLE  :: obtl_recv(:,:), obtl_send(:,:), num_recv(:), num_send(:)
     REAl(DP),   ALLOCATABLE  :: wannierc(:,:),wannierc_tmp(:,:)
-    REAl(DP),   ALLOCATABLE  :: psil(:) ! ,psil_pair_recv(:,:),psil_pair_send(:,:,:)
+    REAl(DP),   ALLOCATABLE  :: psil(:)
     REAL(DP),   ALLOCATABLE  :: exx_tmp(:,:),exx_tmp3(:,:)
     INTEGER,    ALLOCATABLE  :: sdispls(:), sendcount(:)
     INTEGER,    ALLOCATABLE  :: rdispls(:), recvcount(:)
@@ -320,8 +319,8 @@ SUBROUTINE exx_gs(nfi, c)
       ALLOCATE( pair_dist( psgsn, neigh, my_nbspx), stat=ierr ); pair_dist=0.0_DP
       ALLOCATE( selfv  ( np_in_sp_s, psgsn, my_nbspx), stat=ierr ); selfv=0.0_DP
       ALLOCATE( pairv  ( np_in_sp_p, psgsn, neigh, my_nbspx), stat=ierr ); pairv=0.0_DP
-      ALLOCATE( selfrho( np_in_sp_s, psgsn, my_nbspx), stat=ierr ); selfrho=0.0_DP
-      ALLOCATE( pairrho( np_in_sp_p, psgsn, neigh, my_nbspx), stat=ierr ); pairrho=0.0_DP
+      !ALLOCATE( selfrho( np_in_sp_s, psgsn, my_nbspx), stat=ierr ); selfrho=0.0_DP
+      !ALLOCATE( pairrho( np_in_sp_p, psgsn, neigh, my_nbspx), stat=ierr ); pairrho=0.0_DP
       ALLOCATE( pair_label( neigh, my_nbspx ), stat=ierr ); pair_label=0.0_DP
       ALLOCATE( pair_step( neigh, my_nbspx ), stat=ierr ); pair_step=0.0_DP
       ALLOCATE( pair_status( neigh, my_nbspx ), stat=ierr ); pair_status=0.0_DP
@@ -436,7 +435,7 @@ SUBROUTINE exx_gs(nfi, c)
           CALL getpsil( nnrtot, np_in_sp_me_p, psi(1, iobtl), psime_pair_send(1, itr, iobtl), tran) ! HK: TEST
           !
           isend_count = isend_count + 1
-          CALL MPI_ISEND( psime_pair_send(1, itr, iobtl), n_p_me, MPI_DOUBLE_PRECISION, rk_of_obtl_trcv, &
+          CALL MPI_ISEND( psime_pair_send(1, itr, iobtl), np_in_sp_me_p, MPI_DOUBLE_PRECISION, rk_of_obtl_trcv, &
                           gindex_of_iobtl*ndim+obtl_trcv, intra_image_comm, isendreq(isend_count), ierr)
           !
         END IF
@@ -514,42 +513,43 @@ SUBROUTINE exx_gs(nfi, c)
             !                      find the position of previous v/rho
             !==================================================================================
             ! 
-            guess_status = 0        ! no guess
-            pos = 0
-            oldest_step = 100000000
-            DO itr = 1, neigh
-              IF ( pair_label(itr, iobtl) .EQ. 0 ) THEN
-                pos = itr
-                EXIT
-              ELSE IF ( pair_label(itr, iobtl) .EQ. my_var2 ) THEN
-                guess_status = 1
-                pos = itr
-                EXIT
-              ELSE IF ( pair_step(itr, iobtl) < oldest_step ) THEN
-                pos = itr
-                oldest_step = pair_step(itr, iobtl)
-              END IF
-            END DO
-            !
-            IF (guess_status .EQ. 1) THEN
-              IF (pair_step(pos, iobtl) .EQ. n_exx - 1) THEN
-                pair_status(pos, iobtl) = pair_status(pos, iobtl) + 1
-              ELSE
-                pair_status(pos, iobtl) = 1
-              END IF
-            ELSE
-              pair_status(pos, iobtl) = 0
-            END IF
-            !
-            pair_label(pos, iobtl) = my_var2
-            pair_step(pos, iobtl)  = n_exx
+!            guess_status = 0        ! no guess
+!            pos = 0
+!            oldest_step = 100000000
+!            DO itr = 1, neigh
+!              IF ( pair_label(itr, iobtl) .EQ. 0 ) THEN
+!                pos = itr
+!                EXIT
+!              ELSE IF ( pair_label(itr, iobtl) .EQ. my_var2 ) THEN
+!                guess_status = 1
+!                pos = itr
+!                EXIT
+!              ELSE IF ( pair_step(itr, iobtl) < oldest_step ) THEN
+!                pos = itr
+!                oldest_step = pair_step(itr, iobtl)
+!              END IF
+!            END DO
+!            !
+!            IF (guess_status .EQ. 1) THEN
+!              IF (pair_step(pos, iobtl) .EQ. n_exx - 1) THEN
+!                pair_status(pos, iobtl) = pair_status(pos, iobtl) + 1
+!              ELSE
+!                pair_status(pos, iobtl) = 1
+!              END IF
+!            ELSE
+!              pair_status(pos, iobtl) = 0
+!            END IF
+!            !
+!            pair_label(pos, iobtl) = my_var2
+!            pair_step(pos, iobtl)  = n_exx
             !
             !==================================================================================
             !
             call start_clock('exx_grid_trans')
             CALL getmiddlewc(wannierc(1,gindex_of_iobtl),wannierc(1,my_var2), h, ainv, middle )
             ! get pair distance (used for deprecating extrapolation, to be removed)
-            !CALL get_pair_dist(wannierc(1,gindex_of_iobtl),wannierc(1,my_var2),d_pair)
+            ! HK/MCA: d_pair is used in the extrapolation scheme (check if still working)
+            CALL get_pair_dist(wannierc(1,gindex_of_iobtl),wannierc(1,my_var2),d_pair)
             !
             ! calculate translation vector from the center of the box
             CALL getsftv( nr1s, nr2s, nr3s, h, ainv, middle, tran)
@@ -565,7 +565,8 @@ SUBROUTINE exx_gs(nfi, c)
             ! HK/MCA: (TODO) need to make these array allocation in a reusable fashion
             ALLOCATE ( rhol(np_in_sp_me_p) ); rhol=0.0_DP
             ALLOCATE ( rho_in_sp(np_in_sp_p) ); rho_in_sp=0.0_DP
-            CALL getrhol( np_in_sp_me_p, np_in_sp_p, psil(1), psil_pair_recv(1, j), rhol, rho_in_sp, tran, sa1)
+            CALL getrhol( np_in_sp_me_p, np_in_sp_p, psil(1), psime_pair_recv(1, j, iobtl), rhol, rho_in_sp, tran, sa1)
+            !CALL getrhol(p_me_r, p_ps_r, psime(1), psime_pair_recv(1, j, iobtl), rhome, rhops, inv_omega)
             !
             ! calculate the exx potential from the pair density by solving Poisson
             !
@@ -573,9 +574,10 @@ SUBROUTINE exx_gs(nfi, c)
             !
             ALLOCATE ( vl(np_in_sp_me_p) ); vl=0.0_DP ! compute potential (vl) in ME sphere 
             CALL start_clock('getvofr')
+            ! HK/MCA: d_pair is used in the extrapolation scheme (check if still working) see also ``call get_pair_dist''
             CALL getvofr( np_in_sp_me_p, np_in_sp_p, hcub, rho_in_sp, vl,&
                 pairv(1,1,j,iobtl), pairv(1,2,j,iobtl), pairv(1,3,j,iobtl),&
-                .FALSE., d_pair(j), pair_dist(1,j,iobtl), pair_dist(2,j,iobtl),&
+                .FALSE., d_pair, pair_dist(1,j,iobtl), pair_dist(2,j,iobtl),&
                 pair_dist(3,j,iobtl),cgstep)
             CALL stop_clock('getvofr')
             !
@@ -595,8 +597,8 @@ SUBROUTINE exx_gs(nfi, c)
             !$omp parallel do private(ir) 
             DO ip = 1, np_in_sp_me_p
               CALL l2goff (ip,ir,tran) ! local is centered at box center; global index is offset by tran
-              vpsil(ir,iobtl) = vpsil(ir,iobtl) - exxalfa*vl(ip)*psil_pair_recv(ip,j) ! to remain 
-              psil_pair_recv(ip,j) =            - exxalfa*vl(ip)*psil(ip)             ! to be sent 
+              vpsil(ir,iobtl) = vpsil(ir,iobtl) - exxalfa*vl(ip)*psime_pair_recv(ip,j,iobtl) ! to remain 
+              psime_pair_recv(ip,j,iobtl) =            - exxalfa*vl(ip)*psil(ip)             ! to be sent 
             END DO
             !$omp end parallel do
             !
@@ -671,8 +673,7 @@ SUBROUTINE exx_gs(nfi, c)
           rk_of_obtl_trcv  = rk_of_obtl(obtl_trcv)
           !
           isend_count = isend_count + 1
-          ! HK/MCA: revise the send buffer (FIXME)
-          CALL MPI_ISEND( psime_pair_recv(1,itr,iobtl), n_p_me, MPI_DOUBLE_PRECISION, rk_of_obtl_trcv, &
+          CALL MPI_ISEND( psime_pair_recv(1,itr,iobtl), np_in_sp_me_p, MPI_DOUBLE_PRECISION, rk_of_obtl_trcv, &
                           gindex_of_iobtl*ndim+obtl_trcv, intra_image_comm, isendreq(isend_count), ierr)
           !
           ! WRITE(my_unit,*) "itr = ", itr
@@ -702,8 +703,7 @@ SUBROUTINE exx_gs(nfi, c)
           rk_of_obtl_tbs = rk_of_obtl(obtl_tbs)
           !
           irecv_count = irecv_count + 1
-          !HK/MCA: fixme use appropriate buffer
-          CALL MPI_IRECV( psime_pair_send(1, itr, iobtl), n_p_me, MPI_DOUBLE_PRECISION, rk_of_obtl_tbs, &
+          CALL MPI_IRECV( psime_pair_send(1, itr, iobtl), np_in_sp_me_p, MPI_DOUBLE_PRECISION, rk_of_obtl_tbs, &
                           obtl_tbs*ndim+gindex_of_iobtl, intra_image_comm, irecvreq(irecv_count), ierr)
           !
           ! WRITE(my_unit,*) "itr = ", itr
@@ -1003,8 +1003,6 @@ SUBROUTINE exx_gs(nfi, c)
     IF (ALLOCATED(psi))             DEALLOCATE(psi)
     IF (ALLOCATED(irecvreq))        DEALLOCATE(irecvreq)
     IF (ALLOCATED(wannierc))        DEALLOCATE(wannierc)
-    IF (ALLOCATED(psil_pair_send))  DEALLOCATE(psil_pair_send)
-    IF (ALLOCATED(psil_pair_recv))  DEALLOCATE(psil_pair_recv)
     IF (ALLOCATED(obtl_recv))       DEALLOCATE(obtl_recv)
     IF (ALLOCATED(obtl_send))       DEALLOCATE(obtl_send)
     IF (ALLOCATED(num_recv))        DEALLOCATE(num_recv)
