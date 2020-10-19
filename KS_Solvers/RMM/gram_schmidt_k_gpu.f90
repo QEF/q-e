@@ -45,7 +45,6 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
   INTEGER                  :: jblock_start, jblock_end
   INTEGER                  :: ibnd_start, ibnd_end
   INTEGER                  :: jbnd_start, jbnd_end
-  COMPLEX(DP), ALLOCATABLE :: phi(:,:), hphi(:,:), sphi(:,:)
   INTEGER,     ALLOCATABLE :: owner_bgrp_id(:)
   !
   ! ... device variables 
@@ -97,9 +96,6 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
      !
   END IF
   !
-  ALLOCATE( phi ( kdmx, nbnd ) )
-  IF ( eigen_ ) ALLOCATE( hphi( kdmx, nbnd ) )
-  IF ( uspp )   ALLOCATE( sphi( kdmx, nbnd ) )
 !civn 
   ALLOCATE( phi_d ( kdmx, nbnd ) )
   IF ( eigen_ ) ALLOCATE( hphi_d( kdmx, nbnd ) )
@@ -107,8 +103,6 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
 !
   ALLOCATE( owner_bgrp_id( nblock ) )
   !
-!civn 
-  phi = ZERO
 !$cuf kernel do(2)
   DO ii = 1, kdmx  
     DO jj = 1, nbnd
@@ -116,8 +110,6 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
     END DO 
   END DO   
   !
-!civn 
-  IF ( eigen_ ) hphi = ZERO
   IF ( eigen_ ) THEN 
 !$cuf kernel do(2)
     DO ii = 1, kdmx  
@@ -127,8 +119,6 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
     END DO   
   END IF  
   !
-!civn 
-  IF ( uspp )   sphi = ZERO
   IF ( uspp )   THEN 
 !$cuf kernel do(2)
     DO ii = 1, kdmx  
@@ -192,7 +182,7 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
      jbnd_end   = MIN( jblock_end * nbsize, nbnd )
      !
      IF ( jblock_start <= jblock_end .AND. jbnd_start <= jbnd_end ) &
-     CALL project_offdiag( ibnd_start, ibnd_end, jbnd_start, jbnd_end )
+     CALL project_offdiag_gpu( ibnd_start, ibnd_end, jbnd_start, jbnd_end )
      !
   END DO
   !
@@ -217,14 +207,8 @@ SUBROUTINE gram_schmidt_k_gpu( npwx, npw, nbnd, npol, psi, hpsi, spsi, e, &
 psi = psi_d
 if(eigen_) hpsi = hpsi_d
 if(uspp)   spsi = spsi_d
-phi = phi_d
-if(eigen_) hphi = hphi_d
-if(uspp)   sphi = sphi_d
 !
   !
-  DEALLOCATE( phi )
-  IF ( eigen_ ) DEALLOCATE( hphi )
-  IF ( uspp )   DEALLOCATE( sphi )
 !civn 
   DEALLOCATE( phi_d )
   IF ( eigen_ ) DEALLOCATE( hphi_d )
@@ -246,20 +230,14 @@ CONTAINS
     INTEGER, INTENT(IN)  :: ibnd_start, ibnd_end
     !
     INTEGER                  :: ibnd
-    COMPLEX(DP), ALLOCATABLE :: sc(:)
-!civn 
     COMPLEX(DP), ALLOCATABLE :: sc_d(:)
-!
     REAL(DP)                 :: norm
     COMPLEX(DP), EXTERNAL    :: ZDOTC_gpu
 #if defined (__CUDA)
     attributes(device) :: sc_d
 #endif   
     !
-    ALLOCATE( sc( ibnd_start:ibnd_end ) )
-!civn 
     ALLOCATE( sc_d( ibnd_start:ibnd_end ) )
-!
     !
     DO ibnd = ibnd_start, ibnd_end
        !
@@ -325,17 +303,14 @@ CONTAINS
        !
     END DO
     !
-    DEALLOCATE( sc )
-!civn 
     DEALLOCATE( sc_d )
-!
     !
     RETURN
     !
   END SUBROUTINE gram_schmidt_diag
   !
   !
-  SUBROUTINE project_offdiag( ibnd_start, ibnd_end, jbnd_start, jbnd_end )
+  SUBROUTINE project_offdiag_gpu( ibnd_start, ibnd_end, jbnd_start, jbnd_end )
     !
     IMPLICIT NONE
     !
@@ -344,47 +319,47 @@ CONTAINS
     !
     INTEGER                  :: ibnd_size
     INTEGER                  :: jbnd_size
-    COMPLEX(DP), ALLOCATABLE :: sc(:,:)
+    COMPLEX(DP), ALLOCATABLE :: sc_d(:,:)
     !
     ibnd_size = ibnd_end - ibnd_start + 1
     jbnd_size = jbnd_end - jbnd_start + 1
     !
-    ALLOCATE( sc( ibnd_start:ibnd_end, jbnd_start:jbnd_end ) )
+    ALLOCATE( sc_d( ibnd_start:ibnd_end, jbnd_start:jbnd_end ) )
     !
     ! ... <phi_i| S |psi_j>
     !
     IF ( uspp ) THEN
        !
-       CALL ZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi(1,ibnd_start), kdmx, &
-                   spsi(1,jbnd_start), kdmx, ZERO, sc(ibnd_start,jbnd_start), ibnd_size )
+       CALL gpu_ZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi_d(1,ibnd_start), kdmx, &
+                   spsi_d(1,jbnd_start), kdmx, ZERO, sc_d(ibnd_start,jbnd_start), ibnd_size )
        !
     ELSE
        !
-       CALL ZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi(1,ibnd_start), kdmx, &
-                   psi(1,jbnd_start), kdmx, ZERO, sc(ibnd_start,jbnd_start), ibnd_size )
+       CALL gpu_ZGEMM( 'C', 'N', ibnd_size, jbnd_size, kdim, ONE, phi_d(1,ibnd_start), kdmx, &
+                   psi_d(1,jbnd_start), kdmx, ZERO, sc_d(ibnd_start,jbnd_start), ibnd_size )
        !
     END IF
     !
-    CALL mp_sum( sc, intra_bgrp_comm )
+    CALL mp_sum( sc_d, intra_bgrp_comm )
     !
     ! ... phi_j = phi_j - phi_i * <phi_i| S |psi_j>
     !
-    CALL ZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, phi(1,ibnd_start), kdmx, &
-                sc(ibnd_start,jbnd_start), ibnd_size, ONE, phi(1,jbnd_start), kdmx )
+    CALL gpu_ZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, phi_d(1,ibnd_start), kdmx, &
+                sc_d(ibnd_start,jbnd_start), ibnd_size, ONE, phi_d(1,jbnd_start), kdmx )
     !
     IF ( eigen_ ) &
-    CALL ZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, hphi(1,ibnd_start), kdmx, &
-                sc(ibnd_start,jbnd_start), ibnd_size, ONE, hphi(1,jbnd_start), kdmx )
+    CALL gpu_ZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, hphi_d(1,ibnd_start), kdmx, &
+                sc_d(ibnd_start,jbnd_start), ibnd_size, ONE, hphi_d(1,jbnd_start), kdmx )
     !
     IF ( uspp ) &
-    CALL ZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, sphi(1,ibnd_start), kdmx, &
-                sc(ibnd_start,jbnd_start), ibnd_size, ONE, sphi(1,jbnd_start), kdmx )
+    CALL gpu_ZGEMM( 'N', 'N', kdim, jbnd_size, ibnd_size, MONE, sphi_d(1,ibnd_start), kdmx, &
+                sc_d(ibnd_start,jbnd_start), ibnd_size, ONE, sphi_d(1,jbnd_start), kdmx )
     !
-    DEALLOCATE( sc )
+    DEALLOCATE( sc_d )
     !
     RETURN
     !
-  END SUBROUTINE project_offdiag
+  END SUBROUTINE project_offdiag_gpu
   !
   !
   SUBROUTINE energyeigen_gpu( )
