@@ -4,6 +4,7 @@ if(LAPACK_FOUND)
             get_filename_component(_dir_l1 ${_lib} DIRECTORY)
             get_filename_component(_dir_l2 ${_dir_l1} DIRECTORY)
             get_filename_component(_dir_l3 ${_dir_l2} DIRECTORY)
+
             find_path(VendorFFTW_INCLUDE_MKL_DFTI
                 NAMES
                     "mkl_dfti.f90"
@@ -30,31 +31,35 @@ if(LAPACK_FOUND)
 
             add_library(VendorFFTW INTERFACE IMPORTED)
             set(VendorFFTW_LIBRARIES ${LAPACK_LIBRARIES})
-            target_link_libraries(VendorFFTW INTERFACE QE::LAPACK)
+            target_link_libraries(VendorFFTW INTERFACE ${LAPACK_LIBRARIES})
             target_include_directories(VendorFFTW INTERFACE ${VendorFFTW_INCLUDE_DIRS})
             set(VendorFFTW_ID "Intel")
-            break()
-        elseif(_lib MATCHES "armpl")
-            get_filename_component(_dir_l1 ${_lib} DIRECTORY)
-            get_filename_component(_dir_l2 ${_dir_l1} DIRECTORY)
-            get_filename_component(_dir_l3 ${_dir_l2} DIRECTORY)
-            find_path(VendorFFTW_INCLUDE_DIRS
-                NAMES
-                    "fftw3.f"
-                HINTS
-                    ${_dir_l1} ${_dir_l2} ${_dir_l3}
-                PATH_SUFFIXES
-                    "include"
-                    "fftw"
-                    "include/fftw"
-                NO_DEFAULT_PATH
-            )
 
-            add_library(VendorFFTW INTERFACE IMPORTED)
-            set(VendorFFTW_LIBRARIES ${LAPACK_LIBRARIES})
-            target_link_libraries(VendorFFTW INTERFACE QE::LAPACK)
-            set(VendorFFTW_ID "Armpl")
             break()
+# FIXME: undefined reference to `zfft1mx_'
+#        elseif(_lib MATCHES "armpl")
+#            get_filename_component(_dir_l1 ${_lib} DIRECTORY)
+#            get_filename_component(_dir_l2 ${_dir_l1} DIRECTORY)
+#            get_filename_component(_dir_l3 ${_dir_l2} DIRECTORY)
+#
+#            find_path(VendorFFTW_INCLUDE_DIRS
+#                NAMES
+#                    "fftw3.f"
+#                HINTS
+#                    ${_dir_l1} ${_dir_l2} ${_dir_l3}
+#                PATH_SUFFIXES
+#                    "include"
+#                    "fftw"
+#                    "include/fftw"
+#                NO_DEFAULT_PATH
+#            )
+#
+#            add_library(VendorFFTW INTERFACE IMPORTED)
+#            set(VendorFFTW_LIBRARIES ${LAPACK_LIBRARIES})
+#            target_link_libraries(VendorFFTW INTERFACE ${VendorFFTW_LIBRARIES})
+#            set(VendorFFTW_ID "Arm")
+#
+#            break()
         elseif(_lib MATCHES "essl")
             get_filename_component(_dir_l1 ${_lib} DIRECTORY)
             get_filename_component(_dir_l2 ${_dir_l1} DIRECTORY)
@@ -73,8 +78,10 @@ if(LAPACK_FOUND)
 
             add_library(VendorFFTW INTERFACE IMPORTED)
             set(VendorFFTW_LIBRARIES ${LAPACK_LIBRARIES})
-            target_link_libraries(VendorFFTW INTERFACE QE::LAPACK)
+            target_link_libraries(VendorFFTW INTERFACE ${VendorFFTW_LIBRARIES})
+            #target_include_directories(VendorFFTW INTERFACE ${VendorFFTW_INCLUDE_DIRS})
             set(VendorFFTW_ID "Essl")
+
             break()
         endif()
     endforeach()

@@ -22,6 +22,7 @@ if(VendorFFTW_FOUND)
         qe_add_global_compile_definitions(__LINUX_ESSL)
         set(qe_fft_wrappers fft_scalar.ESSL.f90)
     endif()
+    
     target_link_libraries(qe_fft INTERFACE VendorFFTW)
 else()
     # Try to find a vendor FFTW3
