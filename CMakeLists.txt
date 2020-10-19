@@ -130,18 +130,27 @@ endif()
 #    message(FATAL_ERROR "HDF5 requires MPI support, enable it with '-DQE_ENABLE_MPI=ON' or disable HDF5 with '-DQE_ENABLE_HDF5=OFF'")
 # endif()
 
+
 ###########################################################
-# MPI
-# The following targets will be defined:
-add_library(qe_mpi_fortran INTERFACE)
-add_library(QE::MPI_Fortran ALIAS qe_mpi_fortran)
-qe_install_targets(qe_mpi_fortran)
+# language standard requirements
 ###########################################################
-if(QE_ENABLE_MPI)
-    find_package(MPI REQUIRED Fortran)
-    target_link_libraries(qe_mpi_fortran
-        INTERFACE MPI::MPI_Fortran)
-endif(QE_ENABLE_MPI)
+# TODO need to require all compilers using the same one
+if(CMAKE_C_COMPILER_ID MATCHES "PGI")
+  set(CMAKE_C_STANDARD 11)
+  set(CMAKE_C_STANDARD_REQUIRED ON)
+  set(CMAKE_C_EXTENSIONS OFF)
+endif()
+
+############################################################
+## Compiler vendor specific options
+############################################################
+if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
+    include(${PROJECT_CMAKE}/GNUFortranCompiler.cmake)
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES "PGI")
+    include(${PROJECT_CMAKE}/NVFortranCompiler.cmake)
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES "XL")
+    include(${PROJECT_CMAKE}/IBMFortranCompiler.cmake)
+endif()
 
 ###########################################################
 # OpenMP
@@ -158,15 +167,20 @@ if(QE_ENABLE_OPENMP)
         INTERFACE OpenMP::OpenMP_Fortran)
     target_link_libraries(qe_openmp_c
         INTERFACE OpenMP::OpenMP_C)
-
 endif(QE_ENABLE_OPENMP)
 
-############################################################
-## Compiler specific options
-############################################################
-if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
-    include(${PROJECT_CMAKE}/GNUFortranCompiler.cmake)
-endif()
+###########################################################
+# MPI
+# The following targets will be defined:
+add_library(qe_mpi_fortran INTERFACE)
+add_library(QE::MPI_Fortran ALIAS qe_mpi_fortran)
+qe_install_targets(qe_mpi_fortran)
+###########################################################
+if(QE_ENABLE_MPI)
+    find_package(MPI REQUIRED Fortran)
+    target_link_libraries(qe_mpi_fortran
+        INTERFACE MPI::MPI_Fortran)
+endif(QE_ENABLE_MPI)
 
 ############################################################
 ## Vendor
@@ -209,6 +223,11 @@ if(NOT VENDOR_FOUND)
                 ${LAPACK_LIBRARIES}
                 ${LAPACK_LINKER_FLAGS})
     elseif(QE_ENABLE_VENDOR_DEPS)
+        if(CMAKE_Fortran_COMPILER_ID MATCHES "XL")
+            message(FATAL_ERROR "IBM XL compilers cannot build internal LAPACK with QE "
+                                "due to the conflict in flags for free vs fixed format. "
+                                "Please use an optimized LAPACK or build LAPACK separately.")
+        endif()
         message(STATUS "Installing QE::LAPACK via submodule")
         qe_git_submodule_update(external/lapack)
         add_subdirectory(external/lapack EXCLUDE_FROM_ALL)
