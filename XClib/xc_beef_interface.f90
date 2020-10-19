@@ -74,7 +74,7 @@ MODULE beef_interface
     CONTAINS
     ! ====================================================================
     !
-#if defined(__NOBEEF)
+#if !defined(__NOBEEF)
     FUNCTION beef_set_type(tbeef, ionode) RESULT(r)
         INTEGER, INTENT(IN) :: tbeef
         LOGICAL, INTENT(IN) :: ionode
