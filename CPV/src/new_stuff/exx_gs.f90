@@ -675,7 +675,6 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     !
     CALL stop_clock('send_psi_wait')
     !
-    !
     !=========================================================================
     ! after this loop ( do irank ), all the processor got all the overlapping orbitals 
     ! for the i_obtl orbital and ready to calculate pair potential 
