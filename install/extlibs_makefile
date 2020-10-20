@@ -183,6 +183,7 @@ libcuda_eigensolver_clean:
 libcuda_eigensolver_veryclean:
 	if test -d ../EIGENSOLVER_GPU; then (rm -R -f ../EIGENSOLVER_GPU ../${EIGENSOLVER_GPU_NAME}); fi
 
+CUDA_PATH := $(if $(CUDA_PATH),$(CUDA_PATH),no)
 libcuda_devxlib :
 	cd ../external/devxlib; \
     if test ! -e configure; then \
