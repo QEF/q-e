@@ -199,8 +199,8 @@ else()
     pkg_check_modules(PKG_FFTW QUIET "fftw3")
   endif()
 
-  set(LD_LIB_PATH $ENV{LD_LIBRARY_PATH})
-  string(REPLACE ":" ";" LD_LIB_PATH ${LD_LIB_PATH})
+  # Try to find in the LD_LIBRARY_PATH
+  string(REPLACE ":" ";" LIBRARY_DIRS $ENV{LD_LIBRARY_PATH})
 
   if("DOUBLE" IN_LIST FFTW_FIND_COMPONENTS)
   find_library(
@@ -209,7 +209,7 @@ else()
     PATHS 
       ${PKG_FFTW_LIBRARY_DIRS} 
       ${LIB_INSTALL_DIR}
-      ${LD_LIB_PATH}
+      ${LIBRARY_DIRS}
     PATH_SUFFIXES
       "lib"
       "lib64")
@@ -222,7 +222,7 @@ else()
     PATHS 
       ${PKG_FFTW_LIBRARY_DIRS} 
       ${LIB_INSTALL_DIR}
-      ${LD_LIB_PATH}
+      ${LIBRARY_DIRS}
     PATH_SUFFIXES
       "lib"
       "lib64")
@@ -235,7 +235,7 @@ else()
     PATHS 
       ${PKG_FFTW_LIBRARY_DIRS}
       ${LIB_INSTALL_DIR}
-      ${LD_LIB_PATH}
+      ${LIBRARY_DIRS}
     PATH_SUFFIXES
       "lib"
       "lib64")
@@ -248,7 +248,7 @@ else()
     PATHS 
       ${PKG_FFTW_LIBRARY_DIRS} 
       ${LIB_INSTALL_DIR}
-      ${LD_LIB_PATH}
+      ${LIBRARY_DIRS}
     PATH_SUFFIXES
       "lib"
       "lib64")
@@ -261,7 +261,7 @@ else()
     PATHS 
       ${PKG_FFTW_LIBRARY_DIRS} 
       ${LIB_INSTALL_DIR}
-      ${LD_LIB_PATH}
+      ${LIBRARY_DIRS}
     PATH_SUFFIXES
       "lib"
       "lib64")
@@ -274,7 +274,7 @@ else()
     PATHS 
       ${PKG_FFTW_LIBRARY_DIRS}
       ${LIB_INSTALL_DIR}
-      ${LD_LIB_PATH}
+      ${LIBRARY_DIRS}
     PATH_SUFFIXES
       "lib"
       "lib64")
@@ -287,7 +287,7 @@ else()
     PATHS 
       ${PKG_FFTW_LIBRARY_DIRS}
       ${LIB_INSTALL_DIR}
-      ${LD_LIB_PATH}
+      ${LIBRARY_DIRS}
     PATH_SUFFIXES
       "lib"
       "lib64")
@@ -300,7 +300,7 @@ else()
     PATHS 
       ${PKG_FFTW_LIBRARY_DIRS}
       ${LIB_INSTALL_DIR}
-      ${LD_LIB_PATH}
+      ${LIBRARY_DIRS}
     PATH_SUFFIXES
       "lib"
       "lib64")
@@ -313,7 +313,7 @@ else()
     PATHS 
       ${PKG_FFTW_LIBRARY_DIRS}
       ${LIB_INSTALL_DIR}
-      ${LD_LIB_PATH}
+      ${LIBRARY_DIRS}
     PATH_SUFFIXES
       "lib"
       "lib64")
@@ -326,7 +326,7 @@ else()
     PATHS 
       ${PKG_FFTW_LIBRARY_DIRS} 
       ${LIB_INSTALL_DIR}
-      ${LD_LIB_PATH}
+      ${LIBRARY_DIRS}
     PATH_SUFFIXES
       "lib"
       "lib64")
@@ -338,22 +338,28 @@ else()
     PATHS 
       ${PKG_FFTW_LIBRARY_DIRS} 
       ${LIB_INSTALL_DIR}
-      ${LD_LIB_PATH}
+      ${LIBRARY_DIRS}
     PATH_SUFFIXES
       "lib"
       "lib64")
   endif()
 
+  set(LD_DIRS)
+  foreach(_lib ${LIBRARY_DIRS})
+    get_filename_component(_root_lib_dir ${_lib} DIRECTORY)
+    list(APPEND LD_DIRS ${_root_lib_dir})
+  endforeach()
+  
   find_path(FFTW_INCLUDE_DIRS
-  NAMES "fftw3.h"
-  PATHS 
-    ${PKG_FFTW_INCLUDE_DIRS} 
-    ${INCLUDE_INSTALL_DIR}
-    ${LD_LIB_PATH}
-    $ENV{C_INCLUDE_PATH}
-  PATH_SUFFIXES
-    "include"
-    "inc")
+    NAMES "fftw3.h"
+    PATHS 
+      ${PKG_FFTW_INCLUDE_DIRS} 
+      ${INCLUDE_INSTALL_DIR}
+      ${LD_DIRS}
+      $ENV{C_INCLUDE_PATH}
+    PATH_SUFFIXES
+      "include"
+      "inc")
 endif()
 
 
