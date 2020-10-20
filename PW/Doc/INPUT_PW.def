@@ -311,7 +311,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     save charge to disk at each SCF step,
                     keep wavefunctions on disk (in "distributed" format),
                     save mixing data as well.
-                    Do not use this option unless you have a good reason to
+                    Do not use this option unless you have a good reason!
+                    It is no longer needed to specify 'high' in order to be able
+                    to restart from an interrupted calculation (see @ref restart_mode)
                 }
 
                 opt -val 'medium' {
@@ -339,10 +341,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             
                 info {
                     @b Default is @b 'low' for the scf case, @b 'medium' otherwise.
-                    Note that the needed RAM increases as disk I/O decreases!
-                    It is no longer needed to specify 'high' in order to be able
-                    to restart from an interrupted calculation (see @ref restart_mode)
-                    but you cannot restart in @ref disk_io=='nowf' or 'none'
+                    Note that the needed RAM increases as disk I/O decreases
+
                 }
             }
         }
