@@ -199,7 +199,8 @@ else()
     pkg_check_modules(PKG_FFTW QUIET "fftw3")
   endif()
 
-  string(REPLACE ":" ";" LD_LIB_PATH $ENV{LD_LIBRARY_PATH})
+  set(LD_LIB_PATH $ENV{LD_LIBRARY_PATH})
+  string(REPLACE ":" ";" LD_LIB_PATH ${LD_LIB_PATH})
 
   if("DOUBLE" IN_LIST FFTW_FIND_COMPONENTS)
   find_library(
