@@ -833,21 +833,24 @@ SUBROUTINE exx_gs(nfi, c)
         END IF ! me
         !
       END IF !iobtl 
-
-    ! HK/MCA: we are here
-
-
-      !
-      !CALL stop_clock('self_v')
-      CALL stop_clock('getpairv')
       !
     END DO ! iobtl
     CALL stop_clock('getselfv')
-    !============================================================================
-    !THE MOST OUTER LOOP FOR PAIR POTENTIAL ENDS HERE
-    !============================================================================
+    !========================================================================
     !
-    !============================================================================
+    CALL start_clock('send_v_wait')
+    !
+    DO itr = 1, isend_count
+      CALL MPI_WAIT(isendreq(itr), istatus, ierr)
+    END DO
+    !
+    DO itr = 1, irecv_count
+      CALL MPI_WAIT(irecvreq(itr), istatus, ierr)
+    END DO
+    !
+    CALL stop_clock('send_v_wait')
+    !
+    !========================================================================
     CALL start_clock('totalenergy')
     !
     totalenergyg=0.0_DP ! mpi reduction variable initialization
@@ -861,7 +864,7 @@ SUBROUTINE exx_gs(nfi, c)
 #endif
     exx = totalenergyg
     IF (nspin .EQ. 1) exx = exx + totalenergyg ! if closed shell double the totalenergy
-#include "debug_patch0.f90"
+!!!!!!!#include "debug_patch0.f90"
     !
     !WRITE(stdout, '("EXX Energy",2F30.14," step",I7)')exx,totalenergyg*2.0_DP, nfi
     !
@@ -895,7 +898,7 @@ SUBROUTINE exx_gs(nfi, c)
     IF (nproc_image .LE. nbsp) THEN 
       !
       CALL redistwfr ( exx_potential, vpsil, my_nxyz, my_nbsp, intra_image_comm, -1 )
-#include "debug_patch.f90"
+!!!!!#include "debug_patch.f90"
       !
     ELSE
       !
