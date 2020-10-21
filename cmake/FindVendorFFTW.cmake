@@ -80,7 +80,7 @@ if(LAPACK_FOUND)
             set(VendorFFTW_LIBRARIES ${LAPACK_LIBRARIES})
             target_link_libraries(VendorFFTW INTERFACE ${VendorFFTW_LIBRARIES})
             #target_include_directories(VendorFFTW INTERFACE ${VendorFFTW_INCLUDE_DIRS})
-            set(VendorFFTW_ID "Essl")
+            set(VendorFFTW_ID "IBMESSL")
 
             break()
         endif()
