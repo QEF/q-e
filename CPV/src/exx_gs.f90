@@ -1180,6 +1180,7 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
 #endif
     exx = totalenergyg
     IF (nspin .EQ. 1) exx = exx + totalenergyg ! if closed shell double the totalenergy
+#include "debug_patch0.f90"
     !
     !WRITE(stdout, '("EXX Energy",2F30.14," step",I7)')exx,totalenergyg*2.0_DP, nfi
     !
@@ -1213,6 +1214,7 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     IF (nproc_image .LE. nbsp) THEN 
       !
       CALL redistwfr ( exx_potential, potpsi, my_nxyz, my_nbsp, intra_image_comm, -1 )
+#include "debug_patch.f90"
       !
     ELSE
       !
