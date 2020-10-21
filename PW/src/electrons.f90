@@ -715,9 +715,9 @@ SUBROUTINE electrons_scf ( printout, exxen )
            ! ... For DFT+U, ns and ns_nc are also broadcast inside each pool
            ! ... to ensure consistency on all processors of all pools
            IF (noncolin) THEN
-              CALL mp_bcast( rhoin%ns_nc, root_pool, intra_pool_comm )
+              IF (ALLOCATED(rhoin%ns_nc)) CALL mp_bcast( rhoin%ns_nc, root_pool, intra_pool_comm )
            ELSE
-              CALL mp_bcast( rhoin%ns, root_pool, intra_pool_comm )
+              IF (ALLOCATED(rhoin%ns)) CALL mp_bcast( rhoin%ns, root_pool, intra_pool_comm )
            ENDIF
         ENDIF
         !
@@ -1485,7 +1485,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
             /'      -> PAW hartree energy PS =',F17.8,' Ry' &
             /'      -> PAW xc energy AE      =',F17.8,' Ry' &
             /'      -> PAW xc energy PS      =',F17.8,' Ry' &
-            /'      -> total E_H with PAW    =',F17.8,' Ry'& 
+            /'      -> total E_H with PAW    =',F17.8,' Ry' &
             /'      -> total E_XC with PAW   =',F17.8,' Ry' )
 9069 FORMAT( '     scf correction            =',F17.8,' Ry' )
 9070 FORMAT( '     smearing contrib. (-TS)   =',F17.8,' Ry' )

@@ -29,6 +29,6 @@ for iqpt in np.arange(1,nqpt+1):
     os.system('cp si.fc.xml save/ifc.q2r.xml')
   else:
     os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix+'.dvscf1 save/'+prefix+'.dvscf_q'+label)
-    os.system('rm _ph0/'+prefix+'.q_'+str(iqpt)+'/*wfc*' )
+    os.system('rm -f _ph0/'+prefix+'.q_'+str(iqpt)+'/*wfc*')
 
 

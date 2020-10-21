@@ -27,7 +27,7 @@ SUBROUTINE lr_solve_e
   USE klist,                ONLY : nks, xk, ngk, igk_k, degauss
   USE lr_variables,         ONLY : nwordd0psi, iund0psi,LR_polarization, test_case_no, &
                                    & n_ipol, evc0, d0psi, d0psi2, evc1, lr_verbosity, &
-                                   & d0psi_rs, eels, lr_exx, intq, intq_nc
+                                   & d0psi_rs, eels, lr_exx!, intq, intq_nc
   USE lsda_mod,             ONLY : lsda, isk, current_spin,nspin
   USE uspp,                 ONLY : vkb, okvan
   USE wvfct,                ONLY : nbnd, npwx, et, current_k
@@ -40,6 +40,7 @@ SUBROUTINE lr_solve_e
   USE noncollin_module,     ONLY : npol,noncolin
   USE uspp_param,           ONLY : nhm
   USE ions_base,            ONLY : nat
+  USE lrus,                 ONLY : intq, intq_nc
 
   !
   IMPLICIT NONE

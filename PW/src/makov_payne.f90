@@ -86,9 +86,12 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   REAL(DP) :: corr1, corr2, aa, bb
   INTEGER  :: ia, ip
   !
-  ! ... Note that the definition of the Madelung constant used here
-  ! ... differs from the "traditional" one found in the literature. See
-  ! ... Lento, Mozos, Nieminen, J. Phys.: Condens. Matter 14 (2002), 2637-2645
+  ! Note that the definition of the Madelung constant used here:
+  !   Lento, Mozos, Nieminen, J. Phys.: Condens. Matter 14 (2002), 2637-2645
+  ! differs from the "traditional" one found in the literature, e.g.:
+  !   Leslie and Gillam https://doi.org/10.1088/0022-3719/18/5/005,
+  !   Dabo et al. at https://doi.org/10.1103/PhysRevB.77.115139:
+  ! because different definitions of the length parameter L are adopted
   !
   REAL(DP), PARAMETER :: madelung(3) = (/ 2.8373D0, 2.8883D0, 2.8885D0 /)
   !

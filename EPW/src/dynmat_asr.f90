@@ -17,13 +17,17 @@
   USE modes,            ONLY : nmodes
   USE control_flags,    ONLY : iverbosity
   USE noncollin_module, ONLY : nspin_mag
-  USE io_epw,           ONLY : read_dyn_mat_param, read_dyn_mat_header, &
-                               read_dyn_mat, check_is_xml_file
-  USE io_global,        ONLY : ionode, stdout
+  USE io_epw,           ONLY : check_is_xml_file
+  USE io_global,        ONLY : ionode, stdout, ionode_id, meta_ionode, meta_ionode_id
   USE constants_epw,    ONLY : cone, czero, twopi, rydcm1, eps6, zero
   USE io_var,           ONLY : iudyn
   USE wan2bloch,        ONLY : dynifc2blochc
   USE low_lvl,          ONLY : set_ndnmbr, eqvect_strict
+  USE io_dyn_mat,       ONLY : read_dyn_mat_param, read_dyn_mat_header, &
+                               read_dyn_mat, read_dyn_mat_tail
+  USE mp_world,         ONLY : mpime                     
+  USE mp_global,        ONLY : world_comm
+  USE mp,               ONLY : mp_bcast
   !
   IMPLICIT NONE
   !
@@ -46,7 +50,7 @@
   !! Set of symmetry operations
   INTEGER, INTENT(in) :: irt(48, nat)
   !! For each atoms give the rotated atoms
-  REAL(KIND = DP), INTENT(inout) :: sxq(3, 48)
+  REAL(KIND = DP), INTENT(in) :: sxq(3, 48)
   !! Symmetry matrix
   REAL(KIND = DP), INTENT(inout) :: rtau(3, 48, nat)
   !! the relative position of the rotated atom to the original one
@@ -128,8 +132,6 @@
   !!
   INTEGER :: nqs
   !!
-  INTEGER :: axis
-  !!
   INTEGER :: nrws
   !!
   INTEGER :: ierr
@@ -201,8 +203,8 @@
   COMPLEX(KIND = DP), ALLOCATABLE :: dyn(:, :, :, :) ! 3,3,nat,nat
   !! Dynamical matrix
   !
-  axis = 3
-  !
+  q(:, :) = zero
+  ! 
   ! the call to set_ndnmbr is just a trick to get quickly
   ! a file label by exploiting an existing subroutine
   ! (if you look at the sub you will find that the original
@@ -318,151 +320,162 @@
       ENDDO
       !
     ENDDO !  iq = 1, mq
+    ! 
+    ! Close the dyn file
+    CALL read_dyn_mat_tail(nat)
     !
   ELSE ! not a xml file
-    OPEN(UNIT = iudyn, FILE = tempfile, STATUS = 'old', IOSTAT = ios)
-    IF (ios /= 0) CALL errore('dynmat', 'opening file' // tempfile, ABS(ios))
-    !
-    !  read header and run some checks
-    !
-    READ(iudyn, '(a)') line
-    READ(iudyn, '(a)') line
-    READ(iudyn, *) ntyp_, nat_, ibrav_, celldm_
-    !
-    ! We stop testing celldm as it can be different between scf and nscf
-    !IF (ntyp/=ntyp_.OR.nat/=nat_.OR.ibrav_/=ibrav.OR.abs ( &
-    !   celldm_ (1) - celldm (1) )  > 1.0d-5) call errore ('dynmat', &
-    !   'inconsistent data', 1)
-    IF (ntyp /= ntyp_ .OR. nat /= nat_ .OR. ibrav_ /= ibrav) CALL errore ('dynmat', &
-       'inconsistent data', 1)
-    !
-    !  skip reading of cell parameters here
-    !
-    IF (ibrav_ == 0) THEN
-      DO i = 1, 4
-        READ(iudyn, *) line
-      ENDDO
-    ENDIF
-    DO nt = 1, ntyp
-      READ(iudyn, *) i, atm, amass_
-      IF (nt /=i .OR. ABS(amass_ - amass(nt))  > 1.0d-2) THEN
-        WRITE(stdout,*) amass_, amass(nt)
-        CALL errore('dynmat', 'inconsistent data', 1)
+    IF (mpime == ionode_id) THEN      
+      OPEN(UNIT = iudyn, FILE = tempfile, STATUS = 'old', IOSTAT = ios)
+      IF (ios /= 0) CALL errore('dynmat_asr', 'opening file' // tempfile, ABS(ios))
+      !
+      !  read header and run some checks
+      !
+      READ(iudyn, '(a)') line
+      READ(iudyn, '(a)') line
+      READ(iudyn, *) ntyp_, nat_, ibrav_, celldm_
+      !
+      ! We stop testing celldm as it can be different between scf and nscf
+      !IF (ntyp/=ntyp_.OR.nat/=nat_.OR.ibrav_/=ibrav.OR.abs ( &
+      !   celldm_ (1) - celldm (1) )  > 1.0d-5) call errore ('dynmat', &
+      !   'inconsistent data', 1)
+      IF (ntyp /= ntyp_ .OR. nat /= nat_ .OR. ibrav_ /= ibrav) CALL errore ('dynmat_asr', &
+         'inconsistent data', 1)
+      !
+      !  skip reading of cell parameters here
+      !
+      IF (ibrav_ == 0) THEN
+        DO i = 1, 4
+          READ(iudyn, *) line
+        ENDDO
       ENDIF
-    ENDDO
-    DO na = 1, nat
-      READ(iudyn, * ) i, ityp_, tau_
-      IF (na /= i .OR. ityp_ /= ityp(na)) CALL errore('dynmat', &
-          'inconsistent data (names)', 10 + na)
-    ENDDO
-    !
-    ! Read dyn mat only for the first q in the star and then reconstruct the
-    ! other using symmetry.
-    !
-    ! If time-reversal is not included in the star of q, then double the nq to
-    ! search from.
-    IF (imq == 0) THEN
-      mq = 2 * nq
-    ELSE
-      mq = nq
-    ENDIF
-    !
-    ! Read the dyn for the first q in the star.
-    ! For other q in the star, only read the value of the q for checking purposes.
-    !
-    DO iq = 1, mq
-      !
-      READ(iudyn, '(///a)') line
-      READ(line(11:80), *) (q(i, iq), i = 1, 3)
-      READ(iudyn, '(a)') line
-      !
+      DO nt = 1, ntyp
+        READ(iudyn, *) i, atm, amass_
+        IF (nt /=i .OR. ABS(amass_ - amass(nt))  > 1.0d-2) THEN
+          WRITE(stdout,*) amass_, amass(nt)
+          CALL errore('dynmat_asr', 'inconsistent data', 1)
+        ENDIF
+      ENDDO
       DO na = 1, nat
-        DO nb = 1, nat
-          READ(iudyn, *) naa, nbb
-          IF (na /= naa .OR. nb /= nbb) CALL errore('readmat', 'error reading file', nb)
-          READ(iudyn, *)((dynr(1, i, na, j, nb), dynr(2, i, na, j, nb), j = 1, 3), i = 1, 3)
-        ENDDO
+        READ(iudyn, * ) i, ityp_, tau_
+        IF (na /= i .OR. ityp_ /= ityp(na)) CALL errore('dynmat_asr', &
+            'inconsistent data (names)', 10 + na)
       ENDDO
       !
-      ! impose the acoustic sum rule (q=0 needs to be the first q point in the coarse grid)
-      ! [Gonze and Lee, PRB 55, 10361 (1998), Eq. (45) and (81)]
+      ! Read dyn mat only for the first q in the star and then reconstruct the
+      ! other using symmetry.
       !
-      IF (ABS(q(1, iq)) < eps6 .AND. ABS(q(2, iq)) < eps6 .AND. ABS(q(3, iq)) < eps6) THEN
-        WRITE(stdout, '(5x,a)') 'Imposing acoustic sum rule on the dynamical matrix'
-      ENDIF
-      DO na = 1, nat
-        DO ipol = 1,3
-          DO jpol = ipol, 3
-            !
-            IF (ABS(q(1, iq)) < eps6 .AND. ABS(q(2, iq)) < eps6 .AND. ABS(q(3, iq)) < eps6) THEN
-              sumr(1, ipol, na, jpol) = SUM(dynr(1, ipol, na, jpol, :))
-              sumr(2, ipol, na, jpol) = SUM(dynr(2, ipol, na, jpol, :))
-            ENDIF
-            !
-            dynr(:, ipol, na, jpol, na) = dynr(:, ipol, na, jpol, na) - sumr(:, ipol, na, jpol)
-            !
-          ENDDO
-        ENDDO
-      ENDDO
-      !
-      !  fill the two-indices dynamical matrix in cartesian coordinates
-      !  the proper index in the complete list is iq_first+iq-1
-      !
-      DO na = 1, nat
-        DO nb = 1, nat
-          DO ipol = 1, 3
-            DO jpol = 1, 3
-              !
-              mu = (na - 1) * 3 + ipol
-              nu = (nb - 1) * 3 + jpol
-              ! Only store the dyn of the first q in the star.
-              IF (iq == 1) THEN
-                dynq(mu, nu, iq_first) = DCMPLX(dynr(1, ipol, na, jpol, nb), dynr(2, ipol, na, jpol, nb))
-              ENDIF
-            ENDDO
-          ENDDO
-        ENDDO
-      ENDDO
-    ENDDO
-    !
-    IF (ABS(q(1, 1)) < eps6 .AND. ABS(q(2, 1)) < eps6 .AND. ABS(q(3, 1)) < eps6) THEN
-      !  read dielectric tensor and effective charges if present
-      !  SP: Warning zstar is not properly bcast at the moment
-      READ(iudyn, '(a)') line
-      READ(iudyn, '(a)') line
-      !
-      IF (line(6:15) .EQ. 'Dielectric') THEN
-        READ(iudyn, '(a)') line
-        READ(iudyn, *) ((epsi(i, j), j = 1, 3), i = 1, 3)
-        READ(iudyn, '(a)') line
-        READ(iudyn, '(a)') line
-        READ(iudyn, '(a)') line
-        DO na = 1, nat
-          READ(iudyn, '(a)') line
-          READ(iudyn, *) ((zstar(i, j, na), j = 1, 3), i = 1, 3)
-        ENDDO
-        WRITE(stdout,'(5x,a)') 'Read dielectric tensor and effective charges'
-        !
-        !ASR on effective charges
-        DO i = 1, 3
-          DO j = 1, 3
-            sumz = 0.0d0
-            DO na = 1, nat
-              sumz = sumz + zstar(i, j, na)
-            ENDDO
-            DO na = 1, nat
-              zstar(i, j, na) = zstar(i, j, na) - sumz / nat
-            ENDDO
-          ENDDO
-        ENDDO
-        !
+      ! If time-reversal is not included in the star of q, then double the nq to
+      ! search from.
+      IF (imq == 0) THEN
+        mq = 2 * nq
       ELSE
-        IF (lpolar) CALL errore('dynmat', &
-           'You set lpolar = .TRUE. but did not put epsil = true in the PH calculation at Gamma. ', 1)
+        mq = nq
       ENDIF
-    ENDIF
-    CLOSE(iudyn)
-  ENDIF ! col
+      !
+      ! Read the dyn for the first q in the star.
+      ! For other q in the star, only read the value of the q for checking purposes.
+      !
+      DO iq = 1, mq
+        !
+        READ(iudyn, '(///a)') line
+        READ(line(11:80), *) (q(i, iq), i = 1, 3)
+        READ(iudyn, '(a)') line
+        !
+        DO na = 1, nat
+          DO nb = 1, nat
+            READ(iudyn, *) naa, nbb
+            IF (na /= naa .OR. nb /= nbb) CALL errore('dynmat_asr', 'error reading file', nb)
+            READ(iudyn, *)((dynr(1, i, na, j, nb), dynr(2, i, na, j, nb), j = 1, 3), i = 1, 3)
+          ENDDO
+        ENDDO
+        !
+        ! impose the acoustic sum rule (q=0 needs to be the first q point in the coarse grid)
+        ! [Gonze and Lee, PRB 55, 10361 (1998), Eq. (45) and (81)]
+        !
+        IF (ABS(q(1, iq)) < eps6 .AND. ABS(q(2, iq)) < eps6 .AND. ABS(q(3, iq)) < eps6) THEN
+          WRITE(stdout, '(5x,a)') 'Imposing acoustic sum rule on the dynamical matrix'
+        ENDIF
+        DO na = 1, nat
+          DO ipol = 1,3
+            DO jpol = ipol, 3
+              !
+              IF (ABS(q(1, iq)) < eps6 .AND. ABS(q(2, iq)) < eps6 .AND. ABS(q(3, iq)) < eps6) THEN
+                sumr(1, ipol, na, jpol) = SUM(dynr(1, ipol, na, jpol, :))
+                sumr(2, ipol, na, jpol) = SUM(dynr(2, ipol, na, jpol, :))
+              ENDIF
+              !
+              dynr(:, ipol, na, jpol, na) = dynr(:, ipol, na, jpol, na) - sumr(:, ipol, na, jpol)
+              !
+            ENDDO
+          ENDDO
+        ENDDO
+        !
+        !  fill the two-indices dynamical matrix in cartesian coordinates
+        !  the proper index in the complete list is iq_first+iq-1
+        !
+        DO na = 1, nat
+          DO nb = 1, nat
+            DO ipol = 1, 3
+              DO jpol = 1, 3
+                !
+                mu = (na - 1) * 3 + ipol
+                nu = (nb - 1) * 3 + jpol
+                ! Only store the dyn of the first q in the star.
+                IF (iq == 1) THEN
+                  dynq(mu, nu, iq_first) = DCMPLX(dynr(1, ipol, na, jpol, nb), dynr(2, ipol, na, jpol, nb))
+                ENDIF
+              ENDDO
+            ENDDO
+          ENDDO
+        ENDDO
+      ENDDO
+      !
+      IF (ABS(q(1, 1)) < eps6 .AND. ABS(q(2, 1)) < eps6 .AND. ABS(q(3, 1)) < eps6) THEN
+        !  read dielectric tensor and effective charges if present
+        !  SP: Warning zstar is not properly bcast at the moment
+        READ(iudyn, '(a)') line
+        READ(iudyn, '(a)') line
+        !
+        IF (line(6:15) .EQ. 'Dielectric') THEN
+          READ(iudyn, '(a)') line
+          READ(iudyn, *) ((epsi(i, j), j = 1, 3), i = 1, 3)
+          READ(iudyn, '(a)') line
+          READ(iudyn, '(a)') line
+          READ(iudyn, '(a)') line
+          DO na = 1, nat
+            READ(iudyn, '(a)') line
+            READ(iudyn, *) ((zstar(i, j, na), j = 1, 3), i = 1, 3)
+          ENDDO
+          WRITE(stdout,'(5x,a)') 'Read dielectric tensor and effective charges'
+          !
+          !ASR on effective charges
+          DO i = 1, 3
+            DO j = 1, 3
+              sumz = 0.0d0
+              DO na = 1, nat
+                sumz = sumz + zstar(i, j, na)
+              ENDDO
+              DO na = 1, nat
+                zstar(i, j, na) = zstar(i, j, na) - sumz / nat
+              ENDDO
+            ENDDO
+          ENDDO
+          !
+        ELSE
+          IF (lpolar) CALL errore('dynmat_asr', &
+             'You set lpolar = .TRUE. but did not put epsil = true in the PH calculation at Gamma. ', 1)
+        ENDIF
+      ENDIF
+      CLOSE(iudyn)
+    ENDIF ! mpime
+    CALL mp_bcast(zstar, meta_ionode_id, world_comm)
+    CALL mp_bcast(epsi , meta_ionode_id, world_comm)
+    CALL mp_bcast(dynq , meta_ionode_id, world_comm)
+    CALL mp_bcast(q    , meta_ionode_id, world_comm)
+    CALL mp_bcast(mq   , meta_ionode_id, world_comm)
+  ENDIF ! not xml
+  !
   !
   ! Now check that the dyn file is consistent with the current EPW run (SP)
   ! SP: Be careful, here time-reversal is not actual time reversal but is due to
@@ -495,7 +508,7 @@
     ENDDO
     current_iq = current_iq + 1
     IF (found .EQV. .FALSE.) THEN
-      CALL errore('dynmat', 'wrong qpoint', 1)
+      CALL errore('dynmat_asr', 'wrong qpoint', 1)
     ENDIF
   ENDDO
   ! Transform back the sxq in Cartesian

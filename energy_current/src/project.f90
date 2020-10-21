@@ -41,15 +41,13 @@ subroutine project(ipol)
    use mp, ONLY: mp_sum, mp_min, mp_max
    USE mp_global, ONLY: inter_pool_comm, intra_pool_comm
    USE eqv, ONLY: evq
-   use hartree_mod, only: init_linear
+   use hartree_mod, only: dvpsi_save, save_dvpsi
 
    implicit none
    !
    real(DP):: emin, emax
    integer, intent(IN) :: ipol
-   integer :: ik, iun
-   integer, external   :: find_free_unit
-   real(DP), allocatable :: eprec(:, :)
+   integer :: ik
    !
    ! Local variables
    !
@@ -68,11 +66,8 @@ subroutine project(ipol)
    ! true if convergence has been achieved
    COMPLEX(DP), EXTERNAL :: zdotc
    real(DP), EXTERNAL ::ddot
-   COMPLEX(DP), ALLOCATABLE :: aux1(:, :), work(:, :)
    real(DP) ::emme(nbnd, nbnd)
-   REAL(DP), ALLOCATABLE  :: eprec_real(:)
    logical ::l_test, exst
-   character(len=256) ::prefix_restart_cg, c_ipol
 
    external ch_psi_all, cg_psi
    !debug
@@ -80,12 +75,7 @@ subroutine project(ipol)
    evq = evc
    !
 
-   prefix_restart_cg = 'cg_restart'
    ik = 1
-   write (c_ipol, '(I0)') ipol
-   prefix_restart_cg = trim(prefix_restart_cg)//'.'//trim(c_ipol)
-   ALLOCATE (aux1(npwx, nbnd))
-   allocate (work(npwx, nbnd))
    dpsi = (0.d0, 0.d0)
    dvpsi = (0.d0, 0.d0)
    !
@@ -138,52 +128,16 @@ subroutine project(ipol)
    allocate (h_diag(npwx*npol, nbnd))
    h_diag = 0.d0
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!eprec stuff (al momento eprec=1, meglio non riesco a farlo andare)
-
-   allocate (eprec(nbnd, 1))
-   allocate (eprec_real(nbnd))
-!  aux1=(0.d0,0.d0)
-!  DO ig = 1, npw
-!     aux1 (ig,1:nbnd) = g2kin (ig) * evc (ig, 1:nbnd)
-!  END DO
-!  DO ibnd=1,nbnd
-!       work =0.d0
-!       DO ig=1,npw
-!          work(ig,ibnd)=g2kin(ig)*evc(ig,ibnd)
-!       ENDDO
-
-!        eprec_real(ibnd)=2.0d0*DDOT(2*npw,evc(1,ibnd),1,work(1,ibnd),1)
-   !
-!          IF(gstart==2) THEN
-!             eprec_real(ibnd)=eprec_real(ibnd)-DBLE(evc(1,ibnd))*DBLE(work(1,ibnd))
-!          ENDIF
-   !
-!          eprec_real(ibnd)=1.35d0*eprec_real(ibnd)
-
-!      eprec (ibnd,1) = 1.35d0 * zdotc(npwx*npol,evc(1,ibnd),1,aux1(1,ibnd),1)
-!      eprec (ibnd,1)=eprec (ibnd,ik) * 2.d0
-!      if (gstart==2) then
-!         eprec(ibnd,ik)=eprec(ibnd,ik)-1.35d0*conjg(evc(1,ibnd))*aux1(1,ibnd)
-!      end if
-
-!#ifdef __MPI
-!        CALL mp_sum ( eprec_real, intra_pool_comm )
-!#endif
-!  END DO
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! preconditioning
    do ibnd = 1, nbnd
       do ig = 1, npw
          h_diag(ig, ibnd) = 1.d0/max(1.0d0, g2kin(ig))
       enddo
    enddo
-   deallocate (eprec_real)
-!
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!calcolo di alpha_pv
 
    emin = et(1, 1)
-
    do ibnd = 1, nbnd
       emin = min(emin, et(ibnd, 1))
    enddo
@@ -206,66 +160,36 @@ subroutine project(ipol)
    ! avoid zero value for alpha_pv
    alpha_pv = max(alpha_pv, 1.0d-2)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!fine conto di alpha_pv
-!
-!!!!!!!!!!!!!!!!!!!!!!!! inizializzazione partenza per cg
 
-   if (trim(init_linear) == 'restart') then
-      iun = find_free_unit()
-      call diropn_due(prefix_restart_cg, iun, 'save', 2*nwordwfc, exst, tmp_dir)
-      print *, 'PROJECT,DIROPN', exst, prefix_restart_cg, trim(c_ipol)
-      call davcio(dvpsi, 2*nwordwfc, iun, 1, -1)
-      close (iun)
+if (save_dvpsi) then
+       dvpsi = dvpsi_save(:,:,ipol)
    else
-      dvpsi(:, :) = (0.d0, 0.d0)
+       dvpsi(:, :) = (0.d0, 0.d0)
    end if
-!!!!!!!!!!!!!!!!!!!!!!!!!
-
-!
-!  do ibnd = 1, nbnd
-!     do ig = 1, npw
-!        h_diag (ig, ibnd) = 1.d0 / max(1.d0,(g2kin(ig)-et(ibnd,1)+alpha_pv )/eprec(ibnd,ik))
-!     enddo
-!  enddo
 
    !
    eth_rps = 1.D-10
    thresh = eth_rps
-   !
+   !dvpsi is the initial estimate of the solution
    call cgsolve_all(ch_psi_all, cg_psi, et(1, 1), dpsi, dvpsi, &
                     h_diag, npwx, npw, thresh, 1, lter, conv_root, anorm, &
                     nbnd, npol)
    if (.not. conv_root) WRITE (stdout, '(5x,"ik",i4," ibnd",i4, &
         & " linter: root not converged ",e10.3)') &
         ik, ibnd, anorm
-   !CALL flush_unit( stdout )
-
-!!!!!!!!!! scriviamo la soluzione su disco per un restart successivo
-   if ((trim(init_linear) == 'restart') .or. (trim(init_linear) == 'scratch')) then
-      iun = find_free_unit()
-      call diropn_due(prefix_restart_cg, iun, 'save', 2*nwordwfc, exst)
-      print *, 'PROJECT,DIROPN', exst, prefix_restart_cg, trim(c_ipol)
-      call davcio(dvpsi, 2*nwordwfc, iun, 1, +1)
-      close (iun)
+   if (save_dvpsi) then
+        dvpsi_save(:,:,ipol) = dvpsi
    end if
-!!!!!!!!!!!!!!!!!!!!!!!!!
 
    !
    deallocate (h_diag)
-   deallocate (eprec)
-   deallocate (aux1)
-   deallocate (work)
    !
    ! we have now obtained P_c x |psi>.
-   ! In the case of USPP this quantity is needed for the Born
-   ! effective charges, so we save it to disc
-   !
-   ! In the US case we obtain P_c x |psi>, but we need P_c^+ x | psi>,
-   ! therefore we apply S again, and then subtract the additional term
-   ! furthermore we add the term due to dipole of the augmentation charges.
    !
    IF (nkb > 0) call deallocate_bec_type(becp2)
 
    deallocate (evq)
 
    return
+
 end subroutine project

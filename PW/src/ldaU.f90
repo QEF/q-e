@@ -14,7 +14,7 @@ MODULE ldaU
   USE kinds,         ONLY : DP
   USE upf_params,    ONLY : lqmax
   ! FIXME: lqmax should not be used (see starting_ns* below)
-  USE parameters,    ONLY : ntypx, natx
+  USE parameters,    ONLY : ntypx, natx, sc_size
   USE basis,         ONLY : natomwfc
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp
   USE control_flags, ONLY : dfpt_hub
@@ -138,7 +138,7 @@ MODULE ldaU
   ! Inter atomic interaction should be cut off at some distance 
   ! that is the reason of having so many unitcell information. 
   !
-  REAL(DP) :: Hubbard_V(natx,27*natx,4) ! ! 50*(3x3x3) = 1350
+  REAL(DP) :: Hubbard_V(natx,natx*(2*sc_size+1)**3,4) 
   !! The Hubbard_V(I,J,int_type) gives the interaction between atom I (in the unit cell)
   !! with atom J (in the supercell).
   !! If int_type=1, the interaction is between standard orbitals,
@@ -147,11 +147,8 @@ MODULE ldaU
   !! If int_type=4, the interaction is between background (on I) and standard (on J) orbitals.
   !! Hubbard_V(I,J,4) is equal to Hubbard_V(J,I,2). It is useful
   !! in cases where Hubbard_V(I,J,2) /= 0 but I is outside the unit cell, J inside.
-  INTEGER :: sc_size = 1
-  !! Defines the supercell as composed by the unit cells located by
-  !! (n1,n2,n3) in primitive vectors base with -sc_size <= ni <= sc_size
   INTEGER :: num_uc
-  !! Number of unit cells in the supercell, =(2*sc_size+1)^3
+  !! Number of unit cells in the supercell = (2*sc_size+1)**3
   INTEGER :: max_num_neighbors
   !! the maximum number of neighbors
   REAL(DP), ALLOCATABLE :: atom_pos(:,:)
@@ -372,6 +369,9 @@ CONTAINS
        !
        ! DFT+U+V (simplified)
        !
+       ! Number of cells in the supercell
+       num_uc = (2*sc_size+1)**3
+       !
        ! Setup atomic positions in the primitive basis coordinates
        !
        CALL alloc_atom_pos()
@@ -455,7 +455,7 @@ CONTAINS
        ALLOCATE ( v_nsg ( ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin ) )
        ALLOCATE ( nsg   ( ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin ) )
        ALLOCATE ( nsgnew( ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin ) )
-       ALLOCATE ( phase_fac(nat*(2*sc_size+1)**3))
+       ALLOCATE ( phase_fac(nat*num_uc))
        ALLOCATE ( ll(ldmx_tot, ntyp))
        !
        ! ll is a label of all the Hubbard states telling the l of that states. 

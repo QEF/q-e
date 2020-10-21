@@ -28,7 +28,7 @@
                             kmaps, kerwrite, kerread, imag_read, nkc3,        &
                             gap_edge, fsthick, filqf, filkf, nqc1, nqc2, nqc3,&
                             fileig, fila2f, fermi_energy, nc, nkc1, nkc2,     &
-                            etf_mem, epwwrite, epwread, eptemp, nbndsub,      &
+                            etf_mem, epwwrite, epwread, nbndsub,              &
                             eps_acustic, ephwrite, epbread, nsiter, nqstep,   &
                             nqsmear, nqf3, nqf2, nqf1, nkf3, nkf2, nkf1,      &
                             muc, mp_mesh_q, mp_mesh_k, max_memlt, lunif,      &
@@ -41,7 +41,7 @@
                             wsfc, wscut, write_wfn, wmin_specfun, wmin,       &
                             wmax_specfun, wmax, wepexst, wannierize,          &
                             vme, longrange, shortrange, system_2d, lindabs,   &
-                            tempsmin, tempsmax, temps, delta_approx, title,   &
+                            temps, tempsmin, tempsmax, delta_approx, title,   &
                             scattering, scattering_serta, scattering_0rta,    &
                             int_mob, scissor, carrier, ncarrier,              &
                             restart, restart_step, prtgkk, nel, meff, epsiheg,&
@@ -50,7 +50,9 @@
                             mob_maxiter, use_ws, epmatkqread, selecqread,     &
                             scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma,&
                             assume_metal, wannier_plot_scale, reduce_unk,     &
-                            wannier_plot_supercell, wannier_plot_radius
+                            wannier_plot_supercell, wannier_plot_radius,      &
+                            fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv, &
+                            epw_crysym
   USE elph2,         ONLY : elph
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
@@ -149,6 +151,12 @@
   CALL mp_bcast(scdm_proj       , meta_ionode_id, world_comm)
   CALL mp_bcast(assume_metal    , meta_ionode_id, world_comm)
   CALL mp_bcast(reduce_unk      , meta_ionode_id, world_comm)
+  CALL mp_bcast(fixsym          , meta_ionode_id, world_comm)
+  CALL mp_bcast(epw_no_t_rev    , meta_ionode_id, world_comm)
+  CALL mp_bcast(epw_tr          , meta_ionode_id, world_comm)
+  CALL mp_bcast(epw_nosym       , meta_ionode_id, world_comm)
+  CALL mp_bcast(epw_noinv       , meta_ionode_id, world_comm)
+  CALL mp_bcast(epw_crysym      , meta_ionode_id, world_comm)
   !
   ! integers
   !
@@ -213,7 +221,6 @@
   CALL mp_bcast(muc           , meta_ionode_id, world_comm)
   CALL mp_bcast(max_memlt     , meta_ionode_id, world_comm)
   CALL mp_bcast(fermi_energy  , meta_ionode_id, world_comm)
-  CALL mp_bcast(eptemp        , meta_ionode_id, world_comm)
   CALL mp_bcast(scissor       , meta_ionode_id, world_comm)
   CALL mp_bcast(ncarrier      , meta_ionode_id, world_comm)
   CALL mp_bcast(nel           , meta_ionode_id, world_comm)

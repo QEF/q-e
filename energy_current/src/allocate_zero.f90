@@ -1,7 +1,7 @@
 subroutine allocate_zero
    use zero_mod, only: H_g, I_uno_g, I_due_g, &
-                       tabr, tabr_d2y, charge_g, u_g, charge, ion_vel, &
-                       tablocal_hg, tablocal_d2y_hg !,ion_pos
+                       tabr, tabr_d2y, charge_g, u_g, charge, &
+                       tablocal_hg, tablocal_d2y_hg
    use ions_base, only: nsp, nat
    use gvect, only: ngm
    use atom, only: rgrid
@@ -28,7 +28,5 @@ subroutine allocate_zero
    allocate (charge_g(ngm))
    allocate (u_g(ngm, 3))
    allocate (charge(dffts%nnr))
-   if (.not. allocated(ion_vel)) &
-      allocate (ion_vel(3, nat))
 !
 end subroutine allocate_zero

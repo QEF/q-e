@@ -86,27 +86,22 @@ SUBROUTINE hp_postproc
   CALL atomic_dist()
   !
   ! Average similar elements in chi0 and chi
-  write(6,*) 'here 1'
   CALL average_similar_elements(chi0) 
   CALL average_similar_elements(chi)
   !
   ! Reconstruct full chi0 and chi using symmetry
-  write(6,*) 'here 2'
   CALL reconstruct_full_chi(chi0)
   CALL reconstruct_full_chi(chi)
   !
   ! Add a background correction if needed
-  write(6,*) 'here 3'
   CALL background_correction(chi0, chi0bg)
   CALL background_correction(chi, chibg)
   !
   ! Invert the matrices chi0 and chi
-  write(6,*) 'here 4'
   CALL invmat (nath_scbg, chi0bg, inv_chi0bg) 
   CALL invmat (nath_scbg, chibg, inv_chibg)
   !
   ! Calculate Hubbard parameters and write them to file
-  write(6,*) 'here 5'
   CALL calculate_Hubbard_parameters()
   !
   ! Deallocate various arrays
@@ -392,7 +387,8 @@ SUBROUTINE atomic_dist()
   !
   IF (lda_plus_u_kind.EQ.2) THEN
      !
-     ! Number of atoms in the 3x3x3 supercell
+     ! Number of atoms in the supercell 
+     ! (2*sc_size+1) x (2*sc_size+1) x (2*sc_size+1)
      dimn = num_uc * nat
      !
      ALLOCATE(found(dimn))
@@ -553,14 +549,27 @@ SUBROUTINE reconstruct_full_chi(chi_)
   !
   ! Check that all elements were found
   !
-  DO na = 1, nath_sc
-     DO nb = 1, nath_sc
-        IF (chi_(na,nb).EQ.0.0d0) WRITE( stdout, '(/5x,"Missing element: na=", &
-                2x,i4,2x,"nb=",2x,i4/)') na, nb
+  IF (ANY(chi_(:,:).EQ.0.0d0)) THEN
+     !
+     WRITE( stdout, '(/5x,"Existing distances between couples of atoms:"/)')
+     DO na = 1, nath_sc
+        DO nb = 1, nath_sc
+           WRITE( stdout, '(5x,"na=",2x,i4,2x,"nb=",2x,i4,2x,"dist= ",f10.6)') &
+              na, nb, dist_sc(na,nb)
+        ENDDO
      ENDDO
-  ENDDO
-  IF (ANY(chi_(:,:).EQ.0.0d0)) CALL errore ('reconstruct_full_chi', &
+     !
+     DO na = 1, nath_sc
+        DO nb = 1, nath_sc
+           IF (chi_(na,nb).EQ.0.0d0) WRITE( stdout, '(/5x,"Missing chi element for: na=", &
+                2x,i4,2x,"nb=",2x,i4,2x,"dist= ",f10.6/)') na, nb, dist_sc(na,nb)
+        ENDDO
+     ENDDO
+     !
+     CALL errore ('reconstruct_full_chi', &
             'Reconstruction problem: some chi were not found', 1)
+     !
+  ENDIF
   !
   ! Symmetrization
   !
@@ -757,6 +766,8 @@ END SUBROUTINE calculate_Hubbard_parameters
 
 SUBROUTINE write_Hubbard_V()
   !
+  USE parameters,   ONLY : sc_size
+  !
   ! Write information about the Hubbard_V parameters
   ! in the order of increase of interatomic distances.
   !
@@ -773,7 +784,7 @@ SUBROUTINE write_Hubbard_V()
   OPEN(tempunit, file = tempfile, form = 'formatted', status = 'unknown')
   !
   WRITE(iunitU,'(/27x,"Hubbard V parameters:")')
-  WRITE(iunitU,'(22x,"(adapted for a 3x3x3 supercell)",/)')
+  WRITE(iunitU,'(22x,"(adapted for a supercell",1x,i1,"x",i1,"x",i1,")",/)') 2*sc_size+1, 2*sc_size+1, 2*sc_size+1 
   WRITE(iunitU,*) '           Atom 1 ', '    Atom 2 ', '   Distance (Bohr) ', ' Hubbard V (eV)'
   WRITE(iunitU,*)
   !

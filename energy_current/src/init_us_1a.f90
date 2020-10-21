@@ -69,6 +69,7 @@ subroutine init_us_1a
 !lb è il momento angolare della funzione di bessel
 !si può avere solo lb=la+1 lb=la-1 o lb=la
 !e questi tre casi sono rappresentati dall'ultimo indice
+!3.71
    ndm = MAXVAL(upf(:)%kkbeta)
    allocate (aux(ndm))
    allocate (besr(ndm))
@@ -86,9 +87,11 @@ subroutine init_us_1a
          do iq = startq, lastq
             qi = (iq - 1)*dq
 !inizializzazione tabella con l_bessel=l
+            !                  kkbeta dice dove bessel va a zero
             call sph_bes(upf(nt)%kkbeta, rgrid(nt)%r, qi, l, besr)
             do ir = 1, upf(nt)%kkbeta
-               aux(ir) = upf(nt)%beta(ir, nb)*besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir)
+               aux(ir) = upf(nt)%beta(ir, nb)*besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir) ! nel file upf c'è x per il proiettorie
+               !quindi qui c'è solo r^2)
             enddo
             call simpson(upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
             tabr(iq, nb, nt, 0) = vqint*pref
@@ -119,7 +122,7 @@ subroutine init_us_1a
       CALL errore('init_us_1a', 'splines for tabr not implemented', 1)
    endif
 !!!!!!!!!!!!!!
-!inizializzazione di tablocal_hg
+!inizializzazione di tablocal_hg 3.17 3.20
    !attenzione alla nuova griglia che deve essere compatibile con quella
 !dello pseudo locale
    rm = MAXVAL(rgrid(:)%mesh)

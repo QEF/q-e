@@ -27,7 +27,7 @@ SUBROUTINE lr_readin
   USE wvfct,               ONLY : nbnd, et, wg, current_k
   USE lsda_mod,            ONLY : isk
   USE ener,                ONLY : ef
-  USE io_global,           ONLY : ionode, ionode_id, stdout
+  USE io_global,           ONLY : ionode, ionode_id, stdout, meta_ionode, meta_ionode_id
   USE klist,               ONLY : nks, wk, nelec, lgauss, ltetra
   USE fixed_occ,           ONLY : tfixed_occ
   USE symm_base,           ONLY : nosym
@@ -49,8 +49,9 @@ SUBROUTINE lr_readin
   USE qpoint,              ONLY : xq
   USE io_rho_xml,          ONLY : write_scf
   USE mp_bands,            ONLY : ntask_groups
-  USE constants,           ONLY : eps4
-  USE control_lr,          ONLY : lrpa
+  USE constants,           ONLY : eps4, rytoev
+  USE control_lr,          ONLY : lrpa, alpha_mix
+  USE mp_world,            ONLY : world_comm
 
   IMPLICIT NONE
   !
@@ -65,12 +66,16 @@ SUBROUTINE lr_readin
   INTEGER :: ios, iunout, ierr, ipol
   LOGICAL, EXTERNAL  :: check_para_diag
   !
+  CHARACTER(LEN=80)          :: card
+  INTEGER :: i
+  !
   NAMELIST / lr_input /   restart, restart_step ,lr_verbosity, prefix, outdir, &
                         & test_case_no, wfcdir, disk_io, max_seconds
   NAMELIST / lr_control / itermax, ipol, ltammd, lrpa,   &
                         & charge_response, no_hxc, n_ipol, project,      &
                         & scissor, pseudo_hermitian, d0psi_rs, lshift_d0psi, &
-                        & q1, q2, q3, approximation
+                        & q1, q2, q3, approximation, calculator, alpha_mix, start, &
+                        & end, increment, epsil, units 
   NAMELIST / lr_post /    omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int,sum_rule
   namelist / lr_dav /     num_eign, num_init, num_basis_max, residue_conv_thr, precondition,         &
                         & dav_debug, reference,single_pole, sort_contr, diag_of_h, close_pre,        &
@@ -109,7 +114,6 @@ SUBROUTINE lr_readin
      test_case_no = 0
      beta_gamma_z_prefix = 'undefined'
      omeg= 0.0_DP
-     epsil = 0.0_DP
      w_T_npol = 1
      plot_type = 1
      project = .FALSE.
@@ -122,6 +126,18 @@ SUBROUTINE lr_readin
      q2 = 1.0d0
      q3 = 1.0d0
      approximation = 'TDDFT'
+     calculator = 'lanczos'
+     !
+     ! Sternheimer
+     !
+     start_freq=1
+     last_freq=0
+     alpha_mix(:) = 0.0D0
+     alpha_mix(1) = 0.7D0
+     units = 0
+     end = 2.5D0
+     epsil = 0.02D0
+     increment = 0.001D0
      !
      ! For lr_dav (Davidson program)
      !
@@ -303,8 +319,41 @@ SUBROUTINE lr_readin
   ENDIF
   !
   CALL bcast_lr_input
-
+  !
 #endif
+  !
+  IF ( trim(calculator)=='sternheimer' ) THEN
+     nfs=0
+     nfs = ((end-start) / increment) + 1
+     if (nfs < 1) call errore('lr_readin','Too few frequencies',1)
+     ALLOCATE(fiu(nfs))
+     ALLOCATE(fru(nfs))
+     ALLOCATE(comp_f(nfs))
+     comp_f=.TRUE.
+     IF (units == 0) THEN
+        fru(1) =start
+        fru(nfs) = end
+        deltaf = increment
+     ELSEIF (units == 1) THEN 
+        fru(1) =start/rytoev
+        fru(nfs) = end/rytoev
+        deltaf = increment/rytoev
+     ENDIF
+     fiu(:) = epsil
+     DO i=2,nfs-1
+        fru(i)=fru(1) + (i-1) * deltaf
+     ENDDO
+     IF (start_freq<=0) start_freq=1
+     IF (last_freq<=0.OR.last_freq>nfs) last_freq=nfs
+  ELSE
+     nfs=1
+     ALLOCATE(fru(1))
+     ALLOCATE(fiu(1))
+     ALLOCATE(comp_f(1))
+     fru=0.0_DP
+     fiu=0.0_DP
+     comp_f=.TRUE.
+  END IF
   !
   ! Required for restart runs as this never gets initialized.
   !

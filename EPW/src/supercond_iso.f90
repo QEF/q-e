@@ -30,7 +30,8 @@
     USE control_flags,     ONLY : iverbosity
     USE epwcom,            ONLY : nsiter, nstemp, broyden_beta, broyden_ndim, &
                                   limag, lpade, lacon
-    USE eliashbergcom,     ONLY : nsw, nsiw, deltai, deltaip, delta, deltap, estemp
+    USE elph2,             ONLY : gtemp
+    USE eliashbergcom,     ONLY : nsw, nsiw, deltai, deltaip, delta, deltap
     USE constants_epw,     ONLY : kelvin2eV, ci, zero
     USE mp,                ONLY : mp_bcast, mp_barrier, mp_sum
     USE supercond, ONLY : free_energy, dos_quasiparticle, gen_freqgrid_iaxis, &
@@ -236,7 +237,8 @@
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
     USE epwcom,        ONLY : nsiter, nstemp, muc, conv_thr_iaxis
-    USE eliashbergcom, ONLY : nsiw, estemp, gap0, gap, wsi, nznormi, znormi, deltai, deltaip, keri
+    USE elph2,         ONLY : gtemp
+    USE eliashbergcom, ONLY : nsiw, gap0, gap, wsi, nznormi, znormi, deltai, deltaip, keri
     USE constants_epw, ONLY : zero
     USE constants,     ONLY : pi
     USE io_eliashberg, ONLY : eliashberg_write_iaxis
@@ -326,10 +328,10 @@
         znormi(iw) = znormi(iw) + wesqrt(iwp) * kernelm
         deltai(iw) = deltai(iw) + desqrt(iwp) * (kernelp - 2.d0 * muc)
       ENDDO ! iwp
-      znormi(iw) = 1.d0 + pi * estemp(itemp) * znormi(iw) / wsi(iw)
+      znormi(iw) = 1.d0 + pi * gtemp(itemp) * znormi(iw) / wsi(iw)
       ! Eqs.(34)-(35) in Margine and Giustino, PRB 87, 024505 (2013)
-      nznormi(iw) = 1.d0 + pi * estemp(itemp) * nznormi(iw) / wsi(iw)
-      deltai(iw) = pi * estemp(itemp) * deltai(iw) / znormi(iw)
+      nznormi(iw) = 1.d0 + pi * gtemp(itemp) * nznormi(iw) / wsi(iw)
+      deltai(iw) = pi * gtemp(itemp) * deltai(iw) / znormi(iw)
       reldelta = reldelta + ABS(deltai(iw) - deltaold(iw))
       absdelta = absdelta + ABS(deltai(iw))
     ENDDO ! iw
@@ -386,7 +388,8 @@
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
     USE epwcom,        ONLY : nqstep, nsiter, conv_thr_racon, lpade
-    USE eliashbergcom, ONLY : nsw, estemp, dwsph, ws, gap, a2f_iso, dsumi, zsumi, &
+    USE elph2,         ONLY : gtemp
+    USE eliashbergcom, ONLY : nsw, dwsph, ws, gap, a2f_iso, dsumi, zsumi, &
                               delta, deltap, znorm, znormp, gp, gm
     USE constants_epw, ONLY : ci, zero, czero, cone
     USE constants,     ONLY : pi
@@ -461,7 +464,7 @@
     DO iw = 1, nsw ! loop over omega
       DO iwp = 1, nqstep ! loop over omega_prime
         IF (iter == 1) THEN
-          CALL gamma_acont(ws(iw), ws(iwp), estemp(itemp), rgammap, rgammam)
+          CALL gamma_acont(ws(iw), ws(iwp), gtemp(itemp), rgammap, rgammam)
           gp(iw, iwp) = rgammap
           gm(iw, iwp) = rgammam
         ENDIF
@@ -494,8 +497,8 @@
         ENDIF
         delta(iw) = delta(iw) + deltap(i) * esqrt
       ENDDO ! iwp
-      znorm(iw) = 1.d0 + pi * (- estemp(itemp) * zsumi(iw) + ci * znorm(iw) * dwsph) / ws(iw)
-      delta(iw) = pi * (estemp(itemp) * dsumi(iw) + ci * delta(iw) * dwsph) / znorm(iw)
+      znorm(iw) = 1.d0 + pi * (- gtemp(itemp) * zsumi(iw) + ci * znorm(iw) * dwsph) / ws(iw)
+      delta(iw) = pi * (gtemp(itemp) * dsumi(iw) + ci * delta(iw) * dwsph) / znorm(iw)
       reldelta = reldelta + ABS(delta(iw) - deltaold(iw))
       absdelta = absdelta + ABS(delta(iw))
     ENDDO ! iw
@@ -632,7 +635,8 @@
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : zero
     USE constants,     ONLY : pi
-    USE eliashbergcom, ONLY : nsiw, estemp, keri
+    USE elph2,         ONLY : gtemp
+    USE eliashbergcom, ONLY : nsiw, keri
     !
     IMPLICIT NONE
     !
@@ -655,7 +659,7 @@
     !
     DO iw = 1, 2 * nsiw(itemp)
       n = iw - 1
-      omega = DBLE(2 * n) * pi * estemp(itemp)
+      omega = DBLE(2 * n) * pi * gtemp(itemp)
       CALL lambdar_iso(omega, lambda_eph)
       keri(iw) = lambda_eph
     ENDDO
@@ -830,11 +834,12 @@
     USE kinds,             ONLY : DP
     USE io_global,         ONLY : stdout
     USE epwcom,            ONLY : nsiter, nstemp, broyden_beta, broyden_ndim
-    USE eliashbergcom,     ONLY : nsw, delta, deltap, gap, estemp
+    USE elph2,             ONLY : gtemp
+    USE eliashbergcom,     ONLY : nsw, delta, deltap, gap
     USE constants_epw,     ONLY : kelvin2eV, ci, zero
     USE mp,                ONLY : mp_bcast, mp_barrier, mp_sum
-    USE supercond, ONLY : gen_freqgrid_raxis, eliashberg_grid
-    USE utilities,           ONLY : mix_broyden
+    USE supercond,         ONLY : gen_freqgrid_raxis, eliashberg_grid
+    USE utilities,         ONLY : mix_broyden
     USE printing,          ONLY : prtheader_supercond
     !
     IMPLICIT NONE
@@ -933,7 +938,7 @@
       IF (ierr /= 0) CALL errore('eliashberg_iso_raxis', 'Error deallocating dv2', 1)
       !
       WRITE(stdout, '(5x, a, i3, a, f8.4, a, a, i3, a, f10.6, a, a, f10.6, a)') &
-                    'temp(', itemp, ') = ', estemp(itemp) / kelvin2eV, ' K ', &
+                    'temp(', itemp, ') = ', gtemp(itemp) / kelvin2eV, ' K ', &
                     '  gap_edge(', itemp, ') = ', gap(itemp), ' eV ', &
                     '  Re[delta(1)] = ', REAL(delta(1)), ' eV '
       WRITE(stdout, '(a)') '    '
@@ -975,7 +980,8 @@
     USE io_files,      ONLY : prefix
     USE epwcom,        ONLY : nswfc, nqstep, nsiter, muc, conv_thr_raxis, &
                               kerwrite, kerread, nstemp
-    USE eliashbergcom, ONLY : nsw, estemp, ws, dws, gap0, gap, bewph, fdwp, &
+    USE elph2,         ONLY : gtemp
+    USE eliashbergcom, ONLY : nsw, ws, dws, gap0, gap, bewph, fdwp, &
                               kp, km, delta, deltap, znorm, wsph
     USE constants_epw, ONLY : kelvin2eV, ci, eps6, zero, czero
     USE io_eliashberg, ONLY : eliashberg_write_raxis
@@ -1057,8 +1063,8 @@
       ! Fermi Dirac distribution
       fdwp(iw) = zero
       DO iw = 1, nsw
-        IF (ABS(estemp(itemp)) >  eps6) THEN
-          fdwp(iw) = wgauss(-ws(iw) / estemp(itemp), -99)
+        IF (ABS(gtemp(itemp)) >  eps6) THEN
+          fdwp(iw) = wgauss(-ws(iw) / gtemp(itemp), -99)
         ENDIF
       ENDDO
       !
@@ -1068,8 +1074,8 @@
         IF (ierr /= 0) CALL errore('integrate_eliashberg_iso_raxis', 'Error allocating bewph', 1)
         bewph(:) = zero
         DO iwph = 1, nqstep  ! loop over omega (integration variable)
-          IF (ABS(estemp(itemp)) > eps6) THEN
-            bewph(iwph) = wgauss(-wsph(iwph) / estemp(itemp), -99)
+          IF (ABS(gtemp(itemp)) > eps6) THEN
+            bewph(iwph) = wgauss(-wsph(iwph) / gtemp(itemp), -99)
             bewph(iwph) = bewph(iwph) / (1.d0 - 2.d0 * bewph(iwph))
           ENDIF
         ENDDO
@@ -1078,7 +1084,7 @@
     delta(:) = czero
     znorm(:) = czero
     !
-    temp = estemp(itemp) / kelvin2eV
+    temp = gtemp(itemp) / kelvin2eV
     IF (temp < 10.d0) THEN
       WRITE(name1, '(a, a7, f4.2)') TRIM(prefix), '.ker_00', temp
     ELSEIF (temp >= 10.d0) THEN

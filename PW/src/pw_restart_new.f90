@@ -107,7 +107,7 @@ MODULE pw_restart_new
       USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization, magtot, absmag
       USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, magtot_nc, &
                                        lambda
-      USE funct,                ONLY : get_dft_short, get_inlc, get_nonlocc_name, dft_is_nonlocc
+      USE funct,                ONLY : get_dft_short, get_nonlocc_name, dft_is_nonlocc
       USE scf,                  ONLY : rho
       USE force_mod,            ONLY : lforce, sumfor, force, sigma, lstres
       USE extfield,             ONLY : tefield, dipfield, edir, etotefield, &
@@ -149,7 +149,7 @@ MODULE pw_restart_new
       CHARACTER(LEN=8)      :: smearing_loc
       CHARACTER(LEN=8), EXTERNAL :: schema_smearing
       INTEGER               :: i, ig, ngg, ipol
-      INTEGER               :: npwx_g, ispin, inlc
+      INTEGER               :: npwx_g, ispin
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER                  :: iclass, isym, ielem
       CHARACTER(LEN=15)        :: symop_2_class(48)
@@ -450,7 +450,6 @@ MODULE pw_restart_new
                                   starting_ns = starting_ns_eigenvalue, Hub_ns = rho%ns, Hub_ns_nc = rho%ns_nc)
          END IF 
          dft_name = get_dft_short()
-         inlc = get_inlc()
          !
          CALL qexsd_init_dft  (output_obj%dft, dft_name, hybrid_obj, vdw_obj, dftU_obj)
          IF (ASSOCIATED (hybrid_obj)) THEN
@@ -609,7 +608,7 @@ MODULE pw_restart_new
 ! ... FORCES
 !----------------------------------------------------------------------------------------------
          !
-         IF ( lforce ) THEN 
+         IF ( lforce .and. conv_elec ) THEN 
             output_obj%forces_ispresent = .TRUE.
             CALL qexsd_init_forces(output_obj%forces,nat,force,lforce)
          ELSE 
@@ -620,7 +619,7 @@ MODULE pw_restart_new
 !------------------------------------------------------------------------------------------------
 ! ... STRESS 
 !------------------------------------------------------------------------------------------------
-         IF ( lstres) THEN
+         IF ( lstres .and. conv_elec ) THEN
             output_obj%stress_ispresent=.TRUE.
             CALL qexsd_init_stress(output_obj%stress, sigma, lstres ) 
          ELSE 
@@ -1047,7 +1046,7 @@ MODULE pw_restart_new
       !
       pseudo_dir_cur = restart_dir ( )
       CALL qexsd_copy_atomic_species ( output_obj%atomic_species, &
-           nsp, atm, amass, angle1, angle2, starting_magnetization, &
+           nsp, atm, amass, starting_magnetization, angle1, angle2, &
            psfile, pseudo_dir ) 
       IF ( pseudo_dir == ' ' ) pseudo_dir=pseudo_dir_cur
       !! Atomic structure section

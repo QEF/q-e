@@ -14,21 +14,6 @@ module cpv_traj
 
 contains
 
-   function newunit() result(unit)
-      implicit none
-      integer  :: unit
-      integer, parameter :: LUN_MIN = 123, LUN_MAX = 2000
-      logical :: opened
-      integer :: lun
-      do lun = LUN_MIN, LUN_MAX
-         inquire (unit=lun, opened=opened)
-         if (.not. opened) then
-            unit = lun
-            exit
-         end if
-      end do
-   end function newunit
-
    subroutine cpv_trajectory_initialize(t, fname, natoms, tau_fac, vel_fac, tps_fac, circular, ios)
       implicit none
       type(cpv_trajectory), intent(inout) :: t
@@ -38,15 +23,16 @@ contains
       logical, intent(in), optional :: circular
       integer, intent(out), optional :: ios
       integer :: iostat
+      integer, external :: find_free_unit
       ! try to open fname, allocate traj
-      t%iounit_pos = newunit()
+      t%iounit_pos = find_free_unit()
       open (unit=t%iounit_pos, file=trim(fname)//'.pos', iostat=iostat, action='read')
       if (.not. present(ios) .and. iostat /= 0) &
          call errore('cpv_trajectory_initialize', 'error opening file "'//trim(fname)//'.pos"', 1)
       if (present(ios)) &
          ios = iostat
       if (iostat /= 0) return
-      t%iounit_vel = newunit()
+      t%iounit_vel = find_free_unit()
       open (unit=t%iounit_vel, file=trim(fname)//'.vel', iostat=iostat, action='read')
       if (.not. present(ios) .and. iostat /= 0) &
          call errore('cpv_trajectory_initialize', 'error opening file "'//trim(fname)//'.vel"', 1)
@@ -69,14 +55,14 @@ contains
    subroutine cpv_trajectory_close(t)
       implicit none
       type(cpv_trajectory), intent(inout) :: t
-      logical itsopen 
+      logical itsopen
       if (.not. t%is_open) return
-      inquire(unit=t%iounit_pos, opened=itsopen)
+      inquire (unit=t%iounit_pos, opened=itsopen)
       if (itsopen) &
-          close (t%iounit_pos)
-      inquire(unit=t%iounit_vel, opened=itsopen)
+         close (t%iounit_pos)
+      inquire (unit=t%iounit_vel, opened=itsopen)
       if (itsopen) &
-          close (t%iounit_vel)
+         close (t%iounit_vel)
       t%is_open = .false.
    end subroutine
 
@@ -89,32 +75,32 @@ contains
       real(dp), intent(out) :: tps
 
       !default values
-      err=.false.
-      eof=.false.
-      tps_not_set=.false.    
-      tps=0.0_dp
-      nstep=0
+      err = .false.
+      eof = .false.
+      tps_not_set = .false.
+      tps = 0.0_dp
+      nstep = 0
 
       !read line as string
-      read(unit=iounit, fmt='(A)', err=200, end=210) line_read
+      read (unit=iounit, fmt='(A)', err=200, end=210) line_read
       !read nstep and tps as string
-      read(unit=line_read, fmt=*, err=200, end=210) nstep, tps_str
+      read (unit=line_read, fmt=*, err=200, end=210) nstep, tps_str
       !read tps
-      read(unit=tps_str, fmt=*, err=190, end=190) tps 
-    
+      read (unit=tps_str, fmt=*, err=190, end=190) tps
+
       return
-      190 continue
-         write (*,*) '!WARNING! Error reading time. Header was'
-         write (*,*) trim(line_read)
-         tps_not_set=.true.
+190   continue
+      write (*, *) '!WARNING! Error reading time. Header was'
+      write (*, *) trim(line_read)
+      tps_not_set = .true.
       return
-      200 continue
-         write (*,*) '!ERROR! Error reading header. Header was'
-         write (*,*) trim(line_read)
-         err=.true.
+200   continue
+      write (*, *) '!ERROR! Error reading header. Header was'
+      write (*, *) trim(line_read)
+      err = .true.
       return
-      210 continue
-         eof=.true.
+210   continue
+      eof = .true.
       return
    end subroutine
 
@@ -136,9 +122,9 @@ contains
 
       !read headers
       call read_header(t%iounit_pos, tstep%nstep, tstep%tps, err, eof, tps_not_set)
-         if (err .or. eof)  goto 100
+      if (err .or. eof) goto 100
       call read_header(t%iounit_vel, nstep_, tps_, err, eof, tps_not_set)
-         if (err .or. eof)  goto 100
+      if (err .or. eof) goto 100
       if (tstep%nstep /= nstep_ .or. tstep%tps /= tps_) then
          write (*, *) 'error in reading: inconsistent timestep headers in .pos and .vel files!', &
             nstep_, tps_, tstep%nstep, tstep%tps

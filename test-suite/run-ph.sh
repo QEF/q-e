@@ -16,7 +16,7 @@ else
   unset PARA_SUFFIX
 fi
 
-echo $0" "$@
+# echo $0" "$@
 if [[ "$1" == "1" ]]
 then
   echo "Running PW ..."
@@ -75,7 +75,7 @@ elif [[ "$1" == "7" ]]
 then
   echo "Running POSTAHC ..."
 # echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/postahc.x < $2 > $3 2> $4"
-  ${ESPRESSO_ROOT}/bin/postahc.x < $2 > $3 2> $4
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/postahc.x < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
     cat $3

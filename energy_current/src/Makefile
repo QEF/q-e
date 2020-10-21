@@ -12,27 +12,24 @@ MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../LA
           $(MOD_FLAG)../../upflib
 
 #location of needed libraries
-LIBOBJS= ../../iotk/src/libiotk.a ../../clib/clib.a ../../UtilXlib/libutil.a ../../KS_Solvers/DENSE/libdense.a ../../dft-d3/libdftd3qe.a ../../KS_Solvers/PPCG/libppcg.a ../../KS_Solvers/ParO/libparo.a $(QELIBS)
+LIBOBJS=  ../../clib/clib.a ../../UtilXlib/libutil.a ../../KS_Solvers/DENSE/libdense.a ../../dft-d3/libdftd3qe.a ../../KS_Solvers/PPCG/libppcg.a ../../KS_Solvers/ParO/libparo.a $(QELIBS)
 
 ALLCURRENTSOBJS = \
 hartree_mod.o\
 zero_mod.o\
-diropn_due.o\
 all_currents.o \
-openfil_all_currents.o\
-stop_pp.o\
 routine_hartree.o\
 project.o\
-orthogonalize2.o \
 init_us_3.o \
 init_us_1a.o \
 add_nc_curr.o \
-stop_pp.o\
 routine_zero.o\
 init_reciprocal_parts_tab.o\
 allocate_zero.o \
 deallocate_zero.o \
-aris_functionals.o
+ec_functionals.o \
+compute_charge.o \
+averages.o
 
 TEST_CPV_TRAJ_OBJ= \
 traj_object.o \

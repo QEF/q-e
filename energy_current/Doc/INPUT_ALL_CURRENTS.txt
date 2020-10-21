@@ -12,12 +12,15 @@ Program to compute energy current given the atomic configuration and the velocit
 Note that a very small conv_thr must be given in the ELECTRONS namelist, in the order of 1.D-11.
 The numerical derivative is very sensitive to this parameter and to "delta_t". Careful convergence
 tests are needed. Note that if too relaxed values are chosen, the result can depend on the algorithm
-used to diagonalize the hamiltonian a lot (the 4th/3rd digit can be wrong).
+used to diagonalize the hamiltonian a lot (the 4th/3rd digit can be wrong). Options that allows
+estimating the variance are provided, to reinitialize the wavefunctions and repeat each step many
+times ( "n_repeat_every_step" "re_init_wfc_1" "re_init_wfc_2" "re_init_wfc_3" ).
 Performance of the calculation can be tuned a little bit with the parameters "ethr_small_step"
 and "ethr_big_step", that can avoid the waste of some iterations in the diagonalization of the
 hamiltonian in the first scf step of every scf calculation (the program does 2 scf for each step).
 Note that in order to read atomic velocities, in the namelist CONTROL you must set calculation='md',
-and in the namelist IONS you must set ion_velocities='from_input'
+and in the namelist IONS you must set ion_velocities='from_input'. Algorithm for computing finite
+difference derivatives can be set with the option "three_point_derivative" .
 
 This program implements
 
@@ -28,7 +31,7 @@ Nature Phys 12, 80-84 (2016). https://doi.org/10.1038/nphys3509
 and was originally written by Aris Marcolongo in 2014 at SISSA for his PhD thesis
 ( https://iris.sissa.it/handle/20.500.11767/3897 )
 The all_current driver program was rewritten from scratch by Riccardo Bertossa at SISSA in 2020.
-Other contributions are from Loris Ercole (SISSA - EPFL ) , Davide Tisi (SISSA) and Federico Grasselli (SISSA).
+Other contributions are from Davide Tisi (SISSA), Loris Ercole (SISSA - EPFL ) and Federico Grasselli (SISSA).
 
 All the namilist but "ENERGY_CURRENT" are the same as the program pw.x
 
@@ -49,6 +52,7 @@ Structure of the input data:
 /
 
 &ELECTRONS
+  you may want startingwfc = 'random' (for better standard deviation estimation)
   ...
 /
 
@@ -111,9 +115,17 @@ NAMELIST: &ENERGY_CURRENT
                    
                    where J_x, J_y, J_z are the three components of the DFT energy current,
                    and can be easily post-processed by other external programs.
-                   Jele_* are the components of a part of the energy current that you may use
-                   for decorrelation and better data analysis.
+                   Jele_* are the components of the electronic density current that may be used
+                   for decorrelation and better data analysis or for calculating the electric current.
                    v_cm(1) ... v_cm(nsp) are the center of mass velocities for each atomic species.
+                   
+                   If "n_repeat_every_step" > 1, an additional file "file_output" + '.stat' is
+                   written with the following format:
+                   
+                      NSTEP t_ps mean(J_x) mean(J_y) mean(J_z) std(J_x) std(J_y) std(J_z)
+                   
+                   only one line per step is printed in this case (in the other output files you will
+                   find every calculation, also repeated ones). std is the standard deviation.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -150,13 +162,13 @@ NAMELIST: &ENERGY_CURRENT
    Variable:       vel_input_units
    
    Type:           CHARACTER
-   Default:        'CP'
+   Default:        'PW'
    Description:   
                    This multiplies or not by a factor 2 the velocities given in the input.
                                          Available options are:
     
                    'CP' :
-                        assume velocities are given in cp.x time units
+                        assume velocities are given in cp.x time units (thus multiplying by 2 the velocities)
     
                    'PW' :
                         assume velocities are given in pw.x time units
@@ -251,7 +263,78 @@ NAMELIST: &ENERGY_CURRENT
                    It help to decorrelate a little the mass flux from the energy flux
    +--------------------------------------------------------------------
    
+   +--------------------------------------------------------------------
+   Variable:       add_i_current_b
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If true adds to the energy current a part that is correctly implemented only for cubic cells.
+                   This part is in the form of a sum over the atomic types of a constant time the center of mass velocity
+                   of the atomic type. It does not change the value of the thermal conductivity when the formula for the
+                   multicomponent case with the inverse of the Schur complement is used, and in the single component
+                   or solid case this is a non-diffusive contribution.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       save_dvpsi
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If true allocate the space needed for saving the solution of the linear system betweew every calculation.
+                   The iterative algorithm will always start from there. By default it starts always from scratch.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       re_init_wfc_1
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If true initializes, as specified in the ELECTRON namelist of the PW section, the wavefunctions
+                   before the first ground state calculation, then compute the charge density.
+                    Otherwise use the last calculated wavefunctions.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       re_init_wfc_2
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If true initializes, as specified in the ELECTRON namelist of the PW section, the wavefunctions
+                   before the second ground state calculation, then compute the charge density.
+                   Otherwise use the last calculated wavefunctions.
+                   Note that if "three_point_derivative" is false, this has no effect.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       re_init_wfc_3
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If true initializes, as specified in the ELECTRON namelist of the PW section, the wavefunctions
+                   before the third ground state calculation, then compute the charge density.
+                   Otherwise use the last calculated wavefunctions.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       three_point_derivative
+   
+   Type:           LOGICAL
+   Default:        .true.
+   Description:    If true calculates three ground stated: one at t - "delta_t" /2, one at t and one at t + "delta_t"/2.
+                   Obviously it needs more computer time, but the derivative should be better.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       n_repeat_every_step
+   
+   Type:           INTEGER
+   Default:        1
+   Description:    Number of repetition of the full current calculation for each step. If > 1, the file "file_output" + '.stat'
+                   is written with some statistics. Note that if you don't specify at least "re_init_wfc_1" ,this may be useless.
+                   You may want to specify startingwfc = 'random' in the ELECTRONS namelist.
+   +--------------------------------------------------------------------
+   
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Tue May 26 12:09:02 CEST 2020
+This file has been created by helpdoc utility on Wed Oct 21 09:41:47 CEST 2020

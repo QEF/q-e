@@ -29,8 +29,9 @@
     USE control_flags,     ONLY : iverbosity
     USE epwcom,            ONLY : nsiter, nstemp, broyden_beta, broyden_ndim, &
                                   limag, lpade, lacon, fsthick, imag_read, wscut
+    USE elph2,             ONLY : gtemp
     USE eliashbergcom,     ONLY : nsw, nsiw, adelta, adeltap, adeltai, adeltaip, &
-                                  estemp, nkfs, nbndfs, ekfs, ef0
+                                  nkfs, nbndfs, ekfs, ef0
     USE supercond,         ONLY : free_energy, dos_quasiparticle, gen_freqgrid_iaxis, &
                                   deallocate_eliashberg_iaxis, deallocate_eliashberg_raxis, &
                                   deallocate_eliashberg_aniso, eliashberg_grid
@@ -301,9 +302,9 @@
     !! This routine solves the anisotropic Eliashberg equations on the imaginary-axis
     !!
     USE kinds,             ONLY : DP
-    USE elph2,             ONLY : wqf
+    USE elph2,             ONLY : wqf, gtemp
     USE epwcom,            ONLY : nsiter, nstemp, muc, conv_thr_iaxis, fsthick
-    USE eliashbergcom,     ONLY : nsiw, estemp, gap0, gap, agap, wsi, akeri, limag_fly, &
+    USE eliashbergcom,     ONLY : nsiw, gap0, gap, agap, wsi, akeri, limag_fly, &
                                   naznormi, aznormi, adeltai, adeltaip, nznormi, znormi, &
                                   deltai, wsphmax, nkfs, nbndfs, dosef, ef0, ixkqf, ixqfs, &
                                   nqfs, wkfs, w0g, ekfs
@@ -505,18 +506,19 @@
           DO ibnd = 1, nbndfs
             IF (ABS(ekfs(ibnd, ik) - ef0) < fsthick) THEN
               weight = 0.5d0 * wkfs(ik) * w0g(ibnd, ik) / dosef
+              nznormi(iw) = nznormi(iw) + weight * naznormi(ibnd, ik, iw)
               znormi(iw) = znormi(iw) + weight * aznormi(ibnd, ik, iw)
               deltai(iw) = deltai(iw) + weight * adeltai(ibnd, ik, iw)
-              naznormi(ibnd, ik, iw) = 1.d0 + pi * estemp(itemp) * naznormi(ibnd, ik, iw) / wsi(iw)
+              naznormi(ibnd, ik, iw) = 1.d0 + pi * gtemp(itemp) * naznormi(ibnd, ik, iw) / wsi(iw)
               ! Eqs.(21)-(22) in Margine and Giustino, PRB 87, 024505 (2013)
-              aznormi(ibnd, ik, iw) = 1.d0 + pi * estemp(itemp) * aznormi(ibnd, ik, iw) / wsi(iw)
-              adeltai(ibnd, ik, iw) = pi * estemp(itemp) * adeltai(ibnd, ik, iw) / aznormi(ibnd, ik, iw)
+              aznormi(ibnd, ik, iw) = 1.d0 + pi * gtemp(itemp) * aznormi(ibnd, ik, iw) / wsi(iw)
+              adeltai(ibnd, ik, iw) = pi * gtemp(itemp) * adeltai(ibnd, ik, iw) / aznormi(ibnd, ik, iw)
             ENDIF
           ENDDO ! ibnd
         ENDDO ! ik
-        nznormi(iw) = 1.d0 + pi * estemp(itemp) * nznormi(iw) / wsi(iw)
-        znormi(iw) = 1.d0 + pi * estemp(itemp) * znormi(iw) / wsi(iw)
-        deltai(iw) = pi * estemp(itemp) * deltai(iw) / znormi(iw)
+        nznormi(iw) = 1.d0 + pi * gtemp(itemp) * nznormi(iw) / wsi(iw)
+        znormi(iw) = 1.d0 + pi * gtemp(itemp) * znormi(iw) / wsi(iw)
+        deltai(iw) = pi * gtemp(itemp) * deltai(iw) / znormi(iw)
         reldelta = reldelta + ABS(deltai(iw) - deltaold(iw))
         absdelta = absdelta + ABS(deltai(iw))
       ENDDO ! iw
@@ -595,11 +597,11 @@
     ! reference F. Marsiglio, M. Schossmann, and J. Carbotte, Phys. Rev. B 37, 4965 (1988)
     !
     USE kinds,         ONLY : DP
-    USE phcom,         ONLY : nmodes
-    USE elph2,         ONLY : wqf, wf
+    USE modes,         ONLY : nmodes
+    USE elph2,         ONLY : wqf, wf, gtemp
     USE epwcom,        ONLY : nqstep, degaussq, nsiter, conv_thr_racon, fsthick, &
                               lpade, eps_acustic
-    USE eliashbergcom, ONLY : nsw, estemp, dwsph, ws, wsph, gap, agap, gp, gm, adsumi, azsumi, &
+    USE eliashbergcom, ONLY : nsw, dwsph, ws, wsph, gap, agap, gp, gm, adsumi, azsumi, &
                               delta, znorm, adelta, adeltap, aznorm, aznormp, g2, lacon_fly, &
                               a2fij, wkfs, dosef, ixkqf, ixqfs, nqfs, w0g, nkfs, nbndfs, ef0, ekfs
     USE supercond,     ONLY : gamma_acont
@@ -724,7 +726,7 @@
       ! ! Eq.(28) in Margine and Giustino, PRB 87, 024505 (2013)
       DO iw = 1, nsw ! loop over omega
         DO iwp = 1, nqstep ! loop over omega_prime
-          CALL gamma_acont(ws(iw), ws(iwp), estemp(itemp), rgammap, rgammam)
+          CALL gamma_acont(ws(iw), ws(iwp), gtemp(itemp), rgammap, rgammam)
           gp(iw, iwp) = rgammap
           gm(iw, iwp) = rgammam
         ENDDO
@@ -806,8 +808,8 @@
           ENDDO ! iq
           ! Eqs.(26)-(27) in Margine and Giustino, PRB 87, 024505 (2013)
           DO iw = 1, nsw ! loop over omega
-            aznorm(ibnd, ik, iw) = - estemp(itemp) * azsumi(ibnd, ik, iw) + ci * aznorm(ibnd, ik, iw) * dwsph
-            adelta(ibnd, ik, iw) =   estemp(itemp) * adsumi(ibnd, ik, iw) + ci * adelta(ibnd, ik, iw) * dwsph
+            aznorm(ibnd, ik, iw) = - gtemp(itemp) * azsumi(ibnd, ik, iw) + ci * aznorm(ibnd, ik, iw) * dwsph
+            adelta(ibnd, ik, iw) =   gtemp(itemp) * adsumi(ibnd, ik, iw) + ci * adelta(ibnd, ik, iw) * dwsph
           ENDDO ! iw
         ENDIF ! fsthick
       ENDDO ! ibnd
@@ -1092,7 +1094,8 @@
     !!
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : fsthick
-    USE eliashbergcom, ONLY : nkfs, nbndfs, nsiw, estemp, akeri, ekfs, ef0, ixkqf, ixqfs, nqfs
+    USE elph2,         ONLY : gtemp
+    USE eliashbergcom, ONLY : nkfs, nbndfs, nsiw, akeri, ekfs, ef0, ixkqf, ixqfs, nqfs
     USE constants_epw, ONLY : zero
     USE constants,     ONLY : pi
     USE division,      ONLY : fkbounds
@@ -1143,7 +1146,7 @@
               IF (ABS(ekfs(jbnd, ixkqf(ik, iq0)) - ef0) < fsthick) THEN
                 DO iw = 1, 2*nsiw(itemp)
                   n = iw - 1
-                  omega = DBLE(2 * n) * pi * estemp(itemp)
+                  omega = DBLE(2 * n) * pi * gtemp(itemp)
                   CALL lambdar_aniso_ver1(ik, iq, ibnd, jbnd, omega, lambda_eph)
                   !CALL lambdar_aniso_ver2(ik, iq, ibnd, jbnd, omega, lambda_eph)
                   akeri(ik, iq, ibnd, jbnd, iw) = lambda_eph
@@ -1169,7 +1172,7 @@
     ! reference H. Choi et. al, Physica C 385, 66 (2003)
     !
     USE kinds,         ONLY : DP
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE elph2,         ONLY : wf
     USE epwcom,        ONLY : eps_acustic
     USE eliashbergcom, ONLY : ixqfs, g2, dosef
@@ -1397,7 +1400,7 @@
     !! reference F. Masiglio, M. Schossmann, and J. Carbotte, PRB 37, 4965 (1988)
     !!
     USE kinds,         ONLY : DP
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE elph2,         ONLY : wf
     USE epwcom,        ONLY : eps_acustic
     USE eliashbergcom, ONLY : ixqfs, g2, dosef
@@ -1496,7 +1499,7 @@
     !! computes the anisotropic spectral function a2F(k, k', w)
     !!
     USE kinds,         ONLY : DP
-    USE phcom,         ONLY : nmodes
+    USE modes,         ONLY : nmodes
     USE elph2,         ONLY : wf
     USE epwcom,        ONLY : fsthick, eps_acustic, nqstep, degaussq
     USE eliashbergcom, ONLY : nkfs, nbndfs, g2, a2fij, ixkqf, ixqfs, nqfs, ekfs, ef0, &

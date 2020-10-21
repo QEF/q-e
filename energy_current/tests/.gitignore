@@ -1,0 +1,7 @@
+energy_current_*/total_axes*
+energy_current_*/full_unformatted*
+energy_current_*/test.out.*
+energy_current_*/test.err.*
+energy_current_*/current_hz*
+
+

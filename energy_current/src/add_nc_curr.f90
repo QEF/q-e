@@ -6,9 +6,11 @@ subroutine add_nc_curr(current)
    use us, only: spline_ps
    use uspp, ONLY: nkb, vkb, deeq
    USE uspp_param, ONLY: upf, nh
-   use hartree_mod, only: evc_uno
-   use zero_mod, only: becpr, becpd, becprd, xvkb, xdvkb, dvkb, ion_vel
+   !use hartree_mod, only: evc
+   use zero_mod, only: becpr, becpd, becprd, xvkb, xdvkb, dvkb
+   use dynamics_module, only: vel
    use wvfct, ONLY: nbnd, npw, npwx
+   use wavefunctions, only: evc
    use gvect, ONLY: g
    use cell_base, ONLY: tpiba
    use ions_base, ONLY: nat, ityp, nsp
@@ -96,7 +98,7 @@ subroutine add_nc_curr(current)
 !prodotti scalari (si possono evitare di fare tutti?), qui si esegue comunicazione MPI.
    call calbec(npw, vkb, evc, becp)
    do ipol = 1, 3
-      CALL calbec(npw, xvkb(1:npwx, 1:nkb, ipol), evc_uno, becpr(ipol))
+      CALL calbec(npw, xvkb(1:npwx, 1:nkb, ipol), evc, becpr(ipol))
       do ipw = 1, npw
          do ikb = 1, nkb
             vkb1(ipw, ikb) = dvkb(ipw, ikb, ipol)
@@ -104,7 +106,7 @@ subroutine add_nc_curr(current)
       end do
       CALL calbec(npw, vkb1, evc, becpd(ipol))
       do jpol = 1, 3
-         call calbec(npw, xdvkb(1:npwx, 1:nkb, ipol, jpol), evc_uno, becprd(ipol, jpol))
+         call calbec(npw, xdvkb(1:npwx, 1:nkb, ipol, jpol), evc, becprd(ipol, jpol))
       end do
    end do
 
@@ -122,21 +124,21 @@ subroutine add_nc_curr(current)
                do ipol = 1, 3
                   do jpol = 1, 3
                      do ibnd = 1, nbnd
-                        J_nl(ipol) = J_nl(ipol) + ion_vel(jpol, na)*&
+                        J_nl(ipol) = J_nl(ipol) + vel(jpol, na)*&
 &becprd(ipol, jpol)%r(ikb, ibnd)*becp%r(ikb, ibnd)*deeq(ih, ih, na, 1)
 
-                        J_1(ipol) = J_1(ipol) + ion_vel(jpol, na)*&
+                        J_1(ipol) = J_1(ipol) + vel(jpol, na)*&
 &becprd(ipol, jpol)%r(ikb, ibnd)*becp%r(ikb, ibnd)*deeq(ih, ih, na, 1)
 
 !                         print*,'corrente non locale: ', J_nl(:)
 !                          if (ionode) then
 !                              print*,'becpr-ikb-ipol-ibnd-ityp',becpr(ipol)%r(ikb,ibnd),ikb,ipol,ibnd,ityp(na)
 !                          end if
-!                         print*,'VEL',ion_vel(:,na)
-                        J_nl(ipol) = J_nl(ipol) + ion_vel(jpol, na)*&
+!                         print*,'VEL',vel(:,na)
+                        J_nl(ipol) = J_nl(ipol) + vel(jpol, na)*&
 &becpr(ipol)%r(ikb, ibnd)*becpd(jpol)%r(ikb, ibnd)*deeq(ih, ih, na, 1)
 
-                        J_2(ipol) = J_2(ipol) + ion_vel(jpol, na)*&
+                        J_2(ipol) = J_2(ipol) + vel(jpol, na)*&
 &becpr(ipol)%r(ikb, ibnd)*becpd(jpol)%r(ikb, ibnd)*deeq(ih, ih, na, 1)
 !                       print*,'corrente',J_nl(ipol)
                      end do

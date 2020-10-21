@@ -363,9 +363,9 @@ SUBROUTINE memory_report()
            !                      vg                       ylmk0     qmod
            ram1 = real_size * (ngm*nspin_mag + ngm_l*( lmaxq*lmaxq + 1 ) )
            !                                    qgm      aux1
-           ram1 = ram1 + complex_size * ngm_l * ( maxnij + nat*3 )
+           ram1 = ram1 + complex_size * ngm_l * ( maxnij + 3*maxnab )
            !                           ddeeq
-           ram1 = ram1 + real_size * ( maxnij * nat * 3 * nspin_mag )
+           ram1 = ram1 + real_size * ( maxnij * maxnab * 3 * nspin_mag )
            IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'addusforce', ram1/MB
            !
            ram_ = MAX ( ram_, ram1 )

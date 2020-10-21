@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 '''testcode [options] [action1 [action2...]]
 
 testcode is a simple framework for comparing output from (principally numeric)
@@ -228,7 +228,7 @@ actions: list of testcode2 actions to run.
 
     test_args = (arg not in allowed_actions for arg in args)
     if testcode2.compatibility.compat_any(test_args):
-        print('At least one action is not understood: %s.' % (' '.join(args)))
+        print(('At least one action is not understood: %s.' % (' '.join(args))))
         parser.print_usage()
         sys.exit(1)
 
@@ -358,10 +358,10 @@ run_test_args: arguments to pass to test.run_test method.
                     test_store[test.path] = [test]
             else:
                 serialized_tests.append([test])
-        for (key, stests) in test_store.items():
+        for (key, stests) in list(test_store.items()):
             if (len(stests) > 1) and verbose > 2:
-                print('Warning: cannot run tests in %s concurrently.' % stests[0].path)
-        serialized_tests += test_store.values()
+                print(('Warning: cannot run tests in %s concurrently.' % stests[0].path))
+        serialized_tests += list(test_store.values())
 
         semaphore = threading.BoundedSemaphore(tot_nprocs)
         slock = threading.Lock()
@@ -413,10 +413,10 @@ number of tests not checked due to test output file not existing.
             else:
                 if verbose > 0 and verbose <= 2:
                     info_line = testcode2.util.info_line(test.path, inp, args, os.getcwd())
-                    print('%sNot checked.' % info_line)
+                    print(('%sNot checked.' % info_line))
                 if verbose > 1:
-                    print('Skipping comparison.  '
-                          'Test file does not exist: %s.\n' % test_file)
+                    print(('Skipping comparison.  '
+                          'Test file does not exist: %s.\n' % test_file))
                 not_checked += 1
 
     return not_checked
@@ -495,15 +495,15 @@ verbose: level of verbosity in output.
                     )
             if not os.path.exists(test_file):
                 if verbose > 0:
-                    print('Skipping diff with %s in %s: %s does not exist.'
-                            % (benchmark, test.path, test_file))
+                    print(('Skipping diff with %s in %s: %s does not exist.'
+                            % (benchmark, test.path, test_file)))
             elif not have_benchmark:
                 if verbose > 0:
-                    print('Skipping diff with %s. %s' % (test.path, err))
+                    print(('Skipping diff with %s. %s' % (test.path, err)))
             else:
                 if verbose > 0:
-                    print('Diffing %s and %s in %s.' %
-                            (benchmark, test_file, test.path))
+                    print(('Diffing %s and %s in %s.' %
+                            (benchmark, test_file, test.path)))
                 diff_cmd = '%s %s %s' % (diff_program, benchmark, test_file)
                 diff_popen = subprocess.Popen(diff_cmd, shell=True)
                 diff_popen.wait()
@@ -520,10 +520,10 @@ ndays: test files older than ndays are deleted.
 
     test_globs = ['test.out*','test.err*']
 
-    print(
+    print((
             'Delete all %s files older than %s days from each job directory?'
                 % (' '.join(test_globs), ndays)
-         )
+         ))
     ans = ''
     while ans != 'y' and ans != 'n':
         ans = testcode2.compatibility.compat_input('Confirm [y/n]: ')
@@ -613,11 +613,11 @@ insert_id: insert the new benchmark id into the existing list of benchmark ids i
             ids.insert(0, benchmark)
             benchmark = ' '.join(ids)
         if len(benchmark.split()) > 1:
-            print('Setting new benchmarks in userconfig to be: %s.' %
-                    (benchmark))
+            print(('Setting new benchmarks in userconfig to be: %s.' %
+                    (benchmark)))
         else:
-            print('Setting new benchmark in userconfig to be: %s.' %
-                    (benchmark))
+            print(('Setting new benchmark in userconfig to be: %s.' %
+                    (benchmark)))
         config.set('user', 'benchmark', benchmark)
         userconfig = open(userconfig, 'w')
         config.write(userconfig)
@@ -638,14 +638,14 @@ verbose: level of verbosity in output (no output if <1).
         exes = testcode2.compatibility.compat_set(exes)
         if running:
             for exe in exes:
-                print('Using executable: %s.' % (exe))
+                print(('Using executable: %s.' % (exe)))
         # All tests use the same test_id and benchmark.
-        print('Test id: %s.' % (tests[0].test_program.test_id))
+        print(('Test id: %s.' % (tests[0].test_program.test_id)))
         if len(tests[0].test_program.benchmark) > 1:
             benchmark_ids = ', '.join(tests[0].test_program.benchmark)
-            print('Benchmarks: %s.' % (benchmark_ids))
+            print(('Benchmarks: %s.' % (benchmark_ids)))
         else:
-            print('Benchmark: %s.' % (tests[0].test_program.benchmark[0]))
+            print(('Benchmark: %s.' % (tests[0].test_program.benchmark[0])))
         print('')
 
 def end_status(tests, not_checked=0, verbose=1, final=True):
@@ -728,17 +728,17 @@ final: final call (so print a goodbye messge).
         if final:
             msg = 'All done. %s' % (msg,)
         if npassed == nran:
-            print(msg % ('', npassed, nran, ran_test, add_info_msg))
+            print((msg % ('', npassed, nran, ran_test, add_info_msg)))
         else:
-            print(msg % ('ERROR: only ', npassed, nran, ran_test, add_info_msg))
+            print((msg % ('ERROR: only ', npassed, nran, ran_test, add_info_msg)))
         if failures:
-            print('Failed %s in:\n\t%s' % (failed_test, '\n\t'.join(failures)))
+            print(('Failed %s in:\n\t%s' % (failed_test, '\n\t'.join(failures))))
         if warnings:
-            print('%s in:\n\t%s' % (warning.title(), '\n\t'.join(warnings)))
+            print(('%s in:\n\t%s' % (warning.title(), '\n\t'.join(warnings))))
         if skipped:
-            print('Skipped %s in:\n\t%s' % (skipped_test, '\n\t'.join(skipped)))
+            print(('Skipped %s in:\n\t%s' % (skipped_test, '\n\t'.join(skipped))))
     else:
-        print(' [%s/%s%s]'% (npassed, nran, add_info_msg))
+        print((' [%s/%s%s]'% (npassed, nran, add_info_msg)))
 
     # ternary operator not in python 2.4. :-(
     ret_val = 0

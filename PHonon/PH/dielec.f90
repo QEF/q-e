@@ -24,7 +24,7 @@ subroutine dielec()
   USE efield_mod, ONLY : epsilon
   USE units_ph, ONLY : lrdwf, iudwf, lrebar, iuebar
   USE eqv, ONLY : dpsi, dvpsi
-  USE qpoint, ONLY : nksq
+  USE qpoint, ONLY : nksq, ikks
   USE ph_restart, ONLY : ph_writefile
   USE control_lr, ONLY : nbnd_occ
   USE control_ph, ONLY : done_epsil, epsil
@@ -34,20 +34,19 @@ subroutine dielec()
 
   implicit none
 
-  integer :: ibnd, ipol, jpol, nrec, ik, ierr
+  integer :: ibnd, ipol, jpol, nrec, ik, ikk, ierr
   ! counter on polarizations
   ! counter on records
   ! counter on k points
   real(DP) :: w, weight
-
-  complex(DP), external :: zdotc
 
   IF (.NOT.epsil.OR.done_epsil) RETURN
 
   call start_clock ('dielec')
   epsilon(:,:) = 0.d0
   do ik = 1, nksq
-     weight = wk (ik)
+     ikk=ikks(ik)
+     weight = wk (ikk)
      w = fpi * weight / omega
      do ipol = 1, 3
         nrec = (ipol - 1) * nksq + ik
@@ -55,12 +54,13 @@ subroutine dielec()
         do jpol = 1, 3
            nrec = (jpol - 1) * nksq + ik
            call get_buffer (dpsi, lrdwf, iudwf, nrec)
-           do ibnd = 1, nbnd_occ (ik)
+           do ibnd = 1, nbnd_occ (ikk)
               !
               !  this is the real part of <DeltaV*psi(E)|DeltaPsi(E)>
               !
+              ! FIXME: use zgemm instead of dot_product
               epsilon(ipol,jpol)=epsilon(ipol,jpol)-4.d0*w* DBLE( &
-                   zdotc(npwx*npol, dvpsi (1, ibnd), 1, dpsi (1, ibnd), 1))
+                   dot_product(dvpsi(:,ibnd),dpsi(:,ibnd)) )
            enddo
         enddo
      enddo

@@ -4,6 +4,7 @@
 !
 !    Oct 2018, adapted to QE6.3
 !    Jan 2019, adapted to change in rho from (up,down) to (tot,magn)
+!    June 2020, adapted to extended vdW_DF analysis and refined output (PH)
 !
 !-----------------------------------------------------------------------
 PROGRAM do_ppacf
@@ -18,7 +19,14 @@ PROGRAM do_ppacf
   !! For an illustration of how to use this routine to set hybrid 
   !! mixing parameter, please refer to:
   !     
-  !! Y. Jiao, E. Schr\"oder, P. Hyldgaard, J. Chem. Phys. 148, 194115 (2018).     
+  !! Y. Jiao, E. Schr\"oder, and P. Hyldgaard, J. Chem. Phys. 148, 194115 (2018).     
+  !
+  !! Finally, this routine can also be used to set isolate the 
+  !  Ashcroft-type pure-dispersion component of E_{c;vdw}^nl 
+  !  (or the cumulant reminder, E_{c;alpha}^nl, defining a local-field susceptibility):
+  !     
+  !! P. Hyldgaard, Y. Jiao, and V. Shukla, J. Phys.: Condens. Matt. 32, 393001 (2020):     
+  !! https://iopscience.iop.org/article/10.1088/1361-648X/ab8250
   !
   USE basis,                ONLY : starting_wfc
   USE constants,            ONLY : e2, pi, fpi
@@ -26,7 +34,7 @@ PROGRAM do_ppacf
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : ngm, g
   USE gvecw,                ONLY : ecutwfc, gcutw
-  USE io_files,             ONLY : pseudo_dir, prefix, tmp_dir
+  USE io_files,             ONLY : prefix, tmp_dir
   USE io_global,            ONLY : stdout, ionode, ionode_id
   USE cell_base,            ONLY : omega
   USE mp,                   ONLY : mp_bcast, mp_sum
@@ -34,7 +42,7 @@ PROGRAM do_ppacf
   USE mp_global,            ONLY : mp_startup
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE exx,                  ONLY : exxinit, exxenergy2, fock2, ecutfock, & 
-                                   use_ace, aceinit, local_thr
+                                   use_ace, aceinit, local_thr, nbndproj
   USE exx_base,             ONLY : exx_grid_init, exx_mp_init, exx_div_check, &
                                    exxdiv_treatment
   USE exx_base,             ONLY : nq1, nq2, nq3
@@ -53,7 +61,7 @@ PROGRAM do_ppacf
   USE xc_lda_lsda,          ONLY : xc
   USE wvfct,                ONLY : npw, npwx
   USE environment,          ONLY : environment_start, environment_end
-  USE vdW_DF,               ONLY : Nqs, vdW_DF_potential, vdW_DF_energy
+  USE vdW_DF,               ONLY : Nqs, vdW_DF_potential, vdW_DF_energy, vdW_DF_analysis
   USE vdW_DF_scale,         ONLY : xc_vdW_DF_ncc, xc_vdW_DF_spin_ncc, &
                                    get_q0cc_on_grid, get_q0cc_on_grid_spin
   USE vasp_xml,             ONLY : readxmlfile_vasp
@@ -64,7 +72,20 @@ PROGRAM do_ppacf
   ! From which code to read in the calculation data:  
   ! 1 \(\rightarrow\) Quantum ESPRESSO (default);  
   ! 2 \(\rigtharrow\) VASP.
-  LOGICAL :: lplot, ltks, lfock, lecnl_qxln, lecnl_qx
+  INTEGER :: vdW_analysis
+  ! Analysis of which component of vdW-DF nonlocal-correlation term?
+  ! 0 \(\rightarrow\) Use full-method kernel (default, sum of 1+2 kernels);  
+  ! 1 \(\rigtharrow\) Susceptibility-type vdW_DF kernel (postprocessing ONLY!)
+  ! 2 \(\rigtharrow\) Pure-vdW (longitudinal) vdW_DF kernel (postprocessing ONLY!)
+  ! Kernels defined/explained in IOP JCPM focused review.
+  LOGICAL :: lplot, ltks, lfock
+  ! lplot: "2 track spatial variation or not 2 track spatial variation?"
+  ! if (lplot) ltks: "2 track Kohn-sham kinetic energy?" (requires wavefunctions)
+  ! if (lplot) lfock: "Compute Fock exchange value?" (requires wavefunctions)
+  LOGICAL :: lecnl_qxln, lecnl_qx
+  ! lecnl_qxln: "Linearized coupling-constant variation in Ecnl analysis" (Sanity check)
+  ! lecnl_qx: "TESTING ONLY! Ignore qc (but not qx) in setting q_0 in
+  !            Ecnl coupling-constant analysis" (Test! STRONGLY DEPRECIATED).
   INTEGER :: icc, ncc
   INTEGER :: n_lambda
   REAL(DP):: rs, rs3, s, q, qx, qc
@@ -155,12 +176,11 @@ PROGRAM do_ppacf
   !
   TYPE(scf_type) :: exlda, eclda
   TYPE(scf_type) :: tclda  ! the LDA kinetic-correlation energy per particle
-  TYPE(scf_type) :: ecnl   ! the ECNL kinetic.correlation energy per particle
-  TYPE(scf_type) :: tcnl
+  TYPE(scf_type) :: ecnl   ! the nonlocal correlation energy per particle
+  TYPE(scf_type) :: tcnl   ! the Ecnl kinetic-correlation energy per particle
   TYPE(scf_type) :: exgc, ecgc, tcgc
   !
-  NAMELIST / ppacf / code_num,outdir, prefix, n_lambda, lplot, ltks, lfock, use_ace, &
-                     pseudo_dir, lecnl_qxln, lecnl_qx
+  NAMELIST / ppacf / code_num,outdir, prefix, n_lambda, vdW_analysis, lplot, ltks, lfock, use_ace
   !
   ! initialise environment
   !
@@ -176,6 +196,7 @@ PROGRAM do_ppacf
   outdir = './'
   prefix = 'ppacf'
   n_lambda = 1
+  vdW_analysis = 0 
   lplot = .FALSE.
   ltks  = .FALSE.
   lfock = .FALSE.
@@ -206,10 +227,28 @@ PROGRAM do_ppacf
   CALL mp_bcast( lplot,      ionode_id, world_comm )
   CALL mp_bcast( ltks,       ionode_id, world_comm )
   CALL mp_bcast( lfock,      ionode_id, world_comm )
+  CALL mp_bcast( vdW_analysis, ionode_id, world_comm )
   CALL mp_bcast( lecnl_qxln, ionode_id, world_comm )
   CALL mp_bcast( lecnl_qx,   ionode_id, world_comm )
   CALL mp_bcast( dcc,        ionode_id, world_comm )
-  CALL mp_bcast( pseudo_dir, ionode_id, world_comm )
+  !
+  SELECT CASE ( vdW_analysis )
+  CASE ( 0 ) 
+     vdW_DF_analysis = vdW_analysis
+  CASE ( 1,2 )
+     vdW_DF_analysis = vdW_analysis
+     IF (ionode) THEN 
+       WRITE(stdout,'(/)') 
+       WRITE(stdout,'(5X,a)') "NOTE: Coupling-constant analysis of correlation for" 
+       IF (vdW_analysis == 1) THEN
+         WRITE(stdout,'(5X,a)') "Ecnl_Alpha (susceptibility kernel), not for Ecnl."
+       ELSE
+         WRITE(stdout,'(5X,a)') "Ecnl_vdW (pure-vdW kernel), not for full Ecnl."
+       END IF
+     END IF
+  CASE DEFAULT
+     CALL errore( 'ppacf', 'vdW_DF analysis kernel not implemented', 1 )
+  END SELECT
   !
   ncc = n_lambda
   WRITE( stdout, '(//5x,"entering subroutine acf ..."/)')
@@ -224,7 +263,11 @@ PROGRAM do_ppacf
   IF (code_num == 1) THEN
      !
      tmp_dir = TRIM(outdir) 
-     CALL read_file_new ( needwf )
+     IF ( lfock .OR. (lplot .AND. ltks) ) THEN
+        CALL read_file ( )
+     ELSE
+        CALL read_file_new ( needwf )
+     ENDIF
      !
      ! Check exchange correlation functional
      iexch = get_iexch()
@@ -235,7 +278,8 @@ PROGRAM do_ppacf
   ELSEIF (code_num == 2) THEN
      !
      tmp_dir = TRIM(outdir)
-     CALL readxmlfile_vasp( iexch, icorr, igcx, igcc, inlc, ierr )
+     CALL readxmlfile_vasp( iexch, icorr, igcx, igcc, inlc, ierr ) ! Presently has generate_kernel() 
+                             ! if nonlocal dft --- So this call should be after vdW_DF_analysis is set
      IF (ionode) WRITE(stdout,'(5X,a)') "Read data from VASP output 'vasprun.xml'"
      ! 
   ELSE
@@ -606,15 +650,26 @@ PROGRAM do_ppacf
     ENDDO
   ENDIF
   !
+  IF (dft_is_nonlocc()) THEN
+     IF (vdW_analysis==0) WRITE(stdout,'(a32,0PF17.8,a3)') 'Lieb-Oxford ratio, XC', (etx+etc)/etxlda !,etxc/etxlda
+     IF (vdW_analysis==0) WRITE(stdout,'(a32,0PF17.8,a3)') 'Lieb-Oxford ratio, Exchange', etx/etxlda !,etx/etxlda
+  ELSE
+     WRITE(stdout,'(a32,0PF17.8,a3)') 'Lieb-Oxford ratio, XC', (etx+etc)/etxlda !,etxc/etxlda
+     WRITE(stdout,'(a32,0PF17.8,a3)') 'Lieb-Oxford ratio, Exchange', etx/etxlda !,etx/etxlda
+  END IF
+  !
   WRITE(stdout,'(a32,0PF17.8,a3)') 'Exchange', etx, 'Ry'      !,etxlda,etxgc
   WRITE(stdout,'(a32,0PF17.8,a3)') 'LDA Exchange', etxlda, 'Ry'   !,etxlda
   WRITE(stdout,'(a32,0PF17.8,a3)') 'Correlation', etc, 'Ry'   !,etclda,etcgc
   WRITE(stdout,'(a32,0PF17.8,a3)') 'LDA Correlation', etclda, 'Ry'   !,etclda
+  !
   IF (igcc/=0) THEN
      WRITE(stdout,'(a32,0PF17.8,a3)') 'E_c^gc', etcgc, 'Ry'
   END IF
   IF (dft_is_nonlocc()) THEN
-     WRITE(stdout,'(a32,0PF17.8,a3)') 'E_c^nl', etcnl , 'Ry'
+     IF (vdW_analysis==0) WRITE(stdout,'(a32,0PF17.8,a3)') 'E_c^nl', etcnl , 'Ry'
+     IF (vdW_analysis==1) WRITE(stdout,'(a32,0PF17.8,a3)') 'E_c^nl(Alpha)', etcnl , 'Ry'
+     IF (vdW_analysis==2) WRITE(stdout,'(a32,0PF17.8,a3)') 'E_c^nl(vdW)', etcnl , 'Ry'
   END IF
   WRITE(stdout,'(a32,0PF17.8,a3)') 'Exchange + Correlation', etx+etc, 'Ry'
   WRITE(stdout,'(a32,0PF17.8,a3)') 'T_c^LDA', ttclda, 'Ry'
@@ -623,8 +678,11 @@ PROGRAM do_ppacf
      WRITE(stdout,'(a32,0PF17.8,a3)') 'Kinetic-correlation Energy', ttclda+ttcgc, 'Ry'
   END IF
   IF (dft_is_nonlocc()) THEN
-     WRITE(stdout,'(a32,0PF17.8,a3)') 'T_c^nl', etcnl - etcnlncc, 'Ry'
-     WRITE(stdout,'(a32,0PF17.8,a3)') 'Kinetic-correlation Energy', ttclda+(etcnl-etcnlncc), 'Ry'
+     IF (vdW_analysis==0) WRITE(stdout,'(a32,0PF17.8,a3)') 'T_c^nl', etcnl - etcnlncc, 'Ry'
+     IF (vdW_analysis==1) WRITE(stdout,'(a32,0PF17.8,a3)') 'T_c^nl(Alpha)', etcnl - etcnlncc, 'Ry'
+     IF (vdW_analysis==2) WRITE(stdout,'(a32,0PF17.8,a3)') 'T_c^nl(vdW)', etcnl - etcnlncc, 'Ry'
+     !
+     IF (vdW_analysis==0) WRITE(stdout,'(a32,0PF17.8,a3)') 'Kinetic-correlation Energy', ttclda+(etcnl-etcnlncc), 'Ry'
   END IF
   !
   DEALLOCATE( vofrcc )
@@ -759,6 +817,7 @@ PROGRAM do_ppacf
     nq1 = 0
     nq2 = 0
     nq3 = 0
+    nbndproj = 0
     exxdiv_treatment = "gygi-baldereschi"
     ecutfock = ecutwfc
     CALL set_exx_fraction( 1._DP )
@@ -858,27 +917,37 @@ PROGRAM do_ppacf
         CALL destroy_scf_type( exgc )
      ENDIF
      IF (dft_is_nonlocc()) THEN
-        filplot = TRIM(prefix)//'.ecnl'
+        IF (vdW_analysis==0) filplot = TRIM(prefix)//'.ecnl'
+        IF (vdW_analysis==1) filplot = TRIM(prefix)//'.ecnl_Alpha'
+        IF (vdW_analysis==2) filplot = TRIM(prefix)//'.ecnl_vdW'
         plot_num = 2
         CALL dcopy( dfftp%nnr, ecnl%of_r(:,1), 1, vltot, 1 )
         CALL punch_plot( filplot, plot_num, 0., 0., 0., 0., 0., 0, 0, 0, .FALSE. )
         !
-        filplot = TRIM(prefix)//'.tcnl'
+        IF (vdW_analysis==0) filplot = TRIM(prefix)//'.tcnl'
+        IF (vdW_analysis==1) filplot = TRIM(prefix)//'.tcnl_Alpha'
+        IF (vdW_analysis==2) filplot = TRIM(prefix)//'.tcnl_vdW'
         plot_num = 2
         CALL dcopy( dfftp%nnr, tcnl%of_r(:,1), 1, vltot, 1 )
         CALL punch_plot( filplot, plot_num, 0., 0., 0., 0., 0., 0, 0, 0, .FALSE. )
         !
         IF (nspin == 1) THEN
-           filplot = TRIM(prefix)//'.vcnl'
+           IF (vdW_analysis==0) filplot = TRIM(prefix)//'.vcnl'
+           IF (vdW_analysis==1) filplot = TRIM(prefix)//'.vcnl_Alpha'
+           IF (vdW_analysis==2) filplot = TRIM(prefix)//'.vcnl_vdW'
            plot_num = 2
            CALL dcopy( dfftp%nnr, potential_vdW(:,1), 1, vltot, 1 )
            CALL punch_plot( filplot, plot_num, 0., 0., 0., 0., 0., 0, 0, 0, .FALSE. )
         ELSEIF (nspin == 2) THEN
-           filplot = TRIM(prefix)//'.vcnl1'
+           IF (vdW_analysis==0) filplot = TRIM(prefix)//'.vcnl1'
+           IF (vdW_analysis==1) filplot = TRIM(prefix)//'.vcnl1_Alpha'
+           IF (vdW_analysis==2) filplot = TRIM(prefix)//'.vcnl1_vdW'
            plot_num = 2
            CALL dcopy( dfftp%nnr, potential_vdW(:,1), 1, vltot, 1 )
            CALL punch_plot( filplot, plot_num, 0., 0., 0., 0., 0., 0, 0, 0, .FALSE. )
-           filplot = TRIM(prefix)//'.vcnl2'
+           IF (vdW_analysis==0) filplot = TRIM(prefix)//'.vcnl2'
+           IF (vdW_analysis==1) filplot = TRIM(prefix)//'.vcnl2_Alpha'
+           IF (vdW_analysis==2) filplot = TRIM(prefix)//'.vcnl2_vdW'
            plot_num = 2
            CALL dcopy( dfftp%nnr, potential_vdW(:,2), 1, vltot, 1 )
            CALL punch_plot( filplot, plot_num, 0., 0., 0., 0., 0., 0, 0, 0, .FALSE. )
@@ -1147,9 +1216,10 @@ SUBROUTINE ppacf_info
   WRITE(stdout,'(5x,"%                                                                      %")')
   WRITE(stdout,'(5x,"%   Y. Jiao, E. Schr\""oder, and P. Hyldgaard, PRB 97, 085115 (2018).   %")')
   WRITE(stdout,'(5x,"%                                                                      %")')
-  WRITE(stdout,'(5x,"% If you are using this code for hybrid mixing value, please also cite:%")')
+  WRITE(stdout,'(5x,"% Illustrations of use for analysis (vdW-DFs and vdW-DF-hybrids):      %")')
   WRITE(stdout,'(5x,"%                                                                      %")')
   WRITE(stdout,'(5x,"%   Y. Jiao, E. Schr\""oder, and P. Hyldgaard, JCP 148, 194115 (2018).  %")')
+  WRITE(stdout,'(5x,"%   P. Hyldgaard, Y. Jiao, and V. Shukla, IOP JPCM 32, 393001 (2020).   %")')
   WRITE(stdout,'(5x,"%                                                                      %")')
   WRITE(stdout,'(5x,"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")')
   WRITE(stdout,'(/)')

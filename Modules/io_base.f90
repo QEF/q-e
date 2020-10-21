@@ -601,7 +601,7 @@ MODULE io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE read_rhog ( filename, root_in_group, intra_group_comm, &
-         ig_l2g, nspin, rho, gamma_only )
+         ig_l2g, nspin, rho, gamma_only, ier_ )
       !------------------------------------------------------------------------
       !! Read and distribute rho(G) from file  "filename".* 
       !! (* = dat if fortran binary, * = hdf5 if HDF5)
@@ -631,6 +631,8 @@ MODULE io_base
       COMPLEX(dp),  INTENT(INOUT) :: rho(:,:)
       !! temporary check while waiting for more definitive solutions
       LOGICAL, OPTIONAL, INTENT(IN) :: gamma_only
+      !! if present, don't stop in case of open error, return a nonzero value
+      INTEGER, OPTIONAL, INTENT(OUT):: ier_
       !
       COMPLEX(dp), ALLOCATABLE :: rho_g(:)
       COMPLEX(dp), ALLOCATABLE :: rhoaux(:)
@@ -663,6 +665,7 @@ MODULE io_base
       !
       iun  = 4
       ierr = 0
+      IF ( PRESENT(ier_) ) ier_ = 0
       !
       me_in_group     = mp_rank( intra_group_comm )
       nproc_in_group  = mp_size( intra_group_comm )
@@ -672,6 +675,10 @@ MODULE io_base
 #if defined (__HDF5) 
          CALL qeh5_openfile(h5file, TRIM(filename)//'.hdf5', ACTION = 'read', &
               error = ierr)
+         IF ( ierr /= 0 .AND. PRESENT(ier_) ) THEN
+            ier_ = ierr
+            RETURN
+         END IF
          CALL qeh5_read_attribute (h5file%id, "gamma_only", tempchar, MAXLEN = len(tempchar)  )
          CALL qeh5_read_attribute (h5file%id, "ngm_g", ngm_g_ ) 
          CALL qeh5_read_attribute (h5file%id, "nspin", nspin_)  
@@ -685,6 +692,10 @@ MODULE io_base
          OPEN ( UNIT = iun, FILE = TRIM( filename ) // '.dat', &
               FORM = 'unformatted', STATUS = 'old', iostat = ierr )
          IF ( ierr /= 0 ) THEN
+            IF ( PRESENT(ier_) ) THEN
+               ier_ = ierr
+               RETURN
+            END IF
             ierr = 1
             GO TO 10
          END IF

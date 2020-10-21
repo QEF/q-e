@@ -1,11 +1,23 @@
 subroutine init_hartree()
    use qpoint, only: ikqs
+   use hartree_mod, only : dvpsi_save, save_dvpsi
+   use wvfct, only: nbnd, npwx
    implicit none
 
    if (.not. allocated(ikqs)) allocate (ikqs(1))
+   if (save_dvpsi) then
+       if (.not. allocated(dvpsi_save)) then
+               allocate (dvpsi_save(npwx, nbnd,3))
+               dvpsi_save = (0.d0, 0.d0)
+       end if
+   end if
+
+
    ikqs(1) = 1
 
 end subroutine
+
+
 
 subroutine routine_hartree()
    use kinds, only: DP
@@ -17,7 +29,6 @@ subroutine routine_hartree()
    use mp, only: mp_sum, mp_barrier
    use io_global, only: stdout, ionode
    use gvect, only: g, ngm, gstart
-   !USE gvecs, ONLY: dffts%nl, dffts%nlm   !moved to fft type
    USE cell_base, ONLY: tpiba, omega, tpiba2, alat, at
    USE constants, ONLY: e2, fpi, pi
    USE fft_interfaces, ONLY: fwfft, invfft
@@ -32,54 +43,67 @@ subroutine routine_hartree()
    use constants, only: rytoev
    USE eqv, ONLY: dpsi, dvpsi
    USE mp_pools, ONLY: intra_pool_comm
-
+   USE funct, ONLY : get_igcx, get_igcc
+   use compute_charge_mod, only : compute_charge
+    
    implicit none
 
-   !complex(kind=DP), allocatable :: evc_uno(:, :), evc_due(:, :), evp(:, :), tmp(:, :)
+   character(LEN=20) :: dft_name  
    complex(kind=DP), allocatable ::  evp(:, :), tmp(:, :)
    integer :: iun, iv, igm, ibnd, i
-   logical :: exst
-   real(kind=DP), allocatable ::charge(:), fac(:)
+   logical :: exst, do_xc_curr
+   real(kind=DP), allocatable ::charge(:)
    real(kind=DP), allocatable ::excharge_r(:), exgradcharge_r(:, :), exdotcharge_r(:)
-   real(kind=DP) :: qq_fact, q_tot
    real(kind=DP) :: update(1:3), update_a(1:3), update_b(1:3)
    real(kind=DP) :: amodulus
 !
-   complex(kind=DP), allocatable ::charge_g(:), v_uno(:), v_due(:), v_point(:), v_mean(:), charge_g_due(:)
+   complex(kind=DP), allocatable ::charge_g(:),  v_point(:), v_mean(:), charge_g_due(:), &
+           charge_g_tre(:)
 !
    complex(kind=DP), allocatable ::exgradcharge_g(:, :)
 !
-   integer ::icoord, enne, ir !, npwold
+   integer ::icoord, enne, ir
 !
-   logical  :: l_test
+!   logical  :: l_test
    real(DP) :: M(nbnd, nbnd), emme(nbnd, nbnd), kcurrent(3), s(nbnd, nbnd), ss(nbnd, nbnd), &
-               kcurrent_a(3), kcurrent_b(3), ecurrent(3)
+               kcurrent_a(3), kcurrent_b(3), ecurrent(3), &
+               sa(nbnd, nbnd), ssa(nbnd, nbnd), sb(nbnd, nbnd), ssb(nbnd,nbnd)
+
    integer  :: inbd, jbnd, ig, ipol
    integer, external :: find_free_unit
 
-   write (stdout, *) 'INIZIO ROUTINE HARTREE & KOHN'
-   !npwold=npw
+   write (stdout, *) 'BEGIN: HARTREE & KOHN'
+
+   if ( (get_igcx() /= 3) .or. (get_igcc() /=4 ) ) then
+           do_xc_curr=.false.
+           if ( (get_igcx() /= 0) .or. (get_igcc() /=0 ) ) then
+                call errore('ENERGY CURRENT', 'XC NOT PBE OR LDA. ABORT.', 1)  
+           end if        
+   else
+           do_xc_curr=.true.
+   end if 
+
    npw = npwx ! only gamma
    call start_clock('routine_hartree')
    call start_clock('hartree_current')
    call init_hartree()
-!-------------------------------HARTREE---------------------------------------------------------
-!call flush_unit(stdout)
-!Il calcolo della corrente di Hartree e quella di Kohn-Sham
-!richiedono che in memoria esistano contemporaneamente le funzioni d'onda a due tempi diversi t e t'= t-Dt,
-!dove Dt e' l'intervallo usato per la derivata numerica.
-!Quantita' con indice uno o prive di indici si riferiscono a quantita' calcolate al tempo t (i.e. prefix,charge_g,evc_uno)
-!e l'indice due si riferisce a quantita' calcolate al tempo t'=t-Dt (i.e. prefix_due,charge_due,evc_due)
 
-!-------STEP1: lettura e allocazione (npwx = number of plane waves (npwx>npw per comodita'), nbnd = number of bands (n_electrons/2 per insulators))
+!-------------------------------HARTREE---------------------------------------------------------
+! Calculation of Hartree, exchange and Kohn-Sham currents require that there is access in memory
+! simultaneously to the wavefunctions evaluated at two (or three) different time steps (t-Dt), t and t+Dt
+! , where Dt is the time step used for the numerical derivative (if 3 points are used with a factor 1/2).
+! wavefunctions are stored in the scf_all type. scf_all%t_minus,t_zero,t_plus have are types that store 
+! wfc and position and velocities of atoms that were used to compute the wfcs.
+! if only 2 points are used, t_minus == t_zero
+
+!-------STEP1: reading and allocation (npwx = number of plane waves (npwx>npw), nbnd = number of bands (n_electrons/2 for insulators))
    allocate (tmp(npwx, nbnd))
    allocate (evp(npwx, nbnd))
    allocate (charge_g(ngm))
    allocate (charge_g_due(ngm))
+   if (three_point_derivative) &
+       allocate (charge_g_tre(ngm))
    allocate (charge(dffts%nnr))
-   allocate (fac(ngm))
-   allocate (v_uno(ngm))
-   allocate (v_due(ngm))
    allocate (v_point(ngm))
    allocate (v_mean(ngm))
 !
@@ -88,139 +112,59 @@ subroutine routine_hartree()
    allocate (exgradcharge_g(3, ngm))
    allocate (exdotcharge_r(dffts%nnr))
 
-!-------STEP2.1: inizializzazione di charge_g, la carica al tempo t.
-! charge_g = densità di carica nello spazio reciproco. Si ottiene dalla FFT di |evc(r)|^2, dove evc(r)=IFFT(evc)
-! per ottimizzare: fa 2 bande alla volta con una sola IFFT
+!-------STEP2.1: calculation of charge_g, the charge in reciprocal space at time t+Dt.
 
-!TODO: call QE routine
-!TODO: use qe computed charge
-   charge = 0.d0
-   do iv = 1, nbnd, 2
-      psic = 0.d0
-      if (iv == nbnd) then
-         psic(dffts%nl(1:npw)) = evc_uno(1:npw, iv)
-         psic(dffts%nlm(1:npw)) = CONJG(evc_uno(1:npw, iv))
-      else
-         psic(dffts%nl(1:npw)) = evc_uno(1:npw, iv) + (0.D0, 1.D0)*evc_uno(1:npw, iv + 1)
-         psic(dffts%nlm(1:npw)) = CONJG(evc_uno(1:npw, iv) - (0.D0, 1.D0)*evc_uno(1:npw, iv + 1))
-      end if
-      call invfft('Wave', psic, dffts)
-      charge(1:dffts%nnr) = charge(1:dffts%nnr) + dble(psic(1:dffts%nnr))**2.0
-      if (iv /= nbnd) then
-         charge(1:dffts%nnr) = charge(1:dffts%nnr) + dimag(psic(1:dffts%nnr))**2.0 !is dimag standard fortran?
-      end if
-   end do
-   q_tot = 0.
-   do i = 1, dffts%nnr
-      q_tot = q_tot + charge(i)
-   end do
-   q_tot = q_tot/(dffts%nr1*dffts%nr2*dffts%nr3)
-   call mp_sum(q_tot, intra_pool_comm)
-   IF (ionode) THEN
-      print *, 'check_charge', q_tot
-   ENDIF
-!moltiplico per due causa degenerazione di spin
-   charge(1:dffts%nnr) = charge(1:dffts%nnr)*2.d0
+call compute_charge(psic, scf_all%t_plus%evc, npw, nbnd, ngm, dffts, charge, charge_g)
+
+!!!!!!!!!!!!------------ Saving some quantities for the evaluation of the Exchange-correlation current 1/2  -------------!!!!!!!!!!!!!!!!!!
+
+   if (do_xc_curr) then
+! copying of charge in real space
+     excharge_r(1:dffts%nnr) = charge(1:dffts%nnr)
+     do icoord = 1, 3
 !
-!calcolo carica in spazio reciproco (FFT di psic)
-   psic = 0.d0
-   psic(1:dffts%nnr) = dcmplx(charge(1:dffts%nnr), 0.d0)
-   call fwfft('Rho', psic, dffts)
-   charge_g(1:ngm) = psic(dffts%nl(1:ngm))
-
-!!!!!!!!!!!!------------primo exchange-corr_intermezzo 1/2  -------------!!!!!!!!!!!!!!!!!!
-!copio la densità di carica in spazio reale
-   excharge_r(1:dffts%nnr) = charge(1:dffts%nnr)
-   do icoord = 1, 3
+       do igm = 1, ngm
+          exgradcharge_g(icoord, igm) = charge_g(igm)*(0.d0, 1.d0)*g(icoord, igm)*tpiba
+       end do
 !
-      do igm = 1, ngm
-         exgradcharge_g(icoord, igm) = charge_g(igm)*(0.d0, 1.d0)*g(icoord, igm)*tpiba
-      end do
+       psic = 0.d0
+       psic(dffts%nl(1:ngm)) = exgradcharge_g(icoord, 1:ngm)
+       psic(dffts%nlm(1:ngm)) = CONJG(exgradcharge_g(icoord, 1:ngm))
 !
-      psic = 0.d0
-      psic(dffts%nl(1:ngm)) = exgradcharge_g(icoord, 1:ngm)
-      psic(dffts%nlm(1:ngm)) = CONJG(exgradcharge_g(icoord, 1:ngm))
+       call invfft('Rho', psic, dffts)
 !
-      call invfft('Rho', psic, dffts)
+       exgradcharge_r(icoord, 1:dffts%nnr) = dble(psic(1:dffts%nnr))
+     end do
+   end if   
 !
-      exgradcharge_r(icoord, 1:dffts%nnr) = dble(psic(1:dffts%nnr))
-   end do
+!!!!!!!!!!!!------------- end saving quantities for XC current----------------- !!!!!!!!!!!!!!!!!!!!
+
+
+!-------STEP2.2-------inizializing chargeg_due, charge at tempo t-Dt.
+call compute_charge(psic, scf_all%t_minus%evc, npw, nbnd, ngm, dffts, charge, charge_g_due)
+
+!!!!!!!!!!!!------------Saving quantities for XC current 2/2 -------------!!!!!!!!!!!!!!!!!!
 !
-!!!!!!!!!!!!------------- fine intermezzo----------------- !!!!!!!!!!!!!!!!!!!!
+   if (do_xc_curr) then
+       exdotcharge_r(1:dffts%nnr) = (excharge_r(1:dffts%nnr) - charge(1:dffts%nnr))/delta_t
+   end if
+       !
+!!!!!!!!!!!!------------- End saving quantities for XC current----------------- !!!!!!!!!!!!!!!!!!!!
 
-!TODO: use sum_bands?
-!-------STEP2.2-------inizializzazione di chargeg_due, la carica al tempo t-Dt.
-   charge = 0.d0
-   do iv = 1, nbnd, 2
-      psic = 0.d0
-      if (iv == nbnd) then
-         psic(dffts%nl(1:npw)) = evc_due(1:npw, iv)
-         psic(dffts%nlm(1:npw)) = CONJG(evc_due(1:npw, iv))
-      else
-         psic(dffts%nl(1:npw)) = evc_due(1:npw, iv) + (0.D0, 1.D0)*evc_due(1:npw, iv + 1)
-         psic(dffts%nlm(1:npw)) = CONJG(evc_due(1:npw, iv) - (0.D0, 1.D0)*evc_due(1:npw, iv + 1))
-      end if
-      call invfft('Wave', psic, dffts)
-      charge(1:dffts%nnr) = charge(1:dffts%nnr) + dble(psic(1:dffts%nnr))**2.0
-      if (iv /= nbnd) then
-         charge(1:dffts%nnr) = charge(1:dffts%nnr) + dimag(psic(1:dffts%nnr))**2.0
-      end if
-   end do
-   q_tot = 0.
-   do i = 1, dffts%nnr
-      q_tot = q_tot + charge(i)
-   end do
-   q_tot = q_tot/(dffts%nr1*dffts%nr2*dffts%nr3)
-   call mp_sum(q_tot, intra_pool_comm)
-   if (ionode) print *, 'check_charge', q_tot
-!moltiplico per due causa degenerazione di spin
-   charge(1:dffts%nnr) = charge(1:dffts%nnr)*2.d0
 
-!!!!!!!!!!!!------------secondo exchange-corr_intermezzo 2/2 -------------!!!!!!!!!!!!!!!!!!
-!
-   exdotcharge_r(1:dffts%nnr) = (excharge_r(1:dffts%nnr) - charge(1:dffts%nnr))/delta_t
-!
-!!!!!!!!!!!!------------- fine intermezzo----------------- !!!!!!!!!!!!!!!!!!!!
+!-------STEP3----- computation of Hartree potentials from the charges just computed.
+!-------STEP4-----  and numerical derivatives of Hartree potentials
+!the difference with three_point_derivative is that I use the potential at t_zero as v_mean
+!in place of the average between t_plus and t_minus
+if (three_point_derivative) then
+    call compute_charge(psic, scf_all%t_zero%evc, npw, nbnd, ngm, dffts, charge, charge_g_tre)
+    call compute_hartree_vpoint_vmean(v_mean, v_point, g, gstart, omega, ngm, e2, fpi, tpiba2, delta_t,&
+            charge_g, charge_g_due, charge_g_tre)
+else
+    call compute_hartree_vpoint_vmean(v_mean, v_point, g, gstart, omega, ngm, e2, fpi, tpiba2, delta_t, charge_g, charge_g_due)
+endif
 
-!
-!calcolo carica due in spazio reciproco (FFT di psic)
-   psic = 0.d0
-   psic(1:dffts%nnr) = dcmplx(charge(1:dffts%nnr), 0.d0)
-   call fwfft('Rho', psic, dffts)
-   charge_g_due(1:ngm) = psic(dffts%nl(1:ngm))
-
-!-------STEP3----- calcolo dei potenziali di Hartree a partire dalle cariche appena trovate.
-!TODO: use qe routine!!
-!calcolo del potenziale v_uno e di fac
-! fac(G) = e2*fpi/(tpiba2*G^2*omega)
-! v(G) = charge(G)*fac
-   if (gstart == 2) fac(1) = 0.d0
-   do igm = gstart, ngm
-      qq_fact = g(1, igm)**2.d0 + g(2, igm)**2.d0 + g(3, igm)**2.d0
-      fac(igm) = (e2*fpi/(tpiba2*qq_fact))
-   end do
-   fac(:) = fac(:)/omega
-
-   do igm = 1, ngm
-      v_uno(igm) = charge_g(igm)*fac(igm)
-   end do
-
-!medesimo codice per il calcolo di v_due
-   do igm = 1, ngm
-      v_due(igm) = charge_g_due(igm)*fac(igm)
-   end do
-
-!-------STEP4----- derivate numeriche dei potenziali
-
-!A questo punto si esegue il calcolo di v_point e v_mean
-   do igm = 1, ngm
-      v_point(igm) = (v_uno(igm) - v_due(igm))/delta_t
-   end do
-   do igm = 1, ngm
-      v_mean(igm) = (v_uno(igm) + v_due(igm))/2.d0
-   end do
-
-!-------STEP 5----- applicazione formula finale, formula 1.17 del manuale.
+!-------STEP 5----- Application of final formula.
 
    J_hartree = 0.d0
    do igm = gstart, ngm
@@ -230,86 +174,133 @@ subroutine routine_hartree()
 
    call stop_clock('hartree_current')
    call print_clock('hartree_current')
-   if (ionode) print *, 'CORRENTE HARTREE CALCOLATA'
+   if (ionode) print *, 'HARTREE CURRENT CALCULATED'
 
 !-----------------EXCHANGE-CORRELATION-----------------------------------------------
+
    call start_clock('xc_current')
 
-   exdotcharge_r(1:dffts%nnr) = exdotcharge_r(1:dffts%nnr)/omega
-   excharge_r(1:dffts%nnr) = excharge_r(1:dffts%nnr)/omega
-   exgradcharge_r(1:3, 1:dffts%nnr) = exgradcharge_r(1:3, 1:dffts%nnr)/omega
-!
    J_xc(1:3) = 0.d0
+
+   if (do_xc_curr) then 
+       exdotcharge_r(1:dffts%nnr) = exdotcharge_r(1:dffts%nnr)/omega
+       excharge_r(1:dffts%nnr) = excharge_r(1:dffts%nnr)/omega
+       exgradcharge_r(1:3, 1:dffts%nnr) = exgradcharge_r(1:3, 1:dffts%nnr)/omega
 !
-   do ir = 1, dffts%nnr
-      if (excharge_r(ir) > 1.0E-10_DP) then
-         call pbex_current(abs(excharge_r(ir)), exgradcharge_r(1:3, ir), 1, update_a(1:3))
-         call pbec_current(abs(excharge_r(ir)), exgradcharge_r(1:3, ir), 1, update_b(1:3))
-         update(1:3) = e2*(update_a(1:3) + update_b(1:3))
-         update(1:3) = -update(1:3)*exdotcharge_r(ir)*excharge_r(ir)
-         J_xc(1:3) = J_xc(1:3) + update(1:3)
-      end if
-   end do
 !
-   call mp_sum(J_xc, intra_pool_comm)
+       do ir = 1, dffts%nnr
+          if (excharge_r(ir) > 1.0E-10_DP) then
+             call pbex_current(abs(excharge_r(ir)), exgradcharge_r(1:3, ir), 1, update_a(1:3))
+             call pbec_current(abs(excharge_r(ir)), exgradcharge_r(1:3, ir), 1, update_b(1:3))
+             update(1:3) = e2*(update_a(1:3) + update_b(1:3))
+             update(1:3) = -update(1:3)*exdotcharge_r(ir)*excharge_r(ir)
+             J_xc(1:3) = J_xc(1:3) + update(1:3)
+          end if
+       end do
 !
-!elemento di volume
+       call mp_sum(J_xc, intra_pool_comm)    
 !
-   J_xc(1:3) = J_xc(1:3)*omega/(dffts%nr1*dffts%nr2*dffts%nr3)
+!Volume element
 !
+       J_xc(1:3) = J_xc(1:3)*omega/(dffts%nr1*dffts%nr2*dffts%nr3)
+!
+   end if
 
    call stop_clock('xc_current')
    call print_clock('xc_current')
-   if (ionode) print *, 'CORRENTE X-C CALCOLATA'
-!!la corrente appena calcolata si può fare senza scrivere più di 5 righe di codice probabilmente usando quello che c'è già in QE
+   if (ionode) print *, 'X-C CURRENT CALCULATED'
 
 !---------------------------------KOHN------------------------------------------------
    call start_clock('kohn_current')
+   call scf_result_set_global_variables(scf_all%t_zero) ! this set evc, tau and vel from saved values
    allocate (dpsi(npwx, nbnd))
    allocate (dvpsi(npwx, nbnd))
-! per il preconditioning:
+! For preconditioning:
    do ig = 1, npw
       igk_k(ig, 1) = ig
       g2kin(ig) = ((xk(1, 1) + g(1, igk_k(ig, 1)))**2 + &
                    (xk(2, 1) + g(2, igk_k(ig, 1)))**2 + &
                    (xk(3, 1) + g(3, igk_k(ig, 1)))**2)*tpiba2
    end do
-! inizializzazioni potenziali che servono per fare  H|psi>
-! TODO: sono già inizializzati
+! init potentials needed to evaluate  H|psi>
    call init_us_1()
    call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
    call allocate_bec_type(nkb, nbnd, becp)
    call calbec(npw, vkb, evc, becp)
 
-   l_test = .true.
-   if (l_test) then
-      s = 0.d0
-! calcola s = < evc_due, evc_uno >, toglie un contributo a G=0
-      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, evc_due, 2*npwx, evc_uno, 2*npwx, 0.d0, s, nbnd)
+!   l_test = .true.
+!   if (.not. l_test) then
+!
+!      s = 0.d0
+!! computed s = < evc_due, evc_uno >, remove contribution at G=0
+!      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, scf_all%t_plus%evc, 2*npwx, scf_all%t_minus%evc, 2*npwx, 0.d0, s, nbnd)
+!      if (gstart == 2) then
+!         do ibnd = 1, nbnd
+!            do jbnd = 1, nbnd
+!               s(ibnd, jbnd) = s(ibnd, jbnd) - dble(conjg(scf_all%t_plus%evc(1, ibnd))*scf_all%t_minus%evc(1, jbnd))
+!            end do
+!         end do
+!      end if
+!      call mp_sum(s, intra_pool_comm)
+!! computes phi_v^c_punto using <s,s>
+!      call dgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, s, nbnd, s, nbnd, 0.d0, ss, nbnd)
+!      evp = 0.d0
+!      do ibnd = 1, nbnd
+!         do jbnd = 1, nbnd
+!            do ig = 1, npw
+!               evp(ig, ibnd) = evp(ig, ibnd) - scf_all%t_plus%evc(ig, jbnd)*s(jbnd, ibnd)
+!               evp(ig, ibnd) = evp(ig, ibnd) + scf_all%t_minus%evc(ig, jbnd)*ss(ibnd, jbnd)
+!            end do
+!         end do
+!      end do
+!      evp(:, :) = evp(:, :)/delta_t
+!
+!   else
+
+      sa = 0.d0
+      sb = 0.d0 
+
+! computed sb = < evc_due, evc_uno >, sa = <evc_uno, evc_uno> remove contribution at G=0
+! sb is the old s
+! sb is a multiple of the identity if 2 points are used (t_minus==t_zero)
+
+      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, scf_all%t_plus%evc, 2*npwx, scf_all%t_zero%evc, 2*npwx, 0.d0, sa, nbnd)
+      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, scf_all%t_minus%evc, 2*npwx, scf_all%t_zero%evc, 2*npwx, 0.d0, sb, nbnd)
       if (gstart == 2) then
          do ibnd = 1, nbnd
             do jbnd = 1, nbnd
-               s(ibnd, jbnd) = s(ibnd, jbnd) - dble(conjg(evc_due(1, ibnd))*evc_uno(1, jbnd))
+               sa(ibnd, jbnd) = sa(ibnd, jbnd) - dble(conjg(scf_all%t_plus%evc(1, ibnd))*scf_all%t_zero%evc(1, jbnd))
+               sb(ibnd, jbnd) = sb(ibnd, jbnd) - dble(conjg(scf_all%t_minus%evc(1, ibnd))*scf_all%t_zero%evc(1, jbnd))
             end do
          end do
       end if
-      call mp_sum(s, intra_pool_comm)
-! calcola phi_v^c_punto usando <s,s>
-      call dgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, s, nbnd, s, nbnd, 0.d0, ss, nbnd)
+      call mp_sum(sa, intra_pool_comm)
+      call mp_sum(sb, intra_pool_comm)
+! computes phi_v^c_punto using <s,s>
+
+      call dgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, sa, nbnd, sa, nbnd, 0.d0, ssa, nbnd)
+      call dgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, sb, nbnd, sb, nbnd, 0.d0, ssb, nbnd)
+
       evp = 0.d0
       do ibnd = 1, nbnd
          do jbnd = 1, nbnd
             do ig = 1, npw
-               evp(ig, ibnd) = evp(ig, ibnd) - evc_due(ig, jbnd)*s(jbnd, ibnd)
-               evp(ig, ibnd) = evp(ig, ibnd) + evc_uno(ig, jbnd)*ss(ibnd, jbnd)
+
+               evp(ig, ibnd) = evp(ig, ibnd) + scf_all%t_plus%evc(ig, jbnd)*sa(jbnd, ibnd)
+               evp(ig, ibnd) = evp(ig, ibnd) - scf_all%t_zero%evc(ig, jbnd)*ssa(ibnd, jbnd)
+
+               evp(ig, ibnd) = evp(ig, ibnd) - scf_all%t_minus%evc(ig, jbnd)*sb(jbnd, ibnd)
+               evp(ig, ibnd) = evp(ig, ibnd) + scf_all%t_zero%evc(ig, jbnd)*ssb(ibnd, jbnd)
+
             end do
          end do
       end do
-      evp(:, :) = evp(:, :)/delta_t
-   end if
+      evp(:, :) = evp(:, :)/delta_t 
+
+!   end if
 
    tmp(:, :) = (0.d0, 0.d0)
-!fa H|evp>  cioe' H|phi_v^c_punto> e lo mette in tmp:
+   !does H|evp>  i.e. H|phi_v^c_punto> and saves it into tmp:
    call h_psi(npwx, npw, nbnd, evp, tmp)
    kcurrent = 0.d0
    kcurrent_a = 0.d0
@@ -317,14 +308,15 @@ subroutine routine_hartree()
    ecurrent = 0.d0
    polariz: do ipol = 1, 3
       call start_clock('project')
-      ! calcola la proiezione sulla banda di conduzione
+      ! computes projection
       call project(ipol)
       call stop_clock('project')
       call print_clock('project')
 
       call start_clock('kohn-first')
       emme = 0.d0
-      ! prodotto scalare
+
+      ! scalar product
       call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, dvpsi, 2*npwx, tmp, 2*npwx, 0.d0, emme, nbnd)
       if (gstart == 2) then
          do ibnd = 1, nbnd
@@ -354,7 +346,7 @@ subroutine routine_hartree()
       end if
       call mp_sum(emme, intra_pool_comm)
 
-      ! et contiene gli autovalori
+      ! et containes the eigvenvalues
       do ibnd = 1, nbnd
          kcurrent(ipol) = kcurrent(ipol) + et(ibnd, 1)*emme(ibnd, ibnd)
          kcurrent_b(ipol) = kcurrent_b(ipol) + et(ibnd, 1)*emme(ibnd, ibnd)
@@ -364,7 +356,7 @@ subroutine routine_hartree()
       call stop_clock('kohn-second')
       call print_clock('kohn-second')
 
-      if (ionode) write (*, "('  KOHN POLARIZZAZIONE ',I3,' COMPLETATA')") ipol
+      if (ionode) write (*, "('  KOHN POLARIZATION ',I3,' COMPLETED')") ipol
 
    end do polariz
    J_kohn = 0.d0
@@ -378,19 +370,18 @@ subroutine routine_hartree()
       J_kohn(:) = J_kohn(:) + 2.d0*at(:, ipol)*real(kcurrent(ipol))/amodulus
       J_kohn_a(:) = J_kohn_a(:) + 2.d0*at(:, ipol)*real(kcurrent_a(ipol))/amodulus
       J_kohn_b(:) = J_kohn_b(:) + 2.d0*at(:, ipol)*real(kcurrent_b(ipol))/amodulus
-      J_electron(:) = J_electron(:) + 2.d0*e2*at(:, ipol)*real(ecurrent(ipol))/amodulus
+      J_electron(:) = J_electron(:) + 2.d0*2.d0*at(:, ipol)*real(ecurrent(ipol))/amodulus
 !    J_kohn(ipol)=J_kohn(ipol)+2.d0*real(kcurrent(ipol))
    end do
    call stop_clock('kohn_current')
    call print_clock('kohn_current')
    !npw=npwold
-   if (ionode) print *, 'CORRENTE KOHN CALCOLATA'
+   if (ionode) print *, 'KOHN CURRENT CALCULATED'
 !---------------------------------------------------------------------------
    deallocate (charge)
    deallocate (charge_g)
-   deallocate (fac)
-   deallocate (v_uno)
-   deallocate (v_due)
+   deallocate (charge_g_due)
+   if (allocated(charge_g_tre)) deallocate (charge_g_tre)
    deallocate (v_point)
    deallocate (v_mean)
    call deallocate_bec_type(becp)

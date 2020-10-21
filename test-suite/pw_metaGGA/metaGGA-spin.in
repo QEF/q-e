@@ -12,6 +12,7 @@
  &electrons
  conv_thr = 1.D-7,
  mixing_beta = 0.3,
+ diago_david_ndim=4
  /
 ATOMIC_SPECIES
  Fe  1.  Fe.pbe-mt_fhi.UPF

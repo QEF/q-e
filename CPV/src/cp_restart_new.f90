@@ -66,7 +66,7 @@ MODULE cp_restart_new
       USE cell_base,                ONLY : ibrav, alat, tpiba, s_to_r
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
                                            amass, iforce, ityp 
-      USE funct,                    ONLY : get_dft_name, get_inlc, &
+      USE funct,                    ONLY : get_dft_name, &
            dft_is_hybrid, get_exx_fraction, get_screening_parameter, &
            dft_is_nonlocc, get_nonlocc_name
       USE ldaU_cp,                  ONLY : lda_plus_U, ns, Hubbard_l, &

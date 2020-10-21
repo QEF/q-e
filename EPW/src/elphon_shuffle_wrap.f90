@@ -40,14 +40,15 @@
   USE cell_base,     ONLY : at, bg, alat, omega, tpiba
   USE symm_base,     ONLY : irt, s, nsym, ft, sname, invs, s_axis_to_cart,      &
                             sr, nrot, set_sym_bl, find_sym, inverse_s, t_rev,   &
-                            remove_sym, allfrac, time_reversal
+                            allfrac, time_reversal
   USE phcom,         ONLY : evq
   USE qpoint,        ONLY : igkq, xq, eigqts
   USE modes,         ONLY : nmodes, u, npert
   USE lr_symm_base,  ONLY : minus_q, rtau, gi, gimq, irotmq, nsymq, invsymq
   USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem, vme,     &
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir,       &
-                            nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, lpolar, system_2d
+                            nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, lpolar, system_2d, &
+                            fixsym, epw_noinv
   USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, umat, umat_all, veff,&
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat, nbndep,    &
                             ngxx, exband, wscache, area, ngxxf, ng0vec, shift,  &
@@ -57,18 +58,16 @@
   USE fft_base,      ONLY : dfftp
   USE control_ph,    ONLY : u_from_file
   USE noncollin_module, ONLY : m_loc, npol, noncolin
-  USE iotk_module,   ONLY : iotk_open_read, iotk_scan_dat, iotk_free_unit,      &
-                            iotk_close_read
   USE division,      ONLY : fkbounds
   USE uspp,          ONLY : okvan
   USE spin_orb,      ONLY : lspinorb
   USE lrus,          ONLY : becp1
-  USE becmod,        ONLY : becp, deallocate_bec_type
+  USE becmod,        ONLY : deallocate_bec_type
   USE phus,          ONLY : int1, int1_nc, int2, int2_so, alphap
   USE kfold,         ONLY : createkmap_pw2, createkmap
-  USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, read_disp_pattern,       &
-                            copy_sym_epw
-  USE io_epw,        ONLY : read_ifc, readdvscf, readgmap
+  USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, copy_sym_epw, fix_sym
+  USE ph_restart,    ONLY : read_disp_pattern_only
+  USE io_epw,        ONLY : read_ifc_epw, readdvscf, readgmap
   USE poolgathering, ONLY : poolgather
   USE rigid_epw,     ONLY : compute_umn_c
   USE rotate,        ONLY : rotate_epmat, rotate_eigenm, star_q2, gmap_sym
@@ -320,10 +319,10 @@
     IF (iverbosity == 1) WRITE(stdout, 15) ngxx
 15  FORMAT(5x,'Estimated size of gmap: ngxx =', i5)
     !
-    ALLOCATE(gmapsym(ngxxf, 48), STAT = ierr)
+    ALLOCATE(gmapsym(ngxxf, nsym), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating gmapsym', 1)
     gmapsym = 0
-    ALLOCATE(eigv(ngxxf, 48), STAT = ierr)
+    ALLOCATE(eigv(ngxxf, nsym), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating eigv', 1)
     eigv = czero
     !
@@ -379,10 +378,22 @@
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating ifc', 1)
     ifc(:, :, :, :, :, :, :) = zero
   ENDIF
-  !
+  ! 
+  ! SP: Symmetries needs to be consistent with QE so that the order of the q in the star is the
+  !     same as in the .dyn files produced by QE.
+  ! 
   ! Initialize symmetries and create the s matrix
+  s(:, :, :) = 0 ! Symmetry in crystal axis with dim: 3,3,48
   CALL set_sym_bl()
   !
+  ! Setup Bravais lattice symmetry
+  WRITE(stdout,'(5x,a,i3)') "Symmetries of Bravais lattice: ", nrot
+  !
+  ! Setup crystal symmetry
+  CALL find_sym(nat, tau, ityp, .FALSE., m_loc)
+  IF (fixsym) CALL fix_sym(.FALSE.)
+  WRITE(stdout, '(5x, a, i3)') "Symmetries of crystal:         ", nsym
+  ! 
   IF (epwread .AND. .NOT. epbread) THEN
     CONTINUE
   ELSE
@@ -416,25 +427,13 @@
     bmat(:, :, :, :)      = czero
     cu(:, :, :)           = czero
     cuq(:, :, :)          = czero
+    sxq(:, :)             = zero
     !
     ! read interatomic force constat matrix from q2r
     IF (lifc) THEN
-      CALL read_ifc
+      CALL read_ifc_epw
     ENDIF
-    !
-    ! SP: The symmetries are now consistent with QE 5. This means that the order of the q in the star
-    !     should be the same as in the .dyn files produced by QE 5.
-    !
-    !     First we start by setting up the lattice & crystal symm. as done in PHonon/PH/q2qstar.f90
-    !
-    ! ~~~~~~~~ setup Bravais lattice symmetry ~~~~~~~~
-    WRITE(stdout,'(5x,a,i3)') "Symmetries of Bravais lattice: ", nrot
-    !
-    ! ~~~~~~~~ setup crystal symmetry ~~~~~~~~
-    CALL find_sym(nat, tau, ityp, .FALSE., m_loc)
-    IF (.NOT. allfrac) CALL remove_sym(dfftp%nr1, dfftp%nr2, dfftp%nr3)
-    WRITE(stdout, '(5x, a, i3)') "Symmetries of crystal:         ", nsym
-    !
+    ! 
     ! The following loop is required to propertly set up the symmetry matrix s.
     ! We here copy the calls made in PHonon/PH/init_representations.f90 to have the same s as in QE 5.
     DO iq_irr = 1, nqc_irr
@@ -491,18 +490,13 @@
       !
       IF (u_from_file) THEN
          ierr = 0
-         ! ... look for an empty unit (only ionode needs it)
-         !IF (meta_ionode) CALL iotk_free_unit(iunpun, ierr)
          dirname = TRIM(dvscf_dir) // TRIM(prefix) // '.phsave'
          filename = TRIM(dirname) // '/patterns.' // TRIM(int_to_char(iq_irr)) // '.xml'
          INQUIRE(FILE = TRIM(filename), EXIST = exst)
          IF (.NOT. exst) CALL errore('elphon_shuffle_wrap', &
                    'cannot open file for reading or writing', ierr)
-         CALL iotk_open_read(iunpattern, FILE = TRIM(filename), binary = .FALSE., ierr = ierr)
-         CALL read_disp_pattern(iunpattern, iq_irr, ierr)
+         CALL read_disp_pattern_only(iunpattern, filename, iq_irr, ierr)
          IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', ' Problem with modes file', 1)
-         !IF (meta_ionode) CALL iotk_close_read(iunpattern)
-         CALL iotk_close_read(iunpattern)
       ENDIF
       !
       WRITE(stdout, '(//5x, a)') REPEAT('=', 67)
@@ -538,7 +532,10 @@
       ! ######################### star of q #########################
       !
       sym_smallq(:) = 0
-      CALL star_q2(xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, .TRUE., sym_smallq)
+      CALL star_q2(xq, at, bg, nsym, s, invs, t_rev, nq, sxq, isq, imq, .TRUE., sym_smallq)
+      IF (fixsym) THEN
+        IF (epw_noinv) imq = 1 ! Any non-zero integer is ok.
+      ENDIF
       !
       ! The reason for xq instead of xq0 in the above is because xq is passed to QE through module
       xq0 = xq
@@ -553,12 +550,7 @@
       !
       CALL sgam_lr(at, bg, nsym, s, irt, tau, rtau, nat)
       !
-      IF (meta_ionode) THEN
-        CALL dynmat_asr(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, invs, s, irt, rtau, sumr)
-      ENDIF
-      CALL mp_bcast(zstar, meta_ionode_id, world_comm)
-      CALL mp_bcast(epsi , meta_ionode_id, world_comm)
-      CALL mp_bcast(dynq , meta_ionode_id, world_comm)
+      CALL dynmat_asr(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, invs, s, irt, rtau, sumr)
       !
       ! now dynq is the cartesian dyn mat (not divided by the masses)
       !
@@ -721,7 +713,7 @@
         ! are equal to 5+ digits).
         ! For any volunteers, please write to giustino@civet.berkeley.edu
         !
-        CALL elphon_shuffle(iq_irr, nqc_irr, nqc, gmapsym(:,isym1), eigv(:,isym1), isym, xq0, .FALSE.)
+        CALL elphon_shuffle(iq_irr, nqc_irr, nqc, gmapsym(:, isym1), eigv(:, isym1), isym, xq0, .FALSE.)
         !
         !  bring epmatq in the mode representation of iq_first,
         !  and then in the cartesian representation of iq
@@ -765,7 +757,7 @@
           !
           xq0 = -xq0
           !
-          CALL elphon_shuffle(iq_irr, nqc_irr, nqc, gmapsym(:,isym1), eigv(:,isym1), isym, xq0, .TRUE.)
+          CALL elphon_shuffle(iq_irr, nqc_irr, nqc, gmapsym(:, isym1), eigv(:, isym1), isym, xq0, .TRUE.)
           !  bring epmatq in the mode representation of iq_first,
           !  and then in the cartesian representation of iq
           !
@@ -843,7 +835,6 @@
     ENDDO
     DEALLOCATE(becp1, STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating becp1', 1)
-    CALL deallocate_bec_type(becp)
   ENDIF ! IF (.NOT. epbread .AND. .NOT. epwread) THEN
   !
   IF (my_image_id == 0) THEN

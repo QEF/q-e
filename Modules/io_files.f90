@@ -68,7 +68,6 @@ MODULE io_files
   INTEGER :: iunoldwfc   = 11 ! unit with old wavefunctions
   INTEGER :: iunoldwfc2  = 12 ! as above at step -2
   INTEGER :: iunhub      = 13 ! unit for saving Hubbard-U atomic wfcs * S 
-  INTEGER :: iunhub2     = 17 ! unit for saving Hubbard-U atomic wfcs 
   INTEGER :: iunsat      = 14 ! unit for saving (orthogonal) atomic wfcs * S
   INTEGER :: iunmix      = 15 ! unit for saving mixing information
   INTEGER :: iunwfc_exx  = 16 ! unit with exx wavefunctions
@@ -186,7 +185,8 @@ CONTAINS
     IF ( ionode ) ios = f_mkdir_safe( tmp_dir(1:length) )
     CALL mp_bcast ( ios, ionode_id, intra_image_comm )
     exst = ( ios == -1 )
-    IF ( ios > 0 ) CALL errore ('check_tempdir','tmp_dir cannot be opened',1)
+    IF ( ios > 0 ) CALL errore ('check_tempdir', 'temporary directory ' &
+            & // tmp_dir(1:length) // ' cannot be created or accessed',1)
     !
     ! ... let us check now if tmp_dir is visible on all nodes
     ! ... if not, a local tmp_dir is created on each node
@@ -592,13 +592,13 @@ SUBROUTINE davcio( vect, nword, unit, nrec, io )
      !
      READ( UNIT = unit, REC = nrec, IOSTAT = ios ) vect
      IF ( ios /= 0 ) CALL errore( 'davcio', &
-         & 'error while reading from file "' // TRIM(name) // '"', unit )
+         & 'error reading file "' // TRIM(name) // '"', unit )
      !
   ELSE IF ( io > 0 ) THEN
      !
      WRITE( UNIT = unit, REC = nrec, IOSTAT = ios ) vect
      IF ( ios /= 0 ) CALL errore( 'davcio', &
-         & 'error while writing from file "' // TRIM(name) // '"', unit )
+         & 'error writing file "' // TRIM(name) // '"', unit )
      !
   END IF
   !

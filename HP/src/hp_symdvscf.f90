@@ -27,7 +27,7 @@ SUBROUTINE hp_symdvscf (dvtosym)
 
   complex(DP) :: dvtosym (dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin_mag)
   ! the potential to be symmetrized
-  integer :: ftau(3,48)
+  integer :: ftau(3,48), s_scaled(3,3,48)
   integer :: is, ri, rj, rk, i, j, k, ipol, isym, irot
   !  counters
   real(DP) :: gf(3), gf2, n(3)
@@ -49,9 +49,8 @@ SUBROUTINE hp_symdvscf (dvtosym)
   n(2) = tpi / DBLE(dfftp%nr2)
   n(3) = tpi / DBLE(dfftp%nr3)
   !
-  ftau(1,1:nsymq) = NINT ( ft(1,1:nsymq)*dfftp%nr1 )
-  ftau(2,1:nsymq) = NINT ( ft(2,1:nsymq)*dfftp%nr2 )
-  ftau(3,1:nsymq) = NINT ( ft(3,1:nsymq)*dfftp%nr3 )
+  CALL scale_sym_ops( nsymq, s, ft, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+       s_scaled, ftau )
   !
   ! Symmetrize with -q if present (Sq = -q + G)
   !
@@ -77,7 +76,8 @@ SUBROUTINE hp_symdvscf (dvtosym)
                  !
                  ! Rotation and fractional translation: S^-1 * r - ftau
                  !
-                 CALL ruotaijk (s(1,1,irotmq),ftau(1,irotmq),i,j,k,dfftp%nr1,dfftp%nr2,dfftp%nr3,ri,rj,rk)
+                 CALL rotate_grid_point( s_scaled(1,1,irotmq), ftau(1,irotmq),&
+                      i,j,k,dfftp%nr1,dfftp%nr2,dfftp%nr3,ri,rj,rk)
                  !
                  aux2 = (0.d0, 0.d0)
                  aux2 = aux2 + dvtosym(ri,rj,rk,is) * phase(1) 
@@ -145,7 +145,8 @@ SUBROUTINE hp_symdvscf (dvtosym)
                  !
                  ! Rotation and fractional translation: S^-1 * r - ftau
                  !
-                 CALL ruotaijk (s(1,1,irot),ftau(1,irot),i,j,k,dfftp%nr1,dfftp%nr2,dfftp%nr3,ri,rj,rk)
+                 CALL rotate_grid_point( s_scaled(1,1,irot), ftau(1,irot),&
+                      i,j,k,dfftp%nr1,dfftp%nr2,dfftp%nr3,ri,rj,rk)
                  !
                  ! Calculate drho(S^-1 * r - ftau) * exp(iG*(r-tau_pert))
                  !

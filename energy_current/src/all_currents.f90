@@ -1,33 +1,44 @@
 program all_currents
-   use hartree_mod, only: evc_uno, evc_due, trajdir, first_step
+   use hartree_mod, only: trajdir, first_step,&
+           dvpsi_save, subtract_cm_vel, re_init_wfc_1, re_init_wfc_2,re_init_wfc_3,&
+           n_repeat_every_step, ethr_big_step, scf_all, multiple_scf_result_allocate,&
+           scf_result_set_from_global_variables, multiple_scf_result_deallocate, &
+           three_point_derivative, ave_cur, ethr_small_step
    USE environment, ONLY: environment_start, environment_end
    use io_global, ONLY: ionode
    use wavefunctions, only: evc
+   use wvfct, only: nbnd, npwx, npw
    use kinds, only: dp
    !trajectory reading stuff
-   use ions_base, only: nat
    use cpv_traj, only: cpv_trajectory, &
-      cpv_trajectory_initialize, cpv_trajectory_deallocate
+                       cpv_trajectory_initialize, cpv_trajectory_deallocate
+   use dynamics_module, only: vel
+   use ions_base, ONLY: tau, tau_format, nat
+   USE control_flags, ONLY: ethr
+   USE extrapolation, ONLY: update_pot
 
 !from ../PW/src/pwscf.f90
-   USE mp_global, ONLY: mp_startup
+   USE mp_global, ONLY: mp_startup, ionode_id
    USE mp_world, ONLY: world_comm
    use mp, ONLY: mp_bcast, mp_barrier
    USE mp_pools, ONLY: intra_pool_comm
    USE mp_bands, ONLY: intra_bgrp_comm, inter_bgrp_comm
-   !USE mp_exx,               ONLY : negrp
    USE read_input, ONLY: read_input_file
    USE command_line_options, ONLY: input_file_, command_line, ndiag_, nimage_
    USE check_stop, ONLY: check_stop_init
 !from ../Modules/read_input.f90
    USE read_namelists_module, ONLY: read_namelists
    USE read_cards_module, ONLY: read_cards
+   use zero_mod, only: vel_input_units
+   use averages, only: online_average_init
 
    implicit none
-   integer :: exit_status, ios
+   integer :: exit_status, ios, irepeat
+   logical :: print_stat
    type(cpv_trajectory) :: traj
-
-!from ../PW/src/pwscf.f90
+   real(kind=dp) :: vel_factor
+   real(kind=dp),allocatable :: tau_save(:,:)
+   !from ../PW/src/pwscf.f90
    include 'laxlib.fh'
 
 !from ../PW/src/pwscf.f90
@@ -51,14 +62,28 @@ program all_currents
 
    call mp_barrier(intra_pool_comm)
    call bcast_all_current_namelist()
+   if (vel_input_units == 'CP') then ! atomic units of cp are different
+       vel_factor = 2.0_dp
+       if (ionode)  &
+           write (*, *) 'Using CP units for velocities'
+   else if (vel_input_units == 'PW') then
+       if (ionode)  &
+           write (*, *) 'Using PW units for velocities'
+       vel_factor = 1.0_dp
+   else
+      call errore('all_currents', 'error: unknown vel_input_units', 1)
+   endif
+
+
    call set_first_step_restart()
    call iosys()    ! ../PW/src/input.f90    save in internal variables
    call check_stop_init() ! ../PW/src/input.f90
 
+
    !eventually read new positions and velocities from trajectory
    if (ionode) then
       !initialize trajectory reading
-      call cpv_trajectory_initialize(traj, trajdir, nat, 1.0_dp, 1.0_dp, 1.0_dp, ios=ios, circular=.true.)
+      call cpv_trajectory_initialize(traj, trajdir, nat, 1.0_dp, vel_factor, 1.0_dp, ios=ios, circular=.true.)
       if (ios == 0) then
          write (*, *) 'After first step from input file, I will read from the CPV trajectory ', trim(trajdir)
       else
@@ -82,24 +107,94 @@ program all_currents
    call init_zero() ! only once per all trajectory
    call setup_nbnd_occ() ! only once per all trajectory
 
+   if (ionode .and. first_step == 0) then !set velocities factor also in the input file step
+      vel = vel*vel_factor
+      call convert_tau(tau_format, nat, vel)
+   end if
+   CALL mp_bcast(vel, ionode_id, world_comm)
+
+   !initialize scf results object. Later it will saves evc, tau and vel arrays for t-dt, t and t+dt
+   call multiple_scf_result_allocate(scf_all,.true.)
+   if (n_repeat_every_step > 1) then
+       allocate (tau_save(3,nat))
+   end if
+
+   !loop over md steps starts here
    do
-      call run_pwscf(exit_status)
-      if (exit_status /= 0) exit
-
-      call prepare_next_step() ! this stores value of evc and setup tau and ion_vel
-
-      call run_pwscf(exit_status)
-      if (exit_status /= 0) goto 100 !shutdown everything and exit
-      if (allocated(evc_uno)) then
-         evc_uno = evc
-      else
-         allocate (evc_uno, source=evc)
+      if (ionode) then
+         if (subtract_cm_vel) then
+            !calculates center of mass velocity for each atomic species and subtract it
+            call cm_vel(vel)
+         else
+            !calculates center of mass velocity only, without modifying velocities
+            call cm_vel()
+         end if
+      endif
+      if (n_repeat_every_step > 1) then
+          tau_save = tau
+          !initialize average object. Average is computed in write_results sub
+          call online_average_init(ave_cur,.true.)
       end if
+      !the same steps can be calculated more than one time, to estimate stability or variance of the result
+      do irepeat = 1, n_repeat_every_step
+          if (irepeat > 1) then
+              if (ionode) &
+                  write (*,*) 'REPETITION ', irepeat - 1 
+              tau = tau_save
+          end if
+          if (n_repeat_every_step > 1 .and. irepeat .eq. n_repeat_every_step) then
+              print_stat=.true.
+          else 
+              print_stat=.false.
+          end if
 
-      !calculate energy current
-      call routine_hartree()
-      call routine_zero()
-      call write_results(traj)
+          call prepare_next_step(-1) !-1 goes back by dt, so we are in t-dt. Inside, after setting tau, we call hinit1 and update_pot
+          if (re_init_wfc_1) then
+              call init_wfc(1)
+              call sum_band()
+          end if
+          ethr = ethr_big_step
+          call run_pwscf(exit_status)
+          if (exit_status /= 0) goto 100 !shutdown everything and exit
+          !save evc, tau and vel for t-dt
+          call scf_result_set_from_global_variables(scf_all%t_minus)
+          if (three_point_derivative) then
+              call prepare_next_step(1) !1 advance by dt (so we are in the original positions)
+              if (re_init_wfc_2) then ! eventually, to set a random initial evc to do statistical tests
+                  call init_wfc(1)
+                  call sum_band()
+              end if
+              ethr = ethr_small_step
+              call run_pwscf(exit_status)
+              !evc_due = evc
+              if (exit_status /= 0) goto 100 !shutdown everything and exit
+              !save evc, tau and vel for t
+              call scf_result_set_from_global_variables(scf_all%t_zero)
+              call routine_zero() ! routine zero should be called in t
+          else
+              call scf_result_set_from_global_variables(scf_all%t_zero) !if we don't have 3pt derivative, zero and minus are equal
+          end if
+
+          call prepare_next_step(1) !1 advances by dt, so we are in t+dt
+          !if we don't do 3pt we are in t now
+
+          if (re_init_wfc_3) then
+              call init_wfc(1)
+              call sum_band()
+          end if
+          ethr = ethr_small_step
+          call run_pwscf(exit_status)
+          if (exit_status /= 0) goto 100 !shutdown everything and exit
+          !save evc, tau and vel for t+dt
+          call scf_result_set_from_global_variables(scf_all%t_plus)
+
+          if (.not. three_point_derivative) &
+              call routine_zero() ! we are in t in this case, and we call here routine zero
+
+          !calculate second part of energy current
+          call routine_hartree()
+          call write_results(traj,print_stat)
+      end do
       !read new velocities and positions and continue, or exit the loop
       if (.not. read_next_step(traj)) exit
    end do
@@ -108,28 +203,32 @@ program all_currents
 100 call laxlib_end()
    call cpv_trajectory_deallocate(traj)
    call deallocate_zero()
-   if (allocated(evc_uno)) deallocate (evc_uno)
-   if (allocated(evc_due)) deallocate (evc_due)
+   call multiple_scf_result_deallocate(scf_all)
+   if (allocated(tau_save)) deallocate(tau_save)
+   if (allocated(dvpsi_save)) deallocate(dvpsi_save)
    call stop_run(exit_status)
    call do_stop(exit_status)
    stop
 
 contains
 
-   subroutine write_results(traj)
+   subroutine write_results(traj,write_ave)
       use kinds, only: dp
       use ions_base, ONLY: nsp
+      use cell_base, only: alat
       use hartree_mod
       use zero_mod
       use io_global, ONLY: ionode
       use cpv_traj, only: cpv_trajectory, cpv_trajectory_get_last_step
       use traj_object, only: timestep
+      use averages
       implicit none
       type(cpv_trajectory), intent(in)  :: traj
+      logical,intent(in) :: write_ave
       type(timestep) :: ts
       integer :: iun, step, itype
       integer, external :: find_free_unit
-      real(dp) :: time
+      real(dp) :: time, J_tot(3)
 
       if (traj%traj%nsteps > 0) then
          call cpv_trajectory_get_last_step(traj, ts)
@@ -154,21 +253,31 @@ contains
          write (iun, '(A,3E20.12)') 'ionic_d:', i_current_d(:)
          write (iun, '(A,3E20.12)') 'ionic_e:', i_current_e(:)
          write (iun, '(A,3E20.12)') 'zero:', z_current(:)
-         write (iun, '(A,3E20.12)') 'total: ', J_xc + J_hartree + J_kohn + i_current + z_current
-         write (*, '(A,3E20.12)') 'total energy current: ', J_xc + J_hartree + J_kohn + i_current + z_current
+         J_tot =  J_xc + J_hartree + J_kohn + i_current + z_current
+         write (iun, '(A,3E20.12)') 'total: ', J_tot
+         write (*, '(A,3E20.12)') 'total energy current: ', J_tot
          close (iun)
          !WARNING: if you modify the following lines
          !remember to modify the set_first_step_restart() subroutine,
          !so we can read the file that here we are writing in the correct way
          open (iun, file=trim(file_output)//'.dat', position='append')
          write (iun, '(1I7,1E14.6,3E20.12,3E20.12)', advance='no') step, time, &
-                 J_xc + J_hartree + J_kohn + i_current + z_current, J_electron(1:3)
-         do itype=1,nsp
-             write (iun, '(3E20.12)', advance='no') v_cm(:,itype)
-             write (*, '(A,1I3,A,3E20.12)') 'center of mass velocity of type ',itype ,': ', v_cm(:,itype)
+            J_tot, J_electron(1:3)
+         do itype = 1, nsp
+            write (iun, '(3E20.12)', advance='no') alat*v_cm(:, itype)
+            write (*, '(A,1I3,A,3E20.12)') 'center of mass velocity of type ', itype, ': ', alat*v_cm(:, itype)
          end do
-         write (iun,'(A)') ''
+         write (iun, '(A)') ''
          close (iun)
+         call online_average_do(ave_cur,J_tot)
+         if (write_ave) then
+             open(iun, file=trim(file_output)//'.stat', position='append')
+             write (iun, '(1I7,1E14.6)', advance='no') step, time
+             call online_average_print(ave_cur,iun)
+             write (iun, '(A)') ''
+             close (iun)
+         end if
+
       end if
 
    end subroutine
@@ -187,14 +296,17 @@ contains
          eta, n_max, first_step, last_step, &
          ethr_small_step, ethr_big_step, &
          restart, subtract_cm_vel, step_mul, &
-         step_rem
+         step_rem, ec_test, add_i_current_b, &
+         save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
+         re_init_wfc_3, three_point_derivative, &
+         n_repeat_every_step
       !
       !   set default values for variables in namelist
       !
       delta_t = 1.d0
       n_max = 5 ! number of periodic cells in each direction used to sum stuff in zero current
       eta = 1.d0 ! ewald sum convergence parameter
-      init_linear = "nothing" ! 'scratch' or 'restart'. If 'scratch', saves a restart file in project routine. If 'restart', it starts from the saved restart file, and then save again it.
+!      init_linear = "nothing" ! 'scratch' or 'restart'. If 'scratch', saves a restart file in project routine. If 'restart', it starts from the saved restart file, and then save again it.
       file_output = "current_hz"
       ethr_small_step = 1.d-7
       ethr_big_step = 1.d-3
@@ -202,8 +314,16 @@ contains
       last_step = 0
       restart = .false.
       subtract_cm_vel = .false.
-      step_mul=1
-      step_rem=0
+      step_mul = 1
+      step_rem = 0
+      ec_test = .false.
+      add_i_current_b = .false.
+      save_dvpsi = .true.
+      re_init_wfc_1 = .false.
+      re_init_wfc_2 = .false.
+      re_init_wfc_3 = .false.
+      three_point_derivative = .true.
+      n_repeat_every_step = 1
       READ (iunit, energy_current, IOSTAT=ios)
       IF (ios /= 0) CALL errore('main', 'reading energy_current namelist', ABS(ios))
 
@@ -226,10 +346,18 @@ contains
       CALL mp_bcast(ethr_small_step, ionode_id, world_comm)
       CALL mp_bcast(ethr_big_step, ionode_id, world_comm)
       CALL mp_bcast(n_max, ionode_id, world_comm)
-      CALL mp_bcast(init_linear, ionode_id, world_comm)
+      CALL mp_bcast(save_dvpsi, ionode_id, world_comm)
       CALL mp_bcast(file_output, ionode_id, world_comm)
       CALL mp_bcast(step_mul, ionode_id, world_comm)
       CALL mp_bcast(step_rem, ionode_id, world_comm)
+      CALL mp_bcast(ec_test, ionode_id, world_comm)
+      CALL mp_bcast(add_i_current_b, ionode_id, world_comm)
+      CALL mp_bcast(re_init_wfc_1, ionode_id, world_comm)
+      CALL mp_bcast(re_init_wfc_2, ionode_id, world_comm)
+      CALL mp_bcast(re_init_wfc_3, ionode_id, world_comm)
+      CALL mp_bcast(three_point_derivative, ionode_id, world_comm)
+      CALL mp_bcast(n_repeat_every_step, ionode_id, world_comm)
+
    end subroutine
 
    subroutine set_first_step_restart()
@@ -246,14 +374,14 @@ contains
       if (.not. restart) return
       if (ionode) then
          iun = find_free_unit()
-         ios=0
+         ios = 0
          step1 = -1
          open (iun, file=trim(file_output)//'.dat')
-         write(*,*) 'reading file ', trim(file_output)//'.dat'
+         write (*, *) 'reading file ', trim(file_output)//'.dat'
          do while (ios == 0)
-            read (iun, *, iostat=ios) step, time, J, (Jdummy, i=1,nsp+1)
+            read (iun, *, iostat=ios) step, time, J, (Jdummy, i=1, nsp + 1)
             if (ios == 0) then
-               write(*,*) 'found: ', step, time, J
+               write (*, *) 'found: ', step, time, J
                step1 = step
                time1 = time
                J1 = J
@@ -285,9 +413,6 @@ contains
          if (tavel) &
             write (*, *) 'WARNING: VELOCITIES FROM INPUT FILE WILL BE IGNORED'
       end if
-
-      !eventually set first_step if restart
-
    end subroutine
 
    subroutine run_pwscf(exit_status)
@@ -317,33 +442,33 @@ contains
       use dynamics_module, only: vel
       use hartree_mod, only: v_cm
       implicit none
-      real(dp), intent(out), optional :: vel_cm(:,:)
+      real(dp), intent(out), optional :: vel_cm(:, :)
       integer :: iatom, itype
       integer, allocatable :: counter(:)
       real(dp) :: delta(3), mean(3)
       if (.not. allocated(v_cm)) &
-         allocate(v_cm(3,nsp))
-      allocate(counter(nsp))
+         allocate (v_cm(3, nsp))
+      allocate (counter(nsp))
       counter = 0
-      v_cm=0.0_dp
+      v_cm = 0.0_dp
 
-      do iatom=1,nat
-          itype=ityp(iatom)
-          counter(itype) = counter(itype) + 1
-          delta = (vel(:,iatom)-v_cm(:,itype))/real(counter(itype),dp)
-          v_cm(:,itype) = v_cm(:,itype) + delta
+      do iatom = 1, nat
+         itype = ityp(iatom)
+         counter(itype) = counter(itype) + 1
+         delta = (vel(:, iatom) - v_cm(:, itype))/real(counter(itype), dp)
+         v_cm(:, itype) = v_cm(:, itype) + delta
       end do
       if (present(vel_cm)) then
-          do iatom=1,nat
-              itype=ityp(iatom)
-              vel_cm(:,iatom)=vel_cm(:,iatom)-v_cm(:,itype)
-          end do
+         do iatom = 1, nat
+            itype = ityp(iatom)
+            vel_cm(:, iatom) = vel_cm(:, iatom) - v_cm(:, itype)
+         end do
       end if
-      
-      deallocate(counter)
+
+      deallocate (counter)
    end subroutine
 
-   subroutine prepare_next_step()
+   subroutine prepare_next_step(ipm)
       USE extrapolation, ONLY: update_pot
       USE control_flags, ONLY: ethr
       use ions_base, ONLY: tau, tau_format, nat
@@ -352,54 +477,32 @@ contains
       use io_global, ONLY: ionode, ionode_id
       USE mp_world, ONLY: world_comm
       use mp, ONLY: mp_bcast, mp_barrier
-      use hartree_mod, only: evc_due, delta_t, ethr_small_step, &
-                             subtract_cm_vel
-      use zero_mod, only: vel_input_units, ion_vel
+      use hartree_mod, only: delta_t, ethr_small_step, three_point_derivative
+      use zero_mod, only: vel_input_units
       use wavefunctions, only: evc
       implicit none
-      !save old evc
-      if (allocated(evc_due)) then
-         evc_due = evc
-      else
-         allocate (evc_due, source=evc)
-      end if
-      !set new positions
-      if (ionode) then
-         if (vel_input_units == 'CP') then ! atomic units of cp are different
-            vel = 2.d0*vel
-         else if (vel_input_units == 'PW') then
-            !do nothing
-         else
-            call errore('read_vel', 'error: unknown vel_input_units', 1)
-         endif
-         if ( subtract_cm_vel ) then
-         !calculate center of mass velocity for each atomic species and subtract it
-            call cm_vel(vel)
-         else
-            call cm_vel()
-         end if
-      endif
+      integer, intent(in) :: ipm
+      if (ipm /= 0 .and. ipm /= -1 .and. ipm /= 1) &
+           call errore('prepare_next_step', 'error: unknown timestep type')
       !broadcast
       CALL mp_bcast(tau, ionode_id, world_comm)
       CALL mp_bcast(vel, ionode_id, world_comm)
-      if (.not. allocated(ion_vel)) then
-         allocate (ion_vel, source=vel)
+      !set new positions
+      if (three_point_derivative) then
+          tau = tau + delta_t*vel*real(ipm,dp)/2.0_dp
       else
-         ion_vel = vel
-      endif
-      call convert_tau(tau_format, nat, vel)
-      tau = tau + delta_t*vel
+          tau = tau + delta_t*vel*real(ipm,dp)
+      end if
       call mp_barrier(world_comm)
       call update_pot()
       call hinit1()
-      ethr = ethr_small_step
+
    end subroutine
 
    function read_next_step(t) result(res)
       USE extrapolation, ONLY: update_pot
-      USE control_flags, ONLY: ethr
       use cpv_traj, only: cpv_trajectory, cpv_trajectory_initialize, cpv_trajectory_deallocate, &
-         cpv_trajectory_read_step, cpv_trajectory_get_step
+                          cpv_trajectory_read_step, cpv_trajectory_get_step
       use traj_object, only: timestep ! type for timestep data
       use kinds, only: dp
       use ions_base, ONLY: tau, tau_format, nat
@@ -408,7 +511,7 @@ contains
       use io_global, ONLY: ionode, ionode_id
       USE mp_world, ONLY: world_comm
       use mp, ONLY: mp_bcast, mp_barrier
-      use zero_mod, only: vel_input_units, ion_vel
+      use zero_mod, only: vel_input_units
       use hartree_mod, only: first_step, last_step, ethr_big_step, &
                              step_mul, step_rem
       implicit none
@@ -429,7 +532,7 @@ contains
                exit
             end if
             !if needed go on in the reading of trajectory
-            if (ts%nstep < first_step .or. mod(ts%nstep,step_mul) /= step_rem) then
+            if (ts%nstep < first_step .or. mod(ts%nstep, step_mul) /= step_rem) then
                write (*, *) 'SKIPPED STEP ', ts%nstep, ts%tps
                cycle
             end if
@@ -437,6 +540,7 @@ contains
             vel = ts%vel
             tau = ts%tau
             CALL convert_tau(tau_format, nat, tau)
+            call convert_tau(tau_format, nat, vel)
             res = .true.
             goto 200 ! exit the loop skipping 'finish': we will do an other calculation
          enddo
@@ -454,9 +558,6 @@ contains
             return
          end if
          first = .false.
-         call update_pot()
-         call hinit1()
-         ethr = ethr_big_step
 
       end if
 

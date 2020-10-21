@@ -6,7 +6,7 @@ MODULE zero_mod
    use becmod
 
    SAVE
-!variabili per potenziale non locale
+!non local potential variables
    logical  ::l_non_loc, l_tab
    real(DP), allocatable :: tabr(:, :, :, :)
    real(DP), allocatable :: tabr_d2y(:, :, :, :)
@@ -22,6 +22,9 @@ MODULE zero_mod
    !the component of the current here computed
    real(dp) ::z_current(3), i_current(3), i_current_a(3), i_current_b(3), i_current_c(3), i_current_d(3), i_current_e(3)
 
+   !sum or not i_current_b in i_current
+   logical :: add_i_current_b = .false.
+
    !variables depending on the step
    !wavefunction
    !complex(DP),allocatable :: evc_uno(:,:)
@@ -29,10 +32,10 @@ MODULE zero_mod
 
    !ion positions and velocities
    !real(DP), allocatable ::ion_pos(:,:)
-   real(DP), allocatable ::ion_vel(:, :)
+   !real(DP), allocatable ::ion_vel(:, :)
    !second ion positions and velocities read from input
    !real(DP), allocatable ::ion_pos2(:,:) ! must call convert_tau from ../PW/src/input.f90 to obtain correct units for positions
-   character(len=256) :: vel_input_units = 'CP'
+   character(len=256) :: vel_input_units = 'PW'
 
    !input from stdout
    integer        :: natoms !cutoff per somme in griglia reale
@@ -242,10 +245,10 @@ contains
 !  if (a==b) then
 !     y=y-comp_iso
 !  end if
-      if (a == b) then
-         call I_due_value(comp_iso, x, 1)
-         y = y - comp_iso
-      end if
+      !if (a == b) then
+      !   call I_due_value(comp_iso, x, 1)
+      !   y = y - comp_iso
+      !end if
 
    end subroutine I_uno_value
 

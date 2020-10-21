@@ -1,6 +1,6 @@
 program cpv_test
    use cpv_traj, only: cpv_trajectory, cpv_trajectory_initialize, cpv_trajectory_deallocate, &
-      cpv_trajectory_read_step, cpv_trajectory_get_step
+                       cpv_trajectory_read_step, cpv_trajectory_get_step
    use traj_object, only: timestep ! type for timestep data
    use kinds, only: dp
 

@@ -76,14 +76,14 @@ SUBROUTINE check_initial_status(auxdyn)
                               done_iq, lgamma_iq
   USE qpoint,          ONLY : xq
   USE control_lr,      ONLY : lgamma
-  USE output,          ONLY : fildyn
+  USE output,          ONLY : fildyn, fildvscf
   USE control_ph,      ONLY : ldisp, recover, where_rec, rec_code, &
                               start_q, last_q, current_iq, tmp_dir_ph, &
                               ext_recover, ext_restart, tmp_dir_phq, lqdir, &
                               start_irr, last_irr, newgrid, qplot, &
                               done_zeu, done_start_zstar, done_epsil, &
                               done_zue, with_ext_images, always_run, trans, &
-                              u_from_file
+                              u_from_file, epsil
   USE save_ph,         ONLY : tmp_dir_save
   USE units_ph,        ONLY : iudyn
   USE ph_restart,      ONLY : check_directory_phsave, check_available_bands,&
@@ -96,6 +96,8 @@ SUBROUTINE check_initial_status(auxdyn)
   USE mp,              ONLY : mp_bcast
   USE mp_global,       ONLY : mp_global_end
   USE el_phon,         ONLY : elph_mat
+  USE noncollin_module, ONLY : noncolin
+  USE spin_orb,        ONLY : domag
   ! YAMBO >
   USE YAMBO,           ONLY : elph_yambo,dvscf_yambo
   ! YAMBO <
@@ -109,6 +111,7 @@ SUBROUTINE check_initial_status(auxdyn)
   CHARACTER (LEN=256), EXTERNAL :: trimcheck
   CHARACTER (LEN=6  ), EXTERNAL :: int_to_char
   LOGICAL :: exst
+  LOGICAL :: distribute_irrep
   INTEGER :: iq, iq_start, ierr
   !
   tmp_dir=tmp_dir_ph
@@ -154,7 +157,7 @@ SUBROUTINE check_initial_status(auxdyn)
      !
      !   Initialize the representations and write them on file.
      !
-     IF (trans .OR. ldvscf_interpolate) THEN
+     IF (trans .OR. epsil .OR. ldvscf_interpolate) THEN
         CALL init_representations()
      ELSE
         u_from_file = .TRUE.
@@ -191,7 +194,18 @@ SUBROUTINE check_initial_status(auxdyn)
 !
 ! If there are more than one image, divide the work among the images
 !
-  IF (nimage > 1 .AND. .NOT. with_ext_images) CALL image_q_irr()
+! If writing dvscf file, distribute only q points to images.
+! Otherwise, distribute both q points and irreps to images.
+!
+  distribute_irrep = .TRUE.
+  IF (fildvscf /= ' ') THEN
+    WRITE(stdout, '(5x,a)')
+    WRITE(stdout, '(5x,a)') 'Saving dvscf to file. Distribute only q points, &
+                            &not irreducible represetations.'
+    distribute_irrep = .FALSE.
+  ENDIF
+!
+  IF (nimage > 1 .AND. .NOT. with_ext_images) CALL image_q_irr(distribute_irrep)
 !
   IF (recover) THEN
 !
@@ -270,7 +284,7 @@ SUBROUTINE check_initial_status(auxdyn)
   ELSE  
      ! this is the standard treatment
      IF ( ( ( ldisp.OR..NOT.lgamma .OR. modenum/=0 ) .AND. (.NOT.lqdir) ) &
-          .OR. newgrid .OR. always_run ) CALL write_scf( rho, nspin )
+          .OR. newgrid .OR. always_run .OR. (noncolin.AND.domag) ) CALL write_scf( rho, nspin )
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
   !
@@ -337,7 +351,7 @@ SUBROUTINE check_initial_status(auxdyn)
   RETURN
   END SUBROUTINE check_initial_status
 
-  SUBROUTINE image_q_irr()
+  SUBROUTINE image_q_irr(distribute_irrep)
 !
 !  This routine is an example of the load balancing among images.
 !  It decides which image makes which q and which irreducible representation
@@ -359,10 +373,16 @@ SUBROUTINE check_initial_status(auxdyn)
    USE io_global,  ONLY : stdout
    USE mp_images,  ONLY : nimage, my_image_id
    USE symm_base,  ONLY : nsym
+   USE modes,      ONLY : nmodes
 
    IMPLICIT NONE
+   LOGICAL, INTENT(IN) :: distribute_irrep
+   !! If true, distribute both irreps and q-points (default behavior).
+   !! If false, distribute only q-points. Used when writing dvscf file.
+   !
    INTEGER :: total_work,  &  ! total amount of work to do
               total_nrapp, &  ! total number of representations
+              total_nq,    &  ! total number of q points
               work_per_image  ! approximate minimum work per image
 
    INTEGER, ALLOCATABLE :: image_iq(:,:), work(:)
@@ -373,74 +393,135 @@ SUBROUTINE check_initial_status(auxdyn)
    ALLOCATE (image_iq(0:3*nat,nqs))
    ALLOCATE (work(0:nimage-1))
 
-   total_work=0
-   total_nrapp=0
-   DO iq = start_q, last_q
-      DO irr = 1, irr_iq(iq)
+   IF (distribute_irrep) THEN
+    total_work=0
+     total_nrapp=0
+     DO iq = start_q, last_q
+        DO irr = 1, irr_iq(iq)
+           IF (comp_irr_iq(irr,iq)) THEN
+              total_work = total_work + npert_irr_iq(irr, iq) * nsym / nsymq_iq(iq)
+              IF (irr==1) total_work = total_work + nsym / nsymq_iq(iq)
+              total_nrapp = total_nrapp + 1
+           ENDIF
+        END DO
+     END DO
+     IF (nimage > total_nrapp) &
+        CALL errore('image_q_irr','some images have no rapp', 1)
+
+     work_per_image = total_work / nimage
+  !
+  !  If nimage=total_nrapp we put one representation per image
+  !  No load balancing is possible. Otherwise we try to minimize the number of
+  !  different q per image doing all representations of a given q until
+  !  the work becomes too large.
+  !  The initialization is done by the image with the first representation of
+  !  each q point.
+  !
+     image=0
+     work=0
+     work_so_far=0
+     DO iq = start_q, last_q
+        DO irr = 1, irr_iq(iq)
          IF (comp_irr_iq(irr,iq)) THEN
-            total_work = total_work + npert_irr_iq(irr, iq) * nsym / nsymq_iq(iq)
-            IF (irr==1) total_work = total_work + nsym / nsymq_iq(iq)
-            total_nrapp = total_nrapp + 1
-         ENDIF
-      END DO
-   END DO
-   IF (nimage > total_nrapp) &
-      CALL errore('image_q_irr','some images have no rapp', 1)
+           image_iq(irr,iq) = image
+           work(image)=work(image) + npert_irr_iq(irr, iq) * nsym / nsymq_iq(iq)
+           work_so_far=work_so_far + npert_irr_iq(irr, iq) * nsym / nsymq_iq(iq)
+           IF (irr==1) THEN
+              image_iq(0,iq)=image
+              work(image)=work(image) + nsym / nsymq_iq(iq)
+              work_so_far=work_so_far + nsym / nsymq_iq(iq)
+           ENDIF
 
-   work_per_image = total_work / nimage
-!
-!  If nimage=total_nrapp we put one representation per image
-!  No load balancing is possible. Otherwise we try to minimize the number of
-!  different q per image doing all representations of a given q until
-!  the work becomes too large.
-!  The initialization is done by the image with the first representation of
-!  each q point.
-!
-   image=0
-   work=0
-   work_so_far=0
-   DO iq = start_q, last_q
-      DO irr = 1, irr_iq(iq)
-       IF (comp_irr_iq(irr,iq)) THEN
-         image_iq(irr,iq) = image
-         work(image)=work(image) + npert_irr_iq(irr, iq) * nsym / nsymq_iq(iq)
-         work_so_far=work_so_far + npert_irr_iq(irr, iq) * nsym / nsymq_iq(iq)
-         IF (irr==1) THEN
-            image_iq(0,iq)=image
-            work(image)=work(image) + nsym / nsymq_iq(iq)
-            work_so_far=work_so_far + nsym / nsymq_iq(iq)
-         ENDIF
+  !
+  !  The logic is the following. We know how much work the current image
+  !  has already accumulated and we calculate how far it is from the target.
+  !  Note that actual_diff is a positive number in the usual case in which
+  !  we are below the target. Then we calculate the work that the current
+  !  image would do if we would give it the next representation. If the work is
+  !  still below the target, diff_for_next is negative and we give the
+  !  representation to the current image. If the work is above the target,
+  !  we give it to the current image only if its distance from the target
+  !  is less than actual_diff.
+  !
+           actual_diff=-work(image)+work_per_image
+           IF (irr<irr_iq(iq)) THEN
+              diff_for_next= work(image)+npert_irr_iq(irr+1, iq)*nsym/nsymq_iq(iq) &
+                             - work_per_image
+           ELSEIF (irr==irr_iq(iq).and.iq<last_q) THEN
+              diff_for_next= work(image)+npert_irr_iq(1, iq+1)* &
+                         nsym/nsymq_iq(iq+1) + nsym/nsymq_iq(iq+1)-work_per_image
+           ELSE
+              diff_for_next=0
+           ENDIF
 
-!
-!  The logic is the following. We know how much work the current image
-!  has already accumulated and we calculate how far it is from the target.
-!  Note that actual_diff is a positive number in the usual case in which
-!  we are below the target. Then we calculate the work that the current
-!  image would do if we would give it the next representation. If the work is
-!  still below the target, diff_for_next is negative and we give the
-!  representation to the current image. If the work is above the target,
-!  we give it to the current image only if its distance from the target
-!  is less than actual_diff.
-!
-         actual_diff=-work(image)+work_per_image
-         IF (irr<irr_iq(iq)) THEN
-            diff_for_next= work(image)+npert_irr_iq(irr+1, iq)*nsym/nsymq_iq(iq) &
-                           - work_per_image
-         ELSEIF (irr==irr_iq(iq).and.iq<last_q) THEN
-            diff_for_next= work(image)+npert_irr_iq(1, iq+1)* &
-                       nsym/nsymq_iq(iq+1) + nsym/nsymq_iq(iq+1)-work_per_image
-         ELSE
-            diff_for_next=0
+           IF ((nimage==total_nrapp.OR.diff_for_next>actual_diff).AND. &
+                                (image < nimage-1)) THEN
+              work_per_image= (total_work-work_so_far) / (nimage-image-1)
+              image=image+1
+           ENDIF
          ENDIF
+        ENDDO
+     ENDDO
+     !
+   ELSE ! .NOT. distribute_irrep
+     !
+     ! We distribute only q-points.
+     ! The work for each q-point is (nmodes + 1) * nsym / nsymq_iq(iq).
+     !
+     total_work = 0
+     total_nq = 0
+     DO iq = start_q, last_q
+        total_work = total_work + (nmodes + 1) * nsym / nsymq_iq(iq)
+        total_nq = total_nq + 1
+     ENDDO
+     IF (nimage > total_nq) &
+        CALL errore('image_q_irr','some images have no rapp', 1)
 
-         IF ((nimage==total_nrapp.OR.diff_for_next>actual_diff).AND. &
-                              (image < nimage-1)) THEN
-            work_per_image= (total_work-work_so_far) / (nimage-image-1)
-            image=image+1
+     work_per_image = total_work / nimage
+  !
+  !  If nimage=total_nq we put one representation per image
+  !  No load balancing is possible. Otherwise we try to minimize the number of
+  !  different q per image doing all representations of a given q until
+  !  the work becomes too large.
+  !  The initialization is done by the image with the first representation of
+  !  each q point.
+  !
+     image = 0
+     work = 0
+     work_so_far =0
+     DO iq = start_q, last_q
+        !
+        ! Assign iq to this image
+        work(image) = work(image) + (nmodes + 1) * nsym / nsymq_iq(iq)
+        work_so_far = work_so_far + (nmodes + 1) * nsym / nsymq_iq(iq)
+        !
+        ! Assign all irrs of iq to this image
+        DO irr = 1, irr_iq(iq)
+         IF (comp_irr_iq(irr, iq)) THEN
+           image_iq(irr, iq) = image
          ENDIF
-       ENDIF
-      ENDDO
-   ENDDO
+        ENDDO
+        image_iq(0, iq) = image
+        !
+        !  See the comment above for an explanation of the logic.
+        !
+        actual_diff = work_per_image - work(image)
+
+        IF (iq < last_q) THEN
+           diff_for_next = work(image) + (nmodes + 1) * nsym / nsymq_iq(iq + 1) &
+                         - work_per_image
+        ELSE
+           diff_for_next = 0
+        ENDIF
+
+        IF ((nimage == total_nq .OR. diff_for_next > actual_diff) &
+            .AND. (image < nimage - 1)) THEN
+           work_per_image = (total_work - work_so_far) / (nimage - image - 1)
+           image = image + 1
+        ENDIF
+     ENDDO ! iq
+     !
+   ENDIF ! distribute_irrep
 !
 !  Here we actually distribute the work. This image makes only
 !  the representations calculated before.

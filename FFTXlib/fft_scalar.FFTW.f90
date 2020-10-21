@@ -6,15 +6,21 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 
+#if defined(__FFTW)
+
+#if defined(_OPENMP) && defined(__FFT_SCALAR_THREAD_SAFE)
+! thread safety guard
+#error FFTW is not compatiable with __FFT_SCALAR_THREAD_SAFE
+#endif
+
 !=----------------------------------------------------------------------=!
    MODULE fft_scalar_FFTW
 !=----------------------------------------------------------------------=!
-
        USE fft_param
 !! iso_c_binding provides C_PTR, C_NULL_PTR, C_ASSOCIATED
        USE iso_c_binding
        USE fftw_interfaces
-       
+
        IMPLICIT NONE
        SAVE
        PRIVATE
@@ -97,7 +103,6 @@
      CALL start_clock( 'cft_1z' )
 #endif
 
-
 #if defined(_OPENMP)
 
      ldz_t = ldz
@@ -128,7 +133,6 @@
 !$omp end workshare
 !$omp end parallel
      END IF
-
 
 #else
 
@@ -218,7 +222,6 @@
      EXTERNAL :: omp_get_thread_num, omp_get_num_threads, omp_get_max_threads
 #endif
 
-
 #if defined(__FFTW_ALL_XY_PLANES)
      TYPE(C_PTR), SAVE :: fw_plan_2d( ndims ) = C_NULL_PTR
      TYPE(C_PTR), SAVE :: bw_plan_2d( ndims ) = C_NULL_PTR
@@ -226,7 +229,6 @@
      TYPE(C_PTR), SAVE :: fw_plan( 2, ndims ) = C_NULL_PTR
      TYPE(C_PTR), SAVE :: bw_plan( 2, ndims ) = C_NULL_PTR
 #endif
-
 
      dofft( 1 : nx ) = .TRUE.
      IF( PRESENT( pl2ix ) ) THEN
@@ -260,7 +262,6 @@
      CALL start_clock( 'cft_2xy' )
 #endif
 
-
 #if defined(__FFTW_ALL_XY_PLANES)
 
      IF( isign < 0 ) THEN
@@ -281,7 +282,7 @@
      nx_t  = nx
      ny_t  = ny
      nzl_t = nzl
-     ldx_t = ldx 
+     ldx_t = ldx
      ldy_t = ldy
      !
      IF( isign < 0 ) THEN
@@ -315,7 +316,7 @@
         end do
 
 !$omp barrier
- 
+
 !$omp workshare
         r = r * tscale
 !$omp end workshare
@@ -390,7 +391,6 @@
 
 #endif
 
-
 #if defined(__FFT_CLOCKS)
      CALL stop_clock( 'cft_2xy' )
 #endif
@@ -433,7 +433,6 @@
      END SUBROUTINE init_plan
 
    END SUBROUTINE cft_2xy
-
 
 !
 !=----------------------------------------------------------------------=!
@@ -512,7 +511,7 @@
 
      RETURN
 
-   CONTAINS 
+   CONTAINS
 
      SUBROUTINE lookup()
      ip = -1
@@ -606,7 +605,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
 
      END IF
 
-
      IF ( isign > 0 ) THEN
 
         DO h = 0, howmany - 1
@@ -630,7 +628,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
            !
 
            incx1 = ldx;  incx2 = ldx*ldy;  m = nz
-   
+
            do i = 1, nx
               if ( do_fft_y( i ) == 1 ) then
                 call FFTW_INPLACE_DRV_1D( bw_plan( 2, ip), m, f( i + h*ldh ), incx1, incx2 )
@@ -675,7 +673,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
            !
 
            incx1 = ldx * ny;  incx2 = 1;  m = 1
- 
+
            do i = 1, nx
               do j = 1, ny
                  ii = i + ldx * (j -1)
@@ -726,8 +724,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
      END SUBROUTINE init_plan
 
    END SUBROUTINE cfft3ds
-
 !=----------------------------------------------------------------------=!
  END MODULE fft_scalar_FFTW
 !=----------------------------------------------------------------------=!
-
+#endif

@@ -380,6 +380,7 @@ CONTAINS
        U_projection = TRIM ( dft_obj%dftU%U_projection_type )
        Hubbard_l =-1 
        Hubbard_l_back =-1 
+       backall = .false.
        !
        IF ( dft_obj%dftU%Hubbard_U_ispresent) THEN 
           loop_on_hubbardU:DO ihub =1, dft_obj%dftU%ndim_Hubbard_U

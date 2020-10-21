@@ -16,9 +16,9 @@
   USE epwcom,        ONLY : filukk
   USE io_var,        ONLY : iunukk
   USE elph2,         ONLY : ibndstart, ibndend, nbndep, nbndskip
-  USE io_global,     ONLY : ionode_id, meta_ionode
-  USE mp_global,     ONLY : inter_pool_comm
+  USE io_global,     ONLY : meta_ionode_id, meta_ionode
   USE mp,            ONLY : mp_bcast
+  USE mp_world,      ONLY : world_comm
   !
   IMPLICIT NONE
   !
@@ -38,10 +38,10 @@
     CLOSE(iunukk)
   ENDIF ! meta_ionode
   !
-  CALL mp_bcast(ibndstart, ionode_id, inter_pool_comm)
-  CALL mp_bcast(ibndend, ionode_id, inter_pool_comm)
-  CALL mp_bcast(nbndep, ionode_id, inter_pool_comm)
-  CALL mp_bcast(nbndskip, ionode_id, inter_pool_comm)
+  CALL mp_bcast(ibndstart, meta_ionode_id, world_comm)
+  CALL mp_bcast(ibndend, meta_ionode_id, world_comm)
+  CALL mp_bcast(nbndep, meta_ionode_id, world_comm)
+  CALL mp_bcast(nbndskip, meta_ionode_id, world_comm)
   !
   RETURN
   !-----------------------------------------------------------------------

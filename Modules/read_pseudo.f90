@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -50,9 +50,13 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   use radial_grids, ONLY: deallocate_radial_grid, nullify_radial_grid
   USE wrappers,     ONLY: md5_from_file, f_remove
   USE read_upf_v1_module,   ONLY: read_upf_v1
+#if defined (__use_fox)
   USE upf_module,   ONLY: read_upf_new
-  USE upf_auxtools, ONLY: upf_get_pp_format, upf_check_atwfc_norm
   USE emend_upf_module, ONLY: make_emended_upf_copy
+#else
+  USE read_upf_new_module,  ONLY: read_upf_new
+#endif
+  USE upf_auxtools, ONLY: upf_get_pp_format, upf_check_atwfc_norm
   USE upf_to_internal,  ONLY: add_upf_grid, set_upf_q
   USE read_uspp_module, ONLY: readvan, readrrkj
   USE m_gth,            ONLY: readgth
@@ -66,8 +70,8 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   REAL(DP), parameter :: rcut = 10.d0 
   ! 2D Coulomb cutoff: modify this (at your own risks) if problems with cutoff 
   ! being smaller than pseudo rcut. original value=10.0
-  CHARACTER(len=256) :: file_pseudo ! file name complete with path
-  CHARACTER(len=256) :: file_fixed, msg
+  CHARACTER(len=512) :: file_pseudo ! file name complete with path
+  CHARACTER(len=512) :: file_fixed, msg
   LOGICAL :: printout_ = .FALSE., exst, is_xml
   INTEGER :: iunps, isupf, nt, nb, ir, ios
   INTEGER :: iexch_, icorr_, igcx_, igcc_, inlc_
@@ -132,6 +136,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
         !! then as UPF v.2, then as UPF v.1
         !
         IF (isupf ==-81 ) THEN
+#if defined (__use_fox)
            !! error -81 may mean that file contains offending characters
            !! fix and write file to tmp_dir
            !! the underscore is added to distinguish this "fixed" file 
@@ -158,6 +163,11 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
            END IF
            !
            ios = f_remove( file_fixed )
+#else
+           CALL  read_upf_v1 (file_pseudo, upf(nt), isupf )
+           !! try to read UPF v.1 file
+           IF ( isupf == 0 ) isupf = -1
+#endif
         END IF
         !
      END IF
@@ -179,7 +189,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
         !
      ELSE
         !
-        OPEN ( UNIT = iunps, FILE = TRIM(file_pseudo), STATUS = 'old', FORM = 'formatted' ) 
+        OPEN ( UNIT = iunps, FILE = file_pseudo, STATUS = 'old', FORM = 'formatted' )
         !
         !     The type of the pseudopotential is determined by the file name:
         !    *.xml or *.XML  UPF format with schema              pp_format=0
