@@ -200,7 +200,7 @@ else()
   endif()
 
   # Try to find in the LD_LIBRARY_PATH
-  string(REPLACE ":" ";" LIBRARY_DIRS $ENV{LD_LIBRARY_PATH})
+  string(REPLACE ":" ";" LIBRARY_DIRS "$ENV{LD_LIBRARY_PATH}")
 
   if("DOUBLE" IN_LIST FFTW_FIND_COMPONENTS)
   find_library(
