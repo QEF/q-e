@@ -6,11 +6,6 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 # alias targets:
 # https://gitlab.kitware.com/cmake/cmake/merge_requests/2521
 
-# CMake < v3.18 cannot discover the ARM Performance Library
-if(CMAKE_VERSION VERSION_LESS 3.18.0)
-    message("-- CMake versions less then 3.18 cannot automatically discover the ARM Performance Library!")
-endif()
-
 # Policy CMP0048: The project() command manages VERSION variables
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
@@ -21,6 +16,13 @@ project(qe
 
 if(${qe_BINARY_DIR} STREQUAL ${qe_SOURCE_DIR})
   message(FATAL_ERROR "QE source folder cannot be safely used as a build folder!")
+endif()
+
+# CMake < v3.18 cannot discover the ARM Performance Library
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+    if(CMAKE_VERSION VERSION_LESS 3.18.0)
+        message("-- CMake versions less then 3.18 cannot automatically discover the ARM Performance Library!")
+    endif()
 endif()
 
 ######################################################################
