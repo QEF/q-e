@@ -851,6 +851,41 @@ SUBROUTINE exx_gs(nfi, c)
     CALL stop_clock('send_v_wait')
     !
     !========================================================================
+    CALL start_clock('force_rec')
+    !
+    DO iobtl = 1, my_nbspx
+      !
+      gindex_of_iobtl =  index_my_nbsp(iobtl, me)
+      !
+      DO itr = 1, neigh
+        !
+        obtl_tbadd = obtl_send(itr, gindex_of_iobtl)
+        !
+        IF ( obtl_tbadd .NE. 0 ) THEN
+          !
+          CALL getmiddlewc( wannierc(1,gindex_of_iobtl), wannierc(1,obtl_tbadd), h, ainv, middle )
+          !
+          ! calculate translation vector from the center of the box
+          CALL getsftv( nr1s, nr2s, nr3s, h, ainv, middle, tran )
+          !
+          ! upadate vpsil PBE0 
+          !
+          !$omp parallel do private(ir) 
+          DO ip = 1, np_in_sp_me_p
+            CALL l2goff (ip,ir,tran) ! local is centered at box center; global index is offset by tran
+            vpsil(ir,iobtl) = vpsil(ir,iobtl) + psime_pair_send(ip,itr,iobtl)
+          END DO
+          !$omp end parallel do
+          !
+        END IF
+        !
+      END DO
+      !
+    END DO ! iobtl
+    !
+    CALL stop_clock('force_rec')
+    !========================================================================
+    !
     CALL start_clock('totalenergy')
     !
     totalenergyg=0.0_DP ! mpi reduction variable initialization
