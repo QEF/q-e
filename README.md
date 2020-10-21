@@ -25,10 +25,10 @@ make -j$(nproc)
 make install
 ```
 
-("make" alone prints a list of acceptable targets), 
+"make" alone prints a list of acceptable targets, 
 binaries go in bin/. Instead for cmake build system, 
-("make" compiles all targets, with -j$(nproc) in parallel), 
-binaries and modules go in the install directory. 
+"make" compiles all targets (with -j$(nproc) in parallel), 
+binaries, libraries, and modules go in the install directory. 
 For more information, see the general documentation in directory Doc/, 
 package-specific documentation in \*/Doc/, and the web site 
 http://www.quantum-espresso.org/
