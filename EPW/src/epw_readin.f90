@@ -47,7 +47,7 @@
                             laniso, lpolar, lifc, asr_typ, lscreen, scr_typ, nbndsub,  &
                             fermi_diff, smear_rpa, cumulant, bnd_cum, proj, write_wfn, &
                             iswitch, liso, lacon, lpade, etf_mem, epbwrite,            &
-                            nsiter, conv_thr_racon, specfun_el, specfun_ph,            &
+                            nsiter, conv_thr_racon, npade, specfun_el, specfun_ph,     &
                             system_2d, delta_approx, title, int_mob, scissor,          &
                             iterative_bte, scattering, selecqread, epmatkqread,        &
                             ncarrier, carrier, scattering_serta, restart, restart_step,&
@@ -57,7 +57,7 @@
                             auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   &
                             scdm_sigma, assume_metal, wannier_plot, wannier_plot_list, &
                             wannier_plot_supercell, wannier_plot_scale, reduce_unk,    &
-                            wannier_plot_radius,                                       &
+                            wannier_plot_radius, fermi_plot,                           &
                             fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv,        &
                             epw_crysym
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
@@ -141,12 +141,12 @@
        rand_q, rand_nq, rand_k, rand_nk, specfun_pl,                           &
        nqf1, nqf2, nqf3, nkf1, nkf2, nkf3,                                     &
        mp_mesh_k, mp_mesh_q, filqf, filkf, ephwrite,                           &
-       band_plot, degaussq, delta_qsmear, nqsmear, nqstep,                     &
+       band_plot, fermi_plot, degaussq, delta_qsmear, nqsmear, nqstep,         &
        nswfc, nswc, nswi, pwc, wsfc, wscut, system_2d,                         &
        broyden_beta, broyden_ndim, nstemp, temps,                              &
        conv_thr_raxis, conv_thr_iaxis, conv_thr_racon,                         &
        gap_edge, nsiter, muc, lreal, limag, lpade, lacon, liso, laniso, lpolar,&
-       lscreen, scr_typ, fermi_diff, smear_rpa, cumulant, bnd_cum,             &
+       npade, lscreen, scr_typ, fermi_diff, smear_rpa, cumulant, bnd_cum,      &
        lifc, asr_typ, lunif, kerwrite, kerread, imag_read, eliashberg,         &
        ep_coupling, fila2f, max_memlt, efermi_read, fermi_energy,              &
        specfun_el, specfun_ph, wmin_specfun, wmax_specfun, nw_specfun,         &
@@ -240,6 +240,7 @@
   ! ephwrite    : if true write el-phonon matrix elements on the fine mesh to file
   ! eps_acustic : min phonon frequency for e-p and a2f calculations (units of cm-1)
   ! band_plot   : if true write files to plot band structure and phonon dispersion
+  ! fermi_plot  : if true write files to plot Fermi surface
   ! degaussq    : smearing for sum over q in e-ph coupling (units of meV)
   ! delta_qsmear: change in energy for each additional smearing in the a2f (units of meV)
   ! nqsmear     : number of smearings used to calculate a2f
@@ -260,6 +261,7 @@
   !                  Eliashberg equations from imag- to real-axis
   ! gap_edge : initial guess of the superconducting gap (in eV)
   ! nsiter   : nr of iterations for self-consitency cycle
+  ! npade    : percentage of Matsubara points used in Pade continuation
   ! muc     : effective Coulomb potential
   ! lreal   : if .TRUE. solve the real-axis Eliashberg eqautions
   ! limag   : if .TRUE. solve the imag-axis Eliashberg eqautions
@@ -477,6 +479,7 @@
   vme = .TRUE. ! Was false by default until EPW 5.1
   ephwrite = .FALSE.
   band_plot = .FALSE.
+  fermi_plot = .FALSE.
   nqsmear = 10
   nqstep = 500
   delta_qsmear = 0.05d0 ! meV
@@ -517,6 +520,7 @@
   nstemp   = 0
   temps(:) = 0.d0
   nsiter   = 40
+  npade    = 90
   muc     = 0.d0
   fila2f  = ' '
   max_memlt = 2.85d0
@@ -721,6 +725,10 @@
       'You should define either filkf or nkf when band_plot = .true.', 1)
   IF (band_plot .AND. filqf /= ' ' .AND. (nqf1 > 0 .OR. nqf2 > 0 .OR. nqf3 > 0)) CALL errore('epw_readin', &
      'You should define either filqf or nqf when band_plot = .true.', 1)
+  IF (fermi_plot .AND. mp_mesh_k) CALL errore('epw_readin', &
+     'fermi_plot with mp_mesh_k = .true. is not implemented, use mp_mesh_k = .false.', 1)
+  IF (fermi_plot .AND. (nqf1 /= 1 .OR. nqf2 /= 1 .OR. nqf3 /= 1)) CALL errore('epw_readin', &
+     'fermi_plot with nqf /= 1 is not an efficient calculation, use nqf = 1', 1)
   IF (filkf /= ' ' .AND. .NOT. efermi_read) CALL errore('epw_readin', &
      'WARNING: if k-points are along a line, then efermi_read=.true. and fermi_energy must be given in the input file', -1)
   IF (MAXVAL(temps(:)) == 0.d0 .AND. nstemp > 0) &

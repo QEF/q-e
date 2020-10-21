@@ -1,11 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 # Post-processing script from of PH data in format used by EPW
 # 14/07/2015 - Creation of the script - Samuel Ponce
 # 14/03/2018 - Automatically reads the number of q-points - Michael Waters
-# 14/03/2018 - Detect if SOC is included in the calculation - Samuel Ponce 
+# 14/03/2018 - Detect if SOC is included in the calculation - Samuel Ponce
 # 13/11/2018 - Write dyn files in xml format for SOC case - Shunhong Zhang (USTC)
-# 
+#
+from __future__ import print_function
+from builtins import input
 import numpy as np
 import os
 from xml.dom import minidom
@@ -14,12 +16,12 @@ from xml.dom import minidom
 def dyn2xml(prefix):
     ndyn=int(os.popen('head -2 {0}.dyn0|tail -1'.format(prefix)).read())
     for idyn in range(1,ndyn+1):
-        print '{0}.dyn{1} to {0}.dyn_q{1}.xml'.format(prefix,idyn)
+        print('{0}.dyn{1} to {0}.dyn_q{1}.xml'.format(prefix, idyn))
         dynmat=dyn(prefix,idyn)
         dynmat._write_xml()
 def get_geom_info():
-    if os.path.isfile('ph.out')==False:
-       print 'cannot extract geometry info from ph.out'
+    if not os.path.isfile('ph.out'):
+       print('cannot extract geometry info from ph.out')
        return 1
     else:
        volm=float(os.popen('grep -a volume ph.out 2>/dev/null|tail -1').readline().split()[-2])
@@ -47,7 +49,7 @@ class dyn(object):
         self._at=np.zeros((3,3),float)
         self._bg=np.zeros((3,3),float)
         try: self._volm,self._at,self._bg = get_geom_info()
-        except: print 'warning: lattice info not found'
+        except Exception: print('warning: lattice info not found')
         for i in range(0, 4):
             f.readline()
         self._species=[];
@@ -215,7 +217,7 @@ def hasSOC(prefix):
   xmldoc = minidom.parse(fname)
   item = xmldoc.getElementsByTagName('spinorbit')[0]
   lSOC = item.childNodes[0].data
-  
+
   return lSOC
 
 # Check if the calculation was done in sequential
@@ -225,11 +227,11 @@ def isSEQ(prefix):
     lseq = True
   else:
     lseq = False
- 
+
   return lseq
-    
+
 # Enter the number of irr. q-points
-user_input = raw_input('Enter the prefix used for PH calculations (e.g. diam)\n')
+user_input = input('Enter the prefix used for PH calculations (e.g. diam)\n')
 prefix = str(user_input)
 
 # Test if SOC
@@ -237,14 +239,14 @@ SOC = hasSOC(prefix)
 
 # If SOC detected, but dyn is not in XML and we want to convert it
 if SOC=='true':
-  user_input = raw_input('Calculation with SOC detected. Do you want to convert dyn in XML format [y/n]?\n')
+  user_input = input('Calculation with SOC detected. Do you want to convert dyn in XML format [y/n]?\n')
   if str(user_input) == 'y':
     dyn2xml(prefix)
     os.system('mv {0}.dyn*.xml save'.format(prefix))
 
-# If no SOC detected, do you want to convert into XML format 
+# If no SOC detected, do you want to convert into XML format
 if SOC=='false':
-  user_input = raw_input('Calculation without SOC detected. Do you want to convert to xml anyway [y/n]?\n')
+  user_input = input('Calculation without SOC detected. Do you want to convert to xml anyway [y/n]?\n')
   if str(user_input) == 'y':
     SOC = 'true'
     dyn2xml(prefix)
@@ -258,7 +260,7 @@ if True: # this gets the nqpt from the outputfiles
 
 else:
   # Enter the number of irr. q-points
-  user_input = raw_input('Enter the number of irreducible q-points\n')
+  user_input = input('Enter the number of irreducible q-points\n')
   nqpt = user_input
   try:
     nqpt = int(user_input)
@@ -293,7 +295,7 @@ for iqpt in np.arange(1,nqpt+1):
       else:
         os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix+'.dvscf save/'+prefix+'.dvscf_q'+label)
         os.system('rm _ph0/'+prefix+'.q_'+str(iqpt)+'/*wfc*' )
- 
+
   else:
     # Case with SOC
     if SOC == 'true':
@@ -316,4 +318,3 @@ for iqpt in np.arange(1,nqpt+1):
       else:
         os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix+'.dvscf1 save/'+prefix+'.dvscf_q'+label)
         os.system('rm _ph0/'+prefix+'.q_'+str(iqpt)+'/*wfc*' )
-

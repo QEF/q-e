@@ -4,6 +4,7 @@ simple script to mark as CDATA all text contained in PP_INPUTFILE element. It
 avoids any issue related to the presence on XML reserved characters in that
 section.  
 """
+from __future__ import print_function
 from subprocess import Popen, PIPE
 from xml.etree import cElementTree as eT
 import os

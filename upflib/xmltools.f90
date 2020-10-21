@@ -381,7 +381,7 @@ CONTAINS
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, *) ivec
+    WRITE( xmlunit, '(4I18)') ivec
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_iv
@@ -419,7 +419,7 @@ CONTAINS
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, *) rvec
+    WRITE( xmlunit, '(3es24.15)') rvec
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_rv
@@ -433,7 +433,7 @@ CONTAINS
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, *) rmat
+    WRITE( xmlunit, '(3es24.15)') rmat
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_rm
@@ -447,7 +447,7 @@ CONTAINS
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, *) rtens
+    WRITE( xmlunit, '(3es24.15)') rtens
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_rt
@@ -492,14 +492,13 @@ CONTAINS
     !
     TYPE (c_ptr) :: cp
     REAL(dp), POINTER  :: rmat(:,:)
-    INTEGER :: n, nvec
     !
     NULLIFY (rmat)
     cp = c_loc(zmat)
     CALL c_f_pointer (cp, rmat, shape(zmat)*[2,1])
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, *) rmat
+    WRITE( xmlunit, '(2es24.15)') rmat
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_zm

@@ -676,6 +676,7 @@ blas_line
 blas_libs
 f90rule
 SET_MAKE
+cuda_path
 cuda_extlibs
 cuda_libs
 cuda_fflags
@@ -742,7 +743,6 @@ infodir
 docdir
 oldincludedir
 includedir
-runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -774,6 +774,7 @@ enable_shared
 with_cuda
 with_cuda_cc
 with_cuda_runtime
+enable_cuda_env_check
 with_libxc
 with_libxc_prefix
 with_libxc_include
@@ -840,7 +841,6 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
-runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1093,15 +1093,6 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
-  -runstatedir | --runstatedir | --runstatedi | --runstated \
-  | --runstate | --runstat | --runsta | --runst | --runs \
-  | --run | --ru | --r)
-    ac_prev=runstatedir ;;
-  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
-  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
-  | --run=* | --ru=* | --r=*)
-    runstatedir=$ac_optarg ;;
-
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1239,7 +1230,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir runstatedir
+		libdir localedir mandir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1392,7 +1383,6 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
-  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -1433,6 +1423,9 @@ Optional Features:
   --enable-debug          compile Fortran with debug flags (default: no)
   --enable-pedantic       compile Fortran with pedantic flags (default: no)
   --enable-shared         use shared libraries if available (default: yes)
+  --enable-cuda-env-check=yes
+                          The configure script will check CUDA installation
+                          and report problems [default=yes]
   --enable-signals        enable signal trapping (default: no)
 
 Optional Packages:
@@ -1441,7 +1434,7 @@ Optional Packages:
   --with-cuda=PATH        prefix where CUDA is installed [default=no]
   --with-cuda-cc=VAL      GPU architecture (Kepler: 35, Pascal: 60, Volta: 70)
                           [default=35]
-  --with-cuda-runtime=VAL CUDA runtime (Pascal: 8.0, Volta: 9.0) [default=8.0]
+  --with-cuda-runtime=VAL CUDA runtime (Pascal: 8+, Volta: 9+) [default=10.1]
   --with-libxc            (yes|no) Use libXC for some XC functionals (default:
                           no)
   --with-libxc-prefix=DIR Directory where libxc was installed.
@@ -4386,6 +4379,7 @@ test_ldflags="`echo $ldflags | sed 's/\$([^)]*)//g'`"
 NVCC=no
 CUDA_CFLAGS=
 CUDA_LDLIBS=
+cuda_path=
 cuda_fflags=
 cuda_libs=
 cuda_extlibs=
@@ -4414,9 +4408,16 @@ fi
 if test "${with_cuda_runtime+set}" = set; then :
   withval=$with_cuda_runtime;
 else
-  with_cuda_runtime=8.0
+  with_cuda_runtime=10.1
 fi
 
+
+# Check whether --enable-cuda-env-check was given.
+if test "${enable_cuda_env_check+set}" = set; then :
+  enableval=$enable_cuda_env_check;
+else
+  enable_cuda_env_check=yes
+fi
 
 
 
@@ -4639,7 +4640,7 @@ $as_echo "no" >&6; }
 fi
 
 
-   if test "x$NVCC" = "xno"
+   if test "x$NVCC" = "xno" && test "x$enable_cuda_env_check" = "xyes"
    then
       as_fn_error $? "Cannot find nvcc compiler. To enable CUDA, please add path to
                     nvcc in the PATH environment variable and/or specify the path
@@ -4681,7 +4682,7 @@ EOF
    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_compile_nvcc" >&5
 $as_echo "$ac_compile_nvcc" >&6; }
 
-   if test "x$ac_compile_nvcc" = "xno"
+   if test "x$ac_compile_nvcc" = "xno" && test "x$enable_cuda_env_check" = "xyes"
    then
       as_fn_error $? "CUDA compiler has problems." "$LINENO" 5
    fi
@@ -4698,7 +4699,9 @@ $as_echo "$ac_compile_nvcc" >&6; }
    LIBS="$CUDA_LDLIBS $LIBS"
 
    # And the header and the lib
-   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for cuInit in -lcuda" >&5
+   if test "x$enable_cuda_env_check" = "xyes"
+   then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for cuInit in -lcuda" >&5
 $as_echo_n "checking for cuInit in -lcuda... " >&6; }
 if ${ac_cv_lib_cuda_cuInit+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -4748,7 +4751,7 @@ as_fn_error $? "Couldn't find libcuda
 See \`config.log' for more details" "$LINENO" 5; }
 fi
 
-   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for cudaMalloc in -lcudart" >&5
+      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for cudaMalloc in -lcudart" >&5
 $as_echo_n "checking for cudaMalloc in -lcudart... " >&6; }
 if ${ac_cv_lib_cudart_cudaMalloc+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -4798,7 +4801,7 @@ as_fn_error $? "Couldn't find libcudart
 See \`config.log' for more details" "$LINENO" 5; }
 fi
 
-   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for cublasInit in -lcublas" >&5
+      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for cublasInit in -lcublas" >&5
 $as_echo_n "checking for cublasInit in -lcublas... " >&6; }
 if ${ac_cv_lib_cublas_cublasInit+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -4848,7 +4851,7 @@ as_fn_error $? "Couldn't find libcublas
 See \`config.log' for more details" "$LINENO" 5; }
 fi
 
-   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for cufftPlanMany in -lcufft" >&5
+      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for cufftPlanMany in -lcufft" >&5
 $as_echo_n "checking for cufftPlanMany in -lcufft... " >&6; }
 if ${ac_cv_lib_cufft_cufftPlanMany+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -4898,6 +4901,56 @@ as_fn_error $? "Couldn't find libcufft
 See \`config.log' for more details" "$LINENO" 5; }
 fi
 
+   fi
+
+   new_cusolver="yes"
+   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for cusolverDnZhegvdx_bufferSize in -lcusolver" >&5
+$as_echo_n "checking for cusolverDnZhegvdx_bufferSize in -lcusolver... " >&6; }
+if ${ac_cv_lib_cusolver_cusolverDnZhegvdx_bufferSize+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lcusolver  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char cusolverDnZhegvdx_bufferSize ();
+int
+main ()
+{
+return cusolverDnZhegvdx_bufferSize ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_cusolver_cusolverDnZhegvdx_bufferSize=yes
+else
+  ac_cv_lib_cusolver_cusolverDnZhegvdx_bufferSize=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_cusolver_cusolverDnZhegvdx_bufferSize" >&5
+$as_echo "$ac_cv_lib_cusolver_cusolverDnZhegvdx_bufferSize" >&6; }
+if test "x$ac_cv_lib_cusolver_cusolverDnZhegvdx_bufferSize" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBCUSOLVER 1
+_ACEOF
+
+  LIBS="-lcusolver $LIBS"
+
+else
+  new_cusolver="no"
+fi
+
 
    # Returning to the original flags
    CXXFLAGS=${ax_save_CXXFLAGS}
@@ -4907,12 +4960,25 @@ fi
 $as_echo "#define HAVE_CUDA 1" >>confdefs.h
 
    try_dflags="$try_dflags -D__CUDA"
-   cuda_fflags="-Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime \$(MOD_FLAG)\$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve"
+   cuda_extlibs="devxlib"
+   cuda_libs="-Mcudalib=cufft,cublas,cusolver \$(TOPDIR)/external/devxlib/src/libdevXlib.a"
+   cuda_fflags="-Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
+   cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/external/devxlib/src"
+   cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/external/devxlib/include"
+
+   if test ${new_cusolver} != yes; then
+       cuda_fflags="$cuda_fflags \$(MOD_FLAG)\$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve"
+       cuda_extlibs="$cuda_extlibs eigensolver"
+       cuda_libs="$cuda_libs \$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a"
+       { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Using legacy custom solver." >&5
+$as_echo "$as_me: WARNING: Using legacy custom solver." >&2;}
+   else
+       try_dflags="$try_dflags -D__USE_CUSOLVER"
+   fi
    ldflags="$ldflags -Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    gpu_arch="$with_cuda_cc"
    gpu_runtime="$with_cuda_runtime"
-   cuda_libs="-Mcudalib=cufft,cublas,cusolver \$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a"
-   cuda_extlibs="eigensolver"
+   cuda_path="$CUDAPATH"
 fi
 
 # Announcing the new variables
@@ -4922,6 +4988,7 @@ fi
 
 
 # And for Fortran
+
 
 
 
@@ -6449,6 +6516,7 @@ else
       try_iflags="$try_iflags -I$FFT_INCLUDE"
    fi
    if test -n "$FFTW_INCLUDE" ; then :
+      try_dflags="$try_dflags -D__FFTW3"
       try_iflags="$try_iflags -I$FFTW_INCLUDE"
    fi
 

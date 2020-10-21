@@ -599,7 +599,7 @@
     !! Energy of the VBM
     REAL(KIND = DP) :: ecbm
     !! Energy of the CBM
-    REAL(KIND = DP) :: ef
+    REAL(KIND = DP) :: ef_tmp
     !! Energy of the current Fermi level for the bisection method
     REAL(KIND = DP) :: elw
     !! Energy lower bound for the bisection method
@@ -619,7 +619,7 @@
       ef0(itemp) = efermig(etf, nbndsub, nkqf, nelec, wkf, etemp, ngaussw, 0, isk_dummy)
       RETURN
     ENDIF
-    ef      = zero
+    ef_tmp  = zero
     fermi   = zero
     fermicb = zero
     inv_cell = 1.0d0 / omega
@@ -710,10 +710,10 @@
       DO i = 1, maxiter
         !
         !WRITE(stdout,*),'Iteration ',i
-        ! We want ef = (eup + elw) / 2.d0 but the variables are exp therefore:
-        ef = DSQRT(eup) * DSQRT(elw)
+        ! We want ef_tmp = (eup + elw) / 2.d0 but the variables are exp therefore:
+        ef_tmp = DSQRT(eup) * DSQRT(elw)
         !
-        !WRITE(stdout,*),'ef ', - log (ef) * etemp * ryd2ev
+        !WRITE(stdout,*),'ef_tmp ', - log (ef_tmp) * etemp * ryd2ev
         hole_density = zero
         electron_density = zero
         DO ik = 1, nkf
@@ -721,10 +721,10 @@
           ! Compute hole carrier concentration
           DO ibnd = 1, ivbm
             ! Discard very large numbers
-            IF (ks_exp(ibnd, ik) * ef > 1d60) THEN
+            IF (ks_exp(ibnd, ik) * ef_tmp > 1d60) THEN
               fnk = zero
             ELSE
-              fnk = 1.0d0 / (ks_exp(ibnd, ik) * ef  + 1.0d0)
+              fnk = 1.0d0 / (ks_exp(ibnd, ik) * ef_tmp  + 1.0d0)
             ENDIF
             ! The wkf(ikk) already include a factor 2
             hole_density = hole_density + wkf(ikk) * (1.0d0 - fnk)
@@ -732,10 +732,10 @@
           ! Compute electron carrier concentration
           DO ibnd = icbm, nbndsub
             ! Discard very large numbers
-            IF (ks_exp(ibnd, ik) * ef > 1d60) THEN
+            IF (ks_exp(ibnd, ik) * ef_tmp > 1d60) THEN
               fnk = zero
             ELSE
-              fnk = 1.0d0 / (ks_exp(ibnd, ik) * ef  + 1.0d0)
+              fnk = 1.0d0 / (ks_exp(ibnd, ik) * ef_tmp  + 1.0d0)
             ENDIF
             ! The wkf(ikk) already include a factor 2
             electron_density = electron_density + wkf(ikk) * fnk
@@ -756,13 +756,13 @@
         ENDIF
         !
         IF (ABS(rel_err) < eps5) THEN
-          fermi_exp = ef
+          fermi_exp = ef_tmp
           fermi = evbm - (LOG(fermi_exp) * etemp)
           EXIT
         ELSEIF ((rel_err) > eps5) THEN
-          elw = ef
+          elw = ef_tmp
         ELSE
-          eup = ef
+          eup = ef_tmp
         ENDIF
       ENDDO ! iteration
     ENDIF
@@ -776,8 +776,8 @@
       IF (int_mob .AND. carrier) ncarrier = -ABS(ncarrier)
       ! Use bisection method
       DO i = 1, maxiter
-        ! We want ef = (eup + elw) / 2.d0 but the variables are exp therefore:
-        ef = DSQRT(eup) * DSQRT(elw)
+        ! We want ef_tmp = (eup + elw) / 2.d0 but the variables are exp therefore:
+        ef_tmp = DSQRT(eup) * DSQRT(elw)
         !
         hole_density = zero
         DO ik = 1, nkf
@@ -785,10 +785,10 @@
           ! Compute hole carrier concentration
           DO ibnd = 1, ivbm
             ! Discard very large numbers
-            IF (ks_exp(ibnd, ik) * ef > 1d60) THEN
+            IF (ks_exp(ibnd, ik) * ef_tmp > 1d60) THEN
               fnk = 0.0d0
             ELSE
-              fnk = 1.0d0 / (ks_exp(ibnd, ik) * ef  + 1.0d0)
+              fnk = 1.0d0 / (ks_exp(ibnd, ik) * ef_tmp  + 1.0d0)
             ENDIF
             ! The wkf(ikk) already include a factor 2
             hole_density = hole_density + wkf(ikk) * (1.0d0 - fnk) * factor
@@ -808,13 +808,13 @@
         ENDIF
         !
         IF (ABS(rel_err) < eps5) THEN
-          fermi_exp = ef
+          fermi_exp = ef_tmp
           fermi = evbm - (LOG(fermi_exp) * etemp)
           EXIT
         ELSEIF ((rel_err) > eps5) THEN
-          elw = ef
+          elw = ef_tmp
         ELSE
-          eup = ef
+          eup = ef_tmp
         ENDIF
       ENDDO ! iteration
     ENDIF
@@ -826,8 +826,8 @@
       IF (int_mob .AND. carrier) ncarrier = ABS(ncarrier)
       ! Use bisection method
       DO i = 1, maxiter
-        ! We want ef = (eup + elw) / 2.d0 but the variables are exp therefore:
-        ef = DSQRT(eup) * DSQRT(elw)
+        ! We want ef_tmp = (eup + elw) / 2.d0 but the variables are exp therefore:
+        ef_tmp = DSQRT(eup) * DSQRT(elw)
         !
         electron_density = zero
         DO ik = 1, nkf
@@ -835,10 +835,10 @@
           ! Compute electron carrier concentration
           DO ibnd = icbm, nbndsub
             ! Discard very large numbers
-            IF (ks_expcb(ibnd, ik) * ef > 1d60) THEN
+            IF (ks_expcb(ibnd, ik) * ef_tmp > 1d60) THEN
               fnk = zero
             ELSE
-              fnk = 1.0d0 / (ks_expcb(ibnd, ik) * ef  + 1.0d0)
+              fnk = 1.0d0 / (ks_expcb(ibnd, ik) * ef_tmp  + 1.0d0)
             ENDIF
             ! The wkf(ikk) already include a factor 2
             electron_density = electron_density + wkf(ikk) * fnk * factor
@@ -856,20 +856,20 @@
         ENDIF
         !
         IF (ABS(rel_err) < eps5) THEN
-          fermi_exp = ef
+          fermi_exp = ef_tmp
           fermicb = ecbm - (LOG(fermi_exp) * etemp)
           EXIT
         ELSEIF ((rel_err) > eps5) THEN
-          eup = ef
+          eup = ef_tmp
         ELSE
-          elw = ef
+          elw = ef_tmp
         ENDIF
       ENDDO ! iteration
     ENDIF
     !
     IF (i == maxiter) THEN
       WRITE(stdout, '(5x, "Warning: too many iterations in bisection"/ &
-                    5x, "ef = ", f10.6)' ) fermi * ryd2ev
+                    5x, "ef_tmp = ", f10.6)' ) fermi * ryd2ev
     ENDIF
     !
     ! Print results
@@ -883,7 +883,7 @@
       ef0(itemp) = fermi
       WRITE(stdout, '(5x, "Mobility Fermi level = ", f10.6, " eV")' )  ef0(itemp) * ryd2ev
       ! We only compute 1 Fermi level so we do not need the other
-      efcb(itemp) = 0
+      efcb(itemp) = zero
       ctype = -1
       !
     ENDIF
@@ -909,7 +909,7 @@
         ef0(itemp) = fermi
         WRITE(stdout, '(5x, "Mobility VB Fermi level = ", f10.6, " eV")' )  ef0(itemp) * ryd2ev
         ! We only compute 1 Fermi level so we do not need the other
-        efcb(itemp) = 0
+        efcb(itemp) = zero
         ctype = -1
       ELSE ! CB
         efcb(itemp) = fermicb
@@ -930,7 +930,7 @@
         ef0(itemp) = efnew
       ENDIF
       ! We only compute 1 Fermi level so we do not need the other
-      efcb(itemp) = 0
+      efcb(itemp) = zero
       ctype = -1
       !
     ENDIF
@@ -955,7 +955,8 @@
     USE pwcom,         ONLY : ef
     USE mp,            ONLY : mp_max, mp_min
     USE mp_global,     ONLY : inter_pool_comm
-    USE epwcom,        only : wfcelec
+    USE epwcom,        ONLY : wfcelec
+    USE constants_epw, ONLY : ryd2ev
     !
     IMPLICIT NONE
     !
@@ -990,7 +991,7 @@
         !
       ENDDO
     ENDDO
-    if (wfcelec) then
+    IF (wfcelec) then
         DO ik = 1, nkqf
           DO ibnd = 1, nbndsub
             ebnd = etf(ibnd, ik)
@@ -1005,7 +1006,7 @@
             !
           ENDDO
         ENDDO
-    end if
+    ENDIF
     !
     tmp = DBLE(ibndmin)
     CALL mp_min(tmp, inter_pool_comm)
@@ -1017,8 +1018,8 @@
     ibndmax = NINT(tmp)
     CALL mp_max(ebndmax, inter_pool_comm)
     !
-    WRITE(stdout,'(/14x,a,i5,2x,a,f9.3)') 'ibndmin = ', ibndmin, 'ebndmin = ', ebndmin
-    WRITE(stdout,'(14x,a,i5,2x,a,f9.3/)') 'ibndmax = ', ibndmax, 'ebndmax = ', ebndmax
+    WRITE(stdout,'(/14x,a,i5,2x,a,f9.3,a)') 'ibndmin = ', ibndmin, 'ebndmin = ', ebndmin * ryd2ev, ' eV'
+    WRITE(stdout,'(14x,a,i5,2x,a,f9.3,a/)') 'ibndmax = ', ibndmax, 'ebndmax = ', ebndmax * ryd2ev, ' eV'
     !
     !----------------------------------------------------------------------
     END SUBROUTINE fermiwindow

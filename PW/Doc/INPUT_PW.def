@@ -311,7 +311,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     save charge to disk at each SCF step,
                     keep wavefunctions on disk (in "distributed" format),
                     save mixing data as well.
-                    Do not use this option unless you have a good reason to
+                    Do not use this option unless you have a good reason!
+                    It is no longer needed to specify 'high' in order to be able
+                    to restart from an interrupted calculation (see @ref restart_mode)
                 }
 
                 opt -val 'medium' {
@@ -339,10 +341,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             
                 info {
                     @b Default is @b 'low' for the scf case, @b 'medium' otherwise.
-                    Note that the needed RAM increases as disk I/O decreases!
-                    It is no longer needed to specify 'high' in order to be able
-                    to restart from an interrupted calculation (see @ref restart_mode)
-                    but you cannot restart in @ref disk_io=='nowf' or 'none'
+                    Note that the needed RAM increases as disk I/O decreases
+
                 }
             }
         }
@@ -1177,13 +1177,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 is not configured there.
             }
             info { 
-                Specify @ref lda_plus_u = .TRUE. to enable DFT+U calculations
+                Specify @ref lda_plus_u = .TRUE. to enable DFT+U, DFT+U+V, or 
+                DFT+U+J calculations.
                 See: Anisimov, Zaanen, and Andersen, PRB 44, 943 (1991); 
                      Anisimov et al., PRB 48, 16929 (1993); 
                      Liechtenstein, Anisimov, and Zaanen, PRB 52, R5467 (1994).
-                You must specify, for each species with a U term, the value of
-                U and (optionally) alpha, J of the Hubbard model (all in eV):
-                see @ref lda_plus_u_kind, @ref Hubbard_U, @ref Hubbard_alpha, @ref Hubbard_J
+                You must specify, for each Hubbard atom, the value of
+                U and (optionally) V, J, alpha of the Hubbard model (all in eV):
+                see @ref lda_plus_u_kind, @ref Hubbard_U, @ref Hubbard_V, 
+                @ref Hubbard_J, @ref Hubbard_alpha
             }
         }
         var lda_plus_u_kind -type INTEGER { 
@@ -1229,7 +1231,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 simplest DFT+U+V calculation):
                 k=1 - interaction between standard orbitals (both on na and nb); 
                 k=2 - interaction between standard (on na) and background (on nb) orbitals;
-                k=3 - interaction between background orbitlas (both on na and nb);
+                k=3 - interaction between background orbitals (both on na and nb);
                 k=4 - interaction between background (on na) and standard (on nb) orbitals.
                 Standard orbitals correspond to the main Hubbard channel (e.g. d electrons
                 in transition metals) and background orbitals correspond to the secondary
@@ -1240,9 +1242,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             default { 0.D0 for all species }
             info {
                 Hubbard_alpha(i) is the perturbation (on atom i, in eV)
-                used to compute U with the linear-response method of
+                used to compute U (and V) with the linear-response method of
                 Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
-                (only for @ref lda_plus_u_kind=0)
+                (only for @ref lda_plus_u_kind=0 and 2).
+                Note: Hubbard U and V can be computed using the HP code
+                which is based on density-functional perturbation theory,
+                and it gives exactly the same result as the method of 
+                Cococcioni and de Gironcoli.
             }
         }
         dimension Hubbard_beta -start 1 -end ntyp -type REAL { 
@@ -1251,7 +1257,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 Hubbard_beta(i) is the perturbation (on atom i, in eV)
                 used to compute J0 with the linear-response method of
                 Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
-                (only for @ref lda_plus_u_kind=0). See also 
+                (only for @ref lda_plus_u_kind=0 and 2). See also 
                 PRB 84, 115108 (2011).
             }
         }

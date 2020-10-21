@@ -259,7 +259,7 @@ subroutine read_pseudo_header (upf, iunps)
        upf%nchi( upf%nwfc ) )
   do nw = 1, upf%nwfc  
      read (iunps, * ) upf%els (nw), upf%lchi (nw), upf%oc (nw)  
-     upf%nchi (nw) = upf%lchi(nw)-1
+     upf%nchi (nw) = upf%lchi(nw)+1
   enddo
   ! next lines for compatibility with upf v.2
   ALLOCATE( upf%rcut_chi( upf%nwfc ), upf%rcutus_chi( upf%nwfc ), &
@@ -776,7 +776,15 @@ subroutine read_pseudo_ppinfo (upf, iunps)
         ios=100
      ENDIF
   ENDDO
-100  RETURN
+100 CONTINUE 
+  ! PP_INFO reports values only for bound valence states,  
+  IF (upf%els_beta(nb)=="</") THEN 
+     upf%els_beta(nb:upf%nbeta)="__"
+     upf%rcut(nb:upf%nbeta)=-1.0
+     upf%rcutus(nb:upf%nbeta) = -1.0 
+  END IF
+  RETURN
+
   END SUBROUTINE read_pseudo_ppinfo
 
   SUBROUTINE set_coulomb_nonlocal(upf)

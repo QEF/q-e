@@ -399,16 +399,17 @@ CONTAINS
        !
        ! read polinomial coefficients for Q_ij expansion at small radius
        !
+       IF ( upf%nqlc == 0 ) upf%nqlc = 2*upf%lmax+1
+       ALLOCATE( upf%rinner( upf%nqlc ) )
        IF ( v2 .AND. upf%nqf > 0) THEN
           ALLOCATE ( upf%qfcoef(upf%nqf, upf%nqlc, upf%nbeta, upf%nbeta) )
           CALL xmlr_opentag('PP_QFCOEF')
           READ(iun,*) upf%qfcoef
           CALL xmlr_closetag ()
-          ALLOCATE( upf%rinner( upf%nqlc ) )
           CALL xmlr_readtag('PP_RINNER',upf%rinner)
        ELSE IF ( upf%nqf == 0 ) THEN
-          ALLOCATE( upf%rinner(1), upf%qfcoef(1,1,1,1) )
-          upf%rinner = 0.0_dp; upf%qfcoef =0.0_dp
+          ALLOCATE( upf%qfcoef(1,1,1,1) )
+          upf%qfcoef =0.0_dp
        ENDIF
        !
        ! Read augmentation charge Q_ij
@@ -720,7 +721,9 @@ CONTAINS
        CALL xmlr_opentag( 'PP_GIPAW_CORE_ORBITALS')
        CALL get_attr ('number_of_core_orbitals', upf%gipaw_ncore_orbitals)
     ELSE
-       print *, 'FIXME! upf%gipaw_ncore_orbitals'
+       CALL xmlr_readtag ('number_of_core_orbitals', upf%gipaw_ncore_orbitals) 
+       IF ( .NOT. upf%paw_as_gipaw) & 
+          CALL xmlr_readtag( 'number_of_valence_orbitals', upf%gipaw_wfs_nchannels)  
     END IF
     ALLOCATE ( upf%gipaw_core_orbital(upf%mesh,upf%gipaw_ncore_orbitals) )
     ALLOCATE ( upf%gipaw_core_orbital_n(upf%gipaw_ncore_orbitals) )
@@ -777,8 +780,6 @@ CONTAINS
           CALL xmlr_opentag( 'PP_GIPAW_ORBITALS' )
           CALL get_attr( 'number_of_valence_orbitals', &
                upf%gipaw_wfs_nchannels )
-       ELSE
-          print *, 'FIXME! upf%gipaw_wfs_nchannel'
        END IF
        ALLOCATE ( upf%gipaw_wfs_el(upf%gipaw_wfs_nchannels) )
        ALLOCATE ( upf%gipaw_wfs_ll(upf%gipaw_wfs_nchannels) )

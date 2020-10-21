@@ -72,6 +72,12 @@ run-tests-epw-serial : prolog pseudo
 run-tests-epw-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_all
 
+run-tests-zg-serial : prolog
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=zg_all
+
+run-tests-zg-parallel : prolog
+	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=zg_all
+
 run-tests-hp-serial : prolog pseudo
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=hp_all
 
@@ -132,9 +138,9 @@ compare-epw : prolog
 
 clean:
 # output files
-	@rm -rf pw_*/test* ph_*/test* cp_*/test* hp_*/test* pp_*/test* epw_*/test*
+	@rm -rf pw_*/test* ph_*/test* cp_*/test* hp_*/test* pp_*/test* epw_*/test* zg_*/test*
 # error files
-	@rm -rf pw_*/CRASH ph_*/CRASH* cp_*/CRASH hp_*/CRASH pp_*/CRASH epw_*/CRASH
+	@rm -rf pw_*/CRASH ph_*/CRASH* cp_*/CRASH hp_*/CRASH pp_*/CRASH epw_*/CRASH zg_*/CRASH
 # pwscf data files
 	@rm -rf pw_*/pwscf.* ph_*/pwscf.* pp_*/pwscf.* epw_*/pwscf.*
 # cp data files
@@ -164,7 +170,7 @@ clean:
 	@rm -rf epw_*/_ph0 epw_*/*.save epw_*/*.wfc* epw_*/*.dyn* \
 		epw_*/*.qdos_* epw_*/*.P epw_*/*.wout epw_*/*.fmt epw_*/*.pade* \
 		epw_*/*.epmat_wanep epw_*/*.kgmap epw_*/*.nnkp epw_*/*.epmatwp* \
-		epw_*/*.acon_iso_* epw_*/*.a2f* epw_*/*.phdos* \
+		epw_*/*.acon_iso_* epw_*/*.a2f* epw_*/*.phdos* epw_*/*.lambda \
 		epw_*/*.kmap epw_*/*.lambda_k_pairs epw_*/*.ukk epw_*/*.imag_aniso* \
 		epw_*/*.win epw_*/*.imag_iso* epw_*/*.chk epw_*/*.freq  \
 		epw_*/*.epmatwp epw_*/*.epwane epw_*/*.ephmat epw_*/epsilon2* \
@@ -183,6 +189,9 @@ clean:
 	@rm -rf epw_base/save epw_super/save epw_pl/save/ epw_polar/save/ \
                 epw_trev/save epw_trev_uspp/save epw_trev_paw/save \
 		epw_mob/save epw_mob_ibte/save epw_mob_ibte_sym/save epw_mob_polar/save
+
+# Cleaning ZG final files
+	@rm -f zg_conf/equil_pos.txt zg_conf/ZG-*_0.020.dat
 
 	@rm -f userconfig
 

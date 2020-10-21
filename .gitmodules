@@ -1,0 +1,12 @@
+[submodule "external/lapack"]
+	path = external/lapack
+	url = https://github.com/Reference-LAPACK/lapack.git
+[submodule "external/fox"]
+	path = external/fox
+	url = https://github.com/pietrodelugas/fox.git
+[submodule "external/wannier90"]
+	path = external/wannier90
+	url = https://github.com/wannier-developers/wannier90.git
+[submodule "external/devxlib"]
+	path = external/devxlib
+	url = https://gitlab.com/max-centre/components/devicexlib.git

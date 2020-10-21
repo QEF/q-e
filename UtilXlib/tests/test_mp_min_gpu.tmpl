@@ -8,9 +8,7 @@ PROGRAM test_mp_min_{vname}_gpu
 !  N.B : mp_min is doing a allreduce!
 !
     USE cudafor
-#if defined(__MPI)
-    USE MPI
-#endif
+    USE parallel_include
     USE util_param, ONLY : DP
     USE mp, ONLY : mp_min
     USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &
