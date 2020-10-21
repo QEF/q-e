@@ -66,6 +66,7 @@ SUBROUTINE exx_gs(nfi, c)
     !
     INTEGER   iobtl, gindex_of_iobtl, irank, rk_of_obtl_trcv, rk_of_obtl_tbs
     INTEGER   obtl_tbs, lindex_obtl_tbs, obtl_trcv, lindex_obtl_trcv 
+    INTEGER   obtl_tbadd
     REAL(DP)  totalenergy, totalenergyg, tot_energy(nbsp)
     REAL(DP)  total_exx_derv(3,3), total_exx_derv_g(3,3)
     REAL(DP)  selfe, paire(neigh/2), &
