@@ -15,7 +15,19 @@ Quick installation instructions for the impatient:
 make all
 ```
 
-("make" alone prints a list of acceptable targets). Binaries go in bin/.
+or
+
+```
+mkdir ./build
+cd ./build
+cmake -DCMAKE_INSTALL_PREFIX=/path/to/install ..
+make
+make install
+```
+
+"make" alone prints a list of acceptable targets,
+binaries go in bin/. Instead for cmake build system, 
+"make" compiles all targets, binaries go in the install directory.
 For more information, see the general documentation in directory Doc/,
 package-specific documentation in \*/Doc/, and the web site
 http://www.quantum-espresso.org/
