@@ -159,12 +159,12 @@ input_description -distribution {Quantum Espresso} -package energy_current -prog
         }
 
         var vel_input_units -type CHARACTER {
-            default { 'CP'}
+            default { 'PW'}
             options {
                 info { This multiplies or not by a factor 2 the velocities given in the input.
                        Available options are: }
                 opt -val 'CP' {
-                    assume velocities are given in cp.x time units
+                    assume velocities are given in cp.x time units (thus multiplying by 2 the velocities)
                 }
                 opt -val 'PW' {
                     assume velocities are given in pw.x time units

@@ -39,7 +39,7 @@ To calculate the energy current, for each snapshot at time t, we need to do the 
    ...put here atomic positions, as in pw input file...
 
  ATOMIC_VELOCITIES
-   ...put here atomic velocities...
+   ...put here atomic velocities... (usual PW units)
 
  K_POINTS {Gamma}  
 ```
@@ -51,7 +51,7 @@ all_currents.x -in input_energycurrent
 # Example trajectory
 
 Here we compute the energy current from a cp trajectory
-To calculate the energy current, for every timestep of the trajectory `traj.pos` and `traj.vel` located in the folder 'trajectory', we need to do the following:
+To calculate the energy current, for every timestep of the trajectory `traj.pos` and `traj.vel` (velocities are in cp units in this example) located in the folder 'trajectory', we need to do the following:
 
 - prepare the input, for example `input_energycurrent`:
 ```
@@ -62,6 +62,7 @@ To calculate the energy current, for every timestep of the trajectory `traj.pos`
     n_max=     5,
     trajdir='trajectory/traj'
     first_step=1,
+    vel_input_units='CP'
  /
  &CONTROL
     calculation='md',
@@ -90,7 +91,7 @@ To calculate the energy current, for every timestep of the trajectory `traj.pos`
    ...put here atomic positions, as in pw input file...
 
  ATOMIC_VELOCITIES
-   ...put here atomic velocities...
+   ...put here atomic velocities... (CP units)
 
  K_POINTS {Gamma}  
 ```

@@ -151,7 +151,7 @@ a factor 2 can be used for the velocities.
          </info>
       </var>
       <var name="vel_input_units" type="CHARACTER" >
-         <default> &apos;CP&apos;
+         <default> &apos;PW&apos;
          </default>
          <options>
             <info>
@@ -159,7 +159,7 @@ This multiplies or not by a factor 2 the velocities given in the input.
                       Available options are:
             </info>
             <opt val="'CP'" >
-assume velocities are given in cp.x time units
+assume velocities are given in cp.x time units (thus multiplying by 2 the velocities)
             </opt>
             <opt val="'PW'" >
 assume velocities are given in pw.x time units

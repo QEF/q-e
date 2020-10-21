@@ -1,4 +1,5 @@
 &energy_current
+vel_input_units="CP",
     delta_t=   0.500,
     file_output= 'current_hz_not_rotated',
     eta=   0.100,

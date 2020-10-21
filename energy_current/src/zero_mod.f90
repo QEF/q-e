@@ -35,7 +35,7 @@ MODULE zero_mod
    !real(DP), allocatable ::ion_vel(:, :)
    !second ion positions and velocities read from input
    !real(DP), allocatable ::ion_pos2(:,:) ! must call convert_tau from ../PW/src/input.f90 to obtain correct units for positions
-   character(len=256) :: vel_input_units = 'CP'
+   character(len=256) :: vel_input_units = 'PW'
 
    !input from stdout
    integer        :: natoms !cutoff per somme in griglia reale

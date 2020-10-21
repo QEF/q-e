@@ -1,4 +1,5 @@
  &energy_current
+vel_input_units="CP",
     delta_t=   0.300,
     file_output= 'current_hz',
     trajdir= 'traj',

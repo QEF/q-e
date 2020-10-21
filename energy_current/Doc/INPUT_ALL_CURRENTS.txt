@@ -162,13 +162,13 @@ NAMELIST: &ENERGY_CURRENT
    Variable:       vel_input_units
    
    Type:           CHARACTER
-   Default:        'CP'
+   Default:        'PW'
    Description:   
                    This multiplies or not by a factor 2 the velocities given in the input.
                                          Available options are:
     
                    'CP' :
-                        assume velocities are given in cp.x time units
+                        assume velocities are given in cp.x time units (thus multiplying by 2 the velocities)
     
                    'PW' :
                         assume velocities are given in pw.x time units
@@ -337,4 +337,4 @@ NAMELIST: &ENERGY_CURRENT
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Tue Oct 13 19:47:54 CEST 2020
+This file has been created by helpdoc utility on Wed Oct 21 09:41:47 CEST 2020
