@@ -566,6 +566,12 @@ SUBROUTINE reconstruct_full_chi(chi_)
         ENDDO
      ENDDO
      !
+     WRITE( stdout, '(/5x,"Possible solutions:")')
+     WRITE( stdout, '(5x, "1. Relax better the structure (in order to have more accurate inter-atomic distances)")')
+     WRITE( stdout, '(5x, "2. Increase the value of the parameter eps_dist in PW/src/ldaU.f90,")')
+     WRITE( stdout, '(5x, "   then recompile the pw.x and hp.x codes, and re-run the HP postprocessing step")')
+     WRITE( stdout, '(5x, "   by setting compute_hp=.true. in the HP input.")')
+     !
      CALL errore ('reconstruct_full_chi', &
             'Reconstruction problem: some chi were not found', 1)
      !
