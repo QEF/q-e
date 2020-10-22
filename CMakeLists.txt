@@ -198,9 +198,11 @@ qe_install_targets(qe_lapack)
 #######################################################################
 find_package(LAPACK)
 if(LAPACK_FOUND)
-    message(STATUS "Found LAPACK: ${LAPACK_LIBRARIES}")
+    message(STATUS "Found LAPACK: ${BLAS_LIBRARIES};${LAPACK_LIBRARIES}")
     target_link_libraries(qe_lapack
         INTERFACE
+            ${BLAS_LIBRARIES}
+            ${BLAS_LINKER_FLAGS}
             ${LAPACK_LIBRARIES}
             ${LAPACK_LINKER_FLAGS})
 elseif(QE_ENABLE_VENDOR_DEPS)
