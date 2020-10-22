@@ -32,7 +32,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   USE mp,            ONLY : mp_sum, mp_gather, mp_bcast, mp_size,&
                             mp_type_create_column_section, mp_type_free
   USE device_fbuff_m,      ONLY : gbuf => pin_buf
-  USE device_util_m, ONLY : dev_memcpy, dev_memset, dev_memcpy
+  USE device_memcpy_m, ONLY : dev_memcpy, dev_memset, dev_memcpy
   !
   IMPLICIT NONE
   !
@@ -734,7 +734,7 @@ SUBROUTINE pcegterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier, &
                                mp_size, mp_type_free, mp_allgather
   USE device_fbuff_m,         ONLY : buffer => dev_buf
-  USE device_util_m,    ONLY : dev_memcpy, dev_memset, dev_memcpy
+  USE device_memcpy_m,    ONLY : dev_memcpy, dev_memset, dev_memcpy
   !
   IMPLICIT NONE
   !

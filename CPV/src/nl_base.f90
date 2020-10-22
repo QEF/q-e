@@ -263,7 +263,7 @@
       use mp_global,  only : nproc_bgrp, intra_bgrp_comm
       use gvect,      only : gstart
       use gvect_gpum, only : g_d
-      USE device_util_m, ONLY : dev_memcpy
+      USE device_memcpy_m, ONLY : dev_memcpy
       USE cudafor
       USE cublas
 !

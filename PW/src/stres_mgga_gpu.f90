@@ -32,7 +32,7 @@ SUBROUTINE stres_mgga_gpu( sigmaxc )
   USE wavefunctions_gpum,     ONLY : using_evc
   !
   USE device_fbuff_m ,              ONLY : dev_buf
-  USE device_util_m,          ONLY : dev_memcpy, dev_memset
+  USE device_memcpy_m,          ONLY : dev_memcpy, dev_memset
   !
   IMPLICIT NONE
   !
@@ -231,7 +231,7 @@ SUBROUTINE wfc_gradient_gpu( ibnd, ik, npw, gradpsi_d )
   USE wavefunctions_gpum,     ONLY: using_evc, using_evc_d, evc_d, &
                                     using_psic, using_psic_d, psic_d
   USE device_fbuff_m,               ONLY: dev_buf
-  USE device_util_m,          ONLY: dev_memcpy
+  USE device_memcpy_m,          ONLY: dev_memcpy
   !
   IMPLICIT NONE 
   !

@@ -30,7 +30,7 @@ SUBROUTINE stres_knl_gpu( sigmanlc, sigmakin )
   USE wavefunctions_gpum,   ONLY: using_evc, using_evc_d, evc_d  
   USE device_fbuff_m,             ONLY : dev_buf
   USE gvect_gpum,           ONLY : g_d
-  USE device_util_m,        ONLY : dev_memcpy
+  USE device_memcpy_m,        ONLY : dev_memcpy
  
   !
   IMPLICIT NONE

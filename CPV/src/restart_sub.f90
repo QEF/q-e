@@ -40,7 +40,7 @@ SUBROUTINE from_restart( )
    USE time_step,             ONLY : delt
    USE fft_base,              ONLY : dfftp, dffts
    USE matrix_inversion
-   USE device_util_m,         ONLY : dev_memcpy
+   USE device_memcpy_m,         ONLY : dev_memcpy
    !
    IMPLICIT NONE
 

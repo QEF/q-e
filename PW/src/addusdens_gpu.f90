@@ -62,7 +62,7 @@ SUBROUTINE addusdens_g_gpu(rho)
   !
   USE uspp_gpum,            ONLY : becsum_d, using_becsum_d
   USE device_fbuff_m,             ONLY : dev_buf, pin_buf
-  USE device_util_m,        ONLY : dev_memcpy, dev_memset
+  USE device_memcpy_m,        ONLY : dev_memcpy, dev_memset
   !
   IMPLICIT NONE
   !

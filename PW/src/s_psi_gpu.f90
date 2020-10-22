@@ -112,7 +112,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
   !
   USE uspp_gpum,  ONLY : vkb_d, using_vkb_d, using_indv_ijkb0
   USE becmod_gpum, ONLY : using_becp_r_d, using_becp_k_d, using_becp_nc_d
-  USE device_util_m,    ONLY : dev_memcpy
+  USE device_memcpy_m,    ONLY : dev_memcpy
   !
   IMPLICIT NONE
   !

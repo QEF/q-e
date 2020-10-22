@@ -46,7 +46,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
   USE control_flags,        ONLY : lwfpbe0nscf  ! exx_wf related
   USE wavefunctions,        ONLY : cv0, c0_bgrp, cm_bgrp, phi, c0_d, cm_d
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
-  USE device_util_m,        ONLY : dev_memcpy
+  USE device_memcpy_m,        ONLY : dev_memcpy
   !
   IMPLICIT NONE
   !

@@ -358,7 +358,7 @@ CONTAINS
   SUBROUTINE allocate_bec_type_gpu ( nkb, nbnd, bec_d, comm )
     !-----------------------------------------------------------------------
     USE mp, ONLY: mp_size, mp_rank, mp_get_comm_null
-    USE device_util_m, ONLY : dev_memset
+    USE device_memcpy_m, ONLY : dev_memset
     IMPLICIT NONE
     TYPE (bec_type_d) :: bec_d
     INTEGER, INTENT (in) :: nkb, nbnd

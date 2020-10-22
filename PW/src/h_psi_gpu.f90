@@ -112,7 +112,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE exx,                     ONLY: use_ace, vexx, vexxace_gamma, vexxace_k
   USE funct,                   ONLY: exx_is_active
   USE fft_helper_subroutines
-  USE device_util_m,           ONLY: dev_memcpy, dev_memset
+  USE device_memcpy_m,           ONLY: dev_memcpy, dev_memset
   !
   USE wvfct_gpum,    ONLY : g2kin_d, using_g2kin_d
   USE uspp_gpum,     ONLY : vkb_d, using_vkb_d

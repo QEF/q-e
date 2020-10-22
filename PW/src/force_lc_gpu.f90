@@ -22,7 +22,7 @@ SUBROUTINE force_lc_gpu( nat, tau, ityp, alat, omega, ngm, ngl, &
   USE Coul_cut_2D,     ONLY : do_cutoff_2D, cutoff_force_lc
   !
   USE device_fbuff_m,        ONLY : dev_buf
-  USE device_util_m,   ONLY : dev_memcpy
+  USE device_memcpy_m,   ONLY : dev_memcpy
   !
   IMPLICIT NONE
   !
