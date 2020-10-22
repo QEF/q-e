@@ -519,15 +519,15 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                  sevc = sevc_d
           END IF 
 !***********************************************************************
-!       IF (.not. use_gpu) THEN
-         CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
-         CALL gram_schmidt( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
-                         okvan, .TRUE., .TRUE., gs_nblock )
-!       ELSE
-!          CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
-!          CALL gram_schmidt( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
-!                          okvan, .TRUE., .TRUE., gs_nblock )
-!       END IF
+       IF (.not. use_gpu) THEN
+        CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
+        CALL gram_schmidt( npwx, npw, nbnd, npol, evc, hevc, sevc, et(1,ik), &
+                        okvan, .TRUE., .TRUE., gs_nblock )
+       ELSE
+          CALL using_evc(1);  CALL using_et(1); !precontidtion has intent(in)
+          CALL gram_schmidt_gamma_gpu( npwx, npw, nbnd, evc, hevc, sevc, et(1,ik), &
+                          okvan, .TRUE., .TRUE., gs_nblock )
+       END IF
        !
        avg_iter = avg_iter + 0.5D0
        !
