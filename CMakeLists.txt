@@ -198,13 +198,14 @@ qe_install_targets(qe_lapack)
 #######################################################################
 find_package(LAPACK)
 if(LAPACK_FOUND)
-    message(STATUS "Found LAPACK: ${BLAS_LIBRARIES};${LAPACK_LIBRARIES}")
-    target_link_libraries(qe_lapack
-        INTERFACE
-            ${BLAS_LIBRARIES}
-            ${BLAS_LINKER_FLAGS}
-            ${LAPACK_LIBRARIES}
-            ${LAPACK_LINKER_FLAGS})
+    list(APPEND _lapack_libs 
+        ${BLAS_LIBRARIES}
+        ${BLAS_LINKER_FLAGS}
+        ${LAPACK_LIBRARIES}
+        ${LAPACK_LINKER_FLAGS})
+    list(REMOVE_DUPLICATES "${_lapack_libs}")
+    message(STATUS "Found LAPACK: ${_lapack_libs}")
+    target_link_libraries(qe_lapack INTERFACE ${_lapack_libs})
 elseif(QE_ENABLE_VENDOR_DEPS)
     if(CMAKE_Fortran_COMPILER_ID MATCHES "XL")
         message(FATAL_ERROR "IBM XL compilers cannot build internal LAPACK with QE "

@@ -19,6 +19,7 @@ if(BLAS_FOUND OR LAPACK_FOUND)
             find_path(VendorFFTW_INCLUDE_FFTW3
                 NAMES
                     "fftw3.f"
+                    "fftw3.h"
                 HINTS
                     ${_dir_l1} ${_dir_l2} ${_dir_l3}
                 PATH_SUFFIXES
@@ -30,7 +31,12 @@ if(BLAS_FOUND OR LAPACK_FOUND)
             set(VendorFFTW_INCLUDE_DIRS ${VendorFFTW_INCLUDE_MKL_DFTI} ${VendorFFTW_INCLUDE_FFTW3})
 
             add_library(VendorFFTW INTERFACE IMPORTED)
-            set(VendorFFTW_LIBRARIES "${BLAS_LIBRARIES};${LAPACK_LIBRARIES}")
+            list(APPEND VendorFFTW_LIBRARIES 
+                ${BLAS_LIBRARIES}
+                ${BLAS_LINKER_FLAGS}
+                ${LAPACK_LIBRARIES}
+                ${LAPACK_LINKER_FLAGS})
+            list(REMOVE_DUPLICATES "${VendorFFTW_LIBRARIES}")
             target_link_libraries(VendorFFTW INTERFACE ${VendorFFTW_LIBRARIES})
             target_include_directories(VendorFFTW INTERFACE ${VendorFFTW_INCLUDE_DIRS})
             set(VendorFFTW_ID "Intel")
@@ -48,6 +54,7 @@ if(BLAS_FOUND OR LAPACK_FOUND)
 #            find_path(VendorFFTW_INCLUDE_DIRS
 #                NAMES
 #                    "fftw3.f"
+#                    "fftw3.h"
 #                HINTS
 #                    ${_dir_l1} ${_dir_l2} ${_dir_l3}
 #                PATH_SUFFIXES
@@ -58,7 +65,12 @@ if(BLAS_FOUND OR LAPACK_FOUND)
 #            )
 #
 #            add_library(VendorFFTW INTERFACE IMPORTED)
-#            set(VendorFFTW_LIBRARIES ${LAPACK_LIBRARIES})
+#            list(APPEND VendorFFTW_LIBRARIES 
+#                ${BLAS_LIBRARIES}
+#                ${BLAS_LINKER_FLAGS}
+#                ${LAPACK_LIBRARIES}
+#                ${LAPACK_LINKER_FLAGS})
+#            list(REMOVE_DUPLICATES "${VendorFFTW_LIBRARIES}")
 #            target_link_libraries(VendorFFTW INTERFACE ${VendorFFTW_LIBRARIES})
 #            set(VendorFFTW_ID "Arm")
 #
@@ -70,6 +82,7 @@ if(BLAS_FOUND OR LAPACK_FOUND)
             find_path(VendorFFTW_INCLUDE_DIRS
                 NAMES
                     "fftw3.f"
+                    "fftw3.h"
                 HINTS
                     ${_dir_l1} ${_dir_l2} ${_dir_l3}
                 PATH_SUFFIXES
@@ -80,7 +93,12 @@ if(BLAS_FOUND OR LAPACK_FOUND)
             )
 
             add_library(VendorFFTW INTERFACE IMPORTED)
-            set(VendorFFTW_LIBRARIES "${BLAS_LIBRARIES};${LAPACK_LIBRARIES}")
+            list(APPEND VendorFFTW_LIBRARIES 
+                ${BLAS_LIBRARIES}
+                ${BLAS_LINKER_FLAGS}
+                ${LAPACK_LIBRARIES}
+                ${LAPACK_LINKER_FLAGS})
+            list(REMOVE_DUPLICATES "${VendorFFTW_LIBRARIES}")
             target_include_directories(VendorFFTW INTERFACE ${VendorFFTW_INCLUDE_DIRS})
             set(VendorFFTW_ID "IBMESSL")
 
