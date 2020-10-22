@@ -31,7 +31,7 @@ make [-j$(nproc)]
 
 - CMAKE_INSTALL_PREFIX: If “make install” is invoked,
 this directory is prepended onto all install directories.
-- -j$(nproc): run parallel compilation
+- make -j$(nproc): run parallel compilation
 
 For more information, see the general documentation in directory Doc/, 
 package-specific documentation in \*/Doc/, and the web site 
