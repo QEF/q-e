@@ -50,6 +50,7 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   REAL(DP) :: rho, rs, ex_s, vx_s
   !REAL(DP) :: dpz
   INTEGER  :: iflg, ir, i1, i2, f1, f2
+  INTEGER :: iexch_, icorr_
   !
   REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP,        &
                          pi34 = 0.75_DP/3.141592653589793_DP,   &
@@ -63,6 +64,11 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
 #endif
   !
   dmuxc = 0.0_DP
+  !
+  iexch_=iexch
+  icorr_=icorr
+  IF (is_libxc(1)) iexch=0
+  IF (is_libxc(2)) icorr=0
   !
   ! ... first case: analytical derivatives available
   !
@@ -116,6 +122,7 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
      !
      WHERE ( arho < small ) dr = 1.0_DP ! ... to avoid NaN in the next operation
      !
+     !
      dmuxc(:) = (vx(i1:f1) + vc(i1:f1) - vx(i2:f2) - vc(i2:f2)) / &
                 (2.0_DP * dr(:))
      !
@@ -134,6 +141,9 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   ! bring to rydberg units
   !
   dmuxc = e2 * dmuxc
+  !
+  IF (is_libxc(1)) iexch=iexch_
+  IF (is_libxc(2)) icorr=icorr_
   !
   RETURN
   !
@@ -177,11 +187,17 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   INTEGER :: ir, is, iflg
   INTEGER :: i1, i2, i3, i4
   INTEGER :: f1, f2, f3, f4
+  INTEGER :: iexch_, icorr_
   !
   REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP,      &
                          pi34 = 0.75_DP/3.141592653589793_DP, &
                          third = 1.0_DP/3.0_DP, p43 = 4.0_DP/3.0_DP, &
                          p49 = 4.0_DP/9.0_DP, m23 = -2.0_DP/3.0_DP
+  !
+  iexch_=iexch
+  icorr_=icorr
+  IF (is_libxc(1)) iexch=0
+  IF (is_libxc(2)) icorr=0
   !
   dmuxc = 0.0_DP
   ALLOCATE(rhotot(length)) 
@@ -313,6 +329,9 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   ! ... bring to Rydberg units
   !
   dmuxc = e2 * dmuxc
+  !
+  IF (is_libxc(1)) iexch=iexch_
+  IF (is_libxc(2)) icorr=icorr_
   !
   RETURN
   !

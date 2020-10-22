@@ -41,9 +41,9 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
 #if defined(__LIBXC)
   TYPE(xc_f03_func_t) :: xc_func
   TYPE(xc_f03_func_info_t) :: xc_info1, xc_info2
-  INTEGER :: pol_unpol
+  INTEGER :: pol_unpol, fkind_x
   REAL(DP), ALLOCATABLE :: rho_lxc(:)
-  REAL(DP), ALLOCATABLE :: dmxc_lxc(:), dmex_lxc(:), dmcr_lxc(:)
+  REAL(DP), ALLOCATABLE :: dmex_lxc(:), dmcr_lxc(:)
   LOGICAL :: exch_lxc_avail, corr_lxc_avail
 #if (XC_MAJOR_VERSION > 4)
   INTEGER(8) :: lengthxc
@@ -59,7 +59,7 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   !
   lengthxc = length
   !
-  IF ( (is_libxc(1) .OR. iexch==0) .AND. (is_libxc(2) .OR. icorr==0)) THEN
+  IF ( ANY(is_libxc(1:2)) ) THEN
     !
     length_lxc = length*sr_d
     !
@@ -82,7 +82,7 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
       !
     CASE( 4 )
       !
-      CALL xclib_error( 'dmxc', 'The derivative of the xc potential with libxc &
+      CALL xclib_error( 'dmxc', 'The Libxc derivative of the XC potential &
                            &is not available for noncollinear case', 1 )
       !
     CASE DEFAULT
@@ -94,19 +94,23 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
     length_dlxc = length
     IF (pol_unpol == 2) length_dlxc = length*3
     !
-    !
-    ALLOCATE( dmex_lxc(length_dlxc), dmcr_lxc(length_dlxc), &
-              dmxc_lxc(length_dlxc) )
-    !
+  ENDIF
+  !
+  IF ( is_libxc(1) ) THEN
+    ALLOCATE( dmex_lxc(length_dlxc) )
     ! ... DERIVATIVE FOR EXCHANGE
     dmex_lxc(:) = 0.0_DP
     IF (iexch /= 0) THEN    
        CALL xc_f03_func_init( xc_func, iexch, pol_unpol )
         xc_info1 = xc_f03_func_get_info( xc_func )
+        fkind_x  = xc_f03_func_info_get_kind( xc_info1 )
         CALL xc_f03_lda_fxc( xc_func, lengthxc, rho_lxc(1), dmex_lxc(1) )
        CALL xc_f03_func_end( xc_func )
-    ENDIF    
-    !
+    ENDIF  
+  ENDIF
+  !
+  IF ( is_libxc(2) ) THEN
+    ALLOCATE( dmcr_lxc(length_dlxc) )
     ! ... DERIVATIVE FOR CORRELATION
     dmcr_lxc(:) = 0.0_DP
     IF (icorr /= 0) THEN
@@ -115,24 +119,12 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
         CALL xc_f03_lda_fxc( xc_func, lengthxc, rho_lxc(1), dmcr_lxc(1) )
        CALL xc_f03_func_end( xc_func )
     ENDIF
-    !
-    dmxc_lxc = (dmex_lxc + dmcr_lxc)*2.0_DP
-    !
-    IF (sr_d == 1) THEN
-      dmuxc(:,1,1) = dmxc_lxc(:)
-    ELSEIF (sr_d == 2) THEN
-      DO ir = 1, length
-        dmuxc(ir,1,1) = dmxc_lxc(3*ir-2)
-        dmuxc(ir,1,2) = dmxc_lxc(3*ir-1)
-        dmuxc(ir,2,1) = dmxc_lxc(3*ir-1)
-        dmuxc(ir,2,2) = dmxc_lxc(3*ir)
-      ENDDO
-    ENDIF
-    !
-    DEALLOCATE( dmex_lxc, dmcr_lxc, dmxc_lxc )
-    DEALLOCATE( rho_lxc )
-    !
-  ELSEIF ((.NOT.is_libxc(1)) .AND. (.NOT.is_libxc(2)) ) THEN
+  ENDIF
+  !
+  dmuxc = 0.0_DP
+  !
+  IF ( ((.NOT.is_libxc(1)) .OR. (.NOT.is_libxc(2))) &
+        .AND. fkind_x/=XC_EXCHANGE_CORRELATION ) THEN
     !
     rho_threshold_lda = small
     !
@@ -140,12 +132,40 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
     IF ( sr_d == 2 ) CALL dmxc_lsda( length, rho_in, dmuxc )
     IF ( sr_d == 4 ) CALL dmxc_nc( length, rho_in(:,1), rho_in(:,2:4), dmuxc )
     !
-  ELSE
-    !
-    CALL xclib_error( 'dmxc', 'Derivatives of exchange and correlation terms, &
-                        & at present, must be both qe or both libxc.', 3 )
-    !
   ENDIF
+  !
+  !
+  SELECT CASE( sr_d )
+  CASE( 1 )
+    !
+    IF ( is_libxc(1) ) dmuxc(:,1,1) = dmuxc(:,1,1) + dmex_lxc(:)*2.0_DP
+    IF ( is_libxc(2) ) dmuxc(:,1,1) = dmuxc(:,1,1) + dmcr_lxc(:)*2.0_DP
+    !
+  CASE( 2 )
+    !
+    IF ( is_libxc(1) ) THEN
+      DO ir = 1, length
+        dmuxc(ir,1,1) = dmuxc(ir,1,1) + dmex_lxc(3*ir-2)*2.0_DP
+        dmuxc(ir,1,2) = dmuxc(ir,1,2) + dmex_lxc(3*ir-1)*2.0_DP
+        dmuxc(ir,2,1) = dmuxc(ir,2,1) + dmex_lxc(3*ir-1)*2.0_DP
+        dmuxc(ir,2,2) = dmuxc(ir,2,2) + dmex_lxc(3*ir)  *2.0_DP
+      ENDDO
+      DEALLOCATE( dmex_lxc )
+    ENDIF
+    !
+    IF ( is_libxc(2) ) THEN
+      DO ir = 1, length  
+        dmuxc(ir,1,1) = dmuxc(ir,1,1) + dmcr_lxc(3*ir-2)*2.0_DP
+        dmuxc(ir,1,2) = dmuxc(ir,1,2) + dmcr_lxc(3*ir-1)*2.0_DP
+        dmuxc(ir,2,1) = dmuxc(ir,2,1) + dmcr_lxc(3*ir-1)*2.0_DP
+        dmuxc(ir,2,2) = dmuxc(ir,2,2) + dmcr_lxc(3*ir)  *2.0_DP
+      ENDDO
+      DEALLOCATE( dmcr_lxc )
+    ENDIF
+    !
+  END SELECT
+  !
+  IF ( ANY(is_libxc(1:2)) ) DEALLOCATE( rho_lxc )
   !
 #else
   !
