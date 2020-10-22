@@ -27,11 +27,11 @@ make [-j$(nproc)]
 [make install]
 ```
 
-("make" alone prints all targets). Binaries go in bin/.
+("make" builds all targets). Binaries go in build/bin.
 
-- CMAKE_INSTALL_PREFIX: If “make install” is invoked,
+- _CMAKE_INSTALL_PREFIX_: If 'make install' is invoked,
 this directory is prepended onto all install directories.
-- make -j$(nproc): run parallel compilation
+- _make -j$(nproc)_: run parallel compilation
 
 For more information, see the general documentation in directory Doc/, 
 package-specific documentation in \*/Doc/, and the web site 
