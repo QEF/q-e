@@ -36,7 +36,10 @@ if(LAPACK_FOUND)
             set(VendorFFTW_ID "Intel")
 
             break()
-# FIXME: undefined reference to `zfft1mx_'
+## FIXME: In the 'fft_scalar.ARM_LIB.f90' should be removed the call to the subroutine 'zfft1mx'
+##        otherwise the ARMPL throw the following error: undefined reference to `zfft1mx_'
+##        This subroutine is not more implemented in the ARMPL (ARMPL misses the symbol)
+##
 #        elseif(_lib MATCHES "armpl")
 #            get_filename_component(_dir_l1 ${_lib} DIRECTORY)
 #            get_filename_component(_dir_l2 ${_dir_l1} DIRECTORY)
@@ -88,6 +91,10 @@ if(LAPACK_FOUND)
 endif()
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(VendorFFTW REQUIRED_VARS VendorFFTW_LIBRARIES VendorFFTW_INCLUDE_DIRS VendorFFTW_ID)
+find_package_handle_standard_args(VendorFFTW 
+    REQUIRED_VARS 
+        VendorFFTW_LIBRARIES 
+        VendorFFTW_INCLUDE_DIRS 
+        VendorFFTW_ID)
 
 mark_as_advanced(VendorFFTW_LIBRARIES VendorFFTW_ID)
