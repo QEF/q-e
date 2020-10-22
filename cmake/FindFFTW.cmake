@@ -181,7 +181,9 @@ if(FFTW_DIRS)
   endif()
 
   find_path(FFTW_INCLUDE_DIRS
-    NAMES "fftw3.h"
+    NAMES 
+      "fftw3.h"
+      "fftw3.f"
     PATHS 
       ${FFTW_DIRS}
       $ENV{C_INCLUDE_PATH}
@@ -351,7 +353,9 @@ else()
   endforeach()
   
   find_path(FFTW_INCLUDE_DIRS
-    NAMES "fftw3.h"
+    NAMES 
+      "fftw3.h"
+      "fftw3.f"
     PATHS 
       ${PKG_FFTW_INCLUDE_DIRS} 
       ${INCLUDE_INSTALL_DIR}
