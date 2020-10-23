@@ -30,7 +30,6 @@ DEVXLIB_URL="https://gitlab.com/max-centre/components/devicexlib/-/archive/maste
 all: libcuda
 	$(MAKE) libblas_$(BLAS_LIBS_SWITCH) 
 	$(MAKE) liblapack_$(LAPACK_LIBS_SWITCH) 
-	$(MAKE) libelpa_internal 
 	$(MAKE) libiotk 
 
 ###################################
@@ -141,29 +140,6 @@ libfox:
 
 fox_clean:
 	if test -d ../FoX; then (rm -R -f ../FoX); fi
-
-###################################
-# ELPA
-###################################
-
-libelpa : libelpa_$(ELPA_LIBS_SWITCH)
-
-libelpa_ : fake_elpa_external
-libelpa_disabled : fake_elpa_external
-
-fake_elpa_external :
-	touch fake_libelpa.a
-	-rm fake_libelpa.a
-
-libelpa_enabled:
-	if test ! -d ../ELPA; then \
-	( gzip -dc ../archive/ELPA-0.3.tar.gz |(cd ../; tar -xvf -)); fi
-	cd ../ELPA; $(MAKE)
-
-elpa_clean:
-	if test -d ../ELPA; then (cd ../ELPA; $(MAKE) clean); fi
-elpa_veryclean:
-	if test -d ../ELPA; then (rm -R -f ../ELPA); fi
 
 ###################################
 # CUDA
