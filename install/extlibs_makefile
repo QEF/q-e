@@ -193,6 +193,7 @@ libcuda_devxlib :
     fi; \
     touch make.inc; \
     $(MAKE) clean; \
+    export F90FLAGS="$(FOX_FLAGS)"; \
     ./configure FC=$(F90) F77=$(F77) CC=$(CC) \
                 --with-cuda=$(CUDA_PATH) \
                 --with-cuda-cc=$(GPU_ARCH) \
