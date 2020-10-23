@@ -135,35 +135,37 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   ENDIF
   !
   !
-  SELECT CASE( sr_d )
-  CASE( 1 )
-    !
-    IF ( is_libxc(1) ) dmuxc(:,1,1) = dmuxc(:,1,1) + dmex_lxc(:)*2.0_DP
-    IF ( is_libxc(2) ) dmuxc(:,1,1) = dmuxc(:,1,1) + dmcr_lxc(:)*2.0_DP
-    !
-  CASE( 2 )
-    !
-    IF ( is_libxc(1) ) THEN
-      DO ir = 1, length
-        dmuxc(ir,1,1) = dmuxc(ir,1,1) + dmex_lxc(3*ir-2)*2.0_DP
-        dmuxc(ir,1,2) = dmuxc(ir,1,2) + dmex_lxc(3*ir-1)*2.0_DP
-        dmuxc(ir,2,1) = dmuxc(ir,2,1) + dmex_lxc(3*ir-1)*2.0_DP
-        dmuxc(ir,2,2) = dmuxc(ir,2,2) + dmex_lxc(3*ir)  *2.0_DP
-      ENDDO
-      DEALLOCATE( dmex_lxc )
-    ENDIF
-    !
-    IF ( is_libxc(2) ) THEN
-      DO ir = 1, length  
-        dmuxc(ir,1,1) = dmuxc(ir,1,1) + dmcr_lxc(3*ir-2)*2.0_DP
-        dmuxc(ir,1,2) = dmuxc(ir,1,2) + dmcr_lxc(3*ir-1)*2.0_DP
-        dmuxc(ir,2,1) = dmuxc(ir,2,1) + dmcr_lxc(3*ir-1)*2.0_DP
-        dmuxc(ir,2,2) = dmuxc(ir,2,2) + dmcr_lxc(3*ir)  *2.0_DP
-      ENDDO
-      DEALLOCATE( dmcr_lxc )
-    ENDIF
-    !
-  END SELECT
+  IF ( ANY(is_libxc(1:2)) ) THEN
+    SELECT CASE( sr_d )
+    CASE( 1 )
+      !
+      IF ( is_libxc(1) ) dmuxc(:,1,1) = dmuxc(:,1,1) + dmex_lxc(:)*2.0_DP
+      IF ( is_libxc(2) ) dmuxc(:,1,1) = dmuxc(:,1,1) + dmcr_lxc(:)*2.0_DP
+      !
+    CASE( 2 )
+      !
+      IF ( is_libxc(1) ) THEN
+        DO ir = 1, length
+          dmuxc(ir,1,1) = dmuxc(ir,1,1) + dmex_lxc(3*ir-2)*2.0_DP
+          dmuxc(ir,1,2) = dmuxc(ir,1,2) + dmex_lxc(3*ir-1)*2.0_DP
+          dmuxc(ir,2,1) = dmuxc(ir,2,1) + dmex_lxc(3*ir-1)*2.0_DP
+          dmuxc(ir,2,2) = dmuxc(ir,2,2) + dmex_lxc(3*ir)  *2.0_DP
+        ENDDO
+        DEALLOCATE( dmex_lxc )
+      ENDIF
+      !
+      IF ( is_libxc(2) ) THEN
+        DO ir = 1, length  
+          dmuxc(ir,1,1) = dmuxc(ir,1,1) + dmcr_lxc(3*ir-2)*2.0_DP
+          dmuxc(ir,1,2) = dmuxc(ir,1,2) + dmcr_lxc(3*ir-1)*2.0_DP
+          dmuxc(ir,2,1) = dmuxc(ir,2,1) + dmcr_lxc(3*ir-1)*2.0_DP
+          dmuxc(ir,2,2) = dmuxc(ir,2,2) + dmcr_lxc(3*ir)  *2.0_DP
+        ENDDO
+        DEALLOCATE( dmcr_lxc )
+      ENDIF
+      !
+    END SELECT
+  ENDIF
   !
   IF ( ANY(is_libxc(1:2)) ) DEALLOCATE( rho_lxc )
   !

@@ -4,6 +4,7 @@
 MODULE qe_drivers_d_gga
   !
   USE kind_l,     ONLY: DP
+  USE dft_par_mod
   !
   IMPLICIT NONE
   !
@@ -34,6 +35,7 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   ! ... local variables
   !
   INTEGER :: i1, i2, i3, i4, f1, f2, f3, f4
+  INTEGER :: igcx_, igcc_
   REAL(DP), DIMENSION(length) :: dr, s, ds
   REAL(DP), DIMENSION(4*length) :: raux, s2aux
   REAL(DP), ALLOCATABLE :: v1x(:), v2x(:), v1c(:), v2c(:)
@@ -42,6 +44,11 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   !
   ALLOCATE( v1x(4*length), v2x(4*length), sx(4*length) )
   ALLOCATE( v1c(4*length), v2c(4*length), sc(4*length) )
+  !
+  igcx_=igcx
+  igcc_=igcc
+  IF (is_libxc(3)) igcx=0
+  IF (is_libxc(4)) igcc=0
   !
   i1 = 1     ;   f1 = length     !4 blocks:  [ rho+dr ,    grho2    ]
   i2 = f1+1  ;   f2 = 2*length   !           [ rho-dr ,    grho2    ]
@@ -78,6 +85,9 @@ SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc 
   DEALLOCATE( v1x, v2x, sx )
   DEALLOCATE( v1c, v2c, sc )
   !
+  IF (is_libxc(3)) igcx=igcx_
+  IF (is_libxc(4)) igcc=igcc_
+  !
   RETURN
   !
 END SUBROUTINE dgcxc_unpol
@@ -108,6 +118,7 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   INTEGER :: i1, i2, i3, i4, i5, i6, i7, i8
   INTEGER :: f1, f2, f3, f4, f5, f6, f7, f8
   ! block delimiters
+  INTEGER :: igcx_, igcc_
   REAL(DP), DIMENSION(length,2) :: r, s, s2
   REAL(DP), DIMENSION(length,2) :: drup, drdw, dsup, dsdw
   ! deltas for rho and gradient
@@ -130,6 +141,11 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   REAL(DP), PARAMETER :: eps = 1.D-6
   REAL(DP), PARAMETER :: rho_trash = 0.4_DP, zeta_trash = 0.2_DP, &
                          s2_trash = 0.1_DP
+  !
+  igcx_=igcx
+  igcc_=igcc
+  IF (is_libxc(3)) igcx=0
+  IF (is_libxc(4)) igcc=0
   !
   vrrx = 0.0_DP ; vrsx = 0.0_DP ; vssx = 0.0_DP
   vrrc = 0.0_DP ; vrsc = 0.0_DP ; vrzc = 0.0_DP
@@ -267,6 +283,9 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   vssc(:)   = 0.5_DP * (v2c(i3:f3)   - v2c(i4:f4)  ) / ds/st * null_v(:,1)
   vrzc(:,1) = 0.5_DP * (v1c(i5:f5,1) - v1c(i6:f6,1)) / dz    * null_v(:,1)
   vrzc(:,2) = 0.5_DP * (v1c(i5:f5,2) - v1c(i6:f6,2)) / dz    * null_v(:,1)
+  !
+  IF (is_libxc(3)) igcx=igcx_
+  IF (is_libxc(4)) igcc=igcc_
   !
   RETURN
   !

@@ -43,7 +43,7 @@ xclib_test.x : xclib_test.o xc_lib.a
 	- ( cd ../bin ; ln -fs ../XClib/$@ . )
 
 clean :
-	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L 
+	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x
 
 # .PHONY forces execution of a rule irrespective of the presence of an
 # updated file with the same name of the rule. In this way, the script 
