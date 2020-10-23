@@ -230,8 +230,10 @@ CONTAINS
     integer :: mesh
     !
     CALL xmlr_opentag( capitalize_if_v2('pp_mesh') )
-    CALL get_attr ( 'mesh', mesh )
-    if ( mesh /= upf%mesh ) call upf_error('read_pp_mesh','mismatch in mesh',mesh)
+    mesh = upf%mesh
+    CALL get_attr ( 'mesh', upf%mesh )
+    if ( upf%mesh /= mesh ) call upf_error('read_pp_mesh',&
+         'mismatch in mesh size, discarding the one in header',-mesh)
     CALL get_attr ( 'dx'  , upf%dx   )
     CALL get_attr ( 'xmin', upf%xmin )
     CALL get_attr ( 'rmax', upf%rmax )
@@ -340,7 +342,9 @@ CONTAINS
        END IF
        CALL xmlr_readtag( tag, upf%beta(1:upf%mesh,nb) )
        CALL get_attr('index', mb)
-       IF ( nb /= mb ) CALL upf_error('read_pp_nonlocal','mismatch',nb)
+       ! not-so-strict test: index is absent or incorrect in some UPF v.2 files
+       IF ( .NOT. v2 .AND. nb /= mb ) &
+            CALL upf_error('read_pp_nonlocal','mismatch',nb)
        CALL get_attr('label', upf%els_beta(nb))
        CALL get_attr('angular_momentum', upf%lll(nb))
        IF ( .NOT. v2 .AND. upf%has_so ) &
@@ -513,7 +517,8 @@ CONTAINS
        END IF
        CALL xmlr_readtag( tag, upf%chi(1:upf%mesh,nw) )
        call get_attr('index', ind)
-       if ( ind /= nw ) &
+       ! not-so-strict test: index is absent or incorrect in some UPF v.2 files
+       if ( .NOT. v2 .AND. ind /= nw ) &
             call upf_error('read_pp_pswfc','mismatch reading PSWFC', nw)
        call get_attr( 'label', upf%els(nw) )
        call get_attr( 'l', upf%lchi(nw) )
@@ -554,7 +559,9 @@ CONTAINS
           END IF
           CALL xmlr_readtag( tag, upf%aewfc(1:upf%mesh,nb) )
           CALL get_attr ('index',mb)
-          IF ( nb /= mb ) CALL upf_error('read_pp_full_wfc','mismatch',1)
+          ! not-so-strict test (and two more below):
+          ! index may be absent or incorrect in some UPF v.2 files
+          IF ( .NOT. v2 .AND. nb /= mb ) CALL upf_error('read_pp_full_wfc','mismatch',1)
        END DO
        !
        IF ( upf%has_so .AND. upf%tpawp ) THEN
@@ -567,7 +574,7 @@ CONTAINS
              END IF
              CALL xmlr_readtag(tag, upf%paw%aewfc_rel(1:upf%mesh,nb) )
              CALL get_attr ('index',mb)
-             IF ( nb /= mb ) CALL upf_error('read_pp_full_wfc','mismatch',2)
+             IF ( .NOT. v2 .AND. nb /= mb ) CALL upf_error('read_pp_full_wfc','mismatch',2)
           END DO
        END IF
        !
@@ -580,7 +587,7 @@ CONTAINS
           END IF
           CALL xmlr_readtag(tag, upf%pswfc(1:upf%mesh,nb) )
           CALL get_attr ('index',mb)
-          IF ( nb /= mb ) CALL upf_error('read_pp_full_wfc','mismatch',3)
+          IF ( .NOT. v2 .AND. nb /= mb ) CALL upf_error('read_pp_full_wfc','mismatch',3)
        END DO
        !
        CALL xmlr_closetag( )
@@ -604,7 +611,8 @@ CONTAINS
     DO nw = 1,upf%nwfc
        CALL xmlr_readtag( 'PP_RELWFC.'//i2c(nw), dummy )
        CALL get_attr( 'index' , nb )
-       IF ( nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',1)
+       ! not-so-strict test: index absent or incorrect in some UPF v.2 files
+       IF ( .NOT. v2 .AND. nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',1)
        CALL get_attr( 'els',   upf%els(nw) )
        CALL get_attr( 'nn',    upf%nn(nw) )
        CALL get_attr( 'lchi',  upf%lchi(nw) )
@@ -623,7 +631,7 @@ CONTAINS
           return
        end if
        CALL get_attr( 'index' , nw )
-       IF ( nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',2)
+       IF ( .NOT.v2 .AND. nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',2)
        CALL get_attr( 'lll',  upf%lll(nb) )
        CALL get_attr( 'jjj',  upf%jjj(nb) )
     ENDDO
