@@ -28,40 +28,11 @@ DEVXLIB_URL="https://gitlab.com/max-centre/components/devicexlib/-/archive/maste
 # MAIN target
 
 all: libcuda
-	$(MAKE) libblas_$(BLAS_LIBS_SWITCH) 
 	$(MAKE) liblapack_$(LAPACK_LIBS_SWITCH) 
 	$(MAKE) libiotk 
 
 ###################################
-# BLAS
-###################################
-
-libblas : libblas_$(BLAS_LIBS_SWITCH)
-
-libblas_external : fake_blas_external
-
-fake_blas_external :
-	touch fake_libblas.a
-	-rm fake_libblas.a
-
-# why are all these lines commented out?
-#BLAS_NETLIB=blas-3.6.0.tgz
-#BLAS_NETLIB_NAME=BLAS-3.6.0
-#BLAS_NETLIB_URL=http://www.netlib.org/blas/${BLAS_NETLIB}
-#libblas_internal:
-#	$(call download_and_unpack,$(BLAS_NETLIB_NAME),$(BLAS_NETLIB_URL),BLAS,BLAS)
-#      if test -e make_blas.inc; then \
-#	(cp make_blas.inc ../BLAS/make.inc; \
-#	cd ../BLAS; $(MAKE) ); else \
-#	(echo "no configuration file found for blas"; \
-#	echo "run configure from main QE dir"; exit); fi
-#blas_clean:
-#	if test -d ../BLAS; then (cd ../BLAS; $(MAKE) clean); fi
-#blas_veryclean:
-#	if test -d ../BLAS; then (rm -R -f ../BLAS ../${BLAS_NETLIB_NAME}); fi
-
-###################################
-# LAPACK
+# LAPACK (includes BLAS)
 ###################################
 
 liblapack : liblapack_$(LAPACK_LIBS_SWITCH) 
@@ -193,8 +164,7 @@ libcuda_devxlib_veryclean:
 
 libbeef : libbeef_$(BEEF_LIBS_SWITCH)
 
-libbeef_ : fake_libbeef_external
-libbeef_external : fake_elpa_external
+libbeef_external : fake_libbeef_external
 
 fake_libbeef_external :
 	touch fake_libbeef.a

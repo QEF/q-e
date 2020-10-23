@@ -211,9 +211,6 @@ bindir :
 # Targets for external libraries
 ############################################################
 
-libblas : 
-	cd install ; $(MAKE) -f extlibs_makefile $@
-
 liblapack: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
