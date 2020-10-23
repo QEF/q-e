@@ -175,7 +175,7 @@ BEEF_LIBS      = @beef_libs@
 BEEF_LIBS_SWITCH = @beef_libs_switch@
 
 # CUDA libraries
-CUDA_LIBS=@cuda_libs@ $(TOPDIR)/external/devxlib/src/libdevXlib.a
+CUDA_LIBS=@cuda_libs@ -L$(TOPDIR)/external/devxlib/src -ldevXlib
 CUDA_EXTLIBS = devxlib @cuda_extlibs@
 
 # ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
