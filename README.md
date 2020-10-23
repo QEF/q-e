@@ -16,8 +16,25 @@ make all
 ```
 
 ("make" alone prints a list of acceptable targets). Binaries go in bin/.
-For more information, see the general documentation in directory Doc/,
-package-specific documentation in \*/Doc/, and the web site
+
+Quick CMake installation instructions for the impatient:
+
+```
+mkdir ./build
+cd ./build
+cmake [-DCMAKE_INSTALL_PREFIX=/path/to/install] ..
+make [-j$(nproc)]
+[make install]
+```
+
+("make" builds all targets). Binaries go in build/bin.
+
+- _CMAKE_INSTALL_PREFIX_: If 'make install' is invoked,
+this directory is prepended onto all install directories.
+- _make -j$(nproc)_: run parallel compilation
+
+For more information, see the general documentation in directory Doc/, 
+package-specific documentation in \*/Doc/, and the web site 
 http://www.quantum-espresso.org/
 
 ## PACKAGES
