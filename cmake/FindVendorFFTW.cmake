@@ -1,15 +1,35 @@
 if(BLAS_FOUND OR LAPACK_FOUND)
     foreach(_lib ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
-        if(_lib MATCHES "mkl")
-            get_filename_component(_dir_l1 ${_lib} DIRECTORY)
-            get_filename_component(_dir_l2 ${_dir_l1} DIRECTORY)
-            get_filename_component(_dir_l3 ${_dir_l2} DIRECTORY)
+        # Check only libraries and directories
+        set(_search_path)
+        if(EXISTS "${_lib}")
+            # Get three parent directories of the library
+            get_filename_component(_parent_l1 ${_lib} DIRECTORY)
+            get_filename_component(_parent_l2 ${_parent_l1} DIRECTORY)
+            get_filename_component(_parent_l3 ${_parent_l2} DIRECTORY)
+            list(APPEND _search_path ${_lib} ${_parent_l1} ${_parent_l2} ${_parent_l3})
+        else()
+            # Remove first two characters '-L' and try again
+            string(REGEX MATCH "/[^ ]*" _lib_clean ${_lib})
+            if(EXISTS "${_lib_clean}")
+                get_filename_component(_parent_l1 ${_lib_clean} DIRECTORY)
+                get_filename_component(_parent_l2 ${_parent_l1} DIRECTORY)
+                get_filename_component(_parent_l3 ${_parent_l2} DIRECTORY)
+                list(APPEND _search_path ${_lib_clean} ${_parent_l1} ${_parent_l2} ${_parent_l3})
+            else()
+                # This is not a file or a directory
+                continue()
+            endif()
+        endif()
 
+        # Start to search vendor libraries and include directories
+        # Try to find the Intel MKL
+        if(_search_path MATCHES "mkl")
             find_path(VendorFFTW_INCLUDE_MKL_DFTI
                 NAMES
                     "mkl_dfti.f90"
                 HINTS
-                    ${_dir_l1} ${_dir_l2} ${_dir_l3}
+                    ${_search_path}
                 PATH_SUFFIXES
                     "include"
                     "fftw"
@@ -21,7 +41,7 @@ if(BLAS_FOUND OR LAPACK_FOUND)
                     "fftw3.f"
                     "fftw3.h"
                 HINTS
-                    ${_dir_l1} ${_dir_l2} ${_dir_l3}
+                    ${_search_path}
                 PATH_SUFFIXES
                     "include"
                     "fftw"
@@ -42,49 +62,41 @@ if(BLAS_FOUND OR LAPACK_FOUND)
             set(VendorFFTW_ID "Intel")
 
             break()
-## FIXME: In the 'fft_scalar.ARM_LIB.f90' should be removed the call to the subroutine 'zfft1mx'
-##        otherwise the ARMPL throw the following error: undefined reference to `zfft1mx_'
-##        This subroutine is not more implemented in the ARMPL (ARMPL misses the symbol)
-##
-#        elseif(_lib MATCHES "armpl")
-#            get_filename_component(_dir_l1 ${_lib} DIRECTORY)
-#            get_filename_component(_dir_l2 ${_dir_l1} DIRECTORY)
-#            get_filename_component(_dir_l3 ${_dir_l2} DIRECTORY)
-#
-#            find_path(VendorFFTW_INCLUDE_DIRS
-#                NAMES
-#                    "fftw3.f"
-#                    "fftw3.h"
-#                HINTS
-#                    ${_dir_l1} ${_dir_l2} ${_dir_l3}
-#                PATH_SUFFIXES
-#                    "include"
-#                    "fftw"
-#                    "include/fftw"
-#                NO_DEFAULT_PATH
-#            )
-#
-#            add_library(VendorFFTW INTERFACE IMPORTED)
-#            list(APPEND VendorFFTW_LIBRARIES 
-#                ${BLAS_LIBRARIES}
-#                ${BLAS_LINKER_FLAGS}
-#                ${LAPACK_LIBRARIES}
-#                ${LAPACK_LINKER_FLAGS})
-#            list(REMOVE_DUPLICATES "${VendorFFTW_LIBRARIES}")
-#            target_link_libraries(VendorFFTW INTERFACE ${VendorFFTW_LIBRARIES})
-#            set(VendorFFTW_ID "Arm")
-#
-#            break()
-        elseif(_lib MATCHES "essl")
-            get_filename_component(_dir_l1 ${_lib} DIRECTORY)
-            get_filename_component(_dir_l2 ${_dir_l1} DIRECTORY)
-            get_filename_component(_dir_l3 ${_dir_l2} DIRECTORY)
+        # Try to find the ARM Performance Library
+        elseif(_search_path MATCHES "armpl")
             find_path(VendorFFTW_INCLUDE_DIRS
                 NAMES
                     "fftw3.f"
                     "fftw3.h"
                 HINTS
-                    ${_dir_l1} ${_dir_l2} ${_dir_l3}
+                    ${_search_path}
+                PATH_SUFFIXES
+                    "include"
+                    "fftw"
+                    "include/fftw"
+                NO_DEFAULT_PATH
+            )
+
+            add_library(VendorFFTW INTERFACE IMPORTED)
+            list(APPEND VendorFFTW_LIBRARIES 
+                ${BLAS_LIBRARIES}
+                ${BLAS_LINKER_FLAGS}
+                ${LAPACK_LIBRARIES}
+                ${LAPACK_LINKER_FLAGS})
+            list(REMOVE_DUPLICATES "${VendorFFTW_LIBRARIES}")
+            target_link_libraries(VendorFFTW INTERFACE ${VendorFFTW_LIBRARIES})
+            target_include_directories(VendorFFTW INTERFACE ${VendorFFTW_INCLUDE_DIRS})
+            set(VendorFFTW_ID "Arm")
+
+            break()
+        # Try to find the IBM ESSL library
+        elseif(_search_path MATCHES "essl")
+            find_path(VendorFFTW_INCLUDE_DIRS
+                NAMES
+                    "fftw3.f"
+                    "fftw3.h"
+                HINTS
+                    ${_search_path}
                 PATH_SUFFIXES
                     "include"
                     "fftw"
