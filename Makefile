@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2016 Quantum ESPRESSO group
+# Copyright (C) 2001-2020 Quantum ESPRESSO Foundation
 # 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -33,8 +33,6 @@ default :
 	@echo '  couple       Library interface for coupling to external codes'
 	@echo '  epw          Electron-Phonon Coupling with wannier functions'
 	@echo '  gui          Graphical User Interface'
-	@echo '  examples     fetch from web examples for all core packages'
-	@echo '  test-suite   run semi-automated test-suite for regression testing'
 	@echo '  all          same as "make pwall cp ld1 tddfpt hp"'
 	@echo ' '
 	@echo 'where target identifies one or multiple THIRD-PARTIES PACKAGES:'
@@ -102,10 +100,6 @@ acfdt : phlibs
 	if test -d ACFDT ; then \
 	( cd ACFDT ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-# target still present for backward compatibility
-gww:
-	@echo '"make gww" is obsolete, use "make gwl" instead '
-
 gwl : phlibs
 	if test -d GWW ; then \
 	( cd GWW ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
@@ -153,9 +147,6 @@ gui :
 	    echo "  Sorry, gui works only for git sources !!!" ; \
 	    echo ; \
 	fi
-
-examples :
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 pwall : pw neb ph pp pwcond acfdt
 
@@ -289,15 +280,6 @@ install :
 	for x in `find * ! -path "test-suite/*" -name *.x -type f` ; do \
 		cp -v $$x $(PREFIX)/bin/ ; done
 	@echo -e '\nQuantum ESPRESSO binaries are installed in $(PREFIX)/bin\n'
-
-#########################################################
-# Run test-suite for numerical regression testing
-# NB: it is assumed that reference outputs have been 
-#     already computed once (usually during release)
-#########################################################
-
-test-suite: pw cp 
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #########################################################
 # Other targets: clean up
