@@ -1,5 +1,9 @@
 if(BLAS_FOUND OR LAPACK_FOUND)
-    foreach(_lib ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+    # Trasform spaces in semicolons
+    string(REPLACE " " ";" _blas_libs "${BLAS_LIBRARIES}")
+    string(REPLACE " " ";" _lapack_libs "${LAPACK_LIBRARIES}")
+
+    foreach(_lib ${_blas_libs} ${_lapack_libs})
         # Check only libraries and directories
         set(_search_path)
         if(EXISTS "${_lib}")
