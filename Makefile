@@ -40,8 +40,6 @@ default :
 	@echo '  w90          Maximally localised Wannier Functions'
 	@echo '  want         Quantum Transport with Wannier functions'
 	@echo '  yambo        electronic excitations with plane waves'
-#	@echo '  SternheimerGW calculate GW using Sternheimer equations'
-#	@echo '  plumed       Metadynamics plugin for pw or cp'
 	@echo '  d3q          general third-order code and thermal transport codes'
 	@echo ' '
 	@echo 'where target is one of the following suite operation:'
@@ -230,17 +228,11 @@ libbeef:
 w90: bindir liblapack
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-want :
+want: liblapack
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-yambo:
+yambo: liblapack
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
-#plumed: pw cp 
-#	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
-#SternheimerGW: lrmods 
-#	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #########################################################
 # "make links" produces links to all executables in bin/

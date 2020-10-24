@@ -13,16 +13,6 @@ include plugins_list
 include install_utils
 
 ###########################################################
-# extlibs - what is the purpose of these targets? shouldn't
-#           these be dealt with in "extlibs_makefile" ?
-###########################################################
-
-EXTLIBS=liblapack
-
-extlibs:
-	test -n "$(EXTLIBS)" && ( cd .. ; $(MAKE) $(EXTLIBS) || exit 1) || :
-
-###########################################################
 # D3Q
 ###########################################################
 
@@ -129,7 +119,7 @@ w90_distclean:
 # WANT
 ###########################################################
 
-want: extlibs uncompress-want configure-want
+want: uncompress-want configure-want
 	if test -d ../WANT; then \
 	cd ../WANT; $(MAKE) all || exit 1; fi
 	touch ./make-want
@@ -172,7 +162,7 @@ want_distclean:
 # YAMBO
 ###########################################################
 
-yambo: extlibs uncompress-yambo configure-yambo
+yambo: uncompress-yambo configure-yambo
 	if test -d ../YAMBO; then \
 	cd ../YAMBO; $(MAKE) yambo interfaces ypp || exit 1; fi
 	touch ./make-yambo
