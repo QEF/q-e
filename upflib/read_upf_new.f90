@@ -230,10 +230,15 @@ CONTAINS
     integer :: mesh
     !
     CALL xmlr_opentag( capitalize_if_v2('pp_mesh') )
-    mesh = upf%mesh
-    CALL get_attr ( 'mesh', upf%mesh )
-    if ( upf%mesh /= mesh ) call upf_error('read_pp_mesh',&
-         'mismatch in mesh size, discarding the one in header',-mesh)
+    CALL get_attr ( 'mesh', mesh )
+    if ( mesh == 0 ) THEN
+       call upf_error('read_pp_mesh',&
+         'mesh size missing, using the one in header',-1)
+    else if ( mesh /= upf%mesh ) THEN
+       call upf_error('read_pp_mesh',&
+         'mismatch in mesh size, discarding the one in header',-1)
+       upf%mesh = mesh
+    end if
     CALL get_attr ( 'dx'  , upf%dx   )
     CALL get_attr ( 'xmin', upf%xmin )
     CALL get_attr ( 'rmax', upf%rmax )
