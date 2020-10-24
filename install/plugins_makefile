@@ -17,7 +17,7 @@ include install_utils
 #           these be dealt with in "extlibs_makefile" ?
 ###########################################################
 
-EXTLIBS=liblapack libiotk
+EXTLIBS=liblapack
 
 extlibs:
 	test -n "$(EXTLIBS)" && ( cd .. ; $(MAKE) $(EXTLIBS) || exit 1) || :
@@ -188,7 +188,6 @@ configure-yambo:
 	./configure \
 	 --with-blas-libs="$(BLAS_LIBS)" \
 	 --with-lapack-libs="$(LAPACK_LIBS) $(BLAS_LIBS)" \
-	 --with-iotk-path="$(TOPDIR)/iotk" \
 	 --with-fft-libs="$(FFT_LIBS)" \
 	 --with-scalapack-libs="$(SCALAPACK_LIBS)" \
 	 --with-blacs-libs="$(SCALAPACK_LIBS)" \

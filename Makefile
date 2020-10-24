@@ -223,10 +223,6 @@ libcuda:
 libbeef:
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
-# In case of trouble with iotk and compilers, add
-# FFLAGS="$(FFLAGS_NOOPT)" after $(MFLAGS)
-libiotk: 
-	cd install ; $(MAKE) -f extlibs_makefile $@
 #########################################################
 # plugins
 #########################################################
@@ -234,10 +230,10 @@ libiotk:
 w90: bindir liblapack
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-want : libiotk
+want :
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-yambo: libiotk
+yambo:
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #plumed: pw cp 
