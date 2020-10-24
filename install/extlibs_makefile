@@ -28,8 +28,6 @@ DEVXLIB_URL="https://gitlab.com/max-centre/components/devicexlib/-/archive/maste
 # MAIN target
 
 all: libcuda
-	$(MAKE) liblapack_$(LAPACK_LIBS_SWITCH) 
-	$(MAKE) libiotk 
 
 ###################################
 # LAPACK (includes BLAS)
@@ -54,41 +52,6 @@ lapack_clean:
 	if test -d ../LAPACK; then (cd ../LAPACK; $(MAKE) clean); fi
 lapack_veryclean:
 	if test -d ../LAPACK; then (rm -R -f ../LAPACK ../${LAPACK_NETLIB_NAME}); fi
-
-###################################
-# IOTK
-###################################
-
-libiotk:
-	if test ! -d ../S3DE; then \
-	(gzip -dc ../archive/iotk-1.2.beta.tar.gz | (cd ../; tar -xvf -)) ; \
-	if test -e Makefile_iotk; then \
-        (cp Makefile_iotk ../S3DE/iotk/src/Makefile); fi; \
-	if test -e iotk_config.h; then \
-	(cp iotk_config.h ../S3DE/iotk/include/iotk_config.h); fi; fi
-	cd ../S3DE/iotk/src; $(MAKE) lib+util; 
-	cd ../bin; ln -fs ../S3DE/iotk/tools/iotk .; \
-	ln -fs ../S3DE/iotk/src/iotk.x .; \
-	ln -fs ../S3DE/iotk/src/iotk_print_kinds.x .; \
-	# middle instruction needed for windows
-	cd ../; rm -rf iotk ; ln -fs S3DE/iotk iotk
-
-iotk_clean:
-	if test -d ../S3DE; then (cd ../S3DE; $(MAKE) clean); fi
-	if test -d ../iotk; then (rm -R -f ../iotk); fi
-	if test -e ../S3DE/iotk/src/iotk.x; then \
-	rm -f ../S3DE/iotk/src/iotk.x; fi
-	(rm -f ../bin/iotk; \
-	rm -f ../bin/iotk.x; \
-	rm -f ../bin/iotk_print_kinds.x)
-iotk_veryclean:
-	if test -d ../S3DE; then (rm -R -f ../S3DE); fi
-	if test -d ../iotk; then (rm -R -f ../iotk); fi
-	if test -e ../S3DE/iotk/src/iotk.x; then (rm -f ../S3DE/iotk/src/iotk.x); fi
-	rm -f ../bin/iotk; \
-	rm -f ../bin/iotk.x; \
-	rm -f ../bin/iotk_print_kinds.x; \
-	rm -f ../iotk
 
 ###################################
 # FoX
@@ -184,6 +147,6 @@ libbeef_veryclean:
 # cleaning
 ###################################
 
-clean: lapack_clean elpa_clean iotk_clean fox_clean libcuda_eigensolver_clean libcuda_devxlib_clean libbeef_clean
+clean: lapack_clean fox_clean libcuda_eigensolver_clean libcuda_devxlib_clean libbeef_clean
 
-veryclean: lapack_veryclean elpa_veryclean iotk_veryclean fox_clean libcuda_eigensolver_veryclean libcuda_devxlib_veryclean libbeef_veryclean
+veryclean: lapack_veryclean fox_clean libcuda_eigensolver_veryclean libcuda_devxlib_veryclean libbeef_veryclean
