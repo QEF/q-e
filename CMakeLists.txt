@@ -445,6 +445,7 @@ add_custom_target(ph
         qe_phonon_ph_exe
         qe_phonon_dynmat_exe
         qe_phonon_q2r_exe
+        qe_phonon_matdyn_exe
         qe_phonon_q2qstar_exe
         qe_phonon_lambda_exe
         qe_phonon_alpha2f_exe
