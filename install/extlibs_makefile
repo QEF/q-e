@@ -35,11 +35,8 @@ all: libcuda
 
 liblapack : liblapack_$(LAPACK_LIBS_SWITCH) 
 
-liblapack_external : fake_lapack_external
-
-fake_lapack_external :
-	touch fake_liblapack.a
-	-rm fake_liblapack.a
+# lapack is external: don't do anything
+liblapack_external : 
 
 liblapack_internal:
 	$(call download_and_unpack,$(LAPACK_NETLIB_NAME),$(LAPACK_NETLIB_URL),LAPACK,LAPACK)
@@ -58,7 +55,6 @@ lapack_veryclean:
 ###################################
 
 libfox:
-	echo $(HOST)
 	if test ! -d ../FoX; then \
         mkdir ../FoX; \
 	(gzip -dc ../archive/fox.tgz | (cd ../FoX; tar -xvf -)); \

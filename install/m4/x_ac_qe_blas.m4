@@ -348,18 +348,15 @@ else
 fi
 
 if test "$have_blas" -eq 0  ; then
-    # No blas library found: use internal
-    blas_libs_switch="internal"
+    # No blas library found: use internal one (in lapack)
     blas_libs="\$(TOPDIR)/LAPACK/libblas.a" 
 else
-    blas_libs_switch="external"
     echo setting BLAS_LIBS... $blas_libs
 fi
 blas_line="BLAS_LIBS=$blas_libs" 
 
 AC_SUBST(blas_libs)
 AC_SUBST(blas_line)
-AC_SUBST(blas_libs_switch)
   
 ]
 )
