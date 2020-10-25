@@ -44,9 +44,6 @@ X_AC_QE_ENVIRON()
 # Checking CC...
 X_AC_QE_CC()
 
-# Checking F77...
-X_AC_QE_F77()
-
 # Checking F90...
 X_AC_QE_F90()
 
