@@ -31,7 +31,7 @@ subroutine force_corr_gpu (forcescc)
   USE control_flags,        ONLY : gamma_only
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
-  USE gbuffers,             ONLY : dev_buf
+  USE device_fbuff_m,             ONLY : dev_buf
   USE gvect_gpum,           ONLY : g_d
   !
   USE simpsn_gpum,          ONLY : simpsn_gpu_dev

@@ -27,7 +27,7 @@ SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
 !  USE ylmr2_gpum,  ONLY : ylmr2_gpu
   !
   USE us_gpum,    ONLY : using_tab_d, using_tab_d2y_d
-  USE gbuffers,   ONLY : dev_buf
+  USE device_fbuff_m,   ONLY : dev_buf
 #if defined(__CUDA)
   USE cudafor
 #endif

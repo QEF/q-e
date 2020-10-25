@@ -361,7 +361,7 @@
       USE mp_global,              ONLY: me_bgrp
       USE control_flags,          ONLY: many_fft
       USE fft_helper_subroutines
-      USE device_util_m,          ONLY : dev_memcpy
+      USE device_memcpy_m,          ONLY : dev_memcpy
       USE cudafor
 !
       IMPLICIT NONE

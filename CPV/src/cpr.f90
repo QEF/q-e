@@ -119,7 +119,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE input_parameters,         ONLY : tcpbo
   USE funct,                    ONLY : dft_is_hybrid, start_exx, exx_is_active
   USE funct,                    ONLY : dft_is_meta
-  USE device_util_m,            ONLY : dev_memcpy
+  USE device_memcpy_m,            ONLY : dev_memcpy
   !
   IMPLICIT NONE
   !

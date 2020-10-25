@@ -24,7 +24,7 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
   USE spin_orb, ONLY: lspinorb
   USE noncollin_module, ONLY: noncolin, npol
   !
-  USE device_util_m,    ONLY : dev_memset
+  USE device_memcpy_m,    ONLY : dev_memset
   !
   USE uspp_gpum, ONLY : using_vkb_d, using_indv_ijkb0, using_deeq_d, using_deeq_nc_d, &
                         using_qq_at_d, using_qq_so_d

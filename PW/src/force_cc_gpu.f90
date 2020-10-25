@@ -29,8 +29,8 @@ SUBROUTINE force_cc_gpu( forcecc )
   USE wavefunctions, ONLY : psic
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
-  USE gbuffers,             ONLY : dev_buf
-  USE device_util_m,        ONLY : dev_memcpy  
+  USE device_fbuff_m,             ONLY : dev_buf
+  USE device_memcpy_m,        ONLY : dev_memcpy
   !
   IMPLICIT NONE
   !

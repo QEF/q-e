@@ -207,7 +207,7 @@ CONTAINS
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, my_bgrp_id, inter_bgrp_comm, nbgrp
       USE mp,                 ONLY: mp_sum, mp_bcast
       USE mp_world,           ONLY: mpime
-      USE device_util_m
+      USE device_memcpy_m
 
       IMPLICIT  NONE
 
@@ -519,7 +519,7 @@ END MODULE ortho_module
       USE orthogonalize_base, ONLY: bec_bgrp2ortho
       USE mp,                 ONLY : mp_sum
       USE ortho_module
-      USE device_util_m
+      USE device_memcpy_m
       !
       IMPLICIT NONE
       !

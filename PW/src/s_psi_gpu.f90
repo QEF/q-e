@@ -112,7 +112,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
   !
   USE uspp_gpum,  ONLY : vkb_d, using_vkb_d, using_indv_ijkb0
   USE becmod_gpum, ONLY : using_becp_r_d, using_becp_k_d, using_becp_nc_d
-  USE device_util_m,    ONLY : dev_memcpy
+  USE device_memcpy_m,    ONLY : dev_memcpy
   !
   IMPLICIT NONE
   !
@@ -219,7 +219,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !! Gamma version of \(\textrm{s_psi}\) routine.
        !
        USE mp,            ONLY: mp_get_comm_null, mp_circular_shift_left
-       USE gbuffers,      ONLY : dev_buf
+       USE device_fbuff_m,      ONLY : dev_buf
        USE uspp_gpum,     ONLY : qq_at_d, using_qq_at_d
        !
        IMPLICIT NONE  
@@ -339,7 +339,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !-----------------------------------------------------------------------
        !! k-points version of \(\textrm{s_psi}\) routine.
        !
-       USE gbuffers,   ONLY : dev_buf
+       USE device_fbuff_m,   ONLY : dev_buf
        USE uspp_gpum,  ONLY : qq_at_d, using_qq_at_d
 
        IMPLICIT NONE
@@ -424,7 +424,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        !! k-points noncolinear/spinorbit version of \(\textrm{s_psi}\) routine.
        !
-       USE gbuffers,   ONLY : dev_buf
+       USE device_fbuff_m,   ONLY : dev_buf
        USE uspp_gpum,  ONLY : qq_at_d, using_qq_at_d, qq_so_d, using_qq_so_d
 
        IMPLICIT NONE

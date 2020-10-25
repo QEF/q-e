@@ -56,8 +56,7 @@ xc_vdW_scale_mod.o   # added by Yang Jiao
 PWOBJS = ../../PW/src/libpw.a
 QEMODS = ../../Modules/libqemod.a ../../upflib/libupf.a ../../KS_Solvers/libks_solvers.a \
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
-         ../../dft-d3/libdftd3qe.a ../../GScratch/libgscratch.a 
-
+         ../../dft-d3/libdftd3qe.a
 
 MODULES = $(PWOBJS) $(QEMODS)
 

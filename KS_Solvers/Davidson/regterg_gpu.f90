@@ -601,7 +601,7 @@ END SUBROUTINE regterg_gpu
 
 SUBROUTINE reorder_evals_revecs(nbase, nvec, nvecx, conv, e_d, ew_d, v_d)
   USE util_param,   ONLY : DP
-  USE gbuffers,  ONLY : buffer => dev_buf
+  USE device_fbuff_m,  ONLY : buffer => dev_buf
   implicit none
   INTEGER, INTENT(IN) :: nbase, nvec, nvecx
   LOGICAL, INTENT(IN) :: conv(nvec)
@@ -681,7 +681,7 @@ SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   USE mp_bands_util,     ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
   USE mp_bands_util,     ONLY : gstart
   USE mp,                ONLY : mp_bcast, mp_root_sum, mp_sum
-  USE gbuffers,  ONLY : buffer => dev_buf
+  USE device_fbuff_m,  ONLY : buffer => dev_buf
   !
   IMPLICIT NONE
   !

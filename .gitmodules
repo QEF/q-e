@@ -7,3 +7,6 @@
 [submodule "external/wannier90"]
 	path = external/wannier90
 	url = https://github.com/wannier-developers/wannier90.git
+[submodule "external/devxlib"]
+	path = external/devxlib
+	url = https://gitlab.com/max-centre/components/devicexlib.git

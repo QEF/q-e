@@ -432,7 +432,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   !
   USE wvfct_gpum,           ONLY : using_et
   USE scf_gpum,             ONLY : using_vrs
-  USE gbuffers,             ONLY : dev_buf, pin_buf
+  USE device_fbuff_m,             ONLY : dev_buf, pin_buf
   !
   IMPLICIT NONE
   !

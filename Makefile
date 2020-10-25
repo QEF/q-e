@@ -186,7 +186,7 @@ pw4gwwlib : phlibs
 	if test -d GWW ; then \
 	( cd GWW ; $(MAKE) pw4gwwa || exit 1 ) ; fi
 
-mods : libfox libutil libgscratch libla libfft libupf libbeef
+mods : libfox libutil libla libfft libupf libbeef
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 libks_solvers : libs libutil libla
@@ -200,9 +200,6 @@ libfft :
 
 libutil : 
 	( cd UtilXlib ; $(MAKE) TLDEPS= all || exit 1 )
-
-libgscratch : 
-	( cd GScratch ; $(MAKE) TLDEPS= all || exit 1 )
 
 libupf : libfox libutil
 	( cd upflib ; $(MAKE) TLDEPS= all || exit 1 )
@@ -320,8 +317,6 @@ clean :
 		$(MAKE) TLDEPS= clean ) \
 	    fi \
 	done
-	if test -d GScratch ; then \
-	( cd GScratch ; $(MAKE) TLDEPS= clean ) ; fi
 	- @(cd install ; $(MAKE) -f plugins_makefile clean)
 	- @(cd install ; $(MAKE) -f extlibs_makefile clean)
 	- /bin/rm -rf bin/*.x tempdir
