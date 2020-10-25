@@ -73,6 +73,8 @@ option(QE_ENABLE_MPI_MODULE
     "use MPI via Fortran module instead of mpif.h header inclusion" OFF)
 option(QE_ENABLE_BARRIER
     "enable global synchronization between execution units" OFF)
+option(QE_LAPACK_INTERNAL
+    "enable internal reference LAPACK" OFF)
 option(QE_ENABLE_SCALAPACK
     "enable SCALAPACK execution units" OFF)
 option(QE_ENABLE_ELPA
@@ -81,8 +83,6 @@ option(QE_ENABLE_HDF5
     "enable HDF5 data collection" OFF)
 option(QE_ENABLE_CUDA
     "enable CUDA acceleration on NVIDIA GPUs" OFF)
-option(QE_ENABLE_VENDOR_DEPS
-    "enable fallback on vendored deps when none is found via find_package()" ON)
 option(QE_ENABLE_DOC
     "enable documentation building" OFF)
 
@@ -196,21 +196,29 @@ add_library(qe_lapack INTERFACE)
 add_library(QE::LAPACK ALIAS qe_lapack)
 qe_install_targets(qe_lapack)
 #######################################################################
-find_package(LAPACK)
-if(LAPACK_FOUND)
-    list(APPEND _lapack_libs 
-        ${BLAS_LIBRARIES}
-        ${BLAS_LINKER_FLAGS}
-        ${LAPACK_LIBRARIES}
-        ${LAPACK_LINKER_FLAGS})
-    list(REMOVE_DUPLICATES "${_lapack_libs}")
-    message(STATUS "Found LAPACK: ${_lapack_libs}")
-    target_link_libraries(qe_lapack INTERFACE ${_lapack_libs})
-elseif(QE_ENABLE_VENDOR_DEPS)
+if(NOT QE_LAPACK_INTERNAL)
+    find_package(LAPACK)
+    if(LAPACK_FOUND)
+        list(APPEND _lapack_libs
+            ${BLAS_LIBRARIES}
+            ${BLAS_LINKER_FLAGS}
+            ${LAPACK_LIBRARIES}
+            ${LAPACK_LINKER_FLAGS})
+        list(REMOVE_DUPLICATES "${_lapack_libs}")
+        message(STATUS "Found LAPACK: ${_lapack_libs}")
+        target_link_libraries(qe_lapack INTERFACE ${_lapack_libs})
+    else()
+        message(FATAL_ERROR "Failed to find a complete set of external BLAS/LAPACK library by FindLAPACK. "
+                            "Varaibles controlling FindLAPACK can be found at CMake online documentation. "
+                            "Alternatively, '-DQE_LAPACK_INTERNAL=ON' may be used to enable reference LAPACK "
+                            "at a performance loss compared to optimized libraries.")
+    endif()
+else()
+    message(WARNING "Internal reference LAPACK is enabled! It is less performant than vendor optimized libraries.")
     if(CMAKE_Fortran_COMPILER_ID MATCHES "XL")
         message(FATAL_ERROR "IBM XL compilers cannot build internal LAPACK with QE "
                             "due to the conflict in flags for free vs fixed format. "
-                            "Please use an optimized LAPACK or build LAPACK separately.")
+                            "Please use an optimized LAPACK or build internal reference LAPACK separately.")
     endif()
     message(STATUS "Installing QE::LAPACK via submodule")
     qe_git_submodule_update(external/lapack)
@@ -218,11 +226,6 @@ elseif(QE_ENABLE_VENDOR_DEPS)
     target_link_libraries(qe_lapack INTERFACE lapack)
     qe_fix_fortran_modules(lapack)
     qe_install_targets(lapack)
-else()
-    # No dep has been found via find_package,
-    # call it again with REQUIRED to make it fail
-    # explicitly (hoping in some helpful message)
-    find_package(LAPACK REQUIRED)
 endif()
 
 ###########################################################

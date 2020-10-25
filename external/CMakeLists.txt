@@ -7,7 +7,7 @@ if(FOX_ROOT)
     qe_install_targets(qe_fox) 
     target_link_libraries(qe_fox INTERFACE "-L${FOX_ROOT}/lib;-lFoX_dom;-lFoX_sax;-lFoX_wxml;-lFoX_common;-lFoX_utils;-lFoX_fsys")
     target_include_directories(qe_fox INTERFACE ${FOX_ROOT}/finclude)
-elseif(QE_ENABLE_VENDOR_DEPS)
+else()
     message(STATUS "Installing QE::FOX via submodule")
     set(fox_targets
         FoX_fsys
@@ -24,8 +24,6 @@ elseif(QE_ENABLE_VENDOR_DEPS)
     target_link_libraries(qe_fox INTERFACE ${fox_targets})
     qe_fix_fortran_modules(${fox_targets})
     qe_install_targets(qe_fox ${fox_targets})
-else()
-    message(FATAL_ERROR "FoX not found! Please specify a FoX root (-DFOX_ROOT=/path/to/fox) or enable the FoX vendoring (-DQE_ENABLE_VENDOR_DEPS=ON)!")
 endif()
 
 ###########################################################
