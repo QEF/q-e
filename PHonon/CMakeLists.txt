@@ -297,6 +297,21 @@ target_link_libraries(qe_phonon_q2r_exe
         QE::PHonon::PH
 )
 
+##################################################################
+# matdyn.x 
+##################################################################
+set(sources PH/matdyn.f90)
+qe_add_executable(qe_phonon_matdyn_exe ${sources})
+set_target_properties(qe_phonon_matdyn_exe PROPERTIES OUTPUT_NAME matdyn.x) 
+target_link_libraries(qe_phonon_matdyn_exe
+    PRIVATE
+        QE::Modules
+        QE::UTILX
+        QE::PW
+        QE::PHonon::PH
+        QE::PHonon::PHAUX
+) 
+
 ###########################################################
 # q2qstar.x
 ###########################################################
