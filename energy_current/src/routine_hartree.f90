@@ -23,24 +23,20 @@ subroutine routine_hartree()
    use kinds, only: DP
    use hartree_mod
    use wvfct, only: nbnd, npw, npwx
-   use io_files, only: nwordwfc, diropn, iunwfc, prefix, tmp_dir
    use fft_base, only: dffts
    use wavefunctions, only: psic, evc
-   use mp, only: mp_sum, mp_barrier
+   use mp, only: mp_sum
    use io_global, only: stdout, ionode
    use gvect, only: g, ngm, gstart
    USE cell_base, ONLY: tpiba, omega, tpiba2, alat, at
    USE constants, ONLY: e2, fpi, pi
    USE fft_interfaces, ONLY: fwfft, invfft
-   use mp_global, only: mp_global_end
    use ions_base, only: tau
-   use gvecw, only: ecutwfc
 !
    use uspp, ONLY: vkb, nkb
    use klist, only: xk, igk_k
    use wvfct, ONLY: g2kin, et
    use becmod
-   use constants, only: rytoev
    USE eqv, ONLY: dpsi, dvpsi
    USE mp_pools, ONLY: intra_pool_comm
    USE funct, ONLY : get_igcx, get_igcc
@@ -72,7 +68,7 @@ subroutine routine_hartree()
    integer  :: inbd, jbnd, ig, ipol
    integer, external :: find_free_unit
 
-   write (stdout, *) 'BEGIN: HARTREE & KOHN'
+   if (ionode) write (stdout, *) 'BEGIN: HARTREE & KOHN'
 
    if ( (get_igcx() /= 3) .or. (get_igcc() /=4 ) ) then
            do_xc_curr=.false.

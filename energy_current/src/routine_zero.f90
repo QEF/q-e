@@ -1,6 +1,5 @@
 subroutine init_zero()
 !called once to init stuff that does not depend on the atomic positions
-   use io_files, only: nwordwfc, diropn, iunwfc, prefix, tmp_dir
    use gvect, only: ngm, gg, g, gstart
    use zero_mod
    use hartree_mod
@@ -31,20 +30,14 @@ end subroutine
 subroutine routine_zero()
    use kinds, only: DP
    use wvfct, only: nbnd, npwx, npw
-   use io_files, only: nwordwfc, diropn, iunwfc, prefix, tmp_dir
    use fft_base, only: dffts
-   use mp, only: mp_sum, mp_bcast, mp_get
+   use mp, only: mp_sum
    use mp_pools, only: intra_pool_comm
-   use io_global, only: stdout, ionode_id, ionode
+   use io_global, only: stdout, ionode
    use ions_base, only: nsp, zv, nat, ityp, amass, tau
    use dynamics_module, only: vel
-   use cell_base, only: tpiba, tpiba2
-   use uspp_param, only: upf
-   use atom, only: rgrid
-   use mp_world, only: mpime
-   use cell_base, only: at, alat, omega
+   use cell_base, only: tpiba, tpiba2, at, alat, omega
    use wavefunctions, only: psic, evc
-   use fft_interfaces, only: invfft, fwfft
    use gvect, only: ngm, gg, g, gstart
    use constants, only: e2, AMU_RY
    use uspp, only: nkb
@@ -86,7 +79,7 @@ subroutine routine_zero()
    character(256) ::filename, pref_box
    real(DP), allocatable :: values(:)
 
-   write (stdout, *) 'ROUTINE_ZERO BEGINNING'
+   if (ionode) write (stdout, *) 'ROUTINE_ZERO BEGINNING'
    call start_clock('routine_zero')
    if (ionode) print *, 'eta', eta
 
