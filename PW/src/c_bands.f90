@@ -446,19 +446,20 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        ! ... RMM-DIIS diagonalization
        !
-       ALLOCATE( hevc_d( npwx*npol, nbnd ) )
-       ALLOCATE( hevc  ( npwx*npol, nbnd ) )
-       !
-       IF ( okvan ) THEN
-          ALLOCATE( sevc_d( npwx*npol, nbnd ) )
-          ALLOCATE( sevc  ( npwx*npol, nbnd ) )
+       IF ( .not. use_gpu) THEN
+          ALLOCATE( hevc  ( npwx*npol, nbnd ) )
+          IF ( okvan ) THEN
+             ALLOCATE( sevc( npwx*npol, nbnd ) )
+          ELSE
+             sevc => evc
+          END IF
        ELSE
-          IF (.not. use_gpu) THEN
-             sevc_d => evc
+          ALLOCATE( hevc_d( npwx*npol, nbnd ) )
+          IF ( okvan ) THEN
+             ALLOCATE( sevc_d( npwx*npol, nbnd ) )
           ELSE
              sevc_d => evc_d !evc_d allocated in wfcinit_gpu
           END IF
-          sevc => evc
        END IF
        !
        ntry = 0
@@ -524,15 +525,20 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        avg_iter = avg_iter + 0.5D0
        !
-       DEALLOCATE( hevc_d )
-       DEALLOCATE( hevc )
-       !
-       IF ( okvan ) THEN
-          DEALLOCATE( sevc_d )
-          DEALLOCATE( sevc )
-       ELSE
-          NULLIFY( sevc_d )
-          NULLIFY( sevc )
+       IF ( .not. use_gpu) THEN 
+          DEALLOCATE( hevc )
+          IF ( okvan ) THEN
+             DEALLOCATE( sevc )
+          ELSE
+             NULLIFY( sevc )
+          END IF
+        ELSE
+          DEALLOCATE( hevc_d )
+          IF ( okvan ) THEN
+             DEALLOCATE( sevc_d )
+          ELSE
+             NULLIFY( sevc_d )
+          END IF
        END IF
        !
     ELSE
