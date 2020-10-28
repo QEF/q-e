@@ -9,7 +9,7 @@
 #define ZERO ( 0._DP, 0._DP )
 !
 !--------------------------------------------------------------------------
-SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi, hpsi, spsi, e, &
+SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi_d, hpsi_d, spsi_d, e, &
                                uspp, eigen, reorder, nbsize )
   !--------------------------------------------------------------------------
   !
@@ -25,9 +25,9 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi, hpsi, spsi, e, &
   ! ... I/O variables
   !
   INTEGER,     INTENT(IN)    :: npw, npwx, nbnd
-  COMPLEX(DP), INTENT(INOUT) :: psi (npwx,nbnd)
-  COMPLEX(DP), INTENT(INOUT) :: hpsi(npwx,nbnd)
-  COMPLEX(DP), INTENT(INOUT) :: spsi(npwx,nbnd)
+!  COMPLEX(DP), INTENT(INOUT) :: psi (npwx,nbnd)
+!  COMPLEX(DP), INTENT(INOUT) :: hpsi(npwx,nbnd)
+!  COMPLEX(DP), INTENT(INOUT) :: spsi(npwx,nbnd)
   REAL(DP),    INTENT(OUT)   :: e(nbnd)
   LOGICAL,     INTENT(IN)    :: uspp
   LOGICAL,     INTENT(IN)    :: eigen
@@ -58,11 +58,6 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi, hpsi, spsi, e, &
   attributes(device) :: psi_d, hpsi_d, spsi_d
   attributes(device) :: phi_d, hphi_d, sphi_d
 #endif 
-!edp
-  psi_d = psi
-  hpsi_d = hpsi
-  spsi_d = spsi
-!edp
   !
   !
   CALL start_clock( 'gsorth' )
@@ -90,18 +85,6 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi, hpsi, spsi, e, &
      !
   END IF
   !
-  ALLOCATE( phi ( npwx, nbnd ) )
-  IF ( eigen_ ) ALLOCATE( hphi( npwx, nbnd ) )
-  IF ( uspp )   ALLOCATE( sphi( npwx, nbnd ) )
-  ALLOCATE( owner_bgrp_id( nblock ) )
-  !
-  phi = ZERO
-  !
-  IF ( eigen_ ) hphi = ZERO
-  !
-  IF ( uspp )   sphi = ZERO
-  !
-!edp
   ALLOCATE( phi_d ( npwx, nbnd ) )
   IF ( eigen_ ) ALLOCATE( hphi_d( npwx, nbnd ) )
   IF ( uspp )   ALLOCATE( sphi_d( npwx, nbnd ) )
@@ -180,45 +163,25 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi, hpsi, spsi, e, &
   !
   ! ... Blocking loop
   !
-!edp
-  phi  = phi_d
-  hphi = hphi_d
-  sphi = sphi_d
-  psi = psi_d
-!edp
   DO iblock = 1, nblock
      !
      ! ... Orthogonalize diagonal block by standard Gram-Schmidt
      !
-!edp
-  psi_d = psi
-  hpsi_d = hpsi
-  spsi_d = spsi
-  phi_d  = phi
-  hphi_d = hphi
-  sphi_d = sphi
-!edp
      ibnd_start = ( iblock - 1 ) * nbsize + 1
      ibnd_end   = MIN( iblock * nbsize, nbnd )
      !
      IF ( owner_bgrp_id(iblock) == my_bgrp_id ) &
      CALL gram_schmidt_diag_gpu( ibnd_start, ibnd_end )
-!edp
-  phi  = phi_d
-  hphi = hphi_d
-  sphi = sphi_d
-  psi  = psi_d
-!edp
      !
      ! ... Bcast diagonal block
      !
-     CALL mp_bcast( phi(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
+     CALL mp_bcast( phi_d(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
      !
      IF ( eigen_ ) &
-     CALL mp_bcast( hphi(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
+     CALL mp_bcast( hphi_d(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
      !
      IF ( uspp ) &
-     CALL mp_bcast( sphi(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
+     CALL mp_bcast( sphi_d(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
      !
      ! ... Project off-diagonal block outside of diagonal block
      !
@@ -229,34 +192,33 @@ SUBROUTINE gram_schmidt_gamma_gpu( npwx, npw, nbnd, psi, hpsi, spsi, e, &
      jbnd_end   = MIN( jblock_end * nbsize, nbnd )
      !
      IF ( jblock_start <= jblock_end .AND. jbnd_start <= jbnd_end ) &
-     CALL project_offdiag( ibnd_start, ibnd_end, jbnd_start, jbnd_end )
+     CALL project_offdiag_gpu( ibnd_start, ibnd_end, jbnd_start, jbnd_end )
      !
   END DO
   !
   ! ... Copy psi <- phi
   !
-  CALL DCOPY( npwx2 * nbnd, phi(1,1), 1, psi(1,1), 1 )
+  !CALL DCOPY( npwx2 * nbnd, phi(1,1), 1, psi(1,1), 1 )
+  CALL DCOPY_gpu( npwx2 * nbnd, phi_d(1,1), 1, psi_d(1,1), 1 )
   !
   IF ( eigen_ ) &
-  CALL DCOPY( npwx2 * nbnd, hphi(1,1), 1, hpsi(1,1), 1 )
+  CALL DCOPY_gpu( npwx2 * nbnd, hphi_d(1,1), 1, hpsi_d(1,1), 1 )
+  !CALL DCOPY( npwx2 * nbnd, hphi(1,1), 1, hpsi(1,1), 1 )
   !
   IF ( uspp ) &
-  CALL DCOPY( npwx2 * nbnd, sphi(1,1), 1, spsi(1,1), 1 )
+  CALL DCOPY_gpu( npwx2 * nbnd, sphi_d(1,1), 1, spsi_d(1,1), 1 )
+  !CALL DCOPY( npwx2 * nbnd, sphi(1,1), 1, spsi(1,1), 1 )
   !
   ! ... Calculate energy eigenvalues
   !
-  IF ( eigen_ ) CALL energyeigen( )
+ IF ( eigen_ ) CALL energyeigen_gpu( )
   !
   ! ... Sort wave functions
   !
-  IF ( reorder ) CALL sort_vectors( )
+  IF ( reorder ) CALL sort_vectors_gpu( )
   !
-  DEALLOCATE( phi )
-  IF ( eigen_ ) DEALLOCATE( hphi )
-  IF ( uspp   ) DEALLOCATE( sphi )
   DEALLOCATE( owner_bgrp_id )
   !
-!edp
   DEALLOCATE( phi_d )
   IF ( eigen_ ) DEALLOCATE( hphi_d )
   IF ( uspp   ) DEALLOCATE( sphi_d )
@@ -445,7 +407,7 @@ CONTAINS
   END SUBROUTINE gram_schmidt_diag_gpu
   !
   !
-  SUBROUTINE project_offdiag( ibnd_start, ibnd_end, jbnd_start, jbnd_end )
+  SUBROUTINE project_offdiag_gpu( ibnd_start, ibnd_end, jbnd_start, jbnd_end )
     !
     IMPLICIT NONE
     !
@@ -454,82 +416,102 @@ CONTAINS
     !
     INTEGER               :: ibnd_size
     INTEGER               :: jbnd_size
-    REAL(DP), ALLOCATABLE :: sr(:,:)
+    !
+    REAL(DP), ALLOCATABLE :: sr_d(:,:)
+#if defined (__CUDA)
+    attributes(device) :: sr_d
+#endif   
     !
     ibnd_size = ibnd_end - ibnd_start + 1
     jbnd_size = jbnd_end - jbnd_start + 1
     !
-    ALLOCATE( sr( ibnd_start:ibnd_end, jbnd_start:jbnd_end ) )
+    ALLOCATE( sr_d( ibnd_start:ibnd_end, jbnd_start:jbnd_end ) )
     !
     ! ... <phi_i| S |psi_j>
     !
     IF ( uspp ) THEN
        !
-       CALL DGEMM( 'T', 'N', ibnd_size, jbnd_size, npw2, 2._DP, phi(1,ibnd_start), npwx2, &
-                   spsi(1,jbnd_start), npwx2, 0._DP, sr(ibnd_start,jbnd_start), ibnd_size )
+       CALL gpu_DGEMM( 'T', 'N', ibnd_size, jbnd_size, npw2, 2._DP, phi_d(1,ibnd_start), npwx2, &
+                   spsi_d(1,jbnd_start), npwx2, 0._DP, sr_d(ibnd_start,jbnd_start), ibnd_size )
        !
        IF ( gstart == 2 ) &
-       CALL DGER( ibnd_size, jbnd_size, -1._DP, psi(1,ibnd_start), npwx2, &
-                  spsi(1,jbnd_start), npwx2, sr(ibnd_start,jbnd_start), ibnd_size )
+       CALL gpu_DGER( ibnd_size, jbnd_size, -1._DP, psi_d(1,ibnd_start), npwx2, &
+                  spsi_d(1,jbnd_start), npwx2, sr_d(ibnd_start,jbnd_start), ibnd_size )
        !
     ELSE
        !
-       CALL DGEMM( 'T', 'N', ibnd_size, jbnd_size, npw2, 2._DP, phi(1,ibnd_start), npwx2, &
-                   psi(1,jbnd_start), npwx2, 0._DP, sr(ibnd_start,jbnd_start), ibnd_size )
+       CALL gpu_DGEMM( 'T', 'N', ibnd_size, jbnd_size, npw2, 2._DP, phi_d(1,ibnd_start), npwx2, &
+                   psi_d(1,jbnd_start), npwx2, 0._DP, sr_d(ibnd_start,jbnd_start), ibnd_size )
        !
        IF ( gstart == 2 ) &
-       CALL DGER( ibnd_size, jbnd_size, -1._DP, psi(1,ibnd_start), npwx2, &
-                  psi(1,jbnd_start), npwx2, sr(ibnd_start,jbnd_start), ibnd_size )
+       CALL gpu_DGER( ibnd_size, jbnd_size, -1._DP, psi_d(1,ibnd_start), npwx2, &
+                  psi_d(1,jbnd_start), npwx2, sr_d(ibnd_start,jbnd_start), ibnd_size )
        !
     END IF
     !
-    CALL mp_sum( sr, intra_bgrp_comm )
+    CALL mp_sum( sr_d, intra_bgrp_comm )
     !
     ! ... phi_j = phi_j - phi_i * <phi_i| S |psi_j>
     !
-    CALL DGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, phi(1,ibnd_start), npwx2, &
-                sr(ibnd_start,jbnd_start), ibnd_size, 1._DP, phi(1,jbnd_start), npwx2 )
+    CALL gpu_DGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, phi_d(1,ibnd_start), npwx2, &
+                sr_d(ibnd_start,jbnd_start), ibnd_size, 1._DP, phi_d(1,jbnd_start), npwx2 )
     !
     ! NOTE: set Im[ phi(G=0) ] - needed for numerical stability
-    IF ( gstart == 2 ) phi(1,jbnd_start:jbnd_end) = &
-                       CMPLX( DBLE( phi(1,jbnd_start:jbnd_end) ), 0._DP, kind=DP )
+    IF ( gstart == 2 ) THEN
+!$cuf kernel do(1)
+              DO ii=jbnd_start, jbnd_end          
+              phi_d(1, ii) = &
+                        CMPLX( DBLE( phi_d(1, ii) ), 0._DP, kind=DP )
+              END DO
+    END IF
     !
     IF ( eigen_ ) THEN
        !
-       CALL DGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, hphi(1,ibnd_start), npwx2, &
-                   sr(ibnd_start,jbnd_start), ibnd_size, 1._DP, hphi(1,jbnd_start), npwx2 )
+       CALL gpu_DGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, hphi_d(1,ibnd_start), npwx2, &
+                   sr_d(ibnd_start,jbnd_start), ibnd_size, 1._DP, hphi_d(1,jbnd_start), npwx2 )
        !
        ! NOTE: set Im[ H*phi(G=0) ] - needed for numerical stability
-       IF ( gstart == 2 ) hphi(1,jbnd_start:jbnd_end) = &
-                          CMPLX( DBLE( hphi(1,jbnd_start:jbnd_end) ), 0._DP, kind=DP )
+       IF ( gstart == 2 ) THEN 
+!$cuf kernel do(1)
+              DO ii= jbnd_start, jbnd_end         
+                 hphi_d(1, ii) = &
+                          CMPLX( DBLE( hphi_d(1, ii) ), 0._DP, kind=DP )
+              END DO
+       END IF
        !
     END IF
     !
     IF ( uspp ) THEN
        !
-       CALL DGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, sphi(1,ibnd_start), npwx2, &
-                   sr(ibnd_start,jbnd_start), ibnd_size, 1._DP, sphi(1,jbnd_start), npwx2 )
+       CALL gpu_DGEMM( 'N', 'N', npw2, jbnd_size, ibnd_size, -1._DP, sphi_d(1,ibnd_start), npwx2, &
+                   sr_d(ibnd_start,jbnd_start), ibnd_size, 1._DP, sphi_d(1,jbnd_start), npwx2 )
        !
        ! NOTE: set Im[ S*phi(G=0) ] - needed for numerical stability
-       IF ( gstart == 2 ) sphi(1,jbnd_start:jbnd_end) = &
-                          CMPLX( DBLE( sphi(1,jbnd_start:jbnd_end) ), 0._DP, kind=DP )
+       IF ( gstart == 2 ) THEN 
+!$cuf kernel do(1)
+              DO ii=jbnd_start, jbnd_end
+                  sphi_d(1, ii ) = &
+                          CMPLX( DBLE( sphi_d(1, ii) ), 0._DP, kind=DP )
+              END DO
+       END IF
        !
     END IF
     !
-    DEALLOCATE( sr )
+    DEALLOCATE( sr_d )
     !
     RETURN
     !
-  END SUBROUTINE project_offdiag
+  END SUBROUTINE project_offdiag_gpu
   !
   !
-  SUBROUTINE energyeigen( )
+  SUBROUTINE energyeigen_gpu( )
     !
     IMPLICIT NONE
     !
     INTEGER :: ibnd, ibnd_start, ibnd_end
+    REAL(DP) :: e_ibnd
     !
-    REAL(DP), EXTERNAL :: DDOT
+    REAL(DP), EXTERNAL :: gpu_DDOT
     !
     ! ... <psi_i| H |psi_i>
     !
@@ -539,9 +521,15 @@ CONTAINS
     !
     DO ibnd = ibnd_start, ibnd_end
        !
-       e(ibnd) = 2._DP * DDOT( npw2, psi(1,ibnd), 1, hpsi(1,ibnd), 1 )
+       e(ibnd) = 2._DP * gpu_DDOT( npw2, psi_d(1,ibnd), 1, hpsi_d(1,ibnd), 1 )
        !
-       IF ( gstart == 2 ) e(ibnd) = e(ibnd) - DBLE( psi(1,ibnd) ) * DBLE ( hpsi(1,ibnd) )
+       IF ( gstart == 2 ) THEN
+!$cuf kernel do(1)
+          DO ii=1,1
+             e_ibnd = DBLE( psi_d(1,ibnd) ) * DBLE ( hpsi_d(1,ibnd) )
+          END DO
+          e(ibnd) = e(ibnd) - e_ibnd
+       END IF
        !
     END DO
     !
@@ -550,10 +538,10 @@ CONTAINS
     !
     RETURN
     !
-  END SUBROUTINE energyeigen
+  END SUBROUTINE energyeigen_gpu
   !
   !
-  SUBROUTINE sort_vectors( )
+  SUBROUTINE sort_vectors_gpu( )
     !
     IMPLICIT NONE
     !
@@ -573,13 +561,13 @@ CONTAINS
           e(ibnd)   = e(ibnd-1)
           e(ibnd-1) = e0
           !
-          CALL DSWAP( npw2, psi(1,ibnd), 1, psi(1,ibnd-1), 1 )
+          CALL DSWAP_gpu( npw2, psi_d(1,ibnd), 1, psi_d(1,ibnd-1), 1 )
           !
           IF ( eigen_ ) &
-          CALL DSWAP( npw2, hpsi(1,ibnd), 1, hpsi(1,ibnd-1), 1 )
+          CALL DSWAP_gpu( npw2, hpsi_d(1,ibnd), 1, hpsi_d(1,ibnd-1), 1 )
           !
           IF ( uspp ) &
-          CALL DSWAP( npw2, spsi(1,ibnd), 1, spsi(1,ibnd-1), 1 )
+          CALL DSWAP_gpu( npw2, spsi_d(1,ibnd), 1, spsi_d(1,ibnd-1), 1 )
           !
        END IF
        !
@@ -589,7 +577,7 @@ CONTAINS
     !
     RETURN
     !
-  END SUBROUTINE sort_vectors
+  END SUBROUTINE sort_vectors_gpu
   !
   !
 END SUBROUTINE gram_schmidt_gamma_gpu

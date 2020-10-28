@@ -385,3 +385,17 @@ SUBROUTINE gpu_threaded_backassign(array_out, idx, array_in, kdimx, nact, use_a2
   !
 END SUBROUTINE gpu_threaded_backassign
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE DSWAP_gpu(n, dx, incx, dy, incy) 
+#if defined(__CUDA)
+USE cublas
+#endif
+implicit none
+  integer :: n, incx, incy 
+  REAL(8), dimension(*) :: dx, dy
+#if defined(__CUDA)
+  attributes(device) :: dx, dy 
+  CALL cublasDSWAP(n, dx, incx, dy, incy)  
+#endif
+  return
+END SUBROUTINE DSWAP_gpu
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
