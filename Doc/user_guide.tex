@@ -1099,7 +1099,9 @@ that runs on different machines, compile it on the oldest machine you have
 
 \paragraph{Linux PCs with gfortran}
 
-You need at least gfortran v.4.4 or later to properly compile \qe.
+Gfortran v.4.8.5, still often found on CentOS machines, no longer compiles
+\qe\ v.6.6 or later, due to a gfortran bug. You need at least gfortran v.4.9.X.
+
 
 "There is a known incompatibility problem between different calling
 convention for Fortran functions that return complex values [...]
