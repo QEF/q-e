@@ -133,8 +133,6 @@ BLAS_LIBS      = @blas_libs@
 # If you have nothing better, use the local copy
 # LAPACK_LIBS_SWITCH = internal
 # LAPACK_LIBS = $(TOPDIR)/LAPACK/liblapack.a
-# For IBM machines with essl (-D__ESSL): load essl BEFORE lapack !
-# remember that LAPACK_LIBS precedes BLAS_LIBS in loading order
 
 LAPACK_LIBS    = @lapack_libs@
 LAPACK_LIBS_SWITCH = @lapack_libs_switch@
