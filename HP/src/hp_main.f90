@@ -214,9 +214,9 @@ PROGRAM hp_main
   !
   ! Calculation of Hubbard U (serial post-processing) 
   !
-  IF (ionode) CALL hp_postproc()
-  !
 103 CONTINUE
+  !
+  IF (ionode) CALL hp_postproc()
   !
   ! Deallocate some arrays
   !
