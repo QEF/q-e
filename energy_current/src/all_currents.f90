@@ -3,7 +3,8 @@ program all_currents
            dvpsi_save, subtract_cm_vel, re_init_wfc_1, re_init_wfc_2,re_init_wfc_3,&
            n_repeat_every_step, ethr_big_step, scf_all, multiple_scf_result_allocate,&
            scf_result_set_from_global_variables, multiple_scf_result_deallocate, &
-           three_point_derivative, ave_cur, ethr_small_step
+           three_point_derivative, ave_cur, ethr_small_step, &
+           init_hartree, routine_hartree
    USE environment, ONLY: environment_start, environment_end
    use io_global, ONLY: ionode
    use wavefunctions, only: evc
@@ -31,6 +32,18 @@ program all_currents
    USE read_cards_module, ONLY: read_cards
    use zero_mod, only: vel_input_units
    use averages, only: online_average_init
+
+
+   !routine_hartree modules
+   use wvfct, only: nbnd, npw, npwx
+   use wavefunctions, only: psic, evc
+   use gvect, only: g, ngm, gstart
+   USE cell_base, ONLY: tpiba, omega, tpiba2, alat, at
+   use ions_base, only: tau
+   use uspp, ONLY: vkb, nkb
+   use klist, only: xk, igk_k
+   use wvfct, ONLY: g2kin, et
+   use fft_base, only: dffts
 
    implicit none
    integer :: exit_status, ios, irepeat
@@ -192,7 +205,8 @@ program all_currents
               call routine_zero() ! we are in t in this case, and we call here routine zero
 
           !calculate second part of energy current
-          call routine_hartree()
+          call routine_hartree(nbnd, npw, npwx, dffts, psic, evc, g, ngm, gstart, &
+                tpiba, omega, tpiba2, alat, at, tau, vkb, nkb, xk, igk_k, g2kin, et)
           call write_results(traj,print_stat)
       end do
       !read new velocities and positions and continue, or exit the loop

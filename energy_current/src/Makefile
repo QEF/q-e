@@ -4,7 +4,8 @@
 include ../../make.inc
 # location of include files
 #IFLAGS=-I../../include
-
+F90FLAGS+=-fsanitize=address
+LDFLAGS+=-fsanitize=address
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../LAXlib \
           $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../CPV/src $(MOD_FLAG)../../PHonon/PH \
@@ -18,7 +19,6 @@ ALLCURRENTSOBJS = \
 hartree_mod.o\
 zero_mod.o\
 all_currents.o \
-routine_hartree.o\
 project.o\
 init_us_3.o \
 init_us_1a.o \
