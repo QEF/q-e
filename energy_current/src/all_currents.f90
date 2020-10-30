@@ -30,16 +30,16 @@ program all_currents
 !from ../Modules/read_input.f90
    USE read_namelists_module, ONLY: read_namelists
    USE read_cards_module, ONLY: read_cards
-   use zero_mod, only: vel_input_units
+   use zero_mod, only: vel_input_units, init_zero, routine_zero
    use averages, only: online_average_init
 
 
    !routine_hartree modules
    use wvfct, only: nbnd, npw, npwx
    use wavefunctions, only: psic, evc
-   use gvect, only: g, ngm, gstart
+   use gvect, only: g, ngm, gstart, gg
    USE cell_base, ONLY: tpiba, omega, tpiba2, alat, at
-   use ions_base, only: tau
+   use ions_base, only: tau, nsp, zv, nat, ityp, amass
    use uspp, ONLY: vkb, nkb
    use klist, only: xk, igk_k
    use wvfct, ONLY: g2kin, et
@@ -183,7 +183,9 @@ program all_currents
               if (exit_status /= 0) goto 100 !shutdown everything and exit
               !save evc, tau and vel for t
               call scf_result_set_from_global_variables(scf_all%t_zero)
-              call routine_zero() ! routine zero should be called in t
+              call routine_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
+                        vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
+                        nkb) ! routine zero should be called in t
           else
               call scf_result_set_from_global_variables(scf_all%t_zero) !if we don't have 3pt derivative, zero and minus are equal
           end if
@@ -202,7 +204,9 @@ program all_currents
           call scf_result_set_from_global_variables(scf_all%t_plus)
 
           if (.not. three_point_derivative) &
-              call routine_zero() ! we are in t in this case, and we call here routine zero
+              call routine_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
+                        vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
+                        nkb) ! we are in t in this case, and we call here routine zero
 
           !calculate second part of energy current
           call routine_hartree(nbnd, npw, npwx, dffts, psic, evc, g, ngm, gstart, &
