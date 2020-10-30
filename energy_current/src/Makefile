@@ -22,7 +22,6 @@ all_currents.o \
 project.o\
 init_us_3.o \
 init_us_1a.o \
-add_nc_curr.o \
 init_reciprocal_parts_tab.o\
 allocate_zero.o \
 deallocate_zero.o \
