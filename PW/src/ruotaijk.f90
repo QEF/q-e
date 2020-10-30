@@ -66,9 +66,12 @@ subroutine scale_sym_ops (nsym, s, ft, nr1, nr2, nr3, s_scaled, ftau)
      ft_(2) = ft(2,isym) * nr2
      ft_(3) = ft(3,isym) * nr3
      !
-     ! check if the fractional translations are commensurate
-     ! with the FFT grid
-     IF ( ANY ( ABS(ft_(:)-NINT(ft_(:))) > eps2 ) ) THEN
+     ! check if the fractional translations are commensurate with the FFT grid
+     ! (divide by nr* so that the threshold is approx. the same as in symm_base)
+     !
+     IF ( ABS(ft_(1)-NINT(ft_(1)))/nr1 > eps2 .OR. &
+          ABS(ft_(2)-NINT(ft_(2)))/nr2 > eps2 .OR. &
+          ABS(ft_(3)-NINT(ft_(3)))/nr3 > eps2 ) THEN
         call infomsg('scale_sym_ops','found fractional translation not compatible with FFT grid')
         bad = bad + 1
      ENDIF

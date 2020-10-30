@@ -437,6 +437,7 @@ CONTAINS
     integer            :: event
 
     LOGICAL, EXTERNAL  :: matches
+    LOGICAL            :: new_event
 
 
     ! this is a temporary local variable
@@ -546,13 +547,23 @@ CONTAINS
        ! Heres where it get interesting
        ! We may have a new event , or not! :)
 
-       IF ( ((event-1) .gt. 0) .and. ( now_step .lt. event_step(event-1)) ) THEN
-          IF( ionode ) write(*,*) ' AutoPilot: current input_line', input_line 
-          CALL auto_error( ' AutoPilot ','Dynamic Rule Event Out of Order!')
-          go to 20
+       IF ((event-1) .gt. 0) THEN
+          IF ( now_step .lt. event_step(event-1)) THEN
+             IF( ionode ) write(*,*) ' AutoPilot: current input_line', input_line 
+             CALL auto_error( ' AutoPilot ','Dynamic Rule Event Out of Order!')
+             go to 20
+          ENDIF
        ENDIF
 
-       IF ( (event .eq. 0) .or. ( now_step .gt. event_step(event)) ) THEN
+       IF (event .eq. 0) THEN
+          new_event = .true.
+       ELSEIF ( now_step .gt. event_step(event)) THEN
+          new_event = .true.
+       ELSE
+          new_event = .false.
+       ENDIF
+
+       IF ( new_event ) THEN
           ! new event
           event = event + 1
 
@@ -601,14 +612,24 @@ CONTAINS
        ! We may have a new event , or not! :)       
 
 
-       IF ( ((event-1) .gt. 0) .and. ( on_step .lt. event_step(event-1)) ) THEN
-          IF( ionode ) write(*,*) ' AutoPilot: current input_line', input_line 
-          CALL auto_error( ' AutoPilot ','Dynamic Rule Event Out of Order!')
-          go to 20
+       IF ( ((event-1) .gt. 0)) THEN 
+          IF ( on_step .lt. event_step(event-1))  THEN
+              IF( ionode ) write(*,*) ' AutoPilot: current input_line', input_line 
+              CALL auto_error( ' AutoPilot ','Dynamic Rule Event Out of Order!')
+              go to 20
+          ENDIF
        ENDIF
 
 
-       IF ( (event .eq. 0) .or. (on_step .gt. event_step(event)) ) THEN
+       IF (event .eq. 0) THEN
+           new_event = .true.
+       ELSEIF (on_step .gt. event_step(event)) THEN
+           new_event = .true.
+       ELSE
+           new_event = .false.
+       ENDIF
+
+       IF (new_event) THEN
           ! new event
           event = event + 1
           IF (event > max_event_step) THEN

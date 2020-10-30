@@ -54,8 +54,8 @@ for dir in $dirs; do
     # default
     DEPENDS="$LEVEL1/include" 
     # for convenience, used later
-    DEPEND1="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/FFTXlib $LEVEL1/LAXlib $LEVEL1/UtilXlib"
-    DEPEND2="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/FFTXlib $LEVEL2/LAXlib $LEVEL2/UtilXlib \
+    DEPEND1="$LEVEL1/include $LEVEL1/FFTXlib $LEVEL1/LAXlib $LEVEL1/UtilXlib"
+    DEPEND2="$LEVEL2/include $LEVEL2/FFTXlib $LEVEL2/LAXlib $LEVEL2/UtilXlib \
              $LEVEL2/Modules $LEVEL2/upflib "
     DEPEND3="$LEVEL2/include $LEVEL2/FFTXlib $LEVEL2/LAXlib $LEVEL2/UtilXlib"
     case $DIR in 
@@ -105,54 +105,54 @@ for dir in $dirs; do
 
         # handle special cases: modules for C-fortran binding,
         #   	                hdf5, MPI, FoX, libxc
-        sed '/@iso_c_binding@/d' make.depend > make.depend.tmp
-        sed '/@hdf5@/d;/@mpi@/d' make.depend.tmp > make.depend
-        sed '/@fox_dom@/d;/@fox_wxml@/d'  make.depend > make.depend.tmp 
-        sed '/@m_common_io@/d;/@xc_f03_lib_m@/d' make.depend.tmp > make.depend
+        sed '/@iso_c_binding@/d' make.depend > tmp; mv tmp make.depend
+        sed '/@hdf5@/d' make.depend > tmp; mv tmp make.depend
+        sed '/@mpi@/d'  make.depend > tmp; mv tmp make.depend
+        sed '/@fox_dom@/d;/@fox_wxml@/d;/@m_common_io@/d' make.depend > tmp; mv tmp make.depend
+        sed '/@xc_version.h@/d;/@xc_f03_lib_m@/d' make.depend > tmp; mv tmp make.depend
 
         if test "$DIR" = "FFTXlib"
         then
-            sed '/@mkl_dfti/d;/@omp_lib@/d' make.depend > make.depend.tmp
-            sed '/@fftw3.f/d;s/@fftw.c@/fftw.c/' make.depend.tmp > make.depend
+            # more special cases: modules for FFTs, GPU, OpenMP
+            sed '/@omp_lib@/d' make.depend > tmp; mv tmp make.depend
+            sed '/@mkl_dfti/d' make.depend > tmp; mv tmp make.depend
+            sed '/@fftw3.f/d;s/@fftw.c@/fftw.c/' make.depend > tmp; mv tmp make.depend
+            sed '/@cudafor@/d;/@cufft@/d;/@flops_tracker@/d' make.depend > tmp; mv tmp make.depend
         fi
 
         if test "$DIR" = "LAXlib"
         then
-            sed '/@elpa1@/d;/@elpa@/d' make.depend > make.depend.tmp
-            sed '/@cudafor@/d;/@cusolverdn@/d;/@gbuffers@/d' make.depend.tmp > make.depend
-            sed '/@zhegvdx_gpu@/d;/@dsyevd_gpu@/d;/@dsygvdx_gpu@/d' make.depend > make.depend.tmp
-            sed '/@cublas@/d;/@eigsolve_vars@/d;/@nvtx_inters@/d' make.depend.tmp > make.depend
-            /bin/rm make.depend.tmp
+            # more special cases: modules for ELPA, GPUs
+            sed '/@elpa1@/d;/@elpa@/d' make.depend > tmp; mv tmp make.depend
+            sed '/@cudafor@/d;/@cusolverdn@/d;/@gbuffers@/d' make.depend > tmp; mv tmp make.depend
+            sed '/@zhegvdx_gpu@/d;/@dsyevd_gpu@/d;/@dsygvdx_gpu@/d' make.depend > tmp; mv tmp make.depend
+            sed '/@cublas@/d;/@eigsolve_vars@/d;/@nvtx_inters@/d' make.depend > tmp ; mv tmp make.depend
         fi
 
         if test "$DIR" = "UtilXlib"
         then
-            sed '/@ifcore@/d' make.depend > make.depend.tmp
-            sed '/@cudafor@/d' make.depend.tmp > make.depend
+            sed '/@ifcore@/d' make.depend > tmp; mv tmp make.depend
+            sed '/@cudafor@/d' make.depend> tmp; mv tmp make.depend
         fi
 
 
         if test "$DIR" = "PW/src" || test "$DIR" = "TDDFPT/src"
         then
-            sed '/@environ_/d;/@solvent_tddfpt@/d' make.depend > make.depend.tmp
-            cp make.depend.tmp make.depend
+            sed '/@environ_/d;/@solvent_tddfpt@/d' make.depend > tmp; mv tmp make.depend
         fi
 
         if test "$DIR" = "CPV/src"
         then
-            sed '/@f90_unix_proc@/d' make.depend > make.depend.tmp
-            cp make.depend.tmp make.depend
+            sed '/@f90_unix_proc@/d' make.depend > tmp; mv tmp make.depend
         fi
 
         if test "$DIR" = "EPW/src"
         then
-            sed '/@f90_unix_io@/d' make.depend > make.depend.tmp
-            sed '/@f90_unix_env@/d' make.depend.tmp > make.depend
-            sed '/@w90_io@/d' make.depend > make.depend.tmp
-            sed '/@ifport@/d' make.depend.tmp > make.depend
+            sed '/@f90_unix_io@/d' make.depend > tmp; mv tmp make.depend
+            sed '/@f90_unix_env@/d' make.depend> tmp; mv tmp make.depend
+            sed '/@w90_io@/d' make.depend > tmp; mv tmp make.depend
+            sed '/@ifport@/d' make.depend > tmp; mv tmp make.depend
         fi
-
-        rm -f make.depend.tmp
 
         # check for missing dependencies 
         if grep @ make.depend

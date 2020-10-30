@@ -28,13 +28,12 @@
     USE io_global,         ONLY : stdout
     USE control_flags,     ONLY : iverbosity
     USE epwcom,            ONLY : nsiter, nstemp, broyden_beta, broyden_ndim, &
-                                  limag, lpade, lacon, fsthick, imag_read, wscut
+                                  limag, lpade, lacon, fsthick, imag_read, npade
     USE elph2,             ONLY : gtemp
     USE eliashbergcom,     ONLY : nsw, nsiw, adelta, adeltap, adeltai, adeltaip, &
                                   nkfs, nbndfs, ekfs, ef0
     USE supercond,         ONLY : free_energy, dos_quasiparticle, gen_freqgrid_iaxis, &
-                                  deallocate_eliashberg_iaxis, deallocate_eliashberg_raxis, &
-                                  deallocate_eliashberg_aniso, eliashberg_grid
+                                  eliashberg_grid
     USE constants_epw,     ONLY : kelvin2eV, ci, zero
     USE io_global,         ONLY : ionode_id
     USE mp_global,         ONLY : inter_pool_comm
@@ -138,8 +137,8 @@
           CALL print_clock('iaxis_imag')
           WRITE(stdout,'(a)') ' '
         ELSEIF (.NOT. conv .AND. (iter - 1) == nsiter) THEN
-          CALL deallocate_eliashberg_iaxis()
-          CALL deallocate_eliashberg_aniso()
+          CALL deallocate_aniso_iaxis()
+          CALL deallocate_aniso()
           CALL stop_clock('iaxis_imag')
           CALL print_clock('iaxis_imag')
           WRITE(stdout,'(a)') ' '
@@ -152,9 +151,9 @@
       IF (lpade) THEN
         CALL prtheader_supercond(itemp, 2)
         CALL start_clock('raxis_pade')
-        N = 90 * nsiw(itemp) / 100
-        IF (mod(N,2) /= 0 ) N = N + 1
-        CALL pade_cont_aniso_iaxis_to_raxis(itemp, N)
+        N = npade * nsiw(itemp) / 100
+        IF (mod(N, 2) /= 0 ) N = N + 1
+        CALL pade_cont_aniso(itemp, N)
         !
         IF (mpime == ionode_id) THEN
           CALL dos_quasiparticle(itemp)
@@ -162,7 +161,7 @@
         CALL mp_barrier(inter_pool_comm)
         CALL stop_clock('raxis_pade')
         CALL print_clock('raxis_pade')
-        WRITE(stdout,'(a)') ' '
+        WRITE(stdout, '(a)') ' '
       ENDIF ! lpade
       !
       IF (lacon) THEN
@@ -199,7 +198,7 @@
         ENDIF
         !
         DO WHILE (.NOT. conv .AND. iter <= nsiter)
-          CALL analytic_cont_aniso_iaxis_to_raxis(itemp, iter, conv)
+          CALL analytic_cont_aniso(itemp, iter, conv)
           IF (mpime == ionode_id) THEN
             DO ik = 1, nkfs
               DO ibnd = 1, nbndfs
@@ -249,43 +248,44 @@
           CALL mp_barrier(inter_pool_comm)
           CALL stop_clock('raxis_acon')
           CALL print_clock('raxis_acon')
-          WRITE(stdout,'(a)') ' '
+          WRITE(stdout, '(a)') ' '
         ELSEIF (.NOT. conv .AND. (iter - 1) == nsiter) THEN
-          CALL deallocate_eliashberg_iaxis()
-          CALL deallocate_eliashberg_raxis()
-          CALL deallocate_eliashberg_aniso()
+          CALL deallocate_aniso_iaxis()
+          CALL deallocate_aniso_raxis()
+          CALL deallocate_aniso()
           CALL stop_clock('raxis_acon')
           CALL print_clock('raxis_acon')
-          WRITE(stdout,'(a)') ' '
+          WRITE(stdout, '(a)') ' '
           RETURN
         ENDIF
         !
       ENDIF ! lacon
       !
-      CALL deallocate_eliashberg_iaxis()
-      IF (lpade .OR. lacon) CALL deallocate_eliashberg_raxis()
+      CALL deallocate_aniso_iaxis()
       !
       ! remove memory allocated for wsi, deltai, znormi, nznormi, adeltai, aznormi, naznormi
       imelt = (4 + 3 * nbndfs * nkfs) * nsiw(itemp)
       CALL mem_size_eliashberg(2, -imelt)
+      !
+      tcpu = get_clock('aniso_iaxis')
+      WRITE(stdout, '(5x, a, i3, a, f18.2, a)') 'itemp = ', itemp, '   total cpu time :', tcpu, ' secs'
+      WRITE(stdout, '(a)') ' '
+      !
+      IF (lpade .OR. lacon) CALL deallocate_aniso_raxis()
       !
       IF (lpade) THEN
         ! remove memory allocated for ws, delta, znorm, adelta, aznorm
         imelt = nsw + 2 * (2 + 2 * nbndfs * nkfs) * nsw
         CALL mem_size_eliashberg(2, -imelt)
       ELSEIF (lacon) THEN
-        ! remove memory allocated for ws, delta, znorm, adelta, adeltap, aznorm, aznormp
+        ! remove memory allocated for ws, delta, adelta, adeltap, znorm, aznorm, aznormp
         imelt = nsw + 2 * (2 + 4 * nbndfs * nkfs) * nsw
         CALL mem_size_eliashberg(2, -imelt)
       ENDIF
       !
-      tcpu = get_clock('aniso_iaxis')
-      WRITE(stdout, '(5x, a, i3, a, f18.2, a)') 'itemp = ', itemp, '   total cpu time :', tcpu, ' secs'
-      WRITE(stdout,'(a)') ' '
-      !
     ENDDO ! itemp
     !
-    CALL deallocate_eliashberg_aniso()
+    CALL deallocate_aniso()
     !
     CALL stop_clock('aniso_iaxis')
     !
@@ -305,9 +305,9 @@
     USE elph2,             ONLY : wqf, gtemp
     USE epwcom,            ONLY : nsiter, nstemp, muc, conv_thr_iaxis, fsthick
     USE eliashbergcom,     ONLY : nsiw, gap0, gap, agap, wsi, akeri, limag_fly, &
-                                  naznormi, aznormi, adeltai, adeltaip, nznormi, znormi, &
-                                  deltai, wsphmax, nkfs, nbndfs, dosef, ef0, ixkqf, ixqfs, &
-                                  nqfs, wkfs, w0g, ekfs
+                                  deltai, znormi, nznormi, adeltai, adeltaip, & 
+                                  aznormi, naznormi, wsphmax, nkfs, nbndfs, dosef, ef0, & 
+                                  ixkqf, ixqfs, nqfs, wkfs, w0g, ekfs
     USE constants_epw,     ONLY : zero, czero
     USE constants,         ONLY : pi
     USE io_global,         ONLY : stdout, ionode_id
@@ -425,7 +425,7 @@
       CALL memlt_eliashberg(itemp, 'imag')
       IF (.NOT. limag_fly) CALL kernel_aniso_iaxis(itemp)
       !
-    ENDIF
+    ENDIF ! iter
     deltai(:) = zero
     znormi(:) = zero
     nznormi(:) = zero
@@ -499,6 +499,7 @@
         IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error allocating deltaold', 1)
         deltaold(:) = gap0
       ENDIF
+      !
       absdelta = zero
       reldelta = zero
       DO iw = 1, nsiw(itemp) ! loop over omega
@@ -526,8 +527,8 @@
       deltaold(:) = deltai(:)
       !
       IF (iter == 1) &
-        WRITE(stdout, '(5x, a)') '   iter      ethr        znormi [eV]    deltai [eV]'
-      WRITE(stdout, '(5x, i6, 3ES15.6)') iter, errdelta, znormi(1), deltai(1)
+        WRITE(stdout, '(5x, a)') '   iter      ethr          znormi      deltai [meV]'
+      WRITE(stdout, '(5x, i6, 3ES15.6)') iter, errdelta, znormi(1), deltai(1) * 1000.d0
 !      WRITE(stdout, '(5x, a, i6, a, ES15.6, a, ES15.6, a, ES15.6)') 'iter = ', iter, &
 !                    '   ethr = ', errdelta, '   znormi(1) = ', znormi(1), &
 !                    '   deltai(1) = ', deltai(1)
@@ -543,13 +544,14 @@
         DEALLOCATE(deltaold, STAT = ierr)
         IF (ierr /= 0) CALL errore('sum_eliashberg_aniso_iaxis', 'Error deallocating deltaold', 1)
       ENDIF
+      !
       IF (conv) THEN
         WRITE(stdout, '(5x, a, i6)') 'Convergence was reached in nsiter = ', iter
-        WRITE(stdout,'(a)') ' '
+        WRITE(stdout, '(a)') ' '
       ELSEIF (.NOT. conv .AND. iter == nsiter) THEN
         WRITE(stdout, '(5x, a, i6)') 'Convergence was not reached in nsiter = ', iter
         WRITE(stdout, '(5x, a)') 'Increase nsiter or reduce conv_thr_iaxis'
-        WRITE(stdout,'(a)') ' '
+        WRITE(stdout, '(a)') ' '
       ENDIF
     ENDIF ! ionode_id
     CALL mp_bcast(deltai, ionode_id, inter_pool_comm)
@@ -589,7 +591,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE analytic_cont_aniso_iaxis_to_raxis(itemp, iter, conv)
+    SUBROUTINE analytic_cont_aniso(itemp, iter, conv)
     !-----------------------------------------------------------------------
     !
     ! This routine does the analytic continuation of the anisotropic Eliashberg equations
@@ -599,7 +601,7 @@
     USE kinds,         ONLY : DP
     USE modes,         ONLY : nmodes
     USE elph2,         ONLY : wqf, wf, gtemp
-    USE epwcom,        ONLY : nqstep, degaussq, nsiter, conv_thr_racon, fsthick, &
+    USE epwcom,        ONLY : nqstep, nstemp, degaussq, nsiter, conv_thr_racon, fsthick, &
                               lpade, eps_acustic
     USE eliashbergcom, ONLY : nsw, dwsph, ws, wsph, gap, agap, gp, gm, adsumi, azsumi, &
                               delta, znorm, adelta, adeltap, aznorm, aznormp, g2, lacon_fly, &
@@ -687,20 +689,24 @@
       !
       IF (.NOT. lpade) THEN
         ALLOCATE(delta(nsw), STAT = ierr)
-        IF (ierr /= 0) CALL errore('analytic_cont_aniso_iaxis_to_raxis', 'Error allocating delta', 1)
+        IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error allocating delta', 1)
         ALLOCATE(adelta(nbndfs, nkfs, nsw), STAT = ierr)
-        IF (ierr /= 0) CALL errore('analytic_cont_aniso_iaxis_to_raxis', 'Error allocating adelta', 1)
+        IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error allocating adelta', 1)
         ALLOCATE(znorm(nsw), STAT = ierr)
-        IF (ierr /= 0) CALL errore('analytic_cont_aniso_iaxis_to_raxis', 'Error allocating znorm', 1)
+        IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error allocating znorm', 1)
         ALLOCATE(aznorm(nbndfs, nkfs, nsw), STAT = ierr)
-        IF (ierr /= 0) CALL errore('analytic_cont_aniso_iaxis_to_raxis', 'Error allocating aznorm', 1)
+        IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error allocating aznorm', 1)
       ENDIF
       ALLOCATE(adeltap(nbndfs, nkfs, nsw), STAT = ierr)
-      IF (ierr /= 0) CALL errore('analytic_cont_aniso_iaxis_to_raxis', 'Error allocating adeltap', 1)
+      IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error allocating adeltap', 1)
       ALLOCATE(aznormp(nbndfs, nkfs, nsw), STAT = ierr)
-      IF (ierr /= 0) CALL errore('analytic_cont_aniso_iaxis_to_raxis', 'Error allocating aznormp', 1)
+      IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error allocating aznormp', 1)
       ALLOCATE(deltaold(nsw), STAT = ierr)
-      IF (ierr /= 0) CALL errore('analytic_cont_aniso_iaxis_to_raxis', 'Error allocating deltaold', 1)
+      IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error allocating deltaold', 1)
+      ALLOCATE(gp(nsw, nqstep), STAT = ierr)
+      IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error allocating gp', 1)
+      ALLOCATE(gm(nsw, nqstep), STAT = ierr)
+      IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error allocating gm', 1)
       adeltap(:, :, :) = czero
       aznormp(:, :, :) = cone
       deltaold(:) = czero
@@ -718,12 +724,7 @@
         deltaold(:) = gap(itemp)
       ENDIF
       !
-      ALLOCATE(gp(nsw, nqstep), STAT = ierr)
-      IF (ierr /= 0) CALL errore('analytic_cont_aniso_iaxis_to_raxis', 'Error allocating gp', 1)
-      ALLOCATE(gm(nsw, nqstep), STAT = ierr)
-      IF (ierr /= 0) CALL errore('analytic_cont_aniso_iaxis_to_raxis', 'Error allocating gm', 1)
-      !
-      ! ! Eq.(28) in Margine and Giustino, PRB 87, 024505 (2013)
+      !! Eq.(28) in Margine and Giustino, PRB 87, 024505 (2013)
       DO iw = 1, nsw ! loop over omega
         DO iwp = 1, nqstep ! loop over omega_prime
           CALL gamma_acont(ws(iw), ws(iwp), gtemp(itemp), rgammap, rgammam)
@@ -731,10 +732,11 @@
           gm(iw, iwp) = rgammam
         ENDDO
       ENDDO
-      CALL kernel_aniso_iaxis_analytic_cont(itemp)
+      CALL kernel_aniso_analytic_cont(itemp)
       CALL memlt_eliashberg(itemp, 'acon')
       IF (.NOT. lacon_fly) CALL evaluate_a2fij()
-    ENDIF
+    ENDIF ! iter
+    !
     delta(:) = czero
     znorm(:) = czero
     adelta(:, :, :) = czero
@@ -845,8 +847,8 @@
       deltaold(:) = delta(:)
       !
       IF (iter == 1) &
-        WRITE(stdout, '(5x, a)') '   iter      ethr      Re[znorm] [eV] Re[delta] [eV]'
-      WRITE(stdout, '(5x, i6, 3ES15.6)') iter, errdelta, REAL(znorm(1)), REAL(delta(1))
+        WRITE(stdout, '(5x, a)') '   iter      ethr         Re[znorm]   Re[delta] [meV]'
+      WRITE(stdout, '(5x, i6, 3ES15.6)') iter, errdelta, REAL(znorm(1)), REAL(delta(1)) * 1000.d0
 !      WRITE(stdout, '(5x, a, i6, a, ES15.6, a, ES15.6, a, ES15.6)') 'iter = ', iter, &
 !                    '   ethr = ', errdelta, '   Re[znorm(1)] = ', REAL(znorm(1)), &
 !                    '   Re[delta(1)] = ', REAL(delta(1))
@@ -859,11 +861,11 @@
       !
       IF (conv) THEN
         WRITE(stdout, '(5x, a, i6)') 'Convergence was reached in nsiter = ', iter
-        WRITE(stdout,'(a)') ' '
+        WRITE(stdout, '(a)') ' '
       ELSEIF (.NOT. conv .AND. iter == nsiter) THEN
         WRITE(stdout, '(5x, a, i6)') 'Convergence was not reached in nsiter = ', iter
         WRITE(stdout, '(5x, a)') 'Increase nsiter or reduce conv_thr_racon'
-        WRITE(stdout,'(a)') ' '
+        WRITE(stdout, '(a)') ' '
       ENDIF
     ENDIF
     CALL mp_bcast(delta, ionode_id, inter_pool_comm)
@@ -873,43 +875,28 @@
     CALL mp_barrier(inter_pool_comm)
     !
     IF (conv .OR. iter == nsiter) THEN
-      !
       DEALLOCATE(deltaold, STAT = ierr)
-      IF (ierr /= 0) CALL errore('analytic_cont_aniso_iaxis_to_raxis', 'Error deallocating deltaold', 1)
-      DEALLOCATE(gp, STAT = ierr)
-      IF (ierr /= 0) CALL errore('analytic_cont_aniso_iaxis_to_raxis', 'Error deallocating gp', 1)
-      DEALLOCATE(gm, STAT = ierr)
-      IF (ierr /= 0) CALL errore('analytic_cont_aniso_iaxis_to_raxis', 'Error deallocating gm', 1)
-      DEALLOCATE(adsumi, STAT = ierr)
-      IF (ierr /= 0) CALL errore('analytic_cont_aniso_iaxis_to_raxis', 'Error deallocating adsumi', 1)
-      DEALLOCATE(azsumi, STAT = ierr)
-      IF (ierr /= 0) CALL errore('analytic_cont_aniso_iaxis_to_raxis', 'Error deallocating azsumi', 1)
+      IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error deallocating deltaold', 1)
       !
       ! remove memory allocated for deltaold, gp, gm, adsumi, azsumi
       imelt = 2 * nsw + 2 * nqstep * nsw + 2 * (upper_bnd - lower_bnd + 1) * nbndfs * nsw
       CALL mem_size_eliashberg(2, -imelt)
       !
       IF (.NOT. lacon_fly) THEN
-        !
-        DEALLOCATE(a2fij, STAT = ierr)
-        IF (ierr /= 0) CALL errore('analytic_cont_aniso_iaxis_to_raxis', 'Error deallocating a2fij', 1)
-        !
         ! remove memory allocated for a2fij
         imelt = (upper_bnd - lower_bnd + 1) * MAXVAL(nqfs(:)) * nbndfs**2 * nqstep
         CALL mem_size_eliashberg(2, -imelt)
-        !
       ENDIF
-      !
     ENDIF
     !
     RETURN
     !
     !-----------------------------------------------------------------------
-    END SUBROUTINE analytic_cont_aniso_iaxis_to_raxis
+    END SUBROUTINE analytic_cont_aniso
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE pade_cont_aniso_iaxis_to_raxis(itemp, N)
+    SUBROUTINE pade_cont_aniso(itemp, N)
     !-----------------------------------------------------------------------
     !
     ! This routine uses pade approximants to continue the anisotropic Eliashberg equations
@@ -920,7 +907,7 @@
     USE eliashbergcom, ONLY : nsw, ws, nsiw, wsi, delta, znorm, &
                               adelta, aznorm, adeltai, aznormi, &
                               wkfs, dosef, w0g, nkfs, nbndfs, ef0, ekfs
-    USE utilities,       ONLY : pade_coeff, pade_eval
+    USE utilities,     ONLY : pade_coeff, pade_eval
     USE constants_epw, ONLY : cone, ci, zero, czero
     USE io_global,     ONLY : stdout, ionode_id
     USE mp_global,     ONLY : inter_pool_comm, my_pool_id, npool
@@ -979,23 +966,23 @@
     CALL mem_size_eliashberg(2, imelt)
     !
     ALLOCATE(delta(nsw), STAT = ierr)
-    IF (ierr /= 0) CALL errore('pade_cont_aniso_iaxis_to_raxis', 'Error allocating delta', 1)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating delta', 1)
     ALLOCATE(znorm(nsw), STAT = ierr)
-    IF (ierr /= 0) CALL errore('pade_cont_aniso_iaxis_to_raxis', 'Error allocating znorm', 1)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating znorm', 1)
     ALLOCATE(adelta(nbndfs, nkfs, nsw), STAT = ierr)
-    IF (ierr /= 0) CALL errore('pade_cont_aniso_iaxis_to_raxis', 'Error allocating adelta', 1)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating adelta', 1)
     ALLOCATE(aznorm(nbndfs, nkfs, nsw), STAT = ierr)
-    IF (ierr /= 0) CALL errore('pade_cont_aniso_iaxis_to_raxis', 'Error allocating aznorm', 1)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating aznorm', 1)
     ALLOCATE(a(N), STAT = ierr)
-    IF (ierr /= 0) CALL errore('pade_cont_aniso_iaxis_to_raxis', 'Error allocating a', 1)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating a', 1)
     ALLOCATE(b(N), STAT = ierr)
-    IF (ierr /= 0) CALL errore('pade_cont_aniso_iaxis_to_raxis', 'Error allocating b', 1)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating b', 1)
     ALLOCATE(z(N), STAT = ierr)
-    IF (ierr /= 0) CALL errore('pade_cont_aniso_iaxis_to_raxis', 'Error allocating z', 1)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating z', 1)
     ALLOCATE(u(N), STAT = ierr)
-    IF (ierr /= 0) CALL errore('pade_cont_aniso_iaxis_to_raxis', 'Error allocating u', 1)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating u', 1)
     ALLOCATE(v(N), STAT = ierr)
-    IF (ierr /= 0) CALL errore('pade_cont_aniso_iaxis_to_raxis', 'Error allocating v', 1)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating v', 1)
     delta(:) = czero
     znorm(:) = czero
     adelta(:, :, :) = czero
@@ -1047,8 +1034,8 @@
         ENDDO ! ik
       ENDDO ! iw
       !
-      WRITE(stdout, '(5x, a)') '   pade Re[znorm] [eV] Re[delta] [eV]'
-      WRITE(stdout, '(5x, i6, 2ES15.6)') N, REAL(znorm(1)), REAL(delta(1))
+      WRITE(stdout, '(5x, a)') '   pade    Re[znorm]   Re[delta] [meV]'
+      WRITE(stdout, '(5x, i6, 2ES15.6)') N, REAL(znorm(1)), REAL(delta(1)) * 1000.d0
 !      WRITE(stdout, '(5x, a, i6, a, ES15.6, a, ES15.6)') 'pade = ', N, &
 !                    '   Re[znorm(1)] = ', REAL(znorm(1)), &
 !                    '   Re[delta(1)] = ', REAL(delta(1))
@@ -1065,15 +1052,15 @@
     CALL mp_barrier(inter_pool_comm)
     !
     DEALLOCATE(a, STAT = ierr)
-    IF (ierr /= 0) CALL errore('pade_cont_aniso_iaxis_to_raxis', 'Error deallocating a', 1)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating a', 1)
     DEALLOCATE(b, STAT = ierr)
-    IF (ierr /= 0) CALL errore('pade_cont_aniso_iaxis_to_raxis', 'Error deallocating b', 1)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating b', 1)
     DEALLOCATE(z, STAT = ierr)
-    IF (ierr /= 0) CALL errore('pade_cont_aniso_iaxis_to_raxis', 'Error deallocating z', 1)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating z', 1)
     DEALLOCATE(u, STAT = ierr)
-    IF (ierr /= 0) CALL errore('pade_cont_aniso_iaxis_to_raxis', 'Error deallocating u', 1)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating u', 1)
     DEALLOCATE(v, STAT = ierr)
-    IF (ierr /= 0) CALL errore('pade_cont_aniso_iaxis_to_raxis', 'Error deallocating v', 1)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error deallocating v', 1)
     !
     ! remove memory allocated for a, b, z, u, v
     imelt = 2 * 5 * N
@@ -1082,7 +1069,7 @@
     RETURN
     !
     !-----------------------------------------------------------------------
-    END SUBROUTINE pade_cont_aniso_iaxis_to_raxis
+    END SUBROUTINE pade_cont_aniso
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
@@ -1263,7 +1250,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE kernel_aniso_iaxis_analytic_cont(itemp)
+    SUBROUTINE kernel_aniso_analytic_cont(itemp)
     !-----------------------------------------------------------------------
     !!
     !! computes kernels K_{+}(w, iw_n, T) and K_{-}(w, iw_n, T)
@@ -1329,14 +1316,15 @@
     CALL mem_size_eliashberg(2, imelt)
     !
     ALLOCATE(wesqrt(nbndfs, nkfs, nsiw(itemp)), STAT = ierr)
-    IF (ierr /= 0) CALL errore('kernel_aniso_iaxis_analytic_cont', 'Error allocating wesqrt', 1)
+    IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error allocating wesqrt', 1)
     ALLOCATE(desqrt(nbndfs, nkfs, nsiw(itemp)), STAT = ierr)
-    IF (ierr /= 0) CALL errore('kernel_aniso_iaxis_analytic_cont', 'Error allocating desqrt', 1)
-    !
+    IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error allocating desqrt', 1)
     ALLOCATE(adsumi(nbndfs, lower_bnd:upper_bnd, nsw), STAT = ierr)
-    IF (ierr /= 0) CALL errore('kernel_aniso_iaxis_analytic_cont', 'Error allocating adsumi', 1)
+    IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error allocating adsumi', 1)
     ALLOCATE(azsumi(nbndfs, lower_bnd:upper_bnd, nsw), STAT = ierr)
-    IF (ierr /= 0) CALL errore('kernel_aniso_iaxis_analytic_cont', 'Error allocating azsumi', 1)
+    IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error allocating azsumi', 1)
+    wesqrt(:, :, :) = zero
+    desqrt(:, :, :) = zero
     adsumi(:, :, :) = zero
     azsumi(:, :, :) = zero
     !
@@ -1378,9 +1366,9 @@
     ENDDO ! ik
     !
     DEALLOCATE(wesqrt, STAT = ierr)
-    IF (ierr /= 0) CALL errore('kernel_aniso_iaxis_analytic_cont', 'Error deallocating wesqrt', 1)
+    IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error deallocating wesqrt', 1)
     DEALLOCATE(desqrt, STAT = ierr)
-    IF (ierr /= 0) CALL errore('kernel_aniso_iaxis_analytic_cont', 'Error deallocating desqrt', 1)
+    IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error deallocating desqrt', 1)
     !
     ! remove memory allocated for wesqrt, desqrt
     imelt = 2 * nbndfs * nkfs * nsiw(itemp)
@@ -1389,7 +1377,7 @@
     RETURN
     !
     !-----------------------------------------------------------------------
-    END SUBROUTINE kernel_aniso_iaxis_analytic_cont
+    END SUBROUTINE kernel_aniso_analytic_cont
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
@@ -1534,11 +1522,11 @@
     REAL(KIND = DP) :: weight
     !! Factor in a2fij
     REAL(KIND = DP), EXTERNAL :: w0gauss
-    !! The derivative of wgauss:  an approximation to the delta function
+    !! The derivative of wgauss: an approximation to the delta function
     !
-    CALL fkbounds( nkfs, lower_bnd, upper_bnd )
+    CALL fkbounds(nkfs, lower_bnd, upper_bnd)
     ALLOCATE(a2fij(lower_bnd:upper_bnd, MAXVAL(nqfs(:)), nbndfs, nbndfs, nqstep), STAT = ierr)
-    IF (ierr /= 0) CALL errore('evaluate_a2fij', 'Error deallocating a2fij', 1)
+    IF (ierr /= 0) CALL errore('evaluate_a2fij', 'Error allocating a2fij', 1)
     a2fij(:, :, :, :, :) = zero
     !
     inv_degaussq = one / degaussq
@@ -1554,7 +1542,7 @@
                 DO imode = 1, nmodes
                   IF (wf(imode, iq0) > eps_acustic) THEN
                     DO iwph = 1, nqstep
-                      weight  = w0gauss((wsph(iwph) - wf(imode, iq0) ) * inv_degaussq, 0) * inv_degaussq
+                      weight  = w0gauss((wsph(iwph) - wf(imode, iq0)) * inv_degaussq, 0) * inv_degaussq
                       a2fij(ik, iq, ibnd, jbnd, iwph) = a2fij(ik, iq, ibnd, jbnd, iwph) &
                                              + weight * dosef * g2(ik, iq, ibnd, jbnd, imode)
                     ENDDO ! iwph
@@ -1572,6 +1560,176 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE evaluate_a2fij
     !-----------------------------------------------------------------------
+    !
+    !----------------------------------------------------------------------
+    SUBROUTINE deallocate_aniso_iaxis()
+    !----------------------------------------------------------------------
+    !!
+    !!  deallocates the variables allocated for imag-axis solutions
+    !!
+    !----------------------------------------------------------------------
+    !
+    USE eliashbergcom, ONLY : wsi, gap, agap, deltai, znormi, nznormi, &
+                              adeltai, adeltaip, aznormi, naznormi
+    !
+    IMPLICIT NONE
+    !
+    INTEGER :: ierr
+    !! Error status
+    !
+    ! gen_freqgrid_iaxis
+    DEALLOCATE(wsi, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating wsi', 1)
+    ! sum_eliashberg_aniso_iaxis
+    DEALLOCATE(gap, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating gap', 1)
+    DEALLOCATE(agap, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating agap', 1)
+    DEALLOCATE(deltai, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating deltai', 1)
+    DEALLOCATE(znormi, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating znormi', 1)
+    DEALLOCATE(nznormi, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating nznormi', 1)
+    !
+    DEALLOCATE(adeltai, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating adeltai', 1)
+    DEALLOCATE(adeltaip, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating adeltaip', 1)
+    DEALLOCATE(aznormi, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating aznormi', 1)
+    DEALLOCATE(naznormi, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating naznormi', 1)
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE deallocate_aniso_iaxis
+    !-----------------------------------------------------------------------
+    !
+    !----------------------------------------------------------------------
+    SUBROUTINE deallocate_aniso_raxis()
+    !----------------------------------------------------------------------
+    !!
+    !!  deallocates the variables allocated for real-axis solutions
+    !!
+    USE epwcom,        ONLY : lacon
+    USE eliashbergcom, ONLY : ws, delta, znorm, adelta, adeltap, & 
+                              aznorm, aznormp, gp, gm, adsumi, & 
+                              azsumi, a2fij, lacon_fly
+    !
+    IMPLICIT NONE
+    !
+    INTEGER :: ierr
+    !! Error status
+    !
+    ! gen_freqgrid_iaxis
+    DEALLOCATE(ws, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating ws', 1)
+    !
+    ! pade_cont_iso or analytic_cont_aniso
+    DEALLOCATE(delta, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating delta', 1)
+    DEALLOCATE(adelta, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating adelta', 1)
+    DEALLOCATE(znorm, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating znorm', 1)
+    DEALLOCATE(aznorm, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating aznorm', 1)
+    ! analytic_cont_aniso
+    IF (lacon) THEN
+      DEALLOCATE(adeltap, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating adeltap', 1)
+      DEALLOCATE(aznormp, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating aznormp', 1)
+      DEALLOCATE(gp, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating gp', 1)
+      DEALLOCATE(gm, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating gm', 1)
+      ! kernel_aniso_analytic_cont
+      DEALLOCATE(adsumi, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating adsumi', 1)
+      DEALLOCATE(azsumi, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating azsumi', 1)
+      ! evaluate_a2fij
+      IF (.NOT. lacon_fly) THEN
+        DEALLOCATE(a2fij, STAT = ierr)
+        IF (ierr /= 0) CALL errore('deallocate_aniso_raxis', 'Error deallocating a2fij', 1)
+      ENDIF
+    ENDIF
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE deallocate_aniso_raxis
+    !-----------------------------------------------------------------------
+    !
+    !----------------------------------------------------------------------
+    SUBROUTINE deallocate_aniso()
+    !----------------------------------------------------------------------
+    !!
+    !!  deallocates the variables allocated by eliashberg_init, 
+    !!  eliashberg_grid, read_frequencies, read_eigenvalues, read_kqmap,  
+    !!  read_ephmat and evaluate_a2f_lambda
+    !!
+    USE elph2,         ONLY : wf, wqf, xqf, gtemp
+    USE eliashbergcom, ONLY : ekfs, xkfs, wkfs, g2, w0g, a2f_iso, &
+                              ixkff, ixkqf, ixqfs, nqfs, memlt_pool, &
+                              wsph, nsiw
+    !
+    IMPLICIT NONE
+    !
+    INTEGER :: ierr
+    !! Error status
+    !
+    ! eliashberg_init
+    DEALLOCATE(gtemp, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating gtemp', 1)
+    ! eliashberg_grid
+    DEALLOCATE(nsiw, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating nsiw', 1)
+    ! read_frequencies
+    DEALLOCATE(wsph, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating wsph', 1)
+    DEALLOCATE(wf, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating wf', 1)
+    DEALLOCATE(wqf, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating wqf', 1)
+    DEALLOCATE(xqf, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating xqf', 1)
+    ! read_eigenvalues
+    DEALLOCATE(ekfs, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating ekfs', 1)
+    DEALLOCATE(xkfs, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating xkfs', 1)
+    DEALLOCATE(wkfs, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating wkfs', 1)
+    DEALLOCATE(w0g, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating w0g', 1)
+    ! read_kqmap
+    DEALLOCATE(ixkff, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating ixkff', 1)
+    DEALLOCATE(ixkqf, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating ixkqf', 1)
+    DEALLOCATE(ixqfs, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating ixqfs', 1)
+    DEALLOCATE(nqfs, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating nqfs', 1)
+    DEALLOCATE(memlt_pool, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating memlt_pool', 1)
+    ! read_ephmat
+    DEALLOCATE(g2, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating g2', 1)
+    ! evaluate_a2f_lambda
+    DEALLOCATE(a2f_iso, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_aniso', 'Error deallocating a2f_iso', 1)
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE deallocate_aniso
+    !-----------------------------------------------------------------------
+    !
   !-----------------------------------------------------------------------
   END MODULE supercond_aniso
   !-----------------------------------------------------------------------

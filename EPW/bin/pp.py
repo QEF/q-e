@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 # Post-processing script from of PH data in format used by EPW
 # 14/07/2015 - Creation of the script - Samuel Ponce

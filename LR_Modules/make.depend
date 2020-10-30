@@ -39,6 +39,7 @@ addusdbec_nc.o : ../PW/src/pwcom.o
 addusdbec_nc.o : ../upflib/uspp.o
 addusdbec_nc.o : lrcom.o
 addusddenseq.o : ../FFTXlib/fft_interfaces.o
+addusddenseq.o : ../Modules/cell_base.o
 addusddenseq.o : ../Modules/fft_base.o
 addusddenseq.o : ../Modules/ions_base.o
 addusddenseq.o : ../Modules/kind.o

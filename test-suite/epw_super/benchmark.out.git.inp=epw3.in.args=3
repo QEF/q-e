@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.2.0 starts on 15Jul2020 at 10:40:28 
+     Program EPW v.5.3.0 starts on  1Sep2020 at  9:11: 5 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -41,7 +41,7 @@
 
      MPI processes distributed on     1 nodes
      K-points division:     npool     =       4
-     Fft bands division:     nmany     =       1
+     Reading input from epw3.in
 
      Reading supplied temperature list.
                       
@@ -91,15 +91,17 @@
      G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
      number of k points=    0
                        cart. coord. in units 2pi/a_0
-     EPW          :      0.00s CPU      0.01s WALL
+     EPW          :      0.00s CPU      0.00s WALL
 
-     EPW          :      0.00s CPU      0.01s WALL
+     EPW          :      0.00s CPU      0.00s WALL
 
 
      -------------------------------------------------------------------
      Using MgB2.ukk from disk
      -------------------------------------------------------------------
 
+     Symmetries of Bravais lattice:  24
+     Symmetries of crystal:          24
 
      Do not need to read .epb files; read .fmt files
 
@@ -118,8 +120,8 @@
      Finished reading Wann rep data from file
 
      ===================================================================
-     Memory usage:  VmHWM =        21Mb
-                   VmPeak =       602Mb
+     Memory usage:  VmHWM =        29Mb
+                   VmPeak =       586Mb
      ===================================================================
      
      Using uniform q-mesh:    6   6   6
@@ -136,8 +138,8 @@
 
      ===================================================================
 
-              ibndmin =     1  ebndmin =    -0.357
-              ibndmax =     5  ebndmax =     1.152
+              ibndmin =     1  ebndmin =    -4.862 eV
+              ibndmax =     5  ebndmax =    15.672 eV
 
 
      Number of ep-matrix elements per pool :         1575 ~=   12.30 Kb (@ 8 bytes/ DP)
@@ -149,8 +151,8 @@
       
      All q-points are done, no need to restart !!
      ===================================================================
-     Memory usage:  VmHWM =        23Mb
-                   VmPeak =       629Mb
+     Memory usage:  VmHWM =        30Mb
+                   VmPeak =       613Mb
      ===================================================================
 
 
@@ -184,13 +186,13 @@
 
      Finish reading .ephmat files
 
-     lambda_max =           126.3963398   lambda_k_max =             3.2058367
- 
      Electron-phonon coupling strength =    0.8715331
  
      Estimated Allen-Dynes Tc =    26.410306 K for muc =    0.16000
   
-     Estimated BCS superconducting gap =     0.004006 eV
+     Estimated w_log in Allen-Dynes Tc =    61.468732 meV
+  
+     Estimated BCS superconducting gap =     4.005521 meV
   
     
      temp(  1) =     16.00000 K
@@ -202,35 +204,35 @@
     
 
      Size of allocated memory per pool: ~=    0.0357 Gb
-        iter      ethr        znormi [eV]    deltai [eV]
-          1   2.324585E+00   1.842446E+00   5.071399E-03
-          2   1.050021E-01   1.838424E+00   5.747029E-03
-          3   1.139816E-01   1.832860E+00   6.561656E-03
-          4   8.845982E-02   1.828464E+00   7.170240E-03
-          5   1.774059E-01   1.817191E+00   8.498220E-03
-          6   9.894108E-02   1.823272E+00   7.840916E-03
-          7   1.447665E-02   1.822481E+00   7.932339E-03
-          8   2.983689E-03   1.822322E+00   7.955349E-03
+        iter      ethr          znormi      deltai [meV]
+          1   2.324585E+00   1.842446E+00   5.071399E+00
+          2   1.050021E-01   1.838424E+00   5.747029E+00
+          3   1.139816E-01   1.832860E+00   6.561656E+00
+          4   8.845982E-02   1.828464E+00   7.170240E+00
+          5   1.774059E-01   1.817191E+00   8.498220E+00
+          6   9.894108E-02   1.823272E+00   7.840916E+00
+          7   1.447665E-02   1.822481E+00   7.932339E+00
+          8   2.983689E-03   1.822322E+00   7.955349E+00
      Convergence was reached in nsiter =      8
  
-     iaxis_imag   :     22.41s CPU     22.46s WALL (       1 calls)
+     iaxis_imag   :     20.74s CPU     20.76s WALL (       1 calls)
  
     
      Pade approximant of anisotropic Eliashberg equations from imaginary-axis to real-axis
      Cutoff frequency wscut =     0.5000
     
-        pade Re[znorm] [eV] Re[delta] [eV]
-         52   1.678152E+00   7.358502E-03
+        pade    Re[znorm]   Re[delta] [meV]
+         52   1.678216E+00   7.358505E+00
  
      Convergence was reached for N =     52 Pade approximants
  
-     raxis_pade   :      0.09s CPU      0.10s WALL (       1 calls)
+     raxis_pade   :      0.09s CPU      0.11s WALL (       1 calls)
  
-     itemp =   1   total cpu time :             22.57 secs
+     itemp =   1   total cpu time :             20.87 secs
  
 
      Unfolding on the coarse grid
-     elphon_wrap  :      0.00s CPU      0.01s WALL (       1 calls)
+     elphon_wrap  :      0.01s CPU      0.01s WALL (       1 calls)
 
      INITIALIZATION: 
 
@@ -238,18 +240,17 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :      0.06s CPU      0.07s WALL (       1 calls)
+     ephwann      :      0.06s CPU      0.08s WALL (       1 calls)
 
      HamW2B       :      0.00s CPU      0.00s WALL (      21 calls)
 
-     ELIASHBERG   :     83.83s CPU     83.86s WALL (       1 calls)
+     ELIASHBERG   :     68.13s CPU     68.17s WALL (       1 calls)
 
      Total program execution
-     EPW          :   1m23.89s CPU   1m23.94s WALL
+     EPW          :   1m 8.19s CPU   1m 8.27s WALL
 
-                                                                                          
- Please consider citing:                                                                  
- S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
-                                                                                          
- In addition, since you have used the following functionalities, please cite:             
-   eliashberg :: E. R. Margine and F. Giustino, Phys. Rev. B 87, 024505 (2013)              
+     ===============================================================================
+     The functionality-dependent EPW.bib file was created with suggested citations. 
+     Please consider citing the papers listed in EPW.bib.                           
+     ===============================================================================
+                                                                                    

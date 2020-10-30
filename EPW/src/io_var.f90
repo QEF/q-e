@@ -26,18 +26,18 @@
             iospectral_cum, iuwanep, iuwane, iunukk, iudvscf, iuqpeig, iures, &
             iuint3paw
   PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb,&
-            iufilfreq, iufilegnv, iufileph, iufilkqmap, iunpattern, &
+            iufilfreq, iufilegnv, iufileph, iufilkqmap, iunpattern, iufilmu_q, &
             iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, &
-            iufileig, iukmap, crystal, iunifc, iunimem, iunepmatwp2
+            iufileig, iukmap, crystal, iunifc, iunimem, iunepmatwp2, iufilFS
   PUBLIC :: iuwinfil, iun_plot, iuprojfil, iudecayH, iudecayP, &
             iudecaydyn, iudecayv, iunnkp, iuamn, iummn, iubvec
   PUBLIC :: iufilsigma, iufilseebeck, iufilkappael, iufilkappa, iufilscatt_rate,&
             iufilFi_all, iufilsigma_all, iufiltau_all, iuindabs, iuntau, iuntaucb, &
-            iufilesigma_all
+            iufilesigma_all, epwbib
   PUBLIC :: iunsparseq, iunsparsek, iunsparsei, iunsparsej, iunsparset, iunselecq, &
             iunsparseqcb, iunsparsekcb, iunsparseicb, iunsparsejcb, iunsparsetcb, &
-            iunrestart, iufilibtev_sup, iunepmat, iunepmatcb, iufilF, iunepmat_merge,&
-            iunsparseq_merge, iunsparsek_merge, iunsparsei_merge, iunsparsej_merge, &
+            iunrestart, iufilibtev_sup, iunepmat, iunepmatcb, iufilF, iufilmu_nk, iunepmat_merge,&
+            iunsparseq_merge, iunsparsek_merge, iunsparsei_merge,iunsparsej_merge, &
             iunsparset_merge, iunepmatcb_merge, iunsparseqcb_merge, iunsparsekcb_merge,&
             iunsparseicb_merge, iunsparsejcb_merge, iunsparsetcb_merge
 
@@ -76,8 +76,7 @@
   INTEGER :: iukgmap         = 96  ! Map of folding G-vector indexes [.kgmap]
   INTEGER :: iuwanep         = 97  ! Spatial decay of e-p matrix elements in wannier basis
                                    ! Electrons + phonons [epmat_wanep]
-  INTEGER :: iuwane          = 98  ! Spatial decay of matrix elements in Wannier basis
-                                   ! [.epwane]
+  INTEGER :: iuwane          = 98  ! Spatial decay of matrix elements in Wannier basis [.epwane]
   INTEGER :: iuint3paw       = 99  ! Unit for the dvscf_paw_q file
   !
   ! Output of quantity for restarting purposes (101-200)
@@ -128,6 +127,7 @@
   INTEGER :: iuntaucb        = 143  ! Opening the taucb file
   INTEGER :: iuqpeig         = 144  ! Reading quasi-particle eigenenergies from file
   INTEGER :: iunpattern      = 145  ! Unit for reading the pattern files.
+  INTEGER :: iufilFS         = 146  ! Unit for Fermi surface files
   !
   ! Output quantites related to Wannier (201-250)
   !
@@ -157,11 +157,16 @@
   INTEGER :: iufiltau_all    = 258 ! inv_tau_all file to retart an interpolation
   INTEGER :: iufilF          = 259 ! $\partial_E f_{nk}$ in .fmt mode
   INTEGER :: iufilesigma_all = 260 ! Sigmar_all and Sigmai_all file to retart spectral calculation
+  INTEGER :: iufilmu_nk      = 261 ! $\mu_{nk}^{\alpha\beta}$ in mobility_nk.fmt file
+  INTEGER :: iufilmu_q       = 262 ! $\mu_{\nu q}^{\alpha\beta}$ in mobility_nuq.fmt mode
   !
   ! Output quantities related to Indirect absorption (301-325)
   INTEGER :: iuindabs        = 301 ! Indirect absorption data
+  ! 
+  ! Miscellaneous (326-350)
+  INTEGER :: epwbib          = 326 ! EPW bibliographic file.       
   !
-  ! Merging of files
+  ! Merging of files (400-450)
   INTEGER :: iunepmat_merge    = 400
   INTEGER :: iunsparseq_merge  = 401
   INTEGER :: iunsparsek_merge  = 402

@@ -26,15 +26,17 @@
          !
          !
          double precision function w1gauss(x,ngauss)
+            use kinds
             implicit none
             double precision, intent(in) :: x
             integer, intent(in) :: ngauss
+            real(dp), external :: qe_erf
 
             ! ngauss=0 (gaussian smearing)
             ! ngauss=1 FD
 
             if ( ngauss .eq. 0 ) then
-               w1gauss = 0.5d0 * ( 1.d0 + derf( x * sqrtpm1 ) )
+               w1gauss = 0.5d0 * ( 1.d0 + qe_erf( x * sqrtpm1 ) )
             else if ( ngauss .eq. 1 ) then
                w1gauss = 1.d0 / ( exp(-x) + 1.d0)
             end if

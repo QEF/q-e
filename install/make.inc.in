@@ -3,7 +3,7 @@
 # compilation rules
 
 .SUFFIXES :
-.SUFFIXES : .o .c .f .f90 .h .fh
+.SUFFIXES : .o .c .f90 .h .fh
 
 # most fortran compilers can directly preprocess c-like directives: use
 # 	$(MPIF90) $(F90FLAGS) -c $<
@@ -14,11 +14,6 @@
 
 .f90.o:
 	@f90rule@
-
-# .f.o and .c.o: do not modify
-
-.f.o:
-	$(F77) $(FFLAGS) -c $<
 
 .c.o:
 	$(CC) $(CFLAGS)  -c $<
@@ -63,8 +58,7 @@ MOD_FLAG      = @imod@
 # while BASEMODS points to the corresponding module libraries
 # Each Makefile can add directories to MODFLAGS and libraries to QEMODS
 
-BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/iotk/src \
-               $(MOD_FLAG)$(TOPDIR)/upflib \
+BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
                $(MOD_FLAG)$(TOPDIR)/Modules \
                $(MOD_FLAG)$(TOPDIR)/FFTXlib \
 	       $(MOD_FLAG)$(TOPDIR)/LAXlib \
@@ -83,7 +77,9 @@ BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/iotk/src \
 MPIF90         = @mpif90@
 F90           = @f90@
 CC             = @cc@
-F77            = @f77@
+
+# CUDA Toolkit path
+CUDA_PATH=@cuda_path@
 
 # GPU architecture (Kepler: 35, Pascal: 60, Volta: 70 )
 GPU_ARCH=@gpu_arch@
@@ -101,17 +97,16 @@ CUDA_F90FLAGS=@cuda_fflags@
 CPP            = @cpp@
 CPPFLAGS       = @cppflags@ $(DFLAGS) $(IFLAGS)
 
-# compiler flags: C, F90, F77
+# compiler flags: C, F90
 # C flags must include DFLAGS and IFLAGS
 # F90 flags must include MODFLAGS, IFLAGS, and FDFLAGS with appropriate syntax
 
 CFLAGS         = @cflags@ $(DFLAGS) $(IFLAGS)
 F90FLAGS       = @f90flags@ @pre_fdflags@$(FDFLAGS) $(CUDA_F90FLAGS) $(IFLAGS) $(MODFLAGS)
-FFLAGS         = @fflags@
 
-# compiler flags without optimization for fortran-77
+# compiler flags with and without optimization for fortran-77
 # the latter is NEEDED to properly compile dlamch.f, used by lapack
-
+FFLAGS         = @fflags@
 FFLAGS_NOOPT   = @fflags_noopt@
 
 # compiler flag needed by some compilers when the main program is not fortran
@@ -130,18 +125,14 @@ LD_LIBS        = @ld_libs@
 
 # External Libraries (if any) : blas, lapack, fft, MPI
 
-# If you have nothing better, use the local copy via "--with-netlib" :
-# BLAS_LIBS = /your/path/to/espresso/LAPACK/blas.a
-# BLAS_LIBS_SWITCH = internal
+# If you have nothing better, use the local copy
+# BLAS_LIBS = $(TOPDIR)/LAPACK/libblas.a
 
 BLAS_LIBS      = @blas_libs@
-BLAS_LIBS_SWITCH = @blas_libs_switch@
 
-# If you have nothing better, use the local copy via "--with-netlib" :
-# LAPACK_LIBS = /your/path/to/espresso/LAPACK/lapack.a
+# If you have nothing better, use the local copy
 # LAPACK_LIBS_SWITCH = internal
-# For IBM machines with essl (-D__ESSL): load essl BEFORE lapack !
-# remember that LAPACK_LIBS precedes BLAS_LIBS in loading order
+# LAPACK_LIBS = $(TOPDIR)/LAPACK/liblapack.a
 
 LAPACK_LIBS    = @lapack_libs@
 LAPACK_LIBS_SWITCH = @lapack_libs_switch@
@@ -190,9 +181,9 @@ RANLIB         = @ranlib@
 
 FLIB_TARGETS   = all
 
-LIBOBJS        = $(TOPDIR)/clib/clib.a  $(TOPDIR)/iotk/src/libiotk.a
+LIBOBJS        = $(TOPDIR)/clib/clib.a
 LIBXC_LIBS     = @LIBS_LIBXC@
-QELIBS         = $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(BEEF_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LIBXC_LIBS) $(LD_LIBS)
+QELIBS         = $(BEEF_LIBS) $(LIBXC_LIBS) $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LD_LIBS)
 
 # wget or curl - useful to download from network
 WGET = @wget@

@@ -49,6 +49,7 @@ io_files.o \
 io_global.o  \
 ions_base.o \
 kind.o \
+lmdif.o \
 mdiis.o \
 mm_dispersion.o \
 mp_bands.o \
@@ -66,7 +67,6 @@ paw_variables.o \
 plugin_flags.o \
 plugin_arguments.o \
 plugin_variables.o \
-powell.o \
 pw_dot.o \
 qmmm.o \
 random_numbers.o \
@@ -156,7 +156,7 @@ w0gauss.o \
 w1gauss.o \
 deviatoric.o
 
-TLDEPS=libiotk libfox libutil libla libfft
+TLDEPS=libfox libutil libla libfft
 
 all : libqemod.a
 

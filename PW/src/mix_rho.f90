@@ -17,16 +17,16 @@
 #endif
 #endif
 
+MODULE mix_save
 #if defined(__GFORTRAN_HACK)   
 ! gfortran hack - for some mysterious reason gfortran doesn't save
 !                 derived-type variables even with the SAVE attribute
-MODULE mix_save
   USE scf, ONLY : mix_type
   TYPE(mix_type), ALLOCATABLE, SAVE :: &
     df(:),        &! information from preceding iterations
     dv(:)          !     "  "       "     "        "  "
-END MODULE mix_save
 #endif
+END MODULE mix_save
 
 !----------------------------------------------------------------------------
 SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&

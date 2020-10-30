@@ -358,8 +358,30 @@ CONTAINS
   !
   SUBROUTINE initialize_g_vectors()
     !
+    USE fft_base,   ONLY : dfftp
+    USE fft_base,   ONLY : dffts
+    USE funct,      ONLY : dft_is_hybrid
+    ! ... get magnetic moments from previous run before charge is deleted
+    !
+    CALL reset_starting_magnetization()
+    !
+    ! ... recasted from run_pwscf.f90 reset_gvectors 
+    ! ... clean everything (FIXME: clean only what has to be cleaned)
+    !
     CALL clean_pw( .FALSE. )
+    CALL close_files( .TRUE. )
+    !
+    ! ... re-set FFT grids and re-compute needed stuff (FIXME: which?)
+    !
+    dfftp%nr1=0; dfftp%nr2=0; dfftp%nr3=0
+    dffts%nr1=0; dffts%nr2=0; dffts%nr3=0
+    !
     CALL init_run()
+    !
+    !
+    ! ... re-set and re-initialize EXX-related stuff
+    !
+    IF ( dft_is_hybrid() ) CALL reset_exx( )
     !
     CALL mp_bcast( at,        ionode_id, intra_image_comm )
     CALL mp_bcast( at_old,    ionode_id, intra_image_comm )

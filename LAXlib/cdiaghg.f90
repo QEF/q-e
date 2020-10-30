@@ -215,9 +215,12 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
   !
   USE laxlib_parallel_include
   !
-!define __USE_GLOBAL_BUFFER
-#if defined(__USE_GLOBAL_BUFFER)
-  USE gbuffers,        ONLY : dev=>dev_buf, pin=>pin_buf
+  ! NB: the flag below can be used to decouple LAXlib from devXlib.
+  !     This will make devXlib an optional dependency of LAXlib when
+  !     the library will be decoupled from QuantumESPRESSO.
+#define __USE_GLOBAL_BUFFER
+#if defined(__USE_GLOBAL_BUFFER) && defined(__CUDA)
+  USE device_fbuff_m,        ONLY : dev=>dev_buf, pin=>pin_buf
 #define VARTYPE POINTER
 #else
 #define VARTYPE ALLOCATABLE
@@ -299,7 +302,9 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
       IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' cannot allocate h_bkp_d or s_bkp_d ', ABS( info ) )
 #else
       CALL dev%lock_buffer( h_bkp_d,  (/ n, n /), info )
+      IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' cannot allocate h_bkp_d ', ABS( info ) )
       CALL dev%lock_buffer( s_bkp_d,  (/ n, n /), info )
+      IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' cannot allocate s_bkp_d ', ABS( info ) )
 #endif
       !
 !$cuf kernel do(2)
@@ -363,7 +368,9 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
       CALL pin%lock_buffer( e_h, n, info )
       !
       CALL dev%lock_buffer( h_diag_d, n, info )
+      IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' cannot allocate h_bkp_d ', ABS( info ) )
       CALL dev%lock_buffer( s_diag_d, n, info )
+      IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' cannot allocate s_bkp_d ', ABS( info ) )
 #endif
       !
       lwork  = n
@@ -386,7 +393,9 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
       CALL pin%lock_buffer(rwork, lrwork, info)
       CALL pin%lock_buffer(iwork, liwork, info)
       CALL dev%lock_buffer( work_d,  lwork_d, info)
+      IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' cannot allocate work_d ', ABS( info ) )
       CALL dev%lock_buffer( rwork_d, lrwork_d, info)
+      IF( info /= 0 ) CALL lax_error__( ' cdiaghg_gpu ', ' cannot allocate rwork_d ', ABS( info ) )
 #endif
       !
       !$cuf kernel do(1) <<<*,*>>>

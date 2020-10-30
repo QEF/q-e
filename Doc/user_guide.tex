@@ -169,6 +169,8 @@ at the Exascale EU Centre of Excellence.
 Contributors to \qe, beyond the authors of the papers
 mentioned in Sec.\ref{SubSec:Terms}, include:
 \begin{itemize}
+  \item Federico Ficarelli and Daniele Cesarini (CINECA), with help 
+  from Ye Luo (Argonne) and Sebastian Gs\"anger, for CMake support;
   \item Ye Luo (Argonne) for improved FFT threading and miscellaneous
   contributions and optimizations;
 %  \item Pietro Bonf\`a (CINECA) for multiple contributions to optimization,
@@ -442,7 +444,7 @@ the hardware of large HPC centers. Detailed but sometimes outdated
 installation instructions for specific HPC machines may be found in 
 files \texttt{install/README.}{\em sys}, where {\em sys} is the machine name.
 
-Note: support for cMake is being added.
+Note: support for CMake is being added.
 
 Instructions for the impatient:
 \begin{verbatim}
@@ -620,6 +622,8 @@ The following options are available for the CUDA Fortran GPU version:\\
                                   & CUDA Toolkit installed on the workstation \\
                                   & or available on the compute nodes of the HPC facility.\\
                                   & PGI compilers currently accept 7.5, 8.0 or 9.0 (default: 8.0)\\
+\texttt{--enable-cuda-env-check=[yes]}& if set, sanity checks on the CUDA environment\\
+                                      & are performed (default: yes).
 \end{tabular}\\
 
 Please remember that in order to compile the CUDA code for GPU's you need ... 
@@ -1095,7 +1099,9 @@ that runs on different machines, compile it on the oldest machine you have
 
 \paragraph{Linux PCs with gfortran}
 
-You need at least gfortran v.4.4 or later to properly compile \qe.
+Gfortran v.4.8.5, still often found on CentOS machines, no longer compiles
+\qe\ v.6.6 or later, due to a gfortran bug. You need at least gfortran v.4.9.X.
+
 
 "There is a known incompatibility problem between different calling
 convention for Fortran functions that return complex values [...]

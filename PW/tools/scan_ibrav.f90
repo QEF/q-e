@@ -11,19 +11,22 @@ PROGRAM ibrav2cell
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : pi, ANGSTROM_AU
-  USE powell, ONLY : POWELL_MIN
+  !USE powell, ONLY : POWELL_MIN
+  USE lmdif_module, ONLY : lmdif1
   !
   IMPLICIT NONE
   CHARACTER(len=1024) :: line
   INTEGER,PARAMETER :: npar = 6+3 ! celldm(6) and 3 angles
   INTEGER,PARAMETER :: nibrav = 20
   INTEGER,PARAMETER :: ibrav_list(nibrav) =  (/1,2,3,-3,4,5,-5,6,7,8,9,-9,91,10,11,12,-12,13,-13,14/)
-  INTEGER :: ibrav, ios, ii, i
+  INTEGER :: ibrav, ios, ii, i, info
   REAL(DP) :: celldm(6), angle(3), alat, chisq, chisq_aux
   !
-  REAL(DP) :: at(3,3), omega, R(3,3), par(npar), par_aux(npar)
+  REAL(DP) :: at(3,3), omega, R(3,3), par(npar), par_aux(npar), vchisq(npar)
   REAL(DP),PARAMETER :: grad_to_rad = pi/180
-  REAL(DP) :: xi(npar,npar)
+!  REAL(DP) :: xi(npar,npar)
+  INTEGER :: lwa, iwa(npar)
+  REAL(DP),ALLOCATABLE :: wa(:)  
   !
   LOGICAL,EXTERNAL :: matches
 
@@ -49,10 +52,13 @@ PROGRAM ibrav2cell
   WRITE(*, '("at2", 6f14.6)') at(:,2)
   WRITE(*, '("at3", 6f14.6)') at(:,3)
 
+  lwa = npar**2 + 6*npar
+  ALLOCATE(wa(lwa))
+      
   DO ii = 1, nibrav
     ibrav = ibrav_list(ii)
-    xi = 0._dp
-    FORALL(i=1:npar) xi(i,i) = 1._dp
+    !xi = 0._dp
+    !FORALL(i=1:npar) xi(i,i) = 1._dp
     par(1) = SQRT(SUM(at**2))/3
     par(2) = 1._dp
     par(3) = 1._dp
@@ -62,14 +68,28 @@ PROGRAM ibrav2cell
     par(7) = 0._dp
     par(8) = 0._dp
     par(9) = 0._dp
-    CALL POWELL_MIN(optimize_this,par,xi,npar,npar,1.d-24,i,chisq)
+    WRITE(*,'("Scanning ibrav ",i3,"")') ibrav
+    CALL lmdif1(optimize_this_s, npar, npar, par, vchisq, 1.d-15, info, iwa, wa, lwa)
+    
+    IF(info>0 .and. info<5) THEN
+       PRINT*, "Minimization succeeded"
+    ELSEIF(info>=5) THEN
+       PRINT*, "Minimization stopped before convergence"
+    ELSEIF(info<=0) THEN 
+      PRINT*, "Minimization error", info
+      STOP
+    ENDIF
+    chisq = vchisq(1)
+      
     IF(chisq<1.d-6)THEN
-      WRITE(*,'("____________ MATCH (chisq=",g7.1,") ____________")') chisq
+      WRITE(*,'(/,/,"____________ MATCH (chisq=",g7.1,") ____________")') chisq
       WRITE(*, '("  ibrav = ",i3)') ibrav
       DO i = 1,6
         par_aux = par
         par_aux(i) = par_aux(i) * .5_dp
-        chisq_aux = optimize_this(par_aux)
+        !chisq_aux = optimize_this(par_aux)
+        CALL optimize_this_s(npar, npar, par_aux, vchisq, info)
+        chisq_aux = vchisq(1)
         IF(chisq_aux/=chisq)THEN 
           WRITE(*, '("    celldm(",i2,") = ", f14.9)') i,par(i)
         ENDIF
@@ -82,6 +102,7 @@ PROGRAM ibrav2cell
       WRITE(*, '("at1", 6f14.6)') at(:,1)
       WRITE(*, '("at2", 6f14.6)') at(:,2)
       WRITE(*, '("at3", 6f14.6)') at(:,3)
+      WRITE(*,*)
     ENDIF
   ENDDO
 
@@ -89,15 +110,19 @@ PROGRAM ibrav2cell
  !
  CONTAINS
 
- REAL(DP) FUNCTION optimize_this(parameters_) RESULT(chi2)
+  SUBROUTINE optimize_this_s(m_,n_,p_,f_,i_)
     IMPLICIT NONE
-    REAL(DP),INTENT(in) :: parameters_(npar)
-    REAL(DP) :: celldm_(6), angle_(3), at_(3,3), R(3,3), omega_, pars_(npar), penality
+    INTEGER,INTENT(in) :: m_, n_
+    INTEGER,INTENT(inout) :: i_
+    REAL(DP),INTENT(out) :: f_(m_)
+    REAL(DP),INTENT(in)  :: p_(n_)
+    
+    REAL(DP) :: celldm_(6), angle_(3), at_(3,3), R(3,3), omega_, pars_(n_), penality
     INTEGER :: ierr
     CHARACTER(len=32) :: errormsg
     ! Global variables from main function: ibrav, at
 
-    pars_ = parameters_ ! parameters_ is read only!
+    pars_ = p_ ! p_ is read only!
     !WRITE(*, '("A:", 6f10.4,3x,3f10.4)') pars_
     CALL check_bounds(pars_, penality)
     !WRITE(*, '("B:", 6f10.4,3x,3f10.4)') pars_
@@ -114,11 +139,11 @@ PROGRAM ibrav2cell
       at_ = matmul(R,at_)
     ENDIF
 
-    chi2 = SUM( (at-at_)**2 )*penality
-    !WRITE(*, '(3(3f10.4,3x))') at
+    f_ = 0._dp
+    f_(1) = SUM( (at-at_)**2 )*penality
 
- END FUNCTION
-
+ END SUBROUTINE
+ 
  SUBROUTINE check_bounds(pars_, penalty)
    IMPLICIT NONE
    REAL(DP),INTENT(inout) :: pars_(npar), penalty

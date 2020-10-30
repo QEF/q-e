@@ -671,3 +671,94 @@ SUBROUTINE write_nsg
   !
 END SUBROUTINE write_nsg 
 
+!-----------------------------------------------------------------------
+SUBROUTINE read_ns()
+  !---------------------------------------------------------------------
+  !
+  ! This routine was written for the final SCF after vc-relax (M. Cococcioni).
+  ! The occupations ns/nsg also need to be read in order to reproduce
+  ! the right electronic ground state. When using Hubbard corrections
+  ! this might be different (i.e. have different ordering of states) 
+  ! from that simply obtained from the superposition of free ions.
+  ! In other words the KS Hamiltonian (and its ground state) is also 
+  ! functional of the Hubbard interaction parameters.
+  !
+  USE kinds,              ONLY : DP
+  USE mp,                 ONLY : mp_bcast
+  USE mp_images,          ONLY : intra_image_comm
+  USE io_global,          ONLY : ionode, ionode_id
+  USE scf,                ONLY : rho, v
+  USE ldaU,               ONLY : lda_plus_u_kind, nsg, v_nsg, hub_back
+  USE noncollin_module,   ONLY : noncolin
+  USE io_files,           ONLY : restart_dir
+  !
+  IMPLICIT NONE
+  INTEGER :: iunocc, iunocc1, ierr
+  CHARACTER (LEN=256) :: dirname
+  REAL(DP) :: eth, eth1
+  !
+  dirname = restart_dir()
+  !
+  IF ( ionode ) THEN
+     !
+     OPEN ( NEWUNIT=iunocc, FILE = TRIM(dirname) // 'occup.txt', &
+            FORM='formatted', STATUS='old', IOSTAT=ierr )
+     IF (lda_plus_u_kind.EQ.0) THEN
+        READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns
+        IF (hub_back) THEN
+           READ( UNIT = iunocc, FMT = * , iostat = ierr) rho%nsb
+        ENDIF
+     ELSEIF (lda_plus_u_kind.EQ.1) THEN
+        IF (noncolin) THEN
+           READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns_nc
+        ELSE
+           READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns
+        ENDIF
+     ELSEIF (lda_plus_u_kind.EQ.2) THEN
+        READ( UNIT = iunocc, FMT = * , iostat = ierr) nsg
+     ENDIF
+     CLOSE(UNIT=iunocc,STATUS='keep')
+     !
+  ELSE
+     !
+     IF (lda_plus_u_kind.EQ.0) THEN
+        rho%ns(:,:,:,:) = 0.D0
+        IF (hub_back) rho%nsb(:,:,:,:) = 0.D0
+     ELSEIF (lda_plus_u_kind.EQ.1) THEN
+        IF (noncolin) THEN
+           rho%ns_nc(:,:,:,:) = 0.D0
+        ELSE
+           rho%ns(:,:,:,:) = 0.D0
+        ENDIF
+     ELSEIF (lda_plus_u_kind.EQ.2) THEN
+        nsg(:,:,:,:,:) = (0.d0, 0.d0)
+     ENDIF
+     !
+  ENDIF
+  !
+  CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+  !
+  IF (lda_plus_u_kind.EQ.0) THEN
+     CALL mp_bcast(rho%ns, ionode_id, intra_image_comm)
+     CALL v_hubbard (rho%ns, v%ns, eth)
+     IF (hub_back) THEN
+        CALL mp_bcast(rho%nsb, ionode_id, intra_image_comm)
+        CALL v_hubbard_b (rho%nsb, v%nsb, eth1)
+        eth = eth + eth1
+     ENDIF
+  ELSEIF (lda_plus_u_kind.EQ.1) THEN
+     IF (noncolin) THEN
+        CALL mp_bcast(rho%ns_nc, ionode_id, intra_image_comm)
+        CALL v_hubbard_full_nc (rho%ns_nc, v%ns_nc, eth)
+     ELSE
+        CALL mp_bcast(rho%ns, ionode_id, intra_image_comm)
+        CALL v_hubbard_full (rho%ns, v%ns, eth)
+     ENDIF
+  ELSEIF (lda_plus_u_kind.EQ.2) THEN
+     CALL mp_bcast(nsg, ionode_id, intra_image_comm)
+     CALL v_hubbard_extended (nsg, v_nsg, eth)
+  ENDIF
+  !
+  RETURN
+  !
+END SUBROUTINE read_ns

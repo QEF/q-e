@@ -89,6 +89,14 @@ CONTAINS
 
    ENDDO
    !
+#if defined(__CUDA)
+   IF( ALLOCATED( dfft%nl_d ) ) DEALLOCATE( dfft%nl_d )
+   ALLOCATE( dfft%nl_d, SOURCE = dfft%nl )
+   if (dfft%lgamma) THEN
+      IF( ALLOCATED( dfft%nlm_d ) ) DEALLOCATE( dfft%nlm_d )
+      ALLOCATE( dfft%nlm_d, SOURCE=dfft%nlm )
+   END IF
+#endif
 
    END SUBROUTINE fft_set_nl 
    !

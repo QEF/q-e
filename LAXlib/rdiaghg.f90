@@ -85,16 +85,7 @@ SUBROUTINE laxlib_rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp
         end do
         !$omp end parallel do
         !
-#if defined (__ESSL)
-        !
-        ! ... there is a name conflict between essl and lapack ...
-        !
-        CALL DSYGV( 1, v, ldh, s, ldh, e, v, ldh, n, work, lwork )
-        !
-        info = 0
-#else
         CALL DSYGV( 1, 'V', 'U', n, v, ldh, s, ldh, e, work, lwork, info )
-#endif
         !
      ELSE
         !
@@ -200,9 +191,12 @@ SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
 #endif
 #endif
   !
-!define __USE_GLOBAL_BUFFER
-#if defined(__USE_GLOBAL_BUFFER)
-  USE gbuffers,        ONLY : dev=>dev_buf, pin=>pin_buf
+  ! NB: the flag below can be used to decouple LAXlib from devXlib.
+  !     This will make devXlib an optional dependency of LAXlib when
+  !     the library will be decoupled from QuantumESPRESSO.
+#define __USE_GLOBAL_BUFFER
+#if defined(__USE_GLOBAL_BUFFER) && defined(__CUDA)
+  USE device_fbuff_m,        ONLY : dev=>dev_buf, pin=>pin_buf
 #define VARTYPE POINTER
 #else
 #define VARTYPE ALLOCATABLE
@@ -290,6 +284,7 @@ SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
      ALLOCATE(work_d(1*lwork_d), STAT = info)
 #else
      CALL dev%lock_buffer( work_d,  lwork_d, info )
+     IF( info /= 0 ) CALL lax_error__( ' rdiaghg_gpu ', ' cannot allocate work_d ', ABS( info ) )
 #endif
      IF( info /= 0 ) CALL lax_error__( ' rdiaghg_gpu ', ' allocate work_d ', ABS( info ) )
      !
@@ -330,7 +325,9 @@ SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
       IF( info /= 0 ) CALL lax_error__( ' rdiaghg_gpu ', ' cannot allocate h_bkp_d or s_bkp_d ', ABS( info ) )
 #else
       CALL dev%lock_buffer( h_bkp_d,  (/ n, n /), info )
+      IF( info /= 0 ) CALL lax_error__( ' rdiaghg_gpu ', ' cannot allocate h_bkp_d ', ABS( info ) )
       CALL dev%lock_buffer( s_bkp_d,  (/ n, n /), info )
+      IF( info /= 0 ) CALL lax_error__( ' rdiaghg_gpu ', ' cannot allocate s_bkp_d ', ABS( info ) )
 #endif
 
 !$cuf kernel do(2)
@@ -354,6 +351,7 @@ SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
       IF( info /= 0 ) CALL lax_error__( ' rdiaghg_gpu ', ' cannot allocate work_d ', ABS( info ) )
 #else
       CALL dev%lock_buffer( work_d,  lwork_d, info )
+      IF( info /= 0 ) CALL lax_error__( ' rdiaghg_gpu ', ' allocate work_d ', ABS( info ) )
 #endif
       info = cusolverDnDsygvdx(cuSolverHandle, CUSOLVER_EIG_TYPE_1, CUSOLVER_EIG_MODE_VECTOR, &
                                                CUSOLVER_EIG_RANGE_I, CUBLAS_FILL_MODE_UPPER, &

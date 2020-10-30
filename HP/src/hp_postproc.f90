@@ -26,7 +26,8 @@ SUBROUTINE hp_postproc
                              skip_type, equiv_type, skip_atom,       &
                              tmp_dir_save, find_atpert, magn,        &
                              nath_pert, ityp_new, ntyp_new, atm_new, &
-                             num_neigh, lmin, rmax, nq1, nq2, nq3
+                             num_neigh, lmin, rmax, nq1, nq2, nq3,   &
+                             determine_num_pert_only
   !
   IMPLICIT NONE
   !
@@ -60,16 +61,26 @@ SUBROUTINE hp_postproc
   !
   CHARACTER(len=256) :: filenameU
   INTEGER, EXTERNAL :: find_free_unit
+  LOGICAL :: determine_indices_only
   !
   CALL start_clock('hp_postproc')
   !
-  WRITE( stdout, '(/5x,"Post-processing calculation of Hubbard parameters ...",/)')
+  IF (lda_plus_u_kind==2 .AND. determine_num_pert_only) THEN
+     ! DFT+U+V: determine indices of couples for Hubbard V, without computing U and V.
+     ! This is useful when DFT+U+V is used for large supercells. So one can determine
+     ! indices for a supercell and use V computed for a primitive cell.
+     determine_indices_only = .true.
+     WRITE( stdout, '(/5x,"Determination of the indices of inter-site couples ...",/)')
+  ELSE
+     determine_indices_only = .false.
+     WRITE( stdout, '(/5x,"Post-processing calculation of Hubbard parameters ...",/)')
+  ENDIF
   !
   ! Allocate various arrays
   CALL alloc_pp()
   !
   ! Read chi0 and chi from file
-  CALL read_chi()
+  If (.NOT.determine_indices_only) CALL read_chi()
   !
   ! If we merge types of atoms (e.g. Ni_up and Ni_down) 
   ! then we have to keep track of their total magnetization
@@ -84,6 +95,11 @@ SUBROUTINE hp_postproc
   ! Compute interatomic distances
   ! between virtual atoms
   CALL atomic_dist()
+  !
+  IF (determine_indices_only) THEN
+     CALL write_intercite(.false.)   
+     GO TO 15
+  ENDIF
   !
   ! Average similar elements in chi0 and chi
   CALL average_similar_elements(chi0) 
@@ -103,6 +119,8 @@ SUBROUTINE hp_postproc
   !
   ! Calculate Hubbard parameters and write them to file
   CALL calculate_Hubbard_parameters()
+  !
+15 CONTINUE
   !
   ! Deallocate various arrays
   CALL dealloc_pp()
@@ -145,6 +163,11 @@ SUBROUTINE alloc_pp
   ALLOCATE ( inv_chi0bg(nath_scbg, nath_scbg) )
   ALLOCATE ( Hubbard_matrix(nath_scbg, nath_scbg) )
   !
+  ! Find and open unit to write info
+  iunitU = find_free_unit()
+  filenameU = trim(prefix) // ".Hubbard_parameters.dat"
+  OPEN(iunitU, file = filenameU, form = 'formatted', status = 'unknown')
+  !
   RETURN 
   !
 END SUBROUTINE alloc_pp
@@ -171,6 +194,8 @@ SUBROUTINE dealloc_pp
   DEALLOCATE (inv_chibg)
   DEALLOCATE (inv_chi0bg)
   DEALLOCATE (Hubbard_matrix)
+  !
+  CLOSE(iunitU)
   !
   RETURN
   !
@@ -566,6 +591,12 @@ SUBROUTINE reconstruct_full_chi(chi_)
         ENDDO
      ENDDO
      !
+     WRITE( stdout, '(/5x,"Possible solutions:")')
+     WRITE( stdout, '(5x, "1. Relax better the structure (in order to have more accurate inter-atomic distances)")')
+     WRITE( stdout, '(5x, "2. Increase the value of the parameter eps_dist in PW/src/ldaU.f90,")')
+     WRITE( stdout, '(5x, "   then recompile the pw.x and hp.x codes, and re-run the HP postprocessing step")')
+     WRITE( stdout, '(5x, "   by setting compute_hp=.true. in the HP input.")')
+     !
      CALL errore ('reconstruct_full_chi', &
             'Reconstruction problem: some chi were not found', 1)
      !
@@ -664,11 +695,6 @@ SUBROUTINE calculate_Hubbard_parameters()
   IMPLICIT NONE
   INTEGER :: nt1, nt2
   !
-  ! Find and open unit to write info
-  iunitU = find_free_unit()
-  filenameU = trim(prefix) // ".Hubbard_parameters.dat"
-  OPEN(iunitU, file = filenameU, form = 'formatted', status = 'unknown')
-  !
   ! Calculate the matrix of Hubbard parametres: CHI0^{-1} - CHI^{-1}
   !
   DO na = 1, nath_scbg
@@ -702,7 +728,7 @@ SUBROUTINE calculate_Hubbard_parameters()
   !
   ! Write Hubbard V (i.e. off-diagonal elements of the Hubbard matrix)
   !
-  IF ( lda_plus_u_kind.EQ.2 ) CALL write_Hubbard_V()
+  IF ( lda_plus_u_kind.EQ.2 ) CALL write_intercite(.true.)
   !
   ! Write the information about the response matrices chi0 and chi,
   ! about their inverse matrices, and about the entire matrix of 
@@ -758,13 +784,13 @@ SUBROUTINE calculate_Hubbard_parameters()
      !
   ENDIF
   !
-  CLOSE(iunitU)
+  !CLOSE(iunitU)
   !
   RETURN
   !
 END SUBROUTINE calculate_Hubbard_parameters
 
-SUBROUTINE write_Hubbard_V()
+SUBROUTINE write_intercite (lflag)
   !
   USE parameters,   ONLY : sc_size
   !
@@ -777,18 +803,30 @@ SUBROUTINE write_Hubbard_V()
   INTEGER :: ne, nc_min, ipol, tempunit, counter
   CHARACTER(len=80) :: tempfile
   REAL(DP) :: auxdist
+  LOGICAL :: lflag  ! if .true.  then write V to file
+                    ! if .false. then do not write V to file
   !
   ! Find and open unit to write Hubbard_V parameters
   tempunit = find_free_unit()
   tempfile = TRIM("parameters.out")
   OPEN(tempunit, file = tempfile, form = 'formatted', status = 'unknown')
   !
-  WRITE(iunitU,'(/27x,"Hubbard V parameters:")')
-  WRITE(iunitU,'(22x,"(adapted for a supercell",1x,i1,"x",i1,"x",i1,")",/)') 2*sc_size+1, 2*sc_size+1, 2*sc_size+1 
-  WRITE(iunitU,*) '           Atom 1 ', '    Atom 2 ', '   Distance (Bohr) ', ' Hubbard V (eV)'
-  WRITE(iunitU,*)
-  !
-  WRITE(tempunit,*) '# Atom 1 ', ' Atom 2 ', ' Hubbard V (eV)'
+  IF (lflag) THEN
+     WRITE(iunitU,'(/27x,"Hubbard V parameters:")')
+  ELSE
+     WRITE(iunitU,'(/17x,"Indices and distances for inter-cite couples:")')
+  ENDIF
+  WRITE(iunitU,'(22x,"(adapted for a supercell",1x,i1,"x",i1,"x",i1,")",/)') &
+                       2*sc_size+1, 2*sc_size+1, 2*sc_size+1 
+  IF (lflag) THEN
+     WRITE(iunitU,*) '           Atom 1 ', '    Atom 2 ', '   Distance (Bohr) ', ' Hubbard V (eV)'
+     WRITE(iunitU,*)
+     WRITE(tempunit,*) '# Atom 1 ', ' Atom 2 ', ' Hubbard V (eV)'
+  ELSE
+     WRITE(iunitU,*) '           Atom 1 ', '    Atom 2 ', '   Distance (Bohr) '
+     WRITE(iunitU,*)
+     WRITE(tempunit,*) '# Atom 1 ', ' Atom 2 '
+  ENDIF
   !
   ALLOCATE(dist(nath_sc))
   ALLOCATE(distord(nath_sc))
@@ -884,14 +922,28 @@ SUBROUTINE write_Hubbard_V()
      DO nb = 1, nath_sc
         IF ( auxindex(na,indexord(nb)) > 0 ) THEN
            counter = counter + 1
-           WRITE(iunitU,'(11x,i3,x,a4,x,i5,x,a4,2x,f12.6,4x,f10.4)') &
-                 na, atm_new(ityp_sc(na)), auxindex(na,indexord(nb)), atm_new(typeord(nb)), &
-                 dist_sc(na,indexord(nb)), Hubbard_matrix(na,indexord(nb))
-           IF ( nb.LE.(num_neigh+1)              .AND. &     
-                dist_sc(na,indexord(nb)).LE.rmax .AND. & 
-                Hubbard_l(ityp(na)).GE.lmin ) THEN
-              WRITE(tempunit,'(3x,i3,4x,i5,3x,f10.4)') &
-                    na, auxindex(na,indexord(nb)), Hubbard_matrix(na,indexord(nb))
+           IF (lflag) THEN
+              ! Print couples and Hubbard V
+              WRITE(iunitU,'(11x,i3,x,a4,x,i5,x,a4,2x,f12.6,4x,f10.4)') &
+                    na, atm_new(ityp_sc(na)), auxindex(na,indexord(nb)), atm_new(typeord(nb)), &
+                    dist_sc(na,indexord(nb)), Hubbard_matrix(na,indexord(nb))
+              IF ( nb.LE.(num_neigh+1)              .AND. &     
+                   dist_sc(na,indexord(nb)).LE.rmax .AND. & 
+                   Hubbard_l(ityp(na)).GE.lmin ) THEN
+                 WRITE(tempunit,'(3x,i3,4x,i5,3x,f10.4)') &
+                       na, auxindex(na,indexord(nb)), Hubbard_matrix(na,indexord(nb))
+              ENDIF
+           ELSE
+              ! Print couples only
+              WRITE(iunitU,'(11x,i3,x,a4,x,i5,x,a4,2x,f12.6)') &
+                    na, atm_new(ityp_sc(na)), auxindex(na,indexord(nb)), atm_new(typeord(nb)), &
+                    dist_sc(na,indexord(nb))
+              IF ( nb.LE.(num_neigh+1)              .AND. &
+                   dist_sc(na,indexord(nb)).LE.rmax .AND. &
+                   Hubbard_l(ityp(na)).GE.lmin ) THEN
+                 WRITE(tempunit,'(3x,i3,4x,i5)') &
+                       na, auxindex(na,indexord(nb))
+              ENDIF
            ENDIF
         ENDIF
      ENDDO 
@@ -913,6 +965,6 @@ SUBROUTINE write_Hubbard_V()
   !
   RETURN
   !
-END SUBROUTINE write_Hubbard_V
+END SUBROUTINE write_intercite
 
 END SUBROUTINE hp_postproc

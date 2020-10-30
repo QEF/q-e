@@ -11,6 +11,7 @@ becmod.o : kind.o
 becmod.o : mp_bands.o
 becmod.o : noncol.o
 becmod.o : recvec.o
+beef_interface.o : kind.o
 bfgs_module.o : basic_algebra_routines.o
 bfgs_module.o : cell_base.o
 bfgs_module.o : constants.o
@@ -141,6 +142,7 @@ hdf5_qe.o : ../UtilXlib/parallel_include.o
 hdf5_qe.o : io_files.o
 hdf5_qe.o : kind.o
 hdf5_qe.o : mp_world.o
+inpfile.o : open_close_input_file.o
 input_parameters.o : kind.o
 input_parameters.o : parameters.o
 input_parameters.o : wannier_new.o
@@ -227,7 +229,6 @@ plugin_flags.o : kind.o
 plugin_flags.o : parameters.o
 plugin_variables.o : kind.o
 plugin_variables.o : parameters.o
-powell.o : kind.o
 pw_dot.o : ../UtilXlib/mp.o
 pw_dot.o : kind.o
 pw_dot.o : mp_pools.o
@@ -326,6 +327,7 @@ read_pseudo.o : ../upflib/emend_upf.o
 read_pseudo.o : ../upflib/gth.o
 read_pseudo.o : ../upflib/pseudo_types.o
 read_pseudo.o : ../upflib/radial_grids.o
+read_pseudo.o : ../upflib/read_upf_new.o
 read_pseudo.o : ../upflib/read_upf_v1.o
 read_pseudo.o : ../upflib/read_uspp.o
 read_pseudo.o : ../upflib/upf.o
@@ -438,4 +440,4 @@ xsf.o : kind.o
 ylmr2.o : constants.o
 ylmr2.o : kind.o
 environment.o : ../include/configure.h
-version.o : ../include/version.h
+version.o : ../include/qe_version.h
