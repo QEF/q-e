@@ -97,7 +97,7 @@ SUBROUTINE hp_postproc
   CALL atomic_dist()
   !
   IF (determine_indices_only) THEN
-     CALL write_intercite(.false.)   
+     CALL write_intersite(.false.)   
      GO TO 15
   ENDIF
   !
@@ -728,7 +728,7 @@ SUBROUTINE calculate_Hubbard_parameters()
   !
   ! Write Hubbard V (i.e. off-diagonal elements of the Hubbard matrix)
   !
-  IF ( lda_plus_u_kind.EQ.2 ) CALL write_intercite(.true.)
+  IF ( lda_plus_u_kind.EQ.2 ) CALL write_intersite(.true.)
   !
   ! Write the information about the response matrices chi0 and chi,
   ! about their inverse matrices, and about the entire matrix of 
@@ -790,7 +790,7 @@ SUBROUTINE calculate_Hubbard_parameters()
   !
 END SUBROUTINE calculate_Hubbard_parameters
 
-SUBROUTINE write_intercite (lflag)
+SUBROUTINE write_intersite (lflag)
   !
   USE parameters,   ONLY : sc_size
   !
@@ -814,7 +814,7 @@ SUBROUTINE write_intercite (lflag)
   IF (lflag) THEN
      WRITE(iunitU,'(/27x,"Hubbard V parameters:")')
   ELSE
-     WRITE(iunitU,'(/17x,"Indices and distances for inter-cite couples:")')
+     WRITE(iunitU,'(/17x,"Indices and distances for inter-site couples:")')
   ENDIF
   WRITE(iunitU,'(22x,"(adapted for a supercell",1x,i1,"x",i1,"x",i1,")",/)') &
                        2*sc_size+1, 2*sc_size+1, 2*sc_size+1 
@@ -965,6 +965,6 @@ SUBROUTINE write_intercite (lflag)
   !
   RETURN
   !
-END SUBROUTINE write_intercite
+END SUBROUTINE write_intersite
 
 END SUBROUTINE hp_postproc
