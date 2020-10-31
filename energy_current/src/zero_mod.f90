@@ -28,7 +28,6 @@ MODULE zero_mod
    !variables depending on the step
    !wavefunction
    !complex(DP),allocatable :: evc_uno(:,:)
-   real(DP), allocatable   :: charge(:)
 
    !ion positions and velocities
    !real(DP), allocatable ::ion_pos(:,:)
@@ -488,11 +487,12 @@ subroutine routine_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
    real(DP) ::R
    character(256) ::filename, pref_box
    real(DP), allocatable :: values(:)
+   real(DP), allocatable   :: charge(:)
 
    if (ionode) write (stdout, *) 'ROUTINE_ZERO BEGINNING'
    call start_clock('routine_zero')
    if (ionode) print *, 'eta', eta
-
+   allocate (charge(dffts%nnr))
    call start_clock('zero_current')
    if (nkb > 0) then
       l_non_loc = .true.
@@ -533,6 +533,7 @@ subroutine routine_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
    z_current = z_current*alat
    call stop_clock('zero_current')
    call print_clock('zero_current')
+   deallocate (charge)
    if (ionode) print *, 'ZERO CURRENT CALCULATED'
 
 !!
@@ -777,6 +778,47 @@ subroutine add_nc_curr(current, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, e
 !
 end subroutine add_nc_curr
 
+
+subroutine allocate_zero
+   use ions_base, only: nsp, nat
+   use gvect, only: ngm
+   use atom, only: rgrid
+   USE us, ONLY: nqxq, spline_ps
+   USE uspp_param, ONLY: upf, nbetam
+   use fft_base, only: dffts
+   use wvfct, ONLY: npwx, nbnd
+!
+   implicit none
+!
+   integer ::isp
+
+   allocate (H_g(ngm, 3, 3, nsp))
+   allocate (I_uno_g(ngm, 3, 3))
+   allocate (tablocal_hg(nqxq, nsp, 0:1))
+   if (spline_ps) then
+      allocate (tablocal_d2y_hg(nqxq, nsp, 0:1))
+   end if
+   allocate (I_due_g(ngm))
+   allocate (tabr(nqxq, nbetam, nsp, -1:1))
+   if (spline_ps) then
+      allocate (tabr_d2y(nqxq, nbetam, nsp, -1:1))
+   end if
+   allocate (charge_g(ngm))
+   allocate (u_g(ngm, 3))
+!
+end subroutine allocate_zero
+
+
+subroutine deallocate_zero
+!
+   implicit none
+!
+   if (allocated(charge_g)) &
+      deallocate (charge_g)
+   if (allocated(u_g)) &
+      deallocate (u_g)
+!
+end subroutine deallocate_zero
 
 END MODULE zero_mod
 

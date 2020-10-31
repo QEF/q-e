@@ -30,7 +30,8 @@ program all_currents
 !from ../Modules/read_input.f90
    USE read_namelists_module, ONLY: read_namelists
    USE read_cards_module, ONLY: read_cards
-   use zero_mod, only: vel_input_units, init_zero, routine_zero
+   use zero_mod, only: vel_input_units, init_zero, routine_zero, &
+                       allocate_zero, deallocate_zero
    use averages, only: online_average_init
 
 
