@@ -48,8 +48,6 @@ MODULE zero_mod
    integer      ::nr3s_start_par
 contains
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
    real(kind=DP) function h_(x)
       real(kind=DP) :: x
       real(kind=DP), external :: qe_erfc
@@ -63,19 +61,12 @@ contains
       hp_ = -(2.d0/sqrt(pi))*(1.d0/x)*exp(-x*x) - 1.d0/(x*x)*qe_erfc(x)
    end function hp_
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!
-
    real(kind=DP) function modulus(vector)
       real(kind=DP) ::vector(3)
       modulus = sqrt(vector(1)**2 + vector(2)**2 + vector(3)**2)
    end function modulus
 
-!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-   subroutine pbc_ortho(vin, vout, alat, at, bg)
-      !use cell_base, only: alat, at, bg
-! apply the minimum image distance in a orthogonal cell
+   subroutine pbc(vin, vout, alat, at, bg)
       implicit none
       real(DP), intent(in) :: vin(3), alat, at(3,3), bg(3,3)
       real(DP), intent(out) :: vout(3)
@@ -86,16 +77,10 @@ contains
       vout(:) = matmul(vin(:)/alat, bg(:, :)) ! vout = vin in S space
       vout(:) = vout(:) - ANINT(vout(:))
       vout(:) = MATMUL(at(:, :), vout(:))*alat ! back from S space to R space
-   end subroutine pbc_ortho
-
-
-!!!!!!!!!!!!!!!!!!!!
+   end subroutine pbc
 
    subroutine I_uno_value(y, x, a, b, flag, tpiba, at, alat, gstart, g, gg, npw)
-      !use cell_base, only: tpiba
-      !use gvect, only:  gstart, g,  gg
       use mp, only: mp_sum
-      !use wvfct, only: npw
       use mp_pools, only: intra_pool_comm
       implicit none
       integer, intent(in) ::flag, npw, gstart
@@ -103,20 +88,14 @@ contains
       real(DP), intent(in)  ::x(3), tpiba, g(:,:), gg(:), at(3,3),alat
       integer, intent(in)   ::a, b
       integer ::igm
-
-!  integer ::ng_max
-
       real(DP) :: comp_iso
 
       call start_clock('rec')
-!  ng_max=10
 
       y = 0.d0
-! do igm=gstart,ngm
       do igm = gstart, npw
          if ((gg(igm)*tpiba*tpiba)/(4.d0*eta) > 20.d0) exit
          y = y + 2.d0*(I_uno_g(igm, a, b)*cos(DOT_PRODUCT(g(1:3, igm), x(1:3))*tpiba))
-!     if (gl(igm)>ng_max) exit
       end do
       if (gstart == 2) y = y + I_uno_g(1, a, b)
       call mp_sum(y, intra_pool_comm)
@@ -137,7 +116,6 @@ contains
    end subroutine I_uno_value
 
    subroutine add_local_uno(value, pos, a, b, at, alat)
-      !use cell_base, only: at, alat
       use mp_world, only: nproc, mpime
       use mp, only: mp_sum
       use mp_pools, only: intra_pool_comm
@@ -149,7 +127,7 @@ contains
       integer  ::n_x, n_y, n_z
       integer   :: l_blk, nbegin, nend
       real(DP)  :: value1
-!!!!!!!!!!!!!!!!!!!!!
+
       call start_clock('real')
       l_blk = (2*n_max + 1)/nproc
       if (l_blk*nproc < (2*n_max + 1)) l_blk = l_blk + 1
@@ -192,10 +170,7 @@ contains
    end subroutine add_local_uno
 
    subroutine I_due_value(y, x, flag, tpiba, at, alat, gstart, g, gg, npw)
-      !use cell_base, only: tpiba
-      !use gvect, only: ngm, gstart, g, gl, gg
       use mp, only: mp_sum
-      !use wvfct, only: npw
       use mp_pools, only: intra_pool_comm
       implicit none
       integer, intent(in) ::flag, npw, gstart
@@ -203,14 +178,12 @@ contains
       real(DP), intent(in)  ::x(3), at(3,3), alat,g(:,:), gg(:), tpiba
       integer ::igm!,ng_max
       real(DP) ::scalar
-!
+
       call start_clock('rec')
-!  ng_max=10
       y = 0.d0
       do igm = gstart, npw
          if ((gg(igm)*tpiba*tpiba)/(4.d0*eta) > 20.d0) exit
          y = y + 2.d0*(I_due_g(igm)*cos(DOT_PRODUCT(g(1:3, igm), x(1:3))*tpiba))
-!     if        (gl(igm)>ng_max) exit
       end do
       if (gstart == 2) y = y + I_due_g(1)
       call mp_sum(y, intra_pool_comm)
@@ -221,7 +194,8 @@ contains
    end subroutine i_due_value
 
    subroutine add_local_due(value, pos, at, alat)
-      !use cell_base, only: at, alat
+      !This routines computes sum_{L}erfc(sqrt(eta)abs(d-L))/abs(d-L)
+      ! the sum is in real space over a small number of shells
       use mp, only: mp_sum
       use mp_world, ONLY: nproc, mpime
       use mp_pools, ONLY: intra_pool_comm
@@ -234,10 +208,6 @@ contains
       integer   :: l_blk, nbegin, nend
       real(DP)  :: value1
 
-!
-!!!!!!!!!!!
-      !This routines computes sum_{L}erfc(sqrt(eta)abs(d-L))/abs(d-L)
-      ! the sum is in real space over a small number of shells
       call start_clock('real')
       l_blk = (2*n_max + 1)/nproc
       if (l_blk*nproc < (2*n_max + 1)) l_blk = l_blk + 1
@@ -246,8 +216,8 @@ contains
       if (nend > n_max) nend = n_max
       value1 = 0.d0
       do n_x = nbegin, nend
-         do n_y = -n_max, n_max      !secondo ciclo su n
-            do n_z = -n_max, n_max   !terzo ciclo   su n
+         do n_y = -n_max, n_max
+            do n_z = -n_max, n_max
                n(1:3) = n_x*at(1:3, 1)*alat + n_y*at(1:3, 2)*alat + n_z*at(1:3, 3)*alat
                modul = modulus(pos(1:3) - n(1:3))
                erf_value = qe_erfc(sqrt(eta)*modul)
@@ -310,19 +280,11 @@ subroutine routine_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
                         vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
                         nkb, vkb, deeq, upf, nh, xk, igk_k, bg )
    use kinds, only: DP
-   !use wvfct, only: nbnd, npwx, npw
-   use fft_base, only: fft_type_descriptor !, dffts
+   use fft_base, only: fft_type_descriptor
    use mp, only: mp_sum
    use mp_pools, only: intra_pool_comm
    use io_global, only: stdout, ionode
-   !
-   !use ions_base, only: nsp, zv, nat, ityp, amass, tau
-   !use dynamics_module, only: vel
-   !use cell_base, only: tpiba, tpiba2, at, alat, omega
-   !use wavefunctions, only: psic, evc
-   !use gvect, only: ngm, gg, g, gstart
    use constants, only: e2, AMU_RY
-   !use uspp, only: nkb
    use splines
    use hartree_mod
    use compute_charge_mod, only : compute_charge
@@ -442,7 +404,7 @@ subroutine routine_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
       do jatom = 1, nat
          if (iatom > jatom) then
             u(1:3) = (tau(:, iatom) - tau(:, jatom))*alat
-            call pbc_ortho(u(1:3), u_pbc(1:3), alat, at, bg)
+            call pbc(u(1:3), u_pbc(1:3), alat, at, bg)
             call I_due_value(value, u_pbc, 1, tpiba, at, alat, gstart, g, gg, npw)
             !i_current_c(:) = i_current_c(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))* &
             i_current_c(:) = i_current_c(:) + 1.d0*e2*zv(ityp(iatom))*zv(ityp(jatom))* &
@@ -490,23 +452,12 @@ end subroutine routine_zero
 
 subroutine add_nc_curr(current, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, evc, &
                        g, tpiba, nat, ityp, nsp, xk, igk_k)
-!
    use kinds, only: DP
    use becmod
-   !use uspp, ONLY: nkb, vkb, deeq
-   !USE uspp_param, ONLY: upf, nh
-   !use hartree_mod, only: evc
-   !use dynamics_module, only: vel
-   !use wvfct, ONLY: nbnd, npw, npwx
-   !use wavefunctions, only: evc
-   !use gvect, ONLY: g
-   !use cell_base, ONLY: tpiba
-   !use ions_base, ONLY: nat, ityp, nsp
-   !use klist, only: xk, igk_k
-   !use io_global, only: ionode
    USE uspp_param, ONLY: pseudo_upf
-!
+
    implicit none
+
    real(DP), intent(inout) :: current(3)
    integer, intent(in) :: nkb, nh(:), nbnd, npw, npwx, nat, ityp(:), &
                           nsp, igk_k(:,:)
@@ -514,30 +465,22 @@ subroutine add_nc_curr(current, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, e
    real(dp), intent(in) :: deeq(:,:,:,:), vel(:,:), g(:,:), tpiba, xk(:,:)
    type(pseudo_upf), intent(in) :: upf(:)
 
-
-!
    integer ::iun, a, b
    logical ::l_test, exst
    integer :: ipol, jpol, ipwd, ijk, ibnd
    integer ::ijkb, ikb, ih, na, nt, ipw
    real(DP) ::J_nl(3), J_1(3), J_2(3)
-   complex(DP), allocatable ::write (:, :)
    complex(DP), allocatable ::vkb1(:, :)
    integer, external       :: find_free_unit
-!
+
    allocate (vkb1(npwx, nkb))
-   allocate (write (npwx, nbnd))
-!
-!non fare nulla se non vi è potenziale non locale.
+   !do nothing if there is no non local potential
    if (nkb <= 0) return
-!check se vi sono pseudo ultrasoffici o PAW ed in tal caso blocca il calcolo.
    do nt = 1, nsp
       if ((upf(nt)%typ .eq. "US") .or. (upf(nt)%typ .eq. "PAW")) then
          CALL errore('add_nc_curr', 'US and PAW not implemented', 1)
       end if
    end do
-!
-!memory initialization
    CALL allocate_bec_type(nkb, nbnd, becp)
    do ipol = 1, 3
       CALL allocate_bec_type(nkb, nbnd, becpr(ipol))
@@ -546,13 +489,10 @@ subroutine add_nc_curr(current, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, e
          CALL allocate_bec_type(nkb, nbnd, becprd(ipol, jpol))
       end do
    end do
-!
-!allocazione delle vkb (vkb già allocato?)
    allocate (xvkb(npwx, nkb, 3))
    allocate (dvkb(npwx, nkb, 3))
    allocate (xdvkb(npwx, nkb, 3, 3))
 
-!
 !inizializzazione di tab(serve?),tabr ed indici
    call init_us_1a()
 !inizializzazione di vkb (per essere sicuri che lo sia) e xvkb
