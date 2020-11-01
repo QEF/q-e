@@ -25,21 +25,11 @@ MODULE zero_mod
    !sum or not i_current_b in i_current
    logical :: add_i_current_b = .false.
 
-   !variables depending on the step
-   !wavefunction
-   !complex(DP),allocatable :: evc_uno(:,:)
-
-   !ion positions and velocities
-   !real(DP), allocatable ::ion_pos(:,:)
-   !real(DP), allocatable ::ion_vel(:, :)
-   !second ion positions and velocities read from input
-   !real(DP), allocatable ::ion_pos2(:,:) ! must call convert_tau from ../PW/src/input.f90 to obtain correct units for positions
    character(len=256) :: vel_input_units = 'PW'
 
    !input from stdout
    integer        :: natoms !cutoff per somme in griglia reale
    integer        :: n_max !cutoff per somme in griglia reale
-!  character(len=256) :: status !what to do with the program. "initialize" or "compute"
    real(kind=DP)  :: eta !ewald factor for convergence
 
    real(DP) ::I_primo_rec
@@ -82,54 +72,12 @@ contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!
 
-   real(DP) function alpha_0_lr(eta, G_sq, flag)
-      real(DP)  ::eta, G_sq
-      integer ::flag
-      if (flag == 1) then
-         alpha_0_lr = exp(-G_sq/(4.d0*eta))/G_sq
-      else
-         alpha_0_lr = 1.d0/G_sq
-      end if
-   end function alpha_0_lr
 
-!!!!!!!!!!!!!!!!!!!!!!!
-
-   real(DP) function alpha_2_lr(eta, G_sq, flag)
-      use constants, only: pi
-      real(kind=DP), external :: qe_erf
-      real(DP)  ::eta, G_sq
-      integer ::flag
-      if (flag == 1) then
-         alpha_2_lr = 1.d0/G_sq*((3.d0*sqrt(pi)*sqrt(eta/G_sq))*qe_erf(sqrt(G_sq/(eta))/2.d0) - exp(-(G_sq)/(4.d0*eta)))
-      else
-         alpha_2_lr = 2.d0/G_sq
-      end if
-   end function alpha_2_lr
-
-!!!!!!!!!!!!
-
-   subroutine mid(vin, vout)
-      use kinds, only: DP
-      use cell_base, only: alat
-! apply the minimum image distance in a cubic cell
-      implicit none
-      real(DP), intent(in) :: vin(3)
-      real(DP), intent(out) :: vout(3)
-      !local
-      integer :: i
-      do i = 1, 3
-         vout(i) = vin(i) - nint(vin(i)/alat)*alat
-      end do
-   end subroutine mid
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-   subroutine pbc_ortho(vin, vout)
-      use kinds, only: DP
-      use cell_base, only: alat, at, bg
+   subroutine pbc_ortho(vin, vout, alat, at, bg)
+      !use cell_base, only: alat, at, bg
 ! apply the minimum image distance in a orthogonal cell
       implicit none
-      real(DP), intent(in) :: vin(3)
+      real(DP), intent(in) :: vin(3), alat, at(3,3), bg(3,3)
       real(DP), intent(out) :: vout(3)
       !local
       real(DP):: alatdir ! box side in a given direction
@@ -140,82 +88,19 @@ contains
       vout(:) = MATMUL(at(:, :), vout(:))*alat ! back from S space to R space
    end subroutine pbc_ortho
 
-   subroutine pbc_ortho_old(vin, vout)
-      use kinds, only: DP
-      use cell_base, only: alat, at
-! apply the minimum image distance in a orthogonal cell
-      implicit none
-      real(DP), intent(in) :: vin(3)
-      real(DP), intent(out) :: vout(3)
-      !local
-      real(DP):: alatdir ! box side in a given direction
-      integer :: i, n
-      vout(:) = 0.d0
-      do i = 1, 3
-         alatdir = alat*at(i, i)
-         n = nint(vin(i)/alatdir)
-         ! if (vin(i)>=0) then
-         !     n=int(vin(i)/alatdir)
-         ! else
-         !     n=int(vin(i)/alatdir)-1
-         ! end if
-         vout(i) = vin(i) - dble(n)*alatdir
-      end do
-   end subroutine pbc_ortho_old
-
-   subroutine pbc(vin, vout)
-      use kinds, only: DP
-      use cell_base, only: alat
-! apply the minimum image distance in a cubic cell
-      implicit none
-      real(DP), intent(in) :: vin(3)
-      real(DP), intent(out) :: vout(3)
-      !local
-      integer :: i, n
-      vout(:) = 0.d0
-      do i = 1, 3
-         if (vin(i) >= 0) then
-            n = int(vin(i)/alat)
-         else
-            n = int(vin(i)/alat) - 1
-         end if
-         vout(i) = vin(i) - dble(n)*alat
-      end do
-   end subroutine pbc
-
-   subroutine check_positions(ion_pos)
-      use ions_base, only: tau, nat
-      use cell_base, only: alat, at
-      real(DP), intent(in) ::ion_pos(3, nat)
-      integer ::coord, iatom
-      !local variables
-      real(DP):: tau_at(3, nat) !
-
-! tau_at(i,iatom) = at(1,i)*tau(1,iatom) +at(2,i)*tau(2,iatom) + at(3,i)*tau(3,iatom)
-      tau_at = matmul(transpose(at), tau)
-      do iatom = 1, nat
-         do coord = 1, 3
-            if (abs(tau_at(coord, iatom)*alat - ion_pos(coord, iatom)) > 1.E-4) then
-               call errore('check_positions', 'positions from MD and from PW not matching', 1)
-            end if
-         end do
-      end do
-   end subroutine check_positions
 
 !!!!!!!!!!!!!!!!!!!!
 
-!!!!!!!!!!!!!!!!!!!!
-
-   subroutine I_uno_value(y, x, a, b, flag)
-      use cell_base, only: tpiba
-      use gvect, only: ngm, gstart, g, gl, gg
+   subroutine I_uno_value(y, x, a, b, flag, tpiba, at, alat, gstart, g, gg, npw)
+      !use cell_base, only: tpiba
+      !use gvect, only:  gstart, g,  gg
       use mp, only: mp_sum
-      use wvfct, only: npw
+      !use wvfct, only: npw
       use mp_pools, only: intra_pool_comm
       implicit none
-      integer, intent(in) ::flag
+      integer, intent(in) ::flag, npw, gstart
       real(DP), intent(out) ::y
-      real(DP), intent(in)  ::x(3)
+      real(DP), intent(in)  ::x(3), tpiba, g(:,:), gg(:), at(3,3),alat
       integer, intent(in)   ::a, b
       integer ::igm
 
@@ -237,7 +122,7 @@ contains
       call mp_sum(y, intra_pool_comm)
       call stop_clock('rec')
       if (flag == 1) then
-         call add_local_uno(y, x, a, b)
+         call add_local_uno(y, x, a, b, at, alat)
       end if
 !change for opt
 !  call I_due_value(comp_iso,x,1)
@@ -251,14 +136,14 @@ contains
 
    end subroutine I_uno_value
 
-   subroutine add_local_uno(value, pos, a, b)
-      use cell_base, only: at, alat
+   subroutine add_local_uno(value, pos, a, b, at, alat)
+      !use cell_base, only: at, alat
       use mp_world, only: nproc, mpime
       use mp, only: mp_sum
       use mp_pools, only: intra_pool_comm
       implicit none
       integer, intent(in) ::a, b
-      real(DP), intent(in) ::pos(3)
+      real(DP), intent(in) ::pos(3), at(3,3), alat
       real(DP), intent(inout) ::value
       real(DP) ::u(3), u_mod, n(3)
       integer  ::n_x, n_y, n_z
@@ -306,16 +191,16 @@ contains
       !call stop_clock( 'real' )
    end subroutine add_local_uno
 
-   subroutine I_due_value(y, x, flag)
-      use cell_base, only: tpiba
-      use gvect, only: ngm, gstart, g, gl, gg
+   subroutine I_due_value(y, x, flag, tpiba, at, alat, gstart, g, gg, npw)
+      !use cell_base, only: tpiba
+      !use gvect, only: ngm, gstart, g, gl, gg
       use mp, only: mp_sum
-      use wvfct, only: npw
+      !use wvfct, only: npw
       use mp_pools, only: intra_pool_comm
       implicit none
-      integer, intent(in) ::flag
+      integer, intent(in) ::flag, npw, gstart
       real(DP), intent(out) ::y
-      real(DP), intent(in)  ::x(3)
+      real(DP), intent(in)  ::x(3), at(3,3), alat,g(:,:), gg(:), tpiba
       integer ::igm!,ng_max
       real(DP) ::scalar
 !
@@ -330,18 +215,18 @@ contains
       if (gstart == 2) y = y + I_due_g(1)
       call mp_sum(y, intra_pool_comm)
       if (flag == 1) then
-         call add_local_due(y, x)
+         call add_local_due(y, x, at, alat)
       end if
       call stop_clock('rec')
    end subroutine i_due_value
 
-   subroutine add_local_due(value, pos)
-      use cell_base, only: at, alat
+   subroutine add_local_due(value, pos, at, alat)
+      !use cell_base, only: at, alat
       use mp, only: mp_sum
       use mp_world, ONLY: nproc, mpime
       use mp_pools, ONLY: intra_pool_comm
       implicit none
-      real(DP), intent(in) ::pos(3)
+      real(DP), intent(in) ::pos(3), at(3,3), alat
       real(DP), intent(inout) ::value
       real(DP) ::modul, n(3), erf_value
       integer  ::n_x, n_y, n_z
@@ -423,7 +308,7 @@ end subroutine
 
 subroutine routine_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                         vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
-                        nkb, vkb, deeq, upf, nh, xk, igk_k )
+                        nkb, vkb, deeq, upf, nh, xk, igk_k, bg )
    use kinds, only: DP
    !use wvfct, only: nbnd, npwx, npw
    use fft_base, only: fft_type_descriptor !, dffts
@@ -451,7 +336,7 @@ subroutine routine_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
    TYPE ( fft_type_descriptor ), intent(inout) :: dffts
    REAL(DP), intent(in) :: zv(:), amass(:), tau(:,:), vel(:,:), &
                            tpiba, omega, tpiba2, alat, at(:,:), &
-                           g(:,:), gg(:)
+                           g(:,:), gg(:), bg(:,:)
    COMPLEX(DP), intent(inout) :: psic(:), evc(:,:)
    COMPLEX(DP), intent(in):: vkb(:,:)
    real(dp), intent(in) :: deeq(:,:,:,:), xk(:,:)
@@ -557,8 +442,8 @@ subroutine routine_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
       do jatom = 1, nat
          if (iatom > jatom) then
             u(1:3) = (tau(:, iatom) - tau(:, jatom))*alat
-            call pbc_ortho(u(1:3), u_pbc(1:3))
-            call I_due_value(value, u_pbc, 1)
+            call pbc_ortho(u(1:3), u_pbc(1:3), alat, at, bg)
+            call I_due_value(value, u_pbc, 1, tpiba, at, alat, gstart, g, gg, npw)
             !i_current_c(:) = i_current_c(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))* &
             i_current_c(:) = i_current_c(:) + 1.d0*e2*zv(ityp(iatom))*zv(ityp(jatom))* &
                              (vel(:, iatom) + vel(:, jatom))*value
@@ -566,14 +451,14 @@ subroutine routine_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
             do a = 1, 3
                do b = 1, 3
                   if (a > b) then
-                     call I_uno_value(value, u_pbc, a, b, 1)
+                     call I_uno_value(value, u_pbc, a, b, 1, tpiba, at, alat, gstart, g, gg, npw)
                      i_current_e(a) = i_current_e(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
                                       &(vel(b, jatom) + vel(b, iatom))*value
                      i_current_e(b) = i_current_e(b) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
                                       &(vel(a, jatom) + vel(a, iatom))*value
                   end if
                   if (a == b) then
-                     call I_uno_value(value, u_pbc, a, b, 1)
+                     call I_uno_value(value, u_pbc, a, b, 1, tpiba, at, alat, gstart, g, gg, npw)
                      i_current_d(a) = i_current_d(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
                                       &(vel(b, jatom) + vel(b, iatom))*value
                   end if
@@ -780,13 +665,10 @@ end subroutine add_nc_curr
 
 
 subroutine allocate_zero
-   use ions_base, only: nsp, nat
+   use ions_base, only: nsp
    use gvect, only: ngm
-   use atom, only: rgrid
    USE us, ONLY: nqxq, spline_ps
-   USE uspp_param, ONLY: upf, nbetam
-   use fft_base, only: dffts
-   use wvfct, ONLY: npwx, nbnd
+   USE uspp_param, ONLY: nbetam
 !
    implicit none
 !
@@ -819,6 +701,17 @@ subroutine deallocate_zero
       deallocate (u_g)
 !
 end subroutine deallocate_zero
+
+   real(DP) function alpha_0_lr(eta, G_sq, flag)
+      real(DP)  ::eta, G_sq
+      integer ::flag
+      if (flag == 1) then
+         alpha_0_lr = exp(-G_sq/(4.d0*eta))/G_sq
+      else
+         alpha_0_lr = 1.d0/G_sq
+      end if
+   end function alpha_0_lr
+
 
 END MODULE zero_mod
 

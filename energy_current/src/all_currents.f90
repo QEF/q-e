@@ -39,7 +39,7 @@ program all_currents
    use wvfct, only: nbnd, npw, npwx
    use wavefunctions, only: psic, evc
    use gvect, only: g, ngm, gstart, gg
-   USE cell_base, ONLY: tpiba, omega, tpiba2, alat, at
+   USE cell_base, ONLY: tpiba, omega, tpiba2, alat, at, bg
    use ions_base, only: tau, nsp, zv, nat, ityp, amass
    use uspp, ONLY: vkb, nkb, deeq
    use uspp_param, ONLY: upf, nh
@@ -187,7 +187,7 @@ program all_currents
               call scf_result_set_from_global_variables(scf_all%t_zero)
               call routine_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                         vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
-                        nkb, vkb, deeq, upf, nh, xk, igk_k ) ! routine zero should be called in t
+                        nkb, vkb, deeq, upf, nh, xk, igk_k, bg ) ! routine zero should be called in t
           else
               call scf_result_set_from_global_variables(scf_all%t_zero) !if we don't have 3pt derivative, zero and minus are equal
           end if
@@ -208,7 +208,7 @@ program all_currents
           if (.not. three_point_derivative) &
               call routine_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                         vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
-                        nkb, vkb, deeq, upf, nh, xk, igk_k ) ! we are in t in this case, and we call here routine zero
+                        nkb, vkb, deeq, upf, nh, xk, igk_k, bg ) ! we are in t in this case, and we call here routine zero
 
           !calculate second part of energy current
           call routine_hartree(nbnd, npw, npwx, dffts, psic, evc, g, ngm, gstart, &
