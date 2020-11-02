@@ -35,14 +35,15 @@ program all_currents
    use averages, only: online_average_init
 
 
-   !routine_hartree modules
+   !routine_hartree and zero modules
    use wvfct, only: nbnd, npw, npwx
    use wavefunctions, only: psic, evc
-   use gvect, only: g, ngm, gstart, gg
+   use gvect, only: g, ngm, gstart, gg, igtongl, gl, ngl
    USE cell_base, ONLY: tpiba, omega, tpiba2, alat, at, bg
    use ions_base, only: tau, nsp, zv, nat, ityp, amass
    use uspp, ONLY: vkb, nkb, deeq
    use uspp_param, ONLY: upf, nh
+   use us, only : spline_ps, dq
    use klist, only: xk, igk_k
    use wvfct, ONLY: g2kin, et
    use fft_base, only: dffts
@@ -119,7 +120,8 @@ program all_currents
    call init_run() ! ../PW/src/init_run.f90 allocate stuff
    ! now scf is ready to start, but I first initialize energy current stuff
    call allocate_zero() ! only once per all trajectory
-   call init_zero() ! only once per all trajectory
+   call init_zero(nsp, zv, tpiba2, tpiba, omega, at, alat, &
+                ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq) ! only once per all trajectory
    call setup_nbnd_occ() ! only once per all trajectory
 
    if (ionode .and. first_step == 0) then !set velocities factor also in the input file step
