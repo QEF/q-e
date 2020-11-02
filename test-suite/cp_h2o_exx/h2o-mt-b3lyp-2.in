@@ -5,7 +5,7 @@
     ndr = 51,
     ndw = 51,
     nstep  = 50,
-    iprint = 10,
+    iprint = 50,
     isave  = 50,
     tstress = .TRUE.,
     tprnfor = .TRUE.,
@@ -51,11 +51,11 @@
   wf_q              = 500,
   wf_friction       = 0.3D0,
   exx_neigh         = 60,     ! exx related optional
-  exx_dis_cutoff    = 8.0D0,  ! exx related optional
-  exx_ps_rcut_self  = 6.0D0,  ! exx related optional
+  exx_dis_cutoff    = 6.0D0,  ! exx related optional
+  exx_ps_rcut_self  = 5.0D0,  ! exx related optional
   exx_ps_rcut_pair  = 5.0D0,  ! exx related optional
-  exx_me_rcut_self  = 9.3D0,  ! exx related optional
-  exx_me_rcut_pair  = 7.0D0,  ! exx related optional
+  exx_me_rcut_self  = 6.0D0,  ! exx related optional
+  exx_me_rcut_pair  = 6.0D0,  ! exx related optional
   exx_poisson_eps   = 1.D-6,  ! exx related optional
 /
 ATOMIC_SPECIES
