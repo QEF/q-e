@@ -900,7 +900,6 @@ SUBROUTINE exx_gs(nfi, c)
 #endif
     exx = totalenergyg
     IF (nspin .EQ. 1) exx = exx + totalenergyg ! if closed shell double the totalenergy
-!!!!!!!#include "debug_patch0.f90"
     !
     !WRITE(stdout, '("EXX Energy",2F30.14," step",I7)')exx,totalenergyg*2.0_DP, nfi
     !
@@ -934,7 +933,6 @@ SUBROUTINE exx_gs(nfi, c)
     IF (nproc_image .LE. nbsp) THEN 
       !
       CALL redistwfr ( exx_potential, vpsil, my_nxyz, my_nbsp, intra_image_comm, -1 )
-!!!!!#include "debug_patch.f90"
       !
     ELSE
       !
