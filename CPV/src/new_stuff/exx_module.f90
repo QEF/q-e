@@ -102,8 +102,6 @@ MODULE exx_module
   INTEGER,  ALLOCATABLE, PUBLIC       :: pair_label(:,:)        ! the orbital label of previous pair potential/density
   INTEGER,  ALLOCATABLE, PUBLIC       :: pair_step(:,:)         ! the last step that we use previous pair potential/density
   INTEGER,  ALLOCATABLE, PUBLIC       :: pair_status(:,:)       ! the status of this pair for guess
-  INTEGER,  ALLOCATABLE, PUBLIC       :: prev_obtl_overlap(:,:) ! obtl_recv of previous step
-  INTEGER,  ALLOCATABLE, PUBLIC       :: prev_obtl_recv(:,:)    ! obtl_recv of previous step
   ! conversion between 3D index (i,j,k) and 1D index 
   ! odthothd_in_sp(3, 1:np_in_sp_p) is for inner sphere (1st shell)
   ! odthothd_in_sp(3, np_in_sp_p+1:np_tmp_1) is for 2nd shell
@@ -740,8 +738,6 @@ CONTAINS
       IF( ALLOCATED( pair_label ) )     DEALLOCATE( pair_label )
       IF( ALLOCATED( pair_step ) )      DEALLOCATE( pair_step )
       IF( ALLOCATED( pair_status ) )    DEALLOCATE( pair_status )
-      IF( ALLOCATED( prev_obtl_recv ) ) DEALLOCATE( prev_obtl_recv )
-      IF( ALLOCATED(prev_obtl_overlap)) DEALLOCATE( prev_obtl_overlap )
       IF( ALLOCATED( my_nxyz ) )        DEALLOCATE( my_nxyz )
       IF( ALLOCATED( my_nbsp ) )        DEALLOCATE( my_nbsp )
       IF( ALLOCATED( index_my_nbsp ) )  DEALLOCATE( index_my_nbsp)
