@@ -19,7 +19,7 @@ if(${qe_BINARY_DIR} STREQUAL ${qe_SOURCE_DIR})
 endif()
 
 # CMake < v3.18 cannot discover the ARM Performance Library
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "^aarch64")
     if(CMAKE_VERSION VERSION_LESS 3.18.0)
         message("-- CMake versions less then 3.18 cannot automatically discover the ARM Performance Library!")
     endif()
