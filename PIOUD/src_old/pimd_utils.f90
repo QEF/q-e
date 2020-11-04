@@ -28,11 +28,7 @@ subroutine pimd_get_pot_from_pw(epMD)
    implicit none
    real(8) :: epMD
      
-   if (nbeadMD.gt.1) then
-     epMD=sum(pes)/nbeadMD
-   else
-     epMD=pes(1)
-   end if
+   epMD=sum(pes)/nbeadMD
    
    return
 end subroutine pimd_get_pot_from_pw
@@ -65,25 +61,22 @@ subroutine pimd_pw_convert_pos(abc)
     end do 
 
     allocate(rpostmp(ndimMD,natMD,nbeadMD))
-    rpostmp=rpos
-    !! I fix the gauge choosing/fixing the first atom of the necklace
-    do k=2,nbeadMD
-        call my_refold(k,rpostmp(:,:,k-1),rpostmp(:,:,k))
-    end do
+    rpostmp=0.0
+    do k=1,nbeadMD
+      call refold(k,rpostmp(:,:,k))
+    end do      
     
-    if (nbeadMD.gt.1) then
-      rcentroid=0.0
-      do k=1,nbeadMD
-        DO iat=1,natMD
-          DO i=1,ndimMD
-            rcentroid(i,iat)=rcentroid(i,iat)+rpostmp(i,iat,k)
-          END DO
+    rcentroid=0.0
+    do k=1,nbeadMD
+      DO iat=1,natMD
+        DO i=1,ndimMD
+          rcentroid(i,iat)=rcentroid(i,iat)+rpostmp(i,iat,k)
         END DO
-      end do
-      rcentroid=rcentroid/nbeadMD
-    end if  
+      END DO
+    end do
+    rcentroid=rcentroid/nbeadMD
     deallocate(rpostmp)
-     
+  
   else
     
     do k=1,nbeadMD
@@ -207,6 +200,7 @@ SUBROUTINE pimd_get_amas_and_nat
   if(.not.allocated(amas)) allocate(amas(natMD))
   if(.not.allocated(ion_name)) allocate(ion_name(natMD))
   amas(:) = 0.0
+  !ion_name(:)='H'
   mtot=0.0
   DO iat=1,natMD
      amas(iat)=amass(ityp(iat))*10000.d0/5.48579909065d0
@@ -229,8 +223,7 @@ SUBROUTINE match_neb_and_pimd_var
   implicit none
   
   nstep_path = nblocks*nstep_block
-  num_of_images = nbeadMD
-  if (nbeadMD.eq.1) num_of_images=2
+  num_of_images = nbeadMD  !!! there is something that it's not working after that
   first_last_opt=.true.
   CALL mp_bcast( nstep_path,  meta_ionode_id, world_comm )
   CALL mp_bcast( num_of_images,  meta_ionode_id, world_comm )
@@ -340,73 +333,3 @@ SUBROUTINE refold(idx,rpostmp)
 END SUBROUTINE refold
 !
 
-SUBROUTINE my_mimage(vector_in,vector_out)
-  
-  use cell_base, only : at
-  USE path_input_parameters_module, ONLY : alat
-  
-  implicit none
-  double precision, intent(in) :: vector_in(3)
-  double precision :: vector_out(3)
-  double precision :: dist_min
-  integer :: i1,i2,i3
-  
-  dist_min = norm2(vector_in)
-  vector_out = vector_in
-  
-  do i1 = -2 , 2
-    do i2 = -2 , 2 
-      do i3 = -2 , 2
-        
-        if(norm2(i1*at(:,1)*alat + i2*at(:,2)*alat + i3*at(:,3)*alat + vector_in(:)) .le. dist_min ) then
-          
-          dist_min = norm2(i1*at(:,1)*alat + i2*at(:,2)*alat + i3*at(:,3)*alat + vector_in(:))
-          vector_out(:) = i1*at(:,1)*alat + i2*at(:,2)*alat + i3*at(:,3)*alat + vector_in(:)
-          
-        end if
-        
-      end do
-    end do
-  end do
-  
-  
-END SUBROUTINE my_mimage
-
-
-SUBROUTINE my_refold(idx,rpostmp0,rpostmp1)
-
-  USE kinds,         ONLY : DP
-
-  USE path_input_parameters_module, ONLY : alat 
-  USE path_io_units_module,         ONLY : iunpath
-  USE pimd_variables,               ONLY : natMD, ndimMD, nbeadMD, rpos
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN) :: idx
-  !
-  INTEGER :: iat
-  REAL(DP), ALLOCATABLE :: pos0(:,:), pos1(:,:)
-  REAL(8) :: rpostmp0(ndimMD,natMD),rpostmp1(ndimMD,natMD),vector(ndimMD)
-  
-  ALLOCATE( pos0(ndimMD,natMD), pos1(ndimMD,natMD) )
-  !
-  ! atomic positions in current image
-  pos1(:,:) = rpostmp1(:,:)
-  pos0(:,:) = rpostmp0(:,:)
-     !
-  DO iat = 1,natMD
-           
-      call my_mimage( pos1(:,iat) - pos0(:,iat) , vector) 
-      pos1(:,iat) = pos0(:,iat) + vector(:)
-
-  ENDDO
-  
-  ! update positions for the temp. vector rpostmp
-  rpostmp1(:,:) =  pos1(:,:)  
-  
-  DEALLOCATE( pos0, pos1 )
-
-  RETURN
-  !
-END SUBROUTINE my_refold

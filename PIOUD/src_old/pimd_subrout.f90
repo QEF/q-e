@@ -196,18 +196,15 @@ subroutine prop_ceriotti_1half_irun3(intinp)
 ! Quantum kinetic energy
 
     allocate(rpostmp(ndimMD,natMD,nbeadMD))
-    rpostmp=rpos
-    do k=2,nbeadMD
-      call my_refold(k,rpostmp(:,:,k-1),rpostmp(:,:,k))
+    rpostmp=0.0
+    do k=1,nbeadMD
+      call refold(k,rpostmp(:,:,k))
     end do
     
   ! virial
     cost=0.d0
     do ii=1,nbeadMD
-      fbead=0.d0
-      do jj=1,natMD
-        call my_mimage(rcentroid(:,jj)-rpostmp(:,jj,ii),fbead(:,jj))
-      end do
+      fbead(:,:)=rcentroid(:,:)-rpostmp(:,:,ii)
       do jj=1,natMD
         do kk=1,ndimMD
           cost=cost+0.5d0*fbead(kk,jj)*forceMD(kk,jj,ii) ! Ry units!!
@@ -673,18 +670,14 @@ subroutine prop_pioud_irun4(ekin,epot)
 
 ! Quantum kinetic energy
      allocate(rpostmp(ndimMD,natMD,nbead))
-     rpostmp=rpos
-     do k=2,nbead
-       call my_refold(k,rpostmp(:,:,k-1),rpostmp(:,:,k))
+     rpostmp=0.0
+     do k=1,nbead
+       call refold(k,rpostmp(:,:,k))
      end do
-    
-  ! virial
+! virial
      cost=0.d0
      do ii=1,nbead
-        fbead=0.d0
-        do jj=1,natMD
-          call my_mimage(rcentroid(:,jj)-rpostmp(:,jj,ii),fbead(:,jj))
-        end do
+        fbead(:,:)=rcentroid(:,:)-rpostmp(:,:,ii)
         do jj=1,natMD
            do kk=1,ndimMD
               cost=cost+0.5d0*fbead(kk,jj)*forceMD(kk,jj,ii) 
@@ -1510,19 +1503,15 @@ SUBROUTINE pimdnvt_init(epot)!,forcetmp)!(qui devo mettere forze e potenziale)
          if(yesquantum) then
 ! initial EXPECTED value of Quantum kinetic energy calculated in two ways
 
+! virial
            allocate(rpostmp(ndimMD,natMD,nbeadMD))
-           rpostmp=rpos
-           do k=2,nbeadMD
-             call my_refold(k,rpostmp(:,:,k-1),rpostmp(:,:,k))
+           rpostmp=0.0
+           do k=1,nbeadMD
+             call refold(k,rpostmp(:,:,k))
            end do
-    
-      ! virial
            cost=0.d0
            do ii=1,nbeadMD
-              fbead=0.d0
-              do jj=1,natMD
-               call my_mimage(rcentroid(:,jj)-rpostmp(:,jj,ii),fbead(:,jj))
-              end do
+              fbead(:,:)=rcentroid(:,:)-rpostmp(:,:,ii)
               do jj=1,natMD
                 do kk=1,ndimMD
                   cost=cost+0.5d0*fbead(kk,jj)*forceMD(kk,jj,ii) ! Ha units!!
@@ -1658,10 +1647,10 @@ SUBROUTINE pimdnvt( ep)!,forcetmp)
 !  ** write out runtime information in classical case**
 !           write(iunpath,*) '**********************************************************'
            write(iunpath,*)
-           write(iunpath,'(2i6,6g15.7)') &
+           write(iunpath,'(2i6,6g15.5)') &
                 iblockMD,step_blockMD,h,enh,ep,enk,tt,ttk
            write(iunpath,*) '**********************************************************'
-           write(unit_dot_out,'(2i6,6g15.7)') &
+           write(unit_dot_out,'(2i6,6g15.5)') &
                      iblockMD,step_blockMD,h,enh,ep,enk,tt,ttk
            flush(unit_dot_out)
         endif
@@ -2437,13 +2426,16 @@ subroutine checkpoint(ttk)
 !!!--------------------writes velocity,force and position files for postprocessing----------
 !!!--------------------if the number of unit cells > 1 (crystal system)---------------------
 !!!--------------------writes only the centroid coordinatMDes---------------------------------
-
-     write(unit_dot_positions_cen,'(400e15.5)') ((rcentroid(l,i),l=1,ndimMD),i=1,natMD)
-     flush(unit_dot_positions_cen)
-     write(unit_dot_velocities_cen,'(400e15.5)') ((vcentroid(l,i),l=1,ndimMD),i=1,natMD)
-     flush(unit_dot_velocities_cen)
-     write(unit_dot_forces_cen,'(400e15.5)') ((fcentroid(l,i),l=1,ndimMD),i=1,natMD)
-     flush(unit_dot_forces_cen)
+     if(nunitcells.gt.1) then
+         write(unit_dot_positions_cen,'(400e15.5)') ((rcentroid(l,i),l=1,ndimMD),i=1,natMD)
+         flush(unit_dot_positions_cen)
+         write(unit_dot_velocities_cen,'(400e15.5)') ((vcentroid(l,i),l=1,ndimMD),i=1,natMD)
+         flush(unit_dot_velocities_cen)
+         write(unit_dot_forces_cen,'(400e15.5)') ((fcentroid(l,i),l=1,ndimMD),i=1,natMD)
+         flush(unit_dot_forces_cen)
+       !  write(unit_dot_localtemp,'(e15.5)') ttk
+       !  flush(unit_dot_localtemp)
+     end if
      
      do k=1,nbeadMD
            write(unit_dot_positions,'(400e15.5)') ((rpos(l,i,k),l=1,ndimMD),i=1,natMD)
@@ -2465,11 +2457,11 @@ subroutine checkpoint(ttk)
      enddo
      flush(unit_dot_xyz)
      
-     write(unit_dot_positions,'(1500e15.5)') ((rpos(l,i,1),l=1,ndimMD),i=1,natMD)
+     write(unit_dot_positions,'(400e15.5)') ((rpos(l,i,1),l=1,ndimMD),i=1,natMD)
      flush(unit_dot_positions)
-     write(unit_dot_velocities,'(1500e15.5)') ((vel(l,i,1),l=1,ndimMD),i=1,natMD)
+     write(unit_dot_velocities,'(400e15.5)') ((vel(l,i,1),l=1,ndimMD),i=1,natMD)
      flush(unit_dot_velocities)
-     write(unit_dot_forces,'(1500e15.5)') ((forceMD(l,i,1),l=1,ndimMD),i=1,natMD)
+     write(unit_dot_forces,'(400e15.5)') ((forceMD(l,i,1),l=1,ndimMD),i=1,natMD)
      flush(unit_dot_forces)
      write(unit_dot_localtemp,'(e15.5)') ttk
      flush(unit_dot_localtemp)
