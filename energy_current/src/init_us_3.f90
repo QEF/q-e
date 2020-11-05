@@ -18,43 +18,29 @@ subroutine init_us_3(npw_, xvkb_)
    !
    USE atom, ONLY: rgrid
    USE kinds, ONLY: DP
-   USE ions_base, ONLY: nat, ntyp => nsp, ityp, tau
-   USE cell_base, ONLY: tpiba
+   USE ions_base, ONLY: nat, ntyp => nsp, ityp
+   USE cell_base, ONLY: tpiba, omega
    USE constants, ONLY: tpi, pi, fpi
    USE gvect, ONLY: eigts1, eigts2, eigts3, mill, g, gg, ngl, igtongl, gl, gstart
-   USE wvfct, ONLY: npwx, npw, nbnd
-   USE us, ONLY: nqx, dq, spline_ps, tab, tab_d2y
+   USE wvfct, ONLY: npwx
+   USE us, ONLY: dq, spline_ps
    ! USE splinelib
-   USE uspp, ONLY: nkb, nhtol, nhtolm, indv, ap, aainit, vkb
+   USE uspp, ONLY: nkb, nhtol, nhtolm, indv, ap, aainit
    USE uspp_param, ONLY: upf, lmaxkb, nhm, nh
-   use zero_mod, ONLY: tabr, tabr_d2y
+   use zero_mod, ONLY: tabr!, tabr_d2y
    use hartree_mod, ONLY: ec_test
-   USE cell_base, ONLY: omega
    use mp, ONLY: mp_sum, mp_min
 !
 !modules for UT
 !
    use splines
-   USE wavefunctions, ONLY: psic
-   use fft_interfaces, only: invfft, fwfft
-   use fft_base, only: dffts
    use atom, ONLY: rgrid
-   use cell_base, ONLY: at, alat
-   use mp_world, ONLY: mpime
-   use io_global, ONLY: ionode
-   use mp_pools, only: intra_pool_comm
 !
    implicit none
 !
-   !
-   !local variables for SBT
-   integer ::nexp, nr, npi, err
-   real(DP), allocatable ::rr(:), kk(:), ya(:), yb(:), yc(:)
-   real(DP) ::rhomin, rhomax, dr, fixedk, kpmin, skk, cf
 !
-   TYPE(spline_data) :: spl_beta
-   real(DP) :: vint, vint_save, origin
-   integer :: i, n1, n2, n3
+   !TYPE(spline_data) :: spl_beta
+   real(DP) :: vint
    integer :: ndm
    INTEGER, INTENT(IN) :: npw_
    COMPLEX(DP), INTENT(OUT) :: xvkb_(npwx, nkb, 3)
@@ -62,34 +48,20 @@ subroutine init_us_3(npw_, xvkb_)
    !local variables for UT
    !
    complex(DP) :: add
-   integer     :: cont_1, cont_2, cont_3, icont, a, b, ikb, ipol
-   integer     :: ir, ir_found
-   real(DP)    :: u(3), u_x(3), u_y(3), u_z(3), modulus, value
-   integer     :: iqq, ix, iy, iz
-   logical     :: l_spline
+   integer     :: ir
    !
    !
    !     Local variables
    !
-   integer :: i0, i1, i2, i3, ig, l, lm, na, nt, nb, ih, jkb, igl, in, it, ll, lp
+   integer :: i0, i1, i2, i3, ig, l, lm, na, nb, ih, jkb, igl, in, it, ll, lp
 
-   real(DP) :: px, ux, vx, wx, arg, cost, xg
-   real(DP), allocatable :: gk(:, :), sg(:), vq(:), ylm(:, :), betagl(:)
-   real(DP), allocatable ::beta_save(:), beta_save2(:)
+   real(DP) :: px, ux, vx, wx, cost, xg
+   real(DP), allocatable :: ylm(:, :), betagl(:)
    complex(DP), allocatable ::xvkb1(:, :, :)
    complex(DP), allocatable :: sk(:)
    real(DP), allocatable :: aux(:)
-   real(DP), allocatable :: xdata(:)
-   integer :: iq
+   integer :: ii
 
-! testing variables used only for ec_test
-
-   complex(DP) :: vkbr(1:dffts%nnr), vkbr_2(1:dffts%nnr), vkbr_3(1:dffts%nnr, 3)
-   real(DP)    :: stampa(nkb, 1:dffts%nnr, 3, 3), stampa_b(nkb, 1:dffts%nnr, 3, 3) !, ris(4, 4)
-   integer, external :: find_free_unit
-   integer :: iun,iun2,iun3
-   integer :: ii, nr3s_end, nr3s_start, vkb_pol
-   character(len=20) :: string, dimension_string
 
 !
    if (lmaxkb .lt. 0) return
@@ -98,25 +70,11 @@ subroutine init_us_3(npw_, xvkb_)
    allocate (sk(npw_))
    allocate (ylm(npw_, (lmaxkb + 2)**2))
    allocate (betagl(ngl))
-   allocate (beta_save(ngl))
-   allocate (beta_save2(ngl))
    !
    call ylmr2((lmaxkb + 2)**2, npw_, g(1:3, 1:npw_), gg(1:npw_), ylm)
    call aainit(lmaxkb + 2)
    ndm = MAXVAL(upf(:)%kkbeta)
    allocate (aux(ndm))
-!!----------------------------------------------------------------------------------------I
-!  !test componenti a g=0 armoniche sferiche
-!  l_test=.false.
-!  if (l_test) then
-!     open(unit=15,file='gzero',status='unknown')
-!     do lm=1,(lmaxkb+2)**2
-!          write(15,"(I5,F12.7)") lm,ylm(1,lm)
-!     end do
-!     write(15,*) 'gl:',gl(1)
-!     close(15)
-!  end if
-!!-----------------------------------------------------------------------------------------F
    jkb = 0
    xvkb_ = 0.d0
    cost = SQRT(4.*pi/3.)
@@ -127,20 +85,10 @@ subroutine init_us_3(npw_, xvkb_)
 !
 !l è il "momento angolare+1" dello pseudo considerato
          l = nhtol(ih, it) + 1
-!
-!       if (ionode) print*,"ih,LLLLLLL+1=1",ih,l
-!
 !lp è l'indice combinato del'armonica sferica riferito allo pseudo che stiamo caricando
          lp = nhtolm(ih, it)
-!
-!
-!       if (ionode) print*,"ih,LPPPPPPP=1",ih,lp
-!
 !nb è la beta function che dà la dipendenza radiale a questo pseudo
          nb = indv(ih, it)
-!
-!       if (ionode) print*,"ih,NBBBBBBB=1",ih,nb
-!
 !in-1,...,nhtol+1=l sono i momenti angolari che contribuiscono a xvkb(:,ikb), ovvero
 !quelli che differiscono di 1 dal momento angolare del proiettore.
 !in,...,nhtol+2=l+1 sono i "momenti angolari+1" che contribuiscono a xvkb(:,ikb).
@@ -149,9 +97,6 @@ subroutine init_us_3(npw_, xvkb_)
          else
             in = l - 1
          end if
-!
-!
-!        if (ionode) print*,"ih,in=1,2",ih,in,l+1
 !ll indicizza i momenti angolari +1 che contribuiscono a xvkb
          do ll = in, l + 1
 !igl indicizza le shell. Qui calcoliamo il contributo:
@@ -184,36 +129,17 @@ subroutine init_us_3(npw_, xvkb_)
                   i1 = i0 + 1
                   i2 = i0 + 2
                   i3 = i0 + 3
-                  if (ll == l) then
-                     betagl(igl) = tabr(i0, nb, it, 0)*ux*vx*wx/6.d0 + &
-                    &tabr(i1, nb, it, 0)*px*vx*wx/2.d0 - &
-                    &tabr(i2, nb, it, 0)*px*ux*wx/2.d0 + &
-                    &tabr(i3, nb, it, 0)*px*ux*vx/6.d0
+                  ii = ll - l
+                  if (ii < -1 .or. ii >1 ) then
+                          call ERRORE('init_us_3','Internal index error',1)
                   end if
-                  if (ll == l + 1) then
-                     betagl(igl) = tabr(i0, nb, it, 1)*ux*vx*wx/6.d0 + &
-                    &tabr(i1, nb, it, 1)*px*vx*wx/2.d0 - &
-                    &tabr(i2, nb, it, 1)*px*ux*wx/2.d0 + &
-                    &tabr(i3, nb, it, 1)*px*ux*vx/6.d0
-                  end if
-!nb: se l=1 questa condizione non è mai soddisfatta e siamo sempre in uno dei due casi precedenti
-                  if ((ll == l - 1)) then
-                     betagl(igl) = tabr(i0, nb, it, -1)*ux*vx*wx/6.d0 + &
-                    &tabr(i1, nb, it, -1)*px*vx*wx/2.d0 - &
-                    &tabr(i2, nb, it, -1)*px*ux*wx/2.d0 + &
-                    &tabr(i3, nb, it, -1)*px*ux*vx/6.d0
-                  end if
+                  betagl(igl) = tabr(i0, nb, it, ii)*ux*vx*wx/6.d0 + &
+                    &tabr(i1, nb, it, ii)*px*vx*wx/2.d0 - &
+                    &tabr(i2, nb, it, ii)*px*ux*wx/2.d0 + &
+                    &tabr(i3, nb, it, ii)*px*ux*vx/6.d0
+
                end if
             end do
-!!------------------------------------------------------------------------------I
-!     !parte test
-!           l_test=.false.
-!           if (l_test) then
-!              if ((ih==2).and.(ll==1)) then
-!                  beta_save(1:ngl)=betagl(1:ngl)
-!              end if
-!           end if
-!!------------------------------------------------------------------------------F
 !Ora dobbiamo eseguire il ciclo su tutte le armoniche sferiche con momento angolare+1= ll
             do lm = (ll - 1)**2 + 1, ll**2
                do ig = gstart, npw_
@@ -244,32 +170,7 @@ subroutine init_us_3(npw_, xvkb_)
                if (lp == 3) xvkb1(1, ih, 1) = -vint
                if (lp == 4) xvkb1(1, ih, 2) = -vint
             end if
-!!------------------------------------------------------------------------------I
-!     !parte test
-!           l_test=.false.
-!           if (l_test) then
-!              if ((ih==2).and.(ll==1)) then
-!                  vint_save=vint
-!              end if
-!           end if
-!!------------------------------------------------------------------------------F=0.d0
          end if
-!!------------------------------------------------------------------------------I
-!     l_test=.false.
-!     if (l_test) then
-!         if (ionode) then
-!            open(unit=15,file='coerenza',position='append')
-!            write(15,*) "IH,LP,IT: ",ih,lp,it,nhm
-!            do ig=gstart,npw
-!                write(15,*) ig
-!                write(15,"(2F12.7)") -ylm(ig,3)*ylm(ig,lp),dble(xvkb1(ig,ih,1))
-!                write(15,"(2F12.7)") -ylm(ig,4)*ylm(ig,lp),dble(xvkb1(ig,ih,2))
-!                write(15,"(2F12.7)") +ylm(ig,2)*ylm(ig,lp),dble(xvkb1(ig,ih,3))
-!            end do
-!            close(15)
-!         end if
-!     end if
-!!------------------------------------------------------------------------------F
       end do
 !fin qui abbiamo inizializzato xvkb1(npwx,nhm,3) per il tipo di atomo che stiamo considerando.
 !Andiamo ora ad inizializzare xvkb(3,npwx,nkb) per tutti gli atomi di questo
@@ -294,46 +195,79 @@ subroutine init_us_3(npw_, xvkb_)
       end do
    end do
 
-!!----------------------------------------------------------------------------------------I
-!!test per valore nell'origine con calcolo esplicito
-!    origin=0.d0
-!!!!!!!!!!
-!    l_test=.false.
-!    if (l_test) then
-!       do ig=gstart,npw
-!          origin=origin+beta_save(igtongl(ig))
-!       end do
-!       call mp_sum(origin, intra_pool_comm)
-!       origin=origin*2.d0 !perche' e' un calcolo a gamma ed abbiamo solo la meta' dei vettori G
-!       origin=origin+vint
-!       origin=origin*cost/(4.d0*pi)
-!       origin=origin/sqrt(omega)
-!       print*, "ORIGIN VALUE:", origin
-!       origin=0.d0
-!       do n1=-5,5
-!         do n2=-5,5
-!            do n3=-5,5
-!               modulus=alat*sqrt(dble(n1**2+n2**2+n3**2))
-!               do ir=1,rgrid(1)%mesh
-!                         if (rgrid(1)%r(ir)>modulus) then
-!                     ir_found=ir
-!                     exit
-!                  end if
-!                  ir_found=ir
-!                      end do
-!              value=upf(1)%beta(ir_found,2)/rgrid(1)%r(ir_found)
-!              origin=origin+modulus*value/sqrt(12.d0*pi)
-!            end do
-!         end do
-!       end do
-!       print*, "ORIGIN VALUE B:", origin
-!    end if
-!!----------------------------------------------------------------------------------------F
-!!----------------------------------------------------------------------------------------I
 
 !!test per xvkb
 
    if (ec_test) then
+      call init_us_3_test(npw_, xvkb_)
+   end if
+
+   deallocate (ylm)
+   deallocate (sk)
+   deallocate (xvkb1)
+   deallocate (betagl)
+   deallocate (aux)
+
+   call stop_clock('init_us_3')
+   return
+end subroutine init_us_3
+
+
+subroutine init_us_3_test (npw_, xvkb_)!, rgrid, ntyp, ityp, tau, tpiba, )
+
+   !----------------------------------------------------------------------
+   !
+   !   Calculates xbeta functions  with
+   !   structure factor, for all atoms, in reciprocal space. On input:
+   !      npw_       : number of PWs
+   !  On output:
+   !      xvkb_(npwx,nkb,3) : beta functions (npw_ <= npwx).
+   !
+   USE atom, ONLY: rgrid
+   USE kinds, ONLY: DP
+   USE ions_base, ONLY: nat, ntyp => nsp, ityp, tau
+   USE cell_base, ONLY: tpiba
+   USE constants, ONLY: tpi, pi, fpi
+   USE wvfct, ONLY: npwx, npw, nbnd
+   ! USE splinelib
+   USE uspp, ONLY: nkb, vkb
+   USE uspp_param, ONLY: upf, lmaxkb, nhm, nh
+   USE cell_base, ONLY: omega
+   use mp, ONLY: mp_sum, mp_min
+!
+!modules for UT
+!
+   use splines
+   USE wavefunctions, ONLY: psic
+   use fft_interfaces, only: invfft, fwfft
+   use fft_base, only: dffts
+   use cell_base, ONLY: at, alat
+   use mp_world, ONLY: mpime
+   use io_global, ONLY: ionode
+   use mp_pools, only: intra_pool_comm
+!
+   implicit none
+!
+   TYPE(spline_data) :: spl_beta
+   INTEGER, INTENT(IN) :: npw_
+   COMPLEX(DP), INTENT(inOUT) :: xvkb_(npwx, nkb, 3)
+   !
+   !local variables for UT
+   !
+   integer     :: cont_1, cont_2, cont_3, icont, ikb, ipol
+   real(DP)    :: u(3), u_x(3), u_y(3), u_z(3), modulus!, value
+   integer     :: iqq, ix, iy, iz
+
+
+! testing variables used only for ec_test
+
+   complex(DP) :: vkbr(1:dffts%nnr), vkbr_2(1:dffts%nnr), vkbr_3(1:dffts%nnr, 3)
+   real(DP)    :: stampa(nkb, 1:dffts%nnr, 3, 3), stampa_b(nkb, 1:dffts%nnr, 3, 3) !, ris(4, 4)
+   integer, external :: find_free_unit
+   integer :: iun, iun2, iun3
+   integer :: ii, nr3s_end, nr3s_start, vkb_pol
+   character(len=20) :: string, dimension_string
+
 
       if (nat > 1) then
          CALL errore('init_us_3', 'Test not working with nat > 1', 1)
@@ -355,25 +289,25 @@ subroutine init_us_3(npw_, xvkb_)
 ! Each file contains 6 records. Three for each xvbk polarizazion (xvkb, yvkb and zvkb) calculated in way (1) and other three for method (2).
 !
 
-    write (dimension_string, '(I0," ",I0, " ", I0)') dffts%nr3p(mpime + 1),  dffts%nr2,  dffts%nr1
-    iun3=find_free_unit()
-    open(unit=iun3, file='full_unformatted.xmf')
-    write(iun3,'(a)')&
-'<?xml version="1.0" ?><!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>&
-&<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2"><Domain>&
-&    <Grid GridType="Uniform">&
-&      <Topology TopologyType="3DCORECTMesh" Dimensions="'&
-//trim(dimension_string)// '"/>&
-&      <Geometry GeometryType="ORIGIN_DXDYDZ">&
-&        <DataItem Name="Origin" Dimensions="3" NumberType="Float" Precision="8" Format="XML">&
-&          0 0 0&
-&        </DataItem>&
-&        <DataItem Name="Spacing" Dimensions="3" NumberType="Float" Precision="8" Format="XML">&
-&          1 1 1&
-&        </DataItem>&
-&      </Geometry>'
+      write (dimension_string, '(I0," ",I0, " ", I0)') dffts%nr3p(mpime + 1), dffts%nr2, dffts%nr1
+      iun3 = find_free_unit()
+      open (unit=iun3, file='full_unformatted.xmf')
+      write (iun3, '(a)') &
+  '<?xml version="1.0" ?><!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>&
+  &<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2"><Domain>&
+  &    <Grid GridType="Uniform">&
+  &      <Topology TopologyType="3DCORECTMesh" Dimensions="' &
+  //trim(dimension_string)//'"/>&
+  &      <Geometry GeometryType="ORIGIN_DXDYDZ">&
+  &        <DataItem Name="Origin" Dimensions="3" NumberType="Float" Precision="8" Format="XML">&
+  &          0 0 0&
+  &        </DataItem>&
+  &        <DataItem Name="Spacing" Dimensions="3" NumberType="Float" Precision="8" Format="XML">&
+  &          1 1 1&
+  &        </DataItem>&
+  &      </Geometry>'
 
-    do vkb_pol = 1, 3
+      do vkb_pol = 1, 3
          do ikb = 1, nkb
 
             cont_1 = 0
@@ -406,19 +340,19 @@ subroutine init_us_3(npw_, xvkb_)
                nr3s_end = nr3s_end + dffts%nr3p(ii)
             end do
             iun = find_free_unit()
-            write (string, '(I0,"_",I0)') ikb,vkb_pol
-            write (iun3,*)  '<Attribute Name="A_'//trim(string)//'" Active="1" AttributeType="Scalar" Center="Cell">&
-&              <DataItem Dimensions="',dimension_string,'" NumberType="Float" Precision="8"&
-&              Format="Binary">full_unformatted_A_',string,'</DataItem>&
+            write (string, '(I0,"_",I0)') ikb, vkb_pol
+            write (iun3, *) '<Attribute Name="A_'//trim(string)//'" Active="1" AttributeType="Scalar" Center="Cell">&
+&              <DataItem Dimensions="', dimension_string, '" NumberType="Float" Precision="8"&
+&              Format="Binary">full_unformatted_A_', string, '</DataItem>&
 &      </Attribute>'
-            write (iun3,*)  '<Attribute Name="B_'//trim(string)//'" Active="1" AttributeType="Scalar" Center="Cell">&
-&              <DataItem Dimensions="',dimension_string,'" NumberType="Float" Precision="8"&
+            write (iun3, *) '<Attribute Name="B_'//trim(string)//'" Active="1" AttributeType="Scalar" Center="Cell">&
+&              <DataItem Dimensions="', dimension_string, '" NumberType="Float" Precision="8"&
 &              Format="Binary">full_unformatted_B_'//trim(string)//'</DataItem>&
 &      </Attribute>'
 
-            open(unit=iun, file='full_unformatted_A_'//trim(string), FORM="unformatted", access='stream')
+            open (unit=iun, file='full_unformatted_A_'//trim(string), FORM="unformatted", access='stream')
             iun2 = find_free_unit()
-            open(unit=iun2, file='full_unformatted_B_'//trim(string), FORM="unformatted", access='stream')
+            open (unit=iun2, file='full_unformatted_B_'//trim(string), FORM="unformatted", access='stream')
             do iz = 1, dffts%nr3p(mpime + 1)     !primo ciclo   sui punti x
                do iy = 1, dffts%nr2           !secondo ciclo sui punti x
                   do ix = 1, dffts%nr1        !terzo ciclo   sui punti x
@@ -428,8 +362,8 @@ subroutine init_us_3(npw_, xvkb_)
                      u_z(1:3) = real(iz + nr3s_start - 1 - 1)/real(dffts%nr3)*at(1:3, 3)*alat
                      u(1:3) = u_x(1:3) + u_y(1:3) + u_z(1:3)
                      modulus = sqrt(u(1)**2 + u(2)**2 + u(3)**2)
-                     write(iun) dble(vkbr(iqq))
-                     write(iun2) u(vkb_pol)*dble(vkbr_2(iqq))
+                     write (iun) dble(vkbr(iqq))
+                     write (iun2) u(vkb_pol)*dble(vkbr_2(iqq))
 
                      !init "stampa" variable
                      if ((iz == 1) .and. (iy == 1)) then
@@ -483,13 +417,12 @@ subroutine init_us_3(npw_, xvkb_)
                   end do
                end do
             end do
-            close(iun)
-            close(iun2)
+            close (iun)
+            close (iun2)
          end do
       end do
-      write(iun3,*) '</Grid></Domain></Xdmf>'
-      close(iun3)
-
+      write (iun3, *) '</Grid></Domain></Xdmf>'
+      close (iun3)
 
       if (ionode) then
          do ikb = 1, nkb
@@ -572,7 +505,6 @@ subroutine init_us_3(npw_, xvkb_)
             xvkb_(1:npw, ikb, ipol) = psic(dffts%nl(1:npw))
          end do
       end do
-   end if
 !!----------------------------------------------------------------------------------------F
 !!----------------------------------------------------------------------------------------I
 !!test per le armoniche sferiche
@@ -629,13 +561,5 @@ subroutine init_us_3(npw_, xvkb_)
 !     end if
 !!----------------------------------------------------------------------------------------F
 
-   deallocate (ylm)
-   deallocate (sk)
-   deallocate (xvkb1)
-   deallocate (betagl)
-   deallocate (aux)
-
-   call stop_clock('init_us_3')
-   return
-end subroutine init_us_3
+end subroutine
 

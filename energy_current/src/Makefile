@@ -4,7 +4,7 @@
 include ../../make.inc
 # location of include files
 #IFLAGS=-I../../include
-F90FLAGS+=-fsanitize=address
+F90FLAGS+=-fsanitize=address -Wall
 LDFLAGS+=-fsanitize=address
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../LAXlib \
