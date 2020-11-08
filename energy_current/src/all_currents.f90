@@ -30,8 +30,10 @@ program all_currents
 !from ../Modules/read_input.f90
    USE read_namelists_module, ONLY: read_namelists
    USE read_cards_module, ONLY: read_cards
-   use zero_mod, only: vel_input_units, init_zero, routine_zero, &
-                       allocate_zero, deallocate_zero
+   use zero_mod, only: vel_input_units, init_zero, current_zero, &
+                       allocate_zero, deallocate_zero, &
+                       current_ionic, add_i_current_b, &
+                       i_current, i_current_a, i_current_b, i_current_c, i_current_d, i_current_e
    use averages, only: online_average_init
 
 
@@ -190,9 +192,11 @@ program all_currents
               if (exit_status /= 0) goto 100 !shutdown everything and exit
               !save evc, tau and vel for t
               call scf_result_set_from_global_variables(scf_all%t_zero)
-              call routine_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
+              call current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                         vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
                         nkb, vkb, deeq, upf, nh, xk, igk_k, bg ) ! routine zero should be called in t
+              call current_ionic(i_current, i_current_a, i_current_b, i_current_c, i_current_d, i_current_e, add_i_current_b, &
+                      nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
           else
               call scf_result_set_from_global_variables(scf_all%t_zero) !if we don't have 3pt derivative, zero and minus are equal
           end if
@@ -211,9 +215,11 @@ program all_currents
           call scf_result_set_from_global_variables(scf_all%t_plus)
 
           if (.not. three_point_derivative) &
-              call routine_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
+              call current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                         vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
                         nkb, vkb, deeq, upf, nh, xk, igk_k, bg ) ! we are in t in this case, and we call here routine zero
+              call current_ionic(i_current, i_current_a, i_current_b, i_current_c, i_current_d, i_current_e, add_i_current_b, &
+                      nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
 
           !calculate second part of energy current
           call routine_hartree(nbnd, npw, npwx, dffts, psic, evc, g, ngm, gstart, &

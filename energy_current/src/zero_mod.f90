@@ -34,7 +34,7 @@ MODULE zero_mod
 
    real(DP) ::I_primo_rec
    real(DP), allocatable   :: H_g(:, :, :, :)
-   complex(DP), allocatable   :: u_g(:, :) !ngm,a
+   complex(DP), allocatable   :: u_g(:, :) !ngm,a  !this looks like can be transformed in a local variable
    complex(DP), allocatable ::charge_g(:)
    real(DP), allocatable   :: I_uno_g(:, :, :) !griglia,a,b
    real(DP), allocatable   :: I_due_g(:)
@@ -292,7 +292,7 @@ subroutine init_zero(nsp, zv, tpiba2, tpiba, omega, at, alat, &
 end subroutine
 
 
-subroutine routine_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
+subroutine current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                         vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
                         nkb, vkb, deeq, upf, nh, xk, igk_k, bg )
    use kinds, only: DP
@@ -398,22 +398,43 @@ subroutine routine_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
    call print_clock('zero_current')
    deallocate (charge)
    if (ionode) print *, 'ZERO CURRENT CALCULATED'
+   call stop_clock('routine_zero')
+   call print_clock('routine_zero')
 
-!!
-!!------ IONIC CURRENT ----------------
-!!
-   i_current = 0.d0
-   i_current_a = 0.d0
-   i_current_b = 0.d0
-   i_current_c = 0.d0
-   i_current_d = 0.d0
-   i_current_e = 0.d0
+end subroutine current_zero
+
+
+subroutine current_ionic(current, current_a, current_b, current_c, current_d, current_e, add_current_b, &
+                         nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
+   use kinds, only: DP
+   use constants, only: AMU_RY, e2
+   use io_global, only: stdout, ionode
+
+   implicit none
+
+   real(dp), intent(out) :: current(3), current_a(3), current_b(3), current_c(3),&
+                            current_d(3), current_e(3)   
+   logical, intent(in) :: add_current_b
+   INTEGER, intent(in) :: npw, nat, ityp(:), gstart
+   REAL(DP), intent(in) :: zv(:), tau(:,:), vel(:,:), &
+                           tpiba, alat, at(:,:), &
+                           g(:,:), gg(:), bg(:,:), amass(:)
+
+   real(dp) :: u(3), u_pbc(3), val
+   integer :: iatom, jatom, a, b
+        
+   current = 0.d0
+   current_a = 0.d0
+   current_b = 0.d0
+   current_c = 0.d0
+   current_d = 0.d0
+   current_e = 0.d0
 
    call start_clock('calcolo_i')
    do iatom = 1, nat
-      i_current_a(:) = i_current_a(:) + vel(:, iatom)*(1./2.*amconv*amass(ityp(iatom))*(vel(1, iatom)**2 +&
+      current_a(:) = current_a(:) + vel(:, iatom)*(1./2.*amu_ry*amass(ityp(iatom))*(vel(1, iatom)**2 +&
                        vel(2, iatom)**2 + vel(3, iatom)**2))
-      i_current_b(:) = i_current_b(:) + 2./3.*e2*zv(ityp(iatom))**2*vel(:, iatom)*I_primo
+      current_b(:) = current_b(:) + 2./3.*e2*zv(ityp(iatom))**2*vel(:, iatom)*I_primo
    end do
 
    do iatom = 1, nat
@@ -421,50 +442,46 @@ subroutine routine_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
          if (iatom > jatom) then
             u(1:3) = (tau(:, iatom) - tau(:, jatom))*alat
             call pbc(u(1:3), u_pbc(1:3), alat, at, bg)
-            call I_due_value(value, u_pbc, 1, tpiba, at, alat, gstart, g, gg, npw)
-            !i_current_c(:) = i_current_c(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))* &
-            i_current_c(:) = i_current_c(:) + 1.d0*e2*zv(ityp(iatom))*zv(ityp(jatom))* &
-                             (vel(:, iatom) + vel(:, jatom))*value
+            call I_due_value(val, u_pbc, 1, tpiba, at, alat, gstart, g, gg, npw)
+            !current_c(:) = current_c(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))* &
+            current_c(:) = current_c(:) + 1.d0*e2*zv(ityp(iatom))*zv(ityp(jatom))* &
+                             (vel(:, iatom) + vel(:, jatom))*val
 
             do a = 1, 3
                do b = 1, 3
                   if (a > b) then
-                     call I_uno_value(value, u_pbc, a, b, 1, tpiba, at, alat, gstart, g, gg, npw)
-                     i_current_e(a) = i_current_e(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-                                      &(vel(b, jatom) + vel(b, iatom))*value
-                     i_current_e(b) = i_current_e(b) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-                                      &(vel(a, jatom) + vel(a, iatom))*value
+                     call I_uno_value(val, u_pbc, a, b, 1, tpiba, at, alat, gstart, g, gg, npw)
+                     current_e(a) = current_e(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
+                                      &(vel(b, jatom) + vel(b, iatom))*val
+                     current_e(b) = current_e(b) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
+                                      &(vel(a, jatom) + vel(a, iatom))*val
                   end if
                   if (a == b) then
-                     call I_uno_value(value, u_pbc, a, b, 1, tpiba, at, alat, gstart, g, gg, npw)
-                     i_current_d(a) = i_current_d(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-                                      &(vel(b, jatom) + vel(b, iatom))*value
+                     call I_uno_value(val, u_pbc, a, b, 1, tpiba, at, alat, gstart, g, gg, npw)
+                     current_d(a) = current_d(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
+                                      &(vel(b, jatom) + vel(b, iatom))*val
                   end if
                end do
             end do
          end if
       end do
    end do
-   i_current_a = i_current_a * alat**3
-   i_current_b = i_current_b * alat 
-   i_current_c = i_current_c * alat 
-   i_current_d = i_current_d * alat 
-   i_current_e = i_current_e * alat 
-   i_current   = i_current_a + i_current_c + i_current_d + &
-                 i_current_e
-   if (add_i_current_b) &
-      i_current = i_current + i_current_b
+   current_a = current_a * alat**3
+   current_b = current_b * alat 
+   current_c = current_c * alat 
+   current_d = current_d * alat 
+   current_e = current_e * alat 
+   current   = current_a + current_c + current_d + &
+                 current_e
+   if (add_current_b) &
+      current = current + current_b
    
 
    call stop_clock('calcolo_i')
    call print_clock('calcolo_i')
    if (ionode) print *, 'IONIC CURRENT CALCULATED'
 
-300 call stop_clock('routine_zero')
-   call print_clock('routine_zero')
-
-end subroutine routine_zero
-
+   end subroutine
 
 subroutine add_nc_curr(current, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, evc, &
                        g, tpiba, nat, ityp, nsp, xk, igk_k)
@@ -812,31 +829,7 @@ SUBROUTINE init_reciprocal_parts_tab(nsp, zv, tpiba2, tpiba, omega, at, alat, &
 
 END SUBROUTINE init_reciprocal_parts_tab
 
-!subroutine init_us_1all(rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
-!   USE radial_grids, ONLY : radial_grid_type
-!   USE uspp_param, ONLY: pseudo_upf
-!   USE kinds, ONLY: DP
-!
-!   implicit none
-!   type(radial_grid_type), intent(in) :: rgrid(:)
-!   integer, intent(in) :: nsp, nqxq
-!   type(pseudo_upf), intent(in) :: upf(:)
-!   real(dp), intent(in) :: zv(:), omega, dq
-!   logical, intent(in) :: spline_ps  
-!
-!   call init_us_1()
-!   call init_us_1a(rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
-!
-!end subroutine
 
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
-!
-!
-!----------------------------------------------------------------------
 subroutine init_us_1a(rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
    !----------------------------------------------------------------------
    !
