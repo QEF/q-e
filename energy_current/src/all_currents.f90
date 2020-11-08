@@ -214,13 +214,13 @@ program all_currents
           !save evc, tau and vel for t+dt
           call scf_result_set_from_global_variables(scf_all%t_plus)
 
-          if (.not. three_point_derivative) &
+          if (.not. three_point_derivative) then
               call current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                         vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
                         nkb, vkb, deeq, upf, nh, xk, igk_k, bg ) ! we are in t in this case, and we call here routine zero
               call current_ionic(i_current, i_current_a, i_current_b, i_current_c, i_current_d, i_current_e, add_i_current_b, &
                       nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
-
+          end if
           !calculate second part of energy current
           call routine_hartree(nbnd, npw, npwx, dffts, psic, evc, g, ngm, gstart, &
                 tpiba, omega, tpiba2, alat, at, tau, vkb, nkb, xk, igk_k, g2kin, et)
