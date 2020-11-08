@@ -4,7 +4,7 @@ program all_currents
            n_repeat_every_step, ethr_big_step, scf_all, multiple_scf_result_allocate,&
            scf_result_set_from_global_variables, multiple_scf_result_deallocate, &
            three_point_derivative, ave_cur, ethr_small_step, &
-           init_hartree, routine_hartree
+           init_hartree, current_hartree_xc, current_kohn_sham
    USE environment, ONLY: environment_start, environment_end
    use io_global, ONLY: ionode
    use wavefunctions, only: evc
@@ -222,7 +222,9 @@ program all_currents
                       nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
           end if
           !calculate second part of energy current
-          call routine_hartree(nbnd, npw, npwx, dffts, psic, evc, g, ngm, gstart, &
+          call current_hartree_xc(nbnd, npw, npwx, dffts, psic, evc, g, ngm, gstart, &
+                tpiba, omega, tpiba2, alat, at, tau, vkb, nkb, xk, igk_k, g2kin, et)
+          call current_kohn_sham(nbnd, npw, npwx, dffts, psic, evc, g, ngm, gstart, &
                 tpiba, omega, tpiba2, alat, at, tau, vkb, nkb, xk, igk_k, g2kin, et)
           call write_results(traj,print_stat)
       end do
