@@ -24,7 +24,7 @@ PROGRAM xctest_qe_libxc
   !  To be run on a single processor
   !------------------------------------------------------------------------------------!
   !
-#if defined(__LIBXC)
+#if defined(__LIBXCp)
   !
   USE xc_f03_lib_m
   !
@@ -1101,7 +1101,7 @@ PROGRAM xctest_qe_libxc
 #endif
 10 STOP
   !
-#if defined(__LIBXC)
+#if defined(__LIBXCp)
   !
  CONTAINS
 !
@@ -1464,7 +1464,7 @@ END FUNCTION
 END PROGRAM xctest_qe_libxc
 !
 !
-#if defined(__LIBXC)
+#if defined(__LIBXCp)
 !------------------------------------------------------------------------
 FUNCTION calc_perc_diff( thr, x_qe, x_lxc )
   !----------------------------------------------------------------------

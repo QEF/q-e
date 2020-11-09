@@ -6,7 +6,6 @@ MODFLAGS = $(MOD_FLAG)../UtilXlib
 
 XCL = \
 dft_mod.o \
-qe_ext_fun.o \
 qe_constants.o \
 qe_drivers_d_gga.o \
 qe_drivers_d_lda_lsda.o \

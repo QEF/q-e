@@ -52,10 +52,6 @@ CONTAINS
     INTEGER :: save_iexch, save_icorr, save_igcx, save_igcc, save_meta, &
                save_metac
     !
-    !LOGICAL :: xclib_set_dft_IDs
-    !CHARACTER(LEN=1) :: capital                                                               !1) rivedi dichiarazioni queste funzioni
-    !INTEGER :: matching                                                                       !2) rivedi caso BEEF
-    !                                                                                         !3) rivedi il case default qui nei nomi (il nonlocal segnalato lì)
     ! Exit if set to discard further input dft
     !
     IF ( discard_input_dft ) RETURN
@@ -245,7 +241,7 @@ CONTAINS
           READ( dftout(32:32), '(a)' ) lxc
           IF (lxc == 'l') is_libxc(6) = .TRUE.
           
-          !inlc   = 0                                      !*nonlocal da sistemare
+          !inlc   = 0                                      !*.....check
           !
           dft_defined = .TRUE.
 #else
@@ -399,16 +395,6 @@ CONTAINS
     RETURN
     !
   END FUNCTION xclib_set_dft_IDs
-  
-!   INTERFACE intrnl_set_dft_IDs
-!    LOGICAL FUNCTION set_dft_IDs( iexch_, icorr_, igcx_, igcc_, imeta_, imetac_, is_libxc_ )
-!    IMPLICIT NONE
-!    INTEGER, INTENT(IN) :: iexch_, icorr_
-!    INTEGER, INTENT(IN) :: igcx_, igcc_
-!    INTEGER, INTENT(IN) :: imeta_, imetac_
-!    LOGICAL, OPTIONAL   :: is_libxc_(6)
-!    END FUNCTION
-!   END INTERFACE
 
   
   !-----------------------------------------------------------------
@@ -424,7 +410,6 @@ CONTAINS
     INTEGER, INTENT(IN):: n
     CHARACTER(LEN=*), INTENT(IN):: name(0:n)
     CHARACTER(LEN=*), INTENT(IN):: dft_
-    LOGICAL :: matches
     !
     INTEGER :: i
     !
@@ -1337,7 +1322,7 @@ CONTAINS
    REAL(DP), INTENT(IN), OPTIONAL :: grho_threshold_
    REAL(DP), INTENT(IN), OPTIONAL :: tau_threshold_
    !
-   SELECT CASE( TRIM(fkind) )                                                       !*metti case insensitive......
+   SELECT CASE( TRIM(fkind) )
    CASE( 'lda' )
      rho_threshold_lda = rho_threshold_
    CASE( 'gga' )

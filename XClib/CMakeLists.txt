@@ -1,6 +1,5 @@
 set(sources
     dft_mod.f90
-    qe_ext_fun.f90
     qe_constants.f90
     qe_drivers_d_gga.f90
     qe_drivers_d_lda_lsda.f90

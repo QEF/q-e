@@ -24,7 +24,7 @@ MODULE dft_par_mod
     ! GGA
     INTEGER  :: igcx = notset
     INTEGER  :: igcc = notset
-    REAL(DP) :: rho_threshold_gga = 1.E-10_DP
+    REAL(DP) :: rho_threshold_gga = 1.E-6_DP
     REAL(DP) :: grho_threshold_gga = 1.E-10_DP
     REAL(DP) :: screening_parameter, gau_parameter
     !
