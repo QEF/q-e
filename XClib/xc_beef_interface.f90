@@ -99,19 +99,19 @@ MODULE beef_interface
     !
     ! empty routines to prevent compilation errors
     SUBROUTINE beefx( r, g, e, dr, dg, addlda )
-      USE kinds, ONLY : dp
+      USE kind_l, ONLY : dp
       REAL (dp) :: r, g, e, dr, dg
       INTEGER :: addlda
     END SUBROUTINE beefx
     !
     SUBROUTINE beeflocalcorr( r, g, e, dr, dg, addlda)
-      USE kinds, ONLY : dp
+      USE kind_l, ONLY : dp
       REAL (dp), INTENT(INOUT) :: r, g, e, dr, dg
       INTEGER :: addlda
     END SUBROUTINE beeflocalcorr
     !
     SUBROUTINE beeflocalcorrspin(r, z, g, e, drup, drdown, dg, addlda)
-      USE kinds, ONLY : dp
+      USE kind_l, ONLY : dp
       REAL (dp), INTENT(INOUT) :: r, z, g, e, drup, drdown, dg
       INTEGER :: addlda
     END SUBROUTINE beeflocalcorrspin
@@ -128,7 +128,7 @@ MODULE beef_interface
     END SUBROUTINE beefrandinitdef
     !
     SUBROUTINE beefensemble(beefxc, ensemble)
-      USE kinds, ONLY : dp
+      USE kind_l, ONLY : dp
       REAL (dp) :: beefxc(:), ensemble(:)
     END SUBROUTINE beefensemble
     !
