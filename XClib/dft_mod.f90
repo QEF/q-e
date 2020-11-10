@@ -224,22 +224,22 @@ CONTAINS
           !shortname = 'XC-000i-000i-000i-000i-000i-000i'
           READ( dftout(4:6), * ) iexch
           READ( dftout(7:7), '(a)' ) lxc
-          IF (lxc == 'l') is_libxc(1) = .TRUE.
+          IF (lxc == 'L') is_libxc(1) = .TRUE.
           READ( dftout(9:11), * ) icorr
           READ( dftout(12:12), '(a)' ) lxc
-          IF (lxc == 'l') is_libxc(2) = .TRUE.
+          IF (lxc == 'L') is_libxc(2) = .TRUE.
           READ( dftout(14:16), * ) igcx
           READ( dftout(17:17), '(a)' ) lxc
-          IF (lxc == 'l') is_libxc(3) = .TRUE.
+          IF (lxc == 'L') is_libxc(3) = .TRUE.
           READ( dftout(19:21), * ) igcc
           READ( dftout(22:22), '(a)' ) lxc
-          IF (lxc == 'l') is_libxc(4) = .TRUE.
+          IF (lxc == 'L') is_libxc(4) = .TRUE.
           READ( dftout(24:26), * ) imeta
           READ( dftout(27:27), '(a)' ) lxc
-          IF (lxc == 'l') is_libxc(5) = .TRUE.
+          IF (lxc == 'L') is_libxc(5) = .TRUE.
           READ( dftout(29:31), * ) imetac
           READ( dftout(32:32), '(a)' ) lxc
-          IF (lxc == 'l') is_libxc(6) = .TRUE.
+          IF (lxc == 'L') is_libxc(6) = .TRUE.
           
           !inlc   = 0                                      !*.....check
           !
@@ -1065,7 +1065,7 @@ CONTAINS
   FUNCTION get_dft_name()
      USE dft_par_mod
      IMPLICIT NONE
-     CHARACTER(LEN=25) :: get_dft_name
+     CHARACTER(LEN=32) :: get_dft_name
      get_dft_name = dft
      RETURN
   END FUNCTION get_dft_name
@@ -1268,19 +1268,19 @@ CONTAINS
        ELSEIF (imeta == 208 .AND. imetac==231) THEN
           shortname = 'TB09'
        ELSE
-          shortname = 'XC-000i-000i-000i-000i-000i-000i'
+          shortname = 'XC-000I-000I-000I-000I-000I-000I'
           WRITE( shortname(4:6),   '(i3.3)' ) iexch
-          IF ( is_libxc(1) ) WRITE( shortname(7:7),   '(a)' ) 'l'
+          IF ( is_libxc(1) ) WRITE( shortname(7:7),   '(a)' ) 'L'
           WRITE( shortname(9:11),  '(i3.3)' ) icorr
-          IF ( is_libxc(2) ) WRITE( shortname(12:12), '(a)' ) 'l'
+          IF ( is_libxc(2) ) WRITE( shortname(12:12), '(a)' ) 'L'
           WRITE( shortname(14:16), '(i3.3)' ) igcx
-          IF ( is_libxc(3) ) WRITE( shortname(17:17), '(a)' ) 'l'
+          IF ( is_libxc(3) ) WRITE( shortname(17:17), '(a)' ) 'L'
           WRITE( shortname(19:21), '(i3.3)' ) igcc
-          IF ( is_libxc(4) ) WRITE( shortname(22:22), '(a)' ) 'l'
+          IF ( is_libxc(4) ) WRITE( shortname(22:22), '(a)' ) 'L'
           WRITE( shortname(24:26), '(i3.3)' ) imeta
-          IF ( is_libxc(5) ) WRITE( shortname(27:27), '(a)' ) 'l'
+          IF ( is_libxc(5) ) WRITE( shortname(27:27), '(a)' ) 'L'
           WRITE( shortname(29:31), '(i3.3)' ) imetac
-          IF ( is_libxc(6) ) WRITE( shortname(32:32), '(a)' ) 'l'
+          IF ( is_libxc(6) ) WRITE( shortname(32:32), '(a)' ) 'L'
        ENDIF
     ENDIF
 #endif

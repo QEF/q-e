@@ -41,7 +41,7 @@ MODULE funct
   ! XC non local index
   PRIVATE :: inlc
   !
-  CHARACTER(LEN=25) :: dft = 'not set'
+  CHARACTER(LEN=32) :: dft = 'not set'
   !
   ! ------------------------------------------------------------------------
   ! "dft" is the exchange-correlation functional label, as set by the user,
@@ -632,7 +632,7 @@ CONTAINS
   !-----------------------------------------------------------------------
   FUNCTION get_dft_name()
     !! Get the string with the full dft name.
-    CHARACTER(LEN=25) :: get_dft_name
+    CHARACTER(LEN=32) :: get_dft_name
     get_dft_name = dft
     RETURN
   END FUNCTION get_dft_name
@@ -715,8 +715,8 @@ CONTAINS
     !
     IMPLICIT NONE
     !
-    CHARACTER(LEN=26) :: get_dft_short
-    CHARACTER(LEN=26) :: shortname
+    CHARACTER(LEN=32) :: get_dft_short
+    CHARACTER(LEN=32) :: shortname
     INTEGER :: iexch, icorr, igcx, igcc, imeta, imetac
     !
     shortname = 'no shortname'
@@ -798,8 +798,8 @@ CONTAINS
     !
     IMPLICIT NONE
     !
-    CHARACTER(LEN=25) :: get_dft_long
-    CHARACTER(LEN=25) :: longname
+    CHARACTER(LEN=32) :: get_dft_long
+    CHARACTER(LEN=32) :: longname
     !
     !WRITE(longname,'(4a5)') exc(iexch), corr(icorr), gradx(igcx), gradc(igcc)
     !

@@ -164,7 +164,7 @@ SUBROUTINE post_xml_init (  )
   IMPLICIT NONE
   !
   REAL(DP) :: ehart, etxc, vtxc, etotefield, charge
-  CHARACTER(LEN=20) :: dft_name
+  CHARACTER(LEN=32) :: dft_name
   !
   ! ... set G cutoffs and cell factor (FIXME: from setup.f90?)
   !
