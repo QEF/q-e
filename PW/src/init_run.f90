@@ -13,6 +13,7 @@ SUBROUTINE init_run()
   USE symme,              ONLY : sym_rho_init
   USE wvfct,              ONLY : nbnd, et, wg, btype
   USE control_flags,      ONLY : lmd, gamma_only, smallmem, ts_vdw
+  USE input_parameters, ONLY : do_mbd
   USE gvect,              ONLY : g, gg, mill, gcutm, ig_l2g, ngm, ngm_g, &
                                  gshells, gstart ! to be comunicated to the Solvers if gamma_only
   USE gvecs,              ONLY : gcutms, ngms
@@ -102,7 +103,7 @@ SUBROUTINE init_run()
   !
   btype(:,:) = 1
   !
-  IF (ts_vdw) THEN
+  IF (ts_vdw .or. do_mbd) THEN
      CALL tsvdw_initialize()
      CALL set_h_ainv()
   END IF

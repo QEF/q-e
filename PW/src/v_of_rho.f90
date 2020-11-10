@@ -24,8 +24,11 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   USE funct,            ONLY : dft_is_meta, get_meta
   USE scf,              ONLY : scf_type
   USE cell_base,        ONLY : alat
-  USE control_flags,    ONLY : ts_vdw
+  USE io_global,        ONLY : stdout
+  USE control_flags,    ONLY : ts_vdw !Why doesnt do_mbd go here??
+  USE input_parameters, ONLY : do_mbd
   USE tsvdw_module,     ONLY : tsvdw_calculate, UtsvdW
+  USE libmbd_interface, ONLY : mbd_interface
   !
   IMPLICIT NONE
   !
@@ -130,6 +133,15 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
            v%of_r(ir,is)=v%of_r(ir,is)+2.0d0*UtsvdW(ir)
         END DO
      END DO
+  END IF
+  !
+  !GSz
+  IF(do_mbd .and. .not. ts_vdw) then
+    write( stdout,*)'MBD is set but TS is not asked for, quitting'
+    call exit()
+  end if
+  IF (do_mbd) THEN
+    call mbd_interface(tau*alat,rho%of_r(:,1))
   END IF
   !
   CALL stop_clock( 'v_of_rho' )
