@@ -1,5 +1,5 @@
 
-     Program CP v.6.6 starts on  9Nov2020 at 15:11:23 
+     Program CP v.6.6 starts on  9Nov2020 at 15: 7:10 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -169,7 +169,7 @@
    ibrav =   14       cell parameters read from input file
 
    Matrix Multiplication Performances
-   ortho mmul, time for parallel driver      =   0.00000 with    1 procs
+   ortho mmul, time for parallel driver      =   0.00001 with    1 procs
 
    Constraints matrixes will be distributed block like on
    ortho sub-group =    1*   1 procs
@@ -543,7 +543,7 @@ inw = 6:   1   0   1   0.000000
     112    0.000009301204820    0.0    0.00      -0.775959478983     -16.989750608766     -16.989750608766     -16.989750608766     -16.989741307561   0.0000   0.0000   0.0000   0.0000
    MLWF step   13  Convergence =  9.913E-07  Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    113    0.000008010809158    0.0    0.00      -0.775964939193     -16.989752724447     -16.989752724447     -16.989752724447     -16.989744713638   0.0000   0.0000   0.0000   0.0000
+    113    0.000008010809158    0.0    0.00      -0.775964939193     -16.989752724447     -16.989752724447     -16.989752724447     -16.989744713637   0.0000   0.0000   0.0000   0.0000
    MLWF step   12  Convergence =  9.711E-07  Generated
    nj_max nj_min nj_avg :     2     1  1.50
     114    0.000006836661088    0.0    0.00      -0.775968972745     -16.989754568057     -16.989754568057     -16.989754568057     -16.989747731396   0.0000   0.0000   0.0000   0.0000
@@ -558,7 +558,7 @@ inw = 6:   1   0   1   0.000000
     117    0.000004171469906    0.0    0.00      -0.775974194629     -16.989758482398     -16.989758482398     -16.989758482398     -16.989754310928   0.0000   0.0000   0.0000   0.0000
    MLWF step    8  Convergence =  9.855E-07  Generated
    nj_max nj_min nj_avg :     2     1  1.50
-    118    0.000003440873877    0.0    0.00      -0.775974565722     -16.989759400044     -16.989759400044     -16.989759400044     -16.989755959170   0.0000   0.0000   0.0000   0.0000
+    118    0.000003440873877    0.0    0.00      -0.775974565722     -16.989759400044     -16.989759400044     -16.989759400044     -16.989755959171   0.0000   0.0000   0.0000   0.0000
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
    MAIN:   0.344087D-05  0.1D-03  0.917646D-06  0.1D-05  0.000000D+00  0.1D+11
@@ -621,9 +621,9 @@ inw = 6:   1   0   1   0.000000
    H       0.00000000000000E+00     0.00000000000000E+00     0.00000000000000E+00
  
    Forces acting on atoms (au):
-   O      -0.94510901602582E-02    -0.94473367310810E-02    -0.47093382451736E-03
-   H       0.80975005366133E-02     0.18706080918116E-02    -0.19043957418879E-03
-   H       0.18693502575641E-02     0.80912469718821E-02    -0.21178971509232E-03
+   O      -0.94510901602491E-02    -0.94473367310766E-02    -0.47093382448825E-03
+   H       0.80975005366113E-02     0.18706080918121E-02    -0.19043957418766E-03
+   H       0.18693502575646E-02     0.80912469718814E-02    -0.21178971509189E-03
  
 
 
@@ -658,43 +658,44 @@ inw = 6:   1   0   1   0.000000
 
      Called by MAIN_LOOP:
      initialize   :      0.10s CPU      0.12s WALL (       1 calls)
-     main_loop    :      5.85s CPU      6.36s WALL (     119 calls)
-     cpr_total    :      6.01s CPU      6.55s WALL (       1 calls)
+     main_loop    :      5.94s CPU      6.45s WALL (     119 calls)
+     cpr_total    :      6.10s CPU      6.64s WALL (       1 calls)
 
      Called by INIT_RUN:
 
      Called by CPR:
-     cpr_md       :      6.01s CPU      6.55s WALL (     119 calls)
-     move_electro :      5.82s CPU      6.32s WALL (     119 calls)
-     wf_close_opt :      0.15s CPU      0.17s WALL (     119 calls)
+     cpr_md       :      6.10s CPU      6.64s WALL (     119 calls)
+     move_electro :      5.90s CPU      6.41s WALL (     119 calls)
+     wf_close_opt :      0.16s CPU      0.18s WALL (     119 calls)
 
      Called by WANNIER_MODULES:
      wf_init      :      0.03s CPU      0.03s WALL (       1 calls)
-     wf_close_opt :      0.15s CPU      0.17s WALL (     119 calls)
+     wf_close_opt :      0.16s CPU      0.18s WALL (     119 calls)
      wf_1         :      0.04s CPU      0.05s WALL (     119 calls)
      wf_2         :      0.11s CPU      0.12s WALL (     119 calls)
 
      Called by EXACT_EXCHANGE:
-     exact_exchan :      3.86s CPU      4.11s WALL (      29 calls)
-     getpairv     :      2.40s CPU      2.50s WALL (      29 calls)
+     exact_exchan :      3.91s CPU      4.18s WALL (      29 calls)
+     getpairv     :      3.59s CPU      3.77s WALL (      29 calls)
      exx_gs_setup :      0.01s CPU      0.01s WALL (      29 calls)
      exx_pairs    :      0.00s CPU      0.00s WALL (      29 calls)
      r_orbital    :      0.04s CPU      0.08s WALL (      29 calls)
-     totalenergy  :      0.14s CPU      0.14s WALL (      29 calls)
+     totalenergy  :      0.02s CPU      0.02s WALL (      29 calls)
      vl2vg        :      0.02s CPU      0.03s WALL (      29 calls)
-     send_psi     :      0.01s CPU      0.01s WALL (      29 calls)
+     send_psi     :      0.02s CPU      0.02s WALL (      29 calls)
+     sendv        :      0.20s CPU      0.21s WALL (      29 calls)
      send_psi_wai :      0.01s CPU      0.01s WALL (      29 calls)
-     getvofr      :      3.39s CPU      3.49s WALL (      87 calls)
+     getvofr      :      3.39s CPU      3.51s WALL (      87 calls)
      getvofr_qlm  :      0.20s CPU      0.21s WALL (      87 calls)
-     getvofr_boun :      0.16s CPU      0.17s WALL (      87 calls)
-     getvofr_gete :      0.04s CPU      0.04s WALL (      87 calls)
-     getvofr_hpot :      2.96s CPU      3.04s WALL (      87 calls)
+     getvofr_boun :      0.15s CPU      0.16s WALL (      87 calls)
+     getvofr_gete :      0.05s CPU      0.05s WALL (      87 calls)
+     getvofr_hpot :      2.95s CPU      3.05s WALL (      87 calls)
      exx_cell_der :      0.06s CPU      0.06s WALL (     116 calls)
 
      Called by move_electrons:
-     rhoofr       :      0.28s CPU      0.29s WALL (     120 calls)
-     vofrho       :      1.53s CPU      1.76s WALL (     120 calls)
-     dforce       :      0.15s CPU      0.16s WALL (     240 calls)
+     rhoofr       :      0.27s CPU      0.30s WALL (     120 calls)
+     vofrho       :      1.57s CPU      1.78s WALL (     120 calls)
+     dforce       :      0.15s CPU      0.17s WALL (     240 calls)
      calphi       :      0.00s CPU      0.00s WALL (     120 calls)
      nlfl         :      0.00s CPU      0.00s WALL (     120 calls)
 
@@ -714,11 +715,11 @@ inw = 6:   1   0   1   0.000000
      nlfq         :      0.00s CPU      0.00s WALL (     120 calls)
      nlsm1        :      0.00s CPU      0.00s WALL (     121 calls)
      nlsm2        :      0.00s CPU      0.00s WALL (     120 calls)
-     fft          :      0.51s CPU      0.58s WALL (     961 calls)
+     fft          :      0.52s CPU      0.59s WALL (     961 calls)
      ffts         :      0.12s CPU      0.12s WALL (     240 calls)
-     fftw         :      0.23s CPU      0.25s WALL (     778 calls)
-     fft_scatt_xy :      0.12s CPU      0.13s WALL (    1979 calls)
-     fft_scatt_yz :      0.21s CPU      0.24s WALL (    1979 calls)
+     fftw         :      0.22s CPU      0.26s WALL (     778 calls)
+     fft_scatt_xy :      0.11s CPU      0.13s WALL (    1979 calls)
+     fft_scatt_yz :      0.22s CPU      0.25s WALL (    1979 calls)
      fft_scatt_tg :      0.01s CPU      0.01s WALL (     720 calls)
      betagx       :      0.02s CPU      0.02s WALL (       1 calls)
      qradx        :      0.00s CPU      0.00s WALL (       1 calls)
@@ -726,15 +727,15 @@ inw = 6:   1   0   1   0.000000
      nlinit       :      0.03s CPU      0.03s WALL (       1 calls)
      init_dim     :      0.01s CPU      0.01s WALL (       1 calls)
      newnlinit    :      0.00s CPU      0.00s WALL (       1 calls)
-     from_scratch :      0.02s CPU      0.03s WALL (       1 calls)
+     from_scratch :      0.02s CPU      0.04s WALL (       1 calls)
      strucf       :      0.00s CPU      0.00s WALL (       1 calls)
      calbec       :      0.00s CPU      0.00s WALL (     121 calls)
  
  
-     CP           :      6.11s CPU      6.68s WALL
+     CP           :      6.21s CPU      6.78s WALL
 
  
-   This run was terminated on:  15:11:30   9Nov2020            
+   This run was terminated on:  15: 7:17   9Nov2020            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

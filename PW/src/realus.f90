@@ -155,10 +155,19 @@ MODULE realus
 
      IF( dffts%has_task_groups ) THEN
         !
+        if (allocated( tg_psic ) )   CALL mem_counter ( SIZEOF( tg_psic ), -1, &
+ " tg_psic ", &
+ "init_realspace_vars()" )
         IF (allocated( tg_psic ) ) DEALLOCATE( tg_psic )
         !
         ALLOCATE( tg_psic( dffts%nnr_tg ) )
+ CALL mem_counter ( SIZEOF( tg_psic ), 1, &
+ " tg_psic ", &
+ "init_realspace_vars()" )
         ALLOCATE( tg_vrs ( dffts%nnr_tg ) )
+ CALL mem_counter ( SIZEOF( tg_vrs  ), 1, &
+ " tg_vrs  ", &
+ "init_realspace_vars()" )
         !
      ENDIF
      !
@@ -175,6 +184,9 @@ MODULE realus
       !
       IMPLICIT NONE
       !
+      if ( allocated( boxrad ) )    CALL mem_counter ( SIZEOF( boxrad ), -1, &
+ " boxrad ", &
+ "deallocate_realsp()" )
       IF ( allocated( boxrad ) )  DEALLOCATE( boxrad )
       !      
       CALL deallocate_realsp_aug ( tabp )
@@ -196,12 +208,27 @@ MODULE realus
       !
       IF ( associated( tab ) ) THEN
          DO ia = 1, SIZE(tab)
+            if(allocated(tab(ia)%qr ))    CALL mem_counter ( SIZEOF(tab(ia)%qr), -1, &
+ "tab(ia)%qr", &
+ "deallocate_realsp_aug(" )
             IF(allocated(tab(ia)%qr ))  DEALLOCATE(tab(ia)%qr)
+            if(allocated(tab(ia)%box))    CALL mem_counter ( SIZEOF(tab(ia)%box), -1, &
+ "tab(ia)%box", &
+ "deallocate_realsp_aug(" )
             IF(allocated(tab(ia)%box))  DEALLOCATE(tab(ia)%box)
+            if(allocated(tab(ia)%dist))   CALL mem_counter ( SIZEOF(tab(ia)%dist), -1, &
+ "tab(ia)%dist", &
+ "deallocate_realsp_aug(" )
             IF(allocated(tab(ia)%dist)) DEALLOCATE(tab(ia)%dist)
+            if(allocated(tab(ia)%xyz))    CALL mem_counter ( SIZEOF(tab(ia)%xyz), -1, &
+ "tab(ia)%xyz", &
+ "deallocate_realsp_aug(" )
             IF(allocated(tab(ia)%xyz))  DEALLOCATE(tab(ia)%xyz)
             tab(ia)%maxbox = 0
          ENDDO
+ CALL mem_counter ( SIZEOF(tab), -1, &
+ "tab", &
+ "deallocate_realsp_aug(" )
          DEALLOCATE(tab)
       ENDIF
       !
@@ -261,6 +288,9 @@ MODULE realus
       CALL deallocate_realsp_aug ( tabp )
       !
       ALLOCATE(tabp(nat))
+ CALL mem_counter ( SIZEOF(tabp), 1, &
+ "tabp", &
+ "qpointlist(" )
       !
       IF ( .not. allocated( boxrad ) ) THEN
          !
@@ -268,6 +298,9 @@ MODULE realus
          ! ... for each non-local projector )
          !
          ALLOCATE( boxrad( nsp ) )
+ CALL mem_counter ( SIZEOF( boxrad ), 1, &
+ " boxrad ", &
+ "qpointlist(" )
          !
          boxrad(:) = 0.D0
          !
@@ -309,8 +342,17 @@ MODULE realus
       roughestimate = anint( dble( dmbx*dmby*dmbz ) * pi / 6.D0 )
       !
       ALLOCATE( buffpoints( roughestimate ) )
+ CALL mem_counter ( SIZEOF( buffpoints ), 1, &
+ " buffpoints ", &
+ "qpointlist(" )
       ALLOCATE( boxdist (   roughestimate ) )
+ CALL mem_counter ( SIZEOF( boxdist  ), 1, &
+ " boxdist  ", &
+ "qpointlist(" )
       ALLOCATE( xyz( 3, roughestimate ) )
+ CALL mem_counter ( SIZEOF( xyz ), 1, &
+ " xyz ", &
+ "qpointlist(" )
       !
       inv_nr1 = 1.D0 / dble( dfft%nr1 )
       inv_nr2 = 1.D0 / dble( dfft%nr2 )
@@ -387,10 +429,19 @@ MODULE realus
          !
          tabp(ia)%maxbox = mbia
          ALLOCATE( tabp(ia)%box(mbia) )
+ CALL mem_counter ( SIZEOF( tabp(ia)%box ), 1, &
+ " tabp(ia)%box ", &
+ "qpointlist(" )
          tabp(ia)%box(:) = buffpoints(1:mbia)
          ALLOCATE( tabp(ia)%dist(mbia) )
+ CALL mem_counter ( SIZEOF( tabp(ia)%dist ), 1, &
+ " tabp(ia)%dist ", &
+ "qpointlist(" )
          tabp(ia)%dist(:) = boxdist(1:mbia)
          ALLOCATE( tabp(ia)%xyz(3,mbia) )
+ CALL mem_counter ( SIZEOF( tabp(ia)%xyz ), 1, &
+ " tabp(ia)%xyz ", &
+ "qpointlist(" )
          tabp(ia)%xyz(:,:) = xyz(:,1:mbia)
          CALL stop_clock( 'realus:boxes' )
          !
@@ -403,6 +454,9 @@ MODULE realus
       CALL mp_sum( qq_at, intra_bgrp_comm )
       ! and test that they don't differ too much from the result computed on the atomic grid
       ALLOCATE (diff(nsp))
+ CALL mem_counter ( SIZEOF(diff), 1, &
+ "diff", &
+ "qpointlist(" )
       diff(:)=0.0_dp
       do ia=1,nat
          nt = ityp(ia)
@@ -425,10 +479,22 @@ MODULE realus
          '(5X,"Largest difference: ",f10.6," for atom type #",i2)') &
             MAXVAL(diff), MAXLOC(diff(:))
       END IF
+ CALL mem_counter ( SIZEOF(diff), -1, &
+ "diff", &
+ "qpointlist(" )
       DEALLOCATE (diff)
       !
+ CALL mem_counter ( SIZEOF( xyz ), -1, &
+ " xyz ", &
+ "qpointlist(" )
       DEALLOCATE( xyz )
+ CALL mem_counter ( SIZEOF( boxdist ), -1, &
+ " boxdist ", &
+ "qpointlist(" )
       DEALLOCATE( boxdist )
+ CALL mem_counter ( SIZEOF( buffpoints ), -1, &
+ " buffpoints ", &
+ "qpointlist(" )
       DEALLOCATE( buffpoints )
       CALL stop_clock( 'realus' )
       !
@@ -469,27 +535,51 @@ MODULE realus
       !
       nfuncs = nh(nt)*(nh(nt)+1)/2
       ALLOCATE(tab(ia)%qr(mbia, nfuncs))
+ CALL mem_counter ( SIZEOF(tab(ia)%qr), 1, &
+ "tab(ia)%qr", &
+ "real_space_q(" )
       !
       ! ... compute the spherical harmonics
       !
       ALLOCATE( spher(mbia, lmaxq**2) )
+ CALL mem_counter ( SIZEOF( spher ), 1, &
+ " spher ", &
+ "real_space_q(" )
       spher (:,:) = 0.0_dp
       !
       ALLOCATE( rl2( mbia ) )
+ CALL mem_counter ( SIZEOF( rl2 ), 1, &
+ " rl2 ", &
+ "real_space_q(" )
       DO ir = 1, mbia
          rl2(ir) = tab(ia)%xyz(1,ir)**2 + &
                    tab(ia)%xyz(2,ir)**2 + &
                    tab(ia)%xyz(3,ir)**2
       ENDDO
       CALL ylmr2 ( lmaxq**2, mbia, tab(ia)%xyz, rl2, spher )
+ CALL mem_counter ( SIZEOF( rl2 ), -1, &
+ " rl2 ", &
+ "real_space_q(" )
       DEALLOCATE( rl2 )
 
       tab(ia)%qr(:,:)=0.0_dp
       ALLOCATE( qtot(upf(nt)%kkbeta), dqtot(upf(nt)%kkbeta) )
+ CALL mem_counter ( SIZEOF( qtot), 1, &
+ " qtot", &
+ "real_space_q(" )
+ CALL mem_counter ( SIZEOF( dqtot ), 1, &
+ " dqtot ", &
+ "real_space_q(" )
       !
       ! ... variables used for spline interpolation
       !
       ALLOCATE( xsp( upf(nt)%kkbeta ), wsp( upf(nt)%kkbeta ) )
+ CALL mem_counter ( SIZEOF( xsp), 1, &
+ " xsp", &
+ "real_space_q(" )
+ CALL mem_counter ( SIZEOF( wsp ), 1, &
+ " wsp ", &
+ "real_space_q(" )
       !
       ! ... the radii in x
       !
@@ -587,8 +677,23 @@ MODULE realus
       qq_at(:,:,ia) = qq_at(:,:,ia) * omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
 
       !
+ CALL mem_counter ( SIZEOF( qtot), -1, &
+ " qtot", &
+ "real_space_q(" )
+ CALL mem_counter ( SIZEOF( dqtot ), -1, &
+ " dqtot ", &
+ "real_space_q(" )
       DEALLOCATE( qtot, dqtot )
+ CALL mem_counter ( SIZEOF( wsp), -1, &
+ " wsp", &
+ "real_space_q(" )
+ CALL mem_counter ( SIZEOF( xsp ), -1, &
+ " xsp ", &
+ "real_space_q(" )
       DEALLOCATE( wsp, xsp )
+ CALL mem_counter ( SIZEOF( spher ), -1, &
+ " spher ", &
+ "real_space_q(" )
       DEALLOCATE( spher )
       !
       CALL stop_clock( 'realus:tabp' )
@@ -633,10 +738,19 @@ MODULE realus
       ! ... compute the spherical harmonics
       !
       ALLOCATE( spher(mbia, lmaxq**2), dspher(mbia, lmaxq**2, 3) )
+ CALL mem_counter ( SIZEOF( spher), 1, &
+ " spher", &
+ "real_space_dq(" )
+ CALL mem_counter ( SIZEOF( dspher ), 1, &
+ " dspher ", &
+ "real_space_dq(" )
       spher (:,:) = 0.0_dp
       dspher(:,:,:) = 0.0_dp
       !
       ALLOCATE( rl2( mbia ) )
+ CALL mem_counter ( SIZEOF( rl2 ), 1, &
+ " rl2 ", &
+ "real_space_dq(" )
       DO ir = 1, mbia
          rl2(ir) = tabp(ia)%xyz(1,ir)**2 + &
                    tabp(ia)%xyz(2,ir)**2 + &
@@ -646,14 +760,29 @@ MODULE realus
       do ipol = 1, 3
          CALL dylmr2( lmaxq**2, mbia, tabp(ia)%xyz, rl2, dspher(1,1,ipol),ipol )
       END DO
+ CALL mem_counter ( SIZEOF( rl2 ), -1, &
+ " rl2 ", &
+ "real_space_dq(" )
       DEALLOCATE( rl2 )
 
       dqr(:,:,:)=0.0_dp
       ALLOCATE( qtot(upf(nt)%kkbeta), dqtot(upf(nt)%kkbeta) )
+ CALL mem_counter ( SIZEOF( qtot), 1, &
+ " qtot", &
+ "real_space_dq(" )
+ CALL mem_counter ( SIZEOF( dqtot ), 1, &
+ " dqtot ", &
+ "real_space_dq(" )
       !
       ! ... variables used for spline interpolation
       !
       ALLOCATE( xsp( upf(nt)%kkbeta ), wsp( upf(nt)%kkbeta, 2 ) )
+ CALL mem_counter ( SIZEOF( xsp), 1, &
+ " xsp", &
+ "real_space_dq(" )
+ CALL mem_counter ( SIZEOF( wsp ), 1, &
+ " wsp ", &
+ "real_space_dq(" )
       !
       ! ... the radii in x
       !
@@ -758,8 +887,26 @@ MODULE realus
          ENDDO
       ENDDO
       !
+ CALL mem_counter ( SIZEOF( qtot), -1, &
+ " qtot", &
+ "real_space_dq(" )
+ CALL mem_counter ( SIZEOF( dqtot ), -1, &
+ " dqtot ", &
+ "real_space_dq(" )
       DEALLOCATE( qtot, dqtot )
+ CALL mem_counter ( SIZEOF( wsp), -1, &
+ " wsp", &
+ "real_space_dq(" )
+ CALL mem_counter ( SIZEOF( xsp ), -1, &
+ " xsp ", &
+ "real_space_dq(" )
       DEALLOCATE( wsp, xsp )
+ CALL mem_counter ( SIZEOF( dspher), -1, &
+ " dspher", &
+ "real_space_dq(" )
+ CALL mem_counter ( SIZEOF( spher ), -1, &
+ " spher ", &
+ "real_space_dq(" )
       DEALLOCATE( dspher, spher )
       !
       CALL stop_clock( 'realus:tabp' )
@@ -829,6 +976,9 @@ MODULE realus
       !
       ! ... betasave is deallocated here to free the memory for the buffers
       !
+      if ( allocated( betasave ) )   CALL mem_counter ( SIZEOF( betasave ), -1, &
+ " betasave ", &
+ "betapointlist()" )
       IF ( allocated( betasave ) ) DEALLOCATE( betasave )
       !
       IF ( .not. allocated( boxrad_beta ) ) THEN
@@ -837,6 +987,9 @@ MODULE realus
          ! ... for each non-local projector )
          !
          ALLOCATE( boxrad_beta( nsp ) )
+ CALL mem_counter ( SIZEOF( boxrad_beta ), 1, &
+ " boxrad_beta ", &
+ "betapointlist()" )
          boxrad_beta(:) = 0.D0
          !
          DO it = 1, nsp
@@ -873,15 +1026,34 @@ MODULE realus
 
       !
       ALLOCATE( tmp_box_beta( roughestimate, nat ) )
+ CALL mem_counter ( SIZEOF( tmp_box_beta ), 1, &
+ " tmp_box_beta ", &
+ "betapointlist()" )
       ALLOCATE( tmp_boxdist_beta( roughestimate, nat ) )
+ CALL mem_counter ( SIZEOF( tmp_boxdist_beta ), 1, &
+ " tmp_boxdist_beta ", &
+ "betapointlist()" )
       !
+      if ( allocated( xyz_beta ) )   CALL mem_counter ( SIZEOF( xyz_beta ), -1, &
+ " xyz_beta ", &
+ "betapointlist()" )
       IF ( allocated( xyz_beta ) ) DEALLOCATE( xyz_beta )
       ALLOCATE( tmp_xyz_beta( 3, roughestimate, nat ) )
+ CALL mem_counter ( SIZEOF( tmp_xyz_beta ), 1, &
+ " tmp_xyz_beta ", &
+ "betapointlist()" )
       !
       tmp_box_beta(:,:) = 0
       tmp_boxdist_beta(:,:) = 0.D0
       !
-      IF ( .not.allocated( maxbox_beta ) ) ALLOCATE( maxbox_beta( nat ) )
+      if ( .not.allocated( maxbox_beta ) )  THEN 
+ ALLOCATE ( maxbox_beta( nat ) )
+
+  CALL mem_counter ( SIZEOF( maxbox_beta ), 1, &
+ " maxbox_beta ", &
+ "betapointlist()" )
+
+ END IF 
       !
       maxbox_beta(:) = 0
       !
@@ -951,9 +1123,30 @@ MODULE realus
       boxtot = sum(maxbox_beta(1:nat))
       WRITE( stdout,* )  'BOXTOT', boxtot
 
-      IF (.not. ALLOCATED( box0  ) ) ALLOCATE ( box0  ( nat ) )
-      IF (.not. ALLOCATED( box_s ) ) ALLOCATE ( box_s ( nat ) )
-      IF (.not. ALLOCATED( box_e ) ) ALLOCATE ( box_e ( nat ) )
+      if (.not. allocated( box0  ) )  THEN 
+ ALLOCATE  ( box0  ( nat ) )
+
+  CALL mem_counter ( SIZEOF( box0   ), 1, &
+ " box0   ", &
+ "betapointlist()" )
+
+ END IF 
+      if (.not. allocated( box_s ) )  THEN 
+ ALLOCATE  ( box_s ( nat ) )
+
+  CALL mem_counter ( SIZEOF( box_s  ), 1, &
+ " box_s  ", &
+ "betapointlist()" )
+
+ END IF 
+      if (.not. allocated( box_e ) )  THEN 
+ ALLOCATE  ( box_e ( nat ) )
+
+  CALL mem_counter ( SIZEOF( box_e  ), 1, &
+ " box_e  ", &
+ "betapointlist()" )
+
+ END IF 
       box0(1) = 0 ; box_s(1) = 1 ; box_e(1) = maxbox_beta(1) 
       do ia =2,nat
          box0 (ia) = box_e(ia-1) ; box_s(ia) = box0(ia) + 1 ;  box_e(ia) = box0(ia) + maxbox_beta(ia)
@@ -961,16 +1154,43 @@ MODULE realus
       !
       ! ... now store them in a more convenient place
       !
+      if ( allocated( box_psic ) )       CALL mem_counter ( SIZEOF( box_psic ), -1, &
+ " box_psic ", &
+ "betapointlist()" )
       IF ( allocated( box_psic ) )     DEALLOCATE( box_psic )
+      if ( allocated( xyz_beta ) )       CALL mem_counter ( SIZEOF( xyz_beta ), -1, &
+ " xyz_beta ", &
+ "betapointlist()" )
       IF ( allocated( xyz_beta ) )     DEALLOCATE( xyz_beta )
+      if ( allocated( box_beta ) )       CALL mem_counter ( SIZEOF( box_beta ), -1, &
+ " box_beta ", &
+ "betapointlist()" )
       IF ( allocated( box_beta ) )     DEALLOCATE( box_beta )
+      if ( allocated( xkphase ) )        CALL mem_counter ( SIZEOF( xkphase ), -1, &
+ " xkphase ", &
+ "betapointlist()" )
       IF ( allocated( xkphase ) )      DEALLOCATE( xkphase )
       !
       ALLOCATE( box_psic    ( boxtot ) )
+ CALL mem_counter ( SIZEOF( box_psic     ), 1, &
+ " box_psic     ", &
+ "betapointlist()" )
       ALLOCATE( box_beta    ( boxtot ) )
+ CALL mem_counter ( SIZEOF( box_beta     ), 1, &
+ " box_beta     ", &
+ "betapointlist()" )
       ALLOCATE( xyz_beta ( 3, boxtot ) )
+ CALL mem_counter ( SIZEOF( xyz_beta  ), 1, &
+ " xyz_beta  ", &
+ "betapointlist()" )
       ALLOCATE( boxdist_beta( boxtot ) )
+ CALL mem_counter ( SIZEOF( boxdist_beta ), 1, &
+ " boxdist_beta ", &
+ "betapointlist()" )
       ALLOCATE( xkphase     ( boxtot ) )
+ CALL mem_counter ( SIZEOF( xkphase      ), 1, &
+ " xkphase      ", &
+ "betapointlist()" )
       !
       do ia =1,nat
          xyz_beta ( :, box_s(ia):box_e(ia) ) =  tmp_xyz_beta(:,1:maxbox_beta(ia),ia)
@@ -980,8 +1200,17 @@ MODULE realus
       !
       call set_xkphase(1)
       !
+ CALL mem_counter ( SIZEOF( tmp_xyz_beta ), -1, &
+ " tmp_xyz_beta ", &
+ "betapointlist()" )
       DEALLOCATE( tmp_xyz_beta )
+ CALL mem_counter ( SIZEOF( tmp_box_beta ), -1, &
+ " tmp_box_beta ", &
+ "betapointlist()" )
       DEALLOCATE( tmp_box_beta )
+ CALL mem_counter ( SIZEOF( tmp_boxdist_beta ), -1, &
+ " tmp_boxdist_beta ", &
+ "betapointlist()" )
       DEALLOCATE( tmp_boxdist_beta )
       !
       CALL stop_clock( 'realus:boxes' )
@@ -991,7 +1220,10 @@ MODULE realus
       !
       lamx2 = lmaxq*lmaxq
       !
-      ALLOCATE( spher_beta( boxtot, lamx2 ) ) ! ( boxtot,lmax2 )
+      ALLOCATE( spher_beta( boxtot, lamx2 ) ) 
+ CALL mem_counter ( SIZEOF( spher_beta ), 1, &
+ " spher_beta ", &
+ "betapointlist()" )
       !
       spher_beta(:,:) = 0.D0
       !
@@ -1001,6 +1233,12 @@ MODULE realus
          !
          idimension = maxbox_beta(ia)
          ALLOCATE( rl( 3, idimension ), rl2( idimension ) )
+ CALL mem_counter ( SIZEOF( rl), 1, &
+ " rl", &
+ "betapointlist()" )
+ CALL mem_counter ( SIZEOF( rl2 ), 1, &
+ " rl2 ", &
+ "betapointlist()" )
          !
          DO ir = 1, idimension
             rl(:,ir) = xyz_beta(:,box0(ia)+ir)
@@ -1008,12 +1246,27 @@ MODULE realus
          ENDDO
          !
          ALLOCATE( tempspher( idimension, lamx2 ) )
+ CALL mem_counter ( SIZEOF( tempspher ), 1, &
+ " tempspher ", &
+ "betapointlist()" )
          CALL ylmr2( lamx2, idimension, rl, rl2, tempspher )
          spher_beta(box_s(ia):box_e(ia),:) = tempspher(:,:)
+ CALL mem_counter ( SIZEOF( rl), -1, &
+ " rl", &
+ "betapointlist()" )
+ CALL mem_counter ( SIZEOF( rl2), -1, &
+ " rl2", &
+ "betapointlist()" )
+ CALL mem_counter ( SIZEOF( tempspher ), -1, &
+ " tempspher ", &
+ "betapointlist()" )
          DEALLOCATE( rl, rl2, tempspher )
          !
       ENDDO
       !
+      if (gamma_only)   CALL mem_counter ( SIZEOF( xyz_beta ), -1, &
+ " xyz_beta ", &
+ "betapointlist()" )
       if (gamma_only) DEALLOCATE( xyz_beta )
       !
       CALL stop_clock( 'realus:spher' )
@@ -1022,6 +1275,9 @@ MODULE realus
       ! ... let's do the main work
       !
       ALLOCATE( betasave( boxtot, nhm )  )
+ CALL mem_counter ( SIZEOF( betasave  ), 1, &
+ " betasave  ", &
+ "betapointlist()" )
       !
       betasave = 0.D0
       ! Box is set, Y_lm is known in the box, now the calculation can commence
@@ -1044,10 +1300,22 @@ MODULE realus
          IF ( .not. upf(nt)%tvanp ) CYCLE
          !
          ALLOCATE( qtot( upf(nt)%kkbeta, upf(nt)%nbeta, upf(nt)%nbeta ) )
+ CALL mem_counter ( SIZEOF( qtot ), 1, &
+ " qtot ", &
+ "betapointlist()" )
          !
          ! ... variables used for spline interpolation
          !
          ALLOCATE( xsp( upf(nt)%kkbeta ), ysp( upf(nt)%kkbeta ), wsp( upf(nt)%kkbeta ) )
+ CALL mem_counter ( SIZEOF( xsp), 1, &
+ " xsp", &
+ "betapointlist()" )
+ CALL mem_counter ( SIZEOF( ysp), 1, &
+ " ysp", &
+ "betapointlist()" )
+ CALL mem_counter ( SIZEOF( wsp ), 1, &
+ " wsp ", &
+ "betapointlist()" )
          !
          ! ... the radii in x
          !
@@ -1068,12 +1336,24 @@ MODULE realus
             ENDIF
 
             ALLOCATE( d1y(upf(nt)%kkbeta), d2y(upf(nt)%kkbeta) )
+ CALL mem_counter ( SIZEOF( d1y), 1, &
+ " d1y", &
+ "betapointlist()" )
+ CALL mem_counter ( SIZEOF( d2y ), 1, &
+ " d2y ", &
+ "betapointlist()" )
             CALL radial_gradient(ysp(1:upf(nt)%kkbeta), d1y, &
                                  rgrid(nt)%r, upf(nt)%kkbeta, 1)
             CALL radial_gradient(d1y, d2y, rgrid(nt)%r, upf(nt)%kkbeta, 1)
 
             first = d1y(1) ! first derivative in first point
             second =d2y(1) ! second derivative in first point
+ CALL mem_counter ( SIZEOF( d1y), -1, &
+ " d1y", &
+ "betapointlist()" )
+ CALL mem_counter ( SIZEOF( d2y ), -1, &
+ " d2y ", &
+ "betapointlist()" )
             DEALLOCATE( d1y, d2y )
 
             CALL spline( xsp, ysp, first, second, wsp )
@@ -1089,14 +1369,32 @@ MODULE realus
             ENDDO
          ENDDO
          !
+ CALL mem_counter ( SIZEOF( qtot ), -1, &
+ " qtot ", &
+ "betapointlist()" )
          DEALLOCATE( qtot )
+ CALL mem_counter ( SIZEOF( xsp ), -1, &
+ " xsp ", &
+ "betapointlist()" )
          DEALLOCATE( xsp )
+ CALL mem_counter ( SIZEOF( ysp ), -1, &
+ " ysp ", &
+ "betapointlist()" )
          DEALLOCATE( ysp )
+ CALL mem_counter ( SIZEOF( wsp ), -1, &
+ " wsp ", &
+ "betapointlist()" )
          DEALLOCATE( wsp )
          !
       ENDDO
       !
+ CALL mem_counter ( SIZEOF( boxdist_beta ), -1, &
+ " boxdist_beta ", &
+ "betapointlist()" )
       DEALLOCATE( boxdist_beta )
+ CALL mem_counter ( SIZEOF( spher_beta ), -1, &
+ " spher_beta ", &
+ "betapointlist()" )
       DEALLOCATE( spher_beta )
       !
       CALL stop_clock( 'realus:tabp' )
@@ -1124,6 +1422,9 @@ MODULE realus
 !      WRITE (*,*) ' me_bgrp ', me_bgrp ; FLUSH(6)
 !      WRITE (*,*)  ' BETAPOINT LIST', maxbox_beta(:) ; FLUSH(6)
       ALLOCATE ( boxtot_beta ( nproc_bgrp ) )
+ CALL mem_counter ( SIZEOF( boxtot_beta  ), 1, &
+ " boxtot_beta  ", &
+ "beta_box_breaking" )
       boxtot_beta (:) = 0 ; boxtot_beta ( me_bgrp+1 ) = SUM(maxbox_beta(1:nat))
       CALL mp_sum(  boxtot_beta, intra_bgrp_comm )
 
@@ -1136,6 +1437,15 @@ MODULE realus
       nn = 1; opt_nn = 1 ; opt_boxtot_unbalance = boxtot_unbalance
 
       ALLOCATE ( ind(nproc_bgrp), color(nproc_bgrp),  data(nproc_bgrp) )
+ CALL mem_counter ( SIZEOF( ind), 1, &
+ " ind", &
+ "beta_box_breaking" )
+ CALL mem_counter ( SIZEOF( color), 1, &
+ " color", &
+ "beta_box_breaking" )
+ CALL mem_counter ( SIZEOF(  data ), 1, &
+ "  data ", &
+ "beta_box_breaking" )
       data(:) = - boxtot_beta(:) ; ind(1) = 0
       call ihpsort ( nproc_bgrp, data, ind )
 
@@ -1182,6 +1492,18 @@ MODULE realus
          END DO
 
       END DO
+ CALL mem_counter ( SIZEOF( data), -1, &
+ " data", &
+ "beta_box_breaking" )
+ CALL mem_counter ( SIZEOF( color), -1, &
+ " color", &
+ "beta_box_breaking" )
+ CALL mem_counter ( SIZEOF( ind), -1, &
+ " ind", &
+ "beta_box_breaking" )
+ CALL mem_counter ( SIZEOF( boxtot_beta ), -1, &
+ " boxtot_beta ", &
+ "beta_box_breaking" )
       DEALLOCATE ( data, color, ind, boxtot_beta )
 
       IF (nn > 1 ) THEN
@@ -1235,6 +1557,9 @@ MODULE realus
       deeq(:,:,:,:) = 0.D0
       !
       ALLOCATE( aux( dfftp%nnr ) )
+ CALL mem_counter ( SIZEOF( aux ), 1, &
+ " aux ", &
+ "newq_r(" )
       !
       DO is = 1, nspin_mag
          !
@@ -1265,6 +1590,9 @@ MODULE realus
       ENDDO
       !
       deeq(:,:,:,:) = deeq(:,:,:,:)*omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
+ CALL mem_counter ( SIZEOF( aux ), -1, &
+ " aux ", &
+ "newq_r(" )
       DEALLOCATE( aux )
       CALL mp_sum(  deeq(:,:,:,1:nspin_mag) , intra_bgrp_comm )
       !
@@ -1310,6 +1638,9 @@ MODULE realus
       CALL start_clock( 'addusdens' )
       !
       ALLOCATE ( rhor(dfftp%nnr,nspin_mag) )
+ CALL mem_counter ( SIZEOF( rhor ), 1, &
+ " rhor ", &
+ "addusdens_r(" )
       rhor(:,:) = 0.0_dp
       DO is = 1, nspin_mag
          !
@@ -1342,6 +1673,9 @@ MODULE realus
          rho(:,is) = rho(:,is) + psic(dfftp%nl(:))
       END DO
       !
+ CALL mem_counter ( SIZEOF( rhor ), -1, &
+ " rhor ", &
+ "addusdens_r(" )
       DEALLOCATE ( rhor )
 #if defined (__DEBUG)
       !
@@ -1416,6 +1750,9 @@ MODULE realus
       IF (.not.okvan) RETURN
       !
       ALLOCATE ( forceq(3,nat) )
+ CALL mem_counter ( SIZEOF( forceq ), 1, &
+ " forceq ", &
+ "addusforce_r(" )
       forceq(:,:) = 0.0_dp
       !
       DO na = 1, nat
@@ -1429,6 +1766,9 @@ MODULE realus
 !         write (stdout,*) ' inside addusforce na, mbia ', na,mbia
          nfuncs = nh(nt)*(nh(nt)+1)/2
          ALLOCATE ( dqr(mbia,nfuncs,3) )
+ CALL mem_counter ( SIZEOF( dqr ), 1, &
+ " dqr ", &
+ "addusforce_r(" )
          CALL real_space_dq( nt, na, mbia, nfuncs, dqr )
          !
          DO ir = 1, mbia
@@ -1445,6 +1785,9 @@ MODULE realus
             ENDDO
  
          ENDDO
+ CALL mem_counter ( SIZEOF( dqr ), -1, &
+ " dqr ", &
+ "addusforce_r(" )
          DEALLOCATE ( dqr )
          !
          forceq(:,na) = - dqrforce(:) * omega / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
@@ -1453,6 +1796,9 @@ MODULE realus
       !
       forcenl(:,:) = forcenl(:,:) + forceq(:,:)
       !
+ CALL mem_counter ( SIZEOF(forceq ), -1, &
+ "forceq ", &
+ "addusforce_r(" )
       DEALLOCATE (forceq )
       !
       RETURN
@@ -1516,6 +1862,9 @@ MODULE realus
 !         write (stdout,*) ' inside addusstress na, mbia ', na,mbia
          nfuncs = nh(nt)*(nh(nt)+1)/2
          ALLOCATE ( dqr(mbia,nfuncs,3) )
+ CALL mem_counter ( SIZEOF( dqr ), 1, &
+ " dqr ", &
+ "addusstress_r(" )
          CALL real_space_dq( nt, na, mbia, nfuncs, dqr )
          !
          sus_at(:,:) = 0.0_dp
@@ -1536,6 +1885,9 @@ MODULE realus
                end do
             END DO
          ENDDO
+ CALL mem_counter ( SIZEOF( dqr ), -1, &
+ " dqr ", &
+ "addusstress_r(" )
          DEALLOCATE ( dqr )
 
          sus (:,:) = sus(:,:) + sus_at(:,:)
@@ -1658,6 +2010,12 @@ MODULE realus
     !$omp end parallel do
 
     ALLOCATE( wr(maxbox), wi(maxbox) )
+ CALL mem_counter ( SIZEOF( wr), 1, &
+ " wr", &
+ "calbec_rs_gamma(" )
+ CALL mem_counter ( SIZEOF( wi ), 1, &
+ " wi ", &
+ "calbec_rs_gamma(" )
     ! working arrays to order the points in the clever way
     DO nt = 1, nsp
        !
@@ -1708,6 +2066,12 @@ MODULE realus
        ENDDO
        !
     ENDDO
+ CALL mem_counter ( SIZEOF( wr), -1, &
+ " wr", &
+ "calbec_rs_gamma(" )
+ CALL mem_counter ( SIZEOF( wi ), -1, &
+ " wi ", &
+ "calbec_rs_gamma(" )
     DEALLOCATE( wr, wi )
     !
     CALL mp_sum( becp_r( :, ibnd ), intra_bgrp_comm )
@@ -1772,6 +2136,12 @@ MODULE realus
     !$omp end parallel do
 
     ALLOCATE( wr(maxbox), wi(maxbox) )
+ CALL mem_counter ( SIZEOF( wr), 1, &
+ " wr", &
+ "calbec_rs_k(" )
+ CALL mem_counter ( SIZEOF( wi ), 1, &
+ " wi ", &
+ "calbec_rs_k(" )
     ! working arrays to order the points in the clever way
     DO nt = 1, nsp
        !
@@ -1807,6 +2177,12 @@ MODULE realus
        ENDDO
        !
     ENDDO
+ CALL mem_counter ( SIZEOF( wr), -1, &
+ " wr", &
+ "calbec_rs_k(" )
+ CALL mem_counter ( SIZEOF( wi ), -1, &
+ " wi ", &
+ "calbec_rs_k(" )
     DEALLOCATE( wr, wi )
     !
     CALL mp_sum( becp%k( :, ibnd ), intra_bgrp_comm )
@@ -1850,7 +2226,14 @@ MODULE realus
 
       IF( dffts%has_task_groups ) CALL errore( 's_psir_gamma', 'task_groups not implemented', 1 )
 
-      ALLOCATE( w1(nhm), w2(nhm) ) ; if ( ibnd+1 > last) w2 = 0.D0
+      ALLOCATE( w1(nhm), w2(nhm) )
+ CALL mem_counter ( SIZEOF( w1), 1, &
+ " w1", &
+ "s_psir_gamma(" )
+ CALL mem_counter ( SIZEOF( w2 ), 1, &
+ " w2 ", &
+ "s_psir_gamma(" )
+      IF ( ibnd+1 > last) w2 = 0.D0
       !
       fac = sqrt(omega)
       !
@@ -1885,6 +2268,12 @@ MODULE realus
          ENDDO
          !
       ENDDO
+ CALL mem_counter ( SIZEOF( w1), -1, &
+ " w1", &
+ "s_psir_gamma(" )
+ CALL mem_counter ( SIZEOF( w2 ), -1, &
+ " w2 ", &
+ "s_psir_gamma(" )
       DEALLOCATE( w1, w2 )
 
       call add_box_to_psic ( )
@@ -1933,6 +2322,9 @@ MODULE realus
       fac = sqrt(omega)
       !
       ALLOCATE( w1(nhm) )
+ CALL mem_counter ( SIZEOF( w1 ), 1, &
+ " w1 ", &
+ "s_psir_k(" )
       DO nt = 1, nsp
          !
          DO ia = 1, nat
@@ -1963,6 +2355,9 @@ MODULE realus
          ENDDO
          !
       ENDDO
+ CALL mem_counter ( SIZEOF( w1 ), -1, &
+ " w1 ", &
+ "s_psir_k(" )
       DEALLOCATE( w1 )
 
       call add_box_to_psic ( )
@@ -2009,7 +2404,14 @@ MODULE realus
   !
   fac = sqrt(omega)
   !
-  ALLOCATE( w1(nhm), w2(nhm) ) ; IF ( ibnd+1 > last) w2 = 0.D0
+  ALLOCATE( w1(nhm), w2(nhm) )
+ CALL mem_counter ( SIZEOF( w1), 1, &
+ " w1", &
+ "add_vuspsir_gamma(" )
+ CALL mem_counter ( SIZEOF( w2 ), 1, &
+ " w2 ", &
+ "add_vuspsir_gamma(" )
+  IF ( ibnd+1 > last) w2 = 0.D0
   DO nt = 1, nsp
      !
      DO ia = 1, nat
@@ -2040,6 +2442,12 @@ MODULE realus
      ENDDO
      !
   ENDDO
+ CALL mem_counter ( SIZEOF( w1), -1, &
+ " w1", &
+ "add_vuspsir_gamma(" )
+ CALL mem_counter ( SIZEOF( w2 ), -1, &
+ " w2 ", &
+ "add_vuspsir_gamma(" )
   DEALLOCATE( w1, w2 )
 
   call add_box_to_psic ( )
@@ -2091,6 +2499,9 @@ MODULE realus
   fac = sqrt(omega)
   !
   ALLOCATE( w1(nhm))
+ CALL mem_counter ( SIZEOF( w1), 1, &
+ " w1", &
+ "add_vuspsir_k(" )
   DO nt = 1, nsp
      !
      DO ia = 1, nat
@@ -2119,6 +2530,9 @@ MODULE realus
      ENDDO
      !
   ENDDO
+ CALL mem_counter ( SIZEOF( w1 ), -1, &
+ " w1 ", &
+ "add_vuspsir_k(" )
   DEALLOCATE( w1 )
 
   call add_box_to_psic ( )
@@ -2228,7 +2642,14 @@ MODULE realus
         !
         IF (present(conserved)) THEN
          IF (conserved .eqv. .true.) THEN
-          IF (.not. allocated(tg_psic_temp)) ALLOCATE( tg_psic_temp( dffts%nnr_tg ) )
+          if (.not. allocated(tg_psic_temp))  THEN 
+ ALLOCATE ( tg_psic_temp( dffts%nnr_tg ) )
+
+  CALL mem_counter ( SIZEOF( tg_psic_temp ), 1, &
+ " tg_psic_temp ", &
+ "fft_helper_subroutines," )
+
+ END IF 
           tg_psic_temp=tg_psic
          ENDIF
         ENDIF
@@ -2260,7 +2681,14 @@ MODULE realus
         !
         IF (present(conserved)) THEN
          IF (conserved .eqv. .true.) THEN
-           IF (.not. allocated(psic_temp) ) ALLOCATE (psic_temp(size(psic)))
+           if (.not. allocated(psic_temp) )  THEN 
+ ALLOCATE  (psic_temp(size(psic)))
+
+  CALL mem_counter ( SIZEOF(psic_temp), 1, &
+ "psic_temp", &
+ "fft_helper_subroutines," )
+
+ END IF 
            CALL zcopy(size(psic),psic,1,psic_temp,1)
          ENDIF
         ENDIF
@@ -2359,6 +2787,9 @@ MODULE realus
         !
         IF (present(conserved)) THEN
          IF (conserved .eqv. .true.) THEN
+          if (allocated(tg_psic_temp))   CALL mem_counter ( SIZEOF( tg_psic_temp ), -1, &
+ " tg_psic_temp ", &
+ "fft_helper_subroutines," )
           IF (allocated(tg_psic_temp)) DEALLOCATE( tg_psic_temp )
          ENDIF
         ENDIF
@@ -2406,6 +2837,9 @@ MODULE realus
         ENDIF
         IF (present(conserved)) THEN
          IF (conserved .eqv. .true.) THEN
+           if (allocated(psic_temp) )   CALL mem_counter ( SIZEOF(psic_temp), -1, &
+ "psic_temp", &
+ "fft_helper_subroutines," )
            IF (allocated(psic_temp) ) DEALLOCATE(psic_temp)
          ENDIF
         ENDIF
@@ -2477,8 +2911,15 @@ MODULE realus
        CALL invfft ('tgWave', tg_psic, dffts)
        IF (present(conserved)) THEN
           IF (conserved .eqv. .true.) THEN
-             IF (.not. allocated(tg_psic_temp)) &
-                  &ALLOCATE( tg_psic_temp( dffts%nnr_tg ) )
+             if (.not. allocated(tg_psic_temp)) &
+                  & THEN 
+ ALLOCATE ( tg_psic_temp( dffts%nnr_tg ) )
+
+  CALL mem_counter ( SIZEOF( tg_psic_temp ), 1, &
+ " tg_psic_temp ", &
+ "fft_helper_subroutines," )
+
+ END IF 
              tg_psic_temp=tg_psic
           ENDIF
        ENDIF
@@ -2497,7 +2938,14 @@ MODULE realus
        CALL invfft ('Wave', psic, dffts)
        IF (present(conserved)) THEN
           IF (conserved .eqv. .true.) THEN
-             IF (.not. allocated(psic_temp) ) ALLOCATE (psic_temp(size(psic)))
+             if (.not. allocated(psic_temp) )  THEN 
+ ALLOCATE  (psic_temp(size(psic)))
+
+  CALL mem_counter ( SIZEOF(psic_temp), 1, &
+ "psic_temp", &
+ "fft_helper_subroutines," )
+
+ END IF 
              psic_temp=psic
           ENDIF
        ENDIF
@@ -2578,6 +3026,9 @@ MODULE realus
        ENDDO
        IF (present(conserved)) THEN
           IF (conserved .eqv. .true.) THEN
+             if (allocated(tg_psic_temp))   CALL mem_counter ( SIZEOF( tg_psic_temp ), -1, &
+ " tg_psic_temp ", &
+ "fft_helper_subroutines," )
              IF (allocated(tg_psic_temp)) DEALLOCATE( tg_psic_temp )
           ENDIF
        ENDIF
@@ -2602,6 +3053,9 @@ MODULE realus
        !
        IF (present(conserved)) THEN
           IF (conserved .eqv. .true.) THEN
+             if (allocated(psic_temp) )   CALL mem_counter ( SIZEOF(psic_temp), -1, &
+ "psic_temp", &
+ "fft_helper_subroutines," )
              IF (allocated(psic_temp) ) DEALLOCATE(psic_temp)
           ENDIF
        ENDIF
@@ -2651,6 +3105,9 @@ MODULE realus
         ENDDO
         !$omp end parallel do
         !
+ CALL mem_counter ( SIZEOF( tg_v ), -1, &
+ " tg_v ", &
+ "v_loc_psir(" )
         DEALLOCATE( tg_v )
      ELSE
         !   product with the potential v on the smooth grid
@@ -2707,6 +3164,9 @@ MODULE realus
         ENDDO
         !$omp end parallel do
         !
+ CALL mem_counter ( SIZEOF( tg_v ), -1, &
+ " tg_v ", &
+ "v_loc_psir_inplace(" )
         DEALLOCATE( tg_v )
     ELSE
        !   product with the potential v on the smooth grid
