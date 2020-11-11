@@ -28,7 +28,7 @@ from __future__ import print_function
 import os, sys, re
 from shutil import copyfile
 
-fmt = """ CALL mem_counter ( SIZEOF({0}), {1}, "{0}", "{2}" )
+fmt = """ CALL mem_counter ( SIZEOF({0}), {1}, &\n "{0}", &\n "{2}" )
 """
 
 if len(sys.argv) < 2:
@@ -105,6 +105,12 @@ with open(fname,'r') as fin:
           fout.write(lines[i])
           i += 1
           continue
+
+        # same for #ifdefs
+        if ('#' in lines[i].strip()[0]):
+          fout.write(lines[i])
+          i += 1
+          continue
         
         # possibly get rid of comments
         buff = lines[i].split('!')[0]
@@ -121,12 +127,14 @@ with open(fname,'r') as fin:
           if buff[-1] != '\n':
             buff += '\n'
  
-        # find name of subroutine
+        # find name of subroutine (or program in no subroutine is found)
         str_subroutine = re.findall("subroutine", buff.lower()) 
-        if (len(str_subroutine) > 0): 
-          #print 'Treating subroutine ',str_subroutine
-          sub = buff.split()[1]
+        if (len(str_subroutine) == 0):
+          str_subroutine = re.findall("program", buff.lower())
 
+        if (len(str_subroutine) > 0):
+          # print("Treating subroutine ",str_subroutine)
+          sub = buff.split()[1]
 
         # find (de)allocate in strings
         str_allocate = re.findall("[\"\'].*?(allocate).*?[\"\']", buff.lower())
@@ -172,7 +180,7 @@ with open(fname,'r') as fin:
           # is there a tag?
           tag = re.findall(r'^\d+', buff.lower().strip())
           if tag:
-            print("WARNING! deallocate with tag! Check (and change?) file " + fname + ".new (original line " + str(i) + ")")
+            print("WARNING! allocate with tag! Check (and change?) file " + fname + ".new (original line " + str(i) + ")")
           
           
           fout.write(ifcls[0] + ' THEN \n ALLOCATE ' + ifcls[1] + '\n ')
@@ -190,12 +198,6 @@ with open(fname,'r') as fin:
           
           
           write_counters(fout, -1, args, sub, tag)
-          #for a, arg in enumerate(args):
-          #  if 'stat' in arg.lower():
-          #    continue
-          #  if (a == 0) and (tag != []):
-          #    fout.write(tag[0] + ' ')
-          #  fout.write(fmt.format(*[arg, -1]))
             
           if tag:
             fout.write(re.sub("^[ X]*\d+","",buff))
