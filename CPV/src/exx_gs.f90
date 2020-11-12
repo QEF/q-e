@@ -388,6 +388,12 @@ SUBROUTINE exx_gs(nfi, c)
     ! my_var is the maximum of nbsp or nproc_image
     my_var = MAX(nproc_image, nbsp)
     !
+    ! ---------- start of Non-blocking communication (1) -----------
+    ! In this region of the code, we start with non-blocking send of
+    ! local orbitals to form MLWF product potentials on the non-self
+    ! multipole expansion domain. This part allows all pairs to be 
+    ! send simultaneously instead of one-by-one...
+    ! --------------------------------------------------------------
     CALL start_clock('send_psi')
     ! 
     ! we should use my_nbspx (maxval(my_nbsp(me))) here
@@ -463,6 +469,7 @@ SUBROUTINE exx_gs(nfi, c)
     END DO
     !
     CALL stop_clock('send_psi_wait')
+    ! ------- end of Non-blocking communication (1): synchronize by wait ------
     !
     !=========================================================================
     ! after this loop ( do irank ), all the processor got all the overlapping orbitals 
@@ -655,6 +662,11 @@ SUBROUTINE exx_gs(nfi, c)
     irecv_count = 0
     isend_count = 0
     !
+    ! ---------- start of Non-blocking communication (2) -----------
+    ! In this region of the code, we use non-blocking MPI feature to
+    ! send the EXX contributions to orbital force and asynchronously
+    ! overlap with the self-exchange computation...
+    ! --------------------------------------------------------------
     CALL start_clock('send_v')
     !
     !========================================================================
@@ -850,6 +862,7 @@ SUBROUTINE exx_gs(nfi, c)
     END DO
     !
     CALL stop_clock('send_v_wait')
+    ! ------- end of Non-blocking communication (2): synchronize by wait ------
     !
     !========================================================================
     CALL start_clock('force_rec')
