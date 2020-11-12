@@ -120,7 +120,12 @@ MODULE exx_module
 #if defined(_OPENMP)
   INTEGER, EXTERNAL                   :: omp_get_max_threads
 #endif
-  real(dp), allocatable, public  :: psime_pair_recv(:,:,:),psime_pair_send(:,:,:)
+  real(dp), allocatable, public  :: psime_pair_recv(:,:,:) !! recieving buffer holding MLWF on local subdomains
+  !! the first dimension is the (flattened) 1d local grid index; the second is the jth neighbor orbital index;
+  !! the third is the ith local orbital index of the current MPI process
+  real(dp), allocatable, public  :: psime_pair_send(:,:,:) !! sending buffer holding MLWF on local subdomains
+  !! the first dimension is the (flattened) 1d local grid index; the second is the jth neighbor orbital index;
+  !! the third is the ith local orbital index of the current MPI process
   !==========================================================================
   !
   ! PRIVATE variables 
