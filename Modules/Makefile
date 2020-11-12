@@ -1,4 +1,4 @@
-# Makefile for Modules
+#/a Makefile for Modules
 
 include ../make.inc
 
@@ -9,6 +9,7 @@ MODFLAGS=$(BASEMOD_FLAGS) \
 # list of modules
 
 MODULES = \
+additional_kpoints.o \
 autopilot.o \
 basic_algebra_routines.o \
 becmod.o \
