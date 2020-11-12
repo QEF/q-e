@@ -144,3 +144,14 @@ ACF_example:
     Y. Jiao, E. Schr\"oder, and P. Hyldgaard, Phys. Rev. B 97, 085115 (2018);
     Y. Jiao, E. Schr\"oder, P. Hyldgaard, J. Chem. Phys. 148, 194115 (2018).
 
+W90_open_grid_example:
+   This shows how to obtain Wannier functions without doing the intermediate 
+   non-self consistent calculation, which is replaced by the utility open_grid.x
+   See also WAN90_example for the standard procedure.
+
+exx_scf_bands_example:
+   This example shows how to use pw.x to calculate the band structure of Silicon
+   using hybrid HSE functional, inclufing zero-weight dummy k-points. in the scf 
+   calculation.
+
+

@@ -1,0 +1,8 @@
+     Input file > Reading    8 bands at    578 k-points
+Range:   -4.9250   18.2900eV  Emin, Emax, [firstk, lastk] > high-symmetry point:  0.5000 0.5000 0.5000   x coordinate   0.0000
+high-symmetry point:  0.0000 0.0000 0.0000   x coordinate   0.8660
+high-symmetry point:  0.0000 1.0000 0.0000   x coordinate   1.8660
+high-symmetry point:  1.0000 1.0000 0.0000   x coordinate   1.8660
+high-symmetry point:  0.0000 0.0000 0.0000   x coordinate   3.2802
+output file (gnuplot/xmgr) > bands in gnuplot/xmgr format written to file sibands-p.dat                                                                                                                                                                                                                                                   
+output file (ps) > stopping ...

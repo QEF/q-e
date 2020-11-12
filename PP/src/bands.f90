@@ -25,6 +25,7 @@ PROGRAM do_bands
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
   USE mp_images, ONLY : intra_image_comm
+  USE parameters,ONLY : npk
   !
   IMPLICIT NONE
   !
@@ -58,7 +59,7 @@ PROGRAM do_bands
   lp=.false.
   filp='p_avg.dat'
   firstk=0
-  lastk=10000000
+  lastk=npk
   spin_component = 1
   !
   ios = 0
