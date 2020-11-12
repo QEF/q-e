@@ -72,7 +72,11 @@ SUBROUTINE fft_scatter_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_aux, ncp
   ncpx = maxval(ncp_)
   nppx = maxval(npp_)
 
-  ! This should never happend and should go away
+  ! This should never happend and should be removed: when the FFT of
+  ! data not spread on multiple MPI processes should be performed by
+  ! calling the scalar driver directly. It is still possible for debuggning
+  ! purposes to call the parallel driver on local data.
+  !
   IF ( dfft%nproc == 1 ) THEN
      nppx = dfft%nr3x
   END IF
@@ -356,6 +360,9 @@ END SUBROUTINE fft_scatter_gpu
 
 SUBROUTINE fft_scatter_gpu_batch ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_aux, ncp_, npp_, isgn, batchsize, srh )
   !
+  ! This subroutine performs the same task as fft_scatter_gpu, but for
+  ! batchsize wavefuctions or densities.
+  !
   USE cudafor
   IMPLICIT NONE
   !
@@ -388,6 +395,10 @@ SUBROUTINE fft_scatter_gpu_batch ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_au
   ncpx = maxval(ncp_)
   nppx = maxval(npp_)
   !
+  ! This should never happend and should be removed: when the FFT of
+  ! data not spread on multiple MPI processes should be performed by
+  ! calling the scalar driver directly. It is still possible for debuggning
+  ! purposes to call the parallel driver on local data.
   IF ( dfft%nproc == 1 ) THEN
      nppx = dfft%nr3x
   END IF

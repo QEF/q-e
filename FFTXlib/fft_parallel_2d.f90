@@ -384,6 +384,7 @@ END SUBROUTINE tg_cft3s_gpu
 SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
   !----------------------------------------------------------------------------
   !
+  !
   !! ... isgn = +-1 : parallel 3d fft for rho and for the potential
   !                  NOT IMPLEMENTED WITH TASK GROUPS
   !! ... isgn = +-2 : parallel 3d fft for wavefunctions
@@ -408,9 +409,17 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
   ! ...  Note that if isgn=+/-1 (fft on rho and pot.) all fft's are needed
   ! ...  and all planes(i) are set to 1
   !
+  ! ...  batchsize : number of elements to be transformed in f_d
+  !
   ! This driver is based on code written by Stefano de Gironcoli for PWSCF.
   ! Task Group added by Costas Bekas, Oct. 2005, adapted from the CPMD code
   ! (Alessandro Curioni) and revised by Carlo Cavazzoni 2007.
+  !
+  ! The GPU version is based on code written by Josh Romero, Everett Phillips
+  ! and Massimiliano Fatica and revised by Pietro Bonfà.
+  !
+  ! The current version performs batchsize FFTs and overlaps computation
+  ! with MPI communications and data transfers between host and device.
   !
   USE fft_scalar, ONLY : cft_1z_gpu, cft_2xy_gpu
   USE fft_scatter_2d_gpu,   ONLY : fft_scatter_many_columns_to_planes_send, &
@@ -466,6 +475,12 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
      CALL fftx_error__( ' many_cft3s_gpu ', ' abs(isgn) /= 1 or 2 not implemented ', isgn )
   !
   IF (dfft%nproc <= 1) CALL fftx_error__( ' many_cft3s_gpu ', ' this subroutine should never be called with nproc= ', dfft%nproc )
+  !
+  ! FFTs are done in sub-batches of dfft%subbatchsize (default is 4)
+  ! When a sub-batch has been transformed in a direction or a plane,
+  ! communication between device and host is started and the next subbatch is transformed.
+  ! Later, the subbatch is received on target MPI process and transformed
+  ! overlapping computation with MPI communication.
   !
   IF ( isgn > 0 ) THEN
      DO j = 0, batchsize-1, dfft%subbatchsize
