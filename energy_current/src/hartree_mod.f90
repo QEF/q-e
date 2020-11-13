@@ -97,7 +97,7 @@ MODULE hartree_mod
       logical, intent(in) :: allocate_zero
 
       call multiple_scf_result_allocate_(t, npwx, nbnd, nat, allocate_zero)
-      
+
    end subroutine
 
    subroutine multiple_scf_result_allocate_(t, npwx, nbnd, natoms, allocate_zero)
@@ -109,7 +109,7 @@ MODULE hartree_mod
       if (allocate_zero) call scf_result_allocate(t%t_zero, npwx, nbnd, natoms)
       call scf_result_allocate(t%t_minus, npwx, nbnd, natoms)
       call scf_result_allocate(t%t_plus, npwx, nbnd, natoms)
-      
+
    end subroutine
 
    subroutine multiple_scf_result_deallocate(t)
@@ -133,24 +133,24 @@ MODULE hartree_mod
       real(kind=DP), allocatable :: fac(:)
       real(kind=dp) :: qq_fact
       integer :: igm
-   
-   
+
+
       allocate (fac(ngm))
-   
+
    ! calculation of fac
    ! fac(G) = e2*fpi/(tpiba2*G^2*omega)
    ! v(G) = charge(G)*fac
-   
+
       if (gstart == 2) fac(1) = 0.d0
       do igm = gstart, ngm
          qq_fact = g(1, igm)**2.d0 + g(2, igm)**2.d0 + g(3, igm)**2.d0
          fac(igm) = (e2*fpi/(tpiba2*qq_fact))
       end do
       fac(:) = fac(:)/omega
-   
-   
+
+
    !-------STEP4----- numerical derivatives of Hartree potentials
-   
+
    !We compute v_point and v_mean
       do igm = 1, ngm
          v_point(igm) = (charge_g(igm) - charge_g_due(igm))*fac(igm)/delta_t ! v(t+dt)-v(t-dt)
@@ -159,15 +159,15 @@ MODULE hartree_mod
          do igm = 1, ngm
             v_mean(igm) = charge_g_tre(igm)*fac(igm)
          end do
-          
+
       else ! set v_mean as (v(t)+v(t+dt))/2.0
          do igm = 1, ngm
             v_mean(igm) = (charge_g(igm) + charge_g_due(igm))*fac(igm)/2.d0
          end do
       endif
-   
+
       deallocate (fac)
-   
+
    end subroutine
 
 subroutine init_hartree()
@@ -190,8 +190,8 @@ end subroutine
 
 
 
-subroutine current_hartree_xc(nbnd, npw, npwx, dffts, psic, evc, g, ngm, gstart, &
-                tpiba, omega, tpiba2, alat, at, tau, vkb, nkb, xk, igk_k, g2kin, et)
+subroutine current_hartree_xc(nbnd, npw, npwx, dffts, psic, g, ngm, gstart, &
+                tpiba, omega, tpiba2)
    use kinds, only: DP
    !use wvfct, only: nbnd, npw, npwx
    !use wavefunctions, only: psic, evc
@@ -207,45 +207,41 @@ subroutine current_hartree_xc(nbnd, npw, npwx, dffts, psic, evc, g, ngm, gstart,
    USE constants, ONLY: e2, fpi, pi
    USE fft_interfaces, ONLY: fwfft, invfft
    use becmod
-   USE eqv, ONLY: dpsi, dvpsi !TODO: those variables looks like they can be local variables
    USE mp_pools, ONLY: intra_pool_comm
    USE funct, ONLY : get_igcx, get_igcc
    use compute_charge_mod, only : compute_charge
-    
+
    implicit none
 
    INTEGER, intent(in) :: nbnd,  npwx
-   INTEGER, intent(inout) :: npw, igk_k(:,:)
+   INTEGER, intent(inout) :: npw
    TYPE ( fft_type_descriptor ),intent(inout) :: dffts
-   COMPLEX(DP), intent(inout) :: psic(:), evc(:,:)
-   INTEGER, intent(in) :: ngm, gstart, nkb
-   REAL(DP), intent(in) :: tpiba, omega, tpiba2, alat
-   REAL(DP), intent(inout) ::  g(:,:), g2kin(:), at(:,:), &
-                          tau(:,:), xk(:,:), et(:,:)
-   COMPLEX(DP), intent(inout) :: vkb(:,:)
+   COMPLEX(DP), intent(inout) :: psic(:)
+   INTEGER, intent(in) :: ngm, gstart
+   REAL(DP), intent(in) :: tpiba, omega, tpiba2
+   REAL(DP), intent(inout) ::  g(:,:)
 
-   character(LEN=20) :: dft_name  
    complex(kind=DP), allocatable ::  evp(:, :), tmp(:, :)
-   integer :: iun, iv, igm, ibnd, i
-   logical :: exst, do_xc_curr
+   integer :: igm
+   logical :: do_xc_curr
    real(kind=DP), allocatable ::charge(:)
    real(kind=DP), allocatable ::excharge_r(:), exgradcharge_r(:, :), exdotcharge_r(:)
    real(kind=DP) :: update(1:3), update_a(1:3), update_b(1:3)
-   real(kind=DP) :: amodulus
+
 !
    complex(kind=DP), allocatable ::charge_g(:),  v_point(:), v_mean(:), charge_g_due(:), &
            charge_g_tre(:)
 !
    complex(kind=DP), allocatable ::exgradcharge_g(:, :)
 !
-   integer ::icoord, enne, ir
+   integer ::icoord, ir
 !
 !   logical  :: l_test
-   real(DP) :: M(nbnd, nbnd), emme(nbnd, nbnd), kcurrent(3), s(nbnd, nbnd), ss(nbnd, nbnd), &
-               kcurrent_a(3), kcurrent_b(3), ecurrent(3), &
-               sa(nbnd, nbnd), ssa(nbnd, nbnd), sb(nbnd, nbnd), ssb(nbnd,nbnd)
+ !  real(DP) :: s(nbnd, nbnd), ss(nbnd, nbnd), &
+ !  &
+ !              sa(nbnd, nbnd), ssa(nbnd, nbnd), sb(nbnd, nbnd), ssb(nbnd,nbnd)
 
-   integer  :: inbd, jbnd, ig, ipol
+
    integer, external :: find_free_unit
 
    if (ionode) write (stdout, *) 'BEGIN: HARTREE & KOHN'
@@ -253,11 +249,11 @@ subroutine current_hartree_xc(nbnd, npw, npwx, dffts, psic, evc, g, ngm, gstart,
    if ( (get_igcx() /= 3) .or. (get_igcc() /=4 ) ) then
            do_xc_curr=.false.
            if ( (get_igcx() /= 0) .or. (get_igcc() /=0 ) ) then
-                call errore('ENERGY CURRENT', 'XC NOT PBE OR LDA. ABORT.', 1)  
-           end if        
+                call errore('ENERGY CURRENT', 'XC NOT PBE OR LDA. ABORT.', 1)
+           end if
    else
            do_xc_curr=.true.
-   end if 
+   end if
 
    npw = npwx ! only gamma
    allocate (tmp(npwx, nbnd))
@@ -281,7 +277,7 @@ subroutine current_hartree_xc(nbnd, npw, npwx, dffts, psic, evc, g, ngm, gstart,
 ! Calculation of Hartree, exchange and Kohn-Sham currents require that there is access in memory
 ! simultaneously to the wavefunctions evaluated at two (or three) different time steps (t-Dt), t and t+Dt
 ! , where Dt is the time step used for the numerical derivative (if 3 points are used with a factor 1/2).
-! wavefunctions are stored in the scf_all type. scf_all%t_minus,t_zero,t_plus have are types that store 
+! wavefunctions are stored in the scf_all type. scf_all%t_minus,t_zero,t_plus have are types that store
 ! wfc and position and velocities of atoms that were used to compute the wfcs.
 ! if only 2 points are used, t_minus == t_zero
 
@@ -310,7 +306,7 @@ call compute_charge(psic, scf_all%t_plus%evc, npw, nbnd, ngm, dffts, charge, cha
 !
        exgradcharge_r(icoord, 1:dffts%nnr) = dble(psic(1:dffts%nnr))
      end do
-   end if   
+   end if
 !
 !!!!!!!!!!!!------------- end saving quantities for XC current----------------- !!!!!!!!!!!!!!!!!!!!
 
@@ -357,7 +353,7 @@ endif
 
    J_xc(1:3) = 0.d0
 
-   if (do_xc_curr) then 
+   if (do_xc_curr) then
        exdotcharge_r(1:dffts%nnr) = exdotcharge_r(1:dffts%nnr)/omega
        excharge_r(1:dffts%nnr) = excharge_r(1:dffts%nnr)/omega
        exgradcharge_r(1:3, 1:dffts%nnr) = exgradcharge_r(1:3, 1:dffts%nnr)/omega
@@ -373,7 +369,7 @@ endif
           end if
        end do
 !
-       call mp_sum(J_xc, intra_pool_comm)    
+       call mp_sum(J_xc, intra_pool_comm)
 !
 !Volume element
 !
@@ -400,8 +396,8 @@ endif
    end subroutine
 
 
-   subroutine current_kohn_sham(nbnd, npw, npwx, dffts, psic, evc, g, ngm, gstart, &
-                tpiba, omega, tpiba2, alat, at, tau, vkb, nkb, xk, igk_k, g2kin, et)
+   subroutine current_kohn_sham(nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
+                tpiba, tpiba2,  at, vkb, nkb, xk, igk_k, g2kin, et)
    use kinds, only: DP
    !use wvfct, only: nbnd, npw, npwx
    !use wavefunctions, only: psic, evc
@@ -413,7 +409,7 @@ endif
    !use wvfct, ONLY: g2kin, et
    use fft_base, only: fft_type_descriptor !,dffts
    use mp, only: mp_sum
-   use io_global, only: stdout, ionode
+   use io_global, only: ionode
    USE constants, ONLY: e2, fpi, pi
    USE fft_interfaces, ONLY: fwfft, invfft
    use becmod
@@ -421,26 +417,26 @@ endif
    USE mp_pools, ONLY: intra_pool_comm
    USE funct, ONLY : get_igcx, get_igcc
    use compute_charge_mod, only : compute_charge
-    
+
    implicit none
 
    INTEGER, intent(in) :: nbnd,  npwx
    INTEGER, intent(inout) :: npw, igk_k(:,:)
    TYPE ( fft_type_descriptor ),intent(inout) :: dffts
-   COMPLEX(DP), intent(inout) :: psic(:), evc(:,:)
+   COMPLEX(DP), intent(inout) ::  evc(:,:)
    INTEGER, intent(in) :: ngm, gstart, nkb
-   REAL(DP), intent(in) :: tpiba, omega, tpiba2, alat
+   REAL(DP), intent(in) :: tpiba, tpiba2
    REAL(DP), intent(inout) ::  g(:,:), g2kin(:), at(:,:), &
-                          tau(:,:), xk(:,:), et(:,:)
+                           xk(:,:), et(:,:)
    COMPLEX(DP), intent(inout) :: vkb(:,:)
 
-   character(LEN=20) :: dft_name  
+   !character(LEN=20) :: dft_name
    complex(kind=DP), allocatable ::  evp(:, :), tmp(:, :)
-   integer :: iun, iv, igm, ibnd, i
-   logical :: exst, do_xc_curr
+   integer ::  ibnd
    real(kind=DP), allocatable ::charge(:)
    real(kind=DP), allocatable ::excharge_r(:), exgradcharge_r(:, :), exdotcharge_r(:)
-   real(kind=DP) :: update(1:3), update_a(1:3), update_b(1:3)
+
+
    real(kind=DP) :: amodulus
 !
    complex(kind=DP), allocatable ::charge_g(:),  v_point(:), v_mean(:), charge_g_due(:), &
@@ -448,14 +444,15 @@ endif
 !
    complex(kind=DP), allocatable ::exgradcharge_g(:, :)
 !
-   integer ::icoord, enne, ir
+
+
 !
 !   logical  :: l_test
-   real(DP) :: M(nbnd, nbnd), emme(nbnd, nbnd), kcurrent(3), s(nbnd, nbnd), ss(nbnd, nbnd), &
+   real(DP) :: emme(nbnd, nbnd), kcurrent(3),  &
                kcurrent_a(3), kcurrent_b(3), ecurrent(3), &
                sa(nbnd, nbnd), ssa(nbnd, nbnd), sb(nbnd, nbnd), ssb(nbnd,nbnd)
 
-   integer  :: inbd, jbnd, ig, ipol
+   integer  :: jbnd, ig, ipol
    integer, external :: find_free_unit
 
 
@@ -473,8 +470,8 @@ endif
    allocate (exgradcharge_r(3, dffts%nnr))
    allocate (exgradcharge_g(3, ngm))
    allocate (exdotcharge_r(dffts%nnr))
-   
-   
+
+
    !---------------------------------KOHN------------------------------------------------
    call start_clock('kohn_current')
    call scf_result_set_global_variables(scf_all%t_zero) ! this set evc, tau and vel from saved values
@@ -523,7 +520,7 @@ endif
 !   else
 
       sa = 0.d0
-      sb = 0.d0 
+      sb = 0.d0
 
 ! computed sb = < evc_due, evc_uno >, sa = <evc_uno, evc_uno> remove contribution at G=0
 ! sb is the old s
@@ -560,7 +557,7 @@ endif
             end do
          end do
       end do
-      evp(:, :) = evp(:, :)/delta_t 
+      evp(:, :) = evp(:, :)/delta_t
 
 !   end if
 

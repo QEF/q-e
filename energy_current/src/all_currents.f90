@@ -50,7 +50,7 @@ program all_currents
    use wvfct, ONLY: g2kin, et
    use fft_base, only: dffts
    use atom, only: rgrid
-   
+
 
    implicit none
    integer :: exit_status, ios, irepeat
@@ -161,12 +161,12 @@ program all_currents
       do irepeat = 1, n_repeat_every_step
           if (irepeat > 1) then
               if (ionode) &
-                  write (*,*) 'REPETITION ', irepeat - 1 
+                  write (*,*) 'REPETITION ', irepeat - 1
               tau = tau_save
           end if
           if (n_repeat_every_step > 1 .and. irepeat .eq. n_repeat_every_step) then
               print_stat=.true.
-          else 
+          else
               print_stat=.false.
           end if
 
@@ -222,10 +222,10 @@ program all_currents
                       nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
           end if
           !calculate second part of energy current
-          call current_hartree_xc(nbnd, npw, npwx, dffts, psic, evc, g, ngm, gstart, &
-                tpiba, omega, tpiba2, alat, at, tau, vkb, nkb, xk, igk_k, g2kin, et)
-          call current_kohn_sham(nbnd, npw, npwx, dffts, psic, evc, g, ngm, gstart, &
-                tpiba, omega, tpiba2, alat, at, tau, vkb, nkb, xk, igk_k, g2kin, et)
+          call current_hartree_xc(nbnd, npw, npwx, dffts, psic, g, ngm, gstart, &
+                tpiba, omega, tpiba2)
+          call current_kohn_sham(nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
+                tpiba, tpiba2, at, vkb, nkb, xk, igk_k, g2kin, et)
           call write_results(traj,print_stat)
       end do
       !read new velocities and positions and continue, or exit the loop

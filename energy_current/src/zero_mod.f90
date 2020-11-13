@@ -324,8 +324,8 @@ subroutine current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
    real(dp), parameter  :: amconv = AMU_RY
    real(DP) ::n(3), u(3), u_pbc(3), u_x(3), u_y(3), u_z(3), value, x(1:3), ics(3)
    real(DP), external :: qe_erfc
-   real(DP)  :: dtauij(3)
-   real(DP) ::modul, erf_value, charge_atom
+   !real(DP)  :: dtauij(3)
+   real(DP) ::modul, erf_value
    real(DP) ::fac_uno, fac_due, fac_tre, fac_quattro
    real(DP), external :: qe_erf
    integer, external  :: find_free_unit
@@ -336,7 +336,7 @@ subroutine current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
    integer      ::nr1a, nr2a, nr3a
    integer      ::im, iqq !pseudo mesh, real_mesh_one_coordinate
    integer      ::ii, iv !processors,bands
-   integer      ::ix, iy, iz !real_mesh_three_coordinates
+   !integer      ::ix, iy, iz !real_mesh_three_coordinates
    integer      ::iun !unit
    integer      ::iatom, jatom !atoms
    integer      ::n_x, n_y, n_z, n_maxl
@@ -346,7 +346,7 @@ subroutine current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
    logical :: exst, l_test, l_scambio, l_scambio_alt
 
 !auxiliary variables
-   integer ::err, ir, ieta, enne
+   integer ::err, ir, ieta
    real(DP) ::R
    character(256) ::filename, pref_box
    real(DP), allocatable :: values(:)
@@ -408,12 +408,12 @@ subroutine current_ionic(current, current_a, current_b, current_c, current_d, cu
                          nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
    use kinds, only: DP
    use constants, only: AMU_RY, e2
-   use io_global, only: stdout, ionode
+   use io_global, only: ionode
 
    implicit none
 
    real(dp), intent(out) :: current(3), current_a(3), current_b(3), current_c(3),&
-                            current_d(3), current_e(3)   
+                            current_d(3), current_e(3)
    logical, intent(in) :: add_current_b
    INTEGER, intent(in) :: npw, nat, ityp(:), gstart
    REAL(DP), intent(in) :: zv(:), tau(:,:), vel(:,:), &
@@ -422,7 +422,7 @@ subroutine current_ionic(current, current_a, current_b, current_c, current_d, cu
 
    real(dp) :: u(3), u_pbc(3), val
    integer :: iatom, jatom, a, b
-        
+
    current = 0.d0
    current_a = 0.d0
    current_b = 0.d0
@@ -467,15 +467,15 @@ subroutine current_ionic(current, current_a, current_b, current_c, current_d, cu
       end do
    end do
    current_a = current_a * alat**3
-   current_b = current_b * alat 
-   current_c = current_c * alat 
-   current_d = current_d * alat 
-   current_e = current_e * alat 
+   current_b = current_b * alat
+   current_c = current_c * alat
+   current_d = current_d * alat
+   current_e = current_e * alat
    current   = current_a + current_c + current_d + &
                  current_e
    if (add_current_b) &
       current = current + current_b
-   
+
 
    call stop_clock('calcolo_i')
    call print_clock('calcolo_i')
@@ -498,9 +498,9 @@ subroutine add_nc_curr(current, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, e
    real(dp), intent(in) :: deeq(:,:,:,:), vel(:,:), g(:,:), tpiba, xk(:,:)
    type(pseudo_upf), intent(in) :: upf(:)
 
-   integer ::iun, a, b
-   logical ::l_test, exst
-   integer :: ipol, jpol, ipwd, ijk, ibnd
+   !integer ::iun, a, b
+   !logical ::l_test
+   integer :: ipol, jpol, ibnd
    integer ::ijkb, ikb, ih, na, nt, ipw
    real(DP) ::J_nl(3), J_1(3), J_2(3)
    complex(DP), allocatable ::vkb1(:, :)
@@ -645,7 +645,7 @@ subroutine allocate_zero
 !
    implicit none
 !
-   integer ::isp
+   !integer ::isp
 
    allocate (H_g(ngm, 3, 3, nsp))
    allocate (I_uno_g(ngm, 3, 3))
@@ -692,7 +692,7 @@ SUBROUTINE init_reciprocal_parts_tab(nsp, zv, tpiba2, tpiba, omega, at, alat, &
    !use ions_base, only: nsp, zv
    !use cell_base, only: tpiba2, tpiba, omega, at, alat
    use constants, only: pi, fpi
-   use mp_world, only: mpime
+   !use mp_world, only: mpime
    use mp, only: mp_sum
    !use gvect, only: ngm, gg, gstart, g, igtongl, gl, ngl
    !use us, only: spline_ps, dq
@@ -706,12 +706,12 @@ SUBROUTINE init_reciprocal_parts_tab(nsp, zv, tpiba2, tpiba, omega, at, alat, &
    logical, intent(in) :: spline_ps
 
    real(DP) :: px, ux, vx, wx, xg
-   real(DP) :: u(3), u_x(3), u_y(3), u_z(3), n(3), modul, erf_value
-   integer  :: isp, a, b, err, i, igm, ii, igl, it, n_x, n_y, n_z
+   real(DP) :: n(3), modul, erf_value
+   integer  ::  a, b, igm, igl, it, n_x, n_y, n_z
    integer  :: i0, i1, i2, i3
-   real(DP) :: integral, ra, rb
+   !real(DP) :: ra, rb
    real(DP) :: H_g_rad(ngl, 0:1)
-   logical  ::l_plot
+   !logical  ::l_plot
    real(kind=DP), external :: qe_erfc
 
 ! I_primo == S_{2,B} (Aris note)
@@ -852,29 +852,29 @@ subroutine init_us_1a(rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
    integer, intent(in) :: nsp, nqxq
    type(pseudo_upf), intent(in) :: upf(:)
    real(dp), intent(in) :: zv(:), omega, dq
-   logical, intent(in) :: spline_ps  
+   logical, intent(in) :: spline_ps
 
    !
    !
    !     here a few local variables
    !
-   integer :: nt, ih, jh, nb, mb, ijv, l, m, ir, iq, is, startq, &
-              lastq, ilast, ndm, rm
+   integer :: nt, nb, l, ir, iq, startq, &
+              lastq, ndm, rm
    ! various counters
    real(DP), allocatable :: aux(:), besr(:)
    ! various work space
-   real(DP) ::  pref, q, qi
+   real(DP) ::  pref, qi
    ! the prefactor of the q functions
    ! the prefactor of the beta functions
    ! the modulus of g for each shell
    ! q-point grid for interpolation
    real(DP) ::  vqint
    ! interpolated value
-   integer :: n1, m0, m1, n, li, mi, vi, vj, ijs, is1, is2, &
-              lk, mk, vk, kh, lh
+   !integer ::  &
+   !             vk
    !
-   real(DP), allocatable :: xdata(:)
-   real(DP) :: d1
+   !real(DP), allocatable :: xdata(:)
+
    !
    call start_clock('init_us_1a')
    !    Initialization of the variables
