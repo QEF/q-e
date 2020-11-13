@@ -78,7 +78,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
           CALL c2psi_gamma( dffts, psis(1:sizefft), c(:,i), c(:, i+1))
         END IF 
         !
-        CALL invfft( 'Wave', psis(1:sizefft), dffts )
+        CALL invfft( 'Wave', psis, dffts )
         !
         DO ir = 1,sizefft
           psis2(ir,i) = DBLE(psis(ir))
