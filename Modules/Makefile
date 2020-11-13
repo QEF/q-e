@@ -13,7 +13,6 @@ additional_kpoints.o \
 autopilot.o \
 basic_algebra_routines.o \
 becmod.o \
-beef_interface.o \
 bfgs_module.o \
 bspline.o \
 bz_form.o \
@@ -115,7 +114,6 @@ cryst_to_car.o \
 erf.o \
 expint.o \
 generate_k_along_lines.o \
-more_functionals.o \
 has_xml.o \
 inpfile.o \
 int_to_char.o \

@@ -3,7 +3,6 @@ set(sources
     autopilot.f90 
     basic_algebra_routines.f90 
     becmod.f90 
-    beef_interface.f90 
     bfgs_module.f90 
     bspline.f90 
     bz_form.f90 

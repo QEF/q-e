@@ -121,12 +121,12 @@ addusstress.o : realus.o
 addusstress.o : scf_mod.o
 allocate_fft.o : ../../Modules/control_flags.o
 allocate_fft.o : ../../Modules/fft_base.o
-allocate_fft.o : ../../Modules/funct.o
 allocate_fft.o : ../../Modules/io_global.o
 allocate_fft.o : ../../Modules/ions_base.o
 allocate_fft.o : ../../Modules/noncol.o
 allocate_fft.o : ../../Modules/recvec.o
 allocate_fft.o : ../../Modules/wavefunctions.o
+allocate_fft.o : ../../XClib/xc_lib.o
 allocate_fft.o : pwcom.o
 allocate_fft.o : scf_mod.o
 allocate_locpot.o : ../../Modules/fft_base.o
@@ -180,11 +180,11 @@ atomic_wfc_mod.o : ../../Modules/kind.o
 average_pp.o : ../../Modules/kind.o
 average_pp.o : ../../upflib/atom.o
 average_pp.o : ../../upflib/uspp.o
-beef.o : ../../Modules/beef_interface.o
 beef.o : ../../Modules/control_flags.o
-beef.o : ../../Modules/funct.o
 beef.o : ../../Modules/io_global.o
 beef.o : ../../Modules/kind.o
+beef.o : ../../XClib/xc_beef_interface.o
+beef.o : ../../XClib/xc_lib.o
 beef.o : pwcom.o
 beef.o : scf_mod.o
 bp_c_phase.o : ../../Modules/becmod.o
@@ -417,7 +417,6 @@ electrons.o : ../../Modules/check_stop.o
 electrons.o : ../../Modules/constants.o
 electrons.o : ../../Modules/control_flags.o
 electrons.o : ../../Modules/fft_base.o
-electrons.o : ../../Modules/funct.o
 electrons.o : ../../Modules/gvecw.o
 electrons.o : ../../Modules/io_files.o
 electrons.o : ../../Modules/io_global.o
@@ -435,6 +434,7 @@ electrons.o : ../../Modules/tsvdw.o
 electrons.o : ../../Modules/wavefunctions.o
 electrons.o : ../../Modules/wrappers.o
 electrons.o : ../../UtilXlib/mp.o
+electrons.o : ../../XClib/xc_lib.o
 electrons.o : ../../dft-d3/api.o
 electrons.o : ../../dft-d3/dftd3_qe.o
 electrons.o : ../../upflib/uspp.o
@@ -558,7 +558,6 @@ exx.o : ../../Modules/constants.o
 exx.o : ../../Modules/control_flags.o
 exx.o : ../../Modules/coulomb_vcut.o
 exx.o : ../../Modules/fft_base.o
-exx.o : ../../Modules/funct.o
 exx.o : ../../Modules/gvecw.o
 exx.o : ../../Modules/io_files.o
 exx.o : ../../Modules/io_global.o
@@ -573,6 +572,7 @@ exx.o : ../../Modules/recvec.o
 exx.o : ../../Modules/recvec_subs.o
 exx.o : ../../Modules/wavefunctions.o
 exx.o : ../../UtilXlib/mp.o
+exx.o : ../../XClib/xc_lib.o
 exx.o : ../../upflib/gth.o
 exx.o : ../../upflib/splinelib.o
 exx.o : ../../upflib/uspp.o
@@ -612,7 +612,6 @@ exx_base.o : ../../Modules/cell_base.o
 exx_base.o : ../../Modules/constants.o
 exx_base.o : ../../Modules/control_flags.o
 exx_base.o : ../../Modules/coulomb_vcut.o
-exx_base.o : ../../Modules/funct.o
 exx_base.o : ../../Modules/gvecw.o
 exx_base.o : ../../Modules/io_global.o
 exx_base.o : ../../Modules/kind.o
@@ -622,6 +621,7 @@ exx_base.o : ../../Modules/mp_pools.o
 exx_base.o : ../../Modules/noncol.o
 exx_base.o : ../../Modules/recvec.o
 exx_base.o : ../../UtilXlib/mp.o
+exx_base.o : ../../XClib/xc_lib.o
 exx_base.o : pwcom.o
 exx_base.o : start_k.o
 exx_base.o : symm_base.o
@@ -874,9 +874,9 @@ gradcorr.o : ../../Modules/cell_base.o
 gradcorr.o : ../../Modules/constants.o
 gradcorr.o : ../../Modules/fft_base.o
 gradcorr.o : ../../Modules/fft_rho.o
-gradcorr.o : ../../Modules/funct.o
 gradcorr.o : ../../Modules/kind.o
 gradcorr.o : ../../Modules/recvec.o
+gradcorr.o : ../../XClib/xc_lib.o
 gradcorr.o : pwcom.o
 gweights.o : ../../Modules/kind.o
 h_epsi_her_apply.o : ../../Modules/becmod.o
@@ -915,12 +915,12 @@ h_psi.o : ../../FFTXlib/fft_helper_subroutines.o
 h_psi.o : ../../Modules/becmod.o
 h_psi.o : ../../Modules/control_flags.o
 h_psi.o : ../../Modules/fft_base.o
-h_psi.o : ../../Modules/funct.o
 h_psi.o : ../../Modules/kind.o
 h_psi.o : ../../Modules/mp_bands.o
 h_psi.o : ../../Modules/noncol.o
 h_psi.o : ../../Modules/recvec.o
 h_psi.o : ../../UtilXlib/mp.o
+h_psi.o : ../../XClib/xc_lib.o
 h_psi.o : ../../upflib/uspp.o
 h_psi.o : bp_mod.o
 h_psi.o : exx.o
@@ -1004,7 +1004,6 @@ init_q_aeps.o : pwcom.o
 init_run.o : ../../Modules/cell_base.o
 init_run.o : ../../Modules/control_flags.o
 init_run.o : ../../Modules/fft_base.o
-init_run.o : ../../Modules/funct.o
 init_run.o : ../../Modules/ions_base.o
 init_run.o : ../../Modules/paw_variables.o
 init_run.o : ../../Modules/recvec.o
@@ -1098,6 +1097,7 @@ input.o : ../../Modules/run_info.o
 input.o : ../../Modules/tsvdw.o
 input.o : ../../Modules/wannier_new.o
 input.o : ../../Modules/wyckoff.o
+input.o : ../../XClib/xc_lib.o
 input.o : ../../dft-d3/api.o
 input.o : ../../dft-d3/dftd3_qe.o
 input.o : Coul_cut_2D.o
@@ -1137,7 +1137,6 @@ intersite_V.o : pwcom.o
 intersite_V.o : symm_base.o
 io_rho_xml.o : ../../Modules/cell_base.o
 io_rho_xml.o : ../../Modules/control_flags.o
-io_rho_xml.o : ../../Modules/funct.o
 io_rho_xml.o : ../../Modules/io_base.o
 io_rho_xml.o : ../../Modules/io_files.o
 io_rho_xml.o : ../../Modules/io_global.o
@@ -1149,6 +1148,7 @@ io_rho_xml.o : ../../Modules/noncol.o
 io_rho_xml.o : ../../Modules/paw_variables.o
 io_rho_xml.o : ../../Modules/recvec.o
 io_rho_xml.o : ../../UtilXlib/mp.o
+io_rho_xml.o : ../../XClib/xc_lib.o
 io_rho_xml.o : ldaU.o
 io_rho_xml.o : pwcom.o
 io_rho_xml.o : scf_mod.o
@@ -1174,7 +1174,6 @@ loc_scdm.o : ../../Modules/cell_base.o
 loc_scdm.o : ../../Modules/constants.o
 loc_scdm.o : ../../Modules/control_flags.o
 loc_scdm.o : ../../Modules/fft_base.o
-loc_scdm.o : ../../Modules/funct.o
 loc_scdm.o : ../../Modules/io_files.o
 loc_scdm.o : ../../Modules/io_global.o
 loc_scdm.o : ../../Modules/kind.o
@@ -1182,6 +1181,7 @@ loc_scdm.o : ../../Modules/mp_bands.o
 loc_scdm.o : ../../Modules/noncol.o
 loc_scdm.o : ../../Modules/wavefunctions.o
 loc_scdm.o : ../../UtilXlib/mp.o
+loc_scdm.o : ../../XClib/xc_lib.o
 loc_scdm.o : buffers.o
 loc_scdm.o : exx.o
 loc_scdm.o : exx_base.o
@@ -1249,7 +1249,6 @@ memory_report.o : ../../Modules/cell_base.o
 memory_report.o : ../../Modules/constants.o
 memory_report.o : ../../Modules/control_flags.o
 memory_report.o : ../../Modules/fft_base.o
-memory_report.o : ../../Modules/funct.o
 memory_report.o : ../../Modules/gvecw.o
 memory_report.o : ../../Modules/io_global.o
 memory_report.o : ../../Modules/ions_base.o
@@ -1260,6 +1259,7 @@ memory_report.o : ../../Modules/mp_pools.o
 memory_report.o : ../../Modules/noncol.o
 memory_report.o : ../../Modules/recvec.o
 memory_report.o : ../../Modules/wannier_new.o
+memory_report.o : ../../XClib/xc_lib.o
 memory_report.o : ../../upflib/atom.o
 memory_report.o : ../../upflib/uspp.o
 memory_report.o : atomic_wfc_mod.o
@@ -1469,7 +1469,6 @@ paw_exx.o : paw_onecenter.o
 paw_exx.o : pwcom.o
 paw_init.o : ../../Modules/constants.o
 paw_init.o : ../../Modules/control_flags.o
-paw_init.o : ../../Modules/funct.o
 paw_init.o : ../../Modules/io_global.o
 paw_init.o : ../../Modules/ions_base.o
 paw_init.o : ../../Modules/kind.o
@@ -1478,6 +1477,7 @@ paw_init.o : ../../Modules/noncol.o
 paw_init.o : ../../Modules/paw_variables.o
 paw_init.o : ../../Modules/random_numbers.o
 paw_init.o : ../../UtilXlib/mp.o
+paw_init.o : ../../XClib/xc_lib.o
 paw_init.o : ../../upflib/atom.o
 paw_init.o : ../../upflib/radial_grids.o
 paw_init.o : ../../upflib/uspp.o
@@ -1486,7 +1486,6 @@ paw_init.o : paw_symmetry.o
 paw_init.o : pwcom.o
 paw_init.o : scf_mod.o
 paw_onecenter.o : ../../Modules/constants.o
-paw_onecenter.o : ../../Modules/funct.o
 paw_onecenter.o : ../../Modules/io_global.o
 paw_onecenter.o : ../../Modules/ions_base.o
 paw_onecenter.o : ../../Modules/kind.o
@@ -1494,6 +1493,7 @@ paw_onecenter.o : ../../Modules/mp_images.o
 paw_onecenter.o : ../../Modules/noncol.o
 paw_onecenter.o : ../../Modules/paw_variables.o
 paw_onecenter.o : ../../UtilXlib/mp.o
+paw_onecenter.o : ../../XClib/xc_lib.o
 paw_onecenter.o : ../../upflib/atom.o
 paw_onecenter.o : ../../upflib/radial_grids.o
 paw_onecenter.o : ../../upflib/uspp.o
@@ -1582,7 +1582,6 @@ potinit.o : ../../Modules/constants.o
 potinit.o : ../../Modules/control_flags.o
 potinit.o : ../../Modules/fft_base.o
 potinit.o : ../../Modules/fft_rho.o
-potinit.o : ../../Modules/funct.o
 potinit.o : ../../Modules/io_base.o
 potinit.o : ../../Modules/io_files.o
 potinit.o : ../../Modules/io_global.o
@@ -1593,6 +1592,7 @@ potinit.o : ../../Modules/noncol.o
 potinit.o : ../../Modules/paw_variables.o
 potinit.o : ../../Modules/recvec.o
 potinit.o : ../../UtilXlib/mp.o
+potinit.o : ../../XClib/xc_lib.o
 potinit.o : ../../upflib/uspp.o
 potinit.o : atomic_wfc_mod.o
 potinit.o : io_rho_xml.o
@@ -1602,10 +1602,10 @@ potinit.o : paw_onecenter.o
 potinit.o : pwcom.o
 potinit.o : scf_mod.o
 print_clock_pw.o : ../../Modules/control_flags.o
-print_clock_pw.o : ../../Modules/funct.o
 print_clock_pw.o : ../../Modules/io_global.o
 print_clock_pw.o : ../../Modules/noncol.o
 print_clock_pw.o : ../../Modules/paw_variables.o
+print_clock_pw.o : ../../XClib/xc_lib.o
 print_clock_pw.o : ../../upflib/uspp.o
 print_clock_pw.o : bp_mod.o
 print_clock_pw.o : ldaU.o
@@ -1654,7 +1654,6 @@ pw2casino_write.o : ../../Modules/cell_base.o
 pw2casino_write.o : ../../Modules/constants.o
 pw2casino_write.o : ../../Modules/control_flags.o
 pw2casino_write.o : ../../Modules/fft_base.o
-pw2casino_write.o : ../../Modules/funct.o
 pw2casino_write.o : ../../Modules/gvecw.o
 pw2casino_write.o : ../../Modules/io_files.o
 pw2casino_write.o : ../../Modules/io_global.o
@@ -1666,6 +1665,7 @@ pw2casino_write.o : ../../Modules/recvec.o
 pw2casino_write.o : ../../Modules/run_info.o
 pw2casino_write.o : ../../Modules/wavefunctions.o
 pw2casino_write.o : ../../UtilXlib/mp.o
+pw2casino_write.o : ../../XClib/xc_lib.o
 pw2casino_write.o : ../../upflib/uspp.o
 pw2casino_write.o : buffers.o
 pw2casino_write.o : exx.o
@@ -1685,6 +1685,7 @@ pw_init_qexsd_input.o : ../../Modules/qes_libs_module.o
 pw_init_qexsd_input.o : ../../Modules/qes_types_module.o
 pw_init_qexsd_input.o : ../../Modules/qexsd_init.o
 pw_init_qexsd_input.o : ../../Modules/qexsd_input.o
+pw_init_qexsd_input.o : ../../XClib/xc_lib.o
 pw_init_qexsd_input.o : ../../upflib/uspp.o
 pw_init_qexsd_input.o : pwcom.o
 pw_restart_new.o : ../../Modules/bfgs_module.o
@@ -1723,6 +1724,7 @@ pw_restart_new.o : ../../Modules/tsvdw.o
 pw_restart_new.o : ../../Modules/wavefunctions.o
 pw_restart_new.o : ../../Modules/wrappers.o
 pw_restart_new.o : ../../UtilXlib/mp.o
+pw_restart_new.o : ../../XClib/xc_lib.o
 pw_restart_new.o : ../../upflib/uspp.o
 pw_restart_new.o : Coul_cut_2D.o
 pw_restart_new.o : atomic_wfc_mod.o
@@ -1809,7 +1811,6 @@ realus.o : ../../Modules/cell_base.o
 realus.o : ../../Modules/constants.o
 realus.o : ../../Modules/control_flags.o
 realus.o : ../../Modules/fft_base.o
-realus.o : ../../Modules/funct.o
 realus.o : ../../Modules/io_global.o
 realus.o : ../../Modules/ions_base.o
 realus.o : ../../Modules/kind.o
@@ -1856,13 +1857,13 @@ run_driver.o : ../../Modules/command_line_options.o
 run_driver.o : ../../Modules/control_flags.o
 run_driver.o : ../../Modules/fft_base.o
 run_driver.o : ../../Modules/fsockets.o
-run_driver.o : ../../Modules/funct.o
 run_driver.o : ../../Modules/io_files.o
 run_driver.o : ../../Modules/io_global.o
 run_driver.o : ../../Modules/ions_base.o
 run_driver.o : ../../Modules/mp_images.o
 run_driver.o : ../../Modules/parameters.o
 run_driver.o : ../../UtilXlib/mp.o
+run_driver.o : ../../XClib/xc_lib.o
 run_driver.o : ../../upflib/upf_params.o
 run_driver.o : beef.o
 run_driver.o : pwcom.o
@@ -1874,7 +1875,6 @@ run_pwscf.o : ../../Modules/command_line_options.o
 run_pwscf.o : ../../Modules/constants.o
 run_pwscf.o : ../../Modules/control_flags.o
 run_pwscf.o : ../../Modules/fft_base.o
-run_pwscf.o : ../../Modules/funct.o
 run_pwscf.o : ../../Modules/io_global.o
 run_pwscf.o : ../../Modules/ions_base.o
 run_pwscf.o : ../../Modules/kind.o
@@ -1884,6 +1884,7 @@ run_pwscf.o : ../../Modules/parameters.o
 run_pwscf.o : ../../Modules/qexsd.o
 run_pwscf.o : ../../Modules/qmmm.o
 run_pwscf.o : ../../UtilXlib/mp.o
+run_pwscf.o : ../../XClib/xc_lib.o
 run_pwscf.o : ../../upflib/upf_params.o
 run_pwscf.o : atomic_wfc_mod.o
 run_pwscf.o : beef.o
@@ -1906,13 +1907,13 @@ s_1psi.o : realus.o
 s_psi.o : ../../Modules/becmod.o
 s_psi.o : ../../Modules/control_flags.o
 s_psi.o : ../../Modules/fft_base.o
-s_psi.o : ../../Modules/funct.o
 s_psi.o : ../../Modules/ions_base.o
 s_psi.o : ../../Modules/kind.o
 s_psi.o : ../../Modules/mp_bands.o
 s_psi.o : ../../Modules/noncol.o
 s_psi.o : ../../Modules/wavefunctions.o
 s_psi.o : ../../UtilXlib/mp.o
+s_psi.o : ../../XClib/xc_lib.o
 s_psi.o : ../../upflib/uspp.o
 s_psi.o : pwcom.o
 s_psi.o : realus.o
@@ -1928,12 +1929,12 @@ save_in_electrons.o : pwcom.o
 scale_h.o : ../../Modules/cell_base.o
 scale_h.o : ../../Modules/constants.o
 scale_h.o : ../../Modules/control_flags.o
-scale_h.o : ../../Modules/funct.o
 scale_h.o : ../../Modules/io_global.o
 scale_h.o : ../../Modules/kind.o
 scale_h.o : ../../Modules/mp_bands.o
 scale_h.o : ../../Modules/recvec.o
 scale_h.o : ../../UtilXlib/mp.o
+scale_h.o : ../../XClib/xc_lib.o
 scale_h.o : exx.o
 scale_h.o : exx_base.o
 scale_h.o : pwcom.o
@@ -1943,7 +1944,6 @@ scf_mod.o : ../../Modules/cell_base.o
 scf_mod.o : ../../Modules/constants.o
 scf_mod.o : ../../Modules/control_flags.o
 scf_mod.o : ../../Modules/fft_base.o
-scf_mod.o : ../../Modules/funct.o
 scf_mod.o : ../../Modules/ions_base.o
 scf_mod.o : ../../Modules/kind.o
 scf_mod.o : ../../Modules/mp_bands.o
@@ -1951,6 +1951,7 @@ scf_mod.o : ../../Modules/paw_variables.o
 scf_mod.o : ../../Modules/recvec.o
 scf_mod.o : ../../Modules/wavefunctions.o
 scf_mod.o : ../../UtilXlib/mp.o
+scf_mod.o : ../../XClib/xc_lib.o
 scf_mod.o : ../../upflib/uspp.o
 scf_mod.o : buffers.o
 scf_mod.o : extfield.o
@@ -1975,8 +1976,8 @@ set_rhoc.o : pwcom.o
 set_rhoc.o : scf_mod.o
 set_vrs.o : ../../FFTXlib/fft_interfaces.o
 set_vrs.o : ../../Modules/fft_base.o
-set_vrs.o : ../../Modules/funct.o
 set_vrs.o : ../../Modules/kind.o
+set_vrs.o : ../../XClib/xc_lib.o
 setlocal.o : ../../FFTXlib/fft_interfaces.o
 setlocal.o : ../../Modules/cell_base.o
 setlocal.o : ../../Modules/constants.o
@@ -2000,7 +2001,6 @@ setup.o : ../../Modules/cell_base.o
 setup.o : ../../Modules/constants.o
 setup.o : ../../Modules/control_flags.o
 setup.o : ../../Modules/electrons_base.o
-setup.o : ../../Modules/funct.o
 setup.o : ../../Modules/gvecw.o
 setup.o : ../../Modules/io_files.o
 setup.o : ../../Modules/io_global.o
@@ -2018,6 +2018,7 @@ setup.o : ../../Modules/qexsd.o
 setup.o : ../../Modules/qexsd_copy.o
 setup.o : ../../Modules/recvec.o
 setup.o : ../../UtilXlib/mp.o
+setup.o : ../../XClib/xc_lib.o
 setup.o : ../../upflib/uspp.o
 setup.o : atomic_wfc_mod.o
 setup.o : bp_mod.o
@@ -2061,10 +2062,10 @@ stres_ewa.o : ../../UtilXlib/mp.o
 stres_ewa.o : Coul_cut_2D.o
 stres_gradcorr.o : ../../FFTXlib/fft_types.o
 stres_gradcorr.o : ../../Modules/fft_rho.o
-stres_gradcorr.o : ../../Modules/funct.o
 stres_gradcorr.o : ../../Modules/kind.o
 stres_gradcorr.o : ../../Modules/mp_bands.o
 stres_gradcorr.o : ../../UtilXlib/mp.o
+stres_gradcorr.o : ../../XClib/xc_lib.o
 stres_gradcorr.o : pwcom.o
 stres_har.o : ../../FFTXlib/fft_interfaces.o
 stres_har.o : ../../Modules/cell_base.o
@@ -2134,7 +2135,6 @@ stres_mgga.o : ../../FFTXlib/fft_interfaces.o
 stres_mgga.o : ../../Modules/cell_base.o
 stres_mgga.o : ../../Modules/control_flags.o
 stres_mgga.o : ../../Modules/fft_base.o
-stres_mgga.o : ../../Modules/funct.o
 stres_mgga.o : ../../Modules/io_files.o
 stres_mgga.o : ../../Modules/kind.o
 stres_mgga.o : ../../Modules/mp_bands.o
@@ -2143,6 +2143,7 @@ stres_mgga.o : ../../Modules/noncol.o
 stres_mgga.o : ../../Modules/recvec.o
 stres_mgga.o : ../../Modules/wavefunctions.o
 stres_mgga.o : ../../UtilXlib/mp.o
+stres_mgga.o : ../../XClib/xc_lib.o
 stres_mgga.o : buffers.o
 stres_mgga.o : pwcom.o
 stres_mgga.o : scf_mod.o
@@ -2169,13 +2170,13 @@ stress.o : ../../Modules/cell_base.o
 stress.o : ../../Modules/constants.o
 stress.o : ../../Modules/control_flags.o
 stress.o : ../../Modules/fft_base.o
-stress.o : ../../Modules/funct.o
 stress.o : ../../Modules/io_global.o
 stress.o : ../../Modules/ions_base.o
 stress.o : ../../Modules/kind.o
 stress.o : ../../Modules/mm_dispersion.o
 stress.o : ../../Modules/recvec.o
 stress.o : ../../Modules/tsvdw.o
+stress.o : ../../XClib/xc_lib.o
 stress.o : ../../dft-d3/api.o
 stress.o : ../../dft-d3/dftd3_qe.o
 stress.o : ../../upflib/uspp.o
@@ -2196,7 +2197,6 @@ sum_band.o : ../../Modules/becmod.o
 sum_band.o : ../../Modules/cell_base.o
 sum_band.o : ../../Modules/control_flags.o
 sum_band.o : ../../Modules/fft_base.o
-sum_band.o : ../../Modules/funct.o
 sum_band.o : ../../Modules/io_files.o
 sum_band.o : ../../Modules/ions_base.o
 sum_band.o : ../../Modules/kind.o
@@ -2207,6 +2207,7 @@ sum_band.o : ../../Modules/paw_variables.o
 sum_band.o : ../../Modules/recvec.o
 sum_band.o : ../../Modules/wavefunctions.o
 sum_band.o : ../../UtilXlib/mp.o
+sum_band.o : ../../XClib/xc_lib.o
 sum_band.o : ../../upflib/uspp.o
 sum_band.o : buffers.o
 sum_band.o : gcscf_module.o
@@ -2236,6 +2237,7 @@ summary.o : ../../Modules/noncol.o
 summary.o : ../../Modules/recvec.o
 summary.o : ../../Modules/run_info.o
 summary.o : ../../UtilXlib/mp.o
+summary.o : ../../XClib/xc_lib.o
 summary.o : ../../upflib/atom.o
 summary.o : ../../upflib/uspp.o
 summary.o : bp_mod.o
@@ -2315,7 +2317,6 @@ us_exx.o : ../../Modules/becmod.o
 us_exx.o : ../../Modules/cell_base.o
 us_exx.o : ../../Modules/constants.o
 us_exx.o : ../../Modules/control_flags.o
-us_exx.o : ../../Modules/funct.o
 us_exx.o : ../../Modules/gvecw.o
 us_exx.o : ../../Modules/io_global.o
 us_exx.o : ../../Modules/ions_base.o
@@ -2325,6 +2326,7 @@ us_exx.o : ../../Modules/mp_pools.o
 us_exx.o : ../../Modules/noncol.o
 us_exx.o : ../../Modules/recvec.o
 us_exx.o : ../../UtilXlib/mp.o
+us_exx.o : ../../XClib/xc_lib.o
 us_exx.o : ../../upflib/uspp.o
 us_exx.o : pwcom.o
 us_exx.o : realus.o
@@ -2354,6 +2356,7 @@ v_of_rho.o : ../../Modules/noncol.o
 v_of_rho.o : ../../Modules/recvec.o
 v_of_rho.o : ../../Modules/tsvdw.o
 v_of_rho.o : ../../UtilXlib/mp.o
+v_of_rho.o : ../../XClib/xc_lib.o
 v_of_rho.o : Coul_cut_2D.o
 v_of_rho.o : esm.o
 v_of_rho.o : ldaU.o
@@ -2437,7 +2440,6 @@ weights.o : tetra.o
 wfcinit.o : ../../Modules/becmod.o
 wfcinit.o : ../../Modules/constants.o
 wfcinit.o : ../../Modules/control_flags.o
-wfcinit.o : ../../Modules/funct.o
 wfcinit.o : ../../Modules/io_files.o
 wfcinit.o : ../../Modules/io_global.o
 wfcinit.o : ../../Modules/kind.o
@@ -2452,6 +2454,7 @@ wfcinit.o : ../../Modules/recvec.o
 wfcinit.o : ../../Modules/wannier_new.o
 wfcinit.o : ../../Modules/wavefunctions.o
 wfcinit.o : ../../UtilXlib/mp.o
+wfcinit.o : ../../XClib/xc_lib.o
 wfcinit.o : ../../upflib/uspp.o
 wfcinit.o : atomic_wfc_mod.o
 wfcinit.o : bp_mod.o
@@ -2476,7 +2479,6 @@ xdm_dispersion.o : ../../Modules/cell_base.o
 xdm_dispersion.o : ../../Modules/constants.o
 xdm_dispersion.o : ../../Modules/control_flags.o
 xdm_dispersion.o : ../../Modules/fft_base.o
-xdm_dispersion.o : ../../Modules/funct.o
 xdm_dispersion.o : ../../Modules/io_files.o
 xdm_dispersion.o : ../../Modules/io_global.o
 xdm_dispersion.o : ../../Modules/ions_base.o
@@ -2485,6 +2487,7 @@ xdm_dispersion.o : ../../Modules/mp_bands.o
 xdm_dispersion.o : ../../Modules/mp_images.o
 xdm_dispersion.o : ../../Modules/paw_variables.o
 xdm_dispersion.o : ../../UtilXlib/mp.o
+xdm_dispersion.o : ../../XClib/xc_lib.o
 xdm_dispersion.o : ../../upflib/atom.o
 xdm_dispersion.o : ../../upflib/splinelib.o
 xdm_dispersion.o : ../../upflib/uspp.o
