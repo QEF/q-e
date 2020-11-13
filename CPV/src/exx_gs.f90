@@ -382,12 +382,13 @@ SUBROUTINE exx_gs(nfi, c)
     !
     totalenergy = 0.0_DP
     total_exx_derv(:,:) =0.0_DP
-    irecv_count = 0
-    isend_count = 0
     !
     ! my_var is the maximum of nbsp or nproc_image
     my_var = MAX(nproc_image, nbsp)
     !
+#if defined(__MPI)
+    irecv_count = 0
+    isend_count = 0
     ! ---------- start of Non-blocking communication (1) -----------
     ! In this region of the code, we start with non-blocking send of
     ! local orbitals to form MLWF product potentials on the non-self
@@ -439,7 +440,7 @@ SUBROUTINE exx_gs(nfi, c)
           ! get the localized psi around the mid point of two wannier centers
           ! note: the psime is centered at the center of the box
           ! (using the translation vector "tran" from middle of wfc to the center of box)
-          CALL getpsil( nnrtot, np_in_sp_me_p, psi(1, iobtl), psime_pair_send(1, itr, iobtl), tran) ! HK: TEST
+          CALL getpsil( nnrtot, np_in_sp_me_p, psi(1, iobtl), psime_pair_send(1, itr, iobtl), tran)
           !
           isend_count = isend_count + 1
           CALL MPI_ISEND( psime_pair_send(1, itr, iobtl), np_in_sp_me_p, MPI_DOUBLE_PRECISION, rk_of_obtl_trcv, &
@@ -470,6 +471,7 @@ SUBROUTINE exx_gs(nfi, c)
     !
     CALL stop_clock('send_psi_wait')
     ! ------- end of Non-blocking communication (1): synchronize by wait ------
+#endif
     !
     !=========================================================================
     ! after this loop ( do irank ), all the processor got all the overlapping orbitals 
@@ -569,6 +571,10 @@ SUBROUTINE exx_gs(nfi, c)
             ALLOCATE ( psil(np_in_sp_me_p) ); psil=0.0_DP ! HK/MCA: (TODO) the allocation can to be done in a reusable fashion
             CALL getpsil( nnrtot, np_in_sp_me_p, psi(1, iobtl), psil(1), tran) 
             !
+#if ! defined(__MPI)
+            ! does not need communication so construct it here; my_var2 is simultaneously the global and local index (serial case)
+            CALL getpsil( nnrtot, np_in_sp_me_p, psi(1, my_var2), psime_pair_recv(1, j, iobtl), tran)
+#endif
             ! the localized density rhol 
             ! HK/MCA: (TODO) need to make these array allocation in a reusable fashion
             ALLOCATE ( rhol(np_in_sp_me_p) ); rhol=0.0_DP
@@ -606,7 +612,12 @@ SUBROUTINE exx_gs(nfi, c)
             DO ip = 1, np_in_sp_me_p
               CALL l2goff (ip,ir,tran) ! local is centered at box center; global index is offset by tran
               vpsil(ir,iobtl) = vpsil(ir,iobtl) - exxalfa*vl(ip)*psime_pair_recv(ip,j,iobtl) ! to remain 
+#if defined(__MPI)
               psime_pair_recv(ip,j,iobtl) =            - exxalfa*vl(ip)*psil(ip)             ! to be sent 
+#else
+              ! does not need communication so construct it here; my_var2 is simultaneously the global and local index (serial case)
+              vpsil(ir,my_var2) = vpsil(ir,my_var2)    - exxalfa*vl(ip)*psil(ip)
+#endif
             END DO
             !$omp end parallel do
             !
@@ -649,7 +660,6 @@ SUBROUTINE exx_gs(nfi, c)
       !
     END DO
     CALL stop_clock('getpairv')
-
     !===============================================================================
     ! After this loop, each processor finished the pair potentials for the 
     ! iobtl orbital, and shall talk to send/recv vpsiforj
@@ -659,6 +669,7 @@ SUBROUTINE exx_gs(nfi, c)
     !                INITIALIZE SEND VPSI BEFORE CALCULATE PAIR
     !===============================================================================
     !
+#if defined(__MPI)
     irecv_count = 0
     isend_count = 0
     !
@@ -738,6 +749,7 @@ SUBROUTINE exx_gs(nfi, c)
     !========================================================================
     !
     CALL stop_clock('send_v')
+#endif
     !
     !=========================================================================
     !                                
@@ -851,6 +863,7 @@ SUBROUTINE exx_gs(nfi, c)
     CALL stop_clock('getselfv')
     !========================================================================
     !
+#if defined(__MPI)
     CALL start_clock('send_v_wait')
     !
     DO itr = 1, isend_count
@@ -899,6 +912,7 @@ SUBROUTINE exx_gs(nfi, c)
     !
     CALL stop_clock('force_rec')
     !========================================================================
+#endif
     !
     CALL start_clock('totalenergy')
     !
@@ -910,6 +924,8 @@ SUBROUTINE exx_gs(nfi, c)
     CALL MPI_ALLREDUCE(totalenergy, totalenergyg, 1, MPI_DOUBLE_PRECISION, &
         &                        MPI_SUM, intra_image_comm, ierr)
     !
+#else
+    totalenergyg = totalenergy
 #endif
     exx = totalenergyg
     IF (nspin .EQ. 1) exx = exx + totalenergyg ! if closed shell double the totalenergy
@@ -922,14 +938,16 @@ SUBROUTINE exx_gs(nfi, c)
     !
     total_exx_derv_g(:,:) = 0.0_DP ! mpi reduction variable initialization
     !
-#if defined(__MPI)
     IF (.NOT. (isotropic .AND. (ibrav.EQ.1))) THEN
+#if defined(__MPI)
       ! collect the total_exx_derv of each mpi task to total_exx_derv_g
       CALL MPI_ALLREDUCE(total_exx_derv(:,:), total_exx_derv_g(:,:), 9, &
           MPI_DOUBLE_PRECISION, MPI_SUM, intra_image_comm, ierr)
       !
-    END IF
+#else
+      total_exx_derv_g(:,:) = total_exx_derv(:,:)
 #endif
+    END IF
     !
     ! for closed shell case inclued spin factor of 2
     dexx_dh(:,:) = total_exx_derv_g(:,:)
