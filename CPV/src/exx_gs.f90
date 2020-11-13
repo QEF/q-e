@@ -963,7 +963,11 @@ SUBROUTINE exx_gs(nfi, c)
     !
     IF (nproc_image .LE. nbsp) THEN 
       !
+#ifdef __MPI
       CALL redistwfr ( exx_potential, vpsil, my_nxyz, my_nbsp, intra_image_comm, -1 )
+#else
+      exx_potential = vpsil
+#endif
       !
     ELSE
       !

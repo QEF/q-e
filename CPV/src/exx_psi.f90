@@ -92,7 +92,11 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
         !
       END DO !loop over state i
       !
+#ifdef __MPI
       CALL redistwfr( psis2, psitot2, my_nxyz, my_nbsp, intra_image_comm, 1 )
+#else
+      psitot2=psis2
+#endif
       !
     ELSE ! (nproc_image .GT. nbsp) 
       !
