@@ -1236,7 +1236,7 @@ CONTAINS
                READ(input_line,*) lb_vel, ( rd_vel(k,ia), k = 1, 3 )
             ELSE
                CALL errore( ' iosys ', &
-                           & ' wrong entries in ION_VELOCITIES ', ia )
+                           & ' wrong entries in ATOMIC_VELOCITIES ', ia )
             ENDIF
             !
             match_label: DO is = 1, ntyp
