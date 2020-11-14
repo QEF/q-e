@@ -225,7 +225,7 @@ program all_currents
           call current_hartree_xc(nbnd, npw, npwx, dffts, psic, g, ngm, gstart, &
                 tpiba, omega, tpiba2)
           call current_kohn_sham(nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
-                tpiba, tpiba2, at, vkb, nkb, xk, igk_k, g2kin, et)
+                tpiba2, at, vkb, nkb, xk, igk_k, g2kin, et)
           call write_results(traj,print_stat)
       end do
       !read new velocities and positions and continue, or exit the loop

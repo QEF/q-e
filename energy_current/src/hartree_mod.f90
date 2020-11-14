@@ -221,7 +221,6 @@ subroutine current_hartree_xc(nbnd, npw, npwx, dffts, psic, g, ngm, gstart, &
    REAL(DP), intent(in) :: tpiba, omega, tpiba2
    REAL(DP), intent(inout) ::  g(:,:)
 
-   complex(kind=DP), allocatable ::  evp(:, :), tmp(:, :)
    integer :: igm
    logical :: do_xc_curr
    real(kind=DP), allocatable ::charge(:)
@@ -236,13 +235,7 @@ subroutine current_hartree_xc(nbnd, npw, npwx, dffts, psic, g, ngm, gstart, &
 !
    integer ::icoord, ir
 !
-!   logical  :: l_test
- !  real(DP) :: s(nbnd, nbnd), ss(nbnd, nbnd), &
- !  &
- !              sa(nbnd, nbnd), ssa(nbnd, nbnd), sb(nbnd, nbnd), ssb(nbnd,nbnd)
 
-
-   integer, external :: find_free_unit
 
    if (ionode) write (stdout, *) 'BEGIN: HARTREE & KOHN'
 
@@ -256,8 +249,6 @@ subroutine current_hartree_xc(nbnd, npw, npwx, dffts, psic, g, ngm, gstart, &
    end if
 
    npw = npwx ! only gamma
-   allocate (tmp(npwx, nbnd))
-   allocate (evp(npwx, nbnd))
    allocate (charge_g(ngm))
    allocate (charge_g_due(ngm))
    if (three_point_derivative) &
@@ -386,7 +377,6 @@ endif
    if (allocated(charge_g_tre)) deallocate (charge_g_tre)
    deallocate (v_point)
    deallocate (v_mean)
-   call deallocate_bec_type(becp)
    deallocate (excharge_r)
    deallocate (exgradcharge_r)
    deallocate (exgradcharge_g)
@@ -397,7 +387,7 @@ endif
 
 
    subroutine current_kohn_sham(nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
-                tpiba, tpiba2,  at, vkb, nkb, xk, igk_k, g2kin, et)
+                tpiba2,  at, vkb, nkb, xk, igk_k, g2kin, et)
    use kinds, only: DP
    !use wvfct, only: nbnd, npw, npwx
    !use wavefunctions, only: psic, evc
@@ -425,51 +415,22 @@ endif
    TYPE ( fft_type_descriptor ),intent(inout) :: dffts
    COMPLEX(DP), intent(inout) ::  evc(:,:)
    INTEGER, intent(in) :: ngm, gstart, nkb
-   REAL(DP), intent(in) :: tpiba, tpiba2
-   REAL(DP), intent(inout) ::  g(:,:), g2kin(:), at(:,:), &
+   REAL(DP), intent(inout) :: g2kin(:)
+   REAL(DP), intent(in) ::  tpiba2, g(:,:), at(:,:), &
                            xk(:,:), et(:,:)
-   COMPLEX(DP), intent(inout) :: vkb(:,:)
+   COMPLEX(DP), intent(in) :: vkb(:,:)
 
    !character(LEN=20) :: dft_name
    complex(kind=DP), allocatable ::  evp(:, :), tmp(:, :)
    integer ::  ibnd
-   real(kind=DP), allocatable ::charge(:)
-   real(kind=DP), allocatable ::excharge_r(:), exgradcharge_r(:, :), exdotcharge_r(:)
-
-
    real(kind=DP) :: amodulus
-!
-   complex(kind=DP), allocatable ::charge_g(:),  v_point(:), v_mean(:), charge_g_due(:), &
-           charge_g_tre(:)
-!
-   complex(kind=DP), allocatable ::exgradcharge_g(:, :)
-!
-
-
-!
-!   logical  :: l_test
    real(DP) :: emme(nbnd, nbnd), kcurrent(3),  &
                kcurrent_a(3), kcurrent_b(3), ecurrent(3), &
                sa(nbnd, nbnd), ssa(nbnd, nbnd), sb(nbnd, nbnd), ssb(nbnd,nbnd)
 
    integer  :: jbnd, ig, ipol
-   integer, external :: find_free_unit
-
-
    allocate (tmp(npwx, nbnd))
    allocate (evp(npwx, nbnd))
-   allocate (charge_g(ngm))
-   allocate (charge_g_due(ngm))
-   if (three_point_derivative) &
-       allocate (charge_g_tre(ngm))
-   allocate (charge(dffts%nnr))
-   allocate (v_point(ngm))
-   allocate (v_mean(ngm))
-!
-   allocate (excharge_r(dffts%nnr))
-   allocate (exgradcharge_r(3, dffts%nnr))
-   allocate (exgradcharge_g(3, ngm))
-   allocate (exdotcharge_r(dffts%nnr))
 
 
    !---------------------------------KOHN------------------------------------------------
@@ -490,40 +451,10 @@ endif
    call allocate_bec_type(nkb, nbnd, becp)
    call calbec(npw, vkb, evc, becp)
 
-!   l_test = .true.
-!   if (.not. l_test) then
-!
-!      s = 0.d0
-!! computed s = < evc_due, evc_uno >, remove contribution at G=0
-!      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, scf_all%t_plus%evc, 2*npwx, scf_all%t_minus%evc, 2*npwx, 0.d0, s, nbnd)
-!      if (gstart == 2) then
-!         do ibnd = 1, nbnd
-!            do jbnd = 1, nbnd
-!               s(ibnd, jbnd) = s(ibnd, jbnd) - dble(conjg(scf_all%t_plus%evc(1, ibnd))*scf_all%t_minus%evc(1, jbnd))
-!            end do
-!         end do
-!      end if
-!      call mp_sum(s, intra_pool_comm)
-!! computes phi_v^c_punto using <s,s>
-!      call dgemm('T', 'N', nbnd, nbnd, nbnd, 1.d0, s, nbnd, s, nbnd, 0.d0, ss, nbnd)
-!      evp = 0.d0
-!      do ibnd = 1, nbnd
-!         do jbnd = 1, nbnd
-!            do ig = 1, npw
-!               evp(ig, ibnd) = evp(ig, ibnd) - scf_all%t_plus%evc(ig, jbnd)*s(jbnd, ibnd)
-!               evp(ig, ibnd) = evp(ig, ibnd) + scf_all%t_minus%evc(ig, jbnd)*ss(ibnd, jbnd)
-!            end do
-!         end do
-!      end do
-!      evp(:, :) = evp(:, :)/delta_t
-!
-!   else
-
       sa = 0.d0
       sb = 0.d0
 
 ! computed sb = < evc_due, evc_uno >, sa = <evc_uno, evc_uno> remove contribution at G=0
-! sb is the old s
 ! sb is a multiple of the identity if 2 points are used (t_minus==t_zero)
 
       call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, scf_all%t_plus%evc, 2*npwx, scf_all%t_zero%evc, 2*npwx, 0.d0, sa, nbnd)
@@ -640,19 +571,11 @@ endif
    !npw=npwold
    if (ionode) print *, 'KOHN CURRENT CALCULATED'
 !---------------------------------------------------------------------------
-   deallocate (charge)
-   deallocate (charge_g)
-   deallocate (charge_g_due)
-   if (allocated(charge_g_tre)) deallocate (charge_g_tre)
-   deallocate (v_point)
-   deallocate (v_mean)
    call deallocate_bec_type(becp)
    deallocate (dpsi)
    deallocate (dvpsi)
-   deallocate (excharge_r)
-   deallocate (exgradcharge_r)
-   deallocate (exgradcharge_g)
-   deallocate (exdotcharge_r)
+   deallocate (tmp)
+   deallocate (evp)
 
 end subroutine
 
