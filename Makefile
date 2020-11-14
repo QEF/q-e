@@ -175,7 +175,7 @@ pw4gwwlib : phlibs
 	if test -d GWW ; then \
 	( cd GWW ; $(MAKE) pw4gwwa || exit 1 ) ; fi
 
-mods : libfox libutil libla libfft libupf libbeef libmbd librxc
+mods : libfox libutil libla libfft libupf libmbd librxc
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 libks_solvers : libs libutil libla
@@ -219,9 +219,6 @@ libfox:
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
 libcuda: 
-	cd install ; $(MAKE) -f extlibs_makefile $@
-
-libbeef:
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
 libmbd:

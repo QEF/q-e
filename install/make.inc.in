@@ -160,11 +160,6 @@ MPI_LIBS       = @mpi_libs@
 
 MASS_LIBS      = @mass_libs@
 
-# library for bayesian error estimate functionals
-
-BEEF_LIBS      = @beef_libs@
-BEEF_LIBS_SWITCH = @beef_libs_switch@
-
 # library for many-body dispersion
 
 MBD_LIBS= $(TOPDIR)/MBD/libmbd.a
@@ -189,7 +184,7 @@ FLIB_TARGETS   = all
 
 LIBOBJS        = $(TOPDIR)/clib/clib.a
 LIBXC_LIBS     = @LIBS_LIBXC@
-QELIBS         = $(MBD_LIBS) $(BEEF_LIBS) $(LIBXC_LIBS) \
+QELIBS         = $(MBD_LIBS) $(LIBXC_LIBS) \
                  $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) \
 		 $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LD_LIBS)
 

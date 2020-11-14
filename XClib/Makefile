@@ -30,9 +30,19 @@ xc_wrapper_lda_lsda.o \
 xc_wrapper_mgga.o \
 xclib_test.o
 
+BEEF = \
+pbecor.o \
+beefun.o
+
+# PGI requires -c11 to understand __thread
+# See https://www.pgroup.com/userforum/viewtopic.php?t=5504
+ifneq (,$(findstring -D__PGI,$(DFLAGS)))
+	CFLAGS := -c11 $(CFLAGS)
+endif
+
 all: xc_lib.a xclib_test.x
 
-xc_lib.a: 	$(XCL)
+xc_lib.a: $(XCL) $(BEEF)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
@@ -44,12 +54,3 @@ xclib_test.x : xclib_test.o xc_lib.a
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x
 
-# .PHONY forces execution of a rule irrespective of the presence of an
-# updated file with the same name of the rule. In this way, the script 
-# that generates version.f90 always runs, updating the version if you 
-# execute "svn update". The update_version script takes care of not
-# changing the file if the svn version did not change
-
-.PHONY: all clean
-
-include make.depend
