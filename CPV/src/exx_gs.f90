@@ -37,34 +37,17 @@ SUBROUTINE exx_gs(nfi, c)
     USE gvecw,                   ONLY  : ngw
     USE wannier_module,          ONLY  : wfc
     USE exx_module,              ONLY  : my_nbspx, my_nbsp, my_nxyz, index_my_nbsp,rk_of_obtl, lindex_of_obtl
-    USE exx_module,              ONLY  : selfv, selfrho, pairv, pairrho, pair_dist
+    USE exx_module,              ONLY  : selfv, pairv, pair_dist
     USE exx_module,              ONLY  : pair_label, pair_status, pair_step
     USE exx_module,              ONLY  : exx_potential
     USE exx_module,              ONLY  : n_exx, sc_fac ! EXX step and the performance scaling factor
-    USE exx_module,              ONLY  : nord1, nord2, fornberg
-    USE exx_module,              ONLY  : nrg
-    USE exx_module,              ONLY  : s_me_r, s_ps_r, p_me_r, p_ps_r
-    USE exx_module,              ONLY  : n_s_me, n_s_ps, n_p_me, n_p_ps
-    USE exx_module,              ONLY  : prev_obtl_recv
-    USE exx_module,              ONLY  : lmax
-    USE exx_module,              ONLY  : me_cs
-    USE exx_module,              ONLY  : me_rs
-    USE exx_module,              ONLY  : me_ri
-    USE exx_module,              ONLY  : me_rc
-#ifdef __CUDA
-    USE exx_module,              ONLY  : me_cs_d
-    USE exx_module,              ONLY  : me_rs_d
-    USE exx_module,              ONLY  : me_ri_d
-    USE exx_module,              ONLY  : me_rc_d
-    !
-    USE exx_module,              ONLY  : coe_1st_derv_d, coemicf_d, coeke_d  !MCA/HK : dirty hack for std CG
-    !
-    USE exx_module,              ONLY  : psi_d,potpsi_d  
-#endif
-    USE exx_module,              ONLY  : coe_1st_derv, coemicf, coeke !MCA/HK : dirty hack for std CG
+    USE exx_module,              ONLY  : coe_1st_derv, coeke, nord1, nord2, fornberg
+    USE exx_module,              ONLY  : thdtood, odtothd_in_sp, thdtood_in_sp
+    USE exx_module,              ONLY  : np_in_sp_s   , np_in_sp_me_s   , np_in_sp_p   , np_in_sp_me_p
+    USE exx_module,              ONLY  : xx_in_sp,yy_in_sp,zz_in_sp,sc_xx_in_sp,sc_yy_in_sp,sc_zz_in_sp 
     USE energies,                ONLY  : exx
     USE printout_base,           ONLY  : printout_base_open, printout_base_unit, printout_base_close
-    USE wannier_base,            ONLY  : neigh, dis_cutoff
+    USE wannier_base,            ONLY  : neigh, dis_cutoff, texx_cube
     USE mp_wave,                 ONLY  : redistwfr
     !
     USE time_step,               ONLY  : tps                !md time in picoseconds
@@ -77,41 +60,65 @@ SUBROUTINE exx_gs(nfi, c)
     USE exx_module,              ONLY  : exx_energy_cell_derivative
     USE exx_module,              ONLY  : exxalfa
     USE fft_helper_subroutines
-    USE control_flags,           ONLY  : iverbosity
     use exx_module, only : psime_pair_recv, psime_pair_send
+    ! cubic domain related "use" variables
+    USE exx_module,              ONLY  : selfrho, pairrho 
+    USE exx_module,              ONLY  : nrg
+    USE exx_module,              ONLY  : s_me_r, s_ps_r, p_me_r, p_ps_r
+    USE exx_module,              ONLY  : n_s_me, n_s_ps, n_p_me, n_p_ps
+    USE exx_module,              ONLY  : lmax
+    USE exx_module,              ONLY  : me_cs
+    USE exx_module,              ONLY  : me_rs
+    USE exx_module,              ONLY  : me_ri
+    USE exx_module,              ONLY  : me_rc
+    USE exx_module,              ONLY  : coemicf !MCA/HK : dirty hack for std CG
+    USE exx_module,              ONLY  : exx_energy_cell_derivative_cube
 #ifdef __CUDA
+    use exx_module,              only  : me_cs_d
+    use exx_module,              only  : me_rs_d
+    use exx_module,              only  : me_ri_d
+    use exx_module,              only  : me_rc_d
+    !
+    use exx_module,              only  : coe_1st_derv_d, coemicf_d, coeke_d  !mca/hk : dirty hack for std cg
+    !
+    use exx_module,              only  : psi_d,vpsil_d  
     use exx_module, only : psime_pair_recv_d, psime_pair_send_d
 #endif
     !
     IMPLICIT NONE
-    COMPLEX(DP)              :: c(ngw, nbspx)        ! wave functions at time t
-#ifdef __MPI
+    COMPLEX(DP)   c(ngw, nbspx)        ! wave functions at time t
+#if defined(__MPI)
     !
     INTEGER  :: istatus(MPI_STATUS_SIZE)
 #endif
-    INTEGER     i,j,k,l,m
-    INTEGER     lid,gid
-    INTEGER     ir, ip, nfi, ierr, nnrtot, nr1s,nr2s,nr3s
+    INTEGER     ir, ip, i, j,nfi, ierr, nnrtot, nr1s,nr2s,nr3s
     INTEGER     nj_max, iunit
+    REAl(DP)    sa1,a(3),ha, hb, hc
+    REAl(DP)    hcub, centerx, centery, centerz
+    REAL(DP)    middle(3)
+    REAL(DP)    d_pair            ! pair distance
+    !
+    REAL(DP),    ALLOCATABLE ::   vpsil(:,:)
+    REAL(DP),    ALLOCATABLE ::   rhol(:),rho_in_sp(:),vl(:)
+    ! cubic domain related variables
+    INTEGER     l,m
+    INTEGER     lid,gid
     INTEGER     s_me_r1,s_me_r2,s_me_r3,s_me_r4,s_me_r5,s_me_r6
-    REAl(DP)    inv_omega, a(3), ha, hb, hc
+    REAl(DP)    inv_omega
     REAl(DP)    dist, dxy, costheta, sintheta
     COMPLEX(DP) cxy
     REAl(DP)    plm(0:lmax,0:lmax)
     REAl(DP)    ha_proj(3), hb_proj(3), hc_proj(3)
-    REAl(DP)    hcub, centerx, centery, centerz
-    REAL(DP)    middle(3)
     REAL(DP)    dq1,dq2,dq3
     REAL(DP)    dqs1,dqs2,dqs3
-    REAL(DP)    d_pair            ! pair distance
     REAL(DP)    start_timer, stop_timer
-    !
-    REAL(DP),    ALLOCATABLE ::   potpsi(:,:)
+    REAL(DP),   ALLOCATABLE :: rhome(:),rhops(:),potme(:)
+    INTEGER                 :: pos, oldest_step, guess_status  
+    REAl(DP),   ALLOCATABLE :: psime(:)
 #ifdef __CUDA
-    attributes (pinned) :: potpsi
+    attributes (pinned) :: vpsil
 #endif
     REAL(DP),    ALLOCATABLE ::   psi(:,:)
-    REAL(DP),    ALLOCATABLE ::   rhome(:),rhops(:),potme(:)
     !
     INTEGER   iobtl, gindex_of_iobtl, irank, rk_of_obtl_trcv, rk_of_obtl_tbs
     INTEGER   obtl_tbs, lindex_obtl_tbs, obtl_trcv, lindex_obtl_trcv 
@@ -132,12 +139,11 @@ SUBROUTINE exx_gs(nfi, c)
     INTEGER                  :: tmp_iobtl
     INTEGER                  :: me
     !
-    INTEGER                  :: jj,ii,ia,ib,ic,my_var,my_var2,my_var3,i_fac,va,cgstep
-    INTEGER                  :: pos, oldest_step, guess_status  
+    INTEGER                  :: k,jj,ii,ia,ib,ic,my_var,my_var2,my_var3,i_fac,va,cgstep
     INTEGER                  :: ndim,nogrp 
     INTEGER,    ALLOCATABLE  :: obtl_recv(:,:), obtl_send(:,:), num_recv(:), num_send(:)
     REAl(DP),   ALLOCATABLE  :: wannierc(:,:),wannierc_tmp(:,:)
-    REAl(DP),   ALLOCATABLE  :: psime(:)
+    REAl(DP),   ALLOCATABLE  :: psil(:)
     REAL(DP),   ALLOCATABLE  :: exx_tmp(:,:),exx_tmp3(:,:)
     INTEGER,    ALLOCATABLE  :: sdispls(:), sendcount(:)
     INTEGER,    ALLOCATABLE  :: rdispls(:), recvcount(:)
@@ -147,279 +153,39 @@ SUBROUTINE exx_gs(nfi, c)
     REAL(DP) :: Jim(3,3)  ! jacobian [d/d x]        [d/d a]
     !                                |d/d y| = [J]  |d/d b|
     !                                [d/d z]        [d/d c]
-    CHARACTER(LEN=256)       :: chr_me
-    INTEGER                  :: ifile
-    !
-    ! CHARACTER (LEN=20) :: my_filename ! debug
-    ! INTEGER            :: my_unit ! debug
-    !INTEGER            :: psgsn=3 !MCA: number of steps that arrays are stored. Memory overhead from here?
-    INTEGER            :: psgsn=1 !MCA: we are not using extrapolation anyways 
+    INTEGER            :: psgsn=3 !MCA: number of steps that arrays are stored. Memory overhead from here?
 #ifdef __CUDA
     REAL(DP), ALLOCATABLE, DEVICE :: h_d(:,:)
     ATTRIBUTES (device) :: rhome,rhops,potme,psime
 #endif
     !
-     write(*,*) "entering exx_gs" ! debug
-    !
     !=============================================================================================
-    !
-    ! WRITE (my_filename, "(A, I0.4)") "cg", me_image ! debug
-    ! my_unit = me_image + 75332 ! debug
-    ! OPEN (UNIT=my_unit, FILE=my_filename) ! debug
     ! 
     CALL start_clock('exx_gs_setup')
+    CALL exx_gs_setup_common
+    if (texx_cube) then
+      CALL exx_gs_setup_cube
+    else
+      CALL exx_gs_setup_sphere
+    end if
     !
-    !---------------------------------------------------------------------------------------------
-    ! make processor index start from 1
-    !---------------------------------------------------------------------------------------------
-    me = me_image+1
-    !---------------------------------------------------------------------------------------------
-    !
-    !---------------------------------------------------------------------------------------------
-    ! number of real space gird along each lattice parameter directions (a1, a2, a3)
-    !---------------------------------------------------------------------------------------------
-    nr1s=dfftp%nr1                                         ! fft dense grid in Lattice 1 direction
-    nr2s=dfftp%nr2                                         ! fft dense grid in Lattice 2 direction
-    nr3s=dfftp%nr3                                         ! fft dense grid in Lattice 3 direction
-    !---------------------------------------------------------------------------------------------
-    !
-    !---------------------------------------------------------------------------------------------
-    ! the length of each lattice parameters
-    !---------------------------------------------------------------------------------------------
-    a(1)=DSQRT(h(1,1)*h(1,1)+h(2,1)*h(2,1)+h(3,1)*h(3,1))                              ! lattice 1 
-    a(2)=DSQRT(h(1,2)*h(1,2)+h(2,2)*h(2,2)+h(3,2)*h(3,2))                              ! lattice 2 
-    a(3)=DSQRT(h(1,3)*h(1,3)+h(2,3)*h(2,3)+h(3,3)*h(3,3))                              ! lattice 3 
-    !---------------------------------------------------------------------------------------------
-    !
-    !---------------------------------------------------------------------------------------------
-    ! grid spacing in each lattice parameters
-    !---------------------------------------------------------------------------------------------
-    ha = a(1) / DBLE(nr1s)                                   ! grid spacing in Lattice 1 direction
-    hb = a(2) / DBLE(nr2s)                                   ! grid spacing in Lattice 2 direction
-    hc = a(3) / DBLE(nr3s)                                   ! grid spacing in Lattice 3 direction
-    !---------------------------------------------------------------------------------------------
-    !
-    !---------------------------------------------------------------------------------------------
-    ! consider a grid an unit cell, the lattice vectors for the grid
-    !---------------------------------------------------------------------------------------------
-    ha_proj(:) = ha*h(:,1)/a(1)
-    hb_proj(:) = hb*h(:,2)/a(2)
-    hc_proj(:) = hc*h(:,3)/a(3)
-    !---------------------------------------------------------------------------------------------
-    !
-    !---------------------------------------------------------------------------------------------
-    ! total number of real space grid points in the global mesh 
-    ! and the corresponding volume elements for each grid point
-    !---------------------------------------------------------------------------------------------
-    nnrtot = nr1s * nr2s * nr3s
-    hcub   = omega / DBLE(nnrtot)                                  ! volume for a single grid cell
-    !
-    ! laplacian prefactor initialization
-    !call laplacian_setup_meta
-    !---------------------------------------------------------------------------------------------
-    !
-    !---------------------------------------------------------------------------------------------
-    ! the x,y,z coordinates of the center of the box (gird center)
-    ! NOTE: center of the box is set to grid point at int(nr1/2), int(nr2/2), int(nr3/2)
-    !---------------------------------------------------------------------------------------------
-    centerx = h(1,1)*DBLE(INT(nr1s/2))+h(1,2)*DBLE(INT(nr2s/2))+h(1,3)*DBLE(INT(nr3s/2))
-    centery = h(2,1)*DBLE(INT(nr1s/2))+h(2,2)*DBLE(INT(nr2s/2))+h(2,3)*DBLE(INT(nr3s/2))
-    centerz = h(3,1)*DBLE(INT(nr1s/2))+h(3,2)*DBLE(INT(nr2s/2))+h(3,3)*DBLE(INT(nr3s/2))
-    !---------------------------------------------------------------------------------------------
-    !
-    !---------------------------------------------------------------------------------------------
-    ! inverse volume
-    !---------------------------------------------------------------------------------------------
-    inv_omega = 1.0_DP/omega
-    !---------------------------------------------------------------------------------------------
-    !
-    !---------------------------------------------------------------------------------------------
-    ! Compute distances between grid points and the center of the simulation cell in R space 
-    ! This part needs to be done once in constant volume simulation and
-    ! needs to be done every step in variable cell simulationulations ...
-    !---------------------------------------------------------------------------------------------
-    s_me_r1=s_me_r(1)
-    s_me_r2=s_me_r(2)
-    s_me_r3=s_me_r(3)
-    s_me_r4=s_me_r(4)
-    s_me_r5=s_me_r(5)
-    s_me_r6=s_me_r(6)
-#ifdef __CUDA
-    ALLOCATE (h_d, source=h)
-    associate (me_cs=>me_cs_d, me_rs=>me_rs_d, me_ri=>me_ri_d, me_rc=>me_rc_d, h=>h_d)
-    !$cuf kernel do (3)
-#endif
-    DO k = s_me_r(3),s_me_r(6)
-      DO j = s_me_r(2),s_me_r(5)
-        DO i = s_me_r(1),s_me_r(4)
-          !---------------------------------------------------------------------------------------
-          dqs1 = (DBLE(i)/DBLE(nr1s)) - DBLE(INT(nr1s/2))/DBLE(nr1s)
-          dqs2 = (DBLE(j)/DBLE(nr2s)) - DBLE(INT(nr2s/2))/DBLE(nr2s)
-          dqs3 = (DBLE(k)/DBLE(nr3s)) - DBLE(INT(nr3s/2))/DBLE(nr3s)
-          !
-          ! Here we are computing distances between Grid points and center of the simulation cell, so no MIC is needed ...
-          ! Compute distance between grid point and the center of the simulation cell in R space 
-          !
-          dq1=h(1,1)*dqs1+h(1,2)*dqs2+h(1,3)*dqs3   !r_i = h s_i
-          dq2=h(2,1)*dqs1+h(2,2)*dqs2+h(2,3)*dqs3   !r_i = h s_i
-          dq3=h(3,1)*dqs1+h(3,2)*dqs2+h(3,3)*dqs3   !r_i = h s_i
-          !
-          dist = DSQRT(dq1*dq1+dq2*dq2+dq3*dq3)
-          !-------------------------------------------------
-          me_cs(1,i,j,k)=dq1
-          me_cs(2,i,j,k)=dq2
-          me_cs(3,i,j,k)=dq3
-          !-------------------------------------------------
-          me_rs(0,i,j,k)=1.0_DP
-          me_rs(1,i,j,k)=dist
-          !-------------------------------------------------
-          me_ri(0,i,j,k)=1.0_DP
-          !
-          IF(dist.GE.1.0E-10) THEN
-            me_ri(1,i,j,k)=1.0_DP/dist
-          ELSE
-            me_ri(1,i,j,k)=0.0_DP ! JJ: this seems wrong, but is correct
-          END IF
-          !-------------------------------------------------
-          DO l=2,lmax
-            me_rs(l,i,j,k)=me_rs(l-1,i,j,k)*me_rs(1,i,j,k)
-          END DO
-          !-------------------------------------------------
-          DO l=2,lmax+1
-            me_ri(l,i,j,k)=me_ri(l-1,i,j,k)*me_ri(1,i,j,k)
-          END DO
-          !-------------------------------------------------
-          IF( (i.GE.s_me_r1).AND.(i.LE.s_me_r4).AND. &
-              (j.GE.s_me_r2).AND.(j.LE.s_me_r5).AND. &
-              (k.GE.s_me_r3).AND.(k.LE.s_me_r6) ) THEN
-            !-------------------------------------------------
-            dxy      = DSQRT(dq1*dq1+dq2*dq2)
-            !-------------------------------------------------
-            me_rc(0,i,j,k)     =1.0_DP
-            me_rc(1:lmax,i,j,k)=0.0_DP
-            !-------------------------------------------------
-            IF (dxy .GT. 1.0E-10) THEN
-              !-----------------------------------------------
-              cxy = CMPLX(dq1,dq2)/dxy
-              !-----------------------------------------------
-              DO m=1,lmax
-                me_rc(m,i,j,k)=me_rc(m-1,i,j,k)*cxy
-              END DO
-              !-----------------------------------------------
-            END IF
-            !-------------------------------------------------
-          END IF
-          !-------------------------------------------------
-        END DO
-      END DO
-    END DO
-    !---------------------------------------------------------------------------------------------
-#ifdef __CUDA
-   end associate
-   me_cs = me_cs_d 
-   me_rs = me_rs_d 
-   me_ri = me_ri_d 
-   me_rc = me_rc_d 
-   DEALLOCATE(h_d)
-#endif
-
-    !---------------------------------------------------------------------------------------------
-    ! Compute and renormalize numerical derivative coefficients
-    ! This part needs to be done once in constant volume simulation and
-    ! needs to be done every step in variable cell simulationulations ...
-    !---------------------------------------------------------------------------------------------
-    ! Get ha*d/da, ha^2*d^2/da^2 stencil and cross coefficients
-    ! For the finite difference coefficients, see B. Fornberg in Math. Comp. 51 (1988), 699-706
-    !---------------------------------------------------------------------------------------------
-    CALL fornberg(nord1, nord2,coe_1st_derv(:,1),coeke(:,1,1),coeke(:,1,2),ierr)
-    !---------------------------------------------------------------------------------------------
-    IF (ierr .ne. 0) THEN
-      WRITE(stdout,*) ' ERROR: Wrong parameter in CALL of Fornberg'
-      WRITE(stdout,*) ' STOP in exx_gs'
-      RETURN
-    END IF
-    !---------------------------------------------------------------------------------------------
-    ! RENORMALIZE COEKES WITH RESPECT TO THE GRID SPACING
-    ! First derivative coefficients
-    !---------------------------------------------------------------------------------------------
-    coe_1st_derv(:,3) = coe_1st_derv(:,1)/hc                                        ! d/dc stencil
-    coe_1st_derv(:,2) = coe_1st_derv(:,1)/hb                                        ! d/db stencil
-    coe_1st_derv(:,1) = coe_1st_derv(:,1)/ha                                        ! d/da stencil
-    !---------------------------------------------------------------------------------------------
-    ! NOTE: second derivatives contains a additional factor of -4*pi from Poisson equation
-    !---------------------------------------------------------------------------------------------
-    !                            --- \nabla^2 V = -4*\pi \rho ---
-    !---------------------------------------------------------------------------------------------
-    ! axial derivatives
-    !---------------------------------------------------------------------------------------------
-    coeke(:,3,3) = -coeke(:,1,1)/(hc*hc*fpi)                               ! -d^2/dc^2/4pi stencil
-    coeke(:,2,2) = -coeke(:,1,1)/(hb*hb*fpi)                               ! -d^2/db^2/4pi stencil
-    coeke(:,1,1) = -coeke(:,1,1)/(ha*ha*fpi)                               ! -d^2/da^2/4pi stencil
-    !---------------------------------------------------------------------------------------------
-    ! cross derivatives
-    !---------------------------------------------------------------------------------------------
-    coeke(:,2,3) = -coeke(:,1,2)/(hb*hc*fpi)                               ! -d^2/dbdc/4pi stencil
-    coeke(:,1,3) = -coeke(:,1,2)/(ha*hc*fpi)                               ! -d^2/dadc/4pi stencil
-    coeke(:,1,2) = -coeke(:,1,2)/(ha*hb*fpi)                               ! -d^2/dadb/4pi stencil
-    !---------------------------------------------------------------------------------------------
-    ! Jacobian for the non-orthogonal cells 
-    !---------------------------------------------------------------------------------------------
-    !                          --- J = transpose(ainv).(diag(a)) ---
-    !---------------------------------------------------------------------------------------------
-    Jim(:,1) = ainv(1,:)*a(1)                                                   ! i={xyz}, m={abc}
-    Jim(:,2) = ainv(2,:)*a(2) 
-    Jim(:,3) = ainv(3,:)*a(3)
-    !
-    !---------------------------------------------------------------------------------------------
-    ! --- weigh coeke with the Jacobian ---
-    !---------------------------------------------------------------------------------------------
-    ! axial derivatives
-    !---------------------------------------------------------------------------------------------
-    coeke(:,3,3) = (Jim(1,3)**2+Jim(2,3)**2+Jim(3,3)**2)*coeke(:,3,3)
-    coeke(:,2,2) = (Jim(1,2)**2+Jim(2,2)**2+Jim(3,2)**2)*coeke(:,2,2)
-    coeke(:,1,1) = (Jim(1,1)**2+Jim(2,1)**2+Jim(3,1)**2)*coeke(:,1,1)
-    !---------------------------------------------------------------------------------------------
-    !
-    !---------------------------------------------------------------------------------------------
-    ! cross derivatives (needed for non-othogonal grids in the second derivatives)
-    !---------------------------------------------------------------------------------------------
-    coeke(:,2,3) = 2.0_DP*(Jim(1,2)*Jim(1,3)+Jim(2,2)*Jim(2,3)+Jim(3,2)*Jim(3,3))*coeke(:,2,3)
-    coeke(:,1,3) = 2.0_DP*(Jim(1,1)*Jim(1,3)+Jim(2,1)*Jim(2,3)+Jim(3,1)*Jim(3,3))*coeke(:,1,3)
-    coeke(:,1,2) = 2.0_DP*(Jim(1,1)*Jim(1,2)+Jim(2,1)*Jim(2,2)+Jim(3,1)*Jim(3,2))*coeke(:,1,2)
-    coeke(:,3,2) = coeke(:,2,3)                                                ! symmetry of coeke
-    coeke(:,2,1) = coeke(:,1,2)                                                ! symmetry of coeke
-    coeke(:,3,1) = coeke(:,1,3)                                                ! symmetry of coeke
-    !---------------------------------------------------------------------------------------------
-    !CALL coeff_opt()      ! calculate coemicf (preconditioner)
-coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
-#ifdef __CUDA
-    coeke_d = coeke
-    coemicf_d = coemicf
-    coe_1st_derv_d = coe_1st_derv
-#endif
-    !---------------------------------------------------------------------------------------------
-    ! a samall check on the shape of user defined cell (if any)
-    !---------------------------------------------------------------------------------------------
-    IF ((ibrav.EQ.0).AND.(nfi.EQ.1)) THEN
-      WRITE(stdout,*) 'EXX info: If you are using an orthogonal cell without its cell vectors&
-          & aligned to the xyz directions, the EXX calculation may be twice more expensive.'
-    END IF
-    !---------------------------------------------------------------------------------------------
+    !========================================================================
     !
     CALL stop_clock('exx_gs_setup')
     !
-    !---------------------------------------------------------------------------------------------
+    !-------------------------------------------------------------------------
+    ! Get the Wannier center and compute the pair overlap matrix 
+    !-------------------------------------------------------------------------
     !
     CALL start_clock('exx_pairs')
     !
-    !---------------------------------------------------------------------------------------------
     ndim=MAX(nproc_image, nbsp)
     ALLOCATE (wannierc(3,ndim)); wannierc=0.0_DP 
     ALLOCATE (wannierc_tmp(3,nbsp)); wannierc_tmp=0.0_DP 
-    !---------------------------------------------------------------------------------------------
+    !
     ! Adjust Cartesian coordinates of wannier centres according to periodic boundary conditions...
     ! N.B.: PBC are imposed here in the range [0,1)... 
-    !---------------------------------------------------------------------------------------------
+    !
     DO iobtl=1,nbsp
       !
       wannierc_tmp(1,iobtl)=ainv(1,1)*wfc(1,iobtl)+ainv(1,2)*wfc(2,iobtl)+ainv(1,3)*wfc(3,iobtl)   ! s = h^-1 r
@@ -437,11 +203,9 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
       wannierc_tmp(:,iobtl)=wannierc(:,iobtl) ! keep a temporary copy to compute pair indices
       !
     END DO
-    !---------------------------------------------------------------------------------------------
     ! 
-    !---------------------------------------------------------------------------------------------
     ! make copy of wannier centres when number of processors > number of bands
-    !---------------------------------------------------------------------------------------------
+    ! 
     IF(nproc_image.GT.nbsp) THEN
       !
       DO iobtl=nbsp+1,nproc_image
@@ -456,9 +220,7 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
       END DO
       !
     END IF
-    !---------------------------------------------------------------------------------------------
     !
-    !---------------------------------------------------------------------------------------------
     ! overlap is the unique neighbor list that for each band or processor image (ndim)
     ! num_recv is the number of unique neighbors for each band or processor image (ndim)
     !---------------------------------------------------------------------------------------------
@@ -466,11 +228,10 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     ALLOCATE (obtl_send(neigh, ndim));   obtl_send=0
     ALLOCATE (num_recv(ndim)); num_recv=0
     ALLOCATE (num_send(ndim)); num_send=0
-    !---------------------------------------------------------------------------------------------
     ! generate the unique neighbor list
-    !---------------------------------------------------------------------------------------------
+    !
     CALL exx_index_pair(wannierc_tmp, obtl_recv, num_recv, nj_max, ndim)
-    !---------------------------------------------------------------------------------------------
+    !
     IF (ALLOCATED(wannierc_tmp))            DEALLOCATE(wannierc_tmp)
     !---------------------------------------------------------------------------------------------
     DO itr = 1, ndim
@@ -491,40 +252,30 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     !
     CALL stop_clock('exx_pairs')
     !
-    !---------------------------------------------------------------------------------------------
-    ! DO itr = 1, ndim
-    !   DO jtr = 1, neigh/2
-    !     WRITE(*,*) itr, "   ", obtl_recv(jtr, itr) 
-    !   END DO
-    ! END DO
-    !---------------------------------------------------------------------------------------------
-    ! DO itr = 1, ndim
-    !   DO jtr = 1, neigh
-    !     WRITE(*,*) itr, "   ", obtl_send(jtr, itr) 
-    !   END DO
-    ! END DO
-    !---------------------------------------------------------------------------------------------
+    !-------------------------------------------------------------------------
     !
     ! Allocate variables to store potentials for 3 steps ....
     !
     IF (n_exx.EQ.0) THEN
       !
       ! the following variables are used in the extrapolation of exx potentials
-      ALLOCATE( selfv  ( n_s_ps, psgsn, my_nbspx), stat=ierr ); selfv=0.0_DP
-      ALLOCATE( selfrho( n_s_ps, psgsn, my_nbspx), stat=ierr ); selfrho=0.0_DP
-      ALLOCATE( pairv  ( n_p_ps, psgsn, neigh, my_nbspx), stat=ierr ); pairv=0.0_DP
-      ALLOCATE( pairrho( n_p_ps, psgsn, neigh, my_nbspx), stat=ierr ); pairrho=0.0_DP
-      ALLOCATE( pair_dist( psgsn, neigh, my_nbspx), stat=ierr ); pair_dist=0.0_DP
-      ALLOCATE( pair_label( neigh, my_nbspx ), stat=ierr ); pair_label=0.0_DP
-      ALLOCATE( pair_step( neigh, my_nbspx ), stat=ierr ); pair_step=0.0_DP
-      ALLOCATE( pair_status( neigh, my_nbspx ), stat=ierr ); pair_status=0.0_DP
-      ALLOCATE( prev_obtl_recv( neigh/2, ndim ), stat=ierr ); prev_obtl_recv=0
+      if (texx_cube) then
+        ALLOCATE( selfv  ( n_s_ps, psgsn, my_nbspx), stat=ierr ); selfv=0.0_DP
+        ALLOCATE( pairv  ( n_p_ps, psgsn, neigh, my_nbspx), stat=ierr ); pairv=0.0_DP
+        ALLOCATE( selfrho( n_s_ps, psgsn, my_nbspx), stat=ierr ); selfrho=0.0_DP
+        ALLOCATE( pairrho( n_p_ps, psgsn, neigh, my_nbspx), stat=ierr ); pairrho=0.0_DP
+        ALLOCATE( pair_label( neigh, my_nbspx ), stat=ierr ); pair_label=0.0_DP
+        ALLOCATE( pair_step( neigh, my_nbspx ), stat=ierr ); pair_step=0.0_DP
+        ALLOCATE( pair_status( neigh, my_nbspx ), stat=ierr ); pair_status=0.0_DP
+      else
+        ALLOCATE( selfv  ( np_in_sp_s, psgsn, my_nbspx), stat=ierr ); selfv=0.0_DP
+        ALLOCATE( pairv  ( np_in_sp_p, psgsn, neigh, my_nbspx), stat=ierr ); pairv=0.0_DP
+        ALLOCATE( pair_dist( psgsn, neigh, my_nbspx), stat=ierr ); pair_dist=0.0_DP
+      end if
       !
     END IF
     !
-    prev_obtl_recv = obtl_recv
-    !
-    !---------------------------------------------------------------------------------------------
+    !-------------------------------------------------------------------------
     !
     ! update exx step ...
     !
@@ -534,8 +285,8 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     !
     ! obtain orbitals on each local processor, stored in psi
     !
-    ALLOCATE ( psi   ( nnrtot, my_nbsp(me) ) ); psi=0.0_DP
-    ALLOCATE ( potpsi( nnrtot, my_nbsp(me) ) ); potpsi=0.0_DP
+    ALLOCATE ( psi(  nnrtot, my_nbsp(me ) ) ); psi=0.0_DP
+    ALLOCATE ( vpsil(nnrtot, my_nbsp(me ) ) ); vpsil=0.0_DP
     !
     CALL start_clock('r_orbital')
     !
@@ -569,15 +320,23 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     ALLOCATE( irecvreq( neigh * my_nbsp(me) ) )
     ALLOCATE( isendreq( neigh * my_nbsp(me) ) )
     !
-    ! obtain psi in sphere (psime) for neighbors
+    ! obtain psi in sphere (psil) for neighbors
     !
     call start_clock('exx_big_alloc')
-    ! TODO check : if neigh changes
-    if (.not.allocated(psime_pair_send)) then
-      ALLOCATE ( psime_pair_send(n_p_me, neigh, my_nbsp(me)) ); psime_pair_send=0.0_DP
-    end if
-    if (.not.allocated(psime_pair_recv)) then
-      ALLOCATE ( psime_pair_recv(n_p_me, neigh, my_nbsp(me)) ); psime_pair_recv=0.0_DP
+    if (texx_cube) then
+      if (.not.allocated(psime_pair_send)) then
+        ALLOCATE ( psime_pair_send(n_p_me, neigh, my_nbsp(me)) ); psime_pair_send=0.0_DP
+      end if
+      if (.not.allocated(psime_pair_recv)) then
+        ALLOCATE ( psime_pair_recv(n_p_me, neigh, my_nbsp(me)) ); psime_pair_recv=0.0_DP
+      end if
+    else
+      if (.not.allocated(psime_pair_send)) then
+        ALLOCATE ( psime_pair_send(np_in_sp_me_p, neigh, my_nbsp(me)) ); psime_pair_send=0.0_DP
+      end if
+      if (.not.allocated(psime_pair_recv)) then
+        ALLOCATE ( psime_pair_recv(np_in_sp_me_p, neigh, my_nbsp(me)) ); psime_pair_recv=0.0_DP
+      end if
     end if
 #ifdef __CUDA
     if (.not.allocated(psime_pair_send_d)) then
@@ -592,28 +351,28 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     ! initialize totalenergy and derivatives
     !
     totalenergy = 0.0_DP
-    total_exx_derv(:,:) = 0.0_DP
-    irecv_count = 0
-    isend_count = 0
+    total_exx_derv(:,:) =0.0_DP
     !
     ! my_var is the maximum of nbsp or nproc_image
     my_var = MAX(nproc_image, nbsp)
     !
-    !==========================================================================
-    !
+#if defined(__MPI)
+    irecv_count = 0
+    isend_count = 0
+    ! ---------- start of Non-blocking communication (1) -----------
+    ! In this region of the code, we start with non-blocking send of
+    ! local orbitals to form MLWF product potentials on the non-self
+    ! multipole expansion domain. This part allows all pairs to be 
+    ! send simultaneously instead of one-by-one...
+    ! --------------------------------------------------------------
     CALL start_clock('send_psi')
     ! 
-    !==========================================================================
-    !
     ! we should use my_nbspx (maxval(my_nbsp(me))) here
-    !
-    !MCA: TODO try to communicate everything via GPU
     !
     DO iobtl = 1, my_nbspx
       ! 
-      !========================================================================
-      !
       gindex_of_iobtl = index_my_nbsp(iobtl, me)
+      if (gindex_of_iobtl.gt.nbsp) cycle ! index_my_nbsp is set to nbsp+1 when not assigned
       !
       !========================================================================
       !
@@ -627,8 +386,13 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
           rk_of_obtl_tbs  = rk_of_obtl(obtl_tbs)
           !
           irecv_count = irecv_count + 1
-          CALL MPI_IRECV( psime_pair_recv(1, itr, iobtl), n_p_me, MPI_DOUBLE_PRECISION, rk_of_obtl_tbs, &
-                          obtl_tbs*ndim+gindex_of_iobtl, intra_image_comm, irecvreq(irecv_count), ierr)
+          if (texx_cube) then
+            CALL MPI_IRECV( psime_pair_recv(1, itr, iobtl), n_p_me, MPI_DOUBLE_PRECISION, rk_of_obtl_tbs, &
+              obtl_tbs*ndim+gindex_of_iobtl, intra_image_comm, irecvreq(irecv_count), ierr)
+          else
+            CALL MPI_IRECV( psime_pair_recv(1, itr, iobtl), np_in_sp_me_p, MPI_DOUBLE_PRECISION, rk_of_obtl_tbs, &
+              obtl_tbs*ndim+gindex_of_iobtl, intra_image_comm, irecvreq(irecv_count), ierr)
+          end if
           !
         END IF
         !
@@ -652,16 +416,25 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
           ! get the localized psi around the mid point of two wannier centers
           ! note: the psime is centered at the center of the box
           ! (using the translation vector "tran" from middle of wfc to the center of box)
+          if (texx_cube) then
 #ifdef __CUDA
           CALL getpsicb( nrg, p_me_r, psi_d(1,iobtl), psime_pair_send_d(1, itr, iobtl), tran)
           psime_pair_send(:,itr,iobtl) = psime_pair_send_d(:, itr, iobtl)
 #else
           CALL getpsicb( nrg, p_me_r, psi(1,iobtl), psime_pair_send(1, itr, iobtl), tran)
 #endif
+          else
+            CALL getpsil( nnrtot, np_in_sp_me_p, psi(1, iobtl), psime_pair_send(1, itr, iobtl), tran)
+          end if
           !
           isend_count = isend_count + 1
-          CALL MPI_ISEND( psime_pair_send(1, itr, iobtl), n_p_me, MPI_DOUBLE_PRECISION, rk_of_obtl_trcv, &
-                          gindex_of_iobtl*ndim+obtl_trcv, intra_image_comm, isendreq(isend_count), ierr)
+          if (texx_cube) then
+            CALL MPI_ISEND( psime_pair_send(1, itr, iobtl), n_p_me, MPI_DOUBLE_PRECISION, rk_of_obtl_trcv, &
+                            gindex_of_iobtl*ndim+obtl_trcv, intra_image_comm, isendreq(isend_count), ierr)
+          else
+            CALL MPI_ISEND( psime_pair_send(1, itr, iobtl), np_in_sp_me_p, MPI_DOUBLE_PRECISION, rk_of_obtl_trcv, &
+              gindex_of_iobtl*ndim+obtl_trcv, intra_image_comm, isendreq(isend_count), ierr)
+          end if
           !
         END IF
         !
@@ -681,13 +454,14 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     DO itr = 1, isend_count
       CALL MPI_WAIT(isendreq(itr), istatus, ierr)
     END DO
-
+    !
     DO itr = 1, irecv_count
       CALL MPI_WAIT(irecvreq(itr), istatus, ierr)
     END DO
     !
     CALL stop_clock('send_psi_wait')
-    !
+    ! ------- end of Non-blocking communication (1): synchronize by wait ------
+#endif
     !
     !=========================================================================
     ! after this loop ( do irank ), all the processor got all the overlapping orbitals 
@@ -713,27 +487,25 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
       !   
     END IF    
     !
-    !========================================================================
-    !
     CALL start_clock('getpairv')
     !
-    !========================================================================
-    !
-    ! Do some allocations
 #ifdef __CUDA
-    IF(.not.ALLOCATED(potpsi_d )) ALLOCATE(potpsi_d(nnrtot, my_nbsp(me)) )
-    potpsi_d = 0._DP
+    IF(.not.ALLOCATED(vpsil_d )) ALLOCATE(vpsil_d(nnrtot, my_nbsp(me)) )
+    vpsil_d = 0._DP
 #endif
-    IF(.not.ALLOCATED(psime )) ALLOCATE( psime(max(n_p_me,n_s_me)) ); 
-    IF(.not.ALLOCATED(rhome )) ALLOCATE( rhome(max(n_p_me,n_s_me)) );
-    IF(.not.ALLOCATED(rhops )) ALLOCATE( rhops(max(n_p_ps,n_s_ps)) ); 
-    IF(.not.ALLOCATED(potme )) ALLOCATE( potme(max(n_p_me,n_s_me)) ); 
-    !
+    if (texx_cube) then
+      ! Do some allocations
+      IF(.not.ALLOCATED(psime )) ALLOCATE( psime(max(n_p_me,n_s_me)) ); 
+      IF(.not.ALLOCATED(rhome )) ALLOCATE( rhome(max(n_p_me,n_s_me)) );
+      IF(.not.ALLOCATED(rhops )) ALLOCATE( rhops(max(n_p_ps,n_s_ps)) ); 
+      IF(.not.ALLOCATED(potme )) ALLOCATE( potme(max(n_p_me,n_s_me)) ); 
+    end if
     DO iobtl = 1, my_nbspx
       ! 
       middle(:)=0.0_DP
       !
       gindex_of_iobtl = index_my_nbsp(iobtl, me)
+      if (gindex_of_iobtl.gt.nbsp) cycle ! index_my_nbsp is set to nbsp+1 when not assigned
       !
       IF ( gindex_of_iobtl .LE. my_var) THEN
         !
@@ -752,126 +524,27 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
             !                      find the position of previous v/rho
             !==================================================================================
             ! 
-            guess_status = 0        ! no guess
-            pos = 0
-            oldest_step = 100000000
-            DO itr = 1, neigh
-              IF ( pair_label(itr, iobtl) .EQ. 0 ) THEN
-                pos = itr
-                EXIT
-              ELSE IF ( pair_label(itr, iobtl) .EQ. my_var2 ) THEN
-                guess_status = 1
-                pos = itr
-                EXIT
-              ELSE IF ( pair_step(itr, iobtl) < oldest_step ) THEN
-                pos = itr
-                oldest_step = pair_step(itr, iobtl)
-              END IF
-            END DO
+            if (texx_cube) then
+              call solve_a_nonself_pair_cube
+            else
+              call solve_a_nonself_pair_sphere
+            end if
             !
-            IF (guess_status .EQ. 1) THEN
-              IF (pair_step(pos, iobtl) .EQ. n_exx - 1) THEN
-                pair_status(pos, iobtl) = pair_status(pos, iobtl) + 1
-              ELSE
-                pair_status(pos, iobtl) = 1
-              END IF
-            ELSE
-              pair_status(pos, iobtl) = 0
-            END IF
-            !
-            pair_label(pos, iobtl) = my_var2
-            pair_step(pos, iobtl)  = n_exx
-            !
-            !==================================================================================
-            !
-            call start_clock('exx_grid_trans')
-            CALL getmiddlewc(wannierc(1,gindex_of_iobtl),wannierc(1,my_var2), h, ainv, middle )
-            ! get pair distance
-            !CALL get_pair_dist(wannierc(1,gindex_of_iobtl),wannierc(1,my_var2),d_pair)
-            !
-            ! calculate translation vector from the center of the box
-            CALL getsftv( nr1s, nr2s, nr3s, h, ainv, middle, tran)
-            call stop_clock('exx_grid_trans')
-            !      
-            ! get the localized psi around the mid point of two wannier centers
-            ! note: the psime is centered at the center of the box
-            ! (using the translation vector "tran" from middle of wfc to the center of box)
-            call start_clock('exx_psicb')
-#ifdef __CUDA
-            associate(psi=>psi_d)
-#endif
-            CALL getpsicb( nrg, p_me_r, psi(1,iobtl), psime(1), tran)
-#ifdef __CUDA
-            end associate
-#endif
-
-            call stop_clock('exx_psicb')
-            ! 
-            ! to be continue
-            !
-            ! the localized density rhome 
-            call start_clock('exx_getrhol')
-#ifdef __CUDA
-            psime_pair_recv_d(:, j, iobtl)=psime_pair_recv(:, j, iobtl)
-            CALL getrhol(p_me_r, p_ps_r, psime(1), psime_pair_recv_d(1, j, iobtl), rhome, rhops, inv_omega)
-#else
-            CALL getrhol(p_me_r, p_ps_r, psime(1), psime_pair_recv(1, j, iobtl), rhome, rhops, inv_omega)
-#endif
-            call stop_clock('exx_getrhol')
-            !
-            ! calculate the exx potential from the pair density by solving Poisson
-            !
-            !--------------------------------------------------------------------------------------
-            call start_clock('exx_vofr')
-            CALL getvofr( p_me_r, p_ps_r, n_p_me, n_p_ps, hcub, rhops, potme, pair_status(pos, iobtl), psgsn, &
-                          pairrho(:,:,pos,iobtl), pairv(:,:,pos,iobtl), cgstep)
-!            CALL getvofr( p_me_r, p_ps_r, max(n_p_me,n_s_me), max(n_p_ps,n_s_ps), hcub, rhops, potme, pair_status(pos, iobtl), psgsn, &
-!                          pairrho(:,:,pos,iobtl), pairv(:,:,pos,iobtl), cgstep)
-            call stop_clock('exx_vofr')
-            !--------------------------------------------------------------------------------------
-            !
-            !--------------------------------------------------------------------------------------
-            ! write cgsteps in the suffix.ncg (unit=44)
-            !--------------------------------------------------------------------------------------
-            IF ((MOD(nfi,iprint_stdout).EQ.0)) THEN
-              IF (ionode) THEN ! maybe not needed for ionode (if one want more information)
-                WRITE(iunit,'(3X,"(i,j,cgsteps)",3I6)') gindex_of_iobtl, my_var2, cgstep
-              END IF    
-            END IF    
-            !--------------------------------------------------------------------------------------
-            ! 
-            !--------------------------------------------------------------------------------------
-            ! update force and energy
-            !--------------------------------------------------------------------------------------
-            call start_clock('exx_force_loc')
-#ifdef __CUDA
-            CALL updateforce_loc(nrg, p_me_r, potpsi_d(:,iobtl), potme, psime, psime_pair_recv_d(1,j,iobtl),tran)
-            psime_pair_recv(:,j,iobtl) = psime_pair_recv_d(:,j,iobtl)
-#else
-            CALL updateforce_loc(nrg, p_me_r, potpsi(:,iobtl), potme, psime, psime_pair_recv(1,j,iobtl),tran)
-#endif
-            call stop_clock('exx_force_loc')
-            !
-            call start_clock('exx_penergy')
-            !
-            CALL vvprod(p_me_r, rhome, potme, paire(j))    ! dot product of the rho and potme  
-
-            call stop_clock('exx_penergy')
             paire(j) = paire(j) * 0.5_DP* hcub             ! volume element hcub and trapezoidal rule prefactor 0.5_DP are included
             totalenergy = totalenergy + 2.0_DP*paire(j)    ! the factor of two comes from the identity of ij and ji pair
-            !--------------------------------------------------------------------------------------
-            !
-            ! write (my_unit, *) "pair = ", gindex_of_iobtl, "+", my_var2, "pos = ", pos, &
-            !                    "cgstep = ", cgstep, "guess = ", pair_status(pos, iobtl) ! debug
             !
             IF (.NOT. (isotropic .AND. (ibrav.EQ.1) )) THEN
-              call start_clock('exx_stress')
+              CALL start_clock('exx_cell_derv')
               !
               ! EXX cell derivative (note: exxalfa is included in vofrho.f90 when calculate stress)
-              ! CALL start_clock('exx_cell_derv')
               !
-              CALL exx_energy_cell_derivative(p_me_r, p_ps_r, tran, rhome, potme, &
-                                              ha_proj, hb_proj, hc_proj, Jim, pair_dexx_dhab(:,:,j))
+              if (texx_cube) then
+                CALL exx_energy_cell_derivative_cube(p_me_r, p_ps_r, tran, rhome, potme, &
+                  ha_proj, hb_proj, hc_proj, Jim, pair_dexx_dhab(:,:,j))
+              else
+                CALL exx_energy_cell_derivative(np_in_sp_me_p, np_in_sp_p, tran,&
+                  vl, ha, hb, hc, rhol, pair_dexx_dhab(:,:,j))
+              end if
               !
               ! volume element hcub and trapezoidal rule prefactor 0.5_DP are included
               !
@@ -881,13 +554,19 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
               !
               total_exx_derv(:,:) = total_exx_derv(:,:) + 2.0_DP*pair_dexx_dhab(:,:,j)
               !
-              ! CALL stop_clock('exx_cell_derv')
               !
               ! if isotropic => calculate the stress tensor in vofrho.f90
               !
-              call stop_clock('exx_stress')
+              CALL stop_clock('exx_cell_derv')
             END IF
-            
+            !
+            if (.not.texx_cube) then
+              IF (ALLOCATED(psil))            DEALLOCATE(psil)
+              IF (ALLOCATED(rhol))            DEALLOCATE(rhol)
+              IF (ALLOCATED(rho_in_sp))       DEALLOCATE(rho_in_sp)
+              IF (ALLOCATED(vl))              DEALLOCATE(vl)
+            end if
+            !
           END IF
           !
         END DO !for j
@@ -895,9 +574,6 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
       END IF !gindex_of_iobtl <= nbsp
       !
     END DO
-    !
-    !===============================================================================
-    !
     CALL stop_clock('getpairv')
     !
     !===============================================================================
@@ -909,9 +585,15 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     !                INITIALIZE SEND VPSI BEFORE CALCULATE PAIR
     !===============================================================================
     !
+#if defined(__MPI)
     irecv_count = 0
     isend_count = 0
     !
+    ! ---------- start of Non-blocking communication (2) -----------
+    ! In this region of the code, we use non-blocking MPI feature to
+    ! send the EXX contributions to orbital force and asynchronously
+    ! overlap with the self-exchange computation...
+    ! --------------------------------------------------------------
     CALL start_clock('send_v')
     !
     !========================================================================
@@ -921,6 +603,7 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
       !========================================================================
       !
       gindex_of_iobtl = index_my_nbsp(iobtl, me)
+      if (gindex_of_iobtl.gt.nbsp) cycle ! index_my_nbsp is set to nbsp+1 when not assigned
       !
       DO itr = 1, neigh/2
         !
@@ -931,8 +614,13 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
           rk_of_obtl_trcv  = rk_of_obtl(obtl_trcv)
           !
           isend_count = isend_count + 1
-          CALL MPI_ISEND( psime_pair_recv(1,itr,iobtl), n_p_me, MPI_DOUBLE_PRECISION, rk_of_obtl_trcv, &
-                          gindex_of_iobtl*ndim+obtl_trcv, intra_image_comm, isendreq(isend_count), ierr)
+          if (texx_cube) then
+            CALL MPI_ISEND( psime_pair_recv(1,itr,iobtl), n_p_me, MPI_DOUBLE_PRECISION, rk_of_obtl_trcv, &
+              gindex_of_iobtl*ndim+obtl_trcv, intra_image_comm, isendreq(isend_count), ierr)
+          else
+            CALL MPI_ISEND( psime_pair_recv(1,itr,iobtl), np_in_sp_me_p, MPI_DOUBLE_PRECISION, rk_of_obtl_trcv, &
+              gindex_of_iobtl*ndim+obtl_trcv, intra_image_comm, isendreq(isend_count), ierr)
+          end if
           !
           ! WRITE(my_unit,*) "itr = ", itr
           ! WRITE(my_unit,*) "iobtl = ", iobtl
@@ -961,8 +649,13 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
           rk_of_obtl_tbs = rk_of_obtl(obtl_tbs)
           !
           irecv_count = irecv_count + 1
-          CALL MPI_IRECV( psime_pair_send(1, itr, iobtl), n_p_me, MPI_DOUBLE_PRECISION, rk_of_obtl_tbs, &
-                          obtl_tbs*ndim+gindex_of_iobtl, intra_image_comm, irecvreq(irecv_count), ierr)
+          if (texx_cube) then
+            CALL MPI_IRECV( psime_pair_send(1, itr, iobtl), n_p_me, MPI_DOUBLE_PRECISION, rk_of_obtl_tbs, &
+              obtl_tbs*ndim+gindex_of_iobtl, intra_image_comm, irecvreq(irecv_count), ierr)
+          else
+            CALL MPI_IRECV( psime_pair_send(1, itr, iobtl), np_in_sp_me_p, MPI_DOUBLE_PRECISION, rk_of_obtl_tbs, &
+              obtl_tbs*ndim+gindex_of_iobtl, intra_image_comm, irecvreq(irecv_count), ierr)
+          end if
           !
           ! WRITE(my_unit,*) "itr = ", itr
           ! WRITE(my_unit,*) "iobtl = ", iobtl
@@ -983,6 +676,7 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     !========================================================================
     !
     CALL stop_clock('send_v')
+#endif
     !
     !=========================================================================
     !                                
@@ -995,84 +689,37 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     !=========================================================================
     DO iobtl = 1, my_nbspx
       !
-      ! CALL moments(psi(:,:,:,iobtl), nnrtot, 1)
-      ! CALL moments(psi(:,:,:,iobtl), nnrtot, 2)
-      ! CALL moments(psi(:,:,:,iobtl), nnrtot, 3)
-      !
       IF (iobtl.LE.my_nbsp(me)) THEN ! skip when the loop of my_nbspx goes outside of scope
         !
         IF (me.GT.(nbsp*(sc_fac-1))) THEN ! compatible with more processors than nbsp
           !
           gindex_of_iobtl =  index_my_nbsp(iobtl, me)
+          if (gindex_of_iobtl.gt.nbsp) cycle ! index_my_nbsp is set to nbsp+1 when not assigned
           !
-          ! calculate translation vector from the center of the box
-          CALL getsftv(nr1s, nr2s, nr3s, h, ainv, wannierc(1, gindex_of_iobtl), tran)
-          !
-          ! get the localized psi around the wannier centers
-          ! note: the psime is centered at the center of the box
-          ! (using the translation vector "tran" from the wfc to the center of box)
-          !
-#ifdef __CUDA
-          associate( psi=>psi_d )
-#endif
-          CALL getpsicb( nrg, s_me_r, psi(1,iobtl), psime(1), tran)
-#ifdef __CUDA
-          end associate
-#endif
-          ! get the localized density rhome  
-          CALL getrhol(s_me_r, s_ps_r, psime(1), psime(1), rhome, rhops, inv_omega)
-          ! 
-          ! calculate the exx potential from the pair density by solving Poisson
-          !
-          !--------------------------------------------------------------------------------------
-          CALL start_clock('getvofr')
-          !
-          CALL getvofr( s_me_r, s_ps_r, n_s_me, n_s_ps, hcub, rhops, potme, n_exx-1, psgsn, &
-                        selfrho(:,:,iobtl), selfv(:,:,iobtl), cgstep)
-          !
-          CALL stop_clock('getvofr')
-          !--------------------------------------------------------------------------------------
-          !
-          !--------------------------------------------------------------------------------------
-          ! write cgsteps in the suffix.ncg (unit=44)
-          !--------------------------------------------------------------------------------------
-          IF ((MOD(nfi,iprint_stdout).EQ.0)) THEN
-            IF (ionode) THEN ! maybe not needed for ionode (if one want more information)
-              WRITE(44,'(3X,"(i,i,cgsteps)",3I6)') gindex_of_iobtl, gindex_of_iobtl, cgstep
-              CALL printout_base_close("ncg")
-            END IF    
-          END IF    
-          !--------------------------------------------------------------------------------------
-          !
-          !--------------------------------------------------------------------------------------
-          ! update force and energy
-          !--------------------------------------------------------------------------------------
-          !
-#ifdef __CUDA
-          associate( potpsi=>potpsi_d )
-#endif
-          CALL updateforce_slf(nrg, s_me_r, potpsi(1,iobtl), potme, psime, tran)
-          CALL vvprod(s_me_r, rhome, potme, selfe)    ! dot product of the rho and potme 
-#ifdef __CUDA
-          end associate
-#endif
-          selfe = selfe * 0.5_DP* hcub                ! volume element hcub and trapezoidal rule prefactor 0.5_DP are included
-          totalenergy = totalenergy + selfe    ! the factor of two comes from the identity of ij and ji pair
-          !--------------------------------------------------------------------------------------
-          !
-          ! write (*,*) "selfenergy = ", selfe ! debug
+          if (texx_cube) then
+            call solve_a_self_pair_cube
+          else
+            call solve_a_self_pair_sphere
+          end if
+          selfe = selfe * 0.5_DP * hcub               ! volume element hcub and trapezoidal rule prefactor 0.5_DP are included
+          totalenergy = totalenergy + selfe
           !
           !IF(me .GT. nbsp) THEN
-          !  potpsi(:,iobtl) = 0.0_DP
+          !  vpsil(:,iobtl) = 0.0_DP
           !END IF
           !
           IF (.NOT. (isotropic .AND. (ibrav.EQ.1))) THEN
             !
             !  EXX cell derivative (note: need to include exxalfa later)
-            ! CALL start_clock('exx_cell_derv')
+            CALL start_clock('exx_cell_derv')
             !
-            CALL exx_energy_cell_derivative(s_me_r, s_ps_r, tran, rhome, potme, &
-                                            ha_proj, hb_proj, hc_proj, Jim, self_dexx_dhab(:,:))
+            if (texx_cube) then
+              CALL exx_energy_cell_derivative_cube(s_me_r, s_ps_r, tran, rhome, potme, &
+                ha_proj, hb_proj, hc_proj, Jim, self_dexx_dhab(:,:))
+            else
+              CALL exx_energy_cell_derivative(np_in_sp_me_s, np_in_sp_s, tran,&
+                vl, ha, hb, hc, rhol, self_dexx_dhab(:,:))
+            end if
             !
             ! volume element hcub and trapezoidal rule prefactor 0.5_DP are included
             !
@@ -1082,30 +729,34 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
             !
             total_exx_derv(:,:) = total_exx_derv(:,:) + self_dexx_dhab(:,:)
             !
-            ! CALL stop_clock('exx_cell_derv')
+            CALL stop_clock('exx_cell_derv')
             !
             ! if isotropic => calculate the stress tensor in vofrho.f90
             !
           END IF
           !
+          if (.not.texx_cube) then
+            IF (ALLOCATED(psil))            DEALLOCATE(psil)
+            IF (ALLOCATED(rhol))            DEALLOCATE(rhol)
+            IF (ALLOCATED(rho_in_sp))       DEALLOCATE(rho_in_sp)
+            IF (ALLOCATED(vl))              DEALLOCATE(vl)
+          end if
+          !
         END IF ! me
         !
       END IF !iobtl 
       !
-    END DO
-    !
-    ! clean up
-    IF (ALLOCATED(psime))           DEALLOCATE(psime)
-    IF (ALLOCATED(rhome))           DEALLOCATE(rhome)
-    IF (ALLOCATED(rhops))           DEALLOCATE(rhops)
-    IF (ALLOCATED(potme))           DEALLOCATE(potme)
-    ! clean up
-    !=========================================================================
-    !
+    END DO ! iobtl
+    if (texx_cube) then
+      IF (ALLOCATED(psime))           DEALLOCATE(psime)
+      IF (ALLOCATED(rhome))           DEALLOCATE(rhome)
+      IF (ALLOCATED(rhops))           DEALLOCATE(rhops)
+      IF (ALLOCATED(potme))           DEALLOCATE(potme)
+    end if
     CALL stop_clock('getselfv')
-    !
     !========================================================================
     !
+#if defined(__MPI)
     CALL start_clock('send_v_wait')
     !
     DO itr = 1, isend_count
@@ -1117,14 +768,15 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     END DO
     !
     CALL stop_clock('send_v_wait')
+    ! ------- end of Non-blocking communication (2): synchronize by wait ------
     !
     !========================================================================
-    !
     CALL start_clock('force_rec')
     !
     DO iobtl = 1, my_nbspx
       !
       gindex_of_iobtl =  index_my_nbsp(iobtl, me)
+      if (gindex_of_iobtl.gt.nbsp) cycle ! index_my_nbsp is set to nbsp+1 when not assigned
       !
       DO itr = 1, neigh
         !
@@ -1136,17 +788,24 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
           !
           ! calculate translation vector from the center of the box
           CALL getsftv( nr1s, nr2s, nr3s, h, ainv, middle, tran )
-          
-          ! upadate potpsi PBE0 
           !
+          ! upadate vpsil PBE0 
+          !
+          if (texx_cube) then
 #ifdef __CUDA
-          psime_pair_send_d(:,itr,iobtl) = psime_pair_send(:,itr,iobtl)
-          CALL updateforce_rec(nrg, p_me_r, potpsi_d(1,iobtl), psime_pair_send_d(1,itr,iobtl), tran)
+            psime_pair_send_d(:,itr,iobtl) = psime_pair_send(:,itr,iobtl)
+            CALL updateforce_rec(nrg, p_me_r, vpsil_d(1,iobtl), psime_pair_send_d(1,itr,iobtl), tran)
 #else
-          CALL updateforce_rec(nrg, p_me_r, potpsi(1,iobtl), psime_pair_send(1,itr,iobtl), tran)
+            CALL updateforce_rec(nrg, p_me_r, vpsil(1,iobtl), psime_pair_send(1,itr,iobtl), tran)
 #endif
-          !
-
+          else
+            !$omp parallel do private(ir) 
+            DO ip = 1, np_in_sp_me_p
+              CALL l2goff (ip,ir,tran) ! local is centered at box center; global index is offset by tran
+              vpsil(ir,iobtl) = vpsil(ir,iobtl) + psime_pair_send(ip,itr,iobtl)
+            END DO
+            !$omp end parallel do
+          end if
           !
         END IF
         !
@@ -1155,28 +814,24 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     END DO ! iobtl
     !
 #ifdef __CUDA
-    potpsi=potpsi_d
+    vpsil=vpsil_d
+#endif
+    CALL stop_clock('force_rec')
+    !========================================================================
 #endif
     !
-    !MCA: end of GPU stuff
-    !
-    CALL stop_clock('force_rec')
-    !
-    !============================================================================
-    !THE MOST OUTER LOOP FOR PAIR POTENTIAL ENDS HERE
-    !============================================================================
-    !
-    !============================================================================
     CALL start_clock('totalenergy')
     !
     totalenergyg=0.0_DP ! mpi reduction variable initialization
     exx=0.0_DP          ! exx energy (used to handle the open/closed shell energy)
     ! 
-#ifdef __MPI
+#if defined(__MPI)
     ! collect the totalenergy of each mpi task to totalenergyg
     CALL MPI_ALLREDUCE(totalenergy, totalenergyg, 1, MPI_DOUBLE_PRECISION, &
         &                        MPI_SUM, intra_image_comm, ierr)
     !
+#else
+    totalenergyg = totalenergy
 #endif
     exx = totalenergyg
     IF (nspin .EQ. 1) exx = exx + totalenergyg ! if closed shell double the totalenergy
@@ -1185,38 +840,44 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     !
     CALL stop_clock('totalenergy')
     !
-    ! CALL start_clock('exx_cell_derv')
+    CALL start_clock('exx_cell_derv')
     !
     total_exx_derv_g(:,:) = 0.0_DP ! mpi reduction variable initialization
     !
-#ifdef __MPI
     IF (.NOT. (isotropic .AND. (ibrav.EQ.1))) THEN
+#if defined(__MPI)
       ! collect the total_exx_derv of each mpi task to total_exx_derv_g
       CALL MPI_ALLREDUCE(total_exx_derv(:,:), total_exx_derv_g(:,:), 9, &
           MPI_DOUBLE_PRECISION, MPI_SUM, intra_image_comm, ierr)
       !
-    END IF
+#else
+      total_exx_derv_g(:,:) = total_exx_derv(:,:)
 #endif
+    END IF
     !
     ! for closed shell case inclued spin factor of 2
     dexx_dh(:,:) = total_exx_derv_g(:,:)
     IF (nspin .EQ. 1) dexx_dh(:,:) = dexx_dh(:,:) + total_exx_derv_g(:,:)
     !
-    ! CALL stop_clock('exx_cell_derv')
+    CALL stop_clock('exx_cell_derv')
     !
     ! Local to global distribution of EXX potential
-    ! potpsi (local) --> exx_potential (global)
+    ! vpsil (local) --> exx_potential (global)
     !
     CALL start_clock('vl2vg')
     exx_potential=0.0_DP
     !
     IF (nproc_image .LE. nbsp) THEN 
       !
-      CALL redistwfr ( exx_potential, potpsi, my_nxyz, my_nbsp, intra_image_comm, -1 )
+#ifdef __MPI
+      CALL redistwfr ( exx_potential, vpsil, my_nxyz, my_nbsp, intra_image_comm, -1 )
+#else
+      exx_potential = vpsil
+#endif
       !
     ELSE
       !
-      !-----------Zhaofeng's potpsi (local) to exx_potential (global) -----------
+      !-----------Zhaofeng's vpsil (local) to exx_potential (global) -----------
       !
       nogrp = fftx_ntgrp(dffts)
       !
@@ -1254,10 +915,10 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
       ALLOCATE(exx_tmp (dffts%nnr,nproc_image/nogrp)); exx_tmp=0.0_DP
       ALLOCATE(exx_tmp3(dffts%nnr,nproc_image/nogrp)); exx_tmp3=0.0_DP
       !
-#ifdef __MPI
+#if defined(__MPI)
       !
       CALL mp_barrier( intra_image_comm )
-      CALL MPI_ALLTOALLV(potpsi, recvcount,rdispls,MPI_DOUBLE_PRECISION, &
+      CALL MPI_ALLTOALLV(vpsil(1,1), recvcount,rdispls,MPI_DOUBLE_PRECISION, &
           &           exx_tmp, sendcount,sdispls, MPI_DOUBLE_PRECISION, &
           &           intra_image_comm, ierr)
 #endif
@@ -1290,15 +951,13 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
         rdispls1(proc) = rdispls1(proc-1) + recvcount1(proc-1)
       END DO
       !
-#ifdef __MPI
+#if defined(__MPI)
       !
       DO ir=1,nproc_image/nogrp
-        !CALL mp_barrier( dffts%ogrp_comm )
         CALL mp_barrier( fftx_tgcomm(dffts) )
         CALL MPI_ALLTOALLV(exx_tmp3(1,ir), sendcount1, sdispls1, MPI_DOUBLE_PRECISION, &
             &         exx_potential(1,ir),recvcount1, rdispls1, MPI_DOUBLE_PRECISION, &
             &         fftx_tgcomm(dffts), ierr)
-        !    &         dffts%ogrp_comm, ierr)
       END DO
 #endif
       !
@@ -1313,30 +972,14 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
         END DO
       END DO
       !
-      !-----------Zhaofeng's potpsi (local) to exx_potential (global) -----------
+      !-----------Zhaofeng's vpsil (local) to exx_potential (global) -----------
       !
     END IF ! vl2vg
     !
     CALL stop_clock('vl2vg')
     !
-!     IF ( iverbosity > 1 ) THEN
-!       !
-!      DO ir=1,nbsp/nogrp
-!        DO ia=1,dffts%nnr
-!          ifile = 1+10000*ir+me
-!          write(chr_me,"(I4.4,'-',I4.4)") me, ir
-!          open(unit=ifile,file='exx_potential.'//trim(chr_me))
-!          write (ifile,*) exx_potential(ia,ir)
-!          close(ifile)
-!        END DO
-!      END DO
-!       !
-!     END IF
-
-     write(*,*) "exiting exx_gs" ! debug
-    !
     !==============================================================================
-    IF (ALLOCATED(potpsi))           DEALLOCATE(potpsi)
+    IF (ALLOCATED(vpsil))           DEALLOCATE(vpsil)
     IF (ALLOCATED(psi))             DEALLOCATE(psi)
 #ifdef __CUDA
     IF (ALLOCATED(psi_d))             DEALLOCATE(psi_d)
@@ -1360,13 +1003,533 @@ coemicf = 0.d0 ! MCA/HK: dirty hack for std CG...
     IF (ALLOCATED(recvcount1))      DEALLOCATE(recvcount1)
     !
     RETURN
+  contains
+
+    SUBROUTINE  exx_gs_setup_common()
+      IMPLICIT NONE
+      !
+      ! make processor index start from 1
+      !
+      me = me_image+1
+      !
+      ! number of real space gird along each lattice parameter directions (a1, a2, a3)
+      !
+      nr1s=dfftp%nr1; nr2s=dfftp%nr2; nr3s=dfftp%nr3 
+      !
+      ! the length of each lattice parameters
+      !
+      a(1)=DSQRT(h(1,1)*h(1,1)+h(2,1)*h(2,1)+h(3,1)*h(3,1))   ! lattice 1 
+      a(2)=DSQRT(h(1,2)*h(1,2)+h(2,2)*h(2,2)+h(3,2)*h(3,2))   ! lattice 2 
+      a(3)=DSQRT(h(1,3)*h(1,3)+h(2,3)*h(2,3)+h(3,3)*h(3,3))   ! lattice 3 
+      !
+      ! grid spacing in each lattice parameters
+      !
+      ha = a(1) / DBLE(nr1s)  !grid spacing in Lattice 1 direction
+      hb = a(2) / DBLE(nr2s)  !grid spacing in Lattice 2 direction
+      hc = a(3) / DBLE(nr3s)  !grid spacing in Lattice 3 direction
+      !
+      ! total number of real space grid points in the global mesh 
+      ! and the corresponding volume elements for each grid point
+      !
+      nnrtot = nr1s * nr2s * nr3s
+      hcub = omega / DBLE(nnrtot) !nnrtot in parallel
+      !
+      ! the x,y,z coordinates of the center of the box (gird center)
+      ! NOTE: center of the box is set to grid point at int(nr1/2), int(nr2/2), int(nr3/2) for every cell
+      !
+      centerx = h(1,1)*DBLE(INT(nr1s/2))+h(1,2)*DBLE(INT(nr2s/2))+h(1,3)*DBLE(INT(nr3s/2))   ! r = h s
+      centery = h(2,1)*DBLE(INT(nr1s/2))+h(2,2)*DBLE(INT(nr2s/2))+h(2,3)*DBLE(INT(nr3s/2))   ! r = h s
+      centerz = h(3,1)*DBLE(INT(nr1s/2))+h(3,2)*DBLE(INT(nr2s/2))+h(3,3)*DBLE(INT(nr3s/2))   ! r = h s
+      !
+      ! inverse volume
+      !
+      sa1 = 1.0_DP/omega
+      !
+      ! Compute coeke and renormalize
+      ! This part needs to be done once in constant volume simulation and
+      ! needs to be done every step in variable cell simulationulations ...
+      !
+      ! get ha*d/da, ha^2*d^2/da^2 stencil and cross coefficients
+      !   1. for the finite difference coefficients, we follow B. Fornberg in 
+      !       Math. Comp. 51 (1988), 699-706
+      !
+      CALL fornberg(nord1, nord2,coe_1st_derv(:,1),coeke(:,1,1),coeke(:,1,2),ierr)
+      !
+      IF (ierr .ne. 0) THEN
+        WRITE(stdout,*) ' ERROR: Wrong parameter in CALL of Fornberg'
+        WRITE(stdout,*) ' STOP in exx_gs'
+        RETURN
+      END IF
+      !RENORMALIZE COEKES WITH RESPECT TO THE GRID SPACING
+      ! first derivative coefficients
+      !
+      coe_1st_derv(:,3) = coe_1st_derv(:,1)/hc ! d/dc stencil
+      coe_1st_derv(:,2) = coe_1st_derv(:,1)/hb ! d/db stencil
+      coe_1st_derv(:,1) = coe_1st_derv(:,1)/ha ! d/da stencil
+      !
+      ! NOTE: in the second derivatives there is a additional factor of
+      !       -4*pi because we merege that from the Poisson equation
+      !
+      !                \nabla^2 V = -4*\pi \rho
+      !
+      ! axial derivatives
+      !
+      coeke(:,3,3) = -coeke(:,1,1)/(hc*hc*fpi) ! -d^2/dc^2/4pi stencil
+      coeke(:,2,2) = -coeke(:,1,1)/(hb*hb*fpi) ! -d^2/db^2/4pi stencil
+      coeke(:,1,1) = -coeke(:,1,1)/(ha*ha*fpi) ! -d^2/da^2/4pi stencil
+      !
+      ! cross derivatives
+      !
+      coeke(:,2,3) = -coeke(:,1,2)/(hb*hc*fpi) ! -d^2/dbdc/4pi stencil
+      coeke(:,1,3) = -coeke(:,1,2)/(ha*hc*fpi) ! -d^2/dadc/4pi stencil
+      coeke(:,1,2) = -coeke(:,1,2)/(ha*hb*fpi) ! -d^2/dadb/4pi stencil
+      !
+      ! -- Jacobian for the general (non-orthogonal) --
+      ! please see the following reference for details <todo: EXX paper>
+      !
+      ! J = transpose(ainv).(diag(a))
+      !
+      Jim(:,1) = ainv(1,:)*a(1)
+      Jim(:,2) = ainv(2,:)*a(2) ! i={xyz}, m={abc}
+      Jim(:,3) = ainv(3,:)*a(3)
+      !
+      ! -- weigh coeke with the Jacobian --
+      !
+      ! axial derivatives
+      !
+      coeke(:,3,3) = (Jim(1,3)**2+Jim(2,3)**2+Jim(3,3)**2)*coeke(:,3,3)
+      coeke(:,2,2) = (Jim(1,2)**2+Jim(2,2)**2+Jim(3,2)**2)*coeke(:,2,2)
+      coeke(:,1,1) = (Jim(1,1)**2+Jim(2,1)**2+Jim(3,1)**2)*coeke(:,1,1)
+      !
+      ! cross derivatives (needed for non-othogonal grids in the second derivatives)
+      !
+      coeke(:,2,3) = 2.0_DP*(Jim(1,2)*Jim(1,3)+Jim(2,2)*Jim(2,3)+Jim(3,2)*Jim(3,3))*coeke(:,2,3)
+      coeke(:,1,3) = 2.0_DP*(Jim(1,1)*Jim(1,3)+Jim(2,1)*Jim(2,3)+Jim(3,1)*Jim(3,3))*coeke(:,1,3)
+      coeke(:,1,2) = 2.0_DP*(Jim(1,1)*Jim(1,2)+Jim(2,1)*Jim(2,2)+Jim(3,1)*Jim(3,2))*coeke(:,1,2)
+      coeke(:,3,2) = coeke(:,2,3) ! symmetry of coeke
+      coeke(:,2,1) = coeke(:,1,2) ! symmetry of coeke
+      coeke(:,3,1) = coeke(:,1,3) ! symmetry of coeke
+#ifdef __CUDA
+    coeke_d = coeke
+    coemicf_d = coemicf
+    coe_1st_derv_d = coe_1st_derv
+#endif
+      !
+      ! a samall check on the shape of user defined cell (if any)
+      !
+      IF ((ibrav.EQ.0).AND.(nfi.EQ.1)) THEN
+        WRITE(stdout,*) 'EXX info: If you are using an orthogonal cell without its cell vectors&
+          & aligned to the xyz directions, the EXX calculation may be twice more expensive.'
+      END IF
+      RETURN
+    END SUBROUTINE exx_gs_setup_common
+
+    subroutine  exx_gs_setup_cube()
+      implicit none
+      psgsn=1
+      ! consider a grid an unit cell, the lattice vectors for the grid
+      ha_proj(:) = ha*h(:,1)/a(1)
+      hb_proj(:) = hb*h(:,2)/a(2)
+      hc_proj(:) = hc*h(:,3)/a(3)
+      inv_omega = 1.0_DP/omega
+      s_me_r1=s_me_r(1)
+      s_me_r2=s_me_r(2)
+      s_me_r3=s_me_r(3)
+      s_me_r4=s_me_r(4)
+      s_me_r5=s_me_r(5)
+      s_me_r6=s_me_r(6)
+      DO k = s_me_r(3),s_me_r(6)
+        DO j = s_me_r(2),s_me_r(5)
+          DO i = s_me_r(1),s_me_r(4)
+            !---------------------------------------------------------------------------------------
+            dqs1 = (DBLE(i)/DBLE(nr1s)) - DBLE(INT(nr1s/2))/DBLE(nr1s)
+            dqs2 = (DBLE(j)/DBLE(nr2s)) - DBLE(INT(nr2s/2))/DBLE(nr2s)
+            dqs3 = (DBLE(k)/DBLE(nr3s)) - DBLE(INT(nr3s/2))/DBLE(nr3s)
+            !
+            ! Here we are computing distances between Grid points and center of the simulation cell, so no MIC is needed ...
+            ! Compute distance between grid point and the center of the simulation cell in R space 
+            !
+            dq1=h(1,1)*dqs1+h(1,2)*dqs2+h(1,3)*dqs3   !r_i = h s_i
+            dq2=h(2,1)*dqs1+h(2,2)*dqs2+h(2,3)*dqs3   !r_i = h s_i
+            dq3=h(3,1)*dqs1+h(3,2)*dqs2+h(3,3)*dqs3   !r_i = h s_i
+            !
+            dist = DSQRT(dq1*dq1+dq2*dq2+dq3*dq3)
+            !-------------------------------------------------
+            me_cs(1,i,j,k)=dq1
+            me_cs(2,i,j,k)=dq2
+            me_cs(3,i,j,k)=dq3
+            !-------------------------------------------------
+            me_rs(0,i,j,k)=1.0_DP
+            me_rs(1,i,j,k)=dist
+            !-------------------------------------------------
+            me_ri(0,i,j,k)=1.0_DP
+            !
+            IF(dist.GE.1.0E-10) THEN
+              me_ri(1,i,j,k)=1.0_DP/dist
+            ELSE
+              me_ri(1,i,j,k)=0.0_DP ! JJ: this seems wrong, but is correct
+            END IF
+            !-------------------------------------------------
+            DO l=2,lmax
+              me_rs(l,i,j,k)=me_rs(l-1,i,j,k)*me_rs(1,i,j,k)
+            END DO
+            !-------------------------------------------------
+            DO l=2,lmax+1
+              me_ri(l,i,j,k)=me_ri(l-1,i,j,k)*me_ri(1,i,j,k)
+            END DO
+            !-------------------------------------------------
+            IF( (i.GE.s_me_r1).AND.(i.LE.s_me_r4).AND. &
+                (j.GE.s_me_r2).AND.(j.LE.s_me_r5).AND. &
+                (k.GE.s_me_r3).AND.(k.LE.s_me_r6) ) THEN
+              !-------------------------------------------------
+              dxy      = DSQRT(dq1*dq1+dq2*dq2)
+              !-------------------------------------------------
+              me_rc(0,i,j,k)     =1.0_DP
+              me_rc(1:lmax,i,j,k)=0.0_DP
+              !-------------------------------------------------
+              IF (dxy .GT. 1.0E-10) THEN
+                !-----------------------------------------------
+                cxy = CMPLX(dq1,dq2)/dxy
+                !-----------------------------------------------
+                DO m=1,lmax
+                  me_rc(m,i,j,k)=me_rc(m-1,i,j,k)*cxy
+                END DO
+                !-----------------------------------------------
+              END IF
+              !-------------------------------------------------
+            END IF
+            !-------------------------------------------------
+          END DO
+        END DO
+      END DO
+      !---------------------------------------------------------------------------------------------
+      return
+    end subroutine exx_gs_setup_cube
+
+    subroutine  exx_gs_setup_sphere()
+      implicit none
+      !========================================================================
+      ! Compute distances between grid points and the center of the simulation cell in R space 
+      ! This part needs to be done once in constant volume simulation and
+      ! needs to be done every step in variable cell simulationulations ...
+      !
+      !========================================================================
+      DO i=1,np_in_sp_me_s
+        xx_in_sp(i)=h(1,1)*sc_xx_in_sp(i)+h(1,2)*sc_yy_in_sp(i)+h(1,3)*sc_zz_in_sp(i)   ! r = h s
+        yy_in_sp(i)=h(2,1)*sc_xx_in_sp(i)+h(2,2)*sc_yy_in_sp(i)+h(2,3)*sc_zz_in_sp(i)   ! r = h s
+        zz_in_sp(i)=h(3,1)*sc_xx_in_sp(i)+h(3,2)*sc_yy_in_sp(i)+h(3,3)*sc_zz_in_sp(i)   ! r = h s
+      END DO
+      return
+    end subroutine exx_gs_setup_sphere
+
+    subroutine  solve_a_nonself_pair_cube()
+      implicit none
+      call generate_pe_guess_cube
+      call start_clock('exx_grid_trans')
+      CALL getmiddlewc(wannierc(1,gindex_of_iobtl),wannierc(1,my_var2), h, ainv, middle )
+      !
+      ! calculate translation vector from the center of the box
+      CALL getsftv( nr1s, nr2s, nr3s, h, ainv, middle, tran)
+      call stop_clock('exx_grid_trans')
+      !      
+      ! get the localized psi around the mid point of two wannier centers
+      ! note: the psime is centered at the center of the box
+      ! (using the translation vector "tran" from middle of wfc to the center of box)
+      call start_clock('exx_psicb')
+#ifdef __CUDA
+      associate(psi=>psi_d)
+#endif
+      CALL getpsicb( nrg, p_me_r, psi(1,iobtl), psime(1), tran)
+#if ! defined(__MPI)
+      ! does not need communication so construct it here; my_var2 is simultaneously the global and local index (serial case)
+      CALL getpsicb( nrg, p_me_r, psi(1,my_var2), psime_pair_recv(1, j, iobtl), tran)
+#endif
+#ifdef __CUDA
+            end associate
+#endif
+      call stop_clock('exx_psicb')
+      ! 
+      ! the localized density rhome 
+      call start_clock('exx_getrhol')
+      !
+#ifdef __CUDA
+      psime_pair_recv_d(:, j, iobtl)=psime_pair_recv(:, j, iobtl)
+      CALL getrhol_cube(p_me_r, p_ps_r, psime(1), psime_pair_recv_d(1, j, iobtl), rhome, rhops, inv_omega)
+#else
+      CALL getrhol_cube(p_me_r, p_ps_r, psime(1), psime_pair_recv(1, j, iobtl), rhome, rhops, inv_omega)
+#endif
+      !
+      call stop_clock('exx_getrhol')
+      !
+      ! calculate the exx potential from the pair density by solving Poisson
+      !
+      !--------------------------------------------------------------------------------------
+      call start_clock('exx_vofr')
+      CALL getvofr_cube( p_me_r, p_ps_r, max(n_p_me,n_s_me), max(n_p_ps,n_s_ps), hcub, &
+        rhops, potme, pair_status(pos, iobtl), psgsn, pairrho(:,:,pos,iobtl), &
+        pairv(:,:,pos,iobtl), cgstep)
+      call stop_clock('exx_vofr')
+      !--------------------------------------------------------------------------------------
+      !
+      !--------------------------------------------------------------------------------------
+      ! write cgsteps in the suffix.ncg (unit=44)
+      !--------------------------------------------------------------------------------------
+      IF ((MOD(nfi,iprint_stdout).EQ.0)) THEN
+        IF (ionode) THEN ! maybe not needed for ionode (if one want more information)
+          WRITE(iunit,'(3X,"(i,j,cgsteps)",3I6)') gindex_of_iobtl, my_var2, cgstep
+        END IF    
+      END IF    
+      !--------------------------------------------------------------------------------------
+      ! 
+      !--------------------------------------------------------------------------------------
+      ! update force and energy
+      !--------------------------------------------------------------------------------------
+      call start_clock('exx_force_loc')
+#ifdef __CUDA
+      CALL updateforce_loc(nrg, p_me_r, vpsil_d(:,iobtl), potme, psime, psime_pair_recv_d(1,j,iobtl),tran)
+      psime_pair_recv(:,j,iobtl) = psime_pair_recv_d(:,j,iobtl)
+#else
+      CALL updateforce_loc(nrg, p_me_r, vpsil(:,iobtl), potme, psime, psime_pair_recv(1,j,iobtl),tran)
+#endif
+!TODO: check if following subroutines are right
+#if ! defined(__MPI)
+      ! does not need communication so construct it here; my_var2 is simultaneously the global and local index (serial case)
+#ifdef __CUDA
+      CALL updateforce_loc(nrg, p_me_r, vpsil_d(:,my_var2), potme, psime, psime_pair_recv_d(1,j,iobtl),tran)
+      psime_pair_recv(:,j,iobtl) = psime_pair_recv_d(:,j,iobtl)
+#else
+      CALL updateforce_loc(nrg, p_me_r, vpsil(:,my_var2), potme, psime, psime_pair_recv(1,j,iobtl),tran)
+#endif
+      CALL updateforce_loc(nrg, p_me_r, vpsil(:,my_var2), potme, psime_pair_recv(1,j,iobtl), psime, tran)
+#endif
+      call stop_clock('exx_force_loc')
+      !
+      call start_clock('exx_penergy')
+      CALL vvprod_cube(p_me_r, rhome, potme, paire(j))    ! dot product of the rho and potme  
+      call stop_clock('exx_penergy')
+      return
+    end subroutine solve_a_nonself_pair_cube
+
+    subroutine  solve_a_nonself_pair_sphere()
+      implicit none
+      call start_clock('exx_grid_trans')
+      CALL getmiddlewc(wannierc(1,gindex_of_iobtl),wannierc(1,my_var2), h, ainv, middle )
+      ! d_pair is used in the extrapolation scheme (sphere only)
+      CALL get_pair_dist(wannierc(1,gindex_of_iobtl),wannierc(1,my_var2),d_pair)
+      !
+      ! calculate translation vector from the center of the box
+      CALL getsftv( nr1s, nr2s, nr3s, h, ainv, middle, tran)
+      call stop_clock('exx_grid_trans')
+      !      
+      ! get the localized psi around the mid point of two wannier centers
+      ! note: the psil is centered at the center of the box
+      ! (using the translation vector "tran" from middle of wfc to the center of box)
+      ALLOCATE ( psil(np_in_sp_me_p) ); psil=0.0_DP ! HK/MCA: (TODO) the allocation can to be done in a reusable fashion
+      CALL getpsil( nnrtot, np_in_sp_me_p, psi(1, iobtl), psil(1), tran) 
+#if ! defined(__MPI)
+      ! does not need communication so construct it here; my_var2 is simultaneously the global and local index (serial case)
+      CALL getpsil( nnrtot, np_in_sp_me_p, psi(1, my_var2), psime_pair_recv(1, j, iobtl), tran)
+#endif
+      !
+      ! the localized density rhol 
+      ! HK/MCA: (TODO) need to make these array allocation in a reusable fashion
+      ALLOCATE ( rhol(np_in_sp_me_p) ); rhol=0.0_DP
+      ALLOCATE ( rho_in_sp(np_in_sp_p) ); rho_in_sp=0.0_DP
+      CALL getrhol_sphere( np_in_sp_me_p, np_in_sp_p, psil(1), psime_pair_recv(1, j, iobtl), rhol, rho_in_sp, tran, sa1)
+      !
+      ! calculate the exx potential from the pair density by solving Poisson
+      !
+      ! calculate the exx potential from the pair density by solving Poisson
+      !
+      ALLOCATE ( vl(np_in_sp_me_p) ); vl=0.0_DP ! compute potential (vl) in ME sphere 
+      CALL start_clock('getvofr')
+      ! HK/MCA: d_pair is used in the extrapolation scheme (check if still working) see also ``call get_pair_dist''
+      CALL getvofr_sphere( np_in_sp_me_p, np_in_sp_p, hcub, rho_in_sp, vl,&
+        pairv(1,1,j,iobtl), pairv(1,2,j,iobtl), pairv(1,3,j,iobtl),&
+        .FALSE., d_pair, pair_dist(1,j,iobtl), pair_dist(2,j,iobtl),&
+        pair_dist(3,j,iobtl),cgstep)
+      CALL stop_clock('getvofr')
+      !
+      ! write cgsteps in the suffix.ncg (unit=44)
+      !
+      IF ((MOD(nfi,iprint_stdout).EQ.0)) THEN
+        !   
+        IF (ionode) THEN ! maybe not needed for ionode (if one want more information)
+          !   
+          WRITE(iunit,'(3X,"(i,j,cgsteps)",3I6)') gindex_of_iobtl, my_var2, cgstep
+          !
+        END IF    
+        !   
+      END IF    
+      ! 
+      ! update vpsil in the global grid (exxalfa is 0.25 for PBE0)
+      !$omp parallel do private(ir) 
+      DO ip = 1, np_in_sp_me_p
+        CALL l2goff (ip,ir,tran) ! local is centered at box center; global index is offset by tran
+        vpsil(ir,iobtl) = vpsil(ir,iobtl) - exxalfa*vl(ip)*psime_pair_recv(ip,j,iobtl) ! to remain 
+#if defined(__MPI)
+        psime_pair_recv(ip,j,iobtl) =            - exxalfa*vl(ip)*psil(ip)             ! to be sent 
+#else
+        ! does not need communication so construct it here; my_var2 is simultaneously the global and local index (serial case)
+        vpsil(ir,my_var2) = vpsil(ir,my_var2)    - exxalfa*vl(ip)*psil(ip)
+#endif
+      END DO
+      !$omp end parallel do
+      !
+      CALL vvprod_sphere(np_in_sp_me_p, rhol, vl, paire(j)) ! dot product of the rho and vl !HK (todo): do we need to do PS+ME ?? rho_in_sp may be enough
+      return
+    end subroutine solve_a_nonself_pair_sphere
+
+    subroutine  generate_pe_guess_cube()
+      implicit none
+      guess_status = 1        ! guess what?
+      pos = 0
+      oldest_step = 100000000
+      DO itr = 1, neigh
+        IF ( pair_label(itr, iobtl) .EQ. 0 ) THEN
+          pos = itr
+          EXIT
+        ELSE IF ( pair_label(itr, iobtl) .EQ. my_var2 ) THEN
+          guess_status = 1
+          pos = itr
+          EXIT
+        ELSE IF ( pair_step(itr, iobtl) < oldest_step ) THEN
+          pos = itr
+          oldest_step = pair_step(itr, iobtl)
+        END IF
+      END DO
+      !
+      IF (guess_status .EQ. 1) THEN
+        IF (pair_step(pos, iobtl) .EQ. n_exx - 1) THEN
+          pair_status(pos, iobtl) = pair_status(pos, iobtl) + 1
+        ELSE
+          pair_status(pos, iobtl) = 1
+        END IF
+      ELSE
+        pair_status(pos, iobtl) = 0
+      END IF
+      !
+      pair_label(pos, iobtl) = my_var2
+      pair_step(pos, iobtl)  = n_exx
+      return
+    end subroutine generate_pe_guess_cube
+
+    subroutine  solve_a_self_pair_cube()
+      implicit none
+      ! calculate translation vector from the center of the box
+      CALL getsftv(nr1s, nr2s, nr3s, h, ainv, wannierc(1, gindex_of_iobtl), tran)
+      !
+      ! get the localized psi around the wannier centers
+      ! note: the psime is centered at the center of the box
+      ! (using the translation vector "tran" from the wfc to the center of box)
+      !
+#ifdef __CUDA
+      associate( psi=>psi_d )
+#endif
+      CALL getpsicb( nrg, s_me_r, psi(1,iobtl), psime(1), tran)
+#ifdef __CUDA
+      end associate
+#endif
+      ! get the localized density rhome  
+      CALL getrhol_cube(s_me_r, s_ps_r, psime(1), psime(1), rhome, rhops, inv_omega)
+      ! 
+      ! calculate the exx potential from the pair density by solving Poisson
+      !
+      !--------------------------------------------------------------------------------------
+      CALL start_clock('getvofr')
+      !
+      CALL getvofr_cube( s_me_r, s_ps_r, n_s_me, n_s_ps, hcub, rhops, potme, n_exx-1, psgsn, &
+        selfrho(:,:,iobtl), selfv(:,:,iobtl), cgstep)
+      !
+      CALL stop_clock('getvofr')
+      !--------------------------------------------------------------------------------------
+      !
+      !--------------------------------------------------------------------------------------
+      ! write cgsteps in the suffix.ncg (unit=44)
+      !--------------------------------------------------------------------------------------
+      IF ((MOD(nfi,iprint_stdout).EQ.0)) THEN
+        IF (ionode) THEN ! maybe not needed for ionode (if one want more information)
+          WRITE(44,'(3X,"(i,i,cgsteps)",3I6)') gindex_of_iobtl, gindex_of_iobtl, cgstep
+          CALL printout_base_close("ncg")
+        END IF    
+      END IF    
+      !--------------------------------------------------------------------------------------
+      !
+      !--------------------------------------------------------------------------------------
+      ! update force and energy
+      !--------------------------------------------------------------------------------------
+      !
+#ifdef __CUDA
+      associate( vpsil=>vpsil_d )
+#endif
+      CALL updateforce_slf(nrg, s_me_r, vpsil(1,iobtl), potme, psime, tran)
+      CALL vvprod_cube(s_me_r, rhome, potme, selfe)    ! dot product of the rho and potme 
+#ifdef __CUDA
+      end associate
+#endif
+      return
+    end subroutine solve_a_self_pair_cube
+
+    subroutine  solve_a_self_pair_sphere()
+      implicit none
+      ! calculate translation vector from the center of the box
+      CALL getsftv(nr1s, nr2s, nr3s, h, ainv, wannierc(1, gindex_of_iobtl), tran)
+      !
+      ! get the localized psi around the wannier centers
+      ! note: the psil is centered at the center of the box
+      ! (using the translation vector "tran" from the wfc to the center of box)
+      ALLOCATE ( psil(np_in_sp_me_s) ); psil=0.0_DP
+      CALL getpsil( nnrtot, np_in_sp_me_s, psi(1, iobtl), psil(1), tran)
+      !
+      ! get the localized density rhol  
+      ALLOCATE ( rhol(np_in_sp_me_s) ); rhol=0.0_DP
+      ALLOCATE ( rho_in_sp(np_in_sp_s) ); rho_in_sp=0.0_DP
+      CALL getrhol_sphere( np_in_sp_me_s, np_in_sp_s, psil(1), psil(1), rhol, rho_in_sp, tran, sa1)
+      ! 
+      ! calculate the exx potential from the pair density by solving Poisson
+      !
+      ALLOCATE ( vl(np_in_sp_me_s) ); vl=0.0_DP ! compute potential (vl) in ME sphere 
+      CALL start_clock('getvofr')
+      CALL getvofr_sphere( np_in_sp_me_s,np_in_sp_s,&
+        hcub, rho_in_sp, vl, selfv(1,1,iobtl), selfv(1,2,iobtl),&
+        selfv(1,3,iobtl), .TRUE., 0.0, 0.0, 0.0, 0.0,cgstep)
+      !
+      CALL stop_clock('getvofr')
+      !
+      ! write cgsteps in the suffix.ncg (unit=44)
+      !
+      IF ((MOD(nfi,iprint_stdout).EQ.0)) THEN
+        !   
+        IF (ionode) THEN ! maybe not needed for ionode (if one want more information)
+          !   
+          WRITE(44,'(3X,"(i,i,cgsteps)",3I6)') gindex_of_iobtl, gindex_of_iobtl, cgstep
+          !
+          CALL printout_base_close("ncg")
+          !   
+        END IF    
+        !   
+      END IF    
+      !
+      ! update vpsil in the global grid (exxalfa is 0.25 for PBE0) 
+      !$omp parallel do private(ir) 
+      DO ip = 1, np_in_sp_me_s 
+        CALL l2goff (ip,ir,tran) ! local is centered at box center; global index is offset by tran
+        vpsil(ir,iobtl) = vpsil(ir,iobtl) - exxalfa*vl(ip)*psil(ip) ! PBE0
+      END DO
+      !$omp end parallel do 
+      !
+      ! compute exchange energy in ME sphere 
+      CALL vvprod_sphere(np_in_sp_me_s, rhol, vl, selfe) ! dot product of the rho and vl !HK (todo): do we need to do PS+ME ?? rho_in_sp may be enough
+      return
+    end subroutine solve_a_self_pair_sphere
+
 END SUBROUTINE exx_gs
 !====================================================================================
 
 !==============================================================================
 SUBROUTINE getsftv(nr1s, nr2s, nr3s, h, ainv, wc, tran)
     !
-    USE kinds, ONLY : DP
+    USE kinds, ONLY  : DP
     !
     IMPLICIT NONE
     !
@@ -1475,7 +1638,34 @@ END SUBROUTINE get_pair_dist
 !==============================================================================
 
 !==============================================================================
-SUBROUTINE vvprod(me_r, v1, v2, prod)
+SUBROUTINE vvprod_sphere(n, v1, v2, prod)
+    !
+    USE kinds, ONLY  : DP
+    !
+    IMPLICIT NONE
+    !
+    INTEGER  n
+    REAL(DP) prod, v1(n), v2(n), vp
+    !
+    INTEGER  i
+    !
+    prod = 0.0_DP
+    vp = 0.0_DP
+    !
+    !$omp parallel do reduction(+:vp)
+    DO i = 1, n
+      vp = vp + v1(i) * v2(i)
+    END DO
+    !$omp end parallel do 
+    !
+    prod = vp
+    !
+    RETURN
+END SUBROUTINE vvprod_sphere
+!==============================================================================
+
+!==============================================================================
+SUBROUTINE vvprod_cube(me_r, v1, v2, prod)
     !
     USE kinds, ONLY  : DP
     !
@@ -1489,20 +1679,13 @@ SUBROUTINE vvprod(me_r, v1, v2, prod)
     !----------------------------------------------------------------
     INTEGER      :: i,j,k
     REAL(DP)     :: prodp
-#ifdef __CUDA
-    attributes(device) :: v1,v2
-#endif
     !----------------------------------------------------------------
     !
     prodp=0.0D0
     !
     ! WRITE(*,*) "vvprod"
     !
-#ifdef __CUDA
-    !$cuf kernel do (3)
-#else
     !$omp parallel do private(i,j,k) reduction(+:prodp)
-#endif    
     DO k=me_r(3),me_r(6)
       DO j=me_r(2),me_r(5)
         DO i=me_r(1),me_r(4)
@@ -1515,368 +1698,39 @@ SUBROUTINE vvprod(me_r, v1, v2, prod)
       END DO
     END DO
     !----------------------------------------------------------------
-#ifndef __CUDA
     !$omp end parallel do 
-#endif
     !
     prod = prodp
     !
     RETURN
-END SUBROUTINE vvprod
+END SUBROUTINE vvprod_cube
 !==============================================================================
 
 !==============================================================================
-SUBROUTINE getpsicb(nrg,nrl,psig,psil,tran)
+SUBROUTINE getpsil( ntot, np_in_sp_me, psi, psi2, tran)
     !
     USE kinds, ONLY  : DP
-    USE dummy_exx, ONLY  : l2gcb
-    USE fft_base,         ONLY  : dfftp
     !
     IMPLICIT NONE
     !
-    INTEGER      :: nrg(3)
-    INTEGER      :: nrl(6)
-    REAL(DP)     :: psig(nrg(1),nrg(2),nrg(3))
-    REAL(DP)     :: psil(nrl(1):nrl(4),nrl(2):nrl(5),nrl(3):nrl(6))
-    INTEGER      :: tran(3)
-    INTEGER      :: gid(3)
-    !INTEGER      :: lid(3)
-    INTEGER      :: i,j,k
-    INTEGER      :: ti, tj, tk
-    INTEGER      :: gi, gj, gk
-#ifdef __CUDA
-    attributes(device) :: psil, psig
-#endif
+    INTEGER  ntot, tran(3), np_in_sp_me
+    REAL(DP) psi(ntot), psi2(np_in_sp_me)
     !
-    ti = tran(1); tj = tran(2); tk = tran(3)
-#ifdef __CUDA
-    !$cuf kernel do (3)
-#else
-    !$omp parallel do private(i,j,k,gi,gj,gk)
-#endif
-    DO k = nrl(3),nrl(6)
-      DO j = nrl(2),nrl(5)
-        DO i = nrl(1),nrl(4)
-          !----------------------------------------------------
-          gi = l2gcb(dfftp%nr1,i,ti)
-          gj = l2gcb(dfftp%nr2,j,tj)
-          gk = l2gcb(dfftp%nr3,k,tk)
-          psil(i,j,k)=psig(gi,gj,gk)
-          !----------------------------------------------------
-        END DO
-      END DO
+    INTEGER  ir, ip, i, j, k, ii, jj, kk
+    !
+    !$omp parallel do private(ir) 
+    DO ip = 1, np_in_sp_me 
+      CALL l2goff (ip,ir,tran)
+      psi2(ip) = psi(ir)
     END DO
-#ifndef __CUDA
     !$omp end parallel do 
-#endif
-    !----------------------------------------------------------
     !
     RETURN
-END SUBROUTINE getpsicb
+END SUBROUTINE getpsil
 !==============================================================================
-SUBROUTINE getpsicb_cpu(nrg,nrl,psig,psil,tran)
-    !
-    USE kinds, ONLY  : DP
-    USE dummy_exx, ONLY  : l2gcb
-    USE fft_base,         ONLY  : dfftp
-    !
-    IMPLICIT NONE
-    !
-    INTEGER      :: nrg(3)
-    INTEGER      :: nrl(6)
-    REAL(DP)     :: psig(nrg(1),nrg(2),nrg(3))
-    REAL(DP)     :: psil(nrl(1):nrl(4),nrl(2):nrl(5),nrl(3):nrl(6))
-    INTEGER      :: tran(3)
-    INTEGER      :: gid(3)
-    !INTEGER      :: lid(3)
-    INTEGER      :: i,j,k
-    INTEGER      :: ti, tj, tk
-    INTEGER      :: gi, gj, gk
-    !
-    ti = tran(1); tj = tran(2); tk = tran(3)
-
-!$omp parallel do private(i,j,k,gi,gj,gk)
-    DO k = nrl(3),nrl(6)
-      DO j = nrl(2),nrl(5)
-        DO i = nrl(1),nrl(4)
-          !----------------------------------------------------
-          gi = l2gcb(dfftp%nr1,i,ti)
-          gj = l2gcb(dfftp%nr2,j,tj)
-          gk = l2gcb(dfftp%nr3,k,tk)
-          psil(i,j,k)=psig(gi,gj,gk)
-          !----------------------------------------------------
-        END DO
-      END DO
-    END DO
-!$omp end parallel do 
-    !----------------------------------------------------------
-    !
-    RETURN
-END SUBROUTINE getpsicb_cpu
-
-!====================================================================================
-SUBROUTINE moments(wavefunc, ntot, control)
-    !
-    USE kinds,                   ONLY  : DP
-    USE cell_base,               ONLY  : omega, h
-    USE fft_base,                ONLY  : dfftp
-    USE io_global,               ONLY  : stdout
-    !
-    IMPLICIT NONE
-    INTEGER                 ::  i, j, k, offset, ntot, nr1s, nr2s, nr3s, control
-    REAL(DP)                ::  wavefunc(ntot), pos_ratio(3), pos(3)
-    REAL(DP)                ::  rho_r
-    REAL(DP)                ::  e_x, e_y, e_z
-    REAL(DP)                ::  e_xx, e_yy, e_zz, e_xy, e_yz, e_xz
-    REAL(DP)                ::  e_xxx, e_xxy, e_xxz, e_xyy, e_xyz, e_xzz, e_yyy, e_yyz, e_yzz, e_zzz
-    REAL(DP)                ::  x, y, z, nelec, hcub, norm
-    REAL(DP), ALLOCATABLE   ::  xcoeff(:), ycoeff(:), zcoeff(:)
-    ! 
-    hcub = omega/DBLE(ntot)
-    nr1s=dfftp%nr1
-    nr2s=dfftp%nr2
-    nr3s=dfftp%nr3 
-    norm=1.0_DP/DBLE(nr1s*nr2s*nr3s)
-    !
-    ALLOCATE(xcoeff(nr1s+1))
-    ALLOCATE(ycoeff(nr2s+1))
-    ALLOCATE(zcoeff(nr3s+1))
-    !
-    IF (control .EQ. 1) THEN
-      CALL get_trapezoid_coeff(xcoeff, nr1s+1)
-      CALL get_trapezoid_coeff(ycoeff, nr2s+1)
-      CALL get_trapezoid_coeff(zcoeff, nr3s+1)
-    ELSE IF (control .EQ. 2) THEN
-      CALL get_simpson_coeff(xcoeff, nr1s+1)
-      CALL get_simpson_coeff(ycoeff, nr2s+1)
-      CALL get_simpson_coeff(zcoeff, nr3s+1)
-    ELSE IF (control .EQ. 3) THEN
-      CALL get_simpson38_coeff(xcoeff, nr1s+1)
-      CALL get_simpson38_coeff(ycoeff, nr2s+1)
-      CALL get_simpson38_coeff(zcoeff, nr3s+1)
-    END IF
-    !
-    !--------------------
-    e_x=0.0_DP
-    e_y=0.0_DP
-    e_z=0.0_DP
-    !--------------------
-    e_xx=0.0_DP
-    e_yy=0.0_DP
-    e_zz=0.0_DP
-    e_xy=0.0_DP
-    e_yz=0.0_DP
-    e_xz=0.0_DP
-    !--------------------
-    e_xxx=0.0_DP
-    e_xxy=0.0_DP
-    e_xxz=0.0_DP
-    e_xyy=0.0_DP
-    e_xyz=0.0_DP
-    e_xzz=0.0_DP
-    e_yyy=0.0_DP
-    e_yyz=0.0_DP
-    e_yzz=0.0_DP
-    e_zzz=0.0_DP
-    !--------------------
-    !
-    DO i = 1, nr1s+1
-      pos_ratio(1) = DBLE(i-1)/DBLE(nr1s) 
-      DO j = 1, nr2s+1
-        pos_ratio(2) = DBLE(j-1)/DBLE(nr2s) 
-        DO k = 1, nr3s+1
-          pos_ratio(3) = DBLE(k-1)/DBLE(nr3s) 
-          !------------------------------------------------------------------------------------
-          pos(1)=h(1,1)*pos_ratio(1)+h(1,2)*pos_ratio(2)+h(1,3)*pos_ratio(3)
-          pos(2)=h(2,1)*pos_ratio(1)+h(2,2)*pos_ratio(2)+h(2,3)*pos_ratio(3)
-          pos(3)=h(3,1)*pos_ratio(1)+h(3,2)*pos_ratio(2)+h(3,3)*pos_ratio(3)
-          !------------------------------------------------------------------------------------
-          offset = MOD(i,nr1s) + MOD(j-1,nr2s)*nr1s + MOD(k-1,nr3s)*nr1s*nr2s
-          rho_r  = wavefunc(offset) * wavefunc(offset)
-          !------------------------------------------------------------------------------------
-          !
-          !------------------------------------------------------------------------------------
-          nelec  = nelec + rho_r                            * xcoeff(i) * ycoeff(j) * zcoeff(k)  
-          !------------------------------------------------------------------------------------
-          e_x    = e_x   + rho_r * pos(1)                   * xcoeff(i) * ycoeff(j) * zcoeff(k)
-          e_y    = e_y   + rho_r * pos(2)                   * xcoeff(i) * ycoeff(j) * zcoeff(k)
-          e_z    = e_z   + rho_r * pos(3)                   * xcoeff(i) * ycoeff(j) * zcoeff(k)  
-          !------------------------------------------------------------------------------------
-          e_xx   = e_xx  + rho_r * pos(1) * pos(1)          * xcoeff(i) * ycoeff(j) * zcoeff(k)  
-          e_yy   = e_yy  + rho_r * pos(2) * pos(2)          * xcoeff(i) * ycoeff(j) * zcoeff(k)  
-          e_zz   = e_zz  + rho_r * pos(3) * pos(3)          * xcoeff(i) * ycoeff(j) * zcoeff(k)  
-          e_xy   = e_xy  + rho_r * pos(1) * pos(2)          * xcoeff(i) * ycoeff(j) * zcoeff(k)  
-          e_yz   = e_yz  + rho_r * pos(2) * pos(3)          * xcoeff(i) * ycoeff(j) * zcoeff(k)  
-          e_xz   = e_xz  + rho_r * pos(2) * pos(3)          * xcoeff(i) * ycoeff(j) * zcoeff(k)  
-          !------------------------------------------------------------------------------------
-          e_xxx  = e_xxx + rho_r * pos(1) * pos(1) * pos(1) * xcoeff(i) * ycoeff(j) * zcoeff(k)  
-          e_xxy  = e_xxy + rho_r * pos(1) * pos(1) * pos(2) * xcoeff(i) * ycoeff(j) * zcoeff(k)  
-          e_xxz  = e_xxz + rho_r * pos(1) * pos(1) * pos(3) * xcoeff(i) * ycoeff(j) * zcoeff(k)  
-          e_xyy  = e_xyy + rho_r * pos(1) * pos(2) * pos(2) * xcoeff(i) * ycoeff(j) * zcoeff(k)  
-          e_xyz  = e_xyz + rho_r * pos(1) * pos(2) * pos(3) * xcoeff(i) * ycoeff(j) * zcoeff(k)  
-          e_xzz  = e_xzz + rho_r * pos(1) * pos(3) * pos(3) * xcoeff(i) * ycoeff(j) * zcoeff(k)  
-          e_yyy  = e_yyy + rho_r * pos(2) * pos(2) * pos(2) * xcoeff(i) * ycoeff(j) * zcoeff(k)  
-          e_yyz  = e_yyz + rho_r * pos(2) * pos(2) * pos(3) * xcoeff(i) * ycoeff(j) * zcoeff(k)  
-          e_yzz  = e_yzz + rho_r * pos(2) * pos(3) * pos(3) * xcoeff(i) * ycoeff(j) * zcoeff(k)  
-          e_zzz  = e_zzz + rho_r * pos(3) * pos(3) * pos(3) * xcoeff(i) * ycoeff(j) * zcoeff(k)  
-          !------------------------------------------------------------------------------------
-        END DO
-      END DO
-    END DO
-    !
-    !--------------------
-    nelec  = norm*nelec
-    !--------------------
-    e_x    = norm*e_x
-    e_y    = norm*e_y
-    e_z    = norm*e_z
-    !--------------------
-    e_xx   = norm*e_xx
-    e_yy   = norm*e_yy
-    e_zz   = norm*e_zz
-    e_xy   = norm*e_xy
-    e_yz   = norm*e_yz
-    e_xz   = norm*e_xz
-    !--------------------
-    e_xxx  = norm*e_xxx
-    e_xxy  = norm*e_xxy
-    e_xxz  = norm*e_xxz
-    e_xyy  = norm*e_xyy
-    e_xyz  = norm*e_xyz
-    e_xzz  = norm*e_xzz
-    e_yyy  = norm*e_yyy
-    e_yyz  = norm*e_yyz
-    e_yzz  = norm*e_yzz
-    e_zzz  = norm*e_zzz
-    !--------------------
-    !
-    !-----------------------------
-    WRITE(stdout,*)  "  x:", e_x
-    WRITE(stdout,*)  "  y:", e_y
-    WRITE(stdout,*)  "  z:", e_z
-    !-----------------------------
-    WRITE(stdout,*)  " xx:", e_xx
-    WRITE(stdout,*)  " yy:", e_yy
-    WRITE(stdout,*)  " zz:", e_zz
-    WRITE(stdout,*)  " xy:", e_xy
-    WRITE(stdout,*)  " yz:", e_yz
-    WRITE(stdout,*)  " xz:", e_xz
-    !-----------------------------
-    WRITE(stdout,*)  "xxx:", e_xxx
-    WRITE(stdout,*)  "xxy:", e_xxy
-    WRITE(stdout,*)  "xxz:", e_xxz
-    WRITE(stdout,*)  "xyy:", e_xyy
-    WRITE(stdout,*)  "xyz:", e_xyz
-    WRITE(stdout,*)  "xzz:", e_xzz
-    WRITE(stdout,*)  "yyy:", e_yyy
-    WRITE(stdout,*)  "yyz:", e_yyz
-    WRITE(stdout,*)  "yzz:", e_yzz
-    WRITE(stdout,*)  "zzz:", e_zzz
-    !-----------------------------
-    !
-    DEALLOCATE(xcoeff)
-    DEALLOCATE(ycoeff)
-    DEALLOCATE(zcoeff)
-    !
-END SUBROUTINE moments
-!====================================================================================
-
-!====================================================================================
-SUBROUTINE get_trapezoid_coeff(coeff, n)
-    !
-    USE kinds, ONLY : DP
-    !
-    IMPLICIT NONE
-    !
-    INTEGER    :: n, i
-    REAL(DP)   :: coeff(n)
-    !
-    IF (n .GE. 11) THEN
-      coeff(1)    = 1.0_DP/2 
-      coeff(n)    = 1.0_DP/2 
-      !
-      DO i = 2, n-1
-        coeff(i)  = 1.0_DP
-      END DO
-    ELSE
-      CALL errore( 'exx_gs', 'trapezoid rule do not apply for n < 11', 1 )
-    END IF
-    !
-END SUBROUTINE get_trapezoid_coeff
-!===================================================================================
-
-!====================================================================================
-SUBROUTINE get_simpson_coeff(coeff, n)
-    !
-    USE kinds, ONLY : DP
-    !
-    IMPLICIT NONE
-    !
-    INTEGER    :: n, i, ep
-    REAL(DP)   :: coeff(n)
-    !
-    ep =2*((n-1)/2)+1
-    !
-    IF (n .GE. 21) THEN
-      coeff(1)    = 1.0_DP/3
-      coeff(ep)   = 1.0_DP/3
-      !
-      DO i = 2, ep-1
-        IF (MOD(i,2) .EQ. 0) THEN
-          coeff(i) = 4.0_DP/3
-        ELSE
-          coeff(i) = 2.0_DP/3
-        END IF
-      END DO
-      !
-      DO i = ep+1, n
-        coeff(i) = 1.0_DP
-      END DO
-    ELSE
-      CALL errore( 'exx_gs', 'simpson rule do not apply for n < 21', 1 )
-    END IF
-    !
-END SUBROUTINE get_simpson_coeff
-!====================================================================================
-
-!====================================================================================
-SUBROUTINE get_simpson38_coeff(coeff, n)
-    !
-    USE kinds, ONLY : DP
-    !
-    IMPLICIT NONE
-    !
-    INTEGER    :: n, i, ep
-    REAL(DP)   :: coeff(n)
-    !
-    ep =3*((n-1)/3)+1
-    !
-    IF (n .GE. 22) THEN
-      coeff(1)    = 3.0_DP/8 
-      coeff(2)    = 9.0_DP/8 
-      coeff(ep-1) = 9.0_DP/8 
-      coeff(ep)   = 3.0_DP/8 
-      !
-      DO i = 3, ep-2
-        IF (MOD(i,3) .EQ. 1) THEN
-          coeff(i) = 6.0_DP/8
-        ELSE
-          coeff(i) = 9.0_DP/8
-        END IF
-      END DO
-      !
-      DO i = ep+1, n
-        coeff(i) = 1.0_DP
-      END DO
-    ELSE
-      CALL errore( 'exx_gs', 'simpson38 rule do not apply for n < 22', 1 )
-    END IF
-    !
-END SUBROUTINE get_simpson38_coeff
-!====================================================================================
 
 !==============================================================================
-SUBROUTINE getrhol(me_r, ps_r, psi1, psi2, rhome, rhops, inv_omega)
+SUBROUTINE getrhol_cube(me_r, ps_r, psi1, psi2, rhome, rhops, inv_omega)
     !
     USE kinds, ONLY  : DP
     !
@@ -1888,17 +1742,10 @@ SUBROUTINE getrhol(me_r, ps_r, psi1, psi2, rhome, rhops, inv_omega)
     REAL(DP) rhome(me_r(1):me_r(4),me_r(2):me_r(5),me_r(3):me_r(6))
     REAL(DP) rhops(ps_r(1):ps_r(4),ps_r(2):ps_r(5),ps_r(3):ps_r(6))
     REAL(DP) inv_omega
-#ifdef __CUDA
-    attributes(device) :: psi1, psi2, rhops, rhome
-#endif
     !
     INTEGER  i, j, k
     !
-#ifdef __CUDA
-    !$cuf kernel do (3)
-#else
     !$omp parallel do private(i,j,k)
-#endif
     DO k=ps_r(3),ps_r(6)
       DO j=ps_r(2),ps_r(5)
         DO i=ps_r(1),ps_r(4)
@@ -1906,17 +1753,11 @@ SUBROUTINE getrhol(me_r, ps_r, psi1, psi2, rhome, rhops, inv_omega)
         END DO
       END DO
     END DO
-#ifndef __CUDA
     !$omp end parallel do 
-#endif
     !--------------------------------------------------------------------------
     !
     !--------------------------------------------------------------------------
-#ifdef __CUDA
-    !$cuf kernel do (3)
-#else
     !$omp parallel do private(i,j,k)
-#endif
     DO k=me_r(3),me_r(6)
       DO j=me_r(2),me_r(5)
         DO i=me_r(1),me_r(4)
@@ -1924,28 +1765,129 @@ SUBROUTINE getrhol(me_r, ps_r, psi1, psi2, rhome, rhops, inv_omega)
         END DO
       END DO
     END DO
-#ifndef __CUDA
     !$omp end parallel do 
-#endif
     !--------------------------------------------------------------------------
     !
     RETURN
-END SUBROUTINE getrhol
+END SUBROUTINE getrhol_cube
 !==============================================================================
 
 !==============================================================================
-SUBROUTINE updateforce_loc(nrg, me_r, potpsi, potme, psime1, psime2, tran)
+SUBROUTINE getrhol_sphere( np_in_sp_me, np_in_sp, psi, psi2, rho, rho_in_sp, tran, sa1)
+    !
+    USE kinds, ONLY  : DP
+    !
+    IMPLICIT NONE
+    !
+    INTEGER  np_in_sp_me, tran(3),np_in_sp
+    REAL(DP) psi(np_in_sp_me), psi2(np_in_sp_me), rho(np_in_sp_me),sa1, rho_in_sp(np_in_sp)
+    !
+    INTEGER  ir, ip, i, j, k, ii, jj, kk
+    rho_in_sp(:) = 0.D0
+    !
+    !$omp parallel do 
+    DO ip = 1, np_in_sp_me 
+      rho(ip) = psi(ip) * psi2(ip) * sa1
+      IF( ip.LE.np_in_sp ) THEN
+        rho_in_sp( ip ) = rho(ip)
+      END IF
+    ENDDO
+    !$omp end parallel do 
+    !
+    RETURN
+END SUBROUTINE getrhol_sphere
+!==============================================================================
+
+!==============================================================================
+SUBROUTINE l2goff (lind,gind,tran)
+    !
+    USE exx_module,       ONLY  : odtothd_in_sp, thdtood
+    USE fft_base,         ONLY  : dfftp
+    !
+    IMPLICIT NONE
+    !
+    INTEGER  tran(3),lind,gind
+    INTEGER  ir, ip, i, j, k, ii, jj, kk, nr1s, nr2s, nr3s
+    !
+    nr1s=dfftp%nr1; nr2s=dfftp%nr2; nr3s=dfftp%nr3 
+    !
+    i  = odtothd_in_sp(1, lind)
+    j  = odtothd_in_sp(2, lind)
+    k  = odtothd_in_sp(3, lind)
+    !
+    ii = i - tran(1)
+    jj = j - tran(2)
+    kk = k - tran(3)
+    !
+    IF ( ii .GT. nr1s)ii = ii - nr1s
+    IF ( jj .GT. nr2s)jj = jj - nr2s
+    IF ( kk .GT. nr3s)kk = kk - nr3s
+    !
+    IF ( ii .LT. 1)ii = ii + nr1s
+    IF ( jj .LT. 1)jj = jj + nr2s
+    IF ( kk .LT. 1)kk = kk + nr3s
+    !
+    gind = thdtood(ii, jj, kk)
+    !
+    RETURN
+END SUBROUTINE l2goff
+!==============================================================================
+SUBROUTINE getpsicb(nrg,nrl,psig,psil,tran)
+    !
+    USE kinds, ONLY  : DP
+    USE fft_base,         ONLY  : dfftp
+    !
+    IMPLICIT NONE
+    !
+    INTEGER      :: nrg(3)
+    INTEGER      :: nrl(6)
+    REAL(DP)     :: psig(nrg(1),nrg(2),nrg(3))
+    REAL(DP)     :: psil(nrl(1):nrl(4),nrl(2):nrl(5),nrl(3):nrl(6))
+    INTEGER      :: tran(3)
+    INTEGER      :: gid(3)
+    !INTEGER      :: lid(3)
+    INTEGER      :: i,j,k
+    INTEGER      :: ti, tj, tk
+    INTEGER      :: gi, gj, gk
+    integer, external :: l2gcb
+    !
+    ti = tran(1); tj = tran(2); tk = tran(3)
+    !$omp parallel do private(i,j,k,gi,gj,gk)
+    DO k = nrl(3),nrl(6)
+      DO j = nrl(2),nrl(5)
+        DO i = nrl(1),nrl(4)
+          !----------------------------------------------------
+          gi = l2gcb(dfftp%nr1,i,ti)
+          gj = l2gcb(dfftp%nr2,j,tj)
+          gk = l2gcb(dfftp%nr3,k,tk)
+          psil(i,j,k)=psig(gi,gj,gk)
+          !----------------------------------------------------
+        END DO
+      END DO
+    END DO
+    !$omp end parallel do 
+    !----------------------------------------------------------
+    !
+    RETURN
+END SUBROUTINE getpsicb
+!==============================================================================
+
+integer function l2gcb(n,l,t)
+  implicit none
+  integer :: n, l, t
+  l2gcb = MOD(l-t-1+n, n)+1
+end function l2gcb
+SUBROUTINE updateforce_loc(nrg, me_r, vpsil, potme, psime1, psime2, tran)
     !
     USE kinds,                   ONLY  : DP
     USE exx_module,              ONLY  : exxalfa
-    USE dummy_exx, ONLY  : l2gcb
     USE fft_base,         ONLY  : dfftp
     !
     IMPLICIT NONE
     !
     INTEGER      :: nrg(3)
     INTEGER      :: me_r(6)
-    REAL(DP)     :: potpsi(nrg(1),nrg(2),nrg(3))
+    REAL(DP)     :: vpsil(nrg(1),nrg(2),nrg(3))
     REAL(DP)     :: potme(me_r(1):me_r(4),me_r(2):me_r(5),me_r(3):me_r(6))
     REAL(DP)     :: psime1(me_r(1):me_r(4),me_r(2):me_r(5),me_r(3):me_r(6))
     REAL(DP)     :: psime2(me_r(1):me_r(4),me_r(2):me_r(5),me_r(3):me_r(6))
@@ -1955,19 +1897,13 @@ SUBROUTINE updateforce_loc(nrg, me_r, potpsi, potme, psime1, psime2, tran)
     INTEGER      :: lid(3)
     INTEGER      :: i,j,k
     INTEGER      :: gi,gj,gk,ti,tj,tk
-#ifdef __CUDA
-    attributes (device) :: potpsi,potme,psime1,psime2
-#endif
+    integer, external :: l2gcb
     !
     ti=tran(1);tj=tran(2);tk=tran(3)
     !----------------------------------------------------------------
-    ! update potpsi in the global grid (exxalfa is 0.25 for PBE0)
+    ! update vpsil in the global grid (exxalfa is 0.25 for PBE0)
     !----------------------------------------------------------------
-#ifdef __CUDA
-    !$cuf kernel do (3)
-#else
     !$omp parallel do private(i,j,k,gi,gj,gk)
-#endif
     !----------------------------------------------------------------
     DO k=me_r(3),me_r(6)
       DO j=me_r(2),me_r(5)
@@ -1978,17 +1914,17 @@ SUBROUTINE updateforce_loc(nrg, me_r, potpsi, potme, psime1, psime2, tran)
           gj = l2gcb(dfftp%nr2,j,tj)
           gk = l2gcb(dfftp%nr3,k,tk)
           !----------------------------------------------------------
-          potpsi(gi,gj,gk) = potpsi(gi,gj,gk) &
+          vpsil(gi,gj,gk) = vpsil(gi,gj,gk) &
                                          - exxalfa*potme(i,j,k)*psime2(i,j,k)
+#if defined(__MPI)
           psime2(i,j,k) = - exxalfa*potme(i,j,k)*psime1(i,j,k)
+#endif
           !----------------------------------------------------------
         END DO
       END DO
     END DO
     !----------------------------------------------------------------
-#ifndef __CUDA
     !$omp end parallel do 
-#endif
     !----------------------------------------------------------------
 
     !----------------------------------------------------------------
@@ -1998,18 +1934,17 @@ END SUBROUTINE updateforce_loc
 !==============================================================================
 
 !==============================================================================
-SUBROUTINE updateforce_slf(nrg, me_r, potpsi, potme, psime, tran)
+SUBROUTINE updateforce_slf(nrg, me_r, vpsil, potme, psime, tran)
     !
     USE kinds,                   ONLY  : DP
     USE exx_module,              ONLY  : exxalfa
-    USE dummy_exx, ONLY  : l2gcb
     USE fft_base,         ONLY  : dfftp
     !
     IMPLICIT NONE
     !
     INTEGER      :: nrg(3)
     INTEGER      :: me_r(6)
-    REAL(DP)     :: potpsi(nrg(1),nrg(2),nrg(3))
+    REAL(DP)     :: vpsil(nrg(1),nrg(2),nrg(3))
     REAL(DP)     :: potme(me_r(1):me_r(4),me_r(2):me_r(5),me_r(3):me_r(6))
     REAL(DP)     :: psime(me_r(1):me_r(4),me_r(2):me_r(5),me_r(3):me_r(6))
     INTEGER      :: tran(3)
@@ -2019,19 +1954,13 @@ SUBROUTINE updateforce_slf(nrg, me_r, potpsi, potme, psime, tran)
     INTEGER      :: i,j,k
     !
     INTEGER      :: gi,gj,gk,ti,tj,tk
-#ifdef __CUDA
-    attributes (device) :: potpsi,potme,psime
-#endif
+    integer, external :: l2gcb
     !
     ti=tran(1);tj=tran(2);tk=tran(3)
     !----------------------------------------------------------------
-    ! update potpsi in the global grid (exxalfa is 0.25 for PBE0)
+    ! update vpsil in the global grid (exxalfa is 0.25 for PBE0)
     !----------------------------------------------------------------
-#ifdef __CUDA
-    !$cuf kernel do (3)
-#else
     !$omp parallel do private(i,j,k,gi,gj,gk)
-#endif
     DO k=me_r(3),me_r(6)
       DO j=me_r(2),me_r(5)
         DO i=me_r(1),me_r(4)
@@ -2040,16 +1969,14 @@ SUBROUTINE updateforce_slf(nrg, me_r, potpsi, potme, psime, tran)
           gj = l2gcb(dfftp%nr2,j,tj)
           gk = l2gcb(dfftp%nr3,k,tk)
           !----------------------------------------------------------
-          potpsi(gi,gj,gk) = potpsi(gi,gj,gk) &
+          vpsil(gi,gj,gk) = vpsil(gi,gj,gk) &
                                          - exxalfa*potme(i,j,k)*psime(i,j,k)
           !----------------------------------------------------------
         END DO
       END DO
     END DO
     !----------------------------------------------------------------
-#ifndef __CUDA
     !$omp end parallel do 
-#endif
     !----------------------------------------------------------------
 
     !----------------------------------------------------------------
@@ -2059,38 +1986,31 @@ END SUBROUTINE updateforce_slf
 !==============================================================================
 
 !==============================================================================
-SUBROUTINE updateforce_rec(nrg, me_r, potpsi, force, tran)
+SUBROUTINE updateforce_rec(nrg, me_r, vpsil, force, tran)
     !
     USE kinds,                   ONLY  : DP
     USE exx_module,              ONLY  : exxalfa
-    USE dummy_exx,               ONLY  : l2gcb
     USE fft_base,                ONLY  : dfftp
     !
     IMPLICIT NONE
     !
     INTEGER      :: nrg(3)
     INTEGER      :: me_r(6)
-    REAL(DP)     :: potpsi(nrg(1),nrg(2),nrg(3))
+    REAL(DP)     :: vpsil(nrg(1),nrg(2),nrg(3))
     REAL(DP)     :: force(me_r(1):me_r(4),me_r(2):me_r(5),me_r(3):me_r(6))
     INTEGER      :: tran(3)
     !----------------------------------------------------------------
     INTEGER      :: gi, gj, gk
     INTEGER      :: i,j,k
     INTEGER      :: ti,tj,tk
-#ifdef __CUDA
-    attributes (device) :: potpsi, force
-#endif
+    integer, external :: l2gcb
     !
     ti=tran(1);tj=tran(2);tk=tran(3)
     !
     !----------------------------------------------------------------
-    ! update potpsi in the global grid (exxalfa is 0.25 for PBE0)
+    ! update vpsil in the global grid (exxalfa is 0.25 for PBE0)
     !----------------------------------------------------------------
-#ifdef __CUDA
-    !$cuf kernel do (3)
-#else
     !$omp parallel do private(i,j,k,gi,gj,gk)
-#endif
     !----------------------------------------------------------------
     DO k=me_r(3),me_r(6)
       DO j=me_r(2),me_r(5)
@@ -2100,15 +2020,13 @@ SUBROUTINE updateforce_rec(nrg, me_r, potpsi, force, tran)
           gj = l2gcb(dfftp%nr2,j,tj)
           gk = l2gcb(dfftp%nr3,k,tk)
           !----------------------------------------------------------
-          potpsi(gi,gj,gk) = potpsi(gi,gj,gk) + force(i,j,k)
+          vpsil(gi,gj,gk) = vpsil(gi,gj,gk) + force(i,j,k)
           !----------------------------------------------------------
         END DO
       END DO
     END DO
     !----------------------------------------------------------------
-#ifndef __CUDA
     !$omp end parallel do 
-#endif
     !----------------------------------------------------------------
 
     !----------------------------------------------------------------
@@ -2116,56 +2034,3 @@ SUBROUTINE updateforce_rec(nrg, me_r, potpsi, force, tran)
     !----------------------------------------------------------------
 END SUBROUTINE updateforce_rec
 !==============================================================================
-
-!==============================================================================
-SUBROUTINE fcn(m, n, x, fvec, iflag)
-    USE kinds,              ONLY: DP                 !double-precision kind (selected_real_kind(14,200))
-    USE exx_module,         ONLY: PScubeSL_p
-    USE exx_module,         ONLY: coeke
-    IMPLICIT NONE
-    !--------------------------------------------------------------
-    INTEGER,  INTENT(IN)  :: m, n, iflag
-    REAL(DP), INTENT(IN)  :: x(n)
-    REAL(DP), INTENT(OUT) :: fvec(m)
-    
-    INTEGER               :: i
-    REAL(DP)              :: y(4)
-    REAL(DP)              :: gm
-
-    ! here we use PScubeSL_p since it is smaller than PScubeSL_s
-    gm = (1-2.0D0/PScubeSL_p)**(0.25)
-
-    y = [coeke(0,1,1), coeke(1,1,1), coeke(2,1,1), coeke(3,1,1)]
-    
-    fvec(1) = (x(1)**2.0D0 + 3*x(2)**2.0D0 + 3*x(3)**2.0D0 + 3*x(4)**2.0D0) +&
-      & ((3*x(2)**2.0D0 + 3*x(3)**2.0D0 + 3*x(4)**2.0D0) + &
-      & (6*x(2)*x(3) + 6*x(2)*x(4) + 6*x(3)*x(4)))*2*gm - y(1)*3
-    fvec(2) = x(1)*x(2) + x(2)*x(3) + x(3)*x(4) - y(2)
-    fvec(3) = x(1)*x(3) + x(2)*x(4) - y(3)
-    fvec(4) = x(1)*x(4) - y(4)
-END SUBROUTINE fcn
-!==============================================================================
-
-
-!==============================================================================
-SUBROUTINE l2gcb(lid,gid,tran)
-    !
-    USE fft_base,         ONLY  : dfftp
-    !
-    IMPLICIT NONE
-    !
-    INTEGER  lid(3),gid(3),tran(3)
-    INTEGER  nr1s, nr2s, nr3s
-    !
-    nr1s=dfftp%nr1 
-    nr2s=dfftp%nr2 
-    nr3s=dfftp%nr3 
-    !
-    gid(1) = MOD(lid(1)-tran(1)-1+nr1s, nr1s)+1
-    gid(2) = MOD(lid(2)-tran(2)-1+nr2s, nr2s)+1
-    gid(3) = MOD(lid(3)-tran(3)-1+nr3s, nr3s)+1
-    !
-    RETURN
-END SUBROUTINE l2gcb
-!==============================================================================
-

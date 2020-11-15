@@ -3,7 +3,7 @@
 include	../../make.inc
 
 # location of needed modules and included files (if any)
-MODFLAGS= $(BASEMOD_FLAGS)
+MODFLAGS= $(BASEMOD_FLAGS) 
 
 FOBJS = \
 berryion.o \
@@ -30,12 +30,13 @@ electrons_nose.o \
 energies.o \
 ensemble_dft.o \
 exch_corr.o \
+exx_cg.o \
+exx_es.o \
 exx_gs.o \
 exx_module.o \
 exx_pair.o \
 exx_psi.o \
 exx_vofr.o \
-exx_poisson_solver.o \
 forces.o \
 fromscra.o \
 gram.o \
@@ -110,9 +111,9 @@ wf.o \
 makov_payne.o
 
 LOBJS = \
-entropy.o
+entropy.o 
 
-QEMODS=../../Modules/libqemod.a ../../upflib/libupf.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a
+QEMODS=../../Modules/libqemod.a ../../upflib/libupf.a ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 
 TLDEPS= bindir libs mods
 
@@ -128,7 +129,7 @@ cp.x : cprstart.o libcp.a $(QEMODS) $(LIBOBJS)
 		libcp.a $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/cp.x . )
 
-libcp.a : $(FOBJS) $(LOBJS)
+libcp.a : $(FOBJS) $(LOBJS) 
 	 $(AR) $(ARFLAGS) $@ $?
 	 $(RANLIB) $@
 

@@ -678,8 +678,7 @@ MODULE read_namelists_module
        exx_ps_rcut_pair =  5.0_DP
        exx_me_rcut_self = 10.0_DP
        exx_me_rcut_pair =  7.0_DP
-       exx_ps_sl_self   = 12.0_DP
-       exx_ps_sl_pair   = 10.0_DP
+       exx_use_cube_domain = .false.
 !=======================================================================
        !
        nit    = 10
@@ -1257,9 +1256,8 @@ MODULE read_namelists_module
        CALL mp_bcast( exx_ps_rcut_pair, ionode_id, intra_image_comm )
        CALL mp_bcast( exx_me_rcut_self, ionode_id, intra_image_comm )
        CALL mp_bcast( exx_me_rcut_pair, ionode_id, intra_image_comm )
+       CALL mp_bcast( exx_use_cube_domain, ionode_id, intra_image_comm )
        CALL mp_bcast( vnbsp,       ionode_id, intra_image_comm )
-       CALL mp_bcast( exx_ps_sl_self,   ionode_id, intra_image_comm )
-       CALL mp_bcast( exx_ps_sl_pair,   ionode_id, intra_image_comm )
        !
        RETURN
        !

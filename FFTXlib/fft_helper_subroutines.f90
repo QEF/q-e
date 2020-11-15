@@ -8,13 +8,6 @@ MODULE fft_helper_subroutines
 &                    tg_reduce_rho_5
   END INTERFACE
 
-  INTERFACE c2psi_gamma
-    MODULE PROCEDURE c2psi_gamma_cpu
-#ifdef __CUDA
-    MODULE PROCEDURE c2psi_gamma_gpu
-#endif
-  END INTERFACE
-
 CONTAINS
 
   SUBROUTINE tg_reduce_rho_1( rhos, tg_rho_nc, tg_rho, ispin, noncolin, domag, desc )
@@ -277,7 +270,7 @@ CONTAINS
   END SUBROUTINE
 
 
-  SUBROUTINE c2psi_gamma_cpu( desc, psi, c, ca )
+  SUBROUTINE c2psi_gamma( desc, psi, c, ca )
      !
      !  Copy wave-functions from 1D array (c_bgrp) to 3D array (psi) in Fourier space
      !
@@ -289,6 +282,11 @@ CONTAINS
      complex(DP), OPTIONAL, INTENT(IN) :: ca(:)
      complex(DP), parameter :: ci=(0.0d0,1.0d0)
      integer :: ig
+#ifdef __CUDA
+     attributes(DEVICE) :: psi, c, ca
+     associate (desc%nlm_d => desc%nlm)
+     associate (desc%nl_d => desc%nl)
+#endif
      !
      psi = 0.0d0
      !
@@ -298,59 +296,68 @@ CONTAINS
      !  c array: stores the Fourier expansion coefficients
      !     Loop for all local g-vectors (ngw)
      IF( PRESENT(ca) ) THEN
+#ifdef __CUDA
+        !$cuf kernel do (1)
+#endif
         do ig = 1, desc%ngw
            psi( desc%nlm( ig ) ) = CONJG( c( ig ) ) + ci * conjg( ca( ig ))
            psi( desc%nl( ig ) ) = c( ig ) + ci * ca( ig )
         end do
      ELSE
+#ifdef __CUDA
+        !$cuf kernel do (1)
+#endif
         do ig = 1, desc%ngw
            psi( desc%nlm( ig ) ) = CONJG( c( ig ) )
            psi( desc%nl( ig ) ) = c( ig )
         end do
      END IF
-  END SUBROUTINE
-
 #ifdef __CUDA
-  SUBROUTINE c2psi_gamma_gpu( desc, psi, c, ca )
-     !
-     !  Copy wave-functions from 1D array (c_bgrp) to 3D array (psi) in Fourier space
-     !
-     USE fft_param
-     USE fft_types,      ONLY : fft_type_descriptor
-     !!DIR$ IGNORE_TKR c, ca
-     TYPE(fft_type_descriptor), INTENT(in) :: desc
-     complex(DP), DEVICE, INTENT(OUT) :: psi(:)
-     complex(DP), DEVICE, INTENT(IN) :: c(:)
-     complex(DP), DEVICE, OPTIONAL, INTENT(IN) :: ca(:)
-     complex(DP), parameter :: ci=(0.0d0,1.0d0)
-     integer :: ig
-     integer, device, pointer :: nlm_d(:), nl_d(:)
-
-     nlm_d => desc%nlm_d
-     nl_d => desc%nl_d
-     !
-     psi = 0.0d0
-     !
-     !  nlm and nl array: hold conversion indices form 3D to
-     !     1-D vectors. Columns along the z-direction are stored
-     !     contigiously
-     !  c array: stores the Fourier expansion coefficients
-     !     Loop for all local g-vectors (ngw)
-     IF( PRESENT(ca) ) THEN
-        !$cuf kernel do (1)
-        do ig = 1, desc%ngw
-           psi( nlm_d( ig ) ) = CONJG( c( ig ) ) + ci * conjg( ca( ig ))
-           psi( nl_d( ig ) ) = c( ig ) + ci * ca( ig )
-        end do
-     ELSE
-        !$cuf kernel do (1)
-        do ig = 1, desc%ngw
-           psi( nlm_d( ig ) ) = CONJG( c( ig ) )
-           psi( nl_d( ig ) ) = c( ig )
-        end do
-     END IF
-  END SUBROUTINE
+  end associate
 #endif
+  END SUBROUTINE
+
+!#ifdef __CUDA
+!  SUBROUTINE c2psi_gamma_gpu( desc, psi, c, ca )
+!     !
+!     !  Copy wave-functions from 1D array (c_bgrp) to 3D array (psi) in Fourier space
+!     !
+!     USE fft_param
+!     USE fft_types,      ONLY : fft_type_descriptor
+!     !!DIR$ IGNORE_TKR c, ca
+!     TYPE(fft_type_descriptor), INTENT(in) :: desc
+!     complex(DP), DEVICE, INTENT(OUT) :: psi(:)
+!     complex(DP), DEVICE, INTENT(IN) :: c(:)
+!     complex(DP), DEVICE, OPTIONAL, INTENT(IN) :: ca(:)
+!     complex(DP), parameter :: ci=(0.0d0,1.0d0)
+!     integer :: ig
+!     integer, device, pointer :: nlm_d(:), nl_d(:)
+!
+!     nlm_d => desc%nlm_d
+!     nl_d => desc%nl_d
+!     !
+!     psi = 0.0d0
+!     !
+!     !  nlm and nl array: hold conversion indices form 3D to
+!     !     1-D vectors. Columns along the z-direction are stored
+!     !     contigiously
+!     !  c array: stores the Fourier expansion coefficients
+!     !     Loop for all local g-vectors (ngw)
+!     IF( PRESENT(ca) ) THEN
+!        !$cuf kernel do (1)
+!        do ig = 1, desc%ngw
+!           psi( nlm_d( ig ) ) = CONJG( c( ig ) ) + ci * conjg( ca( ig ))
+!           psi( nl_d( ig ) ) = c( ig ) + ci * ca( ig )
+!        end do
+!     ELSE
+!        !$cuf kernel do (1)
+!        do ig = 1, desc%ngw
+!           psi( nlm_d( ig ) ) = CONJG( c( ig ) )
+!           psi( nl_d( ig ) ) = c( ig )
+!        end do
+!     END IF
+!  END SUBROUTINE
+!#endif
 
   SUBROUTINE c2psi_k( desc, psi, c, igk, ngk)
      !
