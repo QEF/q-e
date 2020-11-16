@@ -4,7 +4,7 @@ build:pw:
   script:
     - apt-get update
     - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
-    - apt-get install --yes gfortran git cmake libopenblas0 libopenblas-dev libfftw3-3 libfftw3-dev libopenmpi3 libopenmpi-dev
+    - apt-get install --yes cmake
     - ./configure
     - make pw
 #    - export OMP_NUM_THREADS=1
