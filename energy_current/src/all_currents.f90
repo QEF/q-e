@@ -5,6 +5,11 @@ program all_currents
            scf_result_set_from_global_variables, multiple_scf_result_deallocate, &
            three_point_derivative, ave_cur, ethr_small_step, &
            init_hartree, current_hartree_xc, current_kohn_sham
+   use zero_mod, only: vel_input_units, init_zero, current_zero, &
+                       allocate_zero, deallocate_zero
+   use ionic_mod, only : init_ionic, ionic_init_type, current_ionic, add_i_current_b, &
+                       i_current, i_current_a, i_current_b, i_current_c, i_current_d, i_current_e
+                       
    USE environment, ONLY: environment_start, environment_end
    use io_global, ONLY: ionode
    use wavefunctions, only: evc
@@ -30,10 +35,6 @@ program all_currents
 !from ../Modules/read_input.f90
    USE read_namelists_module, ONLY: read_namelists
    USE read_cards_module, ONLY: read_cards
-   use zero_mod, only: vel_input_units, init_zero, current_zero, &
-                       allocate_zero, deallocate_zero, &
-                       current_ionic, add_i_current_b, &
-                       i_current, i_current_a, i_current_b, i_current_c, i_current_d, i_current_e
    use averages, only: online_average_init
 
 
@@ -53,10 +54,12 @@ program all_currents
 
 
    implicit none
-   integer :: exit_status, ios, irepeat
+
+   integer :: exit_status, ios, irepeat, n_max
    logical :: print_stat
    type(cpv_trajectory) :: traj
-   real(kind=dp) :: vel_factor
+   type(ionic_init_type) :: ionic_data
+   real(kind=dp) :: vel_factor, eta
    real(kind=dp),allocatable :: tau_save(:,:)
    !from ../PW/src/pwscf.f90
    include 'laxlib.fh'
@@ -72,7 +75,7 @@ program all_currents
    IF (ionode) THEN
       CALL input_from_file()
       ! all_currents input
-      call read_all_currents_namelists(5)
+      call read_all_currents_namelists(5,eta,n_max)
    endif
    ! PW input
    call read_namelists('PW', 5)
@@ -81,7 +84,7 @@ program all_currents
    call check_input()
 
    call mp_barrier(intra_pool_comm)
-   call bcast_all_current_namelist()
+   call bcast_all_current_namelist(eta, n_max)
    if (vel_input_units == 'CP') then ! atomic units of cp are different
        vel_factor = 2.0_dp
        if (ionode)  &
@@ -124,6 +127,7 @@ program all_currents
    call init_run() ! ../PW/src/init_run.f90 allocate stuff
    ! now scf is ready to start, but I first initialize energy current stuff
    call allocate_zero() ! only once per all trajectory
+   call init_ionic(ionic_data, eta, n_max, ngm, gstart, at, alat, omega, gg, g, tpiba2)  
    call init_zero(nsp, zv, tpiba2, tpiba, omega, at, alat, &
                 ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq, &
                 upf, rgrid, nqxq) ! only once per all trajectory
@@ -195,7 +199,8 @@ program all_currents
               call current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                         vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
                         nkb, vkb, deeq, upf, nh, xk, igk_k, bg ) ! routine zero should be called in t
-              call current_ionic(i_current, i_current_a, i_current_b, i_current_c, i_current_d, i_current_e, add_i_current_b, &
+              call current_ionic(ionic_data, &
+                      i_current, i_current_a, i_current_b, i_current_c, i_current_d, i_current_e, add_i_current_b, &
                       nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
           else
               call scf_result_set_from_global_variables(scf_all%t_zero) !if we don't have 3pt derivative, zero and minus are equal
@@ -218,7 +223,8 @@ program all_currents
               call current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                         vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
                         nkb, vkb, deeq, upf, nh, xk, igk_k, bg ) ! we are in t in this case, and we call here routine zero
-              call current_ionic(i_current, i_current_a, i_current_b, i_current_c, i_current_d, i_current_e, add_i_current_b, &
+              call current_ionic(ionic_data, &
+                      i_current, i_current_a, i_current_b, i_current_c, i_current_d, i_current_e, add_i_current_b, &
                       nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
           end if
           !calculate second part of energy current
@@ -315,12 +321,14 @@ contains
 
    end subroutine
 
-   subroutine read_all_currents_namelists(iunit)
+   subroutine read_all_currents_namelists(iunit, eta, n_max)
       use zero_mod
       use hartree_mod
       use io_global, ONLY: stdout, ionode, ionode_id
       implicit none
       integer, intent(in) :: iunit
+      integer, intent(out) :: n_max
+      real(dp), intent(out) :: eta
       integer :: ios
       CHARACTER(LEN=256), EXTERNAL :: trimcheck
 
@@ -362,13 +370,15 @@ contains
 
    end subroutine
 
-   subroutine bcast_all_current_namelist()
+   subroutine bcast_all_current_namelist(eta, n_max)
       use zero_mod
       use hartree_mod
       use io_global, ONLY: stdout, ionode, ionode_id
       use mp_world, ONLY: mpime, world_comm
       use mp, ONLY: mp_bcast
       implicit none
+      integer, intent(inout) :: n_max
+      real(dp), intent(inout) :: eta
       CALL mp_bcast(trajdir, ionode_id, world_comm)
       CALL mp_bcast(delta_t, ionode_id, world_comm)
       CALL mp_bcast(eta, ionode_id, world_comm)

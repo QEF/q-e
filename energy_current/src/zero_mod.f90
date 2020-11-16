@@ -20,230 +20,18 @@ MODULE zero_mod
    complex(DP), allocatable :: xdvkb(:, :, :, :)
 
    !the component of the current here computed
-   real(dp) ::z_current(3), i_current(3), i_current_a(3), i_current_b(3), i_current_c(3), i_current_d(3), i_current_e(3)
-
-   !sum or not i_current_b in i_current
-   logical :: add_i_current_b = .false.
+   real(dp) ::z_current(3)!, i_current(3), i_current_a(3), i_current_b(3), i_current_c(3), i_current_d(3), i_current_e(3)
 
    character(len=256) :: vel_input_units = 'PW'
 
    !input from stdout
-   integer        :: natoms !cutoff per somme in griglia reale
-   integer        :: n_max !cutoff per somme in griglia reale
-   real(kind=DP)  :: eta !ewald factor for convergence
 
-   real(DP) ::I_primo_rec
    real(DP), allocatable   :: H_g(:, :, :, :)
    complex(DP), allocatable   :: u_g(:, :) !ngm,a  !this looks like can be transformed in a local variable
    complex(DP), allocatable ::charge_g(:)
-   real(DP), allocatable   :: I_uno_g(:, :, :) !griglia,a,b
-   real(DP), allocatable   :: I_due_g(:)
-   real(DP)  ::I_primo
 
-   !variable for S_due
-   real(DP), allocatable   ::alpha_0_all(:, :), alpha_2_all(:, :)
 
-   !counters and indexes
-   integer      ::nr3s_start, nr3s_end !z-planes in processor
-   integer      ::nr3s_start_par
 contains
-
-   real(kind=DP) function h_(x)
-      real(kind=DP) :: x
-      real(kind=DP), external :: qe_erfc
-      h_ = qe_erfc(x)/x
-   end function h_
-
-   real(kind=DP) function hp_(x)
-      use constants, only: pi
-      real(kind=DP) :: x
-      real(kind=DP), external :: qe_erfc
-      hp_ = -(2.d0/sqrt(pi))*(1.d0/x)*exp(-x*x) - 1.d0/(x*x)*qe_erfc(x)
-   end function hp_
-
-   real(kind=DP) function modulus(vector)
-      real(kind=DP) ::vector(3)
-      modulus = sqrt(vector(1)**2 + vector(2)**2 + vector(3)**2)
-   end function modulus
-
-   subroutine pbc(vin, vout, alat, at, bg)
-      implicit none
-      real(DP), intent(in) :: vin(3), alat, at(3,3), bg(3,3)
-      real(DP), intent(out) :: vout(3)
-      !local
-      real(DP):: alatdir ! box side in a given direction
-      integer :: i, n
-      !vout used also as help variable
-      vout(:) = matmul(vin(:)/alat, bg(:, :)) ! vout = vin in S space
-      vout(:) = vout(:) - ANINT(vout(:))
-      vout(:) = MATMUL(at(:, :), vout(:))*alat ! back from S space to R space
-   end subroutine pbc
-
-   subroutine I_uno_value(y, x, a, b, flag, tpiba, at, alat, gstart, g, gg, npw)
-      use mp, only: mp_sum
-      use mp_pools, only: intra_pool_comm
-      implicit none
-      integer, intent(in) ::flag, npw, gstart
-      real(DP), intent(out) ::y
-      real(DP), intent(in)  ::x(3), tpiba, g(:,:), gg(:), at(3,3),alat
-      integer, intent(in)   ::a, b
-      integer ::igm
-      real(DP) :: comp_iso
-
-      call start_clock('rec')
-
-      y = 0.d0
-      do igm = gstart, npw
-         if ((gg(igm)*tpiba*tpiba)/(4.d0*eta) > 20.d0) exit
-         y = y + 2.d0*(I_uno_g(igm, a, b)*cos(DOT_PRODUCT(g(1:3, igm), x(1:3))*tpiba))
-      end do
-      if (gstart == 2) y = y + I_uno_g(1, a, b)
-      call mp_sum(y, intra_pool_comm)
-      call stop_clock('rec')
-      if (flag == 1) then
-         call add_local_uno(y, x, a, b, at, alat)
-      end if
-!change for opt
-!  call I_due_value(comp_iso,x,1)
-!  if (a==b) then
-!     y=y-comp_iso
-!  end if
-      !if (a == b) then
-      !   call I_due_value(comp_iso, x, 1)
-      !   y = y - comp_iso
-      !end if
-
-   end subroutine I_uno_value
-
-   subroutine add_local_uno(value, pos, a, b, at, alat)
-      use mp_world, only: nproc, mpime
-      use mp, only: mp_sum
-      use mp_pools, only: intra_pool_comm
-      implicit none
-      integer, intent(in) ::a, b
-      real(DP), intent(in) ::pos(3), at(3,3), alat
-      real(DP), intent(inout) ::value
-      real(DP) ::u(3), u_mod, n(3)
-      integer  ::n_x, n_y, n_z
-      integer   :: l_blk, nbegin, nend
-      real(DP)  :: value1
-
-      call start_clock('real')
-      l_blk = (2*n_max + 1)/nproc
-      if (l_blk*nproc < (2*n_max + 1)) l_blk = l_blk + 1
-      nbegin = mpime*l_blk - n_max
-      nend = nbegin + l_blk - 1
-      if (nend > n_max) nend = n_max
-      value1 = 0.d0
-      do n_x = nbegin, nend
-         do n_y = -n_max, n_max
-            do n_z = -n_max, n_max
-               n(1:3) = n_x*at(1:3, 1)*alat + n_y*at(1:3, 2)*alat + n_z*at(1:3, 3)*alat
-               u(1:3) = pos(1:3) - n(1:3)
-               u_mod = modulus(u)
-               value1 = value1 + eta*hp_(sqrt(eta)*u_mod)*u(a)*u(b)/u_mod
-               if (a == b) then
-                  value1 = value1 + sqrt(eta)*h_(sqrt(eta)*u_mod)
-               end if
-            end do
-         end do
-      end do
-      call mp_sum(value1, intra_pool_comm)
-      value = value + value1
-      call stop_clock('real')
-!!!!!!!!!!!!!!!!!!!
-      !call start_clock( 'real' )
-      !do n_x=-n_max,n_max
-      !   do n_y=-n_max,n_max
-      !      do n_z=-n_max,n_max
-      !         n(1:3) = n_x * at(1:3,1)*alat + n_y * at(1:3,2)*alat + n_z * at(1:3,3)*alat
-      !         u(1:3) = pos(1:3)-n(1:3)
-      !         u_mod=modulus(u)
-      !         value=value+eta*hp_(sqrt(eta)*u_mod)*u(a)*u(b)/u_mod
-      !         if (a==b) then
-      !            value=value+sqrt(eta)*h_(sqrt(eta)*u_mod)
-      !         end if
-      !      end do
-      !   end do
-      !end do
-      !call stop_clock( 'real' )
-   end subroutine add_local_uno
-
-   subroutine I_due_value(y, x, flag, tpiba, at, alat, gstart, g, gg, npw)
-      use mp, only: mp_sum
-      use mp_pools, only: intra_pool_comm
-      implicit none
-      integer, intent(in) ::flag, npw, gstart
-      real(DP), intent(out) ::y
-      real(DP), intent(in)  ::x(3), at(3,3), alat,g(:,:), gg(:), tpiba
-      integer ::igm!,ng_max
-      real(DP) ::scalar
-
-      call start_clock('rec')
-      y = 0.d0
-      do igm = gstart, npw
-         if ((gg(igm)*tpiba*tpiba)/(4.d0*eta) > 20.d0) exit
-         y = y + 2.d0*(I_due_g(igm)*cos(DOT_PRODUCT(g(1:3, igm), x(1:3))*tpiba))
-      end do
-      if (gstart == 2) y = y + I_due_g(1)
-      call mp_sum(y, intra_pool_comm)
-      if (flag == 1) then
-         call add_local_due(y, x, at, alat)
-      end if
-      call stop_clock('rec')
-   end subroutine i_due_value
-
-   subroutine add_local_due(value, pos, at, alat)
-      !This routines computes sum_{L}erfc(sqrt(eta)abs(d-L))/abs(d-L)
-      ! the sum is in real space over a small number of shells
-      use mp, only: mp_sum
-      use mp_world, ONLY: nproc, mpime
-      use mp_pools, ONLY: intra_pool_comm
-      implicit none
-      real(DP), intent(in) ::pos(3), at(3,3), alat
-      real(DP), intent(inout) ::value
-      real(DP) ::modul, n(3), erf_value
-      integer  ::n_x, n_y, n_z
-      real(kind=DP), external :: qe_erfc
-      integer   :: l_blk, nbegin, nend
-      real(DP)  :: value1
-
-      call start_clock('real')
-      l_blk = (2*n_max + 1)/nproc
-      if (l_blk*nproc < (2*n_max + 1)) l_blk = l_blk + 1
-      nbegin = mpime*l_blk - n_max
-      nend = nbegin + l_blk - 1
-      if (nend > n_max) nend = n_max
-      value1 = 0.d0
-      do n_x = nbegin, nend
-         do n_y = -n_max, n_max
-            do n_z = -n_max, n_max
-               n(1:3) = n_x*at(1:3, 1)*alat + n_y*at(1:3, 2)*alat + n_z*at(1:3, 3)*alat
-               modul = modulus(pos(1:3) - n(1:3))
-               erf_value = qe_erfc(sqrt(eta)*modul)
-               value1 = value1 + erf_value/modul
-            end do
-         end do
-      end do
-      call mp_sum(value1, intra_pool_comm)
-      value = value + value1
-      call stop_clock('real')
-!!!!!!!!!!
-!  call start_clock( 'real' )
-!  do n_x=-n_max,n_max         !primo ciclo   su n
-!     do n_y=-n_max,n_max      !secondo ciclo su n
-!        do n_z=-n_max,n_max   !terzo ciclo   su n
-!           n(1:3) = n_x * at(1:3,1)*alat + n_y * at(1:3,2)*alat + n_z * at(1:3,3)*alat
-!           modul=modulus(pos(1:3)-n(1:3))
-!           erf_value=qe_erfc(sqrt(eta)*modul)
-!           value=value+ erf_value/modul
-!        end do
-!     end do
-!  end do
-!  call stop_clock( 'real' )
-
-   end subroutine add_local_due
-
 !!!!!!!!!!!!!!!!!!!
 
 
@@ -268,8 +56,6 @@ subroutine init_zero(nsp, zv, tpiba2, tpiba, omega, at, alat, &
    type(pseudo_upf), intent(in) :: upf(:)
 
    integer :: isp, iun, a, b
-   character(256) :: pref_box
-   integer, external :: find_free_unit
    logical :: exst
    call start_clock('init_zero')
    !call init_us_1all(rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
@@ -283,7 +69,6 @@ subroutine init_zero(nsp, zv, tpiba2, tpiba, omega, at, alat, &
             do isp = 1, nsp
                H_g(:, b, a, isp) = H_g(:, a, b, isp)
             end do
-            I_uno_g(:, b, a) = I_uno_g(:, a, b)
          end if
       end do
    end do
@@ -323,12 +108,10 @@ subroutine current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
 !three dimensional auxiliary real vectors
    real(dp), parameter  :: amconv = AMU_RY
    real(DP) ::n(3), u(3), u_pbc(3), u_x(3), u_y(3), u_z(3), value, x(1:3), ics(3)
-   real(DP), external :: qe_erfc
    !real(DP)  :: dtauij(3)
    real(DP) ::modul, erf_value
    real(DP) ::fac_uno, fac_due, fac_tre, fac_quattro
    real(DP), external :: qe_erf
-   integer, external  :: find_free_unit
 
 !counters and indexes
    integer      ::a, b !cartesian components
@@ -348,13 +131,11 @@ subroutine current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
 !auxiliary variables
    integer ::err, ir, ieta
    real(DP) ::R
-   character(256) ::filename, pref_box
    real(DP), allocatable :: values(:)
    real(DP), allocatable   :: charge(:)
 
    if (ionode) write (stdout, *) 'ROUTINE_ZERO BEGINNING'
    call start_clock('routine_zero')
-   if (ionode) print *, 'eta', eta
    allocate (charge(dffts%nnr))
    call start_clock('zero_current')
    if (nkb > 0) then
@@ -404,84 +185,6 @@ subroutine current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
 end subroutine current_zero
 
 
-subroutine current_ionic(current, current_a, current_b, current_c, current_d, current_e, add_current_b, &
-                         nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
-   use kinds, only: DP
-   use constants, only: AMU_RY, e2
-   use io_global, only: ionode
-
-   implicit none
-
-   real(dp), intent(out) :: current(3), current_a(3), current_b(3), current_c(3),&
-                            current_d(3), current_e(3)
-   logical, intent(in) :: add_current_b
-   INTEGER, intent(in) :: npw, nat, ityp(:), gstart
-   REAL(DP), intent(in) :: zv(:), tau(:,:), vel(:,:), &
-                           tpiba, alat, at(:,:), &
-                           g(:,:), gg(:), bg(:,:), amass(:)
-
-   real(dp) :: u(3), u_pbc(3), val
-   integer :: iatom, jatom, a, b
-
-   current = 0.d0
-   current_a = 0.d0
-   current_b = 0.d0
-   current_c = 0.d0
-   current_d = 0.d0
-   current_e = 0.d0
-
-   call start_clock('calcolo_i')
-   do iatom = 1, nat
-      current_a(:) = current_a(:) + vel(:, iatom)*(1./2.*amu_ry*amass(ityp(iatom))*(vel(1, iatom)**2 +&
-                       vel(2, iatom)**2 + vel(3, iatom)**2))
-      current_b(:) = current_b(:) + 2./3.*e2*zv(ityp(iatom))**2*vel(:, iatom)*I_primo
-   end do
-
-   do iatom = 1, nat
-      do jatom = 1, nat
-         if (iatom > jatom) then
-            u(1:3) = (tau(:, iatom) - tau(:, jatom))*alat
-            call pbc(u(1:3), u_pbc(1:3), alat, at, bg)
-            call I_due_value(val, u_pbc, 1, tpiba, at, alat, gstart, g, gg, npw)
-            !current_c(:) = current_c(:) + 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))* &
-            current_c(:) = current_c(:) + 1.d0*e2*zv(ityp(iatom))*zv(ityp(jatom))* &
-                             (vel(:, iatom) + vel(:, jatom))*val
-
-            do a = 1, 3
-               do b = 1, 3
-                  if (a > b) then
-                     call I_uno_value(val, u_pbc, a, b, 1, tpiba, at, alat, gstart, g, gg, npw)
-                     current_e(a) = current_e(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-                                      &(vel(b, jatom) + vel(b, iatom))*val
-                     current_e(b) = current_e(b) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-                                      &(vel(a, jatom) + vel(a, iatom))*val
-                  end if
-                  if (a == b) then
-                     call I_uno_value(val, u_pbc, a, b, 1, tpiba, at, alat, gstart, g, gg, npw)
-                     current_d(a) = current_d(a) - 1./2.*e2*zv(ityp(iatom))*zv(ityp(jatom))*&
-                                      &(vel(b, jatom) + vel(b, iatom))*val
-                  end if
-               end do
-            end do
-         end if
-      end do
-   end do
-   current_a = current_a * alat**3
-   current_b = current_b * alat
-   current_c = current_c * alat
-   current_d = current_d * alat
-   current_e = current_e * alat
-   current   = current_a + current_c + current_d + &
-                 current_e
-   if (add_current_b) &
-      current = current + current_b
-
-
-   call stop_clock('calcolo_i')
-   call print_clock('calcolo_i')
-   if (ionode) print *, 'IONIC CURRENT CALCULATED'
-
-   end subroutine
 
 subroutine add_nc_curr(current, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, evc, &
                        g, tpiba, nat, ityp, nsp, xk, igk_k)
@@ -648,12 +351,10 @@ subroutine allocate_zero
    !integer ::isp
 
    allocate (H_g(ngm, 3, 3, nsp))
-   allocate (I_uno_g(ngm, 3, 3))
    allocate (tablocal_hg(nqxq, nsp, 0:1))
    if (spline_ps) then
       allocate (tablocal_d2y_hg(nqxq, nsp, 0:1))
    end if
-   allocate (I_due_g(ngm))
    allocate (tabr(nqxq, nbetam, nsp, -1:1))
    if (spline_ps) then
       allocate (tabr_d2y(nqxq, nbetam, nsp, -1:1))
@@ -675,15 +376,6 @@ subroutine deallocate_zero
 !
 end subroutine deallocate_zero
 
-   real(DP) function alpha_0_lr(eta, G_sq, flag)
-      real(DP)  ::eta, G_sq
-      integer ::flag
-      if (flag == 1) then
-         alpha_0_lr = exp(-G_sq/(4.d0*eta))/G_sq
-      else
-         alpha_0_lr = 1.d0/G_sq
-      end if
-   end function alpha_0_lr
 
 
 SUBROUTINE init_reciprocal_parts_tab(nsp, zv, tpiba2, tpiba, omega, at, alat, &
@@ -706,68 +398,12 @@ SUBROUTINE init_reciprocal_parts_tab(nsp, zv, tpiba2, tpiba, omega, at, alat, &
    logical, intent(in) :: spline_ps
 
    real(DP) :: px, ux, vx, wx, xg
-   real(DP) :: n(3), modul, erf_value
-   integer  ::  a, b, igm, igl, it, n_x, n_y, n_z
+   integer  ::  a, b, igm, igl, it
    integer  :: i0, i1, i2, i3
    !real(DP) :: ra, rb
    real(DP) :: H_g_rad(ngl, 0:1)
    !logical  ::l_plot
-   real(kind=DP), external :: qe_erfc
 
-! I_primo == S_{2,B} (Aris note)
-   I_primo = 0.d0
-! these sum over n_x n_y n_z are sum_{L!=0}erfc(sqrt(eta*L)*1/L)
-   do n_x = -n_max, n_max
-      do n_y = -n_max, n_max
-         do n_z = -n_max, n_max
-            if ((n_x /= 0) .or. (n_y /= 0) .or. (n_z /= 0)) then
-               n(1:3) = n_x*at(1:3, 1)*alat + n_y*at(1:3, 2)*alat + n_z*at(1:3, 3)*alat
-               modul = modulus(n(:))
-               erf_value = qe_erfc(sqrt(eta)*modul)
-               I_primo = I_primo + erf_value/modul
-            end if
-         end do
-      end do
-   end do
-!now compute the other addendum of S_{2,B}
-   I_primo = I_primo - 2.d0*sqrt(eta/pi)
-!
-   I_primo_rec = 0.d0
-   do igm = gstart, ngm
-      I_primo_rec = I_primo_rec + 2.d0*(4.d0*pi)/omega*alpha_0_lr(eta, gg(igm)*tpiba2, 1)
-   end do
-   call mp_sum(I_primo_rec, intra_pool_comm)
-   I_primo_rec = I_primo_rec - pi/(eta*omega)
-!
-   I_primo = I_primo + I_primo_rec
-!
-!calcolo di I_due_g
-!
-   do igm = gstart, ngm
-!
-      I_due_g(igm) = (4.d0*pi)/omega*alpha_0_lr(eta, gg(igm)*tpiba2, 1)
-!
-   end do
-!
-   if (gstart == 2) then
-      I_due_g(1) = -pi/(eta*omega)
-   end if
-!
-!analogamente a prima inizializzo I_uno_g
-   do a = 1, 3
-      do b = 1, 3
-         if (a >= b) then
-            do igm = gstart, ngm
-               I_uno_g(igm, a, b) = (4.d0*pi)/omega*exp(-tpiba2*gg(igm)/(4.d0*eta))/(tpiba2*gg(igm))*&
- & (2 + gg(igm)*tpiba2/(2.d0*eta))*g(a, igm)*g(b, igm)/gg(igm)
-            end do
-!
-            if (gstart == 2) then
-               I_uno_g(1, a, b) = 0.d0
-            end if
-         end if
-      end do
-   end do
 !
 !Inizializzo H_g
 !

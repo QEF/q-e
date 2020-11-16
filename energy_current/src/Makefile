@@ -18,6 +18,7 @@ LIBOBJS=  ../../clib/clib.a ../../UtilXlib/libutil.a ../../KS_Solvers/DENSE/libd
 ALLCURRENTSOBJS = \
 hartree_mod.o\
 zero_mod.o\
+ionic_mod.o\
 all_currents.o \
 project.o\
 init_us_3.o \
