@@ -238,7 +238,7 @@ if(NOT QE_LAPACK_INTERNAL)
         target_link_libraries(qe_lapack INTERFACE ${_lapack_libs})
     else()
         message(FATAL_ERROR "Failed to find a complete set of external BLAS/LAPACK library by FindLAPACK. "
-                            "Varaibles controlling FindLAPACK can be found at CMake online documentation. "
+                            "Variables controlling FindLAPACK can be found at CMake online documentation. "
                             "Alternatively, '-DQE_LAPACK_INTERNAL=ON' may be used to enable reference LAPACK "
                             "at a performance loss compared to optimized libraries.")
     endif()
