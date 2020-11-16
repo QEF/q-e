@@ -118,7 +118,7 @@ example10:
     This example shows how to use pw.x to perform electronic structure
     calculations in the presence of a finite electric field described 
     through the modern theory of the polarization. The example shows how to
-    calculate the dielectric constant of silicon.
+    calculate the dielectric constant of Si and the effective charges of AlAs.
 
 example11:
     This example tests pw.x with PAW in the noncollinear, spin-orbit case.
