@@ -9,6 +9,9 @@ build:pw:
 #    - mkdir /tmp/save
 #    - make run-tests-pw-serial
 #    - rm -r /tmp/save
+  artifacts:
+    paths:
+      - libmbd
 
 build:cp:
   tags: [docker]
