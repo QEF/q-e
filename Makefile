@@ -223,6 +223,7 @@ libbeef:
 
 # GSz/HK: temporary. Need to follow the proper procedure eg. as in libbeef
 libmbd:
+	echo "MBD MBD MBD"
 	bash ./get_libmbd.sh
 
 #########################################################
