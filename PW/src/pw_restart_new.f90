@@ -68,6 +68,7 @@ MODULE pw_restart_new
                                        lscf, gamma_only, &
                                        tqr, tq_smoothing, tbeta_smoothing, &
                                        noinv, smallmem, &
+                                       do_mbd,          &
                                        llondon, lxdm, ts_vdw, scf_error, n_scf_steps
       USE constants,            ONLY : e2
       USE realus,               ONLY : real_space
@@ -370,7 +371,7 @@ MODULE pw_restart_new
                                    ECUTVCUT = ectuvcut_opt, LOCAL_THR = loc_thr_p )
          END IF 
 
-         empirical_vdw = (llondon .OR. ldftd3 .OR. lxdm .OR. ts_vdw )
+         empirical_vdw = (llondon .OR. ldftd3 .OR. lxdm .OR. ts_vdw .OR. do_mbd )
          dft_is_vdw = dft_is_nonlocc() 
          IF ( dft_is_vdw .OR. empirical_vdw ) THEN 
             ALLOCATE (vdw_obj)
@@ -409,6 +410,13 @@ MODULE pw_restart_new
                     ts_vdw_isolated_pt => ts_vdw_isolated_
                     ts_vdw_econv_thr_ = vdw_econv_thr
                     ts_vdw_econv_thr_pt => ts_vdw_econv_thr_
+                ELSE IF ( do_mbd ) THEN
+                    ! FIXME
+                    !dispersion_energy_term = 2._DP * EtsvdW/e2
+                    !ts_vdw_isolated_ = vdw_isolated
+                    !ts_vdw_isolated_pt => ts_vdw_isolated_
+                    !ts_vdw_econv_thr_ = vdw_econv_thr
+                    !ts_vdw_econv_thr_pt => ts_vdw_econv_thr_
                 END IF
             ELSE
                 vdw_corr_ = 'none'
@@ -1089,7 +1097,7 @@ MODULE pw_restart_new
            Hubbard_U, Hubbard_U_back, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
            vdw_corr, scal6, lon_rcut, vdw_isolated )
       !! More DFT initializations
-      CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, lxdm )
+      CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, do_mbd, lxdm )
       CALL enforce_input_dft ( dft_name, .TRUE. )
       IF ( dft_is_hybrid() ) THEN
          ecutvcut=ecutvcut*e2

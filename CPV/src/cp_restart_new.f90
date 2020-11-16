@@ -47,6 +47,7 @@ MODULE cp_restart_new
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, trhow, &
                                            tksw, do_makov_payne, smallmem,   &
+                                           do_mbd,                           &
                                            llondon, lxdm, ts_vdw, tfor, tpre
       USE control_flags,            ONLY : lwfpbe0nscf, lwfnscf, lwf ! Lingzhu Kong
       USE constants,                ONLY : e2
@@ -774,7 +775,7 @@ MODULE cp_restart_new
            Hubbard_U, hubba_dum, Hubbard_dum(1,:), Hubbard_dum(2,:), Hubbard_dum(3,:), &
            Hubbard_dum, &
            vdw_corr, scal6, lon_rcut, vdw_isolated)
-      CALL set_vdw_corr (vdw_corr, llondon, ldftd3, ts_vdw, lxdm )
+      CALL set_vdw_corr (vdw_corr, llondon, ldftd3, ts_vdw, do_mbd, lxdm )
       IF ( ldftd3 ) CALL errore('cp_readfile','DFT-D3 not implemented',1)
       !
       lsda_ = output_obj%magnetization%lsda
