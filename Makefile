@@ -186,7 +186,7 @@ pw4gwwlib : phlibs
 	if test -d GWW ; then \
 	( cd GWW ; $(MAKE) pw4gwwa || exit 1 ) ; fi
 
-mods : libfox libutil libla libfft libupf libbeef
+mods : libfox libutil libla libfft libupf libbeef libmbd
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 libks_solvers : libs libutil libla
@@ -234,6 +234,11 @@ libcuda:
 
 libbeef:
 	cd install ; $(MAKE) -f extlibs_makefile $@
+
+# GSz/HK: temporary. Need to follow the proper procedure eg. as in libbeef
+libmbd:
+	bash ./get_libmbd.sh
+
 
 # In case of trouble with iotk and compilers, add
 # FFLAGS="$(FFLAGS_NOOPT)" after $(MFLAGS)

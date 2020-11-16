@@ -53,6 +53,7 @@ MODULE libmbd_interface
   inp%coords = tau*alat
 
   inp%xc = 'pbe'
+  call sanity_check_xc_functional_in_use
 !  inp%mbd_beta = 0.83  !value is different for different functionals!! TODO
 
   !
@@ -84,4 +85,18 @@ MODULE libmbd_interface
   ENDIF
 
   END SUBROUTINE mbd_interface
+
+  SUBROUTINE  sanity_check_xc_functional_in_use()
+    USE funct, ONLY : get_dft_short
+    IMPLICIT NONE
+    select case (TRIM(get_dft_short()))
+    CASE ('PBE')
+      ! this is a supported xc functional; do nothing...
+    CASE DEFAULT
+      ! block it off
+       CALL errore( 'libmbd_interface', 'current xc functional not yet supported for MBD', 1 )
+    END SELECT
+    RETURN
+  END SUBROUTINE sanity_check_xc_functional_in_use
+
 END MODULE libmbd_interface

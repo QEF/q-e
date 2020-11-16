@@ -1000,7 +1000,7 @@ MODULE pw_restart_new
            exxdiv_treatment, yukawa, ecutvcut
       USE exx,             ONLY : ecutfock, local_thr
       USE control_flags,   ONLY : noinv, gamma_only, tqr, llondon, ldftd3, &
-           lxdm, ts_vdw
+           lxdm, ts_vdw, do_mbd
       USE Coul_cut_2D,     ONLY : do_cutoff_2D
       USE noncollin_module,ONLY : noncolin, npol, angle1, angle2, bfield, &
            nspin_lsda, nspin_gga, nspin_mag

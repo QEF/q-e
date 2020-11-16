@@ -171,6 +171,11 @@ MASS_LIBS      = @mass_libs@
 BEEF_LIBS      = @beef_libs@
 BEEF_LIBS_SWITCH = @beef_libs_switch@
 
+# library for many-body dispersion (GSz/HK: temporary. need to follow eg. BEEF_LIBS properly)
+
+IFLAGS+= -I$(TOPDIR)/libmbd/include
+LD_LIBS+= $(TOPDIR)/libmbd/lib/libmbd.so
+
 # CUDA libraries
 CUDA_LIBS=@cuda_libs@
 CUDA_EXTLIBS = @cuda_extlibs@
