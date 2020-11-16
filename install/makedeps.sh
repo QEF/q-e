@@ -143,7 +143,7 @@ for dir in $dirs; do
 
         if test "$DIR" = "XClib"
         then
-            sed '/@elpa1@/d' make.depend > tmp; mv tmp make.depend
+            sed '/@omp_lib@/d' make.depend > tmp; mv tmp make.depend
         fi
 
         if test "$DIR" = "PW/src" || test "$DIR" = "TDDFPT/src"
