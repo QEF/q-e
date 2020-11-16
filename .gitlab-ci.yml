@@ -2,6 +2,7 @@ build:pw:
   tags: [docker]
   image: espressofoundation/ubuntu:latest
   script:
+    - apt-get install --yes gfortran git cmake libopenblas0 libopenblas-dev libfftw3-3 libfftw3-dev libopenmpi3 libopenmpi-dev
     - ./configure
     - make pw
 #    - export OMP_NUM_THREADS=1
