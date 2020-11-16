@@ -1,1 +1,11 @@
-Archive contains the .tar.gz files
+Archive contains the tarballs of external libraries and codes used by "make"
+to build QE. Note that "CMake" stores such packages in external/ instead.
+In the future, these files should be removed or replaced as follows:
+
+- fox.tgz		fetch from git repository
+- iotk-1.2.beta.tar.gz	fetch from git repository
+- lapack-3.6.1.tgz	fetch from git repository
+- libbeef-0.1.2.tar.gz	move to XClib directory
+- plumed-1.3-qe.tar.gz  remove (is obsolete)
+
+

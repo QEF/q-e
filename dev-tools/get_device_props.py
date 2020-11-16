@@ -1,20 +1,25 @@
+from __future__ import print_function
 import sys
 import subprocess as sp
 
 have_yaml = True
 try:
     import yaml
-except:
-    have_yaml = False
-    
-try:
-    from StringIO import StringIO
 except ImportError:
-    from io import BytesIO as StringIO
+    have_yaml = False
+
+try:
+    from io import StringIO
+except ImportError:
+    try:
+        from StringIO import StringIO
+    except ImportError:
+        from io import BytesIO as StringIO
+
 
 print("\n\n This is a helper tool to check the details of your GPU before configuring QE.\n\n")
-print("""Remeber to load CUDA environemt and run this on the COMPUTE NODE 
-if you are not sure that the frontend node shares 
+print("""Remeber to load CUDA environemt and run this on the COMPUTE NODE
+if you are not sure that the frontend node shares
 the same configuration as the backend nodes\n\n""")
 
 
@@ -52,13 +57,11 @@ else:
                 minor = str(5 if int(minor)>=5 else 0)
             if 'major' in line:
                 _, major = line.split(':')
-            
+
             if minor != "" and major != "":
                 print("Compute capabilities for dev {}: {}.{}".format(str(devnum), major.strip(),minor.strip()))
                 conf_cc=major.strip()+minor.strip()
                 minor = ""; major = ""; devnum += 1
-                
+
     print("\n If all compute capabilities match, configure QE with:")
     print("./configure --with-cuda=$CUDA_HOME --with-cuda-cc={} --with-cuda-runtime={}\n".format(conf_cc, conf_rt))
-
-    

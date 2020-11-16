@@ -271,20 +271,20 @@
       WRITE(stdout, '(5x, a, i3, a, f18.2, a)') 'itemp = ', itemp, '   total cpu time :', tcpu, ' secs'
       WRITE(stdout, '(a)') ' '
       !
+      IF (lpade .OR. lacon) CALL deallocate_aniso_raxis()
+      !
+      IF (lpade) THEN
+        ! remove memory allocated for ws, delta, znorm, adelta, aznorm
+        imelt = nsw + 2 * (2 + 2 * nbndfs * nkfs) * nsw
+        CALL mem_size_eliashberg(2, -imelt)
+      ELSEIF (lacon) THEN
+        ! remove memory allocated for ws, delta, adelta, adeltap, znorm, aznorm, aznormp
+        imelt = nsw + 2 * (2 + 4 * nbndfs * nkfs) * nsw
+        CALL mem_size_eliashberg(2, -imelt)
+      ENDIF
+      !
     ENDDO ! itemp
     !
-    IF (lpade) THEN
-      ! remove memory allocated for ws, delta, znorm, adelta, aznorm
-      imelt = nsw + 2 * (2 + 2 * nbndfs * nkfs) * nsw
-      CALL mem_size_eliashberg(2, -imelt)
-    ELSEIF (lacon) THEN
-      ! remove memory allocated for ws, delta, adelta, adeltap, 
-      ! znorm, aznorm, aznormp
-      imelt = nsw + 2 * (2 + 4 * nbndfs * nkfs) * nsw
-      CALL mem_size_eliashberg(2, -imelt)
-    ENDIF
-    !
-    IF (lpade .OR. lacon) CALL deallocate_aniso_raxis()
     CALL deallocate_aniso()
     !
     CALL stop_clock('aniso_iaxis')
@@ -676,7 +676,7 @@
     a2f_ = zero
     inv_degaussq = one / degaussq
     !
-    IF (iter == 1 .AND. itemp == 1) THEN
+    IF (iter == 1) THEN
       !
       ! get the size of required allocated memory for
       ! delta, znorm, deltaold, adelta, adeltap, aznorm, aznormp, gp, gm
@@ -707,9 +707,6 @@
       IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error allocating gp', 1)
       ALLOCATE(gm(nsw, nqstep), STAT = ierr)
       IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error allocating gm', 1)
-    ENDIF ! iter & itemp
-    !
-    IF (iter == 1) THEN
       adeltap(:, :, :) = czero
       aznormp(:, :, :) = cone
       deltaold(:) = czero
@@ -736,11 +733,10 @@
         ENDDO
       ENDDO
       CALL kernel_aniso_analytic_cont(itemp)
-      IF (itemp == 1) THEN
-        CALL memlt_eliashberg(itemp, 'acon')
-        IF (.NOT. lacon_fly) CALL evaluate_a2fij()
-      ENDIF ! itemp
+      CALL memlt_eliashberg(itemp, 'acon')
+      IF (.NOT. lacon_fly) CALL evaluate_a2fij()
     ENDIF ! iter
+    !
     delta(:) = czero
     znorm(:) = czero
     adelta(:, :, :) = czero
@@ -878,7 +874,7 @@
     CALL mp_bcast(conv, ionode_id, inter_pool_comm)
     CALL mp_barrier(inter_pool_comm)
     !
-    IF ((conv .AND. itemp == nstemp) .OR. iter == nsiter) THEN
+    IF (conv .OR. iter == nsiter) THEN
       DEALLOCATE(deltaold, STAT = ierr)
       IF (ierr /= 0) CALL errore('analytic_cont_aniso', 'Error deallocating deltaold', 1)
       !
@@ -969,16 +965,14 @@
     imelt = 2 * 5 * N + 2 * (2 + 2 * nbndfs * nkfs) * nsw
     CALL mem_size_eliashberg(2, imelt)
     !
-    IF (itemp == 1) THEN
-      ALLOCATE(delta(nsw), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating delta', 1)
-      ALLOCATE(znorm(nsw), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating znorm', 1)
-      ALLOCATE(adelta(nbndfs, nkfs, nsw), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating adelta', 1)
-      ALLOCATE(aznorm(nbndfs, nkfs, nsw), STAT = ierr)
-      IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating aznorm', 1)
-    ENDIF
+    ALLOCATE(delta(nsw), STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating delta', 1)
+    ALLOCATE(znorm(nsw), STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating znorm', 1)
+    ALLOCATE(adelta(nbndfs, nkfs, nsw), STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating adelta', 1)
+    ALLOCATE(aznorm(nbndfs, nkfs, nsw), STAT = ierr)
+    IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating aznorm', 1)
     ALLOCATE(a(N), STAT = ierr)
     IF (ierr /= 0) CALL errore('pade_cont_aniso', 'Error allocating a', 1)
     ALLOCATE(b(N), STAT = ierr)
@@ -1325,12 +1319,10 @@
     IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error allocating wesqrt', 1)
     ALLOCATE(desqrt(nbndfs, nkfs, nsiw(itemp)), STAT = ierr)
     IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error allocating desqrt', 1)
-    IF (itemp == 1) THEN
-      ALLOCATE(adsumi(nbndfs, lower_bnd:upper_bnd, nsw), STAT = ierr)
-      IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error allocating adsumi', 1)
-      ALLOCATE(azsumi(nbndfs, lower_bnd:upper_bnd, nsw), STAT = ierr)
-      IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error allocating azsumi', 1)
-    ENDIF
+    ALLOCATE(adsumi(nbndfs, lower_bnd:upper_bnd, nsw), STAT = ierr)
+    IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error allocating adsumi', 1)
+    ALLOCATE(azsumi(nbndfs, lower_bnd:upper_bnd, nsw), STAT = ierr)
+    IF (ierr /= 0) CALL errore('kernel_aniso_analytic_cont', 'Error allocating azsumi', 1)
     wesqrt(:, :, :) = zero
     desqrt(:, :, :) = zero
     adsumi(:, :, :) = zero

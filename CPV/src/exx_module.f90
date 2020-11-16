@@ -75,8 +75,14 @@ MODULE exx_module
   INTEGER, PUBLIC                     :: np_in_sp_p, np_in_sp_me_p  ! number of grid points in the PS sphere and the ME sphere for pair orbital in Full Grid
   !
   INTEGER, PUBLIC                     :: my_nbspx               ! parallelization/distribution of orbitals over processors 
-  INTEGER,  ALLOCATABLE, PUBLIC       :: my_nbsp(:), my_nxyz(:) ! parallelization/distribution of orbitals over processors 
-  INTEGER,  ALLOCATABLE, PUBLIC       :: index_my_nbsp (:, :), rk_of_obtl (:), lindex_of_obtl(:) ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: my_nbsp(:)             ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: my_nxyz(:)             ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: index_my_nbsp(:, :)    ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: rk_of_obtl(:)          ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: lindex_of_obtl(:)      ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: pair_label(:,:)        ! the orbital label of previous pair potential/density
+  INTEGER,  ALLOCATABLE, PUBLIC       :: pair_step(:,:)         ! the last step that we use previous pair potential/density
+  INTEGER,  ALLOCATABLE, PUBLIC       :: pair_status(:,:)       ! the status of this pair for guess
   !
   ! conversion between 3D index (i,j,k) and 1D index 
   ! odthothd_in_sp(3, 1:np_in_sp_p) is for inner sphere (1st shell)
@@ -114,6 +120,12 @@ MODULE exx_module
 #if defined(_OPENMP)
   INTEGER, EXTERNAL                   :: omp_get_max_threads
 #endif
+  real(dp), allocatable, public  :: psime_pair_recv(:,:,:) !! recieving buffer holding MLWF on local subdomains
+  !! the first dimension is the (flattened) 1d local grid index; the second is the jth neighbor orbital index;
+  !! the third is the ith local orbital index of the current MPI process
+  real(dp), allocatable, public  :: psime_pair_send(:,:,:) !! sending buffer holding MLWF on local subdomains
+  !! the first dimension is the (flattened) 1d local grid index; the second is the jth neighbor orbital index;
+  !! the third is the ith local orbital index of the current MPI process
   !==========================================================================
   !
   ! PRIVATE variables 
@@ -595,6 +607,9 @@ CONTAINS
       IF( ALLOCATED( selfv ) )          DEALLOCATE( selfv )
       IF( ALLOCATED( pairv ) )          DEALLOCATE( pairv )
       IF( ALLOCATED( pair_dist ) )      DEALLOCATE( pair_dist )
+      IF( ALLOCATED( pair_label ) )     DEALLOCATE( pair_label )
+      IF( ALLOCATED( pair_step ) )      DEALLOCATE( pair_step )
+      IF( ALLOCATED( pair_status ) )    DEALLOCATE( pair_status )
       IF( ALLOCATED( my_nxyz ) )        DEALLOCATE( my_nxyz )
       IF( ALLOCATED( my_nbsp ) )        DEALLOCATE( my_nbsp )
       IF( ALLOCATED( index_my_nbsp ) )  DEALLOCATE( index_my_nbsp)
@@ -610,6 +625,8 @@ CONTAINS
       IF( ALLOCATED( sc_xx_in_sp ))     DEALLOCATE( sc_xx_in_sp )
       IF( ALLOCATED( sc_yy_in_sp ))     DEALLOCATE( sc_yy_in_sp )
       IF( ALLOCATED( sc_zz_in_sp ))     DEALLOCATE( sc_zz_in_sp )
+      IF (ALLOCATED(psime_pair_send))  DEALLOCATE(psime_pair_send)
+      IF (ALLOCATED(psime_pair_recv))  DEALLOCATE(psime_pair_recv)
       !
       RETURN
       !

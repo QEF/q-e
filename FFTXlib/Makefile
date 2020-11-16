@@ -4,6 +4,9 @@ include ../make.inc
 
 FFTX = \
 scatter_mod.o  \
+fft_scatter_2d.o  \
+fft_scatter_gpu.o  \
+fft_scatter_2d_gpu.o  \
 fft_ggen.o  \
 fft_fwinv.o  \
 fft_scalar.o  \
@@ -11,10 +14,13 @@ fft_scalar.ARM_LIB.o  \
 fft_scalar.DFTI.o  \
 fft_scalar.ESSL.o  \
 fft_scalar.FFTW.o  \
+fft_scatter.o  \
+fft_scalar.cuFFT.o  \
 fftw_interfaces.o  \
 fft_scalar.FFTW3.o  \
 fft_scalar.SX6.o  \
 fft_parallel.o  \
+fft_parallel_2d.o  \
 fft_interfaces.o  \
 fft_interpolate.o \
 stick_base.o  \
@@ -29,7 +35,8 @@ fft_stick.o  \
 fft_types.o \
 tg_gather.o \
 fft_helper_subroutines.o \
-fft_param.o
+fft_param.o \
+fft_buffers.o 
 
 
 all : libqefft.a
@@ -49,11 +56,10 @@ fftw_sp.o : fftw_sp.c fftw_sp.h fftw.h konst.h
 
 fftw_dp.o : fftw_dp.c fftw_dp.h fftw.h konst.h
 
-TEST : test.o libqefft.a
-	$(LD) $(LDFLAGS) -o fft_test.x test.o libqefft.a $(QELIBS)
+test : fft_test.o libqefft.a
+	$(LD) $(LDFLAGS) -o fft_test.x fft_test.o libqefft.a $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(LD_LIBS)
 
-TEST0:  test0.o libqefft.a
-	$(LD) $(LDFLAGS) -o fft_test0.x test0.o libqefft.a $(QELIBS)
+TEST : test # compatibility
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L 

@@ -1,0 +1,890 @@
+
+     Program ZG v.6.5 starts on  7Jul2020 at 23: 2:48 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     Fft bands division:     nmany     =       1
+ 
+ Some frequencies are negative: -1.696441561302192E-020           1           1
+ Some frequencies are negative: -1.550932705848553E-020           2           1
+ Some frequencies are negative: -2.471250769447773E-021           3           1
+ 
+    Total vibrational energy:    0.57122701  Ry
+ 
+            Potential energy:    0.28561351  Ry
+ 
+              Kinetic energy:    0.28561351  Ry
+ 
+ Note that the total energy output from a DFT-ZG calculation accounts for half t
+ he total vibrational energy
+ 
+ Points in sets AB, A, B :          36           8          28
+ 
+ Sign matrix
+ -----------
+  1  1  1  1  1  1
+ -1 -1 -1 -1 -1  1
+  1  1  1  1 -1  1
+ -1 -1 -1 -1  1  1
+  1  1  1 -1  1  1
+ -1 -1 -1  1 -1  1
+  1  1  1 -1 -1  1
+ -1 -1 -1  1  1  1
+  1  1 -1  1  1  1
+ -1 -1  1 -1 -1  1
+  1  1 -1  1 -1  1
+ -1 -1  1 -1  1  1
+  1  1 -1 -1  1  1
+ -1 -1  1  1 -1  1
+  1  1 -1 -1 -1  1
+ -1 -1  1  1  1  1
+  1 -1  1  1  1  1
+ -1  1 -1 -1 -1  1
+  1 -1  1  1 -1  1
+ -1  1 -1 -1  1  1
+  1 -1  1 -1  1  1
+ -1  1 -1  1 -1  1
+  1 -1  1 -1 -1  1
+ -1  1 -1  1  1  1
+  1 -1 -1  1  1  1
+ -1  1  1 -1 -1  1
+  1 -1 -1  1 -1  1
+ -1  1  1 -1  1  1
+  1 -1 -1 -1  1  1
+ -1  1  1  1 -1  1
+  1 -1 -1 -1 -1  1
+ -1  1  1  1  1  1
+ -1  1  1  1  1  1
+  1 -1 -1 -1 -1  1
+ -1  1  1  1 -1  1
+  1 -1 -1 -1  1  1
+ -1  1  1 -1  1  1
+  1 -1 -1  1 -1  1
+ -1  1  1 -1 -1  1
+  1 -1 -1  1  1  1
+ -1  1 -1  1  1  1
+  1 -1  1 -1 -1  1
+ -1  1 -1  1 -1  1
+  1 -1  1 -1  1  1
+ -1  1 -1 -1  1  1
+  1 -1  1  1 -1  1
+ -1  1 -1 -1 -1  1
+  1 -1  1  1  1  1
+ -1 -1  1  1  1  1
+  1  1 -1 -1 -1  1
+ -1 -1  1  1 -1  1
+  1  1 -1 -1  1  1
+ -1 -1  1 -1  1  1
+  1  1 -1  1 -1  1
+ -1 -1  1 -1 -1  1
+  1  1 -1  1  1  1
+ -1 -1 -1  1  1  1
+  1  1  1 -1 -1  1
+ -1 -1 -1  1 -1  1
+  1  1  1 -1  1  1
+ -1 -1 -1 -1  1  1
+  1  1  1  1 -1  1
+ -1 -1 -1 -1 -1  1
+  1  1  1  1  1  1
+ 
+ Minimize error based on threshold
+ Total error:  0.135146916663223     
+ 
+ Minimize error based on threshold
+ Total error:  9.611594301072572E-002
+ 
+ Minimize error based on threshold
+ Total error:  6.520323793518225E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.167826258582649     
+ 
+ Minimize error based on threshold
+ Total error:  0.180157053516700     
+ 
+ Minimize error based on threshold
+ Total error:  0.112940033294172     
+ 
+ Minimize error based on threshold
+ Total error:  9.521028181419593E-002
+ 
+ Minimize error based on threshold
+ Total error:  8.701334213884031E-002
+ 
+ Minimize error based on threshold
+ Total error:  9.731119218027647E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.111703615995812     
+ 
+ Minimize error based on threshold
+ Total error:  9.181299659479535E-002
+ 
+ Minimize error based on threshold
+ Total error:  5.539120086523908E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.159219898935625     
+ 
+ Minimize error based on threshold
+ Total error:  0.233028669699423     
+ 
+ Minimize error based on threshold
+ Total error:  0.152555300619739     
+ 
+ Minimize error based on threshold
+ Total error:  7.115950236680980E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.113903206517592     
+ 
+ Minimize error based on threshold
+ Total error:  8.052595066976513E-002
+ 
+ Minimize error based on threshold
+ Total error:  5.762893420096799E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.184355788607715     
+ 
+ Minimize error based on threshold
+ Total error:  0.157886268522004     
+ 
+ Minimize error based on threshold
+ Total error:  0.135925166788918     
+ 
+ Minimize error based on threshold
+ Total error:  0.175140104523339     
+ 
+ Minimize error based on threshold
+ Total error:  8.258438140836238E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.105238545462420     
+ 
+ Minimize error based on threshold
+ Total error:  0.132624430866115     
+ 
+ Minimize error based on threshold
+ Total error:  0.172585063695923     
+ 
+ Minimize error based on threshold
+ Total error:  0.102077084664990     
+ 
+ Minimize error based on threshold
+ Total error:  0.101695830624877     
+ 
+ Minimize error based on threshold
+ Total error:  0.118469391028173     
+ 
+ Minimize error based on threshold
+ Total error:  0.146029287751222     
+ 
+ Minimize error based on threshold
+ Total error:  0.116263784818265     
+ 
+ Minimize error based on threshold
+ Total error:  0.161968590541296     
+ 
+ Minimize error based on threshold
+ Total error:  9.335481424735688E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.107211173622250     
+ 
+ Minimize error based on threshold
+ Total error:  9.718226490244519E-002
+ 
+ Minimize error based on threshold
+ Total error:  4.858073975960698E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.122699411525944     
+ 
+ Minimize error based on threshold
+ Total error:  9.385595606389881E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.110227266505912     
+ 
+ Minimize error based on threshold
+ Total error:  9.640794216329913E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.114448396497821     
+ 
+ Minimize error based on threshold
+ Total error:  0.109853024142659     
+ 
+ Minimize error based on threshold
+ Total error:  6.881683962185699E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.160928589093812     
+ 
+ Minimize error based on threshold
+ Total error:  0.134021104268138     
+ 
+ Minimize error based on threshold
+ Total error:  9.678440946021243E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.102403504652071     
+ 
+ Minimize error based on threshold
+ Total error:  0.115584106749901     
+ 
+ Minimize error based on threshold
+ Total error:  8.219669143404247E-002
+ 
+ Minimize error based on threshold
+ Total error:  9.746586986020488E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.125361311257879     
+ 
+ Minimize error based on threshold
+ Total error:  0.159613783382162     
+ 
+ Minimize error based on threshold
+ Total error:  8.262863030183787E-002
+ 
+ Minimize error based on threshold
+ Total error:  7.617737987991212E-002
+ 
+ Minimize error based on threshold
+ Total error:  8.569160554031796E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.180766721486022     
+ 
+ Minimize error based on threshold
+ Total error:  0.174857740638580     
+ 
+ Minimize error based on threshold
+ Total error:  0.140433743604056     
+ 
+ Minimize error based on threshold
+ Total error:  0.121562021708252     
+ 
+ Minimize error based on threshold
+ Total error:  0.121764852492513     
+ 
+ Minimize error based on threshold
+ Total error:  9.808869555575278E-002
+ 
+ Minimize error based on threshold
+ Total error:  8.896682295549675E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.110156919224012     
+ 
+ Minimize error based on threshold
+ Total error:  0.135428911470665     
+ 
+ Minimize error based on threshold
+ Total error:  6.595612334819591E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.108314821653499     
+ 
+ Minimize error based on threshold
+ Total error:  8.994122436281886E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.197882283023189     
+ 
+ Minimize error based on threshold
+ Total error:  0.157333740345598     
+ 
+ Minimize error based on threshold
+ Total error:  8.979001046637962E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.105650241239754     
+ 
+ Minimize error based on threshold
+ Total error:  0.139586978635591     
+ 
+ Minimize error based on threshold
+ Total error:  0.142635314225788     
+ 
+ Minimize error based on threshold
+ Total error:  0.133478845702859     
+ 
+ Minimize error based on threshold
+ Total error:  0.110673410949378     
+ 
+ Minimize error based on threshold
+ Total error:  0.127840123683093     
+ 
+ Minimize error based on threshold
+ Total error:  0.170071960053804     
+ 
+ Minimize error based on threshold
+ Total error:  4.013636991778104E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.107292484027174     
+ 
+ Minimize error based on threshold
+ Total error:  0.116071173076533     
+ 
+ Minimize error based on threshold
+ Total error:  7.655380052105271E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.154176806272265     
+ 
+ Minimize error based on threshold
+ Total error:  0.122493639516054     
+ 
+ Minimize error based on threshold
+ Total error:  9.844296251839511E-002
+ 
+ Minimize error based on threshold
+ Total error:  4.970731416393920E-002
+ 
+ Minimize error based on threshold
+ Total error:  6.663157231888334E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.200358727484356     
+ 
+ Minimize error based on threshold
+ Total error:  7.943070907001318E-002
+ 
+ Minimize error based on threshold
+ Total error:  9.452616940272883E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.120522485634199     
+ 
+ Minimize error based on threshold
+ Total error:  0.103406272273018     
+ 
+ Minimize error based on threshold
+ Total error:  0.111087466721884     
+ 
+ Minimize error based on threshold
+ Total error:  7.914499022392830E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.127971160308148     
+ 
+ Minimize error based on threshold
+ Total error:  0.114016970102578     
+ 
+ Minimize error based on threshold
+ Total error:  0.149865651601935     
+ 
+ Minimize error based on threshold
+ Total error:  0.130670539155459     
+ 
+ Minimize error based on threshold
+ Total error:  9.122228514375631E-002
+ 
+ Minimize error based on threshold
+ Total error:  6.356321755132918E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.119760297709495     
+ 
+ Minimize error based on threshold
+ Total error:  0.118394885603782     
+ 
+ Minimize error based on threshold
+ Total error:  0.171641514063618     
+ 
+ Minimize error based on threshold
+ Total error:  8.180399918574983E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.132022346804227     
+ 
+ Minimize error based on threshold
+ Total error:  0.173160153432996     
+ 
+ Minimize error based on threshold
+ Total error:  7.010408121774213E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.160940088597572     
+ 
+ Minimize error based on threshold
+ Total error:  0.143232170043791     
+ 
+ Minimize error based on threshold
+ Total error:  0.126136876654725     
+ 
+ Minimize error based on threshold
+ Total error:  0.103465836483911     
+ 
+ Minimize error based on threshold
+ Total error:  0.127390310425153     
+ 
+ Minimize error based on threshold
+ Total error:  0.159249380517595     
+ 
+ Minimize error based on threshold
+ Total error:  0.105751382975117     
+ 
+ Minimize error based on threshold
+ Total error:  0.148996423593543     
+ 
+ Minimize error based on threshold
+ Total error:  6.238209063431219E-002
+ 
+ Minimize error based on threshold
+ Total error:  7.889359881002368E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.102803258061307     
+ 
+ Minimize error based on threshold
+ Total error:  0.106659701544436     
+ 
+ Minimize error based on threshold
+ Total error:  0.133063729656852     
+ 
+ Minimize error based on threshold
+ Total error:  0.150381166526860     
+ 
+ Minimize error based on threshold
+ Total error:  0.108732067304449     
+ 
+ Minimize error based on threshold
+ Total error:  0.112065755838238     
+ 
+ Minimize error based on threshold
+ Total error:  5.008610762197026E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.142304487693592     
+ 
+ Minimize error based on threshold
+ Total error:  0.130558950118477     
+ 
+ Minimize error based on threshold
+ Total error:  0.124415155914659     
+ 
+ Minimize error based on threshold
+ Total error:  0.115192352311132     
+ 
+ Minimize error based on threshold
+ Total error:  0.132194366986516     
+ 
+ Minimize error based on threshold
+ Total error:  9.922908817982994E-002
+ 
+ Minimize error based on threshold
+ Total error:  5.158775177591324E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.100905623279991     
+ 
+ Minimize error based on threshold
+ Total error:  7.759916983594163E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.172375522331499     
+ 
+ Minimize error based on threshold
+ Total error:  0.171550804120209     
+ 
+ Minimize error based on threshold
+ Total error:  0.120613727097053     
+ 
+ Minimize error based on threshold
+ Total error:  0.131984976130476     
+ 
+ Minimize error based on threshold
+ Total error:  0.110064018248264     
+ 
+ Minimize error based on threshold
+ Total error:  8.409712738418627E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.103671526562181     
+ 
+ Minimize error based on threshold
+ Total error:  7.578670792941784E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.105711720297298     
+ 
+ Minimize error based on threshold
+ Total error:  7.181856034182012E-002
+ 
+ Minimize error based on threshold
+ Total error:  6.893405420380182E-002
+ 
+ Minimize error based on threshold
+ Total error:  7.918042567818377E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.164483878343580     
+ 
+ Minimize error based on threshold
+ Total error:  0.141401487709461     
+ 
+ Minimize error based on threshold
+ Total error:  9.960006480407058E-002
+ 
+ Minimize error based on threshold
+ Total error:  7.085377485923607E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.183730270747438     
+ 
+ Minimize error based on threshold
+ Total error:  0.219849183208937     
+ 
+ Minimize error based on threshold
+ Total error:  7.454607394438799E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.102801991053774     
+ 
+ Minimize error based on threshold
+ Total error:  7.890730784132942E-002
+ 
+ Minimize error based on threshold
+ Total error:  8.372437523846536E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.267768089049495     
+ 
+ Minimize error based on threshold
+ Total error:  0.135521555668850     
+ 
+ Minimize error based on threshold
+ Total error:  9.256763361657268E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.169618974757139     
+ 
+ Minimize error based on threshold
+ Total error:  9.361082654655724E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.177556084350394     
+ 
+ Minimize error based on threshold
+ Total error:  0.144467938954530     
+ 
+ Minimize error based on threshold
+ Total error:  0.126344434243382     
+ 
+ Minimize error based on threshold
+ Total error:  8.419025074854214E-002
+ 
+ Minimize error based on threshold
+ Total error:  5.419234709127937E-002
+ 
+ Minimize error based on threshold
+ Total error:  6.999434218614985E-002
+ 
+ Minimize error based on threshold
+ Total error:  8.242356332194919E-002
+ 
+ Minimize error based on threshold
+ Total error:  7.747770909104928E-002
+ 
+ Minimize error based on threshold
+ Total error:  8.589193682047978E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.134989379387962     
+ 
+ Minimize error based on threshold
+ Total error:  0.142111391670057     
+ 
+ Minimize error based on threshold
+ Total error:  9.640187376756500E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.169345938982060     
+ 
+ Minimize error based on threshold
+ Total error:  0.125256918397557     
+ 
+ Minimize error based on threshold
+ Total error:  0.148868677390296     
+ 
+ Minimize error based on threshold
+ Total error:  0.167778727625312     
+ 
+ Minimize error based on threshold
+ Total error:  0.133260118444253     
+ 
+ Minimize error based on threshold
+ Total error:  0.100745450008925     
+ 
+ Minimize error based on threshold
+ Total error:  0.172912745476409     
+ 
+ Minimize error based on threshold
+ Total error:  0.208116619814381     
+ 
+ Minimize error based on threshold
+ Total error:  8.785922524447258E-002
+ 
+ Minimize error based on threshold
+ Total error:  7.857820446232459E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.119235060556414     
+ 
+ Minimize error based on threshold
+ Total error:  0.103788304646256     
+ 
+ Minimize error based on threshold
+ Total error:  0.129081661779064     
+ 
+ Minimize error based on threshold
+ Total error:  0.107901718328242     
+ 
+ Minimize error based on threshold
+ Total error:  9.319736273062934E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.106591742106036     
+ 
+ Minimize error based on threshold
+ Total error:  9.399410947130434E-002
+ 
+ Minimize error based on threshold
+ Total error:  9.424752545496844E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.129730271928953     
+ 
+ Minimize error based on threshold
+ Total error:  0.149161998515935     
+ 
+ Minimize error based on threshold
+ Total error:  0.172353062487202     
+ 
+ Minimize error based on threshold
+ Total error:  0.112257911677449     
+ 
+ Minimize error based on threshold
+ Total error:  8.825470595324007E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.102494980662900     
+ 
+ Minimize error based on threshold
+ Total error:  0.117112923550438     
+ 
+ Minimize error based on threshold
+ Total error:  0.135920054941651     
+ 
+ Minimize error based on threshold
+ Total error:  9.363068940639774E-002
+ 
+ Minimize error based on threshold
+ Total error:  3.517809403278880E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.165694365101911     
+ 
+ Minimize error based on threshold
+ Total error:  9.937709547176399E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.123063748244838     
+ 
+ Minimize error based on threshold
+ Total error:  0.103912729721254     
+ 
+ Minimize error based on threshold
+ Total error:  8.908543325130486E-002
+ 
+ Minimize error based on threshold
+ Total error:  9.976097856935325E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.113024377328582     
+ 
+ Minimize error based on threshold
+ Total error:  0.141696610311454     
+ 
+ Minimize error based on threshold
+ Total error:  0.120031597638087     
+ 
+ Minimize error based on threshold
+ Total error:  0.129299003093973     
+ 
+ Minimize error based on threshold
+ Total error:  0.138413506879251     
+ 
+ Minimize error based on threshold
+ Total error:  0.107164988072113     
+ 
+ Minimize error based on threshold
+ Total error:  0.159018409374271     
+ 
+ Minimize error based on threshold
+ Total error:  8.804605079801033E-002
+ 
+ Minimize error based on threshold
+ Total error:  9.803699053337211E-002
+ 
+ Minimize error based on threshold
+ Total error:  0.112194135605633     
+ 
+ Minimize error based on threshold
+ Total error:  0.133081226341671     
+ 
+ Minimize error based on threshold
+ Total error:  1.399038175593990E-002
+ 
+ Print ZG configuration
+  ZG_conf:   Si   -0.07065438  -0.13989781  -0.06408487
+  ZG_conf:   Si    1.35800976   1.26406813   1.25999503
+  ZG_conf:   Si   -2.71304427   0.08336792   2.71863722
+  ZG_conf:   Si   -1.32064475   1.39179937   4.04252203
+  ZG_conf:   Si   -5.38922599   0.05857914   5.47712192
+  ZG_conf:   Si   -4.04033179   1.37480612   6.78445177
+  ZG_conf:   Si   -8.10332721   0.09038745   8.11561098
+  ZG_conf:   Si   -6.71693084   1.30258416   9.48590214
+  ZG_conf:   Si   -0.03585909   2.71423790   2.73909891
+  ZG_conf:   Si    1.39232446   4.00534423   4.04762656
+  ZG_conf:   Si   -2.61434362   2.71199762   5.45089646
+  ZG_conf:   Si   -1.27369558   4.08552421   6.77263992
+  ZG_conf:   Si   -5.37035855   2.68374908   8.07859537
+  ZG_conf:   Si   -4.15928483   4.17665565   9.48837690
+  ZG_conf:   Si   -8.06272932   2.71294533  10.80003157
+  ZG_conf:   Si   -6.72603506   4.08862123  12.10621190
+  ZG_conf:   Si    0.07935965   5.34538547   5.38806204
+  ZG_conf:   Si    1.35381059   6.79656466   6.74060490
+  ZG_conf:   Si   -2.78755725   5.42841062   8.04206834
+  ZG_conf:   Si   -1.39073914   6.76464500   9.45590167
+  ZG_conf:   Si   -5.42290069   5.46867947  10.84707438
+  ZG_conf:   Si   -4.03421044   6.86530486  12.16619291
+  ZG_conf:   Si   -8.05607259   5.29255961  13.53949346
+  ZG_conf:   Si   -6.75597324   6.73082331  14.89976115
+  ZG_conf:   Si   -0.00989867   8.06337754   8.05511162
+  ZG_conf:   Si    1.35172470   9.39011885   9.45066446
+  ZG_conf:   Si   -2.73738206   8.12871467  10.79716200
+  ZG_conf:   Si   -1.36233667   9.47708882  12.21786088
+  ZG_conf:   Si   -5.39327210   8.07932767  13.55730524
+  ZG_conf:   Si   -4.11916104   9.42620741  14.89411982
+  ZG_conf:   Si   -8.10909756   8.13020042  16.19975419
+  ZG_conf:   Si   -6.80619099   9.45726816  17.70352300
+  ZG_conf:   Si   -2.79883626   2.70403755  -0.10677902
+  ZG_conf:   Si   -1.33735917   4.07331307   1.34599527
+  ZG_conf:   Si   -5.41625936   2.70877694   2.73938818
+  ZG_conf:   Si   -4.02441426   3.95566196   4.13658920
+  ZG_conf:   Si   -8.13748141   2.66035111   5.38427530
+  ZG_conf:   Si   -6.83803796   4.00793249   6.76778716
+  ZG_conf:   Si  -10.86174363   2.69967643   8.06350131
+  ZG_conf:   Si   -9.46307566   4.04424082   9.43145645
+  ZG_conf:   Si   -2.70832692   5.32290051   2.73933264
+  ZG_conf:   Si   -1.29131133   6.69646459   4.08229219
+  ZG_conf:   Si   -5.40647279   5.40182691   5.38603878
+  ZG_conf:   Si   -4.03446301   6.73564828   6.72142375
+  ZG_conf:   Si   -8.16372547   5.47585739   8.13096738
+  ZG_conf:   Si   -6.71600497   6.73343388   9.45008893
+  ZG_conf:   Si  -10.78004452   5.37841849  10.80197472
+  ZG_conf:   Si   -9.41774151   6.78949562  12.13272373
+  ZG_conf:   Si   -2.70457541   8.09936841   5.34296103
+  ZG_conf:   Si   -1.30867327   9.49550700   6.71932408
+  ZG_conf:   Si   -5.38668329   8.13845047   8.09070029
+  ZG_conf:   Si   -4.01636699   9.46212895   9.32845117
+  ZG_conf:   Si   -8.04646412   8.11397973  10.76861558
+  ZG_conf:   Si   -6.72691180   9.40571013  12.14385965
+  ZG_conf:   Si  -10.81195188   8.09469432  13.47639737
+  ZG_conf:   Si   -9.49279191   9.49670787  14.82606441
+  ZG_conf:   Si   -2.62527820  10.87650153   8.09370786
+  ZG_conf:   Si   -1.36882285  12.13145368   9.39368094
+  ZG_conf:   Si   -5.33378007  10.75638049  10.80079607
+  ZG_conf:   Si   -4.05882545  12.08379203  12.10050258
+  ZG_conf:   Si   -8.11351560  10.75745026  13.49927525
+  ZG_conf:   Si   -6.77816497  12.18149480  14.85748129
+  ZG_conf:   Si  -10.82010571  10.87727366  16.15533098
+  ZG_conf:   Si   -9.48683514  12.15396864  17.53196500
+  ZG_conf:   Si   -5.40140922   5.40150403   0.05219749
+  ZG_conf:   Si   -3.97904228   6.75805409   1.41735619
+  ZG_conf:   Si   -8.12631015   5.30619603   2.77679940
+  ZG_conf:   Si   -6.75684855   6.76712922   4.04142096
+  ZG_conf:   Si  -10.84253968   5.45836139   5.41427236
+  ZG_conf:   Si   -9.53263008   6.75738512   6.77589317
+  ZG_conf:   Si  -13.44815806   5.37426622   8.10116042
+  ZG_conf:   Si  -12.06046327   6.74809972   9.45823509
+  ZG_conf:   Si   -5.39246572   8.13096539   2.70089948
+  ZG_conf:   Si   -3.98444466   9.51367223   3.98692989
+  ZG_conf:   Si   -8.16225795   8.10796614   5.41072166
+  ZG_conf:   Si   -6.74861026   9.38470229   6.75963270
+  ZG_conf:   Si  -10.77472773   8.14026290   8.07913396
+  ZG_conf:   Si   -9.42743676   9.51378432   9.49542924
+  ZG_conf:   Si  -13.48973067   8.06864116  10.76525025
+  ZG_conf:   Si  -12.09221386   9.45572824  11.99636647
+  ZG_conf:   Si   -5.36639977  10.76151142   5.31721560
+  ZG_conf:   Si   -4.11050081  12.07636025   6.68078026
+  ZG_conf:   Si   -8.16086029  10.80404377   8.06628249
+  ZG_conf:   Si   -6.79223435  12.08570026   9.39744791
+  ZG_conf:   Si  -10.78628253  10.84592950  10.76819370
+  ZG_conf:   Si   -9.41514360  12.10752336  12.17479233
+  ZG_conf:   Si  -13.40474909  10.82082099  13.44002661
+  ZG_conf:   Si  -12.20623080  12.20928555  14.81890193
+  ZG_conf:   Si   -5.43662977  13.49535006   8.14541435
+  ZG_conf:   Si   -3.99403244  14.81538137   9.43811685
+  ZG_conf:   Si   -8.10157680  13.45519156  10.69305850
+  ZG_conf:   Si   -6.81780525  14.79601196  12.11505084
+  ZG_conf:   Si  -10.78684098  13.49280838  13.44451998
+  ZG_conf:   Si   -9.45972806  14.75892884  14.79882918
+  ZG_conf:   Si  -13.52296095  13.48442201  16.28323058
+  ZG_conf:   Si  -12.17317726  14.85514798  17.52883347
+  ZG_conf:   Si   -8.04975982   8.13065836   0.06888239
+  ZG_conf:   Si   -6.72019545   9.47889600   1.35714079
+  ZG_conf:   Si  -10.83246313   8.07573829   2.72081386
+  ZG_conf:   Si   -9.46397468   9.46115158   4.05413337
+  ZG_conf:   Si  -13.47755697   8.06643093   5.49782100
+  ZG_conf:   Si  -12.15845471   9.47673802   6.72635482
+  ZG_conf:   Si  -16.19292642   8.12314324   8.07193120
+  ZG_conf:   Si  -14.83637601   9.39806051   9.48757341
+  ZG_conf:   Si   -8.11525012  10.79719000   2.65126601
+  ZG_conf:   Si   -6.81169323  12.17260271   4.08447133
+  ZG_conf:   Si  -10.84404728  10.73628987   5.39932990
+  ZG_conf:   Si   -9.51557325  12.19935386   6.69712621
+  ZG_conf:   Si  -13.42439164  10.76417464   8.08544898
+  ZG_conf:   Si  -12.15008146  12.17273962   9.47156441
+  ZG_conf:   Si  -16.18571918  10.83742284  10.79989042
+  ZG_conf:   Si  -14.81036266  12.12911646  12.22166216
+  ZG_conf:   Si   -8.07644841  13.45762661   5.36072182
+  ZG_conf:   Si   -6.80127319  14.80442449   6.78181847
+  ZG_conf:   Si  -10.74329439  13.46084038   8.09452098
+  ZG_conf:   Si   -9.45484364  14.88412474   9.48303546
+  ZG_conf:   Si  -13.50895651  13.56762621  10.88355451
+  ZG_conf:   Si  -12.10915939  14.85757169  12.15778635
+  ZG_conf:   Si  -16.15478310  13.49875884  13.54282572
+  ZG_conf:   Si  -14.84824810  14.89801648  14.85278942
+  ZG_conf:   Si   -8.13804378  16.16430589   8.11800907
+  ZG_conf:   Si   -6.64687752  17.59526632   9.42482785
+  ZG_conf:   Si  -10.80479520  16.23984867  10.78961849
+  ZG_conf:   Si   -9.38700312  17.55846884  12.18589326
+  ZG_conf:   Si  -13.51154718  16.24172500  13.48207172
+  ZG_conf:   Si  -12.23710860  17.51666360  14.83568595
+  ZG_conf:   Si  -16.22514047  16.17264430  16.26712586
+  ZG_conf:   Si  -14.88928710  17.55027547  17.60882250
+ 
+     ZG           :      0.15s CPU      0.17s WALL
+
+ 
+   This run was terminated on:  23: 2:48   7Jul2020            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
