@@ -2,6 +2,8 @@ build:pw:
   tags: [docker]
   image: espressofoundation/ubuntu:latest
   script:
+    - apt-get update
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
     - apt-get install --yes gfortran git cmake libopenblas0 libopenblas-dev libfftw3-3 libfftw3-dev libopenmpi3 libopenmpi-dev
     - ./configure
     - make pw
