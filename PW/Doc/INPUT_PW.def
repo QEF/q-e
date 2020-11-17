@@ -83,6 +83,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
            label_1 Fx(1) Fy(1) Fz(1)
            .....
            label_n Fx(n) Fy(n) Fz(n) ]
+
+        [ @b ADDITIONAL_K_POINTS
+             see: K_POINTS ]
     }
 
     #
@@ -311,7 +314,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     save charge to disk at each SCF step,
                     keep wavefunctions on disk (in "distributed" format),
                     save mixing data as well.
-                    Do not use this option unless you have a good reason to
+                    Do not use this option unless you have a good reason!
+                    It is no longer needed to specify 'high' in order to be able
+                    to restart from an interrupted calculation (see @ref restart_mode)
                 }
 
                 opt -val 'medium' {
@@ -339,10 +344,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             
                 info {
                     @b Default is @b 'low' for the scf case, @b 'medium' otherwise.
-                    Note that the needed RAM increases as disk I/O decreases!
-                    It is no longer needed to specify 'high' in order to be able
-                    to restart from an interrupted calculation (see @ref restart_mode)
-                    but you cannot restart in @ref disk_io=='nowf' or 'none'
+                    Note that the needed RAM increases as disk I/O decreases
+
                 }
             }
         }
@@ -1231,7 +1234,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 simplest DFT+U+V calculation):
                 k=1 - interaction between standard orbitals (both on na and nb); 
                 k=2 - interaction between standard (on na) and background (on nb) orbitals;
-                k=3 - interaction between background orbitlas (both on na and nb);
+                k=3 - interaction between background orbitals (both on na and nb);
                 k=4 - interaction between background (on na) and standard (on nb) orbitals.
                 Standard orbitals correspond to the main Hubbard channel (e.g. d electrons
                 in transition metals) and background orbitals correspond to the secondary
@@ -3055,6 +3058,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
     }
+
+    #
+    # card ADDITIONAL_K_POINTS
+    #
+    card ADDITIONAL_K_POINTS {
+        label { Optional card. Adds a list of k-points with zero weight, after those used for the scf calculation.
+                When doing an EXX calculation and nq1x, nq2x or nq3x are different from one, also include the 
+                required k+q points. The main use of this card is do band plots with EXX. }
+        syntax { message { Same as K_POINTS, but does not accept 'automatic'. } } 
+        }
+ 
 
     #
     # CELL_PARAMETERS

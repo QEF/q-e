@@ -4,9 +4,7 @@ PROGRAM test_mp_max_rv_buffer
 ! with buffer implementation.
 !
 
-#if defined(__MPI)
-    USE MPI
-#endif
+    USE parallel_include
     USE util_param, ONLY : DP
     USE mp, ONLY : mp_max
     USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &

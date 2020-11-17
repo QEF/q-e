@@ -22,7 +22,7 @@
                     conv_thr  =  1.0d-7 
  /
  &IONS
- ion_positions = 'from_file'
+   !ion_positions = 'from_file'
  /
  &CELL
    cell_dynamics = 'damp-w' ,
@@ -31,7 +31,7 @@
  /
 ATOMIC_SPECIES
    As   74.90000  As.pz-bhs.UPF
-ATOMIC_POSITIONS crystal 
+ATOMIC_POSITIONS alat 
 As    0.290010       0.290010       0.290010
 As   -0.290010      -0.290010      -0.290010
 K_POINTS automatic 

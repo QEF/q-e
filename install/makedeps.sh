@@ -113,10 +113,11 @@ for dir in $dirs; do
 
         if test "$DIR" = "FFTXlib"
         then
-            # more special cases: modules for FFTs, OpenMP
+            # more special cases: modules for FFTs, GPU, OpenMP
             sed '/@omp_lib@/d' make.depend > tmp; mv tmp make.depend
             sed '/@mkl_dfti/d' make.depend > tmp; mv tmp make.depend
             sed '/@fftw3.f/d;s/@fftw.c@/fftw.c/' make.depend > tmp; mv tmp make.depend
+            sed '/@cudafor@/d;/@cufft@/d;/@flops_tracker@/d' make.depend > tmp; mv tmp make.depend
         fi
 
         if test "$DIR" = "LAXlib"
@@ -126,6 +127,7 @@ for dir in $dirs; do
             sed '/@cudafor@/d;/@cusolverdn@/d;/@gbuffers@/d' make.depend > tmp; mv tmp make.depend
             sed '/@zhegvdx_gpu@/d;/@dsyevd_gpu@/d;/@dsygvdx_gpu@/d' make.depend > tmp; mv tmp make.depend
             sed '/@cublas@/d;/@eigsolve_vars@/d;/@nvtx_inters@/d' make.depend > tmp ; mv tmp make.depend
+            sed '/@device_fbuff_m@/d' make.depend > tmp ; mv tmp make.depend
         fi
 
         if test "$DIR" = "UtilXlib"

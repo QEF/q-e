@@ -6,17 +6,18 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-SUBROUTINE set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, lxdm )
+SUBROUTINE set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, do_mdb, lxdm )
   USE io_global, ONLY: stdout
   !
   IMPLICIT NONE
   CHARACTER(LEN=*), INTENT(in) :: vdw_corr
-  LOGICAL, INTENT(out) :: llondon, ldftd3, ts_vdw, lxdm
+  LOGICAL, INTENT(out) :: llondon, ldftd3, ts_vdw, do_mdb, lxdm
   !
 
   llondon= .FALSE.
   ldftd3 = .FALSE.
   ts_vdw = .FALSE.
+  do_mdb = .FALSE.
   lxdm   = .FALSE.
 
   SELECT CASE( TRIM( vdw_corr ) )
@@ -28,6 +29,9 @@ SUBROUTINE set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, lxdm )
 
   CASE( 'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler' )
      ts_vdw = .TRUE.
+
+  CASE( 'MBD', 'mbd', 'many-body-dispersion' )
+     do_mdb = .TRUE.
 
   CASE( 'XDM', 'xdm' )
      lxdm   = .TRUE.

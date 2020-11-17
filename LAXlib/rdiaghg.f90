@@ -85,16 +85,7 @@ SUBROUTINE laxlib_rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp
         end do
         !$omp end parallel do
         !
-#if defined (__ESSL)
-        !
-        ! ... there is a name conflict between essl and lapack ...
-        !
-        CALL DSYGV( 1, v, ldh, s, ldh, e, v, ldh, n, work, lwork )
-        !
-        info = 0
-#else
         CALL DSYGV( 1, 'V', 'U', n, v, ldh, s, ldh, e, work, lwork, info )
-#endif
         !
      ELSE
         !
@@ -200,9 +191,12 @@ SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
 #endif
 #endif
   !
-!define __USE_GLOBAL_BUFFER
-#if defined(__USE_GLOBAL_BUFFER)
-  USE gbuffers,        ONLY : dev=>dev_buf, pin=>pin_buf
+  ! NB: the flag below can be used to decouple LAXlib from devXlib.
+  !     This will make devXlib an optional dependency of LAXlib when
+  !     the library will be decoupled from QuantumESPRESSO.
+#define __USE_GLOBAL_BUFFER
+#if defined(__USE_GLOBAL_BUFFER) && defined(__CUDA)
+  USE device_fbuff_m,        ONLY : dev=>dev_buf, pin=>pin_buf
 #define VARTYPE POINTER
 #else
 #define VARTYPE ALLOCATABLE
