@@ -1,15 +1,17 @@
 program all_currents
-   use hartree_mod, only: trajdir, first_step,&
+   use kohn_sham_mod, only: trajdir, first_step,&
            dvpsi_save, subtract_cm_vel, re_init_wfc_1, re_init_wfc_2,re_init_wfc_3,&
-           n_repeat_every_step, ethr_big_step, scf_all, multiple_scf_result_allocate,&
-           scf_result_set_from_global_variables, multiple_scf_result_deallocate, &
+           n_repeat_every_step, ethr_big_step, scf_all, &
            three_point_derivative, ave_cur, ethr_small_step, &
-           init_hartree, current_hartree_xc, current_kohn_sham
+           init_kohn_sham, current_kohn_sham, &
+           j_xc,j_hartree, delta_t
+   use hartree_xc_mod, only: current_hartree_xc
    use zero_mod, only: vel_input_units, init_zero, current_zero, &
                        allocate_zero, deallocate_zero
    use ionic_mod, only : init_ionic, ionic_init_type, current_ionic, add_i_current_b, &
                        i_current, i_current_a, i_current_b, i_current_c, i_current_d, i_current_e
-                       
+   use scf_result_mod, only : multiple_scf_result_allocate, &
+           scf_result_set_from_global_variables, multiple_scf_result_deallocate
    USE environment, ONLY: environment_start, environment_end
    use io_global, ONLY: ionode
    use wavefunctions, only: evc
@@ -131,6 +133,7 @@ program all_currents
    call init_zero(nsp, zv, tpiba2, tpiba, omega, at, alat, &
                 ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq, &
                 upf, rgrid, nqxq) ! only once per all trajectory
+   call init_kohn_sham()
    call setup_nbnd_occ() ! only once per all trajectory
 
    if (ionode .and. first_step == 0) then !set velocities factor also in the input file step
@@ -228,7 +231,8 @@ program all_currents
                       nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
           end if
           !calculate second part of energy current
-          call current_hartree_xc(nbnd, npw, npwx, dffts, psic, g, ngm, gstart, &
+          call current_hartree_xc(three_point_derivative,delta_t, scf_all, &
+                  j_hartree, j_xc, nbnd, npw, npwx, dffts, psic, g, ngm, gstart, &
                 tpiba, omega, tpiba2)
           call current_kohn_sham(nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
                 tpiba2, at, vkb, nkb, xk, igk_k, g2kin, et)
@@ -255,7 +259,7 @@ contains
       use kinds, only: dp
       use ions_base, ONLY: nsp
       use cell_base, only: alat
-      use hartree_mod
+      use kohn_sham_mod
       use zero_mod
       use io_global, ONLY: ionode
       use cpv_traj, only: cpv_trajectory, cpv_trajectory_get_last_step
@@ -323,7 +327,7 @@ contains
 
    subroutine read_all_currents_namelists(iunit, eta, n_max)
       use zero_mod
-      use hartree_mod
+      use kohn_sham_mod
       use io_global, ONLY: stdout, ionode, ionode_id
       implicit none
       integer, intent(in) :: iunit
@@ -372,7 +376,7 @@ contains
 
    subroutine bcast_all_current_namelist(eta, n_max)
       use zero_mod
-      use hartree_mod
+      use kohn_sham_mod
       use io_global, ONLY: stdout, ionode, ionode_id
       use mp_world, ONLY: mpime, world_comm
       use mp, ONLY: mp_bcast
@@ -404,7 +408,7 @@ contains
    end subroutine
 
    subroutine set_first_step_restart()
-      use hartree_mod, only: restart, file_output, first_step
+      use kohn_sham_mod, only: restart, file_output, first_step
       use io_global, ONLY: ionode, ionode_id
       use mp_world, ONLY: mpime, world_comm
       use mp, ONLY: mp_bcast
@@ -483,7 +487,7 @@ contains
       use kinds, only: dp
       use ions_base, ONLY: nat, nsp, ityp
       use dynamics_module, only: vel
-      use hartree_mod, only: v_cm
+      use kohn_sham_mod, only: v_cm
       implicit none
       real(dp), intent(out), optional :: vel_cm(:, :)
       integer :: iatom, itype
@@ -520,7 +524,7 @@ contains
       use io_global, ONLY: ionode, ionode_id
       USE mp_world, ONLY: world_comm
       use mp, ONLY: mp_bcast, mp_barrier
-      use hartree_mod, only: delta_t, ethr_small_step, three_point_derivative
+      use kohn_sham_mod, only: delta_t, ethr_small_step, three_point_derivative
       use zero_mod, only: vel_input_units
       use wavefunctions, only: evc
       implicit none
@@ -555,7 +559,7 @@ contains
       USE mp_world, ONLY: world_comm
       use mp, ONLY: mp_bcast, mp_barrier
       use zero_mod, only: vel_input_units
-      use hartree_mod, only: first_step, last_step, ethr_big_step, &
+      use kohn_sham_mod, only: first_step, last_step, ethr_big_step, &
                              step_mul, step_rem
       implicit none
       type(cpv_trajectory), intent(inout) :: t

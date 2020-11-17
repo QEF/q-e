@@ -27,8 +27,7 @@ subroutine init_us_3(npw_, xvkb_)
    ! USE splinelib
    USE uspp, ONLY: nkb, nhtol, nhtolm, indv, ap, aainit
    USE uspp_param, ONLY: upf, lmaxkb, nhm, nh
-   use zero_mod, ONLY: tabr!, tabr_d2y
-   use hartree_mod, ONLY: ec_test
+   use zero_mod, ONLY: tabr, ec_test!, tabr_d2y
    use mp, ONLY: mp_sum, mp_min
 !
 !modules for UT

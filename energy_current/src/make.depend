@@ -31,11 +31,16 @@ all_currents.o : ../../PW/src/realus.o
 all_currents.o : ../../PW/src/scf_mod.o
 all_currents.o : ../../PW/src/symm_base.o
 all_currents.o : ../../UtilXlib/mp.o
-all_currents.o : hartree_mod.o
+all_currents.o : hartree_xc_mod.o
+all_currents.o : kohn_sham_mod.o
 all_currents.o : zero_mod.o
 all_currents.o : ionic_mod.o
 all_currents.o : averages.o
-hartree_mod.o : compute_charge.o
+hartree_xc_mod.o : compute_charge.o
+hartree_xc_mod.o : scf_result.o
+kohn_sham_mod.o : compute_charge.o
+kohn_sham_mod.o : averages.o
+kohn_sham_mod.o : scf_result.o
 zero_mod.o : compute_charge.o
 allocate_zero.o : ../../upflib/atom.o
 allocate_zero.o : ../../Modules/fft_base.o
@@ -48,7 +53,7 @@ deallocate_zero.o : zero_mod.o
 ec_functionals.o : ../../Modules/exchange_gga.o
 ec_functionals.o : ../../Modules/correlation_gga.o
 hartree_mod.o : ../../Modules/kind.o
-hartree_mod.o : averages.o
+kohn_sham_mod.o : ../../Modules/kind.o
 init_us_1a.o : ../../upflib/atom.o
 init_us_1a.o : ../../Modules/cell_base.o
 init_us_1a.o : ../../Modules/constants.o

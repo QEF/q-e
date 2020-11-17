@@ -41,7 +41,7 @@ subroutine project(ipol)
    use mp, ONLY: mp_sum, mp_min, mp_max
    USE mp_global, ONLY: inter_pool_comm, intra_pool_comm
    USE eqv, ONLY: evq
-   use hartree_mod, only: dvpsi_save, save_dvpsi
+   use kohn_sham_mod, only: dvpsi_save, save_dvpsi
 
    implicit none
    !

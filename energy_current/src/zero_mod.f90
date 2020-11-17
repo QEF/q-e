@@ -23,6 +23,7 @@ MODULE zero_mod
    real(dp) ::z_current(3)!, i_current(3), i_current_a(3), i_current_b(3), i_current_c(3), i_current_d(3), i_current_e(3)
 
    character(len=256) :: vel_input_units = 'PW'
+   logical :: ec_test ! activates tests for debugging purposes
 
    !input from stdout
 
@@ -87,7 +88,7 @@ subroutine current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
    use io_global, only: stdout, ionode
    use constants, only: e2, AMU_RY
    use splines
-   use hartree_mod
+   !use hartree_mod
    use compute_charge_mod, only : compute_charge
    USE uspp_param, ONLY: pseudo_upf
 

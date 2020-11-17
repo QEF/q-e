@@ -13,7 +13,7 @@ subroutine compute_charge(psic, evc, npw, nbnd, ngm, dffts, charge, charge_g)
 
    complex(kind=dp), intent(inout) :: psic(:)
    complex(kind=dp), intent(inout) :: charge_g(:)
-   complex(kind=dp), intent(inout) :: evc(:,:)
+   complex(kind=dp), intent(in) :: evc(:,:)
    real(kind=dp), intent(inout) :: charge(:)
    integer, intent(in) :: npw, nbnd, ngm
    type(fft_type_descriptor), intent(in) ::dffts

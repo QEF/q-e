@@ -16,7 +16,8 @@ MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../LA
 LIBOBJS=  ../../clib/clib.a ../../UtilXlib/libutil.a ../../KS_Solvers/DENSE/libdense.a ../../dft-d3/libdftd3qe.a ../../KS_Solvers/PPCG/libppcg.a ../../KS_Solvers/ParO/libparo.a $(QELIBS)
 
 ALLCURRENTSOBJS = \
-hartree_mod.o\
+hartree_xc_mod.o\
+kohn_sham_mod.o\
 zero_mod.o\
 ionic_mod.o\
 all_currents.o \
@@ -24,7 +25,8 @@ project.o\
 init_us_3.o \
 ec_functionals.o \
 compute_charge.o \
-averages.o
+averages.o\
+scf_result.o
 
 TEST_CPV_TRAJ_OBJ= \
 traj_object.o \
