@@ -469,7 +469,6 @@ CONTAINS
 #ifdef __CUDA
       ALLOCATE(coe_1st_derv_d, source=coe_1st_derv)
       ALLOCATE(coeke_d,   source=coeke)
-      ALLOCATE(coemicf_d, source=coemicf)
 #endif
       !
       IF (texx_cube) then
@@ -489,6 +488,9 @@ CONTAINS
     IMPLICIT NONE
     REAL(DP) :: hx, hy, hz                             !grid spacing along lattice directions
     ALLOCATE( coemicf(-nord2:nord2, 3,3))    ! coeke(neighbor, d/di, d/dj)
+#ifdef __CUDA
+    ALLOCATE(coemicf_d, source=coemicf)
+#endif
     nrg(1)=nr1;   nrg(2)=nr2;   nrg(3)=nr3
     nrgr(1)=nr1r; nrgr(2)=nr2r; nrgr(3)=nr3r
     !
