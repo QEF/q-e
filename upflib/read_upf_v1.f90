@@ -774,9 +774,21 @@ subroutine read_pseudo_ppinfo (upf, iunps)
                idummy, rdummy, upf%rcut(nb), upf%rcutus (nb), rdummy
         ENDDO
         ios=100
+     ELSE 
+        nb = 1 
      ENDIF
   ENDDO
-100  RETURN
+100 CONTINUE 
+  ! PP_INFO reports values only for bound valence states,  
+  IF ( nb .LE.  upf%nbeta ) THEN 
+     IF (upf%els_beta(nb) == "</") THEN 
+        upf%els_beta(nb:upf%nbeta)="__"
+        upf%rcut(nb:upf%nbeta)=-1.0
+        upf%rcutus(nb:upf%nbeta) = -1.0 
+     END IF 
+  END IF
+  RETURN
+
   END SUBROUTINE read_pseudo_ppinfo
 
   SUBROUTINE set_coulomb_nonlocal(upf)

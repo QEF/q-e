@@ -22,8 +22,8 @@ function(qe_get_global_compile_definitions OUTVAR)
 endfunction(qe_get_global_compile_definitions)
 
 function(qe_get_fortran_cpp_flag OUTVAR)
-    if(CMAKE_Fortran_COMPILER_ID STREQUAL "PGI")
-        set(${OUTVAR} "-Mpreprocess" PARENT_SCOPE) # :'(
+    if(DEFINED Fortran_PREPROCESSOR_FLAGS)
+        set(${OUTVAR} "${Fortran_PREPROCESSOR_FLAGS}" PARENT_SCOPE)
     else()
         # TODO actual flag check
         set(${OUTVAR} "-cpp" PARENT_SCOPE)
@@ -31,7 +31,6 @@ function(qe_get_fortran_cpp_flag OUTVAR)
 endfunction(qe_get_fortran_cpp_flag)
 
 function(qe_preprocess_source IN OUT)
-    qe_get_fortran_cpp_flag(f_cpp_flag)
     qe_get_global_compile_definitions(global_defs)
     foreach(DEF ${global_defs})
         list(APPEND global_flags "-D${DEF}")
@@ -42,7 +41,7 @@ function(qe_preprocess_source IN OUT)
     endif()
     add_custom_command(
         OUTPUT ${OUT}
-        COMMAND "${CMAKE_Fortran_COMPILER}" ${f_cpp_flag} ${global_flags} -E ${IN} > ${OUT}
+        COMMAND cpp -P ${global_flags} -E ${IN} > ${OUT}
         MAIN_DEPENDENCY ${IN}
         COMMENT "Preprocessing ${IN}"
         VERBATIM)    

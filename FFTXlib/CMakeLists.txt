@@ -5,61 +5,46 @@ add_library(qe_fft INTERFACE)
 add_library(QE::FFT ALIAS qe_fft)
 qe_install_targets(qe_fft)
 ###########################################################
-if(VENDOR_FOUND AND NOT FFTW_ROOT)
-    if(VENDOR MATCHES "Intel")
+# Try to find a vendor FFTW
+find_package(VendorFFTW)
+if(VendorFFTW_FOUND)
+    if(VendorFFTW_ID STREQUAL "Intel")
         qe_add_global_compile_definitions(__DFTI)
         set(qe_fft_wrappers fft_scalar.DFTI.f90)
-    elseif(VENDOR MATCHES "Armpl")
-        qe_add_global_compile_definitions(__ARM_LIB)
-        set(qe_fft_wrappers fft_scalar.ARM_LIB.f90)
-    elseif(VENDOR MATCHES "IBMESSL")
+    elseif(VendorFFTW_ID STREQUAL "Arm")
+        ## ARMPL implements the same interface of the standard FFTW
+        ## no need of QE ARMPL wrapper
+        #qe_add_global_compile_definitions(__ARM_LIB)
+        #set(qe_fft_wrappers fft_scalar.ARM_LIB.f90)
+	    qe_add_global_compile_definitions(__FFTW)
+        set(qe_fft_wrappers fft_scalar.FFTW.f90)
+    elseif(VendorFFTW_ID STREQUAL "IBMESSL")
         qe_add_global_compile_definitions(__LINUX_ESSL)
         set(qe_fft_wrappers fft_scalar.ESSL.f90)
-    # elseif(VENDOR MATCHES "ACML")
-    #    qe_add_global_compile_definitions(__ACML)
+    endif()
+    
+    target_link_libraries(qe_fft INTERFACE VendorFFTW)
+else()
+    # Try to find the official FFTW3
+    message(STATUS "No vendor FFTW found")
+
+    if(QE_ENABLE_OPENMP)
+        find_package(FFTW COMPONENTS DOUBLE_OPENMP)
     else()
-        message(FATAL_ERROR "The vendor specific FFT found isn't yet supported in QE, please open an issue: https://gitlab.com/QEF/q-e/issues")
+        find_package(FFTW COMPONENTS DOUBLE)
     endif()
 
-    target_link_libraries(qe_fft 
-        INTERFACE 
-            ${FFTW_LIBRARIES}
-            ${FFTW_LINKER_FLAGS})
-    target_include_directories(qe_fft
-        INTERFACE
-            ${FFTW_INCLUDE_DIRS})
-else()
-    # No vendor-specific fft flavor has been found,
-    # just look for a generic FFTW3 implementation
-    if(QE_ENABLE_OPENMP)
-        find_package(FFTW QUIET COMPONENTS DOUBLE_OPENMP_LIB)
-        if(FFTW_FOUND)
-            qe_add_global_compile_definitions(__FFTW3)
-            set(qe_fft_wrappers fft_scalar.FFTW3.f90)
-            target_link_libraries(qe_fft INTERFACE FFTW::DoubleOpenMP)
-            message(STATUS "Found Double+OpenMP FFTW3 library")
-            message(STATUS "Found FFTW3 libraries: ${FFTW_DOUBLE_OPENMP_LIB}")
-            message(STATUS "Found FFTW3 include: ${FFTW_INCLUDE_DIRS}")
-        endif()
+    if(FFTW_FOUND)
+        qe_add_global_compile_definitions(__FFTW3)
+        set(qe_fft_wrappers fft_scalar.FFTW3.f90)
+        target_link_libraries(qe_fft INTERFACE FFTW)
     else()
-        find_package(FFTW QUIET COMPONENTS DOUBLE_LIB)
-        if(FFTW_FOUND)
-            qe_add_global_compile_definitions(__FFTW3)
-            set(qe_fft_wrappers fft_scalar.FFTW3.f90)
-            target_link_libraries(qe_fft INTERFACE FFTW::Double)
-            message(STATUS "Found Double FFTW3 library")
-            message(STATUS "Found FFTW3 libraries: ${FFTW_DOUBLE_LIB}")
-            message(STATUS "Found FFTW3 include: ${FFTW_INCLUDE_DIRS}")
-        endif()
+        # Cannot find anything useful, just fall back to the internal FFTW
+        message(STATUS "No FFTW3 library found. FFTW is falling back to QE internal implementation (FFTXLib)")
+        qe_add_global_compile_definitions(__FFTW)
+        set(qe_fft_wrappers fft_scalar.FFTW.f90)
     endif()
 endif()
-
-# Cannot find anything useful, just fall back to the internal FFTW
-if(NOT FFTW_FOUND)
-    message(STATUS "FFTW is falling back to QE internal implementation (FFTXLib)")
-    qe_add_global_compile_definitions(__FFTW)
-    set(qe_fft_wrappers fft_scalar.FFTW.f90)
-endif(NOT FFTW_FOUND)
 
 set(f_sources
     fft_scatter.f90

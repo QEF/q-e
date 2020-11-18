@@ -75,8 +75,11 @@ MODULE exx_module
   INTEGER, PUBLIC                     :: np_in_sp_p, np_in_sp_me_p  ! number of grid points in the PS sphere and the ME sphere for pair orbital in Full Grid
   !
   INTEGER, PUBLIC                     :: my_nbspx               ! parallelization/distribution of orbitals over processors 
-  INTEGER,  ALLOCATABLE, PUBLIC       :: my_nbsp(:), my_nxyz(:) ! parallelization/distribution of orbitals over processors 
-  INTEGER,  ALLOCATABLE, PUBLIC       :: index_my_nbsp (:, :), rk_of_obtl (:), lindex_of_obtl(:) ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: my_nbsp(:)             ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: my_nxyz(:)             ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: index_my_nbsp(:, :)    ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: rk_of_obtl(:)          ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: lindex_of_obtl(:)      ! parallelization/distribution of orbitals over processors 
   !
   ! conversion between 3D index (i,j,k) and 1D index 
   ! odthothd_in_sp(3, 1:np_in_sp_p) is for inner sphere (1st shell)

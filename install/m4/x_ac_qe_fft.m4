@@ -183,6 +183,7 @@ else
       try_iflags="$try_iflags -I$FFT_INCLUDE"
    fi
    if test -n "$FFTW_INCLUDE" ; then :
+      try_dflags="$try_dflags -D__FFTW3"
       try_iflags="$try_iflags -I$FFTW_INCLUDE"
    fi
 

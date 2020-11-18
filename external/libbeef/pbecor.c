@@ -29,7 +29,7 @@
 /* ---------------------------------------------------------------------- */
 /* ###################################################################### */
 /* ---------------------------------------------------------------------- */
-/* Subroutine */ void gcor2(double a, double a1, double b1, 
+/* Subroutine */ static void gcor2(double a, double a1, double b1, 
 	double b2, double b3, double b4, double rtrs, 
 	double *gg, double *ggrs)
 {
