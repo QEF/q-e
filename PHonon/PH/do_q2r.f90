@@ -264,7 +264,7 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d)
      END DO
      WRITE (2,*) lrigid
      IF (lrigid) THEN
-        WRITE(2,'(3f15.7)') ((epsil(i,j),j=1,3),i=1,3)
+        WRITE(2,'(3f24.12)') ((epsil(i,j),j=1,3),i=1,3)
         DO na=1,nat
            WRITE(2,'(i5)') na
            WRITE(2,'(3f15.7)') ((zeu(i,j,na),j=1,3),i=1,3)
