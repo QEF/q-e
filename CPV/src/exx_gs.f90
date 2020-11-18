@@ -1138,6 +1138,11 @@ SUBROUTINE exx_gs(nfi, c)
       s_me_r4=s_me_r(4)
       s_me_r5=s_me_r(5)
       s_me_r6=s_me_r(6)
+#ifdef __CUDA
+    ALLOCATE (h_d, source=h)
+    associate (me_cs=>me_cs_d, me_rs=>me_rs_d, me_ri=>me_ri_d, me_rc=>me_rc_d, h=>h_d)
+    !$cuf kernel do (3)
+#endif
       DO k = s_me_r(3),s_me_r(6)
         DO j = s_me_r(2),s_me_r(5)
           DO i = s_me_r(1),s_me_r(4)
@@ -1203,7 +1208,15 @@ SUBROUTINE exx_gs(nfi, c)
         END DO
       END DO
       !---------------------------------------------------------------------------------------------
-      return
+#ifdef __CUDA
+   end associate
+   me_cs = me_cs_d 
+   me_rs = me_rs_d 
+   me_ri = me_ri_d 
+   me_rc = me_rc_d 
+   DEALLOCATE(h_d)
+#endif
+      !return
     end subroutine exx_gs_setup_cube
 
     subroutine  exx_gs_setup_sphere()
@@ -1291,17 +1304,17 @@ SUBROUTINE exx_gs(nfi, c)
 #else
       CALL updateforce_loc(nrg, p_me_r, vpsil(:,iobtl), potme, psime, psime_pair_recv(1,j,iobtl),tran)
 #endif
-!TODO: check if following subroutines are right
-#if ! defined(__MPI)
-      ! does not need communication so construct it here; my_var2 is simultaneously the global and local index (serial case)
-#ifdef __CUDA
-      CALL updateforce_loc(nrg, p_me_r, vpsil_d(:,my_var2), potme, psime, psime_pair_recv_d(1,j,iobtl),tran)
-      psime_pair_recv(:,j,iobtl) = psime_pair_recv_d(:,j,iobtl)
-#else
-      CALL updateforce_loc(nrg, p_me_r, vpsil(:,my_var2), potme, psime, psime_pair_recv(1,j,iobtl),tran)
-#endif
-      CALL updateforce_loc(nrg, p_me_r, vpsil(:,my_var2), potme, psime_pair_recv(1,j,iobtl), psime, tran)
-#endif
+!!!!TODO: check if following subroutines are right
+!!!#if ! defined(__MPI)
+!!!      ! does not need communication so construct it here; my_var2 is simultaneously the global and local index (serial case)
+!!!#ifdef __CUDA
+!!!      CALL updateforce_loc(nrg, p_me_r, vpsil_d(:,my_var2), potme, psime, psime_pair_recv_d(1,j,iobtl),tran)
+!!!      psime_pair_recv(:,j,iobtl) = psime_pair_recv_d(:,j,iobtl)
+!!!#else
+!!!      CALL updateforce_loc(nrg, p_me_r, vpsil(:,my_var2), potme, psime, psime_pair_recv(1,j,iobtl),tran)
+!!!#endif
+!!!      CALL updateforce_loc(nrg, p_me_r, vpsil(:,my_var2), potme, psime_pair_recv(1,j,iobtl), psime, tran)
+!!!#endif
       call stop_clock('exx_force_loc')
       !
       call start_clock('exx_penergy')
@@ -1679,13 +1692,20 @@ SUBROUTINE vvprod_cube(me_r, v1, v2, prod)
     !----------------------------------------------------------------
     INTEGER      :: i,j,k
     REAL(DP)     :: prodp
+#ifdef __CUDA
+    attributes(device) :: v1,v2
+#endif
     !----------------------------------------------------------------
     !
     prodp=0.0D0
     !
     ! WRITE(*,*) "vvprod"
     !
+#ifdef __CUDA
+    !$cuf kernel do (3)
+#else
     !$omp parallel do private(i,j,k) reduction(+:prodp)
+#endif    
     DO k=me_r(3),me_r(6)
       DO j=me_r(2),me_r(5)
         DO i=me_r(1),me_r(4)
@@ -1698,7 +1718,9 @@ SUBROUTINE vvprod_cube(me_r, v1, v2, prod)
       END DO
     END DO
     !----------------------------------------------------------------
+#ifndef __CUDA
     !$omp end parallel do 
+#endif
     !
     prod = prodp
     !
@@ -1742,10 +1764,17 @@ SUBROUTINE getrhol_cube(me_r, ps_r, psi1, psi2, rhome, rhops, inv_omega)
     REAL(DP) rhome(me_r(1):me_r(4),me_r(2):me_r(5),me_r(3):me_r(6))
     REAL(DP) rhops(ps_r(1):ps_r(4),ps_r(2):ps_r(5),ps_r(3):ps_r(6))
     REAL(DP) inv_omega
+#ifdef __CUDA
+    attributes(device) :: psi1, psi2, rhops, rhome
+#endif
     !
     INTEGER  i, j, k
     !
+#ifdef __CUDA
+    !$cuf kernel do (3)
+#else
     !$omp parallel do private(i,j,k)
+#endif
     DO k=ps_r(3),ps_r(6)
       DO j=ps_r(2),ps_r(5)
         DO i=ps_r(1),ps_r(4)
@@ -1753,11 +1782,17 @@ SUBROUTINE getrhol_cube(me_r, ps_r, psi1, psi2, rhome, rhops, inv_omega)
         END DO
       END DO
     END DO
+#ifndef __CUDA
     !$omp end parallel do 
+#endif
     !--------------------------------------------------------------------------
     !
     !--------------------------------------------------------------------------
+#ifdef __CUDA
+    !$cuf kernel do (3)
+#else
     !$omp parallel do private(i,j,k)
+#endif
     DO k=me_r(3),me_r(6)
       DO j=me_r(2),me_r(5)
         DO i=me_r(1),me_r(4)
@@ -1765,7 +1800,9 @@ SUBROUTINE getrhol_cube(me_r, ps_r, psi1, psi2, rhome, rhops, inv_omega)
         END DO
       END DO
     END DO
+#ifndef __CUDA
     !$omp end parallel do 
+#endif
     !--------------------------------------------------------------------------
     !
     RETURN
@@ -1836,6 +1873,7 @@ SUBROUTINE getpsicb(nrg,nrl,psig,psil,tran)
     !
     USE kinds, ONLY  : DP
     USE fft_base,         ONLY  : dfftp
+    USE dummy_exx, ONLY : l2gcb
     !
     IMPLICIT NONE
     !
@@ -1845,14 +1883,19 @@ SUBROUTINE getpsicb(nrg,nrl,psig,psil,tran)
     REAL(DP)     :: psil(nrl(1):nrl(4),nrl(2):nrl(5),nrl(3):nrl(6))
     INTEGER      :: tran(3)
     INTEGER      :: gid(3)
-    !INTEGER      :: lid(3)
     INTEGER      :: i,j,k
     INTEGER      :: ti, tj, tk
     INTEGER      :: gi, gj, gk
-    integer, external :: l2gcb
+#ifdef __CUDA
+    attributes(device) :: psil, psig
+#endif
     !
     ti = tran(1); tj = tran(2); tk = tran(3)
+#ifdef __CUDA
+    !$cuf kernel do (3)
+#else
     !$omp parallel do private(i,j,k,gi,gj,gk)
+#endif
     DO k = nrl(3),nrl(6)
       DO j = nrl(2),nrl(5)
         DO i = nrl(1),nrl(4)
@@ -1865,23 +1908,26 @@ SUBROUTINE getpsicb(nrg,nrl,psig,psil,tran)
         END DO
       END DO
     END DO
+#ifndef __CUDA
     !$omp end parallel do 
+#endif
     !----------------------------------------------------------
     !
     RETURN
 END SUBROUTINE getpsicb
 !==============================================================================
 
-integer function l2gcb(n,l,t)
-  implicit none
-  integer :: n, l, t
-  l2gcb = MOD(l-t-1+n, n)+1
-end function l2gcb
+!integer function l2gcb(n,l,t)
+!  implicit none
+!  integer :: n, l, t
+!  l2gcb = MOD(l-t-1+n, n)+1
+!end function l2gcb
 SUBROUTINE updateforce_loc(nrg, me_r, vpsil, potme, psime1, psime2, tran)
     !
     USE kinds,                   ONLY  : DP
     USE exx_module,              ONLY  : exxalfa
     USE fft_base,         ONLY  : dfftp
+    USE dummy_exx,               ONLY  : l2gcb
     !
     IMPLICIT NONE
     !
@@ -1897,19 +1943,24 @@ SUBROUTINE updateforce_loc(nrg, me_r, vpsil, potme, psime1, psime2, tran)
     INTEGER      :: lid(3)
     INTEGER      :: i,j,k
     INTEGER      :: gi,gj,gk,ti,tj,tk
-    integer, external :: l2gcb
+#ifdef __CUDA
+    attributes (device) :: vpsil,potme,psime1,psime2
+#endif
     !
     ti=tran(1);tj=tran(2);tk=tran(3)
     !----------------------------------------------------------------
     ! update vpsil in the global grid (exxalfa is 0.25 for PBE0)
     !----------------------------------------------------------------
+#ifdef __CUDA
+    !$cuf kernel do (3)
+#else
     !$omp parallel do private(i,j,k,gi,gj,gk)
+#endif
     !----------------------------------------------------------------
     DO k=me_r(3),me_r(6)
       DO j=me_r(2),me_r(5)
         DO i=me_r(1),me_r(4)
           !----------------------------------------------------------
-          !CALL l2gcb(lid,gid,tran)
           gi = l2gcb(dfftp%nr1,i,ti)
           gj = l2gcb(dfftp%nr2,j,tj)
           gk = l2gcb(dfftp%nr3,k,tk)
@@ -1924,7 +1975,9 @@ SUBROUTINE updateforce_loc(nrg, me_r, vpsil, potme, psime1, psime2, tran)
       END DO
     END DO
     !----------------------------------------------------------------
+#ifndef __CUDA
     !$omp end parallel do 
+#endif
     !----------------------------------------------------------------
 
     !----------------------------------------------------------------
@@ -1939,6 +1992,7 @@ SUBROUTINE updateforce_slf(nrg, me_r, vpsil, potme, psime, tran)
     USE kinds,                   ONLY  : DP
     USE exx_module,              ONLY  : exxalfa
     USE fft_base,         ONLY  : dfftp
+    USE dummy_exx,               ONLY  : l2gcb
     !
     IMPLICIT NONE
     !
@@ -1954,13 +2008,19 @@ SUBROUTINE updateforce_slf(nrg, me_r, vpsil, potme, psime, tran)
     INTEGER      :: i,j,k
     !
     INTEGER      :: gi,gj,gk,ti,tj,tk
-    integer, external :: l2gcb
+#ifdef __CUDA
+    attributes (device) :: vpsil,potme,psime
+#endif
     !
     ti=tran(1);tj=tran(2);tk=tran(3)
     !----------------------------------------------------------------
     ! update vpsil in the global grid (exxalfa is 0.25 for PBE0)
     !----------------------------------------------------------------
+#ifdef __CUDA
+    !$cuf kernel do (3)
+#else
     !$omp parallel do private(i,j,k,gi,gj,gk)
+#endif
     DO k=me_r(3),me_r(6)
       DO j=me_r(2),me_r(5)
         DO i=me_r(1),me_r(4)
@@ -1976,7 +2036,9 @@ SUBROUTINE updateforce_slf(nrg, me_r, vpsil, potme, psime, tran)
       END DO
     END DO
     !----------------------------------------------------------------
+#ifndef __CUDA
     !$omp end parallel do 
+#endif
     !----------------------------------------------------------------
 
     !----------------------------------------------------------------
@@ -1991,6 +2053,7 @@ SUBROUTINE updateforce_rec(nrg, me_r, vpsil, force, tran)
     USE kinds,                   ONLY  : DP
     USE exx_module,              ONLY  : exxalfa
     USE fft_base,                ONLY  : dfftp
+    USE dummy_exx,               ONLY  : l2gcb
     !
     IMPLICIT NONE
     !
@@ -2003,14 +2066,20 @@ SUBROUTINE updateforce_rec(nrg, me_r, vpsil, force, tran)
     INTEGER      :: gi, gj, gk
     INTEGER      :: i,j,k
     INTEGER      :: ti,tj,tk
-    integer, external :: l2gcb
+#ifdef __CUDA
+    attributes (device) :: vpsil, force
+#endif
     !
     ti=tran(1);tj=tran(2);tk=tran(3)
     !
     !----------------------------------------------------------------
     ! update vpsil in the global grid (exxalfa is 0.25 for PBE0)
     !----------------------------------------------------------------
+#ifdef __CUDA
+    !$cuf kernel do (3)
+#else
     !$omp parallel do private(i,j,k,gi,gj,gk)
+#endif
     !----------------------------------------------------------------
     DO k=me_r(3),me_r(6)
       DO j=me_r(2),me_r(5)
@@ -2026,7 +2095,9 @@ SUBROUTINE updateforce_rec(nrg, me_r, vpsil, force, tran)
       END DO
     END DO
     !----------------------------------------------------------------
+#ifndef __CUDA
     !$omp end parallel do 
+#endif
     !----------------------------------------------------------------
 
     !----------------------------------------------------------------
