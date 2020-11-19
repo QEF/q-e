@@ -111,7 +111,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       !     TS-vdW calculation (RAD)
       !
-      IF (ts_vdw .or. mbd_vdw) THEN
+      IF (ts_vdw) THEN
         !
         CALL start_clock( 'ts_vdw' )
         ALLOCATE (stmp(3,nat), rhocsave(dfftp%nnr) )
