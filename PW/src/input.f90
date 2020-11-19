@@ -171,7 +171,7 @@ SUBROUTINE iosys()
                             tq_smoothing_     => tq_smoothing, &
                             tbeta_smoothing_  => tbeta_smoothing, &
                             ts_vdw_           => ts_vdw, &
-                            do_mbd_           => do_mbd, &
+                            mbd_vdw_          => mbd_vdw, &
                             lecrpa_           => lecrpa, &
                             scf_must_converge_=> scf_must_converge, & 
                             treinit_gvecs_    => treinit_gvecs, &  
@@ -263,7 +263,7 @@ SUBROUTINE iosys()
                                vdw_corr, london, london_s6, london_rcut, london_c6, &
                                london_rvdw, dftd3_threebody, dftd3_version,   &
                                ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,     &
-                               do_mbd,     &
+                               mbd_vdw,     &
                                xdm, xdm_a1, xdm_a2, lforcet,                  &
                                one_atom_occupations,                          &
                                esm_bc, esm_efield, esm_w, esm_nfit, esm_a,    &
@@ -1323,7 +1323,7 @@ SUBROUTINE iosys()
   !
   !  VdW CORRECTIONS (SEMI-EMPIRICAL)
   !
-  CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw_, do_mbd_, lxdm)
+  CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw_, mbd_vdw_, lxdm)
   !
   IF ( london ) THEN
      CALL infomsg("iosys","london is obsolete, use ""vdw_corr='grimme-d2'"" instead")
@@ -1340,10 +1340,10 @@ SUBROUTINE iosys()
      vdw_corr='TS'
      ts_vdw_ = .TRUE.
   END IF
-  IF ( do_mbd ) THEN
-     CALL infomsg("iosys","do_mbd is obsolete, use ""vdw_corr='MBD'"" instead")
+  IF ( mbd_vdw ) THEN
+     CALL infomsg("iosys","mbd_vdw is obsolete, use ""vdw_corr='MBD'"" instead")
      vdw_corr='MBD'
-     do_mbd_ = .TRUE.
+     mbd_vdw_ = .TRUE.
   END IF
   IF ( llondon.AND.lxdm .OR. llondon.AND.ts_vdw_ .OR. lxdm.AND.ts_vdw_ .OR. &
            ldftd3.AND.llondon .OR. ldftd3.AND.lxdm .OR. ldftd3.AND.ts_vdw ) &

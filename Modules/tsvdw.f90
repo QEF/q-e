@@ -41,7 +41,7 @@ USE mp_images,          ONLY: intra_image_comm   !standard MPI communicator
 USE mp,                 ONLY: mp_sum             !MPI collection with sum
 USE parallel_include                             !MPI header
 USE uspp_param,         ONLY: upf                !atomic pseudo-potential data
-USE input_parameters,   ONLY: do_mbd !GSz To stop de-allocating if MBD is called
+USE input_parameters,   ONLY: mbd_vdw !GSz To stop de-allocating if MBD is called
 !
 IMPLICIT NONE
 !

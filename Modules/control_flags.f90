@@ -170,7 +170,7 @@ MODULE control_flags
     lxdm    =.FALSE., & ! if .TRUE. compute XDM dispersion corrections
     lensemb =.FALSE., &! if .TRUE. compute ensemble energies
     restart =.FALSE., &! if .TRUE. restart from results of a preceding run
-    do_mbd  =.FALSE. !GSz
+    mbd_vdw  =.FALSE. !GSz
   !
   ! ... pw self-consistency
   !

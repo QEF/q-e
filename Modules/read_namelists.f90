@@ -87,7 +87,7 @@ MODULE read_namelists_module
        IF( prog == 'CP' ) dt  =  1.0_DP
        !
        !GSz
-       IF ( prog == 'PW' ) do_mbd = .FALSE.
+       IF ( prog == 'PW' ) mbd_vdw = .FALSE.
 
        ndr = 50
        ndw = 50
@@ -760,7 +760,7 @@ MODULE read_namelists_module
        CALL mp_bcast( lfcpdyn,       ionode_id, intra_image_comm )
        CALL mp_bcast( input_xml_schema_file, ionode_id, intra_image_comm )
        CALL mp_bcast( gate,          ionode_id, intra_image_comm ) !TB
-       CALL mp_bcast( do_mbd,        ionode_id, intra_image_comm ) !GSz
+       CALL mp_bcast( mbd_vdw,        ionode_id, intra_image_comm ) !GSz
        !
        RETURN
        !

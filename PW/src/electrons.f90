@@ -417,7 +417,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   !
   USE plugin_variables,     ONLY : plugin_etot
   !GSz
-  USE input_parameters,     ONLY : do_mbd
+  USE input_parameters,     ONLY : mbd_vdw
   USE libmbd_interface,     ONLY : EmbdvdW
   !
   IMPLICIT NONE
@@ -935,13 +935,13 @@ SUBROUTINE electrons_scf ( printout, exxen )
         etot = etot + exdm
         hwf_energy = hwf_energy + exdm
      ENDIF
-     IF (ts_vdw .and. .not. do_mbd) THEN
+     IF (ts_vdw .and. .not. mbd_vdw) THEN
         ! factor 2 converts from Ha to Ry units
         etot = etot + 2.0d0*EtsvdW
         hwf_energy = hwf_energy + 2.0d0*EtsvdW
      ENDIF
      !GSz
-     IF (do_mbd) THEN
+     IF (mbd_vdw) THEN
         !DEBUG WRITE(stdout,'(7X,"Adding MBD energy: ", F9.6," to total")') EmbdvdW
         ! factor 2 converts from Hartree to Ry units
         etot = etot + 2.0d0*EmbdvdW
@@ -1407,8 +1407,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
           IF ( llondon ) WRITE ( stdout , 9074 ) elondon
           IF ( ldftd3 )  WRITE ( stdout , 9078 ) edftd3
           IF ( lxdm )    WRITE ( stdout , 9075 ) exdm
-          IF ( ts_vdw .and. .not. do_mbd )  WRITE ( stdout , 9076 ) 2.0d0*EtsvdW
-          IF ( do_mbd )  WRITE ( stdout , 9076 ) 2.0d0*Embdvdw
+          IF ( ts_vdw .and. .not. mbd_vdw )  WRITE ( stdout , 9076 ) 2.0d0*EtsvdW
+          IF ( mbd_vdw )  WRITE ( stdout , 9076 ) 2.0d0*Embdvdw
           IF ( textfor)  WRITE ( stdout , 9077 ) eext
           IF ( tefield )            WRITE( stdout, 9064 ) etotefield
           IF ( gate )               WRITE( stdout, 9065 ) etotgatefield
