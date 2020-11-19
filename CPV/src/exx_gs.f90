@@ -813,12 +813,13 @@ SUBROUTINE exx_gs(nfi, c)
       !
     END DO ! iobtl
     !
+#endif
+    !
 #ifdef __CUDA
     vpsil=vpsil_d
 #endif
     CALL stop_clock('force_rec')
     !========================================================================
-#endif
     !
     CALL start_clock('totalenergy')
     !
@@ -898,7 +899,6 @@ SUBROUTINE exx_gs(nfi, c)
         !however, 641 to 1024 idle
         IF (proc <= nogrp*nr3s) THEN
           recvcount(proc)=nr1s*nr2s/nogrp
-        ELSE
           recvcount(proc)=0
         END IF
         !
@@ -1255,26 +1255,24 @@ SUBROUTINE exx_gs(nfi, c)
       ! (using the translation vector "tran" from middle of wfc to the center of box)
       call start_clock('exx_psicb')
 #ifdef __CUDA
-      associate(psi=>psi_d)
+      psime_pair_recv_d(:, j, iobtl)=psime_pair_recv(:, j, iobtl)
+      associate(psi=>psi_d,psime_pair_recv=>psime_pair_recv_d)
 #endif
       CALL getpsicb( nrg, p_me_r, psi(1,iobtl), psime(1), tran)
 #if ! defined(__MPI)
       ! does not need communication so construct it here; my_var2 is simultaneously the global and local index (serial case)
       CALL getpsicb( nrg, p_me_r, psi(1,my_var2), psime_pair_recv(1, j, iobtl), tran)
 #endif
-#ifdef __CUDA
-            end associate
-#endif
+
       call stop_clock('exx_psicb')
       ! 
       ! the localized density rhome 
       call start_clock('exx_getrhol')
       !
-#ifdef __CUDA
-      psime_pair_recv_d(:, j, iobtl)=psime_pair_recv(:, j, iobtl)
-      CALL getrhol_cube(p_me_r, p_ps_r, psime(1), psime_pair_recv_d(1, j, iobtl), rhome, rhops, inv_omega)
-#else
       CALL getrhol_cube(p_me_r, p_ps_r, psime(1), psime_pair_recv(1, j, iobtl), rhome, rhops, inv_omega)
+#ifdef __CUDA
+      end associate
+      psime_pair_recv(:, j, iobtl)=psime_pair_recv_d(:, j, iobtl)
 #endif
       !
       call stop_clock('exx_getrhol')
@@ -1304,22 +1302,17 @@ SUBROUTINE exx_gs(nfi, c)
       !--------------------------------------------------------------------------------------
       call start_clock('exx_force_loc')
 #ifdef __CUDA
-      CALL updateforce_loc(nrg, p_me_r, vpsil_d(:,iobtl), potme, psime, psime_pair_recv_d(1,j,iobtl),tran)
-      psime_pair_recv(:,j,iobtl) = psime_pair_recv_d(:,j,iobtl)
-#else
-      CALL updateforce_loc(nrg, p_me_r, vpsil(:,iobtl), potme, psime, psime_pair_recv(1,j,iobtl),tran)
+      associate(vpsil=>vpsil_d,psime_pair_recv=>psime_pair_recv_d)
 #endif
-!!!!TODO: check if following subroutines are right
-!!!#if ! defined(__MPI)
-!!!      ! does not need communication so construct it here; my_var2 is simultaneously the global and local index (serial case)
-!!!#ifdef __CUDA
-!!!      CALL updateforce_loc(nrg, p_me_r, vpsil_d(:,my_var2), potme, psime, psime_pair_recv_d(1,j,iobtl),tran)
-!!!      psime_pair_recv(:,j,iobtl) = psime_pair_recv_d(:,j,iobtl)
-!!!#else
-!!!      CALL updateforce_loc(nrg, p_me_r, vpsil(:,my_var2), potme, psime, psime_pair_recv(1,j,iobtl),tran)
-!!!#endif
-!!!      CALL updateforce_loc(nrg, p_me_r, vpsil(:,my_var2), potme, psime_pair_recv(1,j,iobtl), psime, tran)
-!!!#endif
+      CALL updateforce_loc(nrg, p_me_r, vpsil(:,iobtl), potme, psime, psime_pair_recv(1,j,iobtl),tran)
+#if ! defined(__MPI)
+      ! does not need communication so construct it here; my_var2 is simultaneously the global and local index (serial case)
+      CALL updateforce_loc(nrg, p_me_r, vpsil(:,my_var2), potme, psime_pair_recv(1,j,iobtl), psime, tran)
+#endif
+#ifdef __CUDA
+      end associate
+      psime_pair_recv(:,j,iobtl) = psime_pair_recv_d(:,j,iobtl)
+#endif
       call stop_clock('exx_force_loc')
       !
       call start_clock('exx_penergy')
