@@ -14,6 +14,7 @@ MODULE libmbd_interface
   USE tsvdw_module,     ONLY : veff_pub, vfree_pub, vdw_isolated !these are used as to not mess with cleanup
   USE ions_base,        ONLY : nat, atm, zv, tau, ntyp => nsp, ityp
   USE cell_base,        ONLY : alat, at, bg, omega  ! at: lattice vectors in real space
+  USE funct,            ONLY : get_dft_short
 
   IMPLICIT NONE
 
@@ -52,9 +53,17 @@ MODULE libmbd_interface
   !
   inp%coords = tau*alat
 
-  inp%xc = 'pbe'
-  call sanity_check_xc_functional_in_use
-!  inp%mbd_beta = 0.83  !value is different for different functionals!! TODO
+  select case (TRIM(get_dft_short()))
+  CASE ('PBE')
+    inp%xc = 'pbe'
+  CASE ('PBE0')
+    inp%xc = 'pbe0'
+  CASE ('HSE')
+    inp%xc = 'hse'
+  CASE DEFAULT
+  ! block it off
+    CALL errore( 'libmbd_interface', 'current xc functional not yet supported for MBD@rsSCS, use PBE, PBE0 or HSE', 1 )
+  END SELECT
 
   !
   !Now comes the call to the library
@@ -85,18 +94,5 @@ MODULE libmbd_interface
   ENDIF
 
   END SUBROUTINE mbd_interface
-
-  SUBROUTINE  sanity_check_xc_functional_in_use()
-    USE funct, ONLY : get_dft_short
-    IMPLICIT NONE
-    select case (TRIM(get_dft_short()))
-    CASE ('PBE')
-      ! this is a supported xc functional; do nothing...
-    CASE DEFAULT
-      ! block it off
-       CALL errore( 'libmbd_interface', 'current xc functional not yet supported for MBD', 1 )
-    END SELECT
-    RETURN
-  END SUBROUTINE sanity_check_xc_functional_in_use
 
 END MODULE libmbd_interface
