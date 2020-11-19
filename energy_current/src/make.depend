@@ -54,18 +54,6 @@ ec_functionals.o : ../../Modules/exchange_gga.o
 ec_functionals.o : ../../Modules/correlation_gga.o
 hartree_mod.o : ../../Modules/kind.o
 kohn_sham_mod.o : ../../Modules/kind.o
-init_us_1a.o : ../../upflib/atom.o
-init_us_1a.o : ../../Modules/cell_base.o
-init_us_1a.o : ../../Modules/constants.o
-init_us_1a.o : ../../Modules/ions_base.o
-init_us_1a.o : ../../Modules/kind.o
-init_us_1a.o : ../../Modules/mp_global.o
-init_us_1a.o : ../../Modules/recvec.o
-init_us_1a.o : ../../upflib/splinelib.o
-init_us_1a.o : ../../upflib/uspp.o
-init_us_1a.o : ../../PW/src/pwcom.o
-init_us_1a.o : ../../UtilXlib/mp.o
-init_us_1a.o : zero_mod.o
 init_us_3.o : ../../CPV/src/spline.o
 init_us_3.o : ../../FFTXlib/fft_interfaces.o
 init_us_3.o : ../../upflib/atom.o
@@ -81,7 +69,7 @@ init_us_3.o : ../../upflib/uspp.o
 init_us_3.o : ../../Modules/wavefunctions.o
 init_us_3.o : ../../PW/src/pwcom.o
 init_us_3.o : ../../UtilXlib/mp.o
-init_us_3.o : zero_mod.o
+zero_mod.o : init_us_3.o
 project.o : ../../LR_Modules/lrcom.o
 project.o : ../../Modules/becmod.o
 project.o : ../../Modules/cell_base.o

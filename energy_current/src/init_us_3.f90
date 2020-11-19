@@ -7,7 +7,9 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine init_us_3(npw_, xvkb_)
+module init_us_3_mod
+        contains
+subroutine init_us_3(npw_, xvkb_, tabr, ec_test)
    !----------------------------------------------------------------------
    !
    !   Calculates xbeta functions  with
@@ -27,7 +29,6 @@ subroutine init_us_3(npw_, xvkb_)
    ! USE splinelib
    USE uspp, ONLY: nkb, nhtol, nhtolm, indv, ap, aainit
    USE uspp_param, ONLY: upf, lmaxkb, nhm, nh
-   use zero_mod, ONLY: tabr, ec_test!, tabr_d2y
    use mp, ONLY: mp_sum, mp_min
 !
 !modules for UT
@@ -43,6 +44,8 @@ subroutine init_us_3(npw_, xvkb_)
    integer :: ndm
    INTEGER, INTENT(IN) :: npw_
    COMPLEX(DP), INTENT(OUT) :: xvkb_(npwx, nkb, 3)
+   logical, intent(in) :: ec_test
+   real(dp), intent(in) :: tabr(:,:,:,:)
    !
    !local variables for UT
    !
@@ -128,8 +131,8 @@ subroutine init_us_3(npw_, xvkb_)
                   i1 = i0 + 1
                   i2 = i0 + 2
                   i3 = i0 + 3
-                  ii = ll - l
-                  if (ii < -1 .or. ii >1 ) then
+                  ii = ll - l+2
+                  if (ii < 1 .or. ii >3 ) then
                           call ERRORE('init_us_3','Internal index error',1)
                   end if
                   betagl(igl) = tabr(i0, nb, it, ii)*ux*vx*wx/6.d0 + &
@@ -561,4 +564,4 @@ subroutine init_us_3_test (npw_, xvkb_)!, rgrid, ntyp, ityp, tau, tpiba, )
 !!----------------------------------------------------------------------------------------F
 
 end subroutine
-
+end module

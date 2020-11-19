@@ -7,11 +7,11 @@ MODULE zero_mod
 
    SAVE
 !non local potential variables
-   logical  ::l_non_loc, l_tab
    real(DP), allocatable :: tabr(:, :, :, :)
    real(DP), allocatable :: tabr_d2y(:, :, :, :)
    real(DP), allocatable :: tablocal_hg(:, :, :)
    real(DP), allocatable :: tablocal_d2y_hg(:, :, :)
+   real(DP), allocatable   :: H_g(:, :, :, :)
 
    !the component of the current here computed
    real(dp) ::z_current(3)!, i_current(3), i_current_a(3), i_current_b(3), i_current_c(3), i_current_d(3), i_current_e(3)
@@ -21,7 +21,6 @@ MODULE zero_mod
 
    !input from stdout
 
-   real(DP), allocatable   :: H_g(:, :, :, :)
 
 
 contains
@@ -127,6 +126,7 @@ subroutine current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
    real(DP), allocatable   :: charge(:)
    complex(DP), allocatable   :: u_g(:, :) !ngm,a 
    complex(DP), allocatable ::charge_g(:)
+   logical  ::l_non_loc
 
    if (ionode) write (stdout, *) 'ROUTINE_ZERO BEGINNING'
    call start_clock('routine_zero')
@@ -190,6 +190,7 @@ subroutine add_nc_curr(current, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, e
    use kinds, only: DP
    use becmod
    USE uspp_param, ONLY: pseudo_upf
+   use init_us_3_mod, only : init_us_3
 
    implicit none
 
@@ -235,7 +236,7 @@ subroutine add_nc_curr(current, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, e
 
 !inizializzazione di vkb (per essere sicuri che lo sia) e xvkb
    CALL init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
-   call init_us_3(npw, xvkb)
+   call init_us_3(npw, xvkb,tabr,ec_test)
 !!
 !inizializzazione di dvkb e xdvkb (nb il ciclo su ipw va dentro per essere
 !ottimizzato)
@@ -354,9 +355,9 @@ subroutine allocate_zero
    if (spline_ps) then
       allocate (tablocal_d2y_hg(nqxq, nsp, 0:1))
    end if
-   allocate (tabr(nqxq, nbetam, nsp, -1:1))
+   allocate (tabr(nqxq, nbetam, nsp, 3))
    if (spline_ps) then
-      allocate (tabr_d2y(nqxq, nbetam, nsp, -1:1))
+      allocate (tabr_d2y(nqxq, nbetam, nsp, 3))
    end if
 !
 end subroutine allocate_zero
@@ -542,14 +543,14 @@ subroutine init_us_1a(rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
                !quindi qui c'è solo r^2)
             enddo
             call simpson(upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
-            tabr(iq, nb, nt, 0) = vqint*pref
+            tabr(iq, nb, nt, 2) = vqint*pref
 !l_bessel=l+1
             call sph_bes(upf(nt)%kkbeta, rgrid(nt)%r, qi, l + 1, besr)
             do ir = 1, upf(nt)%kkbeta
                aux(ir) = upf(nt)%beta(ir, nb)*besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir)
             enddo
             call simpson(upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
-            tabr(iq, nb, nt, 1) = vqint*pref
+            tabr(iq, nb, nt, 3) = vqint*pref
 !l_bessel=l-1, solo se l>0
             if (l > 0) then
                call sph_bes(upf(nt)%kkbeta, rgrid(nt)%r, qi, l - 1, besr)
@@ -557,7 +558,7 @@ subroutine init_us_1a(rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
                   aux(ir) = upf(nt)%beta(ir, nb)*besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir)
                enddo
                call simpson(upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
-               tabr(iq, nb, nt, -1) = vqint*pref
+               tabr(iq, nb, nt, 1) = vqint*pref
             end if
          enddo
       enddo
