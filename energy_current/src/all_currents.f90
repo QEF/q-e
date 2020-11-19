@@ -4,7 +4,7 @@ program all_currents
            n_repeat_every_step, ethr_big_step, scf_all, &
            three_point_derivative, ave_cur, ethr_small_step, &
            init_kohn_sham, current_kohn_sham, &
-           j_xc,j_hartree, delta_t
+           j_xc,j_hartree, delta_t, J_kohn, J_kohn_a, J_kohn_b, J_electron
    use hartree_xc_mod, only: current_hartree_xc
    use zero_mod, only: vel_input_units, init_zero, current_zero, &
                        allocate_zero, deallocate_zero
@@ -234,7 +234,8 @@ program all_currents
           call current_hartree_xc(three_point_derivative,delta_t, scf_all, &
                   j_hartree, j_xc, nbnd, npw, npwx, dffts, psic, g, ngm, gstart, &
                 tpiba, omega, tpiba2)
-          call current_kohn_sham(nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
+          call current_kohn_sham(J_kohn, J_kohn_a, J_kohn_b, J_electron, delta_t, &
+                nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
                 tpiba2, at, vkb, nkb, xk, igk_k, g2kin, et)
           call write_results(traj,print_stat)
       end do

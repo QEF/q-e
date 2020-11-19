@@ -51,7 +51,8 @@ end subroutine
 
 
 
-   subroutine current_kohn_sham(nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
+   subroutine current_kohn_sham( J, J_a, J_b, J_el, dt, &
+                nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
                 tpiba2,  at, vkb, nkb, xk, igk_k, g2kin, et)
    use kinds, only: DP
    !use wvfct, only: nbnd, npw, npwx
@@ -81,8 +82,9 @@ end subroutine
    COMPLEX(DP), intent(inout) ::  evc(:,:)
    INTEGER, intent(in) :: ngm, gstart, nkb
    REAL(DP), intent(inout) :: g2kin(:)
+   REAL(DP), intent(out) :: J(3), J_a(3), J_b(3), J_el(3)
    REAL(DP), intent(in) ::  tpiba2, g(:,:), at(:,:), &
-                           xk(:,:), et(:,:)
+                           xk(:,:), et(:,:), dt
    COMPLEX(DP), intent(in) :: vkb(:,:)
 
    !character(LEN=20) :: dft_name
@@ -153,7 +155,7 @@ end subroutine
             end do
          end do
       end do
-      evp(:, :) = evp(:, :)/delta_t
+      evp(:, :) = evp(:, :)/dt
 
 !   end if
 
@@ -217,19 +219,19 @@ end subroutine
       if (ionode) write (*, "('  KOHN POLARIZATION ',I3,' COMPLETED')") ipol
 
    end do polariz
-   J_kohn = 0.d0
-   J_kohn_a = 0.d0
-   J_kohn_b = 0.d0
-   J_electron = 0.d0
+   J = 0.d0
+   J_a = 0.d0
+   J_b = 0.d0
+   J_el = 0.d0
    do ipol = 1, 3
 !     at(:, ipol) / amodulus is the versor along direction ipol
 !      amodulus = sqrt(at(1, ipol)**2 + at(2, ipol)**2 + at(3, ipol)**2)
       amodulus = at(1, ipol)**2 + at(2, ipol)**2 + at(3, ipol)**2
-      J_kohn(:) = J_kohn(:) + 2.d0*at(:, ipol)*real(kcurrent(ipol))/amodulus
-      J_kohn_a(:) = J_kohn_a(:) + 2.d0*at(:, ipol)*real(kcurrent_a(ipol))/amodulus
-      J_kohn_b(:) = J_kohn_b(:) + 2.d0*at(:, ipol)*real(kcurrent_b(ipol))/amodulus
-      J_electron(:) = J_electron(:) + 2.d0*2.d0*at(:, ipol)*real(ecurrent(ipol))/amodulus
-!    J_kohn(ipol)=J_kohn(ipol)+2.d0*real(kcurrent(ipol))
+      J(:) = J(:) + 2.d0*at(:, ipol)*real(kcurrent(ipol))/amodulus
+      J_a(:) = J_a(:) + 2.d0*at(:, ipol)*real(kcurrent_a(ipol))/amodulus
+      J_b(:) = J_b(:) + 2.d0*at(:, ipol)*real(kcurrent_b(ipol))/amodulus
+      J_el(:) = J_el(:) + 2.d0*2.d0*at(:, ipol)*real(ecurrent(ipol))/amodulus
+!    J(ipol)=J(ipol)+2.d0*real(kcurrent(ipol))
    end do
    call stop_clock('kohn_current')
    call print_clock('kohn_current')

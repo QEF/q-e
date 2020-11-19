@@ -28,8 +28,6 @@ MODULE zero_mod
    !input from stdout
 
    real(DP), allocatable   :: H_g(:, :, :, :)
-   complex(DP), allocatable   :: u_g(:, :) !ngm,a  !this looks like can be transformed in a local variable
-   complex(DP), allocatable ::charge_g(:)
 
 
 contains
@@ -134,6 +132,8 @@ subroutine current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
    real(DP) ::R
    real(DP), allocatable :: values(:)
    real(DP), allocatable   :: charge(:)
+   complex(DP), allocatable   :: u_g(:, :) !ngm,a 
+   complex(DP), allocatable ::charge_g(:)
 
    if (ionode) write (stdout, *) 'ROUTINE_ZERO BEGINNING'
    call start_clock('routine_zero')
@@ -145,9 +145,11 @@ subroutine current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
       l_non_loc = .false.
    end if
    npw=npwx
+   allocate (charge_g(ngm))
    call compute_charge(psic, evc, npw, nbnd, ngm, dffts, charge, charge_g)
 !
 !initialization of  u_g
+   allocate (u_g(ngm, 3))
    u_g = 0.d0
    do a = 1, 3
       do b = 1, 3
@@ -170,6 +172,9 @@ subroutine current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
          z_current(a) = z_current(a) + dble(charge_g(1)*conjg(u_g(1, a)))
       end if
    end do
+   deallocate (charge_g)
+   deallocate (u_g)
+
    call mp_sum(z_current, intra_pool_comm)
    if (l_non_loc) then
       call add_nc_curr(z_current, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, evc, &
@@ -360,8 +365,6 @@ subroutine allocate_zero
    if (spline_ps) then
       allocate (tabr_d2y(nqxq, nbetam, nsp, -1:1))
    end if
-   allocate (charge_g(ngm))
-   allocate (u_g(ngm, 3))
 !
 end subroutine allocate_zero
 
@@ -370,10 +373,6 @@ subroutine deallocate_zero
 !
    implicit none
 !
-   if (allocated(charge_g)) &
-      deallocate (charge_g)
-   if (allocated(u_g)) &
-      deallocate (u_g)
 !
 end subroutine deallocate_zero
 
