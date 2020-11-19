@@ -93,6 +93,7 @@ MODULE pw_restart_new
       USE ener,                 ONLY : ef, ef_up, ef_dw, vtxc, etxc, ewld, etot, &
                                        ehart, eband, demet, edftd3, elondon, exdm
       USE tsvdw_module,         ONLY : EtsvdW
+      USE libmbd_interface,     ONLY : EmbdvdW
       USE gvecw,                ONLY : ecutwfc
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
       USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, &
@@ -411,12 +412,7 @@ MODULE pw_restart_new
                     ts_vdw_econv_thr_ = vdw_econv_thr
                     ts_vdw_econv_thr_pt => ts_vdw_econv_thr_
                 ELSE IF ( mbd_vdw ) THEN
-                    ! FIXME
-                    !dispersion_energy_term = 2._DP * EtsvdW/e2
-                    !ts_vdw_isolated_ = vdw_isolated
-                    !ts_vdw_isolated_pt => ts_vdw_isolated_
-                    !ts_vdw_econv_thr_ = vdw_econv_thr
-                    !ts_vdw_econv_thr_pt => ts_vdw_econv_thr_
+                  dispersion_energy_term = 2._DP * EmbdvW/e2 - 2._DP * EtsvdW/e2 !avoiding double-counting
                 END IF
             ELSE
                 vdw_corr_ = 'none'
