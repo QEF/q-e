@@ -12,8 +12,7 @@ SUBROUTINE init_run()
   USE klist,              ONLY : nkstot
   USE symme,              ONLY : sym_rho_init
   USE wvfct,              ONLY : nbnd, et, wg, btype
-  USE control_flags,      ONLY : lmd, gamma_only, smallmem, ts_vdw
-  USE input_parameters, ONLY : mbd_vdw
+  USE control_flags,      ONLY : lmd, gamma_only, smallmem, ts_vdw, mbd_vdw
   USE gvect,              ONLY : g, gg, mill, gcutm, ig_l2g, ngm, ngm_g, &
                                  gshells, gstart ! to be comunicated to the Solvers if gamma_only
   USE gvecs,              ONLY : gcutms, ngms

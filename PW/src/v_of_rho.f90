@@ -25,8 +25,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   USE scf,              ONLY : scf_type
   USE cell_base,        ONLY : alat
   USE io_global,        ONLY : stdout
-  USE control_flags,    ONLY : ts_vdw
-  USE input_parameters, ONLY : mbd_vdw
+  USE control_flags,    ONLY : ts_vdw, mbd_vdw
   USE tsvdw_module,     ONLY : tsvdw_calculate, UtsvdW
   USE libmbd_interface, ONLY : mbd_interface
   !
@@ -135,11 +134,6 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
      END DO
   END IF
   !
-  !GSz
-  IF(mbd_vdw .and. .not. ts_vdw) then
-    write( stdout,*)'MBD is set but TS is not asked for, quitting'
-    call exit()
-  end if
   IF (mbd_vdw) THEN
     call mbd_interface(tau*alat,rho%of_r(:,1))
   END IF

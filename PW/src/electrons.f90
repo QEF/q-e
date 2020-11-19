@@ -378,7 +378,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                    iprint, conv_elec, &
                                    restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
-                                   llondon, ldftd3, scf_must_converge, lxdm, ts_vdw
+                                   llondon, ldftd3, scf_must_converge, lxdm, ts_vdw, &
+                                   mbd_vdw
   USE control_flags,        ONLY : n_scf_steps, scf_error
 
   USE io_files,             ONLY : iunmix, output_drho
@@ -417,7 +418,6 @@ SUBROUTINE electrons_scf ( printout, exxen )
   !
   USE plugin_variables,     ONLY : plugin_etot
   !GSz
-  USE input_parameters,     ONLY : mbd_vdw
   USE libmbd_interface,     ONLY : EmbdvdW
   !
   IMPLICIT NONE

@@ -535,6 +535,8 @@ MODULE input_parameters
 
         LOGICAL   :: ts_vdw = .false.
           ! OBSOLESCENT: same as vdw_corr='Tkatchenko-Scheffler'
+        LOGICAL   :: mbd_vdw = .false.
+          ! added for consistency with ts_vdw
         LOGICAL :: ts_vdw_isolated = .FALSE.
           ! if .TRUE., TS-vdW correction for isolated system
           ! if .FALSE., TS-vdW correction for periodic system
@@ -621,9 +623,6 @@ MODULE input_parameters
           ! in rhombohedral axes. If .FALSE. in hexagonal axes, that are
           ! converted internally in rhombohedral axes.  
           !
-        LOGICAL :: mbd_vdw = .FALSE.
-         ! GSz
-         ! test variable for MBD module
 
 
 
