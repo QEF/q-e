@@ -7,10 +7,7 @@ MODULE zero_mod
 
    SAVE
 !non local potential variables
-   real(DP), allocatable :: tabr(:, :, :, :)
-   real(DP), allocatable :: tabr_d2y(:, :, :, :)
-   real(DP), allocatable :: tablocal_d2y_hg(:, :, :)
-   real(DP), allocatable   :: H_g(:, :, :, :)
+   !real(DP), allocatable :: tabr(:, :, :, :), H_g(:, :, :, :)
 
    !the component of the current here computed
    real(dp) ::z_current(3)!, i_current(3), i_current_a(3), i_current_b(3), i_current_c(3), i_current_d(3), i_current_e(3)
@@ -27,7 +24,8 @@ contains
 
 
 
-subroutine init_zero(nsp, zv, tpiba2, tpiba, omega, at, alat, &
+subroutine init_zero(tabr, H_g, &
+                nsp, zv, tpiba2, tpiba, omega, at, alat, &
                 ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq, &
                 upf, rgrid, nqxq)
 !called once to init stuff that does not depend on the atomic positions
@@ -39,6 +37,7 @@ subroutine init_zero(nsp, zv, tpiba2, tpiba, omega, at, alat, &
    !use ions_base, only: nsp
    implicit none
 
+   real(dp), intent(inout) :: tabr(:, :, :, :), H_g(:, :, :, :)
    integer, intent(in) :: nsp, igtongl(:), ngm, gstart, ngl, nqxq
    real(dp), intent(in) :: zv(:), tpiba2, tpiba, omega, at(3,3), alat, &
                        gg(:), g(:,:), gl(:), dq
@@ -55,7 +54,7 @@ subroutine init_zero(nsp, zv, tpiba2, tpiba, omega, at, alat, &
    call init_us_1()
    allocate (tablocal_hg(nqxq, nsp, 2))
    call init_us_1a(tabr,tablocal_hg,rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
-   call init_reciprocal_parts_tab(tablocal_hg, nsp, zv, tpiba2, tpiba, omega, at, alat, &
+   call init_reciprocal_parts_tab(H_g,tablocal_hg, nsp, zv, tpiba2, tpiba, omega, at, alat, &
            ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq)
    do a = 1, 3
       do b = 1, 3
@@ -72,7 +71,8 @@ subroutine init_zero(nsp, zv, tpiba2, tpiba, omega, at, alat, &
 end subroutine
 
 
-subroutine current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
+subroutine current_zero(tabr, H_g,&
+                        nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                         vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
                         nkb, vkb, deeq, upf, nh, xk, igk_k, bg )
    use kinds, only: DP
@@ -88,6 +88,7 @@ subroutine current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
 
    implicit none
 
+   real(dp), intent(in) :: tabr(:, :, :, :), H_g(:, :, :, :)
    INTEGER, intent(in) :: nbnd, npwx, nsp, nat, ityp(:), &
                            ngm, gstart, nkb, igk_k(:,:), nh(:)
    INTEGER, intent(inout) :: npw
@@ -174,7 +175,7 @@ subroutine current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, 
 
    call mp_sum(z_current, intra_pool_comm)
    if (l_non_loc) then
-      call add_nc_curr(z_current, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, evc, &
+      call add_nc_curr(z_current, tabr, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, evc, &
                        g, tpiba, nat, ityp, nsp, xk, igk_k)
    end if
    z_current = z_current*alat
@@ -189,7 +190,7 @@ end subroutine current_zero
 
 
 
-subroutine add_nc_curr(current, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, evc, &
+subroutine add_nc_curr(current, tabr, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, evc, &
                        g, tpiba, nat, ityp, nsp, xk, igk_k)
    use kinds, only: DP
    use becmod
@@ -202,7 +203,7 @@ subroutine add_nc_curr(current, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, e
    integer, intent(in) :: nkb, nh(:), nbnd, npw, npwx, nat, ityp(:), &
                           nsp, igk_k(:,:)
    complex(DP), intent(in) :: vkb(:,:), evc(:,:)
-   real(dp), intent(in) :: deeq(:,:,:,:), vel(:,:), g(:,:), tpiba, xk(:,:)
+   real(dp), intent(in) :: deeq(:,:,:,:), vel(:,:), g(:,:), tpiba, xk(:,:), tabr(:,:,:,:)
    type(pseudo_upf), intent(in) :: upf(:)
 
    !integer ::iun, a, b
@@ -354,14 +355,8 @@ subroutine allocate_zero
 !
    !integer ::isp
 
-   allocate (H_g(ngm, 3, 3, nsp))
-   if (spline_ps) then
-      allocate (tablocal_d2y_hg(nqxq, nsp, 0:1))
-   end if
-   allocate (tabr(nqxq, nbetam, nsp, 3))
-   if (spline_ps) then
-      allocate (tabr_d2y(nqxq, nbetam, nsp, 3))
-   end if
+   !allocate (H_g(ngm, 3, 3, nsp))
+   !allocate (tabr(nqxq, nbetam, nsp, 3))
 !
 end subroutine allocate_zero
 
@@ -375,7 +370,7 @@ end subroutine deallocate_zero
 
 
 
-SUBROUTINE init_reciprocal_parts_tab(tablocal_hg, nsp, zv, tpiba2, tpiba, omega, at, alat, &
+SUBROUTINE init_reciprocal_parts_tab(H_g,tablocal_hg, nsp, zv, tpiba2, tpiba, omega, at, alat, &
                 ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq)
    use kinds, only: DP
    !use ions_base, only: nsp, zv
@@ -389,6 +384,7 @@ SUBROUTINE init_reciprocal_parts_tab(tablocal_hg, nsp, zv, tpiba2, tpiba, omega,
 !  use splinelib
    implicit none
 
+   real(dp), intent(inout) :: H_g(:, :, :, :)
    integer, intent(in) :: nsp, igtongl(:), ngm, gstart, ngl
    real(dp), intent(in) :: zv(:), tpiba2, tpiba, omega, at(3,3), alat, &
                        gg(:), g(:,:), gl(:), dq, tablocal_hg(:,:,:)

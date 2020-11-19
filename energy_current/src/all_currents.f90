@@ -47,7 +47,7 @@ program all_currents
    USE cell_base, ONLY: tpiba, omega, tpiba2, alat, at, bg
    use ions_base, only: tau, nsp, zv, nat, ityp, amass
    use uspp, ONLY: vkb, nkb, deeq
-   use uspp_param, ONLY: upf, nh
+   use uspp_param, ONLY: upf, nh, nbetam
    use us, only : spline_ps, dq, nqxq
    use klist, only: xk, igk_k
    use wvfct, ONLY: g2kin, et
@@ -62,7 +62,8 @@ program all_currents
    type(cpv_trajectory) :: traj
    type(ionic_init_type) :: ionic_data
    real(kind=dp) :: vel_factor, eta
-   real(kind=dp),allocatable :: tau_save(:,:)
+   real(kind=dp),allocatable :: tau_save(:,:),&
+              tabr(:,:,:,:), H_g(:,:,:,:) ! current zero
    !from ../PW/src/pwscf.f90
    include 'laxlib.fh'
 
@@ -129,8 +130,10 @@ program all_currents
    call init_run() ! ../PW/src/init_run.f90 allocate stuff
    ! now scf is ready to start, but I first initialize energy current stuff
    call allocate_zero() ! only once per all trajectory
+   allocate (H_g(ngm, 3, 3, nsp)) ! current zero 
+   allocate (tabr(nqxq, nbetam, nsp, 3)) ! current zero
    call init_ionic(ionic_data, eta, n_max, ngm, gstart, at, alat, omega, gg, g, tpiba2)  
-   call init_zero(nsp, zv, tpiba2, tpiba, omega, at, alat, &
+   call init_zero(tabr,H_g,nsp, zv, tpiba2, tpiba, omega, at, alat, &
                 ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq, &
                 upf, rgrid, nqxq) ! only once per all trajectory
    call init_kohn_sham()
@@ -199,7 +202,8 @@ program all_currents
               if (exit_status /= 0) goto 100 !shutdown everything and exit
               !save evc, tau and vel for t
               call scf_result_set_from_global_variables(scf_all%t_zero)
-              call current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
+              call current_zero(tabr,H_g,&
+                      nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                         vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
                         nkb, vkb, deeq, upf, nh, xk, igk_k, bg ) ! routine zero should be called in t
               call current_ionic(ionic_data, &
@@ -223,7 +227,8 @@ program all_currents
           call scf_result_set_from_global_variables(scf_all%t_plus)
 
           if (.not. three_point_derivative) then
-              call current_zero(nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
+              call current_zero(tabr,H_g,&
+                      nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                         vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
                         nkb, vkb, deeq, upf, nh, xk, igk_k, bg ) ! we are in t in this case, and we call here routine zero
               call current_ionic(ionic_data, &
