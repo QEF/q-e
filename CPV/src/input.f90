@@ -753,6 +753,7 @@ MODULE input
                                   exx_ps_rcut_s=>exx_ps_rcut_self,&
                                   exx_me_rcut_s=>exx_me_rcut_self,&
                                   exx_ps_rcut_p=>exx_ps_rcut_pair,&
+                                  texx_cube=>exx_use_cube_domain,&
                                   exx_me_rcut_p=>exx_me_rcut_pair
 !===============================================================
      !
@@ -915,8 +916,8 @@ MODULE input
      CALL wannier_init( wf_efield, wf_switch, sw_len, efx0, efy0, efz0, &
                         efx1, efy1, efz1, wfsd, wfdt, neigh, poisson_eps,&
                         dis_cutoff, exx_ps_rcut_s, exx_me_rcut_s,&
-                        exx_ps_rcut_p, exx_me_rcut_p, vnbsp,&
-                        maxwfdt, wf_q, &
+                        exx_ps_rcut_p, exx_me_rcut_p, texx_cube, &
+                        vnbsp, maxwfdt, wf_q, &
                         wf_friction, nit, nsd, nsteps, tolw, adapt,     &
                         calwf, nwf, wffort, writev, wannier_index,      &
                         restart_mode )

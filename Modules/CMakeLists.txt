@@ -1,4 +1,5 @@
 set(sources
+    additional_kpoints.f90 
     autopilot.f90 
     basic_algebra_routines.f90 
     becmod.f90 

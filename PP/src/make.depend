@@ -84,6 +84,7 @@ bands.o : ../../Modules/mp_global.o
 bands.o : ../../Modules/mp_images.o
 bands.o : ../../Modules/mp_pools.o
 bands.o : ../../Modules/noncol.o
+bands.o : ../../Modules/parameters.o
 bands.o : ../../Modules/recvec.o
 bands.o : ../../Modules/wavefunctions.o
 bands.o : ../../PW/src/pwcom.o
