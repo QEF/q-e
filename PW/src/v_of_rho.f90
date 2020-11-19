@@ -25,7 +25,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   USE scf,              ONLY : scf_type
   USE cell_base,        ONLY : alat
   USE io_global,        ONLY : stdout
-  USE control_flags,    ONLY : ts_vdw !Why doesnt mbd_vdw go here??
+  USE control_flags,    ONLY : ts_vdw
   USE input_parameters, ONLY : mbd_vdw
   USE tsvdw_module,     ONLY : tsvdw_calculate, UtsvdW
   USE libmbd_interface, ONLY : mbd_interface
@@ -126,7 +126,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !
   ! ... add Tkatchenko-Scheffler potential (factor 2: Ha -> Ry)
   !
-  IF (ts_vdw) THEN
+  IF (ts_vdw .or. mbd_vdw) THEN
      CALL tsvdw_calculate(tau*alat,rho%of_r(:,1))
      DO is = 1, nspin_lsda
         DO ir=1,dfftp%nnr
