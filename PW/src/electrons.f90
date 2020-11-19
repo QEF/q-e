@@ -417,7 +417,6 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE iso_c_binding,        ONLY : c_int
   !
   USE plugin_variables,     ONLY : plugin_etot
-  !GSz
   USE libmbd_interface,     ONLY : EmbdvdW
   !
   IMPLICIT NONE

@@ -74,6 +74,7 @@ set(sources
     setqf.f90 
     timestep.f90
     tsvdw.f90
+    mbdlib.f90
     version.f90 
     wannier_gw.f90
     wannier_new.f90 
