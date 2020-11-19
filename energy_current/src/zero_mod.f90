@@ -12,12 +12,6 @@ MODULE zero_mod
    real(DP), allocatable :: tabr_d2y(:, :, :, :)
    real(DP), allocatable :: tablocal_hg(:, :, :)
    real(DP), allocatable :: tablocal_d2y_hg(:, :, :)
-   TYPE(bec_type) :: becpr(3)
-   TYPE(bec_type) :: becpd(3)
-   TYPE(bec_type) :: becprd(3, 3)
-   complex(DP), allocatable :: xvkb(:, :, :)
-   complex(DP), allocatable :: dvkb(:, :, :)
-   complex(DP), allocatable :: xdvkb(:, :, :, :)
 
    !the component of the current here computed
    real(dp) ::z_current(3)!, i_current(3), i_current_a(3), i_current_b(3), i_current_c(3), i_current_d(3), i_current_e(3)
@@ -57,7 +51,6 @@ subroutine init_zero(nsp, zv, tpiba2, tpiba, omega, at, alat, &
    integer :: isp, iun, a, b
    logical :: exst
    call start_clock('init_zero')
-   !call init_us_1all(rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
    call init_us_1()
    call init_us_1a(rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
    call init_reciprocal_parts_tab(nsp, zv, tpiba2, tpiba, omega, at, alat, &
@@ -213,7 +206,12 @@ subroutine add_nc_curr(current, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, e
    integer ::ijkb, ikb, ih, na, nt, ipw
    real(DP) ::J_nl(3), J_1(3), J_2(3)
    complex(DP), allocatable ::vkb1(:, :)
-   integer, external       :: find_free_unit
+   TYPE(bec_type) :: becpr(3)
+   TYPE(bec_type) :: becpd(3)
+   TYPE(bec_type) :: becprd(3, 3)
+   complex(DP), allocatable :: xvkb(:, :, :)
+   complex(DP), allocatable :: dvkb(:, :, :)
+   complex(DP), allocatable :: xdvkb(:, :, :, :)
 
    allocate (vkb1(npwx, nkb))
    !do nothing if there is no non local potential
@@ -235,21 +233,17 @@ subroutine add_nc_curr(current, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, e
    allocate (dvkb(npwx, nkb, 3))
    allocate (xdvkb(npwx, nkb, 3, 3))
 
-!inizializzazione di tab(serve?),tabr ed indici
-!   call init_us_1a()
 !inizializzazione di vkb (per essere sicuri che lo sia) e xvkb
    CALL init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
    call init_us_3(npw, xvkb)
 !!
 !inizializzazione di dvkb e xdvkb (nb il ciclo su ipw va dentro per essere
 !ottimizzato)
-!servono altre inizializzazioni?
    dvkb = 0.d0
    do ipol = 1, 3
       do ikb = 1, nkb
          do ipw = 1, npw
             dvkb(ipw, ikb, ipol) = (0.d0, -1.d0)*tpiba*g(ipol, ipw)*vkb(ipw, ikb)
-!         dvkb(ipw,ikb,ipol)=(0.d0,-1.d0)*g(ipol,ipw)*vkb(ipw,ikb)
          end do
       end do
    end do
@@ -259,7 +253,6 @@ subroutine add_nc_curr(current, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, e
             do ipw = 1, npw
 
                xdvkb(ipw, ikb, ipol, jpol) = (0.d0, -1.d0)*tpiba*g(jpol, ipw)*xvkb(ipw, ikb, ipol)
-!            xdvkb(ipw,ikb,ipol,jpol)=(0.d0,-1.d0)*g(jpol,ipw)*xvkb(ipw,ikb,ipol)
                if (ipol == jpol) then
                   xdvkb(ipw, ikb, ipol, jpol) = xdvkb(ipw, ikb, ipol, jpol) + vkb(ipw, ikb)
 
