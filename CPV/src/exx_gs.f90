@@ -1138,11 +1138,12 @@ SUBROUTINE exx_gs(nfi, c)
       s_me_r4=s_me_r(4)
       s_me_r5=s_me_r(5)
       s_me_r6=s_me_r(6)
-#ifdef __CUDA
-    ALLOCATE (h_d, source=h)
-    associate (me_cs=>me_cs_d, me_rs=>me_rs_d, me_ri=>me_ri_d, me_rc=>me_rc_d, h=>h_d)
-    !$cuf kernel do (3)
-#endif
+!#ifdef __CUDA 
+!    ALLOCATE (h_d, source=h)
+!    h_d=h
+!    associate (me_cs=>me_cs_d, me_rs=>me_rs_d, me_ri=>me_ri_d, me_rc=>me_rc_d, h=>h_d)
+!    !$cuf kernel do(3) ! MCA: This is broken, for some reason. Gives NaN.
+!#endif
       DO k = s_me_r(3),s_me_r(6)
         DO j = s_me_r(2),s_me_r(5)
           DO i = s_me_r(1),s_me_r(4)
@@ -1209,12 +1210,16 @@ SUBROUTINE exx_gs(nfi, c)
       END DO
       !---------------------------------------------------------------------------------------------
 #ifdef __CUDA
-   end associate
-   me_cs = me_cs_d 
-   me_rs = me_rs_d 
-   me_ri = me_ri_d 
-   me_rc = me_rc_d 
-   DEALLOCATE(h_d)
+   !end associate
+   !me_cs = me_cs_d 
+   !me_rs = me_rs_d 
+   !me_ri = me_ri_d 
+   !me_rc = me_rc_d 
+   !DEALLOCATE(h_d)
+   me_cs_d = me_cs 
+   me_rs_d = me_rs 
+   me_ri_d = me_ri 
+   me_rc_d = me_rc 
 #endif
       !return
     end subroutine exx_gs_setup_cube
