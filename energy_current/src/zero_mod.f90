@@ -9,7 +9,6 @@ MODULE zero_mod
 !non local potential variables
    real(DP), allocatable :: tabr(:, :, :, :)
    real(DP), allocatable :: tabr_d2y(:, :, :, :)
-   real(DP), allocatable :: tablocal_hg(:, :, :)
    real(DP), allocatable :: tablocal_d2y_hg(:, :, :)
    real(DP), allocatable   :: H_g(:, :, :, :)
 
@@ -46,13 +45,17 @@ subroutine init_zero(nsp, zv, tpiba2, tpiba, omega, at, alat, &
    logical, intent(in) :: spline_ps
    type(radial_grid_type), intent(in) :: rgrid(:)
    type(pseudo_upf), intent(in) :: upf(:)
+   
+   
+   real(DP), allocatable :: tablocal_hg(:, :, :)
 
    integer :: isp, iun, a, b
    logical :: exst
    call start_clock('init_zero')
    call init_us_1()
-   call init_us_1a(rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
-   call init_reciprocal_parts_tab(nsp, zv, tpiba2, tpiba, omega, at, alat, &
+   allocate (tablocal_hg(nqxq, nsp, 2))
+   call init_us_1a(tabr,tablocal_hg,rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
+   call init_reciprocal_parts_tab(tablocal_hg, nsp, zv, tpiba2, tpiba, omega, at, alat, &
            ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq)
    do a = 1, 3
       do b = 1, 3
@@ -63,6 +66,7 @@ subroutine init_zero(nsp, zv, tpiba2, tpiba, omega, at, alat, &
          end if
       end do
    end do
+   deallocate(tablocal_hg)
    call stop_clock('init_zero')
 
 end subroutine
@@ -351,7 +355,6 @@ subroutine allocate_zero
    !integer ::isp
 
    allocate (H_g(ngm, 3, 3, nsp))
-   allocate (tablocal_hg(nqxq, nsp, 0:1))
    if (spline_ps) then
       allocate (tablocal_d2y_hg(nqxq, nsp, 0:1))
    end if
@@ -372,7 +375,7 @@ end subroutine deallocate_zero
 
 
 
-SUBROUTINE init_reciprocal_parts_tab(nsp, zv, tpiba2, tpiba, omega, at, alat, &
+SUBROUTINE init_reciprocal_parts_tab(tablocal_hg, nsp, zv, tpiba2, tpiba, omega, at, alat, &
                 ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq)
    use kinds, only: DP
    !use ions_base, only: nsp, zv
@@ -388,7 +391,7 @@ SUBROUTINE init_reciprocal_parts_tab(nsp, zv, tpiba2, tpiba, omega, at, alat, &
 
    integer, intent(in) :: nsp, igtongl(:), ngm, gstart, ngl
    real(dp), intent(in) :: zv(:), tpiba2, tpiba, omega, at(3,3), alat, &
-                       gg(:), g(:,:), gl(:), dq
+                       gg(:), g(:,:), gl(:), dq, tablocal_hg(:,:,:)
    logical, intent(in) :: spline_ps
 
    real(DP) :: px, ux, vx, wx, xg
@@ -419,14 +422,14 @@ SUBROUTINE init_reciprocal_parts_tab(nsp, zv, tpiba2, tpiba, omega, at, alat, &
             i3 = i0 + 3
 !tablocal_hg e' probabilmente fatto su una griglia 1D ed e' inizializzato in init_us_1a.f90, e' indipendente dalla cell
 !H_g_rad serve per fare un integrale radiale, interpolando tablocal_hg
-            H_g_rad(igl, 0) = tablocal_hg(i0, it, 0)*ux*vx*wx/6.d0 + &
-                        &tablocal_hg(i1, it, 0)*px*vx*wx/2.d0 - &
-                        &tablocal_hg(i2, it, 0)*px*ux*wx/2.d0 + &
-                        &tablocal_hg(i3, it, 0)*px*ux*vx/6.d0
-            H_g_rad(igl, 1) = tablocal_hg(i0, it, 1)*ux*vx*wx/6.d0 + &
+            H_g_rad(igl, 0) = tablocal_hg(i0, it, 1)*ux*vx*wx/6.d0 + &
                         &tablocal_hg(i1, it, 1)*px*vx*wx/2.d0 - &
                         &tablocal_hg(i2, it, 1)*px*ux*wx/2.d0 + &
                         &tablocal_hg(i3, it, 1)*px*ux*vx/6.d0
+            H_g_rad(igl, 1) = tablocal_hg(i0, it, 2)*ux*vx*wx/6.d0 + &
+                        &tablocal_hg(i1, it, 2)*px*vx*wx/2.d0 - &
+                        &tablocal_hg(i2, it, 2)*px*ux*wx/2.d0 + &
+                        &tablocal_hg(i3, it, 2)*px*ux*vx/6.d0
          end if
       end do
       do a = 1, 3
@@ -460,7 +463,8 @@ SUBROUTINE init_reciprocal_parts_tab(nsp, zv, tpiba2, tpiba, omega, at, alat, &
 END SUBROUTINE init_reciprocal_parts_tab
 
 
-subroutine init_us_1a(rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
+subroutine init_us_1a(tabr,tablocal_hg, &
+        rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
    !----------------------------------------------------------------------
    !
    USE radial_grids, ONLY : radial_grid_type
@@ -483,7 +487,7 @@ subroutine init_us_1a(rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
    type(pseudo_upf), intent(in) :: upf(:)
    real(dp), intent(in) :: zv(:), omega, dq
    logical, intent(in) :: spline_ps
-
+   real(DP), intent(inout) :: tablocal_hg(:, :, :), tabr(:,:,:,:)
    !
    !
    !     here a few local variables
@@ -511,7 +515,7 @@ subroutine init_us_1a(rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
    !
 
 !!!!!!!aggiunta di codice per la zero_current
-!tabr(nqxq,nbetam,nsp,-1:1) e tablocal(nqxq,nsp,0:2)
+!tabr(nqxq,nbetam,nsp,1:3) e tablocal(nqxq,nsp,0:2)
 !contiene f_(la,lb)(q)=\int _0 ^\infty dr r^3 f_la(r) j_lb(q.r)
 !dove la è il momento angolare della beta function (ce ne possono
 !essere più di una con il medesimo l) e
@@ -593,7 +597,7 @@ subroutine init_us_1a(rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
                       besr(ir)*rgrid(nt)%r(ir)
          end do
          call simpson(rgrid(nt)%mesh, aux, rgrid(nt)%rab, vqint)
-         tablocal_hg(iq, nt, 0) = vqint*pref
+         tablocal_hg(iq, nt, 1) = vqint*pref
 !inizializzazione con l=1
          call sph_bes(rgrid(nt)%mesh, rgrid(nt)%r, qi, 1, besr)
          do ir = 1, rgrid(nt)%mesh
@@ -601,7 +605,7 @@ subroutine init_us_1a(rgrid, nsp, zv, omega, nqxq, dq, spline_ps, upf)
                       besr(ir)*rgrid(nt)%r(ir)*rgrid(nt)%r(ir)
          end do
          call simpson(rgrid(nt)%mesh, aux, rgrid(nt)%rab, vqint)
-         tablocal_hg(iq, nt, 1) = vqint*pref
+         tablocal_hg(iq, nt, 2) = vqint*pref
       end do
    end do
 #ifdef __MPI
