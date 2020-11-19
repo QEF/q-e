@@ -71,10 +71,10 @@ subroutine init_zero(tabr, H_g, &
 end subroutine
 
 
-subroutine current_zero(tabr, H_g,&
+subroutine current_zero(j_zero, tabr, H_g,&
                         nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                         vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
-                        nkb, vkb, deeq, upf, nh, xk, igk_k, bg )
+                        nkb, vkb, deeq, upf, nh, xk, igk_k, bg, ec_test_ )
    use kinds, only: DP
    use fft_base, only: fft_type_descriptor
    use mp, only: mp_sum
@@ -88,6 +88,7 @@ subroutine current_zero(tabr, H_g,&
 
    implicit none
 
+   real(dp), intent(out) :: j_zero(3)
    real(dp), intent(in) :: tabr(:, :, :, :), H_g(:, :, :, :)
    INTEGER, intent(in) :: nbnd, npwx, nsp, nat, ityp(:), &
                            ngm, gstart, nkb, igk_k(:,:), nh(:)
@@ -100,6 +101,7 @@ subroutine current_zero(tabr, H_g,&
    COMPLEX(DP), intent(in):: vkb(:,:)
    real(dp), intent(in) :: deeq(:,:,:,:), xk(:,:)
    type(pseudo_upf), intent(in) :: upf(:)
+   logical, intent(in) :: ec_test_
 
 !three dimensional auxiliary real vectors
    real(dp), parameter  :: amconv = AMU_RY
@@ -161,24 +163,24 @@ subroutine current_zero(tabr, H_g,&
    end do
 !
 !computation of the current
-   z_current = 0.d0
+   j_zero = 0.d0
    do a = 1, 3
       do igm = gstart, ngm
-         z_current(a) = z_current(a) + 2.d0*dble(charge_g(igm)*conjg(u_g(igm, a)))
+         j_zero(a) = j_zero(a) + 2.d0*dble(charge_g(igm)*conjg(u_g(igm, a)))
       end do
       if (gstart == 2) then
-         z_current(a) = z_current(a) + dble(charge_g(1)*conjg(u_g(1, a)))
+         j_zero(a) = j_zero(a) + dble(charge_g(1)*conjg(u_g(1, a)))
       end if
    end do
    deallocate (charge_g)
    deallocate (u_g)
 
-   call mp_sum(z_current, intra_pool_comm)
+   call mp_sum(j_zero, intra_pool_comm)
    if (l_non_loc) then
-      call add_nc_curr(z_current, tabr, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, evc, &
-                       g, tpiba, nat, ityp, nsp, xk, igk_k)
+      call add_nc_curr(j_zero, tabr, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, evc, &
+                       g, tpiba, nat, ityp, nsp, xk, igk_k, ec_test_)
    end if
-   z_current = z_current*alat
+   j_zero = j_zero*alat
    call stop_clock('zero_current')
    call print_clock('zero_current')
    deallocate (charge)
@@ -191,7 +193,7 @@ end subroutine current_zero
 
 
 subroutine add_nc_curr(current, tabr, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, npwx, evc, &
-                       g, tpiba, nat, ityp, nsp, xk, igk_k)
+                       g, tpiba, nat, ityp, nsp, xk, igk_k,ec_test_)
    use kinds, only: DP
    use becmod
    USE uspp_param, ONLY: pseudo_upf
@@ -205,6 +207,7 @@ subroutine add_nc_curr(current, tabr, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, n
    complex(DP), intent(in) :: vkb(:,:), evc(:,:)
    real(dp), intent(in) :: deeq(:,:,:,:), vel(:,:), g(:,:), tpiba, xk(:,:), tabr(:,:,:,:)
    type(pseudo_upf), intent(in) :: upf(:)
+   logical, intent(in) :: ec_test_
 
    !integer ::iun, a, b
    !logical ::l_test
@@ -241,7 +244,7 @@ subroutine add_nc_curr(current, tabr, nkb, vkb, deeq, upf, nh, vel, nbnd, npw, n
 
 !inizializzazione di vkb (per essere sicuri che lo sia) e xvkb
    CALL init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
-   call init_us_3(npw, xvkb,tabr,ec_test)
+   call init_us_3(npw, xvkb,tabr,ec_test_)
 !!
 !inizializzazione di dvkb e xdvkb (nb il ciclo su ipw va dentro per essere
 !ottimizzato)

@@ -7,7 +7,7 @@ program all_currents
            j_xc,j_hartree, delta_t, J_kohn, J_kohn_a, J_kohn_b, J_electron
    use hartree_xc_mod, only: current_hartree_xc
    use zero_mod, only: vel_input_units, init_zero, current_zero, &
-                       allocate_zero, deallocate_zero
+                       allocate_zero, deallocate_zero, z_current, ec_test
    use ionic_mod, only : init_ionic, ionic_init_type, current_ionic, add_i_current_b, &
                        i_current, i_current_a, i_current_b, i_current_c, i_current_d, i_current_e
    use scf_result_mod, only : multiple_scf_result_allocate, &
@@ -202,10 +202,10 @@ program all_currents
               if (exit_status /= 0) goto 100 !shutdown everything and exit
               !save evc, tau and vel for t
               call scf_result_set_from_global_variables(scf_all%t_zero)
-              call current_zero(tabr,H_g,&
+              call current_zero(z_current, tabr,H_g,&
                       nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                         vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
-                        nkb, vkb, deeq, upf, nh, xk, igk_k, bg ) ! routine zero should be called in t
+                        nkb, vkb, deeq, upf, nh, xk, igk_k, bg, ec_test ) ! routine zero should be called in t
               call current_ionic(ionic_data, &
                       i_current, i_current_a, i_current_b, i_current_c, i_current_d, i_current_e, add_i_current_b, &
                       nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
@@ -227,10 +227,10 @@ program all_currents
           call scf_result_set_from_global_variables(scf_all%t_plus)
 
           if (.not. three_point_derivative) then
-              call current_zero(tabr,H_g,&
+              call current_zero(z_current, tabr, H_g,&
                       nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                         vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
-                        nkb, vkb, deeq, upf, nh, xk, igk_k, bg ) ! we are in t in this case, and we call here routine zero
+                        nkb, vkb, deeq, upf, nh, xk, igk_k, bg, ec_test ) ! we are in t in this case, and we call here routine zero
               call current_ionic(ionic_data, &
                       i_current, i_current_a, i_current_b, i_current_c, i_current_d, i_current_e, add_i_current_b, &
                       nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
