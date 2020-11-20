@@ -6,7 +6,7 @@ In the future, these files should be removed or replaced as follows:
 - iotk-1.2.beta.tar.gz	fetch from git repository
 - lapack-3.6.1.tgz	fetch from git repository
 - libbeef-0.1.2.tar.gz	move to XClib directory
-- libmbd-0.10.3.tar.gz fetch from git repository
+- libmbd-0.10.3.tar.gz fetch from git repository (patched to add non-cmake support, see: https://github.com/kosinyj/libmbd/tree/hyk.add_typical_makefile_for_qe)
 - plumed-1.3-qe.tar.gz  remove (is obsolete)
 
 
