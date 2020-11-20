@@ -1,6 +1,6 @@
 &CONTROL
  calculation='scf'
- tprnfor=.true.
+ tprnfor=.false.
  tstress=.false.
 /
 
@@ -23,10 +23,7 @@ ATOMIC_SPECIES
 O 15.999  O.pbe-hgh.UPF
 H 1.0079  H.pbe-hgh.UPF
 
-
-K_POINTS automatic
-1 1 1 0 0 0
-
+K_POINTS gamma
 
 ATOMIC_POSITIONS angstrom
 O        9.297804      9.943940     10.009942
