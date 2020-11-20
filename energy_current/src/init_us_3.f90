@@ -8,110 +8,109 @@
 !
 !----------------------------------------------------------------------
 module init_us_3_mod
-        contains
-subroutine init_us_3(npw_, xvkb_, tabr, ec_test)
-   !----------------------------------------------------------------------
-   !
-   !   Calculates xbeta functions  with
-   !   structure factor, for all atoms, in reciprocal space. On input:
-   !      npw_       : number of PWs
-   !  On output:
-   !      xvkb_(npwx,nkb,3) : beta functions (npw_ <= npwx).
-   !
-   USE atom, ONLY: rgrid
-   USE kinds, ONLY: DP
-   USE ions_base, ONLY: nat, ntyp => nsp, ityp
-   USE cell_base, ONLY: tpiba, omega
-   USE constants, ONLY: tpi, pi, fpi
-   USE gvect, ONLY: eigts1, eigts2, eigts3, mill, g, gg, ngl, igtongl, gl, gstart
-   USE wvfct, ONLY: npwx
-   USE us, ONLY: dq, spline_ps
-   ! USE splinelib
-   USE uspp, ONLY: nkb, nhtol, nhtolm, indv, ap, aainit
-   USE uspp_param, ONLY: upf, lmaxkb, nhm, nh
-   use mp, ONLY: mp_sum, mp_min
+contains
+   subroutine init_us_3(npw_, xvkb_, tabr, ec_test)
+      !----------------------------------------------------------------------
+      !
+      !   Calculates xbeta functions  with
+      !   structure factor, for all atoms, in reciprocal space. On input:
+      !      npw_       : number of PWs
+      !  On output:
+      !      xvkb_(npwx,nkb,3) : beta functions (npw_ <= npwx).
+      !
+      USE atom, ONLY: rgrid
+      USE kinds, ONLY: DP
+      USE ions_base, ONLY: nat, ntyp => nsp, ityp
+      USE cell_base, ONLY: tpiba, omega
+      USE constants, ONLY: tpi, pi, fpi
+      USE gvect, ONLY: eigts1, eigts2, eigts3, mill, g, gg, ngl, igtongl, gl, gstart
+      USE wvfct, ONLY: npwx
+      USE us, ONLY: dq, spline_ps
+      ! USE splinelib
+      USE uspp, ONLY: nkb, nhtol, nhtolm, indv, ap, aainit
+      USE uspp_param, ONLY: upf, lmaxkb, nhm, nh
+      use mp, ONLY: mp_sum, mp_min
 !
 !modules for UT
 !
-   use splines
-   use atom, ONLY: rgrid
+      use splines
+      use atom, ONLY: rgrid
 !
-   implicit none
+      implicit none
 !
 !
-   !TYPE(spline_data) :: spl_beta
-   real(DP) :: vint
-   integer :: ndm
-   INTEGER, INTENT(IN) :: npw_
-   COMPLEX(DP), INTENT(OUT) :: xvkb_(npwx, nkb, 3)
-   logical, intent(in) :: ec_test
-   real(dp), intent(in) :: tabr(:,:,:,:)
-   !
-   !local variables for UT
-   !
-   complex(DP) :: add
-   integer     :: ir
-   !
-   !
-   !     Local variables
-   !
-   integer :: i0, i1, i2, i3, ig, l, lm, na, nb, ih, jkb, igl, in, it, ll, lp
+      !TYPE(spline_data) :: spl_beta
+      real(DP) :: vint
+      integer :: ndm
+      INTEGER, INTENT(IN) :: npw_
+      COMPLEX(DP), INTENT(OUT) :: xvkb_(npwx, nkb, 3)
+      logical, intent(in) :: ec_test
+      real(dp), intent(in) :: tabr(:, :, :, :)
+      !
+      !local variables for UT
+      !
+      complex(DP) :: add
+      integer     :: ir
+      !
+      !
+      !     Local variables
+      !
+      integer :: i0, i1, i2, i3, ig, l, lm, na, nb, ih, jkb, igl, in, it, ll, lp
 
-   real(DP) :: px, ux, vx, wx, cost, xg
-   real(DP), allocatable :: ylm(:, :), betagl(:)
-   complex(DP), allocatable ::xvkb1(:, :, :)
-   complex(DP), allocatable :: sk(:)
-   real(DP), allocatable :: aux(:)
-   integer :: ii
-
+      real(DP) :: px, ux, vx, wx, cost, xg
+      real(DP), allocatable :: ylm(:, :), betagl(:)
+      complex(DP), allocatable ::xvkb1(:, :, :)
+      complex(DP), allocatable :: sk(:)
+      real(DP), allocatable :: aux(:)
+      integer :: ii
 
 !
-   if (lmaxkb .lt. 0) return
-   call start_clock('init_us_3')
-   allocate (xvkb1(npw_, nhm, 3))
-   allocate (sk(npw_))
-   allocate (ylm(npw_, (lmaxkb + 2)**2))
-   allocate (betagl(ngl))
-   !
-   call ylmr2((lmaxkb + 2)**2, npw_, g(1:3, 1:npw_), gg(1:npw_), ylm)
-   call aainit(lmaxkb + 2)
-   ndm = MAXVAL(upf(:)%kkbeta)
-   allocate (aux(ndm))
-   jkb = 0
-   xvkb_ = 0.d0
-   cost = SQRT(4.*pi/3.)
-   do it = 1, ntyp
-      xvkb1(1:npw_, 1:nhm, 1:3) = (0.d0, 0.d0)
-      do ih = 1, nh(it)
+      if (lmaxkb .lt. 0) return
+      call start_clock('init_us_3')
+      allocate (xvkb1(npw_, nhm, 3))
+      allocate (sk(npw_))
+      allocate (ylm(npw_, (lmaxkb + 2)**2))
+      allocate (betagl(ngl))
+      !
+      call ylmr2((lmaxkb + 2)**2, npw_, g(1:3, 1:npw_), gg(1:npw_), ylm)
+      call aainit(lmaxkb + 2)
+      ndm = MAXVAL(upf(:)%kkbeta)
+      allocate (aux(ndm))
+      jkb = 0
+      xvkb_ = 0.d0
+      cost = SQRT(4.*pi/3.)
+      do it = 1, ntyp
+         xvkb1(1:npw_, 1:nhm, 1:3) = (0.d0, 0.d0)
+         do ih = 1, nh(it)
 !gli indici (ih,it) identificano il proiettore che andiamo ad inizializzare.
 !
 !l è il "momento angolare+1" dello pseudo considerato
-         l = nhtol(ih, it) + 1
+            l = nhtol(ih, it) + 1
 !lp è l'indice combinato del'armonica sferica riferito allo pseudo che stiamo caricando
-         lp = nhtolm(ih, it)
+            lp = nhtolm(ih, it)
 !nb è la beta function che dà la dipendenza radiale a questo pseudo
-         nb = indv(ih, it)
+            nb = indv(ih, it)
 !in-1,...,nhtol+1=l sono i momenti angolari che contribuiscono a xvkb(:,ikb), ovvero
 !quelli che differiscono di 1 dal momento angolare del proiettore.
 !in,...,nhtol+2=l+1 sono i "momenti angolari+1" che contribuiscono a xvkb(:,ikb).
-         if (l .eq. 1) then
-            in = 1
-         else
-            in = l - 1
-         end if
+            if (l .eq. 1) then
+               in = 1
+            else
+               in = l - 1
+            end if
 !ll indicizza i momenti angolari +1 che contribuiscono a xvkb
-         do ll = in, l + 1
+            do ll = in, l + 1
 !igl indicizza le shell. Qui calcoliamo il contributo:
 !f_(nb,ll)(q)=\int _0 ^\infty dr r^3 beta_nb(r) j_ll(q.r), con q che varia sulle shell q=1,...,nlg
 !Questo dipende solo da nb, ovvero della beta function, e da ll. Inseriamo questo in
 !betagl(1:ngl), che si in questa versione si ricalcola e sovrascrive per ogni coppia (ih,ll)
 !no e' una scelta ottimanel in quanto diversi ih possiedono la medesima beta function ed
 !il medesimo integrale si calcola al momento piu' volte
-            do igl = 1, ngl
-               xg = sqrt(gl(igl))*tpiba
+               do igl = 1, ngl
+                  xg = sqrt(gl(igl))*tpiba
 !xg è il modullo della igl-esima shell
-               if (spline_ps) then
-                  CALL errore('init_us_3', 'splines not implemented', 1)
+                  if (spline_ps) then
+                     CALL errore('init_us_3', 'splines not implemented', 1)
 !                   if (ll==l) then
 !                       betagl(igl) = splint(xdata, tabr(:,nb,it,0), tabr_d2y(:,nb,it,0), xg)
 !                   end if
@@ -122,154 +121,150 @@ subroutine init_us_3(npw_, xvkb_, tabr, ec_test)
 !                   if ((ll==l-1)) then
 !                       betagl(igl) = splint(xdata, tabr(:,nb,it,-1), tabr_d2y(:,nb,it,-1), xg)
 !                   end if
-               else
-                  px = xg/dq - int(xg/dq)
-                  ux = 1.d0 - px
-                  vx = 2.d0 - px
-                  wx = 3.d0 - px
-                  i0 = INT(xg/dq) + 1
-                  i1 = i0 + 1
-                  i2 = i0 + 2
-                  i3 = i0 + 3
-                  ii = ll - l+2
-                  if (ii < 1 .or. ii >3 ) then
-                          call ERRORE('init_us_3','Internal index error',1)
-                  end if
-                  betagl(igl) = tabr(i0, nb, it, ii)*ux*vx*wx/6.d0 + &
-                    &tabr(i1, nb, it, ii)*px*vx*wx/2.d0 - &
-                    &tabr(i2, nb, it, ii)*px*ux*wx/2.d0 + &
-                    &tabr(i3, nb, it, ii)*px*ux*vx/6.d0
+                  else
+                     px = xg/dq - int(xg/dq)
+                     ux = 1.d0 - px
+                     vx = 2.d0 - px
+                     wx = 3.d0 - px
+                     i0 = INT(xg/dq) + 1
+                     i1 = i0 + 1
+                     i2 = i0 + 2
+                     i3 = i0 + 3
+                     ii = ll - l + 2
+                     if (ii < 1 .or. ii > 3) then
+                        call ERRORE('init_us_3', 'Internal index error', 1)
+                     end if
+                     betagl(igl) = tabr(i0, nb, it, ii)*ux*vx*wx/6.d0 + &
+                       &tabr(i1, nb, it, ii)*px*vx*wx/2.d0 - &
+                       &tabr(i2, nb, it, ii)*px*ux*wx/2.d0 + &
+                       &tabr(i3, nb, it, ii)*px*ux*vx/6.d0
 
-               end if
-            end do
+                  end if
+               end do
 !Ora dobbiamo eseguire il ciclo su tutte le armoniche sferiche con momento angolare+1= ll
-            do lm = (ll - 1)**2 + 1, ll**2
-               do ig = gstart, npw_
+               do lm = (ll - 1)**2 + 1, ll**2
+                  do ig = gstart, npw_
 !nelle seguente espressioni compare (-i)^(ll-1) invece del solito (-i)^(ll) perchè
 !il momento angolare che stiamo considerando non è ll ma ll-1. ll è solo un indice.
-                  add = ylm(ig, lm)
-                  xvkb1(ig, ih, 1) = xvkb1(ig, ih, 1) - &!ap(lm,lp,3)*ylm(ig,lm)
-                                     (cmplx(cost*ap(lm, 3, lp)*add*betagl(igtongl(ig)))*((0.d0, -1.d0)**(ll - 1)))
+                     add = ylm(ig, lm)
+                     xvkb1(ig, ih, 1) = xvkb1(ig, ih, 1) - &!ap(lm,lp,3)*ylm(ig,lm)
+                                        (cmplx(cost*ap(lm, 3, lp)*add*betagl(igtongl(ig)))*((0.d0, -1.d0)**(ll - 1)))
 !
-                  xvkb1(ig, ih, 2) = xvkb1(ig, ih, 2) - &!ap(lm,lp,4)*ylm(ig,lm)
-                                     (cmplx(cost*ap(lm, 4, lp)*add*betagl(igtongl(ig)))*((0.d0, -1.d0)**(ll - 1)))
+                     xvkb1(ig, ih, 2) = xvkb1(ig, ih, 2) - &!ap(lm,lp,4)*ylm(ig,lm)
+                                        (cmplx(cost*ap(lm, 4, lp)*add*betagl(igtongl(ig)))*((0.d0, -1.d0)**(ll - 1)))
 !
-                  xvkb1(ig, ih, 3) = xvkb1(ig, ih, 3) + &!ap(lm,lp,2)*ylm(ig,lm)
-                                     (cmplx(cost*ap(lm, 2, lp)*add*betagl(igtongl(ig)))*((0.d0, -1.d0)**(ll - 1)))
+                     xvkb1(ig, ih, 3) = xvkb1(ig, ih, 3) + &!ap(lm,lp,2)*ylm(ig,lm)
+                                        (cmplx(cost*ap(lm, 2, lp)*add*betagl(igtongl(ig)))*((0.d0, -1.d0)**(ll - 1)))
 !
+                  end do
                end do
             end do
-         end do
-         if (gstart == 2) then
-            xvkb1(1, ih, 1:3) = 0.d0
-            if ((lp == 2) .or. (lp == 3) .or. (lp == 4)) then
-               do ir = 1, upf(it)%kkbeta
-                  aux(ir) = upf(it)%beta(ir, nb)*rgrid(it)%r(ir)*rgrid(it)%r(ir)
-               end do
-               call simpson(upf(it)%kkbeta, aux, rgrid(it)%rab, vint)
-               vint = vint*cost/sqrt(omega)
-               if (lp == 2) xvkb1(1, ih, 3) = +vint
-               if (lp == 3) xvkb1(1, ih, 1) = -vint
-               if (lp == 4) xvkb1(1, ih, 2) = -vint
+            if (gstart == 2) then
+               xvkb1(1, ih, 1:3) = 0.d0
+               if ((lp == 2) .or. (lp == 3) .or. (lp == 4)) then
+                  do ir = 1, upf(it)%kkbeta
+                     aux(ir) = upf(it)%beta(ir, nb)*rgrid(it)%r(ir)*rgrid(it)%r(ir)
+                  end do
+                  call simpson(upf(it)%kkbeta, aux, rgrid(it)%rab, vint)
+                  vint = vint*cost/sqrt(omega)
+                  if (lp == 2) xvkb1(1, ih, 3) = +vint
+                  if (lp == 3) xvkb1(1, ih, 1) = -vint
+                  if (lp == 4) xvkb1(1, ih, 2) = -vint
+               end if
             end if
-         end if
-      end do
+         end do
 !fin qui abbiamo inizializzato xvkb1(npwx,nhm,3) per il tipo di atomo che stiamo considerando.
 !Andiamo ora ad inizializzare xvkb(3,npwx,nkb) per tutti gli atomi di questo
 !tipo aggiungendo il fattore di struttura.
-      do na = 1, nat
+         do na = 1, nat
 !finalmente inizializza xvkb. Prima carica tutti i proiettori
 !di tipo 1, poi quelli di tipo 2,... quindi alla fine vkb sarà caricato così:
 ! atomi con tipo 1 - atomi con tipo 2 - atomi con tipo 3 - .....
-         if (ityp(na) .eq. it) then
-            do ig = 1, npw_
-               sk(ig) = eigts1(mill(1, ig), na)* &
-                        &eigts2(mill(2, ig), na)* &
-                        &eigts3(mill(3, ig), na)
-            end do
-            do ih = 1, nh(it)
-               jkb = jkb + 1
+            if (ityp(na) .eq. it) then
                do ig = 1, npw_
-                  xvkb_(ig, jkb, 1:3) = xvkb1(ig, ih, 1:3)*sk(ig)
+                  sk(ig) = eigts1(mill(1, ig), na)* &
+                           &eigts2(mill(2, ig), na)* &
+                           &eigts3(mill(3, ig), na)
                end do
-            end do
-         endif
+               do ih = 1, nh(it)
+                  jkb = jkb + 1
+                  do ig = 1, npw_
+                     xvkb_(ig, jkb, 1:3) = xvkb1(ig, ih, 1:3)*sk(ig)
+                  end do
+               end do
+            endif
+         end do
       end do
-   end do
-
 
 !!test per xvkb
 
-   if (ec_test) then
-      call init_us_3_test(npw_, xvkb_)
-   end if
+      if (ec_test) then
+         call init_us_3_test(npw_, xvkb_)
+      end if
 
-   deallocate (ylm)
-   deallocate (sk)
-   deallocate (xvkb1)
-   deallocate (betagl)
-   deallocate (aux)
+      deallocate (ylm)
+      deallocate (sk)
+      deallocate (xvkb1)
+      deallocate (betagl)
+      deallocate (aux)
 
-   call stop_clock('init_us_3')
-   return
-end subroutine init_us_3
+      call stop_clock('init_us_3')
+      return
+   end subroutine init_us_3
 
+   subroutine init_us_3_test(npw_, xvkb_)!, rgrid, ntyp, ityp, tau, tpiba, )
 
-subroutine init_us_3_test (npw_, xvkb_)!, rgrid, ntyp, ityp, tau, tpiba, )
-
-   !----------------------------------------------------------------------
-   !
-   !   Calculates xbeta functions  with
-   !   structure factor, for all atoms, in reciprocal space. On input:
-   !      npw_       : number of PWs
-   !  On output:
-   !      xvkb_(npwx,nkb,3) : beta functions (npw_ <= npwx).
-   !
-   USE atom, ONLY: rgrid
-   USE kinds, ONLY: DP
-   USE ions_base, ONLY: nat, ntyp => nsp, ityp, tau
-   USE cell_base, ONLY: tpiba
-   USE constants, ONLY: tpi, pi, fpi
-   USE wvfct, ONLY: npwx, npw, nbnd
-   ! USE splinelib
-   USE uspp, ONLY: nkb, vkb
-   USE uspp_param, ONLY: upf, lmaxkb, nhm, nh
-   USE cell_base, ONLY: omega
-   use mp, ONLY: mp_sum, mp_min
+      !----------------------------------------------------------------------
+      !
+      !   Calculates xbeta functions  with
+      !   structure factor, for all atoms, in reciprocal space. On input:
+      !      npw_       : number of PWs
+      !  On output:
+      !      xvkb_(npwx,nkb,3) : beta functions (npw_ <= npwx).
+      !
+      USE atom, ONLY: rgrid
+      USE kinds, ONLY: DP
+      USE ions_base, ONLY: nat, ntyp => nsp, ityp, tau
+      USE cell_base, ONLY: tpiba
+      USE constants, ONLY: tpi, pi, fpi
+      USE wvfct, ONLY: npwx, npw, nbnd
+      ! USE splinelib
+      USE uspp, ONLY: nkb, vkb
+      USE uspp_param, ONLY: upf, lmaxkb, nhm, nh
+      USE cell_base, ONLY: omega
+      use mp, ONLY: mp_sum, mp_min
 !
 !modules for UT
 !
-   use splines
-   USE wavefunctions, ONLY: psic
-   use fft_interfaces, only: invfft, fwfft
-   use fft_base, only: dffts
-   use cell_base, ONLY: at, alat
-   use mp_world, ONLY: mpime
-   use io_global, ONLY: ionode
-   use mp_pools, only: intra_pool_comm
+      use splines
+      USE wavefunctions, ONLY: psic
+      use fft_interfaces, only: invfft, fwfft
+      use fft_base, only: dffts
+      use cell_base, ONLY: at, alat
+      use mp_world, ONLY: mpime
+      use io_global, ONLY: ionode
+      use mp_pools, only: intra_pool_comm
 !
-   implicit none
+      implicit none
 !
-   TYPE(spline_data) :: spl_beta
-   INTEGER, INTENT(IN) :: npw_
-   COMPLEX(DP), INTENT(inOUT) :: xvkb_(npwx, nkb, 3)
-   !
-   !local variables for UT
-   !
-   integer     :: cont_1, cont_2, cont_3, icont, ikb, ipol
-   real(DP)    :: u(3), u_x(3), u_y(3), u_z(3), modulus!, value
-   integer     :: iqq, ix, iy, iz
-
+      TYPE(spline_data) :: spl_beta
+      INTEGER, INTENT(IN) :: npw_
+      COMPLEX(DP), INTENT(inOUT) :: xvkb_(npwx, nkb, 3)
+      !
+      !local variables for UT
+      !
+      integer     :: cont_1, cont_2, cont_3, icont, ikb, ipol
+      real(DP)    :: u(3), u_x(3), u_y(3), u_z(3), modulus!, value
+      integer     :: iqq, ix, iy, iz
 
 ! testing variables used only for ec_test
 
-   complex(DP) :: vkbr(1:dffts%nnr), vkbr_2(1:dffts%nnr), vkbr_3(1:dffts%nnr, 3)
-   real(DP)    :: stampa(nkb, 1:dffts%nnr, 3, 3), stampa_b(nkb, 1:dffts%nnr, 3, 3) !, ris(4, 4)
-   integer, external :: find_free_unit
-   integer :: iun, iun2, iun3
-   integer :: ii, nr3s_end, nr3s_start, vkb_pol
-   character(len=20) :: string, dimension_string
-
+      complex(DP) :: vkbr(1:dffts%nnr), vkbr_2(1:dffts%nnr), vkbr_3(1:dffts%nnr, 3)
+      real(DP)    :: stampa(nkb, 1:dffts%nnr, 3, 3), stampa_b(nkb, 1:dffts%nnr, 3, 3) !, ris(4, 4)
+      integer, external :: find_free_unit
+      integer :: iun, iun2, iun3
+      integer :: ii, nr3s_end, nr3s_start, vkb_pol
+      character(len=20) :: string, dimension_string
 
       if (nat > 1) then
          CALL errore('init_us_3', 'Test not working with nat > 1', 1)
@@ -563,5 +558,5 @@ subroutine init_us_3_test (npw_, xvkb_)!, rgrid, ntyp, ityp, tau, tpiba, )
 !     end if
 !!----------------------------------------------------------------------------------------F
 
-end subroutine
+   end subroutine
 end module
