@@ -20,7 +20,7 @@ SUBROUTINE summary()
   USE constants,       ONLY : amu_ry, rytoev
   USE cell_base,       ONLY : alat, ibrav, omega, at, bg, celldm, wmass
   USE ions_base,       ONLY : nat, atm, zv, tau, ntyp => nsp, ityp
-  USE cellmd,          ONLY : calc
+  USE cellmd,          ONLY : calc, lmovecell
   USE ions_base,       ONLY : amass
   USE gvect,           ONLY : ecutrho, ngm, ngm_g, gcutm
   USE gvecs,           ONLY : doublegrid, ngms, ngms_g, gcutms
@@ -52,6 +52,8 @@ SUBROUTINE summary()
   USE exx,             ONLY : ecutfock
   USE fcp_variables,   ONLY : lfcpopt, lfcpdyn
   USE fcp,             ONLY : fcp_summary
+  USE relax,           ONLY : epse, epsf, epsp
+  USE force_mod,       ONLY : lforce
   !
   IMPLICIT NONE
   !
@@ -94,6 +96,8 @@ SUBROUTINE summary()
   WRITE( stdout, 103) nbnd, ecutwfc, ecutrho
   IF ( dft_is_hybrid () ) WRITE( stdout, 104) ecutfock
   IF ( lscf) WRITE( stdout, 105) tr2, mixing_beta, nmix, mixing_style
+  IF ( lforce ) WRITE (stdout, 106) epse, epsf
+  IF ( lmovecell ) WRITE (stdout, 107) epsp
   !
 100 FORMAT( /,/,5X, &
        &     'bravais-lattice index     = ',I12,/,5X, &
@@ -115,6 +119,11 @@ SUBROUTINE summary()
        &     'convergence threshold     = ',1PE12.1,/,5X, &
        &     'mixing beta               = ',0PF12.4,/,5X, &
        &     'number of iterations used = ',I12,2X,A,' mixing')
+106 FORMAT(5X, &
+       &     'tot convergence thresh.   = ',1PE12.1,/,5X, &
+       &     'force convergence thresh. = ',1PE12.1)
+107 FORMAT(5X, &
+       &     'press convergence thresh. = ',1PE12.1)
   !
   call write_dft_name ( ) 
   !
