@@ -50,11 +50,13 @@ program all_currents
    implicit none
 
    type J_all
+      !holds all the result calculated by this program
       real(dp) :: i_current(3), i_current_a(3), i_current_b(3), i_current_c(3), i_current_d(3), i_current_e(3)
       real(dp) ::z_current(3)
       real(kind=DP) ::J_kohn(3), J_kohn_a(3), J_kohn_b(3), J_hartree(3), J_xc(3), J_electron(3)
       real(kind=DP), allocatable :: v_cm(:, :)
    end type
+   type(J_all) :: j
 
    integer :: exit_status, ios, irepeat, n_max
    logical :: print_stat
@@ -77,8 +79,7 @@ program all_currents
    logical :: re_init_wfc_1 = .false., re_init_wfc_2 = .false. ! initialize again evc before scf step number 1 or 2
    logical :: re_init_wfc_3 = .false. ! initialize again evc before scf step number 1 or 2
    logical :: three_point_derivative = .true. ! compute hartree derivative with 3 points
-   logical :: add_i_current_b = .false.
-   type(J_all) :: j
+   logical :: add_i_current_b = .false.  ! if true adds i_current_b to the final result, in the output
    character(len=256) :: vel_input_units = 'PW'
    logical :: ec_test ! activates tests for debugging purposes
 
@@ -164,15 +165,17 @@ program all_currents
    call setup()    ! ../PW/src/setup.f90    setup the calculation
    call init_run() ! ../PW/src/init_run.f90 allocate stuff
    ! now scf is ready to start, but I first initialize energy current stuff
+
    call allocate_zero() ! only once per all trajectory
-   allocate (H_g(ngm, 3, 3, nsp)) ! current zero
-   allocate (tabr(nqxq, nbetam, nsp, 3)) ! current zero
-   call init_ionic(ionic_data, eta, n_max, ngm, gstart, at, alat, omega, gg, g, tpiba2)
+   ! current zero (pseudopotential part) quantities that do not depend on the positions/velocities but only on the cell and atomic types
+   allocate (H_g(ngm, 3, 3, nsp))
+   allocate (tabr(nqxq, nbetam, nsp, 3))
    call init_zero(tabr, H_g, nsp, zv, tpiba2, tpiba, omega, at, alat, &
                   ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq, &
                   upf, rgrid, nqxq) ! only once per all trajectory
+   call init_ionic(ionic_data, eta, n_max, ngm, gstart, at, alat, omega, gg, g, tpiba2)
    call init_kohn_sham()
-   if (save_dvpsi) then
+   if (save_dvpsi) then ! to use the previous result as initial guess of the solution of the system solved in project.f90
       if (.not. allocated(dvpsi_save)) then
          allocate (dvpsi_save(npwx, nbnd, 3))
          dvpsi_save = (0.d0, 0.d0)
@@ -269,10 +272,11 @@ program all_currents
          call scf_result_set_from_global_variables(scf_all%t_plus)
 
          if (.not. three_point_derivative) then
+            ! we are in t in this case, so we call here routines that do not compute numerical derivatives
             call current_zero(j%z_current, tabr, H_g, &
                               nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                               vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
-                              nkb, vkb, deeq, upf, nh, xk, igk_k, bg, ec_test) ! we are in t in this case, and we call here routine zero
+                              nkb, vkb, deeq, upf, nh, xk, igk_k, bg, ec_test)
             call current_ionic(ionic_data, &
                           j%i_current, j%i_current_a, j%i_current_b, j%i_current_c, j%i_current_d, j%i_current_e, add_i_current_b, &
                                nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
@@ -574,6 +578,7 @@ contains
    end subroutine
 
    subroutine cm_vel(v_cm, vel_cm)
+      !calculates center of mass velocities for each atomic type and eventually subtract it from the velocity of each atom
       use kinds, only: dp
       use ions_base, ONLY: nat, nsp, ityp
       use dynamics_module, only: vel
@@ -606,6 +611,7 @@ contains
    end subroutine
 
    subroutine prepare_next_step(ipm, delta_t, ethr_small_step, three_point_derivative)
+           ! advance/go back by dt according to ipm = -1 1 and if dt/2 has to be used (three point derivative)
       USE extrapolation, ONLY: update_pot
       USE control_flags, ONLY: ethr
       use ions_base, ONLY: tau, tau_format, nat
@@ -638,6 +644,7 @@ contains
    end subroutine
 
    function read_next_step(t, first_step, last_step, step_mul, step_rem) result(res)
+      ! read next trajectory step. if no next step exists, return false
       USE extrapolation, ONLY: update_pot
       use cpv_traj, only: cpv_trajectory, cpv_trajectory_initialize, cpv_trajectory_deallocate, &
                           cpv_trajectory_read_step, cpv_trajectory_get_step

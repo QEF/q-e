@@ -12,6 +12,7 @@ contains
                         ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq, &
                         upf, rgrid, nqxq)
 !called once to init stuff that does not depend on the atomic positions
+!tabr and h_g, on output, will be used by all the current_zero calls
       use kinds, only: DP
       USE radial_grids, ONLY: radial_grid_type
       USE uspp_param, ONLY: pseudo_upf
@@ -56,6 +57,8 @@ contains
                            nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                            vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
                            nkb, vkb, deeq, upf, nh, xk, igk_k, bg, ec_test_)
+      !needs tabr and h_g calculated by init_zero
+      !output in j_zero
       use kinds, only: DP
       use fft_base, only: fft_type_descriptor
       use mp, only: mp_sum

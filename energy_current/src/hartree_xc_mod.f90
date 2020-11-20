@@ -28,7 +28,7 @@ contains
       end do
       fac(:) = fac(:)/omega
 
-      !-------STEP4----- numerical derivatives of Hartree potentials
+      ! numerical derivatives of Hartree potentials
 
       !We compute v_point and v_mean
       do igm = 1, ngm
