@@ -934,18 +934,15 @@ SUBROUTINE electrons_scf ( printout, exxen )
         etot = etot + exdm
         hwf_energy = hwf_energy + exdm
      ENDIF
-     IF (ts_vdw .and. .not. mbd_vdw) THEN
-        ! factor 2 converts from Ha to Ry units
-        etot = etot + 2.0d0*EtsvdW
-        hwf_energy = hwf_energy + 2.0d0*EtsvdW
-     ENDIF
-     !GSz
      IF (mbd_vdw) THEN
-        !DEBUG WRITE(stdout,'(7X,"Adding MBD energy: ", F9.6," to total")') EmbdvdW
         ! factor 2 converts from Hartree to Ry units
         etot = etot + 2.0d0*EmbdvdW
         hwf_energy = hwf_energy + 2.0d0*EmbdvdW
-     END IF
+     ELSE IF (ts_vdw) THEN
+        ! factor 2 converts from Hartree to Ry units
+        etot = etot + 2.0d0*EtsvdW
+        hwf_energy = hwf_energy + 2.0d0*EtsvdW
+     ENDIF
      !
      IF ( tefield ) THEN
         etot = etot + etotefield
