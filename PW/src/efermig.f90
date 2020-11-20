@@ -43,11 +43,16 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
   ! ... local variables
   !
   REAL(DP), PARAMETER :: eps = 1.0d-10
+  REAL(DP), PARAMETER :: eps_cold = 1.0d-2
   INTEGER, PARAMETER :: maxiter = 300
+   !
   !
   REAL(DP) :: Ef, Eup, Elw, sumkup, sumklw, sumkmid
-  REAL(DP), EXTERNAL :: sumkg
+  REAL(DP), EXTERNAL :: sumkg, sumkg1, sumkg2
+  REAL(DP), EXTERNAL :: wgauss, w0gauss, w1gauss
   INTEGER :: i, kpoint, Ngauss_
+  INTEGER :: info, maxiter_aux
+  REAL(DP) :: Ef_initial_guess, nelec_ef
   !
   !  ... find (very safe) bounds for the Fermi energy:
   !  Elw = lowest, Eup = highest energy among all k-points.
@@ -67,45 +72,429 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
   CALL mp_max( eup, inter_pool_comm )
   CALL mp_min( elw, inter_pool_comm )
   !
-  ! ... Bisection method
-  !
-  ! ... perform a preliminary determination with the Gaussian broadening
+
+  open(unit=9909, status="replace", file="minimum_bisection.dat")
+  open(unit=66990, status="replace", file="efermig_out.dat")
+
+
+  ! Perform a preliminary determination with the Gaussian broadening
   ! to safely locate Ef mid-gap in the insulating case
-  !
-  !   Ngauss_ = 0 ! currently disabled
+  Ngauss_ = 0
+  maxiter_aux = maxiter
+
+  ! write(66990, *) 'Starting bisection :|'
+  call bisection_find_efermi(num_electrons_minus_nelec, Elw, Eup, ef, eps, maxiter_aux, info)
+  efermig = ef
+  WRITE( 66990, * ) NEW_LINE('a'), "     Bisection Fermi energy:", efermig*rytoev, " Num. electrons:", num_electrons(efermig)
+
+  ! Error handling
+  select case( info )
+    case( 1 )
+      IF (is /= 0) WRITE(66990, '(5x,"Spin Component #",i3)') is
+      WRITE( 66990, '(5x,"Warning: too many iterations in bisection" &
+        &      5x,"Ef = ",f15.6," N. electons = ",f10.6)' ) &
+        Ef * rytoev, num_electrons_minus_nelec(Ef) + nelec
+    case( 2 )
+      call errore( 'efermig', 'internal error, cannot bracket Ef', 1 )
+  end select
+
+  ! If this initial guess already corresponds to the correct number of electron for the actual occupation function, the solution we are done.
   Ngauss_ = Ngauss
-  !
-1 CONTINUE
-  !
-  sumkup = sumkg( et, nbnd, nks, wk, Degauss, Ngauss_, Eup, is, isk )
-  sumklw = sumkg( et, nbnd, nks, wk, Degauss, Ngauss_, Elw, is, isk )
-  IF ( (sumkup - nelec) < -eps .or. (sumklw - nelec) > eps )  &
-       CALL errore( 'efermig', 'internal error, cannot bracket Ef', 1 )
-  DO i = 1, maxiter
-     Ef = (Eup + Elw) / 2.d0
-     sumkmid = sumkg( et, nbnd, nks, wk, Degauss, Ngauss_, Ef, is, isk )
-     IF ( ABS( sumkmid-nelec ) < eps) THEN
-        efermig = Ef
-        ! refine the search with the input Ngauss value if not already done
-        IF (Ngauss /= Ngauss_) THEN
-           Elw = Ef - Degauss ; Eup = Ef + Degauss ; Ngauss_ = Ngauss
-           GOTO 1
-        ENDIF
-        RETURN
-     ELSEIF ( (sumkmid-nelec) < -eps) THEN
-        Elw = Ef
-     ELSE
-        Eup = Ef
-     ENDIF
-  ENDDO
-  IF (is /= 0) WRITE(stdout, '(5x,"Spin Component #",i3)') is
-  WRITE( stdout, '(5x,"Warning: too many iterations in bisection"/ &
-       &      5x,"Ef = ",f10.6," sumk = ",f10.6," electrons")' ) &
-       Ef * rytoev, sumkmid
-  !
-  efermig = Ef
-  !
-  !
-  RETURN
-  !
+
+  ! In case Ngauss = 0, the function returns here too.
+  if( abs_num_electrons_minus_nelec(ef) < eps .or. Ngauss == 0) then 
+    
+    efermig = ef
+    nelec_ef = num_electrons(efermig)
+    
+    WRITE( 66990, * ) NEW_LINE('a'), "     Final Fermi energy from Bisection using Gauss smearing:", efermig*rytoev,&
+                                     " Num. electrons:", nelec_ef
+
+    ! close(66990)
+    ! close(9909)
+    ! return
+    goto 98765
+  end if
+
+  ! If the initial prospection Ef did not provide the correct number of electrons, use Newton's methods to improve.
+  ! Use the prospected Ef as initial guess:
+
+  WRITE( 66990, * ) NEW_LINE('a'), "     Initial guess for Newton methods:", efermig*rytoev ,&
+                                  " Num. electrons:", num_electrons(efermig)
+
+  ! Save the initial prospection
+  Ef_initial_guess = ef
+
+  maxiter_aux = maxiter
+
+  if( Ngauss_ > 0 ) then ! If methfessel-paxton method
+
+    ! call newton_root_finding(abs_num_electrons_minus_nelec, dev1_num_electrons, ef, eps, maxiter_aux, info)
+    call newton_minimization(sq_num_electrons_minus_nelec, dev1_sq_num_electrons, dev2_sq_num_electrons, &
+                                                                                ef, eps, maxiter_aux, info)
+
+  elseif( Ngauss_ == -1 ) then ! Cold smearing method
+
+    call newton_minimization(num_electrons_minus_nelec, dev1_num_electrons, dev2_num_electrons, &
+                                                                                ef, eps, maxiter_aux, info)
+
+  end if
+
+  ! Error handling
+  select case( info )
+    case( 0 )
+
+      if( abs_num_electrons_minus_nelec(ef) < eps ) then
+        WRITE( 66990, * ) &
+           "    Newton's Success: mininum or root reached in ", maxiter_aux, " steps."
+      else 
+        WRITE( 66990, '(5x,"Warning: Newtons finished well, but the number of electron did not reach the required precision. " &
+            &      5x,"Ef = ",f15.6," Num. electrons = ",f10.6,"  Num. steps = ",i0)' ) &
+            Ef * rytoev, num_electrons(Ef), maxiter_aux
+      end if
+
+    case( 1 )
+
+      IF (is /= 0) WRITE(66990, '(5x,"Spin Component #",i3)') is
+      WRITE( 66990, '(5x,"Warning: too many iterations in Newtons"/ &
+         &      5x,"Ef = ",f15.6," Num. electrons = ",f10.6)' ) &
+         Ef * rytoev, num_electrons(Ef)
+
+    case( 2 )
+      ! In case the first or second derivatives go to zero, one should you bisection
+
+      ! methfessel-paxton
+      ! if( Ngauss_ > 0 ) call errore( 'efermig', 'internal error, first derivative went zero.', 1 )
+      if( Ngauss_ > 0 ) WRITE( 66990, '(5x,"Warning: first derivative went zero."/ &
+         &      5x,"Ef = ",f15.6," Num. electrons = ",f10.6,"  Num. steps = ",i0)' ) &
+         Ef * rytoev, num_electrons(Ef), maxiter_aux
+
+      ! ! Cold smearing
+      ! if( Ngauss_ == -1 ) call errore( 'efermig', 'internal error, second derivative went zero.', 1 )
+      if( Ngauss_ == -1 ) WRITE( 66990, '(5x,"Warning: second derivative went zero."/ &
+         &      5x,"Ef = ",f15.6," Num. electrons = ",f10.6,"  Num. steps = ",i0)' ) &
+         Ef * rytoev, num_electrons(Ef), maxiter_aux
+
+  end select
+
+  if( (Ngauss_ == -1 .and. abs_num_electrons_minus_nelec(ef) < eps_cold ) .or. &
+      (Ngauss_ >=  1 .and. abs_num_electrons_minus_nelec(ef) < eps_cold )       ) then
+    efermig = ef
+    nelec_ef = num_electrons(efermig)
+    WRITE( 66990, * ) NEW_LINE('a'), "     Final Fermi energy from Newton's method:", efermig*rytoev,&
+                                     " Num. electrons:", nelec_ef
+  else
+    Ngauss_ = Ngauss
+    maxiter_aux = maxiter
+
+    call bisection_find_efermi(num_electrons_minus_nelec, Elw, Eup, ef, eps, maxiter_aux, info)
+
+    efermig = ef
+    nelec_ef = num_electrons(efermig)
+    WRITE( 66990, * ) NEW_LINE('a'), "     Final Fermi energy from Bisection using Ngauss smearing:", efermig*rytoev,&
+                                     " Num. electrons:", nelec_ef
+    WRITE( 66990, '(5x, a)' ) "Warning: Your 'Degauss' is probably too high!"
+  end if
+
+  98765 continue
+
+  close(66990)
+  close(9909)
+
+  open(unit=9901, status="replace", file="num_electrons_gauss.dat")
+  open(unit=9902, status="replace", file="num_electrons.dat")
+  open(unit=9903, status="replace", file="dev1_num_electrons.dat")
+  open(unit=9904, status="replace", file="dev2_num_electrons.dat")
+  Eup = efermig+2.d0
+  Elw = efermig-2.d0
+  sumkup = (Eup - Elw)/1000.d0
+  ! write(unit=6611, fmt=*) 'Fermi energy        Number electrons'
+  do i = 0, 1000
+    ! write(66990, *) 'Starting bisection :-', i
+    ! write(66990, fmt=*) wk()
+    Ef = Elw + sumkup*i
+    
+    Ngauss_ = 0
+    write(unit=9901, fmt="(2f30.16)") Ef, num_electrons_minus_nelec(Ef)
+
+    Ngauss_ = Ngauss
+    if( Ngauss_ > 0 ) then
+      ! write(unit=9902, fmt="(2f30.16)") Ef, sq_num_electrons_minus_nelec(Ef)
+      write(unit=9902, fmt="(2f30.16)") Ef, num_electrons_minus_nelec(Ef)
+      write(unit=9903, fmt="(2f30.16)") Ef, dev1_sq_num_electrons(Ef)
+      write(unit=9904, fmt="(2f30.16)") Ef, dev2_sq_num_electrons(Ef)
+    else 
+      write(unit=9902, fmt="(2f30.16)") Ef, num_electrons_minus_nelec(Ef)
+      write(unit=9903, fmt="(2f30.16)") Ef, dev1_num_electrons(Ef)
+      write(unit=9904, fmt="(2f30.16)") Ef, dev2_num_electrons(Ef)
+    end if   
+    ! write(66990, *) 'Starting bisection :+', i
+  end do
+  close(9901)
+  close(9902)
+  close(9903)
+  close(9904)
+
+  open(unit=9907, status="replace", file="occupation_fuction_M-P.dat")
+  write(unit=9907, fmt="(a)") "# Ef      f(x)        f'(x)           f''(x) "
+
+  do i = 0, 1000
+    Ef = -10.d0 + (20.d0/1000.d0)*i
+    write(unit=9907, fmt="(4f30.16)") Ef, wgauss(Ef,1), w0gauss(Ef,1), w1gauss(Ef,1)
+  end do
+  close(9907)
+
+  return
+
+  contains
+
+  function num_electrons_minus_nelec(x)
+    real(DP), intent(in) :: x
+    real(DP) :: num_electrons_minus_nelec
+
+    num_electrons_minus_nelec = num_electrons(x) - nelec
+  end function num_electrons_minus_nelec
+
+  function num_electrons(ef)
+    real(DP), intent(in) :: ef
+    real(DP) :: num_electrons
+
+    num_electrons = sumkg( et, nbnd, nks, wk, Degauss, Ngauss_, ef, is, isk )
+  end function num_electrons
+
+  function abs_num_electrons_minus_nelec(ef)
+    real(DP), intent(in) :: ef
+    real(DP) :: abs_num_electrons_minus_nelec
+
+    abs_num_electrons_minus_nelec = abs(num_electrons_minus_nelec(ef))
+  end function abs_num_electrons_minus_nelec
+
+  function sq_num_electrons_minus_nelec(ef)
+    real(DP), intent(in) :: ef
+    real(DP) :: sq_num_electrons_minus_nelec
+
+    sq_num_electrons_minus_nelec = (num_electrons_minus_nelec(ef))**2
+  end function sq_num_electrons_minus_nelec
+
+  function dev1_num_electrons(ef)
+    real(DP), intent(in) :: ef
+    real(DP) :: dev1_num_electrons
+
+    dev1_num_electrons = sumkg1( et, nbnd, nks, wk, Degauss, Ngauss_, ef, is, isk )
+
+    ! if(Ngauss_ > 0 .and. num_electrons_minus_nelec(ef) < 0.d0 ) then
+    !    dev1_num_electrons = - dev1_num_electrons
+    ! end if
+  end function dev1_num_electrons
+
+  function dev2_num_electrons(ef)
+    real(DP), intent(in) :: ef
+    real(DP) :: dev2_num_electrons
+
+    dev2_num_electrons = sumkg2( et, nbnd, nks, wk, Degauss, Ngauss_, ef, is, isk )
+  end function dev2_num_electrons
+
+  function dev1_sq_num_electrons(ef)
+    real(DP), intent(in) :: ef
+    real(DP) :: dev1_sq_num_electrons
+
+    dev1_sq_num_electrons = 2.d0 * num_electrons_minus_nelec(ef) * dev1_num_electrons(ef)
+  end function dev1_sq_num_electrons
+
+  function dev2_sq_num_electrons(ef)
+    real(DP), intent(in) :: ef
+    real(DP) :: dev2_sq_num_electrons
+
+    dev2_sq_num_electrons = 2.d0 * ( (dev1_num_electrons(ef))**2 + num_electrons_minus_nelec(ef) * dev2_num_electrons(ef) )
+  end function dev2_sq_num_electrons
+
+  subroutine newton_minimization(f, f1, f2, x, tol, Nmax, info)
+    real(DP),          intent(inout) :: x
+    !! Initial guess in the entry. Solution in the exit
+    real(DP),          intent(in)    :: tol
+    integer,           intent(inout) :: Nmax
+    integer,           intent(out)   :: info
+    !! 0 = solution found; 1 = max number of step (Nmax) reached; 2 = second derivative is zero
+
+    real(DP)                         :: abstol, x0, denominator, numerator, factor
+    integer                          :: i
+    real(DP)                         :: f, f1, f2
+
+    abstol = abs(tol)
+
+    open(unit=9905, status="replace", file="minimum_newton_minimization.dat")
+    write(unit=9905, fmt=*) "#      ef (Ry)                N(ef)-N0  "
+    write(unit=9905, fmt=*) x, f(x)
+
+    write(66990, *) NEW_LINE('a'), "    -Newton's minimization method"
+
+    x0 = x
+
+    factor = 1.0d0
+
+    do i = 1, Nmax
+       
+       numerator   = f1(x)
+       denominator = abs(f2(x))
+       print *, 'i    x   numer and denom', i, x*rytoev, numerator, denominator
+
+       ! Checking if the denominator is zero
+       if( denominator > abstol ) then
+          x = x0 - factor*numerator/denominator
+          print *, 'x, f(x)', x*rytoev, f(x)
+          write(unit=9905, fmt=*) x, f(x)
+
+          ! Checking if a stationary point was achieved
+          if( abs(x0-x) < abstol .or.abs_num_electrons_minus_nelec(x) < abstol) then
+             info = 0
+             Nmax = i
+             close(9905)
+             return
+          ! If a stationary point was not achieved, continue
+          else
+             x0 = x
+          end if
+
+       ! If denominator is zero, return an error
+       else 
+          info = 2
+          close(9905)
+          return
+       end if
+    end do
+
+    ! Checking if max number of steps was reached
+    if( i > Nmax ) then
+      info = 1
+      close(9905)
+      return
+    end if 
+  end subroutine newton_minimization
+
+  subroutine newton_root_finding(f, f1, x, tol, Nmax, info)
+    real(DP),          intent(inout) :: x
+    !! Initial guess in the entry. Solution in the exit
+    real(DP),          intent(in)    :: tol
+    integer,           intent(inout) :: Nmax
+    integer,           intent(out)   :: info
+    !! 0 = solution found; 1 = max number of step (Nmax) reached; 2 = second derivative is zero
+
+    real(DP)                         :: abstol, x0, denominator, numerator, factor
+    integer                          :: i
+    real(DP)                         :: f, f1
+
+    abstol = abs(tol)
+
+    open(unit=9905, status="replace", file="minimum_newton_root.dat")
+    write(unit=9905, fmt=*) "#      ef (Ry)                N(ef)-N0  "
+    write(unit=9905, fmt=*) x, f(x)
+    write(66990, *) NEW_LINE('a'), "    -Newton's root finding method"
+
+    x0 = x
+
+    factor = 0.5d0
+
+    do i = 1, Nmax
+
+      numerator   = f(x)
+      denominator = f1(x)
+
+      ! Checking if the denominator is zero
+      if( abs(denominator) > abstol ) then
+        ! x = min( x0 - factor*numerator/denominator, 0.2d0 )
+        x = x0 - factor*numerator/denominator
+        write(unit=9905, fmt=*) x, f(x)
+
+        ! Checking if a stationary point was achieved
+        if( abs_num_electrons_minus_nelec(x) < abstol ) then
+        ! if( abs(x0-x) < abstol .or.abs_num_electrons_minus_nelec(x) < abstol ) then
+          info = 0
+          Nmax = i
+          close(9905)
+          return
+        ! If a stationary point was not achieved, continue
+        else
+          x0 = x
+        end if
+
+      ! If denominator is zero, return an error
+      else 
+        info = 2
+        close(9905)
+        return
+      end if
+    end do
+
+    ! Checking if max number of steps was reached
+    if( i > Nmax ) then
+       info = 1
+       close(9905)
+       return
+    end if 
+  end subroutine newton_root_finding
+
+  subroutine bisection_find_efermi(f, energy_lower_bound, energy_upper_bound, x, tol, Nmax, info)
+    real(DP),      intent(in)    :: energy_lower_bound
+    real(DP),      intent(in)    :: energy_upper_bound
+    real(DP),      intent(out)   :: x
+    !! Found Fermi energy at exit
+    real(DP),      intent(in)    :: tol
+    integer,       intent(inout) :: Nmax
+    !! In entry: Max number of steps. In exit: number of step taken.
+    integer,       intent(out)   :: info
+    !! 0 = solution found; 1 = max number of step (Nmax) reached; 2 = cannot bracket root
+
+    real(DP)                     :: abs_tol, fx, Elw_local, Eup_local
+    integer                      :: i
+    real(DP)                     :: f
+
+    abs_tol = abs(tol)
+
+    ! open(9909, status="unknown", file="minimum_bisection.dat")
+    write(9909, *) "#      ef (Ry)                N(ef)-N0 6"
+
+    write(66990,*) NEW_LINE('a'), "    -Bisection root finding method"   
+
+    Elw_local = energy_lower_bound
+    Eup_local = energy_upper_bound
+
+    ! write(66990, *) "Elw:", Elw_local*rytoev, " f(Elw):", f(Elw_local)
+    ! write(66990, *) "Eup:", Eup_local*rytoev, " f(Eup):", f(Eup_local)
+
+    if( f(Elw_local) > abs_tol .or. f(Eup_local) < -abs_tol ) then
+      info = 2
+      ! close(9909)
+      return
+    end if
+
+    do i = 1, Nmax
+
+      x = ( Eup_local + Elw_local ) * 0.5d0
+      fx = f(x)
+      write(unit=9909, fmt=*) x, fx
+
+      ! Was the root found?
+      if( abs(fx) < abs_tol ) then
+        info = 0
+        Nmax = i
+        ! close(9909)
+        return
+      else
+        ! Choosing new boundaries
+        if( fx < -abs_tol ) then
+          Elw_local = x
+        else
+          Eup_local = x
+        end if
+      end if
+    end do
+
+    ! Checking if max number of steps was reached
+    if( i > Nmax ) then
+      info = 1
+      ! close(9909)
+      return
+    end if 
+  end subroutine bisection_find_efermi
 END FUNCTION efermig
+
