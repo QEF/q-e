@@ -2,9 +2,6 @@ build:pw:
   tags: [docker]
   image: espressofoundation/ubuntu:latest
   script:
-    - apt-get update
-    - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
-    - apt-get install --yes cmake
     - ./configure
     - make pw
 #    - export OMP_NUM_THREADS=1
@@ -17,9 +14,6 @@ build:cp:
   tags: [docker]
   image: espressofoundation/ubuntu:latest
   script:
-    - apt-get update
-    - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
-    - apt-get install --yes cmake
     - ./configure
     - make cp
 #    - export OMP_NUM_THREADS=1
@@ -32,9 +26,6 @@ build:ph:
   tags: [docker]
   image: espressofoundation/ubuntu:latest
   script:
-    - apt-get update
-    - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
-    - apt-get install --yes cmake
     - ./configure
     - make ph
 #    - export OMP_NUM_THREADS=1
