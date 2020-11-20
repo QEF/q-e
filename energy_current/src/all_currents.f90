@@ -1,7 +1,7 @@
 program all_currents
    use kohn_sham_mod, only: trajdir, first_step,&
-           dvpsi_save, subtract_cm_vel, re_init_wfc_1, re_init_wfc_2,re_init_wfc_3,&
-           n_repeat_every_step, ethr_big_step, scf_all, &
+           subtract_cm_vel, re_init_wfc_1, re_init_wfc_2,re_init_wfc_3,&
+           n_repeat_every_step, ethr_big_step, &
            three_point_derivative, ave_cur, ethr_small_step, &
            init_kohn_sham, current_kohn_sham, &
            j_xc,j_hartree, delta_t, J_kohn, J_kohn_a, J_kohn_b, J_electron
@@ -11,7 +11,8 @@ program all_currents
    use ionic_mod, only : init_ionic, ionic_init_type, current_ionic, add_i_current_b, &
                        i_current, i_current_a, i_current_b, i_current_c, i_current_d, i_current_e
    use scf_result_mod, only : multiple_scf_result_allocate, &
-           scf_result_set_from_global_variables, multiple_scf_result_deallocate
+           scf_result_set_from_global_variables, multiple_scf_result_deallocate, &
+           multiple_scf_result
    USE environment, ONLY: environment_start, environment_end
    use io_global, ONLY: ionode
    use wavefunctions, only: evc
@@ -64,7 +65,11 @@ program all_currents
    real(kind=dp) :: vel_factor, eta
    real(kind=dp),allocatable :: tau_save(:,:),&
               tabr(:,:,:,:), H_g(:,:,:,:) ! current zero
-   !from ../PW/src/pwscf.f90
+   type(multiple_scf_result) :: scf_all ! kohn_sham & hartree
+   complex(kind=DP), allocatable :: dvpsi_save(:,:,:) ! to save the solution of the system between iterations (kohn_sham
+   logical :: save_dvpsi = .true. ! if true dvpsi_save is allocated and used
+
+      !from ../PW/src/pwscf.f90
    include 'laxlib.fh'
 
 !from ../PW/src/pwscf.f90
@@ -78,7 +83,7 @@ program all_currents
    IF (ionode) THEN
       CALL input_from_file()
       ! all_currents input
-      call read_all_currents_namelists(5,eta,n_max)
+      call read_all_currents_namelists(5,eta,n_max,save_dvpsi)
    endif
    ! PW input
    call read_namelists('PW', 5)
@@ -87,7 +92,7 @@ program all_currents
    call check_input()
 
    call mp_barrier(intra_pool_comm)
-   call bcast_all_current_namelist(eta, n_max)
+   call bcast_all_current_namelist(eta, n_max,save_dvpsi)
    if (vel_input_units == 'CP') then ! atomic units of cp are different
        vel_factor = 2.0_dp
        if (ionode)  &
@@ -137,6 +142,13 @@ program all_currents
                 ngm, gg, gstart, g, igtongl, gl, ngl, spline_ps, dq, &
                 upf, rgrid, nqxq) ! only once per all trajectory
    call init_kohn_sham()
+      if (save_dvpsi) then
+       if (.not. allocated(dvpsi_save)) then
+               allocate (dvpsi_save(npwx, nbnd,3))
+               dvpsi_save = (0.d0, 0.d0)
+       end if
+   end if
+
    call setup_nbnd_occ() ! only once per all trajectory
 
    if (ionode .and. first_step == 0) then !set velocities factor also in the input file step
@@ -239,7 +251,8 @@ program all_currents
           call current_hartree_xc(three_point_derivative,delta_t, scf_all, &
                   j_hartree, j_xc, nbnd, npw, npwx, dffts, psic, g, ngm, gstart, &
                 tpiba, omega, tpiba2)
-          call current_kohn_sham(J_kohn, J_kohn_a, J_kohn_b, J_electron, delta_t, &
+          call current_kohn_sham(J_kohn, J_kohn_a, J_kohn_b, J_electron, delta_t, scf_all, &
+                dvpsi_save, save_dvpsi, &
                 nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
                 tpiba2, at, vkb, nkb, xk, igk_k, g2kin, et)
           call write_results(traj,print_stat)
@@ -331,7 +344,7 @@ contains
 
    end subroutine
 
-   subroutine read_all_currents_namelists(iunit, eta, n_max)
+   subroutine read_all_currents_namelists(iunit, eta, n_max,save_dvpsi)
       use zero_mod
       use kohn_sham_mod
       use io_global, ONLY: stdout, ionode, ionode_id
@@ -339,6 +352,7 @@ contains
       integer, intent(in) :: iunit
       integer, intent(out) :: n_max
       real(dp), intent(out) :: eta
+      logical,intent(inout) :: save_dvpsi
       integer :: ios
       CHARACTER(LEN=256), EXTERNAL :: trimcheck
 
@@ -380,7 +394,7 @@ contains
 
    end subroutine
 
-   subroutine bcast_all_current_namelist(eta, n_max)
+   subroutine bcast_all_current_namelist(eta, n_max, save_dvpsi)
       use zero_mod
       use kohn_sham_mod
       use io_global, ONLY: stdout, ionode, ionode_id
@@ -389,6 +403,7 @@ contains
       implicit none
       integer, intent(inout) :: n_max
       real(dp), intent(inout) :: eta
+      logical,intent(inout) :: save_dvpsi
       CALL mp_bcast(trajdir, ionode_id, world_comm)
       CALL mp_bcast(delta_t, ionode_id, world_comm)
       CALL mp_bcast(eta, ionode_id, world_comm)

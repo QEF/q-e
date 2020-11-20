@@ -45,7 +45,7 @@ type scf_result
        use ions_base, only : tau
        use dynamics_module, only: vel
        implicit none
-       type(scf_result), intent(inout) :: t
+       type(scf_result), intent(in) :: t
 
        tau=t%tau
        vel=t%vel
@@ -57,7 +57,7 @@ type scf_result
        use ions_base, only : tau
        use dynamics_module, only: vel
        implicit none
-       type(scf_result), intent(inout) :: t
+       type(scf_result), intent(in) :: t
 
        evc=t%evc
        tau=t%tau

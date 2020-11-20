@@ -7,7 +7,10 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine project(ipol)
+module project_mod
+
+        contains
+subroutine project(ipol, dvpsi_save, save_dvpsi)
    !----------------------------------------------------------------------
    !
    ! On output: dvpsi contains P_c^+ x | psi_ik > in crystal axis
@@ -41,12 +44,13 @@ subroutine project(ipol)
    use mp, ONLY: mp_sum, mp_min, mp_max
    USE mp_global, ONLY: inter_pool_comm, intra_pool_comm
    USE eqv, ONLY: evq
-   use kohn_sham_mod, only: dvpsi_save, save_dvpsi
 
    implicit none
+   integer, intent(IN) :: ipol
+   logical, intent(in) :: save_dvpsi
+   complex(dp), intent(inout) :: dvpsi_save(:,:,:)
    !
    real(DP):: emin, emax
-   integer, intent(IN) :: ipol
    integer :: ik
    !
    ! Local variables
@@ -193,3 +197,5 @@ if (save_dvpsi) then
    return
 
 end subroutine project
+
+end module
