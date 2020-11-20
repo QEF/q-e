@@ -1403,8 +1403,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
           IF ( llondon ) WRITE ( stdout , 9074 ) elondon
           IF ( ldftd3 )  WRITE ( stdout , 9078 ) edftd3
           IF ( lxdm )    WRITE ( stdout , 9075 ) exdm
-          IF ( ts_vdw .and. .not. mbd_vdw )  WRITE ( stdout , 9076 ) 2.0d0*EtsvdW
-          IF ( mbd_vdw )  WRITE ( stdout , 9076 ) 2.0d0*Embdvdw
+          IF ( mbd_vdw ) THEN
+             WRITE ( stdout , 9076 ) 2.0d0*Embdvdw
+          ELSEIF ( ts_vdw ) THEN
+             WRITE ( stdout , 9076 ) 2.0d0*EtsvdW
+          ENDIF
           IF ( textfor)  WRITE ( stdout , 9077 ) eext
           IF ( tefield )            WRITE( stdout, 9064 ) etotefield
           IF ( gate )               WRITE( stdout, 9065 ) etotgatefield
