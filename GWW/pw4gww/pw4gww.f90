@@ -11,7 +11,6 @@
 ! Original version by Andrea Ferretti
 ! Modified mainly by Layla Martin-Samos
 ! Modified by Joe Stenuit
-! Modified by Joshua David Elliott November 2020 as JDE
 !
 !=----------------------------------------------------------------------------=!
   MODULE io_base_export
@@ -150,11 +149,7 @@ program gwl_punch
                                 scissor,&
                                 l_full,&
                                 n_full,&
-                                l_simple,&
-                                l_no_GW_just_screening,& ! JDE
-                                l_no_GW_bare_Coulomb,&   ! JDE
-                                no_GW_cg_maxit,&         ! JDE
-                                no_GW_cg_threshold       ! JDE
+                                l_simple
                  
  
   USE exchange_custom, ONLY : exchange_fast_dual
@@ -191,8 +186,7 @@ program gwl_punch
                                s_last_state,l_selfconsistent,l_whole_s,l_ts_eigen,l_frac_occ,num_nbndv_min,&
                                l_cond_pol_base,l_semicore,n_semicore,l_semicore_read, l_verbose, l_contour,&
                                l_real,exchange_fast_dual,l_bse,s_bse,dual_bse,l_big_system,extra_pw_cutoff,&
-                               l_list,l_scissor,scissor,l_full,n_full,l_simple,&
-                               l_no_GW_just_screening, l_no_GW_bare_Coulomb, no_GW_cg_maxit, no_GW_cg_threshold ! JDE
+                               l_list,l_scissor,scissor,l_full,n_full,l_simple
                     
 
   !
@@ -290,10 +284,6 @@ program gwl_punch
   l_full=.false.
   n_full=0
   l_simple=.false.
-  l_no_GW_just_screening=.false. ! JDE
-  l_no_GW_bare_coulomb=.false.   ! JDE
-  no_GW_cg_maxit=30              ! JDE
-  no_GW_cg_threshold=1.d-10      ! JDE
   !
   !    Reading input file
   !
@@ -414,10 +404,6 @@ program gwl_punch
   CALL mp_bcast(l_full, ionode_id, world_comm)
   CALL mp_bcast(n_full, ionode_id, world_comm)
   CALL mp_bcast(l_simple, ionode_id, world_comm)
-  CALL mp_bcast(l_no_GW_just_screening, ionode_id, world_comm)  ! JDE
-  CALL mp_bcast(l_no_GW_bare_coulomb, ionode_id, world_comm)    ! JDE
-  CALL mp_bcast(no_GW_cg_maxit, ionode_id, world_comm)          ! JDE
-  CALL mp_bcast(no_GW_cg_threshold, ionode_id, world_comm)      ! JDE
 
   call read_file 
 

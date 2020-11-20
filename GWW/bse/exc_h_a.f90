@@ -1,5 +1,3 @@
-! Modified by Joshua Elliott November 2020 as JDE
-
 subroutine exc_h_a(a_in,a_out,vstate,vstate_r,cstate,wcstate,fc) 
 !this subroutine applies the excitonic hamiltonian exc_h_a on a given vector
 !(a_in) and returns the transformed vector (a_out)
@@ -10,7 +8,7 @@ use bse_basic_structures
 
 use bse_wannier, ONLY:num_nbndv,l_truncated_coulomb, &
                       truncation_radius,l_fullbse,l_tdhf,l_lf,l_rpa,&
-                      l_contraction, l_read_www ! JDE
+                      l_contraction
 use pwcom
 USE wvfct,     ONLY : npwx
 !use io_files,  ONLY : find_free_unit,diropn
@@ -20,7 +18,6 @@ USE fft_custom_gwl
 USE mp,          ONLY :mp_barrier
 USE mp_world,             ONLY : world_comm
 USE contract_w
-USE direct_www, ONLY : direct_www_exc
 
 implicit none
 INTEGER, EXTERNAL :: find_free_unit
@@ -134,19 +131,11 @@ debug=.false.
         if(debug) write(stdout,*)  'DEBUG1'
         Call urot_a(a_in,a_rot,0)
         if(debug) write(stdout,*)  'DEBUG2'
-
-        ! JDE start
-        IF (l_read_www) THEN
-
-        ELSE        
-           if(.not.l_contraction) then
-              call direct_v_exc(a_rot,fc,a_dirv)
-           else
-              call contract_v_apply(a_rot,fc,a_dirv)
-           endif
-        END IF
-        ! JDE end
-
+        if(.not.l_contraction) then
+           call direct_v_exc(a_rot,fc,a_dirv)
+        else
+           call contract_v_apply(a_rot,fc,a_dirv)
+        endif
         if(debug) write(stdout,*)  'DEBUG3'
         call pc_operator_exc(a_dirv,vstate,1)
         if(debug) write(stdout,*)  'DEBUG4'
@@ -170,18 +159,13 @@ debug=.false.
            if(debug) then 
               write(stdout,*) 'Before direct_W_exc'
            endif
+
            !if(.true.) then !DEBUG
-           
-           ! JDE start
-           IF (l_read_www) THEN
-               call direct_www_exc(a_rot, fc, a_dirw)
-           ELSE
-              if(.not.l_contraction) then
-                 call direct_w_exc(a_rot,fc,a_dirw)
-              else
-                 call contract_w_apply(a_rot,fc,a_dirw)
-              endif
-           END IF
+           if(.not.l_contraction) then
+              call direct_w_exc(a_rot,fc,a_dirw)
+           else
+              call contract_w_apply(a_rot,fc,a_dirw)
+           endif
            call pc_operator_exc(a_dirw,vstate,1)
 
 !           and rotate back
