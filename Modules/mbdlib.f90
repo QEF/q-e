@@ -101,10 +101,10 @@ MODULE libmbd_interface
     USE input_parameters, ONLY : tforces, tstress
     IMPLICIT NONE
     IF (tforces) THEN
-      CALL errore( 'libmbd_interface', 'MBD forces currently unavailable (please turn tforces to false', 1 )
+      CALL errore( 'libmbd_interface', 'MBD forces currently unavailable (please turn tforces to false)', 1 )
     END IF
     IF (tstress) THEN
-      CALL errore( 'libmbd_interface', 'MBD stress currently unavailable (please turn tstress to false', 1 )
+      CALL errore( 'libmbd_interface', 'MBD stress currently unavailable (please turn tstress to false)', 1 )
     END IF
     RETURN
   END SUBROUTINE block_off_force_and_stress_calculation
