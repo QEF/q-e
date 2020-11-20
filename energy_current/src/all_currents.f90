@@ -1,15 +1,8 @@
 program all_currents
-   use kohn_sham_mod, only: trajdir, first_step,&
-           subtract_cm_vel, re_init_wfc_1, re_init_wfc_2,re_init_wfc_3,&
-           n_repeat_every_step, ethr_big_step, &
-           three_point_derivative, ave_cur, ethr_small_step, &
-           init_kohn_sham, current_kohn_sham, &
-           j_xc,j_hartree, delta_t, J_kohn, J_kohn_a, J_kohn_b, J_electron
+   use kohn_sham_mod, only: init_kohn_sham, current_kohn_sham, &
    use hartree_xc_mod, only: current_hartree_xc
-   use zero_mod, only: vel_input_units, init_zero, current_zero, &
-                       allocate_zero, deallocate_zero, z_current, ec_test
-   use ionic_mod, only : init_ionic, ionic_init_type, current_ionic, add_i_current_b, &
-                       i_current, i_current_a, i_current_b, i_current_c, i_current_d, i_current_e
+   use zero_mod, only: allocate_zero, deallocate_zero
+   use ionic_mod, only : init_ionic, ionic_init_type, current_ionic
    use scf_result_mod, only : multiple_scf_result_allocate, &
            scf_result_set_from_global_variables, multiple_scf_result_deallocate, &
            multiple_scf_result
@@ -38,7 +31,7 @@ program all_currents
 !from ../Modules/read_input.f90
    USE read_namelists_module, ONLY: read_namelists
    USE read_cards_module, ONLY: read_cards
-   use averages, only: online_average_init
+   use averages, only: online_average,online_average_init
 
 
    !routine_hartree and zero modules
@@ -58,16 +51,41 @@ program all_currents
 
    implicit none
 
+
+   type J_all
+   real(dp) :: i_current(3), i_current_a(3), i_current_b(3), i_current_c(3), i_current_d(3), i_current_e(3)
+    real(dp) ::z_current(3)
+   real(kind=DP) ::J_kohn(3), J_kohn_a(3), J_kohn_b(3), J_hartree(3), J_xc(3), J_electron(3)
+   real(kind=DP), allocatable :: v_cm(:, :)
+   end type
+
    integer :: exit_status, ios, irepeat, n_max
    logical :: print_stat
    type(cpv_trajectory) :: traj
    type(ionic_init_type) :: ionic_data
-   real(kind=dp) :: vel_factor, eta
    real(kind=dp),allocatable :: tau_save(:,:),&
               tabr(:,:,:,:), H_g(:,:,:,:) ! current zero
    type(multiple_scf_result) :: scf_all ! kohn_sham & hartree
    complex(kind=DP), allocatable :: dvpsi_save(:,:,:) ! to save the solution of the system between iterations (kohn_sham
+   real(kind=dp) :: vel_factor
+
+
+   real(kind=dp) :: eta
    logical :: save_dvpsi = .true. ! if true dvpsi_save is allocated and used
+  CHARACTER(len=256) :: file_output, trajdir = ''
+   type(online_average) :: ave_cur
+   real(kind=DP) ::delta_t, ethr_small_step, ethr_big_step
+   integer :: first_step, last_step, step_mul, step_rem, n_repeat_every_step
+   logical :: restart ! if true try to read last calculated step from output and set first_step
+   logical :: subtract_cm_vel ! if true do velocity renormalization
+   logical :: re_init_wfc_1=.false., re_init_wfc_2=.false. ! initialize again evc before scf step number 1 or 2
+   logical :: re_init_wfc_3=.false. ! initialize again evc before scf step number 1 or 2
+   logical :: three_point_derivative=.true. ! compute hartree derivative with 3 points
+  logical :: add_i_current_b = .false.
+   type(J_all) :: j
+   character(len=256) :: vel_input_units = 'PW'
+   logical :: ec_test ! activates tests for debugging purposes
+
 
       !from ../PW/src/pwscf.f90
    include 'laxlib.fh'
@@ -83,7 +101,17 @@ program all_currents
    IF (ionode) THEN
       CALL input_from_file()
       ! all_currents input
-      call read_all_currents_namelists(5,eta,n_max,save_dvpsi)
+      call read_all_currents_namelists(5,&
+          delta_t, &
+         file_output, trajdir, vel_input_units, &
+         eta, n_max, first_step, last_step, &
+         ethr_small_step, ethr_big_step, &
+         restart, subtract_cm_vel, step_mul, &
+         step_rem, ec_test, add_i_current_b, &
+         save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
+         re_init_wfc_3, three_point_derivative, &
+         n_repeat_every_step           )
+              
    endif
    ! PW input
    call read_namelists('PW', 5)
@@ -92,7 +120,16 @@ program all_currents
    call check_input()
 
    call mp_barrier(intra_pool_comm)
-   call bcast_all_current_namelist(eta, n_max,save_dvpsi)
+   call bcast_all_current_namelist(&
+          delta_t, &
+         file_output, trajdir, vel_input_units, &
+         eta, n_max, first_step, last_step, &
+         ethr_small_step, ethr_big_step, &
+         restart, subtract_cm_vel, step_mul, &
+         step_rem, ec_test, add_i_current_b, &
+         save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
+         re_init_wfc_3, three_point_derivative, &
+         n_repeat_every_step          )
    if (vel_input_units == 'CP') then ! atomic units of cp are different
        vel_factor = 2.0_dp
        if (ionode)  &
@@ -106,7 +143,7 @@ program all_currents
    endif
 
 
-   call set_first_step_restart()
+   call set_first_step_restart(restart, file_output, first_step)
    call iosys()    ! ../PW/src/input.f90    save in internal variables
    call check_stop_init() ! ../PW/src/input.f90
 
@@ -124,7 +161,7 @@ program all_currents
    if (first_step > 0) then
       if (ionode) &
          write (*, *) 'SKIPPING STEP FROM INPUT FILE'
-      if (.not. read_next_step(traj)) then
+      if (.not. read_next_step(traj,first_step, last_step, step_mul, step_rem)) then
          if (ionode) &
             write (*, *) 'NOTHING TO DO IN TRAJECTORY FILE'
          goto 100 ! skip everything and exit
@@ -168,10 +205,10 @@ program all_currents
       if (ionode) then
          if (subtract_cm_vel) then
             !calculates center of mass velocity for each atomic species and subtract it
-            call cm_vel(vel)
+            call cm_vel(j%v_cm, vel)
          else
             !calculates center of mass velocity only, without modifying velocities
-            call cm_vel()
+            call cm_vel(j%v_cm)
          end if
       endif
       if (n_repeat_every_step > 1) then
@@ -192,7 +229,7 @@ program all_currents
               print_stat=.false.
           end if
 
-          call prepare_next_step(-1) !-1 goes back by dt, so we are in t-dt. Inside, after setting tau, we call hinit1 and update_pot
+          call prepare_next_step(-1,delta_t, ethr_small_step, three_point_derivative) !-1 goes back by dt, so we are in t-dt. Inside, after setting tau, we call hinit1 and update_pot
           if (re_init_wfc_1) then
               call init_wfc(1)
               call sum_band()
@@ -203,7 +240,7 @@ program all_currents
           !save evc, tau and vel for t-dt
           call scf_result_set_from_global_variables(scf_all%t_minus)
           if (three_point_derivative) then
-              call prepare_next_step(1) !1 advance by dt (so we are in the original positions)
+              call prepare_next_step(1,delta_t, ethr_small_step, three_point_derivative) !1 advance by dt (so we are in the original positions)
               if (re_init_wfc_2) then ! eventually, to set a random initial evc to do statistical tests
                   call init_wfc(1)
                   call sum_band()
@@ -214,18 +251,18 @@ program all_currents
               if (exit_status /= 0) goto 100 !shutdown everything and exit
               !save evc, tau and vel for t
               call scf_result_set_from_global_variables(scf_all%t_zero)
-              call current_zero(z_current, tabr,H_g,&
+              call current_zero(j%z_current, tabr,H_g,&
                       nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                         vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
                         nkb, vkb, deeq, upf, nh, xk, igk_k, bg, ec_test ) ! routine zero should be called in t
               call current_ionic(ionic_data, &
-                      i_current, i_current_a, i_current_b, i_current_c, i_current_d, i_current_e, add_i_current_b, &
+                      j%i_current, j%i_current_a, j%i_current_b, j%i_current_c, j%i_current_d, j%i_current_e, add_i_current_b, &
                       nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
           else
               call scf_result_set_from_global_variables(scf_all%t_zero) !if we don't have 3pt derivative, zero and minus are equal
           end if
 
-          call prepare_next_step(1) !1 advances by dt, so we are in t+dt
+          call prepare_next_step(1,delta_t, ethr_small_step, three_point_derivative) !1 advances by dt, so we are in t+dt
           !if we don't do 3pt we are in t now
 
           if (re_init_wfc_3) then
@@ -239,26 +276,26 @@ program all_currents
           call scf_result_set_from_global_variables(scf_all%t_plus)
 
           if (.not. three_point_derivative) then
-              call current_zero(z_current, tabr, H_g,&
+              call current_zero(j%z_current, tabr, H_g,&
                       nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                         vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
                         nkb, vkb, deeq, upf, nh, xk, igk_k, bg, ec_test ) ! we are in t in this case, and we call here routine zero
               call current_ionic(ionic_data, &
-                      i_current, i_current_a, i_current_b, i_current_c, i_current_d, i_current_e, add_i_current_b, &
+                      j%i_current, j%i_current_a, j%i_current_b, j%i_current_c, j%i_current_d, j%i_current_e, add_i_current_b, &
                       nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
           end if
           !calculate second part of energy current
           call current_hartree_xc(three_point_derivative,delta_t, scf_all, &
-                  j_hartree, j_xc, nbnd, npw, npwx, dffts, psic, g, ngm, gstart, &
+                  j%j_hartree, j%j_xc, nbnd, npw, npwx, dffts, psic, g, ngm, gstart, &
                 tpiba, omega, tpiba2)
-          call current_kohn_sham(J_kohn, J_kohn_a, J_kohn_b, J_electron, delta_t, scf_all, &
+          call current_kohn_sham(j%J_kohn, j%J_kohn_a, j%J_kohn_b, j%J_electron, delta_t, scf_all, &
                 dvpsi_save, save_dvpsi, &
                 nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
                 tpiba2, at, vkb, nkb, xk, igk_k, g2kin, et)
-          call write_results(traj,print_stat)
+          call write_results(traj,print_stat,j,ave_cur)
       end do
       !read new velocities and positions and continue, or exit the loop
-      if (.not. read_next_step(traj)) exit
+      if (.not. read_next_step(traj,first_step, last_step, step_mul, step_rem)) exit
    end do
 
    ! shutdown stuff
@@ -274,12 +311,10 @@ program all_currents
 
 contains
 
-   subroutine write_results(traj,write_ave)
+   subroutine write_results(traj,write_ave,j,ave_cur)
       use kinds, only: dp
       use ions_base, ONLY: nsp
       use cell_base, only: alat
-      use kohn_sham_mod
-      use zero_mod
       use io_global, ONLY: ionode
       use cpv_traj, only: cpv_trajectory, cpv_trajectory_get_last_step
       use traj_object, only: timestep
@@ -287,6 +322,8 @@ contains
       implicit none
       type(cpv_trajectory), intent(in)  :: traj
       logical,intent(in) :: write_ave
+      type(j_all), intent(in) :: j
+      type(online_average), intent(inout) :: ave_cur
       type(timestep) :: ts
       integer :: iun, step, itype
       integer, external :: find_free_unit
@@ -304,18 +341,18 @@ contains
          iun = find_free_unit()
          open (iun, file=trim(file_output), position='append')
          write (iun, *) 'Passo: ', step
-         write (iun, '(A,10E20.12)') 'h&K-XC', J_xc(:)
-         write (iun, '(A,10E20.12)') 'h&K-H', J_hartree(:)
-         write (iun, '(A,1F15.7,9E20.12)') 'h&K-K', delta_t, J_kohn(1:3), J_kohn_a(1:3), J_kohn_b(1:3)
-         write (iun, '(A,3E20.12)') 'h&K-ELE', J_electron(1:3)
-         write (iun, '(A,3E20.12)') 'ionic:', i_current(:)
-         write (iun, '(A,3E20.12)') 'ionic_a:', i_current_a(:)
-         write (iun, '(A,3E20.12)') 'ionic_b:', i_current_b(:)
-         write (iun, '(A,3E20.12)') 'ionic_c:', i_current_c(:)
-         write (iun, '(A,3E20.12)') 'ionic_d:', i_current_d(:)
-         write (iun, '(A,3E20.12)') 'ionic_e:', i_current_e(:)
-         write (iun, '(A,3E20.12)') 'zero:', z_current(:)
-         J_tot =  J_xc + J_hartree + J_kohn + i_current + z_current
+         write (iun, '(A,10E20.12)') 'h&K-XC', j%J_xc(:)
+         write (iun, '(A,10E20.12)') 'h&K-H', j%J_hartree(:)
+         write (iun, '(A,1F15.7,9E20.12)') 'h&K-K', delta_t, j%J_kohn(1:3), j%J_kohn_a(1:3), j%J_kohn_b(1:3)
+         write (iun, '(A,3E20.12)') 'h&K-ELE', j%J_electron(1:3)
+         write (iun, '(A,3E20.12)') 'ionic:', j%i_current(:)
+         write (iun, '(A,3E20.12)') 'ionic_a:', j%i_current_a(:)
+         write (iun, '(A,3E20.12)') 'ionic_b:', j%i_current_b(:)
+         write (iun, '(A,3E20.12)') 'ionic_c:', j%i_current_c(:)
+         write (iun, '(A,3E20.12)') 'ionic_d:', j%i_current_d(:)
+         write (iun, '(A,3E20.12)') 'ionic_e:', j%i_current_e(:)
+         write (iun, '(A,3E20.12)') 'zero:', j%z_current(:)
+         J_tot =  j%J_xc + j%J_hartree + j%J_kohn + j%i_current + j%z_current
          write (iun, '(A,3E20.12)') 'total: ', J_tot
          write (*, '(A,3E20.12)') 'total energy current: ', J_tot
          close (iun)
@@ -324,10 +361,10 @@ contains
          !so we can read the file that here we are writing in the correct way
          open (iun, file=trim(file_output)//'.dat', position='append')
          write (iun, '(1I7,1E14.6,3E20.12,3E20.12)', advance='no') step, time, &
-            J_tot, J_electron(1:3)
+            J_tot, j%J_electron(1:3)
          do itype = 1, nsp
-            write (iun, '(3E20.12)', advance='no') alat*v_cm(:, itype)
-            write (*, '(A,1I3,A,3E20.12)') 'center of mass velocity of type ', itype, ': ', alat*v_cm(:, itype)
+            write (iun, '(3E20.12)', advance='no') alat*j%v_cm(:, itype)
+            write (*, '(A,1I3,A,3E20.12)') 'center of mass velocity of type ', itype, ': ', alat*j%v_cm(:, itype)
          end do
          write (iun, '(A)') ''
          close (iun)
@@ -344,17 +381,35 @@ contains
 
    end subroutine
 
-   subroutine read_all_currents_namelists(iunit, eta, n_max,save_dvpsi)
-      use zero_mod
-      use kohn_sham_mod
+   subroutine read_all_currents_namelists(iunit,&
+          delta_t, &
+         file_output, trajdir, vel_input_units, &
+         eta, n_max, first_step, last_step, &
+         ethr_small_step, ethr_big_step, &
+         restart, subtract_cm_vel, step_mul, &
+         step_rem, ec_test, add_i_current_b, &
+         save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
+         re_init_wfc_3, three_point_derivative, &
+         n_repeat_every_step           )
       use io_global, ONLY: stdout, ionode, ionode_id
       implicit none
       integer, intent(in) :: iunit
+   real(kind=dp), intent(inout) :: eta
+   logical, intent(inout) :: save_dvpsi 
+  CHARACTER(len=256), intent(inout) :: file_output, trajdir 
+   real(kind=DP), intent(inout) ::delta_t, ethr_small_step, ethr_big_step
+   integer, intent(inout) :: first_step, last_step, step_mul, step_rem, n_repeat_every_step
+   logical, intent(inout) :: restart
+   logical, intent(inout) :: subtract_cm_vel
+   logical, intent(inout) :: re_init_wfc_1, re_init_wfc_2
+   logical, intent(inout) :: re_init_wfc_3
+   logical, intent(inout) :: three_point_derivative
+  logical, intent(inout) :: add_i_current_b 
+   character(len=256), intent(inout) :: vel_input_units 
+   logical, intent(inout) :: ec_test ! activates tests for debugging purposes
       integer, intent(out) :: n_max
-      real(dp), intent(out) :: eta
-      logical,intent(inout) :: save_dvpsi
+
       integer :: ios
-      CHARACTER(LEN=256), EXTERNAL :: trimcheck
 
       NAMELIST /energy_current/ delta_t, &
          file_output, trajdir, vel_input_units, &
@@ -371,16 +426,16 @@ contains
       delta_t = 1.d0
       n_max = 5 ! number of periodic cells in each direction used to sum stuff in zero current
       eta = 1.d0 ! ewald sum convergence parameter
-!      init_linear = "nothing" ! 'scratch' or 'restart'. If 'scratch', saves a restart file in project routine. If 'restart', it starts from the saved restart file, and then save again it.
       file_output = "current_hz"
+      trajdir=''
       ethr_small_step = 1.d-7
       ethr_big_step = 1.d-3
       first_step = 0
       last_step = 0
-      restart = .false.
-      subtract_cm_vel = .false.
       step_mul = 1
       step_rem = 0
+      restart = .false.
+      subtract_cm_vel = .false.
       ec_test = .false.
       add_i_current_b = .false.
       save_dvpsi = .true.
@@ -388,22 +443,41 @@ contains
       re_init_wfc_2 = .false.
       re_init_wfc_3 = .false.
       three_point_derivative = .true.
+      vel_input_units='PW'
       n_repeat_every_step = 1
       READ (iunit, energy_current, IOSTAT=ios)
       IF (ios /= 0) CALL errore('main', 'reading energy_current namelist', ABS(ios))
 
    end subroutine
 
-   subroutine bcast_all_current_namelist(eta, n_max, save_dvpsi)
-      use zero_mod
-      use kohn_sham_mod
+   subroutine bcast_all_current_namelist( &
+          delta_t, &
+         file_output, trajdir, vel_input_units, &
+         eta, n_max, first_step, last_step, &
+         ethr_small_step, ethr_big_step, &
+         restart, subtract_cm_vel, step_mul, &
+         step_rem, ec_test, add_i_current_b, &
+         save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
+         re_init_wfc_3, three_point_derivative, &
+         n_repeat_every_step          )
       use io_global, ONLY: stdout, ionode, ionode_id
       use mp_world, ONLY: mpime, world_comm
       use mp, ONLY: mp_bcast
       implicit none
-      integer, intent(inout) :: n_max
-      real(dp), intent(inout) :: eta
-      logical,intent(inout) :: save_dvpsi
+   real(kind=dp), intent(inout) :: eta
+   logical, intent(inout) :: save_dvpsi 
+  CHARACTER(len=256), intent(inout) :: file_output, trajdir 
+   real(kind=DP), intent(inout) ::delta_t, ethr_small_step, ethr_big_step
+   integer, intent(inout) :: first_step, last_step, step_mul, step_rem, n_repeat_every_step
+   logical, intent(inout) :: restart
+   logical, intent(inout) :: subtract_cm_vel
+   logical, intent(inout) :: re_init_wfc_1, re_init_wfc_2
+   logical, intent(inout) :: re_init_wfc_3
+   logical, intent(inout) :: three_point_derivative
+  logical, intent(inout) :: add_i_current_b 
+   character(len=256), intent(inout) :: vel_input_units 
+   logical, intent(inout) :: ec_test
+      integer, intent(out) :: n_max
       CALL mp_bcast(trajdir, ionode_id, world_comm)
       CALL mp_bcast(delta_t, ionode_id, world_comm)
       CALL mp_bcast(eta, ionode_id, world_comm)
@@ -428,13 +502,15 @@ contains
 
    end subroutine
 
-   subroutine set_first_step_restart()
-      use kohn_sham_mod, only: restart, file_output, first_step
+   subroutine set_first_step_restart(restart, file_output, first_step)
       use io_global, ONLY: ionode, ionode_id
       use mp_world, ONLY: mpime, world_comm
       use mp, ONLY: mp_bcast
       use ions_base, ONLY: nsp
       implicit none
+      logical, intent(in) :: restart
+      CHARACTER(len=256), intent(in) :: file_output
+      integer, intent(inout) :: first_step
       integer :: iun, step, ios, i, step1
       integer, external :: find_free_unit
       real(dp) :: time, J(3), time1, J1(3), Jdummy(3)
@@ -504,12 +580,12 @@ contains
       ENDIF
    end subroutine
 
-   subroutine cm_vel(vel_cm)
+   subroutine cm_vel(v_cm, vel_cm)
       use kinds, only: dp
       use ions_base, ONLY: nat, nsp, ityp
       use dynamics_module, only: vel
-      use kohn_sham_mod, only: v_cm
       implicit none
+      real(dp), allocatable, intent(inout) :: v_cm(:,:)
       real(dp), intent(out), optional :: vel_cm(:, :)
       integer :: iatom, itype
       integer, allocatable :: counter(:)
@@ -536,7 +612,7 @@ contains
       deallocate (counter)
    end subroutine
 
-   subroutine prepare_next_step(ipm)
+   subroutine prepare_next_step(ipm, delta_t, ethr_small_step, three_point_derivative)
       USE extrapolation, ONLY: update_pot
       USE control_flags, ONLY: ethr
       use ions_base, ONLY: tau, tau_format, nat
@@ -545,11 +621,12 @@ contains
       use io_global, ONLY: ionode, ionode_id
       USE mp_world, ONLY: world_comm
       use mp, ONLY: mp_bcast, mp_barrier
-      use kohn_sham_mod, only: delta_t, ethr_small_step, three_point_derivative
-      use zero_mod, only: vel_input_units
       use wavefunctions, only: evc
       implicit none
+   real(kind=DP), intent(in) ::delta_t, ethr_small_step
+   logical, intent(in) :: three_point_derivative
       integer, intent(in) :: ipm
+
       if (ipm /= 0 .and. ipm /= -1 .and. ipm /= 1) &
            call errore('prepare_next_step', 'error: unknown timestep type')
       !broadcast
@@ -567,7 +644,7 @@ contains
 
    end subroutine
 
-   function read_next_step(t) result(res)
+   function read_next_step(t,first_step, last_step, step_mul, step_rem) result(res)
       USE extrapolation, ONLY: update_pot
       use cpv_traj, only: cpv_trajectory, cpv_trajectory_initialize, cpv_trajectory_deallocate, &
                           cpv_trajectory_read_step, cpv_trajectory_get_step
@@ -579,10 +656,8 @@ contains
       use io_global, ONLY: ionode, ionode_id
       USE mp_world, ONLY: world_comm
       use mp, ONLY: mp_bcast, mp_barrier
-      use zero_mod, only: vel_input_units
-      use kohn_sham_mod, only: first_step, last_step, ethr_big_step, &
-                             step_mul, step_rem
       implicit none
+   integer, intent(in) :: first_step, last_step, step_mul, step_rem
       type(cpv_trajectory), intent(inout) :: t
       type(timestep) :: ts
       logical :: res

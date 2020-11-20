@@ -5,24 +5,8 @@ MODULE zero_mod
    use fft_base
    use becmod
 
-   SAVE
-!non local potential variables
-   !real(DP), allocatable :: tabr(:, :, :, :), H_g(:, :, :, :)
-
-   !the component of the current here computed
-   real(dp) ::z_current(3)!, i_current(3), i_current_a(3), i_current_b(3), i_current_c(3), i_current_d(3), i_current_e(3)
-
-   character(len=256) :: vel_input_units = 'PW'
-   logical :: ec_test ! activates tests for debugging purposes
-
-   !input from stdout
-
-
 
 contains
-!!!!!!!!!!!!!!!!!!!
-
-
 
 subroutine init_zero(tabr, H_g, &
                 nsp, zv, tpiba2, tpiba, omega, at, alat, &

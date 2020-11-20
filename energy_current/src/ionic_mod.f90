@@ -8,9 +8,6 @@ USE kinds, ONLY: DP
          integer  :: n_max !cutoff per somme in griglia reale
          real(dp), allocatable :: I_uno_g(:, :, :), I_due_g(:)
       end type
-   logical :: add_i_current_b = .false.
-   real(dp) :: i_current(3), i_current_a(3), i_current_b(3), i_current_c(3), i_current_d(3), i_current_e(3)
-   !real(kind=DP)  :: eta !ewald factor for convergence
 
 contains
 

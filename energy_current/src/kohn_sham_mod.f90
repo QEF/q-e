@@ -1,30 +1,8 @@
 MODULE kohn_sham_mod
 
    USE kinds, ONLY: DP
-   use averages, only : online_average
    use scf_result_mod, only : scf_result, multiple_scf_result, scf_result_set_global_variables
 
-   SAVE
-
-
-   CHARACTER(len=256) :: file_output, trajdir = '' !, init_linear
-   real(kind=DP) ::J_kohn(3), J_kohn_a(3), J_kohn_b(3), J_hartree(3), J_xc(3), J_electron(3)
-   type(online_average) :: ave_cur
-   real(kind=DP), allocatable :: v_cm(:, :)
-
-   real(kind=DP) ::delta_t, ethr_small_step, ethr_big_step
-!   type(multiple_scf_result) :: scf_all ! to move
-
-   !complex(kind=DP), allocatable :: dvpsi_save(:,:,:) ! to save the solution of the system between iterations
-   !logical :: save_dvpsi = .true. ! if true dvpsi_save is allocated and used
-
-   integer :: first_step, last_step, step_mul, step_rem, n_repeat_every_step
-   logical :: restart ! if true try to read last calculated step from output and set first_step
-   logical :: subtract_cm_vel ! if true do velocity renormalization
-!   logical :: ec_test ! activates tests for debugging purposes
-   logical :: re_init_wfc_1=.false., re_init_wfc_2=.false. ! initialize again evc before scf step number 1 or 2
-   logical :: re_init_wfc_3=.false. ! initialize again evc before scf step number 1 or 2
-   logical :: three_point_derivative=.true. ! compute hartree derivative with 3 points
 
 
 contains
