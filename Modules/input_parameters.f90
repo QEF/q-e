@@ -1348,6 +1348,7 @@ MODULE input_parameters
           REAL(DP) :: exx_ps_rcut_pair
           REAL(DP) :: exx_me_rcut_self
           REAL(DP) :: exx_me_rcut_pair
+          LOGICAL  :: exx_use_cube_domain
 !=======================================================================
 
           INTEGER :: nit
@@ -1368,6 +1369,7 @@ MODULE input_parameters
           NAMELIST / wannier / wf_efield, wf_switch, sw_len, efx0, efy0, efz0,&
                                efx1, efy1, efz1, wfsd, wfdt,exx_neigh,exx_poisson_eps,&
                                exx_dis_cutoff,exx_ps_rcut_self, exx_me_rcut_self,   &
+                               exx_use_cube_domain,                      &
                                exx_ps_rcut_pair, exx_me_rcut_pair, vnbsp,&
                                maxwfdt, wf_q, wf_friction, nit, nsd, nsteps,  & 
                                tolw, adapt, calwf, nwf, wffort, writev

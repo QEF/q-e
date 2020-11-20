@@ -13,14 +13,15 @@ $ECHO
 $ECHO "This example shows how to use pw.x to perform electronic structure"
 $ECHO "calculations in the presence of a finite homogeneous electric field "
 $ECHO "described through the modern theory of the polarization. The example"
-$ECHO "shows how to calculate high-frequency dielectric constant of bulk Silicon"
+$ECHO "shows how to calculate the high-frequency dielectric constant of Si"
+$ECHO "and effective charges in AlAs"
 
 # set the needed environment variables
 . ../../../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x"
-PSEUDO_LIST="Si.pbe-rrkj.UPF"
+PSEUDO_LIST="Si.pbe-rrkj.UPF Al.pz-vbc.UPF As.pz-bhs.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -159,9 +160,93 @@ $PW_COMMAND < si.scf.efield2.in > si.scf.efield2.out
 check_failure $?
 $ECHO " done"
 
+cat > alas.scf.efield.in << EOF
+&control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='alas',
+    lelfield=.true.,
+    nberrycyc=1
+    pseudo_dir='$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+    tprnfor=.true.
+ /
+ &system
+    ibrav= 1, celldm(1)=10.60, nat=  8, ntyp= 2,
+    ecutwfc = 20.0
+ /
+ &electrons
+    diagonalization='david',
+    conv_thr =  1.0d-8,
+    mixing_beta = 0.5,
+    startingwfc='random',
+    efield_cart(1)=0.d0,efield_cart(2)=0.d0,efield_cart(3)=0.d0
+ /
+ATOMIC_SPECIES
+ Al  26.98 Al.pz-vbc.UPF
+ As  74.90 As.pz-bhs.UPF
+ATOMIC_POSITIONS alat
+ Al -0.125 -0.125 -0.125
+ Al  0.375  0.375 -0.125
+ Al  0.375 -0.125  0.375
+ Al -0.125  0.375  0.375
+ As  0.125  0.125  0.125
+ As  0.625  0.625  0.125
+ As  0.625  0.125  0.625
+ As  0.125  0.625  0.625
+K_POINTS {automatic}
+3 3 7 0 0 0
+EOF
+$ECHO "  running the PW calculation for AlAs E_field=0.0  a.u. ...\c"
+$PW_COMMAND < alas.scf.efield.in > alas.scf.efield.out
+check_failure $?
+$ECHO " done"
+
+cat > alas.scf.efield2.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='alas',
+    lelfield=.true.,
+    nberrycyc=3
+    pseudo_dir='$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+    tprnfor=.true.
+ /
+ &system
+    ibrav= 1, celldm(1)=10.60, nat=  8, ntyp= 2
+    ecutwfc = 20.0
+ /
+ &electrons
+    diagonalization='david',
+    conv_thr =  1.0d-8,
+    mixing_beta = 0.5,
+    startingwfc='random',
+    efield_cart(1)=0.d0,efield_cart(2)=0.d0,efield_cart(3)=0.001d0
+ /
+ATOMIC_SPECIES
+ Al  26.98 Al.pz-vbc.UPF
+ As  74.90 As.pz-bhs.UPF
+ATOMIC_POSITIONS alat
+ Al -0.125 -0.125 -0.125
+ Al  0.375  0.375 -0.125
+ Al  0.375 -0.125  0.375
+ Al -0.125  0.375  0.375
+ As  0.125  0.125  0.125
+ As  0.625  0.625  0.125
+ As  0.625  0.125  0.625
+ As  0.125  0.625  0.625
+K_POINTS {automatic}
+3 3 7 0 0 0
+EOF
+$ECHO "  running the PW calculation for AlAs E_field=0.001  a.u. ...\c"
+$PW_COMMAND < alas.scf.efield2.in > alas.scf.efield2.out
+check_failure $?
+$ECHO " done"
+
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/silicon*
+rm -rf $TMP_DIR/silicon $TMP_DIR/alas**
 $ECHO " done"
 
 $ECHO
