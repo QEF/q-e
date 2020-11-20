@@ -321,7 +321,9 @@ NAMELIST: &CONTROL
                         save charge to disk at each SCF step,
                         keep wavefunctions on disk (in "distributed" format),
                         save mixing data as well.
-                        Do not use this option unless you have a good reason to
+                        Do not use this option unless you have a good reason!
+                        It is no longer needed to specify 'high' in order to be able
+                        to restart from an interrupted calculation (see "restart_mode")
     
                    'medium' :
                         save charge to disk at each SCF step,
@@ -343,10 +345,7 @@ NAMELIST: &CONTROL
                         do not save anything to disk
     
                    Default is 'low' for the scf case, 'medium' otherwise.
-                   Note that the needed RAM increases as disk I/O decreases!
-                   It is no longer needed to specify 'high' in order to be able
-                   to restart from an interrupted calculation (see "restart_mode")
-                   but you cannot restart in "disk_io"=='nowf' or 'none'
+                   Note that the needed RAM increases as disk I/O decreases
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1277,7 +1276,7 @@ NAMELIST: &SYSTEM
                    simplest DFT+U+V calculation):
                    k=1 - interaction between standard orbitals (both on na and nb);
                    k=2 - interaction between standard (on na) and background (on nb) orbitals;
-                   k=3 - interaction between background orbitlas (both on na and nb);
+                   k=3 - interaction between background orbitals (both on na and nb);
                    k=4 - interaction between background (on na) and standard (on nb) orbitals.
                    Standard orbitals correspond to the main Hubbard channel (e.g. d electrons
                    in transition metals) and background orbitals correspond to the secondary
@@ -1763,7 +1762,8 @@ NAMELIST: &SYSTEM
    Type:           CHARACTER
    Default:        'none'
    See:            london_s6, london_rcut, london_c6, london_rvdw,
-                   dftd3_version, dftd3_threebody, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2
+                   dftd3_version, dftd3_threebody, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2,
+                   mbd_vdw
    Description:   
                    Type of Van der Waals correction. Allowed values:
     
@@ -1783,6 +1783,12 @@ NAMELIST: &SYSTEM
                         C6 coefficients.
                         Optional variables: "ts_vdw_econv_thr", "ts_vdw_isolated"
                         See A. Tkatchenko and M. Scheffler, PRL 102, 073005 (2009).
+    
+                   'mbd_vdw', 'many-body dispersion' :
+                        Many-body dipersion (MBD) correction to long-range interactions.
+                        Optional variables: "ts_vdw_isolated"
+                        A. Ambrosetti, A. M. Reilly, R. A. DiStasio, A. Tkatchenko1, J. Chem. Phys. 140
+                        18A508 (2014).
     
                    'XDM', 'xdm' :
                         Exchange-hole dipole-moment model. Optional variables: "xdm_a1", "xdm_a2"
@@ -1889,8 +1895,8 @@ NAMELIST: &SYSTEM
    
    Type:           LOGICAL
    Default:        .FALSE.
-   Description:    Optional: set it to .TRUE. when computing the Tkatchenko-Scheffler vdW energy
-                   for an isolated (non-periodic) system.
+   Description:    Optional: set it to .TRUE. when computing the Tkatchenko-Scheffler vdW energy or the
+                   Many-Body dispersion (MBD) energy for an isolated (non-periodic) system.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -3536,4 +3542,4 @@ CARD: ATOMIC_FORCES
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Tue Sep 29 12:44:54 CEST 2020
+This file has been created by helpdoc utility on Fri Nov 20 11:12:42 EST 2020

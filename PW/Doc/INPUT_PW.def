@@ -1731,10 +1731,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                  }
 
                  opt -val {'mbd_vdw', 'many-body dispersion'} {
-                     Many-body dipersion (MBD) correction to long-range interactions. 
+                     Many-body dipersion (MBD) correction to long-range interactions.
                      Optional variables: @ref ts_vdw_isolated
-                     A. Ambrosetti, A. M. Reilly, R. A. DiStasio, A. Tkatchenko1, J. Chem. Phys. 140 
-                     18A508 (2014). 
+                     A. Ambrosetti, A. M. Reilly, R. A. DiStasio, A. Tkatchenko1, J. Chem. Phys. 140
+                     18A508 (2014).
                  }
 
                  opt -val {'XDM', 'xdm'} {
