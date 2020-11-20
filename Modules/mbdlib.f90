@@ -65,6 +65,8 @@ MODULE libmbd_interface
     CALL errore( 'libmbd_interface', 'current xc functional not yet supported for MBD@rsSCS, use PBE, PBE0 or HSE', 1 )
   END SELECT
 
+  call block_off_force_and_stress_calculation
+
   !
   !Now comes the call to the library
   !
@@ -95,4 +97,15 @@ MODULE libmbd_interface
 
   END SUBROUTINE mbd_interface
 
+  SUBROUTINE  block_off_force_and_stress_calculation()
+    USE input_parameters, ONLY : tforces, tstress
+    IMPLICIT NONE
+    IF (tforces) THEN
+      CALL errore( 'libmbd_interface', 'MBD forces currently unavailable (please turn tforces to false', 1 )
+    END IF
+    IF (tstress) THEN
+      CALL errore( 'libmbd_interface', 'MBD stress currently unavailable (please turn tstress to false', 1 )
+    END IF
+    RETURN
+  END SUBROUTINE block_off_force_and_stress_calculation
 END MODULE libmbd_interface
