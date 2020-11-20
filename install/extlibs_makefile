@@ -149,7 +149,7 @@ libmbd:
 	if test ! -d ../MBD; then \
         mkdir ../MBD; \
 	(gzip -dc ../archive/libmbd-0.10.3.tar.gz | (cd ../MBD; tar -xvf -)); \
-	cd ../MBD/libmbd-0.10.3/src; export FXX=$(F90); export FXXOPT=$(F90FLAGS); \
+	cd ../MBD/libmbd-0.10.3/src; export FXX=$(F90); export FXXOPT="$(F90FLAGS)"; \
 	cp serial.make Makefile; $(MAKE) ; cp *.mod *.a ../..; cd ../.. ;fi
 
 libmbd_clean:
