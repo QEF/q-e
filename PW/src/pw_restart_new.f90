@@ -412,7 +412,7 @@ MODULE pw_restart_new
                     ts_vdw_econv_thr_ = vdw_econv_thr
                     ts_vdw_econv_thr_pt => ts_vdw_econv_thr_
                 ELSE IF ( mbd_vdw ) THEN
-                  dispersion_energy_term = 2._DP * EmbdvW/e2 - 2._DP * EtsvdW/e2 !avoiding double-counting
+                  dispersion_energy_term = 2._DP * EmbdvdW/e2 - 2._DP * EtsvdW/e2 !avoiding double-counting
                 END IF
             ELSE
                 vdw_corr_ = 'none'
