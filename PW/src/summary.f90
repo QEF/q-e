@@ -116,11 +116,11 @@ SUBROUTINE summary()
 104 FORMAT(5X, &
        &     'cutoff for Fock operator  = ',F12.4,'  Ry')
 105 FORMAT(5X, &
-       &     'convergence threshold     = ',1PE12.1,/,5X, &
+       &     'scf convergence threshold = ',1PE12.1,/,5X, &
        &     'mixing beta               = ',0PF12.4,/,5X, &
        &     'number of iterations used = ',I12,2X,A,' mixing')
 106 FORMAT(5X, &
-       &     'tot convergence thresh.   = ',1PE12.1,/,5X, &
+       &     'energy convergence thresh.= ',1PE12.1,/,5X, &
        &     'force convergence thresh. = ',1PE12.1)
 107 FORMAT(5X, &
        &     'press convergence thresh. = ',1PE12.1)
