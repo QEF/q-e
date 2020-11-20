@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
+! Modified by Joshua Elliott November 2020 as JDE
 
  SUBROUTINE produce_wannier_gamma
 
@@ -241,7 +241,14 @@
              endif
              deallocate(evc)
           endif
-          write(stdout,*) 'USE RESTART: 1'
+! JDE start
+          if (l_no_GW_just_screening) THEN
+             ! If no GW skip to bse
+             restart_gww=7
+          else
+             write(stdout,*) 'USE RESTART: 1'
+          end if
+! JDE end
           FLUSH(stdout)
 
           if(restart_gww <= 1) then
@@ -615,10 +622,22 @@
           allocate(tmp_rot(nbnd,nbnd))
           allocate( evc( npwx, nbnd ) )
 
+          ! JDE
+          IF (l_no_GW_just_screening) THEN
+             ALLOCATE (ewvc(npwx, nbnd, nspin))
+          END IF
+          ! JDE
+
           do is=1,nspin
              allocate(o_mat(num_nbndv(is),num_nbndv(is)))
              call davcio(evc,2*nwordwfc,iunwfc,is,-1)
-             
+
+             ! JDE
+             IF (l_no_GW_just_screening) THEN
+                ewvc(1:npwx,1:nbnd,is) = evc(1:npwx,1:nbnd)
+             END IF
+             ! JDE
+
              tmp_rot(:,:)=dble(u_trans(:,:,is))
              call rotate_wannier_gamma( tmp_rot,1,0)
              
@@ -630,7 +649,11 @@
 
           deallocate(tmp_rot)
           deallocate(evc)
-
+          ! JDE
+          IF (l_no_GW_just_screening) THEN
+             DEALLOCATE(ewvc)
+          END IF
+          ! JDE
           endif
 !NOT_TO_BE_INCLUDED_END
 

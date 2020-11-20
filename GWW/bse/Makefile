@@ -40,7 +40,8 @@ print_spectrum.o\
 print_bse.o\
 contract_w_exc.o\
 qpe_exc.o\
-qpcorrections.o
+qpcorrections.o\
+direct_www.o
 #zvscal_test.o\
 
 
