@@ -158,6 +158,7 @@ target_link_libraries(qe_modules
         QE::CLIB # this is needed only by wrappers.f90
         QE::libbeef
         QE::MPI_Fortran
+        QE::MBD
     PUBLIC
         QE::FOX
         QE::UTILX
