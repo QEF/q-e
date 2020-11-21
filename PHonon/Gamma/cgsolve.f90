@@ -64,7 +64,7 @@ SUBROUTINE cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
   IF (precondition) THEN
      CALL zvscal(npw,npwx,nbnd,diagonal,u,h)
   ELSE
-     CALL zcopy(npwx,u,1,h,1)
+     CALL zcopy(npwx*nbnd,u,1,h,1)
   ENDIF
   ! uu = <u|h>
   CALL pw_dot('Y',npw,nbnd,u,npwx,h,npwx,uu)
