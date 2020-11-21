@@ -1,5 +1,6 @@
 # Makefile for pw4gww (PW4GWW)
 # Author G. Stenuit and L. Martin-Samos
+# Modified Joshua Elliott November 2020 as JDE
 
 include ../../make.inc
 
@@ -44,7 +45,9 @@ mp_wave_parallel.o \
 wannier_bse.o\
 hpsi_pw4gww.o \
 cgsolve_all_gamma.o \
-realus.o 
+realus.o \
+operator_1_vp.o \
+operator_debug.o 
 
 QEMODS = ../../Modules/libqemod.a ../../upflib/libupf.a \
          ../../KS_Solvers/libks_solvers.a \
@@ -52,16 +55,17 @@ QEMODS = ../../Modules/libqemod.a ../../upflib/libupf.a \
          ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 # dft-d3 required by xlf for obscure reasons
 PWOBJS = ../../PW/src/libpw.a
+PHOBJS = ../../PHonon/Gamma/libphcg.a 
 
 LIBMIN= 
 
-TLDEPS= phlibs
+TLDEPS= phlibs 
 
 all : tldeps pw4gww.x
 
 pw4gww.x : pw4gww.o libpw4gww.a  $(PW4GWWOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) 
 	$(LD) $(LDFLAGS) -o $@ \
-	pw4gww.o libpw4gww.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(QELIBS)
+	pw4gww.o libpw4gww.a $(PWOBJS) $(PHOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(QELIBS) 
 	- ( cd ../../bin ; ln -fs ../GWW/pw4gww/$@ . )
 
 tldeps :
