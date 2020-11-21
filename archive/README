@@ -7,7 +7,7 @@ In the future, these files should be removed or replaced as follows:
 - lapack-3.6.1.tgz	fetch from git repository
 - libbeef-0.1.2.tar.gz	move to XClib directory
 - libmbd-0.10.3.tar.gz fetch from git repository
-- libmbd-0.10.3-non-cmake-makefiles.tar.gz (patched to add non-cmake support)
+- libmbd-0.10.3-non-cmake-makefiles.tar.gz (patches for libmbd-0.10.3.tar.gz to add non-cmake support)
 - plumed-1.3-qe.tar.gz  remove (is obsolete)
 
 
