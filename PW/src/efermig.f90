@@ -45,7 +45,6 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
   REAL(DP), PARAMETER :: eps = 1.0d-10
   REAL(DP), PARAMETER :: eps_cold = 1.0d-2
   INTEGER, PARAMETER :: maxiter = 300
-   !
   !
   REAL(DP) :: Ef, Eup, Elw, sumkup, sumklw, sumkmid
   REAL(DP), EXTERNAL :: sumkg, sumkg1, sumkg2
@@ -61,8 +60,8 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
   Elw = 1.0E+8
   Eup =-1.0E+8
   DO kpoint = 1, nks
-     Elw = MIN( Elw, et(1,kpoint) )
-     Eup = MAX( Eup, et(nbnd,kpoint) )
+    Elw = MIN( Elw, et(1,kpoint) )
+    Eup = MAX( Eup, et(nbnd,kpoint) )
   ENDDO
   Eup = Eup + 2 * Degauss
   Elw = Elw - 2 * Degauss
@@ -75,7 +74,6 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
 
   open(unit=9909, status="replace", file="minimum_bisection.dat")
   open(unit=66990, status="replace", file="efermig_out.dat")
-
 
   ! Perform a preliminary determination with the Gaussian broadening
   ! to safely locate Ef mid-gap in the insulating case
@@ -109,10 +107,6 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
     
     WRITE( 66990, * ) NEW_LINE('a'), "     Final Fermi energy from Bisection using Gauss smearing:", efermig*rytoev,&
                                      " Num. electrons:", nelec_ef
-
-    ! close(66990)
-    ! close(9909)
-    ! return
     goto 98765
   end if
 
@@ -135,8 +129,10 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
 
   elseif( Ngauss_ == -1 ) then ! Cold smearing method
 
-    call newton_minimization(num_electrons_minus_nelec, dev1_num_electrons, dev2_num_electrons, &
+    call newton_minimization(sq_num_electrons_minus_nelec, dev1_sq_num_electrons, dev2_sq_num_electrons, &
                                                                                 ef, eps, maxiter_aux, info)
+    ! call newton_minimization(num_electrons_minus_nelec, dev1_num_electrons, dev2_num_electrons, &
+    !                                                                             ef, eps, maxiter_aux, info)
 
   end if
 
@@ -161,7 +157,7 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
          Ef * rytoev, num_electrons(Ef)
 
     case( 2 )
-      ! In case the first or second derivatives go to zero, one should you bisection
+      ! In case the first or second derivatives go to zero, one should use bisection
 
       ! methfessel-paxton
       ! if( Ngauss_ > 0 ) call errore( 'efermig', 'internal error, first derivative went zero.', 1 )
@@ -208,10 +204,7 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
   Eup = efermig+2.d0
   Elw = efermig-2.d0
   sumkup = (Eup - Elw)/1000.d0
-  ! write(unit=6611, fmt=*) 'Fermi energy        Number electrons'
   do i = 0, 1000
-    ! write(66990, *) 'Starting bisection :-', i
-    ! write(66990, fmt=*) wk()
     Ef = Elw + sumkup*i
     
     Ngauss_ = 0
@@ -219,16 +212,16 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
 
     Ngauss_ = Ngauss
     if( Ngauss_ > 0 ) then
-      ! write(unit=9902, fmt="(2f30.16)") Ef, sq_num_electrons_minus_nelec(Ef)
       write(unit=9902, fmt="(2f30.16)") Ef, num_electrons_minus_nelec(Ef)
       write(unit=9903, fmt="(2f30.16)") Ef, dev1_sq_num_electrons(Ef)
       write(unit=9904, fmt="(2f30.16)") Ef, dev2_sq_num_electrons(Ef)
     else 
       write(unit=9902, fmt="(2f30.16)") Ef, num_electrons_minus_nelec(Ef)
-      write(unit=9903, fmt="(2f30.16)") Ef, dev1_num_electrons(Ef)
-      write(unit=9904, fmt="(2f30.16)") Ef, dev2_num_electrons(Ef)
+      write(unit=9903, fmt="(2f30.16)") Ef, dev1_sq_num_electrons(Ef)
+      write(unit=9904, fmt="(2f30.16)") Ef, dev2_sq_num_electrons(Ef)
+      ! write(unit=9903, fmt="(2f30.16)") Ef, dev1_num_electrons(Ef)
+      ! write(unit=9904, fmt="(2f30.16)") Ef, dev2_num_electrons(Ef)
     end if   
-    ! write(66990, *) 'Starting bisection :+', i
   end do
   close(9901)
   close(9902)
@@ -336,12 +329,10 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
        
        numerator   = f1(x)
        denominator = abs(f2(x))
-       print *, 'i    x   numer and denom', i, x*rytoev, numerator, denominator
 
        ! Checking if the denominator is zero
        if( denominator > abstol ) then
           x = x0 - factor*numerator/denominator
-          print *, 'x, f(x)', x*rytoev, f(x)
           write(unit=9905, fmt=*) x, f(x)
 
           ! Checking if a stationary point was achieved
@@ -450,7 +441,6 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
 
     abs_tol = abs(tol)
 
-    ! open(9909, status="unknown", file="minimum_bisection.dat")
     write(9909, *) "#      ef (Ry)                N(ef)-N0 6"
 
     write(66990,*) NEW_LINE('a'), "    -Bisection root finding method"   
@@ -458,12 +448,8 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
     Elw_local = energy_lower_bound
     Eup_local = energy_upper_bound
 
-    ! write(66990, *) "Elw:", Elw_local*rytoev, " f(Elw):", f(Elw_local)
-    ! write(66990, *) "Eup:", Eup_local*rytoev, " f(Eup):", f(Eup_local)
-
     if( f(Elw_local) > abs_tol .or. f(Eup_local) < -abs_tol ) then
       info = 2
-      ! close(9909)
       return
     end if
 
@@ -477,7 +463,6 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
       if( abs(fx) < abs_tol ) then
         info = 0
         Nmax = i
-        ! close(9909)
         return
       else
         ! Choosing new boundaries
@@ -492,7 +477,6 @@ FUNCTION efermig( et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk )
     ! Checking if max number of steps was reached
     if( i > Nmax ) then
       info = 1
-      ! close(9909)
       return
     end if 
   end subroutine bisection_find_efermi
