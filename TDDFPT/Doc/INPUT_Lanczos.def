@@ -35,11 +35,6 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 
 	label { This namelist is always needed ! }
 
-	var title  -type CHARACTER {
-	    info { A string describing the job. }
-	    status { OPTIONAL }
-	}
-
 	var prefix -type CHARACTER { 
 	    default { 'pwscf' }
 	    info {
