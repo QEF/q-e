@@ -12,4 +12,4 @@
 	url = https://gitlab.com/max-centre/components/devicexlib.git
 [submodule "external/mbd"]
 	path = external/mbd
-	url = https://github.com/kosinyj/libmbd.git
+	url = https://github.com/jhrmnn/libmbd.git
