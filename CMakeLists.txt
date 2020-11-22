@@ -85,8 +85,13 @@ option(QE_ENABLE_CUDA
     "enable CUDA acceleration on NVIDIA GPUs" OFF)
 option(QE_ENABLE_DOC
     "enable documentation building" OFF)
+<<<<<<< HEAD
 set(QE_FFTW_VENDOR "AUTO" CACHE 
     STRING "select a specific FFTW library [Intel_DFTI, Intel_FFTW3, ArmPL, IBMESSL, FFTW3, Internal]")
+=======
+option(QE_FFTW_VENDOR
+    "select a specific FFTW library [Intel_DFTI, Intel_FFTW3, ArmPL, IBMESSL, FFTW3, Internal]" OFF)
+>>>>>>> 0079f9ffe59fc3e282b6686bda7633b5a4ee9ab6
 
 # TODO change all ifdefs throughout code base to match
 # cmake options
