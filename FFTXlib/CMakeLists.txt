@@ -38,7 +38,8 @@ if(QE_FFTW_VENDOR STREQUAL "AUTO")
             set(qe_fft_wrappers fft_scalar.FFTW3.f90)
             target_link_libraries(qe_fft INTERFACE FFTW3)
         else()
-            # Cannot find anything useful, just fall back to the internal FFTW
+            message(STATUS "CMake variable FFTW3_ROOT may be used to hint the root directory of FFTW3 installation.")
+            # Cannot find anything useful, just point out internal FFTW fallback.
             message(FATAL_ERROR "Failed to find an external FFTW library. "
                                 "Alternatively, '-DQE_FFTW_VENDOR=Internal' may be used to enable reference FFTW "
                                 "at a performance loss compared to optimized libraries.")
@@ -53,7 +54,7 @@ elseif(QE_FFTW_VENDOR MATCHES "Intel")
         qe_add_global_compile_definitions(__FFTW3)
         set(qe_fft_wrappers fft_scalar.FFTW3.f90)
     else()
-        message(FATAL_ERROR "The FFTW Intel library '${QE_FFTW_VENDOR}' is not supported!")
+        message(FATAL_ERROR "The unknown Intel FFTW library '${QE_FFTW_VENDOR}' is not supported!")
     endif()
     if(QE_ENABLE_OPENMP)
         SET(BLA_VENDOR Intel10_64lp)
