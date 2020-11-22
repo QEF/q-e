@@ -143,16 +143,14 @@ set(f_sources
     fft_types.f90
     tg_gather.f90
     fft_helper_subroutines.f90
-    fft_param.f90
-)
+    fft_param.f90)
 
 if(QE_ENABLE_CUDA)
   set(f_sources ${f_sources}
       fft_scatter_gpu.f90
       fft_scatter_2d_gpu.f90
       fft_buffers.f90
-      fft_scalar.cuFFT.f90
-  )
+      fft_scalar.cuFFT.f90)
 endif()
 
 set(c_sources
