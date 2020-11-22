@@ -39,7 +39,7 @@ if(QE_FFTW_VENDOR STREQUAL "AUTO")
             target_link_libraries(qe_fft INTERFACE FFTW3)
         else()
             # Cannot find anything useful, just fall back to the internal FFTW
-            message(FATAL_ERROR "Failed to find a complete set of external FFTW library. "
+            message(FATAL_ERROR "Failed to find an external FFTW library. "
                                 "Alternatively, '-DQE_FFTW_VENDOR=Internal' may be used to enable reference FFTW "
                                 "at a performance loss compared to optimized libraries.")
 
