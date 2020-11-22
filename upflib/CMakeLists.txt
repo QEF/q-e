@@ -34,6 +34,7 @@ set(sources
     write_upf_schema.f90 
     write_upf_v2.f90 
     xmltools.f90
+    ylmr2.f90
 )
 
 qe_add_library(qe_upflib ${sources})

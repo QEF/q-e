@@ -138,7 +138,6 @@ set(sources
     date_and_tim.f90 
     volume.f90 
     dylmr2.f90 
-    ylmr2.f90 
     wgauss.f90 
     w0gauss.f90
     w1gauss.f90
