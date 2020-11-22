@@ -42,6 +42,7 @@ kohn_sham_mod.o : compute_charge.o
 kohn_sham_mod.o : averages.o
 kohn_sham_mod.o : scf_result.o
 kohn_sham_mod.o : project.o
+kohn_sham_mod.o : test_h_psi_s_psi_commutator_Hx_psi.o
 zero_mod.o : compute_charge.o
 allocate_zero.o : ../../upflib/atom.o
 allocate_zero.o : ../../Modules/fft_base.o

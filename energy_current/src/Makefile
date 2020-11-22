@@ -16,6 +16,7 @@ MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../LA
 LIBOBJS=  ../../clib/clib.a ../../UtilXlib/libutil.a ../../KS_Solvers/DENSE/libdense.a ../../dft-d3/libdftd3qe.a ../../KS_Solvers/PPCG/libppcg.a ../../KS_Solvers/ParO/libparo.a $(QELIBS)
 
 ALLCURRENTSOBJS = \
+test_h_psi_s_psi_commutator_Hx_psi.o\
 hartree_xc_mod.o\
 kohn_sham_mod.o\
 zero_mod.o\

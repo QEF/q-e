@@ -47,6 +47,9 @@ program all_currents
    use fft_base, only: dffts
    use atom, only: rgrid
 
+   ! testing only!!!
+   use test_h_psi, only : init_test
+
    implicit none
 
    type J_all
@@ -247,6 +250,7 @@ program all_currents
             if (exit_status /= 0) goto 100 !shutdown everything and exit
             !save evc, tau and vel for t
             call scf_result_set_from_global_variables(scf_all%t_zero)
+            call init_test(evc) ! TESTING ONLY
             call current_zero(j%z_current, tabr, H_g, &
                               nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                               vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
@@ -273,6 +277,7 @@ program all_currents
 
          if (.not. three_point_derivative) then
             ! we are in t in this case, so we call here routines that do not compute numerical derivatives
+            call init_test(evc) ! TESTING ONLY
             call current_zero(j%z_current, tabr, H_g, &
                               nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                               vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &

@@ -40,6 +40,9 @@ contains
       use compute_charge_mod, only: compute_charge
       use project_mod, only: project
 
+
+      use test_h_psi, only : test
+
       implicit none
 
       type(multiple_scf_result), intent(in) :: scf_all
@@ -71,7 +74,7 @@ contains
 
       !---------------------------------KOHN------------------------------------------------
       call start_clock('kohn_current')
-      call scf_result_set_global_variables(scf_all%t_zero) ! this set evc, tau and vel from saved values
+      call scf_result_set_global_variables(scf_all%t_zero) ! this set evc, becp, vkb, tau and vel from saved values
       allocate (dpsi(npwx, nbnd))
       allocate (dvpsi(npwx, nbnd))
 ! For preconditioning:
@@ -86,6 +89,7 @@ contains
       call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
       call allocate_bec_type(nkb, nbnd, becp)
       call calbec(npw, vkb, evc, becp)
+      call test
 
       sa = 0.d0
       sb = 0.d0
