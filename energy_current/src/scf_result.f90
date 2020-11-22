@@ -7,6 +7,7 @@ module scf_result_mod
       complex(kind=dp), allocatable :: evc(:, :)
       REAL(DP), ALLOCATABLE :: vrs(:,:)
       type(bec_type) :: becp
+      complex(dp),allocatable :: vkb(:,:) 
       real(kind=dp), allocatable :: tau(:, :), vel(:, :)
    end type
    type multiple_scf_result
@@ -22,6 +23,7 @@ contains
       allocate (t%vrs(nnr,nspin))
       allocate (t%tau(3, natoms))
       allocate (t%vel(3, natoms))
+      allocate (t%vkb(npwx, nkb))
       call allocate_bec_type(nkb, nbnd, t%becp)
    end subroutine
 
@@ -33,6 +35,7 @@ contains
       call deallocate_bec_type(t%becp)
       deallocate (t%vel)
       deallocate (t%tau)
+      deallocate (t%vkb)
    end subroutine
 
    subroutine scf_result_set_from_global_variables(t)
@@ -40,12 +43,14 @@ contains
       use ions_base, only: tau
       use dynamics_module, only: vel
       use scf, only : vrs
+      use uspp, only: vkb
       use becmod, only : becp
       implicit none
       type(scf_result), intent(inout) :: t
 
       t%evc = evc
       t%vrs = vrs
+      t%vkb = vkb
       if (allocated(becp%r)) &
          t%becp%r = becp%r
       if (allocated(becp%k)) &
@@ -80,12 +85,14 @@ contains
       use ions_base, only: tau
       use dynamics_module, only: vel
       use scf, only : vrs
+      use uspp, only : vkb
       use becmod, only : becp
       implicit none
       type(scf_result), intent(in) :: t
 
       evc = t%evc
       vrs = t%vrs
+      vkb = t%vkb
       if (allocated(becp%r)) &
          becp%r = t%becp%r
       if (allocated(becp%k)) &
