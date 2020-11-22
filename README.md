@@ -1,41 +1,40 @@
 ![q-e-logo](logo.jpg)
 
-> This is the distribution of the Quantum ESPRESSO suite of codes (ESPRESSO:
-> opEn-Source Package for Research in Electronic Structure, Simulation, and
-> Optimization).
+This is the distribution of the Quantum ESPRESSO suite of codes (ESPRESSO:
+opEn-Source Package for Research in Electronic Structure, Simulation, and
+Optimization)
 
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
 ## USAGE
 
-Quick installation instructions for the impatient:
-
+Quick installation instructions for the impatient, using "make":
+(`[]` means "optional"):
 ```
 ./configure [options]
 make all
 ```
+"make" alone prints a list of acceptable targets. Optionally,
+`make -jN` runs parallel compilation on `N` processors.
+Link to binaries are found in bin/.
 
-("make" alone prints a list of acceptable targets). Binaries go in bin/.
-
-Quick CMake installation instructions for the impatient:
+Using "CMake":
 
 ```
 mkdir ./build
 cd ./build
 cmake [-DCMAKE_INSTALL_PREFIX=/path/to/install] ..
-make [-j$(nproc)]
+make [-jN]
 [make install]
 ```
-
-("make" builds all targets). Binaries go in build/bin.
-
-- _CMAKE_INSTALL_PREFIX_: If 'make install' is invoked,
-this directory is prepended onto all install directories.
-- _make -j$(nproc)_: run parallel compilation
+"make" builds all targets. Link to binaries are found in build/bin.
+If `make install` is invoked, directory `CMAKE_INSTALL_PREFIX`
+is prepended onto all install directories.
 
 For more information, see the general documentation in directory Doc/, 
 package-specific documentation in \*/Doc/, and the web site 
-http://www.quantum-espresso.org/
+http://www.quantum-espresso.org/. Documentation for developers 
+can be found on [Wiki page on gitlab](https://gitlab.com/QEF/q-e/-/wikis/home).
 
 ## PACKAGES
 
@@ -58,11 +57,16 @@ The following libraries have been isolated and partially encapsulated in view of
 - LAXlib: parallel distributed dense-matrix diagonalization, using ELPA, SCALapack, or a custom algorithm.
 - KS Solver: parallel iterative diagonalization for the Kohn-Sham Hamiltonian (represented as an operator),using block Davidson and band-by-band or block Conjugate-Gradient algorithms.
 - LRlib: performs a variety of tasks connected with (time-dependent) DFPT, to be used also in connection with Many-Body Perturbation Theory.
+- upflib: pseudopotential-related code
+
+## GPU-enabled version
+Quantum ESPRESSO for GPU's (currently only NVidia) can be found in the
+[q-e-gpu repository](gitlab.com/QEF/q-e-gpu).
 
 ## Contributing
-Before contributing please read the [Contribution Guidelines](CONTRIBUTING.md).
-
-
+Quantum ESPRESSO is an open project: contributions are welcome.
+Read the [Contribution Guidelines](CONTRIBUTING.md) to see how you
+can contribute.
 
 ## LICENSE
 

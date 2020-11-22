@@ -7,7 +7,6 @@ The following files are always present in the repository:
 release-notes      What is new in the current release + list of fixed bugs
                    (only those that were present in some official release)
 user-guide.tex     User guide
-developer-man.tex  Developers' manual
 brillouin_zone.tex Pictures of the labels defined inside the Brillouin zones.
 plumed_quick_ref.tex 
                    An introduction to the usage of PLUMED with QE
