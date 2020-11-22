@@ -151,7 +151,8 @@ set_target_properties(qe_cpv_cppp_exe PROPERTIES OUTPUT_NAME cppp.x)
 target_link_libraries(qe_cpv_cppp_exe
     PRIVATE
         QE::Modules
-        QE::CPV)
+        QE::CPV
+        QE::CLIB)
 
 ###########################################################
 # wfdd.x
