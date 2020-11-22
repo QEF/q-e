@@ -635,9 +635,7 @@
     !! degaussw0 = (ismear-1) * delta_smear + degaussw
     REAL(KIND = DP) :: inv_degaussw0
     !! Inverse degaussw0 for efficiency reasons
-    REAL(KIND = DP) :: eptemp0
-    !!eptemp0   = (ismear-1) * delta_smear + eptem
-    REAL(KIND = DP) :: inv_eptemp0
+    REAL(KIND = DP) :: inv_eptemp
     !! Inverse of temperature define for efficiency reasons
     REAL(KIND = DP) :: lambda_tot
     !! Integrated lambda function
@@ -720,12 +718,11 @@
       DO ismear = 1, nsmear
         !
         degaussw0 = (ismear - 1) * delta_smear + degaussw
-        eptemp0   = (ismear - 1) * delta_smear + gtemp(itemp)
         !
         ! SP: Multiplication is faster than division ==> Important if called a lot
         !     in inner loops
         inv_degaussw0 = one / degaussw0
-        inv_eptemp0   = one / eptemp0
+        inv_eptemp   = one / gtemp(itemp)
         !
         ! Fermi level and corresponding DOS
         !
@@ -815,7 +812,7 @@
                 IF (delta_approx) THEN
                   w0g1 = w0gauss(ekk * inv_degaussw0, 0) * inv_degaussw0
                 ELSE
-                  wgkk = wgauss(-ekk * inv_eptemp0, -99)
+                  wgkk = wgauss(-ekk * inv_eptemp, -99)
                 ENDIF
                 !
                 DO jbnd = 1, nbndfst
@@ -845,7 +842,7 @@
                     !
                   ELSE
                     !
-                    wgkq = wgauss(-ekq * inv_eptemp0, -99)
+                    wgkq = wgauss(-ekq * inv_eptemp, -99)
                     !
                     ! = k-point weight * [f(E_k) - f(E_k+q)] / [E_k+q - E_k - w_q + id]
                     ! This is the imaginary part of the phonon self-energy, sans
