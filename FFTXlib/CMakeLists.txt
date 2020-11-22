@@ -29,7 +29,7 @@ else()
     message(STATUS "No vendor FFTW found")
 
     if(QE_ENABLE_OPENMP)
-        find_package(FFTW COMPONENTS DOUBLE_OPENMP)
+	    find_package(FFTW COMPONENTS DOUBLE DOUBLE_OPENMP)
     else()
         find_package(FFTW COMPONENTS DOUBLE)
     endif()
