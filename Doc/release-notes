@@ -21,6 +21,7 @@ Fixed in 6.7 version:
 Incompatible changes in 6.7 version:
   * FoX  no longer used to read and write pseudopotential files
   * iotk no longer used to read and write any file
+  * Developer manual moved to the Wiki
 
 New in v.6.6:
   * vdW-DF3-opt1, vdW-DF3-opt2, and vdW-DF-C6 van der Waals functionals
