@@ -1,7 +1,7 @@
 LATEX   = pdflatex
 LATEX2HTML = latex2html
 
-PDFS = constraints_HOWTO.pdf  user_guide.pdf plumed_quick_ref.pdf brillouin_zones.pdf
+PDFS = constraints_HOWTO.pdf  user_guide.pdf brillouin_zones.pdf
 AUXS = $(PDFS:.pdf=.aux)
 LOGS = $(PDFS:.pdf=.log)
 OUTS = $(PDFS:.pdf=.out)
