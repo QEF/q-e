@@ -1,7 +1,8 @@
 MODULE kohn_sham_mod
 
    USE kinds, ONLY: DP
-   use scf_result_mod, only: scf_result, multiple_scf_result, scf_result_set_global_variables
+   use scf_result_mod, only: scf_result, multiple_scf_result, scf_result_set_global_variables, &
+           scf_result_set_tau_vel_global_variables
 
 contains
 
@@ -39,6 +40,7 @@ contains
       USE funct, ONLY: get_igcx, get_igcc
       use compute_charge_mod, only: compute_charge
       use project_mod, only: project
+      use extrapolation, only : update_pot
 
 
       use test_h_psi, only : test
@@ -74,9 +76,19 @@ contains
 
       !---------------------------------KOHN------------------------------------------------
       call start_clock('kohn_current')
-      call scf_result_set_global_variables(scf_all%t_zero) ! this set evc, becp, vkb, tau and vel from saved values
+      call scf_result_set_tau_vel_global_variables(scf_all%t_zero) ! this set evc, becp, vkb, tau and vel from saved values
       allocate (dpsi(npwx, nbnd))
       allocate (dvpsi(npwx, nbnd))
+! init potentials needed to evaluate  H|psi>
+      call update_pot()
+      call hinit1()
+      call scf_result_set_global_variables(scf_all%t_zero) ! this set evc, becp, vkb, tau and vel from saved values
+      call sum_band()
+      !call init_us_1()
+      !call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
+      call allocate_bec_type(nkb, nbnd, becp)
+      call calbec(npw, vkb, evc, becp)
+      call test
 ! For preconditioning:
       do ig = 1, npw
          igk_k(ig, 1) = ig
@@ -84,12 +96,6 @@ contains
                       (xk(2, 1) + g(2, igk_k(ig, 1)))**2 + &
                       (xk(3, 1) + g(3, igk_k(ig, 1)))**2)*tpiba2
       end do
-! init potentials needed to evaluate  H|psi>
-      call init_us_1()
-      call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
-      call allocate_bec_type(nkb, nbnd, becp)
-      call calbec(npw, vkb, evc, becp)
-      call test
 
       sa = 0.d0
       sb = 0.d0
