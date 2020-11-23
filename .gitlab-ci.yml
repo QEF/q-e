@@ -48,11 +48,9 @@ build:cmake-gnu:
 
 build:pgi:
   tags: [docker]
-  image: nvcr.io/hpc/pgi-compilers:ce
+  image: nvcr.io/nvidia/nvhpc:20.9-devel-centos7
   script:
     - ./configure FC=pgf90 F90=pgf90 F77=pgfortran MPIF90=mpif90 --enable-openmp --with-cuda=yes --enable-cuda-env-check=no
-    - apt-get install --reinstall make
-    - ln -s /usr/bin/cpp /bin/cpp # workaround bug in autotools
     - make pw cp ph
 
 #build:centos:

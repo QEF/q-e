@@ -1868,7 +1868,7 @@ NAMELIST: &WANNIER
    
    Type:           INTEGER
    Default:        60
-   Description:    An initial guess on the maximum number of neighboring (overlapping) Wannier functions.
+   Description:    An initial guess on the maximum number of neighboring (overlapping) MLWFs.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1876,8 +1876,9 @@ NAMELIST: &WANNIER
    
    Type:           REAL
    Default:        8.0
-   Description:    Radial cutoff distance (in bohr) for including overlapping Wannier function pairs
+   Description:    Radial cutoff distance (in bohr) for including overlapping MLWF pairs
                    in EXX calculations.
+                   See J. Chem. Theory Comput. 16, 3757–3785 (2020).
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1889,14 +1890,27 @@ NAMELIST: &WANNIER
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
+   Variable:       exx_use_cube_domain
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    Use cubic instead of spherical subdomains as local supports during computation
+                   of the EXX potential. If set to .TRUE., the spherical domain
+                   radii (exx_ps_rcut_self, exx_ps_rcut_pair, exx_me_rcut_self, exx_me_rcut_pair)
+                   will be treated as half of the side length of the cubic subdomain.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
    Variable:       exx_ps_rcut_self
    
    Type:           REAL
    Default:        6.0
    Description:    Radial cutoff distance (in bohr) to compute the self EXX energy.
                    This distance determines the radius of the Poisson sphere centered at
-                   a given Wannier function center, and should be large enough to cover
-                   the majority of the orbital charge density.
+                   a given MLWF center, and should be large enough to cover
+                   the majority of the MLWF charge density.
+                   See J. Chem. Theory Comput. 16, 3757–3785 (2020).
+   See:            exx_use_cube_domain
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1906,9 +1920,11 @@ NAMELIST: &WANNIER
    Default:        5.0
    Description:    Radial cutoff distance (in bohr) to compute the pair EXX energy.
                    This distance determines the radius of the Poisson sphere centered at
-                   the midpoint of two overlapping Wannier functions, and should be
-                   large enough to cover the majority of the orbital overlap charge density.
+                   the midpoint of two overlapping MLWFs, and should be
+                   large enough to cover the majority of the MLWF product density.
                    This parameter can generally be chosen as smaller than exx_ps_rcut_self.
+                   See J. Chem. Theory Comput. 16, 3757–3785 (2020).
+   See:            exx_use_cube_domain
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1917,9 +1933,13 @@ NAMELIST: &WANNIER
    Type:           REAL
    Default:        10.0
    Description:    Radial cutoff distance (in bohr) for the multipole-expansion sphere
-                   centered at a given Wannier function center.
-                   The far-field self EXX potential in this sphere is generated with
-                   multipole expansion of the orbital charge density.
+                   centered at a given MLWF center.
+                   The far-field self EXX potential in this sphere is generated with a
+                   multipole expansion of the MLWF charge density.
+                   This parameter must be larger than exx_ps_rcut_self by at least 3
+                   real-space grid point spacings.
+                   See J. Chem. Theory Comput. 16, 3757–3785 (2020).
+   See:            exx_use_cube_domain
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1928,10 +1948,14 @@ NAMELIST: &WANNIER
    Type:           REAL
    Default:        7.0
    Description:    Radial cutoff distance (in bohr) for the multipole-expansion sphere
-                   centered at the midpoint of two overlapping Wannier functions.
+                   centered at the midpoint of two overlapping MLWFs.
                    The far-field pair EXX potential in this sphere is generated with
-                   a multipole expansion of the orbital overlap charge density.
-                   This parameter can generally be chosen as smaller than exx_me_rcut_self.
+                   a multipole expansion of the MLWF product density.
+                   This parameter must be larger than exx_ps_rcut_pair by at least 3
+                   real-space grid point spacings. Also, this parameter can generally
+                   be chosen as smaller than exx_me_rcut_self.
+                   See J. Chem. Theory Comput. 16, 3757–3785 (2020).
+   See:            exx_use_cube_domain
    +--------------------------------------------------------------------
    
 ===END OF NAMELIST======================================================
@@ -2493,4 +2517,4 @@ CARD: AUTOPILOT
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Fri Jul 17 10:28:25 CEST 2020
+This file has been created by helpdoc utility on Wed Nov 11 12:06:08 EST 2020
