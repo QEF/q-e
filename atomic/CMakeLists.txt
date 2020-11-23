@@ -115,11 +115,11 @@ target_link_libraries(qe_atomic_exe
     PRIVATE
         QE::UPF
         QE::Modules
-        QE::ATOMIC)
+        QE::ATOMIC
+        QE::UTILX)
 
 ###########################################################
 
 qe_install_targets(
     qe_atomic
-    qe_atomic_exe
-)
+    qe_atomic_exe)

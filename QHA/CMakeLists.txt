@@ -48,8 +48,7 @@ set(sources
     Debye/d1mach.f
     Debye/debye3.f
     Debye/Debye.f90
-    Debye/Debye_T.f
-)
+    Debye/Debye_T.f)
 qe_add_executable(qe_qha_debye_exe ${sources})
 set_target_properties(qe_qha_debye_exe PROPERTIES OUTPUT_NAME Debye.x)
 
@@ -63,8 +62,7 @@ set(sources
     Phonon_DOS/det3.f
     Phonon_DOS/det4.f
     Phonon_DOS/Tetrahedra.f
-    Phonon_DOS/Integration.f
-)
+    Phonon_DOS/Integration.f)
 qe_add_executable(qe_qha_phonondos_exe ${sources})
 set_target_properties(qe_qha_phonondos_exe PROPERTIES OUTPUT_NAME phonon_dos.x)
 
@@ -76,8 +74,7 @@ set(sources
     Phonon_DOS/k_brillouin.f
     Phonon_DOS/generate_tetra.f 
     Phonon_DOS/det3.f
-    Phonon_DOS/det4.f
-)
+    Phonon_DOS/det4.f)
 qe_add_executable(qe_qha_tetra_exe ${sources})
 set_target_properties(qe_qha_tetra_exe PROPERTIES OUTPUT_NAME tetra.x)
 
@@ -92,5 +89,4 @@ qe_install_targets(
     qe_qha_partialphonondos_exe
     qe_qha_debye_exe
     qe_qha_phonondos_exe
-    qe_qha_tetra_exe
-)
+    qe_qha_tetra_exe)

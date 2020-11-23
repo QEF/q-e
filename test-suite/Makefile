@@ -144,8 +144,8 @@ clean:
 # pwscf data files
 	@rm -rf pw_*/pwscf.* ph_*/pwscf.* pp_*/pwscf.* epw_*/pwscf.*
 # cp data files
-	@rm -rf cp_si/si_*.* cp_o2/o2_*.* cp_h2o/h2o_*.* cp_sio2/sio2_*.*
-	@rm -rf cp_si/si.??? cp_o2/o2.??? cp_h2o/h2o.??? cp_sio2/sio2.???
+	@rm -rf cp_si/si_*.* cp_o2/o2_*.* cp_h2o*/h2o_*.* cp_sio2/sio2_*.*
+	@rm -rf cp_si/si.??? cp_o2/o2.??? cp_h2o*/h2o.??? cp_sio2/sio2.???
 # Special case for 'pw_vc-relax' test-case
 	@rm -f pw_vc-relax/ave pw_vc-relax/e pw_vc-relax/tv pw_vc-relax/p pw_vc-relax/eal pw_vc-relax/avec
 # Special case for 'noexe_langevin' test-case
