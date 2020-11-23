@@ -446,7 +446,5 @@ xc_vdW_DF.o : mp_images.o
 xc_vdW_DF.o : recvec.o
 xsf.o : constants.o
 xsf.o : kind.o
-ylmr2.o : constants.o
-ylmr2.o : kind.o
 environment.o : ../include/configure.h
 version.o : ../include/qe_version.h

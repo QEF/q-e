@@ -342,7 +342,7 @@ tar-qe-modes :
 # NOTICE about "make doc": in order to build the .html and .txt
 # documentation in Doc, "tcl", "tcllib", "xsltproc" are needed;
 # in order to build the .pdf files in Doc, "pdflatex" is needed;
-# in order to build html files for user guide and developer manual,
+# in order to build html files for the user guide,
 # "latex2html" and "convert" (from Image-Magick) are needed.
 doc : 
 	if test -d Doc ; then \
