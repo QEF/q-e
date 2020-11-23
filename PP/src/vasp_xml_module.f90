@@ -102,7 +102,6 @@ SUBROUTINE readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
   USE klist,                ONLY : nkstot, nks, xk, wk
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, nbndx, et, wg
-  USE symm_base,            ONLY : irt, d1, d2, d3, checkallsym, nsym
   USE extfield,             ONLY : forcefield, tefield, gate, forcegate
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE fft_base,             ONLY : dfftp
@@ -916,7 +915,6 @@ END SUBROUTINE vasp_init_vars_from_schema
     USE constants,        ONLY : e2
     USE cell_base,        ONLY : at, bg, alat, omega, cell_base_init
     USE ions_base,        ONLY : nat, nsp
-    USE symm_base,        ONLY : nsym
     USE gvect,            ONLY : ngm_g, ecutrho
     USE fft_base,         ONLY : dfftp
     USE gvecs,            ONLY : ngms_g, dual
@@ -1001,7 +999,6 @@ END SUBROUTINE vasp_init_vars_from_schema
     USE constants,        ONLY : e2, ANGSTROM_AU 
     USE cell_base,        ONLY : at, alat, omega
     USE ions_base,        ONLY : nat, nsp, ityp, tau, zv, atm
-    USE symm_base,        ONLY : nsym
     USE gvect,            ONLY : ngm_g, ecutrho
     USE fft_base,         ONLY : dfftp
     USE gvecs,            ONLY : ngms_g, dual
@@ -1050,7 +1047,6 @@ END SUBROUTINE vasp_init_vars_from_schema
     USE constants,        ONLY : e2
     USE cell_base,        ONLY : at, alat, omega
     USE ions_base,        ONLY : nat, nsp, ityp, tau, atm
-    USE symm_base,        ONLY : nsym
     USE gvect,            ONLY : ngm_g, ecutrho
     USE fft_base,         ONLY : dfftp
     USE gvecs,            ONLY : ngms_g, dual

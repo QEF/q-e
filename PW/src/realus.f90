@@ -1850,7 +1850,8 @@ MODULE realus
 
       IF( dffts%has_task_groups ) CALL errore( 's_psir_gamma', 'task_groups not implemented', 1 )
 
-      ALLOCATE( w1(nhm), w2(nhm) ) ; if ( ibnd+1 > last) w2 = 0.D0
+      ALLOCATE( w1(nhm), w2(nhm) )
+      IF ( ibnd+1 > last) w2 = 0.D0
       !
       fac = sqrt(omega)
       !
@@ -2009,7 +2010,8 @@ MODULE realus
   !
   fac = sqrt(omega)
   !
-  ALLOCATE( w1(nhm), w2(nhm) ) ; IF ( ibnd+1 > last) w2 = 0.D0
+  ALLOCATE( w1(nhm), w2(nhm) )
+  IF ( ibnd+1 > last) w2 = 0.D0
   DO nt = 1, nsp
      !
      DO ia = 1, nat

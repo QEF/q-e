@@ -12,7 +12,9 @@ MODULE xmltools
   ! Poor-man set of tools for reading and writing xml files
   ! Similar to iotk but much simpler - Paolo Giannozzi, June 2020 
   ! Limitations: too many to be listed in detail. Main ones:
-  ! * works on a single opened file at the time
+  ! * works on a single opened file at the time. Exception:
+  !   while a file is opened, one can open, R/W, close another file,
+  !   but it is not possible to operate on both files at the same time
   ! * lines no more than 1024 characters long (see maxline parameter)
   ! * no more than 9 levels of tags (see maxlevel parameter)
   ! * length of tags no more than 80 characters (see maxlength parameter)
@@ -42,6 +44,7 @@ MODULE xmltools
   INTEGER :: xmlunit
   INTEGER, PARAMETER :: maxline=1024
   CHARACTER(LEN=maxline) :: line
+  INTEGER :: xmlsave = -1, nopen = 0
   INTEGER :: eot
   ! eot points to the end of tag in line just scanned
   INTEGER :: nattr
@@ -93,6 +96,8 @@ CONTAINS
 
   SUBROUTINE get_i_attr ( attrname, attrval_i )
     !
+    ! returns attrval_i=0 if not found or not readable
+    !
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN) :: attrname
     INTEGER, INTENT(OUT) :: attrval_i
@@ -101,14 +106,18 @@ CONTAINS
     !
     CALL get_c_attr ( attrname, attrval_c )
     if ( len_trim(attrval_c) > 0 ) then
-       READ (attrval_c,*) attrval_i
-    else
-       attrval_i = 0
+       READ (attrval_c,*, err=1) attrval_i
+       return
+1      print '("Error reading attribute ",a,": expected integer, found ",a)', &
+            trim(attrname), trim(attrval_c)
     end if
+    attrval_i = 0
     !
   END SUBROUTINE get_i_attr
   !
   SUBROUTINE get_l_attr ( attrname, attrval_l )
+    !
+    ! returns attrval_l=.false. if not found or not readable
     !
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN) :: attrname
@@ -118,14 +127,18 @@ CONTAINS
     !
     CALL get_c_attr ( attrname, attrval_c )
     if ( len_trim(attrval_c) > 0 ) then
-       READ (attrval_c,*) attrval_l
-    else
-       attrval_l = .false.
+       READ (attrval_c,*, err=1) attrval_l
+       return
+1      print '("Error reading attribute ",a,": expected logical, found ",a)', &
+            trim(attrname), trim(attrval_c)
     end if
+    attrval_l = .false.
     !
   END SUBROUTINE get_l_attr
   !
   SUBROUTINE get_r_attr ( attrname, attrval_r )
+    !
+    ! returns attrval_r=0 if not found or not readable
     !
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN) :: attrname
@@ -135,14 +148,18 @@ CONTAINS
     !
     CALL get_c_attr ( attrname, attrval_c )
     if ( len_trim(attrval_c) > 0 ) then
-       READ (attrval_c,*) attrval_r
-    else
-       attrval_r = 0.0_dp
+       READ (attrval_c,*, err=1) attrval_r
+       return
+1      print '("Error reading attribute ",a,": expected real, found ",a)', &
+            trim(attrname), trim(attrval_c)
     end if
+    attrval_r = 0.0_dp
     !
   END SUBROUTINE get_r_attr
   !
   SUBROUTINE get_c_attr ( attrname, attrval_c )
+    !
+    ! returns attrval_c='' if not found
     !
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN) :: attrname
@@ -236,9 +253,17 @@ CONTAINS
     CHARACTER(LEN=*), INTENT(in) :: filexml
     INTEGER :: iun, ios
     !
+    IF ( nopen > 1 ) THEN
+       print "('cannot open file ',a,': two xml files already opened')",&
+               trim(filexml)
+       iun = -1
+       RETURN
+    END IF
     OPEN ( NEWUNIT=iun, FILE=filexml, FORM='formatted', STATUS='unknown', &
          IOSTAT=ios)
     IF ( ios /= 0 ) iun = -1
+    nopen = nopen + 1
+    IF ( nopen > 1 ) xmlsave = xmlunit
     xmlunit = iun
     nlevel = 0
     open_tags(nlevel) = 'root'
@@ -255,7 +280,9 @@ CONTAINS
 #if defined ( __debug )
     print "('unit ',i5,': file closed')", xmlunit
 #endif
-    xmlunit = -1
+    xmlunit = xmlsave
+    nopen = nopen - 1
+    xmlsave = -1
     IF (nlevel > 0) print '("warning: file closed at level ",i1,&
             & " with tag ",A," open")', nlevel, trim(open_tags(nlevel))
     nlevel = 0
@@ -368,7 +395,7 @@ CONTAINS
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, *) ivec
+    WRITE( xmlunit, '(4I18)') ivec
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_iv
@@ -406,7 +433,7 @@ CONTAINS
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, *) rvec
+    WRITE( xmlunit, '(3es24.15)') rvec
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_rv
@@ -420,7 +447,7 @@ CONTAINS
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, *) rmat
+    WRITE( xmlunit, '(3es24.15)') rmat
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_rm
@@ -434,7 +461,7 @@ CONTAINS
     INTEGER, INTENT(OUT),OPTIONAL :: ierr
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, *) rtens
+    WRITE( xmlunit, '(3es24.15)') rtens
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_rt
@@ -479,14 +506,13 @@ CONTAINS
     !
     TYPE (c_ptr) :: cp
     REAL(dp), POINTER  :: rmat(:,:)
-    INTEGER :: n, nvec
     !
     NULLIFY (rmat)
     cp = c_loc(zmat)
     CALL c_f_pointer (cp, rmat, shape(zmat)*[2,1])
     !
     CALL xmlw_opentag (name, ierr )
-    WRITE( xmlunit, *) rmat
+    WRITE( xmlunit, '(2es24.15)') rmat
     CALL xmlw_closetag ( )
     !
   END SUBROUTINE writetag_zm
@@ -543,7 +569,10 @@ CONTAINS
     CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: tag
     INTEGER :: i
     !
-    IF ( nlevel < 0 ) print "('severe error: closing tag that was never opened')"
+    IF ( nlevel < 0 ) THEN
+      print "('xmlw_closetag: severe error, closing tag that was never opened')"
+      RETURN
+    END IF
     IF ( .NOT.PRESENT(tag) ) THEN
        DO i=2,nlevel
           WRITE (xmlunit, '("  ")', ADVANCE='NO')
@@ -936,7 +965,7 @@ CONTAINS
        read(xmlunit,'(a)', end=10) line
        ll = len_trim(line)
        if ( ll == maxline ) then
-          print *, 'severe error: line too long'
+          print *, 'xmlr_opentag: severe error, line too long'
           if (present(ierr)) ierr = 2
           return
        end if
@@ -1003,7 +1032,7 @@ CONTAINS
                 if (present(ierr)) ierr = 0
                 nlevel = nlevel+1
                 IF ( nlevel > maxlevel ) THEN
-                   print *, ' severe error: too many levels'
+                   print *, 'xmlr_opentag: severe error, too many levels'
                    if (present(ierr)) ierr = 3
                 else
                    open_tags(nlevel) = trim(tag)
@@ -1061,7 +1090,7 @@ CONTAINS
           print *, 'end of file reached, tag '//trim(tag)//' not found'
        end if
     else
-       print *, 'severe parsing error'
+       print *, 'xmlr_opentag: severe parsing error'
        if ( present(ierr) ) ierr = 1
     end if
     !
@@ -1083,7 +1112,7 @@ CONTAINS
     ! stat= 1: end
     !
     if ( nlevel < 0 ) &
-         print '("severe error: closing tag that was never opened")'
+         print '("xmlr_closetag: severe error, closing tag that was never opened")'
     stat=0
 #if defined ( __debug )
     if ( .not. present(tag) ) then

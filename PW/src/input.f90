@@ -84,8 +84,7 @@ SUBROUTINE iosys()
                             forcefield, &
                             forcegate
   !
-  USE io_files,      ONLY : input_drho, output_drho, &
-                            psfile, tmp_dir, wfc_dir, &
+  USE io_files,      ONLY : psfile, tmp_dir, wfc_dir, &
                             prefix_     => prefix, &
                             pseudo_dir_ => pseudo_dir, &
                             pseudo_dir_cur, restart_dir, &
@@ -343,7 +342,6 @@ SUBROUTINE iosys()
   LOGICAL  :: exst, parallelfs, domag, stop_on_error
   REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp, V
   CHARACTER(len=256) :: tempfile
-  INTEGER, EXTERNAL  :: find_free_unit
   !
   ! MAIN CONTROL VARIABLES, MD AND RELAX
   !
@@ -1214,7 +1212,6 @@ SUBROUTINE iosys()
         !
         WRITE( stdout, '(/5x,"Reading Hubbard V parameters from the file parameters.in...",/)')
         !
-        tempunit = find_free_unit()
         tempfile = TRIM("parameters.in")
         !
         INQUIRE (file = tempfile, exist = exst)
@@ -1226,7 +1223,7 @@ SUBROUTINE iosys()
         !
         ! Open the file parameters.in and read Hubbard_V from there
         !
-        OPEN( UNIT = tempunit, FILE = tempfile, FORM = 'formatted', STATUS = 'unknown' )
+        OPEN( NEWUNIT = tempunit, FILE = tempfile, FORM = 'formatted', STATUS = 'unknown' )
         READ(tempunit,*)
 10      READ(tempunit,*,END=11) i, j, V
         Hubbard_V(i,j,1) = V

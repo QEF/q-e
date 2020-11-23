@@ -138,6 +138,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
                 macroscopic dielectric constant of the system is 
                 computed. Do not set @ref epsil to .true. if you have a
                 metallic system or q/=0: the code will complain and stop.
+                Note: the input value of epsil will be ignored if ldisp=.true.
+                (the code will automatically set epsil to .false. for metals,
+                to .true. for insulators: see routine PHonon/PH/prepare_q.f90).
             }
         }
 

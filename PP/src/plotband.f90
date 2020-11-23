@@ -30,7 +30,8 @@ PROGRAM plotband
   real, ALLOCATABLE :: e_rap(:,:), k_rap(:,:)
   INTEGER, ALLOCATABLE :: nbnd_rapk(:), rap(:,:)
   INTEGER, ALLOCATABLE :: npoints(:)
-  INTEGER :: nks = 0, nbnd = 0, ios, nlines, n,i,j,ni,nf,nl
+  CHARACTER(len=1024) aux
+  INTEGER :: nks = 0, nbnd = 0, ios, nlines, n,i,j,ni,nf,nl, firstk, lastk
   INTEGER :: nks_rap = 0, nbnd_rap = 0
   LOGICAL, ALLOCATABLE :: high_symmetry(:), is_in_range(:), is_in_range_rap(:)
   CHARACTER(len=256) :: filename, filename1, filenamegnu
@@ -254,8 +255,15 @@ PROGRAM plotband
         emax = max(emax, e(i,n))
      ENDDO
   ENDDO
-  WRITE(*,'("Range:",2f10.4,"eV  Emin, Emax > ")', advance="NO") emin, emax
-  READ(5,*) emin, emax
+  WRITE(*,'("Range:",2f10.4,"eV  Emin, Emax, [firstk, lastk] > ")', advance="NO") emin, emax
+  READ(5,'(a1024)') aux
+  READ(aux,*,iostat=ios) emin, emax,firstk,lastk
+  IF(ios/=0) THEN
+    READ(aux,*) emin, emax
+    firstk=1
+    lastk=nks
+  ENDIF
+  IF(firstk>1)  kx = kx-kx(firstk)
 !
 !  Since the minimum and miximum energies are given in input we can
 !  sign the bands that are completely outside this range.
@@ -269,7 +277,7 @@ PROGRAM plotband
 !  The first point of this path: point(iline)
 !  How many points are in each path: npoints(iline)
 !
-  DO n=1,nks
+  DO n=firstk,lastk
      IF (high_symmetry(n)) THEN
         IF (n==1) THEN
 !
@@ -333,9 +341,9 @@ PROGRAM plotband
      DO i=1,nbnd
         IF (is_in_range(i)) THEN
           IF (exist_proj) THEN
-            WRITE (2,'(3f10.4)') (kx(n), e(i,n), sumproj(i,n),n=1,nks)
+            WRITE (2,'(3f10.4)') (kx(n), e(i,n), sumproj(i,n),n=firstk,lastk)
           ELSE
-            WRITE (2,'(2f10.4)') (kx(n), e(i,n),n=1,nks)
+            WRITE (2,'(2f10.4)') (kx(n), e(i,n),n=firstk,lastk)
           ENDIF
           WRITE (2,*)
         ENDIF

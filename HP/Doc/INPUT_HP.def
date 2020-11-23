@@ -85,7 +85,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
             info {
               If .true. determines the number of perturbations
               (i.e. which atoms will be perturbed) and exits smoothly 
-              without performing any calculation.
+              without performing any calculation. For DFT+U+V, it also 
+              determines the indices of inter-site couples.
             }
         }
 

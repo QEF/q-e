@@ -32,7 +32,7 @@
                                scattering, nstemp, int_mob, scissor, carrier,      &
                                iterative_bte, longrange, scatread, nqf1, prtgkk,   &
                                nqf2, nqf3, mp_mesh_k, restart, plselfen,           &
-                               specfun_pl, lindabs, use_ws, epbread,               &
+                               specfun_pl, lindabs, use_ws, epbread, fermi_plot,   &
                                epmatkqread, selecqread, restart_step, nsmear,      &
                                nqc1, nqc2, nqc3, nkc1, nkc2, nkc3, assume_metal,   &
                                cumulant, eliashberg
@@ -67,7 +67,7 @@
                                check_restart_ephwrite
   USE transport,        ONLY : transport_coeffs, scattering_rate_q
   USE grid,             ONLY : qwindow
-  USE printing,         ONLY : print_gkk, plot_band
+  USE printing,         ONLY : print_gkk, plot_band, plot_fermisurface
   USE io_epw,           ONLY : rwepmatw, epw_read, epw_write
   USE io_transport,     ONLY : tau_read, iter_open, print_ibte, iter_merge
   USE io_selfen,        ONLY : selfen_el_read, spectral_read
@@ -462,7 +462,6 @@
     ! Open the prefix.epmatwe file
     IF ((etf_mem == 1) .AND. ionode) THEN
       lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-      filint   = TRIM(prefix)//'.epmatwe'
       CALL diropn(iunepmatwe, 'epmatwe', lrepmatw, exst)
     ENDIF
     !
@@ -760,9 +759,8 @@
   ! Define it only once for the full run.
   CALL fkbounds(nktotf, lower_bnd, upper_bnd)
   !
-  ! Re-order the k-point according to weather they are in or out of the fshick
-  ! windows
-  IF ((iterative_bte .OR. ephwrite) .AND. mp_mesh_k) THEN
+  ! Re-order the k-point according to weather they are in or out of the fshick windows
+  IF ((iterative_bte .OR. ephwrite) .AND. mp_mesh_k .AND. etf_mem < 3) THEN
     CALL load_rebal
   ENDIF
   !
@@ -795,7 +793,7 @@
   ENDIF
 #else
   lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-  filint   = TRIM(prefix)//'.epmatwp'
+  filint = TRIM(tmp_dir) // TRIM(prefix)//'.epmatwp'
   INQUIRE(IOLENGTH = direct_io_factor) dummy(1)
   unf_recl = direct_io_factor * INT(lrepmatw, KIND = KIND(unf_recl))
   IF (unf_recl <= 0) CALL errore('epw_write', 'wrong record length', 3)
@@ -1611,6 +1609,8 @@
       ENDIF
     ENDIF
     IF (band_plot) CALL plot_band()
+    !
+    IF (fermi_plot) CALL plot_fermisurface()
     !
     IF (a2f) CALL a2f_main()
     !

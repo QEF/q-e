@@ -799,8 +799,9 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 
 	dimension configts -start 1 -end nconf -type CHARACTER {
 	    info {
-		A string containing the test valence electronic
-		configuration nc, nc=1,nconf. Same syntax as for "config".
+		A string array containing the test electronic configuration.
+                configts(nc), nc=1,nconf, has the same syntax as for "config"
+                but only VALENCE states must be included.
 		If configts(i) is not set, the electron configuration 
 		is read from the cards following the namelist.
 	    }

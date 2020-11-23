@@ -8,6 +8,7 @@ Custom exceptions.  Initialise signal handler for the interrupt signal.
 :license: modified BSD; see LICENSE for more details.
 '''
 
+from __future__ import print_function
 import signal
 import sys
 

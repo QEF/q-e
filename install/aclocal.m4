@@ -1,6 +1,6 @@
-# generated automatically by aclocal 1.13.4 -*- Autoconf -*-
+# generated automatically by aclocal 1.16.2 -*- Autoconf -*-
 
-# Copyright (C) 1996-2013 Free Software Foundation, Inc.
+# Copyright (C) 1996-2020 Free Software Foundation, Inc.
 
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -24,7 +24,6 @@ m4_include([m4/x_ac_qe_cuda.m4])
 m4_include([m4/x_ac_qe_default_env.m4])
 m4_include([m4/x_ac_qe_elpa.m4])
 m4_include([m4/x_ac_qe_environ.m4])
-m4_include([m4/x_ac_qe_f77.m4])
 m4_include([m4/x_ac_qe_f90.m4])
 m4_include([m4/x_ac_qe_f90rule.m4])
 m4_include([m4/x_ac_qe_fft.m4])

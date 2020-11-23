@@ -26,6 +26,7 @@ documentation for further details.'''
 # copyright: (c) 2012 James Spencer
 # license: modified BSD; see LICENSE for more details
 
+from __future__ import print_function
 import glob
 import optparse
 import os

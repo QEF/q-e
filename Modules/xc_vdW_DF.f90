@@ -1674,14 +1674,14 @@ CONTAINS
   !                         |  VDW_DF_STRESS  |
   !                         |_________________|
 
-  SUBROUTINE vdW_DF_stress (rho_valence, rho_core, nspin, sigma)
+  SUBROUTINE vdW_DF_stress (rho_valence, rho_core, nspin, sigma) ! PH adjusted for wrapper spin/nospin
 
   use gvect,           ONLY : ngm, g
   USE cell_base,       ONLY : tpiba
 
   IMPLICIT NONE
 
-  REAL(DP), INTENT(IN)     :: rho_valence(:)         !
+  REAL(DP), INTENT(IN)     :: rho_valence(:,:)       !
   REAL(dp), INTENT(IN)     :: rho_core(:)            ! Input variables.
   INTEGER,  INTENT(IN)     :: nspin                  !
   REAL(dp), INTENT(INOUT)  :: sigma(3,3)             !
@@ -1689,9 +1689,23 @@ CONTAINS
   REAL(DP), ALLOCATABLE    :: grad_rho(:,:)          !
   REAL(DP), ALLOCATABLE    :: total_rho(:)           ! Rho values.
 
+  real(dp), allocatable    :: rho_up(:)              !
+  real(dp), allocatable    :: rho_down(:)            !
+
+  real(dp), allocatable :: grad_rho_up(:,:)          ! The gradient of the up charge density.
+                                                     ! Same format as grad_rho
+  real(dp), allocatable :: grad_rho_down(:,:)        ! The gradient of the down charge density.
+                                                     ! Same format as grad_rho
+
+
+
   REAL(DP), ALLOCATABLE    :: q0(:)                  !
   REAL(DP), ALLOCATABLE    :: dq0_drho(:)            ! q-values.
   REAL(DP), ALLOCATABLE    :: dq0_dgradrho(:)        !
+  real(dp), allocatable    :: dq0_drho_up(:)         ! The derivative of the saturated q0
+  real(dp), allocatable    :: dq0_drho_down(:)       ! with respect to the spin charge density 
+  real(dp), allocatable    :: dq0_dgradrho_up(:)     ! The derivative of the saturated q0
+  real(dp), allocatable    :: dq0_dgradrho_down(:)   ! with respect to the gradient of the spin charge sensity
 
   COMPLEX(DP), ALLOCATABLE :: thetas(:,:)            ! Thetas.
   INTEGER                  :: i_proc, theta_i, l, m
@@ -1714,8 +1728,8 @@ CONTAINS
      CALL errore ('vdW_DF_stress', 'noncollinear vdW stress not implemented', 1)
   END IF
 #else
-  IF ( nspin>=2 ) THEN
-     CALL errore ('vdW_DF_stress', 'vdW stress not implemented for nspin > 1', 1)
+  IF ( nspin>2 ) THEN
+     CALL errore ('vdW_DF_stress', 'vdW stress not implemented for nspin > 2', 1)
   END IF
 #endif
 
@@ -1727,32 +1741,76 @@ CONTAINS
   ! --------------------------------------------------------------------
   ! Allocations
 
-  ALLOCATE( total_rho(dfftp%nnr), grad_rho(3,dfftp%nnr), thetas(dfftp%nnr, Nqs), &
-            q0(dfftp%nnr), dq0_drho(dfftp%nnr), dq0_dgradrho(dfftp%nnr) )
-
+  ALLOCATE( total_rho(dfftp%nnr), grad_rho(3,dfftp%nnr), thetas(dfftp%nnr, Nqs), q0(dfftp%nnr) )
+  ALLOCATE ( dq0_drho(dfftp%nnr), dq0_dgradrho(dfftp%nnr) )
+#if defined (__SPIN_BALANCED)
+#else
+  IF (nspin==2) THEN
+     allocate( rho_up(dfftp%nnr), rho_down(dfftp%nnr) )
+     allocate( grad_rho_up(3,dfftp%nnr), grad_rho_down(3,dfftp%nnr) )
+     allocate( dq0_drho_up (dfftp%nnr), dq0_dgradrho_up  (dfftp%nnr) )
+     allocate( dq0_drho_down(dfftp%nnr), dq0_dgradrho_down(dfftp%nnr) )
+  ENDIF
+#endif
 
   ! --------------------------------------------------------------------
   ! Charge
 
-  total_rho = rho_valence(:) + rho_core(:)
+  total_rho = rho_valence(:,1) + rho_core(:)
+#if defined (__SPIN_BALANCED)
+#else
+  IF (nspin==2) THEN
+    rho_up    = ( rho_valence(:,1) + rho_valence(:,2) + rho_core(:) )*0.5D0
+    rho_down  = ( rho_valence(:,1) - rho_valence(:,2) + rho_core(:) )*0.5D0
+  ENDIF
+#endif
+
 
 
   ! --------------------------------------------------------------------
   ! Here we calculate the gradient in reciprocal space using FFT.
 
   CALL fft_gradient_r2r (dfftp, total_rho,  g, grad_rho)
-
+#if defined (__SPIN_BALANCED)
+#else
+  IF (nspin==2) THEN
+     call fft_gradient_r2r (dfftp, rho_up,    g, grad_rho_up)
+     call fft_gradient_r2r (dfftp, rho_down,  g, grad_rho_down)
+  ENDIF
+#endif
 
   ! --------------------------------------------------------------------
   ! Get q0.
 
+#if defined (__SPIN_BALANCED)
   CALL get_q0_on_grid (total_rho, grad_rho, q0, dq0_drho, dq0_dgradrho, thetas)
-
+#else
+  IF (nspin == 1) THEN
+     CALL get_q0_on_grid (total_rho, grad_rho, q0, dq0_drho, dq0_dgradrho, thetas)
+  ELSEIF (nspin==2) THEN
+     CALL get_q0_on_grid_spin ( total_rho, rho_up, rho_down, grad_rho, grad_rho_up, grad_rho_down, &
+          q0, dq0_drho_up, dq0_drho_down, dq0_dgradrho_up, dq0_dgradrho_down, thetas)
+  ENDIF
+#endif
 
   ! --------------------------------------------------------------------
   ! Stress
 
-  CALL vdW_DF_stress_gradient (total_rho, grad_rho, q0, dq0_drho, dq0_dgradrho, thetas, sigma_grad)
+#if defined (__SPIN_BALANCED)
+     CALL vdW_DF_stress_gradient (total_rho, grad_rho, q0, dq0_drho, dq0_dgradrho, &
+                                  thetas, sigma_grad)
+#else
+  IF (nspin == 1) THEN
+     CALL vdW_DF_stress_gradient (total_rho, grad_rho, q0, dq0_drho, dq0_dgradrho, &
+                                  thetas, sigma_grad)
+  ELSEIF (nspin == 2) THEN
+     CALL vdW_DF_stress_gradient_spin (total_rho, grad_rho_up, grad_rho_down, q0, &
+                                       dq0_dgradrho_up, dq0_dgradrho_down, &
+                                       thetas, sigma_grad)
+  ENDIF
+#endif
+
+
   CALL vdW_DF_stress_kernel   (total_rho, q0, thetas, sigma_ker)
 
   sigma = - (sigma_grad + sigma_ker)
@@ -1763,15 +1821,165 @@ CONTAINS
      END DO
   END DO
 
-  DEALLOCATE( total_rho, grad_rho, thetas, q0, dq0_drho, dq0_dgradrho )
+  DEALLOCATE( total_rho, grad_rho, thetas, q0 )
+  DEALLOCATE( dq0_drho, dq0_dgradrho )
+#if defined (__SPIN_BALANCED)
+#else
+  IF (nspin == 2) THEN
+     deallocate( rho_up, rho_down )
+     deallocate( grad_rho_up, grad_rho_down )
+     deallocate( dq0_drho_up, dq0_drho_down, dq0_dgradrho_up, dq0_dgradrho_down )
+  ENDIF
+#endif
 
-  END SUBROUTINE vdW_DF_stress
+  END SUBROUTINE vdW_DF_stress ! PH adjusted for wrapper spin/nospin
 
 
+! -------------------------------------------------------------------------
+ ! Begin Spin vdW-DF_strees_gradient implemented Per Hyldgaard 2019, GPL. No Waranties
+ ! Adapted from the original nspin = 1 code (subroutine below) by Thonhauser and coauthors
+! -------------------------------------------------------------------------
+
+  ! ####################################################################
+  !                     |                               |
+  !                     |  VDW_DF_STRESS_GRADIENT_SPIN  |
+  !                     |_______________________________|
+
+  SUBROUTINE vdW_DF_stress_gradient_spin (total_rho, grad_rho_up, grad_rho_down, q0, &
+                                          dq0_dgradrho_up, dq0_dgradrho_down, &
+                                          thetas, sigma)
+
+  USE gvect,                 ONLY : ngm, g, gg, igtongl, gl, ngl, gstart
+  USE cell_base,             ONLY : omega, tpiba, alat, at, tpiba2
+
+  implicit none
+
+  real(dp), intent(IN)     :: total_rho(:)           !
+  real(dp), intent(IN)     :: grad_rho_up (:, :)     ! Input variables.
+  real(dp), intent(IN)     :: grad_rho_down(:, :)    !
+  real(dp), intent(inout)  :: sigma(:,:)             !
+  real(dp), intent(IN)     :: q0(:)                  !
+  real(dp), intent(IN)     :: dq0_dgradrho_up(:)     !
+  real(dp), intent(IN)     :: dq0_dgradrho_down(:)   !
+  complex(dp), intent(IN)  :: thetas(:,:)            !
+
+  complex(dp), allocatable :: u_vdW(:,:)             !
+
+  real(dp), allocatable    :: d2y_dx2(:,:)           !
+  real(dp) :: y(Nqs), dP_dq0, P, a, b, c, d, e, f    ! Interpolation.
+  real(dp) :: dq                                     !
+
+  integer  :: q_low, q_hi, q, q1_i, q2_i , g_i       ! Loop and q-points.
+
+  integer  :: l, m
+  real(dp) :: prefactor_up, prefactor_down           ! Final summation of sigma.
+  real(dp) :: grad2_up, grad2_down                   ! Magnitude of density gradient.
 
 
+  integer  :: i_proc, theta_i, i_grid, q_i, &        !
+              ix, iy, iz                             ! Iterators.
+
+  character(LEN=1) :: intvar
+
+  allocate( d2y_dx2(Nqs, Nqs) )
+  allocate( u_vdW(dfftp%nnr, Nqs) )
+
+  sigma(:,:) = 0.0_DP
+  prefactor_up  = 0.0_DP
+  prefactor_down  = 0.0_DP
+
+  ! --------------------------------------------------------------------
+  ! Get u in k-space.
+
+  call thetas_to_uk(thetas, u_vdW)
+
+  ! --------------------------------------------------------------------
+  ! Get u in real space.
+
+  do theta_i = 1, Nqs
+     CALL invfft('Rho', u_vdW(:,theta_i), dfftp)
+  end do
 
 
+  ! --------------------------------------------------------------------
+  ! Get the second derivatives for interpolating the P_i.
+
+  call initialize_spline_interpolation(q_mesh, d2y_dx2(:,:))
+
+
+  ! --------------------------------------------------------------------
+  ! Do the real space integration to obtain the stress component.
+
+  do i_grid = 1, dfftp%nnr
+
+     if ( total_rho(i_grid) < epsr ) cycle
+
+     q_low = 1
+     q_hi  = Nqs
+     grad2_up = sqrt( grad_rho_up(1,i_grid)**2 &
+                + grad_rho_up(2,i_grid)**2 + grad_rho_up(3,i_grid)**2 )
+     grad2_down = sqrt( grad_rho_down(1,i_grid)**2 &
+                  + grad_rho_down(2,i_grid)**2 + grad_rho_down(3,i_grid)**2 )
+
+     if ( grad2_up == 0.0_dp .or. grad2_down == 0.0_dp) cycle
+
+     ! -----------------------------------------------------------------
+     ! Figure out which bin our value of q0 is in the q_mesh.
+
+     do while ( (q_hi - q_low) > 1)
+
+        q = int((q_hi + q_low)/2)
+
+        if (q_mesh(q) > q0(i_grid)) then
+            q_hi = q
+        else
+            q_low = q
+        end if
+
+     end do
+
+     if (q_hi == q_low) call errore('vdW_DF_stress_gradient_spin','qhi == qlow',1)
+
+     dq = q_mesh(q_hi) - q_mesh(q_low)
+
+     a = (q_mesh(q_hi) - q0(i_grid))/dq
+     b = (q0(i_grid) - q_mesh(q_low))/dq
+     c = (a**3 - a)*dq**2/6.0D0
+     d = (b**3 - b)*dq**2/6.0D0
+     e = (3.0D0*a**2 - 1.0D0)*dq/6.0D0
+     f = (3.0D0*b**2 - 1.0D0)*dq/6.0D0
+
+    do q_i = 1, Nqs
+
+        y(:)   = 0.0D0
+        y(q_i) = 1.0D0
+
+        dP_dq0 = (y(q_hi) - y(q_low))/dq - e*d2y_dx2(q_i,q_low) + f*d2y_dx2(q_i,q_hi)
+
+        prefactor_up = u_vdW(i_grid,q_i) * dP_dq0 * dq0_dgradrho_up(i_grid) / grad2_up
+        prefactor_down = u_vdW(i_grid,q_i) * dP_dq0 * dq0_dgradrho_down(i_grid) / grad2_down
+
+        do l = 1, 3
+            do m = 1, l
+
+                sigma (l, m) = sigma (l, m) -  e2 * prefactor_up * &
+                               (grad_rho_up(l,i_grid) * grad_rho_up(m,i_grid))
+                sigma (l, m) = sigma (l, m) -  e2 * prefactor_down * &
+                               (grad_rho_down(l,i_grid) * grad_rho_down(m,i_grid))
+            end do
+        end do
+
+     end do
+
+  end do
+
+  call mp_sum(  sigma, intra_bgrp_comm )
+
+  call dscal (9, 1.d0 / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3), sigma, 1)
+
+  deallocate( d2y_dx2, u_vdW )
+
+  END SUBROUTINE vdW_DF_stress_gradient_spin
 
 
   ! ####################################################################

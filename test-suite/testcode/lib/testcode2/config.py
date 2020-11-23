@@ -8,6 +8,7 @@ Parse jobconfig and userconfig ini files.
 :license: modified BSD; see LICENSE for more details.
 '''
 
+from __future__ import print_function
 import copy
 import glob
 import os
