@@ -4,12 +4,12 @@ module hartree_xc_mod
 contains
 
    subroutine compute_hartree_vpoint_vmean(v_mean, v_point, g, gstart, omega, ngm, e2, fpi, tpiba2, &
-                                           delta_t, charge_g, charge_g_due, charge_g_tre)
+                                           delta_t, charge_g_plus, charge_minus, charge_zero)
       implicit none
       integer, intent(in) :: gstart, ngm
       real(kind=dp), intent(in) :: g(:, :), omega, e2, fpi, tpiba2, delta_t
-      complex(kind=dp), intent(in) ::  charge_g(:), charge_g_due(:)
-      complex(kind=dp), intent(in), optional ::  charge_g_tre(:)
+      complex(kind=dp), intent(in) ::  charge_g_plus(:), charge_minus(:)
+      complex(kind=dp), intent(in), optional ::  charge_zero(:)
       complex(kind=dp), intent(inout) :: v_mean(:), v_point(:)
       real(kind=DP), allocatable :: fac(:)
       real(kind=dp) :: qq_fact
@@ -32,16 +32,16 @@ contains
 
       !We compute v_point and v_mean
       do igm = 1, ngm
-         v_point(igm) = (charge_g(igm) - charge_g_due(igm))*fac(igm)/delta_t ! v(t+dt)-v(t-dt)
+         v_point(igm) = (charge_g_plus(igm) - charge_minus(igm))*fac(igm)/delta_t ! v(t+dt)-v(t-dt)
       end do
-      if (present(charge_g_tre)) then ! set v_mean as v(t)
+      if (present(charge_zero)) then ! set v_mean as v(t)
          do igm = 1, ngm
-            v_mean(igm) = charge_g_tre(igm)*fac(igm)
+            v_mean(igm) = charge_zero(igm)*fac(igm)
          end do
-
-      else ! set v_mean as (v(t)+v(t+dt))/2.0
+      else
          do igm = 1, ngm
-            v_mean(igm) = (charge_g(igm) + charge_g_due(igm))*fac(igm)/2.d0
+            !v_mean(igm) = (charge_g_plus(igm) + charge_minus(igm))*fac(igm)/2.d0
+            v_mean(igm) = charge_minus(igm)*fac(igm)/2.d0
          end do
       endif
 
@@ -86,13 +86,13 @@ contains
 
       integer :: igm
       logical :: do_xc_curr
-      real(kind=DP), allocatable ::charge(:)
-      real(kind=DP), allocatable ::excharge_r(:), exgradcharge_r(:, :), exdotcharge_r(:)
+      real(kind=DP), allocatable ::charge_minus_or_zero(:)
+      real(kind=DP), allocatable ::charge_plus(:), exgradcharge_r(:, :), exdotcharge_r(:)
       real(kind=DP) :: update(1:3), update_a(1:3), update_b(1:3)
 
 !
-      complex(kind=DP), allocatable ::charge_g(:), v_point(:), v_mean(:), charge_g_due(:), &
-                                       charge_g_tre(:)
+      complex(kind=DP), allocatable ::charge_g_plus(:), v_point(:), v_mean(:), charge_g_minus(:), &
+                                       charge_g_zero(:)
 !
       complex(kind=DP), allocatable ::exgradcharge_g(:, :)
 !
@@ -111,15 +111,15 @@ contains
       end if
 
       npw = npwx ! only gamma
-      allocate (charge_g(ngm))
-      allocate (charge_g_due(ngm))
+      allocate (charge_g_plus(ngm))
+      allocate (charge_g_minus(ngm))
       if (three_point_derivative) &
-         allocate (charge_g_tre(ngm))
-      allocate (charge(dffts%nnr))
+         allocate (charge_g_zero(ngm))
+      allocate (charge_minus_or_zero(dffts%nnr))
       allocate (v_point(ngm))
       allocate (v_mean(ngm))
 !
-      allocate (excharge_r(dffts%nnr))
+      allocate (charge_plus(dffts%nnr))
       allocate (exgradcharge_r(3, dffts%nnr))
       allocate (exgradcharge_g(3, ngm))
       allocate (exdotcharge_r(dffts%nnr))
@@ -133,58 +133,50 @@ contains
 ! wfc and position and velocities of atoms that were used to compute the wfcs.
 ! if only 2 points are used, t_minus == t_zero
 
-!-------STEP1: reading and allocation (npwx = number of plane waves (npwx>npw), nbnd = number of bands (n_electrons/2 for insulators))
 
-!-------STEP2.1: calculation of charge_g, the charge in reciprocal space at time t+Dt.
-
-      call compute_charge(psic, scf_all%t_plus%evc, npw, nbnd, ngm, dffts, charge, charge_g)
-
-!!!!!!!!!!!!------------ Saving some quantities for the evaluation of the Exchange-correlation current 1/2  -------------!!!!!!!!!!!!!!!!!!
+      call compute_charge(psic, scf_all%t_plus%evc, npw, nbnd, ngm, dffts, charge_plus, charge_g_plus)
+      call compute_charge(psic, scf_all%t_minus%evc, npw, nbnd, ngm, dffts, charge_minus_or_zero, charge_g_minus)
 
       if (do_xc_curr) then
-! copying of charge in real space
-         excharge_r(1:dffts%nnr) = charge(1:dffts%nnr)
-         do icoord = 1, 3
-!
-            do igm = 1, ngm
-               exgradcharge_g(icoord, igm) = charge_g(igm)*(0.d0, 1.d0)*g(icoord, igm)*tpiba
-            end do
-!
-            psic = 0.d0
-            psic(dffts%nl(1:ngm)) = exgradcharge_g(icoord, 1:ngm)
-            psic(dffts%nlm(1:ngm)) = CONJG(exgradcharge_g(icoord, 1:ngm))
-!
-            call invfft('Rho', psic, dffts)
-!
-            exgradcharge_r(icoord, 1:dffts%nnr) = dble(psic(1:dffts%nnr))
-         end do
-      end if
-!
-!!!!!!!!!!!!------------- end saving quantities for XC current----------------- !!!!!!!!!!!!!!!!!!!!
-
-!-------STEP2.2-------inizializing chargeg_due, charge at tempo t-Dt.
-      call compute_charge(psic, scf_all%t_minus%evc, npw, nbnd, ngm, dffts, charge, charge_g_due)
-
-!!!!!!!!!!!!------------Saving quantities for XC current 2/2 -------------!!!!!!!!!!!!!!!!!!
-!
-      if (do_xc_curr) then
-         exdotcharge_r(1:dffts%nnr) = (excharge_r(1:dffts%nnr) - charge(1:dffts%nnr))/delta_t
+         exdotcharge_r(1:dffts%nnr) = (charge_plus(1:dffts%nnr) - charge_minus_or_zero(1:dffts%nnr))/delta_t
       end if
       !
-!!!!!!!!!!!!------------- End saving quantities for XC current----------------- !!!!!!!!!!!!!!!!!!!!
 
 !-------STEP3----- computation of Hartree potentials from the charges just computed.
 !-------STEP4-----  and numerical derivatives of Hartree potentials
 !the difference with three_point_derivative is that I use the potential at t_zero as v_mean
-!in place of the average between t_plus and t_minus
+!in place of the average between t_minus
       if (three_point_derivative) then
-         call compute_charge(psic, scf_all%t_zero%evc, npw, nbnd, ngm, dffts, charge, charge_g_tre)
+         !use charge_minus_or_zero!
+         call compute_charge(psic, scf_all%t_zero%evc, npw, nbnd, ngm, dffts, charge_minus_or_zero, charge_g_zero)
          call compute_hartree_vpoint_vmean(v_mean, v_point, g, gstart, omega, ngm, e2, fpi, tpiba2, delta_t, &
-                                           charge_g, charge_g_due, charge_g_tre)
+                                           charge_g_plus, charge_g_minus, charge_g_zero)
       else
-         call compute_hartree_vpoint_vmean(v_mean, v_point, g, gstart, omega, ngm, e2, fpi, tpiba2, delta_t, charge_g, charge_g_due)
+         call compute_hartree_vpoint_vmean(v_mean, v_point, g, gstart, omega, ngm, e2, fpi, tpiba2,&
+                 delta_t, charge_g_plus, charge_g_minus)
       endif
+      !now charge_minus_or_zero is charge at t-Dt if two point derivative is used; otherwise is charge at time t!
 
+      if (do_xc_curr) then
+         do icoord = 1, 3
+            if (three_point_derivative) then
+            do igm = 1, ngm
+               exgradcharge_g(icoord, igm) = charge_g_zero(igm)*(0.d0, 1.d0)*g(icoord, igm)*tpiba
+            end do
+    else
+            do igm = 1, ngm
+               exgradcharge_g(icoord, igm) = charge_g_minus(igm)*(0.d0, 1.d0)*g(icoord, igm)*tpiba
+            end do
+
+    end if
+
+            psic = 0.d0
+            psic(dffts%nl(1:ngm)) = exgradcharge_g(icoord, 1:ngm)
+            psic(dffts%nlm(1:ngm)) = CONJG(exgradcharge_g(icoord, 1:ngm))
+            call invfft('Rho', psic, dffts)
+            exgradcharge_r(icoord, 1:dffts%nnr) = dble(psic(1:dffts%nnr))
+         end do
+      end if
 !-------STEP 5----- Application of final formula.
 
       J_hartree = 0.d0
@@ -205,16 +197,17 @@ contains
 
       if (do_xc_curr) then
          exdotcharge_r(1:dffts%nnr) = exdotcharge_r(1:dffts%nnr)/omega
-         excharge_r(1:dffts%nnr) = excharge_r(1:dffts%nnr)/omega
+         !note that if three_point_derivative == true, charge_minus_or_zero is charge at time t
+         charge_minus_or_zero(1:dffts%nnr) = charge_minus_or_zero(1:dffts%nnr)/omega
          exgradcharge_r(1:3, 1:dffts%nnr) = exgradcharge_r(1:3, 1:dffts%nnr)/omega
 !
 !
          do ir = 1, dffts%nnr
-            if (excharge_r(ir) > 1.0E-10_DP) then
-               call pbex_current(abs(excharge_r(ir)), exgradcharge_r(1:3, ir), 1, update_a(1:3))
-               call pbec_current(abs(excharge_r(ir)), exgradcharge_r(1:3, ir), 1, update_b(1:3))
+            if (charge_minus_or_zero(ir) > 1.0E-10_DP) then
+               call pbex_current(abs(charge_minus_or_zero(ir)), exgradcharge_r(1:3, ir), 1, update_a(1:3))
+               call pbec_current(abs(charge_minus_or_zero(ir)), exgradcharge_r(1:3, ir), 1, update_b(1:3))
                update(1:3) = e2*(update_a(1:3) + update_b(1:3))
-               update(1:3) = -update(1:3)*exdotcharge_r(ir)*excharge_r(ir)
+               update(1:3) = -update(1:3)*exdotcharge_r(ir)*charge_minus_or_zero(ir)
                J_xc(1:3) = J_xc(1:3) + update(1:3)
             end if
          end do
@@ -230,13 +223,13 @@ contains
       call stop_clock('xc_current')
       call print_clock('xc_current')
       if (ionode) print *, 'X-C CURRENT CALCULATED'
-      deallocate (charge)
-      deallocate (charge_g)
-      deallocate (charge_g_due)
-      if (allocated(charge_g_tre)) deallocate (charge_g_tre)
+      deallocate (charge_minus_or_zero)
+      deallocate (charge_g_plus)
+      deallocate (charge_g_minus)
+      if (allocated(charge_g_zero)) deallocate (charge_g_zero)
       deallocate (v_point)
       deallocate (v_mean)
-      deallocate (excharge_r)
+      deallocate (charge_plus)
       deallocate (exgradcharge_r)
       deallocate (exgradcharge_g)
       deallocate (exdotcharge_r)
