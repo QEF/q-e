@@ -80,7 +80,6 @@ extract_program = XXXXXX/test-suite/extract-epw.sh
 inputs_args = ('*.in', '')
 run_cmd_template = tc.program tc.args tc.input tc.output tc.error
 tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
-              (5.0e+0, 5.0e-1, 'n1'),
               (1.0e-3, 1.0e-5, 'f1'),
               (1.0e-1, 5.0e-3, 'p1'),
               (1.0e-2, 1.0e-4, 'ef1'),
@@ -94,7 +93,7 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (1.0e-5, 1.0e-5, 'q1'),
               (1.0e-5, 1.0e-5, 'dos1'),
               (1.0e-3, 5.0e-3, 'e2'),
-              (1.0   , 2.0e-1, 'rsig'), 
+              (1.5   , 2.0e-1, 'rsig'), 
               (1.5   , 5.0e-1, 'isig'),
               (1.0e-2, 1.0e-2, 'rpi'), 
               (1.0e-2, 1.0e-2, 'ipi'),
@@ -109,12 +108,10 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (2.0e-5, 6.0e-3, 'logavg'),
               (1.0e-2, 9.9e-3, 'l_a2f'),
               (1.0e-5, 1.0e-5, 'efm'),
-              (8.0e-2, 1.0e-3, 'lam_max'),
-              (5.0e-3, 1.0e-3, 'lam_kmax'),
               (5.0e-4, 5.0e-4, 'elph'),
               (2.0e-2, 5.0e-4, 'allDyn'),
               (2.0e-3, 5.0e-4, 'pi'),
-              (1.0e-4, 5.0e-4, 'bcsgap'),
+              (1.0e-2, 5.0e-2, 'bcsgap'),
               (1.0e-4, 5.0e-4, 'mobvb'),
               (9.0e-4, 5.0e-4, 'mobcb'),
               (3.0e+1, 1.0e-1, 'mobnewx'),
@@ -124,6 +121,16 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (1.0   , 1.0e-2, 'mobxZ'),
               (1.5e+3,   None, 'indabs'),
               (1.0e-4,   None, 'ratmax'))
+
+skip_program = grep
+skip_args = 'not present in this version'
+
+[ZG]
+exe = XXXXXX/test-suite/run-zg.sh
+extract_program = XXXXXX/test-suite/extract-zg.sh
+inputs_args = ('*.in', '')
+run_cmd_template = tc.program tc.args tc.input tc.output tc.error
+tolerance = ( (1.0e-6, 5.0e-3, 'conf') )
 
 skip_program = grep
 skip_args = 'not present in this version'

@@ -322,6 +322,7 @@ epw_readin.o : ../../Modules/ions_base.o
 epw_readin.o : ../../Modules/mp_global.o
 epw_readin.o : ../../Modules/mp_world.o
 epw_readin.o : ../../Modules/noncol.o
+epw_readin.o : ../../Modules/open_close_input_file.o
 epw_readin.o : ../../Modules/paw_variables.o
 epw_readin.o : ../../PHonon/PH/phcom.o
 epw_readin.o : ../../PW/src/pwcom.o
@@ -337,7 +338,6 @@ epw_setup.o : ../../Modules/cell_base.o
 epw_setup.o : ../../Modules/control_flags.o
 epw_setup.o : ../../Modules/fft_base.o
 epw_setup.o : ../../Modules/funct.o
-epw_setup.o : ../../Modules/io_global.o
 epw_setup.o : ../../Modules/ions_base.o
 epw_setup.o : ../../Modules/kind.o
 epw_setup.o : ../../Modules/mp_global.o
@@ -350,7 +350,6 @@ epw_setup.o : ../../PW/src/symm_base.o
 epw_setup.o : ../../UtilXlib/mp.o
 epw_setup.o : ../../upflib/uspp.o
 epw_setup.o : constants_epw.o
-epw_setup.o : elph2.o
 epw_setup.o : epwcom.o
 epw_summary.o : ../../LR_Modules/lrcom.o
 epw_summary.o : ../../Modules/cell_base.o
@@ -385,7 +384,6 @@ grid.o : elph2.o
 grid.o : epwcom.o
 grid.o : io_var.o
 grid.o : kfold.o
-grid.o : kinds_epw.o
 grid.o : low_lvl.o
 grid.o : poolgathering.o
 grid.o : wan2bloch.o
@@ -420,7 +418,6 @@ io_eliashberg.o : epwcom.o
 io_eliashberg.o : grid.o
 io_eliashberg.o : io_var.o
 io_eliashberg.o : kfold.o
-io_eliashberg.o : kinds_epw.o
 io_eliashberg.o : low_lvl.o
 io_eliashberg.o : supercond.o
 io_epw.o : ../../LR_Modules/lrcom.o
@@ -503,6 +500,7 @@ loadumat.o : kfold.o
 low_lvl.o : ../../Modules/cell_base.o
 low_lvl.o : ../../Modules/constants.o
 low_lvl.o : ../../Modules/io_global.o
+low_lvl.o : ../../Modules/ions_base.o
 low_lvl.o : ../../Modules/kind.o
 low_lvl.o : ../../Modules/mp_global.o
 low_lvl.o : ../../Modules/noncol.o
@@ -520,12 +518,15 @@ poolgathering.o : ../../Modules/mp_global.o
 poolgathering.o : ../../UtilXlib/mp.o
 printing.o : ../../Modules/cell_base.o
 printing.o : ../../Modules/constants.o
+printing.o : ../../Modules/control_flags.o
+printing.o : ../../Modules/io_files.o
 printing.o : ../../Modules/io_global.o
 printing.o : ../../Modules/kind.o
 printing.o : ../../Modules/mp_global.o
 printing.o : ../../Modules/mp_world.o
 printing.o : ../../Modules/noncol.o
 printing.o : ../../PHonon/PH/phcom.o
+printing.o : ../../PW/src/pwcom.o
 printing.o : ../../PW/src/symm_base.o
 printing.o : ../../UtilXlib/mp.o
 printing.o : ../../upflib/uspp.o
@@ -535,7 +536,6 @@ printing.o : eliashbergcom.o
 printing.o : elph2.o
 printing.o : epwcom.o
 printing.o : io_var.o
-printing.o : kinds_epw.o
 printing.o : poolgathering.o
 pw2wan2epw.o : ../../FFTXlib/fft_interfaces.o
 pw2wan2epw.o : ../../FFTXlib/scatter_mod.o
@@ -575,7 +575,11 @@ rigid_epw.o : ../../Modules/constants.o
 rigid_epw.o : ../../Modules/io_global.o
 rigid_epw.o : ../../Modules/ions_base.o
 rigid_epw.o : ../../Modules/kind.o
+rigid_epw.o : ../../Modules/mp_global.o
+rigid_epw.o : ../../Modules/mp_world.o
+rigid_epw.o : ../../UtilXlib/mp.o
 rigid_epw.o : constants_epw.o
+rigid_epw.o : division.o
 rigid_epw.o : epwcom.o
 rotate.o : ../../Modules/cell_base.o
 rotate.o : ../../Modules/control_flags.o
@@ -625,9 +629,11 @@ spectral_func.o : poolgathering.o
 spectral_func.o : selfen.o
 stop_epw.o : ../../Modules/io_global.o
 stop_epw.o : ../../Modules/mp_global.o
+stop_epw.o : ../../Modules/mp_world.o
 stop_epw.o : ../../UtilXlib/mp.o
 stop_epw.o : elph2.o
 stop_epw.o : epwcom.o
+stop_epw.o : io_var.o
 stop_epw.o : printing.o
 supercond.o : ../../Modules/cell_base.o
 supercond.o : ../../Modules/constants.o
@@ -669,9 +675,9 @@ supercond_iso.o : ../../Modules/control_flags.o
 supercond_iso.o : ../../Modules/io_files.o
 supercond_iso.o : ../../Modules/io_global.o
 supercond_iso.o : ../../Modules/kind.o
-supercond_iso.o : ../../UtilXlib/mp.o
 supercond_iso.o : constants_epw.o
 supercond_iso.o : eliashbergcom.o
+supercond_iso.o : elph2.o
 supercond_iso.o : epwcom.o
 supercond_iso.o : io_eliashberg.o
 supercond_iso.o : io_var.o
@@ -699,7 +705,6 @@ transport.o : epwcom.o
 transport.o : grid.o
 transport.o : io_transport.o
 transport.o : io_var.o
-transport.o : kinds_epw.o
 transport.o : poolgathering.o
 transport_iter.o : ../../Modules/cell_base.o
 transport_iter.o : ../../Modules/control_flags.o
@@ -718,7 +723,6 @@ transport_iter.o : epwcom.o
 transport_iter.o : grid.o
 transport_iter.o : io_transport.o
 transport_iter.o : io_var.o
-transport_iter.o : kinds_epw.o
 transport_iter.o : poolgathering.o
 transport_iter.o : printing.o
 transport_iter.o : wigner.o

@@ -46,7 +46,6 @@ CONTAINS
          XSI = "http://www.w3.org/2001/XMLSchema-instance", &
          XSD_VERSION = "QE_PP-1.0"
     !
-    WRITE(6,'("WRITE_UPF_NEW")')
     IF ( PRESENT(schema) ) schema_ = schema
     SELECT CASE (TRIM(schema_))
     CASE ('qe_pp', 'QE_PP')
@@ -171,7 +170,7 @@ CONTAINS
     ! optional: unit pointing to input file containing generation data
     INTEGER, OPTIONAL, INTENT(IN):: u_input
     !
-#include "version.h"
+#include "qe_version.h"
     INTEGER :: nw, nb
     !
     CALL xmlw_opentag ( 'pp_info' )
@@ -817,6 +816,10 @@ CONTAINS
        IF ( v2 ) THEN
           call add_attr( 'number_of_core_orbitals', upf%gipaw_ncore_orbitals )
           CALL xmlw_opentag( 'PP_GIPAW_CORE_ORBITALS' )
+       ELSE 
+          CALL xmlw_writetag('number_of_core_orbitals', upf%gipaw_ncore_orbitals )
+          IF ( .NOT. upf%paw_as_gipaw ) &
+             CALL xmlw_writetag('number_of_valence_orbitals', upf%gipaw_wfs_nchannels) 
        END IF
        DO nb = 1,upf%gipaw_ncore_orbitals
           IF ( v2 ) THEN

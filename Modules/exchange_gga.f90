@@ -106,7 +106,7 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
   !! iflag=6  optB86b: Klimes et al., Phys. Rev. B 83, 195131 (2011)
   !! iflag=7  ev: Engel and Vosko, PRB 47, 13164 (1991)
   !! iflag=8  RPBE: B. Hammer, et al., Phys. Rev. B 59, 7413 (1999)
-  !! iflag=9  W31X: D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
+  !! iflag=9  W31X: D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)
   !
   USE kinds,      ONLY : DP
   !
@@ -1071,7 +1071,7 @@ SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
   !! iflag=1: A. D. Becke, J. Chem. Phys. 85, 7184 (1986) (B86b)
   !! iflag=2: J. Klimes, Phys. Rev. B 83, 195131 (2011). (OptB86b)
   !! iflag=3: I. Hamada, Phys. Rev. B 89, 121103(R) (B86R)
-  !! iflag=4: D. Chakraborty, K. Berland, and T. Thonhauser, TBD (2020)
+  !! iflag=4: D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)
   !
   !! Ikutaro Hamada - HAMADA.Ikutaro@nims.go.jp
   !! National Institute for Materials Science

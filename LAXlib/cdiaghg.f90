@@ -215,9 +215,12 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
   !
   USE laxlib_parallel_include
   !
-!define __USE_GLOBAL_BUFFER
-#if defined(__USE_GLOBAL_BUFFER)
-  USE gbuffers,        ONLY : dev=>dev_buf, pin=>pin_buf
+  ! NB: the flag below can be used to decouple LAXlib from devXlib.
+  !     This will make devXlib an optional dependency of LAXlib when
+  !     the library will be decoupled from QuantumESPRESSO.
+#define __USE_GLOBAL_BUFFER
+#if defined(__USE_GLOBAL_BUFFER) && defined(__CUDA)
+  USE device_fbuff_m,        ONLY : dev=>dev_buf, pin=>pin_buf
 #define VARTYPE POINTER
 #else
 #define VARTYPE ALLOCATABLE

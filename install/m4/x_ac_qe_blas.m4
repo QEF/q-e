@@ -49,8 +49,14 @@ else
       		    mkl_lib="mkl_gf_lp64"
       		    mkl_omp="mkl_gnu_thread"
 		    ;;
+	       nvfortran* )
+      		    mkl_lib="mkl_intel_lp64"
+      		    mkl_omp="mkl_intel_thread"
+                    # FIXME: is the following correct?
+      		    add_mkl_flag="-pgf90libs"
+		    ;;
 	       pgf* )
-                    # Detect (again) PGI version
+                    # Detect PGI version - FIXME: WHY? pgf_version is known
                     pgf_version=`$mpif90 -V 2>&1 | sed '/^$/d' | grep "^pgf" | cut -d ' ' -f2`
                     # From version 19.1, the new llvm backend requires linking to mkl_intel_thread
                     ompimp=""
@@ -342,18 +348,15 @@ else
 fi
 
 if test "$have_blas" -eq 0  ; then
-    # No blas library found: use internal
-    blas_libs_switch="internal"
+    # No blas library found: use internal one (in lapack)
     blas_libs="\$(TOPDIR)/LAPACK/libblas.a" 
 else
-    blas_libs_switch="external"
     echo setting BLAS_LIBS... $blas_libs
 fi
 blas_line="BLAS_LIBS=$blas_libs" 
 
 AC_SUBST(blas_libs)
 AC_SUBST(blas_line)
-AC_SUBST(blas_libs_switch)
   
 ]
 )

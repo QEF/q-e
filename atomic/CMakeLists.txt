@@ -1,0 +1,125 @@
+set(sources
+    src/add_exchange.f90
+    src/all_electron.f90
+    src/ascheq.f90
+    src/ascheqps.f90
+    src/ascheqps_drv.f90
+    src/c6_dft.f90
+    src/c6_tfvw.f90
+    src/calculate_gipaw_orbitals.f90
+    src/cfdsol.f90
+    src/chargeps.f90
+    src/compute_chi.f90
+    src/compute_chi_tm.f90
+    src/compute_phi.f90
+    src/compute_phi_tm.f90
+    src/compute_phius.f90
+    src/compute_potps.f90
+    src/compute_potps_new.f90
+    src/compute_q_3bess.f90
+    src/compute_relpert.f90
+    src/compute_solution.f90
+    src/descreening.f90
+    src/default_conf.f90
+    src/dfx_new.f90
+    src/dir_outward.f90
+    src/dirsol.f90
+    src/dmixp.f90
+    src/drhoofv.f90
+    src/drho0ofvx.f90
+    src/dvex.f90
+    src/el_config.f90
+    src/elsd.f90
+    src/elsd_highv.f90
+    src/elsdps.f90
+    src/elsdps_paw.f90
+    src/esic.f90
+    src/export_upf.f90
+    src/find_qi.f90
+    src/gener_pseudo.f90
+    src/grad_log.f90
+    src/green.f90
+    src/import_upf.f90
+    src/int_0_inf_dr.f90
+    src/integrate_inward.f90
+    src/integrate_outward.f90
+    src/inward.f90
+    src/outward.f90
+    src/intref.f90
+    src/kin_e_density.f90
+    src/ld1_readin.f90
+    src/ld1_setup.f90
+    src/ld1_writeout.f90
+    src/lderiv.f90
+    src/lderivps.f90
+    src/lschps.f90
+    src/newd_at.f90
+    src/new_potential.f90
+    src/nodenum.f90
+    src/normalize.f90
+    src/occ_spin.f90
+    src/paw_type.f90
+    src/partial_wave_expansion.f90
+    src/pseudovloc.f90
+    src/pseudo_q.f90
+    src/read_pseudo_ncpp.f90
+    src/read_pseudo_rrkj3.f90
+    src/run_lda_half.f90
+    src/run_pseudo.f90
+    src/run_test.f90
+    src/scf.f90
+    src/seriebes.f90
+    src/set_rho_core.f90
+    src/set_psi_in.f90
+    src/set_rc_rv.f90
+    src/set_sl3.f90
+    src/sic_correction.f90
+    src/starting_potential.f90
+    src/start_potps.f90
+    src/start_scheq.f90
+    src/test_bessel.f90
+    src/trou.f90
+    src/vdpack.f90
+    src/vext.f90
+    src/vpack.f90
+    src/v_of_rho_at.f90
+    src/vxcgc.f90
+    src/write_cpmd.f90
+    src/write_ae_pseudo.f90
+    src/write_files.f90
+    src/write_paw_recon.f90
+    src/write_pseudo.f90
+    src/write_results.f90
+    src/write_resultsps.f90
+    # Modules
+    src/kli.f90
+    src/atomic_paw.f90
+    src/ld1inc.f90
+    src/parameters.f90)
+
+qe_add_library(qe_atomic ${sources})
+add_library(QE::ATOMIC ALIAS qe_atomic)
+target_link_libraries(qe_atomic
+    PRIVATE
+        QE::UPF
+        QE::UTILX
+        QE::Modules)
+
+###########################################################
+# ld1.x
+###########################################################
+set(sources src/ld1.f90)
+qe_add_executable(qe_atomic_exe ${sources})
+set_target_properties(qe_atomic_exe PROPERTIES OUTPUT_NAME ld1.x)
+target_link_libraries(qe_atomic_exe
+    PRIVATE
+        QE::UPF
+        QE::Modules
+        QE::ATOMIC)
+
+###########################################################
+
+qe_install_targets(
+    qe_atomic
+    qe_atomic_exe
+)

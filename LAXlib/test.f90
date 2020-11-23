@@ -10,7 +10,7 @@
 #if defined(__MPI)
   INTEGER    STATUS(MPI_STATUS_SIZE)
 #else
-  INTEGER :: MPI_MAX_PROCESSOR_NAME=64
+#define MPI_MAX_PROCESSOR_NAME 64
 #endif
   INTEGER :: mype, npes, comm, ntgs, root
   LOGICAL :: iope

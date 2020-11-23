@@ -11,55 +11,27 @@
 ########################################
 #
 URL=http://files.qe-forge.org/index.php?file=
-RELEASE_VERSION := $(shell awk -F\' '/version_number/{print $$2}' ../Modules/version.f90 )
+RELEASE_VERSION := $(shell awk -F\' '/version_number/{print $$2}' ../include/qe_version.h )
 #
 #
 # Package maintainer: Andrea Ferretti
-WANT=want
-WANT_URL=http://www.wannier-transport.org/files/want-latest.tar.gz
+WANT=want-want-2.6.1
+WANT_URL=https://github.com/QEF/want/archive/want-2.6.1.tar.gz
+
 #
 # Package maintainer: Andrea Ferretti
-YAMBO_DEVEL=yambo-devel
-YAMBO_DEVEL_URL=http://www.yambo-code.org/files/yambo-devel-latest.tar.gz
-#
-# Package maintainer: Andrea Ferretti
-YAMBO=yambo-stable
-YAMBO_URL=http://www.yambo-code.org/files/yambo-stable-latest.tar.gz
+YAMBO=yambo-4.5.2
+YAMBO_URL=https://github.com/yambo-code/yambo/archive/4.5.2.tar.gz
+
 #
 # Package maintainer: 
 W90=wannier90-3.1.0
 W90_URL=https://codeload.github.com/wannier-developers/wannier90/tar.gz/v3.1.0
 #
-# Package maintainer: Layla Martin-Samos
-SAX=sax-2.0.3
-SAX_URL=$(URL)$(SAX).tar.gz
-#
 # Package maintainer: Davide Ceresoli
 GIPAW=qe-gipaw-$(RELEASE_VERSION)
 GIPAW_URL=https://github.com/dceresoli/qe-gipaw/archive/$(RELEASE_VERSION).tar.gz
 #
-# Package maintainer: Layla Martin-Samos
-PLUMED=plumed-1.3-qe
-PLUMED_URL=$(URL)$(PLUMED).tar.gz
-#
 # Package maintainer: Lorenzo Paulatto
 D3Q=d3q-latest
 D3Q_URL=https://d3q.sourceforge.io/d3q-qe$(RELEASE_VERSION)-latest.php?outname=d3q-qe$(RELEASE_VERSION)-latest.tgz
-#
-# Package maintainer: 
-TESTSUITE=qe-6.1-test-suite
-TESTSUITE_URL=$(URL)$(TESTSUITE).tar.gz
-#
-# Package maintainer: Marco Govoni
-WEST=West-2.0.1
-WEST_URL=http://www.west-code.org/downloads/$(WEST).tar.gz
-#
-# Package maintainer: Martin Schlipf
-SternheimerGW_version=0.15_QE6.3
-SternheimerGW=SternheimerGW-$(SternheimerGW_version)
-SternheimerGW_archive=v$(SternheimerGW_version).tar.gz
-SternheimerGW_URL=https://github.com/QEF/SternheimerGW/archive/$(SternheimerGW_archive)
-#
-# Package maintainer:
-EXAMPLES=qe-6.1-examples
-EXAMPLES_URL=$(URL)$(EXAMPLES).tar.gz

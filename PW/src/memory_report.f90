@@ -59,7 +59,7 @@ SUBROUTINE memory_report()
   !
   IMPLICIT NONE
   !
-  include 'laxlib.fh'
+  INCLUDE 'laxlib.fh'
   !
   INTEGER, PARAMETER :: MB=1024*1024
   INTEGER, PARAMETER :: GB=1024*MB
@@ -414,6 +414,10 @@ SUBROUTINE memory_report()
      IF ( totram .lt. GB ) WRITE( stdout, 1012 ) totram/MB, ' MB'
      IF ( totram .ge. GB ) WRITE( stdout, 1012 ) totram/GB, ' GB'
   END IF
+  !
+  ! check: more bands than plane waves? not good
+  !
+  IF ( npwx_g < nbndx ) CALL errore('memory_report','more bands than PWs!',1)
   !
  1010 format (/5x,'Estimated static dynamical RAM per process > ', F10.2, A3)
  1011 format (/5x,'Estimated max dynamical RAM per process > ', F10.2, A3)

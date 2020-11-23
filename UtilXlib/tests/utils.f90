@@ -1,7 +1,5 @@
 SUBROUTINE collect_results(test)
-#if defined(__MPI)
-    USE mpi
-#endif
+    USE parallel_include
     USE tester
     IMPLICIT NONE
     !
@@ -75,9 +73,7 @@ END SUBROUTINE save_random_seed
 
 
 SUBROUTINE no_test
-#if defined(__MPI)
-    USE mpi
-#endif
+    USE parallel_include
     USE tester
     IMPLICIT NONE
     !TYPE(tester_t) :: test

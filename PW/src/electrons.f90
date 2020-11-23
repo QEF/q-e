@@ -255,14 +255,14 @@ SUBROUTINE electrons()
         ENDIF 
         !
         IF ( dexx < 0.0_dp ) THEN
-           IF( Doloc ) THEN
+           !IF( Doloc ) THEN
               WRITE(stdout,'(5x,a,1e12.3)') "BEWARE: negative dexx:", dexx
               dexx = ABS ( dexx )
-           ELSE
-              CALL errore( 'electrons', 'dexx is negative! &
-                   & Check that exxdiv_treatment is appropriate for the system,&
-                   & or ecutfock may be too low', 1 )
-           ENDIF
+           !ELSE
+           !   CALL errore( 'electrons', 'dexx is negative! &
+           !        & Check that exxdiv_treatment is appropriate for the system,&
+           !        & or ecutfock may be too low', 1 )
+           !ENDIF
         ENDIF
         !
         !   remove the estimate exchange energy exxen used in the inner SCF
@@ -715,9 +715,9 @@ SUBROUTINE electrons_scf ( printout, exxen )
            ! ... For DFT+U, ns and ns_nc are also broadcast inside each pool
            ! ... to ensure consistency on all processors of all pools
            IF (noncolin) THEN
-              CALL mp_bcast( rhoin%ns_nc, root_pool, intra_pool_comm )
+              IF (ALLOCATED(rhoin%ns_nc)) CALL mp_bcast( rhoin%ns_nc, root_pool, intra_pool_comm )
            ELSE
-              CALL mp_bcast( rhoin%ns, root_pool, intra_pool_comm )
+              IF (ALLOCATED(rhoin%ns)) CALL mp_bcast( rhoin%ns, root_pool, intra_pool_comm )
            ENDIF
         ENDIF
         !

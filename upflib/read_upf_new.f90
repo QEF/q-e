@@ -42,7 +42,6 @@ CONTAINS
     !
     iun = xml_openfile ( filename )
     IF ( iun == -1 ) CALL upf_error('read_upf', 'cannot open file',1)
-    print *, ' READ_UPF_NEW'
     call xmlr_opentag ( 'qe_pp:pseudo', IERR = ierr )
     if ( ierr == 0 ) then
        v2 =.false.
@@ -56,6 +55,7 @@ CONTAINS
        end if
     end if
     if ( ierr /= 0 .and. ierr /= -2 ) then
+       call xml_closefile( )
        ierr = -81
        return
     end if
@@ -231,7 +231,14 @@ CONTAINS
     !
     CALL xmlr_opentag( capitalize_if_v2('pp_mesh') )
     CALL get_attr ( 'mesh', mesh )
-    if ( mesh /= upf%mesh ) call upf_error('read_pp_mesh','mismatch in mesh',mesh)
+    if ( mesh == 0 ) THEN
+       call upf_error('read_pp_mesh',&
+         'mesh size missing, using the one in header',-1)
+    else if ( mesh /= upf%mesh ) THEN
+       call upf_error('read_pp_mesh',&
+         'mismatch in mesh size, discarding the one in header',-1)
+       upf%mesh = mesh
+    end if
     CALL get_attr ( 'dx'  , upf%dx   )
     CALL get_attr ( 'xmin', upf%xmin )
     CALL get_attr ( 'rmax', upf%rmax )
@@ -340,7 +347,9 @@ CONTAINS
        END IF
        CALL xmlr_readtag( tag, upf%beta(1:upf%mesh,nb) )
        CALL get_attr('index', mb)
-       IF ( nb /= mb ) CALL upf_error('read_pp_nonlocal','mismatch',nb)
+       ! not-so-strict test: index is absent or incorrect in some UPF v.2 files
+       IF ( .NOT. v2 .AND. nb /= mb ) &
+            CALL upf_error('read_pp_nonlocal','mismatch',nb)
        CALL get_attr('label', upf%els_beta(nb))
        CALL get_attr('angular_momentum', upf%lll(nb))
        IF ( .NOT. v2 .AND. upf%has_so ) &
@@ -399,24 +408,31 @@ CONTAINS
        !
        ! read polinomial coefficients for Q_ij expansion at small radius
        !
+       IF ( upf%nqlc == 0 ) upf%nqlc = 2*upf%lmax+1
+       ALLOCATE( upf%rinner( upf%nqlc ) )
        IF ( v2 .AND. upf%nqf > 0) THEN
           ALLOCATE ( upf%qfcoef(upf%nqf, upf%nqlc, upf%nbeta, upf%nbeta) )
           CALL xmlr_opentag('PP_QFCOEF')
           READ(iun,*) upf%qfcoef
           CALL xmlr_closetag ()
-          ALLOCATE( upf%rinner( upf%nqlc ) )
           CALL xmlr_readtag('PP_RINNER',upf%rinner)
        ELSE IF ( upf%nqf == 0 ) THEN
-          ALLOCATE( upf%rinner(1), upf%qfcoef(1,1,1,1) )
-          upf%rinner = 0.0_dp; upf%qfcoef =0.0_dp
+          ALLOCATE( upf%qfcoef(1,1,1,1) )
+          upf%qfcoef =0.0_dp
        ENDIF
        !
        ! Read augmentation charge Q_ij
        !
        IF( upf%q_with_l ) THEN
           ALLOCATE( upf%qfuncl(upf%mesh,upf%nbeta*(upf%nbeta+1)/2,0:2*upf%lmax) )
+          upf%qfuncl(:,:,:) = 0.0_dp
+          ! NOTE: it would be wiser to dimension qfuncl as (:,:,0:upf%lmax)
+          ! and store the q_l(r) with index l=L/2 (see loop_on_l below)
+          ! This would save some storage and avoid "holes" in the array
+          ! that may be a source of trouble if not initialized to zero 
        ELSE
           ALLOCATE ( upf%qfunc(upf%mesh,upf%nbeta*(upf%nbeta+1)/2) )
+          upf%qfunc (:,:) = 0.0_dp
        END IF
        ALLOCATE ( aux(upf%mesh) )
        loop_on_nb: DO nb = 1,upf%nbeta
@@ -506,7 +522,8 @@ CONTAINS
        END IF
        CALL xmlr_readtag( tag, upf%chi(1:upf%mesh,nw) )
        call get_attr('index', ind)
-       if ( ind /= nw ) &
+       ! not-so-strict test: index is absent or incorrect in some UPF v.2 files
+       if ( .NOT. v2 .AND. ind /= nw ) &
             call upf_error('read_pp_pswfc','mismatch reading PSWFC', nw)
        call get_attr( 'label', upf%els(nw) )
        call get_attr( 'l', upf%lchi(nw) )
@@ -547,7 +564,9 @@ CONTAINS
           END IF
           CALL xmlr_readtag( tag, upf%aewfc(1:upf%mesh,nb) )
           CALL get_attr ('index',mb)
-          IF ( nb /= mb ) CALL upf_error('read_pp_full_wfc','mismatch',1)
+          ! not-so-strict test (and two more below):
+          ! index may be absent or incorrect in some UPF v.2 files
+          IF ( .NOT. v2 .AND. nb /= mb ) CALL upf_error('read_pp_full_wfc','mismatch',1)
        END DO
        !
        IF ( upf%has_so .AND. upf%tpawp ) THEN
@@ -560,7 +579,7 @@ CONTAINS
              END IF
              CALL xmlr_readtag(tag, upf%paw%aewfc_rel(1:upf%mesh,nb) )
              CALL get_attr ('index',mb)
-             IF ( nb /= mb ) CALL upf_error('read_pp_full_wfc','mismatch',2)
+             IF ( .NOT. v2 .AND. nb /= mb ) CALL upf_error('read_pp_full_wfc','mismatch',2)
           END DO
        END IF
        !
@@ -573,7 +592,7 @@ CONTAINS
           END IF
           CALL xmlr_readtag(tag, upf%pswfc(1:upf%mesh,nb) )
           CALL get_attr ('index',mb)
-          IF ( nb /= mb ) CALL upf_error('read_pp_full_wfc','mismatch',3)
+          IF ( .NOT. v2 .AND. nb /= mb ) CALL upf_error('read_pp_full_wfc','mismatch',3)
        END DO
        !
        CALL xmlr_closetag( )
@@ -597,7 +616,8 @@ CONTAINS
     DO nw = 1,upf%nwfc
        CALL xmlr_readtag( 'PP_RELWFC.'//i2c(nw), dummy )
        CALL get_attr( 'index' , nb )
-       IF ( nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',1)
+       ! not-so-strict test: index absent or incorrect in some UPF v.2 files
+       IF ( .NOT. v2 .AND. nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',1)
        CALL get_attr( 'els',   upf%els(nw) )
        CALL get_attr( 'nn',    upf%nn(nw) )
        CALL get_attr( 'lchi',  upf%lchi(nw) )
@@ -616,7 +636,7 @@ CONTAINS
           return
        end if
        CALL get_attr( 'index' , nw )
-       IF ( nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',2)
+       IF ( .NOT.v2 .AND. nb /= nw ) CALL upf_error('read_pp_spinorb','mismatch',2)
        CALL get_attr( 'lll',  upf%lll(nb) )
        CALL get_attr( 'jjj',  upf%jjj(nb) )
     ENDDO
@@ -714,7 +734,9 @@ CONTAINS
        CALL xmlr_opentag( 'PP_GIPAW_CORE_ORBITALS')
        CALL get_attr ('number_of_core_orbitals', upf%gipaw_ncore_orbitals)
     ELSE
-       print *, 'FIXME! upf%gipaw_ncore_orbitals'
+       CALL xmlr_readtag ('number_of_core_orbitals', upf%gipaw_ncore_orbitals) 
+       IF ( .NOT. upf%paw_as_gipaw) & 
+          CALL xmlr_readtag( 'number_of_valence_orbitals', upf%gipaw_wfs_nchannels)  
     END IF
     ALLOCATE ( upf%gipaw_core_orbital(upf%mesh,upf%gipaw_ncore_orbitals) )
     ALLOCATE ( upf%gipaw_core_orbital_n(upf%gipaw_ncore_orbitals) )
@@ -771,8 +793,6 @@ CONTAINS
           CALL xmlr_opentag( 'PP_GIPAW_ORBITALS' )
           CALL get_attr( 'number_of_valence_orbitals', &
                upf%gipaw_wfs_nchannels )
-       ELSE
-          print *, 'FIXME! upf%gipaw_wfs_nchannel'
        END IF
        ALLOCATE ( upf%gipaw_wfs_el(upf%gipaw_wfs_nchannels) )
        ALLOCATE ( upf%gipaw_wfs_ll(upf%gipaw_wfs_nchannels) )

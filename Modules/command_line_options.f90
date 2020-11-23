@@ -83,11 +83,11 @@ CONTAINS
         narg = narg + 1
         SELECT CASE ( TRIM(arg) )
            CASE ( '-i', '-in', '-inp', '-input' ) 
-           IF (read_string) THEN
-              CALL my_getarg ( input_command_line, narg, input_file_ )
-           ELSE
-              CALL get_command_argument ( narg, input_file_ )
-           ENDIF
+              IF (read_string) THEN
+                 CALL my_getarg ( input_command_line, narg, input_file_ )
+              ELSE
+                 CALL get_command_argument ( narg, input_file_ )
+              ENDIF
               IF ( TRIM (input_file_) == ' ' ) GO TO 15
               narg = narg + 1
            CASE ( '-ni', '-nimage', '-nimages', '-npot' ) 
@@ -106,7 +106,7 @@ CONTAINS
               ENDIF
               READ ( arg, *, ERR = 15, END = 15) npool_
               narg = narg + 1
-!
+! FIXME: following comment should be moved to a more visible place
 ! special case : task group paralleization and nyfft parallelization, both 
 !                introduced to improve scaling coexist and are in part interchangeable
 !                if TG is available it's faster that NYFFT becouse it communicates larger
@@ -123,16 +123,8 @@ CONTAINS
                  CALL get_command_argument ( narg, arg )
               ENDIF
               READ ( arg, *, ERR = 15, END = 15) ntg_         ! read the argument as ntg_
-                                               nyfft_ = ntg_  ! set nyfft_ equal to ntg_
+              nyfft_ = ntg_  ! set nyfft_ equal to ntg_
               narg = narg + 1
-!           CASE ( '-nyfft' ) 
-!              IF (read_string) THEN
-!                 CALL my_getarg ( input_command_line, narg, arg )
-!              ELSE
-!                 CALL get_command_argument ( narg, arg )
-!              ENDIF
-!              READ ( arg, *, ERR = 15, END = 15) nyfft_
-!              narg = narg + 1
            CASE ( '-nb', '-nband', '-nbgrp', '-nband_group') 
               IF (read_string) THEN
                  CALL my_getarg ( input_command_line, narg, arg )

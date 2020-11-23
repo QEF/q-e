@@ -272,7 +272,7 @@
 
                call start_clock('getexxv')
                ! HK: modidfed quad_hybrid extrapolation
-               call getvofr( nnrtot, hcub, n_exx, rho_in_sp, v, pairv(1,1,j,iobtl), pairv(1,2,j,iobtl),&
+               call getvofr_sphere( nnrtot, hcub, n_exx, rho_in_sp, v, pairv(1,1,j,iobtl), pairv(1,2,j,iobtl),&
                 pairv(1,3,j,iobtl), tran, .FALSE., d_pair(j), pair_dist(1,j,iobtl), pair_dist(2,j,iobtl),&
                 pair_dist(3,j,iobtl))
                call stop_clock('getexxv')
