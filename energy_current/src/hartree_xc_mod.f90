@@ -42,12 +42,12 @@ contains
       integer :: igm
       logical :: do_xc_curr
       real(kind=DP), allocatable ::charge_minus_or_zero(:)
-      real(kind=DP), allocatable ::charge_plus(:), exgradcharge_r(:, :), exdotcharge_r(:)
+      real(kind=DP), allocatable ::charge_plus_or_zero(:), exgradcharge_r(:, :), exdotcharge_r(:)
       real(kind=DP) :: update(1:3), update_a(1:3), update_b(1:3)
       real(kind=DP) :: fac, qq_fact
 
 !
-      complex(kind=DP), allocatable ::charge_g_plus(:), v_point(:), v_mean(:), charge_g_minus_or_zero(:)
+      complex(kind=DP), allocatable ::charge_g_plus_or_zero(:), v_point(:), v_mean(:), charge_g_minus_or_zero(:)
 !
       complex(kind=DP), allocatable ::exgradcharge_g(:, :)
 !
@@ -66,13 +66,13 @@ contains
       end if
 
       npw = npwx ! only gamma
-      allocate (charge_g_plus(ngm))
+      allocate (charge_g_plus_or_zero(ngm))
       allocate (charge_g_minus_or_zero(ngm))
       allocate (charge_minus_or_zero(dffts%nnr))
       allocate (v_point(ngm))
       allocate (v_mean(ngm))
 !
-      allocate (charge_plus(dffts%nnr))
+      allocate (charge_plus_or_zero(dffts%nnr))
       allocate (exgradcharge_r(3, dffts%nnr))
       allocate (exgradcharge_g(3, ngm))
       allocate (exdotcharge_r(dffts%nnr))
@@ -87,11 +87,11 @@ contains
 ! if only 2 points are used, t_minus == t_zero
 
 
-      call compute_charge(psic, scf_all%t_plus%evc, npw, nbnd, ngm, dffts, charge_plus, charge_g_plus)
+      call compute_charge(psic, scf_all%t_plus%evc, npw, nbnd, ngm, dffts, charge_plus_or_zero, charge_g_plus_or_zero)
       call compute_charge(psic, scf_all%t_minus%evc, npw, nbnd, ngm, dffts, charge_minus_or_zero, charge_g_minus_or_zero)
 
       if (do_xc_curr) then
-         exdotcharge_r(1:dffts%nnr) = (charge_plus(1:dffts%nnr) - charge_minus_or_zero(1:dffts%nnr))/delta_t
+         exdotcharge_r(1:dffts%nnr) = (charge_plus_or_zero(1:dffts%nnr) - charge_minus_or_zero(1:dffts%nnr))/delta_t
       end if
       !hartree derivative
       if (gstart == 2) then
@@ -100,28 +100,33 @@ contains
       do igm = gstart, ngm
          qq_fact = g(1, igm)**2.d0 + g(2, igm)**2.d0 + g(3, igm)**2.d0
          fac = e2*fpi/(tpiba2*qq_fact*omega)
-         v_point(igm) = (charge_g_plus(igm) - charge_g_minus_or_zero(igm))*fac/delta_t ! v(t+dt)-v(t-dt)
+         v_point(igm) = (charge_g_plus_or_zero(igm) - charge_g_minus_or_zero(igm))*fac/delta_t ! v(t+dt)-v(t-dt)
       end do
 
 
-      !we computed all the numerical derivatives: charge_plus/minus are not needed anymore, we have to compute stuff in zero
+      !we computed all the numerical derivatives: charge_plus_or_zero/minus are not needed anymore, we have to compute stuff
+      !in t=0.
+      !if 2pt derivative is used, t corresponds to scf_all%t_plus,
+      !if 3pt derivative is used, t corresponds to scf_all%t_zero. I put the result in charge_g_plus_or_zero and charge_plus_or_zero
+      !in any case, after the following two lines, charge_g_plus_or_zero and charge_plus_or_zero contains data related to t
       if (three_point_derivative) &
-         call compute_charge(psic, scf_all%t_zero%evc, npw, nbnd, ngm, dffts, charge_minus_or_zero, charge_g_minus_or_zero)
-      !now charge_minus_or_zero is charge at t-Dt if two point derivative is used; otherwise is charge at time t!
+         call compute_charge(psic, scf_all%t_zero%evc, npw, nbnd, ngm, dffts, charge_plus_or_zero, charge_g_plus_or_zero)
       !hartree potential
+      !charge_g_plus_or_zero is charge(r) at time t
+      !charge_plus_or_zero is charge(G) at time t
       if (gstart == 2) then
               v_mean(1)=0.d0
       end if
       do igm = gstart, ngm
          qq_fact = g(1, igm)**2.d0 + g(2, igm)**2.d0 + g(3, igm)**2.d0
          fac = e2*fpi/(tpiba2*qq_fact*omega)
-         v_mean(igm) = charge_g_minus_or_zero(igm)*fac
+         v_mean(igm) = charge_g_plus_or_zero(igm)*fac
       end do
 
       if (do_xc_curr) then
          do icoord = 1, 3
             do igm = 1, ngm
-               exgradcharge_g(icoord, igm) = charge_g_minus_or_zero(igm)*(0.d0, 1.d0)*g(icoord, igm)*tpiba
+               exgradcharge_g(icoord, igm) = charge_g_plus_or_zero(igm)*(0.d0, 1.d0)*g(icoord, igm)*tpiba
             end do
 
             psic = 0.d0
@@ -152,16 +157,16 @@ contains
       if (do_xc_curr) then
          exdotcharge_r(1:dffts%nnr) = exdotcharge_r(1:dffts%nnr)/omega
          !note that if three_point_derivative == true, charge_minus_or_zero is charge at time t
-         charge_minus_or_zero(1:dffts%nnr) = charge_minus_or_zero(1:dffts%nnr)/omega
+         charge_plus_or_zero(1:dffts%nnr) = charge_plus_or_zero(1:dffts%nnr)/omega
          exgradcharge_r(1:3, 1:dffts%nnr) = exgradcharge_r(1:3, 1:dffts%nnr)/omega
 !
 !
          do ir = 1, dffts%nnr
-            if (charge_minus_or_zero(ir) > 1.0E-10_DP) then
-               call pbex_current(abs(charge_minus_or_zero(ir)), exgradcharge_r(1:3, ir), 1, update_a(1:3))
-               call pbec_current(abs(charge_minus_or_zero(ir)), exgradcharge_r(1:3, ir), 1, update_b(1:3))
+            if (charge_plus_or_zero(ir) > 1.0E-10_DP) then
+               call pbex_current(abs(charge_plus_or_zero(ir)), exgradcharge_r(1:3, ir), 1, update_a(1:3))
+               call pbec_current(abs(charge_plus_or_zero(ir)), exgradcharge_r(1:3, ir), 1, update_b(1:3))
                update(1:3) = e2*(update_a(1:3) + update_b(1:3))
-               update(1:3) = -update(1:3)*exdotcharge_r(ir)*charge_minus_or_zero(ir)
+               update(1:3) = -update(1:3)*exdotcharge_r(ir)*charge_plus_or_zero(ir)
                J_xc(1:3) = J_xc(1:3) + update(1:3)
             end if
          end do
@@ -178,11 +183,11 @@ contains
       call print_clock('xc_current')
       if (ionode) print *, 'X-C CURRENT CALCULATED'
       deallocate (charge_minus_or_zero)
-      deallocate (charge_g_plus)
+      deallocate (charge_g_plus_or_zero)
       deallocate (charge_g_minus_or_zero)
       deallocate (v_point)
       deallocate (v_mean)
-      deallocate (charge_plus)
+      deallocate (charge_plus_or_zero)
       deallocate (exgradcharge_r)
       deallocate (exgradcharge_g)
       deallocate (exdotcharge_r)
