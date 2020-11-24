@@ -84,7 +84,7 @@ program all_currents
    logical :: three_point_derivative = .true. ! compute hartree derivative with 3 points
    logical :: add_i_current_b = .false.  ! if true adds i_current_b to the final result, in the output
    character(len=256) :: vel_input_units = 'PW'
-   logical :: ec_test ! activates tests for debugging purposes
+   logical :: ec_test, hpsi_test ! activates tests for debugging purposes
 
    !from ../PW/src/pwscf.f90
    include 'laxlib.fh'
@@ -109,7 +109,7 @@ program all_currents
                                        step_rem, ec_test, add_i_current_b, &
                                        save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
                                        re_init_wfc_3, three_point_derivative, &
-                                       n_repeat_every_step)
+                                       n_repeat_every_step, hpsi_test)
 
    endif
    ! PW input
@@ -128,7 +128,7 @@ program all_currents
       step_rem, ec_test, add_i_current_b, &
       save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
       re_init_wfc_3, three_point_derivative, &
-      n_repeat_every_step)
+      n_repeat_every_step,hpsi_test)
    if (vel_input_units == 'CP') then ! atomic units of cp are different
       vel_factor = 2.0_dp
       if (ionode) &
@@ -250,7 +250,8 @@ program all_currents
             if (exit_status /= 0) goto 100 !shutdown everything and exit
             !save evc, tau and vel for t
             call scf_result_set_from_global_variables(scf_all%t_zero)
-            call init_test(evc) ! TESTING ONLY
+            if (hpsi_test) &
+                call init_test(evc) ! TESTING ONLY
             call current_zero(j%z_current, tabr, H_g, &
                               nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
                               vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
@@ -293,7 +294,7 @@ program all_currents
          call current_kohn_sham(j%J_kohn, j%J_kohn_a, j%J_kohn_b, j%J_electron, delta_t, scf_all, &
                                 dvpsi_save, save_dvpsi, &
                                 nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
-                                tpiba2, at, vkb, nkb, xk, igk_k, g2kin, et)
+                                tpiba2, at, vkb, nkb, xk, igk_k, g2kin, et, hpsi_test)
          call write_results(traj, print_stat, j, ave_cur)
       end do
       !read new velocities and positions and continue, or exit the loop
@@ -392,7 +393,7 @@ contains
                                           step_rem, ec_test, add_i_current_b, &
                                           save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
                                           re_init_wfc_3, three_point_derivative, &
-                                          n_repeat_every_step)
+                                          n_repeat_every_step, hpsi_test)
       use io_global, ONLY: stdout, ionode, ionode_id
       implicit none
       integer, intent(in) :: iunit
@@ -408,7 +409,7 @@ contains
       logical, intent(inout) :: three_point_derivative
       logical, intent(inout) :: add_i_current_b
       character(len=256), intent(inout) :: vel_input_units
-      logical, intent(inout) :: ec_test ! activates tests for debugging purposes
+      logical, intent(inout) :: ec_test, hpsi_test ! activates tests for debugging purposes
       integer, intent(out) :: n_max
 
       integer :: ios
@@ -421,7 +422,7 @@ contains
          step_rem, ec_test, add_i_current_b, &
          save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
          re_init_wfc_3, three_point_derivative, &
-         n_repeat_every_step
+         n_repeat_every_step, hpsi_test
       !
       !   set default values for variables in namelist
       !
@@ -447,6 +448,7 @@ contains
       three_point_derivative = .true.
       vel_input_units = 'PW'
       n_repeat_every_step = 1
+      hpsi_test = .false.
       READ (iunit, energy_current, IOSTAT=ios)
       IF (ios /= 0) CALL errore('main', 'reading energy_current namelist', ABS(ios))
 
@@ -461,7 +463,7 @@ contains
       step_rem, ec_test, add_i_current_b, &
       save_dvpsi, re_init_wfc_1, re_init_wfc_2, &
       re_init_wfc_3, three_point_derivative, &
-      n_repeat_every_step)
+      n_repeat_every_step, hpsi_test)
       use io_global, ONLY: stdout, ionode, ionode_id
       use mp_world, ONLY: mpime, world_comm
       use mp, ONLY: mp_bcast
@@ -478,7 +480,7 @@ contains
       logical, intent(inout) :: three_point_derivative
       logical, intent(inout) :: add_i_current_b
       character(len=256), intent(inout) :: vel_input_units
-      logical, intent(inout) :: ec_test
+      logical, intent(inout) :: ec_test, hpsi_test
       integer, intent(out) :: n_max
       CALL mp_bcast(trajdir, ionode_id, world_comm)
       CALL mp_bcast(delta_t, ionode_id, world_comm)
@@ -501,6 +503,7 @@ contains
       CALL mp_bcast(re_init_wfc_3, ionode_id, world_comm)
       CALL mp_bcast(three_point_derivative, ionode_id, world_comm)
       CALL mp_bcast(n_repeat_every_step, ionode_id, world_comm)
+      CALL mp_bcast(hpsi_test, ionode_id, world_comm)
 
    end subroutine
 

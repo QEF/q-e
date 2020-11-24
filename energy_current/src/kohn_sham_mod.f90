@@ -19,7 +19,7 @@ contains
    subroutine current_kohn_sham(J, J_a, J_b, J_el, dt, scf_all, &
                                 dvpsi_save, save_dvpsi, &
                                 nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
-                                tpiba2, at, vkb, nkb, xk, igk_k, g2kin, et)
+                                tpiba2, at, vkb, nkb, xk, igk_k, g2kin, et, hpsi_test)
       use kinds, only: DP
       !use wvfct, only: nbnd, npw, npwx
       !use wavefunctions, only: psic, evc
@@ -48,7 +48,7 @@ contains
       implicit none
 
       type(multiple_scf_result), intent(in) :: scf_all
-      logical, intent(in) :: save_dvpsi
+      logical, intent(in) :: save_dvpsi, hpsi_test
       complex(dp), intent(inout) :: dvpsi_save(:, :, :)
 
       INTEGER, intent(in) :: nbnd, npwx
@@ -88,7 +88,8 @@ contains
       !call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
       call allocate_bec_type(nkb, nbnd, becp)
       call calbec(npw, vkb, evc, becp)
-      call test
+      if (hpsi_test) &
+          call test
 ! For preconditioning:
       do ig = 1, npw
          igk_k(ig, 1) = ig
