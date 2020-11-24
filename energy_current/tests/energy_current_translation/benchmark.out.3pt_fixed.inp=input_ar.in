@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.6 starts on 24Nov2020 at 13: 7:38 
+     Program PWSCF v.6.6 starts on 24Nov2020 at 14:29:40 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -100,7 +100,7 @@
 
      negative rho (up, down):  2.702E-05 0.000E+00
 
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        1.1 secs
 
      Self-consistent Calculation
 
@@ -114,7 +114,7 @@
      Davidson diagonalization with overlap
      ethr =  2.93E-06,  avg # of iterations =  6.0
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        1.6 secs
 
      total energy              =     -42.44096382 Ry
      estimated scf accuracy    <       0.00014451 Ry
@@ -123,7 +123,7 @@
      Davidson diagonalization with overlap
      ethr =  1.81E-06,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.7 secs
+     total cpu time spent up to now is        1.8 secs
 
      total energy              =     -42.44100544 Ry
      estimated scf accuracy    <       0.00001882 Ry
@@ -132,7 +132,7 @@
      Davidson diagonalization with overlap
      ethr =  2.35E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.9 secs
+     total cpu time spent up to now is        2.0 secs
 
      total energy              =     -42.44100977 Ry
      estimated scf accuracy    <       0.00000085 Ry
@@ -141,7 +141,7 @@
      Davidson diagonalization with overlap
      ethr =  1.07E-08,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is        2.1 secs
+     total cpu time spent up to now is        2.2 secs
 
      total energy              =     -42.44101015 Ry
      estimated scf accuracy    <       0.00000029 Ry
@@ -150,7 +150,7 @@
      Davidson diagonalization with overlap
      ethr =  3.57E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        2.3 secs
+     total cpu time spent up to now is        2.4 secs
 
      total energy              =     -42.44101012 Ry
      estimated scf accuracy    <       0.00000012 Ry
@@ -159,7 +159,7 @@
      Davidson diagonalization with overlap
      ethr =  1.47E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        2.5 secs
+     total cpu time spent up to now is        2.6 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          2.5E-09 Ry
@@ -168,7 +168,7 @@
      Davidson diagonalization with overlap
      ethr =  3.15E-11,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is        2.8 secs
+     total cpu time spent up to now is        2.9 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          1.2E-09 Ry
@@ -186,7 +186,7 @@
      Davidson diagonalization with overlap
      ethr =  7.56E-12,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        3.2 secs
+     total cpu time spent up to now is        3.3 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          2.5E-11 Ry
@@ -195,7 +195,7 @@
      Davidson diagonalization with overlap
      ethr =  3.07E-13,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is        3.4 secs
+     total cpu time spent up to now is        3.5 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          8.2E-12 Ry
@@ -265,7 +265,7 @@
      convergence has been achieved in  16 iterations
      charge density from previous step
 
-     total cpu time spent up to now is        4.9 secs
+     total cpu time spent up to now is        4.8 secs
 
      Self-consistent Calculation
 
@@ -279,7 +279,7 @@
      Davidson diagonalization with overlap
      ethr =  1.37E-11,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        5.2 secs
+     total cpu time spent up to now is        5.1 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          1.4E-09 Ry
@@ -288,7 +288,7 @@
      Davidson diagonalization with overlap
      ethr =  1.75E-11,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        5.4 secs
+     total cpu time spent up to now is        5.3 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          7.8E-11 Ry
@@ -297,7 +297,7 @@
      Davidson diagonalization with overlap
      ethr =  9.78E-13,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        5.6 secs
+     total cpu time spent up to now is        5.5 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          4.8E-13 Ry
@@ -306,7 +306,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        5.8 secs
+     total cpu time spent up to now is        5.7 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          1.2E-13 Ry
@@ -315,7 +315,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        6.0 secs
+     total cpu time spent up to now is        5.9 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          9.2E-15 Ry
@@ -324,7 +324,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        6.2 secs
+     total cpu time spent up to now is        6.1 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          1.7E-15 Ry
@@ -333,7 +333,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        6.4 secs
+     total cpu time spent up to now is        6.3 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          1.0E-15 Ry
@@ -342,7 +342,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        6.6 secs
+     total cpu time spent up to now is        6.5 secs
 
      End of self-consistent calculation
 
@@ -454,14 +454,14 @@
  Testiamo:            8
  CONTROLLO           8           8           4           8
  CONTROLLO_POS   0.0000000000000000        0.0000000000000000        0.0000000000000000     
-     zero_current :      2.17s CPU      2.32s WALL (       1 calls)
+     zero_current :      2.22s CPU      2.38s WALL (       1 calls)
  ZERO CURRENT CALCULATED
-     routine_zero :      2.17s CPU      2.32s WALL (       1 calls)
+     routine_zero :      2.22s CPU      2.38s WALL (       1 calls)
      calcolo_i    :      0.00s CPU      0.00s WALL (       1 calls)
  IONIC CURRENT CALCULATED
      charge density from previous step
 
-     total cpu time spent up to now is        9.2 secs
+     total cpu time spent up to now is        9.1 secs
 
      Self-consistent Calculation
 
@@ -484,7 +484,7 @@
      Davidson diagonalization with overlap
      ethr =  1.76E-11,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        9.6 secs
+     total cpu time spent up to now is        9.7 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          7.9E-11 Ry
@@ -493,7 +493,7 @@
      Davidson diagonalization with overlap
      ethr =  9.82E-13,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        9.9 secs
+     total cpu time spent up to now is       10.0 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          5.1E-13 Ry
@@ -502,7 +502,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is       10.1 secs
+     total cpu time spent up to now is       10.2 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          1.2E-13 Ry
@@ -511,7 +511,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       10.3 secs
+     total cpu time spent up to now is       10.5 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          9.0E-15 Ry
@@ -520,7 +520,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       10.5 secs
+     total cpu time spent up to now is       10.7 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          1.5E-15 Ry
@@ -529,7 +529,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       10.7 secs
+     total cpu time spent up to now is       11.0 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          1.4E-15 Ry
@@ -538,7 +538,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       10.9 secs
+     total cpu time spent up to now is       11.2 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          1.7E-15 Ry
@@ -547,7 +547,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       11.1 secs
+     total cpu time spent up to now is       11.5 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          3.7E-14 Ry
@@ -556,7 +556,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       11.3 secs
+     total cpu time spent up to now is       11.8 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          1.8E-14 Ry
@@ -565,7 +565,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       11.5 secs
+     total cpu time spent up to now is       12.0 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          2.3E-14 Ry
@@ -574,7 +574,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       11.8 secs
+     total cpu time spent up to now is       12.3 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          4.4E-15 Ry
@@ -583,7 +583,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       12.0 secs
+     total cpu time spent up to now is       12.6 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          1.6E-15 Ry
@@ -592,7 +592,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       12.2 secs
+     total cpu time spent up to now is       12.8 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          1.9E-15 Ry
@@ -601,7 +601,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       12.4 secs
+     total cpu time spent up to now is       13.1 secs
 
      total energy              =     -42.44101014 Ry
      estimated scf accuracy    <          1.6E-15 Ry
@@ -610,7 +610,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is       12.6 secs
+     total cpu time spent up to now is       13.3 secs
 
      End of self-consistent calculation
 
@@ -628,73 +628,73 @@
  check_charge   3.9999999999999449     
  check_charge   4.0000000000000560     
  check_charge   4.0000000000000036     
-     hartree_curr :      0.14s CPU      0.15s WALL (       1 calls)
+     hartree_curr :      0.17s CPU      0.18s WALL (       1 calls)
  HARTREE CURRENT CALCULATED
-     xc_current   :      0.05s CPU      0.05s WALL (       1 calls)
+     xc_current   :      0.07s CPU      0.07s WALL (       1 calls)
  X-C CURRENT CALCULATED
      charge density from previous step
                (0.0000000000000000,0.0000000000000000)               (0.0000000000000000,0.0000000000000000)               (0.0000000000000000,0.0000000000000000)             (0.51812378527633884,0.12961957053831699)             (0.51812378527633884,0.12961957053831699)
                (0.0000000000000000,0.0000000000000000)               (0.0000000000000000,0.0000000000000000)               (0.0000000000000000,0.0000000000000000)        (9.43016381079740977E-004,0.22369995374954271)        (9.43016381079740977E-004,0.22369995374954271)
                (0.0000000000000000,0.0000000000000000)               (0.0000000000000000,0.0000000000000000)               (0.0000000000000000,0.0000000000000000)             (0.31510662542832030,0.26674818456358257)             (0.31510662542832030,0.26674818456358257)
-     project      :      0.29s CPU      0.31s WALL (       1 calls)
+     project      :      0.35s CPU      0.41s WALL (       1 calls)
      kohn-first   :      0.00s CPU      0.00s WALL (       1 calls)
      kohn-second  :      0.00s CPU      0.00s WALL (       1 calls)
   KOHN POLARIZATION   1 COMPLETED
-     project      :      0.56s CPU      0.61s WALL (       2 calls)
+     project      :      0.69s CPU      0.80s WALL (       2 calls)
      kohn-first   :      0.00s CPU      0.00s WALL (       2 calls)
      kohn-second  :      0.00s CPU      0.00s WALL (       2 calls)
   KOHN POLARIZATION   2 COMPLETED
-     project      :      0.85s CPU      0.92s WALL (       3 calls)
+     project      :      1.04s CPU      1.18s WALL (       3 calls)
      kohn-first   :      0.00s CPU      0.00s WALL (       3 calls)
      kohn-second  :      0.00s CPU      0.00s WALL (       3 calls)
   KOHN POLARIZATION   3 COMPLETED
-     kohn_current :      1.02s CPU      1.10s WALL (       1 calls)
+     kohn_current :      1.27s CPU      1.44s WALL (       1 calls)
  KOHN CURRENT CALCULATED
 total energy current:  -0.849853264606E-03 -0.849847297444E-03 -0.849848349210E-03
 center of mass velocity of type   1:   0.200000000000E-04  0.200000000000E-04  0.200000000000E-04
  Finished reading trajectory  at step            0
 
-     init_run     :      0.24s CPU      0.33s WALL (       1 calls)
-     electrons    :      7.59s CPU      8.88s WALL (       3 calls)
-     update_pot   :      0.45s CPU      0.53s WALL (       4 calls)
+     init_run     :      0.27s CPU      0.35s WALL (       1 calls)
+     electrons    :      8.15s CPU      9.50s WALL (       3 calls)
+     update_pot   :      0.50s CPU      0.62s WALL (       4 calls)
 
      Called by init_run:
      wfcinit      :      0.02s CPU      0.03s WALL (       1 calls)
-     potinit      :      0.14s CPU      0.21s WALL (       1 calls)
-     hinit0       :      0.06s CPU      0.07s WALL (       1 calls)
+     potinit      :      0.17s CPU      0.22s WALL (       1 calls)
+     hinit0       :      0.07s CPU      0.08s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      1.76s CPU      1.88s WALL (      43 calls)
-     sum_band     :      0.96s CPU      1.03s WALL (      44 calls)
-     v_of_rho     :      4.40s CPU      5.44s WALL (      45 calls)
-     mix_rho      :      0.94s CPU      1.13s WALL (      43 calls)
+     c_bands      :      1.88s CPU      2.02s WALL (      43 calls)
+     sum_band     :      1.06s CPU      1.14s WALL (      44 calls)
+     v_of_rho     :      4.75s CPU      5.80s WALL (      45 calls)
+     mix_rho      :      1.01s CPU      1.22s WALL (      43 calls)
 
      Called by c_bands:
-     init_us_2    :      0.14s CPU      0.15s WALL (      90 calls)
-     regterg      :      1.49s CPU      1.60s WALL (      43 calls)
+     init_us_2    :      0.16s CPU      0.16s WALL (      90 calls)
+     regterg      :      1.58s CPU      1.72s WALL (      43 calls)
 
      Called by *egterg:
      rdiaghg      :      0.00s CPU      0.00s WALL (     119 calls)
-     h_psi        :      2.05s CPU      2.23s WALL (     188 calls)
+     h_psi        :      2.29s CPU      2.55s WALL (     188 calls)
      g_psi        :      0.01s CPU      0.01s WALL (      81 calls)
 
      Called by h_psi:
-     h_psi:calbec :      0.09s CPU      0.09s WALL (     188 calls)
-     vloc_psi     :      1.90s CPU      2.07s WALL (     188 calls)
+     h_psi:calbec :      0.10s CPU      0.10s WALL (     188 calls)
+     vloc_psi     :      2.12s CPU      2.37s WALL (     188 calls)
      add_vuspsi   :      0.05s CPU      0.05s WALL (     188 calls)
 
      General routines
-     calbec       :      0.13s CPU      0.13s WALL (     274 calls)
-     fft          :      2.16s CPU      2.35s WALL (     361 calls)
-     ffts         :      0.17s CPU      0.17s WALL (      51 calls)
-     fftw         :      2.30s CPU      2.53s WALL (     888 calls)
+     calbec       :      0.15s CPU      0.15s WALL (     274 calls)
+     fft          :      2.32s CPU      2.57s WALL (     361 calls)
+     ffts         :      0.19s CPU      0.19s WALL (      51 calls)
+     fftw         :      2.53s CPU      2.83s WALL (     888 calls)
 
      Parallel routines
 
-     PWSCF        :     12.20s CPU     13.90s WALL
+     PWSCF        :     13.12s CPU     15.03s WALL
 
 
-   This run was terminated on:  13: 7:52  24Nov2020            
+   This run was terminated on:  14:29:55  24Nov2020            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

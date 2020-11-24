@@ -22,10 +22,12 @@ subroutine init_test(input_vector)
         complex(dp), allocatable :: tmp(:,:) ! temporary working vector
 
 
-        allocate(hpsi(npwx,nbnd))
-        allocate(spsi(npwx,nbnd))
-        allocate(chxpsi(npwx,nbnd))
-        allocate(input(npwx,nbnd))
+        if (.not. allocated(hpsi)) then
+            allocate(hpsi(npwx,nbnd))
+            allocate(spsi(npwx,nbnd))
+            allocate(chxpsi(npwx,nbnd))
+            allocate(input(npwx,nbnd))
+        end if
         allocate(tmp(npwx,nbnd))
 
         input=input_vector
