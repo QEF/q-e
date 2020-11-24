@@ -43,7 +43,7 @@ contains
       USE control_lr, ONLY: nbnd_occ, alpha_pv
       use mp, ONLY: mp_sum, mp_min, mp_max
       USE mp_global, ONLY: inter_pool_comm, intra_pool_comm
-      USE eqv, ONLY: evq
+!      USE eqv, ONLY: evq
 
       implicit none
       integer, intent(IN) :: ipol
@@ -71,7 +71,7 @@ contains
       COMPLEX(DP), EXTERNAL :: zdotc
       real(DP), EXTERNAL ::ddot
       real(DP) ::emme(nbnd, nbnd)
-      logical ::l_test, exst
+!     logical ::l_test, exst
 
       external ch_psi_all, cg_psi
       !debug
@@ -98,26 +98,26 @@ contains
       !    Apply -P^+_c
       !    NB it uses dvpsi as workspace
       !
-      l_test = .true.
+ !     l_test = .true.
       !ortogonalizzazione manuale
-      if (l_test) then
-         emme = 0.d0
-         call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, evc, 2*npwx, dpsi, 2*npwx, 0.d0, emme, nbnd)
-         if (gstart == 2) then
+ !     if (l_test) then
+      emme = 0.d0
+      call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, evc, 2*npwx, dpsi, 2*npwx, 0.d0, emme, nbnd)
+      if (gstart == 2) then
             do ibnd = 1, nbnd
                do jbnd = 1, nbnd
                   emme(ibnd, jbnd) = emme(ibnd, jbnd) - dble(conjg(evc(1, ibnd))*dpsi(1, jbnd))
                end do
             end do
-         end if
-         call mp_sum(emme, intra_pool_comm)
+      end if
+      call mp_sum(emme, intra_pool_comm)
 !     do ibnd=1,nbnd
 !        do jbnd=1,nbnd
 !            dpsi(1:npw,ibnd)=dpsi(1:npw,ibnd)-evc(1:npw,jbnd)*emme(jbnd,ibnd)
 !        end do
 !     end do
-         call dgemm('N', 'N', 2*npw, nbnd, nbnd, -1.d0, evc, 2*npwx, emme, nbnd, 1.d0, dpsi, 2*npwx)
-      end if
+      call dgemm('N', 'N', 2*npw, nbnd, nbnd, -1.d0, evc, 2*npwx, emme, nbnd, 1.d0, dpsi, 2*npwx)
+!      end if
       !dpsi=-dpsi
       !
       !   dpsi contains P^+_c [H-eS,x] psi_v for the three crystal polarizations
