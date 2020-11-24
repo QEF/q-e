@@ -5,7 +5,7 @@ program all_currents
    use ionic_mod, only: init_ionic, ionic_init_type, current_ionic
    use scf_result_mod, only: multiple_scf_result_allocate, &
                              scf_result_set_from_global_variables, multiple_scf_result_deallocate, &
-                             multiple_scf_result
+                             multiple_scf_result, scf_result_set_global_variables
    USE environment, ONLY: environment_start, environment_end
    use io_global, ONLY: ionode
    use wavefunctions, only: evc
@@ -286,8 +286,13 @@ program all_currents
             call current_ionic(ionic_data, &
                           j%i_current, j%i_current_a, j%i_current_b, j%i_current_c, j%i_current_d, j%i_current_e, add_i_current_b, &
                                nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
+            call scf_result_set_from_global_variables(scf_all%t_plus)
+         else
+                 ! restore wfct and potentials for t=0 (needed only if last point was t+dt)
+            call scf_result_set_global_variables(scf_all%t_zero)
          end if
          !calculate second part of energy current
+
          call current_hartree_xc(three_point_derivative, delta_t, scf_all, &
                                  j%j_hartree, j%j_xc, nbnd, npw, npwx, dffts, psic, g, ngm, gstart, &
                                  tpiba, omega, tpiba2)

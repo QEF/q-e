@@ -76,16 +76,14 @@ contains
 
       !---------------------------------KOHN------------------------------------------------
       call start_clock('kohn_current')
-      call scf_result_set_tau_vel_global_variables(scf_all%t_zero) ! this set evc, becp, vkb, tau and vel from saved values
       allocate (dpsi(npwx, nbnd))
       allocate (dvpsi(npwx, nbnd))
 ! init potentials needed to evaluate  H|psi>
       call update_pot()
       call hinit1()
-      call scf_result_set_global_variables(scf_all%t_zero) ! this set evc, becp, vkb, tau and vel from saved values
+      call init_us_1()
+      call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
       call sum_band()
-      !call init_us_1()
-      !call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
       call allocate_bec_type(nkb, nbnd, becp)
       call calbec(npw, vkb, evc, becp)
       if (hpsi_test) &

@@ -7,7 +7,7 @@ module scf_result_mod
       complex(kind=dp), allocatable :: evc(:, :)
       REAL(DP), ALLOCATABLE :: vrs(:,:)
       !type(bec_type) :: becp
-      complex(dp),allocatable :: vkb(:,:) 
+      !complex(dp),allocatable :: vkb(:,:) 
       real(kind=dp), allocatable :: tau(:, :), vel(:, :), et(:,:)
    end type
    type multiple_scf_result
@@ -23,7 +23,7 @@ contains
       allocate (t%vrs(nnr,nspin))
       allocate (t%tau(3, natoms))
       allocate (t%vel(3, natoms))
-      allocate (t%vkb(npwx, nkb))
+      !allocate (t%vkb(npwx, nkb))
       allocate (t%et(nbnd,nkstot))
       !call allocate_bec_type(nkb, nbnd, t%becp)
    end subroutine
@@ -36,7 +36,7 @@ contains
       !call deallocate_bec_type(t%becp)
       deallocate (t%vel)
       deallocate (t%tau)
-      deallocate (t%vkb)
+      !deallocate (t%vkb)
       deallocate (t%et)
    end subroutine
 
@@ -46,7 +46,7 @@ contains
       use ions_base, only: tau
       use dynamics_module, only: vel
       use scf, only : vrs
-      use uspp, only: vkb
+      !use uspp, only: vkb
       !use becmod, only : becp
       implicit none
       type(scf_result), intent(inout) :: t
@@ -54,7 +54,7 @@ contains
       t%evc = evc
       t%et = et
       t%vrs = vrs
-      t%vkb = vkb
+      !t%vkb = vkb
       !if (allocated(becp%r)) &
       !   t%becp%r = becp%r
       !if (allocated(becp%k)) &
@@ -86,19 +86,31 @@ contains
    subroutine scf_result_set_global_variables(t)
 
       use wavefunctions, only: evc
-      use wvfct, only: et
+      use wvfct, only: et,npw, npwx
       use ions_base, only: tau
       use dynamics_module, only: vel
       use scf, only : vrs
       use uspp, only : vkb
+      use extrapolation, only : update_pot
+      use klist, only: xk, igk_k
       !use becmod, only : becp
       implicit none
       type(scf_result), intent(in) :: t
 
+      tau = t%tau
+      vel = t%vel
+      npw=npwx
+      call update_pot()
+      call hinit1()
+      call init_us_1()
+      call init_us_2(npw, igk_k(1, 1), xk(1, 1), vkb)
+
       evc = t%evc
       et = t%et
       vrs = t%vrs
-      vkb = t%vkb
+      call sum_band()
+      !vkb = t%vkb
+
       !if (allocated(becp%r)) &
       !   becp%r = t%becp%r
       !if (allocated(becp%k)) &
@@ -111,9 +123,7 @@ contains
       !becp%mype =       t%becp%mype
       !becp%nbnd_loc =   t%becp%nbnd_loc
       !becp%ibnd_begin = t%becp%ibnd_begin
-      tau = t%tau
-      vel = t%vel
-
+      
    end subroutine
 
    subroutine multiple_scf_result_allocate(t, allocate_zero)
