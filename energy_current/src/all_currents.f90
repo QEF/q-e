@@ -276,18 +276,7 @@ program all_currents
          !save evc, tau and vel for t+dt
          call scf_result_set_from_global_variables(scf_all%t_plus)
 
-         if (.not. three_point_derivative) then
-            ! we are in t in this case, so we call here routines that do not compute numerical derivatives
-            call init_test(evc) ! TESTING ONLY
-            call current_zero(j%z_current, tabr, H_g, &
-                              nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
-                              vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
-                              nkb, vkb, deeq, upf, nh, xk, igk_k, bg, ec_test)
-            call current_ionic(ionic_data, &
-                          j%i_current, j%i_current_a, j%i_current_b, j%i_current_c, j%i_current_d, j%i_current_e, add_i_current_b, &
-                               nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
-            call scf_result_set_from_global_variables(scf_all%t_plus)
-         else
+         if (three_point_derivative) then
                  ! restore wfct and potentials for t=0 (needed only if last point was t+dt)
             call scf_result_set_global_variables(scf_all%t_zero)
          end if
@@ -300,6 +289,18 @@ program all_currents
                                 dvpsi_save, save_dvpsi, &
                                 nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
                                 tpiba2, at, vkb, nkb, xk, igk_k, g2kin, et, hpsi_test)
+         if (.not. three_point_derivative) then
+            ! we are in t in this case, so we call here routines that do not compute numerical derivatives
+            if (hpsi_test) &
+                call init_test(evc) ! TESTING ONLY
+            call current_zero(j%z_current, tabr, H_g, &
+                              nbnd, npwx, npw, dffts, nsp, zv, nat, ityp, amass, tau, &
+                              vel, tpiba, tpiba2, at, alat, omega, psic, evc, ngm, gg, g, gstart, &
+                              nkb, vkb, deeq, upf, nh, xk, igk_k, bg, ec_test)
+            call current_ionic(ionic_data, &
+                          j%i_current, j%i_current_a, j%i_current_b, j%i_current_c, j%i_current_d, j%i_current_e, add_i_current_b, &
+                               nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
+         end if
          call write_results(traj, print_stat, j, ave_cur)
       end do
       !read new velocities and positions and continue, or exit the loop
