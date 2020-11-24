@@ -75,8 +75,8 @@ contains
 
       external ch_psi_all, cg_psi
       !debug
-      allocate (evq(npwx, nbnd))
-      evq = evc
+!      allocate (evq(npwx, nbnd))
+!      evq = evc
       !
 
       ik = 1
@@ -192,7 +192,7 @@ contains
       !
       IF (nkb > 0) call deallocate_bec_type(becp2)
 
-      deallocate (evq)
+!      deallocate (evq)
 
       return
 
