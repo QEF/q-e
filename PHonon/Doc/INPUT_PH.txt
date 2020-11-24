@@ -183,6 +183,9 @@ NAMELIST: &INPUTPH
                    macroscopic dielectric constant of the system is
                    computed. Do not set "epsil" to .true. if you have a
                    metallic system or q/=0: the code will complain and stop.
+                   Note: the input value of epsil will be ignored if ldisp=.true.
+                   (the code will automatically set epsil to .false. for metals,
+                   to .true. for insulators: see routine PHonon/PH/prepare_q.f90).
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -975,4 +978,4 @@ ________________________________________________________________________
    information.
    
 
-This file has been created by helpdoc utility on Fri Jul 17 10:28:27 CEST 2020
+This file has been created by helpdoc utility on Mon Nov 23 08:30:06 UTC 2020

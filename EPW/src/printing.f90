@@ -1188,8 +1188,8 @@
     USE cell_base,     ONLY : bg
     USE control_flags, ONLY : iverbosity
     USE pwcom,         ONLY : ef
-    USE epwcom,        ONLY : nbndsub, nkf1, nkf2, nkf3
-    USE elph2,         ONLY : etf, xkf, nkqtotf, nktotf
+    USE epwcom,        ONLY : mp_mesh_k, nbndsub, nkf1, nkf2, nkf3
+    USE elph2,         ONLY : bztoibz, etf, xkf, nkqtotf, nktotf
     USE constants_epw, ONLY : ryd2ev, zero
     USE io_var,        ONLY : iufilFS
     USE elph2,         ONLY : nkqf, ibndmin, ibndmax
@@ -1260,7 +1260,11 @@
         WRITE(iufilFS, '(i5, 3f12.6)') nkf2, (bg(i, 2) / DBLE(nkf2), i = 1, 3)
         WRITE(iufilFS, '(i5, 3f12.6)') nkf3, (bg(i, 3) / DBLE(nkf3), i = 1, 3)
         WRITE(iufilFS, '(i5, 4f12.6)') 1, 1.0d0, 0.0d0, 0.0d0, 0.0d0
-        WRITE(iufilFS, '(6f12.6)') ((etf_all(ibnd, ik * 2 - 1) - ef) * ryd2ev, ik = 1, nktotf)
+        IF (mp_mesh_k) THEN
+          WRITE(iufilFS, '(6f12.6)') ((etf_all(ibnd, 2 * bztoibz(ik) - 1) - ef) * ryd2ev, ik = 1, nkf1 * nkf2 * nkf3)
+        ELSE
+          WRITE(iufilFS, '(6f12.6)') ((etf_all(ibnd, ik * 2 - 1) - ef) * ryd2ev, ik = 1, nktotf)
+        ENDIF
         CLOSE(iufilFS)
         !
       ENDDO

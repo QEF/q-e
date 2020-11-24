@@ -1,4 +1,4 @@
-VERSION = 6.6
+VERSION = 6.7
 HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
 
 doc:  all

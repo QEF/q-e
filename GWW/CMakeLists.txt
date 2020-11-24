@@ -31,8 +31,7 @@ set(sources_gww
     gww/self_energy_storage.f90
     gww/start_end.f90
     gww/times_gw.f90
-    gww/vcprim.f90
-)
+    gww/vcprim.f90)
 
 set(sources_pw4gww
     pw4gww/allocate_wannier.f90
@@ -71,10 +70,7 @@ set(sources_pw4gww
     pw4gww/wannier_bse.f90
     pw4gww/hpsi_pw4gww.f90
     pw4gww/cgsolve_all_gamma.f90
-    pw4gww/realus.f90
-    pw4gww/operator_debug.f90
-    pw4gww/operator_1_vp.f90
-)
+    pw4gww/realus.f90)
 
 set(sources_bse
     bse/openfil_bse.f90
@@ -110,8 +106,7 @@ set(sources_bse
     bse/print_bse.f90
     bse/contract_w_exc.f90
     bse/qpe_exc.f90
-    bse/qpcorrections.f90
-    )
+    bse/qpcorrections.f90)
 
 set(sources_head
     head/bcast_ph_input.f90
@@ -119,8 +114,7 @@ set(sources_head
     head/lanczos_k.f90
     head/openfilq.f90
     head/phq_readin.f90
-    head/solve_head.f90
-)
+    head/solve_head.f90)
 
 set(sources_minpack
     minpack/dpmpar.f90
@@ -135,8 +129,7 @@ set(sources_minpack
     minpack/lmdif.f90
     minpack/lmpar.f90
     minpack/mlegzo.f90
-    minpack/qrsolv.f90
-)
+    minpack/qrsolv.f90)
 
 set(sources_simple
     simple/stop_pp.f90
@@ -150,8 +143,7 @@ set(sources_simple
     simple/gk_sort_limit.f90
     simple/khamiltonian.f90
     simple/init_us_2_max.f90
-    simple/commutator.f90
-)
+    simple/commutator.f90)
 
 set(sources_simple_bse
     simple_bse/simple_object.f90
@@ -164,8 +156,7 @@ set(sources_simple_bse
     simple_bse/diago_exc_cg.f90
     simple_bse/spectrum.f90
     simple_bse/lanczos.f90
-    simple_bse/build_eemat.f90
-)
+    simple_bse/build_eemat.f90)
 
 set(sources_simple_ip
     simple_ip/simple_ip_objects.f90
@@ -174,8 +165,7 @@ set(sources_simple_ip
     simple_ip/tetra_mod1.f90
     simple_ip/interpolation.f90
     simple_ip/diagonalization.f90
-    simple_ip/dielectric.f90
-)
+    simple_ip/dielectric.f90)
 
 qe_add_library(qe_gww ${sources_gww})
 add_library(QE::GWW ALIAS qe_gww)
@@ -194,7 +184,10 @@ target_link_libraries(qe_gww_pw4gww
         QE::PW
         QE::Modules
         QE::GWW
-)
+        QE::UTILX
+        QE::FFTX
+        QE::UPF
+        QE::LAX)
 
 qe_add_library(qe_gww_bse ${sources_bse})
 add_library(QE::GWW::bse ALIAS qe_gww_bse)
@@ -204,7 +197,8 @@ target_link_libraries(qe_gww_bse
         QE::GWW
         QE::PW
         QE::GWW::pw4gww
-)
+        QE::UTILX
+        QE::UPF)
 
 qe_add_library(qe_gww_head ${sources_head})
 add_library(QE::GWW::head ALIAS qe_gww_head)
@@ -214,7 +208,9 @@ target_link_libraries(qe_gww_head
         QE::LR_Modules
         QE::Modules
         QE::PHonon::PH
-)
+        QE::UTILX
+        QE::UPF
+        QE::FFTX)
 
 qe_add_library(qe_gww_minpack ${sources_minpack})
 add_library(QE::GWW::minpack ALIAS qe_gww_minpack)
@@ -228,7 +224,10 @@ target_link_libraries(qe_gww_simple
     PRIVATE
         QE::PW
         QE::GWW
-        QE::Modules)
+        QE::Modules
+        QE::UPF
+        QE::UTILX
+        QE::FFTX)
 
 qe_add_library(qe_gww_simplebse ${sources_simple_bse})
 add_library(QE::GWW::simple_bse ALIAS qe_gww_simplebse)
@@ -352,11 +351,4 @@ qe_install_targets(
     # Executables
     qe_gww_util_grap_exe
     qe_gww_util_abcoefftoeps_exe
-    qe_gww_util_memorypw4gww_exe
-    qe_gww_bse_bse_main_exe 
-    qe_gww_gww_exe
-    qe_gww_gww_fit_exe
-    qe_gww_head_exe
-    qe_gww_simple_bse_exe
-    qe_gww_simple_ip_exe
-)
+    qe_gww_util_memorypw4gww_exe)

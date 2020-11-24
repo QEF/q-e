@@ -35,12 +35,6 @@ Structure of the input data:
    <namelist name="lr_input" >
       <label> This namelist is always needed !
       </label>
-      <var name="title" type="CHARACTER" >
-         <info> A string describing the job.
-         </info>
-         <status> OPTIONAL
-         </status>
-      </var>
       <var name="prefix" type="CHARACTER" >
          <default> &apos;pwscf&apos;
          </default>
