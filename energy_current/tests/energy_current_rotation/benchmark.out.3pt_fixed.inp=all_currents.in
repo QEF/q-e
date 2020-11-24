@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.6 starts on 24Nov2020 at 12:33:38 
+     Program PWSCF v.6.6 starts on 24Nov2020 at 13: 7: 6 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -161,7 +161,7 @@
 
      negative rho (up, down):  2.023E-04 0.000E+00
 
-     total cpu time spent up to now is        2.6 secs
+     total cpu time spent up to now is        2.7 secs
 
      total energy              =    4067.55422197 Ry
      estimated scf accuracy    <       0.00316699 Ry
@@ -262,7 +262,7 @@
      Davidson diagonalization with overlap
      ethr =  1.36E-11,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        4.8 secs
+     total cpu time spent up to now is        4.7 secs
 
      End of self-consistent calculation
 
@@ -313,7 +313,7 @@
      Davidson diagonalization with overlap
      ethr =  2.49E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        5.7 secs
+     total cpu time spent up to now is        5.6 secs
 
      total energy              =   12293.00712635 Ry
      estimated scf accuracy    <          9.4E-09 Ry
@@ -322,7 +322,7 @@
      Davidson diagonalization with overlap
      ethr =  1.18E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        5.9 secs
+     total cpu time spent up to now is        5.8 secs
 
      total energy              =   12293.00712635 Ry
      estimated scf accuracy    <          6.7E-10 Ry
@@ -356,9 +356,9 @@
      convergence has been achieved in   7 iterations
  ROUTINE_ZERO BEGINNING
  check_charge   3.9999999999999845     
-     zero_current :      0.09s CPU      0.10s WALL (       1 calls)
+     zero_current :      0.10s CPU      0.10s WALL (       1 calls)
  ZERO CURRENT CALCULATED
-     routine_zero :      0.09s CPU      0.10s WALL (       1 calls)
+     routine_zero :      0.10s CPU      0.10s WALL (       1 calls)
      calcolo_i    :      0.00s CPU      0.00s WALL (       1 calls)
  IONIC CURRENT CALCULATED
      charge density from previous step
@@ -380,7 +380,7 @@
      Davidson diagonalization with overlap
      ethr =  5.63E-06,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        6.8 secs
+     total cpu time spent up to now is        6.9 secs
 
      total energy              =    2115.00628421 Ry
      estimated scf accuracy    <       0.00001197 Ry
@@ -425,7 +425,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-12,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        7.7 secs
+     total cpu time spent up to now is        7.8 secs
 
      End of self-consistent calculation
 
@@ -443,7 +443,7 @@
  check_charge   4.0000000000000107     
  check_charge   4.0000000000001004     
  check_charge   3.9999999999999845     
-     hartree_curr :      0.12s CPU      0.13s WALL (       1 calls)
+     hartree_curr :      0.14s CPU      0.14s WALL (       1 calls)
  HARTREE CURRENT CALCULATED
      xc_current   :      0.05s CPU      0.05s WALL (       1 calls)
  X-C CURRENT CALCULATED
@@ -451,66 +451,66 @@
                (0.0000000000000000,0.0000000000000000)               (0.0000000000000000,0.0000000000000000)               (0.0000000000000000,0.0000000000000000)             (0.44721325287765962,0.12541699703576589)             (0.44721325287765962,0.12541699703576589)
                (0.0000000000000000,0.0000000000000000)               (0.0000000000000000,0.0000000000000000)               (0.0000000000000000,0.0000000000000000)        (2.39677780698517758E-003,0.12924415560759242)        (2.39677780698517758E-003,0.12924415560759242)
                (0.0000000000000000,0.0000000000000000)               (0.0000000000000000,0.0000000000000000)               (0.0000000000000000,0.0000000000000000)             (0.18820227881646348,0.20289546840441530)             (0.18820227881646348,0.20289546840441530)
-     project      :      0.29s CPU      0.33s WALL (       1 calls)
+     project      :      0.29s CPU      0.34s WALL (       1 calls)
      kohn-first   :      0.00s CPU      0.00s WALL (       1 calls)
      kohn-second  :      0.00s CPU      0.00s WALL (       1 calls)
   KOHN POLARIZATION   1 COMPLETED
-     project      :      0.58s CPU      0.63s WALL (       2 calls)
+     project      :      0.58s CPU      0.65s WALL (       2 calls)
      kohn-first   :      0.00s CPU      0.00s WALL (       2 calls)
      kohn-second  :      0.00s CPU      0.00s WALL (       2 calls)
   KOHN POLARIZATION   2 COMPLETED
-     project      :      0.88s CPU      0.95s WALL (       3 calls)
+     project      :      0.88s CPU      0.97s WALL (       3 calls)
      kohn-first   :      0.00s CPU      0.00s WALL (       3 calls)
      kohn-second  :      0.00s CPU      0.00s WALL (       3 calls)
   KOHN POLARIZATION   3 COMPLETED
-     kohn_current :      1.02s CPU      1.12s WALL (       1 calls)
+     kohn_current :      1.01s CPU      1.15s WALL (       1 calls)
  KOHN CURRENT CALCULATED
 total energy current:   0.435965958710E+02  0.609364941227E+02  0.652211055689E+01
 center of mass velocity of type   1:  -0.655865195716E-02  0.388259909892E-02  0.309411879974E-02
 center of mass velocity of type   2:   0.117835578422E-01 -0.709993756873E-02 -0.537011079675E-02
  Finished reading trajectory  at step            0
 
-     init_run     :      0.32s CPU      0.36s WALL (       1 calls)
-     electrons    :      4.87s CPU      5.75s WALL (       3 calls)
+     init_run     :      0.29s CPU      0.37s WALL (       1 calls)
+     electrons    :      4.92s CPU      5.73s WALL (       3 calls)
      update_pot   :      0.37s CPU      0.48s WALL (       4 calls)
 
      Called by init_run:
-     wfcinit      :      0.03s CPU      0.03s WALL (       1 calls)
-     potinit      :      0.15s CPU      0.19s WALL (       1 calls)
-     hinit0       :      0.12s CPU      0.13s WALL (       1 calls)
+     wfcinit      :      0.02s CPU      0.03s WALL (       1 calls)
+     potinit      :      0.15s CPU      0.20s WALL (       1 calls)
+     hinit0       :      0.11s CPU      0.12s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      1.03s CPU      1.11s WALL (      30 calls)
-     sum_band     :      0.61s CPU      0.65s WALL (      31 calls)
-     v_of_rho     :      3.04s CPU      3.77s WALL (      35 calls)
-     mix_rho      :      0.60s CPU      0.74s WALL (      30 calls)
+     c_bands      :      1.06s CPU      1.11s WALL (      30 calls)
+     sum_band     :      0.62s CPU      0.66s WALL (      31 calls)
+     v_of_rho     :      3.02s CPU      3.76s WALL (      35 calls)
+     mix_rho      :      0.62s CPU      0.74s WALL (      30 calls)
 
      Called by c_bands:
      init_us_2    :      0.03s CPU      0.03s WALL (      64 calls)
-     regterg      :      1.01s CPU      1.09s WALL (      30 calls)
+     regterg      :      1.05s CPU      1.09s WALL (      30 calls)
 
      Called by *egterg:
      rdiaghg      :      0.00s CPU      0.00s WALL (      91 calls)
-     h_psi        :      1.69s CPU      1.82s WALL (     177 calls)
+     h_psi        :      1.70s CPU      1.84s WALL (     177 calls)
      g_psi        :      0.00s CPU      0.00s WALL (      63 calls)
 
      Called by h_psi:
      h_psi:calbec :      0.01s CPU      0.01s WALL (     177 calls)
-     vloc_psi     :      1.66s CPU      1.79s WALL (     177 calls)
+     vloc_psi     :      1.67s CPU      1.81s WALL (     177 calls)
      add_vuspsi   :      0.01s CPU      0.01s WALL (     177 calls)
 
      General routines
      calbec       :      0.02s CPU      0.02s WALL (     283 calls)
-     fft          :      1.57s CPU      1.73s WALL (     278 calls)
+     fft          :      1.57s CPU      1.71s WALL (     278 calls)
      ffts         :      0.12s CPU      0.12s WALL (      38 calls)
-     fftw         :      1.71s CPU      1.85s WALL (     728 calls)
+     fftw         :      1.73s CPU      1.87s WALL (     728 calls)
 
      Parallel routines
 
-     PWSCF        :      7.92s CPU      9.06s WALL
+     PWSCF        :      7.99s CPU      9.17s WALL
 
 
-   This run was terminated on:  12:33:47  24Nov2020            
+   This run was terminated on:  13: 7:15  24Nov2020            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
