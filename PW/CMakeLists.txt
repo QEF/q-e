@@ -238,13 +238,12 @@ set(sources
    src/wannier_init.f90 
    src/wannier_check.f90 
    src/wannier_clean.f90 
-   src/wannier_occ.f90
-)
+   src/wannier_occ.f90)
 
 qe_add_library(qe_pw ${sources})
 add_library(QE::PW ALIAS qe_pw)
 target_link_libraries(qe_pw
-    PUBLIC
+    PRIVATE
         QE::HDF5_Fortran
         QE::ELPA
         QE::SCALAPACK
@@ -269,7 +268,10 @@ qe_add_executable(qe_pw_exe ${sources})
 set_target_properties(qe_pw_exe PROPERTIES OUTPUT_NAME pw.x)
 target_link_libraries(qe_pw_exe
     PRIVATE
-        QE::PW)
+        QE::PW
+        QE::Modules
+        QE::LAX
+        QE::UTILX)
 
 ###########################################################
 # ibrav2cell.x
@@ -279,7 +281,8 @@ qe_add_executable(qe_pw_tools_ibrav2cell_exe ${sources})
 set_target_properties(qe_pw_tools_ibrav2cell_exe PROPERTIES OUTPUT_NAME ibrav2cell.x)
 target_link_libraries(qe_pw_tools_ibrav2cell_exe
     PRIVATE
-        QE::PW)
+        QE::PW
+        QE::Modules)
 
 ###########################################################
 # cell2ibrav.x
@@ -289,7 +292,8 @@ qe_add_executable(qe_pw_tools_cell2ibrav_exe ${sources})
 set_target_properties(qe_pw_tools_cell2ibrav_exe PROPERTIES OUTPUT_NAME cell2ibrav.x)
 target_link_libraries(qe_pw_tools_cell2ibrav_exe
     PRIVATE
-        QE::PW)
+        QE::PW
+        QE::Modules)
 
 ###########################################################
 # ev.x
@@ -299,7 +303,9 @@ qe_add_executable(qe_pw_tools_ev_exe ${sources})
 set_target_properties(qe_pw_tools_ev_exe PROPERTIES OUTPUT_NAME ev.x)
 target_link_libraries(qe_pw_tools_ev_exe
     PRIVATE
-        QE::PW)
+        QE::PW
+        QE::Modules
+        QE::UTILX)
 
 ###########################################################
 # kpoints.x
@@ -309,7 +315,9 @@ qe_add_executable(qe_pw_tools_kpoints_exe ${sources})
 set_target_properties(qe_pw_tools_kpoints_exe PROPERTIES OUTPUT_NAME kpoints.x)
 target_link_libraries(qe_pw_tools_kpoints_exe
     PRIVATE
-        QE::PW)
+        QE::PW
+        QE::Modules
+        QE::UTILX)
 
 ###########################################################
 # pwi2xsf.x
@@ -319,7 +327,9 @@ qe_add_executable(qe_pw_tools_pwi2xsf_exe ${sources})
 set_target_properties(qe_pw_tools_pwi2xsf_exe PROPERTIES OUTPUT_NAME pwi2xsf.x)
 target_link_libraries(qe_pw_tools_pwi2xsf_exe
     PRIVATE
-        QE::PW)
+        QE::PW
+        QE::UTILX
+        QE::Modules)
 
 ###########################################################
 
@@ -332,5 +342,4 @@ qe_install_targets(
     qe_pw_tools_cell2ibrav_exe
     qe_pw_tools_ev_exe
     qe_pw_tools_kpoints_exe
-    qe_pw_tools_pwi2xsf_exe
-)
+    qe_pw_tools_pwi2xsf_exe)

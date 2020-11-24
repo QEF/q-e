@@ -216,8 +216,7 @@ set(sources_gamma
     Gamma/writedyn.f90)
 
 set(sources_fd
-    FD/stop_pp.f90
-)
+    FD/stop_pp.f90)
     
 
 qe_add_library(qe_phonon_ph ${sources_ph})
@@ -228,7 +227,10 @@ target_link_libraries(qe_phonon_ph
         QE::OpenMP_Fortran
         QE::PW
         QE::Modules
-        QE::LR_Modules)
+        QE::LR_Modules
+        QE::UTILX
+        QE::UPF
+        QE::FFTX)
 
 qe_add_library(qe_phonon_phaux ${sources_phaux})
 add_library(QE::PHonon::PHAUX ALIAS qe_phonon_phaux)
@@ -243,7 +245,11 @@ target_link_libraries(qe_phonon_gamma
     PRIVATE
         QE::PW
         QE::Modules
-        QE::LR_Modules)
+        QE::LR_Modules
+        QE::UPF
+        QE::FFTX
+        QE::UTILX
+        QE::LAX)
 
 qe_add_library(qe_phonon_fd ${sources_fd})
 add_library(QE::PHonon::FD ALIAS qe_phonon_fd)
@@ -267,7 +273,7 @@ target_link_libraries(qe_phonon_ph_exe
         QE::LAX
         QE::Modules
         QE::PHonon::PH
-)
+        QE::UTILX)
 
 ###########################################################
 # dynmat.x
@@ -281,8 +287,7 @@ target_link_libraries(qe_phonon_dynmat_exe
         QE::Modules
         QE::UTILX
         QE::PHonon::PH
-        QE::PHonon::PHAUX
-)
+        QE::PHonon::PHAUX)
 
 ###########################################################
 # q2r.x
@@ -294,8 +299,7 @@ target_link_libraries(qe_phonon_q2r_exe
     PRIVATE
         QE::Modules
         QE::UTILX
-        QE::PHonon::PH
-)
+        QE::PHonon::PH)
 
 ##################################################################
 # matdyn.x 
@@ -310,7 +314,7 @@ target_link_libraries(qe_phonon_matdyn_exe
         QE::PW
         QE::PHonon::PH
         QE::PHonon::PHAUX
-) 
+        QE::LR_Modules) 
 
 ###########################################################
 # q2qstar.x
@@ -324,8 +328,7 @@ target_link_libraries(qe_phonon_q2qstar_exe
         QE::LR_Modules
         QE::Modules
         QE::UTILX
-        QE::PHonon::PH
-)
+        QE::PHonon::PH)
 
 ###########################################################
 # lambda.x
@@ -337,8 +340,7 @@ target_link_libraries(qe_phonon_lambda_exe
     PRIVATE
         QE::Modules
         QE::UTILX
-        QE::PHonon::PH
-)
+        QE::PHonon::PH)
 
 ###########################################################
 # alpha2f.x
@@ -351,8 +353,7 @@ target_link_libraries(qe_phonon_alpha2f_exe
         QE::PW
         QE::Modules
         QE::UTILX
-        QE::PHonon::PH
-)
+        QE::PHonon::PH)
 
 ###########################################################
 # epa.x
@@ -364,8 +365,7 @@ target_link_libraries(qe_phonon_epa_exe
     PRIVATE
         QE::Modules
         QE::UTILX
-        QE::PHonon::PH
-)
+        QE::PHonon::PH)
 
 ###########################################################
 # fqha.x
@@ -376,8 +376,7 @@ set_target_properties(qe_phonon_fqha_exe PROPERTIES OUTPUT_NAME fqha.x)
 target_link_libraries(qe_phonon_fqha_exe
     PRIVATE
         QE::UTILX
-        QE::PHonon::PH
-)
+        QE::PHonon::PH)
 
 ###########################################################
 # fd.x
@@ -391,8 +390,7 @@ target_link_libraries(qe_phonon_fd_exe
         QE::UTILX
         QE::Modules
         QE::PHonon::FD
-        QE::PHonon::PH
-)
+        QE::PHonon::PH)
 
 ###########################################################
 # fd_ef.x
@@ -406,8 +404,7 @@ target_link_libraries(qe_phonon_fdef_exe
         QE::UTILX
         QE::Modules
         QE::PHonon::FD
-        QE::PHonon::PH
-)
+        QE::PHonon::PH)
 
 ###########################################################
 # fd_ifc.x
@@ -421,8 +418,7 @@ target_link_libraries(qe_phonon_fdifc_exe
         QE::UTILX
         QE::Modules
         QE::PHonon::FD
-        QE::PHonon::PH
-)
+        QE::PHonon::PH)
 
 ###########################################################
 
@@ -443,5 +439,4 @@ qe_install_targets(
     qe_phonon_fqha_exe
     qe_phonon_fd_exe
     qe_phonon_fdef_exe
-    qe_phonon_fdifc_exe
-)
+    qe_phonon_fdifc_exe)

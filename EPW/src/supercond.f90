@@ -250,6 +250,8 @@
     !! Step size in nbin/nbink
     REAL(KIND = DP):: l_sum
     !! total e-ph coupling strength
+    REAL(KIND = DP):: l_a2f_tmp
+    !! Temporary variable for total e-ph coupling strength
     REAL(KIND = DP):: lambda_eph
     !! total e-ph coupling strength (a2f integration)
     REAL(KIND = DP) :: x1, x2, x3
@@ -262,7 +264,7 @@
     !! The derivative of wgauss:  an approximation to the delta function
     REAL(KIND = DP) :: lambda_max(npool)
     !! Max e-ph coupling strength among all pools
-    REAL(KIND = DP), ALLOCATABLE :: l_a2f(:)
+    REAL(KIND = DP), ALLOCATABLE :: l_a2f(:, :)
     !! total e-ph coupling strength for different ismear (a2f integration)
     REAL(KIND = DP), ALLOCATABLE :: lambda_pairs(:)
     !! Histogram lambda_nk,n'k
@@ -401,27 +403,29 @@
       OPEN(UNIT = iudosfil, FILE = name1, STATUS = 'unknown', FORM = 'formatted', IOSTAT = ios)
       IF (ios /= 0) CALL errore('evaluate_a2f_lambda', 'error opening file ' // name1, iudosfil)
       !
-      ALLOCATE(l_a2f(nqsmear), STAT = ierr)
+      ALLOCATE(l_a2f(nqstep, nqsmear), STAT = ierr)
       IF (ierr /= 0) CALL errore('evaluate_a2f_lambda', 'Error allocating l_a2f', 1)
-      l_a2f(:) = zero
+      l_a2f(:, :) = zero
       !
       DO ismear = 1, nqsmear
         IF (ismear == nqsmear) THEN
           WRITE(iua2ffil, '(" w[meV] a2f and integrated 2*a2f/w for ", i4, " smearing values")') ismear
           WRITE(iudosfil, '(" w[meV] phdos[states/meV] for ", i4, " smearing values")') ismear
         ENDIF
+        l_a2f_tmp = zero
         DO iwph = 1, nqstep
-          l_a2f(ismear) = l_a2f(ismear) + 2.0d0 * (a2f(iwph, ismear) / wsph(iwph)) * dwsph
+          l_a2f_tmp = l_a2f_tmp + 2.0d0 * (a2f(iwph, ismear) / wsph(iwph)) * dwsph
+          l_a2f(iwph, ismear) = l_a2f_tmp
           ! wsph in meV (from eV) and phdos in states/meV (from states/eV)
           IF (ismear == nqsmear) THEN
-            WRITE(iua2ffil, '(f12.7, 20f12.7)') wsph(iwph) * 1000.d0, a2f(iwph, :), l_a2f(:)
+            WRITE(iua2ffil, '(f12.7, 20f12.7)') wsph(iwph) * 1000.d0, a2f(iwph, :), l_a2f(iwph, :)
             WRITE(iudosfil, '(f12.7, 15f15.7)') wsph(iwph) * 1000.d0, phdos(iwph, :)/ 1000.d0
           ENDIF
         ENDDO
       ENDDO
       !
       WRITE(iua2ffil, *) "Integrated el-ph coupling"
-      WRITE(iua2ffil, '("  #         ", 15f12.7)') l_a2f(:)
+      WRITE(iua2ffil, '("  #         ", 15f12.7)') l_a2f(nqstep, :)
       WRITE(iua2ffil, *) "Phonon smearing (meV)"
       WRITE(iua2ffil, '("  #         ", 15f12.7)') ((degaussq + (ismear - 1) * delta_qsmear) * 1000.d0, ismear = 1, nqsmear)
       WRITE(iua2ffil, '("Electron smearing (eV)", f12.7)') degaussw
@@ -455,7 +459,7 @@
         WRITE(iua2ffil, '(f12.7, 100f12.7)') wsph(iwph) * 1000.d0, a2f_iso(iwph), a2f_modeproj(:, iwph)
         WRITE(iudosfil, '(f12.7, 100f15.7)') wsph(iwph) * 1000.d0, phdos(iwph, 1)/1000.d0, phdos_modeproj(:, iwph) / 1000.d0
       ENDDO
-      WRITE(iua2ffil, '(a, f18.7, a, f18.7)') 'lambda_int = ', l_a2f(1), '   lambda_sum = ',l_sum
+      WRITE(iua2ffil, '(a, f18.7, a, f18.7)') 'lambda_int = ', l_a2f(nqstep, 1), '   lambda_sum = ',l_sum
       CLOSE(iua2ffil)
       CLOSE(iudosfil)
       !

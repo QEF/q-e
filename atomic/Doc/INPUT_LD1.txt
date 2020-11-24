@@ -986,8 +986,9 @@ NAMELIST: &TEST
    Variable:       configts(i), i=1,nconf
    
    Type:           CHARACTER
-   Description:    A string containing the test valence electronic
-                   configuration nc, nc=1,nconf. Same syntax as for "config".
+   Description:    A string array containing the test electronic configuration.
+                   configts(nc), nc=1,nconf, has the same syntax as for "config"
+                   but only VALENCE states must be included.
                    If configts(i) is not set, the electron configuration
                    is read from the cards following the namelist.
    +--------------------------------------------------------------------
@@ -1265,4 +1266,4 @@ CARD:
       
 
 
-This file has been created by helpdoc utility on Fri Jul 17 10:28:35 CEST 2020
+This file has been created by helpdoc utility on Mon Nov 23 08:30:07 UTC 2020
