@@ -5,7 +5,7 @@ module ionic_mod
 
    type ionic_init_type
       real(DP) :: I_primo, eta
-      integer  :: n_max !cutoff per somme in griglia reale
+      integer  :: n_max !cutoff for real space sums over the cell vector
       real(dp), allocatable :: I_uno_g(:, :, :), I_due_g(:)
    end type
 
@@ -28,9 +28,9 @@ contains
       init_data%n_max = n_max
       init_data%eta = eta
 
-      ! I_primo == S_{2,B} (Aris note)
+      ! I_primo == S^{B} (Eq. 45 and Eq. 59)
       init_data%I_primo = 0.d0
-! these sum over n_x n_y n_z are sum_{L!=0}erfc(sqrt(eta*L)*1/L)
+      ! these sum over n_x n_y n_z are sum_{L!=0}erfc(sqrt(eta*L))*1/L
       do n_x = -n_max, n_max
          do n_y = -n_max, n_max
             do n_z = -n_max, n_max
@@ -43,31 +43,34 @@ contains
             end do
          end do
       end do
-!now compute the other addendum of S_{2,B}
+!now compute the second term of S^{B} (2nd term of Eq. 59)
       init_data%I_primo = init_data%I_primo - 2.d0*sqrt(eta/pi)
 !
-      I_primo_rec = 0.d0
-      do igm = gstart, ngm
-         I_primo_rec = I_primo_rec + 2.d0*(4.d0*pi)/omega*alpha_0_lr(eta, gg(igm)*tpiba2, 1)
-      end do
-      call mp_sum(I_primo_rec, intra_pool_comm)
-      I_primo_rec = I_primo_rec - pi/(eta*omega)
-!
-      init_data%I_primo = init_data%I_primo + I_primo_rec
-!
-!calcolo di I_due_g
+! compute I_due_g array of addenda in 3rd term of Eq. 59
 !
       do igm = gstart, ngm
 !
          init_data%I_due_g(igm) = (4.d0*pi)/omega*alpha_0_lr(eta, gg(igm)*tpiba2, 1)
 !
       end do
+!     I_primo_rec are the last two terms of S^{B} in Eq. 59
+      I_primo_rec = 0.d0
+      do igm = gstart, ngm
+         I_primo_rec = I_primo_rec + 2.d0*init_data%I_due_g(igm)
+         !I_primo_rec = I_primo_rec + 2.d0*(4.d0*pi)/omega*alpha_0_lr(eta, gg(igm)*tpiba2, 1)
+      end do
+      call mp_sum(I_primo_rec, intra_pool_comm)
+      I_primo_rec = I_primo_rec - pi/(eta*omega)
 !
+      init_data%I_primo = init_data%I_primo + I_primo_rec
+!
+!
+!     add the term for G=0
       if (gstart == 2) then
          init_data%I_due_g(1) = -pi/(eta*omega)
       end if
 !
-!analogamente a prima inizializzo I_uno_g
+!now compute I_uno_g that is the last term in Eqs. 58 (no sum over G) 
       do a = 1, 3
          do b = 1, 3
             if (a >= b) then
@@ -128,6 +131,7 @@ contains
    end subroutine pbc
 
    subroutine I_uno_value(init_data, y, x, a, b, flag, tpiba, at, alat, gstart, g, gg, npw)
+      !! this subroutine  computes S^D(R_s-R_t) of Eq. 61
       use mp_pools, only: intra_pool_comm
       implicit none
       type(ionic_init_type), intent(in) :: init_data
@@ -164,6 +168,7 @@ contains
    end subroutine I_uno_value
 
    subroutine add_local_uno(value, n_max, eta, pos, a, b, at, alat)
+!!!   The following routine computes the sum over L in Eq. 61
       use mp_world, only: nproc, mpime
       use mp, only: mp_sum
       use mp_pools, only: intra_pool_comm
@@ -218,6 +223,7 @@ contains
    end subroutine add_local_uno
 
    subroutine I_due_value(init_data, y, x, flag, tpiba, at, alat, gstart, g, gg, npw)
+   !!! computes S^C(R_s-R_t) in Eq. 60
       use mp, only: mp_sum
       use mp_pools, only: intra_pool_comm
       implicit none
@@ -243,7 +249,7 @@ contains
    end subroutine i_due_value
 
    subroutine add_local_due(value, n_max, eta, pos, at, alat)
-      !This routines computes sum_{L}erfc(sqrt(eta)abs(d-L))/abs(d-L)
+      !This routines computes sum_{L}erfc(sqrt(eta)abs(R_s-R_t-L))/abs(R_s-R_t-L) (first term Eq. 60)
       ! the sum is in real space over a small number of shells
       use mp, only: mp_sum
       use mp_world, ONLY: nproc, mpime
@@ -315,10 +321,11 @@ contains
       integer :: iatom, jatom, a, b
 
       current = 0.d0
-      current_a = 0.d0
-      current_b = 0.d0
-      current_c = 0.d0
-      current_d = 0.d0
+      current_a = 0.d0 !J^{nA} Eq. 52
+      current_b = 0.d0 !J^{nB} Eq. 53
+      current_c = 0.d0 !J^{nC} Eq. 54
+      !(Eq. 55) J^{nD} = current_d + current_e 
+      current_d = 0.d0  
       current_e = 0.d0
 
       call start_clock('calcolo_i')
