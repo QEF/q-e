@@ -737,7 +737,7 @@
 !        IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating wb', 1)
 !        bvec = zero
 !        wb   = zero
-        CALL errore ('vmebloch2wan','You selected vme =.true. but error opening' // tempfile, 0)
+        CALL errore ('vmebloch2wan','You selected vme =.true. but error opening' // tempfile, 1)
       ELSE
         READ(iubvec,*) tempfile
         READ(iubvec,*) nkstot_tmp, nnb
@@ -785,7 +785,7 @@
       !
       IF (ios /= 0) THEN
         ! if it doesn't exist, then we just set the mmn to zero
-        CALL errore ('vmebloch2wan','error opening' // tempfile, 0)
+        CALL errore ('vmebloch2wan','error opening' // tempfile, 1)
       ELSE
         !
         DO ik = 1, nkstot
