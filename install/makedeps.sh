@@ -127,6 +127,7 @@ for dir in $dirs; do
             sed '/@cudafor@/d;/@cusolverdn@/d;/@gbuffers@/d' make.depend > tmp; mv tmp make.depend
             sed '/@zhegvdx_gpu@/d;/@dsyevd_gpu@/d;/@dsygvdx_gpu@/d' make.depend > tmp; mv tmp make.depend
             sed '/@cublas@/d;/@eigsolve_vars@/d;/@nvtx_inters@/d' make.depend > tmp ; mv tmp make.depend
+            sed '/@device_fbuff_m@/d' make.depend > tmp ; mv tmp make.depend
         fi
 
         if test "$DIR" = "UtilXlib"

@@ -4,6 +4,7 @@
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
+\usepackage[utf8]{inputenc}
 
 % BEWARE: don't revert from graphicx for epsfig, because latex2html
 % doesn't handle epsfig commands !!!
@@ -28,7 +29,7 @@
 \author{}
 \date{}
 
-\def\qeImage{../../Doc/quantum_espresso.pdf}
+\def\qeImage{../../Doc/quantum_espresso}
 
 \title{
   \includegraphics[width=5cm]{\qeImage} \\
@@ -131,6 +132,8 @@ and many others. We quote in particular:
 \end{itemize}
 and the more recent contributors:
 \begin{itemize}
+  \item Gabriel S. Gusmão (Georgia Tech) and Johannes Voss (ANL)
+    for BEEF support;
   \item Miha Gunde for interface with Grimme's DFT-D3 code, as
 	repackaged by Bàlint Aradi
   \item Pietro Bonf\`a (CINECA) for memory estimator;

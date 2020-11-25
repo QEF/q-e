@@ -85,16 +85,7 @@ SUBROUTINE laxlib_rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp
         end do
         !$omp end parallel do
         !
-#if defined (__ESSL)
-        !
-        ! ... there is a name conflict between essl and lapack ...
-        !
-        CALL DSYGV( 1, v, ldh, s, ldh, e, v, ldh, n, work, lwork )
-        !
-        info = 0
-#else
         CALL DSYGV( 1, 'V', 'U', n, v, ldh, s, ldh, e, work, lwork, info )
-#endif
         !
      ELSE
         !

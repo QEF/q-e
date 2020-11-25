@@ -18,6 +18,13 @@ if(${qe_BINARY_DIR} STREQUAL ${qe_SOURCE_DIR})
   message(FATAL_ERROR "QE source folder cannot be safely used as a build folder!")
 endif()
 
+# CMake < v3.18 cannot discover the ARM Performance Library
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*|arm64.*|ARM64.*)")
+    if(CMAKE_VERSION VERSION_LESS 3.18.0)
+        message("-- CMake versions less then 3.18 cannot automatically discover the ARM Performance Library!")
+    endif()
+endif()
+
 ######################################################################
 # Define the paths for static libraries and executables
 ######################################################################
@@ -66,6 +73,8 @@ option(QE_ENABLE_MPI_MODULE
     "use MPI via Fortran module instead of mpif.h header inclusion" OFF)
 option(QE_ENABLE_BARRIER
     "enable global synchronization between execution units" OFF)
+option(QE_LAPACK_INTERNAL
+    "enable internal reference LAPACK" OFF)
 option(QE_ENABLE_SCALAPACK
     "enable SCALAPACK execution units" OFF)
 option(QE_ENABLE_ELPA
@@ -74,10 +83,10 @@ option(QE_ENABLE_HDF5
     "enable HDF5 data collection" OFF)
 option(QE_ENABLE_CUDA
     "enable CUDA acceleration on NVIDIA GPUs" OFF)
-option(QE_ENABLE_VENDOR_DEPS
-    "enable fallback on vendored deps when none is found via find_package()" ON)
 option(QE_ENABLE_DOC
     "enable documentation building" OFF)
+set(QE_FFTW_VENDOR "AUTO" CACHE 
+    STRING "select a specific FFTW library [Intel_DFTI, Intel_FFTW3, ArmPL, IBMESSL, FFTW3, Internal]")
 
 # TODO change all ifdefs throughout code base to match
 # cmake options
@@ -182,31 +191,6 @@ if(QE_ENABLE_MPI)
         INTERFACE MPI::MPI_Fortran)
 endif(QE_ENABLE_MPI)
 
-############################################################
-## Vendor
-## Try to found vendor specific libraries for:
-## BLAS, LAPACK and FFTW
-############################################################
-if(QE_ENABLE_OPENMP)
-    find_package(VENDOR COMPONENTS THREADS)
-else()
-    find_package(VENDOR)
-endif()
-
-if(VENDOR_FOUND)
-    message(STATUS "Found vendor: ${VENDOR}")
-    message(STATUS "Found vendor BLAS libraries: ${BLAS_LIBRARIES}")
-    message(STATUS "Found vendor LAPACK libraries: ${LAPACK_LIBRARIES}")
-    if(NOT FFTW_ROOT)
-        message(STATUS "Found vendor FFTW libraries: ${FFTW_LIBRARIES}")
-        message(STATUS "Found vendor FFTW include: ${FFTW_INCLUDE_DIRS}")
-    else()
-        set(FFTW_FOUND FALSE)
-        set(FFTW_LIBRARIES)
-        set(FFTW_INCLUDE_DIRS)
-    endif()
-endif()
-
 ###########################################################
 # Lapack
 # The following targets will be defined:
@@ -214,36 +198,65 @@ add_library(qe_lapack INTERFACE)
 add_library(QE::LAPACK ALIAS qe_lapack)
 qe_install_targets(qe_lapack)
 #######################################################################
-if(NOT VENDOR_FOUND)
-    find_package(LAPACK)
-    if(LAPACK_FOUND)
-        message(STATUS "Found LAPACK: ${LAPACK_LIBRARIES}")
-        target_link_libraries(qe_lapack
-            INTERFACE
-                ${LAPACK_LIBRARIES}
-                ${LAPACK_LINKER_FLAGS})
-    elseif(QE_ENABLE_VENDOR_DEPS)
-        if(CMAKE_Fortran_COMPILER_ID MATCHES "XL")
-            message(FATAL_ERROR "IBM XL compilers cannot build internal LAPACK with QE "
-                                "due to the conflict in flags for free vs fixed format. "
-                                "Please use an optimized LAPACK or build LAPACK separately.")
+if(NOT QE_LAPACK_INTERNAL)
+    if(NOT BLA_VENDOR)
+        if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64.*")
+            message(STATUS "Trying to find LAPACK from Intel MKL")
+            if(QE_ENABLE_OPENMP)
+                SET(BLA_VENDOR Intel10_64lp)
+            else()
+                SET(BLA_VENDOR Intel10_64lp_seq)
+            endif()
+            find_package(LAPACK)
+        elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "i686.*|i386.*|x86.*")
+            message(STATUS "Trying to find LAPACK from Intel MKL - 32bit")
+            SET(BLA_VENDOR Intel10_32)
+            find_package(LAPACK)
+        elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*|arm64.*|ARM64.*)")
+            message(STATUS "Trying to find LAPACK from ARM Performance Library")
+            if(QE_ENABLE_OPENMP)
+                SET(BLA_VENDOR Arm_mp)
+            else()
+                SET(BLA_VENDOR Arm)
+            endif()
+            find_package(LAPACK)
         endif()
-        message(STATUS "Installing QE::LAPACK via submodule")
-        qe_git_submodule_update(external/lapack)
-        add_subdirectory(external/lapack EXCLUDE_FROM_ALL)
-        target_link_libraries(qe_lapack INTERFACE lapack)
-        qe_fix_fortran_modules(lapack)
-        qe_install_targets(lapack)
+        if(NOT LAPACK_FOUND)
+            message(STATUS "Trying to find alternative LAPACK libraries")
+            SET(BLA_VENDOR All)
+            find_package(LAPACK)
+        endif()
     else()
-        # No dep has been found via find_package,
-        # call it again with REQUIRED to make it fail
-        # explicitly (hoping in some helpful message)
-        find_package(LAPACK REQUIRED)
+        find_package(LAPACK)
+    endif()
+    if(LAPACK_FOUND)
+        list(APPEND _lapack_libs
+            ${BLAS_LIBRARIES}
+            ${BLAS_LINKER_FLAGS}
+            ${LAPACK_LIBRARIES}
+            ${LAPACK_LINKER_FLAGS})
+        list(REMOVE_DUPLICATES "${_lapack_libs}")
+        message(STATUS "Found LAPACK: ${_lapack_libs}")
+        target_link_libraries(qe_lapack INTERFACE ${_lapack_libs})
+    else()
+        message(FATAL_ERROR "Failed to find a complete set of external BLAS/LAPACK library by FindLAPACK. "
+                            "Variables controlling FindLAPACK can be found at CMake online documentation. "
+                            "Alternatively, '-DQE_LAPACK_INTERNAL=ON' may be used to enable reference LAPACK "
+                            "at a performance loss compared to optimized libraries.")
     endif()
 else()
-  target_link_libraries(qe_lapack
-    INTERFACE
-        ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+    message(WARNING "Internal reference LAPACK is enabled! It is less performant than vendor optimized libraries.")
+    if(CMAKE_Fortran_COMPILER_ID MATCHES "XL")
+        message(FATAL_ERROR "IBM XL compilers cannot build internal LAPACK with QE "
+                            "due to the conflict in flags for free vs fixed format. "
+                            "Please use an optimized LAPACK or build internal reference LAPACK separately.")
+    endif()
+    message(STATUS "Installing QE::LAPACK via submodule")
+    qe_git_submodule_update(external/lapack)
+    add_subdirectory(external/lapack EXCLUDE_FROM_ALL)
+    target_link_libraries(qe_lapack INTERFACE lapack)
+    qe_fix_fortran_modules(lapack)
+    qe_install_targets(lapack)
 endif()
 
 ###########################################################
@@ -466,6 +479,7 @@ add_custom_target(ph
         qe_phonon_ph_exe
         qe_phonon_dynmat_exe
         qe_phonon_q2r_exe
+        qe_phonon_matdyn_exe
         qe_phonon_q2qstar_exe
         qe_phonon_lambda_exe
         qe_phonon_alpha2f_exe

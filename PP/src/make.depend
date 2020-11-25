@@ -84,6 +84,7 @@ bands.o : ../../Modules/mp_global.o
 bands.o : ../../Modules/mp_images.o
 bands.o : ../../Modules/mp_pools.o
 bands.o : ../../Modules/noncol.o
+bands.o : ../../Modules/parameters.o
 bands.o : ../../Modules/recvec.o
 bands.o : ../../Modules/wavefunctions.o
 bands.o : ../../PW/src/pwcom.o
@@ -768,7 +769,6 @@ vasp_xml_module.o : ../../PW/src/io_rho_xml.o
 vasp_xml_module.o : ../../PW/src/paw_init.o
 vasp_xml_module.o : ../../PW/src/pwcom.o
 vasp_xml_module.o : ../../PW/src/scf_mod.o
-vasp_xml_module.o : ../../PW/src/symm_base.o
 vasp_xml_module.o : ../../upflib/uspp.o
 vasp_xml_module.o : vasp_read_chgcar_mod.o
 wannier_enrg.o : ../../Modules/io_files.o

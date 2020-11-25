@@ -96,6 +96,8 @@ CONTAINS
 
   SUBROUTINE get_i_attr ( attrname, attrval_i )
     !
+    ! returns attrval_i=0 if not found or not readable
+    !
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN) :: attrname
     INTEGER, INTENT(OUT) :: attrval_i
@@ -104,14 +106,18 @@ CONTAINS
     !
     CALL get_c_attr ( attrname, attrval_c )
     if ( len_trim(attrval_c) > 0 ) then
-       READ (attrval_c,*) attrval_i
-    else
-       attrval_i = 0
+       READ (attrval_c,*, err=1) attrval_i
+       return
+1      print '("Error reading attribute ",a,": expected integer, found ",a)', &
+            trim(attrname), trim(attrval_c)
     end if
+    attrval_i = 0
     !
   END SUBROUTINE get_i_attr
   !
   SUBROUTINE get_l_attr ( attrname, attrval_l )
+    !
+    ! returns attrval_l=.false. if not found or not readable
     !
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN) :: attrname
@@ -121,14 +127,18 @@ CONTAINS
     !
     CALL get_c_attr ( attrname, attrval_c )
     if ( len_trim(attrval_c) > 0 ) then
-       READ (attrval_c,*) attrval_l
-    else
-       attrval_l = .false.
+       READ (attrval_c,*, err=1) attrval_l
+       return
+1      print '("Error reading attribute ",a,": expected logical, found ",a)', &
+            trim(attrname), trim(attrval_c)
     end if
+    attrval_l = .false.
     !
   END SUBROUTINE get_l_attr
   !
   SUBROUTINE get_r_attr ( attrname, attrval_r )
+    !
+    ! returns attrval_r=0 if not found or not readable
     !
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN) :: attrname
@@ -138,14 +148,18 @@ CONTAINS
     !
     CALL get_c_attr ( attrname, attrval_c )
     if ( len_trim(attrval_c) > 0 ) then
-       READ (attrval_c,*) attrval_r
-    else
-       attrval_r = 0.0_dp
+       READ (attrval_c,*, err=1) attrval_r
+       return
+1      print '("Error reading attribute ",a,": expected real, found ",a)', &
+            trim(attrname), trim(attrval_c)
     end if
+    attrval_r = 0.0_dp
     !
   END SUBROUTINE get_r_attr
   !
   SUBROUTINE get_c_attr ( attrname, attrval_c )
+    !
+    ! returns attrval_c='' if not found
     !
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN) :: attrname

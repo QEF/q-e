@@ -209,7 +209,7 @@ subroutine writexsf (xsffile, gamma, nat, atm, a0, at, tau, ityp, z)
   !
   !  write atomic positions and normalised displacements
   !
-  write(iout,'("ANIMSTEPS",i4)') nat3
+  write(iout,'("ANIMSTEPS ",i4)') nat3
   !
   write(iout,'("CRYSTAL")')
   !
@@ -217,7 +217,7 @@ subroutine writexsf (xsffile, gamma, nat, atm, a0, at, tau, ityp, z)
   write(iout,'(2(3F15.9/),3f15.9)') at(:,:)*a0*BOHR_RADIUS_ANGS
   !
   do i = 1,nat3
-     write(iout,'("PRIMCOORD",i3)') i
+     write(iout,'("PRIMCOORD ",i4)') i
      write(iout,'(3x,2i4)') nat, 1
      znorm = 0.0d0
      do j=1,nat3

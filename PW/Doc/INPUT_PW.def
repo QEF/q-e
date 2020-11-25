@@ -83,6 +83,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
            label_1 Fx(1) Fy(1) Fz(1)
            .....
            label_n Fx(n) Fy(n) Fz(n) ]
+
+        [ @b ADDITIONAL_K_POINTS
+             see: K_POINTS ]
     }
 
     #
@@ -3055,6 +3058,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
     }
+
+    #
+    # card ADDITIONAL_K_POINTS
+    #
+    card ADDITIONAL_K_POINTS {
+        label { Optional card. Adds a list of k-points with zero weight, after those used for the scf calculation.
+                When doing an EXX calculation and nq1x, nq2x or nq3x are different from one, also include the 
+                required k+q points. The main use of this card is do band plots with EXX. }
+        syntax { message { Same as K_POINTS, but does not accept 'automatic'. } } 
+        }
+ 
 
     #
     # CELL_PARAMETERS
