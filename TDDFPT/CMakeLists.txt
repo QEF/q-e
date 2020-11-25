@@ -50,8 +50,7 @@ set(sources
     src/dveqpsi_us.f90
     src/dveqpsi_us_only.f90
     src/orthogonalize_omega.f90
-    src/mix_pot.f90
-)
+    src/mix_pot.f90)
 
 qe_add_library(qe_tddfpt ${sources})
 add_library(QE::TDDFPT ALIAS qe_tddfpt)
@@ -59,7 +58,10 @@ target_link_libraries(qe_tddfpt
     PRIVATE
         QE::LR_Modules
         QE::PW
-        QE::Modules)
+        QE::Modules
+        QE::UTILX
+        QE::UPF
+        QE::FFTX)
 
 ###########################################################
 # turbo_lanczos.x
@@ -71,7 +73,9 @@ target_link_libraries(qe_tddfpt_turbolanczos_exe
     PRIVATE
         QE::PW
         QE::Modules
-        QE::TDDFPT)
+        QE::TDDFPT
+        QE::UPF
+        QE::UTILX)
 
 ###########################################################
 # turbo_davidson.x
@@ -83,7 +87,9 @@ target_link_libraries(qe_tddfpt_turbodavidson_exe
     PRIVATE
         QE::PW
         QE::Modules
-        QE::TDDFPT)
+        QE::TDDFPT
+        QE::UPF
+        QE::UTILX)
 
 ###########################################################
 # turbo_eels.x
@@ -97,7 +103,9 @@ target_link_libraries(qe_tddfpt_turboeels_exe
         QE::LAX
         QE::Modules
         QE::TDDFPT
-        QE::LR_Modules)
+        QE::LR_Modules
+        QE::UPF
+        QE::UTILX)
 
 ###########################################################
 # tddfpt_calculate_spectrum.x
@@ -120,5 +128,4 @@ qe_install_targets(
     qe_tddfpt_turbolanczos_exe
     qe_tddfpt_turbodavidson_exe
     qe_tddfpt_turboeels_exe
-    qe_tddfpt_calculatespectrum_exe
-)
+    qe_tddfpt_calculatespectrum_exe)

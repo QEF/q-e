@@ -275,6 +275,10 @@ CONTAINS
       WRITE( UNIT = stdout, &
            & FMT = '(5X,A," new",T30,"= ",F18.10," Ry",/)' ) fname,energy
       !
+      WRITE(stdout, '(5X,"Gradient error",T30,"= ",1PE12.1)') grad_error
+      IF( lmovecell ) WRITE(stdout, &
+         '(5X,"Cell gradient error",T30,"= ",1PE12.1,/)') cell_error
+      !
       ! ... the bfgs algorithm starts here
       !
       IF ( .NOT. energy_wolfe_condition( energy ) .AND. (scf_iter > 1) ) THEN

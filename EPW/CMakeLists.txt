@@ -63,7 +63,9 @@ target_link_libraries(qe_epw
         QE::PHonon::PH
         QE::PW
         QE::MPI_Fortran
-)
+        QE::UTILX
+        QE::UPF
+        QE::FFTX)
 
 ###########################################################
 # epw.x
@@ -78,8 +80,7 @@ target_link_libraries(qe_epw_exe
 	    QE::PW
 	    QE::FFTX
         QE::UTILX
-        QE::EPW
-)
+        QE::EPW)
 
 ###########################################################
 
@@ -87,5 +88,4 @@ qe_install_targets(
     # Libraries
     qe_epw
     # Exacutables
-    qe_epw_exe
-)
+    qe_epw_exe)

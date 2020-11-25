@@ -20,15 +20,13 @@ set(sources_x
     src/check_orthogonality_k_epsilon.f90
     src/assign_paw_radii_to_species.f90
     src/io_routines.f90
-    src/xanes_quadrupole.f90
-)
+    src/xanes_quadrupole.f90)
 
 set(sources_gipaw
     src/paw_gipaw.f90
     src/gipaw_module.f90
     src/init_gipaw_1.f90
-    src/init_gipaw_2.f90
-)
+    src/init_gipaw_2.f90)
 
 qe_add_library(qe_xspectra_gipaw ${sources_gipaw})
 add_library(QE::XSpectra::GIPAW ALIAS qe_xspectra_gipaw)
@@ -36,7 +34,8 @@ target_link_libraries(qe_xspectra_gipaw
     PRIVATE
         QE::PW
         QE::UTILX
-        QE::Modules)
+        QE::Modules
+        QE::UPF)
 
 qe_add_library(qe_xspectra ${sources_x})
 add_library(QE::XSpectra ALIAS qe_xspectra)
@@ -45,7 +44,8 @@ target_link_libraries(qe_xspectra
         QE::PW
         QE::UTILX
         QE::XSpectra::GIPAW
-        QE::Modules)
+        QE::Modules
+        QE::UPF)
 
 ###########################################################
 # xspectra.x
@@ -59,15 +59,15 @@ target_link_libraries(qe_xspectra_exe
         QE::Modules
         QE::XSpectra
         QE::XSpectra::GIPAW
-)
+        QE::UPF
+        QE::UTILX)
 
 ###########################################################
 # spectra_correction.x
 ###########################################################
 set(sources 
     src/spectra_correction.f90
-    src/gaunt_mod.f90
-)
+    src/gaunt_mod.f90)
 qe_add_executable(qe_xspectra_spectracorrection_exe ${sources})
 set_target_properties(qe_xspectra_spectracorrection_exe PROPERTIES OUTPUT_NAME spectra_correction.x)
 target_link_libraries(qe_xspectra_spectracorrection_exe
@@ -75,7 +75,7 @@ target_link_libraries(qe_xspectra_spectracorrection_exe
         QE::Modules
         QE::XSpectra
         QE::XSpectra::GIPAW
-)
+        QE::UTILX)
 
 ###########################################################
 # molecularnexafs.x
@@ -86,8 +86,7 @@ set_target_properties(qe_xspectra_molecularnexafs_exe PROPERTIES OUTPUT_NAME mol
 target_link_libraries(qe_xspectra_molecularnexafs_exe
     PRIVATE
         QE::XSpectra
-        QE::XSpectra::GIPAW
-)
+        QE::XSpectra::GIPAW)
 
 ###########################################################
 
@@ -98,5 +97,4 @@ qe_install_targets(
     # Executables
     qe_xspectra_exe
     qe_xspectra_spectracorrection_exe
-    qe_xspectra_molecularnexafs_exe
-)
+    qe_xspectra_molecularnexafs_exe)
