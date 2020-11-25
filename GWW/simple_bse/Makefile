@@ -4,15 +4,8 @@ include ../../make.inc
 
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
-	$(MOD_FLAG)../../GWW/gww
+	$(MOD_FLAG)../../GWW/gww 
 
-#<<<<<<< HEAD
-##location of needed libraries
-#LIBOBJS= ../../iotk/src/libiotk.a  \
-#	../../clib/clib.a
-#
-#=======
-#>>>>>>> 40cae61e51e5d23399a72a97ff6a42645c3af4a3
 EXCOBJS = \
 simple_object.o \
 start_end.o \
@@ -28,13 +21,13 @@ build_eemat.o
 
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
 	../../KS_Solvers/libks_solvers.a \
-        ../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a
+        ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 
 TLDEPS=bindir libs mods gwwlib
 
 all : tldeps simple_bse.x  libsimple_exc.a
 
-simple_bse.x : simple_bse.o $(EXCOBJS) $(LIBOBJS) $(QEMODS)
+simple_bse.x : simple_bse.o $(EXCOBJS) $(LIBOBJS) $(QEMODS)  
 	$(MPIF90) $(LDFLAGS) -o $@ \
 		simple_bse.o $(EXCOBJS) $(QEMODS) $(LIBOBJS)  $(QELIBS)
 	- ( cd ../../bin; ln -fs ../GWW/simple_bse/$@ . )

@@ -735,7 +735,7 @@
     !!
     LOGICAL :: ifxst
     !! Does the file exists
-#if defined(__PGI) || defined(__CRAY) || defined(__XLF)
+#if defined(__PGI) || defined(__CRAY) || defined(__XLF) || defined(__FLANG)
     INTEGER, EXTERNAL :: getpid
     !! PID of the process
 #endif
@@ -1121,6 +1121,8 @@
     rmelt = DBLE(imelt) * 4.d0 / 1073741824.d0 ! 4 bytes per number, value in Gb
     IF (vmelt == 2) &
       rmelt = 2.d0 * rmelt ! 8 bytes per number, value in Gb
+    !WRITE(stdout, '(/, 5x, a, a, f9.6, a)') "Memory added/subtracted in mem_size:", &
+    !        " ~= ", rmelt, " Gb"
     rmelt = rmelt + memlt_pool(my_pool_id + 1)
     !
     memlt_pool(:) = zero
@@ -1198,6 +1200,8 @@
       imelt = imelt * nqstep
     ENDIF
     rmelt = DBLE(imelt) * 8.d0 / 1073741824.d0 ! 8 bytes per number, value in Gb
+    !WRITE(stdout, '(/, 5x, a, a, f9.6, a)') "Memory added/subtracted in memlt:", &
+    !        " ~= ", rmelt, " Gb"
     rmelt = rmelt + memlt_pool(my_pool_id + 1)
     !
     memlt_pool(:) = zero

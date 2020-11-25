@@ -87,7 +87,7 @@ SUBROUTINE compute_deff_nc_gpu( deff_d, et )
   USE uspp_gpum,        ONLY: using_deeq_nc_d, using_qq_at_d,    &
                               using_qq_so_d, deeq_nc_d, qq_so_d, &
                               qq_at_d
-  USE device_util_m,    ONLY: dev_memcpy
+  USE device_memcpy_m,    ONLY: dev_memcpy
   !
   IMPLICIT NONE
   !

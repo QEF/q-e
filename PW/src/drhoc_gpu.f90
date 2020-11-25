@@ -203,7 +203,7 @@ SUBROUTINE drhoc_gpu( ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, rhocg_
   !
   USE simpsn_gpum,  ONLY: simpsn_gpu_dev
   USE sph_bes_gpum, ONLY : sph_bes_gpu
-  USE gbuffers,     ONLY : dev_buf
+  USE device_fbuff_m,     ONLY : dev_buf
   implicit none
   !
   !    first the dummy variables

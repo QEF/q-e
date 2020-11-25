@@ -916,7 +916,7 @@ SUBROUTINE getvofr_cube(me_r, ps_r, n_me, n_ps, hcub, rhops, potme, guess_state,
     USE fft_scalar,              ONLY  :  cfft3d
     USE wannier_base,            ONLY  :  poisson_eps
 #ifdef __CUDA
-    USE exx_module,              ONLY  : coemicf_d, coeke_d  !MCA/HK : dirty hack for std CG
+    USE exx_module,              ONLY  : coemicf_d, coeke_d  
 #endif
     USE exx_module,              ONLY  :  coemicf, coeke
     USE exx_module,              ONLY  :  fbsscale

@@ -22,7 +22,7 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   USE fft_base,      ONLY : dffts
   USE fft_interfaces,ONLY : fwfft, invfft
   USE fft_helper_subroutines
-  USE gbuffers,      ONLY : dev_buf
+  USE device_fbuff_m,      ONLY : dev_buf
   !
   IMPLICIT NONE
   !
@@ -327,7 +327,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   USE fft_helper_subroutines
   USE wavefunctions, ONLY: psic_h => psic
   !USE wavefunctions_gpum, ONLY: psic_d
-  USE gbuffers,    ONLY : dev_buf
+  USE device_fbuff_m,    ONLY : dev_buf
   !
   IMPLICIT NONE
   !

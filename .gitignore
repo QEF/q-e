@@ -1,3 +1,6 @@
+build/
+.vscode/
+
 *~
 *.a
 *.inc
@@ -12,11 +15,12 @@
 *.dvi
 *.toc
 *.aux
-*.x.dSYM
+*_tmp.f90
+*.TMP
+*.out
 
 bin/*
 FoX
-iotk
 include/fft_defs.h
 include/configure.h
 include/c_defs.h

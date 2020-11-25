@@ -157,7 +157,7 @@ SUBROUTINE deriv_drhoc_gpu( ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, 
   USE cudafor
 #endif
   USE simpsn_gpum,  ONLY: simpsn_gpu_dev
-  USE gbuffers,     ONLY: dev_buf
+  USE device_fbuff_m,     ONLY: dev_buf
   !
   IMPLICIT NONE
   !

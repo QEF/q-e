@@ -64,7 +64,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
 #if defined(__VERBOSE)
   USE util_param,     ONLY : stdout
 #endif
-  USE device_util_m,  ONLY : dev_memset, dev_memcpy
+  USE device_memcpy_m,  ONLY : dev_memset, dev_memcpy
   !
   IMPLICIT NONE
   !

@@ -60,12 +60,13 @@ SUBROUTINE potinit()
   !
   IMPLICIT NONE
   !
-  REAL(DP)              :: charge           ! the starting charge
-  REAL(DP)              :: etotefield       !
-  REAL(DP)              :: fact
-  INTEGER               :: is
-  LOGICAL               :: exst 
-  CHARACTER(LEN=320)    :: filename
+  REAL(DP)                  :: charge           ! the starting charge
+  REAL(DP)                  :: etotefield       !
+  REAL(DP)                  :: fact
+  INTEGER                   :: is
+  LOGICAL                   :: exst 
+  CHARACTER(LEN=320)        :: filename
+  COMPLEX (DP), ALLOCATABLE :: work(:,:)
   !
   CALL start_clock('potinit')
   !
@@ -108,6 +109,23 @@ SUBROUTINE potinit()
         !
      END IF
      !
+     IF ( input_drho /= ' ' ) THEN
+        !
+        filename = TRIM( restart_dir( )) // input_drho
+        CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
+             ig_l2g, nspin, v%of_g, gamma_only )
+        ! 
+        WRITE( UNIT = stdout, &
+               FMT = '(/5X,"a scf correction to at. rho is read from",A)' ) &
+            TRIM( filename )
+        !
+        ALLOCATE( work( dfftp%ngm, nspin ) )
+        CALL atomic_rho_g( work, nspin )
+        rho%of_g(:,1) = work(:,1) + v%of_g(:,1)
+        DEALLOCATE(work)
+        !
+     END IF
+     !
   ELSE
      !
      ! ... Case c): the potential is built from a superposition 
@@ -143,9 +161,6 @@ SUBROUTINE potinit()
      IF ( okpaw )      CALL PAW_atomic_becsum()
      !
      IF ( input_drho /= ' ' ) THEN
-        !
-        IF ( nspin > 1 ) CALL errore &
-             ( 'potinit', 'spin polarization not allowed in drho', 1 )
         !
         filename = TRIM( restart_dir( )) // input_drho
         CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &

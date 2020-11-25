@@ -327,6 +327,8 @@ SUBROUTINE move_ions( idone, ions_status )
      !
      ! ... before leaving check that the new positions still transform
      ! ... according to the symmetry of the system.
+     ! ... FIXME: should be done in all cases, not just for vc-md
+     ! ... FIXME 2: why not impose symmetry instead of just checking it?
      !
      CALL checkallsym( nat, tau, ityp)
      !

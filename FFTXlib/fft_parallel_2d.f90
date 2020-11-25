@@ -65,7 +65,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn )
   ! (Alessandro Curioni) and revised by Carlo Cavazzoni 2007.
   !
   USE fft_scalar, ONLY : cft_1z, cft_2xy
-  USE scatter_mod_2d,   ONLY : fft_scatter
+  USE fft_scatter_2d,   ONLY : fft_scatter
   USE fft_types,  ONLY : fft_type_descriptor
   !
   IMPLICIT NONE
@@ -163,7 +163,7 @@ CONTAINS
      !dfft%nr3p: number of planes per processor
      !
      !
-     USE scatter_mod_2d, ONLY: fft_scatter
+     USE fft_scatter_2d, ONLY: fft_scatter
      !
      INTEGER, INTENT(in) :: iopt
      !
@@ -184,7 +184,7 @@ CONTAINS
 
   SUBROUTINE bw_scatter( iopt )
      !
-     USE scatter_mod_2d, ONLY: fft_scatter
+     USE fft_scatter_2d, ONLY: fft_scatter
      !
      INTEGER, INTENT(in) :: iopt
      !
@@ -239,7 +239,7 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
   ! (Alessandro Curioni) and revised by Carlo Cavazzoni 2007.
   !
   USE fft_scalar, ONLY : cft_1z_gpu, cft_2xy_gpu
-  USE scatter_mod_2d_gpu,   ONLY : fft_scatter_gpu
+  USE fft_scatter_2d_gpu,   ONLY : fft_scatter_gpu
   USE fft_types,  ONLY : fft_type_descriptor
   USE fft_buffers, ONLY : check_buffers_size, &
                             f_h => pin_space_scatter_in, &
@@ -341,7 +341,7 @@ CONTAINS
      !dfft%nr3p: number of planes per processor
      !
      !
-     USE scatter_mod_2d_gpu, ONLY: fft_scatter_gpu
+     USE fft_scatter_2d_gpu, ONLY: fft_scatter_gpu
      !
      INTEGER, INTENT(in) :: iopt
      !
@@ -362,7 +362,7 @@ CONTAINS
 
   SUBROUTINE bw_scatter_gpu( iopt )
      !
-     USE scatter_mod_2d_gpu, ONLY: fft_scatter_gpu
+     USE fft_scatter_2d_gpu, ONLY: fft_scatter_gpu
      !
      INTEGER, INTENT(in) :: iopt
      !
@@ -413,7 +413,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
   ! (Alessandro Curioni) and revised by Carlo Cavazzoni 2007.
   !
   USE fft_scalar, ONLY : cft_1z_gpu, cft_2xy_gpu
-  USE scatter_mod_2d_gpu,   ONLY : fft_scatter_many_columns_to_planes_send, &
+  USE fft_scatter_2d_gpu,   ONLY : fft_scatter_many_columns_to_planes_send, &
                                    fft_scatter_many_columns_to_planes_store, &
                                    fft_scatter_many_planes_to_columns_send, &
                                    fft_scatter_many_planes_to_columns_store
@@ -430,7 +430,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
   TYPE (fft_type_descriptor), INTENT(in) :: dfft
                                            ! descriptor of fft data layout
   INTEGER, INTENT(in)           :: isgn    ! fft direction
-  INTEGER, INTENT(in)           :: batchsize   
+  INTEGER, INTENT(in)           :: batchsize
   COMPLEX(DP), DEVICE, INTENT(inout)    :: f_d( batchsize * dfft%nnr ) ! array containing data to be transformed
   !
   INTEGER                    :: me_p, istat, i, j, currsize

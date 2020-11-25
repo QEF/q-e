@@ -313,6 +313,18 @@ CONTAINS
           & (distasio@cornell.edu) if you should need assistance reverting to an earlier&
           & version with working taskgroup supoprt.',1)
       !
+      hx=DSQRT(h(1,1)*h(1,1)+h(2,1)*h(2,1)+h(3,1)*h(3,1))
+      hy=DSQRT(h(1,2)*h(1,2)+h(2,2)*h(2,2)+h(3,2)*h(3,2))
+      hz=DSQRT(h(1,3)*h(1,3)+h(2,3)*h(2,3)+h(3,3)*h(3,3))
+      IF(2*exx_me_rcut_s.GT.MIN(hx,hy,hz)) CALL errore('exx_module','EXX calculation error :  &
+          & The exx_me_rcut_self should be set smaller than half the minimum cell length',1)
+      !
+      IF(fftx_ntgrp(dffts).GT.1) CALL errore('exx_module','EXX calculation error : &
+          & taskgroup (-ntg) > 1 needed for zeta>1 calculations currently broken and will&
+          & be fixed in an up-coming major update. Please contact Robert A. DiStasio Jr.&
+          & (distasio@cornell.edu) if you should need assistance reverting to an earlier&
+          & version with working taskgroup supoprt.',1)
+      !
       IF(nproc_image.GE.nbsp) THEN
         !
         IF(MOD(nproc_image,nbsp).NE.0) CALL errore('exx_module','EXX calculation error :  &

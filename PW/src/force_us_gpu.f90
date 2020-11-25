@@ -43,7 +43,7 @@ SUBROUTINE force_us_gpu( forcenl )
                                    using_deeq
   USE becmod_subs_gpum,     ONLY : using_becp_auto, allocate_bec_type_gpu, &
                                     synchronize_bec_type_gpu
-  USE gbuffers,             ONLY : dev_buf
+  USE device_fbuff_m,             ONLY : dev_buf
   USE control_flags,        ONLY : use_gpu
   !
   IMPLICIT NONE

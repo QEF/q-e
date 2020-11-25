@@ -265,14 +265,14 @@ SUBROUTINE electrons()
         ENDIF 
         !
         IF ( dexx < 0.0_dp ) THEN
-           IF( Doloc ) THEN
+           !IF( Doloc ) THEN
               WRITE(stdout,'(5x,a,1e12.3)') "BEWARE: negative dexx:", dexx
               dexx = ABS ( dexx )
-           ELSE
-              CALL errore( 'electrons', 'dexx is negative! &
-                   & Check that exxdiv_treatment is appropriate for the system,&
-                   & or ecutfock may be too low', 1 )
-           ENDIF
+           !ELSE
+           !   CALL errore( 'electrons', 'dexx is negative! &
+           !        & Check that exxdiv_treatment is appropriate for the system,&
+           !        & or ecutfock may be too low', 1 )
+           !ENDIF
         ENDIF
         !
         !   remove the estimate exchange energy exxen used in the inner SCF
@@ -432,7 +432,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   !
   USE wvfct_gpum,           ONLY : using_et
   USE scf_gpum,             ONLY : using_vrs
-  USE gbuffers,             ONLY : dev_buf, pin_buf
+  USE device_fbuff_m,             ONLY : dev_buf, pin_buf
   !
   IMPLICIT NONE
   !

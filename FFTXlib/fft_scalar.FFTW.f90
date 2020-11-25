@@ -59,17 +59,13 @@
      COMPLEX (DP) :: c(:), cout(:)
 
      REAL (DP)  :: tscale
-     INTEGER    :: i, err, idir, ip, void
+     INTEGER    :: i, err, idir, ip
      INTEGER, SAVE :: zdims( 3, ndims ) = -1
      INTEGER, SAVE :: icurrent = 1
      LOGICAL :: found
 
-     INTEGER :: tid
-
 #if defined(_OPENMP)
      INTEGER :: offset, ldz_t
-     INTEGER :: omp_get_max_threads
-     EXTERNAL :: omp_get_max_threads
 #endif
 
      !   Pointers to the "C" structures containing FFT factors ( PLAN )
@@ -108,7 +104,7 @@
      ldz_t = ldz
      !
      IF (isign < 0) THEN
-!$omp parallel default(none) private(tid,offset,i,tscale) shared(c,isign,nsl,fw_planz,ip,nz,cout,ldz) &
+!$omp parallel default(none) private(offset,i,tscale) shared(c,isign,nsl,fw_planz,ip,nz,cout,ldz) &
 !$omp &        firstprivate(ldz_t)
 !$omp do
        DO i=1, nsl
@@ -120,7 +116,7 @@
        tscale = 1.0_DP / nz
        cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) * tscale
      ELSE IF (isign > 0) THEN
-!$omp parallel default(none) private(tid,offset,i) shared(c,isign,nsl,bw_planz,ip,cout,ldz) &
+!$omp parallel default(none) private(offset,i) shared(c,isign,nsl,bw_planz,ip,cout,ldz) &
 !$omp &        firstprivate(ldz_t)
 !$omp do
        DO i=1, nsl
@@ -207,19 +203,18 @@
      INTEGER, INTENT(IN) :: isign, ldx, ldy, nx, ny, nzl
      INTEGER, OPTIONAL, INTENT(IN) :: pl2ix(:)
      COMPLEX (DP) :: r( : )
-     INTEGER :: i, k, j, err, idir, ip, kk, void
+     INTEGER :: i, k, j, err, idir, ip, kk
      REAL(DP) :: tscale
      INTEGER, SAVE :: icurrent = 1
      INTEGER, SAVE :: dims( 4, ndims) = -1
      LOGICAL :: dofft( nfftx ), found
-     INTEGER, PARAMETER  :: stdout = 6
 
 #if defined(_OPENMP)
      INTEGER :: offset
      INTEGER :: nx_t, ny_t, nzl_t, ldx_t, ldy_t
      INTEGER  :: itid, mytid, ntids
-     INTEGER  :: omp_get_thread_num, omp_get_num_threads,omp_get_max_threads
-     EXTERNAL :: omp_get_thread_num, omp_get_num_threads, omp_get_max_threads
+     INTEGER  :: omp_get_thread_num, omp_get_num_threads
+     EXTERNAL :: omp_get_thread_num, omp_get_num_threads
 #endif
 
 #if defined(__FFTW_ALL_XY_PLANES)

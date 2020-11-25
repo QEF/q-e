@@ -2,7 +2,7 @@
 
 AC_DEFUN([X_AC_QE_CC], [
 
-# candidate C and f77 compilers good for all cases
+# candidate C compilers good for all cases
 try_cc="cc gcc"
 
 case "$arch:$f90_flavor" in

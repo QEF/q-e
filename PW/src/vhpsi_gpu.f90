@@ -31,7 +31,7 @@ SUBROUTINE vhpsi_gpu( ldap, np, mps, psip_d, hpsi_d )
   USE becmod_gpum,      ONLY : bec_type_d
   USE becmod_subs_gpum, ONLY : allocate_bec_type_gpu, deallocate_bec_type_gpu, &
                                calbec_gpu
-  USE device_util_m,    ONLY: dev_memcpy, dev_memset
+  USE device_memcpy_m,    ONLY: dev_memcpy, dev_memset
   !
 #if defined(__CUDA)
   USE cudafor

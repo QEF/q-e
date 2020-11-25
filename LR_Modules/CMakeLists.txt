@@ -1,0 +1,69 @@
+set(sources
+    adddvscf.f90
+    addusdbec.f90
+    addusdbec_nc.f90
+    apply_dpot.f90
+    addusldos.f90
+    adddvepsi_us.f90
+    cft_wave.f90
+    cgsolve_all.f90
+    cg_psi.f90
+    ch_psi_all.f90
+    commutator_Hx_psi.f90
+    commutator_Vhubx_psi.f90
+    Coul_cut_2D_ph.f90
+    check_q_points_sym.f90
+    dfpt_tetra_mod.f90
+    dynmat_sub.f90
+    h_prec.f90
+    incdrhoscf.f90
+    incdrhoscf_nc.f90
+    dv_of_drho.f90
+    dgradcorr.f90
+    dnonloccorr.f90
+    dv_vdW_DF.f90
+    dv_rVV10.f90
+    newdq.f90
+    orthogonalize.f90
+    setup_offset_beta.f90
+    setup_nscf.f90
+    set_dbecsum_nc.f90
+    set_int3_nc.f90
+    smallgq.f90
+    lr_sm1_psi.f90
+    lr_addusddens.f90
+    localdos.f90
+    setup_dgc.f90
+    compute_vsgga.f90
+    setup_dmuxc.f90
+    setup_nbnd_occ.f90
+    setup_alpha_pv.f90
+    set_small_group_of_q.f90
+    sgam_lr.f90
+    star_q.f90
+    setqmod.f90
+    lr_orthoUwfc.f90
+    qdipol_cryst.f90
+    mode_group.f90
+    mix_pot.f90
+    lrcom.f90
+    lr_dot.f90
+    lanczos_pseudohermitian.f90
+    lanczos_nonhermitian.f90
+    set_kplusq_nc.f90
+    lr_sym_mod.f90
+    ccg_psi.f90
+    ccgsolve_all.f90
+    ch_psi_all_complex.f90
+    addusddenseq.f90)
+
+qe_add_library(qe_lr_modules ${sources})
+add_library(QE::LR_Modules ALIAS qe_lr_modules)
+target_link_libraries(qe_lr_modules
+    PRIVATE
+        QE::Modules
+        QE::PW)
+
+###########################################################
+
+qe_install_targets(qe_lr_modules)

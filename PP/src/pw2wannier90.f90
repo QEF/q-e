@@ -425,7 +425,7 @@ PROGRAM pw2wannier90
      IF(write_mmn  )  CALL print_clock( 'compute_mmn'  )
      IF(write_unk  )  CALL print_clock( 'write_unk'    )
      IF(write_unkg )  CALL print_clock( 'write_parity' )
-     !! not sure if this should be called also in 'library' mode or not !!
+     ! not sure if this should be called also in 'library' mode or not !!
      CALL environment_end ( 'PW2WANNIER' )
      IF ( ionode ) WRITE( stdout, *  )
      CALL stop_pp
@@ -2148,6 +2148,83 @@ SUBROUTINE compute_mmn
          !
          Mkb(:,:) = (0.0d0,0.0d0)
          !
+         ! loops on bands
+         !
+         IF (wan_mode=='standalone') THEN
+            IF (ionode) WRITE (iun_mmn,'(7i5)') ik, ikp, (g_kpb(ipol,ik,ib), ipol=1,3)
+         ENDIF
+         !
+         DO m=1,nbnd
+            IF (excluded_band(m)) CYCLE
+            !
+            IF(noncolin) THEN
+               psic_nc(:,:) = (0.d0, 0.d0)
+               DO ipol=1,2!npol
+                  istart=(ipol-1)*npwx+1
+                  iend=istart+npw-1
+                  psic_nc(dffts%nl (igk_k(1:npw,ik) ),ipol ) = evc(istart:iend, m)
+		            IF (.not.zerophase(ik,ib)) THEN
+                     CALL invfft ('Wave', psic_nc(:,ipol), dffts)
+                     psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * &
+                                                 phase(1:dffts%nnr)
+                     CALL fwfft ('Wave', psic_nc(:,ipol), dffts)
+                  ENDIF
+                  aux_nc(1:npwq,ipol) = psic_nc(dffts%nl (igk_k(1:npwq,ikp)),ipol )
+               ENDDO
+            ELSE
+               psic(:) = (0.d0, 0.d0)
+               psic(dffts%nl (igk_k (1:npw,ik) ) ) = evc (1:npw, m)
+               IF(gamma_only) psic(dffts%nlm(igk_k(1:npw,ik) ) ) = conjg(evc (1:npw, m))
+               IF (.not.zerophase(ik,ib)) THEN
+                  CALL invfft ('Wave', psic, dffts)
+                  psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
+                  CALL fwfft ('Wave', psic, dffts)
+               ENDIF
+               aux(1:npwq)  = psic(dffts%nl (igk_k(1:npwq,ikp) ) )
+            ENDIF
+            IF(gamma_only) THEN
+               IF (gstart==2) psic(dffts%nlm(1)) = (0.d0,0.d0)
+               aux2(1:npwq) = conjg(psic(dffts%nlm(igk_k(1:npwq,ikp) ) ) )
+            ENDIF
+            !
+            !  Mkb(m,n) = Mkb(m,n) + \sum_{ijI} qb_{ij}^I * e^-i(b*tau_I)
+            !             <psi_m,k1| beta_i,k1 > < beta_j,k2 | psi_n,k2 >
+            !
+            IF (gamma_only) THEN
+               DO n=1,m ! Mkb(m,n) is symmetric in m and n for gamma_only case
+                  IF (excluded_band(n)) CYCLE
+                  mmn = zdotc (npwq, aux,1,evcq(1,n),1) &
+                       + conjg(zdotc(npwq,aux2,1,evcq(1,n),1))
+                  Mkb(m,n) = mmn + Mkb(m,n)
+                  IF (m/=n) Mkb(n,m) = Mkb(m,n) ! fill other half of matrix by symmetry
+               ENDDO
+            ELSEIF(noncolin) THEN
+               DO n=1,nbnd
+                  IF (excluded_band(n)) CYCLE
+                  mmn=(0.d0, 0.d0)
+!                  do ipol=1,2
+!                     mmn = mmn+zdotc (npwq, aux_nc(1,ipol),1,evcq_nc(1,ipol,n),1)
+                  mmn = mmn + zdotc (npwq, aux_nc(1,1),1,evcq(1,n),1) &
+                       + zdotc (npwq, aux_nc(1,2),1,evcq(npwx+1,n),1)
+!                  end do
+                  Mkb(m,n) = mmn + Mkb(m,n)
+               ENDDO
+            ELSE
+               DO n=1,nbnd
+                  IF (excluded_band(n)) CYCLE
+                  mmn = zdotc (npwq, aux,1,evcq(1,n),1)
+                  Mkb(m,n) = mmn + Mkb(m,n)
+               ENDDO
+            ENDIF
+         ENDDO   ! m
+         !
+         ! updating of the elements of the matrix Mkb
+         !
+         DO n=1,nbnd
+            IF (excluded_band(n)) CYCLE
+            CALL mp_sum(Mkb(:,n), intra_pool_comm)
+         ENDDO
+         !
          IF (any_uspp) THEN
             ijkb0 = 0
             DO nt = 1, ntyp
@@ -2212,80 +2289,6 @@ SUBROUTINE compute_mmn
             ENDDO !ntyp
          ENDIF ! any_uspp
          !
-         !
-! loops on bands
-         !
-         IF (wan_mode=='standalone') THEN
-            IF (ionode) WRITE (iun_mmn,'(7i5)') ik, ikp, (g_kpb(ipol,ik,ib), ipol=1,3)
-         ENDIF
-         !
-         DO m=1,nbnd
-            IF (excluded_band(m)) CYCLE
-            !
-            IF(noncolin) THEN
-               psic_nc(:,:) = (0.d0, 0.d0)
-               DO ipol=1,2!npol
-                  istart=(ipol-1)*npwx+1
-                  iend=istart+npw-1
-                  psic_nc(dffts%nl (igk_k(1:npw,ik) ),ipol ) = evc(istart:iend, m)
-		  IF (.not.zerophase(ik,ib)) THEN
-                     CALL invfft ('Wave', psic_nc(:,ipol), dffts)
-                     psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * &
-                                                 phase(1:dffts%nnr)
-                     CALL fwfft ('Wave', psic_nc(:,ipol), dffts)
-                  ENDIF
-                  aux_nc(1:npwq,ipol) = psic_nc(dffts%nl (igk_k(1:npwq,ikp)),ipol )
-               ENDDO
-            ELSE
-               psic(:) = (0.d0, 0.d0)
-               psic(dffts%nl (igk_k (1:npw,ik) ) ) = evc (1:npw, m)
-               IF(gamma_only) psic(dffts%nlm(igk_k(1:npw,ik) ) ) = conjg(evc (1:npw, m))
-               IF (.not.zerophase(ik,ib)) THEN
-                  CALL invfft ('Wave', psic, dffts)
-                  psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
-                  CALL fwfft ('Wave', psic, dffts)
-               ENDIF
-               aux(1:npwq)  = psic(dffts%nl (igk_k(1:npwq,ikp) ) )
-            ENDIF
-            IF(gamma_only) THEN
-               IF (gstart==2) psic(dffts%nlm(1)) = (0.d0,0.d0)
-               aux2(1:npwq) = conjg(psic(dffts%nlm(igk_k(1:npwq,ikp) ) ) )
-            ENDIF
-            !
-            !  Mkb(m,n) = Mkb(m,n) + \sum_{ijI} qb_{ij}^I * e^-i(b*tau_I)
-            !             <psi_m,k1| beta_i,k1 > < beta_j,k2 | psi_n,k2 >
-            !
-            IF (gamma_only) THEN
-               DO n=1,m ! Mkb(m,n) is symmetric in m and n for gamma_only case
-                  IF (excluded_band(n)) CYCLE
-                  mmn = zdotc (npwq, aux,1,evcq(1,n),1) &
-                       + conjg(zdotc(npwq,aux2,1,evcq(1,n),1))
-                  CALL mp_sum(mmn, intra_pool_comm)
-                  Mkb(m,n) = mmn + Mkb(m,n)
-                  IF (m/=n) Mkb(n,m) = Mkb(m,n) ! fill other half of matrix by symmetry
-               ENDDO
-            ELSEIF(noncolin) THEN
-               DO n=1,nbnd
-                  IF (excluded_band(n)) CYCLE
-                  mmn=(0.d0, 0.d0)
-!                  do ipol=1,2
-!                     mmn = mmn+zdotc (npwq, aux_nc(1,ipol),1,evcq_nc(1,ipol,n),1)
-                  mmn = mmn + zdotc (npwq, aux_nc(1,1),1,evcq(1,n),1) &
-                       + zdotc (npwq, aux_nc(1,2),1,evcq(npwx+1,n),1)
-!                  end do
-                  CALL mp_sum(mmn, intra_pool_comm)
-                  Mkb(m,n) = mmn + Mkb(m,n)
-               ENDDO
-            ELSE
-               DO n=1,nbnd
-                  IF (excluded_band(n)) CYCLE
-                  mmn = zdotc (npwq, aux,1,evcq(1,n),1)
-                  CALL mp_sum(mmn, intra_pool_comm)
-                  Mkb(m,n) = mmn + Mkb(m,n)
-               ENDDO
-            ENDIF
-         ENDDO   ! m
-
          ibnd_n = 0
          DO n=1,nbnd
             IF (excluded_band(n)) CYCLE
@@ -2303,7 +2306,7 @@ SUBROUTINE compute_mmn
                ENDIF
             ENDDO
          ENDDO
-
+         !
       ENDDO !ib
    ENDDO  !ik
 

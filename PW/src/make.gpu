@@ -44,11 +44,6 @@ PWLIBS += \
   orthoatwfc_gpu.o \
   atomic_wfc_gpu.o
 
-MODFLAGS += \
-         $(MOD_FLAG)../../GScratch
-QEMODS += \
-         ../../GScratch/libgscratch.a 
-
 a2fmod.o : pwcom_gpu.o
 add_paw_to_deeq_gpu.o : pwcom.o
 add_vhub_to_deeq_gpu.o : ldaU.o

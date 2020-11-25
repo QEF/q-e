@@ -28,7 +28,7 @@
                             kmaps, kerwrite, kerread, imag_read, nkc3,        &
                             gap_edge, fsthick, filqf, filkf, nqc1, nqc2, nqc3,&
                             fileig, fila2f, fermi_energy, nc, nkc1, nkc2,     &
-                            etf_mem, epwwrite, epwread, nbndsub,              &
+                            etf_mem, epwwrite, epwread, nbndsub, fermi_plot,  &
                             eps_acustic, ephwrite, epbread, nsiter, nqstep,   &
                             nqsmear, nqf3, nqf2, nqf1, nkf3, nkf2, nkf1,      &
                             muc, mp_mesh_q, mp_mesh_k, max_memlt, lunif,      &
@@ -87,6 +87,7 @@
   CALL mp_bcast(plselfen        , meta_ionode_id, world_comm)
   CALL mp_bcast(ephwrite        , meta_ionode_id, world_comm)
   CALL mp_bcast(band_plot       , meta_ionode_id, world_comm)
+  CALL mp_bcast(fermi_plot      , meta_ionode_id, world_comm)
   CALL mp_bcast(vme             , meta_ionode_id, world_comm)
   CALL mp_bcast(epbread         , meta_ionode_id, world_comm)
   CALL mp_bcast(epbwrite        , meta_ionode_id, world_comm)
