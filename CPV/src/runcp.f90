@@ -18,7 +18,7 @@
 
 
    SUBROUTINE runcp_uspp_x &
-      ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, cm_bgrp, fromscra, restart )
+      ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, c0_d, cm_bgrp, cm_d, fromscra, restart )
       !
       !  This subroutine performs a Car-Parrinello or Steepest-Descent step
       !  on the electronic variables, computing forces on electrons
@@ -48,7 +48,6 @@
       USE ldaU_cp,             ONLY : lda_plus_u, vupsi
       USE fft_helper_subroutines
 #if defined (__CUDA)
-      USE wavefunctions,       ONLY : c0_d, cm_d
       USE uspp_gpum,           ONLY : vkb_d
       USE cudafor
 #endif
@@ -61,6 +60,7 @@
       REAL(DP) :: rhos(:,:)
       REAL(DP) :: bec_bgrp(:,:)
       COMPLEX(DP) :: c0_bgrp(:,:), cm_bgrp(:,:)
+      COMPLEX(DP) DEVICEATTR :: c0_d(:,:), cm_d(:,:)
       LOGICAL, OPTIONAL, INTENT(IN) :: fromscra
       LOGICAL, OPTIONAL, INTENT(IN) :: restart
       !
@@ -71,10 +71,8 @@
 !dir$ attributes align: 4096 :: emadt2, emaver, c2, c3, c2tmp, c3tmp, tg_rhos, ftmp, itmp
 #endif
 #endif
-     !real(DP),    allocatable :: emadt2(:)
-     !real(DP),    allocatable :: emaver(:)
-     real(DP) :: emadt2(ngw)
-     real(DP) :: emaver(ngw)
+     real(DP),    allocatable :: emadt2(:)
+     real(DP),    allocatable :: emaver(:)
      complex(DP), allocatable :: c2(:), c3(:), c2tmp(:), c3tmp(:)
      REAL(DP),    ALLOCATABLE :: tg_rhos(:,:), ftmp(:)
 #if defined (__CUDA)
@@ -83,7 +81,7 @@
      INTEGER,     ALLOCATABLE :: itmp(:)
      integer :: i, nsiz, incr, idx, idx_in, ierr
      integer :: iwfc, nwfc, is, ii, tg_rhos_siz, c2_siz
-     integer :: iflag, mca_alloc
+     integer :: iflag
      logical :: ttsde
      INTEGER :: omp_get_num_threads
 
@@ -121,8 +119,8 @@
      verl2 = 1.0d0 - verl1
      verl3 = 1.0d0 * fccc
 
-     !ALLOCATE( emadt2( ngw ) )
-     !ALLOCATE( emaver( ngw ) )
+     ALLOCATE( emadt2( ngw ) )
+     ALLOCATE( emaver( ngw ) )
 
      ccc    = fccc * dt2bye
      emadt2 = dt2bye * ema0bg
@@ -326,8 +324,8 @@
 
      END IF
 
-     !DEALLOCATE( emadt2 )
-     !DEALLOCATE( emaver )
+     DEALLOCATE( emadt2 )
+     DEALLOCATE( emaver )
 #if defined (__CUDA)
      DEALLOCATE( rhos_d )
 #endif

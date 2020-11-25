@@ -137,9 +137,7 @@ SUBROUTINE from_scratch( )
     ! ... prefor calculates vkb (used by gram)
     !
     CALL prefor( eigr, vkb )
-#ifdef __CUDA
     CALL dev_memcpy( vkb_d, vkb )
-#endif
     !
     nspin_wfc = nspin
     IF( force_pairing ) nspin_wfc = 1
@@ -150,9 +148,7 @@ SUBROUTINE from_scratch( )
     !
     if( iverbosity > 1 ) CALL dotcsc( vkb, cm_bgrp, ngw, nbsp )
     !
-#ifdef __CUDA
     CALL dev_memcpy( cm_d, cm_bgrp )
-#endif
     !
     ! ... initialize bands
     !
@@ -203,7 +199,7 @@ SUBROUTINE from_scratch( )
        !
        if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
        !
-       CALL rhoofr( nfi, cm_bgrp, irb, eigrb, bec_bgrp, dbec, becsum, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
+       CALL rhoofr( nfi, cm_bgrp, cm_d, bec_bgrp, dbec, becsum, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
        !
        edft%enl  = enl
        edft%ekin = ekin
@@ -251,13 +247,11 @@ SUBROUTINE from_scratch( )
          !
       ELSE
          !
-         CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, cm_bgrp, c0_bgrp, fromscra = .TRUE. )
+         CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, cm_bgrp, cm_d, c0_bgrp, c0_d, fromscra = .TRUE. )
          !
       ENDIF
       !
-#ifdef __CUDA
       CALL dev_memcpy( c0_d, c0_bgrp )  ! c0 contains the updated wave functions
-#endif
       !
       !     nlfq needs deeq bec
       !

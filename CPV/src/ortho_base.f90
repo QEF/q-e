@@ -947,6 +947,8 @@ CONTAINS
       USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nbsp, nspin,  nupdwn, iupdwn, nbspx
       USE device_memcpy_m,     ONLY: dev_memcpy
 !
+      USE device_memcpy_m,     ONLY : dev_memcpy
+!
       IMPLICIT NONE
 
       include 'laxlib.fh'
@@ -1094,9 +1096,7 @@ CONTAINS
                    idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
                    ! xd = x0(:,:,iss) * ccc
                    CALL dev_memcpy( xd(:,:) , x0(:, :, iss ) )
-#ifdef __CUDA
 !$cuf kernel do(2) <<<*,*>>>
-#endif
                    DO j = 1, SIZE( xd, 2 )
                       DO i = 1, SIZE( xd, 1 )
                          xd(i,j) = ccc * xd(i,j)

@@ -85,7 +85,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
           CALL get_wannier_center( tfirst, cm_bgrp, bec_bgrp, eigr, &
                                    eigrb, taub, irb, ibrav, b1, b2, b3 )
      !
-     CALL rhoofr( nfi, c0_bgrp, irb, eigrb, bec_bgrp, dbec, becsum, rhor, &
+     CALL rhoofr( nfi, c0_bgrp, c0_d, bec_bgrp, dbec, becsum, rhor, &
                   drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
      !
 !=================================================================
@@ -95,7 +95,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
         IF ( lwfpbe0nscf ) THEN
            !
            CALL start_clock('exact_exchange')
-           !CALL exx_es(nfi, c0_bgrp, cv0)
+           CALL exx_es(nfi, c0_bgrp, cv0)
            CALL stop_clock('exact_exchange')
            !
         ELSE
@@ -162,9 +162,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
      CALL newd( vpot, becsum, fion, tprint )
      !
      CALL prefor( eigr, vkb )
-#if defined (__CUDA)
      CALL dev_memcpy( vkb_d, vkb )
-#endif
      !
      IF( force_pairing ) THEN
         !
@@ -173,13 +171,11 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
         !
      ELSE
         !
-        CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, cm_bgrp )
+        CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, c0_d, cm_bgrp, cm_d )
         !
      ENDIF
      !
-#if defined (__CUDA)
      CALL dev_memcpy( cm_d, cm_bgrp )  ! cm contains the updated wavefunctions
-#endif
      !
      !----------------------------------------------------------------------
      !                 contribution to fion due to lambda
