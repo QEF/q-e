@@ -41,8 +41,7 @@ set(sources
     src/hp_stop_smoothly.f90
     src/hp_write_chi.f90
     src/hp_write_chi_full.f90
-    src/hp_write_dnsq.f90
-)
+    src/hp_write_dnsq.f90)
 
 qe_add_library(qe_hp ${sources})
 add_library(QE::HP ALIAS qe_hp)
@@ -50,7 +49,10 @@ target_link_libraries(qe_hp
     PRIVATE
         QE::PW
         QE::LR_Modules
-        QE::Modules)
+        QE::Modules
+        QE::FFTX
+        QE::UTILX
+        QE::UPF)
 
 ###########################################################
 # hp.x
@@ -63,11 +65,11 @@ target_link_libraries(qe_hp_exe
         QE::PW
         QE::LAX
         QE::Modules
-        QE::HP)
+        QE::HP
+        QE::UTILX)
 
 ###########################################################
 
 qe_install_targets(
     qe_hp
-    qe_hp_exe
-)
+    qe_hp_exe)

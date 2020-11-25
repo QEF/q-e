@@ -20,15 +20,16 @@ set(sources
     src/path_to_engine_fix_atom_pos.f90
     src/path_variables.f90
     src/set_defaults.f90
-    src/stop_run_path.f90
-)
+    src/stop_run_path.f90)
 
 qe_add_library(qe_neb ${sources})
 add_library(QE::NEB ALIAS qe_neb)
 target_link_libraries(qe_neb
     PRIVATE
         QE::PW
-        QE::Modules)
+        QE::Modules
+        QE::UTILX
+        QE::UPF)
 
 ###########################################################
 # neb.x
@@ -63,5 +64,4 @@ qe_install_targets(
     qe_neb
     # Executables
     qe_neb_exe
-    qe_neb_pathinterpolation_exe
-)
+    qe_neb_pathinterpolation_exe)

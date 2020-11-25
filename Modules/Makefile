@@ -1,4 +1,4 @@
-# Makefile for Modules
+#/a Makefile for Modules
 
 include ../make.inc
 
@@ -9,6 +9,7 @@ MODFLAGS=$(BASEMOD_FLAGS) \
 # list of modules
 
 MODULES = \
+additional_kpoints.o \
 autopilot.o \
 basic_algebra_routines.o \
 becmod.o \
@@ -150,7 +151,6 @@ test_input_file.o \
 date_and_tim.o \
 volume.o \
 dylmr2.o \
-ylmr2.o \
 wgauss.o \
 w0gauss.o \
 w1gauss.o \

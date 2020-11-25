@@ -434,8 +434,8 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
         !
         rhoup2 = rho%of_r(ir,1)+rho%of_r(ir,2)
         rhodw2 = rho%of_r(ir,1)-rho%of_r(ir,2)
-        IF (rhoup2 < 0.d0) rhoneg(1) = rhoneg(1) + rhoup2
-        IF (rhodw2 < 0.d0) rhoneg(2) = rhoneg(2) + rhodw2
+        IF (rhoup2 < 0.d0) rhoneg(1) = rhoneg(1) - rhoup2
+        IF (rhodw2 < 0.d0) rhoneg(2) = rhoneg(2) - rhodw2
      ENDDO
      !
      vtxc   = 0.5d0 * vtxc

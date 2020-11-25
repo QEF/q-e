@@ -127,7 +127,8 @@ target_link_libraries(qe_cpv_exe
     PRIVATE
         QE::Modules
         QE::LAX
-        QE::CPV)
+        QE::CPV
+        QE::UTILX)
 
 ###########################################################
 # manycp.x
@@ -151,7 +152,9 @@ set_target_properties(qe_cpv_cppp_exe PROPERTIES OUTPUT_NAME cppp.x)
 target_link_libraries(qe_cpv_cppp_exe
     PRIVATE
         QE::Modules
-        QE::CPV)
+        QE::CPV
+        QE::CLIB
+        QE::UTILX)
 
 ###########################################################
 # wfdd.x
@@ -174,5 +177,4 @@ qe_install_targets(
     qe_cpv_exe
     qe_cpv_manycp_exe
     qe_cpv_cppp_exe
-    qe_cpv_wfdd_exe
-)
+    qe_cpv_wfdd_exe)

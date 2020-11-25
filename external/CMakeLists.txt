@@ -7,7 +7,7 @@ if(FOX_ROOT)
     qe_install_targets(qe_fox) 
     target_link_libraries(qe_fox INTERFACE "-L${FOX_ROOT}/lib;-lFoX_dom;-lFoX_sax;-lFoX_wxml;-lFoX_common;-lFoX_utils;-lFoX_fsys")
     target_include_directories(qe_fox INTERFACE ${FOX_ROOT}/finclude)
-elseif(QE_ENABLE_VENDOR_DEPS)
+else()
     message(STATUS "Installing QE::FOX via submodule")
     set(fox_targets
         FoX_fsys
@@ -24,204 +24,13 @@ elseif(QE_ENABLE_VENDOR_DEPS)
     target_link_libraries(qe_fox INTERFACE ${fox_targets})
     qe_fix_fortran_modules(${fox_targets})
     qe_install_targets(qe_fox ${fox_targets})
-else()
-    message(FATAL_ERROR "FoX not found! Please specify a FoX root (-DFOX_ROOT=/path/to/fox) or enable the FoX vendoring (-DQE_ENABLE_VENDOR_DEPS=ON)!")
 endif()
+
 ###########################################################
 # QE::libbeef
 ###########################################################
 add_subdirectory(libbeef)
 target_link_libraries(qe_libbeef PRIVATE QE::LAPACK)
-###########################################################
-# QE::IOTK
-###########################################################
-set(sources
-    iotk/src/iotk_dat+COMPLEX3_3.f90
-    iotk/src/iotk_attr+LOGICAL4_6.f90
-    iotk/src/iotk_attr+REAL1_0.f90
-    iotk/src/iotk_attr+INTEGER4_3.f90
-    iotk/src/iotk_misc.f90
-    iotk/src/iotk_dat+COMPLEX4_6.f90
-    iotk/src/iotk_dat+CHARACTER1_6.f90
-    iotk/src/iotk_dat+CHARACTER1_3.f90
-    iotk/src/iotk_dat+REAL4_3.f90
-    iotk/src/iotk_attr+LOGICAL1_6.f90
-    iotk/src/iotk_tool.f90
-    iotk/src/iotk_attr+LOGICAL2_6.f90
-    iotk/src/iotk_attr+LOGICAL3_0.f90
-    iotk/src/iotk_attr+COMPLEX1_0.f90
-    iotk/src/iotk_dat+INTEGER3_3.f90
-    iotk/src/iotk_stream_interf.f90
-    iotk/src/iotk_xtox_interf.f90
-    iotk/src/iotk_attr+REAL2_0.f90
-    iotk/src/iotk_attr+COMPLEX2_6.f90
-    iotk/src/iotk_attr+REAL1_6.f90
-    iotk/src/iotk_attr+INTEGER3_3.f90
-    iotk/src/iotk_attr+LOGICAL4_3.f90
-    iotk/src/iotk_fmt.f90
-    iotk/src/iotk_dat+INTEGER1_0.f90
-    iotk/src/iotk_dat+LOGICAL2_6.f90
-    iotk/src/iotk_dat+REAL3_3.f90
-    iotk/src/iotk_dat+LOGICAL3_3.f90
-    iotk/src/iotk_dat+LOGICAL3_6.f90
-    iotk/src/iotk_attr+COMPLEX2_3.f90
-    iotk/src/iotk_attr+INTEGER3_6.f90
-    iotk/src/iotk_attr+LOGICAL1_3.f90
-    iotk/src/iotk_str.f90
-    iotk/src/iotk_dat+INTEGER4_3.f90
-    iotk/src/iotk_dat+REAL1_0.f90
-    iotk/src/iotk_attr+INTEGER1_3.f90
-    iotk/src/iotk_dat+INTEGER4_0.f90
-    iotk/src/iotk_attr+COMPLEX1_3.f90
-    iotk/src/iotk_dat+COMPLEX2_3.f90
-    iotk/src/iotk_attr_interf.f90
-    iotk/src/iotk_files_interf.f90
-    iotk/src/iotk_attr.f90
-    iotk/src/iotk_dat_interf.f90
-    iotk/src/iotk_attr+INTEGER2_0.f90
-    iotk/src/iotk_dat+LOGICAL2_3.f90
-    iotk/src/iotk_attr+REAL3_6.f90
-    iotk/src/iotk_attr+LOGICAL2_0.f90
-    iotk/src/iotk_misc_interf.f90
-    iotk/src/iotk_stream.f90
-    iotk/src/iotk_attr+COMPLEX3_0.f90
-    iotk/src/iotk_dat+COMPLEX3_6.f90
-    iotk/src/iotk_attr+INTEGER4_6.f90
-    iotk/src/iotk_attr+INTEGER3_0.f90
-    iotk/src/iotk_dat+LOGICAL4_0.f90
-    iotk/src/iotk_attr+COMPLEX1_6.f90
-    iotk/src/iotk_unit_interf.f90
-    iotk/src/iotk_dat+LOGICAL1_3.f90
-    iotk/src/iotk_attr+LOGICAL3_3.f90
-    iotk/src/iotk_dat+LOGICAL2_0.f90
-    iotk/src/iotk_attr+LOGICAL1_0.f90
-    iotk/src/iotk_attr+REAL4_3.f90
-    iotk/src/iotk_dat+REAL2_0.f90
-    iotk/src/iotk_attr+COMPLEX3_6.f90
-    iotk/src/iotk_dat+INTEGER3_0.f90
-    iotk/src/iotk_dat+INTEGER3_6.f90
-    iotk/src/iotk_scan.f90
-    iotk/src/iotk_str_interf.f90
-    iotk/src/iotk_write_interf.f90
-    iotk/src/iotk_attr+INTEGER2_3.f90
-    iotk/src/iotk_dat+COMPLEX2_0.f90
-    iotk/src/iotk_attr+INTEGER4_0.f90
-    iotk/src/iotk_attr+REAL3_0.f90
-    iotk/src/iotk_dat+REAL1_3.f90
-    iotk/src/iotk_dat+LOGICAL4_3.f90
-    iotk/src/iotk_dat+REAL1_6.f90
-    iotk/src/iotk_dat+INTEGER2_6.f90
-    iotk/src/iotk_dat+COMPLEX4_3.f90
-    iotk/src/iotk_dat+REAL2_3.f90
-    iotk/src/iotk_dat+COMPLEX1_0.f90
-    iotk/src/iotk_error_interf.f90
-    iotk/src/iotk_attr+REAL4_0.f90
-    iotk/src/iotk_dat+LOGICAL3_0.f90
-    iotk/src/iotk_dat+REAL3_0.f90
-    iotk/src/iotk_dat+REAL2_6.f90
-    iotk/src/iotk_error.f90
-    iotk/src/iotk_dat+REAL3_6.f90
-    iotk/src/iotk_dat+COMPLEX4_0.f90
-    iotk/src/iotk_attr+REAL3_3.f90
-    iotk/src/iotk_xtox.f90
-    iotk/src/iotk_files.f90
-    iotk/src/iotk_attr+COMPLEX3_3.f90
-    iotk/src/iotk_dat+COMPLEX1_6.f90
-    iotk/src/iotk_attr+COMPLEX4_0.f90
-    iotk/src/iotk_dat+COMPLEX1_3.f90
-    iotk/src/iotk_dat+COMPLEX3_0.f90
-    iotk/src/iotk_dat+CHARACTER1_0.f90
-    iotk/src/iotk_dat+REAL4_0.f90
-    iotk/src/iotk_dat+INTEGER1_6.f90
-    iotk/src/iotk_dat+COMPLEX2_6.f90
-    iotk/src/iotk_attr+INTEGER1_0.f90
-    iotk/src/iotk_write.f90
-    iotk/src/iotk_dat+INTEGER2_0.f90
-    iotk/src/iotk_attr+LOGICAL3_6.f90
-    iotk/src/iotk_dat+LOGICAL1_0.f90
-    iotk/src/iotk_attr+REAL1_3.f90
-    iotk/src/iotk_attr+REAL2_6.f90
-    iotk/src/iotk_attr+LOGICAL2_3.f90
-    iotk/src/iotk_attr+REAL2_3.f90
-    iotk/src/iotk_dat+LOGICAL1_6.f90
-    iotk/src/iotk_dat+INTEGER1_3.f90
-    iotk/src/iotk_dat.f90
-    iotk/src/iotk_attr+COMPLEX4_3.f90
-    iotk/src/iotk_dat+REAL4_6.f90
-    iotk/src/iotk_tool_interf.f90
-    iotk/src/iotk_module.f90
-    iotk/src/iotk_attr+CHARACTER1_0.f90
-    iotk/src/iotk_fmt_interf.f90
-    iotk/src/iotk_dat+INTEGER2_3.f90
-    iotk/src/iotk_attr+COMPLEX4_6.f90
-    iotk/src/iotk_attr+REAL4_6.f90
-    iotk/src/iotk_unit_list.f90
-    iotk/src/iotk_attr+INTEGER2_6.f90
-    iotk/src/iotk_scan_interf.f90
-    iotk/src/iotk_attr+LOGICAL4_0.f90
-    iotk/src/iotk_attr+INTEGER1_6.f90
-    iotk/src/iotk_dat+INTEGER4_6.f90
-    iotk/src/iotk_base.f90
-    iotk/src/iotk_attr+COMPLEX2_0.f90
-    iotk/src/iotk_dat+LOGICAL4_6.f90
-    iotk/src/iotk_unit.f90)
-
-qe_add_library(qe_iotk ${sources})
-if (CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(qe_iotk PRIVATE "-ffree-line-length-none")
-endif()
-target_include_directories(qe_iotk
-    PRIVATE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/iotk/include>
-    INTERFACE
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qe>)
-target_link_libraries(qe_iotk
-    PRIVATE
-        QE::MPI_Fortran)
-add_library(QE::IOTK ALIAS qe_iotk)
-
-###########################################################
-# iotk.x
-###########################################################
-set(sources iotk/src/iotk.f90)
-qe_add_executable(qe_iotk_exe ${sources})
-set_target_properties(qe_iotk_exe PROPERTIES OUTPUT_NAME iotk.x)
-target_link_libraries(qe_iotk_exe
-    PRIVATE
-        QE::MPI_Fortran
-        QE::IOTK)
-
-###########################################################
-# iotk_copy.x
-###########################################################
-set(sources iotk/src/iotk_copy.f90)
-qe_add_executable(qe_iotkcopy_exe ${sources})
-set_target_properties(qe_iotkcopy_exe PROPERTIES OUTPUT_NAME iotk_copy.x)
-target_link_libraries(qe_iotkcopy_exe
-    PRIVATE
-        QE::MPI_Fortran
-        QE::IOTK)
-
-###########################################################
-# iotk_print_kinds.x
-###########################################################
-set(sources iotk/src/iotk_print_kinds.f90)
-qe_add_executable(qe_iotkprintkinds_exe ${sources})
-set_target_properties(qe_iotkprintkinds_exe PROPERTIES OUTPUT_NAME iotk_print_kinds.x)
-target_link_libraries(qe_iotkprintkinds_exe
-    PRIVATE
-        QE::IOTK)
-
-###########################################################
-
-qe_install_targets(
-    # Libraries
-    qe_iotk
-    # Executables
-    qe_iotk_exe
-    qe_iotkcopy_exe
-    qe_iotkprintkinds_exe
-)
 
 ###########################################################
 # QE::WANNIER90
@@ -301,5 +110,4 @@ qe_install_targets(
     # Executables
     qe_wannierprog_exe
     qe_w90chk2chk_exe
-    qe_wannier90_postw90_exe
-)
+    qe_wannier90_postw90_exe)
