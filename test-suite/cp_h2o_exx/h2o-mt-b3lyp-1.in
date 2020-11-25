@@ -1,10 +1,10 @@
  &control
     title = ' Water Molecule ',
     calculation = 'cp-wf',
-    restart_mode = 'restart',
+    restart_mode = 'from_scratch',
     ndr = 51,
-    ndw = 52,
-    nstep  = 83,
+    ndw = 51,
+    nstep  = 120,
     iprint = 120,
     isave  = 120,
     tstress = .TRUE.,
