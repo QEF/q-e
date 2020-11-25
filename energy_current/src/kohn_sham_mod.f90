@@ -100,8 +100,7 @@ contains
       sb = 0.d0
 
 ! computed sb = < evc_due, evc_uno >, sa = <evc_uno, evc_uno> remove contribution at G=0
-! sb is a multiple of the identity if 2 points are used (t_minus==t_zero)
-
+! sa is a multiple of the identity if 2 points are used (t_plus==t_zero)
       call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, scf_all%t_plus%evc, 2*npwx, scf_all%t_zero%evc, 2*npwx, 0.d0, sa, nbnd)
       call dgemm('T', 'N', nbnd, nbnd, 2*npw, 2.d0, scf_all%t_minus%evc, 2*npwx, scf_all%t_zero%evc, 2*npwx, 0.d0, sb, nbnd)
       if (gstart == 2) then

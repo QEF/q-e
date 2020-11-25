@@ -279,17 +279,7 @@ program all_currents
          if (three_point_derivative) then
                  ! restore wfct and potentials for t=0 (needed only if last point was t+dt)
             call scf_result_set_global_variables(scf_all%t_zero)
-         end if
-         !calculate second part of energy current
-
-         call current_hartree_xc(three_point_derivative, delta_t, scf_all, &
-                                 j%j_hartree, j%j_xc, nbnd, npw, npwx, dffts, psic, g, ngm, gstart, &
-                                 tpiba, omega, tpiba2)
-         call current_kohn_sham(j%J_kohn, j%J_kohn_a, j%J_kohn_b, j%J_electron, delta_t, scf_all, &
-                                dvpsi_save, save_dvpsi, &
-                                nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
-                                tpiba2, at, vkb, nkb, xk, igk_k, g2kin, et, hpsi_test)
-         if (.not. three_point_derivative) then
+         else
             ! we are in t in this case, so we call here routines that do not compute numerical derivatives
             if (hpsi_test) &
                 call init_test(evc) ! TESTING ONLY
@@ -301,6 +291,17 @@ program all_currents
                           j%i_current, j%i_current_a, j%i_current_b, j%i_current_c, j%i_current_d, j%i_current_e, add_i_current_b, &
                                nat, tau, vel, zv, ityp, alat, at, bg, tpiba, gstart, g, gg, npw, amass)
          end if
+         !calculate second part of energy current
+
+         call current_hartree_xc(three_point_derivative, delta_t, scf_all, &
+                                 j%j_hartree, j%j_xc, nbnd, npw, npwx, dffts, psic, g, ngm, gstart, &
+                                 tpiba, omega, tpiba2)
+         if (.not. three_point_derivative) &
+             scf_all%t_zero%evc=scf_all%t_plus%evc
+         call current_kohn_sham(j%J_kohn, j%J_kohn_a, j%J_kohn_b, j%J_electron, delta_t, scf_all, &
+                                dvpsi_save, save_dvpsi, &
+                                nbnd, npw, npwx, dffts, evc, g, ngm, gstart, &
+                                tpiba2, at, vkb, nkb, xk, igk_k, g2kin, et, hpsi_test)
          call write_results(traj, print_stat, j, ave_cur)
       end do
       !read new velocities and positions and continue, or exit the loop
