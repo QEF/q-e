@@ -409,7 +409,8 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
   ! ...  Note that if isgn=+/-1 (fft on rho and pot.) all fft's are needed
   ! ...  and all planes(i) are set to 1
   !
-  ! ...  batchsize : number of elements to be transformed in f_d
+  ! ...  batchsize : number of 3D FFTs contained in f_d to be transformed.
+  ! ...              Must be 1 < batchsize <= dfft%batchsize.
   !
   ! This driver is based on code written by Stefano de Gironcoli for PWSCF.
   ! Task Group added by Costas Bekas, Oct. 2005, adapted from the CPMD code
