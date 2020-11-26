@@ -2,14 +2,12 @@
 !---------------------------------------------------------------------------
 SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !-------------------------------------------------------------------------
-  !! Wrapper routine. Calls xc_gga-driver routines from internal libraries
-  !! of q-e or from the external libxc, depending on the input choice.
+  !! Wrapper routine. Calls xc_gga-driver internal routines or the external
+  !! ones from libxc, depending on the input choice.
   !
   !! NOTE: differently from 'xc_lda_drivers', here the input rho is in (up,down)
   !!       form (in the LSDA case).
   !
-  !! NOTE: look at 'PP/src/benchmark_libxc.f90' to test and see the differences
-  !!       between q-e and libxc libraries.
   !
 #if defined(__LIBXC)
 #include "xc_version.h"
@@ -190,7 +188,7 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   ! ---- GGA CORRELATION
   !
-  IF ( is_libxc(4) ) THEN  !lda part of LYP not present in libxc
+  IF ( is_libxc(4) ) THEN  !lda part of LYP not present in libxc (still so? - check)
     !
     CALL xc_f03_func_init( xc_func, igcc, pol_unpol )
      xc_info2 = xc_f03_func_get_info( xc_func )

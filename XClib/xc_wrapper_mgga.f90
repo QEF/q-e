@@ -2,8 +2,8 @@
 !----------------------------------------------------------------------------------------
 SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   !-------------------------------------------------------------------------------------
-  !! Wrapper routine. Calls metaGGA drivers from internal libraries
-  !! of q-e or from the external libxc, depending on the input choice.
+  !! Wrapper routine. Calls internal metaGGA drivers or the Libxc ones,
+  !! depending on the input choice.
   !
 #if defined(__LIBXC)
 #include "xc_version.h"

@@ -8,10 +8,10 @@
 !----------------------------------------------------------------------------
 MODULE constants_l
   !----------------------------------------------------------------------------
+  !! A subset of the constants in 'Modules' folder of QE. Here the ones
+  !! needed internally in xc_lib only.
   !
   USE kind_l, ONLY : DP
-  !
-  ! ... The constants needed everywhere
   !
   IMPLICIT NONE
   !

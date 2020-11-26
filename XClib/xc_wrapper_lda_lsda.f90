@@ -1,13 +1,9 @@
-
 !
-!
-!>>>> quando chiama xc setta la threshold quando non è il valore standard <<<<<<
-
 !---------------------------------------------------------------------------
 SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !-------------------------------------------------------------------------
-  !! Wrapper routine. Calls xc-driver routines from internal libraries
-  !! of q-e or from the external libxc, depending on the input choice.
+  !! Wrapper routine. Calls internal XC-driver routines or external ones
+  !! from Libxc, depending on the input choice.
   !
   !! NOTE: look at 'PP/src/benchmark_libxc.f90' to see the differences
   !!       between q-e and libxc.

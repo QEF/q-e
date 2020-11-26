@@ -441,6 +441,7 @@ target_link_libraries(qe_pp_ppacf_exe
         QE::PW
         QE::XClib
         QE::PP
+        QE::Modules
         QE::UTILX
         QE::FFTX)
 

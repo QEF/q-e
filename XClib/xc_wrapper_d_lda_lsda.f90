@@ -9,12 +9,8 @@
 !---------------------------------------------------------------------
 SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   !---------------------------------------------------------------------
-  !! Wrapper routine. Calls dmxc-driver routines from internal libraries
-  !! or from the external one 'libxc', depending on the input choice.
-  !
-  ! Only two possibilities in the present version (LDA only):
-  ! 1) iexch libxc + icorr libxc
-  ! 2) iexch qe    + icorr qe
+  !! Wrapper routine. Calls internal dmxc-driver routines or the external
+  !! ones from Libxc, depending on the input choice.
   !
   USE kind_l,            ONLY: DP
   USE dft_par_mod

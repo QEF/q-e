@@ -4,7 +4,7 @@
 !--------------------------------------------------------------------------
 MODULE qe_drivers_gga
   !------------------------------------------------------------------------
-  !! Contains the gga drivers of QE that calculate XC energy and potential.
+  !! Contains the GGA drivers that calculate the XC energy and potential.
   !
   USE kind_l, ONLY: DP
   USE dft_par_mod
@@ -61,10 +61,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   ntids = omp_get_num_threads()
 #endif
   !
-  
-  !print *, 'ooooo', exx_started, exx_fraction, gau_parameter
-  
-  
+  !
 !$omp parallel if(ntids==1)
 !$omp do private( rho, grho, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
 !$omp             v2x, v2x_, v2xsr, sc, v1c, v2c )
@@ -619,7 +616,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE( 28 )                   ! X3LYP
         !
-        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), v1x(2), v2x(1), v2x(2) )
+        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), &
+                           v1x(2), v2x(1), v2x(2) )
         !
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
