@@ -485,6 +485,8 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
   !
   IF ( isgn > 0 ) THEN
      DO j = 0, batchsize-1, dfft%subbatchsize
+       ! determine whether the FFTs that are left are less than the maximum
+       ! subbatchsize size.
        currsize = min(dfft%subbatchsize, batchsize - j)
        !
        IF ( isgn /= 2 ) THEN
@@ -497,10 +499,13 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
           !
        ENDIF
        !
+       ! perform the FFT along one direction and, at the same time,
+       ! read data spaced by dfft%nnr and store in in the output
+       ! with spacing ncpx*nx3, making it easy to bach communication.
        DO i = 0, currsize - 1
          CALL cft_1z_gpu( f_d((j+i)*dfft%nnr + 1:), sticks(me_p), n3, nx3, isgn, aux_d(j*dfft%nnr + i*ncpx*nx3 +1:), dfft%a2a_comp )
        ENDDO
-
+       !
        i = cudaEventRecord(dfft%bevents(j/dfft%subbatchsize + 1), dfft%a2a_comp)
        i = cudaStreamWaitEvent(dfft%bstreams(j/dfft%subbatchsize + 1), dfft%bevents(j/dfft%subbatchsize + 1), 0)
 
