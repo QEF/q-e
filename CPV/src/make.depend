@@ -426,8 +426,8 @@ exx_psi.o : ../../Modules/mp_wave.o
 exx_psi.o : ../../UtilXlib/mp.o
 exx_psi.o : ../../UtilXlib/parallel_include.o
 exx_vofr.o : ../../FFTXlib/fft_scalar.o
+exx_vofr.o : ../../XClib/xc_lib.o
 exx_vofr.o : ../../Modules/constants.o
-exx_vofr.o : ../../Modules/funct.o
 exx_vofr.o : ../../Modules/io_global.o
 exx_vofr.o : ../../Modules/kind.o
 exx_vofr.o : ../../Modules/mp_global.o
