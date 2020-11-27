@@ -109,7 +109,7 @@ libcuda_devxlib :
                 --enable-cuda-env-check=no; \
     fi; \
     make all
-	touch ../../install/libcuda_devxlib # do not download and configure again
+	touch ../install/libcuda_devxlib # do not download and configure again
 
 libcuda_devxlib_clean:
 	rm libcuda_devxlib
