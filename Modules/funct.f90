@@ -529,7 +529,7 @@ CONTAINS
     !
     isnonlocc = (inlc > 0)
     !
-    CALL xclib_set_auxiliary_flags
+    CALL xclib_set_auxiliary_flags( isnonlocc )
     !
     ! check non-local term has not been previously set differently
     !
@@ -701,7 +701,9 @@ CONTAINS
      dft_defined = xclib_set_dft_IDs(iexch,icorr,igcx,igcc,imeta,0)
      !
      ! WRITE( stdout,'(a)') dft
-     CALL xclib_set_auxiliary_flags
+     isnonlocc = (inlc > 0)
+     CALL xclib_set_auxiliary_flags( isnonlocc )
+     !
      RETURN
   END SUBROUTINE set_dft_from_indices
   !

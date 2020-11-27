@@ -75,7 +75,7 @@ PROGRAM do_ppacf
   ! 1 \(\rigtharrow\) Susceptibility-type vdW_DF kernel (postprocessing ONLY!)
   ! 2 \(\rigtharrow\) Pure-vdW (longitudinal) vdW_DF kernel (postprocessing ONLY!)
   ! Kernels defined/explained in IOP JCPM focused review.
-  LOGICAL :: is_libxc(2)
+  LOGICAL :: is_libxc(2), isnonlocc
   LOGICAL :: lplot, ltks, lfock
   ! lplot: "2 track spatial variation or not 2 track spatial variation?"
   ! if (lplot) ltks: "2 track Kohn-sham kinetic energy?" (requires wavefunctions)
@@ -826,7 +826,8 @@ PROGRAM do_ppacf
     !
     CALL xclib_set_exx_fraction( 1._DP )
     CALL enforce_input_dft( 'HF' )
-    CALL xclib_set_auxiliary_flags
+    isnonlocc = dft_is_nonlocc()
+    CALL xclib_set_auxiliary_flags( isnonlocc )
     !
     ALLOCATE( igk_buf(npwx), gk(npwx) )
     igk_k(:,:) = 0

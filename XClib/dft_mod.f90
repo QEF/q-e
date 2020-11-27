@@ -642,7 +642,7 @@ CONTAINS
   !
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE xclib_set_auxiliary_flags
+  SUBROUTINE xclib_set_auxiliary_flags( isnonlocc )
     !-----------------------------------------------------------------------
     !! Set logical flags describing the complexity of the xc functional
     !! define the fraction of exact exchange used by hybrid fuctionals.
@@ -651,9 +651,12 @@ CONTAINS
     !
     IMPLICIT NONE
     !
-    !isnonlocc = (inlc > 0)
+    LOGICAL, INTENT(IN) :: isnonlocc
+    !! The non-local part, for now, is not included in xc_lib, but this variable
+    !! is needed to establish 'isgradient'.
+    !
     ismeta    = (imeta+imetac > 0)
-    isgradient= (igcx > 0) .OR.  (igcc > 0)  .OR. ismeta !.OR. isnonlocc
+    isgradient= (igcx > 0) .OR.  (igcc > 0)  .OR. ismeta .OR. isnonlocc
     islda     = (iexch> 0) .AND. (icorr > 0) .AND. .NOT. isgradient
     ! PBE0/DF0
     IF ( iexch==6 .OR.  igcx == 8 ) exx_fraction = 0.25_DP
@@ -925,16 +928,18 @@ CONTAINS
      CHARACTER(len=*), INTENT(IN) :: family, kindf
      !
      CHARACTER(len=4) :: cfamily, ckindf
-     INTEGER :: i
+     INTEGER :: i, ln
      !
-     DO i = 1, LEN_TRIM(family)
+     ln = LEN_TRIM(family)
+     !
+     DO i = 1, ln
        cfamily(i:i) = capital(family(i:i))
      ENDDO
-     DO i = 1, LEN_TRIM(kindf)
+     DO i = 1, 4
        ckindf(i:i) = capital(kindf(i:i))
      ENDDO
      !
-     SELECT CASE( cfamily )
+     SELECT CASE( cfamily(1:ln) )
      CASE( 'LDA' )
        IF (ckindf=='EXCH') xclib_get_id = iexch
        IF (ckindf=='CORR') xclib_get_id = icorr
@@ -964,16 +969,18 @@ CONTAINS
      CHARACTER(len=*), INTENT(IN) :: family, kindf
      !
      CHARACTER(len=4) :: cfamily, ckindf
-     INTEGER :: i
+     INTEGER :: i, ln
      !
-     DO i = 1, LEN_TRIM(family)
+     ln = LEN_TRIM(family)
+     !
+     DO i = 1, ln
        cfamily(i:i) = capital(family(i:i))
      ENDDO
-     DO i = 1, LEN_TRIM(kindf)
+     DO i = 1, 4
        ckindf(i:i) = capital(kindf(i:i))
      ENDDO
      !
-     SELECT CASE( TRIM(cfamily) )
+     SELECT CASE( cfamily(1:ln) )
      CASE( 'LDA' )
        IF (ckindf=='EXCH') name = exc(iexch)
        IF (ckindf=='CORR') name = corr(icorr)
@@ -1002,16 +1009,18 @@ CONTAINS
      CHARACTER(len=*), INTENT(IN) :: family, kindf
      !
      CHARACTER(len=4) :: cfamily, ckindf
-     INTEGER :: i
+     INTEGER :: i, ln
      !
-     DO i = 1, LEN_TRIM(family)
+     ln = LEN_TRIM(family)
+     !
+     DO i = 1, ln
        cfamily(i:i) = capital(family(i:i))
      ENDDO
-     DO i = 1, LEN_TRIM(kindf)
+     DO i = 1, 4
        ckindf(i:i) = capital(kindf(i:i))
      ENDDO
      !
-     SELECT CASE( TRIM(cfamily) )
+     SELECT CASE( cfamily(1:ln) )
      CASE( 'LDA' )
        IF (ckindf=='EXCH') xclib_dft_is_libxc = is_libxc(1)
        IF (ckindf=='CORR') xclib_dft_is_libxc = is_libxc(2)
@@ -1095,13 +1104,15 @@ CONTAINS
      CHARACTER(len=*) :: what
      !
      CHARACTER(len=15) :: cwhat
-     INTEGER :: i
+     INTEGER :: i, ln
      !
-     DO i = 1, LEN_TRIM(what)
+     ln = LEN_TRIM(what)
+     !
+     DO i = 1, ln
        cwhat(i:i) = capital(what(i:i))
      ENDDO
      !
-     SELECT CASE( TRIM(cwhat) )
+     SELECT CASE( cwhat(1:ln) )
      CASE( 'GRADIENT' )
        xclib_dft_is = isgradient
      CASE( 'META' )
@@ -1356,13 +1367,15 @@ CONTAINS
    REAL(DP), INTENT(IN), OPTIONAL :: tau_threshold_
    !
    CHARACTER(len=4) :: cfamily
-   INTEGER :: i
+   INTEGER :: i, ln
    !
-   DO i = 1, LEN_TRIM(family)
+   ln = LEN_TRIM(family)
+   !
+   DO i = 1, ln
      cfamily(i:i) = capital(family(i:i))
    ENDDO
    !
-   SELECT CASE( TRIM(cfamily) )
+   SELECT CASE( cfamily(1:ln) )
    CASE( 'LDA' )
      rho_threshold_lda = rho_threshold_
    CASE( 'GGA' )
