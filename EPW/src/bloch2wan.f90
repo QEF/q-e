@@ -724,15 +724,20 @@
       OPEN(iubvec, FILE = tempfile, ACTION = 'read', IOSTAT = ios)
       IF (ios /= 0) THEN
         !
-        ! if it doesn't exist, then we just set the bvec and wb to zero
+        ! HL 11/2020: The part below is commented since it makes sense to stop the calculation
+        ! in case that there is no *.bvec file with vme = .true. .
         !
-        nnb = 1
-        ALLOCATE(bvec(3, nnb, nkstot), STAT = ierr)
-        IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating bvec', 1)
-        ALLOCATE(wb(nnb), STAT = ierr)
-        IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating wb', 1)
-        bvec = zero
-        wb   = zero
+!        !
+!        ! if it doesn't exist, then we just set the bvec and wb to zero
+!        !
+!        nnb = 1
+!        ALLOCATE(bvec(3, nnb, nkstot), STAT = ierr)
+!        IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating bvec', 1)
+!        ALLOCATE(wb(nnb), STAT = ierr)
+!        IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating wb', 1)
+!        bvec = zero
+!        wb   = zero
+        CALL errore ('vmebloch2wan','You selected vme =.true. but error opening' // tempfile, 1)
       ELSE
         READ(iubvec,*) tempfile
         READ(iubvec,*) nkstot_tmp, nnb
@@ -780,7 +785,7 @@
       !
       IF (ios /= 0) THEN
         ! if it doesn't exist, then we just set the mmn to zero
-        CALL errore ('vmebloch2wan','error opening' // tempfile, 0)
+        CALL errore ('vmebloch2wan','error opening' // tempfile, 1)
       ELSE
         !
         DO ik = 1, nkstot

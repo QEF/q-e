@@ -4,6 +4,12 @@ New in 6.7 version:
   * In vc-relax with Hubbard corrections, the final SCF calculation is done by 
     reading atomic occupations from file produced during the vc-relax 
     (rather then recomputing them from scratch).
+  * EPW: 
+    (1) ZG package to generate special displacements for first-principles non-perturbative calculations 
+    at finite temperatures [Marios Zacharias and Feliciano Giustino, Phys. Rev. Research 2, 013357, (2020)].
+    (2) Plotting of Fermi surface.
+    For the full list of new features, bug fixes, and changes leading to backward incompatibility issues, 
+    please visit the Releases page of the EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
 
 Fixed in 6.7 version:
   * Some linkers yield "missing references to ddot_" in libbeef
@@ -21,6 +27,7 @@ Fixed in 6.7 version:
 Incompatible changes in 6.7 version:
   * FoX  no longer used to read and write pseudopotential files
   * iotk no longer used to read and write any file
+  * Developer manual moved to the Wiki
 
 New in v.6.6:
   * vdW-DF3-opt1, vdW-DF3-opt2, and vdW-DF-C6 van der Waals functionals

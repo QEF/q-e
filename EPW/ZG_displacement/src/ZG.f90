@@ -73,13 +73,15 @@ PROGRAM ZG
   !               supplied in input (default)
   !     amass     masses of atoms in the supercell (a.m.u.), one per atom type
   !               (default: use masses read from file flfrc)
+  !    "q_in_band_form" and "q_in_cryst_coord" meaningful if "q_external" 
+  !    (see below) is set to .true.
   !     q_in_band_form IF .TRUE. the q points are given in band form:
   !               Only the first and last point of one or more lines 
   !               are given. See below. (default: .FALSE.).
   !     q_in_cryst_coord IF .TRUE. input q points are in crystalline 
   !              coordinates (default: .FALSE.)
-  !     loto_2d    set to .true. to activate two-dimensional treatment of LO-TO
-  !     splitting.
+  !     loto_2d  set to .true. to activate two-dimensional treatment of LO-TO
+  !              siplitting.
   !
   !  IF (q_in_band_form) THEN
   !     nq     ! number of q points
@@ -101,7 +103,7 @@ PROGRAM ZG
   !  Input cards to control "ZG_configuration" subroutine:
   !
   !     "ZG_conf"            : Logical flag that enables the creation of the ZG-displacement. 
-  !                            (default .false.) 
+  !                            (default .true.) 
   !     "T"                  : Real number indicating the temperature at which the calculations will be performed. 
   !                            "T" essentially defines the amplitude of the normal coordinates. 
   !                            (default 0.00)
@@ -137,34 +139,42 @@ PROGRAM ZG
   !     "single_phonon_displ": Logical flag that allows to displace the nuclei along single phonon modes. 
   !                            Use output configurations to compute electron-phonon matrix elements with a direct 
   !                            supercell calculation. Set the displacement to the zero point by "T = 0". 
-  !                            This generates the output files: "single_phonon-displacements.dat" and 
+  !                            This finite displacement should carry precisely the effect of diagonal elements of [g(q)+g(-q)].
+  !                            Output files: "single_phonon-displacements.dat" and 
   !                            "single_phonon-velocities.dat".
   !                            (default .false.)
-  !     "qlist_AB.txt"       : This file containes the q-list in crystal coordinates that appears in the "ZG_444.in" example after 
-  !                            the input flags. It corresponds to the q-points commensurate to the supercell size. Only one
-  !                            of the q-point time-reversal partners is kept for the construction of the ZG-displacement. 
-  !                            The calculations, for the moment, assume systems with time-reversal symmetry. 
+  !     "q_external"         : Logical flag that allows the use of a q-point list specified by the user in the input file. 
+  !                            If .false. the q-point list is specified by the supercell dimensions dimx, dimy, and dimz. 
+  !                            If .false. any q-point list after the input flags is ignored.
+  !                            If .true. the q-point list must be provided by the user (see "qlist_AB.txt").
+  !                            (default .false.)
+  !     "qlist_AB.txt"       : This file contains the external q-list in crystal coordinates as in the "ZG_444.in" example,
+  !                            after the input flags. It corresponds to the q-points commensurate to the supercell size. 
+  !                            Only one of the q-point time-reversal partners is kept for the construction of the 
+  !                            ZG-displacement. The calculations, for the moment, assume systems with time-reversal symmetry. 
   !                            For the generation of the "qlist_AB.txt" set the q-gird in file 
-  !                            "example/silicon/input/qlist.in" and run "../../../src/create_qlist.x < qlist.in > qlist.out ". 
-  !                            Paste the output of "qlist_AB.txt" to "ZG.in" after namelist &input.
+  !                            "example/silicon/input/qlist.in" and run "../../../src/create_qlist.x < qlist.in > qlist.out".
+  !                            One can modify the "create_qlist.f90" to generate a different path for consecutive q-points.
+  !                            Paste the output of "qlist_AB.txt" to "ZG.in" after namelist &input. Set the flag 
+  !                            q_external = .true. for the code to read the list.  
   !
-  USE kinds,      ONLY : DP
-  USE mp,         ONLY : mp_bcast
-  USE mp_world,   ONLY : world_comm 
-  USE mp_global,  ONLY : mp_startup, mp_global_end
-  USE environment, ONLY : environment_start, environment_end
-  USE io_global,  ONLY : ionode, ionode_id, stdout
-  USE io_dyn_mat, ONLY : read_dyn_mat_param, read_dyn_mat_header, &
-                         read_ifc_param, read_ifc
-  USE cell_base,  ONLY : at, bg, celldm
-  USE constants,  ONLY : RY_TO_THZ, RY_TO_CMM1, amu_ry
-  USE symm_base,  ONLY : set_sym
+  USE kinds,            ONLY : DP
+  USE mp,               ONLY : mp_bcast
+  USE mp_world,         ONLY : world_comm 
+  USE mp_global,        ONLY : mp_startup, mp_global_end
+  USE environment,      ONLY : environment_start, environment_end
+  USE io_global,        ONLY : ionode, ionode_id, stdout
+  USE io_dyn_mat,       ONLY : read_dyn_mat_param, read_dyn_mat_header, &
+                               read_ifc_param, read_ifc
+  USE cell_base,        ONLY : at, bg, celldm
+  USE constants,        ONLY : RY_TO_THZ, RY_TO_CMM1, amu_ry
+  USE symm_base,        ONLY : set_sym
   USE rap_point_group,  ONLY : code_group
-  USE bz_form,    ONLY : transform_label_coord
-  USE parser,     ONLY : read_line
-  USE rigid,      ONLY : dyndiag, nonanal, nonanal_ifc
+  USE bz_form,          ONLY : transform_label_coord
+  USE parser,           ONLY : read_line
+  USE rigid,            ONLY : dyndiag, nonanal, nonanal_ifc
 
-  USE ifconstants, ONLY : frc, atm, zeu, tau_blk, ityp_blk, m_loc
+  USE ifconstants,      ONLY : frc, atm, zeu, tau_blk, ityp_blk, m_loc
   !
   IMPLICIT NONE
   !
@@ -204,13 +214,12 @@ PROGRAM ZG
   REAL(DP) :: delta
   REAL(DP), ALLOCATABLE :: xqaux(:,:)
   INTEGER, ALLOCATABLE :: nqb(:)
-  INTEGER :: n, i, j, it, nq, nqx, na, nb, iout, nqtot, iout_dyn, iout_eig
+  INTEGER :: n, i, j, it, nq, nqx, na, nb, nqtot
   LOGICAL, EXTERNAL :: has_xml
   INTEGER, ALLOCATABLE :: num_rap_mode(:,:)
   LOGICAL, ALLOCATABLE :: high_sym(:)
   LOGICAL :: q_in_band_form
   ! .... variables for band plotting based on similarity of eigenvalues
-  COMPLEX(DP), ALLOCATABLE :: tmp_z(:,:)
   COMPLEX(DP), ALLOCATABLE :: f_of_q(:,:,:,:)
   INTEGER :: location(1), isig
   CHARACTER(LEN=6) :: int_to_char
@@ -221,31 +230,28 @@ PROGRAM ZG
   CHARACTER(LEN=256) :: input_line, buffer
   CHARACTER(LEN= 10) :: point_label_type
   CHARACTER(len=80) :: k_points = 'tpiba'
-  ! mz_b
+  ! 
   COMPLEX(DP), ALLOCATABLE :: z_nq_zg(:,:,:) ! nomdes, nmodes, nq
   REAL(DP),    ALLOCATABLE :: q_nq_zg(:,:) ! 3, nq
-  LOGICAL                  :: ZG_conf, synch, incl_qA
+  LOGICAL                  :: ZG_conf, synch, incl_qA, q_external
   LOGICAL                  :: compute_error, single_phonon_displ
   INTEGER                  :: dimx, dimy, dimz, nloops 
   REAL(DP)                 :: error_thresh, T
   CHARACTER(LEN=3)         :: atm_zg(ntypx)
-  ! mz_e
+  ! 
   !
-  NAMELIST /input/ flfrc, amass, asr, at,  &
-       &            ntyp, loto_2d, &
-       &            q_in_band_form, q_in_cryst_coord, &
-       &            point_label_type,  &
-! mz_b we add the inputs for generating the ZG-configuration
-       &           ZG_conf, dimx, dimy, dimz, nloops, error_thresh, & 
+  NAMELIST /input/ flfrc, amass, asr, at, ntyp, loto_2d, &
+       &            q_in_band_form, q_in_cryst_coord, point_label_type,  &
+! we add the inputs for generating the ZG-configuration
+       &           ZG_conf, dimx, dimy, dimz, nloops, error_thresh, q_external, & 
        &           compute_error, synch, atm_zg, T, incl_qA, single_phonon_displ 
 ! ZG_conf --> IF TRUE compute the ZG_configuration 
-! mz_e 
   !
   CALL mp_startup()
   CALL environment_start('ZG')
   !
   l1= 1
-  l2 = 1
+  l2= 1
   l3= 1
   IF (ionode) CALL input_from_file ( )
      !
@@ -263,20 +269,21 @@ PROGRAM ZG
      q_in_cryst_coord = .FALSE.
      point_label_type='SC'
      loto_2d=.FALSE.
-     ! mz_b
-     ZG_conf = .FALSE.
+     ! 
+     ZG_conf = .TRUE.
      compute_error = .TRUE.
-     single_phonon_displ = .FALSE.
-     nloops = 15000 
-     error_thresh = 5.0E-02
-     T = 0
      synch = .FALSE.
+     q_external = .FALSE.
      incl_qA = .TRUE.
+     single_phonon_displ = .FALSE.
+     T = 0
+     error_thresh = 5.0E-02
      dimx = 0
      dimy = 0
      dimz = 0
+     nloops = 15000 
      atm_zg = "Element"
-     ! mz_e 
+     ! 
      !
      !
      IF (ionode) READ (5, input,IOSTAT=ios)
@@ -292,25 +299,26 @@ PROGRAM ZG
      CALL mp_bcast(q_in_cryst_coord, ionode_id, world_comm)
      CALL mp_bcast(point_label_type, ionode_id, world_comm)
      CALL mp_bcast(loto_2d,ionode_id, world_comm) 
-     ! mz_b
+     ! 
      CALL mp_bcast(ZG_conf, ionode_id, world_comm)
      CALL mp_bcast(compute_error, ionode_id, world_comm)
-     CALL mp_bcast(single_phonon_displ, ionode_id, world_comm)
-     CALL mp_bcast(atm_zg, ionode_id, world_comm)
-     CALL mp_bcast(nloops, ionode_id, world_comm)
-     CALL mp_bcast(error_thresh, ionode_id, world_comm)
-     CALL mp_bcast(T, ionode_id, world_comm)
      CALL mp_bcast(synch, ionode_id, world_comm)
+     CALL mp_bcast(q_external, ionode_id, world_comm)
      CALL mp_bcast(incl_qA, ionode_id, world_comm)
+     CALL mp_bcast(single_phonon_displ, ionode_id, world_comm)
+     CALL mp_bcast(T, ionode_id, world_comm)
+     CALL mp_bcast(error_thresh, ionode_id, world_comm)
      CALL mp_bcast(dimx, ionode_id, world_comm)
      CALL mp_bcast(dimy, ionode_id, world_comm)
      CALL mp_bcast(dimz, ionode_id, world_comm)
+     CALL mp_bcast(nloops, ionode_id, world_comm)
+     CALL mp_bcast(atm_zg, ionode_id, world_comm)
      ! 
      ! To check that use specify supercell dimensions
      IF (ZG_conf) THEN 
         IF ((dimx < 1)  .OR. (dimy < 1) .OR. (dimz < 1)) CALL errore('ZG', 'reading supercell size', dimx)
      ENDIF
-     ! mz_e      
+     ! 
      !
      ! read force constants
      !
@@ -369,17 +377,17 @@ PROGRAM ZG
      IF (SUM(ABS(at(:,:))) == 0.d0) THEN
         IF (l1.LE.0 .OR. l2.LE.0 .OR. l3.LE.0) CALL                    &
              &             errore ('ZG',' wrong l1,l2 or l3', 1)
-        at(:, 1) = at_blk(:, 1) *DBLE(l1)
-        at(:, 2) = at_blk(:, 2) *DBLE(l2)
-        at(:, 3) = at_blk(:, 3) *DBLE(l3)
+        at(:, 1) = at_blk(:, 1) * DBLE(l1)
+        at(:, 2) = at_blk(:, 2) * DBLE(l2)
+        at(:, 3) = at_blk(:, 3) * DBLE(l3)
      ENDIF
      !
      CALL check_at(at, bg_blk, alat, omega)
      !
      ! the supercell contains "nsc" times the original unit cell
      !
-     nsc = NINT(omega/omega_blk)
-     IF (ABS(omega/omega_blk-nsc) > eps) &
+     nsc = NINT(omega / omega_blk)
+     IF (ABS(omega / omega_blk-nsc) > eps) &
           CALL errore ('ZG', 'volume ratio not integer', 1)
      !
      ! read/generate atomic positions of the (super)cell
@@ -399,103 +407,115 @@ PROGRAM ZG
      !
      ! build the WS cell corresponding to the force constant grid
      !
-     atws(:, 1) = at_blk(:, 1) *DBLE(nr1)
-     atws(:, 2) = at_blk(:, 2) *DBLE(nr2)
-     atws(:, 3) = at_blk(:, 3) *DBLE(nr3)
+     atws(:, 1) = at_blk(:, 1) * DBLE(nr1)
+     atws(:, 2) = at_blk(:, 2) * DBLE(nr2)
+     atws(:, 3) = at_blk(:, 3) * DBLE(nr3)
      ! initialize WS r-vectors
      CALL wsinit(rws, nrwsx, nrws, atws)
      !
      ! end of (super)cell setup
      !
-        !
-        ! read q-point list
-        !
-     IF (ionode) READ (5,*) nq
-     CALL mp_bcast(nq, ionode_id, world_comm)
-     ALLOCATE ( q(3, nq) )
-     IF (.NOT.q_in_band_form) THEN
-           DO n = 1, nq
- ! mz_edits
-              IF (ionode) READ (5,*) (q(i, n), i = 1, 3)
-!              IF (ionode) READ (5,'(3F10.6)') q(:, n) 
- ! mz_done
-           ENDDO
-           CALL mp_bcast(q, ionode_id, world_comm)
-           !
-           IF (q_in_cryst_coord)  CALL cryst_to_cart(nq,q, bg,+ 1)
+     !
+     ! read q-point list
+     !
+     ! 
+     IF (.NOT. q_external) THEN 
+       CALL qpoint_gen1(dimx, dimy, dimz, nq) 
+       ! nq = ctrAB
+       CALL mp_bcast(nq, ionode_id, world_comm)
+       ALLOCATE ( q(3, nq) )        
+       CALL qpoint_gen2(dimx, dimy, dimz, nq, q) 
+       !
+       CALL mp_bcast(q, ionode_id, world_comm)
+       !
+       CALL cryst_to_cart(nq, q, bg, +1) ! convert them to Cartesian
      ELSE
-           ALLOCATE( nqb(nq) )
-           ALLOCATE( xqaux(3, nq) )
-           ALLOCATE( letter(nq) )
-           ALLOCATE( label_list(nq) )
-           npk_label= 0
-           DO n = 1, nq
-              CALL read_line( input_line, end_of_file = tend, error = terr )
-              IF (tend) CALL errore('ZG','Missing lines', 1)
-              IF (terr) CALL errore('ZG','Error reading q points', 1)
-              DO j = 1, 256   ! loop over all characters of input_line
-                 IF ( (ICHAR(input_line(j:j)) < 58 .AND. &   ! a digit
-                       ICHAR(input_line(j:j)) > 47)      &
-                   .OR.ICHAR(input_line(j:j)) == 43 .OR. &   ! the + sign
-                       ICHAR(input_line(j:j)) == 45 .OR. &   ! the - sign
-                       ICHAR(input_line(j:j)) == 46 ) THEN   ! a dot .
-!
-!   This is a digit, therefore this line contains the coordinates of the
-!   k point. We read it and EXIT from the loop on characters
-!
-                     READ(input_line,*) xqaux(1, n), xqaux(2, n), xqaux(3, n), &
-                                                    nqb(n)
-                     EXIT
-                 ELSEIF ((ICHAR(input_line(j:j)) < 123 .AND. &
-                          ICHAR(input_line(j:j)) > 64))  THEN
-!
-!   This is a letter, not a space character. We read the next three 
-!   characters and save them in the letter array, save also which k point
-!   it is
-!
-                    npk_label=npk_label+ 1
-                    READ(input_line(j:),'(a3)') letter(npk_label)
-                    label_list(npk_label) =n
-!
-!  now we remove the letters from input_line and read the number of points
-!  of the line. The next two line should account for the case in which
-!  there is only one space between the letter and the number of points.
-!
-                    nch=3
-                    IF ( ICHAR(input_line(j+ 1:j+ 1)) ==32 .OR. &
-                         ICHAR(input_line(j+2:j+2)) ==32 ) nch=2
-                    buffer =input_line(j+nch:)
-                    READ(buffer,*, err =20, iostat=ios) nqb(n)
-20                  IF (ios /= 0) CALL errore('ZG',&
-                                      'problem reading number of points', 1)
-                    EXIT
-                 ENDIF
-              ENDDO
-           ENDDO
-           IF (q_in_cryst_coord) k_points ='crystal'
-           IF ( npk_label > 0 ) &
-              CALL transform_label_coord(ibrav, celldm, xqaux, letter, &
-                   label_list, npk_label, nq, k_points, point_label_type )
-
-           DEALLOCATE(letter)
-           DEALLOCATE(label_list)
-
-           CALL mp_bcast(xqaux, ionode_id, world_comm)
-           CALL mp_bcast(nqb, ionode_id, world_comm)
-           IF (q_in_cryst_coord)  CALL cryst_to_cart(nq,xqaux, bg,+ 1)
-           nqtot=SUM(nqb(1:nq- 1)) + 1
-           DO i = 1, nq- 1
-              IF (nqb(i) == 0) nqtot=nqtot+ 1
-           ENDDO
-           DEALLOCATE(q)
-           ALLOCATE(q(3, nqtot))
-           ALLOCATE(wq(nqtot))
-           CALL generate_k_along_lines(nq, xqaux, nqb, q, wq, nqtot)
-           nq=nqtot
-           DEALLOCATE(xqaux)
-           DEALLOCATE(nqb)
-        ENDIF
-        ! 
+     ! 
+       IF (ionode) READ (5, *) nq
+       CALL mp_bcast(nq, ionode_id, world_comm)
+       ALLOCATE ( q(3, nq) )
+       IF (.NOT.q_in_band_form) THEN
+             DO n = 1, nq
+                IF (ionode) READ (5, *) (q(i, n), i = 1, 3)
+       !        IF (ionode) READ (5,'(3F10.6)') q(:, n) 
+             ENDDO
+             CALL mp_bcast(q, ionode_id, world_comm)
+             !
+             IF (q_in_cryst_coord)  CALL cryst_to_cart(nq, q, bg, +1)
+       ELSE
+             ALLOCATE( nqb(nq) )
+             ALLOCATE( xqaux(3, nq) )
+             ALLOCATE( letter(nq) )
+             ALLOCATE( label_list(nq) )
+             npk_label= 0
+             DO n = 1, nq
+                CALL read_line( input_line, end_of_file = tend, error = terr )
+                IF (tend) CALL errore('ZG','Missing lines', 1)
+                IF (terr) CALL errore('ZG','Error reading q points', 1)
+                DO j = 1, 256   ! loop over all characters of input_line
+                   IF ( (ICHAR(input_line(j:j)) < 58 .AND. &   ! a digit
+                         ICHAR(input_line(j:j)) > 47)      &
+                     .OR.ICHAR(input_line(j:j)) == 43 .OR. &   ! the + sign
+                         ICHAR(input_line(j:j)) == 45 .OR. &   ! the - sign
+                         ICHAR(input_line(j:j)) == 46 ) THEN   ! a dot .
+  !
+  !   This is a digit, therefore this line contains the coordinates of the
+  !   k point. We read it and EXIT from the loop on characters
+  !
+                       READ(input_line,*) xqaux(1, n), xqaux(2, n), xqaux(3, n), &
+                                                      nqb(n)
+                       EXIT
+                   ELSEIF ((ICHAR(input_line(j:j)) < 123 .AND. &
+                            ICHAR(input_line(j:j)) > 64))  THEN
+  !
+  !   This is a letter, not a space character. We read the next three 
+  !   characters and save them in the letter array, save also which k point
+  !   it is
+  !
+                      npk_label=npk_label+ 1
+                      READ(input_line(j:),'(a3)') letter(npk_label)
+                      label_list(npk_label) =n
+  !
+  !  now we remove the letters from input_line and read the number of points
+  !  of the line. The next two line should account for the case in which
+  !  there is only one space between the letter and the number of points.
+  !
+                      nch=3
+                      IF ( ICHAR(input_line(j+ 1:j+ 1)) ==32 .OR. &
+                           ICHAR(input_line(j+2:j+2)) ==32 ) nch=2
+                      buffer =input_line(j+nch:)
+                      READ(buffer,*, err =20, iostat=ios) nqb(n)
+  20                  IF (ios /= 0) CALL errore('ZG',&
+                                        'problem reading number of points', 1)
+                      EXIT
+                   ENDIF
+                ENDDO
+             ENDDO
+             IF (q_in_cryst_coord) k_points ='crystal'
+             IF ( npk_label > 0 ) &
+                CALL transform_label_coord(ibrav, celldm, xqaux, letter, &
+                     label_list, npk_label, nq, k_points, point_label_type )
+  
+             DEALLOCATE(letter)
+             DEALLOCATE(label_list)
+  
+             CALL mp_bcast(xqaux, ionode_id, world_comm)
+             CALL mp_bcast(nqb, ionode_id, world_comm)
+             IF (q_in_cryst_coord)  CALL cryst_to_cart(nq,xqaux, bg,+ 1)
+             nqtot=SUM(nqb(1 : nq - 1)) + 1
+             DO i = 1, nq - 1
+                IF (nqb(i) == 0) nqtot=nqtot+ 1
+             ENDDO
+             DEALLOCATE(q)
+             ALLOCATE(q(3, nqtot))
+             ALLOCATE(wq(nqtot))
+             CALL generate_k_along_lines(nq, xqaux, nqb, q, wq, nqtot)
+             nq = nqtot
+             DEALLOCATE(xqaux)
+             DEALLOCATE(nqb)
+          ENDIF
+          ! 
+     ENDIF ! q_external, q-list
      !
      IF (asr /= 'no') THEN
         CALL set_asr (asr, nr1, nr2, nr3, frc, zeu, &
@@ -503,37 +523,37 @@ PROGRAM ZG
      ENDIF
      !
      ALLOCATE ( dyn(3, 3, nat, nat), dyn_blk(3, 3, nat_blk, nat_blk) )
-     ALLOCATE ( z(3*nat, 3*nat), w2(3*nat, nq), f_of_q(3, 3, nat, nat) )
-     ! mz_b
+     ALLOCATE ( z(3 * nat, 3 * nat), w2(3*nat, nq), f_of_q(3, 3, nat, nat) )
+     ! 
      IF (ionode .AND. ZG_conf) THEN
-      ALLOCATE ( z_nq_zg(3*nat, 3*nat, nq),q_nq_zg(3, nq))
-      z_nq_zg(:,:,:) = (0.d0, 0.d0)
-      q_nq_zg(:,:) = 0.d0
+      ALLOCATE ( z_nq_zg(3 * nat, 3 * nat, nq), q_nq_zg(3, nq))
+      z_nq_zg(:, :, :) = (0.d0, 0.d0)
+      q_nq_zg(:, :) = 0.d0
      ENDIF
-     ! mz_e
+     ! 
 
      IF (xmlifc) CALL set_sym(nat, tau, ityp, nspin_mag, m_loc )
 
-     ALLOCATE(num_rap_mode(3*nat, nq))
+     ALLOCATE(num_rap_mode(3 * nat, nq))
      ALLOCATE(high_sym(nq))
      num_rap_mode=- 1
      high_sym=.TRUE.
 
-     DO n= 1, nq
+     DO n = 1, nq
         dyn(:,:,:,:) = (0.d0, 0.d0)
 
-        lo_to_split=.FALSE.
-        f_of_q(:,:,:,:) = (0.d0,0.d0)
+        lo_to_split = .FALSE.
+        f_of_q(:,:,:,:) = (0.d0, 0.d0)
         
         CALL setupmat (q(1,n), dyn, nat, at, bg, tau, itau_blk, nsc, alat, &
              dyn_blk, nat_blk, at_blk, bg_blk, tau_blk, omega_blk,  &
                    loto_2d, &
-             epsil, zeu, frc, nr1,nr2,nr3, has_zstar, rws, nrws,f_of_q)
+             epsil, zeu, frc, nr1,nr2,nr3, has_zstar, rws, nrws, f_of_q)
 
         IF (.not.loto_2d) THEN
-        qhat(1) = q(1, n) *at(1, 1) +q(2, n) *at(2, 1) +q(3, n) *at(3, 1)
-        qhat(2) = q(1, n) *at(1, 2) +q(2, n) *at(2, 2) +q(3, n) *at(3, 2)
-        qhat(3) = q(1, n) *at(1, 3) +q(2, n) *at(2, 3) +q(3, n) *at(3,3)
+        qhat(1) = q(1, n) * at(1, 1) + q(2, n) * at(2, 1) + q(3, n) * at(3, 1)
+        qhat(2) = q(1, n) * at(1, 2) + q(2, n) * at(2, 2) + q(3, n) * at(3, 2)
+        qhat(3) = q(1, n) * at(1, 3) + q(2, n) * at(2, 3) + q(3, n) * at(3, 3)
         IF ( ABS( qhat(1) - NINT (qhat(1) ) ) <= eps .AND. &
              ABS( qhat(2) - NINT (qhat(2) ) ) <= eps .AND. &
              ABS( qhat(3) - NINT (qhat(3) ) ) <= eps ) THEN
@@ -578,41 +598,29 @@ PROGRAM ZG
         !
         END IF
         
-       ! mz comments out !!!!!!!! if(iout_dyn.ne.0) call WRITE_dyn_on_file(q(1, n), dyn, nat, iout_dyn)
-        
-
         CALL dyndiag(nat, ntyp, amass, ityp, dyn, w2(1, n), z)
-        ! mz_b fill a 3D matrix with all eigenvectors
+        ! fill a 3D matrix with all eigenvectors
         CALL mp_bcast(z, ionode_id, world_comm)
         IF (ionode .AND. ZG_conf) THEN
-           z_nq_zg(:,:, n) = z(:,:)               
+           z_nq_zg(:, :, n) = z(:, :)               
            q_nq_zg(:, n) = q(:, n)
         ENDIF
-        ! mz_e 
-        !!!!! mz comments out ! IF (ionode.and.iout_eig.ne.0) &
-        !!!!!  & CALL WRITE_eigenvectors(nat, ntyp, amass, ityp,q(1, n),w2(1, n), z, iout_eig)
         !
         ! Cannot use the small group of \Gamma to analize the symmetry
         ! of the mode IF there is an electric field.
         !
         IF (xmlifc.AND..NOT.lo_to_split) THEN
              WRITE(stdout,'(10x,"xq=", 3F8.4)') q(:, n)
-             CALL find_representations_mode_q(nat, ntyp,q(:, n), &
+             CALL find_representations_mode_q(nat, ntyp, q(:, n), &
                        w2(:, n), z,tau, ityp, amass, num_rap_mode(:, n), nspin_mag)
             IF (code_group == code_group_old.OR.high_sym(n- 1)) high_sym(n) =.FALSE.
             code_group_old= code_group
         ENDIF
         !
         !
-
-     !!!!!!!!!mz   IF (ionode.and.iout.ne.0) CALL WRITEmodes(nat,q(1, n),w2(1, n), z, iout)
-
         !
      ENDDO  !nq
      !
-     IF(iout .NE. 0.and.ionode) CLOSE(unit=iout)
-     IF(iout_dyn .NE. 0) CLOSE(unit=iout_dyn)
-     IF(iout_eig .NE. 0) CLOSE(unit=iout_eig)
      !
      !
      !
@@ -621,20 +629,19 @@ PROGRAM ZG
      !
      !
      !
-     !mz_b
+     !
      CALL mp_bcast(w2, ionode_id, world_comm)
      IF ( ionode .AND. ZG_conf ) call ZG_configuration(nq, nat, ntyp, amass, &
                                 ityp, q_nq_zg, w2, z_nq_zg, ios, & 
-                                dimx, dimy, dimz, nloops, error_thresh, synch,tau, alat, atm_zg, & 
-                                ntypx, at, q_in_cryst_coord, q_in_band_form, T, incl_qA, & 
+                                dimx, dimy, dimz, nloops, error_thresh, synch, tau, alat, atm_zg, & 
+                                ntypx, at, q_in_cryst_coord, q_external, T, incl_qA, & 
                                 compute_error, single_phonon_displ)
-     !mz_e
      ! 
      !
      DEALLOCATE (z, w2, dyn, dyn_blk)
-     ! mz_b
+     ! 
      IF (ionode .AND. ZG_conf) DEALLOCATE (z_nq_zg, q_nq_zg) 
-     ! mz_e
+     ! 
      !
      !    for a2F
      !
@@ -2129,20 +2136,135 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
   RETURN
   END SUBROUTINE find_representations_mode_q
 
-!mz adds this routine
+SUBROUTINE  qpoint_gen1(dimx, dimy, dimz, ctrAB) 
+!
+  use kinds, only: dp
+  
+  IMPLICIT NONE
+  ! input
+  INTEGER, intent(in)             :: dimx, dimy, dimz
+  INTEGER, intent(out)            :: ctrAB
+!!  REAL(DP), intent(out)           :: q_AB(:,:)
+  ! local
+  INTEGER                         :: i, j, k, n, ctr, nqs
+  REAL(DP), ALLOCATABLE           :: q_all(:,:)
+  REAL(DP)                        :: q_B(3), q_A(3), eps
+  !
+  nqs = dimx * dimy * dimz  
+  eps = 1.0E-06
+  !
+  ALLOCATE(q_all(3, nqs))
+  !
+  DO i = 1, dimx
+      DO j = 1, dimy
+         DO k = 1, dimz
+            !  this is nothing but consecutive ordering
+            n = (k - 1) + (j - 1) * dimz + (i - 1) * dimy * dimz + 1
+            !  q_all are the components of the complete grid in crystal axis
+            q_all(1, n) = dble(i - 1) / dimx ! + dble(k1)/2/dimx
+            q_all(2, n) = dble(j - 1) / dimy ! + dble(k2)/2/dimy
+            q_all(3, n) = dble(k - 1) / dimz ! + dble(k3)/2/dimz ! k1 , k2 , k3 is for the shift
+         ENDDO
+      ENDDO
+  ENDDO
+  !
+  ctr = 0
+  ctrAB = 0
+  DO i = 1, nqs
+    q_A = q_all(:, i) + q_all(:, i) ! q_A to find if q belongs in A 
+    IF (((ABS(q_A(1)) .LT. eps) .OR. (abs(abs(q_A(1)) - 1) .LT. eps)) .AND. &
+        ((ABS(q_A(2)) .LT. eps) .OR. (abs(abs(q_A(2)) - 1) .LT. eps)) .AND. &
+        ((ABS(q_A(3)) .LT. eps) .OR. (abs(abs(q_A(3)) - 1) .LT. eps))) THEN
+        ctrAB = ctrAB + 1
+    ELSE
+     DO j = i + 1, nqs
+        q_B = q_all(:, i) + q_all(:, j)       
+       IF (((ABS(q_B(1)) .LT. eps) .OR. (abs(abs(q_B(1)) - 1) .LT. eps)) .AND. &
+           ((ABS(q_B(2)) .LT. eps) .OR. (abs(abs(q_B(2)) - 1) .LT. eps)) .AND. &
+           ((ABS(q_B(3)) .LT. eps) .OR. (abs(abs(q_B(3)) - 1) .LT. eps))) THEN
+           ctr = ctr + 1
+           ctrAB = ctrAB + 1
+       END IF 
+      END DO
+    END IF
+  END DO
+  !
+  DEALLOCATE(q_all)
+  ! 
+  !
+END SUBROUTINE qpoint_gen1
+
+SUBROUTINE  qpoint_gen2(dimx, dimy, dimz, ctrAB, q_AB) 
+!
+  use kinds, only: dp
+  
+  IMPLICIT NONE
+  ! input
+  INTEGER, intent(in)             :: dimx, dimy, dimz, ctrAB
+  REAL(DP), intent(out)           :: q_AB(3, ctrAB)
+  ! local
+  INTEGER                         :: i, j, k, n, ctr, nqs
+  REAL(DP), ALLOCATABLE           :: q_all(:, :)
+  REAL(DP)                        :: q_B(3), q_A(3), eps
+  !
+  nqs = dimx * dimy * dimz  
+  eps = 1.0E-06
+  !
+  ALLOCATE(q_all(3, nqs))
+  DO i = 1, dimx
+      DO j = 1, dimy
+         DO k = 1, dimz
+            !  this is nothing but consecutive ordering
+            n = (k - 1) + (j - 1) * dimz + (i - 1) * dimy * dimz + 1
+            !  q_all are the components of the complete grid in crystal axis
+            q_all(1, n) = dble(i - 1) / dimx ! + dble(k1)/2/dimx
+            q_all(2, n) = dble(j - 1) / dimy ! + dble(k2)/2/dimy
+            q_all(3, n) = dble(k - 1) / dimz ! + dble(k3)/2/dimz ! k1 , k2 , k3 is for the shift
+         ENDDO
+      ENDDO
+  ENDDO
+  !
+  ctr = 0
+  DO i = 1, nqs
+    q_A = q_all(:, i) + q_all(:, i) ! q_A to find if q belongs in A 
+    IF (((ABS(q_A(1)) .LT. eps) .OR. (abs(abs(q_A(1)) - 1) .LT. eps)) .AND. &
+        ((ABS(q_A(2)) .LT. eps) .OR. (abs(abs(q_A(2)) - 1) .LT. eps)) .AND. &
+        ((ABS(q_A(3)) .LT. eps) .OR. (abs(abs(q_A(3)) - 1) .LT. eps))) THEN
+        ctr = ctr + 1
+        q_AB(:, ctr) = q_all(:, i)
+  !      write(*,*) "A", q_AB(:, ctr)
+    ELSE
+     DO j = i + 1, nqs
+        q_B = q_all(:, i) + q_all(:, j)       
+       IF (((ABS(q_B(1)) .LT. eps) .OR. (abs(abs(q_B(1)) - 1) .LT. eps)) .AND. &
+           ((ABS(q_B(2)) .LT. eps) .OR. (abs(abs(q_B(2)) - 1) .LT. eps)) .AND. &
+           ((ABS(q_B(3)) .LT. eps) .OR. (abs(abs(q_B(3)) - 1) .LT. eps))) THEN
+           ctr = ctr + 1
+           q_AB(:, ctr) = q_all(:, i)
+  !         write(*,*) q_AB(:, ctr)
+       END IF 
+      END DO
+    END IF
+  END DO
+  !
+  DEALLOCATE(q_all)
+
+END SUBROUTINE qpoint_gen2
+
 SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, & 
-                      dimx, dimy, dimz, nloops, error_thresh, synch,tau, alat, atm, &
-                      ntypx, at, q_in_cryst_coord, q_in_band_form, T, incl_qA, & 
+                      dimx, dimy, dimz, nloops, error_thresh, synch, tau, alat, atm, &
+                      ntypx, at, q_in_cryst_coord, q_external, T, incl_qA, & 
                       compute_error, single_phonon_displ) 
+!
   use kinds, only: dp
   use constants, only: amu_ry, ry_to_thz, ry_to_cmm1, H_PLANCK_SI, &  
                        K_BOLTZMANN_SI, AMU_SI, pi 
   USE cell_base,  ONLY : bg
   USE io_global,  ONLY : ionode
-  implicit none
+  IMPLICIT NONE
   ! input
   CHARACTER(LEN=3), intent(in) :: atm(ntypx)
-  LOGICAL, intent(in)          :: synch, q_in_cryst_coord, q_in_band_form
+  LOGICAL, intent(in)          :: synch, q_in_cryst_coord, q_external
   LOGICAL, intent(in)          :: incl_qA, compute_error, single_phonon_displ
   INTEGER, intent(in)          :: dimx, dimy, dimz, nloops
   INTEGER, intent(in)          :: nq, nat, ntyp, ios, ntypx
@@ -2155,12 +2277,12 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   ! 
   ! local
   CHARACTER(len=256)       :: filename
-  CHARACTER(len=256)       :: pointer_etta, pointer_T
+  CHARACTER(len=256)       :: pointer_etta
   !
   INTEGER                  :: nat3, na, nta, ipol, i, j, k, qp, ii, p, kk
   INTEGER                  :: nq_tot, pn, combs, combs_all, sum_zg
-  INTEGER, ALLOCATABLE     :: Mx_mat(:,:), Mx_mat_or(:,:), M_mat(:,:), V_mat(:)
-  INTEGER, ALLOCATABLE     :: Rlist(:,:)
+  INTEGER, ALLOCATABLE     :: Mx_mat(:, :), Mx_mat_or(:, :), M_mat(:, :), V_mat(:)
+  INTEGER, ALLOCATABLE     :: Rlist(:, :)
   ! nq_tot total number of q-points (including sets A, B, C)
   ! pn combinations 
   INTEGER                  :: ctr, ctr2, ctrA, ctrB, ctrAB
@@ -2176,15 +2298,15 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   REAL(DP), PARAMETER      :: eps = 1.0d-6
   REAL(DP)                 :: hbar, ang, JOULE_TO_RY, u_rand, dotp, PE_nq, KE_nq
   ! ALLOCATE TABLES
-  REAL(DP), ALLOCATABLE    :: equil_p(:,:,:), T_fact(:,:), DW_fact(:,:), qA(:,:), qB(:,:), DWp_fact(:,:), Tp_fact(:,:) 
+  REAL(DP), ALLOCATABLE    :: equil_p(:, :, :), T_fact(:, :), DW_fact(:, :), qA(:, :), qB(:, :), DWp_fact(:, :), Tp_fact(:, :) 
   ! for displacements
-  REAL(DP), ALLOCATABLE    :: Cx_matA(:,:), Cx_matB(:,:), Cx_matAB(:,:), Bx_vect(:)
+  REAL(DP), ALLOCATABLE    :: Cx_matA(:, :), Cx_matB(:, :), Cx_matAB(:, :), Bx_vect(:)
   ! for momenta/velocities 
   REAL(DP), ALLOCATABLE    :: Cpx_matA(:,:), Cpx_matB(:,:), Cpx_matAB(:,:)
   ! matrices to account for the coupling terms between different phonon branches ! 
-  REAL(DP), ALLOCATABLE    :: sum_error_D(:,:), sum_diag_D(:,:), sum_error_B(:), sum_diag_B(:), sum_error_B2(:), sum_diag_B2(:) 
-  REAL(DP), ALLOCATABLE    :: D_tau(:,:,:), P_tau(:,:,:), ratio_zg(:)! displacements and velocities
-  REAL(DP), ALLOCATABLE    :: R_mat(:,:), E_vect(:,:), D_vect(:,:), F_vect(:,:)
+  REAL(DP), ALLOCATABLE    :: sum_error_D(:, :), sum_diag_D(:, :), sum_error_B(:), sum_diag_B(:), sum_error_B2(:), sum_diag_B2(:) 
+  REAL(DP), ALLOCATABLE    :: D_tau(:, :, :), P_tau(:, :, :), ratio_zg(:)! displacements and velocities
+  REAL(DP), ALLOCATABLE    :: R_mat(:, :), E_vect(:, :), D_vect(:, :), F_vect(:, :)
   ! D_tau  : atomic displacements
   ! z_nq_A : eigenvectors for q-points in set A 
   ! z_nq_B : eigenvectors for q-points in set B
@@ -2195,13 +2317,13 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   !
   COMPLEX(DP)              :: z_zg(3 * nat, 3 * nat, nq)
   COMPLEX(DP)              :: imagi 
-  COMPLEX(DP), ALLOCATABLE :: z_nq_synch(:,:,:), z_nq_A(:,:,:), z_nq_B(:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: z_nq_synch(:, :, :), z_nq_A(:, :, :), z_nq_B(:, :, :)
   ! singular value decomposition matrices U = R*conj(L)  
   !
   INTEGER                         :: INFO, N_dim, M_dim, K_dim, L_dim , LWORK
   REAL(DP),       ALLOCATABLE     :: RWORK(:), S_svd(:)
-  COMPLEX(DP),    ALLOCATABLE     :: M_over(:,:,:), U_svd(:,:,:), U_svd_d(:,:), dotp_mat(:,:)
-  COMPLEX(DP),    ALLOCATABLE     :: L_svd(:,:), R_svd(:,:), WORK(:), U_svd_d_new(:,:)
+  COMPLEX(DP),    ALLOCATABLE     :: M_over(:, :, :), U_svd(:, :, :), U_svd_d(:, :), dotp_mat(:, :)
+  COMPLEX(DP),    ALLOCATABLE     :: L_svd(:, :), R_svd(:, :), WORK(:), U_svd_d_new(:, :)
   COMPLEX*16 dum( 1 )    ! for the ZGEEV
   !
   !
@@ -2285,11 +2407,15 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   ENDDO
   !     
 !  WRITE(*,*) "total vibrational energy per cell", 2*dotp/dimx/dimy/dimz, "Ry"
-  IF (q_in_cryst_coord .EQV. .FALSE.) THEN
-  ! in both cases convert them to crystal 
-      CALL cryst_to_cart(nq, q, at, -1)
-  ELSE
-      CALL cryst_to_cart(nq, q, at, -1)
+  IF (q_external) THEN
+      IF (q_in_cryst_coord .EQV. .FALSE.) THEN
+      ! in both cases convert them to crystal 
+          CALL cryst_to_cart(nq, q, at, -1)
+      ELSE
+          CALL cryst_to_cart(nq, q, at, -1)
+      ENDIF
+    ELSE 
+    CALL cryst_to_cart(nq, q, at, -1)
   ENDIF
   ! To distinguish between different sets of qpoints, A, B, C
   ! to find how many points belong to set A and then allocate matrix accordingly
@@ -2421,7 +2547,6 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
       DO ii = 1, pn - 1
         M_over = 0.d0
         ! Construct the overlap matrix M_{\nu,\nu'}
-        !WRITE(*,*) i
         S_svd = 0.d0
         DO p = 1, nat3
           DO j = 1, nat3
@@ -2447,21 +2572,18 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
         DO qp = 1, nat3
          DO k = 1, nat3
             dotp_mat(qp, k) =  CONJG(M_over(qp, qp, ii)) * CONJG(U_svd_d(k, ii))
-          !  WRITE(*,*) REAL(dotp_mat(qp, k)), aimag(dotp_mat(qp, k))
          ENDDO
         ENDDO
         dotp_mat = ABS(REAL(dotp_mat))
         DO qp = 1, nat3
            p = MAXLOC(REAL(dotp_mat(qp,:)), 1)
-        !!!   WRITE(*,*) p, "p_values"
            U_svd_d_new(qp, ii) = U_svd_d(p, ii)
         ENDDO   
         DO qp = 1, nat3
           DO k = 1, nat3
-               z_nq_synch(k, qp, ii + i + 1) = U_svd_d_new(qp, ii) *z_zg(k, qp, ii + i + 1)
+               z_nq_synch(k, qp, ii + i + 1) = U_svd_d_new(qp, ii) * z_zg(k, qp, ii + i + 1)
            ENDDO
         ENDDO
-        ! overWRITE z_zg
         z_zg(:, :, ii + i + 1) = z_nq_synch(:, :, ii + i + 1)
       ENDDO ! ii-loop
     ENDDO ! i-loop
@@ -2503,17 +2625,15 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
       dotp_mat = ABS(DBLE(dotp_mat))
       DO qp = 1, nat3
         p = MAXLOC(DBLE(dotp_mat(qp, :)), 1)
-       !!  WRITE(*,*) p, "p_values"
         U_svd_d_new(qp, ii) = U_svd_d(p, ii)
       ENDDO   
-      !!!!!
-      ! WRITE(*,*) "diago"
+      !
       DO qp = 1, nat3
         DO k = 1, nat3
           z_nq_synch(k, qp, ii + ctr + 1) =  U_svd_d_new(qp, ii) * z_zg(k, qp, ii + ctr + 1)
         ENDDO
       ENDDO
-      ! overWRITE z_zg
+      ! overwrite z_zg
       z_zg(:, :, ii + ctr + 1) = z_nq_synch(:, :, ii + ctr + 1)
       ENDDO ! ii-loop
     ENDIF ! mod(ctrAB, pn)
@@ -2563,7 +2683,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
     combs = combs + i
   ENDDO
   combs_all = 2 * combs + nat3 !; % with x1^2, x2^2 ...
-  !WRITE(*,*) combs, combs_all
+  !
   ! combs_all refere also to  all possible pais ({\k,\a}, {\k' \a'})
   ! 
   ALLOCATE(ratio_zg(combs_all))
@@ -2581,7 +2701,6 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   ! we just select possible permutations until the error is lower than a
   ! threshold. The lower the threshold the longer the algorithm can take.
   ! filename = 'ZG-configuration.txt'
-  WRITE(pointer_T,'(f5.1)') T
   WRITE(pointer_etta,'(f5.3)') error_thresh
   filename = 'ZG-configuration_' // TRIM( pointer_etta ) // '.dat' !'.fp'
   OPEN (unit = 80, file = filename, status = 'unknown', form = 'formatted')
@@ -2592,19 +2711,19 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   ! We also make the inherent choice that each column of Mx_mat_or has the same number of positive and negative signs 
     Mx_mat_or = 0
     DO i = 1, 2 * pn / 4, 2
-      Mx_mat_or(i,:) = M_mat(i,:)
+      Mx_mat_or(i, :) = M_mat(i, :)
     ENDDO
     ctr = 1
     DO i = 2, 2 * pn / 4, 2
-      Mx_mat_or(i,:) = M_mat(2 * pn + 1 - i,:)
+      Mx_mat_or(i, :) = M_mat(2 * pn + 1 - i, :)
       ctr = ctr + 1
     ENDDO
     DO i = 2 * pn / 4 + 1, 2 * pn / 2, 2
-      Mx_mat_or(i,:) = M_mat(i + 1,:)
+      Mx_mat_or(i, :) = M_mat(i + 1, :)
       ctr = ctr + 1
     ENDDO
     DO i = 2 * pn / 4 + 2, 2 * pn / 2, 2
-      Mx_mat_or(i,:) = M_mat(2 * pn + 2 - i,:)
+      Mx_mat_or(i, :) = M_mat(2 * pn + 2 - i, :)
       ctr = ctr + 1
     ENDDO
     !
@@ -2615,8 +2734,8 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
     ! and ALLOCATE the M_x,y matrices ! so we DO not have specific order !
       call random_number(u_rand)
       ii = 1 + FLOOR(i * u_rand) 
-      Mx_mat(i,:) = Mx_mat_or(ii,:)
-      Mx_mat_or(ii,:) = Mx_mat_or(i,:) ! so I DO not repeat this entry
+      Mx_mat(i, :) = Mx_mat_or(ii, :)
+      Mx_mat_or(ii, :) = Mx_mat_or(i, :) ! so I DO not repeat this entry
     ENDDO  
     ! DO q-points in sets A n B
     ! based on the sets of signs we genereated from the above loop
@@ -2695,7 +2814,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
             ctr = ctr + 1
           ENDDO
         ENDDO ! p loop
-    !   D_vect(:, ii) =MATMUL(R_mat, Bx_vect)
+    !   D_vect(:, ii) = MATMUL(R_mat, Bx_vect)
     !   D_vect contains the diagonal and the non-diagonal terms (i.e. v = v' and v .neq. v')
     !   E_vect contains only the diagonal terms (i.e. v = v')
     !   F_vect contains the error (i.e.each entry is the contribution from v \neq v') at each q point to minimize
@@ -2707,7 +2826,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
     !
     !
     !Compute error 
-    !WRITE(80,*) "Sum of diagonal terms per q-point:", SUM(sum_diag_D)/ctrAB
+    !
     !
     IF (compute_error) THEN
       sum_error_D = 0.0d0
@@ -2743,7 +2862,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
               dotp = dotp + q(i, ii) * Rlist(j, ii)!
             ENDDO ! ii
             sum_error_B2(ctr2) = sum_error_B2(ctr2) + cos(2.0d0 * pi * dotp) * F_vect(p, i)
-            !WRITE(*,*) "cosss", cos(2.0d0*pi*dotp)
+            !
           ENDDO ! i
           ctr2 = ctr2 + 1
         ENDDO ! p     
@@ -2814,7 +2933,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
               IF (ABS(qB(ctrB, 1)) < eps) qB(ctrB, 1) = 0.0
               IF (ABS(qB(ctrB, 2)) < eps) qB(ctrB, 2) = 0.0
               IF (ABS(qB(ctrB, 3)) < eps) qB(ctrB, 3) = 0.0
-            !WRITE(*,*) "ohohoB", qB(ctrB,:)
+            !
         ENDIF
       ENDDO
       !
@@ -2836,9 +2955,9 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
       WRITE(80,'(A20, 1F6.2,A2)') 'Temperature is: ' , T ,' K'
       WRITE(80,*) "Atomic positions", nat * nq_tot
       WRITE(81,*) "ZG-Velocities (Ang/ps)"
-      ! Generate displacements and velocities
-      ! remember nq_tot is also equal to the number of cells
-      ! Here now I ll generate the displacements according to 
+      ! Generate displacements and velocities.
+      ! Remember nq_tot is also equal to the number of cells
+      ! Here the displacements are generated according to 
       ! Np^(- 1/2)(Mo/Mk)^(1/2)[\sum_{q \in B} e^{1qR_p}e^v_{ka}(q)(x_{qv}+y_{q\nu})
       ! z_zg(nat3, nat3, nq)) 
       !
@@ -2872,7 +2991,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
               DO qp = 1, ctrA
                 dotp = 0.0d0
                 DO ii = 1, 3
-                  dotp = dotp + qA(qp, ii) * Rlist(p, ii)! + qlistA(q, 2) * Rlist(p, 2) +qlistA(q, 3) * Rlist(p, 3)
+                  dotp = dotp + qA(qp, ii) * Rlist(p, ii)! 
                 ENDDO
                 DO j = 1, nat3
                   D_tau(p, k, i) = D_tau(p, k, i) + SQRT(1.0d0 / nq_tot / amass(nta)) * cos(2.0d0 * pi * dotp) &
@@ -2884,7 +3003,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
             ENDIF ! IF incl_qA
             !
             ctr = ctr + 1 ! for k and i
-            IF (abs(D_tau(p, k, i)) .GT. 5) CALL errore('ZG', 'Displacement very large', D_tau(p, k, i) )
+            IF (ABS(D_tau(p, k, i)) .GT. 5) CALL errore('ZG', 'Displacement very large', D_tau(p, k, i) )
             D_tau(p, k, i) = equil_p(p, k, i) + D_tau(p, k, i) ! add equil structure
           ENDDO ! end i for cart directions
         ENDDO ! end k loop over nat
@@ -2986,7 +3105,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq_zg, ios, &
   ! 
   !
   DEALLOCATE(T_fact, Tp_fact, DW_fact, DWp_fact)
-  DEALLOCATE(equil_p, Rlist, D_tau,qA,qB, z_nq_A, z_nq_B)
+  DEALLOCATE(equil_p, Rlist, D_tau, qA, qB, z_nq_A, z_nq_B)
   DEALLOCATE(Cx_matA, Cx_matB, Cx_matAB)
   DEALLOCATE(Cpx_matA, Cpx_matB, Cpx_matAB)
   DEALLOCATE(Mx_mat_or, Mx_mat, M_mat, V_mat, ratio_zg)
@@ -3109,13 +3228,13 @@ SUBROUTINE single_phonon(nq_tot, nat, ctrB, ctrA, nat3, ityp, ntyp, &
           nta = ityp(k)
           DO i = 1, 3  ! i is for cart directions
            D_tau(p, k, i) = D_tau(p, k, i) + SQRT(2.0d0 / nq_tot / amass(nta)) * DBLE(EXP(imagi * 2.0d0 * pi * dotp) &
-                                 * z_nq_B(ctr, j, qp) * (1.d0 + imagi) * abs(Cx_matB(j, qp))) 
+                                 * z_nq_B(ctr, j, qp) * (1.d0 + imagi) * ABS(Cx_matB(j, qp))) 
            P_tau(p, k, i) = P_tau(p, k, i) + SQRT(2.0d0 / nq_tot * amass(nta)) * DBLE(EXP(imagi * 2.0d0 * pi * dotp) &
-                                 * z_nq_B(ctr, j, qp) * (1.d0 + imagi) * abs(Cpx_matB(j, qp))) / (amass(nta) * AMU_SI)
+                                 * z_nq_B(ctr, j, qp) * (1.d0 + imagi) * ABS(Cpx_matB(j, qp))) / (amass(nta) * AMU_SI)
            ! Here we calculate the momenta of the nuclei and finally 
            !we divide by (amass(nta) *AMU_SI) to get the velocities.
            ctr = ctr + 1 ! for k and i
-           IF (abs(D_tau(p, k, i)) .GT. 5) CALL errore('ZG', 'Displacement very large', D_tau(p, k, i) )
+           IF (ABS(D_tau(p, k, i)) .GT. 5) CALL errore('ZG', 'Displacement very large', D_tau(p, k, i) )
            D_tau(p, k, i) = equil_p(p, k, i) + D_tau(p, k, i) ! add equil structure
           ENDDO ! i loop
         ! write output data
@@ -3144,13 +3263,13 @@ SUBROUTINE single_phonon(nq_tot, nat, ctrB, ctrA, nat3, ityp, ntyp, &
           nta = ityp(k)
           DO i = 1, 3  ! i is for cart directions
            D_tau(p, k, i) = D_tau(p, k, i) + SQRT(2.0d0 / nq_tot / amass(nta)) * DBLE(EXP(imagi * 2.0d0 * pi * dotp) &
-                                 * z_nq_A(ctr, j, qp) * (1.d0 + imagi) * abs(Cx_matA(j, qp))) 
+                                 * z_nq_A(ctr, j, qp) * (1.d0 + imagi) * ABS(Cx_matA(j, qp))) 
            P_tau(p, k, i) = P_tau(p, k, i) + SQRT(2.0d0 / nq_tot * amass(nta)) * DBLE(EXP(imagi * 2.0d0 * pi * dotp) &
-                                 * z_nq_A(ctr, j, qp) * (1.d0 + imagi) * abs(Cpx_matA(j, qp))) / (amass(nta) * AMU_SI)
+                                 * z_nq_A(ctr, j, qp) * (1.d0 + imagi) * ABS(Cpx_matA(j, qp))) / (amass(nta) * AMU_SI)
            ! Here we calculate the momenta of the nuclei and finally 
            !we divide by (amass(nta) *AMU_SI) to get the velocities.
            ctr = ctr + 1 ! for k and i
-           IF (abs(D_tau(p, k, i)) .GT. 5) CALL errore('ZG', 'Displacement very large', D_tau(p, k, i) )
+           IF (ABS(D_tau(p, k, i)) .GT. 5) CALL errore('ZG', 'Displacement very large', D_tau(p, k, i) )
            D_tau(p, k, i) = equil_p(p, k, i) + D_tau(p, k, i) ! add equil structure
           ENDDO ! i loop
         ! write output data
@@ -3162,36 +3281,6 @@ SUBROUTINE single_phonon(nq_tot, nat, ctrB, ctrA, nat3, ityp, ntyp, &
     ENDDO ! j loop
   ENDDO ! qp loop
       !
-!      !Repeat for minus q now: 
-!      !
-!      WRITE(85,'(A30, 3F8.4, A15, i)') "Phonon mode at q-point", -qB(qp, :), " and branch:", j
-!      WRITE(86,'(A30, 3F8.4, A15, i)') "Phonon mode at q-point", -qB(qp, :), " and branch:", j
-!      D_tau = 0.0d0
-!      P_tau = 0.0d0
-!      DO p = 1, nq_tot
-!        dotp = 0.0d0
-!        DO ii = 1, 3
-!           dotp = dotp + -qB(qp, ii) * Rlist(p, ii)! dot product between q and R 
-!        ENDDO
-!        ctr = 1
-!        DO k = 1, nat ! k represents the atom
-!          nta = ityp(k)
-!          DO i = 1, 3  ! i is for cart directions
-!           D_tau(p, k, i) = D_tau(p, k, i) + SQRT(2.0d0 / nq_tot / amass(nta)) * DBLE(EXP(imagi * 2.0d0 * pi * dotp) &
-!                                 * CONJG(z_nq_B(ctr, j, qp)) * (1.d0 - imagi) * abs(Cx_matB(j, qp))) 
-!           P_tau(p, k, i) = P_tau(p, k, i) + SQRT(2.0d0 / nq_tot * amass(nta)) * DBLE(EXP(imagi * 2.0d0 * pi * dotp) &
-!                                 * CONJG(z_nq_B(ctr, j, qp)) * (1.d0 - imagi) * abs(Cpx_matB(j, qp))) / (amass(nta) * AMU_SI)
-!           ! Here we calculate the momenta of the nuclei and finally 
-!           !we divide by (amass(nta) *AMU_SI) to get the velocities.
-!           ctr = ctr + 1 ! for k and i
-!           D_tau(p, k, i) = equil_p(p, k, i) + D_tau(p, k, i) ! add equil structure
-!          ENDDO ! i loop
-!        ! write output data
-!        WRITE(85,'(A6, 3F13.8)') atm(ityp(k)), D_tau(p, k, :) 
-!        WRITE(86,'(A6, 3F15.8)') atm(ityp(k)), P_tau(p, k,:) * 1.0E-12 ! multiply to obtain picoseconds 
-!        !
-!        ENDDO ! k loop
-!      ENDDO ! p loop
 !      
 !
  DEALLOCATE(D_tau, P_tau)

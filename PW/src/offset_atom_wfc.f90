@@ -30,6 +30,7 @@ SUBROUTINE offset_atom_wfc( Hubbard_only, l_back, offset, counter )
   !
   INTEGER  :: na, nt, n, l
   LOGICAL  :: hubbard_wfc, hubbard_wfc_b, hubbard_wfc_b1
+  CHARACTER(LEN=2) :: s
   !
   !
   counter = 0
@@ -38,6 +39,13 @@ SUBROUTINE offset_atom_wfc( Hubbard_only, l_back, offset, counter )
   DO na = 1, nat
      !
      nt = ityp(na)
+     !
+     WRITE(s,'(i2)') nt
+     IF ( ( is_hubbard(nt) .OR. is_hubbard_back(nt) ) .AND. upf(nt)%nwfc < 1 ) THEN
+        CALL errore('offset_atom_wfc', 'no atomic wavefunctions in &
+               &pseudopotential file for species #' // s // new_line('a') // &
+               &'use a pseudopotential file with atomic wavefunctions!', l_back)
+     ENDIF
      !
      DO n = 1, upf(nt)%nwfc
         !
@@ -101,15 +109,10 @@ SUBROUTINE offset_atom_wfc( Hubbard_only, l_back, offset, counter )
         ENDIF
      ENDDO
      !
-     IF (is_hubbard(nt) .OR. is_hubbard_back(nt)) THEN
-        !
-        IF ( l_back.EQ.1 .AND. is_hubbard(nt) .AND. offset(na) < 0 ) &
-            CALL errore('offset_atom_wfc', 'wrong offset', na)
-        IF ( l_back.EQ.2 .AND. is_hubbard_back(nt) .AND. offset(na) < 0 ) &
-            CALL errore('offset_atom_wfc', 'wrong offset back', na)
-        IF ( l_back.EQ.3 .AND. backall(nt) .AND. offset(na) < 0 ) &
-            CALL errore('offset_atom_wfc', 'wrong offset back1', na)
-        !
+     IF ( ( is_hubbard(nt) .OR. is_hubbard_back(nt) ) .AND. offset(na) < 0 ) THEN
+        CALL errore('offset_atom_wfc', 'wrong offset: your pseudopotential &
+                &file for atomic species ' // s // new_line('a') // 'likely &
+                &does not contain the needed atomic wavefunctions', l_back)
      ENDIF      
      !
   ENDDO

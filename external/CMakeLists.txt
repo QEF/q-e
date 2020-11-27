@@ -110,5 +110,4 @@ qe_install_targets(
     # Executables
     qe_wannierprog_exe
     qe_w90chk2chk_exe
-    qe_wannier90_postw90_exe
-)
+    qe_wannier90_postw90_exe)

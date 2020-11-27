@@ -1,35 +1,25 @@
 # How to contribute
-You can contribute to this project in by:
+You can contribute to this project, even as an ordinary user, by:
 
-* [implementing new features or improving existing ones;](#development)
-* [subscribing and partecipating to the users mailing list;](https://lists.quantum-espresso.org/mailman/listinfo/users)
-* [reporting bugs and proposing changes in the Issue section of the gitlab repository;](https://gitlab.com/QEF/q-e/blob/develop/CONTRIBUTING.md#creating-issues)
-* [preparing new tests for the test suite](https://gitlab.com/QEF/q-e/wikis/Quantum-Espresso-test-suite)
+1. subscribing and partecipating to the [users' mailing list](https://lists.quantum-espresso.org/mailman/listinfo/users), answering other people's questions
+and doubts;
 
-## Development
-If you want to contribute serious and non-trivial stuff ( or even simple and trivial  stuff ) you have  to *fork* this repository; keep it updated;
-when your contribution is ready,  submit a merge request to the development branch  of this repository.
-After some basic tests ran by gitlab CI and after approval, your changes will be merged into the development branch.
+2. suggesting improvements and reporting bugs, either to the [developers mailing list](https://lists.quantum-espresso.org/mailman/listinfo/users),
+or using the [Issue section](https://gitlab.com/QEF/q-e/issues) of the gitlab repository.
 
-A basic guide on how to work with `git` can be found [here](https://docs.gitlab.com/ce/gitlab-basics/README.html). A  more thorough introduction to `git` is provided by [proGit](https://git-scm.com/book/en/v2) online e-book.
+Information on the mailing lists and on how to report bugs can be found in the
+[Quantum ESPRESSO web site](https://www.quantum-espresso.org), "Contacts" section.
 
+You can contribute even more by:
 
+3.  preparing new tests for the test suite: see the
+[Wiki page](https://gitlab.com/QEF/q-e/wikis/Test-suite-and-test-farm);
 
-#### Suggested workflow
+4.  improving the documentation;
 
-   - register on [gitlab](https://gitlab.com/users/sign_in);
-   - [fork the QEF/q-e project](https://docs.gitlab.com/ce/gitlab-basics/fork-project.html);
-   - [create a local copy of __your__ repository on your workstation(s)](https://docs.gitlab.com/ce/gitlab-basics/command-line-commands.html#clone-your-project);
-   - [once your contribution is ready push it into __your__ repository](https://docs.gitlab.com/ce/gitlab-basics/start-using-git.html#send-changes-to-gitlab-com);
-   - [create a  merge request to the `develop` branch of QEF/q-e](https://docs.gitlab.com/ce/gitlab-basics/add-merge-request.html#how-to-create-a-merge-request)
-   - for more details and suggestions you can have a look to the wiki pages 
+5.  porting to new/unsupported architectures or configurations;
 
+6.  implementing new features, or improving existing ones.
 
-## Development tools
-[Here](dev-tools/) you can find several tools that will assist you while contributing to the QE source code.
-
-## Creating  Issues
-
-You can report bugs and propose new developments by posting an [issue]( https://gitlab.com/QEF/q-e/issues) in the Issue section of this repository.
-Partecipation to the issue discussions are also a welcome contribution.
-When reporting bugs, please allow to reproduce the problem by providing input and output files.
+For more information, consult the documentation for developers in the
+[Wiki](https://gitlab.com/QEF/q-e/wikis/home)
