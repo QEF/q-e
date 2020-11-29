@@ -725,10 +725,6 @@
       'You should define either filkf or nkf when band_plot = .true.', 1)
   IF (band_plot .AND. filqf /= ' ' .AND. (nqf1 > 0 .OR. nqf2 > 0 .OR. nqf3 > 0)) CALL errore('epw_readin', &
      'You should define either filqf or nqf when band_plot = .true.', 1)
-  IF (fermi_plot .AND. mp_mesh_k) CALL errore('epw_readin', &
-     'fermi_plot with mp_mesh_k = .true. is not implemented, use mp_mesh_k = .false.', 1)
-  IF (fermi_plot .AND. (nqf1 /= 1 .OR. nqf2 /= 1 .OR. nqf3 /= 1)) CALL errore('epw_readin', &
-     'fermi_plot with nqf /= 1 is not an efficient calculation, use nqf = 1', 1)
   IF (filkf /= ' ' .AND. .NOT. efermi_read) CALL errore('epw_readin', &
      'WARNING: if k-points are along a line, then efermi_read=.true. and fermi_energy must be given in the input file', -1)
   IF (MAXVAL(temps(:)) == 0.d0 .AND. nstemp > 0) &
