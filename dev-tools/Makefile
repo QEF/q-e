@@ -25,6 +25,9 @@ dos: makedoc
 atomic: makedoc 
 	./check_gui atomic
 
+hp: makedoc
+	./check_gui hp
+
 makedoc:
 	(cd ..; $(MAKE) doc)
 

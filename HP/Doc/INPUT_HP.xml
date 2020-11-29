@@ -89,7 +89,8 @@ calculations only for inequivalent q points.
          <info>
 If .true. determines the number of perturbations
 (i.e. which atoms will be perturbed) and exits smoothly
-without performing any calculation.
+without performing any calculation. For DFT+U+V, it also
+determines the indices of inter-site couples.
          </info>
       </var>
       <var name="find_atpert" type="INTEGER" >
@@ -117,59 +118,61 @@ Method for searching of atoms which must be perturbed.
          <info>
 Threshold for a comparison of unperturbed occupations
 which is needed for the selection of atoms which must
-be perturbed. Can be used only when find_atpert = 1.
+be perturbed. Can be used only when <ref>find_atpert</ref> = 1.
          </info>
       </var>
-      <var name="skip_type" type="LOGICAL" >
-         <default> .false.
+      <dimension name="skip_type" start="1" end="ntyp" type="LOGICAL" >
+         <default> skip_type(i) = .false.
          </default>
          <see> equiv_type
          </see>
          <info>
-skip_type(i), where i runs over types of atoms.
-If skip_type(i)=.true. then no linear-response
+<ref>skip_type</ref>(i), where i runs over types of atoms.
+If <ref>skip_type</ref>(i)=.true. then no linear-response
 calculation will be performed for the i-th atomic type:
-in this case equiv_type(i) must be specified, otherwise
+in this case <ref>equiv_type</ref>(i) must be specified, otherwise
 the HP code will stop. This option is useful if the
 system has atoms of the same type but opposite spin
 pollarizations (anti-ferromagnetic case).
-This keyword cannot be used when find_atpert = 1.
+This keyword cannot be used when <ref>find_atpert</ref> = 1.
          </info>
-      </var>
-      <var name="equiv_type" type="INTEGER" >
-         <default> 0
+      </dimension>
+      <dimension name="equiv_type" start="1" end="ntyp" type="INTEGER" >
+         <default> equiv_type(i) = 0
          </default>
          <see> skip_type
          </see>
          <info>
-equiv_type(i), where i runs over types of atoms.
-equiv_type(i)=j, will make type i equivalent to type j
+<ref>equiv_type</ref>(i), where i runs over types of atoms.
+<ref>equiv_type</ref>(i)=j, will make type i equivalent to type j
 (useful when nspin=2). Such a merging of types is done
 only at the post-processing stage.
-This keyword cannot be used when find_atpert = 1.
+This keyword cannot be used when <ref>find_atpert</ref> = 1.
          </info>
-      </var>
-      <var name="perturb_only_atom" type="LOGICAL" >
-         <default> .false.
+      </dimension>
+      <dimension name="perturb_only_atom" start="1" end="ntyp" type="LOGICAL" >
+         <default> perturb_only_atom(i) = .false.
          </default>
          <see> compute_hp
          </see>
          <info>
-If perturb_only_atom(i)=.true. then only the i-th
+If <ref>perturb_only_atom</ref>(i)=.true. then only the i-th
 atom will be perturbed and considered in the run.
 This variable is useful when one wants to split
-the whole calculation on parts. Note: this variable
-has a higher priority than skip_type.
+the whole calculation on parts.
+
+<b>Note:</b> this variable has a higher priority than <ref>skip_type</ref>.
          </info>
-      </var>
+      </dimension>
       <var name="start_q" type="INTEGER" >
          <default> 1
          </default>
          <see> last_q, sum_pertq
          </see>
          <info>
-Computes only the q points from start_q to last_q.
-IMPORTANT: start_q must be smaller or equal to
+Computes only the q points from <ref>start_q</ref> to <ref>last_q</ref>.
+
+<b>IMPORTANT:</b> <ref>start_q</ref> must be smaller or equal to
 the total number of q points found.
          </info>
       </var>
@@ -179,8 +182,9 @@ the total number of q points found.
          <see> start_q, sum_pertq
          </see>
          <info>
-Computes only the q points from start_q to last_q.
-IMPORTANT: last_q must be smaller or equal to
+Computes only the q points from <ref>start_q</ref> to <ref>last_q</ref>.
+
+<b>IMPORTANT:</b> <ref>last_q</ref> must be smaller or equal to
 the total number of q points found.
          </info>
       </var>
@@ -193,7 +197,7 @@ the total number of q points found.
 If it is set to .true. then the HP code will collect
 pieces of the response occupation matrices for all
 q points. This variable should be used only when
-start_q, last_q and perturb_only_atom are used.
+<ref>start_q</ref>, <ref>last_q</ref> and <ref>perturb_only_atom</ref> are used.
          </info>
       </var>
       <var name="compute_hp" type="LOGICAL" >
@@ -209,7 +213,7 @@ Hubbard parameters. The HP code will look for files
 tmp_dir/HP/prefix.chi.i.dat. Note that all files
 prefix.chi.i.dat (where i runs over all perturbed
 atoms) must be placed in one folder tmp_dir/HP/.
-compute_hp=.true. must be used only when the
+<ref>compute_hp</ref>=.true. must be used only when the
 calculation was parallelized over perturbations.
          </info>
       </var>
@@ -257,7 +261,7 @@ solution of the linear-response Kohn-Sham equations.
          <info>
 Mixing parameter (for the i-th iteration) for updating
 the response SCF potential using the modified Broyden
-method: D.D. Johnson, <a href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.38.12807">PRB 38, 12807 (1988)</a>.
+method. See: D.D. Johnson, <a href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.38.12807">PRB 38, 12807 (1988)</a>.
          </info>
       </var>
       <var name="nmix" type="INTEGER" >
@@ -265,7 +269,7 @@ method: D.D. Johnson, <a href="https://journals.aps.org/prb/abstract/10.1103/Phy
          </default>
          <info>
 Number of iterations used in potential mixing
-using the modified Broyden method
+using the modified Broyden method. See:
 D.D. Johnson, <a href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.38.12807">PRB 38, 12807 (1988)</a>.
          </info>
       </var>
@@ -287,13 +291,13 @@ when lda_plus_u_kind = 2 (post-processing stage).
 Minimum value of the orbital quantum number of the Hubbard
 atoms starting from which (and up to the maximum l in the
 system) Hubbard V will be written to the file parameters.out.
-lmin refers to the orbital quantum number of the atom
+<ref>lmin</ref> refers to the orbital quantum number of the atom
 corresponding to the first site-index in Hubbard_V(:,:,:).
 This keyword is used only when lda_plus_u_kind = 2 and only
-in the post-processing stage. Example: lmin=1 corresponds to
+in the post-processing stage. Example: <ref>lmin</ref>=1 corresponds to
 writing to file V between e.g. oxygen (with p states) and its
 neighbors, and including V between transition metals (with d
-states) and their neighbors. Instead, when lmin=2 only the
+states) and their neighbors. Instead, when <ref>lmin</ref>=2 only the
 latter will be written to parameters.out.
          </info>
       </var>

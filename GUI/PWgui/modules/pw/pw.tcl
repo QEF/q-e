@@ -667,12 +667,13 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                     
                     group hubbard -decor none {
                         var lda_plus_u_kind {
-                            -label     "type of LDA + U calculation (lda_plus_u_kind):"
+                            -label     "Type of LDA + U calculation (lda_plus_u_kind):"
                             -textvalue {
                                 "simplified version of Cococcioni and de Gironcoli" 
                                 "rotationally invariant scheme of Liechtenstein et al."
+                                "DFT+U+V simplified version of Campo Jr and Cococcioni"
                             }
-                            -value     {0 1}
+                            -value     {0 1 2}
                             -widget    radiobox
                         }
                         

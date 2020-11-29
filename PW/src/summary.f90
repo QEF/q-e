@@ -53,7 +53,6 @@ SUBROUTINE summary()
   USE fcp_variables,   ONLY : lfcpopt, lfcpdyn
   USE fcp,             ONLY : fcp_summary
   USE relax,           ONLY : epse, epsf, epsp
-  USE force_mod,       ONLY : lforce
   !
   IMPLICIT NONE
   !
@@ -96,7 +95,7 @@ SUBROUTINE summary()
   WRITE( stdout, 103) nbnd, ecutwfc, ecutrho
   IF ( dft_is_hybrid () ) WRITE( stdout, 104) ecutfock
   IF ( lscf) WRITE( stdout, 105) tr2, mixing_beta, nmix, mixing_style
-  IF ( lforce ) WRITE (stdout, 106) epse, epsf
+  IF ( lmd .OR. lbfgs ) WRITE (stdout, 106) epse, epsf
   IF ( lmovecell ) WRITE (stdout, 107) epsp
   !
 100 FORMAT( /,/,5X, &
