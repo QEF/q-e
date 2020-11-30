@@ -262,6 +262,12 @@ CONTAINS
       IF ( .NOT. conv_bfgs .AND. ( tr_min_hit > 1 ) ) CALL infomsg( 'bfgs',&
               'history already reset at previous step: stopping' )
       conv_bfgs = conv_bfgs .OR. ( tr_min_hit > 1 )
+      !
+      WRITE(stdout, '(5X,"Energy error",T30,"= ",1PE12.1)') energy_error
+      WRITE(stdout, '(5X,"Gradient error",T30,"= ",1PE12.1)') grad_error
+      IF( lmovecell ) WRITE(stdout, &
+         '(5X,"Cell gradient error",T30,"= ",1PE12.1,/)') cell_error
+      !
       IF ( conv_bfgs ) GOTO 1000
       !
       ! ... some output is written
@@ -274,10 +280,6 @@ CONTAINS
            & FMT = '(5X,A," old",T30,"= ",F18.10," Ry")' ) fname,energy_p
       WRITE( UNIT = stdout, &
            & FMT = '(5X,A," new",T30,"= ",F18.10," Ry",/)' ) fname,energy
-      !
-      WRITE(stdout, '(5X,"Gradient error",T30,"= ",1PE12.1)') grad_error
-      IF( lmovecell ) WRITE(stdout, &
-         '(5X,"Cell gradient error",T30,"= ",1PE12.1,/)') cell_error
       !
       ! ... the bfgs algorithm starts here
       !

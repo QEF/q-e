@@ -4,7 +4,7 @@ exec tclsh "$0" "$@"
 
 #
 # Usage:   update_gui_help module
-#          ( module = pw, ph, pp, neb, projwfc, dos, bands, atomic, or d3 )
+#          ( module = pw, ph, pp, neb, projwfc, dos, bands, or atomic )
 #
 # Requirements: execute the check_gui first !!!
 #             

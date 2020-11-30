@@ -1,5 +1,5 @@
 TOPDIR   = $(shell cd ../..; pwd)
-VERSION  = 6.6
+VERSION  = 6.7
 GEN_MODE = $(TOPDIR)/dev-tools/gen-emacs-mode
 LATEX    = pdflatex
 

@@ -157,20 +157,14 @@ proc ::helpdoc::checkGui_makeHelpFile {deffile modulefile} {
 	::tclu::ERROR "can't find useable xsltproc, gui help file creation skipped"
     }
             
-    # help file will be written to $helpfile
-
-    set helpfile      [file tail [file rootname $modulefile]]-help.tcl
-    set orig_helpfile [file rootname $modulefile]-help.tcl
-
-    if { "$helpfile" == "$orig_helpfile" } {
-	puts stderr [::tclu::labelMsg WARNING "file \"$orig_helpfile\" exists.\nMaking a $orig_helpfile.bak backup copy."]
-	file copy -force $orig_helpfile $orig_helpfile.bak
-    }
-
-
     # open/create a temporaty xml file ...
     
     set orig_xmlfile [file rootname $deffile].xml
+    if { ! [file exists $orig_xmlfile] } {
+        ::tclu::ERROR "file $orig_xmlfile does not exists, remake the documentation first! 
+
+Gui help file creation skipped."
+    }
     set xml_prefix   [file tail [file rootname $deffile]]
 
     if { "$xml_prefix.xml" == "$orig_xmlfile" } {
@@ -180,6 +174,16 @@ proc ::helpdoc::checkGui_makeHelpFile {deffile modulefile} {
 	set xml_temp ${xml_prefix}.xml
     }
     set xml_fid [open $xml_temp w]
+
+    # help file will be written to $helpfile
+
+    set helpfile      [file tail [file rootname $modulefile]]-help.tcl
+    set orig_helpfile [file rootname $modulefile]-help.tcl
+
+    if { "$helpfile" == "$orig_helpfile" } {
+	puts stderr [::tclu::labelMsg WARNING "file \"$orig_helpfile\" exists.\nMaking a $orig_helpfile.bak backup copy."]
+	file copy -force $orig_helpfile $orig_helpfile.bak
+    }
 
 
     # copy $orig_xmlfile to $xml_temp, but replace the stylesheet input_xx.xsl by guihelp.xsl

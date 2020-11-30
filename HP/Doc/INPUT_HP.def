@@ -114,46 +114,47 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
             info {
                 Threshold for a comparison of unperturbed occupations
                 which is needed for the selection of atoms which must 
-                be perturbed. Can be used only when find_atpert = 1.
+                be perturbed. Can be used only when @ref find_atpert = 1.
             }
         }
 
-        var skip_type -type LOGICAL {
-            default { .false. }
+        dimension skip_type -start 1 -end ntyp -type LOGICAL {
+            default { skip_type(i) = .false. }
             see { equiv_type }
             info {
-              skip_type(i), where i runs over types of atoms.
-              If skip_type(i)=.true. then no linear-response 
+              @ref skip_type(i), where i runs over types of atoms.
+              If @ref skip_type(i)=.true. then no linear-response 
               calculation will be performed for the i-th atomic type: 
-              in this case equiv_type(i) must be specified, otherwise 
+              in this case @ref equiv_type(i) must be specified, otherwise 
               the HP code will stop. This option is useful if the 
               system has atoms of the same type but opposite spin 
               pollarizations (anti-ferromagnetic case).
-              This keyword cannot be used when find_atpert = 1.
+              This keyword cannot be used when @ref find_atpert = 1.
             }
         }
 
-        var equiv_type  -type INTEGER {
-            default { 0 }
+        dimension equiv_type -start 1 -end ntyp -type INTEGER {
+            default { equiv_type(i) = 0 }
             see { skip_type }
             info {
-             equiv_type(i), where i runs over types of atoms.
-             equiv_type(i)=j, will make type i equivalent to type j 
+             @ref equiv_type(i), where i runs over types of atoms.
+             @ref equiv_type(i)=j, will make type i equivalent to type j 
              (useful when nspin=2). Such a merging of types is done 
              only at the post-processing stage.
-             This keyword cannot be used when find_atpert = 1.
+             This keyword cannot be used when @ref find_atpert = 1.
             }
         }
 
-        var perturb_only_atom -type LOGICAL {
-            default { .false. }
+        dimension perturb_only_atom -start 1 -end ntyp -type LOGICAL {
+            default { perturb_only_atom(i) = .false. }
             see { compute_hp }
             info {
-             If perturb_only_atom(i)=.true. then only the i-th 
+             If @ref perturb_only_atom(i)=.true. then only the i-th 
              atom will be perturbed and considered in the run. 
              This variable is useful when one wants to split 
-             the whole calculation on parts. Note: this variable 
-             has a higher priority than skip_type.
+             the whole calculation on parts.
+
+             @b Note: this variable has a higher priority than @ref skip_type.
             }
         }
 
@@ -161,8 +162,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
             default { 1 }
             see { last_q, sum_pertq }
             info {
-                 Computes only the q points from start_q to last_q.
-                 IMPORTANT: start_q must be smaller or equal to 
+                 Computes only the q points from @ref start_q to @ref last_q.
+
+                 @b IMPORTANT: @ref start_q must be smaller or equal to 
                  the total number of q points found.
             }
         }
@@ -171,8 +173,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
             default { number of q points }
             see { start_q, sum_pertq }
             info {
-                 Computes only the q points from start_q to last_q.
-                 IMPORTANT: last_q must be smaller or equal to 
+                 Computes only the q points from @ref start_q to @ref last_q.
+
+                 @b IMPORTANT: @ref last_q must be smaller or equal to 
                  the total number of q points found.
             }
         }
@@ -184,7 +187,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
              If it is set to .true. then the HP code will collect
              pieces of the response occupation matrices for all 
              q points. This variable should be used only when 
-             start_q, last_q and perturb_only_atom are used.
+             @ref start_q, @ref last_q and @ref perturb_only_atom are used.
             }
         }
 
@@ -199,7 +202,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
              tmp_dir/HP/prefix.chi.i.dat. Note that all files 
              prefix.chi.i.dat (where i runs over all perturbed 
              atoms) must be placed in one folder tmp_dir/HP/. 
-             compute_hp=.true. must be used only when the 
+             @ref compute_hp=.true. must be used only when the 
              calculation was parallelized over perturbations.
             }
         }
@@ -247,7 +250,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
 	    info { 
 		Mixing parameter (for the i-th iteration) for updating 
                 the response SCF potential using the modified Broyden 
-                method: D.D. Johnson, PRB 38, 12807 (1988).
+                method. See: D.D. Johnson, PRB 38, 12807 (1988).
 	    }
 	}
 
@@ -255,7 +258,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
 	    default { 4 }
 	    info { 
                 Number of iterations used in potential mixing
-                using the modified Broyden method
+                using the modified Broyden method. See:
                 D.D. Johnson, PRB 38, 12807 (1988).
             }
 	}
@@ -277,13 +280,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
                 Minimum value of the orbital quantum number of the Hubbard 
                 atoms starting from which (and up to the maximum l in the 
                 system) Hubbard V will be written to the file parameters.out.
-                lmin refers to the orbital quantum number of the atom 
+                @ref lmin refers to the orbital quantum number of the atom 
                 corresponding to the first site-index in Hubbard_V(:,:,:). 
                 This keyword is used only when lda_plus_u_kind = 2 and only 
-                in the post-processing stage. Example: lmin=1 corresponds to 
+                in the post-processing stage. Example: @ref lmin=1 corresponds to 
                 writing to file V between e.g. oxygen (with p states) and its 
                 neighbors, and including V between transition metals (with d 
-                states) and their neighbors. Instead, when lmin=2 only the 
+                states) and their neighbors. Instead, when @ref lmin=2 only the 
                 latter will be written to parameters.out.
             }
         }
