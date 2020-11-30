@@ -1197,17 +1197,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             options {
                 info { Specifies the type of calculation: }
                 
-                opt -val 0 {
+                opt -val { lda_plus_u_kind = 0 } {
                     DFT+U simplified version of Cococcioni and de Gironcoli, 
                     PRB 71, 035105 (2005), using @ref Hubbard_U
                 }
 
-                opt -val 1 {                
+                opt -val { lda_plus_u_kind = 1 } {                
                     DFT+U rotationally invariant scheme of Liechtenstein et al., 
                     using @ref Hubbard_U and @ref Hubbard_J
                 }
 
-                opt -val 2 {
+                opt -val { lda_plus_u_kind = 2 } {
                     DFT+U+V simplified version of Campo Jr and Cococcioni,
                     J. Phys.: Condens. Matter 22, 055602 (2010), doi:10.1088/0953-8984/22/5/055602,
                     using @ref Hubbard_V
