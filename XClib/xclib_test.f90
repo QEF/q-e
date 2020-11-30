@@ -192,7 +192,14 @@ PROGRAM xclib_test
   !
   ! ... get input from file
   !
-  IF (mype==root) READ( stdin, input_namelist )
+  IF (mype==root) THEN
+    READ( stdin, input_namelist )
+    IF ( test(1:4)=='gen-' ) THEN
+      test = 'exe-benchmark'
+      WRITE( stdout, input_namelist )
+      test = 'gen-benchmark'
+    ENDIF  
+  ENDIF
   !
 #if defined(__MPI)
   CALL MPI_BCAST( test,   30, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr )
@@ -215,7 +222,8 @@ PROGRAM xclib_test
        CALL MPI_Get_processor_name( proc_name(i), nlen, ierr )
     ENDIF
     CALL MPI_BCAST( nlen, 1, MPI_INT, i-1, MPI_COMM_WORLD, ierr )
-    CALL MPI_BCAST( proc_name(i), MPI_MAX_PROCESSOR_NAME, MPI_CHARACTER, i-1, MPI_COMM_WORLD, ierr )
+    CALL MPI_BCAST( proc_name(i), MPI_MAX_PROCESSOR_NAME, MPI_CHARACTER,&
+                    i-1, MPI_COMM_WORLD, ierr )
 #else
      proc_name(i) = 'localhost'
 #endif
@@ -353,11 +361,15 @@ PROGRAM xclib_test
   dvxcsr_aver_b = 0._DP
   dvxcss_aver_b = 0._DP
   !
-  nnr_b = 1
-  IF (GGA) nnr_b = 1 !5
-  IF (MGGA) nnr_b = 1 !8
+  IF (.NOT. POLARIZED) THEN
+    nnr_b = 1
+  ELSE
+    IF (LDA .AND. .NOT. GGA) nnr_b = 2
+    IF (GGA) nnr_b = 4 !5
+    IF (MGGA) nnr_b = 5 !8
+  ENDIF  
   !
-  IF (test=='xc-benchmark'.OR.test=='gen-benchmark') nnrb = nnr_b
+  IF (test(5:13)=='benchmark') nnrb = nnr_b
   !
   !
   ! ... initialize first DFT
@@ -387,7 +399,8 @@ PROGRAM xclib_test
   IF (ns == 2 .AND. icorr1/=0 .AND. icorr1/=1 .AND. icorr1/=2 .AND. &
                     icorr1/=4 .AND. icorr1/=8 .AND. icorr1/=3 .AND. &
                     icorr1/=7 .AND. icorr1/=13) THEN
-     WRITE(stdout,*) CHAR(10)//" ERROR: icorr1 not available at these conditions"//CHAR(10)
+     WRITE(stdout,*) CHAR(10)//" ERROR: icorr1 not available at these &
+                               &conditions"//CHAR(10)
      GO TO 10
   ENDIF
   !
@@ -416,7 +429,7 @@ PROGRAM xclib_test
   IF ( GGA .OR. MGGA ) ALLOCATE( grho(3,nnr+nthr,ns) )
   IF ( MGGA ) ALLOCATE( tau(nnr+nthr,ns) )
   !
-  IF ( test == 'xc-benchmark' ) THEN
+  IF ( test(5:13)=='benchmark' ) THEN
     ALLOCATE( rho_b(nnr_b+nthr,ns) )
     ALLOCATE( rhotz_b(nnr_b+nthr,ns) )
     IF ( GGA .OR. MGGA ) ALLOCATE( grho_b(3,nnr_b+nthr,ns) )
@@ -444,7 +457,7 @@ PROGRAM xclib_test
          ALLOCATE( v2c1(nnr+nthr,ns), v2c_ud1(nnr+nthr) )
        ELSE
          ALLOCATE( grh(nnr+nthr,3,ns) )
-         IF ( test == 'xc-benchmark' ) ALLOCATE( grh_b(nnr+nthr,3,ns) )
+         IF ( test(5:13)=='benchmark' ) ALLOCATE( grh_b(nnr+nthr,3,ns) )
          ALLOCATE( dvxcrr1(nnr+nthr,ns,ns), dvxcsr1(nnr+nthr,ns,ns), &
                    dvxcss1(nnr+nthr,ns,ns) )
        ENDIF
@@ -498,91 +511,132 @@ PROGRAM xclib_test
      ALLOCATE( grho2(ns) )
   ENDIF
   !
-  
-  
-
-IF (test=='xc-benchmark' .AND. mype==root) THEN
   !
-  OPEN( unit=21, file='benchmark_data.dat' )
+  ! ... PROVISIONAL INPUT GRID FOR BENCHMARK TEST:
+  ! ==========================
+  ! LDA
+  ! rho unpol 1p 0.6
+  ! 
+  ! rho pol   2p 0.6 0.1
+  !              0.1 0.6
+  ! ==========================
+  ! GGA
+  ! rho  unpol 1p  0.6      grho 0.1 0.2 0.3
+  ! 
+  ! rho  pol   4p  0.6 0.1  grho 0.1 0.2 0.3  0.4 0.3 0.2
+  !                0.1 0.6       0.1 0.2 0.3  0.4 0.3 0.2 
+  !                0.6 0.1       0.4 0.3 0.2  0.1 0.2 0.3
+  !                0.1 0.6       0.4 0.3 0.2  0.3 0.2 0.1
+  ! ==========================
+  ! MGGA
+  ! rho  unpol 1p  0.6      grho 0.1 0.2 0.3               tau 0.1
+  ! 
+  ! rho  pol   5p  0.6 0.1  grho 0.1 0.2 0.3  0.4 0.3 0.2  tau 0.1 0.2
+  !                0.1 0.6       0.1 0.2 0.3  0.4 0.3 0.2  tau 0.1 0.2
+  !                0.6 0.1       0.4 0.3 0.2  0.1 0.2 0.3  tau 0.1 0.2
+  !                0.1 0.6       0.4 0.3 0.2  0.3 0.2 0.1  tau 0.1 0.2
+  !                0.1 0.6       0.4 0.3 0.2  0.3 0.2 0.1  tau 0.2 0.1
+  ! ===========================  
   !
-  IF (family=='LDA') THEN
-    IF ( POLARIZED ) READ(21,*)
-    READ(21,*) rho_b(1:nnr_b,1:ns) ; READ(21,*)
-    !
-    IF (.NOT. DF_OK) THEN
-      READ(21,*) ex_aver_b(1:1)    ; READ(21,*)
-      READ(21,*) ec_aver_b(1:1)    ; READ(21,*)
-      READ(21,*) vx_aver_b(1,1:ns) ; READ(21,*)
-      READ(21,*) vc_aver_b(1,1:ns) ; READ(21,*)
-      READ(21,*) ex2(1:nnr_b)      ; READ(21,*)
-      READ(21,*) ec2(1:nnr_b)      ; READ(21,*)
-      READ(21,*) vx2(1:nnr_b,1:ns) ; READ(21,*)
-      READ(21,*) vc2(1:nnr_b,1:ns)
+  !
+  IF (test(5:13)=='benchmark' .AND. mype==root) THEN
+    IF (nspin == 1) THEN
+      !nnr_b = 1
+      rho_b(1,1) = 0.6_DP
+      IF (family=='GGA')  grho_b(1,:,1) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
+      IF (family=='MGGA') tau_b(1,1) = 0.1_DP
     ELSE
-      DO ii = 1, 16
-        READ(21,*)
+      !nnr_b = 4
+      DO i = 1, nnr_b
+        IF (MOD(i,2)==0) rho_b(i,:) = (/ 0.6_DP, 0.1_DP /)
+        IF (MOD(i,2)/=0) rho_b(i,:) = (/ 0.1_DP, 0.6_DP /)
+        IF ( family/='LDA') THEN
+          IF (i<=2) THEN
+            grho_b(i,:,1) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
+            grho_b(i,:,2) = (/ 0.4_DP, 0.3_DP, 0.2_DP /)
+          ELSE
+            grho_b(i,:,1) = (/ 0.4_DP, 0.3_DP, 0.2_DP /)
+            grho_b(i,:,2) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
+          ENDIF
+        ENDIF
       ENDDO
-      READ(21,*) dv_aver_b(1:np) ; READ(21,*)
-      READ(21,*) dmuxc2(1:nnr_b,1:ns,1:ns)
-    ENDIF
+      IF (family=='MGGA') THEN
+        !nnr_b = 5
+        rho_b(5,:) = (/ 0.1_DP, 0.6_DP /)
+        grho_b(5,:,1) = (/ 0.4_DP, 0.3_DP, 0.2_DP /)
+        grho_b(5,:,2) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
+        tau_b(5,:) = (/ 0.2_DP, 0.1_DP /)
+      ENDIF
+    ENDIF 
+    !IF (TRIM(family)=='MGGA') THEN
+    !  fact = (3.d0/5.d0)*(3.d0*pi*pi)**(2.0/3.0)
+    !  DO ii = 1, ns
+    !     tau_b(1:nnr_b,ii) = fact*ABS(rho_b(1:nnr_b,ii)*ns)**(5.0/3.0)/ns
+    !  END DO
+    !ENDIF
+  ENDIF
+  !
+  !============================================================================
+  ! READ BENCHMARK INPUT DATA 
+  !============================================================================
+  !
+  IF (test=='exe-benchmark' .AND. mype==root) THEN
     !
-  ELSEIF(family=='GGA'.OR.family=='MGGA') THEN
-    !
-    nskip=23 ; nps = np
-    IF (family=='MGGA') then
-    nskip=64 ; nps=ns
-    endif
-    !
-    DO ii = 1, nskip
-        READ(21,*)
-    ENDDO
-    !
-    IF ( POLARIZED ) READ(21,*)
-    READ(21,*) rho_b(1:nnr_b,1:ns)      ; READ(21,*)
-    READ(21,*) grho_b(1:3,1:nnr_b,1:ns) ; READ(21,*)
-    !
-    IF (.NOT. DF_OK) THEN
-      READ(21,*) ex_aver_b(1:1)     ; READ(21,*)
-      READ(21,*) ec_aver_b(1:1)     ; READ(21,*)
-      READ(21,*) v1x_aver_b(1,1:ns) ; READ(21,*)
-      READ(21,*) v2x_aver_b(1,1:ns) ; READ(21,*)
-      READ(21,*) v1c_aver_b(1,1:ns) ; READ(21,*)
-      READ(21,*) v2c_aver_b(1,1:nps) ; READ(21,*)
-      READ(21,*) ex2(1:nnr_b)       ; READ(21,*)
-      READ(21,*) ec2(1:nnr_b)       ; READ(21,*)
-      READ(21,*) v1x2(1:nnr_b,1:ns) ; READ(21,*)
-      READ(21,*) v2x2(1:nnr_b,1:ns) ; READ(21,*)
-      READ(21,*) v1c2(1:nnr_b,1:ns) ; READ(21,*)
-      READ(21,*) v2c2(1:nnr_b,1:nps) ; READ(21,*)
-      READ(21,*) v3x_aver_b(1,1:ns) ; READ(21,*)
-      READ(21,*) v3c_aver_b(1,1:ns) ; READ(21,*)
-      READ(21,*) v3x2(1:nnr_b,1:ns) ; READ(21,*)
-      READ(21,*) v3c2(1:nnr_b,1:ns)
-    ELSE
-      DO ii = 1, 24
-        READ(21,*)
-      ENDDO
-      READ(21,*) dvxcrr_aver_b(1,1:np) ; READ(21,*)
-      READ(21,*) dvxcsr_aver_b(1,1:np) ; READ(21,*)
-      READ(21,*) dvxcss_aver_b(1,1:np) ; READ(21,*)
-      READ(21,*) dvxcrr2(1:nnr_b,1:ns,1:ns) ; READ(21,*)
-      READ(21,*) dvxcsr2(1:nnr_b,1:ns,1:ns) ; READ(21,*)
-      READ(21,*) dvxcss2(1:nnr_b,1:ns,1:ns)
+    IF (family=='LDA') THEN
+      !
+      IF (.NOT. DF_OK) THEN
+        READ(stdin,*) ex_aver_b(1:1)
+        READ(stdin,*) ec_aver_b(1:1)
+        READ(stdin,*) vx_aver_b(1,1:ns)
+        READ(stdin,*) vc_aver_b(1,1:ns)
+        DO ii = 1, nnr_b+nthr
+          READ(stdin,*) ex2(ii)
+          READ(stdin,*) ec2(ii)
+          READ(stdin,*) vx2(ii,1:ns)
+          READ(stdin,*) vc2(ii,1:ns)
+        ENDDO
+      ELSE
+        READ(stdin,*) dv_aver_b(1:np)
+        DO ii = 1, nnr_b+nthr
+          READ(stdin,*) dmuxc2(ii,1:ns,1:ns)
+        ENDDO  
+      ENDIF
+      !
+    ELSEIF(family=='GGA'.OR.family=='MGGA') THEN
+      !
+      IF (.NOT. DF_OK) THEN
+        READ(stdin,*) ex_aver_b(1:1)
+        READ(stdin,*) ec_aver_b(1:1)
+        READ(stdin,*) v1x_aver_b(1,1:ns)
+        READ(stdin,*) v2x_aver_b(1,1:ns)
+        READ(stdin,*) v1c_aver_b(1,1:ns)
+        READ(stdin,*) v2c_aver_b(1,1:nps)
+        DO ii = 1, nnr_b+nthr
+          READ(stdin,*) ex2(ii)
+          READ(stdin,*) ec2(ii)
+          READ(stdin,*) v1x2(ii,1:ns)
+          READ(stdin,*) v2x2(ii,1:ns)
+          READ(stdin,*) v1c2(ii,1:ns)
+          READ(stdin,*) v2c2(ii,1:nps)
+          READ(stdin,*) v3x_aver_b(1,1:ns)
+          READ(stdin,*) v3c_aver_b(1,1:ns)
+          READ(stdin,*) v3x2(ii,1:ns)
+          READ(stdin,*) v3c2(ii,1:ns)
+        ENDDO
+      ELSE
+        READ(stdin,*) dvxcrr_aver_b(1,1:np)
+        READ(stdin,*) dvxcsr_aver_b(1,1:np)
+        READ(stdin,*) dvxcss_aver_b(1,1:np)
+        DO ii = 1, nnr_b+nthr
+          READ(stdin,*) dvxcrr2(ii,1:ns,1:ns)
+          READ(stdin,*) dvxcsr2(ii,1:ns,1:ns)
+          READ(stdin,*) dvxcss2(ii,1:ns,1:ns)
+        ENDDO
+      ENDIF
+      !
     ENDIF
     !
   ENDIF
-  !
-  CLOSE(21)
-  !
-  IF (TRIM(family)=='MGGA') THEN
-    fact = (3.d0/5.d0)*(3.d0*pi*pi)**(2.0/3.0)
-    DO ii = 1, ns
-       tau_b(1:nnr_b,ii) = fact*ABS(rho_b(1:nnr_b,ii)*ns)**(5.0/3.0)/ns
-    END DO
-  ENDIF
-  !
-ENDIF
-  !
   !  
   !============================================================================
   ! BUILD ARBITRARY INPUT 
@@ -802,7 +856,7 @@ ENDIF
   !=====================================================================================
   !
   !
-  IF (mype==root) THEN
+  IF (mype==root .AND. test(1:4)/='gen-') THEN
     WRITE(stdout,*) ' '
     WRITE(stdout,911) npoints
   ENDIF  
@@ -830,7 +884,7 @@ ENDIF
      !
      ! ... calculate values over a few benchmark points (nnr_b)
      !
-     IF ( test=='xc-benchmark'.AND.mype==root) THEN
+     IF ( test(5:13)=='benchmark'.AND.mype==root) THEN
        IF ( LDA ) THEN
          IF ( .NOT. DF_OK ) THEN
            CALL xc( nnr_b+nthr, ns, ns, rho_b(1:nnr_b+nthr,:), ex1(1:nnr_b+nthr), &
@@ -842,8 +896,8 @@ ENDIF
      ENDIF
      !
      !
-     IF (test == 'xc-benchmark') THEN
-       ex_is_out = .TRUE.     ; ex_is_out = .TRUE.
+     IF (test(5:13)=='benchmark') THEN
+       ex_is_out = .TRUE.     ; ec_is_out = .TRUE.
        vx_is_out = .TRUE.     ; vc_is_out = .TRUE. 
        something_out = .TRUE. ; dmuxc_is_out = .TRUE.
      ENDIF  
@@ -878,20 +932,21 @@ ENDIF
           iout = iout + 1
           !
           IF (iout<=10) THEN
-            WRITE(stdout,*) " "
+            IF (test(1:4)/='gen-') WRITE(stdout,*) " "
             !
-            IF ( test=='xc-benchmark' ) THEN
+            IF ( test=='exe-benchmark' ) THEN
               rhoi(1:ns)=rho_b(ii,1:ns)
               WRITE(stdout,909) nrpe+ii, nnr_b
-            ELSE
+            ELSEIF ( test=='dft-comparison' ) THEN
               rhoi(1:ns) = rho(ii,1:ns)
               WRITE(stdout,909) nrpe+ii, npoints
             ENDIF
             !
-            IF ( .NOT. POLARIZED ) WRITE(stdout, 401 ) rhoi(1)
-            IF (       POLARIZED ) WRITE(stdout, 402 ) rhoi(1), rhoi(2)
-            !
-            WRITE(stdout,*) " "
+            IF (test(1:4)/='gen-') THEN
+              IF ( .NOT. POLARIZED ) WRITE(stdout, 401 ) rhoi(1)
+              IF (       POLARIZED ) WRITE(stdout, 402 ) rhoi(1), rhoi(2)
+              WRITE(stdout,*) " "
+            ENDIF
             !
             IF (.NOT. DF_OK) THEN
               !
@@ -918,22 +973,27 @@ ENDIF
      ! ... THRESHOLD TEST 
      !
      IF (mype==root) THEN
-       WRITE(stdout,*) " "
-       WRITE(stdout,*) "--- INPUT THRESHOLD CHECK ---"
-       WRITE(stdout,*) " "
+       IF (test(1:4)/='gen-') THEN
+         WRITE(stdout,*) " "
+         WRITE(stdout,*) "--- INPUT THRESHOLD CHECK ---"
+         WRITE(stdout,*) " "
+       ENDIF  
        !
        DO ithr = 1, nthr
          !
-         WRITE(stdout,*) " "
-         WRITE(stdout,910) ithr, nthr
+         IF (test(1:4)/='gen-') THEN
+           WRITE(stdout,*) " "
+           WRITE(stdout,910) ithr, nthr
+         ENDIF
          !
          rhoi(1:ns) = rho(nnrb+ithr,1:ns)
-         IF ( TRIM(test)=='xc-benchmark' ) rhoi(1:ns)=rho_b(nnrb+ithr,1:ns)
+         IF ( test(5:13)=='benchmark' ) rhoi(1:ns)=rho_b(nnrb+ithr,1:ns)
          !
-         IF ( .NOT. POLARIZED ) WRITE(stdout, 401 ) rhoi(1)
-         IF (       POLARIZED ) WRITE(stdout, 402 ) rhoi(1), rhoi(2)
-         !
-         WRITE(stdout,*) " "
+         IF (test(1:4)/='gen-') THEN
+           IF ( .NOT. POLARIZED ) WRITE(stdout, 401 ) rhoi(1)
+           IF (       POLARIZED ) WRITE(stdout, 402 ) rhoi(1), rhoi(2)
+           WRITE(stdout,*) " "
+         ENDIF
          !
          IF (.NOT. DF_OK) THEN
            CALL print_diff( 'Ex', ex1(nnrb+ithr:nnrb+ithr), ex2(nnrb+ithr:nnrb+ithr) )
@@ -967,7 +1027,7 @@ ENDIF
      !
      ! ... calculate values over a few benchmark points (nnr_b)
      !
-     IF ( test=='xc-benchmark' .AND. mype==root ) THEN
+     IF ( test(5:13)=='benchmark' .AND. mype==root ) THEN
        IF ( .NOT. DF_OK ) THEN
          IF ( .NOT. LDA ) THEN
            ex2 = 0.d0  ;  ec2 = 0.d0
@@ -993,7 +1053,7 @@ ENDIF
      ENDIF
      !
      !
-     IF (test=='xc-benchmark')  THEN
+     IF (test(5:13)=='benchmark')  THEN
        ex_is_out = .TRUE.  ; ec_is_out = .TRUE.
        v1x_is_out = .TRUE. ; v2x_is_out = .TRUE.
        v1c_is_out = .TRUE. ; v2c_is_out = .TRUE.
@@ -1037,31 +1097,33 @@ ENDIF
           iout = iout + 1 
           ! 
           IF (iout<=10) THEN 
-            WRITE(stdout,*) " "
-            ! 
-            IF ( test=='xc-benchmark' ) THEN 
+            !
+            IF ( test=='exe-benchmark' ) THEN 
+              WRITE(stdout,*) " "
               rhoi(1:ns)=rho_b(ii,1:ns) ; grhoi(:,1:ns) = grho_b(:,ii,1:ns)
               WRITE(stdout,909) nrpe+ii, nnr_b
-            ELSE
-              rhoi(1:ns) = rho(ii,1:ns)   ; grhoi(:,1:ns) = grho(:,ii,1:ns) 
+            ELSEIF ( test=='dft-comparison' ) THEN 
+              WRITE(stdout,*) " "
+              rhoi(1:ns) = rho(ii,1:ns) ; grhoi(:,1:ns) = grho(:,ii,1:ns) 
               WRITE(stdout,909) nrpe+ii, npoints
             ENDIF
-            ! 
-            IF (.NOT. POLARIZED ) THEN 
-              WRITE(stdout,401) rhoi(1) 
-              grho2(1) = grhoi(1,1)**2 + grhoi(2,1)**2 + grhoi(3,1)**2 
-              WRITE(stdout,501) grho2(1) 
-            ELSE 
-              WRITE(stdout,402) rhoi(1), rhoi(2) 
-              grho2(1) = grhoi(1,1)**2 + grhoi(2,1)**2 + grhoi(3,1)**2 
-              grho2(2) = grhoi(1,2)**2 + grhoi(2,2)**2 + grhoi(3,2)**2 
-              grho_ud  = grhoi(1,1) * grhoi(1,2) + & 
-                         grhoi(2,1) * grhoi(2,2) + & 
-                         grhoi(3,1) * grhoi(3,2) 
-              WRITE(stdout,503) grho2(1), grho_ud, grho2(2) 
-            ENDIF 
-            ! 
-            WRITE(stdout,*) " " 
+            !
+            IF ( test/='gen-benchmark' ) THEN 
+              IF (.NOT. POLARIZED ) THEN 
+                WRITE(stdout,401) rhoi(1) 
+                grho2(1) = grhoi(1,1)**2 + grhoi(2,1)**2 + grhoi(3,1)**2 
+                WRITE(stdout,501) grho2(1) 
+              ELSE 
+                WRITE(stdout,402) rhoi(1), rhoi(2) 
+                grho2(1) = grhoi(1,1)**2 + grhoi(2,1)**2 + grhoi(3,1)**2 
+                grho2(2) = grhoi(1,2)**2 + grhoi(2,2)**2 + grhoi(3,2)**2 
+                grho_ud  = grhoi(1,1) * grhoi(1,2) + & 
+                           grhoi(2,1) * grhoi(2,2) + & 
+                           grhoi(3,1) * grhoi(3,2) 
+                WRITE(stdout,503) grho2(1), grho_ud, grho2(2) 
+              ENDIF 
+              WRITE(stdout,*) " "
+            ENDIF  
             ! 
             ! 
             IF (.NOT. DF_OK) THEN 
@@ -1081,7 +1143,7 @@ ENDIF
               ! 
             ELSE 
               ! 
-              WRITE(stdout,*) " " 
+              IF (test/='gen-benchmark') WRITE(stdout,*) " " 
               ! 
               IF (dvxcrr_is_out) CALL print_diff2( 'dvxcrr', dvxcrr1(ii,:,:), dvxcrr2(ii,:,:) ) 
               IF (dvxcsr_is_out) CALL print_diff2( 'dvxcsr', dvxcsr1(ii,:,:), dvxcsr2(ii,:,:) ) 
@@ -1098,33 +1160,36 @@ ENDIF
      ! 
      ! ... THRESHOLD TEST 
      ! 
-     IF (mype==root) THEN 
-       WRITE(stdout,*) " " 
-       WRITE(stdout,*) "--- INPUT THRESHOLD CHECK ---" 
-       WRITE(stdout,*) " " 
+     IF (mype==root) THEN
+       IF (test(1:4)/='gen-' ) THEN
+         WRITE(stdout,*) " " 
+         WRITE(stdout,*) "--- INPUT THRESHOLD CHECK ---" 
+         WRITE(stdout,*) " " 
+       ENDIF  
        ! 
        DO ithr = 1, nthr 
          ! 
          rhoi(1:ns) = rho(nnrb+ithr,1:ns)   ; grhoi(:,1:ns) = grho(:,nnrb+ithr,1:ns) 
-         IF ( test=='xc-benchmark' ) THEN 
+         IF ( test=='exe-benchmark' ) THEN 
            rhoi(1:ns)=rho_b(nnrb+ithr,1:ns) ; grhoi(:,1:ns) = grho_b(:,nnrb+ithr,1:ns) 
          ENDIF   
          ! 
-         IF (.NOT. POLARIZED ) THEN 
-           WRITE(stdout,401) rhoi(1) 
-           grho2(1) = grhoi(1,1)**2 + grhoi(2,1)**2 + grhoi(3,1)**2 
-           WRITE(stdout,501) grho2(1) 
-         ELSE 
-           WRITE(stdout,402) rhoi(1), rhoi(2) 
-           grho2(1) = grhoi(1,1)**2 + grhoi(2,1)**2 + grhoi(3,1)**2 
-           grho2(2) = grhoi(1,2)**2 + grhoi(2,2)**2 + grhoi(3,2)**2 
-           grho_ud  = grhoi(1,1) * grhoi(1,2) + & 
-                      grhoi(2,1) * grhoi(2,2) + & 
-                      grhoi(3,1) * grhoi(3,2) 
-           WRITE(stdout,503) grho2(1), grho_ud, grho2(2) 
-         ENDIF 
-         ! 
-         WRITE(stdout,*) " " 
+         IF (test/='gen-benchmark') THEN
+           IF (.NOT. POLARIZED ) THEN 
+             WRITE(stdout,401) rhoi(1) 
+             grho2(1) = grhoi(1,1)**2 + grhoi(2,1)**2 + grhoi(3,1)**2 
+             WRITE(stdout,501) grho2(1) 
+           ELSE 
+             WRITE(stdout,402) rhoi(1), rhoi(2) 
+             grho2(1) = grhoi(1,1)**2 + grhoi(2,1)**2 + grhoi(3,1)**2 
+             grho2(2) = grhoi(1,2)**2 + grhoi(2,2)**2 + grhoi(3,2)**2 
+             grho_ud  = grhoi(1,1) * grhoi(1,2) + & 
+                        grhoi(2,1) * grhoi(2,2) + & 
+                        grhoi(3,1) * grhoi(3,2) 
+             WRITE(stdout,503) grho2(1), grho_ud, grho2(2) 
+           ENDIF 
+           WRITE(stdout,*) " " 
+         ENDIF  
          ! 
          IF (.NOT. DF_OK) THEN 
            CALL print_diff( 'Ex', ex1(nnrb+ithr:nnrb+ithr), ex2(nnrb+ithr:nnrb+ithr) ) 
@@ -1152,18 +1217,18 @@ ENDIF
      ! 
      ! ... calculate statistics over a large number of points (npoints) 
      ! 
-     CALL evxc_stats( 'V1x', diff_thr_v_mgga, v1x1, v1x2, aver=v1x_aver_b(1,:) ) 
-     CALL evxc_stats( 'V2x', diff_thr_v_mgga, v2x1, v2x2, aver=v2x_aver_b(1,:) ) 
-     CALL evxc_stats( 'V3x', diff_thr_v_mgga, v3x1, v3x2, aver=v3x_aver_b(1,:) ) 
-     CALL evxc_stats( 'V1c', diff_thr_v_mgga, v1c1, v1c2, aver=v1c_aver_b(1,:) ) 
-     CALL evxc_stats( 'V2c', diff_thr_v_mgga, v2c1, v2c2, aver=v2c_aver_b(1,:) ) 
-     CALL evxc_stats( 'V3c', diff_thr_v_mgga, v3c1, v3c2, aver=v3c_aver_b(1,:) ) 
+     CALL evxc_stats( 'V1x', diff_thr_v_mgga, v1x1, v1x2, v1x_aver_b(1,:) ) 
+     CALL evxc_stats( 'V2x', diff_thr_v_mgga, v2x1, v2x2, v2x_aver_b(1,:) ) 
+     CALL evxc_stats( 'V3x', diff_thr_v_mgga, v3x1, v3x2, v3x_aver_b(1,:) ) 
+     CALL evxc_stats( 'V1c', diff_thr_v_mgga, v1c1, v1c2, v1c_aver_b(1,:) ) 
+     CALL evxc_stats( 'V2c', diff_thr_v_mgga, v2c1, v2c2, v2c_aver_b(1,:) ) 
+     CALL evxc_stats( 'V3c', diff_thr_v_mgga, v3c1, v3c2, v3c_aver_b(1,:) ) 
      ! 
      ! ... calculate values over a few benchmark points (nnr_b) 
      ! 
      IF (mype == root) THEN 
        ! 
-       IF ( test=='xc-benchmark') THEN 
+       IF ( test=='exe-benchmark') THEN 
          ALLOCATE( v2cm(np,nnr+nthr,ns) ) 
          CALL xc_metagcx( nnr_b+nthr, ns, np, rho_b, grho, tau, ex1, & 
                           ec1, v1x1, v2x1, v3x1, v1c1, v2cm, v3c1 ) 
@@ -1204,9 +1269,9 @@ ENDIF
             iout = iout + 1 
             ! 
             IF (iout<=10) THEN 
-              WRITE(stdout,*) " " 
+              IF (test(1:4)/='gen-') WRITE(stdout,*) " " 
               !
-              IF ( test=='xc-benchmark' ) THEN
+              IF ( test=='exe-benchmark' ) THEN
                 WRITE(stdout,909) ii, nnr_b
                 rhoi(1:ns) = rho_b(ii,1:ns) ; grhoi(:,1:ns) = grho_b(:,ii,1:ns) 
                 taui(1:ns) = tau_b(ii,1:ns) 
@@ -1216,21 +1281,23 @@ ENDIF
                 taui(1:ns) = tau(ii,1:ns)
               ENDIF
               ! 
-              IF (.NOT. POLARIZED ) THEN 
-                WRITE(stdout,401) rhoi(1) 
-                grho2(1) = grhoi(1,1)**2 + grhoi(2,1)**2 + grhoi(3,1)**2 
-                WRITE(stdout,501) grho2(1) 
-                WRITE(stdout,601) taui(1) 
-              ELSE 
-                WRITE(stdout,402) rhoi(1), rhoi(2) 
-                grho2(1) = grhoi(1,1)**2 + grhoi(2,1)**2 + grhoi(3,1)**2 
-                grho2(2) = grhoi(1,2)**2 + grhoi(2,2)**2 + grhoi(3,2)**2 
-                grho_ud  = grhoi(1,1) * grhoi(1,2) + & 
-                           grhoi(2,1) * grhoi(2,2) + & 
-                           grhoi(3,1) * grhoi(3,2) 
-                WRITE(stdout,503) grho2(1), grho_ud, grho2(2) 
-                WRITE(stdout,602) taui(1), taui(2) 
-              ENDIF 
+              IF (test/='gen-benchmark') THEN
+                IF (.NOT. POLARIZED ) THEN 
+                  WRITE(stdout,401) rhoi(1) 
+                  grho2(1) = grhoi(1,1)**2 + grhoi(2,1)**2 + grhoi(3,1)**2 
+                  WRITE(stdout,501) grho2(1) 
+                  WRITE(stdout,601) taui(1) 
+                ELSE 
+                  WRITE(stdout,402) rhoi(1), rhoi(2) 
+                  grho2(1) = grhoi(1,1)**2 + grhoi(2,1)**2 + grhoi(3,1)**2 
+                  grho2(2) = grhoi(1,2)**2 + grhoi(2,2)**2 + grhoi(3,2)**2 
+                  grho_ud  = grhoi(1,1) * grhoi(1,2) + & 
+                             grhoi(2,1) * grhoi(2,2) + & 
+                             grhoi(3,1) * grhoi(3,2) 
+                  WRITE(stdout,503) grho2(1), grho_ud, grho2(2) 
+                  WRITE(stdout,602) taui(1), taui(2) 
+                ENDIF 
+              ENDIF
               ! 
               IF ( ex_is_out ) CALL print_diff( 'Ex', ex1(ii:ii), ex2(ii:ii) ) 
               IF ( ec_is_out ) CALL print_diff( 'Ec', ec1(ii:ii), ec2(ii:ii) ) 
@@ -1254,38 +1321,42 @@ ENDIF
      ! ... THRESHOLD TEST 
      ! 
      IF ( mype/=root ) THEN 
-       ! 
-       WRITE(stdout,*) " "  
-       WRITE(stdout,*) "--- INPUT THRESHOLD CHECK ---"  
-       WRITE(stdout,*) " "  
+       !
+       IF (test/='gen-benchmark') THEN
+         WRITE(stdout,*) " "  
+         WRITE(stdout,*) "--- INPUT THRESHOLD CHECK ---"  
+         WRITE(stdout,*) " "  
+       ENDIF  
        !  
        DO ithr = 1, nthr  
          ! 
          rhoi(1:ns) = rho(nnrb+ithr,1:ns)   ; grhoi(:,1:ns) = grho(:,nnr+ithr,1:ns) 
          taui(1:ns) = tau(nnrb+ithr,1:ns) 
-         IF ( test=='xc-benchmark' ) THEN 
+         IF ( test=='exe-benchmark' ) THEN 
            rhoi(1:ns) = rho_b(nnrb+ithr,1:ns) ; grhoi(:,1:ns) = grho_b(:,nnrb+ithr,1:ns) 
            taui(1:ns) = tau_b(nnrb+ithr,1:ns) 
          ENDIF 
-         !      
-         WRITE(stdout,*) " " 
-         WRITE(stdout,910) ithr, nthr 
-         IF (.NOT. POLARIZED ) THEN    
-           WRITE(stdout,401) rhoi(1) 
-           grho2(1) = grhoi(1,1)**2 + grhoi(2,1)**2 + grhoi(3,1)**2    
-           WRITE(stdout,501) grho2(1)  
-           WRITE(stdout,601) taui(1) 
-         ELSE    
-           WRITE(stdout,402) rhoi(1), rhoi(2)    
-           grho2(1) = grhoi(1,1)**2 + grhoi(2,1)**2 + grhoi(3,1)**2    
-           grho2(2) = grhoi(1,2)**2 + grhoi(2,2)**2 + grhoi(3,2)**2    
-           grho_ud  = grhoi(1,1) * grhoi(1,2) + &    
-                      grhoi(2,1) * grhoi(2,2) + &    
-                      grhoi(3,1) * grhoi(3,2)    
-           WRITE(stdout,503) grho2(1), grho_ud, grho2(2) 
-           WRITE(stdout,602) taui(1), taui(2) 
-         ENDIF    
-         WRITE(stdout,*) " "    
+         !
+         IF (test/='gen-benchmark') THEN
+           WRITE(stdout,*) " " 
+           WRITE(stdout,910) ithr, nthr 
+           IF (.NOT. POLARIZED ) THEN    
+             WRITE(stdout,401) rhoi(1) 
+             grho2(1) = grhoi(1,1)**2 + grhoi(2,1)**2 + grhoi(3,1)**2    
+             WRITE(stdout,501) grho2(1)  
+             WRITE(stdout,601) taui(1) 
+           ELSE    
+             WRITE(stdout,402) rhoi(1), rhoi(2)    
+             grho2(1) = grhoi(1,1)**2 + grhoi(2,1)**2 + grhoi(3,1)**2    
+             grho2(2) = grhoi(1,2)**2 + grhoi(2,2)**2 + grhoi(3,2)**2    
+             grho_ud  = grhoi(1,1) * grhoi(1,2) + &    
+                        grhoi(2,1) * grhoi(2,2) + &    
+                        grhoi(3,1) * grhoi(3,2)    
+             WRITE(stdout,503) grho2(1), grho_ud, grho2(2) 
+             WRITE(stdout,602) taui(1), taui(2) 
+           ENDIF
+           WRITE(stdout,*) " " 
+         ENDIF
          !    
          CALL print_diff( 'Ex', ex1(nnrb+ithr:nnrb+ithr), ex2(nnrb+ithr:nnrb+ithr) )    
          CALL print_diff( 'Ec', ec1(nnrb+ithr:nnrb+ithr), ec2(nnrb+ithr:nnrb+ithr) )    
@@ -1476,8 +1547,6 @@ SUBROUTINE diff_max( thr, x_qe, x_lxc, max_abs_perc )
   DO i = 1, nnr
     !
     abs_diff  = ABS(x_qe(i) - x_lxc(i))
-    !print*, 'dddfe',x_qe(i), x_lxc(i), abs_diff
-    
     perc_diff = calc_perc_diff( thr, x_qe(i), x_lxc(i) )
     !
     IF ( abs_diff > abs_diff_prev ) THEN
@@ -1550,20 +1619,20 @@ SUBROUTINE print_stat( what, vaver, vmax, vmin, averref )
   REAL(DP), INTENT(IN) :: vaver(2), vmax(2), vmin(2)
   REAL(DP), OPTIONAL :: averref
   !
-  WRITE(stdout,*) " "
-  WRITE(stdout,*) " ", TRIM(what)
   IF (test=='dft-comparison') THEN
+    WRITE(stdout,*) " "
+    WRITE(stdout,*) " ", TRIM(what)
     WRITE(stdout,*) "AVR abs: ", vaver(1), "   AVR %: ", vaver(2)
     WRITE(stdout,*) "MAX abs: ", vmax(1),  "   MAX %: ", vmax(2)
     WRITE(stdout,*) "MIN abs: ", vmin(1),  "   MIN %: ", vmin(2)
-  ELSEIF (test=='xc-benchmark') THEN
+  ELSEIF (test=='exe-benchmark') THEN
+    WRITE(stdout,*) " "
+    WRITE(stdout,*) " ", TRIM(what)
     WRITE(stdout,*) "AVR test: ", vaver(1)
     WRITE(stdout,*) "AVR ref : ", averref
     WRITE(stdout,*) "diff    : ", vaver(1)-averref
   ELSEIF  (test=='gen-benchmark') THEN
-    WRITE(stdout,*) vaver(1)
-    WRITE(stdout,*) averref
-    WRITE(stdout,*) vaver(1)-averref
+    WRITE(stdout,*)  vaver(1)
   ENDIF
   !
 END SUBROUTINE print_stat
@@ -1578,43 +1647,59 @@ SUBROUTINE print_diff( what, x_qe, x_lxc, x_ud_qe, x_ud_lxc )
   REAL(DP), INTENT(IN) :: x_qe(ns), x_lxc(ns)
   REAL(DP), INTENT(IN), OPTIONAL :: x_ud_qe, x_ud_lxc
   !
-  WRITE(stdout,*)" "
-  WRITE(stdout,*) what
+  IF (test/='gen-benchmark') THEN
+    WRITE(stdout,*) " "
+    WRITE(stdout,*) what
+  ENDIF
   !
   IF ( .NOT. POLARIZED .OR. what(1:1)=='E'  ) THEN
-    IF (test=='dft-comparison') THEN
-      WRITE(stdout,101) x_qe(1)
-      WRITE(stdout,201) x_lxc(1)
-    ELSEIF (test=='xc-benchmark') THEN
-      WRITE(stdout,111) x_qe(1)
-      WRITE(stdout,211) x_lxc(1)
-    ENDIF
-    WRITE(stdout,*) " --- "
-    WRITE(stdout,301) ABS(x_qe(1)-x_lxc(1))
-  ELSEIF ( POLARIZED ) THEN
-    IF ( .NOT. PRESENT(x_ud_qe) ) THEN
-      IF ( test=='dft-comparison' ) THEN
-        WRITE(stdout,102) x_qe(1), x_qe(2)
-        WRITE(stdout,202) x_lxc(1), x_lxc(2)
-      ELSEIF (test=='xc-benchmark') THEN
-        WRITE(stdout,112) x_qe(1), x_qe(2)
-        WRITE(stdout,212) x_lxc(1), x_lxc(2)
-      ENDIF  
-      WRITE(stdout,*) " --- "
-      WRITE(stdout,302) ABS(x_qe(1)-x_lxc(1)), &
-                    ABS(x_qe(2)-x_lxc(2))
-    ELSE
-      IF ( test=='dft-comparison' ) THEN
-        WRITE(stdout,103) x_qe(1), x_ud_qe, x_qe(2)
-        WRITE(stdout,203) x_lxc(1), x_ud_lxc, x_lxc(2)
-      ELSEIF (test=='xc-benchmark') THEN
-        WRITE(stdout,113) x_qe(1), x_ud_qe, x_qe(2)
-        WRITE(stdout,213) x_lxc(1), x_ud_lxc, x_lxc(2)
+    IF (test/='gen-benchmark') THEN
+      IF (test=='dft-comparison') THEN
+        WRITE(stdout,101) x_qe(1)
+        WRITE(stdout,201) x_lxc(1)
+      ELSEIF (test=='exe-benchmark') THEN
+        WRITE(stdout,111) x_qe(1)
+        WRITE(stdout,211) x_lxc(1)
       ENDIF
       WRITE(stdout,*) " --- "
-      WRITE(stdout,303) ABS(x_qe(1)-x_lxc(1)), &
-                    ABS(x_ud_qe-x_ud_lxc), &
-                    ABS(x_qe(2)-x_lxc(2))
+      WRITE(stdout,301) ABS(x_qe(1)-x_lxc(1))
+    ELSE
+      WRITE(stdout,*) x_qe(1)
+    ENDIF
+  ELSEIF ( POLARIZED ) THEN
+    IF ( .NOT. PRESENT(x_ud_qe) ) THEN
+      IF (test/='gen-benchmark') THEN
+        IF ( test=='dft-comparison' ) THEN
+          WRITE(stdout,102) x_qe(1), x_qe(2)
+          WRITE(stdout,202) x_lxc(1), x_lxc(2)
+        ELSEIF (test=='exe-benchmark') THEN
+          WRITE(stdout,112) x_qe(1), x_qe(2)
+          WRITE(stdout,212) x_lxc(1), x_lxc(2)
+        ENDIF  
+        WRITE(stdout,*) " --- "
+        WRITE(stdout,302) ABS(x_qe(1)-x_lxc(1)), ABS(x_qe(2)-x_lxc(2))
+      ELSE
+        WRITE(stdout,*) x_qe(1), x_qe(2)
+      ENDIF
+    ELSE
+      IF (test/='gen-benchmark') THEN
+        IF ( test=='dft-comparison' ) THEN
+          WRITE(stdout,103) x_qe(1), x_ud_qe, x_qe(2)
+          WRITE(stdout,203) x_lxc(1), x_ud_lxc, x_lxc(2)
+        ELSEIF (test=='exe-benchmark') THEN
+          WRITE(stdout,113) x_qe(1), x_ud_qe, x_qe(2)
+          WRITE(stdout,213) x_lxc(1), x_ud_lxc, x_lxc(2)
+        ENDIF
+        WRITE(stdout,*) " --- "
+        WRITE(stdout,303) ABS(x_qe(1)-x_lxc(1)), ABS(x_ud_qe-x_ud_lxc), &
+                          ABS(x_qe(2)-x_lxc(2))
+      ELSE
+        IF (.NOT.present(x_ud_qe)) THEN
+          WRITE(stdout,*) x_qe(1), x_qe(2)
+        ELSE  
+          WRITE(stdout,*) x_qe(1), x_ud_qe, x_qe(2)
+        ENDIF  
+      ENDIF
     ENDIF
   ENDIF
   !
@@ -1645,32 +1730,40 @@ SUBROUTINE print_diff2( what, dxc_qe, dxc_lxc )
   CHARACTER(len=*), INTENT(IN) :: what
   REAL(DP), INTENT(IN) :: dxc_qe(ns,ns), dxc_lxc(ns,ns)
   !
-  WRITE(stdout,*) " "
+  IF (test/='gen-benchmark') THEN
+    WRITE(stdout,*) " "
+    WRITE(stdout,*) what
+  ENDIF
   !
-  WRITE(stdout,*) what
-  !
-  IF ( .NOT. POLARIZED ) THEN   
-    IF (test=='dft-comparison') THEN
-      WRITE(stdout,101) dxc_qe(1,1)
-      WRITE(stdout,201) dxc_lxc(1,1)
+  IF ( .NOT. POLARIZED ) THEN
+    IF (test/='gen-benchmark') THEN
+      IF (test=='dft-comparison') THEN
+        WRITE(stdout,101) dxc_qe(1,1)
+        WRITE(stdout,201) dxc_lxc(1,1)
+      ELSE
+        WRITE(stdout,111) dxc_qe(1,1)
+        WRITE(stdout,211) dxc_lxc(1,1)
+      ENDIF
+      WRITE(stdout,*) " --- "
+      WRITE(stdout,301) dxc_qe(1,1)-dxc_lxc(1,1)
     ELSE
-      WRITE(stdout,111) dxc_qe(1,1)
-      WRITE(stdout,211) dxc_lxc(1,1)
+      WRITE(stdout,*) dxc_qe(1,1)
     ENDIF
-    WRITE(stdout,*) " --- "
-    WRITE(stdout,301) dxc_qe(1,1)-dxc_lxc(1,1)
   ELSE
-    IF (test=='dft-comparison') THEN
-      WRITE(stdout,103) dxc_qe(1,1), dxc_qe(2,1), dxc_qe(2,2) !, dxc_qe(1,2)
-      WRITE(stdout,203) dxc_lxc(1,1), dxc_lxc(2,1), dxc_lxc(2,2)
+    IF (test/='gen-benchmark') THEN
+      IF (test=='dft-comparison') THEN
+        WRITE(stdout,103) dxc_qe(1,1), dxc_qe(2,1), dxc_qe(2,2) !, dxc_qe(1,2)
+        WRITE(stdout,203) dxc_lxc(1,1), dxc_lxc(2,1), dxc_lxc(2,2)
+      ELSE
+        WRITE(stdout,113) dxc_qe(1,1), dxc_qe(2,1), dxc_qe(2,2) !, dxc_qe(1,2)
+        WRITE(stdout,213) dxc_lxc(1,1), dxc_lxc(2,1), dxc_lxc(2,2) 
+      ENDIF
+      WRITE(stdout,*) " --- "
+      WRITE(stdout,303) dxc_qe(1,1)-dxc_lxc(1,1), dxc_qe(2,1)-dxc_lxc(2,1), &
+                        dxc_qe(2,2)-dxc_lxc(2,2)
     ELSE
-      WRITE(stdout,113) dxc_qe(1,1), dxc_qe(2,1), dxc_qe(2,2) !, dxc_qe(1,2)
-      WRITE(stdout,213) dxc_lxc(1,1), dxc_lxc(2,1), dxc_lxc(2,2)
+      WRITE(stdout,*) dxc_qe(1,1), dxc_qe(2,1), dxc_qe(2,2)
     ENDIF
-    WRITE(stdout,*) " --- "
-    WRITE(stdout,303) dxc_qe(1,1)-dxc_lxc(1,1), &
-                  dxc_qe(2,1)-dxc_lxc(2,1), &
-                  dxc_qe(2,2)-dxc_lxc(2,2)
   ENDIF
   !
   101 FORMAT('dft1: ',F17.14)
@@ -1686,25 +1779,6 @@ SUBROUTINE print_diff2( what, dxc_qe, dxc_lxc )
   !
 END SUBROUTINE print_diff2
 !
-! !---------------------------------------------------------------------
-! SUBROUTINE calc_stats( thr, x_qe, x_lxc, x_aver, x_max, x_min, nnr_int )
-!   !-------------------------------------------------------------------
-!   !
-!   IMPLICIT NONE
-!   !
-!   REAL(DP), INTENT(IN)  :: thr
-!   REAL(DP), INTENT(IN)  :: x_qe(nnr), x_lxc(nnr)
-!   REAL(DP), INTENT(OUT) :: x_aver(2), x_max(2), x_min(2)
-!   INTEGER, INTENT(OUT) :: nnr_int
-!   !
-!   CALL diff_average( thr, x_qe, x_lxc, x_aver, nnr_int )
-!   CALL diff_max( thr, x_qe, x_lxc, x_max )
-!   CALL diff_min( thr, x_qe, x_lxc, x_min )
-!   !
-!   RETURN
-!   !
-! END SUBROUTINE calc_stats
-!
 !
 SUBROUTINE evxc_stats( what, thr, xc_qe, xc_lxc, aver )
   !
@@ -1712,20 +1786,21 @@ SUBROUTINE evxc_stats( what, thr, xc_qe, xc_lxc, aver )
   !
   CHARACTER(len=*) :: what
   REAL(DP), INTENT(IN) :: thr, xc_qe(nnr+nthr,ns)
-  REAL(DP), INTENT(IN), OPTIONAL :: xc_lxc(nnr+nthr,ns), aver(2)
+  REAL(DP), INTENT(IN) :: xc_lxc(nnr+nthr,ns), aver(2)
   !
   REAL(DP) :: xc_aver(2,2), xc_max(2,2), xc_min(2,2)
   !
   real(dp) :: aver_snd(1), aver_rec(1)
   integer :: ierr2
-  
-  WRITE(stdout,*) " "
+  !
+  IF (test/='gen-benchmark') THEN
+    WRITE(stdout,*) " "
+    IF ( POLARIZED .AND. what(1:1)/='E' ) WRITE(stdout,*) what
+  ENDIF
   !
   xc_aver=0.d0
   xc_max=0.d0
   xc_min=0.d0
-  !
-  IF ( POLARIZED .AND. what(1:1)/='E' ) WRITE(stdout,*) what
   !
   IF ( test=='dft-comparison' ) THEN
     CALL diff_average( thr, xc_qe(1:nnr,1), xc_lxc(1:nnr,1), xc_aver(:,1), nnr_int )
@@ -1744,8 +1819,8 @@ SUBROUTINE evxc_stats( what, thr, xc_qe, xc_lxc, aver )
   !
   IF ( .NOT. POLARIZED .OR. what(1:1)=='E' ) THEN
      IF (mype==root) THEN
-       IF (test=='dft-comparison') CALL print_stat( what, xc_aver(:,1), xc_max(:,1), xc_min(:,1) )
-       IF (test=='xc-benchmark')   CALL print_stat( what, xc_aver(:,1), xc_max(:,1), xc_min(:,1), aver(1) )
+       IF (test=='dft-comparison')  CALL print_stat( what, xc_aver(:,1), xc_max(:,1), xc_min(:,1) )
+       IF (test(5:13)=='benchmark') CALL print_stat( what, xc_aver(:,1), xc_max(:,1), xc_min(:,1), aver(1) )
      ENDIF
   ELSE
     IF ( test=='dft-comparison' ) THEN
@@ -1812,14 +1887,15 @@ SUBROUTINE derivxc_stats( what, thr, dxc_qe, dxc_lxc, aver )
   REAL(DP) :: aver_snd(1), aver_rec(1)
   INTEGER :: ierr2
   !
-  WRITE(stdout,*)" "
-  WRITE(stdout,*) what
+  IF (test/='gen-benchmark') THEN
+    WRITE(stdout,*)" "
+    WRITE(stdout,*) what
+  ENDIF
   !
   dxc_aver = 0.d0
   dxc_min=0.d0
   dxc_max=0.d0
-  
-  
+  !
   IF ( test=='dft-comparison' ) THEN
     CALL diff_average( thr, dxc_qe(1:nnr,1,1), dxc_lxc(1:nnr,1,1), dxc_aver(1:nnr,1), nnr_int )
     CALL diff_max( thr, dxc_qe(1:nnr,1,1), dxc_lxc(1:nnr,1,1), dxc_max(1:nnr,1) )
@@ -1837,7 +1913,7 @@ SUBROUTINE derivxc_stats( what, thr, dxc_qe, dxc_lxc, aver )
   IF ( .NOT. POLARIZED ) THEN
     IF (mype==root) THEN
       IF (test=='dft-comparison') CALL print_stat( what, dxc_aver(1:nnr,1), dxc_max(1:nnr,1), dxc_min(1:nnr,1) )
-      IF (test=='xc-benchmark')   CALL print_stat( what, dxc_aver(1:nnrb,1), dxc_max(1:nnrb,1), dxc_min(1:nnrb,1), aver(1) )
+      IF (test(5:13)=='benchmark') CALL print_stat( what, dxc_aver(1:nnrb,1), dxc_max(1:nnrb,1), dxc_min(1:nnrb,1), aver(1) )
     ENDIF  
   ELSE
   
