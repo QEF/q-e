@@ -44,7 +44,7 @@ PROGRAM xclib_test
   INTEGER :: ierr, ierrm
   
   INTEGER :: nnodes, nlen
-  INTEGER :: i, nps
+  INTEGER :: i
   
   !
   INTEGER, PARAMETER :: stdin  = 5
@@ -361,17 +361,6 @@ PROGRAM xclib_test
   dvxcsr_aver_b = 0._DP
   dvxcss_aver_b = 0._DP
   !
-  IF (.NOT. POLARIZED) THEN
-    nnr_b = 1
-  ELSE
-    IF (LDA .AND. .NOT. GGA) nnr_b = 2
-    IF (GGA) nnr_b = 4 !5
-    IF (MGGA) nnr_b = 5 !8
-  ENDIF  
-  !
-  IF (test(5:13)=='benchmark') nnrb = nnr_b
-  !
-  !
   ! ... initialize first DFT
   !
   CALL xclib_set_dft_from_name( dft1 )
@@ -410,11 +399,20 @@ PROGRAM xclib_test
      POLARIZED = .TRUE.
   ENDIF
   !
+  IF (.NOT. POLARIZED) THEN
+    nnr_b = 1
+  ELSE
+    IF (LDA .AND. .NOT. GGA) nnr_b = 2
+    IF (GGA) nnr_b = 4 !5
+    IF (MGGA) nnr_b = 5 !8
+  ENDIF  
+  !
+  IF (test(5:13)=='benchmark') nnrb = nnr_b
+  !
   np = 1
   IF ( ns == 2 ) THEN
      np = 3
   ENDIF
-  !
   !
   ! ------ ALLOCATIONS --------
   !
@@ -542,29 +540,31 @@ PROGRAM xclib_test
   IF (test(5:13)=='benchmark' .AND. mype==root) THEN
     IF (nspin == 1) THEN
       !nnr_b = 1
-      rho_b(1,1) = 0.6_DP
-      IF (family=='GGA')  grho_b(1,:,1) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
+      rho_b(1,1) = 0.6_DP ; rhotz_b(1,1) = 0.6_DP
+      IF (family/='LDA')  grho_b(:,1,1) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
       IF (family=='MGGA') tau_b(1,1) = 0.1_DP
     ELSE
       !nnr_b = 4
       DO i = 1, nnr_b
-        IF (MOD(i,2)==0) rho_b(i,:) = (/ 0.6_DP, 0.1_DP /)
+        IF (MOD(i,2)==0) rho_b(i,:) = (/ 0.6_DP, 0.1_DP /) 
         IF (MOD(i,2)/=0) rho_b(i,:) = (/ 0.1_DP, 0.6_DP /)
+        IF (MOD(i,2)==0) rhotz_b(i,:) = (/ 0.7_DP, 0.5_DP /) 
+        IF (MOD(i,2)/=0) rhotz_b(i,:) = (/ 0.7_DP, -0.5_DP /)
         IF ( family/='LDA') THEN
           IF (i<=2) THEN
-            grho_b(i,:,1) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
-            grho_b(i,:,2) = (/ 0.4_DP, 0.3_DP, 0.2_DP /)
+            grho_b(:,i,1) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
+            grho_b(:,i,2) = (/ 0.4_DP, 0.3_DP, 0.2_DP /)
           ELSE
-            grho_b(i,:,1) = (/ 0.4_DP, 0.3_DP, 0.2_DP /)
-            grho_b(i,:,2) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
+            grho_b(:,i,1) = (/ 0.4_DP, 0.3_DP, 0.2_DP /)
+            grho_b(:,i,2) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
           ENDIF
         ENDIF
       ENDDO
       IF (family=='MGGA') THEN
         !nnr_b = 5
         rho_b(5,:) = (/ 0.1_DP, 0.6_DP /)
-        grho_b(5,:,1) = (/ 0.4_DP, 0.3_DP, 0.2_DP /)
-        grho_b(5,:,2) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
+        grho_b(:,5,1) = (/ 0.4_DP, 0.3_DP, 0.2_DP /)
+        grho_b(:,5,2) = (/ 0.1_DP, 0.2_DP, 0.3_DP /)
         tau_b(5,:) = (/ 0.2_DP, 0.1_DP /)
       ENDIF
     ENDIF 
@@ -610,18 +610,26 @@ PROGRAM xclib_test
         READ(stdin,*) v1x_aver_b(1,1:ns)
         READ(stdin,*) v2x_aver_b(1,1:ns)
         READ(stdin,*) v1c_aver_b(1,1:ns)
-        READ(stdin,*) v2c_aver_b(1,1:nps)
+        IF (family=='MGGA') THEN
+          READ(stdin,*) v2c_aver_b(1,1:ns)
+          READ(stdin,*) v3x_aver_b(1,1:ns)
+          READ(stdin,*) v3c_aver_b(1,1:ns)
+        ELSE
+          READ(stdin,*) v2c_aver_b(1,1:np)
+        ENDIF
         DO ii = 1, nnr_b+nthr
           READ(stdin,*) ex2(ii)
           READ(stdin,*) ec2(ii)
           READ(stdin,*) v1x2(ii,1:ns)
           READ(stdin,*) v2x2(ii,1:ns)
           READ(stdin,*) v1c2(ii,1:ns)
-          READ(stdin,*) v2c2(ii,1:nps)
-          READ(stdin,*) v3x_aver_b(1,1:ns)
-          READ(stdin,*) v3c_aver_b(1,1:ns)
-          READ(stdin,*) v3x2(ii,1:ns)
-          READ(stdin,*) v3c2(ii,1:ns)
+          IF (family=='MGGA') THEN
+            READ(stdin,*) v2c2(ii,1:ns)
+            READ(stdin,*) v3x2(ii,1:ns)
+            READ(stdin,*) v3c2(ii,1:ns)
+          ELSE
+            READ(stdin,*) v2c_ud2(ii), v2c2(ii,1:ns)
+          ENDIF
         ENDDO
       ELSE
         READ(stdin,*) dvxcrr_aver_b(1,1:np)
@@ -716,6 +724,13 @@ PROGRAM xclib_test
     !
   ENDIF
   !
+  IF (test(5:13)=='benchmark') THEN
+    rho_b(nnrb+1:nnrb+nthr,:) = rho(nnr+1:nnr+nthr,:)
+    rhotz_b(nnrb+1:nnrb+nthr,:) = rho_tz(nnr+1:nnr+nthr,:)
+    IF (family/='LDA') grho_b(:,nnrb+1:nnrb+nthr,:) = grho(:,nnr+1:nnr+nthr,:)
+    IF (family=='MGGA') tau_b(nnrb+1:nnrb+nthr,:) = tau(nnr+1:nnr+nthr,:)
+  ENDIF  
+  !
   !
   diff_thr_e_lda = 1.0E-6_DP
   diff_thr_v_lda = 1.0E-6_DP
@@ -804,7 +819,6 @@ PROGRAM xclib_test
     imetac2 = xclib_get_ID('MGGA','CORR')
     IF (imeta2+imetac2/=0) MGGA = .TRUE.
     !
-    
     IF ( LDA ) THEN
       IF ( .NOT. DF_OK ) THEN
           CALL xc( nnr+nthr, ns, ns, rho_tz, ex2, ec2, vx2, vc2 )
@@ -887,10 +901,9 @@ PROGRAM xclib_test
      IF ( test(5:13)=='benchmark'.AND.mype==root) THEN
        IF ( LDA ) THEN
          IF ( .NOT. DF_OK ) THEN
-           CALL xc( nnr_b+nthr, ns, ns, rho_b(1:nnr_b+nthr,:), ex1(1:nnr_b+nthr), &
-                    ec1(1:nnr_b+nthr), vx1(1:nnr_b+nthr,:), vc1(1:nnr_b+nthr,:) )
+           CALL xc( nnrb+nthr, ns, ns, rhotz_b, ex1, ec1, vx1, vc1 )
          ELSE           
-           CALL dmxc( nnr_b+nthr, ns, rho_b, dmuxc1(1:nnr_b+nthr,:,:) )
+           CALL dmxc( nnrb+nthr, ns, rho_b, dmuxc1 )
          ENDIF
        ENDIF
      ENDIF
@@ -1024,7 +1037,6 @@ PROGRAM xclib_test
        CALL derivxc_stats( 'dvxcss', diff_thr_v_gga, dvxcss1, dvxcss2, dvxcss_aver_b )
      ENDIF
      !
-     !
      ! ... calculate values over a few benchmark points (nnr_b)
      !
      IF ( test(5:13)=='benchmark' .AND. mype==root ) THEN
@@ -1037,14 +1049,14 @@ PROGRAM xclib_test
          CALL xc_gcx( nnr_b+nthr, ns, rho_b, grho_b, exg1, ecg1, v1x1, v2x1, &
                       v1c1, v2c1, v2c_ud1 )
          !
-         ex1 = ex1*rho_tz(:,1) + exg1
-         ec1 = ec1*rho_tz(:,1) + ecg1
+         ex1(1:nnrb+nthr) = ex1(1:nnrb+nthr)*rhotz_b(:,1) + exg1(1:nnrb+nthr)
+         ec1(1:nnrb+nthr) = ec1(1:nnrb+nthr)*rhotz_b(:,1) + ecg1(1:nnrb+nthr)
          v1x1 = v1x1 + vx1
          v1c1 = v1c1 + vc1
        ELSE
          DO ii = 1, nnr_b+nthr
-           grh(ii,1:3,1) = grho(1:3,ii,1)
-           IF (ns==2) grh(ii,1:3,2) = grho(1:3,ii,2)
+           grh(ii,1:3,1) = grho_b(1:3,ii,1)
+           IF (ns==2) grh(ii,1:3,2) = grho_b(1:3,ii,2)
          ENDDO
          !
          CALL dgcxc( nnr_b+nthr, ns, rho_b, grh, dvxcrr1, dvxcsr1, dvxcss1 )
@@ -1176,10 +1188,12 @@ PROGRAM xclib_test
          ! 
          IF (test/='gen-benchmark') THEN
            IF (.NOT. POLARIZED ) THEN 
+             WRITE(stdout,*) " "
              WRITE(stdout,401) rhoi(1) 
              grho2(1) = grhoi(1,1)**2 + grhoi(2,1)**2 + grhoi(3,1)**2 
              WRITE(stdout,501) grho2(1) 
            ELSE 
+             WRITE(stdout,*) " "
              WRITE(stdout,402) rhoi(1), rhoi(2) 
              grho2(1) = grhoi(1,1)**2 + grhoi(2,1)**2 + grhoi(3,1)**2 
              grho2(2) = grhoi(1,2)**2 + grhoi(2,2)**2 + grhoi(3,2)**2 
@@ -1213,27 +1227,30 @@ PROGRAM xclib_test
      ! 
      ! 
   ELSEIF ( MGGA ) THEN 
-     ! 
-     ! 
+     !
+     !
      ! ... calculate statistics over a large number of points (npoints) 
      ! 
-     CALL evxc_stats( 'V1x', diff_thr_v_mgga, v1x1, v1x2, v1x_aver_b(1,:) ) 
+     CALL evxc_stats( 'V1x', diff_thr_v_mgga, v1x1, v1x2, v1x_aver_b(1,:) )
      CALL evxc_stats( 'V2x', diff_thr_v_mgga, v2x1, v2x2, v2x_aver_b(1,:) ) 
-     CALL evxc_stats( 'V3x', diff_thr_v_mgga, v3x1, v3x2, v3x_aver_b(1,:) ) 
-     CALL evxc_stats( 'V1c', diff_thr_v_mgga, v1c1, v1c2, v1c_aver_b(1,:) ) 
+     CALL evxc_stats( 'V1c', diff_thr_v_mgga, v1c1, v1c2, v1c_aver_b(1,:) )
      CALL evxc_stats( 'V2c', diff_thr_v_mgga, v2c1, v2c2, v2c_aver_b(1,:) ) 
+     CALL evxc_stats( 'V3x', diff_thr_v_mgga, v3x1, v3x2, v3x_aver_b(1,:) ) 
      CALL evxc_stats( 'V3c', diff_thr_v_mgga, v3c1, v3c2, v3c_aver_b(1,:) ) 
      ! 
      ! ... calculate values over a few benchmark points (nnr_b) 
      ! 
      IF (mype == root) THEN 
        ! 
-       IF ( test=='exe-benchmark') THEN 
-         ALLOCATE( v2cm(np,nnr+nthr,ns) ) 
-         CALL xc_metagcx( nnr_b+nthr, ns, np, rho_b, grho, tau, ex1, & 
+       IF ( test(5:13)=='benchmark') THEN 
+         ALLOCATE( v2cm(np,nnrb+nthr,ns) ) 
+         CALL xc_metagcx( nnr_b+nthr, ns, np, rho_b, grho_b, tau_b, ex1, & 
                           ec1, v1x1, v2x1, v3x1, v1c1, v2cm, v3c1 ) 
          v2c1= v2cm(1,:,:) 
          DEALLOCATE( v2cm ) 
+       ENDIF  
+       !
+       IF (test(5:13)=='benchmark') THEN
          ex_is_out = .TRUE.  ; ec_is_out = .TRUE.
          v1x_is_out = .TRUE. ; v2x_is_out = .TRUE. 
          v3x_is_out = .TRUE. ; v1c_is_out = .TRUE. 
@@ -1242,14 +1259,14 @@ PROGRAM xclib_test
        ENDIF 
        ! 
        iout = 0 
-       ! 
+       !
        DO ii = 1, nnrb 
-         ! 
+         !
          IF (test=='dft-comparison') THEN 
-           ! 
+           !
            ex_is_out = is_it_out( diff_thr_e_mgga, 1, ex1(ii:ii), ex2(ii:ii) ) 
            ec_is_out = is_it_out( diff_thr_e_mgga, 1, ec1(ii:ii), ec2(ii:ii) ) 
-           ! 
+           !
            IF (.NOT. energy_only) THEN 
              v1x_is_out = is_it_out( diff_thr_v_mgga,ns, v1x1(ii,:), v1x2(ii,:) ) 
              v2x_is_out = is_it_out( diff_thr_v_mgga,ns, v2x1(ii,:), v2x2(ii,:) ) 
@@ -1269,17 +1286,18 @@ PROGRAM xclib_test
             iout = iout + 1 
             ! 
             IF (iout<=10) THEN 
-              IF (test(1:4)/='gen-') WRITE(stdout,*) " " 
-              !
-              IF ( test=='exe-benchmark' ) THEN
-                WRITE(stdout,909) ii, nnr_b
-                rhoi(1:ns) = rho_b(ii,1:ns) ; grhoi(:,1:ns) = grho_b(:,ii,1:ns) 
-                taui(1:ns) = tau_b(ii,1:ns) 
-              ELSE 
-                WRITE(stdout,909) ii, npoints
-                rhoi(1:ns) = rho(ii,1:ns) ; grhoi(:,1:ns) = grho(:,ii,1:ns) 
-                taui(1:ns) = tau(ii,1:ns)
-              ENDIF
+              IF (test(1:4)/='gen-') THEN
+                WRITE(stdout,*) " " 
+                IF ( test=='exe-benchmark' ) THEN
+                  WRITE(stdout,909) ii, nnr_b
+                  rhoi(1:ns) = rho_b(ii,1:ns) ; grhoi(:,1:ns) = grho_b(:,ii,1:ns) 
+                  taui(1:ns) = tau_b(ii,1:ns) 
+                ELSE 
+                  WRITE(stdout,909) ii, npoints
+                  rhoi(1:ns) = rho(ii,1:ns) ; grhoi(:,1:ns) = grho(:,ii,1:ns) 
+                  taui(1:ns) = tau(ii,1:ns)
+                ENDIF
+              ENDIF  
               ! 
               IF (test/='gen-benchmark') THEN
                 IF (.NOT. POLARIZED ) THEN 
@@ -1299,15 +1317,15 @@ PROGRAM xclib_test
                 ENDIF 
               ENDIF
               ! 
-              IF ( ex_is_out ) CALL print_diff( 'Ex', ex1(ii:ii), ex2(ii:ii) ) 
-              IF ( ec_is_out ) CALL print_diff( 'Ec', ec1(ii:ii), ec2(ii:ii) ) 
+              IF ( ex_is_out ) CALL print_diff( 'Ex', ex1(ii:ii), ex2(ii:ii) )
+              IF ( ec_is_out ) CALL print_diff( 'Ec', ec1(ii:ii), ec2(ii:ii) )
               ! 
-              IF (.NOT. ENERGY_ONLY) THEN 
-                IF ( v1x_is_out ) CALL print_diff( 'V1x', v1x1(ii,:), v1x2(ii,:) ) 
-                IF ( v2x_is_out ) CALL print_diff( 'V2x', v2x1(ii,:), v2x2(ii,:) ) 
-                IF ( v3x_is_out ) CALL print_diff( 'V3x', v3x1(ii,:), v3x2(ii,:) ) 
-                IF ( v1c_is_out ) CALL print_diff( 'V1c', v1c1(ii,:), v1c2(ii,:) ) 
+              IF (.NOT. ENERGY_ONLY) THEN
+                IF ( v1x_is_out ) CALL print_diff( 'V1x', v1x1(ii,:), v1x2(ii,:) )
+                IF ( v2x_is_out ) CALL print_diff( 'V2x', v2x1(ii,:), v2x2(ii,:) )
+                IF ( v1c_is_out ) CALL print_diff( 'V1c', v1c1(ii,:), v1c2(ii,:) )
                 IF ( v2c_is_out ) CALL print_diff( 'V2c', v2c1(ii,:), v2c2(ii,:) ) 
+                IF ( v3x_is_out ) CALL print_diff( 'V3x', v3x1(ii,:), v3x2(ii,:) ) 
                 IF ( v3c_is_out ) CALL print_diff( 'V3c', v3c1(ii,:), v3c2(ii,:) ) 
               ENDIF !not energy only 
               ! 
@@ -1320,7 +1338,7 @@ PROGRAM xclib_test
      ! 
      ! ... THRESHOLD TEST 
      ! 
-     IF ( mype/=root ) THEN 
+     IF ( mype==root ) THEN 
        !
        IF (test/='gen-benchmark') THEN
          WRITE(stdout,*) " "  
@@ -1349,8 +1367,8 @@ PROGRAM xclib_test
              WRITE(stdout,402) rhoi(1), rhoi(2)    
              grho2(1) = grhoi(1,1)**2 + grhoi(2,1)**2 + grhoi(3,1)**2    
              grho2(2) = grhoi(1,2)**2 + grhoi(2,2)**2 + grhoi(3,2)**2    
-             grho_ud  = grhoi(1,1) * grhoi(1,2) + &    
-                        grhoi(2,1) * grhoi(2,2) + &    
+             grho_ud  = grhoi(1,1) * grhoi(1,2) + &
+                        grhoi(2,1) * grhoi(2,2) + &
                         grhoi(3,1) * grhoi(3,2)    
              WRITE(stdout,503) grho2(1), grho_ud, grho2(2) 
              WRITE(stdout,602) taui(1), taui(2) 
@@ -1361,11 +1379,11 @@ PROGRAM xclib_test
          CALL print_diff( 'Ex', ex1(nnrb+ithr:nnrb+ithr), ex2(nnrb+ithr:nnrb+ithr) )    
          CALL print_diff( 'Ec', ec1(nnrb+ithr:nnrb+ithr), ec2(nnrb+ithr:nnrb+ithr) )    
          IF (.NOT. ENERGY_ONLY) THEN    
-           CALL print_diff( 'V1x', v1x1(nnrb+ithr,:), v1x2(nnrb+ithr,:) )    
-           CALL print_diff( 'V2x', v2x1(nnrb+ithr,:), v2x2(nnrb+ithr,:) )    
-           CALL print_diff( 'V3x', v3x1(nnrb+ithr,:), v3x2(nnrb+ithr,:) )    
-           CALL print_diff( 'V1c', v1c1(nnrb+ithr,:), v1c2(nnrb+ithr,:) )    
-           CALL print_diff( 'V2c', v2c1(nnrb+ithr,:), v2c2(nnrb+ithr,:) )    
+           CALL print_diff( 'V1x', v1x1(nnrb+ithr,:), v1x2(nnrb+ithr,:) ) 
+           CALL print_diff( 'V2x', v2x1(nnrb+ithr,:), v2x2(nnrb+ithr,:) )
+           CALL print_diff( 'V1c', v1c1(nnrb+ithr,:), v1c2(nnrb+ithr,:) )
+           CALL print_diff( 'V2c', v2c1(nnrb+ithr,:), v2c2(nnrb+ithr,:) )
+           CALL print_diff( 'V3x', v3x1(nnrb+ithr,:), v3x2(nnrb+ithr,:) )
            CALL print_diff( 'V3c', v3c1(nnrb+ithr,:), v3c2(nnrb+ithr,:) )    
          ENDIF    
          !  
@@ -1632,7 +1650,7 @@ SUBROUTINE print_stat( what, vaver, vmax, vmin, averref )
     WRITE(stdout,*) "AVR ref : ", averref
     WRITE(stdout,*) "diff    : ", vaver(1)-averref
   ELSEIF  (test=='gen-benchmark') THEN
-    WRITE(stdout,*)  vaver(1)
+    WRITE(stdout,*) vaver(1)
   ENDIF
   !
 END SUBROUTINE print_stat
@@ -1762,7 +1780,7 @@ SUBROUTINE print_diff2( what, dxc_qe, dxc_lxc )
       WRITE(stdout,303) dxc_qe(1,1)-dxc_lxc(1,1), dxc_qe(2,1)-dxc_lxc(2,1), &
                         dxc_qe(2,2)-dxc_lxc(2,2)
     ELSE
-      WRITE(stdout,*) dxc_qe(1,1), dxc_qe(2,1), dxc_qe(2,2)
+      WRITE(stdout,*) dxc_qe(1,1), dxc_qe(2,1), dxc_qe(2,1), dxc_qe(2,2)
     ENDIF
   ENDIF
   !
@@ -1828,12 +1846,12 @@ SUBROUTINE evxc_stats( what, thr, xc_qe, xc_lxc, aver )
       CALL diff_max( thr, xc_qe(1:nnr,2), xc_lxc(1:nnr,2), xc_max(:,2) )
       CALL diff_min( thr, xc_qe(1:nnr,2), xc_lxc(1:nnr,2), xc_min(:,2) )
       !
-      IF (TRIM(what)=='v2c' .AND. GGA ) THEN
+      IF (TRIM(what)=='V2c' .AND. GGA ) THEN
         CALL diff_average( diff_thr_v_gga, v2c_ud1, v2c_ud2, vaver, nnr_int )
         CALL diff_max( diff_thr_v_gga, v2c_ud1, v2c_ud2, vmax )
         CALL diff_min( diff_thr_v_gga, v2c_ud1, v2c_ud2, vmin )
         !
-        CALL print_stat( 'cross', vaver, vmax, vmin )
+        IF (mype==root) CALL print_stat( 'cross', vaver, vmax, vmin )
       ENDIF
       !      
     ELSE
@@ -1845,7 +1863,7 @@ SUBROUTINE evxc_stats( what, thr, xc_qe, xc_lxc, aver )
       CALL MPI_REDUCE( aver_snd, aver_rec, 1, MPI_DOUBLE_PRECISION, MPI_SUM, 0, comm, ierr2 )
       xc_aver(1:1,2) = aver_rec
       !
-      IF (TRIM(what)=='v2c' .AND. GGA ) THEN
+      IF (TRIM(what)=='V2c' .AND. GGA ) THEN
         v2c_ud1_aver(1) = SUM(v2c_ud1(1:nnr))/npoints
         v2c_ud1_max(1) = MAXVAL( v2c_ud1(1:nnr) )
         v2c_ud1_min(1) = MINVAL( v2c_ud1(1:nnr) )
@@ -1854,7 +1872,7 @@ SUBROUTINE evxc_stats( what, thr, xc_qe, xc_lxc, aver )
         CALL MPI_REDUCE( aver_sndu, aver_recu, 1, MPI_DOUBLE_PRECISION, MPI_SUM, 0, comm, ierrm )
         v2c_ud1_aver(1) = aver_recu
         !
-        CALL print_stat( 'cross', v2c_ud1_aver , v2c_ud1_max, v2c_ud1_min, v2c_aver_b(1,3) )
+        IF (mype==root)CALL print_stat( 'cross', v2c_ud1_aver , v2c_ud1_max, v2c_ud1_min, v2c_aver_b(1,3) )
       ENDIF
       !
     ENDIF
