@@ -181,7 +181,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		1 ... spin-polarized calculation   
 
 		@b BEWARE:
-		not allowed if iswitch=3 (PP generation) or with full
+		not allowed if @ref iswitch=3 (PP generation) or with full
 		relativistic calculation
 	    }
 	    default { 0 }
@@ -268,7 +268,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	    info {
 		@b 'low' or @b 'high'
 
-		if @b 'high' with iswitch=2,3 prints separately core and
+		if @b 'high' with @ref iswitch=2,3 prints separately core and
 		valence contributions to the energies. Print the
 		frozen-core energy.
 	    }
@@ -425,12 +425,12 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	var pseudotype  -type INTEGER {
 	    info {
 		1 ... norm-conserving, single-projector PP
-                      IMPORTANT: if pseudotype=1 all calculations are done
+                      @b IMPORTANT: if pseudotype=1 all calculations are done
                       using the SEMILOCAL form, not the separable nonlocal form
 		
 		2 ... norm-conserving PP in separable form (obsolescent)
                       All calculations are done using SEPARABLE non-local form
-                      IMPORTANT: multiple projectors allowed but not properly
+                      @b IMPORTANT: multiple projectors allowed but not properly
                       implemented, use only if you know what you are doing
 
 		3 ... ultrasoft PP or PAW
@@ -746,15 +746,15 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
     }
 
     namelist TEST {
-	label { needed only if iswitch=2 or iswitch=4, optional if iswitch=3 }
+	label { needed only if @ref iswitch=2 or @ref iswitch=4, optional if @ref iswitch=3 }
 
 	var nconf  -type INTEGER { 
-	    info {   the number of configurations to be tested. For iswitch = 4 nconf=2 }
+	    info {   the number of configurations to be tested. For @ref iswitch=4 nconf=2 }
 	    default { 1 }
 	}
 	
 	var file_pseudo  -type CHARACTER { 
-	    status { ignored if iswitch=3 }
+	    status { ignored if @ref iswitch=3 }
 	    info { 
 		File containing the PP.
 
@@ -766,7 +766,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 
 		* otherwise, the old NC format is read.
 		
-		IMPORTANT: in the latter case, all calculations are done
+		@b IMPORTANT: in the latter case, all calculations are done
 		using the SEMILOCAL form, not the separable nonlocal form.
 		Use the UPF format if you want to test the separable form!
 	    }
@@ -800,9 +800,9 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	dimension configts -start 1 -end nconf -type CHARACTER {
 	    info {
 		A string array containing the test electronic configuration.
-                configts(nc), nc=1,nconf, has the same syntax as for "config"
+                @ref configts(nc), nc=1,@ref nconf, has the same syntax as for @ref config
                 but only VALENCE states must be included.
-		If configts(i) is not set, the electron configuration 
+		If @ref configts(i) is not set, the electron configuration 
 		is read from the cards following the namelist.
 	    }
 	}
@@ -829,8 +829,10 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	}
 
 	var rcutv  -type REAL {
-	    info {   Cutoff distance (CUT) for the inclusion of LDA-1/2 potential. 
-                     Needed (mandatory) only if iswitch = 4 }
+	    info {
+                Cutoff distance (CUT) for the inclusion of LDA-1/2 potential. 
+                Needed (mandatory) only if @ref iswitch = 4
+            }
 	    default { -1.0 }
 	}
 

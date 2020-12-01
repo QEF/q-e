@@ -109,8 +109,10 @@ libcuda_devxlib :
                 --enable-cuda-env-check=no; \
     fi; \
     make all
+	touch ../install/libcuda_devxlib # do not download and configure again
 
 libcuda_devxlib_clean:
+	rm libcuda_devxlib
 	cd ../external/devxlib; \
 	if test -f make.inc; then ($(MAKE) clean); fi
 libcuda_devxlib_veryclean:
