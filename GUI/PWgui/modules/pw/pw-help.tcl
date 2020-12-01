@@ -144,8 +144,8 @@ an interrupted calculation. Do not use to start a new one, or to
 perform a non-scf calculations.  Works only if the calculation was
 cleanly stopped using variable "max_seconds", or by user request
 with an "exit file" (i.e.: create a file "prefix".EXIT, in directory
-"outdir"; see variables "prefix", "outdir").  Overrides "startingwfc"
-and "startingpot".
+"outdir"; see variables "prefix", "outdir"). The default for
+"startingwfc" and "startingpot" is set to 'file'.
             </pre></dd>
 </dl>
 </blockquote>
@@ -170,7 +170,7 @@ This flag controls the way wavefunctions are stored to disk :
 .TRUE.  collect wavefunctions from all processors, store them
         into the output data directory "outdir"/"prefix".save
         The resulting format is portable to a different number
-        of processor, or different kind of parallelization
+        of processors, or different kind of parallelization
 
 .FALSE. OBSOLETE - NO LONGER IMPLEMENTED
         do not collect wavefunctions, leave them in temporary
@@ -456,7 +456,9 @@ optimization step are not controlled by this option )
 save charge to disk at each SCF step,
 keep wavefunctions on disk (in "distributed" format),
 save mixing data as well.
-Do not use this option unless you have a good reason to
+Do not use this option unless you have a good reason!
+It is no longer needed to specify 'high' in order to be able
+to restart from an interrupted calculation (see "restart_mode")
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
@@ -492,10 +494,7 @@ do not save anything to disk
 </dl>
 <pre>
 <b>Default</b> is <b>'low'</b> for the scf case, <b>'medium'</b> otherwise.
-Note that the needed RAM increases as disk I/O decreases!
-It is no longer needed to specify 'high' in order to be able
-to restart from an interrupted calculation (see "restart_mode")
-but you cannot restart in "disk_io"=='nowf' or 'none'
+Note that the needed RAM increases as disk I/O decreases
             </pre>
 </blockquote>
 </ul>      
@@ -1080,31 +1079,36 @@ help starting_magnetization -helpfmt helpdoc -helptext {
 <li> <em>Variables: </em><big><b>starting_magnetization(i), i=1,ntyp</b></big>
 </li>
 <br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0
+         </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
 Starting spin polarization on atomic type 'i' in a spin
-polarized calculation. Values range between -1 (all spins
-down for the valence electrons of atom type 'i') to 1
-(all spins up). Breaks the symmetry and provides a starting
-point for self-consistency. The default value is zero, BUT a
-value MUST be specified for AT LEAST one atomic type in spin
-polarized calculations, unless you constrain the magnetization
-(see "tot_magnetization" and "constrained_magnetization").
-Note that if you start from zero initial magnetization, you
-will invariably end up in a nonmagnetic (zero magnetization)
-state. If you want to start from an antiferromagnetic state,
-you may need to define two different atomic species
-corresponding to sublattices of the same atomic type.
-starting_magnetization is ignored if you are performing a
-non-scf calculation, if you are restarting from a previous
-run, or restarting from an interrupted run.
-If you fix the magnetization with "tot_magnetization",
-you should not specify starting_magnetization.
-In the spin-orbit case starting with zero
+polarized (LSDA or noncollinear/spin-orbit) calculation.
+Allowed values range between -1 (all spins down for the
+valence electrons of atom type 'i') to 1 (all spins up).
+If you expect a nonzero magnetization in your ground state,
+you MUST either specify a nonzero value for at least one
+atomic type, or constrain the magnetization using variable
+"tot_magnetization" for LSDA, "constrained_magnetization"
+for noncollinear/spin-orbit calculations. If you don't,
+you will get a nonmagnetic (zero magnetization) state.
+In order to perform LSDA calculations for an antiferromagnetic
+state, define two different atomic species corresponding to
+sublattices of the same atomic type.
+
+<b>NOTE 1:</b> "starting_magnetization" is ignored in most BUT NOT ALL
+cases in non-scf calculations: it is safe to keep the same
+values for the scf and subsequent non-scf calculation.
+
+<b>NOTE 2:</b> If you fix the magnetization with
+"tot_magnetization", do not specify "starting_magnetization".
+
+<b>NOTE 3:</b> In the noncollinear/spin-orbit case, starting with zero
 starting_magnetization on all atoms imposes time reversal
-symmetry. The magnetization is never calculated and
-kept zero (the internal variable domag is .FALSE.).
+symmetry. The magnetization is never calculated and is
+set to zero (the internal variable domag is set to .FALSE.).
          </pre></blockquote>
 </ul>      
       
@@ -1907,13 +1911,14 @@ is not configured there.
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Specify "lda_plus_u" = .TRUE. to enable DFT+U calculations
+Specify "lda_plus_u" = .TRUE. to enable <b>DFT+U,</b> <b>DFT+U+V,</b> or <b>DFT+U+J</b> calculations.
 See: Anisimov, Zaanen, and Andersen, "PRB 44, 943 (1991)";
      Anisimov et al., "PRB 48, 16929 (1993)";
      Liechtenstein, Anisimov, and Zaanen, "PRB 52, R5467 (1994)".
-You must specify, for each species with a U term, the value of
-U and (optionally) alpha, J of the Hubbard model (all in eV):
-see "lda_plus_u_kind", "Hubbard_U", "Hubbard_alpha", "Hubbard_J"
+You must specify, for each Hubbard atom, the value of
+U and (optionally) V, J, alpha of the Hubbard model (all in eV):
+see "lda_plus_u_kind", "Hubbard_U", "Hubbard_V",
+"Hubbard_J", "Hubbard_alpha"
          </pre></blockquote>
 </ul>      
       
@@ -1930,18 +1935,32 @@ help lda_plus_u_kind -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre>
-Specifies the type of calculation:
-
-   0   DFT+U simplified version of Cococcioni and de Gironcoli,
-       "PRB 71, 035105 (2005)", using "Hubbard_U"
-
-   1   DFT+U rotationally invariant scheme of Liechtenstein et al.,
-       using "Hubbard_U" and "Hubbard_J"
-
-   2   DFT+U+V simplified version of Campo Jr and Cococcioni,
-       J. Phys.: Condens. Matter 22, 055602 (2010), using "Hubbard_V"
-         </pre></blockquote>
+<blockquote>
+<pre> Specifies the type of calculation:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>0</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+DFT+U simplified version of Cococcioni and de Gironcoli,
+"PRB 71, 035105 (2005)", using "Hubbard_U"
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>1</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+DFT+U rotationally invariant scheme of Liechtenstein et al.,
+using "Hubbard_U" and "Hubbard_J"
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><b>2</b> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+DFT+U+V simplified version of Campo Jr and Cococcioni,
+J. Phys.: Condens. Matter 22, 055602 (2010), "doi:10.1088/0953-8984/22/5/055602",
+using "Hubbard_V"
+            </pre></dd>
+</dl>
+</blockquote>
 </ul>      
       
 }
@@ -1996,9 +2015,14 @@ help Hubbard_alpha -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Hubbard_alpha(i) is the perturbation (on atom i, in eV)
-used to compute U with the linear-response method of
+used to compute U (and V) with the linear-response method of
 Cococcioni and de Gironcoli, "PRB 71, 035105 (2005)"
-(only for "lda_plus_u_kind"=0)
+(only for "lda_plus_u_kind"=0 and 2).
+
+Note: Hubbard U and V can be computed using the HP code
+which is based on density-functional perturbation theory,
+and it gives exactly the same result as the method of
+Cococcioni and de Gironcoli.
          </pre></blockquote>
 </ul>      
       
@@ -2019,7 +2043,7 @@ help Hubbard_beta -helpfmt helpdoc -helptext {
 Hubbard_beta(i) is the perturbation (on atom i, in eV)
 used to compute J0 with the linear-response method of
 Cococcioni and de Gironcoli, "PRB 71, 035105 (2005)"
-(only for "lda_plus_u_kind"=0). See also
+(only for "lda_plus_u_kind"=0 and 2). See also
 "PRB 84, 115108 (2011)".
          </pre></blockquote>
 </ul>      
@@ -2346,8 +2370,8 @@ LAMBDA * SUM_{i,itype} ( magnetic_moment(i,itype) - mcons(i,itype) )**2
 where i runs over the cartesian components (or just z
 in the collinear case) and itype over the types (1-ntype).
 mcons(:,:) array is defined from starting_magnetization,
-(and angle1, angle2 in the non-collinear case). lambda is
-a real number
+(also from angle1, angle2 in the noncollinear case).
+lambda is a real number
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">
@@ -3088,7 +3112,7 @@ help uniqueb -helpfmt helpdoc -helptext {
 Used only for monoclinic lattices. If .TRUE. the b
 unique ibrav (-12 or -13) are used, and symmetry
 equivalent positions are chosen assuming that the
-two fold axis or the mirror normal is parallel to the
+twofold axis or the mirror normal is parallel to the
 b axis. If .FALSE. it is parallel to the c axis.
          </pre></blockquote>
 </ul>      

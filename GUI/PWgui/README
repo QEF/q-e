@@ -44,6 +44,7 @@ Currently, the following PWscf programs (modules) are supported:
  * bands.x
  * dos.x
  * ld1.x (atomic)
+ * hp.x
 
 Directory structure of the PWgui source package:
 
@@ -106,4 +107,4 @@ following:
 
 
 --
-Anton Kokalj (tone.kokalj@ijs.si), Mon Jan 23 12:28:40 CET 2012
+Anton Kokalj (tone.kokalj@ijs.si), 29 Nov 2020 

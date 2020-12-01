@@ -15,14 +15,12 @@ set(sources_util
     util_param.f90
     thread_util.f90
     export_gstart_2_solvers.f90
-    set_mpi_comm_4_solvers.f90
-)
+    set_mpi_comm_4_solvers.f90)
 
 set(sources_util_tests
     tests/tester.f90
     tests/utils.f90
-    tests/mp_world.f90
-)
+    tests/mp_world.f90)
 
 qe_add_library(qe_utilx ${sources_util})
 add_library(QE::UTILX ALIAS qe_utilx)
@@ -79,8 +77,8 @@ set(source_names
     test_mp_sum_iv_buffer
     test_mp_sum_rv_buffer
     test_mp_sum_iv_buffer_gpu
-    test_mp_sum_rv_buffer_gpu
-)
+    test_mp_sum_rv_buffer_gpu)
+    
 # TODO rename all sources *.f90 -> *.F90
 FOREACH(NAME ${source_names})
     set(sources tests/${NAME}.f90)

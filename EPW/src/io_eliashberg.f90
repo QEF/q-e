@@ -1787,7 +1787,7 @@
       ! SP - July 2020      
       ! We should not recompute bztoibz
       DO ikbz = 1, nkftot
-        ixkff(ikbz) = ixkf(map_rebal(bztoibz(ikbz)))
+        ixkff(ikbz) = ixkf(bztoibz(ikbz))
       ENDDO
       !
     ELSE

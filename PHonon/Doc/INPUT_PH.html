@@ -46,7 +46,7 @@
 <tr><th style="margin: 3 3 3 10; background: #005789; background: linear-gradient(rgba(0,87,137,1),rgba(0,119,189,1)); color: #ffffee; ">
 <h1 style="margin: 10 10 10 15; text-align: left;"> Input File Description </h1>
 <h2 style="margin: 10 10 10 15; text-align: left;"> Program:
-	      ph.x / PWscf / Quantum Espresso<span style="font-weight: normal;"> (version: 6.6)</span>
+	      ph.x / PWscf / Quantum Espresso<span style="font-weight: normal;"> (version: 6.7)</span>
 </h2>
 </th></tr>
 <tr><td style="padding: 10 3 3 3; background: #ffffff; color: #222222; ">
@@ -59,17 +59,17 @@
    <p><a href="#idm15">Line-of-input:</a> <a href="#idm16">title_line</a></p>
    <p><a href="#idm18">&amp;INPUTPH</a></p>
 <blockquote>
-<a href="#idm19">amass</a> | <a href="#idm22">outdir</a> | <a href="#idm27">prefix</a> | <a href="#idm30">niter_ph</a> | <a href="#idm33">tr2_ph</a> | <a href="#idm36">alpha_mix(niter)</a> | <a href="#idm39">nmix_ph</a> | <a href="#idm42">verbosity</a> | <a href="#idm48">reduce_io</a> | <a href="#idm51">max_seconds</a> | <a href="#idm54">fildyn</a> | <a href="#idm57">fildrho</a> | <a href="#idm60">fildvscf</a> | <a href="#idm63">epsil</a> | <a href="#idm67">lrpa</a> | <a href="#idm70">lnoloc</a> | <a href="#idm73">trans</a> | <a href="#idm78">lraman</a> | <a href="#idm84">eth_rps</a> | <a href="#idm87">eth_ns</a> | <a href="#idm90">dek</a> | <a href="#idm93">recover</a> | <a href="#idm96">low_directory_check</a> | <a href="#idm99">only_init</a> | <a href="#idm102">qplot</a> | <a href="#idm105">q2d</a> | <a href="#idm108">q_in_band_form</a> | <a href="#idm111">electron_phonon</a> | <a href="#idm130">el_ph_nsigma</a> | <a href="#idm133">el_ph_sigma</a> | <a href="#idm139">ahc_dir</a> | <a href="#idm142">ahc_nbnd</a> | <a href="#idm145">ahc_nbndskip</a> | <a href="#idm153">skip_upperfan</a> | <a href="#idm156">lshift_q</a> | <a href="#idm159">zeu</a> | <a href="#idm165">zue</a> | <a href="#idm170">elop</a> | <a href="#idm173">fpol</a> | <a href="#idm177">ldisp</a> | <a href="#idm183">nogg</a> | <a href="#idm186">asr</a> | <a href="#idm189">ldiag</a> | <a href="#idm194">lqdir</a> | <a href="#idm199">search_sym</a> | <a href="#idm203">nq1</a> | <a href="#idm204">nq2</a> | <a href="#idm205">nq3</a> | <a href="#idm210">nk1</a> | <a href="#idm211">nk2</a> | <a href="#idm212">nk3</a> | <a href="#idm213">k1</a> | <a href="#idm214">k2</a> | <a href="#idm215">k3</a> | <a href="#idm218">diagonalization</a> | <a href="#idm224">read_dns_bare</a> | <a href="#idm227">ldvscf_interpolate</a> | <a href="#idm233">wpot_dir</a> | <a href="#idm236">do_long_range</a> | <a href="#idm239">do_charge_neutral</a> | <a href="#idm245">start_irr</a> | <a href="#idm255">last_irr</a> | <a href="#idm265">nat_todo</a> | <a href="#idm270">modenum</a> | <a href="#idm275">start_q</a> | <a href="#idm286">last_q</a> | <a href="#idm298">dvscf_star</a> | <a href="#idm306">drho_star</a>
+<a href="#idm19">amass</a> | <a href="#idm22">outdir</a> | <a href="#idm27">prefix</a> | <a href="#idm30">niter_ph</a> | <a href="#idm33">tr2_ph</a> | <a href="#idm36">alpha_mix(niter)</a> | <a href="#idm39">nmix_ph</a> | <a href="#idm42">verbosity</a> | <a href="#idm48">reduce_io</a> | <a href="#idm51">max_seconds</a> | <a href="#idm54">fildyn</a> | <a href="#idm57">fildrho</a> | <a href="#idm64">fildvscf</a> | <a href="#idm67">epsil</a> | <a href="#idm74">lrpa</a> | <a href="#idm77">lnoloc</a> | <a href="#idm80">trans</a> | <a href="#idm85">lraman</a> | <a href="#idm91">eth_rps</a> | <a href="#idm94">eth_ns</a> | <a href="#idm97">dek</a> | <a href="#idm100">recover</a> | <a href="#idm103">low_directory_check</a> | <a href="#idm106">only_init</a> | <a href="#idm109">qplot</a> | <a href="#idm112">q2d</a> | <a href="#idm115">q_in_band_form</a> | <a href="#idm118">electron_phonon</a> | <a href="#idm137">el_ph_nsigma</a> | <a href="#idm140">el_ph_sigma</a> | <a href="#idm146">ahc_dir</a> | <a href="#idm149">ahc_nbnd</a> | <a href="#idm152">ahc_nbndskip</a> | <a href="#idm160">skip_upperfan</a> | <a href="#idm163">lshift_q</a> | <a href="#idm166">zeu</a> | <a href="#idm172">zue</a> | <a href="#idm177">elop</a> | <a href="#idm180">fpol</a> | <a href="#idm184">ldisp</a> | <a href="#idm190">nogg</a> | <a href="#idm193">asr</a> | <a href="#idm196">ldiag</a> | <a href="#idm201">lqdir</a> | <a href="#idm206">search_sym</a> | <a href="#idm210">nq1</a> | <a href="#idm211">nq2</a> | <a href="#idm212">nq3</a> | <a href="#idm217">nk1</a> | <a href="#idm218">nk2</a> | <a href="#idm219">nk3</a> | <a href="#idm220">k1</a> | <a href="#idm221">k2</a> | <a href="#idm222">k3</a> | <a href="#idm225">diagonalization</a> | <a href="#idm231">read_dns_bare</a> | <a href="#idm234">ldvscf_interpolate</a> | <a href="#idm240">wpot_dir</a> | <a href="#idm243">do_long_range</a> | <a href="#idm246">do_charge_neutral</a> | <a href="#idm252">start_irr</a> | <a href="#idm262">last_irr</a> | <a href="#idm272">nat_todo</a> | <a href="#idm277">modenum</a> | <a href="#idm282">start_q</a> | <a href="#idm293">last_q</a> | <a href="#idm305">dvscf_star</a> | <a href="#idm313">drho_star</a>
 </blockquote>
-   <p><a href="#idm318">Line-of-input:</a> <a href="#idm319"> xq(1)  xq(2)  xq(3)
+   <p><a href="#idm325">Line-of-input:</a> <a href="#idm326"> xq(1)  xq(2)  xq(3)
                </a></p>
-<p><a href="#idm327">qPointsSpecs</a></p>
+<p><a href="#idm334">qPointsSpecs</a></p>
 <blockquote>
-<a href="#idm330">nqs</a> | <a href="#idm338">xq1</a> | <a href="#idm339">xq2</a> | <a href="#idm340">xq3</a> | <a href="#idm341">nq</a>
+<a href="#idm337">nqs</a> | <a href="#idm345">xq1</a> | <a href="#idm346">xq2</a> | <a href="#idm347">xq3</a> | <a href="#idm348">nq</a>
 </blockquote>
-   <p><a href="#idm345">Line-of-input:</a> <a href="#idm346"> atom(1)  atom(2) ... atom(nat_todo)
+   <p><a href="#idm352">Line-of-input:</a> <a href="#idm353"> atom(1)  atom(2) ... atom(nat_todo)
                </a></p>
-   <p><a href="#idm350"> ADDITIONAL INFORMATION </a></p>
+   <p><a href="#idm357"> ADDITIONAL INFORMATION </a></p>
 </blockquote>
 </blockquote>
    <blockquote>
@@ -320,13 +320,13 @@ vnew(in) = alpha_mix*vold(out) + (1-alpha_mix)*vold(in)
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
 File where the charge density responses are written. Note that the file
-                  will actually be saved as ${outdir}/_ph0/${prefix}.${fildrho}1
-                  where  ${outdir}, ${prefix} and ${fildrho} are the values of the
-                  corresponding input variables
+will actually be saved as <b>${outdir}/_ph0/${prefix}.${fildrho}1</b>
+where  <b>${outdir},</b> <b>${prefix}</b> and <b>${fildrho}</b> are the values of the
+corresponding input variables
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm60"></a><a name="fildvscf"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm64"></a><a name="fildvscf"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fildvscf</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -342,7 +342,7 @@ File where the the potential variation is written
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm63"></a><a name="epsil"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm67"></a><a name="epsil"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">epsil</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -357,10 +357,14 @@ If .true. in a q=0 calculation for a non metal the
 macroscopic dielectric constant of the system is
 computed. Do not set <a href="#epsil">epsil</a> to .true. if you have a
 metallic system or q/=0: the code will complain and stop.
+
+Note: the input value of <a href="#epsil">epsil</a> will be ignored if <a href="#ldisp">ldisp</a>=.true.
+(the code will automatically set <a href="#epsil">epsil</a> to .false. for metals,
+to .true. for insulators: see routine PHonon/PH/prepare_q.f90).
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm67"></a><a name="lrpa"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm74"></a><a name="lrpa"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lrpa</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -376,7 +380,7 @@ RPA level with DV_xc=0.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm70"></a><a name="lnoloc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm77"></a><a name="lnoloc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lnoloc</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -392,7 +396,7 @@ local fields, i.e. by setting DV_H=0 and DV_xc=0.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm73"></a><a name="trans"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm80"></a><a name="trans"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">trans</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -409,7 +413,7 @@ calculated.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm78"></a><a name="lraman"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm85"></a><a name="lraman"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lraman</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -429,7 +433,7 @@ M. Lazzeri and F. Mauri, <a href="https://journals.aps.org/prl/abstract/10.1103/
       <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
          <p><b> Optional variables for Raman:
          </b></p>
-         <a name="idm84"></a><a name="eth_rps"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+         <a name="idm91"></a><a name="eth_rps"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">eth_rps</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
@@ -443,7 +447,7 @@ M. Lazzeri and F. Mauri, <a href="https://journals.aps.org/prl/abstract/10.1103/
             </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-         <a name="idm87"></a><a name="eth_ns"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+         <a name="idm94"></a><a name="eth_ns"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">eth_ns</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
@@ -457,7 +461,7 @@ M. Lazzeri and F. Mauri, <a href="https://journals.aps.org/prl/abstract/10.1103/
             </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-         <a name="idm90"></a><a name="dek"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+         <a name="idm97"></a><a name="dek"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">dek</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
@@ -472,7 +476,7 @@ M. Lazzeri and F. Mauri, <a href="https://journals.aps.org/prl/abstract/10.1103/
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
       </td></tr></table>
-      <a name="idm93"></a><a name="recover"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm100"></a><a name="recover"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">recover</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -486,7 +490,7 @@ M. Lazzeri and F. Mauri, <a href="https://journals.aps.org/prl/abstract/10.1103/
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm96"></a><a name="low_directory_check"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm103"></a><a name="low_directory_check"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">low_directory_check</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -502,7 +506,7 @@ If .true. search in the phsave directory only the
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm99"></a><a name="only_init"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm106"></a><a name="only_init"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">only_init</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -518,7 +522,7 @@ If .true. only the bands and other initialization quantities are calculated.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm102"></a><a name="qplot"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm109"></a><a name="qplot"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">qplot</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -532,7 +536,7 @@ If .true. only the bands and other initialization quantities are calculated.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm105"></a><a name="q2d"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm112"></a><a name="q2d"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">q2d</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -551,7 +555,7 @@ and three are the number of points in the two directions.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm108"></a><a name="q_in_band_form"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm115"></a><a name="q_in_band_form"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">q_in_band_form</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -571,7 +575,7 @@ input is calculated. The weights are not used.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm111"></a><a name="electron_phonon"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm118"></a><a name="electron_phonon"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">electron_phonon</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -651,7 +655,7 @@ the use of a different (larger) k-point grid.
 </blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm130"></a><a name="el_ph_nsigma"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm137"></a><a name="el_ph_nsigma"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">el_ph_nsigma</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -667,7 +671,7 @@ electron-phonon coupling calculation.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm133"></a><a name="el_ph_sigma"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm140"></a><a name="el_ph_sigma"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">el_ph_sigma</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
@@ -686,7 +690,7 @@ an electron-phonon coupling calculation.
       <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
          <p><b> Variables for <a href="#electron_phonon">electron_phonon</a> = 'ahc':
          </b></p>
-         <a name="idm139"></a><a name="ahc_dir"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+         <a name="idm146"></a><a name="ahc_dir"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ahc_dir</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -701,7 +705,7 @@ Directory where the output binary files are written.
             </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-         <a name="idm142"></a><a name="ahc_nbnd"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+         <a name="idm149"></a><a name="ahc_nbnd"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ahc_nbnd</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -716,7 +720,7 @@ Number of bands for which the electron self-energy is to be computed.
             </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-         <a name="idm145"></a><a name="ahc_nbndskip"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+         <a name="idm152"></a><a name="ahc_nbndskip"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ahc_nbndskip</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -734,7 +738,7 @@ exceed nbnd of the preceding SCF or NSCF calculation.
             </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-         <a name="idm153"></a><a name="skip_upperfan"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+         <a name="idm160"></a><a name="skip_upperfan"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">skip_upperfan</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -751,7 +755,7 @@ involves solving the Sternheimer equation.
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
       </td></tr></table>
-      <a name="idm156"></a><a name="lshift_q"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm163"></a><a name="lshift_q"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lshift_q</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -768,7 +772,7 @@ When this option is set, the q2r.x code cannot be used.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm159"></a><a name="zeu"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm166"></a><a name="zeu"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">zeu</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -786,7 +790,7 @@ and <a href="#zeu">zeu</a>=.false. only the dielectric tensor is calculated.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm165"></a><a name="zue"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm172"></a><a name="zue"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">zue</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -805,7 +809,7 @@ The results should be the same within numerical noise.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm170"></a><a name="elop"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm177"></a><a name="elop"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">elop</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -820,7 +824,7 @@ If .true. calculate electro-optic tensor.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm173"></a><a name="fpol"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm180"></a><a name="fpol"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fpol</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -837,7 +841,7 @@ see example09 for calculation of methane ).
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm177"></a><a name="ldisp"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm184"></a><a name="ldisp"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ldisp</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -854,7 +858,7 @@ calculation of the entire phonon dispersion.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm183"></a><a name="nogg"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm190"></a><a name="nogg"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nogg</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -874,7 +878,7 @@ minimum, as it is done in code phcg.x.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm186"></a><a name="asr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm193"></a><a name="asr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">asr</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -890,7 +894,7 @@ Works only in conjunction with "gamma_gamma" tricks (see above)
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm189"></a><a name="ldiag"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm196"></a><a name="ldiag"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ldiag</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -911,7 +915,7 @@ correct. The others are zero or wrong. Use with care.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm194"></a><a name="lqdir"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm201"></a><a name="lqdir"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lqdir</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -930,7 +934,7 @@ separately for each q inside the subdirectories.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm199"></a><a name="search_sym"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm206"></a><a name="search_sym"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">search_sym</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -949,7 +953,7 @@ symmetry analysis.
       <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
-<a name="idm203"></a><a name="nq1"></a>nq1, <a name="idm204"></a><a name="nq2"></a>nq2, <a name="idm205"></a><a name="nq3"></a>nq3</th>
+<a name="idm210"></a><a name="nq1"></a>nq1, <a name="idm211"></a><a name="nq2"></a>nq2, <a name="idm212"></a><a name="nq3"></a>nq3</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
 </tr>
 <tr>
@@ -967,7 +971,7 @@ in the input of pw.x.
       <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
-<a name="idm210"></a><a name="nk1"></a>nk1, <a name="idm211"></a><a name="nk2"></a>nk2, <a name="idm212"></a><a name="nk3"></a>nk3, <a name="idm213"></a><a name="k1"></a>k1, <a name="idm214"></a><a name="k2"></a>k2, <a name="idm215"></a><a name="k3"></a>k3</th>
+<a name="idm217"></a><a name="nk1"></a>nk1, <a name="idm218"></a><a name="nk2"></a>nk2, <a name="idm219"></a><a name="nk3"></a>nk3, <a name="idm220"></a><a name="k1"></a>k1, <a name="idm221"></a><a name="k2"></a>k2, <a name="idm222"></a><a name="k3"></a>k3</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
 </tr>
 <tr>
@@ -985,7 +989,7 @@ with offset determined by k1,k2,k3.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm218"></a><a name="diagonalization"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm225"></a><a name="diagonalization"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">diagonalization</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -1017,7 +1021,7 @@ Slower than 'david' but uses less memory and is
 </blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm224"></a><a name="read_dns_bare"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm231"></a><a name="read_dns_bare"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">read_dns_bare</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -1040,7 +1044,7 @@ read (e.g. for restart) in order to save time.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm227"></a><a name="ldvscf_interpolate"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm234"></a><a name="ldvscf_interpolate"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ldvscf_interpolate</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -1061,7 +1065,7 @@ Requires <a href="#trans">trans</a> = .false..
       <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
          <p><b> Optional variables for dvscf interpolation:
          </b></p>
-         <a name="idm233"></a><a name="wpot_dir"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+         <a name="idm240"></a><a name="wpot_dir"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">wpot_dir</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -1079,7 +1083,7 @@ with names ${prefix}.wpot.irc${irc}//"1".
             </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-         <a name="idm236"></a><a name="do_long_range"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+         <a name="idm243"></a><a name="do_long_range"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">do_long_range</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -1100,7 +1104,7 @@ The quadrupole part is not implemented.
             </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-         <a name="idm239"></a><a name="do_charge_neutral"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+         <a name="idm246"></a><a name="do_charge_neutral"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">do_charge_neutral</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -1120,7 +1124,7 @@ charges. Used only if <a href="#do_long_range">do_long_range</a> = .true..
       <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
          <p><b> Specification of irreducible representation
          </b></p>
-         <a name="idm245"></a><a name="start_irr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+         <a name="idm252"></a><a name="start_irr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">start_irr</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -1145,7 +1149,7 @@ IMPORTANT:
             </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-         <a name="idm255"></a><a name="last_irr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+         <a name="idm262"></a><a name="last_irr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">last_irr</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -1170,7 +1174,7 @@ IMPORTANT:
             </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-         <a name="idm265"></a><a name="nat_todo"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+         <a name="idm272"></a><a name="nat_todo"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nat_todo</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -1195,7 +1199,7 @@ IMPORTANT:
             </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-         <a name="idm270"></a><a name="modenum"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+         <a name="idm277"></a><a name="modenum"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">modenum</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -1221,7 +1225,7 @@ a column of the dynamical matrix.
       <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
          <p><b> q-point specification
          </b></p>
-         <a name="idm275"></a><a name="start_q"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+         <a name="idm282"></a><a name="start_q"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">start_q</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -1246,7 +1250,7 @@ IMPORTANT:
             </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-         <a name="idm286"></a><a name="last_q"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+         <a name="idm293"></a><a name="last_q"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">last_q</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -1271,7 +1275,7 @@ IMPORTANT
             </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-         <a name="idm298"></a><a name="dvscf_star"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+         <a name="idm305"></a><a name="dvscf_star"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">dvscf_star</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">STRUCTURE</td>
@@ -1316,7 +1320,7 @@ Note2: this feature is currently untested with image parallelisation.
             </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-         <a name="idm306"></a><a name="drho_star"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+         <a name="idm313"></a><a name="drho_star"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">drho_star</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">STRUCTURE</td>
@@ -1353,7 +1357,7 @@ Notice that the defaults are different.
 </table>
    <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; width: 100%; padding: 5 5 0 5"><tr><td>
 <b>IF </b><tt><em>ldisp != .true.   and   qplot != .true.</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
-         <a name="idm318"></a><table border="0" width="100%" style="margin-bottom: 20; ">
+         <a name="idm325"></a><table border="0" width="100%" style="margin-bottom: 20; ">
 <tr><th bgcolor="#ddcba6"><h3 style="margin: 10 10 10 15; text-align: left;"> 
 	    Line of input 
 	  </h3></th></tr>
@@ -1361,13 +1365,13 @@ Notice that the defaults are different.
 <tr><td>
 <h3>Syntax:</h3>
 <blockquote>
-<i><a href="#idm319"> xq(1)  xq(2)  xq(3)
+<i><a href="#idm326"> xq(1)  xq(2)  xq(3)
                </a></i>  </blockquote>
 </td></tr>
 <tr><td>
 <h3>Description of items:</h3>
 <blockquote>
-<a name="idm319"></a><a name="xq_list"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<a name="idm326"></a><a name="xq_list"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; "> xq(1)  xq(2)  xq(3)
                </th>
@@ -1388,32 +1392,32 @@ Not used if <a href="#ldisp">ldisp</a>=.true. or <a href="#qplot">qplot</a>=.tru
 <b>ELSEIF </b><tt><em>qplot == .true.</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
          <p><b> Specification of q points when <a href="#qplot">qplot</a> == .true.
          </b></p>
-         <a name="idm327"></a><a name="qPointsSpecs"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+         <a name="idm334"></a><a name="qPointsSpecs"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
 <tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
 	    Card: <span class="card">qPointsSpecs</span> </h2></th></tr>
 <tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
 <tr><td>
 <h3>Syntax:</h3>
 <blockquote><div class="syntax">
-<i><a href="#idm330">nqs</a></i>  <br><a name="idm333"></a><table>
+<i><a href="#idm337">nqs</a></i>  <br><a name="idm340"></a><table>
 <tr>
-<td style="white-space:nowrap"> <i><a href="#idm338">xq1(1)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm339">xq2(1)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm340">xq3(1)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm341">nq(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm345">xq1(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm346">xq2(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm347">xq3(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm348">nq(1)</a></i> </td>
 </tr>
 <tr>
-<td style="white-space:nowrap"> <i><a href="#idm338">xq1(2)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm339">xq2(2)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm340">xq3(2)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm341">nq(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm345">xq1(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm346">xq2(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm347">xq3(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm348">nq(2)</a></i> </td>
 </tr>
 <tr><td colspan="2"> . . .</td></tr>
 <tr>
-<td style="white-space:nowrap"> <i><a href="#idm338">xq1(nqs)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm339">xq2(nqs)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm340">xq3(nqs)</a></i> </td>
-<td style="white-space:nowrap"> <i><a href="#idm341">nq(nqs)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm345">xq1(nqs)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm346">xq2(nqs)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm347">xq3(nqs)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm348">nq(nqs)</a></i> </td>
 </tr>
 </table>
 </div></blockquote>
@@ -1421,7 +1425,7 @@ Not used if <a href="#ldisp">ldisp</a>=.true. or <a href="#qplot">qplot</a>=.tru
 <tr><td>
 <h3>Description of items:</h3>
 <blockquote>
-<a name="idm330"></a><a name="nqs"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<a name="idm337"></a><a name="nqs"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nqs</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -1434,7 +1438,7 @@ Number of q points in the list. Used only if <a href="#qplot">qplot</a>=.true.
 <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th width="20%" align="left" valign="top" style="background: #ffff99; padding: 2 2 2 10; ">
-<a name="xq1"><a name="idm338">xq1</a></a>, <a name="xq2"><a name="idm339">xq2</a></a>, <a name="xq3"><a name="idm340">xq3</a></a>
+<a name="xq1"><a name="idm345">xq1</a></a>, <a name="xq2"><a name="idm346">xq2</a></a>, <a name="xq3"><a name="idm347">xq3</a></a>
 </th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
 </tr>
@@ -1448,7 +1452,7 @@ flags q2d and q_in_band_form. (NB: nq is integer)
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
 <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
-<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="nq"><a name="idm341">nq</a></a></th>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="nq"><a name="idm348">nq</a></a></th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
@@ -1465,7 +1469,7 @@ on the flags q2d and q_in_band_form.
 </td></tr></table>
    <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; width: 100%; padding: 5 5 0 5"><tr><td>
 <b>IF </b><tt><em>nat_todo was specified</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
-         <a name="idm345"></a><table border="0" width="100%" style="margin-bottom: 20; ">
+         <a name="idm352"></a><table border="0" width="100%" style="margin-bottom: 20; ">
 <tr><th bgcolor="#ddcba6"><h3 style="margin: 10 10 10 15; text-align: left;"> 
 	    Line of input 
 	  </h3></th></tr>
@@ -1473,13 +1477,13 @@ on the flags q2d and q_in_band_form.
 <tr><td>
 <h3>Syntax:</h3>
 <blockquote>
-<i><a href="#idm346"> atom(1)  atom(2) ... atom(nat_todo)
+<i><a href="#idm353"> atom(1)  atom(2) ... atom(nat_todo)
                </a></i>  </blockquote>
 </td></tr>
 <tr><td>
 <h3>Description of items:</h3>
 <blockquote>
-<a name="idm346"></a><a name="nat_todo_list"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<a name="idm353"></a><a name="nat_todo_list"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; "> atom(1)  atom(2) ... atom(nat_todo)
                </th>
@@ -1498,7 +1502,7 @@ calculation if <a href="#nat_todo">nat_todo</a> is specified.
       </td></tr></table></blockquote>
 </td></tr></table>
    <blockquote>
-<a name="idm350"><h3> ADDITIONAL INFORMATION </h3></a>
+<a name="idm357"><h3> ADDITIONAL INFORMATION </h3></a>
       <blockquote><pre>
 NB: The program ph.x writes on the tmp_dir/_ph0/{prefix}.phsave directory
 a file for each representation of each q point. This file is called
@@ -1507,11 +1511,11 @@ is the number of the representation. These files contain the
 contribution to the dynamical matrix of the irr representation for the
 iq point.
 
-If recover=.true. ph.x does not recalculate the
+If <a href="#recover">recover</a>=.true. ph.x does not recalculate the
 representations already saved in the tmp_dir/_ph0/{prefix}.phsave
 directory.  Moreover ph.x writes on the files patterns.#iq.xml in the
 tmp_dir/_ph0/{prefix}.phsave directory the displacement patterns that it
-is using. If recover=.true. ph.x does not recalculate the
+is using. If <a href="#recover">recover</a>=.true. ph.x does not recalculate the
 displacement patterns found in the tmp_dir/_ph0/{prefix}.phsave directory.
 
 This mechanism allows:
@@ -1556,7 +1560,7 @@ information.
 </td></tr>
 </table>
 <small>
-	  This file has been created by helpdoc utility on Fri Jul 17 10:28:27 CEST 2020.
+	  This file has been created by helpdoc utility on Sun Nov 29 12:16:13 CET 2020.
 	</small>
 </body>
 </html>

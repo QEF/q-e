@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: ld1.x /  / Quantum Espresso (version: 6.6)
+Program: ld1.x /  / Quantum Espresso (version: 6.7)
 ------------------------------------------------------------------------
 
 
@@ -217,7 +217,7 @@ NAMELIST: &INPUT
                    1 ... spin-polarized calculation
                    
                    BEWARE:
-                   not allowed if iswitch=3 (PP generation) or with full
+                   not allowed if "iswitch"=3 (PP generation) or with full
                    relativistic calculation
    Default:        0
    +--------------------------------------------------------------------
@@ -306,7 +306,7 @@ NAMELIST: &INPUT
    Default:        'low'
    Description:    'low' or 'high'
                    
-                   if 'high' with iswitch=2,3 prints separately core and
+                   if 'high' with "iswitch"=2,3 prints separately core and
                    valence contributions to the energies. Print the
                    frozen-core energy.
    +--------------------------------------------------------------------
@@ -928,13 +928,13 @@ CARD:
 ========================================================================
 NAMELIST: &TEST
 
-   NEEDED ONLY IF ISWITCH=2 OR ISWITCH=4, OPTIONAL IF ISWITCH=3
+   NEEDED ONLY IF "ISWITCH"=2 OR "ISWITCH"=4, OPTIONAL IF "ISWITCH"=3
    
    +--------------------------------------------------------------------
    Variable:       nconf
    
    Type:           INTEGER
-   Description:    the number of configurations to be tested. For iswitch = 4 nconf=2
+   Description:    the number of configurations to be tested. For "iswitch"=4 nconf=2
    Default:        1
    +--------------------------------------------------------------------
    
@@ -942,7 +942,7 @@ NAMELIST: &TEST
    Variable:       file_pseudo
    
    Type:           CHARACTER
-   Status:         ignored if iswitch=3
+   Status:         ignored if "iswitch"=3
    Description:    File containing the PP.
                    
                    * If the file name contains  ".upf" or ".UPF",
@@ -986,9 +986,10 @@ NAMELIST: &TEST
    Variable:       configts(i), i=1,nconf
    
    Type:           CHARACTER
-   Description:    A string containing the test valence electronic
-                   configuration nc, nc=1,nconf. Same syntax as for "config".
-                   If configts(i) is not set, the electron configuration
+   Description:    A string array containing the test electronic configuration.
+                   "configts"(nc), nc=1,"nconf", has the same syntax as for "config"
+                   but only VALENCE states must be included.
+                   If "configts"(i) is not set, the electron configuration
                    is read from the cards following the namelist.
    +--------------------------------------------------------------------
    
@@ -1020,7 +1021,7 @@ NAMELIST: &TEST
    
    Type:           REAL
    Description:    Cutoff distance (CUT) for the inclusion of LDA-1/2 potential.
-                                     Needed (mandatory) only if iswitch = 4
+                   Needed (mandatory) only if "iswitch" = 4
    Default:        -1.0
    +--------------------------------------------------------------------
    
@@ -1265,4 +1266,4 @@ CARD:
       
 
 
-This file has been created by helpdoc utility on Fri Jul 17 10:28:35 CEST 2020
+This file has been created by helpdoc utility on Sun Nov 29 12:43:43 CET 2020
