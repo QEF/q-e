@@ -335,11 +335,11 @@ CONTAINS
 #ifdef __CUDA
   SUBROUTINE c2psi_gamma_gpu( desc, psi, c, ca )
      !
-     !  Copy wave-functions from 1D array (c_bgrp) to 3D array (psi) in Fourier space
+     !  Copy wave-functions from 1D array (c_bgrp) to 3D array (psi) in Fourier space,
+     !  GPU implementation.
      !
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
-     !!DIR$ IGNORE_TKR c, ca
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      complex(DP), DEVICE, INTENT(OUT) :: psi(:)
      complex(DP), DEVICE, INTENT(IN) :: c(:)

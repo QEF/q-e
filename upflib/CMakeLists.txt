@@ -34,7 +34,7 @@ set(sources
     write_upf_schema.f90 
     write_upf_v2.f90 
     xmltools.f90
-)
+    ylmr2.f90)
 
 qe_add_library(qe_upflib ${sources})
 add_library(QE::UPF ALIAS qe_upflib)
@@ -42,7 +42,7 @@ target_link_libraries(qe_upflib
     PRIVATE
         QE::MPI_Fortran
         QE::LAPACK
-    PUBLIC
+        QE::UTILX
         QE::FOX)
 
 ##############################################################
@@ -53,24 +53,21 @@ qe_add_executable(qe_upflib_virtual_v2_exe ${sources})
 set_target_properties(qe_upflib_virtual_v2_exe PROPERTIES OUTPUT_NAME virtual_v2.x) 
 target_link_libraries(qe_upflib_virtual_v2_exe 
       PRIVATE 
-        QE::UPF
-)
+        QE::UPF)
+
 ###########################################################
 # upfconv.x
 ###########################################################
 set(sources 
     upfconv.f90 
-    casino_pp.f90 
-)
+    casino_pp.f90 )
 qe_add_executable(qe_upflib_upfconv_exe ${sources}) 
 set_target_properties(qe_upflib_upfconv_exe PROPERTIES OUTPUT_NAME upfconv.x)
 target_link_libraries(qe_upflib_upfconv_exe
                       PRIVATE
-                      QE::UPF
-)
+                      QE::UPF)
 
 ############################################################################
 qe_install_targets(qe_upflib
                    qe_upflib_virtual_v2_exe
-                   qe_upflib_upfconv_exe
-)
+                   qe_upflib_upfconv_exe)

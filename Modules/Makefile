@@ -151,7 +151,6 @@ test_input_file.o \
 date_and_tim.o \
 volume.o \
 dylmr2.o \
-ylmr2.o \
 wgauss.o \
 w0gauss.o \
 w1gauss.o \

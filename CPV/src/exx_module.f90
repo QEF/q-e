@@ -320,10 +320,10 @@ CONTAINS
           & The exx_me_rcut_self should be set smaller than half the minimum cell length',1)
       !
       IF(fftx_ntgrp(dffts).GT.1) CALL errore('exx_module','EXX calculation error : &
-          & taskgroup (-ntg) > 1 needed for zeta>1 calculations currently broken and will&
-          & be fixed in an up-coming major update. Please contact Robert A. DiStasio Jr.&
+          & taskgroup (-ntg) > 1 needed for zeta>1 calculations currently unavailable and will&
+          & become available in the next major update. Please contact Robert A. DiStasio Jr.&
           & (distasio@cornell.edu) if you should need assistance reverting to an earlier&
-          & version with working taskgroup supoprt.',1)
+          & version with working taskgroup support.',1)
       !
       IF(nproc_image.GE.nbsp) THEN
         !

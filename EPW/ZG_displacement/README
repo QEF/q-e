@@ -55,17 +55,20 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
     temperature dependent properties. For help, please see the example folder by "tar -xvf example.tar.gz". 
     In file "example/silicon/ZG_displacement_generation/inputs/ZG_444.in" we show the example for 
     constructing a 4x4x4 ZG-configuration. One could potentially generate any supercell size
-    by simply changing "dimx","dimy","dimz", and the list of q-points (see below). 
+    by simply changing "dimx","dimy","dimz", and the list of q-points (optional, see below). 
     "ZG.in" has the standard format as a "matdyn.in" file for Quantum Espresso. 
     Here we use the following input parameters:
     ---------------------------------------------------------------------------------------
     i) "ZG_conf"            : Logical flag that enables the creation of the ZG-displacement. 
-                              (default .false.) 
+                              (default .true.) 
        "T"                  : Real number indicating the temperature at which the calculations will be performed. 
                               "T" essentially defines the amplitude of the normal coordinates. 
                               (default 0.00)
-       "dimx","dimy","dimz" : Integers corresponding to the dimensionality of the supercell.
-                              (default 0,0,0)
+       "dimx","dimy","dimz" : Integers corresponding to the dimensionality of the supercell i.e.:
+                              size of supercell will be [dimx * a(1), dimy * a(2), dimz * a(3)],
+                              where a(1), a(2), a(3) are the lattice vectors of the unit cell used
+                              to compute the phonons.
+                              (default 0, 0, 0)
        "atm_zg(1), etc.."   : String describing the element of each atomic species
                               (default "Element")
        "synch"              : Logical flag that enables the synchronization of the modes. 
@@ -86,7 +89,7 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
                               (ii) only single phonon displacements are of interest (see below) 
                               (default .true.)
        "threshold"          : Real number indicating the error at which the algorithm stops while it's 
-                              looking for possible combinations of signs. Once this limit is reached 
+                              looking for possible combinations of signs. Once this limit is reached, 
                               the ZG-displacement is constructed. The threshold is usually chosen 
                               to be less than 5% of the diagonal terms, i.e. those terms that contribute 
                               to the calculation of temperature-dependent properties. 
@@ -96,16 +99,22 @@ STEPS for generating the "ZG-displacement" for the calculation of temperature-de
        "single_phonon_displ": Logical flag that allows to displace the nuclei along single phonon modes. 
                               Use output configurations to compute electron-phonon matrix elements with a direct 
                               supercell calculation. Set the displacement to the zero point by "T = 0". 
-                              This generates the output files: "single_phonon-displacements.dat" and 
-                              "single_phonon-velocities.dat".
+                              This finite displacement should carry precisely the effect of diagonal elements of [g(q)+g(-q)].
+                              Output files: "single_phonon-displacements.dat" and "single_phonon-velocities.dat".
                               (default .false.)
-       "qlist_AB.txt"       : This file containes the q-list in crystal coordinates that appears in the "ZG_444.in" example after 
-                              the input flags. It corresponds to the q-points commensurate to the supercell size. Only one
-                              of the q-point time-reversal partners is kept for the construction of the ZG-displacement. 
-                              The calculations, for the moment, assume systems with time-reversal symmetry. 
+       "q_external"         : Logical flag that allows the use of a q-point list specified by the user in the input file. 
+                              If .false. the q-point list is specified by the supercell dimensions dimx, dimy, and dimz. 
+                              If .true. the q-point list must be provided by the user (see "qlist_AB.txt").
+                              (default .false.)
+       "qlist_AB.txt"       : This file contains the external q-list in crystal coordinates as in the "ZG_444.in" example,
+                              after the input flags. It corresponds to the q-points commensurate to the supercell size. 
+                              Only one of the q-point time-reversal partners is kept for the construction of the 
+                              ZG-displacement. The calculations, for the moment, assume systems with time-reversal symmetry. 
                               For the generation of the "qlist_AB.txt" set the q-gird in file 
-                              "example/silicon/input/qlist.in" and run "../../../src/create_qlist.x < qlist.in > qlist.out ". 
-                              Paste the output of "qlist_AB.txt" to "ZG.in" after namelist &input.
+                              "example/silicon/input/qlist.in" and run "../../../src/create_qlist.x < qlist.in > qlist.out".
+                              One can modify the "create_qlist.f90" to generate a different path for consecutive q-points.
+                              Paste the output of "qlist_AB.txt" to "ZG.in" after namelist &input. Set the flag 
+                              q_external = .true. for the code to read the list. 
                                           
     ii)  To generate the ZG-displacement run "/path_to_your_espresso/bin/ZG.x <ZG_444.in> ZG_444.out".
          This generates three output files: the "equil_pos.txt", "ZG-configuration.dat" and "ZG-velocities.dat". 
@@ -160,7 +169,6 @@ Steps:
 4. Use the output file "data_one_column.dat" to calculate the joint-density of states (JDOS) via the executable 
    "JDOS_Gaus.x" located in the "src/JDOS" folder. Command:  "/path_to/JDOS_Gaus.x <JDOS_Gaus.in > JDOS_Gaus.out". 
    For extracting the band gap from the joint-density of states follow the procedure in Ref.[Phys. Rev. B 94, 075125, (2016)].
-
 
 5. Compare your results with the data in the directory 'example/silicon/JDOS/outputs/333'. 
    Gnuplot commands are aslo given to facilitate comparison.

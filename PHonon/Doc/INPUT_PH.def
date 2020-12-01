@@ -116,10 +116,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 
         var fildrho -type CHARACTER { 
             default { ' ' }
-            info { File where the charge density responses are written. Note that the file
-                   will actually be saved as ${outdir}/_ph0/${prefix}.${fildrho}1  
-                   where  ${outdir}, ${prefix} and ${fildrho} are the values of the 
-                   corresponding input variables }
+            info {
+                File where the charge density responses are written. Note that the file
+                will actually be saved as @b {${outdir}/_ph0/${prefix}.${fildrho}1}
+                where  @b ${outdir}, @b ${prefix} and @b ${fildrho} are the values of the 
+                corresponding input variables
+            }
         }
 
         var fildvscf  -type CHARACTER { 
@@ -138,8 +140,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
                 macroscopic dielectric constant of the system is 
                 computed. Do not set @ref epsil to .true. if you have a
                 metallic system or q/=0: the code will complain and stop.
-                Note: the input value of epsil will be ignored if ldisp=.true.
-                (the code will automatically set epsil to .false. for metals,
+                
+                Note: the input value of @ref epsil will be ignored if @ref ldisp=.true.
+                (the code will automatically set @ref epsil to .false. for metals,
                 to .true. for insulators: see routine PHonon/PH/prepare_q.f90).
             }
         }
@@ -792,11 +795,11 @@ is the number of the representation. These files contain the
 contribution to the dynamical matrix of the irr representation for the
 iq point. 
 
-If recover=.true. ph.x does not recalculate the
+If @ref recover=.true. ph.x does not recalculate the
 representations already saved in the tmp_dir/_ph0/{prefix}.phsave
 directory.  Moreover ph.x writes on the files patterns.#iq.xml in the
 tmp_dir/_ph0/{prefix}.phsave directory the displacement patterns that it
-is using. If recover=.true. ph.x does not recalculate the
+is using. If @ref recover=.true. ph.x does not recalculate the
 displacement patterns found in the tmp_dir/_ph0/{prefix}.phsave directory.
 
 This mechanism allows:

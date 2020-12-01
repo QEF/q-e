@@ -41,7 +41,8 @@ write_upf.o \
 write_upf_new.o \
 write_upf_schema.o \
 write_upf_v2.o \
-xmltools.o
+xmltools.o \
+ylmr2.o
 
 -include make.gpu
 
