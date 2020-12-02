@@ -10,3 +10,6 @@
 [submodule "external/devxlib"]
 	path = external/devxlib
 	url = https://gitlab.com/max-centre/components/devicexlib.git
+[submodule "external/mbd"]
+	path = external/mbd
+	url = https://github.com/jhrmnn/libmbd.git

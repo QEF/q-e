@@ -84,6 +84,7 @@ set_vdw_corr.o \
 setqf.o \
 timestep.o\
 tsvdw.o\
+mbdlib.o\
 version.o \
 wannier_gw.o\
 wannier_new.o \

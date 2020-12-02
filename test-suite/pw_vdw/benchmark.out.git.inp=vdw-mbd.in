@@ -1,0 +1,359 @@
+
+     Program PWSCF v.6.6 starts on 20Nov2020 at 15:36:27 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Serial version
+     Waiting for input...
+     Reading input from standard input
+
+     Current dimensions of program PWSCF are:
+     Max number of different atomic species (ntypx) = 10
+     Max number of k-points (npk) =  40000
+     Max angular momentum in pseudopotentials (lmaxx) =  3
+
+     gamma-point specific algorithms are used
+
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum        6817    6817   1701               423701   423701   52923
+
+
+
+     bravais-lattice index     =            1
+     lattice parameter (alat)  =      37.7945  a.u.
+     unit-cell volume          =   53986.6738 (a.u.)^3
+     number of atoms/cell      =            6
+     number of atomic types    =            2
+     number of electrons       =        16.00
+     number of Kohn-Sham states=            8
+     kinetic-energy cutoff     =      15.0000  Ry
+     charge density cutoff     =      60.0000  Ry
+     convergence threshold     =      1.0E-08
+     mixing beta               =       0.7000
+     number of iterations used =            8  plain     mixing
+     Exchange-correlation= SLA-PW-PBX-PBC
+                           (   1   4   3   4   0   0   0)
+
+     celldm(1)=  37.794522  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (   1.000000   0.000000   0.000000 )  
+               a(2) = (   0.000000   1.000000   0.000000 )  
+               a(3) = (   0.000000   0.000000   1.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = (  1.000000  0.000000  0.000000 )  
+               b(2) = (  0.000000  1.000000  0.000000 )  
+               b(3) = (  0.000000  0.000000  1.000000 )  
+
+
+     PseudoPot. # 1 for O  read from file:
+     /home/szabi/espresso/pseudo/O.pbe-hgh.UPF
+     MD5 check sum: 631417d4da25374a53828d646ac41374
+     Pseudo is Norm-conserving, Zval =  6.0
+     Generated in analytical, separable form
+     Using radial grid of 1095 points,  1 beta functions with: 
+                l(1) =   0
+
+     PseudoPot. # 2 for H  read from file:
+     /home/szabi/espresso/pseudo/H.pbe-hgh.UPF
+     MD5 check sum: 5f350582108a937bec95f27f5610ab08
+     Pseudo is Norm-conserving, Zval =  1.0
+     Generated in analytical, separable form
+     Using radial grid of  929 points,  0 beta functions with: 
+
+     atomic species   valence    mass     pseudopotential
+        O              6.00    15.99900     O ( 1.00)
+        H              1.00     1.00790     H ( 1.00)
+
+     No symmetry found
+
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1           O   tau(   1) = (   0.4648902   0.4971970   0.5004971  )
+         2           H   tau(   2) = (   0.4488904   0.5423388   0.4994256  )
+         3           H   tau(   3) = (   0.5128761   0.5021061   0.5002611  )
+         4           O   tau(   4) = (   0.6110436   0.5013359   0.5000310  )
+         5           H   tau(   5) = (   0.6298749   0.4794169   0.5383373  )
+         6           H   tau(   6) = (   0.6296568   0.4775252   0.4627610  )
+
+     number of k points=     1
+                       cart. coord. in units 2pi/alat
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   2.0000000
+
+     Dense  grid:   211851 G-vectors     FFT dimensions: (  96,  96,  96)
+
+     Estimated max dynamical RAM per process >     172.29 MB
+
+   TS-vdW initialization
+   ---------------------
+
+   Determining TS-vdW damping function parameters...
+     ddamp = 20.000000
+     sR =  0.940000
+   Initializing species #   1 with atomic symbol O  
+     Radial grid parameter: NrgpA is  1095.
+     Radial grid parameter: gfctrA is  0.000114.
+     Radial grid parameter: dxA is  0.012500.
+     The number of valence electrons, eref, is         6.000000000000001.
+     The reference free atom volume, vref, is        23.754481633210307 bohr^3.
+     Determining intial radial grid cutoff...
+     An acceptable radial grid cutoff was determined by retaining  873 of 1095 radial grid points.
+     The magnitude of the atomic pseudo-density at the radial grid cutoff is  2.458118E-06.
+     Using this radial grid cutoff value of         6.175306138191277 au:
+     The free atom volume computed with this cutoff is        23.526242825574691 bohr^3 with an error of  0.961%.
+     Linear grid spacing was computed as:         0.007175306138191 bohr.
+     The free atom static dipole polarizability is      5.400000 bohr^3.
+     The free atom homonuclear C6 coefficient is     15.600000 Hartree bohr^6.
+     The free atom vdW radius is      3.190000 bohr.
+   Initializing species #   2 with atomic symbol H  
+     Radial grid parameter: NrgpA is   929.
+     Radial grid parameter: gfctrA is  0.000912.
+     Radial grid parameter: dxA is  0.012500.
+     The number of valence electrons, eref, is         0.999999999260514.
+     The reference free atom volume, vref, is        10.492811406045197 bohr^3.
+     Determining intial radial grid cutoff...
+     An acceptable radial grid cutoff was determined by retaining  727 of  929 radial grid points.
+     The magnitude of the atomic pseudo-density at the radial grid cutoff is  2.570415E-07.
+     Using this radial grid cutoff value of         7.964546459034777 au:
+     The free atom volume computed with this cutoff is        10.391898524434245 bohr^3 with an error of  0.962%.
+     Linear grid spacing was computed as:         0.008964546459035 bohr.
+     The free atom static dipole polarizability is      4.500000 bohr^3.
+     The free atom homonuclear C6 coefficient is      6.500000 Hartree bohr^6.
+     The free atom vdW radius is      3.100000 bohr.
+
+     Initial potential from superposition of free atoms
+
+     starting charge   15.99996, renormalised to   16.00000
+
+     negative rho (up, down):  2.554E+00 0.000E+00
+ Frequency grid relative error: 0.12418110983958286E-009                          
+ Will use parallel mode: none      
+     Starting wfcs are   12 randomized atomic wfcs
+
+     total cpu time spent up to now is        1.2 secs
+
+     Self-consistent Calculation
+
+     iteration #  1     ecut=    15.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  3.0
+
+     negative rho (up, down):  7.120E-01 0.000E+00
+ Frequency grid relative error: 0.12418110983958286E-009                          
+ Will use parallel mode: none      
+
+     total cpu time spent up to now is        2.5 secs
+
+     total energy              =     -60.57289497 Ry
+     estimated scf accuracy    <       2.56814366 Ry
+
+     iteration #  2     ecut=    15.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  2.0
+
+     negative rho (up, down):  3.547E-01 0.000E+00
+ Frequency grid relative error: 0.12418110983958286E-009                          
+ Will use parallel mode: none      
+
+     total cpu time spent up to now is        3.6 secs
+
+     total energy              =     -61.24489515 Ry
+     estimated scf accuracy    <       0.64548787 Ry
+
+     iteration #  3     ecut=    15.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  4.03E-03,  avg # of iterations =  2.0
+
+     negative rho (up, down):  4.959E-03 0.000E+00
+ Frequency grid relative error: 0.12418110983958286E-009                          
+ Will use parallel mode: none      
+
+     total cpu time spent up to now is        4.7 secs
+
+     total energy              =     -61.32300634 Ry
+     estimated scf accuracy    <       0.02299089 Ry
+
+     iteration #  4     ecut=    15.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  1.44E-04,  avg # of iterations =  2.0
+
+     negative rho (up, down):  4.589E-03 0.000E+00
+ Frequency grid relative error: 0.12418110983958286E-009                          
+ Will use parallel mode: none      
+
+     total cpu time spent up to now is        5.8 secs
+
+     total energy              =     -61.32674779 Ry
+     estimated scf accuracy    <       0.00477284 Ry
+
+     iteration #  5     ecut=    15.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  2.98E-05,  avg # of iterations =  2.0
+
+     negative rho (up, down):  9.535E-04 0.000E+00
+ Frequency grid relative error: 0.12418110983958286E-009                          
+ Will use parallel mode: none      
+
+     total cpu time spent up to now is        6.8 secs
+
+     total energy              =     -61.32670667 Ry
+     estimated scf accuracy    <       0.00069840 Ry
+
+     iteration #  6     ecut=    15.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  4.37E-06,  avg # of iterations =  2.0
+
+     negative rho (up, down):  9.175E-05 0.000E+00
+ Frequency grid relative error: 0.12418110983958286E-009                          
+ Will use parallel mode: none      
+
+     total cpu time spent up to now is        7.9 secs
+
+     total energy              =     -61.32692648 Ry
+     estimated scf accuracy    <       0.00001445 Ry
+
+     iteration #  7     ecut=    15.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  9.03E-08,  avg # of iterations =  2.0
+
+     negative rho (up, down):  5.086E-06 0.000E+00
+ Frequency grid relative error: 0.12418110983958286E-009                          
+ Will use parallel mode: none      
+
+     total cpu time spent up to now is        9.0 secs
+
+     total energy              =     -61.32693267 Ry
+     estimated scf accuracy    <       0.00000057 Ry
+
+     iteration #  8     ecut=    15.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  3.54E-09,  avg # of iterations =  2.0
+ Frequency grid relative error: 0.12418110983958286E-009                          
+ Will use parallel mode: none      
+
+     total cpu time spent up to now is       10.0 secs
+
+     total energy              =     -61.32693387 Ry
+     estimated scf accuracy    <       0.00000006 Ry
+
+     iteration #  9     ecut=    15.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  3.69E-10,  avg # of iterations =  2.0
+ Frequency grid relative error: 0.12418110983958286E-009                          
+ Will use parallel mode: none      
+
+     total cpu time spent up to now is       11.1 secs
+
+     total energy              =     -61.32693385 Ry
+     estimated scf accuracy    <       0.00000003 Ry
+
+     iteration # 10     ecut=    15.00 Ry     beta= 0.70
+     Davidson diagonalization with overlap
+     ethr =  1.90E-10,  avg # of iterations =  2.0
+ Frequency grid relative error: 0.12418110983958286E-009                          
+ Will use parallel mode: none      
+
+     total cpu time spent up to now is       12.1 secs
+
+     End of self-consistent calculation
+
+          k = 0.0000 0.0000 0.0000 ( 26462 PWs)   bands (ev):
+
+   -30.6198 -29.3765 -13.6892 -12.6336 -10.5002  -9.1256  -7.3316  -6.2387
+
+     highest occupied level (ev):    -6.2387
+
+!    total energy              =     -61.32693385 Ry
+     estimated scf accuracy    <          6.3E-11 Ry
+
+     The total energy is the sum of the following terms:
+     one-electron contribution =    -158.53119821 Ry
+     hartree contribution      =      80.35337557 Ry
+     xc contribution           =     -15.22540724 Ry
+     ewald contribution        =      32.07886932 Ry
+     Dispersion Correction     =      -0.00257329 Ry
+
+     charge density inside the Wigner-Seitz cell:   16.00000000
+
+     reference position (x0):        20.49620706   18.87974349   18.90659992 bohr
+
+     Dipole moments (with respect to x0):
+     Elect   0.7817   0.0113  -0.0028 au (Ha),   1.9868   0.0287  -0.0071 Debye
+     Ionic   0.0000   0.0000  -0.0000 au (Ha),   0.0000   0.0000  -0.0000 Debye
+     Total   0.7817   0.0113  -0.0028 au (Ha),   1.9868   0.0287  -0.0071 Debye
+
+     Electrons quadrupole moment       -172.46286441 a.u. (Ha)
+          Ions quadrupole moment        135.46765905 a.u. (Ha)
+         Total quadrupole moment        -36.99520536 a.u. (Ha)
+
+     *********    MAKOV-PAYNE CORRECTION    *********
+
+     Makov-Payne correction with Madelung constant =   2.8373
+
+     Makov-Payne correction     0.00000000 Ry =  0.000 eV (1st order, 1/a0)
+                                0.00004742 Ry =  0.001 eV (2nd order, 1/a0^3)
+                                0.00004742 Ry =  0.001 eV (total)
+
+!    Total+Makov-Payne energy  =     -61.32688644 Ry
+     Corrected vacuum level    =       0.04036429 eV
+
+     convergence has been achieved in  10 iterations
+
+     Writing output data file ./pwscf.save/
+
+     init_run     :      1.51s CPU      1.18s WALL (       1 calls)
+     electrons    :     18.21s CPU     10.95s WALL (       1 calls)
+
+     Called by init_run:
+     wfcinit      :      0.49s CPU      0.20s WALL (       1 calls)
+     potinit      :      0.78s CPU      0.82s WALL (       1 calls)
+     hinit0       :      0.08s CPU      0.08s WALL (       1 calls)
+
+     Called by electrons:
+     c_bands      :      8.53s CPU      3.03s WALL (      10 calls)
+     sum_band     :      2.54s CPU      1.07s WALL (      10 calls)
+     v_of_rho     :      6.92s CPU      6.99s WALL (      11 calls)
+     mix_rho      :      0.55s CPU      0.47s WALL (      10 calls)
+
+     Called by c_bands:
+     init_us_2    :      0.06s CPU      0.02s WALL (      21 calls)
+     regterg      :      8.50s CPU      3.01s WALL (      10 calls)
+
+     Called by *egterg:
+     rdiaghg      :      0.01s CPU      0.01s WALL (      31 calls)
+     h_psi        :      8.52s CPU      3.07s WALL (      32 calls)
+     g_psi        :      0.04s CPU      0.01s WALL (      21 calls)
+
+     Called by h_psi:
+     h_psi:calbec :      0.05s CPU      0.02s WALL (      32 calls)
+     vloc_psi     :      8.41s CPU      3.03s WALL (      32 calls)
+     add_vuspsi   :      0.02s CPU      0.01s WALL (      32 calls)
+
+     General routines
+     calbec       :      0.05s CPU      0.02s WALL (      32 calls)
+     fft          :      1.90s CPU      1.85s WALL (      87 calls)
+     ffts         :      0.50s CPU      0.18s WALL (      10 calls)
+     fftw         :      9.01s CPU      3.24s WALL (     276 calls)
+
+
+     PWSCF        :     19.82s CPU     12.18s WALL
+
+
+   This run was terminated on:  15:36:39  20Nov2020            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

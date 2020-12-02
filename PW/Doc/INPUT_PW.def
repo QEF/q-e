@@ -1717,7 +1717,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
              default { 'none' }
              see {
                  london_s6, london_rcut, london_c6, london_rvdw, 
-                 dftd3_version, dftd3_threebody, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2
+                 dftd3_version, dftd3_threebody, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2,
+                 mbd_vdw
              }
              options {
                  info {
@@ -1742,6 +1743,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                      C6 coefficients.
                      Optional variables: @ref ts_vdw_econv_thr, @ref ts_vdw_isolated
                      See A. Tkatchenko and M. Scheffler, PRL 102, 073005 (2009).
+                 }
+
+                 opt -val {'mbd_vdw', 'many-body dispersion'} {
+                     Many-body dipersion (MBD) correction to long-range interactions.
+                     Optional variables: @ref ts_vdw_isolated
+                     A. Ambrosetti, A. M. Reilly, R. A. DiStasio, A. Tkatchenko, J. Chem. Phys. 140
+                     18A508 (2014).
                  }
 
                  opt -val {'XDM', 'xdm'} {
@@ -1837,8 +1845,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         var ts_vdw_isolated -type LOGICAL {
           default { .FALSE. }
           info {
-             Optional: set it to .TRUE. when computing the Tkatchenko-Scheffler vdW energy
-             for an isolated (non-periodic) system.
+             Optional: set it to .TRUE. when computing the Tkatchenko-Scheffler vdW energy or the
+             Many-Body dispersion (MBD) energy for an isolated (non-periodic) system.
           }
         }
 

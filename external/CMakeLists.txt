@@ -111,3 +111,30 @@ qe_install_targets(
     qe_wannierprog_exe
     qe_w90chk2chk_exe
     qe_wannier90_postw90_exe)
+
+###########################################################
+# QE::MBD
+###########################################################
+if(MBD_ROOT)
+    add_library(qe_mbd INTERFACE)
+    add_library(QE::MBD ALIAS qe_mbd)
+    qe_install_targets(qe_mbd) 
+    target_link_libraries(qe_mbd INTERFACE "-L${MBD_ROOT}/lib;-lmbd")
+    target_include_directories(qe_mbd INTERFACE ${MBD_ROOT}/finclude)
+else()
+    message(STATUS "Installing QE::MBD via submodule")
+    qe_git_submodule_update(external/mbd)
+    if(NOT BUILD_SHARED_LIBS)
+        set(BUILD_SHARED_LIBS OFF)
+        set(FORCE_BUILD_STATIC_LIBS ON)
+    endif()
+    add_subdirectory(mbd EXCLUDE_FROM_ALL)
+    if(FORCE_BUILD_STATIC_LIBS)
+        unset(BUILD_SHARED_LIBS)
+    endif()
+    add_library(qe_mbd INTERFACE)
+    add_library(QE::MBD ALIAS qe_mbd)
+    target_link_libraries(qe_mbd INTERFACE Mbd)
+    qe_fix_fortran_modules(Mbd)
+    qe_install_targets(qe_mbd Mbd)
+endif()
