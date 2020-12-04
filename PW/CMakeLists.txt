@@ -87,6 +87,8 @@ set(sources
    src/force_lc.f90 
    src/force_us.f90 
    src/forces.f90 
+   src/gcscf_input.f90 
+   src/gcscf_module.f90 
    src/g_psi.f90 
    src/g_psi_mod.f90 
    src/gen_at_dj.f90 
