@@ -25,7 +25,6 @@ set(sources
     environment.f90 
     exchange_lda_lsda.f90 
     exchange_gga.f90 
-    fcp_variables.f90 
     fd_gradient.f90 
     fft_base.f90 
     fft_rho.f90 

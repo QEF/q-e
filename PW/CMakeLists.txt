@@ -70,7 +70,14 @@ set(sources
    src/exx_base.f90 
    src/exx_band.f90 
    src/exx.f90 
-   src/fcp.f90 
+   src/fcp_capacitance.f90 
+   src/fcp_dyn_calcavg.f90 
+   src/fcp_dyn_printavg.f90 
+   src/fcp_dynamics.f90 
+   src/fcp_hessian.f90 
+   src/fcp_input.f90 
+   src/fcp_module.f90 
+   src/fcp_relaxation.f90 
    src/find_group.f90 
    src/forces_bp_efield.f90 
    src/force_cc.f90 
