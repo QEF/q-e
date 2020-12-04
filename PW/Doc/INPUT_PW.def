@@ -1735,7 +1735,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                  opt -val {'grimme-d3', 'Grimme-D3', 'DFT-D3', 'dft-d3' } {
                      Semiempirical Grimme's DFT-D3. Optional variables:
                      @ref dftd3_version, @ref dftd3_threebody
-                     S. Grimme et al, J. Chem. Phys 132, 154104 (2010), doi:10.1002/jcc.20495
+                     S. Grimme et al, J. Chem. Phys 132, 154104 (2010), doi:10.1063/1.3382344
                  }
 
                  opt -val {'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler'} {
