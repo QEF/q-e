@@ -58,6 +58,12 @@ set(sources
    src/electrons.f90 
    src/eqvect.f90 
    src/esm.f90 
+   src/esm_common_mod.f90 
+   src/esm_ewald_mod.f90 
+   src/esm_force_mod.f90 
+   src/esm_hartree_mod.f90 
+   src/esm_local_mod.f90 
+   src/esm_stres_mod.f90 
    src/ewald.f90 
    src/ewald_dipole.f90 
    src/extfield.f90 
