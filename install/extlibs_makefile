@@ -142,9 +142,24 @@ libbeef_veryclean:
 	if test -d ../LIBBEEF; then (rm -R -f ../LIBBEEF); fi
 
 ###################################
+# LIBMBD
+###################################
+
+libmbd:
+	if test ! -d ../MBD; then \
+        mkdir ../MBD; \
+	(gzip -dc ../archive/libmbd-0.10.3.tar.gz | (cd ../MBD; tar -xvf -)); \
+	(gzip -dc ../archive/libmbd-0.10.3-non-cmake-makefiles.tar.gz | (cd ../MBD; tar -xvf -)); \
+	cd ../MBD/libmbd-0.10.3/src; export FXX=$(F90); export FXXOPT="$(F90FLAGS)"; \
+	cp serial.make Makefile; $(MAKE) ; cp *.mod *.a ../..; cd ../.. ;fi
+
+libmbd_clean:
+	if test -d ../MBD; then (rm -R -f ../MBD); fi
+
+###################################
 # cleaning
 ###################################
 
-clean: lapack_clean fox_clean libcuda_eigensolver_clean libcuda_devxlib_clean libbeef_clean
+clean: lapack_clean fox_clean libcuda_eigensolver_clean libcuda_devxlib_clean libbeef_clean libmbd_clean
 
-veryclean: lapack_veryclean fox_clean libcuda_eigensolver_veryclean libcuda_devxlib_veryclean libbeef_veryclean
+veryclean: lapack_veryclean fox_clean libcuda_eigensolver_veryclean libcuda_devxlib_veryclean libbeef_veryclean libmbd_clean

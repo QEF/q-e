@@ -1235,15 +1235,15 @@ NAMELIST: &SYSTEM
    Description:   
                    Specifies the type of calculation:
     
-                   0 :
+                   lda_plus_u_kind = 0  :
                         DFT+U simplified version of Cococcioni and de Gironcoli,
                         PRB 71, 035105 (2005), using "Hubbard_U"
     
-                   1 :
+                   lda_plus_u_kind = 1  :
                         DFT+U rotationally invariant scheme of Liechtenstein et al.,
                         using "Hubbard_U" and "Hubbard_J"
     
-                   2 :
+                   lda_plus_u_kind = 2  :
                         DFT+U+V simplified version of Campo Jr and Cococcioni,
                         J. Phys.: Condens. Matter 22, 055602 (2010), doi:10.1088/0953-8984/22/5/055602,
                         using "Hubbard_V"
@@ -3549,4 +3549,4 @@ CARD: ATOMIC_FORCES
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Sat Nov 28 21:53:08 CET 2020
+This file has been created by helpdoc utility on Sun Nov 29 22:25:25 CET 2020

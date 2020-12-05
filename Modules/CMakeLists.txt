@@ -74,6 +74,7 @@ set(sources
     setqf.f90 
     timestep.f90
     tsvdw.f90
+    mbdlib.f90
     version.f90 
     wannier_gw.f90
     wannier_new.f90 
@@ -155,6 +156,7 @@ target_link_libraries(qe_modules
         QE::CLIB # this is needed only by wrappers.f90
         QE::libbeef
         QE::MPI_Fortran
+        QE::MBD
         QE::FOX
         QE::UTILX)
 

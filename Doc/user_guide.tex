@@ -96,7 +96,8 @@ The following auxiliary packages are included as well:
 %      phonon dispersion plotting utility (to be
 %      used in conjunction with \PHonon).
 \end{itemize}
-A copy of required external libraries is also included.
+A copy of required external libraries is either included or automatically
+downloaded from the net.
 Finally, several additional packages that exploit data produced by \qe\
 or patch some \qe\ routines can be automatically installed using
 \texttt{make}:
@@ -110,6 +111,8 @@ or patch some \qe\ routines can be automatically installed using
       GW and Bethe-Salpeter equation.
 %\item \texttt{PLUMED} (v.1.3 only):
 %      calculation of free-energy surface through metadynamics.
+\item \texttt{D3Q}:
+      anharmonic force constants.
 \item \texttt{GIPAW} (Gauge-Independent Projector Augmented Waves):
       NMR chemical shifts and EPR g-tensor.
 %\item \texttt{WEST}: Many-body perturbation corrections for standard DFT.
@@ -169,6 +172,11 @@ The development of the GPU-enabled version is coordinated by Pietro Bonf\`a
 Contributors to \qe, beyond the authors of the papers
 mentioned in Sec.\ref{SubSec:Terms}, include:
 \begin{itemize}
+\item Alexandre Tkatchenko's group, in particular Szabolcs Goger
+  (U. Luxembourg), and Robert DiStasio's group, in particular
+  Hsin-Yu Ko (Cornell), for Many-Body Dispersion (MBD) correction.
+  \item Federico Ficarelli and Daniele Cesarini (CINECA), with help 
+  from Ye Luo (Argonne) and Sebastian Gs\"anger, for CMake support;
   \item Federico Ficarelli and Daniele Cesarini (CINECA), with help 
   from Ye Luo (Argonne) and Sebastian Gs\"anger, for CMake support;
   \item Ye Luo (Argonne) for improved FFT threading and miscellaneous
