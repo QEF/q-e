@@ -176,6 +176,12 @@ latgen.o : constants.o
 latgen.o : io_global.o
 latgen.o : kind.o
 linpack.o : kind.o
+mbdlib.o : cell_base.o
+mbdlib.o : funct.o
+mbdlib.o : input_parameters.o
+mbdlib.o : io_global.o
+mbdlib.o : ions_base.o
+mbdlib.o : kind.o
 mbdlib.o : tsvdw.o
 mdiis.o : ../UtilXlib/mp.o
 mdiis.o : kind.o
