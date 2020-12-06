@@ -112,12 +112,13 @@ libcuda_devxlib :
 	touch ../install/libcuda_devxlib # do not download and configure again
 
 libcuda_devxlib_clean:
-	rm libcuda_devxlib
-	cd ../external/devxlib; \
-	if test -f make.inc; then ($(MAKE) clean); fi
+	if test -f libcuda_devxlib; then rm libcuda_devxlib; fi
+	if test -d ../external/devxlib; then \
+	   (cd ../external/devxlib; if test -f make.inc; then $(MAKE) clean; fi); fi
 libcuda_devxlib_veryclean:
-	cd ../external/devxlib; \
-	if test -f make.inc; then ($(MAKE) distclean && rm make.inc); fi
+	if test -d ../external/devxlib; then \
+	   (cd ../external/devxlib; if test -f make.inc; then \
+	      ($(MAKE) distclean && rm make.inc); fi); fi
 
 ###################################
 # BEEF
