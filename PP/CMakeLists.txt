@@ -52,7 +52,11 @@ target_link_libraries(qe_pp
         QE::OpenMP_Fortran
         QE::FOX
         QE::PW
-        QE::Modules)
+        QE::Modules
+        QE::UTILX
+        QE::FFTX
+        QE::UPF
+        QE::LAX)
 
 ###########################################################
 # pp.x
@@ -64,7 +68,8 @@ target_link_libraries(qe_pp_exe
     PRIVATE
         QE::PW
         QE::Modules
-        QE::PP)
+        QE::PP
+        QE::UTILX)
 
 ###########################################################
 # open_grid.x
@@ -77,7 +82,8 @@ target_link_libraries(qe_pp_opengrid_exe
         QE::PW
         QE::UTILX
         QE::Modules
-        QE::PP)
+        QE::PP
+        QE::FFTX)
 
 ###########################################################
 # average.x
@@ -90,7 +96,8 @@ target_link_libraries(qe_pp_average_exe
         QE::PW
         QE::FFTX
         QE::Modules
-        QE::PP)
+        QE::PP
+        QE::UTILX)
 
 ###########################################################
 # bands.x
@@ -102,7 +109,9 @@ target_link_libraries(qe_pp_bands_exe
     PRIVATE
         QE::PW
         QE::Modules
-        QE::PP)
+        QE::PP
+        QE::UTILX
+        QE::UPF)
 
 ###########################################################
 # dos.x
@@ -113,7 +122,9 @@ set_target_properties(qe_pp_dos_exe PROPERTIES OUTPUT_NAME dos.x)
 target_link_libraries(qe_pp_dos_exe
     PRIVATE
         QE::PW
-        QE::PP)
+        QE::PP
+        QE::Modules
+        QE::UTILX)
 
 ###########################################################
 # pawplot.x
@@ -125,7 +136,9 @@ target_link_libraries(qe_pp_pawplot_exe
     PRIVATE
         QE::PW
         QE::Modules
-        QE::PP)
+        QE::PP
+        QE::UPF
+        QE::UTILX)
 
 ###########################################################
 # plan_avg.x
@@ -137,7 +150,9 @@ target_link_libraries(qe_pp_planavg_exe
     PRIVATE
         QE::PW
         QE::Modules
-        QE::PP)
+        QE::PP
+        QE::UTILX
+        QE::UPF)
 
 ###########################################################
 # plotband.x
@@ -185,7 +200,8 @@ target_link_libraries(qe_pp_pmw_exe
         QE::PW
         QE::UTILX
         QE::Modules
-        QE::PP)
+        QE::PP
+        QE::UPF)
 
 ###########################################################
 # xctest.x
@@ -211,7 +227,10 @@ target_link_libraries(qe_pp_projwfc_exe
         QE::LAPACK
         QE::PW
         QE::Modules
-        QE::PP)
+        QE::PP
+        QE::LAX
+        QE::UTILX
+        QE::UPF)
 
 ###########################################################
 # pw2wannier90.x
@@ -225,7 +244,9 @@ target_link_libraries(qe_pp_pw2wannier90_exe
         QE::PW
         QE::UTILX
         QE::Modules
-        QE::PP)
+        QE::PP
+        QE::FFTX
+        QE::UPF)
 
 ###########################################################
 # pw2critic.x
@@ -237,7 +258,8 @@ target_link_libraries(qe_pp_pw2critic_exe
     PRIVATE
         QE::PW
         QE::Modules
-        QE::PP)
+        QE::PP
+        QE::UTILX)
 
 ###########################################################
 # wfck2r.x
@@ -249,7 +271,9 @@ target_link_libraries(qe_pp_wfck2r_exe
     PRIVATE
         QE::PW
         QE::Modules
-        QE::PP)
+        QE::PP
+        QE::UTILX
+        QE::FFTX)
 
 ###########################################################
 # initial_state.x
@@ -261,7 +285,9 @@ target_link_libraries(qe_pp_initial_state_exe
     PRIVATE
         QE::PW
         QE::Modules
-        QE::PP)
+        QE::PP
+        QE::UPF
+        QE::UTILX)
 
 ###########################################################
 # pw2gw.x
@@ -274,7 +300,10 @@ target_link_libraries(qe_pp_pw2gw_exe
         QE::PW
         QE::UTILX
         QE::Modules
-        QE::PP)
+        QE::PP
+        QE::FFTX
+        QE::UPF
+        QE::MPI_Fortran)
 
 ###########################################################
 # sumpdos.x
@@ -296,7 +325,9 @@ target_link_libraries(qe_pp_epsilon_exe
     PRIVATE
         QE::PW
         QE::Modules
-        QE::PP)
+        QE::PP
+        QE::UPF
+        QE::UTILX)
 
 ###########################################################
 # wannier_ham.x
@@ -323,7 +354,8 @@ target_link_libraries(qe_pp_wannierplot_exe
         QE::PW
         QE::UTILX
         QE::Modules
-        QE::PP)
+        QE::PP
+        QE::FFTX)
 
 ###########################################################
 # molecularpdos.x
@@ -347,7 +379,11 @@ target_link_libraries(qe_pp_pw2bgw_exe
     PRIVATE
         QE::PW
         QE::Modules
-        QE::PP)
+        QE::PP
+        QE::UTILX
+        QE::UPF
+        QE::FFTX
+        QE::MPI_Fortran)
 
 ###########################################################
 # fs.x
@@ -385,7 +421,8 @@ target_link_libraries(qe_pp_fermiproj_exe
     PRIVATE
         QE::PW
         QE::Modules
-        QE::PP)
+        QE::PP
+        QE::UTILX)
 
 ###########################################################
 # ppacf.x
@@ -397,7 +434,10 @@ target_link_libraries(qe_pp_ppacf_exe
     PRIVATE
         QE::LAPACK
         QE::PW
-        QE::PP)
+        QE::PP
+        QE::Modules
+        QE::UTILX
+        QE::FFTX)
 
 ###########################################################
 # benchmark_libxc.x
@@ -415,8 +455,7 @@ target_link_libraries(qe_pp_benchmarklibxc_exe
 set(sources 
     simple_transport/src/cryst_to_car.f90
     simple_transport/src/lint.f90
-    simple_transport/src/ef.f90
-)
+    simple_transport/src/ef.f90)
 qe_add_executable(qe_pp_st_ef_exe ${sources})
 set_target_properties(qe_pp_st_ef_exe PROPERTIES OUTPUT_NAME ef.x)
 target_link_libraries(qe_pp_st_ef_exe
@@ -432,8 +471,7 @@ set(sources
     simple_transport/src/cryst_to_car.f90 
     simple_transport/src/lint.f90
     simple_transport/src/vband_ibz.f90 
-    simple_transport/src/dos.f90
-)
+    simple_transport/src/dos.f90)
 qe_add_executable(qe_pp_st_dos_exe ${sources})
 set_target_properties(qe_pp_st_dos_exe PROPERTIES OUTPUT_NAME dos_sp.x)
 target_link_libraries(qe_pp_st_dos_exe
@@ -448,8 +486,7 @@ set(sources
     simple_transport/src/cryst_to_car.f90 
     simple_transport/src/lint.f90 
     simple_transport/src/vband_ibz.f90 
-    simple_transport/src/fermi_int_0.f90
-)
+    simple_transport/src/fermi_int_0.f90)
 qe_add_executable(qe_pp_st_fermiint0_exe ${sources})
 set_target_properties(qe_pp_st_fermiint0_exe PROPERTIES OUTPUT_NAME fermi_int_0.x)
 target_link_libraries(qe_pp_st_ef_exe
@@ -464,8 +501,7 @@ set(sources
     simple_transport/src/reducegrid.f90 
     simple_transport/src/lint.f90 
     simple_transport/src/vband_ibz.f90 
-    simple_transport/src/fermi_int_1.f90
-)
+    simple_transport/src/fermi_int_1.f90)
 qe_add_executable(qe_pp_st_fermiint1_exe ${sources})
 set_target_properties(qe_pp_st_fermiint1_exe PROPERTIES OUTPUT_NAME fermi_int_1.x)
 target_link_libraries(qe_pp_st_ef_exe
@@ -511,5 +547,4 @@ qe_install_targets(
     qe_pp_st_ef_exe
     qe_pp_st_dos_exe
     qe_pp_st_fermiint0_exe
-    qe_pp_st_fermiint1_exe
-)
+    qe_pp_st_fermiint1_exe)

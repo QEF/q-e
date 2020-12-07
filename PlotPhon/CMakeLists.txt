@@ -25,5 +25,4 @@ qe_install_targets(
     # Executables
     qe_plotphon_kforbands_exe
     qe_plotphon_bandstognuplot_exe
-    qe_plotphon_eminmax_exe
-)
+    qe_plotphon_eminmax_exe)

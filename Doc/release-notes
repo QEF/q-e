@@ -1,11 +1,17 @@
-New in dev version:
+New in 6.7 version:
   * Support for CMake (F. Ficarelli and D. Cesarini, CINECA, with help from
     Ye Luo, P. Delugas, S. Gsaenger)
   * In vc-relax with Hubbard corrections, the final SCF calculation is done by 
     reading atomic occupations from file produced during the vc-relax 
     (rather then recomputing them from scratch).
+  * EPW: 
+    (1) ZG package to generate special displacements for first-principles non-perturbative calculations 
+    at finite temperatures [Marios Zacharias and Feliciano Giustino, Phys. Rev. Research 2, 013357, (2020)].
+    (2) Plotting of Fermi surface.
+    For the full list of new features, bug fixes, and changes leading to backward incompatibility issues, 
+    please visit the Releases page of the EPW documentation site [https://docs.epw-code.org/doc/Releases.html].
 
-Fixed in dev version:
+Fixed in 6.7 version:
   * Some linkers yield "missing references to ddot_" in libbeef
   * FFT test in FFTXlib was not always compiling 
   * angle1, angle2, starting_magnetization incorrectly written to xml file
@@ -16,10 +22,12 @@ Fixed in dev version:
   * Crash in matdyn.x when ibrav=0 (thanks to Sasha Fonari)
   * Some postprocessing cases not working properly with k-point parallelization
     and ultrasoft pseudopotentials (noticed by Kristjan Eimre)
+  * Ensemble dynamics in CP was broken in v.6.6 (not in previous versions)
 
-Incompatible changes in dev version:
+Incompatible changes in 6.7 version:
   * FoX  no longer used to read and write pseudopotential files
   * iotk no longer used to read and write any file
+  * Developer manual moved to the Wiki
 
 New in v.6.6:
   * vdW-DF3-opt1, vdW-DF3-opt2, and vdW-DF-C6 van der Waals functionals

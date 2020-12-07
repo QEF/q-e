@@ -5,12 +5,7 @@ finite electric field. The method is explained in:
 P. Umari and A. Pasquarello, PRL 89,157602 (2002)
 I. Souza, J.Iniguez, and D.Vanderbilt, PRL 89, 117602 (2002)
 
-
-
-T
-
-
-The concerned parameters are:
+The related parameters are:
 
 In namelist &CONTROL
 
@@ -131,12 +126,9 @@ unit cells (N_kx,N_ky,N_kz are the number of k-points along x,y,z)
 
 
 
+Example 1 - dielectric constant of Si
 
-
-Example:
-
-With this example, we show how to calculate the dielectric constant
-of bulk silicon. The system is described by a 8-atom cubic unit cell.
+The system is described by a 8-atom cubic unit cell.
 We use a regular mesh of 3X3X7 k-points, where we have 7 k-points
 along the directions of the electric field: gdir=3,nppstr=7
 The first calculation just calculates the electronic structure
@@ -160,4 +152,23 @@ eps_inf=12.04
 (Compare: other DFT calculations, 12.7-13.1 , exp. 11.4 )
 The result 12.14 is not fully converged with respect to the k-points grid
 P.Umari and A. Pasquarello, PRB 68, 085114 (2003).
+
+
+
+Example 2 - effective charges of AlAs
+
+The setup of the system is quite the same as in the previous case, with
+alat=10.60 a.u. and Omega=1191.0160 (a.u.)^3. The calculation follows the
+same logic. Moreover, forces on atoms are computed (tprnfor=.true.)
+
+The electronic dipole D[0.001 a.u.] at 0.001 a.u. field is 0.7400. This yields
+eps_inf=8.808. 
+
+The forces F[0.001 a.u.] on atoms (z component) are 0.03054 a.u., almost equal 
+for all atoms, while F[0.0 a.u.] is almost zero. The Born effective charges Z*
+are thus
+    eZ* = (F[0.001 a.u.]-F[0.0 a.u.])/0.001 a.u. = 3.054 a.u.,  Z* = 2.16
+BEWARE the electron charge factor "e": e=sqrt(2) in Ry atomic units (e^=2) !
+
+
 

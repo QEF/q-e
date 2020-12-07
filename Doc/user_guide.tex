@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.6}
+\def\version{6.7MaX}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -108,8 +108,8 @@ or patch some \qe\ routines can be automatically installed using
 \item \texttt{YAMBO}:
       electronic excitations within Many-Body Perturbation Theory,
       GW and Bethe-Salpeter equation.
-\item \texttt{PLUMED} (v.1.3 only):
-      calculation of free-energy surface through metadynamics.
+%\item \texttt{PLUMED} (v.1.3 only):
+%      calculation of free-energy surface through metadynamics.
 \item \texttt{GIPAW} (Gauge-Independent Projector Augmented Waves):
       NMR chemical shifts and EPR g-tensor.
 %\item \texttt{WEST}: Many-body perturbation corrections for standard DFT.
@@ -138,7 +138,7 @@ Further documentation, beyond what is provided in this guide, can be found in:
    See section \ref{SubSec:Contacts}, ``Contacts'', for more info.
 \end{itemize}
 People who want to contribute to \qe\ should read the
-Developer Manual: \texttt{Doc/developer\_man.pdf}.
+Wiki pages on GItLab: \texttt{https://gitlab.com/QEF/q-e/-/wiki}.
 
 This guide does not explain the basic Unix concepts (shell, execution
 path, directories etc.) and utilities needed to run \qe; it does not
@@ -163,8 +163,8 @@ is promoted by the \qe\ Foundation under the coordination of
 Paolo Giannozzi (Univ. Udine and IOM-CNR, Italy) and Pietro Delugas
 (SISSA Trieste) with a strong support from the MaX - Materials design
 at the Exascale EU Centre of Excellence.
-% of the CINECA National Supercomputing 
-% Center in Bologna under the responsibility of Carlo Cavazzoni.
+The development of the GPU-enabled version is coordinated by Pietro Bonf\`a
+(Univ. Parma).
 
 Contributors to \qe, beyond the authors of the papers
 mentioned in Sec.\ref{SubSec:Terms}, include:
@@ -173,8 +173,6 @@ mentioned in Sec.\ref{SubSec:Terms}, include:
   from Ye Luo (Argonne) and Sebastian Gs\"anger, for CMake support;
   \item Ye Luo (Argonne) for improved FFT threading and miscellaneous
   contributions and optimizations;
-%  \item Pietro Bonf\`a (CINECA) for multiple contributions to optimization,
-%  GPU version, and maintenance;
   \item Fabio Affinito (CINECA) for ELPA support, for contributions
   to the FFT library, and for various parallelization improvements;
   \item Sebastiano Caravati for direct support of GTH pseudopotentials
@@ -242,9 +240,6 @@ PLEASE NOTE: only messages that appear to come from the
 registered user's e-mail address, in its {\em exact form}, will be
 accepted. In case of trouble, carefully check that your return
 e-mail is the correct one (i.e. the one you used to subscribe).
-Please also note that since some time the correct functioning of mailing
-list is frequently disrupted by policy changes at large commercial
-providers. There is not much we can do about that.
 
 If you need to contact the developers for {\em specific} questions
 about coding, proposals, offers of help, etc., you may either post
@@ -634,7 +629,7 @@ and you may want to use a CUDA-aware MPI distribution to optimize the data
 transfer between the processes.
 
 If you want to modify \configure\ (advanced users only!),
-see the Developer Manual.
+see the Wiki pages on GitLab.
 
 \subsubsection{Manual configuration}
 \label{SubSec:manconf}
@@ -1269,6 +1264,14 @@ and MKL libraries should work, but "your mileage may vary", depending
 upon the specific software stack you are using. Parallel compilation 
 with OpenMPI should also work. 
 
+If you get an error like
+\begin{verbatim}
+  clang: error: no input files
+  make[1]: *** [laxlib.fh] Error 1
+  make: *** [libla] Error 1i
+\end{verbatim}
+redefine \texttt{CPP} as \texttt{CPP=gcc -E} in \texttt{make.inc}.
+
 Gfortran information and binaries for Mac OS-X here:
 \texttt{http://hpc.sourceforge.net/} and
 \texttt{https://wiki.helsinki.fi/display/HUGG/GNU+compiler+install+on+Mac+OS+X}.
@@ -1504,8 +1507,8 @@ processors (12x12).
 
 Default values are: \texttt{-ni 1 -nk 1 -nt 1} ;
 \texttt{nd} is set to 1 if ScaLAPACK is not compiled,
-it is set to the square integer smaller than or equal to  half the number
-of processors of each pool.
+it is set to the square integer smaller than or equal to the number of 
+processors of each pool.
 
 \paragraph{Massively parallel calculations}
 For very large jobs (i.e. O(1000) atoms or more) or for very long jobs,

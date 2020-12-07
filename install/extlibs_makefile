@@ -89,6 +89,7 @@ libcuda_eigensolver_clean:
 libcuda_eigensolver_veryclean:
 	if test -d ../EIGENSOLVER_GPU; then (rm -R -f ../EIGENSOLVER_GPU ../${EIGENSOLVER_GPU_NAME}); fi
 
+CUDA_PATH := $(if $(GPU_ARCH),$(CUDA_PATH),no)
 libcuda_devxlib :
 	cd ../external/devxlib; \
     if test ! -e configure; then \
@@ -99,7 +100,8 @@ libcuda_devxlib :
     if test ! -f make.inc; then \
     touch make.inc; \
     $(MAKE) clean; \
-    ./configure FC=$(F90) F77=$(F77) CC=$(CC) \
+    export F90FLAGS="$(FOX_FLAGS)"; \
+    ./configure FC=$(F90) CC=$(CC) \
                 --with-cuda=$(CUDA_PATH) \
                 --with-cuda-cc=$(GPU_ARCH) \
                 --with-cuda-runtime=$(CUDA_RUNTIME) \

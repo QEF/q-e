@@ -65,12 +65,17 @@ SUBROUTINE hp_postproc
   !
   CALL start_clock('hp_postproc')
   !
-  IF (lda_plus_u_kind==2 .AND. determine_num_pert_only) THEN
-     ! DFT+U+V: determine indices of couples for Hubbard V, without computing U and V.
-     ! This is useful when DFT+U+V is used for large supercells. So one can determine
-     ! indices for a supercell and use V computed for a primitive cell.
-     determine_indices_only = .true.
-     WRITE( stdout, '(/5x,"Determination of the indices of inter-site couples ...",/)')
+  IF (determine_num_pert_only) THEN
+     IF (lda_plus_u_kind==2) THEN 
+        ! DFT+U+V: determine indices of couples for Hubbard V, without computing U and V.
+        ! This is useful when DFT+U+V is used for large supercells. So one can determine
+        ! indices for a supercell and use V computed for a primitive cell.
+        determine_indices_only = .true.
+        WRITE( stdout, '(/5x,"Determination of the indices of inter-site couples ...",/)')
+     ELSE
+        ! DFT+U: exit from this routine
+        RETURN
+     ENDIF
   ELSE
      determine_indices_only = .false.
      WRITE( stdout, '(/5x,"Post-processing calculation of Hubbard parameters ...",/)')

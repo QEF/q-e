@@ -322,12 +322,12 @@ SUBROUTINE vcsmd( conv_ions )
      !
      IF ( istep == 1 ) THEN
         !
-        CALL delete_if_present( 'e' )
-        CALL delete_if_present( 'eal' )
-        CALL delete_if_present( 'ave' )
-        CALL delete_if_present( 'p' )
-        CALL delete_if_present( 'avec' )
-        CALL delete_if_present( 'tv' )
+        CALL delete_if_present( TRIM( prefix ) // '.e' )
+        CALL delete_if_present( TRIM( prefix ) // '.eal' )
+        CALL delete_if_present( TRIM( prefix ) // '.ave' )
+        CALL delete_if_present( TRIM( prefix ) // '.p' )
+        CALL delete_if_present( TRIM( prefix ) // '.avec' )
+        CALL delete_if_present( TRIM( prefix ) // '.tv' )
         !
         ios  = 'NEW'
         ipos = 'ASIS'
@@ -339,17 +339,17 @@ SUBROUTINE vcsmd( conv_ions )
         !
      END IF
      !
-     OPEN( UNIT = iun_e,    FILE = 'e',    STATUS = ios, &
+     OPEN( UNIT = iun_e,    FILE = TRIM( prefix ) // '.e',    STATUS = ios, &
            FORM = 'FORMATTED', POSITION = ipos )
-     OPEN( UNIT = iun_eal,  FILE = 'eal',  STATUS = ios, &
+     OPEN( UNIT = iun_eal,  FILE = TRIM( prefix ) // '.eal',  STATUS = ios, &
            FORM = 'FORMATTED', POSITION = ipos )
-     OPEN( UNIT = iun_ave,  FILE = 'ave',  STATUS = ios, &
+     OPEN( UNIT = iun_ave,  FILE = TRIM( prefix ) // '.ave',  STATUS = ios, &
            FORM = 'FORMATTED', POSITION = ipos )
-     OPEN( UNIT = iun_p,    FILE = 'p',    STATUS = ios, &
+     OPEN( UNIT = iun_p,    FILE = TRIM( prefix ) // '.p',    STATUS = ios, &
            FORM = 'FORMATTED', POSITION = ipos )
-     OPEN( UNIT = iun_avec, FILE = 'avec', STATUS = ios, &
+     OPEN( UNIT = iun_avec, FILE = TRIM( prefix ) // '.avec', STATUS = ios, &
            FORM = 'FORMATTED', POSITION = ipos )
-     OPEN( UNIT = iun_tv,   FILE = 'tv',   STATUS = ios, &
+     OPEN( UNIT = iun_tv,   FILE = TRIM( prefix ) // '.tv',   STATUS = ios, &
            FORM = 'FORMATTED', POSITION = ipos )
      !
      nst = istep - 1
@@ -404,7 +404,7 @@ SUBROUTINE vcsmd( conv_ions )
   !
   WRITE( stdout,'(A3,3X,3F14.9)') ( atm(ityp(na)), tau(:,na), na = 1, nat )
   WRITE( stdout, '(/5X,"Ekin = ",F14.8," Ry    T = ",F6.1," K ", &
-       &       " Etot = ",F14.8)') ekint, tnew, edyn + e_start
+       &       " Etot = ",0PF17.8)') ekint, tnew, edyn + e_start
   !
   CALL cryst_to_cart( nat, force, at, 1 )
   force = force*alat
