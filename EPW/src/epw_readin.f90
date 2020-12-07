@@ -59,7 +59,7 @@
                             wannier_plot_supercell, wannier_plot_scale, reduce_unk,    &
                             wannier_plot_radius, fermi_plot,                           &
                             fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv,        &
-                            epw_crysym
+                            epw_crysym, indabs_fca
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
   USE elph2,         ONLY : elph, num_wannier_plot, wanplotlist, gtemp
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, ang2m
@@ -347,6 +347,7 @@
   ! omegastep       : Photon energy step in evaluating phonon-assisted absorption spectra (in eV)
   ! n_r             : Constant refractive index
   ! lindabs         : If .TRUE., do phonon-assisted absorption
+  ! indabs_fca      : If .TRUE., do phonon-assisted absorption considering free carrier absorption
   !
   ! Added by Felix Goudreault
   ! assume_metal     : If .TRUE. => we are dealing with a metal

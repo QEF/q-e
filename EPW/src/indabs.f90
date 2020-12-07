@@ -114,6 +114,10 @@
     !! Absorption prefactor
     REAL(KIND = DP) :: eta(neta) = (/ 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5 /) / ryd2eV
     !! Imaginary broadening of matrix element denominators
+    REAL(KIND = DP) :: ef0_fca(nstemp)
+    !! fermi energy determined from carrier density
+    REAL(KIND = DP), INTENT(in) :: etemp_fca
+    !! Temperature for fermi level calculation
     REAL(KIND = DP), EXTERNAL :: dos_ef
     !! Function to compute the Density of States at the Fermi level
     REAL(KIND = DP), EXTERNAL :: wgauss
@@ -168,21 +172,30 @@
       DO iw = 1, nomega
         omegap(iw) = omegamin + (iw - 1) * omegastep
       ENDDO
+      IF (indabs_fca) THEN
+        ! Calculates free carrier fermi level
+        DO itemp = 1, nstemp
+          etemp_fca = gtemp(itemp)
+          CALL fermi_carrier_indabs(itemp, etemp_fca, ef0_fca)
+        ENDDO
     ENDIF
     !
     ! The total number of k points
     !
     nksqtotf = nktotf ! odd-even for k,k+q
     !
-    IF (efermi_read) THEN
-      !
-      ef0 = fermi_energy
-    ELSE
-      !
-      ef0 = efnew
-    ENDIF
-    !
     DO itemp = 1, nstemp
+      IF (indabs_fca) THEN
+        !
+        ef0 = ef0_fca(itemp)
+      ELSEIF (efermi_read) THEN
+        !
+        ef0 = fermi_energy
+      ELSE
+        !
+        ef0 = efnew
+      ENDIF
+      !
       inv_eptemp0 = 1.0 / gtemp(itemp)
       DO ik = 1, nkf
         !
@@ -501,7 +514,251 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE renorm_eig
     !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE fermi_carrier_indabs(itemp, etemp_fca, ef0_fca)
+    !-----------------------------------------------------------------------
+    !!
+    !! This is a slightly modified version of subroutine fermicarrier
+    !! in Utility.f90. This is used to calculate the fermi energy associated
+    !! with a certain carrier density in when the user want to calculate
+    !! indirect optical absorption for doped semiconductor
+    !!
+    !-----------------------------------------------------------------------
+    USE kinds,     ONLY : DP
+    USE cell_base, ONLY : omega, alat, at
+    USE io_global, ONLY : stdout
+    USE elph2,     ONLY : etf, nkf, wkf, efnew, nkqf
+    USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm, eps5, kelvin2eV, &
+                              zero, eps80, eps6
+    USE noncollin_module, ONLY : noncolin
+    USE pwcom,     ONLY : nelec
+    USE epwcom,    ONLY : int_mob, nbndsub, ncarrier, nstemp, fermi_energy, &
+                          system_2d, carrier, efermi_read, assume_metal, ngaussw
+    USE klist_epw, ONLY : isk_dummy
+    USE mp,        ONLY : mp_barrier, mp_sum, mp_max, mp_min
+    USE mp_global, ONLY : inter_pool_comm
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: itemp
+    !! Temperature index
+!    INTEGER, INTENT(out) :: ctype
+    !! Calculation type: -1 = hole, +1 = electron and 0 = both.
+    REAL(KIND = DP), INTENT(in) :: etemp_fca
+    !! Temperature in kBT [Ry] unit.
+    REAL(KIND = DP), INTENT(inout) :: ef0_fca(nstemp)
+    !! Fermi level for the temperature itemp
+!    REAL(KIND = DP), INTENT(inout) :: efcb(nstemp)
+    !! Second fermi level for the temperature itemp
+    REAL(KIND = DP), EXTERNAL :: efermig
+    !! External function to calculate the fermi energy
+    !
+    ! Local variables
+    INTEGER :: i
+    !! Index for the bisection iteration
+    INTEGER :: ik
+    !! k-point index per pool
+    INTEGER :: ikk
+    !! Odd index to read etf
+    INTEGER :: ibnd
+    !! Local band index
+    INTEGER :: ivbm
+    !! Index of the VBM
+    INTEGER :: icbm
+    !! Index of the CBM
+    INTEGER, PARAMETER :: maxiter = 500 ! 300
+    !! Maximum interation
+    REAL(KIND = DP) :: fermi
+    !! Fermi level returned
+    REAL(KIND = DP) :: fermicb
+    !! Fermi level returned for second Fermi level
+    REAL(KIND = DP) :: fnk
+    !! Fermi-Diract occupation
+    REAL(KIND = DP) :: ks_exp(nbndsub, nkf)
+    !! Exponential of the eigenvalues divided by kBT
+    REAL(KIND = DP) :: ks_expcb(nbndsub, nkf)
+    !! Exponential of the eigenvalues divided by kBT for CB
+    REAL(KIND = DP) :: fermi_exp
+    !! Fermi level in exponential format
+    REAL(KIND = DP) :: rel_err
+    !! Relative error
+    REAL(KIND = DP) :: factor
+    !! Factor that goes from number of carrier per unit cell to number of
+    !! carrier per cm^-3
+    REAL(KIND = DP) :: arg
+    !! Argument of the exponential
+    REAL(KIND = DP) :: inv_cell
+    !! Inverse of the volume in [Bohr^{-3}]
+    REAL(KIND = DP) :: evbm
+    !! Energy of the VBM
+    REAL(KIND = DP) :: ecbm
+    !! Energy of the CBM
+    REAL(KIND = DP) :: ef_tmp
+    !! Energy of the current Fermi level for the bisection method
+    REAL(KIND = DP) :: elw
+    !! Energy lower bound for the bisection method
+    REAL(KIND = DP) :: eup
+    !! Energy upper bound for the bisection method
+    REAL(KIND = DP) :: hole_density
+    !! Hole carrier density
+    REAL(KIND = DP) :: electron_density
+    !! Electron carrier density
+    REAL(KIND = DP), EXTERNAL :: wgauss
+    !! Fermi-Dirac distribution function (when -99)
+    REAL(KIND = DP) :: ekk
+    !! Eigen energy on the fine grid relative to the Fermi level
+    !
+    IF (assume_metal) THEN
+      !! set conduction band chemical potential to 0 since it is irrelevent
+      ctype = -1  ! act like it's for holes
+ !     efcb(itemp) = zero
+      ef0_fca(itemp) = efermig(etf, nbndsub, nkqf, nelec, wkf, etemp_fca, ngaussw, 0, isk_dummy)
+      RETURN
+    ENDIF
+    ef_tmp  = zero
+    fermi   = zero
+    fermicb = zero
+    inv_cell = 1.0d0 / omega
+    !
+    ! for 2d system need to divide by area (vacuum in z-direction)
+    IF (system_2d) inv_cell = inv_cell * at(3, 3) * alat
+    ! vbm index
+    IF (noncolin) THEN
+      ivbm = FLOOR(nelec / 1.0d0)
+    ELSE
+      ivbm = FLOOR(nelec / 2.0d0)
+    ENDIF
+    icbm = ivbm + 1 ! Nb of bands
+    !
+    ! Initialization value. Should be large enough ...
+    evbm = -10000d0
+    ecbm = 10000d0 ! In Ry
+    !
+    DO ik = 1, nkf
+      ikk = 2 * ik - 1
+      DO ibnd = 1, nbndsub
+        IF (ibnd < ivbm + 1) THEN
+          IF (etf(ibnd, ikk) > evbm) THEN
+            evbm = etf (ibnd, ikk)
+          ENDIF
+        ENDIF
+        ! Find cbm index
+        IF (ibnd > ivbm) THEN
+          IF (etf(ibnd, ikk) < ecbm) THEN
+            ecbm = etf(ibnd, ikk)
+          ENDIF
+        ENDIF
+      ENDDO
+    ENDDO
+    !
+    ! Find max and min across pools
+    !
+    CALL mp_max(evbm, inter_pool_comm)
+    CALL mp_min(ecbm, inter_pool_comm)
+    !
+    IF (itemp == 1) THEN
+      WRITE(stdout, '(5x, "Valence band maximum    = ", f10.6, " eV")') evbm * ryd2ev
+      WRITE(stdout, '(5x, "Conduction band minimum = ", f10.6, " eV")') ecbm * ryd2ev
+    ENDIF
+    !
+    IF (ABS(ncarrier) < eps6) THEN
+      WRITE(stdout, '(5x, a)') 'ncarrier not given or too small'
+      WRITE(stdout, '(5x, a)') 'Setting the fermi level to mig-gap'
+      fermi = (evbm + ecbm) /2.0d0
+    ELSEIF ( ncarrier > eps6 ) THEN
+      factor = inv_cell * (bohr2ang * ang2cm)**(-3.d0)
+      ! assuming free electron density
+      eup = 10000d0
+      elw = -10000d0
+      ef_tmp = (evbm + ecbm) /2.0d0
+      DO i = 1, maxiter
+        electron_density = zero
+        DO ik = 1, nkf
+          ikk = 2 * ik -1
+          DO ibnd = icbm, nbndsub
+            ekk = etf(ibnd, ikk) - ef_tmp
+            fnk = wgauss(-ekk / etemp_fca, -99)
+            ! The wkf(ikk) already include a factor 2
+            electron_density = electron_density + wkf(ikk) * fnk * factor
+          ENDDO ! ibnd
+        ENDDO ! ik
+        CALL mp_sum(electron_density, inter_pool_comm)
+        IF (ABS(electron_density) < eps80) THEN
+          rel_err = 1000.0d0
+        ELSE
+          ! In this case ncarrier is a negative number
+          rel_err = (electron_density - ncarrier) / electron_density
+        ENDIF
+        !
+        IF (ABS(rel_err) < eps5) THEN
+          fermi = ef_tmp
+          EXIT
+        ELSEIF ((rel_err) > eps5) THEN
+          eup = ef_tmp
+        ELSE
+          elw = ef_tmp
+        ENDIF
+      ENDDO ! maxiter
+    ELSEIF ( ncarrier < -eps6) THEN
+      ! assuming free hole density
+      eup = 10000d0
+      elw = -10000d0
+      ef_tmp = (evbm + ecbm) /2.0d0
+      DO i = 1, maxiter
+        DO ik = 1, nkf
+          ikk = 2 * ik -1
+          DO ibnd = 1, ivbm
+            ekk = etf(ibnd, ikk) - ef_tmp
+            fnk = wgauss(-ekk / etemp_fca, -99)
+            ! The wkf(ikk) already include a factor 2
+            hole_density = hole_density + wkf(ikk) * (1.0d0 - fnk) * factor
+          ENDDO ! ibnd
+        ENDDO ! ik
+        CALL mp_sum(hole_density, inter_pool_comm)
+        IF (ABS(hole_density) < eps80) THEN
+          rel_err = -1000.0d0
+        ELSE
+          ! In this case ncarrier is a negative number
+          rel_err = (hole_density - ABS(ncarrier)) / hole_density
+        ENDIF
+        !
+        IF (ABS(rel_err) < eps5) THEN
+          fermi = ef_tmp
+          EXIT
+        ELSEIF ((rel_err) > eps5) THEN
+          elw = ef_tmp
+        ELSE
+          eup = ef_tmp
+        ENDIF
+        ef_tmp = (eup + elw) / 2.0d0
+      ENDDO ! maxiter
+    ENDIF !ncarrier
+    IF (i == maxiter) THEN
+      WRITE(stdout, '(5x, "Warning: too many iterations in bisection"/ &
+                    5x, "ef_tmp = ", f10.6)' ) fermi * ryd2ev
+    ENDIF
+    WRITE(stdout, '(/5x, "Temperature ", f8.3, " K")' ) etemp_fca * ryd2ev / kelvin2eV
+    IF (ncarrier > eps6) THEN
+      ef0_fca(itemp) = fermi
+      WRITE(stdout, '(5x, "Electron density = ", E18.6, "Cm^-3")' ) ncarrier
+      WRITE(stdout, '(5x, "Calculated Fermi level = ", f10.6, " eV")' )  ef0_fca(itemp) * ryd2ev
+    ELSEIF (ncarrier < -eps6)
+      ef0_fca(itemp) = fermi
+      WRITE(stdout, '(5x, "Electron density = ", E18.6, "Cm^-3")' ) ncarrier
+      WRITE(stdout, '(5x, "Calculated Fermi level = ", f10.6, " eV")' )  ef0_fca(itemp) * ryd2ev
+    ELSE
+      ef0_fca(itemp) = fermi
+      WRITE(stdout, '(5x, "Calculated Fermi level = ", f10.6, " eV")' )  ef0_fca(itemp) * ryd2ev
+    ENDIF
+    !
+    RETURN
+    !-----------------------------------------------------------------------
+    END SUBROUTINE fermi_carrier_indabs
+    !-----------------------------------------------------------------------
+    !
   !-----------------------------------------------------------------------
   END MODULE indabs
   !-----------------------------------------------------------------------
+
 

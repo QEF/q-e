@@ -115,6 +115,8 @@
   !! if .TRUE. fix the gauge when diagonalizing the interpolated dynamical matrix and electronic Hamiltonian.
   LOGICAL :: lindabs
   !! if .TRUE. perform phonon-assisted absorption calculations
+  LOGICAL :: indabs_fca
+  !! if .TRUE. calculate phonon-assisted free carrier absorption
   LOGICAL :: use_ws
   !! if .TRUE. use Wannier-centers to compute the Wigner-Seitz cell.
   LOGICAL :: epmatkqread
