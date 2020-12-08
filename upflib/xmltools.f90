@@ -71,7 +71,7 @@ MODULE xmltools
   INTERFACE xmlr_readtag
      MODULE PROCEDURE readtag_c, readtag_r, readtag_l, readtag_i, &
           readtag_iv, readtag_rv, readtag_rm, readtag_rt, &
-          readtag_zv, readtag_zm
+          readtag_zv, readtag_zm, readtag_zt
   END INTERFACE xmlr_readtag
   !
   ! IMPORTANT NOTICE: complex numbers, z=a+ib, are written as two reals:
@@ -81,7 +81,7 @@ MODULE xmltools
   INTERFACE xmlw_writetag
      MODULE PROCEDURE writetag_c, writetag_r, writetag_l, writetag_i, &
           writetag_iv, writetag_rv, writetag_rm, writetag_rt, &
-          writetag_zv, writetag_zm
+          writetag_zv, writetag_zm, writetag_zt
   END INTERFACE xmlw_writetag
   !
   INTERFACE get_attr
@@ -517,6 +517,28 @@ CONTAINS
     !
   END SUBROUTINE writetag_zm
   !
+  SUBROUTINE writetag_zt (name, ztens, ierr )
+    !
+    ! As writetag_c for a matrix of complex values - see comments in writetag_zv
+    !
+    USE iso_c_binding
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    COMPLEX(dp), INTENT(IN), TARGET:: ztens(:,:,:)
+    INTEGER, INTENT(OUT), OPTIONAL :: ierr
+    !
+    TYPE (c_ptr) :: cp
+    REAL(dp), POINTER  :: rtens(:,:,:)
+    !
+    NULLIFY (rtens)
+    cp = c_loc(ztens)
+    CALL c_f_pointer (cp, rtens, shape(ztens)*[2,1,1])
+    !
+    CALL xmlw_opentag (name, ierr )
+    WRITE( xmlunit, '(2es24.15)') rtens
+    CALL xmlw_closetag ( )
+    !
+  END SUBROUTINE writetag_zt
+  !
   FUNCTION write_tag_and_attr (name) RESULT (ierr)
     !
     CHARACTER(LEN=*), INTENT(IN) :: name
@@ -859,6 +881,32 @@ CONTAINS
     IF ( present (ierr) ) ierr = ier_
     !
   END SUBROUTINE readtag_zm
+    !
+  SUBROUTINE readtag_zt (name, ztens, ierr)
+    !
+    ! As readtag_c, for a matrix of complex values - see comments in writetag_zv
+    !
+    USE iso_c_binding
+    CHARACTER(LEN=*), INTENT(IN) :: name
+    COMPLEX(dp), INTENT(OUT), target     :: ztens(:,:,:)
+    INTEGER, INTENT(OUT),OPTIONAL :: ierr
+    TYPE (c_ptr) :: cp
+    REAL(dp), POINTER  :: rtens(:,:,:)
+    INTEGER :: ier_
+    !
+    CALL xmlr_opentag (name, ier_)
+    if ( ier_ == 0  ) then
+       NULLIFY (rtens)
+       cp = c_loc(ztens)
+       CALL c_f_pointer (cp, rtens, shape(ztens)*[2,1,1])
+       READ(xmlunit, *) rtens
+       CALL xmlr_closetag ( )
+    else
+       ztens = 0.0_dp
+    end if
+    IF ( present (ierr) ) ierr = ier_
+    !
+  END SUBROUTINE readtag_zt
     !
   subroutine readtag_c ( tag, cval, ierr)
     !
