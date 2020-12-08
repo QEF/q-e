@@ -338,14 +338,12 @@ read_namelists.o : kind.o
 read_namelists.o : mp_images.o
 read_pseudo.o : ../UtilXlib/mp.o
 read_pseudo.o : ../upflib/atom.o
-read_pseudo.o : ../upflib/emend_upf.o
 read_pseudo.o : ../upflib/gth.o
 read_pseudo.o : ../upflib/pseudo_types.o
 read_pseudo.o : ../upflib/radial_grids.o
 read_pseudo.o : ../upflib/read_upf_new.o
 read_pseudo.o : ../upflib/read_upf_v1.o
 read_pseudo.o : ../upflib/read_uspp.o
-read_pseudo.o : ../upflib/upf.o
 read_pseudo.o : ../upflib/upf_auxtools.o
 read_pseudo.o : ../upflib/upf_to_internal.o
 read_pseudo.o : ../upflib/uspp.o
