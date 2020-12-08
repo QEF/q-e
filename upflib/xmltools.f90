@@ -71,7 +71,7 @@ MODULE xmltools
   INTERFACE xmlr_readtag
      MODULE PROCEDURE readtag_c, readtag_r, readtag_l, readtag_i, &
           readtag_iv, readtag_rv, readtag_rm, readtag_rt, &
-          readtag_zv, readtag_zm
+          readtag_zv, readtag_zm, readtag_zt
   END INTERFACE xmlr_readtag
   !
   ! IMPORTANT NOTICE: complex numbers, z=a+ib, are written as two reals:
