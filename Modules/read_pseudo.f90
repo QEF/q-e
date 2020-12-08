@@ -50,12 +50,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   use radial_grids, ONLY: deallocate_radial_grid, nullify_radial_grid
   USE wrappers,     ONLY: md5_from_file, f_remove
   USE read_upf_v1_module,   ONLY: read_upf_v1
-#if defined (__use_fox)
-  USE upf_module,   ONLY: read_upf_new
-  USE emend_upf_module, ONLY: make_emended_upf_copy
-#else
   USE read_upf_new_module,  ONLY: read_upf_new
-#endif
   USE upf_auxtools, ONLY: upf_get_pp_format, upf_check_atwfc_norm
   USE upf_to_internal,  ONLY: add_upf_grid, set_upf_q
   USE read_uspp_module, ONLY: readvan, readrrkj
@@ -136,38 +131,11 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
         !! then as UPF v.2, then as UPF v.1
         !
         IF (isupf ==-81 ) THEN
-#if defined (__use_fox)
-           !! error -81 may mean that file contains offending characters
-           !! fix and write file to tmp_dir
-           !! the underscore is added to distinguish this "fixed" file 
-           !! from the original one, in case the latter is in tmp_dir
-           !
-           file_fixed = TRIM(tmp_dir)//TRIM(psfile(nt))//'_'
-           is_xml = make_emended_upf_copy( file_pseudo, file_fixed ) 
-           !
-           IF (is_xml) THEN
-              !
-              CALL  read_upf_new( file_fixed, upf(nt), isupf )
-              !! try again to read from the corrected file
-              WRITE ( msg, '(A)') 'Pseudo file '// trim(psfile(nt)) // ' has been fixed on the fly.' &
-            &    // new_line('a') // '     To avoid this message in the future, permanently fix ' &
-            &    // new_line('a') // '     your pseudo files following these instructions: ' &
-            &    // new_line('a') // '     https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md'
-             CALL infomsg('read_upf', trim(msg) )
-           ELSE
-              !
-              CALL  read_upf_v1 (file_pseudo, upf(nt), isupf )
-              !! try to read UPF v.1 file
-              IF ( isupf == 0 ) isupf = -1
-              !
-           END IF
-           !
-           ios = f_remove( file_fixed )
-#else
+           !! error code -81 means that the file is not xml or UPF v.2 
+           !! (the funny code value is for compatibility with FoX)
            CALL  read_upf_v1 (file_pseudo, upf(nt), isupf )
            !! try to read UPF v.1 file
            IF ( isupf == 0 ) isupf = -1
-#endif
         END IF
         !
      END IF
