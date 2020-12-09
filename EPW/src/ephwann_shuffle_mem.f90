@@ -38,7 +38,7 @@
                             nqf2, nqf3, mp_mesh_k, restart, plselfen, epbread,  &
                             epmatkqread, selecqread, restart_step, nsmear,      &
                             nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, assume_metal,   &
-                            cumulant, eliashberg, fermi_plot
+                            cumulant, eliashberg, fermi_plot, indabs_fca
   USE control_flags, ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero, cone,       &
@@ -90,7 +90,7 @@
   USE spectral_func, ONLY : spectral_func_el_q, spectral_func_ph_q, a2f_main,   &
                             spectral_func_pl_q
   USE rigid_epw,     ONLY : rpa_epsilon, tf_epsilon, compute_umn_f, rgd_blk_epw_fine_mem
-  USE indabs,        ONLY : indabs_main, renorm_eig
+  USE indabs,        ONLY : indabs_main, renorm_eig, fermi_carrier_indabs
 #if defined(__MPI)
   USE parallel_include, ONLY : MPI_MODE_RDONLY, MPI_INFO_NULL, MPI_OFFSET_KIND, &
                                MPI_OFFSET
@@ -239,8 +239,12 @@
   !! Maximum vector: at*nq
   REAL(KIND = DP) :: etemp
   !! Temperature in Ry (this includes division by kb)
+  REAL(KIND = DP) :: etemp_fca
+  !! Temperature for free carrier absorption
   REAL(KIND = DP) :: ef0(nstemp)
   !! Fermi level for the temperature itemp
+  REAL(KIND = DP) :: ef0_fca(nstemp)
+  !! Fermi level for free carrier absorption
   REAL(KIND = DP) :: efcb(nstemp)
   !! Second Fermi level for the temperature itemp
   REAL(KIND = DP) :: dummy(3)
@@ -1340,7 +1344,15 @@
         ENDIF
         !
         ! Indirect absorption
-        IF (lindabs .AND. .NOT. scattering)  CALL indabs_main(iq)
+        IF (lindabs .AND. .NOT. scattering) THEN
+          IF (indabs_fca .and. (iq == 1)) THEN
+            DO itemp = 1, nstemp
+              etemp_fca = gtemp(itemp)
+              CALL fermi_carrier_indabs(itemp, etemp_fca, ef0_fca)
+            ENDDO
+          ENDIF
+          CALL indabs_main(iq, ef0_fca)
+        ENDIF
         !
         ! Conductivity ---------------------------------------------------------
         IF (scattering) THEN

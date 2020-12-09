@@ -52,7 +52,7 @@
                             assume_metal, wannier_plot_scale, reduce_unk,     &
                             wannier_plot_supercell, wannier_plot_radius,      &
                             fixsym, epw_no_t_rev, epw_tr, epw_nosym, epw_noinv, &
-                            epw_crysym
+                            epw_crysym, indabs_fca, nc_indabs
   USE elph2,         ONLY : elph
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
@@ -158,6 +158,8 @@
   CALL mp_bcast(epw_nosym       , meta_ionode_id, world_comm)
   CALL mp_bcast(epw_noinv       , meta_ionode_id, world_comm)
   CALL mp_bcast(epw_crysym      , meta_ionode_id, world_comm)
+  CALL mp_bcast(indabs_fca      , meta_ionode_id, world_comm)
+  CALL mp_bcast(nc_indabs       , meta_ionode_id, world_comm)
   !
   ! integers
   !
