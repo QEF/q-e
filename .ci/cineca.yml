@@ -46,7 +46,7 @@ pgi parallel v100:
   script:
     - module purge
     - module load profile/global hpc-sdk/20.9--binary mkl/2019--binary python
-    - ./configure --enable-openmp --with-cuda-runtime=10.1 --with-cuda-cc=35 --with-cuda=yes --enable-cuda-env-check=no --with-scalapack=no
+    - ./configure --enable-openmp --with-cuda-runtime=10.1 --with-cuda-cc=70 --with-cuda=yes --enable-cuda-env-check=no --with-scalapack=no
     - make -j pw cp
     - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
     - echo "Using $SLURM_NTASKS procs and $OMP_NUM_THREADS threads"
