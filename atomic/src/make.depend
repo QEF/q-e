@@ -148,7 +148,6 @@ export_upf.o : ../../Modules/funct.o
 export_upf.o : ../../Modules/kind.o
 export_upf.o : ../../Modules/version.o
 export_upf.o : ../../upflib/pseudo_types.o
-export_upf.o : ../../upflib/write_upf.o
 export_upf.o : ../../upflib/write_upf_new.o
 export_upf.o : ld1inc.o
 find_qi.o : ../../Modules/kind.o
