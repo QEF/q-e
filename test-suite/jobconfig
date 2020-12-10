@@ -36,7 +36,7 @@ inputs_args = ('plugin-pw2casino_1.in', '1'), ('plugin-pw2casino_2.in', '1')
 
 [pw_scf/]
 program = PW
-inputs_args = ('scf.in' ,''), ('scf-1.in' ,''), ('scf-2.in' ,''), ('scf-allfrac.in' ,''), ('scf-beef.in' ,''), ('scf-cg.in' ,''), ('scf-disk_io.in' ,''), ('scf-disk_io-1.in' ,''), ('scf-disk_io-2.in' ,''), ('scf-gamma.in' ,''), ('scf-k0.in' ,''), ('scf-kauto.in' ,''), ('scf-kcrys.in' ,''), ('scf-mixing_TF.in' ,''), ('scf-mixing_beta.in' ,''), ('scf-mixing_localTF.in' ,''), ('scf-mixing_ndim.in' ,''), ('scf-ncpp.in' ,''), ('scf-nofrac.in' ,''), ('scf-occ.in' ,'')
+inputs_args = ('scf.in' ,''), ('scf-1.in' ,''), ('scf-2.in' ,''), ('scf-allfrac.in' ,''), ('scf-beef.in' ,''), ('scf-cg.in' ,''), ('scf-disk_io.in' ,''), ('scf-disk_io-1.in' ,''), ('scf-disk_io-2.in' ,''), ('scf-gamma.in' ,''), ('scf-k0.in' ,''), ('scf-kauto.in' ,''), ('scf-kcrys.in' ,''), ('scf-mixing_TF.in' ,''), ('scf-mixing_beta.in' ,''), ('scf-mixing_localTF.in' ,''), ('scf-mixing_ndim.in' ,''), ('scf-ncpp.in' ,''), ('scf-nofrac.in' ,''), ('scf-occ.in' ,''), ('scf-paro-gamma.in',''), ('scf-paro-k.in',''), ('scf-ppcg-gamma.in',''), ('scf-ppcg-k.in','')
 
 [pw_spinorbit/]
 program = PW
@@ -44,7 +44,7 @@ inputs_args = ('spinorbit.in' ,''), ('spinorbit-1.in' ,''), ('spinorbit-3.in' ,'
 
 [pw_uspp/]
 program = PW
-inputs_args = ('uspp.in' ,''), ('uspp-2.in' ,''), ('uspp-cg.in' ,''), ('uspp-hyb-g.in' ,''), ('uspp-hyb-k.in',''), ('uspp-mixing_TF.in' ,''), ('uspp-mixing_localTF.in' ,''), ('uspp-mixing_ndim.in' ,''), ('uspp-singlegrid.in' ,''), ('uspp1-coulomb.in' ,''), ('uspp1.in' ,''), ('uspp2.in' ,'')
+inputs_args = ('uspp.in' ,''), ('uspp-2.in' ,''), ('uspp-cg.in' ,''), ('uspp-hyb-g.in' ,''), ('uspp-hyb-k.in',''), ('uspp-mixing_TF.in' ,''), ('uspp-mixing_localTF.in' ,''), ('uspp-mixing_ndim.in' ,''), ('uspp-singlegrid.in' ,''), ('uspp1-coulomb.in' ,''), ('uspp1.in' ,''), ('uspp2.in' ,''), ('uspp-paro-gamma.in',''), ('uspp-paro-k.in',''), ('uspp-ppcg-gamma.in',''), ('uspp-ppcg-k.in','')
 
 [pw_vdw/]
 program = PW
