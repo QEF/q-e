@@ -193,7 +193,7 @@ ppc64-bgq:*xlf* )
         pre_fdflags="-WF,"
         xlf_flags=1
         ;;
-*:pgf* )
+*:pgf* | *:nvfortran )
 	try_fflags_nomain="-Mnomain"
         try_fflags="-fast"
         try_fflags_openmp="-mp"

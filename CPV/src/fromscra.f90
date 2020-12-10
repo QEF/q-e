@@ -60,7 +60,7 @@ SUBROUTINE from_scratch( )
     USE mp_world,             ONLY : mpime, world_comm
     USE mp,                   ONLY : mp_sum, mp_barrier
     USE matrix_inversion
-    USE device_util_m,        ONLY : dev_memcpy
+    USE device_memcpy_m,        ONLY : dev_memcpy
 
     !
     IMPLICIT NONE

@@ -433,7 +433,6 @@ io_epw.o : ../../Modules/noncol.o
 io_epw.o : ../../PHonon/PH/io_dyn_mat.o
 io_epw.o : ../../PHonon/PH/phcom.o
 io_epw.o : ../../PW/src/pwcom.o
-io_epw.o : ../../PW/src/symm_base.o
 io_epw.o : ../../UtilXlib/mp.o
 io_epw.o : ../../upflib/uspp.o
 io_epw.o : constants_epw.o
@@ -519,12 +518,15 @@ poolgathering.o : ../../Modules/mp_global.o
 poolgathering.o : ../../UtilXlib/mp.o
 printing.o : ../../Modules/cell_base.o
 printing.o : ../../Modules/constants.o
+printing.o : ../../Modules/control_flags.o
+printing.o : ../../Modules/io_files.o
 printing.o : ../../Modules/io_global.o
 printing.o : ../../Modules/kind.o
 printing.o : ../../Modules/mp_global.o
 printing.o : ../../Modules/mp_world.o
 printing.o : ../../Modules/noncol.o
 printing.o : ../../PHonon/PH/phcom.o
+printing.o : ../../PW/src/pwcom.o
 printing.o : ../../PW/src/symm_base.o
 printing.o : ../../UtilXlib/mp.o
 printing.o : ../../upflib/uspp.o
@@ -673,7 +675,6 @@ supercond_iso.o : ../../Modules/control_flags.o
 supercond_iso.o : ../../Modules/io_files.o
 supercond_iso.o : ../../Modules/io_global.o
 supercond_iso.o : ../../Modules/kind.o
-supercond_iso.o : ../../UtilXlib/mp.o
 supercond_iso.o : constants_epw.o
 supercond_iso.o : eliashbergcom.o
 supercond_iso.o : elph2.o

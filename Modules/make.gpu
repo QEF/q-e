@@ -4,7 +4,6 @@ MODULES += \
   becmod_gpu.o \
   becmod_subs_gpu.o \
   cuda_subroutines.o \
-  ylmr2_gpu.o \
   dylmr2_gpu.o \
   random_numbers_gpu.o \
   sph_bes_gpu.o \
@@ -13,9 +12,6 @@ MODULES += \
   exchange_lda_lsda_gpu.o \
   exchange_gga_gpu.o \
   metagga_gpu.o
-
-MODFLAGS += \
-         $(MOD_FLAG)../GScratch
 
 mp_exx.o : control_flags.o
 becmod_gpu.o : becmod.o

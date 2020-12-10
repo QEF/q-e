@@ -86,6 +86,7 @@ MODULE read_namelists_module
        IF( prog == 'PW' ) dt  = 20.0_DP
        IF( prog == 'CP' ) dt  =  1.0_DP
        !
+
        ndr = 50
        ndw = 50
        !
@@ -282,7 +283,7 @@ MODULE read_namelists_module
        ! 
        real_space = .false.
        !
-       ! ... DFT-D, Tkatchenko-Scheffler, XDM
+       ! ... DFT-D, Tkatchenko-Scheffler, XDM, MBD
        !
        vdw_corr    = 'none'
        london      = .false.
@@ -291,6 +292,7 @@ MODULE read_namelists_module
        london_c6   = -1.0_DP
        london_rvdw = -1.0_DP
        ts_vdw          = .FALSE.
+       mbd_vdw          = .FALSE.
        ts_vdw_isolated = .FALSE.
        ts_vdw_econv_thr = 1.E-6_DP
        xdm = .FALSE.
@@ -678,6 +680,7 @@ MODULE read_namelists_module
        exx_ps_rcut_pair =  5.0_DP
        exx_me_rcut_self = 10.0_DP
        exx_me_rcut_pair =  7.0_DP
+       exx_use_cube_domain = .false.
 !=======================================================================
        !
        nit    = 10
@@ -757,6 +760,7 @@ MODULE read_namelists_module
        CALL mp_bcast( lfcpdyn,       ionode_id, intra_image_comm )
        CALL mp_bcast( input_xml_schema_file, ionode_id, intra_image_comm )
        CALL mp_bcast( gate,          ionode_id, intra_image_comm ) !TB
+       CALL mp_bcast( mbd_vdw,        ionode_id, intra_image_comm ) !GSz
        !
        RETURN
        !
@@ -888,6 +892,7 @@ MODULE read_namelists_module
        !
        CALL mp_bcast( vdw_corr,                  ionode_id, intra_image_comm )
        CALL mp_bcast( ts_vdw,                    ionode_id, intra_image_comm )
+       CALL mp_bcast( mbd_vdw,                   ionode_id, intra_image_comm )
        CALL mp_bcast( ts_vdw_isolated,           ionode_id, intra_image_comm )
        CALL mp_bcast( ts_vdw_econv_thr,          ionode_id, intra_image_comm )
        CALL mp_bcast( london,                    ionode_id, intra_image_comm )
@@ -1255,6 +1260,7 @@ MODULE read_namelists_module
        CALL mp_bcast( exx_ps_rcut_pair, ionode_id, intra_image_comm )
        CALL mp_bcast( exx_me_rcut_self, ionode_id, intra_image_comm )
        CALL mp_bcast( exx_me_rcut_pair, ionode_id, intra_image_comm )
+       CALL mp_bcast( exx_use_cube_domain, ionode_id, intra_image_comm )
        CALL mp_bcast( vnbsp,       ionode_id, intra_image_comm )
        !
        RETURN

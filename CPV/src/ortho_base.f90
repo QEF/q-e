@@ -945,9 +945,9 @@ CONTAINS
       USE mp,                ONLY: mp_sum, mp_bcast
       USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm
       USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nbsp, nspin,  nupdwn, iupdwn, nbspx
-      USE device_util_m,     ONLY: dev_memcpy
+      USE device_memcpy_m,     ONLY: dev_memcpy
 !
-      USE device_util_m,     ONLY : dev_memcpy
+      USE device_memcpy_m,     ONLY : dev_memcpy
 !
       IMPLICIT NONE
 
@@ -1302,7 +1302,7 @@ CONTAINS
       USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm, nbgrp
       USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nspin
       !
-      USE device_util_m,     ONLY : dev_memcpy
+      USE device_memcpy_m,     ONLY : dev_memcpy
       !
       IMPLICIT NONE
       !

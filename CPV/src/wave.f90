@@ -176,7 +176,6 @@
       USE kinds,            ONLY: DP
       USE mp,               ONLY: mp_bcast
       USE mp_global,        ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
-      USE uspp_param,       ONLY: upf
 
       IMPLICIT NONE
 
@@ -233,14 +232,12 @@
 
               do ia=1,nat
                  is=ityp(ia)
-                 IF( upf(is)%tvanp ) THEN
-                    do jv=1,nh(is)
-                       jnl = indv_ijkb0(ia) + jv
-                       do i = 1, nss
-                          becrot(jnl,i+noff-1) = becrot(jnl,i+noff-1)+ uu(jl, i) * bec( jnl, j+noff-1 )
-                       end do
+                 do jv=1,nh(is)
+                    jnl = indv_ijkb0(ia) + jv
+                    do i = 1, nss
+                       becrot(jnl,i+noff-1) = becrot(jnl,i+noff-1)+ uu(jl, i) * bec( jnl, j+noff-1 )
                     end do
-                 END IF
+                 end do
               end do
 
               j = j + np_rot

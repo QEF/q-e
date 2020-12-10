@@ -17,7 +17,7 @@ SUBROUTINE add_vhub_to_deeq_gpu( deeq_d )
   USE scf,           ONLY : v
   USE ldaU,          ONLY : is_hubbard, Hubbard_l, offsetU, q_ae
   !
-  USE device_util_m, ONLY : dev_memcpy
+  USE device_memcpy_m, ONLY : dev_memcpy
   !
   IMPLICIT NONE
   !

@@ -83,10 +83,14 @@ INTEGER, DIMENSION(:,:,:), ALLOCATABLE, PRIVATE :: somegaAr  !reduced spherical 
 INTEGER, DIMENSION(:,:,:), ALLOCATABLE, PRIVATE :: gomegaAr  !reduced spherical atomic integration domain (intersection bit array)
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE:: predveffAdn   !atomic dispersion potential prefactor
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: vfree        !free atomic volumes for each atomic species
+!GSz
+REAL(DP), DIMENSION(:), ALLOCATABLE, PUBLIC :: vfree_pub        !free atomic volumes for each atomic species
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: dpfree       !free atomic static dipole polarizability for each atomic species
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: R0free       !free atomic vdW radius for each atomic species
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: C6AAfree     !free atomic homonuclear C6 coefficient for each atomic species
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: veff         !effective atomic volumes for each atom in the simulation cell
+!GSz
+REAL(DP), DIMENSION(:), ALLOCATABLE, PUBLIC :: veff_pub         !effective atomic volumes for each atom in the simulation cell
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: dpeff        !effective atomic static dipole polarizability for each atom in the simulation cell
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: R0eff        !effective atomic vdW radius for each atom in the simulation cell
 REAL(DP), DIMENSION(:), ALLOCATABLE, PRIVATE :: C6AAeff      !effective atomic homonuclear C6 coefficient for each atom in the simulation cell
@@ -204,6 +208,7 @@ PRIVATE :: GetVdWParam
   ! Allocate and initialize species-specific quantities...
   !
   ALLOCATE(vfree(nsp)); vfree=0.0_DP
+  IF(.NOT. ALLOCATED(vfree_pub)) ALLOCATE(vfree_pub(nsp)); vfree=0.0_DP
   ALLOCATE(dpfree(nsp)); dpfree=0.0_DP
   ALLOCATE(R0free(nsp)); R0free=0.0_DP
   ALLOCATE(C6AAfree(nsp)); C6AAfree=0.0_DP
@@ -583,6 +588,7 @@ PRIVATE :: GetVdWParam
     END DO
     !
   END DO
+  vfree_pub=vfree
   !
   RETURN
   !
@@ -1297,6 +1303,7 @@ PRIVATE :: GetVdWParam
   ! Initialization of effective volume...
   !
   ALLOCATE(veff(nat)); veff=0.0_DP
+  IF(.NOT. ALLOCATED(veff_pub)) ALLOCATE(veff_pub(nat)); veff=0.0_DP
   !
   ! Normalization factor for veff integral...
   !
@@ -1346,6 +1353,7 @@ PRIVATE :: GetVdWParam
   CALL mp_sum(veff,intra_image_comm)
   !
   VefftsvdW = veff
+  veff_pub=veff
   !
   CALL stop_clock('tsvdw_veff')
   !

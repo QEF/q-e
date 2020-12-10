@@ -539,6 +539,7 @@ electrons.o : ../../Modules/io_files.o
 electrons.o : ../../Modules/io_global.o
 electrons.o : ../../Modules/ions_base.o
 electrons.o : ../../Modules/kind.o
+electrons.o : ../../Modules/mbdlib.o
 electrons.o : ../../Modules/mm_dispersion.o
 electrons.o : ../../Modules/mp_bands.o
 electrons.o : ../../Modules/mp_pools.o
@@ -1627,10 +1628,8 @@ ns_adj.o : scf_mod.o
 nsg_adj.o : ../../Modules/io_global.o
 nsg_adj.o : ../../Modules/ions_base.o
 nsg_adj.o : ../../Modules/kind.o
-nsg_adj.o : ../../Modules/noncol.o
 nsg_adj.o : ldaU.o
 nsg_adj.o : pwcom.o
-nsg_adj.o : scf_mod.o
 offset_atom_wfc.o : ../../Modules/ions_base.o
 offset_atom_wfc.o : ../../Modules/noncol.o
 offset_atom_wfc.o : ../../upflib/uspp.o
@@ -1970,6 +1969,7 @@ pw_restart_new.o : ../../Modules/io_files.o
 pw_restart_new.o : ../../Modules/io_global.o
 pw_restart_new.o : ../../Modules/ions_base.o
 pw_restart_new.o : ../../Modules/kind.o
+pw_restart_new.o : ../../Modules/mbdlib.o
 pw_restart_new.o : ../../Modules/mm_dispersion.o
 pw_restart_new.o : ../../Modules/mp_bands.o
 pw_restart_new.o : ../../Modules/mp_global.o
@@ -2139,7 +2139,9 @@ run_driver.o : ../../Modules/cell_base.o
 run_driver.o : ../../Modules/check_stop.o
 run_driver.o : ../../Modules/command_line_options.o
 run_driver.o : ../../Modules/control_flags.o
+run_driver.o : ../../Modules/fft_base.o
 run_driver.o : ../../Modules/fsockets.o
+run_driver.o : ../../Modules/funct.o
 run_driver.o : ../../Modules/io_files.o
 run_driver.o : ../../Modules/io_global.o
 run_driver.o : ../../Modules/ions_base.o
@@ -2166,12 +2168,14 @@ run_pwscf.o : ../../Modules/noncol.o
 run_pwscf.o : ../../Modules/parameters.o
 run_pwscf.o : ../../Modules/qexsd.o
 run_pwscf.o : ../../Modules/qmmm.o
+run_pwscf.o : ../../UtilXlib/mp.o
 run_pwscf.o : ../../upflib/upf_params.o
 run_pwscf.o : atomic_wfc_mod.o
 run_pwscf.o : beef.o
 run_pwscf.o : exx.o
 run_pwscf.o : exx_band.o
 run_pwscf.o : exx_base.o
+run_pwscf.o : ldaU.o
 run_pwscf.o : newd.o
 run_pwscf.o : pwcom.o
 run_pwscf.o : scf_mod.o
@@ -2311,6 +2315,7 @@ setlocal.o : extfield.o
 setlocal.o : martyna_tuckerman.o
 setlocal.o : pwcom.o
 setlocal.o : scf_mod.o
+setup.o : ../../Modules/additional_kpoints.o
 setup.o : ../../Modules/cell_base.o
 setup.o : ../../Modules/constants.o
 setup.o : ../../Modules/control_flags.o
@@ -2839,6 +2844,7 @@ v_of_rho.o : ../../Modules/funct.o
 v_of_rho.o : ../../Modules/io_global.o
 v_of_rho.o : ../../Modules/ions_base.o
 v_of_rho.o : ../../Modules/kind.o
+v_of_rho.o : ../../Modules/mbdlib.o
 v_of_rho.o : ../../Modules/mp_bands.o
 v_of_rho.o : ../../Modules/noncol.o
 v_of_rho.o : ../../Modules/recvec.o
@@ -3008,10 +3014,13 @@ wfcinit_gpu.o : pw_restart_new.o
 wfcinit_gpu.o : pwcom.o
 wfcinit_gpu.o : pwcom_gpu.o
 write_ns.o : ../../Modules/constants.o
+write_ns.o : ../../Modules/io_files.o
 write_ns.o : ../../Modules/io_global.o
 write_ns.o : ../../Modules/ions_base.o
 write_ns.o : ../../Modules/kind.o
+write_ns.o : ../../Modules/mp_images.o
 write_ns.o : ../../Modules/noncol.o
+write_ns.o : ../../UtilXlib/mp.o
 write_ns.o : ldaU.o
 write_ns.o : pwcom.o
 write_ns.o : scf_mod.o

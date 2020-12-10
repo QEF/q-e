@@ -965,7 +965,7 @@
          COMPLEX(DP), INTENT(IN)  :: betae( :, : ), c_bgrp( :, : )
          REAL(DP),    INTENT(OUT) :: becdr_bgrp( :, :, : )
       END SUBROUTINE nlsm2_bgrp_x
-#if defined (_CUDA)
+#if defined (__CUDA)
       SUBROUTINE  nlsm2_bgrp_gpu_x( ngw, nkb, betae, c_bgrp, becdr_bgrp, nbspx_bgrp, nbsp_bgrp )
          USE kinds,      ONLY : DP
          IMPLICIT NONE

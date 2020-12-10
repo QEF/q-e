@@ -68,6 +68,7 @@ MODULE pw_restart_new
                                        lscf, gamma_only, &
                                        tqr, tq_smoothing, tbeta_smoothing, &
                                        noinv, smallmem, &
+                                       mbd_vdw,          &
                                        llondon, lxdm, ts_vdw, scf_error, n_scf_steps
       USE constants,            ONLY : e2
       USE realus,               ONLY : real_space
@@ -92,6 +93,7 @@ MODULE pw_restart_new
       USE ener,                 ONLY : ef, ef_up, ef_dw, vtxc, etxc, ewld, etot, &
                                        ehart, eband, demet, edftd3, elondon, exdm
       USE tsvdw_module,         ONLY : EtsvdW
+      USE libmbd_interface,     ONLY : EmbdvdW
       USE gvecw,                ONLY : ecutwfc
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
       USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, &
@@ -377,7 +379,7 @@ MODULE pw_restart_new
                                    ECUTVCUT = ectuvcut_opt, LOCAL_THR = loc_thr_p )
          END IF 
 
-         empirical_vdw = (llondon .OR. ldftd3 .OR. lxdm .OR. ts_vdw )
+         empirical_vdw = (llondon .OR. ldftd3 .OR. lxdm .OR. ts_vdw .OR. mbd_vdw )
          dft_is_vdw = dft_is_nonlocc() 
          IF ( dft_is_vdw .OR. empirical_vdw ) THEN 
             ALLOCATE (vdw_obj)
@@ -416,6 +418,8 @@ MODULE pw_restart_new
                     ts_vdw_isolated_pt => ts_vdw_isolated_
                     ts_vdw_econv_thr_ = vdw_econv_thr
                     ts_vdw_econv_thr_pt => ts_vdw_econv_thr_
+                ELSE IF ( mbd_vdw ) THEN
+                  dispersion_energy_term = 2._DP * EmbdvdW/e2 - 2._DP * EtsvdW/e2 !avoiding double-counting
                 END IF
             ELSE
                 vdw_corr_ = 'none'
@@ -1005,7 +1009,7 @@ MODULE pw_restart_new
            exxdiv_treatment, yukawa, ecutvcut
       USE exx,             ONLY : ecutfock, local_thr
       USE control_flags,   ONLY : noinv, gamma_only, tqr, llondon, ldftd3, &
-           lxdm, ts_vdw
+           lxdm, ts_vdw, mbd_vdw
       USE Coul_cut_2D,     ONLY : do_cutoff_2D
       USE noncollin_module,ONLY : noncolin, npol, angle1, angle2, bfield, &
            nspin_lsda, nspin_gga, nspin_mag
@@ -1102,7 +1106,7 @@ MODULE pw_restart_new
            Hubbard_U, Hubbard_U_back, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
            vdw_corr, scal6, lon_rcut, vdw_isolated )
       !! More DFT initializations
-      CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, lxdm )
+      CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, mbd_vdw, lxdm )
       CALL enforce_input_dft ( dft_name, .TRUE. )
       IF ( dft_is_hybrid() ) THEN
          ecutvcut=ecutvcut*e2
@@ -1168,8 +1172,8 @@ MODULE pw_restart_new
       time_reversal = (.NOT.magnetic_sym) .AND. (.NOT.noinv) 
       CALL inverse_s()
       CALL s_axis_to_cart()
-      !! symmetry check - FIXME: is this needed?
-      IF (nat > 0) CALL checkallsym( nat, tau, ityp)
+      !! symmetry check - FIXME: must be done in a more consistent way 
+      !! IF (nat > 0) CALL checkallsym( nat, tau, ityp)
       !! Algorithmic info
       do_cutoff_2D = (output_obj%boundary_conditions%assume_isolated == "2D")
       CALL qexsd_copy_algorithmic_info ( output_obj%algorithmic_info, &

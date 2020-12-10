@@ -7,7 +7,7 @@ build:pw:
 
 #### BUILDS ON GALILEO ####
 
-intel mpi:
+intel parallel:
   tags: [intel]
   script:
     - module purge
@@ -23,13 +23,12 @@ intel mpi:
     - sed -i 's/export PARA_POSTFIX=" "/export PARA_POSTFIX=" -pd=.true."/g' run-pw.sh
     - make clean && make run-tests-pw-parallel
 
-pgi cuda mpi:
+pgi parallel k80:
   tags: [k80]
   script:
     - module purge
-    - module load profile/global pgi/19.10--binary mkl/2019--binary cuda/10.0 python
-    - ./configure --enable-openmp --with-cuda-runtime=10.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME --with-scalapack=no
-    - sed -i 's/DFTI/FFTW/' make.inc # There is a bug in current FFTXlib, CPU version
+    - module load profile/global hpc-sdk/20.9--binary mkl/2019--binary python
+    - ./configure --enable-openmp --with-cuda-runtime=10.1 --with-cuda-cc=35 --with-cuda=yes --enable-cuda-env-check=no --with-scalapack=no
     - make -j pw cp
     - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
     - echo "Using $SLURM_NTASKS procs and $OMP_NUM_THREADS threads"
@@ -40,140 +39,54 @@ pgi cuda mpi:
     - sed -i 's/export PARA_POSTFIX=" "/export PARA_POSTFIX=" -pd=.true."/g' run-pw.sh
     - make clean && make run-tests-pw-parallel
     - cd .. && cp PW/src/pw.x ./pwgpu-mpi-cuda8-cc35-${CI_COMMIT_SHA:0:8}.x
-  artifacts:
-    paths:
-    - pwgpu-mpi-cuda8-cc35-${CI_COMMIT_SHA:0:8}.x
-    expire_in: 1 week
 
-pgi cuda mpi 185:
-  tags: [k80]
+
+pgi parallel v100:
+  tags: [galileo,v100]
   script:
     - module purge
-    - module load profile/global pgi/18.5 mkl/2018--binary cuda/9.0 openmpi/3.1.3--pgi--18.5 python
-    - ./configure --enable-openmp --with-cuda-runtime=9.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME --with-scalapack=no
-    - module rm -f cuda/9.0             # linking problem with cusolver in PGI 18.5
-    - sed -i 's/DFTI/FFTW/' make.inc # linking problem with mkl in PGI 18.5
+    - module load profile/global hpc-sdk/20.9--binary mkl/2019--binary cuda/10.1 python
+    - ./configure --enable-openmp --with-cuda-runtime=10.1 --with-cuda-cc=70 --with-cuda=$CUDA_HOME --with-scalapack=no
     - make -j pw cp
     - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
     - echo "Using $SLURM_NTASKS procs and $OMP_NUM_THREADS threads"
     - cd test-suite
     - sed -i "s/TESTCODE_NPROCS=4/TESTCODE_NPROCS=$SLURM_NTASKS/" ENVIRONMENT
-    - sed -i 's/mpirun -np/srun -n/' run-pw.sh
-    - make clean
-    - make run-tests-pw-parallel
-    - sed -i 's/export PARA_POSTFIX=" "/export PARA_POSTFIX=" -pd=.true."/g' run-pw.sh
-    - make clean && make run-tests-pw-parallel
-    - cd .. && cp PW/src/pw.x ./pwgpu-mpi-cuda9-cc35-${CI_COMMIT_SHA:0:8}.x
-  artifacts:
-    paths:
-    - pwgpu-mpi-cuda9-cc35-${CI_COMMIT_SHA:0:8}.x
-    expire_in: 1 week
-
-
-pgi cuda mpi v100:
-  tags: [galileo,v100]
-  script:
-    - module purge
-    - module load profile/global pgi/18.5 mkl/2018--binary cuda/9.0 openmpi/3.1.3--pgi--18.5 python
-    - ./configure --enable-openmp --with-cuda-runtime=9.0 --with-cuda-cc=70 --with-cuda=$CUDA_HOME --with-scalapack=no
-    - module rm -f cuda/9.0             # linking problem with cusolver in PGI 18.5
-    - sed -i 's/DFTI/FFTW/' make.inc # linking problem with mkl in PGI 18.5
-    - make -j pw cp
-    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
-    - echo "Using $SLURM_NTASKS procs and $OMP_NUM_THREADS threads"
-    - cd test-suite
-    - sed -i "s/TESTCODE_NPROCS=4/TESTCODE_NPROCS=$SLURM_NTASKS/" ENVIRONMENT
-    - sed -i 's/mpirun -np/srun -n/' run-pw.sh
     - make clean
     - make run-tests-pw-parallel
     - sed -i 's/export PARA_POSTFIX=" "/export PARA_POSTFIX=" -pd=.true."/g' run-pw.sh
     - make clean && make run-tests-pw-parallel
 
-pgi cuda serial:
+pgi serial k80:
   tags: [k80]
   script:
     - module purge
-    - module load profile/global pgi/19.10--binary mkl/2019--binary cuda/10.0 python
-    - ./configure --disable-parallel --enable-openmp --with-cuda-runtime=10.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME
+    - module load profile/global hpc-sdk/20.9--binary mkl/2019--binary python
+    - ./configure --disable-parallel --enable-openmp --with-cuda-runtime=10.1 --with-cuda-cc=35 --with-cuda=yes --enable-cuda-env-check=no
     - make -j pw cp
     - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
     - echo "Using $OMP_NUM_THREADS threads"
     - cd test-suite
     - make clean
     - make run-tests-pw-serial
-    - cd .. && cp PW/src/pw.x ./pwgpu-serial-cuda8-cc35-${CI_COMMIT_SHA:0:8}.x
-  artifacts:
-    paths:
-    - pwgpu-serial-cuda8-cc35-${CI_COMMIT_SHA:0:8}.x
-    expire_in: 1 week
-
-pgi cuda serial 185:
-  tags: [k80]
-  script:
-    - module purge
-    - module load profile/global pgi/18.5 mkl/2018--binary cuda/9.0 python
-    - ./configure --disable-parallel --enable-openmp --with-cuda-runtime=9.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME
-    - module rm -f cuda/9.0             # linking problem with cusolver in PGI 18.5
-    - sed -i 's/DFTI/FFTW/' make.inc # linking problem with mkl in PGI 18.5
-    - make -j pw cp
-    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
-    - echo "Using $OMP_NUM_THREADS threads"
-    - cd test-suite
-    - make clean
-    - make run-tests-pw-serial
-    - cd .. && cp PW/src/pw.x ./pwgpu-serial-cuda9-cc35-${CI_COMMIT_SHA:0:8}.x
-  artifacts:
-    paths:
-    - pwgpu-serial-cuda9-cc35-${CI_COMMIT_SHA:0:8}.x
-    expire_in: 1 week
-
-pgi cuda9 v100 :
-  tags: [galileo,v100]
-  script:
-    - module purge
-    - module load profile/global pgi/18.5 mkl/2018--binary cuda/9.0 python
-    - ./configure --disable-parallel --enable-openmp --with-cuda-runtime=9.0 --with-cuda-cc=70 --with-cuda=$CUDA_HOME
-    - module rm -f cuda/9.0             # linking problem with cusolver in PGI 18.5
-    - sed -i 's/DFTI/FFTW/' make.inc # linking problem with mkl in PGI 18.5
-    - make -j pw cp
-    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
-    - echo "Using $OMP_NUM_THREADS threads"
-    - cd test-suite
-    - make clean
-    - make run-tests-pw-serial
-
-pgi cuda9 v100 CP:
-  tags: [galileo,v100]
-  script:
-    - module purge
-    - module load profile/global pgi/19.10--binary mkl/2019--binary cuda/10.0 python
-    - ./configure --disable-parallel --enable-openmp --with-cuda-runtime=10.0 --with-cuda-cc=70 --with-cuda=$CUDA_HOME
-    - make -j cp
-    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
-    - echo "Using $OMP_NUM_THREADS threads"
-    - cd test-suite
-    - make clean
     - make run-tests-cp-serial
 
 
-pgi191 cuda10 v100 power:
-  tags: [marconi100]
+pgi serial v100 :
+  tags: [galileo,v100]
   script:
     - module purge
-    - module load pgi/19.10--binary cuda/10.1 spectrum_mpi/10.3.1--binary  python/3.8.2
-    - pwd
-    - cd ..
-    - ./configure CC=pgcc F77=pgf90 FC=pgf90 F90=pgf90 MPIF90=mpipgifort --enable-openmp --with-cuda=$CUDA_ROOT --with-cuda-runtime=10.1 --with-cuda-cc=70
+    - module load profile/global hpc-sdk/20.9--binary mkl/2019--binary python
+    - ./configure --disable-parallel --enable-openmp --with-cuda-runtime=10.1 --with-cuda-cc=70 --with-cuda=yes --enable-cuda-env-check=no
     - make -j pw cp
-    - salloc --nodes=1 --ntasks-per-node=4 --ntasks-per-socket=2 --cpus-per-task=32 --gres=gpu:4 --mem=230000MB --time 01:00:00 -A $CINECA_QE_ACCOUNT -p m100_usr_prod
-    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=8; fi
+    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
     - echo "Using $OMP_NUM_THREADS threads"
     - cd test-suite
     - make clean
-    - make run-tests-pw-parallel
-    - exit
+    - make run-tests-pw-serial
+    - make run-tests-cp-serial
 
-pgi207 cuda10 v100 power:
+pgi207 power v100:
   tags: [marconi100]
   script:
     - module purge
@@ -188,6 +101,7 @@ pgi207 cuda10 v100 power:
     - cd test-suite
     - make clean
     - make run-tests-pw-parallel
+    - make run-tests-cp-parallel
     - exit
 
 #pgi cuda9.2 p100 nollvm:

@@ -50,6 +50,7 @@ upf.o : gth.o
 upf.o : pseudo_types.o
 upf.o : read_cpmd.o
 upf.o : read_fhi.o
+upf.o : read_upf_new.o
 upf.o : read_upf_schema.o
 upf.o : read_upf_v1.o
 upf.o : read_upf_v2.o
@@ -88,6 +89,7 @@ virtual_v2.o : upf_io.o
 virtual_v2.o : upf_kinds.o
 virtual_v2.o : upf_utils.o
 virtual_v2.o : write_upf.o
+virtual_v2.o : write_upf_new.o
 write_upf.o : pseudo_types.o
 write_upf.o : write_upf_schema.o
 write_upf.o : write_upf_v2.o
@@ -100,5 +102,7 @@ write_upf_schema.o : upf_kinds.o
 write_upf_v2.o : pseudo_types.o
 write_upf_v2.o : upf_kinds.o
 xmltools.o : upf_kinds.o
+ylmr2.o : upf_const.o
+ylmr2.o : upf_kinds.o
 write_upf_new.o : ../include/qe_version.h
 write_upf_schema.o : ../include/qe_version.h

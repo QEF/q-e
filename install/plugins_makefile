@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2016 Quantum ESPRESSO group
+# Copyright (C) 2001-2020 Quantum ESPRESSO group
 # 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -11,16 +11,6 @@
 sinclude ../make.inc
 include plugins_list
 include install_utils
-
-###########################################################
-# extlibs - what is the purpose of these targets? shouldn't
-#           these be dealt with in "extlibs_makefile" ?
-###########################################################
-
-EXTLIBS=liblapack libiotk
-
-extlibs:
-	test -n "$(EXTLIBS)" && ( cd .. ; $(MAKE) $(EXTLIBS) || exit 1) || :
 
 ###########################################################
 # D3Q
@@ -129,7 +119,7 @@ w90_distclean:
 # WANT
 ###########################################################
 
-want: extlibs uncompress-want configure-want
+want: uncompress-want configure-want
 	if test -d ../WANT; then \
 	cd ../WANT; $(MAKE) all || exit 1; fi
 	touch ./make-want
@@ -141,23 +131,14 @@ uncompress-want:
 configure-want:
 	cd ../WANT ; \
 	./configure \
-	--with-external-iotk \
-	IOTK_LIBS="-L../../../S3DE/iotk/src -liotk" \
-	IOTK_INCLUDE="$(MOD_FLAG)../../../S3DE/iotk/src" \
 	CC="$(CC)" \
 	F90="$(F90)" \
 	MPIF90="$(MPIF90)" \
-	F90FLAGS="$(F90FLAGS) $($PRE_FDFLAGS) $(FDFLAGS) $(IFLAGS) $(MODFLAGS)" \
-	F77="$(F77)" \
-	FFLAGS="$(FFLAGS)" \
-	FFLAGS_NOOPT="$(FFLAGS_NOOPT)" \
 	LD="$(LD)" \
 	LDFLAGS="$(LDFLAGS)" \
 	AR="$(AR)" \
 	ARFLAGS="$(ARFLAGS)" \
 	RANLIB="$(RANLIB)" \
-	DFLAGS="$(DFLAGS)" \
-	FDFLAGS="$(DFLAGS)" \
 	LAPACK_LIBS="$(LAPACK_LIBS)" \
 	BLAS_LIBS="$(BLAS_LIBS)" \
 	FFT_LIBS="$(FFT_LIBS)" 
@@ -181,7 +162,7 @@ want_distclean:
 # YAMBO
 ###########################################################
 
-yambo: extlibs uncompress-yambo configure-yambo
+yambo: uncompress-yambo configure-yambo
 	if test -d ../YAMBO; then \
 	cd ../YAMBO; $(MAKE) yambo interfaces ypp || exit 1; fi
 	touch ./make-yambo
@@ -197,13 +178,11 @@ configure-yambo:
 	./configure \
 	 --with-blas-libs="$(BLAS_LIBS)" \
 	 --with-lapack-libs="$(LAPACK_LIBS) $(BLAS_LIBS)" \
-	 --with-iotk-path="$(TOPDIR)/iotk" \
 	 --with-fft-libs="$(FFT_LIBS)" \
 	 --with-scalapack-libs="$(SCALAPACK_LIBS)" \
 	 --with-blacs-libs="$(SCALAPACK_LIBS)" \
 	 PFC="$(MPIF90)" \
-	 FC="$(F90)" \
-	 F77="$(F77)"
+	 FC="$(F90)"
 	touch ./configure-yambo
 
 yambo_clean:
@@ -220,184 +199,15 @@ yambo_distclean:
 	if test -e ../archive/$(YAMBO).tar.gz ; then \
 		rm -f ../archive/$(YAMBO).tar.gz; fi
 
-# Next targets, except "cleaning" targets, are obsolete or unused
-
-###########################################################
-# plumed
-###########################################################
-
-plumed: test-plumed uncompress-plumed patch-plumed
-	if test -d ../PLUMED; then \
-	cd ../; $(MAKE) pw; $(MAKE) cp; fi
-	touch make-plumed
-
-test-plumed:
-	@(if test ! -s ../archive/$(PLUMED).tar.gz && test ! -d ../PLUMED; then \
-	echo "The release contains no PLUMED package. Trying to download it from qe-forge."; fi) 
-	touch ./test-plumed
-
-uncompress-plumed:
-	$(call download_and_unpack,$(PLUMED),$(PLUMED_URL),PLUMED,plumed)
-	touch uncompress-plumed
-
-patch-plumed:
-	if test -d ../PLUMED; then \
-	(cd ../PLUMED ; export plumedir="`pwd`" ; \
-	cp  patches/plumedpatch_qespresso_5.2.sh ../ ; \
-	cd ../ ; ./plumedpatch_qespresso_5.2.sh -patch) ; fi	
-	touch ./patch-plumed
-
-plumed_clean: 
-	if test -d ../PLUMED; then (cd ../PLUMED; \
-	export plumedir="`pwd`" ; \
-	cd ../ ; ./plumedpatch_qespresso_5.2.sh -revert); fi
-	cd ../PW ; $(MAKE) clean; cd ../CPV ; $(MAKE) clean
-	rm -rf ./make-plumed ./patch-plumed
-
-plumed_veryclean: plumed_clean
-	if test -d ../PLUMED; then (rm -R -f ../PLUMED); fi
-	if test -d ../$(PLUMED); then (rm -R -f ../$(PLUMED)); fi
-	rm -rf ./uncompress-plumed ../plumedpatch_qespresso_5.2.sh
-
-plumed_distclean: 
-# Nothing to do here
-
-###########################################################
-# SaX
-###########################################################
-
-sax: extlibs uncompress-sax configure-sax
-	if test -d ../SaX; then \
-	cd ../SaX; $(MAKE) sax_all; fi
-#	- ( cd ../bin ; ln -sf ../SaX/sax/bin/* . ) 
-	touch ./make-sax
-
-uncompress-sax: 
-	$(call download_and_unpack,$(SAX),$(SAX_URL),SaX,$(SAX))
-	touch uncompress-sax
-
-configure-sax: 
-	cd ../SaX ; \
-	./configure \
-	--with-external-iotk \
-	IOTK_LIBS="-L../../S3DE/iotk/src -liotk" \
-	IOTK_INCLUDE="$(MOD_FLAG)../../S3DE/iotk/src" \
-	CC="$(CC)" \
-	F90="$(F90)" \
-	MPIF90="$(MPIF90)" \
-	F90FLAGS="$(F90FLAGS) $($PRE_FDFLAGS) $(FDFLAGS) $(IFLAGS) $(MODFLAGS)" \
-	F77="$(F77)" \
-	FFLAGS="$(FFLAGS)" \
-	FFLAGS_NOOPT="$(FFLAGS_NOOPT)" \
-	LD="$(LD)" \
-	LDFLAGS="$(LDFLAGS)" \
-	AR="$(AR)" \
-	ARFLAGS="$(ARFLAGS)" \
-	RANLIB="$(RANLIB)" \
-	LIB_LAPACK="$(LAPACK_LIBS)" \
-	LIB_BLAS="$(BLAS_LIBS)" 
-	touch ./configure-sax
-
-
-sax_clean:
-	if test -d ../SaX; then (cd ../SaX; \
-	$(MAKE) clean); fi
-	- rm -rf ./make-sax ./configure-sax
-
-sax_veryclean: sax_clean
-	if test -d ../SaX; then (rm -R -f ../SaX); fi
-	if test -d ../$(SAX); then (rm -R -f ../$(SAX)); fi
-	- rm -rf ./uncompress-sax
-
-sax_distclean: 
-	rm -f ../archive/$(SAX).tar.gz
-
-###########################################################
-# WEST
-###########################################################
-
-west: extlibs uncompress-west 
-	if test -d ../West; then \
-	cd ../West; $(MAKE) -j1 all || exit 1; fi
-	touch ./make-west
-
-uncompress-west: 
-	$(call download_and_unpack,$(WEST),$(WEST_URL),West,WEST)
-	touch uncompress-west
-
-west_clean:
-	if test -d ../West; then (cd ../West; \
-	$(MAKE) clean); fi
-	- rm -rf ./make-west ./configure-west
-
-west_veryclean: west_clean
-# dir is not deleted for compatibility with the repository
-
-west_distclean: 
-	   rm -f ../archive/$(WEST).tar.gz
-
-###########################################################
-# SternheimerGW
-###########################################################
-
-SternheimerGW: extlibs uncompress-SternheimerGW
-	if test -d ../SternheimerGW; then \
-	  cd ../SternheimerGW; $(MAKE); \
-	fi
-	touch ./make-SternheimerGW
-
-uncompress-SternheimerGW: 
-	$(call download_and_unpack,$(SternheimerGW),$(SternheimerGW_URL),SternheimerGW,SternheimerGW)
-	touch uncompress-SternheimerGW
-
-SternheimerGW_clean:
-	if test -d ../SternheimerGW; then \
-	  cd ../SternheimerGW ; $(MAKE) clean ; \
-	fi
-	- rm -rf ./make-SternheimerGW
-
-SternheimerGW_veryclean: SternheimerGW_clean
-	if test -d ../SternheimerGW; then (rm -R -f ../SternheimerGW); fi
-	if test -d ../$(SternheimerGW); then (rm -R -f ../$(SternheimerGW)); fi
-	- rm -rf ./uncompress-SternheimerGW
-
-SternheimerGW_distclean:
-	rm -f ../archive/$(SternheimerGW_archive)
-
-###########################################################
-# test-suite
-###########################################################
-
-test-suite: uncompress-test-suite
-	if test -d ../test-suite ; then \
-	( cd ../test-suite ; $(MAKE) TLDEPS= run-tests || exit 1) ; fi
-
-uncompress-test-suite:
-	$(call download_and_unpack,$(TESTSUITE),$(TESTSUITE_URL),test-suite,test-suite)
-	touch uncompress-test-suite
-
-test-suite_clean:
-	if test -d ../test-suite; then (cd ../test-suite; \
-	$(MAKE) clean); fi
-
-test-suite_veryclean: test-suite_clean
-
-test-suite_distclean:
-	rm -f ../archive/$(TESTSUITE).tar.gz
-
 ###########################################################
 # cleaning
 ###########################################################
 
-clean: w90_clean want_clean yambo_clean plumed_clean \
-	gipaw_clean west_clean SternheimerGW_clean test-suite_clean \
-	sax_clean d3q_clean
+clean: w90_clean want_clean yambo_clean gipaw_clean d3q_clean
 
 veryclean: w90_veryclean want_veryclean yambo_veryclean \
-	plumed_veryclean gipaw_veryclean west_veryclean SternheimerGW_veryclean \
-	test-suite_veryclean sax_veryclean d3q_veryclean
+	gipaw_veryclean d3q_veryclean
 
 distclean: w90_distclean want_distclean yambo_distclean \
-  test-suite_distclean gipaw_distclean west_distclean SternheimerGW_distclean \
-	sax_distclean d3q_distclean
+	gipaw_distclean d3q_distclean
 

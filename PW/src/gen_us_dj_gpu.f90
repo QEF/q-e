@@ -27,7 +27,7 @@ SUBROUTINE gen_us_dj_gpu( ik, dvkb_d )
   USE us_gpum,     ONLY: using_tab, using_tab_d2y, &
                          using_tab_d, tab_d
   USE gvect_gpum,  ONLY: mill_d, eigts1_d, eigts2_d, eigts3_d, g_d
-  USE gbuffers,    ONLY: dev_buf
+  USE device_fbuff_m,    ONLY: dev_buf
   !
   IMPLICIT NONE
   !

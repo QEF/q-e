@@ -21,15 +21,15 @@ fft_interpolate.o : fft_types.o
 fft_parallel.o : fft_buffers.o
 fft_parallel.o : fft_param.o
 fft_parallel.o : fft_scalar.o
+fft_parallel.o : fft_scatter.o
+fft_parallel.o : fft_scatter_gpu.o
 fft_parallel.o : fft_types.o
-fft_parallel.o : scatter_mod.o
-fft_parallel.o : scatter_mod_gpu.o
 fft_parallel_2d.o : fft_buffers.o
 fft_parallel_2d.o : fft_param.o
 fft_parallel_2d.o : fft_scalar.o
+fft_parallel_2d.o : fft_scatter_2d.o
+fft_parallel_2d.o : fft_scatter_2d_gpu.o
 fft_parallel_2d.o : fft_types.o
-fft_parallel_2d.o : scatter_mod_2d.o
-fft_parallel_2d.o : scatter_mod_2d_gpu.o
 fft_scalar.ARM_LIB.o : fft_param.o
 fft_scalar.ARM_LIB.o : fftw_interfaces.o
 fft_scalar.DFTI.o : fft_param.o
@@ -47,42 +47,31 @@ fft_scalar.o : fft_scalar.FFTW.o
 fft_scalar.o : fft_scalar.FFTW3.o
 fft_scalar.o : fft_scalar.SX6.o
 fft_scalar.o : fft_scalar.cuFFT.o
+fft_scatter.o : fft_param.o
+fft_scatter.o : fft_types.o
+fft_scatter_2d.o : fft_param.o
+fft_scatter_2d.o : fft_types.o
+fft_scatter_2d_gpu.o : fft_param.o
+fft_scatter_2d_gpu.o : fft_types.o
+fft_scatter_gpu.o : fft_buffers.o
+fft_scatter_gpu.o : fft_param.o
+fft_scatter_gpu.o : fft_types.o
 fft_smallbox.o : fftw_interfaces.o
 fft_smallbox_type.o : fft_types.o
 fft_support.o : fft_param.o
+fft_test.o : fft_ggen.o
+fft_test.o : fft_helper_subroutines.o
+fft_test.o : fft_interfaces.o
+fft_test.o : fft_parallel.o
+fft_test.o : fft_param.o
+fft_test.o : fft_support.o
+fft_test.o : fft_types.o
+fft_test.o : stick_base.o
 fft_types.o : fft_param.o
 fft_types.o : fft_support.o
 fft_types.o : stick_base.o
 scatter_mod.o : fft_param.o
 scatter_mod.o : fft_types.o
-scatter_mod_2d.o : fft_param.o
-scatter_mod_2d.o : fft_types.o
-scatter_mod_2d_gpu.o : fft_param.o
-scatter_mod_2d_gpu.o : fft_types.o
-scatter_mod_gpu.o : fft_buffers.o
-scatter_mod_gpu.o : fft_param.o
-scatter_mod_gpu.o : fft_types.o
 stick_base.o : fft_param.o
-test.o : fft_ggen.o
-test.o : fft_helper_subroutines.o
-test.o : fft_interfaces.o
-test.o : fft_parallel.o
-test.o : fft_param.o
-test.o : fft_support.o
-test.o : fft_types.o
-test.o : stick_base.o
-test0.o : fft_interfaces.o
-test0.o : fft_parallel.o
-test0.o : fft_param.o
-test0.o : fft_scalar.o
-test0.o : fft_support.o
-test0.o : fft_types.o
 tg_gather.o : fft_param.o
 tg_gather.o : fft_types.o
-fft_stick.o : 
-fft_stick.o : 
-fftw.o : 
-fftw_dp.o : 
-fftw_dp.o : 
-fftw_sp.o : 
-fftw_sp.o : 

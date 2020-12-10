@@ -74,7 +74,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        !! See comments inside
        !
        USE mp, ONLY: mp_get_comm_null, mp_circular_shift_left
-       USE gbuffers, ONLY : dev_buf
+       USE device_fbuff_m, ONLY : dev_buf
        !
 #if defined(__CUDA)
        USE cudafor
@@ -202,7 +202,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        USE cudafor
        USE cublas
 #endif
-       USE gbuffers, ONLY : dev_buf
+       USE device_fbuff_m, ONLY : dev_buf
        !
        IMPLICIT NONE
        COMPLEX(DP), POINTER :: ps_d (:,:), deeaux_d (:,:)
@@ -280,7 +280,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        USE cudafor
        USE cublas
 #endif
-       USE gbuffers,      ONLY : dev_buf
+       USE device_fbuff_m,      ONLY : dev_buf
        USE becmod_gpum,   ONLY : becp_d
        IMPLICIT NONE
        COMPLEX(DP), POINTER :: ps_d (:,:,:)

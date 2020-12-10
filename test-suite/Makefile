@@ -72,6 +72,12 @@ run-tests-epw-serial : prolog pseudo
 run-tests-epw-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_all
 
+run-tests-zg-serial : prolog
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=zg_all
+
+run-tests-zg-parallel : prolog
+	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=zg_all
+
 run-tests-hp-serial : prolog pseudo
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=hp_all
 
@@ -132,14 +138,14 @@ compare-epw : prolog
 
 clean:
 # output files
-	@rm -rf pw_*/test* ph_*/test* cp_*/test* hp_*/test* pp_*/test* epw_*/test*
+	@rm -rf pw_*/test* ph_*/test* cp_*/test* hp_*/test* pp_*/test* epw_*/test* zg_*/test*
 # error files
-	@rm -rf pw_*/CRASH ph_*/CRASH* cp_*/CRASH hp_*/CRASH pp_*/CRASH epw_*/CRASH
+	@rm -rf pw_*/CRASH ph_*/CRASH* cp_*/CRASH hp_*/CRASH pp_*/CRASH epw_*/CRASH zg_*/CRASH
 # pwscf data files
 	@rm -rf pw_*/pwscf.* ph_*/pwscf.* pp_*/pwscf.* epw_*/pwscf.*
 # cp data files
-	@rm -rf cp_si/si_*.* cp_o2/o2_*.* cp_h2o/h2o_*.* cp_sio2/sio2_*.*
-	@rm -rf cp_si/si.??? cp_o2/o2.??? cp_h2o/h2o.??? cp_sio2/sio2.???
+	@rm -rf cp_si/si_*.* cp_o2/o2_*.* cp_h2o*/h2o_*.* cp_sio2/sio2_*.*
+	@rm -rf cp_si/si.??? cp_o2/o2.??? cp_h2o*/h2o.??? cp_sio2/sio2.???
 # Special case for 'pw_vc-relax' test-case
 	@rm -f pw_vc-relax/ave pw_vc-relax/e pw_vc-relax/tv pw_vc-relax/p pw_vc-relax/eal pw_vc-relax/avec
 # Special case for 'noexe_langevin' test-case
@@ -183,6 +189,9 @@ clean:
 	@rm -rf epw_base/save epw_super/save epw_pl/save/ epw_polar/save/ \
                 epw_trev/save epw_trev_uspp/save epw_trev_paw/save \
 		epw_mob/save epw_mob_ibte/save epw_mob_ibte_sym/save epw_mob_polar/save
+
+# Cleaning ZG final files
+	@rm -f zg_conf/equil_pos.txt zg_conf/ZG-*_0.020.dat
 
 	@rm -f userconfig
 

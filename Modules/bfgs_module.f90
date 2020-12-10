@@ -262,6 +262,12 @@ CONTAINS
       IF ( .NOT. conv_bfgs .AND. ( tr_min_hit > 1 ) ) CALL infomsg( 'bfgs',&
               'history already reset at previous step: stopping' )
       conv_bfgs = conv_bfgs .OR. ( tr_min_hit > 1 )
+      !
+      WRITE(stdout, '(5X,"Energy error",T30,"= ",1PE12.1)') energy_error
+      WRITE(stdout, '(5X,"Gradient error",T30,"= ",1PE12.1)') grad_error
+      IF( lmovecell ) WRITE(stdout, &
+         '(5X,"Cell gradient error",T30,"= ",1PE12.1,/)') cell_error
+      !
       IF ( conv_bfgs ) GOTO 1000
       !
       ! ... some output is written

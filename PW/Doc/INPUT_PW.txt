@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: pw.x / PWscf / Quantum Espresso (version: 6.6)
+Program: pw.x / PWscf / Quantum Espresso (version: 6.7)
 ------------------------------------------------------------------------
 
 
@@ -88,6 +88,9 @@ if (tpipa_b or crystal_b in a 'bands' calculation) see Doc/brillouin_zones.pdf
    .....
    label_n Fx(n) Fy(n) Fz(n) ]
 
+[ ADDITIONAL_K_POINTS
+     see: K_POINTS ]
+
 
 
 ========================================================================
@@ -151,8 +154,8 @@ NAMELIST: &CONTROL
                         perform a non-scf calculations.  Works only if the calculation was
                         cleanly stopped using variable "max_seconds", or by user request
                         with an "exit file" (i.e.: create a file "prefix".EXIT, in directory
-                        "outdir"; see variables "prefix", "outdir").  Overrides "startingwfc"
-                        and "startingpot".
+                        "outdir"; see variables "prefix", "outdir"). The default for
+                        "startingwfc" and "startingpot" is set to 'file'.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -165,7 +168,7 @@ NAMELIST: &CONTROL
                    .TRUE.  collect wavefunctions from all processors, store them
                            into the output data directory "outdir"/"prefix".save
                            The resulting format is portable to a different number
-                           of processor, or different kind of parallelization
+                           of processors, or different kind of parallelization
                    
                    .FALSE. OBSOLETE - NO LONGER IMPLEMENTED
                            do not collect wavefunctions, leave them in temporary
@@ -318,7 +321,9 @@ NAMELIST: &CONTROL
                         save charge to disk at each SCF step,
                         keep wavefunctions on disk (in "distributed" format),
                         save mixing data as well.
-                        Do not use this option unless you have a good reason to
+                        Do not use this option unless you have a good reason!
+                        It is no longer needed to specify 'high' in order to be able
+                        to restart from an interrupted calculation (see "restart_mode")
     
                    'medium' :
                         save charge to disk at each SCF step,
@@ -340,10 +345,7 @@ NAMELIST: &CONTROL
                         do not save anything to disk
     
                    Default is 'low' for the scf case, 'medium' otherwise.
-                   Note that the needed RAM increases as disk I/O decreases!
-                   It is no longer needed to specify 'high' in order to be able
-                   to restart from an interrupted calculation (see "restart_mode")
-                   but you cannot restart in "disk_io"=='nowf' or 'none'
+                   Note that the needed RAM increases as disk I/O decreases
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -732,28 +734,32 @@ NAMELIST: &SYSTEM
    Variable:       starting_magnetization(i), i=1,ntyp
    
    Type:           REAL
+   Default:        0
    Description:    Starting spin polarization on atomic type 'i' in a spin
-                   polarized calculation. Values range between -1 (all spins
-                   down for the valence electrons of atom type 'i') to 1
-                   (all spins up). Breaks the symmetry and provides a starting
-                   point for self-consistency. The default value is zero, BUT a
-                   value MUST be specified for AT LEAST one atomic type in spin
-                   polarized calculations, unless you constrain the magnetization
-                   (see "tot_magnetization" and "constrained_magnetization").
-                   Note that if you start from zero initial magnetization, you
-                   will invariably end up in a nonmagnetic (zero magnetization)
-                   state. If you want to start from an antiferromagnetic state,
-                   you may need to define two different atomic species
-                   corresponding to sublattices of the same atomic type.
-                   starting_magnetization is ignored if you are performing a
-                   non-scf calculation, if you are restarting from a previous
-                   run, or restarting from an interrupted run.
-                   If you fix the magnetization with "tot_magnetization",
-                   you should not specify starting_magnetization.
-                   In the spin-orbit case starting with zero
+                   polarized (LSDA or noncollinear/spin-orbit) calculation.
+                   Allowed values range between -1 (all spins down for the
+                   valence electrons of atom type 'i') to 1 (all spins up).
+                   If you expect a nonzero magnetization in your ground state,
+                   you MUST either specify a nonzero value for at least one
+                   atomic type, or constrain the magnetization using variable
+                   "tot_magnetization" for LSDA, "constrained_magnetization"
+                   for noncollinear/spin-orbit calculations. If you don't,
+                   you will get a nonmagnetic (zero magnetization) state.
+                   In order to perform LSDA calculations for an antiferromagnetic
+                   state, define two different atomic species corresponding to
+                   sublattices of the same atomic type.
+                   
+                   NOTE 1: "starting_magnetization" is ignored in most BUT NOT ALL
+                   cases in non-scf calculations: it is safe to keep the same
+                   values for the scf and subsequent non-scf calculation.
+                   
+                   NOTE 2: If you fix the magnetization with
+                   "tot_magnetization", do not specify "starting_magnetization".
+                   
+                   NOTE 3: In the noncollinear/spin-orbit case, starting with zero
                    starting_magnetization on all atoms imposes time reversal
-                   symmetry. The magnetization is never calculated and
-                   kept zero (the internal variable domag is .FALSE.).
+                   symmetry. The magnetization is never calculated and is
+                   set to zero (the internal variable domag is set to .FALSE.).
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1211,13 +1217,14 @@ NAMELIST: &SYSTEM
                    a few selected elements. Modify Modules/set_hubbard_l.f90 and
                    PW/src/tabd.f90 if you plan to use DFT+U with an element that
                    is not configured there.
-   Description:    Specify "lda_plus_u" = .TRUE. to enable DFT+U calculations
+   Description:    Specify "lda_plus_u" = .TRUE. to enable DFT+U, DFT+U+V, or DFT+U+J calculations.
                    See: Anisimov, Zaanen, and Andersen, PRB 44, 943 (1991);
                         Anisimov et al., PRB 48, 16929 (1993);
                         Liechtenstein, Anisimov, and Zaanen, PRB 52, R5467 (1994).
-                   You must specify, for each species with a U term, the value of
-                   U and (optionally) alpha, J of the Hubbard model (all in eV):
-                   see "lda_plus_u_kind", "Hubbard_U", "Hubbard_alpha", "Hubbard_J"
+                   You must specify, for each Hubbard atom, the value of
+                   U and (optionally) V, J, alpha of the Hubbard model (all in eV):
+                   see "lda_plus_u_kind", "Hubbard_U", "Hubbard_V",
+                   "Hubbard_J", "Hubbard_alpha"
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1225,16 +1232,21 @@ NAMELIST: &SYSTEM
    
    Type:           INTEGER
    Default:        0
-   Description:    Specifies the type of calculation:
-                   
-                      0   DFT+U simplified version of Cococcioni and de Gironcoli,
-                          PRB 71, 035105 (2005), using "Hubbard_U"
-                   
-                      1   DFT+U rotationally invariant scheme of Liechtenstein et al.,
-                          using "Hubbard_U" and "Hubbard_J"
-                   
-                      2   DFT+U+V simplified version of Campo Jr and Cococcioni,
-                          J. Phys.: Condens. Matter 22, 055602 (2010), using "Hubbard_V"
+   Description:   
+                   Specifies the type of calculation:
+    
+                   lda_plus_u_kind = 0  :
+                        DFT+U simplified version of Cococcioni and de Gironcoli,
+                        PRB 71, 035105 (2005), using "Hubbard_U"
+    
+                   lda_plus_u_kind = 1  :
+                        DFT+U rotationally invariant scheme of Liechtenstein et al.,
+                        using "Hubbard_U" and "Hubbard_J"
+    
+                   lda_plus_u_kind = 2  :
+                        DFT+U+V simplified version of Campo Jr and Cococcioni,
+                        J. Phys.: Condens. Matter 22, 055602 (2010), doi:10.1088/0953-8984/22/5/055602,
+                        using "Hubbard_V"
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1264,15 +1276,19 @@ NAMELIST: &SYSTEM
                    The atomic indices na and nb correspond to the atomic positions
                    in the "ATOMIC_POSITIONS" card (this is not the same as Hubbard_U
                    which is specified for "ATOMIC_SPECIES").
-                   Wnen na=nb, then Hubbard_V(na,na,k) is the on-site Hubbard_U
+                   
+                   When na=nb, then "Hubbard_V"(na,na,k) is the on-site "Hubbard_U"
                    for the atom na.
+                   
                    natx=50 (if needed it can be changed in /Modules/parameters.f90)
+                   
                    The index k controls the "interaction type" (k=1 is used for the
                    simplest DFT+U+V calculation):
                    k=1 - interaction between standard orbitals (both on na and nb);
                    k=2 - interaction between standard (on na) and background (on nb) orbitals;
-                   k=3 - interaction between background orbitlas (both on na and nb);
+                   k=3 - interaction between background orbitals (both on na and nb);
                    k=4 - interaction between background (on na) and standard (on nb) orbitals.
+                   
                    Standard orbitals correspond to the main Hubbard channel (e.g. d electrons
                    in transition metals) and background orbitals correspond to the secondary
                    Hubbard channel (e.g. p electrons in transition metals).
@@ -1284,9 +1300,14 @@ NAMELIST: &SYSTEM
    Type:           REAL
    Default:        0.D0 for all species
    Description:    Hubbard_alpha(i) is the perturbation (on atom i, in eV)
-                   used to compute U with the linear-response method of
+                   used to compute U (and V) with the linear-response method of
                    Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
-                   (only for "lda_plus_u_kind"=0)
+                   (only for "lda_plus_u_kind"=0 and 2).
+                   
+                   Note: Hubbard U and V can be computed using the HP code
+                   which is based on density-functional perturbation theory,
+                   and it gives exactly the same result as the method of
+                   Cococcioni and de Gironcoli.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1297,7 +1318,7 @@ NAMELIST: &SYSTEM
    Description:    Hubbard_beta(i) is the perturbation (on atom i, in eV)
                    used to compute J0 with the linear-response method of
                    Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
-                   (only for "lda_plus_u_kind"=0). See also
+                   (only for "lda_plus_u_kind"=0 and 2). See also
                    PRB 84, 115108 (2011).
    +--------------------------------------------------------------------
    
@@ -1308,10 +1329,12 @@ NAMELIST: &SYSTEM
    Default:        0.D0 for all species
    Description:    Hubbard_J(i,ityp): J parameters (eV) for species ityp,
                    used in DFT+U calculations (only for "lda_plus_u_kind"=1)
+                   
                    For p orbitals:  J = Hubbard_J(1,ityp);
                    For d orbitals:  J = Hubbard_J(1,ityp), B = Hubbard_J(2,ityp);
                    For f orbitals:  J = Hubbard_J(1,ityp), E2 = Hubbard_J(2,ityp),
                                     E3= Hubbard_J(3,ityp).
+                   
                    If B or E2 or E3 are not specified or set to 0 they will be
                    calculated from J using atomic ratios.
    +--------------------------------------------------------------------
@@ -1324,7 +1347,7 @@ NAMELIST: &SYSTEM
    Description:    In the first iteration of an DFT+U run it overwrites
                    the m-th eigenvalue of the ns occupation matrix for the
                    ispin component of atomic species ityp.
-                   For the noncolin case the ispin index runs up to npol.
+                   For the noncollinear case, the ispin index runs up to npol=2
                    The value lmax  is given by the maximum angular momentum
                    number to which the Hubbard U is applied.
                    Leave unchanged eigenvalues that are not set.
@@ -1400,7 +1423,7 @@ NAMELIST: &SYSTEM
    
    Type:           LOGICAL
    Default:        .false.
-   Description:    If ensemble_energies = .true., an ensemble of xc energies
+   Description:    If "ensemble_energies" = .true., an ensemble of xc energies
                    is calculated non-selfconsistently for perturbed
                    exchange-enhancement factors and LDA vs. PBE correlation
                    ratios after each converged electronic ground state
@@ -1410,7 +1433,7 @@ NAMELIST: &SYSTEM
                    included with libbeef.
                    
                    Requires linking against libbeef.
-                   input_dft must be set to a BEEF-type functional
+                   "input_dft" must be set to a BEEF-type functional
                    (e.g. input_dft = 'BEEF-vdW')
    +--------------------------------------------------------------------
    
@@ -1518,8 +1541,8 @@ NAMELIST: &SYSTEM
                         where i runs over the cartesian components (or just z
                         in the collinear case) and itype over the types (1-ntype).
                         mcons(:,:) array is defined from starting_magnetization,
-                        (and angle1, angle2 in the non-collinear case). lambda is
-                        a real number
+                        (also from angle1, angle2 in the noncollinear case).
+                        lambda is a real number
     
                    'total direction' :
                         the angle theta of the total magnetization
@@ -1571,7 +1594,7 @@ NAMELIST: &SYSTEM
    Description:    determines when atomic magnetic moments are printed on output:
                    report = 0  never
                    report =-1  at the beginning of the scf and at convergence
-                   report = N: as -1, plus every N scf iterations
+                   report = N  as -1, plus every N scf iterations
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1937,9 +1960,9 @@ NAMELIST: &SYSTEM
    Type:           LOGICAL
    Default:        .FALSE.
    Description:    Used only for monoclinic lattices. If .TRUE. the b
-                   unique ibrav (-12 or -13) are used, and symmetry
+                   unique "ibrav" (-12 or -13) are used, and symmetry
                    equivalent positions are chosen assuming that the
-                   two fold axis or the mirror normal is parallel to the
+                   twofold axis or the mirror normal is parallel to the
                    b axis. If .FALSE. it is parallel to the c axis.
    +--------------------------------------------------------------------
    
@@ -1949,8 +1972,8 @@ NAMELIST: &SYSTEM
    Type:           INTEGER
    Default:        1
    Description:    Used only for space groups that in the ITA allow
-                   the use of two different origins. origin_choice=1,
-                   means the first origin, while origin_choice=2 is the
+                   the use of two different origins. "origin_choice"=1,
+                   means the first origin, while "origin_choice"=2 is the
                    second origin.
    +--------------------------------------------------------------------
    
@@ -3219,6 +3242,26 @@ CARD: K_POINTS { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b | tpi
 
 
 ========================================================================
+CARD: ADDITIONAL_K_POINTS 
+
+   OPTIONAL CARD. ADDS A LIST OF K-POINTS WITH ZERO WEIGHT, AFTER THOSE USED FOR THE SCF CALCULATION.
+                  WHEN DOING AN EXX CALCULATION AND NQ1X, NQ2X OR NQ3X ARE DIFFERENT FROM ONE, ALSO INCLUDE THE
+                  REQUIRED K+Q POINTS. THE MAIN USE OF THIS CARD IS DO BAND PLOTS WITH EXX.
+   
+   /////////////////////////////////////////
+   // Syntax:                             //
+   /////////////////////////////////////////
+   
+      ADDITIONAL_K_POINTS 
+         Same as K_POINTS, but does not accept 'automatic'.
+         
+   
+   /////////////////////////////////////////
+   
+===END OF CARD==========================================================
+
+
+========================================================================
 CARD: CELL_PARAMETERS { alat | bohr | angstrom }
 
    OPTIONAL CARD, NEEDED ONLY IF "IBRAV" == 0 IS SPECIFIED, IGNORED OTHERWISE !
@@ -3506,4 +3549,4 @@ CARD: ATOMIC_FORCES
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Sun Jul 19 17:15:18 CEST 2020
+This file has been created by helpdoc utility on Sun Nov 29 22:25:25 CET 2020

@@ -45,7 +45,7 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   !
   USE gvect_gpum,           ONLY : g_d, gg_d, mill_d, &
                                    eigts1_d, eigts2_d, eigts3_d
-  USE gbuffers,             ONLY : buffer=>dev_buf
+  USE device_fbuff_m,             ONLY : buffer=>dev_buf
   !
   IMPLICIT NONE
   !
@@ -258,7 +258,7 @@ SUBROUTINE newd_gpu( )
                             using_deeq_d, using_deeq_nc_d, &
                             dvan_d, dvan_so_d
                             
-  USE gbuffers,      ONLY : buffer=>dev_buf
+  USE device_fbuff_m,      ONLY : buffer=>dev_buf
   !
   IMPLICIT NONE
   !

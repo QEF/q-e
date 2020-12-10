@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2013-2017 Quantum ESPRESSO group
+! Copyright (C) 2013-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -33,12 +33,15 @@ SUBROUTINE run_pwscf( exit_status )
   !! @endnote
   !!
   !
+  USE kinds,                ONLY : DP
+  USE mp,                   ONLY : mp_bcast, mp_sum
   USE io_global,            ONLY : stdout, ionode, ionode_id
   USE parameters,           ONLY : ntypx, npk
   USE upf_params,           ONLY : lmaxx
   USE cell_base,            ONLY : fix_volume, fix_area
   USE control_flags,        ONLY : conv_elec, gamma_only, ethr, lscf, treinit_gvecs
   USE control_flags,        ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs, lensemb
+  USE control_flags,        ONLY : io_level
   USE cellmd,               ONLY : lmovecell
   USE command_line_options, ONLY : command_line
   USE force_mod,            ONLY : lforce, lstres, sigma, force
@@ -53,8 +56,9 @@ SUBROUTINE run_pwscf( exit_status )
   USE qexsd_module,         ONLY : qexsd_set_status
   USE funct,                ONLY : dft_is_hybrid, stop_exx 
   USE beef,                 ONLY : beef_energies
+  USE ldaU,                 ONLY : lda_plus_u
   !
-  USE gbuffers,             ONLY : dev_buf
+  USE device_fbuff_m,             ONLY : dev_buf
   !
   IMPLICIT NONE
   !
@@ -233,7 +237,12 @@ SUBROUTINE run_pwscf( exit_status )
            !
            lbfgs=.FALSE.; lmd=.FALSE.
            WRITE( UNIT = stdout, FMT=9020 ) 
+           !
            CALL reset_gvectors( )
+           !
+           ! ... read atomic occupations for DFT+U(+V)
+           !
+           IF ( lda_plus_u ) CALL read_ns()
            !
         ELSE IF ( ions_status == 2 ) THEN
            !
@@ -280,7 +289,7 @@ SUBROUTINE run_pwscf( exit_status )
   !
   CALL qexsd_set_status( exit_status )
   IF ( lensemb ) CALL beef_energies( )
-  CALL punch( 'all' )
+  IF ( io_level > -1 ) CALL punch( 'all' )
   !
   CALL qmmm_shutdown()
   !

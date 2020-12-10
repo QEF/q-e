@@ -83,6 +83,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
            label_1 Fx(1) Fy(1) Fz(1)
            .....
            label_n Fx(n) Fy(n) Fz(n) ]
+
+        [ @b ADDITIONAL_K_POINTS
+             see: K_POINTS ]
     }
 
     #
@@ -311,7 +314,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     save charge to disk at each SCF step,
                     keep wavefunctions on disk (in "distributed" format),
                     save mixing data as well.
-                    Do not use this option unless you have a good reason to
+                    Do not use this option unless you have a good reason!
+                    It is no longer needed to specify 'high' in order to be able
+                    to restart from an interrupted calculation (see @ref restart_mode)
                 }
 
                 opt -val 'medium' {
@@ -339,10 +344,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             
                 info {
                     @b Default is @b 'low' for the scf case, @b 'medium' otherwise.
-                    Note that the needed RAM increases as disk I/O decreases!
-                    It is no longer needed to specify 'high' in order to be able
-                    to restart from an interrupted calculation (see @ref restart_mode)
-                    but you cannot restart in @ref disk_io=='nowf' or 'none'
+                    Note that the needed RAM increases as disk I/O decreases
+
                 }
             }
         }
@@ -738,16 +741,18 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 In order to perform LSDA calculations for an antiferromagnetic
 		state, define two different atomic species corresponding to
 		sublattices of the same atomic type.
-                NOTE 1: starting_magnetization is ignored in most BUT NOT ALL
+                
+                @b {NOTE 1:} @ref starting_magnetization is ignored in most BUT NOT ALL
 		cases in non-scf calculations: it is safe to keep the same
 		values for the scf and subsequent non-scf calculation.
-		NOTE 2: If you fix the magnetization with
-		@ref tot_magnetization, do not specify starting_magnetization.
-		NOTE 3: In the noncollinear/spin-orbit case, starting with zero 
+                
+		@b {NOTE 2:} If you fix the magnetization with
+		@ref tot_magnetization, do not specify @ref starting_magnetization.
+                
+		@b {NOTE 3:} In the noncollinear/spin-orbit case, starting with zero 
                 starting_magnetization on all atoms imposes time reversal
                 symmetry. The magnetization is never calculated and is
 		set to zero (the internal variable domag is set to .FALSE.).
-
             }
         }
 
@@ -1177,8 +1182,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 is not configured there.
             }
             info { 
-                Specify @ref lda_plus_u = .TRUE. to enable DFT+U, DFT+U+V, or 
-                DFT+U+J calculations.
+                Specify @ref lda_plus_u = .TRUE. to enable @b DFT+U, @b DFT+U+V, or @b DFT+U+J calculations.
                 See: Anisimov, Zaanen, and Andersen, PRB 44, 943 (1991); 
                      Anisimov et al., PRB 48, 16929 (1993); 
                      Liechtenstein, Anisimov, and Zaanen, PRB 52, R5467 (1994).
@@ -1190,17 +1194,24 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
         var lda_plus_u_kind -type INTEGER { 
             default { 0 }
-            info {
-                Specifies the type of calculation:
+            options {
+                info { Specifies the type of calculation: }
                 
-                   0   DFT+U simplified version of Cococcioni and de Gironcoli, 
-                       PRB 71, 035105 (2005), using @ref Hubbard_U
-                
-                   1   DFT+U rotationally invariant scheme of Liechtenstein et al., 
-                       using @ref Hubbard_U and @ref Hubbard_J
-                   
-                   2   DFT+U+V simplified version of Campo Jr and Cococcioni,
-                       J. Phys.: Condens. Matter 22, 055602 (2010), using @ref Hubbard_V
+                opt -val { lda_plus_u_kind = 0 } {
+                    DFT+U simplified version of Cococcioni and de Gironcoli, 
+                    PRB 71, 035105 (2005), using @ref Hubbard_U
+                }
+
+                opt -val { lda_plus_u_kind = 1 } {                
+                    DFT+U rotationally invariant scheme of Liechtenstein et al., 
+                    using @ref Hubbard_U and @ref Hubbard_J
+                }
+
+                opt -val { lda_plus_u_kind = 2 } {
+                    DFT+U+V simplified version of Campo Jr and Cococcioni,
+                    J. Phys.: Condens. Matter 22, 055602 (2010), doi:10.1088/0953-8984/22/5/055602,
+                    using @ref Hubbard_V
+                }
             }
         }
         dimension Hubbard_U -start 1 -end ntyp -type REAL {      
@@ -1224,15 +1235,19 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 The atomic indices na and nb correspond to the atomic positions
                 in the @ref ATOMIC_POSITIONS card (this is not the same as Hubbard_U
                 which is specified for @ref ATOMIC_SPECIES). 
-                Wnen na=nb, then Hubbard_V(na,na,k) is the on-site Hubbard_U
+
+                When na=nb, then @ref Hubbard_V(na,na,k) is the on-site @ref Hubbard_U
                 for the atom na.
+                
                 natx=50 (if needed it can be changed in /Modules/parameters.f90)
+
                 The index k controls the "interaction type" (k=1 is used for the
                 simplest DFT+U+V calculation):
-                k=1 - interaction between standard orbitals (both on na and nb); 
-                k=2 - interaction between standard (on na) and background (on nb) orbitals;
-                k=3 - interaction between background orbitlas (both on na and nb);
-                k=4 - interaction between background (on na) and standard (on nb) orbitals.
+                @b k=1 - interaction between standard orbitals (both on na and nb); 
+                @b k=2 - interaction between standard (on na) and background (on nb) orbitals;
+                @b k=3 - interaction between background orbitals (both on na and nb);
+                @b k=4 - interaction between background (on na) and standard (on nb) orbitals.
+                
                 Standard orbitals correspond to the main Hubbard channel (e.g. d electrons
                 in transition metals) and background orbitals correspond to the secondary
                 Hubbard channel (e.g. p electrons in transition metals).
@@ -1245,6 +1260,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 used to compute U (and V) with the linear-response method of
                 Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
                 (only for @ref lda_plus_u_kind=0 and 2).
+                
                 Note: Hubbard U and V can be computed using the HP code
                 which is based on density-functional perturbation theory,
                 and it gives exactly the same result as the method of 
@@ -1266,10 +1282,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             info {
                 Hubbard_J(i,ityp): J parameters (eV) for species ityp, 
                 used in DFT+U calculations (only for @ref lda_plus_u_kind=1)
+                
                 For p orbitals:  J = Hubbard_J(1,ityp);
                 For d orbitals:  J = Hubbard_J(1,ityp), B = Hubbard_J(2,ityp);
                 For f orbitals:  J = Hubbard_J(1,ityp), E2 = Hubbard_J(2,ityp),
                                  E3= Hubbard_J(3,ityp).
+
                 If B or E2 or E3 are not specified or set to 0 they will be
                 calculated from J using atomic ratios.
             }
@@ -1358,7 +1376,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         var ensemble_energies -type LOGICAL {
             default { .false. }
             info {
-                If ensemble_energies = .true., an ensemble of xc energies
+                If @ref ensemble_energies = .true., an ensemble of xc energies
                 is calculated non-selfconsistently for perturbed
                 exchange-enhancement factors and LDA vs. PBE correlation
                 ratios after each converged electronic ground state
@@ -1368,7 +1386,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 included with libbeef.
 
                 Requires linking against libbeef.
-                input_dft must be set to a BEEF-type functional
+                @ref input_dft must be set to a BEEF-type functional
                 (e.g. input_dft = 'BEEF-vdW')
             }
         }
@@ -1521,9 +1539,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             default { -1 }
             info {
 	        determines when atomic magnetic moments are printed on output:
-                report = 0  never
-                report =-1  at the beginning of the scf and at convergence
-		report = N: as -1, plus every N scf iterations
+                @b {report = 0}  never
+                @b {report =-1}  at the beginning of the scf and at convergence
+		@b {report = N}  as -1, plus every N scf iterations
             }
         }
         
@@ -1699,7 +1717,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
              default { 'none' }
              see {
                  london_s6, london_rcut, london_c6, london_rvdw, 
-                 dftd3_version, dftd3_threebody, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2
+                 dftd3_version, dftd3_threebody, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2,
+                 mbd_vdw
              }
              options {
                  info {
@@ -1716,7 +1735,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                  opt -val {'grimme-d3', 'Grimme-D3', 'DFT-D3', 'dft-d3' } {
                      Semiempirical Grimme's DFT-D3. Optional variables:
                      @ref dftd3_version, @ref dftd3_threebody
-                     S. Grimme et al, J. Chem. Phys 132, 154104 (2010), doi:10.1002/jcc.20495
+                     S. Grimme et al, J. Chem. Phys 132, 154104 (2010), doi:10.1063/1.3382344
                  }
 
                  opt -val {'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler'} {
@@ -1724,6 +1743,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                      C6 coefficients.
                      Optional variables: @ref ts_vdw_econv_thr, @ref ts_vdw_isolated
                      See A. Tkatchenko and M. Scheffler, PRL 102, 073005 (2009).
+                 }
+
+                 opt -val {'mbd_vdw', 'many-body dispersion'} {
+                     Many-body dipersion (MBD) correction to long-range interactions.
+                     Optional variables: @ref ts_vdw_isolated
+                     A. Ambrosetti, A. M. Reilly, R. A. DiStasio, A. Tkatchenko, J. Chem. Phys. 140
+                     18A508 (2014).
                  }
 
                  opt -val {'XDM', 'xdm'} {
@@ -1819,8 +1845,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         var ts_vdw_isolated -type LOGICAL {
           default { .FALSE. }
           info {
-             Optional: set it to .TRUE. when computing the Tkatchenko-Scheffler vdW energy
-             for an isolated (non-periodic) system.
+             Optional: set it to .TRUE. when computing the Tkatchenko-Scheffler vdW energy or the
+             Many-Body dispersion (MBD) energy for an isolated (non-periodic) system.
           }
         }
 
@@ -1871,7 +1897,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
              default { .FALSE. }
              info {
                   Used only for monoclinic lattices. If .TRUE. the b
-                  unique ibrav (-12 or -13) are used, and symmetry 
+                  unique @ref ibrav (-12 or -13) are used, and symmetry 
                   equivalent positions are chosen assuming that the
                   twofold axis or the mirror normal is parallel to the
                   b axis. If .FALSE. it is parallel to the c axis.
@@ -1882,8 +1908,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
              default { 1 }
              info {
                   Used only for space groups that in the ITA allow 
-                  the use of two different origins. origin_choice=1,
-                  means the first origin, while origin_choice=2 is the
+                  the use of two different origins. @ref origin_choice=1,
+                  means the first origin, while @ref origin_choice=2 is the
                   second origin.
              }
          }
@@ -3055,6 +3081,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
     }
+
+    #
+    # card ADDITIONAL_K_POINTS
+    #
+    card ADDITIONAL_K_POINTS {
+        label { Optional card. Adds a list of k-points with zero weight, after those used for the scf calculation.
+                When doing an EXX calculation and nq1x, nq2x or nq3x are different from one, also include the 
+                required k+q points. The main use of this card is do band plots with EXX. }
+        syntax { message { Same as K_POINTS, but does not accept 'automatic'. } } 
+        }
+ 
 
     #
     # CELL_PARAMETERS

@@ -149,6 +149,7 @@ export_upf.o : ../../Modules/kind.o
 export_upf.o : ../../Modules/version.o
 export_upf.o : ../../upflib/pseudo_types.o
 export_upf.o : ../../upflib/write_upf.o
+export_upf.o : ../../upflib/write_upf_new.o
 export_upf.o : ld1inc.o
 find_qi.o : ../../Modules/kind.o
 find_qi.o : ld1inc.o
@@ -169,6 +170,7 @@ import_upf.o : ../../Modules/funct.o
 import_upf.o : ../../Modules/kind.o
 import_upf.o : ../../upflib/pseudo_types.o
 import_upf.o : ../../upflib/radial_grids.o
+import_upf.o : ../../upflib/read_upf_new.o
 import_upf.o : ../../upflib/upf.o
 import_upf.o : atomic_paw.o
 import_upf.o : ld1inc.o

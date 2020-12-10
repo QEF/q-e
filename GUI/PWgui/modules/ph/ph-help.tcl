@@ -248,9 +248,9 @@ help fildrho -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 File where the charge density responses are written. Note that the file
-                  will actually be saved as ${outdir}/_ph0/${prefix}.${fildrho}1
-                  where  ${outdir}, ${prefix} and ${fildrho} are the values of the
-                  corresponding input variables
+will actually be saved as <b>${outdir}/_ph0/${prefix}.${fildrho}1</b>
+where  <b>${outdir},</b> <b>${prefix}</b> and <b>${fildrho}</b> are the values of the
+corresponding input variables
          </pre></blockquote>
 </ul>      
       
@@ -291,6 +291,10 @@ If .true. in a q=0 calculation for a non metal the
 macroscopic dielectric constant of the system is
 computed. Do not set "epsil" to .true. if you have a
 metallic system or q/=0: the code will complain and stop.
+
+Note: the input value of "epsil" will be ignored if "ldisp"=.true.
+(the code will automatically set "epsil" to .false. for metals,
+to .true. for insulators: see routine PHonon/PH/prepare_q.f90).
          </pre></blockquote>
 </ul>      
       

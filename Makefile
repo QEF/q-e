@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2016 Quantum ESPRESSO group
+# Copyright (C) 2001-2020 Quantum ESPRESSO Foundation
 # 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -33,8 +33,6 @@ default :
 	@echo '  couple       Library interface for coupling to external codes'
 	@echo '  epw          Electron-Phonon Coupling with wannier functions'
 	@echo '  gui          Graphical User Interface'
-	@echo '  examples     fetch from web examples for all core packages'
-	@echo '  test-suite   run semi-automated test-suite for regression testing'
 	@echo '  all          same as "make pwall cp ld1 tddfpt hp"'
 	@echo ' '
 	@echo 'where target identifies one or multiple THIRD-PARTIES PACKAGES:'
@@ -42,8 +40,6 @@ default :
 	@echo '  w90          Maximally localised Wannier Functions'
 	@echo '  want         Quantum Transport with Wannier functions'
 	@echo '  yambo        electronic excitations with plane waves'
-#	@echo '  SternheimerGW calculate GW using Sternheimer equations'
-#	@echo '  plumed       Metadynamics plugin for pw or cp'
 	@echo '  d3q          general third-order code and thermal transport codes'
 	@echo ' '
 	@echo 'where target is one of the following suite operation:'
@@ -102,10 +98,6 @@ acfdt : phlibs
 	if test -d ACFDT ; then \
 	( cd ACFDT ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-# target still present for backward compatibility
-gww:
-	@echo '"make gww" is obsolete, use "make gwl" instead '
-
 gwl : phlibs
 	if test -d GWW ; then \
 	( cd GWW ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
@@ -154,9 +146,6 @@ gui :
 	    echo ; \
 	fi
 
-examples :
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
 pwall : pw neb ph pp pwcond acfdt
 
 all   : pwall cp ld1 tddfpt hp xspectra gwl 
@@ -186,7 +175,7 @@ pw4gwwlib : phlibs
 	if test -d GWW ; then \
 	( cd GWW ; $(MAKE) pw4gwwa || exit 1 ) ; fi
 
-mods : libfox libutil libgscratch libla libfft libupf libbeef
+mods : libfox libutil libla libfft libupf libbeef libmbd
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 libks_solvers : libs libutil libla
@@ -200,9 +189,6 @@ libfft :
 
 libutil : 
 	( cd UtilXlib ; $(MAKE) TLDEPS= all || exit 1 )
-
-libgscratch : 
-	( cd GScratch ; $(MAKE) TLDEPS= all || exit 1 )
 
 libupf : libfox libutil
 	( cd upflib ; $(MAKE) TLDEPS= all || exit 1 )
@@ -223,9 +209,6 @@ bindir :
 # Targets for external libraries
 ############################################################
 
-libblas : 
-	cd install ; $(MAKE) -f extlibs_makefile $@
-
 liblapack: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
@@ -238,10 +221,9 @@ libcuda:
 libbeef:
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
-# In case of trouble with iotk and compilers, add
-# FFLAGS="$(FFLAGS_NOOPT)" after $(MFLAGS)
-libiotk: 
+libmbd:
 	cd install ; $(MAKE) -f extlibs_makefile $@
+
 #########################################################
 # plugins
 #########################################################
@@ -249,17 +231,11 @@ libiotk:
 w90: bindir liblapack
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-want : libiotk
+want: liblapack
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-yambo: libiotk
+yambo: liblapack
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
-#plumed: pw cp 
-#	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
-#SternheimerGW: lrmods 
-#	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #########################################################
 # "make links" produces links to all executables in bin/
@@ -294,15 +270,6 @@ install :
 	@echo -e '\nQuantum ESPRESSO binaries are installed in $(PREFIX)/bin\n'
 
 #########################################################
-# Run test-suite for numerical regression testing
-# NB: it is assumed that reference outputs have been 
-#     already computed once (usually during release)
-#########################################################
-
-test-suite: pw cp 
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
-#########################################################
 # Other targets: clean up
 #########################################################
 
@@ -320,8 +287,6 @@ clean :
 		$(MAKE) TLDEPS= clean ) \
 	    fi \
 	done
-	if test -d GScratch ; then \
-	( cd GScratch ; $(MAKE) TLDEPS= clean ) ; fi
 	- @(cd install ; $(MAKE) -f plugins_makefile clean)
 	- @(cd install ; $(MAKE) -f extlibs_makefile clean)
 	- /bin/rm -rf bin/*.x tempdir
@@ -377,7 +342,7 @@ tar-qe-modes :
 # NOTICE about "make doc": in order to build the .html and .txt
 # documentation in Doc, "tcl", "tcllib", "xsltproc" are needed;
 # in order to build the .pdf files in Doc, "pdflatex" is needed;
-# in order to build html files for user guide and developer manual,
+# in order to build html files for the user guide,
 # "latex2html" and "convert" (from Image-Magick) are needed.
 doc : 
 	if test -d Doc ; then \

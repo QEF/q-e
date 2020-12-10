@@ -4,12 +4,13 @@ MODULE exx_module
   ! Exact exchange calculation using maximally localized Wannier functions 
   ! The references for this algorithm are:
   !    (i)  theory: X. Wu , A. Selloni, and R. Car, Phys. Rev. B 79, 085102 (2009).
-  !    (ii) implementation: H.-Y. Ko, B. Santra, R. A. DiStasio, L. Kong, and R. Car, arxiv.
+  !    (ii) implementation: H.-Y. Ko, J. Jia, B. Santra, X. Wu, R. Car, and R. A. DiStasio Jr., J. Chem. Theory Comput. 16, 3757 (2020).
   ! Contributors : 
-  ! Princeton University - Hsin-Yu Ko, Biswajit Santra, Robert A. DiStasio, Lingzhu Kong, Zhaofeng Li, Roberto Car 
-  ! Temple University    - Xifan Wu, Charles W. Swartz
+  ! Cornell University   - Hsin-Yu Ko, Junteng Jia, Robert A. DiStasio
+  ! Princeton University - Marcos F. Calegari Andrade, Lingzhu Kong, Zhaofeng Li, Roberto Car 
+  ! Temple University    - Biswajit Santra, Xifan Wu, Charles W. Swartz
   !
-  ! Code Version 1.0 (Princeton University, September 2014)
+  ! Code Version 1.1 (November 2020)
   !
   !----------------------------------------------------------------------------------------------------------------
   ! For the developers: 
@@ -55,6 +56,7 @@ MODULE exx_module
   USE wannier_base,       ONLY: exx_ps_rcut_p ! radius of the poisson sphere for pair orbital
   USE wannier_base,       ONLY: exx_me_rcut_p ! radius of the ME sphere for pair orbital
   USE wannier_base,       ONLY: vnbsp 
+  USE wannier_base,       ONLY: texx_cube     ! flag to toggle the cube domain
   USE fft_helper_subroutines
   !
   IMPLICIT NONE
@@ -75,8 +77,14 @@ MODULE exx_module
   INTEGER, PUBLIC                     :: np_in_sp_p, np_in_sp_me_p  ! number of grid points in the PS sphere and the ME sphere for pair orbital in Full Grid
   !
   INTEGER, PUBLIC                     :: my_nbspx               ! parallelization/distribution of orbitals over processors 
-  INTEGER,  ALLOCATABLE, PUBLIC       :: my_nbsp(:), my_nxyz(:) ! parallelization/distribution of orbitals over processors 
-  INTEGER,  ALLOCATABLE, PUBLIC       :: index_my_nbsp (:, :), rk_of_obtl (:), lindex_of_obtl(:) ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: my_nbsp(:)             ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: my_nxyz(:)             ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: index_my_nbsp(:, :)    ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: rk_of_obtl(:)          ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: lindex_of_obtl(:)      ! parallelization/distribution of orbitals over processors 
+  INTEGER,  ALLOCATABLE, PUBLIC       :: pair_label(:,:)        ! the orbital label of previous pair potential/density
+  INTEGER,  ALLOCATABLE, PUBLIC       :: pair_step(:,:)         ! the last step that we use previous pair potential/density
+  INTEGER,  ALLOCATABLE, PUBLIC       :: pair_status(:,:)       ! the status of this pair for guess
   !
   ! conversion between 3D index (i,j,k) and 1D index 
   ! odthothd_in_sp(3, 1:np_in_sp_p) is for inner sphere (1st shell)
@@ -110,10 +118,44 @@ MODULE exx_module
   REAL(DP), PUBLIC                    :: h_init(3,3)
   REAL(DP), PUBLIC                    :: dexx_dh(3,3)           ! dexx/dhab for vofrho.f90
   REAL(DP), PUBLIC                    :: exxalfa                ! fraction of exx mixing (locally used in CP)
+  real(dp), allocatable, public  :: psime_pair_recv(:,:,:) !! recieving buffer holding MLWF on local subdomains
+  !! the first dimension is the (flattened) 1d local grid index; the second is the jth neighbor orbital index;
+  !! the third is the ith local orbital index of the current MPI process
+  real(dp), allocatable, public  :: psime_pair_send(:,:,:) !! sending buffer holding MLWF on local subdomains
+  !! the first dimension is the (flattened) 1d local grid index; the second is the jth neighbor orbital index;
+  !! the third is the ith local orbital index of the current MPI process
   !
 #if defined(_OPENMP)
   INTEGER, EXTERNAL                   :: omp_get_max_threads
 #endif
+  ! cubic domain related variables
+  INTEGER, PARAMETER, PUBLIC          :: lm_mx=((lmax+1)*(lmax+2))/2  ! size of flattened 1d lm angular momentum ... 
+  !----------------------------------------------------------------------------------------------------------------
+  ! JJ: new variables
+  !----------------------------------------------------------------------------------------------------------------
+  INTEGER, PUBLIC                     :: s_me_r(6), n_s_me      ! start/ending indexes for 3-dimension in self multipole cube
+  INTEGER, PUBLIC                     :: s_ps_r(6), n_s_ps      ! start/ending indexes for 3-dimension in self poisson cube
+  INTEGER, PUBLIC                     :: p_me_r(6), n_p_me      ! start/ending indexes for 3-dimension in pair multipole cube
+  INTEGER, PUBLIC                     :: p_ps_r(6), n_p_ps      ! start/ending indexes for 3-dimension in pair poisson cube 
+  !----------------------------------------------------------------------------------------------------------------
+  INTEGER, PUBLIC                     :: PScubeSL_s
+  INTEGER, PUBLIC                     :: PScubeSL_p
+  INTEGER, PUBLIC                     :: MEcubeSL_s
+  INTEGER, PUBLIC                     :: MEcubeSL_p
+  INTEGER, PUBLIC                     :: nrg(3)
+  INTEGER, PUBLIC                     :: nrgr(3)
+  !----------------------------------------------------------------------------------------------------------------
+  REAL(DP), ALLOCATABLE, PUBLIC       :: me_cs(:,:,:,:)         ! coordinate  of every point in ME cube
+  REAL(DP), ALLOCATABLE, PUBLIC       :: me_rs(:,:,:,:)         ! distance^n  of every point in ME cube
+  REAL(DP), ALLOCATABLE, PUBLIC       :: me_ri(:,:,:,:)         ! distance^-n of every point in ME cube
+  COMPLEX(DP), ALLOCATABLE, PUBLIC    :: me_rc(:,:,:,:)         ! exp(i*m*phi_j) of everg point in PS cube
+  REAL(DP), ALLOCATABLE, PUBLIC       :: selfrho(:,:,:)         ! self density stored in Poisson sphere for guess potential ...
+  REAL(DP), ALLOCATABLE, PUBLIC       :: pairrho(:,:,:,:)       ! pair density stored in Poisson sphere for guess potential ...
+  REAL(DP), PUBLIC                    :: fbsscale               ! coefficient for preconditioner
+  REAL(DP), ALLOCATABLE, PUBLIC       :: coemicf(:,:,:)         ! coefficient for preconditioner
+  real(dp), allocatable, public  :: rho_ps(:)
+  real(dp), allocatable, public  :: pot_ps(:)
+  INTEGER ::  i, iobtl, gindex_of_iobtl, irank, proc, tmp_iobtl, ndiag_n, ndiag_nx, ndiag_i
   !==========================================================================
   !
   ! PRIVATE variables 
@@ -151,6 +193,7 @@ CONTAINS
       include 'laxlib.fh'
       !
       INTEGER ::  i, iobtl, gindex_of_iobtl, irank, proc, tmp_iobtl, ndiag_n, ndiag_nx, ndiag_i
+      REAL(DP) :: hx,hy,hz
       CHARACTER (len=300) :: print_str
       ndiag_i = ndiag_
       !
@@ -196,15 +239,27 @@ CONTAINS
       WRITE(stdout,'(/,3X,"parameters used in exact exchange calculation",/ &
           &,5X,"radius to compute pairs:",F6.1,1X,"A.U.",3X,"maximum number of neighbors:",I5)')dis_cutoff,neigh
       !
-      WRITE(stdout,'(/,3X,"parameters used to solve Poisson equation",/ &
-          &,5X,"radius for self potential:",F6.1,1X,"A.U."   &
-          &,3X,"radius for pair potential:",F6.1,1X,"A.U.",/ &
-          &,5X,"Poisson solver discretized using",I4,3X,"points in each dimension")')exx_ps_rcut_s,exx_ps_rcut_p,2*nord2+1
-      !
-      WRITE(stdout,'(/,3X,"parameters used for multipole expansion",/   &
-          &,5X,"radius for self potential:",F6.1,1X,"A.U."   &
-          &,3X,"radius for pair potential:",F6.1,1X,"A.U.",/ &
-          &,5X,"maximum angular momentum:",I4)')exx_me_rcut_s,exx_me_rcut_p,lmax
+      IF (texx_cube) THEN
+        WRITE(stdout,'(/,3X,"parameters used to solve Poisson equation",/ &
+            &,5X,"cube side length for self potential:",F6.1,1X,"A.U."   &
+            &,3X,"cube side length for pair potential:",F6.1,1X,"A.U.",/ &
+            &,5X,"Poisson solver discretized using",I4,3X,"points in each dimension")')2*exx_ps_rcut_s,2*exx_ps_rcut_p,2*nord2+1
+        !
+        WRITE(stdout,'(/,3X,"parameters used for multipole expansion",/   &
+            &,5X,"cube side length for self potential:",F6.1,1X,"A.U."   &
+            &,3X,"cube side length for pair potential:",F6.1,1X,"A.U.",/ &
+            &,5X,"maximum angular momentum:",I4)')2*exx_me_rcut_s,2*exx_me_rcut_p,lmax
+      ELSE
+        WRITE(stdout,'(/,3X,"parameters used to solve Poisson equation",/ &
+            &,5X,"radius for self potential:",F6.1,1X,"A.U."   &
+            &,3X,"radius for pair potential:",F6.1,1X,"A.U.",/ &
+            &,5X,"Poisson solver discretized using",I4,3X,"points in each dimension")')exx_ps_rcut_s,exx_ps_rcut_p,2*nord2+1
+        !
+        WRITE(stdout,'(/,3X,"parameters used for multipole expansion",/   &
+            &,5X,"radius for self potential:",F6.1,1X,"A.U."   &
+            &,3X,"radius for pair potential:",F6.1,1X,"A.U.",/ &
+            &,5X,"maximum angular momentum:",I4)')exx_me_rcut_s,exx_me_rcut_p,lmax
+      END IF
       !
       ! Error messages for inconsistencies with current version of code...
       !
@@ -222,6 +277,18 @@ CONTAINS
       !
       IF(exx_ps_rcut_s.GE.exx_me_rcut_s) CALL errore('exx_module','EXX calculation error :  &
           & The exx_ps_rcut_self should be set smaller than the exx_me_rcut_self',1)
+      !
+      hx=DSQRT(h(1,1)*h(1,1)+h(2,1)*h(2,1)+h(3,1)*h(3,1))
+      hy=DSQRT(h(1,2)*h(1,2)+h(2,2)*h(2,2)+h(3,2)*h(3,2))
+      hz=DSQRT(h(1,3)*h(1,3)+h(2,3)*h(2,3)+h(3,3)*h(3,3))
+      IF(2*exx_me_rcut_s.GT.MIN(hx,hy,hz)) CALL errore('exx_module','EXX calculation error :  &
+          & The exx_me_rcut_self should be set smaller than half the minimum cell length',1)
+      !
+      IF(fftx_ntgrp(dffts).GT.1) CALL errore('exx_module','EXX calculation error : &
+          & taskgroup (-ntg) > 1 needed for zeta>1 calculations currently unavailable and will&
+          & become available in the next major update. Please contact Robert A. DiStasio Jr.&
+          & (distasio@cornell.edu) if you should need assistance reverting to an earlier&
+          & version with working taskgroup support.',1)
       !
       IF(nproc_image.GE.nbsp) THEN
         !
@@ -377,211 +444,358 @@ CONTAINS
       ALLOCATE( coe_1st_derv(-nord1:nord1, 3)) ! coe_1st_derv(neighbor, d/di)
       ALLOCATE( coeke(-nord2:nord2, 3,3))      ! coeke(neighbor, d/di, d/dj)
       !
-      ! ALLOCATE exx_potential
-      !
-      IF (nproc_image .LT. nbsp) THEN
-        !
-        ALLOCATE( exx_potential(dffts%nr1*dffts%nr2*dffts%my_nr3p,nbsp) )
-        !
+      IF (texx_cube) then
+        CALL exx_initialize_cube
       ELSE
-        !
-        IF ( dffts%has_task_groups ) THEN
-          !
-          ALLOCATE( exx_potential(dffts%nnr,nproc_image/fftx_ntgrp(dffts)) )
-          !
-          IF(MOD(nproc_image,fftx_ntgrp(dffts)).NE.0) CALL errore &
-              & ('exx_module','EXX calculation is not working when &
-              & number of MPI tasks (nproc_image) is not integer multiple of number of taskgroups',1)
-          !
-        ELSE
-          !
-          ALLOCATE( exx_potential(dffts%nr1x*dffts%nr2x*dffts%my_nr3p,nproc_image) ) !
-          !
-        END IF
-        !
+        CALL exx_initialize_sphere
       END IF
       !
-      exx_potential=0.0_DP
-      !
-      ! Compute number of grid points in Poisson and multipole spheres and store
-      ! information to interchange between global and local (in sphere) grid indices ..
-      !
-      IF(thdyn) THEN
-        !
-        ! the number of grid points in Poisson and multipole spheres are computed
-        ! using the simulation cell given in the input to keep those numbers
-        ! constant throughout a variable cell dynamics ...
-        !
-        h_in=h_init
-        !
-        WRITE(stdout,'(/,3X,"This is a variable cell calculation. In this implementation",/ &
-            &,3X,"the number of grid points used in Poisson sphere and",/ &
-            &,3X,"multipole expansion sphere are kept constant as computed",/ &
-            &,3X,"from the simulation cell given in the input...")')
-        !
-        WRITE(stdout,'(/3X,"cell from input:")')
-        WRITE(stdout,'(3X,3F12.6)') h_in
-        !
-        ! Alternatively, reference cell could be used ... 
-        !
-        !IF(ref_cell.EQV..TRUE.) h_in=ref_at*ref_alat 
-        !
-      ELSE
-        !
-        ! for constant volume calculation ... 
-        !
-        h_in=h
-        !
-      END IF
-      !
-      ! get number of points inside the Poisson and (Poisson + Multipole expansion) spheres
-      ! for self and pair spheres (using different cutoff radii)
-      !
-      CALL getnpinsp(exx_ps_rcut_s, exx_me_rcut_s, np_in_sp_s, np_in_sp_me_s )
-      CALL getnpinsp(exx_ps_rcut_p, exx_me_rcut_p, np_in_sp_p, np_in_sp_me_p )
-      !
-      ! exx_setup   orders the local index in the order such that
-      !                      1 ... np_in_sp_s      is in self Poisson sphere
-      !             np_in_sp_s ... np_in_sp_me_s   is in self Multipole sphere
-      !                      1 ... np_in_sp_p      is in pair Poisson sphere
-      !             np_in_sp_p ... np_in_sp_me_p   is in self Multipole sphere
-      !
-      !             and computes the x y z values for multipole expansion
-      !          ( notice that it is still xyz even in non-orthogonal cells)
-      !
-      CALL exx_setup( )
-      !
-      WRITE(stdout,'(/,3X,"number of grid points in Poisson spehere ",/ &
-          &,5X,"self potential:",I8,3X,"pair potential:",I8)')np_in_sp_s,np_in_sp_p
-      WRITE(stdout,'(/,3X,"number of grid points in multipole expansion spehere: ",/ &
-          &,5X,"self potential:",I8,3X,"pair potential:",I8)')np_in_sp_me_s,np_in_sp_me_p
-      !
-      ! Variables for parallelization are initialized ....
-      !
-      ! parallelization scaling factors
-      !
-      IF(nproc_image.LE.nbsp) THEN
-        sc_fac = 1
-      ELSE
-        sc_fac = nproc_image/nbsp
-      END IF
-      !
-      ! my_nbspx is the maxval of my_nbsp(:), ie the maximum number of bands a processor (mpi task) can have
-      !
-      IF(nproc_image .LE. nbsp) THEN
-        my_nbspx   = nbsp / nproc_image
-        IF( MOD(nbsp, nproc_image) /= 0)THEN
-          my_nbspx = my_nbspx + 1
-        ENDIF
-      ELSE
-        my_nbspx   = (nbsp / nproc_image) + 1
-      END IF
-      !
-      !print *, 'my_nbspx =', my_nbspx
-      !
-      ALLOCATE( my_nxyz ( nproc_image ) )
-      ALLOCATE( my_nbsp ( nproc_image ) )
-      !
-      IF(nproc_image .LE. nbsp) THEN
-        my_nbsp(:) = nbsp/nproc_image
-        IF( MOD(nbsp, nproc_image) /= 0)THEN
-          DO i = 1, nproc_image
-            IF( (i-1) < MOD(nbsp, nproc_image) ) my_nbsp(i) = my_nbsp(i)+1
-          END DO
-        END IF
-      ELSE
-        my_nbsp(:) = 1
-      END IF
-      !
-      ! ** Note that in this case .. 
-      ! this is incorrect:   my_nxyz(:) = nr1*nr2*dffts%npp(me_image+1)
-      my_nxyz(:) = nr1*nr2*dffts%nr3p
-      !
-      !DEBUG
-      !WRITE(stdout,'("my_nbsp")')
-      !WRITE(stdout,'(20I5)')my_nbsp
-      !WRITE(stdout,'("my_nxyz")')
-      !WRITE(stdout,'(20I7)')my_nxyz
-      !DEBUG
-      !
-      ALLOCATE( index_my_nbsp (my_nbspx, nproc_image) )
-      ALLOCATE( rk_of_obtl ( nbsp ) )
-      ALLOCATE( lindex_of_obtl( nbsp ) )
-      !
-      IF(nproc_image .LE. nbsp) THEN
-        index_my_nbsp(:, :) = nbsp + 1
-        DO irank = 1, nproc_image
-          DO iobtl = 1, my_nbsp(irank)
-            gindex_of_iobtl = iobtl
-            DO proc = 1, irank - 1, 1
-              gindex_of_iobtl = gindex_of_iobtl + my_nbsp(proc)
-            END DO
-            IF( gindex_of_iobtl <= nbsp) THEN
-              index_my_nbsp(iobtl, irank) = gindex_of_iobtl
-            END IF
-          END DO
-        END DO
-      ELSE
-        DO proc = 1, nproc_image
-          index_my_nbsp(1, proc) = proc
-        END DO
-      END IF
-      !
-      !DEBUG
-      !WRITE(stdout,'("index_my_nbsp")')
-      !WRITE(stdout,'(20I5)')index_my_nbsp(1,:)
-      !WRITE(stdout,'(20I5)')index_my_nbsp(2,:)
-      !DEBUG
-      !
-      DO iobtl = 1, nbsp
-        rk_of_obtl(iobtl) = 0
-        tmp_iobtl = iobtl
-        DO proc = 1, nproc_image
-          tmp_iobtl = tmp_iobtl - my_nbsp(proc)
-          IF (tmp_iobtl <= 0) THEN
-            rk_of_obtl(iobtl) = proc - 1
-            !print *, 'lrk_of_iobtl=', proc-1, rk_of_obtl(iobtl) 
-            EXIT
-          END IF
-        END DO
-      END DO
-      !
-      !DEBUG
-      !WRITE(stdout,'("rk_of_obtl")')
-      !WRITE(stdout,'(20I5)')rk_of_obtl
-      !DEBUG
-      !
-      DO iobtl = 1, nbsp
-        lindex_of_obtl(iobtl) = iobtl
-        DO proc = 1, nproc_image
-          IF (lindex_of_obtl(iobtl) <= my_nbsp(proc)) EXIT
-          lindex_of_obtl(iobtl) = lindex_of_obtl(iobtl) - my_nbsp(proc)
-        END DO
-      END DO
-      !
-      !DEBUG
-      !WRITE(stdout,'("lindex_of_obtl")')
-      !WRITE(stdout,'(20I5)')lindex_of_obtl
-      !DEBUG
-      !
-      ! Allocate other variables ....
-      !
-      IF ( lwfpbe0nscf .or. lwfnscf ) ALLOCATE( rhopr( dfftp%nnr, nspin ) )
-      !
-      IF ( lwfpbe0nscf ) THEN
-        ALLOCATE( vwc(3, vnbsp) )
-        ALLOCATE( pair_dist( 3, neigh, my_nbspx), stat=ierr )
-        pair_dist (:,:,:) = 0.0_DP
-        ALLOCATE( pairv( np_in_sp_p, 3, neigh, my_nbspx), stat=ierr )
-        pairv (:,:,:,:) = 0.0_DP
-      END IF
-      !
-      WRITE(stdout,'(/,3X,"----------------------------------------------------")')
+      CALL exx_initialize_common
       !
       RETURN
       !
   END SUBROUTINE exx_initialize
   !--------------------------------------------------------------------------------------------------------------
+
+  SUBROUTINE  exx_initialize_cube()
+    IMPLICIT NONE
+    REAL(DP) :: hx, hy, hz                             !grid spacing along lattice directions
+    ALLOCATE( coemicf(-nord2:nord2, 3,3))    ! coeke(neighbor, d/di, d/dj)
+    nrg(1)=nr1;   nrg(2)=nr2;   nrg(3)=nr3
+    nrgr(1)=nr1r; nrgr(2)=nr2r; nrgr(3)=nr3r
+    !
+    ! ALLOCATE exx_potential
+    !
+    IF (nproc_image .LT. nbsp) THEN
+      !
+      ALLOCATE( exx_potential(dffts%nr1*dffts%nr2*dffts%my_nr3p,nbsp) )
+      !
+    ELSE
+      !
+      IF ( dffts%has_task_groups ) THEN
+        !
+        ALLOCATE( exx_potential(dffts%nnr,nproc_image/fftx_ntgrp(dffts)) )
+        !
+        IF(MOD(nproc_image,fftx_ntgrp(dffts)).NE.0) CALL errore &
+          & ('exx_module','EXX calculation is not working when &
+          & number of MPI tasks (nproc_image) is not integer multiple of number of taskgroups',1)
+        !
+      ELSE
+        !
+        ALLOCATE( exx_potential(dffts%nr1x*dffts%nr2x*dffts%my_nr3p,nproc_image) ) !
+        !
+      END IF
+      !
+    END IF
+    !
+    exx_potential=0.0_DP
+    !
+    ! Compute number of grid points in Poisson and multipole spheres and store
+    ! information to interchange between global and local (in sphere) grid indices ..
+    !
+    IF(thdyn) THEN
+      !
+      ! the number of grid points in Poisson and multipole spheres are computed
+      ! using the simulation cell given in the input to keep those numbers
+      ! constant throughout a variable cell dynamics ...
+      !
+      h_in=h_init
+      !
+      WRITE(stdout,'(/,3X,"This is a variable cell calculation. In this implementation",/ &
+        &,3X,"the number of grid points used in Poisson cube and",/ &
+        &,3X,"multipole expansion cube are kept constant as computed",/ &
+        &,3X,"from the simulation cell given in the input...")')
+      !
+      WRITE(stdout,'(/3X,"cell from input:")')
+      WRITE(stdout,'(3X,3F12.6)') h_in
+      !
+      ! Alternatively, reference cell could be used ... 
+      !
+      !IF(ref_cell.EQV..TRUE.) h_in=ref_at*ref_alat 
+      !
+    ELSE
+      !
+      ! for constant volume calculation ... 
+      !
+      h_in=h
+      !
+    END IF
+    !
+    !--------------------------------------------------------------------------
+    ! calculate grid spaing along each direction
+    !--------------------------------------------------------------------------
+    hx=DSQRT(h(1,1)*h(1,1)+h(2,1)*h(2,1)+h(3,1)*h(3,1))/nr1
+    hy=DSQRT(h(1,2)*h(1,2)+h(2,2)*h(2,2)+h(3,2)*h(3,2))/nr2
+    hz=DSQRT(h(1,3)*h(1,3)+h(2,3)*h(2,3)+h(3,3)*h(3,3))/nr3
+    !--------------------------------------------------------------------------
+    ! Number of grid points inside Poisson (PS) and multipole expansion (ME)
+    ! subdomains. _s: self; _p: pair
+    ! We make the side length of the cube as the diameter of the spherical
+    ! subdomain
+    !--------------------------------------------------------------------------
+    PScubeSL_s = IDNINT((2*exx_ps_rcut_s/MIN(hx,hy,hz))/8.0D0)*8-1
+    PScubeSL_p = IDNINT((2*exx_ps_rcut_p/MIN(hx,hy,hz))/8.0D0)*8-1
+    MEcubeSL_s = IDNINT((2*exx_me_rcut_s/MIN(hx,hy,hz))/8.0D0)*8-1
+    MEcubeSL_p = IDNINT((2*exx_me_rcut_p/MIN(hx,hy,hz))/8.0D0)*8-1
+    !--------------------------------------------------------------------------
+    s_ps_r(1) = nr1r - (PScubeSL_s-1)/2;
+    s_ps_r(2) = nr2r - (PScubeSL_s-1)/2;
+    s_ps_r(3) = nr3r - (PScubeSL_s-1)/2;
+    s_ps_r(4) = nr1r - (PScubeSL_s-1)/2 + (PScubeSL_s-1);
+    s_ps_r(5) = nr2r - (PScubeSL_s-1)/2 + (PScubeSL_s-1);
+    s_ps_r(6) = nr3r - (PScubeSL_s-1)/2 + (PScubeSL_s-1);
+    !--------------------------------------------------------------------------
+    p_ps_r(1) = nr1r - (PScubeSL_p-1)/2;
+    p_ps_r(2) = nr2r - (PScubeSL_p-1)/2;
+    p_ps_r(3) = nr3r - (PScubeSL_p-1)/2;
+    p_ps_r(4) = nr1r - (PScubeSL_p-1)/2 + (PScubeSL_p-1);
+    p_ps_r(5) = nr2r - (PScubeSL_p-1)/2 + (PScubeSL_p-1);
+    p_ps_r(6) = nr3r - (PScubeSL_p-1)/2 + (PScubeSL_p-1);
+    !--------------------------------------------------------------------------
+    s_me_r(1) = nr1r - (MEcubeSL_s-1)/2;
+    s_me_r(2) = nr2r - (MEcubeSL_s-1)/2;
+    s_me_r(3) = nr3r - (MEcubeSL_s-1)/2;
+    s_me_r(4) = nr1r - (MEcubeSL_s-1)/2 + (MEcubeSL_s-1);
+    s_me_r(5) = nr2r - (MEcubeSL_s-1)/2 + (MEcubeSL_s-1);
+    s_me_r(6) = nr3r - (MEcubeSL_s-1)/2 + (MEcubeSL_s-1);
+    !--------------------------------------------------------------------------
+    p_me_r(1) = nr1r - (MEcubeSL_p-1)/2;
+    p_me_r(2) = nr2r - (MEcubeSL_p-1)/2;
+    p_me_r(3) = nr3r - (MEcubeSL_p-1)/2;
+    p_me_r(4) = nr1r - (MEcubeSL_p-1)/2 + (MEcubeSL_p-1);
+    p_me_r(5) = nr2r - (MEcubeSL_p-1)/2 + (MEcubeSL_p-1);
+    p_me_r(6) = nr3r - (MEcubeSL_p-1)/2 + (MEcubeSL_p-1);
+    !--------------------------------------------------------------------------
+    n_s_ps = PScubeSL_s**3
+    n_p_ps = PScubeSL_p**3
+    n_s_me = MEcubeSL_s**3
+    n_p_me = MEcubeSL_p**3
+    !--------------------------------------------------------------------------
+    !
+    ALLOCATE( me_cs(3,       s_me_r(1):s_me_r(4),s_me_r(2):s_me_r(5),s_me_r(3):s_me_r(6)), stat=ierr)
+    ALLOCATE( me_rs(0:lmax,  s_me_r(1):s_me_r(4),s_me_r(2):s_me_r(5),s_me_r(3):s_me_r(6)), stat=ierr)
+    ALLOCATE( me_ri(0:lmax+1,s_me_r(1):s_me_r(4),s_me_r(2):s_me_r(5),s_me_r(3):s_me_r(6)), stat=ierr)
+    ALLOCATE( me_rc(0:lmax,  s_me_r(1):s_me_r(4),s_me_r(2):s_me_r(5),s_me_r(3):s_me_r(6)), stat=ierr)
+    me_cs=0.0_DP; me_rs=0.0_DP; me_ri=0.0_DP; me_rc=0.0_DP
+    !
+    WRITE(stdout,'(/,3X,"number of grid points in Poisson cube ",/ &
+      &,5X,"self potential:",I8,3X,"pair potential:",I8)') n_s_ps, n_p_ps
+    WRITE(stdout,'(/,3X,"number of grid points in multipole expansion cube: ",/ &
+      &,5X,"self potential:",I8,3X,"pair potential:",I8)') n_s_me, n_p_me
+    RETURN
+  END SUBROUTINE exx_initialize_cube
+
+  SUBROUTINE  exx_initialize_sphere()
+    IMPLICIT NONE
+    !
+    ! ALLOCATE exx_potential
+    !
+    IF (nproc_image .LT. nbsp) THEN
+      !
+      ALLOCATE( exx_potential(dffts%nr1*dffts%nr2*dffts%my_nr3p,nbsp) )
+      !
+    ELSE
+      !
+      IF ( dffts%has_task_groups ) THEN
+        !
+        ALLOCATE( exx_potential(dffts%nnr,nproc_image/fftx_ntgrp(dffts)) )
+        !
+        IF(MOD(nproc_image,fftx_ntgrp(dffts)).NE.0) CALL errore &
+          & ('exx_module','EXX calculation is not working when &
+          & number of MPI tasks (nproc_image) is not integer multiple of number of taskgroups',1)
+        !
+      ELSE
+        !
+        ALLOCATE( exx_potential(dffts%nr1x*dffts%nr2x*dffts%my_nr3p,nproc_image) ) !
+        !
+      END IF
+      !
+    END IF
+    !
+    exx_potential=0.0_DP
+    !
+    ! Compute number of grid points in Poisson and multipole spheres and store
+    ! information to interchange between global and local (in sphere) grid indices ..
+    !
+    IF(thdyn) THEN
+      !
+      ! the number of grid points in Poisson and multipole spheres are computed
+      ! using the simulation cell given in the input to keep those numbers
+      ! constant throughout a variable cell dynamics ...
+      !
+      h_in=h_init
+      !
+      WRITE(stdout,'(/,3X,"This is a variable cell calculation. In this implementation",/ &
+        &,3X,"the number of grid points used in Poisson sphere and",/ &
+        &,3X,"multipole expansion sphere are kept constant as computed",/ &
+        &,3X,"from the simulation cell given in the input...")')
+      !
+      WRITE(stdout,'(/3X,"cell from input:")')
+      WRITE(stdout,'(3X,3F12.6)') h_in
+      !
+      ! Alternatively, reference cell could be used ... 
+      !
+      !IF(ref_cell.EQV..TRUE.) h_in=ref_at*ref_alat 
+      !
+    ELSE
+      !
+      ! for constant volume calculation ... 
+      !
+      h_in=h
+      !
+    END IF
+    !
+    ! get number of points inside the Poisson and (Poisson + Multipole expansion) spheres
+    ! for self and pair spheres (using different cutoff radii)
+    !
+    CALL getnpinsp(exx_ps_rcut_s, exx_me_rcut_s, np_in_sp_s, np_in_sp_me_s )
+    CALL getnpinsp(exx_ps_rcut_p, exx_me_rcut_p, np_in_sp_p, np_in_sp_me_p )
+    !
+    ! exx_setup   orders the local index in the order such that
+    !                      1 ... np_in_sp_s      is in self Poisson sphere
+    !             np_in_sp_s ... np_in_sp_me_s   is in self Multipole sphere
+    !                      1 ... np_in_sp_p      is in pair Poisson sphere
+    !             np_in_sp_p ... np_in_sp_me_p   is in self Multipole sphere
+    !
+    !             and computes the x y z values for multipole expansion
+    !          ( notice that it is still xyz even in non-orthogonal cells)
+    !
+    CALL exx_setup( )
+    !
+    WRITE(stdout,'(/,3X,"number of grid points in Poisson spehere ",/ &
+      &,5X,"self potential:",I8,3X,"pair potential:",I8)')np_in_sp_s,np_in_sp_p
+    WRITE(stdout,'(/,3X,"number of grid points in multipole expansion spehere: ",/ &
+      &,5X,"self potential:",I8,3X,"pair potential:",I8)')np_in_sp_me_s,np_in_sp_me_p
+
+    RETURN
+  END SUBROUTINE exx_initialize_sphere
+
+  SUBROUTINE exx_initialize_common()
+    IMPLICIT NONE
+    !
+    ! Variables for parallelization are initialized ....
+    !
+    ! parallelization scaling factors
+    !
+    IF(nproc_image.LE.nbsp) THEN
+      sc_fac = 1
+    ELSE
+      sc_fac = nproc_image/nbsp
+    END IF
+    !
+    ! my_nbspx is the maxval of my_nbsp(:), ie the maximum number of bands a processor (mpi task) can have
+    !
+    IF(nproc_image .LE. nbsp) THEN
+      my_nbspx   = nbsp / nproc_image
+      IF( MOD(nbsp, nproc_image) /= 0)THEN
+        my_nbspx = my_nbspx + 1
+      ENDIF
+    ELSE
+      my_nbspx   = (nbsp / nproc_image) + 1
+    END IF
+    !
+    !print *, 'my_nbspx =', my_nbspx
+    !
+    ALLOCATE( my_nxyz ( nproc_image ) )
+    ALLOCATE( my_nbsp ( nproc_image ) )
+    !
+    IF(nproc_image .LE. nbsp) THEN
+      my_nbsp(:) = nbsp/nproc_image
+      IF( MOD(nbsp, nproc_image) /= 0)THEN
+        DO i = 1, nproc_image
+          IF( (i-1) < MOD(nbsp, nproc_image) ) my_nbsp(i) = my_nbsp(i)+1
+        END DO
+      END IF
+    ELSE
+      my_nbsp(:) = 1
+    END IF
+    !
+    ! ** Note that in this case .. 
+    ! this is incorrect:   my_nxyz(:) = nr1*nr2*dffts%npp(me_image+1)
+    my_nxyz(:) = nr1*nr2*dffts%nr3p
+    !
+    !DEBUG
+    !WRITE(stdout,'("my_nbsp")')
+    !WRITE(stdout,'(20I5)')my_nbsp
+    !WRITE(stdout,'("my_nxyz")')
+    !WRITE(stdout,'(20I7)')my_nxyz
+    !DEBUG
+    !
+    ALLOCATE( index_my_nbsp (my_nbspx, nproc_image) )
+    ALLOCATE( rk_of_obtl ( nbsp ) )
+    ALLOCATE( lindex_of_obtl( nbsp ) )
+    !
+    IF(nproc_image .LE. nbsp) THEN
+      index_my_nbsp(:, :) = nbsp + 1 ! set orbital index to beyond nbsp to indicate this entry is not used...
+      DO irank = 1, nproc_image
+        DO iobtl = 1, my_nbsp(irank)
+          gindex_of_iobtl = iobtl
+          DO proc = 1, irank - 1, 1
+            gindex_of_iobtl = gindex_of_iobtl + my_nbsp(proc)
+          END DO
+          IF( gindex_of_iobtl <= nbsp) THEN
+            index_my_nbsp(iobtl, irank) = gindex_of_iobtl
+          END IF
+        END DO
+      END DO
+    ELSE
+      DO proc = 1, nproc_image
+        index_my_nbsp(1, proc) = proc
+      END DO
+    END IF
+    !
+    !DEBUG
+    !WRITE(stdout,'("index_my_nbsp")')
+    !WRITE(stdout,'(20I5)')index_my_nbsp(1,:)
+    !WRITE(stdout,'(20I5)')index_my_nbsp(2,:)
+    !DEBUG
+    !
+    DO iobtl = 1, nbsp
+      rk_of_obtl(iobtl) = 0
+      tmp_iobtl = iobtl
+      DO proc = 1, nproc_image
+        tmp_iobtl = tmp_iobtl - my_nbsp(proc)
+        IF (tmp_iobtl <= 0) THEN
+          rk_of_obtl(iobtl) = proc - 1
+          !print *, 'lrk_of_iobtl=', proc-1, rk_of_obtl(iobtl) 
+          EXIT
+        END IF
+      END DO
+    END DO
+    !
+    !DEBUG
+    !WRITE(stdout,'("rk_of_obtl")')
+    !WRITE(stdout,'(20I5)')rk_of_obtl
+    !DEBUG
+    !
+    DO iobtl = 1, nbsp
+      lindex_of_obtl(iobtl) = iobtl
+      DO proc = 1, nproc_image
+        IF (lindex_of_obtl(iobtl) <= my_nbsp(proc)) EXIT
+        lindex_of_obtl(iobtl) = lindex_of_obtl(iobtl) - my_nbsp(proc)
+      END DO
+    END DO
+    !
+    !DEBUG
+    !WRITE(stdout,'("lindex_of_obtl")')
+    !WRITE(stdout,'(20I5)')lindex_of_obtl
+    !DEBUG
+    !
+    ! Allocate other variables ....
+    !
+    IF ( lwfpbe0nscf .or. lwfnscf ) ALLOCATE( rhopr( dfftp%nnr, nspin ) )
+    !
+    IF ( lwfpbe0nscf ) THEN
+      ALLOCATE( vwc(3, vnbsp) )
+      ALLOCATE( pair_dist( 3, neigh, my_nbspx), stat=ierr )
+      pair_dist (:,:,:) = 0.0_DP
+      ALLOCATE( pairv( np_in_sp_p, 3, neigh, my_nbspx), stat=ierr )
+      pairv (:,:,:,:) = 0.0_DP
+    END IF
+    !
+    WRITE(stdout,'(/,3X,"----------------------------------------------------")')
+    return
+  end subroutine exx_initialize_common
 
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE exx_finalize()
@@ -595,6 +809,9 @@ CONTAINS
       IF( ALLOCATED( selfv ) )          DEALLOCATE( selfv )
       IF( ALLOCATED( pairv ) )          DEALLOCATE( pairv )
       IF( ALLOCATED( pair_dist ) )      DEALLOCATE( pair_dist )
+      IF( ALLOCATED( pair_label ) )     DEALLOCATE( pair_label )
+      IF( ALLOCATED( pair_step ) )      DEALLOCATE( pair_step )
+      IF( ALLOCATED( pair_status ) )    DEALLOCATE( pair_status )
       IF( ALLOCATED( my_nxyz ) )        DEALLOCATE( my_nxyz )
       IF( ALLOCATED( my_nbsp ) )        DEALLOCATE( my_nbsp )
       IF( ALLOCATED( index_my_nbsp ) )  DEALLOCATE( index_my_nbsp)
@@ -610,6 +827,17 @@ CONTAINS
       IF( ALLOCATED( sc_xx_in_sp ))     DEALLOCATE( sc_xx_in_sp )
       IF( ALLOCATED( sc_yy_in_sp ))     DEALLOCATE( sc_yy_in_sp )
       IF( ALLOCATED( sc_zz_in_sp ))     DEALLOCATE( sc_zz_in_sp )
+      IF (ALLOCATED(psime_pair_send))  DEALLOCATE(psime_pair_send)
+      IF (ALLOCATED(psime_pair_recv))  DEALLOCATE(psime_pair_recv)
+      IF (ALLOCATED( rho_ps ))          DEALLOCATE( rho_ps )
+      IF (ALLOCATED( pot_ps ))          DEALLOCATE( pot_ps )
+      IF( ALLOCATED( me_cs ) )          DEALLOCATE( me_cs )
+      IF( ALLOCATED( me_rs ) )          DEALLOCATE( me_rs )
+      IF( ALLOCATED( me_ri ) )          DEALLOCATE( me_ri )
+      IF( ALLOCATED( me_rc ) )          DEALLOCATE( me_rc )
+      IF( ALLOCATED( selfrho ) )        DEALLOCATE( selfrho )
+      IF( ALLOCATED( pairrho ) )        DEALLOCATE( pairrho )
+      IF( ALLOCATED( coemicf)    )      DEALLOCATE( coemicf)
       !
       RETURN
       !
@@ -955,6 +1183,13 @@ CONTAINS
         write(6, *)'STOP in exx_setup'
         return
       endif
+      if (texx_cube) then
+        ALLOCATE( me_cs(3,       s_me_r(1):s_me_r(4),s_me_r(2):s_me_r(5),s_me_r(3):s_me_r(6)), stat=ierr)
+        ALLOCATE( me_rs(0:lmax,  s_me_r(1):s_me_r(4),s_me_r(2):s_me_r(5),s_me_r(3):s_me_r(6)), stat=ierr)
+        ALLOCATE( me_ri(0:lmax+1,s_me_r(1):s_me_r(4),s_me_r(2):s_me_r(5),s_me_r(3):s_me_r(6)), stat=ierr)
+        ALLOCATE( me_rc(0:lmax,  s_me_r(1):s_me_r(4),s_me_r(2):s_me_r(5),s_me_r(3):s_me_r(6)), stat=ierr)
+        me_cs=0.0_DP; me_rs=0.0_DP; me_ri=0.0_DP; me_rc=0.0_DP
+      end if
       !
       !========================================================================
       !
@@ -1529,5 +1764,133 @@ CONTAINS
       !
       RETURN
   END SUBROUTINE exx_energy_cell_derivative
+
+  !--------------------------------------------------------------------------------------------------------------
+  SUBROUTINE exx_energy_cell_derivative_cube(me_r, ps_r, tran, rho, pot, &
+                                      ha_proj, hb_proj, hc_proj, Jim, dexx_dhab)
+    !
+    IMPLICIT NONE
+    !----------------------------------------------------------------------------
+    ! pass in variable
+    !----------------------------------------------------------------------------
+    INTEGER , INTENT(IN)  :: me_r(6)
+    INTEGER , INTENT(IN)  :: ps_r(6)
+    INTEGER , INTENT(IN)  :: tran(3)
+    REAL(DP), INTENT(IN)  :: rho(me_r(1):me_r(4),me_r(2):me_r(5),me_r(3):me_r(6))
+    REAL(DP), INTENT(IN)  :: pot(me_r(1):me_r(4),me_r(2):me_r(5),me_r(3):me_r(6))
+    REAL(DP), INTENT(IN)  :: ha_proj(3)
+    REAL(DP), INTENT(IN)  :: hb_proj(3)
+    REAL(DP), INTENT(IN)  :: hc_proj(3)
+    REAL(DP), INTENT(IN)  :: Jim(3,3)  ! jacobian [d/d x]        [d/d a]
+    !                                             |d/d y| = [J]  |d/d b|
+    !                                             [d/d z]        [d/d c]
+    REAL(DP), INTENT(OUT) :: dexx_dhab(3,3)
+    !----------------------------------------------------------------------------
+    ! local variable
+    !----------------------------------------------------------------------------
+    INTEGER               :: i,j,k,ish
+    INTEGER               :: ii,jj,kk
+    INTEGER               :: alpha, beta
+    REAL(DP)              :: Imn(3,3), r_alpha(3)
+    REAL(DP)              :: tmp1, tmp2, tmp3, tmp4, tmp5, tmp6
+    !
+    REAL(DP) :: dvdri1, dvdri2, dvdri3 
+    REAL(DP) :: dvdr1, dvdr2, dvdr3 
+    integer              :: tran1, tran2, tran3
+    REAL(DP)              :: r_alpha1, r_alpha2, r_alpha3
+    !REAL(DP), ALLOCATABLE :: dvdr(:,:,:,:)
+    !----------------------------------------------------------------------------------
+    
+    !----------------------------------------------------------------------------------
+    ! initialize
+    !----------------------------------------------------------------------------------
+    !ALLOCATE(dvdr(3,ps_r(1):ps_r(4),ps_r(2):ps_r(5),ps_r(3):ps_r(6))); dvdr=0.0D0
+    !----------------------------------------------------------------------------------
+    tmp1 = 0.0_DP; tmp2 = 0.0_DP; tmp3 = 0.0_DP
+    tmp4 = 0.0_DP; tmp5 = 0.0_DP; tmp6 = 0.0_DP
+    !----------------------------------------------------------------------------------
+    Imn(:,:) = 0.0_DP
+    !----------------------------------------------------------------------------------
+    !
+    !----------------------------------------------------------------------------------
+    ! Calculate the potential derivative
+    !----------------------------------------------------------------------------------
+    !CALL exx_pot_derivative(me_r, ps_r, pot, Jim, dvdr)
+    !----------------------------------------------------------------------------------
+
+    tran1 = tran(1)
+    tran2 = tran(2)
+    tran3 = tran(3)
+    
+    !----------------------------------------------------------------------------------
+    ! Integration: I_{mn} = \int \dd r \rho(r) r_m dv_n (r)
+    !----------------------------------------------------------------------------------
+   !$omp parallel do collapse(3) reduction(+:tmp1,tmp2,tmp3,tmp4,tmp5,tmp6) &
+   !$omp private(i,j,k,ii,jj,kk,ish) &
+   !$omp private(r_alpha1, r_alpha2, r_alpha3) &
+   !$omp private(dvdri1, dvdri2, dvdri3, dvdr1, dvdr2, dvdr3) &
+   !$omp firstprivate(ha_proj, hb_proj, hc_proj) &
+   !$omp firstprivate(Jim,tran1,tran2,tran3)
+    DO k = ps_r(3),ps_r(6)
+      DO j = ps_r(2),ps_r(5)
+        DO i = ps_r(1),ps_r(4)
+          !----------------------------------------------------
+          ! Calculate r_m on the fly
+          !----------------------------------------------------
+          ii = i - tran1 ! include the l2goff (1d->3d)
+          jj = j - tran2 ! include the l2goff (1d->3d)
+          kk = k - tran3 ! include the l2goff (1d->3d)
+          !----------------------------------------------------
+          r_alpha1 = DBLE(ii)*ha_proj(1)+DBLE(jj)*hb_proj(1)+DBLE(kk)*hc_proj(1)
+          r_alpha2 = DBLE(ii)*ha_proj(2)+DBLE(jj)*hb_proj(2)+DBLE(kk)*hc_proj(2)
+          r_alpha3 = DBLE(ii)*ha_proj(3)+DBLE(jj)*hb_proj(3)+DBLE(kk)*hc_proj(3)
+          !----------------------------------------------------
+          dvdri1 = 0.d0; dvdri2 = 0.d0; dvdri3 = 0.d0
+          DO ish = 1, nord1
+            ! since the derivative coeff is odd in parity, we combine neighbors
+            dvdri1 = dvdri1 + coe_1st_derv(ish,1)*(pot(i+ish,j,k)-pot(i-ish,j,k))
+            dvdri2 = dvdri2 + coe_1st_derv(ish,2)*(pot(i,j+ish,k)-pot(i,j-ish,k))
+            dvdri3 = dvdri3 + coe_1st_derv(ish,3)*(pot(i,j,k+ish)-pot(i,j,k-ish))
+          END DO
+          !----------------------------------------------------
+          dvdr1 = Jim(1,1)*dvdri1 + Jim(1,2)*dvdri2 + Jim(1,3)*dvdri3
+          dvdr2 = Jim(2,1)*dvdri1 + Jim(2,2)*dvdri2 + Jim(2,3)*dvdri3
+          dvdr3 = Jim(3,1)*dvdri1 + Jim(3,2)*dvdri2 + Jim(3,3)*dvdri3
+          !----------------------------------------------------
+          !----------------------------------------------------
+          ! Combining potential derivatives with cell parameters
+          !----------------------------------------------------
+          tmp1 = tmp1 + rho(i,j,k)*r_alpha1*dvdr1
+          tmp2 = tmp2 + rho(i,j,k)*r_alpha1*dvdr2
+          tmp3 = tmp3 + rho(i,j,k)*r_alpha1*dvdr3
+          tmp4 = tmp4 + rho(i,j,k)*r_alpha2*dvdr2
+          tmp5 = tmp5 + rho(i,j,k)*r_alpha2*dvdr3
+          tmp6 = tmp6 + rho(i,j,k)*r_alpha3*dvdr3
+          !----------------------------------------------------
+        END DO
+      END DO
+    END DO
+    !$omp end parallel do
+    !----------------------------------------------------------------------------------
+    Imn(1,1) = tmp1; Imn(1,2) = tmp2; Imn(1,3) = tmp3
+    Imn(2,1) = tmp2; Imn(2,2) = tmp4; Imn(2,3) = tmp5
+    Imn(3,1) = tmp3; Imn(3,2) = tmp5; Imn(3,3) = tmp6
+    !----------------------------------------------------------------------------------
+    ! Calculate the stress tensor from Imn: (d exx / d hab )_{ij} =  2 (sum_k  Imn_{ik}(ainv)_{jk})
+    !----------------------------------------------------------------------------------
+    DO alpha = 1, 3
+      DO beta = 1, 3
+        dexx_dhab(alpha,beta) = Imn(alpha,1)*ainv(beta,1)+Imn(alpha,2)*ainv(beta,2)+Imn(alpha,3)*ainv(beta,3)
+      END DO
+    END DO
+    !----------------------------------------------------------------------------------
+    dexx_dhab = 2.0_DP*dexx_dhab
+    !----------------------------------------------------------------------------------
+    !
+    !DEALLOCATE(dvdr)
+    !
+    RETURN
+  END SUBROUTINE exx_energy_cell_derivative_cube
+  !--------------------------------------------------------------------------------------------------------------
   !
 END MODULE exx_module

@@ -24,8 +24,10 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   USE funct,            ONLY : dft_is_meta, get_meta
   USE scf,              ONLY : scf_type
   USE cell_base,        ONLY : alat
-  USE control_flags,    ONLY : ts_vdw
+  USE io_global,        ONLY : stdout
+  USE control_flags,    ONLY : ts_vdw, mbd_vdw
   USE tsvdw_module,     ONLY : tsvdw_calculate, UtsvdW
+  USE libmbd_interface, ONLY : mbd_interface
   !
   IMPLICIT NONE
   !
@@ -123,13 +125,17 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !
   ! ... add Tkatchenko-Scheffler potential (factor 2: Ha -> Ry)
   !
-  IF (ts_vdw) THEN
+  IF (ts_vdw .or. mbd_vdw) THEN
      CALL tsvdw_calculate(tau*alat,rho%of_r(:,1))
      DO is = 1, nspin_lsda
         DO ir=1,dfftp%nnr
            v%of_r(ir,is)=v%of_r(ir,is)+2.0d0*UtsvdW(ir)
         END DO
      END DO
+  END IF
+  !
+  IF (mbd_vdw) THEN
+    call mbd_interface(tau*alat,rho%of_r(:,1))
   END IF
   !
   CALL stop_clock( 'v_of_rho' )
@@ -434,8 +440,8 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
         !
         rhoup2 = rho%of_r(ir,1)+rho%of_r(ir,2)
         rhodw2 = rho%of_r(ir,1)-rho%of_r(ir,2)
-        IF (rhoup2 < 0.d0) rhoneg(1) = rhoneg(1) + rhoup2
-        IF (rhodw2 < 0.d0) rhoneg(2) = rhoneg(2) + rhodw2
+        IF (rhoup2 < 0.d0) rhoneg(1) = rhoneg(1) - rhoup2
+        IF (rhodw2 < 0.d0) rhoneg(2) = rhoneg(2) - rhodw2
      ENDDO
      !
      vtxc   = 0.5d0 * vtxc

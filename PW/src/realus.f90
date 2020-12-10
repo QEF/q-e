@@ -1882,7 +1882,8 @@ MODULE realus
       CALL using_qq_at(0)
       CALL using_becp_r(0)
 
-      ALLOCATE( w1(nhm), w2(nhm) ) ; if ( ibnd+1 > last) w2 = 0.D0
+      ALLOCATE( w1(nhm), w2(nhm) )
+      IF ( ibnd+1 > last) w2 = 0.D0
       !
       fac = sqrt(omega)
       !
@@ -2055,7 +2056,8 @@ MODULE realus
   !
   fac = sqrt(omega)
   !
-  ALLOCATE( w1(nhm), w2(nhm) ) ; IF ( ibnd+1 > last) w2 = 0.D0
+  ALLOCATE( w1(nhm), w2(nhm) )
+  IF ( ibnd+1 > last) w2 = 0.D0
   DO nt = 1, nsp
      !
      DO ia = 1, nat

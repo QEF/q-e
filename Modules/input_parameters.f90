@@ -535,6 +535,8 @@ MODULE input_parameters
 
         LOGICAL   :: ts_vdw = .false.
           ! OBSOLESCENT: same as vdw_corr='Tkatchenko-Scheffler'
+        LOGICAL   :: mbd_vdw = .false.
+          ! added for consistency with ts_vdw
         LOGICAL :: ts_vdw_isolated = .FALSE.
           ! if .TRUE., TS-vdW correction for isolated system
           ! if .FALSE., TS-vdW correction for periodic system
@@ -623,6 +625,7 @@ MODULE input_parameters
           !
 
 
+
         NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat, &
              ntyp, nbnd, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s,         &
              nr3s, nr1b, nr2b, nr3b, nosym, nosym_evc, noinv, use_all_frac,   &
@@ -653,7 +656,7 @@ MODULE input_parameters
              esm_a, esm_zb, fcp_mu, fcp_mass, fcp_tempw, fcp_relax,           &
              fcp_relax_step, fcp_relax_crit, fcp_mdiis_size, fcp_mdiis_step,  &
              space_group, uniqueb, origin_choice, rhombohedral,               &
-             zgate, relaxz, block, block_1, block_2, block_height
+             zgate, relaxz, block, block_1, block_2, block_height, mbd_vdw
 
 !=----------------------------------------------------------------------------=!
 !  ELECTRONS Namelist Input Parameters
@@ -1345,6 +1348,7 @@ MODULE input_parameters
           REAL(DP) :: exx_ps_rcut_pair
           REAL(DP) :: exx_me_rcut_self
           REAL(DP) :: exx_me_rcut_pair
+          LOGICAL  :: exx_use_cube_domain
 !=======================================================================
 
           INTEGER :: nit
@@ -1365,6 +1369,7 @@ MODULE input_parameters
           NAMELIST / wannier / wf_efield, wf_switch, sw_len, efx0, efy0, efz0,&
                                efx1, efy1, efz1, wfsd, wfdt,exx_neigh,exx_poisson_eps,&
                                exx_dis_cutoff,exx_ps_rcut_self, exx_me_rcut_self,   &
+                               exx_use_cube_domain,                      &
                                exx_ps_rcut_pair, exx_me_rcut_pair, vnbsp,&
                                maxwfdt, wf_q, wf_friction, nit, nsd, nsteps,  & 
                                tolw, adapt, calwf, nwf, wffort, writev

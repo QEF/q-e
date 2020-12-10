@@ -84,8 +84,7 @@ SUBROUTINE iosys()
                             forcefield, &
                             forcegate
   !
-  USE io_files,      ONLY : input_drho, output_drho, &
-                            psfile, tmp_dir, wfc_dir, &
+  USE io_files,      ONLY : psfile, tmp_dir, wfc_dir, &
                             prefix_     => prefix, &
                             pseudo_dir_ => pseudo_dir, &
                             pseudo_dir_cur, restart_dir, &
@@ -172,6 +171,7 @@ SUBROUTINE iosys()
                             tq_smoothing_     => tq_smoothing, &
                             tbeta_smoothing_  => tbeta_smoothing, &
                             ts_vdw_           => ts_vdw, &
+                            mbd_vdw_          => mbd_vdw, &
                             lecrpa_           => lecrpa, &
                             scf_must_converge_=> scf_must_converge, & 
                             treinit_gvecs_    => treinit_gvecs, &  
@@ -263,6 +263,7 @@ SUBROUTINE iosys()
                                vdw_corr, london, london_s6, london_rcut, london_c6, &
                                london_rvdw, dftd3_threebody, dftd3_version,   &
                                ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,     &
+                               mbd_vdw,     &
                                xdm, xdm_a1, xdm_a2, lforcet,                  &
                                one_atom_occupations,                          &
                                esm_bc, esm_efield, esm_w, esm_nfit, esm_a,    &
@@ -343,7 +344,6 @@ SUBROUTINE iosys()
   LOGICAL  :: exst, parallelfs, domag, stop_on_error
   REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp, V
   CHARACTER(len=256) :: tempfile
-  INTEGER, EXTERNAL  :: find_free_unit
   !
   ! MAIN CONTROL VARIABLES, MD AND RELAX
   !
@@ -1214,7 +1214,6 @@ SUBROUTINE iosys()
         !
         WRITE( stdout, '(/5x,"Reading Hubbard V parameters from the file parameters.in...",/)')
         !
-        tempunit = find_free_unit()
         tempfile = TRIM("parameters.in")
         !
         INQUIRE (file = tempfile, exist = exst)
@@ -1226,7 +1225,7 @@ SUBROUTINE iosys()
         !
         ! Open the file parameters.in and read Hubbard_V from there
         !
-        OPEN( UNIT = tempunit, FILE = tempfile, FORM = 'formatted', STATUS = 'unknown' )
+        OPEN( NEWUNIT = tempunit, FILE = tempfile, FORM = 'formatted', STATUS = 'unknown' )
         READ(tempunit,*)
 10      READ(tempunit,*,END=11) i, j, V
         Hubbard_V(i,j,1) = V
@@ -1322,7 +1321,7 @@ SUBROUTINE iosys()
   !
   !  VdW CORRECTIONS (SEMI-EMPIRICAL)
   !
-  CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw_, lxdm)
+  CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw_, mbd_vdw_, lxdm)
   !
   IF ( london ) THEN
      CALL infomsg("iosys","london is obsolete, use ""vdw_corr='grimme-d2'"" instead")
@@ -1338,6 +1337,11 @@ SUBROUTINE iosys()
      CALL infomsg("iosys","ts_vdw is obsolete, use ""vdw_corr='TS'"" instead")
      vdw_corr='TS'
      ts_vdw_ = .TRUE.
+  END IF
+  IF ( mbd_vdw ) THEN
+     CALL infomsg("iosys","mbd_vdw is obsolete, use ""vdw_corr='MBD'"" instead")
+     vdw_corr='MBD'
+     mbd_vdw_ = .TRUE.
   END IF
   IF ( llondon.AND.lxdm .OR. llondon.AND.ts_vdw_ .OR. lxdm.AND.ts_vdw_ .OR. &
            ldftd3.AND.llondon .OR. ldftd3.AND.lxdm .OR. ldftd3.AND.ts_vdw ) &

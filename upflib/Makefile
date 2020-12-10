@@ -2,10 +2,6 @@
 
 include ../make.inc
 
-# location of needed modules
-# only if using FoX
-#MODFLAGS=$(MOD_FLAG)$(TOPDIR)/FoX/finclude
-
 QEMODS = libupf.a
 
 # list of modules
@@ -45,7 +41,8 @@ write_upf.o \
 write_upf_new.o \
 write_upf_schema.o \
 write_upf_v2.o \
-xmltools.o
+xmltools.o \
+ylmr2.o
 
 -include make.gpu
 
@@ -62,10 +59,10 @@ tldeps :
 	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 virtual_v2.x : virtual_v2.o $(QEMODS) 
-	$(LD) $(LDFLAGS) -o $@ virtual_v2.o $(QEMODS) $(FOX_LIB) $(LAPACK_LIBS) $(BLAS_LIBS) 
+	$(LD) $(LDFLAGS) -o $@ virtual_v2.o $(QEMODS) $(LAPACK_LIBS) $(BLAS_LIBS)
 
 upfconv.x : upfconv.o casino_pp.o $(QEMODS) 
-	$(LD) $(LDFLAGS) -o $@ upfconv.o casino_pp.o $(QEMODS) $(FOX_LIB) $(LAPACK_LIBS) $(BLAS_LIBS) 
+	$(LD) $(LDFLAGS) -o $@ upfconv.o casino_pp.o $(QEMODS) $(LAPACK_LIBS) $(BLAS_LIBS)
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L
