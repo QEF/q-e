@@ -66,7 +66,9 @@ xc_lib.o : xc_input_params_mod.o
 xc_lib.o : qe_kind.o
 xc_lib.o : dft_mod.o
 xclib_test.o : qe_kind.o
+xclib_test.o : qe_constants.o
 xclib_test.o : xc_lib.o
+xclib_test.o : xclib_para_m.o
 xclib_test.o : xc_wrapper_lda_lsda.o
 xclib_test.o : xc_wrapper_mgga.o
 xclib_test.o : xc_wrapper_d_lda_lsda.o

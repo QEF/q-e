@@ -1395,7 +1395,7 @@ PROGRAM xclib_test
   INTEGER, INTENT(OUT) :: nnr_nt
   !
   INTEGER  :: i
-  REAL(DP) :: calc_perc_diff
+  !REAL(DP) :: calc_perc_diff
   REAL(DP) :: abs_diff, perc_diff
   !
   nnr_nt = 0
@@ -1431,7 +1431,7 @@ PROGRAM xclib_test
   REAL(DP), INTENT(OUT) :: max_abs_perc(2)
   !
   INTEGER :: i
-  REAL(DP) :: calc_perc_diff
+  !REAL(DP) :: calc_perc_diff
   REAL(DP) :: abs_diff, perc_diff
   REAL(DP) :: abs_diff_prev, perc_diff_prev
   !
@@ -1469,7 +1469,7 @@ PROGRAM xclib_test
   REAL(DP), INTENT(OUT) :: min_abs_perc(2)
   !
   INTEGER  :: i
-  REAL(DP) :: calc_perc_diff
+  !REAL(DP) :: calc_perc_diff
   REAL(DP) :: abs_diff, perc_diff
   REAL(DP) :: perc_diff_prev, abs_diff_prev
   !
@@ -1877,29 +1877,26 @@ PROGRAM xclib_test
   !
  END FUNCTION
  !
- !
- END PROGRAM xclib_test
-!
-!
-!------------------------------------------------------------------------
-FUNCTION calc_perc_diff( thr, x_qe, x_lxc )
+ !------------------------------------------------------------------------
+ FUNCTION calc_perc_diff( thr, x_qe, x_lxc )
   !----------------------------------------------------------------------
   !! Calculates difference between qe and libxc quantities in percentage.
   !
   IMPLICIT NONE
   !
-  REAL(8), INTENT(IN) :: thr
-  REAL(8), INTENT(IN) :: x_qe, x_lxc
-  REAL(8) :: calc_perc_diff
+  REAL(DP), INTENT(IN) :: thr
+  REAL(DP), INTENT(IN) :: x_qe, x_lxc
+  REAL(DP) :: calc_perc_diff
   !
-  REAL(8) :: perc_diff
+  REAL(DP) :: perc_diff
   !
   perc_diff = -1.d0
-  !
   IF ( ABS(x_qe)<10.d0*thr .AND. ABS(x_qe-x_lxc)<10.d0*thr ) RETURN
   IF ( ABS(x_qe)==0.d0 .AND. ABS(x_qe-x_lxc)>thr ) calc_perc_diff = 100.d0
   IF ( ABS(x_qe)>thr ) calc_perc_diff = ABS( (x_qe-x_lxc)/x_qe )*100.d0
   !
   RETURN
   !
-END FUNCTION calc_perc_diff
+ END FUNCTION calc_perc_diff
+ !
+END PROGRAM xclib_test
