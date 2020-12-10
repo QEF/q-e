@@ -423,6 +423,7 @@ electrons.o : ../../Modules/io_files.o
 electrons.o : ../../Modules/io_global.o
 electrons.o : ../../Modules/ions_base.o
 electrons.o : ../../Modules/kind.o
+electrons.o : ../../Modules/mbdlib.o
 electrons.o : ../../Modules/mm_dispersion.o
 electrons.o : ../../Modules/mp_bands.o
 electrons.o : ../../Modules/mp_pools.o
@@ -1590,6 +1591,7 @@ pw_restart_new.o : ../../Modules/io_files.o
 pw_restart_new.o : ../../Modules/io_global.o
 pw_restart_new.o : ../../Modules/ions_base.o
 pw_restart_new.o : ../../Modules/kind.o
+pw_restart_new.o : ../../Modules/mbdlib.o
 pw_restart_new.o : ../../Modules/mm_dispersion.o
 pw_restart_new.o : ../../Modules/mp_bands.o
 pw_restart_new.o : ../../Modules/mp_global.o
@@ -2235,6 +2237,7 @@ v_of_rho.o : ../../Modules/funct.o
 v_of_rho.o : ../../Modules/io_global.o
 v_of_rho.o : ../../Modules/ions_base.o
 v_of_rho.o : ../../Modules/kind.o
+v_of_rho.o : ../../Modules/mbdlib.o
 v_of_rho.o : ../../Modules/mp_bands.o
 v_of_rho.o : ../../Modules/noncol.o
 v_of_rho.o : ../../Modules/recvec.o

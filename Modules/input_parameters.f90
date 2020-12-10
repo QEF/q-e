@@ -535,6 +535,8 @@ MODULE input_parameters
 
         LOGICAL   :: ts_vdw = .false.
           ! OBSOLESCENT: same as vdw_corr='Tkatchenko-Scheffler'
+        LOGICAL   :: mbd_vdw = .false.
+          ! added for consistency with ts_vdw
         LOGICAL :: ts_vdw_isolated = .FALSE.
           ! if .TRUE., TS-vdW correction for isolated system
           ! if .FALSE., TS-vdW correction for periodic system
@@ -623,6 +625,7 @@ MODULE input_parameters
           !
 
 
+
         NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat, &
              ntyp, nbnd, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s,         &
              nr3s, nr1b, nr2b, nr3b, nosym, nosym_evc, noinv, use_all_frac,   &
@@ -653,7 +656,7 @@ MODULE input_parameters
              esm_a, esm_zb, fcp_mu, fcp_mass, fcp_tempw, fcp_relax,           &
              fcp_relax_step, fcp_relax_crit, fcp_mdiis_size, fcp_mdiis_step,  &
              space_group, uniqueb, origin_choice, rhombohedral,               &
-             zgate, relaxz, block, block_1, block_2, block_height
+             zgate, relaxz, block, block_1, block_2, block_height, mbd_vdw
 
 !=----------------------------------------------------------------------------=!
 !  ELECTRONS Namelist Input Parameters

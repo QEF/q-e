@@ -63,6 +63,7 @@ BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
                $(MOD_FLAG)$(TOPDIR)/FFTXlib \
 	       $(MOD_FLAG)$(TOPDIR)/LAXlib \
 	       $(MOD_FLAG)$(TOPDIR)/UtilXlib \
+	       $(MOD_FLAG)$(TOPDIR)/MBD \
 	       $(MOD_FLAG)$(TOPDIR)/FoX/finclude
 
 # Compilers: fortran-90, fortran-77, C
@@ -163,6 +164,10 @@ MASS_LIBS      = @mass_libs@
 BEEF_LIBS      = @beef_libs@
 BEEF_LIBS_SWITCH = @beef_libs_switch@
 
+# library for many-body dispersion
+
+MBD_LIBS= $(TOPDIR)/MBD/libmbd.a
+
 # CUDA libraries
 CUDA_LIBS=@cuda_libs@ -L$(TOPDIR)/external/devxlib/src -ldevXlib
 CUDA_EXTLIBS = devxlib @cuda_extlibs@
@@ -183,7 +188,9 @@ FLIB_TARGETS   = all
 
 LIBOBJS        = $(TOPDIR)/clib/clib.a
 LIBXC_LIBS     = @LIBS_LIBXC@
-QELIBS         = $(BEEF_LIBS) $(LIBXC_LIBS) $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LD_LIBS)
+QELIBS         = $(MBD_LIBS) $(BEEF_LIBS) $(LIBXC_LIBS) \
+                 $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) \
+		 $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LD_LIBS)
 
 # wget or curl - useful to download from network
 WGET = @wget@
