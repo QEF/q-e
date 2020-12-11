@@ -42,7 +42,7 @@ else
 		    if test "$arch" == "mac686"; then
 		       add_mkl_flag="-openmp"
 		       add_mkl_lib="-lpthread"
-      		       add_mkl_omp="-lpthread"
+		       add_mkl_omp="-lpthread"
 		    fi
 		    ;;
 	       gfortran* )
@@ -51,8 +51,11 @@ else
 		    ;;
 	       nvfortran* )
       		    mkl_lib="mkl_intel_lp64"
-      		    mkl_omp="mkl_gnu_thread"
-      		    add_mkl_flag="-pgf90libs"
+                    mkl_omp="mkl_intel_thread"
+                    # Nota Bene: libiomp5.so is required (is in LLVM
+                    # or in  Intel compiler libraries) in order to
+                    # link threaded MKL with v.20.9 and 20.11
+                    add_mkl_omp="-liomp5"
 		    ;;
 	       pgf* )
                     # For obsolete PGI versions (superseded by nvfortran)
