@@ -9,7 +9,7 @@
 !
 FUNCTION skip_line(dummy)
   !
-  ! True if line is empty or starts with an !
+  ! True if line is empty or starts with # or !
   !
   IMPLICIT NONE
   !
@@ -24,8 +24,8 @@ FUNCTION skip_line(dummy)
   END IF
   !
   tmp = trim(ADJUSTL(dummy))
-  ! Comment line (starts with !)
-  skip_line = tmp(:1) .EQ. "!"
+  ! Comment line (starts with ! or #)
+  skip_line = tmp(:1) .EQ. "!" .OR. tmp(:1) .EQ. "#"
   !
 END FUNCTION
 !
