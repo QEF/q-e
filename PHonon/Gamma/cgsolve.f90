@@ -49,10 +49,14 @@ SUBROUTINE cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
   ELSE
      CALL calbec ( npw, evc,  u, lagrange )
    ENDIF
-  IF (.not. orthonormal) &
+  ! JDE putting back the old version because this looks wrong.
+  IF (.not. orthonormal) THEN
        CALL DPOTRS('U',nbnd,nbnd,overlap,nbndx,lagrange,nbnd,info)
-  IF (info/=0) CALL errore('cgsolve','error in potrs',info)
-  !
+       IF (info/=0) CALL errore('cgsolve','error in potrs',info)
+  END IF
+  ! JDE putting back the old version because this looks wrong.
+       !
+  
   CALL dgemm ('N', 'N', 2*npw, nbnd, nbnd, -1.d0, evc, &
        2*npwx, lagrange, nbndx, 1.d0, u, 2*npwx)
   !
@@ -60,7 +64,7 @@ SUBROUTINE cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
   IF (precondition) THEN
      CALL zvscal(npw,npwx,nbnd,diagonal,u,h)
   ELSE
-     CALL zcopy(npwx,nbnd,u,1,h,1)
+     CALL zcopy(npwx*nbnd,u,1,h,1)
   ENDIF
   ! uu = <u|h>
   CALL pw_dot('Y',npw,nbnd,u,npwx,h,npwx,uu)
@@ -69,7 +73,7 @@ SUBROUTINE cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
      u_u = u_u + uu(ibnd)
   ENDDO
   !
-  !      print '("  iter # ",i3,"  u_u = ",e10.4)', 0, u_u
+        print '("  iter # ",i3,"  u_u = ",e10.4)', 0, u_u  ! JDE
   !
   !   main iteration loop
   !
@@ -106,9 +110,12 @@ SUBROUTINE cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
      ELSE
         CALL calbec ( npw, evc,  u, lagrange )
      ENDIF
-     IF (.not. orthonormal) &
+     ! JDE putting back the old version because this looks wrong.
+     IF (.not. orthonormal) THEN
           CALL DPOTRS('U',nbnd,nbnd,overlap,nbndx,lagrange,nbnd,info)
-     IF (info/=0) CALL errore('cgsolve','error in potrs',info)
+          IF (info/=0) CALL errore('cgsolve','error in potrs',info)
+     ! JDE putting back the old version because this looks wrong.
+     END IF
      CALL dgemm ('N', 'N', 2*npw, nbnd, nbnd,-1.d0, evc, &
           2*npwx, lagrange, nbndx, 1.d0, u, 2*npwx)
      IF (precondition) THEN
@@ -123,7 +130,7 @@ SUBROUTINE cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
      DO ibnd=1,nbnd
         u_u = u_u + uu(ibnd)
      ENDDO
-     !         print '("  iter # ",i3,"  u_u = ",e10.4)', iter, u_u
+              print '("  iter # ",i3,"  u_u = ",e10.4)', iter, u_u ! JDE
      !
      IF( u_u <= eps) GOTO 10
      IF (iter==niter) THEN

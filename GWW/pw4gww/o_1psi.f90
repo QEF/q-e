@@ -565,7 +565,7 @@ SUBROUTINE o_1psi_gamma( numv, v_states, psi, opsi,l_freq,hdiag, ptype,fcw_numbe
         call stop_clock('opsi_pc')
      enddo
 
-     write(stdout,*) 'DEBUG1'
+!     write(stdout,*) 'DEBUG1'
      FLUSH(stdout)
 !call (H-e)^-1 solver
      if(.true.) then
@@ -573,13 +573,13 @@ SUBROUTINE o_1psi_gamma( numv, v_states, psi, opsi,l_freq,hdiag, ptype,fcw_numbe
      else
         psi_g2(1:npw,1:numv)=tmp_psi(1:npw,1:numv)
      endif
-     write(stdout,*) 'DEBUG1.5'
+!     write(stdout,*) 'DEBUG1.5'
      FLUSH(stdout)
      call cgsolve_all_gamma (hpsi_pw4gww,cg_psi_pw4gww,et(1,1),psi_g,psi_g2, &
               h_diag,npw,npw,ethr,1,kter,lconv_root,anorm,numv,1)
 
      tmp_psi(1:npw,1:numv)=psi_g2(1:npw,1:numv)
-     write(stdout,*) 'DEBUG2',kter,lconv_root,anorm
+!     write(stdout,*) 'DEBUG2',kter,lconv_root,anorm
      FLUSH(stdout)
 
 

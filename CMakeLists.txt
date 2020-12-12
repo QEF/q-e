@@ -577,6 +577,12 @@ add_custom_target(gwl
         qe_gww_util_grap_exe
         qe_gww_util_abcoefftoeps_exe
         qe_gww_util_memorypw4gww_exe
+	qe_gww_bse_bse_main_exe
+        qe_gww_gww_exe
+        qe_gww_gww_fit_exe
+        qe_gww_head_exe
+        qe_gww_simple_bse_exe
+        qe_gww_simple_ip_exe
     COMMENT
         "GW with Lanczos chains")
 

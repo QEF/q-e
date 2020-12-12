@@ -21,6 +21,7 @@ rotate_wannier.o\
 write_wannier_matrix.o\
 direct_v_exc.o\
 direct_w_exc.o\
+direct_www.o \
 exc_h_a.o\
 sdescent.o\
 check_basis.o\
