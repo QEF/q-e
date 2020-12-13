@@ -59,7 +59,7 @@
                             gamma_v_all, esigmar_all, esigmai_all,              &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
                             nktotf,  gtemp, xkq, lower_bnd, upper_bnd, dos,&
-                            nbndep
+                            nbndep, ef0_fca
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                             dynifc2blochf, ephwan2blochp_mem, ephwan2bloch_mem
@@ -243,8 +243,6 @@
   !! Temperature for free carrier absorption
   REAL(KIND = DP) :: ef0(nstemp)
   !! Fermi level for the temperature itemp
-  REAL(KIND = DP) :: ef0_fca(nstemp)
-  !! Fermi level for free carrier absorption
   REAL(KIND = DP) :: efcb(nstemp)
   !! Second Fermi level for the temperature itemp
   REAL(KIND = DP) :: dummy(3)
@@ -1346,12 +1344,14 @@
         ! Indirect absorption
         IF (lindabs .AND. .NOT. scattering) THEN
           IF (indabs_fca .and. (iq == 1)) THEN
+            ALLOCATE(ef0_fca(nstemp), STAT = ierr)
+            IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating ef0_fca', 1)
             DO itemp = 1, nstemp
               etemp_fca = gtemp(itemp)
               CALL fermi_carrier_indabs(itemp, etemp_fca, ef0_fca)
             ENDDO
           ENDIF
-          CALL indabs_main(iq, ef0_fca)
+          CALL indabs_main(iq)
         ENDIF
         !
         ! Conductivity ---------------------------------------------------------
@@ -1670,6 +1670,11 @@
   IF (assume_metal) THEN
     DEALLOCATE(dos, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating dos', 1)
+  ENDIF
+  !
+  IF (lindabs .AND. indabs_fca .AND. (.NOT. scattering)) THEN
+    DEALLOCATE(ef0_fca, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating ef0_fca', 1)
   ENDIF
   !
   CALL stop_clock('ephwann')

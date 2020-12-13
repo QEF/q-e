@@ -20,7 +20,7 @@
   CONTAINS
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE indabs_main(iq, ef0_fca)
+    SUBROUTINE indabs_main(iq)
     !-----------------------------------------------------------------------
     !!
     !! Main routine for phonon assisted absorption
@@ -35,7 +35,7 @@
     USE elph2,         ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf, &
                               sigmar_all, efnew, gtemp, &
                               dmef, omegap, epsilon2_abs, epsilon2_abs_lorenz, vmef, &
-                              nbndfst, nktotf
+                              nbndfst, nktotf, ef0_fca
     USE constants_epw, ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, czero
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm
@@ -45,8 +45,6 @@
     !
     INTEGER, INTENT(in) :: iq
     !! Q-point index
-    REAL(KIND = DP), INTENT(in) :: ef0_fca(nstemp)
-    !! Fermi-level of the free carrier absorption
     !
     ! Local variables
     CHARACTER(LEN = 256) :: nameF
@@ -605,6 +603,8 @@
     !! Hole carrier density
     REAL(KIND = DP) :: electron_density
     !! Electron carrier density
+    REAL(KIND = DP) :: intrinsic_density
+    !! Intrinsic carrier density
     REAL(KIND = DP), EXTERNAL :: wgauss
     !! Fermi-Dirac distribution function (when -99)
     REAL(KIND = DP) :: ekk
@@ -663,13 +663,70 @@
       WRITE(stdout, '(5x, "Conduction band minimum = ", f10.6, " eV")') ecbm * ryd2ev
     ENDIF
     !
-    WRITE(stdout, '(5x, "calculating fermi level...")')
-    IF (ABS(nc_indabs) < eps6) THEN
-      WRITE(stdout, '(5x, a)') 'nc_indabs not given or too small'
+    ! We first calculate intrinsic carrier density
+    ! Using this we can determine if the user input make sense
+    WRITE(stdout, '(5x, "Calculating intrinsic carrier density")')
+    ef_tmp = (ecbm + evbm) / 2.d0
+    eup = ecbm
+    elw = evbm
+    factor = inv_cell * (bohr2ang * ang2cm)**(-3.d0)
+    Do i = 1, maxiter
+      !
+      ef_tmp = (eup + elw) / 2.d0
+      hole_density = zero
+      electron_density = zero
+      !
+      DO ik = 1, nkf
+        ikk = 2 * ik -1
+!        WRITE(stdout, '(5x, i, i)') icbm, nbndsub
+        DO ibnd = icbm, nbndsub
+          ekk = etf(ibnd, ikk) - ef_tmp
+          fnk = wgauss(-ekk / etemp_fca, -99)
+          ! The wkf(ikk) already include a factor 2
+          electron_density = electron_density + wkf(ikk) * fnk * factor
+!          WRITE(stdout, '(5x, f, f)') ekk, electron_density
+        ENDDO ! ibnd
+      ENDDO ! ik
+      DO ik = 1, nkf
+        ikk = 2 * ik -1
+        DO ibnd = 1, ivbm
+          ekk = etf(ibnd, ikk) - ef_tmp
+          fnk = wgauss(-ekk / etemp_fca, -99)
+          ! The wkf(ikk) already include a factor 2
+          hole_density = hole_density + wkf(ikk) * (1.0d0 - fnk) * factor
+        ENDDO ! ibnd
+      ENDDO ! ik
+      CALL mp_barrier(inter_pool_comm)
+      CALL mp_sum(hole_density, inter_pool_comm)
+      CALL mp_sum(electron_density, inter_pool_comm)
+      IF (ABS(hole_density) < eps80) THEN
+        rel_err = -1.d0
+      ELSE
+        rel_err = (hole_density - electron_density) / hole_density
+      ENDIF
+      IF (ABS(rel_err) < eps5) THEN
+        intrinsic_density = hole_density
+        EXIT
+      ELSEIF ((rel_err) > eps5) THEN
+        elw = ef_tmp
+      ELSE
+        eup = ef_tmp
+      ENDIF
+      intrinsic_density = hole_density
+    ENDDO ! maxiter
+    IF (i == maxiter) THEN
+      WRITE(stdout, '(5x, a)') "Too many iterations when calculating intrinsic density"
+      WRITE(stdout, '(5x, a, f8.5)') "Relative error of hole density versus electron density: ", rel_err
+      WRITE(stdout, '(5x, a)') "Something likely wrong unless we are dealing with a metallic system"
+    ENDIF
+    !
+    WRITE(stdout, '(5x, "Intrinsic density = ", E18.6, "Cm^-3")' ) intrinsic_density
+    WRITE(stdout, '(/5x, "calculating fermi level...")')
+    IF (ABS(nc_indabs) < intrinsic_density) THEN
+      WRITE(stdout, '(5x, a)') 'nc_indabs not given, or smaller than intrinsic density'
       WRITE(stdout, '(5x, a)') 'Setting the fermi level to mig-gap'
       fermi = (evbm + ecbm) / 2.d0
-    ELSEIF ( nc_indabs > eps6 ) THEN
-      factor = inv_cell * (bohr2ang * ang2cm)**(-3.d0)
+    ELSEIF ( nc_indabs > intrinsic_density ) THEN
       ! assuming free electron density
       eup = 10000d0 + ecbm
       elw = evbm - 10000d0
@@ -712,8 +769,7 @@
         ef_tmp = (eup + elw) / 2.0d0
       ENDDO ! maxiter
       fermi = ef_tmp
-    ELSEIF ( nc_indabs < -eps6) THEN
-      factor = inv_cell * (bohr2ang * ang2cm)**(-3.d0)
+    ELSEIF ( nc_indabs < - intrinsic_density) THEN
       ! assuming free hole density
       eup = 10000d0 + ecbm
       elw = evbm - 10000d0
@@ -758,11 +814,11 @@
                     5x, "ef_tmp = ", f10.6)' ) fermi * ryd2ev
     ENDIF
     WRITE(stdout, '(/5x, "Temperature ", f8.3, " K")' ) etemp_fca * ryd2ev / kelvin2eV
-    IF (nc_indabs > eps6) THEN
+    IF (nc_indabs > intrinsic_density) THEN
       ef0_fca(itemp) = fermi
       WRITE(stdout, '(5x, "Electron density = ", E18.6, "Cm^-3")' ) electron_density
       WRITE(stdout, '(5x, "Calculated Fermi level = ", f10.5, " eV")' )  ef0_fca(itemp) * ryd2ev
-    ELSEIF (nc_indabs < -eps6) THEN
+    ELSEIF (nc_indabs < - intrinsic_density) THEN
       ef0_fca(itemp) = fermi
       WRITE(stdout, '(5x, "Hole density = ", E18.6, "Cm^-3")' ) hole_density
       WRITE(stdout, '(5x, "Calculated Fermi level = ", f10.5, " eV")' )  ef0_fca(itemp) * ryd2ev
