@@ -172,8 +172,8 @@ add_library(QE::GWW ALIAS qe_gww)
 target_link_libraries(qe_gww
     PRIVATE
         QE::FFTX
-        QE::UTILX
     PUBLIC
+        QE::UTILX
 	QE::Modules)
 
 qe_add_library(qe_gww_pw4gww ${sources_pw4gww})
@@ -182,9 +182,7 @@ target_link_libraries(qe_gww_pw4gww
     PRIVATE
         QE::SCALAPACK
         QE::PW
-        QE::Modules
         QE::GWW
-        QE::UTILX
         QE::FFTX
         QE::UPF
         QE::LAX)
@@ -193,11 +191,9 @@ qe_add_library(qe_gww_bse ${sources_bse})
 add_library(QE::GWW::bse ALIAS qe_gww_bse)
 target_link_libraries(qe_gww_bse
     PUBLIC
-        QE::Modules
         QE::GWW
         QE::PW
         QE::GWW::pw4gww
-        QE::UTILX
         QE::UPF)
 
 qe_add_library(qe_gww_head ${sources_head})
@@ -224,9 +220,7 @@ target_link_libraries(qe_gww_simple
     PRIVATE
         QE::PW
         QE::GWW
-        QE::Modules
         QE::UPF
-        QE::UTILX
         QE::FFTX)
 
 qe_add_library(qe_gww_simplebse ${sources_simple_bse})
