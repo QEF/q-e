@@ -20,6 +20,7 @@ PWLIBS += \
   wfcinit_gpu.o \
   rotate_wfc_gpu.o \
   hs_1psi_gpu.o \
+  hs_psi_gpu.o \
   s_1psi_gpu.o \
   utils_gpu.o \
   force_lc_gpu.o \

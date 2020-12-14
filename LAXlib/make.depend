@@ -7,6 +7,7 @@ la_error.o : la_param.o
 la_helper.o : dspev_drv.o
 la_helper.o : la_param.o
 la_helper.o : la_types.o
+la_module.o : la_param.o
 la_helper.o : mp_diag.o
 mp_diag.o : la_param.o
 ptoolkit.o : la_param.o

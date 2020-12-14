@@ -18,27 +18,18 @@ Davidson/cegterg.o \
 Davidson/regterg.o \
 CG/ccgdiagg.o \
 CG/rcgdiagg.o \
-PPCG/generic_cublas.o \
 PPCG/ppcg_gamma.o \
-PPCG/ppcg_gamma_gpu.o \
 PPCG/ppcg_k.o \
-PPCG/ppcg_k_gpu.o \
 ParO/bpcg_gamma.o \
-ParO/bpcg_gamma_gpu.o \
 ParO/bpcg_k.o \
-ParO/bpcg_k_gpu.o \
 ParO/paro_gamma.o \
 ParO/pcg_gamma.o \
 ParO/paro_k.o \
 ParO/pcg_k.o \
 ParO/paro_gamma_new.o \
-ParO/paro_gamma_new_gpu.o \
 ParO/paro_k_new.o \
-ParO/paro_k_new_gpu.o \
 DENSE/rotate_HSpsi_gamma.o \
-DENSE/rotate_HSpsi_gamma_gpu.o \
 DENSE/rotate_HSpsi_k.o \
-DENSE/rotate_HSpsi_k_gpu.o \
 DENSE/rotate_wfc_gamma.o \
 DENSE/rotate_wfc_k.o 
 
