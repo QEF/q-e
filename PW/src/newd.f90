@@ -238,11 +238,11 @@ SUBROUTINE newd( )
            !
         ELSE
            !
-           DO is = 1, nspin
-              !
-              deeq(1:nht,1:nht,na,is) = dvan(1:nht,1:nht,nt)
-              !
-           ENDDO
+           if ( nht > 0 ) THEN
+              DO is = 1, nspin
+                 deeq(1:nht,1:nht,na,is) = dvan(1:nht,1:nht,nt)
+              ENDDO
+           end if
            !
         ENDIF
         !

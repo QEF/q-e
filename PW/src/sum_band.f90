@@ -60,8 +60,10 @@ SUBROUTINE sum_band()
   !
   CALL start_clock( 'sum_band' )
   !
-  becsum(:,:,:) = 0.D0
-  if (tqr) ebecsum(:,:,:) = 0.D0
+  if ( nhm > 0 ) then
+     becsum(:,:,:) = 0.D0
+     if (tqr) ebecsum(:,:,:) = 0.D0
+  end if
   rho%of_r(:,:)      = 0.D0
   rho%of_g(:,:)      = (0.D0, 0.D0)
   if ( dft_is_meta() .OR. lxdm ) then

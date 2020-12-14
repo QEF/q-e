@@ -1,4 +1,6 @@
 New in development version:
+  * GWL iterative Www method from JCTC 15 (6) 3710, 2019: Joshua Elliot 
+    (U. Manchester), N. Colonna, M. Marsili, N. Marzari, P. Umari
   * Many-Body Dispersion (MBD) correction: Szabolcs Goger (U. Luxembourg),
     Hsin-Yu Ko (Cornell), et al.
 

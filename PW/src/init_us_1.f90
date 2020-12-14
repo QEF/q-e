@@ -99,15 +99,17 @@ subroutine init_us_1
        rot_ylm(n,n1)=CMPLX(1.0_dp/sqrt2,0.d0,kind=DP)
        rot_ylm(n,n1+1)=CMPLX(0.d0, 1.0_dp/sqrt2,kind=DP)
      enddo
-     fcoef=(0.d0,0.d0)
-     dvan_so = (0.d0,0.d0)
-     qq_so=(0.d0,0.d0)
-     qq_at  = 0.d0
+  endif
+  if ( nhm > 0 ) then
+     if (lspinorb) then
+        fcoef=(0.d0,0.d0)
+        dvan_so = (0.d0,0.d0)
+        qq_so=(0.d0,0.d0)
+     else
+        dvan = 0.d0
+     end if
      qq_nt=0.d0
-  else
-     qq_nt=0.d0
      qq_at  = 0.d0
-     dvan = 0.d0
   endif
   !
   !   For each pseudopotential we initialize the indices nhtol, nhtolm,
@@ -140,7 +142,7 @@ subroutine init_us_1
      !
      ! ijtoh map augmentation channel indexes ih and jh to composite
      ! "triangular" index ijh
-     ijtoh(:,:,nt) = -1
+     if ( nhm > 0 ) ijtoh(:,:,nt) = -1
      ijv = 0
      do ih = 1,nh(nt)
          do jh = ih,nh(nt)
@@ -301,9 +303,11 @@ subroutine init_us_1
   endif
 #endif
   ! finally we set the atomic specific qq_at matrices
-  do na=1, nat
-     qq_at(:,:, na) = qq_nt(:,:,ityp(na))
-  end do
+  if ( nhm > 0 ) then
+     do na=1, nat
+        qq_at(:,:, na) = qq_nt(:,:,ityp(na))
+     end do
+  end if
   !
   !     fill the interpolation table tab
   !
