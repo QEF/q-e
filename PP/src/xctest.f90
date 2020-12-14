@@ -45,6 +45,8 @@ END PROGRAM xctest
 
 SUBROUTINE test_gcxc( nnr, nspin, rhor, grhor )
   USE kinds, ONLY: DP
+  USE corr_gga, ONLY:glyp
+  USE exch_gga, ONLY:becke88
 !  use funct, only: gcxc
   IMPLICIT NONE
   INTEGER, INTENT(in) :: nnr, nspin

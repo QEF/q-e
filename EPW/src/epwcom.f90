@@ -91,6 +91,8 @@
   !! if .TRUE. calculate velocity matrix elements
   LOGICAL :: band_plot
   !! if .TRUE. write files to plot band structure and phonon dispersion
+  LOGICAL :: fermi_plot
+  !! if .TRUE. write files to plot Fermi surface
   LOGICAL :: lpolar
   !! if .TRUE. enable the correct Wannier interpolation in the case of polar material.
   LOGICAL :: lscreen
@@ -242,6 +244,8 @@
   !! nr. of grid points for Eliashberg equations of imaginary axis
   INTEGER :: nsiter
   !! nr. of iterations for self-consistency
+  INTEGER :: npade
+  !! percentange of Matsubara points used in Pade continuation 
   INTEGER :: broyden_ndim
   !! nr. of iterations used in broyden mixing scheme
   INTEGER :: nw_specfun
@@ -313,7 +317,7 @@
   REAL(KIND = DP) :: gap_edge
   !! initial guess of the superconducting gap
   REAL(KIND = DP) :: max_memlt
-  !! maximum memory that can be allocated per pool 
+  !! maximum memory that can be allocated per pool
   REAL(KIND = DP) :: fermi_energy
   !! fermi energy is given in the input file
   REAL(KIND = DP) :: wmin_specfun

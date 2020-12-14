@@ -330,7 +330,6 @@ SUBROUTINE latgen_lib(ibrav,celldm,a1,a2,a3,omega, ierr, errormsg)
      a3(3) =-a1(3)
   ELSEIF (ibrav == -13) THEN
      errormsg='BEWARE: axis for ibrav=-13 changed, see documentation!'
-     !CALL infomsg('latgen','BEWARE: axis for ibrav=-13 changed, see documentation!')
      !
      !     One face centered monoclinic lattice unique axis b
      !
@@ -368,7 +367,7 @@ SUBROUTINE latgen_lib(ibrav,celldm,a1,a2,a3,omega, ierr, errormsg)
      a3(2)=celldm(1)*celldm(3)*(celldm(4)-celldm(5)*celldm(6))/singam
      a3(3)=celldm(1)*celldm(3)*term
      !
-  ELSE
+  ELSE IF (ibrav /= 0) THEN
      !
      errormsg='nonexistent bravais lattice'
      ierr=ABS(ibrav)

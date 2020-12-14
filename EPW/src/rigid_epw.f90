@@ -303,6 +303,8 @@
     !! Technical note: From the solution of the Poisson equation, there is an additional factor
     !! e^{-i(q+G)\tau_\kappa} with respect to Eq. (4) of PRL 115, 176401 (2015).
     !! The full equation can be found in Eq. (S4) of the supplemental materials of PRL 115, 176401 (2015).
+    !! In practical calculations the G-vector sum is restricted to small |q + G| via the cutoff
+    !! function e^{-({\bf q}+{\bf G})^2/4\alpha}. See footnote 7 of RMP 89, 015003 (2017). 
     !!
     !!
     !! The final implemented formula is:
@@ -449,6 +451,8 @@
     !! Technical note: From the solution of the Poisson equation, there is an additional factor
     !! e^{-i(q+G)\tau_\kappa} with respect to Eq. (4) of PRL 115, 176401 (2015).
     !! The full equation can be found in Eq. (S4) of the supplemental materials of PRL 115, 176401 (2015).
+    !! In practical calculations the G-vector sum is restricted to small |q + G| via the cutoff
+    !! function e^{-({\bf q}+{\bf G})^2/4\alpha}. See footnote 7 of RMP 89, 015003 (2017).    
     !!
     !! The final implemented formula is:
     !!

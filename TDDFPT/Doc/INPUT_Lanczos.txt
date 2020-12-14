@@ -41,14 +41,6 @@ NAMELIST: &lr_input
    THIS NAMELIST IS ALWAYS NEEDED !
    
    +--------------------------------------------------------------------
-   Variable:       title
-   
-   Type:           CHARACTER
-   Description:    A string describing the job.
-   Status:         OPTIONAL
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
    Variable:       prefix
    
    Type:           CHARACTER
@@ -309,4 +301,4 @@ NAMELIST: &lr_post
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Jul 17 10:28:33 CEST 2020
+This file has been created by helpdoc utility on Mon Nov 23 08:30:06 UTC 2020

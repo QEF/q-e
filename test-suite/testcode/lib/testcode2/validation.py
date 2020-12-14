@@ -8,6 +8,7 @@ Classes and functions for comparing data.
 :license: modified BSD; see LICENSE for more details.
 '''
 
+from __future__ import print_function
 import re
 import sys
 import warnings

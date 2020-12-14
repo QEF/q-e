@@ -1,0 +1,153 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: postahc.x / PWscf / Quantum Espresso (version: 6.6)
+------------------------------------------------------------------------
+
+
+Purpose of postahc.x:
+
+- Read the electron-phonon quantities calculated by ph.x with the
+electron_phonon='ahc' option.
+
+- Calculate the phonon-induced electron self-energy in the full matrix form
+at a given temperature.
+
+    Structure of the input data:
+========================================================================
+
+&INPUT
+   ...specs of namelist variables...
+/
+
+
+
+========================================================================
+NAMELIST: &INPUT
+
+   +--------------------------------------------------------------------
+   Variable:       ahc_dir
+   
+   Type:           CHARACTER
+   Status:         REQUIRED
+   Description:    Directory where the binary files are located.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       nk
+   
+   Type:           INTEGER
+   Status:         REQUIRED
+   Description:    Number of k points. Must be identical to that of the preceding SCF or NSCF run.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       nbnd
+   
+   Type:           INTEGER
+   Status:         REQUIRED
+   Description:    Number of bands. Must be identical to nbnd of the preceding SCF or NSCF run.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       nat
+   
+   Type:           INTEGER
+   Status:         REQUIRED
+   Description:    Number of atoms. Must be identical to nat of the preceding pw.x and ph.x
+                   runs.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       nq
+   
+   Type:           INTEGER
+   Status:         REQUIRED
+   Description:    Number of q points. Must be identical to that of the preceding ph.x run
+                   with electron_phonon='ahc'.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ahc_nbnd
+   
+   Type:           INTEGER
+   Status:         REQUIRED
+   Description:    Number of bands for which the electron self-energy is to be computed. Must be
+                   identical to ahc_nbnd of the ph.x run with electron_phonon='ahc'.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ahc_nbndskip
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    Number of bands to exclude when computing the self-energy. Must be identical to
+                   ahc_nbndskip of the ph.x run with electron_phonon='ahc'.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       flvec
+   
+   Type:           CHARACTER
+   Status:         REQUIRED
+   Description:    File containing the normalized phonon displacements written by matdyn.x.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       eta
+   
+   Type:           REAL
+   Status:         REQUIRED
+   Description:    Magnitude of the small imaginary component included to smooth the energy
+                   denominators, in Ry.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       temp_kelvin
+   
+   Type:           REAL
+   Status:         REQUIRED
+   Description:    Temperature in Kelvins at which the electron self-energy is calculated.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       efermi
+   
+   Type:           REAL
+   Status:         REQUIRED
+   Description:    Fermi energy of the electrons in Ry.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       amass_amu(i), i=1,nat
+   
+   Type:           REAL
+   Status:         REQUIRED
+   Description:    Mass for each atom in atomic mass unit. In postahc.x, "amass_amu" must be
+                   set for each atom, not for each atom type as in other programs.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       skip_upperfan
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true., skip calculation of the upper Fan self-energy.
+                   If .false., ahc_upfan_iq#.bin files must be present in "ahc_dir".
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       skip_dw
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true., skip calculation of the Debye-Waller self-energy.
+                   If .false., ahc_dw.bin file must be present in "ahc_dir".
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+This file has been created by helpdoc utility on Tue Oct 06 22:11:45 CEST 2020

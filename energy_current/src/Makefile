@@ -4,7 +4,8 @@
 include ../../make.inc
 # location of include files
 #IFLAGS=-I../../include
-
+F90FLAGS+=-fsanitize=address -Wall
+LDFLAGS+=-fsanitize=address
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../LAXlib \
           $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../CPV/src $(MOD_FLAG)../../PHonon/PH \
@@ -15,21 +16,18 @@ MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../LA
 LIBOBJS=  ../../clib/clib.a ../../UtilXlib/libutil.a ../../KS_Solvers/DENSE/libdense.a ../../dft-d3/libdftd3qe.a ../../KS_Solvers/PPCG/libppcg.a ../../KS_Solvers/ParO/libparo.a $(QELIBS)
 
 ALLCURRENTSOBJS = \
-hartree_mod.o\
+test_h_psi_s_psi_commutator_Hx_psi.o\
+hartree_xc_mod.o\
+kohn_sham_mod.o\
 zero_mod.o\
+ionic_mod.o\
 all_currents.o \
-routine_hartree.o\
 project.o\
 init_us_3.o \
-init_us_1a.o \
-add_nc_curr.o \
-routine_zero.o\
-init_reciprocal_parts_tab.o\
-allocate_zero.o \
-deallocate_zero.o \
 ec_functionals.o \
 compute_charge.o \
-averages.o
+averages.o\
+scf_result.o
 
 TEST_CPV_TRAJ_OBJ= \
 traj_object.o \

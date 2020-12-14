@@ -9,7 +9,7 @@ skip_args = 'not present in this version'
 
 
 [user]
-benchmark = 3pt_aft
+benchmark = 3pt_2pt
 date_fmt = %d%m%y
 diff = vimdiff
 

@@ -42,7 +42,7 @@ New algorithms:
 
 Parallel execution:
       __MPI       	MPI parallelization
-      __MPI_MODULE      Compile with "USE mpi" instead of "include 'mpif/h'"
+      __MPI_MODULE      Compile with "USE mpi" instead of "include 'mpif.h'"
       __MPI_NONBLOCKING Use nonblocking routines (e.g. mpi_ibcast, mpi_igatherv)
 
 Libraries:
