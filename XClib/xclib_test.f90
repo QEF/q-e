@@ -28,10 +28,11 @@ PROGRAM xclib_test
   USE kind_l,      ONLY: DP
   USE constants_l, ONLY: pi
   USE xc_lib,      ONLY: xclib_set_dft_from_name, xclib_set_exx_fraction, &
-                         xclib_get_ID, xclib_reset_dft, xc_gcx
+                         xclib_get_ID, xclib_reset_dft, xc_gcx,           &
+                         xclib_dft_is_libxc
   USE xclib_parallel_include
 #if defined(__LIBXC)
-  USE xc_f03_lib_m
+  USE xc_f90_lib_m
 #endif
   !
   IMPLICIT NONE
@@ -40,7 +41,15 @@ PROGRAM xclib_test
   INTEGER    STATUS(MPI_STATUS_SIZE)
 #else
 #define MPI_MAX_PROCESSOR_NAME 64
-#endif  
+#endif
+  !
+#if defined(__LIBXC)
+  TYPE(xc_f90_func_t) :: xc_func
+  TYPE(xc_f90_func_info_t) :: xc_info
+  CHARACTER(LEN=50) :: lxc_kind, lxc_family
+  INTEGER :: n_ext
+#endif
+  !
   INTEGER :: mype, npes, comm, ntgs, root
   LOGICAL :: iope
   INTEGER :: i, ierr, ierrm
@@ -90,6 +99,7 @@ PROGRAM xclib_test
   REAL(DP) :: grho2(2), grho_ud
   REAL(DP) :: rhoi(2), grhoi(3,2), taui(2)
   CHARACTER(LEN=120) :: name1, name2
+  LOGICAL :: is_libxc(6)
   !
   !--------- dft1 vars --------------------------
   REAL(DP), ALLOCATABLE :: ex1(:), ec1(:)
@@ -268,72 +278,114 @@ PROGRAM xclib_test
 #if defined(__MPI)
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
 #endif
-!
-
-!============================================================  
-!     !
-!     IF ( test=='dft-info' ) THEN
-!       !
-!       CALL xclib_set_dft_from_name( dft1 )
-!       !
-!       WRITE(stdout,*) " "
-!       WRITE(stdout,*) "=================================== "//CHAR(10)//" "
-!       WRITE(stdout,*) "QE functional IDs:"//CHAR(10)//" "
-!       !
-!       ! ... q-e
-!       !
-!       WRITE(stdout,*) "- LDA IDs: ",  iexch1, icorr1
-!       !
-!       IF ( GGA )  WRITE(stdout,*) "- GGA IDs: ",  igcx1,  igcc1
-!       !
-!       IF ( MGGA ) WRITE(stdout,*) "- MGGA IDs: ", imeta1, imetac1
-!       !
-!       ! ... libxc
-!       !
-!       WRITE(stdout,*) " "
-!       WRITE(stdout,*) "LIBXC functional IDs and info:"//CHAR(10)//" "
-!       IF ( LDA ) THEN
-!         !
-!         name1 = xc_f03_functional_get_name( iexch2 )
-!         name2 = xc_f03_functional_get_name( icorr2 )
-!         !
-!         WRITE(stdout,*) "- LDA IDs: ", iexch2, icorr2
-!         WRITE(stdout,*) "- LDA exch: " , TRIM(name1)
-!         WRITE(stdout,*) "- LDA corr: " , TRIM(name2)
-!         WRITE(stdout,*) " "
-!       ENDIF
-!       !
-!       IF ( GGA ) THEN
-!         !
-!         name1 = xc_f03_functional_get_name( igcx2 )
-!         name2 = xc_f03_functional_get_name( igcc2 )
-!         !
-!         WRITE(stdout,*) "- GGA IDs: ", igcx2, igcc2
-!         WRITE(stdout,*) "- GGA exch: " , TRIM(name1)
-!         WRITE(stdout,*) "- GGA corr: " , TRIM(name2)
-!         WRITE(stdout,*) " "
-!       ENDIF
-!       !
-!       IF ( MGGA ) THEN
-!         !
-!         name1 = xc_f03_functional_get_name( imeta2 )
-!         name2 = xc_f03_functional_get_name( imetac2 )
-!         !
-!         WRITE(stdout,*) "- MGGA IDs: ", imeta2, imetac2
-!         WRITE(stdout,*) "- MGGA exch: " , TRIM(name1)
-!         WRITE(stdout,*) "- MGGA corr: " , TRIM(name2)
-!         WRITE(stdout,*) " "
-!       ENDIF
-!   
-!   
-! !      -..............
-!   
-!   
-!       !
-!     ENDIF !dft-info
-!     !
-!   ENDIF !ionode
-!==================================================================================
+  !
+  !==========================================================================
+  ! PRINT DFT INFOS
+  !==========================================================================
+  !
+  IF ( TRIM(test)=='dft-info' .AND. mype==root ) THEN
+    !
+    CALL xclib_set_dft_from_name( dft1 )
+    !
+    iexch1 = xclib_get_ID('LDA','EXCH')
+    is_libxc(1) = xclib_dft_is_libxc('LDA','EXCH')
+    icorr1 = xclib_get_ID('LDA','CORR')
+    is_libxc(2) = xclib_dft_is_libxc('LDA','CORR')
+    IF (iexch1+icorr1/=0)  LDA = .TRUE.
+    igcx1 = xclib_get_ID('GGA','EXCH')
+    is_libxc(3) = xclib_dft_is_libxc('GGA','EXCH')
+    igcc1 = xclib_get_ID('GGA','CORR')
+    is_libxc(4) = xclib_dft_is_libxc('GGA','CORR')
+    IF (igcx1+igcc1/=0)    GGA = .TRUE.
+    imeta1  = xclib_get_ID('MGGA','EXCH')
+    is_libxc(5) = xclib_dft_is_libxc('MGGA','EXCH')
+    imetac1 = xclib_get_ID('MGGA','CORR')
+    is_libxc(6) = xclib_dft_is_libxc('MGGA','CORR')
+    IF (imeta1+imetac1/=0) MGGA = .TRUE.
+    !
+    WRITE(stdout,*) " "
+    WRITE(stdout,*) "=================================== "//CHAR(10)//" "
+    WRITE(stdout,*) "XC functional IDs:"
+    WRITE(stdout,*) CHAR(10)//"LDA IDs"
+    WRITE(stdout,121) iexch1, is_libxc(1), icorr1, is_libxc(2)
+    WRITE(stdout,*) CHAR(10)//"GGA IDs"
+    WRITE(stdout,121) igcx1, is_libxc(3), igcc1, is_libxc(4)
+    WRITE(stdout,*) CHAR(10)//"MGGA IDs"
+    WRITE(stdout,121) imeta1, is_libxc(5), imetac1, is_libxc(6)
+    !
+    !
+#if defined(__LIBXC)
+    WRITE(stdout,*) 'LIBXC functional infos:'
+    !
+    DO i = 1, 6
+      IF (is_libxc(i)) THEN
+        WRITE(stdout,*) 'Functional with ID:', id(i)
+        !
+        CALL xc_f90_func_init( xc_func, id(i), 1 )
+        !
+        xc_info = xc_f90_func_get_info(xc_func)
+        !
+        SELECT CASE(xc_f90_func_info_get_kind(xc_info))
+        CASE (XC_EXCHANGE)
+          WRITE(lxc_kind, '(a)') 'Exchange functional'
+        CASE (XC_CORRELATION)
+          WRITE(lxc_kind, '(a)') 'Correlation functional'
+        CASE (XC_EXCHANGE_CORRELATION)
+          WRITE(lxc_kind, '(a)') 'Exchange+Correlation functional'
+        CASE (XC_KINETIC)
+          WRITE(lxc_kind, '(a)') 'Kinetic energy functional - not implemented&
+                                 &in QE.'
+        CASE DEFAULT
+          WRITE(lxc_kind, '(a)') 'Unknown kind'
+        END SELECT
+        !
+        SELECT CASE (xc_f90_func_info_get_family(xc_info))
+        CASE (XC_FAMILY_LDA);
+          WRITE(lxc_family,'(a)') "LDA"
+        CASE (XC_FAMILY_GGA);
+          WRITE(lxc_family,'(a)') "GGA"
+        CASE (XC_FAMILY_HYB_GGA);
+          WRITE(lxc_family,'(a)') "Hybrid GGA"
+        CASE (XC_FAMILY_MGGA);
+          WRITE(lxc_family,'(a)') "MGGA"
+        CASE (XC_FAMILY_HYB_MGGA);
+          WRITE(lxc_family,'(a)') "Hybrid MGGA"
+        CASE DEFAULT
+          WRITE(lxc_family,'(a)') "unknown"
+        END SELECT
+        !
+        WRITE(*,'("The functional ''", a, "'' is ", a, ", it belongs to the&
+               &''", a, "'' family and is defined in the reference(s):")') &
+               TRIM(xc_f90_func_info_get_name(xc_info)), TRIM(lxc_kind),   &
+               TRIM(lxc_family)
+        ii = 0
+        DO WHILE( ii >= 0 )
+         WRITE(*,'(a,i1,2a)') '[',ii+1,'] ',TRIM(xc_f90_func_reference_get_ref( &
+                                   xc_f90_func_info_get_references(xc_info, ii)))
+        ENDDO
+        !
+         
+        WRITE(stdout,*)
+        n_ext = xc_f90_func_info_get_n_ext_params(xc_info)
+        WRITE(stdout,*) 'Number of external parameters: ', n_ext
+        IF (n_ext/=0) THEN
+          DO ii = 1, n_ext
+            WRITE(stdout,*) 'Parameter n',ii,xc_f90_func_info_get_ext_params_name(xc_info, ii)
+            WRITE(stdout,*) xc_f90_func_info_get_ext_params_description(xc_info, ii)
+          ENDDO
+        ENDIF
+        !
+        CALL xc_f90_func_end(xc_func)
+        !
+      ENDIF
+    ENDDO
+#endif    
+    !
+    121 FORMAT('Exch: ',I3,' is libxc: ',L1,';  Corr: ',I3,' is libxc: ',L1 )
+    !
+    GOTO 10
+    !
+  ENDIF !dft-info
   !
   !
   ! ... point distribution over CPUs
@@ -1368,13 +1420,15 @@ PROGRAM xclib_test
   DEALLOCATE( node_name )
   DEALLOCATE( proc2node )
   !
+  10 CONTINUE
+  !
 #if defined(__MPI)
   CALL mpi_finalize( ierr )
 #endif
   !
   WRITE(stdout,*) " "
   !
-10 STOP
+  STOP
   !
   !
  CONTAINS
