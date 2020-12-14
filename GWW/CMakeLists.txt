@@ -182,6 +182,7 @@ target_link_libraries(qe_gww_pw4gww
     PRIVATE
         QE::SCALAPACK
         QE::PW
+        QE::XClib
         QE::GWW
         QE::FFTX
         QE::UPF

@@ -36,7 +36,7 @@ beefun.o
 
 # PGI requires -c11 to understand __thread
 # See https://www.pgroup.com/userforum/viewtopic.php?t=5504
-ifneq (,$(findstring -D__PGI,$(DFLAGS)))
+ifneq (,$(findstring pg,$(CC)))
 	CFLAGS := -c11 $(CFLAGS)
 endif
 
