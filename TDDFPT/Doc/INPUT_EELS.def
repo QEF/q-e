@@ -214,6 +214,15 @@ input_description -distribution {Quantum Espresso} -package turboEELS -program t
                 }
         }
 
+        var ethr_nscf  -type REAL {
+            default { 1.D-11 }
+            info {
+                Threshold for the convergence of eigenvalues during
+                the iterative diagonalization of the Hamiltonian in
+                the non-self-consistent-field (NSCF) calculation at
+                k and k+q points. Note, this quantity is NOT extensive.
+            }
+        }
 
     }			
 
