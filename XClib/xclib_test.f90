@@ -32,7 +32,7 @@ PROGRAM xclib_test
                          xclib_dft_is_libxc
   USE xclib_parallel_include
 #if defined(__LIBXC)
-  USE xc_f90_lib_m
+  USE xc_f03_lib_m
 #endif
   !
   IMPLICIT NONE
@@ -44,10 +44,10 @@ PROGRAM xclib_test
 #endif
   !
 #if defined(__LIBXC)
-  TYPE(xc_f90_func_t) :: xc_func
-  TYPE(xc_f90_func_info_t) :: xc_info
-  CHARACTER(LEN=50) :: lxc_kind, lxc_family
-  INTEGER :: n_ext
+  TYPE(xc_f03_func_t) :: xc_func
+  TYPE(xc_f03_func_info_t) :: xc_info
+  CHARACTER(LEN=120) :: lxc_kind, lxc_family
+  INTEGER :: n_ext, id(6)
 #endif
   !
   INTEGER :: mype, npes, comm, ntgs, root
@@ -69,6 +69,12 @@ PROGRAM xclib_test
   INTEGER :: nspin
   LOGICAL :: DF_OK
   !
+  !---------- DFT infos -------------------------
+  INTEGER :: iexch1, icorr1, igcx1, igcc1, imeta1, imetac1
+  INTEGER :: iexch2, icorr2, igcx2, igcc2, imeta2, imetac2
+  LOGICAL :: LDA, GGA, MGGA, POLARIZED, ENERGY_ONLY, is_libxc(6)
+  CHARACTER(LEN=120) :: name1, name2
+  !
   !-------- Various params -------------------
   REAL(DP), PARAMETER :: null=0.0_DP, pi34=0.6203504908994_DP
   REAL(DP), PARAMETER :: thresh_lda  = 0.d0, & !1.E-6_DP, &
@@ -82,11 +88,7 @@ PROGRAM xclib_test
                          diff_thr_vmgga  = 1.0E-12_DP, &
                          diff_thr_dmuxc  = 1.0E-6_DP,  &
                          diff_thr_dv     = 1.0E-16_DP
-  REAL(DP) :: fact
-  INTEGER :: iexch1, icorr1, igcx1, igcc1, imeta1, imetac1
-  INTEGER :: iexch2, icorr2, igcx2, igcc2, imeta2, imetac2
-  LOGICAL :: LDA, GGA, MGGA, POLARIZED, ENERGY_ONLY
-  REAL(DP) :: exx_frctn
+  REAL(DP) :: fact, exx_frctn
   !
   !---------- Indexes ---------------------------
   INTEGER :: ii, ns, np, ipol, ithr, nthr, iip, iout
@@ -98,8 +100,6 @@ PROGRAM xclib_test
   REAL(DP), ALLOCATABLE :: tau(:,:), tau_b(:,:)                  
   REAL(DP) :: grho2(2), grho_ud
   REAL(DP) :: rhoi(2), grhoi(3,2), taui(2)
-  CHARACTER(LEN=120) :: name1, name2
-  LOGICAL :: is_libxc(6)
   !
   !--------- dft1 vars --------------------------
   REAL(DP), ALLOCATABLE :: ex1(:), ec1(:)
@@ -315,67 +315,73 @@ PROGRAM xclib_test
     !
     !
 #if defined(__LIBXC)
-    WRITE(stdout,*) 'LIBXC functional infos:'
+    WRITE(stdout,*) CHAR(10)//"LIBXC functional infos:"
+    !
+    id(1) = iexch1 ; id(2) = icorr1
+    id(3) = igcx1  ; id(4) = igcc1
+    id(5) = imeta1 ; id(6) = imetac1
     !
     DO i = 1, 6
       IF (is_libxc(i)) THEN
-        WRITE(stdout,*) 'Functional with ID:', id(i)
+        WRITE(stdout,*) CHAR(10)//"Functional with ID:", id(i)
         !
-        CALL xc_f90_func_init( xc_func, id(i), 1 )
+        CALL xc_f03_func_init( xc_func, id(i), 1 )
         !
-        xc_info = xc_f90_func_get_info(xc_func)
+        xc_info = xc_f03_func_get_info(xc_func)
         !
-        SELECT CASE(xc_f90_func_info_get_kind(xc_info))
-        CASE (XC_EXCHANGE)
+        SELECT CASE( xc_f03_func_info_get_kind(xc_info) )
+        CASE( XC_EXCHANGE )
           WRITE(lxc_kind, '(a)') 'Exchange functional'
-        CASE (XC_CORRELATION)
+        CASE( XC_CORRELATION )
           WRITE(lxc_kind, '(a)') 'Correlation functional'
-        CASE (XC_EXCHANGE_CORRELATION)
+        CASE( XC_EXCHANGE_CORRELATION )
           WRITE(lxc_kind, '(a)') 'Exchange+Correlation functional'
-        CASE (XC_KINETIC)
+        CASE( XC_KINETIC )
           WRITE(lxc_kind, '(a)') 'Kinetic energy functional - not implemented&
                                  &in QE.'
         CASE DEFAULT
           WRITE(lxc_kind, '(a)') 'Unknown kind'
         END SELECT
         !
-        SELECT CASE (xc_f90_func_info_get_family(xc_info))
-        CASE (XC_FAMILY_LDA);
+        SELECT CASE( xc_f03_func_info_get_family(xc_info) )
+        CASE( XC_FAMILY_LDA )
           WRITE(lxc_family,'(a)') "LDA"
-        CASE (XC_FAMILY_GGA);
+        CASE( XC_FAMILY_GGA )
           WRITE(lxc_family,'(a)') "GGA"
-        CASE (XC_FAMILY_HYB_GGA);
+        CASE( XC_FAMILY_HYB_GGA )
           WRITE(lxc_family,'(a)') "Hybrid GGA"
-        CASE (XC_FAMILY_MGGA);
+        CASE( XC_FAMILY_MGGA )
           WRITE(lxc_family,'(a)') "MGGA"
-        CASE (XC_FAMILY_HYB_MGGA);
+        CASE( XC_FAMILY_HYB_MGGA )
           WRITE(lxc_family,'(a)') "Hybrid MGGA"
         CASE DEFAULT
           WRITE(lxc_family,'(a)') "unknown"
         END SELECT
         !
-        WRITE(*,'("The functional ''", a, "'' is ", a, ", it belongs to the&
-               &''", a, "'' family and is defined in the reference(s):")') &
-               TRIM(xc_f90_func_info_get_name(xc_info)), TRIM(lxc_kind),   &
-               TRIM(lxc_family)
+        WRITE(*,'("The functional ''", a, "'' is an ", a, ", it belongs to &
+               &the ''", a, "'' family and is defined in the reference(s): &
+               &")') TRIM(xc_f03_func_info_get_name(xc_info)), TRIM(lxc_kind)&
+               ,TRIM(lxc_family)
         ii = 0
         DO WHILE( ii >= 0 )
-         WRITE(*,'(a,i1,2a)') '[',ii+1,'] ',TRIM(xc_f90_func_reference_get_ref( &
-                                   xc_f90_func_info_get_references(xc_info, ii)))
+         WRITE(*,'(a,i1,2a)') '[',ii+1,'] ',TRIM(xc_f03_func_reference_get_ref( &
+                                   xc_f03_func_info_get_references(xc_info, ii)))
         ENDDO
         !
-         
         WRITE(stdout,*)
-        n_ext = xc_f90_func_info_get_n_ext_params(xc_info)
+        n_ext = xc_f03_func_info_get_n_ext_params( xc_info )
         WRITE(stdout,*) 'Number of external parameters: ', n_ext
-        IF (n_ext/=0) THEN
-          DO ii = 1, n_ext
-            WRITE(stdout,*) 'Parameter n',ii,xc_f90_func_info_get_ext_params_name(xc_info, ii)
-            WRITE(stdout,*) xc_f90_func_info_get_ext_params_description(xc_info, ii)
+        !
+        IF ( n_ext/=0 ) THEN
+          DO ii = 0, n_ext-1
+            WRITE(stdout,*) &
+              TRIM(xc_f03_func_info_get_ext_params_description(xc_info, ii))
+            WRITE(stdout,*) 'Default value: ', &
+                   xc_f03_func_info_get_ext_params_default_value(xc_info, ii)
           ENDDO
         ENDIF
         !
-        CALL xc_f90_func_end(xc_func)
+        CALL xc_f03_func_end( xc_func )
         !
       ENDIF
     ENDDO
