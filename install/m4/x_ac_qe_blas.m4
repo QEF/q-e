@@ -50,12 +50,14 @@ else
       		    mkl_omp="mkl_gnu_thread"
 		    ;;
 	       nvfortran* )
+                    # NB: next two can be replaced by flag "-Mmkl"
       		    mkl_lib="mkl_intel_lp64"
                     mkl_omp="mkl_intel_thread"
-                    # Nota Bene: libiomp5.so is required (is in LLVM
-                    # or in  Intel compiler libraries) in order to
-                    # link threaded MKL with v.20.9 and 20.11
-                    add_mkl_omp="-liomp5"
+		    # NB: with nvidia hpc sdk 2020, linking to threaded mkl
+		    # v.19.1 update 4 fails due to a missing symbol,
+		    # __kmpc_critical_with_hint, that is found in OMP LLVM
+		    # or in Intel compiler library libiomp5.so
+		    # add_mkl_omp="-liomp5"
 		    ;;
 	       pgf* )
                     # For obsolete PGI versions (superseded by nvfortran)
