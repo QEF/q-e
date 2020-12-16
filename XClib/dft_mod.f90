@@ -522,11 +522,11 @@ CONTAINS
           !   
           SELECT CASE( family )
           CASE( XC_FAMILY_LDA )
-             IF (fkind==XC_EXCHANGE .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
+             IF (fkind==XC_EXCHANGE) THEN
                 IF ( LEN(TRIM(name)) > prev_len(1) ) iexch = i
                 is_libxc(1) = .TRUE.
                 prev_len(1) = LEN(TRIM(name))
-             ELSEIF (fkind==XC_CORRELATION) THEN
+             ELSEIF (fkind==XC_CORRELATION .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
                 IF ( LEN(TRIM(name)) > prev_len(2) ) icorr = i
                 is_libxc(2) = .TRUE.
                 prev_len(2) = LEN(TRIM(name))
@@ -534,11 +534,11 @@ CONTAINS
              fkind_v(1) = fkind
              !
           CASE( XC_FAMILY_GGA, XC_FAMILY_HYB_GGA )
-             IF (fkind==XC_EXCHANGE .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
+             IF (fkind==XC_EXCHANGE) THEN
                 IF ( LEN(TRIM(name)) > prev_len(3) ) igcx = i
                 is_libxc(3) = .TRUE.
                 prev_len(3) = LEN(TRIM(name))
-             ELSEIF (fkind==XC_CORRELATION) THEN
+             ELSEIF (fkind==XC_CORRELATION .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
                 IF ( LEN(TRIM(name)) > prev_len(4) ) igcc = i
                 is_libxc(4) = .TRUE.
                 prev_len(4) = LEN(TRIM(name))
@@ -546,11 +546,11 @@ CONTAINS
              fkind_v(2) = fkind
              !
           CASE( XC_FAMILY_MGGA, XC_FAMILY_HYB_MGGA )
-             IF (fkind==XC_EXCHANGE .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
+             IF (fkind==XC_EXCHANGE) THEN
                 IF ( LEN(TRIM(name)) > prev_len(5) ) imeta = i
                 is_libxc(5) = .TRUE.
                 prev_len(5) = LEN(TRIM(name))
-             ELSEIF (fkind==XC_CORRELATION) THEN
+             ELSEIF (fkind==XC_CORRELATION .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
                 IF ( LEN(TRIM(name)) > prev_len(6) ) imetac = i
                 is_libxc(6) = .TRUE.
                 prev_len(6) = LEN(TRIM(name))
@@ -570,13 +570,13 @@ CONTAINS
     ! ... Compatibility checks
     !
     ! LDA:
-    IF (icorr/=0 .AND. fkind_v(1)==XC_EXCHANGE_CORRELATION)  &
+    IF (iexch/=0 .AND. fkind_v(1)==XC_EXCHANGE_CORRELATION)  &
        CALL xclib_infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION functional has &
-                    &been found together with a correlation one (LDA)' )
+                    &been found together with an exchange one (LDA)' )
     ! GGA:
-    IF (igcc/=0 .AND. fkind_v(2)==XC_EXCHANGE_CORRELATION)   &
+    IF (igcx/=0 .AND. fkind_v(2)==XC_EXCHANGE_CORRELATION)   &
        CALL xclib_infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION functional has &
-                    &been found together with a correlation one (GGA)' )
+                    &been found together with an exchange one (GGA)' )
     !
     IF ( (is_libxc(3).AND.iexch/=0) .OR. (is_libxc(4).AND. icorr/=0) )    &
        CALL xclib_infomsg( 'matching_libxc', 'WARNING: an LDA functional has been found, but &
@@ -587,9 +587,9 @@ CONTAINS
        CALL xclib_error( 'matching_libxc', 'Two conflicting metaGGA functionals &
                     &have been found', 1 )
     !
-    IF (imetac/=0 .AND. fkind_v(3)==XC_EXCHANGE_CORRELATION)  &   
+    IF (imeta/=0 .AND. fkind_v(3)==XC_EXCHANGE_CORRELATION)  &   
        CALL xclib_infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION functional has &   
-                     &been found together with a correlation one (mGGA)' )
+                     &been found together with an exchange one (mGGA)' )
     !   
   END SUBROUTINE matching_libxc
   !

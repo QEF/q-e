@@ -1,4 +1,10 @@
 !
+! Copyright (C) 2020 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 !---------------------------------------------------------------------------
 SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !-------------------------------------------------------------------------
@@ -8,10 +14,9 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !! NOTE: differently from 'xc_lda_drivers', here the input rho is in (up,down)
   !!       form (in the LSDA case).
   !
-  !
 #if defined(__LIBXC)
 #include "xc_version.h"
-  USE xc_f03_lib_m
+  USE xc_f90_lib_m
 #endif
   !
   USE kind_l,        ONLY: DP
@@ -46,8 +51,8 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   ! ... local variables
   !
 #if defined(__LIBXC)
-  TYPE(xc_f03_func_t) :: xc_func
-  TYPE(xc_f03_func_info_t) :: xc_info1, xc_info2
+  TYPE(xc_f90_func_t) :: xc_func
+  TYPE(xc_f90_func_info_t) :: xc_info1, xc_info2
   REAL(DP), ALLOCATABLE :: rho_lxc(:), sigma(:)
   REAL(DP), ALLOCATABLE :: ex_lxc(:), ec_lxc(:)
   REAL(DP), ALLOCATABLE :: vx_rho(:), vx_sigma(:)
@@ -141,60 +146,16 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
      !
   ENDIF
   !
-  ! --- GGA EXCHANGE
-  !
-  IF ( is_libxc(3) ) THEN
-    !
-    CALL xc_f03_func_init( xc_func, igcx, pol_unpol )
-     xc_info1 = xc_f03_func_get_info( xc_func )
-     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold_gga )
-     fkind_x  = xc_f03_func_info_get_kind( xc_info1 )
-     CALL xc_f03_gga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
-    CALL xc_f03_func_end( xc_func )
-    !
-    IF (.NOT. POLARIZED) THEN
-      DO k = 1, length
-        ex(k) = ex_lxc(k) * rho_lxc(k) * SIGN(1.0_DP, rho(k,1))
-        v1x(k,1) = vx_rho(k)
-        v2x(k,1) = vx_sigma(k)*2.d0
-      ENDDO
-    ELSE
-      DO k = 1, length
-        ex(k) = ex_lxc(k) * (rho_lxc(2*k-1)+rho_lxc(2*k))
-        v1x(k,1) = vx_rho(2*k-1)
-        v1x(k,2) = vx_rho(2*k)
-        v2x(k,1) = vx_sigma(3*k-2)*2.d0
-        v2x(k,2) = vx_sigma(3*k)*2.d0
-      ENDDO
-    ENDIF
-    !
-  ELSE
-    !
-    ALLOCATE( grho2(length,ns) )
-    !
-    IF ( ns /= 1 ) THEN
-       !
-       DO is = 1, 2
-          grho2(:,is) = grho(1,:,is)**2 + grho(2,:,is)**2 + grho(3,:,is)**2
-       ENDDO
-       !
-       CALL gcx_spin( length, rho, grho2, ex, v1x, v2x )
-       !
-    ENDIF
-    !
-    DEALLOCATE( grho2 )
-    !
-  ENDIF
-  !
   ! ---- GGA CORRELATION
   !
   IF ( is_libxc(4) ) THEN  !lda part of LYP not present in libxc (still so? - check)
     !
-    CALL xc_f03_func_init( xc_func, igcc, pol_unpol )
-     xc_info2 = xc_f03_func_get_info( xc_func )
-     CALL xc_f03_func_set_dens_threshold( xc_func, rho_threshold_gga )
-     CALL xc_f03_gga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), ec_lxc(1), vc_rho(1), vc_sigma(1) )
-    CALL xc_f03_func_end( xc_func )
+    CALL xc_f90_func_init( xc_func, igcc, pol_unpol )
+     xc_info2 = xc_f90_func_get_info( xc_func )
+     CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold_gga )
+     fkind_x  = xc_f90_func_info_get_kind( xc_info2 )
+     CALL xc_f90_gga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), ec_lxc(1), vc_rho(1), vc_sigma(1) )
+    CALL xc_f90_func_end( xc_func )
     !
     IF (.NOT. POLARIZED) THEN
       DO k = 1, length
@@ -271,6 +232,50 @@ SUBROUTINE xc_gcx_( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
     DEALLOCATE( arho, grho2 )
     !
   ENDIF  
+  !
+  ! --- GGA EXCHANGE
+  !
+  IF ( is_libxc(3) ) THEN
+    !
+    CALL xc_f90_func_init( xc_func, igcx, pol_unpol )
+     xc_info1 = xc_f90_func_get_info( xc_func )
+     CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold_gga )
+     CALL xc_f90_gga_exc_vxc( xc_func, lengthxc, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
+    CALL xc_f90_func_end( xc_func )
+    !
+    IF (.NOT. POLARIZED) THEN
+      DO k = 1, length
+        ex(k) = ex_lxc(k) * rho_lxc(k) * SIGN(1.0_DP, rho(k,1))
+        v1x(k,1) = vx_rho(k)
+        v2x(k,1) = vx_sigma(k)*2.d0
+      ENDDO
+    ELSE
+      DO k = 1, length
+        ex(k) = ex_lxc(k) * (rho_lxc(2*k-1)+rho_lxc(2*k))
+        v1x(k,1) = vx_rho(2*k-1)
+        v1x(k,2) = vx_rho(2*k)
+        v2x(k,1) = vx_sigma(3*k-2)*2.d0
+        v2x(k,2) = vx_sigma(3*k)*2.d0
+      ENDDO
+    ENDIF
+    !
+  ELSE
+    !
+    ALLOCATE( grho2(length,ns) )
+    !
+    IF ( ns /= 1 ) THEN
+       !
+       DO is = 1, 2
+          grho2(:,is) = grho(1,:,is)**2 + grho(2,:,is)**2 + grho(3,:,is)**2
+       ENDDO
+       !
+       CALL gcx_spin( length, rho, grho2, ex, v1x, v2x )
+       !
+    ENDIF
+    !
+    DEALLOCATE( grho2 )
+    !
+  ENDIF
   !
   DEALLOCATE( rho_lxc, sigma )
   DEALLOCATE( ex_lxc , ec_lxc   )
