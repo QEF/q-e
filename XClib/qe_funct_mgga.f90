@@ -1057,7 +1057,7 @@ SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )       !<GPU:DEVICE>
   !
   alpha = 1.86726d-03
   !
-  IF (rho < small .AND. tau < small) THEN
+  IF (rho < small .OR. tau < small) THEN  !.AND.?
      ex = zero
      v1x = zero
      v2x = zero
@@ -1333,7 +1333,7 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, & 
   !
   ! ... Ecaa
   !
-  IF (rhoa < small .AND. taua < small) THEN
+  IF (rhoa < small .OR. taua < small) THEN  !.AND.?
     !
     Ecaa = zero
     v1_aa_up = zero
