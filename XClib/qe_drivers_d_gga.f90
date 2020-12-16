@@ -1,10 +1,22 @@
 !
-! --- GGA DERIVATIVE DRIVERS ---
+! Copyright (C) 2020 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!========================================================================
+!                      GGA POTENTIAL DERIVATIVE DRIVERS
+!========================================================================
+!
+!------------------------------------------------------------------------
 MODULE qe_drivers_d_gga
+  !----------------------------------------------------------------------
+  !! Module with QE driver routines that calculates the derivatives of XC
+  !! potential.
   !
-  USE kind_l,     ONLY: DP
-  USE dft_par_mod
+  USE kind_l,       ONLY: DP
+  USE dft_par_mod,  ONLY: igcx, igcc, is_libxc
   !
   IMPLICIT NONE
   !
@@ -21,16 +33,30 @@ CONTAINS
 SUBROUTINE dgcxc_unpol( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc )
   !-------------------------------------------------------------------------
   !! This routine computes the derivative of the exchange and correlation
-  !! potentials.
+  !! potentials of GGA family.
   !
   USE qe_drivers_gga,   ONLY: gcxc
   !
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN) :: length
-  REAL(DP), INTENT(IN), DIMENSION(length) :: r_in, s2_in
-  REAL(DP), INTENT(OUT), DIMENSION(length) :: vrrx, vsrx, vssx
-  REAL(DP), INTENT(OUT), DIMENSION(length) :: vrrc, vsrc, vssc
+  !! Number of k-points
+  REAL(DP), INTENT(IN), DIMENSION(length) :: r_in
+  !! Charge density
+  REAL(DP), INTENT(IN), DIMENSION(length) :: s2_in
+  !! Square modulus of the density gradient for each k-point
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: vrrx
+  !! V1x term of the derivative
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: vsrx
+  !! Cross term for exchange
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: vssx
+  !! V2x term
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: vrrc
+  !! V1c term
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: vsrc
+  !! Cross term for correlation
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: vssc
+  !! V2c term
   !
   ! ... local variables
   !
@@ -105,13 +131,25 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: length
+  !! Number of k-points
   REAL(DP), INTENT(IN), DIMENSION(length,2) :: r_in
+  !! Charge density up and down
   REAL(DP), INTENT(IN), DIMENSION(length,3,2) :: g_in
-  ! input: the charges and the gradient
-  REAL(DP), INTENT(OUT), DIMENSION(length,2) :: vrrx, vrsx, vssx
-  REAL(DP), INTENT(OUT), DIMENSION(length,2) :: vrrc, vrsc, vrzc
+  !! Gradient of the charge density up and down
+  REAL(DP), INTENT(OUT), DIMENSION(length,2) :: vrrx
+  !! V1x term of the derivative
+  REAL(DP), INTENT(OUT), DIMENSION(length,2) :: vrsx
+  !! Cross term for exchange
+  REAL(DP), INTENT(OUT), DIMENSION(length,2) :: vssx
+  !! V2x term of the derivative
+  REAL(DP), INTENT(OUT), DIMENSION(length,2) :: vrrc
+  !! V1c term of the derivative
+  REAL(DP), INTENT(OUT), DIMENSION(length,2) :: vrsc
+  !! Cross term for correlation
+  REAL(DP), INTENT(OUT), DIMENSION(length,2) :: vrzc
+  !! Derivative of V1c with respect to zeta
   REAL(DP), INTENT(OUT), DIMENSION(length) :: vssc
-  ! output: derivatives of the exchange and of the correlation
+  !! V2c term of the derivative
   !
   ! ... local variables
   !
@@ -121,15 +159,10 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   INTEGER :: igcx_, igcc_
   REAL(DP), DIMENSION(length,2) :: r, s, s2
   REAL(DP), DIMENSION(length,2) :: drup, drdw, dsup, dsdw
-  ! deltas for rho and gradient
   REAL(DP), ALLOCATABLE :: sx(:), v1x(:,:), v2x(:,:)
-  ! exchange energy and potentials for each block
   REAL(DP), ALLOCATABLE :: sc(:), v1c(:,:), v2c(:)
-  ! correlation energy and potentials for each block
   REAL(DP), DIMENSION(length) :: rt, zeta, st, s2t
-  ! rho tot, zeta, gradient, square tot gradient
   REAL(DP), DIMENSION(length) :: dr, ds, dz
-  ! deltas for rho tot, gradient and zeta
   REAL(DP), DIMENSION(length,2) :: null_v
   ! used to set output values to zero when input values 
   ! are too small (e.g. rho<eps)
@@ -296,9 +329,9 @@ END SUBROUTINE dgcxc_spin
 SUBROUTINE d3gcxc( r, s2, vrrrx, vsrrx, vssrx, vsssx, &
                      vrrrc, vsrrc, vssrc, vsssc )
   !-----------------------------------------------------------------------
-  !    wat20101006: Calculates all derivatives of the exchange (x) and
-  !                 correlation (c) potential in third order.
-  !                 of the Exc.
+  ! wat20101006: 
+  !! Calculates all derivatives of the exchange (x) and correlation (c) 
+  !! potential in third order of the Exc.
   !
   !    input:       r = rho, s2=|\nabla rho|^2
   !    definition:  E_xc = \int ( f_x(r,s2) + f_c(r,s2) ) dr

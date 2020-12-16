@@ -5,13 +5,17 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!========================================================================
+!                      LDA POTENTIAL DERIVATIVE DRIVERS
+!========================================================================
+!
 !---------------------------------------------------------------------------
 MODULE qe_drivers_d_lda_lsda
   !-------------------------------------------------------------------------
   !! Contains the routines to compute the derivative of the LDA XC potential.
   !
-  USE kind_l,     ONLY: DP
-  USE dft_par_mod
+  USE kind_l,      ONLY: DP
+  USE dft_par_mod, ONLY: iexch, icorr, is_libxc
   !
   IMPLICIT NONE
   !
@@ -38,7 +42,7 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   INTEGER,  INTENT(IN) :: length
   !! length of the input/output arrays
   REAL(DP), INTENT(IN),  DIMENSION(length) :: rho_in
-  !! the charge density ( positive )
+  !! the charge density
   REAL(DP), INTENT(OUT), DIMENSION(length) :: dmuxc
   !! the derivative of the xc potential
   !
@@ -153,7 +157,7 @@ END SUBROUTINE dmxc_lda
 !
 !-----------------------------------------------------------------------
 SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
-  !-----------------------------------------------------------------------
+  !---------------------------------------------------------------------
   !! Computes the derivative of the xc potential with respect to the 
   !! local density in the spin-polarized case.
   !
@@ -350,13 +354,13 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN) :: length
-  !! length of the input/output arrays
+  !! Length of the input/output arrays
   REAL(DP), INTENT(IN), DIMENSION(length) :: rho_in
-  !! total charge density
+  !! Total charge density
   REAL(DP), INTENT(IN), DIMENSION(length,3) :: m
-  !! magnetization vector
+  !! Magnetization vector
   REAL(DP), INTENT(OUT), DIMENSION(length,4,4) :: dmuxc
-  !! derivative of XC functional
+  !! Derivative of XC functional
   !
   ! ... local variables
   !
@@ -564,9 +568,9 @@ END FUNCTION dpz
 !-----------------------------------------------------------------------
 FUNCTION dpz_polarized( rs, iflg )
   !-----------------------------------------------------------------------
-  !!  Derivative of the correlation potential with respect to local density
-  !!  Perdew and Zunger parameterization of the Ceperley-Alder functional.  |
-  !!  Spin-polarized case.
+  !! Derivative of the correlation potential with respect to local density
+  !! Perdew and Zunger parameterization of the Ceperley-Alder functional.  |
+  !! Spin-polarized case.
   !
   USE constants_l, ONLY: pi, fpi
   !
