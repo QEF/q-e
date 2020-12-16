@@ -11,7 +11,7 @@ PROGRAM xclib_test
   !==========================================================================
   !! Testing program for xc_lib library in QE. Different options:
   !
-  !! * dft-info: infos on the input DFT;
+  !! * dft-info: provides infos on the input DFT (both QE and Libxc);
   !! * xc-benchmark: difference with respect to a given set of benchmark data
   !!   (on file);
   !! * gen-benchmark: generate set of benchmark data on file;
@@ -32,7 +32,7 @@ PROGRAM xclib_test
                          xclib_dft_is_libxc
   USE xclib_parallel_include
 #if defined(__LIBXC)
-  USE xc_f03_lib_m
+  USE xc_f90_lib_m
 #endif
   !
   IMPLICIT NONE
@@ -44,8 +44,8 @@ PROGRAM xclib_test
 #endif
   !
 #if defined(__LIBXC)
-  TYPE(xc_f03_func_t) :: xc_func
-  TYPE(xc_f03_func_info_t) :: xc_info
+  TYPE(xc_f90_func_t) :: xc_func
+  TYPE(xc_f90_func_info_t) :: xc_info
   CHARACTER(LEN=120) :: lxc_kind, lxc_family
   INTEGER :: n_ext, id(6)
 #endif
@@ -72,7 +72,7 @@ PROGRAM xclib_test
   !---------- DFT infos -------------------------
   INTEGER :: iexch1, icorr1, igcx1, igcc1, imeta1, imetac1
   INTEGER :: iexch2, icorr2, igcx2, igcc2, imeta2, imetac2
-  LOGICAL :: LDA, GGA, MGGA, POLARIZED, ENERGY_ONLY, is_libxc(6)
+  LOGICAL :: LDA, GGA, MGGA, POLARIZED, is_libxc(6)
   CHARACTER(LEN=120) :: name1, name2
   !
   !-------- Various params -------------------
@@ -201,7 +201,6 @@ PROGRAM xclib_test
   dft1 = 'none'
   dft2 = 'none'
   DF_OK = .FALSE.
-  energy_only = .FALSE.
   nspin = 1
   !
   !==========================================================================
@@ -325,11 +324,11 @@ PROGRAM xclib_test
       IF (is_libxc(i)) THEN
         WRITE(stdout,*) CHAR(10)//"Functional with ID:", id(i)
         !
-        CALL xc_f03_func_init( xc_func, id(i), 1 )
+        CALL xc_f90_func_init( xc_func, id(i), 1 )
         !
-        xc_info = xc_f03_func_get_info(xc_func)
+        xc_info = xc_f90_func_get_info(xc_func)
         !
-        SELECT CASE( xc_f03_func_info_get_kind(xc_info) )
+        SELECT CASE( xc_f90_func_info_get_kind(xc_info) )
         CASE( XC_EXCHANGE )
           WRITE(lxc_kind, '(a)') 'Exchange functional'
         CASE( XC_CORRELATION )
@@ -343,7 +342,7 @@ PROGRAM xclib_test
           WRITE(lxc_kind, '(a)') 'Unknown kind'
         END SELECT
         !
-        SELECT CASE( xc_f03_func_info_get_family(xc_info) )
+        SELECT CASE( xc_f90_func_info_get_family(xc_info) )
         CASE( XC_FAMILY_LDA )
           WRITE(lxc_family,'(a)') "LDA"
         CASE( XC_FAMILY_GGA )
@@ -360,28 +359,28 @@ PROGRAM xclib_test
         !
         WRITE(*,'("The functional ''", a, "'' is an ", a, ", it belongs to &
                &the ''", a, "'' family and is defined in the reference(s): &
-               &")') TRIM(xc_f03_func_info_get_name(xc_info)), TRIM(lxc_kind)&
+               &")') TRIM(xc_f90_func_info_get_name(xc_info)), TRIM(lxc_kind)&
                ,TRIM(lxc_family)
         ii = 0
         DO WHILE( ii >= 0 )
-         WRITE(*,'(a,i1,2a)') '[',ii+1,'] ',TRIM(xc_f03_func_reference_get_ref( &
-                                   xc_f03_func_info_get_references(xc_info, ii)))
+         WRITE(*,'(a,i1,2a)') '[',ii+1,'] ',TRIM(xc_f90_func_reference_get_ref( &
+                                   xc_f90_func_info_get_references(xc_info, ii)))
         ENDDO
         !
         WRITE(stdout,*)
-        n_ext = xc_f03_func_info_get_n_ext_params( xc_info )
+        n_ext = xc_f90_func_info_get_n_ext_params( xc_info )
         WRITE(stdout,*) 'Number of external parameters: ', n_ext
         !
         IF ( n_ext/=0 ) THEN
           DO ii = 0, n_ext-1
             WRITE(stdout,*) &
-              TRIM(xc_f03_func_info_get_ext_params_description(xc_info, ii))
+              TRIM(xc_f90_func_info_get_ext_params_description(xc_info, ii))
             WRITE(stdout,*) 'Default value: ', &
-                   xc_f03_func_info_get_ext_params_default_value(xc_info, ii)
+                   xc_f90_func_info_get_ext_params_default_value(xc_info, ii)
           ENDDO
         ENDIF
         !
-        CALL xc_f03_func_end( xc_func )
+        CALL xc_f90_func_end( xc_func )
         !
       ENDIF
     ENDDO
@@ -878,14 +877,10 @@ PROGRAM xclib_test
         IF ( test == 'dft-comparison' ) THEN
           !
           IF ( .NOT. DF_OK ) THEN
-            !
             ex_is_out = is_it_out( diff_thr_e_lda, 1, ex1(ii:ii), ex2(ii:ii) )
             ec_is_out = is_it_out( diff_thr_e_lda, 1, ec1(ii:ii), ec2(ii:ii) )
-            !
-            IF (.NOT. energy_only) THEN
-              vx_is_out = is_it_out( diff_thr_v_lda,ns, vx1(ii,:), vx2(ii,:) )
-              vc_is_out = is_it_out( diff_thr_v_lda,ns, vc1(ii,:), vc2(ii,:) )
-            ENDIF
+            vx_is_out = is_it_out( diff_thr_v_lda,ns, vx1(ii,:), vx2(ii,:) )
+            vc_is_out = is_it_out( diff_thr_v_lda,ns, vc1(ii,:), vc2(ii,:) )
             something_out = ANY((/ex_is_out, ec_is_out, vx_is_out, vc_is_out/))
           ELSE
             dmuxc_is_out = is_dit_out( diff_thr_dmuxc, dmuxc1(ii,:,:), &
@@ -916,19 +911,12 @@ PROGRAM xclib_test
             ENDIF
             !
             IF (.NOT. DF_OK) THEN
-              !
               IF ( ex_is_out ) CALL print_diff( 'Ex', ex1(ii:ii), ex2(ii:ii) )
               IF ( ec_is_out ) CALL print_diff( 'Ec', ec1(ii:ii), ec2(ii:ii) )
-              !
-              IF (.NOT. ENERGY_ONLY) THEN
-                IF ( vx_is_out ) CALL print_diff( 'Vx', vx1(ii,:), vx2(ii,:) )
-                IF ( vc_is_out ) CALL print_diff( 'Vc', vc1(ii,:), vc2(ii,:) )
-              ENDIF
-              !
+              IF ( vx_is_out ) CALL print_diff( 'Vx', vx1(ii,:), vx2(ii,:) )
+              IF ( vc_is_out ) CALL print_diff( 'Vc', vc1(ii,:), vc2(ii,:) )
             ELSE  
-              !
               CALL print_diff2( 'dmuxc', dmuxc1(ii,:,:), dmuxc2(ii,:,:) )
-              !
             ENDIF !df_ok
             !
           ENDIF
@@ -968,10 +956,8 @@ PROGRAM xclib_test
          IF (.NOT. DF_OK) THEN
            CALL print_diff('Ex',ex1(nnrit:nnrit),ex2(nnrbit:nnrbit))
            CALL print_diff('Ec',ec1(nnrit:nnrit),ec2(nnrbit:nnrbit))
-           IF (.NOT. ENERGY_ONLY) THEN
-             CALL print_diff( 'Vx', vx1(nnrit,:), vx2(nnrbit,:) )
-             CALL print_diff( 'Vc', vc1(nnrit,:), vc2(nnrbit,:) )
-           ENDIF
+           CALL print_diff( 'Vx', vx1(nnrit,:), vx2(nnrbit,:) )
+           CALL print_diff( 'Vc', vc1(nnrit,:), vc2(nnrbit,:) )
          ELSE
            CALL print_diff2('dmuxc',dmuxc1(nnrit,:,:),dmuxc2(nnrbit,:,:))
          ENDIF !df_ok
@@ -1014,21 +1000,17 @@ PROGRAM xclib_test
          IF ( .NOT. DF_OK ) THEN
            ex_is_out = is_it_out( diff_thr_e_gga, 1, ex1(ii:ii), ex2(ii:ii) )
            ec_is_out = is_it_out( diff_thr_e_gga, 1, ec1(ii:ii), ec2(ii:ii) )
-           !
-           IF (.NOT. energy_only) THEN
-             v1x_is_out= is_it_out( diff_thr_vgga,ns, v1x1(ii,:),v1x2(ii,:) )
-             v2x_is_out= is_it_out( diff_thr_vgga,ns, v2x1(ii,:),v2x2(ii,:) )
-             v1c_is_out= is_it_out( diff_thr_vgga,ns, v1c1(ii,:),v1c2(ii,:) )
-             v2c_is_out= is_it_out( diff_thr_vgga,np, v2c1(ii,:),v2c2(ii,:), &
-                                                   v2c_ud1(ii), v2c_ud2(ii) )
-           ENDIF
+           v1x_is_out= is_it_out( diff_thr_vgga,ns, v1x1(ii,:),v1x2(ii,:) )
+           v2x_is_out= is_it_out( diff_thr_vgga,ns, v2x1(ii,:),v2x2(ii,:) )
+           v1c_is_out= is_it_out( diff_thr_vgga,ns, v1c1(ii,:),v1c2(ii,:) )
+           v2c_is_out= is_it_out( diff_thr_vgga,np, v2c1(ii,:),v2c2(ii,:), &
+                                                 v2c_ud1(ii), v2c_ud2(ii) )
            something_out=ANY((/ex_is_out, ec_is_out, v1x_is_out, v2x_is_out, &
                                v1c_is_out, v2c_is_out/) )
          ELSE           
            dvxcrr_is_out = is_dit_out(diff_thr_dv,dvxcrr1(ii,:,:),dvxcrr2(ii,:,:))
            dvxcsr_is_out = is_dit_out(diff_thr_dv,dvxcsr1(ii,:,:),dvxcsr2(ii,:,:))
            dvxcss_is_out = is_dit_out(diff_thr_dv,dvxcss1(ii,:,:),dvxcss2(ii,:,:))
-           !
            dvgga_is_out = ANY((/dvxcrr_is_out, dvxcsr_is_out, dvxcss_is_out/))
          ENDIF
        ENDIF
@@ -1072,18 +1054,12 @@ PROGRAM xclib_test
              ! 
              IF (ex_is_out) CALL print_diff( 'Ex', ex1(ii:ii), ex2(ii:ii) ) 
              IF (ec_is_out) CALL print_diff( 'Ec', ec1(ii:ii), ec2(ii:ii) ) 
-             ! 
-             IF (.NOT. ENERGY_ONLY) THEN 
-               ! 
-               IF (v1x_is_out) CALL print_diff( 'V1x',v1x1(ii,:), v1x2(ii,:) ) 
-               IF (v2x_is_out) CALL print_diff( 'V2x',v2x1(ii,:), v2x2(ii,:) ) 
-               IF (v1c_is_out) CALL print_diff( 'V1c',v1c1(ii,:), v1c2(ii,:) ) 
-               IF (v2c_is_out) CALL print_diff( 'V2c',v2c1(ii,:), v2c2(ii,:), & 
-                                                 v2c_ud1(ii), v2c_ud2(ii) )
-               ! 
-             ENDIF 
-             ! 
-           ELSE 
+             IF (v1x_is_out) CALL print_diff( 'V1x',v1x1(ii,:), v1x2(ii,:) ) 
+             IF (v2x_is_out) CALL print_diff( 'V2x',v2x1(ii,:), v2x2(ii,:) ) 
+             IF (v1c_is_out) CALL print_diff( 'V1c',v1c1(ii,:), v1c2(ii,:) ) 
+             IF (v2c_is_out) CALL print_diff( 'V2c',v2c1(ii,:), v2c2(ii,:), & 
+                                               v2c_ud1(ii), v2c_ud2(ii) )
+           ELSE
              ! 
              IF (test/='gen-benchmark') WRITE(stdout,*) " " 
              ! 
@@ -1093,7 +1069,6 @@ PROGRAM xclib_test
                                                            dvxcsr2(ii,:,:) ) 
              IF (dvxcss_is_out) CALL print_diff2( 'dvxcss',dvxcss1(ii,:,:), &
                                                            dvxcss2(ii,:,:) ) 
-             ! 
            ENDIF 
            ! 
          ENDIF !iout 
@@ -1145,13 +1120,11 @@ PROGRAM xclib_test
          IF (.NOT. DF_OK) THEN 
            CALL print_diff( 'Ex', ex1(nnrbit:nnrbit), ex2(nnrbit:nnrbit) ) 
            CALL print_diff( 'Ec', ec1(nnrbit:nnrbit), ec2(nnrbit:nnrbit) ) 
-           IF (.NOT. ENERGY_ONLY) THEN 
-             CALL print_diff( 'V1x', v1x1(nnrbit,:), v1x2(nnrbit,:) ) 
-             CALL print_diff( 'V2x', v2x1(nnrbit,:), v2x2(nnrbit,:) ) 
-             CALL print_diff( 'V1c', v1c1(nnrbit,:), v1c2(nnrbit,:) ) 
-             CALL print_diff( 'V2c', v2c1(nnrbit,:), v2c2(nnrbit,:),  & 
-                                     v2c_ud1(nnrbit), v2c_ud2(nnrbit) ) 
-           ENDIF 
+           CALL print_diff( 'V1x', v1x1(nnrbit,:), v1x2(nnrbit,:) ) 
+           CALL print_diff( 'V2x', v2x1(nnrbit,:), v2x2(nnrbit,:) ) 
+           CALL print_diff( 'V1c', v1c1(nnrbit,:), v1c2(nnrbit,:) ) 
+           CALL print_diff( 'V2c', v2c1(nnrbit,:), v2c2(nnrbit,:),  & 
+                                   v2c_ud1(nnrbit), v2c_ud2(nnrbit) )
          ELSE   
            CALL print_diff2('dvxcrr',dvxcrr1(nnrbit,:,:), dvxcrr2(nnrbit,:,:)) 
            CALL print_diff2('dvxcsr',dvxcsr1(nnrbit,:,:), dvxcsr2(nnrbit,:,:)) 
@@ -1194,16 +1167,12 @@ PROGRAM xclib_test
            !
            ex_is_out = is_it_out( diff_thr_e_mgga, 1, ex1(ii:ii), ex2(ii:ii) ) 
            ec_is_out = is_it_out( diff_thr_e_mgga, 1, ec1(ii:ii), ec2(ii:ii) ) 
-           !
-           IF (.NOT. energy_only) THEN 
-             v1x_is_out = is_it_out( diff_thr_vmgga,ns,v1x1(ii,:),v1x2(ii,:) )
-             v2x_is_out = is_it_out( diff_thr_vmgga,ns,v2x1(ii,:),v2x2(ii,:) )
-             v3x_is_out = is_it_out( diff_thr_vmgga,ns,v3x1(ii,:),v3x2(ii,:) )
-             v1c_is_out = is_it_out( diff_thr_vmgga,ns,v1c1(ii,:),v1c2(ii,:) )
-             v2c_is_out = is_it_out( diff_thr_vmgga,ns,v2c1(ii,:),v2c2(ii,:) )
-             v3c_is_out = is_it_out( diff_thr_vmgga,ns,v3c1(ii,:),v3c2(ii,:) )
-           ENDIF 
-           ! 
+           v1x_is_out = is_it_out( diff_thr_vmgga,ns,v1x1(ii,:),v1x2(ii,:) )
+           v2x_is_out = is_it_out( diff_thr_vmgga,ns,v2x1(ii,:),v2x2(ii,:) )
+           v3x_is_out = is_it_out( diff_thr_vmgga,ns,v3x1(ii,:),v3x2(ii,:) )
+           v1c_is_out = is_it_out( diff_thr_vmgga,ns,v1c1(ii,:),v1c2(ii,:) )
+           v2c_is_out = is_it_out( diff_thr_vmgga,ns,v2c1(ii,:),v2c2(ii,:) )
+           v3c_is_out = is_it_out( diff_thr_vmgga,ns,v3c1(ii,:),v3c2(ii,:) )
            something_out = ANY((/ex_is_out,ec_is_out, v1x_is_out, v2x_is_out, &
                                  v3x_is_out, v1c_is_out, v2c_is_out, &
                                  v3c_is_out/))
@@ -1247,17 +1216,14 @@ PROGRAM xclib_test
                 ENDIF 
               ENDIF
               ! 
-              IF ( ex_is_out ) CALL print_diff( 'Ex', ex1(ii:ii), ex2(ii:ii) )
-              IF ( ec_is_out ) CALL print_diff( 'Ec', ec1(ii:ii), ec2(ii:ii) )
-              ! 
-              IF (.NOT. ENERGY_ONLY) THEN
-                IF (v1x_is_out) CALL print_diff( 'V1x',v1x1(ii,:), v1x2(ii,:) )
-                IF (v2x_is_out) CALL print_diff( 'V2x',v2x1(ii,:), v2x2(ii,:) )
-                IF (v1c_is_out) CALL print_diff( 'V1c',v1c1(ii,:), v1c2(ii,:) )
-                IF (v2c_is_out) CALL print_diff( 'V2c',v2c1(ii,:), v2c2(ii,:) )
-                IF (v3x_is_out) CALL print_diff( 'V3x',v3x1(ii,:), v3x2(ii,:) )
-                IF (v3c_is_out) CALL print_diff( 'V3c',v3c1(ii,:), v3c2(ii,:) )
-              ENDIF !not energy only 
+              IF (ex_is_out ) CALL print_diff( 'Ex', ex1(ii:ii), ex2(ii:ii) )
+              IF (ec_is_out ) CALL print_diff( 'Ec', ec1(ii:ii), ec2(ii:ii) )
+              IF (v1x_is_out) CALL print_diff( 'V1x',v1x1(ii,:), v1x2(ii,:) )
+              IF (v2x_is_out) CALL print_diff( 'V2x',v2x1(ii,:), v2x2(ii,:) )
+              IF (v1c_is_out) CALL print_diff( 'V1c',v1c1(ii,:), v1c2(ii,:) )
+              IF (v2c_is_out) CALL print_diff( 'V2c',v2c1(ii,:), v2c2(ii,:) )
+              IF (v3x_is_out) CALL print_diff( 'V3x',v3x1(ii,:), v3x2(ii,:) )
+              IF (v3c_is_out) CALL print_diff( 'V3c',v3c1(ii,:), v3c2(ii,:) )
               ! 
            ENDIF  
          ENDIF 
@@ -1312,14 +1278,12 @@ PROGRAM xclib_test
          !    
          CALL print_diff( 'Ex', ex1(nnrbit:nnrbit), ex2(nnrbit:nnrbit) )    
          CALL print_diff( 'Ec', ec1(nnrbit:nnrbit), ec2(nnrbit:nnrbit) )
-         IF (.NOT. ENERGY_ONLY) THEN
-           CALL print_diff( 'V1x', v1x1(nnrbit,:), v1x2(nnrbit,:) )
-           CALL print_diff( 'V2x', v2x1(nnrbit,:), v2x2(nnrbit,:) )
-           CALL print_diff( 'V1c', v1c1(nnrbit,:), v1c2(nnrbit,:) )
-           CALL print_diff( 'V2c', v2c1(nnrbit,:), v2c2(nnrbit,:) )
-           CALL print_diff( 'V3x', v3x1(nnrbit,:), v3x2(nnrbit,:) )
-           CALL print_diff( 'V3c', v3c1(nnrbit,:), v3c2(nnrbit,:) )
-         ENDIF
+         CALL print_diff( 'V1x', v1x1(nnrbit,:), v1x2(nnrbit,:) )
+         CALL print_diff( 'V2x', v2x1(nnrbit,:), v2x2(nnrbit,:) )
+         CALL print_diff( 'V1c', v1c1(nnrbit,:), v1c2(nnrbit,:) )
+         CALL print_diff( 'V2c', v2c1(nnrbit,:), v2c2(nnrbit,:) )
+         CALL print_diff( 'V3x', v3x1(nnrbit,:), v3x2(nnrbit,:) )
+         CALL print_diff( 'V3c', v3c1(nnrbit,:), v3c2(nnrbit,:) )
          !  
        ENDDO
        ! 

@@ -2,7 +2,7 @@
 MODULE dft_mod
   !
 #if defined(__LIBXC)
-    USE xc_f03_lib_m
+    USE xc_f90_lib_m
 #endif  
   !
   SAVE
@@ -47,8 +47,9 @@ CONTAINS
     CHARACTER(len=1) :: lxc
 #if defined(__LIBXC)
     INTEGER :: ii, id_vec(6), n_ext_params
-    TYPE(xc_f03_func_t) :: xc_func03
-    TYPE(xc_f03_func_info_t) :: xc_info03
+    INTEGER :: flag_v(16), exp2, ftot, ftotx
+    TYPE(xc_f90_func_t) :: xc_func03
+    TYPE(xc_f90_func_info_t) :: xc_info03
 #endif
     INTEGER :: save_iexch, save_icorr, save_igcx, save_igcc, save_meta, &
                save_metac
@@ -303,17 +304,45 @@ CONTAINS
     n_ext_params = 0
     DO ii = 1, 6
       IF (is_libxc(ii)) THEN
-        CALL xc_f03_func_init( xc_func03, id_vec(ii), 1 )
-        xc_info03 = xc_f03_func_get_info(xc_func03)
-        n_ext_params = n_ext_params + xc_f03_func_info_get_n_ext_params(xc_info03)
-        CALL xc_f03_func_end( xc_func03 )
+        CALL xc_f90_func_init( xc_func03, id_vec(ii), 1 )
+        xc_info03 = xc_f90_func_get_info(xc_func03)
+        n_ext_params = xc_f90_func_info_get_n_ext_params(xc_info03)
+        ftot = xc_f90_func_info_get_flags(xc_info03)
+        flag_v(1:16) = 0
+        exp2 = 16
+        DO WHILE (ftot > 0)
+          exp2 = exp2 - 1
+          ftotx = ftot - 2**exp2
+          IF (ftotx >= 0) THEN
+            flag_v(exp2+1) = 1
+            ftot = ftotx
+          ENDIF
+        ENDDO
+        !
+        IF ( n_ext_params /= 0 ) THEN       
+          WRITE( *, '(/5X,"WARNING: libxc functional with ID ",I4," depends",&
+                     &/5X," on external parameters: the correct operation in",&
+                     &/5X," QE is not guaranteed with default values.")' ) id_vec(ii)
+        ENDIF
+        IF ( flag_v(1) == 0 ) THEN
+          WRITE( *, '(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
+                     &/5X,"provide Exc: its correct operation in QE is not ",&
+                     &/5X,"guaranteed.")' ) id_vec(ii)
+        ENDIF
+        IF ( flag_v(2) == 0 ) THEN
+          WRITE( *, '(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
+                     &/5X,"provide Vxc: its correct operation in QE is not ",&
+                     &/5X,"guaranteed.")' ) id_vec(ii)
+        ENDIF
+        IF (dftout(1:3) .EQ. 'XC-' .AND. flag_v(3) == 0 ) THEN
+          WRITE( *, '(/5X,"WARNING: libxc functional with ID ",I4," does not ",&
+                     &/5X,"provide Vxc derivative: its correct operation in QE is",&
+                     &/5X," not guaranteed when derivative is needed.")' ) id_vec(ii)
+        ENDIF
+        CALL xc_f90_func_end( xc_func03 )
       ENDIF
     ENDDO
     !
-    IF ( n_ext_params/=0 ) THEN
-       WRITE( *, '(/5X,"WARNING: one or more of the chosen libxc functionals depend",&
-                  &/5X," on external parameters: their correct operation is not guaranteed.")' )
-    ENDIF
 #endif
     !
     ! Back compatibility - TO BE REMOVED
@@ -457,8 +486,8 @@ CONTAINS
     CHARACTER(LEN=256) :: name
     INTEGER :: i, l, prev_len(6), fkind, fkind_v(3), family
     INTEGER, PARAMETER :: ID_MAX_LIBXC=600
-    TYPE(xc_f03_func_t) :: xc_func
-    TYPE(xc_f03_func_info_t) :: xc_info
+    TYPE(xc_f90_func_t) :: xc_func
+    TYPE(xc_f90_func_info_t) :: xc_info
 #if (XC_MAJOR_VERSION > 5)
     !workaround to keep compatibility with libxc develop version
     INTEGER, PARAMETER :: XC_FAMILY_HYB_GGA  = -10 
@@ -469,7 +498,7 @@ CONTAINS
     !
     DO i = 1, ID_MAX_LIBXC
        !
-       name = xc_f03_functional_get_name( i )
+       name = xc_f90_functional_get_name( i )
        !
        DO l = 1, LEN_TRIM(name)
           name(l:l) = capital( name(l:l) )
@@ -482,14 +511,14 @@ CONTAINS
           !WRITE(*, '("matches libxc",i2,2X,A,2X,A)') i, TRIM(name), TRIM(dft)
           !
           fkind=-100 ; family=-100
-          CALL xc_f03_func_init( xc_func, i, 1 )
-          xc_info = xc_f03_func_get_info( xc_func )
-          fkind = xc_f03_func_info_get_kind( xc_info )
-          family = xc_f03_func_info_get_family( xc_info )
+          CALL xc_f90_func_init( xc_func, i, 1 )
+          xc_info = xc_f90_func_get_info( xc_func )
+          fkind = xc_f90_func_info_get_kind( xc_info )
+          family = xc_f90_func_info_get_family( xc_info )
           IF ( matches('HYB_', TRIM(name)) ) THEN
-            exx_fraction = xc_f03_hyb_exx_coef( xc_func )
+            exx_fraction = xc_f90_hyb_exx_coef( xc_func )
           ENDIF
-          CALL xc_f03_func_end( xc_func )
+          CALL xc_f90_func_end( xc_func )
           !   
           SELECT CASE( family )
           CASE( XC_FAMILY_LDA )
@@ -620,7 +649,7 @@ CONTAINS
           nlxc = 0
           DO i = 1, 6
             IF (is_libxc(i)) THEN
-              lxc_name = xc_f03_functional_get_name( id_vec(i) )
+              lxc_name = xc_f90_functional_get_name( id_vec(i) )
               DO l = 1, LEN_TRIM(lxc_name)
                  lxc_name(l:l) = capital( lxc_name(l:l) )
               ENDDO
@@ -1205,10 +1234,10 @@ CONTAINS
      !! functional (e.g. TB09)
      !
      IMPLICIT NONE
-     TYPE(xc_f03_func_info_t) :: xc_info
+     TYPE(xc_f90_func_info_t) :: xc_info
      INTEGER :: ii, flags_tot
      INTEGER, INTENT(OUT) :: eflag 
-     flags_tot = xc_f03_func_info_get_flags(xc_info)
+     flags_tot = xc_f90_func_info_get_flags(xc_info)
      eflag = 0
      DO ii = 15, 0, -1
        IF ( flags_tot-2**ii<0 ) CYCLE
