@@ -19,6 +19,7 @@ New in 6.7 version:
 
 Fixed in 6.7 version:
   * Some linkers yield "missing references to ddot_" in libbeef
+  * Bogus errors in scale_sym_ops in some cases of almost-symmetric crystals
   * FFT test in FFTXlib was not always compiling 
   * angle1, angle2, starting_magnetization incorrectly written to xml file
   * Bug in Hubbard forces and stress for bands parallelization (when nproc_pool>nbnd) 
