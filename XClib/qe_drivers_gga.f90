@@ -1,13 +1,23 @@
 !
-! --- GRADIENT CORRECTION DRIVERS ---
+! Copyright (C) 2020 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!--------------------------------------------------------------------------
+!========================================================================
+!                GRADIENT CORRECTION DRIVERS for E and V
+!========================================================================
+!
+!------------------------------------------------------------------------
 MODULE qe_drivers_gga
-  !------------------------------------------------------------------------
+  !----------------------------------------------------------------------
   !! Contains the GGA drivers that calculate the XC energy and potential.
   !
-  USE kind_l, ONLY: DP
-  USE dft_par_mod
+  USE kind_l,       ONLY: DP
+  USE dft_par_mod,  ONLY: igcx, igcc, rho_threshold_gga, grho_threshold_gga,&
+                          exx_started, exx_fraction, screening_parameter,   &
+                          gau_parameter
   !
   IMPLICIT NONE
   !
@@ -27,13 +37,6 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   !! Gradient corrections for exchange and correlation - Hartree a.u. 
   !! See comments at the beginning of module for implemented cases
   !
-  ! Input:  rho, grho=|\nabla rho|^2
-  ! Definition:  E_x = \int E_x(rho,grho) dr
-  ! Output: sx = E_x(rho,grho)
-  !         v1x= D(E_x)/D(rho)
-  !         v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
-  !         sc, v1c, v2c as above for correlation
-  !
   USE exch_gga
   USE corr_gga
   USE beef_interface, ONLY: beefx, beeflocalcorr
@@ -41,9 +44,24 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN) :: length
-  REAL(DP), INTENT(IN),  DIMENSION(length) :: rho_in, grho_in
-  REAL(DP), INTENT(OUT), DIMENSION(length) :: sx_out, sc_out, v1x_out, &
-                                              v2x_out, v1c_out, v2c_out
+  !! Length of the input/output arrays
+  REAL(DP), INTENT(IN),  DIMENSION(length) :: rho_in
+  !! Charge density
+  REAL(DP), INTENT(IN),  DIMENSION(length) :: grho_in
+  !! \(\text{grho}=|\nabla rho|^2\)
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: sx_out
+  !! Exchange energy: \(s_x = \int e_x(\text{rho},\text{grho}) dr\)
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: sc_out
+  !! Correlation energy: \(s_c = \int e_c(\text{rho},\text{grho}) dr\)
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: v1x_out
+  !! Exchange potential: \(D\ E_x\ /\ D\ \text{rho} \)
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: v2x_out
+  !! Exchange potential: \(D\ E_x\ /\ D(D\text{rho}/D r_\alpha)\ /
+  !! \ |\nabla\text{rho}| \)
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: v1c_out
+  !! Correlation potential (density term)
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: v2c_out
+  !! Correlation potential (gradient term)
   !
   ! ... local variables
   !
@@ -454,7 +472,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE( 1 )
         !
-        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), v1x(2), v2x(1), v2x(2) )
+        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), &
+                           v1x(1), v1x(2), v2x(1), v2x(2) )
         !
         sx_tot(ir) = sx(1)*rnull(1) + sx(2)*rnull(2)
         !
@@ -505,19 +524,19 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
            CALL pbexsr( rho(2), grho2(2), sxsr(2), v1xsr(2), &
                                           v2xsr(2), screening_parameter )
            !
-           sx_tot(ir) = sx_tot(ir) - exx_fraction*0.5_DP * ( sxsr(1)*rnull(1) + &
-                                                               sxsr(2)*rnull(2) )
+           sx_tot(ir) = sx_tot(ir) - exx_fraction*0.5_DP*( sxsr(1)*rnull(1) + &
+                                                             sxsr(2)*rnull(2) )
            v1x = v1x - exx_fraction * v1xsr
            v2x = v2x - exx_fraction * v2xsr * 2.0_DP
            !
         ELSEIF ( igcx == 20 .AND. exx_started ) THEN
            ! gau-pbe
            !CALL pbexgau_lsd( rho, grho2, sxsr, v1xsr, v2xsr, gau_parameter )
-           CALL pbexgau( rho(1), grho2(1), sxsr(1), v1xsr(1), v2xsr(1), gau_parameter )
-           CALL pbexgau( rho(2), grho2(2), sxsr(2), v1xsr(2), v2xsr(2), gau_parameter )
+           CALL pbexgau( rho(1),grho2(1), sxsr(1), v1xsr(1),v2xsr(1), gau_parameter )
+           CALL pbexgau( rho(2),grho2(2), sxsr(2), v1xsr(2),v2xsr(2), gau_parameter )
            !
            sx_tot(ir) = sx_tot(ir) - exx_fraction*0.5_DP * ( sxsr(1)*rnull(1) + &
-                                                               sxsr(2)*rnull(2) )
+                                                             sxsr(2)*rnull(2) )
            v1x = v1x - exx_fraction * v1xsr
            v2x = v2x - exx_fraction * v2xsr * 2.0_DP
            !
@@ -525,7 +544,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE( 9 )                    ! B3LYP
         !
-        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), v1x(2), v2x(1), v2x(2) )
+        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), &
+                           v1x(1), v1x(2), v2x(1), v2x(2) )
         !
         sx_tot(ir) = sx(1)*rnull(1) + sx(2)*rnull(2)
         !
@@ -616,8 +636,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE( 28 )                   ! X3LYP
         !
-        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), &
-                           v1x(2), v2x(1), v2x(2) )
+        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), &
+                           v1x(1), v1x(2), v2x(1), v2x(2) )
         !
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
@@ -625,8 +645,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         CALL pbex( rho(1), grho2(1), 1, sxsr(1), v1xsr(1), v2xsr(1) )
         CALL pbex( rho(2), grho2(2), 1, sxsr(2), v1xsr(2), v2xsr(2) )
         !
-        sx_tot(ir) = 0.5_DP * ( sxsr(1)*rnull(1) + sxsr(2)*rnull(2) ) * 0.235_DP + &
-                              (   sx(1)*rnull(1) +   sx(2)*rnull(2) ) * 0.765_DP
+        sx_tot(ir) = 0.5_DP*( sxsr(1)*rnull(1) + sxsr(2)*rnull(2) )*0.235_DP + &
+                            (   sx(1)*rnull(1) +   sx(2)*rnull(2) )*0.765_DP
         v1x = v1xsr * 0.235_DP + v1x * 0.765_DP
         v2x = v2xsr * 0.235_DP * 2.0_DP + v2x * 0.765_DP
         !
@@ -740,15 +760,15 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE( 43 ) ! 'beefx'
         IF (rho(1) > small .AND. SQRT (ABS (grho2(1)) ) > small) THEN
-           call beefx(2.0_DP * rho(1), 4.0_DP * grho2(1), sx(1), v1x(1), v2x(1), 0)
+           call beefx(2.0_DP*rho(1), 4.0_DP*grho2(1), sx(1), v1x(1), v2x(1), 0)
         ELSE
            sx(1) = 0.0_DP
            v1x(1) = 0.0_DP
            v2x(1) = 0.0_DP
         ENDIF
         IF (rho(2) > small .AND. SQRT (ABS (grho2(2)) ) > small) THEN
-           CALL beefx(2.0_DP * rho(2), 4.0_DP * grho2(2), sx(2), v1x(2), v2x(2), 0)
-           CALL beefx(2.0_DP * rho(2), 4.0_DP * grho2(2), sx(2), v1x(2), v2x(2), 0)
+           CALL beefx(2.0_DP*rho(2), 4.0_DP*grho2(2), sx(2), v1x(2), v2x(2), 0)
+           CALL beefx(2.0_DP*rho(2), 4.0_DP*grho2(2), sx(2), v1x(2), v2x(2), 0)
         ELSE
            sx(2) = 0.0_DP
            v1x(2) = 0.0_DP
@@ -831,7 +851,8 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
                                     (1.0_DP-rho_threshold_gga)), zeta_io(ir) )
     zeta = zeta_io(ir)
     !
-    IF ( ABS(zeta)>1.0_DP .OR. rho<=rho_threshold_gga .OR. SQRT(ABS(grho))<=rho_threshold_gga ) THEN
+    IF ( ABS(zeta)>1.0_DP .OR. rho<=rho_threshold_gga .OR. &
+         SQRT(ABS(grho))<=rho_threshold_gga ) THEN
        sc_out(ir) = 0.0_DP
        v1c_out(ir,:) = 0.0_DP ; v2c_out(ir) = 0.0_DP
        CYCLE
@@ -983,7 +1004,7 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
        !
     CASE DEFAULT
        !
-       CALL xclib_error( " gcc_spin_more ", " gradient correction not implemented ", 1 )
+       CALL xclib_error(" gcc_spin_more "," gradient correction not implemented ",1)
        !
     END SELECT
     !
