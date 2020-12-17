@@ -473,30 +473,30 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
 !edp
 !          IF ( .NOT. lrot ) THEN
           IF (lrot .AND. .NOT. lscf ) THEN
-              !
-!              CALL using_h_diag(2);
-              CALL using_h_diag(0); CALL using_g2kin(0);
+              !!
+              CALL using_h_diag(2);
+!              CALL using_h_diag(0); CALL using_g2kin(0);
               FORALL( ig = 1 : npw )
                  h_diag(ig,1) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
               END FORALL
               !
-              IF (.not. use_gpu) THEN
-                 !
-                 CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) !precontidtion has intent(in) 
-                 CALL ppcg_gamma( h_psi, s_psi, okvan, h_diag, &
-                              npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
-                              0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
-                 !
+              IF (.not. use_gpu ) THEN
+                CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) ! precontidtion has intent(in)
+                CALL paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
+                           npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
+                !
+                avg_iter = avg_iter + nhpsi/float(nbnd) 
+                ! write (6,*) ntry, avg_iter, nhpsi
+                !
               ELSE
-                 !
-                 CALL using_evc_d(1);  CALL using_et_d(1); CALL using_h_diag_d(0) ! precontidtion has intent(in)
-                 CALL ppcg_gamma_gpu( h_psi_gpu, s_psi_gpu, okvan, h_diag_d, &
-                             npwx, npw, nbnd, evc_d, et_d(1,ik), btype(1,ik), &
-                             0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
-                 !
-              END IF
-               !
-               avg_iter = avg_iter + ppcg_iter
+                CALL using_evc_d(1);  CALL using_et_d(1); CALL using_h_diag_d(0) ! precontidtion has intent(in)
+                CALL paro_gamma_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, okvan, &
+                           npwx, npw, nbnd, evc_d, et_d(1,ik), btype(1,ik), ethr, notconv, nhpsi )
+                !
+                avg_iter = avg_iter + nhpsi/float(nbnd) 
+                ! write (6,*) ntry, avg_iter, nhpsi
+                !
+              ENDIF  
                !
           ELSE IF ( .NOT. lrot ) THEN
 !***
@@ -843,26 +843,23 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                  h_diag(ig,:) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
               END FORALL
               !
-!              IF (.not. use_gpu) THEN
-                 !
-                 CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) !precontidtion has intent(in) 
-                 CALL ppcg_k( h_psi, s_psi, okvan, h_diag, &
-                              npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
-                              0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
-                 !
-                 avg_iter = avg_iter + ppcg_iter
-                 !
-!              ELSE
-!                 !
-!                 CALL using_evc_d(1);  CALL using_et_d(1); CALL using_h_diag_d(0) ! precontidtion has intent(in)
-!                 CALL ppcg_k_gpu( h_psi_gpu, s_psi_gpu, okvan, h_diag_d, &
-!                             npwx, npw, nbnd, evc_d, et_d(1,ik), btype(1,ik), &
-!                             0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
-                 !
-!                 avg_iter = avg_iter + ppcg_iter
-                 !
-!             END IF
-               !
+              IF ( .not. use_gpu ) THEN
+                CALL using_evc(1); CALL using_et(1); CALL using_h_diag(0)
+                CALL paro_k_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
+                         npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
+                !
+                avg_iter = avg_iter + nhpsi/float(nbnd) 
+                ! write (6,*) ntry, avg_iter, nhpsi
+              ELSE
+                CALL using_evc_d(1); CALL using_et_d(1); CALL using_h_diag_d(0)
+                CALL paro_k_new_gpu( h_psi_gpu, s_psi_gpu, hs_psi_gpu, g_1psi_gpu, okvan, &
+                         npwx, npw, nbnd, npol, evc_d, et_d(1,ik), btype(1,ik), ethr, notconv, nhpsi )
+                !
+                avg_iter = avg_iter + nhpsi/float(nbnd) 
+                ! write (6,*) ntry, avg_iter, nhpsi
+                !
+              END IF
+              !
           ELSE IF ( .NOT. lrot ) THEN
 !***
              !
