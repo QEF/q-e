@@ -33,6 +33,7 @@ SUBROUTINE lr_setup_nscf ()
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : ethr, isolve, david, use_para_diag, &
                                  & noinv, max_cg_iter
+  USE control_lr,         ONLY : ethr_nscf
   USE mp_pools,           ONLY : kunit
   USE spin_orb,           ONLY : domag
   USE noncollin_module,   ONLY : noncolin
@@ -51,9 +52,9 @@ SUBROUTINE lr_setup_nscf ()
   ! 
   IF ( .NOT. ALLOCATED( force ) ) ALLOCATE( force( 3, nat ) )
   !
-  ! ... threshold for diagonalization ethr - should be good for all cases
+  ! ... threshold for diagonalization ethr
   !
-  ethr = 1.0D-9 / nelec
+  ethr = ethr_nscf
   !
   ! ... variables for iterative diagonalization (Davidson is assumed)
   !

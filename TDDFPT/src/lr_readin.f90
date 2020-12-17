@@ -50,7 +50,7 @@ SUBROUTINE lr_readin
   USE io_rho_xml,          ONLY : write_scf
   USE mp_bands,            ONLY : ntask_groups
   USE constants,           ONLY : eps4, rytoev
-  USE control_lr,          ONLY : lrpa, alpha_mix
+  USE control_lr,          ONLY : lrpa, alpha_mix, ethr_nscf
   USE mp_world,            ONLY : world_comm
 
   IMPLICIT NONE
@@ -75,7 +75,7 @@ SUBROUTINE lr_readin
                         & charge_response, no_hxc, n_ipol, project,      &
                         & scissor, pseudo_hermitian, d0psi_rs, lshift_d0psi, &
                         & q1, q2, q3, approximation, calculator, alpha_mix, start, &
-                        & end, increment, epsil, units 
+                        & end, increment, epsil, units, ethr_nscf 
   NAMELIST / lr_post /    omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int,sum_rule
   namelist / lr_dav /     num_eign, num_init, num_basis_max, residue_conv_thr, precondition,         &
                         & dav_debug, reference,single_pole, sort_contr, diag_of_h, close_pre,        &
@@ -119,6 +119,7 @@ SUBROUTINE lr_readin
      project = .FALSE.
      max_seconds = 1.0E+7_DP
      scissor = 0.d0
+     ethr_nscf = 1.D-11
      !
      ! For EELS
      !
