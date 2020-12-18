@@ -729,7 +729,7 @@ MODULE ph_restart
           CALL xmlr_readtag( "PARTIAL_DYN", dyn_rec(:,:) )
           IF ( zue .AND. irr>0 ) &
                CALL xmlr_readtag( "PARTIAL_ZUE", zstarue0_rec(:,:) )
-          CALL xmlw_closetag( )
+          CALL xmlr_closetag( )
        ENDIF
     ENDIF
     IF (trans) THEN
