@@ -334,9 +334,9 @@ MODULE pw_restart_new
                END DO symmetries_loop
             END IF
          END IF
-         CALL qexsd_init_symmetries(output_obj%symmetries, nsym, nrot, spacegroup,&
-              s, ft, sname, t_rev, nat, irt,symop_2_class(1:nrot), verbosity, &
-              noncolin)
+         CALL qexsd_init_symmetries(output_obj%symmetries, spacegroup, &
+              nsym, nrot, s, ft, sname, t_rev, nat, irt, &
+              symop_2_class(1:nrot), verbosity, noncolin)
          output_obj%symmetries_ispresent=.TRUE. 
          !
 !-------------------------------------------------------------------------------
@@ -981,7 +981,7 @@ MODULE pw_restart_new
            edir, emaxpos, eopreg, eamp, el_dipole, ion_dipole, gate, zgate, &
            relaxz, block, block_1, block_2, block_height
       USE symm_base,       ONLY : nrot, nsym, invsym, s, ft, irt, t_rev, &
-           sname, inverse_s, s_axis_to_cart, &
+           sname, inverse_s, s_axis_to_cart, spacegroup, &
            time_reversal, no_t_rev, nosym, checkallsym
       USE ldaU,            ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_lmax, Hubbard_lmax_back, &
                                   Hubbard_l, Hubbard_l_back, Hubbard_l1_back, backall, &
@@ -1142,7 +1142,7 @@ MODULE pw_restart_new
       ALLOCATE ( irt(48,nat) )
       IF ( lvalid_input ) THEN 
          CALL qexsd_copy_symmetry ( output_obj%symmetries, &
-              nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
+              spacegroup, nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
               noinv, nosym, no_t_rev, input_obj%symmetry_flags )
          
          CALL qexsd_copy_efield ( input_obj%electric_field, &
@@ -1151,7 +1151,7 @@ MODULE pw_restart_new
          
       ELSE 
          CALL qexsd_copy_symmetry ( output_obj%symmetries, &
-              nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
+              spacegroup, nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
               noinv, nosym, no_t_rev )
       ENDIF
       !! More initialization needed for symmetry

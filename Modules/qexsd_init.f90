@@ -245,8 +245,8 @@ CONTAINS
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_symmetries(obj, nsym, nrot, space_group, s, ft, sname, t_rev, nat, irt, &
-                                     class_names, verbosity, noncolin)
+    SUBROUTINE qexsd_init_symmetries(obj, space_group, nsym, nrot, s, ft, &
+         sname, t_rev, nat, irt, class_names, verbosity, noncolin)
       !------------------------------------------------------------------------
       IMPLICIT NONE
       !
