@@ -72,7 +72,11 @@ SUBROUTINE fft_scatter_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_aux, ncp
   ncpx = maxval(ncp_)
   nppx = maxval(npp_)
 
-  ! This should never happend and should go away
+  ! This should never happend and should be removed: when the FFT of
+  ! data not spread on multiple MPI processes should be performed by
+  ! calling the scalar driver directly. It is still possible for debuggning
+  ! purposes to call the parallel driver on local data.
+  !
   IF ( dfft%nproc == 1 ) THEN
      nppx = dfft%nr3x
   END IF
@@ -356,6 +360,9 @@ END SUBROUTINE fft_scatter_gpu
 
 SUBROUTINE fft_scatter_gpu_batch ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_aux, ncp_, npp_, isgn, batchsize, srh )
   !
+  ! This subroutine performs the same task as fft_scatter_gpu, but for
+  ! batchsize wavefuctions or densities.
+  !
   USE cudafor
   IMPLICIT NONE
   !
@@ -388,6 +395,10 @@ SUBROUTINE fft_scatter_gpu_batch ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_au
   ncpx = maxval(ncp_)
   nppx = maxval(npp_)
   !
+  ! This should never happend and should be removed: when the FFT of
+  ! data not spread on multiple MPI processes should be performed by
+  ! calling the scalar driver directly. It is still possible for debuggning
+  ! purposes to call the parallel driver on local data.
   IF ( dfft%nproc == 1 ) THEN
      nppx = dfft%nr3x
   END IF
@@ -439,6 +450,8 @@ SUBROUTINE fft_scatter_gpu_batch ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_au
      CALL start_clock ('a2a_fw')
 
      istat = cudaDeviceSynchronize()
+     ! Here the data are sent to all processors involved in the FFT.
+     ! We avoid sending the block of data to be transposed that we already own.
      DO iter = 2, nprocp
         IF(IAND(nprocp, nprocp-1) == 0) THEN
           sorc = IEOR( me-1, iter-1 )
@@ -468,14 +481,18 @@ SUBROUTINE fft_scatter_gpu_batch ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_au
 #endif
 
      ENDDO
-
+     !
+     ! here we move to f_in the portion that we did not send (was already in our hands)
+     ! this copy is overlapped with communication that is taking place at the same time
+     ! and is eventually completed...
 #ifdef __GPU_MPI
      istat = cudaMemcpyAsync( f_in_d( (me-1)*sendsiz + 1), f_aux_d((me-1)*sendsiz + 1), sendsiz, stream=dfft%a2a_comp )
      IF( istat /= cudaSuccess ) CALL fftx_error__ ('fft_scatter', 'cudaMemcpyAsync failed: ', istat)
 #else
      f_in((me-1)*sendsiz + 1 : me*sendsiz) = f_aux((me-1)*sendsiz + 1 : me*sendsiz)
 #endif
-
+     !
+     ! ...here, where we wait for it to finish.
      CALL MPI_WAITALL(2*nprocp-2, srh, MPI_STATUSES_IGNORE, ierr)
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'MPI_WAITALL info<>0', abs(ierr) )
      istat = cudaDeviceSynchronize()

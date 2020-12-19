@@ -98,8 +98,6 @@
 #endif
 
      IF (isign < 0) THEN
-        !print *,"exec cufft FWD",nz,ldz,nsl
-        !call flush(6)
         istat = cufftExecZ2Z( cufft_planz( ip), c_d(1), c_d(1), CUFFT_FORWARD )
         tscale = 1.0_DP / nz
         IF (is_inplace) THEN
@@ -114,12 +112,10 @@
            END DO
         END IF
      ELSE IF (isign > 0) THEN
-        !print *,"exec cufft INV",nz,ldz,nsl
-        !call flush(6)
         IF (is_inplace) THEN
-           istat = cufftExecZ2Z( cufft_planz( ip), c_d(1), c_d(1), CUFFT_INVERSE ) !CUFFT_FORWARD )
+           istat = cufftExecZ2Z( cufft_planz( ip), c_d(1), c_d(1), CUFFT_INVERSE )
         ELSE
-           istat = cufftExecZ2Z( cufft_planz( ip), c_d(1), cout_d(1), CUFFT_INVERSE ) !CUFFT_FORWARD )
+           istat = cufftExecZ2Z( cufft_planz( ip), c_d(1), cout_d(1), CUFFT_INVERSE )
         END IF
      END IF
 
@@ -162,10 +158,6 @@
                               DATA_DIM, STRIDE, DIST, &
                               DATA_DIM, STRIDE, DIST, &
                               CUFFT_Z2Z, BATCH )
-
-#if defined(__CUDA_DEBUG)
-       print *,"INIT CUFFT Z PLAN: ",nz,"x",nsl,"x",ldz
-#endif
 
 #ifdef TRACK_FLOPS
        zflops( icurrent ) = 5.0d0 * REAL( nz ) * log( REAL( nz ) )/log( 2.d0 )
@@ -428,10 +420,6 @@
                               DATA_DIM, STRIDE, DIST, &
                               CUFFT_Z2Z, BATCH )
 
-#if defined(__CUDA_DEBUG)
-       print *,"INIT CUFFT ALL_XY PLAN: ",nx,"x",ny,"x",nzl,"ldx:",ldx,"batch:",batch_1,batch_2
-#endif
-
 #else
        INTEGER, PARAMETER :: RANK=1
        INTEGER :: FFT_DIM_X(RANK), DATA_DIM_X(RANK), FFT_DIM_Y(RANK), DATA_DIM_Y(RANK)
@@ -455,9 +443,6 @@
        IF( cufft_plan_y( 1, icurrent) /= 0 )  istat = cufftDestroy( cufft_plan_y(1,icurrent) )
        IF( cufft_plan_y( 2, icurrent) /= 0 )  istat = cufftDestroy( cufft_plan_y(2,icurrent) )
 
-#if defined(__CUDA_DEBUG)
-       print *,"INIT CUFFT XY PLAN: ",nx,"x",ny,"x",nzl,"ldx:",ldx,"batch:",batch_1,batch_2
-#endif
 
        istat = cufftPlanMany( cufft_plan_x( icurrent), RANK, FFT_DIM_X, &
                               DATA_DIM_X, STRIDE_X, DIST_X, &
@@ -567,11 +552,9 @@
         DO i=1, ldx*ldy*ldz*howmany
            f_d( i ) = f_d( i ) * tscale
         END DO
-!       call ZDSCAL( nx * ny * nz, tscale, f_d(1), 1)
 
      ELSE IF( isign > 0 ) THEN
 
-!       call FFTW_INPLACE_DRV_3D( bw_plan(ip), 1, f_d(1), 1, 1 )
         istat = cufftExecZ2Z( cufft_plan_3d(ip), f_d(1), f_d(1), CUFFT_INVERSE )
 
      END IF
@@ -641,6 +624,9 @@
      !     (1 = perform fft, 0 = do not perform fft)
      !     This routine is implemented only for fftw, essl, acml
      !     If not implemented, cfft3d is called instead
+     !
+     !     NB: this version is by far much slower than the 3D FFT of the
+     !         entire data.
      !
      !----------------------------------------------------------------------
      !
