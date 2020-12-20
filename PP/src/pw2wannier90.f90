@@ -16,7 +16,7 @@
 ! Takashi Koretsune and Florian Thoele -- noncollinear and USPPs
 ! Valerio Vitale - Selected columns of density matrix (SCDM)
 ! Jae-Mo Lihm - SCDM with noncollinear
-!
+! Ji Hoon Ryoo, Minsu Ghim - sHu, sIu terms for spin Hall conductivity
 !
 ! NOTE: old_spinor_proj is still available for compatibility with old
 !       nnkp files but should be removed soon.
@@ -35,8 +35,9 @@ module wannier
    ! begin change Lopez, Thonhauser, Souza
    integer  :: iun_nnkp,iun_mmn,iun_amn,iun_band,iun_spn,iun_plot,iun_parity,&
         nnbx,nexband,iun_uhu,&
-        iun_uIu !ivo
+        iun_uIu,& !ivo
    ! end change Lopez, Thonhauser, Souza
+        iun_sHu, iun_sIu ! shc
    integer  :: n_wannier !number of WF
    integer  :: n_proj    !number of projection
    complex(DP), allocatable :: gf(:,:)  ! guding_function(npwx,n_wannier)
@@ -51,6 +52,9 @@ module wannier
                             write_dmn,read_sym, & !YN
                             write_uIu, spn_formatted, uHu_formatted, uIu_formatted, & !ivo
    ! end change Lopez, Thonhauser, Souza
+   ! shc
+                            write_shu, write_sIu, sHu_formatted, sIu_formatted, &
+   ! end shc
    ! vv: Begin SCDM keywords
                             scdm_proj
    character(LEN=15)     :: scdm_entanglement
@@ -126,6 +130,9 @@ PROGRAM pw2wannier90
        write_dmn, read_sym, & !YN:
        write_uIu, spn_formatted, uHu_formatted, uIu_formatted,& !ivo
    ! end change Lopez, Thonhauser, Souza
+   ! shc
+       write_sHu, write_sIu, sHu_formatted, sIu_formatted,&
+   ! end shc
        regular_mesh,& !gresch
    ! begin change Vitale
        scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma
@@ -171,6 +178,12 @@ PROGRAM pw2wannier90
      write_uhu = .false.
      write_uIu = .false. !ivo
      ! end change Lopez, Thonhauser, Souza
+     ! shc
+     write_sHu = .false.
+     write_sIu = .false.
+     sHu_formatted=.false.
+     sIu_formatted=.false.
+     ! end shc
      reduce_unk= .false.
      write_unkg= .false.
      write_dmn = .false. !YN:
@@ -210,6 +223,10 @@ PROGRAM pw2wannier90
   CALL mp_bcast(write_uhu,ionode_id, world_comm)
   CALL mp_bcast(write_uIu,ionode_id, world_comm) !ivo
   ! end change Lopez, Thonhauser, Souza
+  ! shc
+  CALL mp_bcast(write_sHu,ionode_id, world_comm)
+  CALL mp_bcast(write_sIu,ionode_id, world_comm)
+  ! end shc
   CALL mp_bcast(write_spn,ionode_id, world_comm)
   CALL mp_bcast(reduce_unk,ionode_id, world_comm)
   CALL mp_bcast(write_unkg,ionode_id, world_comm)
@@ -371,6 +388,19 @@ PROGRAM pw2wannier90
      ELSE
         WRITE(stdout,*) ' -----------------------------------'
         WRITE(stdout,*) ' *** Orbital terms are not computed '
+        WRITE(stdout,*) ' -----------------------------------'
+        WRITE(stdout,*)
+     ENDIF
+     IF(write_sHu.or.write_sIu) THEN
+        WRITE(stdout,*) ' ----------------'
+        WRITE(stdout,*) ' *** Compute shc '
+        WRITE(stdout,*) ' ----------------'
+        WRITE(stdout,*)
+        CALL compute_shc
+        WRITE(stdout,*)
+     ELSE
+        WRITE(stdout,*) ' -----------------------------------'
+        WRITE(stdout,*) ' *** SHC terms are not computed '
         WRITE(stdout,*) ' -----------------------------------'
         WRITE(stdout,*)
      ENDIF
@@ -3025,6 +3055,401 @@ SUBROUTINE compute_orb
    RETURN
 END SUBROUTINE compute_orb
 !
+!-----------------------------------------------------------------------
+SUBROUTINE compute_shc
+   !-----------------------------------------------------------------------
+   !
+   USE io_global,  ONLY : stdout, ionode
+   USE kinds,           ONLY: DP
+   USE wvfct,           ONLY : nbnd, npwx, current_k
+   USE control_flags,   ONLY : gamma_only
+   USE wavefunctions, ONLY : evc, psic, psic_nc
+   USE fft_base,        ONLY : dffts, dfftp
+   USE fft_interfaces,  ONLY : fwfft, invfft
+   USE klist,           ONLY : nkstot, xk, ngk, igk_k
+   USE io_files,        ONLY : nwordwfc, iunwfc
+   USE gvect,           ONLY : g, ngm, gstart
+   USE cell_base,       ONLY : tpiba2, alat, at, bg
+   USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
+   USE constants,       ONLY : tpi
+   USE uspp,            ONLY : nkb, vkb
+   USE uspp_param,      ONLY : upf, nh, lmaxq
+   USE becmod,          ONLY : bec_type, becp, calbec, &
+                               allocate_bec_type, deallocate_bec_type
+   USE mp_global,       ONLY : intra_pool_comm
+   USE mp,              ONLY : mp_sum
+   USE noncollin_module,ONLY : noncolin, npol
+   USE gvecw,           ONLY : gcutw
+   USE wannier
+   ! begin change Lopez, Thonhauser, Souza
+   USE mp,              ONLY : mp_barrier
+   USE scf,             ONLY : vrs, vltot, v, kedtau
+   USE gvecs,           ONLY : doublegrid
+   USE lsda_mod,        ONLY : nspin
+   USE constants,       ONLY : rytoev
+
+   IMPLICIT NONE
+   !
+   INTEGER, EXTERNAL :: find_free_unit
+   !
+   complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
+   !
+   INTEGER :: mmn_tot, ik, ikp, ipol, ib, npw, i, m, n
+   INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
+   INTEGER :: ikevc, ikpevcq, s, counter
+   COMPLEX(DP), ALLOCATABLE :: phase(:)!, aux(:), aux2(:), evcq(:,:), &
+!                               becp2(:,:), Mkb(:,:), aux_nc(:,:) 
+   real(DP), ALLOCATABLE    :: rbecp2(:,:)
+   COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:)
+   real(DP), ALLOCATABLE    :: qg(:), ylm(:,:)
+   COMPLEX(DP)              :: mmn, zdotc, phase1
+   real(DP)                 :: arg, g_(3)
+   CHARACTER (len=9)        :: cdate,ctime
+   CHARACTER (len=60)       :: header
+   LOGICAL                  :: any_uspp
+   INTEGER                  :: nn,inn,loop,loop2
+   LOGICAL                  :: nn_found
+   INTEGER                  :: istart,iend
+   ! begin change Lopez, Thonhauser, Souza
+   COMPLEX(DP)              :: sigma_x,sigma_y,sigma_z,cdum1,cdum2
+   integer                  :: ispol, npw_b2, i_b2, ikp_b2
+   integer, allocatable     :: igk_b1(:), igk_b2(:)
+   complex(DP), allocatable :: evc_b2(:,:),evc_aux(:,:),H_evc(:,:)
+   complex(DP), allocatable :: shu(:,:,:),sIu(:,:,:)
+   ! end change Lopez, Thonhauser, Souza
+
+   any_uspp = any(upf(1:ntyp)%tvanp)
+
+
+   ALLOCATE( phase(dffts%nnr) )
+!   ALLOCATE( evcq(npol*npwx,nbnd) )
+
+!   IF(noncolin) THEN
+!      ALLOCATE( aux_nc(npwx,npol) )
+!   ELSE
+!      ALLOCATE( aux(npwx) )
+!   ENDIF
+
+   IF (wan_mode=='library') ALLOCATE(m_mat(num_bands,num_bands,nnb,iknum))
+
+   if (write_shu) allocate(sHu(num_bands,num_bands,3))
+   if (write_sIu) allocate(sIu(num_bands,num_bands,3))
+
+
+!ivo
+! not sure this is really needed
+   if((write_sHu.or.write_sIu).and.wan_mode=='library')&
+        call errore('pw2wannier90',&
+        'write_sHu, and write_sIu not meant to work library mode',1)
+!endivo
+
+
+   !
+   !
+   ! begin change Lopez, Thonhauser, Souza
+   !
+   !====================================================================
+   !
+   ! The following code was inserted by Timo Thonhauser, Ivo Souza, and
+   ! Graham Lopez in order to calculate the matrix elements 
+   ! <u_n(q+b1)|H(q)|u_m(q+b2)> necessary for the Wannier interpolation 
+   ! of the orbital magnetization
+   !
+   !====================================================================
+   !
+   !
+   !
+   if(write_sHu.or.write_sIu) then !ivo
+     !
+     if(gamma_only) call errore('pw2wannier90',&
+      'write_sHu and write_sIu not yet implemented for gamma_only case',1) !ivo
+     if(any_uspp) call errore('pw2wannier90',&
+      'write_sHu and write_sIu not yet implemented with USP',1) !ivo
+     if(.not. noncolin) call errore('pw2wannier90',&
+      'write_sHu and write_sIu only implemented with noncolin',1) !ivo
+     !
+     !
+     allocate(igk_b2(npwx),&
+          evc_b2(npol*npwx,nbnd),&
+          evc_aux(npol*npwx,nbnd)) 
+     !
+     if(write_sHu) then
+        allocate(H_evc(npol*npwx,nbnd))
+        write(stdout,*) 
+        write(stdout,*) ' -----------------'
+        write(stdout,*) ' *** Compute  sHu '
+        write(stdout,*) ' -----------------'
+        write(stdout,*) 
+        iun_shu = find_free_unit()
+        if (ionode) then
+           CALL date_and_tim( cdate, ctime )
+           header='Created on '//cdate//' at '//ctime 
+           if(sHu_formatted) then
+              open  (unit=iun_shu, file=TRIM(seedname)//".sHu",form='FORMATTED')
+              write (iun_shu,*) header 
+              write (iun_shu,*) nbnd, iknum, nnb
+           else
+              open  (unit=iun_shu, file=TRIM(seedname)//".sHu",form='UNFORMATTED')
+              write (iun_shu) header 
+              write (iun_shu) nbnd, iknum, nnb
+           endif
+        endif
+     endif
+     if(write_sIu) then 
+        write(stdout,*) 
+        write(stdout,*) ' -----------------'
+        write(stdout,*) ' *** Compute  sIu '
+        write(stdout,*) ' -----------------'
+        write(stdout,*) 
+        iun_sIu = find_free_unit()
+        if (ionode) then
+           CALL date_and_tim( cdate, ctime )
+           header='Created on '//cdate//' at '//ctime 
+           if(sIu_formatted) then
+              open  (unit=iun_sIu, file=TRIM(seedname)//".sIu",form='FORMATTED')
+              write (iun_sIu,*) header
+              write (iun_sIu,*) nbnd, iknum, nnb
+           else
+              open  (unit=iun_sIu, file=TRIM(seedname)//".sIu",form='UNFORMATTED')
+              write (iun_sIu) header
+              write (iun_sIu) nbnd, iknum, nnb
+           endif
+        endif
+     endif
+
+     CALL set_vrs(vrs,vltot,v%of_r,kedtau,v%kin_r,dfftp%nnr,nspin,doublegrid)
+     call allocate_bec_type ( nkb, nbnd, becp )
+
+     write(stdout,'(a,i8)') ' iknum = ',iknum
+     do ik = 1, iknum ! loop over k points
+        !
+        write (stdout,'(i8)') ik
+        !
+        npw = ngk(ik)
+        !
+        ikevc = ik+ikstart-1
+        call davcio  (evc, 2*nwordwfc, iunwfc, ikevc, -1 ) !ivo
+        !
+
+        ! sort the wfc at k and set up stuff for h_psi
+        current_k=ik
+        CALL init_us_2(npw,igk_k(1,ik),xk(1,ik),vkb)
+        !
+        ! compute  " H | u_n,k+b2 > "
+        !
+        do i_b2 = 1, nnb ! nnb = # of nearest neighbors
+           !
+           ! read wfc at k+b2
+           ikp_b2 = kpb(ik,i_b2) ! for kpoint 'ik', index of neighbor 'i_b2'
+           !
+!           call davcio  (evc_b2, 2*nwordwfc, iunwfc, ikp_b2, -1 ) !ivo
+           call davcio  (evc_b2, 2*nwordwfc, iunwfc, ikp_b2+ikstart-1, -1 ) !ivo
+!           call gk_sort (xk(1,ikp_b2), ngm, g, gcutw, npw_b2, igk_b2, workg)
+! ivo; igkq -> igk_k(:,ikp_b2), npw_b2 -> ngk(ikp_b2), replaced by PG
+           npw_b2=ngk(ikp_b2)
+           !
+           ! compute the phase
+           phase(:) = ( 0.0D0, 0.0D0 )
+           if (ig_(ik,i_b2)>0) phase( dffts%nl(ig_(ik,i_b2)) ) = ( 1.0D0, 0.0D0 )
+           call invfft('Wave', phase, dffts)
+           !
+           ! loop on bands
+           evc_aux = ( 0.0D0, 0.0D0 )
+           do n = 1, nbnd 
+              !ivo replaced dummy m --> n everywhere on this do loop,
+              !    for consistency w/ band indices in comments
+              if (excluded_band(n)) cycle
+!              if(noncolin) then
+                 psic_nc = ( 0.0D0, 0.0D0 ) !ivo
+                 do ipol = 1, 2
+!                    psic_nc = ( 0.0D0, 0.0D0 ) !ivo
+                    istart=(ipol-1)*npwx+1
+                    iend=istart+npw_b2-1 !ivo npw_b1 --> npw_b2
+                    psic_nc(dffts%nl (igk_k(1:npw_b2,ikp_b2) ),ipol ) = &
+                         evc_b2(istart:iend, n)
+                    ! ivo igk_b1, npw_b1 --> igk_b2, npw_b2
+                    ! multiply by phase in real space - '1' unless neighbor is in a bordering BZ
+                    call invfft ('Wave', psic_nc(:,ipol), dffts)
+                    psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * conjg(phase(1:dffts%nnr)) 
+                    call fwfft ('Wave', psic_nc(:,ipol), dffts)
+                    ! save the result
+                    iend=istart+npw-1
+                    evc_aux(istart:iend,n) = psic_nc(dffts%nl (igk_k(1:npw,ik) ),ipol ) 
+                 end do
+!              else ! this is modeled after the pre-existing code at 1162
+!                 psic = ( 0.0D0, 0.0D0 )
+!                 ! Graham, changed npw --> npw_b2 on RHS. Do you agree?!
+!                 psic(dffts%nl (igk_k(1:npw_b2,ikp_b2) ) ) = evc_b2(1:npw_b2, n) 
+!                 call invfft ('Wave', psic, dffts)
+!                 psic(1:dffts%nnr) = psic(1:dffts%nnr) * conjg(phase(1:dffts%nnr)) 
+!                 call fwfft ('Wave', psic, dffts)
+!                 evc_aux(1:npw,n) = psic(dffts%nl (igk_k(1:npw,ik) ) ) 
+!              end if
+           end do !n
+
+           if(write_sHu) then !ivo
+              !
+              ! calculate the kinetic energy at ik, used in h_psi
+              !
+              CALL g2_kin (ik)
+              !
+              CALL h_psi(npwx, npw, nbnd, evc_aux, H_evc)
+              !
+           endif
+
+           !!
+           sHu = 0.D0
+           sIu = 0.D0
+           !!
+              !
+              ! loop on bands
+              do m = 1, nbnd
+                 if (excluded_band(m)) cycle
+
+                !
+                !
+                if(write_sHu) then !ivo
+                   do n = 1, nbnd  ! loop over bands of already computed ket
+                      if (excluded_band(n)) cycle
+                      if(noncolin) then
+
+                         cdum1=zdotc(npw,evc(1,m),1,H_evc(npwx+1,n),1)
+!                            call mp_sum(cdum1,intra_pool_comm)
+                         cdum2=zdotc(npw,evc(npwx+1,m),1,H_evc(1,n),1)
+!                            call mp_sum(cdum2,intra_pool_comm)
+                         sigma_x=cdum1+cdum2
+                         sigma_y=cmplx_i*(cdum2-cdum1)
+                         sigma_z=zdotc(npw,evc(1,m),1,H_evc(1,n),1)&
+                              -zdotc(npw,evc(npwx+1,m),1,H_evc(npwx+1,n),1)
+!                            call mp_sum(sigma_z,intra_pool_comm)
+                            ! <a|sx|b> = (a2, b1) + (a1, b2)
+                            ! <a|sy|b> = I (a2, b1) - I (a1, b2)
+                            ! <a|sz|b> = (a1, b1) - (a2, b2)
+   
+!                         mmn = zdotc (npw, evc(1,m),1,H_evc(1,n),1) + &
+!                              zdotc (npw, evc(1+npwx,m),1,H_evc(1+npwx,n),1)
+                      else 
+!                         mmn = zdotc (npw, aux,1,H_evc(1,n),1)
+                      end if
+!                      mmn = mmn * rytoev ! because wannier90 works in eV
+!                      call mp_sum(mmn, intra_pool_comm)
+!                      if (ionode) write (iun_uhu) mmn
+                      sHu(n,m,1)=sigma_x * rytoev
+                      sHu(n,m,2)=sigma_y * rytoev
+                      sHu(n,m,3)=sigma_z * rytoev
+                      !
+                   end do !n
+                endif
+                if(write_sIu) then !ivo
+                   do n = 1, nbnd  ! loop over bands of already computed ket
+                      if (excluded_band(n)) cycle
+                      if(noncolin) then
+                         cdum1=zdotc(npw,evc(1,m),1,evc_aux(npwx+1,n),1)
+!                            call mp_sum(cdum1,intra_pool_comm)
+                         cdum2=zdotc(npw,evc(npwx+1,m),1,evc_aux(1,n),1)
+!                            call mp_sum(cdum2,intra_pool_comm)
+                         sigma_x=cdum1+cdum2
+                         sigma_y=cmplx_i*(cdum2-cdum1)
+                         sigma_z=zdotc(npw,evc(1,m),1,evc_aux(1,n),1)&
+                              -zdotc(npw,evc(npwx+1,m),1,evc_aux(npwx+1,n),1)
+!                            call mp_sum(sigma_z,intra_pool_comm)
+!                            mmn = zdotc (npw, evc(1,m),1,evc_aux(1,n),1) + &
+!                                 zdotc (npw, evc(1+npwx,m),1,evc_aux(1+npwx,n),1)
+                      else 
+!                         mmn = zdotc (npw, aux,1,evc_aux(1,n),1)
+                      end if
+!                      call mp_sum(mmn, intra_pool_comm)
+!                      if (ionode) write (iun_uIu) mmn
+                      sIu(n,m,1)=sigma_x
+                      sIu(n,m,2)=sigma_y
+                      sIu(n,m,3)=sigma_z
+                      !
+                   end do !n
+                endif
+                !
+             end do ! m = 1, nbnd
+
+             if(write_shu) call mp_sum(sHu, intra_pool_comm)
+             if(write_sIu) call mp_sum(sIu, intra_pool_comm)
+
+             if (ionode) then  ! write the files out to disk
+                do ispol=1,3
+                   if(write_shu) then
+                      if(sHu_formatted) then ! slow bulky way for transferable files
+                         do n=1,num_bands
+                            do m=1,num_bands
+                               write(iun_sHu,'(2ES20.10)') sHu(m,n,ispol)
+                            enddo
+                         enddo
+                      else  ! the fast way
+                         write(iun_sHu) ((sHu(n,m,ispol),n=1,num_bands),m=1,num_bands)
+                      endif
+                   endif
+                   if(write_siu) then
+                      if(sIu_formatted) then ! slow bulky way for transferable files
+                         do n=1,num_bands
+                            do m=1,num_bands
+                               write(iun_sIu,'(2ES20.10)') sIu(m,n,ispol)
+                            enddo
+                         enddo
+                      else ! the fast way
+                         write(iun_sIu) ((sIu(n,m,ispol),n=1,num_bands),m=1,num_bands)
+                      endif
+                   endif
+                end do
+             endif ! end of io
+       end do ! i_b2
+    end do ! ik
+    !
+    deallocate(igk_b2,evc_b2,evc_aux)
+    if(write_sHu) then
+       deallocate(H_evc)
+       deallocate(sHu)
+    end if
+    if(write_sIu) deallocate(sIu)
+    if (ionode.and.write_sHu) close (iun_shu) !ivo
+    if (ionode.and.write_sIu) close (iun_sIu) !ivo
+    !
+ else
+    if(.not.write_sHu) then
+       write(stdout,*)
+       write(stdout,*) ' -------------------------------'
+       write(stdout,*) ' *** sHu matrix is not computed '
+       write(stdout,*) ' -------------------------------'
+       write(stdout,*)
+    endif
+    if(.not.write_sIu) then
+       write(stdout,*)
+       write(stdout,*) ' -------------------------------'
+       write(stdout,*) ' *** sIu matrix is not computed '
+       write(stdout,*) ' -------------------------------'
+       write(stdout,*)
+    endif
+ end if
+   
+   DEALLOCATE (phase)
+!   IF(noncolin) THEN
+!      DEALLOCATE(aux_nc)
+!   ELSE
+!      DEALLOCATE(aux)
+!   ENDIF
+!   DEALLOCATE(evcq)
+
+!   IF(any_uspp) THEN
+!      DEALLOCATE (  qb)
+!      CALL deallocate_bec_type (becp)
+!      IF (gamma_only) THEN
+!          DEALLOCATE (rbecp2)
+!       ELSE
+!          DEALLOCATE (becp2)
+!       ENDIF
+!    ENDIF
+!
+   WRITE(stdout,*)
+   WRITE(stdout,*) ' shc calculated'
+
+   RETURN
+END SUBROUTINE
 !-----------------------------------------------------------------------
 SUBROUTINE compute_amn
    !-----------------------------------------------------------------------
