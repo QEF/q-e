@@ -831,11 +831,11 @@ SUBROUTINE c_bands_nscf( )
   USE io_files,             ONLY : iunhub, iunwfc, nwordwfc, nwordwfcU
   USE buffers,              ONLY : get_buffer, save_buffer, close_buffer
   USE basis,                ONLY : starting_wfc
-  USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k
+  USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k, igk_k_d
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
-  USE control_flags,        ONLY : ethr, restart, isolve, io_level, iverbosity
+  USE control_flags,        ONLY : ethr, restart, isolve, io_level, iverbosity, use_gpu
   USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, wfcU
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions,        ONLY : evc
@@ -843,9 +843,9 @@ SUBROUTINE c_bands_nscf( )
   USE mp,                   ONLY : mp_sum
   USE check_stop,           ONLY : check_stop_now
 
-  USE wavefunctions_gpum, ONLY : using_evc
-  USE wvfct_gpum,                ONLY : using_et
-  USE uspp_gpum,                 ONLY : using_vkb
+  USE wavefunctions_gpum,   ONLY : using_evc
+  USE wvfct_gpum,           ONLY : using_et
+  USE uspp_gpum,            ONLY : vkb_d, using_vkb, using_vkb_d
   !
   IMPLICIT NONE
   !
@@ -900,12 +900,17 @@ SUBROUTINE c_bands_nscf( )
      !
      IF ( lsda ) current_spin = isk(ik)
      !
-     CALL g2_kin( ik )
+     IF (.not. use_gpu ) CALL g2_kin( ik )
+     IF (      use_gpu ) CALL g2_kin_gpu( ik )
      ! 
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
-     IF ( nkb > 0 ) CALL using_vkb(1)
-     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
+     IF ( nkb > 0 ) THEN
+        IF (.not. use_gpu ) CALL using_vkb(1)
+        IF (.not. use_gpu ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
+        IF (      use_gpu ) CALL using_vkb_d(1)
+        IF (      use_gpu ) CALL init_us_2_gpu( ngk(ik), igk_k_d(1,ik), xk(1,ik), vkb_d )
+     ENDIF
      !
      ! ... Needed for LDA+U
      !
@@ -927,7 +932,8 @@ SUBROUTINE c_bands_nscf( )
         !
      ELSE
         !
-        CALL init_wfc( ik )
+        IF (.not. use_gpu ) CALL init_wfc( ik )
+        IF (      use_gpu ) CALL init_wfc_gpu( ik )
         !
      ENDIF
      !
