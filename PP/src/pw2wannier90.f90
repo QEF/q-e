@@ -3201,10 +3201,12 @@ SUBROUTINE compute_shc
          CALL davcio(evc_b2, 2*nwordwfc, iunwfc, ikp_b2+ikstart-1, -1) !ivo
          npw_b2 = ngk(ikp_b2)
          !
-         ! compute the phase
-         phase(:) = ( 0.0D0, 0.0D0 )
-         IF (ig_(ik,i_b2)>0) phase( dffts%nl(ig_(ik,i_b2)) ) = ( 1.0D0, 0.0D0 )
-         CALL invfft('Wave', phase, dffts)
+         ! compute the phase only if phase is not 1.
+         IF (.NOT. zerophase(ik, i_b2)) THEN
+            phase(:) = ( 0.0D0, 0.0D0 )
+            IF (ig_(ik,i_b2)>0) phase( dffts%nl(ig_(ik,i_b2)) ) = ( 1.0D0, 0.0D0 )
+            CALL invfft('Wave', phase, dffts)
+         ENDIF
          !
          ! loop on bands
          evc_aux = ( 0.0D0, 0.0D0 )
@@ -3216,10 +3218,13 @@ SUBROUTINE compute_shc
                iend = istart + npw_b2 - 1
                psic_nc(dffts%nl(igk_k(1:npw_b2,ikp_b2)), ipol) = evc_b2(istart:iend, n)
                !
-               ! multiply by phase in real space - '1' unless neighbor is in a bordering BZ
-               CALL invfft('Wave', psic_nc(:,ipol), dffts)
-               psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * CONJG(phase(1:dffts%nnr))
-               CALL fwfft('Wave', psic_nc(:,ipol), dffts)
+               ! multiply by phase in real space if phase is not 1.
+               ! Phase is '1' unless neighbor is in a bordering BZ
+               IF (.NOT. zerophase(ik, i_b2)) THEN
+                  CALL invfft('Wave', psic_nc(:,ipol), dffts)
+                  psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * CONJG(phase(1:dffts%nnr))
+                  CALL fwfft('Wave', psic_nc(:,ipol), dffts)
+               ENDIF
                !
                ! save the result
                iend = istart + npw - 1
