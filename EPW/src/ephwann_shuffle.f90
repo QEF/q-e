@@ -1445,7 +1445,7 @@
         !
         ! Indirect absorption
         IF (lindabs .AND. .NOT. scattering) THEN
-          IF (indabs_fca .and. (iq == 1)) THEN
+          IF (indabs_fca .and. (iq == iq_restart)) THEN
             ALLOCATE(ef0_fca(nstemp), STAT = ierr)
             IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating ef0_fca', 1)
             DO itemp = 1, nstemp
