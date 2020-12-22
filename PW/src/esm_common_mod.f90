@@ -207,7 +207,7 @@ CONTAINS
     COMPLEX(DP) :: rg3, vg3, sum1c, sum2c
     COMPLEX(DP) :: expimgpr, experfcm, experfcp, dexperfcm_dgp, dexperfcp_dgp
 
-    COMPLEX(DP), ALLOCATABLE :: rho0r(:), rho0g(:)
+    COMPLEX(DP), ALLOCATABLE :: rho0r(:), rho0g(:), rho0g_tmp(:)
     COMPLEX(DP), ALLOCATABLE :: Vhar0r(:), Vhar0g(:)
     COMPLEX(DP), ALLOCATABLE :: Vloc0r(:), Vloc0g(:)
     CHARACTER(len=256)     :: esm1_file = 'os.esm1'
@@ -224,7 +224,7 @@ CONTAINS
     alpha = 1.0d0
     salp = sqrt(alpha)
 
-    ALLOCATE (rho0r(dfftp%nr3), rho0g(dfftp%nr3))
+    ALLOCATE (rho0r(dfftp%nr3), rho0g(dfftp%nr3), rho0g_tmp(dfftp%nr3))
     ALLOCATE (Vhar0r(dfftp%nr3), Vhar0g(dfftp%nr3))
     ALLOCATE (Vloc0r(dfftp%nr3), Vloc0g(dfftp%nr3))
 
@@ -254,7 +254,8 @@ CONTAINS
       END IF
     END DO ! ig
 
-    CALL cft_1z(rho0g, 1, dfftp%nr3, dfftp%nr3, +1, rho0r)
+    rho0g_tmp = rho0g
+    CALL cft_1z(rho0g_tmp, 1, dfftp%nr3, dfftp%nr3, +1, rho0r)
 
     !!---- calculate hartree potential
     Vhar0g(:) = 0.0d0
@@ -409,7 +410,7 @@ CONTAINS
     END DO
     close (UNIT=4)
 
-    DEALLOCATE (rho0r, rho0g)
+    DEALLOCATE (rho0r, rho0g, rho0g_tmp)
     DEALLOCATE (Vhar0r, Vhar0g)
     DEALLOCATE (Vloc0r, Vloc0g)
 
