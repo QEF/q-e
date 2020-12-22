@@ -106,6 +106,7 @@ vofrho.o \
 wannier_base.o \
 wannier.o \
 wave.o \
+wave_base.o \
 wave_types.o \
 wf.o \
 makov_payne.o

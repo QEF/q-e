@@ -78,7 +78,6 @@ set(sources
     version.f90 
     wannier_gw.f90
     wannier_new.f90 
-    wave_base.f90 
     wavefunctions.f90 
     wrappers.f90
     ws_base.f90 
