@@ -1,7 +1,7 @@
 MODULE esm_hartree_mod
 
   USE kinds, ONLY : DP
-  USE esm_common_mod, ONLY : esm_nfit, esm_w, esm_a, esm_bc, &
+  USE esm_common_mod, ONLY : esm_nfit, esm_w, esm_a, esm_bc, esm_offset, esm_phfact, &
                            & mill_2d, imill_2d, ngm_2d
   IMPLICIT NONE
 
@@ -133,7 +133,7 @@ CONTAINS
         IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           k3 = k3 - dfftp%nr3
         END IF
-        z = DBLE(k3) / DBLE(dfftp%nr3) * L
+        z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
         ! bc1
         arg1 = gp*(z - z0)
         arg2 = -gp*(z + z0)
@@ -141,6 +141,7 @@ CONTAINS
       ENDDO
 
       CALL cft_1z(vg_r, 1, dfftp%nr3, dfftp%nr3, -1, vg)
+      vg = vg * esm_phfact
       vg3(:, ng_2d) = (vg3(:, ng_2d) + vg(:))*e2 ! factor e2: hartree -> Ry.
     ENDDO
     DEALLOCATE (vg, vg_r)
@@ -176,7 +177,7 @@ CONTAINS
         IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           k3 = k3 - dfftp%nr3
         END IF
-        z = DBLE(k3) / DBLE(dfftp%nr3) * L
+        z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
         ! bc1
         vg_r(iz) = -tpi*z**2*rg3 &
                    - tpi*(z - z0)*tmp1 &
@@ -187,8 +188,8 @@ CONTAINS
       ! start smoothing
       nz_l = dfftp%nr3/2 + 1 + esm_nfit
       nz_r = dfftp%nr3/2 + 1 - esm_nfit
-      z_l = DBLE(nz_l - 1)*L/DBLE(dfftp%nr3) - L
-      z_r = DBLE(nz_r - 1)*L/DBLE(dfftp%nr3)
+      z_l = (DBLE(nz_l - 1) + esm_offset)*L/DBLE(dfftp%nr3) - L
+      z_r = (DBLE(nz_r - 1) + esm_offset)*L/DBLE(dfftp%nr3)
       f1 = -tpi*z_r**2*rg3 &
            - tpi*(z_r - z0)*tmp1 &
            - tpi*(z_r + z0)*tmp2 &
@@ -213,12 +214,13 @@ CONTAINS
                                                                    + f4*z_l + f3*z_r + 2*f4*z_r))/(z_l - z_r)**3
       a3 = (2.d0*f1 - 2.d0*f2 + (f3 + f4)*(z_l - z_r))/(z_l - z_r)**3
       DO iz = nz_r, nz_l
-        z = DBLE(iz - 1)/DBLE(dfftp%nr3)*L
+        z = (DBLE(iz - 1) + esm_offset)/DBLE(dfftp%nr3)*L
         vg_r(iz) = (a0 + a1*z + a2*z**2 + a3*z**3)
       ENDDO
       ! end smoothing
 
       CALL cft_1z(vg_r, 1, dfftp%nr3, dfftp%nr3, -1, vg)
+      vg = vg * esm_phfact
       vg3(:, ng_2d) = (vg3(:, ng_2d) + vg(:))*e2 ! factor e2: hartree -> Ry.
 
       DEALLOCATE (vg, vg_r)
@@ -352,7 +354,7 @@ CONTAINS
         IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           k3 = k3 - dfftp%nr3
         END IF
-        z = DBLE(k3) / DBLE(dfftp%nr3) * L
+        z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
         ! bc2
         arg1 = gp*(z - z1)
         arg2 = -gp*(z + z1)
@@ -363,6 +365,7 @@ CONTAINS
                    + fpi*(EXP(arg3) - EXP(arg2))*tmp2/(1.d0 - EXP(arg5))
       ENDDO
       CALL cft_1z(vg_r, 1, dfftp%nr3, dfftp%nr3, -1, vg)
+      vg = vg * esm_phfact
       vg3(:, ng_2d) = (vg3(:, ng_2d) + vg(:))*e2 ! factor e2: hartree -> Ry.
     ENDDO
     DEALLOCATE (vg, vg_r)
@@ -399,7 +402,7 @@ CONTAINS
         IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           k3 = k3 - dfftp%nr3
         END IF
-        z = DBLE(k3) / DBLE(dfftp%nr3) * L
+        z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
         vg_r(iz) = -tpi*z**2*rg3 &
                    - tpi*(z + z1)*tmp1/z1 &
                    + tpi*(z - z1)*tmp2/z1 &
@@ -410,8 +413,8 @@ CONTAINS
       ! start smoothing
       nz_l = dfftp%nr3/2 + 1 + esm_nfit
       nz_r = dfftp%nr3/2 + 1 - esm_nfit
-      z_l = DBLE(nz_l - 1)*L/DBLE(dfftp%nr3) - L
-      z_r = DBLE(nz_r - 1)*L/DBLE(dfftp%nr3)
+      z_l = (DBLE(nz_l - 1) + esm_offset)*L/DBLE(dfftp%nr3) - L
+      z_r = (DBLE(nz_r - 1) + esm_offset)*L/DBLE(dfftp%nr3)
       f1 = -tpi*z_r**2*rg3 &
            - tpi*(z_r + z1)*tmp1/z1 &
            + tpi*(z_r - z1)*tmp2/z1 &
@@ -440,12 +443,13 @@ CONTAINS
                                                                    + f4*z_l + f3*z_r + 2*f4*z_r))/(z_l - z_r)**3
       a3 = (2.d0*f1 - 2.d0*f2 + (f3 + f4)*(z_l - z_r))/(z_l - z_r)**3
       DO iz = nz_r, nz_l
-        z = DBLE(iz - 1)/DBLE(dfftp%nr3)*L
+        z = (DBLE(iz - 1) + esm_offset)/DBLE(dfftp%nr3)*L
         vg_r(iz) = (a0 + a1*z + a2*z**2 + a3*z**3)
       ENDDO
       ! end smoothing
 
       CALL cft_1z(vg_r, 1, dfftp%nr3, dfftp%nr3, -1, vg)
+      vg = vg * esm_phfact
       vg3(:, ng_2d) = (vg3(:, ng_2d) + vg(:))*e2 ! factor e2: hartree -> Ry.
 
       DEALLOCATE (vg, vg_r)
@@ -579,7 +583,7 @@ CONTAINS
         IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           k3 = k3 - dfftp%nr3
         END IF
-        z = DBLE(k3) / DBLE(dfftp%nr3) * L
+        z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
         ! bc3
         arg1 = gp*(z - z1)
         arg2 = -gp*(z + z0)
@@ -588,6 +592,7 @@ CONTAINS
       ENDDO
 
       CALL cft_1z(vg_r, 1, dfftp%nr3, dfftp%nr3, -1, vg)
+      vg = vg * esm_phfact
       vg3(:, ng_2d) = (vg3(:, ng_2d) + vg(:))*e2 ! factor e2: hartree -> Ry.
     ENDDO
     DEALLOCATE (vg, vg_r)
@@ -623,7 +628,7 @@ CONTAINS
         IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           k3 = k3 - dfftp%nr3
         END IF
-        z = DBLE(k3) / DBLE(dfftp%nr3) * L
+        z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
         vg_r(iz) = -tpi*(z**2 + 2.d0*z*z0)*rg3 &
                    - fpi*tmp1 &
                    - fpi*ci*(z - z1)*tmp2 &
@@ -633,8 +638,8 @@ CONTAINS
       ! start smoothing
       nz_l = dfftp%nr3/2 + 1 + esm_nfit
       nz_r = dfftp%nr3/2 + 1 - esm_nfit
-      z_l = DBLE(nz_l - 1)*L/DBLE(dfftp%nr3) - L
-      z_r = DBLE(nz_r - 1)*L/DBLE(dfftp%nr3)
+      z_l = (DBLE(nz_l - 1) + esm_offset)*L/DBLE(dfftp%nr3) - L
+      z_r = (DBLE(nz_r - 1) + esm_offset)*L/DBLE(dfftp%nr3)
       f1 = -tpi*(z_r**2 + 2.d0*z_r*z0)*rg3 &
            - fpi*tmp1 &
            - fpi*ci*(z_r - z1)*tmp2 &
@@ -657,12 +662,13 @@ CONTAINS
                                                                    + f4*z_l + f3*z_r + 2*f4*z_r))/(z_l - z_r)**3
       a3 = (2.d0*f1 - 2.d0*f2 + (f3 + f4)*(z_l - z_r))/(z_l - z_r)**3
       DO iz = nz_r, nz_l
-        z = DBLE(iz - 1)/DBLE(dfftp%nr3)*L
+        z = (DBLE(iz - 1) + esm_offset)/DBLE(dfftp%nr3)*L
         vg_r(iz) = (a0 + a1*z + a2*z**2 + a3*z**3)
       ENDDO
       ! end smoothing
 
       CALL cft_1z(vg_r, 1, dfftp%nr3, dfftp%nr3, -1, vg)
+      vg = vg * esm_phfact
       vg3(:, ng_2d) = (vg3(:, ng_2d) + vg(:))*e2 ! factor e2: hartree -> Ry.
 
       DEALLOCATE (vg, vg_r)
@@ -807,6 +813,9 @@ CONTAINS
                 /(gp**2 + kn**2 + ci*2.d0*aaa*kn)
       ENDDO
 
+      vg = vg * CONJG(esm_phfact)
+      vr = vr * CONJG(esm_phfact)
+
       CALL cft_1z(vg, 1, dfftp%nr3, dfftp%nr3, 1, vg_r)
       ! bc4
       CALL cft_1z(vr, 1, dfftp%nr3, dfftp%nr3, 1, vr_r)
@@ -816,7 +825,7 @@ CONTAINS
         IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           k3 = k3 - dfftp%nr3
         END IF
-        z = DBLE(k3) / DBLE(dfftp%nr3) * L
+        z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
         ! bc4
         arg1 = gp*(z - z1) - xi*(z0 - z1)
         arg2 = -gp*(z + z0)
@@ -838,6 +847,7 @@ CONTAINS
       ENDDO
 
       CALL cft_1z(vg_r, 1, dfftp%nr3, dfftp%nr3, -1, vg)
+      vg = vg * esm_phfact
       vg3(:, ng_2d) = vg(:)*e2 ! factor e2: hartree -> Ry.
     ENDDO
     DEALLOCATE (vg, vg_r, vr, vr_r)
@@ -852,8 +862,8 @@ CONTAINS
       f1 = (0.d0, 0.d0); f2 = (0.d0, 0.d0); f3 = (0.d0, 0.d0); f4 = (0.d0, 0.d0)
       nz_l = dfftp%nr3/2 + 1 + esm_nfit
       nz_r = dfftp%nr3/2 + 1 - esm_nfit
-      z_l = DBLE(nz_l - 1)*L/DBLE(dfftp%nr3) - L
-      z_r = DBLE(nz_r - 1)*L/DBLE(dfftp%nr3)
+      z_l = (DBLE(nz_l - 1) + esm_offset)*L/DBLE(dfftp%nr3) - L
+      z_r = (DBLE(nz_r - 1) + esm_offset)*L/DBLE(dfftp%nr3)
       !
       rg3 = rhog3(1, ng_2d)
       ! bc4
@@ -895,6 +905,9 @@ CONTAINS
         !
       ENDDO
 
+      vg = vg * CONJG(esm_phfact)
+      vr = vr * CONJG(esm_phfact)
+
       CALL cft_1z(vg, 1, dfftp%nr3, dfftp%nr3, 1, vg_r)
       ! bc4
       CALL cft_1z(vr, 1, dfftp%nr3, dfftp%nr3, 1, vr_r)
@@ -905,7 +918,7 @@ CONTAINS
         IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           k3 = k3 - dfftp%nr3
         END IF
-        z = DBLE(k3) / DBLE(dfftp%nr3) * L
+        z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
         ! bc4
         arg1 = -2.d0*aaa*(z0 - z1)
         arg2 = -2.d0*aaa*(z - z1)
@@ -958,11 +971,12 @@ CONTAINS
                                                                    + f4*z_l + f3*z_r + 2*f4*z_r))/(z_l - z_r)**3
       a3 = (2.d0*f1 - 2.d0*f2 + (f3 + f4)*(z_l - z_r))/(z_l - z_r)**3
       DO iz = nz_r, nz_l
-        z = DBLE(iz - 1)/DBLE(dfftp%nr3)*L
+        z = (DBLE(iz - 1) + esm_offset)/DBLE(dfftp%nr3)*L
         vg_r(iz) = (a0 + a1*z + a2*z**2 + a3*z**3)
       ENDDO
 
       CALL cft_1z(vg_r, 1, dfftp%nr3, dfftp%nr3, -1, vg)
+      vg = vg * esm_phfact
 
       vg3(:, ng_2d) = vg(:)*e2 ! factor e2: hartree -> Ry.
 

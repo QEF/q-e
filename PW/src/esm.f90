@@ -23,8 +23,9 @@ MODULE esm
   !! without using dipole corrections. It is useful for simulating interfaces
   !! with vacuum, one or more electrodes, or an electrolyte.
   !!
-  !! esm_z_inv avoids finding an irrelevant inversion symmetry. (implemented
-  !! by S. Nishihara)
+  !! esm_z_inv avoids finding an irrelevant inversion symmetry & phfact
+  !! shifts the z-mesh by a half mesh when nr3 is even. (implemented by
+  !! S. Nishihara)
   !!
   USE kinds, ONLY : DP
   USE esm_common_mod

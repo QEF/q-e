@@ -1,7 +1,7 @@
 MODULE esm_local_mod
 
   USE kinds, ONLY : DP
-  USE esm_common_mod, ONLY : esm_nfit, esm_efield, esm_w, esm_a, esm_bc, &
+  USE esm_common_mod, ONLY : esm_nfit, esm_efield, esm_w, esm_a, esm_bc, esm_offset, esm_phfact, &
                            & mill_2d, imill_2d, ngm_2d, exp_erfc
   IMPLICIT NONE
 
@@ -95,7 +95,7 @@ CONTAINS
           IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
             k3 = k3 - dfftp%nr3
           END IF
-          z = DBLE(k3) / DBLE(dfftp%nr3) * L
+          z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
           ! bc1
           arg001 = gp*(z - zp)
           arg002 = -gp*(z - zp)
@@ -109,6 +109,7 @@ CONTAINS
         ENDDO
       ENDDO
       CALL cft_1z(vg_r, 1, dfftp%nr3, dfftp%nr3, -1, vg)
+      vg = vg * esm_phfact
       DO iz = 1, dfftp%nr3
         vloc3(iz, ng_2d) = vg(iz)
       ENDDO
@@ -123,8 +124,8 @@ CONTAINS
       f1 = (0.d0, 0.d0); f2 = (0.d0, 0.d0); f3 = (0.d0, 0.d0); f4 = (0.d0, 0.d0)
       nz_l = dfftp%nr3/2 + 1 + esm_nfit
       nz_r = dfftp%nr3/2 + 1 - esm_nfit
-      z_l = dble(nz_l - 1)*L/dble(dfftp%nr3) - L
-      z_r = dble(nz_r - 1)*L/dble(dfftp%nr3)
+      z_l = (dble(nz_l - 1) + esm_offset)*L/dble(dfftp%nr3) - L
+      z_r = (dble(nz_r - 1) + esm_offset)*L/dble(dfftp%nr3)
 ! for gp=0
       DO it = 1, nat
         tt = -fpi*zv(ityp(it))/sa
@@ -136,7 +137,7 @@ CONTAINS
           IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
             k3 = k3 - dfftp%nr3
           END IF
-          z = DBLE(k3) / DBLE(dfftp%nr3) * L
+          z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
           ! bc1
           arg001 = -tmp**2*(z - zp)**2
           arg101 = tmp*(z - zp)
@@ -167,10 +168,11 @@ CONTAINS
            + f4*z_l + f3*z_r + 2*f4*z_r))/(z_l - z_r)**3
       a3 = (2.d0*f1 - 2.d0*f2 + (f3 + f4)*(z_l - z_r))/(z_l - z_r)**3
       DO iz = nz_r, nz_l
-        z = dble(iz - 1)/dble(dfftp%nr3)*L
+        z = (dble(iz - 1) + esm_offset)/dble(dfftp%nr3)*L
         vg_r(iz) = (a0 + a1*z + a2*z**2 + a3*z**3)
       ENDDO
       CALL cft_1z(vg_r, 1, dfftp%nr3, dfftp%nr3, -1, vg)
+      vg = vg * esm_phfact
       DO iz = 1, dfftp%nr3
         vloc3(iz, ng_2d) = vg(iz)
       ENDDO
@@ -254,7 +256,7 @@ CONTAINS
           IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
             k3 = k3 - dfftp%nr3
           END IF
-          z = DBLE(k3) / DBLE(dfftp%nr3) * L
+          z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
           ! bc2
           arg001 = gp*(z - zp)
           arg002 = -gp*(z - zp)
@@ -275,6 +277,7 @@ CONTAINS
         ENDDO
       ENDDO
       CALL cft_1z(vg_r, 1, dfftp%nr3, dfftp%nr3, -1, vg)
+      vg = vg * esm_phfact
       DO iz = 1, dfftp%nr3
         vloc3(iz, ng_2d) = vg(iz)
       ENDDO
@@ -289,8 +292,8 @@ CONTAINS
       f1 = (0.d0, 0.d0); f2 = (0.d0, 0.d0); f3 = (0.d0, 0.d0); f4 = (0.d0, 0.d0)
       nz_l = dfftp%nr3/2 + 1 + esm_nfit
       nz_r = dfftp%nr3/2 + 1 - esm_nfit
-      z_l = dble(nz_l - 1)*L/dble(dfftp%nr3) - L
-      z_r = dble(nz_r - 1)*L/dble(dfftp%nr3)
+      z_l = (dble(nz_l - 1) + esm_offset)*L/dble(dfftp%nr3) - L
+      z_r = (dble(nz_r - 1) + esm_offset)*L/dble(dfftp%nr3)
 ! add constant potential (capacitor term)
       ! bc2
       DO iz = 1, dfftp%nr3
@@ -298,7 +301,7 @@ CONTAINS
         IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
           k3 = k3 - dfftp%nr3
         END IF
-        z = DBLE(k3) / DBLE(dfftp%nr3) * L
+        z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
         vg_r(iz) = -0.5d0*v0*(z - z1)/z1*e2 ! factor e2: hartree -> Ry.
       ENDDO
       f1 = -0.5d0*v0*(z_r - z1)/z1 ! unit: hartree
@@ -317,7 +320,7 @@ CONTAINS
           IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
             k3 = k3 - dfftp%nr3
           END IF
-          z = DBLE(k3) / DBLE(dfftp%nr3) * L
+          z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
           ! bc2
           arg001 = -tmp**2*(z - zp)**2
           arg101 = tmp*(z - zp)
@@ -352,10 +355,11 @@ CONTAINS
                                                                    + f4*z_l + f3*z_r + 2*f4*z_r))/(z_l - z_r)**3
       a3 = (2.d0*f1 - 2.d0*f2 + (f3 + f4)*(z_l - z_r))/(z_l - z_r)**3
       DO iz = nz_r, nz_l
-        z = dble(iz - 1)/dble(dfftp%nr3)*L
+        z = (dble(iz - 1) + esm_offset)/dble(dfftp%nr3)*L
         vg_r(iz) = (a0 + a1*z + a2*z**2 + a3*z**3)
       ENDDO
       CALL cft_1z(vg_r, 1, dfftp%nr3, dfftp%nr3, -1, vg)
+      vg = vg * esm_phfact
       DO iz = 1, dfftp%nr3
         vloc3(iz, ng_2d) = vg(iz)
       ENDDO
@@ -437,7 +441,7 @@ CONTAINS
           IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
             k3 = k3 - dfftp%nr3
           END IF
-          z = DBLE(k3) / DBLE(dfftp%nr3) * L
+          z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
           ! bc3
           arg001 = gp*(z - zp)
           arg002 = -gp*(z - zp)
@@ -453,6 +457,7 @@ CONTAINS
         ENDDO
       ENDDO
       CALL cft_1z(vg_r, 1, dfftp%nr3, dfftp%nr3, -1, vg)
+      vg = vg * esm_phfact
       DO iz = 1, dfftp%nr3
         vloc3(iz, ng_2d) = vg(iz)
       ENDDO
@@ -467,8 +472,8 @@ CONTAINS
       f1 = (0.d0, 0.d0); f2 = (0.d0, 0.d0); f3 = (0.d0, 0.d0); f4 = (0.d0, 0.d0)
       nz_l = dfftp%nr3/2 + 1 + esm_nfit
       nz_r = dfftp%nr3/2 + 1 - esm_nfit
-      z_l = dble(nz_l - 1)*L/dble(dfftp%nr3) - L
-      z_r = dble(nz_r - 1)*L/dble(dfftp%nr3)
+      z_l = (dble(nz_l - 1) + esm_offset)*L/dble(dfftp%nr3) - L
+      z_r = (dble(nz_r - 1) + esm_offset)*L/dble(dfftp%nr3)
 
 ! for gp=0
       DO it = 1, nat
@@ -481,7 +486,7 @@ CONTAINS
           IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
             k3 = k3 - dfftp%nr3
           END IF
-          z = DBLE(k3) / DBLE(dfftp%nr3) * L
+          z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
           ! bc3
           arg001 = -tmp**2*(z - zp)**2
           arg101 = tmp*(z - zp)
@@ -516,11 +521,12 @@ CONTAINS
            + f4*z_l + f3*z_r + 2*f4*z_r))/(z_l - z_r)**3
       a3 = (2.d0*f1 - 2.d0*f2 + (f3 + f4)*(z_l - z_r))/(z_l - z_r)**3
       DO iz = nz_r, nz_l
-        z = dble(iz - 1)/dble(dfftp%nr3)*L
+        z = (dble(iz - 1) + esm_offset)/dble(dfftp%nr3)*L
         vg_r(iz) = (a0 + a1*z + a2*z**2 + a3*z**3)
       ENDDO
 
       CALL cft_1z(vg_r, 1, dfftp%nr3, dfftp%nr3, -1, vg)
+      vg = vg * esm_phfact
       DO iz = 1, dfftp%nr3
         vloc3(iz, ng_2d) = vg(iz)
       ENDDO
@@ -607,7 +613,7 @@ CONTAINS
           IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
             k3 = k3 - dfftp%nr3
           END IF
-          z = DBLE(k3) / DBLE(dfftp%nr3) * L
+          z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
           ! bc4
           alpha = aaa + gp + sqrt(aaa**2 + gp**2)
           beta  = aaa + gp - sqrt(aaa**2 + gp**2)
@@ -651,6 +657,7 @@ CONTAINS
         ENDDO
       ENDDO
       CALL cft_1z(vg_r, 1, dfftp%nr3, dfftp%nr3, -1, vg)
+      vg = vg * esm_phfact
       DO iz = 1, dfftp%nr3
         vloc3(iz, ng_2d) = vg(iz)
       ENDDO
@@ -665,8 +672,8 @@ CONTAINS
       f1 = (0.d0, 0.d0); f2 = (0.d0, 0.d0); f3 = (0.d0, 0.d0); f4 = (0.d0, 0.d0)
       nz_l = dfftp%nr3/2 + 1 + esm_nfit
       nz_r = dfftp%nr3/2 + 1 - esm_nfit
-      z_l = dble(nz_l - 1)*L/dble(dfftp%nr3) - L
-      z_r = dble(nz_r - 1)*L/dble(dfftp%nr3)
+      z_l = (dble(nz_l - 1) + esm_offset)*L/dble(dfftp%nr3) - L
+      z_r = (dble(nz_r - 1) + esm_offset)*L/dble(dfftp%nr3)
 ! for gp=0
       DO it = 1, nat
         tt = -fpi*zv(ityp(it))/sa
@@ -678,7 +685,7 @@ CONTAINS
           IF (k3 >= (dfftp%nr3 - dfftp%nr3/2)) THEN
             k3 = k3 - dfftp%nr3
           END IF
-          z = DBLE(k3) / DBLE(dfftp%nr3) * L
+          z = (DBLE(k3) + esm_offset) / DBLE(dfftp%nr3) * L
           ! bc4
           arg001 = -tmp**2*(z - zp)**2
           arg002 = -tmp**2*(z1 - zp)**2
@@ -745,11 +752,12 @@ CONTAINS
            + f4*z_l + f3*z_r + 2*f4*z_r))/(z_l - z_r)**3
       a3 = (2.d0*f1 - 2.d0*f2 + (f3 + f4)*(z_l - z_r))/(z_l - z_r)**3
       DO iz = nz_r, nz_l
-        z = dble(iz - 1)/dble(dfftp%nr3)*L
+        z = (dble(iz - 1) + esm_offset)/dble(dfftp%nr3)*L
         vg_r(iz) = (a0 + a1*z + a2*z**2 + a3*z**3)
       ENDDO
 
       CALL cft_1z(vg_r, 1, dfftp%nr3, dfftp%nr3, -1, vg)
+      vg = vg * esm_phfact
       DO iz = 1, dfftp%nr3
         vloc3(iz, ng_2d) = vg(iz)
       ENDDO
