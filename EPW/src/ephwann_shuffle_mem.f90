@@ -38,7 +38,8 @@
                             nqf2, nqf3, mp_mesh_k, restart, plselfen, epbread,  &
                             epmatkqread, selecqread, restart_step, nsmear,      &
                             nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, assume_metal,   &
-                            cumulant, eliashberg, fermi_plot, indabs_fca
+                            cumulant, eliashberg, fermi_plot, indabs_fca,       &
+                            nomega, omegamin, omegamax, omegastep, neta
   USE control_flags, ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero, cone,       &
@@ -91,6 +92,7 @@
                             spectral_func_pl_q
   USE rigid_epw,     ONLY : rpa_epsilon, tf_epsilon, compute_umn_f, rgd_blk_epw_fine_mem
   USE indabs,        ONLY : indabs_main, renorm_eig, fermi_carrier_indabs
+  USE io_indabs,     ONLY : indabs_read
 #if defined(__MPI)
   USE parallel_include, ONLY : MPI_MODE_RDONLY, MPI_INFO_NULL, MPI_OFFSET_KIND, &
                                MPI_OFFSET
@@ -948,6 +950,14 @@
         sigmai_mode(:, :, :, :) = zero
       ENDIF
     ENDIF ! elecselfen
+    IF (indabs) THEN
+      ! Calculate the number of frequency points
+      nomega = INT((omegamax - omegamin) / omegastep) + 1
+      ALLOCATE(epsilon2_abs(3, nomega, neta, nstemp), STAT = ierr)
+      IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs', 1)
+      ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta, nstemp), STAT = ierr)
+      IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs_lorenz', 1)
+    ENDIF ! indabs
     !
     ! Restart in SERTA case or self-energy (electron or plasmon) case
     IF (restart) THEN
@@ -965,6 +975,11 @@
           ! Here inv_tau_all gets updated
           CALL tau_read(iq_restart, totq, nktotf, .FALSE.)
         ENDIF
+      ENDIF
+      !
+      ! Potential restart in indirect optics
+      IF (indabs) THEN
+        CALL indabs_read(iq_restart, totq, nktotf, epsilon2_abs, epsilon2_abs_lorenz)
       ENDIF
       !
       ! If you restart from reading a file. This prevent

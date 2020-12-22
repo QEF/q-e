@@ -31,7 +31,8 @@
     USE modes,         ONLY : nmodes
     USE epwcom,        ONLY : nstemp, fsthick, degaussw, &
                               eps_acustic, efermi_read, fermi_energy,&
-                              vme, omegamin, omegamax, omegastep, indabs_fca
+                              vme, omegamin, omegamax, omegastep, indabs_fca, &
+                              nomega, neta
     USE elph2,         ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf, &
                               sigmar_all, efnew, gtemp, &
                               dmef, omegap, epsilon2_abs, epsilon2_abs_lorenz, vmef, &
@@ -40,6 +41,7 @@
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm
     USE cell_base,     ONLY : omega
+    USE io_indabs,     ONLY : indabs_write
     !
     IMPLICIT NONE
     !
@@ -72,7 +74,7 @@
     !! Total number of k+q points
     INTEGER :: iw
     !! Index for frequency
-    INTEGER :: nomega
+!    INTEGER :: nomega
     !! Number of points on the photon energy axis
     INTEGER :: mbnd
     !! Index for summation over intermediate bands
@@ -84,7 +86,7 @@
     !! Counter on temperatures
     INTEGER :: ierr
     !! Error status
-    INTEGER, PARAMETER :: neta = 9
+!    INTEGER, PARAMETER :: neta = 9
     !! Broadening parameter
     REAL(KIND = DP) :: ekk
     !! Eigen energy on the fine grid relative to the Fermi level
@@ -136,7 +138,8 @@
     !
     inv_degaussw = 1.0 / degaussw
     !
-    nomega = INT((omegamax - omegamin) / omegastep) + 1
+    ! Done outside
+!    nomega = INT((omegamax - omegamin) / omegastep) + 1
     !
     ! 300 K
     ! Epsilon2 prefactor for velocity matrix elements, including factor of 2 for spin (weights for k-points are divided by 2 to be normalized to 1)
@@ -160,10 +163,11 @@
       !IF (.NOT. ALLOCATED (epsilon2_abs_lorenz) ) ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta))
       ALLOCATE(omegap(nomega), STAT = ierr)
       IF (ierr /= 0) CALL errore('indabs', 'Error allocating omegap', 1)
-      ALLOCATE(epsilon2_abs(3, nomega, neta, nstemp), STAT = ierr)
-      IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs', 1)
-      ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta, nstemp), STAT = ierr)
-      IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs_lorenz', 1)
+      ! Now move the allocation into ephwann instead of indabs
+!      ALLOCATE(epsilon2_abs(3, nomega, neta, nstemp), STAT = ierr)
+!      IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs', 1)
+!      ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta, nstemp), STAT = ierr)
+!      IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs_lorenz', 1)
       !
       epsilon2_abs = 0.d0
       epsilon2_abs_lorenz = 0.d0
@@ -184,135 +188,149 @@
     nksqtotf = nktotf ! odd-even for k,k+q
     !
     DO itemp = 1, nstemp
-      IF (indabs_fca) THEN
-        !
-        ef0 = ef0_fca(itemp)
-      ELSEIF (efermi_read) THEN
-        !
-        ef0 = fermi_energy
+      IF (first_cycle .and. itemp = nstemp) THEN
+        first_cycle = .false.
       ELSE
-        !
-        ef0 = efnew
-      ENDIF
-      !
-      inv_eptemp0 = 1.0 / gtemp(itemp)
-      DO ik = 1, nkf
-        !
-        ikk = 2 * ik - 1
-        ikq = ikk + 1
-        !
-        DO imode = 1, nmodes
+        !        
+        IF (indabs_fca) THEN
           !
-          ! the phonon frequency at this q and nu
-          wq(imode) = wf(imode, iq)
+          ef0 = ef0_fca(itemp)
+        ELSEIF (efermi_read) THEN
           !
-          epf(:, :, imode) = epf17(:, :, imode,ik)
-          IF (wq(imode) > eps_acustic) THEN
-            nqv(imode) = wgauss(-wq(imode) / gtemp(itemp), -99)
-            nqv(imode) = nqv(imode) / (one - two * nqv(imode))
-          ENDIF
-        ENDDO
-        !
-        ! RM - vme version should be checked
-        IF (vme) THEN
-          DO ibnd = 1, nbndfst
-            DO jbnd = 1, nbndfst
-              ! vmef is in units of Ryd * bohr
-              vkk(:, ibnd, jbnd) = vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikk)
-              vkq(:, ibnd, jbnd) = vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikq)
-            ENDDO
-          ENDDO
+          ef0 = fermi_energy
         ELSE
-          DO ibnd = 1, nbndfst
-            DO jbnd = 1, nbndfst
-              ! Dme's already corrected for GW corrections in wan2bloch.f90
-              vkk(:, ibnd, jbnd) = 2.0 * dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikk)
-              vkq(:, ibnd, jbnd) = 2.0 * dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikq)
-            ENDDO
-          ENDDO
+          !
+          ef0 = efnew
         ENDIF
         !
-        DO ibnd = 1, nbndfst
-          !  the energy of the electron at k (relative to Ef)
-          ekk = etf(ibndmin - 1 + ibnd, ikk) - ef0
+        inv_eptemp0 = 1.0 / gtemp(itemp)
+        DO ik = 1, nkf
           !
-          IF (ABS(ekk) < fsthick) THEN
+          ikk = 2 * ik - 1
+          ikq = ikk + 1
+          !
+          DO imode = 1, nmodes
             !
-            wgkk = wgauss(-ekk * inv_eptemp0, -99)
+            ! the phonon frequency at this q and nu
+            wq(imode) = wf(imode, iq)
             !
-            DO jbnd = 1, nbndfst
+            epf(:, :, imode) = epf17(:, :, imode,ik)
+            IF (wq(imode) > eps_acustic) THEN
+              nqv(imode) = wgauss(-wq(imode) / gtemp(itemp), -99)
+              nqv(imode) = nqv(imode) / (one - two * nqv(imode))
+            ENDIF
+          ENDDO
+          !
+          ! RM - vme version should be checked
+          IF (vme) THEN
+            DO ibnd = 1, nbndfst
+              DO jbnd = 1, nbndfst
+                ! vmef is in units of Ryd * bohr
+                vkk(:, ibnd, jbnd) = vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikk)
+                vkq(:, ibnd, jbnd) = vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikq)
+              ENDDO
+            ENDDO
+          ELSE
+            DO ibnd = 1, nbndfst
+              DO jbnd = 1, nbndfst
+                ! Dme's already corrected for GW corrections in wan2bloch.f90
+                vkk(:, ibnd, jbnd) = 2.0 * dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikk)
+                vkq(:, ibnd, jbnd) = 2.0 * dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikq)
+              ENDDO
+            ENDDO
+          ENDIF
+          !
+          DO ibnd = 1, nbndfst
+            !  the energy of the electron at k (relative to Ef)
+            ekk = etf(ibndmin - 1 + ibnd, ikk) - ef0
+            !
+            IF (ABS(ekk) < fsthick) THEN
               !
-              ! The fermi occupation for k+q
-              ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0
+              wgkk = wgauss(-ekk * inv_eptemp0, -99)
               !
-              IF (ABS(ekq) < fsthick .AND. ekq < ekk + wq(nmodes) + omegamax + 6.0 * degaussw) THEN
+              DO jbnd = 1, nbndfst
                 !
-                wgkq = wgauss(-ekq * inv_eptemp0, -99)
+                ! The fermi occupation for k+q
+                ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0
                 !
-                IF (ekq - ekk - wq(nmodes) - omegamax > 6.0 * degaussw) CYCLE
-                IF (ekq - ekk + wq(nmodes) - omegamin < - 6.0 * degaussw) CYCLE
-                !
-                DO imode = 1, nmodes
+                IF (ABS(ekq) < fsthick .AND. ekq < ekk + wq(nmodes) + omegamax + 6.0 * degaussw) THEN
                   !
-                  IF (wq(imode) > eps_acustic) THEN
+                  wgkq = wgauss(-ekq * inv_eptemp0, -99)
+                  !
+                  IF (ekq - ekk - wq(nmodes) - omegamax > 6.0 * degaussw) CYCLE
+                  IF (ekq - ekk + wq(nmodes) - omegamin < - 6.0 * degaussw) CYCLE
+                  !
+                  DO imode = 1, nmodes
                     !
-                    DO m = 1, neta
-                      s1a = czero
-                      s1e = czero
-                      s2a = czero
-                      s2e = czero
+                    IF (wq(imode) > eps_acustic) THEN
                       !
-                      DO mbnd = 1, nbndfst
+                      DO m = 1, neta
+                        s1a = czero
+                        s1e = czero
+                        s2a = czero
+                        s2e = czero
                         !
-                        ! The energy of the electron at k (relative to Ef)
-                        ekmk = etf(ibndmin - 1 + mbnd, ikk) - ef0
-                        ! The energy of the electron at k+q (relative to Ef)
-                        ekmq = etf(ibndmin - 1 + mbnd, ikq) - ef0
+                        DO mbnd = 1, nbndfst
+                          !
+                          ! The energy of the electron at k (relative to Ef)
+                          ekmk = etf(ibndmin - 1 + mbnd, ikk) - ef0
+                          ! The energy of the electron at k+q (relative to Ef)
+                          ekmq = etf(ibndmin - 1 + mbnd, ikq) - ef0
+                          !
+                          s1a(:) = s1a(:) + epf(mbnd, jbnd,imode) * vkk(:, ibnd, mbnd) / &
+                                   (ekmk  - ekq + wq(imode) + ci * eta(m))
+                          s1e(:) = s1e(:) + epf(mbnd, jbnd,imode) * vkk(:, ibnd, mbnd) / &
+                                   (ekmk  - ekq - wq(imode) + ci * eta(m))
+                          s2a(:) =  s2a(:) + epf(ibnd, mbnd,imode) * vkq(:, mbnd, jbnd) / &
+                                   (ekmq  - ekk - wq(imode)+ ci * eta(m))
+                          s2e(:) =  s2e(:) + epf(ibnd, mbnd,imode) * vkq(:, mbnd, jbnd) / &
+                                   (ekmq  - ekk + wq(imode)+ ci * eta(m))
+                        ENDDO
                         !
-                        s1a(:) = s1a(:) + epf(mbnd, jbnd,imode) * vkk(:, ibnd, mbnd) / &
-                                 (ekmk  - ekq + wq(imode) + ci * eta(m))
-                        s1e(:) = s1e(:) + epf(mbnd, jbnd,imode) * vkk(:, ibnd, mbnd) / &
-                                 (ekmk  - ekq - wq(imode) + ci * eta(m))
-                        s2a(:) =  s2a(:) + epf(ibnd, mbnd,imode) * vkq(:, mbnd, jbnd) / &
-                                 (ekmq  - ekk - wq(imode)+ ci * eta(m))
-                        s2e(:) =  s2e(:) + epf(ibnd, mbnd,imode) * vkq(:, mbnd, jbnd) / &
-                                 (ekmq  - ekk + wq(imode)+ ci * eta(m))
-                      ENDDO
-                      !
-                      pfac  =  nqv(imode)      * wgkk * (one - wgkq) - (nqv(imode) + one) * (one - wgkk) * wgkq
-                      pface = (nqv(imode) + one) * wgkk * (one - wgkq) -  nqv(imode) * (one - wgkk) * wgkq
-                      !
-                      DO iw = 1, nomega
+                        pfac  =  nqv(imode)      * wgkk * (one - wgkq) - (nqv(imode) + one) * (one - wgkk) * wgkq
+                        pface = (nqv(imode) + one) * wgkk * (one - wgkq) -  nqv(imode) * (one - wgkk) * wgkq
                         !
-                        IF (ABS(ekq - ekk - wq(imode) - omegap(iw)) > 6.0 * degaussw .AND. &
-                            ABS(ekq - ekk + wq(imode) - omegap(iw)) > 6.0 * degaussw) CYCLE
-                        !
-                        weighte = w0gauss((ekq - ekk - omegap(iw) + wq(imode)) / degaussw, 0) / degaussw
-                        weighta = w0gauss((ekq - ekk - omegap(iw) - wq(imode)) / degaussw, 0) / degaussw
-                        !
-                        DO ipol = 1, 3
-                          epsilon2_abs(ipol, iw, m, itemp) = epsilon2_abs(ipol, iw, m, itemp) + (wkf(ikk) / 2.0) * wqf(iq) * &
-                               cfac / omegap(iw)**2 * pfac  * weighta * ABS(s1a(ipol) + s2a(ipol))**2 / (2 * wq(imode) * omega)
-                          epsilon2_abs(ipol, iw, m, itemp) = epsilon2_abs(ipol, iw, m, itemp) + (wkf(ikk) / 2.0) * wqf(iq) * &
-                               cfac / omegap(iw)**2 * pface * weighte * ABS(s1e(ipol) + s2e(ipol))**2 / (2 * wq(imode) * omega)
-                          epsilon2_abs_lorenz(ipol, iw, m, itemp) = epsilon2_abs_lorenz(ipol, iw, m, itemp) + &
-                                (wkf(ikk) / 2.0) * wqf(iq) * &
-                               cfac / omegap(iw)**2 * pfac  * ABS(s1a(ipol) + s2a(ipol))**2 / (2 * wq(imode) * omega) * &
-                               (degaussw / (degaussw**2 + (ekq - ekk - omegap(iw) - wq(imode))**2)) / pi
-                          epsilon2_abs_lorenz(ipol, iw, m, itemp) = epsilon2_abs_lorenz(ipol, iw, m, itemp)  + &
-                               (wkf(ikk) / 2.0) * wqf(iq) * &
-                               cfac / omegap(iw)**2 * pface * ABS(s1e(ipol) + s2e(ipol))**2 / (2 * wq(imode) * omega) * &
-                               (degaussw / (degaussw**2 + (ekq - ekk - omegap(iw) + wq(imode))**2 )) / pi
-                        ENDDO ! ipol
-                      ENDDO ! iw
-                    ENDDO ! neta
-                  ENDIF ! if wq > acoustic
-                ENDDO ! imode
-              ENDIF ! endif  ekq in fsthick
-            ENDDO ! jbnd
-          ENDIF  ! endif  ekk in fsthick
-        ENDDO ! ibnd
-      ENDDO ! ik
+                        DO iw = 1, nomega
+                          !
+                          IF (ABS(ekq - ekk - wq(imode) - omegap(iw)) > 6.0 * degaussw .AND. &
+                              ABS(ekq - ekk + wq(imode) - omegap(iw)) > 6.0 * degaussw) CYCLE
+                          !
+                          weighte = w0gauss((ekq - ekk - omegap(iw) + wq(imode)) / degaussw, 0) / degaussw
+                          weighta = w0gauss((ekq - ekk - omegap(iw) - wq(imode)) / degaussw, 0) / degaussw
+                          !
+                          DO ipol = 1, 3
+                            epsilon2_abs(ipol, iw, m, itemp) = epsilon2_abs(ipol, iw, m, itemp) + (wkf(ikk) / 2.0) * wqf(iq) * &
+                                 cfac / omegap(iw)**2 * pfac  * weighta * ABS(s1a(ipol) + s2a(ipol))**2 / (2 * wq(imode) * omega)
+                            epsilon2_abs(ipol, iw, m, itemp) = epsilon2_abs(ipol, iw, m, itemp) + (wkf(ikk) / 2.0) * wqf(iq) * &
+                                 cfac / omegap(iw)**2 * pface * weighte * ABS(s1e(ipol) + s2e(ipol))**2 / (2 * wq(imode) * omega)
+                            epsilon2_abs_lorenz(ipol, iw, m, itemp) = epsilon2_abs_lorenz(ipol, iw, m, itemp) + &
+                                  (wkf(ikk) / 2.0) * wqf(iq) * &
+                                 cfac / omegap(iw)**2 * pfac  * ABS(s1a(ipol) + s2a(ipol))**2 / (2 * wq(imode) * omega) * &
+                                 (degaussw / (degaussw**2 + (ekq - ekk - omegap(iw) - wq(imode))**2)) / pi
+                            epsilon2_abs_lorenz(ipol, iw, m, itemp) = epsilon2_abs_lorenz(ipol, iw, m, itemp)  + &
+                                 (wkf(ikk) / 2.0) * wqf(iq) * &
+                                 cfac / omegap(iw)**2 * pface * ABS(s1e(ipol) + s2e(ipol))**2 / (2 * wq(imode) * omega) * &
+                                 (degaussw / (degaussw**2 + (ekq - ekk - omegap(iw) + wq(imode))**2 )) / pi
+                          ENDDO ! ipol
+                        ENDDO ! iw
+                      ENDDO ! neta
+                    ENDIF ! if wq > acoustic
+                  ENDDO ! imode
+                ENDIF ! endif  ekq in fsthick
+              ENDDO ! jbnd
+            ENDIF  ! endif  ekk in fsthick
+          ENDDO ! ibnd
+        ENDDO ! ik
+        IF (restart) THEN
+          IF (MOD(iq, restart_step) == 0 .and. itemp == nstemp) THEN
+            WRITE(stdout, '(5x, a, i10)' ) 'Creation of a restart point at ', iq
+            CALL mp_sum(epsilon2_abs, inter_pool_comm)
+            CALL mp_sum(epsilon2_abs_lorenz, inter_pool_comm)
+            CALL mp_barrier(inter_pool_comm)
+            CALL indabs_write(iq, totq, nktotf, nomega, epsilon2_abs, epsilon2_abs_lorenz)
+          ENDIF
+        ENDIF
+      ENDIF ! Skip first step in restart
     ENDDO ! itemp
     !
     ! The k points are distributed among pools: here we collect them

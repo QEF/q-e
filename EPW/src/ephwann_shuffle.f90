@@ -35,7 +35,8 @@
                                specfun_pl, lindabs, use_ws, epbread, fermi_plot,   &
                                epmatkqread, selecqread, restart_step, nsmear,      &
                                nqc1, nqc2, nqc3, nkc1, nkc2, nkc3, assume_metal,   &
-                               cumulant, eliashberg, indabs_fca
+                               cumulant, eliashberg, indabs_fca, nomega,           &
+                               omegamin, omegamax, omegastep, neta
   USE control_flags,    ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw,    ONLY : ryd2ev, ryd2mev, one, two, zero, czero, eps40,      &
@@ -87,6 +88,7 @@
                                spectral_func_pl_q
   USE rigid_epw,        ONLY : rpa_epsilon, tf_epsilon, compute_umn_f, rgd_blk_epw_fine
   USE indabs,           ONLY : indabs_main, renorm_eig, fermi_carrier_indabs
+  USE io_indabs,        ONLY : indabs_read
 #if defined(__MPI)
   USE parallel_include, ONLY : MPI_MODE_RDONLY, MPI_INFO_NULL, MPI_OFFSET_KIND, &
                                MPI_OFFSET
@@ -1004,6 +1006,14 @@
         sigmai_mode(:, :, :, :) = zero
       ENDIF
     ENDIF ! elecselfen
+    IF (indabs) THEN
+      ! Calculate the number of frequency points
+      nomega = INT((omegamax - omegamin) / omegastep) + 1
+      ALLOCATE(epsilon2_abs(3, nomega, neta, nstemp), STAT = ierr)
+      IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs', 1)
+      ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta, nstemp), STAT = ierr)
+      IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs_lorenz', 1)
+    ENDIF ! indabs
     !
     ! --------------------------------------------------------------------------------------
     ! Polaron shell implementation for future use
@@ -1056,6 +1066,10 @@
         ENDIF
       ENDIF
       !
+      ! Restart in indirect optics
+      IF (indabs) THEN
+        CALL indabs_read(iq_restart, totq, nktotf, epsilon2_abs, epsilon2_abs_lorenz)
+      ENDIF
       ! If you restart from reading a file. This prevent
       ! the case were you restart but the file does not exist
       IF (iq_restart > 1) first_cycle = .TRUE.

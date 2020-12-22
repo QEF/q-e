@@ -332,8 +332,6 @@
   !! Value of the scissor shift in eV.
   REAL(KIND = DP) :: ncarrier
   !! Amount of carrier concentration in cm^-3 when doping a semiconductors
-  REAL(KIND = DP) :: nc_indabs
-  !! Carrier density used for free carrier absorption
   REAL(KIND = DP) :: nc
   !! Number of carrier per unit cell that participate to the conduction in the Ziman resistivity formula
   !
@@ -350,6 +348,10 @@
   !! smearing for the calculation of the Lindhard function (in eV)
   !
   ! Phonon-assisted absorption
+  INTEGER :: neta = 9
+  !! Number of broadening parameters
+  INTEGER :: nomega
+  !! Number of frequency (photon energy) points 
   REAL(KIND = DP) :: omegamin
   !! Photon energy minimum (in eV)
   REAL(KIND = DP) :: omegamax
@@ -358,6 +360,8 @@
   !! Photon energy step (in eV)
   REAL(KIND = DP) :: n_r
   !! Refractive index
+  REAL(KIND = DP) :: nc_indabs
+  !! Carrier density used for free carrier absorption
   !
   ! ----------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.

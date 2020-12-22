@@ -51,6 +51,7 @@ transport_iter.o \
 pw2wan2epw.o \
 wannierization.o \
 indabs.o \
+io_indabs.o\
 bcast_epw_input.o \
 bloch2wan.o \
 dvqpsi.o \
