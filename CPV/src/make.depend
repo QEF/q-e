@@ -426,12 +426,15 @@ exx_psi.o : ../../Modules/mp_global.o
 exx_psi.o : ../../Modules/mp_wave.o
 exx_psi.o : ../../UtilXlib/mp.o
 exx_psi.o : ../../UtilXlib/parallel_include.o
+exx_vofr.o : ../../FFTXlib/fft_scalar.o
 exx_vofr.o : ../../Modules/constants.o
+exx_vofr.o : ../../Modules/funct.o
 exx_vofr.o : ../../Modules/io_global.o
 exx_vofr.o : ../../Modules/kind.o
 exx_vofr.o : ../../Modules/mp_global.o
 exx_vofr.o : ../../UtilXlib/parallel_include.o
 exx_vofr.o : exx_module.o
+exx_vofr.o : wannier_base.o
 forces.o : ../../FFTXlib/fft_helper_subroutines.o
 forces.o : ../../FFTXlib/fft_interfaces.o
 forces.o : ../../Modules/cell_base.o
@@ -1160,7 +1163,6 @@ wave.o : ../../Modules/random_numbers.o
 wave.o : ../../Modules/recvec.o
 wave.o : ../../Modules/wave_base.o
 wave.o : ../../UtilXlib/mp.o
-wave.o : ../../upflib/uspp.o
 wave.o : electrons.o
 wave_types.o : ../../Modules/kind.o
 wf.o : ../../FFTXlib/fft_interfaces.o

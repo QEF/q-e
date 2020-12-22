@@ -86,6 +86,11 @@ module wannier
    logical                  :: old_spinor_proj  ! for compatability for nnkp files prior to W90v2.0
    integer,allocatable :: rir(:,:)
    logical,allocatable :: zerophase(:,:)
+   ! wannier2odd additional variables
+   logical :: wannier_plot
+   character(len=255) :: wannier_plot_list
+   integer, allocatable :: wann_to_plot(:)
+   logical :: split_evc_file
 end module wannier
 !
 
@@ -108,6 +113,8 @@ PROGRAM pw2wannier90
   USE noncollin_module, ONLY : noncolin
   USE control_flags,    ONLY : gamma_only
   USE environment,ONLY : environment_start, environment_end
+  USE wannier2odd,      ONLY : wan2odd
+  USE plot_wan2odd,     ONLY : plot_wann
   USE wannier
   !
   IMPLICIT NONE
@@ -128,8 +135,9 @@ PROGRAM pw2wannier90
    ! end change Lopez, Thonhauser, Souza
        regular_mesh,& !gresch
    ! begin change Vitale
-       scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma
+       scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma,&
    ! end change Vitale
+       wannier_plot, wannier_plot_list, split_evc_file
   !
   ! initialise environment
   !
@@ -179,6 +187,9 @@ PROGRAM pw2wannier90
      scdm_entanglement = 'isolated'
      scdm_mu = 0.0_dp
      scdm_sigma = 1.0_dp
+     wannier_plot = .false.
+     wannier_plot_list = 'all'
+     split_evc_file = .false.
      !
      !     reading the namelist inputpp
      !
@@ -219,6 +230,9 @@ PROGRAM pw2wannier90
   CALL mp_bcast(scdm_entanglement,ionode_id, world_comm)
   CALL mp_bcast(scdm_mu,ionode_id, world_comm)
   CALL mp_bcast(scdm_sigma,ionode_id, world_comm)
+  CALL mp_bcast(wannier_plot,ionode_id, world_comm)
+  CALL mp_bcast(wannier_plot_list,ionode_id, world_comm)
+  CALL mp_bcast(split_evc_file,ionode_id, world_comm) 
   !
   ! Check: kpoint distribution with pools not implemented
   !
@@ -281,6 +295,13 @@ PROGRAM pw2wannier90
   WRITE(stdout,*)
   WRITE(stdout,*) ' Wannier mode is: ',wan_mode
   WRITE(stdout,*)
+  !
+  IF ( wan_mode .ne. 'wannier2odd' ) THEN
+    IF ( wannier_plot ) THEN
+      WRITE(stdout,*) ' Warning: wannier_plot IGNORED: supported only by the wannier2odd mode'
+      WRITE(stdout,*)
+    ENDIF
+  ENDIF
   !
   IF(wan_mode=='standalone') THEN
      !
@@ -469,6 +490,25 @@ PROGRAM pw2wannier90
      !
      CALL read_nnkp
      CALL wan2sic
+     !
+  ENDIF
+  !
+  IF(wan_mode=='wannier2odd') THEN
+     !
+     CALL read_nnkp
+     CALL get_wannier_to_plot
+     CALL openfil_pp
+     CALL wan2odd( seedname, ikstart, wannier_plot, split_evc_file )
+     IF ( wannier_plot ) CALL plot_wann( wann_to_plot, iknum, n_wannier )
+     !
+     IF ( ionode ) WRITE( stdout, *  )
+     CALL print_clock( 'init_pw2wan' )
+     CALL print_clock( 'wannier2odd' )
+     IF ( wannier_plot ) CALL print_clock( 'plot_wann' )
+     CALL environment_end ( 'PW2WANNIER' )
+     IF ( ionode ) WRITE( stdout, *  )
+     !
+     CALL stop_pp
      !
   ENDIF
   !
@@ -5384,3 +5424,127 @@ SUBROUTINE radialpart(ng, q, alfa, rvalue, lmax, radial)
   DEALLOCATE (bes, func_r, r, rij, aux )
   RETURN
 END SUBROUTINE radialpart
+!
+!
+!-----------------------------------------------------------------------
+SUBROUTINE get_wannier_to_plot
+  !-----------------------------------------------------------------------
+  !
+  ! ... gets the list of Wannier functions to plot
+  !
+  USE kinds,           ONLY : DP
+  USE wannier,         ONLY : n_wannier, iknum, wannier_plot_list, wann_to_plot
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER(LEN=1), EXTERNAL :: capital
+  !
+  CHARACTER(LEN=10), PARAMETER :: c_digit = '0123456789'
+  CHARACTER(LEN=2), PARAMETER :: c_range = '-:'
+  CHARACTER(LEN=3), PARAMETER :: c_sep = ' ,;'
+  CHARACTER(LEN=5), PARAMETER :: c_punc = ' ,:-:'
+  CHARACTER(LEN=5), PARAMETER :: c_punc_nospace = ',:-:'
+  CHARACTER(LEN=15), PARAMETER :: allchar = '0123456789 ,:-:'
+  !
+  CHARACTER(LEN=255) :: c_wlist, c_iwann
+  INTEGER :: i, check, iwann, range_size, counter
+  INTEGER :: i_punc, i_digit
+  INTEGER :: nwannx
+  INTEGER, ALLOCATABLE :: aux(:)
+  !
+  !
+  nwannx = n_wannier * iknum       ! num WFs in the supercell
+  ALLOCATE( aux(nwannx) )
+  !
+  c_wlist = wannier_plot_list
+  !
+  IF ( len_trim(c_wlist) == 0 ) &
+    CALL errore( 'get_wannier_to_plot', 'wannier_plot_list is blank', 1 )
+  !
+  DO i = 1, len_trim(c_wlist)
+    c_wlist(i:i) = capital(c_wlist(i:i))
+  ENDDO
+  !
+  IF ( trim(c_wlist) == 'ALL' ) THEN
+    ALLOCATE( wann_to_plot(nwannx) )
+    DO i = 1, nwannx
+      wann_to_plot(i) = i
+    ENDDO
+    !
+    RETURN
+  ELSE
+    check = VERIFY( c_wlist, allchar )
+    IF ( check .ne. 0 ) CALL errore( 'get_wannier_to_plot', &
+                'Unrecognised character in wannier_plot_list', check ) 
+  ENDIF
+  !
+  c_wlist = ADJUSTL( c_wlist )
+  !
+  IF ( SCAN( c_wlist, c_punc ) == 0 ) THEN
+    READ( c_wlist, *, ERR=101, END=101 ) iwann
+    IF ( iwann > nwannx ) &
+      CALL errore( 'get_wannier_to_plot', 'wannier_plot_list out of range', iwann )
+    !
+    ALLOCATE( wann_to_plot(1) )
+    wann_to_plot(1) = iwann
+    !
+    RETURN
+  ENDIF
+  !
+  !
+  counter = 0
+  DO
+    i_punc = SCAN( c_wlist, c_punc )
+    !
+    IF ( i_punc == 1 ) & 
+      CALL errore( 'get_wannier_to_plot', 'Error parsing keyword wannier_plot_list', 2 )
+    !
+    counter = counter + 1
+    c_iwann = c_wlist(1:i_punc-1)
+    READ( c_iwann, *, ERR=101, END=101 ) iwann
+    aux(counter) = iwann
+    IF ( iwann > nwannx ) &
+      CALL errore( 'get_wannier_to_plot', 'wannier_plot_list out of range', iwann )
+    !
+    c_wlist = ADJUSTL( c_wlist(i_punc:) )
+    !
+    IF ( SCAN( c_wlist, c_range ) == 1 ) THEN
+      i_digit = SCAN( c_wlist, c_digit )
+      IF ( SCAN( ADJUSTL( c_wlist(2:i_digit) ), c_punc_nospace ) ) &
+        CALL errore( 'get_wannier_to_plot', 'Error parsing keyword wannier_plot_list', 3 )
+      c_wlist = ADJUSTL( c_wlist(i_digit:) )
+      i_punc = SCAN( c_wlist, c_punc )
+      !
+      c_iwann = c_wlist(1:i_punc-1)
+      READ( c_iwann, *, ERR=101, END=101 ) iwann
+      IF ( iwann > nwannx ) &
+        CALL errore( 'get_wannier_to_plot', 'wannier_plot_list out of range', iwann )
+      !
+      range_size = iwann - aux(counter)
+      IF ( range_size <= 0 ) CALL errore( 'get_wannier_to_plot', &
+                          'Error parsing keyword wannier_plot_list: incorrect range', 1)
+      !
+      DO i = 1, range_size
+        counter = counter + 1
+        aux(counter) = aux(counter-1) + 1
+      ENDDO
+      !
+      c_wlist = ADJUSTL( c_wlist(i_punc:) )
+    ENDIF
+    !
+    IF ( SCAN( c_wlist, c_sep ) == 1 ) c_wlist = ADJUSTL( c_wlist(2:) )
+    IF ( SCAN( c_wlist, c_range ) == 1 ) &
+      CALL errore( 'get_wannier_to_plot', 'Error parsing keyword wannier_plot_list', 4 )
+    !
+    IF ( INDEX( c_wlist, ' ' ) == 1 ) EXIT
+  ENDDO
+  !
+  ALLOCATE( wann_to_plot(counter) )
+  wann_to_plot(:) = aux(1:counter)
+  !
+  RETURN
+  !
+101 CALL errore( 'get_wannier_to_plot', 'Error parsing keyword wannier_plot_list', 1 ) 
+  !
+  ! 
+END SUBROUTINE get_wannier_to_plot

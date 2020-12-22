@@ -18,6 +18,7 @@ default :
 	@echo '  make [-j] target'
 	@echo ' '
 	@echo 'where target identifies one or multiple CORE PACKAGES:'
+	@echo '  kc           programs needed for Koopmans, same as "make pw pp w90"'
 	@echo '  pw           basic code for scf, structure optimization, MD'
 	@echo '  ph           phonon code, Gamma-only and third-order derivatives'
 	@echo '  hp           calculation of the Hubbard parameters from DFPT'
@@ -148,7 +149,9 @@ gui :
 
 pwall : pw neb ph pp pwcond acfdt
 
-all   : pwall cp ld1 tddfpt hp xspectra gwl 
+kc    : pw pp w90
+
+all   : pwall cp ld1 tddfpt hp xspectra gwl kc
 
 ###########################################################
 # Auxiliary targets used by main targets:
